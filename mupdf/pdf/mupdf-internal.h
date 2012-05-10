@@ -198,6 +198,7 @@ fz_buffer *pdf_load_image_stream(pdf_document *doc, int num, int gen, pdf_image_
 fz_stream *pdf_open_image_stream(pdf_document *doc, int num, int gen, pdf_image_params *params);
 fz_stream *pdf_open_stream_with_offset(pdf_document *doc, int num, int gen, pdf_obj *dict, int stm_ofs);
 fz_stream *pdf_open_image_decomp_stream(fz_context *ctx, fz_buffer *, pdf_image_params *params, int *factor);
+fz_stream *pdf_open_contents_stream(pdf_document *xref, pdf_obj *obj);
 
 void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);
 void pdf_repair_obj_stms(pdf_document *doc);
@@ -257,7 +258,7 @@ struct pdf_pattern_s
 	fz_matrix matrix;
 	fz_rect bbox;
 	pdf_obj *resources;
-	fz_buffer *contents;
+	pdf_obj *contents;
 };
 
 pdf_pattern *pdf_load_pattern(pdf_document *doc, pdf_obj *obj);
@@ -280,7 +281,7 @@ struct pdf_xobject_s
 	int transparency;
 	fz_colorspace *colorspace;
 	pdf_obj *resources;
-	fz_buffer *contents;
+	pdf_obj *contents;
 	pdf_obj *me;
 };
 
@@ -527,7 +528,7 @@ struct pdf_page_s
 	int rotate;
 	int transparency;
 	pdf_obj *resources;
-	fz_buffer *contents;
+	pdf_obj *contents;
 	fz_link *links;
 	pdf_annot *annots;
 };

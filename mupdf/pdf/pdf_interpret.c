@@ -104,7 +104,7 @@ struct pdf_csi_s
 	fz_cookie *cookie;
 };
 
-static void pdf_run_buffer(pdf_csi *csi, pdf_obj *rdb, fz_buffer *contents);
+static void pdf_run_contents_object(pdf_csi *csi, pdf_obj *rdb, pdf_obj *contents);
 static void pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, fz_matrix transform);
 static void pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what);
 
@@ -1311,7 +1311,7 @@ pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what)
 		gstate->ctm = ptm;
 		csi->top_ctm = gstate->ctm;
 		pdf_gsave(csi);
-		pdf_run_buffer(csi, pat->resources, pat->contents);
+		pdf_run_contents_object(csi, pat->resources, pat->contents);
 		/* RJW: "cannot render pattern tile" */
 		pdf_grestore(csi);
 		while (oldtop < csi->gtop)
@@ -1330,7 +1330,7 @@ pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, fz_rect area, int what)
 				pdf_gsave(csi);
 				fz_try(ctx)
 				{
-					pdf_run_buffer(csi, pat->resources, pat->contents);
+					pdf_run_contents_object(csi, pat->resources, pat->contents);
 				}
 				fz_catch(ctx)
 				{
@@ -1427,7 +1427,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, fz_matrix t
 		if (xobj->resources)
 			resources = xobj->resources;
 
-		pdf_run_buffer(csi, resources, xobj->contents);
+		pdf_run_contents_object(csi, resources, xobj->contents);
 		/* RJW: "cannot interpret XObject stream" */
 	}
 	fz_always(ctx)
@@ -2548,7 +2548,6 @@ pdf_run_keyword(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, char *buf)
 			fz_warn(ctx, "unknown keyword: '%s'", buf);
 		break;
 	}
-	fz_assert_lock_not_held(ctx, FZ_LOCK_FILE);
 }
 
 static void
@@ -2582,6 +2581,10 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 
 		tok = pdf_lex(file, buf);
 		/* RJW: "lexical error in content stream" */
+
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1086 */
+		if (fz_tell(file) >= (100 << 20))
+			fz_throw(ctx, "compression bomb detected");
 
 		if (in_array)
 		{
@@ -2666,6 +2669,8 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 			break;
 
 		case PDF_TOK_KEYWORD:
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1086 */
+			if (buf->len < 255)
 			pdf_run_keyword(csi, rdb, file, buf->scratch);
 			/* RJW: "cannot run keyword" */
 			pdf_clear_stack(csi);
@@ -2682,48 +2687,78 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
  */
 
 static void
-pdf_run_buffer(pdf_csi *csi, pdf_obj *rdb, fz_buffer *contents)
+pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 {
 	fz_context *ctx = csi->dev->ctx;
 	pdf_lexbuf_large *buf;
-	fz_stream * file = NULL;
 	int save_in_text;
 
 	fz_var(buf);
-	fz_var(file);
+
+	if (file == NULL)
+		return;
+
+	buf = fz_malloc(ctx, sizeof(*buf)); /* we must be re-entrant for type3 fonts */
+	buf->base.size = PDF_LEXBUF_LARGE;
+	save_in_text = csi->in_text;
+	csi->in_text = 0;
+	fz_try(ctx)
+	{
+		pdf_run_stream(csi, rdb, file, &buf->base);
+	}
+	fz_catch(ctx)
+	{
+		fz_warn(ctx, "Content stream parsing error - rendering truncated");
+	}
+	csi->in_text = save_in_text;
+	fz_free(ctx, buf);
+}
+
+static void
+pdf_run_contents_object(pdf_csi *csi, pdf_obj *rdb, pdf_obj *contents)
+{
+	fz_context *ctx = csi->dev->ctx;
+	fz_stream *file = NULL;
 
 	if (contents == NULL)
 		return;
-	// SumatraPDF: apparently it's possible to get cap == 0 && len != 0
-	//             (most likely due to an integer overflow)
-	if (!contents->data)
-		return;
 
+	file = pdf_open_contents_stream(csi->xref, contents);
 	fz_try(ctx)
 	{
-		buf = fz_malloc(ctx, sizeof(*buf)); /* we must be re-entrant for type3 fonts */
-		buf->base.size = PDF_LEXBUF_LARGE;
-		file = fz_open_buffer(ctx, contents);
-		save_in_text = csi->in_text;
-		csi->in_text = 0;
-		fz_try(ctx)
-		{
-			pdf_run_stream(csi, rdb, file, &buf->base);
-		}
-		fz_catch(ctx)
-		{
-			fz_warn(ctx, "Content stream parsing error - rendering truncated");
-		}
-		csi->in_text = save_in_text;
+		pdf_run_contents_stream(csi, rdb, file);
 	}
 	fz_always(ctx)
 	{
 		fz_close(file);
-		fz_free(ctx, buf);
 	}
 	fz_catch(ctx)
 	{
-		fz_throw(ctx, "cannot parse context stream");
+		fz_rethrow(ctx);
+	}
+}
+
+static void
+pdf_run_contents_buffer(pdf_csi *csi, pdf_obj *rdb, fz_buffer *contents)
+{
+	fz_context *ctx = csi->dev->ctx;
+	fz_stream *file = NULL;
+
+	if (contents == NULL)
+		return;
+
+	file = fz_open_buffer(ctx, contents);
+	fz_try(ctx)
+	{
+		pdf_run_contents_stream(csi, rdb, file);
+	}
+	fz_always(ctx)
+	{
+		fz_close(file);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
 	}
 }
 
@@ -2743,14 +2778,16 @@ pdf_run_page_with_usage(pdf_document *xref, pdf_page *page, fz_device *dev, fz_m
 	csi = pdf_new_csi(xref, dev, ctm, event, cookie, NULL);
 	fz_try(ctx)
 	{
-		pdf_run_buffer(csi, page->resources, page->contents);
+		pdf_run_contents_object(csi, page->resources, page->contents);
+	}
+	fz_always(ctx)
+	{
+		pdf_free_csi(csi);
 	}
 	fz_catch(ctx)
 	{
-		pdf_free_csi(csi);
 		fz_throw(ctx, "cannot parse page content stream");
 	}
-	pdf_free_csi(csi);
 
 	if (cookie && cookie->progress_max != -1)
 	{
@@ -2816,7 +2853,7 @@ pdf_run_glyph(pdf_document *xref, pdf_obj *resources, fz_buffer *contents, fz_de
 
 	fz_try(ctx)
 	{
-		pdf_run_buffer(csi, resources, contents);
+		pdf_run_contents_buffer(csi, resources, contents);
 	}
 	fz_catch(ctx)
 	{

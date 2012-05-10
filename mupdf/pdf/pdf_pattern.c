@@ -21,7 +21,7 @@ pdf_free_pattern_imp(fz_context *ctx, fz_storable *pat_)
 	if (pat->resources)
 		pdf_drop_obj(pat->resources);
 	if (pat->contents)
-		fz_drop_buffer(ctx, pat->contents);
+		pdf_drop_obj(pat->contents);
 	fz_free(ctx, pat);
 }
 
@@ -30,7 +30,7 @@ pdf_pattern_size(pdf_pattern *pat)
 {
 	if (pat == NULL)
 		return 0;
-	return sizeof(*pat) + (pat->contents ? pat->contents->cap : 0);
+	return sizeof(*pat);
 }
 
 pdf_pattern *
@@ -72,7 +72,7 @@ pdf_load_pattern(pdf_document *xref, pdf_obj *dict)
 
 	fz_try(ctx)
 	{
-		pat->contents = pdf_load_stream(xref, pdf_to_num(dict), pdf_to_gen(dict));
+		pat->contents = pdf_keep_obj(dict);
 	}
 	fz_catch(ctx)
 	{

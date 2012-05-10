@@ -501,21 +501,19 @@ pdf_parse_ind_obj(pdf_document *xref,
 	fz_var(obj);
 
 	tok = pdf_lex(file, buf);
-	/* RJW: cannot parse indirect object (%d %d R)", num, gen */
 	if (tok != PDF_TOK_INT)
-		fz_throw(ctx, "expected object number (%d %d R)", num, gen);
+		fz_throw(ctx, "expected object number");
 	num = buf->i;
 
 	tok = pdf_lex(file, buf);
-	/* RJW: "cannot parse indirect object (%d %d R)", num, gen */
 	if (tok != PDF_TOK_INT)
-		fz_throw(ctx, "expected generation number (%d %d R)", num, gen);
+		fz_throw(ctx, "expected generation number (%d ? obj)", num);
 	gen = buf->i;
 
 	tok = pdf_lex(file, buf);
 	/* RJW: "cannot parse indirect object (%d %d R)", num, gen */
 	if (tok != PDF_TOK_OBJ)
-		fz_throw(ctx, "expected 'obj' keyword (%d %d R)", num, gen);
+		fz_throw(ctx, "expected 'obj' keyword (%d %d ?)", num, gen);
 
 	tok = pdf_lex(file, buf);
 	/* RJW: "cannot parse indirect object (%d %d R)", num, gen */

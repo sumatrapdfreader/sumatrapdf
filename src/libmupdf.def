@@ -187,13 +187,14 @@ EXPORTS
 	fz_resize_buffer
 	fz_grow_buffer
 	fz_trim_buffer
-	fz_lock_stream
 	fz_new_stream
 	fz_keep_stream
 	fz_fill_buffer
 	fz_read_line
 	fz_open_copy
 	fz_open_null
+	fz_open_concat
+	fz_concat_push
 	fz_open_arc4
 	fz_open_aesd
 	fz_open_a85d
@@ -440,6 +441,7 @@ EXPORTS
 	pdf_open_image_stream
 	pdf_open_stream_with_offset
 	pdf_open_image_decomp_stream
+	pdf_open_contents_stream
 	pdf_repair_xref
 	pdf_repair_obj_stms
 	pdf_print_xref

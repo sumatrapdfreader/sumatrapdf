@@ -391,22 +391,9 @@ insert_mapping(fz_context *ctx, pdf_fontlistMS *fl, char *facename, char *path, 
 static void
 safe_read(fz_stream *file, int offset, char *buf, int size)
 {
-	int n = -1;
-	// lock to prevent an assertion in seek_file and read_file
-	fz_lock(file->ctx, FZ_LOCK_FILE);
-	fz_try(file->ctx)
-	{
-		fz_seek(file, offset, 0);
-		n = fz_read(file, buf, size);
-	}
-	fz_always(file->ctx)
-	{
-		fz_unlock(file->ctx, FZ_LOCK_FILE);
-	}
-	fz_catch(file->ctx)
-	{
-		fz_rethrow(file->ctx);
-	}
+	int n;
+	fz_seek(file, offset, 0);
+	n = fz_read(file, buf, size);
 	if (n != size) /* covers n < 0 case */
 		fz_throw(file->ctx, "safe_read: read %d, expected %d", n, size);
 }

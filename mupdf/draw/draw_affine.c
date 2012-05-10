@@ -653,14 +653,18 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 	inv = fz_concat(inv, ctm);
 	inv = fz_invert_matrix(inv);
 
-	fa = inv.a * 65536;
-	fb = inv.b * 65536;
-	fc = inv.c * 65536;
-	fd = inv.d * 65536;
+	fa = (int)(inv.a *= 65536.0f);
+	fb = (int)(inv.b *= 65536.0f);
+	fc = (int)(inv.c *= 65536.0f);
+	fd = (int)(inv.d *= 65536.0f);
+	inv.e *= 65536.0f;
+	inv.f *= 65536.0f;
 
 	/* Calculate initial texture positions. Do a half step to start. */
-	u = (fa * x) + (fc * y) + inv.e * 65536 + ((fa + fc) >> 1);
-	v = (fb * x) + (fd * y) + inv.f * 65536 + ((fb + fd) >> 1);
+	/* Bug 693021: Keep calculation in float for as long as possible to
+	 * avoid overflow. */
+	u = (int)((inv.a * x) + (inv.c * y) + inv.e + ((inv.a + inv.c) * .5f));
+	v = (int)((inv.b * x) + (inv.d * y) + inv.f + ((inv.b + inv.d) * .5f));
 
 	/* RJW: The following is voodoo. No idea why it works, but it gives
 	 * the best match between scaled/unscaled/interpolated/non-interpolated

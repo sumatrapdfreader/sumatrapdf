@@ -14,6 +14,7 @@ struct null_filter
 {
 	fz_stream *chain;
 	int remain;
+	int pos;
 };
 
 static int
@@ -21,8 +22,12 @@ read_null(fz_stream *stm, unsigned char *buf, int len)
 {
 	struct null_filter *state = stm->state;
 	int amount = MIN(len, state->remain);
-	int n = fz_read(state->chain, buf, amount);
+	int n;
+
+	fz_seek(state->chain, state->pos, 0);
+	n = fz_read(state->chain, buf, amount);
 	state->remain -= n;
+	state->pos += n;
 	return n;
 }
 
@@ -36,7 +41,7 @@ close_null(fz_context *ctx, void *state_)
 }
 
 fz_stream *
-fz_open_null(fz_stream *chain, int len)
+fz_open_null(fz_stream *chain, int len, int offset)
 {
 	struct null_filter *state;
 	fz_context *ctx = chain->ctx;
@@ -46,6 +51,7 @@ fz_open_null(fz_stream *chain, int len)
 		state = fz_malloc_struct(ctx, struct null_filter);
 		state->chain = chain;
 		state->remain = len;
+		state->pos = offset;
 	}
 	fz_catch(ctx)
 	{
@@ -54,6 +60,113 @@ fz_open_null(fz_stream *chain, int len)
 	}
 
 	return fz_new_stream(ctx, state, read_null, close_null);
+}
+
+/* Concat filter concatenates several streams into one */
+
+struct concat_filter
+{
+	int max;
+	int count;
+	int current;
+	int pad; /* 1 if we should add whitespace padding between streams */
+	int ws; /* 1 if we should send a whitespace padding byte next */
+	fz_stream *chain[1];
+};
+
+static int
+read_concat(fz_stream *stm, unsigned char *buf, int len)
+{
+	struct concat_filter *state = (struct concat_filter *)stm->state;
+	int n;
+	int read = 0;
+
+	if (len <= 0)
+		return 0;
+
+	while (state->current != state->count && len > 0)
+	{
+		/* If we need to send a whitespace char, do that */
+		if (state->ws)
+		{
+			*buf++ = 32;
+			read++;
+			len--;
+			state->ws = 0;
+			continue;
+		}
+		/* Otherwise, read as much data as will fit in the buffer */
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1239 */
+		fz_try(stm->ctx)
+		{
+		n = fz_read(state->chain[state->current], buf, len);
+		}
+		fz_catch(stm->ctx)
+		{
+			fz_warn(stm->ctx, "read error; treating as end of file for part");
+			n = 0;
+		}
+		read += n;
+		buf += n;
+		len -= n;
+		/* If we didn't read any, then we must have hit the end of
+		 * our buffer space. Move to the next stream, and remember to
+		 * pad. */
+		if (n == 0)
+		{
+			fz_close(state->chain[state->current]);
+			state->current++;
+			state->ws = state->pad;
+		}
+	}
+
+	return read;
+}
+
+static void
+close_concat(fz_context *ctx, void *state_)
+{
+	struct concat_filter *state = (struct concat_filter *)state_;
+	int i;
+
+	for (i = state->current; i < state->count; i++)
+	{
+		fz_close(state->chain[i]);
+	}
+	fz_free(ctx, state);
+}
+
+fz_stream *
+fz_open_concat(fz_context *ctx, int len, int pad)
+{
+	struct concat_filter *state;
+
+	fz_try(ctx)
+	{
+		state = fz_calloc(ctx, 1, sizeof(struct concat_filter) + (len-1)*sizeof(fz_stream *));
+		state->max = len;
+		state->count = 0;
+		state->current = 0;
+		state->pad = pad;
+		state->ws = 0; /* We never send padding byte at the start */
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return fz_new_stream(ctx, state, read_concat, close_concat);
+}
+
+void
+fz_concat_push(fz_stream *concat, fz_stream *chain)
+{
+	struct concat_filter *state = (struct concat_filter *)concat->state;
+
+	if (state->count == state->max)
+		fz_throw(concat->ctx, "Concat filter size exceeded");
+
+	state->chain[state->count++] = chain;
 }
 
 /* ASCII Hex Decode */

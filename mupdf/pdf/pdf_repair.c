@@ -195,6 +195,7 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 	}
 }
 
+/* Entered with file locked, remains locked throughout. */
 void
 pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 {
@@ -403,19 +404,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 			/* corrected stream length */
 			if (list[i].stm_len >= 0)
 			{
-				fz_unlock(ctx, FZ_LOCK_FILE);
-				fz_try(ctx)
-				{
-					dict = pdf_load_object(xref, list[i].num, list[i].gen);
-				}
-				fz_always(ctx)
-				{
-					fz_lock(ctx, FZ_LOCK_FILE);
-				}
-				fz_catch(ctx)
-				{
-					fz_rethrow(ctx);
-				}
+				dict = pdf_load_object(xref, list[i].num, list[i].gen);
 				/* RJW: "cannot load stream object (%d %d R)", list[i].num, list[i].gen */
 
 				length = pdf_new_int(ctx, list[i].stm_len);

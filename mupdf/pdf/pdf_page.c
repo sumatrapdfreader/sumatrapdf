@@ -282,79 +282,6 @@ found:
 	return useBM;
 }
 
-/* we need to combine all sub-streams into one for the content stream interpreter */
-
-static fz_buffer *
-pdf_load_page_contents_array(pdf_document *xref, pdf_obj *list)
-{
-	fz_buffer *big;
-	fz_buffer *one;
-	int i, n;
-	fz_context *ctx = xref->ctx;
-
-	big = fz_new_buffer(ctx, 32 * 1024);
-
-	n = pdf_array_len(list);
-	fz_var(i); /* Workaround Mac compiler bug */
-	for (i = 0; i < n; i++)
-	{
-		pdf_obj *stm = pdf_array_get(list, i);
-		fz_try(ctx)
-		{
-			one = pdf_load_stream(xref, pdf_to_num(stm), pdf_to_gen(stm));
-		}
-		fz_catch(ctx)
-		{
-			fz_warn(ctx, "cannot load content stream part %d/%d", i + 1, n);
-			continue;
-		}
-
-		/* SumatraPDF: prevent an integer overflow */
-		if (big->len + one->len < 0)
-		{
-			fz_drop_buffer(ctx, one);
-			fz_warn(ctx, "ignoring part %d/%d of huge content stream", i + 1, n);
-			continue;
-		}
-		if (big->len + one->len + 1 > big->cap)
-			fz_resize_buffer(ctx, big, big->len + one->len + 1);
-		memcpy(big->data + big->len, one->data, one->len);
-		big->data[big->len + one->len] = ' ';
-		big->len += one->len + 1;
-
-		fz_drop_buffer(ctx, one);
-	}
-
-	if (n > 0 && big->len == 0)
-	{
-		fz_drop_buffer(ctx, big);
-		fz_throw(ctx, "cannot load content stream");
-	}
-	fz_trim_buffer(ctx, big);
-
-	return big;
-}
-
-static fz_buffer *
-pdf_load_page_contents(pdf_document *xref, pdf_obj *obj)
-{
-	fz_context *ctx = xref->ctx;
-
-	if (pdf_is_array(obj))
-	{
-		return pdf_load_page_contents_array(xref, obj);
-		/* RJW: "cannot load content stream array" */
-	}
-	else if (pdf_is_stream(xref, pdf_to_num(obj), pdf_to_gen(obj)))
-	{
-		return pdf_load_stream(xref, pdf_to_num(obj), pdf_to_gen(obj));
-		/* RJW: "cannot load content stream (%d 0 R)", pdf_to_num(obj) */
-	}
-
-	fz_warn(ctx, "page contents missing, leaving page blank");
-	return fz_new_buffer(ctx, 0);
-}
-
 pdf_page *
 pdf_load_page(pdf_document *xref, int number)
 {
@@ -432,7 +359,7 @@ pdf_load_page(pdf_document *xref, int number)
 	obj = pdf_dict_gets(pageobj, "Contents");
 	fz_try(ctx)
 	{
-		page->contents = pdf_load_page_contents(xref, obj);
+		page->contents = pdf_keep_obj(obj);
 
 		if (pdf_resources_use_blending(ctx, page->resources))
 			page->transparency = 1;
@@ -472,7 +399,7 @@ pdf_free_page(pdf_document *xref, pdf_page *page)
 	if (page->resources)
 		pdf_drop_obj(page->resources);
 	if (page->contents)
-		fz_drop_buffer(xref->ctx, page->contents);
+		pdf_drop_obj(page->contents);
 	if (page->links)
 		fz_drop_link(xref->ctx, page->links);
 	if (page->annots)

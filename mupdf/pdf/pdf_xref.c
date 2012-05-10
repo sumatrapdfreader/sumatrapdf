@@ -306,8 +306,7 @@ pdf_read_new_xref_section(pdf_document *xref, fz_stream *stm, int i0, int i1, in
 	}
 }
 
-/* Entered with file locked. Drops the lock in the middle, but then picks
- * it up again before exiting. */
+/* Entered with file locked, remains locked throughout. */
 static pdf_obj *
 pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 {
@@ -334,7 +333,6 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 	fz_try(ctx)
 	{
-		fz_unlock(ctx, FZ_LOCK_FILE);
 		obj = pdf_dict_gets(trailer, "Size");
 		if (!obj)
 			fz_throw(ctx, "xref stream missing Size entry (%d %d R)", num, gen);
@@ -382,11 +380,8 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 	{
 		pdf_drop_obj(trailer);
 		pdf_drop_obj(index);
-		/* SumatraPDF: prevent lock inconsistency */
-		fz_lock(ctx, FZ_LOCK_FILE);
 		fz_rethrow(ctx);
 	}
-	fz_lock(ctx, FZ_LOCK_FILE);
 
 	return trailer;
 }
@@ -439,22 +434,9 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 		{
 			trailer = pdf_read_xref(xref, ofs, buf);
 
-			/* Unlock file in case XRefStm or Prev are indirect. */
-			fz_unlock(ctx, FZ_LOCK_FILE);
-			fz_try(ctx)
-			{
-				/* FIXME: do we overwrite free entries properly? */
-				xrefstmofs = pdf_to_int(pdf_dict_gets(trailer, "XRefStm"));
-				prevofs = pdf_to_int(pdf_dict_gets(trailer, "Prev"));
-			}
-			fz_always(ctx)
-			{
-				fz_lock(ctx, FZ_LOCK_FILE);
-			}
-			fz_catch(ctx)
-			{
-				fz_rethrow(ctx);
-			}
+			/* FIXME: do we overwrite free entries properly? */
+			xrefstmofs = pdf_to_int(pdf_dict_gets(trailer, "XRefStm"));
+			prevofs = pdf_to_int(pdf_dict_gets(trailer, "Prev"));
 
 			/* We only recurse if we have both xrefstm and prev.
 			 * Hopefully this happens infrequently. */
@@ -479,7 +461,7 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 /*
  * load xref tables from pdf
  *
- * File locked on entry and exit; lock may be dropped in the middle.
+ * File locked on entry, throughout and on exit.
  */
 
 static void
@@ -495,22 +477,9 @@ pdf_load_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 	pdf_read_trailer(xref, buf);
 
-	/* Unlock (and relock) in case Size is indirect. */
-	fz_unlock(ctx, FZ_LOCK_FILE);
-	fz_try(ctx)
-	{
-		size = pdf_to_int(pdf_dict_gets(xref->trailer, "Size"));
-		if (!size)
-			fz_throw(ctx, "trailer missing Size entry");
-	}
-	fz_always(ctx)
-	{
-		fz_lock(ctx, FZ_LOCK_FILE);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
-	}
+	size = pdf_to_int(pdf_dict_gets(xref->trailer, "Size"));
+	if (!size)
+		fz_throw(ctx, "trailer missing Size entry");
 
 	pdf_resize_xref(xref, size);
 
@@ -715,12 +684,10 @@ pdf_open_document_with_stream(fz_stream *file)
 	pdf_obj *obj;
 	pdf_obj *nobj = NULL;
 	int i, repaired = 0;
-	int locked;
 	fz_context *ctx = file->ctx;
 
 	fz_var(dict);
 	fz_var(nobj);
-	fz_var(locked);
 
 	xref = fz_malloc_struct(ctx, pdf_document);
 	pdf_init_document(xref);
@@ -728,9 +695,6 @@ pdf_open_document_with_stream(fz_stream *file)
 
 	xref->file = fz_keep_stream(file);
 	xref->ctx = ctx;
-
-	fz_lock(ctx, FZ_LOCK_FILE);
-	locked = 1;
 
 	fz_try(ctx)
 	{
@@ -759,9 +723,6 @@ pdf_open_document_with_stream(fz_stream *file)
 
 		if (repaired)
 			pdf_repair_xref(xref, &xref->lexbuf.base);
-
-		fz_unlock(ctx, FZ_LOCK_FILE);
-		locked = 0;
 
 		encrypt = pdf_dict_gets(xref->trailer, "Encrypt");
 		id = pdf_dict_gets(xref->trailer, "ID");
@@ -820,11 +781,6 @@ pdf_open_document_with_stream(fz_stream *file)
 				dict = NULL;
 			}
 		}
-	}
-	fz_always(ctx)
-	{
-		if (locked)
-			fz_unlock(ctx, FZ_LOCK_FILE);
 	}
 	fz_catch(ctx)
 	{
@@ -1026,7 +982,6 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 	}
 	else if (x->type == 'n')
 	{
-		fz_lock(ctx, FZ_LOCK_FILE);
 		fz_seek(xref->file, x->ofs, 0);
 
 		fz_try(ctx)
@@ -1036,7 +991,6 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 		}
 		fz_catch(ctx)
 		{
-			fz_unlock(ctx, FZ_LOCK_FILE);
 			fz_throw(ctx, "cannot parse object (%d %d R)", num, gen);
 		}
 
@@ -1044,13 +998,11 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 		{
 			pdf_drop_obj(x->obj);
 			x->obj = NULL;
-			fz_unlock(ctx, FZ_LOCK_FILE);
 			fz_throw(ctx, "found object (%d %d R) instead of (%d %d R)", rnum, rgen, num, gen);
 		}
 
 		if (xref->crypt)
 			pdf_crypt_obj(ctx, xref->crypt, x->obj, num, gen);
-		fz_unlock(ctx, FZ_LOCK_FILE);
 	}
 	else if (x->type == 'o')
 	{

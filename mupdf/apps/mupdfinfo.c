@@ -154,7 +154,7 @@ static void
 infousage(void)
 {
 	fprintf(stderr,
-		"usage: pdfinfo [options] [file.pdf ... ]\n"
+		"usage: mupdfinfo [options] [file.pdf ... ]\n"
 		"\t-d -\tpassword for decryption\n"
 		"\t-f\tlist fonts\n"
 		"\t-i\tlist images\n"

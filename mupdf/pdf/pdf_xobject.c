@@ -23,7 +23,8 @@ pdf_free_xobject_imp(fz_context *ctx, fz_storable *xobj_)
 	if (xobj->resources)
 		pdf_drop_obj(xobj->resources);
 	if (xobj->contents)
-		fz_drop_buffer(ctx, xobj->contents);
+		//fz_drop_buffer(ctx, xobj->contents);
+		pdf_drop_obj(xobj->contents);
 	pdf_drop_obj(xobj->me);
 	fz_free(ctx, xobj);
 }
@@ -33,7 +34,7 @@ pdf_xobject_size(pdf_xobject *xobj)
 {
 	if (xobj == NULL)
 		return 0;
-	return sizeof(*xobj) + (xobj->colorspace ? xobj->colorspace->size : 0) + (xobj->contents ? xobj->contents->len : 0);
+	return sizeof(*xobj) + (xobj->colorspace ? xobj->colorspace->size : 0);
 }
 
 pdf_xobject *
@@ -98,7 +99,7 @@ pdf_load_xobject(pdf_document *xref, pdf_obj *dict)
 
 	fz_try(ctx)
 	{
-		form->contents = pdf_load_stream(xref, pdf_to_num(dict), pdf_to_gen(dict));
+		form->contents = pdf_keep_obj(dict);
 	}
 	fz_catch(ctx)
 	{

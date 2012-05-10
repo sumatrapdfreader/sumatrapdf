@@ -145,8 +145,8 @@ pdf_new_indirect(fz_context *ctx, int num, int gen, void *xref)
 pdf_obj *
 pdf_keep_obj(pdf_obj *obj)
 {
-	assert(obj);
-	obj->refs ++;
+	if (obj)
+		obj->refs ++;
 	return obj;
 }
 
@@ -159,7 +159,6 @@ int pdf_is_indirect(pdf_obj *obj)
 	do { \
 		if (obj && obj->kind == PDF_INDIRECT) \
 		{\
-			fz_assert_lock_not_held(obj->ctx, FZ_LOCK_FILE); \
 			obj = pdf_resolve_indirect(obj); \
 		} \
 	} while (0)

@@ -2,10 +2,9 @@
 #include "mupdf-internal.h"
 
 static void
-pdf_run_glyph_func(void *doc, void *rdb_, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
+pdf_run_glyph_func(void *doc, void *rdb, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
 {
-	pdf_obj *rdb = (pdf_obj *)rdb_;
-	pdf_run_glyph(doc, rdb, contents, dev, ctm, gstate);
+	pdf_run_glyph(doc, (pdf_obj *)rdb, contents, dev, ctm, gstate);
 }
 
 static void

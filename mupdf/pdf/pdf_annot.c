@@ -435,8 +435,9 @@ pdf_create_annot(fz_context *ctx, fz_rect rect, pdf_obj *base_obj, fz_buffer *co
 	form->bbox.y1 = ((rotate % 180) != 90) ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
 	form->transparency = transparency;
 	form->isolated = !transparency;
-	form->contents = content;
 	form->resources = resources;
+	form->contents = pdf_new_string(ctx, content->data, content->len);
+	fz_drop_buffer(ctx, content);
 
 	fz_try(ctx)
 	{
@@ -908,31 +909,44 @@ pdf_get_ap_stream(pdf_document *xref, pdf_obj *obj)
 static void
 pdf_prepend_ap_background(fz_buffer *content, pdf_document *xref, pdf_obj *obj)
 {
-	pdf_xobject *form;
+	pdf_xobject *form = NULL;
+	fz_stream *ap_stm = NULL;
+	fz_buffer *ap_contents = NULL;
 	int i;
+
 	pdf_obj *ap = pdf_get_ap_stream(xref, obj);
 	if (!ap)
 		return;
+
+	fz_var(form);
+	fz_var(ap_stm);
+	fz_var(ap_contents);
 	fz_try(xref->ctx)
 	{
 		form = pdf_load_xobject(xref, ap);
+		ap_stm = pdf_open_contents_stream(xref, form->contents);
+		ap_contents = fz_read_all(ap_stm, 0);
+
+		for (i = 0; i < ap_contents->len - 3 && memcmp(ap_contents->data + i, "/Tx", 3) != 0; i++);
+		if (i == ap_contents->len - 3)
+			i = ap_contents->len;
+		if (content->len + i < 0)
+			i = 0;
+		if (content->cap < content->len + i)
+			fz_resize_buffer(xref->ctx, content, content->len + i);
+		memcpy(content->data + content->len, ap_contents->data, i);
+		content->len += i;
+	}
+	fz_always(xref->ctx)
+	{
+		fz_drop_buffer(xref->ctx, ap_contents);
+		fz_close(ap_stm);
+		pdf_drop_xobject(xref->ctx, form);
 	}
 	fz_catch(xref->ctx)
 	{
-		return;
+		/* fail silently */;
 	}
-
-	for (i = 0; i < form->contents->len - 3 && memcmp(form->contents->data + i, "/Tx", 3) != 0; i++);
-	if (i == form->contents->len - 3)
-		i = form->contents->len;
-	if (content->len + i < 0)
-		i = 0;
-	if (content->cap < content->len + i)
-		fz_resize_buffer(xref->ctx, content, content->len + i);
-	memcpy(content->data + content->len, form->contents->data, i);
-	content->len += i;
-
-	pdf_drop_xobject(xref->ctx, form);
 }
 
 static void

@@ -227,7 +227,10 @@ static void pdfapp_panview(pdfapp_t *app, int newx, int newy)
 
 static void pdfapp_loadpage(pdfapp_t *app)
 {
-	fz_device *mdev;
+	fz_device *mdev = NULL;
+	int errored = 0;
+
+	fz_var(mdev);
 
 	if (app->page_list)
 		fz_free_display_list(app->ctx, app->page_list);
@@ -245,23 +248,48 @@ static void pdfapp_loadpage(pdfapp_t *app)
 	app->page_sheet = NULL;
 	app->page_links = NULL;
 	app->page = NULL;
+	app->page_bbox.x0 = 0;
+	app->page_bbox.y0 = 0;
+	app->page_bbox.x1 = 100;
+	app->page_bbox.y1 = 100;
 
 	fz_try(app->ctx)
 	{
 		app->page = fz_load_page(app->doc, app->pageno - 1);
 
+		app->page_bbox = fz_bound_page(app->doc, app->page);
+	}
+	fz_catch(app->ctx)
+	{
+		pdfapp_warn(app, "Cannot load page");
+		return;
+	}
+
+	fz_try(app->ctx)
+	{
 		/* Create display list */
 		app->page_list = fz_new_display_list(app->ctx);
 		mdev = fz_new_list_device(app->ctx, app->page_list);
 		fz_run_page(app->doc, app->page, mdev, fz_identity, NULL);
+	}
+	fz_always(app->ctx)
+	{
 		fz_free_device(mdev);
+	}
+	fz_catch(app->ctx)
+	{
+		pdfapp_warn(app, "Cannot load page");
+		errored = 1;
+	}
 
-		app->page_bbox = fz_bound_page(app->doc, app->page);
+	fz_try(app->ctx)
+	{
 		app->page_links = fz_load_links(app->doc, app->page);
 	}
 	fz_catch(app->ctx)
 	{
-		pdfapp_error(app, "cannot load page");
+		if (!errored)
+			pdfapp_warn(app, "Cannot load page");
 	}
 }
 
