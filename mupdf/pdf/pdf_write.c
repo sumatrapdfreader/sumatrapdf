@@ -13,6 +13,8 @@ struct pdf_write_options_s
 	int *ofslist;
 	int *genlist;
 	int *renumbermap;
+	int *revrenumbermap;
+	int *revgenlist;
 };
 
 /*
@@ -91,7 +93,7 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 		for (other = 1; other < num; other++)
 		{
 			pdf_obj *a, *b;
-			int match;
+			int differ, newnum;
 
 			if (num == other || !opts->uselist[num] || !opts->uselist[other])
 				continue;
@@ -104,14 +106,14 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 			 */
 			fz_try(ctx)
 			{
-				match = (pdf_is_stream(xref, num, 0) || pdf_is_stream(xref, other, 0));
+				differ = (pdf_is_stream(xref, num, 0) || pdf_is_stream(xref, other, 0));
 			}
 			fz_catch(ctx)
 			{
 				/* Assume different */
-				match = 0;
+				differ = 1;
 			}
-			if (match)
+			if (differ)
 				continue;
 
 			a = xref->table[num].obj;
@@ -124,8 +126,10 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 				continue;
 
 			/* Keep the lowest numbered object */
-			opts->renumbermap[num] = MIN(num, other);
-			opts->renumbermap[other] = MIN(num, other);
+			newnum = MIN(num, other);
+			opts->renumbermap[num] = newnum;
+			opts->renumbermap[other] = newnum;
+			opts->revrenumbermap[newnum] = num; /* Either will do */
 			opts->uselist[MAX(num, other)] = 0;
 
 			/* One duplicate was found, do not look for another */
@@ -136,6 +140,8 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 
 /*
  * Renumber objects sequentially so the xref is more compact
+ *
+ * This code assumes that any opts->renumbermap[n] <= n for all n.
  */
 
 static void compactxref(pdf_document *xref, pdf_write_options *opts)
@@ -152,10 +158,25 @@ static void compactxref(pdf_document *xref, pdf_write_options *opts)
 	newnum = 1;
 	for (num = 1; num < xref->len; num++)
 	{
-		if (opts->uselist[num] && opts->renumbermap[num] == num)
+		/* If it's not used, map it to zero */
+		if (!opts->uselist[num])
+		{
+			opts->renumbermap[num] = 0;
+		}
+		/* If it's not moved, compact it. */
+		else if (opts->renumbermap[num] == num)
+		{
+			opts->revrenumbermap[newnum] = opts->revrenumbermap[num];
+			opts->revgenlist[newnum] = opts->revgenlist[num];
 			opts->renumbermap[num] = newnum++;
-		else if (opts->renumbermap[num] != num)
+		}
+		/* Otherwise it's used, and moved. We know that it must have
+		 * moved down, so the place it's moved to will be in the right
+		 * place already. */
+		else
+		{
 			opts->renumbermap[num] = opts->renumbermap[opts->renumbermap[num]];
+		}
 	}
 }
 
@@ -384,8 +405,10 @@ static void copystream(pdf_document *xref, pdf_write_options *opts, pdf_obj *obj
 	fz_buffer *buf, *tmp;
 	pdf_obj *newlen;
 	fz_context *ctx = xref->ctx;
+	int orig_num = opts->revrenumbermap[num];
+	int orig_gen = opts->revgenlist[num];
 
-	buf = pdf_load_raw_stream(xref, num, gen);
+	buf = pdf_load_raw_renumbered_stream(xref, num, gen, orig_num, orig_gen);
 
 	if (opts->doascii && isbinarystream(buf))
 	{
@@ -414,8 +437,10 @@ static void expandstream(pdf_document *xref, pdf_write_options *opts, pdf_obj *o
 	fz_buffer *buf, *tmp;
 	pdf_obj *newlen;
 	fz_context *ctx = xref->ctx;
+	int orig_num = opts->revrenumbermap[num];
+	int orig_gen = opts->revgenlist[num];
 
-	buf = pdf_load_stream(xref, num, gen);
+	buf = pdf_load_renumbered_stream(xref, num, gen, orig_num, orig_gen);
 
 	pdf_dict_dels(obj, "Filter");
 	pdf_dict_dels(obj, "DecodeParms");
@@ -580,6 +605,8 @@ void pdf_write(pdf_document *xref, char *filename, fz_write_options *fz_opts)
 		opts.ofslist = fz_malloc_array(ctx, xref->len + 1, sizeof(int));
 		opts.genlist = fz_malloc_array(ctx, xref->len + 1, sizeof(int));
 		opts.renumbermap = fz_malloc_array(ctx, xref->len + 1, sizeof(int));
+		opts.revrenumbermap = fz_malloc_array(ctx, xref->len + 1, sizeof(int));
+		opts.revgenlist = fz_malloc_array(ctx, xref->len + 1, sizeof(int));
 
 		fprintf(opts.out, "%%PDF-%d.%d\n", xref->version / 10, xref->version % 10);
 		fprintf(opts.out, "%%\316\274\341\277\246\n\n");
@@ -589,6 +616,8 @@ void pdf_write(pdf_document *xref, char *filename, fz_write_options *fz_opts)
 			opts.uselist[num] = 0;
 			opts.ofslist[num] = 0;
 			opts.renumbermap[num] = num;
+			opts.revrenumbermap[num] = num;
+			opts.revgenlist[num] = xref->table[num].gen;
 		}
 
 		/* Make sure any objects hidden in compressed streams have been loaded */
@@ -607,10 +636,7 @@ void pdf_write(pdf_document *xref, char *filename, fz_write_options *fz_opts)
 			compactxref(xref, &opts);
 
 		/* Make renumbering affect all indirect references and update xref */
-		/* Do not renumber objects if encryption is in use, as the object
-		 * numbers are baked into the streams/strings, and we can't currently
-		 * cope with moving them. See bug 692627. */
-		if (opts.dogarbage >= 2 && !xref->crypt)
+		if (opts.dogarbage >= 2)
 			renumberobjs(xref, &opts);
 
 		for (num = 0; num < xref->len; num++)
@@ -621,6 +647,10 @@ void pdf_write(pdf_document *xref, char *filename, fz_write_options *fz_opts)
 				opts.genlist[num] = xref->table[num].gen;
 			if (xref->table[num].type == 'o')
 				opts.genlist[num] = 0;
+
+			/* SumatraPDF: reset generation numbers (Adobe Reader checks them) */
+			if (opts.dogarbage >= 2)
+				opts.genlist[num] = num == 0 && xref->table[num].type == 'f' ? 65535 : 0;
 
 			if (opts.dogarbage && !opts.uselist[num])
 				continue;
@@ -653,6 +683,8 @@ void pdf_write(pdf_document *xref, char *filename, fz_write_options *fz_opts)
 		fz_free(ctx, opts.ofslist);
 		fz_free(ctx, opts.genlist);
 		fz_free(ctx, opts.renumbermap);
+		fz_free(ctx, opts.revrenumbermap);
+		fz_free(ctx, opts.revgenlist);
 		fclose(opts.out);
 	}
 	fz_catch(ctx)

@@ -882,12 +882,14 @@ showinfo(char *filename, int show, char *pagelist)
 	int page, spage, epage;
 	char *spec, *dash;
 	int allpages;
+	int pagecount;
 
 	if (!xref)
 		infousage();
 
 	allpages = !strcmp(pagelist, "1-");
 
+	pagecount = pdf_count_pages(xref);
 	spec = fz_strsep(&pagelist, ",");
 	while (spec)
 	{
@@ -909,26 +911,19 @@ showinfo(char *filename, int show, char *pagelist)
 		if (spage > epage)
 			page = spage, spage = epage, epage = page;
 
-		if (spage < 1)
-			spage = 1;
-		if (epage > pagecount)
-			epage = pagecount;
-		if (spage > pagecount)
-			spage = pagecount;
+		spage = CLAMP(spage, 1, pagecount);
+		epage = CLAMP(epage, 1, pagecount);
 
 		if (allpages)
 			printf("Retrieving info from pages %d-%d...\n", spage, epage);
-		if (spage >= 1)
+		for (page = spage; page <= epage; page++)
 		{
-			for (page = spage; page <= epage; page++)
+			gatherpageinfo(page);
+			if (!allpages)
 			{
-				gatherpageinfo(page);
-				if (!allpages)
-				{
-					printf("Page %d:\n", page);
-					printinfo(filename, show, page);
-					printf("\n");
-				}
+				printf("Page %d:\n", page);
+				printinfo(filename, show, page);
+				printf("\n");
 			}
 		}
 

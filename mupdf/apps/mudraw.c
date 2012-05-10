@@ -549,17 +549,17 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 
 static void drawrange(fz_context *ctx, fz_document *doc, char *range)
 {
-	int page, spage, epage, final;
+	int page, spage, epage, pagecount;
 	char *spec, *dash;
 
-	final = fz_count_pages(doc);
+	pagecount = fz_count_pages(doc);
 	spec = fz_strsep(&range, ",");
 	while (spec)
 	{
 		dash = strchr(spec, '-');
 
 		if (dash == spec)
-			spage = epage = final;
+			spage = epage = pagecount;
 		else
 			spage = epage = atoi(spec);
 
@@ -568,11 +568,11 @@ static void drawrange(fz_context *ctx, fz_document *doc, char *range)
 			if (strlen(dash) > 1)
 				epage = atoi(dash + 1);
 			else
-				epage = final;
+				epage = pagecount;
 		}
 
-		spage = CLAMP(spage, 1, final);
-		epage = CLAMP(epage, 1, final);
+		spage = CLAMP(spage, 1, pagecount);
+		epage = CLAMP(epage, 1, pagecount);
 
 		if (spage < epage)
 			for (page = spage; page <= epage; page++)

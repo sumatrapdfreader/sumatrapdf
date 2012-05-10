@@ -194,11 +194,14 @@ struct pdf_document_s
 void pdf_cache_object(pdf_document *doc, int num, int gen);
 
 fz_stream *pdf_open_inline_stream(pdf_document *doc, pdf_obj *stmobj, int length, fz_stream *chain, pdf_image_params *params);
-fz_buffer *pdf_load_image_stream(pdf_document *doc, int num, int gen, pdf_image_params *params);
-fz_stream *pdf_open_image_stream(pdf_document *doc, int num, int gen, pdf_image_params *params);
+fz_buffer *pdf_load_image_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen, pdf_image_params *params);
+fz_stream *pdf_open_image_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen, pdf_image_params *params);
 fz_stream *pdf_open_stream_with_offset(pdf_document *doc, int num, int gen, pdf_obj *dict, int stm_ofs);
 fz_stream *pdf_open_image_decomp_stream(fz_context *ctx, fz_buffer *, pdf_image_params *params, int *factor);
 fz_stream *pdf_open_contents_stream(pdf_document *xref, pdf_obj *obj);
+fz_buffer *pdf_load_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
+fz_buffer *pdf_load_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
+fz_stream *pdf_open_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
 
 void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);
 void pdf_repair_obj_stms(pdf_document *doc);

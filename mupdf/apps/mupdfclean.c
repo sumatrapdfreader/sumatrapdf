@@ -60,17 +60,18 @@ static void retainpages(int argc, char **argv)
 	/* Retain pages specified */
 	while (argc - fz_optind)
 	{
-		int page, spage, epage;
+		int page, spage, epage, pagecount;
 		char *spec, *dash;
 		char *pagelist = argv[fz_optind];
 
+		pagecount = pdf_count_pages(xref);
 		spec = fz_strsep(&pagelist, ",");
 		while (spec)
 		{
 			dash = strchr(spec, '-');
 
 			if (dash == spec)
-				spage = epage = pdf_count_pages(xref);
+				spage = epage = pagecount;
 			else
 				spage = epage = atoi(spec);
 
@@ -79,16 +80,14 @@ static void retainpages(int argc, char **argv)
 				if (strlen(dash) > 1)
 					epage = atoi(dash + 1);
 				else
-					epage = pdf_count_pages(xref);
+					epage = pagecount;
 			}
 
 			if (spage > epage)
 				page = spage, spage = epage, epage = page;
 
-			if (spage < 1)
-				spage = 1;
-			if (epage > pdf_count_pages(xref))
-				epage = pdf_count_pages(xref);
+			spage = CLAMP(spage, 1, pagecount);
+			epage = CLAMP(epage, 1, pagecount);
 
 			for (page = spage; page <= epage; page++)
 			{

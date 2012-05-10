@@ -434,7 +434,9 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		{
 			/* Just load the compressed image data now and we can
 			 * decode it on demand. */
-			image->buffer = pdf_load_image_stream(xref, pdf_to_num(dict), pdf_to_gen(dict), &image->params);
+			int num = pdf_to_num(dict);
+			int gen = pdf_to_gen(dict);
+			image->buffer = pdf_load_image_stream(xref, num, gen, num, gen, &image->params);
 			break; /* Out of fz_try */
 		}
 

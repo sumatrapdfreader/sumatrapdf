@@ -442,6 +442,9 @@ EXPORTS
 	pdf_open_stream_with_offset
 	pdf_open_image_decomp_stream
 	pdf_open_contents_stream
+	pdf_load_raw_renumbered_stream
+	pdf_load_renumbered_stream
+	pdf_open_raw_renumbered_stream
 	pdf_repair_xref
 	pdf_repair_obj_stms
 	pdf_print_xref
