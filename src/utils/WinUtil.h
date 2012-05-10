@@ -6,6 +6,7 @@
 
 #include <WindowsX.h>
 #include <CommCtrl.h>
+#include <WinSafer.h>
 
 // the following are only defined if _WIN32_WINNT >= 0x0600 and we use 0x0500
 #ifndef USER_DEFAULT_SCREEN_DPI
@@ -160,5 +161,7 @@ void    UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2]);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
 double  GetProcessRunningTime();
 
+HANDLE CreateProcessAtLevel(const TCHAR *exe, const TCHAR *args=NULL, DWORD level=SAFER_LEVELID_NORMALUSER);
+bool RunAsUser(WCHAR *cmd);
 
 #endif
