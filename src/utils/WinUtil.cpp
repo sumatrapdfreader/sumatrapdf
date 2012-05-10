@@ -202,20 +202,30 @@ TCHAR *ReadIniString(const TCHAR *iniPath, const TCHAR *section, const TCHAR *ke
 
 /* enable "NX" execution prevention for XP, 2003
  * cf. http://www.uninformed.org/?v=2&a=4 */
-typedef HRESULT (WINAPI *_NtSetInformationProcess)(
-   HANDLE  ProcessHandle,
-   UINT    ProcessInformationClass,
-   PVOID   ProcessInformation,
-   ULONG   ProcessInformationLength
-   );
+typedef HRESULT (WINAPI *_NtSetInformationProcess)(HANDLE ProcessHandle, UINT ProcessInformationClass, PVOID ProcessInformation, ULONG ProcessInformationLength);
 
 #define MEM_EXECUTE_OPTION_DISABLE 0x1
 #define MEM_EXECUTE_OPTION_ENABLE 0x2
 #define MEM_EXECUTE_OPTION_PERMANENT 0x8
 #define MEM_EXECUTE_OPTION_DISABLE_ATL 0x4
 
+typedef BOOL (WINAPI* SetProcessDEPPolicyFunc)(DWORD dwFlags);
+#ifndef PROCESS_DEP_ENABLE
+#define PROCESS_DEP_ENABLE 0x1
+#define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION     0x2
+#endif
+ 
 void EnableDataExecution()
 {
+    // first try the documented SetProcessDEPPolicy
+    SetProcessDEPPolicyFunc spdp;
+    spdp = (SetProcessDEPPolicyFunc) LoadDllFunc(_T("kernel32.dll"), "SetProcessDEPPolicy");
+    if (spdp) {
+        spdp(0);
+        return;
+    }
+
+    // now try undocumented NtSetInformationProcess
     _NtSetInformationProcess ntsip;
     DWORD depMode = MEM_EXECUTE_OPTION_ENABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
 
@@ -226,6 +236,15 @@ void EnableDataExecution()
 
 void DisableDataExecution()
 {
+    // first try the documented SetProcessDEPPolicy
+    SetProcessDEPPolicyFunc spdp;
+    spdp = (SetProcessDEPPolicyFunc) LoadDllFunc(_T("kernel32.dll"), "SetProcessDEPPolicy");
+    if (spdp) {
+        spdp(PROCESS_DEP_ENABLE);
+        return;
+    }
+
+    // now try undocumented NtSetInformationProcess
     _NtSetInformationProcess ntsip;
     DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
 

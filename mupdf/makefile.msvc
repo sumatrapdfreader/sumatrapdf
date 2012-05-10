@@ -104,7 +104,8 @@ CFLAGSOPT = $(CFLAGSB) $(OPTLEVEL) /D "NDEBUG"
 LDFLAGS = $(LDFLAGS) /LTCG
 # /DYNAMICBASE and /NXCOMPAT for better protection against stack overflows
 # http://blogs.msdn.com/vcblog/archive/2009/05/21/dynamicbase-and-nxcompat.aspx
-LDFLAGS = $(LDFLAGS) /NXCOMPAT /DYNAMICBASE /FIXED:NO
+# We don't use /NXCOMPAT because we need to turn it on/off at runtime
+LDFLAGS = $(LDFLAGS) /DYNAMICBASE /FIXED:NO
 !else
 # /MTd  : statically link debug crt (libcmtd.lib)
 CFLAGSB = $(CFLAGSB) /MTd
