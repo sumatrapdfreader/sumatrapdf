@@ -454,32 +454,19 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 
     plogf("sp: NPP_NewStream() end=%d", stream->end);
 
-    // default to asking the browser to create the temporary file for us
+    // if we can create a temporary file ourselfes, we manage the download
+    // process. The reason for that is that NP_ASFILE (where browser manages
+    // file downloading, has been broken in almost every browser at some point
+    // and is not reliable).
+
     *stype = NP_ASFILE;
-
-    data->hFile = NULL;
-
-    // Work around limitations in specific browsers:
-    // * Firefox has bug https://bugzilla.mozilla.org/show_bug.cgi?id=644149
-    //   where it's internal caching doesn't work for large files and is flaky
-    //   for small files. As a workaround, we do file downloading ourselves.
-    //   cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1328
-    //   and http://fofou.appspot.com/sumatrapdf/topic?id=2067366
-    // * Opera disables the cache for private tabs, which we can't easily distinguish
-    // * QupZilla deletes files immediately after download (and doesn't remove them later)
-    //   cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1769
-    const char *userAgent = gNPNFuncs.uagent(instance);
-    if (str::Find(userAgent, "Gecko/") ||
-        str::StartsWith(userAgent, "Opera/") ||
-        str::Find(userAgent, "QupZilla/"))
+    data->hFile = CreateTempFile(data->filepath, dimof(data->filepath));
+    if (data->hFile)
     {
-        data->hFile = CreateTempFile(data->filepath, dimof(data->filepath));
-        if (data->hFile)
-        {
-            plogf("sp: using temporary file: %s", data->filepath);
-            *stype = NP_NORMAL;
-        }
+        plogf("sp: using temporary file: %s", data->filepath);
+        *stype = NP_NORMAL;
     }
+
     data->totalSize = stream->end;
     data->currSize = 0;
     data->progress = stream->end > 0 ? 0.01f : 0;
