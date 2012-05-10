@@ -248,7 +248,7 @@ FITZ_OBJS = \
 	$(OFZ)\image_md5.obj $(OFZ)\image_save.obj $(OFZ)\image_jxr.obj
 
 MUPDF_OBJS = \
-	$(OP)\base_object.obj $(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj $(OP)\pdf_store.obj \
+	$(OP)\pdf_object.obj $(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj $(OP)\pdf_store.obj \
 	$(OP)\pdf_colorspace.obj $(OP)\pdf_crypt.obj $(OP)\pdf_encoding.obj \
 	$(OP)\pdf_font.obj $(OP)\pdf_fontfile.obj $(OP)\pdf_metrics.obj \
 	$(OP)\pdf_function.obj $(OP)\pdf_image.obj $(OP)\pdf_interpret.obj $(OP)\pdf_lex.obj \
@@ -298,28 +298,18 @@ PDFAPP_APP = $(O)\pdfview.exe
 PDFBENCH_OBJS = $(LIBS_OBJS) $(OA)\pdfbench.obj
 PDFBENCH_APP = $(O)\pdfbench.exe
 
-PDFSHOW_OBJS = $(LIBS_OBJS) $(OA)\mupdfshow.obj
-PDFSHOW_APP = $(O)\pdfshow.exe
-
-PDFCLEAN_OBJS = $(LIBS_OBJS) $(OA)\mupdfclean.obj
-PDFCLEAN_APP = $(O)\pdfclean.exe
-
-PDFINFO_OBJS = $(LIBS_OBJS) $(OA)\mupdfinfo.obj
-PDFINFO_APP = $(O)\pdfinfo.exe
-
-PDFEXTRACT_OBJS = $(LIBS_OBJS) $(OA)\mupdfextract.obj
-PDFEXTRACT_APP = $(O)\pdfextract.exe
-
-PDFPOSTER_OBJS = $(LIBS_OBJS) $(OA)\mupdfposter.obj
-PDFPOSTER_APP = $(O)\pdfposter.exe
-
-FONTDUMP_OBJS = $(OP)\fontdump.obj
-FONTDUMP_APP = $(O)\fontdump.exe
+MUBUSY_OBJS = $(LIBS_OBJS) $(OA)\mubusy.obj \
+	$(OA)\mupdfshow.obj $(OA)\mupdfclean.obj $(OA)\mupdfinfo.obj $(OA)\mupdfextract.obj \
+	$(OA)\mupdfposter.obj
+MUBUSY_APP = $(O)\mubusy.exe
 
 MUDRAW_OBJS = $(LIBS_OBJS) $(OA)\mudraw.obj
 MUDRAW_APP = $(O)\mudraw.exe
 
-all: $(O) $(MUDRAW_APP) $(PDFSHOW_APP) $(PDFCLEAN_APP) $(PDFINFO_APP) $(PDFEXTRACT_APP) $(PDFPOSTER_APP) $(PDFAPP_APP) $(PDFBENCH_APP)
+FONTDUMP_OBJS = $(OP)\fontdump.obj
+FONTDUMP_APP = $(O)\fontdump.exe
+
+all: $(O) $(MUDRAW_APP) $(MUBUSY_APP) $(PDFAPP_APP) $(PDFBENCH_APP)
 
 clean: force
 	-rmdir /S /Q $(O)
@@ -349,25 +339,13 @@ $(PDFBENCH_APP): $(PDFBENCH_OBJS)
 $(FONTDUMP_APP): $(FONTDUMP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
-$(PDFSHOW_APP): $(PDFSHOW_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
-$(PDFCLEAN_APP): $(PDFCLEAN_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
-$(PDFINFO_APP): $(PDFINFO_OBJS)
+$(MUBUSY_APP): $(MUBUSY_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(PDFAPP_APP): $(PDFAPP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:WINDOWS
 
-$(PDFEXTRACT_APP): $(PDFEXTRACT_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
 $(MUDRAW_APP): $(MUDRAW_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
-$(PDFPOSTER_APP): $(PDFPOSTER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 # freetype directories

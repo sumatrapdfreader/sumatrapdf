@@ -189,7 +189,7 @@ add_table(fz_context *ctx, pdf_cmap *cmap, int value)
 	}
 	if (cmap->tlen + 1 > cmap->tcap)
 	{
-		int new_cap = cmap->tcap > 1 ? (cmap->tcap * 3) / 2 : 256; 
+		int new_cap = cmap->tcap > 1 ? (cmap->tcap * 3) / 2 : 256;
 		cmap->table = fz_resize_array(ctx, cmap->table, new_cap, sizeof(unsigned short));
 		cmap->tcap = new_cap;
 	}

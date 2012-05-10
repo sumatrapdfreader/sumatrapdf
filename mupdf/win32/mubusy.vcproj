@@ -241,23 +241,23 @@
 			>
 		</File>
 		<File
-			RelativePath="..\apps\mubusy_draw.c"
+			RelativePath="..\apps\mupdfclean.c"
 			>
 		</File>
 		<File
-			RelativePath="..\apps\mubusy_pdfclean.c"
+			RelativePath="..\apps\mupdfextract.c"
 			>
 		</File>
 		<File
-			RelativePath="..\apps\mubusy_pdfextract.c"
+			RelativePath="..\apps\mupdfinfo.c"
 			>
 		</File>
 		<File
-			RelativePath="..\apps\mubusy_pdfinfo.c"
+			RelativePath="..\apps\mupdfposter.c"
 			>
 		</File>
 		<File
-			RelativePath="..\apps\mubusy_pdfshow.c"
+			RelativePath="..\apps\mupdfshow.c"
 			>
 		</File>
 	</Files>

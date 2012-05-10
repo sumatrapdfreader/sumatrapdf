@@ -73,7 +73,6 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/draw/draw_path.c \
 	$(MY_ROOT)/draw/draw_simple_scale.c \
 	$(MY_ROOT)/draw/draw_unpack.c \
-	$(MY_ROOT)/pdf/base_object.c \
 	$(MY_ROOT)/pdf/pdf_annot.c \
 	$(MY_ROOT)/pdf/pdf_cmap.c \
 	$(MY_ROOT)/pdf/pdf_cmap_load.c \
@@ -90,6 +89,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/pdf/pdf_lex.c \
 	$(MY_ROOT)/pdf/pdf_metrics.c \
 	$(MY_ROOT)/pdf/pdf_nametree.c \
+	$(MY_ROOT)/pdf/pdf_object.c \
 	$(MY_ROOT)/pdf/pdf_outline.c \
 	$(MY_ROOT)/pdf/pdf_page.c \
 	$(MY_ROOT)/pdf/pdf_parse.c \

@@ -946,11 +946,7 @@ static int arg_is_page_range(const char *arg)
 	return 1;
 }
 
-#ifdef MUPDF_COMBINED_EXE
 int pdfinfo_main(int argc, char **argv)
-#else
-int main(int argc, char **argv)
-#endif
 {
 	enum { NO_FILE_OPENED, NO_INFO_GATHERED, INFO_SHOWN } state;
 	char *filename = "";

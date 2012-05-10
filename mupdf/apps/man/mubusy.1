@@ -1,0 +1,77 @@
+.TH "MUBUSY" "1" "May 10, 2012"
+.\" Please adjust this date whenever revising the manpage.
+.\" no hyphenation
+.nh
+.\" adjust left
+.ad l
+.SH NAME
+mubusy \- all purpose tool for dealing with PDF files
+.SH SYNOPSIS
+mubusy <sub-command> [options]
+.SH DESCRIPTION
+mubusy is a tool based on MuPDF for dealing with PDF files in various manners.
+There are several sub commands available, as described below.
+.SH CLEAN
+mubusy clean [options] input.pdf [output.pdf] [pages]
+.PP
+The clean command pretty prints and rewrites the syntax of a PDF file.
+It can be used to repair broken files, expand compressed streams, filter
+out a range of pages, etc.
+.PP
+If no output file is specified, it will write the cleaned PDF to "out.pdf"
+in the current directory.
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B \-g
+Garbage collect objects that have no references from other objects.
+Give the option twice to renumber all objects and compact the cross reference table.
+Give it three times to merge and reuse duplicate objects.
+.TP
+.B \-d
+Decompress streams. This will make the output file larger, but provides
+easy access for reading and editing the contents with a text editor.
+.TP
+.B pages
+Comma separated list of page ranges to include.
+.SH EXTRACT
+TODO
+.SH INFO
+TODO
+.SH POSTER
+TODO
+.SH SHOW
+mubusy show [options] file.pdf [object numbers ...]
+.PP
+The show command will print the specified objects and streams to stdout.
+Streams are decoded and non-printable characters are represented
+with a period by default.
+.TP
+.B \-b
+Print streams as binary data and omit the object header.
+.TP
+.B \-e
+Print streams in their original encoded (or compressed) form.
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.PP
+Specify objects by number, or use one of the following special names:
+.TP
+.B 'xref' or 'x'
+Print the cross reference table.
+.TP
+.B 'trailer' or 't'
+Print the trailer dictionary.
+.TP
+.B 'pages' or 'p'
+List the object numbers for every page.
+.TP
+.B 'grep' or 'g'
+Print all the objects in the file in a compact one-line format suitable for piping to grep.
+.SH SEE ALSO
+.BR mupdf (1),
+.BR mudraw (1).
+.SH AUTHOR
+MuPDF is Copyright 2006-2012 Artifex Software, Inc.

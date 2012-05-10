@@ -151,11 +151,7 @@ static void retainpages(int argc, char **argv)
 	}
 }
 
-#ifdef MUPDF_COMBINED_EXE
 int pdfclean_main(int argc, char **argv)
-#else
-int main(int argc, char **argv)
-#endif
 {
 	char *infile;
 	char *outfile = "out.pdf";

@@ -119,11 +119,7 @@ static void decimatepages(pdf_document *xref)
 	pdf_drop_obj(kids);
 }
 
-#ifdef MUPDF_COMBINED_EXE
 int pdfposter_main(int argc, char **argv)
-#else
-int main(int argc, char **argv)
-#endif
 {
 	char *infile;
 	char *outfile = "out.pdf";

@@ -1177,10 +1177,6 @@
 				Name="pdf"
 				>
 				<File
-					RelativePath=".\mupdf\pdf\base_object.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\pdf\data_encodings.h"
 					>
 				</File>
@@ -1266,6 +1262,10 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\pdf\pdf_nametree.c"
+					>
+				</File>
+				<File
+					RelativePath=".\mupdf\pdf\pdf_object.c"
 					>
 				</File>
 				<File
