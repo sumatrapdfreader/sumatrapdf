@@ -456,8 +456,8 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
 
     // if we can create a temporary file ourselfes, we manage the download
     // process. The reason for that is that NP_ASFILE (where browser manages
-    // file downloading, has been broken in almost every browser at some point
-    // and is not reliable).
+    // file downloading) is not reliable and has been broken in almost every
+    // browser at some point
 
     *stype = NP_ASFILE;
     data->hFile = CreateTempFile(data->filepath, dimof(data->filepath));
