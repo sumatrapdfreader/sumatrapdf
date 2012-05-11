@@ -266,6 +266,9 @@ Macasamhlaigh an nóta tráchta
 Copying text was denied (copying as image only)
 Níorbh fhéidir téacs a mhacasamhlú (macasamhlú mar íomhá amháin)
 
+Copyright:
+Cóipcheart:
+
 Could not obtain Printer properties
 Níorbh fhéidir airíonna an chlóire a fháil
 
@@ -335,6 +338,9 @@ Lánscáileán\tCtrl+Shift+L
 Facing
 Dhá Leathanach
 
+Failed to rename the file!
+Theip ar athainmniú an chomhaid!
+
 Failed to save a file
 Theip air comhad a chuir i dtaisce
 
@@ -389,6 +395,12 @@ Oiriúnaigh don leithead & taispeáin leathanaigh go leanúnach
 Fit a Single Page
 Oiriúnaigh leathanach amháin
 
+Fonts:
+Clófhoirne:
+
+Formatting the book... %d pages
+Ag formáidiú an leabhair... %d leathanach
+
 Found text at page %s
 Aimsíodh téacs ag lch a %s
 
@@ -415,6 +427,9 @@ Comhaid íomhánna (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Ag luchtú an comhad %s...
 
 MB
 MB
@@ -545,6 +560,9 @@ Ag clóbhualadh leathanach a %d as %d...
 Printing problem.
 Fadhb chlóbhuailte.
 
+Re&name...\tF2
+Athainmnigh...\tF2
+
 Remember &opened files
 Cuimhnigh ar chomhaid &oscailte
 
@@ -553,6 +571,12 @@ Bain ó na ceanáin
 
 Remove page %s from favorites
 Bain leathanach a %s ó na ceanáin
+
+Rename To
+Athainmnigh chuig
+
+Replace document &colors with Windows color scheme
+Ionadaigh dathanna na cáipéise le córas dathanna Windows
 
 Rotate &Left\tCtrl+Shift+-
 Rothlaigh tuathalach\tCtrl+Shift+-
@@ -676,14 +700,4 @@ ag macasamhlú an téacs
 
 printing document
 ag clóbhualadh an cháipéis
-
-# Untranslated:
-#Copyright:
-#Failed to rename the file!
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Re&name...\tF2
-#Rename To
-#Replace document &colors with Windows color scheme
 
