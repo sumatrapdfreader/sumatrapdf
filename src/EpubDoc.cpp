@@ -605,15 +605,7 @@ bool Fb2Doc::Load()
     int inBody = 0, inTitleInfo = 0;
     const char *bodyStart = NULL;
     while ((tok = parser.Next()) && !tok->IsError()) {
-        if (!inBody && !inTitleInfo && tok->IsStartTag() && tok->NameIs("FictionBook") &&
-            !hrefName && parser.tagNesting.Count() == 1) {
-            AttrInfo *attr = tok->GetAttrByValue("http://www.w3.org/1999/xlink");
-            if (attr && attr->nameLen > 6 && str::StartsWith(attr->name, "xmlns:")) {
-                ScopedMem<char> ns(str::DupN(attr->name + 6, attr->nameLen - 6));
-                hrefName.Set(str::Join(ns, ":href"));
-            }
-        }
-        else if (!inTitleInfo && tok->IsStartTag() && Tag_Body == tok->tag) {
+        if (!inTitleInfo && tok->IsStartTag() && Tag_Body == tok->tag) {
             if (!inBody++)
                 bodyStart = tok->s;
         }
@@ -658,8 +650,8 @@ bool Fb2Doc::Load()
             tok = parser.Next();
             if (tok->IsText())
                 tok = parser.Next();
-            if (tok->IsEmptyElementEndTag() && tok->NameIs("image")) {
-                AttrInfo *attr = tok->GetAttrByName(GetHrefName());
+            if (tok->IsEmptyElementEndTag() && Tag_Image == tok->tag) {
+                AttrInfo *attr = tok->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
                 if (attr)
                     coverImage.Set(str::DupN(attr->val, attr->valLen));
             }
@@ -729,11 +721,6 @@ TCHAR *Fb2Doc::GetProperty(const char *name)
 const TCHAR *Fb2Doc::GetFileName() const
 {
     return fileName;
-}
-
-const char *Fb2Doc::GetHrefName() const
-{
-    return hrefName ? hrefName : "href";
 }
 
 bool Fb2Doc::IsZipped() const

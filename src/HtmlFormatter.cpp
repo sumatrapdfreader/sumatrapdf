@@ -781,10 +781,10 @@ void HtmlFormatter::HandleTagFont(HtmlToken *t)
     SetFont(faceName, (FontStyle)CurrFont()->GetStyle(), fontSize);
 }
 
-bool HtmlFormatter::HandleTagA(HtmlToken *t, const char *linkAttr)
+bool HtmlFormatter::HandleTagA(HtmlToken *t, const char *linkAttr, const char *attrNS)
 {
     if (t->IsStartTag() && !currLinkIdx) {
-        AttrInfo *attr = t->GetAttrByName(linkAttr);
+        AttrInfo *attr = attrNS ? t->GetAttrByNameNS(linkAttr, attrNS) : t->GetAttrByName(linkAttr);
         if (attr) {
             AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
             currLinkIdx = currLineInstr.Count();
@@ -1349,6 +1349,22 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken *t)
     }
 }
 
+void EpubFormatter::HandleTagSvgImage(HtmlToken *t)
+{
+    CrashIf(!epubDoc);
+    if (t->IsEndTag())
+        return;
+    if (tagNesting.Find(Tag_Svg) == -1)
+        return;
+    AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
+    if (!attr)
+        return;
+    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    ImageData *img = epubDoc->GetImageData(src, pagePath);
+    if (img)
+        EmitImage(img);
+}
+
 void EpubFormatter::HandleHtmlTag(HtmlToken *t)
 {
     CrashIf(!t->IsTag());
@@ -1358,12 +1374,14 @@ void EpubFormatter::HandleHtmlTag(HtmlToken *t)
         UpdateTagNesting(t);
         return;
     }
-    if (!hiddenDepth && t->IsStartTag() && t->GetAttrByName("hidden"))
+    if (0 == hiddenDepth && t->IsStartTag() && t->GetAttrByName("hidden"))
         hiddenDepth = tagNesting.Count() + 1;
-    if (!hiddenDepth)
-        HtmlFormatter::HandleHtmlTag(t);
-    else
+    if (hiddenDepth > 0)
         UpdateTagNesting(t);
+    else if (Tag_Image == t->tag)
+        HandleTagSvgImage(t);
+    else
+        HtmlFormatter::HandleHtmlTag(t);
 }
 
 bool EpubFormatter::IgnoreText()

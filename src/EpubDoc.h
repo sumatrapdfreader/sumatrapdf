@@ -60,7 +60,6 @@ class Fb2Doc {
     Vec<ImageData2> images;
     ScopedMem<TCHAR> docTitle;
     ScopedMem<TCHAR> docAuthor;
-    ScopedMem<char> hrefName;
     ScopedMem<char> coverImage;
 
     bool isZipped;
@@ -79,7 +78,6 @@ public:
 
     TCHAR *GetProperty(const char *name);
     const TCHAR *GetFileName() const;
-    const char *GetHrefName() const;
     bool IsZipped() const;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);

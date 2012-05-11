@@ -123,7 +123,7 @@ protected:
     void HandleTagBr();
     void HandleTagP(HtmlToken *t);
     void HandleTagFont(HtmlToken *t);
-    bool HandleTagA(HtmlToken *t, const char *linkAttr="href");
+    bool HandleTagA(HtmlToken *t, const char *linkAttr="href", const char *attrNS=NULL);
     void HandleTagHx(HtmlToken *t);
     void HandleTagList(HtmlToken *t);
     void HandleTagPre(HtmlToken *t);
@@ -258,6 +258,8 @@ protected:
     virtual void HandleTagPagebreak(HtmlToken *t);
     virtual void HandleHtmlTag(HtmlToken *t);
     virtual bool IgnoreText();
+
+    void HandleTagSvgImage(HtmlToken *t);
 
     EpubDoc *epubDoc;
     ScopedMem<char> pagePath;

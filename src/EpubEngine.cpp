@@ -711,7 +711,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken *t)
     CrashIf(!fb2Doc);
     if (t->IsEndTag())
         return;
-    AttrInfo *attr = t->GetAttrByName(fb2Doc->GetHrefName());
+    AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (!attr)
         return;
     ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
@@ -760,7 +760,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
         HandleAnchorTag(t);
     }
     else if (Tag_A == t->tag) {
-        HandleTagA(t, fb2Doc->GetHrefName());
+        HandleTagA(t, "href", "http://www.w3.org/1999/xlink");
         HandleAnchorTag(t, true);
     }
     else if (Tag_Pagebreak == t->tag)

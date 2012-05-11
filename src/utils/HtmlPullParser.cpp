@@ -258,12 +258,16 @@ AttrInfo *HtmlToken::GetAttrByName(const char *name)
     return NULL;
 }
 
-AttrInfo *HtmlToken::GetAttrByValue(const char *name)
+// for now just ignores any namespace qualifier
+// (i.e. finds "xlink:href" for name="href" and any value of attrNS)
+// TODO: add proper namespace support
+AttrInfo *HtmlToken::GetAttrByNameNS(const char *name, const char *attrNS)
 {
-    size_t len = str::Len(name);
     nextAttr = NULL; // start from the beginning
     for (AttrInfo *a = NextAttr(); a; a = NextAttr()) {
-        if (len == a->valLen && str::EqN(a->val, name, len))
+        const char *nameStart = (const char *)memchr(a->name, ':', a->nameLen);
+        nameStart = nameStart ? nameStart + 1 : a->name;
+        if (StrEqNIx(nameStart, a->nameLen - (nameStart - a->name), name))
             return a;
     }
     return NULL;
