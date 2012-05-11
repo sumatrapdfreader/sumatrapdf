@@ -637,10 +637,9 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 						item = pdf_array_get(diff, i);
 						if (pdf_is_int(item))
 							k = pdf_to_int(item);
-						if (pdf_is_name(item))
+						/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1942 */
+						if (pdf_is_name(item) && 0 <= k && k < 256)
 							estrings[k++] = pdf_to_name(item);
-						if (k < 0) k = 0;
-						if (k > 255) k = 255;
 					}
 				}
 			}
