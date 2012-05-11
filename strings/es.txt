@@ -484,6 +484,9 @@ Aceptar
 Open
 Abrir
 
+Open &in PDF-XChange
+Abrir en PDF-XChange
+
 Open a document...
 Abrir un documento ...
 
@@ -493,14 +496,11 @@ Abrir en &Adobe Reader
 Open in &Foxit Reader
 Abrir en &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Abrir en Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Abrir en Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Abrir en PDF-XChange
 
 P&roperties
 P&ropiedades

@@ -313,20 +313,20 @@ OK
 Open
 Iepenje
 
+Open &in PDF-XChange
+Iepenje mei PDF-XChange
+
 Open in &Adobe Reader
 Iepenje mei &Adobe Reader
 
 Open in &Foxit Reader
 Iepenje mei &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Iepenje mei Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Iepenje mei Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Iepenje mei PDF-XChange
 
 P&roperties\tCtrl+D
 E&igenskippen...\tCtrl+D

@@ -482,6 +482,9 @@ OK
 Open
 Öffnen…
 
+Open &in PDF-XChange
+Mit PDF-&XChange öffnen
+
 Open a document...
 Dokument öffnen…
 
@@ -491,14 +494,11 @@ Mit &Adobe Reader öffnen
 Open in &Foxit Reader
 Mit F&oxit Reader öffnen
 
-Open in Microsoft HTML Help
-Mit Microsoft HTML Hilfe öffnen
+Open in &Microsoft HTML Help
+Mit &Microsoft HTML Hilfe öffnen
 
-Open in Microsoft XPS-Viewer
-Mit Microsoft XPS-Viewer öffnen
-
-Open in PDF-XChange
-Mit PDF-XChange öffnen
+Open in &Microsoft XPS-Viewer
+Mit &Microsoft XPS-Viewer öffnen
 
 P&roperties
 Ei&genschaften

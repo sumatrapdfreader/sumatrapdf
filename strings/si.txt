@@ -355,20 +355,20 @@ OK
 Open
 විවෘතකරන්න (O)
 
+Open &in PDF-XChange
+PDF-XChange කියවනය මගින් විවෘතකරන්න
+
 Open in &Adobe Reader
 &Adobe කියවනය මගින් විවෘතකරන්න
 
 Open in &Foxit Reader
 &Foxit කියවනය මගින් විවෘතකරන්න
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Microsoft HTML Help කියවනය මගින් විවෘතකරන්න
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Microsoft XPS-Viewer කියවනය මගින් විවෘතකරන්න
-
-Open in PDF-XChange
-PDF-XChange කියවනය මගින් විවෘතකරන්න
 
 P&roperties\tCtrl+D
 වත්කම් (P)\tCtrl+D

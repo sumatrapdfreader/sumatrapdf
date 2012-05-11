@@ -457,6 +457,9 @@ OK
 Open
 გახსნა
 
+Open &in PDF-XChange
+გახსნა PDF-XChange-ში
+
 Open a document...
 დოკუმენტის გახსნა...
 
@@ -466,14 +469,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 გახსნა &Foxit Reader-ში
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 გახსნა Microsoft HTML Help-ში
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 გახსნა Microsoft XPS-Viewer-ში
-
-Open in PDF-XChange
-გახსნა PDF-XChange-ში
 
 P&roperties
 &თვისებები...

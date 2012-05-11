@@ -466,6 +466,9 @@ OK
 Open
 فتح
 
+Open &in PDF-XChange
+فتح الملف بـ PDF-XChange
+
 Open a document...
 فتح مستند...
 
@@ -475,14 +478,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 فتح الملف بـ Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 فتح الملف بـ Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 فتح الملف بـ Microsoft XPS-Viewer
-
-Open in PDF-XChange
-فتح الملف بـ PDF-XChange
 
 P&roperties
 الخصائص

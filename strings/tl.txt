@@ -374,20 +374,20 @@ OK
 Open
 Buksan
 
+Open &in PDF-XChange
+Buksan sa PDF-XChange
+
 Open in &Adobe Reader
 Buksan sa Adobe Reader
 
 Open in &Foxit Reader
 Buksan sa Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Buksan sa Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Buksan sa Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Buksan sa PDF-XChange
 
 P&roperties
 Mga katangian

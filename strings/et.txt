@@ -463,6 +463,9 @@ Sobib
 Open
 Ava
 
+Open &in PDF-XChange
+Ava PDF-XChangega
+
 Open a document...
 Ava dokument...
 
@@ -472,14 +475,11 @@ Ava &Adobe Readeris
 Open in &Foxit Reader
 Ava &Foxit Readeris
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Ava Microsoft HTML Helpga
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Ava Microsoft XPS-Viewerga
-
-Open in PDF-XChange
-Ava PDF-XChangega
 
 P&roperties
 O&madused

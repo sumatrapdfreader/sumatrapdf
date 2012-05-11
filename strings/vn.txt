@@ -479,6 +479,9 @@ OK
 Open
 Mở tập tin
 
+Open &in PDF-XChange
+Mở bằng PDF-XChange
+
 Open a document...
 Mở một tập tin...
 
@@ -488,14 +491,11 @@ Mở bằng Adobe Reader
 Open in &Foxit Reader
 Mở bằng Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Mở bằng Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Mở bằng Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Mở bằng PDF-XChange
 
 P&roperties
 Thuộc tính

@@ -462,6 +462,9 @@ OK
 Open
 開啟
 
+Open &in PDF-XChange
+以 PDF-XChange 開啟
+
 Open a document...
 開啟檔案...
 
@@ -471,14 +474,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 以 Foxit Reader 開啟(&F)
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 以 Microsoft HTML Help 開啟
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 以 Microsoft XPS-Viewer 開啟
-
-Open in PDF-XChange
-以 PDF-XChange 開啟
 
 P&roperties
 內容(&R)

@@ -478,6 +478,9 @@ OK
 Open
 Ochish
 
+Open &in PDF-XChange
+PDF-XChangeda ochish
+
 Open a document...
 Hujjatni ochish...
 
@@ -487,14 +490,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Foxit Readerda ochish
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Microsoft HTML Helpda ochish
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Microsoft XPS-Viewerda ochish
-
-Open in PDF-XChange
-PDF-XChangeda ochish
 
 P&roperties
 &Xossalar

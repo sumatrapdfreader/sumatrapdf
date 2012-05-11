@@ -477,6 +477,9 @@ OK
 Open
 Отвори
 
+Open &in PDF-XChange
+Отвори у програму PDF-XChange
+
 Open a document...
 Отвори документ...
 
@@ -486,14 +489,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Отвори у програму Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Отвори у програму Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Отвори у програму Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Отвори у програму PDF-XChange
 
 P&roperties
 Особине

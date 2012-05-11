@@ -458,6 +458,9 @@ OK
 Open
 פתח
 
+Open &in PDF-XChange
+PDF-XChange פתח בקורא
+
 Open a document...
 פתח מסמך...
 
@@ -467,14 +470,11 @@ Adobe פתח בקורא
 Open in &Foxit Reader
 Foxit פתח בקורא
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Microsoft HTML Help פתח בקורא
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Microsoft XPS-Viewer פתח בקורא
-
-Open in PDF-XChange
-PDF-XChange פתח בקורא
 
 P&roperties
 תכונות

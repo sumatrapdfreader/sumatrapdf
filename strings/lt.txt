@@ -453,6 +453,9 @@ Gerai
 Open
 Atverti
 
+Open &in PDF-XChange
+Atverti naudojant „PDF-&XChange“
+
 Open a document...
 Atverti dokumentą...
 
@@ -461,9 +464,6 @@ Atverti naudojant „&Adobe Reader“
 
 Open in &Foxit Reader
 Atverti naudojant „&Foxit Reader“
-
-Open in PDF-XChange
-Atverti naudojant „PDF-&XChange“
 
 P&roperties
 &Savybės
@@ -670,8 +670,8 @@ spausdinamas dokumentas
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
-#Open in Microsoft HTML Help
-#Open in Microsoft XPS-Viewer
+#Open in &Microsoft HTML Help
+#Open in &Microsoft XPS-Viewer
 #Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme

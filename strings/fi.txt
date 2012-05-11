@@ -474,6 +474,9 @@ OK
 Open
 Avaa
 
+Open &in PDF-XChange
+Avaa PDF-XChange
+
 Open a document...
 Avaa asiakirja...
 
@@ -483,14 +486,11 @@ Avaa &Adobe Readerissa
 Open in &Foxit Reader
 Avaa &Foxit Readerissa
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Avaa Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Avaa Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Avaa PDF-XChange
 
 P&roperties
 Ominaisuudet

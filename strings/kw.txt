@@ -279,20 +279,20 @@ Da lowr
 Open
 Ygeri
 
+Open &in PDF-XChange
+Ygeri yn PDF-XChange
+
 Open in &Adobe Reader
 Ygeri yn &Adobe Reader
 
 Open in &Foxit Reader
 Ygeri yn &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Ygeri yn Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Ygeri yn Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Ygeri yn PDF-XChange
 
 PDF Document
 Restren PDF

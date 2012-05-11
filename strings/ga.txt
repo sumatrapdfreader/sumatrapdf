@@ -476,6 +476,9 @@ Tá go maith
 Open
 Oscail
 
+Open &in PDF-XChange
+Oscail i bPDF-XChange
+
 Open a document...
 Oscail cáipéis...
 
@@ -485,14 +488,11 @@ Oscail in Adobe Reader
 Open in &Foxit Reader
 Oscail i bhFoxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Oscail i bMicrosoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Oscail i bMicrosoft XPS-Viewer
-
-Open in PDF-XChange
-Oscail i bPDF-XChange
 
 P&roperties
 Ai&ríonna

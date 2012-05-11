@@ -311,12 +311,12 @@ Zoom Out
 #No synchronization info at this position
 #Number of Pages:
 #OK
+#Open &in PDF-XChange
 #Open a document...
 #Open in &Adobe Reader
 #Open in &Foxit Reader
-#Open in Microsoft HTML Help
-#Open in Microsoft XPS-Viewer
-#Open in PDF-XChange
+#Open in &Microsoft HTML Help
+#Open in &Microsoft XPS-Viewer
 #P&roperties
 #P&roperties\tCtrl+D
 #PDF Document

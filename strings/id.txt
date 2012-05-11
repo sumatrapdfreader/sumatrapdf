@@ -483,6 +483,9 @@ OK
 Open
 Buka
 
+Open &in PDF-XChange
+Buka di PDF-&XChange
+
 Open a document...
 Buka Dokumen...
 
@@ -492,14 +495,11 @@ Buka di &Adobe Reader
 Open in &Foxit Reader
 Buka di &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Buka dengan Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Buka dengan Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Buka di PDF-&XChange
 
 P&roperties
 P&roperti

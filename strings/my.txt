@@ -405,12 +405,12 @@ mencetak dokumen
 #No result found around line %u in file %s
 #No synchronization file found
 #No synchronization info at this position
+#Open &in PDF-XChange
 #Open a document...
 #Open in &Adobe Reader
 #Open in &Foxit Reader
-#Open in Microsoft HTML Help
-#Open in Microsoft XPS-Viewer
-#Open in PDF-XChange
+#Open in &Microsoft HTML Help
+#Open in &Microsoft XPS-Viewer
 #P&roperties
 #P&roperties\tCtrl+D
 #PDF Producer:

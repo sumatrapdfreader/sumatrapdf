@@ -478,6 +478,9 @@ OK
 Open
 Բացել
 
+Open &in PDF-XChange
+Բացել PDF-XChange-ում
+
 Open a document...
 Բացել ֆայլ...
 
@@ -487,14 +490,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Բացել &Foxit Reader-ում
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Բացել Microsoft HTML Help-ում
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Բացել Microsoft XPS-Viewer-ում
-
-Open in PDF-XChange
-Բացել PDF-XChange-ում
 
 P&roperties
 Հ&ատկությունները

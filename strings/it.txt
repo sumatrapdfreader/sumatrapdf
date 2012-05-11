@@ -486,6 +486,9 @@ OK
 Open
 Apri
 
+Open &in PDF-XChange
+Apri con PDF-XChange
+
 Open a document...
 Apri documento...
 
@@ -495,14 +498,11 @@ Apri con &Adobe Reader
 Open in &Foxit Reader
 Apri con &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Apri con Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Apri con Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Apri con PDF-XChange
 
 P&roperties
 Proprietà

@@ -368,20 +368,20 @@ Iawn
 Open
 Agor
 
+Open &in PDF-XChange
+Agor yn PDF-XChange
+
 Open in &Adobe Reader
 Agor yn &Adobe Reader
 
 Open in &Foxit Reader
 Agor yn &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Agor yn Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Agor yn Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Agor yn PDF-XChange
 
 P&roperties\tCtrl+D
 P&riodweddau...\tCtrl+D

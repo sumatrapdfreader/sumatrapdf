@@ -480,6 +480,9 @@ V redu
 Open
 Odpri
 
+Open &in PDF-XChange
+Odpri s programom PDF-XChange
+
 Open a document...
 Odpri dokument …
 
@@ -489,14 +492,11 @@ Odpri s programom &Adobe Reader
 Open in &Foxit Reader
 Odpri s programom &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Odpri s programom Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Odpri s programom Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Odpri s programom PDF-XChange
 
 P&roperties
 Lastnosti

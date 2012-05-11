@@ -484,6 +484,9 @@ OK
 Open
 Öppna
 
+Open &in PDF-XChange
+Öppna i PDF-XChange
+
 Open a document...
 Öppna ett dokument...
 
@@ -493,14 +496,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Öppna i Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Öppna i Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Öppna i Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Öppna i PDF-XChange
 
 P&roperties
 E&genskaper

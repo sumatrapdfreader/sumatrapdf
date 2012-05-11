@@ -464,6 +464,9 @@ OK
 Open
 Åpne
 
+Open &in PDF-XChange
+Åpne i PDF-XChange
+
 Open a document...
 Åpne et dokument...
 
@@ -473,14 +476,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Åpne i &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Åpne i Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Åpne i Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Åpne i PDF-XChange
 
 P&roperties
 E&genskaper

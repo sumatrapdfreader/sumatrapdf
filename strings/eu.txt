@@ -479,6 +479,9 @@ Ongi
 Open
 Ireki
 
+Open &in PDF-XChange
+Ireki PDF-XChangen
+
 Open a document...
 Ireki agiri bat...
 
@@ -488,14 +491,11 @@ Ireki &Adobe Readerren
 Open in &Foxit Reader
 Ireki &Foxit Readerren
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Ireki Microsoft HTML Laguntzan
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Ireki Microsoft XPS-Ikusgailuan
-
-Open in PDF-XChange
-Ireki PDF-XChangen
 
 P&roperties
 Eza&ugarriak

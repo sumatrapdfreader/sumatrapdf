@@ -478,6 +478,9 @@ OK
 Open
 Otvori
 
+Open &in PDF-XChange
+Otvori u PDF-XChange
+
 Open a document...
 Otvori dokument...
 
@@ -487,14 +490,11 @@ Otvori u &Adobe Readeru
 Open in &Foxit Reader
 Otvori u &Foxit Readeru
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Otvori u Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Otvori u Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Otvori u PDF-XChange
 
 P&roperties
 &Postavke

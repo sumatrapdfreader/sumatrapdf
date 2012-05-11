@@ -481,6 +481,9 @@ OK
 Open
 Άνοιγμα
 
+Open &in PDF-XChange
+Άνοιγμα με PDF-XChange
+
 Open a document...
 Άνοιγμα εγγράφου...
 
@@ -490,14 +493,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Άνοιγμα με &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Άνοιγμα με Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Άνοιγμα με Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Άνοιγμα με PDF-XChange
 
 P&roperties
 &Ιδιότητες

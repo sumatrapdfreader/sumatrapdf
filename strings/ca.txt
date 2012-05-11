@@ -462,6 +462,9 @@ D'acord
 Open
 Obre
 
+Open &in PDF-XChange
+Obre amb el PDF-XChange
+
 Open a document...
 Obre un document...
 
@@ -471,14 +474,11 @@ Obre amb l'&Adobe Reader
 Open in &Foxit Reader
 Obre amb el &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Obre amb el Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Obre amb el Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Obre amb el PDF-XChange
 
 P&roperties
 P&ropietats

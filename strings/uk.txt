@@ -461,6 +461,9 @@ OK
 Open
 Відкрити
 
+Open &in PDF-XChange
+Відкрити у PDF-XChange
+
 Open a document...
 Відкрити документ...
 
@@ -470,14 +473,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 Відкрити у Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Відкрити у Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Відкрити у Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Відкрити у PDF-XChange
 
 P&roperties
 Властивості

@@ -481,6 +481,9 @@ OK
 Open
 Otevřít...
 
+Open &in PDF-XChange
+Otevřít v programu PDF-XChange
+
 Open a document...
 Otevřít dokument...
 
@@ -490,14 +493,11 @@ Otevřít v programu &Adobe Reader
 Open in &Foxit Reader
 Otevřít v programu &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Otevřít v programu Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Otevřít v programu Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Otevřít v programu PDF-XChange
 
 P&roperties
 &Vlastnosti

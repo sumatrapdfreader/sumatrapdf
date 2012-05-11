@@ -476,6 +476,9 @@ Tamam
 Open
 &Aç
 
+Open &in PDF-XChange
+PDF-XChange ile aç
+
 Open a document...
 Belge aç...
 
@@ -485,14 +488,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 &Adobe Foxit ile aç
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Microsoft HTML Help ile aç
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Microsoft XPS-Viewer ile aç
-
-Open in PDF-XChange
-PDF-XChange ile aç
 
 P&roperties
 Ö&zellikler

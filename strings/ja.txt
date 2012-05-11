@@ -461,6 +461,9 @@ OK
 Open
 開く
 
+Open &in PDF-XChange
+PDF-XChange で開く(&A)
+
 Open a document...
 ドキュメントを開く...
 
@@ -469,9 +472,6 @@ Adobe Reader で開く(&A)
 
 Open in &Foxit Reader
 Foxit Reader で開く(&A)
-
-Open in PDF-XChange
-PDF-XChange で開く(&A)
 
 P&roperties
 プロパティ(&R)
@@ -678,8 +678,8 @@ printing document
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
-#Open in Microsoft HTML Help
-#Open in Microsoft XPS-Viewer
+#Open in &Microsoft HTML Help
+#Open in &Microsoft XPS-Viewer
 #Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme

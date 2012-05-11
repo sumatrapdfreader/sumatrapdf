@@ -239,20 +239,20 @@ OK
 Open
 Адчыніць
 
+Open &in PDF-XChange
+Адкрыць у PDF-XChange
+
 Open in &Adobe Reader
 Адкрыць у &Adobe Reader
 
 Open in &Foxit Reader
 Адкрыць у &Foxit Reader
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Адкрыць у Microsoft HTML Help
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Адкрыць у Microsoft XPS-Viewer
-
-Open in PDF-XChange
-Адкрыць у PDF-XChange
 
 PDF Document
 PDF-дaкумент

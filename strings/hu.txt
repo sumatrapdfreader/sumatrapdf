@@ -481,6 +481,9 @@ OK
 Open
 Megny&itás
 
+Open &in PDF-XChange
+Megnyitás PDF-XChangeben
+
 Open a document...
 Fájl megnyitása...
 
@@ -490,14 +493,11 @@ Megnyitás &Adobe Acrobat-ban
 Open in &Foxit Reader
 Megnyitás &Foxit Readerben
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Megnyitás Microsoft HTML Helpben
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Megnyitás Microsoft XPS-Viewerben
-
-Open in PDF-XChange
-Megnyitás PDF-XChangeben
 
 P&roperties
 &Tulajdonságok

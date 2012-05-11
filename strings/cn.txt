@@ -478,6 +478,9 @@ OK
 Open
 打开
 
+Open &in PDF-XChange
+在 PDF-XChange 中打开
+
 Open a document...
 打开一个文件...
 
@@ -487,14 +490,11 @@ Open in &Adobe Reader
 Open in &Foxit Reader
 在 &Foxit Reader 中打开
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 在 Microsoft HTML Help 中打开
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 在 Microsoft XPS-Viewer 中打开
-
-Open in PDF-XChange
-在 PDF-XChange 中打开
 
 P&roperties
 属性(&R)

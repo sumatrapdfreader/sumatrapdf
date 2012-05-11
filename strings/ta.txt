@@ -372,20 +372,20 @@ OK
 Open
 திற
 
+Open &in PDF-XChange
+PDF-XChange இல் திற
+
 Open in &Adobe Reader
 &Adobe Reader இல் திற
 
 Open in &Foxit Reader
 &Foxit Reader இல் திற
 
-Open in Microsoft HTML Help
+Open in &Microsoft HTML Help
 Microsoft HTML Help இல் திற
 
-Open in Microsoft XPS-Viewer
+Open in &Microsoft XPS-Viewer
 Microsoft XPS-Viewer இல் திற
-
-Open in PDF-XChange
-PDF-XChange இல் திற
 
 P&roperties\tCtrl+D
 பண்புகள்...\tCtrl+D
