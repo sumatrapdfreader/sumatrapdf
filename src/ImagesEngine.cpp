@@ -207,20 +207,15 @@ bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom,
     g.SetClip(screenR);
     g.FillRectangle(&SolidBrush(white), screenR);
 
-    REAL scaleX = 1.0f, scaleY = 1.0f;
-    if (bmp->GetHorizontalResolution() != 0.f)
-        scaleX = 1.0f * bmp->GetHorizontalResolution() / GetDeviceCaps(hDC, LOGPIXELSX);
-    if (bmp->GetVerticalResolution() != 0.f)
-        scaleY = 1.0f * bmp->GetVerticalResolution() / GetDeviceCaps(hDC, LOGPIXELSY);
-
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);
     m.Translate((REAL)(screenRect.x - screen.x), (REAL)(screenRect.y - screen.y), MatrixOrderAppend);
-    if (scaleX != 1.0f || scaleY != 1.0f)
-        m.Scale(scaleX, scaleY, MatrixOrderPrepend);
     g.SetTransform(&m);
 
-    Status ok = g.DrawImage(bmp, 0, 0);
+    RectI pageRcI = PageMediabox(pageNo).Round();
+    ImageAttributes imgAttrs;
+    imgAttrs.SetWrapMode(WrapModeTileFlipXY);
+    Status ok = g.DrawImage(bmp, Rect(0, 0, pageRcI.dx, pageRcI.dy), 0, 0, pageRcI.dx, pageRcI.dy, UnitPixel, &imgAttrs);
     return ok == Ok;
 }
 
@@ -247,7 +242,12 @@ RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, 
     if (inverse)
         m.Invert();
     m.TransformPoints(pts, 2);
-    return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+    rect = RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
+    // try to undo rounding errors caused by a rotation
+    // (necessary correction determined by experimentation)
+    if (rotation != 0)
+        rect.Inflate(-0.01, -0.01);
+    return rect;
 }
 
 class ImageElement : public PageElement {
