@@ -10,7 +10,7 @@ Lang: tw Chinese Traditional (繁體中文)
 
 Contributor: FreeXD (http://blog.ecstart.com/?47979)
 Contributor: theowoo (http://grnrnat.net.ru/)
-Contributor: 張修銘 (cges30901@gamil.com)
+Contributor: 張修銘 (cges30901@gmail.com)
 
 &About
 關於(&A)
@@ -165,11 +165,14 @@ Contributor: 張修銘 (cges30901@gamil.com)
 About SumatraPDF
 關於 SumatraPDF
 
+Add Favorite
+新增我的最愛
+
 Add page %s to favorites
 把第 %s 頁加入我的最愛
 
 Add page %s to favorites with (optional) name:
-把第 %s 頁加入我的最愛
+把第 %s 頁加入我的最愛的名稱(非必要)：
 
 Add to favorites
 加入我的最愛
@@ -335,6 +338,9 @@ F&ullscreen\tCtrl+Shift+L
 
 Facing
 雙頁模式
+
+Failed to rename the file!
+重新命名該檔案失敗!
 
 Failed to save a file
 檔案儲存失敗
@@ -543,6 +549,9 @@ Printing page %d of %d...
 Printing problem.
 列印問題
 
+Re&name...\tF2
+重新命名(&N)...\tF2
+
 Remember &opened files
 儲存最近開啟檔案(&O)
 
@@ -551,6 +560,9 @@ Remove from favorites
 
 Remove page %s from favorites
 從我的最愛中移除第 %s 頁
+
+Rename To
+重新命名為
 
 Rotate &Left\tCtrl+Shift+-
 頁面左旋(&L)\tCtrl+Shift+-
@@ -676,14 +688,10 @@ printing document
 文件列印中
 
 # Untranslated:
-#Add Favorite
 #Could not obtain Printer properties
-#Failed to rename the file!
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
 #Printer with given name doesn't exist
-#Re&name...\tF2
-#Rename To
 #Replace document &colors with Windows color scheme
 
