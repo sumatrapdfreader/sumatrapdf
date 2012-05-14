@@ -1,7 +1,28 @@
 diff -rPu5 synctex.orig\synctex_parser.c synctex\synctex_parser.c
 --- synctex.orig\synctex_parser.c	Tue Jun 14 15:40:56 2011
-+++ synctex\synctex_parser.c	Sat Feb 04 08:06:02 2012
-@@ -1418,10 +1418,13 @@
++++ synctex\synctex_parser.c	Mon May 14 21:57:29 2012
+@@ -231,15 +231,18 @@
+ /*  A node is meant to own its child and sibling.
+  *  It is not owned by its parent, unless it is its first child.
+  *  This destructor is for all nodes with children.
+  */
+ void _synctex_free_node(synctex_node_t node) {
+-	if (node) {
++	/* SumatraPDF: prevent stack overflow */
++	synctex_node_t next;
++	while (node) {
+ 		(*((node->class)->sibling))(node);
+-		SYNCTEX_FREE(SYNCTEX_SIBLING(node));
++		next = SYNCTEX_SIBLING(node);
+ 		SYNCTEX_FREE(SYNCTEX_CHILD(node));
+ 		free(node);
++		node = next;
+ 	}
+ 	return;
+ }
+ 
+ /*  A node is meant to own its child and sibling.
+@@ -1418,10 +1421,13 @@
  			/*  We have current_size+len+1<=UINT_MAX
  			 *  or equivalently new_size<UINT_MAX,
  			 *  where we have assumed that len<UINT_MAX */
@@ -15,7 +36,7 @@ diff -rPu5 synctex.orig\synctex_parser.c synctex\synctex_parser.c
  					return SYNCTEX_STATUS_OK;
  				}
  				free(* value_ref);
-@@ -4146,11 +4149,11 @@
+@@ -4146,11 +4152,11 @@
  typedef int (*synctex_fprintf_t)(void *, const char * , ...); /*  print formatted to either FILE *  or gzFile */
  
  #   define SYNCTEX_BITS_PER_BYTE 8
@@ -30,7 +51,7 @@ diff -rPu5 synctex.orig\synctex_parser.c synctex\synctex_parser.c
          unsigned int reserved:SYNCTEX_BITS_PER_BYTE*sizeof(int)-1; /*  Align */
 diff -rPu5 synctex.orig\synctex_parser_utils.c synctex\synctex_parser_utils.c
 --- synctex.orig\synctex_parser_utils.c	Tue Jun 14 10:23:56 2011
-+++ synctex\synctex_parser_utils.c	Fri Aug 12 23:08:40 2011
++++ synctex\synctex_parser_utils.c	Mon Mar 12 19:56:52 2012
 @@ -166,10 +166,13 @@
  next_character:
  	if(SYNCTEX_IS_PATH_SEPARATOR(*lhs)) {/*  lhs points to a path separator */

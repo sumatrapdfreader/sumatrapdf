@@ -233,11 +233,14 @@ void _synctex_free_leaf(synctex_node_t node);
  *  This destructor is for all nodes with children.
  */
 void _synctex_free_node(synctex_node_t node) {
-	if (node) {
+	/* SumatraPDF: prevent stack overflow */
+	synctex_node_t next;
+	while (node) {
 		(*((node->class)->sibling))(node);
-		SYNCTEX_FREE(SYNCTEX_SIBLING(node));
+		next = SYNCTEX_SIBLING(node);
 		SYNCTEX_FREE(SYNCTEX_CHILD(node));
 		free(node);
+		node = next;
 	}
 	return;
 }
