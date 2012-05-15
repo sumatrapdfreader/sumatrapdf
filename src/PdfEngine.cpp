@@ -2092,8 +2092,14 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     ScopedCritSec scope(&ctxAccess);
 
-    fz_image *image = positions.At(imageIx).image;
-    fz_pixmap *pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);
+    fz_pixmap *pixmap;
+    fz_try(ctx) {
+        fz_image *image = positions.At(imageIx).image;
+        pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
     RenderedFitzBitmap *bmp = new RenderedFitzBitmap(ctx, pixmap);
     fz_drop_pixmap(ctx, pixmap);
 
@@ -3478,8 +3484,14 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     ScopedCritSec scope(&ctxAccess);
 
-    fz_image *image = positions.At(imageIx).image;
-    fz_pixmap *pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);
+    fz_pixmap *pixmap;
+    fz_try(ctx) {
+        fz_image *image = positions.At(imageIx).image;
+        pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);
+    }
+    fz_catch(ctx) {
+        return NULL;
+    }
     RenderedFitzBitmap *bmp = new RenderedFitzBitmap(ctx, pixmap);
     fz_drop_pixmap(ctx, pixmap);
 
