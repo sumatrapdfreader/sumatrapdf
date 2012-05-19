@@ -271,6 +271,9 @@ Kopírovať ko&mentár
 Copying text was denied (copying as image only)
 Kopírovanie textu odmietnuté (iba ako obrázok)
 
+Copyright:
+Autorské práva:
+
 Could not obtain Printer properties
 Získanie vlastností tlačiarne zlyhalo
 
@@ -340,6 +343,9 @@ F&ullscreen\tCtrl+Shift+L
 Facing
 Dve strany
 
+Failed to rename the file!
+Súbor se nepodarilo premenovať!
+
 Failed to save a file
 Zlyhanie pri ukladaní súboru
 
@@ -394,6 +400,12 @@ Prispôsobiť šírke okna
 Fit a Single Page
 Prispôsobiť a zobraziť celú stranu v okne
 
+Fonts:
+Písma:
+
+Formatting the book... %d pages
+Formátovanie knihy... %d stránok
+
 Found text at page %s
 Text bol nájdený na strane %s
 
@@ -420,6 +432,9 @@ Súbory obrázkov (*.%s)
 
 KB
 KB
+
+Loading file %s...
+Načítavanie súboru %s...
 
 MB
 MB
@@ -550,6 +565,9 @@ Tlač strany %d z %d...
 Printing problem.
 Problém pri tlači.
 
+Re&name...\tF2
+Preme&novať...\tF2
+
 Remember &opened files
 Zapamätať si &otvorené súbory
 
@@ -558,6 +576,12 @@ Odobrať z obľúbených položiek
 
 Remove page %s from favorites
 Odobrať stranu %s z obľúbených položiek
+
+Rename To
+Premenovať na
+
+Replace document &colors with Windows color scheme
+&Farby dokumentu nahradiť farebnou schémou systému Windows
 
 Rotate &Left\tCtrl+Shift+-
 Otočiť &vľavo\tCtrl+Shift+-
@@ -681,14 +705,4 @@ prebieha kopírovanie textu
 
 printing document
 prebieha tlač dokumentu
-
-# Untranslated:
-#Copyright:
-#Failed to rename the file!
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Re&name...\tF2
-#Rename To
-#Replace document &colors with Windows color scheme
 
