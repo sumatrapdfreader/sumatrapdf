@@ -15,6 +15,7 @@ Contributor: Pedro Sanchez [http://www.pedrosanchez-net.es]
 Contributor: Carlos Luna
 Contributor: Juan Vílchez [http://www.juanvilchez.es]
 Contributor: Javier Gutiérrez [http://guti.isgreat.org]
+Contributor: José Luis Rivera [jlrn7@yahoo.com]
 
 &About
 &Acerca de...
@@ -125,7 +126,7 @@ Página anterior\t<-
 &Recordar la contraseña para este documento
 
 &Remember these settings for each document
-&Recordar estos ajustes para todos los documentos
+&Recordar esta configuración para todos los documentos
 
 &Remove Document
 Desechar Documento
@@ -239,13 +240,13 @@ Cannot print this file
 No se puede imprimir este archivo
 
 Cannot start inverse search command. Please check the command line in the settings.
-No se puede iniciar el comando de búsqueda inversa. Verifique la línea de comandos en las opciones.
+No se puede iniciar el comando de búsqueda inversa. Verifique la línea de comandos en la configuración.
 
 Change Language
 Cambiar Idioma (Change Language)
 
 Check for &Updates
-&Comprobar actualizaciones
+&Buscar actualizaciones
 
 Comic books
 Comics
@@ -284,7 +285,7 @@ Couldn't initialize printer
 No se pudo inicializar la impresora
 
 Couldn't render the page
-No se pudo renderizar la página
+No se pudo procesar la página
 
 Created:
 Creado:
@@ -299,10 +300,10 @@ Default &Layout:
 &Vista Predeterminada:
 
 Default &Zoom:
-&Zoom Predeterminado:
+&Acercamiento Predeterminado:
 
 Default PDF reader can't be changed in portable mode
-No se puede cambiar el lector PDF por defecto en modo portátil
+No se puede cambiar el lector PDF predeterminado en modo portátil
 
 Denied Permissions:
 Permisos Denegados
@@ -347,7 +348,7 @@ Facing
 Página doble
 
 Failed to rename the file!
-No se puede renombrar el fichero!
+¡No se puede renombrar el fichero!
 
 Failed to save a file
 Error al Guardar el Archivo
@@ -380,13 +381,13 @@ Find:
 Buscar:
 
 Fit &Content\tCtrl+3
-Ajustar &Contenido\tCtrl+3
+Ajustar al &Contenido\tCtrl+3
 
 Fit &Page\tCtrl+0
-Ajustar &Página\tCtrl+0
+Ajustar a &Página\tCtrl+0
 
 Fit &Width\tCtrl+2
-&Ancho de Página\tCtrl+2
+Ajustar a &Ancho de Página\tCtrl+2
 
 Fit Content
 Ajustar al contenido
@@ -395,10 +396,10 @@ Fit Page
 Ajustar Página
 
 Fit Width
-Ancho de Página
+Ajustar a ancho de Página
 
 Fit Width and Show Pages Continuously
-Ajustar el ancho de página y mostrar las páginas de forma continua
+Ajustar al ancho de página y mostrar las páginas de forma continua
 
 Fit a Single Page
 Ajustar a una sola página
@@ -443,10 +444,10 @@ MB
 MB
 
 Make SumatraPDF default application for PDF files?
-¿Convertir SumatraPDF en la aplicación por defecto para archivos PDF?
+¿Convertir SumatraPDF en la aplicación predeterminada para archivos PDF?
 
 Make SumatraPDF my default PDF reader
-Hacer SumatraPDF el lector PDF por defecto
+Hacer SumatraPDF el lector PDF predeterminado
 
 Match Case
 Coincidir mayúsculas y minúsculas
@@ -539,7 +540,7 @@ Page:
 Página:
 
 Please wait - rendering...
-Espere por favor - renderizando...
+Espere por favor - procesando...
 
 Postscript documents
 Documentos Postscript
@@ -584,7 +585,7 @@ Rename To
 Renombrando a
 
 Replace document &colors with Windows color scheme
-Reemplazar &colors del documento con el esquema de color de Windows
+Reemplazar &colores del documento con el esquema de color de Windows
 
 Rotate &Left\tCtrl+Shift+-
 Girar a la izquierda\tCtrl+Mayús+-
@@ -635,7 +636,7 @@ Single Page
 Página única
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-Lo sentimos, ¡eso no debería haber sucedido!\n\nPresione 'Cancelar', si quiere ayudarnos a arreglar la causa del fallo.
+Lo sentimos, esto no debería haber sucedido...\n\nPresione 'Cancelar', si quiere ayudarnos a arreglar la causa del fallo.
 
 Source file %s has no synchronization point
 El archivo fuente %s no posee un punto de sincronización
@@ -656,7 +657,7 @@ SumatraPDF is your default PDF reader
 SumatraPDF es el lector PDF predeterminado
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF a partir de ahora será el lector PDF por defecto
+SumatraPDF a partir de ahora será el lector PDF predeterminado
 
 Synchronization file cannot be opened
 No se pudo abrir el archivo de sincronización
@@ -686,7 +687,7 @@ You have the latest version.
 Usted tiene la última versión.
 
 You have version %s
-Tiene la versión %s
+Usted tiene la versión %s
 
 Zoom
 Zoom
@@ -707,5 +708,5 @@ copying text
 copiado de texto
 
 printing document
-imprimimendo documento
+imprimiendo documento
 
