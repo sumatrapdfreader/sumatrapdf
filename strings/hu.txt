@@ -12,12 +12,13 @@ Contributor: Richard Magyar (magyar_richard@yahoo.com)
 Contributor: Lázár Viktor
 Contributor: Cs. Gergely, NoIP (info@mthq.org)
 Contributor: Gábor Zsótér
+Contributor: Csaba Vágányik
 
 &About
 Név&jegy
 
 &Actual Size\tCtrl+1
-&Eredeti méret\tCtrl+1
+&Tényleges méret\tCtrl+1
 
 &All selected pages
 Az összes kiválasztott oldal
@@ -26,16 +27,16 @@ Az összes kiválasztott oldal
 Ugrás vissza\tAlt+<-
 
 &Book View\tCtrl+8
-&Könyv-mód(oldalpár címlappal)\tCtrl+8
+&Könyv-mód (oldalpár címlappal)\tCtrl+8
 
 &Close\tCtrl+W
 Be&zárás\tCtrl+W
 
 &Copy Selection
-Kijelöltek &másolása
+Kijelölés &másolása
 
 &Copy Selection\tCtrl+C
-Kép/Szöveg másolása\tCtrl+C
+Kijelölés másolása\tCtrl+C
 
 &Don't ask me again
 Ne kérdezze meg többé
@@ -74,7 +75,7 @@ Utolsó oldal\tEnd
 Nagyítás:
 
 &Manual
-Útmutató(web)
+Útmutató (web)
 
 &Match case
 Kis- és nagybetűk megkülönböztetése
@@ -92,13 +93,13 @@ Köszönöm,&nem
 Csak a páratlan oldalak
 
 &Open Document
-&Fájl Megnyitása
+&Fájl megnyitása
 
 &Open...\tCtrl+O
 Megny&itás...\tCtrl+O
 
 &Options...
-&Beállítások
+&Beállítások...
 
 &Password:
 &Jelszó:
@@ -146,7 +147,7 @@ Oldalak széleinek levágása a nyomtatható méretre
 Verzió kihagyása
 
 &Use original page sizes
-Ne igazítson a lapmérethez(eredeti oldalméret használata)
+Eredeti oldalméret használata
 
 &View
 &Nézet
@@ -164,7 +165,7 @@ Ne igazítson a lapmérethez(eredeti oldalméret használata)
 (%s. oldal)
 
 About SumatraPDF
-SumatraPDF névjegye
+A SumatraPDF névjegye
 
 Add Favorite
 Hozzáadás a kedvencekhez
@@ -173,13 +174,13 @@ Add page %s to favorites
 %s. oldal hozzáadása a kedvencekhez
 
 Add page %s to favorites with (optional) name:
-%s. oldal hozzáadása a kedvencekhez, megnevezéssel(opcionális):
+%s. oldal hozzáadása a kedvencekhez, megnevezéssel (opcionális):
 
 Add to favorites
 Hozzáadás a kedvencekhez
 
 Advanced
-További programbeállítások
+Haladó
 
 All files
 Minden fájl
@@ -203,10 +204,10 @@ Automatic
 Automatikus
 
 Automatically check for &updates
-&Program&frissítések automatikus keresése bekapcsoláskor
+&Frissítések automatikus keresése
 
 Book View
-Könyv(Oldalpár címlappal)
+Könyv (oldalpár címlappal)
 
 Book&marks\tF12
 Könyvjelzők\tF12
@@ -242,7 +243,7 @@ Change Language
 Nyelv kiválasztása (Change Language)
 
 Check for &Updates
-Újabb &verzió keresése
+&Frissítések keresése
 
 Comic books
 Képregény fájlok
@@ -260,7 +261,7 @@ Contribute Translation
 &Járulj hozzá a fordításhoz
 
 Copy &Image
-Másol &Kép
+&Kép másolása
 
 Copy &Link Address
 &Hivatkozás címének másolása
@@ -269,7 +270,7 @@ Copy Co&mment
 Me&gjegyzés másolása
 
 Copying text was denied (copying as image only)
-Szöveg másolása tiltott(csak képként másolva)
+Szöveg másolása tiltott (csak képként másolva)
 
 Copyright:
 Szerzői jog:
@@ -344,7 +345,7 @@ Facing
 Oldalpár
 
 Failed to rename the file!
-A fájl átnevezése hibás
+A fájl átnevezése sikertelen
 
 Failed to save a file
 A fájl mentése sikertelen
@@ -557,7 +558,7 @@ Printer with given name doesn't exist
 Nem található nyomtató a megadott néven
 
 Printing is still in progress. Abort and start over?
-A nyomtatás még folyamatban van. Megszakítás vagy újrakezdés?
+A nyomtatás még folyamatban van. Megszakítás és újrakezdés?
 
 Printing page %d of %d...
 %d. oldal nyomtatása a(z) %d-ből...
@@ -569,7 +570,7 @@ Re&name...\tF2
 Átnevezés...\tF2
 
 Remember &opened files
-Korábban megnyitott file-ok listájának tárolása
+Korábban megnyitott fájlok listájának tárolása
 
 Remove from favorites
 Eltávolítás a kedvencek közül
@@ -605,7 +606,7 @@ Select &All\tCtrl+A
 Összes &kijelölése\tCtrl+A
 
 Select content with Ctrl+left mouse button
-Először jelölje ki a másolandó részt Ctrl+Bal egérgomb -bal
+Jelölje ki a másolandó részt Ctrl+Bal egérgombbal
 
 Send by &E-mail...
 Fájl küldése &e-mail-ben
@@ -644,16 +645,16 @@ SumatraPDF Options
 A SumatraPDF beállításai
 
 SumatraPDF Update
-SumatraPDF: programfrissítés keresése
+SumatraPDF frissítés
 
 SumatraPDF crashed
 SumatraPDF működése leállt
 
 SumatraPDF is your default PDF reader
-A Sumatra az alapértelmezett PDF-olvasója
+A SumatraPDF az alapértelmezett PDF-olvasója
 
 SumatraPDF should now be your default PDF reader
-Mostantól a Sumatra az alapértelmezett PDF-olvasója
+Mostantól a SumatraPDF az alapértelmezett PDF-olvasója
 
 Synchronization file cannot be opened
 Nem sikerült megnyitni a szinkronizációs fájlt
