@@ -3,6 +3,41 @@
 // Buffer size for all volumes involved.
 static const size_t TotalBufferSize=0x4000000;
 
+class RSEncode // Encode or decode data area, one object per one thread.
+{
+  private:
+    RSCoder RSC;
+  public:
+    void EncodeBuf();
+    void DecodeBuf();
+
+    void Init(int RecVolNumber) {RSC.Init(RecVolNumber);}
+    byte *Buf;
+    byte *OutBuf;
+    int BufStart;
+    int BufEnd;
+    int FileNumber;
+    int RecVolNumber;
+    size_t RecBufferSize;
+    int *Erasures;
+    int EraSize;
+};
+
+
+#ifdef RAR_SMP
+THREAD_PROC(RSEncodeThread)
+{
+  RSEncode *rs=(RSEncode *)Data;
+  rs->EncodeBuf();
+}
+
+THREAD_PROC(RSDecodeThread)
+{
+  RSEncode *rs=(RSEncode *)Data;
+  rs->DecodeBuf();
+}
+#endif
+
 RecVolumes::RecVolumes()
 {
   Buf.Alloc(TotalBufferSize);
@@ -12,11 +47,25 @@ RecVolumes::RecVolumes()
 
 RecVolumes::~RecVolumes()
 {
-  for (int I=0;I<sizeof(SrcFile)/sizeof(SrcFile[0]);I++)
+  for (int I=0;I<ASIZE(SrcFile);I++)
     delete SrcFile[I];
 }
 
 
+
+
+void RSEncode::EncodeBuf()
+{
+  for (int BufPos=BufStart;BufPos<BufEnd;BufPos++)
+  {
+    byte Data[256],Code[256];
+    for (int I=0;I<FileNumber;I++)
+      Data[I]=Buf[I*RecBufferSize+BufPos];
+    RSC.Encode(Data,FileNumber,Code);
+    for (int I=0;I<RecVolNumber;I++)
+      OutBuf[I*RecBufferSize+BufPos]=Code[I];
+  }
+}
 
 
 bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
@@ -175,6 +224,10 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
         CalcCRCMessageDone=true;
       }
       
+#ifndef SILENT
+        mprintf("\r\n%s",CurName);
+#endif
+
       File CurFile;
       CurFile.TOpen(CurName,CurNameW);
       CurFile.Seek(0,SEEK_END);
@@ -265,6 +318,9 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
         {
           if (NewFile->GetHeaderType()==ENDARC_HEAD)
           {
+#ifndef SILENT
+            mprintf("\r\n%s",ArcName);
+#endif
             if ((NewFile->EndArcHead.Flags&EARC_DATACRC)!=0 && 
                 NewFile->EndArcHead.ArcDataCRC!=CalcFileCRC(NewFile,NewFile->CurBlockPos))
             {
@@ -356,8 +412,6 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
   mprintf(St(MReconstructing));
 #endif
 
-  RSCoder RSC(RecVolNumber);
-
   int TotalFiles=FileNumber+RecVolNumber;
   int Erasures[256],EraSize=0;
 
@@ -374,6 +428,17 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
 #endif
   // Size of per file buffer.
   size_t RecBufferSize=TotalBufferSize/TotalFiles;
+
+#ifdef RAR_SMP
+  uint ThreadNumber=Cmd->Threads;
+  RSEncode rse[MaxPoolThreads];
+  uint WaitHandles[MaxPoolThreads];
+#else
+  uint ThreadNumber=1;
+  RSEncode rse[1];
+#endif
+  for (uint I=0;I<ThreadNumber;I++)
+    rse[I].Init(RecVolNumber);
 
   while (true)
   {
@@ -401,21 +466,50 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
     }
     ProcessedSize+=MaxRead;
 #endif
-    for (int BufPos=0;BufPos<MaxRead;BufPos++)
+   
+
+    int BlockStart=0;
+    int BlockSize=MaxRead/ThreadNumber;
+    if (BlockSize<0x100)
+      BlockSize=MaxRead;
+    uint CurThread=0;
+
+    while (BlockStart<MaxRead)
     {
-      if ((BufPos&0xffff)==0)
-        Wait();
-      byte Data[256];
-      for (int I=0;I<TotalFiles;I++)
-        Data[I]=Buf[I*RecBufferSize+BufPos];
-      RSC.Decode(Data,TotalFiles,Erasures,EraSize);
-      for (int I=0;I<EraSize;I++)
-        Buf[Erasures[I]*RecBufferSize+BufPos]=Data[Erasures[I]];
-/*
-      for (int I=0;I<FileNumber;I++)
-        Buf[I*RecBufferSize+BufPos]=Data[I];
-*/
+      // Last thread processes all left data including increasement
+      // from rounding error.
+      if (CurThread==ThreadNumber-1)
+        BlockSize=MaxRead-BlockStart;
+
+      RSEncode *curenc=rse+CurThread;
+      curenc->Buf=&Buf[0];
+      curenc->BufStart=BlockStart;
+      curenc->BufEnd=BlockStart+BlockSize;
+      curenc->FileNumber=TotalFiles;
+      curenc->RecBufferSize=RecBufferSize;
+      curenc->Erasures=Erasures;
+      curenc->EraSize=EraSize;
+
+#ifdef RAR_SMP
+      if (ThreadNumber>1)
+      {
+        uint Handle=RSThreadPool.Start(RSDecodeThread,(void*)curenc);
+        WaitHandles[CurThread++]=Handle;
+      }
+      else
+        curenc->DecodeBuf();
+#else
+      curenc->DecodeBuf();
+#endif
+
+      BlockStart+=BlockSize;
     }
+
+#ifdef RAR_SMP
+    if (CurThread>0)
+      RSThreadPool.Wait(WaitHandles,CurThread);
+#endif // RAR_SMP
+    
     for (int I=0;I<FileNumber;I++)
       if (WriteFlags[I])
         SrcFile[I]->Write(&Buf[I*RecBufferSize],MaxRead);
@@ -438,7 +532,7 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
   {
     // Truncate the last volume to its real size.
     Archive Arc(Cmd);
-    if (Arc.Open(LastVolName,LastVolNameW,false,true) && Arc.IsArchive(true) &&
+    if (Arc.Open(LastVolName,LastVolNameW,FMF_UPDATE) && Arc.IsArchive(true) &&
         Arc.SearchBlock(ENDARC_HEAD))
     {
       Arc.Seek(Arc.NextBlockPos,SEEK_SET);
@@ -461,4 +555,18 @@ bool RecVolumes::Restore(RAROptions *Cmd,const char *Name,
     mprintf(St(MDone));
 #endif
   return(true);
+}
+
+
+void RSEncode::DecodeBuf()
+{
+  for (int BufPos=BufStart;BufPos<BufEnd;BufPos++)
+  {
+    byte Data[256];
+    for (int I=0;I<FileNumber;I++)
+      Data[I]=Buf[I*RecBufferSize+BufPos];
+    RSC.Decode(Data,FileNumber,Erasures,EraSize);
+    for (int I=0;I<EraSize;I++)
+      Buf[Erasures[I]*RecBufferSize+BufPos]=Data[Erasures[I]];
+  }
 }

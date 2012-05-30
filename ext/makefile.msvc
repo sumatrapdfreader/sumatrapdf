@@ -65,7 +65,7 @@ UNRAR_OBJS = \
 	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
 	$(OR)\strlist.obj $(OR)\system.obj $(OR)\timefn.obj \
 	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
-	$(OR)\volume.obj $(OR)\dll.obj
+	$(OR)\volume.obj $(OR)\dll.obj $(OR)\secpassword.obj
 
 DJVU_OBJS = \
 	$(ODV)\Arrays.obj $(ODV)\atomic.obj $(ODV)\BSByteStream.obj \

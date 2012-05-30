@@ -48,8 +48,6 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
     if (!OldFormat && (CommHead.UnpVer < 15 || CommHead.UnpVer > UNP_VER || CommHead.Method > 0x35))
       return(false);
     ComprDataIO DataIO;
-    Unpack Unpack(&DataIO);
-    Unpack.Init();
     DataIO.SetTestMode(true);
     uint UnpCmtLength;
     if (OldFormat)
@@ -68,6 +66,9 @@ bool Archive::GetComment(Array<byte> *CmtData,Array<wchar> *CmtDataW)
     DataIO.SetFiles(this,NULL);
     DataIO.EnableShowProgress(false);
     DataIO.SetPackedSizeToRead(CmtLength);
+
+    Unpack Unpack(&DataIO);
+    Unpack.Init();
     Unpack.SetDestSize(UnpCmtLength);
     Unpack.DoUnpack(CommHead.UnpVer,false);
 

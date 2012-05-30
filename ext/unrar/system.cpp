@@ -56,6 +56,10 @@ void SetPriority(int Priority)
   SetPriorityClass(GetCurrentProcess(),PriorityClass);
   SetThreadPriority(GetCurrentThread(),PriorityLevel);
 
+#ifdef RAR_SMP
+  ThreadPool::SetPriority(PriorityLevel);
+#endif
+
 //  Background mode for Vista, too slow for real life use.
 //  if (WinNT()>=WNT_VISTA && Priority==1)
 //    SetPriorityClass(GetCurrentProcess(),PROCESS_MODE_BACKGROUND_BEGIN);

@@ -45,7 +45,7 @@ char* ConvertPath(const char *SrcPath,char *DestPath)
     if (IsPathDiv(s[0]) && s[1]=='.' && s[2]=='.' && IsPathDiv(s[3]))
       DestPtr=s+4;
 
-  // Remove any sequence of . and \ in the beginning of path string.
+  // Remove <d>:\ and any sequence of . and \ in the beginning of path string.
   while (*DestPtr!=0)
   {
     const char *s=DestPtr;
@@ -94,7 +94,7 @@ wchar* ConvertPath(const wchar *SrcPath,wchar *DestPath)
     if (IsPathDiv(s[0]) && s[1]=='.' && s[2]=='.' && IsPathDiv(s[3]))
       DestPtr=s+4;
 
-  // Remove any sequence of . and \ in the beginning of path string.
+  // Remove <d>:\ and any sequence of . and \ in the beginning of path string.
   while (*DestPtr!=0)
   {
     const wchar *s=DestPtr;
@@ -1103,7 +1103,7 @@ char* VolNameToFirstName(const char *VolName,char *FirstName,bool NewNumbering)
     while (Find.Next(&FD))
     {
       Archive Arc;
-      if (Arc.Open(FD.Name,FD.NameW) && Arc.IsArchive(true) && !Arc.NotFirstVolume)
+      if (Arc.Open(FD.Name,FD.NameW,0) && Arc.IsArchive(true) && !Arc.NotFirstVolume)
       {
         strcpy(FirstName,FD.Name);
         break;
@@ -1160,7 +1160,7 @@ wchar* VolNameToFirstName(const wchar *VolName,wchar *FirstName,bool NewNumberin
     while (Find.Next(&FD))
     {
       Archive Arc;
-      if (Arc.Open(FD.Name,FD.NameW) && Arc.IsArchive(true) && !Arc.NotFirstVolume)
+      if (Arc.Open(FD.Name,FD.NameW,0) && Arc.IsArchive(true) && !Arc.NotFirstVolume)
       {
         wcscpy(FirstName,FD.NameW);
         break;

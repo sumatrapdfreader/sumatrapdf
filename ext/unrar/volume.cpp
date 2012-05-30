@@ -52,7 +52,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
 #endif
 
   if (!FailedOpen)
-    while (!Arc.Open(NextName,NextNameW))
+    while (!Arc.Open(NextName,NextNameW,0))
     {
       // We need to open a new volume which size was not calculated
       // in total size before, so we cannot calculate the total progress
@@ -71,7 +71,7 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
         wcscpy(AltNextNameW,Arc.FileNameW);
         NextVolumeName(AltNextName,AltNextNameW,ASIZE(AltNextName),true);
         OldSchemeTested=true;
-        if (Arc.Open(AltNextName,AltNextNameW))
+        if (Arc.Open(AltNextName,AltNextNameW,0))
         {
           strcpy(NextName,AltNextName);
           wcscpy(NextNameW,AltNextNameW);
@@ -79,14 +79,30 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
         }
       }
 #ifdef RARDLL
-      if (Cmd->Callback==NULL && Cmd->ChangeVolProc==NULL ||
-          Cmd->Callback!=NULL && Cmd->Callback(UCM_CHANGEVOLUME,Cmd->UserData,(LPARAM)NextName,RAR_VOL_ASK)==-1)
+      bool DllVolChanged=false;
+
+      if (Cmd->Callback!=NULL)
       {
-        Cmd->DllError=ERAR_EOPEN;
-        FailedOpen=true;
-        break;
+        GetWideName(NextName,NextNameW,NextNameW,ASIZE(NextNameW));
+        char CurName[ASIZE(NextName)];
+        strcpy(CurName,NextName);
+        wchar CurNameW[ASIZE(NextNameW)];
+        wcscpy(CurNameW,NextNameW);
+        if (Cmd->Callback(UCM_CHANGEVOLUMEW,Cmd->UserData,(LPARAM)NextNameW,RAR_VOL_ASK)!=-1 &&
+            wcscmp(CurNameW,NextNameW)!=0)
+        {
+          *NextName=0;
+          DllVolChanged=true;
+        }
+        else
+          if (Cmd->Callback(UCM_CHANGEVOLUME,Cmd->UserData,(LPARAM)NextName,RAR_VOL_ASK)!=-1 &&
+              strcmp(CurName,NextName)!=0)
+          {
+            *NextNameW=0;
+            DllVolChanged=true;
+          }
       }
-      if (Cmd->ChangeVolProc!=NULL)
+      if (!DllVolChanged && Cmd->ChangeVolProc!=NULL)
       {
         // Here we preserve ESP value. It is necessary for those developers,
         // who still define ChangeVolProc callback as "C" type function,
@@ -105,19 +121,24 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
         // convention broken it.
 #if defined(_MSC_VER)
 #ifndef _WIN_64
-        __asm mov esp,ebx
+      __asm mov esp,ebx
 #endif
 #elif defined(_WIN_ALL) && defined(__BORLANDC__)
-        _ESP=_EBX;
+      _ESP=_EBX;
 #endif
-        if (RetCode==0)
-        {
-          Cmd->DllError=ERAR_EOPEN;
-          FailedOpen=true;
-          break;
-        }
+      if (RetCode!=0)
+      {
+        *NextNameW=0;
+        DllVolChanged=true;
       }
-#else // RARDLL
+    }
+    if (!DllVolChanged)
+    {
+      Cmd->DllError=ERAR_EOPEN;
+      FailedOpen=true;
+      break;
+    }
+#else // !RARDLL
 
 #if !defined(SFX_MODULE) && !defined(_WIN_CE)
       if (!RecoveryDone)
@@ -152,15 +173,20 @@ bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,char Comman
 #if !defined(SILENT) && !defined(_WIN_CE)
       Log(Arc.FileName,St(MAbsNextVol),NextName);
 #endif
-    Arc.Open(Arc.FileName,Arc.FileNameW);
+    Arc.Open(Arc.FileName,Arc.FileNameW,0);
     Arc.Seek(PosBeforeClose,SEEK_SET);
     return(false);
   }
   Arc.CheckArc(true);
 #ifdef RARDLL
-  if (Cmd->Callback!=NULL &&
-      Cmd->Callback(UCM_CHANGEVOLUME,Cmd->UserData,(LPARAM)NextName,RAR_VOL_NOTIFY)==-1)
-    return(false);
+  if (Cmd->Callback!=NULL)
+  {
+    GetWideName(NextName,NextNameW,NextNameW,ASIZE(NextNameW));
+    if (Cmd->Callback(UCM_CHANGEVOLUMEW,Cmd->UserData,(LPARAM)NextNameW,RAR_VOL_NOTIFY)==-1)
+      return(false);
+    if (Cmd->Callback(UCM_CHANGEVOLUME,Cmd->UserData,(LPARAM)NextName,RAR_VOL_NOTIFY)==-1)
+      return(false);
+  }
   if (Cmd->ChangeVolProc!=NULL)
   {
 #if defined(_WIN_ALL) && !defined(_MSC_VER) && !defined(__MINGW32__)

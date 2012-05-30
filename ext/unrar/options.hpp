@@ -1,9 +1,11 @@
 #ifndef _RAR_OPTIONS_
 #define _RAR_OPTIONS_
 
-#define DEFAULT_RECOVERY    -1
+#define DEFAULT_RECOVERY     -1
 
 #define DEFAULT_RECVOLUMES  -10
+
+#define VOLSIZE_AUTO   INT64NDF // Automatically detect the volume size.
 
 enum PATH_EXCL_MODE {
   EXCL_UNCHANGED=0,    // Process paths as is (default).
@@ -49,7 +51,7 @@ enum OVERWRITE_MODE
 
 enum RAR_CHARSET { RCH_DEFAULT=0,RCH_ANSI,RCH_OEM,RCH_UNICODE };
 
-#define     MAX_FILTERS           16
+#define     MAX_FILTER_TYPES           16
 enum FilterState {FILTER_DEFAULT=0,FILTER_AUTO,FILTER_FORCE,FILTER_DISABLE};
 
 
@@ -84,7 +86,7 @@ class RAROptions
     RAR_CHARSET FilelistCharset;
     char ArcPath[NM];
     wchar ArcPathW[NM];
-    wchar Password[MAXPASSWORD];
+    SecPassword Password;
     bool EncryptHeaders;
     char LogName[NM];
     MESSAGE_TYPE MsgStream;
@@ -138,7 +140,7 @@ class RAROptions
     bool Lock;
     bool Test;
     bool VolumePause;
-    FilterMode FilterModes[MAX_FILTERS];
+    FilterMode FilterModes[MAX_FILTER_TYPES];
     char EmailTo[NM];
     uint VersionControl;
     bool NoEndBlock;
@@ -150,7 +152,7 @@ class RAROptions
     EXTTIME_MODE xarctime;
     char CompressStdin[NM];
 
-#ifdef PACK_SMP
+#ifdef RAR_SMP
     uint Threads;
 #endif
 

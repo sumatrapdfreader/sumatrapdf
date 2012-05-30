@@ -12,7 +12,6 @@ Unpack::Unpack(ComprDataIO *DataIO)
 {
   UnpIO=DataIO;
   Window=NULL;
-  ExternalWindow=false;
   Suspended=false;
   UnpAllBuf=false;
   UnpSomeRead=false;
@@ -21,31 +20,24 @@ Unpack::Unpack(ComprDataIO *DataIO)
 
 Unpack::~Unpack()
 {
-  if (Window!=NULL && !ExternalWindow)
-    delete[] Window;
+  delete[] Window;
   InitFilters();
 }
 
 
-void Unpack::Init(byte *Window)
+void Unpack::Init()
 {
-  if (Window==NULL)
-  {
-    Unpack::Window=new byte[MAXWINSIZE];
+  Window=new byte[MAXWINSIZE];
 
-    // Clean the window to generate the same output when unpacking corrupt
-    // RAR files, which may access to unused areas of sliding dictionary.
-    memset(Unpack::Window,0,MAXWINSIZE);
 #ifndef ALLOW_EXCEPTIONS
-    if (Unpack::Window==NULL)
-      ErrHandler.MemoryError();
+  if (Window==NULL)
+    ErrHandler.MemoryError();
 #endif
-  }
-  else
-  {
-    Unpack::Window=Window;
-    ExternalWindow=true;
-  }
+
+  // Clean the window to generate the same output when unpacking corrupt
+  // RAR files, which may access to unused areas of sliding dictionary.
+  memset(Window,0,MAXWINSIZE);
+
   UnpInitData(false);
 
 #ifndef SFX_MODULE
@@ -83,13 +75,6 @@ inline void Unpack::InsertOldDist(unsigned int Distance)
   OldDist[2]=OldDist[1];
   OldDist[1]=OldDist[0];
   OldDist[0]=Distance;
-}
-
-
-inline void Unpack::InsertLastMatch(unsigned int Length,unsigned int Distance)
-{
-  LastDist=Distance;
-  LastLength=Length;
 }
 
 
@@ -213,7 +198,7 @@ void Unpack::Unpack29(bool Solid)
   if (DDecode[1]==0)
   {
     int Dist=0,BitLength=0,Slot=0;
-    for (int I=0;I<sizeof(DBitLengthCounts)/sizeof(DBitLengthCounts[0]);I++,BitLength++)
+    for (int I=0;I<ASIZE(DBitLengthCounts);I++,BitLength++)
       for (int J=0;J<DBitLengthCounts[I];J++,Slot++,Dist+=(1<<BitLength))
       {
         DDecode[Slot]=Dist;
@@ -275,7 +260,7 @@ void Unpack::Unpack29(bool Solid)
         }
         if (NextCh==-1) // Corrupt PPM data found.
           break;
-        if (NextCh==2)  // End of file in PPM mode..
+        if (NextCh==2)  // End of file in PPM mode.
           break;
         if (NextCh==3)  // Read VM code.
         {
@@ -380,7 +365,7 @@ void Unpack::Unpack29(bool Solid)
       }
 
       InsertOldDist(Distance);
-      InsertLastMatch(Length,Distance);
+      LastLength=Length;
       CopyString(Length,Distance);
       continue;
     }
@@ -399,7 +384,7 @@ void Unpack::Unpack29(bool Solid)
     if (Number==258)
     {
       if (LastLength!=0)
-        CopyString(LastLength,LastDist);
+        CopyString(LastLength,OldDist[0]);
       continue;
     }
     if (Number<263)
@@ -417,7 +402,7 @@ void Unpack::Unpack29(bool Solid)
         Length+=getbits()>>(16-Bits);
         addbits(Bits);
       }
-      InsertLastMatch(Length,Distance);
+      LastLength=Length;
       CopyString(Length,Distance);
       continue;
     }
@@ -430,7 +415,7 @@ void Unpack::Unpack29(bool Solid)
         addbits(Bits);
       }
       InsertOldDist(Distance);
-      InsertLastMatch(2,Distance);
+      LastLength=2;
       CopyString(2,Distance);
       continue;
     }
@@ -439,11 +424,17 @@ void Unpack::Unpack29(bool Solid)
 }
 
 
+// Return 'false' to quit unpacking the current file or 'true' to continue.
 bool Unpack::ReadEndOfBlock()
 {
   unsigned int BitField=getbits();
   bool NewTable,NewFile=false;
-  if (BitField & 0x8000)
+
+  // "1"  - no new file, new table just here.
+  // "00" - new file,    no new table.
+  // "01" - new file,    new table (in beginning of next file).
+  
+  if ((BitField & 0x8000)!=0)
   {
     NewTable=true;
     addbits(1);
@@ -455,12 +446,21 @@ bool Unpack::ReadEndOfBlock()
     addbits(2);
   }
   TablesRead=!NewTable;
-  return !(NewFile || NewTable && !ReadTables());
+
+  // Quit immediately if "new file" flag is set. If "new table" flag
+  // is present, we'll read the table in beginning of next file
+  // based on 'TablesRead' 'false' value.
+  if (NewFile)
+    return false;
+  return ReadTables(); // Quit only if we failed to read tables.
 }
 
 
 bool Unpack::ReadVMCode()
 {
+  // Entire VM code is guaranteed to fully present in block defined 
+  // by current Huffman table. Compressor checks that VM code does not cross
+  // Huffman block boundaries.
   unsigned int FirstByte=getbits()>>8;
   addbits(8);
   int Length=(FirstByte & 7)+1;
@@ -554,7 +554,7 @@ bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
   if (NewFilter) // New filter code, never used before since VM reset.
   {
     // Too many different filters, corrupt archive.
-    if (FiltPos>1024)
+    if (FiltPos>MAX_FILTERS)
     {
       delete StackFilter;
       return false;
@@ -836,6 +836,8 @@ void Unpack::UnpWriteBuf()
       }
       else
       {
+        // Current filter intersects the window write border, so we adjust
+        // the window border to process this filter next time, not now.
         for (size_t J=I;J<PrgStack.Size();J++)
         {
           UnpackFilter *flt=PrgStack[J];
@@ -1112,7 +1114,7 @@ void Unpack::MakeDecodeTables(byte *LengthTable,DecodeTable *Dec,uint Size)
 
       // Prepare the decode table, so this position in code list will be
       // decoded to current alphabet item number.
-      Dec->DecodeNum[LastPos]=I;
+      Dec->DecodeNum[LastPos]=(ushort)I;
 
       // We'll use next position number for this bit length next time.
       // So we pass through the entire range of positions available

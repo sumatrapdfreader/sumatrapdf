@@ -28,7 +28,7 @@ class CmdExtract
     char ArcName[NM];
     wchar ArcNameW[NM];
 
-    wchar Password[MAXPASSWORD];
+    SecPassword Password;
     bool PasswordAll;
     bool PrevExtracted;
     char DestFileName[NM];

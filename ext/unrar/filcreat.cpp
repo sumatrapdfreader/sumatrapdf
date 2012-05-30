@@ -2,7 +2,7 @@
 
 bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
                 OVERWRITE_MODE Mode,bool *UserReject,int64 FileSize,
-                uint FileTime)
+                uint FileTime,bool WriteOnly)
 {
   if (UserReject!=NULL)
     *UserReject=false;
@@ -121,14 +121,15 @@ bool FileCreate(RAROptions *Cmd,File *NewFile,char *Name,wchar *NameW,
         continue;
       }
       if (Choice==6)
-        ErrHandler.Exit(USER_BREAK);
+        ErrHandler.Exit(RARX_USERBREAK);
     }
   }
-  if (NewFile!=NULL && NewFile->Create(Name,NameW))
+  uint FileMode=WriteOnly ? FMF_WRITE|FMF_SHAREREAD:FMF_UPDATE|FMF_SHAREREAD;
+  if (NewFile!=NULL && NewFile->Create(Name,NameW,FileMode))
     return(true);
   PrepareToDelete(Name,NameW);
   CreatePath(Name,NameW,true);
-  return(NewFile!=NULL ? NewFile->Create(Name,NameW):DelFile(Name,NameW));
+  return(NewFile!=NULL ? NewFile->Create(Name,NameW,FileMode):DelFile(Name,NameW));
 }
 
 

@@ -70,7 +70,9 @@ bool CreatePath(const char *Path,bool SkipLastName)
     if (s-Path>=NM)
       break;
 
-    if (*s==CPATHDIVIDER)
+    // Process all kinds of path separators, so user can enter Unix style
+    // path in Windows or Windows in Unix.
+    if (IsPathDiv(*s))
     {
       char DirName[NM];
       strncpy(DirName,Path,s-Path);
@@ -113,7 +115,9 @@ bool CreatePath(const wchar *Path,bool SkipLastName)
     if (s-Path>=NM)
       break;
 
-    if (*s==CPATHDIVIDER)
+    // Process all kinds of path separators, so user can enter Unix style
+    // path in Windows or Windows in Unix.
+    if (IsPathDiv(*s))
     {
       wchar DirName[NM];
       wcsncpy(DirName,Path,s-Path);

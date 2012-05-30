@@ -20,7 +20,7 @@ bool ExtractLink(ComprDataIO &DataIO,Archive &Arc,const char *LinkName,uint &Lin
         else
         {
           Log(Arc.FileName,St(MErrCreateLnk),LinkName);
-          ErrHandler.SetErrorCode(WARNING);
+          ErrHandler.SetErrorCode(RARX_WARNING);
         }
       // We do not set time of created symlink, because utime changes
       // time of link target and lutimes is not available on all Linux

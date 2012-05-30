@@ -777,6 +777,10 @@
 				RelativePath="scantree.cpp"
 				>
 			</File>
+  		<File
+				RelativePath="secpassword.cpp"
+				>
+			</File>
 			<File
 				RelativePath="sha1.cpp"
 				>

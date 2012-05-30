@@ -4,6 +4,7 @@
 
 const uint TOP=1 << 24, BOT=1 << 15;
 
+
 class RangeCoder
 {
   public:

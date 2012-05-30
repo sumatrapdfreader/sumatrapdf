@@ -31,7 +31,7 @@ OBJ = rar.obj strlist.obj strfn.obj pathfn.obj savepos.obj smallfn.o global.obj 
 	resource.obj match.obj timefn.obj rdwrfn.obj consio.obj options.obj \
 	ulinks.obj errhnd.obj rarvm.obj rijndael.obj getbits.obj sha1.obj \
 	extinfo.obj extract.obj volume.obj find.obj unpack.obj cmddata.obj \
-	filestr.obj recvol.obj rs.obj scantree.obj \
+	secpassword.obj filestr.obj recvol.obj rs.obj scantree.obj \
 	list.obj \
 #	dll.obj \
 

@@ -24,7 +24,7 @@ OBJECTS=rar.o strlist.o strfn.o pathfn.o savepos.o smallfn.o global.o \
 	system.o isnt.o crypt.o crc.o rawread.o encname.o \
 	resource.o match.o timefn.o rdwrfn.o consio.o options.o \
 	ulinks.o errhnd.o rarvm.o rijndael.o getbits.o sha1.o \
-	extinfo.o extract.o volume.o list.o find.o unpack.o cmddata.o
+	extinfo.o extract.o volume.o list.o find.o unpack.o secpassword.o cmddata.o
 
 .cpp.o:
 	$(COMPILE) -D$(WHAT) -c $<

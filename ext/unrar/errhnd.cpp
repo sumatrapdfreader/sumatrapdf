@@ -11,7 +11,7 @@ ErrorHandler::ErrorHandler()
 
 void ErrorHandler::Clean()
 {
-  ExitCode=SUCCESS;
+  ExitCode=RARX_SUCCESS;
   ErrCount=0;
   EnableBreak=true;
   Silent=false;
@@ -22,7 +22,7 @@ void ErrorHandler::Clean()
 void ErrorHandler::MemoryError()
 {
   MemoryErrorMsg();
-  Throw(MEMORY_ERROR);
+  Throw(RARX_MEMORY);
 }
 
 
@@ -30,7 +30,7 @@ void ErrorHandler::OpenError(const char *FileName,const wchar *FileNameW)
 {
 #ifndef SILENT
   OpenErrorMsg(FileName);
-  Throw(OPEN_ERROR);
+  Throw(RARX_OPEN);
 #endif
 }
 
@@ -45,7 +45,7 @@ void ErrorHandler::CloseError(const char *FileName,const wchar *FileNameW)
   }
 #endif
 #if !defined(SILENT) || defined(RARDLL)
-  Throw(FATAL_ERROR);
+  Throw(RARX_FATAL);
 #endif
 }
 
@@ -56,7 +56,7 @@ void ErrorHandler::ReadError(const char *FileName,const wchar *FileNameW)
   ReadErrorMsg(NULL,NULL,FileName,FileNameW);
 #endif
 #if !defined(SILENT) || defined(RARDLL)
-  Throw(FATAL_ERROR);
+  Throw(RARX_FATAL);
 #endif
 }
 
@@ -82,7 +82,7 @@ void ErrorHandler::WriteError(const char *ArcName,const wchar *ArcNameW,const ch
   WriteErrorMsg(ArcName,ArcNameW,FileName,FileNameW);
 #endif
 #if !defined(SILENT) || defined(RARDLL)
-  Throw(WRITE_ERROR);
+  Throw(RARX_WRITE);
 #endif
 }
 
@@ -95,7 +95,7 @@ void ErrorHandler::WriteErrorFAT(const char *FileName,const wchar *FileNameW)
   ErrMsg(NULL,St(MNTFSRequired),FileName);
 #endif
 #if !defined(SILENT) && !defined(SFX_MODULE) || defined(RARDLL)
-  Throw(WRITE_ERROR);
+  Throw(RARX_WRITE);
 #endif
 }
 #endif
@@ -126,7 +126,7 @@ void ErrorHandler::SeekError(const char *FileName,const wchar *FileNameW)
   }
 #endif
 #if !defined(SILENT) || defined(RARDLL)
-  Throw(FATAL_ERROR);
+  Throw(RARX_FATAL);
 #endif
 }
 
@@ -229,7 +229,7 @@ void ErrorHandler::WriteErrorMsg(const char *ArcName,const wchar *ArcNameW,const
 }
 
 
-void ErrorHandler::Exit(int ExitCode)
+void ErrorHandler::Exit(RAR_EXIT ExitCode)
 {
 #ifndef SFX_MODULE
   Alarm();
@@ -260,18 +260,18 @@ void ErrorHandler::ErrMsg(const char *ArcName,const char *fmt,...)
 #endif
 
 
-void ErrorHandler::SetErrorCode(int Code)
+void ErrorHandler::SetErrorCode(RAR_EXIT Code)
 {
   switch(Code)
   {
-    case WARNING:
-    case USER_BREAK:
-      if (ExitCode==SUCCESS)
+    case RARX_WARNING:
+    case RARX_USERBREAK:
+      if (ExitCode==RARX_SUCCESS)
         ExitCode=Code;
       break;
-    case FATAL_ERROR:
-      if (ExitCode==SUCCESS || ExitCode==WARNING)
-        ExitCode=FATAL_ERROR;
+    case RARX_FATAL:
+      if (ExitCode==RARX_SUCCESS || ExitCode==RARX_WARNING)
+        ExitCode=RARX_FATAL;
       break;
     default:
       ExitCode=Code;
@@ -308,7 +308,7 @@ void _stdfunction ProcessSignal(int SigType)
 #if defined(USE_RC) && !defined(SFX_MODULE) && !defined(_WIN_CE) && !defined(RARDLL)
   ExtRes.UnloadDLL();
 #endif
-  exit(USER_BREAK);
+  exit(RARX_USERBREAK);
 #if defined(_WIN_ALL) && !defined(_MSC_VER)
   // never reached, just to avoid a compiler warning
   return(TRUE);
@@ -332,9 +332,9 @@ void ErrorHandler::SetSignalHandlers(bool Enable)
 }
 
 
-void ErrorHandler::Throw(int Code)
+void ErrorHandler::Throw(RAR_EXIT Code)
 {
-  if (Code==USER_BREAK && !EnableBreak)
+  if (Code==RARX_USERBREAK && !EnableBreak)
     return;
   ErrHandler.SetErrorCode(Code);
 #ifdef ALLOW_EXCEPTIONS

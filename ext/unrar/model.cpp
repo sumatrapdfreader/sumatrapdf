@@ -360,14 +360,14 @@ inline void PPM_CONTEXT::decodeBinSymbol(ModelPPM *Model)
     rs.Freq += (rs.Freq < 128);
     Model->Coder.SubRange.LowCount=0;
     Model->Coder.SubRange.HighCount=bs;
-    bs = SHORT16(bs+INTERVAL-GET_MEAN(bs,PERIOD_BITS,2));
+    bs = GET_SHORT16(bs+INTERVAL-GET_MEAN(bs,PERIOD_BITS,2));
     Model->PrevSuccess=1;
     Model->RunLength++;
   } 
   else 
   {
     Model->Coder.SubRange.LowCount=bs;
-    bs = SHORT16(bs-GET_MEAN(bs,PERIOD_BITS,2));
+    bs = GET_SHORT16(bs-GET_MEAN(bs,PERIOD_BITS,2));
     Model->Coder.SubRange.HighCount=BIN_SCALE;
     Model->InitEsc=ExpEscape[bs >> 10];
     Model->NumMasked=1;

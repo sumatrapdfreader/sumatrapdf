@@ -2,7 +2,7 @@
 
 #define Clean(D,S)  {for (int I=0;I<(S);I++) (D)[I]=0;}
 
-RSCoder::RSCoder(int ParSize)
+void RSCoder::Init(int ParSize)
 {
   RSCoder::ParSize=ParSize; // Store the number of recovery volumes.
   FirstBlockDone=false;

@@ -33,7 +33,7 @@ class CommandData:public RAROptions
     void ReadConfig();
     bool PreprocessSwitch(const char *Switch);
     void OutTitle();
-    void OutHelp();
+    void OutHelp(RAR_EXIT ExitCode);
     bool IsSwitch(int Ch);
     bool ExclCheck(char *CheckName,bool Dir,bool CheckFullPath,bool CheckInclList);
     bool ExclDirByAttr(uint FileAttr);

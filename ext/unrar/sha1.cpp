@@ -234,12 +234,12 @@ unsigned char finalcount[8];
         digest[i] = context->state[i] & 0xffffffff;
     }
     /* Wipe variables */
-    memset(&i,0,sizeof(i));
-    memset(&j,0,sizeof(j));
-    memset(context->buffer, 0, 64);
-    memset(context->state, 0, 20);
-    memset(context->count, 0, 8);
-    memset(&finalcount, 0, 8);
+    cleandata(&i,sizeof(i));
+    cleandata(&j,sizeof(j));
+    cleandata(context->buffer, 64);
+    cleandata(context->state, 20);
+    cleandata(context->count, 8);
+    cleandata(&finalcount, 8);
     if (handsoff)
       memset(context->workspace,0,sizeof(context->workspace)); // Wipe the temporary buffer.
 //      SHA1Transform(context->state, context->workspace, context->buffer, true); /* make SHA1Transform overwrite it's own static vars */

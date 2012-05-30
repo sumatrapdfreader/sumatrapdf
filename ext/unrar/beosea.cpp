@@ -5,7 +5,7 @@ void ExtractBeEA(Archive &Arc,char *FileName)
   if (Arc.HeaderCRC!=Arc.EAHead.HeadCRC)
   {
     Log(Arc.FileName,St(MEABroken),FileName);
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(RARX_CRC);
     return;
   }
   if (Arc.EAHead.Method<0x31 || Arc.EAHead.Method>0x35 || Arc.EAHead.UnpVer>PACK_VER)
@@ -29,14 +29,14 @@ void ExtractBeEA(Archive &Arc,char *FileName)
   if (Arc.EAHead.EACRC!=~DataIO.UnpFileCRC)
   {
     Log(Arc.FileName,St(MEABroken),FileName);
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(RARX_CRC);
     return;
   }
   int fd = open(FileName,O_WRONLY);
   if (fd==-1)
   {
     Log(Arc.FileName,St(MCannotSetEA),FileName);
-    ErrHandler.SetErrorCode(WARNING);
+    ErrHandler.SetErrorCode(RARX_WARNING);
     return;
   }
 
@@ -51,7 +51,7 @@ void ExtractBeEA(Archive &Arc,char *FileName)
     if (NameSize>=sizeof(Name))
     {
       Log(Arc.FileName,St(MCannotSetEA),FileName);
-      ErrHandler.SetErrorCode(WARNING);
+      ErrHandler.SetErrorCode(RARX_WARNING);
       break;
     }
     memcpy(Name,CurItem+10,NameSize);
@@ -59,7 +59,7 @@ void ExtractBeEA(Archive &Arc,char *FileName)
     if (fs_write_attr(fd,Name,Type,0,CurItem+10+NameSize,Size)==-1)
     {
       Log(Arc.FileName,St(MCannotSetEA),FileName);
-      ErrHandler.SetErrorCode(WARNING);
+      ErrHandler.SetErrorCode(RARX_WARNING);
       break;
     }
     AttrPos+=10+NameSize+Size;
@@ -79,7 +79,7 @@ void ExtractBeEANew(Archive &Arc,char *FileName)
   if (fd==-1)
   {
     Log(Arc.FileName,St(MCannotSetEA),FileName);
-    ErrHandler.SetErrorCode(WARNING);
+    ErrHandler.SetErrorCode(RARX_WARNING);
     return;
   }
 
@@ -94,7 +94,7 @@ void ExtractBeEANew(Archive &Arc,char *FileName)
     if (NameSize>=sizeof(Name))
     {
       Log(Arc.FileName,St(MCannotSetEA),FileName);
-      ErrHandler.SetErrorCode(WARNING);
+      ErrHandler.SetErrorCode(RARX_WARNING);
       break;
     }
     memcpy(Name,CurItem+10,NameSize);
@@ -102,7 +102,7 @@ void ExtractBeEANew(Archive &Arc,char *FileName)
     if (fs_write_attr(fd,Name,Type,0,CurItem+10+NameSize,Size)==-1)
     {
       Log(Arc.FileName,St(MCannotSetEA),FileName);
-      ErrHandler.SetErrorCode(WARNING);
+      ErrHandler.SetErrorCode(RARX_WARNING);
       break;
     }
     AttrPos+=10+NameSize+Size;

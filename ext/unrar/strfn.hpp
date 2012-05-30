@@ -47,6 +47,7 @@ int64 atoil(const char *Str);
 void itoa(int64 n,wchar *Str);
 int64 atoil(const wchar *Str);
 const wchar* GetWide(const char *Src);
+const wchar* GetWide(const char *Src,const wchar *SrcW);
 const wchar* GetCmdParam(const wchar *CmdLine,wchar *Param,size_t MaxSize);
 
 #endif

@@ -1,7 +1,7 @@
 #include "rar.hpp"
 #include "dll.hpp"
 
-static int RarErrorToDll(int ErrCode);
+static int RarErrorToDll(RAR_EXIT ErrCode);
 
 struct DataSet
 {
@@ -33,10 +33,11 @@ HANDLE PASCAL RAROpenArchive(struct RAROpenArchiveData *r)
 
 HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
 {
+  DataSet *Data=NULL;
   try
   {
     r->OpenResult=0;
-    DataSet *Data=new DataSet;
+    Data=new DataSet;
     Data->Cmd.DllError=0;
     Data->OpenMode=r->OpenMode;
     Data->Cmd.FileArgs->AddString("*");
@@ -55,7 +56,7 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     Data->Cmd.Callback=r->Callback;
     Data->Cmd.UserData=r->UserData;
 
-    if (!Data->Arc.Open(r->ArcName,r->ArcNameW))
+    if (!Data->Arc.Open(r->ArcName,r->ArcNameW,0))
     {
       r->OpenResult=ERAR_EOPEN;
       delete Data;
@@ -86,10 +87,21 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     Data->Extract.ExtractArchiveInit(&Data->Cmd,Data->Arc);
     return((HANDLE)Data);
   }
-  catch (int ErrCode)
+  catch (RAR_EXIT ErrCode)
   {
-    r->OpenResult=RarErrorToDll(ErrCode);
+    if (Data!=NULL && Data->Cmd.DllError!=0)
+      r->OpenResult=Data->Cmd.DllError;
+    else
+      r->OpenResult=RarErrorToDll(ErrCode);
+    if (Data != NULL)
+      delete Data;
     return(NULL);
+  }
+  catch (std::bad_alloc) // Catch 'new' exception.
+  {
+    r->OpenResult=ERAR_NO_MEMORY;
+    if (Data != NULL)
+      delete Data;
   }
 }
 
@@ -105,50 +117,26 @@ int PASCAL RARCloseArchive(HANDLE hArcData)
 
 int PASCAL RARReadHeader(HANDLE hArcData,struct RARHeaderData *D)
 {
-  DataSet *Data=(DataSet *)hArcData;
-  try
-  {
-    if ((Data->HeaderSize=(int)Data->Arc.SearchBlock(FILE_HEAD))<=0)
-    {
-      if (Data->Arc.Volume && Data->Arc.GetHeaderType()==ENDARC_HEAD &&
-          (Data->Arc.EndArcHead.Flags & EARC_NEXT_VOLUME))
-        if (MergeArchive(Data->Arc,NULL,false,'L'))
-        {
-          Data->Extract.SignatureFound=false;
-          Data->Arc.Seek(Data->Arc.CurBlockPos,SEEK_SET);
-          return(RARReadHeader(hArcData,D));
-        }
-        else
-          return(ERAR_EOPEN);
-      return(Data->Arc.BrokenFileHeader ? ERAR_BAD_DATA:ERAR_END_ARCHIVE);
-    }
-    if (Data->OpenMode==RAR_OM_LIST && (Data->Arc.NewLhd.Flags & LHD_SPLIT_BEFORE))
-    {
-      int Code=RARProcessFile(hArcData,RAR_SKIP,NULL,NULL);
-      if (Code==0)
-        return(RARReadHeader(hArcData,D));
-      else
-        return(Code);
-    }
-    strncpyz(D->ArcName,Data->Arc.FileName,ASIZE(D->ArcName));
-    strncpyz(D->FileName,Data->Arc.NewLhd.FileName,ASIZE(D->FileName));
-    D->Flags=Data->Arc.NewLhd.Flags;
-    D->PackSize=Data->Arc.NewLhd.PackSize;
-    D->UnpSize=Data->Arc.NewLhd.UnpSize;
-    D->HostOS=Data->Arc.NewLhd.HostOS;
-    D->FileCRC=Data->Arc.NewLhd.FileCRC;
-    D->FileTime=Data->Arc.NewLhd.FileTime;
-    D->UnpVer=Data->Arc.NewLhd.UnpVer;
-    D->Method=Data->Arc.NewLhd.Method;
-    D->FileAttr=Data->Arc.NewLhd.FileAttr;
-    D->CmtSize=0;
-    D->CmtState=0;
-  }
-  catch (int ErrCode)
-  {
-    return(RarErrorToDll(ErrCode));
-  }
-  return(0);
+  struct RARHeaderDataEx X;
+  memset(&X,0,sizeof(X));
+
+  int Code=RARReadHeaderEx(hArcData,&X);
+
+  strncpyz(D->ArcName,X.ArcName,ASIZE(D->ArcName));
+  strncpyz(D->FileName,X.FileName,ASIZE(D->FileName));
+  D->Flags=X.Flags;
+  D->PackSize=X.PackSize;
+  D->UnpSize=X.UnpSize;
+  D->HostOS=X.HostOS;
+  D->FileCRC=X.FileCRC;
+  D->FileTime=X.FileTime;
+  D->UnpVer=X.UnpVer;
+  D->Method=X.Method;
+  D->FileAttr=X.FileAttr;
+  D->CmtSize=0;
+  D->CmtState=0;
+
+  return Code;
 }
 
 
@@ -171,7 +159,7 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
           return(ERAR_EOPEN);
       return(Data->Arc.BrokenFileHeader ? ERAR_BAD_DATA:ERAR_END_ARCHIVE);
     }
-    if (Data->OpenMode==RAR_OM_LIST && (Data->Arc.NewLhd.Flags & LHD_SPLIT_BEFORE))
+    if (Data->OpenMode==RAR_OM_LIST && (Data->Arc.NewLhd.Flags & LHD_SPLIT_BEFORE)!=0)
     {
       int Code=RARProcessFile(hArcData,RAR_SKIP,NULL,NULL);
       if (Code==0)
@@ -213,9 +201,9 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
     D->CmtSize=0;
     D->CmtState=0;
   }
-  catch (int ErrCode)
+  catch (RAR_EXIT ErrCode)
   {
-    return(RarErrorToDll(ErrCode));
+    return(Data->Cmd.DllError!=0 ? Data->Cmd.DllError:RarErrorToDll(ErrCode));
   }
   return(0);
 }
@@ -287,6 +275,8 @@ int PASCAL ProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestNa
       bool Repeat=false;
       Data->Extract.ExtractCurrentFile(&Data->Cmd,Data->Arc,Data->HeaderSize,Repeat);
 
+      // Now we process extra file information if any.
+      //
       // Archive can be closed if we process volumes, next volume is missing
       // and current one is already removed or deleted. So we need to check
       // if archive is still open to avoid calling file operations on
@@ -301,9 +291,9 @@ int PASCAL ProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestNa
       Data->Arc.Seek(Data->Arc.CurBlockPos,SEEK_SET);
     }
   }
-  catch (int ErrCode)
+  catch (RAR_EXIT ErrCode)
   {
-    return(RarErrorToDll(ErrCode));
+    return(Data->Cmd.DllError!=0 ? Data->Cmd.DllError:RarErrorToDll(ErrCode));
   }
   return(Data->Cmd.DllError);
 }
@@ -347,7 +337,10 @@ void PASCAL RARSetProcessDataProc(HANDLE hArcData,PROCESSDATAPROC ProcessDataPro
 void PASCAL RARSetPassword(HANDLE hArcData,char *Password)
 {
   DataSet *Data=(DataSet *)hArcData;
-  GetWideName(Password,NULL,Data->Cmd.Password,ASIZE(Data->Cmd.Password));
+  wchar PasswordW[MAXPASSWORD];
+  GetWideName(Password,NULL,PasswordW,ASIZE(PasswordW));
+  Data->Cmd.Password.Set(PasswordW);
+  cleandata(PasswordW,sizeof(PasswordW));
 }
 #endif
 
@@ -358,23 +351,23 @@ int PASCAL RARGetDllVersion()
 }
 
 
-static int RarErrorToDll(int ErrCode)
+static int RarErrorToDll(RAR_EXIT ErrCode)
 {
   switch(ErrCode)
   {
-    case FATAL_ERROR:
+    case RARX_FATAL:
       return(ERAR_EREAD);
-    case CRC_ERROR:
+    case RARX_CRC:
       return(ERAR_BAD_DATA);
-    case WRITE_ERROR:
+    case RARX_WRITE:
       return(ERAR_EWRITE);
-    case OPEN_ERROR:
+    case RARX_OPEN:
       return(ERAR_EOPEN);
-    case CREATE_ERROR:
+    case RARX_CREATE:
       return(ERAR_ECREATE);
-    case MEMORY_ERROR:
+    case RARX_MEMORY:
       return(ERAR_NO_MEMORY);
-    case SUCCESS:
+    case RARX_SUCCESS:
       return(0);
     default:
       return(ERAR_UNKNOWN);

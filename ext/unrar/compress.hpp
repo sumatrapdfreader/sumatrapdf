@@ -6,7 +6,6 @@ class PackingFileTable;
 
 #define MAX_LZ_MATCH    0x101
 
-#define CODEBUFSIZE     0x4000
 #define MAXWINSIZE      0x400000
 #define MAXWINMASK      (MAXWINSIZE-1)
 

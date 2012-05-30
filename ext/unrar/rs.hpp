@@ -24,7 +24,7 @@ class RSCoder
     int ELPol[MAXPOL]; // Error locator polynomial.
     bool FirstBlockDone;
   public:
-    RSCoder(int ParSize);
+    void Init(int ParSize);
     void Encode(byte *Data,int DataSize,byte *DestData);
     bool Decode(byte *Data,int DataSize,int *EraLoc,int EraSize);
 };

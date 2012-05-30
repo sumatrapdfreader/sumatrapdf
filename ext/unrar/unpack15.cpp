@@ -238,9 +238,7 @@ void Unpack::ShortLZ()
   Distance=ChSetA[DistancePlace];
   if (--DistancePlace != -1)
   {
-    PlaceA[Distance]--;
     LastDistance=ChSetA[DistancePlace];
-    PlaceA[LastDistance]++;
     ChSetA[DistancePlace+1]=LastDistance;
     ChSetA[DistancePlace]=Distance;
   }
@@ -464,8 +462,6 @@ void Unpack::InitHuff()
 {
   for (unsigned int I=0;I<256;I++)
   {
-    Place[I]=PlaceA[I]=PlaceB[I]=I;
-    PlaceC[I]=(~I+1) & 0xff;
     ChSet[I]=ChSetB[I]=I<<8;
     ChSetA[I]=I;
     ChSetC[I]=((~I+1) & 0xff)<<8;
@@ -477,7 +473,7 @@ void Unpack::InitHuff()
 }
 
 
-void Unpack::CorrHuff(unsigned int *CharSet,unsigned int *NumToPlace)
+void Unpack::CorrHuff(ushort *CharSet,byte *NumToPlace)
 {
   int I,J;
   for (I=7;I>=0;I--)

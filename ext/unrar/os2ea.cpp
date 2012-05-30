@@ -13,14 +13,14 @@ void ExtractOS2EA(Archive &Arc,char *FileName)
   if (Arc.HeaderCRC!=Arc.EAHead.HeadCRC)
   {
     Log(Arc.FileName,St(MEABroken),FileName);
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(RARX_CRC);
     return;
   }
 
   if (Arc.EAHead.Method<0x31 || Arc.EAHead.Method>0x35 || Arc.EAHead.UnpVer>PACK_VER)
   {
     Log(Arc.FileName,St(MEAUnknHeader),FileName);
-    ErrHandler.SetErrorCode(WARNING);
+    ErrHandler.SetErrorCode(RARX_WARNING);
     return;
   }
 
@@ -46,7 +46,7 @@ void ExtractOS2EA(Archive &Arc,char *FileName)
   if (Arc.EAHead.EACRC!=~DataIO.UnpFileCRC)
   {
     Log(Arc.FileName,St(MEABroken),FileName);
-    ErrHandler.SetErrorCode(CRC_ERROR);
+    ErrHandler.SetErrorCode(RARX_CRC);
     return;
   }
 
@@ -55,7 +55,7 @@ void ExtractOS2EA(Archive &Arc,char *FileName)
   if (DosSetPathInfo((unsigned char *)FileName,2,&EAOP2,sizeof(EAOP2),0x10)!=0)
   {
     Log(Arc.FileName,St(MCannotSetEA),FileName);
-    ErrHandler.SetErrorCode(WARNING);
+    ErrHandler.SetErrorCode(RARX_WARNING);
   }
   File::SetCloseFileTimeByName(FileName,&Arc.NewLhd.mtime,&Arc.NewLhd.atime);
   mprintf(St(MShowEA));
@@ -86,7 +86,7 @@ void ExtractOS2EANew(Archive &Arc,char *FileName)
   if (DosSetPathInfo((unsigned char *)FileName,2,&EAOP2,sizeof(EAOP2),0x10)!=0)
   {
     Log(Arc.FileName,St(MCannotSetEA),FileName);
-    ErrHandler.SetErrorCode(WARNING);
+    ErrHandler.SetErrorCode(RARX_WARNING);
   }
   File::SetCloseFileTimeByName(FileName,&Arc.NewLhd.mtime,&Arc.NewLhd.atime);
   mprintf(St(MShowEA));

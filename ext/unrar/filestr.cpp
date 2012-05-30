@@ -35,12 +35,12 @@ bool ReadTextFile(
   File SrcFile;
   if (FileName!=NULL && *FileName!=0 || FileNameW!=NULL && *FileNameW!=0)
   {
-    bool OpenCode=AbortOnError ? SrcFile.WOpen(FileName,FileNameW):SrcFile.Open(FileName,FileNameW);
+    bool OpenCode=AbortOnError ? SrcFile.WOpen(FileName,FileNameW):SrcFile.Open(FileName,FileNameW,0);
 
     if (!OpenCode)
     {
       if (AbortOnError)
-        ErrHandler.Exit(OPEN_ERROR);
+        ErrHandler.Exit(RARX_OPEN);
       return(false);
     }
   }

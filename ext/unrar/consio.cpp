@@ -8,7 +8,7 @@ static int KbdAnsi(char *Addr,int Size);
 
 #if !defined(GUI) && !defined(SILENT)
 static void RawPrint(char *Msg,MESSAGE_TYPE MessageType);
-static uint GetKey();
+static byte GetKey();
 #endif
 
 static MESSAGE_TYPE MsgStream=MSG_STDOUT;
@@ -147,6 +147,7 @@ void GetPasswordText(wchar *Str,uint MaxLength)
   strncpyz(StrA,getpass(""),ASIZE(StrA));
 #endif
   CharToWide(StrA,Str,MaxLength);
+  cleandata(StrA,sizeof(StrA));
 #endif
   Str[MaxLength-1]=0;
   RemoveLF(Str);
@@ -156,7 +157,8 @@ void GetPasswordText(wchar *Str,uint MaxLength)
 
 
 #ifndef SILENT
-bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,wchar *Password,uint MaxLength)
+bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,
+                 SecPassword *Password)
 {
   Alarm();
   while (true)
@@ -175,23 +177,27 @@ bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,
         strcat(PromptStr,NameOnly);
     }
     eprintf("\n%s: ",PromptStr);
-    GetPasswordText(Password,MaxLength);
-    if (*Password==0 && Type==PASSWORD_GLOBAL)
+
+    wchar PlainPsw[MAXPASSWORD];
+    GetPasswordText(PlainPsw,ASIZE(PlainPsw));
+    if (*PlainPsw==0 && Type==PASSWORD_GLOBAL)
       return(false);
     if (Type==PASSWORD_GLOBAL)
     {
       eprintf(St(MReAskPsw));
       wchar CmpStr[MAXPASSWORD];
       GetPasswordText(CmpStr,ASIZE(CmpStr));
-      if (*CmpStr==0 || wcscmp(Password,CmpStr)!=0)
+      if (*CmpStr==0 || wcscmp(PlainPsw,CmpStr)!=0)
       {
         eprintf(St(MNotMatchPsw));
-        memset(Password,0,MaxLength*sizeof(*Password));
-        memset(CmpStr,0,sizeof(CmpStr));
+        cleandata(PlainPsw,sizeof(PlainPsw));
+        cleandata(CmpStr,sizeof(CmpStr));
         continue;
       }
-      memset(CmpStr,0,sizeof(CmpStr));
+      cleandata(CmpStr,sizeof(CmpStr));
     }
+    Password->Set(PlainPsw);
+    cleandata(PlainPsw,sizeof(PlainPsw));
     break;
   }
   return(true);
@@ -200,7 +206,7 @@ bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,
 
 
 #if !defined(GUI) && !defined(SILENT)
-uint GetKey()
+byte GetKey()
 {
   char Str[80];
   bool EndOfFile;
@@ -215,9 +221,9 @@ uint GetKey()
   {
     // Looks like stdin is a null device. We can enter to infinite loop
     // calling Ask(), so let's better exit.
-    ErrHandler.Exit(USER_BREAK);
+    ErrHandler.Exit(RARX_USERBREAK);
   }
-  return(Str[0]);
+  return (byte)Str[0];
 }
 #endif
 
@@ -260,13 +266,13 @@ int Ask(const char *AskStr)
     eprintf("[%c]%s",Item[I][KeyPos],&Item[I][KeyPos+1]);
   }
   eprintf(" ");
-  int Ch=GetKey();
+  byte Ch=GetKey();
 #if defined(_WIN_ALL)
-  OemToCharBuff((LPCSTR)&Ch,(LPTSTR)&Ch,1);
+  OemToCharBuffA((LPCSTR)&Ch,(LPSTR)&Ch,1);
 #endif
   Ch=loctoupper(Ch);
   for (int I=0;I<NumItems;I++)
-    if (Ch==Item[I][ItemKeyPos[I]])
+    if (Ch==(byte)Item[I][ItemKeyPos[I]])
       return(I+1);
   return(0);
 }

@@ -20,6 +20,7 @@ File::File()
   AllowExceptions=true;
 #ifdef _WIN_ALL
   NoSequentialRead=false;
+  CreateMode=FMF_UNDEFINED;
 #endif
 }
 
@@ -45,15 +46,16 @@ void File::operator = (File &SrcFile)
 }
 
 
-bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
+bool File::Open(const char *Name,const wchar *NameW,uint Mode)
 {
   ErrorType=FILE_SUCCESS;
   FileHandle hNewFile;
-  if (File::OpenShared)
-    OpenShared=true;
+  bool OpenShared=File::OpenShared || (Mode & FMF_OPENSHARED)!=0;
+  bool UpdateMode=(Mode & FMF_UPDATE)!=0;
+  bool WriteMode=(Mode & FMF_WRITE)!=0;
 #ifdef _WIN_ALL
-  uint Access=GENERIC_READ;
-  if (Update)
+  uint Access=WriteMode ? GENERIC_WRITE:GENERIC_READ;
+  if (UpdateMode)
     Access|=GENERIC_WRITE;
   uint ShareMode=FILE_SHARE_READ;
   if (OpenShared)
@@ -67,7 +69,7 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
   if (hNewFile==BAD_HANDLE && GetLastError()==ERROR_FILE_NOT_FOUND)
     ErrorType=FILE_NOTFOUND;
 #else
-  int flags=Update ? O_RDWR:O_RDONLY;
+  int flags=UpdateMode ? O_RDWR:(WriteMode ? O_WRONLY:O_RDONLY);
 #ifdef O_BINARY
   flags|=O_BINARY;
 #if defined(_AIX) && defined(_LARGE_FILE_API)
@@ -85,14 +87,14 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
   extern "C" int flock(int, int);
 #endif
 
-  if (!OpenShared && Update && handle>=0 && flock(handle,LOCK_EX|LOCK_NB)==-1)
+  if (!OpenShared && UpdateMode && handle>=0 && flock(handle,LOCK_EX|LOCK_NB)==-1)
   {
     close(handle);
     return(false);
   }
 #endif
 #endif
-  hNewFile=handle==-1 ? BAD_HANDLE:fdopen(handle,Update ? UPDATEBINARY:READBINARY);
+  hNewFile=handle==-1 ? BAD_HANDLE:fdopen(handle,UpdateMode ? UPDATEBINARY:READBINARY);
   if (hNewFile==BAD_HANDLE && errno==ENOENT)
     ErrorType=FILE_NOTFOUND;
 #endif
@@ -107,7 +109,7 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
     // We use memove instead of strcpy and wcscpy to avoid problems
     // with overlapped buffers. While we do not call this function with
     // really overlapped buffers yet, we do call it with Name equal to
-    // FileName like Arc.Open(Arc.FileName,Arc.FileNameW).
+    // FileName like Arc.Open(Arc.FileName,Arc.FileNameW,...).
     if (NameW!=NULL)
       memmove(FileNameW,NameW,(wcslen(NameW)+1)*sizeof(*NameW));
     else
@@ -126,7 +128,7 @@ bool File::Open(const char *Name,const wchar *NameW,bool OpenShared,bool Update)
 void File::TOpen(const char *Name,const wchar *NameW)
 {
   if (!WOpen(Name,NameW))
-    ErrHandler.Exit(OPEN_ERROR);
+    ErrHandler.Exit(RARX_OPEN);
 }
 #endif
 
@@ -140,18 +142,24 @@ bool File::WOpen(const char *Name,const wchar *NameW)
 }
 
 
-bool File::Create(const char *Name,const wchar *NameW,bool ShareRead)
+bool File::Create(const char *Name,const wchar *NameW,uint Mode)
 {
+  // OpenIndiana based NAS and CIFS shares fail to set the file time if file
+  // was created in read+write mode and some data was written and not flushed
+  // before SetFileTime call. So we should use the write only mode if we plan
+  // SetFileTime call and do not need to read from file.
+  bool WriteMode=(Mode & FMF_WRITE)!=0;
+  bool ShareRead=(Mode & FMF_SHAREREAD)!=0 || File::OpenShared;
 #ifdef _WIN_ALL
-  DWORD ShareMode=(ShareRead || File::OpenShared) ? FILE_SHARE_READ:0;
+  CreateMode=Mode;
+  uint Access=WriteMode ? GENERIC_WRITE:GENERIC_READ|GENERIC_WRITE;
+  DWORD ShareMode=ShareRead ? FILE_SHARE_READ:0;
   if (WinNT() && NameW!=NULL && *NameW!=0)
-    hFile=CreateFileW(NameW,GENERIC_READ|GENERIC_WRITE,ShareMode,NULL,
-                      CREATE_ALWAYS,0,NULL);
+    hFile=CreateFileW(NameW,Access,ShareMode,NULL,CREATE_ALWAYS,0,NULL);
   else
-    hFile=CreateFileA(Name,GENERIC_READ|GENERIC_WRITE,ShareMode,NULL,
-                     CREATE_ALWAYS,0,NULL);
+    hFile=CreateFileA(Name,Access,ShareMode,NULL,CREATE_ALWAYS,0,NULL);
 #else
-  hFile=fopen(Name,CREATEBINARY);
+  hFile=fopen(Name,WriteMode ? WRITEBINARY:CREATEBINARY);
 #endif
   NewFile=true;
   HandleType=FILE_HANDLENORMAL;
@@ -182,19 +190,19 @@ void File::AddFileToList(FileHandle hFile)
 
 
 #if !defined(SHELL_EXT) && !defined(SFX_MODULE)
-void File::TCreate(const char *Name,const wchar *NameW,bool ShareRead)
+void File::TCreate(const char *Name,const wchar *NameW,uint Mode)
 {
-  if (!WCreate(Name,NameW,ShareRead))
-    ErrHandler.Exit(FATAL_ERROR);
+  if (!WCreate(Name,NameW,Mode))
+    ErrHandler.Exit(RARX_FATAL);
 }
 #endif
 
 
-bool File::WCreate(const char *Name,const wchar *NameW,bool ShareRead)
+bool File::WCreate(const char *Name,const wchar *NameW,uint Mode)
 {
-  if (Create(Name,NameW,ShareRead))
+  if (Create(Name,NameW,Mode))
     return(true);
-  ErrHandler.SetErrorCode(CREATE_ERROR);
+  ErrHandler.SetErrorCode(RARX_CREATE);
   ErrHandler.CreateErrorMsg(Name,NameW);
   return(false);
 }
@@ -536,6 +544,12 @@ bool File::Truncate()
 void File::SetOpenFileTime(RarTime *ftm,RarTime *ftc,RarTime *fta)
 {
 #ifdef _WIN_ALL
+  // Workaround for OpenIndiana NAS time bug. If we cannot create a file
+  // in write only mode, we need to flush the write buffer before calling
+  // SetFileTime or file time will not be changed.
+  if (CreateMode!=FMF_UNDEFINED && (CreateMode & FMF_WRITE)==0)
+    FlushFileBuffers(hFile);
+
   bool sm=ftm!=NULL && ftm->IsSet();
   bool sc=ftc!=NULL && ftc->IsSet();
   bool sa=fta!=NULL && fta->IsSet();

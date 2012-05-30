@@ -127,7 +127,7 @@ void ComprDataIO::UnpWrite(byte *Addr,size_t Count)
   {
     if (Cmd->Callback!=NULL &&
         Cmd->Callback(UCM_PROCESSDATA,Cmd->UserData,(LPARAM)Addr,Count)==-1)
-      ErrHandler.Exit(USER_BREAK);
+      ErrHandler.Exit(RARX_USERBREAK);
     if (Cmd->ProcessDataProc!=NULL)
     {
       // Here we preserve ESP value. It is necessary for those developers,
@@ -153,7 +153,7 @@ void ComprDataIO::UnpWrite(byte *Addr,size_t Count)
       _ESP=_EBX;
 #endif
       if (RetCode==0)
-        ErrHandler.Exit(USER_BREAK);
+        ErrHandler.Exit(RARX_USERBREAK);
     }
   }
 #endif // RARDLL
@@ -246,18 +246,18 @@ void ComprDataIO::GetUnpackedData(byte **Data,size_t *Size)
 }
 
 
-void ComprDataIO::SetEncryption(int Method,const wchar *Password,const byte *Salt,bool Encrypt,bool HandsOffHash)
+void ComprDataIO::SetEncryption(int Method,SecPassword *Password,const byte *Salt,bool Encrypt,bool HandsOffHash)
 {
   if (Encrypt)
   {
-    Encryption=*Password ? Method:0;
+    Encryption=Password->IsSet() ? Method:0;
 #ifndef RAR_NOCRYPT
     Crypt.SetCryptKeys(Password,Salt,Encrypt,false,HandsOffHash);
 #endif
   }
   else
   {
-    Decryption=*Password ? Method:0;
+    Decryption=Password->IsSet() ? Method:0;
 #ifndef RAR_NOCRYPT
     Decrypt.SetCryptKeys(Password,Salt,Encrypt,Method<29,HandsOffHash);
 #endif

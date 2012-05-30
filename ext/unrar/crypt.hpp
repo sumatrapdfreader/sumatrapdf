@@ -9,18 +9,18 @@ struct CryptKeyCacheItem
 #ifndef _SFX_RTL_
   CryptKeyCacheItem()
   {
-    *Password=0;
+    Password.Set(L"");
   }
 
   ~CryptKeyCacheItem()
   {
     memset(AESKey,0,sizeof(AESKey));
     memset(AESInit,0,sizeof(AESInit));
-    memset(Password,0,sizeof(Password));
+    memset(&Password,0,sizeof(Password));
   }
 #endif
   byte AESKey[16],AESInit[16];
-  wchar Password[MAXPASSWORD];
+  SecPassword Password;
   bool SaltPresent;
   byte Salt[SALT_SIZE];
   bool HandsOffHash;
@@ -48,7 +48,7 @@ class CryptData
     static CryptKeyCacheItem Cache[4];
     static int CachePos;
   public:
-    void SetCryptKeys(const wchar *Password,const byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash);
+    void SetCryptKeys(SecPassword *Password,const byte *Salt,bool Encrypt,bool OldOnly,bool HandsOffHash);
     void SetAV15Encryption();
     void SetCmt13Encryption();
     void EncryptBlock20(byte *Buf);

@@ -98,8 +98,8 @@ time_t RarTime::GetUnix()
 // since January 1, 1601 for Windows and since January 1, 1970 for Unix.
 // Actually we do not care since which date this time starts from
 // as long as this date is the same for GetRaw and SetRaw. We use the value
-// returned by GetRaw() for time comparisons and for relative operations
-// like SetRaw(GetRaw()-C).
+// returned by GetRaw() for time comparisons, for relative operations
+// like SetRaw(GetRaw()-C) and for compact time storage when necessary.
 int64 RarTime::GetRaw()
 {
   if (!IsSet())

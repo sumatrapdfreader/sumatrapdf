@@ -14,7 +14,7 @@ void InitConsoleOptions(MESSAGE_TYPE MsgStream,bool Sound);
   void eprintf(const char *fmt,...);
   void Alarm();
   void GetPasswordText(wchar *Str,uint MaxLength);
-  bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,wchar *Password,uint MaxLength);
+  bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,SecPassword *Password);
   int Ask(const char *AskStr);
 #endif
 
@@ -30,7 +30,7 @@ void OutComment(char *Comment,size_t Size);
   #endif
   inline void Alarm() {}
   inline void GetPasswordText(wchar *Str,uint MaxLength) {}
-  inline bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,wchar *Password,uint MaxLength) {return(false);}
+  inline bool GetPassword(PASSWORD_TYPE Type,const char *FileName,const wchar *FileNameW,SecPassword *Password) {return(false);}
   inline int Ask(const char *AskStr) {return(0);}
 #endif
 
