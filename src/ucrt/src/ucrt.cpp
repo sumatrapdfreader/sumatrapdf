@@ -369,6 +369,18 @@ size_t __cdecl mbrtowc(wchar_t *wchar, const char *mbchar, size_t cbSize, mbstat
 }
 #endif
 
+// http://msdn.microsoft.com/en-us/library/5d7tc9zw(v=vs.80).aspx
+size_t __cdecl wcstombs(char *mbstr, const wchar_t *wcstr, size_t count)
+{
+    if (!wcstr || count > INT_MAX) {
+        errno = EINVAL;
+        return -1;
+    }
+    // gzlib.c assumes that wcstombs can't fail, so we don't verify that all
+    // wide characters could indeed be converted (i.e. EILSEQ is never raised)
+    return WideCharToMultiByte(CP_ACP, 0, wcstr, -1, mbstr, mbstr ? count : 0, NULL, NULL);
+}
+
 // http://msdn.microsoft.com/en-us/library/a9yb3dbt.aspx
 float __cdecl _hypotf(float x, float y)
 {
@@ -541,4 +553,3 @@ void OnExit()
     _initterm(__xp_a, __xp_z);
     _initterm(__xt_a, __xt_z);
 }
-
