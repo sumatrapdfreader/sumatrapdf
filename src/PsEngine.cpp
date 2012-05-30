@@ -10,7 +10,6 @@
 #include "WinUtil.h"
 
 #include <zlib.h>
-extern "C" gzFile ZEXPORT gzwopen(const wchar_t *path, const char *mode);
 
 static TCHAR *GetGhostscriptPath()
 {
@@ -154,7 +153,7 @@ static PdfEngine *psgz2pdf(const TCHAR *fileName)
         return NULL;
 
 #ifdef UNICODE
-    gzFile inFile = gzwopen(fileName, "rb");
+    gzFile inFile = gzopen_w(fileName, "rb");
 #else
     gzFile inFile = gzopen(fileName, "rb");
 #endif

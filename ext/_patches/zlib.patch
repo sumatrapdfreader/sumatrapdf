@@ -1,48 +1,3 @@
-diff -rPu5 zlib.orig\gzguts.h zlib\gzguts.h
---- zlib.orig\gzguts.h	Sun Jan 29 10:13:14 2012
-+++ zlib\gzguts.h	Sat Feb 04 08:53:13 2012
-@@ -28,10 +28,14 @@
- #include <fcntl.h>
- 
- #ifdef __TURBOC__
- #  include <io.h>
- #endif
-+/* SumatraPDF: required for _open */
-+#ifdef _MSC_VER
-+#  include <io.h>
-+#endif
- 
- #ifdef NO_DEFLATE       /* for compatibility with old definition */
- #  define NO_GZCOMPRESS
- #endif
- 
-diff -rPu5 zlib.orig\gzwopen.c zlib\gzwopen.c
---- zlib.orig\gzwopen.c	Thu Jan 01 01:00:00 1970
-+++ zlib\gzwopen.c	Sat Feb 04 07:13:51 2012
-@@ -0,0 +1,23 @@
-+/* Copyright 2011 the SumatraPDF project authors (see AUTHORS file).
-+   License: Simplified BSD (see COPYING.BSD) */
-+
-+#include <string.h>
-+#include <io.h>
-+#include <fcntl.h>
-+
-+#include "zlib.h"
-+
-+/* open files with Unicode paths (for use in a DLL) */
-+gzFile ZEXPORT gzwopen(const wchar_t *path, const char *mode)
-+{
-+    int flags = (strchr(mode, 'r') ? _O_RDONLY :
-+                 strchr(mode, 'w') ? _O_WRONLY | _O_CREAT :
-+                 strchr(mode, 'a') ? _O_APPEND | _O_CREAT : 0) |
-+                (strchr(mode, 'b') ? _O_BINARY : 0);
-+    int fd = _wopen(path, flags, 0);
-+
-+    gzFile file = gzdopen(fd, mode);
-+    if (!file)
-+        _close(fd);
-+    return file;
-+}
 diff -rPu5 zlib.orig\minizip\iowin32s.c zlib\minizip\iowin32s.c
 --- zlib.orig\minizip\iowin32s.c	Thu Jan 01 01:00:00 1970
 +++ zlib\minizip\iowin32s.c	Sat Jan 21 16:18:29 2012
@@ -232,26 +187,25 @@ diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 +}
 +#endif
 diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
---- zlib.orig\minizip\unzip.c	Sat Jan 21 11:49:30 2012
-+++ zlib\minizip\unzip.c	Thu Apr 05 13:36:53 2012
-@@ -91,10 +91,16 @@
- #  define local static
- #endif
- /* compile with -Dlocal if your debugger can't find static symbols */
+--- zlib.orig\minizip\unzip.c	Sat Jan 21 21:49:31 2012
++++ zlib\minizip\unzip.c	Wed May 30 23:16:22 2012
+@@ -106,10 +106,15 @@
  
+ #ifndef UNZ_MAXFILENAMEINZIP
+ #define UNZ_MAXFILENAMEINZIP (256)
+ #endif
  
 +/* SumatraPDF: allow to include a custom allocator */
 +#ifdef INC_CUSTOM_ALLOC
 +#include INC_CUSTOM_ALLOC
 +#endif
 +
-+
- #ifndef CASESENSITIVITYDEFAULT_NO
- #  if !defined(unix) && !defined(CASESENSITIVITYDEFAULT_YES)
- #    define CASESENSITIVITYDEFAULT_NO
- #  endif
+ #ifndef ALLOC
+ # define ALLOC(size) (malloc(size))
  #endif
-@@ -712,10 +718,14 @@
+ #ifndef TRYFREE
+ # define TRYFREE(p) {if (p) free(p);}
+@@ -712,10 +717,14 @@
          /* total number of entries in the central dir */
          if (unz64local_getShort(&us.z_filefunc, us.filestream,&uL)!=UNZ_OK)
              err=UNZ_ERRNO;
@@ -266,7 +220,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
              (number_disk!=0))
              err=UNZ_BADZIPFILE;
  
-@@ -1373,10 +1383,15 @@
+@@ -1373,10 +1382,15 @@
  /*
  // Unzip Helper Functions - should be here?
  ///////////////////////////////////////////
@@ -282,7 +236,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
    Check the coherency of the local header and info in the end of central
          directory about this file
    store in *piSizeVar the size of extra info in local header
-@@ -1548,17 +1563,19 @@
+@@ -1548,17 +1562,19 @@
      pfile_in_zip_read_info->stream.total_out = 0;
  
      if ((s->cur_file_info.compression_method==Z_BZIP2ED) && (!raw))
@@ -306,7 +260,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
        pfile_in_zip_read_info->stream.avail_in = 0;
  
        err=BZ2_bzDecompressInit(&pfile_in_zip_read_info->bstream, 0, 0);
-@@ -1573,12 +1590,13 @@
+@@ -1573,12 +1589,13 @@
        pfile_in_zip_read_info->raw=1;
  #endif
      }

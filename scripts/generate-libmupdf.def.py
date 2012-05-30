@@ -50,7 +50,7 @@ EXPORTS
 	gzerror
 	gzprintf
 	gzopen
-	gzwopen
+	gzopen_w
 	gzseek
 	gztell
 	gzread

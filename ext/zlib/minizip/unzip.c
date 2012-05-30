@@ -93,12 +93,6 @@
 /* compile with -Dlocal if your debugger can't find static symbols */
 
 
-/* SumatraPDF: allow to include a custom allocator */
-#ifdef INC_CUSTOM_ALLOC
-#include INC_CUSTOM_ALLOC
-#endif
-
-
 #ifndef CASESENSITIVITYDEFAULT_NO
 #  if !defined(unix) && !defined(CASESENSITIVITYDEFAULT_YES)
 #    define CASESENSITIVITYDEFAULT_NO
@@ -112,6 +106,11 @@
 
 #ifndef UNZ_MAXFILENAMEINZIP
 #define UNZ_MAXFILENAMEINZIP (256)
+#endif
+
+/* SumatraPDF: allow to include a custom allocator */
+#ifdef INC_CUSTOM_ALLOC
+#include INC_CUSTOM_ALLOC
 #endif
 
 #ifndef ALLOC
