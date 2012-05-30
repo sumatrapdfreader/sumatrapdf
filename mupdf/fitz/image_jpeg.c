@@ -46,6 +46,78 @@ static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 	}
 }
 
+/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
+static inline int read_value(unsigned char *data, int bytes, int is_big_endian)
+{
+	int value = 0;
+	if (!is_big_endian)
+		data += bytes;
+	for (; bytes > 0; bytes--)
+		value = (value << 8) | (is_big_endian ? *data++ : *--data);
+	return value;
+}
+
+static void extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int *yres)
+{
+	int is_big_endian;
+	int offset, ifd_len, res_type = 0;
+	float x_res = 0, y_res = 0;
+
+	if (rlen < 20 ||
+		read_value(rbuf + 2, 2, 1) != 0xFFE1 ||
+		read_value(rbuf + 6, 4, 1) != 0x45786966 /* Exif */ ||
+		read_value(rbuf + 10, 2, 1) != 0x0000)
+	{
+		return;
+	}
+	if (read_value(rbuf + 12, 4, 1) == 0x49492A00)
+		is_big_endian = 0;
+	else if (read_value(rbuf + 12, 4, 1) == 0x4D4D002A)
+		is_big_endian = 1;
+	else
+		return;
+
+	offset = read_value(rbuf + 16, 4, is_big_endian) + 12;
+	if (offset < 20 || offset + 2 >= rlen)
+		return;
+	ifd_len = read_value(rbuf + offset, 2, is_big_endian);
+	for (offset += 2; ifd_len > 0 && offset + 12 < rlen; ifd_len--, offset += 12)
+	{
+		int tag = read_value(rbuf + offset, 2, is_big_endian);
+		int type = read_value(rbuf + offset + 2, 2, is_big_endian);
+		int count = read_value(rbuf + offset + 4, 4, is_big_endian);
+		int value_off = read_value(rbuf + offset + 8, 4, is_big_endian) + 12;
+		switch (tag)
+		{
+		case 0x11A:
+			if (type == 5 && value_off > offset && value_off + 8 <= rlen)
+				x_res = 1.0f * read_value(rbuf + value_off, 4, is_big_endian) / read_value(rbuf + value_off + 4, 4, is_big_endian);
+			break;
+		case 0x11B:
+			if (type == 5 && value_off > offset && value_off + 8 <= rlen)
+				y_res = 1.0f * read_value(rbuf + value_off, 4, is_big_endian) / read_value(rbuf + value_off + 4, 4, is_big_endian);
+			break;
+		case 0x128:
+			if (type == 3 && count == 1)
+				res_type = read_value(rbuf + offset + 8, 2, is_big_endian);
+			break;
+		}
+	}
+
+	if (x_res <= 0 || x_res > INT_MAX || y_res <= 0 || y_res > INT_MAX)
+		return;
+	if (res_type == 2)
+	{
+		*xres = (int)x_res;
+		*yres = (int)y_res;
+	}
+	else if (res_type == 3)
+	{
+		*xres = (int)(x_res * 254 / 100);
+		*yres = (int)(y_res * 254 / 100);
+	}
+}
+
 fz_pixmap *
 fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 {
@@ -113,6 +185,11 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 	{
 		image->xres = cinfo.X_density * 254 / 100;
 		image->yres = cinfo.Y_density * 254 / 100;
+	}
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
+	else if (cinfo.density_unit == 0)
+	{
+		extract_exif_resolution(rbuf, rlen, &image->xres, &image->yres);
 	}
 
 	if (image->xres <= 0) image->xres = 72;

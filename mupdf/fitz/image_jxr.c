@@ -25,19 +25,19 @@ fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
 	HRESULT hr;
 
 	CoInitialize(NULL);
-#define HR(hr) if (FAILED(hr)) goto CleanUp
-	HR(CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_ALL, &IID_IWICImagingFactory, (void **)&factory));
-	HR(CreateStreamOnHGlobal(NULL, TRUE, &stream));
-	HR(IStream_Write(stream, data, (ULONG)size, &written));
-	HR(IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL));
-	HR(IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, WICDecodeMetadataCacheOnDemand, &decoder));
-	HR(IWICImagingFactory_CreateFormatConverter(factory, &converter));
-	HR(IWICBitmapDecoder_GetFrame(decoder, 0, &src_frame));
-	HR(IUnknown_QueryInterface(src_frame, &IID_IWICBitmapSource, &src_bitmap));
-	HR(IWICFormatConverter_Initialize(converter, src_bitmap, &GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone, NULL, 0.f, WICBitmapPaletteTypeCustom));
-	HR(IWICFormatConverter_GetSize(converter, &width, &height));
-	HR(IWICFormatConverter_GetResolution(converter, &xres, &yres));
-#undef HR
+#define Check(hr) if (FAILED(hr)) goto CleanUp
+	Check(CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_ALL, &IID_IWICImagingFactory, (void **)&factory));
+	Check(CreateStreamOnHGlobal(NULL, TRUE, &stream));
+	Check(IStream_Write(stream, data, (ULONG)size, &written));
+	Check(IStream_Seek(stream, zero, STREAM_SEEK_SET, NULL));
+	Check(IWICImagingFactory_CreateDecoderFromStream(factory, stream, NULL, WICDecodeMetadataCacheOnDemand, &decoder));
+	Check(IWICImagingFactory_CreateFormatConverter(factory, &converter));
+	Check(IWICBitmapDecoder_GetFrame(decoder, 0, &src_frame));
+	Check(IUnknown_QueryInterface(src_frame, &IID_IWICBitmapSource, &src_bitmap));
+	Check(IWICFormatConverter_Initialize(converter, src_bitmap, &GUID_WICPixelFormat32bppBGRA, WICBitmapDitherTypeNone, NULL, 0.f, WICBitmapPaletteTypeCustom));
+	Check(IWICFormatConverter_GetSize(converter, &width, &height));
+	Check(IWICFormatConverter_GetResolution(converter, &xres, &yres));
+#undef Check
 	codec_available = 1;
 
 	fz_try(ctx)
@@ -59,18 +59,14 @@ fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
 	pix->yres = (int)(yres + 0.5);
 
 CleanUp:
-	if (src_bitmap)
-		IUnknown_Release(src_bitmap);
-	if (converter)
-		IUnknown_Release(converter);
-	if (src_frame)
-		IUnknown_Release(src_frame);
-	if (decoder)
-		IUnknown_Release(decoder);
-	if (factory)
-		IUnknown_Release(factory);
-	if (stream)
-		IUnknown_Release(stream);
+#define Release(unk) if (unk) IUnknown_Release(unk)
+	Release(src_bitmap);
+	Release(converter);
+	Release(src_frame);
+	Release(decoder);
+	Release(factory);
+	Release(stream);
+#undef Release
 	CoUninitialize();
 
 	if (codec_available)
