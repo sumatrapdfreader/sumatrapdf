@@ -765,8 +765,15 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 		fontdesc->cid_to_gid_len = 256;
 		fontdesc->cid_to_gid = etable;
 
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1961 */
+		fz_try(ctx)
+		{
 		pdf_load_to_unicode(xref, fontdesc, estrings, NULL, pdf_dict_gets(dict, "ToUnicode"));
-		/* RJW: "cannot load to_unicode" */
+		}
+		fz_catch(ctx)
+		{
+			fz_warn(ctx, "cannot load to_unicode");
+		}
 
 	skip_encoding:
 
@@ -955,8 +962,15 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 			}
 		}
 
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1961 */
+		fz_try(ctx)
+		{
 		pdf_load_to_unicode(xref, fontdesc, NULL, collection, to_unicode);
-		/* RJW: "cannot load to_unicode" */
+		}
+		fz_catch(ctx)
+		{
+			fz_warn(ctx, "cannot load to_unicode");
+		}
 
 		/* Horizontal */
 
