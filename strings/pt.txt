@@ -40,7 +40,7 @@ Como li&vro\tCtrl+8
 &Não perguntar novamente
 
 &Even pages only
-Apenas as páginas &pares
+Só páginas &pares
 
 &Facing\tCtrl+7
 D&uas páginas\tCtrl+7
@@ -88,7 +88,7 @@ Página &seguinte\t->
 &Não, obrigado(a)
 
 &Odd pages only
-Apenas páginas í&mpares
+Só páginas í&mpares
 
 &Open Document
 &Abrir documento
@@ -100,7 +100,7 @@ Apenas páginas í&mpares
 &Opções...
 
 &Password:
-&Palavra passe:
+&Palavra-passe:
 
 &Pin Document
 Fi&xar documento
@@ -118,13 +118,13 @@ Página &anterior\t<-
 &Imprimir...(recusado)
 
 &Remember the password for this document
-&Lembrar a palavra passe deste documento
+&Lembrar a palavra-passe deste documento
 
 &Remember these settings for each document
 &Lembrar estas definições para todos os documentos
 
 &Remove Document
-Esq&uecer documento
+Remover doc&umento
 
 &Save As...
 &Gravar como...
@@ -226,7 +226,7 @@ CHM documents
 Documentos CHM
 
 Can't connect to the Internet (error %#x).
-Não foi possível ligar à internet (erro %#x).
+Não foi possível ligar à internet (erro %#x)
 
 Cancel
 Cancelar
@@ -238,7 +238,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Não é possível iniciar o comando da pesquisa inversa. Verifique a linha de comandos nas definições.
 
 Change Language
-&Mudar idioma (Change Language)
+Mudar idioma
 
 Check for &Updates
 Verificar at&ualizações
@@ -271,13 +271,13 @@ Copying text was denied (copying as image only)
 A cópia do texto foi recusada (copie como imagem)
 
 Copyright:
-Direito autoral:
+Direitos de autor:
 
 Could not obtain Printer properties
 Não foi possível obter as propriedades da impressora
 
 Couldn't initialize printer
-Não foi possível inicializar a impressora
+Não foi possível iniciar a impressora
 
 Couldn't render the page
 Não foi possível processar a página
@@ -292,13 +292,13 @@ Custom &Zoom...\tCtrl+Y
 &Personalizar...\tCtrl+Y
 
 Default &Layout:
-&Exibição por omissão:
+&Exibição padrão:
 
 Default &Zoom:
-&Ampliação por omissão:
+&Ampliação padrão:
 
 Default PDF reader can't be changed in portable mode
-No modo portátil, não é possível alterar o leitor de PDFs
+No modo portátil, não pode alterar o leitor pré-definido dos PDFs
 
 Denied Permissions:
 Permissões recusadas:
@@ -319,13 +319,13 @@ EPUB ebooks
 Documentos EPUB
 
 Enter password
-Indique a palavra passe
+Indique a palavra-passe
 
 Enter password for %s
-Indique a palavra passe de %s
+Indique a palavra-passe de %s
 
 Enter the command-line to invoke when you double-click on the PDF document:
-Insira a linha de comandos a invocar ao fazer duplo clique no documento PDF:
+Indique a linha de comandos a invocar ao clicar duas vezes no documento PDF:
 
 Error loading %s
 Erro ao carregar %s
@@ -346,7 +346,7 @@ Failed to rename the file!
 Falha ao mudar o nome do ficheiro!
 
 Failed to save a file
-Erro ao gravar o ficheiro
+Erro ao gravar o ficheiro!
 
 Favorites
 Favoritos
@@ -442,7 +442,7 @@ Make SumatraPDF default application for PDF files?
 Tornar SumatraPDF a aplicação principal para PDFs?
 
 Make SumatraPDF my default PDF reader
-Tornar SumatraPDF o leitor principal dos PDF
+Tornar SumatraPDF o leitor pré-definido dos PDF
 
 Match Case
 Sensível a maiúsculas
@@ -469,7 +469,7 @@ No synchronization file found
 Nenhum ficheiro de sincronização encontrado
 
 No synchronization info at this position
-Não há informação de sincronização nesta posição
+Não há informações de sincronização nesta posição
 
 Number of Pages:
 Número de páginas:
@@ -481,7 +481,7 @@ Open
 Abrir
 
 Open &in PDF-XChange
-Abrir no PDF-XChange
+Abrir no PDF-&XChange
 
 Open a document...
 Abrir documento...
@@ -490,13 +490,13 @@ Open in &Adobe Reader
 Abrir no Adobe &Reader
 
 Open in &Foxit Reader
-Abrir &no Foxit Reader
+Abrir &no &Foxit Reader
 
 Open in &Microsoft HTML Help
-Abrir no Microsoft HTML Help
+Abrir no &Microsoft HTML Help
 
 Open in &Microsoft XPS-Viewer
-Abrir no Microsoft XPS-Viewer
+Abrir no &Microsoft XPS-Viewer
 
 P&roperties
 &Propriedades
@@ -556,13 +556,13 @@ Printer with given name doesn't exist
 A impressora indicada não existe
 
 Printing is still in progress. Abort and start over?
-A impressão está a decorrer. Cancelar e reiniciar?
+A impressão está em curso. Cancelar e reiniciar?
 
 Printing page %d of %d...
 A imprimir página %d de %d...
 
 Printing problem.
-Erro de impressão.
+Erro de impressão
 
 Re&name...\tF2
 Mudar &nome...\tF2
@@ -580,7 +580,7 @@ Rename To
 Mudar nome para
 
 Replace document &colors with Windows color scheme
-Substituir &cores do documento pelas cores Windows
+Substituir &cores do documento pelas cores do Windows
 
 Rotate &Left\tCtrl+Shift+-
 Rodar à &esquerda\tCtrl+Shift+-
@@ -607,7 +607,7 @@ Select content with Ctrl+left mouse button
 Selecione o conteúdo com Ctrl+botão esquerdo do rato
 
 Send by &E-mail...
-&Enviar por correio...
+&Enviar por correio eletrónico...
 
 Set inverse search command-line
 Definir linha de comandos para procura inversa
@@ -649,10 +649,10 @@ SumatraPDF crashed
 O SumatraPDF terminou
 
 SumatraPDF is your default PDF reader
-SumatraPDF é o leitor principal dos PDF
+O SumatraPDF é o leitor pré-definido dos PDF
 
 SumatraPDF should now be your default PDF reader
-SumatraPDF deve agora ser o leitor principal dos PDF
+O SumatraPDF deve agora ser o leitor pré-definido dos PDF
 
 Synchronization file cannot be opened
 Não foi possível abrir o ficheiro de sincronização
@@ -679,7 +679,7 @@ XPS documents
 Documentos XPS
 
 You have the latest version.
-Já tem a versão mais recente.
+Já tem a versão mais recente
 
 You have version %s
 Tem a versão %s
@@ -697,7 +697,7 @@ Zoom factor
 Ampliação
 
 [Changes detected; refreshing] %s
-[Mudanças detetadas; atualizando] %s
+[Mudanças detetadas; a atualizar] %s
 
 copying text
 cópia de texto
