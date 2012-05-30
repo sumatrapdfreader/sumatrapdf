@@ -13,7 +13,7 @@ pdf_is_stream(pdf_document *xref, int num, int gen)
 	pdf_cache_object(xref, num, gen);
 	/* RJW: "cannot load object, ignoring error" */
 
-	return xref->table[num].stm_ofs > 0;
+	return xref->table[num].stm_ofs > 0 || xref->table[num].stm_buf;
 }
 
 /*
@@ -266,9 +266,12 @@ build_filter_chain(fz_stream *chain, pdf_document *xref, pdf_obj *fs, pdf_obj *p
 static fz_stream *
 pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, int gen, int offset)
 {
+	fz_context *ctx = chain->ctx;
 	int hascrypt;
 	int len;
-	fz_context *ctx = chain->ctx;
+
+	if (num > 0 && num < xref->len && xref->table[num].stm_buf)
+		return fz_open_buffer(ctx, xref->table[num].stm_buf);
 
 	/* don't close chain when we close this filter */
 	fz_keep_stream(chain);
@@ -390,6 +393,10 @@ pdf_open_image_stream(pdf_document *xref, int num, int gen, int orig_num, int or
 	pdf_cache_object(xref, num, gen);
 	/* RJW: "cannot load stream object (%d %d R)", num, gen */
 
+	/* SumatraPDF: allow to synthesize content streams */
+	if (x->stm_buf)
+		return fz_open_buffer(xref->ctx, x->stm_buf);
+
 	if (x->stm_ofs == 0)
 		fz_throw(xref->ctx, "object is not a stream");
 
@@ -468,6 +475,9 @@ pdf_load_raw_renumbered_stream(pdf_document *xref, int num, int gen, int orig_nu
 	pdf_obj *dict;
 	int len;
 	fz_buffer *buf;
+
+	if (num > 0 && num < xref->len && xref->table[num].stm_buf)
+		return fz_keep_buffer(xref->ctx, xref->table[num].stm_buf);
 
 	dict = pdf_load_object(xref, num, gen);
 	/* RJW: "cannot load stream dictionary (%d %d R)", num, gen */
@@ -588,30 +598,6 @@ pdf_open_object_array(pdf_document *xref, pdf_obj *list)
 	return stm;
 }
 
-/* SumatraPDF: allow to synthesize content streams */
-static fz_stream *
-pdf_open_object_string(pdf_document *xref, pdf_obj *string)
-{
-	fz_stream *stm;
-	fz_buffer *buffer = fz_new_buffer(xref->ctx, pdf_to_str_len(string) + 1);
-
-	buffer->len = fz_strlcpy(buffer->data, pdf_to_str_buf(string), pdf_to_str_len(string) + 1);
-	fz_try(xref->ctx)
-	{
-		stm = fz_open_buffer(xref->ctx, buffer);
-	}
-	fz_always(xref->ctx)
-	{
-		fz_drop_buffer(xref->ctx, buffer);
-	}
-	fz_catch(xref->ctx)
-	{
-		fz_rethrow(xref->ctx);
-	}
-
-	return stm;
-}
-
 fz_stream *
 pdf_open_contents_stream(pdf_document *xref, pdf_obj *obj)
 {
@@ -625,10 +611,6 @@ pdf_open_contents_stream(pdf_document *xref, pdf_obj *obj)
 	gen = pdf_to_gen(obj);
 	if (pdf_is_stream(xref, num, gen))
 		return pdf_open_image_stream(xref, num, gen, num, gen, NULL);
-
-	/* SumatraPDF: allow to synthesize content streams */
-	if (pdf_is_string(obj))
-		return pdf_open_object_string(xref, obj);
 
 	fz_warn(ctx, "pdf object stream missing (%d %d R)", num, gen);
 	return NULL;

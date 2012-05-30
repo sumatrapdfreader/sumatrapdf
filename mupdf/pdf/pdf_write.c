@@ -246,7 +246,7 @@ static void renumberobjs(pdf_document *xref, pdf_write_options *opts)
 		if (pdf_is_indirect(obj))
 		{
 			obj = pdf_new_indirect(ctx, opts->renumbermap[pdf_to_num(obj)], 0, xref);
-			pdf_update_object(xref, num, 0, obj);
+			pdf_update_object(xref, num, obj);
 			pdf_drop_obj(obj);
 		}
 		else
@@ -580,7 +580,7 @@ static void writexref(pdf_document *xref, pdf_write_options *opts)
 	fprintf(opts->out, "startxref\n%d\n%%%%EOF\n", startxref);
 }
 
-void pdf_write(pdf_document *xref, char *filename, fz_write_options *fz_opts)
+void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz_opts)
 {
 	int lastfree;
 	int num;

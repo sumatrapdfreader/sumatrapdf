@@ -424,29 +424,36 @@ pdf_transform_annot(pdf_annot *annot)
 
 /* SumatraPDF: synthesize appearance streams for a few more annotations */
 static pdf_annot *
-pdf_create_annot(fz_context *ctx, fz_rect rect, pdf_obj *base_obj, fz_buffer *content, pdf_obj *resources, int transparency)
+pdf_create_annot(pdf_document *xref, fz_rect rect, pdf_obj *base_obj, fz_buffer *content, pdf_obj *resources, int transparency)
 {
-	pdf_annot *annot = NULL;
-	pdf_xobject *form = pdf_create_xobject(ctx, base_obj);
+	pdf_xobject *form;
+	pdf_annot *annot;
 	int rotate = pdf_to_int(pdf_dict_gets(pdf_dict_gets(base_obj, "MK"), "R"));
 
+	form = pdf_create_xobject(xref->ctx, base_obj);
 	form->matrix = fz_rotate(rotate);
 	form->bbox.x1 = ((rotate % 180) != 90) ? rect.x1 - rect.x0 : rect.y1 - rect.y0;
 	form->bbox.y1 = ((rotate % 180) != 90) ? rect.y1 - rect.y0 : rect.x1 - rect.x0;
 	form->transparency = transparency;
 	form->isolated = !transparency;
 	form->resources = resources;
-	form->contents = pdf_new_string(ctx, content->data, content->len);
-	fz_drop_buffer(ctx, content);
 
-	fz_try(ctx)
+	fz_try(xref->ctx)
 	{
-		annot = fz_malloc_struct(ctx, pdf_annot);
+		int num = pdf_create_object(xref);
+		pdf_update_stream(xref, num, content);
+		form->contents = pdf_new_indirect(xref->ctx, num, 0, xref);
+
+		annot = fz_malloc_struct(xref->ctx, pdf_annot);
 	}
-	fz_catch(ctx)
+	fz_always(xref->ctx)
 	{
-		pdf_drop_xobject(ctx, form);
-		fz_rethrow(ctx);
+		fz_drop_buffer(xref->ctx, content);
+	}
+	fz_catch(xref->ctx)
+	{
+		pdf_drop_xobject(xref->ctx, form);
+		fz_rethrow(xref->ctx);
 	}
 	annot->obj = base_obj;
 	annot->rect = rect;
@@ -547,7 +554,7 @@ pdf_create_link_annot(pdf_document *xref, pdf_obj *obj)
 		rgb[0], rgb[1], rgb[2], rect.x1 - rect.x0, rect.y1 - rect.y0);
 
 	obj = pdf_clone_for_view_only(xref, obj);
-	return pdf_create_annot(xref->ctx, rect, obj, content, NULL, 0);
+	return pdf_create_annot(xref, rect, obj, content, NULL, 0);
 }
 
 // appearance streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
@@ -660,7 +667,7 @@ pdf_create_text_annot(pdf_document *xref, pdf_obj *obj)
 	fz_buffer_printf(xref->ctx, content, " Q", content_ap);
 
 	obj = pdf_clone_for_view_only(xref, obj);
-	return pdf_create_annot(xref->ctx, rect, obj, content, NULL, 0);
+	return pdf_create_annot(xref, rect, obj, content, NULL, 0);
 }
 
 // appearance streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
@@ -727,7 +734,7 @@ pdf_create_file_annot(pdf_document *xref, pdf_obj *obj)
 	fz_buffer_printf(xref->ctx, content, " Q", content_ap);
 
 	obj = pdf_clone_for_view_only(xref, obj);
-	return pdf_create_annot(xref->ctx, rect, obj, content, NULL, 0);
+	return pdf_create_annot(xref, rect, obj, content, NULL, 0);
 }
 
 /* SumatraPDF: partial support for text markup annotations */
@@ -793,7 +800,7 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 	}
 	fz_buffer_printf(xref->ctx, content, "f Q");
 
-	return pdf_create_annot(xref->ctx, rect, pdf_keep_obj(obj), content, resources, 1);
+	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, resources, 1);
 }
 
 static pdf_annot *
@@ -830,7 +837,7 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 	}
 	fz_buffer_printf(xref->ctx, content, "S Q");
 
-	return pdf_create_annot(xref->ctx, rect, pdf_keep_obj(obj), content, NULL, 0);
+	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, NULL, 0);
 }
 
 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
@@ -1146,7 +1153,7 @@ pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 	fz_drop_buffer(xref->ctx, base_ap);
 
 	rect = fz_transform_rect(fz_rotate(-rotate), rect);
-	return pdf_create_annot(xref->ctx, rect, pdf_keep_obj(obj), content, res ? pdf_keep_obj(res) : NULL, 0);
+	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, res ? pdf_keep_obj(res) : NULL, 0);
 }
 
 /* SumatraPDF: partial support for freetext annotations */
@@ -1208,7 +1215,7 @@ pdf_create_freetext_annot(pdf_document *xref, pdf_obj *obj)
 	fz_buffer_printf(xref->ctx, content, "ET Q");
 	fz_drop_buffer(xref->ctx, base_ap);
 
-	return pdf_create_annot(xref->ctx, rect, pdf_keep_obj(obj), content, res, 0);
+	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, res, 0);
 }
 
 static pdf_annot *

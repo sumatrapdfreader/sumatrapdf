@@ -12,7 +12,7 @@ static int showcolumn;
 
 static void usage(void)
 {
-	fprintf(stderr, "usage: mupdfshow [options] file.pdf [grepable] [xref] [trailer] [pagetree] [object numbers]\n");
+	fprintf(stderr, "usage: mubusy show [options] file.pdf [grepable] [xref] [trailer] [pagetree] [object numbers]\n");
 	fprintf(stderr, "\t-b\tprint streams as binary data\n");
 	fprintf(stderr, "\t-e\tprint encoded streams (don't decode)\n");
 	fprintf(stderr, "\t-p\tpassword\n");
@@ -203,7 +203,7 @@ int pdfshow_main(int argc, char **argv)
 	fz_var(doc);
 	fz_try(ctx)
 	{
-		doc = pdf_open_document(ctx, filename);
+		doc = pdf_open_document_no_run(ctx, filename);
 		if (pdf_needs_password(doc))
 			if (!pdf_authenticate_password(doc, password))
 				fz_warn(ctx, "cannot authenticate password: %s", filename);

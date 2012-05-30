@@ -1316,6 +1316,10 @@
 					RelativePath=".\mupdf\pdf\pdf_xref.c"
 					>
 				</File>
+				<File
+					RelativePath=".\mupdf\pdf\pdf_xref_aux.c"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="xps"

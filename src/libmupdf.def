@@ -345,7 +345,6 @@ EXPORTS
 	fz_new_name
 	pdf_new_string
 	pdf_new_indirect
-	pdf_new_ref
 	pdf_new_array
 	pdf_new_dict
 	pdf_copy_array
@@ -405,17 +404,20 @@ EXPORTS
 	pdf_count_objects
 	pdf_resolve_indirect
 	pdf_load_object
-	pdf_update_object
 	pdf_load_raw_stream
 	pdf_load_stream
 	pdf_open_raw_stream
 	pdf_open_stream
 	pdf_load_image
 	pdf_load_outline
+	pdf_create_object
+	pdf_delete_object
+	pdf_update_object
+	pdf_update_stream
+	pdf_write_document
 	pdf_open_document
 	pdf_open_document_with_stream
 	pdf_close_document
-	pdf_write
 	pdf_needs_password
 	pdf_authenticate_password
 	pdf_has_permission
@@ -427,6 +429,7 @@ EXPORTS
 	pdf_free_page
 	pdf_run_page
 	pdf_run_page_with_usage
+	pdf_meta
 
 	pdf_set_str_len
 	pdf_get_indirect_document
@@ -435,6 +438,8 @@ EXPORTS
 	pdf_parse_dict
 	pdf_parse_stm_obj
 	pdf_parse_ind_obj
+	pdf_open_document_no_run
+	pdf_open_document_no_run_with_stream
 	pdf_cache_object
 	pdf_open_inline_stream
 	pdf_load_image_stream

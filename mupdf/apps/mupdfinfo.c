@@ -154,7 +154,7 @@ static void
 infousage(void)
 {
 	fprintf(stderr,
-		"usage: mupdfinfo [options] [file.pdf ... ]\n"
+		"usage: mubusy info [options] [file.pdf ... ]\n"
 		"\t-d -\tpassword for decryption\n"
 		"\t-f\tlist fonts\n"
 		"\t-i\tlist images\n"
@@ -552,7 +552,7 @@ gatherpatterns(int page, pdf_obj *pageref, pdf_obj *pageobj, pdf_obj *dict)
 }
 
 static void
-gatherresourceinfo(int page, pdf_obj *rsrc)
+gatherresourceinfo(int page, pdf_obj *rsrc, int show)
 {
 	pdf_obj *pageobj;
 	pdf_obj *pageref;
@@ -570,7 +570,7 @@ gatherresourceinfo(int page, pdf_obj *rsrc)
 		fz_throw(ctx, "cannot retrieve info from page %d", page);
 
 	font = pdf_dict_gets(rsrc, "Font");
-	if (font)
+	if (show & FONTS && font)
 	{
 		int n;
 
@@ -582,12 +582,12 @@ gatherresourceinfo(int page, pdf_obj *rsrc)
 
 			subrsrc = pdf_dict_gets(obj, "Resources");
 			if (subrsrc && pdf_objcmp(rsrc, subrsrc))
-				gatherresourceinfo(page, subrsrc);
+				gatherresourceinfo(page, subrsrc, show);
 		}
 	}
 
 	xobj = pdf_dict_gets(rsrc, "XObject");
-	if (xobj)
+	if (show & XOBJS && xobj)
 	{
 		int n;
 
@@ -600,16 +600,16 @@ gatherresourceinfo(int page, pdf_obj *rsrc)
 			pdf_obj *obj = pdf_dict_get_val(xobj, i);
 			subrsrc = pdf_dict_gets(obj, "Resources");
 			if (subrsrc && pdf_objcmp(rsrc, subrsrc))
-				gatherresourceinfo(page, subrsrc);
+				gatherresourceinfo(page, subrsrc, show);
 		}
 	}
 
 	shade = pdf_dict_gets(rsrc, "Shading");
-	if (shade)
+	if (show & SHADINGS && shade)
 		gathershadings(page, pageref, pageobj, shade);
 
 	pattern = pdf_dict_gets(rsrc, "Pattern");
-	if (pattern)
+	if (show & PATTERNS && pattern)
 	{
 		int n;
 		gatherpatterns(page, pageref, pageobj, pattern);
@@ -619,13 +619,13 @@ gatherresourceinfo(int page, pdf_obj *rsrc)
 			pdf_obj *obj = pdf_dict_get_val(pattern, i);
 			subrsrc = pdf_dict_gets(obj, "Resources");
 			if (subrsrc && pdf_objcmp(rsrc, subrsrc))
-				gatherresourceinfo(page, subrsrc);
+				gatherresourceinfo(page, subrsrc, show);
 		}
 	}
 }
 
 static void
-gatherpageinfo(int page)
+gatherpageinfo(int page, int show)
 {
 	pdf_obj *pageobj;
 	pdf_obj *pageref;
@@ -640,7 +640,7 @@ gatherpageinfo(int page)
 	gatherdimensions(page, pageref, pageobj);
 
 	rsrc = pdf_dict_gets(pageobj, "Resources");
-	gatherresourceinfo(page, rsrc);
+	gatherresourceinfo(page, rsrc, show);
 }
 
 static void
@@ -918,7 +918,7 @@ showinfo(char *filename, int show, char *pagelist)
 			printf("Retrieving info from pages %d-%d...\n", spage, epage);
 		for (page = spage; page <= epage; page++)
 		{
-			gatherpageinfo(page);
+			gatherpageinfo(page, show);
 			if (!allpages)
 			{
 				printf("Page %d:\n", page);
@@ -996,7 +996,7 @@ int pdfinfo_main(int argc, char **argv)
 
 			filename = argv[fz_optind];
 			printf("%s:\n", filename);
-			xref = pdf_open_document(ctx, filename);
+			xref = pdf_open_document_no_run(ctx, filename);
 			if (pdf_needs_password(xref))
 				if (!pdf_authenticate_password(xref, password))
 					fz_throw(ctx, "cannot authenticate password: %s", filename);

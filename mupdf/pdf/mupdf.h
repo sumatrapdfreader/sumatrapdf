@@ -20,8 +20,6 @@ pdf_obj *pdf_new_real(fz_context *ctx, float f);
 pdf_obj *fz_new_name(fz_context *ctx, char *str);
 pdf_obj *pdf_new_string(fz_context *ctx, char *str, int len);
 pdf_obj *pdf_new_indirect(fz_context *ctx, int num, int gen, void *doc);
-pdf_obj *pdf_new_ref(pdf_document *xref, pdf_obj *obj);
-
 pdf_obj *pdf_new_array(fz_context *ctx, int initialcap);
 pdf_obj *pdf_new_dict(fz_context *ctx, int initialcap);
 pdf_obj *pdf_copy_array(fz_context *ctx, pdf_obj *array);
@@ -96,7 +94,6 @@ fz_matrix pdf_to_matrix(fz_context *ctx, pdf_obj *array);
 int pdf_count_objects(pdf_document *doc);
 pdf_obj *pdf_resolve_indirect(pdf_obj *ref);
 pdf_obj *pdf_load_object(pdf_document *doc, int num, int gen);
-void pdf_update_object(pdf_document *doc, int num, int gen, pdf_obj *newobj);
 
 fz_buffer *pdf_load_raw_stream(pdf_document *doc, int num, int gen);
 fz_buffer *pdf_load_stream(pdf_document *doc, int num, int gen);
@@ -106,6 +103,36 @@ fz_stream *pdf_open_stream(pdf_document *doc, int num, int gen);
 fz_image *pdf_load_image(pdf_document *doc, pdf_obj *obj);
 
 fz_outline *pdf_load_outline(pdf_document *doc);
+
+/*
+	pdf_create_object: Allocate a slot in the xref table and return a fresh unused object number.
+*/
+int pdf_create_object(pdf_document *xref);
+
+/*
+	pdf_delete_object: Remove object from xref table, marking the slot as free.
+*/
+void pdf_delete_object(pdf_document *xref, int num);
+
+/*
+	pdf_update_object: Replace object in xref table with the passed in object.
+*/
+void pdf_update_object(pdf_document *xref, int num, pdf_obj *obj);
+
+/*
+	pdf_update_stream: Replace stream contents for object in xref table with the passed in buffer.
+
+	The buffer contents must match the /Filter setting.
+	If storing uncompressed data, make sure to delete the /Filter key from
+	the stream dictionary. If storing deflated data, make sure to set the
+	/Filter value to /FlateDecode.
+*/
+void pdf_update_stream(pdf_document *xref, int num, fz_buffer *buf);
+
+/*
+	pdf_write_document: Write out the document to a file with all changes finalised.
+*/
+void pdf_write_document(pdf_document *doc, char *filename, fz_write_options *opts);
 
 /*
 	pdf_open_document: Open a PDF document.
@@ -146,8 +173,6 @@ pdf_document *pdf_open_document_with_stream(fz_stream *file);
 	Does not throw exceptions.
 */
 void pdf_close_document(pdf_document *doc);
-
-void pdf_write(pdf_document *doc, char *filename, fz_write_options *opts);
 
 int pdf_needs_password(pdf_document *doc);
 int pdf_authenticate_password(pdf_document *doc, char *pw);
@@ -218,5 +243,10 @@ void pdf_free_page(pdf_document *doc, pdf_page *page);
 void pdf_run_page(pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
 
 void pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie);
+
+/*
+	Metadata interface.
+*/
+int pdf_meta(pdf_document *doc, int key, void *ptr, int size);
 
 #endif

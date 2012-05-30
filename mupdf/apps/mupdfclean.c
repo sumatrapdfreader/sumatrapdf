@@ -18,7 +18,7 @@ static fz_context *ctx = NULL;
 static void usage(void)
 {
 	fprintf(stderr,
-		"usage: mupdfclean [options] input.pdf [output.pdf] [pages]\n"
+		"usage: mubusy clean [options] input.pdf [output.pdf] [pages]\n"
 		"\t-p -\tpassword\n"
 		"\t-g\tgarbage collect unused objects\n"
 		"\t-gg\tin addition to -g compact xref table\n"
@@ -49,7 +49,7 @@ static void retainpages(int argc, char **argv)
 	pdf_dict_puts(root, "Type", pdf_dict_gets(oldroot, "Type"));
 	pdf_dict_puts(root, "Pages", pdf_dict_gets(oldroot, "Pages"));
 
-	pdf_update_object(xref, pdf_to_num(oldroot), pdf_to_gen(oldroot), root);
+	pdf_update_object(xref, pdf_to_num(oldroot), root);
 
 	pdf_drop_obj(root);
 
@@ -200,7 +200,7 @@ int pdfclean_main(int argc, char **argv)
 		exit(1);
 	}
 
-	xref = pdf_open_document(ctx, infile);
+	xref = pdf_open_document_no_run(ctx, infile);
 	if (pdf_needs_password(xref))
 		if (!pdf_authenticate_password(xref, password))
 			fz_throw(ctx, "cannot authenticate password: %s", infile);
@@ -209,7 +209,7 @@ int pdfclean_main(int argc, char **argv)
 	if (subset)
 		retainpages(argc, argv);
 
-	pdf_write(xref, outfile, &opts);
+	pdf_write_document(xref, outfile, &opts);
 
 	pdf_close_document(xref);
 	fz_free_context(ctx);

@@ -102,6 +102,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/pdf/pdf_unicode.c \
 	$(MY_ROOT)/pdf/pdf_xobject.c \
 	$(MY_ROOT)/pdf/pdf_xref.c \
+	$(MY_ROOT)/pdf/pdf_xref_aux.c \
 	$(MY_ROOT)/xps/xps_common.c \
 	$(MY_ROOT)/xps/xps_doc.c \
 	$(MY_ROOT)/xps/xps_glyphs.c \

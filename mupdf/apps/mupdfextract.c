@@ -3,6 +3,7 @@
  */
 
 #include "mupdf.h"
+#include "mupdf-internal.h"
 
 static pdf_document *doc = NULL;
 static fz_context *ctx = NULL;
@@ -10,7 +11,7 @@ static int dorgb = 0;
 
 static void usage(void)
 {
-	fprintf(stderr, "usage: pdfextract [options] file.pdf [object numbers]\n");
+	fprintf(stderr, "usage: mubusy extract [options] file.pdf [object numbers]\n");
 	fprintf(stderr, "\t-p\tpassword\n");
 	fprintf(stderr, "\t-r\tconvert images to rgb\n");
 	exit(1);
@@ -170,7 +171,7 @@ int pdfextract_main(int argc, char **argv)
 		exit(1);
 	}
 
-	doc = pdf_open_document(ctx, infile);
+	doc = pdf_open_document_no_run(ctx, infile);
 	if (pdf_needs_password(doc))
 		if (!pdf_authenticate_password(doc, password))
 			fz_throw(ctx, "cannot authenticate password: %s", infile);

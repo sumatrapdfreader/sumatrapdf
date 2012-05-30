@@ -18,7 +18,7 @@ static int y_factor = 0;
 static void usage(void)
 {
 	fprintf(stderr,
-		"usage: mupdfposter [options] input.pdf [output.pdf]\n"
+		"usage: mubusy poster [options] input.pdf [output.pdf]\n"
 		"\t-p -\tpassword\n"
 		"\t-x\tx decimation factor\n"
 		"\t-y\ty decimation factor\n");
@@ -45,7 +45,7 @@ static void decimatepages(pdf_document *xref)
 	pdf_dict_puts(root, "Type", pdf_dict_gets(oldroot, "Type"));
 	pdf_dict_puts(root, "Pages", pdf_dict_gets(oldroot, "Pages"));
 
-	pdf_update_object(xref, pdf_to_num(oldroot), pdf_to_gen(oldroot), root);
+	pdf_update_object(xref, pdf_to_num(oldroot), root);
 
 	pdf_drop_obj(root);
 
@@ -79,10 +79,16 @@ static void decimatepages(pdf_document *xref)
 		{
 			for (x = 0; x < xf; x++)
 			{
-				pdf_obj *newpageobj = pdf_copy_dict(ctx, xref->page_objs[page]);
-				pdf_obj *newpageref = pdf_new_ref(xref, newpageobj);
-				pdf_obj *newmediabox = pdf_new_array(ctx, 4);
+				pdf_obj *newpageobj, *newpageref, *newmediabox;
 				fz_rect mb;
+				int num;
+
+				newpageobj = pdf_copy_dict(ctx, xref->page_objs[page]);
+				num = pdf_create_object(xref);
+				pdf_update_object(xref, num, newpageobj);
+				newpageref = pdf_new_indirect(ctx, num, 0, xref);
+
+				newmediabox = pdf_new_array(ctx, 4);
 
 				mb.x0 = page_details->mediabox.x0 + (w/xf)*x;
 				if (x == xf-1)
@@ -162,7 +168,7 @@ int pdfposter_main(int argc, char **argv)
 		exit(1);
 	}
 
-	xref = pdf_open_document(ctx, infile);
+	xref = pdf_open_document_no_run(ctx, infile);
 	if (pdf_needs_password(xref))
 		if (!pdf_authenticate_password(xref, password))
 			fz_throw(ctx, "cannot authenticate password: %s", infile);
@@ -170,7 +176,7 @@ int pdfposter_main(int argc, char **argv)
 	/* Only retain the specified subset of the pages */
 	decimatepages(xref);
 
-	pdf_write(xref, outfile, &opts);
+	pdf_write_document(xref, outfile, &opts);
 
 	pdf_close_document(xref);
 	fz_free_context(ctx);

@@ -75,7 +75,6 @@ int main(int argc, char **argv)
 	/* Print usage */
 
 	fprintf(stderr, "usage: mubusy <command> [options]\n");
-	fprintf(stderr, "Available commands:\n");
 
 	for (i = 0; i < nelem(tools); i++)
 		fprintf(stderr, "\t%s\t-- %s\n", tools[i].name, tools[i].desc);

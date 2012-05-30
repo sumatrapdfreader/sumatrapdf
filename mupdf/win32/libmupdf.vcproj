@@ -345,6 +345,10 @@
 				RelativePath="..\pdf\pdf_xref.c"
 				>
 			</File>
+			<File
+				RelativePath="..\pdf\pdf_xref_aux.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="fitz"

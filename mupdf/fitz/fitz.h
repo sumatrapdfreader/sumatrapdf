@@ -97,17 +97,32 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 
 /*
 	Variadic macros, inline and restrict keywords
+
+	inline is standard in C++, so don't touch the definition in this case.
+	For some compilers we can enable it within C too.
 */
 
+#ifndef __cplusplus
 #if __STDC_VERSION__ == 199901L /* C99 */
 #elif _MSC_VER >= 1500 /* MSVC 9 or newer */
 #define inline __inline
-#define restrict __restrict
 #elif __GNUC__ >= 3 /* GCC 3 or newer */
 #define inline __inline
-#define restrict __restrict
 #else /* Unknown or ancient */
 #define inline
+#endif
+#endif
+
+/*
+	restrict is standard in C99, but not in all C++ compilers. Enable
+	where possible, disable if in doubt.
+ */
+#if __STDC_VERSION__ == 199901L /* C99 */
+#elif _MSC_VER >= 1500 /* MSVC 9 or newer */
+#define restrict __restrict
+#elif __GNUC__ >= 3 /* GCC 3 or newer */
+#define restrict __restrict
+#else /* Unknown or ancient */
 #define restrict
 #endif
 
