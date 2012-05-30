@@ -435,6 +435,7 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
   Jbig2RegionSegmentInfo rsi;
   int offset = 0;
   byte seg_flags;
+  int code = 0;
 
   /* 7.4.7 */
   if (segment->data_length < 18)
@@ -509,14 +510,12 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
     Jbig2ArithCx *GR_stats = NULL;
     int stats_size;
     Jbig2Image *image = NULL;
-    int code;
 
     image = jbig2_image_new(ctx, rsi.width, rsi.height);
     if (image == NULL)
     {
-        /* SumatraPDF: fix memory leak */
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-               "unable to allocate refinement image");
+        code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+            "unable to allocate refinement image");
         goto cleanup;
     }
     jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
@@ -527,7 +526,7 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
     GR_stats = jbig2_new(ctx, Jbig2ArithCx, stats_size);
     if (GR_stats == NULL)
     {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+        code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
             "failed to allocate GR-stats in jbig2_refinement_region");
         goto cleanup;
     }
@@ -537,7 +536,7 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
            segment->data_length - offset);
     if (ws == NULL)
     {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+        code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
             "failed to allocate ws in jbig2_refinement_region");
         goto cleanup;
     }
@@ -545,7 +544,7 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
     as = jbig2_arith_new(ctx, ws);
     if (as == NULL)
     {
-        jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+        code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
             "failed to allocate as in jbig2_refinement_region");
         goto cleanup;
     }
@@ -555,7 +554,7 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
     if ((segment->flags & 63) == 40) {
         /* intermediate region. save the result for later */
-	segment->result = jbig2_image_clone(ctx, image);
+        segment->result = jbig2_image_clone(ctx, image);
     } else {
 	/* immediate region. composite onto the page */
         jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
@@ -566,7 +565,6 @@ jbig2_refinement_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
     }
 
 cleanup:
-    /* SumatraPDF: fix memory leak */
     jbig2_image_release(ctx, image);
     jbig2_image_release(ctx, params.reference);
     jbig2_free(ctx->allocator, as);
@@ -574,5 +572,5 @@ cleanup:
     jbig2_free(ctx->allocator, GR_stats);
   }
 
-  return 0;
+  return code;
 }

@@ -212,8 +212,8 @@ cleanup1:
         STRIPT = jbig2_huffman_get(hs, params->SBHUFFDT, &code);
     } else {
         code = jbig2_arith_int_decode(params->IADT, as, &STRIPT);
-        if (code < 0) goto cleanup2;
     }
+    if (code < 0) goto cleanup2;
 
     /* 6.4.5 (2) */
     STRIPT *= -(params->SBSTRIPS);
@@ -227,8 +227,8 @@ cleanup1:
             DT = jbig2_huffman_get(hs, params->SBHUFFDT, &code);
         } else {
             code = jbig2_arith_int_decode(params->IADT, as, &DT);
-            if (code < 0) goto cleanup2;
         }
+        if (code < 0) goto cleanup2;
         DT *= params->SBSTRIPS;
         STRIPT += DT;
 
@@ -242,12 +242,11 @@ cleanup1:
 		    DFS = jbig2_huffman_get(hs, params->SBHUFFFS, &code);
 		} else {
 		    code = jbig2_arith_int_decode(params->IAFS, as, &DFS);
-            if (code < 0) goto cleanup2;
 		}
+                if (code < 0) goto cleanup2;
 		FIRSTS += DFS;
 		CURS = FIRSTS;
 		first_symbol = FALSE;
-
 	    } else {
 		/* (3c.ii) / 6.4.8 */
 		if (params->SBHUFF) {
@@ -256,6 +255,7 @@ cleanup1:
 		    code = jbig2_arith_int_decode(params->IADS, as, &IDS);
 		}
 		if (code) {
+                    /* decoded an OOB, reached end of stripe */
 		    break;
 		}
 		CURS += IDS + params->SBDSOFFSET;
@@ -277,13 +277,12 @@ cleanup1:
 		ID = jbig2_huffman_get(hs, SBSYMCODES, &code);
 	    } else {
 		code = jbig2_arith_iaid_decode(params->IAID, as, (int *)&ID);
-        if (code < 0) goto cleanup2;
 	    }
+            if (code < 0) goto cleanup2;
 	    if (ID >= SBNUMSYMS) {
-		/* SumatraPDF: fix memory leak */
-		code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-                    "symbol id out of range! (%d/%d)", ID, SBNUMSYMS);
-		goto cleanup2;
+            code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+                "symbol id out of range! (%d/%d)", ID, SBNUMSYMS);
+            goto cleanup2;
 	    }
 
 	    /* (3c.v) / 6.4.11 - look up the symbol bitmap IB */
@@ -838,7 +837,6 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     {
         code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "couldn't allocate text region image");
-        jbig2_image_release(ctx, image);
         goto cleanup2;
     }
     if (!params.SBHUFF) {
@@ -858,7 +856,6 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     {
         code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "couldn't allocate text region image data");
-        jbig2_image_release(ctx, image);
         goto cleanup3;
     }
 
@@ -876,7 +873,6 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     {
         code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "couldn't allocate text region image data");
-        jbig2_image_release(ctx, image);
         goto cleanup4;
     }
     }
@@ -889,13 +885,12 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     {
         jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "failed to decode text region image data");
-        jbig2_image_release(ctx, image);
         goto cleanup4;
     }
 
     if ((segment->flags & 63) == 4) {
         /* we have an intermediate region here. save it for later */
-        segment->result = image;
+        segment->result = jbig2_image_clone(ctx, image);
     } else {
         /* otherwise composite onto the page */
         jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
@@ -903,7 +898,6 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
             region_info.width, region_info.height, region_info.x, region_info.y);
         jbig2_page_add_result(ctx, &ctx->pages[ctx->current_page], image,
             region_info.x, region_info.y, region_info.op);
-        jbig2_image_release(ctx, image);
     }
 
 cleanup4:
@@ -930,6 +924,7 @@ cleanup2:
     if (!params.SBHUFF && params.SBREFINE) {
         jbig2_free(ctx->allocator, GR_stats);
     }
+    jbig2_image_release(ctx, image);
 
 cleanup1:
     if (params.SBHUFF) {

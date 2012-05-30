@@ -259,6 +259,14 @@ int
 jbig2_page_add_result(Jbig2Ctx *ctx, Jbig2Page *page, Jbig2Image *image,
 		      int x, int y, Jbig2ComposeOp op)
 {
+    /* ensure image exists first */
+    if (page->image == NULL)
+    {
+        jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1,
+            "page info possibly missing, no image defined");
+        return 0;
+    }
+
     /* grow the page to accomodate a new stripe if necessary */
     if (page->striped) {
 	int new_height = y + image->height + page->end_row;

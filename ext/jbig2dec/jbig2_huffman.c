@@ -253,13 +253,12 @@ jbig2_huffman_get (Jbig2HuffmanState *hs,
       entry = &table->entries[this_word >> (32 - log_table_size)];
       flags = entry->flags;
       PREFLEN = entry->PREFLEN;
-      /* SumatraPDF: handle missing JBIG2Globals */
-      if (entry->u.RANGELOW == -1 && PREFLEN == (byte)-1 && flags == (byte)-1)
-	{
-	  if (oob)
-	    *oob = -1;
-	  return -1;
-	}
+      if ((flags == (byte)-1) && (PREFLEN == (byte)-1) && (entry->u.RANGELOW == -1))
+      {
+          if (oob)
+              *oob = -1;
+          return -1;
+      }
 
       next_word = hs->next_word;
       offset_bits += PREFLEN;
@@ -393,9 +392,9 @@ jbig2_build_huffman_table (Jbig2Ctx *ctx, const Jbig2HuffmanParams *params)
         "couldn't allocate entries storage in jbig2_build_huffman_table");
     return NULL;
   }
+  /* fill now to catch missing JBIG2Globals later */
+  memset(entries, 0xFF, sizeof(Jbig2HuffmanEntry)*max_j);
   result->entries = entries;
-  /* SumatraPDF: handle missing JBIG2Globals */
-  memset(entries, 0xFF, sizeof(Jbig2HuffmanEntry) * max_j);
 
   LENCOUNT[0] = 0;
 

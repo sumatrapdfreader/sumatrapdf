@@ -142,7 +142,7 @@ jbig2_decode_pattern_dict(Jbig2Ctx *ctx, Jbig2Segment *segment,
   rparams.GBTEMPLATE = params->HDTEMPLATE;
   rparams.TPGDON = 0;	/* not used if HDMMR = 1 */
   rparams.USESKIP = 0;
-  rparams.gbat[0] = -(int)params->HDPW;
+  rparams.gbat[0] = -(int8_t)params->HDPW;
   rparams.gbat[1] = 0;
   rparams.gbat[2] = -3;
   rparams.gbat[3] = -1;

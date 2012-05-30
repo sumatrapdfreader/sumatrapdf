@@ -32,6 +32,7 @@ Jbig2Image* jbig2_image_new(Jbig2Ctx *ctx, int width, int height)
 {
 	Jbig2Image	*image;
 	int		stride;
+        int64_t         check;
 
 	image = jbig2_new(ctx, Jbig2Image, 1);
 	if (image == NULL) {
@@ -41,8 +42,18 @@ Jbig2Image* jbig2_image_new(Jbig2Ctx *ctx, int width, int height)
 	}
 
 	stride = ((width - 1) >> 3) + 1; /* generate a byte-aligned stride */
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1759 */
-	image->data = jbig2_new(ctx, uint8_t, stride*height + 1);
+        /* check for integer multiplication overflow */
+        /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1759 */
+        check = ((int64_t)stride)*((int64_t)height) + 1;
+        if (check != (int)check)
+        {
+            jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+                "integer multiplication overflow from stride(%d)*height(%d)",
+                stride, height);
+            jbig2_free(ctx->allocator, image);
+            return NULL;
+        }
+        image->data = jbig2_new(ctx, uint8_t, (int)check);
 	if (image->data == NULL) {
         jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
             "could not allocate image data buffer! [%d bytes]\n", stride*height);
@@ -230,14 +241,14 @@ int jbig2_image_compose(Jbig2Ctx *ctx, Jbig2Image *dst, Jbig2Image *src,
 #endif
 
     leftbyte = x >> 3;
+    if (leftbyte > dst->height * dst->stride)
+        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+            "preventing heap overflow in jbig2_image_compose");
     rightbyte = (x + w - 1) >> 3;
     shift = x & 7;
 
     /* general OR case */
     s = ss;
-    /* SumatraPDF: prevent heap overflow */
-    if (leftbyte > dst->height * dst->stride)
-      return -1;
     d = dd = dst->data + y*dst->stride + leftbyte;
     if (leftbyte == rightbyte) {
 	mask = 0x100 - (0x100 >> w);
