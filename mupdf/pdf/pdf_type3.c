@@ -115,6 +115,13 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 
 		first = pdf_to_int(pdf_dict_gets(dict, "FirstChar"));
 		last = pdf_to_int(pdf_dict_gets(dict, "LastChar"));
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1966 */
+		if (first >= 256 && last - first < 256)
+		{
+			fz_warn(ctx, "ignoring out-of-bound values for FirstChar/LastChar: %d/%d", first, last);
+			last -= first;
+			first = 0;
+		}
 		/* SumatraPDF: prevent heap overflow */
 		if (first < 0 || last > 255 || first > last)
 			fz_throw(ctx, "invalid FirstChar/LastChar for Type3 font");
