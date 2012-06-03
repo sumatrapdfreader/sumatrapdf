@@ -317,7 +317,7 @@ E&xit\tCtrl+Q
 끝내기(&X)\tCtrl+Q
 
 EPUB ebooks
-EPUB 문서
+ePub 문서
 
 Enter password
 비밀번호 입력
@@ -404,7 +404,7 @@ Fonts:
 글꼴:
 
 Formatting the book... %d pages
-책 포맷 중... %d 페이지
+읽어들이는 중... %d 페이지
 
 Found text at page %s
 %s 페이지에서 문자열 찾음
@@ -515,7 +515,7 @@ PDF Version:
 PDF 버전:
 
 PDF documents
-PDF 문서들
+PDF 문서
 
 Pa&ge...\tCtrl+G
 페이지(&G)...\tCtrl+G
@@ -539,7 +539,7 @@ Please wait - rendering...
 잠시만 기다리세요 - 렌더링 중...
 
 Postscript documents
-포스트스크립트 문서
+Postscript 문서
 
 Pr&esentation\tCtrl+L
 프레젠테이션(&E)\tCtrl+L
