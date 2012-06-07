@@ -248,6 +248,11 @@ cleanup1:
 		CURS = FIRSTS;
 		first_symbol = FALSE;
 	    } else {
+                if (NINSTANCES > params->SBNUMINSTANCES) {
+                    code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+                        "too many NINSTANCES (%d) decoded", NINSTANCES);
+                    break;
+		}
 		/* (3c.ii) / 6.4.8 */
 		if (params->SBHUFF) {
 		    IDS = jbig2_huffman_get(hs, params->SBHUFFDS, &code);
@@ -255,7 +260,7 @@ cleanup1:
 		    code = jbig2_arith_int_decode(params->IADS, as, &IDS);
 		}
 		if (code) {
-                    /* decoded an OOB, reached end of stripe */
+                    /* decoded an OOB, reached end of strip */
 		    break;
 		}
 		CURS += IDS + params->SBDSOFFSET;
@@ -268,7 +273,7 @@ cleanup1:
 		CURT = jbig2_huffman_get_bits(hs, params->LOGSBSTRIPS);
 	    } else {
 		code = jbig2_arith_int_decode(params->IAIT, as, &CURT);
-        if (code < 0) goto cleanup2;
+                if (code < 0) goto cleanup2;
 	    }
 	    T = STRIPT + CURT;
 
@@ -406,7 +411,8 @@ cleanup1:
 			ID, IB->width, IB->height, x, y, NINSTANCES + 1,
 			params->SBNUMINSTANCES);
 #endif
-	    jbig2_image_compose(ctx, image, IB, x, y, params->SBCOMBOP);
+	    code = jbig2_image_compose(ctx, image, IB, x, y, params->SBCOMBOP);
+            if (code < 0) goto cleanup2;
 
 	    /* (3c.x) */
 	    if ((!params->TRANSPOSED) && (params->REFCORNER < 2)) {

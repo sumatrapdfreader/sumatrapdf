@@ -301,7 +301,7 @@ jbig2_data_in (Jbig2Ctx *ctx, const unsigned char *data, size_t size)
 	    {
 	      if (ctx->buf_wr_ix - ctx->buf_rd_ix < 13)
 		return 0;
-	      ctx->n_pages = jbig2_get_int32(ctx->buf + ctx->buf_rd_ix + 9);
+	      ctx->n_pages = jbig2_get_uint32(ctx->buf + ctx->buf_rd_ix + 9);
 	      ctx->buf_rd_ix += 13;
               if (ctx->n_pages == 1)
                 jbig2_error(ctx, JBIG2_SEVERITY_INFO, -1, "file header indicates a single page document");

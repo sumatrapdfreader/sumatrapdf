@@ -1,22 +1,6 @@
-diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
---- jbig2dec.orig\jbig2_huffman.c	Wed May 30 20:04:16 2012
-+++ jbig2dec\jbig2_huffman.c	Wed May 30 21:57:06 2012
-@@ -251,11 +251,11 @@
-       int PREFLEN;
- 
-       entry = &table->entries[this_word >> (32 - log_table_size)];
-       flags = entry->flags;
-       PREFLEN = entry->PREFLEN;
--      if ((flags == (byte)-1) && (PREFLEN == (int)-1) && (entry->u.RANGELOW == -1))
-+      if ((flags == (byte)-1) && (PREFLEN == (byte)-1) && (entry->u.RANGELOW == -1))
-       {
-           if (oob)
-               *oob = -1;
-           return -1;
-       }
 diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
---- jbig2dec.orig\jbig2_image.c	Wed May 30 20:04:16 2012
-+++ jbig2dec\jbig2_image.c	Wed May 30 21:34:09 2012
+--- jbig2dec.orig\jbig2_image.c	Thu Jun 07 06:33:07 2012
++++ jbig2dec\jbig2_image.c	Thu Jun 07 06:39:43 2012
 @@ -41,11 +41,12 @@
  		return NULL;
  	}
@@ -31,37 +15,3 @@ diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
              jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
                  "integer multiplication overflow from stride(%d)*height(%d)",
                  stride, height);
-diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
---- jbig2dec.orig\jbig2_symbol_dict.c	Wed May 30 20:04:16 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Wed May 30 21:53:48 2012
-@@ -799,11 +799,11 @@
-   }
-   jbig2_free(ctx->allocator, GB_stats);
- 
- cleanup2:
-   jbig2_sd_release(ctx, SDNEWSYMS);
--  if (params->SDHUFF && params->SDREFAGG)
-+  if (params->SDHUFF && !params->SDREFAGG)
-   {
-       jbig2_free(ctx->allocator, SDNEWSYMWIDTHS);
-   }
-   jbig2_release_huffman_table(ctx, SDHUFFRDX);
-   jbig2_release_huffman_table(ctx, SBHUFFRSIZE);
-@@ -1014,13 +1014,16 @@
-       params.SDINSYMS = jbig2_sd_cat(ctx, n_dicts, dicts);
-       if (params.SDINSYMS == NULL)
-       {
-           jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
-               "failed to allocate symbol array in symbol dictionary");
--          jbig2_sd_release(ctx, *dicts);
-+          /* SumatraPDF: this looks more correct */
-+          jbig2_free(ctx->allocator, dicts);
-           goto cleanup;
-       }
-+      /* SumatraPDF: fix memory leak */
-+      jbig2_free(ctx->allocator, dicts);
-     }
-     if (params.SDINSYMS != NULL) {
-       params.SDNUMINSYMS = params.SDINSYMS->n_symbols;
-     }
-   }

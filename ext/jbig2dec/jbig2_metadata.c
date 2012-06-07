@@ -87,7 +87,7 @@ int jbig2_metadata_add(Jbig2Ctx *ctx, Jbig2Metadata *md,
 
     /* grow the array if necessary */
     if (md->entries == md->max_entries) {
-        md->max_entries >>= 2;
+        md->max_entries <<= 1;
         keys = jbig2_renew(ctx, md->keys, char*, md->max_entries);
         values = jbig2_renew(ctx, md->values, char*, md->max_entries);
         if (keys == NULL || values == NULL) {

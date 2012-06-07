@@ -361,19 +361,12 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
         "decoding height class %d with %d syms decoded", HCHEIGHT, NSYMSDECODED);
 
       for (;;) {
-	  /* check for broken symbol table */
- 	  if (NSYMSDECODED > params->SDNUMNEWSYMS)
-      {
-          jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-              "No OOB signalling end of height class %d", HCHEIGHT);
-	      goto cleanup4;
-      }
 	  /* 6.5.7 */
 	  if (params->SDHUFF) {
 	      DW = jbig2_huffman_get(hs, params->SDHUFFDW, &code);
 	  } else {
 	      code = jbig2_arith_int_decode(IADW, as, &DW);
-          if (code < 0) goto cleanup4;
+              if (code < 0) goto cleanup4;
 	  }
 
 	  /* 6.5.5 (4c.i) */
@@ -382,6 +375,15 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 	    " OOB signals end of height class %d", HCHEIGHT);
 	    break;
 	  }
+
+	  /* check for broken symbol table */
+          if (NSYMSDECODED >= params->SDNUMNEWSYMS)
+          {
+              jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+                  "No OOB signalling end of height class %d", HCHEIGHT);
+              goto cleanup4;
+          }
+
 	  SYMWIDTH = SYMWIDTH + DW;
 	  TOTWIDTH = TOTWIDTH + SYMWIDTH;
 	  if (SYMWIDTH < 0) {
@@ -1016,11 +1018,9 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
       {
           jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
               "failed to allocate symbol array in symbol dictionary");
-          /* SumatraPDF: this looks more correct */
           jbig2_free(ctx->allocator, dicts);
           goto cleanup;
       }
-      /* SumatraPDF: fix memory leak */
       jbig2_free(ctx->allocator, dicts);
     }
     if (params.SDINSYMS != NULL) {

@@ -59,7 +59,7 @@ struct _Jbig2Ctx {
   Jbig2FileState state;
 
   uint8_t file_header_flags;
-  int32_t n_pages;
+  uint32_t n_pages;
 
   int n_segments_max;
   Jbig2Segment **segments;
