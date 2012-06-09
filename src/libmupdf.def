@@ -140,7 +140,7 @@ EXPORTS
 	fz_run_page
 	fz_free_page
 	fz_meta
-	fz_write
+	fz_write_document
 
 	fz_clone_context_internal
 	fz_new_aa_context
@@ -187,6 +187,10 @@ EXPORTS
 	fz_resize_buffer
 	fz_grow_buffer
 	fz_trim_buffer
+	fz_write_buffer
+	fz_write_buffer_byte
+	fz_write_buffer_bits
+	fz_write_buffer_pad
 	fz_new_stream
 	fz_keep_stream
 	fz_fill_buffer
@@ -386,7 +390,7 @@ EXPORTS
 	pdf_dict_get
 	pdf_dict_gets
 	pdf_dict_getsa
-	fz_dict_put
+	pdf_dict_put
 	pdf_dict_puts
 	pdf_dict_del
 	pdf_dict_dels
@@ -433,6 +437,7 @@ EXPORTS
 
 	pdf_set_str_len
 	pdf_get_indirect_document
+	pdf_set_int
 	pdf_lex
 	pdf_parse_array
 	pdf_parse_dict
@@ -454,6 +459,7 @@ EXPORTS
 	pdf_repair_obj_stms
 	pdf_print_xref
 	pdf_resize_xref
+	pdf_new_ref
 	pdf_new_crypt
 	pdf_free_crypt
 	pdf_crypt_obj

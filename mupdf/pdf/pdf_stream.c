@@ -13,7 +13,7 @@ pdf_is_stream(pdf_document *xref, int num, int gen)
 	pdf_cache_object(xref, num, gen);
 	/* RJW: "cannot load object, ignoring error" */
 
-	return xref->table[num].stm_ofs > 0 || xref->table[num].stm_buf;
+	return xref->table[num].stm_ofs != 0 || xref->table[num].stm_buf;
 }
 
 /*
@@ -537,6 +537,9 @@ pdf_load_image_stream(pdf_document *xref, int num, int gen, int orig_num, int or
 	fz_buffer *buf;
 
 	fz_var(buf);
+
+	if (num > 0 && num < xref->len && xref->table[num].stm_buf)
+		return fz_keep_buffer(xref->ctx, xref->table[num].stm_buf);
 
 	dict = pdf_load_object(xref, num, gen);
 	/* RJW: "cannot load stream dictionary (%d %d R)", num, gen */

@@ -134,12 +134,12 @@ pdf_load_name_tree_imp(pdf_obj *dict, pdf_document *xref, pdf_obj *node)
 			if (pdf_is_string(key))
 			{
 				key = pdf_to_utf8_name(ctx, key);
-				fz_dict_put(dict, key, val);
+				pdf_dict_put(dict, key, val);
 				pdf_drop_obj(key);
 			}
 			else if (pdf_is_name(key))
 			{
-				fz_dict_put(dict, key, val);
+				pdf_dict_put(dict, key, val);
 			}
 		}
 	}

@@ -135,9 +135,9 @@ int pdfposter_main(int argc, char **argv)
 	pdf_document *xref;
 	fz_context *ctx;
 
-	opts.dogarbage = 0;
-	opts.doexpand = 0;
-	opts.doascii = 0;
+	opts.do_garbage = 0;
+	opts.do_expand = 0;
+	opts.do_ascii = 0;
 
 	while ((c = fz_getopt(argc, argv, "x:y:")) != -1)
 	{

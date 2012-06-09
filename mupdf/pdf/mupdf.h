@@ -71,7 +71,7 @@ pdf_obj *pdf_dict_get_val(pdf_obj *dict, int idx);
 pdf_obj *pdf_dict_get(pdf_obj *dict, pdf_obj *key);
 pdf_obj *pdf_dict_gets(pdf_obj *dict, char *key);
 pdf_obj *pdf_dict_getsa(pdf_obj *dict, char *key, char *abbrev);
-void fz_dict_put(pdf_obj *dict, pdf_obj *key, pdf_obj *val);
+void pdf_dict_put(pdf_obj *dict, pdf_obj *key, pdf_obj *val);
 void pdf_dict_puts(pdf_obj *dict, char *key, pdf_obj *val);
 void pdf_dict_del(pdf_obj *dict, pdf_obj *key);
 void pdf_dict_dels(pdf_obj *dict, char *key);

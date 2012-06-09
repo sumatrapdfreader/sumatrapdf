@@ -131,7 +131,7 @@ fz_meta(fz_document *doc, int key, void *ptr, int size)
 }
 
 void
-fz_write(fz_document *doc, char *filename, fz_write_options *opts)
+fz_write_document(fz_document *doc, char *filename, fz_write_options *opts)
 {
 	if (doc && doc->write)
 		doc->write(doc, filename, opts);

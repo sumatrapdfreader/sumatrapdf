@@ -6,6 +6,7 @@
 
 void pdf_set_str_len(pdf_obj *obj, int newlen);
 void *pdf_get_indirect_document(pdf_obj *obj);
+void pdf_set_int(pdf_obj *obj, int i);
 
 /*
  * PDF Images
@@ -211,6 +212,7 @@ void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);
 void pdf_repair_obj_stms(pdf_document *doc);
 void pdf_print_xref(pdf_document *);
 void pdf_resize_xref(pdf_document *doc, int newcap);
+pdf_obj *pdf_new_ref(pdf_document *doc, pdf_obj *obj);
 
 /*
  * Encryption

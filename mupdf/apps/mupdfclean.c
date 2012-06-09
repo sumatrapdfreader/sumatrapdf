@@ -24,6 +24,7 @@ static void usage(void)
 		"\t-gg\tin addition to -g compact xref table\n"
 		"\t-ggg\tin addition to -gg merge duplicate objects\n"
 		"\t-d\tdecompress all streams\n"
+		"\t-l\tlinearize PDF\n"
 		"\t-i\ttoggle decompression of image streams\n"
 		"\t-f\ttoggle decompression of font streams\n"
 		"\t-a\tascii hex encode binary streams\n"
@@ -160,20 +161,22 @@ int pdfclean_main(int argc, char **argv)
 	int subset;
 	fz_write_options opts;
 
-	opts.dogarbage = 0;
-	opts.doexpand = 0;
-	opts.doascii = 0;
+	opts.do_garbage = 0;
+	opts.do_expand = 0;
+	opts.do_ascii = 0;
+	opts.do_linear = 0;
 
-	while ((c = fz_getopt(argc, argv, "adfgip:")) != -1)
+	while ((c = fz_getopt(argc, argv, "adfgilp:")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
-		case 'g': opts.dogarbage ++; break;
-		case 'd': opts.doexpand ^= fz_expand_all; break;
-		case 'f': opts.doexpand ^= fz_expand_fonts; break;
-		case 'i': opts.doexpand ^= fz_expand_images; break;
-		case 'a': opts.doascii ++; break;
+		case 'g': opts.do_garbage ++; break;
+		case 'd': opts.do_expand ^= fz_expand_all; break;
+		case 'f': opts.do_expand ^= fz_expand_fonts; break;
+		case 'i': opts.do_expand ^= fz_expand_images; break;
+		case 'l': opts.do_linear ++; break;
+		case 'a': opts.do_ascii ++; break;
 		default: usage(); break;
 		}
 	}

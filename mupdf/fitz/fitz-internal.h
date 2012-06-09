@@ -374,6 +374,7 @@ struct fz_buffer_s
 	int refs;
 	unsigned char *data;
 	int cap, len;
+	int unused_bits;
 };
 
 /*
@@ -414,6 +415,14 @@ void fz_grow_buffer(fz_context *ctx, fz_buffer *buf);
 	buf: The buffer to trim.
 */
 void fz_trim_buffer(fz_context *ctx, fz_buffer *buf);
+
+void fz_write_buffer(fz_context *ctx, fz_buffer *buf, unsigned char *data, int len);
+
+void fz_write_buffer_byte(fz_context *ctx, fz_buffer *buf, int val);
+
+void fz_write_buffer_bits(fz_context *ctx, fz_buffer *buf, int val, int bits);
+
+void fz_write_buffer_pad(fz_context *ctx, fz_buffer *buf);
 
 struct fz_stream_s
 {

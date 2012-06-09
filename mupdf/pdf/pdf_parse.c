@@ -418,7 +418,7 @@ pdf_parse_dict(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 					(tok == PDF_TOK_KEYWORD && !strcmp(buf->scratch, "ID")))
 				{
 					val = pdf_new_int(ctx, a);
-					fz_dict_put(dict, key, val);
+					pdf_dict_put(dict, key, val);
 					pdf_drop_obj(val);
 					val = NULL;
 					pdf_drop_obj(key);
@@ -441,7 +441,7 @@ pdf_parse_dict(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 				fz_throw(ctx, "unknown token in dict");
 			}
 
-			fz_dict_put(dict, key, val);
+			pdf_dict_put(dict, key, val);
 			pdf_drop_obj(val);
 			val = NULL;
 			pdf_drop_obj(key);

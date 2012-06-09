@@ -267,6 +267,13 @@ int pdf_to_str_len(pdf_obj *obj)
 	return obj->u.s.len;
 }
 
+void pdf_set_int(pdf_obj *obj, int i)
+{
+	if (!obj || obj->kind != PDF_INT)
+		return;
+	obj->u.i = i;
+}
+
 /* for use by pdf_crypt_obj_imp to decrypt AES string in place */
 void pdf_set_str_len(pdf_obj *obj, int newlen)
 {
@@ -634,7 +641,7 @@ pdf_copy_dict(fz_context *ctx, pdf_obj *obj)
 	n = pdf_dict_len(obj);
 	dict = pdf_new_dict(ctx, n);
 	for (i = 0; i < n; i++)
-		fz_dict_put(dict, pdf_dict_get_key(obj, i), pdf_dict_get_val(obj, i));
+		pdf_dict_put(dict, pdf_dict_get_key(obj, i), pdf_dict_get_val(obj, i));
 
 	return dict;
 }
@@ -754,7 +761,7 @@ pdf_dict_getsa(pdf_obj *obj, char *key, char *abbrev)
 }
 
 void
-fz_dict_put(pdf_obj *obj, pdf_obj *key, pdf_obj *val)
+pdf_dict_put(pdf_obj *obj, pdf_obj *key, pdf_obj *val)
 {
 	int location;
 	char *s;
@@ -790,8 +797,11 @@ fz_dict_put(pdf_obj *obj, pdf_obj *key, pdf_obj *val)
 	i = pdf_dict_finds(obj, s, &location);
 	if (i >= 0 && i < obj->u.d.len)
 	{
-		pdf_drop_obj(obj->u.d.items[i].v);
-		obj->u.d.items[i].v = pdf_keep_obj(val);
+		if (obj->u.d.items[i].v != val)
+		{
+			pdf_drop_obj(obj->u.d.items[i].v);
+			obj->u.d.items[i].v = pdf_keep_obj(val);
+		}
 	}
 	else
 	{
@@ -814,7 +824,7 @@ void
 pdf_dict_puts(pdf_obj *obj, char *key, pdf_obj *val)
 {
 	pdf_obj *keyobj = fz_new_name(obj->ctx, key);
-	fz_dict_put(obj, keyobj, val);
+	pdf_dict_put(obj, keyobj, val);
 	pdf_drop_obj(keyobj);
 }
 

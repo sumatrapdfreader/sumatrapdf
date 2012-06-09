@@ -2285,16 +2285,17 @@ typedef struct fz_write_options_s fz_write_options;
 */
 struct fz_write_options_s
 {
-	int doascii;    /*	If non-zero then attempt (where possible) to
+	int do_ascii;    /*	If non-zero then attempt (where possible) to
 				make the output ascii. */
-	int doexpand;	/*	Bitflags; each non zero bit indicates an aspect
+	int do_expand;	/*	Bitflags; each non zero bit indicates an aspect
 				of the file that should be 'expanded' on
 				writing. */
-	int dogarbage;	/*	If non-zero then attempt (where possible) to
+	int do_garbage;	/*	If non-zero then attempt (where possible) to
 				garbage collect the file before writing. */
+	int do_linear;   /*	If non-zero then write linearised. */
 };
 
-/*	An enumeration of bitflags to use in the above 'doexpand' field of
+/*	An enumeration of bitflags to use in the above 'do_expand' field of
 	fz_write_options.
 */
 enum
@@ -2320,6 +2321,6 @@ enum
 
 	May throw exceptions.
 */
-void fz_write(fz_document *doc, char *filename, fz_write_options *opts);
+void fz_write_document(fz_document *doc, char *filename, fz_write_options *opts);
 
 #endif

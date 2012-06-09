@@ -726,7 +726,7 @@ pdf_obj *pdf_copy_str_dict(fz_context *ctx, pdf_obj *dict)
         // resolve all indirect references
         if (pdf_is_indirect(val)) {
             pdf_obj *val2 = pdf_new_string(ctx, pdf_to_str_buf(val), pdf_to_str_len(val));
-            fz_dict_put(copy, pdf_dict_get_key(copy, i), val2);
+            pdf_dict_put(copy, pdf_dict_get_key(copy, i), val2);
             pdf_drop_obj(val2);
         }
     }
