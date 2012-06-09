@@ -618,7 +618,8 @@ static void compactxref(pdf_document *xref, pdf_write_options *opts)
 	for (num = 1; num < xref->len; num++)
 	{
 		/* If it's not used, map it to zero */
-		if (!opts->use_list[num])
+		/* SumatraPDF: take removeduplicateobjs into account */
+		if (!opts->use_list[opts->renumber_map[num]])
 		{
 			opts->renumber_map[num] = 0;
 		}
@@ -1692,6 +1693,9 @@ dowriteobject(pdf_document *xref, pdf_write_options *opts, int num, int pass)
 	{
 		if (pass > 0)
 			padto(opts->out, opts->ofs_list[num]);
+		/* SumatraPDF: set use_list[num] in case there was no garbage collection */
+		if (!opts->use_list[num])
+			opts->use_list[num] = 1;
 		opts->ofs_list[num] = ftell(opts->out);
 		writeobject(xref, opts, num, opts->gen_list[num]);
 	}

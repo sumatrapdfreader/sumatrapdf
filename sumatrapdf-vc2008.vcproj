@@ -1309,6 +1309,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\pdf\pdf_write.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\pdf\pdf_xobject.c"
 					>
 				</File>
