@@ -68,14 +68,16 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
             assert curr_trans is not None, "File %s, line %d" % (file_path, line_no)
             if re.findall(r"%#?[sdux]", curr_orig) != re.findall(r"%#?[sdux]", curr_trans):
                 try:
-                    print("File %s, line %d, translation has incorrect variable order '%s'" % (file_path, line_no, curr_trans))
+                    print("File %s, line %d, translation has incorrect variable order" % (file_path, line_no))
+                    print("trans: '%s'" % curr_trans)
                 except:
                     # might fail to print unicode to console, so print again
                     # without the string
                     print("File %s, line %d, translation has incorrect variable order" % (file_path, line_no))
                 assert 0
             elif re.search(r"\\(?![\\tn])", curr_trans):
-                print("File %s, line %d, translation has incorrect escape characters '%s'" % (file_path, line_no, curr_trans))
+                print("File %s, line %d, translation has incorrect escape characters" % (file_path, line_no))
+                print("trans: '%s'" % curr_trans)
                 assert 0
             elif curr_orig not in strings_dict:
                 strings_dict[curr_orig] = [(lang_code, curr_trans)]
