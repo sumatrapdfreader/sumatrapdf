@@ -246,7 +246,7 @@ void GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation)
     m.Rotate((REAL)rotation, MatrixOrderAppend);
 }
 
-Bitmap *ImageFromHdPhotoStream(IStream *stream)
+Bitmap *WICDecodeImageFromStream(IStream *stream)
 {
     ScopedCom com;
 
@@ -342,12 +342,19 @@ Bitmap *BitmapFromData(const char *data, size_t len)
     if (!stream)
         return NULL;
     if (Img_JXR == format)
-        return ImageFromHdPhotoStream(stream);
+        return WICDecodeImageFromStream(stream);
 
     Bitmap *bmp = Bitmap::FromStream(stream);
     if (bmp && bmp->GetLastStatus() != Ok) {
         delete bmp;
         bmp = NULL;
+    }
+    // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
+    if (bmp && Img_JPEG == format && 0 == bmp->GetWidth() && 0 == bmp->GetHeight()) {
+        delete bmp;
+        LARGE_INTEGER zero = { 0 };
+        stream->Seek(zero, STREAM_SEEK_SET, NULL);
+        bmp = WICDecodeImageFromStream(stream);
     }
     return bmp;
 }
@@ -376,23 +383,23 @@ Size BitmapSizeFromData(const char *data, size_t len)
             if ((r.Byte(10) & 0x80))
                 ix += 3 * (1 << ((r.Byte(10) & 0x07) + 1));
             while (ix + 8 < len) {
-                if (r.Byte(ix) == '\x2c') {
+                if (r.Byte(ix) == 0x2C) {
                     result.Width = r.WordLE(ix + 5);
                     result.Height = r.WordLE(ix + 7);
                     break;
                 }
-                else if (r.Byte(ix) == '\x21' && r.Byte(ix + 1) == '\xF9')
+                else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xF9)
                     ix += 8;
-                else if (r.Byte(ix) == '\x21' && r.Byte(ix + 1) == '\xFE') {
-                    const char *commentEnd = r.Find(ix + 2, '\0');
+                else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFE) {
+                    const char *commentEnd = r.Find(ix + 2, 0x00);
                     ix = commentEnd ? commentEnd - data + 1 : len;
                 }
-                else if (r.Byte(ix) == '\x21' && r.Byte(ix + 1) == '\x01' && ix + 15 < len) {
-                    const char *textDataEnd = r.Find(ix + 15, '\0');
+                else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0x01 && ix + 15 < len) {
+                    const char *textDataEnd = r.Find(ix + 15, 0x00);
                     ix = textDataEnd ? textDataEnd - data + 1 : len;
                 }
-                else if (r.Byte(ix) == '\x21' && r.Byte(ix + 1) == '\xFF' && ix + 14 < len) {
-                    const char *applicationDataEnd = r.Find(ix + 14, '\0');
+                else if (r.Byte(ix) == 0x21 && r.Byte(ix + 1) == 0xFF && ix + 14 < len) {
+                    const char *applicationDataEnd = r.Find(ix + 14, 0x00);
                     ix = applicationDataEnd ? applicationDataEnd - data + 1 : len;
                 }
                 else
@@ -402,8 +409,8 @@ Size BitmapSizeFromData(const char *data, size_t len)
         break;
     case Img_JPEG:
         // find the last start of frame marker for non-differential Huffman coding
-        for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == '\xFF'; ) {
-            if ('\xC0' <= r.Byte(ix + 1) && r.Byte(ix + 1) <= '\xC3') {
+        for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF; ) {
+            if (0xC0 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xC3) {
                 result.Width = r.WordBE(ix + 7);
                 result.Height = r.WordBE(ix + 5);
             }
@@ -449,7 +456,7 @@ Size BitmapSizeFromData(const char *data, size_t len)
 
     if (result.Empty()) {
         // let GDI+ extract the image size if we've failed
-        // (currently happens for animated GIFs and for all TIFFs and JXRs)
+        // (currently happens for animated GIFs and for all TIFFs)
         Bitmap *bmp = BitmapFromData(data, len);
         if (bmp)
             result = Size(bmp->GetWidth(), bmp->GetHeight());
