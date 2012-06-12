@@ -271,6 +271,9 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 تعذر نسخ النص (النسخ كصورة فقط)
 
+Copyright:
+حقوق الطبع محفوظة: 
+
 Could not obtain Printer properties
 لم يمكن الحصول على خصائص الطابعة
 
@@ -340,6 +343,9 @@ F&ullscreen\tCtrl+Shift+L
 Facing
 صفحتان متقابلتان
 
+Failed to rename the file!
+فشل في إعادة تسمية الملف!
+
 Failed to save a file
 فشل في حفظ الملف
 
@@ -394,6 +400,12 @@ Fit Width and Show Pages Continuously
 Fit a Single Page
 احتواء صفحة مفردة
 
+Fonts:
+الخطوط:
+
+Formatting the book... %d pages
+تهيئة الكتاب... %d صفحة
+
 Found text at page %s
 تم العثور على النص في صفحة %s
 
@@ -420,6 +432,9 @@ Image files (*.%s)
 
 KB
 ك.ب
+
+Loading file %s...
+تحميل الملف %s...
 
 MB
 م.ب
@@ -550,6 +565,9 @@ Printing page %d of %d...
 Printing problem.
 يوجد مشكلة في الطباعة
 
+Re&name...\tF2
+إعادة تسمية...\tF2
+
 Remember &opened files
 تذكر الملفات المفتوحة
 
@@ -558,6 +576,12 @@ Remove from favorites
 
 Remove page %s from favorites
 احذف الصفحة %s من المفضلة
+
+Rename To
+إعادة تسمية إلى
+
+Replace document &colors with Windows color scheme
+تغيير ألوان الكتب إلى ألوان ويندوز القياسية
 
 Rotate &Left\tCtrl+Shift+-
 دوران لليسار\tCtrl+Shift+-
@@ -681,14 +705,4 @@ copying text
 
 printing document
 تتم حالياً الطباعة
-
-# Untranslated:
-#Copyright:
-#Failed to rename the file!
-#Fonts:
-#Formatting the book... %d pages
-#Loading file %s...
-#Re&name...\tF2
-#Rename To
-#Replace document &colors with Windows color scheme
 
