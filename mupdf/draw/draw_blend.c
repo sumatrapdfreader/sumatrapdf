@@ -598,14 +598,14 @@ fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int is
 	h = bbox.y1 - bbox.y0;
 
 	n = src->n;
-	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * n;
-	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * n;
+	sp = src->samples + (unsigned int)(((y - src->y) * src->w + (x - src->x)) * n);
+	dp = dst->samples + (unsigned int)(((y - dst->y) * dst->w + (x - dst->x)) * n);
 
 	assert(src->n == dst->n);
 
 	if (!isolated)
 	{
-		unsigned char *hp = shape->samples + (y - shape->y) * shape->w + (x - shape->x);
+		unsigned char *hp = shape->samples + (unsigned int)((y - shape->y) * shape->w + (x - shape->x));
 
 		while (h--)
 		{

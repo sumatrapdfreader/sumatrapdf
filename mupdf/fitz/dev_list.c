@@ -593,6 +593,7 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz
 	int tiled = 0;
 	int empty;
 	int progress = 0;
+	fz_context *ctx = dev->ctx;
 
 	if (cookie)
 	{
@@ -658,103 +659,103 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz
 visible:
 		ctm = fz_concat(node->ctm, top_ctm);
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1848 */
-		fz_try(dev->ctx) {
-
-		switch (node->cmd)
+		fz_try(ctx)
 		{
-		case FZ_CMD_FILL_PATH:
-			fz_fill_path(dev, node->item.path, node->flag, ctm,
-				node->colorspace, node->color, node->alpha);
-			break;
-		case FZ_CMD_STROKE_PATH:
-			fz_stroke_path(dev, node->item.path, node->stroke, ctm,
-				node->colorspace, node->color, node->alpha);
-			break;
-		case FZ_CMD_CLIP_PATH:
+			switch (node->cmd)
+			{
+			case FZ_CMD_FILL_PATH:
+				fz_fill_path(dev, node->item.path, node->flag, ctm,
+					node->colorspace, node->color, node->alpha);
+				break;
+			case FZ_CMD_STROKE_PATH:
+				fz_stroke_path(dev, node->item.path, node->stroke, ctm,
+					node->colorspace, node->color, node->alpha);
+				break;
+			case FZ_CMD_CLIP_PATH:
+			{
+				fz_rect trect = fz_transform_rect(top_ctm, node->rect);
+				fz_clip_path(dev, node->item.path, &trect, node->flag, ctm);
+				break;
+			}
+			case FZ_CMD_CLIP_STROKE_PATH:
+			{
+				fz_rect trect = fz_transform_rect(top_ctm, node->rect);
+				fz_clip_stroke_path(dev, node->item.path, &trect, node->stroke, ctm);
+				break;
+			}
+			case FZ_CMD_FILL_TEXT:
+				fz_fill_text(dev, node->item.text, ctm,
+					node->colorspace, node->color, node->alpha);
+				break;
+			case FZ_CMD_STROKE_TEXT:
+				fz_stroke_text(dev, node->item.text, node->stroke, ctm,
+					node->colorspace, node->color, node->alpha);
+				break;
+			case FZ_CMD_CLIP_TEXT:
+				fz_clip_text(dev, node->item.text, ctm, node->flag);
+				break;
+			case FZ_CMD_CLIP_STROKE_TEXT:
+				fz_clip_stroke_text(dev, node->item.text, node->stroke, ctm);
+				break;
+			case FZ_CMD_IGNORE_TEXT:
+				fz_ignore_text(dev, node->item.text, ctm);
+				break;
+			case FZ_CMD_FILL_SHADE:
+				fz_fill_shade(dev, node->item.shade, ctm, node->alpha);
+				break;
+			case FZ_CMD_FILL_IMAGE:
+				fz_fill_image(dev, node->item.image, ctm, node->alpha);
+				break;
+			case FZ_CMD_FILL_IMAGE_MASK:
+				fz_fill_image_mask(dev, node->item.image, ctm,
+					node->colorspace, node->color, node->alpha);
+				break;
+			case FZ_CMD_CLIP_IMAGE_MASK:
+			{
+				fz_rect trect = fz_transform_rect(top_ctm, node->rect);
+				fz_clip_image_mask(dev, node->item.image, &trect, ctm);
+				break;
+			}
+			case FZ_CMD_POP_CLIP:
+				fz_pop_clip(dev);
+				break;
+			case FZ_CMD_BEGIN_MASK:
+				rect = fz_transform_rect(top_ctm, node->rect);
+				fz_begin_mask(dev, rect, node->flag, node->colorspace, node->color);
+				break;
+			case FZ_CMD_END_MASK:
+				fz_end_mask(dev);
+				break;
+			case FZ_CMD_BEGIN_GROUP:
+				rect = fz_transform_rect(top_ctm, node->rect);
+				fz_begin_group(dev, rect,
+					(node->flag & ISOLATED) != 0, (node->flag & KNOCKOUT) != 0,
+					node->item.blendmode, node->alpha);
+				break;
+			case FZ_CMD_END_GROUP:
+				fz_end_group(dev);
+				break;
+			case FZ_CMD_BEGIN_TILE:
+				tiled++;
+				rect.x0 = node->color[2];
+				rect.y0 = node->color[3];
+				rect.x1 = node->color[4];
+				rect.y1 = node->color[5];
+				fz_begin_tile(dev, node->rect, rect,
+					node->color[0], node->color[1], ctm);
+				break;
+			case FZ_CMD_END_TILE:
+				tiled--;
+				fz_end_tile(dev);
+				break;
+			}
+		}
+		fz_catch(ctx)
 		{
-			fz_rect trect = fz_transform_rect(top_ctm, node->rect);
-			fz_clip_path(dev, node->item.path, &trect, node->flag, ctm);
-			break;
-		}
-		case FZ_CMD_CLIP_STROKE_PATH:
-		{
-			fz_rect trect = fz_transform_rect(top_ctm, node->rect);
-			fz_clip_stroke_path(dev, node->item.path, &trect, node->stroke, ctm);
-			break;
-		}
-		case FZ_CMD_FILL_TEXT:
-			fz_fill_text(dev, node->item.text, ctm,
-				node->colorspace, node->color, node->alpha);
-			break;
-		case FZ_CMD_STROKE_TEXT:
-			fz_stroke_text(dev, node->item.text, node->stroke, ctm,
-				node->colorspace, node->color, node->alpha);
-			break;
-		case FZ_CMD_CLIP_TEXT:
-			fz_clip_text(dev, node->item.text, ctm, node->flag);
-			break;
-		case FZ_CMD_CLIP_STROKE_TEXT:
-			fz_clip_stroke_text(dev, node->item.text, node->stroke, ctm);
-			break;
-		case FZ_CMD_IGNORE_TEXT:
-			fz_ignore_text(dev, node->item.text, ctm);
-			break;
-		case FZ_CMD_FILL_SHADE:
-			fz_fill_shade(dev, node->item.shade, ctm, node->alpha);
-			break;
-		case FZ_CMD_FILL_IMAGE:
-			fz_fill_image(dev, node->item.image, ctm, node->alpha);
-			break;
-		case FZ_CMD_FILL_IMAGE_MASK:
-			fz_fill_image_mask(dev, node->item.image, ctm,
-				node->colorspace, node->color, node->alpha);
-			break;
-		case FZ_CMD_CLIP_IMAGE_MASK:
-		{
-			fz_rect trect = fz_transform_rect(top_ctm, node->rect);
-			fz_clip_image_mask(dev, node->item.image, &trect, ctm);
-			break;
-		}
-		case FZ_CMD_POP_CLIP:
-			fz_pop_clip(dev);
-			break;
-		case FZ_CMD_BEGIN_MASK:
-			rect = fz_transform_rect(top_ctm, node->rect);
-			fz_begin_mask(dev, rect, node->flag, node->colorspace, node->color);
-			break;
-		case FZ_CMD_END_MASK:
-			fz_end_mask(dev);
-			break;
-		case FZ_CMD_BEGIN_GROUP:
-			rect = fz_transform_rect(top_ctm, node->rect);
-			fz_begin_group(dev, rect,
-				(node->flag & ISOLATED) != 0, (node->flag & KNOCKOUT) != 0,
-				node->item.blendmode, node->alpha);
-			break;
-		case FZ_CMD_END_GROUP:
-			fz_end_group(dev);
-			break;
-		case FZ_CMD_BEGIN_TILE:
-			tiled++;
-			rect.x0 = node->color[2];
-			rect.y0 = node->color[3];
-			rect.x1 = node->color[4];
-			rect.y1 = node->color[5];
-			fz_begin_tile(dev, node->rect, rect,
-				node->color[0], node->color[1], ctm);
-			break;
-		case FZ_CMD_END_TILE:
-			tiled--;
-			fz_end_tile(dev);
-			break;
-		}
-
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1848 */
-		}
-		fz_catch(dev->ctx)
-		{
-			fz_warn(dev->ctx, "continuing despite exception");
+			/* Swallow the error */
+			if (cookie)
+				cookie->errors++;
+			fz_warn(ctx, "Ignoring error during interpretation");
 		}
 	}
 }

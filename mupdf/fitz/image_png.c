@@ -88,8 +88,8 @@ png_predict(unsigned char *samples, int width, int height, int n, int depth)
 
 	for (row = 0; row < height; row ++)
 	{
-		unsigned char *src = samples + (stride + 1) * row;
-		unsigned char *dst = samples + stride * row;
+		unsigned char *src = samples + (unsigned int)((stride + 1) * row);
+		unsigned char *dst = samples + (unsigned int)(stride * row);
 
 		unsigned char *a = dst;
 		unsigned char *b = dst - stride;
@@ -192,7 +192,7 @@ png_deinterlace(struct info *info, int *passw, int *passh, int *passofs)
 
 	for (p = 0; p < 7; p++)
 	{
-		unsigned char *sp = info->samples + passofs[p];
+		unsigned char *sp = info->samples + (unsigned int)(passofs[p]);
 		int w = passw[p];
 		int h = passh[p];
 
@@ -524,8 +524,8 @@ png_mask_transparency(struct info *info, fz_pixmap *dst)
 
 	for (y = 0; y < info->height; y++)
 	{
-		unsigned char *sp = info->samples + y * stride;
-		unsigned char *dp = dst->samples + y * dst->w * dst->n;
+		unsigned char *sp = info->samples + (unsigned int)(y * stride);
+		unsigned char *dp = dst->samples + (unsigned int)(y * dst->w * dst->n);
 		for (x = 0; x < info->width; x++)
 		{
 			t = 1;

@@ -99,7 +99,7 @@ static void make_ht_line(unsigned char *buf, fz_halftone *ht, int x, int y, int 
 		assert(tile->n == 1);
 
 		/* Left hand section; from x to tile width */
-		tbase = tile->samples + py * tw;
+		tbase = tile->samples + (unsigned int)(py * tw);
 		t = tbase + px;
 		len = tw - px;
 		if (len > w2)

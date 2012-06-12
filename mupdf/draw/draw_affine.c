@@ -674,7 +674,7 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 		v -= 32768;
 	}
 
-	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
+	dp = dst->samples + (unsigned int)(((y - dst->y) * dst->w + (x - dst->x)) * dst->n);
 	n = dst->n;
 	sp = img->samples;
 	sw = img->w;
@@ -682,7 +682,7 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 	if (shape)
 	{
 		hw = shape->w;
-		hp = shape->samples + ((y - shape->y) * hw) + x - shape->x;
+		hp = shape->samples + (unsigned int)(((y - shape->y) * hw) + x - shape->x);
 	}
 	else
 	{

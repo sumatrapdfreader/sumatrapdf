@@ -624,7 +624,7 @@ static inline void blit_aa(fz_pixmap *dst, int x, int y,
 	unsigned char *mp, int w, unsigned char *color)
 {
 	unsigned char *dp;
-	dp = dst->samples + ( (y - dst->y) * dst->w + (x - dst->x) ) * dst->n;
+	dp = dst->samples + (unsigned int)(( (y - dst->y) * dst->w + (x - dst->x) ) * dst->n);
 	if (color)
 		fz_paint_span_with_color(dp, mp, dst->n, w, color);
 	else
@@ -725,7 +725,7 @@ static inline void blit_sharp(int x0, int x1, int y,
 	x1 = CLAMP(x1, dst->x, dst->x + dst->w);
 	if (x0 < x1)
 	{
-		dp = dst->samples + ( (y - dst->y) * dst->w + (x0 - dst->x) ) * dst->n;
+		dp = dst->samples + (unsigned int)(( (y - dst->y) * dst->w + (x0 - dst->x) ) * dst->n);
 		if (color)
 			fz_paint_solid_color(dp, dst->n, x1 - x0, color);
 		else

@@ -1172,6 +1172,7 @@ pdf_create_freetext_annot(pdf_document *xref, pdf_obj *obj)
 	int align = pdf_to_int(pdf_dict_gets(obj, "Q"));
 	pdf_obj *res = pdf_dict_from_string(xref, ANNOT_FREETEXT_AP_RESOURCES);
 	unsigned short *ucs2, *rest;
+	char *r;
 	float x;
 
 	char *font_name = NULL;
@@ -1194,11 +1195,15 @@ pdf_create_freetext_annot(pdf_document *xref, pdf_obj *obj)
 	fz_buffer_printf(xref->ctx, content, "1 0 0 1 2 %.4f Tm ", rect.y1 - rect.y0 - 2);
 
 	/* Adobe Reader seems to consider "[1 0 0] r" and "1 0 0 rg" to mean the same(?) */
-	if (strchr(base_ap->data, '['))
+	if ((r = strchr(base_ap->data, '[')) && sscanf(r, "[%f %f %f] r", &x, &x, &x) == 3)
 	{
-		float r, g, b;
-		if (sscanf(strchr(base_ap->data, '['), "[%f %f %f] r", &r, &g, &b) == 3)
-			fz_buffer_printf(xref->ctx, content, "%.4f %.4f %.4f rg ", r, g, b);
+		*r = ' ';
+		memcpy(strchr(r, ']'), " rg", 3);
+	}
+	if ((r = strchr(content->data, '[')) && sscanf(r, "[%f %f %f] r", &x, &x, &x) == 3)
+	{
+		*r = ' ';
+		memcpy(strchr(r, ']'), " rg", 3);
 	}
 
 	ucs2 = pdf_to_ucs2(xref->ctx, value);

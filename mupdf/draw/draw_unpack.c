@@ -73,8 +73,8 @@ fz_unpack_tile(fz_pixmap *dst, unsigned char * restrict src, int n, int depth, i
 
 	for (y = 0; y < dst->h; y++)
 	{
-		unsigned char *sp = src + y * stride;
-		unsigned char *dp = dst->samples + y * (dst->w * dst->n);
+		unsigned char *sp = src + (unsigned int)(y * stride);
+		unsigned char *dp = dst->samples + (unsigned int)(y * dst->w * dst->n);
 
 		/* Specialized loops */
 

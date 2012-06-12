@@ -393,8 +393,8 @@ fz_paint_pixmap_with_rect(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbo
 		return;
 
 	n = src->n;
-	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * src->n;
-	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
+	sp = src->samples + (unsigned int)(((y - src->y) * src->w + (x - src->x)) * src->n);
+	dp = dst->samples + (unsigned int)(((y - dst->y) * dst->w + (x - dst->x)) * dst->n);
 
 	while (h--)
 	{
@@ -424,8 +424,8 @@ fz_paint_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha)
 		return;
 
 	n = src->n;
-	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * src->n;
-	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
+	sp = src->samples + (unsigned int)(((y - src->y) * src->w + (x - src->x)) * src->n);
+	dp = dst->samples + (unsigned int)(((y - dst->y) * dst->w + (x - dst->x)) * dst->n);
 
 	while (h--)
 	{
@@ -457,9 +457,9 @@ fz_paint_pixmap_with_mask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk)
 		return;
 
 	n = src->n;
-	sp = src->samples + ((y - src->y) * src->w + (x - src->x)) * src->n;
-	mp = msk->samples + ((y - msk->y) * msk->w + (x - msk->x)) * msk->n;
-	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
+	sp = src->samples + (unsigned int)(((y - src->y) * src->w + (x - src->x)) * src->n);
+	mp = msk->samples + (unsigned int)(((y - msk->y) * msk->w + (x - msk->x)) * msk->n);
+	dp = dst->samples + (unsigned int)(((y - dst->y) * dst->w + (x - dst->x)) * dst->n);
 
 	while (h--)
 	{

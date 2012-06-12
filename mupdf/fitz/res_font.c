@@ -390,8 +390,8 @@ fz_copy_ft_bitmap(fz_context *ctx, int left, int top, FT_Bitmap *bitmap)
 	{
 		for (y = 0; y < pixmap->h; y++)
 		{
-			unsigned char *out = pixmap->samples + y * pixmap->w;
-			unsigned char *in = bitmap->buffer + (pixmap->h - y - 1) * bitmap->pitch;
+			unsigned char *out = pixmap->samples + (unsigned int)(y * pixmap->w);
+			unsigned char *in = bitmap->buffer + (unsigned int)((pixmap->h - y - 1) * bitmap->pitch);
 			unsigned char bit = 0x80;
 			int w = pixmap->w;
 			while (w--)
@@ -410,9 +410,9 @@ fz_copy_ft_bitmap(fz_context *ctx, int left, int top, FT_Bitmap *bitmap)
 	{
 		for (y = 0; y < pixmap->h; y++)
 		{
-			memcpy(pixmap->samples + y * pixmap->w,
-				bitmap->buffer + (pixmap->h - y - 1) * bitmap->pitch,
-				pixmap->w);
+			memcpy(pixmap->samples + (unsigned int)(y * pixmap->w),
+			       bitmap->buffer + (unsigned int)((pixmap->h - y - 1) * bitmap->pitch),
+			       pixmap->w);
 		}
 	}
 

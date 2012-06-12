@@ -286,8 +286,8 @@ fz_expand_tiff_colormap(struct tiff *tiff)
 
 	for (y = 0; y < tiff->imagelength; y++)
 	{
-		src = tiff->samples + (tiff->stride * y);
-		dst = samples + (stride * y);
+		src = tiff->samples + (unsigned int)(tiff->stride * y);
+		dst = samples + (unsigned int)(stride * y);
 
 		for (x = 0; x < tiff->imagewidth; x++)
 		{
@@ -403,8 +403,8 @@ fz_decode_tiff_strips(struct tiff *tiff)
 		unsigned wlen = tiff->stride * tiff->rowsperstrip;
 		unsigned char *rp = tiff->bp + offset;
 
-		if (wp + wlen > tiff->samples + tiff->stride * tiff->imagelength)
-			wlen = tiff->samples + tiff->stride * tiff->imagelength - wp;
+		if (wp + wlen > tiff->samples + (unsigned int)(tiff->stride * tiff->imagelength))
+			wlen = tiff->samples + (unsigned int)(tiff->stride * tiff->imagelength) - wp;
 
 		if (rp + rlen > tiff->ep)
 			fz_throw(tiff->ctx, "strip extends beyond the end of the file");

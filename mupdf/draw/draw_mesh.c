@@ -269,7 +269,7 @@ static int clip_poly(float src[MAXV][MAXN],
 
 static void paint_scan(fz_pixmap *pix, int y, int x1, int x2, int *v1, int *v2, int n)
 {
-	unsigned char *p = pix->samples + ((y - pix->y) * pix->w + (x1 - pix->x)) * pix->n;
+	unsigned char *p = pix->samples + (unsigned int)(((y - pix->y) * pix->w + (x1 - pix->x)) * pix->n);
 	int v[FZ_MAX_COLORS];
 	int dv[FZ_MAX_COLORS];
 	int w = x2 - x1;

@@ -229,6 +229,7 @@ static void pdfapp_loadpage(pdfapp_t *app)
 {
 	fz_device *mdev = NULL;
 	int errored = 0;
+	fz_cookie cookie = { 0 };
 
 	fz_var(mdev);
 
@@ -270,7 +271,12 @@ static void pdfapp_loadpage(pdfapp_t *app)
 		/* Create display list */
 		app->page_list = fz_new_display_list(app->ctx);
 		mdev = fz_new_list_device(app->ctx, app->page_list);
-		fz_run_page(app->doc, app->page, mdev, fz_identity, NULL);
+		fz_run_page(app->doc, app->page, mdev, fz_identity, &cookie);
+		if (cookie.errors)
+		{
+			pdfapp_warn(app, "Errors found on page");
+			errored = 1;
+		}
 	}
 	fz_always(app->ctx)
 	{
@@ -291,6 +297,8 @@ static void pdfapp_loadpage(pdfapp_t *app)
 		if (!errored)
 			pdfapp_warn(app, "Cannot load page");
 	}
+
+	app->errored = errored;
 }
 
 #define MAX_TITLE 256
@@ -303,6 +311,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 	fz_colorspace *colorspace;
 	fz_matrix ctm;
 	fz_bbox bbox;
+	fz_cookie cookie = { 0 };
 
 	wincursor(app, WAIT);
 
@@ -318,7 +327,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		app->page_sheet = fz_new_text_sheet(app->ctx);
 		app->page_text = fz_new_text_page(app->ctx, app->page_bbox);
 		tdev = fz_new_text_device(app->ctx, app->page_sheet, app->page_text);
-		fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, NULL);
+		fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, &cookie);
 		fz_free_device(tdev);
 	}
 
@@ -357,7 +366,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		app->image = fz_new_pixmap_with_bbox(app->ctx, colorspace, bbox);
 		fz_clear_pixmap_with_value(app->ctx, app->image, 255);
 		idev = fz_new_draw_device(app->ctx, app->image);
-		fz_run_display_list(app->page_list, idev, ctm, bbox, NULL);
+		fz_run_display_list(app->page_list, idev, ctm, bbox, &cookie);
 		fz_free_device(idev);
 		if (app->invert)
 			fz_invert_pixmap(app->ctx, app->image);
@@ -386,6 +395,12 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		winrepaint(app);
 
 		wincursor(app, ARROW);
+	}
+
+	if (cookie.errors && app->errored == 0)
+	{
+		app->errored = 1;
+		pdfapp_warn(app, "Errors found on page. Page rendering may be incomplete.");
 	}
 
 	fz_flush_warnings(app->ctx);

@@ -439,8 +439,8 @@ draw_glyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
 	w = bbox.x1 - bbox.x0;
 	h = bbox.y1 - bbox.y0;
 
-	mp = msk->samples + ((y - msk->y - yorig) * msk->w + (x - msk->x - xorig));
-	dp = dst->samples + ((y - dst->y) * dst->w + (x - dst->x)) * dst->n;
+	mp = msk->samples + (unsigned int)((y - msk->y - yorig) * msk->w + (x - msk->x - xorig));
+	dp = dst->samples + (unsigned int)(((y - dst->y) * dst->w + (x - dst->x)) * dst->n);
 
 	assert(msk->n == 1);
 
@@ -783,7 +783,7 @@ fz_draw_fill_shade(fz_device *devp, fz_shade *shade, fz_matrix ctm, float alpha)
 		n = dest->n;
 		for (y = scissor.y0; y < scissor.y1; y++)
 		{
-			s = dest->samples + ((scissor.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n;
+			s = dest->samples + (unsigned int)(((scissor.x0 - dest->x) + (y - dest->y) * dest->w) * dest->n);
 			for (x = scissor.x0; x < scissor.x1; x++)
 			{
 				for (i = 0; i < n; i++)
@@ -794,7 +794,7 @@ fz_draw_fill_shade(fz_device *devp, fz_shade *shade, fz_matrix ctm, float alpha)
 		{
 			for (y = scissor.y0; y < scissor.y1; y++)
 			{
-				s = shape->samples + (scissor.x0 - shape->x) + (y - shape->y) * shape->w;
+				s = shape->samples + (unsigned int)((scissor.x0 - shape->x) + (y - shape->y) * shape->w);
 				for (x = scissor.x0; x < scissor.x1; x++)
 				{
 					*s++ = 255;
