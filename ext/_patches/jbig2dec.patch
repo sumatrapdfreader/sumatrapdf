@@ -1,7 +1,163 @@
+diff -rPu5 jbig2dec.orig\getopt.c jbig2dec\getopt.c
+--- jbig2dec.orig\getopt.c	Fri Jun 15 13:36:58 2012
++++ jbig2dec\getopt.c	Sun Dec 25 03:40:24 2011
+@@ -1,25 +1,28 @@
+-/* Copyright (C) 2001-2012 Artifex Software, Inc.
+-   All Rights Reserved.
+-
+-   This software is provided AS-IS with no warranty, either express or
+-   implied.
+-
+-   This software is distributed under license and may not be copied,
+-   modified or distributed except as expressly authorized under the terms
+-   of the license contained in the file LICENSE in this distribution.
+-
+-   Refer to licensing information at http://www.artifex.com or contact
+-   Artifex Software, Inc.,  7 Mt. Lassen Drive - Suite A-134, San Rafael,
+-   CA  94903, U.S.A., +1(415)492-9861, for further information.
+-*/
+-
+ /* Getopt for GNU.
+    NOTE: getopt is now part of the C library, so if you don't know what
+    "Keep this file name-space clean" means, talk to drepper@gnu.org
+    before changing it!
+-*/
++   Copyright (C) 1987,88,89,90,91,92,93,94,95,96,98,99,2000,2001
++   	Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, write to the Free
++   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
++   02111-1307 USA.  */
++
+ /* This tells Alpha OSF/1 not to define a getopt prototype in <stdio.h>.
+    Ditto for AIX 3.2 and <stdlib.h>.  */
+ #ifndef _NO_PROTO
+ # define _NO_PROTO
+ #endif
+diff -rPu5 jbig2dec.orig\getopt.h jbig2dec\getopt.h
+--- jbig2dec.orig\getopt.h	Fri Jun 15 13:36:58 2012
++++ jbig2dec\getopt.h	Sun Dec 25 03:40:24 2011
+@@ -1,22 +1,23 @@
+-/* Copyright (C) 2001-2012 Artifex Software, Inc.
+-   All Rights Reserved.
+-
+-   This software is provided AS-IS with no warranty, either express or
+-   implied.
++/* Declarations for getopt.
++   Copyright (C) 1989-1994, 1996-1999, 2001 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
+ 
+-   This software is distributed under license and may not be copied,
+-   modified or distributed except as expressly authorized under the terms
+-   of the license contained in the file LICENSE in this distribution.
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
+ 
+-   Refer to licensing information at http://www.artifex.com or contact
+-   Artifex Software, Inc.,  7 Mt. Lassen Drive - Suite A-134, San Rafael,
+-   CA  94903, U.S.A., +1(415)492-9861, for further information.
+-*/
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
+ 
+-/* Declarations for getopt.
+-*/
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, write to the Free
++   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
++   02111-1307 USA.  */
+ 
+ #ifndef _GETOPT_H
+ 
+ #ifndef __need_getopt
+ # define _GETOPT_H 1
+diff -rPu5 jbig2dec.orig\getopt1.c jbig2dec\getopt1.c
+--- jbig2dec.orig\getopt1.c	Fri Jun 15 13:36:58 2012
++++ jbig2dec\getopt1.c	Sun Dec 25 03:40:24 2011
+@@ -1,22 +1,25 @@
+-/* Copyright (C) 2001-2012 Artifex Software, Inc.
+-   All Rights Reserved.
+-
+-   This software is provided AS-IS with no warranty, either express or
+-   implied.
++/* getopt_long and getopt_long_only entry points for GNU getopt.
++   Copyright (C) 1987,88,89,90,91,92,93,94,96,97,98
++     Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
+ 
+-   This software is distributed under license and may not be copied,
+-   modified or distributed except as expressly authorized under the terms
+-   of the license contained in the file LICENSE in this distribution.
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
+ 
+-   Refer to licensing information at http://www.artifex.com or contact
+-   Artifex Software, Inc.,  7 Mt. Lassen Drive - Suite A-134, San Rafael,
+-   CA  94903, U.S.A., +1(415)492-9861, for further information.
+-*/
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
+ 
+-/* getopt_long and getopt_long_only entry points for GNU getopt.
+-*/
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, write to the Free
++   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
++   02111-1307 USA.  */
++
+ #ifdef HAVE_CONFIG_H
+ #include <config.h>
+ #endif
+ 
+ #include "getopt.h"
+Only in jbig2dec.orig: install-sh
+diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
+--- jbig2dec.orig\jbig2.h	Fri Jun 15 13:36:58 2012
++++ jbig2dec\jbig2.h	Fri Jun 15 13:53:05 2012
+@@ -27,16 +27,19 @@
+ 
+ /* To enable Memento, either uncomment the following, or arrange to
+  * predefine MEMENTO whilst building. */
+ /* #define MEMENTO */
+ 
++/* SumatraPDF: allow to build without Memento */
++#ifdef MEMENTO
+ /* If we are building as part of GS then make sure we use the version
+  * of MEMENTO that is part of gs (in case of version skew) */
+ #ifdef GSBUILD
+ #include "../base/memento.h"
+ #else
+ #include "memento.h"
++#endif
+ #endif
+ 
+ /* warning levels */
+ typedef enum {
+   JBIG2_SEVERITY_DEBUG,
 diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
---- jbig2dec.orig\jbig2_image.c	Thu Jun 07 06:33:07 2012
-+++ jbig2dec\jbig2_image.c	Thu Jun 07 06:39:43 2012
-@@ -41,11 +41,12 @@
+--- jbig2dec.orig\jbig2_image.c	Fri Jun 15 13:36:58 2012
++++ jbig2dec\jbig2_image.c	Fri Jun 15 13:48:35 2012
+@@ -46,11 +46,12 @@
  		return NULL;
  	}
  

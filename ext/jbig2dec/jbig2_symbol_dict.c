@@ -1,17 +1,22 @@
+/* Copyright (C) 2001-2012 Artifex Software, Inc.
+   All Rights Reserved.
+
+   This software is provided AS-IS with no warranty, either express or
+   implied.
+
+   This software is distributed under license and may not be copied,
+   modified or distributed except as expressly authorized under the terms
+   of the license contained in the file LICENSE in this distribution.
+
+   Refer to licensing information at http://www.artifex.com or contact
+   Artifex Software, Inc.,  7 Mt. Lassen Drive - Suite A-134, San Rafael,
+   CA  94903, U.S.A., +1(415)492-9861, for further information.
+*/
+
 /*
     jbig2dec
-
-    Copyright (C) 2001-2005 Artifex Software, Inc.
-
-    This software is distributed under license and may not
-    be copied, modified or distributed except as expressly
-    authorized under the terms of the license contained in
-    the file LICENSE in this distribution.
-
-    For further licensing information refer to http://artifex.com/ or
-    contact Artifex Software, Inc., 7 Mt. Lassen Drive - Suite A-134,
-    San Rafael, CA  94903, U.S.A., +1(415)492-9861.
 */
+
 
 /* symbol dictionary segment decode and support */
 
@@ -230,7 +235,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
   Jbig2SymbolDict *SDEXSYMS = NULL;
   int32_t HCHEIGHT;
   uint32_t NSYMSDECODED;
-  int32_t SYMWIDTH, TOTWIDTH;
+  uint32_t SYMWIDTH, TOTWIDTH;
   uint32_t HCFIRSTSYM;
   uint32_t *SDNEWSYMWIDTHS = NULL;
   int SBSYMCODELEN = 0;
@@ -285,7 +290,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
           goto cleanup1;
       }
       if (params->SDREFAGG) {
-          int tmp = params->SDINSYMS->n_symbols + params->SDNUMNEWSYMS;
+          int tmp = params->SDNUMINSYMS + params->SDNUMNEWSYMS;
           for (SBSYMCODELEN = 0; (1 << SBSYMCODELEN) < tmp; SBSYMCODELEN++);
           IAID = jbig2_arith_iaid_ctx_new(ctx, SBSYMCODELEN);
           IARDX = jbig2_arith_int_ctx_new(ctx);
@@ -543,7 +548,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 		      uint32_t ID;
 		      int32_t RDX, RDY;
 		      int BMSIZE = 0;
-		      int ninsyms = params->SDINSYMS->n_symbols;
+		      int ninsyms = params->SDNUMINSYMS;
 		      int code1 = 0;
 		      int code2 = 0;
 		      int code3 = 0;
@@ -960,17 +965,17 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
   /* maybe #ifdef CONFORMANCE and a separate routine */
   if (!params.SDHUFF) {
     if (flags & 0x000c) {
-      jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+      jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
 		  "SDHUFF is zero, but contrary to spec SDHUFFDH is not.");
     }
     if (flags & 0x0030) {
-      jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+      jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
 		  "SDHUFF is zero, but contrary to spec SDHUFFDW is not.");
     }
   }
 
   if (flags & 0x0080) {
-      jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+      jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
         "bitmap coding context is used (NYI) symbol data likely to be garbage!");
   }
 
