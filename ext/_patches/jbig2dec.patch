@@ -1,3 +1,26 @@
+diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
+--- jbig2dec.orig\jbig2.h	Fri Jun 15 13:36:58 2012
++++ jbig2dec\jbig2.h	Fri Jun 15 23:28:23 2012
+@@ -27,16 +27,19 @@
+ 
+ /* To enable Memento, either uncomment the following, or arrange to
+  * predefine MEMENTO whilst building. */
+ /* #define MEMENTO */
+ 
++/* SumatraPDF: allow to build without MEMENTO (clashes with MuPDF's) */
++#ifdef MEMENTO
+ /* If we are building as part of GS then make sure we use the version
+  * of MEMENTO that is part of gs (in case of version skew) */
+ #ifdef GSBUILD
+ #include "../base/memento.h"
+ #else
+ #include "memento.h"
++#endif
+ #endif
+ 
+ /* warning levels */
+ typedef enum {
+   JBIG2_SEVERITY_DEBUG,
 diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
 --- jbig2dec.orig\jbig2_image.c	Fri Jun 15 13:36:58 2012
 +++ jbig2dec\jbig2_image.c	Fri Jun 15 14:16:17 2012

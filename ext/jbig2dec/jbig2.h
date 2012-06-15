@@ -29,12 +29,15 @@ extern "C" {
  * predefine MEMENTO whilst building. */
 /* #define MEMENTO */
 
+/* SumatraPDF: allow to build without MEMENTO (clashes with MuPDF's) */
+#ifdef MEMENTO
 /* If we are building as part of GS then make sure we use the version
  * of MEMENTO that is part of gs (in case of version skew) */
 #ifdef GSBUILD
 #include "../base/memento.h"
 #else
 #include "memento.h"
+#endif
 #endif
 
 /* warning levels */

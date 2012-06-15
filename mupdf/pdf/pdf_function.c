@@ -1396,7 +1396,8 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict)
 	/* required for all */
 	obj = pdf_dict_gets(dict, "Domain");
 	func->m = pdf_array_len(obj) / 2;
-	for (i = 0; i < func->m; i++)
+	/* SumatraPDF: prevent heap overflow */
+	for (i = 0; i < MIN(func->m, MAXM); i++)
 	{
 		func->domain[i][0] = pdf_to_real(pdf_array_get(obj, i * 2 + 0));
 		func->domain[i][1] = pdf_to_real(pdf_array_get(obj, i * 2 + 1));
@@ -1408,7 +1409,8 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict)
 	{
 		func->has_range = 1;
 		func->n = pdf_array_len(obj) / 2;
-		for (i = 0; i < func->n; i++)
+		/* SumatraPDF: prevent heap overflow */
+		for (i = 0; i < MIN(func->n, MAXN); i++)
 		{
 			func->range[i][0] = pdf_to_real(pdf_array_get(obj, i * 2 + 0));
 			func->range[i][1] = pdf_to_real(pdf_array_get(obj, i * 2 + 1));
@@ -1420,7 +1422,8 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict)
 		func->n = 0;
 	}
 
-	if (func->m >= MAXM || func->n >= MAXN)
+	/* SumatraPDF: allow up to FZ_MAX_COLORS colors (not one less) */
+	if (func->m > MAXM || func->n > MAXN)
 	{
 		fz_free(ctx, func);
 		fz_throw(ctx, "assert: /Domain or /Range too big");
