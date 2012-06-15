@@ -92,17 +92,17 @@ jbig2_get_int16 (const byte *buf);
 
 /* dynamic memory management */
 void *
-jbig2_alloc (Jbig2Allocator *allocator, size_t size);
+jbig2_alloc (Jbig2Allocator *allocator, size_t size, size_t num);
 
 void
 jbig2_free (Jbig2Allocator *allocator, void *p);
 
 void *
-jbig2_realloc (Jbig2Allocator *allocator, void *p, size_t size);
+jbig2_realloc (Jbig2Allocator *allocator, void *p, size_t size, size_t num);
 
-#define jbig2_new(ctx, t, size) ((t *)jbig2_alloc(ctx->allocator, (size) * sizeof(t)))
+#define jbig2_new(ctx, t, size) ((t *)jbig2_alloc(ctx->allocator, size, sizeof(t)))
 
-#define jbig2_renew(ctx, p, t, size) ((t *)jbig2_realloc(ctx->allocator, (p), (size) * sizeof(t)))
+#define jbig2_renew(ctx, p, t, size) ((t *)jbig2_realloc(ctx->allocator, (p), size, sizeof(t)))
 
 int
 jbig2_error (Jbig2Ctx *ctx, Jbig2Severity severity, int32_t seg_idx,

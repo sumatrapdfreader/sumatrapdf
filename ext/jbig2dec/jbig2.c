@@ -57,9 +57,14 @@ static Jbig2Allocator jbig2_default_allocator =
 };
 
 void *
-jbig2_alloc (Jbig2Allocator *allocator, size_t size)
+jbig2_alloc (Jbig2Allocator *allocator, size_t size, size_t num)
 {
-  return allocator->alloc (allocator, size);
+  /* check for integer multiplication overflow */
+  int64_t check = ((int64_t)num)*((int64_t)size);
+  if (check != (int)check)
+    return NULL;
+  else
+    return allocator->alloc (allocator, (int)check);
 }
 
 void
@@ -69,9 +74,14 @@ jbig2_free (Jbig2Allocator *allocator, void *p)
 }
 
 void *
-jbig2_realloc (Jbig2Allocator *allocator, void *p, size_t size)
+jbig2_realloc (Jbig2Allocator *allocator, void *p, size_t size, size_t num)
 {
-  return allocator->realloc (allocator, p, size);
+  /* check for integer multiplication overflow */
+  int64_t check = ((int64_t)num)*((int64_t)size);
+  if (check != (int)check)
+    return NULL;
+  else
+    return allocator->realloc (allocator, p, (int)check);
 }
 
 static int
@@ -123,7 +133,7 @@ jbig2_ctx_new (Jbig2Allocator *allocator,
   if (error_callback == NULL)
       error_callback = &jbig2_default_error;
 
-  result = (Jbig2Ctx*)jbig2_alloc(allocator, sizeof(Jbig2Ctx));
+  result = (Jbig2Ctx*)jbig2_alloc(allocator, sizeof(Jbig2Ctx), 1);
   if (result == NULL) {
     error_callback(error_callback_data, "initial context allocation failed!",
                     JBIG2_SEVERITY_FATAL, -1);

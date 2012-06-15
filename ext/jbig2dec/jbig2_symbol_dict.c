@@ -48,7 +48,7 @@
 typedef struct {
   bool SDHUFF;
   bool SDREFAGG;
-  int32_t SDNUMINSYMS;
+  uint32_t SDNUMINSYMS;
   Jbig2SymbolDict *SDINSYMS;
   uint32_t SDNUMNEWSYMS;
   uint32_t SDNUMEXSYMS;
@@ -233,7 +233,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 {
   Jbig2SymbolDict *SDNEWSYMS = NULL;
   Jbig2SymbolDict *SDEXSYMS = NULL;
-  int32_t HCHEIGHT;
+  uint32_t HCHEIGHT;
   uint32_t NSYMSDECODED;
   uint32_t SYMWIDTH, TOTWIDTH;
   uint32_t HCFIRSTSYM;
@@ -290,8 +290,8 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
           goto cleanup1;
       }
       if (params->SDREFAGG) {
-          int tmp = params->SDNUMINSYMS + params->SDNUMNEWSYMS;
-          for (SBSYMCODELEN = 0; (1 << SBSYMCODELEN) < tmp; SBSYMCODELEN++);
+          int64_t tmp = params->SDNUMINSYMS + params->SDNUMNEWSYMS;
+          for (SBSYMCODELEN = 0; (int64_t)(1 << SBSYMCODELEN) < tmp; SBSYMCODELEN++);
           IAID = jbig2_arith_iaid_ctx_new(ctx, SBSYMCODELEN);
           IARDX = jbig2_arith_int_ctx_new(ctx);
           IARDY = jbig2_arith_int_ctx_new(ctx);
@@ -318,7 +318,8 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 	  SDNEWSYMWIDTHS = jbig2_new(ctx, uint32_t, params->SDNUMNEWSYMS);
 	  if (SDNEWSYMWIDTHS == NULL) {
 	    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-            "could not allocate storage for symbol widths");
+              "could not allocate storage for (%u) symbol widths",
+              params->SDNUMNEWSYMS);
 	    goto cleanup2;
 	  }
       }
@@ -327,7 +328,8 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
   SDNEWSYMS = jbig2_sd_new(ctx, params->SDNUMNEWSYMS);
   if (SDNEWSYMS == NULL) {
       jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
-          "could not allocate storage for symbols");
+          "could not allocate storage for (%u) new symbols",
+          params->SDNUMNEWSYMS);
       goto cleanup2;
   }
 
@@ -634,7 +636,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 	  }
 
 	  jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
-            "decoded symbol %d of %d (%dx%d)",
+            "decoded symbol %u of %u (%ux%u)",
 		NSYMSDECODED, params->SDNUMNEWSYMS,
 		SYMWIDTH, HCHEIGHT);
 
@@ -1002,7 +1004,7 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
   offset += 8;
 
   jbig2_error(ctx, JBIG2_SEVERITY_INFO, segment->number,
-	      "symbol dictionary, flags=%04x, %d exported syms, %d new syms",
+	      "symbol dictionary, flags=%04x, %u exported syms, %u new syms",
 	      flags, params.SDNUMEXSYMS, params.SDNUMNEWSYMS);
 
   /* 7.4.2.2 (2) */

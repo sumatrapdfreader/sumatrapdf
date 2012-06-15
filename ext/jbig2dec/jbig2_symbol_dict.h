@@ -22,7 +22,7 @@
 
 /* the results of decoding a symbol dictionary */
 typedef struct {
-    int n_symbols;
+    uint32_t n_symbols;
     Jbig2Image **glyphs;
 } Jbig2SymbolDict;
 
