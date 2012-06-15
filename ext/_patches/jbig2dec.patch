@@ -1,6 +1,6 @@
 diff -rPu5 jbig2dec.orig\getopt.c jbig2dec\getopt.c
 --- jbig2dec.orig\getopt.c	Fri Jun 15 13:36:58 2012
-+++ jbig2dec\getopt.c	Sun Dec 25 03:40:24 2011
++++ jbig2dec\getopt.c	Fri Jun 15 14:05:54 2012
 @@ -1,25 +1,28 @@
 -/* Copyright (C) 2001-2012 Artifex Software, Inc.
 -   All Rights Reserved.
@@ -48,7 +48,7 @@ diff -rPu5 jbig2dec.orig\getopt.c jbig2dec\getopt.c
  #endif
 diff -rPu5 jbig2dec.orig\getopt.h jbig2dec\getopt.h
 --- jbig2dec.orig\getopt.h	Fri Jun 15 13:36:58 2012
-+++ jbig2dec\getopt.h	Sun Dec 25 03:40:24 2011
++++ jbig2dec\getopt.h	Fri Jun 15 14:05:54 2012
 @@ -1,22 +1,23 @@
 -/* Copyright (C) 2001-2012 Artifex Software, Inc.
 -   All Rights Reserved.
@@ -89,7 +89,7 @@ diff -rPu5 jbig2dec.orig\getopt.h jbig2dec\getopt.h
  # define _GETOPT_H 1
 diff -rPu5 jbig2dec.orig\getopt1.c jbig2dec\getopt1.c
 --- jbig2dec.orig\getopt1.c	Fri Jun 15 13:36:58 2012
-+++ jbig2dec\getopt1.c	Sun Dec 25 03:40:24 2011
++++ jbig2dec\getopt1.c	Fri Jun 15 14:05:54 2012
 @@ -1,22 +1,25 @@
 -/* Copyright (C) 2001-2012 Artifex Software, Inc.
 -   All Rights Reserved.
@@ -130,10 +130,9 @@ diff -rPu5 jbig2dec.orig\getopt1.c jbig2dec\getopt1.c
  #endif
  
  #include "getopt.h"
-Only in jbig2dec.orig: install-sh
 diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
 --- jbig2dec.orig\jbig2.h	Fri Jun 15 13:36:58 2012
-+++ jbig2dec\jbig2.h	Fri Jun 15 13:53:05 2012
++++ jbig2dec\jbig2.h	Fri Jun 15 14:09:17 2012
 @@ -27,16 +27,19 @@
  
  /* To enable Memento, either uncomment the following, or arrange to
@@ -156,7 +155,7 @@ diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
    JBIG2_SEVERITY_DEBUG,
 diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
 --- jbig2dec.orig\jbig2_image.c	Fri Jun 15 13:36:58 2012
-+++ jbig2dec\jbig2_image.c	Fri Jun 15 13:48:35 2012
++++ jbig2dec\jbig2_image.c	Fri Jun 15 14:09:34 2012
 @@ -46,11 +46,12 @@
  		return NULL;
  	}
