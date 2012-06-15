@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.RectF;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -93,7 +92,7 @@ public class MuPDFActivity extends Activity
 	private ImageButton  mSearchBack;
 	private ImageButton  mSearchFwd;
 	private EditText     mSearchText;
-	private AsyncTask<Integer,Integer,SearchTaskResult> mSearchTask;
+	private SafeAsyncTask<Integer,Integer,SearchTaskResult> mSearchTask;
 	//private SearchTaskResult mSearchTaskResult;
 	private AlertDialog.Builder mAlertBuilder;
 	private LinkState    mLinkState = LinkState.DEFAULT;
@@ -289,6 +288,11 @@ public class MuPDFActivity extends Activity
 				// When something changes making the previous settled view
 				// no longer appropriate, tell the page to remove HQ
 				((PageView)v).removeHq();
+			}
+
+			@Override
+			protected void onNotInUse(View v) {
+				((PageView)v).releaseResources();
 			}
 		};
 		mDocView.setAdapter(new MuPDFPageAdapter(this, core));
@@ -648,7 +652,7 @@ public class MuPDFActivity extends Activity
 		});
 		progressDialog.setMax(core.countPages());
 
-		mSearchTask = new AsyncTask<Integer,Integer,SearchTaskResult>() {
+		mSearchTask = new SafeAsyncTask<Integer,Integer,SearchTaskResult>() {
 			@Override
 			protected SearchTaskResult doInBackground(Integer... params) {
 				int index;
@@ -712,6 +716,6 @@ public class MuPDFActivity extends Activity
 			}
 		};
 
-		mSearchTask.execute(new Integer(direction));
+		mSearchTask.safeExecute(new Integer(direction));
 	}
 }

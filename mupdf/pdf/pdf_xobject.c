@@ -23,7 +23,6 @@ pdf_free_xobject_imp(fz_context *ctx, fz_storable *xobj_)
 	if (xobj->resources)
 		pdf_drop_obj(xobj->resources);
 	if (xobj->contents)
-		//fz_drop_buffer(ctx, xobj->contents);
 		pdf_drop_obj(xobj->contents);
 	pdf_drop_obj(xobj->me);
 	fz_free(ctx, xobj);
@@ -110,6 +109,125 @@ pdf_load_xobject(pdf_document *xref, pdf_obj *dict)
 	form->me = pdf_keep_obj(dict);
 
 	return form;
+}
+
+pdf_obj *
+pdf_new_xobject(pdf_document *xref, fz_rect *bbox, fz_matrix *mat)
+{
+	int idict_num;
+	pdf_obj *idict = NULL;
+	pdf_obj *dict = NULL;
+	pdf_xobject *form = NULL;
+	pdf_obj *obj = NULL;
+	pdf_obj *res = NULL;
+	pdf_obj *procset = NULL;
+	fz_context *ctx = xref->ctx;
+
+	fz_var(idict);
+	fz_var(dict);
+	fz_var(form);
+	fz_var(obj);
+	fz_var(res);
+	fz_var(procset);
+	fz_try(ctx)
+	{
+		dict = pdf_new_dict(ctx, 0);
+
+		obj = pdf_new_rect(ctx, bbox);
+		pdf_dict_puts(dict, "BBox", obj);
+		pdf_drop_obj(obj);
+		obj = NULL;
+
+		obj = pdf_new_int(ctx, 1);
+		pdf_dict_puts(dict, "FormType", obj);
+		pdf_drop_obj(obj);
+		obj = NULL;
+
+		obj = pdf_new_int(ctx, 0);
+		pdf_dict_puts(dict, "Length", obj);
+		pdf_drop_obj(obj);
+		obj = NULL;
+
+		obj = pdf_new_matrix(ctx, mat);
+		pdf_dict_puts(dict, "Matrix", obj);
+		pdf_drop_obj(obj);
+		obj = NULL;
+
+		res = pdf_new_dict(ctx, 0);
+		procset = pdf_new_array(ctx, 2);
+		obj = fz_new_name(ctx, "PDF");
+		pdf_array_push(procset, obj);
+		pdf_drop_obj(obj);
+		obj = NULL;
+		obj = fz_new_name(ctx, "Text");
+		pdf_array_push(procset, obj);
+		pdf_drop_obj(obj);
+		obj = NULL;
+		pdf_dict_puts(res, "ProcSet", procset);
+		pdf_drop_obj(procset);
+		procset = NULL;
+		pdf_dict_puts(dict, "Resources", res);
+
+		obj = fz_new_name(ctx, "Form");
+		pdf_dict_puts(dict, "Subtype", obj);
+		pdf_drop_obj(obj);
+		obj = NULL;
+
+		obj = fz_new_name(ctx, "XObject");
+		pdf_dict_puts(dict, "Type", obj);
+		pdf_drop_obj(obj);
+		obj = NULL;
+
+		form = fz_malloc_struct(ctx, pdf_xobject);
+		FZ_INIT_STORABLE(form, 1, pdf_free_xobject_imp);
+		form->resources = NULL;
+		form->contents = NULL;
+		form->colorspace = NULL;
+		form->me = NULL;
+
+		form->bbox = *bbox;
+
+		form->matrix = fz_identity;
+
+		form->isolated = 0;
+		form->knockout = 0;
+		form->transparency = 0;
+
+		form->resources = res;
+		res = NULL;
+
+		idict_num = pdf_create_object(xref);
+		pdf_update_object(xref, idict_num, dict);
+		idict = pdf_new_indirect(ctx, idict_num, 0, xref);
+		pdf_drop_obj(dict);
+		dict = NULL;
+
+		pdf_store_item(ctx, idict, form, pdf_xobject_size(form));
+
+		form->contents = pdf_keep_obj(idict);
+		form->me = pdf_keep_obj(idict);
+
+		pdf_drop_xobject(ctx, form);
+		form = NULL;
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(procset);
+		pdf_drop_obj(res);
+		pdf_drop_obj(obj);
+		pdf_drop_obj(dict);
+		pdf_drop_obj(idict);
+		pdf_drop_xobject(ctx, form);
+		fz_throw(ctx, "failed to create xobject)");
+	}
+
+	return idict;
+}
+
+void pdf_update_xobject_contents(pdf_document *xref, pdf_xobject *form, fz_buffer *buffer)
+{
+	pdf_dict_dels(form->contents, "Filter");
+	pdf_update_stream(xref, pdf_to_num(form->contents), buffer);
 }
 
 /* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */

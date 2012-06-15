@@ -567,6 +567,98 @@ pdf_array_contains(pdf_obj *arr, pdf_obj *obj)
 	return 0;
 }
 
+pdf_obj *pdf_new_rect(fz_context *ctx, fz_rect *rect)
+{
+	pdf_obj *arr = NULL;
+	pdf_obj *item = NULL;
+
+	fz_var(arr);
+	fz_var(item);
+	fz_try(ctx)
+	{
+		arr = pdf_new_array(ctx, 4);
+
+		item = pdf_new_real(ctx, rect->x0);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+
+		item = pdf_new_real(ctx, rect->y0);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+
+		item = pdf_new_real(ctx, rect->x1 - rect->x0);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+
+		item = pdf_new_real(ctx, rect->y1 - rect->y0);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(item);
+		pdf_drop_obj(arr);
+		fz_rethrow(ctx);
+	}
+
+	return arr;
+}
+
+pdf_obj *pdf_new_matrix(fz_context *ctx, fz_matrix *mtx)
+{
+	pdf_obj *arr = NULL;
+	pdf_obj *item = NULL;
+
+	fz_var(arr);
+	fz_var(item);
+	fz_try(ctx)
+	{
+		arr = pdf_new_array(ctx, 6);
+
+		item = pdf_new_real(ctx, mtx->a);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+
+		item = pdf_new_real(ctx, mtx->b);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+
+		item = pdf_new_real(ctx, mtx->c);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+
+		item = pdf_new_real(ctx, mtx->d);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+
+		item = pdf_new_real(ctx, mtx->e);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+
+		item = pdf_new_real(ctx, mtx->f);
+		pdf_array_push(arr, item);
+		pdf_drop_obj(item);
+		item = NULL;
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(item);
+		pdf_drop_obj(arr);
+		fz_rethrow(ctx);
+	}
+
+	return arr;
+}
+
 /* dicts may only have names as keys! */
 
 static int keyvalcmp(const void *ap, const void *bp)
@@ -743,6 +835,36 @@ pdf_dict_gets(pdf_obj *obj, char *key)
 }
 
 pdf_obj *
+pdf_dict_getp(pdf_obj *obj, char *keys)
+{
+	char buf[256];
+	char *k, *e;
+
+	if (strlen(keys)+1 > 256)
+		fz_throw(obj->ctx, "buffer overflow in pdf_dict_getp");
+
+	strcpy(buf, keys);
+
+	e = buf;
+	while (*e && obj)
+	{
+		k = e;
+		while (*e != '/' && *e != '\0')
+			e++;
+
+		if (*e == '/')
+		{
+			*e = '\0';
+			e++;
+		}
+
+		obj = pdf_dict_gets(obj, k);
+	}
+
+	return obj;
+}
+
+pdf_obj *
 pdf_dict_get(pdf_obj *obj, pdf_obj *key)
 {
 	if (!key || key->kind != PDF_NAME)
@@ -826,6 +948,63 @@ pdf_dict_puts(pdf_obj *obj, char *key, pdf_obj *val)
 	pdf_obj *keyobj = fz_new_name(obj->ctx, key);
 	pdf_dict_put(obj, keyobj, val);
 	pdf_drop_obj(keyobj);
+}
+
+void
+pdf_dict_putp(pdf_obj *obj, char *keys, pdf_obj *val)
+{
+	fz_context *ctx = obj->ctx;
+	char buf[256];
+	char *k, *e;
+	pdf_obj *cobj = NULL;
+
+	if (strlen(keys)+1 > 256)
+		fz_throw(obj->ctx, "buffer overflow in pdf_dict_getp");
+
+	strcpy(buf, keys);
+
+	e = buf;
+	while (*e)
+	{
+		k = e;
+		while (*e != '/' && *e != '\0')
+			e++;
+
+		if (*e == '/')
+		{
+			*e = '\0';
+			e++;
+		}
+
+		if (*e)
+		{
+			/* Not the last key in the key path. Create subdict if not already there. */
+			cobj = pdf_dict_gets(obj, k);
+			if (cobj == NULL)
+			{
+				cobj = pdf_new_dict(ctx, 1);
+				fz_try(ctx)
+				{
+					pdf_dict_puts(obj, k, cobj);
+				}
+				fz_always(ctx)
+				{
+					pdf_drop_obj(cobj);
+				}
+				fz_catch(ctx)
+				{
+					fz_rethrow(ctx);
+				}
+			}
+			/* Move to subdict */
+			obj = cobj;
+		}
+		else
+		{
+			/* Last key. Use it to store the value */
+			pdf_dict_puts(obj, k, val);
+		}
+	}
 }
 
 void

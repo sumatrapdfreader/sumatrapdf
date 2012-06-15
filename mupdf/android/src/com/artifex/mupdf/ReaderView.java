@@ -115,6 +115,8 @@ public class ReaderView extends AdapterView<Adapter>
 
 	protected void onUnsettle(View v) {};
 
+	protected void onNotInUse(View v) {};
+
 	public View getDisplayedView() {
 		return mChildViews.get(mCurrent);
 	}
@@ -342,6 +344,7 @@ public class ReaderView extends AdapterView<Adapter>
 				int ai = childIndices[i];
 				if (ai < mCurrent - 1 || ai > mCurrent + 1) {
 					View v = mChildViews.get(ai);
+					onNotInUse(v);
 					mViewCache.add(v);
 					removeViewInLayout(v);
 					mChildViews.remove(ai);
@@ -355,7 +358,7 @@ public class ReaderView extends AdapterView<Adapter>
 			int numChildren = mChildViews.size();
 			for (int i = 0; i < numChildren; i++) {
 				View v = mChildViews.valueAt(i);
-				postUnsettle(v);
+				onNotInUse(v);
 				mViewCache.add(v);
 				removeViewInLayout(v);
 			}

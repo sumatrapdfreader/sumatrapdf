@@ -1727,10 +1727,14 @@ RectD PdfEngineImpl::PageMediabox(int pageNo)
     // cf. pdf_page.c's pdf_load_page
     fz_rect mbox = fz_empty_rect, cbox = fz_empty_rect;
     int rotate = 0;
+    float userunit = 1.0;
     fz_try(ctx) {
         mbox = pdf_to_rect(ctx, pdf_dict_gets(page, "MediaBox"));
         cbox = pdf_to_rect(ctx, pdf_dict_gets(page, "CropBox"));
         rotate = pdf_to_int(pdf_dict_gets(page, "Rotate"));
+        pdf_obj *obj = pdf_dict_gets(page, "UserUnit");
+        if (pdf_is_real(obj))
+            userunit = pdf_to_real(obj);
     }
     fz_catch(ctx) { }
     if (fz_is_empty_rect(mbox)) {
@@ -1749,7 +1753,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo)
     // cf. pdf_page.c's pdf_bound_page
     mbox = fz_transform_rect(fz_rotate((float)rotate), mbox);
 
-    _mediaboxes[pageNo-1] = RectD(0, 0, mbox.x1 - mbox.x0, mbox.y1 - mbox.y0);
+    _mediaboxes[pageNo-1] = RectD(0, 0, (mbox.x1 - mbox.x0) * userunit, (mbox.y1 - mbox.y0) * userunit);
     return _mediaboxes[pageNo-1];
 }
 

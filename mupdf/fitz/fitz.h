@@ -412,7 +412,7 @@ void *fz_calloc(fz_context *ctx, unsigned int count, unsigned int size);
 	exception on failure to allocate.
 */
 #define fz_malloc_struct(CTX, STRUCT) \
-	Memento_label(fz_calloc(CTX,1,sizeof(STRUCT)), #STRUCT)
+	((STRUCT *)Memento_label(fz_calloc(CTX,1,sizeof(STRUCT)), #STRUCT))
 
 /*
 	fz_malloc_array: Allocate a block of (non zeroed) memory (with

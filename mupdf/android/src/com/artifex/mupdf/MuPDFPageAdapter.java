@@ -48,7 +48,7 @@ public class MuPDFPageAdapter extends BaseAdapter {
 			// Page size as yet unknown. Blank it for now, and
 			// start a background task to find the size
 			pageView.blank(position);
-			AsyncTask<Void,Void,PointF> sizingTask = new AsyncTask<Void,Void,PointF>() {
+			SafeAsyncTask<Void,Void,PointF> sizingTask = new SafeAsyncTask<Void,Void,PointF>() {
 				@Override
 				protected PointF doInBackground(Void... arg0) {
 					return mCore.getPageSize(position);
@@ -65,21 +65,8 @@ public class MuPDFPageAdapter extends BaseAdapter {
 						pageView.setPage(position, result);
 				}
 			};
-			try
-			{
-				sizingTask.execute((Void)null);
-			}
-			catch (java.util.concurrent.RejectedExecutionException e)
-			{
-				// If we can't do it in the background, just
-				// do it in the foreground.
-				PointF result = mCore.getPageSize(position);
-				mPageSizes.put(position, result);
-				// Check that this view hasn't been reused for
-				// another page since we started
-				if (pageView.getPage() == position)
-					pageView.setPage(position, result);
-			}
+
+			sizingTask.safeExecute((Void)null);
 		}
 		return pageView;
 	}

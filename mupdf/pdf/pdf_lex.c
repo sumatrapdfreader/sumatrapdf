@@ -461,3 +461,55 @@ pdf_lex(fz_stream *f, pdf_lexbuf *buf)
 		}
 	}
 }
+
+void pdf_print_token(fz_context *ctx, fz_buffer *fzbuf, int tok, pdf_lexbuf *buf)
+{
+	switch(tok)
+	{
+	case PDF_TOK_NAME:
+		fz_buffer_printf(ctx, fzbuf, "/%s", buf->scratch);
+		break;
+	case PDF_TOK_STRING:
+		{
+			int i;
+			fz_buffer_printf(ctx, fzbuf, "<");
+			for (i = 0; i < buf->len; i++)
+				fz_buffer_printf(ctx, fzbuf, "%02X", buf->scratch[i]);
+			fz_buffer_printf(ctx, fzbuf, ">");
+		}
+		break;
+	case PDF_TOK_OPEN_DICT:
+		fz_buffer_printf(ctx, fzbuf, "<<");
+		break;
+	case PDF_TOK_CLOSE_DICT:
+		fz_buffer_printf(ctx, fzbuf, ">>");
+		break;
+	case PDF_TOK_OPEN_ARRAY:
+		fz_buffer_printf(ctx, fzbuf, "[");
+		break;
+	case PDF_TOK_CLOSE_ARRAY:
+		fz_buffer_printf(ctx, fzbuf, "]");
+		break;
+	case PDF_TOK_OPEN_BRACE:
+		fz_buffer_printf(ctx, fzbuf, "{");
+		break;
+	case PDF_TOK_CLOSE_BRACE:
+		fz_buffer_printf(ctx, fzbuf, "}");
+		break;
+	case PDF_TOK_INT:
+		fz_buffer_printf(ctx, fzbuf, "%d", buf->i);
+		break;
+	case PDF_TOK_REAL:
+		{
+			char sbuf[256];
+			sprintf(sbuf, "%g", buf->f);
+			if (strchr(sbuf, 'e')) /* bad news! */
+				sprintf(sbuf, fabsf(buf->f) > 1 ? "%1.1f" : "%1.8f", buf->f);
+			fz_buffer_printf(ctx, fzbuf, "%s", sbuf);
+		}
+		break;
+	default:
+		fz_buffer_printf(ctx, fzbuf, "%s", buf->scratch);
+		break;
+	}
+}

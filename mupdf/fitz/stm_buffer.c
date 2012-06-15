@@ -162,3 +162,18 @@ void fz_write_buffer_pad(fz_context *ctx, fz_buffer *buf)
 {
 	buf->unused_bits = 0;
 }
+
+void
+fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, char *fmt, ...)
+{
+	va_list args;
+	va_start(args, fmt);
+
+	/* Caller guarantees not to generate more than 256 bytes per call */
+	while(buffer->cap - buffer->len < 256)
+		fz_grow_buffer(ctx, buffer);
+
+	buffer->len += vsprintf(buffer->data + buffer->len, fmt, args);
+
+	va_end(args);
+}

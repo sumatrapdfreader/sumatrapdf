@@ -56,7 +56,7 @@ char *pdfapp_usage(pdfapp_t *app)
 		"f\t\t-- fullscreen\n"
 		"r\t\t-- reload file\n"
 		". pgdn right spc\t-- next page\n"
-		", pgup left b\t-- previous page\n"
+		", pgup left b bkspc\t-- previous page\n"
 		">\t\t-- next 10 pages\n"
 		"<\t\t-- back 10 pages\n"
 		"m\t\t-- mark page for snap back\n"
@@ -892,6 +892,7 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 			app->pageno++;
 		break;
 
+	case '\b':
 	case 'b':
 		panto = DONT_PAN;
 		if (app->numberlen > 0)

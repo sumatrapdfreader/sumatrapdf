@@ -839,7 +839,7 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 {
 	pdf_obj *widths;
 	pdf_obj *descriptor;
-	pdf_font_desc *fontdesc;
+	pdf_font_desc *fontdesc = NULL;
 	FT_Face face;
 	int kind;
 	char collection[256];

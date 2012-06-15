@@ -202,6 +202,16 @@ gatherdimensions(int page, pdf_obj *pageref, pdf_obj *pageobj)
 
 	bbox = pdf_to_rect(ctx, obj);
 
+	obj = pdf_dict_gets(pageobj, "UserUnit");
+	if (pdf_is_real(obj))
+	{
+		float unit = pdf_to_real(obj);
+		bbox.x0 *= unit;
+		bbox.y0 *= unit;
+		bbox.x1 *= unit;
+		bbox.y1 *= unit;
+	}
+
 	for (j = 0; j < dims; j++)
 		if (!memcmp(dim[j].u.dim.bbox, &bbox, sizeof (fz_rect)))
 			break;

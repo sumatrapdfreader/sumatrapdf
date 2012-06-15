@@ -1136,6 +1136,7 @@ pdf_update_object(pdf_document *xref, int num, pdf_obj *newobj)
 	x->ofs = 0;
 	x->obj = pdf_keep_obj(newobj);
 }
+
 void
 pdf_update_stream(pdf_document *xref, int num, fz_buffer *newbuf)
 {

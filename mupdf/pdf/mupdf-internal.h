@@ -135,6 +135,11 @@ pdf_obj *pdf_parse_stm_obj(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
 pdf_obj *pdf_parse_ind_obj(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf, int *num, int *gen, int *stm_ofs);
 
 /*
+	pdf_print_token: print a lexed token to a buffer, growing if necessary
+*/
+void pdf_print_token(fz_context *ctx, fz_buffer *buf, int tok, pdf_lexbuf *lex);
+
+/*
  * xref and object / stream api
  */
 
@@ -296,8 +301,10 @@ struct pdf_xobject_s
 };
 
 pdf_xobject *pdf_load_xobject(pdf_document *doc, pdf_obj *obj);
+pdf_obj *pdf_new_xobject(pdf_document *doc, fz_rect *bbox, fz_matrix *mat);
 pdf_xobject *pdf_keep_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_drop_xobject(fz_context *ctx, pdf_xobject *xobj);
+void pdf_update_xobject_contents(pdf_document *xref, pdf_xobject *from, fz_buffer *buffer);
 /* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
 pdf_xobject *pdf_create_xobject(fz_context *ctx, pdf_obj *dict);
 
