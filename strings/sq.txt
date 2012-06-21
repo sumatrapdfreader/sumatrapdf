@@ -1,0 +1,705 @@
+﻿# Translations for Albanian (Shqip) (sq) language
+
+# * Lines starting with # are comments (such as this).
+# * This file must be in UTF-8 encoding. Make sure you use a proper
+#   text editor (Notepad++ or Notepad2) and set UTF-8 encoding.
+# * For lines containing several variables (such as %s, %d or %u), the
+#   variables must remain in that exact order in the translation.
+
+Lang: sq Albanian (Shqip)
+
+Contributor: Besmir Godole
+
+&About
+&Për
+
+&Actual Size\tCtrl+1
+Përmasa &Aktuale\tCtrl+1
+
+&All selected pages
+&Gjithë faqet e seleksionuara
+
+&Back\tAlt+Left Arrow
+&Prapa\tAlt+Left Arrow
+
+&Book View\tCtrl+8
+&Libër\tCtrl+8
+
+&Close\tCtrl+W
+&Mbyll\tCtrl+W
+
+&Copy Selection
+&Kopjoj Materialin
+
+&Copy Selection\tCtrl+C
+&Kopjoj Materialin\tCtrl+C
+
+&Don't ask me again
+&Mos pyet më
+
+&Even pages only
+Vetëm faqet &çift
+
+&Facing\tCtrl+7
+&Përbri\tCtrl+7
+
+&File
+&Skedar
+
+&Find what:
+&Gjej çfarë:
+
+&First Page\tHome
+&Faqja e Parë\tHome
+
+&Fit pages to printable area
+&Përshtat faqet në hapësirën që shtypet
+
+&Go To
+&Shkoj Te
+
+&Go to page:
+&Shkoj te faqja:
+
+&Help
+&Ndihmë
+
+&Last Page\tEnd
+&Faqja e Fundit\tEnd
+
+&Magnification:
+&Zmadhimi:
+
+&Manual
+&Manual
+
+&Match case
+&Krahasoj shkronjat
+
+&Next Page\tRight Arrow
+&Faqja Tjetër\t-Right Arrow
+
+&No
+&Jo
+
+&No, thanks
+&Jo, faleminderit
+
+&Odd pages only
+Vetëm faqet &teke
+
+&Open Document
+&Hap Dokumentin
+
+&Open...\tCtrl+O
+&Hap...\tCtrl+O
+
+&Options...
+&Mundësi...
+
+&Password:
+&Fjalëkalimi:
+
+&Pin Document
+&Ngul Dokumentin
+
+&Previous Page\tLeft Arrow
+&Faqja e Mëparshme\tLeft Arrow
+
+&Print...
+&Shtyp...
+
+&Print...\tCtrl+P
+&Shtyp...\tCtrl+P
+
+&Print... (denied)
+&Shtyp... (ndalohet)
+
+&Remember the password for this document
+&Mbaj mend fjalëkalimin për këtë dokument
+
+&Remember these settings for each document
+&Mbaj mend parametrat për çdo dokument
+
+&Remove Document
+&Heq Dokumentin
+
+&Save As...
+&Ruaj Si...
+
+&Save As...\tCtrl+S
+&Ruaj Si...\tCtrl+S
+
+&Settings
+&Parametra
+
+&Shrink pages to printable area (if necessary)
+&Ngjesh faqet në hapësirën që shtypet (kur është e nevojshme)
+
+&Single Page\tCtrl+6
+&Faqe e Vetme\tCtrl+6
+
+&Skip this version
+&Shmang këtë versionin
+
+&Use original page sizes
+&Përdor përmasat origjinale të faqes
+
+&View
+&Pamje
+
+&Yes
+&Po
+
+&Zoom
+&Zmadhimi
+
+(of %d)
+(nga %d)
+
+(page %s)
+(faqe %s)
+
+About SumatraPDF
+Për SumatraPDF
+
+Add Favorite
+Shtoj te Pëlqimet
+
+Add page %s to favorites
+Shtoj faqen %s te pëlqimet
+
+Add page %s to favorites with (optional) name:
+Shtoj faqen %s te pëlqimet nën emrin (me zgjedhje):
+
+Add to favorites
+Shtoj te pëlqimet
+
+Advanced
+Avancuar
+
+All files
+Të gjitha skedat
+
+All supported documents
+Të gjitha dokumentet e garantuara
+
+Application:
+Aplikimi:
+
+Associate with PDF files?
+Do e shoqëroni me skedat PDF?
+
+Attachment: %s
+Shtojca: %s
+
+Author:
+Autori:
+
+Automatic
+Automatik
+
+Automatically check for &updates
+Verifikoj automatikisht &azhurnimet
+
+Book View
+Libër
+
+Book&marks\tF12
+Shir&ita\tF12
+
+Bookmark Shortcuts
+Shkurtoret e Shiritit
+
+Bookmark shortcut to page %s of %s
+Shkurtoja e shiritit për faqen %s nga %s
+
+Bookmarks
+Shirita
+
+Bytes
+Bajt
+
+CHM documents
+Dokumente CHM
+
+Can't connect to the Internet (error %#x).
+Nuk mund të lidhet në Internet (gabim %#x).
+
+Cancel
+Anuloj
+
+Cannot print this file
+Nuk mund të shtypë skedën
+
+Cannot start inverse search command. Please check the command line in the settings.
+Nuk mund të kryejë komandën e kërkimit mbrapsht. Ju lutemi verifikoni komandën te parametrat.
+
+Change Language
+Ndryshoj Gjuhën (Change Language)
+
+Check for &Updates
+Verifikoj &Azhurnimet
+
+Comic books
+Comic books
+
+Continuous
+Vazhdimësi
+
+Continuous Book View
+Libër në Vazhdimësi
+
+Continuous Facing
+Përbri në Vazhdimësi
+
+Contribute Translation
+Kontribuoj Përkthimin
+
+Copy &Image
+Kopjoj &Imazhin
+
+Copy &Link Address
+Kopjoj Adresën e &Lidhësit
+
+Copy Co&mment
+Kopjoj Ko&mentin
+
+Copying text was denied (copying as image only)
+Ndalohet kopjimi i tekstit (kopjohet vetëm si imazh)
+
+Copyright:
+Copyright:
+
+Could not obtain Printer properties
+Nuk mund të marrë vetitë e Printerit
+
+Couldn't initialize printer
+Nuk mund të nisë printerin
+
+Couldn't render the page
+Nuk mund të përpunojë faqen
+
+Created:
+Krijuar më:
+
+Current file
+Skeda aktuale
+
+Custom &Zoom...\tCtrl+Y
+&Zmadhim i Caktuar...\tCtrl+Y
+
+Default &Layout:
+&Formati Standard:
+
+Default &Zoom:
+&Zmadhimi Standard:
+
+Default PDF reader can't be changed in portable mode
+Nuk mund të ndryshojë lexuesi standard i PDFve në mënyrën portabël
+
+Denied Permissions:
+E Ndaluar:
+
+DjVu documents
+Dokumente DjVu
+
+Document Properties
+Vetitë e Dokumentit
+
+Download
+Shkarkoj
+
+E&xit\tCtrl+Q
+D&al\tCtrl+Q
+
+EPUB ebooks
+Libra elektronikë EPUB
+
+Enter password
+Shkruani fjalëkalimin
+
+Enter password for %s
+Shkruani fjalëkalimin për %s
+
+Enter the command-line to invoke when you double-click on the PDF document:
+Shkruani komandën që duhet dhënë kur klikoni dy herë mbi dokumentin PDF:
+
+Error loading %s
+Gabim në hapjen e %s
+
+F&avorites
+&Pëlqime
+
+F&orward\tAlt+Right Arrow
+P&ërpara\tAlt+Right Arrow
+
+F&ullscreen\tCtrl+Shift+L
+Ekran i p&lotë\tCtrl+Shift+L
+
+Facing
+Përbri
+
+Failed to rename the file!
+Dështoi riemërtimi i skedës!
+
+Failed to save a file
+Dështoi ruajtja e skedës
+
+Favorites
+Pëlqime
+
+File %s not found
+Nuk gjen skedën %s
+
+File Size:
+Masa e Skedës:
+
+File:
+Skeda:
+
+Fin&d...\tCtrl+F
+G&jej...\tCtrl+F
+
+Find
+Gjej
+
+Find Next
+Gjej Përpara
+
+Find Previous
+Gjej Prapa
+
+Find:
+Gjej:
+
+Fit &Content\tCtrl+3
+Përshtat &Materialin\tCtrl+3
+
+Fit &Page\tCtrl+0
+Përshtat &Faqen\tCtrl+0
+
+Fit &Width\tCtrl+2
+Përshtat &Gjerësinë\tCtrl+2
+
+Fit Content
+Përshtat Materialin
+
+Fit Page
+Përshtat Faqen
+
+Fit Width
+Përshtat Gjerësinë
+
+Fit Width and Show Pages Continuously
+Përshtat Gjerësinë dhe Tregoj Faqet në Vazhdimësi
+
+Fit a Single Page
+Përshtat si Faqe të Vetme
+
+Fonts:
+Fonte:
+
+Formatting the book... %d pages
+Formaton librin... %d faqe
+
+Found text at page %s
+Gjen tekstin në faqen %s
+
+Found text at page %s (again)
+Gjen tekstin në faqen %s (përsëri)
+
+Frequently Read
+Lexime të Shpeshta
+
+GB
+GB
+
+Go to page
+Shkoj te faqja
+
+Hide frequently read
+Fsheh dokumentet që lexoj më shpesh
+
+Hint: Use the F3 key for finding again
+Këshillë: Përdorni tastin F3 për gjetjen e radhës
+
+Image files (*.%s)
+Imazhe (*.%s)
+
+KB
+KB
+
+Loading file %s...
+Hap skedën %s...
+
+MB
+MB
+
+Make SumatraPDF default application for PDF files?
+Do e bëni SumatraPDF programin standard për skedat PDF?
+
+Make SumatraPDF my default PDF reader
+SumatraPDF të jetë lexuesi standard për PDF
+
+Match Case
+Krahasoj Madhësinë e Shkrimit
+
+Mobi documents
+Dokumente Mobi
+
+Modified:
+Modifikuar më:
+
+New version %s is available. Download new version?
+Ka dalë versioni i ri %s. Do e shkarkoni?
+
+Next Page
+Faqja Tjetër
+
+No matches were found
+Nuk gjen ngjashmëritë
+
+No result found around line %u in file %s
+Pa rezultat në rreshtin %u te skeda %s
+
+No synchronization file found
+Nuk gjen skedën e sinkronizimit
+
+No synchronization info at this position
+Nuk ka info sinkronizimi në këtë pozicion
+
+Number of Pages:
+Numri i Faqeve:
+
+OK
+OK
+
+Open
+Hap
+
+Open &in PDF-XChange
+Hap &në PDF-XChange
+
+Open a document...
+Hap një dokument...
+
+Open in &Adobe Reader
+Hap në &Adobe Reader
+
+Open in &Foxit Reader
+Hap në &Foxit Reader
+
+Open in &Microsoft HTML Help
+Hap në &Microsoft HTML Help
+
+Open in &Microsoft XPS-Viewer
+Hap në &Microsoft XPS-Viewer
+
+P&roperties
+V&eti
+
+P&roperties\tCtrl+D
+V&eti\tCtrl+D
+
+PDF Document
+Dokument PDF
+
+PDF Producer:
+PDF Prodhuesi:
+
+PDF Version:
+PDF Versioni:
+
+PDF documents
+Dokumente PDF
+
+Pa&ge...\tCtrl+G
+Fa&qja..\tCtrl+G
+
+Page %s
+Faqja %s
+
+Page Size:
+Përmasa e Faqes:
+
+Page number %u inexistant
+Numri i faqes %u nuk ekziston
+
+Page scaling
+Shkallëzimi i faqes
+
+Page:
+Faqe:
+
+Please wait - rendering...
+Ju lutemi prisni - përpunohet...
+
+Postscript documents
+Dokumente Postscript
+
+Pr&esentation\tCtrl+L
+Pr&ezantim\tCtrl+L
+
+Previous Page
+Faqja e Mëparshme
+
+Print
+Shtyp
+
+Print range
+Kufiri i shtypjes
+
+Printer with given name doesn't exist
+Nuk ekziston printeri me emrin e dhënë
+
+Printing is still in progress. Abort and start over?
+Shtypja është ende në vazhdim. Do e ndërprisni apo do e filloni nga e para?
+
+Printing page %d of %d...
+Shtyp faqen %d nga %d...
+
+Printing problem.
+Problem në shtypje.
+
+Re&name...\tF2
+Rie&mërtoj...\tF2
+
+Remember &opened files
+Mbaj mend skedat e &hapura
+
+Remove from favorites
+Heq nga pëlqimet
+
+Remove page %s from favorites
+Heq faqen %s nga pëlqimet
+
+Rename To
+Riemërtoj Në
+
+Replace document &colors with Windows color scheme
+Zëvendësoj &ngjyrat e dokumentit me ngjyrat e Windows-it
+
+Rotate &Left\tCtrl+Shift+-
+Rrotulloj &Majtas\tCtrl+Shift+-
+
+Rotate &Right\tCtrl+Shift++
+Rrotulloj &Djathtas\tCtrl+Shift++
+
+Save As
+Ruaj Si
+
+Save S&hortcut...\tCtrl+Shift+S
+&Ruaj S&hkurtoren...\tCtrl+Shift+S
+
+Searching %d of %d...
+Kërkon %d nga %d...
+
+Select &All
+Seleksionoj të &Gjithë
+
+Select &All\tCtrl+A
+Seleksionoj të &Gjithë\tCtrl+A
+
+Select content with Ctrl+left mouse button
+Seleksiononi materialin me Ctrl+butonin e majtë të miut
+
+Send by &E-mail...
+Dërgoj me &E-Mail...
+
+Set inverse search command-line
+Shkruani komandën e kërkimit mbrapsht
+
+Show &Toolbar
+Tregoj &Brezin e Mjeteve
+
+Show &pages continuously
+Tregoj &faqet në vazhdimësi
+
+Show Favorites
+Tregoj Pëlqimet
+
+Show frequently read
+Tregoj dokumentet që lexoj më shpesh
+
+Show the &bookmarks sidebar when available
+Tregoj brezin anësor të &shiritave kur mundësohet
+
+Single Page
+Faqe e Vetme
+
+Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+Na falni, nuk duhej të ndodhte!\n\nJu lutemi shtypni 'Anuloj' nëse doni të na ndihmoni që ta ndreqim gabimin.
+
+Source file %s has no synchronization point
+Skeda burimore %s nuk ka pikë sinkronizimi
+
+Subject:
+Tema:
+
+SumatraPDF Options
+SumatraPDF Mundësitë
+
+SumatraPDF Update
+SumatraPDF Azhurnimi
+
+SumatraPDF crashed
+SumatraPDF u bllokua
+
+SumatraPDF is your default PDF reader
+SumatraPDF është lexuesi standard për PDF
+
+SumatraPDF should now be your default PDF reader
+SumatraPDF tani do jetë lexuesi standard për PDF
+
+Synchronization file cannot be opened
+Nuk mund të hapet sinkronizimi i skedës
+
+Text documents
+Dokumente tekst
+
+Title:
+Titulli:
+
+Unknown source file (%s)
+Skedë burimore e panjohur (%s)
+
+View
+Pamje
+
+Visit &Website
+&SumatraPDF në Internet
+
+Warning
+Kujdes
+
+XPS documents
+Dokumente XPS
+
+You have the latest version.
+Keni versionin më të fundit.
+
+You have version %s
+Keni versionin %s
+
+Zoom
+Zmadhimi
+
+Zoom In
+Zmadhoj
+
+Zoom Out
+Zvogëloj
+
+Zoom factor
+Faktori i zmadhimit
+
+[Changes detected; refreshing] %s
+[Diktohen ndryshime; rifreskohet] %s
+
+copying text
+kopjon tekstin
+
+printing document
+shtyp doumentin
+
