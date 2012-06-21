@@ -21,26 +21,9 @@ diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
  /* warning levels */
  typedef enum {
    JBIG2_SEVERITY_DEBUG,
-diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
---- jbig2dec.orig\jbig2_image.c	Fri Jun 15 13:36:58 2012
-+++ jbig2dec\jbig2_image.c	Fri Jun 15 14:16:17 2012
-@@ -46,11 +46,12 @@
- 		return NULL;
- 	}
- 
- 	stride = ((width - 1) >> 3) + 1; /* generate a byte-aligned stride */
-         /* check for integer multiplication overflow */
--        check = ((int64_t)stride)*((int64_t)height);
-+        /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1759 */
-+        check = ((int64_t)stride)*((int64_t)height) + 1;
-         if (check != (int)check)
-         {
-             jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
-                 "integer multiplication overflow from stride(%d)*height(%d)",
-                 stride, height);
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Fri Jun 15 20:45:09 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Fri Jun 15 20:50:31 2012
++++ jbig2dec\jbig2_symbol_dict.c	Thu Jun 21 17:23:37 2012
 @@ -289,11 +289,11 @@
                "failed to allocate storage for symbol bitmap");
            goto cleanup1;

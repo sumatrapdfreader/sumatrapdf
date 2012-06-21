@@ -792,7 +792,7 @@ jbig2_set_bits(byte *line, int x0, int x1)
 		line[a0] |= lm[b0];
 		for (a = a0 + 1; a < a1; a++)
 			line[a] = 0xFF;
-		line[a1] |= rm[b1];
+		if (b1) line[a1] |= rm[b1];
 	}
 }
 
