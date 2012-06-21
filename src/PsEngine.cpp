@@ -111,7 +111,7 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
-    HANDLE process = LaunchProcess(cmdLine, CREATE_NO_WINDOW);
+    HANDLE process = LaunchProcess(cmdLine, NULL, CREATE_NO_WINDOW);
     if (!process)
         return NULL;
 

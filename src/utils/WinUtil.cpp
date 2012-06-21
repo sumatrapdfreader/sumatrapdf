@@ -435,14 +435,14 @@ bool LaunchFile(const TCHAR *path, const TCHAR *params, const TCHAR *verb, bool 
     return ShellExecuteEx(&sei);
 }
 
-HANDLE LaunchProcess(TCHAR *cmdLine, DWORD flags)
+HANDLE LaunchProcess(TCHAR *cmdLine, const TCHAR *currDir, DWORD flags)
 {
     PROCESS_INFORMATION pi = { 0 };
     STARTUPINFO si = { 0 };
     si.cb = sizeof(si);
 
     // per msdn, cmdLine has to be writeable
-    if (!CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, flags, NULL, NULL, &si, &pi))
+    if (!CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, flags, NULL, currDir, &si, &pi))
         return NULL;
 
     CloseHandle(pi.hThread);

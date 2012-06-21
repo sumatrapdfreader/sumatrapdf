@@ -405,7 +405,11 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     if (inverseSearch)
         cmdline.Set(win->pdfsync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
     if (!str::IsEmpty(cmdline.Get())) {
-        ScopedHandle process(LaunchProcess(cmdline));
+        // resolve relative paths with relation to SumatraPDF.exe's directory
+        ScopedMem<TCHAR> appDir(GetExePath());
+        if (appDir)
+            appDir.Set(path::GetDir(appDir));
+        ScopedHandle process(LaunchProcess(cmdline, appDir));
         if (!process)
             ShowNotification(win, _TR("Cannot start inverse search command. Please check the command line in the settings."));
     }
