@@ -126,7 +126,8 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 		}
 
 		/* Make sure we read the EOF marker (for inline images only) */
-		if (in_line)
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1980 */
+		if (in_line && 0)
 		{
 			unsigned char tbuf[512];
 			fz_try(ctx)
