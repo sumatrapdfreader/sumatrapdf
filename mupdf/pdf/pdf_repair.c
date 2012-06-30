@@ -151,7 +151,7 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 
 	fz_var(stm);
 
-	buf.size = PDF_LEXBUF_SMALL;
+	pdf_lexbuf_init(ctx, &buf, PDF_LEXBUF_SMALL);
 
 	fz_try(ctx)
 	{
@@ -188,6 +188,7 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 	fz_always(ctx)
 	{
 		fz_close(stm);
+		pdf_lexbuf_fin(&buf);
 	}
 	fz_catch(ctx)
 	{

@@ -359,7 +359,11 @@ read_a85d(fz_stream *stm, unsigned char *buf, int len)
 			case 0:
 				break;
 			case 1:
-				fz_throw(stm->ctx, "partial final byte in a85d");
+				/* Specifically illegal in the spec, but adobe
+				 * and gs both cope. See normal_87.pdf for a
+				 * case where this matters. */
+				fz_warn(stm->ctx, "partial final byte in a85d");
+				break;
 			case 2:
 				word = word * (85 * 85 * 85) + 0xffffff;
 				state->bp[0] = word >> 24;

@@ -1306,15 +1306,12 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots)
 
 				pdf_transform_annot(annot);
 
-				if (annot)
+				if (!head)
+					head = tail = annot;
+				else
 				{
-					if (!head)
-						head = tail = annot;
-					else
-					{
-						tail->next = annot;
-						tail = annot;
-					}
+					tail->next = annot;
+					tail = annot;
 				}
 			}
 		}

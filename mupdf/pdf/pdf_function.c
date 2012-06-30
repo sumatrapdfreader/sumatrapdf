@@ -699,20 +699,16 @@ resize_code(fz_context *ctx, pdf_function *func, int newsize)
 }
 
 static void
-parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
+parse_code(pdf_function *func, fz_stream *stream, int *codeptr, pdf_lexbuf *buf)
 {
-	pdf_lexbuf buf;
 	int tok;
 	int opptr, elseptr, ifptr;
 	int a, b, mid, cmp;
 	fz_context *ctx = stream->ctx;
 
-	buf.size = PDF_LEXBUF_SMALL;
-	memset(buf.scratch, 0, sizeof(buf.scratch));
-
 	while (1)
 	{
-		tok = pdf_lex(stream, &buf);
+		tok = pdf_lex(stream, buf);
 		/* RJW: "calculator function lexical error" */
 
 		switch(tok)
@@ -723,7 +719,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 		case PDF_TOK_INT:
 			resize_code(ctx, func, *codeptr);
 			func->u.p.code[*codeptr].type = PS_INT;
-			func->u.p.code[*codeptr].u.i = buf.i;
+			func->u.p.code[*codeptr].u.i = buf->i;
 			++*codeptr;
 			break;
 
@@ -744,7 +740,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 		case PDF_TOK_REAL:
 			resize_code(ctx, func, *codeptr);
 			func->u.p.code[*codeptr].type = PS_REAL;
-			func->u.p.code[*codeptr].u.f = buf.f;
+			func->u.p.code[*codeptr].u.f = buf->f;
 			++*codeptr;
 			break;
 
@@ -755,19 +751,19 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 			resize_code(ctx, func, *codeptr);
 
 			ifptr = *codeptr;
-			parse_code(func, stream, codeptr);
+			parse_code(func, stream, codeptr, buf);
 			/* RJW: "error in 'if' branch" */
 
-			tok = pdf_lex(stream, &buf);
+			tok = pdf_lex(stream, buf);
 			/* RJW: "calculator function syntax error" */
 
 			if (tok == PDF_TOK_OPEN_BRACE)
 			{
 				elseptr = *codeptr;
-				parse_code(func, stream, codeptr);
+				parse_code(func, stream, codeptr, buf);
 				/* RJW: "error in 'else' branch" */
 
-				tok = pdf_lex(stream, &buf);
+				tok = pdf_lex(stream, buf);
 				/* RJW: "calculator function syntax error" */
 			}
 			else
@@ -778,7 +774,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 			if (tok != PDF_TOK_KEYWORD)
 				fz_throw(ctx, "missing keyword in 'if-else' context");
 
-			if (!strcmp(buf.scratch, "if"))
+			if (!strcmp(buf->scratch, "if"))
 			{
 				if (elseptr >= 0)
 					fz_throw(ctx, "too many branches for 'if'");
@@ -789,7 +785,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 				func->u.p.code[opptr+3].type = PS_BLOCK;
 				func->u.p.code[opptr+3].u.block = *codeptr;
 			}
-			else if (!strcmp(buf.scratch, "ifelse"))
+			else if (!strcmp(buf->scratch, "ifelse"))
 			{
 				if (elseptr < 0)
 					fz_throw(ctx, "not enough branches for 'ifelse'");
@@ -804,7 +800,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 			}
 			else
 			{
-				fz_throw(ctx, "unknown keyword in 'if-else' context: '%s'", buf.scratch);
+				fz_throw(ctx, "unknown keyword in 'if-else' context: '%s'", buf->scratch);
 			}
 			break;
 
@@ -822,7 +818,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 			while (b - a > 1)
 			{
 				mid = (a + b) / 2;
-				cmp = strcmp(buf.scratch, ps_op_names[mid]);
+				cmp = strcmp(buf->scratch, ps_op_names[mid]);
 				if (cmp > 0)
 					a = mid;
 				else if (cmp < 0)
@@ -831,7 +827,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr)
 					a = b = mid;
 			}
 			if (cmp != 0)
-				fz_throw(ctx, "unknown operator: '%s'", buf.scratch);
+				fz_throw(ctx, "unknown operator: '%s'", buf->scratch);
 
 			resize_code(ctx, func, *codeptr);
 			func->u.p.code[*codeptr].type = PS_OPERATOR;
@@ -855,7 +851,7 @@ load_postscript_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int 
 	fz_context *ctx = xref->ctx;
 	int locked = 0;
 
-	buf.size = PDF_LEXBUF_SMALL;
+	pdf_lexbuf_init(ctx, &buf, PDF_LEXBUF_SMALL);
 
 	fz_var(stream);
 	fz_var(locked);
@@ -875,11 +871,12 @@ load_postscript_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int 
 		func->u.p.cap = 0;
 
 		codeptr = 0;
-		parse_code(func, stream, &codeptr);
+		parse_code(func, stream, &codeptr, &buf);
 	}
 	fz_always(ctx)
 	{
 		fz_close(stream);
+		pdf_lexbuf_fin(&buf);
 	}
 	fz_catch(ctx)
 	{

@@ -830,6 +830,7 @@ void fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix transform);
 fz_path *fz_clone_path(fz_context *ctx, fz_path *old);
 
 fz_rect fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm);
+void fz_adjust_rect_for_stroke(fz_rect *r, fz_stroke_state *stroke, fz_matrix *ctm);
 void fz_print_path(fz_context *ctx, FILE *out, fz_path *, int indent);
 
 fz_stroke_state *fz_new_stroke_state(fz_context *ctx);

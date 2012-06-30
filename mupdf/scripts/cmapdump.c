@@ -78,6 +78,11 @@ main(int argc, char **argv)
 		if (strlen(realname) > (sizeof name - 1))
 		{
 			fprintf(stderr, "cmapdump: file name too long\n");
+			if (fclose(fo))
+			{
+				fprintf(stderr, "cmapdump: could not close output file '%s'\n", argv[1]);
+				return 1;
+			}
 			return 1;
 		}
 

@@ -231,16 +231,21 @@ end:
 }
 
 static int
-lex_string(fz_stream *f, char *buf, int n)
+lex_string(fz_stream *f, pdf_lexbuf *lb)
 {
-	char *s = buf;
-	char *e = buf + n;
+	char *s = lb->scratch;
+	char *e = s + lb->size;
 	int bal = 1;
 	int oct;
 	int c;
 
-	while (s < e)
+	while (1)
 	{
+		if (s == e)
+		{
+			s += pdf_lexbuf_grow(lb);
+			e = lb->scratch + lb->size;
+		}
 		c = fz_read_byte(f);
 		switch (c)
 		{
@@ -319,19 +324,25 @@ lex_string(fz_stream *f, char *buf, int n)
 		}
 	}
 end:
-	return s - buf;
+	lb->len = s - lb->scratch;
+	return PDF_TOK_STRING;
 }
 
 static int
-lex_hex_string(fz_stream *f, char *buf, int n)
+lex_hex_string(fz_stream *f, pdf_lexbuf *lb)
 {
-	char *s = buf;
-	char *e = buf + n;
+	char *s = lb->scratch;
+	char *e = s + lb->size;
 	int a = 0, x = 0;
 	int c;
 
-	while (s < e)
+	while (1)
 	{
+		if (s == e)
+		{
+			s += pdf_lexbuf_grow(lb);
+			e = lb->scratch + lb->size;
+		}
 		c = fz_read_byte(f);
 		switch (c)
 		{
@@ -357,7 +368,8 @@ lex_hex_string(fz_stream *f, char *buf, int n)
 		}
 	}
 end:
-	return s - buf;
+	lb->len = s - lb->scratch;
+	return PDF_TOK_STRING;
 }
 
 static int
@@ -399,6 +411,37 @@ pdf_token_from_keyword(char *key)
 	return PDF_TOK_KEYWORD;
 }
 
+void pdf_lexbuf_init(fz_context *ctx, pdf_lexbuf *lb, int size)
+{
+	lb->size = lb->base_size = size;
+	lb->len = 0;
+	lb->ctx = ctx;
+	lb->scratch = &lb->buffer[0];
+}
+
+void pdf_lexbuf_fin(pdf_lexbuf *lb)
+{
+	if (lb && lb->size != lb->base_size)
+		fz_free(lb->ctx, lb->scratch);
+}
+
+ptrdiff_t pdf_lexbuf_grow(pdf_lexbuf *lb)
+{
+	char *old = lb->scratch;
+	int newsize = lb->size * 2;
+	if (lb->size == lb->base_size)
+	{
+		lb->scratch = fz_malloc(lb->ctx, newsize);
+		memcpy(lb->scratch, lb->buffer, lb->size);
+	}
+	else
+	{
+		lb->scratch = fz_resize_array(lb->ctx, lb->scratch, newsize, 1);
+	}
+	lb->size = newsize;
+	return lb->scratch - old;
+}
+
 int
 pdf_lex(fz_stream *f, pdf_lexbuf *buf)
 {
@@ -419,8 +462,7 @@ pdf_lex(fz_stream *f, pdf_lexbuf *buf)
 			lex_name(f, buf);
 			return PDF_TOK_NAME;
 		case '(':
-			buf->len = lex_string(f, buf->scratch, buf->size);
-			return PDF_TOK_STRING;
+			return lex_string(f, buf);
 		case ')':
 			fz_warn(f->ctx, "lexical error (unexpected ')')");
 			continue;
@@ -433,8 +475,7 @@ pdf_lex(fz_stream *f, pdf_lexbuf *buf)
 			else
 			{
 				fz_unread_byte(f);
-				buf->len = lex_hex_string(f, buf->scratch, buf->size);
-				return PDF_TOK_STRING;
+				return lex_hex_string(f, buf);
 			}
 		case '>':
 			c = fz_read_byte(f);

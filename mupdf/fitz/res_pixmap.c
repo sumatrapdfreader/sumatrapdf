@@ -138,7 +138,7 @@ fz_pixmap_height(fz_context *ctx, fz_pixmap *pix)
 void
 fz_clear_pixmap(fz_context *ctx, fz_pixmap *pix)
 {
-  memset(pix->samples, 0, (unsigned int)(pix->w * pix->h * pix->n));
+	memset(pix->samples, 0, (unsigned int)(pix->w * pix->h * pix->n));
 }
 
 void
@@ -225,7 +225,7 @@ fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_bbox r)
 			for (x = w; x > 0; x--)
 			{
 				int v;
-				v  = *srcp++;
+				v = *srcp++;
 				v += *srcp++;
 				v += *srcp++;
 				*destp++ = (unsigned char)((v+1)/3);

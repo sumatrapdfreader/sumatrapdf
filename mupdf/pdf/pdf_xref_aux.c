@@ -3,7 +3,7 @@
 
 /*
 	These functions have been split out of pdf_xref.c to allow tools
-	to be linked without pulling in the interpreter.  The interpreter
+	to be linked without pulling in the interpreter. The interpreter
 	references the built-in font and cmap resources which are quite
 	big. Not linking those into the tools saves roughly 6MB in the
 	resulting executables.

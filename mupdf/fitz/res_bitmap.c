@@ -117,5 +117,5 @@ void fz_bitmap_details(fz_bitmap *bit, int *w, int *h, int *n, int *stride)
 	if (n)
 		*n = bit->n;
 	if (stride)
-		*w = bit->stride;
+		*stride = bit->stride;
 }

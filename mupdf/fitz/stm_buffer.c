@@ -173,7 +173,7 @@ fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, char *fmt, ...)
 	while(buffer->cap - buffer->len < 256)
 		fz_grow_buffer(ctx, buffer);
 
-	buffer->len += vsprintf(buffer->data + buffer->len, fmt, args);
+	buffer->len += vsprintf((char *)buffer->data + buffer->len, fmt, args);
 
 	va_end(args);
 }

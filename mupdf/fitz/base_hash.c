@@ -138,7 +138,7 @@ static void
 fz_resize_hash(fz_context *ctx, fz_hash_table *table, int newsize)
 {
 	fz_hash_entry *oldents = table->ents;
-	fz_hash_entry *newents = table->ents;
+	fz_hash_entry *newents;
 	int oldsize = table->size;
 	int oldload = table->load;
 	int i;

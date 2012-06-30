@@ -334,6 +334,7 @@ fz_list_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_m
 	fz_try(ctx)
 	{
 		node->rect = fz_bound_text(dev->ctx, text, ctm);
+		fz_adjust_rect_for_stroke(&node->rect, stroke, &ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
 		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}
@@ -377,6 +378,7 @@ fz_list_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 	fz_try(ctx)
 	{
 		node->rect = fz_bound_text(dev->ctx, text, ctm);
+		fz_adjust_rect_for_stroke(&node->rect, stroke, &ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
 		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}

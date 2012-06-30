@@ -151,7 +151,6 @@ static void
 page_objects_insert(fz_context *ctx, page_objects **ppo, int i)
 {
 	page_objects *po;
-	int j;
 
 	/* Make a page_objects if we don't have one */
 	if (*ppo == NULL)
@@ -165,7 +164,6 @@ page_objects_insert(fz_context *ctx, page_objects **ppo, int i)
 		po->cap *= 2;
 		*ppo = po;
 	}
-	j = po->len;
 	po->object[po->len++] = i;
 }
 

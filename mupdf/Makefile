@@ -173,7 +173,11 @@ install: $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUBUSY)
 
 # --- Clean and Default ---
 
-all: $(THIRD_LIBS) $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUBUSY)
+all: all-nojs
+
+all-nojs: $(THIRD_LIBS) $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUBUSY)
+
+third: $(THIRD_LIBS)
 
 clean:
 	rm -rf $(OUT)

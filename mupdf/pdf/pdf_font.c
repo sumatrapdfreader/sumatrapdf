@@ -175,8 +175,18 @@ static int lookup_mre_code(char *name)
 static void
 pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 {
+	char buf[256], *comma = NULL;
 	unsigned char *data;
 	unsigned int len;
+
+	if (strchr(fontname, ','))
+	{
+		fz_strlcpy(buf, fontname, sizeof buf);
+		comma = strchr(buf, ',');
+		if (comma)
+			*comma++ = 0;
+		fontname = buf;
+	}
 
 	data = pdf_lookup_builtin_font(fontname, &len);
 	if (!data)
@@ -203,6 +213,14 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 
 	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
 		fontdesc->flags |= PDF_FD_SYMBOLIC;
+
+	if (comma)
+	{
+		if (strstr(comma, "Italic"))
+			fontdesc->font->ft_italic = 1;
+		if (strstr(comma, "Bold"))
+			fontdesc->font->ft_bold = 1;
+	}
 }
 
 static void
