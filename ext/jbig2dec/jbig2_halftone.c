@@ -250,7 +250,7 @@ jbig2_pattern_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
     jbig2_free(ctx->allocator, GB_stats);
   }
 
-  return (segment->result != NULL) ? 0 : 1;
+  return (segment->result != NULL) ? 0 : -1;
 }
 
 /**

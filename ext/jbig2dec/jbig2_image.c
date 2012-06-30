@@ -60,7 +60,8 @@ Jbig2Image* jbig2_image_new(Jbig2Ctx *ctx, int width, int height)
         image->data = jbig2_new(ctx, uint8_t, (int)check);
 	if (image->data == NULL) {
         jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
-            "could not allocate image data buffer! [%d bytes]", stride*height);
+            "could not allocate image data buffer! [stride(%d)*height(%d) bytes]",
+                stride, height);
 		jbig2_free(ctx->allocator, image);
 		return NULL;
 	}

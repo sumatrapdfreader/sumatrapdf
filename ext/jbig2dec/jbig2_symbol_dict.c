@@ -373,8 +373,8 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 	      DW = jbig2_huffman_get(hs, params->SDHUFFDW, &code);
 	  } else {
 	      code = jbig2_arith_int_decode(IADW, as, &DW);
-              if (code < 0) goto cleanup4;
 	  }
+          if (code < 0) goto cleanup4;
 
 	  /* 6.5.5 (4c.i) */
 	  if (code == 1) {
@@ -635,13 +635,13 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 	    SDNEWSYMWIDTHS[NSYMSDECODED] = SYMWIDTH;
 	  }
 
+          /* 6.5.5 (4c.iv) */
+          NSYMSDECODED = NSYMSDECODED + 1;
+
 	  jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
             "decoded symbol %u of %u (%ux%u)",
 		NSYMSDECODED, params->SDNUMNEWSYMS,
 		SYMWIDTH, HCHEIGHT);
-
-	  /* 6.5.5 (4c.iv) */
-	  NSYMSDECODED = NSYMSDECODED + 1;
 
       } /* end height class decode loop */
 
@@ -699,6 +699,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 	  if (code) {
 	    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
 	      "error decoding MMR bitmap image!");
+	    jbig2_image_release(ctx, image);
 	    goto cleanup4;
 	  }
 	}
@@ -715,6 +716,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
       {
           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
               "failed to copy the collective bitmap into symbol dictionary");
+          jbig2_image_release(ctx, image);
           goto cleanup4;
       }
 	  jbig2_image_compose(ctx, glyph, image, -x, 0, JBIG2_COMPOSE_REPLACE);
@@ -806,7 +808,6 @@ cleanup4:
       jbig2_sd_release(ctx, refagg_dicts[0]);
       jbig2_free(ctx->allocator, refagg_dicts);
   }
-  jbig2_free(ctx->allocator, GB_stats);
 
 cleanup2:
   jbig2_sd_release(ctx, SDNEWSYMS);
@@ -969,16 +970,19 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
     if (flags & 0x000c) {
       jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
 		  "SDHUFF is zero, but contrary to spec SDHUFFDH is not.");
+      goto cleanup;
     }
     if (flags & 0x0030) {
       jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
 		  "SDHUFF is zero, but contrary to spec SDHUFFDW is not.");
+      goto cleanup;
     }
   }
 
   if (flags & 0x0080) {
       jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
         "bitmap coding context is used (NYI) symbol data likely to be garbage!");
+      goto cleanup;
   }
 
   /* 7.4.2.1.2 */
@@ -1080,9 +1084,9 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
       jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
           "segment marks bitmap coding context as retained (NYI)");
   } else {
-      /* todo: free GB_stats, GR_stats */
+      jbig2_free(ctx->allocator, GR_stats);
+      jbig2_free(ctx->allocator, GB_stats);
   }
-  jbig2_free(ctx->allocator, GR_stats);
 
 cleanup:
   if (params.SDHUFF) {

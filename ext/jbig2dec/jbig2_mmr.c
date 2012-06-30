@@ -831,14 +831,12 @@ jbig2_decode_get_run(Jbig2MmrCtx *mmr, const mmr_table_node *table, int initial_
 	return result;
 }
 
-static void
+static int
 jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 {
-	int a0, a1, a2, b1, b2;
-	int c;
-
-	a0 = -1;
-	c = 0;		/* 0 is white, black is 1 */
+	int a0 = -1;
+	int a1, a2, b1, b2;
+	int c = 0;		/* 0 is white, black is 1 */
 
 	while (1)
 	{
@@ -864,6 +862,7 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 				a2 = a1 + black_run;
 				if (a1 > mmr->width) a1 = mmr->width;
 				if (a2 > mmr->width) a2 = mmr->width;
+				if (a2 < a1) return -1;
 				jbig2_set_bits(dst, a1, a2);
 				a0 = a2;
 				/* printf ("H %d %d\n", white_run, black_run); */
@@ -876,6 +875,7 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 				a2 = a1 + white_run;
 				if (a1 > mmr->width) a1 = mmr->width;
 				if (a2 > mmr->width) a2 = mmr->width;
+				if (a1 < a0) return -1;
 				jbig2_set_bits(dst, a0, a1);
 				a0 = a2;
 				/* printf ("H %d %d\n", black_run, white_run); */
@@ -888,7 +888,11 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 			jbig2_decode_mmr_consume(mmr, 4);
 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
 			b2 = jbig2_find_changing_element(ref, b1, mmr->width);
-			if (c) jbig2_set_bits(dst, a0, b2);
+			if (c)
+			{
+				if (b2 < a0) return -1;
+				jbig2_set_bits(dst, a0, b2);
+			}
 			a0 = b2;
 		}
 
@@ -897,7 +901,11 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 			/* printf ("V(0)\n"); */
 			jbig2_decode_mmr_consume(mmr, 1);
 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
-			if (c) jbig2_set_bits(dst, a0, b1);
+			if (c)
+			{
+				if (b1 < a0) return -1;
+				jbig2_set_bits(dst, a0, b1);
+			}
 			a0 = b1;
 			c = !c;
 		}
@@ -908,7 +916,11 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 			jbig2_decode_mmr_consume(mmr, 3);
 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
 			if (b1 + 1 > mmr->width) break;
-			if (c) jbig2_set_bits(dst, a0, b1 + 1);
+			if (c)
+			{
+				if (b1 + 1 < a0) return -1;
+				jbig2_set_bits(dst, a0, b1 + 1);
+			}
 			a0 = b1 + 1;
 			c = !c;
 		}
@@ -919,7 +931,11 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 			jbig2_decode_mmr_consume(mmr, 6);
 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
 			if (b1 + 2 > mmr->width) break;
-			if (c) jbig2_set_bits(dst, a0, b1 + 2);
+			if (c)
+			{
+				if (b1 + 2 < a0) return -1;
+				jbig2_set_bits(dst, a0, b1 + 2);
+			}
 			a0 = b1 + 2;
 			c = !c;
 		}
@@ -930,7 +946,11 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 			jbig2_decode_mmr_consume(mmr, 7);
 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
 			if (b1 + 3 > mmr->width) break;
-			if (c) jbig2_set_bits(dst, a0, b1 + 3);
+			if (c)
+			{
+				if (b1 + 3 < a0) return -1;
+				jbig2_set_bits(dst, a0, b1 + 3);
+			}
 			a0 = b1 + 3;
 			c = !c;
 		}
@@ -941,7 +961,11 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 			jbig2_decode_mmr_consume(mmr, 3);
 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
 			if (b1 - 1 < 0) break;
-			if (c) jbig2_set_bits(dst, a0, b1 - 1);
+			if (c)
+			{
+				if (b1 - 1 < a0) return -1;
+				jbig2_set_bits(dst, a0, b1 - 1);
+			}
 			a0 = b1 - 1;
 			c = !c;
 		}
@@ -952,7 +976,11 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 			jbig2_decode_mmr_consume(mmr, 6);
 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
 			if (b1 - 2 < 0) break;
-			if (c) jbig2_set_bits(dst, a0, b1 - 2);
+			if (c)
+			{
+				if (b1 - 2 < a0) return -1;
+				jbig2_set_bits(dst, a0, b1 - 2);
+			}
 			a0 = b1 - 2;
 			c = !c;
 		}
@@ -963,7 +991,11 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 			jbig2_decode_mmr_consume(mmr, 7);
 			b1 = jbig2_find_changing_element_of_color(ref, a0, mmr->width, !c);
 			if (b1 - 3 < 0) break;
-			if (c) jbig2_set_bits(dst, a0, b1 - 3);
+			if (c)
+			{
+				if (b1 - 3 < a0) return -1;
+				jbig2_set_bits(dst, a0, b1 - 3);
+			}
 			a0 = b1 - 3;
 			c = !c;
 		}
@@ -971,6 +1003,8 @@ jbig2_decode_mmr_line(Jbig2MmrCtx *mmr, const byte *ref, byte *dst)
 		else
 			break;
 	}
+
+	return 0;
 }
 
 int
@@ -985,17 +1019,19 @@ jbig2_decode_generic_mmr(Jbig2Ctx *ctx,
 	byte *dst = image->data;
 	byte *ref = NULL;
 	int y;
+	int code = 0;
 
 	jbig2_decode_mmr_init(&mmr, image->width, image->height, data, size);
 
 	for (y = 0; y < image->height; y++) {
 		memset(dst, 0, rowstride);
-		jbig2_decode_mmr_line(&mmr, ref, dst);
+		code = jbig2_decode_mmr_line(&mmr, ref, dst);
+		if (code < 0) return code;
 		ref = dst;
 		dst += rowstride;
 	}
 
-	return 0;
+	return code;
 }
 
 /**

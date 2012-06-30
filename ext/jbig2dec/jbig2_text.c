@@ -325,14 +325,6 @@ cleanup1:
 		int code4 = 0;
 		int code5 = 0;
 
-		/* as must exist for refinement */
-		if (as == NULL)
-		{
-			code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-				"as is NULL before refinement region");
-			goto cleanup2;
-		}
-
 		/* 6.4.11 (1, 2, 3, 4) */
 		if (!params->SBHUFF) {
 		  code1 = jbig2_arith_int_decode(params->IARDW, as, &RDW);
@@ -854,9 +846,18 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     if (ws == NULL)
     {
         code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-            "couldn't allocate text region image");
+            "couldn't allocate ws in text region image");
         goto cleanup2;
     }
+
+    as = jbig2_arith_new(ctx, ws);
+    if (as == NULL)
+    {
+        code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+            "couldn't allocate as in text region image");
+        goto cleanup2;
+    }
+
     if (!params.SBHUFF) {
 	int SBSYMCODELEN, index;
         int SBNUMSYMS = 0;
@@ -864,12 +865,11 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
 	    SBNUMSYMS += dicts[index]->n_symbols;
 	}
 
-	as = jbig2_arith_new(ctx, ws);
     params.IADT = jbig2_arith_int_ctx_new(ctx);
     params.IAFS = jbig2_arith_int_ctx_new(ctx);
     params.IADS = jbig2_arith_int_ctx_new(ctx);
     params.IAIT = jbig2_arith_int_ctx_new(ctx);
-    if ((as == NULL) || (params.IADT == NULL) || (params.IAFS == NULL) ||
+    if ((params.IADT == NULL) || (params.IAFS == NULL) ||
         (params.IADS == NULL) || (params.IAIT == NULL))
     {
         code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
@@ -898,7 +898,7 @@ jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data
     code = jbig2_decode_text_region(ctx, segment, &params,
         (const Jbig2SymbolDict * const *)dicts, n_dicts, image,
         segment_data + offset, segment->data_length - offset,
-		GR_stats, as, as ? NULL : ws);
+		GR_stats, as, ws);
     if (code < 0)
     {
         jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
@@ -934,8 +934,8 @@ cleanup3:
         jbig2_arith_int_ctx_free(ctx, params.IAFS);
         jbig2_arith_int_ctx_free(ctx, params.IADS);
         jbig2_arith_int_ctx_free(ctx, params.IAIT);
-        jbig2_free(ctx->allocator, as);
     }
+    jbig2_free(ctx->allocator, as);
     jbig2_word_stream_buf_free(ctx, ws);
 
 cleanup2:

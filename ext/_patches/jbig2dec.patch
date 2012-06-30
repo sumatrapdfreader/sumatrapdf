@@ -1,6 +1,6 @@
 diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
 --- jbig2dec.orig\jbig2.h	Fri Jun 15 13:36:58 2012
-+++ jbig2dec\jbig2.h	Fri Jun 15 23:28:23 2012
++++ jbig2dec\jbig2.h	Sat Jun 30 14:41:52 2012
 @@ -27,16 +27,19 @@
  
  /* To enable Memento, either uncomment the following, or arrange to
@@ -22,8 +22,8 @@ diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
  typedef enum {
    JBIG2_SEVERITY_DEBUG,
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
---- jbig2dec.orig\jbig2_symbol_dict.c	Fri Jun 15 20:45:09 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Thu Jun 21 17:23:37 2012
+--- jbig2dec.orig\jbig2_symbol_dict.c	Mon Jun 25 20:55:16 2012
++++ jbig2dec\jbig2_symbol_dict.c	Sat Jun 30 14:42:13 2012
 @@ -289,11 +289,11 @@
                "failed to allocate storage for symbol bitmap");
            goto cleanup1;

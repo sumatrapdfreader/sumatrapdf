@@ -150,7 +150,7 @@ jbig2_page_info (Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_da
         page->image = jbig2_image_new(ctx, page->width, page->height);
     }
     if (page->image == NULL) {
-        return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+        return jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "failed to allocate buffer for page image");
     } else {
 	/* 8.2 (3) fill the page with the default pixel value */
