@@ -327,6 +327,13 @@ static TCHAR *MimeFromUrl(const TCHAR *url)
     if (!ext)
         return str::Dup(DEFAULT_MIME_TYPE);
 
+    if (str::FindChar(ext, ';')) {
+        // some CHM documents use (image) URLs that are followed by
+        // a semi-colon and a number after the file's extension
+        ScopedMem<TCHAR> newUrl(str::DupN(url, str::FindChar(ext, ';') - url));
+        return MimeFromUrl(newUrl);
+    }
+
     static struct {
         TCHAR *ext;
         TCHAR *mimetype;
