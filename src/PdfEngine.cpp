@@ -2176,6 +2176,26 @@ TCHAR *PdfEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords
     return result;
 }
 
+static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList)
+{
+    pdf_obj *fonts = pdf_dict_gets(res, "Font");
+    for (int k = 0; k < pdf_dict_len(fonts); k++) {
+        pdf_obj *font = pdf_resolve_indirect(pdf_dict_get_val(fonts, k));
+        if (font && fontList.Find(font) == -1)
+            fontList.Append(font);
+    }
+    // also extract fonts for all XObjects (recursively)
+    pdf_obj *xobjs = pdf_dict_gets(res, "XObject");
+    for (int k = 0; k < pdf_dict_len(xobjs); k++) {
+        pdf_obj *xobj = pdf_dict_get_val(xobjs, k);
+        pdf_obj *xres = pdf_dict_gets(xobj, "Resources");
+        if (xobj && xres && !pdf_dict_mark(xobj)) {
+            pdf_extract_fonts(xres, fontList);
+            pdf_dict_unmark(xobj);
+        }
+    }
+}
+
 TCHAR *PdfEngineImpl::ExtractFontList()
 {
     Vec<pdf_obj *> fontList;
@@ -2183,15 +2203,13 @@ TCHAR *PdfEngineImpl::ExtractFontList()
     // collect all fonts from all page objects
     for (int i = 1; i <= PageCount(); i++) {
         pdf_page *page = GetPdfPage(i);
-        if (!page)
-            continue;
-        ScopedCritSec scope(&ctxAccess);
-        // TODO: further fonts might be referenced e.g. by form objects
-        pdf_obj *fonts = pdf_dict_gets(page->resources, "Font");
-        for (int k = 0; k < pdf_dict_len(fonts); k++) {
-            pdf_obj *font = pdf_resolve_indirect(pdf_dict_get_val(fonts, k));
-            if (font && fontList.Find(font) == -1)
-                fontList.Append(font);
+        if (page) {
+            ScopedCritSec scope(&ctxAccess);
+            pdf_extract_fonts(page->resources, fontList);
+            for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
+                if (annot->ap)
+                    pdf_extract_fonts(annot->ap->resources, fontList);
+            }
         }
     }
 
@@ -2244,7 +2262,10 @@ TCHAR *PdfEngineImpl::ExtractFontList()
             info.RemoveAt(info.Count() - 2, 2);
             info.Append(")");
         }
-        fonts.Append(str::conv::FromUtf8(info.LendData()));
+
+        ScopedMem<TCHAR> fontInfo(str::conv::FromUtf8(info.LendData()));
+        if (fontInfo && fonts.Find(fontInfo) == -1)
+            fonts.Append(fontInfo.StealData());
     }
     if (fonts.Count() == 0)
         return NULL;
