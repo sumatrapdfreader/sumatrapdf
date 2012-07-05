@@ -374,10 +374,8 @@ jbig2_decode_refinement_region(Jbig2Ctx *ctx,
 {
   {
     jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
-      "decoding generic refinement region with offset %d,%x,\n"
-      "  GRTEMPLATE=%d, TPGRON=%d, RA1=(%d,%d) RA2=(%d,%d)\n",
-      params->DX, params->DY, params->GRTEMPLATE, params->TPGRON,
-      params->grat[0], params->grat[1], params->grat[2], params->grat[3]);
+      "decoding generic refinement region with offset %d,%x, GRTEMPLATE=%d, TPGRON=%d",
+      params->DX, params->DY, params->GRTEMPLATE, params->TPGRON);
   }
 
   if (params->TPGRON)

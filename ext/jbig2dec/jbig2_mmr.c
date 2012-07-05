@@ -1059,13 +1059,15 @@ jbig2_decode_halftone_mmr(Jbig2Ctx *ctx,
 	byte *dst = image->data;
 	byte *ref = NULL;
 	int y;
+        int code = 0;
 	const uint32_t EOFB = 0x001001;
 
 	jbig2_decode_mmr_init(&mmr, image->width, image->height, data, size);
 
 	for (y = 0; y < image->height; y++) {
 		memset(dst, 0, rowstride);
-		jbig2_decode_mmr_line(&mmr, ref, dst);
+		code = jbig2_decode_mmr_line(&mmr, ref, dst);
+               if (code < 0) return code;
 		ref = dst;
 		dst += rowstride;
 	}
@@ -1077,5 +1079,5 @@ jbig2_decode_halftone_mmr(Jbig2Ctx *ctx,
 
 	*consumed_bytes += mmr.data_index + (mmr.bit_index >> 3) + 
                        (mmr.bit_index > 0 ? 1 : 0);
-	return 0;
+	return code;
 }
