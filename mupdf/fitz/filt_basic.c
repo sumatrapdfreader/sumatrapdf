@@ -89,6 +89,18 @@ read_concat(fz_stream *stm, unsigned char *buf, int len)
 		/* If we need to send a whitespace char, do that */
 		if (state->ws)
 		{
+			/* SumatraPDF: force-close strings at PDF stream boundaries */
+			if (state->ws == 5)
+			{
+				if (len < 5)
+					break;
+				memcpy(buf, "\n%)>\n", 5);
+				buf += 5;
+				read += 5;
+				len -= 5;
+				state->ws = 0;
+				continue;
+			}
 			*buf++ = 32;
 			read++;
 			len--;

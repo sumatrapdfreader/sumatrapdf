@@ -2681,7 +2681,8 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 					break;
 
 				case PDF_TOK_KEYWORD:
-					if (pdf_run_keyword(csi, rdb, file, buf->scratch))
+					/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1982 */
+					if (pdf_run_keyword(csi, rdb, file, buf->scratch) && buf->len > 8)
 					{
 						tok = PDF_TOK_EOF;
 					}

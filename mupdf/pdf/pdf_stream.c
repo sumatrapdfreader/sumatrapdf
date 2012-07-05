@@ -577,7 +577,8 @@ pdf_open_object_array(pdf_document *xref, pdf_obj *list)
 	fz_stream *stm;
 
 	n = pdf_array_len(list);
-	stm = fz_open_concat(ctx, n, 1);
+	/* SumatraPDF: force-close strings at PDF stream boundaries */
+	stm = fz_open_concat(ctx, n, 5);
 
 	fz_var(i); /* Workaround Mac compiler bug */
 	for (i = 0; i < n; i++)
