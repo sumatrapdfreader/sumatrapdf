@@ -123,8 +123,9 @@ static void retainpages(int argc, char **argv)
 		pdf_obj *names = pdf_new_dict(ctx, 1);
 		pdf_obj *dests = pdf_new_dict(ctx, 1);
 		pdf_obj *names_list = pdf_new_array(ctx, 32);
+		int len = pdf_dict_len(olddests);
 
-		for (i = 0; i < pdf_dict_len(olddests); i++)
+		for (i = 0; i < len; i++)
 		{
 			pdf_obj *key = pdf_dict_get_key(olddests, i);
 			pdf_obj *val = pdf_dict_get_val(olddests, i);

@@ -46,6 +46,8 @@ fz_open_null(fz_stream *chain, int len, int offset)
 	struct null_filter *state;
 	fz_context *ctx = chain->ctx;
 
+	if (len < 0)
+		len = 0;
 	fz_try(ctx)
 	{
 		state = fz_malloc_struct(ctx, struct null_filter);

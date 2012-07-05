@@ -1515,6 +1515,34 @@ static void expandstream(pdf_document *xref, pdf_write_options *opts, pdf_obj *o
 	pdf_drop_obj(obj);
 }
 
+static int is_image_filter(char *s)
+{
+	if (	!strcmp(s, "CCITTFaxDecode") || !strcmp(s, "CCF") ||
+		!strcmp(s, "DCTDecode") || !strcmp(s, "DCT") ||
+		!strcmp(s, "RunLengthDecode") || !strcmp(s, "RL") ||
+		!strcmp(s, "JBIG2Decode") ||
+		!strcmp(s, "JPXDecode"))
+		return 1;
+	return 0;
+}
+
+static int filter_implies_image(pdf_document *xref, pdf_obj *o)
+{
+	if (!o)
+		return 0;
+	if (pdf_is_name(o))
+		return is_image_filter(pdf_to_name(o));
+	if (pdf_is_array(o))
+	{
+		int i, len;
+		len = pdf_array_len(o);
+		for (i = 0; i < len; i++)
+			if (is_image_filter(pdf_to_name(pdf_array_get(o, i))))
+				return 1;
+	}
+	return 0;
+}
+
 static void writeobject(pdf_document *xref, pdf_write_options *opts, int num, int gen)
 {
 	pdf_obj *obj;
@@ -1577,6 +1605,10 @@ static void writeobject(pdf_document *xref, pdf_write_options *opts, int num, in
 				dontexpand = !(opts->do_expand & fz_expand_fonts);
 			if (o = pdf_dict_gets(obj, "Subtype"), !strcmp(pdf_to_name(o), "CIDFontType0C"))
 				dontexpand = !(opts->do_expand & fz_expand_fonts);
+			if (o = pdf_dict_gets(obj, "Filter"), filter_implies_image(xref, o))
+				dontexpand = !(opts->do_expand & fz_expand_images);
+			if (pdf_dict_gets(obj, "Width") != NULL && pdf_dict_gets(obj, "Height") != NULL)
+				dontexpand = !(opts->do_expand & fz_expand_images);
 		}
 		if (opts->do_expand && !dontexpand && !pdf_is_jpx_image(ctx, obj))
 			expandstream(xref, opts, obj, num, gen);

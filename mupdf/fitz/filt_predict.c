@@ -63,9 +63,11 @@ fz_predict_tiff(fz_predict *state, unsigned char *out, unsigned char *in, int le
 {
 	int left[MAXC];
 	int i, k;
+	const int mask = (1 << state->bpc)-1;
 
 	for (k = 0; k < state->colors; k++)
 		left[k] = 0;
+	memset(out, 0, state->stride);
 
 	for (i = 0; i < state->columns; i++)
 	{
@@ -73,7 +75,7 @@ fz_predict_tiff(fz_predict *state, unsigned char *out, unsigned char *in, int le
 		{
 			int a = getcomponent(in, i * state->colors + k, state->bpc);
 			int b = a + left[k];
-			int c = b % (1 << state->bpc);
+			int c = b & mask;
 			putcomponent(out, i * state->colors + k, state->bpc, c);
 			left[k] = c;
 		}

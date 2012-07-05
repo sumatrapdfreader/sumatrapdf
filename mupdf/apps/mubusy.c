@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 		{
 			strcpy(buf, "mupdf");
 			strcat(buf, tools[i].name);
-			if (namematch(end, start, buf))
+			if (namematch(end, start, buf) || namematch(end, start, buf+2))
 				return tools[i].func(argc, argv);
 		}
 	}

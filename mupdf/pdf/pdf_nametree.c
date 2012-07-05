@@ -120,14 +120,16 @@ pdf_load_name_tree_imp(pdf_obj *dict, pdf_document *xref, pdf_obj *node)
 
 	if (kids && !pdf_dict_mark(node))
 	{
-		for (i = 0; i < pdf_array_len(kids); i++)
+		int len = pdf_array_len(kids);
+		for (i = 0; i < len; i++)
 			pdf_load_name_tree_imp(dict, xref, pdf_array_get(kids, i));
 		pdf_dict_unmark(node);
 	}
 
 	if (names)
 	{
-		for (i = 0; i + 1 < pdf_array_len(names); i += 2)
+		int len = pdf_array_len(names);
+		for (i = 0; i + 1 < len; i += 2)
 		{
 			pdf_obj *key = pdf_array_get(names, i);
 			pdf_obj *val = pdf_array_get(names, i + 1);

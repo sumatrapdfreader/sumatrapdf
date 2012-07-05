@@ -535,7 +535,7 @@ pdf_create_link_annot(pdf_document *xref, pdf_obj *obj)
 	fz_buffer *content;
 	fz_rect rect;
 	float rgb[3];
-	int i;
+	int i, n;
 
 	border = pdf_dict_gets(obj, "Border");
 	if (pdf_to_real(pdf_array_get(border, 2)) <= 0)
@@ -548,7 +548,7 @@ pdf_create_link_annot(pdf_document *xref, pdf_obj *obj)
 	// TODO: draw rounded rectangles if the first two /Border values are non-zero
 	content = fz_new_buffer(xref->ctx, 128);
 	fz_buffer_printf(xref->ctx, content, "q %.4f w [", pdf_to_real(pdf_array_get(border, 2)));
-	for (i = 0; i < pdf_array_len(dashes); i++)
+	for (i = 0, n = pdf_array_len(dashes); i < n; i++)
 		fz_buffer_printf(xref->ctx, content, "%.4f ", pdf_to_real(pdf_array_get(dashes, i)));
 	fz_buffer_printf(xref->ctx, content, "] 0 d %.4f %.4f %.4f RG 0 0 %.4f %.4f re S Q",
 		rgb[0], rgb[1], rgb[2], rect.x1 - rect.x0, rect.y1 - rect.y0);
@@ -777,9 +777,9 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 	fz_rect a, b;
 	float rgb[3];
 	float skew;
-	int i;
+	int i, n;
 
-	for (i = 0; i < pdf_array_len(quad_points) / 8; i++)
+	for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		skew = 0.15 * fabs(a.y0 - b.y0);
@@ -791,7 +791,7 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 
 	fz_buffer_printf(xref->ctx, content, "q /GS gs %.4f %.4f %.4f rg 1 0 0 1 -%.4f -%.4f cm ",
 		rgb[0], rgb[1], rgb[2], rect.x0, rect.y0);
-	for (i = 0; i < pdf_array_len(quad_points) / 8; i++)
+	for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		skew = 0.15 * fabs(a.y0 - b.y0);
@@ -811,9 +811,9 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 	pdf_obj *quad_points = pdf_dict_gets(obj, "QuadPoints");
 	fz_rect a, b;
 	float rgb[3];
-	int i;
+	int i, n;
 
-	for (i = 0; i < pdf_array_len(quad_points) / 8; i++)
+	for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		b.y0 -= 0.25; a.y1 += 0.25;
@@ -826,7 +826,7 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 		rgb[0], rgb[1], rgb[2], rect.x0, rect.y0);
 	if (!strcmp(type, "Squiggly"))
 		fz_buffer_printf(xref->ctx, content, "[1 1] d ");
-	for (i = 0; i < pdf_array_len(quad_points) / 8; i++)
+	for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
 		if (!strcmp(type, "StrikeOut"))

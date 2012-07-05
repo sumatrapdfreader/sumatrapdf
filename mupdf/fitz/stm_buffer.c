@@ -113,8 +113,12 @@ void fz_write_buffer_byte(fz_context *ctx, fz_buffer *buf, int val)
 
 void fz_write_buffer_bits(fz_context *ctx, fz_buffer *buf, int val, int bits)
 {
-	int extra;
 	int shift;
+
+	/* Throughout this code, the invariant is that we need to write the
+	 * bottom 'bits' bits of 'val' into the stream. On entry we assume
+	 * that val & ((1<<bits)-1) == val, but we do not rely on this after
+	 * having written the first partial byte. */
 
 	if (bits == 0)
 		return;
@@ -124,12 +128,16 @@ void fz_write_buffer_bits(fz_context *ctx, fz_buffer *buf, int val, int bits)
 	 * buf->unused_bits = the number of unused bits in the last byte.
 	 */
 
-	/* Extend the buffer as required before we start; that way we never
-	 * fail part way during writing. */
+	/* Find the amount we need to shift val up by so that it will be in
+	 * the correct position to be inserted into any existing data byte. */
 	shift = (buf->unused_bits - bits);
+
+	/* Extend the buffer as required before we start; that way we never
+	 * fail part way during writing. If shift < 0, then we'll need -shift
+	 * more bits. */
 	if (shift < 0)
 	{
-		extra = (7-buf->unused_bits)>>3;
+		int extra = (7-shift)>>3; /* Round up to bytes */
 		fz_ensure_buffer(ctx, buf, buf->len + extra);
 	}
 
@@ -138,8 +146,14 @@ void fz_write_buffer_bits(fz_context *ctx, fz_buffer *buf, int val, int bits)
 	{
 		buf->data[buf->len-1] |= (shift >= 0 ? (((unsigned int)val)<<shift) : (((unsigned int)val)>>-shift));
 		if (shift >= 0)
+		{
+			/* If we were shifting up, we're done. */
+			buf->unused_bits -= bits;
 			return;
-		bits += shift;
+		}
+		/* The number of bits left to write is the number that didn't
+		 * fit in this first byte. */
+		bits = -shift;
 	}
 
 	/* Write any whole bytes */
@@ -152,7 +166,7 @@ void fz_write_buffer_bits(fz_context *ctx, fz_buffer *buf, int val, int bits)
 	/* Write trailing bits (with 0's in unused bits) */
 	if (bits > 0)
 	{
-		bits += 8;
+		bits = 8-bits;
 		buf->data[buf->len++] = val<<bits;
 	}
 	buf->unused_bits = bits;
@@ -177,3 +191,49 @@ fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, char *fmt, ...)
 
 	va_end(args);
 }
+
+#ifdef TEST_BUFFER_WRITE
+
+#define TEST_LEN 1024
+
+void
+fz_test_buffer_write(fz_context *ctx)
+{
+	fz_buffer *master = fz_new_buffer(ctx, TEST_LEN);
+	fz_buffer *copy = fz_new_buffer(ctx, TEST_LEN);
+	fz_stream *stm;
+	int i, j, k;
+
+	/* Make us a dummy buffer */
+	for (i = 0; i < TEST_LEN; i++)
+	{
+		master->data[i] = rand();
+	}
+	master->len = TEST_LEN;
+
+	/* Now copy that buffer several times, checking it for validity */
+	stm = fz_open_buffer(ctx, master);
+	for (i = 0; i < 256; i++)
+	{
+		memset(copy->data, i, TEST_LEN);
+		copy->len = 0;
+		j = TEST_LEN * 8;
+		do
+		{
+			k = (rand() & 31)+1;
+			if (k > j)
+				k = j;
+			fz_write_buffer_bits(ctx, copy, fz_read_bits(stm, k), k);
+			j -= k;
+		}
+		while (j);
+
+		if (memcmp(copy->data, master->data, TEST_LEN) != 0)
+			fprintf(stderr, "Copied buffer is different!\n");
+		fz_seek(stm, 0, 0);
+	}
+	fz_close(stm);
+	fz_drop_buffer(ctx, master);
+	fz_drop_buffer(ctx, copy);
+}
+#endif

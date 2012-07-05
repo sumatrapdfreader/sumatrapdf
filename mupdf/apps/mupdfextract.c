@@ -178,7 +178,8 @@ int pdfextract_main(int argc, char **argv)
 
 	if (fz_optind == argc)
 	{
-		for (o = 0; o < pdf_count_objects(doc); o++)
+		int len = pdf_count_objects(doc);
+		for (o = 0; o < len; o++)
 			showobject(o);
 	}
 	else

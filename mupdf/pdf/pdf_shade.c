@@ -177,14 +177,14 @@ draw_stripe(fz_context *ctx, pdf_tensor_patch *p, fz_shade *shade, int depth)
 	if (depth == 0)
 	{
 		/* if no more subdividing, draw two new patches... */
-		triangulate_patch(ctx, s0, shade);
 		triangulate_patch(ctx, s1, shade);
+		triangulate_patch(ctx, s0, shade);
 	}
 	else
 	{
 		/* ...otherwise, continue subdividing. */
-		draw_stripe(ctx, &s0, shade, depth);
 		draw_stripe(ctx, &s1, shade, depth);
+		draw_stripe(ctx, &s0, shade, depth);
 	}
 }
 

@@ -142,9 +142,10 @@ static void showobject(int num, int gen)
 static void showgrep(char *filename)
 {
 	pdf_obj *obj;
-	int i;
+	int i, len;
 
-	for (i = 0; i < pdf_count_objects(doc); i++)
+	len = pdf_count_objects(doc);
+	for (i = 0; i < len; i++)
 	{
 		if (doc->table[i].type == 'n' || doc->table[i].type == 'o')
 		{
