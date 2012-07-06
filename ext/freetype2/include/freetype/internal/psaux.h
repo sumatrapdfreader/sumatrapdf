@@ -5,7 +5,7 @@
 /*    Auxiliary functions and data structures related to PostScript fonts  */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
+/*  Copyright 1996-2004, 2006, 2008, 2009, 2012 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -225,7 +225,7 @@ FT_BEGIN_HEADER
     T1_Field_ParseFunc  reader;
     FT_UInt             offset;       /* offset of field in object      */
     FT_Byte             size;         /* size of field in bytes         */
-    FT_UInt             array_max;    /* maximal number of elements for */
+    FT_UInt             array_max;    /* maximum number of elements for */
                                       /* array                          */
     FT_UInt             count_offset; /* offset of element count for    */
                                       /* arrays; must not be zero if in */
@@ -531,7 +531,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    max_points   :: maximum points in builder outline                  */
   /*                                                                       */
-  /*    max_contours :: Maximal number of contours in builder outline.     */
+  /*    max_contours :: Maximum number of contours in builder outline.     */
   /*                                                                       */
   /*    pos_x        :: The horizontal translation (if composite glyph).   */
   /*                                                                       */

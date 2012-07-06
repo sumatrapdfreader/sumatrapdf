@@ -244,7 +244,7 @@
   tt_check_trickyness_sfnt_ids( TT_Face  face )
   {
 #define TRICK_SFNT_IDS_PER_FACE   3
-#define TRICK_SFNT_IDS_NUM_FACES  13
+#define TRICK_SFNT_IDS_NUM_FACES  17
 
     static const tt_sfnt_id_rec sfnt_id[TRICK_SFNT_IDS_NUM_FACES]
                                        [TRICK_SFNT_IDS_PER_FACE] = {
@@ -317,6 +317,26 @@
         { 0x00000000, 0x00000000 }, /* cvt  */
         { 0x0d3de9cb, 0x00000141 }, /* fpgm */
         { 0xd4127766, 0x00002280 }  /* prep */
+      },
+      { /* NEC FA-Gothic, 1996 */
+        { 0x00000000, 0x00000000 }, /* cvt  */
+        { 0x4a692698, 0x000001f0 }, /* fpgm */
+        { 0x340d4346, 0x00001fca }  /* prep */
+      },
+      { /* NEC FA-Minchou, 1996 */
+        { 0x00000000, 0x00000000 }, /* cvt  */
+        { 0xcd34c604, 0x00000166 }, /* fpgm */
+        { 0x6cf31046, 0x000022b0 }  /* prep */
+      },
+      { /* NEC FA-RoundGothicB, 1996 */
+        { 0x00000000, 0x00000000 }, /* cvt  */
+        { 0x5da75315, 0x0000019d }, /* fpgm */
+        { 0x40745a5f, 0x000022e0 }  /* prep */
+      },
+      { /* NEC FA-RoundGothicM, 1996 */
+        { 0x00000000, 0x00000000 }, /* cvt  */
+        { 0xf055fc48, 0x000001c2 }, /* fpgm */
+        { 0x3900ded3, 0x00001e18 }  /* prep */
       }
     };
 

@@ -1983,13 +1983,11 @@
                  FT_UInt       glyph_index,
                  FT_Int32      load_flags )
   {
-    TT_Face       face;
     FT_Error      error;
     TT_LoaderRec  loader;
 
 
-    face   = (TT_Face)glyph->face;
-    error  = TT_Err_Ok;
+    error = TT_Err_Ok;
 
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
 
@@ -2003,10 +2001,7 @@
       error = load_sbit_image( size, glyph, glyph_index, load_flags );
       if ( !error )
       {
-        FT_Face  root = &face->root;
-
-
-        if ( FT_IS_SCALABLE( root ) )
+        if ( FT_IS_SCALABLE( glyph->face ) )
         {
           /* for the bbox we need the header only */
           (void)tt_loader_init( &loader, size, glyph, load_flags, TRUE );

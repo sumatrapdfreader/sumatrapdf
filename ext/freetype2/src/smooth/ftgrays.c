@@ -312,7 +312,7 @@ typedef ptrdiff_t  FT_PtrDist;
 #endif /* PIXEL_BITS >= 8 */
 
 
-  /* maximal number of gray spans in a call to the span callback */
+  /* maximum number of gray spans in a call to the span callback */
 #define FT_MAX_GRAY_SPANS  32
 
 

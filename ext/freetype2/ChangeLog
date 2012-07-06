@@ -1,3 +1,239 @@
+2012-06-15  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.4.10 released.
+	=========================
+
+
+	Tag sources with `VER-2-4-10'.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.4.10.
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/vc2010/freetype.vcxproj, builds/win32/vc2010/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.4.9/2.4.10/, s/249/2410/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 10.
+
+	* builds/unix/configure.raw (version_info): Set to 15:0:9.
+
+2012-06-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftsynth.c (FT_GlyphSlot_Embolden): Improve spacing.
+
+	* docs/CHANGES: Updated.
+
+2012-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	* builds/exports.mk: Add CCexe_CFLAGS and CCexe_LDFLAGS.
+
+	to pass special compiler/linker flags under cross development.
+	Suggested by Savannah bug #36367.
+
+	ChangeLog on 2010-07-15 saying as they were removed was wrong
+	for the official trunk of FreeType2.  This commit is the first
+	introduction of them.
+
+2012-06-14  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2012-06-14  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Add new versions of NEC FA family to tricky font list.
+
+	NEC FA family dated in 1996 have different checksum.
+	Reported by Johnson Y. Yan <yinsen_yan@foxitsoftware.com>; see
+
+	  http://lists.gnu.org/archive/html/freetype-devel/2012-06/msg00023.html
+
+	* src/truetype/ttobjs.c (tt_check_trickyness_sfnt_ids): 4 sets
+	of fpgm & prep table checksums for FA-Gothic, FA-Minchou,
+	FA-RoundedGothicM, FA-RoundedGothicB are added.  The family
+	names in sample PDF are truncated, thus the list of the
+	family names in tt_check_trickyness_family() is not updated yet.
+
+2012-06-06  Werner Lemberg  <wl@gnu.org>
+
+	[ftraster] Fix rounding issue causing visual artifacts.
+
+	Problem reported by jola <hans-jochen.lau@lhsystems.com>; see
+
+	  http://lists.gnu.org/archive/html/freetype-devel/2012-05/msg00036.html
+
+	* src/raster/ftraster.c (SMulDiv_No_Round): New macro.
+	(Line_Up): Use it.
+	* src/raster/ftmisc.h (FT_MulDiv_No_Round): Copied from `ftcalc.c'.
+
+2012-05-28  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftoutln.c (FT_Outline_Get_Orientation): Simplify.
+
+	We now use the cross product of the direction vectors to compute the
+	outline's orientation.
+
+2012-05-28  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2012-05-28  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	New function FT_Outline_EmboldenXY.
+
+	* include/freetype/ftoutln.h (FT_Outline_EmboldenXY): Define it.
+
+	* src/base/ftoutln.c (FT_Outline_EmboldenXY): Implement it, using a
+	simplified embolding algorithm.
+	(FT_Outline_Embolden): Make it a special case of
+	`FT_Outline_EmboldenXY'
+
+2012-05-07  Werner Lemberg  <wl@gnu.org>
+
+	[type1] Fix Savannah bug #36386.
+
+	* src/type1/t1load.c (t1_load_keyword): Ignore keyword if context is
+	not valid.
+
+2012-04-07  Werner Lemberg  <wl@gnu.org>
+
+	Remove compiler warning.
+
+	* src/truetype/ttgload.c (TT_Load_Glyph)
+	[!TT_CONFIG_OPTION_EMBEDDED_BITMAPS]: Access `glyph->face' directly.
+
+2012-03-28  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Properly copy scaler flags to script metrics object.
+
+	Without this patch, only the dummy and cjk autohinter modules get
+	them (since they copy the whole scaler object).
+
+	* src/autofit/aflatin.c (af_latin_metrics_scale),
+	src/autofit/aflatin2.c (af_latin2_metrics_scale): Implement it.
+
+2012-03-22  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[bdflib] Remove redundant macro.
+
+	* src/bdf/bdflib.c (isdigok): Remove and replace with sbitset, which
+	is exactly the same.
+
+2012-03-20  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[configure] Fix Savannah bug #35644.
+
+	* builds/unix/configure.raw: Check `-ansi' flag works even if gcc
+	is used.  Bionic libc headers for Android lose the consistency
+	when they are parsed with __STDC_VERSION__ older than 199901L or
+	__STRICT_ANSI__.
+
+2012-03-20  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Improvement to Savannah bug #35656.
+
+	* src/bdf/bdflib.c (isdigok): Add cast, as suggested in report.
+
+2012-03-17  Chris Liddell  <chris.liddell@artifex.com>
+
+	[type1] Fix Savannah bug #35847.
+
+	* src/type1/t1load.c (parse_subrs): Fix the loop exit condition;
+	we want to exit when we have run out of data.
+
+2012-03-16  Werner Lemberg  <wl@gnu.org>
+
+	[bdf] Really fix Savannah bug #35658.
+
+	* src/bdf/bdflib.c (_bdf_list_split): Add one more `field' initializer.
+
+2012-03-14  Yann Droneaud  <yann@droneaud.fr>
+
+	[sfnt] Make arrays static like all others.
+
+	* src/sfnt/ttload.c (tt_face_load_maxp, tt_face_load_os2),
+	src/sfnt/ttmtx.c (tt_face_load_hhea): Add `static' keyword to frame
+	fields.
+
+2012-03-14  Huw Davies  <huw@codeweavers.com>
+
+	[sfnt] A refinement of the previous commit.
+
+	* src/sfnt/sfobjs.c (tt_name_entry_ascii_from_utf16,
+	tt_name_entry_ascii_from_other): Stop at null byte.
+
+2012-03-14  Huw Davies  <huw@codeweavers.com>
+
+	[sfnt] Add `name' table compatibility to MS Windows.
+
+	* src/sfnt/sfobjs.c (tt_name_entry_ascii_from_utf16,
+	tt_name_entry_ascii_from_other): Don't replace `\0' with question
+	marks when converting strings.
+
+2012-03-14  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #35833.
+
+	Based on the patch given in the bug report.
+
+	* src/type1/t1load.c (IS_INCREMENTAL): New macro.
+	(read_binary_data): Add parameter `incremental'.
+	Update all callers using `IS_INCREMENTAL'.
+
+2012-03-11  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Return correct linear advance width values.
+
+	This was quite a subtle bug which accidentally showed up with glyph
+	`afii10023' of arial.ttf (version 2.76).  This glyph is a composite;
+	the first component, `E', has an advance width of 1366 font units,
+	while the advance width of the composite itself (which looks like
+	uppercase `E' with dieresis) is 1367 font units.  I think this is
+	actually a bug in the font itself, because there is no reason that
+	this glyph has not the same width as uppercase `E' without the
+	dieresis.  Anyway, it helped identify this problem.
+
+	Using the TrueType hinter, the correct value (1367) of `afii10023'
+	was returned, but the autohinter mysteriously returned 1366.
+
+	Digging in the code showed that the autohinter recursively calls
+	FT_Load_Glyph to load the glyph, adding the FT_LOAD_NO_SCALE load
+	flag.  However, the `linearHoriAdvance' field is still returned as a
+	scaled value.  To avoid scaling twice, the old code in autofit reset
+	`linearHoriAdvance', using the `horiAdvance' field.  This seemed to
+	work since FT_LOAD_NO_SCALE was in use, but it failed actually,
+	because `horiAdvance' is defined as the distance of the first
+	subglyph's phantom points, which in turn are initialized using the
+	advance width of the first subglyph.  And as the given example
+	shows, these widths can differ.
+
+	* src/autofit/afloader.c (af_loader_load_g): Temporarily set
+	FT_LOAD_LINEAR_DESIGN while calling FT_Load_Glyph to get unscaled
+	values for the linear advance widths.
+
+2012-03-10  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix SSW instruction.
+
+	* src/truetype/ttinterp.c (DO_SSW): SSW *does* use font units.  For
+	verification, it took some time to find a font which actually uses
+	this instruction.
+
+2012-03-09  Vinnie Falco  <vinnie.falco@gmail.com>
+
+	Prepare source code for amalgamation.
+
+	* include/freetype/freetype.h: Swap order of preprocessor blocks.
+
 2012-03-08  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.4.9 released.
@@ -40,14 +276,14 @@
 
 	Prepare source code for amalgamation.
 
-	* src\autofit\aferrors.h, src\bdf\bdferror.h, src\bzip2\ftbzip2.c,
-	src\cache\ftcerror.h, src\cff\cfferrs.h, src\cid\ciderrs.h,
-	src\gxvalid\gxverror.h, src\gzip\ftgzip.c, src\lzw\ftlzw.c,
-	src\otvalid\otverror.h, src\pcf\pcferror.h, src\pfr\pfrerror.h,
-	src\psaux\psauxerr.h, src\pshinter\pshnterr.h,
-	src\psnames\psnamerr.h, src\raster\rasterrs.h, src\sfnt\sferrors.h,
-	src\smooth\ftsmerrs.h, src\truetype\tterrors.h,
-	src\type1\t1errors.h, src\type42\t42error.h, src\winfonts\fnterrs.h:
+	* src/autofit/aferrors.h, src/bdf/bdferror.h, src/bzip2/ftbzip2.c,
+	src/cache/ftcerror.h, src/cff/cfferrs.h, src/cid/ciderrs.h,
+	src/gxvalid/gxverror.h, src/gzip/ftgzip.c, src/lzw/ftlzw.c,
+	src/otvalid/otverror.h, src/pcf/pcferror.h, src/pfr/pfrerror.h,
+	src/psaux/psauxerr.h, src/pshinter/pshnterr.h,
+	src/psnames/psnamerr.h, src/raster/rasterrs.h, src/sfnt/sferrors.h,
+	src/smooth/ftsmerrs.h, src/truetype/tterrors.h,
+	src/type1/t1errors.h, src/type42/t42error.h, src/winfonts/fnterrs.h:
 	Add #undef FT_ERR_PREFIX before #define FT_ERR_PREFIX.
 
 2012-03-03  Werner Lemberg  <wl@gnu.org>

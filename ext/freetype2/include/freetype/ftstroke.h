@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType path stroker (specification).                               */
 /*                                                                         */
-/*  Copyright 2002-2006, 2008, 2009, 2011 by                               */
+/*  Copyright 2002-2006, 2008, 2009, 2011-2012 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -682,6 +682,11 @@ FT_BEGIN_HEADER
    *
    * @note:
    *   The source glyph is untouched in case of error.
+   *
+   *   Adding stroke may yield a significantly wider and taller glyph
+   *   depending on how large of a radius was used to stroke the glyph.  You
+   *   may need to manually adjust horizontal and vertical advance amounts
+   *   to account for this added size.
    */
   FT_EXPORT( FT_Error )
   FT_Glyph_Stroke( FT_Glyph    *pglyph,
@@ -719,6 +724,11 @@ FT_BEGIN_HEADER
    *
    * @note:
    *   The source glyph is untouched in case of error.
+   *
+   *   Adding stroke may yield a significantly wider and taller glyph
+   *   depending on how large of a radius was used to stroke the glyph.  You
+   *   may need to manually adjust horizontal and vertical advance amounts
+   *   to account for this added size.
    */
   FT_EXPORT( FT_Error )
   FT_Glyph_StrokeBorder( FT_Glyph    *pglyph,

@@ -52,7 +52,7 @@
   /*                                                                       */
   /* In order to detect infinite loops in the code, we set up a counter    */
   /* within the run loop.  A single stroke of interpretation is now        */
-  /* limited to a maximal number of opcodes defined below.                 */
+  /* limited to a maximum number of opcodes defined below.                 */
   /*                                                                       */
 #define MAX_RUNNABLE_OPCODES  1000000L
 
@@ -1463,7 +1463,7 @@
 
 #else
 
-  /* compute (a*b)/2^14 with maximal accuracy and rounding */
+  /* compute (a*b)/2^14 with maximum accuracy and rounding */
   static FT_Int32
   TT_MulFix14( FT_Int32  a,
                FT_Int    b )
@@ -1493,7 +1493,7 @@
 #endif
 
 
-  /* compute (ax*bx+ay*by)/2^14 with maximal accuracy and rounding */
+  /* compute (ax*bx+ay*by)/2^14 with maximum accuracy and rounding */
   static FT_Int32
   TT_DotFix14( FT_Int32  ax,
                FT_Int32  ay,
@@ -3110,14 +3110,9 @@
     CUR.GS.single_width_cutin = (FT_F26Dot6)args[0];
 
 
-    /* XXX: UNDOCUMENTED! or bug in the Windows engine?   */
-    /*                                                    */
-    /*      It seems that the value that is read here is  */
-    /*      expressed in 16.16 format rather than in font */
-    /*      units.                                        */
-    /*                                                    */
-#define DO_SSW                                                 \
-    CUR.GS.single_width_value = (FT_F26Dot6)( args[0] >> 10 );
+#define DO_SSW                                                     \
+    CUR.GS.single_width_value = TT_MULFIX( args[0],                \
+                                           CUR.tt_metrics.scale );
 
 
 #define DO_FLIPON            \
@@ -5772,7 +5767,7 @@
   /*                                                                       */
   /* UNDOCUMENTED: According to Greg Hitchcock, there is one (virtual)     */
   /*               contour in the twilight zone, namely contour number     */
-  /*               zero.                                                   */
+  /*               zero which includes all points of it.                   */
   /*                                                                       */
   static void
   Ins_SHC( INS_ARG )

@@ -60,7 +60,7 @@
 
 #include <ft2build.h>
 #include "ftraster.h"
-#include FT_INTERNAL_CALC_H   /* for FT_MulDiv only */
+#include FT_INTERNAL_CALC_H   /* for FT_MulDiv and FT_MulDiv_No_Round */
 
 #include "rastpic.h"
 
@@ -255,7 +255,8 @@
   /* On the other hand, SMulDiv means `Slow MulDiv', and is used typically */
   /* for clipping computations.  It simply uses the FT_MulDiv() function   */
   /* defined in `ftcalc.h'.                                                */
-#define SMulDiv  FT_MulDiv
+#define SMulDiv           FT_MulDiv
+#define SMulDiv_No_Round  FT_MulDiv_No_Round
 
   /* The rasterizer is a very general purpose component; please leave */
   /* the following redefinitions there (you never know your target    */
@@ -1150,14 +1151,14 @@
 
     if ( Dx > 0 )
     {
-      Ix = SMulDiv( ras.precision, Dx, Dy);
+      Ix = SMulDiv_No_Round( ras.precision, Dx, Dy );
       Rx = ( ras.precision * Dx ) % Dy;
       Dx = 1;
     }
     else
     {
-      Ix = SMulDiv( ras.precision, -Dx, Dy) * -1;
-      Rx =    ( ras.precision * -Dx ) % Dy;
+      Ix = -SMulDiv_No_Round( ras.precision, -Dx, Dy );
+      Rx = ( ras.precision * -Dx ) % Dy;
       Dx = -1;
     }
 
