@@ -82,11 +82,8 @@ void cleandata(void *data,size_t size)
   // 'volatile' is required. Otherwise optimizers can remove this function
   // if cleaning local variables, which are not used after that.
   volatile byte *d = (volatile byte *)data;
-  while (size>0)
-  {
-    *d=0;
-    size--;
-  }
+  for (size_t i=0;i<size;i++)
+    d[i]=0;
 #endif
 }
 

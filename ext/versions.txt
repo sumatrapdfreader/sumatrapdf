@@ -8,6 +8,6 @@ libjpeg-turbo   1.2.0   2011-02-10   http://sourceforge.net/projects/libjpeg-tur
 libdjvu         3.5.25  2012-03-15   http://djvu.sourceforge.net/
 openjpeg        1.5.0   2012-02-07   http://code.google.com/p/openjpeg/downloads
 synctex         1.16    2011-06-14   http://itexmac.sourceforge.net/SyncTeX.html
-unrar           4.20.3  2012-05-27   http://www.rarlab.com/rar_add.htm
+unrar           4.20.0  2012-06-09   http://www.rarlab.com/rar_add.htm
 zlib            1.2.7   2012-05-02   http://www.zlib.net/
 ../mupdf        trunk                http://git.ghostscript.com/?p=mupdf.git
