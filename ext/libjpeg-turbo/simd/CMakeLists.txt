@@ -37,6 +37,8 @@ else()
   set(OBJDIR ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
+file(GLOB INC_FILES *.inc)
+
 foreach(file ${SIMD_BASENAMES})
   set(DEPFILE "")
   set(SIMD_SRC ${CMAKE_CURRENT_SOURCE_DIR}/${file}.asm)
@@ -53,7 +55,8 @@ foreach(file ${SIMD_BASENAMES})
     string(REGEX REPLACE "gra" "gry" DEPFILE ${DEPFILE})
   endif()
   set(SIMD_OBJ ${OBJDIR}/${file}.obj)
-  add_custom_command(OUTPUT ${SIMD_OBJ} DEPENDS ${SIMD_SRC} ${DEPFILE} *.inc
+  add_custom_command(OUTPUT ${SIMD_OBJ}
+    DEPENDS ${SIMD_SRC} ${DEPFILE} ${INC_FILES}
     COMMAND ${NASM} ${NAFLAGS} ${SIMD_SRC} -o${SIMD_OBJ})
   set(SIMD_OBJS ${SIMD_OBJS} ${SIMD_OBJ})
 endforeach()

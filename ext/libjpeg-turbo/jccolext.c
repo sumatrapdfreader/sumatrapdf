@@ -2,7 +2,7 @@
  * jccolext.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
- * Copyright (C) 2009-2011, D. R. Commander.
+ * Copyright (C) 2009-2012, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -109,6 +109,38 @@ rgb_gray_convert_internal (j_compress_ptr cinfo,
       outptr[col] = (JSAMPLE)
 		((ctab[r+R_Y_OFF] + ctab[g+G_Y_OFF] + ctab[b+B_Y_OFF])
 		 >> SCALEBITS);
+    }
+  }
+}
+
+
+/*
+ * Convert some rows of samples to the JPEG colorspace.
+ * This version handles extended RGB->plain RGB conversion
+ */
+
+INLINE
+LOCAL(void)
+rgb_rgb_convert_internal (j_compress_ptr cinfo,
+                          JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
+                          JDIMENSION output_row, int num_rows)
+{
+  register JSAMPROW inptr;
+  register JSAMPROW outptr0, outptr1, outptr2;
+  register JDIMENSION col;
+  JDIMENSION num_cols = cinfo->image_width;
+
+  while (--num_rows >= 0) {
+    inptr = *input_buf++;
+    outptr0 = output_buf[0][output_row];
+    outptr1 = output_buf[1][output_row];
+    outptr2 = output_buf[2][output_row];
+    output_row++;
+    for (col = 0; col < num_cols; col++) {
+      outptr0[col] = GETJSAMPLE(inptr[RGB_RED]);
+      outptr1[col] = GETJSAMPLE(inptr[RGB_GREEN]);
+      outptr2[col] = GETJSAMPLE(inptr[RGB_BLUE]);
+      inptr += RGB_PIXELSIZE;
     }
   }
 }

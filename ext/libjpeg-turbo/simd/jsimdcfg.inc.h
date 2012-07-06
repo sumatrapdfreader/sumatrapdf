@@ -15,54 +15,51 @@
 #include "../jmorecfg.h"
 #include "jsimd.h"
 
-#define define(var) %define _cpp_protection_##var
-#define definev(var) %define _cpp_protection_##var var
-
 ;
 ; -- jpeglib.h
 ;
 
-definev(DCTSIZE)
-definev(DCTSIZE2)
+%define _cpp_protection_DCTSIZE DCTSIZE
+%define _cpp_protection_DCTSIZE2 DCTSIZE2
 
 ;
 ; -- jmorecfg.h
 ;
 
-definev(RGB_RED)
-definev(RGB_GREEN)
-definev(RGB_BLUE)
-definev(RGB_PIXELSIZE)
+%define _cpp_protection_RGB_RED RGB_RED
+%define _cpp_protection_RGB_GREEN RGB_GREEN
+%define _cpp_protection_RGB_BLUE RGB_BLUE
+%define _cpp_protection_RGB_PIXELSIZE RGB_PIXELSIZE
 
-definev(EXT_RGB_RED)
-definev(EXT_RGB_GREEN)
-definev(EXT_RGB_BLUE)
-definev(EXT_RGB_PIXELSIZE)
+%define _cpp_protection_EXT_RGB_RED EXT_RGB_RED
+%define _cpp_protection_EXT_RGB_GREEN EXT_RGB_GREEN
+%define _cpp_protection_EXT_RGB_BLUE EXT_RGB_BLUE
+%define _cpp_protection_EXT_RGB_PIXELSIZE EXT_RGB_PIXELSIZE
 
-definev(EXT_RGBX_RED)
-definev(EXT_RGBX_GREEN)
-definev(EXT_RGBX_BLUE)
-definev(EXT_RGBX_PIXELSIZE)
+%define _cpp_protection_EXT_RGBX_RED EXT_RGBX_RED
+%define _cpp_protection_EXT_RGBX_GREEN EXT_RGBX_GREEN
+%define _cpp_protection_EXT_RGBX_BLUE EXT_RGBX_BLUE
+%define _cpp_protection_EXT_RGBX_PIXELSIZE EXT_RGBX_PIXELSIZE
 
-definev(EXT_BGR_RED)
-definev(EXT_BGR_GREEN)
-definev(EXT_BGR_BLUE)
-definev(EXT_BGR_PIXELSIZE)
+%define _cpp_protection_EXT_BGR_RED EXT_BGR_RED
+%define _cpp_protection_EXT_BGR_GREEN EXT_BGR_GREEN
+%define _cpp_protection_EXT_BGR_BLUE EXT_BGR_BLUE
+%define _cpp_protection_EXT_BGR_PIXELSIZE EXT_BGR_PIXELSIZE
 
-definev(EXT_BGRX_RED)
-definev(EXT_BGRX_GREEN)
-definev(EXT_BGRX_BLUE)
-definev(EXT_BGRX_PIXELSIZE)
+%define _cpp_protection_EXT_BGRX_RED EXT_BGRX_RED
+%define _cpp_protection_EXT_BGRX_GREEN EXT_BGRX_GREEN
+%define _cpp_protection_EXT_BGRX_BLUE EXT_BGRX_BLUE
+%define _cpp_protection_EXT_BGRX_PIXELSIZE EXT_BGRX_PIXELSIZE
 
-definev(EXT_XBGR_RED)
-definev(EXT_XBGR_GREEN)
-definev(EXT_XBGR_BLUE)
-definev(EXT_XBGR_PIXELSIZE)
+%define _cpp_protection_EXT_XBGR_RED EXT_XBGR_RED
+%define _cpp_protection_EXT_XBGR_GREEN EXT_XBGR_GREEN
+%define _cpp_protection_EXT_XBGR_BLUE EXT_XBGR_BLUE
+%define _cpp_protection_EXT_XBGR_PIXELSIZE EXT_XBGR_PIXELSIZE
 
-definev(EXT_XRGB_RED)
-definev(EXT_XRGB_GREEN)
-definev(EXT_XRGB_BLUE)
-definev(EXT_XRGB_PIXELSIZE)
+%define _cpp_protection_EXT_XRGB_RED EXT_XRGB_RED
+%define _cpp_protection_EXT_XRGB_GREEN EXT_XRGB_GREEN
+%define _cpp_protection_EXT_XRGB_BLUE EXT_XRGB_BLUE
+%define _cpp_protection_EXT_XRGB_PIXELSIZE EXT_XRGB_PIXELSIZE
 
 %define RGBX_FILLER_0XFF        1
 
@@ -73,7 +70,7 @@ definev(EXT_XRGB_PIXELSIZE)
 %define JSAMPLE                 byte          ; unsigned char
 %define SIZEOF_JSAMPLE          SIZEOF_BYTE   ; sizeof(JSAMPLE)
 
-definev(CENTERJSAMPLE)
+%define _cpp_protection_CENTERJSAMPLE CENTERJSAMPLE
 
 ; Representation of a DCT frequency coefficient.
 ; On this SIMD implementation, this must be 'short'.
@@ -126,74 +123,74 @@ definev(CENTERJSAMPLE)
 ; -- jsimd.h
 ;
 
-definev(JSIMD_NONE)
-definev(JSIMD_MMX)
-definev(JSIMD_3DNOW)
-definev(JSIMD_SSE)
-definev(JSIMD_SSE2)
+%define _cpp_protection_JSIMD_NONE JSIMD_NONE
+%define _cpp_protection_JSIMD_MMX JSIMD_MMX
+%define _cpp_protection_JSIMD_3DNOW JSIMD_3DNOW
+%define _cpp_protection_JSIMD_SSE JSIMD_SSE
+%define _cpp_protection_JSIMD_SSE2 JSIMD_SSE2
 
 ; Short forms of external names for systems with brain-damaged linkers.
 ;
 #ifdef NEED_SHORT_EXTERNAL_NAMES
-definev(jpeg_simd_cpu_support)
-definev(jsimd_rgb_ycc_convert_mmx)
-definev(jsimd_ycc_rgb_convert_mmx)
-definev(jconst_rgb_ycc_convert_sse2)
-definev(jsimd_rgb_ycc_convert_sse2)
-definev(jconst_ycc_rgb_convert_sse2)
-definev(jsimd_ycc_rgb_convert_sse2)
-definev(jsimd_h2v2_downsample_mmx)
-definev(jsimd_h2v1_downsample_mmx)
-definev(jsimd_h2v2_downsample_sse2)
-definev(jsimd_h2v1_downsample_sse2)
-definev(jsimd_h2v2_upsample_mmx)
-definev(jsimd_h2v1_upsample_mmx)
-definev(jsimd_h2v1_fancy_upsample_mmx)
-definev(jsimd_h2v2_fancy_upsample_mmx)
-definev(jsimd_h2v1_merged_upsample_mmx)
-definev(jsimd_h2v2_merged_upsample_mmx)
-definev(jsimd_h2v2_upsample_sse2)
-definev(jsimd_h2v1_upsample_sse2)
-definev(jconst_fancy_upsample_sse2)
-definev(jsimd_h2v1_fancy_upsample_sse2)
-definev(jsimd_h2v2_fancy_upsample_sse2)
-definev(jconst_merged_upsample_sse2)
-definev(jsimd_h2v1_merged_upsample_sse2)
-definev(jsimd_h2v2_merged_upsample_sse2)
-definev(jsimd_convsamp_mmx)
-definev(jsimd_convsamp_sse2)
-definev(jsimd_convsamp_float_3dnow)
-definev(jsimd_convsamp_float_sse)
-definev(jsimd_convsamp_float_sse2)
-definev(jsimd_fdct_islow_mmx)
-definev(jsimd_fdct_ifast_mmx)
-definev(jconst_fdct_islow_sse2)
-definev(jsimd_fdct_islow_sse2)
-definev(jconst_fdct_ifast_sse2)
-definev(jsimd_fdct_ifast_sse2)
-definev(jsimd_fdct_float_3dnow)
-definev(jconst_fdct_float_sse)
-definev(jsimd_fdct_float_sse)
-definev(jsimd_quantize_mmx)
-definev(jsimd_quantize_sse2)
-definev(jsimd_quantize_float_3dnow)
-definev(jsimd_quantize_float_sse)
-definev(jsimd_quantize_float_sse2)
-definev(jsimd_idct_2x2_mmx)
-definev(jsimd_idct_4x4_mmx)
-definev(jconst_idct_red_sse2)
-definev(jsimd_idct_2x2_sse2)
-definev(jsimd_idct_4x4_sse2)
-definev(jsimd_idct_islow_mmx)
-definev(jsimd_idct_ifast_mmx)
-definev(jconst_idct_islow_sse2)
-definev(jsimd_idct_islow_sse2)
-definev(jconst_idct_ifast_sse2)
-definev(jsimd_idct_ifast_sse2)
-definev(jsimd_idct_float_3dnow)
-definev(jconst_idct_float_sse)
-definev(jsimd_idct_float_sse)
-definev(jconst_idct_float_sse2)
-definev(jsimd_idct_float_sse2)
+%define _cpp_protection_jpeg_simd_cpu_support jpeg_simd_cpu_support
+%define _cpp_protection_jsimd_rgb_ycc_convert_mmx jsimd_rgb_ycc_convert_mmx
+%define _cpp_protection_jsimd_ycc_rgb_convert_mmx jsimd_ycc_rgb_convert_mmx
+%define _cpp_protection_jconst_rgb_ycc_convert_sse2 jconst_rgb_ycc_convert_sse2
+%define _cpp_protection_jsimd_rgb_ycc_convert_sse2 jsimd_rgb_ycc_convert_sse2
+%define _cpp_protection_jconst_ycc_rgb_convert_sse2 jconst_ycc_rgb_convert_sse2
+%define _cpp_protection_jsimd_ycc_rgb_convert_sse2 jsimd_ycc_rgb_convert_sse2
+%define _cpp_protection_jsimd_h2v2_downsample_mmx jsimd_h2v2_downsample_mmx
+%define _cpp_protection_jsimd_h2v1_downsample_mmx jsimd_h2v1_downsample_mmx
+%define _cpp_protection_jsimd_h2v2_downsample_sse2 jsimd_h2v2_downsample_sse2
+%define _cpp_protection_jsimd_h2v1_downsample_sse2 jsimd_h2v1_downsample_sse2
+%define _cpp_protection_jsimd_h2v2_upsample_mmx jsimd_h2v2_upsample_mmx
+%define _cpp_protection_jsimd_h2v1_upsample_mmx jsimd_h2v1_upsample_mmx
+%define _cpp_protection_jsimd_h2v1_fancy_upsample_mmx jsimd_h2v1_fancy_upsample_mmx
+%define _cpp_protection_jsimd_h2v2_fancy_upsample_mmx jsimd_h2v2_fancy_upsample_mmx
+%define _cpp_protection_jsimd_h2v1_merged_upsample_mmx jsimd_h2v1_merged_upsample_mmx
+%define _cpp_protection_jsimd_h2v2_merged_upsample_mmx jsimd_h2v2_merged_upsample_mmx
+%define _cpp_protection_jsimd_h2v2_upsample_sse2 jsimd_h2v2_upsample_sse2
+%define _cpp_protection_jsimd_h2v1_upsample_sse2 jsimd_h2v1_upsample_sse2
+%define _cpp_protection_jconst_fancy_upsample_sse2 jconst_fancy_upsample_sse2
+%define _cpp_protection_jsimd_h2v1_fancy_upsample_sse2 jsimd_h2v1_fancy_upsample_sse2
+%define _cpp_protection_jsimd_h2v2_fancy_upsample_sse2 jsimd_h2v2_fancy_upsample_sse2
+%define _cpp_protection_jconst_merged_upsample_sse2 jconst_merged_upsample_sse2
+%define _cpp_protection_jsimd_h2v1_merged_upsample_sse2 jsimd_h2v1_merged_upsample_sse2
+%define _cpp_protection_jsimd_h2v2_merged_upsample_sse2 jsimd_h2v2_merged_upsample_sse2
+%define _cpp_protection_jsimd_convsamp_mmx jsimd_convsamp_mmx
+%define _cpp_protection_jsimd_convsamp_sse2 jsimd_convsamp_sse2
+%define _cpp_protection_jsimd_convsamp_float_3dnow jsimd_convsamp_float_3dnow
+%define _cpp_protection_jsimd_convsamp_float_sse jsimd_convsamp_float_sse
+%define _cpp_protection_jsimd_convsamp_float_sse2 jsimd_convsamp_float_sse2
+%define _cpp_protection_jsimd_fdct_islow_mmx jsimd_fdct_islow_mmx
+%define _cpp_protection_jsimd_fdct_ifast_mmx jsimd_fdct_ifast_mmx
+%define _cpp_protection_jconst_fdct_islow_sse2 jconst_fdct_islow_sse2
+%define _cpp_protection_jsimd_fdct_islow_sse2 jsimd_fdct_islow_sse2
+%define _cpp_protection_jconst_fdct_ifast_sse2 jconst_fdct_ifast_sse2
+%define _cpp_protection_jsimd_fdct_ifast_sse2 jsimd_fdct_ifast_sse2
+%define _cpp_protection_jsimd_fdct_float_3dnow jsimd_fdct_float_3dnow
+%define _cpp_protection_jconst_fdct_float_sse jconst_fdct_float_sse
+%define _cpp_protection_jsimd_fdct_float_sse jsimd_fdct_float_sse
+%define _cpp_protection_jsimd_quantize_mmx jsimd_quantize_mmx
+%define _cpp_protection_jsimd_quantize_sse2 jsimd_quantize_sse2
+%define _cpp_protection_jsimd_quantize_float_3dnow jsimd_quantize_float_3dnow
+%define _cpp_protection_jsimd_quantize_float_sse jsimd_quantize_float_sse
+%define _cpp_protection_jsimd_quantize_float_sse2 jsimd_quantize_float_sse2
+%define _cpp_protection_jsimd_idct_2x2_mmx jsimd_idct_2x2_mmx
+%define _cpp_protection_jsimd_idct_4x4_mmx jsimd_idct_4x4_mmx
+%define _cpp_protection_jconst_idct_red_sse2 jconst_idct_red_sse2
+%define _cpp_protection_jsimd_idct_2x2_sse2 jsimd_idct_2x2_sse2
+%define _cpp_protection_jsimd_idct_4x4_sse2 jsimd_idct_4x4_sse2
+%define _cpp_protection_jsimd_idct_islow_mmx jsimd_idct_islow_mmx
+%define _cpp_protection_jsimd_idct_ifast_mmx jsimd_idct_ifast_mmx
+%define _cpp_protection_jconst_idct_islow_sse2 jconst_idct_islow_sse2
+%define _cpp_protection_jsimd_idct_islow_sse2 jsimd_idct_islow_sse2
+%define _cpp_protection_jconst_idct_ifast_sse2 jconst_idct_ifast_sse2
+%define _cpp_protection_jsimd_idct_ifast_sse2 jsimd_idct_ifast_sse2
+%define _cpp_protection_jsimd_idct_float_3dnow jsimd_idct_float_3dnow
+%define _cpp_protection_jconst_idct_float_sse jconst_idct_float_sse
+%define _cpp_protection_jsimd_idct_float_sse jsimd_idct_float_sse
+%define _cpp_protection_jconst_idct_float_sse2 jconst_idct_float_sse2
+%define _cpp_protection_jsimd_idct_float_sse2 jsimd_idct_float_sse2
 #endif /* NEED_SHORT_EXTERNAL_NAMES */
 

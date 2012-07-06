@@ -2163,13 +2163,13 @@ deb: all
 	sh pkgscripts/makedpkg
 
 @X86_64_TRUE@udmg: all
-@X86_64_TRUE@	sh pkgscripts/makemacpkg -builddir32 ${BUILDDIR32}
+@X86_64_TRUE@	sh pkgscripts/makemacpkg -build32 ${BUILDDIR32}
 
 @X86_64_TRUE@iosdmg: all
-@X86_64_TRUE@	sh pkgscripts/makemacpkg -builddir32 ${BUILDDIR32} -builddirarmv6 ${BUILDDIRARMV6} -builddirarmv7 ${BUILDDIRARMV7}
+@X86_64_TRUE@	sh pkgscripts/makemacpkg -build32 ${BUILDDIR32} -buildarmv6 ${BUILDDIRARMV6} -buildarmv7 ${BUILDDIRARMV7}
 
 @X86_64_FALSE@iosdmg: all
-@X86_64_FALSE@	sh pkgscripts/makemacpkg -builddirarmv6 ${BUILDDIRARMV6} -builddirarmv7 ${BUILDDIRARMV7}
+@X86_64_FALSE@	sh pkgscripts/makemacpkg -buildarmv6 ${BUILDDIRARMV6} -buildarmv7 ${BUILDDIRARMV7}
 
 dmg: all
 	sh pkgscripts/makemacpkg

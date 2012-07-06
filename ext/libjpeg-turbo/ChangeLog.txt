@@ -1,3 +1,50 @@
+1.2.1
+=====
+
+[1] Creating or decoding a JPEG file that uses the RGB colorspace should now
+properly work when the input or output colorspace is one of the libjpeg-turbo
+colorspace extensions.
+
+[2] When libjpeg-turbo was built without SIMD support and merged (non-fancy)
+upsampling was used along with an alpha-enabled colorspace during
+decompression, the unused byte of the decompressed pixels was not being set to
+0xFF.  This has been fixed.  TJUnitTest has also been extended to test for the
+correct behavior of the colorspace extensions when merged upsampling is used.
+
+[3] Fixed a bug whereby the libjpeg-turbo SSE2 SIMD code would not preserve the
+upper 64 bits of xmm6 and xmm7 on Win64 platforms, which violated the Win64
+calling conventions.
+
+[4] Fixed a regression caused by 1.2.0[6] whereby decompressing corrupt JPEG
+images (specifically, images in which the component count was erroneously set
+to a large value) would cause libjpeg-turbo to segfault.
+
+[5] Worked around a severe performance issue with "Bobcat" (AMD Embedded APU)
+processors.  The MASKMOVDQU instruction, which was used by the libjpeg-turbo
+SSE2 SIMD code, is apparently implemented in microcode on AMD processors, and
+it is painfully slow on Bobcat processors in particular.  Eliminating the use
+of this instruction improved performance by an order of magnitude on Bobcat
+processors and by a small amount (typically 5%) on AMD desktop processors.
+
+[6] Added SIMD acceleration for performing 4:2:2 upsampling on NEON-capable ARM
+platforms.  This speeds up the decompression of 4:2:2 JPEGs by 20-25% on such
+platforms.
+
+[7] Fixed a regression caused by 1.2.0[2] whereby, on Linux/x86 platforms
+running the 32-bit SSE2 SIMD code in libjpeg-turbo, decompressing a 4:2:0 or
+4:2:2 JPEG image into a 32-bit (RGBX, BGRX, etc.) buffer without using fancy
+upsampling would produce several incorrect columns of pixels at the right-hand
+side of the output image if each row in the output image was not evenly
+divisible by 16 bytes.
+
+[8] Fixed an issue whereby attempting to build the SIMD extensions with Xcode
+4.3 on OS X platforms would cause NASM to return numerous errors of the form
+"'%define' expects a macro identifier".
+
+[9] Added flags to the TurboJPEG API that allow the caller to force the use of
+either the fast or the accurate DCT/IDCT algorithms in the underlying codec.
+
+
 1.2.0
 =====
 

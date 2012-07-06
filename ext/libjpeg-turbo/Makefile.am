@@ -302,15 +302,15 @@ deb: all
 if X86_64
 
 udmg: all
-	sh pkgscripts/makemacpkg -builddir32 ${BUILDDIR32}
+	sh pkgscripts/makemacpkg -build32 ${BUILDDIR32}
 
 iosdmg: all
-	sh pkgscripts/makemacpkg -builddir32 ${BUILDDIR32} -builddirarmv6 ${BUILDDIRARMV6} -builddirarmv7 ${BUILDDIRARMV7}
+	sh pkgscripts/makemacpkg -build32 ${BUILDDIR32} -buildarmv6 ${BUILDDIRARMV6} -buildarmv7 ${BUILDDIRARMV7}
 
 else
 
 iosdmg: all
-	sh pkgscripts/makemacpkg -builddirarmv6 ${BUILDDIRARMV6} -builddirarmv7 ${BUILDDIRARMV7}
+	sh pkgscripts/makemacpkg -buildarmv6 ${BUILDDIRARMV6} -buildarmv7 ${BUILDDIRARMV7}
 
 endif
 

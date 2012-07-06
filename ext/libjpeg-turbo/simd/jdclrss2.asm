@@ -1,7 +1,7 @@
 ;
 ; jdclrss2.asm - colorspace conversion (SSE2)
 ;
-; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
+; Copyright 2009, 2012 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ;
 ; Based on
 ; x86 SIMD extension for IJG JPEG library
@@ -262,17 +262,13 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
 	movntdq	XMMWORD [edi+0*SIZEOF_XMMWORD], xmmA
 	movntdq	XMMWORD [edi+1*SIZEOF_XMMWORD], xmmD
 	movntdq	XMMWORD [edi+2*SIZEOF_XMMWORD], xmmF
-	add	edi, byte RGB_PIXELSIZE*SIZEOF_XMMWORD	; outptr
 	jmp	short .out0
 .out1:	; --(unaligned)-----------------
-	pcmpeqb    xmmH,xmmH			; xmmH=(all 1's)
-	maskmovdqu xmmA,xmmH			; movntdqu XMMWORD [edi], xmmA
-	add	edi, byte SIZEOF_XMMWORD	; outptr
-	maskmovdqu xmmD,xmmH			; movntdqu XMMWORD [edi], xmmD
-	add	edi, byte SIZEOF_XMMWORD	; outptr
-	maskmovdqu xmmF,xmmH			; movntdqu XMMWORD [edi], xmmF
-	add	edi, byte SIZEOF_XMMWORD	; outptr
+	movdqu	XMMWORD [edi+0*SIZEOF_XMMWORD], xmmA
+	movdqu	XMMWORD [edi+1*SIZEOF_XMMWORD], xmmD
+	movdqu	XMMWORD [edi+2*SIZEOF_XMMWORD], xmmF
 .out0:
+	add	edi, byte RGB_PIXELSIZE*SIZEOF_XMMWORD	; outptr
 	sub	ecx, byte SIZEOF_XMMWORD
 	jz	near .nextrow
 
@@ -283,26 +279,23 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
 	alignx	16,7
 
 .column_st32:
-	pcmpeqb	xmmH,xmmH			; xmmH=(all 1's)
 	lea	ecx, [ecx+ecx*2]		; imul ecx, RGB_PIXELSIZE
 	cmp	ecx, byte 2*SIZEOF_XMMWORD
 	jb	short .column_st16
-	maskmovdqu xmmA,xmmH			; movntdqu XMMWORD [edi], xmmA
-	add	edi, byte SIZEOF_XMMWORD	; outptr
-	maskmovdqu xmmD,xmmH			; movntdqu XMMWORD [edi], xmmD
-	add	edi, byte SIZEOF_XMMWORD	; outptr
+	movdqu	XMMWORD [edi+0*SIZEOF_XMMWORD], xmmA
+	movdqu	XMMWORD [edi+1*SIZEOF_XMMWORD], xmmD
+	add	edi, byte 2*SIZEOF_XMMWORD	; outptr
 	movdqa	xmmA,xmmF
 	sub	ecx, byte 2*SIZEOF_XMMWORD
 	jmp	short .column_st15
 .column_st16:
 	cmp	ecx, byte SIZEOF_XMMWORD
 	jb	short .column_st15
-	maskmovdqu xmmA,xmmH			; movntdqu XMMWORD [edi], xmmA
+	movdqu	XMMWORD [edi+0*SIZEOF_XMMWORD], xmmA
 	add	edi, byte SIZEOF_XMMWORD	; outptr
 	movdqa	xmmA,xmmD
 	sub	ecx, byte SIZEOF_XMMWORD
 .column_st15:
-%ifdef STRICT_MEMORY_ACCESS
 	; Store the lower 8 bytes of xmmA to the output when it has enough
 	; space.
 	cmp	ecx, byte SIZEOF_MMWORD
@@ -336,47 +329,6 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
 	test	ecx, ecx
 	jz	short .nextrow
 	mov	BYTE [edi], al
-%else
-	mov	eax,ecx
-	xor	ecx, byte 0x0F
-	shl	ecx, 2
-	movd	xmmB,ecx
-	psrlq	xmmH,4
-	pcmpeqb	xmmE,xmmE
-	psrlq	xmmH,xmmB
-	psrlq	xmmE,xmmB
-	punpcklbw xmmE,xmmH
-	; ----------------
-	mov	ecx,edi
-	and	ecx, byte SIZEOF_XMMWORD-1
-	jz	short .adj0
-	add	eax,ecx
-	cmp	eax, byte SIZEOF_XMMWORD
-	ja	short .adj0
-	and	edi, byte (-SIZEOF_XMMWORD)	; align to 16-byte boundary
-	shl	ecx, 3			; pslldq xmmA,ecx & pslldq xmmE,ecx
-	movdqa	xmmG,xmmA
-	movdqa	xmmC,xmmE
-	pslldq	xmmA, SIZEOF_XMMWORD/2
-	pslldq	xmmE, SIZEOF_XMMWORD/2
-	movd	xmmD,ecx
-	sub	ecx, byte (SIZEOF_XMMWORD/2)*BYTE_BIT
-	jb	short .adj1
-	movd	xmmF,ecx
-	psllq	xmmA,xmmF
-	psllq	xmmE,xmmF
-	jmp	short .adj0
-.adj1:	neg	ecx
-	movd	xmmF,ecx
-	psrlq	xmmA,xmmF
-	psrlq	xmmE,xmmF
-	psllq	xmmG,xmmD
-	psllq	xmmC,xmmD
-	por	xmmA,xmmG
-	por	xmmE,xmmC
-.adj0:	; ----------------
-	maskmovdqu xmmA,xmmE			; movntdqu XMMWORD [edi], xmmA
-%endif ; STRICT_MEMORY_ACCESS ; ---------------
 
 %else ; RGB_PIXELSIZE == 4 ; -----------
 
@@ -421,19 +373,14 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
 	movntdq	XMMWORD [edi+1*SIZEOF_XMMWORD], xmmD
 	movntdq	XMMWORD [edi+2*SIZEOF_XMMWORD], xmmC
 	movntdq	XMMWORD [edi+3*SIZEOF_XMMWORD], xmmH
-	add	edi, byte RGB_PIXELSIZE*SIZEOF_XMMWORD	; outptr
 	jmp	short .out0
 .out1:	; --(unaligned)-----------------
-	pcmpeqb    xmmE,xmmE			; xmmE=(all 1's)
-	maskmovdqu xmmA,xmmE			; movntdqu XMMWORD [edi], xmmA
-	add	edi, byte SIZEOF_XMMWORD	; outptr
-	maskmovdqu xmmD,xmmE			; movntdqu XMMWORD [edi], xmmD
-	add	edi, byte SIZEOF_XMMWORD	; outptr
-	maskmovdqu xmmC,xmmE			; movntdqu XMMWORD [edi], xmmC
-	add	edi, byte SIZEOF_XMMWORD	; outptr
-	maskmovdqu xmmH,xmmE			; movntdqu XMMWORD [edi], xmmH
-	add	edi, byte SIZEOF_XMMWORD	; outptr
+	movdqu	XMMWORD [edi+0*SIZEOF_XMMWORD], xmmA
+	movdqu	XMMWORD [edi+1*SIZEOF_XMMWORD], xmmD
+	movdqu	XMMWORD [edi+2*SIZEOF_XMMWORD], xmmC
+	movdqu	XMMWORD [edi+3*SIZEOF_XMMWORD], xmmH
 .out0:
+	add	edi, byte RGB_PIXELSIZE*SIZEOF_XMMWORD	; outptr
 	sub	ecx, byte SIZEOF_XMMWORD
 	jz	near .nextrow
 
@@ -444,25 +391,22 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
 	alignx	16,7
 
 .column_st32:
-	pcmpeqb	xmmE,xmmE			; xmmE=(all 1's)
 	cmp	ecx, byte SIZEOF_XMMWORD/2
 	jb	short .column_st16
-	maskmovdqu xmmA,xmmE			; movntdqu XMMWORD [edi], xmmA
-	add	edi, byte SIZEOF_XMMWORD	; outptr
-	maskmovdqu xmmD,xmmE			; movntdqu XMMWORD [edi], xmmD
-	add	edi, byte SIZEOF_XMMWORD	; outptr
+	movdqu	XMMWORD [edi+0*SIZEOF_XMMWORD], xmmA
+	movdqu	XMMWORD [edi+1*SIZEOF_XMMWORD], xmmD
+	add	edi, byte 2*SIZEOF_XMMWORD	; outptr
 	movdqa	xmmA,xmmC
 	movdqa	xmmD,xmmH
 	sub	ecx, byte SIZEOF_XMMWORD/2
 .column_st16:
 	cmp	ecx, byte SIZEOF_XMMWORD/4
 	jb	short .column_st15
-	maskmovdqu xmmA,xmmE			; movntdqu XMMWORD [edi], xmmA
+	movdqu	XMMWORD [edi+0*SIZEOF_XMMWORD], xmmA
 	add	edi, byte SIZEOF_XMMWORD	; outptr
 	movdqa	xmmA,xmmD
 	sub	ecx, byte SIZEOF_XMMWORD/4
 .column_st15:
-%ifdef STRICT_MEMORY_ACCESS
 	; Store two pixels (8 bytes) of xmmA to the output when it has enough
 	; space.
 	cmp	ecx, byte SIZEOF_XMMWORD/8
@@ -477,47 +421,6 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
 	test	ecx, ecx
 	jz	short .nextrow
 	movd	DWORD [edi], xmmA
-%else
-	cmp	ecx, byte SIZEOF_XMMWORD/16
-	jb	short .nextrow
-	mov	eax,ecx
-	xor	ecx, byte 0x03
-	inc	ecx
-	shl	ecx, 4
-	movd	xmmF,ecx
-	psrlq	xmmE,xmmF
-	punpcklbw xmmE,xmmE
-	; ----------------
-	mov	ecx,edi
-	and	ecx, byte SIZEOF_XMMWORD-1
-	jz	short .adj0
-	lea	eax, [ecx+eax*4]	; RGB_PIXELSIZE
-	cmp	eax, byte SIZEOF_XMMWORD
-	ja	short .adj0
-	and	edi, byte (-SIZEOF_XMMWORD)	; align to 16-byte boundary
-	shl	ecx, 3			; pslldq xmmA,ecx & pslldq xmmE,ecx
-	movdqa	xmmB,xmmA
-	movdqa	xmmG,xmmE
-	pslldq	xmmA, SIZEOF_XMMWORD/2
-	pslldq	xmmE, SIZEOF_XMMWORD/2
-	movd	xmmC,ecx
-	sub	ecx, byte (SIZEOF_XMMWORD/2)*BYTE_BIT
-	jb	short .adj1
-	movd	xmmH,ecx
-	psllq	xmmA,xmmH
-	psllq	xmmE,xmmH
-	jmp	short .adj0
-.adj1:	neg	ecx
-	movd	xmmH,ecx
-	psrlq	xmmA,xmmH
-	psrlq	xmmE,xmmH
-	psllq	xmmB,xmmC
-	psllq	xmmG,xmmC
-	por	xmmA,xmmB
-	por	xmmE,xmmG
-.adj0:	; ----------------
-	maskmovdqu xmmA,xmmE			; movntdqu XMMWORD [edi], xmmA
-%endif ; STRICT_MEMORY_ACCESS ; ---------------
 
 %endif ; RGB_PIXELSIZE ; ---------------
 

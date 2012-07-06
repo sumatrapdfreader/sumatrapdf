@@ -36,32 +36,58 @@ for image in $IMAGES; do
 
 	cp $IMGDIR/$image $OUTDIR
 	basename=`basename $image .bmp`
-	$EXEDIR/cjpeg -quality 95 -dct fast -grayscale $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_GRAY_cjpeg.jpg
-	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x2 $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_420_cjpeg.jpg
-	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x1 $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_422_cjpeg.jpg
-	$EXEDIR/cjpeg -quality 95 -dct fast -sample 1x1 $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_444_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -grayscale $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_GRAY_fast_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x2 $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_420_fast_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x1 $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_422_fast_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -sample 1x1 $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_444_fast_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct int -grayscale $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_GRAY_accurate_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct int -sample 2x2 $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_420_accurate_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct int -sample 2x1 $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_422_accurate_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct int -sample 1x1 $IMGDIR/${basename}.bmp >$OUTDIR/${basename}_444_accurate_cjpeg.jpg
 	for samp in GRAY 420 422 444; do
-		$EXEDIR/djpeg -rgb -bmp $OUTDIR/${basename}_${samp}_cjpeg.jpg >$OUTDIR/${basename}_${samp}_djpeg.bmp
+		$EXEDIR/djpeg -rgb -bmp $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_default_djpeg.bmp
+		$EXEDIR/djpeg -dct fast -rgb -bmp $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_fast_djpeg.bmp
+		$EXEDIR/djpeg -dct int -rgb -bmp $OUTDIR/${basename}_${samp}_accurate_cjpeg.jpg >$OUTDIR/${basename}_${samp}_accurate_djpeg.bmp
+	done
+	for samp in 420 422; do
+		$EXEDIR/djpeg -nosmooth -bmp $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_default_nosmooth_djpeg.bmp
+		$EXEDIR/djpeg -dct fast -nosmooth -bmp $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_fast_nosmooth_djpeg.bmp
+		$EXEDIR/djpeg -dct int -nosmooth -bmp $OUTDIR/${basename}_${samp}_accurate_cjpeg.jpg >$OUTDIR/${basename}_${samp}_accurate_nosmooth_djpeg.bmp
 	done
 
 	# Compression
-	for samp in GRAY 420 422 444; do
-		runme $JAVA TJExample $OUTDIR/$image $OUTDIR/${basename}_${samp}.jpg -q 95 -samp ${samp}
-		runme cmp $OUTDIR/${basename}_${samp}.jpg $OUTDIR/${basename}_${samp}_cjpeg.jpg
+	for dct in fast accurate; do
+		for samp in GRAY 420 422 444; do
+			runme $JAVA TJExample $OUTDIR/$image $OUTDIR/${basename}_${samp}_${dct}.jpg -q 95 -samp ${samp} -${dct}dct
+			runme cmp $OUTDIR/${basename}_${samp}_${dct}.jpg $OUTDIR/${basename}_${samp}_${dct}_cjpeg.jpg
+		done
 	done
 
 	# Decompression
-	for samp in 420 GRAY 420 422 444; do
-		runme $JAVA TJExample $OUTDIR/${basename}_${samp}.jpg $OUTDIR/${basename}_${samp}.bmp
-		runme cmp -i 54:54 $OUTDIR/${basename}_${samp}.bmp $OUTDIR/${basename}_${samp}_djpeg.bmp
-		rm $OUTDIR/${basename}_${samp}.bmp
+	for dct in fast accurate default; do
+		srcdct=${dct}
+		dctarg=-${dct}dct
+		if [ "${dct}" = "default" ]; then
+			srcdct=fast
+			dctarg=
+		fi
+		for samp in GRAY 420 422 444; do
+			runme $JAVA TJExample $OUTDIR/${basename}_${samp}_${srcdct}.jpg $OUTDIR/${basename}_${samp}_${dct}.bmp ${dctarg}
+			runme cmp -i 54:54 $OUTDIR/${basename}_${samp}_${dct}.bmp $OUTDIR/${basename}_${samp}_${dct}_djpeg.bmp
+			rm $OUTDIR/${basename}_${samp}_${dct}.bmp
+		done
+		for samp in 420 422; do
+			runme $JAVA TJExample $OUTDIR/${basename}_${samp}_${srcdct}.jpg $OUTDIR/${basename}_${samp}_${dct}_nosmooth.bmp -fastupsample ${dctarg}
+			runme cmp -i 54:54 $OUTDIR/${basename}_${samp}_${dct}_nosmooth.bmp $OUTDIR/${basename}_${samp}_${dct}_nosmooth_djpeg.bmp
+			rm $OUTDIR/${basename}_${samp}_${dct}_nosmooth.bmp
+		done
 	done
 
 	# Scaled decompression
 	for scale in 2 4 8; do
 		for samp in GRAY 420 422 444; do
-			$EXEDIR/djpeg -rgb -bmp -scale 1/${scale} $OUTDIR/${basename}_${samp}_cjpeg.jpg >$OUTDIR/${basename}_${samp}_1_${scale}_djpeg.bmp
-			runme $JAVA TJExample $OUTDIR/${basename}_${samp}.jpg $OUTDIR/${basename}_${samp}_1_${scale}.bmp -scale 1/${scale}
+			$EXEDIR/djpeg -rgb -bmp -scale 1/${scale} $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_1_${scale}_djpeg.bmp
+			runme $JAVA TJExample $OUTDIR/${basename}_${samp}_fast.jpg $OUTDIR/${basename}_${samp}_1_${scale}.bmp -scale 1/${scale}
 			runme cmp -i 54:54 $OUTDIR/${basename}_${samp}_1_${scale}.bmp $OUTDIR/${basename}_${samp}_1_${scale}_djpeg.bmp
 			rm $OUTDIR/${basename}_${samp}_1_${scale}.bmp
 		done
@@ -69,20 +95,26 @@ for image in $IMAGES; do
 
 	# Transforms
 	for samp in GRAY 420 422 444; do
-		$EXEDIR/jpegtran -crop 70x60+16+16 -flip horizontal -trim $OUTDIR/${basename}_${samp}.jpg >$OUTDIR/${basename}_${samp}_hflip_jpegtran.jpg
-		$EXEDIR/jpegtran -crop 70x60+16+16 -flip vertical -trim $OUTDIR/${basename}_${samp}.jpg >$OUTDIR/${basename}_${samp}_vflip_jpegtran.jpg
-		$EXEDIR/jpegtran -crop 70x60+16+16 -transpose -trim $OUTDIR/${basename}_${samp}.jpg >$OUTDIR/${basename}_${samp}_transpose_jpegtran.jpg
-		$EXEDIR/jpegtran -crop 70x60+16+16 -transverse -trim $OUTDIR/${basename}_${samp}.jpg >$OUTDIR/${basename}_${samp}_transverse_jpegtran.jpg
-		$EXEDIR/jpegtran -crop 70x60+16+16 -rotate 90 -trim $OUTDIR/${basename}_${samp}.jpg >$OUTDIR/${basename}_${samp}_rot90_jpegtran.jpg
-		$EXEDIR/jpegtran -crop 70x60+16+16 -rotate 180 -trim $OUTDIR/${basename}_${samp}.jpg >$OUTDIR/${basename}_${samp}_rot180_jpegtran.jpg
-		$EXEDIR/jpegtran -crop 70x60+16+16 -rotate 270 -trim $OUTDIR/${basename}_${samp}.jpg >$OUTDIR/${basename}_${samp}_rot270_jpegtran.jpg
+		$EXEDIR/jpegtran -crop 70x60+16+16 -flip horizontal -trim $OUTDIR/${basename}_${samp}_fast.jpg >$OUTDIR/${basename}_${samp}_hflip_jpegtran.jpg
+		$EXEDIR/jpegtran -crop 70x60+16+16 -flip vertical -trim $OUTDIR/${basename}_${samp}_fast.jpg >$OUTDIR/${basename}_${samp}_vflip_jpegtran.jpg
+		$EXEDIR/jpegtran -crop 70x60+16+16 -transpose -trim $OUTDIR/${basename}_${samp}_fast.jpg >$OUTDIR/${basename}_${samp}_transpose_jpegtran.jpg
+		$EXEDIR/jpegtran -crop 70x60+16+16 -transverse -trim $OUTDIR/${basename}_${samp}_fast.jpg >$OUTDIR/${basename}_${samp}_transverse_jpegtran.jpg
+		$EXEDIR/jpegtran -crop 70x60+16+16 -rotate 90 -trim $OUTDIR/${basename}_${samp}_fast.jpg >$OUTDIR/${basename}_${samp}_rot90_jpegtran.jpg
+		$EXEDIR/jpegtran -crop 70x60+16+16 -rotate 180 -trim $OUTDIR/${basename}_${samp}_fast.jpg >$OUTDIR/${basename}_${samp}_rot180_jpegtran.jpg
+		$EXEDIR/jpegtran -crop 70x60+16+16 -rotate 270 -trim $OUTDIR/${basename}_${samp}_fast.jpg >$OUTDIR/${basename}_${samp}_rot270_jpegtran.jpg
 	done
 	for xform in hflip vflip transpose transverse rot90 rot180 rot270; do
 		for samp in GRAY 420 422 444; do
-			runme $JAVA TJExample $OUTDIR/${basename}_${samp}.jpg $OUTDIR/${basename}_${samp}_${xform}.jpg -$xform -crop 16,16,70x60
+			runme $JAVA TJExample $OUTDIR/${basename}_${samp}_fast.jpg $OUTDIR/${basename}_${samp}_${xform}.jpg -$xform -crop 16,16,70x60
 			runme cmp $OUTDIR/${basename}_${samp}_${xform}.jpg $OUTDIR/${basename}_${samp}_${xform}_jpegtran.jpg
 			$EXEDIR/djpeg -rgb -bmp $OUTDIR/${basename}_${samp}_${xform}_jpegtran.jpg >$OUTDIR/${basename}_${samp}_${xform}_jpegtran.bmp
-			runme $JAVA TJExample $OUTDIR/${basename}_${samp}.jpg $OUTDIR/${basename}_${samp}_${xform}.bmp -$xform -crop 16,16,70x60
+			runme $JAVA TJExample $OUTDIR/${basename}_${samp}_fast.jpg $OUTDIR/${basename}_${samp}_${xform}.bmp -$xform -crop 16,16,70x60
+			runme cmp -i 54:54 $OUTDIR/${basename}_${samp}_${xform}.bmp $OUTDIR/${basename}_${samp}_${xform}_jpegtran.bmp
+			rm $OUTDIR/${basename}_${samp}_${xform}.bmp
+		done
+		for samp in 420 422; do
+			$EXEDIR/djpeg -nosmooth -rgb -bmp $OUTDIR/${basename}_${samp}_${xform}_jpegtran.jpg >$OUTDIR/${basename}_${samp}_${xform}_jpegtran.bmp
+			runme $JAVA TJExample $OUTDIR/${basename}_${samp}_fast.jpg $OUTDIR/${basename}_${samp}_${xform}.bmp -$xform -crop 16,16,70x60 -fastupsample
 			runme cmp -i 54:54 $OUTDIR/${basename}_${samp}_${xform}.bmp $OUTDIR/${basename}_${samp}_${xform}_jpegtran.bmp
 			rm $OUTDIR/${basename}_${samp}_${xform}.bmp
 		done
@@ -91,9 +123,9 @@ for image in $IMAGES; do
 	# Grayscale transform
 	for xform in hflip vflip transpose transverse rot90 rot180 rot270; do
 		for samp in GRAY 444 422 420; do
-			runme $JAVA TJExample $OUTDIR/${basename}_${samp}.jpg $OUTDIR/${basename}_${samp}_${xform}.jpg -$xform -grayscale -crop 16,16,70x60
+			runme $JAVA TJExample $OUTDIR/${basename}_${samp}_fast.jpg $OUTDIR/${basename}_${samp}_${xform}.jpg -$xform -grayscale -crop 16,16,70x60
 			runme cmp $OUTDIR/${basename}_${samp}_${xform}.jpg $OUTDIR/${basename}_GRAY_${xform}_jpegtran.jpg
-			runme $JAVA TJExample $OUTDIR/${basename}_${samp}.jpg $OUTDIR/${basename}_${samp}_${xform}.bmp -$xform -grayscale -crop 16,16,70x60
+			runme $JAVA TJExample $OUTDIR/${basename}_${samp}_fast.jpg $OUTDIR/${basename}_${samp}_${xform}.bmp -$xform -grayscale -crop 16,16,70x60
 			runme cmp -i 54:54 $OUTDIR/${basename}_${samp}_${xform}.bmp $OUTDIR/${basename}_GRAY_${xform}_jpegtran.bmp
 			rm $OUTDIR/${basename}_${samp}_${xform}.bmp
 		done
@@ -104,7 +136,7 @@ for image in $IMAGES; do
 		for samp in GRAY 444 422 420; do
 			for scale in 2 4 8; do
 				$EXEDIR/djpeg -rgb -bmp -scale 1/${scale} $OUTDIR/${basename}_${samp}_${xform}_jpegtran.jpg >$OUTDIR/${basename}_${samp}_${xform}_1_${scale}_jpegtran.bmp
-				runme $JAVA TJExample $OUTDIR/${basename}_${samp}.jpg $OUTDIR/${basename}_${samp}_${xform}_1_${scale}.bmp -$xform -scale 1/${scale} -crop 16,16,70x60
+				runme $JAVA TJExample $OUTDIR/${basename}_${samp}_fast.jpg $OUTDIR/${basename}_${samp}_${xform}_1_${scale}.bmp -$xform -scale 1/${scale} -crop 16,16,70x60
 				runme cmp -i 54:54 $OUTDIR/${basename}_${samp}_${xform}_1_${scale}.bmp $OUTDIR/${basename}_${samp}_${xform}_1_${scale}_jpegtran.bmp
 				rm $OUTDIR/${basename}_${samp}_${xform}_1_${scale}.bmp
 			done

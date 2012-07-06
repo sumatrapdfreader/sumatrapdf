@@ -39,63 +39,80 @@ for image in $IMAGES; do
 
 	cp $IMGDIR/$image $OUTDIR
 	basename=`basename $image .${EXT}`
-	$EXEDIR/cjpeg -quality 95 -dct fast -grayscale $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_GRAY_cjpeg.jpg
-	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x2 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_420_cjpeg.jpg
-	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x1 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_422_cjpeg.jpg
-	$EXEDIR/cjpeg -quality 95 -dct fast -sample 1x1 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_444_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -grayscale $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_GRAY_fast_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x2 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_420_fast_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -sample 2x1 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_422_fast_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct fast -sample 1x1 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_444_fast_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct int -grayscale $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_GRAY_accurate_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct int -sample 2x2 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_420_accurate_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct int -sample 2x1 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_422_accurate_cjpeg.jpg
+	$EXEDIR/cjpeg -quality 95 -dct int -sample 1x1 $IMGDIR/${basename}.${EXT} >$OUTDIR/${basename}_444_accurate_cjpeg.jpg
 	for samp in GRAY 420 422 444; do
-		$EXEDIR/djpeg -rgb $BMPARG $OUTDIR/${basename}_${samp}_cjpeg.jpg >$OUTDIR/${basename}_${samp}_djpeg.${EXT}
+		$EXEDIR/djpeg -rgb $BMPARG $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_default_djpeg.${EXT}
+		$EXEDIR/djpeg -dct fast -rgb $BMPARG $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_fast_djpeg.${EXT}
+		$EXEDIR/djpeg -dct int -rgb $BMPARG $OUTDIR/${basename}_${samp}_accurate_cjpeg.jpg >$OUTDIR/${basename}_${samp}_accurate_djpeg.${EXT}
 	done
 	for samp in 420 422; do
-		$EXEDIR/djpeg -nosmooth $BMPARG $OUTDIR/${basename}_${samp}_cjpeg.jpg >$OUTDIR/${basename}_${samp}_djpeg_nosmooth.${EXT}
+		$EXEDIR/djpeg -nosmooth $BMPARG $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_default_nosmooth_djpeg.${EXT}
+		$EXEDIR/djpeg -dct fast -nosmooth $BMPARG $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_fast_nosmooth_djpeg.${EXT}
+		$EXEDIR/djpeg -dct int -nosmooth $BMPARG $OUTDIR/${basename}_${samp}_accurate_cjpeg.jpg >$OUTDIR/${basename}_${samp}_accurate_nosmooth_djpeg.${EXT}
 	done
 
 	# Compression
-	runme $EXEDIR/tjbench $OUTDIR/$image 95 -rgb -quiet -benchtime 0.01
-	for s in GRAY 420 422 444; do
-		runme cmp $OUTDIR/${basename}_${s}_Q95.jpg $OUTDIR/${basename}_${s}_cjpeg.jpg
-	done
-
-	# Tiled compression & decompression
-	runme $EXEDIR/tjbench $OUTDIR/$image 95 -rgb -tile -quiet -benchtime 0.01
-	for samp in GRAY 444; do
-		for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
-			$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
-			runme cmp $i $OUTDIR/${basename}_${samp}_djpeg.${EXT}
-			rm $i
-		done
-	done
-	runme $EXEDIR/tjbench $OUTDIR/$image 95 -rgb -tile -quiet -benchtime 0.01 -fastupsample
-	for samp in 420 422; do
-		for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
-			$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
-			runme cmp $i $OUTDIR/${basename}_${samp}_djpeg_nosmooth.${EXT}
-			rm $i
+	for dct in accurate fast; do
+		runme $EXEDIR/tjbench $OUTDIR/$image 95 -rgb -quiet -benchtime 0.01 -${dct}dct
+		for samp in GRAY 420 422 444; do
+			runme cmp $OUTDIR/${basename}_${samp}_Q95.jpg $OUTDIR/${basename}_${samp}_${dct}_cjpeg.jpg
 		done
 	done
 
-	# Tiled decompression
-	for samp in GRAY 444; do
-		runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -tile -quiet -benchtime 0.01
-		for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
-			$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
-			runme cmp $i $OUTDIR/${basename}_${samp}_djpeg.${EXT}
-			rm $i
+	for dct in fast accurate default; do
+		dctarg=-${dct}dct
+		if [ "${dct}" = "default" ]; then
+			dctarg=
+		fi
+
+		# Tiled compression & decompression
+		runme $EXEDIR/tjbench $OUTDIR/$image 95 -rgb -tile -quiet -benchtime 0.01 ${dctarg}
+		for samp in GRAY 444; do
+			for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+				$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+				runme cmp $i $OUTDIR/${basename}_${samp}_${dct}_djpeg.${EXT}
+				rm $i
+			done
 		done
-	done
-	for samp in 420 422; do
-		runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -tile -quiet -benchtime 0.01 -fastupsample
-		for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
-			$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
-			runme cmp $i $OUTDIR/${basename}_${samp}_djpeg_nosmooth.${EXT}
-			rm $i
+		runme $EXEDIR/tjbench $OUTDIR/$image 95 -rgb -tile -quiet -benchtime 0.01 -fastupsample ${dctarg}
+		for samp in 420 422; do
+			for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+				$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+				runme cmp $i $OUTDIR/${basename}_${samp}_${dct}_nosmooth_djpeg.${EXT}
+				rm $i
+			done
+		done
+
+		# Tiled decompression
+		for samp in GRAY 444; do
+			runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -tile -quiet -benchtime 0.01 ${dctarg}
+			for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+				$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+				runme cmp $i $OUTDIR/${basename}_${samp}_${dct}_djpeg.${EXT}
+				rm $i
+			done
+		done
+		for samp in 420 422; do
+			runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -tile -quiet -benchtime 0.01 -fastupsample ${dctarg}
+			for i in $OUTDIR/${basename}_${samp}_Q95_[0-9]*[0-9]x[0-9]*[0-9].${EXT} \
+				$OUTDIR/${basename}_${samp}_Q95_full.${EXT}; do
+				runme cmp $i $OUTDIR/${basename}_${samp}_${dct}_nosmooth_djpeg.${EXT}
+				rm $i
+			done
 		done
 	done
 
 	# Scaled decompression
 	for scale in 2 4 8; do
 		for samp in GRAY 420 422 444; do
-			$EXEDIR/djpeg -rgb -scale 1/${scale} $BMPARG $OUTDIR/${basename}_${samp}_cjpeg.jpg >$OUTDIR/${basename}_${samp}_1_${scale}_djpeg.${EXT}
+			$EXEDIR/djpeg -rgb -scale 1/${scale} $BMPARG $OUTDIR/${basename}_${samp}_fast_cjpeg.jpg >$OUTDIR/${basename}_${samp}_1_${scale}_djpeg.${EXT}
 			runme $EXEDIR/tjbench $OUTDIR/${basename}_${samp}_Q95.jpg $BMPARG -scale 1/${scale} -quiet -benchtime 0.01
 			runme cmp $OUTDIR/${basename}_${samp}_Q95_1_${scale}.${EXT} $OUTDIR/${basename}_${samp}_1_${scale}_djpeg.${EXT}
 			rm $OUTDIR/${basename}_${samp}_Q95_1_${scale}.${EXT}

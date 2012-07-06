@@ -203,7 +203,7 @@ installed.
 
 Add
 
-  CFLAGS='-O3 -m32' LDFLAGS=-m32
+  --host i686-apple-darwin CFLAGS='-O3 -m32' LDFLAGS=-m32
 
 to the configure command line.
 
@@ -228,7 +228,8 @@ MacPorts, must be installed.
 
 Add
 
-  CFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
+  --host i686-apple-darwin \
+    CFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
     -mmacosx-version-min=10.4 -O3 -m32' \
     LDFLAGS='-isysroot /Developer/SDKs/MacOSX10.4u.sdk \
     -mmacosx-version-min=10.4 -m32'
@@ -258,8 +259,8 @@ to the configure command line.  NASM 2.07 or later from FreeBSD ports must be
 installed.
 
 
-Sun Studio
-----------
+Oracle Solaris Studio
+---------------------
 
 Add
 
@@ -268,7 +269,7 @@ Add
 to the configure command line.  libjpeg-turbo will automatically be built with
 the maximum optimization level (-xO5) unless you override CFLAGS.
 
-To build a 64-bit version of libjpeg-turbo using Sun Studio, add
+To build a 64-bit version of libjpeg-turbo using Oracle Solaris Studio, add
 
   --host x86_64-pc-solaris CC=cc CFLAGS='-xO5 -m64' LDFLAGS=-m64
 

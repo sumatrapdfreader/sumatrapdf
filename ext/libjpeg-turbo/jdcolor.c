@@ -3,7 +3,7 @@
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2009, 2011, D. R. Commander.
+ * Copyright (C) 2009, 2011-2012, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -80,6 +80,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #define RGB_PIXELSIZE EXT_RGB_PIXELSIZE
 #define ycc_rgb_convert_internal ycc_extrgb_convert_internal
 #define gray_rgb_convert_internal gray_extrgb_convert_internal
+#define rgb_rgb_convert_internal rgb_extrgb_convert_internal
 #include "jdcolext.c"
 #undef RGB_RED
 #undef RGB_GREEN
@@ -87,6 +88,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #undef RGB_PIXELSIZE
 #undef ycc_rgb_convert_internal
 #undef gray_rgb_convert_internal
+#undef rgb_rgb_convert_internal
 
 #define RGB_RED EXT_RGBX_RED
 #define RGB_GREEN EXT_RGBX_GREEN
@@ -95,6 +97,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #define RGB_PIXELSIZE EXT_RGBX_PIXELSIZE
 #define ycc_rgb_convert_internal ycc_extrgbx_convert_internal
 #define gray_rgb_convert_internal gray_extrgbx_convert_internal
+#define rgb_rgb_convert_internal rgb_extrgbx_convert_internal
 #include "jdcolext.c"
 #undef RGB_RED
 #undef RGB_GREEN
@@ -103,6 +106,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #undef RGB_PIXELSIZE
 #undef ycc_rgb_convert_internal
 #undef gray_rgb_convert_internal
+#undef rgb_rgb_convert_internal
 
 #define RGB_RED EXT_BGR_RED
 #define RGB_GREEN EXT_BGR_GREEN
@@ -110,6 +114,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #define RGB_PIXELSIZE EXT_BGR_PIXELSIZE
 #define ycc_rgb_convert_internal ycc_extbgr_convert_internal
 #define gray_rgb_convert_internal gray_extbgr_convert_internal
+#define rgb_rgb_convert_internal rgb_extbgr_convert_internal
 #include "jdcolext.c"
 #undef RGB_RED
 #undef RGB_GREEN
@@ -117,6 +122,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #undef RGB_PIXELSIZE
 #undef ycc_rgb_convert_internal
 #undef gray_rgb_convert_internal
+#undef rgb_rgb_convert_internal
 
 #define RGB_RED EXT_BGRX_RED
 #define RGB_GREEN EXT_BGRX_GREEN
@@ -125,6 +131,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #define RGB_PIXELSIZE EXT_BGRX_PIXELSIZE
 #define ycc_rgb_convert_internal ycc_extbgrx_convert_internal
 #define gray_rgb_convert_internal gray_extbgrx_convert_internal
+#define rgb_rgb_convert_internal rgb_extbgrx_convert_internal
 #include "jdcolext.c"
 #undef RGB_RED
 #undef RGB_GREEN
@@ -133,6 +140,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #undef RGB_PIXELSIZE
 #undef ycc_rgb_convert_internal
 #undef gray_rgb_convert_internal
+#undef rgb_rgb_convert_internal
 
 #define RGB_RED EXT_XBGR_RED
 #define RGB_GREEN EXT_XBGR_GREEN
@@ -141,6 +149,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #define RGB_PIXELSIZE EXT_XBGR_PIXELSIZE
 #define ycc_rgb_convert_internal ycc_extxbgr_convert_internal
 #define gray_rgb_convert_internal gray_extxbgr_convert_internal
+#define rgb_rgb_convert_internal rgb_extxbgr_convert_internal
 #include "jdcolext.c"
 #undef RGB_RED
 #undef RGB_GREEN
@@ -149,6 +158,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #undef RGB_PIXELSIZE
 #undef ycc_rgb_convert_internal
 #undef gray_rgb_convert_internal
+#undef rgb_rgb_convert_internal
 
 #define RGB_RED EXT_XRGB_RED
 #define RGB_GREEN EXT_XRGB_GREEN
@@ -157,6 +167,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #define RGB_PIXELSIZE EXT_XRGB_PIXELSIZE
 #define ycc_rgb_convert_internal ycc_extxrgb_convert_internal
 #define gray_rgb_convert_internal gray_extxrgb_convert_internal
+#define rgb_rgb_convert_internal rgb_extxrgb_convert_internal
 #include "jdcolext.c"
 #undef RGB_RED
 #undef RGB_GREEN
@@ -165,6 +176,7 @@ typedef my_color_deconverter * my_cconvert_ptr;
 #undef RGB_PIXELSIZE
 #undef ycc_rgb_convert_internal
 #undef gray_rgb_convert_internal
+#undef rgb_rgb_convert_internal
 
 
 /*
@@ -353,6 +365,51 @@ gray_rgb_convert (j_decompress_ptr cinfo,
 
 
 /*
+ * Convert plain RGB to extended RGB
+ */
+
+METHODDEF(void)
+rgb_rgb_convert (j_decompress_ptr cinfo,
+		  JSAMPIMAGE input_buf, JDIMENSION input_row,
+		  JSAMPARRAY output_buf, int num_rows)
+{
+  switch (cinfo->out_color_space) {
+    case JCS_EXT_RGB:
+      rgb_extrgb_convert_internal(cinfo, input_buf, input_row, output_buf,
+                                  num_rows);
+      break;
+    case JCS_EXT_RGBX:
+    case JCS_EXT_RGBA:
+      rgb_extrgbx_convert_internal(cinfo, input_buf, input_row, output_buf,
+                                   num_rows);
+      break;
+    case JCS_EXT_BGR:
+      rgb_extbgr_convert_internal(cinfo, input_buf, input_row, output_buf,
+                                  num_rows);
+      break;
+    case JCS_EXT_BGRX:
+    case JCS_EXT_BGRA:
+      rgb_extbgrx_convert_internal(cinfo, input_buf, input_row, output_buf,
+                                   num_rows);
+      break;
+    case JCS_EXT_XBGR:
+    case JCS_EXT_ABGR:
+      rgb_extxbgr_convert_internal(cinfo, input_buf, input_row, output_buf,
+                                   num_rows);
+      break;
+    case JCS_EXT_XRGB:
+    case JCS_EXT_ARGB:
+      rgb_extxrgb_convert_internal(cinfo, input_buf, input_row, output_buf,
+                                   num_rows);
+      break;
+    default:
+      rgb_rgb_convert_internal(cinfo, input_buf, input_row, output_buf,
+                               num_rows);
+      break;
+  }
+}
+
+/*
  * Adobe-style YCCK->CMYK conversion.
  * We convert YCbCr to R=1-C, G=1-M, and B=1-Y using the same
  * conversion as above, while passing K (black) unchanged.
@@ -494,9 +551,14 @@ jinit_color_deconverter (j_decompress_ptr cinfo)
       }
     } else if (cinfo->jpeg_color_space == JCS_GRAYSCALE) {
       cconvert->pub.color_convert = gray_rgb_convert;
-    } else if (cinfo->jpeg_color_space == cinfo->out_color_space &&
-      rgb_pixelsize[cinfo->out_color_space] == 3) {
-      cconvert->pub.color_convert = null_convert;
+    } else if (cinfo->jpeg_color_space == JCS_RGB) {
+      if (rgb_red[cinfo->out_color_space] == 0 &&
+          rgb_green[cinfo->out_color_space] == 1 &&
+          rgb_blue[cinfo->out_color_space] == 2 &&
+          rgb_pixelsize[cinfo->out_color_space] == 3)
+        cconvert->pub.color_convert = null_convert;
+      else
+        cconvert->pub.color_convert = rgb_rgb_convert;
     } else
       ERREXIT(cinfo, JERR_CONVERSION_NOTIMPL);
     break;

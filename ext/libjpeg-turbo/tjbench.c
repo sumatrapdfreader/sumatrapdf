@@ -667,7 +667,7 @@ void usage(char *progname)
 {
 	int i;
 	printf("USAGE: %s\n", progname);
-	printf("       <Inputfile (BMP|PPM)> <%% Quality> [options]\n\n");
+	printf("       <Inputfile (BMP|PPM)> <Quality> [options]\n\n");
 	printf("       %s\n", progname);
 	printf("       <Inputfile (JPG)> [options]\n\n");
 	printf("Options:\n\n");
@@ -680,8 +680,12 @@ void usage(char *progname)
 	printf("     Force MMX, SSE, SSE2, or SSE3 code paths in the underlying codec\n");
 	printf("-rgb, -bgr, -rgbx, -bgrx, -xbgr, -xrgb =\n");
 	printf("     Test the specified color conversion path in the codec (default: BGR)\n");
-	printf("-fastupsample = Use fast, inaccurate upsampling code to perform 4:2:2 and 4:2:0\n");
-	printf("     YUV decoding in libjpeg decompressor\n");
+	printf("-fastupsample = Use the fastest chrominance upsampling algorithm available in\n");
+	printf("     the underlying codec\n");
+	printf("-fastdct = Use the fastest DCT/IDCT algorithms available in the underlying\n");
+	printf("     codec\n");
+	printf("-accuratedct = Use the most accurate DCT/IDCT algorithms available in the\n");
+	printf("     underlying codec\n");
 	printf("-quiet = Output results in tabular rather than verbose format\n");
 	printf("-yuvencode = Encode RGB input as planar YUV rather than compressing as JPEG\n");
 	printf("-yuvdecode = Decode JPEG image to planar YUV rather than RGB\n");
@@ -794,6 +798,16 @@ int main(int argc, char *argv[])
 			{
 				printf("Using fast upsampling code\n\n");
 				flags|=TJFLAG_FASTUPSAMPLE;
+			}
+			if(!strcasecmp(argv[i], "-fastdct"))
+			{
+				printf("Using fastest DCT/IDCT algorithm\n\n");
+				flags|=TJFLAG_FASTDCT;
+			}
+			if(!strcasecmp(argv[i], "-accuratedct"))
+			{
+				printf("Using most accurate DCT/IDCT algorithm\n\n");
+				flags|=TJFLAG_ACCURATEDCT;
 			}
 			if(!strcasecmp(argv[i], "-rgb")) pf=TJPF_RGB;
 			if(!strcasecmp(argv[i], "-rgbx")) pf=TJPF_RGBX;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C)2009-2011 D. R. Commander.  All Rights Reserved.
+ * Copyright (C)2009-2012 D. R. Commander.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -226,28 +226,30 @@ static const int tjPixelSize[TJ_NUMPF] = {3, 3, 4, 4, 4, 4, 1, 4, 4, 4, 4};
  */
 #define TJFLAG_BOTTOMUP        2
 /**
- * Turn off CPU auto-detection and force TurboJPEG to use MMX code (IPP and
- * 32-bit libjpeg-turbo versions only.)
+ * Turn off CPU auto-detection and force TurboJPEG to use MMX code (if the
+ * underlying codec supports it.)
  */
 #define TJFLAG_FORCEMMX        8
 /**
- * Turn off CPU auto-detection and force TurboJPEG to use SSE code (32-bit IPP
- * and 32-bit libjpeg-turbo versions only)
+ * Turn off CPU auto-detection and force TurboJPEG to use SSE code (if the
+ * underlying codec supports it.)
  */
 #define TJFLAG_FORCESSE       16
 /**
- * Turn off CPU auto-detection and force TurboJPEG to use SSE2 code (32-bit IPP
- * and 32-bit libjpeg-turbo versions only)
+ * Turn off CPU auto-detection and force TurboJPEG to use SSE2 code (if the
+ * underlying codec supports it.)
  */
 #define TJFLAG_FORCESSE2      32
 /**
- * Turn off CPU auto-detection and force TurboJPEG to use SSE3 code (64-bit IPP
- * version only)
+ * Turn off CPU auto-detection and force TurboJPEG to use SSE3 code (if the
+ * underlying codec supports it.)
  */
 #define TJFLAG_FORCESSE3     128
 /**
- * Use fast, inaccurate chrominance upsampling routines in the JPEG
- * decompressor (libjpeg and libjpeg-turbo versions only)
+ * When decompressing, use the fastest chrominance upsampling algorithm
+ * available in the underlying codec.  The default is to use smooth upsampling,
+ * which creates a smooth transition between neighboring chrominance components
+ * in order to reduce upsampling artifacts in the decompressed image.
  */
 #define TJFLAG_FASTUPSAMPLE  256
 /**
@@ -258,6 +260,24 @@ static const int tjPixelSize[TJ_NUMPF] = {3, 3, 4, 4, 4, 4, 1, 4, 4, 4, 4};
  * versions of TurboJPEG.
  */
 #define TJFLAG_NOREALLOC     1024
+/**
+ * Use the fastest DCT/IDCT algorithm available in the underlying codec.  The
+ * default if this flag is not specified is implementation-specific.  The
+ * libjpeg implementation, for example, uses the fast algorithm by default when
+ * compressing, because this has been shown to have only a very slight effect
+ * on accuracy, but it uses the accurate algorithm when decompressing, because
+ * this has been shown to have a larger effect.
+ */
+#define TJFLAG_FASTDCT       2048
+/**
+ * Use the most accurate DCT/IDCT algorithm available in the underlying codec.
+ * The default if this flag is not specified is implementation-specific.  The
+ * libjpeg implementation, for example, uses the fast algorithm by default when
+ * compressing, because this has been shown to have only a very slight effect
+ * on accuracy, but it uses the accurate algorithm when decompressing, because
+ * this has been shown to have a larger effect.
+ */
+#define TJFLAG_ACCURATEDCT   4096
 
 
 /**

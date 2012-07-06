@@ -522,6 +522,10 @@ EXTERN(void) jsimd_h2v1_extxrgb_merged_upsample_sse2
         JPP((JDIMENSION output_width, JSAMPIMAGE input_buf,
              JDIMENSION in_row_group_ctr, JSAMPARRAY output_buf));
 
+EXTERN(void) jsimd_h2v1_fancy_upsample_neon
+        JPP((int max_v_samp_factor, JDIMENSION downsampled_width,
+             JSAMPARRAY input_data, JSAMPARRAY * output_data_ptr));
+
 /* SIMD Sample Conversion */
 EXTERN(void) jsimd_convsamp_mmx JPP((JSAMPARRAY sample_data,
                                      JDIMENSION start_col,

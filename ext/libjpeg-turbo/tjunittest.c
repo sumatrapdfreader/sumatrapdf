@@ -1,5 +1,5 @@
 /*
- * Copyright (C)2009-2011 D. R. Commander.  All Rights Reserved.
+ * Copyright (C)2009-2012 D. R. Commander.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -77,7 +77,7 @@ const int _onlyGray[]={TJPF_GRAY};
 const int _onlyRGB[]={TJPF_RGB};
 
 enum {YUVENCODE=1, YUVDECODE};
-int yuv=0, alloc=0, alpha=0;
+int yuv=0, alloc=0;
 
 int exitStatus=0;
 #define bailout() {exitStatus=-1;  goto bailout;}
@@ -502,6 +502,8 @@ void doTest(int w, int h, const int *formats, int nformats, int subsamp,
 		for(i=0; i<2; i++)
 		{
 			int flags=0;
+			if(subsamp==TJSAMP_422 || subsamp==TJSAMP_420 || subsamp==TJSAMP_440)
+				flags|=TJFLAG_FASTUPSAMPLE;
 			if(i==1)
 			{
 				if(yuv==YUVDECODE) goto bailout;
@@ -617,15 +619,12 @@ int main(int argc, char *argv[])
 	if(doyuv) {yuv=YUVENCODE;  alloc=0;}
 	doTest(35, 39, _3byteFormats, 2, TJSAMP_444, "test");
 	doTest(39, 41, _4byteFormats, 4, TJSAMP_444, "test");
-	if(doyuv)
-	{
-		doTest(41, 35, _3byteFormats, 2, TJSAMP_422, "test");
-		doTest(35, 39, _4byteFormats, 4, TJSAMP_422, "test");
-		doTest(39, 41, _3byteFormats, 2, TJSAMP_420, "test");
-		doTest(41, 35, _4byteFormats, 4, TJSAMP_420, "test");
-		doTest(35, 39, _3byteFormats, 2, TJSAMP_440, "test");
-		doTest(39, 41, _4byteFormats, 4, TJSAMP_440, "test");
-	}
+	doTest(41, 35, _3byteFormats, 2, TJSAMP_422, "test");
+	doTest(35, 39, _4byteFormats, 4, TJSAMP_422, "test");
+	doTest(39, 41, _3byteFormats, 2, TJSAMP_420, "test");
+	doTest(41, 35, _4byteFormats, 4, TJSAMP_420, "test");
+	doTest(35, 39, _3byteFormats, 2, TJSAMP_440, "test");
+	doTest(39, 41, _4byteFormats, 4, TJSAMP_440, "test");
 	doTest(35, 39, _onlyGray, 1, TJSAMP_GRAY, "test");
 	doTest(39, 41, _3byteFormats, 2, TJSAMP_GRAY, "test");
 	doTest(41, 35, _4byteFormats, 4, TJSAMP_GRAY, "test");
