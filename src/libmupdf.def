@@ -167,6 +167,12 @@ EXPORTS
 	fz_sha256_init
 	fz_sha256_update
 	fz_sha256_final
+	fz_sha512_init
+	fz_sha512_update
+	fz_sha512_final
+	fz_sha384_init
+	fz_sha384_update
+	fz_sha384_final
 	fz_arc4_init
 	fz_arc4_encrypt
 	aes_setkey_enc
@@ -191,6 +197,7 @@ EXPORTS
 	fz_write_buffer_byte
 	fz_write_buffer_bits
 	fz_write_buffer_pad
+	fz_buffer_printf
 	fz_new_stream
 	fz_keep_stream
 	fz_fill_buffer
@@ -264,6 +271,7 @@ EXPORTS
 	fz_transform_path
 	fz_clone_path
 	fz_bound_path
+	fz_adjust_rect_for_stroke
 	fz_print_path
 	fz_new_stroke_state
 	fz_new_stroke_state_with_len
@@ -351,6 +359,8 @@ EXPORTS
 	pdf_new_indirect
 	pdf_new_array
 	pdf_new_dict
+	pdf_new_rect
+	pdf_new_matrix
 	pdf_copy_array
 	pdf_copy_dict
 	pdf_keep_obj
@@ -389,9 +399,11 @@ EXPORTS
 	pdf_dict_get_val
 	pdf_dict_get
 	pdf_dict_gets
+	pdf_dict_getp
 	pdf_dict_getsa
 	pdf_dict_put
 	pdf_dict_puts
+	pdf_dict_putp
 	pdf_dict_del
 	pdf_dict_dels
 	pdf_sort_dict
@@ -438,11 +450,15 @@ EXPORTS
 	pdf_set_str_len
 	pdf_get_indirect_document
 	pdf_set_int
+	pdf_lexbuf_init
+	pdf_lexbuf_fin
+	pdf_lexbuf_grow
 	pdf_lex
 	pdf_parse_array
 	pdf_parse_dict
 	pdf_parse_stm_obj
 	pdf_parse_ind_obj
+	pdf_print_token
 	pdf_open_document_no_run
 	pdf_open_document_no_run_with_stream
 	pdf_cache_object
@@ -466,6 +482,7 @@ EXPORTS
 	pdf_open_crypt
 	pdf_open_crypt_with_filter
 	pdf_crypt_revision
+	pdf_crypt_revision_r
 	pdf_crypt_method
 	pdf_crypt_length
 	pdf_crypt_key
@@ -484,8 +501,10 @@ EXPORTS
 	pdf_keep_pattern
 	pdf_drop_pattern
 	pdf_load_xobject
+	pdf_new_xobject
 	pdf_keep_xobject
 	pdf_drop_xobject
+	pdf_update_xobject_contents
 	pdf_create_xobject
 	pdf_new_cmap
 	pdf_keep_cmap

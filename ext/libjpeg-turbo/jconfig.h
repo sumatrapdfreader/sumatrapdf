@@ -2,7 +2,7 @@
 /* see jconfig.txt for explanations */
 
 #define JPEG_LIB_VERSION 80
-#define LIBJPEG_TURBO_VERSION 1.2.0
+#define LIBJPEG_TURBO_VERSION 1.2.1
 #define C_ARITH_CODING_SUPPORTED
 #define D_ARITH_CODING_SUPPORTED
 

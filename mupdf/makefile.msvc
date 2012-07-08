@@ -245,7 +245,7 @@ FITZ_OBJS = \
 	$(OFZ)\res_path.obj $(OFZ)\res_pixmap.obj $(OFZ)\res_text.obj $(OFZ)\res_bitmap.obj \
 	$(OFZ)\res_colorspace.obj $(OFZ)\res_font.obj $(OFZ)\res_shade.obj $(OFZ)\res_halftone.obj \
 	$(OFZ)\stm_buffer.obj $(OFZ)\stm_open.obj $(OFZ)\stm_read.obj \
-	$(OFZ)\image_md5.obj $(OFZ)\image_save.obj $(OFZ)\image_jxr.obj
+	$(OFZ)\image_md5.obj $(OFZ)\image_save.obj $(OFZ)\image_jxr.obj $(OFZ)\crypt_sha512.obj
 
 MUPDF_OBJS = \
 	$(OP)\pdf_object.obj $(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj $(OP)\pdf_store.obj \

@@ -239,6 +239,8 @@ fz_stream *pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, int num, int gen);
 fz_stream *pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int num, int gen);
 
 int pdf_crypt_revision(pdf_document *doc);
+/* SumatraPDF: make crypt revision available (instead of crypt *version*) */
+int pdf_crypt_revision_r(pdf_document *xref);
 char *pdf_crypt_method(pdf_document *doc);
 int pdf_crypt_length(pdf_document *doc);
 unsigned char *pdf_crypt_key(pdf_document *doc);

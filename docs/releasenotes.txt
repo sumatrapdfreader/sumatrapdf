@@ -5,6 +5,8 @@ Next version:
 
 2.2 (2012-??-??)
 
+* add support for PDF documents encrypted with Acrobat X
+
 2.1.1 (2012-05-07)
 
 * fix a couple of crashes, most importantly crash when resizing some ePub files

@@ -2281,8 +2281,12 @@ TCHAR *PdfEngineImpl::GetProperty(const char *name)
 
     if (str::Eq(name, "PdfVersion")) {
         int major = _doc->version / 10, minor = _doc->version % 10;
-        if (1 == major && 7 == minor && 5 == pdf_crypt_revision(_doc))
-            return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
+        if (1 == major && 7 == minor && 5 == pdf_crypt_revision(_doc)) {
+            if (pdf_crypt_revision_r(_doc) == 5)
+                return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
+            if (pdf_crypt_revision_r(_doc) == 6)
+                return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 8);
+        }
         return str::Format(_T("%d.%d"), major, minor);
     }
     if (str::Eq(name, "FontList"))
