@@ -54,6 +54,7 @@ fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
 	{
 		fz_drop_pixmap(ctx, pix);
 		pix = NULL;
+		goto CleanUp;
 	}
 	pix->xres = (int)(xres + 0.5);
 	pix->yres = (int)(yres + 0.5);

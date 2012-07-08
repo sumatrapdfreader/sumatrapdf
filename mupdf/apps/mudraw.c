@@ -229,7 +229,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 				char *line = bmp_data + bmp_data_len / h * k;
 				for (i = 0, j = 1; i < width; i += j, j = 1)
 				{
-#define memeq3(a, b) ((*(DWORD *)(a) & 0xFFFFFF) == (*(DWORD *)(b) & 0xFFFFFF))
+#define memeq3(a, b) (*(WORD *)(a) == *(WORD *)(b) && (a)[2] == (b)[2])
 					for (; i + j < width && j < 128 && memeq3(line + i * 3, line + (i + j) * 3); j++);
 					if (j > 1)
 					{
