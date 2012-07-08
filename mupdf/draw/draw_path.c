@@ -28,10 +28,10 @@ bezier(fz_gel *gel, fz_matrix *ctm, float flatness,
 	float xabcd, yabcd;
 
 	/* termination check */
-	dmax = ABS(xa - xb);
-	dmax = MAX(dmax, ABS(ya - yb));
-	dmax = MAX(dmax, ABS(xd - xc));
-	dmax = MAX(dmax, ABS(yd - yc));
+	dmax = fz_abs(xa - xb);
+	dmax = fz_max(dmax, fz_abs(ya - yb));
+	dmax = fz_max(dmax, fz_abs(xd - xc));
+	dmax = fz_max(dmax, fz_abs(yd - yc));
 	if (dmax < flatness || depth >= MAX_DEPTH)
 	{
 		line(gel, ctm, xa, ya, xd, yd);
@@ -499,10 +499,10 @@ fz_stroke_bezier(struct sctx *s,
 	float xabcd, yabcd;
 
 	/* termination check */
-	dmax = ABS(xa - xb);
-	dmax = MAX(dmax, ABS(ya - yb));
-	dmax = MAX(dmax, ABS(xd - xc));
-	dmax = MAX(dmax, ABS(yd - yc));
+	dmax = fz_abs(xa - xb);
+	dmax = fz_max(dmax, fz_abs(ya - yb));
+	dmax = fz_max(dmax, fz_abs(xd - xc));
+	dmax = fz_max(dmax, fz_abs(yd - yc));
 	if (dmax < s->flatness || depth >= MAX_DEPTH)
 	{
 		fz_point p;
@@ -705,10 +705,10 @@ fz_dash_bezier(struct sctx *s,
 	float xabcd, yabcd;
 
 	/* termination check */
-	dmax = ABS(xa - xb);
-	dmax = MAX(dmax, ABS(ya - yb));
-	dmax = MAX(dmax, ABS(xd - xc));
-	dmax = MAX(dmax, ABS(yd - yc));
+	dmax = fz_abs(xa - xb);
+	dmax = fz_max(dmax, fz_abs(ya - yb));
+	dmax = fz_max(dmax, fz_abs(xd - xc));
+	dmax = fz_max(dmax, fz_abs(yd - yc));
 	if (dmax < s->flatness || depth >= MAX_DEPTH)
 	{
 		fz_point p;
@@ -780,7 +780,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 	phase_len = 0;
 	for (i = 0; i < stroke->dash_len; i++)
 		phase_len += stroke->dash_list[i];
-	max_expand = MAX(MAX(fabs(ctm.a),fabs(ctm.b)),MAX(fabs(ctm.c),fabs(ctm.d)));
+	max_expand = fz_max(fz_max(fz_abs(ctm.a),fz_abs(ctm.b)),fz_max(fz_abs(ctm.c),fz_abs(ctm.d)));
 	/* SumatraPDF: only flatten if quite short phases are in fact too short */
 	if (phase_len < 1.0f && phase_len * max_expand < 0.5f)
 	{

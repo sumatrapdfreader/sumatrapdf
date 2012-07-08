@@ -40,7 +40,7 @@ struct pdf_crypt_s
 	fz_context *ctx;
 };
 
-static void pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_obj *dict, char *name, int defaultlength);
+static void pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_crypt *crypt, char *name);
 
 /*
  * Create crypt object for decrypting strings and streams
@@ -79,80 +79,6 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 		fz_throw(ctx, "unknown encryption version");
 	}
 
-	crypt->length = 40;
-	if (crypt->v == 2 || crypt->v == 4)
-	{
-		obj = pdf_dict_gets(dict, "Length");
-		if (pdf_is_int(obj))
-			crypt->length = pdf_to_int(obj);
-
-		/* work-around for pdf generators that assume length is in bytes */
-		if (crypt->length < 40)
-			crypt->length = crypt->length * 8;
-
-		if (crypt->length % 8 != 0)
-		{
-			pdf_free_crypt(ctx, crypt);
-			fz_throw(ctx, "invalid encryption key length");
-		}
-		if (crypt->length > 256)
-		{
-			pdf_free_crypt(ctx, crypt);
-			fz_throw(ctx, "invalid encryption key length");
-		}
-	}
-
-	if (crypt->v == 5)
-		crypt->length = 256;
-
-	if (crypt->v == 1 || crypt->v == 2)
-	{
-		crypt->stmf.method = PDF_CRYPT_RC4;
-		crypt->stmf.length = crypt->length;
-
-		crypt->strf.method = PDF_CRYPT_RC4;
-		crypt->strf.length = crypt->length;
-	}
-
-	if (crypt->v == 4 || crypt->v == 5)
-	{
-		crypt->stmf.method = PDF_CRYPT_NONE;
-		crypt->stmf.length = crypt->length;
-
-		crypt->strf.method = PDF_CRYPT_NONE;
-		crypt->strf.length = crypt->length;
-
-		obj = pdf_dict_gets(dict, "CF");
-		if (pdf_is_dict(obj))
-		{
-			crypt->cf = pdf_keep_obj(obj);
-		}
-		else
-		{
-			crypt->cf = NULL;
-		}
-
-		fz_try(ctx)
-		{
-			obj = pdf_dict_gets(dict, "StmF");
-			if (pdf_is_name(obj))
-				pdf_parse_crypt_filter(ctx, &crypt->stmf, crypt->cf, pdf_to_name(obj), crypt->length);
-
-			obj = pdf_dict_gets(dict, "StrF");
-			if (pdf_is_name(obj))
-				pdf_parse_crypt_filter(ctx, &crypt->strf, crypt->cf, pdf_to_name(obj), crypt->length);
-		}
-		fz_catch(ctx)
-		{
-			pdf_free_crypt(ctx, crypt);
-			fz_throw(ctx, "cannot parse string crypt filter (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
-		}
-
-		/* in crypt revision 4, the crypt filter determines the key length */
-		if (crypt->strf.method != PDF_CRYPT_NONE)
-			crypt->length = crypt->stmf.length;
-	}
-
 	/* Standard security handler (PDF 1.7 table 3.19) */
 
 	obj = pdf_dict_gets(dict, "R");
@@ -163,7 +89,7 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 		fz_warn(ctx, "encryption dictionary missing revision value, guessing...");
 		if (crypt->v < 2)
 			crypt->r = 2;
-		else if (crypt->v == 2 || crypt->v == 3)
+		else if (crypt->v == 2)
 			crypt->r = 3;
 		else if (crypt->v == 4)
 			crypt->r = 4;
@@ -192,10 +118,11 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 	obj = pdf_dict_gets(dict, "U");
 	if (pdf_is_string(obj) && pdf_to_str_len(obj) == 32)
 		memcpy(crypt->u, pdf_to_str_buf(obj), 32);
-	else if (pdf_is_string(obj) && pdf_to_str_len(obj) >= 48 && crypt->r == 5)
+	/* /O and /U are supposed to be 48 bytes long for revision 5, they're often longer, though */
+	else if (crypt->r == 5 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
 		memcpy(crypt->u, pdf_to_str_buf(obj), 48);
 	/* SumatraPDF: support crypt version 5 revision 6 */
-	else if (pdf_is_string(obj) && pdf_to_str_len(obj) >= 48 && crypt->r == 6)
+	else if (crypt->r == 6 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
 		memcpy(crypt->u, pdf_to_str_buf(obj), 48);
 	else if (pdf_is_string(obj) && pdf_to_str_len(obj) < 32)
 	{
@@ -253,6 +180,82 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 	else
 		fz_warn(ctx, "missing file identifier, may not be able to do decryption");
 
+	/* Determine encryption key length */
+
+	crypt->length = 40;
+	if (crypt->v == 2 || crypt->v == 4)
+	{
+		obj = pdf_dict_gets(dict, "Length");
+		if (pdf_is_int(obj))
+			crypt->length = pdf_to_int(obj);
+
+		/* work-around for pdf generators that assume length is in bytes */
+		if (crypt->length < 40)
+			crypt->length = crypt->length * 8;
+
+		if (crypt->length % 8 != 0)
+		{
+			pdf_free_crypt(ctx, crypt);
+			fz_throw(ctx, "invalid encryption key length");
+		}
+		if (crypt->length < 0 || crypt->length > 256)
+		{
+			pdf_free_crypt(ctx, crypt);
+			fz_throw(ctx, "invalid encryption key length");
+		}
+	}
+
+	if (crypt->v == 5)
+		crypt->length = 256;
+
+	if (crypt->v == 1 || crypt->v == 2)
+	{
+		crypt->stmf.method = PDF_CRYPT_RC4;
+		crypt->stmf.length = crypt->length;
+
+		crypt->strf.method = PDF_CRYPT_RC4;
+		crypt->strf.length = crypt->length;
+	}
+
+	if (crypt->v == 4 || crypt->v == 5)
+	{
+		crypt->stmf.method = PDF_CRYPT_NONE;
+		crypt->stmf.length = crypt->length;
+
+		crypt->strf.method = PDF_CRYPT_NONE;
+		crypt->strf.length = crypt->length;
+
+		obj = pdf_dict_gets(dict, "CF");
+		if (pdf_is_dict(obj))
+		{
+			crypt->cf = pdf_keep_obj(obj);
+		}
+		else
+		{
+			crypt->cf = NULL;
+		}
+
+		fz_try(ctx)
+		{
+			obj = pdf_dict_gets(dict, "StmF");
+			if (pdf_is_name(obj))
+				pdf_parse_crypt_filter(ctx, &crypt->stmf, crypt, pdf_to_name(obj));
+
+			obj = pdf_dict_gets(dict, "StrF");
+			if (pdf_is_name(obj))
+				pdf_parse_crypt_filter(ctx, &crypt->strf, crypt, pdf_to_name(obj));
+		}
+		fz_catch(ctx)
+		{
+			pdf_free_crypt(ctx, crypt);
+			fz_throw(ctx, "cannot parse string crypt filter (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
+		}
+
+		/* in crypt revision 4, the crypt filter determines the key length */
+		if (crypt->strf.method != PDF_CRYPT_NONE)
+			crypt->length = crypt->stmf.length;
+	}
+
 	return crypt;
 }
 
@@ -269,7 +272,7 @@ pdf_free_crypt(fz_context *ctx, pdf_crypt *crypt)
  */
 
 static void
-pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_obj *cf_obj, char *name, int defaultlength)
+pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_crypt *crypt, char *name)
 {
 	pdf_obj *obj;
 	pdf_obj *dict;
@@ -277,20 +280,20 @@ pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_obj *cf_obj, c
 	int is_stdcf = (!is_identity && (strcmp(name, "StdCF") == 0));
 
 	if (!is_identity && !is_stdcf)
-		fz_throw(ctx, "Crypt Filter not Identity or StdCF (%d %d R)", pdf_to_num(cf_obj), pdf_to_gen(cf_obj));
+		fz_throw(ctx, "Crypt Filter not Identity or StdCF (%d %d R)", pdf_to_num(crypt->cf), pdf_to_gen(crypt->cf));
 
 	cf->method = PDF_CRYPT_NONE;
-	cf->length = defaultlength;
+	cf->length = crypt->length;
 
-	if (!cf_obj)
+	if (!crypt->cf)
 	{
 		cf->method = (is_identity ? PDF_CRYPT_NONE : PDF_CRYPT_RC4);
 		return;
 	}
 
-	dict = pdf_dict_gets(cf_obj, name);
+	dict = pdf_dict_gets(crypt->cf, name);
 	if (!pdf_is_dict(dict))
-		fz_throw(ctx, "cannot parse crypt filter (%d %d R)", pdf_to_num(cf_obj), pdf_to_gen(cf_obj));
+		fz_throw(ctx, "cannot parse crypt filter (%d %d R)", pdf_to_num(crypt->cf), pdf_to_gen(crypt->cf));
 
 	obj = pdf_dict_gets(dict, "CFM");
 	if (pdf_is_name(obj))
@@ -316,6 +319,14 @@ pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_obj *cf_obj, c
 		cf->length = cf->length * 8;
 
 	if ((cf->length % 8) != 0)
+		fz_throw(ctx, "invalid key length: %d", cf->length);
+
+	/* SumatraPDF: fix range checks */
+	if ((crypt->r == 1 || crypt->r == 2 || crypt->r == 4) &&
+		(cf->length < 40 || cf->length > 128))
+		fz_throw(ctx, "invalid key length: %d", cf->length);
+	/* SumatraPDF: support crypt version 5 revision 6 */
+	if ((crypt->r == 5 || crypt->r == 6) && (cf->length != 256))
 		fz_throw(ctx, "invalid key length: %d", cf->length);
 }
 
@@ -935,12 +946,13 @@ pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int n
 	if (strcmp(name, "Identity"))
 	{
 		pdf_crypt_filter cf;
-		pdf_parse_crypt_filter(chain->ctx, &cf, crypt->cf, name, crypt->length);
+		pdf_parse_crypt_filter(chain->ctx, &cf, crypt, name);
 		return pdf_open_crypt_imp(chain, crypt, &cf, num, gen);
 	}
 	return chain;
 }
 
+#ifndef NDEBUG
 void pdf_print_crypt(pdf_crypt *crypt)
 {
 	int i;
@@ -964,3 +976,4 @@ void pdf_print_crypt(pdf_crypt *crypt)
 
 	printf("}\n");
 }
+#endif

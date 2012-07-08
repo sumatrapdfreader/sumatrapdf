@@ -885,7 +885,7 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 				fz_throw(ctx, "cid font is missing info");
 
 			obj = pdf_dict_gets(cidinfo, "Registry");
-			tmplen = MIN(sizeof tmpstr - 1, pdf_to_str_len(obj));
+			tmplen = fz_mini(sizeof tmpstr - 1, pdf_to_str_len(obj));
 			memcpy(tmpstr, pdf_to_str_buf(obj), tmplen);
 			tmpstr[tmplen] = '\0';
 			fz_strlcpy(collection, tmpstr, sizeof collection);
@@ -893,7 +893,7 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 			fz_strlcat(collection, "-", sizeof collection);
 
 			obj = pdf_dict_gets(cidinfo, "Ordering");
-			tmplen = MIN(sizeof tmpstr - 1, pdf_to_str_len(obj));
+			tmplen = fz_mini(sizeof tmpstr - 1, pdf_to_str_len(obj));
 			memcpy(tmpstr, pdf_to_str_buf(obj), tmplen);
 			tmpstr[tmplen] = '\0';
 			fz_strlcat(collection, tmpstr, sizeof collection);
@@ -1291,6 +1291,7 @@ pdf_load_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 	return fontdesc;
 }
 
+#ifndef NDEBUG
 void
 pdf_print_font(fz_context *ctx, pdf_font_desc *fontdesc)
 {
@@ -1322,3 +1323,4 @@ pdf_print_font(fz_context *ctx, pdf_font_desc *fontdesc)
 		printf("\t}\n");
 	}
 }
+#endif

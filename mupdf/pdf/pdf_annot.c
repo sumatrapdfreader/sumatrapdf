@@ -757,10 +757,10 @@ static fz_rect
 fz_straighten_rect(fz_rect rect)
 {
 	fz_rect r;
-	r.x0 = MIN(rect.x0, rect.x1);
-	r.y0 = MIN(rect.y0, rect.y1);
-	r.x1 = MAX(rect.x0, rect.x1);
-	r.y1 = MAX(rect.y0, rect.y1);
+	r.x0 = fz_min(rect.x0, rect.x1);
+	r.y0 = fz_min(rect.y0, rect.y1);
+	r.x1 = fz_max(rect.x0, rect.x1);
+	r.y1 = fz_max(rect.y0, rect.y1);
 	return r;
 }
 

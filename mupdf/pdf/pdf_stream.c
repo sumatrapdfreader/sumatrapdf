@@ -143,9 +143,6 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 			params->u.jpeg.ct = (ct ? pdf_to_int(ct) : -1);
 			return chain;
 		}
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1942 */
-		while (fz_peek_byte(chain) == '\n' || fz_peek_byte(chain) == '\r')
-			fz_read_byte(chain);
 		return fz_open_dctd(chain, ct ? pdf_to_int(ct) : -1);
 	}
 
@@ -419,9 +416,6 @@ pdf_open_image_decomp_stream(fz_context *ctx, fz_buffer *buffer, pdf_image_param
 	case PDF_IMAGE_JPEG:
 		if (*factor > 8)
 			*factor = 8;
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1942 */
-		while (fz_peek_byte(chain) == '\n' || fz_peek_byte(chain) == '\r')
-			fz_read_byte(chain);
 		return fz_open_resized_dctd(chain, params->u.jpeg.ct, *factor);
 	case PDF_IMAGE_RLD:
 		*factor = 1;

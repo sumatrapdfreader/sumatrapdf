@@ -337,6 +337,7 @@ fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix ctm)
 	}
 }
 
+#ifndef NDEBUG
 void
 fz_print_path(fz_context *ctx, FILE *out, fz_path *path, int indent)
 {
@@ -376,6 +377,7 @@ fz_print_path(fz_context *ctx, FILE *out, fz_path *path, int indent)
 		}
 	}
 }
+#endif
 
 fz_stroke_state *
 fz_keep_stroke_state(fz_context *ctx, fz_stroke_state *stroke)

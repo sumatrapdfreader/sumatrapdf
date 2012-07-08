@@ -101,11 +101,16 @@ read_dctd(fz_stream *stm, unsigned char *buf, int len)
 
 	if (!state->init)
 	{
+		int c;
 		cinfo->client_data = state;
 		cinfo->err = &state->errmgr;
 		jpeg_std_error(cinfo->err);
 		cinfo->err->error_exit = error_exit;
 		jpeg_create_decompress(cinfo);
+
+		/* Skip over any stray returns at the start of the stream */
+		while ((c = fz_peek_byte(state->chain)) == '\n' || c == '\r')
+			(void)fz_read_byte(state->chain);
 
 		cinfo->src = &state->srcmgr;
 		cinfo->src->init_source = init_source;

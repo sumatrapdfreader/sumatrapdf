@@ -326,11 +326,11 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	if (radius_y_att)
 		yrad = fz_atof(radius_y_att);
 
-	xrad = MAX(0.01f, xrad);
-	yrad = MAX(0.01f, yrad);
+	xrad = fz_max(0.01f, xrad);
+	yrad = fz_max(0.01f, yrad);
 
 	/* scale the ctm to make ellipses */
-	if (fabsf(xrad) > FLT_EPSILON)
+	if (fz_abs(xrad) > FLT_EPSILON)
 		ctm = fz_concat(fz_scale(1, yrad / xrad), ctm);
 
 	if (yrad != 0.0)
@@ -344,10 +344,10 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	r1 = xrad;
 
 	area = fz_transform_rect(fz_invert_matrix(ctm), area);
-	ma = MAX(ma, ceilf(hypotf(area.x0 - x0, area.y0 - y0) / xrad));
-	ma = MAX(ma, ceilf(hypotf(area.x1 - x0, area.y0 - y0) / xrad));
-	ma = MAX(ma, ceilf(hypotf(area.x0 - x0, area.y1 - y0) / xrad));
-	ma = MAX(ma, ceilf(hypotf(area.x1 - x0, area.y1 - y0) / xrad));
+	ma = fz_maxi(ma, ceilf(hypotf(area.x0 - x0, area.y0 - y0) / xrad));
+	ma = fz_maxi(ma, ceilf(hypotf(area.x1 - x0, area.y0 - y0) / xrad));
+	ma = fz_maxi(ma, ceilf(hypotf(area.x0 - x0, area.y1 - y0) / xrad));
+	ma = fz_maxi(ma, ceilf(hypotf(area.x1 - x0, area.y1 - y0) / xrad));
 
 	if (spread == SPREAD_REPEAT)
 	{
@@ -402,11 +402,11 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	k = ((area.x0 - p1.x) * x + (area.y0 - p1.y) * y) / (x * x + y * y);
 	mi = floorf(k); ma = ceilf(k);
 	k = ((area.x1 - p1.x) * x + (area.y0 - p1.y) * y) / (x * x + y * y);
-	mi = MIN(mi, floorf(k)); ma = MAX(ma, ceilf(k));
+	mi = fz_mini(mi, floorf(k)); ma = fz_maxi(ma, ceilf(k));
 	k = ((area.x0 - p1.x) * x + (area.y1 - p1.y) * y) / (x * x + y * y);
-	mi = MIN(mi, floorf(k)); ma = MAX(ma, ceilf(k));
+	mi = fz_mini(mi, floorf(k)); ma = fz_maxi(ma, ceilf(k));
 	k = ((area.x1 - p1.x) * x + (area.y1 - p1.y) * y) / (x * x + y * y);
-	mi = MIN(mi, floorf(k)); ma = MAX(ma, ceilf(k));
+	mi = fz_mini(mi, floorf(k)); ma = fz_maxi(ma, ceilf(k));
 	dx = x1 - x0; dy = y1 - y0;
 
 	if (spread == SPREAD_REPEAT)

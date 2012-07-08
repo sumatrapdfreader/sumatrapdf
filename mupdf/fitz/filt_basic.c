@@ -21,7 +21,7 @@ static int
 read_null(fz_stream *stm, unsigned char *buf, int len)
 {
 	struct null_filter *state = stm->state;
-	int amount = MIN(len, state->remain);
+	int amount = fz_mini(len, state->remain);
 	int n;
 
 	fz_seek(state->chain, state->pos, 0);

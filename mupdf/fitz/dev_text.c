@@ -129,7 +129,7 @@ append_char(fz_context *ctx, fz_text_span *span, int c, fz_rect bbox)
 {
 	if (span->len == span->cap)
 	{
-		int new_cap = MAX(64, span->cap * 2);
+		int new_cap = fz_maxi(64, span->cap * 2);
 		span->text = fz_resize_array(ctx, span->text, new_cap, sizeof(*span->text));
 		span->cap = new_cap;
 	}
@@ -155,7 +155,7 @@ append_span(fz_context *ctx, fz_text_line *line, fz_text_span *span)
 		return;
 	if (line->len == line->cap)
 	{
-		int new_cap = MAX(8, line->cap * 2);
+		int new_cap = fz_maxi(8, line->cap * 2);
 		line->spans = fz_resize_array(ctx, line->spans, new_cap, sizeof(*line->spans));
 		line->cap = new_cap;
 	}
@@ -176,7 +176,7 @@ append_line(fz_context *ctx, fz_text_block *block, fz_text_line *line)
 {
 	if (block->len == block->cap)
 	{
-		int new_cap = MAX(16, block->cap * 2);
+		int new_cap = fz_maxi(16, block->cap * 2);
 		block->lines = fz_resize_array(ctx, block->lines, new_cap, sizeof *block->lines);
 		block->cap = new_cap;
 	}
@@ -202,13 +202,13 @@ lookup_block_for_line(fz_context *ctx, fz_text_page *page, fz_text_line *line)
 		float dy = line->bbox.y0 - block->bbox.y1;
 		if (dy > -size * 1.5f && dy < size * PARAGRAPH_DIST)
 			if (line->bbox.x0 <= block->bbox.x1 && line->bbox.x1 >= block->bbox.x0)
-				if (ABS(dx) < w / 2)
+				if (fz_abs(dx) < w / 2)
 					return block;
 	}
 
 	if (page->len == page->cap)
 	{
-		int new_cap = MAX(16, page->cap * 2);
+		int new_cap = fz_maxi(16, page->cap * 2);
 		page->blocks = fz_resize_array(ctx, page->blocks, new_cap, sizeof(*page->blocks));
 		page->cap = new_cap;
 	}
@@ -404,7 +404,7 @@ calc_bbox_overlap(fz_rect bbox1, fz_rect bbox2)
 	area2 = (bbox2.x1 - bbox2.x0) * (bbox2.y1 - bbox2.y0);
 	area3 = (intersect.x1 - intersect.x0) * (intersect.y1 - intersect.y0);
 
-	return area3 / MAX(area1, area2);
+	return area3 / fz_max(area1, area2);
 }
 
 static inline int
@@ -667,8 +667,8 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 		if (font->ft_face)
 		{
 			fz_rect bbox = fz_bound_glyph(ctx, font, text->items[i].gid, trm);
-			rect.y0 = MIN(rect.y0, bbox.y0);
-			rect.y1 = MAX(rect.y1, bbox.y1);
+			rect.y0 = fz_min(rect.y0, bbox.y0);
+			rect.y1 = fz_max(rect.y1, bbox.y1);
 		}
 		pen->x = trm.e + dir.x * adv;
 		pen->y = trm.f + dir.y * adv;

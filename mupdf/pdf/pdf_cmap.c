@@ -109,6 +109,7 @@ pdf_set_cmap_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode)
 	cmap->wmode = wmode;
 }
 
+#ifndef NDEBUG
 void
 pdf_print_cmap(fz_context *ctx, pdf_cmap *cmap)
 {
@@ -155,6 +156,7 @@ pdf_print_cmap(fz_context *ctx, pdf_cmap *cmap)
 	}
 	printf("\t}\n}\n");
 }
+#endif
 
 /*
  * Add a codespacerange section.

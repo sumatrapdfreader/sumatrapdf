@@ -7,7 +7,7 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 {
 	int count, n;
 
-	count = MIN(len, stm->wp - stm->rp);
+	count = fz_mini(len, stm->wp - stm->rp);
 	if (count)
 	{
 		memcpy(buf, stm->rp, count);
@@ -33,7 +33,7 @@ fz_read(fz_stream *stm, unsigned char *buf, int len)
 			stm->pos += n;
 		}
 
-		n = MIN(len - count, stm->wp - stm->rp);
+		n = fz_mini(len - count, stm->wp - stm->rp);
 		if (n)
 		{
 			memcpy(buf + count, stm->rp, n);

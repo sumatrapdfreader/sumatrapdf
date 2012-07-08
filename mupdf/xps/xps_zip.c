@@ -302,8 +302,8 @@ xps_find_and_read_zip_dir(xps_document *doc)
 	fz_seek(doc->file, 0, SEEK_END);
 	file_size = fz_tell(doc->file);
 
-	maxback = MIN(file_size, 0xFFFF + sizeof buf);
-	back = MIN(maxback, sizeof buf);
+	maxback = fz_mini(file_size, 0xFFFF + sizeof buf);
+	back = fz_mini(maxback, sizeof buf);
 
 	while (back < maxback)
 	{

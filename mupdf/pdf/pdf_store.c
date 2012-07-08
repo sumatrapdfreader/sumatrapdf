@@ -31,6 +31,7 @@ pdf_cmp_key(void *k0, void *k1)
 	return pdf_objcmp((pdf_obj *)k0, (pdf_obj *)k1);
 }
 
+#ifndef NDEBUG
 static void
 pdf_debug_key(void *key_)
 {
@@ -42,6 +43,7 @@ pdf_debug_key(void *key_)
 	} else
 		pdf_print_obj(key);
 }
+#endif
 
 static fz_store_type pdf_obj_store_type =
 {
@@ -49,7 +51,9 @@ static fz_store_type pdf_obj_store_type =
 	pdf_keep_key,
 	pdf_drop_key,
 	pdf_cmp_key,
+#ifndef NDEBUG
 	pdf_debug_key
+#endif
 };
 
 void

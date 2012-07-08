@@ -432,10 +432,10 @@ ximage_blit(Drawable d, GC gc,
 
 	for (ay = 0; ay < srch; ay += HEIGHT)
 	{
-		h = MIN(srch - ay, HEIGHT);
+		h = fz_mini(srch - ay, HEIGHT);
 		for (ax = 0; ax < srcw; ax += WIDTH)
 		{
-			w = MIN(srcw - ax, WIDTH);
+			w = fz_mini(srcw - ax, WIDTH);
 
 			image = next_pool_image();
 

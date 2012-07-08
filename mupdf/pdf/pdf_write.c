@@ -583,11 +583,11 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 				continue;
 
 			/* Keep the lowest numbered object */
-			newnum = MIN(num, other);
+			newnum = fz_mini(num, other);
 			opts->renumber_map[num] = newnum;
 			opts->renumber_map[other] = newnum;
 			opts->rev_renumber_map[newnum] = num; /* Either will do */
-			opts->use_list[MAX(num, other)] = 0;
+			opts->use_list[fz_maxi(num, other)] = 0;
 
 			/* One duplicate was found, do not look for another */
 			break;
@@ -616,7 +616,6 @@ static void compactxref(pdf_document *xref, pdf_write_options *opts)
 	for (num = 1; num < xref->len; num++)
 	{
 		/* If it's not used, map it to zero */
-		/* SumatraPDF: take removeduplicateobjs into account */
 		if (!opts->use_list[opts->renumber_map[num]])
 		{
 			opts->renumber_map[num] = 0;

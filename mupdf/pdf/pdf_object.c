@@ -1452,6 +1452,7 @@ pdf_fprint_obj(FILE *fp, pdf_obj *obj, int tight)
 	return n;
 }
 
+#ifndef NDEBUG
 void
 pdf_print_obj(pdf_obj *obj)
 {
@@ -1463,3 +1464,4 @@ pdf_print_ref(pdf_obj *ref)
 {
 	pdf_print_obj(pdf_resolve_indirect(ref));
 }
+#endif

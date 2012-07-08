@@ -87,8 +87,8 @@ static void retainpages(int argc, char **argv)
 			if (spage > epage)
 				page = spage, spage = epage, epage = page;
 
-			spage = CLAMP(spage, 1, pagecount);
-			epage = CLAMP(epage, 1, pagecount);
+			spage = fz_clampi(spage, 1, pagecount);
+			epage = fz_clampi(epage, 1, pagecount);
 
 			for (page = spage; page <= epage; page++)
 			{

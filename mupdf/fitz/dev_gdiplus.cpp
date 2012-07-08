@@ -378,10 +378,10 @@ public:
 		stack->tileCtm.e = tl.x;
 		stack->tileCtm.f = tl.y;
 		tl = fz_transform_point(fz_invert_matrix(ctm), tl);
-		stack->tileArea.x0 = floorf((area.x0 - MAX(tl.x, 0)) / xstep);
-		stack->tileArea.y0 = floorf((area.y0 - MAX(tl.y, 0)) / ystep);
-		stack->tileArea.x1 = ceilf((area.x1 - MAX(tl.x, 0)) / xstep);
-		stack->tileArea.y1 = ceilf((area.y1 - MAX(tl.y, 0)) / ystep);
+		stack->tileArea.x0 = floorf((area.x0 - fz_max(tl.x, 0)) / xstep);
+		stack->tileArea.y0 = floorf((area.y0 - fz_max(tl.y, 0)) / ystep);
+		stack->tileArea.x1 = ceilf((area.x1 - fz_max(tl.x, 0)) / xstep);
+		stack->tileArea.y1 = ceilf((area.y1 - fz_max(tl.y, 0)) / ystep);
 	}
 
 	void applyTiling()
@@ -493,7 +493,7 @@ public:
 			graphics->DrawImage(&PixmapBitmap(ctx, image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(alpha));
 			graphics->Restore(state);
 		}
-		else if (scale < 1.0 && MIN(image->w, image->h) > 100 && !image->has_alpha)
+		else if (scale < 1.0 && fz_mini(image->w, image->h) > 100 && !image->has_alpha)
 		{
 			fz_try(ctx)
 			{
@@ -799,8 +799,8 @@ gdiplus_get_path(fz_path *path, fz_matrix ctm, int evenodd=1)
 	BBOX_BOUNDS = fz_transform_rect(fz_invert_matrix(ctm), BBOX_BOUNDS);
 	for (int i = 0; i < len; i++)
 	{
-		points[i].X = CLAMP(points[i].X, BBOX_BOUNDS.x0, BBOX_BOUNDS.x1);
-		points[i].Y = CLAMP(points[i].Y, BBOX_BOUNDS.y0, BBOX_BOUNDS.y1);
+		points[i].X = fz_clamp(points[i].X, BBOX_BOUNDS.x0, BBOX_BOUNDS.x1);
+		points[i].Y = fz_clamp(points[i].Y, BBOX_BOUNDS.y0, BBOX_BOUNDS.y1);
 	}
 	
 	GraphicsPath *gpath = new GraphicsPath(points, types, len, evenodd ? FillModeAlternate : FillModeWinding);
@@ -1026,7 +1026,7 @@ ft_get_width_scale(fz_font *font, int gid)
 		
 		if (advance)
 		{
-			float charSize = (float)CLAMP(face->units_per_EM, 1000, 65536);
+			float charSize = (float)fz_clampi(face->units_per_EM, 1000, 65536);
 			return charSize * font->width_table[gid] / advance;
 		}
 	}
@@ -1101,7 +1101,7 @@ gdiplus_render_text(fz_device *dev, fz_text *text, fz_matrix ctm, Brush *brush, 
 		user->outlines = fz_new_hash_table(dev->ctx, 509, sizeof(ftglyphkey), -1);
 	
 	FT_Face face = (FT_Face)text->font->ft_face;
-	FT_UShort charSize = CLAMP(face->units_per_EM, 1000, 65536);
+	FT_UShort charSize = fz_clampi(face->units_per_EM, 1000, 65536);
 	FT_Set_Char_Size(face, charSize, charSize, 72, 72);
 	FT_Set_Transform(face, NULL, NULL);
 	
@@ -1143,7 +1143,7 @@ gdiplus_run_text(fz_device *dev, fz_text *text, fz_matrix ctm, Brush *brush)
 	Graphics *graphics = ((userData *)dev->user)->graphics;
 	
 	FT_Face face = (FT_Face)text->font->ft_face;
-	FT_UShort charSize = CLAMP(face->units_per_EM, 1000, 65536);
+	FT_UShort charSize = fz_clampi(face->units_per_EM, 1000, 65536);
 	FT_Set_Char_Size(face, charSize, charSize, 72, 72);
 	FT_Set_Transform(face, NULL, NULL);
 	

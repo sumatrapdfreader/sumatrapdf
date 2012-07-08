@@ -256,7 +256,7 @@ lookup_compare(const void *elem1, const void *elem2)
 	{
 		const char *rest = len1 > len2 ? val1 + len2 : val2 + len1;
 		if (',' == *rest || !_stricmp(rest, "-roman"))
-			return _strnicmp(val1, val2, MIN(len1, len2));
+			return _strnicmp(val1, val2, fz_mini(len1, len2));
 	}
 
 	return _stricmp(val1, val2);

@@ -263,8 +263,8 @@ cbz_read_zip_dir(cbz_document *doc)
 	fz_seek(file, 0, 2);
 	filesize = fz_tell(file);
 
-	maxback = MIN(filesize, 0xFFFF + sizeof buf);
-	back = MIN(maxback, sizeof buf);
+	maxback = fz_mini(filesize, 0xFFFF + sizeof buf);
+	back = fz_mini(maxback, sizeof buf);
 
 	while (back < maxback)
 	{

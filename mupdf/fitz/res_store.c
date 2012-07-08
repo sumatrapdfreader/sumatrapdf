@@ -452,6 +452,7 @@ fz_drop_store_context(fz_context *ctx)
 	ctx->store = NULL;
 }
 
+#ifndef NDEBUG
 void
 fz_print_store(fz_context *ctx, FILE *out)
 {
@@ -476,6 +477,7 @@ fz_print_store(fz_context *ctx, FILE *out)
 	}
 	fz_unlock(ctx, FZ_LOCK_ALLOC);
 }
+#endif
 
 /* This is now an n^2 algorithm - not ideal, but it'll only be bad if we are
  * actually managing to scavenge lots of blocks back. */

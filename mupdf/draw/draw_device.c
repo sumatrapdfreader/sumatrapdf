@@ -1510,10 +1510,10 @@ fz_draw_end_tile(fz_device *devp)
 	/* SumatraPDF: make sure that the whole area is covered */
 	tl.x = state[1].dest->x; tl.y = state[1].dest->y;
 	tl = fz_transform_point(fz_invert_matrix(ctm), tl);
-	x0 = floorf((area.x0 - MAX(tl.x, 0)) / xstep);
-	y0 = floorf((area.y0 - MAX(tl.y, 0)) / ystep);
-	x1 = ceilf((area.x1 - MAX(tl.x, 0)) / xstep);
-	y1 = ceilf((area.y1 - MAX(tl.y, 0)) / ystep);
+	x0 = floorf((area.x0 - fz_max(tl.x, 0)) / xstep);
+	y0 = floorf((area.y0 - fz_max(tl.y, 0)) / ystep);
+	x1 = ceilf((area.x1 - fz_max(tl.x, 0)) / xstep);
+	y1 = ceilf((area.y1 - fz_max(tl.y, 0)) / ystep);
 
 	ctm.e = state[1].dest->x;
 	ctm.f = state[1].dest->y;

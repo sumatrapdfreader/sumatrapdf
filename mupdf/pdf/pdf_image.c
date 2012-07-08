@@ -79,6 +79,7 @@ pdf_cmp_image_key(void *k0_, void *k1_)
 	return k0->image == k1->image && k0->factor == k1->factor;
 }
 
+#ifndef NDEBUG
 static void
 pdf_debug_image(void *key_)
 {
@@ -86,6 +87,7 @@ pdf_debug_image(void *key_)
 
 	printf("(image %d x %d sf=%d) ", key->image->w, key->image->h, key->factor);
 }
+#endif
 
 static fz_store_type pdf_image_store_type =
 {
@@ -93,7 +95,9 @@ static fz_store_type pdf_image_store_type =
 	pdf_keep_image_key,
 	pdf_drop_image_key,
 	pdf_cmp_image_key,
+#ifndef NDEBUG
 	pdf_debug_image
+#endif
 };
 
 static fz_pixmap *
@@ -344,12 +348,12 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		if (imagemask)
 			bpc = 1;
 
-		if (w == 0)
-			fz_throw(ctx, "image width is zero");
-		if (h == 0)
-			fz_throw(ctx, "image height is zero");
-		if (bpc == 0)
-			fz_throw(ctx, "image depth is zero");
+		if (w <= 0)
+			fz_throw(ctx, "image width is zero (or less)");
+		if (h <= 0)
+			fz_throw(ctx, "image height is zero (or less)");
+		if (bpc <= 0)
+			fz_throw(ctx, "image depth is zero (or less)");
 		if (bpc > 16)
 			fz_throw(ctx, "image depth is too large: %d", bpc);
 		if (w > (1 << 16))

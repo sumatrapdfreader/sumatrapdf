@@ -1541,10 +1541,10 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 		}
 
 		else if (!strcmp(s, "CA"))
-			gstate->stroke.alpha = pdf_to_real(val);
+			gstate->stroke.alpha = fz_clamp(pdf_to_real(val), 0, 1);
 
 		else if (!strcmp(s, "ca"))
-			gstate->fill.alpha = pdf_to_real(val);
+			gstate->fill.alpha = fz_clamp(pdf_to_real(val), 0, 1);
 
 		else if (!strcmp(s, "BM"))
 		{

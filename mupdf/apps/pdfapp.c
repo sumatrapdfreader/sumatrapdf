@@ -1085,10 +1085,10 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 		if (app->iscopying)
 		{
 			app->iscopying = 0;
-			app->selr.x0 = MIN(app->selx, x) - app->panx + rect.x0;
-			app->selr.x1 = MAX(app->selx, x) - app->panx + rect.x0;
-			app->selr.y0 = MIN(app->sely, y) - app->pany + rect.y0;
-			app->selr.y1 = MAX(app->sely, y) - app->pany + rect.y0;
+			app->selr.x0 = fz_mini(app->selx, x) - app->panx + rect.x0;
+			app->selr.x1 = fz_maxi(app->selx, x) - app->panx + rect.x0;
+			app->selr.y0 = fz_mini(app->sely, y) - app->pany + rect.y0;
+			app->selr.y1 = fz_maxi(app->sely, y) - app->pany + rect.y0;
 			winrepaint(app);
 			if (app->selr.x0 < app->selr.x1 && app->selr.y0 < app->selr.y1)
 				windocopy(app);
@@ -1156,10 +1156,10 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 
 	else if (app->iscopying)
 	{
-		app->selr.x0 = MIN(app->selx, x) - app->panx + rect.x0;
-		app->selr.x1 = MAX(app->selx, x) - app->panx + rect.x0;
-		app->selr.y0 = MIN(app->sely, y) - app->pany + rect.y0;
-		app->selr.y1 = MAX(app->sely, y) - app->pany + rect.y0;
+		app->selr.x0 = fz_mini(app->selx, x) - app->panx + rect.x0;
+		app->selr.x1 = fz_maxi(app->selx, x) - app->panx + rect.x0;
+		app->selr.y0 = fz_mini(app->sely, y) - app->pany + rect.y0;
+		app->selr.y1 = fz_maxi(app->sely, y) - app->pany + rect.y0;
 		winrepaint(app);
 	}
 

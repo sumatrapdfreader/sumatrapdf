@@ -82,8 +82,11 @@ void pdf_dict_dels(pdf_obj *dict, char *key);
 void pdf_sort_dict(pdf_obj *dict);
 
 int pdf_fprint_obj(FILE *fp, pdf_obj *obj, int tight);
+
+#ifndef NDEBUG
 void pdf_print_obj(pdf_obj *obj);
 void pdf_print_ref(pdf_obj *obj);
+#endif
 
 char *pdf_to_utf8(fz_context *ctx, pdf_obj *src);
 unsigned short *pdf_to_ucs2(fz_context *ctx, pdf_obj *src); /* sumatrapdf */

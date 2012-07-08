@@ -24,7 +24,7 @@ static void showtrailer(void)
 	if (!doc)
 		fz_throw(ctx, "no file specified");
 	printf("trailer\n");
-	pdf_print_obj(doc->trailer);
+	pdf_fprint_obj(stdout, doc->trailer, 0);
 	printf("\n");
 }
 
@@ -122,7 +122,7 @@ static void showobject(int num, int gen)
 		else
 		{
 			printf("%d %d obj\n", num, gen);
-			pdf_print_obj(obj);
+			pdf_fprint_obj(stdout, obj, 0);
 			printf("stream\n");
 			showstream(num, gen);
 			printf("endstream\n");
@@ -132,7 +132,7 @@ static void showobject(int num, int gen)
 	else
 	{
 		printf("%d %d obj\n", num, gen);
-		pdf_print_obj(obj);
+		pdf_fprint_obj(stdout, obj, 0);
 		printf("endobj\n\n");
 	}
 

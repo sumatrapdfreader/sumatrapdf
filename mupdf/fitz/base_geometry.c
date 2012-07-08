@@ -1,7 +1,7 @@
 #include "fitz-internal.h"
 
-#define MAX4(a,b,c,d) MAX(MAX(a,b), MAX(c,d))
-#define MIN4(a,b,c,d) MIN(MIN(a,b), MIN(c,d))
+#define MAX4(a,b,c,d) fz_max(fz_max(a,b), fz_max(c,d))
+#define MIN4(a,b,c,d) fz_min(fz_min(a,b), fz_min(c,d))
 
 /* Matrices, points and affine transformations */
 
@@ -209,10 +209,10 @@ fz_intersect_rect(fz_rect a, fz_rect b)
 	if (fz_is_infinite_rect(b)) return a;
 	if (fz_is_empty_rect(a)) return fz_empty_rect;
 	if (fz_is_empty_rect(b)) return fz_empty_rect;
-	r.x0 = MAX(a.x0, b.x0);
-	r.y0 = MAX(a.y0, b.y0);
-	r.x1 = MIN(a.x1, b.x1);
-	r.y1 = MIN(a.y1, b.y1);
+	r.x0 = fz_max(a.x0, b.x0);
+	r.y0 = fz_max(a.y0, b.y0);
+	r.x1 = fz_min(a.x1, b.x1);
+	r.y1 = fz_min(a.y1, b.y1);
 	return (r.x1 < r.x0 || r.y1 < r.y0) ? fz_empty_rect : r;
 }
 
@@ -224,10 +224,10 @@ fz_union_rect(fz_rect a, fz_rect b)
 	if (fz_is_infinite_rect(b)) return b;
 	if (fz_is_empty_rect(a)) return b;
 	if (fz_is_empty_rect(b)) return a;
-	r.x0 = MIN(a.x0, b.x0);
-	r.y0 = MIN(a.y0, b.y0);
-	r.x1 = MAX(a.x1, b.x1);
-	r.y1 = MAX(a.y1, b.y1);
+	r.x0 = fz_min(a.x0, b.x0);
+	r.y0 = fz_min(a.y0, b.y0);
+	r.x1 = fz_max(a.x1, b.x1);
+	r.y1 = fz_max(a.y1, b.y1);
 	return r;
 }
 
@@ -239,10 +239,10 @@ fz_intersect_bbox(fz_bbox a, fz_bbox b)
 	if (fz_is_infinite_rect(b)) return a;
 	if (fz_is_empty_rect(a)) return fz_empty_bbox;
 	if (fz_is_empty_rect(b)) return fz_empty_bbox;
-	r.x0 = MAX(a.x0, b.x0);
-	r.y0 = MAX(a.y0, b.y0);
-	r.x1 = MIN(a.x1, b.x1);
-	r.y1 = MIN(a.y1, b.y1);
+	r.x0 = fz_maxi(a.x0, b.x0);
+	r.y0 = fz_maxi(a.y0, b.y0);
+	r.x1 = fz_mini(a.x1, b.x1);
+	r.y1 = fz_mini(a.y1, b.y1);
 	return (r.x1 < r.x0 || r.y1 < r.y0) ? fz_empty_bbox : r;
 }
 
@@ -254,10 +254,10 @@ fz_union_bbox(fz_bbox a, fz_bbox b)
 	if (fz_is_infinite_rect(b)) return b;
 	if (fz_is_empty_rect(a)) return b;
 	if (fz_is_empty_rect(b)) return a;
-	r.x0 = MIN(a.x0, b.x0);
-	r.y0 = MIN(a.y0, b.y0);
-	r.x1 = MAX(a.x1, b.x1);
-	r.y1 = MAX(a.y1, b.y1);
+	r.x0 = fz_mini(a.x0, b.x0);
+	r.y0 = fz_mini(a.y0, b.y0);
+	r.x1 = fz_maxi(a.x1, b.x1);
+	r.y1 = fz_maxi(a.y1, b.y1);
 	return r;
 }
 

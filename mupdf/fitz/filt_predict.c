@@ -52,9 +52,9 @@ static inline int paeth(int a, int b, int c)
 {
 	/* The definitions of ac and bc are correct, not a typo. */
 	int ac = b - c, bc = a - c, abcc = ac + bc;
-	int pa = ABS(ac);
-	int pb = ABS(bc);
-	int pc = ABS(abcc);
+	int pa = fz_absi(ac);
+	int pb = fz_absi(bc);
+	int pc = fz_absi(abcc);
 	return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
 }
 

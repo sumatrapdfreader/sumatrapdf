@@ -37,7 +37,7 @@ pdf_read_start_xref(pdf_document *xref)
 
 	xref->file_size = fz_tell(xref->file);
 
-	t = MAX(0, xref->file_size - (int)sizeof buf);
+	t = fz_maxi(0, xref->file_size - (int)sizeof buf);
 	fz_seek(xref->file, t, 0);
 
 	n = fz_read(xref->file, buf, sizeof buf);
@@ -841,6 +841,7 @@ pdf_close_document(pdf_document *xref)
 	fz_free(ctx, xref);
 }
 
+#ifndef NDEBUG
 void
 pdf_print_xref(pdf_document *xref)
 {
@@ -856,6 +857,7 @@ pdf_print_xref(pdf_document *xref)
 			xref->table[i].stm_buf);
 	}
 }
+#endif
 
 /*
  * compressed object streams

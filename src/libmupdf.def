@@ -150,7 +150,6 @@ EXPORTS
 	fz_synchronize_end
 	fz_atof
 	fz_new_hash_table
-	fz_print_hash
 	fz_empty_hash
 	fz_free_hash
 	fz_hash_find
@@ -183,7 +182,6 @@ EXPORTS
 	fz_new_store_context
 	fz_drop_store_context
 	fz_keep_store_context
-	fz_print_store
 	fz_store_item
 	fz_find_item
 	fz_remove_item
@@ -256,7 +254,6 @@ EXPORTS
 	fz_new_font_from_file
 	fz_keep_font
 	fz_drop_font
-	fz_print_font
 	fz_set_font_bbox
 	fz_bound_glyph
 	fz_glyph_cacheable
@@ -272,7 +269,6 @@ EXPORTS
 	fz_clone_path
 	fz_bound_path
 	fz_adjust_rect_for_stroke
-	fz_print_path
 	fz_new_stroke_state
 	fz_new_stroke_state_with_len
 	fz_keep_stroke_state
@@ -297,7 +293,6 @@ EXPORTS
 	fz_keep_shade
 	fz_drop_shade
 	fz_free_shade_imp
-	fz_print_shade
 	fz_bound_shade
 	fz_paint_shade
 	fz_new_gel
@@ -408,8 +403,6 @@ EXPORTS
 	pdf_dict_dels
 	pdf_sort_dict
 	pdf_fprint_obj
-	pdf_print_obj
-	pdf_print_ref
 	pdf_to_utf8
 	pdf_to_ucs2
 	pdf_to_utf8_name
@@ -473,7 +466,6 @@ EXPORTS
 	pdf_open_raw_renumbered_stream
 	pdf_repair_xref
 	pdf_repair_obj_stms
-	pdf_print_xref
 	pdf_resize_xref
 	pdf_new_ref
 	pdf_new_crypt
@@ -486,7 +478,6 @@ EXPORTS
 	pdf_crypt_method
 	pdf_crypt_length
 	pdf_crypt_key
-	pdf_print_crypt
 	pdf_load_function
 	pdf_eval_function
 	pdf_keep_function
@@ -511,7 +502,6 @@ EXPORTS
 	pdf_drop_cmap
 	pdf_free_cmap_imp
 	pdf_cmap_size
-	pdf_print_cmap
 	pdf_cmap_wmode
 	pdf_set_cmap_wmode
 	pdf_set_usecmap
@@ -553,7 +543,6 @@ EXPORTS
 	pdf_new_font_desc
 	pdf_keep_font
 	pdf_drop_font
-	pdf_print_font
 	pdf_parse_link_dest
 	pdf_parse_action
 	pdf_lookup_dest

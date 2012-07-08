@@ -81,10 +81,10 @@ fz_bound_text(fz_context *ctx, fz_text *text, fz_matrix ctm)
 			trm = fz_concat(tm, ctm);
 			gbox = fz_bound_glyph(ctx, text->font, text->items[i].gid, trm);
 
-			bbox.x0 = MIN(bbox.x0, gbox.x0);
-			bbox.y0 = MIN(bbox.y0, gbox.y0);
-			bbox.x1 = MAX(bbox.x1, gbox.x1);
-			bbox.y1 = MAX(bbox.y1, gbox.y1);
+			bbox.x0 = fz_min(bbox.x0, gbox.x0);
+			bbox.y0 = fz_min(bbox.y0, gbox.y0);
+			bbox.x1 = fz_max(bbox.x1, gbox.x1);
+			bbox.y1 = fz_max(bbox.y1, gbox.y1);
 		}
 	}
 

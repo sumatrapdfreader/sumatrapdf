@@ -9,10 +9,10 @@ pdf_to_rect(fz_context *ctx, pdf_obj *array)
 	float b = pdf_to_real(pdf_array_get(array, 1));
 	float c = pdf_to_real(pdf_array_get(array, 2));
 	float d = pdf_to_real(pdf_array_get(array, 3));
-	r.x0 = MIN(a, c);
-	r.y0 = MIN(b, d);
-	r.x1 = MAX(a, c);
-	r.y1 = MAX(b, d);
+	r.x0 = fz_min(a, c);
+	r.y0 = fz_min(b, d);
+	r.x1 = fz_max(a, c);
+	r.y1 = fz_max(b, d);
 	return r;
 }
 

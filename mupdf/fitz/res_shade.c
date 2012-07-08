@@ -67,6 +67,7 @@ fz_bound_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm)
 	return fz_intersect_rect(s, r);
 }
 
+#ifndef NDEBUG
 void
 fz_print_shade(fz_context *ctx, FILE *out, fz_shade *shade)
 {
@@ -130,3 +131,4 @@ fz_print_shade(fz_context *ctx, FILE *out, fz_shade *shade)
 
 	fprintf(out, "}\n");
 }
+#endif

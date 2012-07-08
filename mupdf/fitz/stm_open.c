@@ -191,7 +191,7 @@ static void seek_buffer(fz_stream *stm, int offset, int whence)
 		stm->rp += offset;
 	if (whence == 2)
 		stm->rp = stm->ep - offset;
-	stm->rp = CLAMP(stm->rp, stm->bp, stm->ep);
+	stm->rp = fz_clampp(stm->rp, stm->bp, stm->ep);
 	stm->wp = stm->ep;
 }
 

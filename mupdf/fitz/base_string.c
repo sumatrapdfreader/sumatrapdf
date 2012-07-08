@@ -252,6 +252,6 @@ float fz_atof(const char *s)
 		/* Return 1.0, as it's a small known value that won't cause a divide by 0. */
 		return 1.0;
 	}
-	d = CLAMP(d, -FLT_MAX, FLT_MAX);
+	d = fz_clampd(d, -FLT_MAX, FLT_MAX);
 	return (float)d;
 }

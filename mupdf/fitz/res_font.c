@@ -847,6 +847,7 @@ fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gi
 	/* RJW: "cannot draw type3 glyph" */
 }
 
+#ifndef NDEBUG
 void
 fz_print_font(fz_context *ctx, FILE *out, fz_font *font)
 {
@@ -872,6 +873,7 @@ fz_print_font(fz_context *ctx, FILE *out, fz_font *font)
 
 	fprintf(out, "}\n");
 }
+#endif
 
 fz_rect
 fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
