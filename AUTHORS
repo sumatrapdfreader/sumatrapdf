@@ -29,21 +29,30 @@ Translations by various translators (see strings/*.txt)
 
 External projects are by their various authors:
 
-Project        License                        Website
------------------------------------------------------------------------------------------
-MuPDF          mupdf/COPYING           <GPL>  http://mupdf.com/
-FreeType       ext/freetype2/FTL.txt          http://www.freetype.org/
-OpenJPEG       ext/openjpeg/LICENSE    <BSD>  http://www.openjpeg.org/
-jbig2dec       ext/jbig2dec/COPYING    <GPL>  http://jbig2dec.sf.net/
-libjpeg-turbo  ext/.../README-turbo.txt<BSD>  http://libjpeg-turbo.virtualgl.org/
-zlib           ext/zlib/zlib.h                http://www.zlib.net/
-SyncTeX        <unknown>                      http://itexmac.sourceforge.net/SyncTeX.html
+Project        License                   Type Website
+--------------------------------------------------------------------------------------------------------------
+MuPDF          mupdf/COPYING             GPL  http://mupdf.com/
 bzip2          ext/bzip2/LICENSE              http://bzip.org/
+CHMLIB         ext/CHMLib/COPYING        LGPL http://www.jedrea.com/chmlib/
+FreeType       ext/freetype2/FTL.txt          http://www.freetype.org/
+jbig2dec       ext/jbig2dec/COPYING      GPL  http://jbig2dec.sf.net/
+libjpeg-turbo  ext/.../README-turbo.txt  BSD  http://libjpeg-turbo.virtualgl.org/
+DjVuLibre      ext/libdjvu/COPYRIGHT     GPL  http://djvu.sourceforge.net/
+OpenJPEG       ext/openjpeg/LICENSE      BSD  http://www.openjpeg.org/
+SyncTeX        ext/.../synctex_parser.c       http://itexmac.sourceforge.net/SyncTeX.html
 UnRAR          ext/unrar/license.txt          http://www.rarlab.com/
-DjVuLibre      ext/libdjvu/COPYRIGHT   <GPL>  http://djvu.sourceforge.net/
-CHMLIB         ext/CHMLib/COPYING     <LGPL>  http://www.jedrea.com/chmlib/
-msinttypes     src/utils/inttypes.h    <BSD>  http://code.google.com/p/msinttypes/
-NPAPI          src/browserplugin/npapi <MPL>  http://code.google.com/p/npapi-sdk/
-ezgdi          mupdf/pdf/pdf_ft_tools.c<GPL>  http://code.google.com/p/ezgdi/
+zlib           ext/zlib/zlib.h                http://www.zlib.net/
+NPAPI          src/browserplugin/npapi   MPL  http://code.google.com/p/npapi-sdk/
+ucrt           src/ucrt/AUTHORS          BSD  http://code.google.com/p/sumatrapdf/source/browse/trunk/src/ucrt
+msinttypes     src/utils/inttypes.h      BSD  http://code.google.com/p/msinttypes/
+
+CMap Resources mupdf/cmaps/README             http://sourceforge.net/adobe/cmap/home/Home/
+PolarSSL       mupdf/fitz/crypt_aes.c    BSD  http://polarssl.org/
+Arcfour        mupdf/fitz/crypt_arc4.c        http://tools.ietf.org/html/draft-kaukonen-cipher-arcfour-01
+RSA's MD5      mupdf/fitz/crypt_md5.c         http://tools.ietf.org/html/rfc1321
+CyaSSL         mupdf/fitz/crypt_sha512.c GPL  http://www.yassl.com/
+Android        mupdf/fonts/droid/NOTICE  APL  http://www.droidfonts.com/
+Poppler        mupdf/pdf/pdf_annot.c     GPL  http://poppler.freedesktop.org/
+ezgdi          mupdf/pdf/pdf_ft_tools.c  GPL  http://code.google.com/p/ezgdi/
 
 Fugue Icons    CC BY 3.0                      http://p.yusukekamiyamane.com/

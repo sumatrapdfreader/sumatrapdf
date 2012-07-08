@@ -1,6 +1,7 @@
-ucrt contains code by:
+﻿ucrt contains code by:
 
 * Krzysztof J. Kowalczyk (http://blog.kowalczyk.info)
+* Simon Bünzli (zeniko at gmail.com)
 
 Some code comes from the following projects:
 * http://code.google.com/p/webrt (BSD license)
