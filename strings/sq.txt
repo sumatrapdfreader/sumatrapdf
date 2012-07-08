@@ -14,7 +14,7 @@ Contributor: Besmir Godole
 &Për
 
 &Actual Size\tCtrl+1
-Përmasa &Aktuale\tCtrl+1
+Përmasa &Reale\tCtrl+1
 
 &All selected pages
 &Gjithë faqet e seleksionuara
@@ -53,7 +53,7 @@ Vetëm faqet &çift
 &Faqja e Parë\tHome
 
 &Fit pages to printable area
-&Përshtat faqet në hapësirën që shtypet
+&Përshtat faqet në hapësirën që printohet
 
 &Go To
 &Shkoj Te
@@ -71,13 +71,13 @@ Vetëm faqet &çift
 &Zmadhimi:
 
 &Manual
-&Manual
+&Manuali
 
 &Match case
 &Krahasoj shkronjat
 
 &Next Page\tRight Arrow
-&Faqja Tjetër\t-Right Arrow
+&Faqja Tjetër\tRight Arrow
 
 &No
 &Jo
@@ -107,13 +107,13 @@ Vetëm faqet &teke
 &Faqja e Mëparshme\tLeft Arrow
 
 &Print...
-&Shtyp...
+&Printoj...
 
 &Print...\tCtrl+P
-&Shtyp...\tCtrl+P
+&Printoj...\tCtrl+P
 
 &Print... (denied)
-&Shtyp... (ndalohet)
+&Printoj... (ndalohet)
 
 &Remember the password for this document
 &Mbaj mend fjalëkalimin për këtë dokument
@@ -134,10 +134,10 @@ Vetëm faqet &teke
 &Parametra
 
 &Shrink pages to printable area (if necessary)
-&Ngjesh faqet në hapësirën që shtypet (kur është e nevojshme)
+&Ngjesh faqet në hapësirën që printohet (kur është e nevojshme)
 
 &Single Page\tCtrl+6
-&Faqe e Vetme\tCtrl+6
+&Një Faqe\tCtrl+6
 
 &Skip this version
 &Shmang këtë versionin
@@ -152,7 +152,7 @@ Vetëm faqet &teke
 &Po
 
 &Zoom
-&Zmadhimi
+&Zmadhoj
 
 (of %d)
 (nga %d)
@@ -170,7 +170,7 @@ Add page %s to favorites
 Shtoj faqen %s te pëlqimet
 
 Add page %s to favorites with (optional) name:
-Shtoj faqen %s te pëlqimet nën emrin (me zgjedhje):
+Shtoni faqen %s te pëlqimet nën emrin (me zgjedhje):
 
 Add to favorites
 Shtoj te pëlqimet
@@ -212,7 +212,7 @@ Bookmark Shortcuts
 Shkurtoret e Shiritit
 
 Bookmark shortcut to page %s of %s
-Shkurtoja e shiritit për faqen %s nga %s
+Shkurtorja e shiritit për faqen %s nga %s
 
 Bookmarks
 Shirita
@@ -230,16 +230,16 @@ Cancel
 Anuloj
 
 Cannot print this file
-Nuk mund të shtypë skedën
+Nuk mund të printojë skedën
 
 Cannot start inverse search command. Please check the command line in the settings.
 Nuk mund të kryejë komandën e kërkimit mbrapsht. Ju lutemi verifikoni komandën te parametrat.
 
 Change Language
-Ndryshoj Gjuhën (Change Language)
+Ndryshoj Gjuhën
 
 Check for &Updates
-Verifikoj &Azhurnimet
+&Azhurnoj
 
 Comic books
 Comic books
@@ -269,7 +269,7 @@ Copying text was denied (copying as image only)
 Ndalohet kopjimi i tekstit (kopjohet vetëm si imazh)
 
 Copyright:
-Copyright:
+Të Drejtat:
 
 Could not obtain Printer properties
 Nuk mund të marrë vetitë e Printerit
@@ -287,7 +287,7 @@ Current file
 Skeda aktuale
 
 Custom &Zoom...\tCtrl+Y
-&Zmadhim i Caktuar...\tCtrl+Y
+&Përmasa e Caktuar...\tCtrl+Y
 
 Default &Layout:
 &Formati Standard:
@@ -296,10 +296,10 @@ Default &Zoom:
 &Zmadhimi Standard:
 
 Default PDF reader can't be changed in portable mode
-Nuk mund të ndryshojë lexuesi standard i PDFve në mënyrën portabël
+Lexuesi standard i PDFve nuk mund të ndryshojë në mënyrën portabël
 
 Denied Permissions:
-E Ndaluar:
+Nuk Lejohet:
 
 DjVu documents
 Dokumente DjVu
@@ -329,13 +329,13 @@ Error loading %s
 Gabim në hapjen e %s
 
 F&avorites
-&Pëlqime
+P&ëlqej
 
 F&orward\tAlt+Right Arrow
 P&ërpara\tAlt+Right Arrow
 
 F&ullscreen\tCtrl+Shift+L
-Ekran i p&lotë\tCtrl+Shift+L
+Ekran i P&lotë\tCtrl+Shift+L
 
 Facing
 Përbri
@@ -347,7 +347,7 @@ Failed to save a file
 Dështoi ruajtja e skedës
 
 Favorites
-Pëlqime
+Pëlqej
 
 File %s not found
 Nuk gjen skedën %s
@@ -395,7 +395,7 @@ Fit Width and Show Pages Continuously
 Përshtat Gjerësinë dhe Tregoj Faqet në Vazhdimësi
 
 Fit a Single Page
-Përshtat si Faqe të Vetme
+Përshtat në Një Faqe
 
 Fonts:
 Fonte:
@@ -419,7 +419,7 @@ Go to page
 Shkoj te faqja
 
 Hide frequently read
-Fsheh dokumentet që lexoj më shpesh
+Fsheh leximet e shpeshta
 
 Hint: Use the F3 key for finding again
 Këshillë: Përdorni tastin F3 për gjetjen e radhës
@@ -458,7 +458,7 @@ Next Page
 Faqja Tjetër
 
 No matches were found
-Nuk gjen ngjashmëritë
+Nuk ka ngjashmëri
 
 No result found around line %u in file %s
 Pa rezultat në rreshtin %u te skeda %s
@@ -530,7 +530,7 @@ Page scaling
 Shkallëzimi i faqes
 
 Page:
-Faqe:
+Faqja:
 
 Please wait - rendering...
 Ju lutemi prisni - përpunohet...
@@ -545,22 +545,22 @@ Previous Page
 Faqja e Mëparshme
 
 Print
-Shtyp
+Printoj
 
 Print range
-Kufiri i shtypjes
+Kufiri i printimit
 
 Printer with given name doesn't exist
 Nuk ekziston printeri me emrin e dhënë
 
 Printing is still in progress. Abort and start over?
-Shtypja është ende në vazhdim. Do e ndërprisni apo do e filloni nga e para?
+Printimi është duke vijuar. Do e ndërprisni apo do e filloni nga e para?
 
 Printing page %d of %d...
-Shtyp faqen %d nga %d...
+Printon faqen %d nga %d...
 
 Printing problem.
-Problem në shtypje.
+Problem në printim.
 
 Re&name...\tF2
 Rie&mërtoj...\tF2
@@ -575,7 +575,7 @@ Remove page %s from favorites
 Heq faqen %s nga pëlqimet
 
 Rename To
-Riemërtoj Në
+Riemërtoj Si
 
 Replace document &colors with Windows color scheme
 Zëvendësoj &ngjyrat e dokumentit me ngjyrat e Windows-it
@@ -605,7 +605,7 @@ Select content with Ctrl+left mouse button
 Seleksiononi materialin me Ctrl+butonin e majtë të miut
 
 Send by &E-mail...
-Dërgoj me &E-Mail...
+Dërgoj me &e-mail...
 
 Set inverse search command-line
 Shkruani komandën e kërkimit mbrapsht
@@ -620,13 +620,13 @@ Show Favorites
 Tregoj Pëlqimet
 
 Show frequently read
-Tregoj dokumentet që lexoj më shpesh
+Tregoj leximet e shpeshta
 
 Show the &bookmarks sidebar when available
 Tregoj brezin anësor të &shiritave kur mundësohet
 
 Single Page
-Faqe e Vetme
+Një Faqe
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Na falni, nuk duhej të ndodhte!\n\nJu lutemi shtypni 'Anuloj' nëse doni të na ndihmoni që ta ndreqim gabimin.
@@ -668,7 +668,7 @@ View
 Pamje
 
 Visit &Website
-&SumatraPDF në Internet
+SumatraPDF në &Internet
 
 Warning
 Kujdes
@@ -677,13 +677,13 @@ XPS documents
 Dokumente XPS
 
 You have the latest version.
-Keni versionin më të fundit.
+Ky është versioni më i fundit.
 
 You have version %s
-Keni versionin %s
+Ky është versioni %s
 
 Zoom
-Zmadhimi
+Zmadhoj
 
 Zoom In
 Zmadhoj
@@ -695,11 +695,11 @@ Zoom factor
 Faktori i zmadhimit
 
 [Changes detected; refreshing] %s
-[Diktohen ndryshime; rifreskohet] %s
+[Dikton ndryshime; freskohet] %s
 
 copying text
 kopjon tekstin
 
 printing document
-shtyp doumentin
+printon doumentin
 
