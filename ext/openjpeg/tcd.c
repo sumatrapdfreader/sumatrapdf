@@ -690,6 +690,12 @@ void tcd_malloc_decode_tile(opj_tcd_t *tcd, opj_image_t * image, opj_cp_t * cp, 
 		opj_tccp_t *tccp = &tcp->tccps[compno];
 		opj_tcd_tilecomp_t *tilec = &tile->comps[compno];
 		
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693171 */
+		if (tccp->numresolutions <= 0) {
+			cp->tileno[tileno] = -1;
+			return;
+		}
+		
 		/* border of each tile component (global) */
 		tilec->x0 = int_ceildiv(tile->x0, image->comps[compno].dx);
 		tilec->y0 = int_ceildiv(tile->y0, image->comps[compno].dy);
@@ -1381,6 +1387,7 @@ opj_bool tcd_decode_tile(opj_tcd_t *tcd, unsigned char *src, int len, int tileno
 		/* The +3 is headroom required by the vectorized DWT */
 		tilec->data = (int*) opj_aligned_malloc((((tilec->x1 - tilec->x0) * (tilec->y1 - tilec->y0))+3) * sizeof(int));
 		/* SumatraPDF: prevent a potential NULL dereference */
+		/* likely cf. http://code.google.com/p/openjpeg/issues/detail?id=151 */
 		if (!tilec->data) {				
 			opj_event_msg(tcd->cinfo, EVT_ERROR, "OOM in tcd_decode_tile!\n");
 			// TODO: this might leak memory

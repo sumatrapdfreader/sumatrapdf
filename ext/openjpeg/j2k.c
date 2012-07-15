@@ -1563,10 +1563,14 @@ static void j2k_read_eoc(opj_j2k_t *j2k) {
 		for (i = 0; i < j2k->cp->tileno_size; i++) {
 			tcd_malloc_decode_tile(tcd, j2k->image, j2k->cp, i, j2k->cstr_info);
 			tileno = j2k->cp->tileno[i];
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693171 */
+			if (j2k->cp->tileno[i] != -1) {
 			success = tcd_decode_tile(tcd, j2k->tile_data[tileno], j2k->tile_len[tileno], tileno, j2k->cstr_info);
 			opj_free(j2k->tile_data[tileno]);
 			j2k->tile_data[tileno] = NULL;
 			tcd_free_decode_tile(tcd, i);
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693171 */
+			} else success = OPJ_FALSE;
 			if (success == OPJ_FALSE) {
 				j2k->state |= J2K_STATE_ERR;
 				break;
