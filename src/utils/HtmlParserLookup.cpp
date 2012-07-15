@@ -208,6 +208,7 @@ AlignAttr FindAlignAttr(const char *name, size_t len)
 
 // map of entity names to their Unicode runes, cf.
 // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
+// and http://www.w3.org/TR/MathML2/bycodes.html
 
 uint32_t FindHtmlEntityRune(const char *name, size_t len)
 {
@@ -220,6 +221,9 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('A','a','c','u'):
         if (6 == len && CS2('t','e') == STR2(name + 4)) return 193;
         break;
+    case CS4('A','b','r','e'):
+        if (6 == len && CS2('v','e') == STR2(name + 4)) return 258;
+        break;
     case CS4('A','c','i','r'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 194;
         break;
@@ -228,6 +232,12 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
         break;
     case CS4('A','l','p','h'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 913;
+        break;
+    case CS4('A','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 256;
+        break;
+    case CS4('A','o','g','o'):
+        if (5 == len && CS1('n') == STR1(name + 4)) return 260;
         break;
     case CS4('A','r','i','n'):
         if (5 == len && CS1('g') == STR1(name + 4)) return 197;
@@ -241,25 +251,73 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('B','e','t','a'):
         if (4 == len) return 914;
         break;
+    case CS4('B','r','e','v'):
+        if (5 == len && CS1('e') == STR1(name + 4)) return 728;
+        break;
+    case CS4('C','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 262;
+        break;
+    case CS4('C','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 268;
+        break;
     case CS4('C','c','e','d'):
         if (6 == len && CS2('i','l') == STR2(name + 4)) return 199;
+        break;
+    case CS4('C','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 264;
+        break;
+    case CS4('C','d','o','t'):
+        if (4 == len) return 266;
+        break;
+    case CS4('C','e','d','i'):
+        if (7 == len && CS3('l','l','a') == STR3(name + 4)) return 184;
         break;
     case CS3('C','h','i'): return 935;
     case CS4('D','a','g','g'):
         if (6 == len && CS2('e','r') == STR2(name + 4)) return 8225;
         break;
+    case CS4('D','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 270;
+        break;
     case CS4('D','e','l','t'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 916;
         break;
+    case CS4('D','i','a','c'):
+        if (14 == len && str::EqN(name + 4, "riticalDot", 10)) return 729;
+        if (22 == len && str::EqN(name + 4, "riticalDoubleAcute", 18)) return 733;
+        if (16 == len && str::EqN(name + 4, "riticalTilde", 12)) return 732;
+        break;
+    case CS4('D','o','u','b'):
+        if (9 == len && str::EqN(name + 4, "leDot", 5)) return 168;
+        break;
+    case CS4('D','o','w','n'):
+        if (9 == len && str::EqN(name + 4, "Breve", 5)) return 785;
+        break;
+    case CS4('D','s','t','r'):
+        if (6 == len && CS2('o','k') == STR2(name + 4)) return 272;
+        break;
+    case CS3('E','N','G'): return 330;
     case CS3('E','T','H'): return 208;
     case CS4('E','a','c','u'):
         if (6 == len && CS2('t','e') == STR2(name + 4)) return 201;
         break;
+    case CS4('E','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 282;
+        break;
     case CS4('E','c','i','r'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 202;
         break;
+    case CS4('E','d','o','t'):
+        if (4 == len) return 278;
+        break;
     case CS4('E','g','r','a'):
         if (6 == len && CS2('v','e') == STR2(name + 4)) return 200;
+        break;
+    case CS4('E','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 274;
+        break;
+    case CS4('E','o','g','o'):
+        if (5 == len && CS1('n') == STR1(name + 4)) return 280;
         break;
     case CS4('E','p','s','i'):
         if (7 == len && CS3('l','o','n') == STR3(name + 4)) return 917;
@@ -270,6 +328,31 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
         break;
     case CS4('G','a','m','m'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 915;
+        if (6 == len && CS2('a','d') == STR2(name + 4)) return 988;
+        break;
+    case CS4('G','b','r','e'):
+        if (6 == len && CS2('v','e') == STR2(name + 4)) return 286;
+        break;
+    case CS4('G','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 290;
+        break;
+    case CS4('G','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 284;
+        break;
+    case CS4('G','d','o','t'):
+        if (4 == len) return 288;
+        break;
+    case CS4('H','a','c','e'):
+        if (5 == len && CS1('k') == STR1(name + 4)) return 711;
+        break;
+    case CS4('H','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 292;
+        break;
+    case CS4('H','s','t','r'):
+        if (6 == len && CS2('o','k') == STR2(name + 4)) return 294;
+        break;
+    case CS4('I','J','l','i'):
+        if (5 == len && CS1('g') == STR1(name + 4)) return 306;
         break;
     case CS4('I','a','c','u'):
         if (6 == len && CS2('t','e') == STR2(name + 4)) return 205;
@@ -277,22 +360,64 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('I','c','i','r'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 206;
         break;
+    case CS4('I','d','o','t'):
+        if (4 == len) return 304;
+        break;
     case CS4('I','g','r','a'):
         if (6 == len && CS2('v','e') == STR2(name + 4)) return 204;
+        break;
+    case CS4('I','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 298;
+        break;
+    case CS4('I','o','g','o'):
+        if (5 == len && CS1('n') == STR1(name + 4)) return 302;
         break;
     case CS4('I','o','t','a'):
         if (4 == len) return 921;
         break;
+    case CS4('I','t','i','l'):
+        if (6 == len && CS2('d','e') == STR2(name + 4)) return 296;
+        break;
     case CS4('I','u','m','l'):
         if (4 == len) return 207;
+        break;
+    case CS4('J','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 308;
         break;
     case CS4('K','a','p','p'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 922;
         break;
+    case CS4('K','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 310;
+        break;
+    case CS4('L','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 313;
+        break;
     case CS4('L','a','m','b'):
         if (6 == len && CS2('d','a') == STR2(name + 4)) return 923;
         break;
+    case CS4('L','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 317;
+        break;
+    case CS4('L','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 315;
+        break;
+    case CS4('L','m','i','d'):
+        if (6 == len && CS2('o','t') == STR2(name + 4)) return 319;
+        break;
+    case CS4('L','s','t','r'):
+        if (6 == len && CS2('o','k') == STR2(name + 4)) return 321;
+        break;
     case CS2('M','u'): return 924;
+    case CS4('N','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 323;
+        break;
+    case CS4('N','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 327;
+        break;
+    case CS4('N','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 325;
+        break;
     case CS4('N','t','i','l'):
         if (6 == len && CS2('d','e') == STR2(name + 4)) return 209;
         break;
@@ -306,8 +431,14 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('O','c','i','r'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 212;
         break;
+    case CS4('O','d','b','l'):
+        if (6 == len && CS2('a','c') == STR2(name + 4)) return 336;
+        break;
     case CS4('O','g','r','a'):
         if (6 == len && CS2('v','e') == STR2(name + 4)) return 210;
+        break;
+    case CS4('O','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 332;
         break;
     case CS4('O','m','e','g'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 937;
@@ -324,15 +455,39 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('O','u','m','l'):
         if (4 == len) return 214;
         break;
+    case CS4('O','v','e','r'):
+        if (7 == len && CS3('B','a','r') == STR3(name + 4)) return 175;
+        break;
     case CS3('P','h','i'): return 934;
     case CS2('P','i'): return 928;
+    case CS4('P','l','u','s'):
+        if (9 == len && str::EqN(name + 4, "Minus", 5)) return 177;
+        break;
     case CS4('P','r','i','m'):
         if (5 == len && CS1('e') == STR1(name + 4)) return 8243;
         break;
     case CS3('P','s','i'): return 936;
+    case CS4('R','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 340;
+        break;
+    case CS4('R','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 344;
+        break;
+    case CS4('R','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 342;
+        break;
     case CS3('R','h','o'): return 929;
+    case CS4('S','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 346;
+        break;
     case CS4('S','c','a','r'):
         if (6 == len && CS2('o','n') == STR2(name + 4)) return 352;
+        break;
+    case CS4('S','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 350;
+        break;
+    case CS4('S','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 348;
         break;
     case CS4('S','i','g','m'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 931;
@@ -341,36 +496,85 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
         if (5 == len && CS1('N') == STR1(name + 4)) return 222;
         break;
     case CS3('T','a','u'): return 932;
+    case CS4('T','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 356;
+        break;
+    case CS4('T','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 354;
+        break;
     case CS4('T','h','e','t'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 920;
+        break;
+    case CS4('T','s','t','r'):
+        if (6 == len && CS2('o','k') == STR2(name + 4)) return 358;
         break;
     case CS4('U','a','c','u'):
         if (6 == len && CS2('t','e') == STR2(name + 4)) return 218;
         break;
+    case CS4('U','b','r','e'):
+        if (6 == len && CS2('v','e') == STR2(name + 4)) return 364;
+        break;
     case CS4('U','c','i','r'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 219;
+        break;
+    case CS4('U','d','b','l'):
+        if (6 == len && CS2('a','c') == STR2(name + 4)) return 368;
         break;
     case CS4('U','g','r','a'):
         if (6 == len && CS2('v','e') == STR2(name + 4)) return 217;
         break;
+    case CS4('U','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 362;
+        break;
+    case CS4('U','n','d','e'):
+        if (8 == len && CS4('r','B','a','r') == STR4(name + 4)) return 818;
+        break;
+    case CS4('U','o','g','o'):
+        if (5 == len && CS1('n') == STR1(name + 4)) return 370;
+        break;
     case CS4('U','p','s','i'):
+        if (4 == len) return 978;
         if (7 == len && CS3('l','o','n') == STR3(name + 4)) return 933;
+        break;
+    case CS4('U','r','i','n'):
+        if (5 == len && CS1('g') == STR1(name + 4)) return 366;
+        break;
+    case CS4('U','t','i','l'):
+        if (6 == len && CS2('d','e') == STR2(name + 4)) return 360;
         break;
     case CS4('U','u','m','l'):
         if (4 == len) return 220;
+        break;
+    case CS4('W','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 372;
         break;
     case CS2('X','i'): return 926;
     case CS4('Y','a','c','u'):
         if (6 == len && CS2('t','e') == STR2(name + 4)) return 221;
         break;
+    case CS4('Y','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 374;
+        break;
     case CS4('Y','u','m','l'):
         if (4 == len) return 376;
+        break;
+    case CS4('Z','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 377;
+        break;
+    case CS4('Z','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 381;
+        break;
+    case CS4('Z','d','o','t'):
+        if (4 == len) return 379;
         break;
     case CS4('Z','e','t','a'):
         if (4 == len) return 918;
         break;
     case CS4('a','a','c','u'):
         if (6 == len && CS2('t','e') == STR2(name + 4)) return 225;
+        break;
+    case CS4('a','b','r','e'):
+        if (6 == len && CS2('v','e') == STR2(name + 4)) return 259;
         break;
     case CS4('a','c','i','r'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 226;
@@ -390,9 +594,15 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('a','l','p','h'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 945;
         break;
+    case CS4('a','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 257;
+        break;
     case CS3('a','m','p'): return 38;
     case CS3('a','n','d'): return 8743;
     case CS3('a','n','g'): return 8736;
+    case CS4('a','o','g','o'):
+        if (5 == len && CS1('n') == STR1(name + 4)) return 261;
+        break;
     case CS4('a','p','o','s'):
         if (4 == len) return 39;
         break;
@@ -408,6 +618,9 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('a','u','m','l'):
         if (4 == len) return 228;
         break;
+    case CS4('b','a','c','k'):
+        if (11 == len && str::EqN(name + 4, "epsilon", 7)) return 1014;
+        break;
     case CS4('b','d','q','u'):
         if (5 == len && CS1('o') == STR1(name + 4)) return 8222;
         break;
@@ -420,9 +633,21 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('b','u','l','l'):
         if (4 == len) return 8226;
         break;
+    case CS4('c','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 263;
+        break;
     case CS3('c','a','p'): return 8745;
+    case CS4('c','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 269;
+        break;
     case CS4('c','c','e','d'):
         if (6 == len && CS2('i','l') == STR2(name + 4)) return 231;
+        break;
+    case CS4('c','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 265;
+        break;
+    case CS4('c','d','o','t'):
+        if (4 == len) return 267;
         break;
     case CS4('c','e','d','i'):
         if (5 == len && CS1('l') == STR1(name + 4)) return 184;
@@ -459,6 +684,9 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('d','a','r','r'):
         if (4 == len) return 8595;
         break;
+    case CS4('d','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 271;
+        break;
     case CS3('d','e','g'): return 176;
     case CS4('d','e','l','t'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 948;
@@ -466,17 +694,32 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('d','i','a','m'):
         if (5 == len && CS1('s') == STR1(name + 4)) return 9830;
         break;
+    case CS4('d','i','g','a'):
+        if (7 == len && CS3('m','m','a') == STR3(name + 4)) return 989;
+        break;
     case CS4('d','i','v','i'):
         if (6 == len && CS2('d','e') == STR2(name + 4)) return 247;
+        break;
+    case CS4('d','s','t','r'):
+        if (6 == len && CS2('o','k') == STR2(name + 4)) return 273;
         break;
     case CS4('e','a','c','u'):
         if (6 == len && CS2('t','e') == STR2(name + 4)) return 233;
         break;
+    case CS4('e','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 283;
+        break;
     case CS4('e','c','i','r'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 234;
         break;
+    case CS4('e','d','o','t'):
+        if (4 == len) return 279;
+        break;
     case CS4('e','g','r','a'):
         if (6 == len && CS2('v','e') == STR2(name + 4)) return 232;
+        break;
+    case CS4('e','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 275;
         break;
     case CS4('e','m','p','t'):
         if (5 == len && CS1('y') == STR1(name + 4)) return 8709;
@@ -484,8 +727,12 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('e','m','s','p'):
         if (4 == len) return 8195;
         break;
+    case CS3('e','n','g'): return 331;
     case CS4('e','n','s','p'):
         if (4 == len) return 8194;
+        break;
+    case CS4('e','o','g','o'):
+        if (5 == len && CS1('n') == STR1(name + 4)) return 281;
         break;
     case CS4('e','p','s','i'):
         if (7 == len && CS3('l','o','n') == STR3(name + 4)) return 949;
@@ -518,8 +765,20 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('f','r','a','s'):
         if (5 == len && CS1('l') == STR1(name + 4)) return 8260;
         break;
+    case CS4('g','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 501;
+        break;
     case CS4('g','a','m','m'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 947;
+        break;
+    case CS4('g','b','r','e'):
+        if (6 == len && CS2('v','e') == STR2(name + 4)) return 287;
+        break;
+    case CS4('g','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 285;
+        break;
+    case CS4('g','d','o','t'):
+        if (4 == len) return 289;
         break;
     case CS2('g','e'): return 8805;
     case CS2('g','t'): return 62;
@@ -529,11 +788,17 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('h','a','r','r'):
         if (4 == len) return 8596;
         break;
+    case CS4('h','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 293;
+        break;
     case CS4('h','e','a','r'):
         if (6 == len && CS2('t','s') == STR2(name + 4)) return 9829;
         break;
     case CS4('h','e','l','l'):
         if (6 == len && CS2('i','p') == STR2(name + 4)) return 8230;
+        break;
+    case CS4('h','s','t','r'):
+        if (6 == len && CS2('o','k') == STR2(name + 4)) return 295;
         break;
     case CS4('i','a','c','u'):
         if (6 == len && CS2('t','e') == STR2(name + 4)) return 237;
@@ -547,13 +812,25 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('i','g','r','a'):
         if (6 == len && CS2('v','e') == STR2(name + 4)) return 236;
         break;
+    case CS4('i','j','l','i'):
+        if (5 == len && CS1('g') == STR1(name + 4)) return 307;
+        break;
+    case CS4('i','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 299;
+        break;
     case CS4('i','m','a','g'):
         if (5 == len && CS1('e') == STR1(name + 4)) return 8465;
+        break;
+    case CS4('i','m','p','e'):
+        if (5 == len && CS1('d') == STR1(name + 4)) return 437;
         break;
     case CS4('i','n','f','i'):
         if (5 == len && CS1('n') == STR1(name + 4)) return 8734;
         break;
     case CS3('i','n','t'): return 8747;
+    case CS4('i','o','g','o'):
+        if (5 == len && CS1('n') == STR1(name + 4)) return 303;
+        break;
     case CS4('i','o','t','a'):
         if (4 == len) return 953;
         break;
@@ -563,14 +840,29 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('i','s','i','n'):
         if (4 == len) return 8712;
         break;
+    case CS4('i','t','i','l'):
+        if (6 == len && CS2('d','e') == STR2(name + 4)) return 297;
+        break;
     case CS4('i','u','m','l'):
         if (4 == len) return 239;
+        break;
+    case CS4('j','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 309;
         break;
     case CS4('k','a','p','p'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 954;
         break;
+    case CS4('k','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 311;
+        break;
+    case CS4('k','g','r','e'):
+        if (6 == len && CS2('e','n') == STR2(name + 4)) return 312;
+        break;
     case CS4('l','A','r','r'):
         if (4 == len) return 8656;
+        break;
+    case CS4('l','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 314;
         break;
     case CS4('l','a','m','b'):
         if (6 == len && CS2('d','a') == STR2(name + 4)) return 955;
@@ -584,6 +876,12 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('l','a','r','r'):
         if (4 == len) return 8592;
         break;
+    case CS4('l','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 318;
+        break;
+    case CS4('l','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 316;
+        break;
     case CS4('l','c','e','i'):
         if (5 == len && CS1('l') == STR1(name + 4)) return 8968;
         break;
@@ -593,6 +891,9 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS2('l','e'): return 8804;
     case CS4('l','f','l','o'):
         if (6 == len && CS2('o','r') == STR2(name + 4)) return 8970;
+        break;
+    case CS4('l','m','i','d'):
+        if (6 == len && CS2('o','t') == STR2(name + 4)) return 320;
         break;
     case CS4('l','o','w','a'):
         if (6 == len && CS2('s','t') == STR2(name + 4)) return 8727;
@@ -604,6 +905,9 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
         break;
     case CS4('l','s','q','u'):
         if (5 == len && CS1('o') == STR1(name + 4)) return 8216;
+        break;
+    case CS4('l','s','t','r'):
+        if (6 == len && CS2('o','k') == STR2(name + 4)) return 322;
         break;
     case CS2('l','t'): return 60;
     case CS4('m','a','c','r'):
@@ -625,8 +929,20 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('n','a','b','l'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 8711;
         break;
+    case CS4('n','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 324;
+        break;
+    case CS4('n','a','p','o'):
+        if (5 == len && CS1('s') == STR1(name + 4)) return 329;
+        break;
     case CS4('n','b','s','p'):
         if (4 == len) return 160;
+        break;
+    case CS4('n','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 328;
+        break;
+    case CS4('n','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 326;
         break;
     case CS4('n','d','a','s'):
         if (5 == len && CS1('h') == STR1(name + 4)) return 8211;
@@ -650,14 +966,23 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('o','c','i','r'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 244;
         break;
+    case CS4('o','d','b','l'):
+        if (6 == len && CS2('a','c') == STR2(name + 4)) return 337;
+        break;
     case CS4('o','e','l','i'):
         if (5 == len && CS1('g') == STR1(name + 4)) return 339;
+        break;
+    case CS4('o','g','o','n'):
+        if (4 == len) return 731;
         break;
     case CS4('o','g','r','a'):
         if (6 == len && CS2('v','e') == STR2(name + 4)) return 242;
         break;
     case CS4('o','l','i','n'):
         if (5 == len && CS1('e') == STR1(name + 4)) return 8254;
+        break;
+    case CS4('o','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 333;
         break;
     case CS4('o','m','e','g'):
         if (5 == len && CS1('a') == STR1(name + 4)) return 969;
@@ -724,6 +1049,9 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('r','A','r','r'):
         if (4 == len) return 8658;
         break;
+    case CS4('r','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 341;
+        break;
     case CS4('r','a','d','i'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 8730;
         break;
@@ -735,6 +1063,12 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
         break;
     case CS4('r','a','r','r'):
         if (4 == len) return 8594;
+        break;
+    case CS4('r','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 345;
+        break;
+    case CS4('r','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 343;
         break;
     case CS4('r','c','e','i'):
         if (5 == len && CS1('l') == STR1(name + 4)) return 8969;
@@ -750,6 +1084,9 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
         if (6 == len && CS2('o','r') == STR2(name + 4)) return 8971;
         break;
     case CS3('r','h','o'): return 961;
+    case CS4('r','i','n','g'):
+        if (4 == len) return 730;
+        break;
     case CS3('r','l','m'): return 8207;
     case CS4('r','s','a','q'):
         if (6 == len && CS2('u','o') == STR2(name + 4)) return 8250;
@@ -757,11 +1094,20 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('r','s','q','u'):
         if (5 == len && CS1('o') == STR1(name + 4)) return 8217;
         break;
+    case CS4('s','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 347;
+        break;
     case CS4('s','b','q','u'):
         if (5 == len && CS1('o') == STR1(name + 4)) return 8218;
         break;
     case CS4('s','c','a','r'):
         if (6 == len && CS2('o','n') == STR2(name + 4)) return 353;
+        break;
+    case CS4('s','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 351;
+        break;
+    case CS4('s','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 349;
         break;
     case CS4('s','d','o','t'):
         if (4 == len) return 8901;
@@ -777,6 +1123,10 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS3('s','i','m'): return 8764;
     case CS4('s','p','a','d'):
         if (6 == len && CS2('e','s') == STR2(name + 4)) return 9824;
+        break;
+    case CS4('s','t','r','a'):
+        if (15 == len && str::EqN(name + 4, "ightepsilon", 11)) return 1013;
+        if (11 == len && str::EqN(name + 4, "ightphi", 7)) return 981;
         break;
     case CS3('s','u','b'): return 8834;
     case CS4('s','u','b','e'):
@@ -800,6 +1150,12 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
         if (5 == len && CS1('g') == STR1(name + 4)) return 223;
         break;
     case CS3('t','a','u'): return 964;
+    case CS4('t','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 357;
+        break;
+    case CS4('t','c','e','d'):
+        if (6 == len && CS2('i','l') == STR2(name + 4)) return 355;
+        break;
     case CS4('t','h','e','r'):
         if (6 == len && CS2('e','4') == STR2(name + 4)) return 8756;
         break;
@@ -822,6 +1178,9 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('t','r','a','d'):
         if (5 == len && CS1('e') == STR1(name + 4)) return 8482;
         break;
+    case CS4('t','s','t','r'):
+        if (6 == len && CS2('o','k') == STR2(name + 4)) return 359;
+        break;
     case CS4('u','A','r','r'):
         if (4 == len) return 8657;
         break;
@@ -831,19 +1190,59 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('u','a','r','r'):
         if (4 == len) return 8593;
         break;
+    case CS4('u','b','r','e'):
+        if (6 == len && CS2('v','e') == STR2(name + 4)) return 365;
+        break;
     case CS4('u','c','i','r'):
         if (5 == len && CS1('c') == STR1(name + 4)) return 251;
+        break;
+    case CS4('u','d','b','l'):
+        if (6 == len && CS2('a','c') == STR2(name + 4)) return 369;
         break;
     case CS4('u','g','r','a'):
         if (6 == len && CS2('v','e') == STR2(name + 4)) return 249;
         break;
+    case CS4('u','m','a','c'):
+        if (5 == len && CS1('r') == STR1(name + 4)) return 363;
+        break;
     case CS3('u','m','l'): return 168;
+    case CS4('u','o','g','o'):
+        if (5 == len && CS1('n') == STR1(name + 4)) return 371;
+        break;
     case CS4('u','p','s','i'):
         if (5 == len && CS1('h') == STR1(name + 4)) return 978;
         if (7 == len && CS3('l','o','n') == STR3(name + 4)) return 965;
         break;
+    case CS4('u','r','i','n'):
+        if (5 == len && CS1('g') == STR1(name + 4)) return 367;
+        break;
+    case CS4('u','t','i','l'):
+        if (6 == len && CS2('d','e') == STR2(name + 4)) return 361;
+        break;
     case CS4('u','u','m','l'):
         if (4 == len) return 252;
+        break;
+    case CS4('v','a','r','e'):
+        if (10 == len && str::EqN(name + 4, "psilon", 6)) return 949;
+        break;
+    case CS4('v','a','r','k'):
+        if (8 == len && CS4('a','p','p','a') == STR4(name + 4)) return 1008;
+        break;
+    case CS4('v','a','r','p'):
+        if (6 == len && CS2('h','i') == STR2(name + 4)) return 966;
+        if (5 == len && CS1('i') == STR1(name + 4)) return 982;
+        break;
+    case CS4('v','a','r','r'):
+        if (6 == len && CS2('h','o') == STR2(name + 4)) return 1009;
+        break;
+    case CS4('v','a','r','s'):
+        if (8 == len && CS4('i','g','m','a') == STR4(name + 4)) return 962;
+        break;
+    case CS4('v','a','r','t'):
+        if (8 == len && CS4('h','e','t','a') == STR4(name + 4)) return 977;
+        break;
+    case CS4('w','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 373;
         break;
     case CS4('w','e','i','e'):
         if (6 == len && CS2('r','p') == STR2(name + 4)) return 8472;
@@ -852,9 +1251,21 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     case CS4('y','a','c','u'):
         if (6 == len && CS2('t','e') == STR2(name + 4)) return 253;
         break;
+    case CS4('y','c','i','r'):
+        if (5 == len && CS1('c') == STR1(name + 4)) return 375;
+        break;
     case CS3('y','e','n'): return 165;
     case CS4('y','u','m','l'):
         if (4 == len) return 255;
+        break;
+    case CS4('z','a','c','u'):
+        if (6 == len && CS2('t','e') == STR2(name + 4)) return 378;
+        break;
+    case CS4('z','c','a','r'):
+        if (6 == len && CS2('o','n') == STR2(name + 4)) return 382;
+        break;
+    case CS4('z','d','o','t'):
+        if (4 == len) return 380;
         break;
     case CS4('z','e','t','a'):
         if (4 == len) return 950;

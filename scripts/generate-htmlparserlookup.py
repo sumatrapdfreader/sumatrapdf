@@ -1,5 +1,5 @@
 """
-This script generates the fairly fast C code for the following function:
+This script generates fairly fast C code for the following function:
 Given a string, see if it belongs to a known set of strings. If it does,
 return a value corresponding to that string.
 """
@@ -132,13 +132,20 @@ List_Inline_Tags = "a abbr acronym audio b code em font i s small span strike st
 Template_Entities_Comment = """\
 // map of entity names to their Unicode runes, cf.
 // http://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
+// and http://www.w3.org/TR/MathML2/bycodes.html
 """
+
+# selection of MathML2 entities that aren't HTML entities
+List_MathML2_Entities = [("DoubleDot", 168), ("OverBar", 175), ("PlusMinus", 177), ("Cedilla", 184), ("Amacr", 256), ("amacr", 257), ("Abreve", 258), ("abreve", 259), ("Aogon", 260), ("aogon", 261), ("Cacute", 262), ("cacute", 263), ("Ccirc", 264), ("ccirc", 265), ("Cdot", 266), ("cdot", 267), ("Ccaron", 268), ("ccaron", 269), ("Dcaron", 270), ("dcaron", 271), ("Dstrok", 272), ("dstrok", 273), ("Emacr", 274), ("emacr", 275), ("Edot", 278), ("edot", 279), ("Eogon", 280), ("eogon", 281), ("Ecaron", 282), ("ecaron", 283), ("Gcirc", 284), ("gcirc", 285), ("Gbreve", 286), ("gbreve", 287), ("Gdot", 288), ("gdot", 289), ("Gcedil", 290), ("Hcirc", 292), ("hcirc", 293), ("Hstrok", 294), ("hstrok", 295), ("Itilde", 296), ("itilde", 297), ("Imacr", 298), ("imacr", 299), ("Iogon", 302), ("iogon", 303), ("Idot", 304), ("IJlig", 306), ("ijlig", 307), ("Jcirc", 308), ("jcirc", 309), ("Kcedil", 310), ("kcedil", 311), ("kgreen", 312), ("Lacute", 313), ("lacute", 314), ("Lcedil", 315), ("lcedil", 316), ("Lcaron", 317), ("lcaron", 318), ("Lmidot", 319), ("lmidot", 320), ("Lstrok", 321), ("lstrok", 322), ("Nacute", 323), ("nacute", 324), ("Ncedil", 325), ("ncedil", 326), ("Ncaron", 327), ("ncaron", 328), ("napos", 329), ("ENG", 330), ("eng", 331), ("Omacr", 332), ("omacr", 333), ("Odblac", 336), ("odblac", 337), ("Racute", 340), ("racute", 341), ("Rcedil", 342), ("rcedil", 343), ("Rcaron", 344), ("rcaron", 345), ("Sacute", 346), ("sacute", 347), ("Scirc", 348), ("scirc", 349), ("Scedil", 350), ("scedil", 351), ("Tcedil", 354), ("tcedil", 355), ("Tcaron", 356), ("tcaron", 357), ("Tstrok", 358), ("tstrok", 359), ("Utilde", 360), ("utilde", 361), ("Umacr", 362), ("umacr", 363), ("Ubreve", 364), ("ubreve", 365), ("Uring", 366), ("uring", 367), ("Udblac", 368), ("udblac", 369), ("Uogon", 370), ("uogon", 371), ("Wcirc", 372), ("wcirc", 373), ("Ycirc", 374), ("ycirc", 375), ("Zacute", 377), ("zacute", 378), ("Zdot", 379), ("zdot", 380), ("Zcaron", 381), ("zcaron", 382), ("imped", 437), ("gacute", 501), ("Hacek", 711), ("Breve", 728), ("DiacriticalDot", 729), ("ring", 730), ("ogon", 731), ("DiacriticalTilde", 732), ("DiacriticalDoubleAcute", 733), ("DownBreve", 785), ("UnderBar", 818), ("varepsilon", 949), ("varsigma", 962), ("varphi", 966), ("vartheta", 977), ("Upsi", 978), ("straightphi", 981), ("varpi", 982), ("Gammad", 988), ("digamma", 989), ("varkappa", 1008), ("varrho", 1009), ("straightepsilon", 1013), ("backepsilon", 1014)]
 
 from htmlentitydefs import entitydefs
 entitydefs['apos'] = "'" # only XML entity that isn't an HTML entity as well
 List_HTML_Entities = []
 for name, value in entitydefs.items():
 	List_HTML_Entities.append((name, value[2:-1] or str(ord(value))))
+for (name, value) in List_MathML2_Entities:
+	assert name not in entitydefs
+	List_HTML_Entities.append((name, str(value)))
 
 ########## CSS colors ##########
 
