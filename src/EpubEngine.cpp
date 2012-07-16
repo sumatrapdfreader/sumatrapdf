@@ -1300,6 +1300,45 @@ static TCHAR *ToPlainUrl(const TCHAR *url)
     return plainUrl;
 }
 
+// cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
+static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
+{
+    if (!strstr(html, "charset="))
+        return 0;
+
+    HtmlPullParser parser(html, min(htmlLen, 1024));
+    HtmlToken *tok;
+    while ((tok = parser.Next()) && !tok->IsError()) {
+        if (tok->tag != Tag_Meta)
+            continue;
+        AttrInfo *attr = tok->GetAttrByName("http-equiv");
+        if (!attr || !attr->ValIs("Content-Type"))
+            continue;
+        attr = tok->GetAttrByName("content");
+        ScopedMem<char> mimetype, charset;
+        if (!attr || !str::Parse(attr->val, attr->valLen, "%S;%_charset=%S", &mimetype, &charset))
+            continue;
+
+        static struct {
+            const char *name;
+            UINT codepage;
+        } codepages[] = {
+            { "ISO-8859-1", 1252 }, { "Latin1", 1252 }, { "CP1252", 1252 }, { "Windows-1252", 1252 },
+            { "ISO-8859-2", 28592 }, { "Latin2", 28592 },
+            { "CP1251", 1251 }, { "Windows-1251", 1251 }, { "KOI8-R", 20866 },
+            { "Big5", 950 }, { "shift-jis", 932 }, { "x-euc", 932 }, { "euc-kr", 949 },
+            { "UTF-8", CP_UTF8 },
+        };
+        for (int i = 0; i < dimof(codepages); i++) {
+            if (str::EqI(charset, codepages[i].name))
+                return codepages[i].codepage;
+        }
+        break;
+    }
+    
+    return 0;
+}
+
 // variation of CRC-32 which deals with strings that are
 // mostly ASCII and should be treated case independently
 static uint32_t GetQuickHashI(const TCHAR *str)
@@ -1365,11 +1404,12 @@ public:
         }
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         // TODO: use the native codepage for the path to GetData
-        ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, NULL));
+        size_t pageHtmlLen;
+        ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, &pageHtmlLen));
         if (!pageHtml)
             return;
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8);
-        html.AppendAndFree(doc->ToUtf8(pageHtml));
+        html.AppendAndFree(doc->ToUtf8(pageHtml, ExtractHttpCharset((const char *)pageHtml.Get(), pageHtmlLen)));
         added.Append(plainUrl.StealData());
         addedHashes.Append(hash);
     }

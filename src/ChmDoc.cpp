@@ -69,11 +69,13 @@ unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
     return data.StealData();
 }
 
-char *ChmDoc::ToUtf8(const unsigned char *text)
+char *ChmDoc::ToUtf8(const unsigned char *text, UINT overrideCP)
 {
     const char *s = (char *)text;
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
+    if (overrideCP)
+        return str::ToMultiByte(s, overrideCP, CP_UTF8);
     if (CP_UTF8 == codepage)
         return str::Dup(s);
     return str::ToMultiByte(s, codepage, CP_UTF8);

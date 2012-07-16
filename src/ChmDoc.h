@@ -31,7 +31,7 @@ public:
     bool HasData(const char *fileName);
     unsigned char *GetData(const char *fileName, size_t *lenOut);
 
-    char *ToUtf8(const unsigned char *text);
+    char *ToUtf8(const unsigned char *text, UINT overrideCP=0);
     TCHAR *ToStr(const char *text);
 
     TCHAR *GetProperty(const char *name);
