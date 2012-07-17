@@ -848,6 +848,7 @@ struct fz_stroke_state_s
 };
 
 fz_path *fz_new_path(fz_context *ctx);
+fz_point fz_currentpoint(fz_context *ctx, fz_path *path);
 void fz_moveto(fz_context*, fz_path*, float x, float y);
 void fz_lineto(fz_context*, fz_path*, float x, float y);
 void fz_curveto(fz_context*,fz_path*, float, float, float, float, float, float);
@@ -883,11 +884,13 @@ fz_glyph_cache *fz_keep_glyph_cache(fz_context *ctx);
 void fz_drop_glyph_cache_context(fz_context *ctx);
 void fz_purge_glyph_cache(fz_context *ctx);
 
+fz_path *fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm);
+fz_path *fz_outline_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm);
 fz_pixmap *fz_render_ft_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm, int aa);
-fz_pixmap *fz_render_t3_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm, fz_colorspace *model);
+fz_pixmap *fz_render_t3_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm, fz_colorspace *model, fz_bbox scissor);
 fz_pixmap *fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *state);
-fz_pixmap *fz_render_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_colorspace *model);
-fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_matrix, fz_stroke_state *stroke);
+fz_pixmap *fz_render_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_colorspace *model, fz_bbox scissor);
+fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_matrix, fz_stroke_state *stroke, fz_bbox scissor);
 void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate);
 
 /*

@@ -35,40 +35,6 @@ xps_parse_point(char *s_in, float *x, float *y)
 	return s_out;
 }
 
-static fz_point
-fz_currentpoint(fz_path *path)
-{
-	fz_point c, m;
-	int i;
-
-	c.x = c.y = m.x = m.y = 0;
-	i = 0;
-
-	while (i < path->len)
-	{
-		switch (path->items[i++].k)
-		{
-		case FZ_MOVETO:
-			m.x = c.x = path->items[i++].v;
-			m.y = c.y = path->items[i++].v;
-			break;
-		case FZ_LINETO:
-			c.x = path->items[i++].v;
-			c.y = path->items[i++].v;
-			break;
-		case FZ_CURVETO:
-			i += 4;
-			c.x = path->items[i++].v;
-			c.y = path->items[i++].v;
-			break;
-		case FZ_CLOSE_PATH:
-			c = m;
-		}
-	}
-
-	return c;
-}
-
 /* Draw an arc segment transformed by the matrix, we approximate with straight
  * line segments. We cannot use the fz_arc function because they only draw
  * circular arcs, we need to transform the line to make them elliptical but
@@ -160,7 +126,7 @@ xps_draw_arc(fz_context *doc, fz_path *path,
 	float sign;
 	float th1, dth;
 
-	pt = fz_currentpoint(path);
+	pt = fz_currentpoint(doc, path);
 	x1 = pt.x;
 	y1 = pt.y;
 	x2 = point_x;
@@ -334,7 +300,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 		case 'm':
 			if (i + 1 >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			fz_moveto(doc->ctx, path, pt.x + fz_atof(args[i]), pt.y + fz_atof(args[i+1]));
 			i += 2;
 			break;
@@ -346,33 +312,33 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 		case 'l':
 			if (i + 1 >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			fz_lineto(doc->ctx, path, pt.x + fz_atof(args[i]), pt.y + fz_atof(args[i+1]));
 			i += 2;
 			break;
 
 		case 'H':
 			if (i >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			fz_lineto(doc->ctx, path, fz_atof(args[i]), pt.y);
 			i += 1;
 			break;
 		case 'h':
 			if (i >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			fz_lineto(doc->ctx, path, pt.x + fz_atof(args[i]), pt.y);
 			i += 1;
 			break;
 
 		case 'V':
 			if (i >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			fz_lineto(doc->ctx, path, pt.x, fz_atof(args[i]));
 			i += 1;
 			break;
 		case 'v':
 			if (i >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			fz_lineto(doc->ctx, path, pt.x, pt.y + fz_atof(args[i]));
 			i += 1;
 			break;
@@ -394,7 +360,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 
 		case 'c':
 			if (i + 5 >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			x1 = fz_atof(args[i+0]) + pt.x;
 			y1 = fz_atof(args[i+1]) + pt.y;
 			x2 = fz_atof(args[i+2]) + pt.x;
@@ -410,7 +376,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 
 		case 'S':
 			if (i + 3 >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			x1 = fz_atof(args[i+0]);
 			y1 = fz_atof(args[i+1]);
 			x2 = fz_atof(args[i+2]);
@@ -424,7 +390,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 
 		case 's':
 			if (i + 3 >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			x1 = fz_atof(args[i+0]) + pt.x;
 			y1 = fz_atof(args[i+1]) + pt.y;
 			x2 = fz_atof(args[i+2]) + pt.x;
@@ -438,7 +404,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 
 		case 'Q':
 			if (i + 3 >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			x1 = fz_atof(args[i+0]);
 			y1 = fz_atof(args[i+1]);
 			x2 = fz_atof(args[i+2]);
@@ -451,7 +417,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 		case 'q':
 			if (i + 3 >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			x1 = fz_atof(args[i+0]) + pt.x;
 			y1 = fz_atof(args[i+1]) + pt.y;
 			x2 = fz_atof(args[i+2]) + pt.x;
@@ -473,7 +439,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 		case 'a':
 			if (i + 6 >= n) break;
-			pt = fz_currentpoint(path);
+			pt = fz_currentpoint(doc->ctx, path);
 			xps_draw_arc(doc->ctx, path,
 				fz_atof(args[i+0]), fz_atof(args[i+1]), fz_atof(args[i+2]),
 				atoi(args[i+3]), atoi(args[i+4]),
@@ -587,7 +553,7 @@ xps_parse_poly_quadratic_bezier_segment(fz_context *doc, fz_path *path, xml_elem
 			}
 			else
 			{
-				pt = fz_currentpoint(path);
+				pt = fz_currentpoint(doc, path);
 				fz_curveto(doc, path,
 						(pt.x + 2 * x[0]) / 3, (pt.y + 2 * y[0]) / 3,
 						(x[1] + 2 * x[0]) / 3, (y[1] + 2 * y[0]) / 3,

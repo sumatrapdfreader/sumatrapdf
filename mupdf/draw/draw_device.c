@@ -463,11 +463,12 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, fz_matrix ctm,
 	unsigned char colorbv[FZ_MAX_COLORS + 1];
 	unsigned char shapebv;
 	float colorfv[FZ_MAX_COLORS];
-	fz_matrix tm, trm;
+	fz_matrix tm, trm, trunc_trm;
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
+	fz_bbox scissor = state->scissor;
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
 		state = fz_knockout_begin(dev);
@@ -491,10 +492,15 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, fz_matrix ctm,
 		trm = fz_concat(tm, ctm);
 		x = floorf(trm.e);
 		y = floorf(trm.f);
-		trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
-		trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-		glyph = fz_render_glyph(dev->ctx, text->font, gid, trm, model);
+		trunc_trm = trm;
+		trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
+		trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
+
+		scissor.x0 -= x; scissor.x1 -= x;
+		scissor.y0 -= y; scissor.y1 -= y;
+
+		glyph = fz_render_glyph(dev->ctx, text->font, gid, trunc_trm, model, scissor);
 		if (glyph)
 		{
 			if (glyph->n == 1)
@@ -510,6 +516,19 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, fz_matrix ctm,
 			}
 			fz_drop_pixmap(dev->ctx, glyph);
 		}
+		else
+		{
+			fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, trm);
+			if (path)
+			{
+				fz_draw_fill_path(devp, path, 0, fz_identity, colorspace, color, alpha);
+				fz_free_path(dev->ctx, path);
+			}
+			else
+			{
+				fz_warn(dev->ctx, "cannot render glyph");
+			}
+		}
 	}
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
@@ -523,11 +542,12 @@ fz_draw_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke, fz_
 	fz_draw_device *dev = devp->user;
 	unsigned char colorbv[FZ_MAX_COLORS + 1];
 	float colorfv[FZ_MAX_COLORS];
-	fz_matrix tm, trm;
+	fz_matrix tm, trm, trunc_trm;
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
+	fz_bbox scissor = state->scissor;
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
 		state = fz_knockout_begin(dev);
@@ -550,16 +570,34 @@ fz_draw_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke, fz_
 		trm = fz_concat(tm, ctm);
 		x = floorf(trm.e);
 		y = floorf(trm.f);
-		trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
-		trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-		glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, trm, ctm, stroke);
+		trunc_trm = trm;
+		trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
+		trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
+
+		scissor.x0 -= x; scissor.x1 -= x;
+		scissor.y0 -= y; scissor.y1 -= y;
+
+		glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, trunc_trm, ctm, stroke, scissor);
 		if (glyph)
 		{
 			draw_glyph(colorbv, state->dest, glyph, x, y, state->scissor);
 			if (state->shape)
 				draw_glyph(colorbv, state->shape, glyph, x, y, state->scissor);
 			fz_drop_pixmap(dev->ctx, glyph);
+		}
+		else
+		{
+			fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, trm);
+			if (path)
+			{
+				fz_draw_stroke_path(devp, path, stroke, fz_identity, colorspace, color, alpha);
+				fz_free_path(dev->ctx, path);
+			}
+			else
+			{
+				fz_warn(dev->ctx, "cannot render glyph");
+			}
 		}
 	}
 
@@ -645,13 +683,18 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, fz_matrix ctm, int accumulate)
 			trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 			trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-			glyph = fz_render_glyph(dev->ctx, text->font, gid, trm, model);
+			glyph = fz_render_glyph(dev->ctx, text->font, gid, trm, model, bbox);
 			if (glyph)
 			{
 				draw_glyph(NULL, mask, glyph, x, y, bbox);
 				if (state[1].shape)
 					draw_glyph(NULL, state[1].shape, glyph, x, y, bbox);
 				fz_drop_pixmap(dev->ctx, glyph);
+			}
+			else
+			{
+				fz_warn(dev->ctx, "cannot draw glyph for clipping (unimplemented case)");
+				// TODO: outline/non-cached case
 			}
 		}
 	}
@@ -712,13 +755,18 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 			trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 			trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-			glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, trm, ctm, stroke);
+			glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, trm, ctm, stroke, bbox);
 			if (glyph)
 			{
 				draw_glyph(NULL, mask, glyph, x, y, bbox);
 				if (shape)
 					draw_glyph(NULL, shape, glyph, x, y, bbox);
 				fz_drop_pixmap(dev->ctx, glyph);
+			}
+			else
+			{
+				fz_warn(dev->ctx, "cannot draw glyph for clipping (unimplemented case)");
+				// TODO: outline/non-cached case
 			}
 		}
 	}

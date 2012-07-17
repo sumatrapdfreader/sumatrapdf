@@ -63,6 +63,40 @@ grow_path(fz_context *ctx, fz_path *path, int n)
 	path->last = path->len;
 }
 
+fz_point
+fz_currentpoint(fz_context *ctx, fz_path *path)
+{
+	fz_point c, m;
+	int i;
+
+	c.x = c.y = m.x = m.y = 0;
+	i = 0;
+
+	while (i < path->len)
+	{
+		switch (path->items[i++].k)
+		{
+		case FZ_MOVETO:
+			m.x = c.x = path->items[i++].v;
+			m.y = c.y = path->items[i++].v;
+			break;
+		case FZ_LINETO:
+			c.x = path->items[i++].v;
+			c.y = path->items[i++].v;
+			break;
+		case FZ_CURVETO:
+			i += 4;
+			c.x = path->items[i++].v;
+			c.y = path->items[i++].v;
+			break;
+		case FZ_CLOSE_PATH:
+			c = m;
+		}
+	}
+
+	return c;
+}
+
 void
 fz_moveto(fz_context *ctx, fz_path *path, float x, float y)
 {

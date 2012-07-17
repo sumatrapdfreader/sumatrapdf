@@ -1,7 +1,5 @@
 #include "fitz-internal.h"
 
-/* SumatraPDF: changed max font size from 1000 to 3000 */
-#define MAX_FONT_SIZE 3000
 #define MAX_GLYPH_SIZE 256
 #define MAX_CACHE_SIZE (1024*1024)
 
@@ -97,29 +95,48 @@ fz_keep_glyph_cache(fz_context *ctx)
 }
 
 fz_pixmap *
-fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *stroke)
+fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *stroke, fz_bbox scissor)
 {
 	if (font->ft_face)
+	{
+		if (stroke->dash_len > 0)
+			return NULL;
 		return fz_render_ft_stroked_glyph(ctx, font, gid, trm, ctm, stroke);
-	return fz_render_glyph(ctx, font, gid, trm, NULL);
+	}
+	return fz_render_glyph(ctx, font, gid, trm, NULL, scissor);
 }
 
+/*
+	Render a glyph and return a bitmap.
+	If the glyph is too large to fit the cache we have two choices:
+	1) Return NULL so the caller can draw the glyph using an outline.
+		Only supported for freetype fonts.
+	2) Render a clipped glyph by using the scissor rectangle.
+		Only supported for type 3 fonts.
+		This must not be inserted into the cache.
+ */
 fz_pixmap *
-fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_colorspace *model)
+fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_colorspace *model, fz_bbox scissor)
 {
 	fz_glyph_cache *cache;
 	fz_glyph_key key;
 	fz_pixmap *val;
 	float size = fz_matrix_expansion(ctm);
+	int do_cache;
+
+	if (size <= MAX_GLYPH_SIZE)
+	{
+		scissor = fz_infinite_bbox;
+		do_cache = 1;
+	}
+	else
+	{
+		if (font->ft_face)
+			return NULL;
+		do_cache = 0;
+	}
 
 	cache = ctx->glyph_cache;
-
-	if (size > MAX_FONT_SIZE)
-	{
-		/* TODO: this case should be handled by rendering glyph as a path fill */
-		fz_warn(ctx, "font size too large (%g), not rendering glyph", size);
-		return NULL;
-	}
 
 	memset(&key, 0, sizeof key);
 	key.font = font;
@@ -132,6 +149,9 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 	key.f = (ctm.f - floorf(ctm.f)) * 256;
 	key.aa = fz_aa_level(ctx);
 
+	ctm.e = floorf(ctm.e) + key.e / 256.0f;
+	ctm.f = floorf(ctm.f) + key.f / 256.0f;
+
 	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 	val = fz_hash_find(ctx, cache->hash, &key);
 	if (val)
@@ -140,9 +160,6 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 		fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
 		return val;
 	}
-
-	ctm.e = floorf(ctm.e) + key.e / 256.0f;
-	ctm.f = floorf(ctm.f) + key.f / 256.0f;
 
 	fz_try(ctx)
 	{
@@ -162,7 +179,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 			 * abandon ours, and use the one there already.
 			 */
 			fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
-			val = fz_render_t3_glyph(ctx, font, gid, ctm, model);
+			val = fz_render_t3_glyph(ctx, font, gid, ctm, model, scissor);
 			fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 		}
 		else
@@ -177,7 +194,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 		fz_rethrow(ctx);
 	}
 
-	if (val)
+	if (val && do_cache)
 	{
 		if (val->w < MAX_GLYPH_SIZE && val->h < MAX_GLYPH_SIZE)
 		{

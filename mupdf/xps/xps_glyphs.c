@@ -333,6 +333,9 @@ xps_parse_glyphs_imp(xps_document *doc, fz_matrix ctm,
 			else
 				advance = mtx.hadv * 100;
 
+			if (font->ft_bold)
+				advance *= 1.02f;
+
 			if (is && *is)
 			{
 				is = xps_parse_glyph_metrics(is, &advance, &u_offset, &v_offset);

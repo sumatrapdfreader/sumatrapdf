@@ -7,7 +7,7 @@
 
 static void pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *dict, char *collection, char *basefont, int has_encoding);
 
-static char *base_font_names[14][7] =
+static char *base_font_names[][10] =
 {
 	{ "Courier", "CourierNew", "CourierNewPSMT", NULL },
 	{ "Courier-Bold", "CourierNew,Bold", "Courier,Bold",
@@ -33,7 +33,8 @@ static char *base_font_names[14][7] =
 	{ "Times-BoldItalic", "TimesNewRomanPS-BoldItalicMT",
 		"TimesNewRoman,BoldItalic", "TimesNewRomanPS-BoldItalic",
 		"TimesNewRoman-BoldItalic", NULL },
-	{ "Symbol", NULL },
+	{ "Symbol", "Symbol,Italic", "Symbol,Bold", "Symbol,BoldItalic",
+		"SymbolMT", "SymbolMT,Italic", "SymbolMT,Bold", "SymbolMT,BoldItalic", NULL },
 	{ "ZapfDingbats", NULL }
 };
 
@@ -72,7 +73,7 @@ static int strcmp_ignore_space(char *a, char *b)
 static char *clean_font_name(char *fontname)
 {
 	int i, k;
-	for (i = 0; i < 14; i++)
+	for (i = 0; i < nelem(base_font_names); i++)
 		for (k = 0; base_font_names[i][k]; k++)
 			if (!strcmp_ignore_space(base_font_names[i][k], fontname))
 				return base_font_names[i][0];
@@ -175,18 +176,8 @@ static int lookup_mre_code(char *name)
 static void
 pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 {
-	char buf[256], *comma = NULL;
 	unsigned char *data;
 	unsigned int len;
-
-	if (strchr(fontname, ','))
-	{
-		fz_strlcpy(buf, fontname, sizeof buf);
-		comma = strchr(buf, ',');
-		if (comma)
-			*comma++ = 0;
-		fontname = buf;
-	}
 
 	data = pdf_lookup_builtin_font(fontname, &len);
 	if (!data)
@@ -213,14 +204,6 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 
 	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
 		fontdesc->flags |= PDF_FD_SYMBOLIC;
-
-	if (comma)
-	{
-		if (strstr(comma, "Italic"))
-			fontdesc->font->ft_italic = 1;
-		if (strstr(comma, "Bold"))
-			fontdesc->font->ft_bold = 1;
-	}
 }
 
 static void
