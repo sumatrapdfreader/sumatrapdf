@@ -3587,10 +3587,10 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     // close to '-'); the other two alternatives are for
     // the major exception: the two Swiss layouts
     case '+': case '=': case 0xE0: case 0xE4:
-        ZoomToSelection(&win, win.dm->NextZoomStep(ZOOM_MAX));
+        ZoomToSelection(&win, win.dm->NextZoomStep(ZOOM_MAX), false);
         break;
     case '-':
-        ZoomToSelection(&win, win.dm->NextZoomStep(ZOOM_MIN));
+        ZoomToSelection(&win, win.dm->NextZoomStep(ZOOM_MIN), false);
         break;
     case '/':
         if (!gIsDivideKeyDown)
@@ -4257,7 +4257,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
         case GID_ZOOM:
             if (gi.dwFlags != GF_BEGIN) {
                 float zoom = (float)LODWORD(gi.ullArguments) / (float)win.touchState.startArg;
-                ZoomToSelection(&win, zoom, true);
+                ZoomToSelection(&win, zoom, false, true);
             }
             win.touchState.startArg = LODWORD(gi.ullArguments);
             break;
@@ -4541,12 +4541,12 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDT_VIEW_ZOOMIN:
             if (win->IsDocLoaded())
-                ZoomToSelection(win, win->dm->NextZoomStep(ZOOM_MAX));
+                ZoomToSelection(win, win->dm->NextZoomStep(ZOOM_MAX), false);
             break;
 
         case IDT_VIEW_ZOOMOUT:
             if (win->IsDocLoaded())
-                ZoomToSelection(win, win->dm->NextZoomStep(ZOOM_MIN));
+                ZoomToSelection(win, win->dm->NextZoomStep(ZOOM_MIN), false);
             break;
 
         case IDM_ZOOM_6400:

@@ -159,7 +159,7 @@ void UpdateTextSelection(WindowInfo *win, bool select)
     win->showSelection = win->selectionOnPage != NULL;
 }
 
-void ZoomToSelection(WindowInfo *win, float factor, bool relative)
+void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relative)
 {
     if (!win->IsDocLoaded())
         return;
@@ -198,6 +198,9 @@ void ZoomToSelection(WindowInfo *win, float factor, bool relative)
                 zoomToPt = true;
         }
     }
+
+    if (!relative && (ZOOM_FIT_PAGE == factor || ZOOM_FIT_CONTENT == factor) && scrollToFit)
+        zoomToPt = false;
 
     if (relative)
         win->dm->ZoomBy(factor, zoomToPt ? &pt : NULL);

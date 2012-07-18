@@ -1272,7 +1272,8 @@ void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
 {
     if (!IsValidZoom(zoomLevel))
         return;
-    if (ZoomVirtual() == zoomLevel)
+    bool scrollToFitPage = ZOOM_FIT_PAGE == zoomLevel || ZOOM_FIT_CONTENT == zoomLevel;
+    if (ZoomVirtual() == zoomLevel && (fixPt || !scrollToFitPage))
         return;
 
     ScrollState ss = GetScrollState();
@@ -1287,10 +1288,10 @@ void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
             fixPt = NULL;
     }
 
-    if (ZOOM_FIT_CONTENT == zoomLevel || ZOOM_FIT_PAGE == zoomLevel) {
+    if (scrollToFitPage) {
+        ss.page = CurrentPageNo();
         // SetScrollState's first call to GoToPage will already scroll to fit
         ss.x = ss.y = -1;
-        fixPt = NULL;
     }
 
     //lf("DisplayModel::zoomTo() zoomLevel=%.6f", _zoomLevel);
