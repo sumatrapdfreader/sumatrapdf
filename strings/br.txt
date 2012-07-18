@@ -704,3 +704,6 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Show &Bookmarks
+

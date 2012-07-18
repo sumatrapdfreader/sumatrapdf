@@ -706,3 +706,6 @@ kopírování textu
 printing document
 tisk dokumentu
 
+# Untranslated:
+#Show &Bookmarks
+

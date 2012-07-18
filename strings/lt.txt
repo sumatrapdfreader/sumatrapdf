@@ -676,4 +676,5 @@ spausdinamas dokumentas
 #Rename To
 #Replace document &colors with Windows color scheme
 #Save S&hortcut...\tCtrl+Shift+S
+#Show &Bookmarks
 

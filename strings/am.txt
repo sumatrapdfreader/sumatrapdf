@@ -703,3 +703,6 @@ copying text
 printing document
 Ֆայլը տպվում է
 
+# Untranslated:
+#Show &Bookmarks
+

@@ -708,3 +708,6 @@ menyalin teks
 printing document
 mencetak dokumen
 
+# Untranslated:
+#Show &Bookmarks
+

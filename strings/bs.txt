@@ -703,3 +703,6 @@ kopiram tekst
 printing document
 štampam dokument
 
+# Untranslated:
+#Show &Bookmarks
+

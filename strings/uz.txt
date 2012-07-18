@@ -703,3 +703,6 @@ matn nusxa olinmoqda
 printing document
 hujjat bosib chiqarilmoqda
 
+# Untranslated:
+#Show &Bookmarks
+

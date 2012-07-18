@@ -703,3 +703,6 @@ kopjon tekstin
 printing document
 printon doumentin
 
+# Untranslated:
+#Show &Bookmarks
+

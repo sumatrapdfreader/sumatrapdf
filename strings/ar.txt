@@ -706,3 +706,6 @@ copying text
 printing document
 تتم حالياً الطباعة
 
+# Untranslated:
+#Show &Bookmarks
+

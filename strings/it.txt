@@ -711,3 +711,6 @@ Copia del testo...
 printing document
 Stampa documento...
 
+# Untranslated:
+#Show &Bookmarks
+

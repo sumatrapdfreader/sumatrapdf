@@ -709,3 +709,6 @@ kopierar text
 printing document
 skriver ut dokumentet
 
+# Untranslated:
+#Show &Bookmarks
+

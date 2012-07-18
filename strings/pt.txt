@@ -705,3 +705,6 @@ cópia de texto
 printing document
 impressão de documento
 
+# Untranslated:
+#Show &Bookmarks
+

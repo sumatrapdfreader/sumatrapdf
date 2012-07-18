@@ -614,6 +614,9 @@ Per &E-Mail versenden…
 Set inverse search command-line
 Befehlszeile für die Inverssuche setzen
 
+Show &Bookmarks
+Lese&zeichen anzeigen
+
 Show &Toolbar
 &Werkzeugleiste anzeigen
 

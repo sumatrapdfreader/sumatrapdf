@@ -704,3 +704,6 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#Show &Bookmarks
+

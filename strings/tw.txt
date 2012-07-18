@@ -694,4 +694,5 @@ printing document
 #Loading file %s...
 #Printer with given name doesn't exist
 #Replace document &colors with Windows color scheme
+#Show &Bookmarks
 

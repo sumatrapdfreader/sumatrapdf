@@ -47,8 +47,9 @@ static MenuDef menuDefFile[] = {
     { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
 #ifdef ENABLE_SAVE_SHORTCUT
     { _TRN("Save S&hortcut...\tCtrl+Shift+S"), IDM_SAVEAS_BOOKMARK,     MF_REQ_DISK_ACCESS | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
-#endif
+#else
     { _TRN("Re&name...\tF2"),               IDM_RENAME_FILE,            MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+#endif
     { _TRN("&Print...\tCtrl+P"),            IDM_PRINT,                  MF_REQ_PRINTER_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
     // PDF/XPS/CHM specific items are dynamically removed in RebuildFileMenu
@@ -171,6 +172,7 @@ static MenuDef menuDefContext[] = {
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
+    { _TRN("Show &Bookmarks"),              IDM_VIEW_BOOKMARKS,         MF_PLUGIN_MODE_ONLY },
     { _TRN("P&roperties"),                  IDM_PROPERTIES,             MF_PLUGIN_MODE_ONLY },
 };
 
@@ -480,6 +482,8 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     if (!win->selectionOnPage)
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
     MenuUpdatePrintItem(win, popup, true);
+    win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->dm->HasTocTree());
+    win::menu::SetChecked(popup, IDM_VIEW_BOOKMARKS, win->tocVisible);
 
     POINT pt = { x, y };
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
@@ -490,6 +494,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     case IDM_SELECT_ALL:
     case IDM_SAVEAS:
     case IDM_PRINT:
+    case IDM_VIEW_BOOKMARKS:
     case IDM_PROPERTIES:
         SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
         break;

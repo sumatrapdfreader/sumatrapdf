@@ -705,3 +705,6 @@ kopiranje besedila
 printing document
 tiskanje dokumenta
 
+# Untranslated:
+#Show &Bookmarks
+

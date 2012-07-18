@@ -704,3 +704,6 @@ kopiram tekst
 printing document
 ispisujem dokument
 
+# Untranslated:
+#Show &Bookmarks
+

@@ -438,6 +438,7 @@ mencetak dokumen
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
 #Set inverse search command-line
+#Show &Bookmarks
 #Show Favorites
 #Show frequently read
 #Show the &bookmarks sidebar when available

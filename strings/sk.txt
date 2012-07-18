@@ -706,3 +706,6 @@ prebieha kopírovanie textu
 printing document
 prebieha tlač dokumentu
 
+# Untranslated:
+#Show &Bookmarks
+

@@ -699,4 +699,5 @@ belge yazdırılıyor
 #Failed to rename the file!
 #Re&name...\tF2
 #Rename To
+#Show &Bookmarks
 

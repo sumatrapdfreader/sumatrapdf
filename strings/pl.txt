@@ -704,3 +704,6 @@ kopiowanie tekstu
 printing document
 drukowanie dokumentu
 
+# Untranslated:
+#Show &Bookmarks
+

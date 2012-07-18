@@ -707,3 +707,6 @@ Szöveg vágólapra
 printing document
 Nyomtatás
 
+# Untranslated:
+#Show &Bookmarks
+

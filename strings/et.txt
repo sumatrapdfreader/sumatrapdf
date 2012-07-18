@@ -703,3 +703,6 @@ teksti kopeerimine
 printing document
 dokumendi printimine
 
+# Untranslated:
+#Show &Bookmarks
+

@@ -685,4 +685,5 @@ se imprimă documentul
 #Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme
+#Show &Bookmarks
 

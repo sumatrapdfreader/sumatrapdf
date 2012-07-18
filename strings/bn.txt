@@ -352,6 +352,7 @@ Zoom Out
 #Select &All\tCtrl+A
 #Select content with Ctrl+left mouse button
 #Send by &E-mail...
+#Show &Bookmarks
 #Show &pages continuously
 #Show Favorites
 #Show frequently read

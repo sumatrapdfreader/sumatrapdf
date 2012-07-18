@@ -712,3 +712,6 @@ tekst kopiëren
 printing document
 document afdrukken
 
+# Untranslated:
+#Show &Bookmarks
+

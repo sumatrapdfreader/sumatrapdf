@@ -704,3 +704,6 @@ idazkia kopiatzen
 printing document
 agiria irarkitzen
 
+# Untranslated:
+#Show &Bookmarks
+

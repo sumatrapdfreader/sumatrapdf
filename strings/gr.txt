@@ -706,3 +706,6 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#Show &Bookmarks
+

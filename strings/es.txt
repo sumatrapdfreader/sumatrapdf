@@ -710,3 +710,6 @@ copiado de texto
 printing document
 imprimiendo documento
 
+# Untranslated:
+#Show &Bookmarks
+

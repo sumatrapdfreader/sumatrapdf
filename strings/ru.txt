@@ -705,3 +705,6 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Show &Bookmarks
+

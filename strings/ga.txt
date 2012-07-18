@@ -701,3 +701,6 @@ ag macasamhlú an téacs
 printing document
 ag clóbhualadh an cháipéis
 
+# Untranslated:
+#Show &Bookmarks
+
