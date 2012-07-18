@@ -613,6 +613,9 @@ Send by &E-mail...
 Set inverse search command-line
 Εμφάνιση γραμμής αντίστροφης αναζήτησης
 
+Show &Bookmarks
+Εμφάνιση &Σελιδοδεικτών
+
 Show &Toolbar
 &Εμφάνιση Γραμμής Εργαλείων
 
@@ -705,7 +708,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#Show &Bookmarks
 
