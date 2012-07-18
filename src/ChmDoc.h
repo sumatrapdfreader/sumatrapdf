@@ -6,8 +6,6 @@
 
 #include "EbookBase.h"
 
-#define CP_CHM_DEFAULT 1252
-
 class ChmDoc {
     struct chmFile *chmHandle;
 
@@ -21,11 +19,12 @@ class ChmDoc {
 
     void ParseWindowsData();
     bool ParseSystemData();
+    bool ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool isIndex);
 
     bool Load(const TCHAR *fileName);
 
 public:
-    ChmDoc() : codepage(CP_CHM_DEFAULT) { }
+    ChmDoc() : codepage(0) { }
     ~ChmDoc();
 
     bool HasData(const char *fileName);

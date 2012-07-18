@@ -135,6 +135,28 @@ void ChmDoc::ParseWindowsData()
     }
 }
 
+#define CP_CHM_DEFAULT 1252
+
+static UINT LcidToCodepage(DWORD lcid)
+{
+    // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
+    static struct {
+        DWORD lcid;
+        UINT codepage;
+    } lcidToCodepage[] = {
+        { 1025, 1256 }, { 2052,  936 }, { 1028,  950 }, { 1029, 1250 },
+        { 1032, 1253 }, { 1037, 1255 }, { 1038, 1250 }, { 1041,  932 },
+        { 1042,  949 }, { 1045, 1250 }, { 1049, 1251 }, { 1051, 1250 },
+        { 1060, 1250 }, { 1055, 1254 }
+    };
+
+    for (int i = 0; i < dimof(lcidToCodepage); i++)
+        if (lcid == lcidToCodepage[i].lcid)
+            return lcidToCodepage[i].codepage;
+
+    return CP_CHM_DEFAULT;
+}
+
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
 bool ChmDoc::ParseSystemData()
 {
@@ -170,6 +192,10 @@ bool ChmDoc::ParseSystemData()
             if (!title)
                 title.Set(GetCharZ(data, dataLen, off + 4));
             break;
+        case 4:
+            if (!codepage && len >= 4)
+                codepage = LcidToCodepage(r.DWordLE(off + 4));
+            break;
         case 6:
             // compiled file - ignore
             break;
@@ -184,31 +210,6 @@ bool ChmDoc::ParseSystemData()
     }
 
     return true;
-}
-
-static UINT GetChmCodepage(const TCHAR *fileName)
-{
-    // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
-    static struct {
-        DWORD langId;
-        UINT codepage;
-    } langIdToCodepage[] = {
-        { 1025, 1256 }, { 2052,  936 }, { 1028,  950 }, { 1029, 1250 },
-        { 1032, 1253 }, { 1037, 1255 }, { 1038, 1250 }, { 1041,  932 },
-        { 1042,  949 }, { 1045, 1250 }, { 1049, 1251 }, { 1051, 1250 },
-        { 1060, 1250 }, { 1055, 1254 }
-    };
-
-    char header[24];
-    if (!file::ReadAll(fileName, header, sizeof(header)))
-        return CP_CHM_DEFAULT;
-
-    DWORD lang_id = ByteReader(header, sizeof(header)).DWordLE(20);
-    for (int i = 0; i < dimof(langIdToCodepage); i++)
-        if (lang_id == langIdToCodepage[i].langId)
-            return langIdToCodepage[i].codepage;
-
-    return CP_CHM_DEFAULT;
 }
 
 bool ChmDoc::Load(const TCHAR *fileName)
@@ -233,7 +234,15 @@ bool ChmDoc::Load(const TCHAR *fileName)
     if (!HasData(homePath))
         return false;
 
-    codepage = GetChmCodepage(fileName);
+    if (!codepage) {
+        char header[24];
+        if (file::ReadAll(fileName, header, sizeof(header))) {
+            DWORD lcid = ByteReader(header, sizeof(header)).DWordLE(20);
+            codepage = LcidToCodepage(lcid);
+        }
+        else
+            codepage = CP_CHM_DEFAULT;
+    }
     if (GetACP() == codepage)
         codepage = CP_ACP;
 
@@ -420,8 +429,15 @@ static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT 
     }
 }
 
-static bool ParseTocOrIndex(EbookTocVisitor *visitor, const char *html, UINT codepage, bool isIndex)
+bool ChmDoc::ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool isIndex)
 {
+    if (!path)
+        return false;
+    ScopedMem<unsigned char> htmlData(GetData(path, NULL));
+    const char *html = (char *)htmlData.Get();
+    if (!html)
+        return false;
+
     HtmlParser p;
     UINT cp = codepage;
     // detect UTF-8 content by BOM
@@ -451,13 +467,7 @@ bool ChmDoc::HasToc() const
 
 bool ChmDoc::ParseToc(EbookTocVisitor *visitor)
 {
-    if (!tocPath)
-        return false;
-    ScopedMem<unsigned char> htmlData(GetData(tocPath, NULL));
-    const char *html = (char *)htmlData.Get();
-    if (!html)
-        return false;
-    return ParseTocOrIndex(visitor, html, codepage, false);
+    return ParseTocOrIndex(visitor, tocPath, false);
 }
 
 bool ChmDoc::HasIndex() const
@@ -467,13 +477,7 @@ bool ChmDoc::HasIndex() const
 
 bool ChmDoc::ParseIndex(EbookTocVisitor *visitor)
 {
-    if (!indexPath)
-        return false;
-    ScopedMem<unsigned char> htmlData(GetData(indexPath, NULL));
-    const char *html = (char *)htmlData.Get();
-    if (!html)
-        return false;
-    return ParseTocOrIndex(visitor, html, codepage, true);
+    return ParseTocOrIndex(visitor, indexPath, true);
 }
 
 bool ChmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
