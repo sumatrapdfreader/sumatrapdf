@@ -356,10 +356,14 @@ fz_insert_gel(fz_gel *gel, float fx0, float fy0, float fx1, float fy1)
 	fy0 = floorf(fy0 * fz_aa_vscale);
 	fy1 = floorf(fy1 * fz_aa_vscale);
 
-	x0 = fz_clamp(fx0, BBOX_MIN * fz_aa_hscale, BBOX_MAX * fz_aa_hscale);
-	y0 = fz_clamp(fy0, BBOX_MIN * fz_aa_vscale, BBOX_MAX * fz_aa_vscale);
-	x1 = fz_clamp(fx1, BBOX_MIN * fz_aa_hscale, BBOX_MAX * fz_aa_hscale);
-	y1 = fz_clamp(fy1, BBOX_MIN * fz_aa_vscale, BBOX_MAX * fz_aa_vscale);
+	/* Call fz_clamp so that clamping is done in the float domain, THEN
+	 * cast down to an int. Calling fz_clampi causes problems due to the
+	 * implicit cast down from float to int of the first argument
+	 * over/underflowing and flipping sign at extreme values. */
+	x0 = (int)fz_clamp(fx0, BBOX_MIN * fz_aa_hscale, BBOX_MAX * fz_aa_hscale);
+	y0 = (int)fz_clamp(fy0, BBOX_MIN * fz_aa_vscale, BBOX_MAX * fz_aa_vscale);
+	x1 = (int)fz_clamp(fx1, BBOX_MIN * fz_aa_hscale, BBOX_MAX * fz_aa_hscale);
+	y1 = (int)fz_clamp(fy1, BBOX_MIN * fz_aa_vscale, BBOX_MAX * fz_aa_vscale);
 
 	d = clip_lerp_y(gel->clip.y0, 0, x0, y0, x1, y1, &v);
 	if (d == OUTSIDE) return;

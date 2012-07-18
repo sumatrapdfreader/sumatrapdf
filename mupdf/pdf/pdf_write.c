@@ -731,7 +731,7 @@ static void renumberobjs(pdf_document *xref, pdf_write_options *opts)
 				if (newlen < opts->renumber_map[num])
 					newlen = opts->renumber_map[num];
 				xref->table[opts->renumber_map[num]] = oldxref[num];
-				new_use_list[opts->renumber_map[num]] = opts->use_list[num];
+				new_use_list[opts->renumber_map[num]] = 1;
 			}
 			else
 			{
@@ -1722,9 +1722,6 @@ dowriteobject(pdf_document *xref, pdf_write_options *opts, int num, int pass)
 	{
 		if (pass > 0)
 			padto(opts->out, opts->ofs_list[num]);
-		/* SumatraPDF: set use_list[num] in case there was no garbage collection */
-		if (!opts->use_list[num])
-			opts->use_list[num] = 1;
 		opts->ofs_list[num] = ftell(opts->out);
 		writeobject(xref, opts, num, opts->gen_list[num]);
 	}
@@ -1817,6 +1814,7 @@ make_page_offset_hints(pdf_document *xref, pdf_write_options *opts, fz_buffer *b
 		else
 			max = opts->ofs_list[1];
 
+		/* SumatraPDF: TODO: this assertion doesn't hold for i == xref->len-1 */
 		assert(max > min);
 
 		if (opts->use_list[i] & USE_SHARED)
@@ -2127,6 +2125,9 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 		/* Sweep & mark objects from the trailer */
 		if (opts.do_garbage >= 1)
 			sweepobj(xref, &opts, xref->trailer);
+		else
+			for (num = 0; num < xref->len; num++)
+				opts.use_list[num] = 1;
 
 		/* Coalesce and renumber duplicate objects */
 		if (opts.do_garbage >= 3)

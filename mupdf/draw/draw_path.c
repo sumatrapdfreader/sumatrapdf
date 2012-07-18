@@ -82,7 +82,7 @@ fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness)
 		{
 		case FZ_MOVETO:
 			/* implicit closepath before moveto */
-			if (i && (cx != bx || cy != by))
+			if (cx != bx || cy != by)
 				line(gel, &ctm, cx, cy, bx, by);
 			x1 = path->items[i++].v;
 			y1 = path->items[i++].v;
@@ -118,7 +118,7 @@ fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness)
 		}
 	}
 
-	if (i && (cx != bx || cy != by))
+	if (cx != bx || cy != by)
 		line(gel, &ctm, cx, cy, bx, by);
 }
 
