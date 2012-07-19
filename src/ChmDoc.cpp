@@ -249,12 +249,12 @@ bool ChmDoc::Load(const TCHAR *fileName)
     return true;
 }
 
-TCHAR *ChmDoc::GetProperty(const char *name)
+TCHAR *ChmDoc::GetProperty(DocumentProperty prop)
 {
     ScopedMem<TCHAR> result;
-    if (str::Eq(name, "Title") && title)
+    if (Prop_Title == prop && title)
         result.Set(str::conv::FromCodePage(title, codepage));
-    else if (str::Eq(name, "Creator") && creator)
+    else if (Prop_CreatorApp == prop && creator)
         result.Set(str::conv::FromCodePage(creator, codepage));
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (result) {

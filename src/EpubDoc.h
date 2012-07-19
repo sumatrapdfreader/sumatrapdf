@@ -16,10 +16,15 @@ struct ImageData2 {
 /* ********** EPUB ********** */
 
 class EpubDoc {
+    struct Metadata {
+        DocumentProperty prop;
+        char *value;
+    };
+
     ZipFile zip;
     str::Str<char> htmlData;
     Vec<ImageData2> images;
-    Vec<const char *> props;
+    Vec<Metadata> props;
     ScopedMem<TCHAR> tocPath;
     ScopedMem<TCHAR> fileName;
     bool isNcxToc;
@@ -38,7 +43,7 @@ public:
     size_t GetTextDataSize();
     ImageData *GetImageData(const char *id, const char *pagePath);
 
-    TCHAR *GetProperty(const char *name);
+    TCHAR *GetProperty(DocumentProperty prop);
     const TCHAR *GetFileName() const;
 
     bool HasToc() const;
@@ -76,7 +81,7 @@ public:
     ImageData *GetImageData(const char *id);
     ImageData *GetCoverImage();
 
-    TCHAR *GetProperty(const char *name);
+    TCHAR *GetProperty(DocumentProperty prop);
     const TCHAR *GetFileName() const;
     bool IsZipped() const;
 
@@ -155,7 +160,7 @@ public:
     const char *GetTextData(size_t *lenOut);
     ImageData *GetImageData(const char *id);
 
-    TCHAR *GetProperty(const char *name);
+    TCHAR *GetProperty(DocumentProperty prop);
     const TCHAR *GetFileName() const;
 
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);

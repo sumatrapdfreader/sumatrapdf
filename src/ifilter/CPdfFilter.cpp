@@ -70,7 +70,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_AUTHOR:
         m_state = STATE_PDF_TITLE;
-        str.Set(m_pdfEngine->GetProperty("Author"));
+        str.Set(m_pdfEngine->GetProperty(Prop_Author));
         if (!str::IsEmpty(str.Get())) {
             chunkValue.SetTextValue(PKEY_Author, AsWStrQ(str));
             return S_OK;
@@ -79,8 +79,8 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_TITLE:
         m_state = STATE_PDF_DATE;
-        str.Set(m_pdfEngine->GetProperty("Title"));
-        if (!str) str.Set(m_pdfEngine->GetProperty("Subject"));
+        str.Set(m_pdfEngine->GetProperty(Prop_Title));
+        if (!str) str.Set(m_pdfEngine->GetProperty(Prop_Subject));
         if (!str::IsEmpty(str.Get())) {
             chunkValue.SetTextValue(PKEY_Title, AsWStrQ(str));
             return S_OK;
@@ -89,8 +89,8 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
 
     case STATE_PDF_DATE:
         m_state = STATE_PDF_CONTENT;
-        str.Set(m_pdfEngine->GetProperty("ModDate"));
-        if (!str) str.Set(m_pdfEngine->GetProperty("CreationDate"));
+        str.Set(m_pdfEngine->GetProperty(Prop_ModificationDate));
+        if (!str) str.Set(m_pdfEngine->GetProperty(Prop_CreationDate));
         if (!str::IsEmpty(str.Get())) {
             SYSTEMTIME systime;
             if (PdfDateParse(str, &systime)) {

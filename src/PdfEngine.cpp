@@ -950,7 +950,7 @@ public:
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo);
     virtual PageLayoutType PreferredLayout();
-    virtual TCHAR *GetProperty(const char *name);
+    virtual TCHAR *GetProperty(DocumentProperty prop);
 
     virtual bool IsPrintingAllowed() {
         return pdf_has_permission(_doc, PDF_PERM_PRINT);
@@ -2274,12 +2274,12 @@ TCHAR *PdfEngineImpl::ExtractFontList()
     return fonts.Join(_T("\n"));
 }
 
-TCHAR *PdfEngineImpl::GetProperty(const char *name)
+TCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
 {
     if (!_doc)
         return NULL;
 
-    if (str::Eq(name, "PdfVersion")) {
+    if (Prop_PdfVersion == prop) {
         int major = _doc->version / 10, minor = _doc->version % 10;
         if (1 == major && 7 == minor && 5 == pdf_crypt_revision(_doc)) {
             if (pdf_crypt_revision_r(_doc) == 5)
@@ -2289,16 +2289,27 @@ TCHAR *PdfEngineImpl::GetProperty(const char *name)
         }
         return str::Format(_T("%d.%d"), major, minor);
     }
-    if (str::Eq(name, "FontList"))
+    if (Prop_FontList == prop)
         return ExtractFontList();
 
-    // _info is guaranteed not to contain any indirect references,
-    // so no need for ctxAccess
-    pdf_obj *obj = pdf_dict_gets(_info, (char *)name);
-    if (!obj)
-        return NULL;
-
-    return str::conv::FromPdf(obj);
+    static struct {
+        DocumentProperty prop;
+        char *name;
+    } pdfPropNames[] = {
+        { Prop_Title, "Title" }, { Prop_Author, "Author" },
+        { Prop_Subject, "Subject" }, { Prop_Copyright, "Copyright" },
+        { Prop_CreationDate, "CreationDate" }, { Prop_ModificationDate, "ModDate" },
+        { Prop_CreatorApp, "Creator" }, { Prop_PdfProducer, "Producer" },
+    };
+    for (int i = 0; i < dimof(pdfPropNames); i++) {
+        if (pdfPropNames[i].prop == prop) {
+            // _info is guaranteed not to contain any indirect references,
+            // so no need for ctxAccess
+            pdf_obj *obj = pdf_dict_gets(_info, pdfPropNames[i].name);
+            return obj ? str::conv::FromPdf(obj) : NULL;
+        }
+    }
+    return NULL;
 };
 
 char *PdfEngineImpl::GetDecryptionKey() const
@@ -2663,7 +2674,7 @@ public:
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
     }
     virtual bool HasClipOptimizations(int pageNo);
-    virtual TCHAR *GetProperty(const char *name);
+    virtual TCHAR *GetProperty(DocumentProperty prop);
 
     virtual float GetFileDPI() const { return 72.0f; }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".xps"); }
@@ -2725,7 +2736,7 @@ protected:
 
     RectD         * _mediaboxes;
     fz_outline    * _outline;
-    xps_doc_prop  * _info;
+    xps_doc_props * _info;
     fz_rect      ** imageRects;
 };
 
@@ -2838,7 +2849,7 @@ XpsEngineImpl::~XpsEngineImpl()
         _doc = NULL;
     }
     if (_info)
-        xps_free_doc_prop(ctx, _info);
+        xps_free_doc_props(ctx, _info);
 
     while (runCache.Count() > 0) {
         assert(runCache.Last()->refs == 1);
@@ -2956,7 +2967,7 @@ bool XpsEngineImpl::LoadFromStream(fz_stream *stm)
         _info = xps_extract_doc_props(_doc);
     }
     fz_catch(ctx) {
-        fz_warn(ctx, "Couldn't load Info dictionary");
+        fz_warn(ctx, "Couldn't load document properties");
     }
 
     return true;
@@ -3390,15 +3401,22 @@ TCHAR *XpsEngineImpl::ExtractFontList()
     return fonts.Join(_T("\n"));
 }
 
-TCHAR *XpsEngineImpl::GetProperty(const char *name)
+TCHAR *XpsEngineImpl::GetProperty(DocumentProperty prop)
 {
-    for (xps_doc_prop *prop = _info; prop; prop = prop->next) {
-        if (str::Eq(prop->name, name) && !str::IsEmpty(prop->value))
-            return str::conv::FromUtf8(prop->value);
-    }
-    if (str::Eq(name, "FontList"))
+    if (Prop_FontList == prop)
         return ExtractFontList();
-    return NULL;
+    if (!_info)
+        return NULL;
+
+    char *value = NULL;
+    switch (prop) {
+    case Prop_Title: value = _info->title; break;
+    case Prop_Author: value = _info->author; break;
+    case Prop_Subject: value = _info->subject; break;
+    case Prop_CreationDate: value = _info->creation_date; break;
+    case Prop_ModificationDate: value = _info->modification_date; break;
+    }
+    return value ? str::conv::FromUtf8(value) : NULL;
 };
 
 PageElement *XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt)

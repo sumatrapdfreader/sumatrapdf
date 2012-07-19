@@ -258,6 +258,7 @@ EXPORTS
 	fz_bound_glyph
 	fz_glyph_cacheable
 	fz_new_path
+	fz_currentpoint
 	fz_moveto
 	fz_lineto
 	fz_curveto
@@ -278,6 +279,8 @@ EXPORTS
 	fz_new_glyph_cache_context
 	fz_keep_glyph_cache
 	fz_drop_glyph_cache_context
+	fz_outline_ft_glyph
+	fz_outline_glyph
 	fz_render_ft_glyph
 	fz_render_t3_glyph
 	fz_render_ft_stroked_glyph
@@ -630,7 +633,7 @@ EXPORTS
 	xps_lookup_alternate_content
 	xps_extract_anchor_info
 	xps_extract_doc_props
-	xps_free_doc_prop
+	xps_free_doc_props
 
 ; MuCBZ exports
 

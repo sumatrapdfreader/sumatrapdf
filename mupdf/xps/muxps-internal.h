@@ -240,14 +240,15 @@ struct xps_document_s
 void xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char *anchor_name, int step);
 
 /* SumatraPDF: extract document properties (hacky) */
-typedef struct xps_doc_prop_s xps_doc_prop;
-struct xps_doc_prop_s
+typedef struct xps_doc_props_s
 {
-	char *name;
-	char *value;
-	xps_doc_prop *next;
-};
-xps_doc_prop *xps_extract_doc_props(xps_document *doc);
-void xps_free_doc_prop(fz_context *ctx, xps_doc_prop *prop);
+	char *title;
+	char *author;
+	char *subject;
+	char *creation_date;
+	char *modification_date;
+} xps_doc_props;
+xps_doc_props *xps_extract_doc_props(xps_document *doc);
+void xps_free_doc_props(fz_context *ctx, xps_doc_props *props);
 
 #endif

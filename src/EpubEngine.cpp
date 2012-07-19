@@ -587,7 +587,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(const char *name) { return doc->GetProperty(name); }
+    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".epub"); }
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
@@ -789,7 +789,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(const char *name) { return doc->GetProperty(name); }
+    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
     virtual const TCHAR *GetDefaultFileExt() const {
         return doc && doc->IsZipped() ? _T(".fb2z") : _T(".fb2");
     }
@@ -1276,7 +1276,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(const char *name) { return doc->GetProperty(name); }
+    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
 
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
@@ -1577,7 +1577,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(const char *name) { return doc->GetProperty(name); }
+    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".html"); }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 

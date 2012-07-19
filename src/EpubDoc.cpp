@@ -190,8 +190,8 @@ EpubDoc::~EpubDoc()
         free(images.At(i).base.data);
         free(images.At(i).id);
     }
-    for (size_t i = 1; i < props.Count(); i += 2) {
-        free((void *)props.At(i));
+    for (size_t i = 1; i < props.Count(); i++) {
+        free(props.At(i).value);
     }
 }
 
@@ -302,13 +302,13 @@ bool EpubDoc::Load()
 
 void EpubDoc::ParseMetadata(const char *content)
 {
-    const char *metadataMap[] = {
-        "dc:title",         "Title",
-        "dc:creator",       "Author",
-        "dc:date",          "CreationDate",
-        "dcterms:modified", "ModDate",
-        "dc:description",   "Subject",
-        "dc:rights",        "Copyright",
+    Metadata metadataMap[] = {
+        { Prop_Title,           "dc:title" },
+        { Prop_Author,          "dc:creator" },
+        { Prop_CreationDate,    "dc:date" },
+        { Prop_ModificationDate,"dcterms:modified" },
+        { Prop_Subject,         "dc:description" },
+        { Prop_Copyright,       "dc:rights" },
     };
 
     HtmlPullParser pullParser(content, str::Len(content));
@@ -325,18 +325,17 @@ void EpubDoc::ParseMetadata(const char *content)
         if (!tok->IsStartTag())
             continue;
 
-        for (int i = 0; i < dimof(metadataMap); i += 2) {
-            if (tok->NameIs(metadataMap[i]) ||
+        for (int i = 0; i < dimof(metadataMap); i++) {
+            if (tok->NameIs(metadataMap[i].value) ||
                 Tag_Meta == tok->tag && tok->GetAttrByName("property") &&
-                tok->GetAttrByName("property")->ValIs(metadataMap[i])) {
+                tok->GetAttrByName("property")->ValIs(metadataMap[i].value)) {
                 tok = pullParser.Next();
                 if (!tok->IsText())
                     break;
-                char *text = ResolveHtmlEntities(tok->s, tok->sLen);
-                if (text) {
-                    props.Append(metadataMap[i+1]);
-                    props.Append(text);
-                }
+                Metadata prop = { metadataMap[i].prop, NULL };
+                prop.value = ResolveHtmlEntities(tok->s, tok->sLen);
+                if (prop.value)
+                    props.Append(prop);
                 break;
             }
         }
@@ -389,11 +388,11 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     return NULL;
 }
 
-TCHAR *EpubDoc::GetProperty(const char *name)
+TCHAR *EpubDoc::GetProperty(DocumentProperty prop)
 {
-    for (size_t i = 0; i < props.Count(); i += 2) {
-        if (str::Eq(props.At(i), name))
-            return str::conv::FromUtf8(props.At(i + 1));
+    for (size_t i = 0; i < props.Count(); i++) {
+        if (props.At(i).prop == prop)
+            return str::conv::FromUtf8(props.At(i).value);
     }
     return NULL;
 }
@@ -709,11 +708,11 @@ ImageData *Fb2Doc::GetCoverImage()
     return GetImageData(coverImage);
 }
 
-TCHAR *Fb2Doc::GetProperty(const char *name)
+TCHAR *Fb2Doc::GetProperty(DocumentProperty prop)
 {
-    if (str::Eq(name, "Title") && docTitle)
+    if (Prop_Title == prop && docTitle)
         return str::Dup(docTitle);
-    if (str::Eq(name, "Author") && docAuthor)
+    if (Prop_Author == prop && docAuthor)
         return str::Dup(docAuthor);
     return NULL;
 }
@@ -1389,17 +1388,20 @@ ImageData *HtmlDoc::GetImageData(const char *id)
     return &images.Last().base;
 }
 
-TCHAR *HtmlDoc::GetProperty(const char *name)
+TCHAR *HtmlDoc::GetProperty(DocumentProperty prop)
 {
-    if (str::Eq(name, "Title") && title)
-        return str::Dup(title);
-    if (str::Eq(name, "Author") && author)
-        return str::Dup(author);
-    if (str::Eq(name, "CreationDate") && date)
-        return str::Dup(date);
-    if (str::Eq(name, "Copyright") && copyright)
-        return str::Dup(copyright);
-    return NULL;
+    switch (prop) {
+    case Prop_Title:
+        return title ? str::Dup(title) : NULL;
+    case Prop_Author:
+        return author ? str::Dup(author) : NULL;
+    case Prop_CreationDate:
+        return date ? str::Dup(date) : NULL;
+    case Prop_Copyright:
+        return copyright ? str::Dup(copyright) : NULL;
+    default:
+        return NULL;
+    }
 }
 
 const TCHAR *HtmlDoc::GetFileName() const

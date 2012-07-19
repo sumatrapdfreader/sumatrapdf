@@ -46,31 +46,31 @@ void DumpProperties(BaseEngine *engine)
     ScopedMem<char> str;
     str.Set(Escape((TCHAR *)engine->FileName(), true));
     Out("\t\tFilePath=\"%s\"\n", str.Get());
-    str.Set(Escape(engine->GetProperty("Title")));
+    str.Set(Escape(engine->GetProperty(Prop_Title)));
     if (str)
         Out("\t\tTitle=\"%s\"\n", str.Get());
-    str.Set(Escape(engine->GetProperty("Subject")));
+    str.Set(Escape(engine->GetProperty(Prop_Subject)));
     if (str)
         Out("\t\tSubject=\"%s\"\n", str.Get());
-    str.Set(Escape(engine->GetProperty("Author")));
+    str.Set(Escape(engine->GetProperty(Prop_Author)));
     if (str)
         Out("\t\tAuthor=\"%s\"\n", str.Get());
-    str.Set(Escape(engine->GetProperty("Copyright")));
+    str.Set(Escape(engine->GetProperty(Prop_Copyright)));
     if (str)
         Out("\t\tCopyright=\"%s\"\n", str.Get());
-    str.Set(Escape(engine->GetProperty("CreationDate")));
+    str.Set(Escape(engine->GetProperty(Prop_CreationDate)));
     if (str)
         Out("\t\tCreationDate=\"%s\"\n", str.Get());
-    str.Set(Escape(engine->GetProperty("ModDate")));
+    str.Set(Escape(engine->GetProperty(Prop_ModificationDate)));
     if (str)
         Out("\t\tModDate=\"%s\"\n", str.Get());
-    str.Set(Escape(engine->GetProperty("Creator")));
+    str.Set(Escape(engine->GetProperty(Prop_CreatorApp)));
     if (str)
         Out("\t\tCreator=\"%s\"\n", str.Get());
-    str.Set(Escape(engine->GetProperty("Producer")));
+    str.Set(Escape(engine->GetProperty(Prop_PdfProducer)));
     if (str)
         Out("\t\tProducer=\"%s\"\n", str.Get());
-    str.Set(Escape(engine->GetProperty("PdfVersion")));
+    str.Set(Escape(engine->GetProperty(Prop_PdfVersion)));
     if (str)
         Out("\t\tPdfVersion=\"%s\"\n", str.Get());
     if (!engine->IsPrintingAllowed())
@@ -83,7 +83,7 @@ void DumpProperties(BaseEngine *engine)
         Out("\t\tPreferredLayout=\"%d\"\n", engine->PreferredLayout());
     Out("\t/>\n");
 
-    ScopedMem<TCHAR> fontlist(engine->GetProperty("FontList"));
+    ScopedMem<TCHAR> fontlist(engine->GetProperty(Prop_FontList));
     if (fontlist) {
         StrVec fonts;
         fonts.Split(fontlist, _T("\n"));

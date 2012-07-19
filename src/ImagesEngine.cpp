@@ -311,7 +311,7 @@ class ImageEngineImpl : public ImagesEngine, public ImageEngine {
 public:
     virtual ImageEngine *Clone();
 
-    virtual TCHAR *GetProperty(const char *name);
+    virtual TCHAR *GetProperty(DocumentProperty prop);
 
 protected:
     bool LoadSingleFile(const TCHAR *fileName);
@@ -425,21 +425,24 @@ static TCHAR *GetImageProperty(Bitmap *bmp, PROPID id, PROPID altId=0)
     return value;
 }
 
-TCHAR *ImageEngineImpl::GetProperty(const char *name)
+TCHAR *ImageEngineImpl::GetProperty(DocumentProperty prop)
 {
-    if (str::Eq(name, "Title"))
+    switch (prop) {
+    case Prop_Title:
         return GetImageProperty(LoadImage(1), PropertyTagImageDescription, PropertyTagXPTitle);
-    if (str::Eq(name, "Subject"))
+    case Prop_Subject:
         return GetImageProperty(LoadImage(1), PropertyTagXPSubject);
-    if (str::Eq(name, "Author"))
+    case Prop_Author:
         return GetImageProperty(LoadImage(1), PropertyTagArtist, PropertyTagXPAuthor);
-    if (str::Eq(name, "Copyright"))
+    case Prop_Copyright:
         return GetImageProperty(LoadImage(1), PropertyTagCopyright);
-    if (str::Eq(name, "CreationDate"))
+    case Prop_CreationDate:
         return GetImageProperty(LoadImage(1), PropertyTagDateTime, PropertyTagExifDTDigitized);
-    if (str::Eq(name, "Creator"))
+    case Prop_CreatorApp:
         return GetImageProperty(LoadImage(1), PropertyTagSoftwareUsed);
-    return NULL;
+    default:
+        return NULL;
+    }
 }
 
 bool ImageEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
@@ -650,7 +653,7 @@ public:
     }
     virtual RectD PageMediabox(int pageNo);
 
-    virtual TCHAR *GetProperty(const char *name);
+    virtual TCHAR *GetProperty(DocumentProperty prop);
 
     // json::ValueObserver
     virtual bool observe(const char *path, const char *value, json::DataType type);
@@ -872,21 +875,25 @@ bool CbxEngineImpl::observe(const char *path, const char *value, json::DataType 
            !propDate || str::FindChar(propDate, '/') <= propDate;
 }
 
-TCHAR *CbxEngineImpl::GetProperty(const char *name)
+TCHAR *CbxEngineImpl::GetProperty(DocumentProperty prop)
 {
-    if (str::Eq(name, "Title"))
+    switch (prop) {
+    case Prop_Title:
         return propTitle ? str::Dup(propTitle) : NULL;
-    if (str::Eq(name, "Author"))
+    case Prop_Author:
         return propAuthors.Count() ? propAuthors.Join(_T(", ")) : NULL;
-    if (str::Eq(name, "CreationDate"))
+    case Prop_CreationDate:
         return propDate ? str::Dup(propDate) : NULL;
-    if (str::Eq(name, "ModDate"))
+    case Prop_ModificationDate:
         return propModDate ? str::Dup(propModDate) : NULL;
-    if (str::Eq(name, "Creator"))
+    case Prop_CreatorApp:
         return propCreator ? str::Dup(propCreator) : NULL;
-    if (str::Eq(name, "Subject"))
+    // TODO: replace with Prop_Summary
+    case Prop_Subject:
         return propSummary ? str::Dup(propSummary) : NULL;
-    return NULL;
+    default:
+        return NULL;
+    }
 }
 
 class ImagesPage {

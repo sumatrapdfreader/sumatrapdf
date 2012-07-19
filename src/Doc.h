@@ -24,6 +24,7 @@ class MobiTestDoc;
 class PasswordUI;
 
 struct ImageData;
+enum DocumentProperty;
 
 enum DocType {
     Doc_None = 0, Engine_None = 0,
@@ -110,7 +111,7 @@ public:
     // of a virtual EbookDoc interface that *Doc implement so
     // that the compiler can choose the correct method automatically
     const TCHAR *GetFilePath() const;
-    TCHAR *GetProperty(const char *name);
+    TCHAR *GetProperty(DocumentProperty prop);
     const char *GetHtmlData(size_t &len);
     size_t GetHtmlDataSize();
     ImageData *GetCoverImage();

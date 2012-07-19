@@ -950,7 +950,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     }
 
     const TCHAR *baseName = path::GetBaseName(win->dm->FilePath());
-    TCHAR *docTitle = win->dm->engine ? win->dm->engine->GetProperty("Title") : NULL;
+    TCHAR *docTitle = win->dm->engine ? win->dm->engine->GetProperty(Prop_Title) : NULL;
     if (docTitle) {
         str::NormalizeWS(docTitle);
         if (!str::IsEmpty(docTitle)) {

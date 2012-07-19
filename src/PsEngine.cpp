@@ -238,7 +238,7 @@ public:
     virtual PageLayoutType PreferredLayout() {
         return pdfEngine ? pdfEngine->PreferredLayout() : Layout_Single;
     }
-    virtual TCHAR *GetProperty(const char *name) { return NULL; }
+    virtual TCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
     virtual bool IsPrintingAllowed() {
         return pdfEngine ? pdfEngine->IsPrintingAllowed() : true;

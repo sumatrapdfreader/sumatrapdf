@@ -189,12 +189,12 @@ const TCHAR *Doc::GetFilePath() const
     return GetFilePathFromDoc();
 }
 
-TCHAR *Doc::GetProperty(const char *name)
+TCHAR *Doc::GetProperty(DocumentProperty prop)
 {
     if (Doc_Epub == type)
-        return epubDoc->GetProperty(name);
+        return epubDoc->GetProperty(prop);
     if (IsEngine())
-        return engine->GetProperty(name);
+        return engine->GetProperty(prop);
     return NULL;
 }
 

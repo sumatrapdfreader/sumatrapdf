@@ -310,19 +310,19 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     TCHAR *str = str::Dup(gPluginMode ? gPluginURL : doc.GetFilePath());
     layoutData->AddProperty(_TR("File:"), str);
 
-    str = doc.GetProperty("Title");
+    str = doc.GetProperty(Prop_Title);
     layoutData->AddProperty(_TR("Title:"), str);
 
-    str = doc.GetProperty("Subject");
+    str = doc.GetProperty(Prop_Subject);
     layoutData->AddProperty(_TR("Subject:"), str);
 
-    str = doc.GetProperty("Author");
+    str = doc.GetProperty(Prop_Author);
     layoutData->AddProperty(_TR("Author:"), str);
 
-    str = doc.GetProperty("Copyright");
+    str = doc.GetProperty(Prop_Copyright);
     layoutData->AddProperty(_TR("Copyright:"), str);
 
-    str = doc.GetProperty("CreationDate");
+    str = doc.GetProperty(Prop_CreationDate);
     if (Engine_PDF == engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else if (Engine_XPS == engineType)
@@ -331,7 +331,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
-    str = doc.GetProperty("ModDate");
+    str = doc.GetProperty(Prop_ModificationDate);
     if (Engine_PDF == engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else if (Engine_XPS == engineType)
@@ -340,14 +340,14 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Modified:"), str);
 
-    str = doc.GetProperty("Creator");
+    str = doc.GetProperty(Prop_CreatorApp);
     layoutData->AddProperty(_TR("Application:"), str);
 
-    str = doc.GetProperty("Producer");
+    str = doc.GetProperty(Prop_PdfProducer);
     // TODO: remove PDF from string
     layoutData->AddProperty(_TR("PDF Producer:"), str);
 
-    str = doc.GetProperty("PdfVersion");
+    str = doc.GetProperty(Prop_PdfVersion);
     layoutData->AddProperty(_TR("PDF Version:"), str);
 
     size_t fileSize = file::GetSize(doc.GetFilePath());
@@ -391,7 +391,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
     if (extended) {
         // TODO: FontList extraction can take a while
-        str = doc.GetProperty("FontList");
+        str = doc.GetProperty(Prop_FontList);
         if (str) {
             // add a space between basic and extended file properties
             layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));

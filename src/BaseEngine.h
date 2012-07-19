@@ -19,6 +19,13 @@ enum PageDestType { Dest_None,
     Dest_GoToPageDialog, Dest_PrintDialog, Dest_SaveAsDialog, Dest_ZoomToDialog,
 };
 
+enum DocumentProperty {
+    Prop_Title, Prop_Author, Prop_Copyright, Prop_Subject,
+    Prop_CreationDate, Prop_ModificationDate, Prop_CreatorApp,
+    Prop_FontList,
+    Prop_PdfVersion, Prop_PdfProducer,
+};
+
 class RenderedBitmap {
 protected:
     HBITMAP hbmp;
@@ -206,7 +213,7 @@ public:
     virtual bool IsImageCollection() { return false; }
 
     // access to various document properties (such as Author, Title, etc.)
-    virtual TCHAR *GetProperty(const char *name) { return NULL; }
+    virtual TCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

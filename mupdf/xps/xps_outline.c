@@ -239,28 +239,24 @@ xps_open_and_parse(xps_document *doc, char *path)
 
 static inline int iswhite(c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }
 
-static xps_doc_prop *
-xps_hacky_get_prop(fz_context *ctx, char *data, char *name, char *tag_name, xps_doc_prop *prev)
+static char *
+xps_hacky_get_prop(fz_context *ctx, char *data, char *tag_name)
 {
-	char *start, *end;
-	xps_doc_prop *prop;
+	char *start, *end, *prop;
 
 	start = strstr(data, tag_name);
 	if (!start || start == data || start[-1] != '<')
-		return prev;
+		return NULL;
 	end = strstr(start + 1, tag_name);
 	start = strchr(start, '>');
 	if (!start || !end || start >= end || end[-2] != '<' || end[-1] != '/')
-		return prev;
+		return NULL;
 
 	for (start++; iswhite(*start); start++);
 	for (end -= 3; iswhite(*end) && end > start; end--);
 
-	prop = fz_malloc_struct(ctx, xps_doc_prop);
-	prop->name = fz_strdup(ctx, name);
-	prop->value = fz_malloc(ctx, end - start + 2);
-	fz_strlcpy(prop->value, start, end - start + 2);
-	prop->next = prev;
+	prop = fz_malloc(ctx, end - start + 2);
+	fz_strlcpy(prop, start, end - start + 2);
 
 	return prop;
 }
@@ -290,26 +286,27 @@ xps_find_doc_props_path(xps_document *doc, char path[1024])
 	xml_free_element(doc->ctx, root);
 }
 
-xps_doc_prop *xps_extract_doc_props(xps_document *doc)
+xps_doc_props *xps_extract_doc_props(xps_document *doc)
 {
 	char path[1024];
 	xps_part *part;
-	xps_doc_prop *prop = NULL;
+	xps_doc_props *props;
 	fz_var(part);
-	fz_var(prop);
+	fz_var(props);
 
 	xps_find_doc_props_path(doc, path);
 	if (!*path)
 		return NULL;
 	part = xps_read_part(doc, path);
+	props = fz_malloc_struct(doc->ctx, xps_doc_props);
 
 	fz_try(doc->ctx)
 	{
-		prop = xps_hacky_get_prop(doc->ctx, part->data, "Title", "dc:title", prop);
-		prop = xps_hacky_get_prop(doc->ctx, part->data, "Subject", "dc:subject", prop);
-		prop = xps_hacky_get_prop(doc->ctx, part->data, "Author", "dc:creator", prop);
-		prop = xps_hacky_get_prop(doc->ctx, part->data, "CreationDate", "dcterms:created", prop);
-		prop = xps_hacky_get_prop(doc->ctx, part->data, "ModDate", "dcterms:modified", prop);
+		props->title = xps_hacky_get_prop(doc->ctx, part->data, "dc:title");
+		props->author = xps_hacky_get_prop(doc->ctx, part->data, "dc:creator");
+		props->subject = xps_hacky_get_prop(doc->ctx, part->data, "dc:subject");
+		props->creation_date = xps_hacky_get_prop(doc->ctx, part->data, "dcterms:created");
+		props->modification_date = xps_hacky_get_prop(doc->ctx, part->data, "dcterms:modified");
 	}
 	fz_always(doc->ctx)
 	{
@@ -317,22 +314,22 @@ xps_doc_prop *xps_extract_doc_props(xps_document *doc)
 	}
 	fz_catch(doc->ctx)
 	{
-		xps_free_doc_prop(doc->ctx, prop);
+		xps_free_doc_props(doc->ctx, props);
 		fz_rethrow(doc->ctx);
 	}
 
-	return prop;
+	return props;
 }
 
 void
-xps_free_doc_prop(fz_context *ctx, xps_doc_prop *prop)
+xps_free_doc_props(fz_context *ctx, xps_doc_props *props)
 {
-	while (prop)
-	{
-		xps_doc_prop *next = prop->next;
-		fz_free(ctx, prop->name);
-		fz_free(ctx, prop->value);
-		fz_free(ctx, prop);
-		prop = next;
-	}
+	if (!props)
+		return;
+	fz_free(ctx, props->title);
+	fz_free(ctx, props->author);
+	fz_free(ctx, props->subject);
+	fz_free(ctx, props->creation_date);
+	fz_free(ctx, props->modification_date);
+	fz_free(ctx, props);
 }

@@ -33,7 +33,7 @@ public:
     char *ToUtf8(const unsigned char *text, UINT overrideCP=0);
     TCHAR *ToStr(const char *text);
 
-    TCHAR *GetProperty(const char *name);
+    TCHAR *GetProperty(DocumentProperty prop);
     const char *GetHomePath();
     Vec<char *> *GetAllPaths();
 
