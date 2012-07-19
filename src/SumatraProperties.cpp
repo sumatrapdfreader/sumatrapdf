@@ -104,9 +104,14 @@ static void ConvDateToDisplay(TCHAR **s, bool (* DateParse)(const TCHAR *date, S
 
     SYSTEMTIME date;
     bool ok = DateParse(*s, &date);
-    free(*s);
+    if (!ok)
+        return;
 
-    *s = ok ? FormatSystemTime(date) : NULL;
+    TCHAR *formatted = FormatSystemTime(date);
+    if (formatted) {
+        free(*s);
+        *s = formatted;
+    }
 }
 
 // Format the file size in a short form that rounds to the largest size unit
@@ -329,6 +334,8 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         ConvDateToDisplay(&str, IsoDateParse);
     else if (Engine_Epub == engineType || Doc_Epub == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
+    else if (Engine_Mobi == engineType || Doc_Mobi == engineType)
+        ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = doc.GetProperty(Prop_ModificationDate);
@@ -337,6 +344,8 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     else if (Engine_XPS == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
     else if (Engine_Epub == engineType || Doc_Epub == engineType)
+        ConvDateToDisplay(&str, IsoDateParse);
+    else if (Engine_Mobi == engineType || Doc_Mobi == engineType)
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Modified:"), str);
 

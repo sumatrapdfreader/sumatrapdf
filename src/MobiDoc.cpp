@@ -6,7 +6,6 @@
 
 #include "BitReader.h"
 #include "ByteOrderDecoder.h"
-#include "EbookBase.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -78,7 +77,7 @@ enum MobiDocType {
 // Note: the real length of MobiHeader is in MobiHeader.hdrLen. This is just
 // the size of the struct
 #define kMobiHeaderLen 232
-// length up to MobiHeader.exhtFlags
+// length up to MobiHeader.exthFlags
 #define kMobiHeaderMinLen 116
 struct MobiHeader {
     char         id[4];
@@ -112,7 +111,7 @@ struct MobiHeader {
     uint32       huffmanRecCount;
     uint32       huffmanTableOffset;
     uint32       huffmanTableLen;
-    uint32       exhtFlags;  // bitfield. if bit 6 (0x40) is set => there's an EXTH record
+    uint32       exthFlags;  // bitfield. if bit 6 (0x40) is set => there's an EXTH record
     char         reserved1[32];
     uint32       drmOffset; // -1 if no drm info
     uint32       drmEntriesCount; // -1 if no drm
@@ -417,7 +416,7 @@ static void DecodeMobiDocHeader(const char *buf, MobiHeader* hdr)
     hdr->huffmanRecCount =      d.UInt32();
     hdr->huffmanTableOffset =   d.UInt32();
     hdr->huffmanTableLen =      d.UInt32();
-    hdr->exhtFlags =            d.UInt32();
+    hdr->exthFlags =            d.UInt32();
     CrashIf(kMobiHeaderMinLen != d.Offset());
 
     if (hdr->hdrLen < kMobiHeaderMinLen + 48)
@@ -471,6 +470,9 @@ MobiDoc::~MobiDoc()
     delete huffDic;
     delete doc;
     delete pdbReader;
+    for (size_t i = 0; i < props.Count(); i++) {
+        free(props.At(i).value);
+    }
 }
 
 bool MobiDoc::ParseHeader()
@@ -576,7 +578,49 @@ bool MobiDoc::ParseHeader()
         }
     }
 
+    if ((mobiHdr.exthFlags & 0x40)) {
+        uint32 offset = kPalmDocHeaderLen + mobiHdr.hdrLen;
+        DecodeExthHeader(firstRecData + offset, recSize - offset);
+    }
+
     LoadImages();
+    return true;
+}
+
+bool MobiDoc::DecodeExthHeader(const char *data, size_t dataLen)
+{
+    if (dataLen < 12 || !str::EqN(data, "EXTH", 4))
+        return false;
+
+    ByteOrderDecoder d(data, dataLen, ByteOrderDecoder::BigEndian);
+    d.Skip(4);
+    uint32 hdrLen = d.UInt32();
+    uint32 count = d.UInt32();
+    if (hdrLen > dataLen)
+        return false;
+
+    for (uint32 i = 0; i < count; i++) {
+        uint32 type = d.UInt32();
+        uint32 length = d.UInt32();
+        if (d.Offset() + length - 8 > dataLen)
+            return false;
+        d.Skip(length - 8);
+
+        Metadata prop;
+        switch (type) {
+        case 100: prop.prop = Prop_Author; break;
+        case 105: prop.prop = Prop_Subject; break;
+        case 106: prop.prop = Prop_CreationDate; break;
+        case 108: prop.prop = Prop_CreatorApp; break;
+        case 109: prop.prop = Prop_Copyright; break;
+        case 503: prop.prop = Prop_Title; break;
+        default:  continue;
+        }
+        prop.value = str::DupN(data + d.Offset() - length + 8, length - 8);
+        if (prop.value)
+            props.Append(prop);
+    }
+
     return true;
 }
 
@@ -775,6 +819,15 @@ char *MobiDoc::GetBookHtmlData(size_t& lenOut) const
 {
     lenOut = doc->Size();
     return doc->Get();
+}
+
+TCHAR *MobiDoc::GetProperty(DocumentProperty prop)
+{
+    for (size_t i = 0; i < props.Count(); i++) {
+        if (props.At(i).prop == prop)
+            return str::conv::FromCodePage(props.At(i).value, textEncoding);
+    }
+    return NULL;
 }
 
 bool MobiDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)

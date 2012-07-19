@@ -31,7 +31,6 @@ refactoring is such a change.
 A random list of things to implement sooner or later:
 - html: format text on a line to a baseline
   http://www.bobpowell.net/formattingtext.htm
-- mobi: document properties (metadata)
 - mobi: links
 - ebook ui: links
 - mobi: lists (ul, li)

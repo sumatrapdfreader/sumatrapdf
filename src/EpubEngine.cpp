@@ -913,6 +913,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
+    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
 
     virtual PageDestination *GetNamedDest(const TCHAR *name);

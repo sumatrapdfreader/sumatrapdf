@@ -190,7 +190,7 @@ EpubDoc::~EpubDoc()
         free(images.At(i).base.data);
         free(images.At(i).id);
     }
-    for (size_t i = 1; i < props.Count(); i++) {
+    for (size_t i = 0; i < props.Count(); i++) {
         free(props.At(i).value);
     }
 }

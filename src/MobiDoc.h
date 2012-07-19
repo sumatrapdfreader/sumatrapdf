@@ -4,6 +4,8 @@
 #ifndef MobiDoc_h
 #define MobiDoc_h
 
+#include "EbookBase.h"
+
 class PdbReader;
 class HuffDicDecompressor;
 struct ImageData;
@@ -30,6 +32,12 @@ class MobiDoc
 
     HuffDicDecompressor *huffDic;
 
+    struct Metadata {
+        DocumentProperty    prop;
+        char *              value;
+    };
+    Vec<Metadata>       props;
+
     MobiDoc(const TCHAR *filePath);
 
     bool    ParseHeader();
@@ -37,6 +45,7 @@ class MobiDoc
     void    LoadImages();
     bool    LoadImage(size_t imageNo);
     bool    LoadDocument();
+    bool    DecodeExthHeader(const char *data, size_t dataLen);
 
 public:
     str::Str<char> *    doc;
@@ -50,6 +59,7 @@ public:
     ImageData *         GetCoverImage();
     ImageData *         GetImage(size_t imgRecIndex) const;
     const TCHAR *       GetFileName() const { return fileName; }
+    TCHAR *             GetProperty(DocumentProperty prop);
     PdbDocType          GetDocType() const { return docType; }
 
     static bool         IsSupportedFile(const TCHAR *fileName, bool sniff=false);

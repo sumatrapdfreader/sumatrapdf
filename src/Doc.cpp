@@ -191,6 +191,8 @@ const TCHAR *Doc::GetFilePath() const
 
 TCHAR *Doc::GetProperty(DocumentProperty prop)
 {
+    if (Doc_Mobi == type)
+        return mobiDoc->GetProperty(prop);
     if (Doc_Epub == type)
         return epubDoc->GetProperty(prop);
     if (IsEngine())
