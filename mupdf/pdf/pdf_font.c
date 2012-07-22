@@ -180,14 +180,14 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 	unsigned int len;
 
 	data = pdf_lookup_builtin_font(fontname, &len);
+#ifdef _WIN32
 	if (!data)
 	{
-#ifdef _WIN32
-		/* we use built-in fonts in addition to those installed on windows
-		   because the metric for Times-Roman in windows fonts seems wrong
-		   and we end up with over-lapping text if this font is used.
-		   poppler doesn't have this problem even when using windows fonts
-		   so maybe there's a better fix. */
+		/* we don't use system fonts instead of base fonts because
+		   the metrics for Times-Roman and Courier don't seem to
+		   match those of Windows' Times New Roman and Courier New;
+		   Poppler doesn't seem to have this problem even when using
+		   Windows fonts, so maybe there's a better fix */
 		fz_try(ctx)
 		{
 			pdf_load_windows_font(ctx, fontdesc, fontname);
@@ -195,9 +195,11 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 		fz_catch(ctx) { }
 		if (fontdesc->font)
 			return;
-#endif
-		fz_throw(ctx, "cannot find builtin font: '%s'", fontname);
+		data = pdf_lookup_builtin_font(clean_font_name(fontname), &len);
 	}
+#endif
+	if (!data)
+		fz_throw(ctx, "cannot find builtin font: '%s'", fontname);
 
 	fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 1);
 	/* RJW: "cannot load freetype font from memory" */
@@ -502,7 +504,8 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 		if (descriptor)
 			pdf_load_font_descriptor(fontdesc, xref, descriptor, NULL, basefont, pdf_dict_gets(dict, "Encoding") != NULL);
 		else
-			pdf_load_builtin_font(ctx, fontdesc, clean_font_name(basefont));
+			/* SumatraPDF: load system Arial, Times New Roman, etc. when requested */
+			pdf_load_builtin_font(ctx, fontdesc, basefont);
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
 		}
 		fz_catch(ctx)
@@ -1142,7 +1145,7 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *d
 		origname = p + 1;
 
 	/* Look through list of alternate names for built in fonts */
-	fontname = clean_font_name(origname);
+	fontname = origname; /* SumatraPDF: prefer system fonts to the built-in ones */
 
 	fontdesc->flags = pdf_to_int(pdf_dict_gets(dict, "Flags"));
 	fontdesc->italic_angle = pdf_to_real(pdf_dict_gets(dict, "ItalicAngle"));
@@ -1166,8 +1169,7 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *d
 		fz_catch(ctx)
 		{
 			fz_warn(ctx, "ignored error when loading embedded font; attempting to load system font");
-			/* SumatraPDF: prefer system fonts to the built-in ones */
-			if (origname != fontname && 0)
+			if (origname != fontname)
 				pdf_load_builtin_font(ctx, fontdesc, fontname);
 			else
 				pdf_load_system_font(ctx, fontdesc, fontname, collection, has_encoding);
@@ -1175,8 +1177,7 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *d
 	}
 	else
 	{
-		/* SumatraPDF: prefer system fonts to the built-in ones */
-		if (origname != fontname && 0)
+		if (origname != fontname)
 			pdf_load_builtin_font(ctx, fontdesc, fontname);
 		else
 			pdf_load_system_font(ctx, fontdesc, fontname, collection, has_encoding);
