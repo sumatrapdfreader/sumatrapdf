@@ -611,6 +611,9 @@ Gửi qua &email...
 Set inverse search command-line
 Đặt dòng lệnh tìm kiếm ngược
 
+Show &Bookmarks
+Hiện chỉ dấu sách
+
 Show &Toolbar
 Hiện thanh công cụ
 
@@ -703,7 +706,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Show &Bookmarks
 
