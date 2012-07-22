@@ -170,7 +170,7 @@ static void scan_Lookup(struct ft2vert_st *ret, const FT_Bytes top)
 		scan_SubTable(ret, top + SubTable);
 
 	if (ret->SubTableCount != SubTableCount)
-		fz_warn(ret->ctx, "scan_Lookup: SubTableCount (=%d) is not expected (=%d).\n",
+		fz_warn(ret->ctx, "scan_Lookup: SubTableCount (=%d) is not expected (=%d).",
 				ret->SubTableCount, SubTableCount);
 }
 
@@ -277,7 +277,7 @@ static void scan_GSUB_Header(struct ft2vert_st *ret, const FT_Bytes top)
 	LookupList  = BYTE2(s);
 
 	if (Version != 0x00010000)
-		fz_warn(ret->ctx, "GSUB Version (=%.1f) is not 1.0\n", (double)Version / 0x10000);
+		fz_warn(ret->ctx, "GSUB Version (=%.1f) is not 1.0", (double)Version / 0x10000);
 
 	scan_ScriptList(ret, top + ScriptList);
 	scan_FeatureList(ret, top + FeatureList);
@@ -301,12 +301,12 @@ static struct ft2vert_st *ft2vert_init(fz_context *ctx, FT_Face face)
 	assert(ft_error != FT_Err_Unimplemented_Feature); // make sure to enable the otvalid module
 	if (ft_error != 0 || ret->GSUB_table == 0)
 	{
-		fz_warn(ctx, "%s has no GSUB table.\n", face->family_name);
+		fz_warn(ctx, "%s has no GSUB table.", face->family_name);
 		return ret;
 	}
 	scan_GSUB_Header(ret, ret->GSUB_table);
 	if (ret->SubTableCount == 0)
-		fz_warn(ctx, "%s has no vrt2/vert feature.\n", face->family_name);
+		fz_warn(ctx, "%s has no vrt2/vert feature.", face->family_name);
 
 	return ret;
 }
