@@ -286,7 +286,7 @@ fz_check_font_dimensions(FT_Face face)
 }
 
 fz_font *
-fz_new_font_from_file(fz_context *ctx, char *path, int index, int use_glyph_bbox)
+fz_new_font_from_file(fz_context *ctx, char *name, char *path, int index, int use_glyph_bbox)
 {
 	FT_Face face;
 	fz_font *font;
@@ -304,7 +304,10 @@ fz_new_font_from_file(fz_context *ctx, char *path, int index, int use_glyph_bbox
 	}
 	fz_check_font_dimensions(face);
 
-	font = fz_new_font(ctx, face->family_name, use_glyph_bbox, face->num_glyphs);
+	if (!name)
+		name = face->family_name;
+
+	font = fz_new_font(ctx, name, use_glyph_bbox, face->num_glyphs);
 	font->ft_face = face;
 	font->bbox.x0 = (float) face->bbox.xMin / face->units_per_EM;
 	font->bbox.y0 = (float) face->bbox.yMin / face->units_per_EM;
@@ -315,7 +318,7 @@ fz_new_font_from_file(fz_context *ctx, char *path, int index, int use_glyph_bbox
 }
 
 fz_font *
-fz_new_font_from_memory(fz_context *ctx, unsigned char *data, int len, int index, int use_glyph_bbox)
+fz_new_font_from_memory(fz_context *ctx, char *name, unsigned char *data, int len, int index, int use_glyph_bbox)
 {
 	FT_Face face;
 	fz_font *font;
@@ -333,7 +336,10 @@ fz_new_font_from_memory(fz_context *ctx, unsigned char *data, int len, int index
 	}
 	fz_check_font_dimensions(face);
 
-	font = fz_new_font(ctx, face->family_name, use_glyph_bbox, face->num_glyphs);
+	if (!name)
+		name = face->family_name;
+
+	font = fz_new_font(ctx, name, use_glyph_bbox, face->num_glyphs);
 	font->ft_face = face;
 	font->bbox.x0 = (float) face->bbox.xMin / face->units_per_EM;
 	font->bbox.y0 = (float) face->bbox.yMin / face->units_per_EM;

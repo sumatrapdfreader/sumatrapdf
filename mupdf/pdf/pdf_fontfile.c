@@ -719,7 +719,7 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 	if (GetEnvironmentVariable(_T("MULOG"), NULL, 0))
 		printf("pdf_load_windows_font: loading font from '%s'\n", found->fontpath);
 
-	font->font = fz_new_font_from_file(ctx, found->fontpath, found->index,
+	font->font = fz_new_font_from_file(ctx, orig_name, found->fontpath, found->index,
 		strcmp(found->fontface, "DroidSansFallback") != 0);
 	/* "cannot load freetype font from file %s", found->fontpath */
 	font->font->ft_file = fz_strdup(ctx, found->fontpath);

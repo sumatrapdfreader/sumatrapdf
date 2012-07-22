@@ -273,7 +273,10 @@ public:
 		if (fontCollections)
 		{
 			for (int i = 0; i < fz_hash_len(ctx, fontCollections); i++)
+			{
+				fz_drop_font(ctx, *(fz_font **)fz_hash_get_key(ctx, fontCollections, i));
 				delete (PrivateFontCollection *)fz_hash_get_val(ctx, fontCollections, i);
+			}
 			fz_free_hash(ctx, fontCollections);
 		}
 		delete tempFiles;
@@ -858,8 +861,8 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 		return NULL;
 	
 	if (!user->fontCollections)
-		user->fontCollections = fz_new_hash_table(dev->ctx, 13, sizeof(font->name), -1);
-	PrivateFontCollection *collection = (PrivateFontCollection *)fz_hash_find(dev->ctx, user->fontCollections, font->name);
+		user->fontCollections = fz_new_hash_table(dev->ctx, 13, sizeof(font), -1);
+	PrivateFontCollection *collection = (PrivateFontCollection *)fz_hash_find(dev->ctx, user->fontCollections, &font);
 	
 	if (!collection)
 	{
@@ -882,7 +885,8 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 			collection->AddFontFile(fontPath);
 		}
 		
-		fz_hash_insert(dev->ctx, user->fontCollections, font->name, collection);
+		fz_keep_font(dev->ctx, font);
+		fz_hash_insert(dev->ctx, user->fontCollections, &font, collection);
 	}
 	
 	if (collection->GetFamilyCount() == 0)

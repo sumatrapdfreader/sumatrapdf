@@ -521,7 +521,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 
 		fz_try(doc->ctx)
 		{
-			font = fz_new_font_from_memory(doc->ctx, part->data, part->size, subfontid, 1);
+			font = fz_new_font_from_memory(doc->ctx, NULL, part->data, part->size, subfontid, 1);
 		}
 		fz_catch(doc->ctx)
 		{
