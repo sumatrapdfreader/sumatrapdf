@@ -613,6 +613,7 @@ static int GetPolicies(bool isRestricted)
         { _T("RegistryAccess"), Perm_RegistryAccess },
         { _T("PrinterAccess"),  Perm_PrinterAccess },
         { _T("CopySelection"),  Perm_CopySelection },
+        { _T("FullscreenAccess"),Perm_FullscreenAccess },
     };
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
@@ -3266,6 +3267,9 @@ static void OnMenuGoToPage(WindowInfo& win)
 
 static void EnterFullscreen(WindowInfo& win, bool presentation)
 {
+    if (!HasPermission(Perm_FullscreenAccess))
+        return;
+
     if ((presentation ? win.presentation : win.fullScreen) ||
         !IsWindowVisible(win.hwndFrame) || gPluginMode)
         return;

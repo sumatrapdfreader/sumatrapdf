@@ -34,6 +34,8 @@ enum {
     Perm_PrinterAccess      = 1 << 4,
     // enables image/text selections and selection copying (if permitted by the document)
     Perm_CopySelection      = 1 << 5,
+    // enables fullscreen and presentation view modes
+    Perm_FullscreenAccess   = 1 << 6,
     // enables all of the above
     Perm_All                = 0x0FFFFFF,
     // set through the command line (Policies might only apply when in restricted use mode)
@@ -51,6 +53,7 @@ enum MenuToolbarFlags {
     MF_REQ_PREF_ACCESS   = Perm_SavePreferences << PERM_FLAG_OFFSET,
     MF_REQ_PRINTER_ACCESS= Perm_PrinterAccess << PERM_FLAG_OFFSET,
     MF_REQ_ALLOW_COPY    = Perm_CopySelection << PERM_FLAG_OFFSET,
+    MF_REQ_FULLSCREEN    = Perm_FullscreenAccess << PERM_FLAG_OFFSET,
 };
 
 /* styling for About/Properties windows */
