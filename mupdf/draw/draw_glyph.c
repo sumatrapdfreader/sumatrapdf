@@ -131,7 +131,8 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 	}
 	else
 	{
-		if (font->ft_face)
+		/* SumatraPDF: don't break clipping by larger glyphs */
+		if (font->ft_face && size > 3000)
 			return NULL;
 		do_cache = 0;
 	}
