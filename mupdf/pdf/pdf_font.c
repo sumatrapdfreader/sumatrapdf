@@ -179,15 +179,13 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 	unsigned char *data;
 	unsigned int len;
 
-	data = pdf_lookup_builtin_font(fontname, &len);
 #ifdef _WIN32
-	if (!data)
+	/* SumatraPDF: prefer system fonts unless a base font is explicitly requested */
+	if (!pdf_lookup_builtin_font(fontname, &len))
 	{
-		/* we don't use system fonts instead of base fonts because
-		   the metrics for Times-Roman and Courier don't seem to
-		   match those of Windows' Times New Roman and Courier New;
-		   Poppler doesn't seem to have this problem even when using
-		   Windows fonts, so maybe there's a better fix */
+		/* TODO: the metrics for Times-Roman and Courier don't match
+		   those of Windows' Times New Roman and Courier New; for
+		   some reason, Poppler doesn't seem to have this problem */
 		fz_try(ctx)
 		{
 			pdf_load_windows_font(ctx, fontdesc, fontname);
@@ -195,9 +193,12 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 		fz_catch(ctx) { }
 		if (fontdesc->font)
 			return;
-		data = pdf_lookup_builtin_font(clean_font_name(fontname), &len);
 	}
 #endif
+
+	fontname = clean_font_name(fontname);
+
+	data = pdf_lookup_builtin_font(fontname, &len);
 	if (!data)
 		fz_throw(ctx, "cannot find builtin font: '%s'", fontname);
 
@@ -233,7 +234,7 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fon
 	unsigned int len;
 
 #ifdef _WIN32
-	/* Try to fall back to a reasonable TrueType font that might be installed locally */
+	/* SumatraPDF: Try to fall back to a reasonable system font */
 	fz_try(ctx)
 	{
 		pdf_load_similar_cjk_font(ctx, fontdesc, ros, serif);
@@ -241,9 +242,9 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fon
 	fz_catch(ctx)
 	{
 #ifdef NOCJKFONT
+		/* If no CJK fallback font is builtin, maybe one has been shipped separately */
 		fz_try(ctx)
 		{
-			/* If no CJK fallback font is builtin, maybe one has been shipped separately */
 			pdf_load_windows_font(ctx, fontdesc, "DroidSansFallback");
 		}
 		fz_catch(ctx) { }
@@ -276,19 +277,17 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, c
 	int mono = 0;
 
 #ifdef _WIN32
-	/* try to find a precise match in Windows' fonts before falling back to a built-in one */
+	/* SumatraPDF: try to find a matching system font before falling back to a built-in one */
 	fz_try(ctx)
 	{
 		pdf_load_windows_font(ctx, fontdesc, fontname);
-	}
-	fz_catch(ctx) { }
-	if (fontdesc->font)
-	{
 		/* TODO: this seems to be required at least for MS-Mincho - why? */
 		if (collection)
 			fontdesc->font->ft_substitute = 1;
-		return;
 	}
+	fz_catch(ctx) { }
+	if (fontdesc->font)
+		return;
 #endif
 
 	if (strstr(fontname, "Bold"))
@@ -504,7 +503,6 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 		if (descriptor)
 			pdf_load_font_descriptor(fontdesc, xref, descriptor, NULL, basefont, pdf_dict_gets(dict, "Encoding") != NULL);
 		else
-			/* SumatraPDF: load system Arial, Times New Roman, etc. when requested */
 			pdf_load_builtin_font(ctx, fontdesc, basefont);
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
 		}
@@ -529,13 +527,11 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 		}
 
 		/* Some chinese documents mistakenly consider WinAnsiEncoding to be codepage 936 */
-		/* SumatraPDF: tweak heuristic to determine broken chinese fonts */
 		if (descriptor && pdf_is_string(pdf_dict_gets(descriptor, "FontName")) &&
 			!pdf_dict_gets(dict, "ToUnicode") &&
 			!strcmp(pdf_to_name(pdf_dict_gets(dict, "Encoding")), "WinAnsiEncoding") &&
 			pdf_to_int(pdf_dict_gets(descriptor, "Flags")) == 4)
 		{
-			/* note: without the comma, pdf_load_font_descriptor would prefer /FontName over /BaseFont */
 			char *cp936fonts[] = {
 				"\xCB\xCE\xCC\xE5", "SimSun,Regular",
 				"\xBA\xDA\xCC\xE5", "SimHei,Regular",
@@ -592,7 +588,6 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 					cmap = test;
 				if (test->platform_id == 3 && test->encoding_id == 1)
 					cmap = test;
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1815 */
 				if (symbolic && test->platform_id == 3 && test->encoding_id == 0)
 					cmap = test;
 			}
@@ -641,8 +636,7 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 						item = pdf_array_get(diff, i);
 						if (pdf_is_int(item))
 							k = pdf_to_int(item);
-						/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1942 */
-						if (pdf_is_name(item) && 0 <= k && k < 256)
+						if (pdf_is_name(item) && k >= 0 && k < 256)
 							estrings[k++] = pdf_to_name(item);
 					}
 				}
@@ -659,7 +653,13 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 		subtype = pdf_to_name(pdf_dict_gets(dict, "Subtype"));
 		if (!strcmp(subtype, "Type1"))
 			kind = TYPE1;
+		else if (!strcmp(subtype, "MMType1"))
+			kind = TYPE1;
 		else if (!strcmp(subtype, "TrueType"))
+			kind = TRUETYPE;
+		else if (!strcmp(subtype, "CIDFontType0"))
+			kind = TYPE1;
+		else if (!strcmp(subtype, "CIDFontType2"))
 			kind = TRUETYPE;
 
 		/* encode by glyph name where we can */
@@ -722,8 +722,7 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 			}
 
 			/* Symbolic cmap */
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1618 */
-			else if (face->num_charmaps != 1 || face->charmaps[0]->encoding != FT_ENCODING_MS_SYMBOL)
+			else if (!face->charmap || face->charmap->encoding != FT_ENCODING_MS_SYMBOL)
 			{
 				for (i = 0; i < 256; i++)
 				{
@@ -764,27 +763,28 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 			}
 		}
 
-		fz_unlock(ctx, FZ_LOCK_FREETYPE);
-
-		/* SumatraPDF: handle symbolic Type 1 fonts with an implicit encoding similar to Adobe Reader */
+		/* symbolic Type 1 fonts with an implicit encoding and non-standard glyph names */
 		if (kind == TYPE1 && symbolic)
+		{
 			for (i = 0; i < 256; i++)
 				if (etable[i] && estrings[i] && !pdf_lookup_agl(estrings[i]))
-					estrings[i] = (char *)pdf_standard[i];
+					estrings[i] = (char*) pdf_standard[i];
+		}
+
+		fz_unlock(ctx, FZ_LOCK_FREETYPE);
 
 		fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 1);
 		fontdesc->size += pdf_cmap_size(ctx, fontdesc->encoding);
 		fontdesc->cid_to_gid_len = 256;
 		fontdesc->cid_to_gid = etable;
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1961 */
 		fz_try(ctx)
 		{
-		pdf_load_to_unicode(xref, fontdesc, estrings, NULL, pdf_dict_gets(dict, "ToUnicode"));
+			pdf_load_to_unicode(xref, fontdesc, estrings, NULL, pdf_dict_gets(dict, "ToUnicode"));
 		}
 		fz_catch(ctx)
 		{
-			fz_warn(ctx, "cannot load to_unicode");
+			fz_warn(ctx, "cannot load ToUnicode CMap");
 		}
 
 	skip_encoding:
@@ -981,7 +981,7 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 		}
 		fz_catch(ctx)
 		{
-			fz_warn(ctx, "cannot load to_unicode");
+			fz_warn(ctx, "cannot load ToUnicode CMap");
 		}
 
 		/* Horizontal */
@@ -1123,26 +1123,20 @@ static void
 pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *dict, char *collection, char *basefont, int has_encoding)
 {
 	pdf_obj *obj1, *obj2, *obj3, *obj;
-	char *fontname, *origname, *p;
+	char *fontname, *origname;
 	FT_Face face;
 	fz_context *ctx = xref->ctx;
 
-	/* The descriptor's FontName should be the same as the font's BaseFont. */
-	origname = pdf_to_name(pdf_dict_gets(dict, "FontName"));
-	if (!origname)
-		origname = basefont;
+	/* Prefer BaseFont; don't bother with FontName */
+	origname = basefont;
 
-	/* Prefer BaseFont if it has a style suffix */
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1666 */
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1842 */
-	if (!strchr(basefont, '+') || !pdf_is_name(pdf_dict_gets(dict, "FontName")))
-		origname = basefont;
+	/* SumatraPDF: handle /BaseFont /Arial,Bold+000041 /FontName /Arial,Bold */
+	if (strchr(basefont, '+') && pdf_is_name(pdf_dict_gets(dict, "FontName")))
+		origname = pdf_to_name(pdf_dict_gets(dict, "FontName"));
 
-	/* Strip the SUBSET+ prefix */
-	p = strchr(origname, '+');
-	/* SumatraPDF: only strip a SUBSET+ prefix */
-	if (p && p == origname + 6)
-		origname = p + 1;
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1616 */
+	if (strlen(origname) > 7 && origname[6] == '+')
+		origname += 7;
 
 	/* Look through list of alternate names for built in fonts */
 	fontname = origname; /* SumatraPDF: prefer system fonts to the built-in ones */
@@ -1212,6 +1206,7 @@ pdf_make_width_table(fz_context *ctx, pdf_font_desc *fontdesc)
 
 	font->width_count = n + 1;
 	font->width_table = fz_malloc_array(ctx, font->width_count, sizeof(int));
+	memset(font->width_table, 0, font->width_count * sizeof(int));
 	fontdesc->size += font->width_count * sizeof(int);
 
 	for (i = 0; i < fontdesc->hmtx_len; i++)
@@ -1220,10 +1215,8 @@ pdf_make_width_table(fz_context *ctx, pdf_font_desc *fontdesc)
 		{
 			cid = pdf_lookup_cmap(fontdesc->encoding, k);
 			gid = pdf_font_cid_to_gid(ctx, fontdesc, cid);
-			/* SumatraPDF: Widths are per cid, so there could be clashes, if two cids
-			               map to the same gid (for now, prefer the non-zero width) */
-			if (gid >= 0 && gid < font->width_count && fontdesc->hmtx[i].w != 0)
-				font->width_table[gid] = fontdesc->hmtx[i].w;
+			if (gid >= 0 && gid < font->width_count)
+				font->width_table[gid] = fz_maxi(fontdesc->hmtx[i].w, font->width_table[gid]);
 		}
 	}
 }
