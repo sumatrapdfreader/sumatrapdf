@@ -618,6 +618,9 @@ Invia via &email...
 Set inverse search command-line
 Imposta la ricerca inversa via riga di comando
 
+Show &Bookmarks
+Visualizza segnali&bri
+
 Show &Toolbar
 &Barra strumenti
 
@@ -710,7 +713,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Show &Bookmarks
 

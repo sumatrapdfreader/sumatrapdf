@@ -163,7 +163,7 @@ Ignorar &esta versão
 (página %s)
 
 About SumatraPDF
-Sobre SumatraPDF
+Sobre o SumatraPDF
 
 Add Favorite
 Adicionar favorito
@@ -226,7 +226,7 @@ CHM documents
 Documentos CHM
 
 Can't connect to the Internet (error %#x).
-Não foi possível ligar à internet (erro %#x)
+Não foi possível ligar à Internet (erro %#x)
 
 Cancel
 Cancelar
@@ -442,7 +442,7 @@ Make SumatraPDF default application for PDF files?
 Tornar SumatraPDF a aplicação principal para PDFs?
 
 Make SumatraPDF my default PDF reader
-Tornar SumatraPDF o leitor pré-definido dos PDF
+Tornar SumatraPDF o leitor principal dos PDF
 
 Match Case
 Sensível a maiúsculas
@@ -535,7 +535,7 @@ Page:
 Página:
 
 Please wait - rendering...
-Por favor, aguarde - a processar...
+Por favor aguarde - a processar...
 
 Postscript documents
 Documentos Postscript
@@ -595,7 +595,7 @@ Save S&hortcut...\tCtrl+Shift+S
 Criar atal&ho...\tCtrl+Shift+S
 
 Searching %d of %d...
-Pesquisando %d de %d...
+A procurar %d de %d...
 
 Select &All
 &Selecionar tudo
@@ -611,6 +611,9 @@ Send by &E-mail...
 
 Set inverse search command-line
 Definir linha de comandos para procura inversa
+
+Show &Bookmarks
+&Mostrar marcadores
 
 Show &Toolbar
 Mostrar &barra de ferramentas
@@ -649,10 +652,10 @@ SumatraPDF crashed
 O SumatraPDF terminou
 
 SumatraPDF is your default PDF reader
-O SumatraPDF é o leitor pré-definido dos PDF
+O SumatraPDF é o leitor principal dos PDF
 
 SumatraPDF should now be your default PDF reader
-O SumatraPDF deve agora ser o leitor pré-definido dos PDF
+O SumatraPDF deve agora ser o leitor principal dos PDF
 
 Synchronization file cannot be opened
 Não foi possível abrir o ficheiro de sincronização
@@ -704,7 +707,4 @@ cópia de texto
 
 printing document
 impressão de documento
-
-# Untranslated:
-#Show &Bookmarks
 
