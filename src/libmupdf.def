@@ -67,7 +67,6 @@ EXPORTS
 	fz_seek
 	fz_read
 	fz_read_all
-	fz_read_all2
 	fz_clone_stream
 	fz_keep_bitmap
 	fz_drop_bitmap

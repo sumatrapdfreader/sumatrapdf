@@ -89,9 +89,8 @@ fz_fill_buffer(fz_stream *stm)
 	}
 }
 
-/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1587 */
 fz_buffer *
-fz_read_all2(fz_stream *stm, int initial, int fail_on_error)
+fz_read_all(fz_stream *stm, int initial)
 {
 	fz_buffer *buf = NULL;
 	int n;
@@ -116,18 +115,7 @@ fz_read_all2(fz_stream *stm, int initial, int fail_on_error)
 				fz_throw(ctx, "compression bomb detected");
 			}
 
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1587 */
-			fz_try(ctx)
-			{
-				n = fz_read(stm, buf->data + buf->len, buf->cap - buf->len);
-			}
-			fz_catch(ctx)
-			{
-				if (fail_on_error || buf->len == 0)
-					fz_rethrow(ctx);
-				fz_warn(ctx, "capping stream at read error");
-				break;
-			}
+			n = fz_read(stm, buf->data + buf->len, buf->cap - buf->len);
 			if (n == 0)
 				break;
 
@@ -142,12 +130,6 @@ fz_read_all2(fz_stream *stm, int initial, int fail_on_error)
 	fz_trim_buffer(ctx, buf);
 
 	return buf;
-}
-
-fz_buffer *
-fz_read_all(fz_stream *stm, int initial)
-{
-	return fz_read_all2(stm, initial, 1);
 }
 
 void

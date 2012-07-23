@@ -1180,8 +1180,6 @@ int fz_read(fz_stream *stm, unsigned char *data, int len);
 	exceptions on failure to allocate.
 */
 fz_buffer *fz_read_all(fz_stream *stm, int initial);
-/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1587 */
-fz_buffer *fz_read_all2(fz_stream *stm, int initial, int fail_on_error);
 
 /* SumatraPDF: allow to clone a stream */
 fz_stream *fz_clone_stream(fz_context *ctx, fz_stream *stm);
