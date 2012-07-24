@@ -202,7 +202,7 @@ bool CurrLangNameSet(const char *langName)
 #ifdef SVN_PRE_RELEASE_VER
 #define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf/prerelease.html")
 #else
-#define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf")
+#define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf/download-free-pdf-viewer.html")
 #endif
 #endif
 
