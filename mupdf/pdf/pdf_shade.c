@@ -984,7 +984,7 @@ pdf_load_shading_dict(pdf_document *xref, pdf_obj *dict, fz_matrix transform)
 	pdf_obj *obj;
 	int funcs = 0;
 	int type = 0;
-	int i;
+	int i, in, out;
 	fz_context *ctx = xref->ctx;
 
 	fz_var(shade);
@@ -1040,7 +1040,13 @@ pdf_load_shading_dict(pdf_document *xref, pdf_obj *dict, fz_matrix transform)
 		{
 			funcs = 1;
 
-			func[0] = pdf_load_function(xref, obj);
+			if (type == 1)
+				in = 2;
+			else
+				in = 1;
+			out = shade->colorspace->n;
+
+			func[0] = pdf_load_function(xref, obj, in, out);
 			if (!func[0])
 				fz_throw(ctx, "cannot load shading function (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
 		}
@@ -1050,9 +1056,15 @@ pdf_load_shading_dict(pdf_document *xref, pdf_obj *dict, fz_matrix transform)
 			if (funcs != 1 && funcs != shade->colorspace->n)
 				fz_throw(ctx, "incorrect number of shading functions");
 
+			if (type == 1)
+				in = 2;
+			else
+				in = 1;
+			out = 1;
+
 			for (i = 0; i < funcs; i++)
 			{
-				func[i] = pdf_load_function(xref, pdf_array_get(obj, i));
+				func[i] = pdf_load_function(xref, pdf_array_get(obj, i), in, out);
 				if (!func[i])
 					fz_throw(ctx, "cannot load shading function (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
 			}

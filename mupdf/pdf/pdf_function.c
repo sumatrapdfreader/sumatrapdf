@@ -916,6 +916,8 @@ eval_postscript_func(fz_context *ctx, pdf_function *func, float *in, float *out)
  * Sample function
  */
 
+#define MAX_SAMPLE_FUNCTION_SIZE (100 << 20)
+
 static void
 load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num, int gen)
 {
@@ -929,58 +931,60 @@ load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num,
 	func->u.sa.samples = NULL;
 
 	obj = pdf_dict_gets(dict, "Size");
-	if (!pdf_is_array(obj) || pdf_array_len(obj) != func->m)
-		fz_throw(ctx, "malformed /Size");
+	if (pdf_array_len(obj) < func->m)
+		fz_throw(ctx, "too few sample function dimension sizes");
+	if (pdf_array_len(obj) > func->m)
+		fz_warn(ctx, "too many sample function dimension sizes");
 	for (i = 0; i < func->m; i++)
 		func->u.sa.size[i] = pdf_to_int(pdf_array_get(obj, i));
 
 	obj = pdf_dict_gets(dict, "BitsPerSample");
-	if (!pdf_is_int(obj))
-		fz_throw(ctx, "malformed /BitsPerSample");
 	func->u.sa.bps = bps = pdf_to_int(obj);
 
+	for (i = 0; i < func->m; i++)
+	{
+		func->u.sa.encode[i][0] = 0;
+		func->u.sa.encode[i][1] = func->u.sa.size[i] - 1;
+	}
 	obj = pdf_dict_gets(dict, "Encode");
 	if (pdf_is_array(obj))
 	{
-		if (pdf_array_len(obj) != func->m * 2)
-			fz_throw(ctx, "malformed /Encode");
-		for (i = 0; i < func->m; i++)
+		int ranges = fz_mini(func->m, pdf_array_len(obj) / 2);
+		if (ranges != func->m)
+			fz_warn(ctx, "too few/many sample function input mappings");
+
+		for (i = 0; i < ranges; i++)
 		{
-			func->u.sa.encode[i][0] = pdf_to_real(pdf_array_get(obj, i*2+0));
-			func->u.sa.encode[i][1] = pdf_to_real(pdf_array_get(obj, i*2+1));
+			func->u.sa.encode[i][0] = pdf_to_real(pdf_array_get(obj, i * 2 + 0));
+			func->u.sa.encode[i][1] = pdf_to_real(pdf_array_get(obj, i * 2 + 1));
 		}
 	}
-	else
+
+	for (i = 0; i < func->n; i++)
 	{
-		for (i = 0; i < func->m; i++)
-		{
-			func->u.sa.encode[i][0] = 0;
-			func->u.sa.encode[i][1] = func->u.sa.size[i] - 1;
-		}
+		func->u.sa.decode[i][0] = func->range[i][0];
+		func->u.sa.decode[i][1] = func->range[i][1];
 	}
 
 	obj = pdf_dict_gets(dict, "Decode");
 	if (pdf_is_array(obj))
 	{
-		if (pdf_array_len(obj) != func->n * 2)
-			fz_throw(ctx, "malformed /Decode");
-		for (i = 0; i < func->n; i++)
+		int ranges = fz_mini(func->n, pdf_array_len(obj) / 2);
+		if (ranges != func->n)
+			fz_warn(ctx, "too few/many sample function output mappings");
+
+		for (i = 0; i < ranges; i++)
 		{
-			func->u.sa.decode[i][0] = pdf_to_real(pdf_array_get(obj, i*2+0));
-			func->u.sa.decode[i][1] = pdf_to_real(pdf_array_get(obj, i*2+1));
-		}
-	}
-	else
-	{
-		for (i = 0; i < func->n; i++)
-		{
-			func->u.sa.decode[i][0] = func->range[i][0];
-			func->u.sa.decode[i][1] = func->range[i][1];
+			func->u.sa.decode[i][0] = pdf_to_real(pdf_array_get(obj, i * 2 + 0));
+			func->u.sa.decode[i][1] = pdf_to_real(pdf_array_get(obj, i * 2 + 1));
 		}
 	}
 
 	for (i = 0, samplecount = func->n; i < func->m; i++)
 		samplecount *= func->u.sa.size[i];
+
+	if (samplecount > MAX_SAMPLE_FUNCTION_SIZE)
+		fz_throw(ctx, "sample function too large");
 
 	func->u.sa.samples = fz_malloc_array(ctx, samplecount, sizeof(float));
 	func->size += samplecount * sizeof(float);
@@ -997,7 +1001,7 @@ load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num,
 		if (fz_is_eof_bits(stream))
 		{
 			fz_close(stream);
-			fz_throw(ctx, "truncated sample stream");
+			fz_throw(ctx, "truncated sample function stream");
 		}
 
 		switch (bps)
@@ -1133,42 +1137,56 @@ load_exponential_func(fz_context *ctx, pdf_function *func, pdf_obj *dict)
 	pdf_obj *obj;
 	int i;
 
-	if (func->m != 1)
-		fz_throw(ctx, "/Domain must be one dimension (%d)", func->m);
+	if (func->m > 1)
+		fz_warn(ctx, "exponential functions have at most one input");
+	func->m = 1;
 
 	obj = pdf_dict_gets(dict, "N");
-	if (!pdf_is_int(obj) && !pdf_is_real(obj))
-		fz_throw(ctx, "malformed /N");
 	func->u.e.n = pdf_to_real(obj);
+
+	/* See exponential functions (PDF 1.7 section 3.9.2) */
+	if (func->u.e.n != (int) func->u.e.n)
+	{
+		/* If N is non-integer, input values may never be negative */
+		for (i = 0; i < func->m; i++)
+			if (func->domain[i][0] < 0 || func->domain[i][1] < 0)
+				fz_warn(ctx, "exponential function input domain includes illegal negative input values");
+	}
+	else if (func->u.e.n < 0)
+	{
+		/* if N is negative, input values may never be zero */
+		for (i = 0; i < func->m; i++)
+			if (func->domain[i][0] == 0 || func->domain[i][1] == 0 ||
+				(func->domain[i][0] < 0 && func->domain[i][1] > 0))
+				fz_warn(ctx, "exponential function input domain includes illegal input value zero");
+	}
+
+	for (i = 0; i < func->n; i++)
+	{
+		func->u.e.c0[i] = 0;
+		func->u.e.c1[i] = 1;
+	}
 
 	obj = pdf_dict_gets(dict, "C0");
 	if (pdf_is_array(obj))
 	{
-		func->n = pdf_array_len(obj);
-		if (func->n >= MAXN)
-			fz_throw(ctx, "exponential function result array out of range");
-		for (i = 0; i < func->n; i++)
+		int ranges = fz_mini(func->n, pdf_array_len(obj));
+		if (ranges != func->n)
+			fz_warn(ctx, "too few/many C0 constants for exponential function");
+
+		for (i = 0; i < ranges; i++)
 			func->u.e.c0[i] = pdf_to_real(pdf_array_get(obj, i));
-	}
-	else
-	{
-		func->n = 1;
-		func->u.e.c0[0] = 0;
 	}
 
 	obj = pdf_dict_gets(dict, "C1");
 	if (pdf_is_array(obj))
 	{
-		if (pdf_array_len(obj) != func->n)
-			fz_throw(ctx, "/C1 must match /C0 length");
-		for (i = 0; i < func->n; i++)
+		int ranges = fz_mini(func->n, pdf_array_len(obj));
+		if (ranges != func->n)
+			fz_warn(ctx, "too few/many C1 constants for exponential function");
+
+		for (i = 0; i < ranges; i++)
 			func->u.e.c1[i] = pdf_to_real(pdf_array_get(obj, i));
-	}
-	else
-	{
-		if (func->n != 1)
-			fz_throw(ctx, "/C1 must match /C0 length");
-		func->u.e.c1[0] = 1;
 	}
 }
 
@@ -1181,12 +1199,9 @@ eval_exponential_func(fz_context *ctx, pdf_function *func, float in, float *out)
 
 	x = fz_clamp(x, func->domain[0][0], func->domain[0][1]);
 
-	/* constraint */
+	/* Default output is zero, which is suitable for violated constraints */
 	if ((func->u.e.n != (int)func->u.e.n && x < 0) || (func->u.e.n < 0 && x == 0))
-	{
-		fz_warn(ctx, "constraint error");
 		return;
-	}
 
 	tmp = powf(x, func->u.e.n);
 	for (i = 0; i < func->n; i++)
@@ -1214,8 +1229,9 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 
 	func->u.st.k = 0;
 
-	if (func->m != 1)
-		fz_throw(ctx, "/Domain must be one dimension (%d)", func->m);
+	if (func->m > 1)
+		fz_warn(ctx, "stitching functions have at most one input");
+	func->m = 1;
 
 	obj = pdf_dict_gets(dict, "Functions");
 	if (!pdf_is_array(obj))
@@ -1231,7 +1247,7 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 		for (i = 0; i < k; i++)
 		{
 			sub = pdf_array_get(obj, i);
-			funcs[i] = pdf_load_function(xref, sub);
+			funcs[i] = pdf_load_function(xref, sub, 1, func->n);
 			/* RJW: "cannot load sub function %d (%d %d R)", i, pdf_to_num(sub), pdf_to_gen(sub) */
 			if (funcs[i]->m != 1 || funcs[i]->n != funcs[0]->n)
 				fz_throw(ctx, "sub function %d /Domain or /Range mismatch", i);
@@ -1239,9 +1255,7 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 			func->u.st.k ++;
 		}
 
-		if (!func->n)
-			func->n = funcs[0]->n;
-		else if (func->n != funcs[0]->n)
+		if (func->n != funcs[0]->n)
 			fz_throw(ctx, "sub function /Domain or /Range mismatch");
 	}
 
@@ -1249,34 +1263,41 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 	if (!pdf_is_array(obj))
 		fz_throw(ctx, "stitching function has no bounds");
 	{
-		if (pdf_array_len(obj) != k - 1)
-			fz_throw(ctx, "malformed /Bounds (wrong length)");
+		if (pdf_array_len(obj) < k - 1)
+			fz_throw(ctx, "too few subfunction boundaries");
+		if (pdf_array_len(obj) > k)
+			fz_warn(ctx, "too many subfunction boundaries");
 
-		for (i = 0; i < k-1; i++)
+		for (i = 0; i < k - 1; i++)
 		{
 			num = pdf_array_get(obj, i);
-			if (!pdf_is_int(num) && !pdf_is_real(num))
-				fz_throw(ctx, "malformed /Bounds (item not real)");
 			func->u.st.bounds[i] = pdf_to_real(num);
-			if (i && func->u.st.bounds[i-1] > func->u.st.bounds[i])
-				fz_throw(ctx, "malformed /Bounds (item not monotonic)");
+			if (i && func->u.st.bounds[i - 1] > func->u.st.bounds[i])
+				fz_throw(ctx, "subfunction %d boundary out of range", i);
 		}
 
-		if (k != 1 && (func->domain[0][0] > func->u.st.bounds[0] ||
-			func->domain[0][1] < func->u.st.bounds[k-2]))
-			fz_warn(ctx, "malformed shading function bounds (domain mismatch), proceeding anyway.");
+		if (k > 1 && (func->domain[0][0] > func->u.st.bounds[0] ||
+			func->domain[0][1] < func->u.st.bounds[k - 2]))
+			fz_warn(ctx, "subfunction boundaries outside of input mapping");
+	}
+
+	for (i = 0; i < k; i++)
+	{
+		func->u.st.encode[i * 2 + 0] = 0;
+		func->u.st.encode[i * 2 + 1] = 0;
 	}
 
 	obj = pdf_dict_gets(dict, "Encode");
-	if (!pdf_is_array(obj))
-		fz_throw(ctx, "stitching function is missing encoding");
+	if (pdf_is_array(obj))
 	{
-		if (pdf_array_len(obj) != k * 2)
-			fz_throw(ctx, "malformed /Encode");
-		for (i = 0; i < k; i++)
+		int ranges = fz_mini(k, pdf_array_len(obj) / 2);
+		if (ranges != k)
+			fz_warn(ctx, "too few/many stitching function input mappings");
+
+		for (i = 0; i < ranges; i++)
 		{
-			func->u.st.encode[i*2+0] = pdf_to_real(pdf_array_get(obj, i*2+0));
-			func->u.st.encode[i*2+1] = pdf_to_real(pdf_array_get(obj, i*2+1));
+			func->u.st.encode[i * 2 + 0] = pdf_to_real(pdf_array_get(obj, i * 2 + 0));
+			func->u.st.encode[i * 2 + 1] = pdf_to_real(pdf_array_get(obj, i * 2 + 1));
 		}
 	}
 }
@@ -1309,16 +1330,16 @@ eval_stitching_func(fz_context *ctx, pdf_function *func, float in, float *out)
 	}
 	else if (i == k - 1)
 	{
-		low = bounds[k-2];
+		low = bounds[k - 2];
 		high = func->domain[0][1];
 	}
 	else
 	{
-		low = bounds[i-1];
+		low = bounds[i - 1];
 		high = bounds[i];
 	}
 
-	in = lerp(in, low, high, func->u.st.encode[i*2+0], func->u.st.encode[i*2+1]);
+	in = lerp(in, low, high, func->u.st.encode[i * 2 + 0], func->u.st.encode[i * 2 + 1]);
 
 	pdf_eval_function(ctx, func->u.st.funcs[i], &in, 1, out, func->n);
 }
@@ -1373,7 +1394,7 @@ pdf_function_size(pdf_function *func)
 }
 
 pdf_function *
-pdf_load_function(pdf_document *xref, pdf_obj *dict)
+pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 {
 	fz_context *ctx = xref->ctx;
 	pdf_function *func;
@@ -1394,9 +1415,8 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict)
 
 	/* required for all */
 	obj = pdf_dict_gets(dict, "Domain");
-	func->m = pdf_array_len(obj) / 2;
-	/* SumatraPDF: prevent heap overflow */
-	for (i = 0; i < fz_mini(func->m, MAXM); i++)
+	func->m = fz_clampi(pdf_array_len(obj) / 2, 1, MAXN);
+	for (i = 0; i < func->m; i++)
 	{
 		func->domain[i][0] = pdf_to_real(pdf_array_get(obj, i * 2 + 0));
 		func->domain[i][1] = pdf_to_real(pdf_array_get(obj, i * 2 + 1));
@@ -1407,9 +1427,8 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict)
 	if (pdf_is_array(obj))
 	{
 		func->has_range = 1;
-		func->n = pdf_array_len(obj) / 2;
-		/* SumatraPDF: prevent heap overflow */
-		for (i = 0; i < fz_mini(func->n, MAXN); i++)
+		func->n = fz_clampi(pdf_array_len(obj) / 2, 1, MAXN);
+		for (i = 0; i < func->n; i++)
 		{
 			func->range[i][0] = pdf_to_real(pdf_array_get(obj, i * 2 + 0));
 			func->range[i][1] = pdf_to_real(pdf_array_get(obj, i * 2 + 1));
@@ -1418,15 +1437,13 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict)
 	else
 	{
 		func->has_range = 0;
-		func->n = 0;
+		func->n = out;
 	}
 
-	/* SumatraPDF: allow up to FZ_MAX_COLORS colors (not one less) */
-	if (func->m > MAXM || func->n > MAXN)
-	{
-		fz_free(ctx, func);
-		fz_throw(ctx, "assert: /Domain or /Range too big");
-	}
+	if (func->m != in)
+		fz_warn(ctx, "too few/many function inputs");
+	if (func->n != out)
+		fz_warn(ctx, "too few/many function outputs");
 
 	fz_try(ctx)
 	{
@@ -1472,20 +1489,27 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict)
 }
 
 void
-pdf_eval_function(fz_context *ctx, pdf_function *func, float *in, int inlen, float *out, int outlen)
+pdf_eval_function(fz_context *ctx, pdf_function *func, float *in_, int inlen, float *out_, int outlen)
 {
-	memset(out, 0, sizeof(float) * outlen);
+	float fakein[MAXN];
+	float fakeout[MAXN];
+	float *in = in_;
+	float *out = out_;
 
-	if (inlen != func->m)
+	if (inlen < func->m)
 	{
-		fz_warn(ctx, "tried to evaluate function with wrong number of inputs");
-		return;
+		in = fakein;
+		memset(in, 0, sizeof(float) * func->m);
+		memcpy(in, in_, sizeof(float) * inlen);
 	}
-	if (func->n != outlen)
+
+	if (outlen < func->n)
 	{
-		fz_warn(ctx, "tried to evaluate function with wrong number of outputs");
-		return;
+		out = fakeout;
+		memset(out, 0, sizeof(float) * func->n);
 	}
+	else
+		memset(out, 0, sizeof(float) * outlen);
 
 	switch(func->type)
 	{
@@ -1494,6 +1518,9 @@ pdf_eval_function(fz_context *ctx, pdf_function *func, float *in, int inlen, flo
 	case STITCHING: eval_stitching_func(ctx, func, *in, out); break;
 	case POSTSCRIPT: eval_postscript_func(ctx, func, in, out); break;
 	}
+
+	if (outlen < func->n)
+		memcpy(out_, out, sizeof(float) * outlen);
 }
 
 /*

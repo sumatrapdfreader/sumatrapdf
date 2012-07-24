@@ -119,7 +119,7 @@ load_separation(pdf_document *xref, pdf_obj *array)
 
 	fz_try(ctx)
 	{
-		tint = pdf_load_function(xref, tintobj);
+		tint = pdf_load_function(xref, tintobj, n, base->n);
 		/* RJW: fz_drop_colorspace(ctx, base);
 		 * "cannot load tint function (%d %d R)", pdf_to_num(tintobj), pdf_to_gen(tintobj) */
 

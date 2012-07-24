@@ -258,7 +258,7 @@ void pdf_print_crypt(pdf_crypt *crypt);
 
 typedef struct pdf_function_s pdf_function;
 
-pdf_function *pdf_load_function(pdf_document *doc, pdf_obj *ref);
+pdf_function *pdf_load_function(pdf_document *doc, pdf_obj *ref, int in, int out);
 void pdf_eval_function(fz_context *ctx, pdf_function *func, float *in, int inlen, float *out, int outlen);
 pdf_function *pdf_keep_function(fz_context *ctx, pdf_function *func);
 void pdf_drop_function(fz_context *ctx, pdf_function *func);
