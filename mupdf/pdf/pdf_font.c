@@ -928,8 +928,11 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 
 		pdf_set_font_wmode(ctx, fontdesc, pdf_cmap_wmode(ctx, fontdesc->encoding));
 
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1565 */
-		if (kind == TRUETYPE || !strcmp(pdf_to_name(pdf_dict_gets(dict, "Subtype")), "CIDFontType2"))
+		if (kind == TRUETYPE ||
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1565 */
+			!strcmp(pdf_to_name(pdf_dict_gets(dict, "Subtype")), "CIDFontType2") ||
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1997 */
+			pdf_is_indirect(pdf_dict_gets(dict, "CIDToGIDMap")))
 		{
 			pdf_obj *cidtogidmap;
 
