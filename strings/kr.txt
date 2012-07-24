@@ -23,7 +23,7 @@ Contributor: 4Li
 선택한 모든 페이지(&A)
 
 &Back\tAlt+Left Arrow
-뒤로(&B)\tAlt+왼쪽 방향키
+이전에 본 페이지(&B)\tAlt+왼쪽 방향키
 
 &Book View\tCtrl+8
 책처럼 보기(&B)\tCtrl+8
@@ -176,7 +176,7 @@ Add page %s to favorites with (optional) name:
 %s 페이지의 책갈피 이름을 입력하세요. (옵션) :
 
 Add to favorites
-책갈피 추가
+책갈피에 추가
 
 Advanced
 고급
@@ -215,7 +215,7 @@ Bookmark Shortcuts
 책갈피 바로가기
 
 Bookmark shortcut to page %s of %s
-%s / %s 페이지의 책갈피 바로가기
+%s / %s 페이지에 책갈피 바로가기
 
 Bookmarks
 책갈피
@@ -266,7 +266,7 @@ Copy &Link Address
 링크 주소 복사(&L)
 
 Copy Co&mment
-주석 복사(&M)
+주석(설명) 복사(&M)
 
 Copying text was denied (copying as image only)
 문자열 복사가 거부되었습니다. (이미지만 복사됩니다.)
@@ -281,7 +281,7 @@ Couldn't initialize printer
 프린터를 초기화할 수 없습니다.
 
 Couldn't render the page
-페이지 렌더링을 할 수 없습니다.
+페이지를 렌더링할 수 없습니다.
 
 Created:
 만든 날짜:
@@ -335,7 +335,7 @@ F&avorites
 책갈피(&A)
 
 F&orward\tAlt+Right Arrow
-앞으로(&O)\tAlt+오른쪽 방향키
+다음에 본 페이지(&O)\tAlt+오른쪽 방향키
 
 F&ullscreen\tCtrl+Shift+L
 전체 화면(&U)\tCtrl+Shift+L
@@ -344,7 +344,7 @@ Facing
 두 페이지씩
 
 Failed to rename the file!
-파일 이름 바꾸기 실패!
+파일 이름을 바꾸지 못했습니다!
 
 Failed to save a file
 파일을 저장하지 못했습니다.
@@ -404,7 +404,7 @@ Fonts:
 글꼴:
 
 Formatting the book... %d pages
-읽어들이는 중... %d 페이지
+%d 페이지 읽어들이는 중...
 
 Found text at page %s
 %s 페이지에서 문자열 찾음
@@ -461,7 +461,7 @@ Next Page
 다음 페이지
 
 No matches were found
-일치 항목을 찾을 수 없습니다.
+일치하는 항목을 찾을 수 없습니다.
 
 No result found around line %u in file %s
 %u 행 (%s 파일) 주변에서 발견된 결과가 없습니다.
@@ -482,22 +482,22 @@ Open
 열기
 
 Open &in PDF-XChange
-PDF-XChange에서 열기
+PDF-XChange로 열기
 
 Open a document...
 문서 열기...
 
 Open in &Adobe Reader
-Adobe Reader에서 열기(&A)
+Adobe Reader로 열기(&A)
 
 Open in &Foxit Reader
-Foxit Reader에서 열기(&F)
+Foxit Reader로 열기(&F)
 
 Open in &Microsoft HTML Help
-Microsoft HTML Help에서 열기
+Microsoft HTML Help로 열기
 
 Open in &Microsoft XPS-Viewer
-Microsoft XPS-Viewer에서 열기
+Microsoft XPS-Viewer로 열기
 
 P&roperties
 속성(&R)
@@ -536,7 +536,7 @@ Page:
 페이지:
 
 Please wait - rendering...
-잠시만 기다리세요 - 렌더링 중...
+렌더링 중, 잠시만 기다리세요...
 
 Postscript documents
 Postscript 문서
@@ -613,6 +613,9 @@ Send by &E-mail...
 Set inverse search command-line
 명령줄 역 탐색 설정
 
+Show &Bookmarks
+책갈피 보이기(&B)
+
 Show &Toolbar
 도구모음 보이기(&T)
 
@@ -626,7 +629,7 @@ Show frequently read
 최근에 읽은 파일 보이기
 
 Show the &bookmarks sidebar when available
-사용 가능한 경우 책갈피 사이드바 보이기(&B)
+사용 가능한 경우 책갈피 옆구리 표시줄 보이기(&B)
 
 Single Page
 한 페이지씩
@@ -705,7 +708,4 @@ copying text
 
 printing document
 문서 인쇄 중
-
-# Untranslated:
-#Show &Bookmarks
 
