@@ -335,7 +335,7 @@ F&avorites
 책갈피(&A)
 
 F&orward\tAlt+Right Arrow
-다음에 본 페이지(&O)\tAlt+오른쪽 방향키
+이후에 본 페이지(&O)\tAlt+오른쪽 방향키
 
 F&ullscreen\tCtrl+Shift+L
 전체 화면(&U)\tCtrl+Shift+L
@@ -518,7 +518,7 @@ PDF documents
 PDF 문서
 
 Pa&ge...\tCtrl+G
-페이지(&G)...\tCtrl+G
+페이지 이동(&G)...\tCtrl+G
 
 Page %s
 %s 페이지

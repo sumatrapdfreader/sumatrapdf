@@ -611,6 +611,9 @@ Enviar por email...
 Set inverse search command-line
 Configurar pesquisa inversa
 
+Show &Bookmarks
+Mostrar Fa&voritos
+
 Show &Toolbar
 Mostrar barra de ferramentas
 
@@ -703,7 +706,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Show &Bookmarks
 
