@@ -936,7 +936,14 @@ load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num,
 	if (pdf_array_len(obj) > func->m)
 		fz_warn(ctx, "too many sample function dimension sizes");
 	for (i = 0; i < func->m; i++)
+	{
 		func->u.sa.size[i] = pdf_to_int(pdf_array_get(obj, i));
+		if (func->u.sa.size[i] < 0)
+		{
+			fz_warn(ctx, "negative sample function dimension size");
+			func->u.sa.size[i] = 1;
+		}
+	}
 
 	obj = pdf_dict_gets(dict, "BitsPerSample");
 	func->u.sa.bps = bps = pdf_to_int(obj);

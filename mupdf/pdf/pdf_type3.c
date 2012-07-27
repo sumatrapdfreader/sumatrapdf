@@ -90,10 +90,9 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 					item = pdf_array_get(diff, i);
 					if (pdf_is_int(item))
 						k = pdf_to_int(item);
-					if (pdf_is_name(item))
+					/* SumatraPDF: consistency with pdf_load_simple_font */
+					if (pdf_is_name(item) && k >= 0 && k < 256)
 						estrings[k++] = pdf_to_name(item);
-					if (k < 0) k = 0;
-					if (k > 255) k = 255;
 				}
 			}
 		}
@@ -115,6 +114,7 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 
 		first = pdf_to_int(pdf_dict_gets(dict, "FirstChar"));
 		last = pdf_to_int(pdf_dict_gets(dict, "LastChar"));
+
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1966 */
 		if (first >= 256 && last - first < 256)
 		{
@@ -122,9 +122,9 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 			last -= first;
 			first = 0;
 		}
-		/* SumatraPDF: prevent heap overflow */
+
 		if (first < 0 || last > 255 || first > last)
-			fz_throw(ctx, "invalid FirstChar/LastChar for Type3 font");
+			first = last = 0;
 
 		widths = pdf_dict_gets(dict, "Widths");
 		if (!widths)

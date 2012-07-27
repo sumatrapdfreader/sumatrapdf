@@ -274,7 +274,9 @@ pdf_read_new_xref_section(pdf_document *xref, fz_stream *stm, int i0, int i1, in
 {
 	int i, n;
 
-	if (i0 < 0 || i0 + i1 > xref->len)
+	if (i0 < 0 || i1 < 0)
+		fz_throw(xref->ctx, "negative xref stream entry index");
+	if (i0 + i1 > xref->len)
 		fz_throw(xref->ctx, "xref stream has too many entries");
 
 	for (i = i0; i < i0 + i1; i++)
@@ -347,6 +349,17 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 		w0 = pdf_to_int(pdf_array_get(obj, 0));
 		w1 = pdf_to_int(pdf_array_get(obj, 1));
 		w2 = pdf_to_int(pdf_array_get(obj, 2));
+
+		if (w0 < 0)
+			fz_warn(ctx, "xref stream objects have corrupt type");
+		if (w1 < 0)
+			fz_warn(ctx, "xref stream objects have corrupt offset");
+		if (w2 < 0)
+			fz_warn(ctx, "xref stream objects have corrupt generation");
+
+		w0 = w0 < 0 ? 0 : w0;
+		w1 = w1 < 0 ? 0 : w1;
+		w2 = w2 < 0 ? 0 : w2;
 
 		index = pdf_dict_gets(trailer, "Index");
 
@@ -435,12 +448,17 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 			xrefstmofs = pdf_to_int(pdf_dict_gets(trailer, "XRefStm"));
 			prevofs = pdf_to_int(pdf_dict_gets(trailer, "Prev"));
 
+			if (xrefstmofs < 0)
+				fz_throw(ctx, "negative xref stream offset");
+			if (prevofs < 0)
+				fz_throw(ctx, "negative xref stream offset for previous xref stream");
+
 			/* We only recurse if we have both xrefstm and prev.
 			 * Hopefully this happens infrequently. */
 			if (xrefstmofs && prevofs)
 				pdf_read_xref_sections(xref, xrefstmofs, buf);
 			if (prevofs)
- 				ofs = prevofs;
+				ofs = prevofs;
 			else if (xrefstmofs)
 				ofs = xrefstmofs;
 			pdf_drop_obj(trailer);
@@ -478,7 +496,8 @@ pdf_load_xref(pdf_document *xref, pdf_lexbuf *buf)
 	if (!size)
 		fz_throw(ctx, "trailer missing Size entry");
 
-	pdf_resize_xref(xref, size);
+	if (size > xref->len)
+		pdf_resize_xref(xref, size);
 
 	pdf_read_xref_sections(xref, xref->startxref, buf);
 
@@ -889,6 +908,11 @@ pdf_load_obj_stm(pdf_document *xref, int num, int gen, pdf_lexbuf *buf)
 
 		count = pdf_to_int(pdf_dict_gets(objstm, "N"));
 		first = pdf_to_int(pdf_dict_gets(objstm, "First"));
+
+		if (count < 0)
+			fz_throw(ctx, "negative number of objects in object stream");
+		if (first < 0)
+			fz_throw(ctx, "first object in object stream resides outside stream");
 
 		numbuf = fz_calloc(ctx, count, sizeof(int));
 		ofsbuf = fz_calloc(ctx, count, sizeof(int));

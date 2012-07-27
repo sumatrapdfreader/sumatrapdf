@@ -546,6 +546,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		if (diff > timing.max)
 		{
 			timing.max = diff;
+			timing.maxpage = pagenum;
 			timing.maxfilename = filename;
 		}
 		timing.total += diff;

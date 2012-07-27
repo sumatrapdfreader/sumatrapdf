@@ -90,10 +90,10 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 	int colors = pdf_to_int(pdf_dict_gets(p, "Colors"));
 	int bpc = pdf_to_int(pdf_dict_gets(p, "BitsPerComponent"));
 
-	if (predictor == 0) predictor = 1;
-	if (columns == 0) columns = 1;
-	if (colors == 0) colors = 1;
-	if (bpc == 0) bpc = 8;
+	if (predictor <= 0) predictor = 1;
+	if (columns <= 0) columns = 1;
+	if (colors <= 0) colors = 1;
+	if (bpc <= 0) bpc = 8;
 
 	if (!strcmp(s, "ASCIIHexDecode") || !strcmp(s, "AHx"))
 		return fz_open_ahxd(chain);
