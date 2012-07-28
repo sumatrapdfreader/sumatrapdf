@@ -4231,11 +4231,11 @@ static LRESULT CanvasOnMouseHWheel(WindowInfo& win, UINT message, WPARAM wParam,
     win.wheelAccumDelta += delta;
 
     while (win.wheelAccumDelta >= gDeltaPerLine) {
-        SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
+        SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
         win.wheelAccumDelta -= gDeltaPerLine;
     }
     while (win.wheelAccumDelta <= -gDeltaPerLine) {
-        SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+        SendMessage(win.hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
         win.wheelAccumDelta += gDeltaPerLine;
     }
 
