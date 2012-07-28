@@ -190,9 +190,12 @@ public:
         delete pdfEngine;
     }
     virtual PsEngineImpl *Clone() {
+        PdfEngine *newEngine = pdfEngine ? static_cast<PdfEngine *>(pdfEngine->Clone()) : NULL;
+        if (!newEngine)
+            return NULL;
         PsEngineImpl *clone = new PsEngineImpl();
-        if (fileName)  clone->fileName = str::Dup(fileName);
-        if (pdfEngine) clone->pdfEngine = static_cast<PdfEngine *>(pdfEngine->Clone());
+        if (fileName) clone->fileName = str::Dup(fileName);
+        clone->pdfEngine = newEngine;
         return clone;
     }
 

@@ -104,7 +104,8 @@ static void close_file(fz_context *ctx, void *state)
 /* SumatraPDF: allow to clone a stream */
 static fz_stream *reopen_file(fz_context *ctx, fz_stream *stm)
 {
-	return fz_open_fd(ctx, dup(*(int *)stm->state));
+	fz_throw(ctx, "can't reliably clone a file descriptor");
+	return NULL;
 }
 
 fz_stream *

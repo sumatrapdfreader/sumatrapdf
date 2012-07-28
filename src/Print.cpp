@@ -623,6 +623,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
         DM_OUT_BUFFER); /* write the result. */
 
     ClosePrinter(printer);
+    printer = NULL;
 
     PRINTER_INFO_2 *info = (PRINTER_INFO_2 *)infoData.Get();
     hdcPrint = CreateDC(info->pDriverName, info->pPrinterName, info->pPortName, devMode);
@@ -644,5 +645,8 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
 Exit:
     free(devMode);
     DeleteDC(hdcPrint);
+    if (printer)
+        ClosePrinter(printer);
+    delete engine;
     return ok;
 }

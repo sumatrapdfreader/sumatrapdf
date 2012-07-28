@@ -1209,15 +1209,13 @@ PdfEngineImpl *PdfEngineImpl::Clone()
         pwdUI = new PasswordCloner(pdf_crypt_key(_doc));
 
     PdfEngineImpl *clone = new PdfEngineImpl();
-    if (!clone || !clone->Load(_doc->file, pwdUI)) {
+    if (!clone || !(_fileName ? clone->Load(_fileName, pwdUI) : clone->Load(_doc->file, pwdUI))) {
         delete clone;
         delete pwdUI;
         return NULL;
     }
     delete pwdUI;
 
-    if (_fileName)
-        clone->_fileName = str::Dup(_fileName);
     if (!_decryptionKey && _doc->crypt) {
         delete clone->_decryptionKey;
         clone->_decryptionKey = NULL;
@@ -2871,13 +2869,10 @@ XpsEngineImpl *XpsEngineImpl::Clone()
     ScopedCritSec scope(&ctxAccess);
 
     XpsEngineImpl *clone = new XpsEngineImpl();
-    if (!clone || !clone->Load(_doc->file)) {
+    if (!clone || !(_fileName ? clone->Load(_fileName) : clone->Load(_doc->file))) {
         delete clone;
         return NULL;
     }
-
-    if (_fileName)
-        clone->_fileName = str::Dup(_fileName);
 
     return clone;
 }

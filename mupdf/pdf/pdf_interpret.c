@@ -2581,7 +2581,11 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 			do
 			{
 				if (csi->top == nelem(csi->stack) - 1)
-					fz_throw(ctx, "stack overflow");
+				{
+					/* SumatraPDF: prevent infinite loop */
+					fz_warn(ctx, "operand stack overflow, dropping one value");
+					csi->top--;
+				}
 
 				/* Check the cookie */
 				if (csi->cookie)

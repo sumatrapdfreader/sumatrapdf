@@ -490,7 +490,9 @@ class ImageDirEngineImpl : public ImagesEngine, public ImageDirEngine {
     friend ImageDirEngine;
 
 public:
-    virtual ImageDirEngine *Clone() { return CreateFromFile(fileName); }
+    virtual ImageDirEngine *Clone() {
+        return fileName ? CreateFromFile(fileName) : NULL;
+    }
     virtual RectD PageMediabox(int pageNo);
 
     virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
