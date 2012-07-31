@@ -612,6 +612,9 @@ Send by &E-mail...
 Set inverse search command-line
 Задать команду обратного поиска
 
+Show &Bookmarks
+Показать &закладки
+
 Show &Toolbar
 Панель &инструментов
 
@@ -704,7 +707,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Show &Bookmarks
 
