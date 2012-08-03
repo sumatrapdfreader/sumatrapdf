@@ -413,6 +413,18 @@ read_ttf_string(fz_stream *file, int offset, TT_NAME_RECORD *ttRecordBE, char *b
 }
 
 static void
+makeFakePSName(char szName[MAX_FACENAME], const char *szStyle)
+{
+	// append the font's subfamily, unless it's a Regular font
+	if (*szStyle && _stricmp(szStyle, "Regular") != 0)
+	{
+		fz_strlcat(szName, "-", MAX_FACENAME);
+		fz_strlcat(szName, szStyle, MAX_FACENAME);
+	}
+	remove_spaces(szName);
+}
+
+static void
 parseTTF(fz_stream *file, int offset, int index, char *path)
 {
 	TT_OFFSET_TABLE ttOffsetTableBE;
@@ -420,7 +432,10 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	TT_NAME_TABLE_HEADER ttNTHeaderBE;
 	TT_NAME_RECORD ttRecordBE;
 
-	char szPSName[MAX_FACENAME] = { 0 }, szTTName[MAX_FACENAME] = { 0 }, szStyle[MAX_FACENAME] = { 0 };
+	char szPSName[MAX_FACENAME] = { 0 };
+	char szTTName[MAX_FACENAME] = { 0 };
+	char szStyle[MAX_FACENAME] = { 0 };
+	char szCJKName[MAX_FACENAME] = { 0 };
 	int i, count, tblOffset;
 
 	safe_read(file, offset, (char *)&ttOffsetTableBE, sizeof(TT_OFFSET_TABLE));
@@ -454,23 +469,29 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	count = BEtoHs(ttNTHeaderBE.uNRCount);
 	for (i = 0; i < count; i++)
 	{
-		short nameId;
+		short langId, nameId;
+		BOOL isCJKName;
 
 		safe_read(file, offset + i * sizeof(TT_NAME_RECORD), (char *)&ttRecordBE, sizeof(TT_NAME_RECORD));
 
-		// ignore non-English strings
-		if (BEtoHs(ttRecordBE.uLanguageID) && BEtoHs(ttRecordBE.uLanguageID) != TT_MS_LANGID_ENGLISH_UNITED_STATES)
+		langId = BEtoHs(ttRecordBE.uLanguageID);
+		nameId = BEtoHs(ttRecordBE.uNameID);
+		isCJKName = TT_NAME_ID_FONT_FAMILY == nameId && LANG_CHINESE == PRIMARYLANGID(langId);
+
+		// ignore non-English strings (except for Chinese font names)
+		if (langId && langId != TT_MS_LANGID_ENGLISH_UNITED_STATES && !isCJKName)
 			continue;
 		// ignore names other than font (sub)family and PostScript name
-		nameId = BEtoHs(ttRecordBE.uNameID);
 		fz_try(file->ctx)
 		{
-			if (TT_NAME_ID_FONT_FAMILY == nameId)
-				read_ttf_string(file, tblOffset, &ttRecordBE, szTTName, MAX_FACENAME);
+			if (isCJKName)
+				read_ttf_string(file, tblOffset, &ttRecordBE, szCJKName, sizeof(szCJKName));
+			else if (TT_NAME_ID_FONT_FAMILY == nameId)
+				read_ttf_string(file, tblOffset, &ttRecordBE, szTTName, sizeof(szTTName));
 			else if (TT_NAME_ID_FONT_SUBFAMILY == nameId)
-				read_ttf_string(file, tblOffset, &ttRecordBE, szStyle, MAX_FACENAME);
+				read_ttf_string(file, tblOffset, &ttRecordBE, szStyle, sizeof(szStyle));
 			else if (TT_NAME_ID_PS_NAME == nameId)
-				read_ttf_string(file, tblOffset, &ttRecordBE, szPSName, MAX_FACENAME);
+				read_ttf_string(file, tblOffset, &ttRecordBE, szPSName, sizeof(szPSName));
 		}
 		fz_catch(file->ctx)
 		{
@@ -489,17 +510,16 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 	{
 		// derive a PostScript-like name and add it, if it's different from the font's
 		// included PostScript name; cf. http://code.google.com/p/sumatrapdf/issues/detail?id=376
-
-		// append the font's subfamily, unless it's a Regular font
-		if (szStyle[0] && _stricmp(szStyle, "Regular") != 0)
-		{
-			fz_strlcat(szTTName, "-", MAX_FACENAME);
-			fz_strlcat(szTTName, szStyle, MAX_FACENAME);
-		}
-		remove_spaces(szTTName);
+		makeFakePSName(szTTName, szStyle);
 		// compare the two names before adding this one
 		if (lookup_compare(szTTName, szPSName))
 			insert_mapping(file->ctx, &fontlistMS, szTTName, path, index);
+	}
+	if (szCJKName[0])
+	{
+		makeFakePSName(szCJKName, szStyle);
+		if (lookup_compare(szCJKName, szPSName) && lookup_compare(szCJKName, szTTName))
+			insert_mapping(file->ctx, &fontlistMS, szCJKName, path, index);
 	}
 }
 
@@ -707,6 +727,25 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 		*comma = ',';
 		if (!found)
 			found = pdf_find_windows_font_path(fontname);
+	}
+	// fifth, try to convert the font name from the common Chinese codepage 936
+	if (!found && fontname[0] < 0)
+	{
+		WCHAR cjkNameW[MAX_FACENAME];
+		char cjkName[MAX_FACENAME];
+		if (MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, fontname, -1, cjkNameW, nelem(cjkNameW)) &&
+			WideCharToMultiByte(CP_UTF8, 0, cjkNameW, -1, cjkName, nelem(cjkName), NULL, NULL))
+		{
+			comma = strchr(cjkName, ',');
+			if (comma)
+			{
+				*comma = '-';
+				found = pdf_find_windows_font_path(cjkName);
+				*comma = ',';
+			}
+			if (!found)
+				found = pdf_find_windows_font_path(cjkName);
+		}
 	}
 
 	if (found && (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats")))

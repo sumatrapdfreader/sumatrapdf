@@ -2248,7 +2248,10 @@ TCHAR *PdfEngineImpl::ExtractFontList()
             encoding = "Expert";
 
         str::Str<char> info;
-        info.Append(name);
+        if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, NULL, 0))
+            info.Append(ScopedMem<char>(str::ToMultiByte(name, 936, CP_UTF8)));
+        else
+            info.Append(name);
         if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
             info.Append(" (");
             if (!str::IsEmpty(type))
