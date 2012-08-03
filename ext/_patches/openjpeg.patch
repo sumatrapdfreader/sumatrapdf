@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
 --- openjpeg.orig\image.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\image.c	Wed Feb 22 21:53:38 2012
++++ openjpeg\image.c	Fri Aug 03 20:09:06 2012
 @@ -81,9 +81,11 @@
  					opj_free(image_comp->data);
  				}
@@ -15,21 +15,103 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\j2k.c	Sun Jul 15 21:31:49 2012
-@@ -1561,14 +1561,18 @@
++++ openjpeg\j2k.c	Fri Aug 03 20:14:06 2012
+@@ -1267,11 +1267,12 @@
+ 	if (j2k->cp->correct) {
+ 
+ 		static int backup_tileno = 0;
+ 
+ 		/* tileno is negative or larger than the number of tiles!!! */
+-		if ((tileno < 0) || (tileno > (cp->tw * cp->th))) {
++		/* cf. http://code.google.com/p/openjpeg/source/detail?r=1727 */
++		if ((tileno < 0) || (tileno >= (cp->tw * cp->th))) {
+ 			opj_event_msg(j2k->cinfo, EVT_ERROR,
+ 				"JPWL: bad tile number (%d out of a maximum of %d)\n",
+ 				tileno, (cp->tw * cp->th));
+ 			if (!JPWL_ASSUME) {
+ 				opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: giving up\n");
+@@ -1284,12 +1285,23 @@
+ 				tileno);
+ 		}
+ 
+ 		/* keep your private count of tiles */
+ 		backup_tileno++;
+-	};
++	}
++  else
+ #endif /* USE_JPWL */
++  /* cf. http://code.google.com/p/openjpeg/source/detail?r=1727 */
++  {
++    /* tileno is negative or larger than the number of tiles!!! */
++    if ((tileno < 0) || (tileno >= (cp->tw * cp->th))) {
++      opj_event_msg(j2k->cinfo, EVT_ERROR,
++        "JPWL: bad tile number (%d out of a maximum of %d)\n",
++        tileno, (cp->tw * cp->th));
++      return;
++    }
++  }
+ 	
+ 	if (cp->tileno_size == 0) {
+ 		cp->tileno[cp->tileno_size] = tileno;
+ 		cp->tileno_size++;
+ 	} else {
+@@ -1323,13 +1335,24 @@
+ 			opj_event_msg(j2k->cinfo, EVT_WARNING, "- trying to adjust this\n"
+ 				"- setting Psot to %d => assuming it is the last tile\n",
+ 				totlen);
+ 		}
+ 
+-	};
++	}
++  else
+ #endif /* USE_JPWL */
+-
++  /* cf. http://code.google.com/p/openjpeg/source/detail?r=1727 */
++  {
++    /* totlen is negative or larger than the bytes left!!! */
++    if ((totlen < 0) || (totlen > (cio_numbytesleft(cio) + 8))) {
++      opj_event_msg(j2k->cinfo, EVT_ERROR,
++        "JPWL: bad tile byte size (%d bytes against %d bytes left)\n",
++        totlen, cio_numbytesleft(cio) + 8);
++      return;
++    }
++  }
++	
+ 	if (!totlen)
+ 		totlen = cio_numbytesleft(cio) + 8;
+ 	
+ 	partno = cio_read(cio, 1);
+ 	numparts = cio_read(cio, 1);
+@@ -1552,23 +1575,29 @@
+ /* <<UniPG */
+ }
+ 
+ static void j2k_read_eoc(opj_j2k_t *j2k) {
+ 	int i, tileno;
+-	opj_bool success;
++	opj_bool success = OPJ_FALSE;
+ 
+ 	/* if packets should be decoded */
+ 	if (j2k->cp->limit_decoding != DECODE_ALL_BUT_PACKETS) {
  		opj_tcd_t *tcd = tcd_create(j2k->cinfo);
  		tcd_malloc_decode(tcd, j2k->image, j2k->cp);
  		for (i = 0; i < j2k->cp->tileno_size; i++) {
  			tcd_malloc_decode_tile(tcd, j2k->image, j2k->cp, i, j2k->cstr_info);
  			tileno = j2k->cp->tileno[i];
-+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693171 */
-+			if (j2k->cp->tileno[i] != -1) {
- 			success = tcd_decode_tile(tcd, j2k->tile_data[tileno], j2k->tile_len[tileno], tileno, j2k->cstr_info);
- 			opj_free(j2k->tile_data[tileno]);
- 			j2k->tile_data[tileno] = NULL;
- 			tcd_free_decode_tile(tcd, i);
-+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693171 */
-+			} else success = OPJ_FALSE;
+-			success = tcd_decode_tile(tcd, j2k->tile_data[tileno], j2k->tile_len[tileno], tileno, j2k->cstr_info);
+-			opj_free(j2k->tile_data[tileno]);
+-			j2k->tile_data[tileno] = NULL;
+-			tcd_free_decode_tile(tcd, i);
++			/* cf. http://code.google.com/p/openjpeg/source/detail?r=1729 */
++			if (j2k->cp->tileno[i] != -1)
++			{
++				success = tcd_decode_tile(tcd, j2k->tile_data[tileno], j2k->tile_len[tileno], tileno, j2k->cstr_info);
++				opj_free(j2k->tile_data[tileno]);
++				j2k->tile_data[tileno] = NULL;
++				tcd_free_decode_tile(tcd, i);
++			}
++			else
++				success = OPJ_FALSE;
  			if (success == OPJ_FALSE) {
  				j2k->state |= J2K_STATE_ERR;
  				break;
@@ -37,7 +119,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		}
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\jp2.c	Sun Jul 15 21:50:17 2012
++++ openjpeg\jp2.c	Fri Aug 03 20:09:06 2012
 @@ -171,10 +171,15 @@
  			box->length = cio_numbytesleft(cio) + 12;
  	}
@@ -147,15 +229,30 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\tcd.c	Sun Jul 15 21:54:04 2012
-@@ -688,10 +688,16 @@
++++ openjpeg\tcd.c	Fri Aug 03 20:10:16 2012
+@@ -331,11 +331,12 @@
+ 							/* code-block size (global) */
+ 							cblk->x0 = int_max(cblkxstart, prc->x0);
+ 							cblk->y0 = int_max(cblkystart, prc->y0);
+ 							cblk->x1 = int_min(cblkxend, prc->x1);
+ 							cblk->y1 = int_min(cblkyend, prc->y1);
+-							cblk->data = (unsigned char*) opj_calloc(8192+2, sizeof(unsigned char));
++							/* cf. http://code.google.com/p/openjpeg/source/detail?r=1703 */
++							cblk->data = (unsigned char*) opj_calloc(9728+2, sizeof(unsigned char));
+ 							/* FIXME: mqc_init_enc and mqc_byteout underrun the buffer if we don't do this. Why? */
+ 							cblk->data += 2;
+ 							cblk->layers = (opj_tcd_layer_t*) opj_calloc(100, sizeof(opj_tcd_layer_t));
+ 							cblk->passes = (opj_tcd_pass_t*) opj_calloc(100, sizeof(opj_tcd_pass_t));
+ 						}
+@@ -688,10 +689,17 @@
  	
  	for (compno = 0; compno < tile->numcomps; compno++) {
  		opj_tccp_t *tccp = &tcp->tccps[compno];
  		opj_tcd_tilecomp_t *tilec = &tile->comps[compno];
  		
-+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693171 */
-+		if (tccp->numresolutions <= 0) {
++		/* cf. http://code.google.com/p/openjpeg/source/detail?r=1729 */
++		if (tccp->numresolutions <= 0)
++		{
 +			cp->tileno[tileno] = -1;
 +			return;
 +		}
@@ -165,7 +262,7 @@ diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
  		tilec->y0 = int_ceildiv(tile->y0, image->comps[compno].dy);
  		tilec->x1 = int_ceildiv(tile->x1, image->comps[compno].dx);
  		tilec->y1 = int_ceildiv(tile->y1, image->comps[compno].dy);
-@@ -1378,10 +1384,17 @@
+@@ -1378,10 +1386,17 @@
  	t1 = t1_create(tcd->cinfo);
  	for (compno = 0; compno < tile->numcomps; ++compno) {
  		opj_tcd_tilecomp_t* tilec = &tile->comps[compno];
@@ -183,7 +280,7 @@ diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
  	t1_destroy(t1);
  	t1_time = opj_clock() - t1_time;
  	opj_event_msg(tcd->cinfo, EVT_INFO, "- tiers-1 took %f s\n", t1_time);
-@@ -1456,10 +1469,17 @@
+@@ -1456,10 +1471,17 @@
  		int offset_y = int_ceildivpow2(imagec->y0, imagec->factor);
  
  		int i, j;
