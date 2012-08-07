@@ -160,13 +160,15 @@ xps_parse_image_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	{
 		image = xps_load_image(doc->ctx, part->data, part->size);
 	}
+	fz_always(doc->ctx)
+	{
+		xps_free_part(doc, part);
+	}
 	fz_catch(doc->ctx)
 	{
 		fz_warn(doc->ctx, "cannot decode image resource");
-		xps_free_part(doc, part);
 		return;
 	}
-	xps_free_part(doc, part);
 
 	xps_parse_tiling_brush(doc, ctm, area, base_uri, dict, root, xps_paint_image_brush, image);
 

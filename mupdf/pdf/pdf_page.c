@@ -19,12 +19,14 @@ put_marker_bool(fz_context *ctx, pdf_obj *rdb, char *marker, int val)
 	{
 		pdf_dict_puts(rdb, marker, tmp);
 	}
-	fz_catch(ctx)
+	fz_always(ctx)
 	{
 		pdf_drop_obj(tmp);
+	}
+	fz_catch(ctx)
+	{
 		fz_rethrow(ctx);
 	}
-	pdf_drop_obj(tmp);
 }
 
 typedef struct pdf_page_load_s pdf_page_load;
@@ -152,8 +154,7 @@ pdf_load_page_tree(pdf_document *xref)
 	pdf_obj *count;
 	struct info info;
 
-	/* SumatraPDF: fix memory leak */
-	if (xref->page_refs || xref->page_objs)
+	if (xref->page_refs)
 		return;
 
 	catalog = pdf_dict_gets(xref->trailer, "Root");
@@ -271,12 +272,14 @@ found:
 			useBM = 1;
 		}
 	}
-	fz_catch(ctx)
+	fz_always(ctx)
 	{
 		pdf_dict_unmark(rdb);
+	}
+	fz_catch(ctx)
+	{
 		fz_rethrow(ctx);
 	}
-	pdf_dict_unmark(rdb);
 
 	put_marker_bool(ctx, rdb, ".useBM", useBM);
 	return useBM;
@@ -405,10 +408,8 @@ pdf_load_links(pdf_document *xref, pdf_page *page)
 void
 pdf_free_page(pdf_document *xref, pdf_page *page)
 {
-	if (page->resources)
-		pdf_drop_obj(page->resources);
-	if (page->contents)
-		pdf_drop_obj(page->contents);
+	pdf_drop_obj(page->resources);
+	pdf_drop_obj(page->contents);
 	if (page->links)
 		fz_drop_link(xref->ctx, page->links);
 	if (page->annots)

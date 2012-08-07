@@ -161,8 +161,7 @@ fz_open_file_w(fz_context *ctx, const wchar_t *name)
 {
 	int fd = _wopen(name, O_BINARY | O_RDONLY, 0);
 	if (fd == -1)
-		/* SumatraPDF: consistency with fz_open_file */
-		fz_throw(ctx, "cannot open file");
+		fz_throw(ctx, "cannot open file %Ls", name);
 	return fz_open_fd(ctx, fd);
 }
 

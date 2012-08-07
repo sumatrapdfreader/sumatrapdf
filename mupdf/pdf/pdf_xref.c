@@ -364,12 +364,10 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 		index = pdf_dict_gets(trailer, "Index");
 
 		stm = pdf_open_stream_with_offset(xref, num, gen, trailer, stm_ofs);
-		/* RJW: Ensure pdf_open_stream does fz_throw(ctx, "cannot open compressed xref stream (%d %d R)", num, gen); */
 
 		if (!index)
 		{
 			pdf_read_new_xref_section(xref, stm, 0, size, w0, w1, w2);
-			/* RJW: Ensure above does fz_throw(ctx, "cannot read xref stream (%d %d R)", num, gen); */
 		}
 		else
 		{
@@ -389,7 +387,6 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 	fz_catch(ctx)
 	{
 		pdf_drop_obj(trailer);
-		pdf_drop_obj(index);
 		fz_rethrow(ctx);
 	}
 
@@ -552,8 +549,7 @@ pdf_ocg_set_config(pdf_document *xref, int config)
 			fz_throw(xref->ctx, "Illegal OCG config");
 	}
 
-	if (desc->intent)
-		pdf_drop_obj(desc->intent);
+	pdf_drop_obj(desc->intent);
 	desc->intent = pdf_dict_gets(cobj, "Intent");
 	if (desc->intent)
 		pdf_keep_obj(desc->intent);
@@ -678,8 +674,7 @@ pdf_free_ocg(fz_context *ctx, pdf_ocg_descriptor *desc)
 	if (!desc)
 		return;
 
-	if (desc->intent)
-		pdf_drop_obj(desc->intent);
+	pdf_drop_obj(desc->intent);
 	fz_free(ctx, desc->ocgs);
 	fz_free(ctx, desc);
 }
@@ -846,8 +841,7 @@ pdf_close_document(pdf_document *xref)
 
 	if (xref->file)
 		fz_close(xref->file);
-	if (xref->trailer)
-		pdf_drop_obj(xref->trailer);
+	pdf_drop_obj(xref->trailer);
 	if (xref->crypt)
 		pdf_free_crypt(ctx, xref->crypt);
 
@@ -860,7 +854,6 @@ pdf_close_document(pdf_document *xref)
 	fz_free(ctx, xref);
 }
 
-#ifndef NDEBUG
 void
 pdf_print_xref(pdf_document *xref)
 {
@@ -876,7 +869,6 @@ pdf_print_xref(pdf_document *xref)
 			xref->table[i].stm_buf);
 	}
 }
-#endif
 
 /*
  * compressed object streams
@@ -938,7 +930,6 @@ pdf_load_obj_stm(pdf_document *xref, int num, int gen, pdf_lexbuf *buf)
 			fz_seek(stm, first + ofsbuf[i], 0);
 
 			obj = pdf_parse_stm_obj(xref, stm, buf);
-			/* RJW: Ensure above does fz_throw(ctx, "cannot parse object %d in stream (%d %d R)", i, num, gen); */
 
 			if (numbuf[i] < 1 || numbuf[i] >= xref->len)
 			{
@@ -1157,8 +1148,7 @@ pdf_update_object(pdf_document *xref, int num, pdf_obj *newobj)
 
 	x = &xref->table[num];
 
-	if (x->obj)
-		pdf_drop_obj(x->obj);
+	pdf_drop_obj(x->obj);
 
 	x->type = 'n';
 	x->ofs = 0;
@@ -1197,7 +1187,8 @@ pdf_meta(pdf_document *doc, int key, void *ptr, int size)
 		return FZ_META_OK;
 	case FZ_META_CRYPT_INFO:
 		if (doc->crypt)
-			sprintf((char *)ptr, "Standard V%d %d-bit %s",
+			sprintf((char *)ptr, "Standard V%d R%d %d-bit %s",
+				pdf_crypt_version(doc),
 				pdf_crypt_revision(doc),
 				pdf_crypt_length(doc),
 				pdf_crypt_method(doc));

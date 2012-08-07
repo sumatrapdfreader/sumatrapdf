@@ -90,8 +90,7 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 					item = pdf_array_get(diff, i);
 					if (pdf_is_int(item))
 						k = pdf_to_int(item);
-					/* SumatraPDF: consistency with pdf_load_simple_font */
-					if (pdf_is_name(item) && k >= 0 && k < 256)
+					if (pdf_is_name(item) && k >= 0 && k < nelem(estrings))
 						estrings[k++] = pdf_to_name(item);
 				}
 			}
@@ -179,8 +178,8 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 	}
 	fz_catch(ctx)
 	{
-		/* SumatraPDF: fix memory leak */
-		pdf_drop_font(ctx, fontdesc);
+		if (fontdesc)
+			pdf_drop_font(ctx, fontdesc);
 		fz_throw(ctx, "cannot load type3 font (%d %d R)", pdf_to_num(dict), pdf_to_gen(dict));
 	}
 	return fontdesc;

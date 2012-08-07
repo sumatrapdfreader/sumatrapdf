@@ -322,7 +322,7 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		if (pdf_is_jpx_image(ctx, dict))
 		{
 			pdf_load_jpx(xref, dict, image);
-			/* RJW: "cannot load jpx image" */
+
 			if (forcemask)
 			{
 				fz_pixmap *mask_pixmap;
@@ -373,7 +373,6 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 			}
 
 			image->base.colorspace = pdf_load_colorspace(xref, obj);
-			/* RJW: "cannot load image colorspace" */
 
 			if (!strcmp(image->base.colorspace->name, "Indexed"))
 				indexed = 1;
@@ -405,7 +404,6 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 			if (!cstm)
 			{
 				mask = (fz_image *)pdf_load_image_imp(xref, rdb, obj, NULL, 1);
-				/* RJW: "cannot load image mask/softmask" */
 			}
 		}
 		else if (pdf_is_array(obj))
@@ -454,14 +452,13 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		else
 		{
 			stm = pdf_open_stream(xref, pdf_to_num(dict), pdf_to_gen(dict));
-			/* RJW: "cannot open image data stream (%d 0 R)", pdf_to_num(dict) */
 		}
 
 		image->tile = decomp_image_from_stream(ctx, stm, image, cstm != NULL, indexed, 1, 0);
 	}
 	fz_catch(ctx)
 	{
-		fz_drop_image(ctx, &image->base);
+		pdf_free_image(ctx, (fz_storable *) image);
 		fz_rethrow(ctx);
 	}
 	return image;
@@ -471,7 +468,6 @@ fz_image *
 pdf_load_inline_image(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *file)
 {
 	return (fz_image *)pdf_load_image_imp(xref, rdb, dict, file, 0);
-	/* RJW: "cannot load inline image" */
 }
 
 int
@@ -505,7 +501,6 @@ pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image)
 	fz_var(colorspace);
 
 	buf = pdf_load_stream(xref, pdf_to_num(dict), pdf_to_gen(dict));
-	/* RJW: "cannot load jpx image data" */
 
 	/* FIXME: We can't handle decode arrays for indexed images currently */
 	fz_try(ctx)
@@ -514,12 +509,10 @@ pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image)
 		if (obj)
 		{
 			colorspace = pdf_load_colorspace(xref, obj);
-			/* RJW: "cannot load image colorspace" */
 			indexed = !strcmp(colorspace->name, "Indexed");
 		}
 
 		img = fz_load_jpx(ctx, buf->data, buf->len, colorspace, indexed);
-		/* RJW: "cannot load jpx image" */
 
 		if (img && colorspace == NULL)
 			colorspace = fz_keep_colorspace(ctx, img->colorspace);
@@ -531,7 +524,6 @@ pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image)
 		if (pdf_is_dict(obj))
 		{
 			image->base.mask = (fz_image *)pdf_load_image_imp(xref, NULL, obj, NULL, 1);
-			/* RJW: "cannot load image mask/softmask" */
 		}
 
 		obj = pdf_dict_getsa(dict, "Decode", "D");
@@ -589,7 +581,6 @@ pdf_load_image(pdf_document *xref, pdf_obj *dict)
 	}
 
 	image = pdf_load_image_imp(xref, NULL, dict, NULL, 0);
-	/* RJW: "cannot load image (%d 0 R)", pdf_to_num(dict) */
 
 	pdf_store_item(ctx, dict, image, pdf_image_size(ctx, image));
 

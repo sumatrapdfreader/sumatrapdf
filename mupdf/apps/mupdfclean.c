@@ -161,6 +161,7 @@ int pdfclean_main(int argc, char **argv)
 	int c;
 	int subset;
 	fz_write_options opts;
+	int write_failed = 0;
 
 	opts.do_garbage = 0;
 	opts.do_expand = 0;
@@ -204,18 +205,29 @@ int pdfclean_main(int argc, char **argv)
 		exit(1);
 	}
 
-	xref = pdf_open_document_no_run(ctx, infile);
-	if (pdf_needs_password(xref))
-		if (!pdf_authenticate_password(xref, password))
-			fz_throw(ctx, "cannot authenticate password: %s", infile);
+	fz_try(ctx)
+	{
+		xref = pdf_open_document_no_run(ctx, infile);
+		if (pdf_needs_password(xref))
+			if (!pdf_authenticate_password(xref, password))
+				fz_throw(ctx, "cannot authenticate password: %s", infile);
 
-	/* Only retain the specified subset of the pages */
-	if (subset)
-		retainpages(argc, argv);
+		/* Only retain the specified subset of the pages */
+		if (subset)
+			retainpages(argc, argv);
 
-	pdf_write_document(xref, outfile, &opts);
+		pdf_write_document(xref, outfile, &opts);
+	}
+	fz_always(ctx)
+	{
+		pdf_close_document(xref);
+	}
+	fz_catch(ctx)
+	{
+		write_failed = 1;
+	}
 
-	pdf_close_document(xref);
 	fz_free_context(ctx);
-	return 0;
+
+	return write_failed ? 1 : 0;
 }

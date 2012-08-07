@@ -2282,10 +2282,10 @@ TCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
 
     if (Prop_PdfVersion == prop) {
         int major = _doc->version / 10, minor = _doc->version % 10;
-        if (1 == major && 7 == minor && 5 == pdf_crypt_revision(_doc)) {
-            if (pdf_crypt_revision_r(_doc) == 5)
+        if (1 == major && 7 == minor && pdf_crypt_version(_doc) == 5) {
+            if (pdf_crypt_revision(_doc) == 5)
                 return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
-            if (pdf_crypt_revision_r(_doc) == 6)
+            if (pdf_crypt_revision(_doc) == 6)
                 return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 8);
         }
         return str::Format(_T("%d.%d"), major, minor);

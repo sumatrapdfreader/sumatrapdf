@@ -184,7 +184,7 @@ pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, int low, int high, int n)
 static void
 add_table(fz_context *ctx, pdf_cmap *cmap, int value)
 {
-	if (cmap->tlen == USHRT_MAX)
+	if (cmap->tlen >= USHRT_MAX + 1)
 	{
 		fz_warn(ctx, "cmap table is full; ignoring additional entries");
 		return;
@@ -233,7 +233,7 @@ pdf_map_range_to_table(fz_context *ctx, pdf_cmap *cmap, int low, int *table, int
 	int i;
 	int high = low + len;
 	int offset = cmap->tlen;
-	if (cmap->tlen + len >= USHRT_MAX)
+	if (cmap->tlen + len >= USHRT_MAX + 1)
 		fz_warn(ctx, "cannot map range to table; table is full");
 	else
 	{
@@ -280,7 +280,7 @@ pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, int low, int *values, int l
 		return;
 	}
 
-	if (cmap->tlen + len + 1 >= USHRT_MAX)
+	if (cmap->tlen + len + 1 >= USHRT_MAX + 1)
 		fz_warn(ctx, "cannot map one to many; table is full");
 	else
 	{
@@ -314,7 +314,7 @@ pdf_sort_cmap(fz_context *ctx, pdf_cmap *cmap)
 
 	qsort(cmap->ranges, cmap->rlen, sizeof(pdf_range), cmprange);
 
-	if (cmap->tlen == USHRT_MAX)
+	if (cmap->tlen >= USHRT_MAX + 1)
 	{
 		fz_warn(ctx, "cmap table is full; will not combine ranges");
 		return;

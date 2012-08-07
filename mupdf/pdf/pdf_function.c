@@ -711,7 +711,6 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr, pdf_lexbuf *buf)
 	while (1)
 	{
 		tok = pdf_lex(stream, buf);
-		/* RJW: "calculator function lexical error" */
 
 		switch(tok)
 		{
@@ -754,19 +753,15 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr, pdf_lexbuf *buf)
 
 			ifptr = *codeptr;
 			parse_code(func, stream, codeptr, buf);
-			/* RJW: "error in 'if' branch" */
 
 			tok = pdf_lex(stream, buf);
-			/* RJW: "calculator function syntax error" */
 
 			if (tok == PDF_TOK_OPEN_BRACE)
 			{
 				elseptr = *codeptr;
 				parse_code(func, stream, codeptr, buf);
-				/* RJW: "error in 'else' branch" */
 
 				tok = pdf_lex(stream, buf);
-				/* RJW: "calculator function syntax error" */
 			}
 			else
 			{
@@ -861,7 +856,6 @@ load_postscript_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int 
 	fz_try(ctx)
 	{
 		stream = pdf_open_stream(xref, num, gen);
-		/* RJW: "cannot open calculator function stream" */
 
 		tok = pdf_lex(stream, &buf);
 		if (tok != PDF_TOK_OPEN_BRACE)
@@ -958,7 +952,7 @@ load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num,
 	{
 		int ranges = fz_mini(func->m, pdf_array_len(obj) / 2);
 		if (ranges != func->m)
-			fz_warn(ctx, "too few/many sample function input mappings");
+			fz_warn(ctx, "wrong number of sample function input mappings");
 
 		for (i = 0; i < ranges; i++)
 		{
@@ -978,7 +972,7 @@ load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num,
 	{
 		int ranges = fz_mini(func->n, pdf_array_len(obj) / 2);
 		if (ranges != func->n)
-			fz_warn(ctx, "too few/many sample function output mappings");
+			fz_warn(ctx, "wrong number of sample function output mappings");
 
 		for (i = 0; i < ranges; i++)
 		{
@@ -997,7 +991,6 @@ load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num,
 	func->size += samplecount * sizeof(float);
 
 	stream = pdf_open_stream(xref, num, gen);
-	/* RJW: "cannot open samples stream (%d %d R)", num, gen */
 
 	/* read samples */
 	for (i = 0; i < samplecount; i++)
@@ -1179,7 +1172,7 @@ load_exponential_func(fz_context *ctx, pdf_function *func, pdf_obj *dict)
 	{
 		int ranges = fz_mini(func->n, pdf_array_len(obj));
 		if (ranges != func->n)
-			fz_warn(ctx, "too few/many C0 constants for exponential function");
+			fz_warn(ctx, "wrong number of C0 constants for exponential function");
 
 		for (i = 0; i < ranges; i++)
 			func->u.e.c0[i] = pdf_to_real(pdf_array_get(obj, i));
@@ -1190,7 +1183,7 @@ load_exponential_func(fz_context *ctx, pdf_function *func, pdf_obj *dict)
 	{
 		int ranges = fz_mini(func->n, pdf_array_len(obj));
 		if (ranges != func->n)
-			fz_warn(ctx, "too few/many C1 constants for exponential function");
+			fz_warn(ctx, "wrong number of C1 constants for exponential function");
 
 		for (i = 0; i < ranges; i++)
 			func->u.e.c1[i] = pdf_to_real(pdf_array_get(obj, i));
@@ -1255,16 +1248,17 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 		{
 			sub = pdf_array_get(obj, i);
 			funcs[i] = pdf_load_function(xref, sub, 1, func->n);
-			/* RJW: "cannot load sub function %d (%d %d R)", i, pdf_to_num(sub), pdf_to_gen(sub) */
-			if (funcs[i]->m != 1 || funcs[i]->n != funcs[0]->n)
-				fz_throw(ctx, "sub function %d /Domain or /Range mismatch", i);
+
 			func->size += pdf_function_size(funcs[i]);
 			func->u.st.k ++;
-		}
 
-		if (func->n != funcs[0]->n)
-			fz_throw(ctx, "sub function /Domain or /Range mismatch");
+			if (funcs[i]->m != func->m)
+				fz_warn(ctx, "wrong number of inputs for sub function %d", i);
+			if (funcs[i]->n != func->n)
+				fz_warn(ctx, "wrong number of outputs for sub function %d", i);
+		}
 	}
+
 
 	obj = pdf_dict_gets(dict, "Bounds");
 	if (!pdf_is_array(obj))
@@ -1299,7 +1293,7 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 	{
 		int ranges = fz_mini(k, pdf_array_len(obj) / 2);
 		if (ranges != k)
-			fz_warn(ctx, "too few/many stitching function input mappings");
+			fz_warn(ctx, "wrong number of stitching function input mappings");
 
 		for (i = 0; i < ranges; i++)
 		{
@@ -1422,7 +1416,7 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 
 	/* required for all */
 	obj = pdf_dict_gets(dict, "Domain");
-	func->m = fz_clampi(pdf_array_len(obj) / 2, 1, MAXN);
+	func->m = fz_clampi(pdf_array_len(obj) / 2, 1, MAXM);
 	for (i = 0; i < func->m; i++)
 	{
 		func->domain[i][0] = pdf_to_real(pdf_array_get(obj, i * 2 + 0));
@@ -1448,9 +1442,9 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 	}
 
 	if (func->m != in)
-		fz_warn(ctx, "too few/many function inputs");
+		fz_warn(ctx, "wrong number of function inputs");
 	if (func->n != out)
-		fz_warn(ctx, "too few/many function outputs");
+		fz_warn(ctx, "wrong number of function outputs");
 
 	fz_try(ctx)
 	{
@@ -1498,7 +1492,7 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 void
 pdf_eval_function(fz_context *ctx, pdf_function *func, float *in_, int inlen, float *out_, int outlen)
 {
-	float fakein[MAXN];
+	float fakein[MAXM];
 	float fakeout[MAXN];
 	float *in = in_;
 	float *out = out_;

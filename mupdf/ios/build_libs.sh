@@ -27,7 +27,7 @@ make -C .. libs || exit 1
 echo Assembling final library in $TARGET_BUILD_DIR/.
 mkdir -p "$TARGET_BUILD_DIR"
 rm -f $TARGET_BUILD_DIR/libLibraries.a
-ar cru $TARGET_BUILD_DIR/libLibraries.a ../$OUT/*.o
+ar cr $TARGET_BUILD_DIR/libLibraries.a ../$OUT/*.o
 ranlib $TARGET_BUILD_DIR/libLibraries.a
 
 echo Done.

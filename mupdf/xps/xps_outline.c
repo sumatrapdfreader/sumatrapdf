@@ -103,12 +103,14 @@ xps_load_document_structure(xps_document *doc, xps_fixdoc *fixdoc)
 	{
 		root = xml_parse_document(doc->ctx, part->data, part->size);
 	}
-	fz_catch(doc->ctx)
+	fz_always(doc->ctx)
 	{
 		xps_free_part(doc, part);
+	}
+	fz_catch(doc->ctx)
+	{
 		fz_rethrow(doc->ctx);
 	}
-	xps_free_part(doc, part);
 	if (!root)
 		return NULL;
 
@@ -116,12 +118,14 @@ xps_load_document_structure(xps_document *doc, xps_fixdoc *fixdoc)
 	{
 		outline = xps_parse_document_structure(doc, root);
 	}
-	fz_catch(doc->ctx)
+	fz_always(doc->ctx)
 	{
 		xml_free_element(doc->ctx, root);
+	}
+	fz_catch(doc->ctx)
+	{
 		fz_rethrow(doc->ctx);
 	}
-	xml_free_element(doc->ctx, root);
 
 	return outline;
 }

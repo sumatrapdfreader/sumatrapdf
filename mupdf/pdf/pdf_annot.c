@@ -391,8 +391,7 @@ pdf_free_annot(fz_context *ctx, pdf_annot *annot)
 		next = annot->next;
 		if (annot->ap)
 			pdf_drop_xobject(ctx, annot->ap);
-		if (annot->obj)
-			pdf_drop_obj(annot->obj);
+		pdf_drop_obj(annot->obj);
 		fz_free(ctx, annot);
 		annot = next;
 	}

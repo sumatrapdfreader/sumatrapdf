@@ -12,6 +12,9 @@ CFLAGS += -pipe -O2 -DNDEBUG -pg
 LDFLAGS += -pg
 else ifeq "$(build)" "release"
 CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer
+else ifeq "$(build)" "coverage"
+CFLAGS += -pipe -g -DDEBUG -pg -fprofile-arcs -ftest-coverage
+LIBS += -lgcov
 else ifeq "$(build)" "native"
 CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer -march=native -mfpmath=sse
 else ifeq "$(build)" "memento"

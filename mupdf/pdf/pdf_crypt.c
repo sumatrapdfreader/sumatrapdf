@@ -262,8 +262,8 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 void
 pdf_free_crypt(fz_context *ctx, pdf_crypt *crypt)
 {
-	if (crypt->id) pdf_drop_obj(crypt->id);
-	if (crypt->cf) pdf_drop_obj(crypt->cf);
+	pdf_drop_obj(crypt->id);
+	pdf_drop_obj(crypt->cf);
 	fz_free(ctx, crypt);
 }
 
@@ -746,16 +746,14 @@ pdf_crypt_key(pdf_document *xref)
 }
 
 int
-pdf_crypt_revision(pdf_document *xref)
+pdf_crypt_version(pdf_document *xref)
 {
 	if (xref->crypt)
 		return xref->crypt->v;
 	return 0;
 }
 
-/* SumatraPDF: make crypt revision available (instead of crypt *version*) */
-int
-pdf_crypt_revision_r(pdf_document *xref)
+int pdf_crypt_revision(pdf_document *xref)
 {
 	if (xref->crypt)
 		return xref->crypt->r;

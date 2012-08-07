@@ -53,8 +53,6 @@ pdf_lex_cmap(fz_stream *file, pdf_lexbuf *buf)
 {
 	int tok = pdf_lex(file, buf);
 
-	/* RJW: Lost debugging here: "cannot parse cmap token" */
-
 	if (tok == PDF_TOK_KEYWORD)
 		tok = pdf_cmap_token_from_keyword(buf->scratch);
 
@@ -67,7 +65,6 @@ pdf_parse_cmap_name(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf
 	int tok;
 
 	tok = pdf_lex_cmap(file, buf);
-	/* RJW: Lost debugging: "syntaxerror in cmap" */
 
 	if (tok == PDF_TOK_NAME)
 		fz_strlcpy(cmap->cmap_name, buf->scratch, sizeof(cmap->cmap_name));
@@ -81,7 +78,6 @@ pdf_parse_wmode(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *bu
 	int tok;
 
 	tok = pdf_lex_cmap(file, buf);
-	/* RJW: Lost debugging: "syntaxerror in cmap" */
 
 	if (tok == PDF_TOK_INT)
 		pdf_set_cmap_wmode(ctx, cmap, buf->i);
@@ -98,7 +94,6 @@ pdf_parse_codespace_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_
 	while (1)
 	{
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: Lost debugging: "syntaxerror in cmap" */
 
 		if (tok == TOK_END_CODESPACE_RANGE)
 			return;
@@ -107,7 +102,6 @@ pdf_parse_codespace_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_
 		{
 			lo = pdf_code_from_string(buf->scratch, buf->len);
 			tok = pdf_lex_cmap(file, buf);
-			/* RJW: Lost debugging: "syntaxerror in cmap" */
 			if (tok == PDF_TOK_STRING)
 			{
 				hi = pdf_code_from_string(buf->scratch, buf->len);
@@ -131,7 +125,6 @@ pdf_parse_cid_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf
 	while (1)
 	{
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: Lost debugging: "syntaxerror in cmap" */
 
 		if (tok == TOK_END_CID_RANGE)
 			return;
@@ -142,14 +135,12 @@ pdf_parse_cid_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf
 		lo = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: Lost debugging: "syntaxerror in cmap" */
 		if (tok != PDF_TOK_STRING)
 			fz_throw(ctx, "expected string");
 
 		hi = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: Lost debugging: "syntaxerror in cmap" */
 		if (tok != PDF_TOK_INT)
 			fz_throw(ctx, "expected integer");
 
@@ -168,7 +159,6 @@ pdf_parse_cid_char(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 	while (1)
 	{
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: "syntaxerror in cmap" */
 
 		if (tok == TOK_END_CID_CHAR)
 			return;
@@ -179,8 +169,6 @@ pdf_parse_cid_char(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 		src = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: "syntaxerror in cmap" */
-
 		if (tok != PDF_TOK_INT)
 			fz_throw(ctx, "expected integer");
 
@@ -200,7 +188,6 @@ pdf_parse_bf_range_array(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_l
 	while (1)
 	{
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: "syntaxerror in cmap" */
 
 		if (tok == PDF_TOK_CLOSE_ARRAY)
 			return;
@@ -230,7 +217,6 @@ pdf_parse_bf_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 	while (1)
 	{
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: "syntaxerror in cmap" */
 
 		if (tok == TOK_END_BF_RANGE)
 			return;
@@ -241,14 +227,12 @@ pdf_parse_bf_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 		lo = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: "syntaxerror in cmap" */
 		if (tok != PDF_TOK_STRING)
 			fz_throw(ctx, "expected string");
 
 		hi = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: "syntaxerror in cmap" */
 
 		if (tok == PDF_TOK_STRING)
 		{
@@ -280,7 +264,6 @@ pdf_parse_bf_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 		else if (tok == PDF_TOK_OPEN_ARRAY)
 		{
 			pdf_parse_bf_range_array(ctx, cmap, file, buf, lo, hi);
-			/* RJW: "cannot map bfrange" */
 		}
 
 		else
@@ -301,7 +284,6 @@ pdf_parse_bf_char(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *
 	while (1)
 	{
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: "syntaxerror in cmap" */
 
 		if (tok == TOK_END_BF_CHAR)
 			return;
@@ -312,7 +294,6 @@ pdf_parse_bf_char(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf *
 		src = pdf_code_from_string(buf->scratch, buf->len);
 
 		tok = pdf_lex_cmap(file, buf);
-		/* RJW: "syntaxerror in cmap" */
 		/* Note: does not handle /dstName */
 		if (tok != PDF_TOK_STRING)
 			fz_throw(ctx, "expected string");

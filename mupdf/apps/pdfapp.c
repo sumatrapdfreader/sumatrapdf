@@ -326,9 +326,12 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		/* Extract text */
 		app->page_sheet = fz_new_text_sheet(app->ctx);
 		app->page_text = fz_new_text_page(app->ctx, app->page_bbox);
-		tdev = fz_new_text_device(app->ctx, app->page_sheet, app->page_text);
-		fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, &cookie);
-		fz_free_device(tdev);
+		if (app->page_list)
+		{
+			tdev = fz_new_text_device(app->ctx, app->page_sheet, app->page_text);
+			fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, &cookie);
+			fz_free_device(tdev);
+		}
 	}
 
 	if (drawpage)
@@ -365,9 +368,12 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 #endif
 		app->image = fz_new_pixmap_with_bbox(app->ctx, colorspace, bbox);
 		fz_clear_pixmap_with_value(app->ctx, app->image, 255);
-		idev = fz_new_draw_device(app->ctx, app->image);
-		fz_run_display_list(app->page_list, idev, ctm, bbox, &cookie);
-		fz_free_device(idev);
+		if (app->page_list)
+		{
+			idev = fz_new_draw_device(app->ctx, app->image);
+			fz_run_display_list(app->page_list, idev, ctm, bbox, &cookie);
+			fz_free_device(idev);
+		}
 		if (app->invert)
 			fz_invert_pixmap(app->ctx, app->image);
 	}

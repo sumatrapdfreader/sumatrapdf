@@ -945,7 +945,6 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 	ctm = fz_concat(font->t3matrix, trm);
 	dev = fz_new_draw_device_type3(ctx, glyph);
 	font->t3run(font->t3doc, font->t3resources, contents, dev, ctm, NULL);
-	/* RJW: "cannot draw type3 glyph" */
 	fz_free_device(dev);
 
 	if (!model)
@@ -987,7 +986,6 @@ fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gi
 
 	ctm = fz_concat(font->t3matrix, trm);
 	font->t3run(font->t3doc, font->t3resources, contents, dev, ctm, gstate);
-	/* RJW: "cannot draw type3 glyph" */
 }
 
 #ifndef NDEBUG

@@ -1019,7 +1019,6 @@ pdf_load_shading_dict(pdf_document *xref, pdf_obj *dict, fz_matrix transform)
 		if (!obj)
 			fz_throw(ctx, "shading colorspace is missing");
 		shade->colorspace = pdf_load_colorspace(xref, obj);
-		/* RJW: "cannot load colorspace (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj) */
 
 		obj = pdf_dict_gets(dict, "Background");
 		if (obj)
@@ -1143,14 +1142,12 @@ pdf_load_shading(pdf_document *xref, pdf_obj *dict)
 			fz_throw(ctx, "syntaxerror: missing shading dictionary");
 
 		shade = pdf_load_shading_dict(xref, obj, mat);
-		/* RJW: "cannot load shading dictionary (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj) */
 	}
 
 	/* Naked shading dictionary */
 	else
 	{
 		shade = pdf_load_shading_dict(xref, dict, fz_identity);
-		/* RJW: "cannot load shading dictionary (%d %d R)", pdf_to_num(dict), pdf_to_gen(dict) */
 	}
 
 	pdf_store_item(ctx, dict, shade, fz_shade_size(shade));

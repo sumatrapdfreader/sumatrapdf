@@ -735,8 +735,7 @@ static void renumberobjs(pdf_document *xref, pdf_write_options *opts)
 			}
 			else
 			{
-				if (oldxref[num].obj)
-					pdf_drop_obj(oldxref[num].obj);
+				pdf_drop_obj(oldxref[num].obj);
 			}
 		}
 	}
@@ -1435,10 +1434,8 @@ static void addhexfilter(pdf_document *xref, pdf_obj *dict)
 
 	pdf_drop_obj(ahx);
 	pdf_drop_obj(nullobj);
-	if (newf)
-		pdf_drop_obj(newf);
-	if (newdp)
-		pdf_drop_obj(newdp);
+	pdf_drop_obj(newf);
+	pdf_drop_obj(newdp);
 }
 
 static void copystream(pdf_document *xref, pdf_write_options *opts, pdf_obj *obj_orig, int num, int gen)

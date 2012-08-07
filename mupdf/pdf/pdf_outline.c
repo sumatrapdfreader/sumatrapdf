@@ -46,15 +46,15 @@ pdf_load_outline_imp(pdf_document *xref, pdf_obj *dict)
 			dict = pdf_dict_gets(dict, "Next");
 		}
 	}
-	fz_catch(ctx)
+	fz_always(ctx)
 	{
 		for (dict = odict; dict && pdf_dict_marked(dict); dict = pdf_dict_gets(dict, "Next"))
 			pdf_dict_unmark(dict);
+	}
+	fz_catch(ctx)
+	{
 		fz_rethrow(ctx);
 	}
-
-	for (dict = odict; dict && pdf_dict_marked(dict); dict = pdf_dict_gets(dict, "Next"))
-		pdf_dict_unmark(dict);
 
 	return first;
 }

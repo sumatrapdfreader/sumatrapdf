@@ -11,6 +11,7 @@ EXPORTS
 	fz_throw_imp
 	fz_rethrow
 	fz_warn_imp
+	fz_too_deeply_nested
 	fz_flush_warnings
 	fz_new_context
 	fz_clone_context
@@ -470,13 +471,14 @@ EXPORTS
 	pdf_repair_obj_stms
 	pdf_resize_xref
 	pdf_new_ref
+	pdf_print_xref
 	pdf_new_crypt
 	pdf_free_crypt
 	pdf_crypt_obj
 	pdf_open_crypt
 	pdf_open_crypt_with_filter
+	pdf_crypt_version
 	pdf_crypt_revision
-	pdf_crypt_revision_r
 	pdf_crypt_method
 	pdf_crypt_length
 	pdf_crypt_key

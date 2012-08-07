@@ -3,6 +3,9 @@
 
 /* Scan file for objects and reconstruct xref table */
 
+/* Define in PDF 1.7 to be 8388607, but mupdf is more lenient. */
+#define MAX_OBJECT_NUMBER (10 << 20)
+
 struct entry
 {
 	int num;
@@ -26,7 +29,7 @@ pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf
 	stm_len = 0;
 
 	tok = pdf_lex(file, buf);
-	/* RJW: "cannot parse object" */
+
 	if (tok == PDF_TOK_OPEN_DICT)
 	{
 		pdf_obj *dict, *obj;
@@ -51,16 +54,14 @@ pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf
 			obj = pdf_dict_gets(dict, "Encrypt");
 			if (obj)
 			{
-				if (*encrypt)
-					pdf_drop_obj(*encrypt);
+				pdf_drop_obj(*encrypt);
 				*encrypt = pdf_keep_obj(obj);
 			}
 
 			obj = pdf_dict_gets(dict, "ID");
 			if (obj)
 			{
-				if (*id)
-					pdf_drop_obj(*id);
+				pdf_drop_obj(*id);
 				*id = pdf_keep_obj(obj);
 			}
 		}
@@ -79,7 +80,6 @@ pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf
 		tok != PDF_TOK_INT )
 	{
 		tok = pdf_lex(file, buf);
-		/* RJW: "cannot scan for endobj or stream token" */
 	}
 
 	if (tok == PDF_TOK_INT)
@@ -133,7 +133,6 @@ pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf
 
 atobjend:
 		tok = pdf_lex(file, buf);
-		/* RJW: "cannot scan for endobj token" */
 		if (tok != PDF_TOK_ENDOBJ)
 			fz_warn(ctx, "object missing 'endobj' token");
 	}
@@ -170,6 +169,16 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 				fz_throw(ctx, "corrupt object stream (%d %d R)", num, gen);
 
 			n = buf.i;
+			if (n < 0)
+			{
+				fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", n, i);
+				continue;
+			}
+			else if (n > MAX_OBJECT_NUMBER)
+			{
+				fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", n, i);
+				continue;
+			}
 			if (n >= xref->len)
 				pdf_resize_xref(xref, n + 1);
 
@@ -299,12 +308,18 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 					break;
 				}
 
-				/* SumatraPDF: sanity check */
-				if (num < 0 || gen < 0)
+				if (num < 0)
 				{
-					fz_warn(ctx, "ignoring object (%d %d R)", num, gen);
+					fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", num, gen);
 					continue;
 				}
+				else if (num > MAX_OBJECT_NUMBER)
+				{
+					fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", num, gen);
+					continue;
+				}
+
+				gen = fz_clampi(gen, 0, 65535);
 
 				if (listlen + 1 == listcap)
 				{
@@ -344,32 +359,28 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 				obj = pdf_dict_gets(dict, "Encrypt");
 				if (obj)
 				{
-					if (encrypt)
-						pdf_drop_obj(encrypt);
+					pdf_drop_obj(encrypt);
 					encrypt = pdf_keep_obj(obj);
 				}
 
 				obj = pdf_dict_gets(dict, "ID");
 				if (obj)
 				{
-					if (id)
-						pdf_drop_obj(id);
+					pdf_drop_obj(id);
 					id = pdf_keep_obj(obj);
 				}
 
 				obj = pdf_dict_gets(dict, "Root");
 				if (obj)
 				{
-					if (root)
-						pdf_drop_obj(root);
+					pdf_drop_obj(root);
 					root = pdf_keep_obj(obj);
 				}
 
 				obj = pdf_dict_gets(dict, "Info");
 				if (obj)
 				{
-					if (info)
-						pdf_drop_obj(info);
+					pdf_drop_obj(info);
 					info = pdf_keep_obj(obj);
 				}
 
@@ -406,7 +417,6 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 			if (list[i].stm_len >= 0)
 			{
 				dict = pdf_load_object(xref, list[i].num, list[i].gen);
-				/* RJW: "cannot load stream object (%d %d R)", list[i].num, list[i].gen */
 
 				length = pdf_new_int(ctx, list[i].stm_len);
 				pdf_dict_puts(dict, "Length", length);
@@ -446,11 +456,13 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 		{
 			pdf_dict_puts(xref->trailer, "Root", root);
 			pdf_drop_obj(root);
+			root = NULL;
 		}
 		if (info)
 		{
 			pdf_dict_puts(xref->trailer, "Info", info);
 			pdf_drop_obj(info);
+			info = NULL;
 		}
 
 		if (encrypt)
@@ -464,6 +476,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 			}
 			pdf_dict_puts(xref->trailer, "Encrypt", encrypt);
 			pdf_drop_obj(encrypt);
+			encrypt = NULL;
 		}
 
 		if (id)
@@ -477,16 +490,17 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 			}
 			pdf_dict_puts(xref->trailer, "ID", id);
 			pdf_drop_obj(id);
+			id = NULL;
 		}
 
 		fz_free(ctx, list);
 	}
 	fz_catch(ctx)
 	{
-		if (encrypt) pdf_drop_obj(encrypt);
-		if (id) pdf_drop_obj(id);
-		if (root) pdf_drop_obj(root);
-		if (info) pdf_drop_obj(info);
+		pdf_drop_obj(encrypt);
+		pdf_drop_obj(id);
+		pdf_drop_obj(root);
+		pdf_drop_obj(info);
 		fz_free(ctx, list);
 		fz_rethrow(ctx);
 	}
@@ -495,6 +509,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 void
 pdf_repair_obj_stms(pdf_document *xref)
 {
+	fz_context *ctx = xref->ctx;
 	pdf_obj *dict;
 	int i;
 
@@ -503,9 +518,19 @@ pdf_repair_obj_stms(pdf_document *xref)
 		if (xref->table[i].stm_ofs)
 		{
 			dict = pdf_load_object(xref, i, 0);
-			if (!strcmp(pdf_to_name(pdf_dict_gets(dict, "Type")), "ObjStm"))
-				pdf_repair_obj_stm(xref, i, 0);
-			pdf_drop_obj(dict);
+			fz_try(ctx)
+			{
+				if (!strcmp(pdf_to_name(pdf_dict_gets(dict, "Type")), "ObjStm"))
+					pdf_repair_obj_stm(xref, i, 0);
+			}
+			fz_always(ctx)
+			{
+				pdf_drop_obj(dict);
+			}
+			fz_catch(ctx)
+			{
+				fz_rethrow(ctx);
+			}
 		}
 	}
 

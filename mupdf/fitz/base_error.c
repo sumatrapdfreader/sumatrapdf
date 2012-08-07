@@ -44,6 +44,12 @@ void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
 
 /* Error context */
 
+int fz_too_deeply_nested(fz_context *ctx)
+{
+	fz_error_context *ex = ctx->error;
+	return ex->top + 1 >= nelem(ex->stack);
+}
+
 /* SumatraPDF: force crash so that we get crash report */
 inline void fz_crash_abort()
 {

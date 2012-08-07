@@ -20,10 +20,8 @@ pdf_free_xobject_imp(fz_context *ctx, fz_storable *xobj_)
 
 	if (xobj->colorspace)
 		fz_drop_colorspace(ctx, xobj->colorspace);
-	if (xobj->resources)
-		pdf_drop_obj(xobj->resources);
-	if (xobj->contents)
-		pdf_drop_obj(xobj->contents);
+	pdf_drop_obj(xobj->resources);
+	pdf_drop_obj(xobj->contents);
 	pdf_drop_obj(xobj->me);
 	fz_free(ctx, xobj);
 }

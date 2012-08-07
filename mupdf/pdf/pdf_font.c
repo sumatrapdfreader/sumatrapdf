@@ -203,7 +203,6 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 		fz_throw(ctx, "cannot find builtin font: '%s'", fontname);
 
 	fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 1);
-	/* RJW: "cannot load freetype font from memory" */
 
 	if (!strcmp(fontname, "Symbol") || !strcmp(fontname, "ZapfDingbats"))
 		fontdesc->flags |= PDF_FD_SYMBOLIC;
@@ -220,7 +219,6 @@ pdf_load_substitute_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontnam
 		fz_throw(ctx, "cannot find substitute font");
 
 	fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 1);
-	/* RJW: "cannot load freetype font from memory" */
 
 	fontdesc->font->ft_substitute = 1;
 	fontdesc->font->ft_bold = bold && !ft_is_bold(fontdesc->font->ft_face);
@@ -263,7 +261,6 @@ pdf_load_substitute_cjk_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fon
 
 	/* a glyph bbox cache is too big for droid sans fallback (51k glyphs!) */
 	fontdesc->font = fz_new_font_from_memory(ctx, fontname, data, len, 0, 0);
-	/* RJW: "cannot load builtin CJK font" */
 
 	fontdesc->font->ft_substitute = 1;
 }
@@ -552,7 +549,6 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 				fontdesc->encoding = pdf_load_system_cmap(ctx, "GBK-EUC-H");
 				fontdesc->to_unicode = pdf_load_system_cmap(ctx, "Adobe-GB1-UCS2");
 				fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-GB1-UCS2");
-				/* RJW: "cannot load font" */
 
 				face = fontdesc->font->ft_face;
 				kind = ft_kind(face);
@@ -636,7 +632,7 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 						item = pdf_array_get(diff, i);
 						if (pdf_is_int(item))
 							k = pdf_to_int(item);
-						if (pdf_is_name(item) && k >= 0 && k < 256)
+						if (pdf_is_name(item) && k >= 0 && k < nelem(estrings))
 							estrings[k++] = pdf_to_name(item);
 					}
 				}
@@ -973,7 +969,6 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Japan2-UCS2");
 				else if (!strcmp(collection, "Adobe-Korea1"))
 					fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-Korea1-UCS2");
-				/* RJW: "cannot load system cmap %s", collection */
 			}
 		}
 
@@ -1114,7 +1109,7 @@ pdf_load_type0_font(pdf_document *xref, pdf_obj *dict)
 		return load_cid_font(xref, dfont, encoding, to_unicode);
 	else
 		fz_throw(xref->ctx, "syntaxerror: unknown cid font type");
-	/* RJW: "cannot load descendant font (%d %d R)", pdf_to_num(dfont), pdf_to_gen(dfont) */
+
 	return NULL; /* Stupid MSVC */
 }
 
@@ -1267,7 +1262,6 @@ pdf_load_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 		fz_warn(ctx, "unknown font format, guessing type1 or truetype.");
 		fontdesc = pdf_load_simple_font(xref, dict);
 	}
-	/* RJW: "cannot load font (%d %d R)", pdf_to_num(dict), pdf_to_gen(dict) */
 
 	/* Save the widths to stretch non-CJK substitute fonts */
 	if (fontdesc->font->ft_substitute && !fontdesc->to_ttf_cmap)

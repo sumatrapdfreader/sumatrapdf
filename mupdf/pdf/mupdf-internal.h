@@ -225,9 +225,7 @@ void pdf_repair_obj_stms(pdf_document *doc);
 void pdf_resize_xref(pdf_document *doc, int newcap);
 pdf_obj *pdf_new_ref(pdf_document *doc, pdf_obj *obj);
 
-#ifndef NDEBUG
 void pdf_print_xref(pdf_document *);
-#endif
 
 /*
  * Encryption
@@ -241,9 +239,8 @@ void pdf_crypt_buffer(fz_context *ctx, pdf_crypt *crypt, fz_buffer *buf, int num
 fz_stream *pdf_open_crypt(fz_stream *chain, pdf_crypt *crypt, int num, int gen);
 fz_stream *pdf_open_crypt_with_filter(fz_stream *chain, pdf_crypt *crypt, char *name, int num, int gen);
 
+int pdf_crypt_version(pdf_document *doc);
 int pdf_crypt_revision(pdf_document *doc);
-/* SumatraPDF: make crypt revision available (instead of crypt *version*) */
-int pdf_crypt_revision_r(pdf_document *xref);
 char *pdf_crypt_method(pdf_document *doc);
 int pdf_crypt_length(pdf_document *doc);
 unsigned char *pdf_crypt_key(pdf_document *doc);

@@ -626,12 +626,14 @@ xps_open_document(fz_context *ctx, char *filename)
 	{
 		doc = xps_open_document_with_stream(file);
 	}
-	fz_catch(ctx)
+	fz_always(ctx)
 	{
 		fz_close(file);
+	}
+	fz_catch(ctx)
+	{
 		fz_throw(ctx, "cannot load document '%s'", filename);
 	}
-	fz_close(file);
 	return doc;
 }
 

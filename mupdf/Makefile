@@ -33,7 +33,7 @@ QUIET_MKDIR = @ echo ' ' ' ' MKDIR $@ ;
 endif
 
 CC_CMD = $(QUIET_CC) $(CC) $(CFLAGS) -o $@ -c $<
-AR_CMD = $(QUIET_AR) $(AR) cru $@ $^
+AR_CMD = $(QUIET_AR) $(AR) cr $@ $^
 LINK_CMD = $(QUIET_LINK) $(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 MKDIR_CMD = $(QUIET_MKDIR) mkdir -p $@
 

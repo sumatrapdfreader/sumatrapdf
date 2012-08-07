@@ -512,8 +512,7 @@ pdf_array_put(pdf_obj *obj, int i, pdf_obj *item)
 		fz_warn(obj->ctx, "assert: index %d > length %d", i, obj->u.a.len);
 	else
 	{
-		if (obj->u.a.items[i])
-			pdf_drop_obj(obj->u.a.items[i]);
+		pdf_drop_obj(obj->u.a.items[i]);
 		obj->u.a.items[i] = pdf_keep_obj(item);
 	}
 }
@@ -1090,8 +1089,7 @@ pdf_free_array(pdf_obj *obj)
 	int i;
 
 	for (i = 0; i < obj->u.a.len; i++)
-		if (obj->u.a.items[i])
-			pdf_drop_obj(obj->u.a.items[i]);
+		pdf_drop_obj(obj->u.a.items[i]);
 
 	fz_free(obj->ctx, obj->u.a.items);
 	fz_free(obj->ctx, obj);
@@ -1103,10 +1101,8 @@ pdf_free_dict(pdf_obj *obj)
 	int i;
 
 	for (i = 0; i < obj->u.d.len; i++) {
-		if (obj->u.d.items[i].k)
-			pdf_drop_obj(obj->u.d.items[i].k);
-		if (obj->u.d.items[i].v)
-			pdf_drop_obj(obj->u.d.items[i].v);
+		pdf_drop_obj(obj->u.d.items[i].k);
+		pdf_drop_obj(obj->u.d.items[i].v);
 	}
 
 	fz_free(obj->ctx, obj->u.d.items);
