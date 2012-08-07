@@ -69,7 +69,6 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 
 	for (k = 1; k < jpx->numcomps; k++)
 	{
-		/* SumatraPDF: fix memory leak */
 		if (jpx->comps[k].w != jpx->comps[0].w)
 		{
 			opj_image_destroy(jpx);

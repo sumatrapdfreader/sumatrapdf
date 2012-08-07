@@ -313,8 +313,6 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 	fz_var(mask);
 
 	image = fz_malloc_struct(ctx, pdf_image);
-	/* SumatraPDF: fix memory leak */
-	FZ_INIT_STORABLE(&image->base, 1, pdf_free_image);
 
 	fz_try(ctx)
 	{
