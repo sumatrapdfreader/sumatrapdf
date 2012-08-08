@@ -419,7 +419,7 @@ static void OnButtonStartSumatra()
     if (!h)
         CreateProcessHelper(exePath);
 #else
-    bool ok = RunAsUser(AsWStrQ(exePath));
+    bool ok = RunAsUser(exePath);
     if (!ok) {
         // create the process as is (mainly for non-admin users)
         CreateProcessHelper(exePath);

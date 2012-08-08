@@ -1037,7 +1037,7 @@ typedef BOOL WINAPI CreateProcessWithTokenWProc(HANDLE hToken, DWORD dwLogonFlag
 
 // Run a given *.exe as a non-elevated (non-admin) process.
 // based on http://stackoverflow.com/questions/3298611/run-my-program-asuser
-bool RunAsUser(WCHAR *cmd)
+bool RunAsUser(TCHAR *cmd)
 {
     CreateProcessWithTokenWProc *_CreateProcessWithTokenW;
     PROCESS_INFORMATION pi = { 0 };
@@ -1054,7 +1054,7 @@ bool RunAsUser(WCHAR *cmd)
     if (!_CreateProcessWithTokenW)
         return false;
 
-        // Enable SeIncreaseQuotaPrivilege in this process (won't work if current process is not elevated)
+    // Enable SeIncreaseQuotaPrivilege in this process (won't work if current process is not elevated)
     BOOL ok = OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hProcessToken);
     if (!ok) {
         lf("RunAsUser(): OpenProcessToken() failed");
@@ -1123,7 +1123,7 @@ bool RunAsUser(WCHAR *cmd)
     si.wShowWindow = SW_SHOWNORMAL;
     si.dwFlags = STARTF_USESHOWWINDOW;
 
-    ok = _CreateProcessWithTokenW(hPrimaryToken, 0, NULL, cmd, 0, NULL, NULL, &si, &pi);
+    ok = _CreateProcessWithTokenW(hPrimaryToken, 0, NULL, AsWStrQ(cmd), 0, NULL, NULL, &si, &pi);
     if (!ok) {
         lf("RunAsUser(): CreateProcessWithTokenW() failed");
         goto Error;
@@ -1141,5 +1141,3 @@ Error:
     LogLastError();
     goto Exit;
 }
-
-

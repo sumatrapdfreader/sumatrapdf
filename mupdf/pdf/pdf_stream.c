@@ -257,10 +257,10 @@ build_filter_chain(fz_stream *chain, pdf_document *xref, pdf_obj *fs, pdf_obj *p
  * allow for other people accessing the file), followed by a decryption
  * filter.
  *
- * num and gen are used purely to seed the encryption.
+ * orig_num and orig_gen are used purely to seed the encryption.
  */
 static fz_stream *
-pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, int gen, int offset)
+pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, int orig_num, int orig_gen, int offset)
 {
 	fz_context *ctx = chain->ctx;
 	int hascrypt;
@@ -279,7 +279,7 @@ pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int n
 	{
 		hascrypt = pdf_stream_has_crypt(ctx, stmobj);
 		if (xref->crypt && !hascrypt)
-			chain = pdf_open_crypt(chain, xref->crypt, num, gen);
+			chain = pdf_open_crypt(chain, xref->crypt, orig_num, orig_gen);
 	}
 	fz_catch(ctx)
 	{
@@ -303,7 +303,7 @@ pdf_open_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, 
 	filters = pdf_dict_getsa(stmobj, "Filter", "F");
 	params = pdf_dict_getsa(stmobj, "DecodeParms", "DP");
 
-	chain = pdf_open_raw_filter(chain, xref, stmobj, num, gen, offset);
+	chain = pdf_open_raw_filter(chain, xref, stmobj, num, num, gen, offset);
 
 	if (pdf_is_name(filters))
 		chain = build_filter(chain, xref, filters, params, num, gen, imparams);
@@ -361,7 +361,7 @@ pdf_open_raw_renumbered_stream(pdf_document *xref, int num, int gen, int orig_nu
 	if (x->stm_ofs == 0)
 		fz_throw(xref->ctx, "object is not a stream");
 
-	return pdf_open_raw_filter(xref->file, xref, x->obj, orig_num, orig_gen, x->stm_ofs);
+	return pdf_open_raw_filter(xref->file, xref, x->obj, num, orig_num, orig_gen, x->stm_ofs);
 }
 
 /*

@@ -273,9 +273,6 @@ pdf_parse_array(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 				break;
 
 			case PDF_TOK_OPEN_ARRAY:
-				if (fz_too_deeply_nested(ctx))
-					fz_throw(ctx, "nested too deep, not parsing array");
-
 				obj = pdf_parse_array(xref, file, buf);
 				pdf_array_push(ary, obj);
 				pdf_drop_obj(obj);
@@ -283,9 +280,6 @@ pdf_parse_array(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 				break;
 
 			case PDF_TOK_OPEN_DICT:
-				if (fz_too_deeply_nested(ctx))
-					fz_throw(ctx, "nested too deep, not parsing dict");
-
 				obj = pdf_parse_dict(xref, file, buf);
 				pdf_array_push(ary, obj);
 				pdf_drop_obj(obj);
@@ -383,9 +377,6 @@ pdf_parse_dict(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 			switch (tok)
 			{
 			case PDF_TOK_OPEN_ARRAY:
-				if (fz_too_deeply_nested(ctx))
-					fz_throw(ctx, "nested too deep, not parsing array");
-
 				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1643 */
 				fz_try(ctx)
 				{
@@ -409,9 +400,6 @@ pdf_parse_dict(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 				break;
 
 			case PDF_TOK_OPEN_DICT:
-				if (fz_too_deeply_nested(ctx))
-					fz_throw(ctx, "nested too deep, not parsing array");
-
 				val = pdf_parse_dict(xref, file, buf);
 				break;
 

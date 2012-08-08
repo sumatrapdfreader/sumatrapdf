@@ -162,6 +162,6 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
 double  GetProcessRunningTime();
 
 HANDLE CreateProcessAtLevel(const TCHAR *exe, const TCHAR *args=NULL, DWORD level=SAFER_LEVELID_NORMALUSER);
-bool RunAsUser(WCHAR *cmd);
+bool RunAsUser(TCHAR *cmd);
 
 #endif

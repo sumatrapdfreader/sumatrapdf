@@ -44,12 +44,6 @@ void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
 
 /* Error context */
 
-int fz_too_deeply_nested(fz_context *ctx)
-{
-	fz_error_context *ex = ctx->error;
-	return ex->top + 1 >= nelem(ex->stack);
-}
-
 /* SumatraPDF: force crash so that we get crash report */
 inline void fz_crash_abort()
 {
@@ -68,15 +62,24 @@ static void throw(fz_error_context *ex)
 	}
 }
 
-void fz_push_try(fz_error_context *ex)
+int fz_push_try(fz_error_context *ex)
 {
 	assert(ex);
-	if (ex->top + 1 >= nelem(ex->stack))
-	{
-		fprintf(stderr, "exception stack overflow!\n");
-		fz_crash_abort();
-	}
 	ex->top++;
+	/* Normal case, get out of here quick */
+	if (ex->top < nelem(ex->stack)-1)
+		return 1;
+	/* We reserve the top slot on the exception stack purely to cope with
+	 * the case when we overflow. If we DO hit this, then we 'throw'
+	 * immediately - returning 0 stops the setjmp happening and takes us
+	 * direct to the always/catch clauses. */
+	assert(ex->top == nelem(ex->stack)-1);
+	strcpy(ex->message, "exception stack overflow!");
+	ex->stack[ex->top].code = 1;
+	/* SumatraPDF: print error message */
+	fprintf(stderr, "! %s:%d: %s\n", __FILE__, __LINE__, ex->message);
+	LOGE("error: %s\n", ex->message);
+	return 0;
 }
 
 char *fz_caught(fz_context *ctx)

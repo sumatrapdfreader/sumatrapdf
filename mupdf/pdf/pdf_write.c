@@ -3,6 +3,8 @@
 
 /* #define DEBUG_LINEARIZATION */
 /* #define DEBUG_HEAP_SORT */
+/* #define DEBUG_WRITING */
+
 
 typedef struct pdf_write_options_s pdf_write_options;
 
@@ -128,10 +130,11 @@ page_objects_list_destroy(fz_context *ctx, page_objects_list *pol)
 static void
 page_objects_list_ensure(fz_context *ctx, page_objects_list **pol, int newcap)
 {
-	if (newcap <= (*pol)->cap)
+	int oldcap = (*pol)->cap;
+	if (newcap <= oldcap)
 		return;
-	*pol = fz_resize_array(ctx, *pol, 1, sizeof(**pol) + (newcap-1)*sizeof(int));
-	memset(&(*pol)->page[(*pol)->cap], 0, sizeof(page_objects *)*(newcap-(*pol)->cap));
+	*pol = fz_resize_array(ctx, *pol, 1, sizeof(page_objects_list) + (newcap-1)*sizeof(page_objects *));
+	memset(&(*pol)->page[oldcap], 0, (newcap-oldcap)*sizeof(page_objects *));
 	(*pol)->cap = newcap;
 }
 
@@ -254,6 +257,7 @@ order_ge(int ui, int uj)
 	 *  Catalogue (and other document level objects)
 	 *  First page
 	 *  (Primary Hint stream) (*)
+	 *  Any free objects
 	 * Note, this is NOT the same order they appear in
 	 * the final file!
 	 *
@@ -264,7 +268,12 @@ order_ge(int ui, int uj)
 	 * first. */
 	if (((ui ^ uj) & ~USE_PAGE_OBJECT) == 0)
 		return ((ui & USE_PAGE_OBJECT) == 0);
-	/* Put the hint stream last. */
+	/* Put unused objects last */
+	else if (ui == 0)
+		return 1;
+	else if (uj == 0)
+		return 0;
+	/* Put the hint stream before that... */
 	else if (ui & USE_HINTS)
 		return 1;
 	else if (uj & USE_HINTS)
@@ -301,7 +310,7 @@ order_ge(int ui, int uj)
 }
 
 static void
-heap_sort(int *list, int n, int *val, int (*ge)(int, int))
+heap_sort(int *list, int n, const int *val, int (*ge)(int, int))
 {
 	int i, j;
 
@@ -731,7 +740,7 @@ static void renumberobjs(pdf_document *xref, pdf_write_options *opts)
 				if (newlen < opts->renumber_map[num])
 					newlen = opts->renumber_map[num];
 				xref->table[opts->renumber_map[num]] = oldxref[num];
-				new_use_list[opts->renumber_map[num]] = 1;
+				new_use_list[opts->renumber_map[num]] = opts->use_list[num];
 			}
 			else
 			{
@@ -1265,6 +1274,14 @@ linearize(pdf_document *xref, pdf_write_options *opts)
 	/* Add new objects required for linearization */
 	add_linearization_objs(xref, opts);
 
+#ifdef DEBUG_WRITING
+	fprintf(stderr, "Usage calculated:\n");
+	for (i=0; i < xref->len; i++)
+	{
+		fprintf(stderr, "%d: use=%d\n", i, opts->use_list[i]);
+	}
+#endif
+
 	/* Allocate/init the structures used for renumbering the objects */
 	reorder = fz_calloc(ctx, n, sizeof(int));
 	rev_renumber_map = fz_calloc(ctx, n, sizeof(int));
@@ -1276,6 +1293,14 @@ linearize(pdf_document *xref, pdf_write_options *opts)
 
 	/* Heap sort the reordering */
 	heap_sort(reorder+1, n-1, opts->use_list, &order_ge);
+
+#ifdef DEBUG_WRITING
+	fprintf(stderr, "Reordered:\n");
+	for (i=1; i < xref->len; i++)
+	{
+		fprintf(stderr, "%d: use=%d\n", i, opts->use_list[reorder[i]]);
+	}
+#endif
 
 	/* Find the split point */
 	for (i = 1; (opts->use_list[reorder[i]] & USE_PARAMS) == 0; i++);
@@ -1304,18 +1329,21 @@ linearize(pdf_document *xref, pdf_write_options *opts)
 static void
 update_linearization_params(pdf_document *xref, pdf_write_options *opts)
 {
+	int offset;
 	pdf_set_int(opts->linear_l, opts->file_len);
 	/* Primary hint stream offset (of object, not stream!) */
 	pdf_set_int(opts->linear_h0, opts->ofs_list[xref->len-1]);
 	/* Primary hint stream length (of object, not stream!) */
-	pdf_set_int(opts->linear_h1, opts->ofs_list[1] - opts->ofs_list[xref->len-1] + opts->hintstream_len);
+	offset = (opts->start == 1 ? opts->main_xref_offset : opts->ofs_list[1] + opts->hintstream_len);
+	pdf_set_int(opts->linear_h1, offset - opts->ofs_list[xref->len-1]);
 	/* Object number of first pages page object (the first object of page 0) */
 	pdf_set_int(opts->linear_o, opts->page_object_lists->page[0]->object[0]);
 	/* Offset of end of first page (first page is followed by primary
 	 * hint stream (object n-1) then remaining pages (object 1...). The
 	 * primary hint stream counts as part of the first pages data, I think.
 	 */
-	pdf_set_int(opts->linear_e, opts->ofs_list[1] + opts->hintstream_len);
+	offset = (opts->start == 1 ? opts->main_xref_offset : opts->ofs_list[1] + opts->hintstream_len);
+	pdf_set_int(opts->linear_e, offset);
 	/* Number of pages in document */
 	pdf_set_int(opts->linear_n, opts->page_count);
 	/* Offset of first entry in main xref table */
@@ -1691,6 +1719,7 @@ padto(FILE *file, int target)
 {
 	int pos = ftell(file);
 
+	assert(pos <= target);
 	while (pos < target)
 	{
 		fputc('\n', file);
@@ -1740,27 +1769,25 @@ writeobjects(pdf_document *xref, pdf_write_options *opts, int pass)
 	{
 		/* Write first xref */
 		if (pass == 0)
-		{
 			opts->first_xref_offset = ftell(opts->out);
-		}
 		else
-		{
-			int pos = ftell(opts->out);
-			while (pos < opts->first_xref_offset)
-			{
-				fputc('\n', opts->out);
-				pos++;
-			}
-		}
+			padto(opts->out, opts->first_xref_offset);
 		writexref(xref, opts, opts->start, xref->len, 1, opts->main_xref_offset, 0);
 	}
 
 	for (num = opts->start+1; num < xref->len; num++)
 		dowriteobject(xref, opts, num, pass);
 	if (opts->do_linear && pass == 1)
-		padto(opts->out, opts->ofs_list[1] + opts->hintstream_len);
+	{
+		int offset = (opts->start == 1 ? opts->main_xref_offset : opts->ofs_list[1] + opts->hintstream_len);
+		padto(opts->out, offset);
+	}
 	for (num = 1; num < opts->start; num++)
+	{
+		if (pass == 1)
+			opts->ofs_list[num] += opts->hintstream_len;
 		dowriteobject(xref, opts, num, pass);
+	}
 }
 
 static int
@@ -1799,19 +1826,19 @@ make_page_offset_hints(pdf_document *xref, pdf_write_options *opts, fz_buffer *b
 	max_shared_object = 1;
 	min_shared_length = opts->file_len;
 	max_shared_length = 0;
-	for (i=0; i < xref->len; i++)
+	for (i=1; i < xref->len; i++)
 	{
 		int min, max, page;
 
 		min = opts->ofs_list[i];
-		if (i == opts->start-1)
+		if (i == opts->start-1 || (opts->start == 1 && i == xref->len-1))
 			max = opts->main_xref_offset;
-		else if (i < xref->len-1)
-			max = opts->ofs_list[i+1];
-		else
+		else if (i == xref->len-1)
 			max = opts->ofs_list[1];
+		else
+			max = opts->ofs_list[i+1];
 
-		/* SumatraPDF: TODO: this assertion doesn't hold for i == xref->len-1 */
+		/* SumatraPDF: TODO: this assertion doesn't always hold (e.g. for files 1044 and 1103) */
 		assert(max > min);
 
 		if (opts->use_list[i] & USE_SHARED)
@@ -2072,6 +2099,18 @@ make_hint_stream(pdf_document *xref, pdf_write_options *opts)
 	}
 }
 
+#ifdef DEBUG_WRITING
+static void dump_object_details(pdf_document *xref, pdf_write_options *opts)
+{
+	int i;
+
+	for (i = 0; i < xref->len; i++)
+	{
+		fprintf(stderr, "%d@%d: use=%d\n", i, opts->ofs_list[i], opts->use_list[i]);
+	}
+}
+#endif
+
 
 void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz_opts)
 {
@@ -2131,11 +2170,11 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 			removeduplicateobjs(xref, &opts);
 
 		/* Compact xref by renumbering and removing unused objects */
-		if (opts.do_garbage >= 2)
+		if (opts.do_garbage >= 2 || opts.do_linear)
 			compactxref(xref, &opts);
 
 		/* Make renumbering affect all indirect references and update xref */
-		if (opts.do_garbage >= 2)
+		if (opts.do_garbage >= 2 || opts.do_linear)
 			renumberobjs(xref, &opts);
 
 		if (opts.do_linear)
@@ -2144,6 +2183,10 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 		}
 
 		writeobjects(xref, &opts, 0);
+
+#ifdef DEBUG_WRITING
+		dump_object_details(xref, &opts);
+#endif
 
 		/* Construct linked list of free object slots */
 		lastfree = 0;
@@ -2160,7 +2203,7 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 		if (opts.do_linear)
 		{
 			opts.main_xref_offset = ftell(opts.out);
-			writexref(xref, &opts, 0, xref->len, !opts.do_linear, 0, opts.first_xref_offset);
+			writexref(xref, &opts, 0, opts.start, 0, 0, opts.first_xref_offset);
 			opts.file_len = ftell(opts.out);
 
 			make_hint_stream(xref, &opts);
@@ -2171,14 +2214,14 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 			writeobjects(xref, &opts, 1);
 
 			padto(opts.out, opts.main_xref_offset);
-
+			writexref(xref, &opts, 0, opts.start, 0, 0, opts.first_xref_offset);
 		}
 		else
 		{
 			opts.first_xref_offset = ftell(opts.out);
+			writexref(xref, &opts, 0, xref->len, 1, 0, opts.first_xref_offset);
 		}
 
-		writexref(xref, &opts, 0, xref->len, !opts.do_linear, 0, opts.first_xref_offset);
 	}
 	fz_always(ctx)
 	{
