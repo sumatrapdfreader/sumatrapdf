@@ -1554,7 +1554,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 			if (pdf_is_dict(val))
 			{
 				pdf_xobject *xobj;
-				pdf_obj *group, *luminosity, *bc;
+				pdf_obj *group, *luminosity, *bc, *tr;
 
 				if (gstate->softmask)
 				{
@@ -1588,6 +1588,13 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 					gstate->luminosity = 1;
 				else
 					gstate->luminosity = 0;
+
+				/* SumatraPDF: don't pointlessly check for /TR2 */
+				{
+					tr = pdf_dict_gets(val, "TR");
+					if (strcmp(pdf_to_name(tr), "Identity"))
+						fz_warn(ctx, "ignoring transfer function");
+				}
 			}
 			else if (pdf_is_name(val) && !strcmp(pdf_to_name(val), "None"))
 			{
@@ -1602,6 +1609,13 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 		else if (!strcmp(s, "TR"))
 		{
 			if (!pdf_is_name(val) || strcmp(pdf_to_name(val), "Identity"))
+				fz_warn(ctx, "ignoring transfer function");
+		}
+
+		/* SumatraPDF: warn about PDF 1.3 transfer functions */
+		else if (!strcmp(s, "TR2"))
+		{
+			if (!pdf_is_name(val) || strcmp(pdf_to_name(val), "Identity") && strcmp(pdf_to_name(val), "Default"))
 				fz_warn(ctx, "ignoring transfer function");
 		}
 	}

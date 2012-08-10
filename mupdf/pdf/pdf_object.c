@@ -588,12 +588,12 @@ pdf_obj *pdf_new_rect(fz_context *ctx, fz_rect *rect)
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, rect->x1 - rect->x0);
+		item = pdf_new_real(ctx, rect->x1);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, rect->y1 - rect->y0);
+		item = pdf_new_real(ctx, rect->y1);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;

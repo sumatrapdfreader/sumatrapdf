@@ -20,7 +20,7 @@ static dispatch_queue_t queue;
 static float screenScale = 1;
 static fz_context *ctx = NULL;
 
-@interface MuLibraryController : UITableViewController
+@interface MuLibraryController : UITableViewController <UIActionSheetDelegate>
 {
 	NSArray *files;
 	NSTimer *timer;
@@ -335,6 +335,42 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	return [files count] + 1;
 }
 
+- (void) actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+	if (buttonIndex == [actionSheet destructiveButtonIndex])
+	{
+		char filename[PATH_MAX];
+		int row = [actionSheet tag];
+
+		dispatch_sync(queue, ^{});
+
+		strcpy(filename, [NSHomeDirectory() UTF8String]);
+		strcat(filename, "/Documents/");
+		strcat(filename, [[files objectAtIndex: row - 1] UTF8String]);
+
+		printf("delete document '%s'\n", filename);
+
+		unlink(filename);
+
+		[self reload];
+	}
+}
+
+- (void) onTapDelete: (UIControl*)sender
+{
+	int row = [sender tag];
+	NSString *title = [NSString stringWithFormat: @"Delete %@?", [files objectAtIndex: row - 1]];
+	UIActionSheet *sheet = [[UIActionSheet alloc]
+							initWithTitle: title
+							delegate: self
+							cancelButtonTitle: @"Cancel"
+							destructiveButtonTitle: @"Delete"
+							otherButtonTitles: nil];
+	[sheet setTag: row];
+	[sheet showInView: [self tableView]];
+	[sheet release];
+}
+
 - (UITableViewCell*) tableView: (UITableView*)tableView cellForRowAtIndexPath: (NSIndexPath*)indexPath
 {
 	static NSString *cellid = @"MuCellIdent";
@@ -345,11 +381,25 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	if (row == 0) {
 		[[cell textLabel] setText: @"About MuPDF"];
 		[[cell textLabel] setFont: [UIFont systemFontOfSize: 20]];
-//		[[cell textLabel] setFont: [UIFont italicSystemFontOfSize: 20]];
 	} else {
 		[[cell textLabel] setText: [files objectAtIndex: row - 1]];
 		[[cell textLabel] setFont: [UIFont systemFontOfSize: 20]];
 	}
+
+	if (row > 0)
+	{
+		UIButton *deleteButton = [UIButton buttonWithType:UIButtonTypeCustom];
+		[deleteButton setImage: [UIImage imageNamed: @"x_alt_blue.png"] forState: UIControlStateNormal];
+		[deleteButton setFrame: CGRectMake(0, 0, 35, 35)];
+		[deleteButton addTarget: self action: @selector(onTapDelete:) forControlEvents: UIControlEventTouchUpInside];
+		[deleteButton setTag: row];
+		[cell setAccessoryView: deleteButton];
+	}
+	else
+	{
+		[cell setAccessoryView: nil];
+	}
+
 	return cell;
 }
 
@@ -485,11 +535,13 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	static NSString *cellid = @"MuCellIdent";
 	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier: cellid];
 	if (!cell)
+	{
 		cell = [[[UITableViewCell alloc] initWithStyle: UITableViewCellStyleValue1 reuseIdentifier: cellid] autorelease];
+		[[cell textLabel] setFont: [UIFont systemFontOfSize: 16]];
+		[[cell detailTextLabel] setFont: [UIFont systemFontOfSize: 16]];
+	}
 	NSString *title = [titles objectAtIndex: [indexPath row]];
 	NSString *page = [pages objectAtIndex: [indexPath row]];
-	[[cell textLabel] setFont: [UIFont systemFontOfSize: 16]];
-	[[cell detailTextLabel] setFont: [UIFont systemFontOfSize: 16]];
 	[[cell textLabel] setText: title];
 	[[cell detailTextLabel] setText: [NSString stringWithFormat: @"%d", [page intValue]+1]];
 	return cell;
@@ -1001,15 +1053,22 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 
 - (void) viewWillAppear: (BOOL)animated
 {
-	CGSize size = [canvas frame].size;
-	width = size.width;
-	height = size.height;
-
 	[self setTitle: [key lastPathComponent]];
 
 	[slider setValue: current];
 
 	[indicator setText: [NSString stringWithFormat: @" %d of %d ", current+1, count_pages(doc)]];
+
+	[[self navigationController] setToolbarHidden: NO animated: animated];
+}
+
+- (void) viewWillLayoutSubviews
+{
+	CGSize size = [canvas frame].size;
+	int max_width = MAX(width, size.width);
+
+	width = size.width;
+	height = size.height;
 
 	[canvas setContentInset: UIEdgeInsetsZero];
 	[canvas setContentSize: CGSizeMake(count_pages(doc) * width, height)];
@@ -1018,7 +1077,24 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 	[sliderWrapper setWidth: SLIDER_W];
 	[searchBar setFrame: CGRectMake(0,0,SEARCH_W,32)];
 
-	[[self navigationController] setToolbarHidden: NO animated: animated];
+	[[[self navigationController] toolbar] setNeedsLayout]; // force layout!
+
+	// use max_width so we don't clamp the content offset too early during animation
+	[canvas setContentSize: CGSizeMake(count_pages(doc) * max_width, height)];
+	[canvas setContentOffset: CGPointMake(current * width, 0)];
+
+	for (MuPageView *view in [canvas subviews]) {
+		if ([view number] == current) {
+			[view setFrame: CGRectMake([view number] * width, 0, width-GAP, height)];
+			[view willRotate];
+		}
+	}
+	for (MuPageView *view in [canvas subviews]) {
+		if ([view number] != current) {
+			[view setFrame: CGRectMake([view number] * width, 0, width-GAP, height)];
+			[view willRotate];
+		}
+	}
 }
 
 - (void) viewDidAppear: (BOOL)animated
@@ -1347,37 +1423,6 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 - (BOOL) shouldAutorotateToInterfaceOrientation: (UIInterfaceOrientation)o
 {
 	return YES;
-}
-
-- (void) willAnimateRotationToInterfaceOrientation: (UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration
-{
-	CGSize size = [canvas frame].size;
-	int max_width = MAX(width, size.width);
-
-	width = size.width;
-	height = size.height;
-
-	[sliderWrapper setWidth: SLIDER_W];
-	[searchBar setFrame: CGRectMake(0,0,SEARCH_W,32)];
-
-	[[[self navigationController] toolbar] setNeedsLayout]; // force layout!
-
-	// use max_width so we don't clamp the content offset too early during animation
-	[canvas setContentSize: CGSizeMake(count_pages(doc) * max_width, height)];
-	[canvas setContentOffset: CGPointMake(current * width, 0)];
-
-	for (MuPageView *view in [canvas subviews]) {
-		if ([view number] == current) {
-			[view setFrame: CGRectMake([view number] * width, 0, width-GAP, height)];
-			[view willRotate];
-		}
-	}
-	for (MuPageView *view in [canvas subviews]) {
-		if ([view number] != current) {
-			[view setFrame: CGRectMake([view number] * width, 0, width-GAP, height)];
-			[view willRotate];
-		}
-	}
 }
 
 - (void) didRotateFromInterfaceOrientation: (UIInterfaceOrientation)o

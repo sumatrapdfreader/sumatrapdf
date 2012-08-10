@@ -1081,6 +1081,8 @@ jbig2_symbol_dictionary(Jbig2Ctx *ctx, Jbig2Segment *segment,
   /* 7.4.2.2 (7) */
   if (flags & 0x0200) {
       /* todo: retain GB_stats, GR_stats */
+      jbig2_free(ctx->allocator, GR_stats);
+      jbig2_free(ctx->allocator, GB_stats);
       jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
           "segment marks bitmap coding context as retained (NYI)");
   } else {
