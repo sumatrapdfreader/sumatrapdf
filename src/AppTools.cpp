@@ -290,7 +290,7 @@ bool IsExeAssociatedWithPdfExtension()
 
     CmdLineParser argList(tmp);
     ScopedMem<TCHAR> exePath(GetExePath());
-    if (!exePath || !argList.Find(_T("%1")))
+    if (!exePath || !argList.Find(_T("%1")) || !str::Find(tmp, _T("\"%1\"")))
         return false;
 
     return path::IsSame(exePath, argList.At(0));
