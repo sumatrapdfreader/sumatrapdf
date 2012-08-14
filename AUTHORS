@@ -25,6 +25,9 @@ exception of code in src/utils and src/mui which has a BSD license
 Icons by Zenon, Sonke Tesch, George Georgiou, Robert Hegner,
 FAMFAMFAM and Yusuke Kamiyamane.
 
+Windows program icon (gfx/SumatraPDF*.png, gfx/SumatraPDF.ico) by
+zenon38@gmail.com, license: GPLv2.
+
 Translations by various translators (see strings/*.txt)
 
 External projects are by their various authors:
