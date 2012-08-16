@@ -53,7 +53,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
-                android:layout_toLeftOf="@+id/searchButton"
+                android:layout_toLeftOf="@+id/outlineButton"
                 android:paddingLeft="15dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceMedium" />

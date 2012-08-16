@@ -103,10 +103,9 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 	obj = pdf_dict_gets(dict, "O");
 	if (pdf_is_string(obj) && pdf_to_str_len(obj) == 32)
 		memcpy(crypt->o, pdf_to_str_buf(obj), 32);
-	/* /O and /U are supposed to be 48 bytes long for revision 5, they're often longer, though */
-	else if (crypt->r == 5 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
+	/* /O and /U are supposed to be 48 bytes long for revision 5 and 6, they're often longer, though */
+	else if (crypt->r >= 5 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
 		memcpy(crypt->o, pdf_to_str_buf(obj), 48);
-	/* SumatraPDF: support crypt version 5 revision 6 */
 	else if (crypt->r == 6 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
 		memcpy(crypt->o, pdf_to_str_buf(obj), 48);
 	else
@@ -118,10 +117,9 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 	obj = pdf_dict_gets(dict, "U");
 	if (pdf_is_string(obj) && pdf_to_str_len(obj) == 32)
 		memcpy(crypt->u, pdf_to_str_buf(obj), 32);
-	/* /O and /U are supposed to be 48 bytes long for revision 5, they're often longer, though */
-	else if (crypt->r == 5 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
+	/* /O and /U are supposed to be 48 bytes long for revision 5 and 6, they're often longer, though */
+	else if (crypt->r >= 5 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
 		memcpy(crypt->u, pdf_to_str_buf(obj), 48);
-	/* SumatraPDF: support crypt version 5 revision 6 */
 	else if (crypt->r == 6 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
 		memcpy(crypt->u, pdf_to_str_buf(obj), 48);
 	else if (pdf_is_string(obj) && pdf_to_str_len(obj) < 32)
@@ -144,7 +142,6 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 		crypt->p = 0xfffffffc;
 	}
 
-	/* SumatraPDF: support crypt version 5 revision 6 */
 	if (crypt->r == 5 || crypt->r == 6)
 	{
 		obj = pdf_dict_gets(dict, "OE");
@@ -322,10 +319,9 @@ pdf_parse_crypt_filter(fz_context *ctx, pdf_crypt_filter *cf, pdf_crypt *crypt, 
 		fz_throw(ctx, "invalid key length: %d", cf->length);
 
 	if ((crypt->r == 1 || crypt->r == 2 || crypt->r == 4) &&
-		(cf->length < 0 || cf->length > 256))
+		(cf->length < 0 || cf->length > 128))
 		fz_throw(ctx, "invalid key length: %d", cf->length);
-	/* SumatraPDF: support crypt version 5 revision 6 */
-	if ((crypt->r == 5 || crypt->r == 6) && (cf->length != 256))
+	if ((crypt->r == 5 || crypt->r == 6) && cf->length != 256)
 		fz_throw(ctx, "invalid key length: %d", cf->length);
 }
 
@@ -451,15 +447,15 @@ pdf_compute_encryption_key_r5(pdf_crypt *crypt, unsigned char *password, int pwl
 	aes_crypt_cbc(&aes, AES_DECRYPT, 32, buffer + 32, ownerkey ? crypt->oe : crypt->ue, crypt->key);
 }
 
-/* SumatraPDF: support crypt version 5 revision 6 */
 /*
- * Compute an encryption key (PDF 1.7 ExtensionLevel 8 algorithm 3.2b)
+ * Compute an encryption key (PDF 1.7 ExtensionLevel 8 algorithm)
+ *
+ * Adobe has not yet released the details, so the algorithm reference is:
  * http://esec-lab.sogeti.com/post/The-undocumented-password-validation-algorithm-of-Adobe-Reader-X
  */
 
 static void
-pdf_compute_hardened_hash_r6(unsigned char *password, int pwlen, unsigned char salt[8],
-	unsigned char *ownerkey, unsigned char hash[32])
+pdf_compute_hardened_hash_r6(unsigned char *password, int pwlen, unsigned char salt[16], unsigned char *ownerkey, unsigned char hash[32])
 {
 	unsigned char data[(128 + 64 + 48) * 64];
 	unsigned char block[64];
@@ -534,12 +530,16 @@ pdf_compute_encryption_key_r6(pdf_crypt *crypt, unsigned char *password, int pwl
 	if (pwlen > 127)
 		pwlen = 127;
 
-	pdf_compute_hardened_hash_r6(password, pwlen, (ownerkey ? crypt->o : crypt->u) + 32, ownerkey ? crypt->u : NULL, validationkey);
+	pdf_compute_hardened_hash_r6(password, pwlen,
+		(ownerkey ? crypt->o : crypt->u) + 32,
+		ownerkey ? crypt->u : NULL, validationkey);
+	pdf_compute_hardened_hash_r6(password, pwlen,
+		crypt->u + 40, NULL, hash);
 
-	pdf_compute_hardened_hash_r6(password, pwlen, crypt->u + 40, NULL, hash);
 	memset(iv, 0, sizeof(iv));
 	aes_setkey_dec(&aes, hash, 256);
-	aes_crypt_cbc(&aes, AES_DECRYPT, 32, iv, ownerkey ? crypt->oe : crypt->ue, crypt->key);
+	aes_crypt_cbc(&aes, AES_DECRYPT, 32, iv,
+		ownerkey ? crypt->oe : crypt->ue, crypt->key);
 }
 
 /*
@@ -595,9 +595,10 @@ pdf_compute_user_password(pdf_crypt *crypt, unsigned char *password, int pwlen, 
 		pdf_compute_encryption_key_r5(crypt, password, pwlen, 0, output);
 	}
 
-	/* SumatraPDF: support crypt version 5 revision 6 */
 	if (crypt->r == 6)
+	{
 		pdf_compute_encryption_key_r6(crypt, password, pwlen, 0, output);
+	}
 }
 
 /*
@@ -612,7 +613,6 @@ pdf_authenticate_user_password(pdf_crypt *crypt, unsigned char *password, int pw
 {
 	unsigned char output[32];
 	pdf_compute_user_password(crypt, password, pwlen, output);
-	/* SumatraPDF: support crypt version 5 revision 6 */
 	if (crypt->r == 2 || crypt->r == 5 || crypt->r == 6)
 		return memcmp(output, crypt->u, 32) == 0;
 	if (crypt->r == 3 || crypt->r == 4)
@@ -641,15 +641,12 @@ pdf_authenticate_owner_password(pdf_crypt *crypt, unsigned char *ownerpass, int 
 	if (crypt->r == 5)
 	{
 		/* PDF 1.7 ExtensionLevel 3 algorithm 3.12 */
-
 		pdf_compute_encryption_key_r5(crypt, ownerpass, pwlen, 1, key);
-
 		return !memcmp(key, crypt->o, 32);
 	}
-
-	/* SumatraPDF: support crypt version 5 revision 6 */
-	if (crypt->r == 6)
+	else if (crypt->r == 6)
 	{
+		/* PDF 1.7 ExtensionLevel 8 algorithm */
 		pdf_compute_encryption_key_r6(crypt, ownerpass, pwlen, 1, key);
 		return !memcmp(key, crypt->o, 32);
 	}

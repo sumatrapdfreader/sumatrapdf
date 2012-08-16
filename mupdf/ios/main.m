@@ -189,7 +189,7 @@ static CGSize fitPageToScreen(CGSize page, CGSize screen)
 {
 	float hscale = screen.width / page.width;
 	float vscale = screen.height / page.height;
-	float scale = MIN(hscale, vscale);
+	float scale = fz_min(hscale, vscale);
 	hscale = floorf(page.width * scale) / page.width;
 	vscale = floorf(page.height * scale) / page.height;
 	return CGSizeMake(hscale, vscale);
@@ -1065,7 +1065,7 @@ static UIImage *renderTile(struct document *doc, int number, CGSize screenSize, 
 - (void) viewWillLayoutSubviews
 {
 	CGSize size = [canvas frame].size;
-	int max_width = MAX(width, size.width);
+	int max_width = fz_max(width, size.width);
 
 	width = size.width;
 	height = size.height;

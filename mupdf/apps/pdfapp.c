@@ -35,7 +35,7 @@ static void pdfapp_error(pdfapp_t *app, char *msg)
 char *pdfapp_version(pdfapp_t *app)
 {
 	return
-		"MuPDF 1.0\n"
+		"MuPDF 1.1\n"
 		"Copyright 2006-2012 Artifex Software, Inc.\n";
 }
 
@@ -105,7 +105,7 @@ void pdfapp_open(pdfapp_t *app, char *filename, int reload)
 			{
 				password = winpassword(app, filename);
 				if (!password)
-					pdfapp_error(app, "Needs a password.");
+					fz_throw(ctx, "Needs a password");
 				okay = fz_authenticate_password(app->doc, password);
 				if (!okay)
 					pdfapp_warn(app, "Invalid password.");

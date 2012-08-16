@@ -3,12 +3,27 @@
 
 #include "fitz.h"
 
+#ifdef _WIN32 /* Microsoft Visual C++ */
+
+typedef signed char int8_t;
+typedef short int int16_t;
+typedef int int32_t;
+typedef __int64 int64_t;
+
+typedef unsigned char uint8_t;
+typedef unsigned short int uint16_t;
+typedef unsigned int uint32_t;
+typedef unsigned __int64 uint64_t;
+
+#else
+#include <inttypes.h>
+#endif
+
 struct fz_warn_context_s
 {
 	char message[256];
 	int count;
 };
-
 
 fz_context *fz_clone_context_internal(fz_context *ctx);
 
@@ -161,23 +176,27 @@ void fz_sha256_init(fz_sha256 *state);
 void fz_sha256_update(fz_sha256 *state, const unsigned char *input, unsigned int inlen);
 void fz_sha256_final(fz_sha256 *state, unsigned char digest[32]);
 
-/* SumatraPDF: sha-512 and sha-384 digests */
+/* sha-512 digests */
 
-typedef struct fz_sha512_sha384_s fz_sha512, fz_sha384;
+typedef struct fz_sha512_s fz_sha512;
 
-struct fz_sha512_sha384_s
+struct fz_sha512_s
 {
-	unsigned int buffer_len;
-	unsigned int lo_len;
-	unsigned int hi_len;
-	unsigned int _padding;
-	unsigned char digest[64];
-	unsigned char buffer[128];
+	uint64_t state[8];
+	unsigned int count[2];
+	union {
+		unsigned char u8[128];
+		uint64_t u64[16];
+	} buffer;
 };
 
 void fz_sha512_init(fz_sha512 *state);
 void fz_sha512_update(fz_sha512 *state, const unsigned char *input, unsigned int inlen);
 void fz_sha512_final(fz_sha512 *state, unsigned char digest[64]);
+
+/* sha-384 digests */
+
+typedef struct fz_sha512_s fz_sha384;
 
 void fz_sha384_init(fz_sha384 *state);
 void fz_sha384_update(fz_sha384 *state, const unsigned char *input, unsigned int inlen);

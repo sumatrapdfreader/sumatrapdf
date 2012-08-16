@@ -973,10 +973,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\fitz\crypt_sha512.c"
-					>
-				</File>
-				<File
 					RelativePath=".\mupdf\fitz\dev_bbox.c"
 					>
 				</File>

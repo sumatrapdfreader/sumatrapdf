@@ -16,6 +16,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.view.KeyEvent;
+import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -82,6 +83,7 @@ public class MuPDFActivity extends Activity
 	private EditText     mPasswordView;
 	private TextView     mFilenameView;
 	private SeekBar      mPageSlider;
+	private int          mPageSliderRes;
 	private TextView     mPageNumberView;
 	private ImageButton  mSearchButton;
 	private ImageButton  mCancelButton;
@@ -92,7 +94,7 @@ public class MuPDFActivity extends Activity
 	private ImageButton  mSearchBack;
 	private ImageButton  mSearchFwd;
 	private EditText     mSearchText;
-	private SafeAsyncTask<Integer,Integer,SearchTaskResult> mSearchTask;
+	private SafeAsyncTask<Void,Integer,SearchTaskResult> mSearchTask;
 	//private SearchTaskResult mSearchTaskResult;
 	private AlertDialog.Builder mAlertBuilder;
 	private LinkState    mLinkState = LinkState.DEFAULT;
@@ -148,6 +150,7 @@ public class MuPDFActivity extends Activity
 					}
 				}
 				core = openFile(Uri.decode(uri.getEncodedPath()));
+				SearchTaskResult.set(null);
 			}
 			if (core != null && core.needsPassword()) {
 				requestPassword(savedInstanceState);
@@ -270,8 +273,8 @@ public class MuPDFActivity extends Activity
 				if (core == null)
 					return;
 				mPageNumberView.setText(String.format("%d/%d", i+1, core.countPages()));
-				mPageSlider.setMax(core.countPages()-1);
-				mPageSlider.setProgress(i);
+				mPageSlider.setMax((core.countPages()-1) * mPageSliderRes);
+				mPageSlider.setProgress(i * mPageSliderRes);
 				if (SearchTaskResult.get() != null && SearchTaskResult.get().pageNumber != i) {
 					SearchTaskResult.set(null);
 					mDocView.resetupChildren();
@@ -301,20 +304,24 @@ public class MuPDFActivity extends Activity
 		// controls in variables
 		makeButtonsView();
 
+		// Set up the page slider
+		int smax = Math.max(core.countPages()-1,1);
+		mPageSliderRes = ((10 + smax - 1)/smax) * 2;
+
 		// Set the file-name text
 		mFilenameView.setText(mFileName);
 
 		// Activate the seekbar
 		mPageSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 			public void onStopTrackingTouch(SeekBar seekBar) {
-				mDocView.setDisplayedViewIndex(seekBar.getProgress());
+				mDocView.setDisplayedViewIndex((seekBar.getProgress()+mPageSliderRes/2)/mPageSliderRes);
 			}
 
 			public void onStartTrackingTouch(SeekBar seekBar) {}
 
 			public void onProgressChanged(SeekBar seekBar, int progress,
 					boolean fromUser) {
-				updatePageNumView(progress);
+				updatePageNumView((progress+mPageSliderRes/2)/mPageSliderRes);
 			}
 		});
 
@@ -511,8 +518,8 @@ public class MuPDFActivity extends Activity
 			// Update page number text and slider
 			int index = mDocView.getDisplayedViewIndex();
 			updatePageNumView(index);
-			mPageSlider.setMax(core.countPages()-1);
-			mPageSlider.setProgress(index);
+			mPageSlider.setMax((core.countPages()-1)*mPageSliderRes);
+			mPageSlider.setProgress(index*mPageSliderRes);
 			if (mTopBarIsSearch) {
 				mSearchText.requestFocus();
 				showKeyboard();
@@ -576,21 +583,25 @@ public class MuPDFActivity extends Activity
 	}
 
 	void searchModeOn() {
-		mTopBarIsSearch = true;
-		//Focus on EditTextWidget
-		mSearchText.requestFocus();
-		showKeyboard();
-		mTopBarSwitcher.showNext();
+		if (!mTopBarIsSearch) {
+			mTopBarIsSearch = true;
+			//Focus on EditTextWidget
+			mSearchText.requestFocus();
+			showKeyboard();
+			mTopBarSwitcher.showNext();
+		}
 	}
 
 	void searchModeOff() {
-		mTopBarIsSearch = false;
-		hideKeyboard();
-		mTopBarSwitcher.showPrevious();
-		SearchTaskResult.set(null);
-		// Make the ReaderView act on the change to mSearchTaskResult
-		// via overridden onChildSetup method.
-		mDocView.resetupChildren();
+		if (mTopBarIsSearch) {
+			mTopBarIsSearch = false;
+			hideKeyboard();
+			mTopBarSwitcher.showPrevious();
+			SearchTaskResult.set(null);
+			// Make the ReaderView act on the change to mSearchTaskResult
+			// via overridden onChildSetup method.
+			mDocView.resetupChildren();
+		}
 	}
 
 	void updatePageNumView(int index) {
@@ -642,6 +653,9 @@ public class MuPDFActivity extends Activity
 			return;
 		killSearch();
 
+		final int increment = direction;
+		final int startIndex = SearchTaskResult.get() == null ? mDocView.getDisplayedViewIndex() : SearchTaskResult.get().pageNumber + increment;
+
 		final ProgressDialogX progressDialog = new ProgressDialogX(this);
 		progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 		progressDialog.setTitle(getString(R.string.searching_));
@@ -652,14 +666,10 @@ public class MuPDFActivity extends Activity
 		});
 		progressDialog.setMax(core.countPages());
 
-		mSearchTask = new SafeAsyncTask<Integer,Integer,SearchTaskResult>() {
+		mSearchTask = new SafeAsyncTask<Void,Integer,SearchTaskResult>() {
 			@Override
-			protected SearchTaskResult doInBackground(Integer... params) {
-				int index;
-				if (SearchTaskResult.get() == null)
-					index = mDocView.getDisplayedViewIndex();
-				else
-					index = SearchTaskResult.get().pageNumber + params[0].intValue();
+			protected SearchTaskResult doInBackground(Void... params) {
+				int index = startIndex;
 
 				while (0 <= index && index < core.countPages() && !isCancelled()) {
 					publishProgress(index);
@@ -668,7 +678,7 @@ public class MuPDFActivity extends Activity
 					if (searchHits != null && searchHits.length > 0)
 						return new SearchTaskResult(mSearchText.getText().toString(), index, searchHits);
 
-					index += params[0].intValue();
+					index += increment;
 				}
 				return null;
 			}
@@ -684,7 +694,7 @@ public class MuPDFActivity extends Activity
 					// via overridden onChildSetup method.
 				    mDocView.resetupChildren();
 				} else {
-					mAlertBuilder.setTitle(R.string.text_not_found);
+					mAlertBuilder.setTitle(SearchTaskResult.get() == null ? R.string.text_not_found : R.string.no_further_occurences_found);
 					AlertDialog alert = mAlertBuilder.create();
 					alert.setButton(AlertDialog.BUTTON_POSITIVE, "Dismiss",
 							(DialogInterface.OnClickListener)null);
@@ -710,12 +720,37 @@ public class MuPDFActivity extends Activity
 				mHandler.postDelayed(new Runnable() {
 					public void run() {
 						if (!progressDialog.isCancelled())
+						{
 							progressDialog.show();
+							progressDialog.setProgress(startIndex);
+						}
 					}
 				}, SEARCH_PROGRESS_DELAY);
 			}
 		};
 
-		mSearchTask.safeExecute(new Integer(direction));
+		mSearchTask.safeExecute();
+	}
+
+	@Override
+	public boolean onSearchRequested() {
+		if (mButtonsVisible && mTopBarIsSearch) {
+			hideButtons();
+		} else {
+			showButtons();
+			searchModeOn();
+		}
+		return super.onSearchRequested();
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		if (mButtonsVisible && !mTopBarIsSearch) {
+			hideButtons();
+		} else {
+			showButtons();
+			searchModeOff();
+		}
+		return super.onPrepareOptionsMenu(menu);
 	}
 }

@@ -4,14 +4,19 @@ include $(CLEAR_VARS)
 
 MY_ROOT := ../..
 
+OPENJPEG := openjpeg-1.5.0-patched
+JPEG := jpeg-9
+ZLIB := zlib-1.2.7
+FREETYPE := freetype-2.4.10
+
 LOCAL_CFLAGS += -DARCH_ARM -DARCH_THUMB -DARCH_ARM_CAN_LOAD_UNALIGNED
 
 LOCAL_C_INCLUDES := \
 	../thirdparty/jbig2dec \
-	../thirdparty/openjpeg-1.5.0/libopenjpeg \
-	../thirdparty/jpeg-8d \
-	../thirdparty/zlib-1.2.5 \
-	../thirdparty/freetype-2.4.9/include \
+	../thirdparty/$(OPENJPEG)/libopenjpeg \
+	../thirdparty/$(JPEG) \
+	../thirdparty/$(ZLIB) \
+	../thirdparty/$(FREETYPE)/include \
 	../draw \
 	../fitz \
 	../pdf \
