@@ -212,7 +212,9 @@ bool EpubDoc::Load()
     if (!contentPath)
         return false;
 
-    ScopedMem<char> content(zip.GetFileData(contentPath));
+    ScopedMem<TCHAR> contentPathDec(str::Dup(contentPath));
+    UrlDecode(contentPathDec);
+    ScopedMem<char> content(zip.GetFileData(contentPathDec));
     if (!content)
         return false;
     ParseMetadata(content);
@@ -239,6 +241,7 @@ bool EpubDoc::Load()
             if (props && str::Find(props, _T("nav"))) {
                 isNcxToc = false;
                 tocPath.Set(str::Join(contentPath, htmlPath));
+                UrlDecode(tocPath);
             }
             if (htmlPath && htmlId) {
                 idPathMap.Append(htmlId.StealData());
@@ -264,6 +267,7 @@ bool EpubDoc::Load()
             tocPath.Set(node->GetAttribute("href"));
             if (tocPath) {
                 tocPath.Set(str::Join(contentPath, tocPath));
+                UrlDecode(tocPath);
                 isNcxToc = true;
             }
         }
@@ -287,6 +291,7 @@ bool EpubDoc::Load()
             continue;
 
         ScopedMem<TCHAR> fullPath(str::Join(contentPath, htmlPath));
+        UrlDecode(fullPath);
         ScopedMem<char> html(zip.GetFileData(fullPath));
         if (!html)
             continue;
