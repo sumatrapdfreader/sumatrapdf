@@ -106,8 +106,6 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 	/* /O and /U are supposed to be 48 bytes long for revision 5 and 6, they're often longer, though */
 	else if (crypt->r >= 5 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
 		memcpy(crypt->o, pdf_to_str_buf(obj), 48);
-	else if (crypt->r == 6 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
-		memcpy(crypt->o, pdf_to_str_buf(obj), 48);
 	else
 	{
 		pdf_free_crypt(ctx, crypt);
@@ -119,8 +117,6 @@ pdf_new_crypt(fz_context *ctx, pdf_obj *dict, pdf_obj *id)
 		memcpy(crypt->u, pdf_to_str_buf(obj), 32);
 	/* /O and /U are supposed to be 48 bytes long for revision 5 and 6, they're often longer, though */
 	else if (crypt->r >= 5 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
-		memcpy(crypt->u, pdf_to_str_buf(obj), 48);
-	else if (crypt->r == 6 && pdf_is_string(obj) && pdf_to_str_len(obj) >= 48)
 		memcpy(crypt->u, pdf_to_str_buf(obj), 48);
 	else if (pdf_is_string(obj) && pdf_to_str_len(obj) < 32)
 	{
