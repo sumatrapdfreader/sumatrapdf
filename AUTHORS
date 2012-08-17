@@ -53,7 +53,6 @@ CMap Resources mupdf/cmaps/README             http://sourceforge.net/adobe/cmap/
 PolarSSL       mupdf/fitz/crypt_aes.c    BSD  http://polarssl.org/
 Arcfour        mupdf/fitz/crypt_arc4.c        http://tools.ietf.org/html/draft-kaukonen-cipher-arcfour-01
 RSA's MD5      mupdf/fitz/crypt_md5.c         http://tools.ietf.org/html/rfc1321
-CyaSSL         mupdf/fitz/crypt_sha512.c GPL  http://www.yassl.com/
 Android        mupdf/fonts/droid/NOTICE  APL  http://www.droidfonts.com/
 Poppler        mupdf/pdf/pdf_annot.c     GPL  http://poppler.freedesktop.org/
 ezgdi          mupdf/pdf/pdf_ft_tools.c  GPL  http://code.google.com/p/ezgdi/

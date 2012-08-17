@@ -653,7 +653,8 @@ pdf_read_ocg(pdf_document *xref)
 			pdf_obj *o = pdf_array_get(ocg, i);
 			desc->ocgs[i].num = pdf_to_num(o);
 			desc->ocgs[i].gen = pdf_to_gen(o);
-			desc->ocgs[i].state = 0;
+			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2011 */
+			desc->ocgs[i].state = 1;
 		}
 		xref->ocg = desc;
 	}
