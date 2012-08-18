@@ -1590,6 +1590,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 					gstate->luminosity = 0;
 
 				/* SumatraPDF: don't pointlessly check for /TR2 */
+				if (pdf_dict_gets(val, "TR"))
 				{
 					tr = pdf_dict_gets(val, "TR");
 					if (strcmp(pdf_to_name(tr), "Identity"))

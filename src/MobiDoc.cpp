@@ -602,7 +602,7 @@ bool MobiDoc::DecodeExthHeader(const char *data, size_t dataLen)
     for (uint32 i = 0; i < count; i++) {
         uint32 type = d.UInt32();
         uint32 length = d.UInt32();
-        if (d.Offset() + length - 8 > dataLen)
+        if (length > dataLen - d.Offset() + 8)
             return false;
         d.Skip(length - 8);
 
