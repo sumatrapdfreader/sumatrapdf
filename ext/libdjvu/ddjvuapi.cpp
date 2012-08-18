@@ -3795,6 +3795,7 @@ anno_sub(ByteStream *bs, miniexp_t &result)
   io.fgetc = anno_fgetc;
   io.ungetc = anno_ungetc;
   io.p_macrochar = 0;
+  io.p_diezechar = 0;
   io.p_macroqueue = 0;
   // Read
   while (* anno_dat.s )

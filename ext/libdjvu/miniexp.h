@@ -436,9 +436,11 @@ MINILISPAPI void minilisp_finish(void);
      * the parenthesis <(> and <)>,
      * the double quote <">,
      * the vertical bar <|>,
-     * the dieze character <#> (reserved for future use),
+     * the dieze character <#>, when followed by an 
+       ascii character with a non zero entry in the
+       dieze character array.
      * any other ascii character with a non zero entry 
-       in the macrocharacter array.
+       in the macro character array.
 
    - Symbols are represented by their name.
      Vertical bars <|> can be used to delimit names that
@@ -462,10 +464,13 @@ MINILISPAPI void minilisp_finish(void);
      representation of the cdr.
 
    - When the parser encounters an ascii character corresponding
-     to a non zero function pointer in the macrocharacter array,
+     to a non zero function pointer in the macro character array,
      the function is invoked and must return a possibly empty
      list of miniexps to be returned by subsequent 
-     invocations of the parser. */
+     invocations of the parser. The same process happens when
+     the parser encounters a dieze character followed by an 
+     ascii character corresponding to a non zero function pointer
+     int the dieze character array. */
 
 
 /* miniexp_pname --
@@ -488,10 +493,14 @@ MINILISPAPI miniexp_t miniexp_pname(miniexp_t p, int width);
    non-ascii characters in strings are output as octal escapes. When both
    <p_macrochar> and <p_macroqueue> are non zero, a non zero entry in
    <p_macrochar[c]> defines a special parsing function that is called when
-   <miniexp_read_r> encounters the character <c> (in range 0 to 127.) The
-   parsing function returns a list of <miniexp_t> that function
-   <miniexp_read_r> returns one-by-one before processing more input. This 
-   list is in fact stored in the variable pointed by <io.p_macroqueue>.  */
+   <miniexp_read_r> encounters the character <c> (in range 0 to 127.) 
+   When both <p_diezechar> and <p_macroqueue> are non zero, a non zero 
+   entry in <p_diezechar[c]> defines a special parsing function that 
+   is called when <miniexp_read_r> encounters the character '#' followed
+   by character <c> (in range 0 to 127.)   These parsing functions return 
+   a list of <miniexp_t> that function <miniexp_read_r> returns one-by-one 
+   before processing more input. This list is in fact stored in the 
+   variable pointed by <io.p_macroqueue>.  */
 
 typedef struct miniexp_io_s miniexp_io_t;
 typedef miniexp_t (*miniexp_macrochar_t)(miniexp_io_t*);
@@ -504,6 +513,7 @@ struct miniexp_io_s
   void *data[4];
   int *p_print7bits;
   miniexp_macrochar_t *p_macrochar;
+  miniexp_macrochar_t *p_diezechar;
   minivar_t *p_macroqueue;
   minivar_t *p_reserved;
 };
@@ -513,8 +523,9 @@ struct miniexp_io_s
    that reads from stdin and prints to stdout. 
    Field <data[0]> is used to hold the stdin file pointer.
    Field <data[1]> is used to hold the stdout file pointer.
-   Fields <p_print7bits>, <p_macrochar>, and <p_macroqueue> 
-   are set to point to shared variables. */
+   Fields <p_print7bits>, <p_macrochar>, <p_diezechar>
+   and <p_macroqueue> are set to point to zero-initialized
+   shared variables. */
 
 MINILISPAPI void miniexp_io_init(miniexp_io_t *io);
 
@@ -580,6 +591,7 @@ extern MINILISPAPI int (*minilisp_puts)(const char *);
 extern MINILISPAPI int (*minilisp_getc)(void);
 extern MINILISPAPI int (*minilisp_ungetc)(int);
 extern MINILISPAPI miniexp_t (*minilisp_macrochar_parser[128])(void);
+extern MINILISPAPI miniexp_t (*minilisp_diezechar_parser[128])(void);
 extern MINILISPAPI int minilisp_print_7bits;
 #if defined(stdin)
 MINILISPAPI void minilisp_set_output(FILE *f);

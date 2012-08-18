@@ -422,7 +422,7 @@ static void j2k_read_siz(opj_j2k_t *j2k) {
 	
 	if ((image->x0<0)||(image->x1<0)||(image->y0<0)||(image->y1<0)) {
 		opj_event_msg(j2k->cinfo, EVT_ERROR,
-									"%s: invalid image size (x0:%d, x1:%d, y0:%d, y1:%d)\n",
+									"JPWL: invalid image size (x0:%d, x1:%d, y0:%d, y1:%d)\n",
 									image->x0,image->x1,image->y0,image->y1);
 		return;
 	}

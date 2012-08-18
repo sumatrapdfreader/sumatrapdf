@@ -1,23 +1,6 @@
-diff -rPu5 libdjvu.orig\DataPool.cpp libdjvu\DataPool.cpp
---- libdjvu.orig\DataPool.cpp	Thu Mar 15 23:45:44 2012
-+++ libdjvu\DataPool.cpp	Sat Mar 17 12:11:56 2012
-@@ -1358,13 +1358,10 @@
- 	 // the "pool->restart_readers()" will not restart it. So we're going
- 	 // to continue issuing this command until we get rid of all
- 	 // "active_readers"
-       while(*active_readers)
-       {
--#if (THREADMODEL==COTHREADS) || (THREADMODEL==MACTHREADS)
--	 GThread::yield();
--#endif
- 	 pool->restart_readers();
-       }
-    }
- }
- 
 diff -rPu5 libdjvu.orig\DjVuGlobal.h libdjvu\DjVuGlobal.h
---- libdjvu.orig\DjVuGlobal.h	Thu Mar 15 23:45:44 2012
-+++ libdjvu\DjVuGlobal.h	Sat Mar 17 11:58:56 2012
+--- libdjvu.orig\DjVuGlobal.h	Tue May 08 04:56:53 2012
++++ libdjvu\DjVuGlobal.h	Sat Aug 18 20:12:12 2012
 @@ -70,11 +70,12 @@
  # include <new>
  #else
@@ -33,8 +16,8 @@ diff -rPu5 libdjvu.orig\DjVuGlobal.h libdjvu\DjVuGlobal.h
  #  define DJVUAPI __declspec(dllimport)
  # endif
 diff -rPu5 libdjvu.orig\GString.h libdjvu\GString.h
---- libdjvu.orig\GString.h	Thu Mar 15 23:45:44 2012
-+++ libdjvu\GString.h	Sat Mar 17 11:59:49 2012
+--- libdjvu.orig\GString.h	Tue May 08 04:56:53 2012
++++ libdjvu\GString.h	Sat Aug 18 20:12:32 2012
 @@ -113,11 +113,13 @@
  #include <stdarg.h>
  #ifdef WIN32
@@ -51,27 +34,26 @@ diff -rPu5 libdjvu.orig\GString.h libdjvu\GString.h
  # if !defined(AUTOCONF) || HAVE_WCHAR_H
  #  include <wchar.h>
 diff -rPu5 libdjvu.orig\GThreads.h libdjvu\GThreads.h
---- libdjvu.orig\GThreads.h	Thu Mar 15 23:45:44 2012
-+++ libdjvu\GThreads.h	Sat Mar 17 12:11:45 2012
-@@ -133,14 +133,10 @@
- #define WIN32_LEAN_AND_MEAN
- #include "windows.h"
- #endif
- #endif
+--- libdjvu.orig\GThreads.h	Tue May 08 04:56:53 2012
++++ libdjvu\GThreads.h	Sat Aug 18 20:17:23 2012
+@@ -105,10 +105,13 @@
+ #include "GException.h"
  
--#if THREADMODEL==MACTHREADS
--#include <threads.h>
--#endif
--
- #if THREADMODEL==POSIXTHREADS
- #include <sys/types.h>
- #include <sys/time.h>
- #include <unistd.h>
- #undef TRY
+ #define NOTHREADS     0
+ #define POSIXTHREADS  10
+ #define WINTHREADS    11
++/* SumatraPDF: prevent these constants from being confused with NOTHREADS */
++#define MACTHREADS    -1
++#define COTHREADS     -1
+ 
+ // Known platforms
+ #ifndef THREADMODEL
+ #if defined(WIN32)
+ #define THREADMODEL WINTHREADS
 diff -rPu5 libdjvu.orig\miniexp.cpp libdjvu\miniexp.cpp
---- libdjvu.orig\miniexp.cpp	Thu Mar 15 23:45:44 2012
-+++ libdjvu\miniexp.cpp	Sat Mar 17 15:20:17 2012
-@@ -901,11 +901,12 @@
+--- libdjvu.orig\miniexp.cpp	Tue May 08 04:56:53 2012
++++ libdjvu\miniexp.cpp	Sat Aug 18 20:13:23 2012
+@@ -899,11 +899,12 @@
  }
  
  int 
@@ -85,24 +67,10 @@ diff -rPu5 libdjvu.orig\miniexp.cpp libdjvu\miniexp.cpp
  const char *
  miniexp_to_str(miniexp_t p)
  {
-@@ -1614,11 +1615,12 @@
-         {
-           return read_quoted_symbol(io, c);
-         }
-       else if (c == '#')
-         {
--          return read_error(io, c);
-+          /* SumatraPDF: this is a color value: #RRGGBB */
-+          return read_symbol_or_number(io, c);
-         }
-       else if (io->p_macrochar && io->p_macroqueue 
-                && c >= 0 && c < 128 
-                && io->p_macrochar[c])
-         {
 diff -rPu5 libdjvu.orig\miniexp.h libdjvu\miniexp.h
---- libdjvu.orig\miniexp.h	Thu Mar 15 23:45:44 2012
-+++ libdjvu\miniexp.h	Sat Mar 17 12:07:32 2012
-@@ -667,15 +667,16 @@
+--- libdjvu.orig\miniexp.h	Tue May 08 04:56:53 2012
++++ libdjvu\miniexp.h	Sat Aug 18 20:14:08 2012
+@@ -679,15 +679,16 @@
    public: static const miniexp_t classname; \
            virtual miniexp_t classof() const; \
            virtual bool isa(miniexp_t) const; 

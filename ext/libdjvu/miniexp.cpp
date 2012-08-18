@@ -868,11 +868,9 @@ print_c_string(const char *s, char *d, bool eightbits)
           char letter = 0;
           static const char *tr1 = "\"\\tnrbf";
           static const char *tr2 = "\"\\\t\n\r\b\f";
-          { // extra nesting for windows
-            for (int i=0; tr2[i]; i++)
-              if (c == tr2[i])
-                letter = tr1[i];
-          }
+          for (int i=0; tr2[i]; i++)
+            if (c == tr2[i])
+              letter = tr1[i];
           char_out('\\', d, n);
           if (letter)
             char_out(letter, d, n);
@@ -1028,6 +1026,7 @@ extern "C"
   // SunCC needs this to be defined inside extern "C" { ... }
   // Beware the difference between extern "C" {...} and extern "C".
   miniexp_t (*minilisp_macrochar_parser[128])(void);
+  miniexp_t (*minilisp_diezechar_parser[128])(void);
   minivar_t minilisp_macroqueue;
   int minilisp_print_7bits;
 }
@@ -1037,6 +1036,7 @@ miniexp_io_t miniexp_io = {
   stdio_fputs, stdio_fgetc, stdio_ungetc, { 0, 0, 0, 0 },
   (int*)&minilisp_print_7bits,
   (miniexp_macrochar_t*)minilisp_macrochar_parser, 
+  (miniexp_macrochar_t*)minilisp_diezechar_parser, 
   (minivar_t*)&minilisp_macroqueue,
   0
 };  
@@ -1054,6 +1054,7 @@ miniexp_io_init(miniexp_io_t *io)
   io->data[0] = io->data[1] = io->data[2] = io->data[3] = 0;
   io->p_print7bits = (int*)&minilisp_print_7bits;;
   io->p_macrochar = (miniexp_macrochar_t*)minilisp_macrochar_parser;
+  io->p_diezechar = (miniexp_macrochar_t*)minilisp_diezechar_parser;
   io->p_macroqueue = (minivar_t*)&minilisp_macroqueue;
   io->p_reserved = 0;
 }
@@ -1435,9 +1436,18 @@ read_c_string(miniexp_io_t *io, int &c)
       else if (c=='\\')
         {
           c = io->fgetc(io);
-          if (c == '\n')
+          if (c == '\n')             // LF
             {
               c = io->fgetc(io);
+              if (c == '\r')         // LFCR
+                c = io->fgetc(io);
+              continue;
+            }
+          else if (c == '\r')        // CR
+            {
+              c = io->fgetc(io);
+              if (c == '\n')         // CRLF
+                c = io->fgetc(io);
               continue;
             }
           else if (c>='0' && c<='7')
@@ -1482,11 +1492,9 @@ read_c_string(miniexp_io_t *io, int &c)
             }
           static const char *tr1 = "tnrbfva";
           static const char *tr2 = "\t\n\r\b\f\013\007";
-          { // extra nesting for windows
-            for (int i=0; tr1[i]; i++)
-              if (c == tr1[i])
-                c = tr2[i];
-          }
+          for (int i=0; tr1[i]; i++)
+            if (c == tr1[i])
+              c = tr2[i];
         }
       append(c,s,l,m);
       c = io->fgetc(io);
@@ -1615,14 +1623,8 @@ read_miniexp(miniexp_io_t *io, int &c)
         {
           return read_quoted_symbol(io, c);
         }
-      else if (c == '#')
-        {
-          /* SumatraPDF: this is a color value: #RRGGBB */
-          return read_symbol_or_number(io, c);
-        }
       else if (io->p_macrochar && io->p_macroqueue 
-               && c >= 0 && c < 128 
-               && io->p_macrochar[c])
+               && c >= 0 && c < 128 && io->p_macrochar[c])
         {
           miniexp_t p = io->p_macrochar[c](io);
           if (miniexp_length(p) > 0)
@@ -1630,10 +1632,22 @@ read_miniexp(miniexp_io_t *io, int &c)
           c = io->fgetc(io);
           continue;
         }
-      else 
+      else if (c == '#' && io->p_diezechar && io->p_macroqueue)
         {
-          return read_symbol_or_number(io, c);
+          int nc = io->fgetc(io);
+          if (nc >= 0 && nc < 128 && io->p_diezechar[nc])
+            {
+              miniexp_t p = io->p_macrochar[nc](io);
+              if (miniexp_length(p) > 0)
+                *io->p_macroqueue = p;
+              c = io->fgetc(io);
+              continue;
+            }
+          io->ungetc(io, nc);
+          // fall thru
         }
+      // default
+      return read_symbol_or_number(io, c);
     }
 }
 
@@ -1677,12 +1691,15 @@ miniexp_t miniexp_pprint(miniexp_t p, int w)
 void 
 minilisp_set_output(FILE *f)
 {
+  minilisp_puts = compat_puts;
   miniexp_io_set_output(&miniexp_io, f);
 }
 
 void 
 minilisp_set_input(FILE *f)
 {
+  minilisp_getc = compat_getc;
+  minilisp_ungetc = compat_ungetc;
   miniexp_io_set_input(&miniexp_io, f);
 }
 
@@ -1705,10 +1722,8 @@ minilisp_finish(void)
   ASSERT(!gc.lock);
   // clear minivars
   minivar_t::mark(gc_clear);
-  { // extra nesting for windows
-    for (int i=0; i<recentsize; i++)
-      gc.recent[i] = 0;
-  }
+  for (int i=0; i<recentsize; i++)
+    gc.recent[i] = 0;
   // collect everything
   gc_run();
   // deallocate mblocks

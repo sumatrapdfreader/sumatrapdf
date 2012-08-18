@@ -507,11 +507,12 @@ GStringRep::Unicode::create(
       const unsigned int size=(size_t)optr-(size_t)utf8buf;
       if(size)
       {
-		  retval=(gretval=GStringRep::Unicode::create(size));
+        retval=(gretval=GStringRep::Unicode::create(size));
         memcpy(retval->data,utf8buf,size);
-      }else
+      }
+      else
       {
-		  retval=(gretval=GStringRep::Unicode::create(1));
+        retval=(gretval=GStringRep::Unicode::create(1));
         retval->size=size;
       }
       retval->data[size]=0;
@@ -521,12 +522,12 @@ GStringRep::Unicode::create(
     }
   }
   if(!retval)
-  {
-    retval=(gretval=GStringRep::Unicode::create(1));
-    retval->data[0]=0;
-    retval->size=0;
-    retval->set_remainder(0,0,t);
-  }
+    {
+      retval=(gretval=GStringRep::Unicode::create(1));
+      retval->data[0]=0;
+      retval->size=0;
+      retval->set_remainder(0,0,t);
+    }
   return gretval;
 }
 
@@ -541,25 +542,28 @@ xUTF16toUCS4(uint16_t const *&s,void const * const eptr)
     if((W1<0xD800)||(W1>0xDFFF))
     {
       if((U=W1))
-      {
-        s=r;
-      }
-    }else if(W1<=0xDBFF)
-    {
-      uint16_t const * const rr=r+1;
-      if(rr <= eptr)
-      {
-        uint32_t const W2=s[1];
-        if(((W2>=0xDC00)||(W2<=0xDFFF))&&((U=(0x1000+((W1&0x3ff)<<10))|(W2&0x3ff))))
         {
-          s=rr;
-        }else
-        {
-          U=(unsigned int)(-1)-W1;
           s=r;
         }
-      }
     }
+    else if(W1<=0xDBFF)
+      {
+        uint16_t const * const rr=r+1;
+        if(rr <= eptr)
+          {
+            uint32_t const W2=s[1];
+            if(((W2>=0xDC00)||(W2<=0xDFFF))
+               &&((U=(0x1000+((W1&0x3ff)<<10))|(W2&0x3ff))))
+              {
+                s=rr;
+              }
+            else
+              {
+                U=(unsigned int)(-1)-W1;
+                s=r;
+              }
+          }
+      }
   }
   return U;
 }
@@ -570,33 +574,35 @@ UTF16BEtoUCS4(unsigned char const *&s,void const * const eptr)
   uint32_t U=0;
   unsigned char const * const r=s+2;
   if(r <= eptr)
-  {
-    uint32_t const C1MSB=s[0];
-    if((C1MSB<0xD8)||(C1MSB>0xDF))
     {
-      if((U=((C1MSB<<8)|((uint32_t)s[1]))))
-      {
-        s=r;
-      }
-    }else if(C1MSB<=0xDB)
-    {
-      unsigned char const * const rr=r+2;
-      if(rr <= eptr)
-      {
-        uint32_t const C2MSB=s[2];
-        if((C2MSB>=0xDC)||(C2MSB<=0xDF))
+      uint32_t const C1MSB=s[0];
+      if((C1MSB<0xD8)||(C1MSB>0xDF))
         {
-          U=0x10000+((uint32_t)s[1]<<10)+(uint32_t)s[3]
-            +(((C1MSB<<18)|(C2MSB<<8))&0xc0300);
-          s=rr;
-        }else
-        {
-          U=(unsigned int)(-1)-((C1MSB<<8)|((uint32_t)s[1]));
-          s=r;
+          if((U=((C1MSB<<8)|((uint32_t)s[1]))))
+            {
+              s=r;
+            }
         }
-      }
+      else if(C1MSB<=0xDB)
+        {
+          unsigned char const * const rr=r+2;
+          if(rr <= eptr)
+            {
+              uint32_t const C2MSB=s[2];
+              if((C2MSB>=0xDC)||(C2MSB<=0xDF))
+                {
+                  U=0x10000+((uint32_t)s[1]<<10)+(uint32_t)s[3]
+                    +(((C1MSB<<18)|(C2MSB<<8))&0xc0300);
+                  s=rr;
+                }
+              else
+                {
+                  U=(unsigned int)(-1)-((C1MSB<<8)|((uint32_t)s[1]));
+                  s=r;
+                }
+            }
+        }
     }
-  }
   return U;
 }
 
@@ -606,33 +612,35 @@ UTF16LEtoUCS4(unsigned char const *&s,void const * const eptr)
   uint32_t U=0;
   unsigned char const * const r=s+2;
   if(r <= eptr)
-  {
-    uint32_t const C1MSB=s[1];
-    if((C1MSB<0xD8)||(C1MSB>0xDF))
     {
-      if((U=((C1MSB<<8)|((uint32_t)s[0]))))
-      {
-        s=r;
-      }
-    }else if(C1MSB<=0xDB)
-    {
-      unsigned char const * const rr=r+2;
-      if(rr <= eptr)
-      {
-        uint32_t const C2MSB=s[3];
-        if((C2MSB>=0xDC)||(C2MSB<=0xDF))
+      uint32_t const C1MSB=s[1];
+      if((C1MSB<0xD8)||(C1MSB>0xDF))
         {
-          U=0x10000+((uint32_t)s[0]<<10)+(uint32_t)s[2]
-            +(((C1MSB<<18)|(C2MSB<<8))&0xc0300);
-          s=rr;
-        }else
-        {
-          U=(unsigned int)(-1)-((C1MSB<<8)|((uint32_t)s[1]));
-          s=r;
+          if((U=((C1MSB<<8)|((uint32_t)s[0]))))
+            {
+              s=r;
+            }
         }
-      }
+      else if(C1MSB<=0xDB)
+        {
+          unsigned char const * const rr=r+2;
+          if(rr <= eptr)
+            {
+              uint32_t const C2MSB=s[3];
+              if((C2MSB>=0xDC)||(C2MSB<=0xDF))
+                {
+                  U=0x10000+((uint32_t)s[0]<<10)+(uint32_t)s[2]
+                    +(((C1MSB<<18)|(C2MSB<<8))&0xc0300);
+                  s=rr;
+                }
+              else
+                {
+                  U=(unsigned int)(-1)-((C1MSB<<8)|((uint32_t)s[1]));
+                  s=r;
+                }
+            }
+        }
     }
-  }
   return U;
 }
 
@@ -642,13 +650,14 @@ UCS4BEtoUCS4(unsigned char const *&s,void const * const eptr)
   uint32_t U=0;
   unsigned char const * const r=s+4;
   if(r<=eptr)
-  {
-    U=(((((((uint32_t)s[0]<<8)|(uint32_t)s[1])<<8)|(uint32_t)s[2])<<8)|(uint32_t)s[3]);
-    if(U)
     {
-      s=r;
-    } 
-  }
+      U=(((((((uint32_t)s[0]<<8)|(uint32_t)s[1])<<8)
+           |(uint32_t)s[2])<<8)|(uint32_t)s[3]);
+      if(U)
+        {
+          s=r;
+        } 
+    }
   return U;
 }
 
@@ -658,13 +667,14 @@ UCS4LEtoUCS4(unsigned char const *&s,void const * const eptr)
   uint32_t U=0;
   unsigned char const * const r=s+4;
   if(r<=eptr)
-  {
-    U=(((((((uint32_t)s[3]<<8)|(uint32_t)s[2])<<8)|(uint32_t)s[1])<<8)|(uint32_t)s[0]);
-    if(U)
     {
-      s=r;
+      U=(((((((uint32_t)s[3]<<8)|(uint32_t)s[2])<<8)|
+           (uint32_t)s[1])<<8)|(uint32_t)s[0]);
+      if(U)
+        {
+          s=r;
+        }
     }
-  }
   return U;
 }
 
@@ -674,13 +684,14 @@ UCS4_2143toUCS4(unsigned char const *&s,void const * const eptr)
   uint32_t U=0;
   unsigned char const * const r=s+4;
   if(r<=eptr)
-  {
-    U=(((((((uint32_t)s[1]<<8)|(uint32_t)s[0])<<8)|(uint32_t)s[3])<<8)|(uint32_t)s[2]);
-    if(U)
     {
-      s=r;
+      U=(((((((uint32_t)s[1]<<8)|(uint32_t)s[0])<<8)
+           |(uint32_t)s[3])<<8)|(uint32_t)s[2]);
+      if(U)
+        {
+          s=r;
+        }
     }
-  }
   return U;
 }
 
@@ -690,13 +701,14 @@ UCS4_3412toUCS4(unsigned char const *&s,void const * const eptr)
   uint32_t U=0;
   unsigned char const * const r=s+4;
   if(r<=eptr)
-  {
-    U=(((((((uint32_t)s[2]<<8)|(uint32_t)s[3])<<8)|(uint32_t)s[0])<<8)|(uint32_t)s[1]);
-    if(U)
     {
-      s=r;
+      U=(((((((uint32_t)s[2]<<8)|(uint32_t)s[3])<<8)
+           |(uint32_t)s[0])<<8)|(uint32_t)s[1]);
+      if(U)
+        {
+          s=r;
+        }
     }
-  }
   return U;
 }
 
@@ -732,7 +744,8 @@ GStringRep::Unicode::set_remainder( const GP<GStringRep::Unicode> &xremainder )
     if(size)
       memcpy(remainder,xremainder->remainder,size);
     encodetype=xremainder->encodetype;
-  }else
+  }
+  else
   {
     gremainder.resize(0,1);
     encodetype=XUTF8;

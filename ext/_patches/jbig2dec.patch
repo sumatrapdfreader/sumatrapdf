@@ -21,9 +21,26 @@ diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
  /* warning levels */
  typedef enum {
    JBIG2_SEVERITY_DEBUG,
+diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
+--- jbig2dec.orig\jbig2_huffman.c	Fri Jun 15 13:36:58 2012
++++ jbig2dec\jbig2_huffman.c	Sat Aug 18 19:20:14 2012
+@@ -253,11 +253,12 @@
+   for (;;)
+     {
+       int log_table_size = table->log_table_size;
+       int PREFLEN;
+ 
+-      entry = &table->entries[this_word >> (32 - log_table_size)];
++      /* SumatraPDF: shifting by the size of the operand is undefined */
++      entry = &table->entries[log_table_size > 0 ? this_word >> (32 - log_table_size) : 0];
+       flags = entry->flags;
+       PREFLEN = entry->PREFLEN;
+       if ((flags == (byte)-1) && (PREFLEN == (byte)-1) && (entry->u.RANGELOW == -1))
+       {
+           if (oob)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
---- jbig2dec.orig\jbig2_symbol_dict.c	Mon Jun 25 20:55:16 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Thu Jul 05 15:18:46 2012
+--- jbig2dec.orig\jbig2_symbol_dict.c	Fri Aug 10 22:44:08 2012
++++ jbig2dec\jbig2_symbol_dict.c	Fri Aug 10 22:45:55 2012
 @@ -289,11 +289,11 @@
                "failed to allocate storage for symbol bitmap");
            goto cleanup1;

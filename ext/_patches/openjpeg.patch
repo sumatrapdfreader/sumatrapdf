@@ -15,7 +15,20 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\j2k.c	Fri Aug 03 20:14:06 2012
++++ openjpeg\j2k.c	Sat Aug 18 18:45:13 2012
+@@ -420,11 +420,11 @@
+ 	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
+ 	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
+ 	
+ 	if ((image->x0<0)||(image->x1<0)||(image->y0<0)||(image->y1<0)) {
+ 		opj_event_msg(j2k->cinfo, EVT_ERROR,
+-									"%s: invalid image size (x0:%d, x1:%d, y0:%d, y1:%d)\n",
++									"JPWL: invalid image size (x0:%d, x1:%d, y0:%d, y1:%d)\n",
+ 									image->x0,image->x1,image->y0,image->y1);
+ 		return;
+ 	}
+ 	
+ 	image->numcomps = cio_read(cio, 2);	/* Csiz */
 @@ -1267,11 +1267,12 @@
  	if (j2k->cp->correct) {
  
@@ -227,9 +240,54 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  	return OPJ_TRUE;
  }
  
+diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
+--- openjpeg.orig\opj_config.h	Thu Jan 01 01:00:00 1970
++++ openjpeg\opj_config.h	Fri Aug 03 20:09:06 2012
+@@ -0,0 +1,41 @@
++/* If you want to build the library manually without using
++ * 'configure' or 'CMake'
++ * then copy this file 
++ * 'opj_config.h.in.user' 
++ *       to
++ * 'opj_config.h'
++ * 
++ * Open 'opj_config.h' and change the file contents
++ * if you want to define something because you know you have 
++ * BOTH installed the library AND the header file(s).
++ * Then e.g. write
++#define HAVE_LIBPNG 1
++ *  
++ *
++ * The file 'opj_config.h' will be included in some source files.
++ * ==== YOU CAN NOT COMPILE WITHOUT IT. ====
++ * === DO NOT FOREGET TO CHANGE 'config.nix' APPROPRIATELY. ====
++*/
++
++/* DO NOT DEFINE BOTH VERSIONS OF LCMS */
++/* define to 1 if you have both liblcms and lcms.h installed */
++#undef HAVE_LIBLCMS1
++/* #define HAVE_LIBLCMS1 1 */
++
++/* define to 1 if you have both liblcms2 and lcms2.h installed */
++#undef HAVE_LIBLCMS2
++/* #define HAVE_LIBLCMS2 1 */
++
++/* define to 1 if you have both libpng and png.h installed */
++#undef HAVE_LIBPNG
++/* #define HAVE_LIBPNG 1 */
++
++/* define to 1 if you have both libtiff and tiff.h installed */
++#undef HAVE_LIBTIFF
++/* #define HAVE_LIBTIFF 1 */
++
++/*---------------- DO NOT CHANGE BELOW THIS LINE ----------------*/
++#define PACKAGE_URL "http://www.openjpeg.org/"
++#define PACKAGE_BUGREPORT "http://code.google.com/p/openjpeg/"
++
++#define PACKAGE_VERSION "1.5.0"
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\tcd.c	Fri Aug 03 20:10:16 2012
++++ openjpeg\tcd.c	Fri Aug 03 23:22:34 2012
 @@ -331,11 +331,12 @@
  							/* code-block size (global) */
  							cblk->x0 = int_max(cblkxstart, prc->x0);

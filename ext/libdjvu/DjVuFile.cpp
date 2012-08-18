@@ -1207,7 +1207,7 @@ DjVuFile::decode_chunk( const GUTF8String &id, const GP<ByteStream> &gbs,
       iffout.copy(achunk);
       iffout.close_chunk();
     }
-  else if (chkid == "CELX")
+  else if (chkid == "CELX" || chkid == "SINF")
     {
       G_THROW( ERR_MSG("DjVuFile.securedjvu") );
     }

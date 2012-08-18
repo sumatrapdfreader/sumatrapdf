@@ -107,6 +107,9 @@
 #define NOTHREADS     0
 #define POSIXTHREADS  10
 #define WINTHREADS    11
+/* SumatraPDF: prevent these constants from being confused with NOTHREADS */
+#define MACTHREADS    -1
+#define COTHREADS     -1
 
 // Known platforms
 #ifndef THREADMODEL
@@ -133,6 +136,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #endif
+#endif
+
+#if THREADMODEL==MACTHREADS
+#include <threads.h>
 #endif
 
 #if THREADMODEL==POSIXTHREADS

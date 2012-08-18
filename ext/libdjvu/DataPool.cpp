@@ -1360,6 +1360,9 @@ DataPool::stop(bool only_blocked)
 	 // "active_readers"
       while(*active_readers)
       {
+#if (THREADMODEL==COTHREADS) || (THREADMODEL==MACTHREADS)
+	 GThread::yield();
+#endif
 	 pool->restart_readers();
       }
    }

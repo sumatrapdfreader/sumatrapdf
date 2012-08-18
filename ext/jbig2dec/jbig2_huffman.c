@@ -255,7 +255,8 @@ jbig2_huffman_get (Jbig2HuffmanState *hs,
       int log_table_size = table->log_table_size;
       int PREFLEN;
 
-      entry = &table->entries[this_word >> (32 - log_table_size)];
+      /* SumatraPDF: shifting by the size of the operand is undefined */
+      entry = &table->entries[log_table_size > 0 ? this_word >> (32 - log_table_size) : 0];
       flags = entry->flags;
       PREFLEN = entry->PREFLEN;
       if ((flags == (byte)-1) && (PREFLEN == (byte)-1) && (entry->u.RANGELOW == -1))
