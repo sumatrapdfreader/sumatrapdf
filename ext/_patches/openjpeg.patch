@@ -15,7 +15,7 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\j2k.c	Sat Aug 18 18:45:13 2012
++++ openjpeg\j2k.c	Sat Aug 18 22:20:37 2012
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -130,6 +130,20 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  				break;
  			}
  		}
+@@ -1735,10 +1764,13 @@
+ 
+ 	if(j2k->tile_len != NULL) {
+ 		opj_free(j2k->tile_len);
+ 	}
+ 	if(j2k->tile_data != NULL) {
++		/* SumatraPDF: fix memory leak */
++		for (i = 0; i < j2k->cp->tileno_size; i++)
++			opj_free(j2k->tile_data[j2k->cp->tileno[i]]);
+ 		opj_free(j2k->tile_data);
+ 	}
+ 	if(j2k->default_tcp != NULL) {
+ 		opj_tcp_t *default_tcp = j2k->default_tcp;
+ 		if(default_tcp->ppt_data_first != NULL) {
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Tue Feb 07 12:49:55 2012
 +++ openjpeg\jp2.c	Fri Aug 03 20:09:06 2012

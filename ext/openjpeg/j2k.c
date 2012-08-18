@@ -1766,6 +1766,9 @@ void j2k_destroy_decompress(opj_j2k_t *j2k) {
 		opj_free(j2k->tile_len);
 	}
 	if(j2k->tile_data != NULL) {
+		/* SumatraPDF: fix memory leak */
+		for (i = 0; i < j2k->cp->tileno_size; i++)
+			opj_free(j2k->tile_data[j2k->cp->tileno[i]]);
 		opj_free(j2k->tile_data);
 	}
 	if(j2k->default_tcp != NULL) {
