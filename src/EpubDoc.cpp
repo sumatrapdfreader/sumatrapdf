@@ -291,13 +291,13 @@ bool EpubDoc::Load()
             continue;
 
         ScopedMem<TCHAR> fullPath(str::Join(contentPath, htmlPath));
+        ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
         UrlDecode(fullPath);
         ScopedMem<char> html(zip.GetFileData(fullPath));
         if (!html)
             continue;
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
-        ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path);
         htmlData.Append(html);
     }
