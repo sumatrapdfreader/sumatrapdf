@@ -149,7 +149,8 @@ jbig2_sd_count_referred(Jbig2Ctx *ctx, Jbig2Segment *segment)
 
     for (index = 0; index < segment->referred_to_segment_count; index++) {
         rsegment = jbig2_find_segment(ctx, segment->referred_to_segments[index]);
-        if (rsegment && ((rsegment->flags & 63) == 0)) n_dicts++;
+        /* SumatraPDF: don't include empty segments */
+        if (rsegment && ((rsegment->flags & 63) == 0) && rsegment->result) n_dicts++;
     }
 
     return (n_dicts);
@@ -175,7 +176,8 @@ jbig2_sd_list_referred(Jbig2Ctx *ctx, Jbig2Segment *segment)
 
     for (index = 0; index < segment->referred_to_segment_count; index++) {
         rsegment = jbig2_find_segment(ctx, segment->referred_to_segments[index]);
-        if (rsegment && ((rsegment->flags & 63) == 0)) {
+        /* SumatraPDF: don't include empty segments */
+        if (rsegment && ((rsegment->flags & 63) == 0) && rsegment->result) {
             /* add this referred to symbol dictionary */
             dicts[dindex++] = (Jbig2SymbolDict *)rsegment->result;
         }

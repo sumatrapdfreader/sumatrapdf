@@ -302,6 +302,12 @@ cleanup1:
 		while (id >= dicts[index]->n_symbols)
 		    id -= dicts[index++]->n_symbols;
 		IB = jbig2_image_clone(ctx, dicts[index]->glyphs[id]);
+		/* SumatraPDF: fail on missing glyphs */
+		if (!IB) {
+		    code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+		        "missing glyph %d/%d!", index, id);
+		    goto cleanup2;
+		}
 	    }
 	    if (params->SBREFINE) {
 	      if (params->SBHUFF) {

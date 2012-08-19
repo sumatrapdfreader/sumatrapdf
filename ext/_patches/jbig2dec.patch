@@ -40,8 +40,36 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
            if (oob)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Fri Aug 10 22:44:08 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Fri Aug 10 22:45:55 2012
-@@ -289,11 +289,11 @@
++++ jbig2dec\jbig2_symbol_dict.c	Sun Aug 19 02:03:52 2012
+@@ -147,11 +147,12 @@
+     Jbig2Segment *rsegment;
+     int n_dicts = 0;
+ 
+     for (index = 0; index < segment->referred_to_segment_count; index++) {
+         rsegment = jbig2_find_segment(ctx, segment->referred_to_segments[index]);
+-        if (rsegment && ((rsegment->flags & 63) == 0)) n_dicts++;
++        /* SumatraPDF: don't include empty segments */
++        if (rsegment && ((rsegment->flags & 63) == 0) && rsegment->result) n_dicts++;
+     }
+ 
+     return (n_dicts);
+ }
+ 
+@@ -173,11 +174,12 @@
+         return NULL;
+     }
+ 
+     for (index = 0; index < segment->referred_to_segment_count; index++) {
+         rsegment = jbig2_find_segment(ctx, segment->referred_to_segments[index]);
+-        if (rsegment && ((rsegment->flags & 63) == 0)) {
++        /* SumatraPDF: don't include empty segments */
++        if (rsegment && ((rsegment->flags & 63) == 0) && rsegment->result) {
+             /* add this referred to symbol dictionary */
+             dicts[dindex++] = (Jbig2SymbolDict *)rsegment->result;
+         }
+     }
+ 
+@@ -289,11 +291,11 @@
                "failed to allocate storage for symbol bitmap");
            goto cleanup1;
        }
@@ -54,3 +82,23 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
            IARDY = jbig2_arith_int_ctx_new(ctx);
            if ((IAID == NULL) || (IARDX == NULL) || (IARDY == NULL))
            {
+diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
+--- jbig2dec.orig\jbig2_text.c	Mon Jun 25 20:55:16 2012
++++ jbig2dec\jbig2_text.c	Sun Aug 19 01:58:18 2012
+@@ -300,10 +300,16 @@
+ 
+ 		index = 0;
+ 		while (id >= dicts[index]->n_symbols)
+ 		    id -= dicts[index++]->n_symbols;
+ 		IB = jbig2_image_clone(ctx, dicts[index]->glyphs[id]);
++		/* SumatraPDF: fail on missing glyphs */
++		if (!IB) {
++		    code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
++		        "missing glyph %d/%d!", index, id);
++		    goto cleanup2;
++		}
+ 	    }
+ 	    if (params->SBREFINE) {
+ 	      if (params->SBHUFF) {
+ 		RI = jbig2_huffman_get_bits(hs, 1);
+ 	      } else {
