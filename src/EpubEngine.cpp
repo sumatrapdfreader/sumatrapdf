@@ -700,7 +700,9 @@ Fb2Formatter::Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc) :
     EmitImage(cover);
     // render larger images alone on the cover page,
     // smaller images just separated by a horizontal line
-    if (currLineInstr.Last().bbox.Height > args->pageDy / 2)
+    if (0 == currLineInstr.Count())
+        /* the image was broken */;
+    else if (currLineInstr.Last().bbox.Height > args->pageDy / 2)
         ForceNewPage();
     else
         EmitHr();
