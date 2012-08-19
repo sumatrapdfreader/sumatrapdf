@@ -483,7 +483,7 @@ public:
 		};
 		
 		float scale = hypotf(hypotf(ctm.a, ctm.b), hypotf(ctm.c, ctm.d)) / hypotf(image->w, image->h);
-		/* cf. fz_paint_image_imp in draw/imagedraw.c for when (not) to interpolate */
+		// cf. fz_paint_image_imp in draw/imagedraw.c for when (not) to interpolate
 		bool downscale = hypotf(ctm.a, ctm.b) < image->w && hypotf(ctm.c, ctm.d) < image->h;
 		bool alwaysInterpolate = downscale ||
 			hypotf(ctm.a, ctm.b) > image->w && hypotf(ctm.c, ctm.d) > image->h &&
@@ -1377,9 +1377,22 @@ fz_gdiplus_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 extern "C" static void
 fz_gdiplus_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
 {
-	fz_pixmap *pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
-	((userData *)dev->user)->pushClipMask(pixmap, ctm);
-	fz_drop_pixmap(dev->ctx, pixmap);
+	// always push a clip mask so that the stack remains consistent even in case of error
+	fz_pixmap *pixmap = NULL;
+	fz_var(pixmap);
+	fz_try(dev->ctx)
+	{
+		pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
+	}
+	fz_always(dev->ctx)
+	{
+		((userData *)dev->user)->pushClipMask(pixmap, ctm);
+		fz_drop_pixmap(dev->ctx, pixmap);
+	}
+	fz_catch(dev->ctx)
+	{
+		fz_rethrow(dev->ctx);
+	}
 }
 
 extern "C" static void
