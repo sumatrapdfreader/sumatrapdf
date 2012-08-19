@@ -39,6 +39,13 @@ static boolean fill_input_buffer(j_decompress_ptr cinfo)
 static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 {
 	struct jpeg_source_mgr *src = cinfo->src;
+	/* SumatraPDF: prevent integer overflow */
+	if (num_bytes > 0 && (size_t)num_bytes > src->bytes_in_buffer)
+	{
+		src->next_input_byte += src->bytes_in_buffer;
+		src->bytes_in_buffer = 0;
+	}
+	else
 	if (num_bytes > 0)
 	{
 		src->next_input_byte += num_bytes;
