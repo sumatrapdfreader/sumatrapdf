@@ -599,6 +599,13 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 		      rparams.reference = (ID < ninsyms) ?
 					params->SDINSYMS->glyphs[ID] :
 					SDNEWSYMS->glyphs[ID-ninsyms];
+		      /* SumatraPDF: fail on missing glyphs */
+		      if (rparams.reference == NULL) {
+		          code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+		              "missing glyph %d/%d!", ID, ninsyms);
+		          jbig2_image_release(ctx, image);
+		          goto cleanup4;
+		      }
 		      rparams.DX = RDX;
 		      rparams.DY = RDY;
 		      rparams.TPGRON = 0;

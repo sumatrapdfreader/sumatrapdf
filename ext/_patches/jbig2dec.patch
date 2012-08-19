@@ -40,7 +40,7 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
            if (oob)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Fri Aug 10 22:44:08 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Sun Aug 19 02:03:52 2012
++++ jbig2dec\jbig2_symbol_dict.c	Sun Aug 19 10:01:44 2012
 @@ -147,11 +147,12 @@
      Jbig2Segment *rsegment;
      int n_dicts = 0;
@@ -82,6 +82,24 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
            IARDY = jbig2_arith_int_ctx_new(ctx);
            if ((IAID == NULL) || (IARDX == NULL) || (IARDY == NULL))
            {
+@@ -595,10 +597,17 @@
+ 		      /* Table 18 */
+ 		      rparams.GRTEMPLATE = params->SDRTEMPLATE;
+ 		      rparams.reference = (ID < ninsyms) ?
+ 					params->SDINSYMS->glyphs[ID] :
+ 					SDNEWSYMS->glyphs[ID-ninsyms];
++		      /* SumatraPDF: fail on missing glyphs */
++		      if (rparams.reference == NULL) {
++		          code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
++		              "missing glyph %d/%d!", ID, ninsyms);
++		          jbig2_image_release(ctx, image);
++		          goto cleanup4;
++		      }
+ 		      rparams.DX = RDX;
+ 		      rparams.DY = RDY;
+ 		      rparams.TPGRON = 0;
+ 		      memcpy(rparams.grat, params->sdrat, 4);
+ 		      jbig2_decode_refinement_region(ctx, segment,
 diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
 --- jbig2dec.orig\jbig2_text.c	Mon Jun 25 20:55:16 2012
 +++ jbig2dec\jbig2_text.c	Sun Aug 19 01:58:18 2012
