@@ -99,6 +99,8 @@ struct pdf_csi_s
 	pdf_gstate *gstate;
 	int gcap;
 	int gtop;
+	/* SumatraPDF: ensure clip stack consistency */
+	int gbot;
 
 	/* cookie support */
 	fz_cookie *cookie;
@@ -1002,6 +1004,8 @@ pdf_new_csi(pdf_document *xref, fz_device *dev, fz_matrix ctm, char *event, fz_c
 		if (gstate)
 			copy_state(ctx, &csi->gstate[0], gstate);
 		csi->gtop = 0;
+		/* SumatraPDF: ensure clip stack consistency */
+		csi->gbot = 0;
 
 		csi->cookie = cookie;
 	}
@@ -1063,7 +1067,8 @@ pdf_grestore(pdf_csi *csi)
 	pdf_gstate *gs = csi->gstate + csi->gtop;
 	int clip_depth = gs->clip_depth;
 
-	if (csi->gtop == 0)
+	/* SumatraPDF: ensure clip stack consistency */
+	if (csi->gtop <= csi->gbot)
 	{
 		fz_warn(ctx, "gstate underflow in content stream");
 		return;
@@ -2736,6 +2741,8 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	fz_context *ctx = csi->dev->ctx;
 	pdf_lexbuf *buf;
 	int save_in_text;
+	/* SumatraPDF: ensure clip stack consistency */
+	int save_gbot;
 
 	fz_var(buf);
 
@@ -2746,6 +2753,9 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	pdf_lexbuf_init(ctx, buf, PDF_LEXBUF_SMALL);
 	save_in_text = csi->in_text;
 	csi->in_text = 0;
+	/* SumatraPDF: ensure clip stack consistency */
+	save_gbot = csi->gbot;
+	csi->gbot = csi->gtop;
 	fz_try(ctx)
 	{
 		pdf_run_stream(csi, rdb, file, buf);
@@ -2755,6 +2765,8 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 		fz_warn(ctx, "Content stream parsing error - rendering truncated");
 	}
 	csi->in_text = save_in_text;
+	/* SumatraPDF: ensure clip stack consistency */
+	csi->gbot = save_gbot;
 	pdf_lexbuf_fin(buf);
 	fz_free(ctx, buf);
 }
