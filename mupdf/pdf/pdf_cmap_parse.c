@@ -248,7 +248,8 @@ pdf_parse_bf_range(fz_context *ctx, pdf_cmap *cmap, fz_stream *file, pdf_lexbuf 
 
 				if (buf->len / 2)
 				{
-					for (i = 0; i < buf->len / 2; i++)
+					/* SumatraPDF: prevent stack overflow */
+					for (i = 0; i < fz_mini(buf->len / 2, nelem(dststr)); i++)
 						dststr[i] = pdf_code_from_string(&buf->scratch[i * 2], 2);
 
 					while (lo <= hi)
