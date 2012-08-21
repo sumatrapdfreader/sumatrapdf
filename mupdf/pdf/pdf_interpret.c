@@ -320,8 +320,12 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 
 		fz_begin_mask(csi->dev, bbox, gstate->luminosity,
 			softmask->colorspace, gstate->softmask_bc);
+		/* SumatraPDF: letting this error through would mess up clip stacks */
+		fz_try(csi->dev->ctx)
+		{
 		pdf_run_xobject(csi, NULL, softmask, fz_identity);
-
+		}
+		fz_catch(csi->dev->ctx) { /* ignore error */ }
 		fz_end_mask(csi->dev);
 
 		gstate->softmask = softmask;
@@ -1397,7 +1401,13 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, fz_matrix t
 
 				fz_begin_mask(csi->dev, bbox, gstate->luminosity,
 					softmask->colorspace, gstate->softmask_bc);
+				/* SumatraPDF: letting this error through would mess up clip stacks */
+				/* TODO: the same might also occur when pdf_run_contents_object throws below or in pdf_show_pattern */
+				fz_try(ctx)
+				{
 				pdf_run_xobject(csi, resources, softmask, fz_identity);
+				}
+				fz_catch(ctx) { /* ignore error */ }
 				fz_end_mask(csi->dev);
 
 				pdf_drop_xobject(ctx, softmask);
