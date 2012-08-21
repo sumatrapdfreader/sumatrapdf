@@ -3549,7 +3549,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Selecteer inhoud met Ctrl+linker muisknop",
   "Verzend per &e-mail...",
   "Omgekeerde zoekrichting instellen",
-  NULL,
+  "Bladwijzers tonen",
   "Werkbalk tonen",
   "Toon pagina's doorlopend",
   "Toon Favorieten",

@@ -8,16 +8,16 @@
 
 Lang: nl Dutch (Nederlands)
 
+Contributor: Jeroen Baert
 Contributor: Kristof Bal
 Contributor: Wim Benes
+Contributor: Robbert Feunekes
 Contributor: Jaap Ginder
 Contributor: Barry Haveman
+Contributor: Ruud Kok
 Contributor: Marco La Fors
 Contributor: Stephan Paternotte
 Contributor: Ricki Yani Setiawan
-Contributor: Robbert Feunekes
-Contributor: Jeroen Baert
-Contributor: Ruud Kok
 
 &About
 &Over
@@ -619,6 +619,9 @@ Verzend per &e-mail...
 Set inverse search command-line
 Omgekeerde zoekrichting instellen
 
+Show &Bookmarks
+Bladwijzers tonen
+
 Show &Toolbar
 Werkbalk tonen
 
@@ -711,7 +714,4 @@ tekst kopiëren
 
 printing document
 document afdrukken
-
-# Untranslated:
-#Show &Bookmarks
 
