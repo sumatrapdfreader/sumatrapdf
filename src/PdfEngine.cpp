@@ -298,7 +298,7 @@ TCHAR *fz_text_page_to_str(fz_text_page *text, TCHAR *lineSep, RectI **coords_ou
                         *dest = '?';
 #endif
                     if (*dest < 32)
-                        *dest = '?';
+                        *dest = str::IsWs(*dest) ? ' ' : '?';
                     dest++;
                     if (destRect)
                         *destRect++ = fz_rect_to_RectD(span->text[i].bbox).Round();
