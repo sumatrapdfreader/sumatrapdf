@@ -297,12 +297,25 @@ TCHAR *fz_text_page_to_str(fz_text_page *text, TCHAR *lineSep, RectI **coords_ou
                     if (!WideCharToMultiByte(CP_ACP, 0, &c, 1, dest, 1, NULL, NULL))
                         *dest = '?';
 #endif
-                    if (*dest < 32)
-                        *dest = str::IsWs(*dest) ? ' ' : '?';
+                    if (*dest <= 32) {
+                        if (!str::IsWs(*dest))
+                            *dest = '?';
+                        // collapse multiple whitespace characters into one
+                        else if (dest > content && !str::IsWs(dest[-1]))
+                            *dest = ' ';
+                        else
+                            continue;
+                    }
                     dest++;
                     if (destRect)
                         *destRect++ = fz_rect_to_RectD(span->text[i].bbox).Round();
                 }
+            }
+            // remove trailing spaces
+            if (lineSepLen > 0 && dest > content && str::IsWs(dest[-1])) {
+                dest--;
+                if (destRect)
+                    destRect--;
             }
             lstrcpy(dest, lineSep);
             dest += lineSepLen;
