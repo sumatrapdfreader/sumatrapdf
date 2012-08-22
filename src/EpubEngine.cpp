@@ -1329,7 +1329,8 @@ static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
             { "ISO-8859-1", 1252 }, { "Latin1", 1252 }, { "CP1252", 1252 }, { "Windows-1252", 1252 },
             { "ISO-8859-2", 28592 }, { "Latin2", 28592 },
             { "CP1251", 1251 }, { "Windows-1251", 1251 }, { "KOI8-R", 20866 },
-            { "Big5", 950 }, { "shift-jis", 932 }, { "x-euc", 932 }, { "euc-kr", 949 },
+            { "shift-jis", 932 }, { "x-euc", 932 }, { "euc-kr", 949 },
+            { "Big5", 950 }, { "GB2312", 936 },
             { "UTF-8", CP_UTF8 },
         };
         for (int i = 0; i < dimof(codepages); i++) {
@@ -1386,7 +1387,7 @@ public:
             if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
                 if (*path == '/')
                     path++;
-                url.Set(doc->ToStr(path));
+                url.Set(str::conv::FromUtf8(path));
                 visit(NULL, url, -1);
             }
         }
@@ -1406,7 +1407,6 @@ public:
                 return;
         }
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
-        // TODO: use the native codepage for the path to GetData
         size_t pageHtmlLen;
         ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, &pageHtmlLen));
         if (!pageHtml)

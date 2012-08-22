@@ -253,9 +253,9 @@ TCHAR *ChmDoc::GetProperty(DocumentProperty prop)
 {
     ScopedMem<TCHAR> result;
     if (Prop_Title == prop && title)
-        result.Set(str::conv::FromCodePage(title, codepage));
+        result.Set(ToStr(title));
     else if (Prop_CreatorApp == prop && creator)
-        result.Set(str::conv::FromCodePage(creator, codepage));
+        result.Set(ToStr(creator));
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (result) {
         // TODO: original code called str::RemoveChars(result, "\n\r\t")
@@ -309,17 +309,16 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
             continue;
         ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
         ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
+#ifdef UNICODE
+        if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
+            ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+            attrVal.Set(str::conv::FromCodePage(bytes, cp));
+        }
+#endif
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;
-        else if (str::EqI(attrName, _T("Name"))) {
-#ifdef UNICODE
-            if (cp != CP_CHM_DEFAULT) {
-                ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
-                attrVal.Set(str::conv::FromCodePage(bytes, cp));
-            }
-#endif
+        else if (str::EqI(attrName, _T("Name")))
             name.Set(attrVal.StealData());
-        }
         else if (str::EqI(attrName, _T("Local"))) {
             // remove the ITS protocol and any filename references from the URLs
             if (str::Find(attrVal, _T("::/")))
@@ -361,24 +360,17 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
             continue;
         ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
         ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
+#ifdef UNICODE
+        if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
+            ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+            attrVal.Set(str::conv::FromCodePage(bytes, cp));
+        }
+#endif
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;
-        else if (str::EqI(attrName, _T("Keyword"))) {
-#ifdef UNICODE
-            if (cp != CP_CHM_DEFAULT) {
-                ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
-                attrVal.Set(str::conv::FromCodePage(bytes, cp));
-            }
-#endif
+        else if (str::EqI(attrName, _T("Keyword")))
             keyword.Set(attrVal.StealData());
-        }
         else if (str::EqI(attrName, _T("Name"))) {
-#ifdef UNICODE
-            if (cp != CP_CHM_DEFAULT) {
-                ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
-                attrVal.Set(str::conv::FromCodePage(bytes, cp));
-            }
-#endif
             name.Set(attrVal.StealData());
             // some CHM documents seem to use a lonely Name instead of Keyword
             if (!keyword)
@@ -433,6 +425,7 @@ bool ChmDoc::ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool is
 {
     if (!path)
         return false;
+    // TODO: is path already UTF-8 encoded - or do we need str::conv::ToUtf8(ToStr(path)) ?
     ScopedMem<unsigned char> htmlData(GetData(path, NULL));
     const char *html = (char *)htmlData.Get();
     if (!html)

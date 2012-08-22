@@ -425,8 +425,8 @@ bool ChmEngineImpl::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
     ChmCacheEntry *e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(plainUrl);
-        ScopedMem<char> urlAnsi(str::conv::ToAnsi(plainUrl));
-        e->data = (char *)doc->GetData(urlAnsi, &e->size);
+        ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
+        e->data = (char *)doc->GetData(urlUtf8, &e->size);
         if (!e->data) {
             delete e;
             return false;
