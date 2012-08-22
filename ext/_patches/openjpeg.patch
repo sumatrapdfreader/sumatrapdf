@@ -15,7 +15,7 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\j2k.c	Sat Aug 18 22:20:37 2012
++++ openjpeg\j2k.c	Wed Aug 22 10:18:18 2012
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -29,7 +29,21 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  	}
  	
  	image->numcomps = cio_read(cio, 2);	/* Csiz */
-@@ -1267,11 +1267,12 @@
+@@ -1032,11 +1032,12 @@
+ 	opj_cio_t *cio = j2k->cio;
+ 	
+ 	old_poc = tcp->POC ? tcp->numpocs + 1 : 0;
+ 	tcp->POC = 1;
+ 	len = cio_read(cio, 2);		/* Lpoc */
+-	numpchgs = (len - 2) / (5 + 2 * (numcomps <= 256 ? 1 : 2));
++	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=165 */
++	numpchgs = int_min((len - 2) / (5 + 2 * (numcomps <= 256 ? 1 : 2)), 32 - old_poc);
+ 	
+ 	for (i = old_poc; i < numpchgs + old_poc; i++) {
+ 		opj_poc_t *poc;
+ 		poc = &tcp->pocs[i];
+ 		poc->resno0 = cio_read(cio, 1);	/* RSpoc_i */
+@@ -1267,11 +1268,12 @@
  	if (j2k->cp->correct) {
  
  		static int backup_tileno = 0;
@@ -43,7 +57,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  				tileno, (cp->tw * cp->th));
  			if (!JPWL_ASSUME) {
  				opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: giving up\n");
-@@ -1284,12 +1285,23 @@
+@@ -1284,12 +1286,23 @@
  				tileno);
  		}
  
@@ -68,7 +82,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		cp->tileno[cp->tileno_size] = tileno;
  		cp->tileno_size++;
  	} else {
-@@ -1323,13 +1335,24 @@
+@@ -1323,13 +1336,24 @@
  			opj_event_msg(j2k->cinfo, EVT_WARNING, "- trying to adjust this\n"
  				"- setting Psot to %d => assuming it is the last tile\n",
  				totlen);
@@ -95,7 +109,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  	
  	partno = cio_read(cio, 1);
  	numparts = cio_read(cio, 1);
-@@ -1552,23 +1575,29 @@
+@@ -1552,23 +1576,29 @@
  /* <<UniPG */
  }
  
@@ -130,7 +144,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  				break;
  			}
  		}
-@@ -1735,10 +1764,13 @@
+@@ -1735,10 +1765,13 @@
  
  	if(j2k->tile_len != NULL) {
  		opj_free(j2k->tile_len);
@@ -144,6 +158,20 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  	if(j2k->default_tcp != NULL) {
  		opj_tcp_t *default_tcp = j2k->default_tcp;
  		if(default_tcp->ppt_data_first != NULL) {
+@@ -2174,11 +2207,12 @@
+ 		numpocs_tile = 0;
+ 		tcp->POC = 0;
+ 		if (parameters->numpocs) {
+ 			/* initialisation of POC */
+ 			tcp->POC = 1;
+-			for (i = 0; i < parameters->numpocs; i++) {
++			/* cf. http://code.google.com/p/openjpeg/issues/detail?id=165 */
++			for (i = 0; i < int_min(parameters->numpocs, 32); i++) {
+ 				if((tileno == parameters->POC[i].tile - 1) || (parameters->POC[i].tile == -1)) {
+ 					opj_poc_t *tcp_poc = &tcp->pocs[numpocs_tile];
+ 					tcp_poc->resno0		= parameters->POC[numpocs_tile].resno0;
+ 					tcp_poc->compno0	= parameters->POC[numpocs_tile].compno0;
+ 					tcp_poc->layno1		= parameters->POC[numpocs_tile].layno1;
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Tue Feb 07 12:49:55 2012
 +++ openjpeg\jp2.c	Fri Aug 03 20:09:06 2012

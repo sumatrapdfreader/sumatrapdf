@@ -1034,7 +1034,8 @@ static void j2k_read_poc(opj_j2k_t *j2k) {
 	old_poc = tcp->POC ? tcp->numpocs + 1 : 0;
 	tcp->POC = 1;
 	len = cio_read(cio, 2);		/* Lpoc */
-	numpchgs = (len - 2) / (5 + 2 * (numcomps <= 256 ? 1 : 2));
+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=165 */
+	numpchgs = int_min((len - 2) / (5 + 2 * (numcomps <= 256 ? 1 : 2)), 32 - old_poc);
 	
 	for (i = old_poc; i < numpchgs + old_poc; i++) {
 		opj_poc_t *poc;
@@ -2208,7 +2209,8 @@ void j2k_setup_encoder(opj_j2k_t *j2k, opj_cparameters_t *parameters, opj_image_
 		if (parameters->numpocs) {
 			/* initialisation of POC */
 			tcp->POC = 1;
-			for (i = 0; i < parameters->numpocs; i++) {
+			/* cf. http://code.google.com/p/openjpeg/issues/detail?id=165 */
+			for (i = 0; i < int_min(parameters->numpocs, 32); i++) {
 				if((tileno == parameters->POC[i].tile - 1) || (parameters->POC[i].tile == -1)) {
 					opj_poc_t *tcp_poc = &tcp->pocs[numpocs_tile];
 					tcp_poc->resno0		= parameters->POC[numpocs_tile].resno0;
