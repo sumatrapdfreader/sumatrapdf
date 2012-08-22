@@ -15,7 +15,7 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\j2k.c	Wed Aug 22 10:18:18 2012
++++ openjpeg\j2k.c	Wed Aug 22 10:40:04 2012
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -29,7 +29,44 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  	}
  	
  	image->numcomps = cio_read(cio, 2);	/* Csiz */
-@@ -1032,11 +1032,12 @@
+@@ -805,10 +805,17 @@
+ 	opj_image_t *image = j2k->image;
+ 	opj_cio_t *cio = j2k->cio;
+ 	
+ 	len = cio_read(cio, 2);		/* Lcoc */
+ 	compno = cio_read(cio, image->numcomps <= 256 ? 1 : 2);	/* Ccoc */
++	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=166 */
++	if (compno >= image->numcomps) {
++		opj_event_msg(j2k->cinfo, EVT_ERROR,
++			"JPWL: bad component number in COC (%d out of a maximum of %d)\n",
++			compno, image->numcomps);
++		return;
++	}
+ 	tcp->tccps[compno].csty = cio_read(cio, 1);	/* Scoc */
+ 	j2k_read_cox(j2k, compno);
+ }
+ 
+ static void j2k_write_qcx(opj_j2k_t *j2k, int compno) {
+@@ -989,10 +996,18 @@
+ 		/* keep your private count of tiles */
+ 		backup_compno++;
+ 	};
+ #endif /* USE_JPWL */
+ 
++	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=166 */
++	if (compno >= j2k->image->numcomps) {
++		opj_event_msg(j2k->cinfo, EVT_ERROR,
++			"JPWL: bad component number in QCC (%d out of a maximum of %d)\n",
++			compno, j2k->image->numcomps);
++		return;
++	}
++
+ 	j2k_read_qcx(j2k, compno, len - 2 - (numcomp <= 256 ? 1 : 2));
+ }
+ 
+ static void j2k_write_poc(opj_j2k_t *j2k) {
+ 	int len, numpchgs, i;
+@@ -1032,11 +1047,12 @@
  	opj_cio_t *cio = j2k->cio;
  	
  	old_poc = tcp->POC ? tcp->numpocs + 1 : 0;
@@ -43,7 +80,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		opj_poc_t *poc;
  		poc = &tcp->pocs[i];
  		poc->resno0 = cio_read(cio, 1);	/* RSpoc_i */
-@@ -1267,11 +1268,12 @@
+@@ -1267,11 +1283,12 @@
  	if (j2k->cp->correct) {
  
  		static int backup_tileno = 0;
@@ -57,7 +94,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  				tileno, (cp->tw * cp->th));
  			if (!JPWL_ASSUME) {
  				opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: giving up\n");
-@@ -1284,12 +1286,23 @@
+@@ -1284,12 +1301,23 @@
  				tileno);
  		}
  
@@ -82,7 +119,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		cp->tileno[cp->tileno_size] = tileno;
  		cp->tileno_size++;
  	} else {
-@@ -1323,13 +1336,24 @@
+@@ -1323,13 +1351,24 @@
  			opj_event_msg(j2k->cinfo, EVT_WARNING, "- trying to adjust this\n"
  				"- setting Psot to %d => assuming it is the last tile\n",
  				totlen);
@@ -109,7 +146,26 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  	
  	partno = cio_read(cio, 1);
  	numparts = cio_read(cio, 1);
-@@ -1552,23 +1576,29 @@
+@@ -1534,10 +1573,18 @@
+ 			}
+ 		}
+ 	};
+ #endif /* USE_JPWL */
+ 
++	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=166 */
++	if (compno >= j2k->image->numcomps) {
++		opj_event_msg(j2k->cinfo, EVT_ERROR,
++			"JPWL: bad component number in RGN (%d out of a maximum of %d)\n",
++			compno, j2k->image->numcomps);
++		return;
++	}
++
+ 	tcp->tccps[compno].roishift = cio_read(cio, 1);				/* SPrgn */
+ }
+ 
+ static void j2k_write_eoc(opj_j2k_t *j2k) {
+ 	opj_cio_t *cio = j2k->cio;
+@@ -1552,23 +1599,29 @@
  /* <<UniPG */
  }
  
@@ -144,7 +200,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  				break;
  			}
  		}
-@@ -1735,10 +1765,13 @@
+@@ -1735,10 +1788,13 @@
  
  	if(j2k->tile_len != NULL) {
  		opj_free(j2k->tile_len);
@@ -158,7 +214,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  	if(j2k->default_tcp != NULL) {
  		opj_tcp_t *default_tcp = j2k->default_tcp;
  		if(default_tcp->ppt_data_first != NULL) {
-@@ -2174,11 +2207,12 @@
+@@ -2174,11 +2230,12 @@
  		numpocs_tile = 0;
  		tcp->POC = 0;
  		if (parameters->numpocs) {
