@@ -15,7 +15,7 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\j2k.c	Thu Aug 23 16:36:24 2012
++++ openjpeg\j2k.c	Thu Aug 23 16:52:27 2012
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -35,8 +35,8 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  	}
  #endif /* USE_JPWL */
  
-+	/* SumatraPDF: prevent division by zero */
-+	if (!(cp->tdx * cp->tdy)) {
++	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
++	if (cp->tdx <= 0 || cp->tdy <= 0) {
 +		opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: invalid tile size (tdx: %d, tdy: %d)\n", cp->tdx, cp->tdy);
 +		return;
 +	}
@@ -52,8 +52,8 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		}
  #endif /* USE_JPWL */
  
-+		/* SumatraPDF: prevent division by zero */
-+		if (!(image->comps[i].dx * image->comps[i].dy)) {
++		/* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
++		if (image->comps[i].dx <= 0 || image->comps[i].dy <= 0) {
 +			opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: invalid component size (dx: %d, dy: %d)\n", image->comps[i].dx, image->comps[i].dy);
 +			return;
 +		}
@@ -63,7 +63,41 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		h = int_ceildiv(image->y1 - image->y0, image->comps[i].dy);
  
  		image->comps[i].resno_decoded = 0;	/* number of resolution decoded */
-@@ -805,10 +817,17 @@
+@@ -555,10 +567,16 @@
+ 			}
+ 		}
+ 	}
+ #endif /* USE_JPWL */
+ 
++	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
++	if (cp->tw <= 0 || cp->th <= 0) {
++		opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: bad number of tiles (%d x %d)\n", cp->tw, cp->th);
++		return;
++	}
++
+ 	cp->tcps = (opj_tcp_t*) opj_calloc(cp->tw * cp->th, sizeof(opj_tcp_t));
+ 	cp->tileno = (int*) opj_malloc(cp->tw * cp->th * sizeof(int));
+ 	cp->tileno_size = 0;
+ 	
+ #ifdef USE_JPWL
+@@ -572,10 +590,16 @@
+ 			}
+ 		}
+ 	}
+ #endif /* USE_JPWL */
+ 
++	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
++	if (!cp->tcps) {
++		opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: could not alloc tcps field of cp\n");
++		return;
++	}
++
+ 	for (i = 0; i < cp->tw * cp->th; i++) {
+ 		cp->tcps[i].POC = 0;
+ 		cp->tcps[i].numpocs = 0;
+ 		cp->tcps[i].first = 1;
+ 	}
+@@ -805,10 +829,17 @@
  	opj_image_t *image = j2k->image;
  	opj_cio_t *cio = j2k->cio;
  	
@@ -81,7 +115,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  }
  
  static void j2k_write_qcx(opj_j2k_t *j2k, int compno) {
-@@ -989,10 +1008,18 @@
+@@ -989,10 +1020,18 @@
  		/* keep your private count of tiles */
  		backup_compno++;
  	};
@@ -100,7 +134,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
  static void j2k_write_poc(opj_j2k_t *j2k) {
  	int len, numpchgs, i;
-@@ -1032,11 +1059,12 @@
+@@ -1032,11 +1071,12 @@
  	opj_cio_t *cio = j2k->cio;
  	
  	old_poc = tcp->POC ? tcp->numpocs + 1 : 0;
@@ -114,7 +148,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		opj_poc_t *poc;
  		poc = &tcp->pocs[i];
  		poc->resno0 = cio_read(cio, 1);	/* RSpoc_i */
-@@ -1267,11 +1295,12 @@
+@@ -1267,11 +1307,12 @@
  	if (j2k->cp->correct) {
  
  		static int backup_tileno = 0;
@@ -128,7 +162,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  				tileno, (cp->tw * cp->th));
  			if (!JPWL_ASSUME) {
  				opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: giving up\n");
-@@ -1284,12 +1313,23 @@
+@@ -1284,12 +1325,23 @@
  				tileno);
  		}
  
@@ -153,7 +187,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		cp->tileno[cp->tileno_size] = tileno;
  		cp->tileno_size++;
  	} else {
-@@ -1323,13 +1363,24 @@
+@@ -1323,13 +1375,24 @@
  			opj_event_msg(j2k->cinfo, EVT_WARNING, "- trying to adjust this\n"
  				"- setting Psot to %d => assuming it is the last tile\n",
  				totlen);
@@ -180,7 +214,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  	
  	partno = cio_read(cio, 1);
  	numparts = cio_read(cio, 1);
-@@ -1534,10 +1585,18 @@
+@@ -1534,10 +1597,18 @@
  			}
  		}
  	};
@@ -199,7 +233,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
  static void j2k_write_eoc(opj_j2k_t *j2k) {
  	opj_cio_t *cio = j2k->cio;
-@@ -1552,23 +1611,29 @@
+@@ -1552,23 +1623,29 @@
  /* <<UniPG */
  }
  
@@ -234,7 +268,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  				break;
  			}
  		}
-@@ -1735,10 +1800,13 @@
+@@ -1735,10 +1812,13 @@
  
  	if(j2k->tile_len != NULL) {
  		opj_free(j2k->tile_len);
@@ -248,7 +282,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  	if(j2k->default_tcp != NULL) {
  		opj_tcp_t *default_tcp = j2k->default_tcp;
  		if(default_tcp->ppt_data_first != NULL) {
-@@ -2174,11 +2242,12 @@
+@@ -2174,11 +2254,12 @@
  		numpocs_tile = 0;
  		tcp->POC = 0;
  		if (parameters->numpocs) {
