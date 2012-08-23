@@ -468,6 +468,12 @@ static void j2k_read_siz(opj_j2k_t *j2k) {
 	}
 #endif /* USE_JPWL */
 
+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
+	if (cp->tdx <= 0 || cp->tdy <= 0) {
+		opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: invalid tile size (tdx: %d, tdy: %d)\n", cp->tdx, cp->tdy);
+		return;
+	}
+
 	image->comps = (opj_image_comp_t*) opj_calloc(image->numcomps, sizeof(opj_image_comp_t));
 	for (i = 0; i < image->numcomps; i++) {
 		int tmp, w, h;
@@ -505,6 +511,12 @@ static void j2k_read_siz(opj_j2k_t *j2k) {
 			
 		}
 #endif /* USE_JPWL */
+
+		/* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
+		if (image->comps[i].dx <= 0 || image->comps[i].dy <= 0) {
+			opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: invalid component size (dx: %d, dy: %d)\n", image->comps[i].dx, image->comps[i].dy);
+			return;
+		}
 
 		/* TODO: unused ? */
 		w = int_ceildiv(image->x1 - image->x0, image->comps[i].dx);
@@ -557,6 +569,12 @@ static void j2k_read_siz(opj_j2k_t *j2k) {
 	}
 #endif /* USE_JPWL */
 
+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
+	if (cp->tw <= 0 || cp->th <= 0) {
+		opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: bad number of tiles (%d x %d)\n", cp->tw, cp->th);
+		return;
+	}
+
 	cp->tcps = (opj_tcp_t*) opj_calloc(cp->tw * cp->th, sizeof(opj_tcp_t));
 	cp->tileno = (int*) opj_malloc(cp->tw * cp->th * sizeof(int));
 	cp->tileno_size = 0;
@@ -573,6 +591,12 @@ static void j2k_read_siz(opj_j2k_t *j2k) {
 		}
 	}
 #endif /* USE_JPWL */
+
+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
+	if (!cp->tcps) {
+		opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: could not alloc tcps field of cp\n");
+		return;
+	}
 
 	for (i = 0; i < cp->tw * cp->th; i++) {
 		cp->tcps[i].POC = 0;
