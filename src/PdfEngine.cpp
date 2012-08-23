@@ -1838,6 +1838,10 @@ bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_mat
     DeleteObject(bgBrush);
 
     fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
+    if (pageRect) {
+        fz_bbox pageclip = fz_round_rect(fz_transform_rect(ctm2, fz_RectD_to_rect(*pageRect)));
+        clipbox = fz_intersect_bbox(clipbox, pageclip);
+    }
     fz_device *dev = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
@@ -3258,6 +3262,10 @@ bool XpsEngineImpl::RenderPage(HDC hDC, xps_page *page, RectI screenRect, fz_mat
     DeleteObject(bgBrush);
 
     fz_bbox clipbox = fz_RectI_to_bbox(screenRect);
+    if (pageRect) {
+        fz_bbox pageclip = fz_round_rect(fz_transform_rect(ctm2, fz_RectD_to_rect(*pageRect)));
+        clipbox = fz_intersect_bbox(clipbox, pageclip);
+    }
     fz_device *dev;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {

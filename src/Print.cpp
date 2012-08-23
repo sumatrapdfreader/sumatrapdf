@@ -137,15 +137,17 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print);
             }
             else {
+                RenderedBitmap *bmp = NULL;
                 short shrink = 1;
-RetrySelWithLowerDPI:
-                RenderedBitmap *bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print);
-                if (bmp) {
-                    if (!bmp->GetBitmap() && shrink < 32 && zoom / shrink > 0.1f) {
+                while (!bmp && shrink < 32) {
+                    bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print);
+                    if (!bmp || !bmp->GetBitmap()) {
                         shrink *= 2;
                         delete bmp;
-                        goto RetrySelWithLowerDPI;
+                        bmp = NULL;
                     }
+                }
+                if (bmp) {
                     RectI rc((paperWidth - bmp->Size().dx * shrink) / 2,
                              (paperHeight - bmp->Size().dy * shrink) / 2,
                              bmp->Size().dx * shrink, bmp->Size().dy * shrink);
@@ -237,15 +239,17 @@ RetrySelWithLowerDPI:
                 engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print);
             }
             else {
+                RenderedBitmap *bmp = NULL;
                 short shrink = 1;
-RetryWithLowerDPI:
-                RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print);
-                if (bmp) {
-                    if (!bmp->GetBitmap() && shrink < 32 && zoom / shrink > 0.1f) {
+                while (!bmp && shrink < 32) {
+                    bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print);
+                    if (!bmp || !bmp->GetBitmap()) {
                         shrink *= 2;
                         delete bmp;
-                        goto RetryWithLowerDPI;
+                        bmp = NULL;
                     }
+                }
+                if (bmp) {
                     RectI rc((paperWidth - bmp->Size().dx * shrink) / 2 + offset.x,
                              (paperHeight - bmp->Size().dy * shrink) / 2 + offset.y,
                              bmp->Size().dx * shrink, bmp->Size().dy * shrink);
