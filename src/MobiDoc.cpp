@@ -212,6 +212,8 @@ class HuffDicDecompressor
 
     uint32      codeLength;
 
+    Vec<uint32> recursionGuard;
+
 public:
     HuffDicDecompressor();
 
@@ -245,8 +247,14 @@ bool HuffDicDecompressor::DecodeOne(uint32 code, str::Str<char>& dst)
     }
 
     if (!(symLen & 0x8000)) {
+        if (recursionGuard.Find(code) != -1) {
+            lf("infinite recursion");
+            return false;
+        }
+        recursionGuard.Push(code);
         if (!Decompress(p, symLen, dst))
             return false;
+        recursionGuard.Pop();
     } else {
         symLen &= 0x7fff;
         if (symLen > 127) {
