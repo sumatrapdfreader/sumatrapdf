@@ -714,3 +714,7 @@ Copia del testo...
 printing document
 Stampa documento...
 
+# Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
+

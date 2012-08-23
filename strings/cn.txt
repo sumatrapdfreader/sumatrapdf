@@ -704,5 +704,7 @@ printing document
 正在打印文档
 
 # Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
 #Show &Bookmarks
 

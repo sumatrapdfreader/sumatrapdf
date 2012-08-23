@@ -709,3 +709,7 @@ copying text
 printing document
 문서 인쇄 중
 
+# Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
+

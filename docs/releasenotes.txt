@@ -6,6 +6,7 @@ Next version:
 2.2 (2012-??-??)
 
 * add support for PDF documents encrypted with Acrobat X
+* “Print as image” compatibility option for documents that fail to print properly
 
 2.1.1 (2012-05-07)
 

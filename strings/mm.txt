@@ -258,6 +258,7 @@ Zoom Out
 #Cannot print this file
 #Cannot start inverse search command. Please check the command line in the settings.
 #Comic books
+#Compatibility
 #Continuous Book View
 #Contribute Translation
 #Copy &Image
@@ -331,6 +332,7 @@ Zoom Out
 #Postscript documents
 #Pr&esentation\tCtrl+L
 #Print
+#Print as &image (requires more memory)
 #Print range
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?

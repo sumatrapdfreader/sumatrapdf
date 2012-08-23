@@ -688,10 +688,12 @@ printing document
 文件列印中
 
 # Untranslated:
+#Compatibility
 #Could not obtain Printer properties
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
+#Print as &image (requires more memory)
 #Printer with given name doesn't exist
 #Replace document &colors with Windows color scheme
 #Show &Bookmarks

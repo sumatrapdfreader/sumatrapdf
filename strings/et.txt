@@ -704,5 +704,7 @@ printing document
 dokumendi printimine
 
 # Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
 #Show &Bookmarks
 

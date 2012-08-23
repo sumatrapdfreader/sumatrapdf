@@ -702,5 +702,7 @@ printing document
 ag clóbhualadh an cháipéis
 
 # Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
 #Show &Bookmarks
 

@@ -439,6 +439,7 @@ Faktor-zoum
 #CHM documents
 #Can't connect to the Internet (error %#x).
 #Comic books
+#Compatibility
 #Copy &Image
 #Copy &Link Address
 #Copy Co&mment
@@ -484,6 +485,7 @@ Faktor-zoum
 #Postscript documents
 #Pr&esentation\tCtrl+L
 #Print
+#Print as &image (requires more memory)
 #Print range
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?

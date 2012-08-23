@@ -15,25 +15,6 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-static bool PrinterSupportsStretchDib(HWND hwndForMsgBox, HDC hdc)
-{
-#ifdef USE_GDI_FOR_PRINTING
-    // assume the printer supports enough of GDI(+) for reasonable results
-    return true;
-#else
-    // most printers can support stretchdibits,
-    // whereas a lot of printers do not support bitblt
-    // quit if printer doesn't support StretchDIBits
-    int rasterCaps = GetDeviceCaps(hdc, RASTERCAPS);
-    int supportsStretchDib = rasterCaps & RC_STRETCHDIB;
-    if (supportsStretchDib)
-        return true;
-
-    MessageBox(hwndForMsgBox, _T("This printer doesn't support the StretchDIBits function"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
-    return false;
-#endif
-}
-
 struct PrintData {
     HDC hdc; // owned by PrintData
 
@@ -43,14 +24,17 @@ struct PrintData {
     int rotation;
     PrintRangeAdv rangeAdv;
     PrintScaleAdv scaleAdv;
+    bool printAsImage;
     short orientation;
 
     PrintData(BaseEngine *engine, HDC hdc, DEVMODE *devMode,
               Vec<PRINTPAGERANGE>& ranges, int rotation=0,
               PrintRangeAdv rangeAdv=PrintRangeAll,
               PrintScaleAdv scaleAdv=PrintScaleShrink,
+              bool printAsImage=false,
               Vec<SelectionOnPage> *sel=NULL) :
-        engine(NULL), hdc(hdc), rotation(rotation), rangeAdv(rangeAdv), scaleAdv(scaleAdv)
+        engine(NULL), hdc(hdc), rotation(rotation),
+        rangeAdv(rangeAdv), scaleAdv(scaleAdv), printAsImage(printAsImage)
     {
         if (engine)
             this->engine = engine->Clone();
@@ -146,26 +130,31 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
             else if (PrintScaleNone == pd.scaleAdv)
                 zoom = dpiFactor;
 
-#ifdef USE_GDI_FOR_PRINTING
-            RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
-                                     (int)(printableHeight - sSize.dy * zoom) / 2,
-                                     paperWidth, paperHeight);
-            engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print);
-#else
-            RenderedBitmap *bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print);
-            if (bmp) {
-                PointI TL((printableWidth - bmp->Size().dx) / 2,
-                          (printableHeight - bmp->Size().dy) / 2);
-                bmp->StretchDIBits(hdc, RectI(TL, bmp->Size()));
-                delete bmp;
+            if (!pd.printAsImage) {
+                RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
+                                         (int)(printableHeight - sSize.dy * zoom) / 2,
+                                         paperWidth, paperHeight);
+                engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print);
             }
-#endif
-            if (EndPage(hdc) <= 0) {
-                AbortDoc(hdc);
-                goto Exit;
+            else {
+                short shrink = 1;
+RetrySelWithLowerDPI:
+                RenderedBitmap *bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print);
+                if (bmp) {
+                    if (!bmp->GetBitmap() && shrink < 32 && zoom / shrink > 0.1f) {
+                        shrink *= 2;
+                        delete bmp;
+                        goto RetrySelWithLowerDPI;
+                    }
+                    RectI rc((paperWidth - bmp->Size().dx * shrink) / 2,
+                             (paperHeight - bmp->Size().dy * shrink) / 2,
+                             bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                    bmp->StretchDIBits(hdc, rc);
+                    delete bmp;
+                }
             }
 
-            if (progressUI && progressUI->WasCanceled()) {
+            if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
                 goto Exit;
             }
@@ -241,26 +230,31 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                     offset.y += (int)((paperHeight - bottomMargin) - onPaper.BR().y);
             }
 
-#ifdef USE_GDI_FOR_PRINTING
-            RectI rc = RectI::FromXY((int)(paperWidth - pSize.dx * zoom) / 2 + offset.x,
-                                     (int)(paperHeight - pSize.dy * zoom) / 2 + offset.y,
-                                     paperWidth, paperHeight);
-            engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print);
-#else
-            RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom, rotation, NULL, Target_Print);
-            if (bmp) {
-                PointI TL((paperWidth - bmp->Size().dx) / 2 + offset.x,
-                          (paperHeight - bmp->Size().dy) / 2 + offset.y);
-                bmp->StretchDIBits(hdc, RectI(TL, bmp->Size()));
-                delete bmp;
+            if (!pd.printAsImage) {
+                RectI rc = RectI::FromXY((int)(paperWidth - pSize.dx * zoom) / 2 + offset.x,
+                                         (int)(paperHeight - pSize.dy * zoom) / 2 + offset.y,
+                                         paperWidth, paperHeight);
+                engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print);
             }
-#endif
-            if (EndPage(hdc) <= 0) {
-                AbortDoc(hdc);
-                goto Exit;
+            else {
+                short shrink = 1;
+RetryWithLowerDPI:
+                RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print);
+                if (bmp) {
+                    if (!bmp->GetBitmap() && shrink < 32 && zoom / shrink > 0.1f) {
+                        shrink *= 2;
+                        delete bmp;
+                        goto RetryWithLowerDPI;
+                    }
+                    RectI rc((paperWidth - bmp->Size().dx * shrink) / 2 + offset.x,
+                             (paperHeight - bmp->Size().dy * shrink) / 2 + offset.y,
+                             bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                    bmp->StretchDIBits(hdc, rc);
+                    delete bmp;
+                }
             }
 
-            if (progressUI && progressUI->WasCanceled()) {
+            if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
                 goto Exit;
             }
@@ -382,7 +376,9 @@ static HGLOBAL GlobalMemDup(void *data, size_t len)
 /* Show Print Dialog box to allow user to select the printer
 and the pages to print.
 
-Note: The following doesn't apply for USE_GDI_FOR_PRINTING
+For reference: In order to print with Adobe Reader instead: ViewWithAcrobat(win, _T("/P"));
+
+Note: The following only applies for printing as image
 
 Creates a new dummy page for each page with a large zoom factor,
 and then uses StretchDIBits to copy this to the printer's dc.
@@ -393,8 +389,6 @@ So far have tested printing from XP to
  - HP Laserjet 2300d
  - HP Deskjet D4160
  - Lexmark Z515 inkjet, which should cover most bases.
-
-In order to print with Adobe Reader instead: ViewWithAcrobat(win, _T("/P"));
 */
 #define MAXPAGERANGES 10
 void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
@@ -402,6 +396,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // we remember some printer settings per process
     static ScopedMem<DEVMODE> defaultDevMode;
     static PrintScaleAdv defaultScaleAdv = PrintScaleShrink;
+    static bool defaultAsImage = false;
 
     bool printSelection = false;
     Vec<PRINTPAGERANGE> ranges;
@@ -446,7 +441,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     pd.nMaxPage = dm->PageCount();
     pd.nStartPage = START_PAGE_GENERAL;
 
-    Print_Advanced_Data advanced = { PrintRangeAll, PrintScaleShrink };
+    Print_Advanced_Data advanced = { PrintRangeAll, defaultScaleAdv, defaultAsImage };
     ScopedMem<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
     pd.lphPropertyPages = &hPsp;
@@ -455,7 +450,6 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     // restore remembered settings
     if (defaultDevMode)
         pd.hDevMode = GlobalMemDup(defaultDevMode.Get(), defaultDevMode.Get()->dmSize + defaultDevMode.Get()->dmDriverExtra);
-    advanced.scale = defaultScaleAdv;
 
     if (PrintDlgEx(&pd) != S_OK) {
         if (CommDlgExtendedError() != 0) {
@@ -477,12 +471,10 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
             GlobalUnlock(pd.hDevMode);
         }
         defaultScaleAdv = advanced.scale;
+        defaultAsImage = advanced.asImage;
     }
 
     if (pd.dwResultAction != PD_RESULT_PRINT)
-        goto Exit;
-
-    if (!PrinterSupportsStretchDib(win->hwndFrame, pd.hDC))
         goto Exit;
 
     if (pd.Flags & PD_CURRENTPAGE) {
@@ -500,8 +492,8 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     }
 
     LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
-    PrintData *data = new PrintData(dm->engine, pd.hDC, devMode, ranges,
-                                    dm->Rotation(), advanced.range, advanced.scale,
+    PrintData *data = new PrintData(dm->engine, pd.hDC, devMode, ranges, dm->Rotation(),
+                                    advanced.range, advanced.scale, advanced.asImage,
                                     printSelection ? win->selectionOnPage : NULL);
     pd.hDC = NULL; // deleted by PrintData
     if (devMode)
@@ -548,6 +540,8 @@ static void ApplyPrintSettings(const TCHAR *settings, int pageCount, Vec<PRINTPA
             advanced.scale = PrintScaleShrink;
         else if (str::Eq(rangeList.At(i), _T("fit")))
             advanced.scale = PrintScaleFit;
+        else if (str::Eq(rangeList.At(i), _T("compat")))
+            advanced.asImage = true;
     }
 
     if (ranges.Count() == 0) {
@@ -632,16 +626,19 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
             MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         goto Exit;
     }
-    if (PrinterSupportsStretchDib(NULL, hdcPrint)) {
+
+    {
+        Print_Advanced_Data advanced = { PrintRangeAll, PrintScaleShrink, false };
         Vec<PRINTPAGERANGE> ranges;
-        Print_Advanced_Data advanced = { PrintRangeAll, PrintScaleShrink };
         ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced);
 
-        PrintData pd(engine, hdcPrint, devMode, ranges, 0, advanced.range, advanced.scale);
+        PrintData pd(engine, hdcPrint, devMode, ranges, 0,
+                     advanced.range, advanced.scale, advanced.asImage);
         hdcPrint = NULL; // deleted by PrintData
         PrintToDevice(pd);
         ok = true;
     }
+
 Exit:
     free(devMode);
     DeleteDC(hdcPrint);

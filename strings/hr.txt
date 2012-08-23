@@ -705,5 +705,7 @@ printing document
 ispisujem dokument
 
 # Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
 #Show &Bookmarks
 

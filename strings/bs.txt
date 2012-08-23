@@ -704,5 +704,7 @@ printing document
 štampam dokument
 
 # Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
 #Show &Bookmarks
 

@@ -709,3 +709,7 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
+

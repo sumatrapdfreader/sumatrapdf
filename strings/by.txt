@@ -388,6 +388,7 @@ Zoom Out
 #Can't connect to the Internet (error %#x).
 #Cannot start inverse search command. Please check the command line in the settings.
 #Comic books
+#Compatibility
 #Continuous Book View
 #Copy &Image
 #Copy &Link Address
@@ -439,6 +440,7 @@ Zoom Out
 #Postscript documents
 #Pr&esentation\tCtrl+L
 #Print
+#Print as &image (requires more memory)
 #Print range
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?

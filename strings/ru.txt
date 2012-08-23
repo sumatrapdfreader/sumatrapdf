@@ -708,3 +708,7 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
+

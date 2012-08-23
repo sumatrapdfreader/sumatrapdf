@@ -709,5 +709,7 @@ printing document
 impression du document
 
 # Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
 #Show &Bookmarks
 

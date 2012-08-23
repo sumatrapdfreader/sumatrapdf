@@ -708,3 +708,7 @@ cópia de texto
 printing document
 impressão de documento
 
+# Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
+

@@ -707,5 +707,7 @@ printing document
 prebieha tlač dokumentu
 
 # Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
 #Show &Bookmarks
 

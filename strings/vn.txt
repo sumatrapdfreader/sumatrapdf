@@ -707,3 +707,7 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
+

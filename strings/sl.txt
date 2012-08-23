@@ -706,5 +706,7 @@ printing document
 tiskanje dokumenta
 
 # Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
 #Show &Bookmarks
 

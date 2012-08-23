@@ -691,8 +691,10 @@ printing document
 tulostetaan asiakirjaa
 
 # Untranslated:
+#Compatibility
 #Copyright:
 #Failed to rename the file!
+#Print as &image (requires more memory)
 #Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme

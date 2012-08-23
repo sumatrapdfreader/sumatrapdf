@@ -707,3 +707,7 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
+

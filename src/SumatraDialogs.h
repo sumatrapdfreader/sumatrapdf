@@ -22,6 +22,7 @@ enum PrintScaleAdv { PrintScaleNone = 0, PrintScaleShrink, PrintScaleFit };
 struct Print_Advanced_Data {
     PrintRangeAdv range;
     PrintScaleAdv scale;
+    bool asImage;
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem<DLGTEMPLATE>& dlgTemplate);

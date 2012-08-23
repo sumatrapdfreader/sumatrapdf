@@ -704,5 +704,7 @@ printing document
 Ֆայլը տպվում է
 
 # Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
 #Show &Bookmarks
 

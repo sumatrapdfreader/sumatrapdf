@@ -522,6 +522,7 @@ printing document
 #Bookmark shortcut to page %s of %s
 #CHM documents
 #Comic books
+#Compatibility
 #Copy &Image
 #Copy &Link Address
 #Copy Co&mment
@@ -551,6 +552,7 @@ printing document
 #Postscript documents
 #Pr&esentation\tCtrl+L
 #Print
+#Print as &image (requires more memory)
 #Print range
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?

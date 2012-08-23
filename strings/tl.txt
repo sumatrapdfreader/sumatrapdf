@@ -565,6 +565,7 @@ ipini-print ang dokumento
 #Bookmark shortcut to page %s of %s
 #CHM documents
 #Comic books
+#Compatibility
 #Copy &Image
 #Copyright:
 #Could not obtain Printer properties
@@ -588,6 +589,7 @@ ipini-print ang dokumento
 #Page %s
 #Postscript documents
 #Print
+#Print as &image (requires more memory)
 #Printer with given name doesn't exist
 #Printing is still in progress. Abort and start over?
 #Printing page %d of %d...

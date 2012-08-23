@@ -715,3 +715,7 @@ tekst kopiëren
 printing document
 document afdrukken
 
+# Untranslated:
+#Compatibility
+#Print as &image (requires more memory)
+

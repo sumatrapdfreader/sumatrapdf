@@ -248,6 +248,9 @@ Nach &neuer Version suchen
 Comic books
 Comicbücher
 
+Compatibility
+Kompatibilität
+
 Continuous
 Fortlaufend
 
@@ -550,6 +553,9 @@ Previous Page
 
 Print
 Drucken…
+
+Print as &image (requires more memory)
+Als B&ild drucken (benötigt mehr Speicher)
 
 Print range
 Seitenbereich
