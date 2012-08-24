@@ -246,6 +246,9 @@ Check for &Updates
 Comic books
 Документы CBR, CBZ (комиксы)
 
+Compatibility
+Совместимость
+
 Continuous
 Разрешить прокрутку
 
@@ -549,6 +552,9 @@ Previous Page
 Print
 Печать
 
+Print as &image (requires more memory)
+Печатать как &изображение (требуется больше памяти)
+
 Print range
 Диапазон печати
 
@@ -707,8 +713,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
 

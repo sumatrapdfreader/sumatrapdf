@@ -123,7 +123,7 @@ Nhớ mật khẩu cho tập tin này
 Nhớ các cài đặt này cho từng tập tin
 
 &Remove Document
-Xóa tập tin
+Gỡ tập tin xuống
 
 &Save As...
 Lưu thành...
@@ -244,6 +244,9 @@ Kiểm tra cập nhật
 
 Comic books
 Truyện tranh comic
+
+Compatibility
+Tính tương thích
 
 Continuous
 Liên tiếp
@@ -548,6 +551,9 @@ Trang trước
 Print
 In
 
+Print as &image (requires more memory)
+In thành hình ảnh (cần nhiều bộ nhớ hơn)
+
 Print range
 Giới hạn vùng in
 
@@ -706,8 +712,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
 
