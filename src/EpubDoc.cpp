@@ -335,7 +335,7 @@ void EpubDoc::ParseMetadata(const char *content)
                 Tag_Meta == tok->tag && tok->GetAttrByName("property") &&
                 tok->GetAttrByName("property")->ValIs(metadataMap[i].value)) {
                 tok = pullParser.Next();
-                if (!tok->IsText())
+                if (!tok || !tok->IsText())
                     break;
                 Metadata prop = { metadataMap[i].prop, NULL };
                 prop.value = ResolveHtmlEntities(tok->s, tok->sLen);
@@ -486,11 +486,10 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
                 level--;
         }
         else if (tok->IsStartTag() && (tok->NameIs("text") || tok->NameIs("ncx:text"))) {
-            tok = parser.Next();
+            if (!(tok = parser.Next()) || tok->IsError())
+                break;
             if (tok->IsText())
                 itemText.Set(FromHtmlUtf8(tok->s, tok->sLen));
-            else if (tok->IsError())
-                break;
         }
         else if (tok->IsTag() && !tok->IsEndTag() && (tok->NameIs("content") || tok->NameIs("ncx:content"))) {
             AttrInfo *attrInfo = tok->GetAttrByName("src");
@@ -627,13 +626,12 @@ bool Fb2Doc::Load()
         else if (inTitleInfo && tok->IsEndTag() && tok->NameIs("title-info"))
             inTitleInfo--;
         else if (inTitleInfo && tok->IsStartTag() && tok->NameIs("book-title")) {
-            tok = parser.Next();
+            if (!(tok = parser.Next()) || tok->IsError())
+                break;
             if (tok->IsText()) {
                 ScopedMem<char> tmp(str::DupN(tok->s, tok->sLen));
                 docTitle.Set(DecodeHtmlEntitites(tmp, CP_UTF8));
             }
-            else if (tok->IsError())
-                break;
         }
         else if (inTitleInfo && tok->IsStartTag() && tok->NameIs("author")) {
             while ((tok = parser.Next()) && !tok->IsError() &&
@@ -652,9 +650,9 @@ bool Fb2Doc::Load()
         }
         else if (inTitleInfo && tok->IsStartTag() && tok->NameIs("coverpage")) {
             tok = parser.Next();
-            if (tok->IsText())
+            if (tok && tok->IsText())
                 tok = parser.Next();
-            if (tok->IsEmptyElementEndTag() && Tag_Image == tok->tag) {
+            if (tok && tok->IsEmptyElementEndTag() && Tag_Image == tok->tag) {
                 AttrInfo *attr = tok->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
                 if (attr)
                     coverImage.Set(str::DupN(attr->val, attr->valLen));
@@ -782,7 +780,7 @@ Fallback:
     }
     HtmlPullParser parser(text, len);
     HtmlToken *tok = parser.Next();
-    if (!tok->IsStartTag())
+    if (!tok || !tok->IsStartTag())
         goto Fallback;
 
     if (tok->NameIs("BOOKMARK")) {
@@ -1348,7 +1346,7 @@ bool HtmlDoc::Load()
         (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {
         if (tok->IsStartTag() && Tag_Title == tok->tag) {
             tok = parser.Next();
-            if (tok->IsText())
+            if (tok && tok->IsText())
                 title.Set(FromHtmlUtf8(tok->s, tok->sLen));
         }
         else if ((tok->IsStartTag() || tok->IsEmptyElementEndTag()) && Tag_Meta == tok->tag) {
