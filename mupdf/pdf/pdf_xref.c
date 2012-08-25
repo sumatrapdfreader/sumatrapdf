@@ -940,8 +940,10 @@ pdf_load_obj_stm(pdf_document *xref, int num, int gen, pdf_lexbuf *buf)
 
 			if (xref->table[numbuf[i]].type == 'o' && xref->table[numbuf[i]].ofs == num)
 			{
+				/* SumatraPDF: prevent use-after-free */
 				if (xref->table[numbuf[i]].obj)
-					pdf_drop_obj(xref->table[numbuf[i]].obj);
+					pdf_drop_obj(obj);
+				else
 				xref->table[numbuf[i]].obj = obj;
 			}
 			else
