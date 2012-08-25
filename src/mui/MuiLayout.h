@@ -35,7 +35,7 @@ class Control;
 // using either horizontal or vertical layout. Vertical/Horizontal
 // layout are conceptually the same, just using different axis/dimensions
 // for calculations. LayoutAxis is x for horizontal layout and y
-// for vertical layout. NonLayoutAxis is the otehr one.
+// for vertical layout. NonLayoutAxis is the other one.
 struct DirectionalLayoutData {
     ILayout *          element;
     // size is a float that determines how much of the remaining
