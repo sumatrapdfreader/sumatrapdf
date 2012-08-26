@@ -602,7 +602,7 @@ fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix tr
 		state->linejoin == FZ_LINEJOIN_BEVEL ? FT_STROKER_LINEJOIN_BEVEL :
 		FT_STROKER_LINEJOIN_MITER;
 #endif
-	FT_Stroker_Set(stroker, linewidth, state->start_cap, line_join, state->miterlimit * 65536);
+	FT_Stroker_Set(stroker, linewidth, (FT_Stroker_LineCap)state->start_cap, line_join, state->miterlimit * 65536);
 
 	fterr = FT_Get_Glyph(face->glyph, &glyph);
 	if (fterr)

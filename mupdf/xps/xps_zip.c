@@ -716,7 +716,7 @@ static int xps_meta(fz_document *doc_, int key, void *ptr, int size)
 {
 	xps_document *doc = (xps_document *)doc_;
 
-	doc = doc;
+	UNUSED(doc);
 
 	switch(key)
 	{

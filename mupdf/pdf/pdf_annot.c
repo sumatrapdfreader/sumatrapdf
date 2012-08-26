@@ -247,6 +247,8 @@ pdf_parse_action(pdf_document *xref, pdf_obj *action)
 	pdf_obj *obj, *dest;
 	fz_context *ctx = xref->ctx;
 
+	UNUSED(ctx);
+
 	ld.kind = FZ_LINK_NONE;
 
 	if (!action)

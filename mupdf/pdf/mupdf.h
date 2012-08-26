@@ -17,7 +17,7 @@ pdf_obj *pdf_new_null(fz_context *ctx);
 pdf_obj *pdf_new_bool(fz_context *ctx, int b);
 pdf_obj *pdf_new_int(fz_context *ctx, int i);
 pdf_obj *pdf_new_real(fz_context *ctx, float f);
-pdf_obj *fz_new_name(fz_context *ctx, char *str);
+pdf_obj *pdf_new_name(fz_context *ctx, char *str);
 pdf_obj *pdf_new_string(fz_context *ctx, char *str, int len);
 pdf_obj *pdf_new_indirect(fz_context *ctx, int num, int gen, void *doc);
 pdf_obj *pdf_new_array(fz_context *ctx, int initialcap);

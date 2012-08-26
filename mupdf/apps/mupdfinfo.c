@@ -901,7 +901,7 @@ showinfo(char *filename, int show, char *pagelist)
 
 	pagecount = pdf_count_pages(xref);
 	spec = fz_strsep(&pagelist, ",");
-	while (spec)
+	while (spec && pagecount)
 	{
 		dash = strchr(spec, '-');
 

@@ -1054,7 +1054,7 @@ add_linearization_objs(pdf_document *xref, pdf_write_options *opts)
 		/* FIXME: Do we have document information? Do an I entry */
 		/* FIXME: Do we have logical structure heirarchy? Do a C entry */
 		/* FIXME: Do L, Page Label hint table */
-		o = fz_new_name(ctx, "FlateDecode");
+		o = pdf_new_name(ctx, "FlateDecode");
 		pdf_dict_puts(hint_obj, "Filter", o);
 		pdf_drop_obj(o);
 		o = NULL;
@@ -1426,7 +1426,7 @@ static void addhexfilter(pdf_document *xref, pdf_obj *dict)
 	pdf_obj *ahx, *nullobj;
 	fz_context *ctx = xref->ctx;
 
-	ahx = fz_new_name(ctx, "ASCIIHexDecode");
+	ahx = pdf_new_name(ctx, "ASCIIHexDecode");
 	nullobj = pdf_new_null(ctx);
 	newf = newdp = NULL;
 

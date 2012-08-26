@@ -118,6 +118,8 @@ pdf_load_name_tree_imp(pdf_obj *dict, pdf_document *xref, pdf_obj *node)
 	pdf_obj *names = pdf_dict_gets(node, "Names");
 	int i;
 
+	UNUSED(ctx);
+
 	if (kids && !pdf_dict_mark(node))
 	{
 		int len = pdf_array_len(kids);

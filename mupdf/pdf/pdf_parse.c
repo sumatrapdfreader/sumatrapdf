@@ -194,7 +194,7 @@ pdf_obj *
 pdf_to_utf8_name(fz_context *ctx, pdf_obj *src)
 {
 	char *buf = pdf_to_utf8(ctx, src);
-	pdf_obj *dst = fz_new_name(ctx, buf);
+	pdf_obj *dst = pdf_new_name(ctx, buf);
 	fz_free(ctx, buf);
 	return dst;
 }
@@ -287,7 +287,7 @@ pdf_parse_array(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 				break;
 
 			case PDF_TOK_NAME:
-				obj = fz_new_name(ctx, buf->scratch);
+				obj = pdf_new_name(ctx, buf->scratch);
 				pdf_array_push(ary, obj);
 				pdf_drop_obj(obj);
 				obj = NULL;
@@ -370,7 +370,7 @@ pdf_parse_dict(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 			if (tok != PDF_TOK_NAME)
 				fz_throw(ctx, "invalid key in dict");
 
-			key = fz_new_name(ctx, buf->scratch);
+			key = pdf_new_name(ctx, buf->scratch);
 
 			tok = pdf_lex(file, buf);
 
@@ -403,7 +403,7 @@ pdf_parse_dict(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 				val = pdf_parse_dict(xref, file, buf);
 				break;
 
-			case PDF_TOK_NAME: val = fz_new_name(ctx, buf->scratch); break;
+			case PDF_TOK_NAME: val = pdf_new_name(ctx, buf->scratch); break;
 			case PDF_TOK_REAL: val = pdf_new_real(ctx, buf->f); break;
 			case PDF_TOK_STRING: val = pdf_new_string(ctx, buf->scratch, buf->len); break;
 			case PDF_TOK_TRUE: val = pdf_new_bool(ctx, 1); break;
@@ -472,7 +472,7 @@ pdf_parse_stm_obj(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 		return pdf_parse_array(xref, file, buf);
 	case PDF_TOK_OPEN_DICT:
 		return pdf_parse_dict(xref, file, buf);
-	case PDF_TOK_NAME: return fz_new_name(ctx, buf->scratch); break;
+	case PDF_TOK_NAME: return pdf_new_name(ctx, buf->scratch); break;
 	case PDF_TOK_REAL: return pdf_new_real(ctx, buf->f); break;
 	case PDF_TOK_STRING: return pdf_new_string(ctx, buf->scratch, buf->len); break;
 	case PDF_TOK_TRUE: return pdf_new_bool(ctx, 1); break;
@@ -523,7 +523,7 @@ pdf_parse_ind_obj(pdf_document *xref,
 		obj = pdf_parse_dict(xref, file, buf);
 		break;
 
-	case PDF_TOK_NAME: obj = fz_new_name(ctx, buf->scratch); break;
+	case PDF_TOK_NAME: obj = pdf_new_name(ctx, buf->scratch); break;
 	case PDF_TOK_REAL: obj = pdf_new_real(ctx, buf->f); break;
 	case PDF_TOK_STRING: obj = pdf_new_string(ctx, buf->scratch, buf->len); break;
 	case PDF_TOK_TRUE: obj = pdf_new_bool(ctx, 1); break;

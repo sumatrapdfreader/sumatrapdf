@@ -351,7 +351,7 @@ EXPORTS
 	pdf_new_bool
 	pdf_new_int
 	pdf_new_real
-	fz_new_name
+	pdf_new_name
 	pdf_new_string
 	pdf_new_indirect
 	pdf_new_array

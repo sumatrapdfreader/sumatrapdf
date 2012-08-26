@@ -126,6 +126,11 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif
 
 /*
+	Shut the compiler up about unused variables
+*/
+#define UNUSED(x) do { x = x; } while (0)
+
+/*
 	Some standard math functions, done as static inlines for speed.
 	People with compilers that do not adequately implement inlines may
 	like to reimplement these using macros.

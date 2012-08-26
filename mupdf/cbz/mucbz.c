@@ -494,7 +494,7 @@ static int cbz_meta(fz_document *doc_, int key, void *ptr, int size)
 {
 	cbz_document *doc = (cbz_document *)doc_;
 
-	doc = doc;
+	UNUSED(doc);
 
 	switch(key)
 	{
