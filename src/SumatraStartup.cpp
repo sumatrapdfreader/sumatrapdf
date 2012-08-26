@@ -160,8 +160,9 @@ static void OpenUsingDde(const TCHAR *filePath, CommandLineInfo& i, bool isFirst
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
+        ScopedMem<TCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
         cmd.Set(str::Format(_T("[") DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
-                                    filePath, i.forwardSearchOrigin, i.forwardSearchLine));
+                                    filePath, sourcePath, i.forwardSearchLine));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
 }
@@ -200,8 +201,9 @@ static WindowInfo *LoadOnStartup(const TCHAR *filePath, CommandLineInfo& i, bool
     if (i.forwardSearchOrigin && i.forwardSearchLine && win->pdfsync) {
         UINT page;
         Vec<RectI> rects;
-        int ret = win->pdfsync->SourceToDoc(i.forwardSearchOrigin, i.forwardSearchLine, 0, &page, rects);
-        ShowForwardSearchResult(win, i.forwardSearchOrigin, i.forwardSearchLine, 0, ret, page, rects);
+            ScopedMem<TCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
+        int ret = win->pdfsync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
+        ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);
     }
     return win;
 }
