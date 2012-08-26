@@ -336,7 +336,8 @@ fz_decode_tiff_strips(struct tiff *tiff)
 	unsigned strip;
 	unsigned i;
 
-	if (!tiff->rowsperstrip || !tiff->stripoffsets || !tiff->rowsperstrip)
+	/* SumatraPDF: prevent NULL-pointer dereference */
+	if (!tiff->rowsperstrip || !tiff->stripoffsets || !tiff->rowsperstrip || !tiff->stripbytecounts)
 		fz_throw(tiff->ctx, "no image data in tiff; maybe it is tiled");
 
 	if (tiff->planar != 1)
