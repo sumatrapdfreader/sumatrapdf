@@ -40,7 +40,7 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
            if (oob)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Fri Aug 10 22:44:08 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Sun Aug 19 10:01:44 2012
++++ jbig2dec\jbig2_symbol_dict.c	Sun Aug 26 12:47:50 2012
 @@ -147,11 +147,12 @@
      Jbig2Segment *rsegment;
      int n_dicts = 0;
@@ -100,6 +100,42 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
  		      rparams.TPGRON = 0;
  		      memcpy(rparams.grat, params->sdrat, 4);
  		      jbig2_decode_refinement_region(ctx, segment,
+@@ -673,10 +682,17 @@
+ 	  const byte *src = data + jbig2_huffman_offset(hs);
+ 	  const int stride = (image->width >> 3) +
+ 		((image->width & 7) ? 1 : 0);
+ 	  byte *dst = image->data;
+ 
++	  /* SumatraPDF: prevent read access violation */
++	  if (size - jbig2_huffman_offset(hs) < image->height * stride) {
++	    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "not enough data for decoding (%d/%d)", image->height * stride, size - jbig2_huffman_offset(hs));
++	    jbig2_image_release(ctx, image);
++	    goto cleanup4;
++	  }
++
+ 	  BMSIZE = image->height * stride;
+ 	  jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
+ 	    "reading %dx%d uncompressed bitmap"
+ 	    " for %d symbols (%d bytes)",
+ 	    image->width, image->height, NSYMSDECODED - HCFIRSTSYM, BMSIZE);
+@@ -686,10 +702,17 @@
+ 	    dst += image->stride;
+ 	    src += stride;
+ 	  }
+ 	} else {
+ 	  Jbig2GenericRegionParams rparams;
++
++	  /* SumatraPDF: prevent read access violation */
++	  if (size - jbig2_huffman_offset(hs) < BMSIZE) {
++	    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "not enough data for decoding (%d/%d)", BMSIZE, size - jbig2_huffman_offset(hs));
++	    jbig2_image_release(ctx, image);
++	    goto cleanup4;
++	  }
+ 
+ 	  jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
+ 	    "reading %dx%d collective bitmap for %d symbols (%d bytes)",
+ 	    image->width, image->height, NSYMSDECODED - HCFIRSTSYM, BMSIZE);
+ 
 diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
 --- jbig2dec.orig\jbig2_text.c	Mon Jun 25 20:55:16 2012
 +++ jbig2dec\jbig2_text.c	Sun Aug 19 01:58:18 2012

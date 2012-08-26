@@ -684,6 +684,13 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 		((image->width & 7) ? 1 : 0);
 	  byte *dst = image->data;
 
+	  /* SumatraPDF: prevent read access violation */
+	  if (size - jbig2_huffman_offset(hs) < image->height * stride) {
+	    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "not enough data for decoding (%d/%d)", image->height * stride, size - jbig2_huffman_offset(hs));
+	    jbig2_image_release(ctx, image);
+	    goto cleanup4;
+	  }
+
 	  BMSIZE = image->height * stride;
 	  jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
 	    "reading %dx%d uncompressed bitmap"
@@ -697,6 +704,13 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 	  }
 	} else {
 	  Jbig2GenericRegionParams rparams;
+
+	  /* SumatraPDF: prevent read access violation */
+	  if (size - jbig2_huffman_offset(hs) < BMSIZE) {
+	    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "not enough data for decoding (%d/%d)", BMSIZE, size - jbig2_huffman_offset(hs));
+	    jbig2_image_release(ctx, image);
+	    goto cleanup4;
+	  }
 
 	  jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
 	    "reading %dx%d collective bitmap for %d symbols (%d bytes)",

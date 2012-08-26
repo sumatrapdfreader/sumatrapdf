@@ -6,6 +6,8 @@ AUTOMAKE_OPTIONS = foreign 1.7 dist-bzip2 dist-zip -Wall
 lib_LTLIBRARIES = libjbig2dec.la
 include_HEADERS = jbig2.h
 
+CFLAGS = @CFLAGS@ $(XCFLAGS)
+
 libjbig2dec_la_LDFLAGS = -version-info @JBIG2DEC_LT_CURRENT@:@JBIG2DEC_LT_REVISION@:@JBIG2DEC_LT_AGE@
 libjbig2dec_la_SOURCES = jbig2.c \
 	jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c jbig2_huffman.c \
@@ -19,7 +21,7 @@ libjbig2dec_la_SOURCES = jbig2.c \
 	jbig2_arith.h jbig2_arith_iaid.h jbig2_arith_int.h \
 	jbig2_huffman.h jbig2_hufftab.h jbig2_mmr.h \
 	jbig2_generic.h jbig2_symbol_dict.h jbig2_text.h \
-	jbig2_metadata.c jbig2_metadata.h
+	jbig2_metadata.c jbig2_metadata.h memento.c memento.h
 
 bin_PROGRAMS = jbig2dec
 noinst_PROGRAMS = test_sha1 test_huffman test_arith

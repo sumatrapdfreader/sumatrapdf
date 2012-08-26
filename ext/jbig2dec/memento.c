@@ -39,7 +39,9 @@
 #ifdef __MACH__
 #include <string.h>
 #else
+#ifndef memset
 void *memset(void *,int,size_t);
+#endif
 #endif
 int atexit(void (*)(void));
 #else
