@@ -247,6 +247,9 @@ Check for &Updates
 Comic books
 Βιβλία κόμικ
 
+Compatibility
+Συμβατότητα
+
 Continuous
 Μια σελίδα, συνεχόμενα
 
@@ -550,6 +553,9 @@ Previous Page
 Print
 Εκτύπωση
 
+Print as &image (requires more memory)
+Εκτύπωση ως &εικόνα (απαιτεί περισσότερη μνήμη)
+
 Print range
 Εύρος εκτύπωσης
 
@@ -708,8 +714,4 @@ copying text
 
 printing document
 εκτύπωση εγγράφου
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
 

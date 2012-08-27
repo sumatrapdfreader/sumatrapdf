@@ -245,6 +245,9 @@ Procurar atualizações
 Comic books
 Quadrinhos
 
+Compatibility
+Compatibilidade
+
 Continuous
 Contínuo
 
@@ -548,6 +551,9 @@ Página anterior
 Print
 Imprimir
 
+Print as &image (requires more memory)
+Imprimir como &imagem (requer mais memória)
+
 Print range
 Intervalo de impressão
 
@@ -706,8 +712,4 @@ copiando texto
 
 printing document
 imprimindo documento
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
 

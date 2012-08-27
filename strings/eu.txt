@@ -9,7 +9,7 @@
 Lang: eu Basque (Euskara)
 
 Contributor: Igor G. Olaizola
-Contributor: Xabier Aramendi (azpidatziak@gmail.com) 2011-2012 (https://sites.google.com/site/azpidatziak/)
+Contributor: Xabier Aramendi (2011-2012) (https://sites.google.com/site/azpidatziak/)
 
 &About
 &Honi buruz...
@@ -244,6 +244,9 @@ E&giaztatu Eguneraketak
 
 Comic books
 Komiki liburuak
+
+Compatibility
+Bateragarritasuna
 
 Continuous
 Jarraian
@@ -548,6 +551,9 @@ Aurreko Orrialdea
 Print
 Irarkitu
 
+Print as &image (requires more memory)
+Irarkitu I&rudi bezala (oroimen gehiago behar du)
+
 Print range
 Irarketa eremua
 
@@ -610,6 +616,9 @@ Post@z bidali...
 
 Set inverse search command-line
 Ezarri alderantzizko bilaketa agindu-lerroa
+
+Show &Bookmarks
+Erakutsi Laster&markak
 
 Show &Toolbar
 Erakutsi &Tresnabarra
@@ -703,9 +712,4 @@ idazkia kopiatzen
 
 printing document
 agiria irarkitzen
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
-#Show &Bookmarks
 
