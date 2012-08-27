@@ -78,6 +78,11 @@ public:
 
 class StderrLogger : public Logger {
 public:
+    virtual ~StderrLogger()
+    {
+        fflush(stderr);
+    }
+
     virtual void Log(TCHAR *s)
     {
         if (s)
