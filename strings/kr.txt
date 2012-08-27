@@ -247,6 +247,9 @@ Check for &Updates
 Comic books
 만화 책
 
+Compatibility
+호환성
+
 Continuous
 한 페이지씩 계속
 
@@ -550,6 +553,9 @@ Previous Page
 Print
 인쇄
 
+Print as &image (requires more memory)
+이미지로 인쇄(&I) (더 많은 메모리 필요)
+
 Print range
 인쇄 범위
 
@@ -701,15 +707,11 @@ Zoom factor
 배율 계수
 
 [Changes detected; refreshing] %s
-[변경 감지됨. 갱신 중...] %s
+[변경 감지됨. 새로 고치는 중...] %s
 
 copying text
 문자열 복사 중
 
 printing document
 문서 인쇄 중
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
 
