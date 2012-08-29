@@ -395,6 +395,9 @@ bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
 
 static void DecodeMobiDocHeader(const char *buf, MobiHeader* hdr)
 {
+    memset(hdr, 0, sizeof(MobiHeader));
+    hdr->drmEntriesCount = (uint32)-1;
+
     ByteOrderDecoder d(buf, kMobiHeaderLen, ByteOrderDecoder::BigEndian);
     d.Bytes(hdr->id, 4);
     hdr->hdrLen =               d.UInt32();
@@ -441,8 +444,12 @@ static void DecodeMobiDocHeader(const char *buf, MobiHeader* hdr)
 
     d.Bytes(hdr->reserved2, 62);
     hdr->extraDataFlags =       d.UInt16();
-    hdr->indxRec =              d.UInt32();
-    CrashIf(kMobiHeaderLen != d.Offset());
+    if (hdr->hdrLen >= 232) {
+        hdr->indxRec =          d.UInt32();
+        CrashIf(kMobiHeaderLen != d.Offset());
+    }
+    else
+        CrashIf(kMobiHeaderLen - 4 != d.Offset());
 }
 
 static PdbDocType GetPdbDocType(const char *typeCreator)
@@ -535,6 +542,10 @@ bool MobiDoc::ParseHeader()
     DecodeMobiDocHeader(firstRecData + kPalmDocHeaderLen, &mobiHdr);
     if (!str::EqN("MOBI", mobiHdr.id, 4)) {
         lf("MobiHeader.id is not 'MOBI'");
+        return false;
+    }
+    if (mobiHdr.drmEntriesCount != (uint32)-1) {
+        lf("DRM is unsupported");
         return false;
     }
     textEncoding = mobiHdr.textEncoding;
