@@ -14,6 +14,7 @@ Contributor: Ali Nayeri
 Contributor: dawoodiran@gmail.com
 Contributor: DR. dawood fakhim
 Contributor: داود فخیم
+Contributor: IRIman (iriman@chmail.ir)
 
 &About
 &درباره
@@ -22,67 +23,67 @@ Contributor: داود فخیم
 &ابعاد اصلی‌\tCtrl+1
 
 &All selected pages
-همه صفحات انتخاب شده
+&همه‌ی صفحات انتخاب ‌شده
 
 &Back\tAlt+Left Arrow
-&قبلی\tAlt+Left Arrow
+&قبلی\tAlt+←
 
 &Book View\tCtrl+8
-نمایش بشکل کتاب
+نمایش &کتابی
 
 &Close\tCtrl+W
 &بستن\tCtrl+W
 
 &Copy Selection
-رونوشت از انتخاب شده
+&رونوشت از انتخاب شده
 
 &Copy Selection\tCtrl+C
-&رونوشت مورد منتخب
+&رونوشت از انتخاب شده
 
 &Don't ask me again
-& دوباره از من نپرس
+&دوباره از من نپرس
 
 &Even pages only
-فقط صفحات زوج
+فقط صفحات &زوج
 
 &Facing\tCtrl+7
-دو صفحه ایی
+&دوصفحه‌ای
 
 &File
-&فايل
+&پرونده
 
 &Find what:
-&:جستجو برای
+&جستجو برای:
 
 &First Page\tHome
-&صفحه نخست\tHome
+صفحه‌ی &نخست\tHome
 
 &Fit pages to printable area
-صفحات را متناسب با صفحه چاپ بکن
+اندازه‌ی صفحات را متناسب با ناحیه‌ی قابل چاپ کاغذ &درست کن
 
 &Go To
 &برو به
 
 &Go to page:
-&:برو به صفحه
+&برو به صفحه‌ی:
 
 &Help
 &راهنما
 
 &Last Page\tEnd
-&صفحه آخر\tEnd
+صفحه‌ی آ&خر\tEnd
 
 &Magnification:
 &درشت نمایی
 
 &Manual
-&کتابچه راهنما در اینترنت
+&کتابچه‌ی راهنمای آنلاین
 
 &Match case
-&با توجه به قالب حروف
+با توجه به &قالب حروف
 
 &Next Page\tRight Arrow
-&صفحه بعدی\t->
+صفحه‌ی &بعدی\t→
 
 &No
 &خیر
@@ -91,67 +92,67 @@ Contributor: داود فخیم
 &نه، متشکرم
 
 &Odd pages only
-فقط صفحات فرد
+فقط صفحات &فرد
 
 &Open Document
 باز کردن سند
 
 &Open...\tCtrl+O
-&باز کردن...\tCtrl+O
+با&ز کردن...\tCtrl+O
 
 &Options...
-&گزینه ها
+&گزینه‌ها
 
 &Password:
-&کلمه عبور
+&کلمه‌ی عبور
 
 &Pin Document
-ثابت نمودن سند
+&سنجاق کردن سند
 
 &Previous Page\tLeft Arrow
-&صفحه قبلی\t<-
+صفحه‌ی &قبلی\t←
 
 &Print...
-چاپ کردن000
+&چاپ...
 
 &Print...\tCtrl+P
 &چاپ...\tCtrl+P
 
 &Print... (denied)
-&چاپ(ممنوع).. 
+&چاپ (ممنوع)...
 
 &Remember the password for this document
-رمز عبور این سند را بخاطر داشته باش
+رمز عبور این سند را به &خاطر داشته باش
 
 &Remember these settings for each document
-&این تنظیمات را برای هر سند بخاطر بسپار
+این تنظیمات را برای همه‌ی اسناد به &خاطر بسپار
 
 &Remove Document
-سند را حذف کن
+سند را &حذف کن
 
 &Save As...
-ذخیره کردن بنام000
+&ذخیره کردن با نام...
 
 &Save As...\tCtrl+S
-&...ذخیره بعنوان\tCtrl+S
+&ذخیره کردن با نام...\tCtrl+S
 
 &Settings
 &تنظیمات
 
 &Shrink pages to printable area (if necessary)
-صفحات را برای متناسب کردن با صفحه چاپ کوچک کن(اگر ضروری است)
+اندازه‌ی صفحات را متناسب با ناحیه‌ی قابل چاپ کاغذ &کاهش بده (اگر لازم است)
 
 &Single Page\tCtrl+6
-تک صفحه ای
+&تک‌صفحه‌ای
 
 &Skip this version
-&از این نسخه چشم پوشی کن
+از این نسخه &چشم‌پوشی کن
 
 &Use original page sizes
-اندازه صفحه اصلی را بکار بگیر
+اندازه‌ی &واقعی صفحات را به کار بگیر
 
 &View
-&نمايش
+&نمایش
 
 &Yes
 بلی
@@ -160,97 +161,100 @@ Contributor: داود فخیم
 &تغییر ابعاد نمایش
 
 (of %d)
-(%d از)
+(از %d)
 
 (page %s)
-(صفحه 5%s)
+(صفحه‌ی %s)
 
 About SumatraPDF
-SumatraPDF درباره برنامه
+درباره‌ی برنامه‌ی SumatraPDF
 
 Add Favorite
-افزودن به دلخواه
+افزودن به موارد برگزیده
 
 Add page %s to favorites
-افزودن صفحه %sبه دلخواهها
+افزودن صفحه‌ی %s به موارد برگزیده
 
 Add page %s to favorites with (optional) name:
-افزودن صفحه به %sدلخواهها با نام:
+افزودن صفحه‌ی %s به موارد برگزیده با نام(اختیاری):
 
 Add to favorites
-افزودن به دلخواهها
+افزودن به موارد برگزیده
 
 Advanced
 امکانات پیشرفته
 
 All files
-تمام فایلها
+تمام پرونده‌ها
 
 All supported documents
-همه اسناد قابل پشتیبانی
+همه‌ی اسناد پشتیبانی شده
 
 Application:
 :نرم‌افزار
 
 Associate with PDF files?
-قرار بدهیم ؟ PDF ایا این برنامه را نمایشگر همیشگی فایل های
+پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
 
 Attachment: %s
-پیوست:%s
+پیوست: %s
 
 Author:
-:مولف
+مؤلّف:
 
 Automatic
 خودکار
 
 Automatically check for &updates
-جستجو خودکار برای نسخه جدید
+به صورت خودکار برای نسخه‌ی &جدید جستجو کن
 
 Book View
 نمایش کتابی‌
 
 Book&marks\tF12
-نشان یادگاری سرکتاب\tF12
+ن&شانه‌ی صفحه‌ها\tF12
 
 Bookmark Shortcuts
-میانبر به نشانه گذاری ها
+میانبرهای نشانه‌گذاری‌ها
 
 Bookmark shortcut to page %s of %s
-میانبر به نشانه گذاری صفحه %s از %s
+میانبر به نشانه‌گذاری صفحه‌ی %s از %s
 
 Bookmarks
-نشانه گذاریها
+نشانه‌گذاری‌ها
 
 Bytes
-بایتها
+بایت
 
 CHM documents
 CHM اسناد
 
 Can't connect to the Internet (error %#x).
-ناتوانی در اتصال به اینترنت(خطای %#x)
+نمی‌توان به اینترنت وصل شد (خطای %#x)
 
 Cancel
 لغو
 
 Cannot print this file
-این فایل قابل به چاپ نیست
+نمی‌توان این پرونده را چاپ کرد
 
 Cannot start inverse search command. Please check the command line in the settings.
-.جستجو معکوس قابل اجرا نیست. لطفا تنظیمات خط فرمان را بازبینی کنید
+جستجوی معکوس قابل اجرا نیست. لطفاً تنظیمات خط فرمان را بازبینی کنید.
 
 Change Language
 تغییر زبان (Change Language)
 
 Check for &Updates
-چک کردن نسخه تازه تر
+بررسی برای نسخه‌ی &جدیدتر
 
 Comic books
-کتابهای فکاهی
+کتاب‌های فُکاهی
+
+Compatibility
+سازگاری
 
 Continuous
-نمايش پيوسته
+نمایش پیوسته
 
 Continuous Book View
 نمایش کتابی‌ پیوسته
@@ -259,25 +263,25 @@ Continuous Facing
 نمایش دو صفحه‌ای پیوسته
 
 Contribute Translation
-در ترجمه این برنامه کمک کنید
+در ترجمه‌ی این برنامه کمک کنید
 
 Copy &Image
-رونوشت و عکس
+رونوشت از &عکس
 
 Copy &Link Address
-رونوشت و لینک آدرس
+رونوشت از نشانی &پیوند
 
 Copy Co&mment
-رونوشت و توضیح
+رونوشت از تو&ضیح
 
 Copying text was denied (copying as image only)
-رونوشت گیری ممنوع (کپی فقط بعنوان عکس)
+رونوشت‌گیری از متن ممنوع است (رونوشت فقط به صورت عکس)
 
 Copyright:
-حق نشر
+حقّ نشر
 
 Could not obtain Printer properties
-قادر به تعیین خصوصیات چاپ نمیباشم
+نمی‌توان خصوصیات چاپگر را به دست آورد
 
 Couldn't initialize printer
 متأسفانه چاپگر منتخب در دسترس نیست
@@ -286,106 +290,106 @@ Couldn't render the page
 متأسفانه صفحه قابل نمایش نیست
 
 Created:
-:بوجود آمده
+زمان ایجاد:
 
 Current file
-همین فایل
+همین پرونده
 
 Custom &Zoom...\tCtrl+Y
-ابعاد نمایش مخصوص\tCtrl+Y
+ابعاد نمایش &سفارشی...\tCtrl+Y
 
 Default &Layout:
-:نمایش پیش فرض
+&نمایش پیش‌فرض:
 
 Default &Zoom:
-:ابعاد نمایش
+&ابعاد نمایش پیش‌فرض:
 
 Default PDF reader can't be changed in portable mode
-باشد PDF نسخه همراه برنامه نمی‌تواند مجری استاندارد فایلهای
+خواننده‌ی پیش‌فرض پرونده‌های PDF را نمی‌توان در نسخه‌ی همراه تغییر داد.
 
 Denied Permissions:
-:دسترسی ممنوع
+دسترسی‌های ممنوع:
 
 DjVu documents
 DjVu اسناد
 
 Document Properties
-ویژگیهای سند
+ویژگی‌های سند
 
 Download
-بارگیری
+دریافت
 
 E&xit\tCtrl+Q
-خروج\tCtrl+Q
+&خروج\tCtrl+Q
 
 EPUB ebooks
 EPUB اسناد
 
 Enter password
-کلمه عبور را وارد کنید
+کلمه‌ی عبور را وارد کنید
 
 Enter password for %s
-را وارد کنید %s کلمه عبور برای
+کلمه‌ی عبور را برای %s وارد کنید
 
 Enter the command-line to invoke when you double-click on the PDF document:
-خط دستور را برای فرخوانی هنگام کلیک روی فایل pdf  را وارد کن
+خط دستور را برای فراخوانی هنگام کلیک روی پرونده‌ی PDF وارد کنید:
 
 Error loading %s
 نمایش خطا %s
 
 F&avorites
-دلخواهها
-
-F&orward\tAlt+Right Arrow
-جلو\tAlt+Right Arrow
+موارد &منتخب
 
 F&ullscreen\tCtrl+Shift+L
-تمام‌صفحه\tCtrl+Shift+L
+&تمام‌صفحه\tCtrl+Shift+L
 
 Facing
-نمایش دو صفحه‌ای
+نمایش دوصفحه‌ای
+
+Failed to rename the file!
+تغییر نام پرونده با شکست مواجه شد!
 
 Failed to save a file
-ذخيره کردن فايل با مشکل روبرو شد
+ذخیره کردن فایل با مشکل روبرو شد
 
 Favorites
-دلخواهها
+موارد منتخب
 
 File %s not found
-فایل %s پیدا نشد
+پرونده %s پیدا نشد
 
 File Size:
-:حجم فایل
+حجم پرونده:
 
 File:
-:فايل
+پرونده:
 
 Fin&d...\tCtrl+F
-...جستجو\tCtrl+F
+&جستجو...\tCtrl+F
 
 Find
 جستجو
 
 Find Next
-جستجو روبه جلو
+مورد بعدی را پیدا کن
 
 Find Previous
-جستجو روبه عقب
+مورد قبلی را پیدا کن
 
 Find:
 جستجو:
 
 Fit &Content\tCtrl+3
-متناسب کردن &محتویات\tCtrl+3
+متناسب کردن با &محتویات\tCtrl+3
 
 Fit &Page\tCtrl+0
-به بزرگی پنجره\tCtrl+0
+به &بزرگی پنجره\tCtrl+0
 
 Fit &Width\tCtrl+2
-به بزرگی پهنای پنجره\tCtrl+2
+به بزرگی &پهنای پنجره\tCtrl+2
 
 Fit Content
-متناسب کردن محتویات
+متناسب کردن با محتویات
 
 Fit Page
 به بزرگی پنجره
@@ -394,55 +398,55 @@ Fit Width
 به بزرگی پهنای پنجره
 
 Fit Width and Show Pages Continuously
-متناسب کردن پهنا و نمایش بدنبال هم صفحات
+صفحات را به بزرگی پهنای پنجره و به صورت پیوسته نمایش بده
 
 Fit a Single Page
 متناسب کردن یک صفحه
 
 Fonts:
-قلمها
+قلم‌ها:
 
 Formatting the book... %d pages
-قالب بندی کتاب 000%d صفحات
+قالب‌بندی کتاب... %d صفحه
 
 Found text at page %s
-پیدا شد %s متن در صفحه
+متن در صفحه‌ی ‌%s پیدا شد
 
 Found text at page %s (again)
-پیدا کردن متن در صفحه%s (دوباره)
+متن در صفحه‌ی ‌%s پیدا شد (دوباره)
 
 Frequently Read
-سوالات رایج
+خوانده شده‌ها
 
 GB
-GB
+گیگابایت
 
 Go to page
-برو به صفحه
+برو به صفحه‌ی
 
 Hide frequently read
-پنهان کردن مطالعه شده  مکرر
+پنهان کردن خوانده شده‌ها
 
 Hint: Use the F3 key for finding again
-استفاده کنید F3 اشاره: برای جستجو مجدد از کلید
+اشاره: برای جستجوی مجدد از کلید F3 استفاده کنید
 
 Image files (*.%s)
-(*.%s)فایلهای تصویری
+پرونده‌های تصویری (*.%s)
 
 KB
-KB
+کیلوبایت
 
 Loading file %s...
-نمایش فایل %s....
+در حال بازکردن پرونده‌ی %s...
 
 MB
 MB
 
 Make SumatraPDF default application for PDF files?
-قرار بدهیم؟ PDF ایا این برنامه را مجری استاندارد فایل های
+پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
 
 Make SumatraPDF my default PDF reader
-PDF بعنوان مرورگر اصلی‌ اسناد SumatraPDF انتخاب
+انتخاب SumatraPDF به عنوان برنامه‌ی پیش‌فرض من برای خواندن اسناد PDF
 
 Match Case
 متناسب با مورد
@@ -451,220 +455,232 @@ Mobi documents
 Mobi اسناد
 
 Modified:
-:اصلاح شده
+اصلاح شده:
 
 New version %s is available. Download new version?
-موجود می‌باشد. آیا می‌خواهید آن را بارگیری کنید؟ (%s) نسخه تازه
+نسخه جدید %s موجود است. آیا می‌خواهید آن را دریافت کنید؟
 
 Next Page
-صفحه بعدی
+صفحه‌ی بعدی
 
 No matches were found
 مورد مرتبطی یافت نشد
 
 No result found around line %u in file %s
-هیچ نتیجه ای در خط %u در فایل %s یافت نشد
+هیچ نتیجه‌ای در خط %u در پرونده‌ی %s یافت نشد
 
 No synchronization file found
-فایل همگام سازی موجود نیست
+پرونده همگام‌سازی موجود نیست
 
 No synchronization info at this position
-هیچ اصلاعاتی در ین محل همگام نشد
+هیچ اطلاعاتی در این محل همگام نشد
 
 Number of Pages:
-شماره صفحات
+تعداد صفحات:
 
 OK
-قبول
+تأیید
 
 Open
 باز کردن
 
 Open &in PDF-XChange
-PDF-XChange باز کردن در
+باز کردن در PDF-&XChange
 
 Open a document...
-باز کردن سند....
+باز کردن سند...
 
 Open in &Adobe Reader
-Adobe Reader باز کردن در
+باز کردن در &Adobe Reader
 
 Open in &Foxit Reader
-Foxit Reader باز کردن در
+باز کردن در &Foxit Reader
 
 Open in &Microsoft HTML Help
-Microsoft HTML Help باز کردن در
+باز کردن در &Microsoft HTML Help
 
 Open in &Microsoft XPS-Viewer
-Microsoft XPS-Viewer باز کردن در
+باز کردن در Microsoft X&PS-Viewer
 
 P&roperties
-خصوصیات
+وی&ژگی‌ها
 
 P&roperties\tCtrl+D
-...ویزگیها\tCtrl+D
+وی&ژگی‌ها\tCtrl+D
 
 PDF Document
 PDF سند
 
 PDF Producer:
-:PDF برنامه مبدل
+برنامه‌ی ساخت PDF:
 
 PDF Version:
-:PDF نسخه
+نسخه‌ی PDF:
 
 PDF documents
 PDF اسناد
 
 Pa&ge...\tCtrl+G
-...صفحه\tCtrl+G
+&صفحه‌ی...\tCtrl+G
 
 Page %s
-صفحه %s
+صفحه‌ی %s
 
 Page Size:
-:ابعاد صفحه
+ابعاد صفحه:
 
 Page number %u inexistant
-موجود نیست %u صفحه
+صفحه‌ی %u موجود نیست
 
 Page scaling
-اندازه گیری صفحه
+مقیاس‌گذاری صفحه
 
 Page:
 صفحه:
 
 Please wait - rendering...
-... لطفا صبر کنید
+لطفاً صبر کنید...
 
 Postscript documents
-ضمیه اسناد
+Postscript اسناد
 
 Pr&esentation\tCtrl+L
-نمایش\tCtrl+L
+ارا&ئه\tCtrl+L
 
 Previous Page
-صفحه قبلی
+صفحه‌ی قبلی
 
 Print
 چاپ
 
+Print as &image (requires more memory)
+چاپ به عنوان &عکس (حافظه‌ی بیشتری مصرف می‌شود)
+
 Print range
-محدوده چاپ
+محدوده‌ی چاپ
 
 Printer with given name doesn't exist
-چاپگر با نام داده شده وجود ندارد
+چاپگری با نام داده شده وجود ندارد
 
 Printing is still in progress. Abort and start over?
-در حال چاپ کردن .انصراف و شروع مجدد؟
+در حال چاپ کردن.انصراف و شروع مجدد؟
 
 Printing page %d of %d...
-چاپ کردن از صفحه %d از %d
+چاپ کردن صفحه‌ی %d از %d...
 
 Printing problem.
-مشکل در چاپ
+مشکل در چاپ.
+
+Re&name...\tF2
+تغییر  &نام...\tF2
 
 Remember &opened files
-فایلهای باز شده را بخاطر بسپار
+پرونده‌های &باز را به خاطر بسپار
 
 Remove from favorites
-حذف از دلخواه ها
+حذف از موارد برگزیده
 
 Remove page %s from favorites
-حذف صفحه %s از دلخواه ها
+حذف صفحه‌ی %s از موارد برگزیده
+
+Rename To
+تغییر نام به
 
 Replace document &colors with Windows color scheme
-جایگزینی سند و رنگها با تم رنگ ویندوز
+جایگزینی &رنگ‌های سند با طرح رنگ ویندوز
 
 Rotate &Left\tCtrl+Shift+-
-چرخاندن به چپ\tCtrl+Shift+-
+چرخاندن به &چپ\tCtrl+Shift+-
 
 Rotate &Right\tCtrl+Shift++
-چرخاندن به راست\tCtrl+Shift++
+چرخاندن به &راست\tCtrl+Shift++
 
 Save As
-ذخیره بنام
+ذخیره با نام
 
 Save S&hortcut...\tCtrl+Shift+S
-...\tCtrl+Shift+Sذخیره میانبر
+ذخیره‌ی &میانبر...\tCtrl+Shift+S
 
 Searching %d of %d...
-... %d از %d در حال جستجو
+در حال جستجو %d از %d...
 
 Select &All
-انتخاب همه
+انتخاب &همه
 
 Select &All\tCtrl+A
-انتخاب همه\tCtrl+A
+انتخاب &همه\tCtrl+A
 
 Select content with Ctrl+left mouse button
-و دکمه سمت چپ موس انتخاب کنید Ctrl متن مورد نظر را با
+متن مورد نظر را با کلید Ctrl و کلید سمت چپ موس انتخاب کنید
 
 Send by &E-mail...
-... ارسال با پست الکترونیکی‌
+ارسال از طریق &رایانامه(Email)...
 
 Set inverse search command-line
-تنظیم وارانه جستجو
+تنظیم خط فرمان جستجوی وارونه
+
+Show &Bookmarks
+ن&شانه‌ها را نشان بده
 
 Show &Toolbar
-نمايش نوار ابزار
+نمایش نوار &ابزار
 
 Show &pages continuously
-نمایش پیوسته صفحات
+نمایش &پیوسته‌ی صفحات
 
 Show Favorites
-نشان دادن دلخواه ها
+نشان دادن موارد برگزیده
 
 Show frequently read
-نشان دادن بیشترین خوانده شده
+نشان دادن خوانده شده‌ها
 
 Show the &bookmarks sidebar when available
-نشان دادن  نوار کناری علامتگذاریها هنگامیکه در دسترس است
+هنگامیکه نوار ن&شانه‌ها در دسترس است آن را نشان بده
 
 Single Page
 نمایش تک صفحه‌ای
 
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
-متاسفانه انجام نشد!\n\n لطفاً کلید کنسل را بزنید
+متأسفیم، نباید اینطوری می‌شد!\n\n لطفاً اگر مایلید که برای برطرف شدن مشکل ما را یاری نمایید، کلید لغو را بزنید.
 
 Source file %s has no synchronization point
-نقاط همگام سازی ندارد %s فایل
+پرونده‌ی %s نقاط همگام‌سازی ندارد
 
 Subject:
-:موضوع
+موضوع:
 
 SumatraPDF Options
-SumatraPDF گزینه ها
+ گزینه‌های SumatraPDF
 
 SumatraPDF Update
-بروز رسانی SumatraPDF
+به‌روز رسانی SumatraPDF
 
 SumatraPDF crashed
-SumatraPDF خراب شد
+SumatraPDF از کار افتاد
 
 SumatraPDF is your default PDF reader
-شماست PDF مرورگر اصلی SumatraPDF
+SumatraPDF برنامه‌ی پیش‌فرض برای خواندن پرونده‌های PDF شماست
 
 SumatraPDF should now be your default PDF reader
-شماست PDF اکنون مرورگر اصلی SumatraPDF
+اکنون SumatraPDF باید برنامه‌ی پیش‌فرض برای خواندن پرونده‌های PDF شما باشد
 
 Synchronization file cannot be opened
-فایل همگام سازی باز نمی‌شود
+پرونده‌ی همگام‌سازی باز نمی‌شود
 
 Text documents
 سند متنی
 
 Title:
-:عنوان
+عنوان:
 
 Unknown source file (%s)
-نامعلوم است (%s) فایل منبع
+پرونده‌ی منبع نامعلوم است (%s) 
 
 View
-نمايش
+نمایش
 
 Visit &Website
-بازديد از وب‌سايت
+بازدید از &وب‌سایت
 
 Warning
 هشدار
@@ -673,10 +689,10 @@ XPS documents
 XPS اسناد
 
 You have the latest version.
-.نسخه شما تازه‌ترین نسخه می‌باشد
+نسخه‌ی شما جدیدترین نسخه است.
 
 You have version %s
-شما نسخه %s را دارید
+شما نسخه‌ی %s را دارید
 
 Zoom
 ابعاد نمایش
@@ -691,19 +707,14 @@ Zoom factor
 ضریب ابعاد نمایش
 
 [Changes detected; refreshing] %s
-%s [تغییرات شناسایی شد]
+%s [تغییرات شناسایی شد؛ تازه‌سازی]
 
 copying text
-در حل رونوش متن
+در حال رونوشت متن
 
 printing document
-در حل چاپ سند
+در حال چاپ سند
 
 # Untranslated:
-#Compatibility
-#Failed to rename the file!
-#Print as &image (requires more memory)
-#Re&name...\tF2
-#Rename To
-#Show &Bookmarks
+#F&orward\tAlt+Right Arrow
 
