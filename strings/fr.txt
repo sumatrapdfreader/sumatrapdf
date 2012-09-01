@@ -14,6 +14,7 @@ Contributor: phoenix
 Contributor: pconno
 Contributor: didier
 Contributor: bernard
+Contributor: leo
 
 &About
 &À propos
@@ -248,6 +249,9 @@ Check for &Updates
 
 Comic books
 Bandes dessinées
+
+Compatibility
+Compatibilité
 
 Continuous
 Vue continue
@@ -552,6 +556,9 @@ Page précédente
 Print
 Imprimer
 
+Print as &image (requires more memory)
+Imprimer en tant qu'&image (demande plus de mémoire)
+
 Print range
 Plage d'impression
 
@@ -614,6 +621,9 @@ Envoyer par &courriel...
 
 Set inverse search command-line
 Configurer la recherche inverse
+
+Show &Bookmarks
+Voir les &Marque-pages
 
 Show &Toolbar
 Afficher la &barre d'outils
@@ -707,9 +717,4 @@ copie du texte
 
 printing document
 impression du document
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
-#Show &Bookmarks
 

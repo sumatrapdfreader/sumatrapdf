@@ -253,6 +253,9 @@ Controleren op &updates
 Comic books
 Stripboeken
 
+Compatibility
+Compatibiliteit
+
 Continuous
 Doorlopend
 
@@ -281,7 +284,7 @@ Copyright:
 Auteursrecht
 
 Could not obtain Printer properties
-Kon geen Printer eigenschappen verkrijgen
+Kan geen printereigenschappen verkrijgen
 
 Couldn't initialize printer
 Kan de printer niet initialiseren
@@ -556,6 +559,9 @@ Vorige pagina
 Print
 Afdrukken
 
+Print as &image (requires more memory)
+Als afbeelding afdrukken (vereist meer geheugen)
+
 Print range
 Bereik afdrukken
 
@@ -714,8 +720,4 @@ tekst kopiëren
 
 printing document
 document afdrukken
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
 
