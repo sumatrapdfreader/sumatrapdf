@@ -137,7 +137,7 @@ pdf_load_name_tree_imp(pdf_obj *dict, pdf_document *xref, pdf_obj *node)
 			pdf_obj *val = pdf_array_get(names, i + 1);
 			if (pdf_is_string(key))
 			{
-				key = pdf_to_utf8_name(ctx, key);
+				key = pdf_to_utf8_name(xref, key);
 				pdf_dict_put(dict, key, val);
 				pdf_drop_obj(key);
 			}

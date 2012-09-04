@@ -75,7 +75,7 @@ static Pixmap xicon, xmask;
 static GC xgc;
 static XEvent xevt;
 static int mapped = 0;
-static Cursor xcarrow, xchand, xcwait;
+static Cursor xcarrow, xchand, xcwait, xccaret;
 static int justcopied = 0;
 static int dirty = 0;
 static int dirtysearch = 0;
@@ -117,6 +117,24 @@ char *winpassword(pdfapp_t *app, char *filename)
 	return r;
 }
 
+char *wintextinput(pdfapp_t *app, char *inittext, int retry)
+{
+	static char buf[256];
+
+	if (retry)
+		return NULL;
+
+	printf("> [%s] ", inittext);
+	fgets(buf, sizeof buf, stdin);
+	return buf;
+}
+
+int winchoiceinput(pdfapp_t *app, int nopts, char *opts[], int *nvals, char *vals[])
+{
+	/* FIXME: temporary dummy implementation */
+	return 0;
+}
+
 /*
  * X11 magic
  */
@@ -144,6 +162,7 @@ static void winopen(void)
 	xcarrow = XCreateFontCursor(xdpy, XC_left_ptr);
 	xchand = XCreateFontCursor(xdpy, XC_hand2);
 	xcwait = XCreateFontCursor(xdpy, XC_watch);
+	xccaret = XCreateFontCursor(xdpy, XC_xterm);
 
 	xbgcolor.red = 0x7000;
 	xbgcolor.green = 0x7000;
@@ -217,6 +236,18 @@ void winclose(pdfapp_t *app)
 	closing = 1;
 }
 
+int winsavequery(pdfapp_t *app)
+{
+	/* FIXME: temporary dummy implementation */
+	return DISCARD;
+}
+
+int wingetsavepath(pdfapp_t *app, char *buf, int len)
+{
+	/* FIXME: temporary dummy implementation */
+	return 0;
+}
+
 void cleanup(pdfapp_t *app)
 {
 	fz_context *ctx = app->ctx;
@@ -227,6 +258,7 @@ void cleanup(pdfapp_t *app)
 
 	XFreePixmap(xdpy, xicon);
 
+	XFreeCursor(xdpy, xccaret);
 	XFreeCursor(xdpy, xcwait);
 	XFreeCursor(xdpy, xchand);
 	XFreeCursor(xdpy, xcarrow);
@@ -252,6 +284,8 @@ void wincursor(pdfapp_t *app, int curs)
 		XDefineCursor(xdpy, xwin, xchand);
 	if (curs == WAIT)
 		XDefineCursor(xdpy, xwin, xcwait);
+	if (curs == CARET)
+		XDefineCursor(xdpy, xwin, xccaret);
 	XFlush(xdpy);
 }
 

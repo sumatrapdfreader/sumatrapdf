@@ -237,6 +237,8 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 	fz_var(info);
 	fz_var(list);
 
+	xref->dirty = 1;
+
 	fz_seek(xref->file, 0, 0);
 
 	fz_try(ctx)
@@ -413,8 +415,8 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 				xref->table[list[i].num].obj = NULL;
 			}
 
-			/* corrected stream length */
-			if (list[i].stm_len >= 0)
+			/* correct stream length for unencrypted documents */
+			if (!encrypt && list[i].stm_len >= 0)
 			{
 				dict = pdf_load_object(xref, list[i].num, list[i].gen);
 

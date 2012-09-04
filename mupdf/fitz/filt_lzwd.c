@@ -80,6 +80,12 @@ read_lzwd(fz_stream *stm, unsigned char *buf, int len)
 			break;
 		}
 
+		if (next_code >= NUM_CODES && code != LZW_CLEAR)
+		{
+			fz_warn(stm->ctx, "missing clear code in lzw decode");
+			code = LZW_CLEAR;
+		}
+
 		if (code == LZW_CLEAR)
 		{
 			code_bits = MIN_BITS;
@@ -115,7 +121,7 @@ read_lzwd(fz_stream *stm, unsigned char *buf, int len)
 			{
 				code_bits ++;
 				if (code_bits > MAX_BITS)
-					code_bits = MAX_BITS;	/* FIXME */
+					code_bits = MAX_BITS;
 			}
 
 			old_code = code;

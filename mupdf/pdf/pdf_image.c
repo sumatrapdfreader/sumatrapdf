@@ -303,7 +303,7 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 	int imagemask;
 	int interpolate;
 	int indexed;
-	fz_image *mask = NULL; /* explicit mask/softmask image */
+	fz_image *mask = NULL; /* explicit mask/soft mask image */
 	int usecolorkey;
 
 	int i;
@@ -325,7 +325,7 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 			{
 				fz_pixmap *mask_pixmap;
 				if (image->n != 2)
-					fz_throw(ctx, "softmask must be grayscale");
+					fz_throw(ctx, "soft mask must be grayscale");
 				mask_pixmap = fz_alpha_from_gray(ctx, image->tile, 1);
 				fz_drop_pixmap(ctx, image->tile);
 				image->tile = mask_pixmap;
@@ -398,11 +398,13 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		obj = pdf_dict_getsa(dict, "SMask", "Mask");
 		if (pdf_is_dict(obj))
 		{
-			/* Not allowed for inline images */
-			if (!cstm)
-			{
+			/* Not allowed for inline images or soft masks */
+			if (cstm)
+				fz_warn(ctx, "Ignoring invalid inline image soft mask");
+			else if (forcemask)
+				fz_warn(ctx, "Ignoring recursive image soft mask");
+			else
 				mask = (fz_image *)pdf_load_image_imp(xref, rdb, obj, NULL, 1);
-			}
 		}
 		else if (pdf_is_array(obj))
 		{

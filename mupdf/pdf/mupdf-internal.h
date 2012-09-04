@@ -165,6 +165,7 @@ struct pdf_xref_entry_s
 typedef struct pdf_crypt_s pdf_crypt;
 typedef struct pdf_ocg_descriptor_s pdf_ocg_descriptor;
 typedef struct pdf_ocg_entry_s pdf_ocg_entry;
+typedef struct pdf_hotspot_s pdf_hotspot;
 
 struct pdf_ocg_entry_s
 {
@@ -180,6 +181,21 @@ struct pdf_ocg_descriptor_s
 	pdf_obj *intent;
 };
 
+enum
+{
+	HOTSPOT_POINTER_DOWN = 0x1,
+	HOTSPOT_POINTER_OVER = 0x2
+};
+
+struct pdf_hotspot_s
+{
+	int num;
+	int gen;
+	int state;
+};
+
+typedef struct pdf_js_s pdf_js;
+
 struct pdf_document_s
 {
 	fz_document super;
@@ -193,6 +209,7 @@ struct pdf_document_s
 	pdf_crypt *crypt;
 	pdf_obj *trailer;
 	pdf_ocg_descriptor *ocg;
+	pdf_hotspot hotspot;
 
 	int len;
 	pdf_xref_entry *table;
@@ -203,10 +220,17 @@ struct pdf_document_s
 	pdf_obj **page_refs;
 
 	pdf_lexbuf_large lexbuf;
+
+	pdf_annot *focus;
+	pdf_obj *focus_obj;
+
+	pdf_js *js;
+	int recalculating;
+	int dirty;
 };
 
 pdf_document *pdf_open_document_no_run(fz_context *ctx, const char *filename);
-pdf_document *pdf_open_document_no_run_with_stream(fz_stream *file);
+pdf_document *pdf_open_document_no_run_with_stream(fz_context *ctx, fz_stream *file);
 
 void pdf_cache_object(pdf_document *doc, int num, int gen);
 
@@ -315,7 +339,10 @@ pdf_xobject *pdf_load_xobject(pdf_document *doc, pdf_obj *obj);
 pdf_obj *pdf_new_xobject(pdf_document *doc, fz_rect *bbox, fz_matrix *mat);
 pdf_xobject *pdf_keep_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_drop_xobject(fz_context *ctx, pdf_xobject *xobj);
-void pdf_update_xobject_contents(pdf_document *xref, pdf_xobject *from, fz_buffer *buffer);
+void pdf_update_xobject_contents(pdf_document *xref, pdf_xobject *form, fz_buffer *buffer);
+
+void pdf_update_appearance(pdf_document *doc, pdf_obj *obj);
+
 /* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
 pdf_xobject *pdf_create_xobject(fz_context *ctx, pdf_obj *dict);
 
@@ -522,19 +549,22 @@ void pdf_drop_font(fz_context *ctx, pdf_font_desc *font);
 void pdf_print_font(fz_context *ctx, pdf_font_desc *fontdesc);
 #endif
 
+fz_rect pdf_measure_text(fz_context *ctx, pdf_font_desc *fontdesc, unsigned char *buf, int len);
+float pdf_text_stride(fz_context *ctx, pdf_font_desc *fontdesc, float fontsize, unsigned char *buf, int len, float room, int *count);
+
 /*
  * Interactive features
  */
-
-typedef struct pdf_annot_s pdf_annot;
 
 struct pdf_annot_s
 {
 	pdf_obj *obj;
 	fz_rect rect;
+	fz_rect pagerect;
 	pdf_xobject *ap;
 	fz_matrix matrix;
 	pdf_annot *next;
+	int type;
 };
 
 fz_link_dest pdf_parse_link_dest(pdf_document *doc, pdf_obj *dest);
@@ -542,13 +572,27 @@ fz_link_dest pdf_parse_action(pdf_document *doc, pdf_obj *action);
 pdf_obj *pdf_lookup_dest(pdf_document *doc, pdf_obj *needle);
 pdf_obj *pdf_lookup_name(pdf_document *doc, char *which, pdf_obj *needle);
 pdf_obj *pdf_load_name_tree(pdf_document *doc, char *which);
+
 /* SumatraPDF: parse full file specifications */
-char *pdf_file_spec_to_str(fz_context *ctx, pdf_obj *file_spec);
+char *pdf_file_spec_to_str(pdf_document *doc, pdf_obj *file_spec);
 
 fz_link *pdf_load_link_annots(pdf_document *, pdf_obj *annots, fz_matrix page_ctm);
 
-pdf_annot *pdf_load_annots(pdf_document *, pdf_obj *annots);
+pdf_annot *pdf_load_annots(pdf_document *, pdf_obj *annots, fz_matrix page_ctm);
 void pdf_free_annot(fz_context *ctx, pdf_annot *link);
+
+int pdf_field_type(pdf_document *doc, pdf_obj *field);
+char *pdf_field_value(pdf_document *doc, pdf_obj *field);
+int pdf_field_set_value(pdf_document *doc, pdf_obj *field, char *text);
+char *pdf_field_border_style(pdf_document *doc, pdf_obj *field);
+void pdf_field_set_border_style(pdf_document *doc, pdf_obj *field, char *text);
+void pdf_field_set_button_caption(pdf_document *doc, pdf_obj *field, char *text);
+void pdf_field_set_fill_color(pdf_document *doc, pdf_obj *field, pdf_obj *col);
+void pdf_field_set_text_color(pdf_document *doc, pdf_obj *field, pdf_obj *col);
+int pdf_field_display(pdf_document *doc, pdf_obj *field);
+void pdf_field_set_display(pdf_document *doc, pdf_obj *field, int d);
+pdf_obj *pdf_lookup_field(pdf_obj *form, char *name);
+void pdf_field_reset(pdf_document *doc, pdf_obj *field);
 
 /*
  * Page tree, pages and related objects
@@ -575,9 +619,94 @@ void pdf_run_glyph(pdf_document *doc, pdf_obj *resources, fz_buffer *contents, f
 /*
  * PDF interface to store
  */
-
 void pdf_store_item(fz_context *ctx, pdf_obj *key, void *val, unsigned int itemsize);
 void *pdf_find_item(fz_context *ctx, fz_store_free_fn *free, pdf_obj *key);
 void pdf_remove_item(fz_context *ctx, fz_store_free_fn *free, pdf_obj *key);
+
+/*
+ * PDF interaction interface
+ */
+int pdf_has_unsaved_changes(pdf_document *doc);
+int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event);
+fz_rect *pdf_poll_screen_update(pdf_document *doc);
+fz_widget *pdf_focused_widget(pdf_document *doc);
+fz_widget *pdf_first_widget(pdf_document *doc, pdf_page *page);
+fz_widget *pdf_next_widget(fz_widget *previous);
+char *pdf_text_widget_text(pdf_document *doc, fz_widget *tw);
+int pdf_text_widget_max_len(pdf_document *doc, fz_widget *tw);
+int pdf_text_widget_content_type(pdf_document *doc, fz_widget *tw);
+int pdf_text_widget_set_text(pdf_document *doc, fz_widget *tw, char *text);
+int pdf_choice_widget_options(pdf_document *doc, fz_widget *tw, char *opts[]);
+int pdf_choice_widget_is_multiselect(pdf_document *doc, fz_widget *tw);
+int pdf_choice_widget_value(pdf_document *doc, fz_widget *tw, char *opts[]);
+void pdf_choice_widget_set_value(pdf_document *doc, fz_widget *tw, int n, char *opts[]);
+
+/*
+ * Javascript handler
+ */
+typedef struct pdf_js_event_s
+{
+	pdf_obj *target;
+	char *value;
+	int rc;
+} pdf_js_event;
+
+pdf_js *pdf_new_js(pdf_document *doc);
+void pdf_drop_js(pdf_js *js);
+void pdf_js_load_document_level(pdf_js *js);
+void pdf_js_setup_event(pdf_js *js, pdf_js_event *e);
+pdf_js_event *pdf_js_get_event(pdf_js *js);
+void pdf_js_execute(pdf_js *js, char *code);
+void pdf_js_execute_count(pdf_js *js, char *code, int count);
+
+/*
+ * Javascript engine interface
+ */
+typedef struct pdf_jsimp_s pdf_jsimp;
+typedef struct pdf_jsimp_type_s pdf_jsimp_type;
+typedef struct pdf_jsimp_obj_s pdf_jsimp_obj;
+
+typedef void (pdf_jsimp_dtr)(void *jsctx, void *obj);
+typedef pdf_jsimp_obj *(pdf_jsimp_method)(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[]);
+typedef pdf_jsimp_obj *(pdf_jsimp_getter)(void *jsctx, void *obj);
+typedef void (pdf_jsimp_setter)(void *jsctx, void *obj, pdf_jsimp_obj *val);
+
+enum
+{
+	JS_TYPE_UNKNOWN,
+	JS_TYPE_NULL,
+	JS_TYPE_STRING,
+	JS_TYPE_NUMBER,
+	JS_TYPE_ARRAY
+};
+
+/* SumatraPDF: don't declare functions that aren't linked */
+#ifndef NDEBUG
+pdf_jsimp *pdf_new_jsimp(fz_context *ctx, void *jsctx);
+void pdf_drop_jsimp(pdf_jsimp *imp);
+
+pdf_jsimp_type *pdf_jsimp_new_type(pdf_jsimp *imp, pdf_jsimp_dtr *dtr);
+void pdf_jsimp_drop_type(pdf_jsimp *imp, pdf_jsimp_type *type);
+void pdf_jsimp_addmethod(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf_jsimp_method *meth);
+void pdf_jsimp_addproperty(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf_jsimp_getter *get, pdf_jsimp_setter *set);
+void pdf_jsimp_set_global_type(pdf_jsimp *imp, pdf_jsimp_type *type);
+
+pdf_jsimp_obj *pdf_jsimp_new_obj(pdf_jsimp *imp, pdf_jsimp_type *type, void *obj);
+void pdf_jsimp_drop_obj(pdf_jsimp *imp, pdf_jsimp_obj *obj);
+
+int pdf_jsimp_to_type(pdf_jsimp *imp, pdf_jsimp_obj *obj);
+
+pdf_jsimp_obj *pdf_jsimp_from_string(pdf_jsimp *imp, char *str);
+char *pdf_jsimp_to_string(pdf_jsimp *imp, pdf_jsimp_obj *obj);
+
+pdf_jsimp_obj *pdf_jsimp_from_number(pdf_jsimp *imp, double num);
+double pdf_jsimp_to_number(pdf_jsimp *imp, pdf_jsimp_obj *obj);
+
+int pdf_jsimp_array_len(pdf_jsimp *imp, pdf_jsimp_obj *obj);
+pdf_jsimp_obj *pdf_jsimp_array_item(pdf_jsimp *imp, pdf_jsimp_obj *obj, int i);
+
+void pdf_jsimp_execute(pdf_jsimp *imp, char *code);
+void pdf_jsimp_execute_count(pdf_jsimp *imp, char *code, int count);
+#endif
 
 #endif

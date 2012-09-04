@@ -88,10 +88,10 @@ void pdf_print_obj(pdf_obj *obj);
 void pdf_print_ref(pdf_obj *obj);
 #endif
 
-char *pdf_to_utf8(fz_context *ctx, pdf_obj *src);
-unsigned short *pdf_to_ucs2(fz_context *ctx, pdf_obj *src); /* sumatrapdf */
-pdf_obj *pdf_to_utf8_name(fz_context *ctx, pdf_obj *src);
-char *pdf_from_ucs2(fz_context *ctx, unsigned short *str);
+char *pdf_to_utf8(pdf_document *xref, pdf_obj *src);
+unsigned short *pdf_to_ucs2(pdf_document *xref, pdf_obj *src); /* sumatrapdf */
+pdf_obj *pdf_to_utf8_name(pdf_document *xref, pdf_obj *src);
+char *pdf_from_ucs2(pdf_document *xref, unsigned short *str);
 /* SumatraPDF: allow to convert to UCS-2 without the need for an fz_context */
 void pdf_to_ucs2_buf(unsigned short *buffer, pdf_obj *src);
 
@@ -169,7 +169,7 @@ pdf_document *pdf_open_document(fz_context *ctx, const char *filename);
 	fz_open_file_w or fz_open_fd for opening a stream, and
 	fz_close for closing an open stream.
 */
-pdf_document *pdf_open_document_with_stream(fz_stream *file);
+pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_stream *file);
 
 /*
 	pdf_close_document: Closes and frees an opened PDF document.
@@ -236,6 +236,29 @@ fz_rect pdf_bound_page(pdf_document *doc, pdf_page *page);
 	Does not throw exceptions.
 */
 void pdf_free_page(pdf_document *doc, pdf_page *page);
+
+typedef struct pdf_annot_s pdf_annot;
+
+/*
+	pdf_first_annot: Return the first annotation on a page.
+
+	Does not throw exceptions.
+*/
+pdf_annot *pdf_first_annot(pdf_document *doc, pdf_page *page);
+
+/*
+	pdf_next_annot: Return the next annotation on a page.
+
+	Does not throw exceptions.
+*/
+pdf_annot *pdf_next_annot(pdf_document *doc, pdf_annot *annot);
+
+/*
+	pdf_bound_annot: Return the rectangle for an annotation on a page.
+
+	Does not throw exceptions.
+*/
+fz_rect pdf_bound_annot(pdf_document *doc, pdf_annot *annot);
 
 /*
 	pdf_run_page: Interpret a loaded page and render it on a device.

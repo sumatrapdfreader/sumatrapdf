@@ -285,9 +285,8 @@ cbz_read_zip_dir(cbz_document *doc)
 }
 
 cbz_document *
-cbz_open_document_with_stream(fz_stream *file)
+cbz_open_document_with_stream(fz_context *ctx, fz_stream *file)
 {
-	fz_context *ctx = file->ctx;
 	cbz_document *doc;
 
 	doc = fz_malloc_struct(ctx, cbz_document);
@@ -323,7 +322,7 @@ cbz_open_document(fz_context *ctx, char *filename)
 		fz_throw(ctx, "cannot open file '%s': %s", filename, strerror(errno));
 
 	fz_try(ctx) {
-		doc = cbz_open_document_with_stream(file);
+		doc = cbz_open_document_with_stream(ctx, file);
 	} fz_always(ctx) {
 		fz_close(file);
 	} fz_catch(ctx) {
@@ -458,44 +457,9 @@ cbz_run_page(cbz_document *doc, cbz_page *page, fz_device *dev, fz_matrix ctm, f
 	fz_fill_image(dev, &image->base, ctm, 1);
 }
 
-/* Document interface wrappers */
-
-static void cbz_close_document_shim(fz_document *doc)
+static int
+cbz_meta(cbz_document *doc, int key, void *ptr, int size)
 {
-	cbz_close_document((cbz_document*)doc);
-}
-
-static int cbz_count_pages_shim(fz_document *doc)
-{
-	return cbz_count_pages((cbz_document*)doc);
-}
-
-static fz_page *cbz_load_page_shim(fz_document *doc, int number)
-{
-	return (fz_page*) cbz_load_page((cbz_document*)doc, number);
-}
-
-static fz_rect cbz_bound_page_shim(fz_document *doc, fz_page *page)
-{
-	return cbz_bound_page((cbz_document*)doc, (cbz_page*)page);
-}
-
-static void cbz_run_page_shim(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
-{
-	cbz_run_page((cbz_document*)doc, (cbz_page*)page, dev, transform, cookie);
-}
-
-static void cbz_free_page_shim(fz_document *doc, fz_page *page)
-{
-	cbz_free_page((cbz_document*)doc, (cbz_page*)page);
-}
-
-static int cbz_meta(fz_document *doc_, int key, void *ptr, int size)
-{
-	cbz_document *doc = (cbz_document *)doc_;
-
-	UNUSED(doc);
-
 	switch(key)
 	{
 	case FZ_META_FORMAT_INFO:
@@ -509,15 +473,11 @@ static int cbz_meta(fz_document *doc_, int key, void *ptr, int size)
 static void
 cbz_init_document(cbz_document *doc)
 {
-	doc->super.close = cbz_close_document_shim;
-	doc->super.needs_password = NULL;
-	doc->super.authenticate_password = NULL;
-	doc->super.load_outline = NULL;
-	doc->super.count_pages = cbz_count_pages_shim;
-	doc->super.load_page = cbz_load_page_shim;
-	doc->super.load_links = NULL;
-	doc->super.bound_page = cbz_bound_page_shim;
-	doc->super.run_page = cbz_run_page_shim;
-	doc->super.free_page = cbz_free_page_shim;
-	doc->super.meta = cbz_meta;
+	doc->super.close = (void*)cbz_close_document;
+	doc->super.count_pages = (void*)cbz_count_pages;
+	doc->super.load_page = (void*)cbz_load_page;
+	doc->super.bound_page = (void*)cbz_bound_page;
+	doc->super.run_page = (void*)cbz_run_page;
+	doc->super.free_page = (void*)cbz_free_page;
+	doc->super.meta = (void*)cbz_meta;
 }

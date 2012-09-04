@@ -5,6 +5,11 @@ extern struct pdf_document *pdf_open_document(fz_context *ctx, char *filename);
 extern struct xps_document *xps_open_document(fz_context *ctx, char *filename);
 extern struct cbz_document *cbz_open_document(fz_context *ctx, char *filename);
 
+extern struct pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_stream *file);
+extern struct xps_document *xps_open_document_with_stream(fz_context *ctx, fz_stream *file);
+extern struct cbz_document *cbz_open_document_with_stream(fz_context *ctx, fz_stream *file);
+
+
 static inline int fz_tolower(int c)
 {
 	if (c >= 'A' && c <= 'Z')
@@ -24,25 +29,48 @@ static inline int fz_strcasecmp(char *a, char *b)
 }
 
 fz_document *
+fz_open_document_with_stream(fz_context *ctx, char *magic, fz_stream *stream)
+{
+	char *ext = strrchr(magic, '.');
+
+	if (ext)
+	{
+		if (!fz_strcasecmp(ext, ".xps") || !fz_strcasecmp(ext, ".rels"))
+			return (fz_document*) xps_open_document_with_stream(ctx, stream);
+		if (!fz_strcasecmp(ext, ".cbz") || !fz_strcasecmp(ext, ".zip"))
+			return (fz_document*) cbz_open_document_with_stream(ctx, stream);
+		if (!fz_strcasecmp(ext, ".pdf"))
+			return (fz_document*) pdf_open_document_with_stream(ctx, stream);
+	}
+
+	if (!strcmp(magic, "cbz") || !strcmp(magic, "application/x-cbz"))
+		return (fz_document*) cbz_open_document_with_stream(ctx, stream);
+	if (!strcmp(magic, "xps") || !strcmp(magic, "application/vnd.ms-xpsdocument"))
+		return (fz_document*) xps_open_document_with_stream(ctx, stream);
+	if (!strcmp(magic, "pdf") || !strcmp(magic, "application/pdf"))
+		return (fz_document*) pdf_open_document_with_stream(ctx, stream);
+
+	/* last guess: pdf */
+	return (fz_document*) pdf_open_document_with_stream(ctx, stream);
+}
+
+fz_document *
 fz_open_document(fz_context *ctx, char *filename)
 {
 	char *ext = strrchr(filename, '.');
-	if (ext && (!fz_strcasecmp(ext, ".xps") || !fz_strcasecmp(ext, ".rels")))
-		return (fz_document*) xps_open_document(ctx, filename);
-	if (ext && !fz_strcasecmp(ext, ".cbz"))
-		return (fz_document*) cbz_open_document(ctx, filename);
-#if 0
-	/* We used to only open pdf files if they ended in .pdf. For now,
-	 * until we move to detecting filetypes by their content, we disable
-	 * this code, and assume that any file that hasn't matched an
-	 * extension already, is a PDF. */
-	if (ext && !fz_strcasecmp(ext, ".pdf"))
-		return (fz_document*) pdf_open_document(ctx, filename);
-	fz_throw(ctx, "unknown document type: '%s'", filename);
-	return NULL;
-#else
+
+	if (ext)
+	{
+		if (!fz_strcasecmp(ext, ".xps") || !fz_strcasecmp(ext, ".rels"))
+			return (fz_document*) xps_open_document(ctx, filename);
+		if (!fz_strcasecmp(ext, ".cbz") || !fz_strcasecmp(ext, ".zip"))
+			return (fz_document*) cbz_open_document(ctx, filename);
+		if (!fz_strcasecmp(ext, ".pdf"))
+			return (fz_document*) pdf_open_document(ctx, filename);
+	}
+
+	/* last guess: pdf */
 	return (fz_document*) pdf_open_document(ctx, filename);
-#endif
 }
 
 void
@@ -108,6 +136,30 @@ fz_bound_page(fz_document *doc, fz_page *page)
 	return fz_empty_rect;
 }
 
+fz_annot *
+fz_first_annot(fz_document *doc, fz_page *page)
+{
+	if (doc && doc->first_annot && page)
+		return doc->first_annot(doc, page);
+	return NULL;
+}
+
+fz_annot *
+fz_next_annot(fz_document *doc, fz_annot *annot)
+{
+	if (doc && doc->next_annot && annot)
+		return doc->next_annot(doc, annot);
+	return NULL;
+}
+
+fz_rect
+fz_bound_annot(fz_document *doc, fz_annot *annot)
+{
+	if (doc && doc->bound_annot && annot)
+		return doc->bound_annot(doc, annot);
+	return fz_empty_rect;
+}
+
 void
 fz_run_page(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
 {
@@ -128,6 +180,13 @@ fz_meta(fz_document *doc, int key, void *ptr, int size)
 	if (doc && doc->meta)
 		return doc->meta(doc, key, ptr, size);
 	return FZ_META_UNKNOWN_KEY;
+}
+
+fz_interactive *fz_interact(fz_document *doc)
+{
+	if (doc && doc->interact)
+		return doc->interact(doc);
+	return NULL;
 }
 
 void

@@ -2222,6 +2222,7 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 			writexref(xref, &opts, 0, xref->len, 1, 0, opts.first_xref_offset);
 		}
 
+		xref->dirty = 0;
 	}
 	fz_always(ctx)
 	{

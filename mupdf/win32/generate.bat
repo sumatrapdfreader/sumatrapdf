@@ -5,9 +5,11 @@ if not exist generated mkdir generated
 
 cl /nologo -Ifitz -Ipdf scripts/fontdump.c
 cl /nologo -Ifitz -Ipdf scripts/cmapdump.c
+cl /nologo -Ifitz -Ipdf scripts/cquote.c
 
 if not exist fontdump.exe goto usage
 if not exist cmapdump.exe goto usage
+if not exist cquote.exe goto usage
 
 if not exist generated/font_base14.h fontdump.exe generated/font_base14.h fonts/Dingbats.cff fonts/NimbusMonL-Bold.cff fonts/NimbusMonL-BoldObli.cff fonts/NimbusMonL-Regu.cff fonts/NimbusMonL-ReguObli.cff fonts/NimbusRomNo9L-Medi.cff fonts/NimbusRomNo9L-MediItal.cff fonts/NimbusRomNo9L-Regu.cff fonts/NimbusRomNo9L-ReguItal.cff fonts/NimbusSanL-Bold.cff fonts/NimbusSanL-BoldItal.cff fonts/NimbusSanL-Regu.cff fonts/NimbusSanL-ReguItal.cff fonts/StandardSymL.cff
 
@@ -23,7 +25,9 @@ if not exist generated/cmap_japan.h cmapdump.exe generated/cmap_japan.h cmaps/ja
 
 if not exist generated/cmap_korea.h cmapdump.exe generated/cmap_korea.h cmaps/korea/Adobe-Korea1-UCS2 cmaps/korea/Adobe-Korea1-0 cmaps/korea/Adobe-Korea1-1 cmaps/korea/Adobe-Korea1-2 cmaps/korea/KSC-EUC-H cmaps/korea/KSC-EUC-V cmaps/korea/KSC-H cmaps/korea/KSC-Johab-H cmaps/korea/KSC-Johab-V cmaps/korea/KSC-V cmaps/korea/KSCms-UHC-H cmaps/korea/KSCms-UHC-HW-H cmaps/korea/KSCms-UHC-HW-V cmaps/korea/KSCms-UHC-V cmaps/korea/KSCpc-EUC-H cmaps/korea/KSCpc-EUC-V cmaps/korea/UniKS-UCS2-H cmaps/korea/UniKS-UCS2-V cmaps/korea/UniKS-UTF16-H cmaps/korea/UniKS-UTF16-V
 
-del cmapdump.obj fontdump.obj cmapdump.exe fontdump.exe
+if not exist generated/js_util.h cquote.exe generated/js_util.h pdf/pdf_util.js
+
+del cmapdump.obj fontdump.obj cquote.obj cmapdump.exe fontdump.exe cquote.exe
 
 goto fin
 

@@ -1305,3 +1305,55 @@ pdf_print_font(fz_context *ctx, pdf_font_desc *fontdesc)
 	}
 }
 #endif
+
+fz_rect pdf_measure_text(fz_context *ctx, pdf_font_desc *fontdesc, unsigned char *buf, int len)
+{
+	pdf_hmtx h;
+	int gid;
+	int i;
+	float x = 0.0;
+	fz_rect acc = fz_empty_rect;
+	fz_rect bbox;
+
+	for (i = 0; i < len; i++)
+	{
+		gid = pdf_font_cid_to_gid(ctx, fontdesc, buf[i]);
+		h = pdf_lookup_hmtx(ctx, fontdesc, buf[i]);
+		bbox = fz_bound_glyph(ctx, fontdesc->font, gid, fz_identity);
+		bbox.x0 += x;
+		bbox.x1 += x;
+		acc = fz_union_rect(acc, bbox);
+		x += h.w / 1000.0;
+	}
+
+	return acc;
+}
+
+float pdf_text_stride(fz_context *ctx, pdf_font_desc *fontdesc, float fontsize, unsigned char *buf, int len, float room, int *count)
+{
+	pdf_hmtx h;
+	int gid;
+	int i = 0;
+	float x = 0.0;
+
+	while(i < len)
+	{
+		float span;
+
+		gid = pdf_font_cid_to_gid(ctx, fontdesc, buf[i]);
+		h = pdf_lookup_hmtx(ctx, fontdesc, buf[i]);
+
+		span = h.w * fontsize / 1000.0;
+
+		if (x + span > room)
+			break;
+
+		x += span;
+		i ++;
+	}
+
+	if (count)
+		*count = i;
+
+	return x;
+}

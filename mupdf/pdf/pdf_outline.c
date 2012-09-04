@@ -29,7 +29,7 @@ pdf_load_outline_imp(pdf_document *xref, pdf_obj *dict)
 
 			obj = pdf_dict_gets(dict, "Title");
 			if (obj)
-				node->title = pdf_to_utf8(ctx, obj);
+				node->title = pdf_to_utf8(xref, obj);
 
 			/* SumatraPDF: support expansion states */
 			node->is_open = pdf_to_int(pdf_dict_gets(dict, "Count")) >= 0;

@@ -1226,6 +1226,8 @@ static void fmt_str(struct fmt *fmt, pdf_obj *obj)
 			fmt_puts(fmt, "\\(");
 		else if (c == ')')
 			fmt_puts(fmt, "\\)");
+		else if (c == '\\')
+			fmt_puts(fmt, "\\\\");
 		else if (c < 32 || c >= 127) {
 			char buf[16];
 			fmt_putc(fmt, '\\');

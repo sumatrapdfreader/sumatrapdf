@@ -361,7 +361,7 @@ pdf_load_page(pdf_document *xref, int number)
 	if (obj)
 	{
 		page->links = pdf_load_link_annots(xref, obj, page->ctm);
-		page->annots = pdf_load_annots(xref, obj);
+		page->annots = pdf_load_annots(xref, obj, page->ctm);
 	}
 
 	page->resources = pdf_dict_gets(pageobj, "Resources");
@@ -377,7 +377,7 @@ pdf_load_page(pdf_document *xref, int number)
 			page->transparency = 1;
 
 		for (annot = page->annots; annot && !page->transparency; annot = annot->next)
-			if (pdf_resources_use_blending(ctx, annot->ap->resources))
+			if (annot->ap && pdf_resources_use_blending(ctx, annot->ap->resources))
 				page->transparency = 1;
 	}
 	fz_catch(ctx)
@@ -414,5 +414,10 @@ pdf_free_page(pdf_document *xref, pdf_page *page)
 		fz_drop_link(xref->ctx, page->links);
 	if (page->annots)
 		pdf_free_annot(xref->ctx, page->annots);
+	/* xref->focus, when not NULL, refers to one of
+	 * the annotations and must be NULLed when the
+	 * annotations are destroyed. xref->focus_obj
+	 * keeps track of the actual annotation object. */
+	xref->focus = NULL;
 	fz_free(xref->ctx, page);
 }

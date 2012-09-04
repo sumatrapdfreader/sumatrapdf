@@ -9,6 +9,35 @@ JBIG2DEC_DIR := $(wildcard thirdparty/jbig2dec*)
 JPEG_DIR := $(wildcard thirdparty/jpeg*)
 OPENJPEG_DIR := $(wildcard thirdparty/openjpeg*/libopenjpeg)
 ZLIB_DIR := $(wildcard thirdparty/zlib*)
+V8_DIR := $(wildcard thirdparty/v8*)
+
+# --- V8 ---
+
+ifneq "$(V8_DIR)" ""
+
+CFLAGS += -I$(V8_DIR)/include
+ifeq "$(BUILD)" "release"
+V8LIB_CHOICE := release
+else ifeq "$(BUILD)" "profile"
+V8LIB_CHOICE := release
+else
+V8LIB_CHOICE := debug
+endif
+
+# If you are building for 32bit linux use V8_ARCH=ia32
+# MacOSX has a 64bit kernel, but a 32 bit userspace.
+ifeq "$(OS)" "Darwin"
+V8_ARCH ?= ia32
+V8LIBS = -L$(V8_DIR)/out-mac/$(V8_ARCH).$(V8LIB_CHOICE)/ -lv8_base -lv8_snapshot
+else
+V8_ARCH ?= x64
+V8LIBS = -L$(V8_DIR)/out/$(V8_ARCH).$(V8LIB_CHOICE)/obj.target/tools/gyp -lv8_base -lv8_snapshot -lpthread
+endif
+
+V8_PRESENT := 1
+else
+V8_PRESENT := 0
+endif
 
 # --- FreeType 2 ---
 

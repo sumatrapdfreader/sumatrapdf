@@ -783,6 +783,8 @@ pdf_init_document(pdf_document *xref)
 				dict = NULL;
 			}
 		}
+		xref->js = pdf_new_js(xref);
+		pdf_js_load_document_level(xref->js);
 	}
 	fz_catch(ctx)
 	{
@@ -812,6 +814,8 @@ pdf_close_document(pdf_document *xref)
 		return;
 	ctx = xref->ctx;
 
+	pdf_drop_js(xref->js);
+
 	if (xref->table)
 	{
 		for (i = 0; i < xref->len; i++)
@@ -840,6 +844,8 @@ pdf_close_document(pdf_document *xref)
 		fz_free(ctx, xref->page_refs);
 	}
 
+	if (xref->focus_obj)
+		pdf_drop_obj(xref->focus_obj);
 	if (xref->file)
 		fz_close(xref->file);
 	pdf_drop_obj(xref->trailer);
@@ -1031,7 +1037,7 @@ pdf_cache_object(pdf_document *xref, int num, int gen)
 	}
 	else
 	{
-		fz_throw(ctx, "assert: corrupt xref struct");
+		fz_throw(ctx, "cannot find object in xref (%d %d R)", num, gen);
 	}
 }
 
@@ -1238,7 +1244,7 @@ pdf_meta(pdf_document *doc, int key, void *ptr, int size)
 		}
 		if (info && ptr && size)
 		{
-			char *utf8 = pdf_to_utf8(doc->ctx, info);
+			char *utf8 = pdf_to_utf8(doc, info);
 			strncpy(ptr, utf8, size);
 			((char *)ptr)[size-1] = 0;
 			fz_free(doc->ctx, utf8);
@@ -1250,8 +1256,14 @@ pdf_meta(pdf_document *doc, int key, void *ptr, int size)
 	}
 }
 
+static fz_interactive *
+pdf_interact(pdf_document *doc)
+{
+	return (fz_interactive *)doc;
+}
+
 /*
-	Wrappers to implement the fz_document interface for pdf_document.
+	Initializers for the fz_document interface.
 
 	The functions are split across two files to allow calls to a
 	version of the constructor that does not link in the interpreter.
@@ -1260,73 +1272,27 @@ pdf_meta(pdf_document *doc, int key, void *ptr, int size)
 	saves roughly 6MB of space.
 */
 
-static void pdf_close_document_shim(fz_document *doc)
-{
-	pdf_close_document((pdf_document*)doc);
-}
-
-static int pdf_needs_password_shim(fz_document *doc)
-{
-	return pdf_needs_password((pdf_document*)doc);
-}
-
-static int pdf_authenticate_password_shim(fz_document *doc, char *password)
-{
-	return pdf_authenticate_password((pdf_document*)doc, password);
-}
-
-static fz_outline *pdf_load_outline_shim(fz_document *doc)
-{
-	return pdf_load_outline((pdf_document*)doc);
-}
-
-static int pdf_count_pages_shim(fz_document *doc)
-{
-	return pdf_count_pages((pdf_document*)doc);
-}
-
-static fz_page *pdf_load_page_shim(fz_document *doc, int number)
-{
-	return (fz_page*) pdf_load_page((pdf_document*)doc, number);
-}
-
-static fz_link *pdf_load_links_shim(fz_document *doc, fz_page *page)
-{
-	return pdf_load_links((pdf_document*)doc, (pdf_page*)page);
-}
-
-static fz_rect pdf_bound_page_shim(fz_document *doc, fz_page *page)
-{
-	return pdf_bound_page((pdf_document*)doc, (pdf_page*)page);
-}
-
-static void pdf_free_page_shim(fz_document *doc, fz_page *page)
-{
-	pdf_free_page((pdf_document*)doc, (pdf_page*)page);
-}
-
-static int pdf_meta_shim(fz_document *doc, int key, void *ptr, int size)
-{
-	return pdf_meta((pdf_document*)doc, key, ptr, size);
-}
-
 static pdf_document *
-pdf_new_document(fz_stream *file)
+pdf_new_document(fz_context *ctx, fz_stream *file)
 {
-	fz_context *ctx = file->ctx;
 	pdf_document *doc = fz_malloc_struct(ctx, pdf_document);
 
-	doc->super.close = pdf_close_document_shim;
-	doc->super.needs_password = pdf_needs_password_shim;
-	doc->super.authenticate_password = pdf_authenticate_password_shim;
-	doc->super.load_outline = pdf_load_outline_shim;
-	doc->super.count_pages = pdf_count_pages_shim;
-	doc->super.load_page = pdf_load_page_shim;
-	doc->super.load_links = pdf_load_links_shim;
-	doc->super.bound_page = pdf_bound_page_shim;
+	doc->super.close = (void*)pdf_close_document;
+	doc->super.needs_password = (void*)pdf_needs_password;
+	doc->super.authenticate_password = (void*)pdf_authenticate_password;
+	doc->super.load_outline = (void*)pdf_load_outline;
+	doc->super.count_pages = (void*)pdf_count_pages;
+	doc->super.load_page = (void*)pdf_load_page;
+	doc->super.load_links = (void*)pdf_load_links;
+	doc->super.bound_page = (void*)pdf_bound_page;
+	doc->super.first_annot = (void*)pdf_first_annot;
+	doc->super.next_annot = (void*)pdf_next_annot;
+	doc->super.bound_annot = (void*)pdf_bound_annot;
 	doc->super.run_page = NULL; /* see pdf_xref_aux.c */
-	doc->super.free_page = pdf_free_page_shim;
-	doc->super.meta = pdf_meta_shim;
+	doc->super.free_page = (void*)pdf_free_page;
+	doc->super.meta = (void*)pdf_meta;
+	doc->super.interact = (void*)pdf_interact;
+	doc->super.write = (void*)pdf_write_document;
 
 	pdf_lexbuf_init(ctx, &doc->lexbuf.base, PDF_LEXBUF_LARGE);
 	doc->file = fz_keep_stream(file);
@@ -1336,9 +1302,9 @@ pdf_new_document(fz_stream *file)
 }
 
 pdf_document *
-pdf_open_document_no_run_with_stream(fz_stream *file)
+pdf_open_document_no_run_with_stream(fz_context *ctx, fz_stream *file)
 {
-	pdf_document *doc = pdf_new_document(file);
+	pdf_document *doc = pdf_new_document(ctx, file);
 	pdf_init_document(doc);
 	return doc;
 }
@@ -1354,7 +1320,7 @@ pdf_open_document_no_run(fz_context *ctx, const char *filename)
 	fz_try(ctx)
 	{
 		file = fz_open_file(ctx, filename);
-		doc = pdf_new_document(file);
+		doc = pdf_new_document(ctx, file);
 		pdf_init_document(doc);
 	}
 	fz_always(ctx)

@@ -765,7 +765,7 @@ fz_outline *pdf_loadattachments(pdf_document *xref)
         ZeroMemory(node, sizeof(fz_outline));
         node->title = fz_strdup(xref->ctx, pdf_to_name(name));
         node->dest.kind = FZ_LINK_LAUNCH;
-        node->dest.ld.launch.file_spec = pdf_file_spec_to_str(xref->ctx, dest);
+        node->dest.ld.launch.file_spec = pdf_file_spec_to_str(xref, dest);
         node->dest.ld.launch.new_window = 1;
         node->dest.ld.launch.embedded_num = pdf_to_num(embedded);
         node->dest.ld.launch.embedded_gen = pdf_to_gen(embedded);
@@ -1351,7 +1351,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         return false;
 
     fz_try(ctx) {
-        _doc = pdf_open_document_with_stream(stm);
+        _doc = pdf_open_document_with_stream(ctx, stm);
     }
     fz_always(ctx) {
         fz_close(stm);
@@ -1381,7 +1381,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 
         ScopedMem<WCHAR> wstr(str::conv::ToWStr(pwd));
         fz_try(ctx) {
-            char *pwd_doc = pdf_from_ucs2(ctx, (unsigned short *)wstr.Get());
+            char *pwd_doc = pdf_from_ucs2(_doc, (unsigned short *)wstr.Get());
             ok = pwd_doc && pdf_authenticate_password(_doc, pwd_doc);
             fz_free(ctx, pwd_doc);
         }
@@ -2055,7 +2055,7 @@ pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
             if (file && embedded && !fz_is_empty_rect(rect)) {
                 fz_link_dest ld;
                 ld.kind = FZ_LINK_LAUNCH;
-                ld.ld.launch.file_spec = pdf_file_spec_to_str(ctx, file);
+                ld.ld.launch.file_spec = pdf_file_spec_to_str(_doc, file);
                 ld.ld.launch.new_window = 1;
                 ld.ld.launch.embedded_num = pdf_to_num(embedded);
                 ld.ld.launch.embedded_gen = pdf_to_gen(embedded);
@@ -2951,7 +2951,7 @@ bool XpsEngineImpl::LoadFromStream(fz_stream *stm)
         return false;
 
     fz_try(ctx) {
-        _doc = xps_open_document_with_stream(stm);
+        _doc = xps_open_document_with_stream(ctx, stm);
     }
     fz_always(ctx) {
         fz_close(stm);

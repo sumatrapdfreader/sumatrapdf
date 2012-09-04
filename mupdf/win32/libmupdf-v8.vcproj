@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="libmupdf"
-	ProjectGUID="{5F615F91-DFF8-4F05-BF48-6222B7D86519}"
+	Name="libmupdf-v8"
+	ProjectGUID="{2E5DAFDB-A060-4011-B760-32F6A3A4BC9D}"
 	RootNamespace="mupdf"
 	>
 	<Platforms>
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-9;..\thirdparty\openjpeg-1.5.0-patched\libopenjpeg;..\thirdparty\zlib-1.2.7;..\thirdparty\freetype-2.4.10\include"
+				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;&quot;..\thirdparty\jpeg-9&quot;;&quot;..\thirdparty\openjpeg-1.5.0-patched\libopenjpeg&quot;;&quot;..\thirdparty\zlib-1.2.7&quot;;&quot;..\thirdparty\freetype-2.4.10\include&quot;;&quot;..\thirdparty\v8-3.9\include&quot;"
 				PreprocessorDefinitions="DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -60,6 +60,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalLibraryDirectories=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -106,7 +107,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-9;..\thirdparty\openjpeg-1.5.0-patched\libopenjpeg;..\thirdparty\zlib-1.2.7;..\thirdparty\freetype-2.4.10\include"
+				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.5.0\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.9\include;&quot;..\thirdparty\v8-3.9\include&quot;"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -166,7 +167,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-9;..\thirdparty\openjpeg-1.5.0-patched\libopenjpeg;..\thirdparty\zlib-1.2.7;..\thirdparty\freetype-2.4.10\include"
+				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-8d;..\thirdparty\openjpeg-1.5.0\libopenjpeg;..\thirdparty\zlib-1.2.5;..\thirdparty\freetype-2.4.9\include;&quot;..\thirdparty\v8-3.9\include&quot;"
 				PreprocessorDefinitions="MEMENTO=1;DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -282,7 +283,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\pdf\pdf_js_none.c"
+				RelativePath="..\pdf\pdf_js.c"
+				>
+			</File>
+			<File
+				RelativePath="..\pdf\pdf_jsimp_cpp.c"
+				>
+			</File>
+			<File
+				RelativePath="..\pdf\pdf_jsimp_cpp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\pdf\pdf_jsimp_v8.cpp"
 				>
 			</File>
 			<File

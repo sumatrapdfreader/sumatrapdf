@@ -14,7 +14,9 @@
 
 typedef struct pdfapp_s pdfapp_t;
 
-enum { ARROW, HAND, WAIT };
+enum { ARROW, HAND, WAIT, CARET };
+
+enum { DISCARD, SAVE, CANCEL };
 
 extern void winwarn(pdfapp_t*, char *s);
 extern void winerror(pdfapp_t*, char *s);
@@ -23,6 +25,8 @@ extern void winresize(pdfapp_t*, int w, int h);
 extern void winrepaint(pdfapp_t*);
 extern void winrepaintsearch(pdfapp_t*);
 extern char *winpassword(pdfapp_t*, char *filename);
+extern char *wintextinput(pdfapp_t*, char *inittext, int retry);
+extern int winchoiceinput(pdfapp_t*, int nopts, char *opts[], int *nvals, char *vals[]);
 extern void winopenuri(pdfapp_t*, char *s);
 extern void wincursor(pdfapp_t*, int curs);
 extern void windocopy(pdfapp_t*);
@@ -31,6 +35,8 @@ extern void windrawstring(pdfapp_t*, int x, int y, char *s);
 extern void winclose(pdfapp_t*);
 extern void winhelp(pdfapp_t*);
 extern void winfullscreen(pdfapp_t*, int state);
+extern int winsavequery(pdfapp_t*);
+extern int wingetsavepath(pdfapp_t*, char *buf, int len);
 
 struct pdfapp_s
 {
@@ -46,6 +52,7 @@ struct pdfapp_s
 	int rotate;
 	fz_pixmap *image;
 	int grayscale;
+	fz_colorspace *colorspace;
 	int invert;
 
 	/* current page params */
@@ -87,6 +94,8 @@ struct pdfapp_s
 	int beyondy;
 	fz_bbox selr;
 
+	int nowaitcursor;
+
 	/* search state */
 	int isediting;
 	int searchdir;
@@ -103,6 +112,7 @@ struct pdfapp_s
 void pdfapp_init(fz_context *ctx, pdfapp_t *app);
 void pdfapp_open(pdfapp_t *app, char *filename, int reload);
 void pdfapp_close(pdfapp_t *app);
+int pdfapp_preclose(pdfapp_t *app);
 
 char *pdfapp_version(pdfapp_t *app);
 char *pdfapp_usage(pdfapp_t *app);
@@ -111,6 +121,7 @@ void pdfapp_onkey(pdfapp_t *app, int c);
 void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int state);
 void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen);
 void pdfapp_onresize(pdfapp_t *app, int w, int h);
+void pdfapp_gotopage(pdfapp_t *app, int number);
 
 void pdfapp_invert(pdfapp_t *app, fz_bbox rect);
 void pdfapp_inverthit(pdfapp_t *app);

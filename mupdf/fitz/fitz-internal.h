@@ -464,6 +464,16 @@ void fz_grow_buffer(fz_context *ctx, fz_buffer *buf);
 */
 void fz_trim_buffer(fz_context *ctx, fz_buffer *buf);
 
+/*
+	fz_buffer_cat: Concatenate buffers
+
+	buf: first to concatenate and the holder of the result
+	extra: second to concatenate
+
+	May throw exception on failure to allocate.
+*/
+void fz_buffer_cat(fz_context *ctx, fz_buffer *buf, fz_buffer *extra);
+
 void fz_write_buffer(fz_context *ctx, fz_buffer *buf, unsigned char *data, int len);
 
 void fz_write_buffer_byte(fz_context *ctx, fz_buffer *buf, int val);
@@ -477,7 +487,14 @@ void fz_write_buffer_pad(fz_context *ctx, fz_buffer *buf);
 	grow, but the caller must ensure that no more than 256 bytes are
 	added to the buffer per call.
 */
-void fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, char *fmt, ...);
+void fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, const char *fmt, ...);
+
+/*
+	fz_buffer_printf: print a string formatted as a pdf string to a buffer.
+	The buffer will grow.
+*/
+void
+fz_buffer_cat_pdf_string(fz_context *ctx, fz_buffer *buffer, const char *text);
 
 struct fz_stream_s
 {
@@ -1171,7 +1188,11 @@ struct fz_document_s
 	void (*run_page)(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
 	void (*free_page)(fz_document *doc, fz_page *page);
 	int (*meta)(fz_document *doc, int key, void *ptr, int size);
+	fz_interactive *(*interact)(fz_document *doc);
 	void (*write)(fz_document *doc, char *filename, fz_write_options *opts);
+	fz_annot *(*first_annot)(fz_document *doc, fz_page *page);
+	fz_annot *(*next_annot)(fz_document *doc, fz_annot *annot);
+	fz_rect (*bound_annot)(fz_document *doc, fz_annot *annot);
 };
 
 #endif

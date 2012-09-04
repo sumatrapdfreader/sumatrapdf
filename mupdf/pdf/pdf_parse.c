@@ -31,59 +31,88 @@ pdf_to_matrix(fz_context *ctx, pdf_obj *array)
 
 /* Convert Unicode/PdfDocEncoding string into utf-8 */
 char *
-pdf_to_utf8(fz_context *ctx, pdf_obj *src)
+pdf_to_utf8(pdf_document *xref, pdf_obj *src)
 {
-	unsigned char *srcptr = (unsigned char *) pdf_to_str_buf(src);
+	fz_context *ctx = xref->ctx;
+	fz_buffer *strmbuf = NULL;
+	unsigned char *srcptr;
 	char *dstptr, *dst;
-	int srclen = pdf_to_str_len(src);
+	int srclen;
 	int dstlen = 0;
 	int ucs;
 	int i;
 
-	if (srclen >= 2 && srcptr[0] == 254 && srcptr[1] == 255)
+	fz_var(strmbuf);
+	fz_try(ctx)
 	{
-		for (i = 2; i + 1 < srclen; i += 2)
+		if (pdf_is_string(src))
 		{
-			ucs = srcptr[i] << 8 | srcptr[i+1];
-			dstlen += fz_runelen(ucs);
+			srcptr = (unsigned char *) pdf_to_str_buf(src);
+			srclen = pdf_to_str_len(src);
+		}
+		else if (pdf_is_stream(xref, pdf_to_num(src), pdf_to_gen(src)))
+		{
+			strmbuf = pdf_load_stream(xref, pdf_to_num(src), pdf_to_gen(src));
+			srclen = fz_buffer_storage(ctx, strmbuf, (unsigned char **)&srcptr);
+		}
+		else
+		{
+			srclen = 0;
 		}
 
-		dstptr = dst = fz_malloc(ctx, dstlen + 1);
-
-		for (i = 2; i + 1 < srclen; i += 2)
+		if (srclen >= 2 && srcptr[0] == 254 && srcptr[1] == 255)
 		{
-			ucs = srcptr[i] << 8 | srcptr[i+1];
-			dstptr += fz_runetochar(dstptr, ucs);
+			for (i = 2; i + 1 < srclen; i += 2)
+			{
+				ucs = srcptr[i] << 8 | srcptr[i+1];
+				dstlen += fz_runelen(ucs);
+			}
+
+			dstptr = dst = fz_malloc(ctx, dstlen + 1);
+
+			for (i = 2; i + 1 < srclen; i += 2)
+			{
+				ucs = srcptr[i] << 8 | srcptr[i+1];
+				dstptr += fz_runetochar(dstptr, ucs);
+			}
+		}
+		else if (srclen >= 2 && srcptr[0] == 255 && srcptr[1] == 254)
+		{
+			for (i = 2; i + 1 < srclen; i += 2)
+			{
+				ucs = srcptr[i] | srcptr[i+1] << 8;
+				dstlen += fz_runelen(ucs);
+			}
+
+			dstptr = dst = fz_malloc(ctx, dstlen + 1);
+
+			for (i = 2; i + 1 < srclen; i += 2)
+			{
+				ucs = srcptr[i] | srcptr[i+1] << 8;
+				dstptr += fz_runetochar(dstptr, ucs);
+			}
+		}
+		else
+		{
+			for (i = 0; i < srclen; i++)
+				dstlen += fz_runelen(pdf_doc_encoding[srcptr[i]]);
+
+			dstptr = dst = fz_malloc(ctx, dstlen + 1);
+
+			for (i = 0; i < srclen; i++)
+			{
+				ucs = pdf_doc_encoding[srcptr[i]];
+				dstptr += fz_runetochar(dstptr, ucs);
+			}
 		}
 	}
-	else if (srclen >= 2 && srcptr[0] == 255 && srcptr[1] == 254)
+	fz_always(ctx)
 	{
-		for (i = 2; i + 1 < srclen; i += 2)
-		{
-			ucs = srcptr[i] | srcptr[i+1] << 8;
-			dstlen += fz_runelen(ucs);
-		}
-
-		dstptr = dst = fz_malloc(ctx, dstlen + 1);
-
-		for (i = 2; i + 1 < srclen; i += 2)
-		{
-			ucs = srcptr[i] | srcptr[i+1] << 8;
-			dstptr += fz_runetochar(dstptr, ucs);
-		}
+		fz_drop_buffer(ctx, strmbuf);
 	}
-	else
+	fz_catch(ctx)
 	{
-		for (i = 0; i < srclen; i++)
-			dstlen += fz_runelen(pdf_doc_encoding[srcptr[i]]);
-
-		dstptr = dst = fz_malloc(ctx, dstlen + 1);
-
-		for (i = 0; i < srclen; i++)
-		{
-			ucs = pdf_doc_encoding[srcptr[i]];
-			dstptr += fz_runetochar(dstptr, ucs);
-		}
+		fz_rethrow(ctx);
 	}
 
 	*dstptr = '\0';
@@ -92,8 +121,9 @@ pdf_to_utf8(fz_context *ctx, pdf_obj *src)
 
 /* Convert Unicode/PdfDocEncoding string into ucs-2 */
 unsigned short *
-pdf_to_ucs2(fz_context *ctx, pdf_obj *src)
+pdf_to_ucs2(pdf_document *xref, pdf_obj *src)
 {
+	fz_context *ctx = xref->ctx;
 	unsigned char *srcptr = (unsigned char *) pdf_to_str_buf(src);
 	unsigned short *dstptr, *dst;
 	int srclen = pdf_to_str_len(src);
@@ -153,8 +183,9 @@ pdf_to_ucs2_buf(unsigned short *buffer, pdf_obj *src)
 
 /* Convert UCS-2 string into PdfDocEncoding for authentication */
 char *
-pdf_from_ucs2(fz_context *ctx, unsigned short *src)
+pdf_from_ucs2(pdf_document *xref, unsigned short *src)
 {
+	fz_context *ctx = xref->ctx;
 	int i, j, len;
 	char *docstr;
 
@@ -191,11 +222,11 @@ pdf_from_ucs2(fz_context *ctx, unsigned short *src)
 }
 
 pdf_obj *
-pdf_to_utf8_name(fz_context *ctx, pdf_obj *src)
+pdf_to_utf8_name(pdf_document *xref, pdf_obj *src)
 {
-	char *buf = pdf_to_utf8(ctx, src);
-	pdf_obj *dst = pdf_new_name(ctx, buf);
-	fz_free(ctx, buf);
+	char *buf = pdf_to_utf8(xref, src);
+	pdf_obj *dst = pdf_new_name(xref->ctx, buf);
+	fz_free(xref->ctx, buf);
 	return dst;
 }
 

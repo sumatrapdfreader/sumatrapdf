@@ -15,9 +15,9 @@ static void pdf_run_page_shim(fz_document *doc, fz_page *page, fz_device *dev, f
 }
 
 pdf_document *
-pdf_open_document_with_stream(fz_stream *file)
+pdf_open_document_with_stream(fz_context *ctx, fz_stream *file)
 {
-	pdf_document *doc = pdf_open_document_no_run_with_stream(file);
+	pdf_document *doc = pdf_open_document_no_run_with_stream(ctx, file);
 	doc->super.run_page = pdf_run_page_shim;
 	return doc;
 }

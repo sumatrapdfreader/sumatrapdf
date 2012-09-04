@@ -128,6 +128,7 @@ EXPORTS
 	fz_print_outline
 	fz_free_outline
 	fz_open_document
+	fz_open_document_with_stream
 	fz_close_document
 	fz_needs_password
 	fz_authenticate_password
@@ -136,9 +137,29 @@ EXPORTS
 	fz_load_page
 	fz_load_links
 	fz_bound_page
+	fz_first_annot
+	fz_next_annot
+	fz_bound_annot
 	fz_run_page
 	fz_free_page
 	fz_meta
+	fz_interact
+	fz_has_unsaved_changes
+	fz_pass_event
+	fz_poll_screen_update
+	fz_focused_widget
+	fz_first_widget
+	fz_next_widget
+	fz_widget_get_type
+	fz_widget_bbox
+	fz_text_widget_text
+	fz_text_widget_max_len
+	fz_text_widget_content_type
+	fz_text_widget_set_text
+	fz_choice_widget_options
+	fz_choice_widget_is_multiselect
+	fz_choice_widget_value
+	fz_choice_widget_set_value
 	fz_write_document
 
 	fz_clone_context_internal
@@ -190,6 +211,7 @@ EXPORTS
 	fz_resize_buffer
 	fz_grow_buffer
 	fz_trim_buffer
+	fz_buffer_cat
 	fz_write_buffer
 	fz_write_buffer_byte
 	fz_write_buffer_bits
@@ -438,6 +460,9 @@ EXPORTS
 	pdf_load_links
 	pdf_bound_page
 	pdf_free_page
+	pdf_first_annot
+	pdf_next_annot
+	pdf_bound_annot
 	pdf_run_page
 	pdf_run_page_with_usage
 	pdf_meta
@@ -499,6 +524,7 @@ EXPORTS
 	pdf_keep_xobject
 	pdf_drop_xobject
 	pdf_update_xobject_contents
+	pdf_update_appearance
 	pdf_create_xobject
 	pdf_new_cmap
 	pdf_keep_cmap
@@ -546,6 +572,8 @@ EXPORTS
 	pdf_new_font_desc
 	pdf_keep_font
 	pdf_drop_font
+	pdf_measure_text
+	pdf_text_stride
 	pdf_parse_link_dest
 	pdf_parse_action
 	pdf_lookup_dest
@@ -555,10 +583,43 @@ EXPORTS
 	pdf_load_link_annots
 	pdf_load_annots
 	pdf_free_annot
+	pdf_field_type
+	pdf_field_value
+	pdf_field_set_value
+	pdf_field_border_style
+	pdf_field_set_border_style
+	pdf_field_set_button_caption
+	pdf_field_set_fill_color
+	pdf_field_set_text_color
+	pdf_field_display
+	pdf_field_set_display
+	pdf_lookup_field
+	pdf_field_reset
 	pdf_run_glyph
 	pdf_store_item
 	pdf_find_item
 	pdf_remove_item
+	pdf_has_unsaved_changes
+	pdf_pass_event
+	pdf_poll_screen_update
+	pdf_focused_widget
+	pdf_first_widget
+	pdf_next_widget
+	pdf_text_widget_text
+	pdf_text_widget_max_len
+	pdf_text_widget_content_type
+	pdf_text_widget_set_text
+	pdf_choice_widget_options
+	pdf_choice_widget_is_multiselect
+	pdf_choice_widget_value
+	pdf_choice_widget_set_value
+	pdf_new_js
+	pdf_drop_js
+	pdf_js_load_document_level
+	pdf_js_setup_event
+	pdf_js_get_event
+	pdf_js_execute
+	pdf_js_execute_count
 
 ; MuXPS exports
 

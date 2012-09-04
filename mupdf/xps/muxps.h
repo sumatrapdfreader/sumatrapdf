@@ -45,7 +45,7 @@ xps_document *xps_open_document(fz_context *ctx, char *filename);
 	fz_open_file_w or fz_open_fd for opening a stream, and
 	fz_close for closing an open stream.
 */
-xps_document *xps_open_document_with_stream(fz_stream *file);
+xps_document *xps_open_document_with_stream(fz_context *ctx, fz_stream *file);
 
 /*
 	xps_close_document: Closes and frees an opened document.

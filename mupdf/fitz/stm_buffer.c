@@ -94,6 +94,19 @@ fz_buffer_storage(fz_context *ctx, fz_buffer *buf, unsigned char **datap)
 	return (buf ? buf->len : 0);
 }
 
+void
+fz_buffer_cat(fz_context *ctx, fz_buffer *buf, fz_buffer *extra)
+{
+	if (buf->cap - buf->len < extra->len)
+	{
+		buf->data = fz_resize_array(ctx, buf->data, buf->len + extra->len, 1);
+		buf->cap = buf->len + extra->len;
+	}
+
+	memcpy(buf->data + buf->len, extra->data, extra->len);
+	buf->len += extra->len;
+}
+
 void fz_write_buffer(fz_context *ctx, fz_buffer *buf, unsigned char *data, int len)
 {
 	if (buf->len + len > buf->cap)
@@ -178,7 +191,7 @@ void fz_write_buffer_pad(fz_context *ctx, fz_buffer *buf)
 }
 
 void
-fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, char *fmt, ...)
+fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -190,6 +203,82 @@ fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, char *fmt, ...)
 	buffer->len += vsprintf((char *)buffer->data + buffer->len, fmt, args);
 
 	va_end(args);
+}
+
+void
+fz_buffer_cat_pdf_string(fz_context *ctx, fz_buffer *buffer, const char *text)
+{
+	int len = 2;
+	const char *s = text;
+	char *d;
+	char c;
+
+	while ((c = *s++) != 0)
+	{
+		switch (c)
+		{
+		case '\n':
+		case '\r':
+		case '\t':
+		case '\b':
+		case '\f':
+		case '(':
+		case ')':
+		case '\\':
+			len++;
+			break;
+		}
+		len++;
+	}
+
+	while(buffer->cap - buffer->len < len)
+		fz_grow_buffer(ctx, buffer);
+
+	s = text;
+	d = (char *)buffer->data + buffer->len;
+	*d++ = '(';
+	while ((c = *s++) != 0)
+	{
+		switch (c)
+		{
+		case '\n':
+			*d++ = '\\';
+			*d++ = 'n';
+			break;
+		case '\r':
+			*d++ = '\\';
+			*d++ = 'r';
+			break;
+		case '\t':
+			*d++ = '\\';
+			*d++ = 't';
+			break;
+		case '\b':
+			*d++ = '\\';
+			*d++ = 'b';
+			break;
+		case '\f':
+			*d++ = '\\';
+			*d++ = 'f';
+			break;
+		case '(':
+			*d++ = '\\';
+			*d++ = '(';
+			break;
+		case ')':
+			*d++ = '\\';
+			*d++ = ')';
+			break;
+		case '\\':
+			*d++ = '\\';
+			*d++ = '\\';
+			break;
+		default:
+			*d++ = c;
+		}
+	}
+	*d++ = ')';
+	buffer->len += len;
 }
 
 #ifdef TEST_BUFFER_WRITE
