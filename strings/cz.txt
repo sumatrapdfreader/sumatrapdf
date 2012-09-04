@@ -247,6 +247,9 @@ Check for &Updates
 Comic books
 Komiksy
 
+Compatibility
+Kompatibilita
+
 Continuous
 Jedna stránka průběžně
 
@@ -550,6 +553,9 @@ Předchozí stránka
 Print
 Tisk...
 
+Print as &image (requires more memory)
+Tisknout jako &obrázek (vyžaduje více paměti)
+
 Print range
 Rozsah tisku
 
@@ -612,6 +618,9 @@ Odeslat &e-mailem...
 
 Set inverse search command-line
 Nastavit inverzní vyhledávání z příkazového řádku
+
+Show &Bookmarks
+Zobrazit &záložky
 
 Show &Toolbar
 Zobrazit panel nás&trojů
@@ -705,9 +714,4 @@ kopírování textu
 
 printing document
 tisk dokumentu
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
-#Show &Bookmarks
 
