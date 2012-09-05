@@ -252,6 +252,9 @@ Controlla &aggiornamenti
 Comic books
 Fumetti
 
+Compatibility
+Compatibilità
+
 Continuous
 Pagina continua
 
@@ -555,6 +558,9 @@ Pagina precedente
 Print
 Stampa
 
+Print as &image (requires more memory)
+Stampa come &immagine (richiede più memoria))
+
 Print range
 Stampa intervallo
 
@@ -713,8 +719,4 @@ Copia del testo...
 
 printing document
 Stampa documento...
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
 
