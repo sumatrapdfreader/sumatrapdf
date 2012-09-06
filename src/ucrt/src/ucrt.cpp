@@ -482,6 +482,13 @@ failure:
         ret
     }
 }
+
+void __report_rangecheckfailure()
+{
+	// TODO: terminate the program
+	// TODO: only when compiled with msvc 2012
+}
+
 } // extern "C"
 
 // provide symbol:
