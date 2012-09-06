@@ -1,7 +1,9 @@
 #ifdef _WIN32
 
 #include <time.h>
+#ifndef METRO
 #include <winsock2.h>
+#endif
 #include <windows.h>
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)

@@ -945,9 +945,45 @@ pdf_dict_put(pdf_obj *obj, pdf_obj *key, pdf_obj *val)
 void
 pdf_dict_puts(pdf_obj *obj, char *key, pdf_obj *val)
 {
-	pdf_obj *keyobj = pdf_new_name(obj->ctx, key);
-	pdf_dict_put(obj, keyobj, val);
-	pdf_drop_obj(keyobj);
+	fz_context *ctx = obj->ctx;
+	pdf_obj *keyobj = pdf_new_name(ctx, key);
+
+	fz_try(ctx)
+	{
+		pdf_dict_put(obj, keyobj, val);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(keyobj);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+void
+pdf_dict_puts_drop(pdf_obj *obj, char *key, pdf_obj *val)
+{
+	fz_context *ctx = obj->ctx;
+	pdf_obj *keyobj = NULL;
+
+	fz_var(keyobj);
+
+	fz_try(ctx)
+	{
+		keyobj = pdf_new_name(ctx, key);
+		pdf_dict_put(obj, keyobj, val);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(keyobj);
+		pdf_drop_obj(val);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 }
 
 void

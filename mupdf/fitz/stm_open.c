@@ -43,7 +43,8 @@ fz_new_stream(fz_context *ctx, void *state,
 fz_stream *
 fz_keep_stream(fz_stream *stm)
 {
-	stm->refs ++;
+	if (stm)
+		stm->refs ++;
 	return stm;
 }
 

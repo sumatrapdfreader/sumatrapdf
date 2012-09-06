@@ -218,6 +218,7 @@ struct pdf_document_s
 	int page_cap;
 	pdf_obj **page_objs;
 	pdf_obj **page_refs;
+	int resources_localised;
 
 	pdf_lexbuf_large lexbuf;
 
@@ -231,6 +232,8 @@ struct pdf_document_s
 
 pdf_document *pdf_open_document_no_run(fz_context *ctx, const char *filename);
 pdf_document *pdf_open_document_no_run_with_stream(fz_context *ctx, fz_stream *file);
+
+void pdf_localise_page_resources(pdf_document *xref);
 
 void pdf_cache_object(pdf_document *doc, int num, int gen);
 

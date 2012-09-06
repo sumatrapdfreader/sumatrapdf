@@ -193,14 +193,19 @@ void fz_write_buffer_pad(fz_context *ctx, fz_buffer *buf)
 void
 fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, const char *fmt, ...)
 {
+	/* SumatraPDF: remove the limit of 256 bytes just to be safe */
+	int count;
 	va_list args;
 	va_start(args, fmt);
 
-	/* Caller guarantees not to generate more than 256 bytes per call */
-	while(buffer->cap - buffer->len < 256)
+retry_larger_buffer:
+	count = vsnprintf(buffer->data + buffer->len, buffer->cap - buffer->len, fmt, args);
+	if (count < 0 || count >= buffer->cap - buffer->len)
+	{
 		fz_grow_buffer(ctx, buffer);
-
-	buffer->len += vsprintf((char *)buffer->data + buffer->len, fmt, args);
+		goto retry_larger_buffer;
+	}
+	buffer->len += count;
 
 	va_end(args);
 }

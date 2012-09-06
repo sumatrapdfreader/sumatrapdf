@@ -88,9 +88,11 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/pdf/pdf_encoding.c \
 	$(MY_ROOT)/pdf/pdf_font.c \
 	$(MY_ROOT)/pdf/pdf_fontfile.c \
+	$(MY_ROOT)/pdf/pdf_form.c \
 	$(MY_ROOT)/pdf/pdf_function.c \
 	$(MY_ROOT)/pdf/pdf_image.c \
 	$(MY_ROOT)/pdf/pdf_interpret.c \
+	$(MY_ROOT)/pdf/pdf_js_none.c \
 	$(MY_ROOT)/pdf/pdf_lex.c \
 	$(MY_ROOT)/pdf/pdf_metrics.c \
 	$(MY_ROOT)/pdf/pdf_nametree.c \
@@ -105,6 +107,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/pdf/pdf_store.c \
 	$(MY_ROOT)/pdf/pdf_type3.c \
 	$(MY_ROOT)/pdf/pdf_unicode.c \
+	$(MY_ROOT)/pdf/pdf_write.c \
 	$(MY_ROOT)/pdf/pdf_xobject.c \
 	$(MY_ROOT)/pdf/pdf_xref.c \
 	$(MY_ROOT)/pdf/pdf_xref_aux.c \
