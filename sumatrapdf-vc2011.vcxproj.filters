@@ -54,6 +54,9 @@
     <Filter Include="sumatra\engines">
       <UniqueIdentifier>{ff27589d-73b0-4269-b0ed-6d2edbe11db6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ucrt">
+      <UniqueIdentifier>{0e2de5f1-02d4-4ed8-93e9-f2ac13fd859b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -860,6 +863,21 @@
     <ClCompile Include="src\utils\GdiPlusUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt_console.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt_dll.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt_log.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt_win.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1255,6 +1273,9 @@
     <ClInclude Include="src\utils\GdiPlusUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\ucrt\src\ucrt_log.h">
+      <Filter>ucrt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">
@@ -1450,6 +1471,12 @@
     <None Include="docs\wishlist.txt" />
     <None Include="docs\release_plan.txt" />
     <None Include="makefile.msvc" />
+    <None Include="src\ucrt\src\ucrt_asm.asm">
+      <Filter>ucrt</Filter>
+    </None>
+    <None Include="src\ucrt\src\ucrt_math.asm">
+      <Filter>ucrt</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\SumatraPDF.rc">
