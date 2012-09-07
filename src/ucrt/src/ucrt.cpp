@@ -483,11 +483,12 @@ failure:
     }
 }
 
-void __report_rangecheckfailure()
+#if _MSC_VER >= 1700 // only for vs 2012 or later
+__declspec(noreturn) void __cdecl __report_rangecheckfailure()
 {
-	// TODO: terminate the program
-	// TODO: only when compiled with msvc 2012
+	crash_me();
 }
+#endif
 
 } // extern "C"
 
