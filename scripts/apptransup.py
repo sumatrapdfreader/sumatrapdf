@@ -1,31 +1,35 @@
 #!/usr/bin/env python
 from extract_strings import extract_strings_from_c_files
-import os.path
-import sys
-import string
-import hashlib
+import os.path, sys, string, hashlib, httplib, urllib
 
 # Extracts english strings from the source code and uploads them
-# to AppTranslator.org
+# to apptranslator.org
 g_my_dir = os.path.dirname(__file__)
-g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
 
-SERVER = "localhost:8890"
-URL = "/handleUploadStrings?app=SumatraPDF&secret="
+use_local_for_testing = True
 
-# apptranscreds.py needs to have upload secret in the form of:
+if use_local_for_testing:
+    SERVER = "127.0.0.1"
+    PORT = 8089
+else:
+    SERVER = "apptranslator.org"
+    PORT = 80
+
+# secrets.py needs to have upload secret in the form of:
 # uploadsecret = "$secret"
 # to protect AppTranslator.org server from potential abuse
 try:
-    import apptranscreds
+    import secrets
+    # force crash if secrets.uploadsecret is not defined
+    print("uploadsecret:" + secrets.uploadsecret)
 except:
-    print("apptranscreds.py not present")
+    print("secrets.py not present")
     sys.exit(1)
 
 def lastUploadHashFileName():
-    return os.path.join(g_my_dir, "strhashfile.txt")
+    return os.path.join(g_my_dir, "apptransup-lashuploadhash.txt")
 
-def loadLastUploadHash():
+def lastUploadHash():
     f = lastUploadHashFileName()
     if not os.path.exists(f): return ""
     return open(f, "rb").read()
@@ -33,10 +37,17 @@ def loadLastUploadHash():
 def saveLastUploadHash(s):
     open(lastUploadHashFileName(), "wb").write(s)
 
-def uploadStrings(s, secret):
-    print("Uploading strings to the server:")
-    fullUrl = URL + secret
-    print("http://" + SERVER + fullUrl)
+def uploadStrings(strings, secret):
+    print("Uploading strings to the server...")
+    params = urllib.urlencode({'strings': strings, 'app': 'SumatraPDF', 'secret': secret})
+    headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+    conn = httplib.HTTPConnection(SERVER, PORT)
+    conn.request("POST", "/uploadstrings", params, headers)
+    resp = conn.getresponse()
+    print resp.status
+    print resp.reason
+    print resp.read()
+    conn.close()
     print("Upload done")
 
 def main():
@@ -44,12 +55,12 @@ def main():
     strings.sort()
     s = "AppTranslator strings\n" + string.join(strings, "\n")
     shash = hashlib.sha1(s).hexdigest()
-    prevHash = loadLastUploadHash()
+    prevHash = lastUploadHash()
     if shash == prevHash:
         print("Skipping upload because strings haven't changed since last upload")
-        return
-    uploadStrings(s, apptranscreds.uploadsecret)
-    saveLastUploadHash(shash)
+    else:
+        uploadStrings(s, secrets.uploadsecret)
+        saveLastUploadHash(shash)
 
 if __name__ == "__main__":
     main()

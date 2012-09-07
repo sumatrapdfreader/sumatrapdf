@@ -19,7 +19,7 @@ def should_translate(file_name):
         return False
     return file_name not in C_FILES_TO_EXCLUDE
 
-SRC_DIR = os.path.join("..", "src")
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
 C_FILES_TO_PROCESS = [os.path.join(SRC_DIR, f) for f in os.listdir(SRC_DIR) if should_translate(f)]
 STRINGS_PATH = os.path.join("..", "strings")
 TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'
