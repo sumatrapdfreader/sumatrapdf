@@ -251,6 +251,9 @@ Check for &Updates
 Comic books
 Comics
 
+Compatibility
+Compatibilidad
+
 Continuous
 Continua
 
@@ -554,6 +557,9 @@ Página anterior
 Print
 Imprimir
 
+Print as &image (requires more memory)
+Imprimir como &image (se necesita más memoria)
+
 Print range
 Rango de impresión
 
@@ -616,6 +622,9 @@ Enviar por correo electrónico
 
 Set inverse search command-line
 Establecer línea de comando para búsqueda inversa
+
+Show &Bookmarks
+Mostrar &Bookmarks
 
 Show &Toolbar
 Mostrar barra de herramientas
@@ -709,9 +718,4 @@ copiado de texto
 
 printing document
 imprimiendo documento
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
-#Show &Bookmarks
 

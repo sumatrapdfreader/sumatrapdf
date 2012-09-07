@@ -12,6 +12,7 @@ Contributor: Mohammed Al-Foulad (http://www.mbsee.info)
 Contributor: Boubker Talibi
 Contributor: Felark (felark@hotmail.com)
 Contributor: Abu Abdullah (falcon.sheep@gmail.com)
+Contributor: Islam Shoman (http://about.me/drshoman2009)
 
 &About
 حول البرنامج
@@ -245,7 +246,10 @@ Check for &Updates
 تحقق من وجود &تحديثات
 
 Comic books
-كتب فكاهية
+كتب قصص مصورة
+
+Compatibility
+التوافق
 
 Continuous
 صفحات متتالية
@@ -413,7 +417,7 @@ Found text at page %s (again)
 وُجد النص في الصفحة %s (مرة أخرى)
 
 Frequently Read
-قُرأ تكرارا
+الأكثر قراءة
 
 GB
 ج.ب
@@ -476,7 +480,7 @@ Number of Pages:
 عدد الصفحات
 
 OK
-حسناً
+موافق
 
 Open
 فتح
@@ -550,6 +554,9 @@ Previous Page
 Print
 طباعة
 
+Print as &image (requires more memory)
+اطبع كصورة (يحتاج إلى ذاكرة أكثر)
+
 Print range
 نطاق الطباعة
 
@@ -608,10 +615,13 @@ Select content with Ctrl+left mouse button
 اختر المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
 
 Send by &E-mail...
-إرسال بالإيميل
+إرسال بالبريد الإلكتروني
 
 Set inverse search command-line
 أمر البحث عن نص باتجاه معاكس
+
+Show &Bookmarks
+إظهار العلامات
 
 Show &Toolbar
 عرض شريط الأدوات
@@ -641,7 +651,7 @@ Subject:
 الموضوع
 
 SumatraPDF Options
-خيارات قارئ سومطره للبي دي إف
+خيارات SumatraPDF
 
 SumatraPDF Update
 تحديث SumatraPDF
@@ -705,9 +715,4 @@ copying text
 
 printing document
 تتم حالياً الطباعة
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
-#Show &Bookmarks
 
