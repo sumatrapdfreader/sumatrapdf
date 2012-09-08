@@ -486,7 +486,7 @@ failure:
 #if _MSC_VER >= 1700 // only for vs 2012 or later
 __declspec(noreturn) void __cdecl __report_rangecheckfailure()
 {
-	crash_me();
+    crash_me();
 }
 #endif
 
@@ -501,7 +501,7 @@ type_info::type_info(const type_info& rhs)
 
 type_info& type_info::operator=(const type_info& rhs)
 {
-        return *this;
+    return *this;
 }
 
 type_info::~type_info()

@@ -145,7 +145,7 @@ static void
 fz_bbox_begin_tile(fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm)
 {
 	fz_bbox_data *data = dev->user;
-	fz_bbox_add_rect(dev, area, 0);
+	fz_bbox_add_rect(dev, fz_transform_rect(ctm, area), 0);
 	data->ignore++;
 }
 

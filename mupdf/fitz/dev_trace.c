@@ -114,7 +114,7 @@ fz_trace_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_
 static void
 fz_trace_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
 {
-	printf("<clip_path ");
+	printf("<clip_path");
 	if (even_odd)
 		printf(" winding=\"eofill\"");
 	else
