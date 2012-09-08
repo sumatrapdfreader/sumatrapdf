@@ -246,6 +246,9 @@ Verificar at&ualizações
 Comic books
 Livros Comic
 
+Compatibility
+Compatibilidade
+
 Continuous
 Uma página contínua
 
@@ -549,6 +552,9 @@ Página anterior
 Print
 Imprimir
 
+Print as &image (requires more memory)
+Imprimir &como imagem (usa mais memória)
+
 Print range
 Intervalo de impressão
 
@@ -707,8 +713,4 @@ cópia de texto
 
 printing document
 impressão de documento
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
 
