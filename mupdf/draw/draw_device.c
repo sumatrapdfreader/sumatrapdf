@@ -1540,8 +1540,6 @@ fz_draw_end_tile(fz_device *devp)
 	int x0, y0, x1, y1, x, y;
 	fz_context *ctx = dev->ctx;
 	fz_draw_state *state;
-	/* SumatraPDF: make sure that the whole area is covered */
-	fz_point tl;
 
 	if (dev->top == 0)
 	{
@@ -1555,13 +1553,11 @@ fz_draw_end_tile(fz_device *devp)
 	area = state[1].area;
 	ctm = state[1].ctm;
 
-	/* SumatraPDF: make sure that the whole area is covered */
-	tl.x = state[1].dest->x; tl.y = state[1].dest->y;
-	tl = fz_transform_point(fz_invert_matrix(ctm), tl);
-	x0 = floorf((area.x0 - fz_max(tl.x, 0)) / xstep);
-	y0 = floorf((area.y0 - fz_max(tl.y, 0)) / ystep);
-	x1 = ceilf((area.x1 - fz_max(tl.x, 0)) / xstep);
-	y1 = ceilf((area.y1 - fz_max(tl.y, 0)) / ystep);
+	x0 = floorf(area.x0 / xstep);
+	y0 = floorf(area.y0 / ystep);
+	/* SumatraPDF: fix rounding issue in pattern_with_extra_q.pdf */
+	x1 = ceilf(area.x1 / xstep + 0.001f);
+	y1 = ceilf(area.y1 / ystep + 0.001f);
 
 	ctm.e = state[1].dest->x;
 	ctm.f = state[1].dest->y;
@@ -1584,10 +1580,9 @@ fz_draw_end_tile(fz_device *devp)
 		fz_dump_blend(dev->ctx, state[0].shape, "/");
 #endif
 
-	/* SumatraPDF: some documents need one additional step */
-	for (y = y0; y <= y1; y++)
+	for (y = y0; y < y1; y++)
 	{
-		for (x = x0; x <= x1; x++)
+		for (x = x0; x < x1; x++)
 		{
 			ttm = fz_concat(fz_translate(x * xstep, y * ystep), ctm);
 			state[1].dest->x = ttm.e;

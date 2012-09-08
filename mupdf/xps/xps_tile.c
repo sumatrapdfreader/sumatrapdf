@@ -174,6 +174,20 @@ xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 		int x0, y0, x1, y1;
 		fz_matrix invctm = fz_invert_matrix(ctm);
 		area = fz_transform_rect(invctm, area);
+		/* SumatraPDF: make sure that the intended area is covered */
+		{
+			fz_point tl;
+			fz_bbox bbox;
+			fz_rect bigview = viewbox;
+			bigview.x1 = bigview.x0 + xstep;
+			bigview.y1 = bigview.y0 + ystep;
+			bbox = fz_bbox_covering_rect(fz_transform_rect(ctm, bigview));
+			tl.x = bbox.x0;
+			tl.y = bbox.y0;
+			tl = fz_transform_point(invctm, tl);
+			area.x0 -= fz_max(tl.x, 0); area.x1 += xstep - fz_max(tl.x, 0);
+			area.y0 -= fz_max(tl.y, 0); area.y1 += ystep - fz_max(tl.y, 0);
+		}
 		x0 = floorf(area.x0 / xstep);
 		y0 = floorf(area.y0 / ystep);
 		x1 = ceilf(area.x1 / xstep);

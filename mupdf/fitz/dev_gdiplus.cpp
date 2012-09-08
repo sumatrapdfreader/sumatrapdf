@@ -376,24 +376,22 @@ public:
 		stack->xstep = xstep;
 		stack->ystep = ystep;
 		stack->tileCtm = ctm;
+		stack->tileCtm.e = bbox.x0;
+		stack->tileCtm.f = bbox.y0;
 		
-		fz_point tl = { bbox.x0, bbox.y0 };
-		stack->tileCtm.e = tl.x;
-		stack->tileCtm.f = tl.y;
-		tl = fz_transform_point(fz_invert_matrix(ctm), tl);
-		stack->tileArea.x0 = floorf((area.x0 - fz_max(tl.x, 0)) / xstep);
-		stack->tileArea.y0 = floorf((area.y0 - fz_max(tl.y, 0)) / ystep);
-		stack->tileArea.x1 = ceilf((area.x1 - fz_max(tl.x, 0)) / xstep);
-		stack->tileArea.y1 = ceilf((area.y1 - fz_max(tl.y, 0)) / ystep);
+		stack->tileArea.x0 = floorf(area.x0 / xstep);
+		stack->tileArea.y0 = floorf(area.y0 / ystep);
+		stack->tileArea.x1 = ceilf(area.x1 / xstep + 0.001f);
+		stack->tileArea.y1 = ceilf(area.y1 / ystep + 0.001f);
 	}
 
 	void applyTiling()
 	{
 		assert(stack->layer && stack->saveG && stack->xstep && stack->ystep);
 		
-		for (int y = stack->tileArea.y0; y <= stack->tileArea.y1; y++)
+		for (int y = stack->tileArea.y0; y < stack->tileArea.y1; y++)
 		{
-			for (int x = stack->tileArea.x0; x <= stack->tileArea.x1; x++)
+			for (int x = stack->tileArea.x0; x < stack->tileArea.x1; x++)
 			{
 				fz_matrix ttm = fz_concat(fz_translate(x * stack->xstep, y * stack->ystep), stack->tileCtm);
 				Rect bounds = stack->bounds;
