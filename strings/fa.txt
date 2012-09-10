@@ -26,13 +26,13 @@ Contributor: IRIman (iriman@chmail.ir)
 &همه‌ی صفحات انتخاب ‌شده
 
 &Back\tAlt+Left Arrow
-&قبلی\tAlt+←
+&عقب\tAlt+←
 
 &Book View\tCtrl+8
 نمایش &کتابی
 
 &Close\tCtrl+W
-&بستن\tCtrl+W
+ب&ستن\tCtrl+W
 
 &Copy Selection
 &رونوشت از انتخاب شده
@@ -98,7 +98,7 @@ Contributor: IRIman (iriman@chmail.ir)
 باز کردن سند
 
 &Open...\tCtrl+O
-با&ز کردن...\tCtrl+O
+&باز کردن...\tCtrl+O
 
 &Options...
 &گزینه‌ها
@@ -340,6 +340,9 @@ Error loading %s
 F&avorites
 موارد &منتخب
 
+F&orward\tAlt+Right Arrow
+&جلو\tAlt+→
+
 F&ullscreen\tCtrl+Shift+L
 &تمام‌صفحه\tCtrl+Shift+L
 
@@ -416,7 +419,7 @@ Found text at page %s (again)
 متن در صفحه‌ی ‌%s پیدا شد (دوباره)
 
 Frequently Read
-خوانده شده‌ها
+آخرین خوانده‌ها
 
 GB
 گیگابایت
@@ -425,7 +428,7 @@ Go to page
 برو به صفحه‌ی
 
 Hide frequently read
-پنهان کردن خوانده شده‌ها
+پنهان کردن آخرین خوانده‌ها
 
 Hint: Use the F3 key for finding again
 اشاره: برای جستجوی مجدد از کلید F3 استفاده کنید
@@ -440,7 +443,7 @@ Loading file %s...
 در حال بازکردن پرونده‌ی %s...
 
 MB
-MB
+مگابایت
 
 Make SumatraPDF default application for PDF files?
 پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
@@ -488,7 +491,7 @@ Open &in PDF-XChange
 باز کردن در PDF-&XChange
 
 Open a document...
-باز کردن سند...
+باز کردن یک سند...
 
 Open in &Adobe Reader
 باز کردن در &Adobe Reader
@@ -614,7 +617,7 @@ Select content with Ctrl+left mouse button
 متن مورد نظر را با کلید Ctrl و کلید سمت چپ موس انتخاب کنید
 
 Send by &E-mail...
-ارسال از طریق &رایانامه(Email)...
+ارسال با پست ا&لکترونیکی...
 
 Set inverse search command-line
 تنظیم خط فرمان جستجوی وارونه
@@ -632,7 +635,7 @@ Show Favorites
 نشان دادن موارد برگزیده
 
 Show frequently read
-نشان دادن خوانده شده‌ها
+نشان دادن آخرین خوانده‌ها
 
 Show the &bookmarks sidebar when available
 هنگامیکه نوار ن&شانه‌ها در دسترس است آن را نشان بده
@@ -714,7 +717,4 @@ copying text
 
 printing document
 در حال چاپ سند
-
-# Untranslated:
-#F&orward\tAlt+Right Arrow
 
