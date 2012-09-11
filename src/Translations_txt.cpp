@@ -39,7 +39,7 @@ LangDef gLangData[LANGS_COUNT] = {
     { "gl", "Galician (Galego)", _LANGID(LANG_GALICIAN), 0 },
     { "ka", "Georgian (\341\203\245\341\203\220\341\203\240\341\203\227\341\203\243\341\203\232\341\203\230)", _LANGID(LANG_GEORGIAN), 0 },
     { "de", "German (Deutsch)", _LANGID(LANG_GERMAN), 0 },
-    { "gr", "Greek (\316\225\316\273\316\273\316\267\316\275\316\271\316\272\316\254)", _LANGID(LANG_GREEK), 0 },
+    { "el", "Greek (\316\225\316\273\316\273\316\267\316\275\316\271\316\272\316\254)", _LANGID(LANG_GREEK), 0 },
     { "he", "Hebrew (\327\242\327\221\327\250\327\231\327\252)", _LANGID(LANG_HEBREW), 1 },
     { "hu", "Hungarian (Magyar)", _LANGID(LANG_HUNGARIAN), 0 },
     { "id", "Indonesian (Bahasa Indonesia)", _LANGID(LANG_INDONESIAN), 0 },
@@ -5028,7 +5028,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Text kopieren verweigert",
   "Dokument drucken verweigert",
 
-  /* Translations for language gr */
+  /* Translations for language el */
   "&\316\243\317\207\316\265\317\204\316\271\316\272\316\254",
   "\316\240\317\201\316\261\316\263\316\274\316\261\317\204\316\271\316\272\317\214 &\316\234\316\255\316\263\316\265\316\270\316\277\317\202\tCtrl+1",
   "\316\214&\316\273\316\265\317\202 \316\277\316\271 \316\265\317\200\316\271\316\273\316\265\316\263\316\274\316\255\316\275\316\265\317\202",

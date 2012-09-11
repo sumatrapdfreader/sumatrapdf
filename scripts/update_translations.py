@@ -119,7 +119,6 @@ def make_lang_layouts(lang_index):
     return lang_layouts
 
 def gen_c_code(langs_ex, strings_dict, file_name, lang_index):
-    langs_ex.sort(lang_sort_func)
     langs = [cols[0] for cols in langs_ex]
     assert DEFAULT_LANG == langs[0]
     langs_count = len(langs)
@@ -196,6 +195,7 @@ def main():
         if s not in strings_dict:
             strings_dict[s] = []
 
+    langs.sort(lang_sort_func)
     c_file_name = os.path.join(g_src_dir, "Translations_txt.cpp")
     gen_and_upload_js(strings_dict, langs, contributors)
     remove_incomplete_translations(langs, strings, strings_dict, INCOMPLETE_MISSING_THRESHOLD)

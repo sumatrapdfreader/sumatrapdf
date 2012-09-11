@@ -1,4 +1,4 @@
-﻿# Translations for Greek (Ελληνικά) (gr) language
+﻿# Translations for Greek (Ελληνικά) (el) language
 
 # * Lines starting with # are comments (such as this).
 # * This file must be in UTF-8 encoding. Make sure you use a proper
@@ -6,7 +6,7 @@
 # * For lines containing several variables (such as %s, %d or %u), the
 #   variables must remain in that exact order in the translation.
 
-Lang: gr Greek (Ελληνικά)
+Lang: el Greek (Ελληνικά)
 
 Contributor: Giorgos Dimopoulos (geodimo1985@gmail.com)
 Contributor: George Georgiou (geonetor@yahoo.gr)
