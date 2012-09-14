@@ -697,6 +697,9 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 							etable[i] = FT_Get_Name_Index(face, estrings[i]);
 						else
 							etable[i] = ft_char_index(face, aglcode);
+						/* SumatraPDF: prefer non-zero gids */
+						if (aglcode && !etable[i])
+							etable[i] = ft_char_index(face, i);
 					}
 				}
 			}
@@ -713,6 +716,9 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 							etable[i] = FT_Get_Name_Index(face, estrings[i]);
 						else
 							etable[i] = ft_char_index(face, k);
+						/* SumatraPDF: prefer non-zero gids */
+						if (k > 0 && !etable[i])
+							etable[i] = ft_char_index(face, i);
 					}
 				}
 			}
