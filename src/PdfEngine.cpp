@@ -608,9 +608,10 @@ struct ListInspectionData {
     bool req_blending;
     bool req_t3_fonts;
     size_t mem_estimate;
+    size_t path_len;
 
     ListInspectionData(Vec<FitzImagePos>& images) : images(&images),
-        req_blending(false), req_t3_fonts(false), mem_estimate(0) { }
+        req_blending(false), req_t3_fonts(false), mem_estimate(0), path_len(0) { }
 };
 
 extern "C" static void
@@ -622,6 +623,12 @@ fz_inspection_free(fz_device *dev)
     ((ListInspectionData *)dev->user)->images->Reverse();
 }
 
+static void fz_inspection_handle_path(fz_device *dev, fz_path *path)
+{
+    ((ListInspectionData *)dev->user)->path_len += path->len;
+    ((ListInspectionData *)dev->user)->mem_estimate += path->cap * sizeof(fz_path_item);
+}
+
 static void fz_inspection_handle_text(fz_device *dev, fz_text *text)
 {
     ((ListInspectionData *)dev->user)->req_t3_fonts = text->font->t3procs != NULL;
@@ -631,6 +638,30 @@ static void fz_inspection_handle_image(fz_device *dev, fz_image *image)
 {
     int n = image->colorspace ? image->colorspace->n + 1 : 1;
     ((ListInspectionData *)dev->user)->mem_estimate += image->w * image->h * n;
+}
+
+extern "C" static void
+fz_inspection_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha)
+{
+    fz_inspection_handle_path(dev, path);
+}
+
+extern "C" static void
+fz_inspection_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha)
+{
+    fz_inspection_handle_path(dev, path);
+}
+
+extern "C" static void
+fz_inspection_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
+{
+    fz_inspection_handle_path(dev, path);
+}
+
+extern "C" static void
+fz_inspection_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
+{
+    fz_inspection_handle_path(dev, path);
 }
 
 extern "C" static void
@@ -699,6 +730,11 @@ static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *
 {
     fz_device *dev = fz_new_device(ctx, data);
     dev->free_user = fz_inspection_free;
+
+    dev->fill_path = fz_inspection_fill_path;
+    dev->stroke_path = fz_inspection_stroke_path;
+    dev->clip_path = fz_inspection_clip_path;
+    dev->clip_stroke_path = fz_inspection_clip_stroke_path;
 
     dev->fill_text = fz_inspection_fill_text;
     dev->stroke_text = fz_inspection_stroke_text;
@@ -920,6 +956,7 @@ struct PdfPageRun {
     size_t size_est;
     bool req_blending;
     bool req_t3_fonts;
+    size_t path_len;
     int refs;
 };
 
@@ -1024,7 +1061,7 @@ protected:
     bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm, float zoom, int rotation,
                                RectD *pageRect, RenderTarget target);
-    bool            RequiresBlending(pdf_page *page);
+    bool            PreferGdiPlusDevice(pdf_page *page);
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
@@ -1606,7 +1643,7 @@ PdfPageRun *PdfEngineImpl::CreatePageRun(pdf_page *page, fz_display_list *list)
         }
     }
 
-    PdfPageRun newRun = { page, list, data.mem_estimate, data.req_blending, data.req_t3_fonts, 1 };
+    PdfPageRun newRun = { page, list, data.mem_estimate, data.req_blending, data.req_t3_fonts, data.path_len, 1 };
     return (PdfPageRun *)_memdup(&newRun);
 }
 
@@ -1859,13 +1896,14 @@ bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_mat
 // Fitz' draw_device.c currently isn't able to correctly/quickly render some
 // transparency groups while our dev_gdiplus.cpp gets most of them right
 // (however dev_gdiplus' Type 3 fonts look worse than bad transparency rendering)
-bool PdfEngineImpl::RequiresBlending(pdf_page *page)
+// also dev_gdiplus seems significantly faster at rendering large (amounts of) paths
+bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page)
 {
     PdfPageRun *run = GetPageRun(page);
     if (!run)
         return false;
 
-    bool result = run->req_blending && !run->req_t3_fonts;
+    bool result = (run->req_blending || run->path_len > 100000) && !run->req_t3_fonts;
     DropPageRun(run);
     return result;
 }
@@ -1881,7 +1919,7 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
     // GDI+ seems to render quicker and more reliable at high zoom levels
-    if ((zoom > 40.0 || RequiresBlending(page)) != gDebugGdiPlusDevice) {
+    if ((zoom > 40.0 || PreferGdiPlusDevice(page)) != gDebugGdiPlusDevice) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
         ctm = fz_concat(ctm, fz_translate((float)-bbox.x0, (float)-bbox.y0));
 
