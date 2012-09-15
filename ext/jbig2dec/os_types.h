@@ -44,6 +44,14 @@
 # include "config_types.h"
 #elif defined(_WIN32) || defined(__WIN32__)
 # include "config_win32.h"
+#elif defined (STD_INT_USE_SYS_TYPES_H)
+# include <sys/types.h>
+#elif defined (STD_INT_USE_INTTYPES_H)
+# include <inttypes.h>
+#elif defined (STD_INT_USE_SYS_INTTYPES_H)
+# include <sys/inttypes.h>
+#elif defined (STD_INT_USE_SYS_INT_TYPES_H)
+# include <sys/int_types.h>
 #elif !defined(HAVE_STDINT_H)
    typedef unsigned char  uint8_t;
    typedef unsigned short uint16_t;
