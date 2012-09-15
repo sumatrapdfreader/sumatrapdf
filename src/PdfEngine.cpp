@@ -609,9 +609,11 @@ struct ListInspectionData {
     bool req_t3_fonts;
     size_t mem_estimate;
     size_t path_len;
+    size_t clip_path_len;
 
     ListInspectionData(Vec<FitzImagePos>& images) : images(&images),
-        req_blending(false), req_t3_fonts(false), mem_estimate(0), path_len(0) { }
+        req_blending(false), req_t3_fonts(false), mem_estimate(0),
+        path_len(0), clip_path_len(0) { }
 };
 
 extern "C" static void
@@ -623,10 +625,14 @@ fz_inspection_free(fz_device *dev)
     ((ListInspectionData *)dev->user)->images->Reverse();
 }
 
-static void fz_inspection_handle_path(fz_device *dev, fz_path *path)
+static void fz_inspection_handle_path(fz_device *dev, fz_path *path, bool clipping=false)
 {
-    ((ListInspectionData *)dev->user)->path_len += path->len;
-    ((ListInspectionData *)dev->user)->mem_estimate += path->cap * sizeof(fz_path_item);
+    ListInspectionData *data = (ListInspectionData *)dev->user;
+    if (!clipping)
+        data->path_len += path->len;
+    else
+        data->clip_path_len += path->len;
+    data->mem_estimate += path->cap * sizeof(fz_path_item);
 }
 
 static void fz_inspection_handle_text(fz_device *dev, fz_text *text)
@@ -655,13 +661,13 @@ fz_inspection_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke
 extern "C" static void
 fz_inspection_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
 {
-    fz_inspection_handle_path(dev, path);
+    fz_inspection_handle_path(dev, path, true);
 }
 
 extern "C" static void
 fz_inspection_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
-    fz_inspection_handle_path(dev, path);
+    fz_inspection_handle_path(dev, path, true);
 }
 
 extern "C" static void
@@ -957,6 +963,7 @@ struct PdfPageRun {
     bool req_blending;
     bool req_t3_fonts;
     size_t path_len;
+    size_t clip_path_len;
     int refs;
 };
 
@@ -1643,7 +1650,10 @@ PdfPageRun *PdfEngineImpl::CreatePageRun(pdf_page *page, fz_display_list *list)
         }
     }
 
-    PdfPageRun newRun = { page, list, data.mem_estimate, data.req_blending, data.req_t3_fonts, data.path_len, 1 };
+    PdfPageRun newRun = {
+        page, list, data.mem_estimate, data.req_blending,
+        data.req_t3_fonts, data.path_len, data.clip_path_len, 1
+    };
     return (PdfPageRun *)_memdup(&newRun);
 }
 
@@ -1911,6 +1921,9 @@ bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip
     // transparency groups while dev_gdiplus gets most of them right
     else if (run->req_blending)
         result = true;
+    // dev_gdiplus seems significantly slower at clipping than fitz/draw
+    else if (run->clip_path_len > 50000)
+        result = false;
     // dev_gdiplus seems significantly faster at rendering large (amounts of) paths
     // (only required when tiling, at lower zoom levels lines look slightly worse)
     else if (run->path_len > 100000) {
