@@ -1061,7 +1061,7 @@ protected:
     bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm, float zoom, int rotation,
                                RectD *pageRect, RenderTarget target);
-    bool            PreferGdiPlusDevice(pdf_page *page);
+    bool            PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip);
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
@@ -1893,17 +1893,32 @@ bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_mat
     return RunPage(page, dev, ctm2, target, clipbox);
 }
 
-// Fitz' draw_device.c currently isn't able to correctly/quickly render some
-// transparency groups while our dev_gdiplus.cpp gets most of them right
-// (however dev_gdiplus' Type 3 fonts look worse than bad transparency rendering)
-// also dev_gdiplus seems significantly faster at rendering large (amounts of) paths
-bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page)
+// various heuristics for deciding when to use dev_gdiplus instead of fitz/draw
+bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip)
 {
     PdfPageRun *run = GetPageRun(page);
     if (!run)
         return false;
 
-    bool result = (run->req_blending || run->path_len > 100000) && !run->req_t3_fonts;
+    bool result = false;
+    // GDI+ seems to render quicker and more reliably at high zoom levels
+    if (zoom > 40.0f)
+        result = true;
+    // dev_gdiplus' Type 3 fonts look worse than bad transparency at lower zoom levels
+    else if (run->req_t3_fonts)
+        result = false;
+    // fitz/draw currently isn't able to correctly/quickly render some
+    // transparency groups while dev_gdiplus gets most of them right
+    else if (run->req_blending)
+        result = true;
+    // dev_gdiplus seems significantly faster at rendering large (amounts of) paths
+    // (only required when tiling, at lower zoom levels lines look slightly worse)
+    else if (run->path_len > 100000) {
+        fz_bbox clipBox = fz_round_rect(clip);
+        fz_bbox pageBox = fz_round_rect(pdf_bound_page(_doc, page));
+        result = clipBox.x0 > pageBox.x0 || clipBox.x1 < pageBox.x1 ||
+                 clipBox.y0 > pageBox.y0 || clipBox.y1 < pageBox.y1;
+    }
     DropPageRun(run);
     return result;
 }
@@ -1918,8 +1933,7 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
-    // GDI+ seems to render quicker and more reliable at high zoom levels
-    if ((zoom > 40.0 || PreferGdiPlusDevice(page)) != gDebugGdiPlusDevice) {
+    if (PreferGdiPlusDevice(page, zoom, pRect) != gDebugGdiPlusDevice) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
         ctm = fz_concat(ctm, fz_translate((float)-bbox.x0, (float)-bbox.y0));
 
@@ -3328,7 +3342,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, pRect));
 
-    // GDI+ seems to render quicker and more reliable at high zoom levels
+    // GDI+ seems to render quicker and more reliably at high zoom levels
     if ((zoom > 40.0) != gDebugGdiPlusDevice) {
         int w = bbox.x1 - bbox.x0, h = bbox.y1 - bbox.y0;
         ctm = fz_concat(ctm, fz_translate((float)-bbox.x0, (float)-bbox.y0));
