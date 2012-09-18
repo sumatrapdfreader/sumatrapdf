@@ -10,9 +10,9 @@ use_local_for_testing = True
 
 if use_local_for_testing:
     SERVER = "127.0.0.1"
-    PORT = 8089
+    PORT = 5000
 else:
-    SERVER = "apptranslator.org"
+    SERVER = "www.apptranslator.org"
     PORT = 80
 
 # secrets.py needs to have upload secret in the form of:
@@ -27,7 +27,7 @@ except:
     sys.exit(1)
 
 def lastUploadHashFileName():
-    return os.path.join(g_my_dir, "apptransup-lashuploadhash.txt")
+    return os.path.join(g_my_dir, "apptransup-lastuploadhash.txt")
 
 def lastUploadHash():
     f = lastUploadHashFileName()
