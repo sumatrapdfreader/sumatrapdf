@@ -259,6 +259,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\pdf\pdf_event.c"
+				>
+			</File>
+			<File
 				RelativePath="..\pdf\pdf_font.c"
 				>
 			</File>

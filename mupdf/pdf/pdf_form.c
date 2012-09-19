@@ -1737,9 +1737,13 @@ void pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
 
 static void execute_action_chain(pdf_document *doc, pdf_obj *obj)
 {
-	pdf_obj *a;
+	pdf_obj *a = pdf_dict_gets(obj, "A");
+	pdf_js_event e;
 
-	a = pdf_dict_gets(obj, "A");
+	e.target = obj;
+	e.value = "";
+	pdf_js_setup_event(doc->js, &e);
+
 	while (a)
 	{
 		execute_action(doc, obj, a);

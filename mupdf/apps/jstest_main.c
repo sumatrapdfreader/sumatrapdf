@@ -37,6 +37,22 @@ void winerror(pdfapp_t *app, char *msg)
 	exit(1);
 }
 
+void winalert(pdfapp_t *app, fz_alert_event *alert)
+{
+	fprintf(stderr, "Alert %s: %s", alert->title, alert->message);
+	switch (alert->button_group_type)
+	{
+	case FZ_ALERT_BUTTON_GROUP_OK:
+	case FZ_ALERT_BUTTON_GROUP_OK_CANCEL:
+		alert->button_pressed = FZ_ALERT_BUTTON_OK;
+		break;
+	case FZ_ALERT_BUTTON_GROUP_YES_NO:
+	case FZ_ALERT_BUTTON_GROUP_YES_NO_CANCEL:
+		alert->button_pressed = FZ_ALERT_BUTTON_YES;
+		break;
+	}
+}
+
 static char pd_password[256] = "";
 static char td_textinput[LONGLINE] = "";
 

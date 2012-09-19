@@ -153,6 +153,16 @@ pdf_jsimp_obj *pdf_jsimp_array_item(pdf_jsimp *imp, pdf_jsimp_obj *obj, int i)
 	return item;
 }
 
+pdf_jsimp_obj *pdf_jsimp_property(pdf_jsimp *imp, pdf_jsimp_obj *obj, char *prop)
+{
+	pdf_jsimp_obj *pobj = NULL;
+	const char *err = pdf_jsimp_property_cpp(imp, obj, prop, &pobj);
+	if (err != NULL)
+		fz_throw(pdf_jsimp_ctx_cpp(imp), "%s", err);
+
+	return pobj;
+}
+
 void pdf_jsimp_execute(pdf_jsimp *imp, char *code)
 {
 	const char *err = pdf_jsimp_execute_cpp(imp, code);
@@ -165,4 +175,53 @@ void pdf_jsimp_execute_count(pdf_jsimp *imp, char *code, int count)
 	const char *err = pdf_jsimp_execute_count_cpp(imp, code, count);
 	if (err != NULL)
 		fz_throw(pdf_jsimp_ctx_cpp(imp), "%s", err);
+}
+pdf_jsimp_obj *pdf_jsimp_call_method(pdf_jsimp *imp, pdf_jsimp_method *meth, void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
+{
+	fz_context *ctx = pdf_jsimp_ctx_cpp(imp);
+	pdf_jsimp_obj *res;
+
+	fz_try(ctx)
+	{
+		res = meth(jsctx, obj, argc, args);
+	}
+	fz_catch(ctx)
+	{
+		res = NULL;
+		fz_warn(ctx, "%s", ctx->error->message);
+	}
+
+	return res;
+}
+
+pdf_jsimp_obj *pdf_jsimp_call_getter(pdf_jsimp *imp, pdf_jsimp_getter *get, void *jsctx, void *obj)
+{
+	fz_context *ctx = pdf_jsimp_ctx_cpp(imp);
+	pdf_jsimp_obj *res;
+
+	fz_try(ctx)
+	{
+		res = get(jsctx, obj);
+	}
+	fz_catch(ctx)
+	{
+		res = NULL;
+		fz_warn(ctx, "%s", ctx->error->message);
+	}
+
+	return res;
+}
+
+void pdf_jsimp_call_setter(pdf_jsimp *imp, pdf_jsimp_setter *set, void *jsctx, void *obj, pdf_jsimp_obj *val)
+{
+	fz_context *ctx = pdf_jsimp_ctx_cpp(imp);
+
+	fz_try(ctx)
+	{
+		set(jsctx, obj, val);
+	}
+	fz_catch(ctx)
+	{
+		fz_warn(ctx, "%s", ctx->error->message);
+	}
 }

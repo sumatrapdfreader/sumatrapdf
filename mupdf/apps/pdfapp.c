@@ -101,6 +101,21 @@ void pdfapp_invert(pdfapp_t *app, fz_bbox rect)
 	fz_invert_pixmap_rect(app->image, rect);
 }
 
+static void event_cb(fz_doc_event *event, void *data)
+{
+	pdfapp_t *app = (pdfapp_t *)data;
+
+	switch (event->type)
+	{
+	case FZ_DOCUMENT_EVENT_ALERT:
+		{
+			fz_alert_event *alert = fz_access_alert_event(event);
+			winalert(app, alert);
+		}
+		break;
+	}
+}
+
 void pdfapp_open(pdfapp_t *app, char *filename, int reload)
 {
 	fz_context *ctx = app->ctx;
@@ -108,7 +123,14 @@ void pdfapp_open(pdfapp_t *app, char *filename, int reload)
 
 	fz_try(ctx)
 	{
+		fz_interactive *idoc;
+
 		app->doc = fz_open_document(ctx, filename);
+
+		idoc = fz_interact(app->doc);
+
+		if (idoc)
+			fz_set_doc_event_callback(idoc, event_cb, app);
 
 		if (fz_needs_password(app->doc))
 		{

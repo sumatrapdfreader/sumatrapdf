@@ -110,6 +110,22 @@ void winwarn(pdfapp_t *app, char *msg)
 	fprintf(stderr, "mupdf: warning: %s\n", msg);
 }
 
+void winalert(pdfapp_t *app, fz_alert_event *alert)
+{
+	fprintf(stderr, "Alert %s: %s", alert->title, alert->message);
+	switch (alert->button_group_type)
+	{
+	case FZ_ALERT_BUTTON_GROUP_OK:
+	case FZ_ALERT_BUTTON_GROUP_OK_CANCEL:
+		alert->button_pressed = FZ_ALERT_BUTTON_OK;
+		break;
+	case FZ_ALERT_BUTTON_GROUP_YES_NO:
+	case FZ_ALERT_BUTTON_GROUP_YES_NO_CANCEL:
+		alert->button_pressed = FZ_ALERT_BUTTON_YES;
+		break;
+	}
+}
+
 char *winpassword(pdfapp_t *app, char *filename)
 {
 	char *r = password;

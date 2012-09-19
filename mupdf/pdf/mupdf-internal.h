@@ -228,6 +228,9 @@ struct pdf_document_s
 	pdf_js *js;
 	int recalculating;
 	int dirty;
+
+	fz_doc_event_cb *event_cb;
+	void *event_cb_data;
 };
 
 pdf_document *pdf_open_document_no_run(fz_context *ctx, const char *filename);
@@ -643,6 +646,9 @@ int pdf_choice_widget_options(pdf_document *doc, fz_widget *tw, char *opts[]);
 int pdf_choice_widget_is_multiselect(pdf_document *doc, fz_widget *tw);
 int pdf_choice_widget_value(pdf_document *doc, fz_widget *tw, char *opts[]);
 void pdf_choice_widget_set_value(pdf_document *doc, fz_widget *tw, int n, char *opts[]);
+void pdf_set_doc_event_callback(pdf_document *doc, fz_doc_event_cb *event_cb, void *data);
+
+void pdf_event_issue_alert(pdf_document *doc, fz_alert_event *event);
 
 /*
  * Javascript handler
@@ -707,6 +713,8 @@ double pdf_jsimp_to_number(pdf_jsimp *imp, pdf_jsimp_obj *obj);
 
 int pdf_jsimp_array_len(pdf_jsimp *imp, pdf_jsimp_obj *obj);
 pdf_jsimp_obj *pdf_jsimp_array_item(pdf_jsimp *imp, pdf_jsimp_obj *obj, int i);
+
+pdf_jsimp_obj *pdf_jsimp_property(pdf_jsimp *imp, pdf_jsimp_obj *obj, char *prop);
 
 void pdf_jsimp_execute(pdf_jsimp *imp, char *code);
 void pdf_jsimp_execute_count(pdf_jsimp *imp, char *code, int count);

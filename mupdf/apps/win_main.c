@@ -99,6 +99,62 @@ void winerror(pdfapp_t *app, char *msg)
 	exit(1);
 }
 
+void winalert(pdfapp_t *app, fz_alert_event *alert)
+{
+	int buttons = MB_OK;
+	int icon = MB_ICONWARNING;
+	int pressed = FZ_ALERT_BUTTON_NONE;
+
+	switch (alert->icon_type)
+	{
+	case FZ_ALERT_ICON_ERROR:
+		icon = MB_ICONERROR;
+		break;
+	case FZ_ALERT_ICON_WARNING:
+		icon = MB_ICONWARNING;
+		break;
+	case FZ_ALERT_ICON_QUESTION:
+		icon = MB_ICONQUESTION;
+		break;
+	case FZ_ALERT_ICON_STATUS:
+		icon = MB_ICONINFORMATION;
+		break;
+	}
+
+	switch (alert->button_group_type)
+	{
+	case FZ_ALERT_BUTTON_GROUP_OK:
+		buttons = MB_OK;
+		break;
+	case FZ_ALERT_BUTTON_GROUP_OK_CANCEL:
+		buttons = MB_OKCANCEL;
+		break;
+	case FZ_ALERT_BUTTON_GROUP_YES_NO:
+		buttons = MB_YESNO;
+		break;
+	case FZ_ALERT_BUTTON_GROUP_YES_NO_CANCEL:
+		buttons = MB_YESNOCANCEL;
+		break;
+	}
+
+	pressed = MessageBoxA(hwndframe, alert->message, alert->title, icon|buttons);
+
+	switch (pressed)
+	{
+	case IDOK:
+		alert->button_pressed = FZ_ALERT_BUTTON_OK;
+		break;
+	case IDCANCEL:
+		alert->button_pressed = FZ_ALERT_BUTTON_CANCEL;
+		break;
+	case IDNO:
+		alert->button_pressed = FZ_ALERT_BUTTON_NO;
+		break;
+	case IDYES:
+		alert->button_pressed = FZ_ALERT_BUTTON_YES;
+	}
+}
+
 int winsavequery(pdfapp_t *app)
 {
 	switch(MessageBoxA(hwndframe, "File has unsaved changes. Do you want to save", "MuPDF", MB_YESNOCANCEL))

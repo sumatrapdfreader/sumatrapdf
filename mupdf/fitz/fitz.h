@@ -2575,6 +2575,127 @@ int fz_choice_widget_value(fz_interactive *idoc, fz_widget *tw, char *opts[]);
 */
 void fz_choice_widget_set_value(fz_interactive *idoc, fz_widget *tw, int n, char *opts[]);
 
+
+/*
+	Document events: the objects via which MuPDF informs the calling app
+	of occurrences emanating from the document, possibly from user interaction
+	or javascript execution. MuPDF informs the app of document events via a
+	callback.
+*/
+
+/*
+	Document event structures are mostly opaque to the app. Only the type
+	is visible to the app.
+*/
+typedef struct fz_doc_event_s fz_doc_event;
+
+struct fz_doc_event_s
+{
+	int type;
+};
+
+/*
+	The various types of document events
+*/
+enum
+{
+	FZ_DOCUMENT_EVENT_ALERT,
+	FZ_DOCUMENT_EVENT_PRINT,
+	FZ_DOCUMENT_EVENT_LAUNCH_URL,
+	FZ_DOCUMENT_EVENT_MAIL_DOC,
+	FZ_DOCUMENT_EVENT_SUBMIT
+};
+
+/*
+	fz_doc_event_cb: the type of function via which the app receives
+	document events.
+*/
+typedef void (fz_doc_event_cb)(fz_doc_event *event, void *data);
+
+/*
+	fz_set_doc_event_callback: set the function via which to receive
+	document events.
+*/
+void fz_set_doc_event_callback(fz_interactive *idoc, fz_doc_event_cb *fn, void *data);
+
+/*
+	fz_alert_event: details of an alert event. In response the app should
+	display an alert dialog with the bittons specified by "button_type_group".
+	If "check_box_message" is non-NULL, a checkbox should be displayed in
+	the lower-left corned along with the messsage.
+
+	"finally_checked" and "button_pressed" should be set by the app
+	before returning from the callback. "finally_checked" need be set
+	only if "check_box_message" is non-NULL.
+*/
+typedef struct
+{
+	char *message;
+	int icon_type;
+	int button_group_type;
+	char *title;
+	char *check_box_message;
+	int initially_checked;
+	int finally_checked;
+	int button_pressed;
+} fz_alert_event;
+
+/* Possible values of icon_type */
+enum
+{
+	FZ_ALERT_ICON_ERROR,
+	FZ_ALERT_ICON_WARNING,
+	FZ_ALERT_ICON_QUESTION,
+	FZ_ALERT_ICON_STATUS
+};
+
+/* Possible values of button_group_type */
+enum
+{
+	FZ_ALERT_BUTTON_GROUP_OK,
+	FZ_ALERT_BUTTON_GROUP_OK_CANCEL,
+	FZ_ALERT_BUTTON_GROUP_YES_NO,
+	FZ_ALERT_BUTTON_GROUP_YES_NO_CANCEL
+};
+
+/* Possible values of button_pressed */
+enum
+{
+	FZ_ALERT_BUTTON_NONE,
+	FZ_ALERT_BUTTON_OK,
+	FZ_ALERT_BUTTON_CANCEL,
+	FZ_ALERT_BUTTON_NO,
+	FZ_ALERT_BUTTON_YES
+};
+
+/*
+	fz_access_alert_event: access the details of an alert event
+	The returned pointer and all the data referred to by the
+	structire are owned by mupdf and need not be freed by the
+	caller.
+*/
+fz_alert_event *fz_access_alert_event(fz_doc_event *event);
+
+/*
+	fz_submit_event: details of a submit event. The app should submit
+	the specified data to the specified url. "get" determines whether
+	to use the GET or POST method.
+*/
+typedef struct
+{
+	char *url;
+	char *data;
+	int data_len;
+	int get;
+} fz_submit_event;
+
+/*
+	fz_access_submit_event: access the details of a submit event
+	The returned pointer and all data referred to by the structure are
+	owned by mupdf and need not be freed by the caller.
+*/
+fz_submit_event *fz_access_submit_event(fz_doc_event *event);
+
 typedef struct fz_write_options_s fz_write_options;
 
 /*

@@ -160,6 +160,8 @@ EXPORTS
 	fz_choice_widget_is_multiselect
 	fz_choice_widget_value
 	fz_choice_widget_set_value
+	fz_set_doc_event_callback
+	fz_access_alert_event
 	fz_write_document
 
 	fz_clone_context_internal
@@ -422,6 +424,7 @@ EXPORTS
 	pdf_dict_getsa
 	pdf_dict_put
 	pdf_dict_puts
+	pdf_dict_puts_drop
 	pdf_dict_putp
 	pdf_dict_del
 	pdf_dict_dels
@@ -481,6 +484,7 @@ EXPORTS
 	pdf_print_token
 	pdf_open_document_no_run
 	pdf_open_document_no_run_with_stream
+	pdf_localise_page_resources
 	pdf_cache_object
 	pdf_open_inline_stream
 	pdf_load_image_stream
@@ -613,6 +617,8 @@ EXPORTS
 	pdf_choice_widget_is_multiselect
 	pdf_choice_widget_value
 	pdf_choice_widget_set_value
+	pdf_set_doc_event_callback
+	pdf_event_issue_alert
 	pdf_new_js
 	pdf_drop_js
 	pdf_js_load_document_level

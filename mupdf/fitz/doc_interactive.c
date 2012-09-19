@@ -75,3 +75,8 @@ void fz_choice_widget_set_value(fz_interactive *idoc, fz_widget *tw, int n, char
 {
 	pdf_choice_widget_set_value((pdf_document *)idoc, tw, n, opts);
 }
+
+void fz_set_doc_event_callback(fz_interactive *idoc, fz_doc_event_cb *event_cb, void *data)
+{
+	pdf_set_doc_event_callback((pdf_document *)idoc, event_cb, data);
+}

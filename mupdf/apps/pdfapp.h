@@ -37,6 +37,7 @@ extern void winhelp(pdfapp_t*);
 extern void winfullscreen(pdfapp_t*, int state);
 extern int winsavequery(pdfapp_t*);
 extern int wingetsavepath(pdfapp_t*, char *buf, int len);
+extern void winalert(pdfapp_t *, fz_alert_event *alert);
 
 struct pdfapp_s
 {
