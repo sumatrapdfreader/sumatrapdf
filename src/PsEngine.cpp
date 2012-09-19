@@ -315,7 +315,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         return false;
 
     if (sniff) {
-        char header[1024];
+        char header[2048];
         ZeroMemory(header, sizeof(header));
         file::ReadAll(fileName, header, sizeof(header) - 1);
         if (str::StartsWith(header, "\xC5\xD0\xD3\xC6")) {
