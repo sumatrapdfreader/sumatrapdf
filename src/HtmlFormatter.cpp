@@ -562,8 +562,8 @@ void HtmlFormatter::EmitImage(ImageData *img)
         }
         else {
             REAL scale = min((pageDx - currX) / newSize.Width, (pageDy - currY) / newSize.Height);
-            newSize.Width *= scale;
-            newSize.Height *= scale;
+            newSize.Width = min(newSize.Width * scale, pageDx - currX);
+            newSize.Height = min(newSize.Height * scale, pageDy - currY);
         }
     }
 
