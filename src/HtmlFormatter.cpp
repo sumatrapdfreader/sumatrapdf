@@ -546,22 +546,25 @@ void HtmlFormatter::EmitImage(ImageData *img)
         return;
 
     SizeF newSize((REAL)imgSize.Width, (REAL)imgSize.Height);
-    // move overly large images to a new line
-    if (!IsCurrLineEmpty() && currX + newSize.Width > pageDx)
+    // move overly large images to a new line (if they don't fit entirely)
+    if (!IsCurrLineEmpty() && (currX + newSize.Width > pageDx || currY + newSize.Height > pageDy))
         FlushCurrLine(false);
     // move overly large images to a new page
-    if (currY > 0 && currY + newSize.Height / 2.f > pageDy)
+    // (if they don't fit even when scaled down to 75%)
+    REAL scalePage = min((pageDx - currX) / newSize.Width, pageDy / newSize.Height);
+    if (currY > 0 && currY + newSize.Height * min(scalePage, 0.75f) > pageDy)
         ForceNewPage();
-    // if image is still bigger than available space, scale it down
-    if ((newSize.Width > pageDx) || (currY + newSize.Height) > pageDy) {
-        if (HasPreviousLineSingleImage(currPage->instructions)) {
-            // don't scale down images that follow right after a
-            // line containing a single image, as they might be
-            // intended to be of the same size
+    // if image is bigger than the available space, scale it down
+    if (newSize.Width > pageDx - currX || newSize.Height > pageDy - currY) {
+        REAL scale = min(scalePage, (pageDy - currY) / newSize.Height);
+        // scale down images that follow right after a line
+        // containing a single image as little as possible,
+        // as they might be intended to be of the same size
+        if (scale < scalePage && HasPreviousLineSingleImage(currPage->instructions)) {
             ForceNewPage();
+            scale = scalePage;
         }
-        else {
-            REAL scale = min((pageDx - currX) / newSize.Width, (pageDy - currY) / newSize.Height);
+        if (scale < 1) {
             newSize.Width = min(newSize.Width * scale, pageDx - currX);
             newSize.Height = min(newSize.Height * scale, pageDy - currY);
         }
