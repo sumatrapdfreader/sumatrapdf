@@ -1911,8 +1911,11 @@ bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip
         return false;
 
     bool result = false;
-    // GDI+ seems to render quicker and more reliably at high zoom levels
-    if (zoom > 40.0f)
+    // dev_gdiplus seems significantly slower at clipping than fitz/draw
+    if (run->clip_path_len > 50000)
+        result = false;
+    // dev_gdiplus seems to render quicker and more reliably at high zoom levels
+    else if (zoom > 40.0f)
         result = true;
     // dev_gdiplus' Type 3 fonts look worse than bad transparency at lower zoom levels
     else if (run->req_t3_fonts)
@@ -1921,9 +1924,6 @@ bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip
     // transparency groups while dev_gdiplus gets most of them right
     else if (run->req_blending)
         result = true;
-    // dev_gdiplus seems significantly slower at clipping than fitz/draw
-    else if (run->clip_path_len > 50000)
-        result = false;
     // dev_gdiplus seems significantly faster at rendering large (amounts of) paths
     // (only required when tiling, at lower zoom levels lines look slightly worse)
     else if (run->path_len > 100000) {
