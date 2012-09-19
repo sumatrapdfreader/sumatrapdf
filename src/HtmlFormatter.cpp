@@ -1161,7 +1161,7 @@ Vec<HtmlPage*> *HtmlFormatter::FormatAllPages(bool skipEmptyPages)
 // mouse is over a link. There's a slight complication here: we only get explicit information about
 // strings, not about the whitespace and we should underline the whitespace as well. Also the text
 // should be underlined at a baseline
-void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor)
+void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor, bool *abortCookie)
 {
     Color kindleTextColor(0x5F, 0x4B, 0x32); // this color matches Kindle app
     if (!textColor)
@@ -1217,6 +1217,9 @@ void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL
         } else {
             CrashIf(true);
         }
+
+        if (abortCookie && *abortCookie)
+            break;
     }
 }
 

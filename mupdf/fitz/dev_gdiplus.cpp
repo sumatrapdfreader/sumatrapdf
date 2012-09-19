@@ -259,6 +259,11 @@ public:
 	~userData()
 	{
 		assert(stack && !stack->prev);
+		while (stack && stack->prev) {
+			userDataStackItem *item = stack;
+			stack = stack->prev;
+			delete item;
+		}
 		if (stack)
 			graphics->SetClip(&stack->clip);
 		delete stack;

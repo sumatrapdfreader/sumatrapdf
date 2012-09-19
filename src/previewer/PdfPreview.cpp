@@ -67,6 +67,7 @@ class PageRenderer {
     int reqPage;
     float reqZoom;
     SizeI reqSize;
+    bool reqAbort;
 
     CRITICAL_SECTION currAccess;
     HANDLE thread;
@@ -111,8 +112,11 @@ public:
             reqPage = pageNo;
             reqZoom = zoom;
             reqSize = target.Size();
+            reqAbort = false;
             thread = CreateThread(NULL, 0, RenderThread, this, 0, 0);
         }
+        else if (reqPage != pageNo || reqSize != target.Size())
+            reqAbort = true;
     }
 
 protected:
@@ -120,18 +124,23 @@ protected:
         ScopedCom comScope; // because the engine reads data from a COM IStream
 
         PageRenderer *pr = (PageRenderer *)data;
-        RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0);
+        RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, NULL, Target_View, &pr->reqAbort);
 
         ScopedCritSec scope(&pr->currAccess);
 
-        delete pr->currBmp;
-        pr->currBmp = bmp;
-        pr->currPage = pr->reqPage;
-        pr->currSize = pr->reqSize;
+        if (!pr->reqAbort) {
+            delete pr->currBmp;
+            pr->currBmp = bmp;
+            pr->currPage = pr->reqPage;
+            pr->currSize = pr->reqSize;
+        }
+        else
+            delete bmp;
 
         HANDLE thread = pr->thread;
         pr->thread = NULL;
-        PostMessage(pr->hwnd, UWM_PAINT_AGAIN, 0, 0);
+        if (!pr->reqAbort)
+            PostMessage(pr->hwnd, UWM_PAINT_AGAIN, 0, 0);
 
         CloseHandle(thread);
         return 0;

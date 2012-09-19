@@ -542,7 +542,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         if (!req.dm->textCache->HasData(req.pageNo))
             req.dm->textCache->GetData(req.pageNo);
 
-        bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect);
+        bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, Target_View, &req.abort);
         if (req.abort) {
             delete bmp;
             if (req.renderCb)

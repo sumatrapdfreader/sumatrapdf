@@ -1849,6 +1849,8 @@ struct fz_cookie_s
 	int progress;
 	int progress_max; /* -1 for unknown */
 	int errors;
+	/* SumatraPDF: support Fitz-agnostic abort cookie */
+	char *abort2;
 };
 
 /*

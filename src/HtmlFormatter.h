@@ -270,7 +270,7 @@ public:
         HtmlFormatter(args), epubDoc(doc), hiddenDepth(0) { }
 };
 
-void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL);
+void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL offY, bool showBbox, Color *textColor=NULL, bool *abortCookie=NULL);
 HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator);
 HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args);
 

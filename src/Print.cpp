@@ -55,7 +55,7 @@ struct PrintData {
     }
 };
 
-static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
+static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool *abortCookie=NULL)
 {
     assert(pd.engine);
     if (!pd.engine) return;
@@ -134,13 +134,13 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
                                          (int)(printableHeight - sSize.dy * zoom) / 2,
                                          paperWidth, paperHeight);
-                engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print);
+                engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie);
             }
             else {
                 RenderedBitmap *bmp = NULL;
                 short shrink = 1;
                 while (!bmp && shrink < 32) {
-                    bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print);
+                    bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie);
                     if (!bmp || !bmp->GetBitmap()) {
                         shrink *= 2;
                         delete bmp;
@@ -236,13 +236,13 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL)
                 RectI rc = RectI::FromXY((int)(paperWidth - pSize.dx * zoom) / 2 + offset.x,
                                          (int)(paperHeight - pSize.dy * zoom) / 2 + offset.y,
                                          paperWidth, paperHeight);
-                engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print);
+                engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print, abortCookie);
             }
             else {
                 RenderedBitmap *bmp = NULL;
                 short shrink = 1;
                 while (!bmp && shrink < 32) {
-                    bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print);
+                    bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print, abortCookie);
                     if (!bmp || !bmp->GetBitmap()) {
                         shrink *= 2;
                         delete bmp;
@@ -329,7 +329,7 @@ public:
         while (!threadData->win->printThread)
             Sleep(1);
         threadData->thread = threadData->win->printThread;
-        PrintToDevice(*threadData->data, threadData);
+        PrintToDevice(*threadData->data, threadData, &threadData->isCanceled);
         QueueWorkItem(threadData);
         return 0;
     }

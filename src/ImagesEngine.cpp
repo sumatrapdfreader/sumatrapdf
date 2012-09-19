@@ -129,9 +129,9 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View);
+                         RenderTarget target=Target_View, bool *abortCookie=NULL);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View);
+                         RectD *pageRect=NULL, RenderTarget target=Target_View, bool *abortCookie=NULL);
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -166,7 +166,7 @@ protected:
     }
 };
 
-RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool *abortCookie)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -177,7 +177,7 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     HBITMAP hbmp = CreateCompatibleBitmap(hDC, screen.dx, screen.dy);
     DeleteObject(SelectObject(hDCMem, hbmp));
 
-    bool ok = RenderPage(hDCMem, screen, pageNo, zoom, rotation, pageRect, target);
+    bool ok = RenderPage(hDCMem, screen, pageNo, zoom, rotation, pageRect, target, abortCookie);
     DeleteDC(hDCMem);
     ReleaseDC(NULL, hDC);
     if (!ok) {
@@ -188,7 +188,7 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     return new RenderedBitmap(hbmp, screen.Size());
 }
 
-bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target)
+bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool *abortCookie)
 {
     Bitmap *bmp = LoadImage(pageNo);
     if (!bmp)
