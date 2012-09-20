@@ -473,6 +473,8 @@
     }
   }
 
+/* SumatraPDF: accept CFF OpenType fonts without 'head' */
+#include "../sfnt/sferrors.h"
 
   FT_LOCAL_DEF( FT_Error )
   cff_face_init( FT_Stream      stream,
@@ -513,7 +515,8 @@
 
     /* check whether we have a valid OpenType file */
     error = sfnt->init_face( stream, face, face_index, num_params, params );
-    if ( !error )
+    /* SumatraPDF: accept CFF OpenType fonts without 'head' */
+    if ( !error || error == SFNT_Err_Table_Missing )
     {
       if ( face->format_tag != TTAG_OTTO )  /* `OTTO'; OpenType/CFF font */
       {

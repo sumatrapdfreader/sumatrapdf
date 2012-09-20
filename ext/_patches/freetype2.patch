@@ -1,0 +1,66 @@
+diff -rPu5 freetype2.orig\src\cff\cffobjs.c freetype2\src\cff\cffobjs.c
+--- freetype2.orig\src\cff\cffobjs.c	Sat Feb 11 11:25:55 2012
++++ freetype2\src\cff\cffobjs.c	Thu Sep 20 19:07:54 2012
+@@ -471,10 +471,12 @@
+           family_name[idx + 1] = '\0';
+       }
+     }
+   }
+ 
++/* SumatraPDF: accept CFF OpenType fonts without 'head' */
++#include "../sfnt/sferrors.h"
+ 
+   FT_LOCAL_DEF( FT_Error )
+   cff_face_init( FT_Stream      stream,
+                  FT_Face        cffface,        /* CFF_Face */
+                  FT_Int         face_index,
+@@ -511,11 +513,12 @@
+     if ( FT_STREAM_SEEK( 0 ) )
+       goto Exit;
+ 
+     /* check whether we have a valid OpenType file */
+     error = sfnt->init_face( stream, face, face_index, num_params, params );
+-    if ( !error )
++    /* SumatraPDF: accept CFF OpenType fonts without 'head' */
++    if ( !error || error == SFNT_Err_Table_Missing )
+     {
+       if ( face->format_tag != TTAG_OTTO )  /* `OTTO'; OpenType/CFF font */
+       {
+         FT_TRACE2(( "  not an OpenType/CFF font\n" ));
+         error = CFF_Err_Unknown_File_Format;
+diff -rPu5 freetype2.orig\src\sfnt\sfobjs.c freetype2\src\sfnt\sfobjs.c
+--- freetype2.orig\src\sfnt\sfobjs.c	Thu Jun 14 07:35:58 2012
++++ freetype2\src\sfnt\sfobjs.c	Thu Sep 20 19:08:53 2012
+@@ -491,12 +491,13 @@
+     if ( FT_STREAM_SEEK( face->ttc_header.offsets[face_index] ) )
+       return error;
+ 
+     /* check that we have a valid TrueType file */
+     error = sfnt->load_font_dir( face, stream );
+-    if ( error )
+-      return error;
++    /* SumatraPDF: accept CFF OpenType fonts without 'head' */
++    // if ( error )
++    //   return error;
+ 
+     face->root.num_faces  = face->ttc_header.count;
+     face->root.face_index = face_index;
+ 
+     return error;
+diff -rPu5 freetype2.orig\src\sfnt\ttload.c freetype2\src\sfnt\ttload.c
+--- freetype2.orig\src\sfnt\ttload.c	Thu Jun 14 07:35:58 2012
++++ freetype2\src\sfnt\ttload.c	Thu Sep 20 19:08:29 2012
+@@ -366,11 +366,12 @@
+     if ( error )
+     {
+       FT_TRACE2(( "tt_face_load_font_dir:"
+                   " invalid table directory for TrueType\n" ));
+ 
+-      goto Exit;
++      /* SumatraPDF: accept CFF OpenType fonts without 'head' */
++      // goto Exit;
+     }
+ 
+     face->num_tables = sfnt.num_tables;
+     face->format_tag = sfnt.format_tag;
+ 

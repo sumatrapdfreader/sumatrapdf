@@ -368,7 +368,8 @@
       FT_TRACE2(( "tt_face_load_font_dir:"
                   " invalid table directory for TrueType\n" ));
 
-      goto Exit;
+      /* SumatraPDF: accept CFF OpenType fonts without 'head' */
+      // goto Exit;
     }
 
     face->num_tables = sfnt.num_tables;

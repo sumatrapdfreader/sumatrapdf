@@ -493,8 +493,9 @@
 
     /* check that we have a valid TrueType file */
     error = sfnt->load_font_dir( face, stream );
-    if ( error )
-      return error;
+    /* SumatraPDF: accept CFF OpenType fonts without 'head' */
+    // if ( error )
+    //   return error;
 
     face->root.num_faces  = face->ttc_header.count;
     face->root.face_index = face_index;
