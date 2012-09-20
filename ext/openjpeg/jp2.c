@@ -211,7 +211,10 @@ static opj_bool jp2_read_ihdr(opj_jp2_t *jp2, opj_cio_t *cio) {
 
 	opj_common_ptr cinfo = jp2->cinfo;
 
-	jp2_read_boxhdr(cinfo, cio, &box);
+  if(jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) {
+    opj_event_msg(cinfo, EVT_ERROR, "Failed to read boxhdr\n");
+    return OPJ_FALSE;
+  }
 	if (JP2_IHDR != box.type) {
 		opj_event_msg(cinfo, EVT_ERROR, "Expected IHDR Marker\n");
 		return OPJ_FALSE;
@@ -284,7 +287,10 @@ static opj_bool jp2_read_bpcc(opj_jp2_t *jp2, opj_cio_t *cio) {
 
 	opj_common_ptr cinfo = jp2->cinfo;
 
-	jp2_read_boxhdr(cinfo, cio, &box);
+  if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) {
+    opj_event_msg(cinfo, EVT_ERROR, "Failed to read boxhdr\n");
+    return OPJ_FALSE;
+  }
 	if (JP2_BPCC != box.type) {
 		opj_event_msg(cinfo, EVT_ERROR, "Expected BPCC Marker\n");
 		return OPJ_FALSE;
@@ -474,7 +480,7 @@ static opj_bool jp2_read_pclr(opj_jp2_t *jp2, opj_cio_t *cio,
 	for(i = 0; i < nr_channels; ++i)
   {
 /* Cji */
-	*entries++ = cio_read(cio, channel_size[i]>>3);
+	*entries++ = cio_read(cio, (channel_size[i]+7)>>3);
   }
    }
 
@@ -644,99 +650,98 @@ opj_bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color)
 
 	opj_common_ptr cinfo = jp2->cinfo;
 
-	jp2_read_boxhdr(cinfo, cio, &box);
-	do 
-   {
-	if (JP2_JP2H != box.type) 
-  {
-	if (box.type == JP2_JP2C) 
- {
-	opj_event_msg(cinfo, EVT_ERROR, "Expected JP2H Marker\n");
-	return OPJ_FALSE;
- }
-	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-	if (box.length <= 8) return OPJ_FALSE;
-	cio_skip(cio, box.length - 8);
+  if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+  do {
+    if (JP2_JP2H != box.type) 
+      {
+      if (box.type == JP2_JP2C) 
+        {
+        opj_event_msg(cinfo, EVT_ERROR, "Expected JP2H Marker\n");
+        return OPJ_FALSE;
+        }
+	  /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
+	  if (box.length <= 8) return OPJ_FALSE;
+      cio_skip(cio, box.length - 8);
 
-	if(cio->bp >= cio->end) return OPJ_FALSE;
+      if(cio->bp >= cio->end) return OPJ_FALSE;
 
-	jp2_read_boxhdr(cinfo, cio, &box);
-  }
-   } while(JP2_JP2H != box.type);
+      if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+      }
+  } while(JP2_JP2H != box.type);
 
 	if (!jp2_read_ihdr(jp2, cio))
 		return OPJ_FALSE;
 	jp2h_end = box.init_pos + box.length;
 
-	if (jp2->bpc == 255) 
-   {
-	if (!jp2_read_bpcc(jp2, cio))
-		return OPJ_FALSE;
-   }
-	jp2_read_boxhdr(cinfo, cio, &box);
+  if (jp2->bpc == 255) 
+    {
+    if (!jp2_read_bpcc(jp2, cio))
+      return OPJ_FALSE;
+    }
+  if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
 
-	while(cio_tell(cio) < jp2h_end)
-   {
-	if(box.type == JP2_COLR)
-  {
-	if( !jp2_read_colr(jp2, cio, &box, color))
- {
-	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-	if (box.length <= 8) return OPJ_FALSE;
-    cio_seek(cio, box.init_pos + 8);
-    cio_skip(cio, box.length - 8);
- }
-    jp2_read_boxhdr(cinfo, cio, &box);
-    continue;
-  }
+  while(cio_tell(cio) < jp2h_end)
+    {
+    if(box.type == JP2_COLR)
+      {
+      if( !jp2_read_colr(jp2, cio, &box, color))
+        {
+        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
+        if (box.length <= 8) return OPJ_FALSE;
+        cio_seek(cio, box.init_pos + 8);
+        cio_skip(cio, box.length - 8);
+        }
+      if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+      continue;
+      }
     if(box.type == JP2_CDEF && !jp2->ignore_pclr_cmap_cdef)
-  {
-    if( !jp2_read_cdef(jp2, cio, &box, color))
- {
-	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-	if (box.length <= 8) return OPJ_FALSE;
-    cio_seek(cio, box.init_pos + 8);
-    cio_skip(cio, box.length - 8);
- }
-    jp2_read_boxhdr(cinfo, cio, &box);
-    continue;
-  }
+      {
+      if( !jp2_read_cdef(jp2, cio, &box, color))
+        {
+        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
+        if (box.length <= 8) return OPJ_FALSE;
+        cio_seek(cio, box.init_pos + 8);
+        cio_skip(cio, box.length - 8);
+        }
+      if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+      continue;
+      }
     if(box.type == JP2_PCLR && !jp2->ignore_pclr_cmap_cdef)
-  {
-    if( !jp2_read_pclr(jp2, cio, &box, color))
- {
-	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-	if (box.length <= 8) return OPJ_FALSE;
-    cio_seek(cio, box.init_pos + 8);
-    cio_skip(cio, box.length - 8);
- }
-    jp2_read_boxhdr(cinfo, cio, &box);
-    continue;
-  }
+      {
+      if( !jp2_read_pclr(jp2, cio, &box, color))
+        {
+        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
+        if (box.length <= 8) return OPJ_FALSE;
+        cio_seek(cio, box.init_pos + 8);
+        cio_skip(cio, box.length - 8);
+        }
+      if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+      continue;
+      }
     if(box.type == JP2_CMAP && !jp2->ignore_pclr_cmap_cdef)
-  {
-    if( !jp2_read_cmap(jp2, cio, &box, color))
- {
-	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-	if (box.length <= 8) return OPJ_FALSE;
+      {
+      if( !jp2_read_cmap(jp2, cio, &box, color))
+        {
+        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
+        if (box.length <= 8) return OPJ_FALSE;
+        cio_seek(cio, box.init_pos + 8);
+        cio_skip(cio, box.length - 8);
+        }
+      if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+      continue;
+      }
+    /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
+    if (box.length <= 8) return OPJ_FALSE;
     cio_seek(cio, box.init_pos + 8);
     cio_skip(cio, box.length - 8);
- }
-    jp2_read_boxhdr(cinfo, cio, &box);
-    continue;
-  }
-	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-	if (box.length <= 8) return OPJ_FALSE;
-	cio_seek(cio, box.init_pos + 8);
-	cio_skip(cio, box.length - 8);
-	jp2_read_boxhdr(cinfo, cio, &box);
+    if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
 
-   }/* while(cio_tell(cio) < box_end) */
+    }/* while(cio_tell(cio) < box_end) */
 
-	cio_seek(cio, jp2h_end);
+  cio_seek(cio, jp2h_end);
 
-/* Part 1, I.5.3.3 : 'must contain at least one' */
-	return (color->jp2_has_colr == 1);
+  /* Part 1, I.5.3.3 : 'must contain at least one' */
+  return (color->jp2_has_colr == 1);
 
 }/* jp2_read_jp2h() */
 
@@ -856,8 +861,10 @@ static opj_bool jp2_read_ftyp(opj_jp2_t *jp2, opj_cio_t *cio) {
 
 	opj_common_ptr cinfo = jp2->cinfo;
 
-	jp2_read_boxhdr(cinfo, cio, &box);
-
+  if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) {
+    opj_event_msg(cinfo, EVT_ERROR, "Failed to read boxhdr\n");
+    return OPJ_FALSE;
+  }
 	if (JP2_FTYP != box.type) {
 		opj_event_msg(cinfo, EVT_ERROR, "Expected FTYP Marker\n");
 		return OPJ_FALSE;
@@ -914,13 +921,16 @@ static opj_bool jp2_read_jp2c(opj_jp2_t *jp2, opj_cio_t *cio, unsigned int *j2k_
 
 	opj_common_ptr cinfo = jp2->cinfo;
 
-	jp2_read_boxhdr(cinfo, cio, &box);
+  if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) {
+    opj_event_msg(cinfo, EVT_ERROR, "Failed to read boxhdr\n");
+    return OPJ_FALSE;
+  }
 	do {
 		if(JP2_JP2C != box.type) {
 			/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
 			if (box.length <= 8) return OPJ_FALSE;
 			cio_skip(cio, box.length - 8);
-			jp2_read_boxhdr(cinfo, cio, &box);
+			if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
 		}
 	} while(JP2_JP2C != box.type);
 
@@ -951,7 +961,10 @@ static opj_bool jp2_read_jp(opj_jp2_t *jp2, opj_cio_t *cio) {
 
 	opj_common_ptr cinfo = jp2->cinfo;
 
-	jp2_read_boxhdr(cinfo, cio, &box);
+  if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) {
+    opj_event_msg(cinfo, EVT_ERROR, "Failed to read boxhdr\n");
+    return OPJ_FALSE;
+  }
 	if (JP2_JP != box.type) {
 		opj_event_msg(cinfo, EVT_ERROR, "Expected JP Marker\n");
 		return OPJ_FALSE;

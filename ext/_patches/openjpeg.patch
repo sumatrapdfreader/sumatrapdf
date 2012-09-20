@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
---- openjpeg.orig\image.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\image.c	Fri Aug 03 20:09:06 2012
+--- openjpeg.orig\image.c	Thu Sep 13 09:58:39 2012
++++ openjpeg\image.c	Thu Sep 20 19:28:51 2012
 @@ -81,9 +81,11 @@
  					opj_free(image_comp->data);
  				}
@@ -14,8 +14,8 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  }
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
---- openjpeg.orig\j2k.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\j2k.c	Thu Aug 23 16:52:27 2012
+--- openjpeg.orig\j2k.c	Thu Sep 13 09:58:39 2012
++++ openjpeg\j2k.c	Thu Sep 20 19:37:17 2012
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -76,11 +76,11 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 +	}
 +
  	cp->tcps = (opj_tcp_t*) opj_calloc(cp->tw * cp->th, sizeof(opj_tcp_t));
- 	cp->tileno = (int*) opj_malloc(cp->tw * cp->th * sizeof(int));
- 	cp->tileno_size = 0;
- 	
- #ifdef USE_JPWL
-@@ -572,10 +590,16 @@
+     if (cp->tcps == NULL)
+     {
+         opj_event_msg(j2k->cinfo, EVT_ERROR, "Out of memory\n");
+         return;
+@@ -582,10 +600,16 @@
  			}
  		}
  	}
@@ -97,7 +97,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		cp->tcps[i].numpocs = 0;
  		cp->tcps[i].first = 1;
  	}
-@@ -805,10 +829,17 @@
+@@ -821,10 +845,17 @@
  	opj_image_t *image = j2k->image;
  	opj_cio_t *cio = j2k->cio;
  	
@@ -115,7 +115,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  }
  
  static void j2k_write_qcx(opj_j2k_t *j2k, int compno) {
-@@ -989,10 +1020,18 @@
+@@ -1005,10 +1036,18 @@
  		/* keep your private count of tiles */
  		backup_compno++;
  	};
@@ -134,7 +134,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
  static void j2k_write_poc(opj_j2k_t *j2k) {
  	int len, numpchgs, i;
-@@ -1032,11 +1071,12 @@
+@@ -1048,11 +1087,12 @@
  	opj_cio_t *cio = j2k->cio;
  	
  	old_poc = tcp->POC ? tcp->numpocs + 1 : 0;
@@ -148,73 +148,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		opj_poc_t *poc;
  		poc = &tcp->pocs[i];
  		poc->resno0 = cio_read(cio, 1);	/* RSpoc_i */
-@@ -1267,11 +1307,12 @@
- 	if (j2k->cp->correct) {
- 
- 		static int backup_tileno = 0;
- 
- 		/* tileno is negative or larger than the number of tiles!!! */
--		if ((tileno < 0) || (tileno > (cp->tw * cp->th))) {
-+		/* cf. http://code.google.com/p/openjpeg/source/detail?r=1727 */
-+		if ((tileno < 0) || (tileno >= (cp->tw * cp->th))) {
- 			opj_event_msg(j2k->cinfo, EVT_ERROR,
- 				"JPWL: bad tile number (%d out of a maximum of %d)\n",
- 				tileno, (cp->tw * cp->th));
- 			if (!JPWL_ASSUME) {
- 				opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: giving up\n");
-@@ -1284,12 +1325,23 @@
- 				tileno);
- 		}
- 
- 		/* keep your private count of tiles */
- 		backup_tileno++;
--	};
-+	}
-+  else
- #endif /* USE_JPWL */
-+  /* cf. http://code.google.com/p/openjpeg/source/detail?r=1727 */
-+  {
-+    /* tileno is negative or larger than the number of tiles!!! */
-+    if ((tileno < 0) || (tileno >= (cp->tw * cp->th))) {
-+      opj_event_msg(j2k->cinfo, EVT_ERROR,
-+        "JPWL: bad tile number (%d out of a maximum of %d)\n",
-+        tileno, (cp->tw * cp->th));
-+      return;
-+    }
-+  }
- 	
- 	if (cp->tileno_size == 0) {
- 		cp->tileno[cp->tileno_size] = tileno;
- 		cp->tileno_size++;
- 	} else {
-@@ -1323,13 +1375,24 @@
- 			opj_event_msg(j2k->cinfo, EVT_WARNING, "- trying to adjust this\n"
- 				"- setting Psot to %d => assuming it is the last tile\n",
- 				totlen);
- 		}
- 
--	};
-+	}
-+  else
- #endif /* USE_JPWL */
--
-+  /* cf. http://code.google.com/p/openjpeg/source/detail?r=1727 */
-+  {
-+    /* totlen is negative or larger than the bytes left!!! */
-+    if ((totlen < 0) || (totlen > (cio_numbytesleft(cio) + 8))) {
-+      opj_event_msg(j2k->cinfo, EVT_ERROR,
-+        "JPWL: bad tile byte size (%d bytes against %d bytes left)\n",
-+        totlen, cio_numbytesleft(cio) + 8);
-+      return;
-+    }
-+  }
-+	
- 	if (!totlen)
- 		totlen = cio_numbytesleft(cio) + 8;
- 	
- 	partno = cio_read(cio, 1);
- 	numparts = cio_read(cio, 1);
-@@ -1534,10 +1597,18 @@
+@@ -1588,10 +1628,18 @@
  			}
  		}
  	};
@@ -233,56 +167,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
  static void j2k_write_eoc(opj_j2k_t *j2k) {
  	opj_cio_t *cio = j2k->cio;
-@@ -1552,23 +1623,29 @@
- /* <<UniPG */
- }
- 
- static void j2k_read_eoc(opj_j2k_t *j2k) {
- 	int i, tileno;
--	opj_bool success;
-+	opj_bool success = OPJ_FALSE;
- 
- 	/* if packets should be decoded */
- 	if (j2k->cp->limit_decoding != DECODE_ALL_BUT_PACKETS) {
- 		opj_tcd_t *tcd = tcd_create(j2k->cinfo);
- 		tcd_malloc_decode(tcd, j2k->image, j2k->cp);
- 		for (i = 0; i < j2k->cp->tileno_size; i++) {
- 			tcd_malloc_decode_tile(tcd, j2k->image, j2k->cp, i, j2k->cstr_info);
- 			tileno = j2k->cp->tileno[i];
--			success = tcd_decode_tile(tcd, j2k->tile_data[tileno], j2k->tile_len[tileno], tileno, j2k->cstr_info);
--			opj_free(j2k->tile_data[tileno]);
--			j2k->tile_data[tileno] = NULL;
--			tcd_free_decode_tile(tcd, i);
-+			/* cf. http://code.google.com/p/openjpeg/source/detail?r=1729 */
-+			if (j2k->cp->tileno[i] != -1)
-+			{
-+				success = tcd_decode_tile(tcd, j2k->tile_data[tileno], j2k->tile_len[tileno], tileno, j2k->cstr_info);
-+				opj_free(j2k->tile_data[tileno]);
-+				j2k->tile_data[tileno] = NULL;
-+				tcd_free_decode_tile(tcd, i);
-+			}
-+			else
-+				success = OPJ_FALSE;
- 			if (success == OPJ_FALSE) {
- 				j2k->state |= J2K_STATE_ERR;
- 				break;
- 			}
- 		}
-@@ -1735,10 +1812,13 @@
- 
- 	if(j2k->tile_len != NULL) {
- 		opj_free(j2k->tile_len);
- 	}
- 	if(j2k->tile_data != NULL) {
-+		/* SumatraPDF: fix memory leak */
-+		for (i = 0; i < j2k->cp->tileno_size; i++)
-+			opj_free(j2k->tile_data[j2k->cp->tileno[i]]);
- 		opj_free(j2k->tile_data);
- 	}
- 	if(j2k->default_tcp != NULL) {
- 		opj_tcp_t *default_tcp = j2k->default_tcp;
- 		if(default_tcp->ppt_data_first != NULL) {
-@@ -2174,11 +2254,12 @@
+@@ -2256,11 +2304,12 @@
  		numpocs_tile = 0;
  		tcp->POC = 0;
  		if (parameters->numpocs) {
@@ -297,8 +182,8 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  					tcp_poc->compno0	= parameters->POC[numpocs_tile].compno0;
  					tcp_poc->layno1		= parameters->POC[numpocs_tile].layno1;
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
---- openjpeg.orig\jp2.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\jp2.c	Fri Aug 03 20:09:06 2012
+--- openjpeg.orig\jp2.c	Thu Sep 13 09:58:39 2012
++++ openjpeg\jp2.c	Thu Sep 20 19:42:28 2012
 @@ -171,10 +171,15 @@
  			box->length = cio_numbytesleft(cio) + 12;
  	}
@@ -315,86 +200,86 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  }
  
  #if 0
-@@ -647,10 +652,12 @@
- 	if (box.type == JP2_JP2C) 
-  {
- 	opj_event_msg(cinfo, EVT_ERROR, "Expected JP2H Marker\n");
- 	return OPJ_FALSE;
-  }
-+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+	if (box.length <= 8) return OPJ_FALSE;
- 	cio_skip(cio, box.length - 8);
+@@ -652,10 +657,12 @@
+       if (box.type == JP2_JP2C) 
+         {
+         opj_event_msg(cinfo, EVT_ERROR, "Expected JP2H Marker\n");
+         return OPJ_FALSE;
+         }
++	  /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
++	  if (box.length <= 8) return OPJ_FALSE;
+       cio_skip(cio, box.length - 8);
  
- 	if(cio->bp >= cio->end) return OPJ_FALSE;
+       if(cio->bp >= cio->end) return OPJ_FALSE;
  
- 	jp2_read_boxhdr(cinfo, cio, &box);
-@@ -672,46 +679,56 @@
-    {
- 	if(box.type == JP2_COLR)
-   {
- 	if( !jp2_read_colr(jp2, cio, &box, color))
-  {
-+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+	if (box.length <= 8) return OPJ_FALSE;
-     cio_seek(cio, box.init_pos + 8);
-     cio_skip(cio, box.length - 8);
-  }
-     jp2_read_boxhdr(cinfo, cio, &box);
-     continue;
-   }
+       if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+@@ -677,46 +684,56 @@
+     {
+     if(box.type == JP2_COLR)
+       {
+       if( !jp2_read_colr(jp2, cio, &box, color))
+         {
++        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
++        if (box.length <= 8) return OPJ_FALSE;
+         cio_seek(cio, box.init_pos + 8);
+         cio_skip(cio, box.length - 8);
+         }
+       if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+       continue;
+       }
      if(box.type == JP2_CDEF && !jp2->ignore_pclr_cmap_cdef)
-   {
-     if( !jp2_read_cdef(jp2, cio, &box, color))
-  {
-+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+	if (box.length <= 8) return OPJ_FALSE;
-     cio_seek(cio, box.init_pos + 8);
-     cio_skip(cio, box.length - 8);
-  }
-     jp2_read_boxhdr(cinfo, cio, &box);
-     continue;
-   }
+       {
+       if( !jp2_read_cdef(jp2, cio, &box, color))
+         {
++        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
++        if (box.length <= 8) return OPJ_FALSE;
+         cio_seek(cio, box.init_pos + 8);
+         cio_skip(cio, box.length - 8);
+         }
+       if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+       continue;
+       }
      if(box.type == JP2_PCLR && !jp2->ignore_pclr_cmap_cdef)
-   {
-     if( !jp2_read_pclr(jp2, cio, &box, color))
-  {
-+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+	if (box.length <= 8) return OPJ_FALSE;
-     cio_seek(cio, box.init_pos + 8);
-     cio_skip(cio, box.length - 8);
-  }
-     jp2_read_boxhdr(cinfo, cio, &box);
-     continue;
-   }
+       {
+       if( !jp2_read_pclr(jp2, cio, &box, color))
+         {
++        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
++        if (box.length <= 8) return OPJ_FALSE;
+         cio_seek(cio, box.init_pos + 8);
+         cio_skip(cio, box.length - 8);
+         }
+       if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+       continue;
+       }
      if(box.type == JP2_CMAP && !jp2->ignore_pclr_cmap_cdef)
-   {
-     if( !jp2_read_cmap(jp2, cio, &box, color))
-  {
-+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+	if (box.length <= 8) return OPJ_FALSE;
+       {
+       if( !jp2_read_cmap(jp2, cio, &box, color))
+         {
++        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
++        if (box.length <= 8) return OPJ_FALSE;
+         cio_seek(cio, box.init_pos + 8);
+         cio_skip(cio, box.length - 8);
+         }
+       if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+       continue;
+       }
++    /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
++    if (box.length <= 8) return OPJ_FALSE;
      cio_seek(cio, box.init_pos + 8);
      cio_skip(cio, box.length - 8);
-  }
-     jp2_read_boxhdr(cinfo, cio, &box);
-     continue;
+     if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
+ 
+     }/* while(cio_tell(cio) < box_end) */
+@@ -908,16 +925,20 @@
+     opj_event_msg(cinfo, EVT_ERROR, "Failed to read boxhdr\n");
+     return OPJ_FALSE;
    }
-+	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+	if (box.length <= 8) return OPJ_FALSE;
- 	cio_seek(cio, box.init_pos + 8);
- 	cio_skip(cio, box.length - 8);
- 	jp2_read_boxhdr(cinfo, cio, &box);
- 
-    }/* while(cio_tell(cio) < box_end) */
-@@ -898,16 +915,20 @@
- 	opj_common_ptr cinfo = jp2->cinfo;
- 
- 	jp2_read_boxhdr(cinfo, cio, &box);
  	do {
  		if(JP2_JP2C != box.type) {
 +			/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
 +			if (box.length <= 8) return OPJ_FALSE;
  			cio_skip(cio, box.length - 8);
- 			jp2_read_boxhdr(cinfo, cio, &box);
+ 			if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
  		}
  	} while(JP2_JP2C != box.type);
  
@@ -408,7 +293,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  
 diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 --- openjpeg.orig\opj_config.h	Thu Jan 01 01:00:00 1970
-+++ openjpeg\opj_config.h	Fri Aug 03 20:09:06 2012
++++ openjpeg\opj_config.h	Thu Sep 20 20:26:49 2012
 @@ -0,0 +1,41 @@
 +/* If you want to build the library manually without using
 + * 'configure' or 'CMake'
@@ -450,75 +335,4 @@ diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 +#define PACKAGE_URL "http://www.openjpeg.org/"
 +#define PACKAGE_BUGREPORT "http://code.google.com/p/openjpeg/"
 +
-+#define PACKAGE_VERSION "1.5.0"
-diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
---- openjpeg.orig\tcd.c	Tue Feb 07 12:49:55 2012
-+++ openjpeg\tcd.c	Fri Aug 03 23:22:34 2012
-@@ -331,11 +331,12 @@
- 							/* code-block size (global) */
- 							cblk->x0 = int_max(cblkxstart, prc->x0);
- 							cblk->y0 = int_max(cblkystart, prc->y0);
- 							cblk->x1 = int_min(cblkxend, prc->x1);
- 							cblk->y1 = int_min(cblkyend, prc->y1);
--							cblk->data = (unsigned char*) opj_calloc(8192+2, sizeof(unsigned char));
-+							/* cf. http://code.google.com/p/openjpeg/source/detail?r=1703 */
-+							cblk->data = (unsigned char*) opj_calloc(9728+2, sizeof(unsigned char));
- 							/* FIXME: mqc_init_enc and mqc_byteout underrun the buffer if we don't do this. Why? */
- 							cblk->data += 2;
- 							cblk->layers = (opj_tcd_layer_t*) opj_calloc(100, sizeof(opj_tcd_layer_t));
- 							cblk->passes = (opj_tcd_pass_t*) opj_calloc(100, sizeof(opj_tcd_pass_t));
- 						}
-@@ -688,10 +689,17 @@
- 	
- 	for (compno = 0; compno < tile->numcomps; compno++) {
- 		opj_tccp_t *tccp = &tcp->tccps[compno];
- 		opj_tcd_tilecomp_t *tilec = &tile->comps[compno];
- 		
-+		/* cf. http://code.google.com/p/openjpeg/source/detail?r=1729 */
-+		if (tccp->numresolutions <= 0)
-+		{
-+			cp->tileno[tileno] = -1;
-+			return;
-+		}
-+		
- 		/* border of each tile component (global) */
- 		tilec->x0 = int_ceildiv(tile->x0, image->comps[compno].dx);
- 		tilec->y0 = int_ceildiv(tile->y0, image->comps[compno].dy);
- 		tilec->x1 = int_ceildiv(tile->x1, image->comps[compno].dx);
- 		tilec->y1 = int_ceildiv(tile->y1, image->comps[compno].dy);
-@@ -1378,10 +1386,17 @@
- 	t1 = t1_create(tcd->cinfo);
- 	for (compno = 0; compno < tile->numcomps; ++compno) {
- 		opj_tcd_tilecomp_t* tilec = &tile->comps[compno];
- 		/* The +3 is headroom required by the vectorized DWT */
- 		tilec->data = (int*) opj_aligned_malloc((((tilec->x1 - tilec->x0) * (tilec->y1 - tilec->y0))+3) * sizeof(int));
-+		/* SumatraPDF: prevent a potential NULL dereference */
-+		/* likely cf. http://code.google.com/p/openjpeg/issues/detail?id=151 */
-+		if (!tilec->data) {				
-+			opj_event_msg(tcd->cinfo, EVT_ERROR, "OOM in tcd_decode_tile!\n");
-+			// TODO: this might leak memory
-+			return OPJ_FALSE;
-+		}
- 		t1_decode_cblks(t1, tilec, &tcd->tcp->tccps[compno]);
- 	}
- 	t1_destroy(t1);
- 	t1_time = opj_clock() - t1_time;
- 	opj_event_msg(tcd->cinfo, EVT_INFO, "- tiers-1 took %f s\n", t1_time);
-@@ -1456,10 +1471,17 @@
- 		int offset_y = int_ceildivpow2(imagec->y0, imagec->factor);
- 
- 		int i, j;
- 		if(!imagec->data){
- 			imagec->data = (int*) opj_malloc(imagec->w * imagec->h * sizeof(int));
-+			/* SumatraPDF: prevent a potential NULL dereference */
-+			if (!imagec->data) {
-+				opj_event_msg(tcd->cinfo, EVT_ERROR, "OOM in tcd_decode_tile!\n");
-+				opj_aligned_free(tilec->data);
-+				// TODO: this might leak memory
-+				return OPJ_FALSE;
-+			}
- 		}
- 		if(tcd->tcp->tccps[compno].qmfbid == 1) {
- 			for(j = res->y0; j < res->y1; ++j) {
- 				for(i = res->x0; i < res->x1; ++i) {
- 					int v = tilec->data[i - res->x0 + (j - res->y0) * tw];
++#define PACKAGE_VERSION "1.5.1"

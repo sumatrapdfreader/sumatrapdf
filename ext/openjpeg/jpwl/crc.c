@@ -90,7 +90,7 @@ const unsigned short CRC16_table[256] = {
 
 void updateCRC16(unsigned short *crc, unsigned char data) {
 	*crc = CRC16_table[(*crc >> 8) & 0xFF] ^ (*crc << 8) ^ data;
-};
+}
 
 
 /** file: CRC32.CPP
@@ -155,6 +155,6 @@ const unsigned long CRC32_table[256] = {
 
 void updateCRC32(unsigned long *crc, unsigned char data) {
 	*crc = CRC32_table[(unsigned char) *crc ^ data] ^ ((*crc >> 8) & 0x00FFFFFF);
-};
+}
 
 #endif /* USE_JPWL */

@@ -152,7 +152,7 @@ unsigned char cio_bytein(opj_cio_t *cio) {
  * v : value to write
  * n : number of bytes to write
  */
-unsigned int cio_write(opj_cio_t *cio, unsigned long long int v, int n) {
+unsigned int cio_write(opj_cio_t *cio, unsigned int64 v, int n) {
 	int i;
 	for (i = n - 1; i >= 0; i--) {
 		if( !cio_byteout(cio, (unsigned char) ((v >> (i << 3)) & 0xff)) )

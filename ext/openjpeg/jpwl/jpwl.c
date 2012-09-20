@@ -191,6 +191,7 @@ void jpwl_prepare_marks(opj_j2k_t *j2k, opj_cio_t *cio, opj_image_t *image) {
 	jpwl_epb_ms_t *epb_mark;
 	jpwl_epc_ms_t *epc_mark;
 	jpwl_esd_ms_t *esd_mark;
+  (void)image;
 
 	/* find (SOC + SIZ) length */
 	/* I assume SIZ is always the first marker after SOC */
@@ -405,7 +406,7 @@ void jpwl_prepare_marks(opj_j2k_t *j2k, opj_cio_t *cio, opj_image_t *image) {
 
 		/* add all the lengths of the markers which are len-ready and stay within SOC and SOT */
 		for (mm = 0; mm < jwmarker_num; mm++) {
-			if ((jwmarker[mm].pos >=0) && (jwmarker[mm].pos < sot_pos)) {
+			if ( jwmarker[mm].pos < sot_pos) { /* jwmarker[mm].pos >=0 since ulong */
 				if (jwmarker[mm].len_ready)
 					left_MHmarks_len += jwmarker[mm].len + 2;
 				else {
@@ -632,7 +633,7 @@ void jpwl_prepare_marks(opj_j2k_t *j2k, opj_cio_t *cio, opj_image_t *image) {
 					pprot = j2k->cp->pprot[packspec++];
 				}
 
-				//printf("Tile %02d, pack %02d ==> %d\n", tileno, packno, pprot);
+				/*printf("Tile %02d, pack %02d ==> %d\n", tileno, packno, pprot);*/
 		
 			}
 
@@ -717,6 +718,7 @@ void jpwl_dump_marks(opj_j2k_t *j2k, opj_cio_t *cio, opj_image_t *image) {
 	unsigned char *jpwl_buf, *orig_buf;
 	unsigned long int orig_pos;
 	double epbcoding_time = 0.0, esdcoding_time = 0.0;
+  (void)image;
 
 	/* Order JPWL markers according to their wishlist position */
 	qsort((void *) jwmarker, (size_t) jwmarker_num, sizeof (jpwl_marker_t), jpwl_markcomp);
@@ -1282,6 +1284,10 @@ opj_bool jpwl_check_tile(opj_j2k_t *j2k, opj_tcd_t *tcd, int tileno) {
 		}
 	}
 
+#else
+  (void)j2k;
+  (void)tcd;
+  (void)tileno;
 #endif
 
 	return OPJ_TRUE;

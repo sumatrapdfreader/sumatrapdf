@@ -327,7 +327,7 @@ void jpwl_epb_write(opj_j2k_t *j2k, jpwl_epb_ms_t *epb, unsigned char *buf) {
 	/* update markers struct */
 	j2k_add_marker(j2k->cstr_info, J2K_MS_EPB, -1, epb->Lepb + 2);
 
-};
+}
 
 
 jpwl_epc_ms_t *jpwl_epc_create(opj_j2k_t *j2k, opj_bool esd_on, opj_bool red_on, opj_bool epb_on, opj_bool info_on) {
@@ -677,7 +677,7 @@ opj_bool jpwl_correct(opj_j2k_t *j2k) {
 		id = cio_read(cio, 2);
 
 		/* details */
-		printf("Marker@%d: %X\n", cio_tell(cio) - 2, id);
+		printf("Marker@%lld: %X\n", cio_tell(cio) - 2, id);
 
 		/* do an action in response to the read marker */
 		switch (id) {
@@ -1190,7 +1190,7 @@ void jpwl_epc_write(opj_j2k_t *j2k, jpwl_epc_ms_t *epc, unsigned char *buf) {
 	/* update markers struct */
 	j2k_add_marker(j2k->cstr_info, J2K_MS_EPC, -1, epc->Lepc + 2);
 
-};
+}
 
 int jpwl_esds_add(opj_j2k_t *j2k, jpwl_marker_t *jwmarker, int *jwmarker_num,
 				  int comps, unsigned char addrm, unsigned char ad_size,
