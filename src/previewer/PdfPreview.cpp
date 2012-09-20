@@ -139,8 +139,7 @@ protected:
 
         HANDLE thread = pr->thread;
         pr->thread = NULL;
-        if (!pr->reqAbort)
-            PostMessage(pr->hwnd, UWM_PAINT_AGAIN, 0, 0);
+        PostMessage(pr->hwnd, UWM_PAINT_AGAIN, 0, 0);
 
         CloseHandle(thread);
         return 0;
