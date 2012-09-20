@@ -1632,7 +1632,7 @@ fz_draw_free_user(fz_device *devp)
 				fz_drop_pixmap(ctx, state[1].shape);
 			state--;
 		}
-		while(--dev->top > 0);
+		while (dev->top-- > 0); /* SumatraPDF: fix memory leak */
 	}
 	if (dev->stack != &dev->init_stack[0])
 		fz_free(ctx, dev->stack);

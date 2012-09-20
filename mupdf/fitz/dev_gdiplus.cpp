@@ -16,8 +16,8 @@ extern "C" {
 
 using namespace Gdiplus;
 
-static ULONG_PTR m_gdiplusToken;
-static LONG m_gdiplusUsage = 0;
+static ULONG_PTR g_gdiplusToken;
+static LONG g_gdiplusUsage = 0;
 
 static ColorPalette *
 gdiplus_create_grayscale_palette(fz_context *ctx, int depth)
@@ -258,7 +258,10 @@ public:
 
 	~userData()
 	{
-		assert(stack && !stack->prev);
+		if (!stack)
+			fz_warn(ctx, "draw stack base item is missing");
+		else if (stack->prev)
+			fz_warn(ctx, "draw stack is not empty");
 		while (stack && stack->prev) {
 			userDataStackItem *item = stack;
 			stack = stack->prev;
@@ -1452,8 +1455,8 @@ fz_gdiplus_free_user(fz_device *dev)
 	delete (userData *)dev->user;
 	
 	fz_synchronize_begin();
-	if (--m_gdiplusUsage == 0)
-		GdiplusShutdown(m_gdiplusToken);
+	if (--g_gdiplusUsage == 0)
+		GdiplusShutdown(g_gdiplusToken);
 	fz_synchronize_end();
 }
 
@@ -1461,8 +1464,8 @@ fz_device *
 fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_bbox base_clip)
 {
 	fz_synchronize_begin();
-	if (++m_gdiplusUsage == 1)
-		GdiplusStartup(&m_gdiplusToken, &GdiplusStartupInput(), NULL);
+	if (++g_gdiplusUsage == 1)
+		GdiplusStartup(&g_gdiplusToken, &GdiplusStartupInput(), NULL);
 	fz_synchronize_end();
 	
 	fz_device *dev = fz_new_device(ctx, new userData(ctx, (HDC)dc, base_clip));
