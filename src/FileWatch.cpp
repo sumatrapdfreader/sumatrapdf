@@ -172,3 +172,11 @@ bool FileWatcher::NotifyChange()
         pFileNotify = (FILE_NOTIFY_INFORMATION *)((PBYTE)pFileNotify + pFileNotify->NextEntryOffset);
     }
 }
+
+FileWatcher::~FileWatcher()
+{
+    SynchronousAbort();
+    delete observer;
+    free(filePath);
+    CloseHandle(hEvtStopWatching);
+}

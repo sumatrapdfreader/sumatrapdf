@@ -29,12 +29,7 @@ public:
         hEvtStopWatching = CreateEvent(NULL, TRUE, FALSE, NULL);
     }
 
-    ~FileWatcher() {
-        SynchronousAbort();
-        delete observer;
-        free(filePath);
-        CloseHandle(hEvtStopWatching);
-    }
+    ~FileWatcher();
 
 private:
     HANDLE          hDir;      // handle of the directory to watch
