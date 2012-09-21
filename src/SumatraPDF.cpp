@@ -1217,6 +1217,8 @@ class FileChangeCallback : public UIThreadWorkItem, public FileChangeObserver
 {
 public:
     FileChangeCallback(WindowInfo *win) : UIThreadWorkItem(win) { }
+    virtual ~FileChangeCallback() {
+    }
 
     virtual void OnFileChanged() {
         // We cannot call win->Reload directly as it could cause race conditions
@@ -2413,20 +2415,28 @@ size_t TotalWindowsCount()
     return gWindows.Count() + gEbookWindows.Count();
 }
 
+#include <malloc.h>
+
 // closes a document inside a WindowInfo and turns it into
 // about window
 void CloseDocumentInWindow(WindowInfo *win)
 {
+    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     bool wasChm = win->IsChm();
     if (wasChm)
         UnsubclassCanvas(win->hwndCanvas);
     delete win->watcher;
+    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     win->watcher = NULL;
     SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
+    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     ClearTocBox(win);
+    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     AbortFinding(win, true);
+    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     delete win->dm;
     win->dm = NULL;
+    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     str::ReplacePtr(&win->loadedFilePath, NULL);
     delete win->pdfsync;
     win->pdfsync = NULL;
