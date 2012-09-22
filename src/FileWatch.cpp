@@ -2,9 +2,10 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "FileWatch.h"
-
 #include "FileUtil.h"
+#include "WinUtil.h"
+
+#include "FileWatch.h"
 
 // TODO: a hack for VS 2011 compilation. 1600 is VS 2010
 #if _MSC_VER > 1600
@@ -31,6 +32,23 @@ void FileWatcher::SynchronousAbort()
 
     CloseHandle(overl.hEvent);
     overl.hEvent = NULL;
+
+    // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039
+    // we must wait for all outstanding overlapped i/o on hDir has stopped.
+    // otherwise CloseHandle(hDir) might end up modyfing it's associated
+    // overl asynchronously, after we have already freed its memory, causing
+    // memory corruption
+    BOOL ok = CancelIo(hDir);
+    if (!ok)
+        LogLastError();
+
+    DWORD numBytesTransferred;
+    ok = GetOverlappedResult(hDir, &overl, &numBytesTransferred, TRUE);
+    if (!ok) {
+        DWORD err = GetLastError();
+        if (ERROR_OPERATION_ABORTED != err)
+            LogLastError();
+    }
     CloseHandle(hDir);
     hDir = NULL;
 }
@@ -42,9 +60,7 @@ void FileWatcher::StartWatchThread()
     if (IsThreadRunning())
         SynchronousAbort();
 
-    assert(hDir);
-    if (!hDir)
-        return;
+    CrashIf(!hDir);
 
     // reset the hEvtStopWatching event so that it can be set if
     // some thread requires the watching thread to stop
@@ -107,7 +123,6 @@ DWORD WINAPI FileWatcher::WatchingThread(void *param)
         }
         fw->NotifyChange();
     }
-
     return 0;
 }
 

@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "SumatraPDF.h"
+#include <malloc.h>
 #include <wininet.h>
 
 #include "AppPrefs.h"
@@ -2415,28 +2416,20 @@ size_t TotalWindowsCount()
     return gWindows.Count() + gEbookWindows.Count();
 }
 
-#include <malloc.h>
-
 // closes a document inside a WindowInfo and turns it into
 // about window
 void CloseDocumentInWindow(WindowInfo *win)
 {
-    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     bool wasChm = win->IsChm();
     if (wasChm)
         UnsubclassCanvas(win->hwndCanvas);
     delete win->watcher;
-    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     win->watcher = NULL;
     SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
-    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     ClearTocBox(win);
-    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     AbortFinding(win, true);
-    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     delete win->dm;
     win->dm = NULL;
-    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
     str::ReplacePtr(&win->loadedFilePath, NULL);
     delete win->pdfsync;
     win->pdfsync = NULL;
@@ -2455,6 +2448,11 @@ void CloseDocumentInWindow(WindowInfo *win)
     win->RedrawAll();
     UpdateFindbox(win);
     SetFocus(win->hwndFrame);
+
+    // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039
+    // HeapValidate() is left here to help us catch the possibility that the fix
+    // in FileWatcher::SynchronousAbort() isn't correct
+    HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
 }
 
 void QuitIfNoMoreWindows()

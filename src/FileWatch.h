@@ -14,7 +14,7 @@ public:
 class FileWatcher {
 public:
     // Watching file modifications using a loop
-    void Init(LPCTSTR filefullpath);
+    void Init(const TCHAR* filefullpath);
     bool CheckForChanges(DWORD waittime=0);
 
     // Watching file modification via a thread
