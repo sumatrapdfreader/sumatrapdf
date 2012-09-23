@@ -1681,9 +1681,6 @@
     <None Include="src\sample_mobi.html">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="docs\release_plan.txt">
-      <Filter>docs</Filter>
-    </None>
     <None Include="docs\wishlist.txt">
       <Filter>docs</Filter>
     </None>
@@ -1698,6 +1695,9 @@
     </None>
     <None Include="src\ucrt\src\ucrt_math.asm">
       <Filter>ucrt</Filter>
+    </None>
+    <None Include="docs\releaseplan.txt">
+      <Filter>docs</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
