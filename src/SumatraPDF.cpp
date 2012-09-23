@@ -893,6 +893,8 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     */
     if (win->dm) {
         win->dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), win->dpi);
+        if (engineType == Engine_ComicBook)
+            win->dm->SetDisplayR2L(gGlobalPrefs.cbxR2L);
         if (prevModel && str::Eq(win->dm->FilePath(), prevModel->FilePath())) {
             gRenderCache.KeepForDisplayModel(prevModel, win->dm);
             win->dm->CopyNavHistory(*prevModel);

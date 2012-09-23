@@ -263,6 +263,11 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             // to make testing of crash reporting system in pre-release/release
             // builds possible
             crashOnOpen = true;
+        } else if (is_arg_with_param("-manga-mode")) {
+            // TODO: we should have a ui for this instead of remembering it globally
+            // in prefs
+            TCHAR *s = argList.At(++n);
+            cbxR2L = str::EqI(_T("true"), s) || str::Eq(_T("1"), s);
         }
 #ifdef DEBUG
         else if (is_arg("-enum-printers")) {

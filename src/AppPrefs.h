@@ -90,6 +90,8 @@ struct SerializableGlobalPrefs {
     int  openCountWeek; /* week count since 2011-01-01 needed to "age" openCount values in file history */
 
     FILETIME lastPrefUpdate; /* modification time of the preferences file when it was last read */
+
+    bool cbxR2L; /* display CBX double pages from right to left */
 };
 
 extern SerializableGlobalPrefs gGlobalPrefs;

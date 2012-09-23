@@ -261,6 +261,7 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.fwdSearch.color = gGlobalPrefs.fwdSearch.color;
     i.fwdSearch.permanent = gGlobalPrefs.fwdSearch.permanent;
     i.escToExit = gGlobalPrefs.escToExit;
+    i.cbxR2L = gGlobalPrefs.cbxR2L;
     if (gGlobalPrefs.useSysColors) {
         i.colorRange[0] = GetSysColor(COLOR_WINDOWTEXT);
         i.colorRange[1] = GetSysColor(COLOR_WINDOW);
@@ -352,6 +353,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gGlobalPrefs.fwdSearch.color = i.fwdSearch.color;
     gGlobalPrefs.fwdSearch.permanent = i.fwdSearch.permanent;
     gGlobalPrefs.escToExit = i.escToExit;
+    gGlobalPrefs.cbxR2L = i.cbxR2L;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
     gRenderCache.colorRange[0] = i.colorRange[0];
     gRenderCache.colorRange[1] = i.colorRange[1];

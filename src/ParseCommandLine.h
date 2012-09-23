@@ -47,6 +47,7 @@ public:
     TCHAR *     pluginURL;
     bool        exitImmediately;
     bool        silent;
+    bool        cbxR2L;
 
     // stress-testing related
     TCHAR *     stressTestPath;
@@ -63,7 +64,7 @@ public:
         restrictedUse(false), pluginURL(NULL),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
-        showConsole(false), exitImmediately(false), silent(false),
+        showConsole(false), exitImmediately(false), silent(false), cbxR2L(false),
         forwardSearchOrigin(NULL), forwardSearchLine(0),
         stressTestPath(NULL), stressTestFilter(NULL),
         stressTestRanges(NULL), stressTestCycles(1), crashOnOpen(false)

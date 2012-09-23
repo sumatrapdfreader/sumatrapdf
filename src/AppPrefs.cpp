@@ -72,6 +72,7 @@
 #define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
 #define FWDSEARCH_WIDTH             "ForwardSearch_HighlightWidth"
 #define FWDSEARCH_PERMANENT         "ForwardSearch_HighlightPermanent"
+#define CBX_RIGHT2LEFT              "CBX_Right2Left"
 
 #define DM_AUTOMATIC_STR            "automatic"
 #define DM_SINGLE_PAGE_STR          "single page"
@@ -119,6 +120,7 @@ SerializableGlobalPrefs gGlobalPrefs = {
     true, // bool showStartPage
     0, // int openCountWeek
     { 0, 0 }, // FILETIME lastPrefUpdate
+    false, // bool cbxR2L
 };
 
 // number of weeks past since 2011-01-01
@@ -184,6 +186,8 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     prefs->Add(FWDSEARCH_COLOR, globalPrefs.fwdSearch.color);
     prefs->Add(FWDSEARCH_WIDTH, globalPrefs.fwdSearch.width);
     prefs->Add(FWDSEARCH_PERMANENT, globalPrefs.fwdSearch.permanent);
+
+    prefs->Add(CBX_RIGHT2LEFT, globalPrefs.cbxR2L);
 
     return prefs;
 }
@@ -504,6 +508,8 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
     Retrieve(global, FWDSEARCH_COLOR, globalPrefs.fwdSearch.color);
     Retrieve(global, FWDSEARCH_WIDTH, globalPrefs.fwdSearch.width);
     Retrieve(global, FWDSEARCH_PERMANENT, globalPrefs.fwdSearch.permanent);
+
+    Retrieve(global, CBX_RIGHT2LEFT, globalPrefs.cbxR2L);
 
     Retrieve(global, OPEN_COUNT_WEEK_STR, globalPrefs.openCountWeek);
     int weekDiff = GetWeekCount() - globalPrefs.openCountWeek;
