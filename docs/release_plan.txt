@@ -1,6 +1,3 @@
-The idea for the next few releases is to make them relatively quickly,
-every 2-3 months.
-
 Major user-visible changes in each release:
 2.2 - fb2 in ebook ui; new translation system as described
       in wishlist.txt; rebrand as Sumatra Reader
@@ -23,9 +20,8 @@ More detailed list for 2.2:
   leaks memory
 - ???
 
-Given aggresive schedule, it's important to make the most risky
-(most likely to introduce breakage) changes first so that there
-is time to stabilize the code. E.g. in 2.2, LoadDocument() 
+It's best to make the most risky (most likely to introduce breakage) changes
+first so that there is time to stabilize the code. E.g. in 2.2, LoadDocument() 
 refactoring is such a change.
 
 A random list of things to implement sooner or later:

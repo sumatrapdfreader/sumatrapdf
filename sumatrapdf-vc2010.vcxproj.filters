@@ -78,6 +78,12 @@
     <Filter Include="sumatra\regress">
       <UniqueIdentifier>{c705e6c9-81a5-41c1-9b39-902909c11ec9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ucrt">
+      <UniqueIdentifier>{08318f74-cab2-4f26-8c74-cbd50bb202fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ucrt\mingw">
+      <UniqueIdentifier>{97cc2de5-f8a5-42f4-9dea-fc29da03eb0c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -977,6 +983,27 @@
     <ClCompile Include="src\regress\Regress.cpp">
       <Filter>sumatra\regress</Filter>
     </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt_console.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt_dll.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt_log.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\ucrt_win.cpp">
+      <Filter>ucrt</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\mingw\_stat64i32.c">
+      <Filter>ucrt\mingw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ucrt\src\mingw\_wstat64i32.c">
+      <Filter>ucrt\mingw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1453,6 +1480,9 @@
     <ClInclude Include="src\EbookBase.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
+    <ClInclude Include="src\ucrt\src\ucrt_log.h">
+      <Filter>ucrt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">
@@ -1659,6 +1689,12 @@
     </None>
     <None Include="docs\codingstyle.txt">
       <Filter>docs</Filter>
+    </None>
+    <None Include="src\ucrt\src\ucrt_asm.asm">
+      <Filter>ucrt</Filter>
+    </None>
+    <None Include="src\ucrt\src\ucrt_math.asm">
+      <Filter>ucrt</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
