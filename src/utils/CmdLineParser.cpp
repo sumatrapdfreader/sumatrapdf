@@ -52,7 +52,6 @@ static const TCHAR *ParseUnquoted(const TCHAR *arg, StrVec *out)
 void ParseCmdLine(const TCHAR *cmdLine, StrVec& out)
 {
     while (cmdLine) {
-        // skip whitespace
         while (str::IsWs(*cmdLine))
             cmdLine++;
         if ('"' == *cmdLine)
