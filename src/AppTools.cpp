@@ -427,8 +427,14 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
     LPTSTR firstEditor = NULL;
     ScopedMem<TCHAR> path(NULL);
 
+    TCHAR *editorToSkip = NULL;
+
     for (int i = 0; i < dimof(editor_rules); i++)
     {
+        if (editorToSkip && str::Eq(editorToSkip, editor_rules[i].Name))
+            continue;
+        editorToSkip = NULL;
+
         path.Set(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
         if (!path)
             continue;
@@ -457,8 +463,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         free(editorCmd);
 
         // skip the remaining rules for this editor
-        while (i + 1 < dimof(editor_rules) && str::Eq(editor_rules[i].Name, editor_rules[i+1].Name))
-            i++;
+        editorToSkip = editor_rules[i].Name;
     }
 
     // Fall back to notepad as a default handler
