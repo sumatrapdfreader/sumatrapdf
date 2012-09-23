@@ -203,7 +203,8 @@ bool GetExePath(LPTSTR lpPath, int len)
     if (!path)
         return false;
 
-    CmdLineParser args(path);
+    StrVec args;
+    ParseCmdLine(path, args);
     if (!file::Exists(args.At(0)))
         return false;
 

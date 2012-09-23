@@ -85,7 +85,8 @@ static void ParseScrollValue(PointI *scroll, const TCHAR *txt)
 /* parse argument list. we assume that all unrecognized arguments are file names. */
 void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 {
-    CmdLineParser argList(cmdLine);
+    StrVec argList;
+    ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.Count();
 
 #define is_arg(txt) str::EqI(_T(txt), argument)

@@ -158,7 +158,7 @@ UTILS_OBJS = \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
 	$(OU)\HtmlPrettyPrint.obj $(OU)\ThreadUtil.obj $(OU)\DebugLog.obj \
 	$(OU)\UiMsg.obj $(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
-	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj
+	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
 ZIP_OBJS = \
@@ -223,7 +223,8 @@ PDFPREVIEW_OBJS = \
 
 BROWSER_PLUGIN_OBJS = \
 	$(ODLL)\npPdfViewer.obj $(BROWSER_PLUGIN_RES) \
-	$(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj
+	$(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj \
+	$(OU)\CmdLineParser.obj \
 
 ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) \

@@ -897,7 +897,8 @@ static int RunApp()
 
 static void ParseCommandLine(TCHAR *cmdLine)
 {
-    CmdLineParser argList(cmdLine);
+    StrVec argList;
+    ParseCmdLine(cmdLine, argList);
 
 #define is_arg(param) str::EqI(arg + 1, _T(param))
 #define is_arg_with_param(param) (is_arg(param) && i < argList.Count() - 1)

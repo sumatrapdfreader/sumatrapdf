@@ -327,7 +327,8 @@ int main(int argc, char **argv)
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 
-    CmdLineParser argList(GetCommandLine());
+    StrVec argList;
+    ParseCmdLine(GetCommandLine(), argList);
     if (argList.Count() < 2) {
 Usage:
         ErrOut("%s <filename> [-pwd <password>][-full][-alt][-render <path-%%d.tga>]\n",

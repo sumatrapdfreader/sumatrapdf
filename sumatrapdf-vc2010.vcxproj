@@ -301,6 +301,7 @@
     <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\ByteOrderDecoder.cpp" />
     <ClCompile Include="src\utils\ByteOrderDecoder_ut.cpp" />
+    <ClCompile Include="src\utils\CmdLineParser.cpp" />
     <ClCompile Include="src\utils\DbgHelpDyn.cpp" />
     <ClCompile Include="src\utils\DebugLog.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
