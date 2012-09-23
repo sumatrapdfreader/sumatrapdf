@@ -89,10 +89,10 @@ bool    BufFmtV(WCHAR *buf, size_t bufCchSize, const WCHAR *fmt, va_list args);
 WCHAR * FmtV(const WCHAR *fmt, va_list args);
 WCHAR * Format(const WCHAR *fmt, ...);
 
-inline bool IsWs(char c) { return iswspace(c); }
-inline bool IsWs(WCHAR c) { return isspace((unsigned char)c); }
+inline bool IsWs(char c) { return isspace((unsigned char)c); }
+inline bool IsWs(WCHAR c) { return iswspace(c); }
 inline bool IsDigit(char c) { return '0' <= c && c <= '9'; }
-inline bool IsDigit(WCHAR c) { return '0' <= c && c <= '9'; }
+inline bool IsDigit(WCHAR c) { return L'0' <= c && c <= L'9'; }
 size_t  TrimWS(TCHAR *s, TrimOpt opt=TrimBoth);
 
 size_t  TransChars(char *str, const char *oldChars, const char *newChars);
