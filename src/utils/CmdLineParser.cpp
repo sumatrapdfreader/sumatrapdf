@@ -7,6 +7,7 @@
 /* returns the next character in '*txt' that isn't a backslash */
 static const TCHAR SkipBackslashs(const TCHAR *txt)
 {
+    AssertCrash(txt && '\\' == *txt);
     while ('\\' == *++txt);
     return *txt;
 }
@@ -14,6 +15,7 @@ static const TCHAR SkipBackslashs(const TCHAR *txt)
 /* appends the next quoted argument and returns the position after it */
 static const TCHAR *ParseQuoted(const TCHAR *arg, StrVec *out)
 {
+    AssertCrash(arg && '"' == *arg);
     arg++;
 
     str::Str<TCHAR> txt(str::Len(arg) / 2);
@@ -35,6 +37,8 @@ static const TCHAR *ParseQuoted(const TCHAR *arg, StrVec *out)
 /* appends the next unquoted argument and returns the position after it */
 static const TCHAR *ParseUnquoted(const TCHAR *arg, StrVec *out)
 {
+    AssertCrash(arg && *arg && ('"' != *arg) && !str::IsWs(*arg));
+
     const TCHAR *next;
     // contrary to http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
     // we don't treat quotation marks or backslashes in non-quoted
