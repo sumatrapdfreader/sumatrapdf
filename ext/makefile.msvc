@@ -20,7 +20,7 @@ BZIP2_CFLAGS = $(CFLAGSOPT) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
 BZIP2_CFLAGS = $(BZIP2_CFLAGS) /wd4244
 !endif
 MINIZIP_CFLAGS = $(CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(EXTDIR)/bzip2
-MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /D "INC_CUSTOM_ALLOC=\"unzalloc.h\""
+MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /D "INC_CUSTOM_ALLOC=\"unzalloc.h\"" /D "NOCRYPT"
 
 UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL" /D "SILENT"
 # a hack to enable C++ exception handling for UnRAR (without triggering a warning)
@@ -51,7 +51,8 @@ BZIP2_OBJS = \
 	$(OBZ)\decompress.obj $(OBZ)\huffman.obj $(OBZ)\randtable.obj $(OBZ)\bz_internal_error.obj
 
 MINIZIP_OBJS = \
-	$(OZ)\unzip.obj $(OZ)\unzalloc.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj $(OZ)\iowin32s.obj
+	$(OZ)\unzip.obj $(OZ)\unzalloc.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj \
+	$(OZ)\iowin32s.obj $(OZ)\zip.obj
 
 UNRAR_OBJS = \
 	$(OR)\archive.obj $(OR)\arcread.obj $(OR)\cmddata.obj \

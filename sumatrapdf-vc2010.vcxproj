@@ -57,6 +57,8 @@
     <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
     <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)ext\zlib;$(ProjectDir)ext\zlib\minizip;$(ProjectDir)src\mui;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)ext\zlib;$(ProjectDir)ext\zlib\minizip;$(ProjectDir)src\mui;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
@@ -140,6 +142,7 @@
     <ClCompile Include="ext\zlib\minizip\iowin32s.c" />
     <ClCompile Include="ext\zlib\minizip\unzalloc.c" />
     <ClCompile Include="ext\zlib\minizip\unzip.c" />
+    <ClCompile Include="ext\zlib\minizip\zip.c" />
     <ClCompile Include="ext\zlib\trees.c" />
     <ClCompile Include="ext\zlib\uncompr.c" />
     <ClCompile Include="ext\zlib\zutil.c" />
@@ -400,6 +403,7 @@
     <ClInclude Include="ext\zlib\minizip\iowin32s.h" />
     <ClInclude Include="ext\zlib\minizip\unzalloc.h" />
     <ClInclude Include="ext\zlib\minizip\unzip.h" />
+    <ClInclude Include="ext\zlib\minizip\zip.h" />
     <ClInclude Include="ext\zlib\trees.h" />
     <ClInclude Include="ext\zlib\zconf.h" />
     <ClInclude Include="ext\zlib\zlib.h" />

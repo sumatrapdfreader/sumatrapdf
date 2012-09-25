@@ -10,6 +10,7 @@
 #include <ioapi.h>
 #include <iowin32.h>
 #include <iowin32s.h>
+#include <zip.h>
 
 ZipFile::ZipFile(const TCHAR *path, Allocator *allocator) :
     filenames(0, allocator), filenameHashes(0, allocator), fileinfo(0, allocator),
@@ -234,4 +235,67 @@ bool ZipFile::UnzipFile(const TCHAR *filename, const TCHAR *dir, const TCHAR *un
     bool ok = file::WriteAll(filePath.Get(), data, len);
     Allocator::Free(allocator, data);
     return ok;
+}
+
+class ZipCreatorImpl : public ZipCreator {
+    StrVec files;
+public:
+    ZipCreatorImpl() {};
+    virtual ~ZipCreatorImpl() {};
+    virtual bool AddFile(const TCHAR *filePath);
+    virtual bool SaveAs(const TCHAR *zipFilePath);
+};
+
+bool ZipCreatorImpl::AddFile(const TCHAR *filePath)
+{
+    if (!file::Exists(filePath))
+        return false;
+    files.Append(str::Dup(filePath));
+    return true;
+}
+
+bool ZipCreatorImpl::SaveAs(const TCHAR *zipFilePath)
+{
+    if (files.Count() == 0)
+        return false;
+    bool result = true;
+    zipFile zf;
+    zlib_filefunc64_def ffunc;
+    fill_win32_filefunc64(&ffunc);
+    zf = zipOpen2_64((const void*)zipFilePath, 0, NULL, &ffunc);
+    if (!zf)
+        return false;
+    zip_fileinfo zi = { 0 };
+    int err;
+
+    for (size_t i=0; i<files.Count(); i++) {
+        TCHAR *fileName = files.At(i);
+        ScopedMem<char> fileNameUtf(str::conv::ToUtf8(fileName));
+        size_t fileSize;
+        char *fileData = file::ReadAll(fileName, &fileSize);
+        if (!fileData)
+            goto Error;
+        err = zipOpenNewFileInZip64(zf, fileNameUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 1);
+        if (err != ZIP_OK)
+            goto Error;
+        err = zipWriteInFileInZip(zf, fileData, fileSize);
+        if (err != ZIP_OK)
+            goto Error;
+        err = zipCloseFileInZip(zf);
+        if (err != ZIP_OK)
+            goto Error;
+    }
+    goto Exit;
+Error:
+    result = false;
+Exit:
+    err = zipClose(zf, NULL);
+    if (err != ZIP_OK)
+        result = false;
+    return result;
+}
+
+ZipCreator *ZipCreator::Create()
+{
+    return new ZipCreatorImpl();
 }

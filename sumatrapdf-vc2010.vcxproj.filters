@@ -1007,6 +1007,9 @@
     <ClCompile Include="src\utils\CmdLineParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="ext\zlib\minizip\zip.c">
+      <Filter>zlib\minizip</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1485,6 +1488,9 @@
     </ClInclude>
     <ClInclude Include="src\ucrt\src\ucrt_log.h">
       <Filter>ucrt</Filter>
+    </ClInclude>
+    <ClInclude Include="ext\zlib\minizip\zip.h">
+      <Filter>zlib\minizip</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

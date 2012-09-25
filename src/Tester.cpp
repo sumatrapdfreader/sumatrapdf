@@ -18,6 +18,7 @@ using namespace Gdiplus;
 #include "NoFreeAllocator.h"
 #include "Timer.h"
 #include "WinUtil.h"
+#include "ZipUtil.h"
 
 #include "DebugLog.h"
 
@@ -41,6 +42,7 @@ static int Usage()
     printf("  -layout - will also layout mobi files\n");
     printf("  -save-html] - will save html content of mobi file\n");
     printf("  -save-images - will save images extracted from mobi files\n");
+    printf("  -zip-create - creates a sample zip file that needs to be manually checked that it worked\n");
     return 1;
 }
 
@@ -169,6 +171,30 @@ static void MobiTest(char *dirOrFile)
         MobiTestDir(tmp);
 }
 
+// we assume this is called from main sumatradirectory, e.g. as:
+// ./obj-dbg/tester.exe, so we use the known files 
+void ZipCreateTest()
+{
+    TCHAR *zipFileName = _T("tester-tmp.zip");
+    file::Delete(zipFileName);
+    ZipCreator *zc = ZipCreator::Create();
+    bool ok = zc->AddFile(_T("makefile.deps"));
+    if (!ok) {
+        printf("ZipCreateTest(): failed to add makefile.deps");
+        return;
+    }
+    ok = zc->AddFile(_T("makefile.msvc"));
+    if (!ok) {
+        printf("ZipCreateTest(): failed to add makefile.msvc");
+        return;
+    }
+    ok = zc->SaveAs(zipFileName);
+    if (!ok) {
+        printf("ZipCreateTest(): SaveAs() failed");
+    }
+    delete zc;
+}
+
 extern "C"
 int main(int argc, char **argv)
 {
@@ -200,6 +226,9 @@ int main(int argc, char **argv)
             ++i; --left;
         } else if (str::Eq(argv[i], "-save-images")) {
             gSaveImages = true;
+            ++i; --left;
+        } else if (str::Eq(argv[i], "-zip-create")) {
+            ZipCreateTest();
             ++i; --left;
         } else {
             // unknown argument
