@@ -75,18 +75,16 @@ private:
 };
 #endif
 
+class ZipCreatorData;
+
 class ZipCreator {
+    ZipCreatorData *d;
 public:
-    friend class ZipCreatorImpl;
+    ZipCreator();
+    ~ZipCreator();
 
-    virtual ~ZipCreator() {}
-    virtual bool AddFile(const TCHAR *filePath) = 0;
-    virtual bool SaveAs(const TCHAR *zipFilePath) = 0;
-
-    static ZipCreator *Create();
-
-private:
-    ZipCreator() {};
+    bool AddFile(const TCHAR *filePath);
+    bool SaveAs(const TCHAR *zipFilePath);
 };
 
 #endif

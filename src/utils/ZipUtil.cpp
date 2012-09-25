@@ -304,26 +304,32 @@ char *ZipExtractorImpl::GetFileData(size_t fileInfoIdx, size_t *lenOut)
 }
 #endif
 
-class ZipCreatorImpl : public ZipCreator {
-    StrVec files;
+class ZipCreatorData {
 public:
-    ZipCreatorImpl() {};
-    virtual ~ZipCreatorImpl() {};
-    virtual bool AddFile(const TCHAR *filePath);
-    virtual bool SaveAs(const TCHAR *zipFilePath);
+    StrVec files;
 };
 
-bool ZipCreatorImpl::AddFile(const TCHAR *filePath)
+ZipCreator::ZipCreator()
+{
+    d = new ZipCreatorData;
+}
+
+ZipCreator::~ZipCreator()
+{
+    delete d;
+}
+
+bool ZipCreator::AddFile(const TCHAR *filePath)
 {
     if (!file::Exists(filePath))
         return false;
-    files.Append(str::Dup(filePath));
+    d->files.Append(str::Dup(filePath));
     return true;
 }
 
-bool ZipCreatorImpl::SaveAs(const TCHAR *zipFilePath)
+bool ZipCreator::SaveAs(const TCHAR *zipFilePath)
 {
-    if (files.Count() == 0)
+    if (d->files.Count() == 0)
         return false;
     bool result = true;
     zipFile zf;
@@ -335,8 +341,8 @@ bool ZipCreatorImpl::SaveAs(const TCHAR *zipFilePath)
     zip_fileinfo zi = { 0 };
     int err;
 
-    for (size_t i=0; i<files.Count(); i++) {
-        TCHAR *fileName = files.At(i);
+    for (size_t i=0; i<d->files.Count(); i++) {
+        TCHAR *fileName = d->files.At(i);
         ScopedMem<char> fileNameUtf(str::conv::ToUtf8(fileName));
         size_t fileSize;
         char *fileData = file::ReadAll(fileName, &fileSize);
@@ -360,9 +366,4 @@ Exit:
     if (err != ZIP_OK)
         result = false;
     return result;
-}
-
-ZipCreator *ZipCreator::Create()
-{
-    return new ZipCreatorImpl();
 }

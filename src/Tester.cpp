@@ -177,7 +177,7 @@ void ZipCreateTest()
 {
     TCHAR *zipFileName = _T("tester-tmp.zip");
     file::Delete(zipFileName);
-    ZipCreator *zc = ZipCreator::Create();
+    ZipCreator *zc = new ZipCreator();
     bool ok = zc->AddFile(_T("makefile.deps"));
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.deps");
