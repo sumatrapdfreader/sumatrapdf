@@ -98,6 +98,7 @@ static str::Str<char> *gAdditionalInfo = NULL;
 static HANDLE   gDumpEvent = NULL;
 static HANDLE   gDumpThread = NULL;
 static ExeType  gExeType = ExeSumatraStatic;
+static bool     gCrashed = false;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
@@ -324,6 +325,9 @@ void SubmitCrashInfo()
 static DWORD WINAPI CrashDumpThread(LPVOID data)
 {
     WaitForSingleObject(gDumpEvent, INFINITE);
+    if (!gCrashed)
+        return 0;
+
     if (!dbghelp::Load())
         return 0;
 
@@ -346,6 +350,8 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     if (wasHere)
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     wasHere = true;
+
+    gCrashed = true;
 
     gMei.ThreadId = GetCurrentThreadId();
     gMei.ExceptionPointers = exceptionInfo;
@@ -637,9 +643,15 @@ void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
 
 void UninstallCrashHandler()
 {
-    if (gDumpEvent)
+    if (!gDumpEvent || !gDumpThread)
+        return;
+
+    if (gPrevExceptionFilter)
         SetUnhandledExceptionFilter(gPrevExceptionFilter);
-    TerminateThread(gDumpThread, 1);
+
+    SetEvent(gDumpEvent);
+    WaitForSingleObject(gDumpThread, 1000); // 1 sec
+
     CloseHandle(gDumpThread);
     CloseHandle(gDumpEvent);
 
