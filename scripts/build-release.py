@@ -3,12 +3,7 @@ Builds a (pre)release build of SumatraPDF, including the installer,
 and optionally uploads it to s3.
 """
 
-import os
-import os.path
-import shutil
-import sys
-import time
-import re
+import os, os.path, shutil, sys, time, re
 
 from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists
