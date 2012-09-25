@@ -11,6 +11,7 @@
 #define _UNICODE
 #endif
 
+#include <WinSock2.h>
 #include <windows.h>
 #include <unknwn.h>
 #include <shlwapi.h>
