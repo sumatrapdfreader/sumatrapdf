@@ -306,7 +306,7 @@ char *ZipExtractorImpl::GetFileData(size_t fileInfoIdx, size_t *lenOut)
 
 class ZipCreatorData {
 public:
-    StrVec files;
+    StrVec pathsAndZipNames;
 };
 
 ZipCreator::ZipCreator()
@@ -319,17 +319,41 @@ ZipCreator::~ZipCreator()
     delete d;
 }
 
-bool ZipCreator::AddFile(const TCHAR *filePath)
+// add a given file under (optional) nameInZip 
+// it's not a good idea to save absolute windows-style
+// in the zip file, so we try to pick an intelligent
+// name if filePath is absolute and nameInZip is NULL
+bool ZipCreator::AddFile(const TCHAR *filePath, const TCHAR *nameInZip)
 {
     if (!file::Exists(filePath))
         return false;
-    d->files.Append(str::Dup(filePath));
+    d->pathsAndZipNames.Append(str::Dup(filePath));
+    if (NULL == nameInZip) {
+        if (path::IsAbsolute(filePath)) {
+            nameInZip = path::GetBaseName(filePath);
+        } else {
+            nameInZip = filePath;
+        }
+    }
+    d->pathsAndZipNames.Append(str::Dup(nameInZip));
     return true;
+}
+
+// filePath must be in dir, we use the filePath relative to dir
+// as the zip name
+bool ZipCreator::AddFileFromDir(const TCHAR *filePath, const TCHAR *dir)
+{
+    if (!str::StartsWith(filePath, dir))
+        return false;
+    const TCHAR *nameInZip = filePath + str::Len(dir);
+    if (path::IsSep(*nameInZip))
+        ++nameInZip;
+    return AddFile(filePath, nameInZip);
 }
 
 bool ZipCreator::SaveAs(const TCHAR *zipFilePath)
 {
-    if (d->files.Count() == 0)
+    if (d->pathsAndZipNames.Count() == 0)
         return false;
     bool result = true;
     zipFile zf;
@@ -341,14 +365,16 @@ bool ZipCreator::SaveAs(const TCHAR *zipFilePath)
     zip_fileinfo zi = { 0 };
     int err;
 
-    for (size_t i=0; i<d->files.Count(); i++) {
-        TCHAR *fileName = d->files.At(i);
-        ScopedMem<char> fileNameUtf(str::conv::ToUtf8(fileName));
+    size_t fileCount = d->pathsAndZipNames.Count() / 2;
+    for (size_t i=0; i<fileCount; i++) {
+        TCHAR *fileName = d->pathsAndZipNames.At(2*i);
+        TCHAR *nameInZip = d->pathsAndZipNames.At(2*i+1);
+        ScopedMem<char> nameInZipUtf(str::conv::ToUtf8(nameInZip));
         size_t fileSize;
         char *fileData = file::ReadAll(fileName, &fileSize);
         if (!fileData)
             goto Error;
-        err = zipOpenNewFileInZip64(zf, fileNameUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 1);
+        err = zipOpenNewFileInZip64(zf, nameInZipUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 1);
         if (err != ZIP_OK)
             goto Error;
         err = zipWriteInFileInZip(zf, fileData, fileSize);

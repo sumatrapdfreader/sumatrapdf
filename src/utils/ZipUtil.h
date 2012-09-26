@@ -83,7 +83,8 @@ public:
     ZipCreator();
     ~ZipCreator();
 
-    bool AddFile(const TCHAR *filePath);
+    bool AddFile(const TCHAR *filePath, const TCHAR *nameInZip=NULL);
+    bool AddFileFromDir(const TCHAR *filePath, const TCHAR *dir);
     bool SaveAs(const TCHAR *zipFilePath);
 };
 

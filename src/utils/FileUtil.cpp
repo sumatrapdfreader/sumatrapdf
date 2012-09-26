@@ -6,12 +6,12 @@
 
 namespace path {
 
-static inline bool IsSep(WCHAR c)
+bool IsSep(WCHAR c)
 {
     return L'\\' == c || L'/' == c;
 }
 
-static inline bool IsSep(char c)
+bool IsSep(char c)
 {
     return '\\' == c || '/' == c;
 }
@@ -199,6 +199,11 @@ bool Match(const TCHAR *path, const TCHAR *filter)
         filter = str::FindChar(filter, ';') + 1;
     }
     return MatchWildcardsRec(path, filter);
+}
+
+bool IsAbsolute(const TCHAR *path)
+{
+    return !PathIsRelative(path);
 }
 
 // returns the path to either the %TEMP% directory or a

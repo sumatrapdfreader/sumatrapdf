@@ -6,6 +6,9 @@
 
 namespace path {
 
+bool         IsSep(WCHAR c);
+bool         IsSep(char c);
+
 const WCHAR *GetBaseName(const WCHAR *path);
 const char * GetBaseName(const char *path);
 const TCHAR *GetExt(const TCHAR *path);
@@ -17,6 +20,7 @@ TCHAR *      ShortPath(const TCHAR *path);
 bool         IsSame(const TCHAR *path1, const TCHAR *path2);
 bool         HasVariableDriveLetter(const TCHAR *path);
 bool         Match(const TCHAR *path, const TCHAR *filter);
+bool         IsAbsolute(const TCHAR *path);
 
 TCHAR *      GetTempPath(const TCHAR *filePrefix=NULL);
 
