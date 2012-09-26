@@ -114,7 +114,14 @@ def verify_started_in_right_directory():
   print("This script must be run from top of the source tree")
   sys.exit(1)
 
-# like cmdrun() but throws an exception on failure
+def run_cmd(*args):
+  cmd = " ".join(args)
+  print("\nrun_cmd_throw: '%s'" % cmd)
+  cmdproc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  res = cmdproc.communicate()
+  return (res[0], res[1], cmdproc.returncode)
+
+# like run_cmd() but throws an exception on failure
 def run_cmd_throw(*args):
   cmd = " ".join(args)
   print("\nrun_cmd_throw: '%s'" % cmd)
