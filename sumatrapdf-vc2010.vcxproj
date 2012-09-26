@@ -361,7 +361,7 @@
     <ClCompile Include="src\utils\DialogSizer.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\HtmlWindow.cpp" />
-    <ClCompile Include="src\utils\Http.cpp" />
+    <ClCompile Include="src\utils\HttpUtil.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
     <ClCompile Include="src\utils\UiMsg.cpp" />

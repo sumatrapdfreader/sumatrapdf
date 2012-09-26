@@ -123,7 +123,7 @@ $(OS)\CrashHandler.obj: src\AppTools.h src\BaseEngine.h src\CrashHandler.h
 $(OS)\CrashHandler.obj: src\DisplayState.h src\FileHistory.h src\SumatraPDF.h
 $(OS)\CrashHandler.obj: src\SumatraWindow.h src\Translations.h src\utils\Allocator.h
 $(OS)\CrashHandler.obj: src\utils\BaseUtil.h src\utils\DbgHelpDyn.h src\utils\DebugLog.h
-$(OS)\CrashHandler.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Http.h
+$(OS)\CrashHandler.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HttpUtil.h
 $(OS)\CrashHandler.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\CrashHandler.obj: src\utils\WinUtil.h src\utils\ZipUtil.h src\Version.h
 $(OS)\DisplayModel.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
@@ -376,7 +376,7 @@ $(OS)\SumatraPDF.obj: src\SumatraWindow.h src\TableOfContents.h src\TextSearch.h
 $(OS)\SumatraPDF.obj: src\TextSelection.h src\Toolbar.h src\Translations.h
 $(OS)\SumatraPDF.obj: src\UiMsgSumatra.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\SumatraPDF.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OS)\SumatraPDF.obj: src\utils\HtmlWindow.h src\utils\Http.h src\utils\RefCounted.h
+$(OS)\SumatraPDF.obj: src\utils\HtmlWindow.h src\utils\HttpUtil.h src\utils\RefCounted.h
 $(OS)\SumatraPDF.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
 $(OS)\SumatraPDF.obj: src\utils\ThreadUtil.h src\utils\Timer.h src\utils\Touch.h
 $(OS)\SumatraPDF.obj: src\utils\UiMsg.h src\utils\Vec.h src\utils\WinUtil.h
@@ -490,9 +490,9 @@ $(OU)\HtmlPullParser.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\HtmlWindow.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\HtmlWindow.obj: src\utils\HtmlWindow.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\HtmlWindow.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
-$(OU)\Http.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OU)\Http.obj: src\utils\GeomUtil.h src\utils\Http.h src\utils\Scoped.h
-$(OU)\Http.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OU)\HttpUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OU)\HttpUtil.obj: src\utils\GeomUtil.h src\utils\HttpUtil.h src\utils\Scoped.h
+$(OU)\HttpUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\JsonParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\JsonParser.obj: src\utils\JsonParser.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\JsonParser.obj: src\utils\Vec.h

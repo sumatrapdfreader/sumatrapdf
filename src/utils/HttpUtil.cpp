@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include <Wininet.h>
-#include "Http.h"
+#include "HttpUtil.h"
 
 #include "FileUtil.h"
 #include "WinUtil.h"

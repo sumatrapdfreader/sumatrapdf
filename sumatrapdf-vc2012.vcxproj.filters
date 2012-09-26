@@ -440,7 +440,7 @@
     <ClCompile Include="src\utils\FileUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\Http.cpp">
+    <ClCompile Include="src\utils\HttpUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\StrUtil.cpp">
@@ -1048,7 +1048,7 @@
     <ClInclude Include="src\utils\GeomUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\Http.h">
+    <ClInclude Include="src\utils\HttpUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\SimpleLog.h">

@@ -225,11 +225,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\utils\Http.cpp"
+					RelativePath=".\src\utils\HttpUtil.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\utils\Http.h"
+					RelativePath=".\src\utils\HttpUtil.h"
 					>
 				</File>
 				<File

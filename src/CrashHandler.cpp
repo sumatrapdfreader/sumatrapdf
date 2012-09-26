@@ -8,7 +8,7 @@
 #include "CrashHandler.h"
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
-#include "Http.h"
+#include "HttpUtil.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"

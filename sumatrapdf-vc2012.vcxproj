@@ -329,7 +329,7 @@
     <ClCompile Include="src\utils\DialogSizer.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
     <ClCompile Include="src\utils\HtmlWindow.cpp" />
-    <ClCompile Include="src\utils\Http.cpp" />
+    <ClCompile Include="src\utils\HttpUtil.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
     <ClCompile Include="src\utils\UtilTests.cpp" />
@@ -443,7 +443,7 @@
     <ClInclude Include="src\utils\FileUtil.h" />
     <ClInclude Include="src\utils\GeomUtil.h" />
     <ClInclude Include="src\utils\HtmlWindow.h" />
-    <ClInclude Include="src\utils\Http.h" />
+    <ClInclude Include="src\utils\HttpUtil.h" />
     <ClInclude Include="src\utils\SimpleLog.h" />
     <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />

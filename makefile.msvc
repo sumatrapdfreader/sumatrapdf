@@ -158,7 +158,7 @@ UCRT_DLL_OBJS = $(UCRT_OBJS) $(OS)\ucrt_dll.obj
 UCRT_CON_OBJS = $(UCRT_OBJS) $(OS)\ucrt_console.obj
 
 UTILS_OBJS = \
-	$(OU)\BencUtil.obj $(OU)\FileUtil.obj $(OU)\Http.obj \
+	$(OU)\BencUtil.obj $(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
 	$(OU)\StrUtil.obj $(OU)\UtilTests.obj $(OU)\WinUtil.obj \
 	$(OU)\DialogSizer.obj $(OU)\FileTransactions.obj $(OU)\Touch.obj \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj $(OU)\GdiPlusUtil.obj \

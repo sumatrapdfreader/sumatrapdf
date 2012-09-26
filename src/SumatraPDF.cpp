@@ -19,7 +19,7 @@
 #include "FileWatch.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "Http.h"
+#include "HttpUtil.h"
 #include "HtmlWindow.h"
 #include "Menu.h"
 #include "Mui.h"
