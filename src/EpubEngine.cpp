@@ -1207,6 +1207,7 @@ public:
 
     ImageData *GetImageData(const char *id, const char *pagePath) {
         ScopedMem<char> url(NormalizeURL(id, pagePath));
+        UrlDecode(url);
         for (size_t i = 0; i < images.Count(); i++) {
             if (str::Eq(images.At(i).id, url))
                 return &images.At(i).base;
@@ -1300,6 +1301,7 @@ static TCHAR *ToPlainUrl(const TCHAR *url)
 {
     TCHAR *plainUrl = str::Dup(url);
     str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
+    UrlDecode(plainUrl);
     return plainUrl;
 }
 

@@ -13,6 +13,10 @@ struct ImageData2 {
     size_t  idx; // document specific index at which to find this image
 };
 
+char *NormalizeURL(const char *url, const char *base);
+void UrlDecode(char *url);
+void UrlDecode(WCHAR *url);
+
 /* ********** EPUB ********** */
 
 class EpubDoc {
@@ -189,7 +193,5 @@ public:
     static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
     static TxtDoc *CreateFromFile(const TCHAR *fileName);
 };
-
-char *NormalizeURL(const char *url, const char *base);
 
 #endif

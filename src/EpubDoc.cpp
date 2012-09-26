@@ -110,12 +110,26 @@ char *NormalizeURL(const char *url, const char *base)
     return norm.StealData();
 }
 
-static void UrlDecode(TCHAR *url)
+void UrlDecode(char *url)
 {
-    for (TCHAR *src = url; *src; src++, url++) {
+    for (char *src = url; *src; src++, url++) {
         int val;
-        if (*src == '%' && str::Parse(src, _T("%%%2x"), &val)) {
+        if (*src == '%' && str::Parse(src, "%%%2x", &val)) {
             *url = (char)val;
+            src += 2;
+        } else {
+            *url = *src;
+        }
+    }
+    *url = '\0';
+}
+
+void UrlDecode(WCHAR *url)
+{
+    for (WCHAR *src = url; *src; src++, url++) {
+        int val;
+        if (*src == '%' && str::Parse(src, L"%%%2x", &val)) {
+            *url = (WCHAR)val;
             src += 2;
         } else {
             *url = *src;
@@ -1375,6 +1389,7 @@ const char *HtmlDoc::GetTextData(size_t *lenOut)
 ImageData *HtmlDoc::GetImageData(const char *id)
 {
     ScopedMem<char> url(NormalizeURL(id, pagePath));
+    UrlDecode(url);
     for (size_t i = 0; i < images.Count(); i++) {
         if (str::Eq(images.At(i).id, url))
             return &images.At(i).base;
