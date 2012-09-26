@@ -99,6 +99,46 @@ static pdf_jsimp_obj *app_alert(void *jsctx, void *obj, int argc, pdf_jsimp_obj 
 	return nButton_obj;
 }
 
+static pdf_jsimp_obj *app_execDialog(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
+{
+	pdf_js *js = (pdf_js *)jsctx;
+
+	pdf_event_issue_exec_dialog(js->doc);
+
+	return NULL;
+}
+
+static pdf_jsimp_obj *app_execMenuItem(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
+{
+	pdf_js *js = (pdf_js *)jsctx;
+
+	if (argc == 1)
+		pdf_event_issue_exec_menu_item(js->doc, pdf_jsimp_to_string(js->imp, args[0]));
+
+	return NULL;
+}
+
+static pdf_jsimp_obj *app_launchURL(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
+{
+	pdf_js *js = (pdf_js *)jsctx;
+	char *cUrl;
+	int bNewFrame = 0;
+
+	switch(argc)
+	{
+	default:
+		return NULL;
+	case 2:
+		bNewFrame = (int)pdf_jsimp_to_number(js->imp, args[1]);
+	case 1:
+		cUrl = pdf_jsimp_to_string(js->imp, args[0]);
+	}
+
+	pdf_event_issue_launch_url(js->doc, cUrl, bNewFrame);
+
+	return NULL;
+}
+
 static pdf_obj *load_color(fz_context *ctx, pdf_jsimp *imp, pdf_jsimp_obj *val)
 {
 	pdf_obj *col = NULL;
@@ -519,6 +559,115 @@ static pdf_jsimp_obj *doc_resetForm(void *jsctx, void *obj, int argc, pdf_jsimp_
 	return NULL;
 }
 
+static pdf_jsimp_obj *doc_print(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
+{
+	pdf_js  *js = (pdf_js *)jsctx;
+
+	pdf_event_issue_print(js->doc);
+
+	return NULL;
+}
+
+static pdf_jsimp_obj *doc_mailDoc(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
+{
+	pdf_js  *js = (pdf_js *)jsctx;
+	fz_context *ctx = js->doc->ctx;
+	pdf_jsimp_obj *bUI_obj = NULL;
+	pdf_jsimp_obj *cTo_obj = NULL;
+	pdf_jsimp_obj *cCc_obj = NULL;
+	pdf_jsimp_obj *cBcc_obj = NULL;
+	pdf_jsimp_obj *cSubject_obj = NULL;
+	pdf_jsimp_obj *cMessage_obj = NULL;
+	fz_mail_doc_event event;
+	int arg_is_obj = 0;
+
+	if (argc < 1 || argc > 6)
+		return NULL;
+
+	event.ask_user = 1;
+	event.to = "";
+	event.cc = "";
+	event.bcc = "";
+	event.subject = "";
+	event.message = "";
+
+	fz_var(bUI_obj);
+	fz_var(cTo_obj);
+	fz_var(cCc_obj);
+	fz_var(cBcc_obj);
+	fz_var(cSubject_obj);
+	fz_var(cMessage_obj);
+	fz_try(ctx)
+	{
+		arg_is_obj = (argc == 1 && pdf_jsimp_to_type(js->imp, args[0]) != JS_TYPE_BOOLEAN);
+		if (arg_is_obj)
+		{
+			bUI_obj = pdf_jsimp_property(js->imp, args[0], "bUI");
+			cTo_obj = pdf_jsimp_property(js->imp, args[0], "cTo");
+			cCc_obj = pdf_jsimp_property(js->imp, args[0], "cCc");
+			cBcc_obj = pdf_jsimp_property(js->imp, args[0], "cBcc");
+			cSubject_obj = pdf_jsimp_property(js->imp, args[0], "cSubject");
+			cMessage_obj = pdf_jsimp_property(js->imp, args[0], "cMessage");
+		}
+		else
+		{
+			switch (argc)
+			{
+			case 6:
+				cMessage_obj = args[5];
+			case 5:
+				cSubject_obj = args[4];
+			case 4:
+				cBcc_obj = args[3];
+			case 3:
+				cCc_obj = args[2];
+			case 2:
+				cTo_obj = args[1];
+			case 1:
+				bUI_obj = args[0];
+			}
+		}
+
+		if (bUI_obj)
+			event.ask_user = (int)pdf_jsimp_to_number(js->imp, bUI_obj);
+
+		if (cTo_obj)
+			event.to = pdf_jsimp_to_string(js->imp, cTo_obj);
+
+		if (cCc_obj)
+			event.cc = pdf_jsimp_to_string(js->imp, cCc_obj);
+
+		if (cBcc_obj)
+			event.bcc = pdf_jsimp_to_string(js->imp, cBcc_obj);
+
+		if (cSubject_obj)
+			event.subject = pdf_jsimp_to_string(js->imp, cSubject_obj);
+
+		if (cMessage_obj)
+			event.message = pdf_jsimp_to_string(js->imp, cMessage_obj);
+
+		pdf_event_issue_mail_doc(js->doc, &event);
+	}
+	fz_always(ctx)
+	{
+		if (arg_is_obj)
+		{
+			pdf_jsimp_drop_obj(js->imp, bUI_obj);
+			pdf_jsimp_drop_obj(js->imp, cTo_obj);
+			pdf_jsimp_drop_obj(js->imp, cCc_obj);
+			pdf_jsimp_drop_obj(js->imp, cBcc_obj);
+			pdf_jsimp_drop_obj(js->imp, cSubject_obj);
+			pdf_jsimp_drop_obj(js->imp, cMessage_obj);
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return NULL;
+}
+
 static void declare_dom(pdf_js *js)
 {
 	pdf_jsimp      *imp       = js->imp;
@@ -527,6 +676,8 @@ static void declare_dom(pdf_js *js)
 	js->doctype = pdf_jsimp_new_type(imp, NULL);
 	pdf_jsimp_addmethod(imp, js->doctype, "getField", doc_getField);
 	pdf_jsimp_addmethod(imp, js->doctype, "resetForm", doc_resetForm);
+	pdf_jsimp_addmethod(imp, js->doctype, "print", doc_print);
+	pdf_jsimp_addmethod(imp, js->doctype, "mailDoc", doc_mailDoc);
 	pdf_jsimp_addproperty(imp, js->doctype, "event", doc_getEvent, doc_setEvent);
 	pdf_jsimp_addproperty(imp, js->doctype, "app", doc_getApp, doc_setApp);
 
@@ -549,6 +700,9 @@ static void declare_dom(pdf_js *js)
 	/* Create the app type */
 	js->apptype = pdf_jsimp_new_type(imp, NULL);
 	pdf_jsimp_addmethod(imp, js->apptype, "alert", app_alert);
+	pdf_jsimp_addmethod(imp, js->apptype, "execDialog", app_execDialog);
+	pdf_jsimp_addmethod(imp, js->apptype, "execMenuItem", app_execMenuItem);
+	pdf_jsimp_addmethod(imp, js->apptype, "launchURL", app_launchURL);
 
 	/* Create the document object and tell the engine to use */
 	pdf_jsimp_set_global_type(js->imp, js->doctype);

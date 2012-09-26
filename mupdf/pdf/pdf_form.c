@@ -1589,7 +1589,9 @@ static void reset_form(pdf_document *doc, pdf_obj *fields, int exclude)
 	pdf_obj *form = pdf_dict_getp(doc->trailer, "Root/AcroForm/Fields");
 	int i, n;
 
-	if (exclude)
+	/* The 'fields' array not being present signals that all fields
+	 * should be reset, so handle it using the exclude case - excluding none */
+	if (exclude || !fields)
 	{
 		/* mark the fields we don't want to reset */
 		pdf_obj *nil = pdf_new_null(ctx);
@@ -1686,6 +1688,13 @@ static void execute_action(pdf_document *doc, pdf_obj *obj, pdf_obj *a)
 		{
 			reset_form(doc, pdf_dict_gets(a, "Fields"), pdf_to_int(pdf_dict_gets(a, "Flags")) & 1);
 		}
+		else if (!strcmp(type, "Named"))
+		{
+			char *name = pdf_to_name(pdf_dict_gets(a, "N"));
+
+			if (!strcmp(name, "Print"))
+				pdf_event_issue_print(doc);
+		}
 	}
 }
 
@@ -1748,6 +1757,21 @@ static void execute_action_chain(pdf_document *doc, pdf_obj *obj)
 	{
 		execute_action(doc, obj, a);
 		a = pdf_dict_gets(a, "Next");
+	}
+}
+
+static void execute_additional_action(pdf_document *doc, pdf_obj *obj, char *act)
+{
+	pdf_obj *a = pdf_dict_getp(obj, act);
+
+	if (a)
+	{
+		pdf_js_event e;
+
+		e.target = obj;
+		e.value = "";
+		pdf_js_setup_event(doc->js, &e);
+		execute_action(doc, obj, a);
 	}
 }
 
@@ -2002,6 +2026,8 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
 					hp->gen = pdf_to_gen(annot->obj);
 					hp->state = HOTSPOT_POINTER_DOWN;
 					changed = 1;
+					/* Exectute the down action */
+					execute_additional_action(doc, annot->obj, "AA/D");
 				}
 				break;
 
@@ -2025,6 +2051,9 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
 						break;
 					}
 
+					/* Execute the up action */
+					execute_additional_action(doc, annot->obj, "AA/U");
+					/* Execute the main action chain */
 					execute_action_chain(doc, annot->obj);
 				}
 				break;

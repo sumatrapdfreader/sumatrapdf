@@ -2605,7 +2605,9 @@ enum
 	FZ_DOCUMENT_EVENT_PRINT,
 	FZ_DOCUMENT_EVENT_LAUNCH_URL,
 	FZ_DOCUMENT_EVENT_MAIL_DOC,
-	FZ_DOCUMENT_EVENT_SUBMIT
+	FZ_DOCUMENT_EVENT_SUBMIT,
+	FZ_DOCUMENT_EVENT_EXEC_MENU_ITEM,
+	FZ_DOCUMENT_EVENT_EXEC_DIALOG
 };
 
 /*
@@ -2679,6 +2681,12 @@ enum
 fz_alert_event *fz_access_alert_event(fz_doc_event *event);
 
 /*
+	fz_access_exec_menu_item_event: access the details of am execMenuItem
+	event, which consists of just the name of the menu item
+*/
+char *fz_access_exec_menu_item_event(fz_doc_event *event);
+
+/*
 	fz_submit_event: details of a submit event. The app should submit
 	the specified data to the specified url. "get" determines whether
 	to use the GET or POST method.
@@ -2697,6 +2705,43 @@ typedef struct
 	owned by mupdf and need not be freed by the caller.
 */
 fz_submit_event *fz_access_submit_event(fz_doc_event *event);
+
+/*
+	fz_launch_url_event: details of a launch-url event. The app should
+	open the url, either in a new frame or in the current window.
+*/
+typedef struct
+{
+	char *url;
+	int new_frame;
+} fz_launch_url_event;
+
+/*
+	fz_access_launch_url_event: access the details of a launch-url
+	event. The returned pointer and all data referred to by the structure
+	are owned by mupdf and need not be freed by the caller.
+*/
+fz_launch_url_event *fz_access_launch_url_event(fz_doc_event *event);
+
+/*
+	fz_mail_doc_event: details of a mail_doc event. The app should save
+	the current state of the document and email it using the specified
+	parameters.
+*/
+typedef struct
+{
+	int ask_user;
+	char *to;
+	char *cc;
+	char *bcc;
+	char *subject;
+	char *message;
+} fz_mail_doc_event;
+
+/*
+	fz_acccess_mail_doc_event: access the details of a mail-doc event.
+*/
+fz_mail_doc_event *fz_access_mail_doc_event(fz_doc_event *event);
 
 typedef struct fz_write_options_s fz_write_options;
 

@@ -126,6 +126,11 @@ void winalert(pdfapp_t *app, fz_alert_event *alert)
 	}
 }
 
+void winprint(pdfapp_t *app)
+{
+	fprintf(stderr, "The MuPDF library supports printing, but this application currently does not");
+}
+
 char *winpassword(pdfapp_t *app, char *filename)
 {
 	char *r = password;

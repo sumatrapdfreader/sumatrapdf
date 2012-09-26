@@ -235,6 +235,9 @@ fz_draw_fill_path(fz_device *devp, fz_path *path, int even_odd, fz_matrix ctm,
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
 
+	if (model == NULL)
+		model = fz_device_gray;
+
 	fz_reset_gel(dev->gel, state->scissor);
 	fz_flatten_fill_path(dev->gel, path, ctm, flatness);
 	fz_sort_gel(dev->gel);
@@ -282,6 +285,9 @@ fz_draw_stroke_path(fz_device *devp, fz_path *path, fz_stroke_state *stroke, fz_
 	int i;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
+
+	if (model == NULL)
+		model = fz_device_gray;
 
 	if (linewidth * expansion < 0.1f)
 		linewidth = 1 / expansion;
@@ -609,9 +615,10 @@ static void
 fz_draw_clip_text(fz_device *devp, fz_text *text, fz_matrix ctm, int accumulate)
 {
 	fz_draw_device *dev = devp->user;
+	fz_context *ctx = dev->ctx;
 	fz_bbox bbox;
 	fz_pixmap *mask, *dest, *shape;
-	fz_matrix tm, trm;
+	fz_matrix tm, trm, trunc_trm;
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 	fz_draw_state *state;
@@ -680,10 +687,12 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, fz_matrix ctm, int accumulate)
 			trm = fz_concat(tm, ctm);
 			x = floorf(trm.e);
 			y = floorf(trm.f);
-			trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
-			trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-			glyph = fz_render_glyph(dev->ctx, text->font, gid, trm, model, bbox);
+			trunc_trm = trm;
+			trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
+			trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
+
+			glyph = fz_render_glyph(dev->ctx, text->font, gid, trunc_trm, model, bbox);
 			if (glyph)
 			{
 				draw_glyph(NULL, mask, glyph, x, y, bbox);
@@ -693,8 +702,35 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, fz_matrix ctm, int accumulate)
 			}
 			else
 			{
-				fz_warn(dev->ctx, "cannot draw glyph for clipping (unimplemented case)");
-				// TODO: outline/non-cached case
+				fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, trm);
+				if (path)
+				{
+					fz_pixmap *old_dest;
+					float white = 1;
+
+					state = &dev->stack[dev->top];
+					old_dest = state[0].dest;
+					state[0].dest = state[0].mask;
+					state[0].mask = NULL;
+					fz_try(ctx)
+					{
+						fz_draw_fill_path(devp, path, 0, fz_identity, fz_device_gray, &white, 1);
+					}
+					fz_always(ctx)
+					{
+						state[0].mask = state[0].dest;
+						state[0].dest = old_dest;
+						fz_free_path(dev->ctx, path);
+					}
+					fz_catch(ctx)
+					{
+						fz_rethrow(ctx);
+					}
+				}
+				else
+				{
+					fz_warn(dev->ctx, "cannot render glyph for clipping");
+				}
 			}
 		}
 	}
@@ -704,9 +740,10 @@ static void
 fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	fz_draw_device *dev = devp->user;
+	fz_context *ctx = dev->ctx;
 	fz_bbox bbox;
 	fz_pixmap *mask, *dest, *shape;
-	fz_matrix tm, trm;
+	fz_matrix tm, trm, trunc_trm;
 	fz_pixmap *glyph;
 	int i, x, y, gid;
 	fz_draw_state *state = push_stack(dev);
@@ -752,10 +789,12 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 			trm = fz_concat(tm, ctm);
 			x = floorf(trm.e);
 			y = floorf(trm.f);
-			trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
-			trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-			glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, trm, ctm, stroke, bbox);
+			trunc_trm = trm;
+			trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
+			trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
+
+			glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, trunc_trm, ctm, stroke, bbox);
 			if (glyph)
 			{
 				draw_glyph(NULL, mask, glyph, x, y, bbox);
@@ -765,8 +804,35 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 			}
 			else
 			{
-				fz_warn(dev->ctx, "cannot draw glyph for clipping (unimplemented case)");
-				// TODO: outline/non-cached case
+				fz_path *path = fz_outline_glyph(dev->ctx, text->font, gid, trm);
+				if (path)
+				{
+					fz_pixmap *old_dest;
+					float white = 1;
+
+					state = &dev->stack[dev->top];
+					old_dest = state[0].dest;
+					state[0].dest = state[0].mask;
+					state[0].mask = NULL;
+					fz_try(ctx)
+					{
+						fz_draw_stroke_path(devp, path, stroke, fz_identity, fz_device_gray, &white, 1);
+					}
+					fz_always(ctx)
+					{
+						state[0].mask = state[0].dest;
+						state[0].dest = old_dest;
+						fz_free_path(dev->ctx, path);
+					}
+					fz_catch(ctx)
+					{
+						fz_rethrow(ctx);
+					}
+				}
+				else
+				{
+					fz_warn(dev->ctx, "cannot render glyph for stroked clipping");
+				}
 			}
 		}
 	}

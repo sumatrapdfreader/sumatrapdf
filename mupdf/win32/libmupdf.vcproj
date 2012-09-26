@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-9;..\thirdparty\openjpeg-1.5.0-patched\libopenjpeg;..\thirdparty\zlib-1.2.7;..\thirdparty\freetype-2.4.10\include"
+				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg;..\thirdparty\openjpeg\libopenjpeg;..\thirdparty\zlib;..\thirdparty\freetype\include"
 				PreprocessorDefinitions="DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -106,7 +106,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-9;..\thirdparty\openjpeg-1.5.0-patched\libopenjpeg;..\thirdparty\zlib-1.2.7;..\thirdparty\freetype-2.4.10\include"
+				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg;..\thirdparty\openjpeg\libopenjpeg;..\thirdparty\zlib;..\thirdparty\freetype\include"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -166,7 +166,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg-9;..\thirdparty\openjpeg-1.5.0-patched\libopenjpeg;..\thirdparty\zlib-1.2.7;..\thirdparty\freetype-2.4.10\include"
+				AdditionalIncludeDirectories="..\scripts;..\fitz;..\pdf;..\thirdparty\jbig2dec;..\thirdparty\jpeg;..\thirdparty\openjpeg\libopenjpeg;..\thirdparty\zlib;..\thirdparty\freetype\include"
 				PreprocessorDefinitions="MEMENTO=1;DEBUG=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

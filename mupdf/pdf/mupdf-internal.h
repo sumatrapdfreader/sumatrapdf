@@ -649,6 +649,11 @@ void pdf_choice_widget_set_value(pdf_document *doc, fz_widget *tw, int n, char *
 void pdf_set_doc_event_callback(pdf_document *doc, fz_doc_event_cb *event_cb, void *data);
 
 void pdf_event_issue_alert(pdf_document *doc, fz_alert_event *event);
+void pdf_event_issue_print(pdf_document *doc);
+void pdf_event_issue_exec_menu_item(pdf_document *doc, char *item);
+void pdf_event_issue_exec_dialog(pdf_document *doc);
+void pdf_event_issue_launch_url(pdf_document *doc, char *url, int new_frame);
+void pdf_event_issue_mail_doc(pdf_document *doc, fz_mail_doc_event *event);
 
 /*
  * Javascript handler
@@ -686,7 +691,8 @@ enum
 	JS_TYPE_NULL,
 	JS_TYPE_STRING,
 	JS_TYPE_NUMBER,
-	JS_TYPE_ARRAY
+	JS_TYPE_ARRAY,
+	JS_TYPE_BOOLEAN
 };
 
 /* SumatraPDF: don't declare functions that aren't linked */

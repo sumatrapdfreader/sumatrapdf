@@ -1,17 +1,23 @@
 # GNU Makefile for third party libraries used by MuPDF
 #
 # If thirdparty libraries are supplied, they will be built as
-# static libraries. Download and unzip the the mupdf-thirdparty.zip
-# archive in the source directory.
+# static libraries.
+#
+# Use 'git submodule init' and 'git submodule update' to check
+# out the thirdparty libraries from git.
 
-FREETYPE_DIR := $(wildcard thirdparty/freetype*)
-JBIG2DEC_DIR := $(wildcard thirdparty/jbig2dec*)
-JPEG_DIR := $(wildcard thirdparty/jpeg*)
-OPENJPEG_DIR := $(wildcard thirdparty/openjpeg*/libopenjpeg)
-ZLIB_DIR := $(wildcard thirdparty/zlib*)
-V8_DIR := $(wildcard thirdparty/v8*)
+FREETYPE_DIR := thirdparty/freetype
+JBIG2DEC_DIR := thirdparty/jbig2dec
+JPEG_DIR := thirdparty/jpeg
+OPENJPEG_DIR := thirdparty/openjpeg
+ZLIB_DIR := thirdparty/zlib
 
 # --- V8 ---
+#
+# V8 is too big to be used as a submodule.
+#
+
+V8_DIR := $(wildcard thirdparty/v8*)
 
 ifneq "$(V8_DIR)" ""
 
@@ -41,7 +47,7 @@ endif
 
 # --- FreeType 2 ---
 
-ifneq "$(FREETYPE_DIR)" ""
+ifneq "$(wildcard $(FREETYPE_DIR)/README)" ""
 CFLAGS += -I$(FREETYPE_DIR)/include
 LIBS := $(filter-out -lfreetype, $(LIBS))
 FREETYPE_LIB := $(OUT)/libfreetype.a
@@ -104,7 +110,7 @@ endif
 
 # --- JBIG2DEC ---
 
-ifneq "$(JBIG2DEC_DIR)" ""
+ifneq "$(wildcard $(JBIG2DEC_DIR)/README)" ""
 CFLAGS += -I$(JBIG2DEC_DIR)
 LIBS := $(filter-out -ljbig2dec, $(LIBS))
 JBIG2DEC_LIB := $(OUT)/libjbig2dec.a
@@ -133,7 +139,7 @@ endif
 
 # --- JPEG library from IJG ---
 
-ifneq "$(JPEG_DIR)" ""
+ifneq "$(wildcard $(JPEG_DIR)/README)" ""
 CFLAGS += -I$(JPEG_DIR)
 LIBS := $(filter-out -ljpeg, $(LIBS))
 JPEG_LIB := $(OUT)/libjpeg.a
@@ -178,8 +184,8 @@ endif
 
 # --- OpenJPEG ---
 
-ifneq "$(OPENJPEG_DIR)" ""
-CFLAGS += -I$(OPENJPEG_DIR)
+ifneq "$(wildcard $(OPENJPEG_DIR)/README)" ""
+CFLAGS += -I$(OPENJPEG_DIR)/libopenjpeg
 LIBS := $(filter-out -lopenjpeg, $(LIBS))
 OPENJPEG_LIB := $(OUT)/libopenjpeg.a
 
@@ -209,13 +215,13 @@ OPENJPEG_SRC := \
 	tpix_manager.c \
 
 $(OPENJPEG_LIB): $(addprefix $(OUT)/opj_, $(OPENJPEG_SRC:%.c=%.o))
-$(OUT)/opj_%.o: $(OPENJPEG_DIR)/%.c | $(OUT)
+$(OUT)/opj_%.o: $(OPENJPEG_DIR)/libopenjpeg/%.c | $(OUT)
 	$(CC_CMD) -DOPJ_STATIC
 endif
 
 # --- ZLIB ---
 
-ifneq "$(ZLIB_DIR)" ""
+ifneq "$(wildcard $(ZLIB_DIR)/README)" ""
 CFLAGS += -I$(ZLIB_DIR) -Dverbose=-1
 LIBS := $(filter-out -lz, $(LIBS))
 ZLIB_LIB := $(OUT)/libz.a

@@ -1,5 +1,6 @@
 package com.artifex.mupdf;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.PointF;
 import android.graphics.RectF;
 
@@ -79,12 +80,14 @@ public class MuPDFCore
 		destroying();
 	}
 
-	public synchronized void drawPage(int page, Bitmap bitmap,
+	public synchronized Bitmap drawPage(int page,
 			int pageW, int pageH,
 			int patchX, int patchY,
 			int patchW, int patchH) {
 		gotoPage(page);
-		drawPage(bitmap, pageW, pageH, patchX, patchY, patchW, patchH);
+		Bitmap bm = Bitmap.createBitmap(patchW, patchH, Config.ARGB_8888);
+		drawPage(bm, pageW, pageH, patchX, patchY, patchW, patchH);
+		return bm;
 	}
 
 	public synchronized int hitLinkPage(int page, float x, float y) {

@@ -28,7 +28,6 @@ public class ReaderView extends AdapterView<Adapter>
 
 	private static final int  FLING_MARGIN      = 100;
 	private static final int  GAP               = 20;
-	private static final int  SCROLL_SPEED      = 2;
 
 	private static final float MIN_SCALE        = 1.0f;
 	private static final float MAX_SCALE        = 5.0f;

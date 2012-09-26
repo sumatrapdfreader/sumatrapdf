@@ -29,8 +29,9 @@ static void pdfapp_warn(pdfapp_t *app, const char *fmt, ...)
 	char buf[1024];
 	va_list ap;
 	va_start(ap, fmt);
-	vsprintf(buf, fmt, ap);
+	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
+	buf[sizeof(buf)-1] = 0;
 	winwarn(app, buf);
 }
 
@@ -111,6 +112,45 @@ static void event_cb(fz_doc_event *event, void *data)
 		{
 			fz_alert_event *alert = fz_access_alert_event(event);
 			winalert(app, alert);
+		}
+		break;
+
+	case FZ_DOCUMENT_EVENT_PRINT:
+		winprint(app);
+		break;
+
+	case FZ_DOCUMENT_EVENT_EXEC_MENU_ITEM:
+		{
+			char *item = fz_access_exec_menu_item_event(event);
+
+			if (!strcmp(item, "Print"))
+				winprint(app);
+			else
+				pdfapp_warn(app, "The document attempted to execute menu item: %s. (Not supported)", item);
+		}
+		break;
+
+	case FZ_DOCUMENT_EVENT_EXEC_DIALOG:
+		pdfapp_warn(app, "The document attempted to open a dialog box. (Not supported)");
+		break;
+
+	case FZ_DOCUMENT_EVENT_LAUNCH_URL:
+		{
+			fz_launch_url_event *launch_url = fz_access_launch_url_event(event);
+
+			pdfapp_warn(app, "The document attempted to open url: %s. (Not supported by app)", launch_url->url);
+		}
+		break;
+
+	case FZ_DOCUMENT_EVENT_MAIL_DOC:
+		{
+			fz_mail_doc_event *mail_doc = fz_access_mail_doc_event(event);
+
+			pdfapp_warn(app, "The document attmepted to mail the document%s%s%s%s%s%s%s%s (Not supported)",
+				mail_doc->to[0]?", To: ":"", mail_doc->to,
+				mail_doc->cc[0]?", Cc: ":"", mail_doc->cc,
+				mail_doc->bcc[0]?", Bcc: ":"", mail_doc->bcc,
+				mail_doc->subject[0]?", Subject: ":"", mail_doc->subject);
 		}
 		break;
 	}

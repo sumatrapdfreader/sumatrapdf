@@ -164,6 +164,8 @@ public:
 			return JS_TYPE_NUMBER;
 		else if (pobj->IsArray())
 			return JS_TYPE_ARRAY;
+		else if (pobj->IsBoolean() || pobj->IsBooleanObject())
+			return JS_TYPE_BOOLEAN;
 		else
 			return JS_TYPE_UNKNOWN;
 	}

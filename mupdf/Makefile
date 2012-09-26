@@ -118,6 +118,7 @@ CMAP_KOREA_SRC := $(wildcard cmaps/korea/*)
 FONT_BASE14_SRC := $(wildcard fonts/*.cff)
 FONT_DROID_SRC := fonts/droid/DroidSans.ttf fonts/droid/DroidSansMono.ttf
 FONT_CJK_SRC := fonts/droid/DroidSansFallback.ttf
+FONT_CJK_FULL_SRC := fonts/droid/DroidSansFallbackFull.ttf
 JAVASCRIPT_SRC := pdf/pdf_util.js
 
 $(GEN)/cmap_cns.h : $(CMAP_CNS_SRC)
@@ -135,12 +136,14 @@ $(GEN)/font_droid.h : $(FONT_DROID_SRC)
 	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_DROID_SRC)
 $(GEN)/font_cjk.h : $(FONT_CJK_SRC)
 	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_CJK_SRC)
+$(GEN)/font_cjk_full.h : $(FONT_CJK_FULL_SRC)
+	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_CJK_FULL_SRC)
 
 $(GEN)/js_util.h : $(JAVASCRIPT_SRC)
 	$(QUIET_GEN) ./$(CQUOTE) $@ $(JAVASCRIPT_SRC)
 
 CMAP_HDR := $(addprefix $(GEN)/, cmap_cns.h cmap_gb.h cmap_japan.h cmap_korea.h)
-FONT_HDR := $(GEN)/font_base14.h $(GEN)/font_droid.h $(GEN)/font_cjk.h
+FONT_HDR := $(GEN)/font_base14.h $(GEN)/font_droid.h $(GEN)/font_cjk.h $(GEN)/font_cjk_full.h
 JAVASCRIPT_HDR := $(GEN)/js_util.h
 
 ifeq "$(CROSSCOMPILE)" ""

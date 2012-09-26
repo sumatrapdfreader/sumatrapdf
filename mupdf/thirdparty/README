@@ -1,0 +1,15 @@
+This directory holds third party libraries as git submodules.
+
+If the directories are empty, the makefile based build will try
+to use system libraries instead.
+
+To set up the third party modules for building from git:
+
+	$ git submodule init
+	$ git submodule update
+
+Then after each pull (to make sure they're up to date):
+
+	$ git submodule update
+
+Do NOT edit files in the submodule checkouts unless you know what you're doing.

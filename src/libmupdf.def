@@ -162,6 +162,9 @@ EXPORTS
 	fz_choice_widget_set_value
 	fz_set_doc_event_callback
 	fz_access_alert_event
+	fz_access_exec_menu_item_event
+	fz_access_launch_url_event
+	fz_access_mail_doc_event
 	fz_write_document
 
 	fz_clone_context_internal
@@ -619,6 +622,11 @@ EXPORTS
 	pdf_choice_widget_set_value
 	pdf_set_doc_event_callback
 	pdf_event_issue_alert
+	pdf_event_issue_print
+	pdf_event_issue_exec_menu_item
+	pdf_event_issue_exec_dialog
+	pdf_event_issue_launch_url
+	pdf_event_issue_mail_doc
 	pdf_new_js
 	pdf_drop_js
 	pdf_js_load_document_level

@@ -473,7 +473,8 @@ $(MUPDF_GEN_DIR)\font_droid.h:
 	cd $(MUPDF_DIR) && win32\generate.bat
 
 $(OP)\pdf_fontfile.obj: $(MUPDF_GEN_DIR) \
-	$(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_droid.h $(MUPDF_GEN_DIR)\font_cjk.h
+	$(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_droid.h \
+	$(MUPDF_GEN_DIR)\font_cjk.h $(MUPDF_GEN_DIR)\font_cjk_full.h
 
 $(OP)\pdf_cmap_tables.obj: $(MUPDF_GEN_DIR) \
 	$(MUPDF_GEN_DIR)\cmap_cns.h $(MUPDF_GEN_DIR)\cmap_gbs.h \

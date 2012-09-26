@@ -65,7 +65,10 @@ fz_resize_buffer(fz_context *ctx, fz_buffer *buf, int size)
 void
 fz_grow_buffer(fz_context *ctx, fz_buffer *buf)
 {
-	fz_resize_buffer(ctx, buf, (buf->cap * 3) / 2);
+	int newsize = (buf->cap * 3) / 2;
+	if (newsize == 0)
+		newsize = 256;
+	fz_resize_buffer(ctx, buf, newsize);
 }
 
 static void

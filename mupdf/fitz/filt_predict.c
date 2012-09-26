@@ -199,6 +199,15 @@ fz_open_predict(fz_stream *chain, int predictor, int columns, int colors, int bp
 
 	fz_var(state);
 
+	if (predictor < 1)
+		predictor = 1;
+	if (columns < 1)
+		columns = 1;
+	if (colors < 1)
+		colors = 1;
+	if (bpc < 1)
+		bpc = 8;
+
 	fz_try(ctx)
 	{
 		state = fz_malloc_struct(ctx, fz_predict);

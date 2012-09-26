@@ -25,9 +25,9 @@ public class MuPDFPageView extends PageView {
 	}
 
 	@Override
-	protected void drawPage(Bitmap bm, int sizeX, int sizeY,
+	protected Bitmap drawPage(int sizeX, int sizeY,
 			int patchX, int patchY, int patchWidth, int patchHeight) {
-		mCore.drawPage(mPageNumber, bm, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight);
+		return mCore.drawPage(mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight);
 	}
 
 	@Override

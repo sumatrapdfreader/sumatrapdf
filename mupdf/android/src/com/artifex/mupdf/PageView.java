@@ -8,8 +8,6 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Handler;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +19,8 @@ class PatchInfo {
 	public Point patchViewSize;
 	public Rect  patchArea;
 
-	public PatchInfo(Bitmap aBm, Point aPatchViewSize, Rect aPatchArea) {
-		bm = aBm;
+	public PatchInfo(Point aPatchViewSize, Rect aPatchArea) {
+		bm = null;
 		patchViewSize = aPatchViewSize;
 		patchArea = aPatchArea;
 	}
@@ -53,8 +51,8 @@ public abstract class PageView extends ViewGroup {
 	protected     float     mSourceScale;
 
 	private       ImageView mEntire; // Image rendered at minimum zoom
-	private       Bitmap    mEntireBm;
-	private       SafeAsyncTask<Void,Void,LinkInfo[]> mDrawEntire;
+	private       SafeAsyncTask<Void,Void,LinkInfo[]> mGetLinkInfo;
+	private       SafeAsyncTask<Void,Void,Bitmap> mDrawEntire;
 
 	private       Point     mPatchViewSize; // View size on the basis of which the patch was created
 	private       Rect      mPatchArea;
@@ -64,7 +62,6 @@ public abstract class PageView extends ViewGroup {
 	private       LinkInfo  mLinks[];
 	private       View      mSearchView;
 	private       boolean   mIsBlank;
-	private       boolean   mUsingHardwareAcceleration;
 	private       boolean   mHighlightLinks;
 
 	private       ProgressBar mBusyIndicator;
@@ -75,10 +72,9 @@ public abstract class PageView extends ViewGroup {
 		mContext    = c;
 		mParentSize = parentSize;
 		setBackgroundColor(BACKGROUND_COLOR);
-		mUsingHardwareAcceleration = Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB;
 	}
 
-	protected abstract void drawPage(Bitmap bm, int sizeX, int sizeY, int patchX, int patchY, int patchWidth, int patchHeight);
+	protected abstract Bitmap drawPage(int sizeX, int sizeY, int patchX, int patchY, int patchWidth, int patchHeight);
 	protected abstract LinkInfo[] getLinkInfo();
 
 	public void releaseResources() {
@@ -165,24 +161,26 @@ public abstract class PageView extends ViewGroup {
 		Point newSize = new Point((int)(size.x*mSourceScale), (int)(size.y*mSourceScale));
 		mSize = newSize;
 
-		if (mUsingHardwareAcceleration) {
-			// When hardware accelerated, updates to the bitmap seem to be
-			// ignored, so we recreate it. There may be another way around this
-			// that we are yet to find.
-			mEntire.setImageBitmap(null);
-			mEntireBm = null;
-		}
+		mEntire.setImageBitmap(null);
 
-		if (mEntireBm == null || mEntireBm.getWidth() != newSize.x
-				              || mEntireBm.getHeight() != newSize.y) {
-			mEntireBm = Bitmap.createBitmap(mSize.x, mSize.y, Bitmap.Config.ARGB_8888);
-		}
+		// Get the link info in the background
+		mGetLinkInfo = new SafeAsyncTask<Void,Void,LinkInfo[]>() {
+			protected LinkInfo[] doInBackground(Void... v) {
+				return getLinkInfo();
+			}
+
+			protected void onPostExecute(LinkInfo[] v) {
+				mLinks = v;
+				invalidate();
+			}
+		};
+
+		mGetLinkInfo.safeExecute();
 
 		// Render the page in the background
-		mDrawEntire = new SafeAsyncTask<Void,Void,LinkInfo[]>() {
-			protected LinkInfo[] doInBackground(Void... v) {
-				drawPage(mEntireBm, mSize.x, mSize.y, 0, 0, mSize.x, mSize.y);
-				return getLinkInfo();
+		mDrawEntire = new SafeAsyncTask<Void,Void,Bitmap>() {
+			protected Bitmap doInBackground(Void... v) {
+				return drawPage(mSize.x, mSize.y, 0, 0, mSize.x, mSize.y);
 			}
 
 			protected void onPreExecute() {
@@ -203,11 +201,10 @@ public abstract class PageView extends ViewGroup {
 				}
 			}
 
-			protected void onPostExecute(LinkInfo[] v) {
+			protected void onPostExecute(Bitmap bm) {
 				removeView(mBusyIndicator);
 				mBusyIndicator = null;
-				mEntire.setImageBitmap(mEntireBm);
-				mLinks = v;
+				mEntire.setImageBitmap(bm);
 				invalidate();
 			}
 		};
@@ -352,11 +349,9 @@ public abstract class PageView extends ViewGroup {
 				mSearchView.bringToFront();
 			}
 
-			Bitmap bm = Bitmap.createBitmap(patchArea.width(), patchArea.height(), Bitmap.Config.ARGB_8888);
-
 			mDrawPatch = new SafeAsyncTask<PatchInfo,Void,PatchInfo>() {
 				protected PatchInfo doInBackground(PatchInfo... v) {
-					drawPage(v[0].bm, v[0].patchViewSize.x, v[0].patchViewSize.y,
+					v[0].bm = drawPage(v[0].patchViewSize.x, v[0].patchViewSize.y,
 									  v[0].patchArea.left, v[0].patchArea.top,
 									  v[0].patchArea.width(), v[0].patchArea.height());
 					return v[0];
@@ -374,7 +369,7 @@ public abstract class PageView extends ViewGroup {
 				}
 			};
 
-			mDrawPatch.safeExecute(new PatchInfo(bm, patchViewSize, patchArea));
+			mDrawPatch.safeExecute(new PatchInfo(patchViewSize, patchArea));
 		}
 	}
 

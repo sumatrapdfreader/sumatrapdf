@@ -155,6 +155,11 @@ void winalert(pdfapp_t *app, fz_alert_event *alert)
 	}
 }
 
+void winprint(pdfapp_t *app)
+{
+	MessageBoxA(hwndframe, "The MuPDF library supports printing, but this application currently does not", "Print document", MB_ICONWARNING);
+}
+
 int winsavequery(pdfapp_t *app)
 {
 	switch(MessageBoxA(hwndframe, "File has unsaved changes. Do you want to save", "MuPDF", MB_YESNOCANCEL))

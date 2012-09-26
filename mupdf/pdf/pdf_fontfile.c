@@ -1,6 +1,20 @@
 #include "fitz-internal.h"
 #include "mupdf-internal.h"
 
+/*
+	Which fonts are embedded is based on a few preprocessor definitions.
+
+	The base 14 fonts are always embedded.
+	For font substitution we embed DroidSans which has good glyph coverage.
+	For CJK font substitution we embed DroidSansFallback.
+
+	Set NOCJK to skip all CJK support (this also omits embedding the CJK CMaps)
+	Set NOCJKFONT to skip the embedded CJK font.
+	Set NOCJKFULL to embed a smaller CJK font without CJK Extension A support.
+
+	Set NODROIDFONT to use the base 14 fonts as substitute fonts.
+*/
+
 #ifdef NOCJK
 #define NOCJKFONT
 #endif
@@ -12,7 +26,11 @@
 #endif
 
 #ifndef NOCJKFONT
+#ifndef NOCJKFULL
+#include "../generated/font_cjk_full.h"
+#else
 #include "../generated/font_cjk.h"
+#endif
 #endif
 
 unsigned char *
@@ -122,8 +140,13 @@ unsigned char *
 pdf_lookup_substitute_cjk_font(int ros, int serif, unsigned int *len)
 {
 #ifndef NOCJKFONT
+#ifndef NOCJKFULL
+	*len = sizeof pdf_font_DroidSansFallbackFull;
+	return (unsigned char*) pdf_font_DroidSansFallbackFull;
+#else
 	*len = sizeof pdf_font_DroidSansFallback;
 	return (unsigned char*) pdf_font_DroidSansFallback;
+#endif
 #else
 	*len = 0;
 	return NULL;
