@@ -203,15 +203,20 @@ FILETIME ZipFile::GetFileTime(size_t fileindex)
 
 char *ZipFile::GetComment(size_t *len)
 {
-    ScopedMem<char> comment(SAZA(char, commentLen + 1));
-    if (!comment || !uf)
+    if (!uf)
+        return NULL;
+    char *comment = (char *)Allocator::Alloc(allocator, commentLen + 1);
+    if (!comment)
         return NULL;
     int read = unzGetGlobalComment(uf, comment, commentLen);
-    if (read <= 0)
+    if (read <= 0) {
+        Allocator::Free(allocator, comment);
         return NULL;
+    }
+    comment[commentLen] = '\0';
     if (len)
         *len = commentLen;
-    return comment.StealData();
+    return comment;
 }
 
 bool ZipFile::UnzipFile(const TCHAR *filename, const TCHAR *dir, const TCHAR *unzippedName)

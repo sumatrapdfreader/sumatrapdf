@@ -33,6 +33,7 @@ public:
     FILETIME GetFileTime(const TCHAR *filename);
     FILETIME GetFileTime(size_t fileindex);
 
+    // caller must free() the result (or rather Allocator::Free it)
     char *GetComment(size_t *len=NULL);
 
     bool UnzipFile(const TCHAR *filename, const TCHAR *dir, const TCHAR *unzippedName=NULL);
