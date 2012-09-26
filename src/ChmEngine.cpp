@@ -24,10 +24,26 @@ static bool IsExternalUrl(const TCHAR *url)
            str::StartsWithI(url, _T("mailto:"));
 }
 
+// from EpubDoc.cpp
+static void UrlDecode(TCHAR *url)
+{
+    for (TCHAR *src = url; *src; src++, url++) {
+        int val;
+        if (*src == '%' && str::Parse(src, _T("%%%2x"), &val)) {
+            *url = (char)val;
+            src += 2;
+        } else {
+            *url = *src;
+        }
+    }
+    *url = '\0';
+}
+
 static TCHAR *ToPlainUrl(const TCHAR *url)
 {
     TCHAR *plainUrl = str::Dup(url);
     str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
+    UrlDecode(plainUrl);
     return plainUrl;
 }
 
