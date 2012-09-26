@@ -50,7 +50,7 @@ ucrt           src/ucrt/AUTHORS          BSD  http://code.google.com/p/sumatrapd
 msinttypes     src/utils/inttypes.h      BSD  http://code.google.com/p/msinttypes/
 
 CMap Resources mupdf/cmaps/README             http://sourceforge.net/adobe/cmap/home/Home/
-PolarSSL       mupdf/fitz/crypt_aes.c    GPL  http://polarssl.org/
+XySSL          mupdf/fitz/crypt_aes.c    BSD  http://en.wikipedia.org/wiki/PolarSSL#History
 Arcfour        mupdf/fitz/crypt_arc4.c        http://tools.ietf.org/html/draft-kaukonen-cipher-arcfour-01
 RSA's MD5      mupdf/fitz/crypt_md5.c         http://tools.ietf.org/html/rfc1321
 Android        mupdf/fonts/droid/NOTICE  APL  http://www.droidfonts.com/
