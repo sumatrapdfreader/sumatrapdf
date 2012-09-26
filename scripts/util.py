@@ -1,11 +1,5 @@
-import os.path
-import re
-import shutil
-import struct
-import subprocess
-import sys
+import os.path, re, shutil, struct, subprocess, sys, bz2
 import zipfile2 as zipfile
-import bz2
 
 def import_boto():
   global Key, S3Connection, bucket_lister, awscreds
