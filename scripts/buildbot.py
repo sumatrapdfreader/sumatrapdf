@@ -75,11 +75,11 @@ def htmlize_error_lines(lines):
 		src = l[:err_start]
 		msg = l[err_start + 3:]
 		a = htmlize_src_link(src)
-		s = a + ":\n" + msg
+		s = a + " " + msg
 		res.append(s)
 	return res
 
-def pre(s): return "<pre>" + s + "</pre>"
+def pre(s): return '<pre style="white-space: pre-wrap;">' + s + '</pre>'
 
 def gen_errors_html(errors, ver):
 	s = "<html><body>"
