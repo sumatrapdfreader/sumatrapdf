@@ -105,6 +105,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\CmdLineParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\CmdLineParser.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\HtmlParserLookup.cpp"
 					>
 				</File>
@@ -262,10 +270,6 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\BitManip.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\utils\CmdLineParser.h"
 					>
 				</File>
 				<File

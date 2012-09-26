@@ -61,6 +61,7 @@ EXPORTS
 	inflate
 	inflateEnd
 	deflateInit_
+	deflateInit2_
 	deflate
 	deflateEnd
 	compress

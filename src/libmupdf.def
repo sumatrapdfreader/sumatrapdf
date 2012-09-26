@@ -745,4 +745,3 @@ EXPORTS
 	compress
 	compressBound
 	crc32
-	get_crc_table
