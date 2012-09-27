@@ -55,6 +55,16 @@ struct PrintData {
     }
 };
 
+static RectD BoundSelectionOnPage(Vec<SelectionOnPage>& sel, int pageNo)
+{
+    RectD bounds;
+    for (size_t i = 0; i < sel.Count(); i++) {
+        if (sel.At(i).pageNo == pageNo)
+            bounds = bounds.Union(sel.At(i).rect);
+    }
+    return bounds;
+}
+
 static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool *abortCookie=NULL)
 {
     assert(pd.engine);
@@ -75,13 +85,20 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
         di.lpszDocName = engine.FileName();
 
     int current = 1, total = 0;
-    for (size_t i = 0; i < pd.ranges.Count(); i++) {
-        if (pd.ranges.At(i).nToPage < pd.ranges.At(i).nFromPage)
-            total += pd.ranges.At(i).nFromPage - pd.ranges.At(i).nToPage + 1;
-        else
-            total += pd.ranges.At(i).nToPage - pd.ranges.At(i).nFromPage + 1;
+    if (pd.sel.Count() == 0) {
+        for (size_t i = 0; i < pd.ranges.Count(); i++) {
+            if (pd.ranges.At(i).nToPage < pd.ranges.At(i).nFromPage)
+                total += pd.ranges.At(i).nFromPage - pd.ranges.At(i).nToPage + 1;
+            else
+                total += pd.ranges.At(i).nToPage - pd.ranges.At(i).nFromPage + 1;
+        }
     }
-    total += (int)pd.sel.Count();
+    else {
+        for (int pageNo = 1; pageNo < engine.PageCount(); pageNo++) {
+            if (!BoundSelectionOnPage(pd.sel, pageNo).IsEmpty())
+                total++;
+        }
+    }
     if (progressUI)
         progressUI->UpdateProgress(current, total);
 
@@ -113,16 +130,19 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
         bPrintPortrait = DMORIENT_PORTRAIT == pd.orientation;
 
     if (pd.sel.Count() > 0) {
-        for (size_t i = 0; i < pd.sel.Count(); i++) {
+        for (int pageNo = 1; pageNo < engine.PageCount(); pageNo++) {
+            RectD bounds = BoundSelectionOnPage(pd.sel, pageNo);
+            if (bounds.IsEmpty())
+                continue;
+
             if (progressUI)
                 progressUI->UpdateProgress(current, total);
 
             StartPage(hdc);
-            RectD *clipRegion = &pd.sel.At(i).rect;
 
-            SizeT<float> sSize = clipRegion->Size().Convert<float>();
-            float zoom = min((float)printableWidth / sSize.dx,
-                             (float)printableHeight / sSize.dy);
+            SizeT<float> bSize = bounds.Size().Convert<float>();
+            float zoom = min((float)printableWidth / bSize.dx,
+                             (float)printableHeight / bSize.dy);
             // use the correct zoom values, if the page fits otherwise
             // and the user didn't ask for anything else (default setting)
             if (PrintScaleShrink == pd.scaleAdv)
@@ -130,29 +150,36 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
             else if (PrintScaleNone == pd.scaleAdv)
                 zoom = dpiFactor;
 
-            if (!pd.printAsImage) {
-                RectI rc = RectI::FromXY((int)(printableWidth - sSize.dx * zoom) / 2,
-                                         (int)(printableHeight - sSize.dy * zoom) / 2,
-                                         paperWidth, paperHeight);
-                engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie);
-            }
-            else {
-                RenderedBitmap *bmp = NULL;
-                short shrink = 1;
-                while (!bmp && shrink < 32) {
-                    bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie);
-                    if (!bmp || !bmp->GetBitmap()) {
-                        shrink *= 2;
-                        delete bmp;
-                        bmp = NULL;
-                    }
+            for (size_t i = 0; i < pd.sel.Count(); i++) {
+                if (pd.sel.At(i).pageNo != pageNo)
+                    continue;
+
+                RectD *clipRegion = &pd.sel.At(i).rect;
+                PointI offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
+                if (!pd.printAsImage) {
+                    RectI rc((int)(printableWidth - bSize.dx * zoom) / 2 + offset.x,
+                             (int)(printableHeight - bSize.dy * zoom) / 2 + offset.y,
+                             (int)(clipRegion->dx * zoom), (int)(clipRegion->dy * zoom));
+                    engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie);
                 }
-                if (bmp) {
-                    RectI rc((paperWidth - bmp->Size().dx * shrink) / 2,
-                             (paperHeight - bmp->Size().dy * shrink) / 2,
-                             bmp->Size().dx * shrink, bmp->Size().dy * shrink);
-                    bmp->StretchDIBits(hdc, rc);
-                    delete bmp;
+                else {
+                    RenderedBitmap *bmp = NULL;
+                    short shrink = 1;
+                    while (!bmp && shrink < 32) {
+                        bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie);
+                        if (!bmp || !bmp->GetBitmap()) {
+                            shrink *= 2;
+                            delete bmp;
+                            bmp = NULL;
+                        }
+                    }
+                    if (bmp) {
+                        RectI rc((int)(paperWidth - bSize.dx * zoom) / 2 + offset.x,
+                                 (int)(paperHeight - bSize.dy * zoom) / 2 + offset.y,
+                                 bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                        bmp->StretchDIBits(hdc, rc);
+                        delete bmp;
+                    }
                 }
             }
 
