@@ -144,11 +144,10 @@ def build_index_html():
 	html = "<html><body>\n"
 	html += "<p>SumatraPDF buildbot results:</p>\n"
 	html += "<ul>\n"
-	keys = s3List(s3_dir)
-	for k in keys:
-		#print(k.name)
-		name = k.name[len(s3_dir):]
-		print(name)
+	names = [k.name[len(s3_dir):] for k in s3List(s3_dir) if k.name.endswith("/analyze.html")]
+	names.sort(reverse=True, key=lambda name: int(name.split("/")[0]))
+	print(names)
+	for name in names:
 		if name.endswith("/analyze.html"):
 			parts = name.split("/")
 			ver = parts[0]
@@ -255,6 +254,8 @@ def main():
 	src_path = os.path.join("..", "sumatrapdf_buildbot")
 	ensure_path_exists(src_path)
 	os.chdir(src_path)
+
+	#build_index_html()
 	buildbot_loop()
 
 if __name__ == "__main__":
