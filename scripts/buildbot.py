@@ -8,6 +8,9 @@ from util import log, run_cmd_throw, run_cmd, test_for_flag, s3UploadFilePublic
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists
 from util import parse_svninfo_out, s3List, s3Delete, verify_started_in_right_directory
 
+def file_size(p):
+  return os.path.getsize(p)
+
 def skip_error(s):
 	if "C2220" in s: return True # warning treated as error
 	return False
@@ -86,31 +89,70 @@ def gen_errors_html(errors, ver):
 	s += "</body></html>"
 	return s
 
-class Stats:
+def str2bool(s): 
+	if s.lower() in ("true", "1"): return True
+	if s.lower() in ("false", "0"): return False
+	assert(False)
+
+def test_ser():
+	stats = Stats()
+	print stats.to_s()
+
+class Stats(object):
+	int_fields = ("analyze_warnings_count", "release_sumatrapdf_exe_size", "release_sumatrapdf_no_mupdf_exe_size",
+		"release_installer_exe_size", "release_libmupdf_dll_size", "release_nppdfviewer_dll_size",
+		"release_pdffilter_dll_size", "release_pdfpreview_dll_size")
+	bool_fields = ("release_failed")
 	def __init__(self):
 		# serialized to stats.txt
 		self.analyze_warnings_count = 0
 		self.release_failed = False
+		self.release_sumatrapdf_exe_size = 0
+		self.release_sumatrapdf_no_mupdf_exe_size = 0
+		self.release_installer_exe_size = 0
+		self.release_libmupdf_dll_size = 0
+		self.release_nppdfviewer_dll_size = 0
+		self.release_pdffilter_dll_size = 0
+		self.release_pdfpreview_dll_size = 0
 
-		# just for passing info
+		# just for passing data aroun
 		self.analyze_out = None
 		self.release_build_log = None
 
-	def add_field(self, name, val):
+	def add_field(self, name):
+		val = self.__getattribute__ (name)
 		self.fields.append("%s: %s" % (name, str(val)))
 
 	def to_s(self):
 		self.fields = []
-		self.add_field("AnalyzeWarningsCount", self.analyze_warnings_count)
+		self.add_field("analyze_warnings_count")
+		self.add_field("release_failed")
+		if not self.release_failed:
+			for f in ("release_sumatrapdf_exe_size", "release_sumatrapdf_no_mupdf_exe_size",
+		"release_installer_exe_size", "release_libmupdf_dll_size", "release_nppdfviewer_dll_size",
+		"release_pdffilter_dll_size", "release_pdfpreview_dll_size"):
+				self.add_field(f)
 		return string.join(self.fields, "\n")
+
+	def set_field(self, name, val, tp):
+		if tp in ("str", "string"):
+			self.__setattr__(name, val)
+			return
+		if tp == "bool":
+			self.__setattr__(name, str2bool(val))
+			return
+		if tp in ("int", "num"):
+			self.__setattr__(name, int(val))
+			return
+		assert(False)
 
 	def from_s(self):
 		lines = s.split("\n")
 		for l in lines:
 			(name, val) = l.split(": ", 1)
-			# TODO: set value based on a name
-			if name == "AnalyzeWarningsCount":
-				self.analyze_warnings_count = int(val)
+			if name in int_fields: self.set_field(name, val, "int")
+			elif name in bool_fields: self.set_field(name, val, "bool")
+			else: assert(False)
 
 def get_cache_dir():
 	cache_dir = os.path.join("..", "sumatrapdfcache", "buildbot")
@@ -135,6 +177,28 @@ def has_already_been_built(ver):
 		if k.name == expected_name: return True
 	return False
 
+# given a list of files from s3 in the form ${ver}/${name}, group them
+# into a list of lists, [[${ver}, [${name1}, ${name2}]], ${ver2}, [${name1}]] etc.
+# we rely that the files are already sorted by ${ver}
+def group_by_ver(files):
+	res = []
+	curr_ver = None
+	curr_ver_names = []
+	for f in files:
+		(ver, name) = f.split("/", 1)
+		if ver == curr_ver:
+			curr_ver_names  
+		else:
+			if curr_ver != None:
+				assert(len(curr_ver_names) > 0)
+				res.append([curr_ver, curr_ver_names])
+			curr_ver = ver
+			curr_ver_names = [name]
+	if curr_ver != None:
+		assert(len(curr_ver_names) > 0)
+		res.append([curr_ver, curr_ver_names])
+	return res	
+
 # build sumatrapdf/buildbot/index.html summary page that links to each 
 # sumatrapdf/buildbot/${ver}/analyze.html
 # TODO: download stats.txt files locally
@@ -146,13 +210,16 @@ def build_index_html():
 	html += "<ul>\n"
 	names = [k.name[len(s3_dir):] for k in s3List(s3_dir) if k.name.endswith("/analyze.html")]
 	names.sort(reverse=True, key=lambda name: int(name.split("/")[0]))
-	print(names)
-	for name in names:
-		if name.endswith("/analyze.html"):
-			parts = name.split("/")
-			ver = parts[0]
-			url = "http://kjkpub.s3.amazonaws.com/" + s3_dir + name
-			html += "  <li>Build " + a(url, ver) + "</li>\n"
+	#print(names)
+	# TODO: this should be a table
+	# TODO: fail/ok for release build, link to build log if failed
+	# TODO: number of analyze warning
+	files_by_ver = group_by_ver(names)
+	for arr in files_by_ver:
+		(ver, files) = arr
+		assert("analyze.html" in files)
+		url = "http://kjkpub.s3.amazonaws.com/" + s3_dir + "analyze.html"
+		html += "  <li>Build " + a(url, ver) + "</li>\n"
 	html += "</ul>\n"
 	html += "</body></html>\n"
 	#print(html)
@@ -173,13 +240,13 @@ def build_release(stats, ver):
 		stats.release_build_log = out
 		stats.release_failed = True
 		return
-	# TODO: remember:
-	#stats.release_sumatrapdf_exe_size
-	#stats.release_installer_exe_size
-	#stats.release_libmupdf_dll_size
-	#stats.release_nppdfviewer_dll_size
-	#stats.release_pdffilter_dll_size
-	#stats.release_pdfpreview_dll_size
+	stats.release_sumatrapdf_exe_size = file_size(os.path.join(obj_dir), "SumatraPDF.exe")
+	stats.release_sumatrapdf_no_mupdf_exe_size = file_size(os.path.join(obj_dir), "SumatraPDF-no-MuPDF.exe")
+	stats.release_installer_exe_size = file_size(os.path.join(obj_dir), "Installer.exe")
+	stats.release_libmupdf_dll_size = file_size(os.path.join(obj_dir), "libmupdf.dll")
+	stats.release_nppdfviewer_dll_size = file_size(os.path.join(obj_dir), "npPdfViewer.dll")
+	stats.release_pdffilter_dll_size = file_size(os.path.join(obj_dir), "PdfFilter.dll")
+	stats.release_pdfpreview_dll_size = file_size(os.path.join(obj_dir), "PdfPreview.dll")
 
 def build_analyze(stats, ver):
 	config = "CFG=rel"
@@ -206,7 +273,7 @@ def svn_update_to_ver(ver):
 	run_cmd_throw("svn", "update", "-r" + ver)
 	rebuild_trans_src_path_cache()
 
-# TODO: more build types (regular 32bit release and debug, 64bit?)
+# TODO: maybe add debug build and 64bit release?
 def build_version(ver):
 	print("Building version %s" % ver)
 	svn_update_to_ver(ver)
@@ -218,22 +285,34 @@ def build_version(ver):
 	dur = datetime.datetime.now() - start_time
 	print("%s for analyze build" % str(dur))
 
-	#start_time = datetime.datetime.now()
-	#build_release(stats, ver)
-	#dur = datetime.datetime.now() - start_time
-	#print("%s for release build" % str(dur))
+	start_time = datetime.datetime.now()
+	build_release(stats, ver)
+	dur = datetime.datetime.now() - start_time
+	print("%s for release build" % str(dur))
 
-	out = stats.analyze_out
-	errors = htmlize_error_lines(extract_compile_errors(out))
+	errors = htmlize_error_lines(extract_compile_errors(stats.analyze_out))
 	html = gen_errors_html(errors, ver)
 	stats.analyze_warnings_count = len(errors)
 	stats_txt = stats.to_s()
+
 	s3dir = "sumatrapdf/buildbot/%s/" % ver
+
 	s3UploadDataPublicWithContentType(html, s3dir + "analyze.html")
 	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt")
 
+	if stats.release_failed:
+		s3UploadDataPublicWithContentType(stats.release_build_log, s3dir + "release_build_log.txt")
+
 	build_index_html()
 
+# for testing
+def build_curr():
+	(local_ver, latest_ver) = get_svn_versions()
+	print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
+	if not has_already_been_built(local_ver):
+		build_version(local_ver)
+	else:
+		print("We have already built revision %s" % local_ver)
 
 def buildbot_loop():
 	while True:
@@ -256,6 +335,7 @@ def main():
 	os.chdir(src_path)
 
 	#build_index_html()
+	#build_curr()
 	buildbot_loop()
 
 if __name__ == "__main__":
