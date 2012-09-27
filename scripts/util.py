@@ -72,33 +72,29 @@ def ul_cb(sofar, total):
 
 def s3UploadFilePublic(local_file_name, remote_file_name):
   log("s3 upload '%s' as '%s'" % (local_file_name, remote_file_name))
-  bucket = s3PubBucket()
-  k = Key(bucket)
-  k.key = remote_file_name
+  k = s3PubBucket().new_key(remote_file_name)
   k.set_contents_from_filename(local_file_name, cb=ul_cb)
   k.make_public()
 
 def s3UploadDataPublic(data, remote_file_name):
   log("s3 upload data as '%s'" % remote_file_name)
-  bucket = s3PubBucket()
-  k = Key(bucket)
-  k.key = remote_file_name
+  k = s3PubBucket().new_key(remote_file_name)
   k.set_contents_from_string(data)
   k.make_public()
 
 def s3List(s3dir):
-  bucket = s3PubBucket()
-  return bucket_lister(bucket, s3dir)
+  b = s3PubBucket()
+  return bucket_lister(b, s3dir)
 
 def s3Delete(s3Name):
   log("s3 delete '%s'" % s3Name)
-  bucket = s3PubBucket()
-  k = Key(bucket, s3Name)
+  b = s3PubBucket()
+  k = Key(b, s3Name)
   k.delete()
   
 def ensure_s3_doesnt_exist(remote_file_path):
-  bucket = s3PubBucket()
-  if not bucket.get_key(remote_file_path):
+  b = s3PubBucket()
+  if not b.get_key(remote_file_path):
     return
   print("'%s' already exists on s3" % remote_file_path)
   sys.exit(1)

@@ -5,7 +5,7 @@ import os, os.path, shutil, sys, time, re, string
 
 from util import log, run_cmd_throw, run_cmd, test_for_flag, s3UploadFilePublic
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists
-from util import parse_svninfo_out, s3List, s3Delete
+from util import parse_svninfo_out, s3List, s3Delete, verify_started_in_right_directory
 
 def skip_error(s):
 	if "C2220" in s: return True # warning treated as error
@@ -47,6 +47,8 @@ def get_src_trans_map():
 def trans_src_path(s):
 	return get_src_trans_map()[s]
 
+def a(url, txt): return '<a href="' + url + '">' + txt + '</a>'
+
 # Turn:
 # src\utils\allocator.h(156)
 # Into:
@@ -57,8 +59,8 @@ def htmlize_src_link(s):
 	src_path = trans_src_path(src_path) # src\utils\Allocator.h
 	src_path_in_url = src_path.replace("\\", "/")
 	src_line = parts[1][:-1] # "156)"" => "156"
-	href = "https://code.google.com/p/sumatrapdf/source/browse/trunk/" + src_path_in_url + "#" + src_line
-	return '<a href="' + href + '">' + src_path + "(" + src_line + ")" + '</a>'
+	url = "https://code.google.com/p/sumatrapdf/source/browse/trunk/" + src_path_in_url + "#" + src_line
+	return a(url, src_path + "(" + src_line + ")")
 
 # Turn:
 # c:\users\kkowalczyk\src\sumatrapdf\src\utils\allocator.h(156) : warning C6011: Dereferencing NULL pointer 'node'. : Lines: 149, 150, 151, 153, 154, 156
@@ -89,22 +91,67 @@ def gen_errors_html(errors, ver):
 	s += "</body></html>"
 	return s
 
-def test_extract_compile_errors():
-	s = open("analyze-6665-out.txt").read()
-	errors = extract_compile_errors(s)
-	errors = htmlize_error_lines(errors)
-	html = gen_errors_html(errors, "6665")
-	open("analyze.html", "w").write(html)
+class Stats:
+	def __init__(self):
+		self.analyze_warnings_count = 0
+		self.analyze_out = None
 
-# TODO: do this in a loop, wake up every 1hr, update svn to see if there were changes
-# and if there were, do the build
-# TODO: more build types (regular 32bit release and debug, 64bit?)
-def main():
-	(out, err) = run_cmd_throw("svn", "info")
-	ver = str(parse_svninfo_out(out))
-	# TODO: check if results of this already exist on s3, abort if they do
-	print("Building revision %s" % ver)
+	def add_field(self, name, val):
+		self.fields.append("%s: %s" % (name, str(val)))
 
+	def to_s(self):
+		self.fields = []
+		self.add_field("AnalyzeWarningsCount", self.analyze_warnings_count)
+		return string.join(self.fields, "\n")
+
+def get_cache_dir():
+	cache_dir = os.path.join("..", "sumatrapdfcache", "buildbot")
+	if not os.path.exists(cache_dir): os.makedirs(cache_dir)
+	return cache_dir
+
+def s3UploadDataPublicWithContentType(data, s3_path):
+	# writing to a file to force boto to set Content-Type based on file extension.
+	# TODO: there must be a simpler way
+	tmp_name = os.path.basename(s3_path)
+	tmp_path = os.path.join(get_cache_dir(), tmp_name)
+	open(tmp_path, "w").write(data)
+	s3UploadFilePublic(tmp_path, s3_path)
+	os.remove(tmp_path)
+
+# return true if we already have results for a given build number in s3
+def has_already_been_built(ver):
+	s3_dir = "sumatrapdf/buildbot/"
+	expected_name = s3_dir + ver + "/analyze.html"
+	keys = s3List(s3_dir)
+	for k in keys:
+		if k.name == expected_name: return True
+	return False
+
+# build sumatrapdf/buildbot/index.html summary page that links to each 
+# sumatrapdf/buildbot/${ver}/analyze.html
+# TODO: download stats.txt files locally
+# TODO: add summary stats from stats.txt
+def build_index_html():
+	s3_dir = "sumatrapdf/buildbot/"
+	html = "<html><body>\n"
+	html += "<p>SumatraPDF buildbot results:</p>\n"
+	html += "<ul>\n"
+	keys = s3List(s3_dir)
+	for k in keys:
+		#print(k.name)
+		name = k.name[len(s3_dir):]
+		print(name)
+		if name.endswith("/analyze.html"):
+			parts = name.split("/")
+			ver = parts[0]
+			url = "http://kjkpub.s3.amazonaws.com/" + s3_dir + name
+			html += "  <li>Build " + a(url, ver) + "</li>\n"
+	html += "</ul>\n"
+	html += "</body></html>\n"
+	#print(html)
+	s3UploadDataPublicWithContentType(html, "sumatrapdf/buildbot/index.html")
+
+def build_analyze(stats, ver):
 	config = "CFG=rel"
 	obj_dir = "obj-rel"
 	shutil.rmtree(obj_dir, ignore_errors=True)
@@ -114,20 +161,38 @@ def main():
 	# disable ucrt because vs2012 doesn't support it and I give it priority
 	# over 2010 (if both installed) hoping it has better /analyze
 	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_SUM_ANALYZE=yes", "WITH_UCRT=no", config, extcflags, platform, "all_sumatrapdf")
-	open("analyze-%s-out.txt" % ver, "w").write(out)
-	open("analyze-%s-err.txt" % ver, "w").write(err)
+	stats.analyze_out = out
 
-	errors = extract_compile_errors(out)
-	errors = htmlize_error_lines(errors)
+# TODO: more build types (regular 32bit release and debug, 64bit?)
+def build_curr_version():
+	(out, err) = run_cmd_throw("svn", "info")
+	ver = str(parse_svninfo_out(out))
+	if has_already_been_built(ver):
+		print("We have already built revision %s" % ver)
+		return
+	print("Building revision %s" % ver)
+
+	stats = Stats()
+	build_analyze(stats, ver)
+
+	out = stats.analyze_out
+	errors = htmlize_error_lines(extract_compile_errors(out))
 	html = gen_errors_html(errors, ver)
+	stats.analyze_warnings_count = len(errors)
+	stats_txt = stats.to_s()
+	s3dir = "sumatrapdf/buildbot/%s/" % ver
+	s3UploadDataPublicWithContentType(html, s3dir + "analyze.html")
+	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt")
+	build_index_html()
 
-	# TODO:
-	# - generate analyze.json with basic stats (how many analyze errors)
-	# - upload html and json to s3 kjkpub bucket /sumatrapdf/buildbot/${ver}/analyze.html and analyze.json
-	# - generate /sumatrapdf/buildbot/index.html that links to all ${ver}/analyze.html and shows the summary
-	#   it gets from all ${ver}/analyze.json
+# TODO: do this in a loop, wake up every 1hr, update svn to see if there were changes
+# and if there were, do the build
+def buildbot_loop():
+	build_curr_version()
+
+def main():
+	verify_started_in_right_directory()
+	buildbot_loop()
 
 if __name__ == "__main__":
-	test_extract_compile_errors()
-	sys.exit(1)
 	main()
