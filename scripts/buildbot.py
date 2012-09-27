@@ -1,5 +1,6 @@
 """
-Builds Sumatra with /analyze flag and upload results to s3 for easy analysis.
+Builds sumatra and uploads results to s3 for easy analysis, viewable at:
+http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
 import os, os.path, shutil, sys, time, re, string
 
@@ -163,15 +164,21 @@ def build_analyze(stats, ver):
 	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_SUM_ANALYZE=yes", "WITH_UCRT=no", config, extcflags, platform, "all_sumatrapdf")
 	stats.analyze_out = out
 
-# TODO: more build types (regular 32bit release and debug, 64bit?)
-def build_curr_version():
+# returns local and latest (on the server) svn versions
+def get_svn_versions():
 	(out, err) = run_cmd_throw("svn", "info")
-	ver = str(parse_svninfo_out(out))
-	if has_already_been_built(ver):
-		print("We have already built revision %s" % ver)
-		return
-	print("Building revision %s" % ver)
+	ver_local = str(parse_svninfo_out(out))
+	(out, err) = run_cmd_throw("svn", "info", "https://sumatrapdf.googlecode.com/svn/trunk")
+	ver_latest = str(parse_svninfo_out(out))
+	return ver_local, ver_latest
 
+def svn_update_to_ver(ver):
+	run_cmd_throw("svn", "update", "-r" + ver)
+
+# TODO: more build types (regular 32bit release and debug, 64bit?)
+def build_version(ver):
+	print("Building version %s" % ver)
+	svn_update_to_ver(ver)
 	stats = Stats()
 	build_analyze(stats, ver)
 
@@ -183,15 +190,28 @@ def build_curr_version():
 	s3dir = "sumatrapdf/buildbot/%s/" % ver
 	s3UploadDataPublicWithContentType(html, s3dir + "analyze.html")
 	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt")
+
 	build_index_html()
 
-# TODO: do this in a loop, wake up every 1hr, update svn to see if there were changes
-# and if there were, do the build
 def buildbot_loop():
-	build_curr_version()
+	while True:
+		(local_ver, latest_ver) = get_svn_versions()
+		print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
+		while int(local_ver) < int(latest_ver):
+			if not has_already_been_built(local_ver):
+				build_version(local_ver)
+			else:
+				print("We have already built revision %s" % local_ver)
+			local_ver = str(int(local_ver)+1)
+		print("Sleeping for 15 minutes")
+		time.sleep(60*15) # 15 mins
 
 def main():
 	verify_started_in_right_directory()
+	# to avoid problems, we build a separate source tree, just for the buildbot
+	src_path = os.path.join("..", "sumatrapdf_buildbot")
+	ensure_path_exists(src_path)
+	os.chdir(src_path)
 	buildbot_loop()
 
 if __name__ == "__main__":
