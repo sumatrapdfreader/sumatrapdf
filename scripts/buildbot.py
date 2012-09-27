@@ -2,7 +2,7 @@
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
-import os, os.path, shutil, sys, time, re, string
+import os, os.path, shutil, sys, time, re, string, datetime
 
 from util import log, run_cmd_throw, run_cmd, test_for_flag, s3UploadFilePublic
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists
@@ -22,31 +22,23 @@ def extract_compile_errors(s):
 				errors.append(l)
 	return errors
 
-g_src_files = None
-def get_src_files():
-	global g_src_files
-	if g_src_files is not None: return g_src_files
-	g_src_files = []
+g_src_trans_map = None
+def rebuild_trans_src_path_cache():
+	global g_src_trans_map
+	g_src_trans_map = {}
 	for root, dirs, files in os.walk("src"):
 		for file in files:
 			file_path = os.path.join(root, file)
-			g_src_files.append(file_path)
-	return g_src_files
-
-g_src_trans_map = None
-def get_src_trans_map():
-	global g_src_trans_map
-	if g_src_trans_map is not None: return g_src_trans_map
-	g_src_trans_map = {}
-	for f in get_src_files():
-		g_src_trans_map[f.lower()] = f
-	return g_src_trans_map
+			g_src_trans_map[file_path.lower()] = file_path
 
 # for some reason file names are lower-cased and the url has exact case
 # we need to convert src_path to have the exact case for urls to work
 # i.e. given "src\doc.h" we need to return "src\Doc.h"
 def trans_src_path(s):
-	return get_src_trans_map()[s]
+	if s not in g_src_trans_map:
+		print("%s not in g_src_trans_map" % s)
+		print(g_src_trans_map.keys())
+	return g_src_trans_map[s]
 
 def a(url, txt): return '<a href="' + url + '">' + txt + '</a>'
 
@@ -71,7 +63,9 @@ def htmlize_src_link(s):
 def htmlize_error_lines(lines):
 	if len(lines) == 0: return []
 	res = []
-	rel_path_start = lines[0].find("sumatrapdf\\") + len("sumatrapdf\\")
+	# TODO: would be nicer if "sumatrapdf_buildbot" wasn't hard-coded, but don't know
+	# how to get this reliably
+	rel_path_start = lines[0].find("sumatrapdf_buildbot\\") + len("sumatrapdf_buildbot\\")
 	for l in lines:
 		l = l[rel_path_start:]
 		err_start = l.find(" : ")
@@ -94,8 +88,13 @@ def gen_errors_html(errors, ver):
 
 class Stats:
 	def __init__(self):
+		# serialized to stats.txt
 		self.analyze_warnings_count = 0
+		self.release_failed = False
+
+		# just for passing info
 		self.analyze_out = None
+		self.release_build_log = None
 
 	def add_field(self, name, val):
 		self.fields.append("%s: %s" % (name, str(val)))
@@ -104,6 +103,14 @@ class Stats:
 		self.fields = []
 		self.add_field("AnalyzeWarningsCount", self.analyze_warnings_count)
 		return string.join(self.fields, "\n")
+
+	def from_s(self):
+		lines = s.split("\n")
+		for l in lines:
+			(name, val) = l.split(": ", 1)
+			# TODO: set value based on a name
+			if name == "AnalyzeWarningsCount":
+				self.analyze_warnings_count = int(val)
 
 def get_cache_dir():
 	cache_dir = os.path.join("..", "sumatrapdfcache", "buildbot")
@@ -152,13 +159,37 @@ def build_index_html():
 	#print(html)
 	s3UploadDataPublicWithContentType(html, "sumatrapdf/buildbot/index.html")
 
-def build_analyze(stats, ver):
+def build_release(stats, ver):
 	config = "CFG=rel"
 	obj_dir = "obj-rel"
-	shutil.rmtree(obj_dir, ignore_errors=True)
 	extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
 	platform = "PLATFORM=X86"
 
+	shutil.rmtree(obj_dir, ignore_errors=True)
+	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
+	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
+	stats.release_build_log = None
+	stats.release_failed = False
+	if errcode != 0:
+		stats.release_build_log = out
+		stats.release_failed = True
+		return
+	# TODO: remember:
+	#stats.release_sumatrapdf_exe_size
+	#stats.release_installer_exe_size
+	#stats.release_libmupdf_dll_size
+	#stats.release_nppdfviewer_dll_size
+	#stats.release_pdffilter_dll_size
+	#stats.release_pdfpreview_dll_size
+
+def build_analyze(stats, ver):
+	config = "CFG=rel"
+	obj_dir = "obj-rel"
+	extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
+	platform = "PLATFORM=X86"
+
+	shutil.rmtree(obj_dir, ignore_errors=True)
+	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
 	# disable ucrt because vs2012 doesn't support it and I give it priority
 	# over 2010 (if both installed) hoping it has better /analyze
 	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_SUM_ANALYZE=yes", "WITH_UCRT=no", config, extcflags, platform, "all_sumatrapdf")
@@ -174,13 +205,24 @@ def get_svn_versions():
 
 def svn_update_to_ver(ver):
 	run_cmd_throw("svn", "update", "-r" + ver)
+	rebuild_trans_src_path_cache()
 
 # TODO: more build types (regular 32bit release and debug, 64bit?)
 def build_version(ver):
 	print("Building version %s" % ver)
 	svn_update_to_ver(ver)
+
 	stats = Stats()
+
+	start_time = datetime.datetime.now()
 	build_analyze(stats, ver)
+	dur = datetime.datetime.now() - start_time
+	print("%s for analyze build" % str(dur))
+
+	#start_time = datetime.datetime.now()
+	#build_release(stats, ver)
+	#dur = datetime.datetime.now() - start_time
+	#print("%s for release build" % str(dur))
 
 	out = stats.analyze_out
 	errors = htmlize_error_lines(extract_compile_errors(out))
@@ -192,6 +234,7 @@ def build_version(ver):
 	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt")
 
 	build_index_html()
+
 
 def buildbot_loop():
 	while True:
