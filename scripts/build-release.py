@@ -162,6 +162,7 @@ def main():
 
   if not testing and not build_test_installer and not build_rel_installer:
     shutil.rmtree(obj_dir, ignore_errors=True)
+    shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
 
   config = "CFG=rel"
   if build_test_installer and not build_prerelease:
