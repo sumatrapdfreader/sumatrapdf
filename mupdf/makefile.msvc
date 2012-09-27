@@ -48,6 +48,7 @@ FREETYPE_DIR=$(EXTDIR)\freetype2
 JPEG_TURBO_DIR=$(EXTDIR)\libjpeg-turbo
 OPENJPEG_DIR=$(EXTDIR)\openjpeg
 JBIG2_DIR=$(EXTDIR)\jbig2dec
+MUPDF_GEN_DIR = $(MUPDF_DIR)\generated
 
 # full path to NASM can be passed in or we'll assume it's in PATH
 !if "$(NASM)"==""
@@ -314,11 +315,11 @@ FONTDUMP_APP = $(O)\fontdump.exe
 all: $(O) $(MUDRAW_APP) $(MUBUSY_APP) $(PDFAPP_APP) $(PDFBENCH_APP)
 
 clean: force
-	-rmdir /S /Q $(O)
+	-rmdir /S /Q $(O) $(MUPDF_GEN_DIR)
 
 ## Note: the following command does not work on Windows
 cleanall: force
-	-rmdir /S /Q obj-*-win
+	-rmdir /S /Q obj-*-win $(MUPDF_GEN_DIR)
 
 $(O): force
 	@if not exist $(O) mkdir $(O)
@@ -464,21 +465,20 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 
 # files that might have to be generated first:
 
-MUPDF_GEN_DIR = $(MUPDF_DIR)\generated
-
-$(MUPDF_GEN_DIR):
-	cd $(MUPDF_DIR) && win32\generate.bat
-
-$(MUPDF_GEN_DIR)\font_droid.h:
-	cd $(MUPDF_DIR) && win32\generate.bat
-
-$(OP)\pdf_fontfile.obj: $(MUPDF_GEN_DIR) \
-	$(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_droid.h \
-	$(MUPDF_GEN_DIR)\font_cjk.h $(MUPDF_GEN_DIR)\font_cjk_full.h
-
-$(OP)\pdf_cmap_tables.obj: $(MUPDF_GEN_DIR) \
-	$(MUPDF_GEN_DIR)\cmap_cns.h $(MUPDF_GEN_DIR)\cmap_gbs.h \
+MUPDF_CMAP_TABLES = $(MUPDF_GEN_DIR)\cmap_cns.h $(MUPDF_GEN_DIR)\cmap_gb.h \
 	$(MUPDF_GEN_DIR)\cmap_japan.h $(MUPDF_GEN_DIR)\cmap_korea.h
+
+MUPDF_FONT_FILES = $(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_droid.h \
+	$(MUPDF_GEN_DIR)\font_cjk.h $(MUPDF_GEN_DIR)\font_cjk_full.h	
+
+MUPDF_GENERATED =  $(MUPDF_CMAP_TABLES) $(MUPDF_FONT_FILES) $(MUPDF_GEN_DIR)\js_util.h
+
+$(MUPDF_GENERATED):
+	cd $(MUPDF_DIR) && win32\generate.bat
+
+$(OP)\pdf_cmap_tables.obj: $(MUPDF_CMAP_TABLES)
+$(OP)\pdf_fontfile.obj: $(MUPDF_FONT_FILES)
+$(OP)\pdf_js.obj: $(MUPDF_GEN_DIR)\js_util.h
 
 # header dependencies
 
