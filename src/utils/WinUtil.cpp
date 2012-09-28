@@ -188,15 +188,10 @@ bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst)
 
 TCHAR *ReadIniString(const TCHAR *iniPath, const TCHAR *section, const TCHAR *key)
 {
-    DWORD size = 256, read;
-    TCHAR *value = NULL;
-    do {
-        TCHAR *newValue = (TCHAR *)realloc(value, size * sizeof(TCHAR));
-        CrashIf(!newValue); // TODO: use infallible realloc
-        value = newValue;
-        read = GetPrivateProfileString(section, key, NULL, value, size, iniPath);
-        size *= 2;
-    } while (read == size - 1 && size < 64 * 1024);
+    DWORD bufCch = 64*512; // so max memory use is 64k
+    TCHAR *value = (TCHAR*)malloc(bufCch*sizeof(TCHAR));
+    if (value)
+        GetPrivateProfileString(section, key, NULL, value, bufCch-1, iniPath);
     return value;
 }
 

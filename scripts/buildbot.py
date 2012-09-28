@@ -23,7 +23,6 @@ TODO:
    build but is different that than build and there was no checkin for at least 4hr
    (all those rules are to ensure we don't create pre-release builds too frequently)
  - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time (in a separate html?)
- - somehow enable using vs 2012 for /analyze
 """
 
 def file_size(p):
