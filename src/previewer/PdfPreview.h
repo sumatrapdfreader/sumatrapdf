@@ -166,14 +166,16 @@ public:
             return E_INVALIDARG;
         DWORD size = GetFileSize(hFile, NULL), read;
         HGLOBAL data = GlobalAlloc(GMEM_MOVEABLE, size);
-        ReadFile(hFile, GlobalLock(data), size, &read, NULL);
+        BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, NULL);
         GlobalUnlock(data);
         GetFileTime(hFile, NULL, NULL, &m_dateStamp);
         CloseHandle(hFile);
 
         IStream *pStm;
-        if (FAILED(CreateStreamOnHGlobal(data, TRUE, &pStm)))
+        if (!ok || FAILED(CreateStreamOnHGlobal(data, TRUE, &pStm))) {
+            GlobalFree(data);
             return E_FAIL;
+        }
         HRESULT res = Initialize(pStm, 0);
         pStm->Release();
         return res;

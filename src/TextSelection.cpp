@@ -149,9 +149,13 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *l
             bbox.dx = c[1].x - bbox.x;
 
         result.len++;
-        result.pages = (int *)realloc(result.pages, sizeof(int) * result.len);
+        int *newPages = (int *)realloc(result.pages, sizeof(int) * result.len);
+        CrashIf(!newPages); // TODO: use infallible realloc
+        result.pages = newPages;
         result.pages[result.len - 1] = pageNo;
-        result.rects = (RectI *)realloc(result.rects, sizeof(RectI) * result.len);
+        RectI *newRects = (RectI *)realloc(result.rects, sizeof(RectI) * result.len);
+        CrashIf(!newRects); // TODO: use infallible realloc
+        result.rects = newRects;
         result.rects[result.len - 1] = bbox;
     }
 }

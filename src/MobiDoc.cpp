@@ -576,23 +576,23 @@ bool MobiDoc::ParseHeader()
 
     if (COMPRESSION_HUFF == compressionType) {
         CrashIf(Pdb_Mobipocket != docType);
-        size_t recSize;
-        const char *recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec, &recSize);
+        size_t huffRecSize;
+        const char *recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec, &huffRecSize);
         if (!recData)
             return false;
         assert(NULL == huffDic);
         huffDic = new HuffDicDecompressor();
-        if (!huffDic->SetHuffData((uint8*)recData, recSize))
+        if (!huffDic->SetHuffData((uint8*)recData, huffRecSize))
             return false;
         size_t cdicsCount = mobiHdr.huffmanRecCount - 1;
         assert(cdicsCount <= kCdicsMax);
         if (cdicsCount > kCdicsMax)
             return false;
         for (size_t i = 0; i < cdicsCount; i++) {
-            recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec + 1 + i, &recSize);
+            recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec + 1 + i, &huffRecSize);
             if (!recData)
                 return false;
-            if (!huffDic->AddCdicData((uint8*)recData, recSize))
+            if (!huffDic->AddCdicData((uint8*)recData, huffRecSize))
                 return false;
         }
     }

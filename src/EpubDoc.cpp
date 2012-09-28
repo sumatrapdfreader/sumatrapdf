@@ -163,7 +163,7 @@ static char *Base64Decode(const char *s, const char *end, size_t *len)
     for (; s < end && *s != '='; s++) {
         char n = decode64(*s);
         if (-1 == n) {
-            if (isspace(*s))
+            if (str::IsWs(*s))
                 continue;
             free(result);
             return NULL;
@@ -1106,7 +1106,7 @@ char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOu
         for (int i = 0; i < 4; i++) {
             palette[(226 + i) * 3 + 2] = i < 2 ? 136 : 0;
             palette[(226 + i) * 3 + 1] = i >= 2 ? 136 : 0;
-            palette[(226 + i) * 3 + 0] = i % 2 ? 136 : 0;
+            palette[(226 + i) * 3 + 0] = (i % 2) != 0 ? 136 : 0;
         }
     }
 

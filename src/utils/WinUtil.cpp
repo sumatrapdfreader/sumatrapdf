@@ -191,7 +191,9 @@ TCHAR *ReadIniString(const TCHAR *iniPath, const TCHAR *section, const TCHAR *ke
     DWORD size = 256, read;
     TCHAR *value = NULL;
     do {
-        value = (TCHAR *)realloc(value, size * sizeof(TCHAR));
+        TCHAR *newValue = (TCHAR *)realloc(value, size * sizeof(TCHAR));
+        CrashIf(!newValue); // TODO: use infallible realloc
+        value = newValue;
         read = GetPrivateProfileString(section, key, NULL, value, size, iniPath);
         size *= 2;
     } while (read == size - 1 && size < 64 * 1024);

@@ -265,7 +265,8 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     USHORT res = 0;
     if (factorAvg > 1.5)
         res = (USHORT)ceilf(log(factorAvg) / log(2.0f));
-    return res;
+    // limit res to 30, so that (1 << res) doesn't overflow for 32-bit signed int
+    return limitValue(res, (USHORT)0, (USHORT)30);
 }
 
 // reduce the size of tiles in order to hopefully use less memory overall
