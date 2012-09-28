@@ -23,6 +23,7 @@ TODO:
    build but is different that than build and there was no checkin for at least 4hr
    (all those rules are to ensure we don't create pre-release builds too frequently)
  - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time (in a separate html?)
+ - link to the right revision in analyze.html (https://code.google.com/p/sumatrapdf/source/browse/trunk/src/PdfSync.cpp?r=6692#19)
 """
 
 g_first_analyze_build = 6690
