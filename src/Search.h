@@ -60,6 +60,7 @@ void OnMenuFindPrev(WindowInfo *win);
 void OnMenuFindNext(WindowInfo *win);
 void OnMenuFind(WindowInfo *win);
 void OnMenuFindMatchCase(WindowInfo *win);
+void OnMenuFindSel(WindowInfo *win, TextSearchDirection direction);
 void AbortFinding(WindowInfo *win, bool hideMessage=false);
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction=FIND_FORWARD, bool FAYT=false);
 

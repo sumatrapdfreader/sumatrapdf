@@ -27,6 +27,7 @@ public:
 
     void SetSensitive(bool sensitive);
     void SetDirection(TextSearchDirection direction);
+    void SetLastResult(TextSelection *sel);
     TextSel *FindFirst(int page, TCHAR *text, ProgressUpdateUI *tracker=NULL);
     TextSel *FindNext(ProgressUpdateUI *tracker=NULL);
 

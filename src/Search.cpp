@@ -52,8 +52,7 @@ void OnMenuFind(WindowInfo *win)
     // copy any selected text to the find bar, if it's still empty
     if (win->dm->textSelection->result.len > 0 &&
         Edit_GetTextLength(win->hwndFindBox) == 0) {
-        ScopedMem<TCHAR> selection(win->dm->textSelection->ExtractText(_T("\n")));
-        str::TransChars(selection, _T("\n"), _T("\0"));
+        ScopedMem<TCHAR> selection(win->dm->textSelection->ExtractText(_T(" ")));
         str::NormalizeWS(selection);
         if (!str::IsEmpty(selection.Get())) {
             win::SetText(win->hwndFindBox, selection);
@@ -117,6 +116,26 @@ void OnMenuFindMatchCase(WindowInfo *win)
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     win->dm->textSearch->SetSensitive((state & TBSTATE_CHECKED) != 0);
     Edit_SetModify(win->hwndFindBox, TRUE);
+}
+
+void OnMenuFindSel(WindowInfo *win, TextSearchDirection direction)
+{
+    if (!win->IsDocLoaded() || !NeedsFindUI(win) || win->IsChm())
+        return;
+    if (!win->selectionOnPage || 0 == win->dm->textSelection->result.len)
+        return;
+
+    ScopedMem<TCHAR> selection(win->dm->textSelection->ExtractText(_T(" ")));
+    str::NormalizeWS(selection);
+    if (str::IsEmpty(selection.Get()))
+        return;
+
+    win::SetText(win->hwndFindBox, selection);
+    AbortFinding(win); // cancel FAYT
+    Edit_SetModify(win->hwndFindBox, FALSE);
+    win->dm->textSearch->SetLastResult(win->dm->textSelection);
+
+    FindTextOnThread(win, direction);
 }
 
 static void ShowSearchResult(WindowInfo& win, TextSel *result, bool addNavPt)

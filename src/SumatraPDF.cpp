@@ -4676,6 +4676,14 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             OnMenuFindMatchCase(win);
             break;
 
+        case IDM_FIND_NEXT_SEL:
+            OnMenuFindSel(win, FIND_FORWARD);
+            break;
+
+        case IDM_FIND_PREV_SEL:
+            OnMenuFindSel(win, FIND_BACKWARD);
+            break;
+
         case IDM_VISIT_WEBSITE:
             LaunchBrowser(WEBSITE_MAIN_URL);
             break;

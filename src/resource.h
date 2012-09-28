@@ -90,6 +90,8 @@
 #define IDM_FAV_DEL                     561
 #define IDM_FAV_TOGGLE                  562
 #define IDM_RENAME_FILE                 580
+#define IDM_FIND_NEXT_SEL               581
+#define IDM_FIND_PREV_SEL               582
 #define IDM_DEBUG_SHOW_LINKS            590
 #define IDM_DEBUG_GDI_RENDERER          591
 #define IDM_DEBUG_CRASH_ME              592

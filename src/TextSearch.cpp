@@ -95,6 +95,20 @@ void TextSearch::SetDirection(TextSearchDirection direction)
         findIndex += (int)str::Len(findText) * (forward ? 1 : -1);
 }
 
+void TextSearch::SetLastResult(TextSelection *sel)
+{
+    CopySelection(sel);
+
+    ScopedMem<TCHAR> selection(ExtractText(_T(" ")));
+    str::NormalizeWS(selection);
+    SetText(selection);
+
+    findPage = min(startPage, endPage);
+    findIndex = (findPage == startPage ? startGlyph : endGlyph) + str::Len(findText);
+    pageText = textCache->GetData(findPage);
+    forward = true;
+}
+
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
 int TextSearch::MatchLen(const TCHAR *start)
