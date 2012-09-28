@@ -175,8 +175,8 @@ def create_dir(d):
 	return d
 
 def get_cache_dir(): return create_dir(os.path.join("..", "sumatrapdfcache", "buildbot"))
-
 def get_stats_cache_dir(): return create_dir(os.path.join(get_cache_dir(), "stats"))
+def get_logs_cache_dir(): return create_dir(os.path.join(get_cache_dir(), "logs"))
 
 # return Stats object or None if we don't have it for this version
 def stats_for_ver(ver):
@@ -366,6 +366,10 @@ def sign_try_hard(obj_dir):
 		tries -= 1
 	assert(False)
 
+def strip_empty_lines(s):
+	lines = [l for l in s.split("\n") if len(l.strip()) > 0]
+	return string.join(lines, "\n")
+
 def build_release(stats, ver):
 	config = "CFG=rel"
 	obj_dir = "obj-rel"
@@ -375,6 +379,11 @@ def build_release(stats, ver):
 	shutil.rmtree(obj_dir, ignore_errors=True)
 	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
 	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
+
+	log_path = os.path.join(get_logs_cache_dir(), ver + "_rel_log.txt")
+	s = out + "\n====STDERR:\n" + err
+	open(log_path, "w").write(strip_empty_lines(s))
+
 	stats.rel_build_log = None
 	stats.rel_failed = False
 	if errcode != 0:
@@ -404,6 +413,11 @@ def build_analyze(stats, ver):
 	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
 	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_SUM_ANALYZE=yes", config, extcflags, platform, "all_sumatrapdf")
 	stats.analyze_out = out
+
+	log_path = os.path.join(get_logs_cache_dir(), ver + "_analyze_log.txt")
+	s = out + "\n====STDERR:\n" + err
+	open(log_path, "w").write(strip_empty_lines(s))
+
 
 # returns local and latest (on the server) svn versions
 def get_svn_versions():
