@@ -1,4 +1,4 @@
-import os.path, re, shutil, struct, subprocess, sys, bz2
+import os.path, re, shutil, struct, subprocess, sys, bz2, tempfile
 import zipfile2 as zipfile
 
 def import_boto():
@@ -82,6 +82,15 @@ def s3UploadDataPublic(data, remote_path):
   k.set_contents_from_string(data)
   k.make_public()
 
+def s3UploadDataPublicWithContentType(data, remote_path):
+  # writing to a file to force boto to set Content-Type based on file extension.
+  # TODO: there must be a simpler way
+  tmp_name = os.path.basename(remote_path)
+  tmp_path = os.path.join(tempfile.gettempdir(), tmp_name)
+  open(tmp_path, "w").write(data)
+  s3UploadFilePublic(tmp_path, remote_path)
+  os.remove(tmp_path)
+
 def s3DownloadToFile(remote_path, local_path):
   log("s3 download '%s' as '%s'" % (local_path, remote_path))
   k = s3PubBucket().new_key(remote_path)
@@ -95,11 +104,13 @@ def s3Delete(remote_path):
   log("s3 delete '%s'" % remote_path)
   s3PubBucket().new_key(remote_path).delete()
   
-def ensure_s3_doesnt_exist(remote_file_path):
-  b = s3PubBucket()
-  if not b.get_key(remote_file_path):
+def s3_exist(remote_path):
+  return s3PubBucket().get_key(remote_path)
+
+def ensure_s3_doesnt_exist(remote_path):
+  if not s3_exist(remote_path):
     return
-  print("'%s' already exists on s3" % remote_file_path)
+  print("'%s' already exists in s3" % remote_path)
   sys.exit(1)
 
 def ensure_path_exists(path):

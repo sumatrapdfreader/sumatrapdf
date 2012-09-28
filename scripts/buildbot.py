@@ -6,8 +6,9 @@ import os, os.path, shutil, sys, time, re, string, datetime
 from util import log, run_cmd_throw, run_cmd, test_for_flag
 from util import s3UploadFilePublic, s3Delete, s3DownloadToFile
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, s3List
-from util import parse_svninfo_out, ensure_path_exists, verify_started_in_right_directory
-from util import build_installer_data
+from util import s3UploadDataPublicWithContentType, s3_exist
+from util import parse_svninfo_out, ensure_path_exists, build_installer_data
+from util import verify_started_in_right_directory
 
 """
 TODO:
@@ -177,21 +178,15 @@ def get_cache_dir(): return create_dir(os.path.join("..", "sumatrapdfcache", "bu
 
 def get_stats_cache_dir(): return create_dir(os.path.join(get_cache_dir(), "stats"))
 
+# return Stats object or None if we don't have it for this version
 def stats_for_ver(ver):
 	local_path = os.path.join(get_stats_cache_dir(), ver + ".txt")
 	if not os.path.exists(local_path):
-		s3DownloadToFile("sumatrapdf/buildbot/%s/stats.txt" % ver, local_path)
+		s3_path = "sumatrapdf/buildbot/%s/stats.txt" % ver
+		if not s3_exist(s3_path): return None
+		s3DownloadToFile(s3_path, local_path)
 		assert(os.path.exists(local_path))
 	return Stats(local_path)
-
-def s3UploadDataPublicWithContentType(data, s3_path):
-	# writing to a file to force boto to set Content-Type based on file extension.
-	# TODO: there must be a simpler way
-	tmp_name = os.path.basename(s3_path)
-	tmp_path = os.path.join(get_cache_dir(), tmp_name)
-	open(tmp_path, "w").write(data)
-	s3UploadFilePublic(tmp_path, s3_path)
-	os.remove(tmp_path)
 
 # return true if we already have results for a given build number in s3
 def has_already_been_built(ver):
@@ -254,6 +249,21 @@ g_index_html_css = """
 }
 </style>"""
 
+# return stats for the first successful build before $ver 
+def stats_for_previous_build(ver):
+	ver = int(ver) - 1
+	while True:
+		stats = stats_for_ver(str(ver))
+		# we assume that we have 
+		if None == stats: return None
+		if not stats.rel_failed: return stats
+		ver -= 1
+
+def size_diff_html(n):
+	if n > 0:   return ' (<font color=red>+' + str(n) + '</font>)'
+	elif n < 0: return ' (<font color=green>' + str(n) + '</font>)'
+	else:       return ''
+
 # build sumatrapdf/buildbot/index.html summary page that links to each 
 # sumatrapdf/buildbot/${ver}/analyze.html
 def build_index_html():
@@ -275,8 +285,8 @@ def build_index_html():
 		html += "  <tr>\n"
 
 		# build number
-		# TDOO: link to svn revision in svn?
-		html += "    <td>" + ver + "</td>\n"
+		url = "https://code.google.com/p/sumatrapdf/source/detail?r=" + ver
+		html += td(a(url, ver), 4) + "\n"
 
 		# /analyze warnings count
 		url = s3_ver_url + "analyze.html"
@@ -290,18 +300,21 @@ def build_index_html():
 			s = '<font color="green"<b>ok!</b></font>'
 		html += td(s, 4) + "\n"
 
-		# TODO: should show size difference between this build and previous one
-		# to do that, we probably should generate starting from oldest version,
-		# keep track of last valid size (not allowing build failures to mess up),
-		# and reverse the lines when generating the html so that latest releases
-		# are at the top
 		# SumatraPDF.exe, Installer.exe size
 		if stats.rel_failed:
 			html += td("", 4) + "\n" + td("", 4) + "\n"
 		else:
-			html += td(str(stats.rel_sumatrapdf_exe_size), 4) + "\n"
-			html += td(str(stats.rel_installer_exe_size), 4) + "\n"
-
+			prev_stats = stats_for_previous_build(ver)
+			if None == prev_stats:
+				html += td(str(stats.rel_sumatrapdf_exe_size), 4) + "\n"
+				html += td(str(stats.rel_installer_exe_size), 4) + "\n"
+			else:
+				s = size_diff_html(stats.rel_sumatrapdf_exe_size - prev_stats.rel_sumatrapdf_exe_size)
+				s = str(stats.rel_sumatrapdf_exe_size) + s
+				html += td(s, 4) + "\n"
+				s = size_diff_html(stats.rel_installer_exe_size - prev_stats.rel_installer_exe_size)
+				s = str(stats.rel_installer_exe_size) + s
+				html += td(s, 4) + "\n"
 		html += "  </tr>\n"
 	html += "</table>"
 	html += "</body></html>\n"
