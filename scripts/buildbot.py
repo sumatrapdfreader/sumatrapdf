@@ -12,6 +12,12 @@ from util import verify_started_in_right_directory
 
 """
 TODO:
+ - at some point the index.html page will get too big, so split it into N-item chunks
+   (100? 300?)
+ - a shorter display of revisions that didn't introduce any code changes, which we can
+   detect by also storing sha1 of generated binaries/dlls, and if they're the same
+   as for previous build, we assume it was a non-code change. Then we could e.g. show
+   just revision number
  - should also do pre-release builds if there was a new checkin since the last uploaded
    build but is different that than build and there was no checkin for at least 4hr
    (all those rules are to ensure we don't create pre-release builds too frequently)
