@@ -291,6 +291,8 @@ public:
             return E_INVALIDARG;
         DWORD size = GetFileSize(hFile, NULL), read;
         HGLOBAL data = GlobalAlloc(GMEM_MOVEABLE, size);
+        if (!data)
+            return E_OUTOFMEMORY;
         BOOL ok = ReadFile(hFile, GlobalLock(data), size, &read, NULL);
         GlobalUnlock(data);
         CloseHandle(hFile);

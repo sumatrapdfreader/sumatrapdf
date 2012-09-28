@@ -97,17 +97,17 @@ void CrashMe(); // in StrUtil.cpp
 //
 // Just as with assert(), the condition is not guaranteed to be executed
 // in some builds, so it shouldn't contain the actual logic of the code
-#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
-#define CrashIf(exp) \
-    { if (exp) \
-        CrashMe(); }
-#else
-#define CrashIf(exp) NoOp()
-#endif
 
 #define CrashAlwaysIf(exp) \
     { if (exp) \
-        CrashMe(); }
+        CrashMe(); \
+    __analysis_assume(!(exp)); }
+
+#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+#define CrashIf(exp) CrashAlwaysIf(exp)
+#else
+#define CrashIf(exp) NoOp()
+#endif
 
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
