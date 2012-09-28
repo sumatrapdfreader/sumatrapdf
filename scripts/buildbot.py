@@ -25,6 +25,8 @@ TODO:
  - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time (in a separate html?)
 """
 
+g_first_analyze_build = 6690
+
 def file_size(p):
   return os.path.getsize(p)
 
@@ -285,7 +287,9 @@ def build_index_html():
 	files_by_ver = group_by_ver(names)
 	for arr in files_by_ver:
 		(ver, files) = arr
-		assert("analyze.html" in files and "stats.txt" in files)
+		if int(ver) >= g_first_analyze_build:
+			assert("analyze.html" in files)
+		assert("stats.txt" in files)
 		stats = stats_for_ver(ver)
 		s3_ver_url = "http://kjkpub.s3.amazonaws.com/" + s3_dir + ver + "/"
 		html += "  <tr>\n"
@@ -295,8 +299,11 @@ def build_index_html():
 		html += td(a(url, ver), 4) + "\n"
 
 		# /analyze warnings count
-		url = s3_ver_url + "analyze.html"
-		html += td(a(url, str(stats.analyze_warnings_count) + " warnings"), 4)
+		if int(ver) >= g_first_analyze_build:
+			url = s3_ver_url + "analyze.html"
+			html += td(a(url, str(stats.analyze_warnings_count) + " warnings"), 4)
+		else:
+			html += td("", 4)
 
 		# release build status
 		if stats.rel_failed:
@@ -424,7 +431,6 @@ def build_analyze(stats, ver):
 	s = out + "\n====STDERR:\n" + err
 	open(log_path, "w").write(strip_empty_lines(s))
 
-
 # returns local and latest (on the server) svn versions
 def get_svn_versions():
 	(out, err) = run_cmd_throw("svn", "info")
@@ -441,27 +447,30 @@ def svn_update_to_ver(ver):
 def build_version(ver):
 	print("Building version %s" % ver)
 	svn_update_to_ver(ver)
+	s3dir = "sumatrapdf/buildbot/%s/" % ver
 
 	stats = Stats()
 
-	start_time = datetime.datetime.now()
-	build_analyze(stats, ver)
-	dur = datetime.datetime.now() - start_time
-	print("%s for analyze build" % str(dur))
+	# only run /analyze on newer builds since we didn't have the necessary
+	# makefile logic before
+	stats.analyze_warnings_count = 0
+	if int(ver) >= g_first_analyze_build:
+		start_time = datetime.datetime.now()
+		build_analyze(stats, ver)
+		dur = datetime.datetime.now() - start_time
+		print("%s for analyze build" % str(dur))
+		errors = htmlize_error_lines(extract_compile_errors(stats.analyze_out))
+		html = gen_errors_html(errors, ver)
+		stats.analyze_warnings_count = len(errors)
+		s3UploadDataPublicWithContentType(html, s3dir + "analyze.html")
 
 	start_time = datetime.datetime.now()
 	build_release(stats, ver)
 	dur = datetime.datetime.now() - start_time
 	print("%s for release build" % str(dur))
 
-	errors = htmlize_error_lines(extract_compile_errors(stats.analyze_out))
-	html = gen_errors_html(errors, ver)
-	stats.analyze_warnings_count = len(errors)
+
 	stats_txt = stats.to_s()
-
-	s3dir = "sumatrapdf/buildbot/%s/" % ver
-
-	s3UploadDataPublicWithContentType(html, s3dir + "analyze.html")
 	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt")
 
 	if stats.rel_failed:
