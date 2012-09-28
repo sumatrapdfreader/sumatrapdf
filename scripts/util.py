@@ -70,27 +70,30 @@ def s3PubBucket():
 def ul_cb(sofar, total):
   print("So far: %d, total: %d" % (sofar , total))
 
-def s3UploadFilePublic(local_file_name, remote_file_name):
-  log("s3 upload '%s' as '%s'" % (local_file_name, remote_file_name))
-  k = s3PubBucket().new_key(remote_file_name)
-  k.set_contents_from_filename(local_file_name, cb=ul_cb)
+def s3UploadFilePublic(local_path, remote_path):
+  log("s3 upload '%s' as '%s'" % (local_path, remote_path))
+  k = s3PubBucket().new_key(remote_path)
+  k.set_contents_from_filename(local_path, cb=ul_cb)
   k.make_public()
 
-def s3UploadDataPublic(data, remote_file_name):
-  log("s3 upload data as '%s'" % remote_file_name)
-  k = s3PubBucket().new_key(remote_file_name)
+def s3UploadDataPublic(data, remote_path):
+  log("s3 upload data as '%s'" % remote_path)
+  k = s3PubBucket().new_key(remote_path)
   k.set_contents_from_string(data)
   k.make_public()
+
+def s3DownloadToFile(remote_path, local_path):
+  log("s3 download '%s' as '%s'" % (local_path, remote_path))
+  k = s3PubBucket().new_key(remote_path)
+  k.get_contents_to_filename(local_path)
 
 def s3List(s3dir):
   b = s3PubBucket()
   return bucket_lister(b, s3dir)
 
-def s3Delete(s3Name):
-  log("s3 delete '%s'" % s3Name)
-  b = s3PubBucket()
-  k = Key(b, s3Name)
-  k.delete()
+def s3Delete(remote_path):
+  log("s3 delete '%s'" % remote_path)
+  s3PubBucket().new_key(remote_path).delete()
   
 def ensure_s3_doesnt_exist(remote_file_path):
   b = s3PubBucket()

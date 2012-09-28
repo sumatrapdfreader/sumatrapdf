@@ -3,10 +3,20 @@ Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
 import os, os.path, shutil, sys, time, re, string, datetime
+from util import log, run_cmd_throw, run_cmd, test_for_flag
+from util import s3UploadFilePublic, s3Delete, s3DownloadToFile
+from util import s3UploadDataPublic, ensure_s3_doesnt_exist, s3List
+from util import parse_svninfo_out, ensure_path_exists, verify_started_in_right_directory
+from util import build_installer_data
 
-from util import log, run_cmd_throw, run_cmd, test_for_flag, s3UploadFilePublic
-from util import s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists
-from util import parse_svninfo_out, s3List, s3Delete, verify_started_in_right_directory
+"""
+TODO:
+ - should also do pre-release builds if there was a new checkin since the last uploaded
+   build but is different that than build and there was no checkin for at least 4hr
+   (all those rules are to ensure we don't create pre-release builds too frequently)
+ - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time (in a separate html?)
+ - somehow enable using vs 2012 for /analyze
+"""
 
 def file_size(p):
   return os.path.getsize(p)
@@ -43,7 +53,10 @@ def trans_src_path(s):
 		print(g_src_trans_map.keys())
 	return g_src_trans_map[s]
 
+g_spaces = "                              "
 def a(url, txt): return '<a href="' + url + '">' + txt + '</a>'
+def pre(s): return '<pre style="white-space: pre-wrap;">' + s + '</pre>'
+def td(s, off=0): return g_spaces[:off] + '<td>%s</td>' % s
 
 # Turn:
 # src\utils\allocator.h(156)
@@ -79,8 +92,6 @@ def htmlize_error_lines(lines):
 		res.append(s)
 	return res
 
-def pre(s): return '<pre style="white-space: pre-wrap;">' + s + '</pre>'
-
 def gen_errors_html(errors, ver):
 	s = "<html><body>"
 	s += "There were %d warnings and errors in Sumatra build %s" % (len(errors), str(ver))
@@ -99,25 +110,28 @@ def test_ser():
 	print stats.to_s()
 
 class Stats(object):
-	int_fields = ("analyze_warnings_count", "release_sumatrapdf_exe_size", "release_sumatrapdf_no_mupdf_exe_size",
-		"release_installer_exe_size", "release_libmupdf_dll_size", "release_nppdfviewer_dll_size",
-		"release_pdffilter_dll_size", "release_pdfpreview_dll_size")
-	bool_fields = ("release_failed")
-	def __init__(self):
+	int_fields = ("analyze_warnings_count", "rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
+		"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
+		"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size")
+	bool_fields = ("rel_failed")
+	def __init__(self, serialized_file=None):
 		# serialized to stats.txt
 		self.analyze_warnings_count = 0
-		self.release_failed = False
-		self.release_sumatrapdf_exe_size = 0
-		self.release_sumatrapdf_no_mupdf_exe_size = 0
-		self.release_installer_exe_size = 0
-		self.release_libmupdf_dll_size = 0
-		self.release_nppdfviewer_dll_size = 0
-		self.release_pdffilter_dll_size = 0
-		self.release_pdfpreview_dll_size = 0
+		self.rel_failed = False
+		self.rel_sumatrapdf_exe_size = 0
+		self.rel_sumatrapdf_no_mupdf_exe_size = 0
+		self.rel_installer_exe_size = 0
+		self.rel_libmupdf_dll_size = 0
+		self.rel_nppdfviewer_dll_size = 0
+		self.rel_pdffilter_dll_size = 0
+		self.rel_pdfpreview_dll_size = 0
 
 		# just for passing data aroun
 		self.analyze_out = None
-		self.release_build_log = None
+		self.rel_build_log = None
+
+		if serialized_file != None:
+			self.from_s(open(serialized_file, "r").read())
 
 	def add_field(self, name):
 		val = self.__getattribute__ (name)
@@ -126,11 +140,11 @@ class Stats(object):
 	def to_s(self):
 		self.fields = []
 		self.add_field("analyze_warnings_count")
-		self.add_field("release_failed")
-		if not self.release_failed:
-			for f in ("release_sumatrapdf_exe_size", "release_sumatrapdf_no_mupdf_exe_size",
-		"release_installer_exe_size", "release_libmupdf_dll_size", "release_nppdfviewer_dll_size",
-		"release_pdffilter_dll_size", "release_pdfpreview_dll_size"):
+		self.add_field("rel_failed")
+		if not self.rel_failed:
+			for f in ("rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
+		"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
+		"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size"):
 				self.add_field(f)
 		return string.join(self.fields, "\n")
 
@@ -146,18 +160,29 @@ class Stats(object):
 			return
 		assert(False)
 
-	def from_s(self):
+	def from_s(self, s):
 		lines = s.split("\n")
 		for l in lines:
 			(name, val) = l.split(": ", 1)
-			if name in int_fields: self.set_field(name, val, "int")
-			elif name in bool_fields: self.set_field(name, val, "bool")
-			else: assert(False)
+			name = name.replace("release_", "rel_")
+			if name in self.int_fields: self.set_field(name, val, "int")
+			elif name in self.bool_fields: self.set_field(name, val, "bool")
+			else: print(name); assert(False)
 
-def get_cache_dir():
-	cache_dir = os.path.join("..", "sumatrapdfcache", "buildbot")
-	if not os.path.exists(cache_dir): os.makedirs(cache_dir)
-	return cache_dir
+def create_dir(d):
+	if not os.path.exists(d): os.makedirs(d)
+	return d
+
+def get_cache_dir(): return create_dir(os.path.join("..", "sumatrapdfcache", "buildbot"))
+
+def get_stats_cache_dir(): return create_dir(os.path.join(get_cache_dir(), "stats"))
+
+def stats_for_ver(ver):
+	local_path = os.path.join(get_stats_cache_dir(), ver + ".txt")
+	if not os.path.exists(local_path):
+		s3DownloadToFile("sumatrapdf/buildbot/%s/stats.txt" % ver, local_path)
+		assert(os.path.exists(local_path))
+	return Stats(local_path)
 
 def s3UploadDataPublicWithContentType(data, s3_path):
 	# writing to a file to force boto to set Content-Type based on file extension.
@@ -187,7 +212,7 @@ def group_by_ver(files):
 	for f in files:
 		(ver, name) = f.split("/", 1)
 		if ver == curr_ver:
-			curr_ver_names  
+			curr_ver_names.append(name) 
 		else:
 			if curr_ver != None:
 				assert(len(curr_ver_names) > 0)
@@ -199,31 +224,134 @@ def group_by_ver(files):
 		res.append([curr_ver, curr_ver_names])
 	return res	
 
+g_index_html_css = """
+<style type="text/css">
+#table-5 {
+	background-color: #f5f5f5;
+	padding: 5px;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border: 1px solid #ebebeb;
+}
+#table-5 td, #table-5 th {
+	padding: 1px 5px;
+}
+#table-5 thead {
+	font: normal 15px Helvetica Neue,Helvetica,sans-serif;
+	text-shadow: 0 1px 0 white;
+	color: #999;
+}
+#table-5 th {
+	text-align: left;
+	border-bottom: 1px solid #fff;
+}
+#table-5 td {
+	font-size: 14px;
+}
+#table-5 td:hover {
+	background-color: #fff;
+}
+</style>"""
+
 # build sumatrapdf/buildbot/index.html summary page that links to each 
 # sumatrapdf/buildbot/${ver}/analyze.html
-# TODO: download stats.txt files locally
-# TODO: add summary stats from stats.txt
 def build_index_html():
 	s3_dir = "sumatrapdf/buildbot/"
-	html = "<html><body>\n"
+	html = "<html><head>%s</head><body>\n" % g_index_html_css
 	html += "<p>SumatraPDF buildbot results:</p>\n"
-	html += "<ul>\n"
-	names = [k.name[len(s3_dir):] for k in s3List(s3_dir) if k.name.endswith("/analyze.html")]
+	names = [n.name for n in s3List(s3_dir)]
+	names = [n[len(s3_dir):] for n in names if not n.endswith("/index.html")]
 	names.sort(reverse=True, key=lambda name: int(name.split("/")[0]))
-	#print(names)
-	# TODO: this should be a table
-	# TODO: fail/ok for release build, link to build log if failed
-	# TODO: number of analyze warning
+
+	html += '<table id="table-5"><tr><th>build</th><th>/analyze</th><th>release</th>'
+	html += '<th>SumatraPDF.exe size</th><th>Installer.exe size</th></tr>\n'
 	files_by_ver = group_by_ver(names)
 	for arr in files_by_ver:
 		(ver, files) = arr
-		assert("analyze.html" in files)
-		url = "http://kjkpub.s3.amazonaws.com/" + s3_dir + "analyze.html"
-		html += "  <li>Build " + a(url, ver) + "</li>\n"
-	html += "</ul>\n"
+		assert("analyze.html" in files and "stats.txt" in files)
+		stats = stats_for_ver(ver)
+		s3_ver_url = "http://kjkpub.s3.amazonaws.com/" + s3_dir + ver + "/"
+		html += "  <tr>\n"
+
+		# build number
+		# TDOO: link to svn revision in svn?
+		html += "    <td>" + ver + "</td>\n"
+
+		# /analyze warnings count
+		url = s3_ver_url + "analyze.html"
+		html += td(a(url, str(stats.analyze_warnings_count) + " warnings"), 4)
+
+		# release build status
+		if stats.rel_failed:
+			url =  s3_ver_url + "release_build_log.txt"
+			s = '<font color="red"><b>fail</b></font> (' + a(url, "log") + ')'
+		else:
+			s = '<font color="green"<b>ok!</b></font>'
+		html += td(s, 4) + "\n"
+
+		# TODO: should show size difference between this build and previous one
+		# to do that, we probably should generate starting from oldest version,
+		# keep track of last valid size (not allowing build failures to mess up),
+		# and reverse the lines when generating the html so that latest releases
+		# are at the top
+		# SumatraPDF.exe, Installer.exe size
+		if stats.rel_failed:
+			html += td("", 4) + "\n" + td("", 4) + "\n"
+		else:
+			html += td(str(stats.rel_sumatrapdf_exe_size), 4) + "\n"
+			html += td(str(stats.rel_installer_exe_size), 4) + "\n"
+
+		html += "  </tr>\n"
+	html += "</table>"
 	html += "</body></html>\n"
 	#print(html)
 	s3UploadDataPublicWithContentType(html, "sumatrapdf/buildbot/index.html")
+
+g_cert_pwd = None
+def get_cert_pwd():
+	global g_cert_pwd
+	if g_cert_pwd == None:
+		cert_path = os.path.join("scripts", "cert.pfx")
+		if not os.path.exists(os.path.join("scripts", "cert.pfx")):
+			print("scripts/cert.pfx missing")
+			sys.exit(1)
+		import awscreds
+		g_cert_pwd = awscreds.certpwd
+	return g_cert_pwd
+
+def sign(file_path, cert_pwd):
+  # the sign tool is finicky, so copy it and cert to the same dir as
+  # exe we're signing
+  file_dir = os.path.dirname(file_path)
+  file_name = os.path.basename(file_path)
+  cert_src = os.path.join("scripts", "cert.pfx")
+  sign_tool_src = os.path.join("bin", "ksigncmd.exe")
+  cert_dest = os.path.join(file_dir, "cert.pfx")
+  sign_tool_dest = os.path.join(file_dir, "ksigncmd.exe")
+  if not os.path.exists(cert_dest): shutil.copy(cert_src, cert_dest)
+  if not os.path.exists(sign_tool_dest): shutil.copy(sign_tool_src, sign_tool_dest)
+  curr_dir = os.getcwd()
+  os.chdir(file_dir)
+  run_cmd_throw("ksigncmd.exe", "/f", "cert.pfx", "/p", cert_pwd, file_name)  
+  os.chdir(curr_dir)
+
+def try_sign(obj_dir):
+	try:
+		exe = os.path.join(obj_dir, "SumatraPDF.exe")
+		sign(exe, get_cert_pwd())
+		sign(os.path.join(obj_dir, "uninstall.exe"), get_cert_pwd())
+	except:
+		return False
+	return True
+
+# sometimes ksigncmd.exe fails, so we try 3 times
+def sign_try_hard(obj_dir):
+	tries = 3
+	while tries > 0:
+		if try_sign(obj_dir): return
+		tries -= 1
+	assert(False)
 
 def build_release(stats, ver):
 	config = "CFG=rel"
@@ -234,19 +362,24 @@ def build_release(stats, ver):
 	shutil.rmtree(obj_dir, ignore_errors=True)
 	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
 	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
-	stats.release_build_log = None
-	stats.release_failed = False
+	stats.rel_build_log = None
+	stats.rel_failed = False
 	if errcode != 0:
-		stats.release_build_log = out
-		stats.release_failed = True
+		stats.rel_build_log = out
+		stats.rel_failed = True
 		return
-	stats.release_sumatrapdf_exe_size = file_size(os.path.join(obj_dir), "SumatraPDF.exe")
-	stats.release_sumatrapdf_no_mupdf_exe_size = file_size(os.path.join(obj_dir), "SumatraPDF-no-MuPDF.exe")
-	stats.release_installer_exe_size = file_size(os.path.join(obj_dir), "Installer.exe")
-	stats.release_libmupdf_dll_size = file_size(os.path.join(obj_dir), "libmupdf.dll")
-	stats.release_nppdfviewer_dll_size = file_size(os.path.join(obj_dir), "npPdfViewer.dll")
-	stats.release_pdffilter_dll_size = file_size(os.path.join(obj_dir), "PdfFilter.dll")
-	stats.release_pdfpreview_dll_size = file_size(os.path.join(obj_dir), "PdfPreview.dll")
+
+	sign_try_hard(obj_dir)
+	build_installer_data(obj_dir)
+	run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
+
+	stats.rel_sumatrapdf_exe_size = file_size(os.path.join(obj_dir, "SumatraPDF.exe"))
+	stats.rel_sumatrapdf_no_mupdf_exe_size = file_size(os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe"))
+	stats.rel_installer_exe_size = file_size(os.path.join(obj_dir, "Installer.exe"))
+	stats.rel_libmupdf_dll_size = file_size(os.path.join(obj_dir, "libmupdf.dll"))
+	stats.rel_nppdfviewer_dll_size = file_size(os.path.join(obj_dir, "npPdfViewer.dll"))
+	stats.rel_pdffilter_dll_size = file_size(os.path.join(obj_dir, "PdfFilter.dll"))
+	stats.rel_pdfpreview_dll_size = file_size(os.path.join(obj_dir, "PdfPreview.dll"))
 
 def build_analyze(stats, ver):
 	config = "CFG=rel"
@@ -256,9 +389,7 @@ def build_analyze(stats, ver):
 
 	shutil.rmtree(obj_dir, ignore_errors=True)
 	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
-	# disable ucrt because vs2012 doesn't support it and I give it priority
-	# over 2010 (if both installed) hoping it has better /analyze
-	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_SUM_ANALYZE=yes", "WITH_UCRT=no", config, extcflags, platform, "all_sumatrapdf")
+	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_SUM_ANALYZE=yes", config, extcflags, platform, "all_sumatrapdf")
 	stats.analyze_out = out
 
 # returns local and latest (on the server) svn versions
@@ -300,8 +431,8 @@ def build_version(ver):
 	s3UploadDataPublicWithContentType(html, s3dir + "analyze.html")
 	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt")
 
-	if stats.release_failed:
-		s3UploadDataPublicWithContentType(stats.release_build_log, s3dir + "release_build_log.txt")
+	if stats.rel_failed:
+		s3UploadDataPublicWithContentType(stats.rel_build_log, s3dir + "release_build_log.txt")
 
 	build_index_html()
 
@@ -327,12 +458,20 @@ def buildbot_loop():
 		print("Sleeping for 15 minutes")
 		time.sleep(60*15) # 15 mins
 
+def copy_secrets(dst_path):
+	src = os.path.join("scripts", "awscreds.py")
+	shutil.copyfile(src, os.path.join(dst_path, src))
+	src = os.path.join("scripts", "cert.pfx")
+	shutil.copyfile(src, os.path.join(dst_path, src))
+
 def main():
 	verify_started_in_right_directory()
 	# to avoid problems, we build a separate source tree, just for the buildbot
 	src_path = os.path.join("..", "sumatrapdf_buildbot")
 	ensure_path_exists(src_path)
+	copy_secrets(src_path)
 	os.chdir(src_path)
+	get_cert_pwd() # early exit if problems
 
 	#build_index_html()
 	#build_curr()
