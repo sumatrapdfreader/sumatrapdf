@@ -476,7 +476,7 @@ def buildbot_loop():
 	while True:
 		(local_ver, latest_ver) = get_svn_versions()
 		print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
-		while int(local_ver) < int(latest_ver):
+		while int(local_ver) <= int(latest_ver):
 			if not has_already_been_built(local_ver):
 				build_version(local_ver)
 			else:
