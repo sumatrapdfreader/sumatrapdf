@@ -18,6 +18,7 @@ TODO:
    detect by also storing sha1 of generated binaries/dlls, and if they're the same
    as for previous build, we assume it was a non-code change. Then we could e.g. show
    just revision number
+ - prune logs (only keep the last 10)
  - should also do pre-release builds if there was a new checkin since the last uploaded
    build but is different that than build and there was no checkin for at least 4hr
    (all those rules are to ensure we don't create pre-release builds too frequently)
