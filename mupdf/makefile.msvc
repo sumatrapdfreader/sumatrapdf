@@ -79,11 +79,7 @@ CFLAGSB = $(CFLAGSB) /wd4996
 # /GS  : enable security checks
 # /Gy  : separate functions for linker
 # /GF  : enable read-only string pooling
-CFLAGSB = $(CFLAGSB) /W3 /GR- /Zi /GS /Gy /GF
-
-!if "$(WITH_ANALYZE)"!="yes" && "$(WITH_SUM_ANALYZE)"!="yes"
-CFLAGSB = $(CFLAGSB) /WX
-!endif
+CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy /GF
 
 # Make it easy to compile as ANSI or UNICODE application
 !if "$(_ANSI)"==""

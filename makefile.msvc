@@ -10,8 +10,6 @@
 #   note: building on X64 isn't officially supported and might unintentionally be broken
 #WITH_ANALYZE=yes
 #   use /analyze for all code
-#WITH_SUM_ANALYZE=yes
-#   use /analyze just for our code
 #WITH_UCRT=yes|no
 #   if 'yes', compile with ucrt for smaller binaries size
 
@@ -67,18 +65,13 @@ CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 CFLAGS = $(CFLAGS) /wd4800
 
 !if "$(WITH_ANALYZE)"=="yes"
-CFLAGS = $(CFLAGS) /analyze
-WITH_SUM_ANALYZE=no
+CFLAGS =  /analyze:WX- $(CFLAGS)
 !endif
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /Isrc/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
 	/I$(MUPDF_DIR)\xps /Isrc /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
 	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src
-
-!if "$(WITH_SUM_ANALYZE)"=="yes"
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /analyze
-!endif
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip

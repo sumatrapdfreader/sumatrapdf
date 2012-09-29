@@ -1,4 +1,4 @@
-import os.path, re, shutil, struct, subprocess, sys, bz2, tempfile
+import os.path, re, shutil, struct, subprocess, sys, bz2, tempfile, hashlib
 import zipfile2 as zipfile
 
 def import_boto():
@@ -112,6 +112,12 @@ def ensure_s3_doesnt_exist(remote_path):
     return
   print("'%s' already exists in s3" % remote_path)
   sys.exit(1)
+
+def file_sha1(fp):
+  data = open(fp, "rb").read()
+  m = hashlib.sha1()
+  m.update(data)
+  return m.hexdigest()
 
 def ensure_path_exists(path):
   if not os.path.exists(path):

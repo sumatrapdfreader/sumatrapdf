@@ -8,7 +8,7 @@ from util import s3UploadFilePublic, s3Delete, s3DownloadToFile
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, s3List
 from util import s3UploadDataPublicWithContentType, s3_exist
 from util import parse_svninfo_out, ensure_path_exists, build_installer_data
-from util import verify_started_in_right_directory
+from util import verify_started_in_right_directory, file_sha1
 
 """
 TODO:
@@ -24,13 +24,16 @@ TODO:
  - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time (in a separate html?)
 """
 
-g_first_analyze_build = 6690
+g_first_analyze_build = 6000
 
 def file_size(p):
   return os.path.getsize(p)
 
 def skip_error(s):
-	if "C2220" in s: return True # warning treated as error
+	# C2220 - warning treated as error
+	# LNK2019 - linker error unresolved external symbol
+	for err in ("C2220", "LNK2019"):
+		if err in s: return True
 	return False
 
 # given a text generated with /analyze, extract the lines that contain
@@ -48,6 +51,14 @@ def rebuild_trans_src_path_cache():
 	global g_src_trans_map
 	g_src_trans_map = {}
 	for root, dirs, files in os.walk("src"):
+		for file in files:
+			file_path = os.path.join(root, file)
+			g_src_trans_map[file_path.lower()] = file_path
+	for root, dirs, files in os.walk("ext"):
+		for file in files:
+			file_path = os.path.join(root, file)
+			g_src_trans_map[file_path.lower()] = file_path
+	for root, dirs, files in os.walk("mupdf"):
 		for file in files:
 			file_path = os.path.join(root, file)
 			g_src_trans_map[file_path.lower()] = file_path
@@ -88,7 +99,9 @@ def htmlize_src_link(s, ver):
 # warning C6011: Dereferencing NULL pointer 'node'. : Lines: 149, 150, 151, 153, 154, 156
 def htmlize_error_lines(lines, ver):
 	if len(lines) == 0: return []
-	res = []
+	sumatra_errors = []
+	mupdf_errors = []
+	ext_errors = []
 	# TODO: would be nicer if "sumatrapdf_buildbot" wasn't hard-coded, but don't know
 	# how to get this reliably
 	rel_path_start = lines[0].find("sumatrapdf_buildbot\\") + len("sumatrapdf_buildbot\\")
@@ -99,15 +112,25 @@ def htmlize_error_lines(lines, ver):
 		msg = l[err_start + 3:]
 		a = htmlize_src_link(src, ver)
 		s = a + " " + msg
-		res.append(s)
-	return res
+		if l.startswith("src\\"):     sumatra_errors.append(s)
+		elif l.startswith("mupdf\\"): mupdf_errors.append(s)
+		elif l.startswith("ext\\"):   ext_errors.append(s)
+		else: assert(False)
+	return (sumatra_errors, mupdf_errors, ext_errors)
 
 def gen_analyze_html(stats, ver):
-	errors = htmlize_error_lines(extract_analyze_errors(stats.analyze_out), ver)
-	stats.analyze_warnings_count = len(errors)
+	(sumatra_errors, mupdf_errors, ext_errors) = htmlize_error_lines(extract_analyze_errors(stats.analyze_out), ver)
+	stats.analyze_sumatra_warnings_count = len(sumatra_errors)
+	stats.analyze_mupdf_warnings_count = len(mupdf_errors)
+	stats.analyze_ext_warnings_count = len(ext_errors)
 	s = "<html><body>"
-	s += "There were %d warnings and errors in Sumatra build %s" % (len(errors), str(ver))
-	s += pre(string.join(errors, ""))
+	s += a("../index.html", "Home")
+	s += ": build %s, %d warnings in sumatra code, %d in mupdf, %d in ext:" % (str(ver), stats.analyze_sumatra_warnings_count, stats.analyze_mupdf_warnings_count, stats.analyze_ext_warnings_count)
+	s += pre(string.join(sumatra_errors, ""))
+	s += "<p>Warnings in mupdf code:</p>"
+	s += pre(string.join(mupdf_errors, ""))
+	s += "<p>Warnings in ext code:</p>"
+	s += pre(string.join(ext_errors, ""))
 	s += "</pre>"
 	s += "</body></html>"
 	return s
@@ -122,13 +145,21 @@ def test_ser():
 	print stats.to_s()
 
 class Stats(object):
-	int_fields = ("analyze_warnings_count", "rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
+	int_fields = ("analyze_sumatra_warnings_count", "analyze_mupdf_warnings_count", "analyze_ext_warnings_count", 
+		"rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
 		"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
 		"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size")
 	bool_fields = ("rel_failed")
+	str_fields = ("rel_sumatrapdf_exe_sha1", "rel_sumatrapdf_no_mupdf_exe_sha1",
+		"rel_installer_exe_sha1", "rel_libmupdf_dll_sha1", "rel_nppdfviewer_dll_sha1",
+		"rel_pdffilter_dll_sha1", "rel_pdfpreview_dll_sha1")
+
 	def __init__(self, serialized_file=None):
 		# serialized to stats.txt
-		self.analyze_warnings_count = 0
+		self.analyze_sumatra_warnings_count = 0
+		self.analyze_mupdf_warnings_count = 0
+		self.analyze_ext_warnings_count = 0
+
 		self.rel_failed = False
 		self.rel_sumatrapdf_exe_size = 0
 		self.rel_sumatrapdf_no_mupdf_exe_size = 0
@@ -137,6 +168,14 @@ class Stats(object):
 		self.rel_nppdfviewer_dll_size = 0
 		self.rel_pdffilter_dll_size = 0
 		self.rel_pdfpreview_dll_size = 0
+
+		self.rel_sumatrapdf_exe_sha1 = 0
+		self.rel_sumatrapdf_no_mupdf_exe_sha1 = 0
+		self.rel_installer_exe_sha1 = 0
+		self.rel_libmupdf_dll_sha1 = 0
+		self.rel_nppdfviewer_dll_sha1 = 0
+		self.rel_pdffilter_dll_sha1 = 0
+		self.rel_pdfpreview_dll_sha1 = 0
 
 		# just for passing data aroun
 		self.analyze_out = None
@@ -149,29 +188,35 @@ class Stats(object):
 		val = self.__getattribute__ (name)
 		self.fields.append("%s: %s" % (name, str(val)))
 
+	def add_rel_fields(self):
+		for f in ("rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
+			"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
+			"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size",
+			"rel_sumatrapdf_exe_sha1", "rel_sumatrapdf_no_mupdf_exe_sha1",
+			"rel_installer_exe_sha1", "rel_libmupdf_dll_sha1", "rel_nppdfviewer_dll_sha1",
+			"rel_pdffilter_dll_sha1", "rel_pdfpreview_dll_sha1"):
+			self.add_field(f)
+
 	def to_s(self):
 		self.fields = []
-		self.add_field("analyze_warnings_count")
+		self.add_field("analyze_sumatra_warnings_count")
+		self.add_field("analyze_mupdf_warnings_count")
+		self.add_field("analyze_ext_warnings_count")
 		self.add_field("rel_failed")
 		if not self.rel_failed:
-			for f in ("rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
-		"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
-		"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size"):
-				self.add_field(f)
+			self.add_rel_fields()
 		return string.join(self.fields, "\n")
 
 	def set_field(self, name, val, tp):
 		if tp in ("str", "string"):
 			self.__setattr__(name, val)
-			return
-		if tp == "bool":
+		elif tp == "bool":
 			self.__setattr__(name, str2bool(val))
-			return
-		if tp in ("int", "num"):
+		elif tp in ("int", "num"):
 			self.__setattr__(name, int(val))
-			return
-		assert(False)
-
+		else:
+			assert(False)
+ 
 	def from_s(self, s):
 		lines = s.split("\n")
 		for l in lines:
@@ -179,6 +224,7 @@ class Stats(object):
 			name = name.replace("release_", "rel_")
 			if name in self.int_fields: self.set_field(name, val, "int")
 			elif name in self.bool_fields: self.set_field(name, val, "bool")
+			elif name in self.str_fields: self.set_field(name, val, "str")
 			else: print(name); assert(False)
 
 def create_dir(d):
@@ -322,7 +368,8 @@ def build_index_html():
 		# /analyze warnings count
 		if int(ver) >= g_first_analyze_build:
 			url = s3_ver_url + "analyze.html"
-			html += td(a(url, str(stats.analyze_warnings_count) + " warnings"), 4)
+			s = "%d %d %d warnings" % (stats.analyze_sumatra_warnings_count, stats.analyze_mupdf_warnings_count, stats.analyze_ext_warnings_count)
+			html += td(a(url, s), 4)
 		else:
 			html += td("", 4)
 
@@ -401,7 +448,7 @@ def sign_try_hard(obj_dir):
 	assert(False)
 
 def strip_empty_lines(s):
-	lines = [l for l in s.split("\n") if len(l.strip()) > 0]
+	lines = [l.strip() for l in s.split("\n") if len(l.strip()) > 0]
 	return string.join(lines, "\n")
 
 def build_release(stats, ver):
@@ -429,13 +476,27 @@ def build_release(stats, ver):
 	build_installer_data(obj_dir)
 	run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
 
-	stats.rel_sumatrapdf_exe_size = file_size(os.path.join(obj_dir, "SumatraPDF.exe"))
-	stats.rel_sumatrapdf_no_mupdf_exe_size = file_size(os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe"))
-	stats.rel_installer_exe_size = file_size(os.path.join(obj_dir, "Installer.exe"))
-	stats.rel_libmupdf_dll_size = file_size(os.path.join(obj_dir, "libmupdf.dll"))
-	stats.rel_nppdfviewer_dll_size = file_size(os.path.join(obj_dir, "npPdfViewer.dll"))
-	stats.rel_pdffilter_dll_size = file_size(os.path.join(obj_dir, "PdfFilter.dll"))
-	stats.rel_pdfpreview_dll_size = file_size(os.path.join(obj_dir, "PdfPreview.dll"))
+	p = os.path.join(obj_dir, "SumatraPDF.exe")
+	stats.rel_sumatrapdf_exe_size = file_size(p)
+	stats.rel_sumatrapdf_exe_sha1 = file_sha1(p)
+	p = os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe")
+	stats.rel_sumatrapdf_no_mupdf_exe_size = file_size(p)
+	stats.rel_sumatrapdf_no_mupdf_exe_sha1 = file_sha1(p)
+	p = os.path.join(obj_dir, "Installer.exe")
+	stats.rel_installer_exe_size = file_size(p)
+	stats.rel_installer_exe_sha1 = file_sha1(p)
+	p = os.path.join(obj_dir, "libmupdf.dll")
+	stats.rel_libmupdf_dll_size = file_size(p)
+	stats.rel_libmupdf_dll_sha1 = file_sha1(p)
+	p = os.path.join(obj_dir, "npPdfViewer.dll")
+	stats.rel_nppdfviewer_dll_size = file_size(p)
+	stats.rel_nppdfviewer_dll_sha1 = file_sha1(p)
+	p = os.path.join(obj_dir, "PdfFilter.dll")
+	stats.rel_pdffilter_dll_size = file_size(p)
+	stats.rel_pdffilter_dll_sha1 = file_sha1(p)
+	p = os.path.join(obj_dir, "PdfPreview.dll")
+	stats.rel_pdfpreview_dll_size = file_size(p)
+	stats.rel_pdfpreview_dll_sha1 = file_sha1(p)
 
 def build_analyze(stats, ver):
 	config = "CFG=rel"
@@ -445,7 +506,7 @@ def build_analyze(stats, ver):
 
 	shutil.rmtree(obj_dir, ignore_errors=True)
 	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
-	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_SUM_ANALYZE=yes", config, extcflags, platform, "all_sumatrapdf")
+	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_ANALYZE=yes", config, extcflags, platform, "all_sumatrapdf")
 	stats.analyze_out = out
 
 	log_path = os.path.join(get_logs_cache_dir(), ver + "_analyze_log.txt")
@@ -465,36 +526,38 @@ def svn_update_to_ver(ver):
 	rebuild_trans_src_path_cache()
 
 # TODO: maybe add debug build and 64bit release?
-def build_version(ver):
+# skip_release is just for testing
+def build_version(ver, skip_release=False):
 	print("Building version %s" % ver)
 	svn_update_to_ver(ver)
 	s3dir = "sumatrapdf/buildbot/%s/" % ver
 
 	stats = Stats()
-
 	# only run /analyze on newer builds since we didn't have the necessary
 	# makefile logic before
-	stats.analyze_warnings_count = 0
-	if int(ver) >= g_first_analyze_build:
+	run_analyze = int(ver) >= g_first_analyze_build
+
+	if not skip_release:
+		start_time = datetime.datetime.now()
+		build_release(stats, ver)
+		dur = datetime.datetime.now() - start_time
+		print("%s for release build" % str(dur))
+		if stats.rel_failed:
+			run_analyze = False # don't bother running analyze if release failed
+			s3UploadDataPublicWithContentType(stats.rel_build_log, s3dir + "release_build_log.txt")
+
+	if run_analyze:
 		start_time = datetime.datetime.now()
 		build_analyze(stats, ver)
 		dur = datetime.datetime.now() - start_time
 		print("%s for analyze build" % str(dur))
 		html = gen_analyze_html(stats, ver)
+		p = os.path.join(get_logs_cache_dir(), "%s_analyze.html" % str(ver))
+		open(p, "w").write(html)
 		s3UploadDataPublicWithContentType(html, s3dir + "analyze.html")
-
-	start_time = datetime.datetime.now()
-	build_release(stats, ver)
-	dur = datetime.datetime.now() - start_time
-	print("%s for release build" % str(dur))
-
 
 	stats_txt = stats.to_s()
 	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt")
-
-	if stats.rel_failed:
-		s3UploadDataPublicWithContentType(stats.rel_build_log, s3dir + "release_build_log.txt")
-
 	build_index_html()
 
 # for testing
@@ -535,6 +598,7 @@ def main():
 	os.chdir(src_path)
 	get_cert_pwd() # early exit if problems
 
+	#build_version("6698", skip_release=True)
 	#build_index_html()
 	#build_curr()
 	buildbot_loop()

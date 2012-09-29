@@ -5,8 +5,8 @@ naming the files as sha1 of their content, but only if the file
 doesn't already exist in destination directory.
 Deletes the source file if -delete flag is given"""
 
-import sys, os, os.path, hashlib, shutil
-from util import test_for_flag
+import sys, os, os.path, shutil
+from util import test_for_flag, file_sha1
 
 pj = os.path.join
 
@@ -37,12 +37,6 @@ def is_epub(s):
 def is_mobi(s):
 	if s.lower().endswith(".mobi"): return True
 	return False
-
-def file_sha1(fp):
-	data = open(fp, "rb").read()
-	m = hashlib.sha1()
-	m.update(data)
-	return m.hexdigest()
 
 def copy_file(srcDir, dstDir, moveFiles, fileName, dstDir2):
 	srcPath = pj(srcDir, fileName)
