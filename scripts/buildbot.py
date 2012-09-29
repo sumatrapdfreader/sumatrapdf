@@ -2,26 +2,26 @@
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
-import os, os.path, shutil, sys, time, re, string, datetime
+import os, os.path, shutil, sys, time, re, string, datetime, json
 from util import log, run_cmd_throw, run_cmd, test_for_flag
 from util import s3UploadFilePublic, s3Delete, s3DownloadToFile
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, s3List
 from util import s3UploadDataPublicWithContentType, s3_exist
 from util import parse_svninfo_out, ensure_path_exists, build_installer_data
-from util import verify_started_in_right_directory, file_sha1
+from util import verify_started_in_right_directory
 
 """
 TODO:
  - at some point the index.html page will get too big, so split it into N-item chunks
    (100? 300?)
  - a shorter display of revisions that didn't introduce any code changes, which we can
-   detect by also storing sha1 of generated binaries/dlls, and if they're the same
-   as for previous build, we assume it was a non-code change. Then we could e.g. show
-   just revision number
+   detect by checking which files changed during a given revision and assume that if
+   source files didn't change, the binary didn't change
  - should also do pre-release builds if there was a new checkin since the last uploaded
    build but is different that than build and there was no checkin for at least 4hr
    (all those rules are to ensure we don't create pre-release builds too frequently)
- - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time (in a separate html?)
+ - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time 
+   (in a separate html?)
 """
 
 g_first_analyze_build = 6000
@@ -150,9 +150,7 @@ class Stats(object):
 		"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
 		"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size")
 	bool_fields = ("rel_failed")
-	str_fields = ("rel_sumatrapdf_exe_sha1", "rel_sumatrapdf_no_mupdf_exe_sha1",
-		"rel_installer_exe_sha1", "rel_libmupdf_dll_sha1", "rel_nppdfviewer_dll_sha1",
-		"rel_pdffilter_dll_sha1", "rel_pdfpreview_dll_sha1")
+	str_fields = ()
 
 	def __init__(self, serialized_file=None):
 		# serialized to stats.txt
@@ -169,14 +167,6 @@ class Stats(object):
 		self.rel_pdffilter_dll_size = 0
 		self.rel_pdfpreview_dll_size = 0
 
-		self.rel_sumatrapdf_exe_sha1 = 0
-		self.rel_sumatrapdf_no_mupdf_exe_sha1 = 0
-		self.rel_installer_exe_sha1 = 0
-		self.rel_libmupdf_dll_sha1 = 0
-		self.rel_nppdfviewer_dll_sha1 = 0
-		self.rel_pdffilter_dll_sha1 = 0
-		self.rel_pdfpreview_dll_sha1 = 0
-
 		# just for passing data aroun
 		self.analyze_out = None
 		self.rel_build_log = None
@@ -191,10 +181,7 @@ class Stats(object):
 	def add_rel_fields(self):
 		for f in ("rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
 			"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
-			"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size",
-			"rel_sumatrapdf_exe_sha1", "rel_sumatrapdf_no_mupdf_exe_sha1",
-			"rel_installer_exe_sha1", "rel_libmupdf_dll_sha1", "rel_nppdfviewer_dll_sha1",
-			"rel_pdffilter_dll_sha1", "rel_pdfpreview_dll_sha1"):
+			"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size"):
 			self.add_field(f)
 
 	def to_s(self):
@@ -339,6 +326,34 @@ def size_diff_html(n):
 	elif n < 0: return ' (<font color=green>' + str(n) + '</font>)'
 	else:       return ''
 
+def build_files_changed(ver):
+	# TODO: get files changed in a revision and check if any source files changed
+	return True
+
+def build_sizes_json():
+	files = os.listdir(get_stats_cache_dir())
+	versions = [int(f.split(".")[0]) for f in files]
+	versions.sort()
+	print(versions)
+	sumatra_sizes = []
+	installer_sizes = []
+	prev_sumatra_size = 0
+	prev_installer_size = 0
+	for ver in versions:
+		stats = stats_for_ver(str(ver))
+		sumatra_size = stats.rel_sumatrapdf_exe_size
+		installer_size = stats.rel_installer_exe_size
+		if sumatra_size == prev_sumatra_size and installer_size == prev_installer_size:
+			continue
+		sumatra_sizes.append(sumatra_size)
+		installer_sizes.append(installer_size)
+		prev_sumatra_size = sumatra_size
+		prev_installer_size = installer_size
+	sumatra_json = json.dumps(sumatra_sizes)
+	installer_json = json.dumps(installer_sizes)
+	s = "var g_sumatra_sizes = %s;\nvar g_installer_sizes = %s;\n" % (sumatra_json, installer_json)
+	s3UploadDataPublicWithContentType(s, "sumatrapdf/buildbot/sizes.js")
+
 # build sumatrapdf/buildbot/index.html summary page that links to each 
 # sumatrapdf/buildbot/${ver}/analyze.html
 def build_index_html():
@@ -346,18 +361,21 @@ def build_index_html():
 	html = "<html><head>%s</head><body>\n" % g_index_html_css
 	html += "<p>SumatraPDF buildbot results:</p>\n"
 	names = [n.name for n in s3List(s3_dir)]
-	names = [n[len(s3_dir):] for n in names if not n.endswith("/index.html")]
+	# filter out top-level files like index.html and sizes.js
+	names = [n[len(s3_dir):] for n in names if len(n.split("/")) == 4]
 	names.sort(reverse=True, key=lambda name: int(name.split("/")[0]))
 
 	html += '<table id="table-5"><tr><th>build</th><th>/analyze</th><th>release</th>'
-	html += '<th>SumatraPDF.exe size</th><th>Installer.exe size</th></tr>\n'
+	html += '<th style="font-size:80%">SumatraPDF.exe size</th><th style="font-size:80%"">Installer.exe size</th></tr>\n'
 	files_by_ver = group_by_ver(names)
 	for arr in files_by_ver:
 		(ver, files) = arr
-		if int(ver) >= g_first_analyze_build:
-			assert("analyze.html" in files)
 		assert("stats.txt" in files)
 		stats = stats_for_ver(ver)
+		total_warnings = stats.analyze_sumatra_warnings_count, stats.analyze_mupdf_warnings_count, stats.analyze_ext_warnings_count
+		if int(ver) >= g_first_analyze_build and total_warnings > 0:
+			assert("analyze.html" in files)
+
 		s3_ver_url = "http://kjkpub.s3.amazonaws.com/" + s3_dir + ver + "/"
 		html += "  <tr>\n"
 
@@ -365,8 +383,13 @@ def build_index_html():
 		url = "https://code.google.com/p/sumatrapdf/source/detail?r=" + ver
 		html += td(a(url, ver), 4) + "\n"
 
+		# TODO: this must group several revisions on one line to actually be shorter
+		if not build_files_changed(ver):
+			html += '<td colspan=4>unchanged</td>'
+			continue
+
 		# /analyze warnings count
-		if int(ver) >= g_first_analyze_build:
+		if int(ver) >= g_first_analyze_build and total_warnings > 0:
 			url = s3_ver_url + "analyze.html"
 			s = "%d %d %d warnings" % (stats.analyze_sumatra_warnings_count, stats.analyze_mupdf_warnings_count, stats.analyze_ext_warnings_count)
 			html += td(a(url, s), 4)
@@ -472,31 +495,24 @@ def build_release(stats, ver):
 		stats.rel_failed = True
 		return
 
-	sign_try_hard(obj_dir)
-	build_installer_data(obj_dir)
-	run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
-
 	p = os.path.join(obj_dir, "SumatraPDF.exe")
 	stats.rel_sumatrapdf_exe_size = file_size(p)
-	stats.rel_sumatrapdf_exe_sha1 = file_sha1(p)
 	p = os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe")
 	stats.rel_sumatrapdf_no_mupdf_exe_size = file_size(p)
-	stats.rel_sumatrapdf_no_mupdf_exe_sha1 = file_sha1(p)
-	p = os.path.join(obj_dir, "Installer.exe")
-	stats.rel_installer_exe_size = file_size(p)
-	stats.rel_installer_exe_sha1 = file_sha1(p)
 	p = os.path.join(obj_dir, "libmupdf.dll")
 	stats.rel_libmupdf_dll_size = file_size(p)
-	stats.rel_libmupdf_dll_sha1 = file_sha1(p)
 	p = os.path.join(obj_dir, "npPdfViewer.dll")
 	stats.rel_nppdfviewer_dll_size = file_size(p)
-	stats.rel_nppdfviewer_dll_sha1 = file_sha1(p)
 	p = os.path.join(obj_dir, "PdfFilter.dll")
 	stats.rel_pdffilter_dll_size = file_size(p)
-	stats.rel_pdffilter_dll_sha1 = file_sha1(p)
 	p = os.path.join(obj_dir, "PdfPreview.dll")
 	stats.rel_pdfpreview_dll_size = file_size(p)
-	stats.rel_pdfpreview_dll_sha1 = file_sha1(p)
+
+	build_installer_data(obj_dir)
+	run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
+	p = os.path.join(obj_dir, "Installer.exe")
+	stats.rel_installer_exe_size = file_size(p)
+
 
 def build_analyze(stats, ver):
 	config = "CFG=rel"
@@ -558,6 +574,7 @@ def build_version(ver, skip_release=False):
 
 	stats_txt = stats.to_s()
 	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt")
+	build_sizes_json()
 	build_index_html()
 
 # for testing
@@ -600,6 +617,7 @@ def main():
 
 	#build_version("6698", skip_release=True)
 	#build_index_html()
+	#build_sizes_json()
 	#build_curr()
 	buildbot_loop()
 
