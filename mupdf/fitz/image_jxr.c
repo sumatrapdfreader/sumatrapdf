@@ -24,7 +24,9 @@ fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
 	ULONG written;
 	HRESULT hr;
 
-	CoInitialize(NULL);
+	hr = CoInitialize(NULL);
+	if (FAILED(hr))
+		fz_throw(ctx, "JPEG-XR codec is not available");
 #define Check(hr) if (FAILED(hr)) goto CleanUp
 	Check(CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_ALL, &IID_IWICImagingFactory, (void **)&factory));
 	Check(CreateStreamOnHGlobal(NULL, TRUE, &stream));

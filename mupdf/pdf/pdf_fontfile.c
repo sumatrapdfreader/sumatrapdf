@@ -667,9 +667,12 @@ create_system_font_list(fz_context *ctx)
 {
 	TCHAR szFontDir[MAX_PATH];
 
-	GetWindowsDirectory(szFontDir, nelem(szFontDir) - 12);
-	_tcscat_s(szFontDir, MAX_PATH, _T("\\Fonts\\*.?t?"));
-	extend_system_font_list(ctx, szFontDir);
+	UINT cch = GetWindowsDirectory(szFontDir, nelem(szFontDir) - 12);
+	if (0 < cch && cch < nelem(szFontDir) - 12)
+	{
+		_tcscat_s(szFontDir, MAX_PATH, _T("\\Fonts\\*.?t?"));
+		extend_system_font_list(ctx, szFontDir);
+	}
 
 	if (fontlistMS.len == 0)
 		fz_warn(ctx, "couldn't find any usable system fonts");
