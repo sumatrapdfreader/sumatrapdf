@@ -124,11 +124,11 @@ static RectI GetTileRectDevice(BaseEngine *engine, int pageNo, int rotation, flo
     RectD mediabox = engine->PageMediabox(pageNo);
 
     if (tile.res && tile.res != INVALID_TILE_RES) {
-        double width = mediabox.dx / (1 << tile.res);
+        double width = mediabox.dx / (int)(1 << tile.res);
         mediabox.x += tile.col * width;
         mediabox.dx = width;
-        double height = mediabox.dy / (1 << tile.res);
-        mediabox.y += ((1 << tile.res) - tile.row - 1) * height;
+        double height = mediabox.dy / (int)(1 << tile.res);
+        mediabox.y += ((int)(1 << tile.res) - tile.row - 1) * height;
         mediabox.dy = height;
     }
 
@@ -266,7 +266,7 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
     if (factorAvg > 1.5)
         res = (USHORT)ceilf(log(factorAvg) / log(2.0f));
     // limit res to 30, so that (1 << res) doesn't overflow for 32-bit signed int
-    return limitValue(res, (USHORT)0, (USHORT)30);
+    return min(res, 30);
 }
 
 // reduce the size of tiles in order to hopefully use less memory overall

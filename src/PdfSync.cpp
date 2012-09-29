@@ -250,8 +250,9 @@ int Pdfsync::RebuildIndex()
         switch (*line) {
         case 'l':
             psline.file = filestack.Last();
+            psline.column = 0;
             if (str::Parse(line, "l %u %u %u", &psline.record, &psline.line, &psline.column) ||
-                0 == (psline.column = 0) && str::Parse(line, "l %u %u", &psline.record, &psline.line)) {
+                str::Parse(line, "l %u %u", &psline.record, &psline.line)) {
                 lines.Append(psline);
             }
             // else dbg("Bad 'l' line in the pdfsync file");

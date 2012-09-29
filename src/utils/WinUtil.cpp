@@ -404,16 +404,15 @@ DWORD GetFileVersion(TCHAR *path)
     DWORD fileVersion = 0;
     DWORD handle;
     DWORD size = GetFileVersionInfoSize(path, &handle);
-    LPVOID versionInfo = malloc(size);
+    ScopedMem<void> versionInfo(malloc(size));
 
-    if (GetFileVersionInfo(path, handle, size, versionInfo)) {
+    if (versionInfo && GetFileVersionInfo(path, handle, size, versionInfo)) {
         VS_FIXEDFILEINFO *fileInfo;
         UINT len;
         if (VerQueryValue(versionInfo, _T("\\"), (LPVOID *)&fileInfo, &len))
             fileVersion = fileInfo->dwFileVersionMS;
     }
 
-    free(versionInfo);
     return fileVersion;
 }
 
@@ -909,7 +908,8 @@ void UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2])
     bmi.bmiHeader.biCompression = BI_RGB;
 
     int bmpBytes = size.dx * size.dy * 4;
-    unsigned char *bmpData = (unsigned char *)malloc(bmpBytes);
+    ScopedMem<unsigned char> bmpData((unsigned char *)malloc(bmpBytes));
+    CrashIf(!bmpData);
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         for (int i = 0; i < bmpBytes; i++) {
             int k = i % 4;
@@ -918,7 +918,6 @@ void UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2])
         SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
     }
 
-    free(bmpData);
     ReleaseDC(NULL, hDC);
 }
 
