@@ -92,7 +92,7 @@ def s3UploadDataPublicWithContentType(data, remote_path):
   os.remove(tmp_path)
 
 def s3DownloadToFile(remote_path, local_path):
-  log("s3 download '%s' as '%s'" % (local_path, remote_path))
+  log("s3 download '%s' as '%s'" % (remote_path, local_path))
   k = s3PubBucket().new_key(remote_path)
   k.get_contents_to_filename(local_path)
 
