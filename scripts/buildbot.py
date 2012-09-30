@@ -370,7 +370,9 @@ def build_index_html():
 	files_by_ver = group_by_ver(names)
 	for arr in files_by_ver:
 		(ver, files) = arr
-		assert("stats.txt" in files)
+		if "stats.txt" not in files:
+			print("stats.txt missing in %s (%s)" % (ver, str(files)))
+			assert("stats.txt" in files)
 		stats = stats_for_ver(ver)
 		total_warnings = stats.analyze_sumatra_warnings_count, stats.analyze_mupdf_warnings_count, stats.analyze_ext_warnings_count
 		if int(ver) >= g_first_analyze_build and total_warnings > 0:
