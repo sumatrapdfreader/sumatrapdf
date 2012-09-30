@@ -1,6 +1,14 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// TODO: this is a hack to get MS_ENH_RSA_AES_PROV_XP, which is only available
+// in xp (0x0501) and we set WINVER and _WIN32_WINNT to w2k (0x0500)
+// We should just switch to xp globally
+#undef WINVER
+#undef _WIN32_WINNT
+#define WINVER 0x0501
+#define _WIN32_WINNT 0x0501
+
 #include "BaseUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
@@ -1137,3 +1145,70 @@ Error:
     LogLastError();
     goto Exit;
 }
+
+// MD5 digest that uses Windows' CryptoAPI. It's good for code that doesn't already
+// have MD5 code (smaller code) and it's probably faster than most other implementations
+// TODO: could try to use CryptoNG available starting in Vista. But then again, would that be worth it?
+void CalcMD5DigestWin(const void *data, size_t byteCount, unsigned char digest[16])
+{
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+
+    // http://stackoverflow.com/questions/9794745/ms-cryptoapi-doesnt-work-on-windows-xp-with-cryptacquirecontext
+    BOOL ok = CryptAcquireContext(&hProv, NULL, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    if (!ok) {
+        // TODO: test this on XP
+        ok = CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+    }
+
+    CrashAlwaysIf(!ok);
+    ok = CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash);
+    CrashAlwaysIf(!ok);
+    ok = CryptHashData(hHash, (const BYTE*)data, byteCount, 0);
+    CrashAlwaysIf(!ok);
+
+    DWORD hashLen;
+    DWORD argSize = sizeof(DWORD);
+    ok = CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE *)&hashLen, &argSize, 0);
+    CrashIf(sizeof(DWORD) != argSize);
+    CrashAlwaysIf(!ok);
+    CrashAlwaysIf(16 != hashLen);
+    ok = CryptGetHashParam(hHash, HP_HASHVAL, digest, &hashLen, 0);
+    CrashAlwaysIf(!ok);
+    CrashAlwaysIf(16 != hashLen);
+    CryptDestroyHash(hHash);
+    CryptReleaseContext(hProv,0);
+}
+
+// SHA1 digest that uses Windows' CryptoAPI. It's good for code that doesn't already
+// have SHA1 code (smaller code) and it's probably faster than most other implementations
+// TODO: hasn't been tested for corectness
+void CalcSha1DigestWin(void *data, size_t byteCount, unsigned char digest[32])
+{
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+
+    BOOL ok = CryptAcquireContext(&hProv, NULL, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    if (!ok) {
+        // TODO: test this on XP
+        ok = CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+    }
+    CrashAlwaysIf(!ok);
+    ok = CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash);
+    CrashAlwaysIf(!ok);
+    ok = CryptHashData(hHash, (const BYTE*)data, byteCount, 0);
+    CrashAlwaysIf(!ok);
+
+    DWORD hashLen;
+    DWORD argSize = sizeof(DWORD);
+    ok = CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE *)&hashLen, &argSize, 0);
+    CrashIf(sizeof(DWORD) != argSize);
+    CrashAlwaysIf(!ok);
+    CrashAlwaysIf(32 != hashLen);
+    ok = CryptGetHashParam(hHash, HP_HASHVAL, digest, &hashLen, 0);
+    CrashAlwaysIf(!ok);
+    CrashAlwaysIf(32 != hashLen);
+    CryptDestroyHash(hHash);
+    CryptReleaseContext(hProv,0);
+}
+

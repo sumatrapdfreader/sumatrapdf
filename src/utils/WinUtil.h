@@ -92,6 +92,9 @@ void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=NULL);
 bool    ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset=0);
 UINT    GuessTextCodepage(const char *data, size_t len, UINT default=CP_ACP);
 
+void CalcMD5DigestWin(const void *data, size_t byteCount, unsigned char digest[16]);
+void CalcSha1DigestWin(const void *data, size_t byteCount, unsigned char digest[32]);
+
 namespace win {
 
 inline size_t GetTextLen(HWND hwnd)
