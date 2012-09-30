@@ -471,11 +471,6 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
     return CallWindowProc(DefWndProcTocTree, hwnd, message, wParam, lParam);
 }
 
-static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit);
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd);
-#endif
-
 static WNDPROC DefWndProcTocBox = NULL;
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {

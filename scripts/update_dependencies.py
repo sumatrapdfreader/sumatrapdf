@@ -48,6 +48,8 @@ def extractIncludes(file):
 	content = open(file, "r").read()
 	# filter out multi-line comments (could contain #include lines as examples)
 	content = re.sub(r'(?s)/\*.*?\*/', '/* */', content)
+	# try to filter out "#if 0 ... #endif" sections (hacky)
+	content = re.sub(r'(?sm)^#if 0$.*?^#endif$', '', content)
 	includes = re.findall(r'(?m)^#include ["<]([^">]+)[">]', content)
 	includes = prependPath(includes, file)
 	
