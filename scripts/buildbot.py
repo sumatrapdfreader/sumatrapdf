@@ -373,7 +373,13 @@ def build_index_html():
 		if "stats.txt" not in files:
 			print("stats.txt missing in %s (%s)" % (ver, str(files)))
 			assert("stats.txt" in files)
-		stats = stats_for_ver(ver)
+		try:
+			stats = stats_for_ver(ver)
+		except:
+			print("names: %s" % str(names))
+			print("ver:   %s" % str(ver))
+			print("files: %s" % str(files))
+			raise
 		total_warnings = stats.analyze_sumatra_warnings_count, stats.analyze_mupdf_warnings_count, stats.analyze_ext_warnings_count
 		if int(ver) >= g_first_analyze_build and total_warnings > 0:
 			assert("analyze.html" in files)
