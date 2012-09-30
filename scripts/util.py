@@ -133,7 +133,21 @@ def verify_started_in_right_directory():
 def run_cmd(*args):
   cmd = " ".join(args)
   print("run_cmd_throw: '%s'" % cmd)
-  cmdproc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  # this magic disables the modal dialog that windows shows if the process crashes
+  # TODO: it doesn't seem to work, maybe because it was actually a crash in a process
+  # sub-launched from the process I'm launching. I had to manually disable this in
+  # registry, as per http://stackoverflow.com/questions/396369/how-do-i-disable-the-debug-close-application-dialog-on-windows-vista:
+  # DWORD HKLM or HKCU\Software\Microsoft\Windows\Windows Error Reporting\DontShowUI = "1"
+  # DWORD HKLM or HKCU\Software\Microsoft\Windows\Windows Error Reporting\Disabled = "1"
+  # see: http://msdn.microsoft.com/en-us/library/bb513638.aspx
+  if sys.platform.startswith("win"):
+    import ctypes
+    SEM_NOGPFAULTERRORBOX = 0x0002 # From MSDN
+    ctypes.windll.kernel32.SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    subprocess_flags = 0x8000000 #win32con.CREATE_NO_WINDOW?
+  else:
+    subprocess_flags = 0
+  cmdproc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=subprocess_flags)
   res = cmdproc.communicate()
   return (res[0], res[1], cmdproc.returncode)
 
@@ -141,7 +155,16 @@ def run_cmd(*args):
 def run_cmd_throw(*args):
   cmd = " ".join(args)
   print("run_cmd_throw: '%s'" % cmd)
-  cmdproc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+  # see comment in run_cmd()
+  if sys.platform.startswith("win"):
+    import ctypes
+    SEM_NOGPFAULTERRORBOX = 0x0002 # From MSDN
+    ctypes.windll.kernel32.SetErrorMode(SEM_NOGPFAULTERRORBOX);
+    subprocess_flags = 0x8000000 #win32con.CREATE_NO_WINDOW?
+  else:
+    subprocess_flags = 0
+  cmdproc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=subprocess_flags)
   res = cmdproc.communicate()
   errcode = cmdproc.returncode
   if 0 != errcode:

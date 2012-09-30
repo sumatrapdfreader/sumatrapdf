@@ -380,8 +380,8 @@ def build_index_html():
 			print("ver:   %s" % str(ver))
 			print("files: %s" % str(files))
 			raise
-		total_warnings = stats.analyze_sumatra_warnings_count, stats.analyze_mupdf_warnings_count, stats.analyze_ext_warnings_count
-		if int(ver) >= g_first_analyze_build and total_warnings > 0:
+		total_warnings = stats.analyze_sumatra_warnings_count + stats.analyze_mupdf_warnings_count + stats.analyze_ext_warnings_count
+		if int(ver) >= g_first_analyze_build and total_warnings > 0 and not stats.rel_failed:
 			assert("analyze.html" in files)
 
 		s3_ver_url = "http://kjkpub.s3.amazonaws.com/" + s3_dir + ver + "/"
