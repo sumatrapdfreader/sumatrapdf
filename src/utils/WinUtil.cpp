@@ -1,14 +1,6 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// TODO: this is a hack to get MS_ENH_RSA_AES_PROV_XP, which is only available
-// in xp (0x0501) and we set WINVER and _WIN32_WINNT to w2k (0x0500)
-// We should just switch to xp globally
-#undef WINVER
-#undef _WIN32_WINNT
-#define WINVER 0x0501
-#define _WIN32_WINNT 0x0501
-
 #include "BaseUtil.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
@@ -1146,6 +1138,14 @@ Error:
     goto Exit;
 }
 
+// Note: MS_ENH_RSA_AES_PROV_XP isn't defined in the SDK shipping with VS2008
+#ifndef MS_ENH_RSA_AES_PROV_XP
+#define MS_ENH_RSA_AES_PROV_XP _T("Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)")
+#endif
+#ifndef PROV_RSA_AES
+#define PROV_RSA_AES 24
+#endif
+
 // MD5 digest that uses Windows' CryptoAPI. It's good for code that doesn't already
 // have MD5 code (smaller code) and it's probably faster than most other implementations
 // TODO: could try to use CryptoNG available starting in Vista. But then again, would that be worth it?
@@ -1211,4 +1211,3 @@ void CalcSha1DigestWin(void *data, size_t byteCount, unsigned char digest[32])
     CryptDestroyHash(hHash);
     CryptReleaseContext(hProv,0);
 }
-
