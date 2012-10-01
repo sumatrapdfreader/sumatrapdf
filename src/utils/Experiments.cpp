@@ -7,6 +7,7 @@ have not better place for. It's compiled in debug build
 but only to make sure it's compileable. */
 
 #include "BaseUtil.h"
+#include "FileUtil.h"
 
 // mini(un)zip
 #include <ioapi.h>
@@ -16,7 +17,7 @@ but only to make sure it's compileable. */
 #include <unzip.h>
 
 class ZipFileInfo {
-    friend class ZipExtractorImpl;
+    friend class ZipExtractor;
 public:
     // of interest to callers of ZipExtractor APIs
     TCHAR *     fileName;
@@ -29,83 +30,79 @@ private:
     unz64_file_pos  filePos;
 };
 
-class ZipExtractor {
-public:
-    friend class ZipExtractorImpl;
+struct ZipExtractorData;
 
+class ZipExtractor {
+
+private:
+    ZipExtractorData *d;
+    ZipExtractor(Allocator *allocator);
+
+public:
     static ZipExtractor *CreateFromFile(const TCHAR *path, Allocator *allocator=NULL);
     static ZipExtractor *CreateFromStream(IStream *stream, Allocator *allocator=NULL);
 
-    virtual ~ZipExtractor() {}
+    ~ZipExtractor();
 
-    virtual Vec<ZipFileInfo> *GetFileInfos() = 0;
-    virtual bool ExtractTo(size_t fileInfoIdx, const TCHAR *dir, const TCHAR *extractedName = NULL) = 0;
-    virtual char *GetFileData(size_t fileInfoIdx, size_t *lenOut=NULL) = 0;
-
-private:
-    ZipExtractor() {}
+    Vec<ZipFileInfo> *GetFileInfos();
+    bool ExtractTo(size_t fileInfoIdx, const TCHAR *dir, const TCHAR *extractedName = NULL);
+    void *GetFileData(size_t fileInfoIdx, size_t *lenOut=NULL);
 };
 
-class ZipExtractorImpl : public ZipExtractor {
-    friend class ZipExtractor;
-
-    Vec<ZipFileInfo> fileInfos;
+struct ZipExtractorData {
     Allocator *allocator;
-public:
-    virtual ~ZipExtractorImpl() {}
-    ZipExtractorImpl() {}
-
-    virtual Vec<ZipFileInfo> *GetFileInfos();
-    virtual bool ExtractTo(size_t fileInfoIdx, const TCHAR *dir, const TCHAR *extractedName = NULL);
-    virtual char *GetFileData(size_t fileInfoIdx, size_t *lenOut=NULL);
-
-private:
-    ZipExtractorImpl(Allocator *a) : allocator(a) {}
-    bool OpenFile(const TCHAR *name);
-    bool OpenStream(IStream *stream);
+    Vec<ZipFileInfo> fileInfos;
+    const TCHAR *path;
+    IStream *stream;
 };
+
+ZipExtractor::ZipExtractor(Allocator *allocator)
+{
+    d = new ZipExtractorData;
+    d->allocator = allocator;
+    d->path = NULL;
+    d->stream = NULL;
+}
+
+ZipExtractor::~ZipExtractor()
+{
+    delete d;
+}
 
 ZipExtractor *ZipExtractor::CreateFromFile(const TCHAR *path, Allocator *allocator)
 {
-    ZipExtractorImpl *ze = new ZipExtractorImpl(allocator);
-    if (!ze->OpenFile(path)) {
-        delete ze;
-        return NULL;
-    }
+    ZipExtractor *ze = new ZipExtractor(allocator);
+    ze->d->path = path;
+    // TODO: do sth.
     return ze;
 }
 
 ZipExtractor *ZipExtractor::CreateFromStream(IStream *stream, Allocator *allocator)
 {
-    ZipExtractorImpl *ze = new ZipExtractorImpl(allocator);
-    if (!ze->OpenStream(stream)) {
-        delete ze;
-        return NULL;
-    }
+    ZipExtractor *ze = new ZipExtractor(allocator);
+    ze->d->stream = stream;
+    // TODO: do sth.
     return ze;
 }
 
-bool ZipExtractorImpl::OpenFile(const TCHAR *name)
-{
-    return false;
-}
-
-bool ZipExtractorImpl::OpenStream(IStream *stream)
-{
-    return false;
-}
-
-Vec<ZipFileInfo> *ZipExtractorImpl::GetFileInfos()
+Vec<ZipFileInfo> *ZipExtractor::GetFileInfos()
 {
     return NULL;
 }
 
-bool ZipExtractorImpl::ExtractTo(size_t fileInfoIdx, const TCHAR *dir, const TCHAR *extractedName)
+bool ZipExtractor::ExtractTo(size_t fileInfoIdx, const TCHAR *dir, const TCHAR *extractedName)
 {
-    return false;
+    size_t fileDataSize;
+    void *fileData = GetFileData(fileInfoIdx, &fileDataSize);
+    if (!fileData)
+        return false;
+    TCHAR *path = path::Join(dir, extractedName);
+    bool ok = file::WriteAll(path, fileData, fileDataSize);
+    free(fileData);
+    return ok;
 }
 
-char *ZipExtractorImpl::GetFileData(size_t fileInfoIdx, size_t *lenOut)
+void *ZipExtractor::GetFileData(size_t fileInfoIdx, size_t *lenOut)
 {
     return NULL;
 }
