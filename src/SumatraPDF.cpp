@@ -3017,11 +3017,15 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     LoadDocument(args);
 }
 
+// scrolls half a page down/up (needed for Shift+Up/Down)
+#define SB_HPAGEUP   (WM_USER + 1)
+#define SB_HPAGEDOWN (WM_USER + 2)
+
 static void OnVScroll(WindowInfo& win, WPARAM wParam)
 {
     if (!win.IsDocLoaded())
         return;
-    assert(win.dm);
+    AssertCrash(win.dm);
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof (si);
@@ -3038,6 +3042,8 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
     case SB_BOTTOM:     si.nPos = si.nMax; break;
     case SB_LINEUP:     si.nPos -= lineHeight; break;
     case SB_LINEDOWN:   si.nPos += lineHeight; break;
+    case SB_HPAGEUP:    si.nPos -= si.nPage / 2; break;
+    case SB_HPAGEDOWN:  si.nPos += si.nPage / 2; break;
     case SB_PAGEUP:     si.nPos -= si.nPage; break;
     case SB_PAGEDOWN:   si.nPos += si.nPage; break;
     case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
@@ -3050,7 +3056,7 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
     GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
 
     // If the position has changed, scroll the window and update it
-    if (win.IsDocLoaded() && (si.nPos != iVertPos))
+    if (si.nPos != iVertPos)
         win.dm->ScrollYTo(si.nPos);
 }
 
@@ -3058,7 +3064,7 @@ static void OnHScroll(WindowInfo& win, WPARAM wParam)
 {
     if (!win.IsDocLoaded())
         return;
-    assert(win.dm);
+    AssertCrash(win.dm);
 
     SCROLLINFO si = { 0 };
     si.cbSize = sizeof (si);
@@ -3083,7 +3089,7 @@ static void OnHScroll(WindowInfo& win, WPARAM wParam)
     GetScrollInfo(win.hwndCanvas, SB_HORZ, &si);
 
     // If the position has changed, scroll the window and update it
-    if (win.IsDocLoaded() && (si.nPos != iVertPos))
+    if (si.nPos != iVertPos)
         win.dm->ScrollXTo(si.nPos);
 }
 
@@ -3491,12 +3497,12 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
             win->dm->GoToNextPage(0);
     } else if (VK_UP == key) {
         if (win->dm->NeedVScroll())
-            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+            SendMessage(win->hwndCanvas, WM_VSCROLL, IsShiftPressed() ? SB_HPAGEUP : SB_LINEUP, 0);
         else
             win->dm->GoToPrevPage(-1);
     } else if (VK_DOWN == key) {
         if (win->dm->NeedVScroll())
-            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+            SendMessage(win->hwndCanvas, WM_VSCROLL, IsShiftPressed() ? SB_HPAGEDOWN : SB_LINEDOWN, 0);
         else
             win->dm->GoToNextPage(0);
     } else if (inTextfield) {
