@@ -15,7 +15,7 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Thu Sep 13 09:58:39 2012
-+++ openjpeg\j2k.c	Thu Sep 20 19:37:17 2012
++++ openjpeg\j2k.c	Thu Sep 20 20:35:01 2012
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -183,7 +183,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  					tcp_poc->layno1		= parameters->POC[numpocs_tile].layno1;
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Thu Sep 13 09:58:39 2012
-+++ openjpeg\jp2.c	Thu Sep 20 19:42:28 2012
++++ openjpeg\jp2.c	Thu Sep 20 20:35:01 2012
 @@ -171,10 +171,15 @@
  			box->length = cio_numbytesleft(cio) + 12;
  	}
@@ -293,7 +293,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  
 diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 --- openjpeg.orig\opj_config.h	Thu Jan 01 01:00:00 1970
-+++ openjpeg\opj_config.h	Thu Sep 20 20:26:49 2012
++++ openjpeg\opj_config.h	Thu Sep 20 20:35:01 2012
 @@ -0,0 +1,41 @@
 +/* If you want to build the library manually without using
 + * 'configure' or 'CMake'

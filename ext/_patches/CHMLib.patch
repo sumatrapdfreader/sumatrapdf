@@ -1,6 +1,6 @@
 diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
 --- CHMLib.orig\src\chm_lib.c	Thu Jul 02 23:34:54 2009
-+++ CHMLib\src\chm_lib.c	Sun Apr 29 11:26:37 2012
++++ CHMLib\src\chm_lib.c	Mon Oct 01 12:24:12 2012
 @@ -92,11 +92,11 @@
  #ifdef WIN32
  #define CHM_ACQUIRE_LOCK(a) do {                        \
@@ -43,7 +43,72 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
  }
  
  /* structure of PMGL headers */
-@@ -565,10 +572,15 @@
+@@ -484,15 +491,19 @@
+     Int32       block_next;             /* 10 */
+ }; /* __attribute__ ((aligned (1))); */
+ 
+ static int _unmarshal_pmgl_header(unsigned char **pData,
+                                   unsigned int *pDataLen,
++                                  unsigned int blockLen,
+                                   struct chmPmglHeader *dest)
+ {
+     /* we only know how to deal with a 0x14 byte structures */
+     if (*pDataLen != _CHM_PMGL_LEN)
+         return 0;
++    /* SumatraPDF: sanity check */
++    if (blockLen < _CHM_PMGL_LEN)
++        return 0;
+ 
+     /* unmarshal fields */
+     _unmarshal_char_array(pData, pDataLen,  dest->signature, 4);
+     _unmarshal_uint32    (pData, pDataLen, &dest->free_space);
+     _unmarshal_uint32    (pData, pDataLen, &dest->unknown_0008);
+@@ -500,10 +511,13 @@
+     _unmarshal_int32     (pData, pDataLen, &dest->block_next);
+ 
+     /* check structure */
+     if (memcmp(dest->signature, _chm_pmgl_marker, 4) != 0)
+         return 0;
++    /* SumatraPDF: sanity check */
++    if (dest->free_space > blockLen - _CHM_PMGL_LEN)
++        return 0;
+ 
+     return 1;
+ }
+ 
+ /* structure of PMGI headers */
+@@ -515,23 +529,30 @@
+     UInt32      free_space;             /*  4 */
+ }; /* __attribute__ ((aligned (1))); */
+ 
+ static int _unmarshal_pmgi_header(unsigned char **pData,
+                                   unsigned int *pDataLen,
++                                  unsigned int blockLen,
+                                   struct chmPmgiHeader *dest)
+ {
+     /* we only know how to deal with a 0x8 byte structures */
+     if (*pDataLen != _CHM_PMGI_LEN)
+         return 0;
++    /* SumatraPDF: sanity check */
++    if (blockLen < _CHM_PMGI_LEN)
++        return 0;
+ 
+     /* unmarshal fields */
+     _unmarshal_char_array(pData, pDataLen,  dest->signature, 4);
+     _unmarshal_uint32    (pData, pDataLen, &dest->free_space);
+ 
+     /* check structure */
+     if (memcmp(dest->signature, _chm_pmgi_marker, 4) != 0)
+         return 0;
++    /* SumatraPDF: sanity check */
++    if (dest->free_space > blockLen - _CHM_PMGI_LEN)
++        return 0;
+ 
+     return 1;
+ }
+ 
+ /* structure of LZXC reset table */
+@@ -565,10 +586,15 @@
      _unmarshal_uint64    (pData, pDataLen, &dest->block_len);
  
      /* check structure */
@@ -59,7 +124,7 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
  }
  
  /* structure of LZXC control data block */
-@@ -936,10 +948,12 @@
+@@ -936,10 +962,12 @@
              !_unmarshal_lzxc_control_data(&sbufpos, &sremain,
                                            &ctlData))
          {
@@ -72,7 +137,7 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
          newHandle->reset_interval = ctlData.resetInterval;
  
  /* Jed, Mon Jun 28: Experimentally, it appears that the reset block count */
-@@ -951,10 +965,11 @@
+@@ -951,10 +979,11 @@
  #else
          newHandle->reset_blkcount = newHandle->reset_interval    /
                                      (newHandle->window_size / 2) *
@@ -84,7 +149,33 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
      /* initialize cache */
      chm_set_param(newHandle, CHM_PARAM_MAX_BLOCKS_CACHED,
                    CHM_MAX_BLOCKS_CACHED);
-@@ -1543,10 +1558,16 @@
+@@ -1172,11 +1201,11 @@
+     char buffer[CHM_MAX_PATHLEN+1];
+ 
+     /* figure out where to start and end */
+     cur = page_buf;
+     hremain = _CHM_PMGL_LEN;
+-    if (! _unmarshal_pmgl_header(&cur, &hremain, &header))
++    if (! _unmarshal_pmgl_header(&cur, &hremain, block_len, &header))
+         return NULL;
+     end = page_buf + block_len - (header.free_space);
+ 
+     /* now, scan progressively */
+     while (cur < end)
+@@ -1216,11 +1245,11 @@
+     char buffer[CHM_MAX_PATHLEN+1];
+ 
+     /* figure out where to start and end */
+     cur = page_buf;
+     hremain = _CHM_PMGI_LEN;
+-    if (! _unmarshal_pmgi_header(&cur, &hremain, &header))
++    if (! _unmarshal_pmgi_header(&cur, &hremain, block_len, &header))
+         return -1;
+     end = page_buf + block_len - (header.free_space);
+ 
+     /* now, scan progressively */
+     while (cur < end)
+@@ -1543,10 +1572,16 @@
          h->lzx_state = LZXinit(window_size);
      }
  
@@ -101,3 +192,29 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
      memcpy(buf, ubuffer+nOffset, (unsigned int)nLen);
      CHM_RELEASE_LOCK(h->lzx_mutex);
      return nLen;
+@@ -1654,11 +1689,11 @@
+         }
+ 
+         /* figure out start and end for this page */
+         cur = page_buf;
+         lenRemain = _CHM_PMGL_LEN;
+-        if (! _unmarshal_pmgl_header(&cur, &lenRemain, &header))
++        if (! _unmarshal_pmgl_header(&cur, &lenRemain, h->block_len, &header))
+         {
+             free(page_buf);
+             return 0;
+         }
+         end = page_buf + h->block_len - (header.free_space);
+@@ -1803,11 +1838,11 @@
+         }
+ 
+         /* figure out start and end for this page */
+         cur = page_buf;
+         lenRemain = _CHM_PMGL_LEN;
+-        if (! _unmarshal_pmgl_header(&cur, &lenRemain, &header))
++        if (! _unmarshal_pmgl_header(&cur, &lenRemain, h->block_len, &header))
+         {
+             free(page_buf);
+             return 0;
+         }
+         end = page_buf + h->block_len - (header.free_space);
