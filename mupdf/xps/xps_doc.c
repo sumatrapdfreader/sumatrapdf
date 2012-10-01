@@ -379,8 +379,19 @@ xps_read_and_process_metadata_part(xps_document *doc, char *name, xps_fixdoc *fi
 	if (xps_has_part(doc, name))
 	{
 		xps_part *part = xps_read_part(doc, name);
+		/* SumatraPDF: fix memory leak */
+		fz_try(doc->ctx)
+		{
 		xps_parse_metadata(doc, part, fixdoc);
+		}
+		fz_always(doc->ctx)
+		{
 		xps_free_part(doc, part);
+		}
+		fz_catch(doc->ctx)
+		{
+			fz_rethrow(doc->ctx);
+		}
 	}
 }
 
@@ -427,7 +438,16 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	char *height_att;
 
 	part = xps_read_part(doc, page->name);
+	/* SumatraPDF: fix memory leak */
+	fz_var(part);
+	fz_try(doc->ctx)
+	{
 	root = xml_parse_document(doc->ctx, part->data, part->size);
+	}
+	fz_catch(doc->ctx)
+	{
+		root = NULL;
+	}
 	xps_free_part(doc, part);
 	if (!root)
 		fz_throw(doc->ctx, "FixedPage missing root element");

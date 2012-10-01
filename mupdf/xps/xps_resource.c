@@ -64,7 +64,15 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 	/* External resource dictionaries MUST NOT reference other resource dictionaries */
 	xps_resolve_url(part_name, base_uri, source_att, sizeof part_name);
 	part = xps_read_part(doc, part_name);
+	/* SumatraPDF: fix memory leak */
+	fz_try(doc->ctx)
+	{
 	xml = xml_parse_document(doc->ctx, part->data, part->size);
+	}
+	fz_catch(doc->ctx)
+	{
+		xml = NULL;
+	}
 	xps_free_part(doc, part);
 
 	if (!xml)

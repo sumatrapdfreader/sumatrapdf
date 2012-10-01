@@ -294,7 +294,7 @@ xps_doc_props *xps_extract_doc_props(xps_document *doc)
 {
 	char path[1024];
 	xps_part *part;
-	xps_doc_props *props;
+	xps_doc_props *props = NULL;
 	fz_var(part);
 	fz_var(props);
 
@@ -302,10 +302,10 @@ xps_doc_props *xps_extract_doc_props(xps_document *doc)
 	if (!*path)
 		return NULL;
 	part = xps_read_part(doc, path);
-	props = fz_malloc_struct(doc->ctx, xps_doc_props);
 
 	fz_try(doc->ctx)
 	{
+		props = fz_malloc_struct(doc->ctx, xps_doc_props);
 		props->title = xps_hacky_get_prop(doc->ctx, part->data, "dc:title");
 		props->author = xps_hacky_get_prop(doc->ctx, part->data, "dc:creator");
 		props->subject = xps_hacky_get_prop(doc->ctx, part->data, "dc:subject");
