@@ -4964,6 +4964,11 @@ InitMouseWheelInfo:
             OnTimer(*win, hwnd, wParam);
             break;
 
+        case WM_MOUSEACTIVATE:
+            if ((win->presentation || win->fullScreen) && hwnd != GetForegroundWindow())
+                return MA_ACTIVATEANDEAT;
+            return MA_ACTIVATE;
+
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
