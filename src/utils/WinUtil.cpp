@@ -1156,10 +1156,8 @@ void CalcMD5DigestWin(const void *data, size_t byteCount, unsigned char digest[1
 
     // http://stackoverflow.com/questions/9794745/ms-cryptoapi-doesnt-work-on-windows-xp-with-cryptacquirecontext
     BOOL ok = CryptAcquireContext(&hProv, NULL, MS_DEF_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    if (!ok) {
-        // TODO: test this on XP
+    if (!ok)
         ok = CryptAcquireContext(&hProv, NULL, MS_ENH_RSA_AES_PROV_XP, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
-    }
 
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash);
