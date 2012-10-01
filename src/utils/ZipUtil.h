@@ -42,40 +42,6 @@ protected:
     void ExtractFilenames();
 };
 
-// TODO: this is just a sketch of an API, without most of the code
-#if 0
-class ZipFileInfo {
-    friend class ZipExtractorImpl;
-public:
-    // of interest to callers of ZipExtractor APIs
-    TCHAR *     fileName;
-    FILETIME    fileTime;
-
-private:
-    // for internal use
-    uint32_t        hash;
-    unz_file_info64 fileInfo;
-    unz64_file_pos  filePos;
-};
-
-class ZipExtractor {
-public:
-    friend class ZipExtractorImpl;
-
-    static ZipExtractor *CreateFromFile(const TCHAR *path, Allocator *allocator=NULL);
-    static ZipExtractor *CreateFromStream(IStream *stream, Allocator *allocator=NULL);
-
-    virtual ~ZipExtractor() {}
-
-    virtual Vec<ZipFileInfo> *GetFileInfos() = 0;
-    virtual bool ExtractTo(size_t fileInfoIdx, const TCHAR *dir, const TCHAR *extractedName = NULL) = 0;
-    virtual char *GetFileData(size_t fileInfoIdx, size_t *lenOut=NULL) = 0;
-
-private:
-    ZipExtractor() {}
-};
-#endif
-
 class ZipCreatorData;
 
 class ZipCreator {

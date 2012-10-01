@@ -308,6 +308,7 @@
     <ClCompile Include="src\utils\DbgHelpDyn.cpp" />
     <ClCompile Include="src\utils\DebugLog.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
+    <ClCompile Include="src\utils\Experiments.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />

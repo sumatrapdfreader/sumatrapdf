@@ -1010,6 +1010,9 @@
     <ClCompile Include="ext\zlib\minizip\zip.c">
       <Filter>zlib\minizip</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\Experiments.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1178,9 +1181,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\GeomUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\HttpUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\SimpleLog.h">
@@ -1492,6 +1492,7 @@
     <ClInclude Include="ext\zlib\minizip\zip.h">
       <Filter>zlib\minizip</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\Http.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">

@@ -160,6 +160,10 @@ UTILS_OBJS = \
 	$(OU)\UiMsg.obj $(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
 	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj
 
+!if "$(CFG)"=="dbg"
+UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
+!endif
+
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
 ZIP_OBJS = \
 	$(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(BZIP2_OBJS)
