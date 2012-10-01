@@ -8,7 +8,7 @@ from util import s3UploadFilePublic, s3Delete, s3DownloadToFile
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, s3List
 from util import s3UploadDataPublicWithContentType, s3_exist
 from util import parse_svninfo_out, ensure_path_exists, build_installer_data
-from util import verify_started_in_right_directory
+from util import verify_started_in_right_directory, strip_empty_lines
 
 """
 TODO:
@@ -98,7 +98,7 @@ def htmlize_src_link(s, ver):
 # <a href="https://code.google.com/p/sumatrapdf/source/browse/trunk/src/utils/allocator.h#156">src\utils\allocator.h(156)</a>:<br>
 # warning C6011: Dereferencing NULL pointer 'node'. : Lines: 149, 150, 151, 153, 154, 156
 def htmlize_error_lines(lines, ver):
-	if len(lines) == 0: return []
+	if len(lines) == 0: return ([],[],[])
 	sumatra_errors = []
 	mupdf_errors = []
 	ext_errors = []
@@ -477,10 +477,6 @@ def sign_try_hard(obj_dir):
 		if try_sign(obj_dir): return
 		tries -= 1
 	assert(False)
-
-def strip_empty_lines(s):
-	lines = [l.strip() for l in s.split("\n") if len(l.strip()) > 0]
-	return string.join(lines, "\n")
 
 def build_release(stats, ver):
 	config = "CFG=rel"

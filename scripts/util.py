@@ -1,4 +1,4 @@
-import os.path, re, shutil, struct, subprocess, sys, bz2, tempfile, hashlib
+import os.path, re, shutil, struct, subprocess, sys, bz2, tempfile, hashlib, string
 import zipfile2 as zipfile
 
 def import_boto():
@@ -31,6 +31,10 @@ def group(list, size):
 
 def uniquify(array):
   return list(set(array))
+
+def strip_empty_lines(s):
+  lines = [l.strip() for l in s.split("\n") if len(l.strip()) > 0]
+  return string.join(lines, "\n")
 
 def test_for_flag(args, arg, has_data=False):
   if arg not in args:
