@@ -218,3 +218,19 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
              return 0;
          }
          end = page_buf + h->block_len - (header.free_space);
+diff -rPu5 CHMLib.orig\src\lzx.c CHMLib\src\lzx.c
+--- CHMLib.orig\src\lzx.c	Thu Jul 02 23:34:54 2009
++++ CHMLib\src\lzx.c	Mon Oct 01 12:36:01 2012
+@@ -175,11 +175,11 @@
+     /* if a previously allocated window is big enough, keep it     */
+     if (window < 15 || window > 21) return NULL;
+ 
+     /* allocate state and associated window */
+     pState = (struct LZXstate *)malloc(sizeof(struct LZXstate));
+-    if (!(pState->window = (UBYTE *)malloc(wndsize)))
++    if (!pState || !(pState->window = (UBYTE *)malloc(wndsize)))
+     {
+         free(pState);
+         return NULL;
+     }
+     pState->actual_size = wndsize;

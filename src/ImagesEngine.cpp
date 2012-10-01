@@ -410,7 +410,7 @@ static TCHAR *GetImageProperty(Bitmap *bmp, PROPID id, PROPID altId=0)
     TCHAR *value = NULL;
     UINT size = bmp->GetPropertyItemSize(id);
     PropertyItem *item = (PropertyItem *)malloc(size);
-    Status ok = bmp->GetPropertyItem(id, size, item);
+    Status ok = item ? bmp->GetPropertyItem(id, size, item) : OutOfMemory;
     if (Ok != ok)
         /* property didn't exist */;
     else if (PropertyTagTypeASCII == item->type)
@@ -806,6 +806,14 @@ bool CbxEngineImpl::FinishLoadingCbz()
     return true;
 }
 
+static char *GetTextContent(HtmlPullParser& parser)
+{
+    HtmlToken *tok = parser.Next();
+    if (!tok || !tok->IsText())
+        return NULL;
+    return ResolveHtmlEntities(tok->s, tok->sLen);
+}
+
 // extract ComicInfo.xml metadata
 // cf. http://comicrack.cyolito.com/downloads/comicrack/ComicRack/Support-Files/ComicInfoSchema.zip/
 void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
@@ -814,31 +822,41 @@ void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
     HtmlPullParser parser(xmlData, str::Len(xmlData));
     HtmlToken *tok;
     while ((tok = parser.Next()) && !tok->IsError()) {
-        if (tok->IsStartTag() && tok->NameIs("Title") && (tok = parser.Next()) && tok->IsText()) {
-            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
-            observe("/ComicBookInfo/1.0/title", value, json::Type_String);
+        if (!tok->IsStartTag())
+            continue;
+        if (tok->NameIs("Title")) {
+            ScopedMem<char> value(GetTextContent(parser));
+            if (value)
+                observe("/ComicBookInfo/1.0/title", value, json::Type_String);
         }
-        else if (tok->IsStartTag() && tok->NameIs("Year") && (tok = parser.Next()) && tok->IsText()) {
-            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
-            observe("/ComicBookInfo/1.0/publicationYear", value, json::Type_Number);
+        else if (tok->NameIs("Year")) {
+            ScopedMem<char> value(GetTextContent(parser));
+            if (value)
+                observe("/ComicBookInfo/1.0/publicationYear", value, json::Type_Number);
         }
-        else if (tok->IsStartTag() && tok->NameIs("Month") && (tok = parser.Next()) && tok->IsText()) {
-            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
-            observe("/ComicBookInfo/1.0/publicationMonth", value, json::Type_Number);
+        else if (tok->NameIs("Month")) {
+            ScopedMem<char> value(GetTextContent(parser));
+            if (value)
+                observe("/ComicBookInfo/1.0/publicationMonth", value, json::Type_Number);
         }
-        if (tok->IsStartTag() && tok->NameIs("Summary") && (tok = parser.Next()) && tok->IsText()) {
-            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
-            observe("/X-summary", value, json::Type_String);
+        else if (tok->NameIs("Summary")) {
+            ScopedMem<char> value(GetTextContent(parser));
+            if (value)
+                observe("/X-summary", value, json::Type_String);
         }
-        else if (tok->IsStartTag() && tok->NameIs("Writer") && (tok = parser.Next()) && tok->IsText()) {
-            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
-            observe("/ComicBookInfo/1.0/credits[0]/person", value, json::Type_String);
-            observe("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type_Bool);
+        else if (tok->NameIs("Writer")) {
+            ScopedMem<char> value(GetTextContent(parser));
+            if (value) {
+                observe("/ComicBookInfo/1.0/credits[0]/person", value, json::Type_String);
+                observe("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type_Bool);
+            }
         }
-        else if (tok->IsStartTag() && tok->NameIs("Penciller") && (tok = parser.Next()) && tok->IsText()) {
-            ScopedMem<char> value(ResolveHtmlEntities(tok->s, tok->sLen));
-            observe("/ComicBookInfo/1.0/credits[1]/person", value, json::Type_String);
-            observe("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type_Bool);
+        else if (tok->NameIs("Penciller")) {
+            ScopedMem<char> value(GetTextContent(parser));
+            if (value) {
+                observe("/ComicBookInfo/1.0/credits[1]/person", value, json::Type_String);
+                observe("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type_Bool);
+            }
         }
     }
 }

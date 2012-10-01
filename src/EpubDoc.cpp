@@ -1073,6 +1073,8 @@ char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOu
     bool hasPalette = hdr.depth != 16;
     size_t tgaDataSize = 18 + (hasPalette ? 256 * 3 : 0) + width * height * (hasPalette ? 1 : 3);
     uint8_t *tgaData = SAZA(uint8_t, tgaDataSize);
+    if (!tgaData)
+        return NULL;
 
     // encode TGA header
     uint8_t *tgaHeader = tgaData;

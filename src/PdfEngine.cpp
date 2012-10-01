@@ -107,6 +107,10 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap) :
 
     // always try to produce an 8-bit palette for saving some memory
     unsigned char *bmpData = (unsigned char *)calloc(rows8, h);
+    if (!bmpData) {
+        free(bmi);
+        return;
+    }
     fz_pixmap *bgrPixmap = NULL;
     if (bmpData && pixmap->n == 4 &&
         pixmap->colorspace == fz_find_device_colorspace(ctx, "DeviceRGB"))

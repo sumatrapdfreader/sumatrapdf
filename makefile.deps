@@ -468,6 +468,9 @@ $(OU)\DialogSizer.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\DirIter.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DirIter.h
 $(OU)\DirIter.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\DirIter.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OU)\Experiments.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OU)\Experiments.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\Experiments.obj: src\utils\Vec.h
 $(OU)\FileTransactions.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileTransactions.h
 $(OU)\FileTransactions.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\FileTransactions.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
