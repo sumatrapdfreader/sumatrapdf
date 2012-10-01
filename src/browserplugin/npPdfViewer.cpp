@@ -376,10 +376,16 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
         plogf("sp:   SavedData: len=%d", saved->len);
 
     instance->pdata = calloc(1, sizeof(InstanceData));
+    if (!instance->pdata)
+    {
+        plogf("error: NPERR_OUT_OF_MEMORY_ERROR");
+        return NPERR_OUT_OF_MEMORY_ERROR;
+    }
+
     data = (InstanceData *)instance->pdata;
     gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
     
-    if (data && GetExePath(data->exepath, dimof(data->exepath)))
+    if (GetExePath(data->exepath, dimof(data->exepath)))
         data->message = _T("Opening document in SumatraPDF...");
     else
         data->message = _T("Error: SumatraPDF hasn't been found!");
