@@ -268,6 +268,8 @@ void fz_var_imp(void *);
 #define fz_catch(ctx) \
 		} while(0); \
 	} \
+	/* SumatraPDF: teach PREfast about fz_try/fz_catch */ \
+	fz_analysis_assume(!ctx->error->stack[ctx->error->top].code); \
 	if (ctx->error->stack[ctx->error->top--].code)
 
 int fz_push_try(fz_error_context *ex);
