@@ -96,11 +96,14 @@ wchar_t * __cdecl _wcsdup_dbg(const wchar_t *s, int blockType, const char *file,
     return _wcsdup(s);
 }
 
+#pragma warning( push )
+#pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
 static void crash_me()
 {
     char *p = 0;
     *p = 0;
 }
+#pragma warning( pop )
 
 void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
 {
@@ -116,6 +119,8 @@ double __cdecl _wtof(const wchar_t *s)
     }
     size_t len = wcslen(s);
     char *s2 = (char*)malloc(len+1);
+    if (!s2)
+        return 0;
     char *tmp = s2;
     while (*s) {
         *tmp++ = (char)*s++;
@@ -166,6 +171,8 @@ void* __cdecl _aligned_malloc(size_t size, size_t alignment)
         return NULL;
 
     AlignedMemory* ret = (AlignedMemory*)malloc(sizeof(AlignedMemory));
+    if (!ret)
+        return NULL;
 
     // The memory is aligned towards the lowest address that so only
     // alignment - 1 bytes needs to be allocated.
