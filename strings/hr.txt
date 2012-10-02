@@ -245,6 +245,9 @@ Provjeri ažuriranje
 Comic books
 Stripovi
 
+Compatibility
+Kompatibilnost
+
 Continuous
 Slijedno
 
@@ -548,6 +551,9 @@ Prethodna stranica
 Print
 Ispis
 
+Print as &image (requires more memory)
+Ispiši kao sl&iku (zahtijeva više memorija)
+
 Print range
 Ispiši raspon
 
@@ -610,6 +616,9 @@ Pošalji &e-poštom...
 
 Set inverse search command-line
 Omogući unazadnu pretragu
+
+Show &Bookmarks
+Prikaži &oznake
 
 Show &Toolbar
 Prikaži alatnu traku
@@ -703,9 +712,4 @@ kopiram tekst
 
 printing document
 ispisujem dokument
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
-#Show &Bookmarks
 

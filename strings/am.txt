@@ -244,6 +244,9 @@ Check for &Updates
 Comic books
 Հումորիստական գրքեր
 
+Compatibility
+Համատեղելիությունը
+
 Continuous
 Անդադար
 
@@ -547,6 +550,9 @@ Previous Page
 Print
 Տպել
 
+Print as &image (requires more memory)
+Տպել որպես &նկար (պահանջում է լր. հիշողություն)
+
 Print range
 Տպելու կարգը
 
@@ -609,6 +615,9 @@ Send by &E-mail...
 
 Set inverse search command-line
 Նշել փնտրման հրամանների տողը
+
+Show &Bookmarks
+Ցուցադրել &Էջանիշերը
 
 Show &Toolbar
 Ցույց տալ գործիքները
@@ -702,9 +711,4 @@ copying text
 
 printing document
 Ֆայլը տպվում է
-
-# Untranslated:
-#Compatibility
-#Print as &image (requires more memory)
-#Show &Bookmarks
 
