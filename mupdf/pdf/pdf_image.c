@@ -109,8 +109,9 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 	unsigned char *samples = NULL;
 	int w = (image->base.w + (factor-1)) / factor;
 	int h = (image->base.h + (factor-1)) / factor;
-	pdf_image_key *key;
-
+	/* SumatraPDF: prevent use of uninitialized value */
+	pdf_image_key *key = NULL;
+	fz_var(key);
 	fz_var(tile);
 	fz_var(samples);
 
