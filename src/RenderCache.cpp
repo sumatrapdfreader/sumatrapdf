@@ -13,7 +13,8 @@
 
 RenderCache::RenderCache()
     : cacheCount(0), requestCount(0),
-      maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN))
+      maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)),
+      isRemoteSession(GetSystemMetrics(SM_REMOTESESSION))
 {
     colorRange[0] = WIN_COL_BLACK;
     colorRange[1] = WIN_COL_WHITE;
@@ -581,9 +582,11 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
     UINT renderDelay = 0;
 
     if (!entry) {
-        if (renderedReplacement)
-            *renderedReplacement = true;
-        entry = Find(dm, pageNo, dm->Rotation(), INVALID_ZOOM, &tile);
+        if (!isRemoteSession) {
+            if (renderedReplacement)
+                *renderedReplacement = true;
+            entry = Find(dm, pageNo, dm->Rotation(), INVALID_ZOOM, &tile);
+        }
         renderDelay = GetRenderDelay(dm, pageNo, tile);
         if (renderMissing && RENDER_DELAY_UNDEFINED == renderDelay && !IsRenderQueueFull())
             Render(dm, pageNo, tile);

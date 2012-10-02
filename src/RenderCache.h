@@ -69,7 +69,7 @@ class RenderCache
 private:
     BitmapCacheEntry *  cache[MAX_BITMAPS_CACHED];
     int                 cacheCount;
-    // make sure to never ask for _requestAccess in a _cacheAccess
+    // make sure to never ask for requestAccess in a cacheAccess
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION    cacheAccess;
 
@@ -80,6 +80,7 @@ private:
     HANDLE              renderThread;
 
     const SizeI         maxTileSize;
+    bool                isRemoteSession;
 
 public:
     /* allow to modify the range of colors used for accessibility reasons (experimental!) */
