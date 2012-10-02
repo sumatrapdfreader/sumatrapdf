@@ -49,6 +49,11 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+// 6211 is "Leaking memory 'foo' due to an exception". Except we don't
+// use exceptions so new shouldn't throw so /analyze shouldn't complain about
+// TODO: verify that new doesn't throw
+#pragma warning(disable: 6211)
+
 /* Ugly name, but the whole point is to make things shorter.
    SAZA = Struct Allocate and Zero memory for Array
    (note: use operator new for single structs/classes) */

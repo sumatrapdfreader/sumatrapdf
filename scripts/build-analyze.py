@@ -28,6 +28,7 @@ def pretty_print_errors(s):
 	print_lines(mupdf)
 	print("******** SUMATRA warnings\n")
 	print_lines(sumatra)
+	print("Sumatra: %d, mupdf: %d, ext: %d" % (len(sumatra), len(mupdf), len(ext)))
 
 def main():
 	verify_started_in_right_directory()
@@ -40,6 +41,5 @@ def main():
 	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
 	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_ANALYZE=yes", config, extcflags, platform, "all_sumatrapdf")
 	pretty_print_errors(out)
-
 if __name__ == "__main__":
 	main()
