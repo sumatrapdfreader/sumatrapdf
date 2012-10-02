@@ -246,7 +246,16 @@ void fz_var_imp(void *);
 	attention to the man behind the curtain.
 */
 
+/* SumatraPDF: teach PREfast about fz_try/fz_catch */
+#if _MSC_VER >= 1500
+#define fz_analysis_assume(exp) __analysis_assume(exp)
+#else
+#define fz_analysis_assume(exp)
+#endif
+
 #define fz_try(ctx) \
+	/* SumatraPDF: teach PREfast about fz_try/fz_catch */ \
+	fz_analysis_assume(fz_push_try(ctx->error) && fz_setjmp(ctx->error->stack[ctx->error->top].buffer) == 0); \
 	if (fz_push_try(ctx->error) && \
 		((ctx->error->stack[ctx->error->top].code = fz_setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0))\
 	{ do {
