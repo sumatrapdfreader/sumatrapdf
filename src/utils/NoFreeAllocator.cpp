@@ -135,6 +135,8 @@ void *alloc(size_t size)
     if (!m || (size > m->left)) {
         size_t blockSize = max(MEM_BLOCK_SIZE, size + sizeof(MemBlock));
         MemBlock *block = (MemBlock*)malloc(blockSize);
+        if (!block)
+            return NULL;
         block->size = blockSize - sizeof(MemBlock);
         block->left = block->size;
         block->next = gCurrMemBlock;
