@@ -254,8 +254,6 @@ void fz_var_imp(void *);
 #endif
 
 #define fz_try(ctx) \
-	/* SumatraPDF: teach PREfast about fz_try/fz_catch */ \
-	fz_analysis_assume(fz_push_try(ctx->error) && fz_setjmp(ctx->error->stack[ctx->error->top].buffer) == 0); \
 	if (fz_push_try(ctx->error) && \
 		((ctx->error->stack[ctx->error->top].code = fz_setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0))\
 	{ do {
@@ -269,7 +267,7 @@ void fz_var_imp(void *);
 		} while(0); \
 	} \
 	/* SumatraPDF: teach PREfast about fz_try/fz_catch */ \
-	fz_analysis_assume(!ctx->error->stack[ctx->error->top].code); \
+	fz_analysis_assume(ctx->error->stack[ctx->error->top].code); \
 	if (ctx->error->stack[ctx->error->top--].code)
 
 int fz_push_try(fz_error_context *ex);
