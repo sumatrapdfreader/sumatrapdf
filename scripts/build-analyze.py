@@ -42,5 +42,4 @@ def main():
 	pretty_print_errors(out)
 
 if __name__ == "__main__":
-	#main()
-	test_anal_temp()
+	main()
