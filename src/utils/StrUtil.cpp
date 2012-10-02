@@ -4,11 +4,14 @@
 /* The most basic things, including string handling functions */
 #include "BaseUtil.h"
 
+#pragma warning( push )
+#pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
 void CrashMe()
 {
     char *p = NULL;
     *p = 0;
 }
+#pragma warning( pop )
 
 namespace str {
 
@@ -675,6 +678,8 @@ int CmpNatural(const TCHAR *a, const TCHAR *b)
 {
     const TCHAR *aStart = a, *bStart = b;
     int diff = 0;
+    if (!a || !b)
+        return 0; // the result doesn't matter, shouldn't be called with NULL args
 
     for (; 0 == diff; a++, b++) {
         // ignore leading and trailing spaces, and differences in whitespace only
