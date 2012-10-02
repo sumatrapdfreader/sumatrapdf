@@ -16,7 +16,11 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
+#ifndef ABOUT_USE_LESS_COLORS
 #define ABOUT_LINE_OUTER_SIZE       2
+#else
+#define ABOUT_LINE_OUTER_SIZE       1
+#endif
 #define ABOUT_LINE_SEP_SIZE         1
 #define ABOUT_LEFT_RIGHT_SPACE_DX   8
 #define ABOUT_MARGIN_DX            10
@@ -98,7 +102,7 @@ static Vec<StaticLinkInfo> gLinkInfo;
 static void DrawSumatraPDF(HDC hdc, PointI pt)
 {
     const TCHAR *txt = APP_NAME_STR;
-#ifdef BLACK_ON_YELLOW
+#ifdef ABOUT_USE_LESS_COLORS
     // simple black version
     SetTextColor(hdc, ABOUT_BORDER_COL);
     TextOut(hdc, pt.x, pt.y, txt, str::Len(txt));
@@ -217,14 +221,25 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     ClientRect rc(hwnd);
+#ifndef ABOUT_USE_LESS_COLORS
     FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
+#else
+    FillRect(hdc, &rc.ToRECT(), ScopedGdiObj<HBRUSH>(CreateSolidBrush(RGB(0xCC, 0xCC, 0xCC))));
+#endif
 
     /* render title */
     RectI titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
 
     SelectObject(hdc, gBrushAboutBg);
     SelectObject(hdc, penBorder);
+#ifndef ABOUT_USE_LESS_COLORS
     Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx, rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
+#else
+    RectI titleBgBand(0, rect.y, rc.dx, titleRect.dy);
+    FillRect(hdc, &titleBgBand.ToRECT(), gBrushAboutBg);
+    PaintLine(hdc, RectI(0, rect.y, rc.dx, 0));
+    PaintLine(hdc, RectI(0, rect.y + titleRect.dy, rc.dx, 0));
+#endif
 
     titleRect.Offset((rect.dx - titleRect.dx) / 2, 0);
     DrawSumatraVersion(hdc, titleRect);
@@ -233,7 +248,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     SetTextColor(hdc, ABOUT_BORDER_COL);
     SetBkMode(hdc, TRANSPARENT);
 
+#ifndef ABOUT_USE_LESS_COLORS
     Rectangle(hdc, rect.x, rect.y + titleRect.dy, rect.x + rect.dx, rect.y + rect.dy);
+#endif
 
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
@@ -558,7 +575,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
-#ifndef BLACK_ON_YELLOW
+#ifndef ABOUT_USE_LESS_COLORS
     FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
 #else
     FillRect(hdc, &rc.ToRECT(), gBrushNoDocBg);

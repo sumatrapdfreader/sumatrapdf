@@ -451,7 +451,11 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     SetBkMode(hdc, TRANSPARENT);
 
     ClientRect rcClient(hwnd);
+#ifndef ABOUT_USE_LESS_COLORS
     FillRect(hdc, &rcClient.ToRECT(), gBrushAboutBg);
+#else
+    FillRect(hdc, &rcClient.ToRECT(), ScopedGdiObj<HBRUSH>(CreateSolidBrush(RGB(0xCC, 0xCC, 0xCC))));
+#endif
 
 #if 0
     SelectObject(hdc, gBrushAboutBg);
