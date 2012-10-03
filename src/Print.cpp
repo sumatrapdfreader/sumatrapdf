@@ -55,6 +55,12 @@ struct PrintData {
     }
 };
 
+class ScopeDisableDEP {
+public:
+    ScopeDisableDEP() { EnableDataExecution(); }
+    ~ScopeDisableDEP() { DisableDataExecution(); }
+};
+
 static RectD BoundSelectionOnPage(Vec<SelectionOnPage>& sel, int pageNo)
 {
     RectD bounds;
@@ -67,7 +73,7 @@ static RectD BoundSelectionOnPage(Vec<SelectionOnPage>& sel, int pageNo)
 
 static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool *abortCookie=NULL)
 {
-    assert(pd.engine);
+    AssertCrash(pd.engine);
     if (!pd.engine) return;
 
     HDC hdc = pd.hdc;
@@ -109,23 +115,23 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
     // TODO: even better would be to print in a separate process so that
     // crashes during printing wouldn't affect the main process. It's also
     // much more complicated to implement
-    EnableDataExecution();
-    if (StartDoc(hdc, &di) <= 0)
-        goto Exit;
+    ScopeDisableDEP scopeNoDEP;
 
+    if (StartDoc(hdc, &di) <= 0)
+        return;
+
+    // MM_TEXT: Each logical unit is mapped to one device pixel.
+    // Positive x is to the right; positive y is down.
     SetMapMode(hdc, MM_TEXT);
 
-    const int paperWidth = GetDeviceCaps(hdc, PHYSICALWIDTH);
-    const int paperHeight = GetDeviceCaps(hdc, PHYSICALHEIGHT);
-    const int printableWidth = GetDeviceCaps(hdc, HORZRES);
-    const int printableHeight = GetDeviceCaps(hdc, VERTRES);
-    const int leftMargin = GetDeviceCaps(hdc, PHYSICALOFFSETX);
-    const int topMargin = GetDeviceCaps(hdc, PHYSICALOFFSETY);
-    const int rightMargin = paperWidth - printableWidth - leftMargin;
-    const int bottomMargin = paperHeight - printableHeight - topMargin;
+    const SizeI paperSize(GetDeviceCaps(hdc, PHYSICALWIDTH),
+                          GetDeviceCaps(hdc, PHYSICALHEIGHT));
+    const RectI printable(GetDeviceCaps(hdc, PHYSICALOFFSETX),
+                          GetDeviceCaps(hdc, PHYSICALOFFSETY),
+                          GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
     const float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / engine.GetFileDPI(),
                                 GetDeviceCaps(hdc, LOGPIXELSY) / engine.GetFileDPI());
-    bool bPrintPortrait = paperWidth < paperHeight;
+    bool bPrintPortrait = paperSize.dx < paperSize.dy;
     if (pd.orientation)
         bPrintPortrait = DMORIENT_PORTRAIT == pd.orientation;
 
@@ -141,8 +147,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
             StartPage(hdc);
 
             SizeT<float> bSize = bounds.Size().Convert<float>();
-            float zoom = min((float)printableWidth / bSize.dx,
-                             (float)printableHeight / bSize.dy);
+            float zoom = min((float)printable.dx / bSize.dx,
+                             (float)printable.dy / bSize.dy);
             // use the correct zoom values, if the page fits otherwise
             // and the user didn't ask for anything else (default setting)
             if (PrintScaleShrink == pd.scaleAdv)
@@ -157,8 +163,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
                 RectD *clipRegion = &pd.sel.At(i).rect;
                 PointI offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
                 if (!pd.printAsImage) {
-                    RectI rc((int)(printableWidth - bSize.dx * zoom) / 2 + offset.x,
-                             (int)(printableHeight - bSize.dy * zoom) / 2 + offset.y,
+                    RectI rc((int)(printable.dx - bSize.dx * zoom) / 2 + offset.x,
+                             (int)(printable.dy - bSize.dy * zoom) / 2 + offset.y,
                              (int)(clipRegion->dx * zoom), (int)(clipRegion->dy * zoom));
                     engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie);
                 }
@@ -174,8 +180,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
                         }
                     }
                     if (bmp) {
-                        RectI rc((int)(paperWidth - bSize.dx * zoom) / 2 + offset.x,
-                                 (int)(paperHeight - bSize.dy * zoom) / 2 + offset.y,
+                        RectI rc((int)(paperSize.dx - bSize.dx * zoom) / 2 + offset.x,
+                                 (int)(paperSize.dy - bSize.dy * zoom) / 2 + offset.y,
                                  bmp->Size().dx * shrink, bmp->Size().dy * shrink);
                         bmp->StretchDIBits(hdc, rc);
                         delete bmp;
@@ -185,13 +191,13 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
 
             if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
-                goto Exit;
+                return;
             }
             current++;
         }
 
         EndDoc(hdc);
-        goto Exit;
+        return;
     }
 
     // print all the pages the user requested
@@ -205,8 +211,6 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
                 progressUI->UpdateProgress(current, total);
 
             StartPage(hdc);
-            // MM_TEXT: Each logical unit is mapped to one device pixel.
-            // Positive x is to the right; positive y is down.
 
             SizeT<float> pSize = engine.PageMediabox(pageNo).Size().Convert<float>();
             int rotation = 0;
@@ -230,39 +234,39 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
             // offset adjustments are needed because the GDI coordinate system
             // starts at the corner of the printable area and we rather want to
             // center the page on the physical paper (default behavior)
-            PointI offset(-leftMargin, -topMargin);
+            PointI offset(-printable.x, -printable.y);
 
             if (pd.scaleAdv != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 RectD rect = engine.PageContentBox(pageNo, Target_Print);
                 RectT<float> cbox = engine.Transform(rect, pageNo, 1.0, rotation).Convert<float>();
-                zoom = min((float)printableWidth / cbox.dx,
-                       min((float)printableHeight / cbox.dy,
-                       min((float)paperWidth / pSize.dx,
-                           (float)paperHeight / pSize.dy)));
+                zoom = min((float)printable.dx / cbox.dx,
+                       min((float)printable.dy / cbox.dy,
+                       min((float)paperSize.dx / pSize.dx,
+                           (float)paperSize.dy / pSize.dy)));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
                 if (PrintScaleShrink == pd.scaleAdv && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
-                RectT<float> onPaper((paperWidth - pSize.dx * zoom) / 2 + cbox.x * zoom,
-                                    (paperHeight - pSize.dy * zoom) / 2 + cbox.y * zoom,
-                                    cbox.dx * zoom, cbox.dy * zoom);
-                if (leftMargin > onPaper.x)
-                    offset.x += (int)(leftMargin - onPaper.x);
-                else if (paperWidth - rightMargin < onPaper.BR().x)
-                    offset.x += (int)((paperWidth - rightMargin) - onPaper.BR().x);
-                if (topMargin > onPaper.y)
-                    offset.y += (int)(topMargin - onPaper.y);
-                else if (paperHeight - bottomMargin < onPaper.BR().y)
-                    offset.y += (int)((paperHeight - bottomMargin) - onPaper.BR().y);
+                RectT<float> onPaper((paperSize.dx - pSize.dx * zoom) / 2 + cbox.x * zoom,
+                                     (paperSize.dy - pSize.dy * zoom) / 2 + cbox.y * zoom,
+                                     cbox.dx * zoom, cbox.dy * zoom);
+                if (onPaper.x < printable.x)
+                    offset.x += (int)(printable.x - onPaper.x);
+                else if (onPaper.BR().x > printable.BR().x)
+                    offset.x -= (int)(onPaper.BR().x - printable.BR().x);
+                if (onPaper.y < printable.y)
+                    offset.y += (int)(printable.y - onPaper.y);
+                else if (onPaper.BR().y > printable.BR().y)
+                    offset.y -= (int)(onPaper.BR().y - printable.BR().y);
             }
 
             if (!pd.printAsImage) {
-                RectI rc = RectI::FromXY((int)(paperWidth - pSize.dx * zoom) / 2 + offset.x,
-                                         (int)(paperHeight - pSize.dy * zoom) / 2 + offset.y,
-                                         paperWidth, paperHeight);
+                RectI rc = RectI::FromXY((int)(paperSize.dx - pSize.dx * zoom) / 2 + offset.x,
+                                         (int)(paperSize.dy - pSize.dy * zoom) / 2 + offset.y,
+                                         paperSize.dx, paperSize.dy);
                 engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print, abortCookie);
             }
             else {
@@ -277,8 +281,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
                     }
                 }
                 if (bmp) {
-                    RectI rc((paperWidth - bmp->Size().dx * shrink) / 2 + offset.x,
-                             (paperHeight - bmp->Size().dy * shrink) / 2 + offset.y,
+                    RectI rc((paperSize.dx - bmp->Size().dx * shrink) / 2 + offset.x,
+                             (paperSize.dy - bmp->Size().dy * shrink) / 2 + offset.y,
                              bmp->Size().dx * shrink, bmp->Size().dy * shrink);
                     bmp->StretchDIBits(hdc, rc);
                     delete bmp;
@@ -287,15 +291,13 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
 
             if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
-                goto Exit;
+                return;
             }
             current++;
         }
     }
 
     EndDoc(hdc);
-Exit:
-    DisableDataExecution();
 }
 
 class PrintThreadUpdateWorkItem : public UIThreadWorkItem {
