@@ -163,6 +163,7 @@ ProducingPaletteDone:
             return;
         }
     }
+    CrashIf(!bgrPixmap);
 
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi->bmiHeader.biWidth = w;
@@ -243,7 +244,7 @@ unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
 void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
 {
     int fileLen;
-    fz_buffer *buffer;
+    fz_buffer *buffer = NULL;
 
     fz_try(file->ctx) {
         fz_seek(file, 0, 2);
@@ -256,7 +257,8 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
         ZeroMemory(digest, 16);
         return;
     }
-    assert(fileLen == buffer->len);
+    CrashIf(NULL == buffer);
+    CrashIf(fileLen != buffer->len);
 
     CalcMD5Digest(buffer->data, buffer->len, digest);
 
@@ -1365,7 +1367,7 @@ bool PdfEngineImpl::Load(IStream *stream, PasswordUI *pwdUI)
     if (!ctx)
         return false;
 
-    fz_stream *stm;
+    fz_stream *stm = NULL;
     fz_try(ctx) {
         stm = fz_open_istream(ctx, stream);
     }
@@ -1564,7 +1566,7 @@ PageDestination *PdfEngineImpl::GetNamedDest(const TCHAR *name)
     ScopedCritSec scope(&ctxAccess);
 
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
-    pdf_obj *dest;
+    pdf_obj *dest = NULL;
     fz_try(ctx) {
         pdf_obj *nameobj = pdf_new_string(ctx, (char *)name_utf8, (int)str::Len(name_utf8));
         dest = pdf_lookup_dest(_doc, nameobj);
@@ -1829,8 +1831,8 @@ RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target)
     if (!page)
         return RectD();
 
-    fz_bbox bbox;
-    fz_device *dev;
+    fz_bbox bbox = { 0 };
+    fz_device *dev = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         dev = fz_new_bbox_device(ctx, &bbox);
@@ -1975,7 +1977,7 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
-    fz_pixmap *image;
+    fz_pixmap *image = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceRGB");
@@ -1987,7 +1989,7 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         return NULL;
     }
 
-    fz_device *dev;
+    fz_device *dev = NULL;
     fz_try(ctx) {
         dev = fz_new_draw_device(ctx, image);
     }
@@ -2162,7 +2164,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     Vec<FitzImagePos> positions;
     ListInspectionData data(positions);
-    fz_device *dev;
+    fz_device *dev = NULL;
 
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
@@ -2183,7 +2185,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     ScopedCritSec scope(&ctxAccess);
 
-    fz_pixmap *pixmap;
+    fz_pixmap *pixmap = NULL;
     fz_try(ctx) {
         fz_image *image = positions.At(imageIx).image;
         pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);
@@ -2204,7 +2206,7 @@ TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **co
 
     fz_text_sheet *sheet = NULL;
     fz_text_page *text = NULL;
-    fz_device *dev;
+    fz_device *dev = NULL;
     fz_var(sheet);
     fz_var(text);
 
@@ -2414,7 +2416,7 @@ PageLayoutType PdfEngineImpl::PreferredLayout()
     PageLayoutType layout = Layout_Single;
 
     ScopedCritSec scope(&ctxAccess);
-    pdf_obj *root;
+    pdf_obj *root = NULL;
     fz_try(ctx) {
         root = pdf_dict_gets(_doc->trailer, "Root");
     }
@@ -2444,7 +2446,7 @@ PageLayoutType PdfEngineImpl::PreferredLayout()
 
 unsigned char *PdfEngineImpl::GetFileData(size_t *cbCount)
 {
-    unsigned char *data;
+    unsigned char *data = NULL;
     ScopedCritSec scope(&ctxAccess);
     fz_try(ctx) {
         data = fz_extract_stream_data(_doc->file, cbCount);
@@ -2466,6 +2468,7 @@ bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num, int gen)
     fz_catch(ctx) {
         return false;
     }
+    CrashIf(NULL == data);
     bool result = saveUI.SaveEmbedded(data->data, data->len);
     fz_drop_buffer(ctx, data);
     return result;
@@ -2993,7 +2996,7 @@ bool XpsEngineImpl::Load(IStream *stream)
     if (!ctx)
         return false;
 
-    fz_stream *stm;
+    fz_stream *stm = NULL;
     fz_try(ctx) {
         stm = fz_open_istream(ctx, stream);
     }
@@ -3274,8 +3277,8 @@ RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target)
     if (!page)
         return RectD();
 
-    fz_bbox bbox;
-    fz_device *dev;
+    fz_bbox bbox = { 0 };
+    fz_device *dev = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         dev = fz_new_bbox_device(ctx, &bbox);
@@ -3341,7 +3344,7 @@ bool XpsEngineImpl::RenderPage(HDC hDC, xps_page *page, RectI screenRect, fz_mat
         fz_bbox pageclip = fz_round_rect(fz_transform_rect(ctm2, fz_RectD_to_rect(*pageRect)));
         clipbox = fz_intersect_bbox(clipbox, pageclip);
     }
-    fz_device *dev;
+    fz_device *dev = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         dev = fz_new_gdiplus_device(ctx, hDC, clipbox);
@@ -3387,7 +3390,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         return new RenderedBitmap(hbmp, SizeI(w, h));
     }
 
-    fz_pixmap *image;
+    fz_pixmap *image = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceRGB");
@@ -3399,7 +3402,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         return NULL;
     }
 
-    fz_device *dev;
+    fz_device *dev = NULL;
     fz_try(ctx) {
         dev = fz_new_draw_device(ctx, image);
     }
@@ -3428,7 +3431,7 @@ TCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **co
 
     fz_text_sheet *sheet = NULL;
     fz_text_page *text = NULL;
-    fz_device *dev;
+    fz_device *dev = NULL;
     fz_var(sheet);
     fz_var(text);
 
@@ -3462,7 +3465,7 @@ TCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **co
 
 unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
 {
-    unsigned char *data;
+    unsigned char *data = NULL;
     ScopedCritSec scope(&ctxAccess);
     fz_try(ctx) {
         data = fz_extract_stream_data(_doc->file, cbCount);
@@ -3604,7 +3607,7 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     Vec<FitzImagePos> positions;
     ListInspectionData data(positions);
-    fz_device *dev;
+    fz_device *dev = NULL;
 
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
@@ -3625,7 +3628,7 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     ScopedCritSec scope(&ctxAccess);
 
-    fz_pixmap *pixmap;
+    fz_pixmap *pixmap = NULL;
     fz_try(ctx) {
         fz_image *image = positions.At(imageIx).image;
         pixmap = fz_image_to_pixmap(ctx, image, image->w, image->h);

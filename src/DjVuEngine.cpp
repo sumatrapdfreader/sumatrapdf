@@ -31,8 +31,11 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, SizeI size, bool grayscale) :
     int colors = grayscale ? 256 : 0;
 
     BITMAPINFO *bmi = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + colors * sizeof(RGBQUAD));
-    for (int i = 0; i < colors; i++)
+    if (!bmi)
+        return;
+    for (int i = 0; i < colors; i++) {
         bmi->bmiColors[i].rgbRed = bmi->bmiColors[i].rgbGreen = bmi->bmiColors[i].rgbBlue = i;
+    }
 
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi->bmiHeader.biWidth = size.dx;
