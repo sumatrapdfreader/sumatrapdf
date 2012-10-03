@@ -122,10 +122,13 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     }
     else
         gBrushNoDocBg = CreateSolidBrush(COL_WINDOW_BG);
-    if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs.bgColor)
-        gBrushAboutBg = CreateSolidBrush(gGlobalPrefs.bgColor);
-    else
-        gBrushAboutBg = CreateSolidBrush(ABOUT_BG_COLOR);
+    COLORREF bgColor = ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs.bgColor ? gGlobalPrefs.bgColor : ABOUT_BG_LOGO_COLOR;
+    gBrushLogoBg = CreateSolidBrush(bgColor);
+#ifndef ABOUT_USE_LESS_COLORS
+    gBrushAboutBg = CreateSolidBrush(bgColor);
+#else
+    gBrushAboutBg = CreateSolidBrush(ABOUT_BG_GRAY_COLOR);
+#endif
 
     NONCLIENTMETRICS ncm = { 0 };
     ncm.cbSize = sizeof(ncm);
@@ -536,6 +539,7 @@ Exit:
 #endif
 
     DeleteObject(gBrushNoDocBg);
+    DeleteObject(gBrushLogoBg);
     DeleteObject(gBrushAboutBg);
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);

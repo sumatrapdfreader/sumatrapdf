@@ -439,9 +439,6 @@ void OnMenuProperties(SumatraWindow& win)
 static void DrawProperties(HWND hwnd, HDC hdc)
 {
     PropertiesLayout *layoutData = FindPropertyWindowByHwnd(hwnd);
-#if 0
-    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, COL_BLACK);
-#endif
 
     ScopedFont fontLeftTxt(GetSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(GetSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
@@ -451,16 +448,7 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     SetBkMode(hdc, TRANSPARENT);
 
     ClientRect rcClient(hwnd);
-#ifndef ABOUT_USE_LESS_COLORS
     FillRect(hdc, &rcClient.ToRECT(), gBrushAboutBg);
-#else
-    FillRect(hdc, &rcClient.ToRECT(), ScopedGdiObj<HBRUSH>(CreateSolidBrush(RGB(0xCC, 0xCC, 0xCC))));
-#endif
-
-#if 0
-    SelectObject(hdc, gBrushAboutBg);
-    SelectObject(hdc, penBorder);
-#endif
 
     SetTextColor(hdc, WIN_COL_BLACK);
 
@@ -482,10 +470,6 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     }
 
     SelectObject(hdc, origFont);
-
-#if 0
-    DeleteObject(penBorder);
-#endif
 }
 
 static void OnPaintProperties(HWND hwnd)

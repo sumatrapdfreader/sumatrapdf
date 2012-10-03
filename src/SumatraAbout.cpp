@@ -221,22 +221,18 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     ClientRect rc(hwnd);
-#ifndef ABOUT_USE_LESS_COLORS
     FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
-#else
-    FillRect(hdc, &rc.ToRECT(), ScopedGdiObj<HBRUSH>(CreateSolidBrush(RGB(0xCC, 0xCC, 0xCC))));
-#endif
 
     /* render title */
     RectI titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
 
-    SelectObject(hdc, gBrushAboutBg);
+    SelectObject(hdc, gBrushLogoBg);
     SelectObject(hdc, penBorder);
 #ifndef ABOUT_USE_LESS_COLORS
     Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx, rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
 #else
     RectI titleBgBand(0, rect.y, rc.dx, titleRect.dy);
-    FillRect(hdc, &titleBgBand.ToRECT(), gBrushAboutBg);
+    FillRect(hdc, &titleBgBand.ToRECT(), gBrushLogoBg);
     PaintLine(hdc, RectI(0, rect.y, rc.dx, 0));
     PaintLine(hdc, RectI(0, rect.y + titleRect.dy, rc.dx, 0));
 #endif
@@ -555,9 +551,9 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
 
     ClientRect rc(win.hwndCanvas);
-    FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
+    FillRect(hdc, &rc.ToRECT(), gBrushLogoBg);
 
-    SelectObject(hdc, gBrushAboutBg);
+    SelectObject(hdc, gBrushLogoBg);
     SelectObject(hdc, penBorder);
 
     bool isRtl = IsUIRightToLeft();
@@ -575,11 +571,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
-#ifndef ABOUT_USE_LESS_COLORS
     FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
-#else
-    FillRect(hdc, &rc.ToRECT(), gBrushNoDocBg);
-#endif
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
     Vec<DisplayState *> list;

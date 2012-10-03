@@ -77,7 +77,7 @@ extern bool                     gUseEbookUI;
 extern HCURSOR                  gCursorHand;
 extern HCURSOR                  gCursorArrow;
 extern HCURSOR                  gCursorIBeam;
-extern HBRUSH                   gBrushNoDocBg;
+extern HBRUSH                   gBrushLogoBg;
 extern HBRUSH                   gBrushAboutBg;
 extern HFONT                    gDefaultGuiFont;
 extern TCHAR *                  gPluginURL;

@@ -77,7 +77,8 @@ bool             gUseEbookUI = false;
 // embedded (e.g. in a web browser)
 TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
-#define ABOUT_BG_COLOR          RGB(0xFF, 0xF2, 0)
+#define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
+#define ABOUT_BG_GRAY_COLOR     RGB(0xCC, 0xCC, 0xCC)
 
 // Background color comparison:
 // Adobe Reader X   0x565656 without any frame border
@@ -132,7 +133,7 @@ HINSTANCE                    ghinst = NULL;
 HCURSOR                      gCursorArrow;
 HCURSOR                      gCursorHand;
 HCURSOR                      gCursorIBeam;
-HBRUSH                       gBrushNoDocBg;
+HBRUSH                       gBrushLogoBg;
 HBRUSH                       gBrushAboutBg;
 HFONT                        gDefaultGuiFont;
 
@@ -149,6 +150,7 @@ static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
 static HCURSOR                      gCursorSizeNS;
 static HCURSOR                      gCursorNo;
+static HBRUSH                       gBrushNoDocBg;
 static HBITMAP                      gBitmapReloadingCue;
 static RenderCache                  gRenderCache;
 static UIThreadWorkItemQueue        gUIThreadMarshaller;
