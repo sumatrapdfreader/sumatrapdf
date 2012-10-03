@@ -117,7 +117,7 @@ static const char *ResolveHtmlEntity(const char *s, size_t len, int& rune)
         return entEnd;
 
     // go to the end of a potential named entity
-    for (entEnd = s; entEnd < s + len && isalnum(*entEnd); entEnd++);
+    for (entEnd = s; entEnd < s + len && isalnum((int)*entEnd); entEnd++);
     if (entEnd != s) {
         rune = HtmlEntityNameToRune(s, entEnd - s);
         if (-1 == rune)

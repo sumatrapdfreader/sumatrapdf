@@ -309,8 +309,8 @@ TCHAR *ExtractFilenameFromURL(const TCHAR *url)
         ScopedMem<char> utf8Name(str::conv::ToUtf8(urlName));
         char *src = utf8Name, *dst = utf8Name;
         while (*src) {
-            if (*src == '%' && isxdigit(*(src + 1)) && isxdigit(*(src + 2))) {
-                char hex[3] = { *(src + 1), *(src + 2), '\0' };
+            if (*src == '%' && isxdigit((int)src[1]) && isxdigit((int)src[2])) {
+                char hex[3] = { src[1], src[2], '\0' };
                 *dst++ = (char)strtoul(hex, NULL, 16);
                 src += 3;
             }
