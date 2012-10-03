@@ -22,6 +22,7 @@ TODO:
    (all those rules are to ensure we don't create pre-release builds too frequently)
  - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time 
    (in a separate html?)
+ - add svn checkin message to index.html page
 """
 
 g_first_analyze_build = 6000
@@ -603,6 +604,7 @@ def build_version_try(ver, try_count = 2):
 			if 0 == try_count:
 				raise
 			time.sleep(60)
+		return
 
 def buildbot_loop():
 	while True:
