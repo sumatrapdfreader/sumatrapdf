@@ -26,7 +26,9 @@
 
 HMODULE SafeLoadLibrary(const TCHAR *dllName);
 FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName);
-
+BOOL    SafeCloseHandle(HANDLE h);
+BOOL    SafeDestroyWindow(HWND hwnd);
+BOOL    SafeDestroyWindow(HWND *hwnd);
 void    FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance);
 
 bool   IsAppThemed();

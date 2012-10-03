@@ -364,22 +364,14 @@ static void OnButtonInstall()
     SendMessage(gHwndProgressBar, PBM_SETSTEP, 1, 0);
 
     // disable the install button and remove all the installation options
-    DestroyWindow(gHwndStaticInstDir);
-    gHwndStaticInstDir = NULL;
-    DestroyWindow(gHwndTextboxInstDir);
-    gHwndTextboxInstDir = NULL;
-    DestroyWindow(gHwndButtonBrowseDir);
-    gHwndButtonBrowseDir = NULL;
-    DestroyWindow(gHwndCheckboxRegisterDefault);
-    gHwndCheckboxRegisterDefault = NULL;
-    DestroyWindow(gHwndCheckboxRegisterBrowserPlugin);
-    gHwndCheckboxRegisterBrowserPlugin = NULL;
-    DestroyWindow(gHwndCheckboxRegisterPdfFilter);
-    gHwndCheckboxRegisterPdfFilter = NULL;
-    DestroyWindow(gHwndCheckboxRegisterPdfPreviewer);
-    gHwndCheckboxRegisterPdfPreviewer = NULL;
-    DestroyWindow(gHwndButtonOptions);
-    gHwndButtonOptions = NULL;
+    SafeDestroyWindow(&gHwndStaticInstDir);
+    SafeDestroyWindow(&gHwndTextboxInstDir);
+    SafeDestroyWindow(&gHwndButtonBrowseDir);
+    SafeDestroyWindow(&gHwndCheckboxRegisterDefault);
+    SafeDestroyWindow(&gHwndCheckboxRegisterBrowserPlugin);
+    SafeDestroyWindow(&gHwndCheckboxRegisterPdfFilter);
+    SafeDestroyWindow(&gHwndCheckboxRegisterPdfPreviewer);
+    SafeDestroyWindow(&gHwndButtonOptions);
 
     EnableWindow(gHwndButtonInstUninst, FALSE);
 

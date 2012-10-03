@@ -149,7 +149,7 @@ static void UninstallCrashHandler()
         SetUnhandledExceptionFilter(gPrevExceptionFilter);
     TerminateThread(gDumpThread, 1);
     CloseHandle(gDumpThread);
-    CloseHandle(gDumpEvent);
+    SafeCloseHandle(gDumpEvent);
 }
 
 

@@ -29,7 +29,11 @@ struct DLGTEMPLATEEX {
 static DLGTEMPLATE *GetRtLDlgTemplate(int dlgId)
 {
     HRSRC dialogRC = FindResource(NULL, MAKEINTRESOURCE(dlgId), RT_DIALOG);
+    if (!dialogRC)
+        return NULL;
     HGLOBAL dlgTemplate = LoadResource(NULL, dialogRC);
+    if (!dlgTemplate)
+        return NULL;
     void *origDlgTemplate = LockResource(dlgTemplate);
     size_t size = SizeofResource(NULL, dialogRC);
 

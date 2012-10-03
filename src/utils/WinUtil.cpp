@@ -1025,6 +1025,33 @@ Error:
     return NULL;
 }
 
+// This is just to satisfy /analyze. CloseHandle(NULL) works perfectly fine
+// but /analyze complains anyway
+BOOL SafeCloseHandle(HANDLE h)
+{
+    if (!h)
+        return TRUE;
+    return CloseHandle(h);
+}
+
+// This is just to satisfy /analyze. DestroyWindow(NULL) works perfectly fine
+// but /analyze complains anyway
+BOOL SafeDestroyWindow(HWND hwnd)
+{
+    if (!hwnd)
+        return TRUE;
+    return DestroyWindow(hwnd);
+}
+
+BOOL SafeDestroyWindow(HWND *hwnd)
+{
+    if (!hwnd || !*hwnd)
+        return TRUE;
+    BOOL ok = DestroyWindow(*hwnd);
+    *hwnd = NULL;
+    return ok;
+}
+
 // CreateProcessWithTokenW() only available since Vista
 typedef BOOL WINAPI CreateProcessWithTokenWProc(HANDLE hToken, DWORD dwLogonFlags,
     LPCWSTR lpApplicationName, LPWSTR lpCommandLine, DWORD dwCreationFlags,
@@ -1129,9 +1156,9 @@ bool RunAsUser(TCHAR *cmd)
 Exit:
     CloseHandle(hProcessToken);
     CloseHandle(pi.hProcess);
-    CloseHandle(hShellProcessToken);
-    CloseHandle(hPrimaryToken);
-    CloseHandle(hShellProcess);
+    SafeCloseHandle(hShellProcessToken);
+    SafeCloseHandle(hPrimaryToken);
+    SafeCloseHandle(hShellProcess);
     return ret;
 Error:
     LogLastError();
