@@ -586,17 +586,39 @@ def build_curr():
 	(local_ver, latest_ver) = get_svn_versions()
 	print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
 	if not has_already_been_built(local_ver):
-		build_version(local_ver)
+			build_version(local_ver)
 	else:
 		print("We have already built revision %s" % local_ver)
+				
+def build_version_try(ver, try_count = 2):
+	# it can happen we get a valid but intermitten exception e.g.
+	# due to svn command failing due to server hiccup
+	# in that case we'll retry, waiting 1 min in between,
+	# but only up to try_count times
+	while True:
+		try:
+			build_version(ver)
+		except:
+			try_count -= 1
+			if 0 == try_count:
+				raise
+			time.sleep(60)
 
 def buildbot_loop():
 	while True:
-		(local_ver, latest_ver) = get_svn_versions()
+		# get_svn_versions() might throw an exception due to
+		# temporary network problems, so retry
+		try:
+			(local_ver, latest_ver) = get_svn_versions()
+		except:
+			print("get_svn_versions() threw an exception")
+			time.sleep(120)
+			continue
+
 		print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
 		while int(local_ver) <= int(latest_ver):
 			if not has_already_been_built(local_ver):
-				build_version(local_ver)
+				build_version_try(local_ver)
 			else:
 				print("We have already built revision %s" % local_ver)
 			local_ver = str(int(local_ver)+1)
