@@ -469,6 +469,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
 
     PageElement *pageEl = win->dm->GetElementAtPos(PointI(x, y));
     ScopedMem<TCHAR> value(pageEl ? pageEl->GetValue() : NULL);
+    CrashIf(value && !pageEl);
     RenderedBitmap *bmp = NULL;
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
