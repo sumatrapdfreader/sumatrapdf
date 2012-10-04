@@ -189,6 +189,92 @@ def parse_svninfo_out(txt):
   if ver: return ver[0]
   raise Exception("parse_svn_info_out() failed to parse '%s'" % txt)
 
+# Parse output of "svn log -r${rev} -v", which looks sth. like this:
+#------------------------------------------------------------------------
+#r6667 | kkowalczyk | 2012-09-25 22:52:34 -0700 (Tue, 25 Sep 2012) | 1 line
+#Changed paths:
+#   M /trunk/installer-vc2008.vcproj
+#   D /trunk/src/utils/Http.h
+#   A /trunk/src/utils/HttpUtil.cpp (from /trunk/src/utils/Http.cpp:6665)
+#
+#rename Http.[h|cpp] => HttpUtil.[h|cpp]
+#------------------------------------------------------------------------
+# Returns a tuple:
+# (user, comment, modified, added, deleted)
+# or None in case this is not a source checkin (but e.g. a wiki page edit)
+def parse_svnlog_out(txt):
+  lines = [l.strip() for l in txt.split("\n")]
+  # remove empty line at the end
+  if len(lines) > 1 and len(lines[-1]) == 0:
+    lines = lines[:-1]
+  if 1 == len(lines): return None
+  if not lines[0].startswith("---"):
+    print(txt)
+    print("l: '%s'" % lines[0])
+    assert lines[0].startswith("----")
+  if not lines[-1].startswith("---"):
+    print(txt)
+    print("l: '%s'" % lines[-1])
+    assert lines[-1].startswith("----")
+  user = lines[1].split(" | ")[1]
+  assert "Changed paths:" == lines[2]
+  modified = []
+  added = []
+  deleted = []
+  lines = lines[3:]
+  n = 0
+  while True:
+    if 0 == len(lines[n]): break
+    s = lines[n]
+    #print("s: %s" % s)
+    typ = s[0]
+    name = s[2:]
+    assert name[0] == '/'
+    if typ == 'M':
+      modified.append(name)
+    elif typ == 'D':
+      deleted.append(name)
+    elif typ == 'A':
+      added.append(name)
+    else:
+      print("typ: %s\n" % typ)
+      assert False
+    n += 1
+  lines = lines[n+1:-1] # skip the last ----
+  comment = string.join(lines, "\n")
+  return (user, comment, modified, added, deleted)
+
+def parse_svnlog_out_test():
+  s = """------------------------------------------------------------------------
+r6667 | kkowalczyk | 2012-09-25 22:52:34 -0700 (Tue, 25 Sep 2012) | 1 line
+Changed paths:
+   M /trunk/src/SumatraPDF.cpp
+   D /trunk/src/utils/Http.h
+   A /trunk/src/utils/HttpUtil.h (from /trunk/src/utils/Http.h:6665)
+   M /trunk/sumatrapdf-vc2012.vcxproj
+   M /trunk/sumatrapdf-vc2012.vcxproj.filters
+
+rename Http.[h|cpp] => HttpUtil.[h|cpp]
+------------------------------------------------------------------------"""
+  res = parse_svnlog_out(s)
+  (user, comment, modified, added, deleted) = res
+  print("User: %s\nComment: %s\nModified: %s\nAdded: %s\nDeleted: %s\n" % (user, comment, str(modified), str(added), str(deleted)))
+  assert user == "kkowalczyk"
+  assert comment == "rename Http.[h|cpp] => HttpUtil.[h|cpp]"
+
+def parse_svnlog_out_test2(startrev=1, endrev=6700):
+  rev = endrev
+  while rev >= startrev:
+    (out, err) = run_cmd_throw("svn", "log", "-r%s" % str(rev), "-v")
+    res = parse_svnlog_out(out)
+    print("\nRev: %s" % str(rev))
+    if None == res:
+      print("Not svn checkin")
+    else:
+      (user, comment, modified, added, deleted) = res
+      print("User: %s\nComment: %s\nModified: %s\nAdded: %s\nDeleted: %s\n" % (user, comment, str(modified), str(added), str(deleted)))
+    rev -= 1
+
 # version line is in the format:
 # #define CURR_VERSION 1.1
 def extract_sumatra_version(file_path):
@@ -219,3 +305,7 @@ def build_installer_data(dir):
   font_path = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
   zf.write(font_path, "DroidSansFallback.ttf")
   zf.close()
+
+if __name__ == "__main__":
+  #parse_svnlog_out_test2()
+  pass
