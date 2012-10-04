@@ -1,8 +1,9 @@
-from extract_strings import load_strings_file, untranslated_count_for_lang, extract_strings_from_c_files, get_missing_for_language, dump_missing_per_language, write_out_strings_files, key_sort_func, load_lang_index
-from util import group, uniquify, ul_cb, s3connection, s3PubBucket, s3UploadFilePublic, s3UploadDataPublic
-import simplejson
-import os.path
-import re
+import os.path, re, simplejson
+from util import *
+from extract_strings import load_strings_file, untranslated_count_for_lang
+from extract_strings import extract_strings_from_c_files, get_missing_for_language
+from extract_strings import dump_missing_per_language, write_out_strings_files
+from extract_strings import key_sort_func, load_lang_index
 
 g_can_upload = True
 g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
@@ -16,10 +17,9 @@ except:
     print("cd boto; python setup.py install")
     g_can_upload = False
 
-try:
-    import awscreds
-except:
-    print("awscreds.py not present")
+config = load_config()
+if not config.HasAwsCreds():
+    print("aws creds not present in config.py")
     g_can_upload = False
 
 S3_JS_NAME = "blog/sumatrapdf-langs.js"

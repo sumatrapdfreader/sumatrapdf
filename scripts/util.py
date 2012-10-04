@@ -1,8 +1,9 @@
 import os.path, re, shutil, struct, subprocess, sys, bz2, tempfile, hashlib, string
 import zipfile2 as zipfile
 
+g_config = None
 def import_boto():
-  global Key, S3Connection, bucket_lister, awscreds
+  global Key, S3Connection, bucket_lister, g_config
   try:
     from boto.s3.key import Key
     from boto.s3.connection import S3Connection
@@ -13,10 +14,9 @@ def import_boto():
     print("cd boto; python setup.py install")
     raise
 
-  try:
-    import awscreds
-  except:
-    print "awscreds.py file needed with access and secret globals for aws access"
+  g_config =  load_config()
+  if  not g_config.HasAwsCreds():
+    print "config.py doesn't have aws creds"
     sys.exit(1)
 
 def log(s):
@@ -65,7 +65,7 @@ def s3connection():
   global g_s3conn
   if g_s3conn is None:
     import_boto()
-    g_s3conn = S3Connection(awscreds.access, awscreds.secret, True)
+    g_s3conn = S3Connection(g_config.aws_access, g_config.aws_secret, True)
   return g_s3conn
 
 def s3PubBucket():
@@ -306,6 +306,52 @@ def build_installer_data(dir):
   zf.write(font_path, "DroidSansFallback.ttf")
   zf.close()
 
+# Some operations, like uploading to s3, require knowing s3 credential
+# We store all such information that cannot be publicly known in a file
+# config.py. This object is just a wrapper to documents the fields
+# and given default values if config.py doesn't exist
+
+class Config(object):
+  def __init__(self):
+    self.aws_access = None
+    self.aws_secret = None
+    self.cert_pwd = None
+    self.trans_ul_secret = None
+
+  def GetCertPwdMustExist(self):
+    assert(None != self.cert_pwd)
+    return self.cert_pwd
+
+  # TODO: could verify aws creds better i.e. check the lengths
+  def GetAwsCredsMustExist(self):
+    assert(None != self.aws_access)
+    assert(None != self.aws_secret)
+    return (self.aws_access, self.aws_secret)
+
+  def HasAwsCreds(self):
+    if None is self.aws_access: return False
+    if None is self.aws_secret: return False
+    return True
+
+def load_config():
+  c = Config()
+  try:
+    import config
+    c.aws_access = config.aws_access
+    c.aws_secret = config.aws_secret
+    c.cert_pwd = config.cert_pwd
+    c.trans_ul_secret = config.trans_ul_secret
+  except:
+    # it's ok if doesn't exist, we just won't have the config data
+    pass
+  return c
+
+def test_load_config():
+  c = load_config()
+  vals = (c.aws_access, c.aws_secret, c.cert_pwd, c.trans_ul_secret)
+  print("aws_secret: %s\naws_secret: %s\ncert_pwd: %s\ntrans_ul_secret: %s" % vals)
+
 if __name__ == "__main__":
   #parse_svnlog_out_test2()
+  #test_load_config()
   pass

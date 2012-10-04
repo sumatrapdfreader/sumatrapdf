@@ -5,10 +5,7 @@ and optionally uploads it to s3.
 
 import os, os.path, shutil, sys, time, re
 
-from util import log, run_cmd_throw, test_for_flag, s3UploadFilePublic
-from util import s3UploadDataPublic, ensure_s3_doesnt_exist, ensure_path_exists
-from util import zip_file, extract_sumatra_version, verify_started_in_right_directory
-from util import build_installer_data, parse_svninfo_out, s3List, s3Delete
+from util import *
 
 args = sys.argv[1:]
 upload               = test_for_flag(args, "-upload")
@@ -153,8 +150,8 @@ def main():
     if not os.path.exists(os.path.join("scripts", "cert.pfx")):
       print("scripts/cert.pfx missing")
       sys.exit(1)
-    import awscreds
-    cert_pwd = awscreds.certpwd
+    conf = util.load_config()
+    cert_pwd = conf.GetCertPwdMustExist()
 
   obj_dir = "obj-rel"
   if target_platform == "X64":

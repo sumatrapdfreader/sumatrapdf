@@ -3,13 +3,7 @@ Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
 import os, os.path, shutil, sys, time, re, string, datetime, json, cPickle, cgi
-from util import log, run_cmd_throw, run_cmd, test_for_flag
-from util import s3UploadFilePublic, s3Delete, s3DownloadToFile
-from util import s3UploadDataPublic, ensure_s3_doesnt_exist, s3List
-from util import s3UploadDataPublicWithContentType, s3_exist
-from util import parse_svninfo_out, ensure_path_exists, build_installer_data
-from util import verify_started_in_right_directory, strip_empty_lines
-from util import parse_svnlog_out
+from util import *
 
 """
 TODO:
@@ -503,8 +497,8 @@ def get_cert_pwd():
 		if not os.path.exists(os.path.join("scripts", "cert.pfx")):
 			print("scripts/cert.pfx missing")
 			sys.exit(1)
-		import awscreds
-		g_cert_pwd = awscreds.certpwd
+		conf = load_config()
+		g_cert_pwd = conf.GetCertPwdMustExist()
 	return g_cert_pwd
 
 def sign(file_path, cert_pwd):
@@ -690,7 +684,7 @@ def buildbot_loop():
 		time.sleep(60*15) # 15 mins
 
 def copy_secrets(dst_path):
-	src = os.path.join("scripts", "awscreds.py")
+	src = os.path.join("scripts", "config.py")
 	shutil.copyfile(src, os.path.join(dst_path, src))
 	src = os.path.join("scripts", "cert.pfx")
 	shutil.copyfile(src, os.path.join(dst_path, src))
