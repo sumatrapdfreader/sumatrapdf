@@ -84,9 +84,18 @@ pdf_load_xobject(pdf_document *xref, pdf_obj *dict)
 		obj = pdf_dict_gets(attrs, "CS");
 		if (obj)
 		{
+			/* SumatraPDF: fix memory leak */
+			fz_try(ctx)
+			{
 			form->colorspace = pdf_load_colorspace(xref, obj);
 			if (!form->colorspace)
 				fz_throw(ctx, "cannot load xobject colorspace");
+			}
+			fz_catch(ctx)
+			{
+				pdf_drop_xobject(ctx, form);
+				fz_rethrow(ctx);
+			}
 		}
 	}
 

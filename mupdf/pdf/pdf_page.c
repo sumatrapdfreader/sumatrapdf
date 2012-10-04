@@ -360,8 +360,16 @@ pdf_load_page(pdf_document *xref, int number)
 	obj = pdf_dict_gets(pageobj, "Annots");
 	if (obj)
 	{
+		/* SumatraPDF: ignore annotations in case of unexpected errors */
+		fz_try(ctx)
+		{
 		page->links = pdf_load_link_annots(xref, obj, page->ctm);
 		page->annots = pdf_load_annots(xref, obj, page->ctm);
+		}
+		fz_catch(ctx)
+		{
+			fz_warn(ctx, "unexpectedly failed to load page annotations");
+		}
 	}
 
 	page->resources = pdf_dict_gets(pageobj, "Resources");

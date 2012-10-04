@@ -324,6 +324,10 @@ public:
 
 int main(int argc, char **argv)
 {
+#ifdef DEBUG
+    // _CrtSetBreakAlloc(527);
+#endif
+
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 

@@ -1093,7 +1093,16 @@ pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 		pdf_font_desc *fontdesc = NULL;
 		pdf_obj *font_obj = pdf_dict_gets(pdf_dict_gets(res, "Font"), font_name);
 		if (font_obj)
-			fontdesc = pdf_load_font(xref, res, font_obj);
+		{
+			fz_try(xref->ctx)
+			{
+				fontdesc = pdf_load_font(xref, res, font_obj);
+			}
+			fz_catch(xref->ctx)
+			{
+				fontdesc = NULL;
+			}
+		}
 		/* TODO: try to reverse the encoding instead of replacing the font */
 		if (fontdesc && fontdesc->cid_to_gid && !fontdesc->cid_to_ucs)
 		{
@@ -1279,10 +1288,20 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 			if (n == NULL)
 				n = pdf_dict_gets(ap, "N"); /* normal state */
 
+			/* SumatraPDF: prevent memory leak */
+			fz_try(ctx)
+			{
+
 			/* lookup current state in sub-dictionary */
 			if (!pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
 				n = pdf_dict_get(n, as);
 
+			}
+			fz_catch(ctx)
+			{
+				fz_warn(ctx, "ignoring broken annotation");
+				continue;
+			}
 
 			annot = fz_malloc_struct(ctx, pdf_annot);
 			annot->obj = pdf_keep_obj(obj);

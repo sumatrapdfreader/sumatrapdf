@@ -137,11 +137,18 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 	int k;
 
 	fz_pixmap *image = NULL;
+	fz_var(image);
 
 	if (setjmp(err.env))
 	{
+		/* SumatraPDF: prevent memory leak */
 		if (image)
+		{
 			fz_drop_pixmap(ctx, image);
+			image = NULL;
+			jpeg_finish_decompress(&cinfo);
+		}
+		jpeg_destroy_decompress(&cinfo);
 		fz_throw(ctx, "jpeg error: %s", err.msg);
 	}
 
@@ -170,7 +177,12 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 	else if (cinfo.output_components == 4)
 		colorspace = fz_device_cmyk;
 	else
+	{
+		/* SumatraPDF: prevent memory leak */
+		jpeg_finish_decompress(&cinfo);
+		jpeg_destroy_decompress(&cinfo);
 		fz_throw(ctx, "bad number of components in jpeg: %d", cinfo.output_components);
+	}
 
 	fz_try(ctx)
 	{
