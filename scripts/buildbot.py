@@ -2,13 +2,14 @@
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
-import os, os.path, shutil, sys, time, re, string, datetime, json
+import os, os.path, shutil, sys, time, re, string, datetime, json, cPickle
 from util import log, run_cmd_throw, run_cmd, test_for_flag
 from util import s3UploadFilePublic, s3Delete, s3DownloadToFile
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, s3List
 from util import s3UploadDataPublicWithContentType, s3_exist
 from util import parse_svninfo_out, ensure_path_exists, build_installer_data
 from util import verify_started_in_right_directory, strip_empty_lines
+from util import parse_svnlog_out
 
 """
 TODO:
@@ -22,7 +23,6 @@ TODO:
    (all those rules are to ensure we don't create pre-release builds too frequently)
  - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time 
    (in a separate html?)
- - add svn checkin message to index.html page
 """
 
 g_first_analyze_build = 6000
@@ -251,6 +251,59 @@ def stats_for_ver(ver):
 		assert(os.path.exists(local_path))
 	return Stats(local_path)
 
+def file_remove_try_hard(p):
+	removeRetryCount = 0
+	while removeRetryCount < 3:
+		try:
+			os.remove(filePath)
+			return
+		except:
+			time.sleep(1) # try to sleep to make the time for the file not be used anymore
+			print "exception: n  %s, n  %s, n  %s n  when trying to remove file %s" % (sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], filePath)
+		removeRetryCount += 1
+
+# We cache results of running svn log in a dict mapping
+# version to string returned by svn log
+g_svn_log_per_ver = None
+
+def load_svn_log_data():
+	try:
+		p = os.path.join(get_cache_dir(), "snv_log.dat")
+		fo = open(p, "rb")
+	except IOError:
+		# it's ok if doesn't exist
+		return {}
+	try:
+		res = cPickle.load(fo)
+		fo.close()
+		return res
+	except:
+		fo.close()
+		file_remove_try_hard(p)
+		return {}
+
+def save_svn_log_data(data):
+	p = os.path.join(get_cache_dir(), "snv_log.dat")
+	fo = open(p, "wb")
+	cPickle.dump(data, fo, protocol=cPickle.HIGHEST_PROTOCOL)
+	fo.close()
+
+def checkin_comment_for_ver(ver):
+	global g_svn_log_per_ver
+	ver = str(ver)
+	if g_svn_log_per_ver is None:
+		g_svn_log_per_ver = load_svn_log_data()
+	if ver not in g_svn_log_per_ver:
+		# TODO: retry few times to make it robust against temporary network failures
+		(out, err) = run_cmd_throw("svn", "log", "-r%s" % ver, "-v")
+		g_svn_log_per_ver[ver] = out
+		save_svn_log_data(g_svn_log_per_ver)
+	s = g_svn_log_per_ver[ver]
+	res = parse_svnlog_out(s)
+	if res is None:
+		return "not a source code change"
+	return res[1]
+
 # return true if we already have results for a given build number in s3
 def has_already_been_built(ver):
 	s3_dir = "sumatrapdf/buildbot/"
@@ -367,7 +420,7 @@ def build_index_html():
 	names.sort(reverse=True, key=lambda name: int(name.split("/")[0]))
 
 	html += '<table id="table-5"><tr><th>build</th><th>/analyze</th><th>release</th>'
-	html += '<th style="font-size:80%">SumatraPDF.exe size</th><th style="font-size:80%"">Installer.exe size</th></tr>\n'
+	html += '<th style="font-size:80%">SumatraPDF.exe size</th><th style="font-size:80%"">Installer.exe size</th><th>checkin comment</th></tr>\n'
 	files_by_ver = group_by_ver(names)
 	for arr in files_by_ver:
 		(ver, files) = arr
@@ -389,8 +442,8 @@ def build_index_html():
 		html += "  <tr>\n"
 
 		# build number
-		url = "https://code.google.com/p/sumatrapdf/source/detail?r=" + ver
-		html += td(a(url, ver), 4) + "\n"
+		src_url = "https://code.google.com/p/sumatrapdf/source/detail?r=" + ver
+		html += td(a(src_url, ver), 4) + "\n"
 
 		# TODO: this must group several revisions on one line to actually be shorter
 		if not build_files_changed(ver):
@@ -400,7 +453,7 @@ def build_index_html():
 		# /analyze warnings count
 		if int(ver) >= g_first_analyze_build and total_warnings > 0:
 			url = s3_ver_url + "analyze.html"
-			s = "%d %d %d warnings" % (stats.analyze_sumatra_warnings_count, stats.analyze_mupdf_warnings_count, stats.analyze_ext_warnings_count)
+			s = "%d %d %d" % (stats.analyze_sumatra_warnings_count, stats.analyze_mupdf_warnings_count, stats.analyze_ext_warnings_count)
 			html += td(a(url, s), 4)
 		else:
 			html += td("", 4)
@@ -408,7 +461,7 @@ def build_index_html():
 		# release build status
 		if stats.rel_failed:
 			url =  s3_ver_url + "release_build_log.txt"
-			s = '<font color="red"><b>fail</b></font> (' + a(url, "log") + ')'
+			s = '<b>' + a(url, "fail") + '</b>'
 		else:
 			s = '<font color="green"<b>ok!</b></font>'
 		html += td(s, 4) + "\n"
@@ -428,6 +481,14 @@ def build_index_html():
 				s = size_diff_html(stats.rel_installer_exe_size - prev_stats.rel_installer_exe_size)
 				s = str(stats.rel_installer_exe_size) + s
 				html += td(s, 4) + "\n"
+
+		# checkin comment
+		comment = checkin_comment_for_ver(ver)
+		if len(comment) > 74:
+			if len(comment) > 77:
+				comment = comment[:74] + a(src_url, "...")
+		html += td(comment, 4) + "\n"
+
 		html += "  </tr>\n"
 	html += "</table>"
 	html += "</body></html>\n"
