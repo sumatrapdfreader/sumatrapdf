@@ -322,6 +322,10 @@ class Config(object):
     assert(None != self.cert_pwd)
     return self.cert_pwd
 
+  def GetTransUploadSecret(self):
+    assert(None != self.trans_ul_secret)
+    return self.trans_ul_secret
+
   # TODO: could verify aws creds better i.e. check the lengths
   def GetAwsCredsMustExist(self):
     assert(None != self.aws_access)
