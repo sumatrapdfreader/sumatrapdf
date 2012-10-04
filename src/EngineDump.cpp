@@ -73,6 +73,9 @@ void DumpProperties(BaseEngine *engine)
     str.Set(Escape(engine->GetProperty(Prop_PdfVersion)));
     if (str)
         Out("\t\tPdfVersion=\"%s\"\n", str.Get());
+    str.Set(Escape(engine->GetProperty(Prop_PdfFileStructure)));
+    if (str)
+        Out("\t\tPdfFileStructure=\"%s\"\n", str.Get());
     if (!engine->IsPrintingAllowed())
         Out("\t\tPrintingAllowed=\"no\"\n");
     if (!engine->IsCopyingTextAllowed())

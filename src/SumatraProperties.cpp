@@ -387,24 +387,20 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     str = FormatPermissions(doc);
     layoutData->AddProperty(_TR("Denied Permissions:"), str);
 
-    // TODO: this is about linearlized PDF. Looks like mupdf would
-    // have to be extended to detect linearlized PDF. The rules are described
-    // in F3.3 of http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    // layoutData->AddProperty(_T("Fast Web View:"), str::Dup(_T("No")));
-
-    // TODO: probably needs to extend mupdf to get this information.
-    // Tagged PDF rules are described in 14.8.2 of
-    // http://www.adobe.com/devnet/acrobat/pdfs/PDF32000_2008.pdf
-    // layoutData->AddProperty(_T("Tagged PDF:"), str::Dup(_T("No")));
-
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
     if (extended) {
-        // TODO: FontList extraction can take a while
-        str = doc.GetProperty(Prop_FontList);
+        // TODO: how to best expose this property?
+        str = doc.GetProperty(Prop_PdfFileStructure);
         if (str) {
             // add a space between basic and extended file properties
             layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));
         }
+        layoutData->AddProperty(_T("PDF File Structure:"), str);
+
+        // TODO: FontList extraction can take a while
+        str = doc.GetProperty(Prop_FontList);
+        if (str && !layoutData->HasProperty(_T(" ")))
+            layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));
         layoutData->AddProperty(_TR("Fonts:"), str);
     }
 #endif

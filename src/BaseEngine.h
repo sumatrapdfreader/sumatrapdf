@@ -23,7 +23,7 @@ enum DocumentProperty {
     Prop_Title, Prop_Author, Prop_Copyright, Prop_Subject,
     Prop_CreationDate, Prop_ModificationDate, Prop_CreatorApp,
     Prop_FontList,
-    Prop_PdfVersion, Prop_PdfProducer,
+    Prop_PdfVersion, Prop_PdfProducer, Prop_PdfFileStructure,
 };
 
 class RenderedBitmap {

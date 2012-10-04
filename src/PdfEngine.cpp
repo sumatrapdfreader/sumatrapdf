@@ -1092,6 +1092,8 @@ protected:
     pdf_annot    ** ProcessPageAnnotations(pdf_page *page);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
     TCHAR         * ExtractFontList();
+    bool            IsLinearizedFile();
+    bool            IsTaggedFile();
 
     bool            SaveEmbedded(LinkSaverUI& saveUI, int num, int gen);
 
@@ -2265,6 +2267,49 @@ TCHAR *PdfEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords
     return result;
 }
 
+bool PdfEngineImpl::IsLinearizedFile()
+{
+    ScopedCritSec scope(&ctxAccess);
+    // determine the object number of the very first object in the file
+    fz_seek(_doc->file, 0, 0);
+    int tok = pdf_lex(_doc->file, &_doc->lexbuf.base);
+    if (tok != PDF_TOK_INT)
+        return false;
+    int num = _doc->lexbuf.base.i;
+    // check whether it's a linearization dictionary
+    fz_try(_doc->ctx) {
+        pdf_cache_object(_doc, num, 0);
+    }
+    fz_catch(_doc->ctx) {
+        return false;
+    }
+    pdf_obj *obj = _doc->table[num].obj;
+    if (!pdf_is_dict(obj))
+        return false;
+    // /Linearized format must be version 1.0
+    if (pdf_to_real(pdf_dict_gets(obj, "Linearized")) != 1.0f)
+        return false;
+    // /L must be the exact file size
+    if (pdf_to_int(pdf_dict_gets(obj, "L")) != _doc->file_size)
+        return false;
+    // /O must be the object number of the first page
+    if (pdf_to_int(pdf_dict_gets(obj, "O")) != pdf_to_num(_doc->page_refs[0]))
+        return false;
+    // /N must be the total number of pages
+    if (pdf_to_int(pdf_dict_gets(obj, "N")) != PageCount())
+        return false;
+    // /H must be an array and /E and /T must be integers
+    return pdf_is_array(pdf_dict_gets(obj, "H")) &&
+           pdf_is_int(pdf_dict_gets(obj, "E")) &&
+           pdf_is_int(pdf_dict_gets(obj, "T"));
+}
+
+bool PdfEngineImpl::IsTaggedFile()
+{
+    ScopedCritSec scope(&ctxAccess);
+    return pdf_to_bool(pdf_dict_getp(_doc->trailer, "Root/MarkInfo/Marked"));
+}
+
 static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList)
 {
     pdf_obj *fonts = pdf_dict_gets(res, "Font");
@@ -2380,6 +2425,14 @@ TCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
                 return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 8);
         }
         return str::Format(_T("%d.%d"), major, minor);
+    }
+    if (Prop_PdfFileStructure == prop) {
+        StrVec fstruct;
+        if (IsLinearizedFile())
+            fstruct.Append(str::Dup(_T("linearized")));
+        if (IsTaggedFile())
+            fstruct.Append(str::Dup(_T("tagged")));
+        return fstruct.Count() > 0 ? fstruct.Join(_T(", ")) : NULL;
     }
     if (Prop_FontList == prop)
         return ExtractFontList();
