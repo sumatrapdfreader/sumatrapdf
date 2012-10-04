@@ -1530,7 +1530,7 @@ static char *TextFindEmailEnd(str::Str<char>& htmlData, char *curr, bool fromAt=
 
 static char *TextFindRfcEnd(str::Str<char>& htmlData, char *curr)
 {
-    if (isalnum((unsigned)*(curr - 1)))
+    if (isalnum((unsigned char)*(curr - 1)))
         return NULL;
     int rfc;
     char *end = (char *)str::Parse(curr, "RFC %d", &rfc);

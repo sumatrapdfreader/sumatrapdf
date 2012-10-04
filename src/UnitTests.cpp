@@ -165,12 +165,32 @@ static void BenchRangeTest()
     assert(!IsBenchPagesInfo(NULL));
 }
 
+static void UrlExtractTest()
+{
+    assert(!ExtractFilenameFromURL(_T("")));
+    assert(!ExtractFilenameFromURL(_T("#hash_only")));
+    assert(!ExtractFilenameFromURL(_T("?query=only")));
+    ScopedMem<TCHAR> filename(ExtractFilenameFromURL(_T("http://example.net/filename.ext")));
+    assert(str::Eq(filename, _T("filename.ext")));
+    filename.Set(ExtractFilenameFromURL(_T("http://example.net/filename.ext#with_hash")));
+    assert(str::Eq(filename, _T("filename.ext")));
+    filename.Set(ExtractFilenameFromURL(_T("http://example.net/path/to/filename.ext?more=data")));
+    assert(str::Eq(filename, _T("filename.ext")));
+    filename.Set(ExtractFilenameFromURL(_T("http://example.net/pa%74h/na%2f%6d%65%2ee%78t")));
+    assert(str::Eq(filename, _T("na/me.ext")));
+#ifdef UNICODE
+    filename.Set(ExtractFilenameFromURL(_T("http://example.net/%E2%82%AC")));
+    assert(str::Eq((char *)filename.Get(), "\xAC\x20"));
+#endif
+}
+
 void SumatraPDF_UnitTests()
 {
     hexstrTest();
     ParseCommandLineTest();
     versioncheck_test();
     BenchRangeTest();
+    UrlExtractTest();
 }
 
 #endif
