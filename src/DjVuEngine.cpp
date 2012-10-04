@@ -165,6 +165,8 @@ public:
             initialized = true;
             InitializeCriticalSection(&lock);
             ctx = ddjvu_context_create("DjVuEngine");
+            // reset the locale to "C" as most other code expects
+            setlocale(LC_ALL, "C");
         }
 
         return ctx != NULL;

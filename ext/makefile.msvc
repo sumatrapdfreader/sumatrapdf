@@ -31,6 +31,8 @@ UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
 
 DJVU_CFLAGS = $(CFLAGSOPT) /D "NEED_JPEG_DECODER" /I$(JPEG_TURBO_DIR)
 DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=0" /D "DDJVUAPI=/**/" /D "MINILISPAPI=/**/"
+# prevent libdjvu from changing the C locale from underneath anybody else
+DJVU_CFLAGS = $(DJVU_CFLAGS) /D "DO_CHANGELOCALE=0"
 # a hack to enable C++ exception handling for libdjvu (without triggering a warning)
 DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
 # undo /D "UNICODE", as libdjvu uses TCHAR functions for char in several places
