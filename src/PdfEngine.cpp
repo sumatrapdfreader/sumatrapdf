@@ -163,7 +163,7 @@ ProducingPaletteDone:
             return;
         }
     }
-    CrashIf(!bgrPixmap);
+    AssertCrash(hasPalette || bgrPixmap);
 
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi->bmiHeader.biWidth = w;
