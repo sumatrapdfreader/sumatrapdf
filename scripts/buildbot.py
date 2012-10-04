@@ -2,7 +2,7 @@
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
-import os, os.path, shutil, sys, time, re, string, datetime, json, cPickle
+import os, os.path, shutil, sys, time, re, string, datetime, json, cPickle, cgi
 from util import log, run_cmd_throw, run_cmd, test_for_flag
 from util import s3UploadFilePublic, s3Delete, s3DownloadToFile
 from util import s3UploadDataPublic, ensure_s3_doesnt_exist, s3List
@@ -15,14 +15,9 @@ from util import parse_svnlog_out
 TODO:
  - at some point the index.html page will get too big, so split it into N-item chunks
    (100? 300?)
- - a shorter display of revisions that didn't introduce any code changes, which we can
-   detect by checking which files changed during a given revision and assume that if
-   source files didn't change, the binary didn't change
  - should also do pre-release builds if there was a new checkin since the last uploaded
    build but is different that than build and there was no checkin for at least 4hr
    (all those rules are to ensure we don't create pre-release builds too frequently)
- - use stats.txt to graph e.g. sizes of SumatraPDF.exe/Installer.exe over time 
-   (in a separate html?)
 """
 
 g_first_analyze_build = 6000
@@ -486,7 +481,9 @@ def build_index_html():
 		comment = checkin_comment_for_ver(ver)
 		if len(comment) > 74:
 			if len(comment) > 77:
-				comment = comment[:74] + a(src_url, "...")
+				comment = cgi.escape(comment[:74]) + a(src_url, "...")
+		else:
+			comment = cgi.escape(comment)
 		html += td(comment, 4) + "\n"
 
 		html += "  </tr>\n"
