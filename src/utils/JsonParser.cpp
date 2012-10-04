@@ -20,7 +20,8 @@ static inline const char *SkipDigits(const char *s)
     return s;
 }
 
-struct ParseArgs {
+class ParseArgs {
+public:
     str::Str<char> path;
     bool canceled;
     ValueObserver *observer;

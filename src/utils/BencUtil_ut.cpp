@@ -374,3 +374,15 @@ static void BencTestStress()
     free(s);
     delete startDict;
 }
+
+static void BencTest()
+{
+    BencTestParseInt();
+    BencTestParseString();
+    BencTestParseRawStrings();
+    BencTestParseArrays();
+    BencTestParseDicts();
+    BencTestArrayAppend();
+    BencTestDictAppend();
+    BencTestStress();
+}

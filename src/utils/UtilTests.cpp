@@ -223,14 +223,7 @@ void BaseUtils_UnitTests()
     StrVecTest();
     WinUtilTest();
     LogTest();
-    BencTestParseInt();
-    BencTestParseString();
-    BencTestParseRawStrings();
-    BencTestParseArrays();
-    BencTestParseDicts();
-    BencTestArrayAppend();
-    BencTestDictAppend();
-    BencTestStress();
+    BencTest();
     SigSlotTest();
     JsonTest();
 }

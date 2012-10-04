@@ -46,7 +46,7 @@ static inline void addsingleNL(WCHAR *base, WCHAR **cur)
 // appends a space, if the last character isn't one already
 static inline void addsinglespace(WCHAR *base, WCHAR **cur)
 {
-    if (*cur > base && !isspace(*(*cur - 1)))
+    if (*cur > base && !iswspace(*(*cur - 1)))
         *(*cur)++ = ' ';
 }
 
@@ -145,7 +145,7 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             }
         default:
             m_pPtr--;
-            if (isspace(*m_pPtr)) {
+            if (iswspace(*m_pPtr)) {
                 addsinglespace(result, &rptr);
                 m_pPtr++;
                 break;
