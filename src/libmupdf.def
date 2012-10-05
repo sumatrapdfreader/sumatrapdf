@@ -257,6 +257,10 @@ EXPORTS
 	fz_pixmap_size
 	fz_scale_pixmap
 	fz_pixmap_bbox_no_ctx
+	fz_compressed_buffer_size
+	fz_open_compressed_buffer
+	fz_open_image_decomp_stream
+	fz_free_compressed_buffer
 	fz_load_jpx
 	fz_load_jpeg
 	fz_load_png
@@ -324,6 +328,7 @@ EXPORTS
 	fz_free_shade_imp
 	fz_bound_shade
 	fz_paint_shade
+	fz_process_mesh
 	fz_new_gel
 	fz_insert_gel
 	fz_reset_gel
@@ -490,10 +495,8 @@ EXPORTS
 	pdf_localise_page_resources
 	pdf_cache_object
 	pdf_open_inline_stream
-	pdf_load_image_stream
-	pdf_open_image_stream
+	pdf_load_compressed_stream
 	pdf_open_stream_with_offset
-	pdf_open_image_decomp_stream
 	pdf_open_contents_stream
 	pdf_load_raw_renumbered_stream
 	pdf_load_renumbered_stream

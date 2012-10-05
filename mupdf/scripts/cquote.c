@@ -114,7 +114,7 @@ main(int argc, char **argv)
 		}
 
 		if (!bol)
-			fprintf(fi, "\\n\"\n");
+			fprintf(fo, "\\n\"\n");
 
 		if (fclose(fi))
 		{

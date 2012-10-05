@@ -1684,22 +1684,23 @@ fz_draw_free_user(fz_device *devp)
 	fz_context *ctx = dev->ctx;
 	/* pop and free the stacks */
 	if (dev->top > 0)
-	{
-		fz_draw_state *state = &dev->stack[--dev->top];
 		fz_warn(ctx, "items left on stack in draw device: %d", dev->top+1);
 
-		do
-		{
-			if (state[1].mask != state[0].mask)
-				fz_drop_pixmap(ctx, state[1].mask);
-			if (state[1].dest != state[0].dest)
-				fz_drop_pixmap(ctx, state[1].dest);
-			if (state[1].shape != state[0].shape)
-				fz_drop_pixmap(ctx, state[1].shape);
-			state--;
-		}
-		while (dev->top-- > 0); /* SumatraPDF: fix memory leak */
+	while(dev->top-- > 0)
+	{
+		fz_draw_state *state = &dev->stack[dev->top];
+		if (state[1].mask != state[0].mask)
+			fz_drop_pixmap(ctx, state[1].mask);
+		if (state[1].dest != state[0].dest)
+			fz_drop_pixmap(ctx, state[1].dest);
+		if (state[1].shape != state[0].shape)
+			fz_drop_pixmap(ctx, state[1].shape);
 	}
+	/* We never free the dest/mask/shape at level 0, as:
+	 *  1) dest is passed in and ownership remains with the
+	 *     caller.
+	 *  2) shape and mask are NULL at level 0.
+	 */
 	if (dev->stack != &dev->init_stack[0])
 		fz_free(ctx, dev->stack);
 	fz_free_gel(dev->gel);

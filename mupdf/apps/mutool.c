@@ -1,5 +1,5 @@
 /*
- * mubusy -- swiss army knife of pdf manipulation tools
+ * mutool -- swiss army knife of pdf manipulation tools
  */
 
 #include <stdio.h>
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 
 	/* Print usage */
 
-	fprintf(stderr, "usage: mubusy <command> [options]\n");
+	fprintf(stderr, "usage: mutool <command> [options]\n");
 
 	for (i = 0; i < nelem(tools); i++)
 		fprintf(stderr, "\t%s\t-- %s\n", tools[i].name, tools[i].desc);

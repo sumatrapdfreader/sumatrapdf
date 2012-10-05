@@ -1125,6 +1125,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\fitz\stm_comp_buf.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\stm_filter.c"
 					>
 				</File>

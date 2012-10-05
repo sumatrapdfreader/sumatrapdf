@@ -18,7 +18,7 @@ static fz_context *ctx = NULL;
 static void usage(void)
 {
 	fprintf(stderr,
-		"usage: mubusy clean [options] input.pdf [output.pdf] [pages]\n"
+		"usage: mutool clean [options] input.pdf [output.pdf] [pages]\n"
 		"\t-p -\tpassword\n"
 		"\t-g\tgarbage collect unused objects\n"
 		"\t-gg\tin addition to -g compact xref table\n"

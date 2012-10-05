@@ -18,7 +18,7 @@ static int y_factor = 0;
 static void usage(void)
 {
 	fprintf(stderr,
-		"usage: mubusy poster [options] input.pdf [output.pdf]\n"
+		"usage: mutool poster [options] input.pdf [output.pdf]\n"
 		"\t-p -\tpassword\n"
 		"\t-x\tx decimation factor\n"
 		"\t-y\ty decimation factor\n");

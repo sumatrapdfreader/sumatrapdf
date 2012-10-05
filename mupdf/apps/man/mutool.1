@@ -1,18 +1,18 @@
-.TH "MUBUSY" "1" "May 10, 2012"
+.TH "MUTOOL" "1" "Oct 02, 2012"
 .\" Please adjust this date whenever revising the manpage.
 .\" no hyphenation
 .nh
 .\" adjust left
 .ad l
 .SH NAME
-mubusy \- all purpose tool for dealing with PDF files
+mutool \- all purpose tool for dealing with PDF files
 .SH SYNOPSIS
-mubusy <sub-command> [options]
+mutool <sub-command> [options]
 .SH DESCRIPTION
-mubusy is a tool based on MuPDF for dealing with PDF files in various manners.
+mutool is a tool based on MuPDF for dealing with PDF files in various manners.
 There are several sub commands available, as described below.
 .SH CLEAN
-mubusy clean [options] input.pdf [output.pdf] [pages]
+mutool clean [options] input.pdf [output.pdf] [pages]
 .PP
 The clean command pretty prints and rewrites the syntax of a PDF file.
 It can be used to repair broken files, expand compressed streams, filter
@@ -42,7 +42,7 @@ TODO
 .SH POSTER
 TODO
 .SH SHOW
-mubusy show [options] file.pdf [object numbers ...]
+mutool show [options] file.pdf [object numbers ...]
 .PP
 The show command will print the specified objects and streams to stdout.
 Streams are decoded and non-printable characters are represented

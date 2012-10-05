@@ -164,8 +164,8 @@ $(OUT)/cmapdump.o : pdf/pdf_cmap.c pdf/pdf_cmap_parse.c
 MUDRAW := $(addprefix $(OUT)/, mudraw)
 $(MUDRAW) : $(FITZ_LIB) $(THIRD_LIBS)
 
-MUBUSY := $(addprefix $(OUT)/, mubusy)
-$(MUBUSY) : $(addprefix $(OUT)/, mupdfclean.o mupdfextract.o mupdfinfo.o mupdfposter.o mupdfshow.o) $(FITZ_LIB) $(THIRD_LIBS)
+MUTOOL := $(addprefix $(OUT)/, mutool)
+$(MUTOOL) : $(addprefix $(OUT)/, pdfclean.o pdfextract.o pdfinfo.o pdfposter.o pdfshow.o) $(FITZ_LIB) $(THIRD_LIBS)
 
 ifeq "$(NOX11)" ""
 MUVIEW := $(OUT)/mupdf
@@ -208,18 +208,18 @@ libdir ?= $(prefix)/lib
 incdir ?= $(prefix)/include
 mandir ?= $(prefix)/share/man
 
-install: $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUBUSY)
+install: $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUTOOL)
 	install -d $(bindir) $(libdir) $(incdir) $(mandir)/man1
 	install $(FITZ_LIB) $(libdir)
 	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h $(incdir)
-	install $(MUVIEW) $(MUDRAW) $(MUBUSY) $(bindir)
+	install $(MUVIEW) $(MUDRAW) $(MUTOOL) $(bindir)
 	install $(wildcard apps/man/*.1) $(mandir)/man1
 
 # --- Clean and Default ---
 
 all: all-nojs $(JSTARGETS)
 
-all-nojs: $(THIRD_LIBS) $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUBUSY)
+all-nojs: $(THIRD_LIBS) $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUTOOL)
 
 third: $(THIRD_LIBS)
 

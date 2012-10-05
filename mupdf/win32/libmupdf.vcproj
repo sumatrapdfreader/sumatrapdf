@@ -558,6 +558,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\stm_comp_buf.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\stm_open.c"
 				>
 			</File>

@@ -79,7 +79,7 @@ pdf_load_jbig2_globals(pdf_document *xref, pdf_obj *dict)
  * Create a filter given a name and param dictionary.
  */
 static fz_stream *
-build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, int num, int gen, pdf_image_params *params)
+build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, int num, int gen, fz_compression_params *params)
 {
 	fz_context *ctx = chain->ctx;
 	char *s = pdf_to_name(f);
@@ -107,14 +107,14 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 		if (params)
 		{
 			/* We will shortstop here */
-			params->type = PDF_IMAGE_FAX;
+			params->type = FZ_IMAGE_FAX;
 			params->u.fax.k = (k ? pdf_to_int(k) : 0);
-			params->u.fax.eol = (eol ? pdf_to_bool(eol) : 0);
-			params->u.fax.eba = (eba ? pdf_to_bool(eba) : 0);
+			params->u.fax.end_of_line = (eol ? pdf_to_bool(eol) : 0);
+			params->u.fax.encoded_byte_align = (eba ? pdf_to_bool(eba) : 0);
 			params->u.fax.columns = (columns ? pdf_to_int(columns) : 1728);
 			params->u.fax.rows = (rows ? pdf_to_int(rows) : 0);
-			params->u.fax.eob = (eob ? pdf_to_bool(eob) : 1);
-			params->u.fax.bi1 = (bi1 ? pdf_to_bool(bi1) : 0);
+			params->u.fax.end_of_block = (eob ? pdf_to_bool(eob) : 1);
+			params->u.fax.black_is_1 = (bi1 ? pdf_to_bool(bi1) : 0);
 			return chain;
 		}
 		return fz_open_faxd(chain,
@@ -133,8 +133,8 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 		if (params)
 		{
 			/* We will shortstop here */
-			params->type = PDF_IMAGE_JPEG;
-			params->u.jpeg.ct = (ct ? pdf_to_int(ct) : -1);
+			params->type = FZ_IMAGE_JPEG;
+			params->u.jpeg.color_transform = (ct ? pdf_to_int(ct) : -1);
 			return chain;
 		}
 		return fz_open_dctd(chain, ct ? pdf_to_int(ct) : -1);
@@ -145,7 +145,7 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 		if (params)
 		{
 			/* We will shortstop here */
-			params->type = PDF_IMAGE_RLD;
+			params->type = FZ_IMAGE_RLD;
 			return chain;
 		}
 		return fz_open_rld(chain);
@@ -155,7 +155,7 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 		if (params)
 		{
 			/* We will shortstop here */
-			params->type = PDF_IMAGE_FLATE;
+			params->type = FZ_IMAGE_FLATE;
 			params->u.flate.predictor = predictor;
 			params->u.flate.columns = columns;
 			params->u.flate.colors = colors;
@@ -174,12 +174,12 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 		if (params)
 		{
 			/* We will shortstop here */
-			params->type = PDF_IMAGE_LZW;
+			params->type = FZ_IMAGE_LZW;
 			params->u.lzw.predictor = predictor;
 			params->u.lzw.columns = columns;
 			params->u.lzw.colors = colors;
 			params->u.lzw.bpc = bpc;
-			params->u.lzw.ec = (ec ? pdf_to_int(ec) : 1);
+			params->u.lzw.early_change = (ec ? pdf_to_int(ec) : 1);
 			return chain;
 		}
 		chain = fz_open_lzwd(chain, ec ? pdf_to_int(ec) : 1);
@@ -229,7 +229,7 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
  * Assume ownership of head.
  */
 static fz_stream *
-build_filter_chain(fz_stream *chain, pdf_document *xref, pdf_obj *fs, pdf_obj *ps, int num, int gen, pdf_image_params *params)
+build_filter_chain(fz_stream *chain, pdf_document *xref, pdf_obj *fs, pdf_obj *ps, int num, int gen, fz_compression_params *params)
 {
 	pdf_obj *f;
 	pdf_obj *p;
@@ -290,7 +290,7 @@ pdf_open_raw_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int n
  * to stream length and decrypting.
  */
 static fz_stream *
-pdf_open_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, int gen, int offset, pdf_image_params *imparams)
+pdf_open_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, int gen, int offset, fz_compression_params *imparams)
 {
 	pdf_obj *filters;
 	pdf_obj *params;
@@ -313,7 +313,7 @@ pdf_open_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, 
  * constraining to stream length, and without decryption.
  */
 fz_stream *
-pdf_open_inline_stream(pdf_document *xref, pdf_obj *stmobj, int length, fz_stream *chain, pdf_image_params *imparams)
+pdf_open_inline_stream(pdf_document *xref, pdf_obj *stmobj, int length, fz_stream *chain, fz_compression_params *imparams)
 {
 	pdf_obj *filters;
 	pdf_obj *params;
@@ -359,19 +359,8 @@ pdf_open_raw_renumbered_stream(pdf_document *xref, int num, int gen, int orig_nu
 	return pdf_open_raw_filter(xref->file, xref, x->obj, num, orig_num, orig_gen, x->stm_ofs);
 }
 
-/*
- * Open a stream for reading uncompressed data.
- * Put the opened file in xref->stream.
- * Using xref->file while a stream is open is a Bad idea.
- */
-fz_stream *
-pdf_open_stream(pdf_document *xref, int num, int gen)
-{
-	return pdf_open_image_stream(xref, num, gen, num, gen, NULL);
-}
-
-fz_stream *
-pdf_open_image_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen, pdf_image_params *params)
+static fz_stream *
+pdf_open_image_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen, fz_compression_params *params)
 {
 	pdf_xref_entry *x;
 
@@ -388,48 +377,15 @@ pdf_open_image_stream(pdf_document *xref, int num, int gen, int orig_num, int or
 	return pdf_open_filter(xref->file, xref, x->obj, orig_num, orig_gen, x->stm_ofs, params);
 }
 
+/*
+ * Open a stream for reading uncompressed data.
+ * Put the opened file in xref->stream.
+ * Using xref->file while a stream is open is a Bad idea.
+ */
 fz_stream *
-pdf_open_image_decomp_stream(fz_context *ctx, fz_buffer *buffer, pdf_image_params *params, int *factor)
+pdf_open_stream(pdf_document *xref, int num, int gen)
 {
-	fz_stream *chain = fz_open_buffer(ctx, buffer);
-
-	switch (params->type)
-	{
-	case PDF_IMAGE_FAX:
-		*factor = 1;
-		return fz_open_faxd(chain,
-				params->u.fax.k,
-				params->u.fax.eol,
-				params->u.fax.eba,
-				params->u.fax.columns,
-				params->u.fax.rows,
-				params->u.fax.eob,
-				params->u.fax.bi1);
-	case PDF_IMAGE_JPEG:
-		if (*factor > 8)
-			*factor = 8;
-		return fz_open_resized_dctd(chain, params->u.jpeg.ct, *factor);
-	case PDF_IMAGE_RLD:
-		*factor = 1;
-		return fz_open_rld(chain);
-	case PDF_IMAGE_FLATE:
-		*factor = 1;
-		chain = fz_open_flated(chain);
-		if (params->u.flate.predictor > 1)
-			chain = fz_open_predict(chain, params->u.flate.predictor, params->u.flate.columns, params->u.flate.colors, params->u.flate.bpc);
-		return chain;
-	case PDF_IMAGE_LZW:
-		*factor = 1;
-		chain = fz_open_lzwd(chain, params->u.lzw.ec);
-		if (params->u.lzw.predictor > 1)
-			chain = fz_open_predict(chain, params->u.lzw.predictor, params->u.lzw.columns, params->u.lzw.colors, params->u.lzw.bpc);
-		return chain;
-	default:
-		*factor = 1;
-		break;
-	}
-
-	return chain;
+	return pdf_open_image_stream(xref, num, gen, num, gen, NULL);
 }
 
 fz_stream *
@@ -491,23 +447,8 @@ pdf_guess_filter_length(int len, char *filter)
 	return len;
 }
 
-/*
- * Load uncompressed contents of a stream into buf.
- */
 fz_buffer *
-pdf_load_stream(pdf_document *xref, int num, int gen)
-{
-	return pdf_load_image_stream(xref, num, gen, num, gen, NULL);
-}
-
-fz_buffer *
-pdf_load_renumbered_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen)
-{
-	return pdf_load_image_stream(xref, num, gen, orig_num, orig_gen, NULL);
-}
-
-fz_buffer *
-pdf_load_image_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen, pdf_image_params *params)
+pdf_load_image_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen, fz_compression_params *params)
 {
 	fz_context *ctx = xref->ctx;
 	fz_stream *stm = NULL;
@@ -547,6 +488,38 @@ pdf_load_image_stream(pdf_document *xref, int num, int gen, int orig_num, int or
 	}
 
 	return buf;
+}
+
+/*
+ * Load uncompressed contents of a stream into buf.
+ */
+fz_buffer *
+pdf_load_stream(pdf_document *xref, int num, int gen)
+{
+	return pdf_load_image_stream(xref, num, gen, num, gen, NULL);
+}
+
+fz_buffer *
+pdf_load_renumbered_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen)
+{
+	return pdf_load_image_stream(xref, num, gen, orig_num, orig_gen, NULL);
+}
+
+fz_compressed_buffer *
+pdf_load_compressed_stream(pdf_document *xref, int num, int gen)
+{
+	fz_context *ctx = xref->ctx;
+	fz_compressed_buffer *bc = fz_malloc_struct(ctx, fz_compressed_buffer);
+
+	fz_try(ctx)
+	{
+		bc->buffer = pdf_load_image_stream(xref, num, gen, num, gen, &bc->params);
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, bc);
+	}
+	return bc;
 }
 
 static fz_stream *

@@ -12,7 +12,7 @@ static int showcolumn;
 
 static void usage(void)
 {
-	fprintf(stderr, "usage: mubusy show [options] file.pdf [grepable] [xref] [trailer] [pagetree] [object numbers]\n");
+	fprintf(stderr, "usage: mutool show [options] file.pdf [grepable] [xref] [trailer] [pagetree] [object numbers]\n");
 	fprintf(stderr, "\t-b\tprint streams as binary data\n");
 	fprintf(stderr, "\t-e\tprint encoded streams (don't decode)\n");
 	fprintf(stderr, "\t-p\tpassword\n");

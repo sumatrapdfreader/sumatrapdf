@@ -11,7 +11,7 @@ static int dorgb = 0;
 
 static void usage(void)
 {
-	fprintf(stderr, "usage: mubusy extract [options] file.pdf [object numbers]\n");
+	fprintf(stderr, "usage: mutool extract [options] file.pdf [object numbers]\n");
 	fprintf(stderr, "\t-p\tpassword\n");
 	fprintf(stderr, "\t-r\tconvert images to rgb\n");
 	exit(1);

@@ -238,7 +238,7 @@ pdf_free_image(fz_context *ctx, fz_storable *image_)
 	if (image == NULL)
 		return;
 	fz_drop_pixmap(ctx, image->tile);
-	fz_drop_buffer(ctx, image->buffer);
+	fz_free_compressed_buffer(ctx, image->buffer);
 	fz_drop_colorspace(ctx, image->base.colorspace);
 	fz_drop_image(ctx, image->base.mask);
 	fz_free(ctx, image);
@@ -288,7 +288,7 @@ pdf_image_get_pixmap(fz_context *ctx, fz_image *image_, int w, int h)
 	while (key.factor > 0);
 
 	/* We need to make a new one. */
-	stm = pdf_open_image_decomp_stream(ctx, image->buffer, &image->params, &factor);
+	stm = fz_open_image_decomp_stream(ctx, image->buffer, &factor);
 
 	return decomp_image_from_stream(ctx, stm, image, 0, 0, factor, 1);
 }
@@ -422,7 +422,6 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		}
 
 		/* Now, do we load a ref, or do we load the actual thing? */
-		image->params.type = PDF_IMAGE_RAW;
 		FZ_INIT_STORABLE(&image->base, 1, pdf_free_image);
 		image->base.get_pixmap = pdf_image_get_pixmap;
 		image->base.w = w;
@@ -433,14 +432,13 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		image->imagemask = imagemask;
 		image->usecolorkey = usecolorkey;
 		image->base.mask = mask;
-		image->params.colorspace = image->base.colorspace; /* Uses the same ref as for the base one */
 		if (!indexed && !cstm)
 		{
 			/* Just load the compressed image data now and we can
 			 * decode it on demand. */
 			int num = pdf_to_num(dict);
 			int gen = pdf_to_gen(dict);
-			image->buffer = pdf_load_image_stream(xref, num, gen, num, gen, &image->params);
+			image->buffer = pdf_load_compressed_stream(xref, num, gen);
 			break; /* Out of fz_try */
 		}
 
@@ -547,19 +545,18 @@ pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image)
 		fz_drop_pixmap(ctx, img);
 		fz_rethrow(ctx);
 	}
-	image->params.type = PDF_IMAGE_RAW;
 	FZ_INIT_STORABLE(&image->base, 1, pdf_free_image);
 	image->base.get_pixmap = pdf_image_get_pixmap;
 	image->base.w = img->w;
 	image->base.h = img->h;
 	image->base.colorspace = colorspace;
+	image->buffer = NULL;
 	image->tile = img;
 	image->n = img->n;
 	image->bpc = 8;
 	image->interpolate = 0;
 	image->imagemask = 0;
 	image->usecolorkey = 0;
-	image->params.colorspace = colorspace; /* Uses the same ref as for the base one */
 }
 
 static int
@@ -567,7 +564,7 @@ pdf_image_size(fz_context *ctx, pdf_image *im)
 {
 	if (im == NULL)
 		return 0;
-	return sizeof(*im) + fz_pixmap_size(ctx, im->tile) + (im->buffer ? im->buffer->cap : 0);
+	return sizeof(*im) + fz_pixmap_size(ctx, im->tile) + (im->buffer && im->buffer->buffer ? im->buffer->buffer->cap : 0);
 }
 
 fz_image *

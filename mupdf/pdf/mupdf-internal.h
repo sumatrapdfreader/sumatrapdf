@@ -12,52 +12,6 @@ void pdf_set_int(pdf_obj *obj, int i);
  * PDF Images
  */
 
-typedef struct pdf_image_params_s pdf_image_params;
-
-struct pdf_image_params_s
-{
-	int type;
-	fz_colorspace *colorspace;
-	union
-	{
-		struct
-		{
-			int columns;
-			int rows;
-			int k;
-			int eol;
-			int eba;
-			int eob;
-			int bi1;
-		}
-		fax;
-		struct
-		{
-			int ct;
-		}
-		jpeg;
-		struct
-		{
-			int columns;
-			int colors;
-			int predictor;
-			int bpc;
-		}
-		flate;
-		struct
-		{
-			int columns;
-			int colors;
-			int predictor;
-			int bpc;
-			int ec;
-		}
-		lzw;
-	}
-	u;
-};
-
-
 typedef struct pdf_image_s pdf_image;
 
 struct pdf_image_s
@@ -65,24 +19,12 @@ struct pdf_image_s
 	fz_image base;
 	fz_pixmap *tile;
 	int n, bpc;
-	pdf_image_params params;
-	fz_buffer *buffer;
+	fz_compressed_buffer *buffer;
 	int colorkey[FZ_MAX_COLORS * 2];
 	float decode[FZ_MAX_COLORS * 2];
 	int imagemask;
 	int interpolate;
 	int usecolorkey;
-};
-
-enum
-{
-	PDF_IMAGE_RAW,
-	PDF_IMAGE_FAX,
-	PDF_IMAGE_JPEG,
-	PDF_IMAGE_RLD,
-	PDF_IMAGE_FLATE,
-	PDF_IMAGE_LZW,
-	PDF_IMAGE_JPX
 };
 
 /*
@@ -240,11 +182,10 @@ void pdf_localise_page_resources(pdf_document *xref);
 
 void pdf_cache_object(pdf_document *doc, int num, int gen);
 
-fz_stream *pdf_open_inline_stream(pdf_document *doc, pdf_obj *stmobj, int length, fz_stream *chain, pdf_image_params *params);
-fz_buffer *pdf_load_image_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen, pdf_image_params *params);
-fz_stream *pdf_open_image_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen, pdf_image_params *params);
+fz_stream *pdf_open_inline_stream(pdf_document *doc, pdf_obj *stmobj, int length, fz_stream *chain, fz_compression_params *params);
+fz_compressed_buffer *pdf_load_compressed_stream(pdf_document *doc, int num, int gen);
 fz_stream *pdf_open_stream_with_offset(pdf_document *doc, int num, int gen, pdf_obj *dict, int stm_ofs);
-fz_stream *pdf_open_image_decomp_stream(fz_context *ctx, fz_buffer *, pdf_image_params *params, int *factor);
+fz_stream *pdf_open_compressed_stream(fz_context *ctx, fz_compressed_buffer *);
 fz_stream *pdf_open_contents_stream(pdf_document *xref, pdf_obj *obj);
 fz_buffer *pdf_load_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
 fz_buffer *pdf_load_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);

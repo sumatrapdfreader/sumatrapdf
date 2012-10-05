@@ -52,6 +52,7 @@ struct fz_display_list_s
 {
 	fz_display_node *first;
 	fz_display_node *last;
+	int len;
 
 	int top;
 	struct {
@@ -173,6 +174,7 @@ fz_append_display_node(fz_display_list *list, fz_display_node *node)
 		list->last->next = node;
 		list->last = node;
 	}
+	list->len++;
 }
 
 static void
@@ -562,6 +564,7 @@ fz_new_display_list(fz_context *ctx)
 	fz_display_list *list = fz_malloc_struct(ctx, fz_display_list);
 	list->first = NULL;
 	list->last = NULL;
+	list->len = 0;
 	list->top = 0;
 	list->tiled = 0;
 	return list;
@@ -599,7 +602,7 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz
 
 	if (cookie)
 	{
-		cookie->progress_max = list->last - list->first;
+		cookie->progress_max = list->len;
 		cookie->progress = 0;
 	}
 
