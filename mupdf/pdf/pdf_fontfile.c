@@ -666,8 +666,17 @@ static void
 create_system_font_list(fz_context *ctx)
 {
 	TCHAR szFontDir[MAX_PATH];
+	UINT cch;
 
-	UINT cch = GetWindowsDirectory(szFontDir, nelem(szFontDir) - 12);
+#ifdef DEBUG
+	// allow to overwrite system fonts for debugging purposes
+	// (either pass a full path or a search pattern such as "fonts\*.ttf")
+	cch = GetEnvironmentVariable(_T("MUPDF_FONTS_PATTERN"), szFontDir, nelem(szFontDir));
+	if (0 < cch && cch < nelem(szFontDir))
+		extend_system_font_list(ctx, szFontDir);
+#endif
+
+	cch = GetWindowsDirectory(szFontDir, nelem(szFontDir) - 12);
 	if (0 < cch && cch < nelem(szFontDir) - 12)
 	{
 		_tcscat_s(szFontDir, MAX_PATH, _T("\\Fonts\\*.?t?"));
