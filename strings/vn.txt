@@ -350,6 +350,9 @@ Không thể đổi tên tập tin!
 Failed to save a file
 Không lưu được tập tin.
 
+Fast Web View
+Xem dạng Web nhanh
+
 Favorites
 Ưa thích
 
@@ -509,6 +512,9 @@ Thuộc tính\tCtrl+D
 PDF Document
 Tập tin PDF
 
+PDF Optimizations:
+Các tối ưu PDF
+
 PDF Producer:
 Phần mềm tạo PDF:
 
@@ -665,6 +671,9 @@ SumatraPDF giờ là trình đọc PDF chính của bạn
 Synchronization file cannot be opened
 Không mở được tập tin đồng bộ
 
+Tagged PDF
+PDF được gắn thẻ
+
 Text documents
 Tập tin văn bản
 
@@ -712,9 +721,4 @@ copying text
 
 printing document
 đang in tập tin
-
-# Untranslated:
-#Fast Web View
-#PDF Optimizations:
-#Tagged PDF
 

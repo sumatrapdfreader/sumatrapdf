@@ -64,15 +64,19 @@ def c_oct(c):
     o = "00" + oct(ord(c))
     return "\\" + o[-3:]
 
-def c_escape(txt):
+def c_escape(txt, encode_to_utf=False):
     if txt is None:
         return "NULL"
     # escape all quotes
     txt = txt.replace('"', r'\"')
     # and all non-7-bit characters of the UTF-8 encoded string
     #print(txt)
-    #txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt.encode("utf-8"))
-    txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt)
+    if encode_to_utf:
+        # the old, pre-apptranslator translation system required encoding to utf8, 
+        txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt.encode("utf-8"))
+    else:
+        # the new apptranslator-based translation system already has txt in utf8 at this point
+        txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt)
     return '"%s"' % txt
 
 def get_trans_for_lang(strings_dict, keys, lang_arg):
@@ -120,7 +124,7 @@ def make_lang_layouts(lang_index):
         lang_layouts[cols[0]] = cols[3] == "RTL" and 1 or 0
     return lang_layouts
 
-def gen_c_code(langs_ex, strings_dict, file_name, lang_index):
+def gen_c_code(langs_ex, strings_dict, file_name, lang_index, encode_to_utf=False):
     langs = [cols[0] for cols in langs_ex]
     assert DEFAULT_LANG == langs[0]
     langs_count = len(langs)
@@ -136,12 +140,12 @@ def gen_c_code(langs_ex, strings_dict, file_name, lang_index):
             trans = get_trans_for_lang(strings_dict, keys, lang)
         lines.append("")
         lines.append("  /* Translations for language %s */" % lang)
-        lines += ["  %s," % c_escape(t) for t in trans]
+        lines += ["  %s," % c_escape(t, encode_to_utf=encode_to_utf) for t in trans]
     translations = "\n".join(lines)
     
     lang_ids = make_lang_ids(langs_ex, lang_index)
     lang_layouts = make_lang_layouts(lang_index)
-    lang_data = ['{ "%s", %s, %s, %d },' % (lang[0], c_escape(lang[1]), lang_ids[lang[0]], lang_layouts[lang[0]]) for lang in langs_ex]
+    lang_data = ['{ "%s", %s, %s, %d },' % (lang[0], c_escape(lang[1], encode_to_utf=encode_to_utf), lang_ids[lang[0]], lang_layouts[lang[0]]) for lang in langs_ex]
     lang_data = "\n    ".join(lang_data)
     
     file_content = TRANSLATIONS_TXT_C % locals()
@@ -193,8 +197,6 @@ def dump_langs_as_py(langs):
 
 def main():
     (strings_dict, langs, contributors) = load_strings_file()
-    dump_langs_as_py(langs)
-    return
     strings = extract_strings_from_c_files()
     for s in strings_dict.keys():
         if s not in strings:
@@ -210,7 +212,7 @@ def main():
     c_file_name = os.path.join(g_src_dir, "Translations_txt.cpp")
     gen_and_upload_js(strings_dict, langs, contributors)
     remove_incomplete_translations(langs, strings, strings_dict)
-    gen_c_code(langs, strings_dict, c_file_name, load_lang_index())
+    gen_c_code(langs, strings_dict, c_file_name, load_lang_index(), encode_to_utf=True)
 
 def main_new():
     import apptransdl
