@@ -95,7 +95,7 @@ def s3UploadDataPublicWithContentType(data, remote_path, silent=False):
   # TODO: there must be a simpler way
   tmp_name = os.path.basename(remote_path)
   tmp_path = os.path.join(tempfile.gettempdir(), tmp_name)
-  open(tmp_path, "w").write(data)
+  open(tmp_path, "w").write(data.encode("utf-8"))
   s3UploadFilePublic(tmp_path, remote_path, silent)
   os.remove(tmp_path)
 

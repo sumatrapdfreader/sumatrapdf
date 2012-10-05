@@ -481,10 +481,10 @@ def build_index_html():
 
 		# checkin comment
 		(comment, trimmed) = trim_checkin_comment(checkin_comment_for_ver(ver))
+		comment = comment.decode('utf-8')
 		comment = cgi.escape(comment)
 		if trimmed: comment += a(src_url, "...")
 		html += td(comment, 4) + "\n"
-
 		html += "  </tr>\n"
 	html += "</table>"
 	html += "</body></html>\n"
