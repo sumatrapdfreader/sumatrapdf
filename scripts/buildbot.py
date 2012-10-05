@@ -296,10 +296,12 @@ def checkin_comment_for_ver(ver):
 # return true if we already have results for a given build number in s3
 def has_already_been_built(ver):
 	s3_dir = "sumatrapdf/buildbot/"
-	expected_name = s3_dir + ver + "/analyze.html"
+	expected_name1 = s3_dir + ver + "/analyze.html"
+	expected_name2 = s3_dir + ver + "/release_build_log.txt"
 	keys = s3List(s3_dir)
 	for k in keys:
-		if k.name == expected_name: return True
+		if k.name in [expected_name1, expected_name2]:
+			return True
 	return False
 
 # given a list of files from s3 in the form ${ver}/${name}, group them
