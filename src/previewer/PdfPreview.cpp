@@ -68,6 +68,7 @@ class PageRenderer {
     float reqZoom;
     SizeI reqSize;
     bool reqAbort;
+    AbortCookie *abortCookie;
 
     CRITICAL_SECTION currAccess;
     HANDLE thread;
@@ -82,7 +83,7 @@ class PageRenderer {
 public:
     PageRenderer(BaseEngine *engine, HWND hwnd) : engine(engine), hwnd(hwnd),
         currPage(0), currBmp(NULL), reqPage(0), reqZoom(0), thread(NULL),
-        preventRecursion(false) {
+        abortCookie(NULL), preventRecursion(false) {
         InitializeCriticalSection(&currAccess);
     }
     ~PageRenderer() {
@@ -115,8 +116,11 @@ public:
             reqAbort = false;
             thread = CreateThread(NULL, 0, RenderThread, this, 0, 0);
         }
-        else if (reqPage != pageNo || reqSize != target.Size())
+        else if (reqPage != pageNo || reqSize != target.Size()) {
+            if (abortCookie)
+                abortCookie->Abort();
             reqAbort = true;
+        }
     }
 
 protected:
@@ -124,7 +128,7 @@ protected:
         ScopedCom comScope; // because the engine reads data from a COM IStream
 
         PageRenderer *pr = (PageRenderer *)data;
-        RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, NULL, Target_View, &pr->reqAbort);
+        RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, NULL, Target_View, &pr->abortCookie);
 
         ScopedCritSec scope(&pr->currAccess);
 
@@ -136,6 +140,8 @@ protected:
         }
         else
             delete bmp;
+        delete pr->abortCookie;
+        pr->abortCookie = NULL;
 
         HANDLE thread = pr->thread;
         pr->thread = NULL;

@@ -213,12 +213,12 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool *abortCookie=NULL) {
-        return pdfEngine ? pdfEngine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, abortCookie) : NULL;
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
+        return pdfEngine ? pdfEngine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, cookie_out) : NULL;
     }
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, bool *abortCookie=NULL) {
-        return pdfEngine ? pdfEngine->RenderPage(hDC, screenRect, pageNo, zoom, rotation, pageRect, target, abortCookie) : false;
+                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
+        return pdfEngine ? pdfEngine->RenderPage(hDC, screenRect, pageNo, zoom, rotation, pageRect, target, cookie_out) : false;
     }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) {

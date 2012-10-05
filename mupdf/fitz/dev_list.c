@@ -611,8 +611,7 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz
 		/* Check the cookie for aborting */
 		if (cookie)
 		{
-			/* SumatraPDF: support Fitz-agnostic abort cookie */
-			if (cookie->abort || cookie->abort2 && *cookie->abort2)
+			if (cookie->abort)
 				break;
 			cookie->progress = progress++;
 		}

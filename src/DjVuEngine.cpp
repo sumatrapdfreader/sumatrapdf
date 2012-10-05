@@ -141,6 +141,13 @@ public:
     virtual PageDestination *GetLink() { return dest; }
 };
 
+class DjVuAbortCookie : public AbortCookie {
+public:
+    bool abort;
+    DjVuAbortCookie() : abort(false) { }
+    virtual void Abort() { abort = true; }
+};
+
 class DjVuContext {
     bool initialized;
     ddjvu_context_t *ctx;
@@ -211,9 +218,9 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool *abortCookie=NULL);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, bool *abortCookie=NULL);
+                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -415,7 +422,7 @@ bool DjVuEngineImpl::Load(const TCHAR *fileName)
     return true;
 }
 
-RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool *abortCookie)
+RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -461,12 +468,16 @@ RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
     return bmp;
 }
 
-bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool *abortCookie)
+bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     bool success = true;
     RectD mediabox = PageMediabox(pageNo);
     HRGN clip = CreateRectRgn(screenRect.x, screenRect.y, screenRect.x + screenRect.dx, screenRect.y + screenRect.dy);
     SelectClipRgn(hDC, clip);
+
+    DjVuAbortCookie *cookie = NULL;
+    if (cookie_out)
+        *cookie_out = cookie = new DjVuAbortCookie();
 
     // render in 1 MB bands, as otherwise GDI can run out of memory
     RectD rect = pageRect ? *pageRect : mediabox;
@@ -479,14 +490,14 @@ bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
         RectI screenBand = Transform(pageBand, pageNo, zoom, rotation).Round();
         screenBand.Offset(screenRect.x - pt.x, screenRect.y - pt.y);
 
-        RenderedBitmap *bmp = RenderBitmap(pageNo, zoom, rotation, &pageBand, target, abortCookie);
+        RenderedBitmap *bmp = RenderBitmap(pageNo, zoom, rotation, &pageBand, target, cookie_out);
         if (bmp && bmp->GetBitmap())
             bmp->StretchDIBits(hDC, screenBand);
         else
             success = false;
         delete bmp;
 
-        if (abortCookie && *abortCookie) {
+        if (cookie && cookie->abort) {
             success = false;
             break;
         }

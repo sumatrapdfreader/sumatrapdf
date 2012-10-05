@@ -51,6 +51,13 @@ struct PageAnchor {
     PageAnchor(DrawInstr *instr=NULL, int pageNo=-1) : instr(instr), pageNo(pageNo) { }
 };
 
+class EbookAbortCookie : public AbortCookie {
+public:
+    bool abort;
+    EbookAbortCookie() : abort(false) { }
+    virtual void Abort() { abort = true; }
+};
+
 class EbookEngine : public virtual BaseEngine {
 public:
     EbookEngine();
@@ -68,9 +75,9 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool *abortCookie=NULL);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, bool *abortCookie=NULL);
+                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -270,7 +277,7 @@ RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, b
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool *abortCookie)
+RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -281,7 +288,7 @@ RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     HBITMAP hbmp = CreateCompatibleBitmap(hDC, screen.dx, screen.dy);
     DeleteObject(SelectObject(hDCMem, hbmp));
 
-    bool ok = RenderPage(hDCMem, screen, pageNo, zoom, rotation, pageRect, target, abortCookie);
+    bool ok = RenderPage(hDCMem, screen, pageNo, zoom, rotation, pageRect, target, cookie_out);
     DeleteDC(hDCMem);
     ReleaseDC(NULL, hDC);
     if (!ok) {
@@ -320,7 +327,7 @@ void EbookEngine::FixFontSizeForResolution(HDC hDC)
     currFontDpi = dpi;
 }
 
-bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool *abortCookie)
+bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -342,10 +349,14 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     m.Translate((float)(screenRect.x - screen.x), (float)(screenRect.y - screen.y), MatrixOrderAppend);
     g.SetTransform(&m);
 
+    EbookAbortCookie *cookie = NULL;
+    if (cookie_out)
+        *cookie_out = cookie = new EbookAbortCookie();
+
     ScopedCritSec scope(&pagesAccess);
     FixFontSizeForResolution(hDC);
-    DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, &Color(Color::Black), abortCookie);
-    return !(abortCookie && *abortCookie);
+    DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, &Color(Color::Black), cookie ? &cookie->abort : NULL);
+    return !(cookie && cookie->abort);
 }
 
 static RectI GetInstrBbox(DrawInstr *instr, float pageBorder)

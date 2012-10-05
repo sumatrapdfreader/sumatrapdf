@@ -52,6 +52,7 @@ struct PageRenderRequest {
 
     RectD               pageRect; // calculated from TilePosition
     bool                abort;
+    AbortCookie *       abortCookie;
     DWORD               timestamp;
     // owned by the PageRenderRequest (use it before reusing the request)
     // on rendering success, the callback gets handed the RenderedBitmap
@@ -124,6 +125,7 @@ private:
                    RenderingCallback *callback=NULL);
     void    ClearQueueForDisplayModel(DisplayModel *dm, int pageNo=INVALID_PAGE_NO,
                                       TilePosition *tile=NULL);
+    void    AbortCurrentRequest();
 
     static DWORD WINAPI RenderCacheThread(LPVOID data);
 

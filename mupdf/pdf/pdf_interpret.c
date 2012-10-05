@@ -2610,8 +2610,7 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 				/* Check the cookie */
 				if (csi->cookie)
 				{
-					/* SumatraPDF: support Fitz-agnostic abort cookie */
-					if (csi->cookie->abort || csi->cookie->abort2 && *csi->cookie->abort2)
+					if (csi->cookie->abort)
 					{
 						tok = PDF_TOK_EOF;
 						break;
@@ -2871,8 +2870,7 @@ pdf_run_page_with_usage(pdf_document *xref, pdf_page *page, fz_device *dev, fz_m
 		/* Check the cookie for aborting */
 		if (cookie)
 		{
-			/* SumatraPDF: support Fitz-agnostic abort cookie */
-			if (cookie->abort || cookie->abort2 && *cookie->abort2)
+			if (cookie->abort)
 				break;
 			cookie->progress++;
 		}

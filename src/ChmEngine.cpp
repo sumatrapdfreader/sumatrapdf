@@ -119,13 +119,13 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool *abortCookie=NULL) {
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
          // TOOD: assert(0);
          return NULL;
     }
 
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, bool *abortCookie=NULL) {
+                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
         // TODO: assert(0);
         return false;
     }

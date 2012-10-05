@@ -31,8 +31,7 @@ xps_lookup_alternate_content(xml_element *node)
 void
 xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node)
 {
-	/* SumatraPDF: support Fitz-agnostic abort cookie */
-	if (doc->cookie && (doc->cookie->abort || doc->cookie->abort2 && *doc->cookie->abort2))
+	if (doc->cookie && doc->cookie->abort)
 		return;
 	/* SolidColorBrushes are handled in a special case and will never show up here */
 	if (!strcmp(xml_tag(node), "ImageBrush"))
@@ -50,8 +49,7 @@ xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, 
 void
 xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node)
 {
-	/* SumatraPDF: support Fitz-agnostic abort cookie */
-	if (doc->cookie && (doc->cookie->abort || doc->cookie->abort2 && *doc->cookie->abort2))
+	if (doc->cookie && doc->cookie->abort)
 		return;
 	if (!strcmp(xml_tag(node), "Path"))
 		xps_parse_path(doc, ctm, base_uri, dict, node);

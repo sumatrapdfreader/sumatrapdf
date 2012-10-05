@@ -55,6 +55,35 @@ struct PrintData {
     }
 };
 
+class AbortCookieManager {
+    CRITICAL_SECTION cookieAccess;
+public:
+    AbortCookie *cookie;
+
+    AbortCookieManager() : cookie(NULL) {
+        InitializeCriticalSection(&cookieAccess);
+    }
+    ~AbortCookieManager() {
+        Clear();
+        DeleteCriticalSection(&cookieAccess);
+    }
+
+    void Abort() {
+        ScopedCritSec scope(&cookieAccess);
+        if (cookie)
+            cookie->Abort();
+        Clear();
+    }
+
+    void Clear() {
+        ScopedCritSec scope(&cookieAccess);
+        if (cookie) {
+            delete cookie;
+            cookie = NULL;
+        }
+    }
+};
+
 class ScopeDisableDEP {
 public:
     ScopeDisableDEP() { EnableDataExecution(); }
@@ -71,7 +100,7 @@ static RectD BoundSelectionOnPage(Vec<SelectionOnPage>& sel, int pageNo)
     return bounds;
 }
 
-static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool *abortCookie=NULL)
+static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, AbortCookieManager *abortCookie=NULL)
 {
     AssertCrash(pd.engine);
     if (!pd.engine) return;
@@ -166,13 +195,17 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
                     RectI rc((int)(printable.dx - bSize.dx * zoom) / 2 + offset.x,
                              (int)(printable.dy - bSize.dy * zoom) / 2 + offset.y,
                              (int)(clipRegion->dx * zoom), (int)(clipRegion->dy * zoom));
-                    engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie);
+                    engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                    if (abortCookie)
+                        abortCookie->Clear();
                 }
                 else {
                     RenderedBitmap *bmp = NULL;
                     short shrink = 1;
                     while (!bmp && shrink < 32) {
-                        bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie);
+                        bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                        if (abortCookie)
+                            abortCookie->Clear();
                         if (!bmp || !bmp->GetBitmap()) {
                             shrink *= 2;
                             delete bmp;
@@ -267,13 +300,17 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, bool
                 RectI rc = RectI::FromXY((int)(paperSize.dx - pSize.dx * zoom) / 2 + offset.x,
                                          (int)(paperSize.dy - pSize.dy * zoom) / 2 + offset.y,
                                          paperSize.dx, paperSize.dy);
-                engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print, abortCookie);
+                engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                if (abortCookie)
+                    abortCookie->Clear();
             }
             else {
                 RenderedBitmap *bmp = NULL;
                 short shrink = 1;
                 while (!bmp && shrink < 32) {
-                    bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print, abortCookie);
+                    bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                    if (abortCookie)
+                        abortCookie->Clear();
                     if (!bmp || !bmp->GetBitmap()) {
                         shrink *= 2;
                         delete bmp;
@@ -316,6 +353,7 @@ public:
 
 class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback, public UIThreadWorkItem {
     NotificationWnd *wnd;
+    AbortCookieManager cookie;
     bool isCanceled;
 
 public:
@@ -345,6 +383,7 @@ public:
     // called when printing has been canceled
     virtual void RemoveNotification(NotificationWnd *wnd) {
         isCanceled = true;
+        cookie.Abort();
         this->wnd = NULL;
         if (WindowInfoStillValid(win))
             win->notifications->RemoveNotification(wnd);
@@ -358,7 +397,7 @@ public:
         while (!threadData->win->printThread)
             Sleep(1);
         threadData->thread = threadData->win->printThread;
-        PrintToDevice(*threadData->data, threadData, &threadData->isCanceled);
+        PrintToDevice(*threadData->data, threadData, &threadData->cookie);
         QueueWorkItem(threadData);
         return 0;
     }

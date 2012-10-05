@@ -762,6 +762,13 @@ static fz_device *fz_new_inspection_device(fz_context *ctx, ListInspectionData *
     return dev;
 }
 
+class FitzAbortCookie : public AbortCookie {
+public:
+    fz_cookie cookie;
+    FitzAbortCookie() { memset(&cookie, 0, sizeof(cookie)); }
+    virtual void Abort() { cookie.abort = 1; }
+};
+
 extern "C" {
 #include <mupdf-internal.h>
 }
@@ -999,10 +1006,10 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool *abortCookie=NULL);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, bool *abortCookie=NULL) {
-        return RenderPage(hDC, GetPdfPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, target, abortCookie);
+                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
+        return RenderPage(hDC, GetPdfPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, target, cookie_out);
     }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -1073,7 +1080,7 @@ protected:
     }
     bool            RenderPage(HDC hDC, pdf_page *page, RectI screenRect,
                                fz_matrix *ctm, float zoom, int rotation,
-                               RectD *pageRect, RenderTarget target, bool *abortCookie);
+                               RectD *pageRect, RenderTarget target, AbortCookie **cookie_out);
     bool            PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip);
     TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View, bool cacheRun=false);
@@ -1084,7 +1091,7 @@ protected:
     bool            RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm,
                             RenderTarget target=Target_View,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true,
-                            bool *abortCookie=NULL);
+                            FitzAbortCookie *cookie=NULL);
     void            DropPageRun(PdfPageRun *run, bool forceRemove=false);
 
     PdfTocItem    * BuildTocTree(fz_outline *entry, int& idCounter);
@@ -1745,17 +1752,15 @@ PdfPageRun *PdfEngineImpl::GetPageRun(pdf_page *page, bool tryOnly)
     return result;
 }
 
-bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_bbox clipbox, bool cacheRun, bool *abortCookie)
+bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, RenderTarget target, fz_bbox clipbox, bool cacheRun, FitzAbortCookie *cookie)
 {
     bool ok = true;
-    fz_cookie cookie = { 0 };
-    cookie.abort2 = (char *)abortCookie;
 
     PdfPageRun *run;
     if (Target_View == target && (run = GetPageRun(page, !cacheRun))) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            fz_run_display_list(run->list, dev, ctm, clipbox, &cookie);
+            fz_run_display_list(run->list, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -1768,7 +1773,7 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
         char *targetName = target == Target_Print ? "Print" :
                            target == Target_Export ? "Export" : "View";
         fz_try(ctx) {
-            pdf_run_page_with_usage(_doc, page, dev, ctm, targetName, &cookie);
+            pdf_run_page_with_usage(_doc, page, dev, ctm, targetName, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -1779,7 +1784,7 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
     fz_free_device(dev);
     LeaveCriticalSection(&ctxAccess);
 
-    return ok && !(cookie.abort2 && *cookie.abort2);
+    return ok && !(cookie && cookie->cookie.abort);
 }
 
 void PdfEngineImpl::DropPageRun(PdfPageRun *run, bool forceRemove)
@@ -1895,7 +1900,7 @@ RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     return fz_rect_to_RectD(rect2);
 }
 
-bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool *abortCookie)
+bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     if (!page)
         return false;
@@ -1930,7 +1935,10 @@ bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_mat
     }
     LeaveCriticalSection(&ctxAccess);
 
-    return RunPage(page, dev, ctm2, target, clipbox, true, abortCookie);
+    FitzAbortCookie *cookie = NULL;
+    if (cookie_out)
+        *cookie_out = cookie = new FitzAbortCookie();
+    return RunPage(page, dev, ctm2, target, clipbox, true, cookie);
 }
 
 // various heuristics for deciding when to use dev_gdiplus instead of fitz/draw
@@ -1966,7 +1974,7 @@ bool PdfEngineImpl::PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip
     return result;
 }
 
-RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool *abortCookie)
+RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     pdf_page* page = GetPdfPage(pageNo);
     if (!page)
@@ -1988,7 +1996,7 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 
         RectI rc(0, 0, w, h);
         RectD pageRect2 = fz_rect_to_RectD(pRect);
-        bool ok = RenderPage(hDCMem, page, rc, &ctm, 0, 0, &pageRect2, target, abortCookie);
+        bool ok = RenderPage(hDCMem, page, rc, &ctm, 0, 0, &pageRect2, target, cookie_out);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!ok) {
@@ -2021,7 +2029,10 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
     LeaveCriticalSection(&ctxAccess);
 
-    bool ok = RunPage(page, dev, ctm, target, bbox, true, abortCookie);
+    FitzAbortCookie *cookie = NULL;
+    if (cookie_out)
+        *cookie_out = cookie = new FitzAbortCookie();
+    bool ok = RunPage(page, dev, ctm, target, bbox, true, cookie);
 
     ScopedCritSec scope(&ctxAccess);
 
@@ -2827,10 +2838,10 @@ public:
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, bool *abortCookie=NULL);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, bool *abortCookie=NULL) {
-        return RenderPage(hDC, GetXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, abortCookie);
+                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
+        return RenderPage(hDC, GetXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, cookie_out);
     }
 
     virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
@@ -2886,7 +2897,7 @@ protected:
     }
     bool            RenderPage(HDC hDC, xps_page *page, RectI screenRect,
                                fz_matrix *ctm, float zoom, int rotation,
-                               RectD *pageRect, bool *abortCookie);
+                               RectD *pageRect, AbortCookie **cookie_out);
     TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep,
                                     RectI **coords_out=NULL, bool cacheRun=false);
 
@@ -2895,7 +2906,7 @@ protected:
     XpsPageRun    * GetPageRun(xps_page *page, bool tryOnly=false);
     bool            RunPage(xps_page *page, fz_device *dev, fz_matrix ctm,
                             fz_bbox clipbox=fz_infinite_bbox, bool cacheRun=true,
-                            bool *abortCookie=NULL);
+                            FitzAbortCookie *cookie=NULL);
     void            DropPageRun(XpsPageRun *run, bool forceRemove=false);
 
     XpsTocItem    * BuildTocTree(fz_outline *entry, int& idCounter);
@@ -3266,17 +3277,15 @@ XpsPageRun *XpsEngineImpl::GetPageRun(xps_page *page, bool tryOnly)
     return result;
 }
 
-bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, bool cacheRun, bool *abortCookie)
+bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, bool cacheRun, FitzAbortCookie *cookie)
 {
     bool ok = true;
-    fz_cookie cookie = { 0 };
-    cookie.abort2 = (char *)abortCookie;
 
     XpsPageRun *run = GetPageRun(page, !cacheRun);
     if (run) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            fz_run_display_list(run->list, dev, ctm, clipbox, &cookie);
+            fz_run_display_list(run->list, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -3287,7 +3296,7 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bb
     else {
         ScopedCritSec scope(&ctxAccess);
         fz_try(ctx) {
-            xps_run_page(_doc, page, dev, ctm, &cookie);
+            xps_run_page(_doc, page, dev, ctm, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -3298,7 +3307,7 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bb
     fz_free_device(dev);
     LeaveCriticalSection(&ctxAccess);
 
-    return ok && !(cookie.abort2 && *cookie.abort2);
+    return ok && !(cookie && cookie->cookie.abort);
 }
 
 void XpsEngineImpl::DropPageRun(XpsPageRun *run, bool forceRemove)
@@ -3395,7 +3404,7 @@ RectD XpsEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     return fz_rect_to_RectD(rect2);
 }
 
-bool XpsEngineImpl::RenderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, bool *abortCookie)
+bool XpsEngineImpl::RenderPage(HDC hDC, xps_page *page, RectI screenRect, fz_matrix *ctm, float zoom, int rotation, RectD *pageRect, AbortCookie **cookie_out)
 {
     if (!page)
         return false;
@@ -3430,10 +3439,13 @@ bool XpsEngineImpl::RenderPage(HDC hDC, xps_page *page, RectI screenRect, fz_mat
     }
     LeaveCriticalSection(&ctxAccess);
 
-    return RunPage(page, dev, ctm2, clipbox, true, abortCookie);
+    FitzAbortCookie *cookie = NULL;
+    if (cookie_out)
+        *cookie_out = cookie = new FitzAbortCookie();
+    return RunPage(page, dev, ctm2, clipbox, true, cookie);
 }
 
-RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, bool *abortCookie)
+RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     xps_page* page = GetXpsPage(pageNo);
     if (!page)
@@ -3455,7 +3467,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         DeleteObject(SelectObject(hDCMem, hbmp));
 
         RectI rc(0, 0, w, h);
-        bool ok = RenderPage(hDCMem, page, rc, &ctm, 0, 0, pageRect, abortCookie);
+        bool ok = RenderPage(hDCMem, page, rc, &ctm, 0, 0, pageRect, cookie_out);
         DeleteDC(hDCMem);
         ReleaseDC(NULL, hDC);
         if (!ok) {
@@ -3488,7 +3500,10 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
     LeaveCriticalSection(&ctxAccess);
 
-    bool ok = RunPage(page, dev, ctm, bbox, true, abortCookie);
+    FitzAbortCookie *cookie = NULL;
+    if (cookie_out)
+        *cookie_out = cookie = new FitzAbortCookie();
+    bool ok = RunPage(page, dev, ctm, bbox, true, cookie);
 
     ScopedCritSec scope(&ctxAccess);
 

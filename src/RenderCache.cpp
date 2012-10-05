@@ -289,8 +289,7 @@ bool RenderCache::ReduceTileSize()
         FreeForDisplayModel(cache[0]->dm);
     while (requestCount > 0)
         ClearQueueForDisplayModel(requests[0].dm);
-    if (curReq)
-        curReq->abort = true;
+    AbortCurrentRequest();
 
     return true;
 }
@@ -324,7 +323,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
         if ((curReq->zoom != zoom) || (curReq->rotation != rotation)) {
             /* Currently rendered page is for the same page but with different zoom
             or rotation, so abort it */
-            curReq->abort = true;
+            AbortCurrentRequest();
         } else {
             /* we're already rendering exactly the same page */
             goto Exit;
@@ -421,6 +420,7 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
     else
         assert(0);
     newRequest->abort = false;
+    newRequest->abortCookie = NULL;
     newRequest->timestamp = GetTickCount();
     newRequest->renderCb = renderCb;
 
@@ -464,6 +464,8 @@ bool RenderCache::GetNextRequest(PageRenderRequest *req)
 bool RenderCache::ClearCurrentRequest()
 {
     ScopedCritSec scope(&requestAccess);
+    if (curReq)
+        delete curReq->abortCookie;
     curReq = NULL;
 
     bool isQueueEmpty = requestCount == 0;
@@ -486,7 +488,7 @@ void RenderCache::CancelRendering(DisplayModel *dm)
             return;
         }
 
-        curReq->abort = true;
+        AbortCurrentRequest();
         LeaveCriticalSection(&requestAccess);
 
         /* TODO: busy loop is not good, but I don't have a better idea */
@@ -512,6 +514,16 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePo
         } else
             curPos++;
     }
+}
+
+void RenderCache::AbortCurrentRequest()
+{
+    ScopedCritSec scope(&requestAccess);
+    if (!curReq)
+        return;
+    if (curReq->abortCookie)
+        curReq->abortCookie->Abort();
+    curReq->abort = true;
 }
 
 DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
@@ -544,7 +556,8 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
         if (!req.dm->textCache->HasData(req.pageNo))
             req.dm->textCache->GetData(req.pageNo);
 
-        bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, Target_View, &req.abort);
+        CrashIf(req.abortCookie != NULL);
+        bmp = req.dm->engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, Target_View, &req.abortCookie);
         if (req.abort) {
             delete bmp;
             if (req.renderCb)
