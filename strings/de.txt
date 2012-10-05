@@ -353,6 +353,9 @@ Die Datei konnte nicht umbenannt werden!
 Failed to save a file
 Die Datei konnte nicht neu gespeichert werden!
 
+Fast Web View
+Schnelle Webanzeige
+
 Favorites
 Favoriten
 
@@ -512,6 +515,9 @@ Ei&genschaften\tStrg+D
 PDF Document
 PDF-Dokument
 
+PDF Optimizations:
+PDF Optimierungen:
+
 PDF Producer:
 PDF Urheber:
 
@@ -667,6 +673,9 @@ PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
 
 Synchronization file cannot be opened
 Die Synchronisationsdatei kann nicht geöffnet werden
+
+Tagged PDF
+PDF mit Tags
 
 Text documents
 Text-Dokumente

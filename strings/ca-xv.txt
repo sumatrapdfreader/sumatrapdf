@@ -679,13 +679,16 @@ s'està imprimint el document
 #Copy &Image
 #Copyright:
 #Failed to rename the file!
+#Fast Web View
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
+#PDF Optimizations:
 #Print as &image (requires more memory)
 #Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme
 #Show &Bookmarks
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+#Tagged PDF
 

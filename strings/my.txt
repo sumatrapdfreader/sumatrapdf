@@ -384,6 +384,7 @@ mencetak dokumen
 #F&avorites
 #F&orward\tAlt+Right Arrow
 #Failed to rename the file!
+#Fast Web View
 #Favorites
 #File %s not found
 #Fit &Content\tCtrl+3
@@ -414,6 +415,7 @@ mencetak dokumen
 #Open in &Microsoft XPS-Viewer
 #P&roperties
 #P&roperties\tCtrl+D
+#PDF Optimizations:
 #PDF Producer:
 #Page %s
 #Page number %u inexistant
@@ -450,6 +452,7 @@ mencetak dokumen
 #SumatraPDF crashed
 #SumatraPDF should now be your default PDF reader
 #Synchronization file cannot be opened
+#Tagged PDF
 #Text documents
 #Unknown source file (%s)
 #XPS documents

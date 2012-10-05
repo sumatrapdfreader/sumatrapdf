@@ -714,3 +714,8 @@ cópia de texto
 printing document
 impressão de documento
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

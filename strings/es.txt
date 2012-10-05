@@ -719,3 +719,8 @@ copiado de texto
 printing document
 imprimiendo documento
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

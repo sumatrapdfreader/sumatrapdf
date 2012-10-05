@@ -708,6 +708,9 @@ prebieha tlač dokumentu
 
 # Untranslated:
 #Compatibility
+#Fast Web View
+#PDF Optimizations:
 #Print as &image (requires more memory)
 #Show &Bookmarks
+#Tagged PDF
 

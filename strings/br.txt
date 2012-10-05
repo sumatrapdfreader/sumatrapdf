@@ -713,3 +713,8 @@ copiando texto
 printing document
 imprimindo documento
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

@@ -575,6 +575,7 @@ ipini-print ang dokumento
 #Error loading %s
 #F&avorites
 #Failed to rename the file!
+#Fast Web View
 #Favorites
 #File %s not found
 #Fonts:
@@ -586,6 +587,7 @@ ipini-print ang dokumento
 #Loading file %s...
 #Mobi documents
 #Open a document...
+#PDF Optimizations:
 #Page %s
 #Postscript documents
 #Print
@@ -603,5 +605,6 @@ ipini-print ang dokumento
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+#Tagged PDF
 #XPS documents
 

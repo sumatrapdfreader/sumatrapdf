@@ -690,11 +690,14 @@ printing document
 # Untranslated:
 #Compatibility
 #Could not obtain Printer properties
+#Fast Web View
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
+#PDF Optimizations:
 #Print as &image (requires more memory)
 #Printer with given name doesn't exist
 #Replace document &colors with Windows color scheme
 #Show &Bookmarks
+#Tagged PDF
 

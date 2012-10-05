@@ -713,3 +713,8 @@ idazkia kopiatzen
 printing document
 agiria irarkitzen
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

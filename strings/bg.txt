@@ -698,8 +698,11 @@ printing document
 # Untranslated:
 #Compatibility
 #Failed to rename the file!
+#Fast Web View
+#PDF Optimizations:
 #Print as &image (requires more memory)
 #Re&name...\tF2
 #Rename To
 #Show &Bookmarks
+#Tagged PDF
 

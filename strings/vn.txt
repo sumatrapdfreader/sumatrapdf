@@ -713,3 +713,8 @@ copying text
 printing document
 đang in tập tin
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

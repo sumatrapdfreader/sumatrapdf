@@ -718,3 +718,8 @@ copying text
 printing document
 در حال چاپ سند
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

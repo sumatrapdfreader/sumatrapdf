@@ -715,3 +715,8 @@ kopírování textu
 printing document
 tisk dokumentu
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

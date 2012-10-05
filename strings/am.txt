@@ -712,3 +712,8 @@ copying text
 printing document
 Ֆայլը տպվում է
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

@@ -720,3 +720,8 @@ Copia del testo...
 printing document
 Stampa documento...
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

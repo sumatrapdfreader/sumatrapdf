@@ -566,6 +566,7 @@ argraffu dogfen
 #Error loading %s
 #F&avorites
 #Failed to rename the file!
+#Fast Web View
 #Favorites
 #File %s not found
 #Fonts:
@@ -577,6 +578,7 @@ argraffu dogfen
 #Loading file %s...
 #Open a document...
 #P&roperties
+#PDF Optimizations:
 #Page %s
 #Postscript documents
 #Print
@@ -595,5 +597,6 @@ argraffu dogfen
 #Show Favorites
 #Show frequently read
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
+#Tagged PDF
 #[Changes detected; refreshing] %s
 

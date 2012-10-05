@@ -712,3 +712,8 @@ kopjon tekstin
 printing document
 printon doumentin
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

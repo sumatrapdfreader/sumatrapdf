@@ -1506,6 +1506,13 @@ bool PdfEngineImpl::FinishLoading()
         _info = pdf_dict_gets(_doc->trailer, "Info");
         if (_info)
             _info = pdf_copy_str_dict(ctx, pdf_resolve_indirect(_info));
+        else
+            _info = pdf_new_dict(ctx, 2);
+        // also remember linearization and tagged states at this point
+        if (IsLinearizedFile())
+            pdf_dict_puts_drop(_info, "Linearized", pdf_new_bool(ctx, 1));
+        if (IsTaggedFile())
+            pdf_dict_puts_drop(_info, "Marked", pdf_new_bool(ctx, 1));
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load Info dictionary");
@@ -2307,7 +2314,8 @@ bool PdfEngineImpl::IsLinearizedFile()
 bool PdfEngineImpl::IsTaggedFile()
 {
     ScopedCritSec scope(&ctxAccess);
-    return pdf_to_bool(pdf_dict_getp(_doc->trailer, "Root/MarkInfo/Marked"));
+    pdf_obj *root = pdf_dict_gets(_doc->trailer, "Root");
+    return pdf_to_bool(pdf_dict_gets(pdf_dict_gets(root, "MarkInfo"), "Marked"));
 }
 
 static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList)
@@ -2428,11 +2436,11 @@ TCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
     }
     if (Prop_PdfFileStructure == prop) {
         StrVec fstruct;
-        if (IsLinearizedFile())
+        if (pdf_to_bool(pdf_dict_gets(_info, "Linearized")))
             fstruct.Append(str::Dup(_T("linearized")));
-        if (IsTaggedFile())
+        if (pdf_to_bool(pdf_dict_gets(_info, "Marked")))
             fstruct.Append(str::Dup(_T("tagged")));
-        return fstruct.Count() > 0 ? fstruct.Join(_T(", ")) : NULL;
+        return fstruct.Count() > 0 ? fstruct.Join(_T(",")) : NULL;
     }
     if (Prop_FontList == prop)
         return ExtractFontList();

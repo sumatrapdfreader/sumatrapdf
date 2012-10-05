@@ -539,6 +539,7 @@ printing document
 #Error loading %s
 #F&avorites
 #Failed to rename the file!
+#Fast Web View
 #Favorites
 #File %s not found
 #Fit &Content\tCtrl+3
@@ -556,6 +557,7 @@ printing document
 #No result found around line %u in file %s
 #Open a document...
 #P&roperties
+#PDF Optimizations:
 #Page %s
 #Page scaling
 #Postscript documents
@@ -581,6 +583,7 @@ printing document
 #Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 #SumatraPDF Update
 #SumatraPDF crashed
+#Tagged PDF
 #Unknown source file (%s)
 #XPS documents
 

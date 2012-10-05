@@ -175,6 +175,22 @@ static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     return str::Format(_T("%s x %s %s"), strWidth, strHeight, isMetric ? _T("cm") : _T("in"));
 }
 
+static TCHAR *FormatPdfFileStructure(Doc doc)
+{
+    ScopedMem<TCHAR> fstruct(doc.GetProperty(Prop_PdfFileStructure));
+    if (str::IsEmpty(fstruct.Get()))
+        return NULL;
+    
+    StrVec props;
+
+    if (str::Find(fstruct, _T("linearized")))
+        props.Push(str::Dup(_TR("Fast Web View")));
+    if (str::Find(fstruct, _T("tagged")))
+        props.Push(str::Dup(_TR("Tagged PDF")));
+
+    return props.Join(_T(", "));
+}
+
 // returns a list of permissions denied by this document
 // Caller needs to free the result
 static TCHAR *FormatPermissions(Doc doc)
@@ -359,6 +375,9 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     str = doc.GetProperty(Prop_PdfVersion);
     layoutData->AddProperty(_TR("PDF Version:"), str);
 
+    str = FormatPdfFileStructure(doc);
+    layoutData->AddProperty(_TR("PDF Optimizations:"), str);
+
     size_t fileSize = file::GetSize(doc.GetFilePath());
     if (fileSize == INVALID_FILE_SIZE && doc.IsEngine())
         free(doc.AsEngine()->GetFileData(&fileSize));
@@ -389,18 +408,12 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
 
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
     if (extended) {
-        // TODO: how to best expose this property?
-        str = doc.GetProperty(Prop_PdfFileStructure);
+        // TODO: FontList extraction can take a while
+        str = doc.GetProperty(Prop_FontList);
         if (str) {
             // add a space between basic and extended file properties
             layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));
         }
-        layoutData->AddProperty(_T("PDF File Structure:"), str);
-
-        // TODO: FontList extraction can take a while
-        str = doc.GetProperty(Prop_FontList);
-        if (str && !layoutData->HasProperty(_T(" ")))
-            layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));
         layoutData->AddProperty(_TR("Fonts:"), str);
     }
 #endif

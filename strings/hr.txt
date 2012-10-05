@@ -713,3 +713,8 @@ kopiram tekst
 printing document
 ispisujem dokument
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

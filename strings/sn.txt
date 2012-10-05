@@ -282,6 +282,7 @@ Duputsa
 #F&avorites
 #F&orward\tAlt+Right Arrow
 #Failed to rename the file!
+#Fast Web View
 #Favorites
 #File %s not found
 #File Size:
@@ -318,6 +319,7 @@ Duputsa
 #P&roperties
 #P&roperties\tCtrl+D
 #PDF Document
+#PDF Optimizations:
 #PDF Producer:
 #PDF Version:
 #PDF documents
@@ -361,6 +363,7 @@ Duputsa
 #SumatraPDF is your default PDF reader
 #SumatraPDF should now be your default PDF reader
 #Synchronization file cannot be opened
+#Tagged PDF
 #Text documents
 #Title:
 #Unknown source file (%s)

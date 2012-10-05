@@ -685,12 +685,15 @@ skriver ut dokument
 #Copy &Image
 #Copyright:
 #Failed to rename the file!
+#Fast Web View
 #Fonts:
 #Formatting the book... %d pages
 #Loading file %s...
+#PDF Optimizations:
 #Print as &image (requires more memory)
 #Re&name...\tF2
 #Rename To
 #Replace document &colors with Windows color scheme
 #Show &Bookmarks
+#Tagged PDF
 

@@ -716,3 +716,8 @@ copying text
 printing document
 تتم حالياً الطباعة
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

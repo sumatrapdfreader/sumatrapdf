@@ -714,3 +714,8 @@ copying text
 printing document
 печатается документ
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

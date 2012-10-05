@@ -500,6 +500,7 @@ Zoomfaktor
 #Error loading %s
 #F&avorites
 #Failed to rename the file!
+#Fast Web View
 #Favorites
 #File %s not found
 #Fit &Content\tCtrl+3
@@ -516,6 +517,7 @@ Zoomfaktor
 #No result found around line %u in file %s
 #Open a document...
 #P&roperties
+#PDF Optimizations:
 #Page %s
 #Page scaling
 #Postscript documents
@@ -541,6 +543,7 @@ Zoomfaktor
 #Subject:
 #SumatraPDF Update
 #SumatraPDF crashed
+#Tagged PDF
 #copying text
 #printing document
 

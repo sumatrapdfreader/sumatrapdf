@@ -715,3 +715,8 @@ copying text
 printing document
 εκτύπωση εγγράφου
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

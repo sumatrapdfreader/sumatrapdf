@@ -721,3 +721,8 @@ tekst kopiëren
 printing document
 document afdrukken
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

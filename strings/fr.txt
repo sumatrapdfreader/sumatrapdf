@@ -718,3 +718,8 @@ copie du texte
 printing document
 impression du document
 
+# Untranslated:
+#Fast Web View
+#PDF Optimizations:
+#Tagged PDF
+

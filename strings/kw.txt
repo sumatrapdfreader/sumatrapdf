@@ -456,6 +456,7 @@ Faktor-zoum
 #Error loading %s
 #F&avorites
 #Failed to rename the file!
+#Fast Web View
 #Favorites
 #File %s not found
 #File Size:
@@ -477,6 +478,7 @@ Faktor-zoum
 #Open a document...
 #P&roperties
 #P&roperties\tCtrl+D
+#PDF Optimizations:
 #PDF Producer:
 #PDF Version:
 #Page %s
@@ -505,6 +507,7 @@ Faktor-zoum
 #Subject:
 #SumatraPDF Update
 #SumatraPDF crashed
+#Tagged PDF
 #Title:
 #XPS documents
 #copying text
