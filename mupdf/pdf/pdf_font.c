@@ -683,7 +683,8 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 		}
 
 		/* encode by glyph name where we can */
-		if (kind == TRUETYPE)
+		/* SumatraPDF: don't encode name-less TrueType fonts just by name (required for Windows 8 fonts) */
+		if (kind == TRUETYPE || (ft_kind(face) == TRUETYPE && !FT_HAS_GLYPH_NAMES(face)))
 		{
 			/* Unicode cmap */
 			if (!symbolic && face->charmap && face->charmap->platform_id == 3)
