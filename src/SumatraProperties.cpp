@@ -180,13 +180,21 @@ static TCHAR *FormatPdfFileStructure(Doc doc)
     ScopedMem<TCHAR> fstruct(doc.GetProperty(Prop_PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
         return NULL;
+    StrVec parts;
+    parts.Split(fstruct, _T(","), true);
     
     StrVec props;
 
-    if (str::Find(fstruct, _T("linearized")))
+    if (parts.Find(_T("linearized")) != -1)
         props.Push(str::Dup(_TR("Fast Web View")));
-    if (str::Find(fstruct, _T("tagged")))
+    if (parts.Find(_T("tagged")) != -1)
         props.Push(str::Dup(_TR("Tagged PDF")));
+    if (parts.Find(_T("PDFX")) != -1)
+        props.Push(str::Dup(_T("PDF/X (ISO 15930)")));
+    if (parts.Find(_T("PDFA1")) != -1)
+        props.Push(str::Dup(_T("PDF/A (ISO 19005)")));
+    if (parts.Find(_T("PDFE1")) != -1)
+        props.Push(str::Dup(_T("PDF/E (ISO 24517)")));
 
     return props.Join(_T(", "));
 }

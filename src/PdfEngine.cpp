@@ -1093,7 +1093,6 @@ protected:
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
     TCHAR         * ExtractFontList();
     bool            IsLinearizedFile();
-    bool            IsTaggedFile();
 
     bool            SaveEmbedded(LinkSaverUI& saveUI, int num, int gen);
 
@@ -1511,16 +1510,29 @@ bool PdfEngineImpl::FinishLoading()
         // also remember linearization and tagged states at this point
         if (IsLinearizedFile())
             pdf_dict_puts_drop(_info, "Linearized", pdf_new_bool(ctx, 1));
-        if (IsTaggedFile())
+        if (pdf_to_bool(pdf_dict_getp(_doc->trailer, "Root/MarkInfo/Marked")))
             pdf_dict_puts_drop(_info, "Marked", pdf_new_bool(ctx, 1));
+        // also remember known output intents (PDF/X, etc.)
+        pdf_obj *intents = pdf_dict_getp(_doc->trailer, "Root/OutputIntents");
+        if (pdf_is_array(intents)) {
+            pdf_obj *list = pdf_new_array(ctx, pdf_array_len(intents));
+            for (int i = 0; i < pdf_array_len(intents); i++) {
+                pdf_obj *intent = pdf_dict_gets(pdf_array_get(intents, i), "S");
+                if (pdf_is_name(intent) && !pdf_is_indirect(intent) && str::StartsWith(pdf_to_name(intent), "GTS_PDF"))
+                    pdf_array_push(list, intent);
+            }
+            pdf_dict_puts_drop(_info, "OutputIntents", list);
+        }
+        else
+            pdf_dict_dels(_info, "OutputIntents");
     }
     fz_catch(ctx) {
-        fz_warn(ctx, "Couldn't load Info dictionary");
+        fz_warn(ctx, "Couldn't load document properties");
         pdf_drop_obj(_info);
         _info = NULL;
     }
     fz_try(ctx) {
-        pdf_obj *pagelabels = pdf_dict_gets(pdf_dict_gets(_doc->trailer, "Root"), "PageLabels");
+        pdf_obj *pagelabels = pdf_dict_getp(_doc->trailer, "Root/PageLabels");
         if (pagelabels)
             _pagelabels = BuildPageLabelVec(pagelabels, PageCount());
     }
@@ -2311,13 +2323,6 @@ bool PdfEngineImpl::IsLinearizedFile()
            pdf_is_int(pdf_dict_gets(obj, "T"));
 }
 
-bool PdfEngineImpl::IsTaggedFile()
-{
-    ScopedCritSec scope(&ctxAccess);
-    pdf_obj *root = pdf_dict_gets(_doc->trailer, "Root");
-    return pdf_to_bool(pdf_dict_gets(pdf_dict_gets(root, "MarkInfo"), "Marked"));
-}
-
 static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList)
 {
     pdf_obj *fonts = pdf_dict_gets(res, "Font");
@@ -2434,14 +2439,23 @@ TCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
         }
         return str::Format(_T("%d.%d"), major, minor);
     }
+
     if (Prop_PdfFileStructure == prop) {
         StrVec fstruct;
         if (pdf_to_bool(pdf_dict_gets(_info, "Linearized")))
             fstruct.Append(str::Dup(_T("linearized")));
         if (pdf_to_bool(pdf_dict_gets(_info, "Marked")))
             fstruct.Append(str::Dup(_T("tagged")));
+        if (pdf_dict_gets(_info, "OutputIntents")) {
+            for (int i = 0; i < pdf_array_len(pdf_dict_gets(_info, "OutputIntents")); i++) {
+                pdf_obj *intent = pdf_array_get(pdf_dict_gets(_info, "OutputIntents"), i);
+                CrashIf(!str::StartsWith(pdf_to_name(intent), "GTS_"));
+                fstruct.Append(str::conv::FromUtf8(pdf_to_name(intent) + 4));
+            }
+        }
         return fstruct.Count() > 0 ? fstruct.Join(_T(",")) : NULL;
     }
+
     if (Prop_FontList == prop)
         return ExtractFontList();
 
