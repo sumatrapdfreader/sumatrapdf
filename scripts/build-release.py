@@ -4,8 +4,8 @@ and optionally uploads it to s3.
 """
 
 import os, os.path, shutil, sys, time, re
-
 from util import *
+import apptransul, apptransdl
 
 args = sys.argv[1:]
 upload               = test_for_flag(args, "-upload")
@@ -101,6 +101,8 @@ def sign(file_path, cert_pwd):
   run_cmd_throw("ksigncmd.exe", "/f", "cert.pfx", "/p", cert_pwd, file_name)  
   os.chdir(curr_dir)
 
+g_new_translation_system = False
+
 def main():
   global upload
   if len(args) != 0:
@@ -118,6 +120,16 @@ def main():
   else:
     ver = extract_sumatra_version(os.path.join("src", "Version.h"))
   log("Version: '%s'" % ver)
+
+  if g_new_translation_system:
+    apptransul.uploadStringsIfChanged()
+    changed = apptransdl.downloadAndUpdateTranslationsIfChanged()
+    # Note: this is not a perfect check since re-running the script will
+    # proceed
+    if changed:
+      print("New translations have been downloaded from apptranslator.og")
+      print("Please verify and checkin src/Translations_txt.cpp and strings/translations.txt")
+      sys.exit(1)
 
   filename_base = "SumatraPDF-%s" % ver
   if build_prerelease:
