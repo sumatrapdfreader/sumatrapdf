@@ -150,7 +150,7 @@ def main():
     if not os.path.exists(os.path.join("scripts", "cert.pfx")):
       print("scripts/cert.pfx missing")
       sys.exit(1)
-    conf = util.load_config()
+    conf = load_config()
     cert_pwd = conf.GetCertPwdMustExist()
 
   obj_dir = "obj-rel"
