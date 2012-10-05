@@ -575,7 +575,6 @@ def build_release(stats, ver):
 	p = os.path.join(obj_dir, "Installer.exe")
 	stats.rel_installer_exe_size = file_size(p)
 
-
 def build_analyze(stats, ver):
 	config = "CFG=rel"
 	obj_dir = "obj-rel"

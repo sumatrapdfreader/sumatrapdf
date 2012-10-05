@@ -2,6 +2,7 @@
 from extract_strings import extract_strings_from_c_files
 import os.path, sys, string, hashlib, httplib, urllib
 from util import load_config
+import buildbot
 
 # Extracts english strings from the source code and uploads them
 # to apptranslator.org
@@ -41,6 +42,10 @@ def uploadStringsToServer(strings, secret):
     print("Upload done")
 
 def uploadStringsIfChanged():
+    (local_ver, latest_ver) = buildbot.get_svn_versions()
+    if int(latest_ver) > int(local_ver):
+        print("Skipping string upload because your local version (%s) is older than latest in svn (%s)" % (local_ver, latest_ver))
+        return
     # needs to have upload secret to protect apptranslator.org server from abuse
     config = load_config()
     uploadsecret = config.trans_ul_secret
