@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-# Extracts english strings from the source code and uploads them
-# to apptranslator.org
+# Downloads latest translations from apptranslator.org.
+# If changed, saves them as strings/translations.txt and
+# re-generates src/Translations_txt.cpp
 
 from extract_strings import extract_strings_from_c_files
 import os.path, sys, string, urllib2
