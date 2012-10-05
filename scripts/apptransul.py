@@ -18,7 +18,7 @@ else:
     PORT = 80
 
 def lastUploadHashFileName():
-    return os.path.join(g_my_dir, "apptransup-lastuploadhash.txt")
+    return os.path.join(g_my_dir, "apptransul-lastuploadhash.txt")
 
 def lastUploadHash():
     f = lastUploadHashFileName()
