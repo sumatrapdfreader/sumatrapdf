@@ -70,7 +70,9 @@ def c_escape(txt):
     # escape all quotes
     txt = txt.replace('"', r'\"')
     # and all non-7-bit characters of the UTF-8 encoded string
-    txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt.encode("utf-8"))
+    #print(txt)
+    #txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt.encode("utf-8"))
+    txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt)
     return '"%s"' % txt
 
 def get_trans_for_lang(strings_dict, keys, lang_arg):
@@ -175,15 +177,24 @@ def gen_and_upload_js(strings_dict, langs, contributors):
 def get_untranslated_as_list(untranslated_dict):
     return uniquify(sum(untranslated_dict.values(), []))
 
-def remove_incomplete_translations(langs, strings, strings_dict, threshold):
+def remove_incomplete_translations(langs, strings, strings_dict, threshold=INCOMPLETE_MISSING_THRESHOLD):
     assert langs[0][0] == DEFAULT_LANG
     for lang in langs[1:]:
         missing = get_missing_for_language(strings, strings_dict, lang[0])
         if len(missing) >= threshold:
             langs.remove(lang)
 
+def dump_langs_as_py(langs):
+    s = "g_langs = [\n"
+    for l in langs:
+        s += '  ["%s", "%s"],\n' % (l[0], l[1])
+    s += "]\n"
+    print(s.encode("utf-8-sig"))
+
 def main():
     (strings_dict, langs, contributors) = load_strings_file()
+    dump_langs_as_py(langs)
+    return
     strings = extract_strings_from_c_files()
     for s in strings_dict.keys():
         if s not in strings:
@@ -198,8 +209,15 @@ def main():
     langs.sort(lang_sort_func)
     c_file_name = os.path.join(g_src_dir, "Translations_txt.cpp")
     gen_and_upload_js(strings_dict, langs, contributors)
-    remove_incomplete_translations(langs, strings, strings_dict, INCOMPLETE_MISSING_THRESHOLD)
+    remove_incomplete_translations(langs, strings, strings_dict)
     gen_c_code(langs, strings_dict, c_file_name, load_lang_index())
 
+def main_new():
+    import apptransdl
+    changed = apptransdl.downloadAndUpdateTranslationsIfChanged()
+    if changed:
+        print("New translations received from the server, checkin Translations_txt.cpp")
+
 if __name__ == "__main__":
+    #main_new()
     main()

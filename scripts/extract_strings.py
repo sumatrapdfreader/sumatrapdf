@@ -21,7 +21,7 @@ def should_translate(file_name):
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
 C_FILES_TO_PROCESS = [os.path.join(SRC_DIR, f) for f in os.listdir(SRC_DIR) if should_translate(f)]
-STRINGS_PATH = os.path.join("..", "strings")
+STRINGS_PATH = os.path.join(os.path.dirname(__file__), "..", "strings")
 TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'
 
 def is_comment_line(l): return l.startswith("#")
@@ -131,10 +131,10 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
     fo.close()
     #print("Parsing '%s', %d translations" % (os.path.basename(file_path), len(all_origs)))
 
-# Returns a tuple (strings, langs)
+# Returns a tuple (strings, langs, contributors)
 # 'strings' maps an original, untranslated string to
 # an array of translation, where each translation is a tuple 
-# [language, text translated into this language]
+# (language, text translated into this language)
 # 'langs' is an array of language definition tuples. First item in a tuple
 # is language iso code (e.g. "en" or "sp-rs" and second is language name
 def load_strings_file():
