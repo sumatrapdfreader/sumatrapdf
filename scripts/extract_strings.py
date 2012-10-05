@@ -202,11 +202,16 @@ def dump_missing_per_language(strings, strings_dict, dump_strings=False):
         untranslated_dict[lang] = get_missing_for_language(strings, strings_dict, lang)
     items = untranslated_dict.items()
     items.sort(langs_sort_func)
+
+    print("\nMissing translations:")
+    strs = []
     for (lang, untranslated) in items:
-        print "Language %s: %3d untranslated" % (lang, len(untranslated))
-        if not dump_strings: continue
-        for u in untranslated:
-            print "  " + u
+        strs.append("%5s: %3d" % (lang, len(untranslated)))
+    per_line = 5
+    while len(strs) > 0:
+        line_strs = strs[:per_line]
+        strs = strs[per_line:]
+        print("  ".join(line_strs))
     return untranslated_dict
 
 STRING_FILE_TEMPLATE = """\

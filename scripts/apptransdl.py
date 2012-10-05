@@ -1,24 +1,27 @@
 #!/usr/bin/env python
+
+# Extracts english strings from the source code and uploads them
+# to apptranslator.org
+
 from extract_strings import extract_strings_from_c_files
 import os.path, sys, string, urllib2
 from util import load_config
 
-# Extracts english strings from the source code and uploads them
-# to apptranslator.org
 g_my_dir = os.path.dirname(__file__)
+g_strings_dir = os.path.join(g_my_dir, "..", "strings")
 
 use_local_for_testing = True
 
 if use_local_for_testing:
-    #SERVER = "172.21.12.12"  # mac book
-    SERVER = "10.37.129.2"    # mac pro
+    SERVER = "172.21.12.12"  # mac book
+    #SERVER = "10.37.129.2"    # mac pro
     PORT = 5000
 else:
     SERVER = "www.apptranslator.org"
     PORT = 80
 
 def lastDownloadFilePath():
-    return os.path.join(g_my_dir, "apptransdl-last.txt")
+    return os.path.join(g_strings_dir, "translations.txt")
 
 def validSha1(s): return len(s) == 40
 

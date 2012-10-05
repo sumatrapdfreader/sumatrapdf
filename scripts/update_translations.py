@@ -188,13 +188,6 @@ def remove_incomplete_translations(langs, strings, strings_dict, threshold=INCOM
         if len(missing) >= threshold:
             langs.remove(lang)
 
-def dump_langs_as_py(langs):
-    s = "g_langs = [\n"
-    for l in langs:
-        s += '  ["%s", "%s"],\n' % (l[0], l[1])
-    s += "]\n"
-    print(s.encode("utf-8-sig"))
-
 def main():
     (strings_dict, langs, contributors) = load_strings_file()
     strings = extract_strings_from_c_files()
@@ -218,7 +211,7 @@ def main_new():
     import apptransdl
     changed = apptransdl.downloadAndUpdateTranslationsIfChanged()
     if changed:
-        print("New translations received from the server, checkin Translations_txt.cpp")
+        print("New translations received from the server, checkin Translations_txt.cpp and translations.txt")
 
 if __name__ == "__main__":
     #main_new()
