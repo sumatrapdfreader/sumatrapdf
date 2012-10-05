@@ -377,7 +377,7 @@ def build_sizes_json():
 	files = os.listdir(get_stats_cache_dir())
 	versions = [int(f.split(".")[0]) for f in files]
 	versions.sort()
-	print(versions)
+	#print(versions)
 	sumatra_sizes = []
 	installer_sizes = []
 	prev_sumatra_size = 0
@@ -395,7 +395,7 @@ def build_sizes_json():
 	sumatra_json = json.dumps(sumatra_sizes)
 	installer_json = json.dumps(installer_sizes)
 	s = "var g_sumatra_sizes = %s;\nvar g_installer_sizes = %s;\n" % (sumatra_json, installer_json)
-	s3UploadDataPublicWithContentType(s, "sumatrapdf/buildbot/sizes.js")
+	s3UploadDataPublicWithContentType(s, "sumatrapdf/buildbot/sizes.js", silent=True)
 
 def trim_checkin_comment(s):
 	if len(s) < 75: return (s, False)
@@ -487,7 +487,7 @@ def build_index_html():
 	html += "</table>"
 	html += "</body></html>\n"
 	#print(html)
-	s3UploadDataPublicWithContentType(html, "sumatrapdf/buildbot/index.html")
+	s3UploadDataPublicWithContentType(html, "sumatrapdf/buildbot/index.html", silent=True)
 
 g_cert_pwd = None
 def get_cert_pwd():
@@ -620,7 +620,7 @@ def build_version(ver, skip_release=False):
 		print("%s for release build" % str(dur))
 		if stats.rel_failed:
 			run_analyze = False # don't bother running analyze if release failed
-			s3UploadDataPublicWithContentType(stats.rel_build_log, s3dir + "release_build_log.txt")
+			s3UploadDataPublicWithContentType(stats.rel_build_log, s3dir + "release_build_log.txt", silent=True)
 
 	if run_analyze:
 		start_time = datetime.datetime.now()
@@ -630,10 +630,10 @@ def build_version(ver, skip_release=False):
 		html = gen_analyze_html(stats, ver)
 		p = os.path.join(get_logs_cache_dir(), "%s_analyze.html" % str(ver))
 		open(p, "w").write(html)
-		s3UploadDataPublicWithContentType(html, s3dir + "analyze.html")
+		s3UploadDataPublicWithContentType(html, s3dir + "analyze.html", silent=True)
 
 	stats_txt = stats.to_s()
-	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt")
+	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt", silent=True)
 	build_sizes_json()
 	build_index_html()
 

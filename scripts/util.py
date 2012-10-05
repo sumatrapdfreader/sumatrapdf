@@ -74,25 +74,29 @@ def s3PubBucket():
 def ul_cb(sofar, total):
   print("So far: %d, total: %d" % (sofar , total))
 
-def s3UploadFilePublic(local_path, remote_path):
-  log("s3 upload '%s' as '%s'" % (local_path, remote_path))
+def s3UploadFilePublic(local_path, remote_path, silent=False):
+  size = os.path.getsize(local_path)
+  log("s3 upload %d bytes of '%s' as '%s'" % (size, local_path, remote_path))
   k = s3PubBucket().new_key(remote_path)
-  k.set_contents_from_filename(local_path, cb=ul_cb)
+  if silent:
+    k.set_contents_from_filename(local_path)
+  else:
+    k.set_contents_from_filename(local_path, cb=ul_cb)    
   k.make_public()
 
 def s3UploadDataPublic(data, remote_path):
-  log("s3 upload data as '%s'" % remote_path)
+  log("s3 upload %d bytes of data as '%s'" % (len(data), remote_path))
   k = s3PubBucket().new_key(remote_path)
   k.set_contents_from_string(data)
   k.make_public()
 
-def s3UploadDataPublicWithContentType(data, remote_path):
+def s3UploadDataPublicWithContentType(data, remote_path, silent=False):
   # writing to a file to force boto to set Content-Type based on file extension.
   # TODO: there must be a simpler way
   tmp_name = os.path.basename(remote_path)
   tmp_path = os.path.join(tempfile.gettempdir(), tmp_name)
   open(tmp_path, "w").write(data)
-  s3UploadFilePublic(tmp_path, remote_path)
+  s3UploadFilePublic(tmp_path, remote_path, silent)
   os.remove(tmp_path)
 
 def s3DownloadToFile(remote_path, local_path):
