@@ -110,7 +110,7 @@ pdf_document *openxref(fz_context *ctx, char *filename)
 
 pdf_page *benchloadpage(fz_context *ctx, pdf_document *xref, int pagenum)
 {
-	pdf_page *page;
+	pdf_page *page = NULL;
 	mstimer timer;
 
 	timerstart(&timer);

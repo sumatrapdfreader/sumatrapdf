@@ -4,30 +4,6 @@
 #include "BaseUtil.h"
 #include "ThreadUtil.h"
 
-WorkerThread::WorkerThread(Functor *f)
-{
-    thread = CreateThread(NULL, 0, ThreadProc, f, 0, 0);
-}
-
-WorkerThread::~WorkerThread()
-{
-    TerminateThread(thread, 1);
-    CloseHandle(thread);
-}
-
-bool WorkerThread::Join(DWORD waitMs)
-{
-    return WaitForSingleObject(thread, waitMs) == WAIT_OBJECT_0;
-}
-
-DWORD WINAPI WorkerThread::ThreadProc(LPVOID data)
-{
-    Functor *f = (Functor *)data;
-    (*f)();
-    delete f;
-    return 0;
-}
-
 UiMessageLoop::UiMessageLoop() : threadId(GetCurrentThreadId())
 {
     InitializeCriticalSection(&cs);

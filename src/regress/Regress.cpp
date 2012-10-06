@@ -75,6 +75,7 @@ static void VerifyFileExists(const TCHAR *filePath)
 
 static HANDLE   gDumpEvent = NULL;
 static HANDLE   gDumpThread = NULL;
+static bool     gCrashed = false;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
@@ -82,6 +83,9 @@ static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
 static DWORD WINAPI CrashDumpThread(LPVOID data)
 {
     WaitForSingleObject(gDumpEvent, INFINITE);
+    if (!gCrashed)
+        return 0;
+
     printflush("Captain, we've got a crash!\n");
     if (!dbghelp::Load()) {
         printflush("CrashDumpThread(): dbghelp::Load() failed");
@@ -115,6 +119,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     if (wasHere)
         return EXCEPTION_CONTINUE_SEARCH;
     wasHere = true;
+    gCrashed = true;
 
     gMei.ThreadId = GetCurrentThreadId();
     gMei.ExceptionPointers = exceptionInfo;
@@ -145,13 +150,18 @@ static void InstallCrashHandler()
 
 static void UninstallCrashHandler()
 {
-    if (gDumpEvent)
+    if (!gDumpEvent || !gDumpThread)
+        return;
+
+    if (gPrevExceptionFilter)
         SetUnhandledExceptionFilter(gPrevExceptionFilter);
-    TerminateThread(gDumpThread, 1);
+
+    SetEvent(gDumpEvent);
+    WaitForSingleObject(gDumpThread, 1000); // 1 sec
+
     CloseHandle(gDumpThread);
     SafeCloseHandle(gDumpEvent);
 }
-
 
 #include "Regress00.cpp"
 

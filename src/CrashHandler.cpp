@@ -350,7 +350,6 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     if (wasHere)
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
     wasHere = true;
-
     gCrashed = true;
 
     gMei.ThreadId = GetCurrentThreadId();

@@ -62,18 +62,6 @@ inline Functor *Bind(Func func, Cls cls, Arg1 arg1, Arg2 arg2)
     return new Functor2<Func, Cls, Arg1, Arg2>(func, cls, arg1, arg2);
 }
 
-class WorkerThread {
-    HANDLE thread;
-
-    static DWORD WINAPI ThreadProc(LPVOID data);
-
-public:
-    WorkerThread(Functor *f);
-    ~WorkerThread();
-
-    bool Join(DWORD waitMs=INFINITE);
-};
-
 class UiMessageLoop {
     DWORD threadId;
     Vec<Functor *> queue;
