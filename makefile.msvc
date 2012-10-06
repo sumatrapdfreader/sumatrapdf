@@ -65,7 +65,10 @@ CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 CFLAGS = $(CFLAGS) /wd4800
 
 !if "$(WITH_ANALYZE)"=="yes"
-CFLAGS =  /analyze:WX- $(CFLAGS)
+CFLAGS = /analyze:WX- $(CFLAGS)
+# suppress warning C6211: Leaking memory 'foo' due to an exception
+# TODO: verify that new doesn't throw
+CFLAGS = $(CFLAGS) /wd6211
 !endif
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \

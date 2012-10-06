@@ -59,9 +59,6 @@ CC = cl.exe
 
 # CFLGASB - CFLAGS base. 
 
-#CFLAGSB = $(CFLAGSB) /showIncludes
-#CFLAGSB = $(CFLAGSB) /analyze
-
 CFLAGSB = $(CFLAGSB) /nologo /c
 # standard windows defines
 !if "$(PLATFORM)"=="X64"
