@@ -518,6 +518,8 @@ pdf_load_compressed_stream(pdf_document *xref, int num, int gen)
 	fz_catch(ctx)
 	{
 		fz_free(ctx, bc);
+		/* SumatraPDF: prevent use-after-free */
+		fz_rethrow(ctx);
 	}
 	return bc;
 }
