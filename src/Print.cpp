@@ -202,7 +202,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                 else {
                     RenderedBitmap *bmp = NULL;
                     short shrink = 1;
-                    while (!bmp && shrink < 32) {
+                    do {
                         bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
                         if (abortCookie)
                             abortCookie->Clear();
@@ -211,7 +211,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                             delete bmp;
                             bmp = NULL;
                         }
-                    }
+                    } while (!bmp && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
                     if (bmp) {
                         RectI rc((int)(paperSize.dx - bSize.dx * zoom) / 2 + offset.x,
                                  (int)(paperSize.dy - bSize.dy * zoom) / 2 + offset.y,
@@ -307,7 +307,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
             else {
                 RenderedBitmap *bmp = NULL;
                 short shrink = 1;
-                while (!bmp && shrink < 32) {
+                do {
                     bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
                     if (abortCookie)
                         abortCookie->Clear();
@@ -316,7 +316,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                         delete bmp;
                         bmp = NULL;
                     }
-                }
+                } while (!bmp && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
                 if (bmp) {
                     RectI rc((paperSize.dx - bmp->Size().dx * shrink) / 2 + offset.x,
                              (paperSize.dy - bmp->Size().dy * shrink) / 2 + offset.y,
