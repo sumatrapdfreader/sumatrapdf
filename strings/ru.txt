@@ -351,6 +351,9 @@ Failed to rename the file!
 Failed to save a file
 Ошибка сохранения файла
 
+Fast Web View
+Быстрый просмотр в Интернете
+
 Favorites
 Избранное
 
@@ -510,6 +513,9 @@ P&roperties\tCtrl+D
 PDF Document
 Документ PDF
 
+PDF Optimizations:
+Оптимизация PDF:
+
 PDF Producer:
 Создатель PDF:
 
@@ -666,6 +672,9 @@ SumatraPDF should now be your default PDF reader
 Synchronization file cannot be opened
 Не удалось открыть файл с информацией для синхронизации
 
+Tagged PDF
+Размеченный PDF
+
 Text documents
 Текстовые документы
 
@@ -713,9 +722,4 @@ copying text
 
 printing document
 печатается документ
-
-# Untranslated:
-#Fast Web View
-#PDF Optimizations:
-#Tagged PDF
 
