@@ -1513,7 +1513,7 @@ bool PdfEngineImpl::FinishLoading()
         if (_info)
             _info = pdf_copy_str_dict(ctx, _info);
         if (!_info)
-            _info = pdf_new_dict(ctx, 2);
+            _info = pdf_new_dict(ctx, 4);
         // also remember linearization and tagged states at this point
         if (IsLinearizedFile())
             pdf_dict_puts_drop(_info, "Linearized", pdf_new_bool(ctx, 1));
