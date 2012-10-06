@@ -1511,8 +1511,8 @@ bool PdfEngineImpl::FinishLoading()
         // displaying document properties
         _info = pdf_dict_gets(_doc->trailer, "Info");
         if (_info)
-            _info = pdf_copy_str_dict(ctx, pdf_resolve_indirect(_info));
-        else
+            _info = pdf_copy_str_dict(ctx, _info);
+        if (!_info)
             _info = pdf_new_dict(ctx, 2);
         // also remember linearization and tagged states at this point
         if (IsLinearizedFile())
