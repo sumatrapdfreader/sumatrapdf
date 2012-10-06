@@ -4,48 +4,6 @@
 #include "BaseUtil.h"
 #include "ThreadUtil.h"
 
-UiMessageLoop::UiMessageLoop() : threadId(GetCurrentThreadId())
-{
-    InitializeCriticalSection(&cs);
-}
-
-UiMessageLoop::~UiMessageLoop()
-{
-    DeleteVecMembers(queue);
-    DeleteCriticalSection(&cs);
-}
-
-int UiMessageLoop::Run()
-{
-    MSG msg;
-
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-
-        Functor *task = NULL;
-        if (queue.Count() > 0) {
-            ScopedCritSec scope(&cs);
-            task = queue.At(0);
-            queue.Remove(task);
-        }
-        if (task) {
-            (*task)();
-            delete task;
-        }
-    }
-
-    return msg.wParam;
-}
-
-void UiMessageLoop::AddTask(Functor *f)
-{
-    ScopedCritSec scope(&cs);
-    queue.Append(f);
-    // make sure that the message queue isn't empty
-    PostThreadMessage(threadId, WM_NULL, 0, 0);
-}
-
 // http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
 const DWORD MS_VC_EXCEPTION=0x406D1388;
 
