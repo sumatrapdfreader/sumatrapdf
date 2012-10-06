@@ -658,11 +658,12 @@ def build_version_try(ver, try_count = 2):
 	while True:
 		try:
 			build_version(ver)
-		except e:
+		except Exception, e:
 			# rethrow assert() exceptions, they come from our code
 			# and we should stop
 			if isinstance(e, AssertException):
 				raise e
+			print(str(e))
 			traceback.print_exc()
 			try_count -= 1
 			if 0 == try_count:

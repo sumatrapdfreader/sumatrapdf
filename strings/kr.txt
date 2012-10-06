@@ -17,7 +17,7 @@ Contributor: 4Li
 정보(&A)
 
 &Actual Size\tCtrl+1
-원래 크기(&A)\tCtrl+1
+실제 크기(&A)\tCtrl+1
 
 &All selected pages
 선택한 모든 페이지(&A)
@@ -32,10 +32,10 @@ Contributor: 4Li
 닫기(&C)\tCtrl+W
 
 &Copy Selection
-선택 부분 복사(&C)
+선택한 부분 복사(&C)
 
 &Copy Selection\tCtrl+C
-선택 영역 복사(&C)\tCtrl+C
+선택한 부분 복사(&C)\tCtrl+C
 
 &Don't ask me again
 다시 묻지 않음(&D)
@@ -62,7 +62,7 @@ Contributor: 4Li
 이동(&G)
 
 &Go to page:
-페이지로 이동(&G):
+이동할 페이지(&G):
 
 &Help
 도움말(&H)
@@ -77,7 +77,7 @@ Contributor: 4Li
 설명서(&M)
 
 &Match case
-대소문자 구분(&M)
+대/소문자 구분(&M)
 
 &Next Page\tRight Arrow
 다음 페이지(&N)\t오른쪽 방향키
@@ -125,7 +125,7 @@ Contributor: 4Li
 각 문서의 설정 기억(&R)
 
 &Remove Document
-문서 제거(&R)
+고정 문서 제거(&R)
 
 &Save As...
 다른 이름으로 저장(&S)...
@@ -137,7 +137,7 @@ Contributor: 4Li
 설정(&S)
 
 &Shrink pages to printable area (if necessary)
-인쇄 영역에 맞춰 페이지 축소(&S) (필요한 경우)
+인쇄 영역에 맞춰 (필요한 경우) 페이지 축소(&S)
 
 &Single Page\tCtrl+6
 한 페이지씩(&S)\tCtrl+6
@@ -167,16 +167,16 @@ About SumatraPDF
 SumatraPDF 정보
 
 Add Favorite
-책갈피 추가
+즐겨찾기 추가
 
 Add page %s to favorites
-%s 페이지를 책갈피에 추가
+%s 페이지를 즐겨찾기에 추가
 
 Add page %s to favorites with (optional) name:
-%s 페이지의 책갈피 이름을 입력하세요. (옵션) :
+%s 페이지의 즐겨찾기 이름을 입력하세요. (옵션) :
 
 Add to favorites
-책갈피에 추가
+즐겨찾기에 추가
 
 Advanced
 고급
@@ -332,10 +332,10 @@ Enter the command-line to invoke when you double-click on the PDF document:
 PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
 
 Error loading %s
-%s 불러오는 중 오류
+%s 불러오는 중 오류 발생
 
 F&avorites
-책갈피(&A)
+즐겨찾기(&A)
 
 F&orward\tAlt+Right Arrow
 이후에 본 페이지(&O)\tAlt+오른쪽 방향키
@@ -352,8 +352,11 @@ Failed to rename the file!
 Failed to save a file
 파일을 저장하지 못했습니다.
 
+Fast Web View
+빠른 웹 보기
+
 Favorites
-책갈피
+즐겨찾기
 
 File %s not found
 %s 파일을 찾을 수 없습니다.
@@ -413,7 +416,7 @@ Found text at page %s
 %s 페이지에서 문자열 찾음
 
 Found text at page %s (again)
-%s 페이지에서 문자열 찾음 (다시)
+%s 페이지에서 (다시) 문자열 찾음
 
 Frequently Read
 최근에 읽은 파일
@@ -422,7 +425,7 @@ GB
 GB
 
 Go to page
-페이지로 이동
+이동할 페이지
 
 Hide frequently read
 최근에 읽은 파일 감추기
@@ -458,7 +461,7 @@ Modified:
 수정한 날짜:
 
 New version %s is available. Download new version?
-새 버전 %s 이 사용 가능합니다. 다운로드할까요?
+새 버전 %s (이)가 사용 가능합니다. 다운로드할까요?
 
 Next Page
 다음 페이지
@@ -485,7 +488,7 @@ Open
 열기
 
 Open &in PDF-XChange
-PDF-XChange로 열기
+PDF-XChange로 열기(&I)
 
 Open a document...
 문서 열기...
@@ -497,10 +500,10 @@ Open in &Foxit Reader
 Foxit Reader로 열기(&F)
 
 Open in &Microsoft HTML Help
-Microsoft HTML Help로 열기
+Microsoft HTML Help로 열기(&M)
 
 Open in &Microsoft XPS-Viewer
-Microsoft XPS-Viewer로 열기
+Microsoft XPS-Viewer로 열기(&M)
 
 P&roperties
 속성(&R)
@@ -510,6 +513,9 @@ P&roperties\tCtrl+D
 
 PDF Document
 PDF 문서
+
+PDF Optimizations:
+PDF 최적화:
 
 PDF Producer:
 PDF 제작자:
@@ -533,13 +539,13 @@ Page number %u inexistant
 %u 페이지가 존재하지 않습니다.
 
 Page scaling
-페이지 배율 조정 중
+페이지 배율 조정하는 중
 
 Page:
 페이지:
 
 Please wait - rendering...
-렌더링 중, 잠시만 기다리세요...
+렌더링하는 중, 잠시만 기다리세요...
 
 Postscript documents
 Postscript 문서
@@ -563,13 +569,13 @@ Printer with given name doesn't exist
 지정된 이름의 프린터가 존재하지 않습니다.
 
 Printing is still in progress. Abort and start over?
-인쇄가 진행 중입니다. 중지하고 다시 시작할까요?
+인쇄를 진행하는 중입니다. 중지하고 다시 시작할까요?
 
 Printing page %d of %d...
-%d / %d 페이지 인쇄 중...
+%d / %d 페이지 인쇄하는 중...
 
 Printing problem.
-인쇄 중 문제 발생.
+인쇄하는 중 문제 발생.
 
 Re&name...\tF2
 이름 바꾸기(&N)...\tF2
@@ -578,10 +584,10 @@ Remember &opened files
 열었던 파일들 기억(&O)
 
 Remove from favorites
-책갈피에서 제거
+즐겨찾기에서 제거
 
 Remove page %s from favorites
-책갈피에서 %s 페이지 제거
+즐겨찾기에서 %s 페이지 제거
 
 Rename To
 바꿀 이름
@@ -602,7 +608,7 @@ Save S&hortcut...\tCtrl+Shift+S
 바로가기 저장(&H)...\tCtrl+Shift+S
 
 Searching %d of %d...
-%d / %d (을)를 검색 중...
+%d / %d (을)를 검색하는 중...
 
 Select &All
 모두 선택(&A)
@@ -629,7 +635,7 @@ Show &pages continuously
 연속적으로 페이지 보이기(&P)
 
 Show Favorites
-책갈피 보이기
+즐겨찾기 보이기
 
 Show frequently read
 최근에 읽은 파일 보이기
@@ -666,6 +672,9 @@ SumatraPDF는 이제 기본 PDF 리더여야 합니다.
 
 Synchronization file cannot be opened
 동기화 파일을 열 수 없습니다.
+
+Tagged PDF
+태그있는 PDF
 
 Text documents
 텍스트 문서
@@ -710,13 +719,8 @@ Zoom factor
 [변경 감지됨. 새로 고치는 중...] %s
 
 copying text
-문자열 복사 중
+문자열 복사하는 중
 
 printing document
-문서 인쇄 중
-
-# Untranslated:
-#Fast Web View
-#PDF Optimizations:
-#Tagged PDF
+문서 인쇄하는 중
 
