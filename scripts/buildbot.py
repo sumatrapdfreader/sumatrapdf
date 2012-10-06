@@ -2,7 +2,7 @@
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
-import os, os.path, shutil, sys, time, re, string, datetime, json, cPickle, cgi
+import os, os.path, shutil, sys, time, re, string, datetime, json, cPickle, cgi, traceback
 from util import *
 
 """
@@ -633,16 +633,19 @@ def build_version(ver, skip_release=False):
 		open(p, "w").write(html)
 		s3UploadDataPublicWithContentType(html, s3dir + "analyze.html", silent=True)
 
+	# TODO: it appears we might throw an exception after uploading analyze.html but
+	# before/dufing uploading stats.txt. Would have to implement transactional
+	# multi-upload to be robust aginst that, so will just let it be
 	stats_txt = stats.to_s()
 	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt", silent=True)
 	build_sizes_json()
 	build_index_html()
 
 # for testing
-def build_curr():
+def build_curr(force=False):
 	(local_ver, latest_ver) = get_svn_versions()
 	print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
-	if not has_already_been_built(local_ver):
+	if not has_already_been_built(local_ver) or force:
 			build_version(local_ver)
 	else:
 		print("We have already built revision %s" % local_ver)
@@ -655,7 +658,12 @@ def build_version_try(ver, try_count = 2):
 	while True:
 		try:
 			build_version(ver)
-		except:
+		except e:
+			# rethrow assert() exceptions, they come from our code
+			# and we should stop
+			if isinstance(e, AssertException):
+				raise e
+			traceback.print_exc()
 			try_count -= 1
 			if 0 == try_count:
 				raise
@@ -702,7 +710,7 @@ def main():
 	#build_version("6698", skip_release=True)
 	#build_index_html()
 	#build_sizes_json()
-	#build_curr()
+	#build_curr(force=True)
 	buildbot_loop()
 
 if __name__ == "__main__":
