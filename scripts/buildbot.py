@@ -409,7 +409,7 @@ def trim_checkin_comment(s):
 # sumatrapdf/buildbot/${ver}/analyze.html
 def build_index_html():
 	s3_dir = "sumatrapdf/buildbot/"
-	html = "<html><head>%s</head><body>\n" % g_index_html_css
+	html = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>%s</head><body>\n' % g_index_html_css
 	html += "<p>SumatraPDF buildbot results:</p>\n"
 	names = [n.name for n in s3List(s3_dir)]
 	# filter out top-level files like index.html and sizes.js
@@ -709,10 +709,10 @@ def main():
 	get_cert_pwd() # early exit if problems
 
 	#build_version("6698", skip_release=True)
-	#build_index_html()
+	build_index_html()
 	#build_sizes_json()
 	#build_curr(force=True)
-	buildbot_loop()
+	#buildbot_loop()
 
 if __name__ == "__main__":
 	main()
