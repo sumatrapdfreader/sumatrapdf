@@ -8,7 +8,7 @@ import buildbot
 # to apptranslator.org
 g_my_dir = os.path.dirname(__file__)
 
-use_local_for_testing = True
+use_local_for_testing = False
 
 if use_local_for_testing:
     SERVER = "172.21.12.12"

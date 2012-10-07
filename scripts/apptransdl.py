@@ -11,7 +11,7 @@ from util import load_config
 g_my_dir = os.path.dirname(__file__)
 g_strings_dir = os.path.join(g_my_dir, "..", "strings")
 
-use_local_for_testing = True
+use_local_for_testing = False
 
 if use_local_for_testing:
     SERVER = "172.21.12.12"  # mac book
