@@ -96,14 +96,14 @@ wchar_t * __cdecl _wcsdup_dbg(const wchar_t *s, int blockType, const char *file,
     return _wcsdup(s);
 }
 
-#pragma warning( push )
+#pragma warning(push)
 #pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
 static void crash_me()
 {
     char *p = 0;
     *p = 0;
 }
-#pragma warning( pop )
+#pragma warning(pop)
 
 void __cdecl _wassert(const wchar_t *msg, const wchar_t *file, unsigned line)
 {

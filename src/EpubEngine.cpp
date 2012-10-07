@@ -20,7 +20,7 @@ using namespace Gdiplus;
 
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
-#pragma warning( disable: 4250 ) /* 'class1' : inherits 'class2::member' via dominance */
+#pragma warning(disable: 4250) /* 'class1' : inherits 'class2::member' via dominance */
 
 #define DEFAULT_FONT_NAME L"Georgia"
 #define DEFAULT_FONT_SIZE 10

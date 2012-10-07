@@ -162,6 +162,8 @@ bool CreateRegKey(HKEY keySub, const TCHAR *keyName)
     return true;
 }
 
+#pragma warning(push)
+#pragma warning(disable: 6248) // "Setting a SECURITY_DESCRIPTOR's DACL to NULL will result in an unprotected object"
 // try to remove any access restrictions on the key
 // by granting everybody all access to this key (NULL DACL)
 static void ResetRegKeyAcl(HKEY keySub, const TCHAR *keyName)
@@ -176,6 +178,7 @@ static void ResetRegKeyAcl(HKEY keySub, const TCHAR *keyName)
     RegSetKeySecurity(hKey, DACL_SECURITY_INFORMATION, &secdesc);
     RegCloseKey(hKey);
 }
+#pragma warning(pop)
 
 bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst)
 {

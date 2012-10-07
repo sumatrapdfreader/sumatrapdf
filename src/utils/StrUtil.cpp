@@ -4,14 +4,14 @@
 /* The most basic things, including string handling functions */
 #include "BaseUtil.h"
 
-#pragma warning( push )
+#pragma warning(push)
 #pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
 void CrashMe()
 {
     char *p = NULL;
     *p = 0;
 }
-#pragma warning( pop )
+#pragma warning(pop)
 
 namespace str {
 
