@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d5af1f2aaf98fb9b64d4444b53923fd987b211bf
+46bce7b50b1f017d7df006f7f542f2ffc9c8ffe6
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4383,6 +4383,7 @@ fr:Compatibilité
 hr:Kompatibilnost
 it:Compatibilità
 kr:호환성
+mk:Компатибилност
 nl:Compatibiliteit
 pl:Zgodność
 pt:Compatibilidade
@@ -6139,6 +6140,7 @@ hu:A fájl átnevezése sikertelen
 id:Gagal mengganti nama berkas!
 it:Impossibile rinominare il file
 kr:파일 이름을 바꾸지 못했습니다!
+mk:Не успеав да ја преименувам датотеката!
 nl:Naam niet kunnen wijzigen!
 pl:Błąd zmiany nazwy pliku!
 pt:Falha ao mudar o nome do ficheiro!
@@ -6217,7 +6219,10 @@ uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Fast Web View
 de:Schnelle Webanzeige
+es:Visualización Rápida en Web
+it:Vista web veloce
 kr:빠른 웹 보기
+mk:Брз веб-преглед
 pl:Szybkie wyświetlanie w Internecie
 ru:Быстрый просмотр в Интернете
 vn:Xem dạng Web nhanh
@@ -9152,7 +9157,10 @@ uz:PDF hujjati
 vn:Tập tin PDF
 :PDF Optimizations:
 de:PDF Optimierungen:
+es:Optimizaciones de PDF:
+it:Ottimizzazioni PDF:
 kr:PDF 최적화:
+mk:Оптимизации за PDF:
 ru:Оптимизация PDF:
 vn:Các tối ưu PDF
 :PDF Producer:
@@ -9933,6 +9941,7 @@ fr:Imprimer en tant qu'&image (demande plus de mémoire)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
 it:Stampa come &immagine (richiede più memoria))
 kr:이미지로 인쇄(&I) (더 많은 메모리 필요)
+mk:Печати како слика (бара повеќе меморија)
 nl:Als afbeelding afdrukken (vereist meer geheugen)
 pt:Imprimir &como imagem (usa mais memória)
 ru:Печатать как &изображение (требуется больше памяти)
@@ -10216,6 +10225,7 @@ hu:Átnevezés...\tF2
 id:&Ganti Nama...\tF2
 it:Ri&nomina...\tF2
 kr:이름 바꾸기(&N)...\tF2
+mk:Преименувај... \tF2
 nl:&Naam wijzigen...\tF2
 pl:Zmień &nazwę...\tF2
 pt:Mudar &nome...\tF2
@@ -10398,6 +10408,7 @@ hu:Átnevezés
 id:Ganti Nama Menjadi
 it:Rinomina in
 kr:바꿀 이름
+mk:Преименувај во
 nl:Naam wijzigen in
 pl:Zmień nazwę na
 pt:Mudar nome para
@@ -11021,6 +11032,7 @@ fr:Voir les &Marque-pages
 hr:Prikaži &oznake
 it:Visualizza segnali&bri
 kr:책갈피 보이기(&B)
+mk:Прикажи &обележувачи
 nl:Bladwijzers tonen
 pl:Pokaż &Zakładki
 pt:&Mostrar marcadores
@@ -11842,7 +11854,10 @@ uz:Sinxronizatsiya faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tagged PDF
 de:PDF mit Tags
+es:PDF Etiquetado
+it:PDF marcati
 kr:태그있는 PDF
+mk:Означен PDF
 ru:Размеченный PDF
 vn:PDF được gắn thẻ
 :Text documents
