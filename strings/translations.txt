@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0abdda9e8a5ef924e0804ff5e659ab36ed53d23d
+d5af1f2aaf98fb9b64d4444b53923fd987b211bf
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -11022,6 +11022,7 @@ hr:Prikaži &oznake
 it:Visualizza segnali&bri
 kr:책갈피 보이기(&B)
 nl:Bladwijzers tonen
+pl:Pokaż &Zakładki
 pt:&Mostrar marcadores
 ru:Показать &закладки
 sq:Tregoj &shiritat

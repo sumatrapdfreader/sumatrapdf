@@ -8164,7 +8164,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Zaznacz zawarto\305\233\304\207 wciskaj\304\205c Ctrl i lewy przycisk myszy",
   "Do\305\202\304\205cz do wiadomo\305\233ci &e-mail...",
   "Ustaw wiersz polece\305\204 do odwrotnego wyszukiwania",
-  NULL,
+  "Poka\305\274 &Zak\305\202adki",
   "Poka\305\274 pasek &narz\304\231dzi",
   "Wy\305\233wietlaj strony w uk\305\202adzie &ci\304\205g\305\202ym",
   "Poka\305\274 ulubione",
