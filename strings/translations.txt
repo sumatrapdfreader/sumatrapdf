@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-22519ce18cea28350a6012c3659c47ad62d9a9de
+0abdda9e8a5ef924e0804ff5e659ab36ed53d23d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4384,6 +4384,7 @@ hr:Kompatibilnost
 it:Compatibilità
 kr:호환성
 nl:Compatibiliteit
+pl:Zgodność
 pt:Compatibilidade
 ru:Совместимость
 sq:Pajtueshmëria
@@ -6217,6 +6218,7 @@ vn:Không lưu được tập tin.
 :Fast Web View
 de:Schnelle Webanzeige
 kr:빠른 웹 보기
+pl:Szybkie wyświetlanie w Internecie
 ru:Быстрый просмотр в Интернете
 vn:Xem dạng Web nhanh
 :Favorites
