@@ -7,6 +7,8 @@ import os, os.path, shutil, sys, time, re
 from util import *
 import apptransul, apptransdl
 
+g_new_translation_system = True
+
 args = sys.argv[1:]
 upload               = test_for_flag(args, "-upload")
 upload_tmp           = test_for_flag(args, "-uploadtmp")
@@ -100,8 +102,6 @@ def sign(file_path, cert_pwd):
   os.chdir(file_dir)
   run_cmd_throw("ksigncmd.exe", "/f", "cert.pfx", "/p", cert_pwd, file_name)  
   os.chdir(curr_dir)
-
-g_new_translation_system = False
 
 def main():
   global upload

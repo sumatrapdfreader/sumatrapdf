@@ -214,5 +214,5 @@ def main_new():
         print("New translations received from the server, checkin Translations_txt.cpp and translations.txt")
 
 if __name__ == "__main__":
-    #main_new()
-    main()
+    main_new()
+    #main()
