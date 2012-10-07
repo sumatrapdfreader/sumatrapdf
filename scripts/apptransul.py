@@ -6,7 +6,7 @@ import buildbot
 
 # Extracts english strings from the source code and uploads them
 # to apptranslator.org
-g_my_dir = os.path.dirname(__file__)
+g_strings_dir = os.path.join(os.path.dirname(__file__), "..", "strings")
 
 use_local_for_testing = False
 
@@ -17,16 +17,16 @@ else:
     SERVER = "www.apptranslator.org"
     PORT = 80
 
-def lastUploadHashFileName():
-    return os.path.join(g_my_dir, "apptransul-lastuploadhash.txt")
+def lastUploadedFilePath():
+    return os.path.join(g_strings_dir, "last_uploaded.txt")
 
-def lastUploadHash():
-    f = lastUploadHashFileName()
+def lastUploaded():
+    f = lastUploadedFilePath()
     if not os.path.exists(f): return ""
     return open(f, "rb").read()
 
-def saveLastUploadHash(s):
-    open(lastUploadHashFileName(), "wb").write(s)
+def saveLastUploaded(s):
+    open(lastUploadedFilePath(), "wb").write(s)
 
 def uploadStringsToServer(strings, secret):
     print("Uploading strings to the server...")
@@ -64,13 +64,14 @@ def uploadStringsIfChanged():
     strings = extract_strings_from_c_files()
     strings.sort()
     s = "AppTranslator strings\n" + string.join(strings, "\n")
-    shash = hashlib.sha1(s).hexdigest()
-    prevHash = lastUploadHash()
-    if shash == prevHash:
+    s = s.encode("utf8")
+
+    if lastUploaded() == s:
         print("Skipping upload because strings haven't changed since last upload")
     else:
         uploadStringsToServer(s, uploadsecret)
-        saveLastUploadHash(shash)
+        saveLastUploaded(s)
+        print("Don't forget to checkin strings/last_uploaded.txt")
 
 if __name__ == "__main__":
     uploadStringsIfChanged()
