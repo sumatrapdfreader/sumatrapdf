@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-54775058ddb50f7e61cf9df183dab96b0e5061ef
+4173ffb1156caf6fbb31c27402473d7e30abef10
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -41,6 +41,7 @@ mk:&За SumatraPDF...
 ml:പറ്റി
 mm:အကြောင်း
 my:&Mengenai
+ne:SumatraPDF &बारेमा
 nl:&Over
 nn:&Om
 no:&Om
@@ -106,6 +107,7 @@ mk:&Реална големина\tCtrl+1
 ml:ശരിയായ വലിപ്പം\tCtrl+1
 mm:ပုံမှန် အရွယ်\tCtrl+1
 my:&Saiz sebenar\tCtrl+1
+ne:&सही आकार\tCtrl+1
 nl:W&are grootte\tCtrl+1
 nn:F&aktisk storleik\tCtrl+1
 no:Fak&tisk størrelse\tCtrl+1
@@ -163,6 +165,7 @@ kr:선택한 모든 페이지(&A)
 lt:&Visi pažymėti puslapiai
 mk:&Сите означени страници
 my:&Semua mukasurat pilihan
+ne:चयन गरिएका &सबै पानाहरु
 nl:&Alle geselecteerde pagina's
 no:&Alle valgte sider
 pl:&Zaznaczone strony
@@ -218,6 +221,7 @@ kw:War-lergh\tAlt+<-
 lt:At&gal\tAlt+Kairėn
 mk:Назад\tAlt+Left Arrow
 my:&Kembali\tAlt+Left Arrow
+ne:&पछाडि\tAlt+बायाँ बाण
 nl:Terug\tAlt+<-
 no:Tilbake\tAlt+Pil venstre
 pl:&Wstecz\tAlt+W lewo
@@ -269,6 +273,7 @@ ka:&წიგნის რეჟიმი\tCtrl+8
 kr:책처럼 보기(&B)\tCtrl+8
 lt:Knyga\tCtrl+8
 mk:Книга\tCtrl+8
+ne:&पुस्तिका दृश्य\tCtrl+8
 nl:&Boekweergave\tCtrl+8
 no:&Bokvisning\tCtrl+8
 pl:Widok o&dczytu\tCtrl+8
@@ -327,6 +332,7 @@ mk:&Затвори\tCtrl+W
 ml:അടയ്ക്കുക\tCtrl+W
 mm:&ပိတ်ပါ\tCtrl+W
 my:&Tutup\tCtrl+W
+ne:&बन्द गर्नुहोस्\tCtrl+W
 nl:&Sluiten\tCtrl+W
 nn:&Lukk\tCtrl+W
 no:&Lukk\tCtrl+W
@@ -381,6 +387,7 @@ ka:მონიშნულის &კოპირება
 kr:선택한 부분 복사(&C)
 lt:&Kopijuoti pažymėtą sritį
 mk:&Копирај селекција
+ne:&चयनको प्रतिलिपि बनाउनुहोस्
 nl:Selectie kopiëren
 no:&Kopier valgt område
 pl:Kopiuj &zaznaczenie
@@ -435,6 +442,7 @@ kw:Dasskrifa Dewis\tCtrl+C
 lt:&Kopijuoti pažymėtą sritį\tCtrl+C
 mk:Копирај селекција\tCtrl+C
 my:&Salin pilihan\tCtrl+C
+ne:&चयनको प्रतिलिपि बनाउनुहोस्\tCtrl+C
 nl:Kopieer selectie\tCtrl+C
 no:Kopier merket tekst\tCtrl+C
 pl:Kopiuj &zaznaczenie\tCtrl+C
@@ -2897,6 +2905,7 @@ mk:За SumatraPDF
 ml:സുമാത്രാപിഡീഎഫിനെപ്പറ്റി
 mm:စူမာတရာ အကြောင်း
 my:Mengenai SumatraPDF
+ne:SumatraPDF बारेमा
 nl:Over SumatraPDF
 nn:Om SumatraPDF
 no:Om SumatraPDF
@@ -2952,6 +2961,7 @@ ka:რჩეულებში დამატება
 kr:즐겨찾기 추가
 lt:Sukurti žymą
 mk:Додади омилен
+ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg Favoriet toe
 no:Legg til i Favoritter
 pl:Dodaj do ulubionych
@@ -3001,6 +3011,7 @@ ka:%s გვერდის რჩეულებში დამატება
 kr:%s 페이지를 즐겨찾기에 추가
 lt:Sukurti žymą į %s puslapį
 mk:Додади страница %s во омилени
+ne:पाना %s लाई मनपर्नेमा थप्नुहोस्
 nl:Voeg pagina %s toe aan favorieten
 no:Legg til side %s i favoritter
 pl:Dodaj stronę %s do ulubionych
@@ -3050,6 +3061,7 @@ ka:%s გვერდის დამატება რჩეულებში
 kr:%s 페이지의 즐겨찾기 이름을 입력하세요. (옵션) :
 lt:Sukurti žymą į %s puslapį, suteikiant jai šį pavadinimą (neprivalomas):
 mk:Додади страница %s во омилени со име по избор:
+ne:पाना %s लाई मनपर्नेमा (ऐच्छिक) नाम सहित थप्नुहोस्
 nl:Voeg pagina %s toe aan favorieten met (optionele) naam:
 no:Legg til side %s i favoritter med (valgfritt) navn:
 pl:Dodaj stronę %s do ulubionych pod (opcjonalną) nazwą:
@@ -3099,6 +3111,7 @@ ka:რჩეულებში დამატება
 kr:즐겨찾기에 추가
 lt:Sukurti žymą
 mk:Додади во омилени
+ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg toe aan favorieten
 no:Legg til i favoritter
 pl:Dodaj do ulubionych
@@ -3152,6 +3165,7 @@ kr:고급
 kw:Avonsyes
 lt:Kitos
 mk:Напредни
+ne:उन्नत
 nl:Geavanceerd
 no:Avansert
 pl:Zaawansowane
@@ -3208,6 +3222,7 @@ kw:Pub restren
 lt:Visi failai
 mk:Сите датотеки
 my:Semua fail
+ne:सबै फाइलहरु
 nl:Alle bestanden
 no:Alle filer (*.*)
 pl:Wszystkie pliki
@@ -3259,6 +3274,7 @@ ka:ყველა მხარდაჭერილი დოკუმენტ
 kr:모든 지원되는 문서
 lt:Visų palaikomų tipų dokumentai
 mk:Сите поддражни документи
+ne:सबै समर्थनयोग्य कागजातहरू
 nl:Alle ondersteunde documenten
 no:Alle støttede dokumenter
 pl:Wszystkie obsługiwane pliki
@@ -3311,6 +3327,7 @@ kr:프로그램:
 lt:Programa:
 mk:Апликација:
 my:Aplikasi
+ne:अनुप्रयोग:
 nl:Programma:
 no:Program:
 pl:Program:
@@ -3370,6 +3387,7 @@ kw:Keskelmi orth restrennow PDF?
 lt:Susieti su PDF failais?
 mk:Да управувам со PDF-датотеки?
 mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
+ne:PDF फाइलहरु सँग सम्बन्धन गराउने?
 nl:Associëren met PDF-bestanden?
 nn:Tilknytte PDF-filer?
 no:Tilknytt til PDF-filer?
@@ -3426,6 +3444,7 @@ ka:დანართი: %s
 kr:첨부: %s
 lt:Priedas: %s
 mk:Прилог: %s
+ne:संलग्नहरू: %s
 nl:Bijlage: %s
 no:Vedlegg: %s
 pl:Załącznik: %s
@@ -3479,6 +3498,7 @@ ka:ავტორი:
 kr:저자:
 lt:Autorius:
 mk:Автор:
+ne:लेखक
 nl:Auteur:
 no:Forfatter:
 pl:Autor:
@@ -3534,6 +3554,7 @@ kw:Awtomatek
 lt:Automatinis
 mk:Автоматски
 my:Automatik
+ne:स्वत:
 nl:Automatisch
 no:Automatisk
 pl:Automatycznie
@@ -3590,6 +3611,7 @@ kw:Checkya rag nowythyansow yn awtomatek
 lt:Automatiškai &tikrinti, ar yra naujinimų
 mk:Проверувај за &надградби автоматски
 my:Semak &kemas kini secara automatik
+ne:&अद्यावधिकहरु स्वतः जाँच्नुहोस्
 nl:Automatisch controleren op &updates
 no:Automatisk sjekk for &oppdateringer
 pl:&Szukaj aktualizacji automatycznie
@@ -3645,6 +3667,7 @@ kw:Gwel-lyver
 lt:Knyga
 mk:Книга
 my:Paparan buku
+ne:पुस्तिका दृश्य
 nl:Boekweergave
 no:Bokvisning
 pl:Widok odczytu
@@ -3705,6 +3728,7 @@ lt:Žymės\tF12
 mk:Обележувачи\tF12
 mm:စာမျက်နှာ မှတ်သား\tF12
 my:Penanda\tF12
+ne:पुस्तक&चिनोहरू\tF12
 nl:Bladwijzers\tF12
 nn:Bokmerker\tF12
 no:Bokmerker\tF12
@@ -3759,6 +3783,7 @@ ja:ショートカットをブックマーク
 ka:მალსახმობები
 kr:책갈피 바로가기
 mk:Кратенки од обележувачи
+ne:पुस्तकचिनो सर्टकटहरु
 nl:Bladwijzer maken
 no:Bokmerk snarveier
 pl:Zakładki
@@ -3855,6 +3880,7 @@ ka:სანიშნები
 kr:책갈피
 lt:Žymės
 mk:Обележувачи
+ne:पुस्तकचिनो
 nl:Bladwijzers
 no:Bokmerker
 pl:Zakładki
@@ -3908,6 +3934,7 @@ kr:바이트
 lt:baitų
 mk:бајти
 my:Bytes
+ne:बाईट
 nl:Bytes
 no:bytes
 pl:bajtów
@@ -3961,6 +3988,7 @@ ka:CHM დოკუმენტები
 kr:CHM 문서
 lt:CHM dokumentai
 mk:CHM-документи
+ne:CHM कागजातहरु
 nl:CHM-documenten
 no:CHM-dokumenter
 pl:Dokumenty CHM
@@ -4065,6 +4093,7 @@ kw:Hedhi
 lt:Atsisakyti
 mk:Откажи
 my:Batal
+ne:रद्द गर्नुहोस्
 nl:Annuleren
 no:Avbryt
 pl:Anuluj
@@ -4234,6 +4263,7 @@ lt:Keisti kalbą (Change Language)
 mk:Смени јазик (Change Language)
 mm:စာ စကား ပြောင်းရန် (Change Language)
 my:Tukar bahasa (Change Language)
+ne:भाषा परिवर्तन गर्नुहोस् (Change Language)
 nl:Taal wijzigen (Change Language)
 nn:Byt språk (Change Language)
 no:Endre språk (Change Language)
@@ -4297,6 +4327,7 @@ kw:&Checkya rag versyon nowyth
 lt:Tikrinti, ar yra &naujinimų
 mk:&Провери за надградби
 mm:အမျိုးအစား သစ်စုံစမ်းရန်
+ne:&अद्यावधिकहरु जाँच्नुहोस्
 nl:Controleren op &updates
 nn:&Sjå etter ny versjon
 no:&Se etter oppdateringer...
@@ -4384,6 +4415,7 @@ hr:Kompatibilnost
 it:Compatibilità
 kr:호환성
 mk:Компатибилност
+ne:मिल्दोजुल्दो
 nl:Compatibiliteit
 pl:Zgodność
 pt:Compatibilidade
@@ -4432,6 +4464,7 @@ mk:Непрекинат поглед
 ml:തുടര്‍ച്ച
 mm:ဆက်တိုက်
 my:Bersambung
+ne:निरन्तर
 nl:Doorlopend
 nn:Kontinuerleg
 no:Kontinuerlig
@@ -4491,6 +4524,7 @@ kw:Gwel-lyver heb aswa
 lt:Nenutrūkstama knygos peržiūra
 mk:Книга со непрекинат поглед
 my:Paparan buku berterusan
+ne:निरन्तर पुस्तिका दृश्य
 nl:Doorlopend boekaanzicht
 no:Kontinuerlig bokvisning
 pl:Widok odczytu - układ ciągły
@@ -4552,6 +4586,7 @@ mk:Непрекинат поглед со две страници
 ml:തുടര്‍ച്ചയായി കാണിക്കുക
 mm:ဆက်တိုက် မျက်နှာ
 my:Dua belah mukasurat bersambung
+ne:निरन्तर सम्मुख पृष्ठ
 nl:Dubbele pagina doorlopend
 nn:Kontunuerleg motståande
 no:Kontinuerlig - motst&ående
@@ -4616,6 +4651,7 @@ lt:Prisidėti prie vertimo
 mk:Учествувај во преведувањето на оваа апликација
 ml:മാക്സിന്‍ ബി ജൊണ്‍
 my:Menyumbangkan alihbahasa
+ne:अनुवादमा योगदान दिनुहोस्
 nl:Help met vertalen
 nn:Delta med omsetjing
 no:Bidra med oversetting
@@ -4663,6 +4699,7 @@ id:Salin &Gambar
 it:Copia &immagine
 kr:이미지 복사(&I)
 mk:Копирај &слика
+ne:&छवि प्रतिलिपि बनाउनुहोस्
 nl:Afbeelding kopiëren
 pl:Kopiuj obraz
 pt:Copiar &imagem
@@ -4707,6 +4744,7 @@ ka:&ბმულის კოპირება
 kr:링크 주소 복사(&L)
 lt:Kopijuoti &saito adresą
 mk:Копирај ја адресата на &врската
+ne:&लिङ्क ठेगानाको प्रतिलिपि बनाउनुहोस्
 nl:&Verwijzing kopiëren
 no:Kopier &lenkeadresse
 pl:Kopiuj adres z &odnośnika
@@ -4756,6 +4794,7 @@ ka:კო&მენტარის კოპირება
 kr:주석(설명) 복사(&M)
 lt:Kopijuoti ko&mentarą
 mk:Копирај коментар
+ne:&टिप्पणीको प्रतिलिपि बनाउनुहोस्
 nl:Notitie kopiëren
 no:Kopier ko&mmentar
 pl:Kopiuj ko&mentarz
@@ -4847,6 +4886,7 @@ id:Hak Cipta
 it:Copyright:
 kr:저작권:
 mk:Авторско право:
+ne:प्रतिलिपिअधिकार:
 nl:Auteursrecht
 pl:Prawo autorskie:
 pt:Direitos de autor:
@@ -5049,6 +5089,7 @@ ka:შექმნილია:
 kr:만든 날짜:
 lt:Sukurtas:
 mk:Создадено на:
+ne:सिर्जना गरिएको:
 nl:Gemaakt:
 no:Opprettet:
 pl:Utworzono:
@@ -5100,6 +5141,7 @@ ka:მიმდინარე ფაილი
 kr:현재 파일
 lt:Esamasis failas
 mk:Активна датотека
+ne:हालको फाइल
 nl:Huidig bestand
 no:Gjeldende fil
 pl:Bieżący plik
@@ -5422,6 +5464,7 @@ ka:DjVu დოკუმენტები
 kr:DjVu 문서
 lt:DjVu dokumentai
 mk:DjVu-документи
+ne:DjVu कागजातहरु
 nl:DjVu-documenten
 no:DjVu-dokumenter
 pl:Dokumenty DjVu
@@ -5472,6 +5515,7 @@ ka:დოკუმენტის თვისებები
 kr:문서 속성
 lt:Dokumento savybės
 mk:Својства на документ
+ne:कागजात गुणहरू
 nl:Documenteigenschappen
 no:Dokumentegenskaper
 pl:Właściwości dokumentu
