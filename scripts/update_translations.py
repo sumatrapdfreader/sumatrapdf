@@ -211,7 +211,7 @@ def main_new():
     import apptransdl
     changed = apptransdl.downloadAndUpdateTranslationsIfChanged()
     if changed:
-        print("New translations received from the server, checkin Translations_txt.cpp and translations.txt")
+        print("\nNew translations received from the server, checkin Translations_txt.cpp and translations.txt")
 
 if __name__ == "__main__":
     main_new()
