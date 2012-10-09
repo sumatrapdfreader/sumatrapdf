@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-46bce7b50b1f017d7df006f7f542f2ffc9c8ffe6
+54775058ddb50f7e61cf9df183dab96b0e5061ef
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4389,6 +4389,7 @@ pl:Zgodność
 pt:Compatibilidade
 ru:Совместимость
 sq:Pajtueshmëria
+sv:Kompatibilitet
 vn:Tính tương thích
 :Continuous
 af:Aanmekaar
@@ -6218,13 +6219,16 @@ uk:Не можна зберегти файл.
 uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Fast Web View
+br:Visualização rápida na Web
 de:Schnelle Webanzeige
 es:Visualización Rápida en Web
 it:Vista web veloce
 kr:빠른 웹 보기
 mk:Брз веб-преглед
+nl:Snelle browserweergave
 pl:Szybkie wyświetlanie w Internecie
 ru:Быстрый просмотр в Интернете
+sv:Snabb Webb-Visning
 vn:Xem dạng Web nhanh
 :Favorites
 am:Ընտրյալներ
@@ -9156,12 +9160,14 @@ uk:PDF документ
 uz:PDF hujjati
 vn:Tập tin PDF
 :PDF Optimizations:
+br:Otimizações PDF:
 de:PDF Optimierungen:
 es:Optimizaciones de PDF:
 it:Ottimizzazioni PDF:
 kr:PDF 최적화:
 mk:Оптимизации за PDF:
 ru:Оптимизация PDF:
+sv:PDF Optimeringar:
 vn:Các tối ưu PDF
 :PDF Producer:
 am:PDF արտադրողը.
@@ -9946,6 +9952,7 @@ nl:Als afbeelding afdrukken (vereist meer geheugen)
 pt:Imprimir &como imagem (usa mais memória)
 ru:Печатать как &изображение (требуется больше памяти)
 sq:Printoj si &figurë (kërkon shumë RAM)
+sv:Skr&iv ut som bild (mer minnekrävande)
 vn:In thành hình ảnh (cần nhiều bộ nhớ hơn)
 :Print range
 am:Տպելու կարգը
@@ -11038,6 +11045,7 @@ pl:Pokaż &Zakładki
 pt:&Mostrar marcadores
 ru:Показать &закладки
 sq:Tregoj &shiritat
+sv:Visa &Bokmärken
 vn:Hiện chỉ dấu sách
 :Show &Toolbar
 af:Vertoon Toolbar
@@ -11853,12 +11861,14 @@ uk:Неможливо відкрити файл синхронізації
 uz:Sinxronizatsiya faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tagged PDF
+br:PDF com marcações (tags)
 de:PDF mit Tags
 es:PDF Etiquetado
 it:PDF marcati
 kr:태그있는 PDF
 mk:Означен PDF
 ru:Размеченный PDF
+sv:Taggad PDF
 vn:PDF được gắn thẻ
 :Text documents
 am:Տեքստային ֆայլեր
