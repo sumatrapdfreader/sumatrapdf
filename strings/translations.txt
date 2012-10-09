@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4173ffb1156caf6fbb31c27402473d7e30abef10
+0472fa945d524a1e19ea1d671d097d89d03e9de2
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -248,8 +248,8 @@ ar:&عرض الكتاب
 bg:&Изглед като книга\tCtrl+8
 br:Visualizar como livro\tCtrl+8
 bs:&Knjiški pregled\tCtrl+8
-ca-xv:Vista de &llibre\tCtrl+8
-ca:Vista de &llibre\tCtrl+8
+ca-xv:Visualització de &llibre\tCtrl+8
+ca:Visualització de &llibre\tCtrl+8
 cn:书籍视图(&B)\tCtrl+8
 cz:K&niha\tCtrl+8
 de:&Buchansicht\tStrg+8
@@ -560,6 +560,7 @@ kr:짝수 페이지만(&E)
 lt:Tik &lyginiai puslapiai
 mk:Само &парни страници
 my:&Mukasurat genap sahaja
+ne:&जोर पाना मात्र
 nl:Alleen &Even pagina's
 no:Bare &partallssider
 pl:Strony &parzyste
@@ -611,6 +612,7 @@ ka:&ურთიერთ-საპირისპიროდ\tCtrl+7
 kr:두 페이지씩(&F)\tCtrl+7
 lt:&Du puslapiai\tCtrl+7
 mk:Две страници\tCtrl+7
+ne:&सम्मुख\tCtrl+7
 nl:&Dubbele pagina\tCtrl+7
 no:&Vendt\tCtrl+7
 pl:&Wiele stron\tCtrl+7
@@ -670,6 +672,7 @@ mk:&Датотека
 ml:ഫയല്‍
 mm:&ဖိုင်
 my:&Fail
+ne:&फाइल
 nl:&Bestand
 nn:&Fil
 no:&Fil
@@ -730,6 +733,7 @@ kw:&Kavos pyth:
 lt:&Surasti
 mk:&Најди што:
 my:&carian:
+ne:के फेला पार्ने:
 nl:&Zoek naar:
 no:&Søk etter:
 pl:&Szukaj:
@@ -1030,6 +1034,7 @@ mk:&Помош
 ml:സഹായം
 mm:&အကူအညီ
 my:&Bantuan
+ne:&मदत
 nl:&Help
 nn:&Hjelp
 no:&Hjelp
@@ -1500,6 +1505,7 @@ kr:홀수 페이지만(&O)
 lt:&Tik nelyginiai puslapiai
 mk:Само &непарни страници
 my:&Mukasurat ganjil sahaja
+ne:&बिजोर पाना मात्र
 nl:Alleen &Oneven pagina's
 no:Bare &oddetallssider
 pl:Strony &nieparzyste
@@ -1551,6 +1557,7 @@ ka:&დოკუმენტის გახსნა
 kr:문서 열기(&O)
 lt:&Atverti dokumentą
 mk:Отвори документ
+ne:&कागजात खोल्नुहोस्
 nl:Document &Openen
 no:&Åpne dokument
 pl:&Otwórz dokument
@@ -1610,6 +1617,7 @@ mk:&Отвори...\tCtrl+O
 ml:തുറക്കുക...\tCtrl+O
 mm:&ဖွင့်ပါ...\tCtrl+O
 my:&Buka...\tCtrl+O
+ne:&खोल्नुहोस्...\tCtrl+O
 nl:&Openen...\tCtrl+O
 nn:&Opne...\tCtrl+O
 no:&Åpne...\tCtrl+O
@@ -1670,6 +1678,7 @@ kw:&Etholyow...
 lt:&Nuostatos...
 mk:&Опции...
 my:&Pilihan...
+ne:&विकल्पहरु
 nl:&Opties...
 no:&Innstillinger...
 pl:&Opcje...
@@ -3638,8 +3647,8 @@ ar:عرض الكتاب
 bg:Изглед като книга
 br:Ver como livro
 bs:Knjiški pregled
-ca-xv:Vista de llibre
-ca:Vista de llibre
+ca-xv:Visualització de llibre
+ca:Visualització de llibre
 cn:书籍视图
 cy:Golwg llyfr
 cz:Kniha
@@ -4404,6 +4413,8 @@ vn:Truyện tranh comic
 am:Համատեղելիությունը
 ar:التوافق
 br:Compatibilidade
+ca-xv:Compatibilitat
+ca:Compatibilitat
 cz:Kompatibilita
 de:Kompatibilität
 el:Συμβατότητα
@@ -4495,8 +4506,8 @@ ar:عرض مستمر للكتاب
 bg:Непрекъснат изглед като книга
 br:Ver como livro contínuo
 bs:Slijedni knjiški pogled
-ca-xv:Vista contínua de llibre
-ca:Vista contínua de llibre
+ca-xv:Visualització contínua de llibre
+ca:Visualització contínua de llibre
 cn:连续书籍视图
 cy:Golwg llyfr didor
 cz:Kniha průběžně
@@ -4682,6 +4693,8 @@ ar:نسخ الصورة
 bg:Копирай &изображението
 br:Copiar &Imagem
 bs:Kopiraj &sliku
+ca-xv:Copia la &imatge
+ca:Copia la &imatge
 cn:复制图片(&I)
 cz:Kopírovat &obrázek
 de:&Bild kopieren
@@ -4870,6 +4883,8 @@ ar:حقوق الطبع محفوظة:
 bg:Авторско право:
 br:Direito autoral:
 bs:Prava pridržana:
+ca-xv:Copyright:
+ca:Copyright:
 cn:版权:
 cz:Autorská práva:
 de:Copyright:
@@ -5220,8 +5235,8 @@ bg:&Разположение по подразбиране:
 br:&Visualização Padrão
 bs:Izvorni &izgled:
 by:&Кампаноўка па змаўчанні
-ca-xv:&Vista predeterminada:
-ca:&Vista predeterminada:
+ca-xv:&Visualització predeterminada:
+ca:&Visualització predeterminada:
 cn:默认布局(&L):
 cy:&Cynllun Rhagosodedig:
 cz:Výchozí &uspořádání:
@@ -5572,6 +5587,7 @@ kw:Iskarga
 lt:Atsisiųsti
 mk:Преземи
 my:Muat turun
+ne:डाउनलोड
 nl:Downloaden
 no:Nedlasting
 pl:Pobierz
@@ -5633,6 +5649,7 @@ mk:&Излези\tCtrl+Q
 ml:പുറത്തേക്ക് \tCtrl+Q
 mm:&ထွက်ပါ\tCtrl+Q
 my:&Keluar\tCtrl+Q
+ne:बाहिर &जानुहोस्\tCtrl+Q
 nl:&Afsluiten\tCtrl+Q
 nn:&Avslutt\tCtrl+Q
 no:A&vslutt\tCtrl+Q
@@ -5747,6 +5764,7 @@ lt:Įveskite slaptažodį
 mk:Внеси лозинка
 mm:လျှို့ဝှက် ထည့်သွင်းရန်
 my:Masukkan kata laluan
+ne:पासवर्ड भर्नुहोस्
 nl:Wachtwoord invoeren
 nn:Skriv inn passord
 no:Skriv inn passord
@@ -5811,6 +5829,7 @@ lt:Įveskite %s slaptažodį
 mk:Внеси лозинка за %s
 mm:လျှို့ဝှက် ထည့်သွင်း %s
 my:Masukkan kata laluan untuk %s
+ne:%s को पासवर्ड भर्नुहोस्
 nl:Wachtwoord invoeren voor %s
 nn:Skriv inn passord for %s
 no:Skriv inn passord for %s
@@ -5916,6 +5935,7 @@ ka:ჩატვირთვის შეცდომა %s
 kr:%s 불러오는 중 오류 발생
 lt:Nepavyko įkelti %s
 mk:Грешка при вчитување %s
+ne:%s लोड त्रुटि
 nl:Fout bij het laden van %s
 no:Feil under lasting %s
 pl:Błąd ładowania pliku %s
@@ -5964,6 +5984,7 @@ ka:&რჩეულები
 kr:즐겨찾기(&A)
 lt:&Parankiniai
 mk:Омилени
+ne:&मनपर्ने
 nl:F&avorieten
 no:F&avoritter
 pl:&Ulubione
@@ -6015,6 +6036,7 @@ kr:이후에 본 페이지(&O)\tAlt+오른쪽 방향키
 kw:Yn-rag\tAlt+->
 lt:&Pirmyn\tAlt+Dešinėn
 mk:Напред\tAlt+Right Arrow
+ne:अगाडि\tAlt+दायाँ बाण
 nl:Verder\tAlt+->
 no:Fremover\tAlt+Pil høyre
 pl:&Dalej\tAlt+W prawo
@@ -6141,6 +6163,7 @@ mk:Две страници
 ml:തിരിച്ച്
 mm: အရှေ့မျက်နှာ
 my:Dua belah mukasurat
+ne:सम्मुख
 nl:Dubbele pagina
 nn:Motståande
 no:Motstående
@@ -6170,6 +6193,8 @@ am:Հնարավոր չեղավ անվանափոխել ֆայլը։
 ar:فشل في إعادة تسمية الملف!
 br:Falha ao renomear o arquivo!
 bs:Neuspješna promjena naziva faja!
+ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
+ca:S'ha produït un error en canviar el nom del fitxer!
 cn:无法重命名!
 cz:Soubor se nepodařilo přejmenovat!
 de:Die Datei konnte nicht umbenannt werden!
@@ -6186,6 +6211,7 @@ id:Gagal mengganti nama berkas!
 it:Impossibile rinominare il file
 kr:파일 이름을 바꾸지 못했습니다!
 mk:Не успеав да ја преименувам датотеката!
+ne:नाम फेराई असफल
 nl:Naam niet kunnen wijzigen!
 pl:Błąd zmiany nazwy pliku!
 pt:Falha ao mudar o nome do ficheiro!
@@ -6238,6 +6264,7 @@ mk:Зачувување на PDF-документот не успеа
 ml:ഫയല്‍ സുക്ഷിക്കാന്‍ സാധിച്ചില്ല
 mm:ဖိုင် သိမ်းမရပါ
 my:Gagal menyimpan fail
+ne:फाइल बचत असफल
 nl:Fout bij opslaan bestand
 nn:Feil under lagring av fil
 no:Feil ved lagring av filen
@@ -6264,6 +6291,8 @@ uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Fast Web View
 br:Visualização rápida na Web
+ca-xv:Visualització ràpida de web
+ca:Visualització ràpida de web
 de:Schnelle Webanzeige
 es:Visualización Rápida en Web
 it:Vista web veloce
@@ -6305,6 +6334,7 @@ ka:რჩეულები
 kr:즐겨찾기
 lt:Parankiniai
 mk:Омилени
+ne:मनपर्नेहरु
 nl:Favorieten
 no:Favoritter
 pl:Ulubione
@@ -6350,6 +6380,7 @@ ja:ファイル %s が見つかりません
 ka:%s ფაილი ვერ მოიძებნა
 kr:%s 파일을 찾을 수 없습니다.
 mk:Датотеката %s не е најдена
+ne:फाइल %s भेटिएन
 nl:Bestand %s niet gevonden
 no:Filen %s finnes ikke
 pl:Nie znaleziono pliku %s
@@ -6400,6 +6431,7 @@ kr:파일 크기:
 lt:Failo dydis:
 mk:Големина на датотека:
 my:Saiz fail:
+ne:फाइल साइज
 nl:Bestandsgrootte
 no:Filstørrelse:
 pl:Rozmiar pliku:
@@ -6454,6 +6486,7 @@ kr:파일:
 lt:Failas:
 mk:Датотека:
 my:Fail:
+ne:फाइल:
 nl:Bestand:
 no:Fil:
 pl:Plik:
@@ -6515,6 +6548,7 @@ mk:Најди...\tCtrl+F
 ml:കണ്ടെത്തുക...\tCtrl+F
 mm:ရှာပါ\tCtrl+F
 my:Cari...\tCtrl+F
+ne:&फेला पार्नुहोस् ...\tCtrl+F
 nl:Zoeken...\tCtrl+F
 nn:Finn...\tCtrl+F
 no:Søk etter...\tCtrl+F
@@ -6574,6 +6608,7 @@ kw:Kavos
 lt:Ieškoti
 mk:Најди
 my:Cari
+ne:फेला पार्नुहोस्
 nl:Zoeken
 no:Søk etter
 pl:Znajdź
@@ -6635,6 +6670,7 @@ mk:Најди следно
 ml:അടുത്തത് കണ്ടെത്തുക
 mm:နောက်တခု ရှာပါ
 my:Cari seterusnya
+ne:पछिल्लो फेला पार्नुहोस्
 nl:Volgende
 nn:Finn neste
 no:Neste
@@ -6699,6 +6735,7 @@ mk:Најди претходно
 ml: മുന്‍പുള്ളത് കണ്ടെത്തുക
 mm:ပြီးခဲ့တာ ရှာပါ
 my:Cari sebelumnya
+ne:अघिल्लो फेला पार्नुहोस्
 nl:Vorige
 nn:Finn førre
 no:Forrige
@@ -6763,6 +6800,7 @@ mk:Најди:
 ml:കണ്ടെത്തുക:
 mm:ရှာပါ
 my:Cari:
+ne:फेला पार्नुहोस्:
 nl:Zoeken:
 nn:Finn
 no:Søk etter:
@@ -7256,6 +7294,8 @@ ar:الخطوط:
 bg:Шрифтове:
 br:Fontes:
 bs:Fontovi:
+ca-xv:Tipus de lletra:
+ca:Tipus de lletra:
 cn:字体:
 cz:Písma:
 de:Schriftarten:
@@ -7291,6 +7331,8 @@ ar:تهيئة الكتاب... %d صفحة
 bg:Форматиране на книгата... %d страници
 br:Formatando o livro... %d páginas
 bs:Formatiranje knjige... %d stranica
+ca-xv:S'està formatant el llibre... %d pàgines
+ca:S'està formatant el llibre... %d pàgines
 cn:正在格式化 %d 页
 cz:Formátování knihy... %d stránek
 de:Buch wird formatiert… Seite %d
@@ -7512,6 +7554,7 @@ mk:GB
 ml:GB
 mm:GB
 my:GB
+ne:जिबी
 nl:GB
 nn:GB
 no:GB
@@ -7791,6 +7834,7 @@ mk:KB
 ml:KB
 mm:KB
 my:KB
+ne:केबी
 nl:KB
 nn:KB
 no:KB
@@ -7821,6 +7865,8 @@ ar:تحميل الملف %s...
 bg:Зареждане на файл %s...
 br:Carregando arquivo %s...
 bs:Učitavanje fajl %s...
+ca-xv:S'està carregant el fitxer %s...
+ca:S'està carregant el fitxer %s...
 cn:正在加载 %s...
 cz:Načítání souboru %s...
 de:%s wird geladen…
@@ -8641,6 +8687,7 @@ kw:Da lowr
 lt:Gerai
 mk:Во ред
 my:OK
+ne:ठीक
 nl:OK
 no:OK
 pl:OK
@@ -8702,6 +8749,7 @@ mk:Отвори
 ml:തുറക്കുക
 mm:ဖွင့်ပါ
 my:Buka
+ne:खोल्नुहोस्
 nl:Openen
 nn:Opne
 no:Åpne
@@ -8761,6 +8809,7 @@ kr:PDF-XChange로 열기(&I)
 kw:Ygeri yn PDF-XChange
 lt:Atverti naudojant „PDF-&XChange“
 mk:Отвори со PDF-XChange
+ne:PDF-XChange मा खोल्नुहोस्
 nl:Openen met PDF-XChange
 no:Åpne i PDF-XChange
 pl:Otwórz w PDF-XChange
@@ -8812,6 +8861,7 @@ ka:დოკუმენტის გახსნა...
 kr:문서 열기...
 lt:Atverti dokumentą...
 mk:Отвори документ...
+ne:कागजात खोल्नुहोस्
 nl:Open een document...
 no:Åpne et dokument...
 pl:Otwórz dokument...
@@ -8864,6 +8914,7 @@ kr:Adobe Reader로 열기(&A)
 kw:Ygeri yn &Adobe Reader
 lt:Atverti naudojant „&Adobe Reader“
 mk:Отвори со &Adobe Reader
+ne:&Adobe Reader मा खोल्नुहोस्
 nl:Openen met &Adobe Reader
 no:Åpne i &Adobe Reader
 pl:Otwórz w &Adobe Reader
@@ -8919,6 +8970,7 @@ kr:Foxit Reader로 열기(&F)
 kw:Ygeri yn &Foxit Reader
 lt:Atverti naudojant „&Foxit Reader“
 mk:Отвори со &Foxit Reader
+ne:&Foxit Reader मा खोल्नुहोस्
 nl:Openen met &Foxit Reader
 no:Åpne i &Foxit Reader
 pl:Otwórz w &Foxit Reader
@@ -8972,6 +9024,7 @@ ka:გახსნა Microsoft HTML Help-ში
 kr:Microsoft HTML Help로 열기(&M)
 kw:Ygeri yn Microsoft HTML Help
 mk:Отвори со Microsoft HTML Help
+ne:&Microsoft HTML Help मा खोल्नुहोस्
 nl:Openen met Microsoft HTML Help
 no:Åpne i Microsoft HTML Help
 pl:Otwórz w Microsoft HTML Help
@@ -9025,6 +9078,7 @@ ka:გახსნა Microsoft XPS-Viewer-ში
 kr:Microsoft XPS-Viewer로 열기(&M)
 kw:Ygeri yn Microsoft XPS-Viewer
 mk:Отвори со Microsoft XPS-Viewer
+ne:&Microsoft XPS-Viewer मा खोल्नुहोस्
 nl:Openen met Microsoft XPS-Viewer
 no:Åpne i Microsoft XPS-Viewer
 pl:Otwórz w Microsoft XPS-Viewer
@@ -9205,6 +9259,8 @@ uz:PDF hujjati
 vn:Tập tin PDF
 :PDF Optimizations:
 br:Otimizações PDF:
+ca-xv:Optimitzacions del PDF:
+ca:Optimitzacions del PDF:
 de:PDF Optimierungen:
 es:Optimizaciones de PDF:
 it:Ottimizzazioni PDF:
@@ -9981,6 +10037,8 @@ vn:In
 am:Տպել որպես &նկար (պահանջում է լր. հիշողություն)
 ar:اطبع كصورة (يحتاج إلى ذاكرة أكثر)
 br:Imprimir como &imagem (requer mais memória)
+ca-xv:Imprimeix com a &imatge (requereix més memòria)
+ca:Imprimeix com a &imatge (requereix més memòria)
 cz:Tisknout jako &obrázek (vyžaduje více paměti)
 de:Als B&ild drucken (benötigt mehr Speicher)
 el:Εκτύπωση ως &εικόνα (απαιτεί περισσότερη μνήμη)
@@ -10261,6 +10319,8 @@ am:Ան&վանափոխել...\tF2
 ar:إعادة تسمية...\tF2
 br:Re&nomear...\tF2
 bs:Promije&ni naziv...\tF2
+ca-xv:Canvia el &nom...\tF2
+ca:Canvia el &nom...\tF2
 cn:重命名(&N)...\tF2
 cz:Přejme&novat...\tF2
 de:Umbe&nennen…\tF2
@@ -10444,6 +10504,8 @@ am:Անվանափոխել՝
 ar:إعادة تسمية إلى
 br:Renomear para
 bs:Promije&ni naziv u
+ca-xv:Canvia el nom a
+ca:Canvia el nom a
 cn:重命名到
 cz:Přejmenovat na
 de:Umbenennen zu
@@ -10477,6 +10539,8 @@ ar:تغيير ألوان الكتب إلى ألوان ويندوز القياس�
 bg:Замени &цветовете на документа с цветовата схема на Windows
 br:Substituir &cores do documento pelo esquema de cores do Windows
 bs:Zamijeni &boje u dokumentu sa Windows kolor šemom
+ca-xv:Substitueix els &colors del document amb l'esquema de colors del Windows
+ca:Substitueix els &colors del document amb l'esquema de colors del Windows
 cn:采用系统颜色方案(&C)
 cz:Barvy dokumentu nahradit barevným s&chématem systému Windows
 de:Dokumenten&farben durch Windows-Farbschema ersetzen
@@ -11073,6 +11137,8 @@ vn:Đặt dòng lệnh tìm kiếm ngược
 am:Ցուցադրել &Էջանիշերը
 ar:إظهار العلامات
 br:Mostrar Fa&voritos
+ca-xv:Mostra els &marcadors
+ca:Mostra els &marcadors
 cz:Zobrazit &záložky
 de:Lese&zeichen anzeigen
 el:Εμφάνιση &Σελιδοδεικτών
@@ -11433,6 +11499,7 @@ ar:عذرا, لا يجدر أن يحدث ما حدث!\n\n الرجاء الضغ�
 bg:Извинете, това не би трябвало да се случва!\n\nНатиснете 'Отказ', ако искате да ни помогнете да поправим причината за това спиране.
 br:Desculpe, isso não deveria ter acontecido!\n\nAperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.
 bs:Oprostite, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam želite pomoći ispraviti uzrok ovog rušenja.
+ca-xv:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'este error
 ca:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'aquest error.
 cn:抱歉，本不应该发生的！\n\n如果你希望帮助我们修复这个崩溃问题，请点击'取消'。
 cz:To se nemělo stát, omlouváme se.\n\nPokud nám chcete pomoci vyřešit příčinu tohoto pádu, klikněte na tlačítko Storno.
@@ -11906,6 +11973,8 @@ uz:Sinxronizatsiya faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tagged PDF
 br:PDF com marcações (tags)
+ca-xv:PDF etiquetat
+ca:PDF etiquetat
 de:PDF mit Tags
 es:PDF Etiquetado
 it:PDF marcati
