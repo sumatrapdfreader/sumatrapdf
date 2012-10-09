@@ -129,11 +129,14 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
         }
     }
     else {
-        for (int pageNo = 1; pageNo < engine.PageCount(); pageNo++) {
+        for (int pageNo = 1; pageNo <= engine.PageCount(); pageNo++) {
             if (!BoundSelectionOnPage(pd.sel, pageNo).IsEmpty())
                 total++;
         }
     }
+    AssertCrash(total > 0);
+    if (0 == total)
+        return;
     if (progressUI)
         progressUI->UpdateProgress(current, total);
 
@@ -165,7 +168,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
         bPrintPortrait = DMORIENT_PORTRAIT == pd.orientation;
 
     if (pd.sel.Count() > 0) {
-        for (int pageNo = 1; pageNo < engine.PageCount(); pageNo++) {
+        for (int pageNo = 1; pageNo <= engine.PageCount(); pageNo++) {
             RectD bounds = BoundSelectionOnPage(pd.sel, pageNo);
             if (bounds.IsEmpty())
                 continue;
