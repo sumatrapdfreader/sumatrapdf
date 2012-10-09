@@ -64,5 +64,6 @@
   ["uk", "Ukrainian (Українська)"],
   ["sl", "Slovenian (Slovenščina)"],
   ["my", "Malaysian (Bahasa Melayu)"],
+  ["ne", "Nepali (नेपाली)"],
 ]
 
