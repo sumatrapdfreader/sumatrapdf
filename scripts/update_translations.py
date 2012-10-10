@@ -5,22 +5,21 @@ from extract_strings import extract_strings_from_c_files, get_missing_for_langua
 from extract_strings import dump_missing_per_language, write_out_strings_files
 from extract_strings import key_sort_func, load_lang_index
 
-g_can_upload = True
+g_can_upload = False
 g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
-
-try:
-    import boto.s3
-    from boto.s3.key import Key
-except:
-    print("You need boto library (http://code.google.com/p/boto/)")
-    print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
-    print("cd boto; python setup.py install")
-    g_can_upload = False
 
 config = load_config()
 if not config.HasAwsCreds():
     print("aws creds not present in config.py")
-    g_can_upload = False
+else:
+    try:
+        import boto.s3
+        from boto.s3.key import Key
+        g_can_upload = True
+    except:
+        print("You need boto library (http://code.google.com/p/boto/)")
+        print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
+        print("cd boto; python setup.py install")
 
 S3_JS_NAME = "blog/sumatrapdf-langs.js"
 # number of missing translations for a language to be considered

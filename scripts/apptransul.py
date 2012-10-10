@@ -41,30 +41,33 @@ def uploadStringsToServer(strings, secret):
     conn.close()
     print("Upload done")
 
-def uploadStringsIfChanged():
+def uploadStringsIfChanged(skip_svn_check=False):
     # needs to have upload secret to protect apptranslator.org server from abuse
     config = load_config()
     uploadsecret = config.trans_ul_secret
     if None is uploadsecret:
         print("Skipping string upload because don't have upload secret")
         return
-    # Note: this check might be confusing due to how svn work
-    # Unforunately, if you have local latest revision 5 and do a checkin to create
-    # revision 6, svn info says that locally you're still on revision 5, even though
-    # the code is actually as revision 6.
-    # You need to do "svn update" to update local version number
-    # Unfortunately I can't do it automatically here since it would be dangerous
-    # (i.e. it would update code locally).
-    # svn update is called in build-release.py, so it's not a problem if it's run
-    # from  ./scripts/build-release.bat or ./scripts/build-pre-release.bat
-    try:
-        (local_ver, latest_ver) = buildbot.get_svn_versions()
-    except:
-        print("Skipping string upload because SVN isn't available to check for up-to-date-ness")
-        return
-    if int(latest_ver) > int(local_ver):
-        print("Skipping string upload because your local version (%s) is older than latest in svn (%s)" % (local_ver, latest_ver))
-        return
+
+    if not skip_svn_check:
+        # Note: this check might be confusing due to how svn work
+        # Unforunately, if you have local latest revision 5 and do a checkin to create
+        # revision 6, svn info says that locally you're still on revision 5, even though
+        # the code is actually as revision 6.
+        # You need to do "svn update" to update local version number
+        # Unfortunately I can't do it automatically here since it would be dangerous
+        # (i.e. it would update code locally).
+        # svn update is called in build-release.py, so it's not a problem if it's run
+        # from  ./scripts/build-release.bat or ./scripts/build-pre-release.bat
+        try:
+            (local_ver, latest_ver) = buildbot.get_svn_versions()
+        except:
+            print("Skipping string upload because SVN isn't available to check for up-to-date-ness")
+            return
+        if int(latest_ver) > int(local_ver):
+            print("Skipping string upload because your local version (%s) is older than latest in svn (%s)" % (local_ver, latest_ver))
+            return
+
     strings = extract_strings_from_c_files()
     strings.sort()
     s = "AppTranslator strings\n" + string.join(strings, "\n")
@@ -78,4 +81,4 @@ def uploadStringsIfChanged():
         print("Don't forget to checkin strings/last_uploaded.txt")
 
 if __name__ == "__main__":
-    uploadStringsIfChanged()
+    uploadStringsIfChanged("-force" in sys.argv)
