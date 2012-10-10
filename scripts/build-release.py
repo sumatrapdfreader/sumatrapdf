@@ -122,7 +122,9 @@ def main():
     ver = extract_sumatra_version(os.path.join("src", "Version.h"))
   log("Version: '%s'" % ver)
 
-  if g_new_translation_system and not skip_transl_update:
+  # don't update translations for release versions to prevent Trunk changes
+  # from messing up the compilation of a point release on a branch
+  if g_new_translation_system and build_prerelease and not skip_transl_update:
     apptransul.uploadStringsIfChanged()
     changed = apptransdl.downloadAndUpdateTranslationsIfChanged()
     # Note: this is not a perfect check since re-running the script will
