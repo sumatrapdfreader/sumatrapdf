@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-367609751348a5dc8ffa6f15f8320d9638d60f84
+b4c775a70b5976bfe38940f65f881a578fab97ed
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -503,6 +503,7 @@ lt:&Daugiau nebeklausti
 mk:Не ме прашувај повторно
 mm:ထပ်မမေးပါနှင့်။
 my:&Jangan tanya saya lagi
+ne:मलाई पुनः &नसोध्नुहोस्
 nl:Niet opnieuw vragen
 nn:Ikkje spør meg igjen
 no:&Ikke spør meg igjen
@@ -853,6 +854,7 @@ kr:인쇄 영역에 페이지 맞추기(&F)
 lt:Pritaikyti puslapių dydį prie spausdinamo ploto
 mk:&Прилагоди страници на зона за печатење
 my:&Muatkan halaman pada kawasan boleh cetak
+ne:पृष्ठहरुलाई छाप्नयोग्य क्षेत्रमा &अटाउनुहोस्
 nl:Pagina's in afdrukgebied passen
 no:&Tilpass sider til utskriftsområde
 pl:Dopasuj strony do rozmiaru &wydruku
@@ -975,7 +977,7 @@ kw:&Mos dhe folen:
 lt:&Eiti į puslapį:
 mk:&Појди на страница:
 my:&Pergi ke halaman:
-ne:&पृष्टमा जानुहोस्
+ne:&पृष्ठमा जानुहोस्
 nl:&Ga naar pagina:
 no:&Gå til side:
 pl:Idź &do strony:
@@ -1103,7 +1105,7 @@ mk:Последна страница\tEnd
 ml:അവസാന താള്‍\tEnd
 mm:နောက်ဆုံး စာမျက်နှာ\tEnd
 my:&Halaman terakhir
-ne:&अन्तिम पृष्ट\tEnd
+ne:&अन्तिम पृष्ठ\tEnd
 nl:&Laatste pagina\tEnd
 nn:Siste side\tEnd
 no:Siste side\tEnd
@@ -1343,6 +1345,7 @@ mk:Следна страница\t->
 ml:അടുത്ത താള്‍\t->
 mm:နောက် တမျက်နှာ\t->
 my:&Halaman seterusnya\t->
+ne:&अर्को पृष्ठ\tदायाँ बाण
 nl:Volgende pagina\t->
 nn:Neste side\t->
 no:Neste side\tPil høyre
@@ -1460,6 +1463,7 @@ kw:&Na, meur ras
 lt:Ačiū, &ne
 mk:&Не, благодарам
 my:&Tidak, terima kasih
+ne:धन्यबाद, तर &पर्दैन
 nl:&Nee, bedankt
 no:&Nei, takk
 pl:Nie, &dziękuję
@@ -1854,6 +1858,7 @@ mk:Претходна страница\t<-
 ml:മുന്‍പുള്ള താള്‍\t<-
 mm:ပြီးတဲ့ စာမျက်နှာ\t<-
 my:&Halaman sebelumnya\t<-
+ne:&अघिल्लो पृष्ठ\tबायाँ बाण
 nl:Vorige pagina\t<-
 nn:Førre side\t<-
 no:Forrige side\tPil venstre
@@ -2082,6 +2087,7 @@ kr:이 문서의 비밀번호 기억(&R)
 lt:Įsiminti šio dokumento &slaptažodį
 mk:&Запомни ја лозинката за овој документ
 my:&Ingat katalaluan untuk dokumen ini
+ne:यो कागजातको पासवर्ड &सम्झनुहोस्
 nl:Wachtwoord onthouden voor dit document
 no:&Husk passordet for dette dokumentet
 pl:Pamiętaj &hasło dla tego dokumentu
@@ -2138,6 +2144,7 @@ kw:Gwitha an etholy&ow ma rag pub restren
 lt:Įsiminti šias &nuostatas kiekvienam dokumentui
 mk:&Запомни ги овие поставувања за секој документ
 my:&Ingat tetapan-tetapan ini untuk setiap dokumen
+ne:यी सेटिङहरु प्रत्येक कागजातको लागि &सम्झनुहोस्
 nl:&Bewaar deze instellingen voor elk document
 no:&Husk disse innstillingene for hvert dokument
 pl:Pamiętaj ustawienia dla &każdego dokumentu
@@ -2414,6 +2421,7 @@ ka:გვერდების შემცირება ბეჭდვად
 kr:인쇄 영역에 맞춰 (필요한 경우) 페이지 축소(&S)
 lt:&Sumažinti puslapių dydį iki spausdinamo ploto (jei reikia)
 mk:&Намали страници според зона за печатење (ако е потребно)
+ne:पृष्ठहरुलाई छाप्नयोग्य क्षेत्रमा &खुम्च्याउनुहोस् (आवस्यक परेमा)
 nl:Pagina's verkleinen tot afdrukgebied (indien nodig)
 no:&Krymp sider til utskriftsområde (om nødvendig)
 pl:&Zmniejsz strony do rozmiaru wydruku (w razie potrzeby)
@@ -2581,6 +2589,7 @@ ka:&გვერდების ორიგინალი ზომის გ�
 kr:원래 페이지 크기 사용(&U)
 lt:Na&udoti originalius puslapių dydžius
 mk:&Користи оригинални димензии на страници
+ne:&मौलिक पृष्ठ साईज प्रयोग गर्नुहोस्
 nl:Originele paginagrootte gebruiken
 no:&Benytt opprinnelige sidestørrelser
 pl:Użyj &oryginalnego rozmiaru stron
@@ -2876,7 +2885,7 @@ ka:(გვერდი %s)
 kr:(%s 페이지)
 lt:(%s psl.)
 mk:(страница %s)
-ne:(पृष्ट %s)
+ne:(पृष्ठ %s)
 nl:(pagina %s)
 no:(side %s)
 pl:(strona %s)
@@ -4069,6 +4078,7 @@ ka:ინტერნეტთან დაკავშირება ვერ
 kr:인터넷에 접속할 수 없습니다. (오류 %#x)
 lt:Ryšys su internetu nutrūko (klaida %#x).
 mk:Не можам да се поврзам на Интернет (грешка %#x).
+ne:इन्टरनेट जडान गर्न सकिएन (त्रुटि %#x).
 nl:Kan geen verbinding maken met internet (fout %#x).
 no:Kan ikke koble til Internett (feilmelding %#x).
 pl:Nie można połączyć z Internetem (błąd %#x).
@@ -4415,6 +4425,7 @@ ka:CBR, CBZ დოკუმენტები (კომიქსები)
 kr:만화 책
 lt:Komiksų knygelės
 mk:Стрипови
+ne:कमिक पुस्तिका
 nl:Stripboeken
 no:Tegneserier
 pl:Komiksy
@@ -4882,6 +4893,7 @@ ka:ტექსტის კოპირება აკრძალულია
 kr:문자열 복사가 거부되었습니다. (이미지만 복사됩니다.)
 lt:Teksto kopijavimas uždraustas (kopijuojamas tik ekrano vaizdas)
 mk:Копирањето на текстот беше одбиено (копирање само во вид на слика)
+ne:पाठ प्रतिलिपि अस्वीकार भयो (छविको रुपमा प्रतिलिपि बनाईदैछ)
 nl:Tekst kopiëren niet toegestaan (kopieer als afbeelding)
 no:Mangler tillatelse til kopiering av tekst (kopierer kun som bilde)
 pl:Nie można kopiować tekstu (można kopiować jako obrazy)
@@ -4970,6 +4982,7 @@ ka:პრინტერის თვისებების მიღება
 kr:프린터 속성을 가져올 수 없습니다.
 lt:Spausdintuvo savybių sužinoti nepavyko
 mk:Не можам да дојдам до својствата на печатачот
+ne:मुद्रक गुणहरु प्राप्त गर्न सकिएन
 nl:Kan geen printereigenschappen verkrijgen
 no:Kunne ikke innhente skriveregenskaper
 pl:Nie można uzyskać właściwości drukarki
@@ -5020,6 +5033,7 @@ kr:프린터를 초기화할 수 없습니다.
 kw:Ny yllys darbari pryntyer
 lt:Nepavyko prisijungti prie spausdintuvo
 mk:Не можам да го подготвам печатачот
+ne:मुद्रकलाई आरम्भ गर्न सकिएन
 nl:Kan de printer niet initialiseren
 no:Kunne ikke klargjøre skriveren
 pl:Nie można zainicjować drukarki
@@ -5075,7 +5089,7 @@ kr:페이지를 렌더링할 수 없습니다.
 kw:Ny yllys rendra folen
 lt:Nepavyko atvaizduoti puslapio
 mk:Не можам да ја прикажам страницата
-ne:पृष्ट रेन्डर गर्न सकिएन
+ne:पृष्ठ रेन्डर गर्न सकिएन
 nl:Kan deze pagina niet weergegeven
 no:Kunne ikke vise siden
 pl:Nie można wyświetlić strony
@@ -6129,6 +6143,7 @@ mk:На цел екран\tCtrl+Shift+L
 ml:മുഴുവന്‍ കാണിക്കുക\tCtrl+Shift+L
 mm:မြင်ကွင်း ပြည့်\tCtrl+Shift+L
 my:Mukasurat Penuh\tCtrl+Shift+L
+ne:पूर्णस्क्रिन\tCtrl+Shift+L
 nl:Volledig scherm\tCtrl+Shift+L
 nn:Full skjerm\tCtrl+Shift+L
 no:Fullskjerm\tCtrl+Shift+L
@@ -6329,6 +6344,7 @@ es:Visualización Rápida en Web
 it:Vista web veloce
 kr:빠른 웹 보기
 mk:Брз веб-преглед
+ne:द्रुत वेब दृश्य
 nl:Snelle browserweergave
 pl:Szybkie wyświetlanie w Internecie
 ru:Быстрый просмотр в Интернете
@@ -6701,7 +6717,7 @@ mk:Најди следно
 ml:അടുത്തത് കണ്ടെത്തുക
 mm:နောက်တခု ရှာပါ
 my:Cari seterusnya
-ne:पछिल्लो फेला पार्नुहोस्
+ne:अर्को फेला पार्नुहोस्
 nl:Volgende
 nn:Finn neste
 no:Neste
@@ -6887,6 +6903,7 @@ ka:&შიგთავსის მიხედვით\tCtrl+3
 kr:내용에 맞춤(&C)\tCtrl+3
 lt:Visas puslapio &turinys\tCtrl+3
 mk:Прилагоди на &содржина\tCtrl+3
+ne:&सामग्री अटाउनुहोस्\tCtrl+3
 nl:Passend maken\tCtrl+3
 no:Tilpass &innhold\tCtrl+3
 pl:Dopasuj do &zawartości\tCtrl+3
@@ -6947,6 +6964,7 @@ mk:Прилагоди на &страница\tCtrl+0
 ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക\tCtrl+0
 mm:စာမျက်နှာ ပြည့်\tCtrl+O
 my:&Muatkan mukasurat\tCtrl+0
+ne:&पृष्ठ अटाउनुहोस्\tCtrl+0
 nl:Hele &pagina\tCtrl+0
 nn:Tilpass &side\tCtrl+0
 no:Tilpass &side\tCtrl+0
@@ -7012,6 +7030,7 @@ mk:Прилагоди на &ширина\tCtrl+2
 ml:അകലം പൊരുത്തപ്പെടുത്തുക\tCtrl+2
 mm:အလျားနှင့်အမြင့် အပြည့်
 my:&Muatkan lebar\tCtrl+2
+ne:&चौडाइ अटाउनुहोस्\tCtrl+2
 nl:Passend in &breedte\tCtrl+2
 nn:Tilpass &breidde\tCtrl+2
 no:Tilpass til bredd&e\tCtrl+2
@@ -7068,6 +7087,7 @@ ka:შიგთავსის მიხედვით
 kr:내용에 맞춤
 lt:Visas puslapio turinys
 mk:Прилагоди на содржина
+ne:सामग्री अटाउनुहोस्
 nl:Passend maken
 no:Tilpass innhold
 pl:Dopasuj do zawartości strony
@@ -7128,6 +7148,7 @@ mk:Прилагоди на страница
 ml:വലിപ്പം പൊരുത്തപ്പെടുത്തുക
 mm:စာမျက်နှာ ပြည့်
 my:Muatkan mukasurat
+ne:पृष्ठ अटाउनुहोस्
 nl:Hele pagina
 nn:Tilpass side
 no:Tilpass side
@@ -7193,6 +7214,7 @@ mk:Прилагоди на ширина
 ml:അകലം പൊരുത്തപ്പെടുത്തുക
 mm:အလျားနှင့်အမြင့် အပြည့်
 my:Muatkan lebar
+ne:चौडाइ अटाउनुहोस्
 nl:Passend in breedte
 nn:Tilpass breidde
 no:Tilpass til bredde
@@ -7249,6 +7271,7 @@ ka:ფანჯრის სიგანეზე მორგება და �
 kr:지속적인 너비 맞춤과 페이지 보기
 lt:Visas puslapio plotis, nenutrūkstama peržiūra
 mk:Прилагоди на широчина и прикажи страници непрекинато
+ne:चौडाई अटाउनुहोस् र पृष्ठहरु निरन्तर देखाउनुहोस्
 nl:Passend in breedte en pagina's doorlopend
 no:Tilpass bredde og vis sider kontinuerlig
 pl:Dopasuj szerokość i wyświetlaj strony w układzie ciągłym
@@ -7300,6 +7323,7 @@ ka:გვერდის მორგება ფანჯრის ზომ�
 kr:한 페이지 맞춤
 lt:Visas puslapis
 mk:Прилагоди на поединечна страница
+ne:एकल पृष्ठ अटाउनुहोस्
 nl:Hele pagina passend maken
 no:Tilpass til enkeltside
 pl:Dopasuj pojedynczą stronę
@@ -7382,7 +7406,7 @@ id:Memformat buku... %d halaman
 it:Formattazione del libro ... %d pagine
 kr:%d 페이지 읽어들이는 중...
 mk:Ја форматирам книгата... %d страници
-ne:पुस्तक स्वरूपण ... %d पृष्टहरु
+ne:पुस्तक स्वरूपण ... %d पृष्ठहरु
 nl:Boek samenstellen... %d paginas
 pl:Formatowanie książki... %d stron
 pt:A formatar livro... %d páginas
@@ -7430,6 +7454,7 @@ kr:%s 페이지에서 문자열 찾음
 kw:Tekst kevys war folen %s
 lt:Ieškoti teksto %s puslapyje
 mk:Пронајдов текст на страница %s
+ne:पृष्ठ %s मा पाठ भेटियो
 nl:Tekst gevonden op pagina %s
 no:Fant tekst på side %s
 pl:Znaleziono tekst na stronie %s
@@ -7481,6 +7506,7 @@ ka:ტექსტი ნაპოვნია %s გვერდზე (ხე�
 kr:%s 페이지에서 (다시) 문자열 찾음
 lt:Rastas tekstas %s puslapyje (vėl)
 mk:Пронајдов текст на страница %s (повторно)
+ne:पृष्ठ %s मा पाठ भेटियो (पुनः)
 nl:Tekst gevonden op pagina %s (opnieuw)
 no:Fant tekst på side %s (igjen)
 pl:Znaleziono tekst na stronie %s (znowu)
@@ -7529,6 +7555,7 @@ ka:ბოლოს წაკითხული დოკუმენტები
 kr:최근에 읽은 파일
 lt:Dažniausiai skaitomi
 mk:Често читани
+ne:प्रायजसो पढिएको
 nl:Vaak gelezen
 no:Ofte leste
 pl:Ostatnio otwierane
@@ -7652,7 +7679,7 @@ lt:Eiti į puslapį
 mk:Појди на страница
 mm:သွားရန် စာမျက်နှာ
 my:Pergi ke mukasurat
-ne:पृष्टमा जानुहोस्
+ne:पृष्ठमा जानुहोस्
 nl:Ga naar pagina
 nn:Gå til side
 no:Gå til side
@@ -7708,6 +7735,7 @@ ka:ბოლოს წაკითხული დოკუმენტები
 kr:최근에 읽은 파일 감추기
 lt:Nerodyti dažniausiai skaitomų
 mk:Сокриј често читани
+ne:प्रायजसो पढिएको लुकाउनुहोस्
 nl:'Vaak gelezen' verbergen
 no:Skjult ofte leste
 pl:Ukryj ostanio otwierane
@@ -7759,6 +7787,7 @@ kr:힌트: 다시 찾으려면 F3 키를 누르세요.
 kw:Hynt: Devnydhya alhwedhen F3 rag daskavos
 lt:Patarimas: ieškodami kito atitikmens naudokite klavišą F3
 mk:Совет: За повторно пребарување користете F3 од тастатурата
+ne:सङ्केत: पुनः फेलापार्न F3 कुञ्जी प्रयोग गर्नुहोस्
 nl:Tip: Gebruik de functietoets F3 om verder te zoeken
 no:Tips: Bruk F3 tasten for søk etter neste
 pl:Wskazówka: użyj klawisza F3, aby szukać dalej
@@ -7810,6 +7839,7 @@ ka:ნახატი ფაილები (*.%s)
 kr:이미지 파일 (*.%s)
 lt:Grafiniai failai (*.%s)
 mk:Слики (*.%s)
+ne:छवि फाइल (*.%s)
 nl:Afbeeldingen (*.%s)
 no:Bildefiler (*.%s)
 pl:Pliki graficzne (*.%s)
@@ -8399,7 +8429,7 @@ mk:Следна страница
 ml:അടുത്ത താള്‍
 mm:နောက် တမျက်နှာ
 my:Mukasurat seterusnya
-ne:पछिल्लो पृष्ठ
+ne:अर्को पृष्ठ
 nl:Volgende pagina
 nn:Neste side
 no:Neste side
@@ -8460,6 +8490,7 @@ kw:Ny veu keyvys par vyth
 lt:Nerasta atitikmenų
 mk:Не се пронајдени совпаѓања
 my:Tiada padanan dijumpai
+ne:जोडाहरु प्राप्त भएन
 nl:Geen zoekresultaat gevonden
 no:Søkeelementet ble ikke funnet
 pl:Nie znaleziono wyników
@@ -8565,6 +8596,7 @@ kr:동기화 파일을 찾을 수 없습니다.
 kw:Ny veu kevys restren gettermynegi vyth
 lt:Sinchronizacijos failas nerastas
 mk:Не најдов синхронизациска датотека
+ne:कुनै समक्रमण फाइल भेटिएन्
 nl:Geen synchronisatiebestand gevonden
 no:Ingen synkroniserende fil funnet
 pl:Nie znaleziono pliku synchronizacji
@@ -8620,6 +8652,7 @@ kr:이 위치의 동기화 정보가 없습니다.
 kw:Ny veu kevys derivadow kettermynegi y'n le ma
 lt:Nėra sinchronizacijos informacijos šioje pozicijoje
 mk:Нема информации за синхронизација на оваа позиција
+ne:यो स्थानमा समक्रमण जानकारी छैन
 nl:Geen synchronisatieinformatie beschikbaar
 no:Ingen synkroniserings info her
 pl:Brak informacji o synchronizacji w tej pozycji
@@ -9740,6 +9773,7 @@ ka:გვერდის მასშტაბირება
 kr:페이지 배율 조정하는 중
 lt:Puslapio mastelis
 mk:Размер на страница
+ne:पृष्ठ मापन
 nl:Pagina schalen
 no:Sideskalering
 pl:Skalowanie strony
@@ -10200,6 +10234,7 @@ ka:მოცემული სახელის მქონე პრინ�
 kr:지정된 이름의 프린터가 존재하지 않습니다.
 lt:Spausdintuvo tokiu vardu nėra
 mk:Не постои печатач со зададеното име
+ne:दिईएको नाम भएको मुद्रक अवस्थित छैन
 nl:Printer met de opgegeven naam bestaat niet
 no:Skriver med gjeldende navn eksisterer ikke
 pl:Drukarka o podanej nazwie nie istnieje
@@ -10247,6 +10282,7 @@ ka:მიმდინარეობს ამობეჭდვა. გსუ�
 kr:인쇄를 진행하는 중입니다. 중지하고 다시 시작할까요?
 lt:Spausdinimas dar nebaigtas. Ar norite jį nutraukti ir pradėti iš naujo?
 mk:Печатењето трае сè уште. Да го запрам и да почнам одново?
+ne:छपाई कार्य प्रगति हुदैछ | परित्याग गरि पुनः सुरु गर्ने?
 nl:Afdrukken is nog niet voltooid. Afbreken en opnieuw beginnen?
 no:Utskriften pågår fortsatt. Avbryte og starte på nytt?
 pl:Jeszcze trwa drukowanie. Przerwać i zacząć od nowa?
@@ -10448,6 +10484,7 @@ kr:열었던 파일들 기억(&O)
 kw:Kovhe restrennow ygerys
 lt:Įsiminti &atvertus failus
 mk:Запомни ги &отворените датотеки
+ne:&खोलिएका फाइलहरु सम्झनुहोस्
 nl:Onthoud ge&opende bestanden
 no:Husk &åpnede filer
 pl:Pamiętaj &otwierane pliki
@@ -10548,7 +10585,7 @@ ka:%s გვერდის წაშლა რჩეულებიდან
 kr:즐겨찾기에서 %s 페이지 제거
 lt:Pašalinti %s puslapį iš parankinių
 mk:Отстрани страница %s од омилени
-ne:मनपर्ने बाट पृष्ट %s लाई हटाउनुहोस्
+ne:मनपर्ने बाट पृष्ठ %s लाई हटाउनुहोस्
 nl:Verwijder pagina %s uit favorieten
 no:Fjern side %s fra favoritter
 pl:Usuń stronę %s z ulubionych
@@ -10625,6 +10662,7 @@ id:Ganti &warna dokumen dengan skema warna Windows
 it:Sostituisci &colori documento con schema colore di Windows
 kr:Windows 색 구성표처럼 문서 색 교체(&C)
 mk:Замени ги &боите во документот со палетата на Windows
+ne:कागजात रङ्गलाई विन्डोज रङ योजना अनुसार बदल्नुहोस्
 nl:Vervang de documentkleuren met Windows kleurenschema
 pl:Wymień kolory dokumentu na kolory systemowe Windows
 pt:Substituir &cores do documento pelas cores do Windows
@@ -10678,6 +10716,7 @@ mk:Ротирај на лево\tCtrl+Shift+-
 ml: ഇടത്തേക്കു ചരിക്കുക\tCtrl+Shift+-
 mm:ဘယ်သို့ လှဲ့\tCtrl+Shift+-
 my:Ubah ke kiri\tCtrl+Shift+-
+ne:&बायाँ घुमाउनुहोस्\tCtrl+Shift+-
 nl:Linksom draaien\tCtrl+Shift+-
 nn:Roter til venstre\tCtrl+Shift+-
 no:Roter mot klokken\tCtrl+Shift+Minus
@@ -10743,6 +10782,7 @@ mk:Ротирај на десно\tCtrl+Shift++
 ml:വലത്തേക്കു ചരിക്കുക\tCtrl+Shift++
 mm:ညာသို့ လှဲ့\tCtrl+Shift++
 my:Ubah ke kanan\tCtrl+Shift++
+ne:&दायाँ घुमाउनुहोस्\tCtrl+Shift++
 nl:Rechtsom draaien\tCtrl+Shift++
 nn:Roter til høgre\tCtrl+Shift++
 no:Roter med klokken\tCtrl+Shift+Pluss
@@ -11071,6 +11111,7 @@ kr:Ctrl+마우스 왼쪽 버튼으로 내용을 선택합니다.
 kw:Dewis dalgh gans Ctrl+boton-logosen kledh
 lt:Turinį žymėkite su Ctrl+kairiuoju pelės klavišu
 mk:Селектирај со Ctrl и левото копче на глувчето
+ne:Ctrl+बायाँ माउसबटनले सामाग्री चयन गर्नुहोस्
 nl:Selecteer inhoud met Ctrl+linker muisknop
 no:Velg innhold med Ctrl+Venstre museknapp
 pl:Zaznacz zawartość wciskając Ctrl i lewy przycisk myszy
@@ -11333,7 +11374,7 @@ kw:Diskwedhes folennow heb aswa
 lt:&Puslapius rodyti nenutrūkstamai
 mk:Прикажувај страници непрекинато
 my:Papar mukasurat secara berterusan
-ne:&पृष्टहरु निरन्तर देखाउनुहोस्
+ne:&पृष्ठहरु निरन्तर देखाउनुहोस्
 nl:Toon pagina's doorlopend
 no:Vis sider kontinuerlig
 pl:Wyświetlaj strony w układzie &ciągłym
@@ -11434,6 +11475,7 @@ ka:ხშირად წაკითხულების ჩვენება
 kr:최근에 읽은 파일 보이기
 lt:Rodyti dažniausiai skaitomus
 mk:Прикажи често читани
+ne:प्रायजसो पढिएको देखाउनुहोस्
 nl:'Vaak gelezen' weergeven
 no:Vis ofte leste
 pl:Pokaż często otwierane
@@ -12344,6 +12386,7 @@ mk:Посети веб-сајт
 ml:വെബ്സൈറ്റ് സന്ദര്‍ശിക്കുക
 mm:&ဝဘ်ဌာနေ သို့
 my:&Lawat lamanweb
+ne:&वेबसाइट भ्रमण गर्नुहोस्
 nl:Bezoek de &website
 nn:Vitj &heimeside
 no:Åpne &hjemmesiden

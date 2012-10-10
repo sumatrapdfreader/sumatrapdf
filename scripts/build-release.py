@@ -16,6 +16,7 @@ testing              = test_for_flag(args, "-test") or test_for_flag(args, "-tes
 build_test_installer = test_for_flag(args, "-test-installer") or test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
 build_rel_installer  = test_for_flag(args, "-testrelinst")
 build_prerelease     = test_for_flag(args, "-prerelease")
+skip_transl_update   = test_for_flag(args, "-noapptrans")
 svn_revision         = test_for_flag(args, "-svn-revision", True)
 target_platform      = test_for_flag(args, "-platform", True)
 
@@ -121,7 +122,7 @@ def main():
     ver = extract_sumatra_version(os.path.join("src", "Version.h"))
   log("Version: '%s'" % ver)
 
-  if g_new_translation_system:
+  if g_new_translation_system and not skip_transl_update:
     apptransul.uploadStringsIfChanged()
     changed = apptransdl.downloadAndUpdateTranslationsIfChanged()
     # Note: this is not a perfect check since re-running the script will
