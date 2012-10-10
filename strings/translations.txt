@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0472fa945d524a1e19ea1d671d097d89d03e9de2
+367609751348a5dc8ffa6f15f8320d9638d60f84
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -165,7 +165,7 @@ kr:선택한 모든 페이지(&A)
 lt:&Visi pažymėti puslapiai
 mk:&Сите означени страници
 my:&Semua mukasurat pilihan
-ne:चयन गरिएका &सबै पानाहरु
+ne:चयन गरिएका &सबै पृष्ठहरु
 nl:&Alle geselecteerde pagina's
 no:&Alle valgte sider
 pl:&Zaznaczone strony
@@ -560,7 +560,7 @@ kr:짝수 페이지만(&E)
 lt:Tik &lyginiai puslapiai
 mk:Само &парни страници
 my:&Mukasurat genap sahaja
-ne:&जोर पाना मात्र
+ne:&जोर पृष्ठ मात्र
 nl:Alleen &Even pagina's
 no:Bare &partallssider
 pl:Strony &parzyste
@@ -795,6 +795,7 @@ mk:Прва страница\tHome
 ml:ആദ്യ താള്‍\tHome
 mm:ပထမ စာမျက်နှာ\tHome
 my:&Halaman pertama\tHome
+ne:&पहिलो पृष्ठ\tHome
 nl:Eerste pagina\tHome
 nn:Fyrste side\tHome
 no:Første side\tHome
@@ -913,6 +914,7 @@ mk:П&ојди на
 ml:അവിടെ സന്ദര്‍ശിക്കുക
 mm:သို့ သွား
 my:&Pergi
+ne:&जानुहोस्
 nl:&Ga naar
 nn:&Gå til
 no:&Gå til
@@ -973,6 +975,7 @@ kw:&Mos dhe folen:
 lt:&Eiti į puslapį:
 mk:&Појди на страница:
 my:&Pergi ke halaman:
+ne:&पृष्टमा जानुहोस्
 nl:&Ga naar pagina:
 no:&Gå til side:
 pl:Idź &do strony:
@@ -1100,6 +1103,7 @@ mk:Последна страница\tEnd
 ml:അവസാന താള്‍\tEnd
 mm:နောက်ဆုံး စာမျက်နှာ\tEnd
 my:&Halaman terakhir
+ne:&अन्तिम पृष्ट\tEnd
 nl:&Laatste pagina\tEnd
 nn:Siste side\tEnd
 no:Siste side\tEnd
@@ -1159,6 +1163,7 @@ kw:&Brasheans:
 lt:&Mastelis
 mk:&Зголемување
 my:&Pembesaran:
+ne:&आवर्धन:
 nl:&Vergroting:
 no:&Forstørrelse:
 pl:&Powiększenie:
@@ -1218,6 +1223,7 @@ lt:Naudotojo &vadovas
 mk:Прирачник за употреба
 mm:&ကိုယ်တိုင်
 my:&Manual
+ne:&पुस्तिका
 nl:Handleiding
 no:&Bruksanvisning
 pa:ਮਦੱਦ ਕਤਾਬ(&M)
@@ -1275,6 +1281,7 @@ kr:대/소문자 구분(&M)
 kw:An &Keth kas
 lt:&Skirti didžiąsias ir mažąsias raides
 mk:&Разликувај мали и големи букви
+ne:&केस मिलाउनुहोस्
 nl:Hoofd-/kleine letters toepassen
 no:&Skill mellom store og små bokstaver
 pl:&Uwzględnij wielkość liter
@@ -1396,6 +1403,7 @@ kw:&Na
 lt:&Ne
 mk:&Не
 my:&Tidak
+ne:&बेठिक
 nl:&Nee
 no:&Nei
 pl:&Nie
@@ -1505,7 +1513,7 @@ kr:홀수 페이지만(&O)
 lt:&Tik nelyginiai puslapiai
 mk:Само &непарни страници
 my:&Mukasurat ganjil sahaja
-ne:&बिजोर पाना मात्र
+ne:&बिजोर पृष्ठ मात्र
 nl:Alleen &Oneven pagina's
 no:Bare &oddetallssider
 pl:Strony &nieparzyste
@@ -1735,6 +1743,7 @@ kw:&Ger-tremena:
 lt:&Slaptažodis:
 mk:&Лозинка:
 my:&Kata laluan
+ne:&पासवर्ड
 nl:&Wachtwoord:
 no:&Passord:
 pl:&Hasło:
@@ -1900,6 +1909,7 @@ ka:&ამობეჭდვა...
 kr:인쇄(&P)...
 lt:&Spausdinti...
 mk:&Печати...
+ne:&छाप्नुहोस् ...
 nl:Afdrukken...
 no:&Skriv ut...
 pl:&Drukuj...
@@ -1952,6 +1962,7 @@ kr:인쇄(&P)... (거부됨)
 lt:&Spausdinti... (neprieinama)
 mk:&Печати... (denied)
 my:&Cetak... (dinafikan)
+ne:&छपाई... (अस्वीकार भयो)
 nl:Afdrukken... (niet toegestaan)
 no:&Skriv ut... (ikke tillatt)
 pl:&Drukuj... (odmówiono)
@@ -2013,6 +2024,7 @@ mk:&Печати...\tCtrl+P
 ml:അച്ചടി...\tCtrl+P
 mm:&ပုံနှိပ်ပါ...\tCtrl+P
 my:&Cetak...\tCtrl+P
+ne:&छाप्नुहोस्...\tCtrl+P
 nl:Afdrukken...\tCtrl+P
 nn:Skriv &ut...\tCtrl+P
 no:&Skriv ut...\tCtrl+P
@@ -2177,6 +2189,7 @@ ka:დოკუმენტის &წაშლა
 kr:고정 문서 제거(&R)
 lt:Pa&šalinti dokumentą
 mk:Отстрани документ
+ne:कागजात &हटाउनुहोस्
 nl:Document ve&rwijderen
 no:&Fjern dokument
 pl:&Usuń dokument
@@ -2226,6 +2239,7 @@ ka:შენახვა &როგორც...
 kr:다른 이름으로 저장(&S)...
 lt:Į&rašyti kaip...
 mk:&Зачувај како...
+ne:&बचत गर्नुहोस्...
 nl:Op&slaan als...
 no:&Lagre som...
 pl:Zapisz jako...
@@ -2286,6 +2300,7 @@ mk:&Зачувај како...\tCtrl+S
 ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക...\tCtrl+S
 mm:&ကဲ့သို့ သိမ်းပါ.....\tCtrl+S
 my:&Simpan sebagai...\tCtrl+S
+ne:&बचत गर्नुहोस्...\tCtrl+S
 nl:&Opslaan als...\tCtrl+S
 nn:Lagre &som...\tCtrl+S
 no:Lagre &som...\tCtrl+S
@@ -2346,6 +2361,7 @@ kw:&Settyansow
 lt:&Nuostatos
 mk:&Поставувања
 my:&Tetapan
+ne:&सेटिङहरू
 nl:&Instellingen
 no:&Alternativer
 pl:&Ustawienia
@@ -2449,6 +2465,7 @@ ka:&თითო გვერდად\tCtrl+6
 kr:한 페이지씩(&S)\tCtrl+6
 lt:&Vienas puslapis\tCtrl+6
 mk:Единечна страница\tCtrl+6
+ne:&एकल पृष्ठ\tCtrl+6
 nl:&Enkele pagina\tCtrl+6
 no:&Enkeltside\tCtrl+6
 pl:&Pojedyncza strona\tCtrl+6
@@ -2507,6 +2524,7 @@ lt:Pralei&sti šią versiją
 mk:&Прескокни ја оваа верзија
 mm:ဒီအမျိုးအစား ကိုရှောင်မည်။
 my:&Langkau versi ini
+ne:यो संस्करणलाई फड्किनुहोस्
 nl:Deze versie overslaan
 nn:Hopp over denne versjonen
 no:&Ignorer denne versjonen
@@ -2624,6 +2642,7 @@ mk:&Поглед
 ml:കാഴ്ച്ച
 mm:&မြင်ကွင်း
 my:&Lihat
+ne:&हेर्नुहोस्
 nl:&Beeld
 nn:&Vis
 no:&Vis
@@ -2684,6 +2703,7 @@ kw:&Ya
 lt:&Taip
 mk:&Да
 my:&Ya
+ne:&ठिक
 nl:&Ja
 no:&Ja
 pl:&Tak
@@ -2745,6 +2765,7 @@ mk:&Зумирање
 ml:വലുതാക്കുക
 mm:ချဲ့ထွင်
 my:&Fokus
+ne:&ठुलो बनाउनुहोस्
 nl:&Zoom
 nn:&Zoom
 no:&Zoom
@@ -2855,6 +2876,7 @@ ka:(გვერდი %s)
 kr:(%s 페이지)
 lt:(%s psl.)
 mk:(страница %s)
+ne:(पृष्ट %s)
 nl:(pagina %s)
 no:(side %s)
 pl:(strona %s)
@@ -3020,7 +3042,7 @@ ka:%s გვერდის რჩეულებში დამატება
 kr:%s 페이지를 즐겨찾기에 추가
 lt:Sukurti žymą į %s puslapį
 mk:Додади страница %s во омилени
-ne:पाना %s लाई मनपर्नेमा थप्नुहोस्
+ne:पृष्ठ %s लाई मनपर्नेमा थप्नुहोस्
 nl:Voeg pagina %s toe aan favorieten
 no:Legg til side %s i favoritter
 pl:Dodaj stronę %s do ulubionych
@@ -3070,7 +3092,7 @@ ka:%s გვერდის დამატება რჩეულებში
 kr:%s 페이지의 즐겨찾기 이름을 입력하세요. (옵션) :
 lt:Sukurti žymą į %s puslapį, suteikiant jai šį pavadinimą (neprivalomas):
 mk:Додади страница %s во омилени со име по избор:
-ne:पाना %s लाई मनपर्नेमा (ऐच्छिक) नाम सहित थप्नुहोस्
+ne:पृष्ठ %s लाई मनपर्नेमा (ऐच्छिक) नाम सहित थप्नुहोस्
 nl:Voeg pagina %s toe aan favorieten met (optionele) naam:
 no:Legg til side %s i favoritter med (valgfritt) navn:
 pl:Dodaj stronę %s do ulubionych pod (opcjonalną) nazwą:
@@ -4159,6 +4181,7 @@ kw:Ny yllir pryntya an restren ma
 lt:Nepavyko išspausdinti failo
 mk:Не можам да ја печатам оваа датотека
 my:Tidak boleh cetak fail ini
+ne:यो फाइल छाप्न सकिंदैन
 nl:Dit bestand kan niet worden afgedrukt
 no:Kan ikke skrive ut filen
 pl:Nie można drukować tego pliku
@@ -4421,6 +4444,7 @@ el:Συμβατότητα
 es:Compatibilidad
 eu:Bateragarritasuna
 fa:سازگاری
+fi:Yhteensopivuus
 fr:Compatibilité
 hr:Kompatibilnost
 it:Compatibilità
@@ -5051,6 +5075,7 @@ kr:페이지를 렌더링할 수 없습니다.
 kw:Ny yllys rendra folen
 lt:Nepavyko atvaizduoti puslapio
 mk:Не можам да ја прикажам страницата
+ne:पृष्ट रेन्डर गर्न सकिएन
 nl:Kan deze pagina niet weergegeven
 no:Kunne ikke vise siden
 pl:Nie można wyświetlić strony
@@ -5208,6 +5233,7 @@ kr:사용자 지정 배율(&Z)...\tCtrl+Y
 kw:&Zoum arbennik...\tCtrl+Y
 lt:Pasirinkti &mastelį...\tCtrl+Y
 mk:&Зумирање по избор...\tCtrl+Y
+ne:अनुकुल &जुम ...\tCtrl+Y
 nl:&Aangepaste Zoom...\tCtrl+Y
 no:&Egendefinert zoom...\tCtrl+Y
 pl:&Własne powiększenie...\tCtrl+Y
@@ -5263,6 +5289,7 @@ kr:기본 구성(&L):
 kw:&Delinyans savonek:
 lt:Numatytasis iš&dėstymas:
 mk:&Основен поглед:
+ne:पूर्वनिर्धारित &सजावट:
 nl:Standaard opmaak:
 no:Standard sideoppsett:
 pl:&Układ domyślny:
@@ -5318,6 +5345,7 @@ kr:기본 배율(&Z):
 kw:&Zoum savonek:
 lt:Numatytasis &mastelis
 mk:Основно &зумирање:
+ne:पूर्वनिर्धारित &जुम:
 nl:Standaard &zoom:
 no:Standard&zoom:
 pl:Domyślne &powiększenie:
@@ -5374,6 +5402,7 @@ kw:Ny yll an pennredyer PDF bos chanjyes yn modh porthadow
 lt:Naudojant programą kaip portatyvią, numatytosios PDF žiūryklės keisti negalima
 mk:Основниот читач на PDF не може да работи во мобилен режим
 my:Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
+ne:चलायमान मोडमा पूर्वनिर्धारित PDF पाठक परिवर्तन गर्न मिल्दैन
 nl:Standaard PDF-lezer kan niet worden aangepast in portable modus
 no:Standard PDF-leser kan ikke endres i flyttbar modus
 pl:Domyślna przeglądarka PDF nie może być zmieniona w trybie przenośnym
@@ -5426,6 +5455,7 @@ ka:თქვენ არ გაქვთ საჭირო უფლებე�
 kr:거부된 사용 권한:
 lt:Nesuteikti leidimai:
 mk:Одбиени привилегии:
+ne:अस्वीकृत अनुमतिहरु:
 nl:Niet toegestaan:
 no:Manglende tillatelser:
 pl:Brak zezwoleń:
@@ -5707,6 +5737,7 @@ ka:EPUB დოკუმენტები
 kr:ePub 문서
 lt:EPUB dokumentai
 mk:EPUB-е-книги
+ne:EPUB ई-पुस्तकहरु
 nl:EPUB-bestanden
 no:EPUB-dokumenter
 pl:Dokumenty EPUB
@@ -7313,6 +7344,7 @@ id:Huruf
 it:Font:
 kr:글꼴:
 mk:Букви:
+ne:फन्टहरू:
 nl:Lettertypen:
 pl:Czcionki:
 pt:Tipo de letra:
@@ -7350,6 +7382,7 @@ id:Memformat buku... %d halaman
 it:Formattazione del libro ... %d pagine
 kr:%d 페이지 읽어들이는 중...
 mk:Ја форматирам книгата... %d страници
+ne:पुस्तक स्वरूपण ... %d पृष्टहरु
 nl:Boek samenstellen... %d paginas
 pl:Formatowanie książki... %d stron
 pt:A formatar livro... %d páginas
@@ -7619,6 +7652,7 @@ lt:Eiti į puslapį
 mk:Појди на страница
 mm:သွားရန် စာမျက်နှာ
 my:Pergi ke mukasurat
+ne:पृष्टमा जानुहोस्
 nl:Ga naar pagina
 nn:Gå til side
 no:Gå til side
@@ -7884,6 +7918,7 @@ id:Memuat berkas %s...
 it:Caricamento file %s...
 kr:%s 파일 불러오는 중...
 mk:Ја вчитувам датотеката %s...
+ne:%s फाइल लोड हुँदैछ ...
 nl:Bestand %s laden...
 pl:Wczytywanie pliku %s...
 pt:A carregar o ficheiro %s...
@@ -7937,6 +7972,7 @@ mk:MB
 ml:MB
 mm:MB
 my:MB
+ne:एमबी
 nl:MB
 nn:MB
 no:MB
@@ -8000,6 +8036,7 @@ kw:Gul SumatraPDF towlen savonek rag restrennow PDF?
 lt:Ar nustatyti „SumatraPDF“ kaip numatytąją PDF žiūryklę?
 mk:Дали да ја направам SumatraPDF основна апликација за PDF-датотеки?
 mm:SumatraPDF ကို PDF ဖိုင်များဖွင့်ရန် အဖြစ်ပြုလုပ်လိုပါသလား။
+ne:SumatraPDF लाई PDF फाइलको पूर्वनिर्धारित अनुप्रयोग बनाउने?
 nl:SumatraPDF als standaardlezer van PDF-bestanden instellen?
 nn:Gjere SumatraPDF til standardprogram for PDF-filer?
 no:Gjøre SumatraPDF til standard åpningsprogram for PDF-filer?
@@ -8064,6 +8101,7 @@ mk:Направи ја SumatraPDF основен читач на PDF
 ml:സുമാത്രാപിഡീഎഫ് നിങ്ങളു PDF ഫയല്‍ വായിക്കാനുള്ള മുഖ്യ പ്രോഗ്രാം ആക്കുക
 mm:စူမာတရာ PDF ကြည့်ရာကို အဓိကအဖြစ် အသုံးပြုရန်
 my:Jadikan SumatraPDF pembaca utama PDF
+ne:SumatraPDF लाई PDF फाइलको पूर्वनिर्धारित अनुप्रयोग बनाउनुहोस्
 nl:SumatraPDF als standaard PDF-lezer instellen
 nn:Bruk SumatraPDF som standard PDF-lesar
 no:Bruk SumatraPDF som standard PDF-leser
@@ -8128,6 +8166,7 @@ lt:Skirti didžiąsias ir mažąsias raides
 mk:Разликувај мали и големи букви
 mm:တူညီ သော
 my:Hampir sama
+ne:केस मिलाउनुहोस्
 nl:Hoofdlettergevoelig
 nn:Skil mellom store/små bokstavar
 no:Skill mellom store og små bokstaver
@@ -8184,6 +8223,7 @@ ka:Mobi დოკუმენტები
 kr:Mobi 문서
 lt:Mobi dokumentai
 mk:Mobi-документи
+ne:Mobi कागजातहरु
 nl:Mobi-documenten
 no:Mobi-dokumenter
 pl:Dokumenty Mobi
@@ -8234,6 +8274,7 @@ ka:შეცვლილია:
 kr:수정한 날짜:
 lt:Keistas:
 mk:Изменето на:
+ne:परिमार्जित:
 nl:Aangepast:
 no:Endret:
 pl:Zmodyfikowano:
@@ -8292,6 +8333,7 @@ kr:새 버전 %s (이)가 사용 가능합니다. 다운로드할까요?
 kw:Versyon nowyth %s yw parys. Iskarga versyon nowyth?
 lt:Yra nauja %s versija. Atsiųsti naują versiją?
 mk:Нова верзија %s е достапна. Сакате да ја преземам?
+ne:नया संस्करण %s उपलब्ध छ | डाउनलोड गर्ने?
 nl:Nieuwe versie %s is beschikbaar. Wilt u deze downloaden?
 nn:Ny versjon (ver. %s) tilgjengeleg. Laste ned?
 no:En ny versjon %s er tilgjenglig. Vil du laste den ned nå?
@@ -8357,6 +8399,7 @@ mk:Следна страница
 ml:അടുത്ത താള്‍
 mm:နောက် တမျက်နှာ
 my:Mukasurat seterusnya
+ne:पछिल्लो पृष्ठ
 nl:Volgende pagina
 nn:Neste side
 no:Neste side
@@ -8631,6 +8674,7 @@ kr:페이지 수:
 lt:Puslapių skaičius:
 mk:Број на страници:
 my:Jumlah mukasurat:
+ne:पृष्ठ संख्या:
 nl:Aantal pagina's:
 no:Antall sider:
 pl:Liczba stron:
@@ -9130,6 +9174,7 @@ ka:&თვისებები...
 kr:속성(&R)
 lt:&Savybės
 mk:&Својства
+ne:गुणहरु
 nl:Eigenschappen
 no:E&genskaper
 pl:Właściwości
@@ -9181,6 +9226,7 @@ ka:&თვისებები...\tCtrl+D
 kr:속성(&R)\tCtrl+D
 lt:&Savybės\tCtrl+D
 mk:С&војства...\tCtrl+D
+ne:&गुणहरु\tCtrl+D
 nl:E&igenschappen...\tCtrl+D
 no:E&genskaper...\tCtrl+D
 pl:&Właściwości\tCtrl+D
@@ -9237,6 +9283,7 @@ kw:Restren PDF
 lt:PDF dokumentas
 mk:PDF-документ
 my:Dokumen PDF
+ne:PDF कागजात
 nl:PDF-document
 no:PDF-dokument
 pl:Dokument PDF
@@ -9302,6 +9349,7 @@ ka:PDF-ის მწარმოებელი:
 kr:PDF 제작자:
 lt:PDF leidėjas:
 mk:PDF-генератор:
+ne:PDF निर्माता
 nl:PDF-maker:
 no:PDF-produsent:
 pl:Producent PDF:
@@ -9356,6 +9404,7 @@ kr:PDF 버전:
 lt:PDF versija:
 mk:Верзија на PDF:
 my:Versi PDF:
+ne:PDF संस्करण
 nl:PDF-versie:
 no:PDF-versjon:
 pl:Wersja PDF:
@@ -9412,6 +9461,7 @@ kw:Restrennow PDF
 lt:PDF dokumentai
 mk:PDF-документи
 my:Dokumen-dokumen PDF
+ne:PDF कागजात
 nl:PDF-documenten
 no:PDF-dokumenter (*.pdf)
 pl:Dokumenty PDF
@@ -9473,6 +9523,7 @@ mk:Страница...\tCtrl+G
 ml:താള്‍...\tCtrl+G
 mm:စာမျက်နှာ...\tCtrl+G
 my:Mukasurat...\tCtrl+G
+ne:&पृष्ठ ...\tCtrl+G
 nl:Pa&gina...\tCtrl+G
 nn:Side...\tCtrl+G
 no:Side...\tCtrl+G
@@ -9528,6 +9579,7 @@ ka:%s გვერდი
 kr:%s 페이지
 lt:%s puslapis
 mk:страница %s
+ne:पृष्ठ %s
 nl:Pagina %s
 no:Side %s
 pl:Strona %s
@@ -9579,6 +9631,7 @@ kr:페이지 크기:
 lt:Puslapio dydis:
 mk:Големина на страница:
 my:Saiz mukasurat
+ne:पृष्ठ साइज:
 nl:Paginagrootte:
 no:Sidestørrelse:
 pl:Rozmiar strony:
@@ -9634,6 +9687,7 @@ kr:%u 페이지가 존재하지 않습니다.
 kw:Nyns eus folen %u
 lt:Puslapio numerio %u nėra
 mk:Страница со број %u не постои
+ne:पृष्ट संख्या %u अवस्थित छैन
 nl:Paginanummer %u bestaat niet
 no:Sidetallet '%u' finnes ikke i dokumentet
 pl:Brak strony o numerze %u
@@ -9744,6 +9798,7 @@ lt:Puslapis:
 mk:Страница:
 mm:စာ မျက်နှာ
 my:Mukasurat:
+ne:पृष्ठ:
 nl:Pagina:
 nn:Side:
 no:Side:
@@ -9802,6 +9857,7 @@ kr:렌더링하는 중, 잠시만 기다리세요...
 kw:Gortos, mar pleg - ow rendra...
 lt:Prašome palaukti – atvaizduojama...
 mk:Ве молам почекајте - создавам приказ...
+ne:कृपया पर्खनुहोस - रेन्डरिङ हुदैछ ...
 nl:Een ogenblik - weergeven...
 no:Vennligst vent - arbeider...
 pl:Proszę czekać - renderowanie...
@@ -9853,6 +9909,7 @@ ka:Postscript დოკუმენტები
 kr:Postscript 문서
 lt:„PostScript“ dokumentai
 mk:Postscript-документи
+ne:पोस्ट स्क्रिप्ट कागजातहरु
 nl:Postscript documenten
 no:Postscript-dokumenter
 pl:Dokumenty postscript
@@ -9902,6 +9959,7 @@ ka:წარმოდგ&ენა\tCtrl+L
 kr:프레젠테이션(&E)\tCtrl+L
 lt:&Pateiktis\tCtrl+L
 mk:Презентација\tCtrl+L
+ne:&प्रस्तुतीकरण\tCtrl+L
 nl:Pr&esentatie\tCtrl+L
 no:Pr&esentasjon\tCtrl+L
 pl:&Prezentacja\tCtrl+L
@@ -9961,6 +10019,7 @@ mk:Претходна страница
 ml:മുന്‍പുള്ള താള്‍
 mm:ပြီးတဲ့ စာမျက်နှာ
 my:Mukasurat sebelumnya
+ne:अघिल्लो पृष्ठ
 nl:Vorige pagina
 nn:Førre side
 no:Forrige side
@@ -10016,6 +10075,7 @@ ka:ამობეჭდვა
 kr:인쇄
 lt:Spausdinti
 mk:Печати
+ne:छाप्नुहोस्
 nl:Afdrukken
 no:Skriv ut
 pl:Drukuj
@@ -10045,11 +10105,13 @@ el:Εκτύπωση ως &εικόνα (απαιτεί περισσότερη μ
 es:Imprimir como &image (se necesita más memoria)
 eu:Irarkitu I&rudi bezala (oroimen gehiago behar du)
 fa:چاپ به عنوان &عکس (حافظه‌ی بیشتری مصرف می‌شود)
+fi:Tulosta &kuvana (kuluttaa enemmän muistia)
 fr:Imprimer en tant qu'&image (demande plus de mémoire)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
 it:Stampa come &immagine (richiede più memoria))
 kr:이미지로 인쇄(&I) (더 많은 메모리 필요)
 mk:Печати како слика (бара повеќе меморија)
+ne:&छविको रुपमा छाप्नुहोस् (धेरै स्मृति चाहिन्छ)
 nl:Als afbeelding afdrukken (vereist meer geheugen)
 pt:Imprimir &como imagem (usa mais memória)
 ru:Печатать как &изображение (требуется больше памяти)
@@ -10088,6 +10150,7 @@ ka:ბეჭდვის დიაპაზონი
 kr:인쇄 범위
 lt:Spausdinimo intervalas
 mk:Опсег за печатење
+ne:छपाई दायरा
 nl:Bereik afdrukken
 no:Utskriftsområde
 pl:Zakres druku
@@ -10290,6 +10353,7 @@ mk:Проблем при печатење.
 ml:അച്ചടിയില് തകരാര്‍
 mm:ပုံနှိပ် ကရိယာ ပြသာနာ
 my:Masalah mencetak
+ne:छपाइ समस्या.
 nl:Probleem bij het afdrukken
 nn:Skrivarfeil
 no:Problem med utskrift.
@@ -10337,6 +10401,7 @@ id:&Ganti Nama...\tF2
 it:Ri&nomina...\tF2
 kr:이름 바꾸기(&N)...\tF2
 mk:Преименувај... \tF2
+ne:नाम &फेर्नुहोस्...\tF2
 nl:&Naam wijzigen...\tF2
 pl:Zmień &nazwę...\tF2
 pt:Mudar &nome...\tF2
@@ -10434,6 +10499,7 @@ ka:რჩეულებიდან წაშლა
 kr:즐겨찾기에서 제거
 lt:Pašalinti iš parankinių
 mk:Отстрани од омилени
+ne:मनपर्ने बाट हटाउनुहोस्
 nl:Verwijder uit favorieten
 no:Fjern fra favoritter
 pl:Usuń z ulubionych
@@ -10482,6 +10548,7 @@ ka:%s გვერდის წაშლა რჩეულებიდან
 kr:즐겨찾기에서 %s 페이지 제거
 lt:Pašalinti %s puslapį iš parankinių
 mk:Отстрани страница %s од омилени
+ne:मनपर्ने बाट पृष्ट %s लाई हटाउनुहोस्
 nl:Verwijder pagina %s uit favorieten
 no:Fjern side %s fra favoritter
 pl:Usuń stronę %s z ulubionych
@@ -10522,6 +10589,7 @@ id:Ganti Nama Menjadi
 it:Rinomina in
 kr:바꿀 이름
 mk:Преименувај во
+ne:नाम फेर्नुहोस्
 nl:Naam wijzigen in
 pl:Zmień nazwę na
 pt:Mudar nome para
@@ -10740,6 +10808,7 @@ mk:Зачувај како
 ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക
 mm:ကဲ့သို့ သိမ်းပါ..
 my:Simpan sebagai
+ne:बचत गर्नुहोस्
 nl:Opslaan als
 nn:Lagre som
 no:Lagre som
@@ -10794,6 +10863,7 @@ ja:ショートカットを作成(&H)...\tCtrl+Shift+S
 ka:&ჩანიშვნა…\tCtrl+Shift+S
 kr:바로가기 저장(&H)...\tCtrl+Shift+S
 mk:Зачувај &кратенка...\tCtrl+Shift+S
+ne:&सर्टकट बचत गर्नुहोस्...\tCtrl+Shift+S
 nl:Snelkoppeling opslaan...\tCtrl+Shift+S
 no:Lagre s&narvei...\tCtrl+Shift+S
 pl:Utwórz skrót do dokumentu\tCtrl+Shift+S
@@ -10897,6 +10967,7 @@ ka:ყ&ველას მონიშვნა
 kr:모두 선택(&A)
 lt:Pažymėti &viską
 mk:Избери сè
+ne:&सबै चयन गर्नुहोस्
 nl:&Alles selecteren
 no:Merk &alt
 pl:Zaznacz wszystko
@@ -10947,6 +11018,7 @@ ka:ყ&ველას მონიშვნა\tCtrl+A
 kr:모두 선택(&A)\tCtrl+A
 lt:Pažymėti &viską\tCtrl+A
 mk:Избери сè\tCtrl+A
+ne:&सबै चयन गर्नुहोस्\tCtrl+A
 nl:Selecteer &alles\tCtrl+A
 no:Merk &alle\tCtrl+A
 pl:Zaznacz &wszystko\tCtrl+A
@@ -11053,6 +11125,7 @@ kr:이메일로 보내기(&E)...
 kw:Danvon der &e-bost...
 lt:Siųsti el. &paštu...
 mk:Испрати по &е-пошта...
+ne:&ई-मेल द्वारा पठाउनुहोस्...
 nl:Verzend per &e-mail...
 no:Send med e-post...
 pl:Dołącz do wiadomości &e-mail...
@@ -11145,11 +11218,13 @@ el:Εμφάνιση &Σελιδοδεικτών
 es:Mostrar &Bookmarks
 eu:Erakutsi Laster&markak
 fa:ن&شانه‌ها را نشان بده
+fi:Näytä &Kirjanmerkit
 fr:Voir les &Marque-pages
 hr:Prikaži &oznake
 it:Visualizza segnali&bri
 kr:책갈피 보이기(&B)
 mk:Прикажи &обележувачи
+ne:&पुस्तकचिनोहरू देखाउनुहोस्
 nl:Bladwijzers tonen
 pl:Pokaż &Zakładki
 pt:&Mostrar marcadores
@@ -11198,6 +11273,7 @@ mk:Прикажи алатник
 ml:റ്റുള്‍ബാര്‍  കാണിക്കുക
 mm:တူးလ်ဘား ပြပါ
 my:Tunjukkan Bar Alat
+ne:&उपकरणपट्टी देखाउनुहोस्
 nl:Werkbalk tonen
 nn:Vis verktylinje
 no:Vis verktøylinje
@@ -11257,6 +11333,7 @@ kw:Diskwedhes folennow heb aswa
 lt:&Puslapius rodyti nenutrūkstamai
 mk:Прикажувај страници непрекинато
 my:Papar mukasurat secara berterusan
+ne:&पृष्टहरु निरन्तर देखाउनुहोस्
 nl:Toon pagina's doorlopend
 no:Vis sider kontinuerlig
 pl:Wyświetlaj strony w układzie &ciągłym
@@ -11308,6 +11385,7 @@ ka:რჩეულების ჩვენება
 kr:즐겨찾기 보이기
 lt:Rodyti parankinius
 mk:Прикажи омилени
+ne:मनपर्नेहरु देखाउनुहोस्
 nl:Toon Favorieten
 no:Vis Favoritter
 pl:Pokaż ulubione
@@ -11408,6 +11486,7 @@ kr:사용 가능한 경우 책갈피 옆구리 표시줄 보이기(&B)
 kw:Diskwedhes &amalvar an lyververkyow mars eus onan
 lt:Rodyti &žymų parankinę, kai yra žymų
 mk:Прикажи го алатникот со &обележувачи кога е достапен
+ne:उपलब्ध भएमा &पुस्तकचिनो छेउपट्‍टि देखाउनुहोस्
 nl:Toon de &bladwijzerwerkbalk indien beschikbaar
 no:Vis &bokmerker-fanen når tilgjengelig
 pl:Pokaż panel za&kładek, gdy są dostępne
@@ -11469,6 +11548,7 @@ mk:Една страница
 ml:ഒറ്റ താള്‍
 mm: တ မျက်နှာ
 my:Satu Mukasurat
+ne:एकल पृष्ठ
 nl:Enkele pagina
 nn:Enkel side
 no:Enkeltside
@@ -11576,6 +11656,7 @@ kr:원본 파일 %s (은)는 동기화 지점이 없습니다.
 kw:Nyns eus poynt kettermynegi vyth y'n restren %s
 lt:Pradinis failas %s  neturi sinchronizacijos taško
 mk:Изворната датотека %s нема синхронизациска точка
+ne:स्रोत फाइल %s मा समक्रमण विन्दु छैन
 nl:Bestand %s heeft geen synchronisatiepunt
 no:Kildefilen %s har ingen synkroniseringspunkt
 pl:Plik źródłowy %s nie posiada punktów synchronizacji
@@ -11629,6 +11710,7 @@ kr:주제:
 lt:Tema:
 mk:Предмет:
 my:Subjek
+ne:बिषय
 nl:Onderwerp:
 no:Emne:
 pl:Temat:
@@ -11685,6 +11767,7 @@ kw:Etholyow SumatraPDF
 lt:„SumatraPDF“ nuostatos
 mk:Поставувања на SumatraPDF
 my:Tetapan-tetapan SumatraPDF
+ne:SumatraPDF विकल्पहरु
 nl:SumatraPDF Opties
 no:Innstillinger
 pl:Opcje SumatraPDF
@@ -11737,6 +11820,7 @@ ka:SumatraPDF-ის განახლება
 kr:SumatraPDF 업데이트
 lt:„SumatraPDF“ naujinimas
 mk:Надградување на SumatraPDF
+ne:SumatraPDF अद्यावधिक
 nl:SumatraPDF Update
 no:SumatraPDF Oppdatering
 pl:Aktualizacja SumatraPDF
@@ -11787,6 +11871,7 @@ ka:SumatraPDF-ის მუშაობა ავარიულად დას
 kr:SumatraPDF 충돌남
 lt:„SumatraPDF“ strigo
 mk:SumatraPDF се сруши
+ne:SumatraPDF बिग्रियो
 nl:SumatraPDF is vastgelopen
 no:SumatraPDF krasjet
 pl:SumatraPDF uległ awarii
@@ -11841,6 +11926,7 @@ kw:SumatraPDF yw dha bennredyer PDF
 lt:„SumatraPDF“ yra numatytoji PDF žiūryklė
 mk:SumatraPDF е Вашиот основен читач на PDF
 my:SumatraPDF ialah pembaca PDF utama anda
+ne:SumatraPDF तपाईको पूर्वनिर्धारित PDF पाठक हो
 nl:SumatraPDF is de standaard PDF-lezer
 no:SumatraPDF er din standard PDF-leser
 pl:SumatraPDF jest domyślną przeglądarką PDF
@@ -11896,6 +11982,7 @@ kr:SumatraPDF는 이제 기본 PDF 리더여야 합니다.
 kw:Alemma rag y fydh SumatraPDF dha bennredyer PDF
 lt:Dabar „SumatraPDF“ bus numatytoji PDF žiūryklė
 mk:Сега SumatraPDF би требало да е Вашиот основен читач на PDF
+ne:SumatraPDF अब तपाईको पूर्वनिर्धारित PDF पाठक हुनुपर्छ
 nl:SumatraPDF zou nu de standaard PDF-lezer moeten zijn
 no:SumatraPDF burde nå være din standard PDF-leser
 pl:SumatraPDF powinien być teraz domyślną przeglądarką PDF
@@ -11951,6 +12038,7 @@ kr:동기화 파일을 열 수 없습니다.
 kw:Ny yllir ygeri an restren gettermynegi
 lt:Sinchronizacijos failas negali būti atvertas
 mk:Синхронизациската датотека не може да се отвори
+ne:समक्रमण फाइल खोल्न सकिदैन्
 nl:Het synchronisatiebestand kan niet worden geopend
 no:Synkroniserende fil kan ikke åpnes
 pl:Nie można otworzyć pliku synchronizacji
@@ -11980,6 +12068,7 @@ es:PDF Etiquetado
 it:PDF marcati
 kr:태그있는 PDF
 mk:Означен PDF
+ne:ट्याग गरिएको PDF
 ru:Размеченный PDF
 sv:Taggad PDF
 vn:PDF được gắn thẻ
@@ -12017,6 +12106,7 @@ kr:텍스트 문서
 kw:Restrennow tekst
 lt:Tekstiniai dokumentai
 mk:Текстуални документи
+ne:पाठ कागजातहरु
 nl:Tekstdocumenten
 no:Tekstdokumenter
 pl:Pliki tekstowe
@@ -12071,6 +12161,7 @@ kr:제목:
 lt:Pavadinimas:
 mk:Наслов:
 my:Tajuk:
+ne:शीर्षक:
 nl:Titel:
 no:Tittel:
 pl:Tytuł:
@@ -12126,6 +12217,7 @@ kr:알 수 없는 원본 파일 (%s)
 kw:Restren-bennfenten anaswonnys (%s)
 lt:Nežinomas pradinis failas (%s)
 mk:Непозната изворна датотека (%s)
+ne:अज्ञात स्रोत फाइल (%s)
 nl:Onbekend bronbestand (%s)
 no:Ukjent kildefil (%s)
 pl:Nieznany plik źródłowy (%s)
@@ -12186,6 +12278,7 @@ mk:Поглед
 ml:കാഴ്ച്ച
 mm:မြင်ကွင်း
 my:Lihat
+ne:हेर्नुहोस्
 nl:Beeld
 nn:Vis
 no:Vis
@@ -12311,6 +12404,7 @@ kw:Gwarnyans
 lt:Įspėjimas
 mk:Предупредување
 my:Amaran
+ne:चेतावनी
 nl:Waarschuwing
 no:Advarsel
 pl:Uwaga
@@ -12364,6 +12458,7 @@ ka:XPS დოკუმენტები
 kr:XPS 문서
 lt:XPS dokumentai
 mk:XPS-документи
+ne:XPS कागजातहरु
 nl:XPS-documenten
 no:XPS-dokumenter
 pl:Pliki XPS
@@ -12420,6 +12515,7 @@ kw:Yma'n versyon nowyttha genes.
 lt:Jūs naudojatės naujausia programos laida.
 mk:Ја имате најновата верзија.
 mm:သင့်ဟာသည် နောက်ဆုံးထုပ်ဖြစ်၏။
+ne:तपाई संग अद्यावधिक संस्करण छ |
 nl:U gebruikt de meest recente versie.
 nn:Du har den siste versjonen.
 no:Du har den siste versjonen.
@@ -12483,6 +12579,7 @@ kw:Yma versyon %s genes
 lt:Jūsų naudojama laida: %s
 mk:Ја имате верзијата %s
 mm:သင့်အမျိုးအစားသည် %s
+ne:तपाई संग संस्करण %s छ
 nl:U heeft versie %s
 nn:Du har versjon %s
 no:Du har versjon %s
@@ -12540,6 +12637,7 @@ kr:배율
 kw:Zoumya
 lt:Mastelis
 mk:Зумирање
+ne:ठुलो बनाउनुहोस्
 nl:Zoom
 no:Zoom
 pl:Powiększenie
@@ -12601,6 +12699,7 @@ mk:Зголеми
 ml:വലുതാക്കുക
 mm:ကျဉ်းပါ
 my:Fokus ke dalam
+ne:ठुलो बनाउनुहोस्
 nl:Inzoomen
 nn:Zoom inn
 no:Zoom inn
@@ -12666,6 +12765,7 @@ mk:Намали
 ml:ചെറുതാക്കുക
 mm:ချဲ့ပါ
 my:Fokus ke luar
+ne:सानो बनाउनुहोस्
 nl:Uitzoomen
 nn:Zoom ut
 no:Zoom ut
@@ -12724,6 +12824,7 @@ kr:배율 계수
 kw:Faktor-zoum
 lt:Mastelis
 mk:Степен на зумирање
+ne:जुम कारकतत्व
 nl:Zoomniveau
 no:Zoom til
 pl:Współczynnik powiększenia
@@ -12778,6 +12879,7 @@ kr:[변경 감지됨. 새로 고치는 중...] %s
 kw:[Nowythyansow kevys; owth arnowytha] %s
 lt:[Aptikta pakitimų; atnaujinama] %s
 mk:[Забележав промени; освежувам...] %s
+ne:[परिवर्तन पत्ता लाग्यो; ताजा गरिँदैछ] %s
 nl:[Bestand gewijzigd; verversen] %s
 no:[Endringer oppdaget; oppdaterer] %s
 pl:[wykryto zmiany; odświeżanie] %s
@@ -12831,6 +12933,7 @@ kr:문자열 복사하는 중
 lt:kopijuojamas tekstas
 mk:копирам текст
 my:menyalin teks
+ne:पाठ प्रतिलिपि बनाईदैछ
 nl:tekst kopiëren
 no:kopierer tekst
 pl:kopiowanie tekstu
@@ -12884,6 +12987,7 @@ kr:문서 인쇄하는 중
 lt:spausdinamas dokumentas
 mk:печатам документ
 my:mencetak dokumen
+ne:कागजात छपाइ
 nl:document afdrukken
 no:skriver ut dokument
 pl:drukowanie dokumentu
