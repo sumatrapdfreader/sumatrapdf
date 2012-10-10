@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b4c775a70b5976bfe38940f65f881a578fab97ed
+1cb3f4ba9acda145bc258f664a0ae4252607707e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4468,6 +4468,7 @@ pt:Compatibilidade
 ru:Совместимость
 sq:Pajtueshmëria
 sv:Kompatibilitet
+tr:Uyumluluk
 vn:Tính tương thích
 :Continuous
 af:Aanmekaar
@@ -6266,6 +6267,7 @@ sk:Súbor se nepodarilo premenovať!
 sl:Preimenovanje datoteke ni uspelo!
 sq:Dështoi riemërtimi i skedës!
 sv:Kunde inte döpa om filen!
+tr:Dosyanın ismi değiştirilemedi!
 tw:重新命名該檔案失敗!
 uz:Fayl nomini o'zgartirish muvaffaqiyatsiz tugadi
 vn:Không thể đổi tên tập tin!
@@ -6349,6 +6351,7 @@ nl:Snelle browserweergave
 pl:Szybkie wyświetlanie w Internecie
 ru:Быстрый просмотр в Интернете
 sv:Snabb Webb-Visning
+tr:Hızlı Web Görünümü
 vn:Xem dạng Web nhanh
 :Favorites
 am:Ընտրյալներ
@@ -9348,6 +9351,7 @@ kr:PDF 최적화:
 mk:Оптимизации за PDF:
 ru:Оптимизация PDF:
 sv:PDF Optimeringar:
+tr:PDF Optimizasyonları:
 vn:Các tối ưu PDF
 :PDF Producer:
 am:PDF արտադրողը.
@@ -10151,6 +10155,7 @@ pt:Imprimir &como imagem (usa mais memória)
 ru:Печатать как &изображение (требуется больше памяти)
 sq:Printoj si &figurë (kërkon shumë RAM)
 sv:Skr&iv ut som bild (mer minnekrävande)
+tr:Resim olarak bas (daha çok hafıza gerektirir)
 vn:In thành hình ảnh (cần nhiều bộ nhớ hơn)
 :Print range
 am:Տպելու կարգը
@@ -10446,6 +10451,7 @@ sk:Preme&novať...\tF2
 sl:Preime&nuj …\tF2
 sq:Rie&mërtoj...\tF2
 sv:Döp om
+tr:İsim Değiştir
 tw:重新命名(&N)...\tF2
 uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
@@ -10635,6 +10641,7 @@ sk:Premenovať na
 sl:Preimenuj v
 sq:Riemërtoj si
 sv:Döp om till
+tr:Belirtilen İsme Değiştir
 tw:重新命名為
 uz:Yangi nom
 vn:Đổi tên thành
@@ -11272,6 +11279,7 @@ pt:&Mostrar marcadores
 ru:Показать &закладки
 sq:Tregoj &shiritat
 sv:Visa &Bokmärken
+tr:Göster &Sık Kullanılanlar
 vn:Hiện chỉ dấu sách
 :Show &Toolbar
 af:Vertoon Toolbar
@@ -12113,6 +12121,7 @@ mk:Означен PDF
 ne:ट्याग गरिएको PDF
 ru:Размеченный PDF
 sv:Taggad PDF
+tr:İşaretlenmiş PDF
 vn:PDF được gắn thẻ
 :Text documents
 am:Տեքստային ֆայլեր
