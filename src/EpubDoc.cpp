@@ -243,7 +243,7 @@ bool EpubDoc::Load()
         *(TCHAR *)(str::FindCharLast(contentPath, '/') + 1) = '\0';
     else
         *contentPath = '\0';
-    StrVec idPathMap;
+    StrList idPathMap;
 
     for (node = node->down; node; node = node->next) {
         ScopedMem<TCHAR> mediatype(node->GetAttribute("media-type"));
@@ -296,15 +296,12 @@ bool EpubDoc::Load()
         ScopedMem<TCHAR> idref(node->GetAttribute("idref"));
         if (!idref)
             continue;
-        const TCHAR *htmlPath = NULL;
-        for (size_t i = 0; i < idPathMap.Count() && !htmlPath; i += 2) {
-            if (str::Eq(idref, idPathMap.At(i)))
-                htmlPath = idPathMap.At(i+1);
-        }
-        if (!htmlPath)
+        int idx = -1;
+        while ((idx = idPathMap.Find(idref, idx + 1)) != -1 && (idx % 2) == 1);
+        if (-1 == idx)
             continue;
 
-        ScopedMem<TCHAR> fullPath(str::Join(contentPath, htmlPath));
+        ScopedMem<TCHAR> fullPath(str::Join(contentPath, idPathMap.At(idx + 1)));
         ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
         UrlDecode(fullPath);
         ScopedMem<char> html(zip.GetFileData(fullPath));

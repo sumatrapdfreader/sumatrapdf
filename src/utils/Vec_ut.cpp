@@ -56,6 +56,21 @@ static void StrVecTest()
     }
 }
 
+static void StrListTest()
+{
+    StrList l;
+    assert(l.Count() == 0);
+    l.Append(str::Dup(_T("one")));
+    l.Append(str::Dup(_T("two")));
+    l.Append(str::Dup(_T("One")));
+    assert(l.Count() == 3);
+    assert(str::Eq(l.At(0), _T("one")));
+    assert(str::EqI(l.At(2), _T("one")));
+    assert(l.Find(_T("One")) == 2);
+    assert(l.FindI(_T("One")) == 0);
+    assert(l.Find(_T("Two")) == -1);
+}
+
 static size_t VecTestAppendFmt()
 {
     str::Str<char> v(256);

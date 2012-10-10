@@ -422,3 +422,73 @@ private:
     }
 };
 
+// StrList is a subset of StrVec that's optimized for appending and searching
+// StrList owns the strings it contains and frees them at destruction
+class StrList {
+    struct Item {
+        TCHAR *string;
+        uint32_t hash;
+    };
+
+    Vec<Item> items;
+    Allocator *allocator;
+
+    // variation of CRC-32 which deals with strings that are
+    // mostly ASCII and should be treated case independently
+    static uint32_t GetQuickHashI(const TCHAR *str) {
+        uint32_t crc = 0;
+        for (; *str; str++) {
+            uint32_t bits = (crc ^ ((_totlower((wint_t)*str) & 0xFF) << 24)) & 0xFF000000L;
+            for (int i = 0; i < 8; i++) {
+                if ((bits & 0x80000000L))
+                    bits = (bits << 1) ^ 0x04C11DB7L;
+                else
+                    bits <<= 1;
+            }
+            crc = (crc << 8) ^ bits;
+        }
+        return crc;
+    }
+
+public:
+    StrList(size_t capHint=0, Allocator *allocator=NULL) :
+        items(capHint, allocator), allocator(allocator) { }
+
+    ~StrList() {
+        for (Item *item = items.IterStart(); item; item = items.IterNext()) {
+            Allocator::Free(allocator, item->string);
+        }
+    }
+
+    const TCHAR *At(size_t idx) const {
+        return items.At(idx).string;
+    }
+
+    size_t Count() const {
+        return items.Count();
+    }
+
+    // str must have been allocated by allocator and is owned by StrList
+    void Append(TCHAR *str) {
+        Item item = { str, GetQuickHashI(str) };
+        items.Append(item);
+    }
+
+    int Find(const TCHAR *str, size_t startAt=0) const {
+        uint32_t hash = GetQuickHashI(str);
+        for (size_t i = startAt; i < Count(); i++) {
+            if (items.At(i).hash == hash && str::Eq(items.At(i).string, str))
+                return (int)i;
+        }
+        return -1;
+    }
+
+    int FindI(const TCHAR *str, size_t startAt=0) const {
+        uint32_t hash = GetQuickHashI(str);
+        for (size_t i = startAt; i < Count(); i++) {
+            if (items.At(i).hash == hash && str::EqI(items.At(i).string, str))
+                return (int)i;
+        }
+        return -1;
+    }
+};

@@ -188,7 +188,7 @@ protected:
     ChmDoc *doc;
     ChmTocItem *tocRoot;
 
-    StrVec pages;
+    StrList pages;
     int currentPageNo;
     HtmlWindow *htmlWindow;
     ChmNavigationCallback *navCb;
@@ -362,7 +362,7 @@ void ChmEngineImpl::ZoomTo(float zoomLevel)
 
 class ChmTocBuilder : public EbookTocVisitor {
     ChmDoc *doc;
-    StrVec *pages;
+    StrList *pages;
     ChmTocItem **root;
     int idCounter;
     Vec<DocTocItem *> lastItems;
@@ -384,7 +384,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     }
 
 public:
-    ChmTocBuilder(ChmDoc *doc, StrVec *pages, ChmTocItem **root) :
+    ChmTocBuilder(ChmDoc *doc, StrList *pages, ChmTocItem **root) :
         doc(doc), pages(pages), root(root), idCounter(0) { }
 
     virtual void visit(const TCHAR *name, const TCHAR *url, int level) {

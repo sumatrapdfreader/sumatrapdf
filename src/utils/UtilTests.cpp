@@ -221,6 +221,7 @@ void BaseUtils_UnitTests()
     FileUtilTest();
     VecTest();
     StrVecTest();
+    StrListTest();
     WinUtilTest();
     LogTest();
     BencTest();
