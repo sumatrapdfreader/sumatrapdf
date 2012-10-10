@@ -13,11 +13,12 @@ on Macos an older version installed as:
 Whatever directory it unpacks to, ensure that both the 'tools' and
 'platform-tools' directories inside it have been added to your PATH.
 
-2) Download the android ndk, and unpack it. These instructions have been
-written with r6b (the latest version at the time of writing) of the NDK
-in mind; other versions may give problems. On windows I unpacked it as:
+2) Download the android ndk, and unpack it. These instructions were written
+with NDK r6b (the latest version at the time of writing) in mind, but the
+build has now been tweaked to work with r8b. Other versions may give problems.
+On windows I unpacked it as:
 
-   C:\android-ndk-r6b
+   C:\android-ndk-r8b
 
 on Macos an older version unpacked as:
 

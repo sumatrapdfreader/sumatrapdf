@@ -4,10 +4,10 @@ include $(CLEAR_VARS)
 
 MY_ROOT := ../..
 
-OPENJPEG := openjpeg-1.5.0-patched
-JPEG := jpeg-9
-ZLIB := zlib-1.2.7
-FREETYPE := freetype-2.4.10
+OPENJPEG := openjpeg
+JPEG := jpeg
+ZLIB := zlib
+FREETYPE := freetype
 
 LOCAL_CFLAGS += -DARCH_ARM -DARCH_THUMB -DARCH_ARM_CAN_LOAD_UNALIGNED
 
@@ -66,6 +66,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/res_store.c \
 	$(MY_ROOT)/fitz/res_text.c \
 	$(MY_ROOT)/fitz/stm_buffer.c \
+	$(MY_ROOT)/fitz/stm_comp_buf.c \
 	$(MY_ROOT)/fitz/stm_open.c \
 	$(MY_ROOT)/fitz/stm_read.c \
 	$(MY_ROOT)/draw/draw_affine.c \

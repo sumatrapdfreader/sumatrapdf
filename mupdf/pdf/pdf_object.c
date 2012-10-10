@@ -103,7 +103,7 @@ pdf_new_real(fz_context *ctx, float f)
 }
 
 pdf_obj *
-pdf_new_string(fz_context *ctx, char *str, int len)
+pdf_new_string(fz_context *ctx, const char *str, int len)
 {
 	pdf_obj *obj;
 	obj = Memento_label(fz_malloc(ctx, offsetof(pdf_obj, u.s.buf) + len + 1), "pdf_obj(string)");
@@ -117,7 +117,7 @@ pdf_new_string(fz_context *ctx, char *str, int len)
 }
 
 pdf_obj *
-pdf_new_name(fz_context *ctx, char *str)
+pdf_new_name(fz_context *ctx, const char *str)
 {
 	pdf_obj *obj;
 	obj = Memento_label(fz_malloc(ctx, offsetof(pdf_obj, u.n) + strlen(str) + 1), "pdf_obj(name)");
@@ -774,7 +774,7 @@ pdf_dict_get_val(pdf_obj *obj, int i)
 }
 
 static int
-pdf_dict_finds(pdf_obj *obj, char *key, int *location)
+pdf_dict_finds(pdf_obj *obj, const char *key, int *location)
 {
 	if (obj->u.d.sorted && obj->u.d.len > 0)
 	{
@@ -819,7 +819,7 @@ pdf_dict_finds(pdf_obj *obj, char *key, int *location)
 }
 
 pdf_obj *
-pdf_dict_gets(pdf_obj *obj, char *key)
+pdf_dict_gets(pdf_obj *obj, const char *key)
 {
 	int i;
 
@@ -835,7 +835,7 @@ pdf_dict_gets(pdf_obj *obj, char *key)
 }
 
 pdf_obj *
-pdf_dict_getp(pdf_obj *obj, char *keys)
+pdf_dict_getp(pdf_obj *obj, const char *keys)
 {
 	char buf[256];
 	char *k, *e;
@@ -873,7 +873,7 @@ pdf_dict_get(pdf_obj *obj, pdf_obj *key)
 }
 
 pdf_obj *
-pdf_dict_getsa(pdf_obj *obj, char *key, char *abbrev)
+pdf_dict_getsa(pdf_obj *obj, const char *key, const char *abbrev)
 {
 	pdf_obj *v;
 	v = pdf_dict_gets(obj, key);
@@ -943,7 +943,7 @@ pdf_dict_put(pdf_obj *obj, pdf_obj *key, pdf_obj *val)
 }
 
 void
-pdf_dict_puts(pdf_obj *obj, char *key, pdf_obj *val)
+pdf_dict_puts(pdf_obj *obj, const char *key, pdf_obj *val)
 {
 	fz_context *ctx = obj->ctx;
 	pdf_obj *keyobj = pdf_new_name(ctx, key);
@@ -963,7 +963,7 @@ pdf_dict_puts(pdf_obj *obj, char *key, pdf_obj *val)
 }
 
 void
-pdf_dict_puts_drop(pdf_obj *obj, char *key, pdf_obj *val)
+pdf_dict_puts_drop(pdf_obj *obj, const char *key, pdf_obj *val)
 {
 	fz_context *ctx = obj->ctx;
 	pdf_obj *keyobj = NULL;
@@ -987,7 +987,7 @@ pdf_dict_puts_drop(pdf_obj *obj, char *key, pdf_obj *val)
 }
 
 void
-pdf_dict_putp(pdf_obj *obj, char *keys, pdf_obj *val)
+pdf_dict_putp(pdf_obj *obj, const char *keys, pdf_obj *val)
 {
 	fz_context *ctx = obj->ctx;
 	char buf[256];
@@ -1044,7 +1044,7 @@ pdf_dict_putp(pdf_obj *obj, char *keys, pdf_obj *val)
 }
 
 void
-pdf_dict_dels(pdf_obj *obj, char *key)
+pdf_dict_dels(pdf_obj *obj, const char *key)
 {
 	RESOLVE(obj);
 

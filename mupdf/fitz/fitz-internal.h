@@ -222,7 +222,7 @@ static inline float my_atan2f(float o, float a)
 
 #define sinf(x) my_sinf(x)
 #define cosf(x) my_sinf(((float)(M_PI/2.0f)) + (x))
-#define atin2f(x,y) my_atan2f((x),(y))
+#define atan2f(x,y) my_atan2f((x),(y))
 #endif
 
 /* Range checking atof */
@@ -344,7 +344,7 @@ typedef struct fz_sha512_s fz_sha384;
 
 void fz_sha384_init(fz_sha384 *state);
 void fz_sha384_update(fz_sha384 *state, const unsigned char *input, unsigned int inlen);
-void fz_sha384_final(fz_sha384 *state, unsigned char digest[48]);
+void fz_sha384_final(fz_sha384 *state, unsigned char digest[64]);
 
 /* arc4 crypto */
 

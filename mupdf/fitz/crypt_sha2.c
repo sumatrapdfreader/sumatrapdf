@@ -387,7 +387,7 @@ void fz_sha384_update(fz_sha384 *context, const unsigned char *input, unsigned i
 	fz_sha512_update(context, input, inlen);
 }
 
-void fz_sha384_final(fz_sha384 *context, unsigned char digest[48])
+void fz_sha384_final(fz_sha384 *context, unsigned char digest[64])
 {
 	fz_sha512_final(context, digest);
 }

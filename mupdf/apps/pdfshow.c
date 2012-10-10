@@ -28,6 +28,20 @@ static void showtrailer(void)
 	printf("\n");
 }
 
+static void showencrypt(void)
+{
+	pdf_obj *encrypt;
+
+	if (!doc)
+		fz_throw(ctx, "no file specified");
+	encrypt = pdf_dict_gets(doc->trailer, "Encrypt");
+	if (!encrypt)
+		fz_throw(ctx, "document not encrypted");
+	printf("encryption dictionary\n");
+	pdf_fprint_obj(stdout, pdf_resolve_indirect(encrypt), 0);
+	printf("\n");
+}
+
 static void showxref(void)
 {
 	if (!doc)
@@ -217,6 +231,7 @@ int pdfshow_main(int argc, char **argv)
 			switch (argv[fz_optind][0])
 			{
 			case 't': showtrailer(); break;
+			case 'e': showencrypt(); break;
 			case 'x': showxref(); break;
 			case 'p': showpagetree(); break;
 			case 'g': showgrep(filename); break;

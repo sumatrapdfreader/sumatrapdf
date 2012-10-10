@@ -4,10 +4,10 @@ include $(CLEAR_VARS)
 
 MY_ROOT := ../..
 
-OPENJPEG := openjpeg-1.5.0-patched
-JPEG := jpeg-9
-ZLIB := zlib-1.2.7
-FREETYPE := freetype-2.4.10
+OPENJPEG := openjpeg
+JPEG := jpeg
+ZLIB := zlib
+FREETYPE := freetype
 
 LOCAL_C_INCLUDES := \
 	../thirdparty/jbig2dec \

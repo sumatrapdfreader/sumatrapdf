@@ -81,6 +81,9 @@ Toggle between color and grayscale rendering.
 .TP
 .B i
 Toggle between normal and inverted color rendering.
+.P
+Sending a \fBSIGHUP\fR signal to the mupdf process will also cause the viewed
+file to be reloaded automatically, for use in e.g. build scripts.
 .SH SEE ALSO
 .BR mupdfclean (1),
 .BR mupdfdraw (1),
