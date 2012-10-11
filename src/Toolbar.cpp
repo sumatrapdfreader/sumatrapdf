@@ -257,7 +257,7 @@ static LRESULT CALLBACK WndProcFindBox(HWND hwnd, UINT message, WPARAM wParam, L
             return 1;
 
         case VK_RETURN:
-            FindTextOnThread(win);
+            FindTextOnThread(win, IsShiftPressed() ? FIND_BACKWARD : FIND_FORWARD);
             return 1;
 
         case VK_TAB:

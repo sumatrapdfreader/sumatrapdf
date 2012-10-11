@@ -3507,6 +3507,10 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
             SendMessage(win->hwndCanvas, WM_VSCROLL, IsShiftPressed() ? SB_HPAGEDOWN : SB_LINEDOWN, 0);
         else
             win->dm->GoToNextPage(0);
+    } else if (VK_HOME == key && IsCtrlPressed()) {
+        win->dm->GoToFirstPage();
+    } else if (VK_END == key && IsCtrlPressed()) {
+        win->dm->GoToLastPage();
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
