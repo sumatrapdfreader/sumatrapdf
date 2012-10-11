@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1cb3f4ba9acda145bc258f664a0ae4252607707e
+75d35153d41a9c41426aa3520c6460b566930e1e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6343,6 +6343,7 @@ ca-xv:Visualització ràpida de web
 ca:Visualització ràpida de web
 de:Schnelle Webanzeige
 es:Visualización Rápida en Web
+fr:Affichage Web rapide
 it:Vista web veloce
 kr:빠른 웹 보기
 mk:Брз веб-преглед
@@ -9346,6 +9347,7 @@ ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
 de:PDF Optimierungen:
 es:Optimizaciones de PDF:
+fr:Optimisations PDF
 it:Ottimizzazioni PDF:
 kr:PDF 최적화:
 mk:Оптимизации за PDF:
@@ -12115,6 +12117,7 @@ ca-xv:PDF etiquetat
 ca:PDF etiquetat
 de:PDF mit Tags
 es:PDF Etiquetado
+fr:PDF balisé
 it:PDF marcati
 kr:태그있는 PDF
 mk:Означен PDF
