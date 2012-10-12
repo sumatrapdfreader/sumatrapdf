@@ -181,13 +181,15 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 		int gen = pdf_to_gen(ocg);
 		int len = desc->len;
 		int i;
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2066 */
+		int hidden_default = 0;
 
 		for (i = 0; i < len; i++)
 		{
 			if (desc->ocgs[i].num == num && desc->ocgs[i].gen == gen)
 			{
-				if (desc->ocgs[i].state == 0)
-					return 1; /* If off, hidden */
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2066 */
+				hidden_default = desc->ocgs[i].state == 0;
 				break;
 			}
 		}
@@ -232,7 +234,7 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 		 * dicts, this is not really a problem. */
 		obj = pdf_dict_gets(ocg, "Usage");
 		if (!pdf_is_dict(obj))
-			return 0;
+			return hidden_default;
 		/* FIXME: Should look at Zoom (and return hidden if out of
 		 * max/min range) */
 		/* FIXME: Could provide hooks to the caller to check if
@@ -242,7 +244,10 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 		{
 			return 1;
 		}
-		return 0;
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2066 */
+		if (strcmp(pdf_to_name(pdf_dict_gets(obj2, event_state)), "ON") == 0)
+			return 0;
+		return hidden_default;
 	}
 	else if (strcmp(type, "OCMD") == 0)
 	{
