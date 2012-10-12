@@ -130,7 +130,7 @@ def main():
     # Note: this is not a perfect check since re-running the script will
     # proceed
     if changed:
-      print("New translations have been downloaded from apptranslator.og")
+      print("\nNew translations have been downloaded from apptranslator.og")
       print("Please verify and checkin src/Translations_txt.cpp and strings/translations.txt")
       sys.exit(1)
 

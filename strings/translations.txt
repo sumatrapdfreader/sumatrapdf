@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-75d35153d41a9c41426aa3520c6460b566930e1e
+5274b8e508a17505ea124a362e0b724fad7f00d3
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6338,6 +6338,7 @@ uk:Не можна зберегти файл.
 uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Fast Web View
+ar:تهيئة الويب السريعة
 br:Visualização rápida na Web
 ca-xv:Visualització ràpida de web
 ca:Visualització ràpida de web
@@ -9342,6 +9343,7 @@ uk:PDF документ
 uz:PDF hujjati
 vn:Tập tin PDF
 :PDF Optimizations:
+ar:تحسينات البي دي إف
 br:Otimizações PDF:
 ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
@@ -12112,6 +12114,7 @@ uk:Неможливо відкрити файл синхронізації
 uz:Sinxronizatsiya faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tagged PDF
+ar:البي دي إف الموسومة
 br:PDF com marcações (tags)
 ca-xv:PDF etiquetat
 ca:PDF etiquetat
