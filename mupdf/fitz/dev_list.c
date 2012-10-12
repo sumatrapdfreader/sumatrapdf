@@ -25,7 +25,8 @@ typedef enum fz_display_command_e
 	FZ_CMD_BEGIN_GROUP,
 	FZ_CMD_END_GROUP,
 	FZ_CMD_BEGIN_TILE,
-	FZ_CMD_END_TILE
+	FZ_CMD_END_TILE,
+	FZ_CMD_APPLY_TR, /* SumatraPDF: support transfer functions */
 } fz_display_command;
 
 struct fz_display_node_s
@@ -39,6 +40,7 @@ struct fz_display_node_s
 		fz_shade *shade;
 		fz_image *image;
 		int blendmode;
+		fz_transfer_function *tr; /* SumatraPDF: support transfer functions */
 	} item;
 	fz_stroke_state *stroke;
 	int flag; /* even_odd, accumulate, isolated/knockout... */
@@ -210,6 +212,10 @@ fz_free_display_node(fz_context *ctx, fz_display_node *node)
 	case FZ_CMD_END_GROUP:
 	case FZ_CMD_BEGIN_TILE:
 	case FZ_CMD_END_TILE:
+		break;
+	/* SumatraPDF: support transfer functions */
+	case FZ_CMD_APPLY_TR:
+		fz_drop_transfer_function(ctx, node->item.tr);
 		break;
 	}
 	if (node->stroke)
@@ -524,6 +530,18 @@ fz_list_end_tile(fz_device *dev)
 	fz_append_display_node(dev->user, node);
 }
 
+/* SumatraPDF: support transfer functions */
+static void
+fz_list_apply_tr(fz_device *dev, fz_transfer_function *tr, int for_mask)
+{
+	fz_display_node *node;
+	node = fz_new_display_node(dev->ctx, FZ_CMD_APPLY_TR, fz_identity, NULL, NULL, 0);
+	node->item.tr = fz_keep_transfer_function(dev->ctx, tr);
+	node->flag = for_mask;
+	node->rect = fz_infinite_rect;
+	fz_append_display_node(dev->user, node);
+}
+
 fz_device *
 fz_new_list_device(fz_context *ctx, fz_display_list *list)
 {
@@ -554,6 +572,9 @@ fz_new_list_device(fz_context *ctx, fz_display_list *list)
 
 	dev->begin_tile = fz_list_begin_tile;
 	dev->end_tile = fz_list_end_tile;
+
+	/* SumatraPDF: support transfer functions */
+	dev->apply_tr = fz_list_apply_tr;
 
 	return dev;
 }
@@ -752,6 +773,10 @@ visible:
 			case FZ_CMD_END_TILE:
 				tiled--;
 				fz_end_tile(dev);
+				break;
+			/* SumatraPDF: support transfer functions */
+			case FZ_CMD_APPLY_TR:
+				fz_apply_tr(dev, node->item.tr, node->flag);
 				break;
 			}
 		}

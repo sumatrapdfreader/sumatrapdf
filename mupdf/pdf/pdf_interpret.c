@@ -28,7 +28,7 @@ struct pdf_material_s
 	pdf_pattern *pattern;
 	fz_shade *shade;
 	float alpha;
-	float v[32];
+	float v[FZ_MAX_COLORS];
 };
 
 struct pdf_gstate_s
@@ -59,6 +59,10 @@ struct pdf_gstate_s
 	fz_matrix softmask_ctm;
 	float softmask_bc[FZ_MAX_COLORS];
 	int luminosity;
+
+	/* SumatraPDF: support transfer functions */
+	fz_transfer_function *tr;
+	fz_transfer_function *softmask_tr;
 };
 
 struct pdf_csi_s
@@ -300,6 +304,65 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 	return 0;
 }
 
+/* SumatraPDF: support transfer functions */
+static fz_transfer_function *
+pdf_load_transfer_function(pdf_document *doc, pdf_obj *obj, int is_tr2)
+{
+	fz_transfer_function *tr;
+
+	if (pdf_is_name(obj))
+	{
+		if (strcmp(pdf_to_name(obj), "Identity") && (!is_tr2 || strcmp(pdf_to_name(obj), "Default")))
+			fz_throw(doc->ctx, "unknown transfer function %s", pdf_to_name(obj));
+		return NULL;
+	}
+
+	tr = fz_malloc_struct(doc->ctx, fz_transfer_function);
+	FZ_INIT_STORABLE(tr, 1, fz_free);
+
+	fz_try(doc->ctx)
+	{
+		pdf_function *func;
+		float in, out;
+		int i, n;
+
+		if (pdf_is_array(obj))
+		{
+			for (n = 0; n < 4; n++)
+			{
+				pdf_obj *part = pdf_array_get(obj, n);
+				func = pdf_load_function(doc, part, 1, 1);
+				for (i = 0; i < 256; i++)
+				{
+					in = i / 255.0f;
+					pdf_eval_function(doc->ctx, func, &in, 1, &out, 1);
+					tr->function[n][i] = (int)(out * 255 + 0.5f);
+				}
+				pdf_drop_function(doc->ctx, func);
+			}
+		}
+		else
+		{
+			func = pdf_load_function(doc, obj, 1, 1);
+			for (i = 0; i < 256; i++)
+			{
+				in = i / 255.0f;
+				pdf_eval_function(doc->ctx, func, &in, 1, &out, 1);
+				for (n = 0; n < 4; n++)
+					tr->function[n][i] = (int)(out * 255 + 0.5f);
+			}
+			pdf_drop_function(doc->ctx, func);
+		}
+	}
+	fz_catch(doc->ctx)
+	{
+		fz_drop_transfer_function(doc->ctx, tr);
+		fz_rethrow(doc->ctx);
+	}
+
+	return tr;
+}
+
 /*
  * Emit graphics calls to device.
  */
@@ -314,7 +377,9 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 		pdf_xobject *softmask = gstate->softmask;
 		fz_rect bbox = fz_transform_rect(gstate->softmask_ctm, softmask->bbox);
 		fz_matrix save_ctm = gstate->ctm;
-
+		/* SumatraPDF: support transfer functions */
+		fz_transfer_function *tr = gstate->softmask_tr;
+		gstate->softmask_tr = NULL;
 		gstate->softmask = NULL;
 		gstate->ctm = gstate->softmask_ctm;
 
@@ -326,13 +391,20 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 		pdf_run_xobject(csi, NULL, softmask, fz_identity);
 		}
 		fz_catch(csi->dev->ctx) { /* ignore error */ }
+		/* SumatraPDF: support transfer functions */
+		if (gstate->softmask_tr)
+		{
+			fz_apply_tr(csi->dev, gstate->softmask_tr, 1);
+			gstate->softmask_tr = tr;
+		}
 		fz_end_mask(csi->dev);
 
 		gstate->softmask = softmask;
 		gstate->ctm = save_ctm;
 	}
 
-	if (gstate->blendmode)
+	/* SumatraPDF: support transfer functions */
+	if (gstate->blendmode || gstate->tr)
 		fz_begin_group(csi->dev, bbox, 1, 0, gstate->blendmode, 1);
 }
 
@@ -341,7 +413,10 @@ pdf_end_group(pdf_csi *csi)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 
-	if (gstate->blendmode)
+	/* SumatraPDF: support transfer functions */
+	if (gstate->tr)
+		fz_apply_tr(csi->dev, gstate->tr, 0);
+	if (gstate->blendmode || gstate->tr)
 		fz_end_group(csi->dev);
 
 	if (gstate->softmask)
@@ -921,6 +996,10 @@ pdf_init_gstate(fz_context *ctx, pdf_gstate *gs, fz_matrix ctm)
 	gs->softmask = NULL;
 	gs->softmask_ctm = fz_identity;
 	gs->luminosity = 0;
+
+	/* SumatraPDF: support transfer functions */
+	gs->tr = NULL;
+	gs->softmask_tr = NULL;
 }
 
 static pdf_material *
@@ -954,6 +1033,9 @@ copy_state(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
 	gs->fill = old->fill;
 	gs->font = old->font;
 	gs->softmask = old->softmask;
+	/* SumatraPDF: support transfer functions */
+	gs->tr = fz_keep_transfer_function(ctx, old->tr);
+	gs->softmask_tr = fz_keep_transfer_function(ctx, old->softmask_tr);
 
 	fz_drop_stroke_state(ctx, gs->stroke_state);
 	gs->stroke_state = fz_keep_stroke_state(ctx, old->stroke_state);
@@ -1061,6 +1143,9 @@ pdf_gsave(pdf_csi *csi)
 		pdf_keep_font(ctx, gs->font);
 	if (gs->softmask)
 		pdf_keep_xobject(ctx, gs->softmask);
+	/* SumatraPDF: support transfer functions */
+	fz_keep_transfer_function(ctx, gs->tr);
+	fz_keep_transfer_function(ctx, gs->softmask_tr);
 	fz_keep_stroke_state(ctx, gs->stroke_state);
 }
 
@@ -1084,6 +1169,9 @@ pdf_grestore(pdf_csi *csi)
 		pdf_drop_font(ctx, gs->font);
 	if (gs->softmask)
 		pdf_drop_xobject(ctx, gs->softmask);
+	/* SumatraPDF: support transfer functions */
+	fz_drop_transfer_function(ctx, gs->tr);
+	fz_drop_transfer_function(ctx, gs->softmask_tr);
 	fz_drop_stroke_state(ctx, gs->stroke_state);
 
 	csi->gtop --;
@@ -1117,6 +1205,9 @@ pdf_free_csi(pdf_csi *csi)
 		pdf_drop_font(ctx, csi->gstate[0].font);
 	if (csi->gstate[0].softmask)
 		pdf_drop_xobject(ctx, csi->gstate[0].softmask);
+	/* SumatraPDF: support transfer functions */
+	fz_drop_transfer_function(ctx, csi->gstate[0].tr);
+	fz_drop_transfer_function(ctx, csi->gstate[0].softmask_tr);
 	fz_drop_stroke_state(ctx, csi->gstate[0].stroke_state);
 
 	while (csi->gstate[0].clip_depth--)
@@ -1396,7 +1487,9 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, fz_matrix t
 			{
 				pdf_xobject *softmask = gstate->softmask;
 				fz_rect bbox = fz_transform_rect(gstate->ctm, xobj->bbox);
-
+				/* SumatraPDF: support transfer functions */
+				fz_transfer_function *tr = gstate->softmask_tr;
+				gstate->softmask_tr = NULL;
 				gstate->softmask = NULL;
 				popmask = 1;
 
@@ -1409,6 +1502,12 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, fz_matrix t
 				pdf_run_xobject(csi, resources, softmask, fz_identity);
 				}
 				fz_catch(ctx) { /* ignore error */ }
+				/* SumatraPDF: support transfer functions */
+				if (tr)
+				{
+					fz_apply_tr(csi->dev, tr, 1);
+					fz_drop_transfer_function(ctx, tr);
+				}
 				fz_end_mask(csi->dev);
 
 				pdf_drop_xobject(ctx, softmask);
@@ -1577,6 +1676,12 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 					pdf_drop_xobject(ctx, gstate->softmask);
 					gstate->softmask = NULL;
 				}
+				/* SumatraPDF: support transfer functions */
+				if (gstate->softmask_tr)
+				{
+					fz_drop_transfer_function(ctx, gstate->softmask_tr);
+					gstate->softmask_tr = NULL;
+				}
 
 				group = pdf_dict_gets(val, "G");
 				if (!group)
@@ -1609,8 +1714,8 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 				if (pdf_dict_gets(val, "TR"))
 				{
 					tr = pdf_dict_gets(val, "TR");
-					if (strcmp(pdf_to_name(tr), "Identity"))
-						fz_warn(ctx, "ignoring transfer function");
+					/* SumatraPDF: support transfer functions */
+					gstate->softmask_tr = pdf_load_transfer_function(csi->xref, tr, 0);
 				}
 			}
 			else if (pdf_is_name(val) && !strcmp(pdf_to_name(val), "None"))
@@ -1623,17 +1728,12 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 			}
 		}
 
-		else if (!strcmp(s, "TR"))
+		/* SumatraPDF: support transfer functions */
+		else if (!strcmp(s, "TR") || !strcmp(s, "TR2"))
 		{
-			if (!pdf_is_name(val) || strcmp(pdf_to_name(val), "Identity"))
-				fz_warn(ctx, "ignoring transfer function");
-		}
-
-		/* SumatraPDF: warn about PDF 1.3 transfer functions */
-		else if (!strcmp(s, "TR2"))
-		{
-			if (!pdf_is_name(val) || strcmp(pdf_to_name(val), "Identity") && strcmp(pdf_to_name(val), "Default"))
-				fz_warn(ctx, "ignoring transfer function");
+			fz_drop_transfer_function(ctx, gstate->tr);
+			gstate->tr = NULL;
+			gstate->tr = pdf_load_transfer_function(csi->xref, val, !strcmp(s, "TR2"));
 		}
 	}
 }

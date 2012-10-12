@@ -165,3 +165,11 @@ fz_end_tile(fz_device *dev)
 	if (dev->end_tile)
 		dev->end_tile(dev);
 }
+
+/* SumatraPDF: support transfer functions */
+void
+fz_apply_tr(fz_device *dev, fz_transfer_function *tr, int for_mask)
+{
+	if (dev->apply_tr)
+		dev->apply_tr(dev, tr, for_mask);
+}

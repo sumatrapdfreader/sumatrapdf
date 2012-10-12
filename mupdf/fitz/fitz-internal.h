@@ -1298,6 +1298,24 @@ void fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatn
 void fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth);
 void fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth);
 
+/* SumatraPDF: support transfer functions */
+typedef struct fz_transfer_function_s fz_transfer_function;
+struct fz_transfer_function_s
+{
+	fz_storable storable;
+	unsigned char function[4][256];
+};
+
+inline fz_transfer_function *
+fz_keep_transfer_function(fz_context *ctx, fz_transfer_function *tr)
+{
+	return (fz_transfer_function *)fz_keep_storable(ctx, tr ? &tr->storable : NULL);
+}
+inline void fz_drop_transfer_function(fz_context *ctx, fz_transfer_function *tr)
+{
+	fz_drop_storable(ctx, tr ? &tr->storable : NULL);
+}
+
 /*
  * The device interface.
  */
@@ -1361,6 +1379,9 @@ struct fz_device_s
 
 	void (*begin_tile)(fz_device *, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
 	void (*end_tile)(fz_device *);
+
+	/* SumatraPDF: support transfer functions */
+	void (*apply_tr)(fz_device *, fz_transfer_function *tr, int for_mask);
 };
 
 void fz_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
@@ -1383,6 +1404,8 @@ void fz_begin_group(fz_device *dev, fz_rect area, int isolated, int knockout, in
 void fz_end_group(fz_device *dev);
 void fz_begin_tile(fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
 void fz_end_tile(fz_device *dev);
+/* SumatraPDF: support transfer functions */
+void fz_apply_tr(fz_device *dev, fz_transfer_function *tr, int for_mask);
 
 fz_device *fz_new_device(fz_context *ctx, void *user);
 

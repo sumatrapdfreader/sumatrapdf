@@ -178,6 +178,13 @@ struct userDataStackItem
 	userDataStackItem(float _alpha=1.0, userDataStackItem *_prev=NULL) :
 		alpha(_alpha), prev(_prev), saveG(NULL), layer(NULL), mask(NULL),
 		luminosity(false), blendmode(0), xstep(0), ystep(0), layerAlpha(1.0) { }
+
+	~userDataStackItem()
+	{
+		delete layer;
+		delete mask;
+		delete saveG;
+	}
 };
 
 class TempFile
@@ -429,23 +436,53 @@ public:
 		{
 			delete graphics;
 			graphics = stack->saveG;
+			stack->saveG = NULL;
 			if (stack->mask)
-			{
 				_applyMask(stack->layer, stack->mask, stack->luminosity);
-				delete stack->mask;
-			}
 			int blendmode = stack->blendmode & FZ_BLEND_MODEMASK;
 			if (blendmode != 0)
 				_applyBlend(stack->layer, stack->bounds, blendmode);
-			
 			graphics->DrawImage(stack->layer, stack->bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel, &DrawImageAttributes(stack->layerAlpha));
-			delete stack->layer;
 		}
 		
 		graphics->SetClip(&stack->clip);
 		userDataStackItem *prev = stack->prev;
 		delete stack;
 		stack = prev;
+	}
+
+	void applyTR(fz_transfer_function *tr, bool for_mask)
+	{
+		userDataStackItem *fgStack = stack;
+		while (fgStack && !fgStack->layer)
+			fgStack = fgStack->prev;
+		assert(fgStack);
+		if (!fgStack)
+		{
+			fz_warn(ctx, "layer stack item required for transfer functions");
+			return;
+		}
+		
+		Bitmap *layer = fgStack->layer;
+		Rect bounds(0, 0, layer->GetWidth(), layer->GetHeight());
+		BitmapData data;
+		Status status = layer->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
+		if (status != Ok)
+			return;
+		
+		for (int row = 0; row < bounds.Height; row++)
+		{
+			LPBYTE Scan0 = (LPBYTE)data.Scan0 + row * data.Stride;
+			for (int col = 0; col < bounds.Width; col++)
+			{
+				for (int n = 0; n < 3; n++)
+					Scan0[col * 4 + n] = tr->function[2 - n][Scan0[col * 4 + n]];
+				if (for_mask)
+					Scan0[col * 4 + 3] = tr->function[3][Scan0[col * 4 + 3]];
+			}
+		}
+		
+		layer->UnlockBits(&data);
 	}
 
 	void drawPixmap(fz_pixmap *image, fz_matrix ctm, float alpha=1.0, Graphics *graphics=NULL) const
@@ -586,7 +623,7 @@ protected:
 		assert(bgStack);
 		if (!bgStack)
 		{
-			fz_warn(ctx, "background stack required for blending");
+			fz_warn(ctx, "background stack item required for blending");
 			return;
 		}
 		
@@ -1450,6 +1487,12 @@ fz_gdiplus_end_tile(fz_device *dev)
 }
 
 extern "C" static void
+fz_gdiplus_apply_tr(fz_device *dev, fz_transfer_function *tr, int for_mask)
+{
+	((userData *)dev->user)->applyTR(tr, for_mask);
+}
+
+extern "C" static void
 fz_gdiplus_free_user(fz_device *dev)
 {
 	delete (userData *)dev->user;
@@ -1496,6 +1539,8 @@ fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_bbox base_clip)
 	
 	dev->begin_tile = fz_gdiplus_begin_tile;
 	dev->end_tile = fz_gdiplus_end_tile;
+	
+	dev->apply_tr = fz_gdiplus_apply_tr;
 	
 	return dev;
 }

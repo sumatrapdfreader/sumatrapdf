@@ -1677,6 +1677,40 @@ fz_draw_end_tile(fz_device *devp)
 		fz_knockout_end(dev);
 }
 
+/* SumatraPDF: support transfer functions */
+static void
+fz_draw_apply_tr(fz_device *devp, fz_transfer_function *tr, int for_mask)
+{
+	fz_draw_device *dev = devp->user;
+	fz_pixmap *dest = dev->stack[dev->top].dest;
+	unsigned char *s;
+	int i, n;
+
+	if (dest->n > 5)
+	{
+		fz_warn(dev->ctx, "destination colorspace has more than 4 channels (%d)", dest->colorspace->n - 1);
+		return;
+	}
+#ifdef DUMP_GROUP_BLENDS
+	dump_spaces(dev->top, "");
+	fz_dump_blend(dev->ctx, dest, "Transfer function: ");
+#endif
+	s = dest->samples;
+	for (i = 0; i < dest->w * dest->h; i++)
+	{
+		if (dest->n == 2)
+			*s++ = tr->function[3][*s];
+		else if (dest->n > 2)
+			for (n = 0; n < dest->n - 1; n++)
+				*s++ = tr->function[n][*s];
+		*s++ = for_mask ? tr->function[3][*s] : *s;
+	}
+#ifdef DUMP_GROUP_BLENDS
+	fz_dump_blend(dev->ctx, dest, " mapped to ");
+	printf("\n");
+#endif
+}
+
 static void
 fz_draw_free_user(fz_device *devp)
 {
@@ -1766,6 +1800,9 @@ fz_new_draw_device(fz_context *ctx, fz_pixmap *dest)
 
 	dev->begin_tile = fz_draw_begin_tile;
 	dev->end_tile = fz_draw_end_tile;
+
+	/* SumatraPDF: support transfer functions */
+	dev->apply_tr = fz_draw_apply_tr;
 
 	return dev;
 }
