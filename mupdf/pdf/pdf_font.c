@@ -458,6 +458,33 @@ pdf_new_font_desc(fz_context *ctx)
 	return fontdesc;
 }
 
+/* SumatraPDF: provide a bullet fallback font */
+static pdf_font_desc *
+pdf_load_bullet_font(fz_context *ctx)
+{
+	pdf_font_desc *fontdesc = pdf_new_font_desc(ctx);
+	int gid, i;
+
+	fz_try(ctx)
+	{
+		pdf_load_builtin_font(ctx, fontdesc, "Symbol");
+		fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 1);
+		fontdesc->cid_to_gid_len = 256;
+		fontdesc->cid_to_gid = fz_malloc_array(ctx, 256, sizeof(unsigned short));
+		gid = FT_Get_Name_Index(fontdesc->font->ft_face, "bullet");
+		for (i = 0; i < 256; i++)
+			fontdesc->cid_to_gid[i] = gid;
+		pdf_set_default_hmtx(ctx, fontdesc, ft_width(ctx, fontdesc, 0));
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_font(ctx, fontdesc);
+		fz_rethrow(ctx);
+	}
+
+	return fontdesc;
+}
+
 /*
  * Simple fonts (Type1 and TrueType)
  */
@@ -509,17 +536,8 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 				fz_rethrow(ctx);
 			fz_warn(ctx, "using bullet-substitute font for '%s' (%d %d R)", basefont, pdf_to_num(dict), pdf_to_gen(dict));
 			pdf_drop_font(ctx, fontdesc);
-
-			fontdesc = pdf_new_font_desc(ctx);
-			pdf_load_builtin_font(ctx, fontdesc, "Symbol");
-			face = fontdesc->font->ft_face;
-			kind = ft_kind(face);
-			fontdesc->encoding = pdf_new_identity_cmap(ctx, 0, 1);
-			fontdesc->cid_to_gid_len = 256;
-			fontdesc->cid_to_gid = fz_malloc_array(ctx, 256, sizeof(unsigned short));
-			k = FT_Get_Name_Index(face, "bullet");
-			for (i = 0; i < 256; i++)
-				fontdesc->cid_to_gid[i] = k;
+			fontdesc = NULL;
+			fontdesc = pdf_load_bullet_font(ctx);
 			goto skip_encoding;
 		}
 

@@ -2737,6 +2737,8 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 			/* If we do catch an error, then reset ourselves to a
 			 * base lexing state */
 			in_array = 0;
+			/* SumatraPDF: clear the stack on errors */
+			pdf_clear_stack(csi);
 		}
 	}
 	while (tok != PDF_TOK_EOF);
