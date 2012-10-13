@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0df823674b01e5f09b3d5b1c16c92fc344abe55e
+600b3e6cf8aedaa192dfab6695eeb044cb84923e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -387,7 +387,7 @@ ka:მონიშნულის &კოპირება
 kr:선택한 부분 복사(&C)
 lt:&Kopijuoti pažymėtą sritį
 mk:&Копирај селекција
-ne:&चयनको प्रतिलिपि बनाउनुहोस्
+ne:चयनको प्रति&लिपि बनाउनुहोस्
 nl:Selectie kopiëren
 no:&Kopier valgt område
 pl:Kopiuj &zaznaczenie
@@ -442,7 +442,7 @@ kw:Dasskrifa Dewis\tCtrl+C
 lt:&Kopijuoti pažymėtą sritį\tCtrl+C
 mk:Копирај селекција\tCtrl+C
 my:&Salin pilihan\tCtrl+C
-ne:&चयनको प्रतिलिपि बनाउनुहोस्\tCtrl+C
+ne:चयनको प्रति&लिपि बनाउनुहोस्\tCtrl+C
 nl:Kopieer selectie\tCtrl+C
 no:Kopier merket tekst\tCtrl+C
 pl:Kopiuj &zaznaczenie\tCtrl+C
@@ -1039,7 +1039,7 @@ mk:&Помош
 ml:സഹായം
 mm:&အကူအညီ
 my:&Bantuan
-ne:&मदत
+ne:म&दत
 nl:&Help
 nn:&Hjelp
 no:&Hjelp
@@ -1105,7 +1105,7 @@ mk:Последна страница\tEnd
 ml:അവസാന താള്‍\tEnd
 mm:နောက်ဆုံး စာမျက်နှာ\tEnd
 my:&Halaman terakhir
-ne:&अन्तिम पृष्ठ\tEnd
+ne:अन्ति&म पृष्ठ\tEnd
 nl:&Laatste pagina\tEnd
 nn:Siste side\tEnd
 no:Siste side\tEnd
@@ -1859,7 +1859,7 @@ mk:Претходна страница\t<-
 ml:മുന്‍പുള്ള താള്‍\t<-
 mm:ပြီးတဲ့ စာမျက်နှာ\t<-
 my:&Halaman sebelumnya\t<-
-ne:&अघिल्लो पृष्ठ\tबायाँ बाण
+ne:अ&घिल्लो पृष्ठ\tबायाँ बाण
 nl:Vorige pagina\t<-
 nn:Førre side\t<-
 no:Forrige side\tPil venstre
@@ -2247,7 +2247,7 @@ ka:შენახვა &როგორც...
 kr:다른 이름으로 저장(&S)...
 lt:Į&rašyti kaip...
 mk:&Зачувај како...
-ne:&बचत गर्नुहोस्...
+ne:ब&चत गर्नुहोस्...
 nl:Op&slaan als...
 no:&Lagre som...
 pl:Zapisz jako...
@@ -2308,7 +2308,7 @@ mk:&Зачувај како...\tCtrl+S
 ml:എന്ന പേരില്‍ സൂക്ഷിക്കുക...\tCtrl+S
 mm:&ကဲ့သို့ သိမ်းပါ.....\tCtrl+S
 my:&Simpan sebagai...\tCtrl+S
-ne:&बचत गर्नुहोस्...\tCtrl+S
+ne:ब&चत गर्नुहोस्...\tCtrl+S
 nl:&Opslaan als...\tCtrl+S
 nn:Lagre &som...\tCtrl+S
 no:Lagre &som...\tCtrl+S
@@ -2533,7 +2533,7 @@ lt:Pralei&sti šią versiją
 mk:&Прескокни ја оваа верзија
 mm:ဒီအမျိုးအစား ကိုရှောင်မည်။
 my:&Langkau versi ini
-ne:यो संस्करणलाई फड्किनुहोस्
+ne:यो संस्करणलाई &फड्किनुहोस्
 nl:Deze versie overslaan
 nn:Hopp over denne versjonen
 no:&Ignorer denne versjonen
@@ -2775,7 +2775,7 @@ mk:&Зумирање
 ml:വലുതാക്കുക
 mm:ချဲ့ထွင်
 my:&Fokus
-ne:&ठुलो बनाउनुहोस्
+ne:&आकार परिवर्तन
 nl:&Zoom
 nn:&Zoom
 no:&Zoom
@@ -5253,7 +5253,7 @@ kr:사용자 지정 배율(&Z)...\tCtrl+Y
 kw:&Zoum arbennik...\tCtrl+Y
 lt:Pasirinkti &mastelį...\tCtrl+Y
 mk:&Зумирање по избор...\tCtrl+Y
-ne:अनुकुल &जुम ...\tCtrl+Y
+ne:अनुकुल &आकार ...\tCtrl+Y
 nl:&Aangepaste Zoom...\tCtrl+Y
 no:&Egendefinert zoom...\tCtrl+Y
 pl:&Własne powiększenie...\tCtrl+Y
@@ -5309,7 +5309,7 @@ kr:기본 구성(&L):
 kw:&Delinyans savonek:
 lt:Numatytasis iš&dėstymas:
 mk:&Основен поглед:
-ne:पूर्वनिर्धारित &सजावट:
+ne:पूर्वनिर्धारित स&जावट:
 nl:Standaard opmaak:
 no:Standard sideoppsett:
 pl:&Układ domyślny:
@@ -5365,7 +5365,7 @@ kr:기본 배율(&Z):
 kw:&Zoum savonek:
 lt:Numatytasis &mastelis
 mk:Основно &зумирање:
-ne:पूर्वनिर्धारित &जुम:
+ne:पूर्वनिर्धारित &आकार:
 nl:Standaard &zoom:
 no:Standard&zoom:
 pl:Domyślne &powiększenie:
@@ -6088,7 +6088,7 @@ kr:이후에 본 페이지(&O)\tAlt+오른쪽 방향키
 kw:Yn-rag\tAlt+->
 lt:&Pirmyn\tAlt+Dešinėn
 mk:Напред\tAlt+Right Arrow
-ne:अगाडि\tAlt+दायाँ बाण
+ne:अ&गाडि\tAlt+दायाँ बाण
 nl:Verder\tAlt+->
 no:Fremover\tAlt+Pil høyre
 pl:&Dalej\tAlt+W prawo
@@ -6150,7 +6150,7 @@ mk:На цел екран\tCtrl+Shift+L
 ml:മുഴുവന്‍ കാണിക്കുക\tCtrl+Shift+L
 mm:မြင်ကွင်း ပြည့်\tCtrl+Shift+L
 my:Mukasurat Penuh\tCtrl+Shift+L
-ne:पूर्णस्क्रिन\tCtrl+Shift+L
+ne:पू&र्णस्क्रिन\tCtrl+Shift+L
 nl:Volledig scherm\tCtrl+Shift+L
 nn:Full skjerm\tCtrl+Shift+L
 no:Fullskjerm\tCtrl+Shift+L
@@ -6729,7 +6729,7 @@ mk:Најди следно
 ml:അടുത്തത് കണ്ടെത്തുക
 mm:နောက်တခု ရှာပါ
 my:Cari seterusnya
-ne:अर्को फेला पार्नुहोस्
+ne:अर्को
 nl:Volgende
 nn:Finn neste
 no:Neste
@@ -6794,7 +6794,7 @@ mk:Најди претходно
 ml: മുന്‍പുള്ളത് കണ്ടെത്തുക
 mm:ပြီးခဲ့တာ ရှာပါ
 my:Cari sebelumnya
-ne:अघिल्लो फेला पार्नुहोस्
+ne:अघिल्लो
 nl:Vorige
 nn:Finn førre
 no:Forrige
@@ -8899,7 +8899,7 @@ kr:PDF-XChange로 열기(&I)
 kw:Ygeri yn PDF-XChange
 lt:Atverti naudojant „PDF-&XChange“
 mk:Отвори со PDF-XChange
-ne:PDF-XChange मा खोल्नुहोस्
+ne:PDF-XChange मा &खोल्नुहोस्
 nl:Openen met PDF-XChange
 no:Åpne i PDF-XChange
 pl:Otwórz w PDF-XChange
@@ -9004,7 +9004,7 @@ kr:Adobe Reader로 열기(&A)
 kw:Ygeri yn &Adobe Reader
 lt:Atverti naudojant „&Adobe Reader“
 mk:Отвори со &Adobe Reader
-ne:&Adobe Reader मा खोल्नुहोस्
+ne:Adobe Reader मा &खोल्नुहोस्
 nl:Openen met &Adobe Reader
 no:Åpne i &Adobe Reader
 pl:Otwórz w &Adobe Reader
@@ -9060,7 +9060,7 @@ kr:Foxit Reader로 열기(&F)
 kw:Ygeri yn &Foxit Reader
 lt:Atverti naudojant „&Foxit Reader“
 mk:Отвори со &Foxit Reader
-ne:&Foxit Reader मा खोल्नुहोस्
+ne:Foxit Reader मा &खोल्नुहोस्
 nl:Openen met &Foxit Reader
 no:Åpne i &Foxit Reader
 pl:Otwórz w &Foxit Reader
@@ -9114,7 +9114,7 @@ ka:გახსნა Microsoft HTML Help-ში
 kr:Microsoft HTML Help로 열기(&M)
 kw:Ygeri yn Microsoft HTML Help
 mk:Отвори со Microsoft HTML Help
-ne:&Microsoft HTML Help मा खोल्नुहोस्
+ne:Microsoft HTML Help मा &खोल्नुहोस्
 nl:Openen met Microsoft HTML Help
 no:Åpne i Microsoft HTML Help
 pl:Otwórz w Microsoft HTML Help
@@ -9168,7 +9168,7 @@ ka:გახსნა Microsoft XPS-Viewer-ში
 kr:Microsoft XPS-Viewer로 열기(&M)
 kw:Ygeri yn Microsoft XPS-Viewer
 mk:Отвори со Microsoft XPS-Viewer
-ne:&Microsoft XPS-Viewer मा खोल्नुहोस्
+ne:Microsoft XPS-Viewer मा &खोल्नुहोस्
 nl:Openen met Microsoft XPS-Viewer
 no:Åpne i Microsoft XPS-Viewer
 pl:Otwórz w Microsoft XPS-Viewer
@@ -9220,7 +9220,7 @@ ka:&თვისებები...
 kr:속성(&R)
 lt:&Savybės
 mk:&Својства
-ne:गुणहरु
+ne:&गुणहरु
 nl:Eigenschappen
 no:E&genskaper
 pl:Właściwości
@@ -10011,7 +10011,7 @@ ka:წარმოდგ&ენა\tCtrl+L
 kr:프레젠테이션(&E)\tCtrl+L
 lt:&Pateiktis\tCtrl+L
 mk:Презентација\tCtrl+L
-ne:&प्रस्तुतीकरण\tCtrl+L
+ne:प्रस्तुती&करण\tCtrl+L
 nl:Pr&esentatie\tCtrl+L
 no:Pr&esentasjon\tCtrl+L
 pl:&Prezentacja\tCtrl+L
@@ -10685,7 +10685,7 @@ id:Ganti &warna dokumen dengan skema warna Windows
 it:Sostituisci &colori documento con schema colore di Windows
 kr:Windows 색 구성표처럼 문서 색 교체(&C)
 mk:Замени ги &боите во документот со палетата на Windows
-ne:कागजात रङ्गलाई विन्डोज रङ योजना अनुसार बदल्नुहोस्
+ne:कागजात &रङ्गलाई विन्डोज रङ योजना अनुसार बदल्नुहोस्
 nl:Vervang de documentkleuren met Windows kleurenschema
 pl:Wymień kolory dokumentu na kolory systemowe Windows
 pt:Substituir &cores do documento pelas cores do Windows
@@ -11031,7 +11031,7 @@ ka:ყ&ველას მონიშვნა
 kr:모두 선택(&A)
 lt:Pažymėti &viską
 mk:Избери сè
-ne:&सबै चयन गर्नुहोस्
+ne:सबै &चयन गर्नुहोस्
 nl:&Alles selecteren
 no:Merk &alt
 pl:Zaznacz wszystko
@@ -11082,7 +11082,7 @@ ka:ყ&ველას მონიშვნა\tCtrl+A
 kr:모두 선택(&A)\tCtrl+A
 lt:Pažymėti &viską\tCtrl+A
 mk:Избери сè\tCtrl+A
-ne:&सबै चयन गर्नुहोस्\tCtrl+A
+ne:सबै &चयन गर्नुहोस्\tCtrl+A
 nl:Selecteer &alles\tCtrl+A
 no:Merk &alle\tCtrl+A
 pl:Zaznacz &wszystko\tCtrl+A
@@ -11401,7 +11401,7 @@ kw:Diskwedhes folennow heb aswa
 lt:&Puslapius rodyti nenutrūkstamai
 mk:Прикажувај страници непрекинато
 my:Papar mukasurat secara berterusan
-ne:&पृष्ठहरु निरन्तर देखाउनुहोस्
+ne:पृष्ठहरु &निरन्तर देखाउनुहोस्
 nl:Toon pagina's doorlopend
 no:Vis sider kontinuerlig
 pl:Wyświetlaj strony w układzie &ciągłym
@@ -12712,7 +12712,7 @@ kr:배율
 kw:Zoumya
 lt:Mastelis
 mk:Зумирање
-ne:ठुलो बनाउनुहोस्
+ne:आकार परिवर्तन
 nl:Zoom
 no:Zoom
 pl:Powiększenie
@@ -12899,7 +12899,7 @@ kr:배율 계수
 kw:Faktor-zoum
 lt:Mastelis
 mk:Степен на зумирање
-ne:जुम कारकतत्व
+ne:आकार कारकतत्व
 nl:Zoomniveau
 no:Zoom til
 pl:Współczynnik powiększenia
