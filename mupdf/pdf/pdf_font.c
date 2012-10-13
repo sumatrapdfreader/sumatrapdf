@@ -538,6 +538,9 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 			pdf_drop_font(ctx, fontdesc);
 			fontdesc = NULL;
 			fontdesc = pdf_load_bullet_font(ctx);
+
+			face = fontdesc->font->ft_face;
+			kind = ft_kind(face);
 			goto skip_encoding;
 		}
 
@@ -562,6 +565,7 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 			{
 				fz_warn(ctx, "workaround for S22PDF lying about chinese font encodings");
 				pdf_drop_font(ctx, fontdesc);
+				fontdesc = NULL;
 				fontdesc = pdf_new_font_desc(ctx);
 				pdf_load_font_descriptor(fontdesc, xref, descriptor, "Adobe-GB1", cp936fonts[i+1], 1);
 				fontdesc->encoding = pdf_load_system_cmap(ctx, "GBK-EUC-H");
