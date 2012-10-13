@@ -340,6 +340,8 @@ EXPORTS
 	fz_flatten_fill_path
 	fz_flatten_stroke_path
 	fz_flatten_dash_path
+	fz_keep_transfer_function
+	fz_drop_transfer_function
 	fz_new_draw_device_type3
 	fz_fill_path
 	fz_stroke_path
@@ -361,6 +363,7 @@ EXPORTS
 	fz_end_group
 	fz_begin_tile
 	fz_end_tile
+	fz_apply_transfer_function
 	fz_new_device
 	fz_decode_tile
 	fz_decode_indexed_tile

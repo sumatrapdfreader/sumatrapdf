@@ -451,7 +451,7 @@ public:
 		stack = prev;
 	}
 
-	void applyTR(fz_transfer_function *tr, bool for_mask)
+	void applyTransferFunction(fz_transfer_function *tr, bool for_mask)
 	{
 		userDataStackItem *fgStack = stack;
 		while (fgStack && !fgStack->layer)
@@ -1487,9 +1487,9 @@ fz_gdiplus_end_tile(fz_device *dev)
 }
 
 extern "C" static void
-fz_gdiplus_apply_tr(fz_device *dev, fz_transfer_function *tr, int for_mask)
+fz_gdiplus_apply_transfer_function(fz_device *dev, fz_transfer_function *tr, int for_mask)
 {
-	((userData *)dev->user)->applyTR(tr, for_mask);
+	((userData *)dev->user)->applyTransferFunction(tr, for_mask);
 }
 
 extern "C" static void
@@ -1540,7 +1540,7 @@ fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_bbox base_clip)
 	dev->begin_tile = fz_gdiplus_begin_tile;
 	dev->end_tile = fz_gdiplus_end_tile;
 	
-	dev->apply_tr = fz_gdiplus_apply_tr;
+	dev->apply_transfer_function = fz_gdiplus_apply_transfer_function;
 	
 	return dev;
 }

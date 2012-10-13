@@ -286,7 +286,7 @@ fz_trace_end_tile(fz_device *dev)
 
 /* SumatraPDF: support transfer functions */
 static void
-fz_trace_apply_tr(fz_device *devp, fz_transfer_function *tr, int for_mask)
+fz_trace_apply_transfer_function(fz_device *devp, fz_transfer_function *tr, int for_mask)
 {
 	printf("<transfer_function from=\"%g %g %g %g\" to=\"%g %g %g %g\"/>\n",
 		tr->function[0][0] / 255.0f, tr->function[1][0] / 255.0f,
@@ -326,7 +326,7 @@ fz_device *fz_new_trace_device(fz_context *ctx)
 	dev->end_tile = fz_trace_end_tile;
 
 	/* SumatraPDF: support transfer functions */
-	dev->apply_tr = fz_trace_apply_tr;
+	dev->apply_transfer_function = fz_trace_apply_transfer_function;
 
 	return dev;
 }

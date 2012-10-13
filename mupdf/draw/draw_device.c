@@ -1679,7 +1679,7 @@ fz_draw_end_tile(fz_device *devp)
 
 /* SumatraPDF: support transfer functions */
 static void
-fz_draw_apply_tr(fz_device *devp, fz_transfer_function *tr, int for_mask)
+fz_draw_apply_transfer_function(fz_device *devp, fz_transfer_function *tr, int for_mask)
 {
 	fz_draw_device *dev = devp->user;
 	fz_pixmap *dest = dev->stack[dev->top].dest;
@@ -1802,7 +1802,7 @@ fz_new_draw_device(fz_context *ctx, fz_pixmap *dest)
 	dev->end_tile = fz_draw_end_tile;
 
 	/* SumatraPDF: support transfer functions */
-	dev->apply_tr = fz_draw_apply_tr;
+	dev->apply_transfer_function = fz_draw_apply_transfer_function;
 
 	return dev;
 }

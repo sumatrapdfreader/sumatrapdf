@@ -682,3 +682,17 @@ fz_convert_color(fz_context *ctx, fz_colorspace *ds, float *dv, fz_colorspace *s
 	else
 		fz_std_conv_color(ctx, ss, sv, ds, dv);
 }
+
+/* SumatraPDF: support transfer functions */
+fz_transfer_function *
+fz_keep_transfer_function(fz_context *ctx, fz_transfer_function *tr)
+{
+	return tr ? (fz_transfer_function *)fz_keep_storable(ctx, &tr->storable) : NULL;
+}
+
+void
+fz_drop_transfer_function(fz_context *ctx, fz_transfer_function *tr)
+{
+	if (tr)
+		fz_drop_storable(ctx, &tr->storable);
+}

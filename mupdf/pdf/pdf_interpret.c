@@ -399,7 +399,7 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 		/* SumatraPDF: support transfer functions */
 		if (gstate->softmask_tr)
 		{
-			fz_apply_tr(csi->dev, gstate->softmask_tr, 1);
+			fz_apply_transfer_function(csi->dev, gstate->softmask_tr, 1);
 			gstate->softmask_tr = tr;
 		}
 		fz_end_mask(csi->dev);
@@ -420,7 +420,7 @@ pdf_end_group(pdf_csi *csi)
 
 	/* SumatraPDF: support transfer functions */
 	if (gstate->tr)
-		fz_apply_tr(csi->dev, gstate->tr, 0);
+		fz_apply_transfer_function(csi->dev, gstate->tr, 0);
 	if (gstate->blendmode || gstate->tr)
 		fz_end_group(csi->dev);
 
@@ -1510,7 +1510,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, fz_matrix t
 				/* SumatraPDF: support transfer functions */
 				if (tr)
 				{
-					fz_apply_tr(csi->dev, tr, 1);
+					fz_apply_transfer_function(csi->dev, tr, 1);
 					fz_drop_transfer_function(ctx, tr);
 				}
 				fz_end_mask(csi->dev);
