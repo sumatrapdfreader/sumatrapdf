@@ -109,8 +109,10 @@ static void
 fz_bbox_pop_clip(fz_device *dev)
 {
 	fz_bbox_data *data = dev->user;
-	assert(data->top > 0);
-	data->top--;
+	if (data->top > 0)
+		data->top--;
+	else
+		fz_warn(dev->ctx, "unexpected pop clip");
 }
 
 static void
@@ -160,7 +162,9 @@ fz_bbox_end_tile(fz_device *dev)
 static void
 fz_bbox_free_user(fz_device *dev)
 {
-	assert(((fz_bbox_data *)dev->user)->top == 0);
+	fz_bbox_data *data = dev->user;
+	if (data->top > 0)
+		fz_warn(dev->ctx, "items left on stack in bbox device: %d", data->top);
 	fz_free(dev->ctx, dev->user);
 }
 
