@@ -431,6 +431,7 @@ class StrList {
     };
 
     Vec<Item> items;
+    size_t count;
     Allocator *allocator;
 
     // variation of CRC-32 which deals with strings that are
@@ -452,7 +453,7 @@ class StrList {
 
 public:
     StrList(size_t capHint=0, Allocator *allocator=NULL) :
-        items(capHint, allocator), allocator(allocator) { }
+        items(capHint, allocator), count(0), allocator(allocator) { }
 
     ~StrList() {
         for (Item *item = items.IterStart(); item; item = items.IterNext()) {
@@ -465,21 +466,21 @@ public:
     }
 
     size_t Count() const {
-        return items.Count();
+        return count;
     }
 
     // str must have been allocated by allocator and is owned by StrList
     void Append(TCHAR *str) {
         Item item = { str, GetQuickHashI(str) };
         items.Append(item);
+        count++;
     }
 
     int Find(const TCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
-        size_t count = items.Count();
+        Item *item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
-            Item& item = items.At(i);
-            if (item.hash == hash && str::Eq(item.string, str))
+            if (item[i].hash == hash && str::Eq(item[i].string, str))
                 return (int)i;
         }
         return -1;
@@ -487,10 +488,9 @@ public:
 
     int FindI(const TCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
-        size_t count = items.Count();
+        Item *item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
-            Item& item = items.At(i);
-            if (item.hash == hash && str::EqI(item.string, str))
+            if (item[i].hash == hash && str::EqI(item[i].string, str))
                 return (int)i;
         }
         return -1;
