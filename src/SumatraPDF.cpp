@@ -805,6 +805,8 @@ static void UnsubclassCanvas(HWND hwnd)
     SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
 }
 
+#include "DebugLog.h"
+
 // isNewWindow : if true then 'win' refers to a newly created window that needs
 //   to be resized and placed
 // allowFailure : if false then keep displaying the previously loaded document
@@ -818,6 +820,8 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     ScopedMem<TCHAR> title;
     WindowInfo *win = args.win;
 
+    // TODO: remove time logging before release
+    Timer t(true);
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
     if (placeWindow && (gGlobalPrefs.globalPrefsOnly || state && state->useGlobalValues)) {
@@ -1031,6 +1035,9 @@ Error:
         EnterFullscreen(*win);
     if (!isNewWindow && win->presentation && win->dm)
         win->dm->SetPresentationMode(true);
+
+    t.Stop();
+    dbglog::LogF("LoadDocIntoWindow() time: %.2f", t.GetTimeInMs());
 
     return true;
 }
@@ -2424,6 +2431,8 @@ size_t TotalWindowsCount()
 // about window
 void CloseDocumentInWindow(WindowInfo *win)
 {
+    // TODO: remove time logging before release
+    Timer t(true);
     bool wasChm = win->IsChm();
     if (wasChm)
         UnsubclassCanvas(win->hwndCanvas);
@@ -2452,6 +2461,8 @@ void CloseDocumentInWindow(WindowInfo *win)
     win->RedrawAll();
     UpdateFindbox(win);
     SetFocus(win->hwndFrame);
+    t.Stop();
+    dbglog::LogF("CloseDocumentInWindow() time: %.2f", t.GetTimeInMs());
 
 #ifdef DEBUG
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039
