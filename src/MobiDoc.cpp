@@ -156,8 +156,10 @@ static bool PalmdocUncompress(const char *src, size_t srcLen, str::Str<char>& ds
             dst.Append(' ');
             dst.Append((char)(c ^ 0x80));
         }
-        else
+        else {
             CrashIf(true);
+            return false;
+        }
     }
 
     return true;
@@ -300,14 +302,13 @@ bool HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, str::Str<char>&
             uint32 baseVal;
             codeLen -= 1;
             do {
-                CrashIf(codeLen > 31);
-                baseVal = baseTable[codeLen*2];
-                code = (bits >> (32 - (codeLen+1)));
                 codeLen++;
                 if (codeLen > 32) {
                     lf("code len > 32 bits");
                     return false;
                 }
+                baseVal = baseTable[codeLen * 2 - 2];
+                code = (bits >> (32 - codeLen));
             } while (baseVal > code);
             code = baseTable[codeLen * 2 - 1] - (bits >> (32 - codeLen));
         }
