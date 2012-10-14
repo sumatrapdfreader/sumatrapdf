@@ -859,7 +859,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
 
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
     DocType engineType;
-    BaseEngine *engine = EngineManager(!gUseEbookUI).CreateEngine(args.fileName, pwdUI, &engineType);
+    BaseEngine *engine = EngineManager::CreateEngine(!gUseEbookUI, args.fileName, pwdUI, &engineType);
     if (engine)
         win->dm = new DisplayModel(engine, engineType, win);
     else

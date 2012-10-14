@@ -119,13 +119,11 @@ public:
     static Doc CreateFromFile(const TCHAR *filePath);
 };
 
-class EngineManager {
-    bool enableEbookEngines;
+namespace EngineManager {
 
-public:
-    EngineManager(bool enableEbookEngines=false) : enableEbookEngines(enableEbookEngines) { }
-    bool IsSupportedFile(const TCHAR *filePath, bool sniff=false);
-    BaseEngine *CreateEngine(const TCHAR *filePath, PasswordUI *pwdUI=NULL, DocType *typeOut=NULL);
-};
+bool IsSupportedFile(bool enableEbookEngines, const TCHAR *filePath, bool sniff=false);
+BaseEngine *CreateEngine(bool enableEbookEngines, const TCHAR *filePath, PasswordUI *pwdUI=NULL, DocType *typeOut=NULL);
+
+}
 
 #endif

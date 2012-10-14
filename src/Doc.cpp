@@ -256,7 +256,9 @@ Doc Doc::CreateFromFile(const TCHAR *filePath)
     return doc;
 }
 
-bool EngineManager::IsSupportedFile(const TCHAR *filePath, bool sniff)
+namespace EngineManager {
+
+bool IsSupportedFile(bool enableEbookEngines, const TCHAR *filePath, bool sniff)
 {
     return PdfEngine::IsSupportedFile(filePath, sniff)  ||
            XpsEngine::IsSupportedFile(filePath, sniff)  ||
@@ -278,10 +280,9 @@ bool EngineManager::IsSupportedFile(const TCHAR *filePath, bool sniff)
            );
 }
 
-BaseEngine *EngineManager::CreateEngine(const TCHAR *filePath, PasswordUI *pwdUI, DocType *typeOut)
+BaseEngine *CreateEngine(bool enableEbookEngines, const TCHAR *filePath, PasswordUI *pwdUI, DocType *typeOut)
 {
-    assert(filePath);
-    if (!filePath) return NULL;
+    CrashIf(!filePath);
 
     BaseEngine *engine = NULL;
     DocType engineType = Engine_None;
@@ -344,9 +345,11 @@ RetrySniffing:
         sniff = true;
         goto RetrySniffing;
     }
-    CrashIf(engine && !IsSupportedFile(filePath, sniff));
+    CrashIf(engine && !IsSupportedFile(enableEbookEngines, filePath, sniff));
 
     if (typeOut)
         *typeOut = engine ? engineType : Engine_None;
     return engine;
 }
+
+} // namespace EngineManager
