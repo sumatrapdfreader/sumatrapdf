@@ -802,6 +802,15 @@ pdf_init_document(pdf_document *xref)
 	{
 		fz_warn(ctx, "Ignoring Broken Optional Content");
 	}
+
+	/* SumatraPDF: update xref->version with /Version */
+	obj = pdf_dict_getp(xref->trailer, "Root/Version");
+	if (pdf_is_name(obj))
+	{
+		int version = (int)(fz_atof(pdf_to_name(obj)) * 10 + 0.1);
+		if (version > xref->version)
+			xref->version = version;
+	}
 }
 
 void
