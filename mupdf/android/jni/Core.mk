@@ -8,6 +8,7 @@ OPENJPEG := openjpeg
 JPEG := jpeg
 ZLIB := zlib
 FREETYPE := freetype
+V8 := v8-3.9
 
 LOCAL_CFLAGS += -DARCH_ARM -DARCH_THUMB -DARCH_ARM_CAN_LOAD_UNALIGNED
 
@@ -24,6 +25,9 @@ LOCAL_C_INCLUDES := \
 	../cbz \
 	../scripts \
 	..
+ifdef V8_BUILD
+LOCAL_C_INCLUDES += ../thirdparty/$(V8)/include
+endif
 
 LOCAL_MODULE    := mupdfcore
 LOCAL_SRC_FILES := \
@@ -47,6 +51,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/doc_document.c \
 	$(MY_ROOT)/fitz/doc_link.c \
 	$(MY_ROOT)/fitz/doc_outline.c \
+	$(MY_ROOT)/fitz/doc_interactive.c \
 	$(MY_ROOT)/fitz/filt_basic.c \
 	$(MY_ROOT)/fitz/filt_dctd.c \
 	$(MY_ROOT)/fitz/filt_faxd.c \
@@ -94,7 +99,6 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/pdf/pdf_function.c \
 	$(MY_ROOT)/pdf/pdf_image.c \
 	$(MY_ROOT)/pdf/pdf_interpret.c \
-	$(MY_ROOT)/pdf/pdf_js_none.c \
 	$(MY_ROOT)/pdf/pdf_lex.c \
 	$(MY_ROOT)/pdf/pdf_metrics.c \
 	$(MY_ROOT)/pdf/pdf_nametree.c \
@@ -126,6 +130,15 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/xps/xps_xml.c \
 	$(MY_ROOT)/xps/xps_zip.c \
 	$(MY_ROOT)/cbz/mucbz.c
+ifdef V8_BUILD
+LOCAL_SRC_FILES += \
+	$(MY_ROOT)/pdf/pdf_js.c \
+	$(MY_ROOT)/pdf/pdf_jsimp_cpp.c \
+	$(MY_ROOT)/pdf/pdf_jsimp_v8.cpp
+else
+LOCAL_SRC_FILES += \
+	$(MY_ROOT)/pdf/pdf_js_none.c
+endif
 
 LOCAL_LDLIBS    := -lm -llog -ljnigraphics
 

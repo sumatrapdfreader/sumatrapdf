@@ -168,3 +168,20 @@ our app), execute:
        adb logcat
 
 Good luck!
+
+Forms support
+~~~~~~~~~~~~~
+
+To build with PDF forms support, the only change is to the ndk-build stage.
+Run:
+
+	V8_BUILD=yes ndk-build
+
+The build will need v8 headers and libraries to be present in the thirdparty
+directory. The files assumed are:
+
+	thirdparty/v8-3.9/android/libv8_base.a
+	thirdparty/v8-3.9/android/libv8_snapshot.a
+	thirdparty/v8-3.9/include/v8.h
+	thirdparty/v8-3.9/include/v8stdint.h
+

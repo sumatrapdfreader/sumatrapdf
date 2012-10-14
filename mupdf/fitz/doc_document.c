@@ -9,6 +9,8 @@ extern struct pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_st
 extern struct xps_document *xps_open_document_with_stream(fz_context *ctx, fz_stream *file);
 extern struct cbz_document *cbz_open_document_with_stream(fz_context *ctx, fz_stream *file);
 
+extern int pdf_js_supported();
+
 
 static inline int fz_tolower(int c)
 {
@@ -187,6 +189,11 @@ fz_interactive *fz_interact(fz_document *doc)
 	if (doc && doc->interact)
 		return doc->interact(doc);
 	return NULL;
+}
+
+int fz_javascript_supported()
+{
+	return pdf_js_supported();
 }
 
 void

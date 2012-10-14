@@ -871,3 +871,8 @@ void pdf_js_execute_count(pdf_js *js, char *code, int count)
 		}
 	}
 }
+
+int pdf_js_supported()
+{
+	return 1;
+}

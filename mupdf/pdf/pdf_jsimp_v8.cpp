@@ -195,6 +195,7 @@ extern "C" fz_context *pdf_jsimp_ctx_cpp(pdf_jsimp *imp)
 
 extern "C" const char *pdf_new_jsimp_cpp(fz_context *ctx, void *jsctx, pdf_jsimp **imp)
 {
+	Locker lock;
 	*imp = reinterpret_cast<pdf_jsimp *>(new PDFJSImp(ctx, jsctx));
 
 	return NULL;
@@ -202,12 +203,14 @@ extern "C" const char *pdf_new_jsimp_cpp(fz_context *ctx, void *jsctx, pdf_jsimp
 
 extern "C" const char *pdf_drop_jsimp_cpp(pdf_jsimp *imp)
 {
+	Locker lock;
 	delete reinterpret_cast<PDFJSImp *>(imp);
 	return NULL;
 }
 
 extern "C" const char *pdf_jsimp_new_type_cpp(pdf_jsimp *imp, pdf_jsimp_dtr *dtr, pdf_jsimp_type **type)
 {
+	Locker lock;
 	PDFJSImp *vImp = reinterpret_cast<PDFJSImp *>(imp);
 	PDFJSImpType *vType = new PDFJSImpType(vImp, dtr);
 	vImp->types.push_back(vType);
@@ -257,6 +260,7 @@ static Handle<Value> callMethod(const Arguments &args)
 
 extern "C" const char *pdf_jsimp_addmethod_cpp(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf_jsimp_method *meth)
 {
+	Locker lock;
 	PDFJSImpType *vType = reinterpret_cast<PDFJSImpType *>(type);
 	HandleScope scope;
 
@@ -316,6 +320,7 @@ static void setProp(Local<String> property, Local<Value> value, const AccessorIn
 
 extern "C" const char *pdf_jsimp_addproperty_cpp(pdf_jsimp *imp, pdf_jsimp_type *type, char *name, pdf_jsimp_getter *get, pdf_jsimp_setter *set)
 {
+	Locker lock;
 	PDFJSImpType *vType = reinterpret_cast<PDFJSImpType *>(type);
 	HandleScope scope;
 
@@ -327,6 +332,7 @@ extern "C" const char *pdf_jsimp_addproperty_cpp(pdf_jsimp *imp, pdf_jsimp_type 
 
 extern "C" const char *pdf_jsimp_set_global_type_cpp(pdf_jsimp *imp, pdf_jsimp_type *type)
 {
+	Locker lock;
 	PDFJSImp	 *vImp  = reinterpret_cast<PDFJSImp *>(imp);
 	PDFJSImpType *vType = reinterpret_cast<PDFJSImpType *>(type);
 	HandleScope scope;
@@ -350,6 +356,7 @@ static void gcCallback(Persistent<Value> val, void *parm)
 
 extern "C" const char *pdf_jsimp_new_obj_cpp(pdf_jsimp *imp, pdf_jsimp_type *type, void *natobj, pdf_jsimp_obj **robj)
 {
+	Locker lock;
 	PDFJSImpType *vType = reinterpret_cast<PDFJSImpType *>(type);
 	HandleScope scope;
 	Local<Object> obj = vType->templ->NewInstance();
@@ -377,42 +384,49 @@ extern "C" const char *pdf_jsimp_new_obj_cpp(pdf_jsimp *imp, pdf_jsimp_type *typ
 
 extern "C" const char *pdf_jsimp_drop_obj_cpp(pdf_jsimp *imp, pdf_jsimp_obj *obj)
 {
+	Locker lock;
 	delete reinterpret_cast<PDFJSImpObject *>(obj);
 	return NULL;
 }
 
 extern "C" const char *pdf_jsimp_to_type_cpp(pdf_jsimp *imp, pdf_jsimp_obj *obj, int *type)
 {
+	Locker lock;
 	*type = reinterpret_cast<PDFJSImpObject *>(obj)->type();
 	return NULL;
 }
 
 extern "C" const char *pdf_jsimp_from_string_cpp(pdf_jsimp *imp, char *str, pdf_jsimp_obj **obj)
 {
+	Locker lock;
 	*obj = reinterpret_cast<pdf_jsimp_obj *>(new PDFJSImpObject(str));
 	return NULL;
 }
 
 extern "C" const char *pdf_jsimp_to_string_cpp(pdf_jsimp *imp, pdf_jsimp_obj *obj, char **str)
 {
+	Locker lock;
 	*str = reinterpret_cast<PDFJSImpObject *>(obj)->toString();
 	return NULL;
 }
 
 extern "C" const char *pdf_jsimp_from_number_cpp(pdf_jsimp *imp, double num, pdf_jsimp_obj **obj)
 {
+	Locker lock;
 	*obj = reinterpret_cast<pdf_jsimp_obj *>(new PDFJSImpObject(num));
 	return NULL;
 }
 
 extern "C" const char *pdf_jsimp_to_number_cpp(pdf_jsimp *imp, pdf_jsimp_obj *obj, double *num)
 {
+	Locker lock;
 	*num = reinterpret_cast<PDFJSImpObject *>(obj)->toNumber();
 	return NULL;
 }
 
 extern "C" const char *pdf_jsimp_array_len_cpp(pdf_jsimp *imp, pdf_jsimp_obj *obj, int *len)
 {
+	Locker lock;
 	Local<Object> jsobj = reinterpret_cast<PDFJSImpObject *>(obj)->toValue()->ToObject();
 	Local<Array> arr = Local<Array>::Cast(jsobj);
 	*len = arr->Length();
@@ -421,6 +435,7 @@ extern "C" const char *pdf_jsimp_array_len_cpp(pdf_jsimp *imp, pdf_jsimp_obj *ob
 
 extern "C" const char *pdf_jsimp_array_item_cpp(pdf_jsimp *imp, pdf_jsimp_obj *obj, int i, pdf_jsimp_obj **item)
 {
+	Locker lock;
 	Local<Object> jsobj = reinterpret_cast<PDFJSImpObject *>(obj)->toValue()->ToObject();
 	*item = reinterpret_cast<pdf_jsimp_obj *>(new PDFJSImpObject(jsobj->Get(Number::New(i))));
 	return NULL;
@@ -428,6 +443,7 @@ extern "C" const char *pdf_jsimp_array_item_cpp(pdf_jsimp *imp, pdf_jsimp_obj *o
 
 extern "C" const char *pdf_jsimp_property_cpp(pdf_jsimp *imp, pdf_jsimp_obj *obj, char *prop, pdf_jsimp_obj **pobj)
 {
+	Locker lock;
 	Local<Object> jsobj = reinterpret_cast<PDFJSImpObject *>(obj)->toValue()->ToObject();
 	*pobj = reinterpret_cast<pdf_jsimp_obj *>(new PDFJSImpObject(jsobj->Get(String::New(prop))));
 	return NULL;
@@ -435,6 +451,7 @@ extern "C" const char *pdf_jsimp_property_cpp(pdf_jsimp *imp, pdf_jsimp_obj *obj
 
 extern "C" const char *pdf_jsimp_execute_cpp(pdf_jsimp *imp, char *code)
 {
+	Locker lock;
 	PDFJSImp *vImp = reinterpret_cast<PDFJSImp *>(imp);
 	HandleScope scope;
 	Context::Scope context_scope(vImp->context);
@@ -447,6 +464,7 @@ extern "C" const char *pdf_jsimp_execute_cpp(pdf_jsimp *imp, char *code)
 
 extern "C" const char *pdf_jsimp_execute_count_cpp(pdf_jsimp *imp, char *code, int count)
 {
+	Locker lock;
 	PDFJSImp *vImp = reinterpret_cast<PDFJSImp *>(imp);
 	HandleScope scope;
 	Context::Scope context_scope(vImp->context);

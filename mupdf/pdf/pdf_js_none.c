@@ -9,22 +9,8 @@ struct pdf_js_s
 
 pdf_js *pdf_new_js(pdf_document *doc)
 {
-	fz_context *ctx = doc->ctx;
-	pdf_js *js = fz_malloc_struct(ctx, pdf_js);
-
-	fz_try(ctx)
-	{
-		js->ctx = doc->ctx;
-		js->event.target = NULL;
-		js->event.value = fz_strdup(ctx, "");
-		js->event.rc = 1;
-	}
-	fz_catch(ctx)
-	{
-		pdf_drop_js(js);
-	}
-
-	return js;
+	/* SumatraPDF: don't let pdf_init_document fail for nothing */
+	return NULL;
 }
 
 void pdf_js_load_document_level(pdf_js *js)
@@ -55,4 +41,9 @@ void pdf_js_execute(pdf_js *js, char *code)
 
 void pdf_js_execute_count(pdf_js *js, char *code, int count)
 {
+}
+
+int pdf_js_supported()
+{
+	return 0;
 }

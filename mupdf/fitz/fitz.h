@@ -2741,6 +2741,12 @@ typedef struct
 */
 fz_mail_doc_event *fz_access_mail_doc_event(fz_doc_event *event);
 
+/*
+	fz_javascript_supported: test whether a version of mupdf with
+	a javascript engine is in use.
+*/
+int fz_javascript_supported();
+
 typedef struct fz_write_options_s fz_write_options;
 
 /*

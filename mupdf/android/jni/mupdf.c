@@ -22,6 +22,14 @@
 
 #define MAX_SEARCH_HITS (500)
 
+enum
+{
+	NONE,
+	TEXT,
+	LISTBOX,
+	COMBOBOX
+};
+
 /* Globals */
 fz_colorspace *colorspace;
 fz_document *doc;
@@ -101,11 +109,11 @@ Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(JNIEnv *env, jobject thiz, int
 	float zoom;
 	fz_matrix ctm;
 	fz_bbox bbox;
-	fz_device *dev = NULL;
 
-	fz_var(dev);
+	if (page == pagenum && currentPage != NULL)
+		return;
 
-	if (currentPage != NULL && page != currentPageNumber)
+	if (currentPage != NULL)
 	{
 		fz_free_page(doc, currentPage);
 		currentPage = NULL;
@@ -135,11 +143,18 @@ Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(JNIEnv *env, jobject thiz, int
 	}
 	fz_catch(ctx)
 	{
-		currentPageNumber = page;
 		LOGE("cannot make displaylist from page %d", pagenum);
 	}
-	fz_free_device(dev);
-	dev = NULL;
+}
+
+JNIEXPORT void JNICALL
+Java_com_artifex_mupdf_MuPDFCore_markDirtyInternal(JNIEnv *env, jobject thiz, int page)
+{
+	if (currentPage != NULL && page == pagenum)
+	{
+		fz_free_page(doc, currentPage);
+		currentPage = NULL;
+	}
 }
 
 JNIEXPORT float JNICALL
@@ -154,6 +169,12 @@ Java_com_artifex_mupdf_MuPDFCore_getPageHeight(JNIEnv *env, jobject thiz)
 {
 	LOGE("PageHeight=%g", pageHeight);
 	return pageHeight;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_artifex_mupdf_MuPDFCore_javascriptSupported(JNIEnv *env, jobject thiz)
+{
+	return fz_javascript_supported();
 }
 
 JNIEXPORT jboolean JNICALL
@@ -614,6 +635,59 @@ Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz
 	return arr;
 }
 
+JNIEXPORT jobjectArray JNICALL
+Java_com_artifex_mupdf_MuPDFCore_getWidgetAreasInternal(JNIEnv * env, jobject thiz, int pageNumber)
+{
+	jclass       rectFClass;
+	jmethodID    ctor;
+	jobjectArray arr;
+	jobject      rectF;
+	fz_interactive *idoc;
+	fz_widget *widget;
+	fz_matrix    ctm;
+	float        zoom;
+	int          count;
+
+	rectFClass = (*env)->FindClass(env, "android/graphics/RectF");
+	if (rectFClass == NULL) return NULL;
+	ctor = (*env)->GetMethodID(env, rectFClass, "<init>", "(FFFF)V");
+	if (ctor == NULL) return NULL;
+
+	Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(env, thiz, pageNumber);
+	if (currentPageNumber == -1 || currentPage == NULL)
+		return NULL;
+
+	idoc = fz_interact(doc);
+	if (idoc == NULL)
+		return NULL;
+
+	zoom = resolution / 72;
+	ctm = fz_scale(zoom, zoom);
+
+	count = 0;
+	for (widget = fz_first_widget(idoc, currentPage); widget; widget = fz_next_widget(idoc, widget))
+		count ++;
+
+	arr = (*env)->NewObjectArray(env, count, rectFClass, NULL);
+	if (arr == NULL) return NULL;
+
+	count = 0;
+	for (widget = fz_first_widget(idoc, currentPage); widget; widget = fz_next_widget(idoc, widget))
+	{
+		fz_rect rect = fz_transform_rect(ctm, *fz_widget_bbox(widget));
+
+		rectF = (*env)->NewObject(env, rectFClass, ctor,
+				(float)rect.x0, (float)rect.y0, (float)rect.x1, (float)rect.y1);
+		if (rectF == NULL) return NULL;
+		(*env)->SetObjectArrayElement(env, arr, count, rectF);
+		(*env)->DeleteLocalRef(env, rectF);
+
+		count ++;
+	}
+
+	return arr;
+}
+
 JNIEXPORT int JNICALL
 Java_com_artifex_mupdf_MuPDFCore_getPageLink(JNIEnv * env, jobject thiz, int pageNumber, float x, float y)
 {
@@ -656,4 +730,134 @@ Java_com_artifex_mupdf_MuPDFCore_getPageLink(JNIEnv * env, jobject thiz, int pag
 	else if (link->dest.kind == FZ_LINK_GOTO)
 		return link->dest.ld.gotor.page;
 	return -1;
+}
+
+JNIEXPORT int JNICALL
+Java_com_artifex_mupdf_MuPDFCore_passClickEventInternal(JNIEnv * env, jobject thiz, int pageNumber, float x, float y)
+{
+	fz_matrix ctm;
+	fz_interactive *idoc = fz_interact(doc);
+	float zoom;
+	fz_point p;
+	fz_ui_event event;
+	int changed = 0;
+
+	if (idoc == NULL)
+		return 0;
+
+	Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(env, thiz, pageNumber);
+	if (currentPageNumber == -1 || currentPage == NULL)
+		return 0;
+
+	p.x = x;
+	p.y = y;
+
+	/* Ultimately we should probably return a pointer to a java structure
+	 * with the link details in, but for now, page number will suffice.
+	 */
+	zoom = resolution / 72;
+	ctm = fz_scale(zoom, zoom);
+	ctm = fz_invert_matrix(ctm);
+
+	p = fz_transform_point(ctm, p);
+
+	fz_try(ctx)
+	{
+		event.etype = FZ_EVENT_TYPE_POINTER;
+		event.event.pointer.pt = p;
+		event.event.pointer.ptype = FZ_POINTER_DOWN;
+		changed = fz_pass_event(idoc, currentPage, &event);
+		event.event.pointer.ptype = FZ_POINTER_UP;
+		changed |= fz_pass_event(idoc, currentPage, &event);
+	}
+	fz_catch(ctx)
+	{
+		LOGE("passClickEvent: %s", ctx->error->message);
+	}
+
+	return changed;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_artifex_mupdf_MuPDFCore_getFocusedWidgetTextInternal(JNIEnv * env, jobject thiz)
+{
+	char *text = "";
+
+	fz_try(ctx)
+	{
+		fz_interactive *idoc = fz_interact(doc);
+
+		if (idoc)
+		{
+			fz_widget *focus = fz_focused_widget(idoc);
+
+			if (focus)
+				text = fz_text_widget_text(idoc, focus);
+		}
+	}
+	fz_catch(ctx)
+	{
+		LOGE("getFocusedWidgetText failed: %s", ctx->error->message);
+	}
+
+	return (*env)->NewStringUTF(env, text);
+}
+
+JNIEXPORT int JNICALL
+Java_com_artifex_mupdf_MuPDFCore_setFocusedWidgetTextInternal(JNIEnv * env, jobject thiz, jstring jtext)
+{
+	const char *text;
+	int result = 0;
+
+	text = (*env)->GetStringUTFChars(env, jtext, NULL);
+	if (text == NULL)
+	{
+		LOGE("Failed to get text");
+		return 0;
+	}
+
+	fz_try(ctx)
+	{
+		fz_interactive *idoc = fz_interact(doc);
+
+		if (idoc)
+		{
+			fz_widget *focus = fz_focused_widget(idoc);
+
+			if (focus)
+				result = fz_text_widget_set_text(idoc, focus, text);
+		}
+	}
+	fz_catch(ctx)
+	{
+		LOGE("setFocusedWidgetText failed: %s", ctx->error->message);
+	}
+
+	(*env)->ReleaseStringUTFChars(env, jtext, text);
+
+	return result;
+}
+
+JNIEXPORT int JNICALL
+Java_com_artifex_mupdf_MuPDFCore_getFocusedWidgetTypeInternal(JNIEnv * env, jobject thiz)
+{
+	fz_interactive *idoc = fz_interact(doc);
+	fz_widget *focus;
+
+	if (idoc == NULL)
+		return NONE;
+
+	focus = fz_focused_widget(idoc);
+
+	if (focus == NULL)
+		return NONE;
+
+	switch (fz_widget_get_type(focus))
+	{
+	case FZ_WIDGET_TYPE_TEXT: return TEXT;
+	case FZ_WIDGET_TYPE_LISTBOX: return LISTBOX;
+	case FZ_WIDGET_TYPE_COMBOBOX: return COMBOBOX;
+	}
+
+	return NONE;
 }

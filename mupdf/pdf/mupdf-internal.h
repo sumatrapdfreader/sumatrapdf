@@ -606,6 +606,7 @@ typedef struct pdf_js_event_s
 	int rc;
 } pdf_js_event;
 
+int pdf_js_supported();
 pdf_js *pdf_new_js(pdf_document *doc);
 void pdf_drop_js(pdf_js *js);
 void pdf_js_load_document_level(pdf_js *js);

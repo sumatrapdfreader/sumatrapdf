@@ -165,6 +165,7 @@ EXPORTS
 	fz_access_exec_menu_item_event
 	fz_access_launch_url_event
 	fz_access_mail_doc_event
+	fz_javascript_supported
 	fz_write_document
 
 	fz_clone_context_internal
@@ -633,6 +634,7 @@ EXPORTS
 	pdf_event_issue_exec_dialog
 	pdf_event_issue_launch_url
 	pdf_event_issue_mail_doc
+	pdf_js_supported
 	pdf_new_js
 	pdf_drop_js
 	pdf_js_load_document_level

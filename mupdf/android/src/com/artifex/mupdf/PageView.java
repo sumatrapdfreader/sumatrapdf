@@ -317,7 +317,7 @@ public abstract class PageView extends ViewGroup {
 		}
 	}
 
-	public void addHq() {
+	public void addHq(boolean force) {
 		Rect viewArea = new Rect(getLeft(),getTop(),getRight(),getBottom());
 		// If the viewArea's size matches the unzoomed size, there is no need for an hq patch
 		if (viewArea.width() != mSize.x || viewArea.height() != mSize.y) {
@@ -332,7 +332,7 @@ public abstract class PageView extends ViewGroup {
 			patchArea.offset(-viewArea.left, -viewArea.top);
 
 			// If being asked for the same area as last time, nothing to do
-			if (patchArea.equals(mPatchArea) && patchViewSize.equals(mPatchViewSize))
+			if (patchArea.equals(mPatchArea) && patchViewSize.equals(mPatchViewSize) && !force)
 				return;
 
 			// Stop the drawing of previous patch if still going
@@ -371,6 +371,35 @@ public abstract class PageView extends ViewGroup {
 
 			mDrawPatch.safeExecute(new PatchInfo(patchViewSize, patchArea));
 		}
+	}
+
+	public void update() {
+		// Cancel pending render task
+		if (mDrawEntire != null) {
+			mDrawEntire.cancel(true);
+			mDrawEntire = null;
+		}
+
+		if (mDrawPatch != null) {
+			mDrawPatch.cancel(true);
+			mDrawPatch = null;
+		}
+
+		// Render the page in the background
+		mDrawEntire = new SafeAsyncTask<Void,Void,Bitmap>() {
+			protected Bitmap doInBackground(Void... v) {
+				return drawPage(mSize.x, mSize.y, 0, 0, mSize.x, mSize.y);
+			}
+
+			protected void onPostExecute(Bitmap bm) {
+				mEntire.setImageBitmap(bm);
+				invalidate();
+			}
+		};
+
+		mDrawEntire.safeExecute();
+
+		addHq(true);
 	}
 
 	public void removeHq() {
