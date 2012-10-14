@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-600b3e6cf8aedaa192dfab6695eeb044cb84923e
+304ddd21fec7a43383bbd34aa914d2c116f26713
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -930,7 +930,7 @@ sk:&Ísť na
 sl:Po&jdi na
 sn:Enda ku...
 sp-rs:Idi
-sq:&Shkoj Te
+sq:&Shkoj te
 sr-rs:Иди
 sv:&Gå till
 ta:அங்கு செல்
@@ -1629,7 +1629,7 @@ mk:&Отвори...\tCtrl+O
 ml:തുറക്കുക...\tCtrl+O
 mm:&ဖွင့်ပါ...\tCtrl+O
 my:&Buka...\tCtrl+O
-ne:&खोल्नुहोस्...\tCtrl+O
+ne:खोल्नु&होस्...\tCtrl+O
 nl:&Openen...\tCtrl+O
 nn:&Opne...\tCtrl+O
 no:&Åpne...\tCtrl+O
@@ -1987,7 +1987,7 @@ tl:&I-print... (hindi maaari)
 tr:&Baskı... (reddedildi)
 tw:列印(&P)... (已中斷)
 uk:Друк... (відхилено)
-uz:&Bosib chiqarish... (rad etilgan)
+uz:&Bosib chiqarish... (ruxsat etilmagan)
 vn:&In... (bị từ chối)
 :&Print...\tCtrl+P
 af:&Druk\tCtrl+P
@@ -2265,7 +2265,7 @@ tl:I-&save bilang...
 tr:&Farklı Kaydet...
 tw:另存新檔(&S)
 uk:Зберегти як...
-uz:...&sifatida saqlash
+uz:&Quyidagicha saqlash...
 vn:Lưu thành...
 :&Save As...\tCtrl+S
 af:&Stoor As\tCtrl+S
@@ -2331,7 +2331,7 @@ tl:I-save Bilang...\tCtrl+S
 tr:&Farklı kaydet...\tCtrl+S
 tw:另存新檔(&S)...\tCtrl+S
 uk:Зб&ерегти як...\tCtrl+S
-uz:...&sifatida saqlash\tCtrl+S
+uz:&Quyidagicha saqlash...\tCtrl+S
 vn:Lưu thành...\tCtrl+S
 :&Settings
 am:&Կարգավորումներ
@@ -2441,7 +2441,7 @@ tl:Paliitin ang pahina sa printable na area (kung kinakailangan)
 tr:Sayfaları baskı alanına &indirgele (gerekirse)
 tw:如有需要，縮小頁面以符合可列印區域(&S)
 uk:Урізати сторінки до зони друку (при необхідності)
-uz:&Betlarni printerga moslab kichiktirish (kerak bo'lsa)
+uz:&Betlarni printerga moslab kichiktirish (zarur bo'lganda)
 vn:Nén vừa trang in (nếu cần thiết)
 :&Single Page\tCtrl+6
 am:&Մեկ էջով\tCtrl+6
@@ -2601,7 +2601,7 @@ si:&සෑබෑ පිටු ප්‍රමාණය යොදන්න
 sk:Použiť originálne veľkosti strán
 sl:&Uporabi izvirno velikost strani
 sp-rs:Upotrebi originalne veličine stranica
-sq:&Përdor përmasën origjinale të fletës
+sq:&Përdor përmasat origjinale të fletës
 sr-rs:Употреби оригиналне величине страница
 sv:Använd u&rsprunglig sidstorlek
 ta:மூல பக்க அளவுகளை உபயோகி
@@ -2609,7 +2609,7 @@ tl:Gamitin ang orihinal na laki ng mga pahina
 tr:Orijinal sayfa boyutlarını &kullan
 tw:使用頁面原始大小(&S)
 uk:Використовувати оригінальні розміри сторінки
-uz:&Betlarning asl o'lchami
+uz:&Betlarning asl o'lchamlaridan foydalanish
 vn:Sử dụng kích thước trang gốc
 :&View
 af:&Vertoon
@@ -2789,7 +2789,7 @@ sk:&Zväčšenie
 sl:Po&večava
 sn:&Zuma
 sp-rs:Uvećanje
-sq:&Shkalla
+sq:&Shkallë
 sr-rs:Увећање
 sv:&Zoom
 ta:பெரிதாக்கு
@@ -2904,7 +2904,7 @@ ta:(பக்கம் %s)
 tr:(sayfa %s)
 tw:(第 %s 頁)
 uk:(сторінка %s)
-uz:(bet %s))
+uz:(bet %s)
 vn:(trang %s)
 :About SumatraPDF
 af:Omtrent SumatraPDF
@@ -3120,7 +3120,7 @@ ta:விருப்பகளில்  பக்கம் %s ஐ பெயர�
 tr:Sayfa %s sık kullanılanlara (tercihe bağlı) isimle ekle:
 tw:把第 %s 頁加入我的最愛的名稱(非必要)：
 uk:Додати %s сторінку до закладок з іменем(необов'язково):
-uz:%s betni Tanlanganlarga nomi bilan (shart emas) qo'shish:
+uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 :Add to favorites
 am:Ավելացնել ընտրյալներին
@@ -3380,7 +3380,7 @@ si:යෙදුම:
 sk:Program:
 sl:Aplikacija:
 sp-rs:Aplikacija:
-sq:Programi:
+sq:Aplikacioni:
 sr-rs:Апликација:
 sv:Programvara:
 ta:செயலி
@@ -4092,7 +4092,7 @@ si:අන්තර්ජාලයට සම්භන්ධවිය නොහැ
 sk:Pripojenie k internetu zlyhalo (chyba %#x).
 sl:Ne morem se povezati na internet (napaka %#x).
 sp-rs:Povezivanje na internet nije moguće (greška %#x).
-sq:Nuk mund të lidhet në Internet (gabim %#x).
+sq:Nuk mund të lidhet në internet (gabim %#x).
 sr-rs:Повезивање на интернет није могуће (грешка %#x).
 sv:Kan ej ansluta till internet (fel %#x).
 tl:Hindi makakonekta sa Internet (error %#x).
@@ -4471,9 +4471,10 @@ pl:Zgodność
 pt:Compatibilidade
 ru:Совместимость
 sl:Združljivost
-sq:Pajtueshmëria
+sq:Përputhja
 sv:Kompatibilitet
 tr:Uyumluluk
+uz:Mosligi
 vn:Tính tương thích
 :Continuous
 af:Aanmekaar
@@ -4998,7 +4999,7 @@ ru:Не удалось определить свойства принтера
 sk:Získanie vlastností tlačiarne zlyhalo
 sl:Ne morem dobiti Lastnosti tiskalnika
 sp-rs:Nije moguće prikazati osobine štampača
-sq:Nuk mund të marrë vetitë e Printerit
+sq:Nuk mund të marrë vetitë e printerit
 sr-rs:Није могуће приказати особине штампача
 sv:Kunde inte hämta egenskaper för skrivare
 tr:Yazıcı özellikleri temin edilemedi
@@ -5328,7 +5329,7 @@ tl:Default na Ayos:
 tr:Varsayılan &Düzen:
 tw:預設閱覽模式：(&L)
 uk:Розташування за замовчуванням:
-uz:Andoza &leyaut
+uz:Andoza &joylashish
 vn:Khung nhìn mặc định
 :Default &Zoom:
 am:Ծրագրային &չափը.
@@ -5433,7 +5434,7 @@ si:portable ආකාරයෙදී ප්‍රධාන PDF කියවන�
 sk:Predvolený prehliadač PDF dokumentov nemôže byť zmenený, pokiaľ nie je nainštalovaný
 sl:Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
 sp-rs:Podrazumevani PDF čitač ne može biti promenjen u prenosivnom režimu
-sq:Lexuesi standard i PDFve nuk mund të ndryshojë në mënyrën portabël
+sq:Lexuesi standard i PDF-ve nuk mund të ndryshojë në mënyrën portabël
 sr-rs:Подразумевани PDF читач не може бити промењен у преносивном режиму
 sv:SumatraPDF kan ej göras förvald i portabelt läge
 ta:முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை
@@ -5947,7 +5948,7 @@ si:PDF ගොනුව මත double-click කළ විට සිදුවන �
 sk:Dvojité kliknutie na PDF dokument vykoná zadaný príkazový riadok:
 sl:Vnesite ukazno vrstico, ki se bo izvedla, ko boste dvokliknili na PDF dokument:
 sp-rs:Unesite parametre komandne linije koji će se izvršiti prilikom dvoklika na PDF dokument:
-sq:Komanda që duhet dhënë kur klikoni dy herë dokumentin PDF:
+sq:Komanda që jepet kur klikoni dy herë dokumentin PDF:
 sr-rs:Унесите параметре командне линије који ће се извршити приликом двоклика на PDF документ:
 sv:Ange kommandorad att aktivera när du dubbelklickar på PDF-dokumentet:
 tl:Pakisulat ang command na gagawin kapag dalawang beses na kli-nik ang dokumentong PDF:
@@ -6275,7 +6276,7 @@ sq:Dështoi riemërtimi i skedës!
 sv:Kunde inte döpa om filen!
 tr:Dosyanın ismi değiştirilemedi!
 tw:重新命名該檔案失敗!
-uz:Fayl nomini o'zgartirish muvaffaqiyatsiz tugadi
+uz:Fayl nomini o'zgartirish muvaffaqiyatsiz tugadi!
 vn:Không thể đổi tên tập tin!
 :Failed to save a file
 af:Kon nie die lêer stoor nie!
@@ -6361,6 +6362,7 @@ ru:Быстрый просмотр в Интернете
 sl:Hiter spletni prikaz
 sv:Snabb Webb-Visning
 tr:Hızlı Web Görünümü
+uz:Tez veb ko'rish
 vn:Xem dạng Web nhanh
 :Favorites
 am:Ընտրյալներ
@@ -7353,7 +7355,7 @@ tl:Pagkasyahin ang isang pahina
 tr:Tek sayfaya ölçekle
 tw:合適單頁
 uk:Вмістити на сторінку
-uz:Yagona betga moslash
+uz:Bitta betga moslash
 vn:Vừa một trang đơn
 :Fonts:
 am:Տառատեսաներ.
@@ -7429,7 +7431,7 @@ sq:Formaton librin... %d faqe
 sr-rs:Форматирање књиге... %d страница
 sv:Formatterar bok... %d sidor
 tr:Kitap biçimlendiriliyor... %d sayfa
-uz:Kitob formatlanmoqda... %d bet
+uz:Kitob format qilinmoqda... %d bet
 vn:Đang định dạng sách... %d trang
 :Found text at page %s
 am:Տեքստը գտնվել է %s էջում
@@ -7583,7 +7585,7 @@ sv:Mest lästa
 tr:Sıkça okunan
 tw:經常開啟的檔案
 uk:Часто читані
-uz:Tez-tez o'qiladigan
+uz:Tez-tez o'qiladiganlar
 vn:Đọc thường xuyên
 :GB
 af:GB
@@ -7763,7 +7765,7 @@ sv:Dölj mest lästa
 tr:Sıkça okunanı gizle
 tw:隱藏經常開啟的檔案
 uk:Приховати часто читані
-uz:Tez-tez o'qiladigan yashirish
+uz:Tez-tez o'qiladiganlarni yashirish
 vn:Ẩn Đọc thường xuyên
 :Hint: Use the F3 key for finding again
 am:Որոնումը կրկնելու համար օգտագործեք F3 կոճակը
@@ -8091,7 +8093,7 @@ si:PDF ගොනු සදහා පෙරනිමි මෘදුකාංග�
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 sl:Naj bo SumatraPDF privezti program za datoteke PDF?
 sp-rs:Postaviti SumatraPDF kao podrazumevanu aplikaciju za PDF datoteke?
-sq:Doni që SumatraPDF të jetë programi standard për skedat PDF?
+sq:SumatraPDF të jetë aplikacioni standard për skedat PDF?
 sr-rs:Поставити SumatraPDF као подразумевану апликацију за PDF датотеке?
 sv:Ställa in SumatraPDF som standardprogram för PDF-filer?
 ta:SumatraPDFயை கோட நிலை PDF படிப்பியாக மாற்றவா?
@@ -8100,7 +8102,7 @@ tl:Gawin ang SumatraPDF bilang default na pambukas ng mga PDF files?
 tr:SumatraPDF'i PDF dosyaları için varsayılan uygulama yapmak ister misiniz?
 tw:把 SumatraPDF 作為預設的PDF閱讀器?
 uk:Зробити SumatraPDF типовою програмою для PDF-файлів?
-uz:SumatraPDF PDF-fayllarni ko'rish andoza dasturi qilinsinmi?
+uz:SumatraPDF PDF-fayllarni ko'rish andoza dasturi sifatida ishlatilsinmi?
 vn:Đặt SumatraPDF làm trình đọc PDF mặc định?
 :Make SumatraPDF my default PDF reader
 af:Maak Sumatra Die Automatiese PDF Leser
@@ -8521,7 +8523,7 @@ tl:Walang makitang kapareha
 tr:Sonuç bulunamadı
 tw:找不到結果
 uk:Співпадінь не знайдено
-uz:Mos kelmadi
+uz:Mos keladigan topilmadi
 vn:Không tìm thấy
 :No result found around line %u in file %s
 am:Ոչինչ չի գտնվել %u տողում %s ֆայլի
@@ -8566,14 +8568,14 @@ ru:Результат, соответствующий строке %u в фай�
 sk:Nenájdené žiadne výsledky na riadku %u v súbore %s
 sl:Okoli vrstice %u v datoteki %s ni zadetkov
 sp-rs:Rezultati oko linije %u u datoteci %s nisu pronađeni
-sq:Pa rezultat në radhën %u te skeda %s
+sq:Asnjë rezultat në radhën %u te skeda %s
 sr-rs:Резултати око линије %u у датотеци %s нису пронађени
 sv:Inget resultat hittades vid rad %u i filen %s
 tl:Walang nakitang resulta sa line %u ng file %s
 tr:%u satırı etrafında %s dosyasındaki sonuç bulunamadı
 tw:在第 %u 行附近（檔案 %s）找不到目標
 uk:Нічого не знайдено у лінії %u у файлі %s
-uz:%u satriga %s faylida mos natija topilmadi
+uz:%u satriga %s faylida mos keladigan natija topilmadi
 vn:Không tìm thấy gì quanh dòng %u trong tập tin %s
 :No synchronization file found
 am:Չեն գտնվել համանման ֆայլեր
@@ -9237,7 +9239,7 @@ tl:Mga katangian
 tr:Ö&zellikler
 tw:內容(&R)
 uk:Властивості
-uz:&Xossalar
+uz:&Xossalari
 vn:Thuộc tính
 :P&roperties\tCtrl+D
 am:Հ&ատկություններ...\tCtrl+D
@@ -9291,7 +9293,7 @@ tl:Mga Katangian\tCtrl+D
 tr:&Özellikleri\tCtrl+D
 tw:屬性...(&R)\tCtrl+D
 uk:Властивості\tCtrl+D
-uz:&Xossalar\tCtrl+D
+uz:&Xossalari\tCtrl+D
 vn:Thuộc tính\tCtrl+D
 :PDF Document
 am:PDF ֆայլ
@@ -9366,6 +9368,7 @@ ru:Оптимизация PDF:
 sl:Optimizacije PDF:
 sv:PDF Optimeringar:
 tr:PDF Optimizasyonları:
+uz:PDF optimizatsiyalari:
 vn:Các tối ưu PDF
 :PDF Producer:
 am:PDF արտադրողը.
@@ -10171,6 +10174,7 @@ sl:Natisni kot sliko (zahteva več pomnilnika)
 sq:Printoj si &figurë (kërkon shumë RAM)
 sv:Skr&iv ut som bild (mer minnekrävande)
 tr:Resim olarak bas (daha çok hafıza gerektirir)
+uz:&Rasm sifatida bosib chiqarish (ko'proq xotirani talab qiladi)
 vn:In thành hình ảnh (cần nhiều bộ nhớ hơn)
 :Print range
 am:Տպելու կարգը
@@ -10269,7 +10273,7 @@ sr-rs:Штампач са наведеним именом не постоји
 sv:Det finns ingen skrivade med angivet namn
 tr:Girilen isimli Yazıcı bulunamadı
 uk:Друкарки з даним іменем не існує
-uz:Ushbu nom bilan printer mavjud emas
+uz:Bunday printer mavjud emas
 vn:Máy in với tên được cho không tồn tại
 :Printing is still in progress. Abort and start over?
 am:Տպվում է։ Կանգնեցնե՞լ։
@@ -10828,7 +10832,7 @@ tl:Iikot Pakanan\tCtrl+Shift++
 tr:&Sağa çevir\tCtrl+Shift++
 tw:頁面右旋(&R)\tCtrl+Shift++
 uk:Повернути праворуч\tCtrl+Shift++
-uz:&O'nga burish\tCtrl+Shift++
+uz:&O'ngga burish\tCtrl+Shift++
 vn:Quay phải\tCtrl+Shift++
 :Save As
 af:Stoor As
@@ -10894,7 +10898,7 @@ tl:I-save bilang
 tr:Farklı kaydet
 tw:另存新檔
 uk:Зберегти як
-uz:sifatida saqlash
+uz:Quyidagicha saqlash
 vn:Lưu thành
 :Save S&hortcut...\tCtrl+Shift+S
 am:Պահպանել պ&իտակը...\tCtrl+Shift+S
@@ -10942,7 +10946,7 @@ sv:Spara g&enväg...\tCtrl+Shift+S
 tr:K&ısayolu kaydet...\tCtrl+Shift+S
 tw:儲存為捷徑...(&H)\tCtrl+Shift+S
 uk:Зберегти ярлик...\tCtrl+Shift+S
-uz:&Yorliqni saqlash\tCtrl+Shift+S
+uz:&Yorliqni saqlash...\tCtrl+Shift+S
 vn:Lưu lối tắt...\tCtrl+Shift+S
 :Searching %d of %d...
 am:Փնտրվում է %d-ից %d
@@ -11299,6 +11303,7 @@ sl:Prikaži &zaznamke
 sq:Tregoj &shiritat
 sv:Visa &Bokmärken
 tr:Göster &Sık Kullanılanlar
+uz:&Xatcho'plarni ko'rsatish
 vn:Hiện chỉ dấu sách
 :Show &Toolbar
 af:Vertoon Toolbar
@@ -11640,7 +11645,7 @@ tl:Iisang Pahina
 tr:Tek sayfa
 tw:單頁模式
 uk:Одна сторінка
-uz:Yagona bet
+uz:Bitta bet
 vn:Trang đơn
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Մերժել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
@@ -12071,7 +12076,7 @@ tl:SumatraPDF na dapat ang iyong default na pambasa ng mga PDF file
 tr:SumatraPDF artık varsayılan PDF okuyucunuzdur
 tw:SumatraPDF 已成為你的預設 PDF 閱讀器
 uk:SumatraPDF тепер буде вашим PDF переглядачем по замовчуванню
-uz:SumatraPDF endi andoza PDF ko'rish vositasi
+uz:SumatraPDF endi andoza PDF ko'rish vositasi bo'ldi
 vn:SumatraPDF giờ là trình đọc PDF chính của bạn
 :Synchronization file cannot be opened
 am:Հնարավոր չէ բացել համաժամեցման ֆայլը
@@ -12119,7 +12124,7 @@ si:සමකාලනය කළ ගොනුව විවෘත කළ නොහ
 sk:Synchronizačný súbor nie je možné otvoriť
 sl:Datoteke sinhronizacije ni mogoče odpreti
 sp-rs:Nije moguće otvoriti usklađivačku datoteku
-sq:Nuk hapet sinkronizimi i skedës
+sq:Nuk hapet skeda e sinkronizimit
 sr-rs:Није могуће отворити усклађивачку датотеку
 sv:Synkroniseringsfil kan ej öppnas
 ta:ஒத்தியங்கு கோப்பை திறக்க முடியவில்லை
@@ -12143,8 +12148,10 @@ mk:Означен PDF
 ne:ट्याग गरिएको PDF
 ru:Размеченный PDF
 sl:Označen PDF
+sq:PDF me etiketa
 sv:Taggad PDF
 tr:İşaretlenmiş PDF
+uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text documents
 am:Տեքստային ֆայլեր
@@ -12604,7 +12611,7 @@ sk:Používate najnovšiu verziu.
 sl:Imate najnovejšo različico.
 sn:Pane version idzva.
 sp-rs:Vaša verzija je ažurna.
-sq:Ky është versioni më i fundit.
+sq:Keni versionin e fundit.
 sr-rs:Ваша верзија је ажурна.
 sv:Du har den senaste versionen.
 ta:உங்களிடம் புதிய பதிப்பு உள்ளது
@@ -12613,7 +12620,7 @@ tl:Ito ang pinakabagong bersyon.
 tr:En güncel sürümü kullanmaktasınız.
 tw:目前使用的版本為最新版。
 uk:Ви вже маєте найновішу версію.
-uz:Sizda eng so'ngi versiya.
+uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
 :You have version %s
 af:Jy Het Weergawe %s
@@ -12668,7 +12675,7 @@ sk:Používate verziu %s
 sl:Imate različico %s
 sn:Pane version %s
 sp-rs:Imate verziju %s
-sq:Ky është versioni %s
+sq:Keni versionin %s
 sr-rs:Имате верзију %s
 sv:Du har version %s
 ta:உங்களின் பதிப்பு %s
@@ -12676,7 +12683,7 @@ tl:Ang bersyong nasa iyo ay %s
 tr:Kullandığınız sürüm: %s
 tw:您使用的版本 %s
 uk:Ви використовуєте версію %s
-uz:Sizda versiya %s
+uz:Sizdagi versiya %s
 vn:Bạn đang dùng phiên bản %s
 :Zoom
 am:Չափը
@@ -12973,7 +12980,7 @@ tl:[May napansing mga pagbabago; nagre-refresh] %s
 tr:[Değişiklik tespit edildi; güncelleniyor] %s
 tw:[找到更新，同步中] %s
 uk:[Знайдено зміни; оновлення] %s
-uz:[O'zgarishlar aniqlangan; yangilash...] %s
+uz:[O'zgarishlar aniqlangan; yangilanmoqda] %s
 vn:[Phát hiện thay đổi; đang cập nhật] %s
 :copying text
 am:Տեքստը պատճենվում է
@@ -13073,7 +13080,7 @@ si:ලේඛනය මුද්‍රණය
 sk:prebieha tlač dokumentu
 sl:tiskanje dokumenta
 sp-rs:štampanje dokumenta
-sq:printon doumentin
+sq:printon dokumentin
 sr-rs:штампање документа
 sv:skriver ut dokumentet
 ta:கோப்பு அக்சிடப்படுகிறது
