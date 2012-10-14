@@ -227,7 +227,7 @@ void ToLower(WCHAR *s)
 /* Caller needs to free() the result */
 char *ToMultiByte(const WCHAR *txt, UINT codePage)
 {
-    assert(txt);
+    AssertCrash(txt);
     if (!txt) return NULL;
 
     int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, -1, NULL, 0, NULL, NULL);
@@ -243,7 +243,7 @@ char *ToMultiByte(const WCHAR *txt, UINT codePage)
 /* Caller needs to free() the result */
 char *ToMultiByte(const char *src, UINT codePageSrc, UINT codePageDest)
 {
-    assert(src);
+    AssertCrash(src);
     if (!src) return NULL;
 
     if (codePageSrc == codePageDest)
@@ -259,7 +259,7 @@ char *ToMultiByte(const char *src, UINT codePageSrc, UINT codePageDest)
 /* Caller needs to free() the result */
 WCHAR *ToWideChar(const char *src, UINT codePage)
 {
-    assert(src);
+    AssertCrash(src);
     if (!src) return NULL;
 
     int requiredBufSize = MultiByteToWideChar(codePage, 0, src, -1, NULL, 0);

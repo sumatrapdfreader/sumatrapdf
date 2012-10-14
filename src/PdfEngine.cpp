@@ -2653,7 +2653,8 @@ TCHAR *PdfLink::GetValue() const
         break;
     case FZ_LINK_LAUNCH:
         // note: we (intentionally) don't support the /Win specific Launch parameters
-        path = str::conv::FromUtf8(link->ld.launch.file_spec);
+        if (link->ld.launch.file_spec)
+            path = str::conv::FromUtf8(link->ld.launch.file_spec);
         if (path && link->ld.launch.embedded_num && str::EndsWithI(path, _T(".pdf"))) {
             free(path);
             path = str::Format(_T("%s:%d:%d"), engine->FileName(),
@@ -2661,7 +2662,8 @@ TCHAR *PdfLink::GetValue() const
         }
         break;
     case FZ_LINK_GOTOR:
-        path = str::conv::FromUtf8(link->ld.gotor.file_spec);
+        if (link->ld.gotor.file_spec)
+            path = str::conv::FromUtf8(link->ld.gotor.file_spec);
         break;
     }
 
