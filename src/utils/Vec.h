@@ -476,8 +476,10 @@ public:
 
     int Find(const TCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
-        for (size_t i = startAt; i < Count(); i++) {
-            if (items.At(i).hash == hash && str::Eq(items.At(i).string, str))
+        size_t count = items.Count();
+        for (size_t i = startAt; i < count; i++) {
+            Item& item = items.At(i);
+            if (item.hash == hash && str::Eq(item.string, str))
                 return (int)i;
         }
         return -1;
@@ -485,8 +487,10 @@ public:
 
     int FindI(const TCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
-        for (size_t i = startAt; i < Count(); i++) {
-            if (items.At(i).hash == hash && str::EqI(items.At(i).string, str))
+        size_t count = items.Count();
+        for (size_t i = startAt; i < count; i++) {
+            Item& item = items.At(i);
+            if (item.hash == hash && str::EqI(item.string, str))
                 return (int)i;
         }
         return -1;
