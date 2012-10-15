@@ -424,7 +424,7 @@ pdf_read_xref(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 }
 
 static void
-pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
+pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf, fz_buffer *seen_ofs)
 {
 	pdf_obj *trailer = NULL;
 	fz_context *ctx = xref->ctx;
@@ -435,10 +435,25 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 	fz_var(xrefstmofs);
 	fz_var(prevofs);
 
+	/* SumatraPDF: prevent infinite recursion */
+	seen_ofs = seen_ofs ? fz_keep_buffer(ctx, seen_ofs) : fz_new_buffer(ctx, 10 * sizeof(int));
+
 	fz_try(ctx)
 	{
 		do
 		{
+			/* SumatraPDF: prevent infinite recursion */
+			int i;
+			for (i = 0; i < seen_ofs->len; i += sizeof(int))
+				if (*(int *)(seen_ofs->data + i) == ofs)
+					break;
+			if (i < seen_ofs->len)
+			{
+				fz_warn(ctx, "ignoring xref recursion with offset %d", ofs);
+				break;
+			}
+			fz_write_buffer(ctx, seen_ofs, (unsigned char *)&ofs, sizeof(int));
+
 			trailer = pdf_read_xref(xref, ofs, buf);
 
 			/* FIXME: do we overwrite free entries properly? */
@@ -453,7 +468,7 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 			/* We only recurse if we have both xrefstm and prev.
 			 * Hopefully this happens infrequently. */
 			if (xrefstmofs && prevofs)
-				pdf_read_xref_sections(xref, xrefstmofs, buf);
+				pdf_read_xref_sections(xref, xrefstmofs, buf, seen_ofs);
 			if (prevofs)
 				ofs = prevofs;
 			else if (xrefstmofs)
@@ -462,6 +477,11 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 			trailer = NULL;
 		}
 		while (prevofs || xrefstmofs);
+	}
+	/* SumatraPDF: prevent infinite recursion */
+	fz_always(ctx)
+	{
+		fz_drop_buffer(ctx, seen_ofs);
 	}
 	fz_catch(ctx)
 	{
@@ -496,7 +516,7 @@ pdf_load_xref(pdf_document *xref, pdf_lexbuf *buf)
 	if (size > xref->len)
 		pdf_resize_xref(xref, size);
 
-	pdf_read_xref_sections(xref, xref->startxref, buf);
+	pdf_read_xref_sections(xref, xref->startxref, buf, NULL);
 
 	/* broken pdfs where first object is not free */
 	if (xref->table[0].type != 'f')
