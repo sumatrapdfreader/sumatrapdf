@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-304ddd21fec7a43383bbd34aa914d2c116f26713
+1328b60df524109f43e288b6ba9b018fbb95a479
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -687,7 +687,7 @@ sk:&Súbor
 sl:&Datoteka
 sn:&Faira
 sp-rs:Datoteka
-sq:&Skedar
+sq:&Skedari
 sr-rs:Датотека
 sv:&Arkiv
 ta:கோப்பு
@@ -2380,7 +2380,7 @@ si:සැකසුම් (E)
 sk:&Nastavenia
 sl:&Nastavitve
 sp-rs:Podešavanja
-sq:&Parametra
+sq:&Parametrat
 sr-rs:Подешавања
 sv:Alternati&v
 ta:அமைப்புகள்
@@ -2666,7 +2666,7 @@ sk:&Zobraziť
 sl:&Pogled
 sn:&Maonero
 sp-rs:Prikaz
-sq:&Pamje
+sq:&Pamja
 sr-rs:Приказ
 sv:Vi&sa
 ta:நோக்கு
@@ -2789,7 +2789,7 @@ sk:&Zväčšenie
 sl:Po&večava
 sn:&Zuma
 sp-rs:Uvećanje
-sq:&Shkallë
+sq:&Shkalla
 sr-rs:Увећање
 sv:&Zoom
 ta:பெரிதாக்கு
@@ -3326,7 +3326,7 @@ ru:Все поддерживаемые документы
 sk:Všetky podporované dokumenty
 sl:Vse podprte dokumente
 sp-rs:Svi podržani dokumenti
-sq:Dokumentet e garantuara
+sq:Dokumente të garantuara
 sr-rs:Сви подржани документи
 sv:Alla dokument som stöds
 ta:எல்லா ஆதரிக்கப்பட்ட கோப்புகள்
@@ -3784,7 +3784,7 @@ sk:Záložky\tF12
 sl:Zaznamki\tF12
 sn:Mabhukumaki\tF12
 sp-rs:Obeleživači\tF12
-sq:Shir&ita\tF12
+sq:Faqe të &shenjuara\tF12
 sr-rs:Обележивачи\tF12
 sv:Bokmärken\tF12
 ta:புத்தகக்குறி
@@ -3835,7 +3835,7 @@ ru:Ярлыки закладок
 sk:Zástupca záložiek
 sl:Zaznamki bližnjic
 sp-rs:Prečica ka obeleživaču
-sq:Shkurtoret e shiritit
+sq:Shkurtoret e shenjimit
 sr-rs:Пречица ка обележивачу
 sv:Bokmärkesgenvägar
 tr:Yer imi kısayolları
@@ -3883,7 +3883,7 @@ ru:Ярлык закладки на стр. %s из %s
 sk:Zástupca záložky na stranu %s z %s
 sl:Zaznamek bližnjice na stran %s od %s
 sp-rs:Obeleži prečicu na strani %s od %s
-sq:Shkurtorja e shiritit për faqen %s nga %s
+sq:Shkurtorja e shenjimit për faqet %s nga %s
 sr-rs:Обележи пречицу на страни %s од %s
 sv:Bokmärk genväg till sida %s av %s
 tr:%s. sayfasına %s yer imi kısayolu
@@ -3934,7 +3934,7 @@ si:පිටු සලකුණු
 sk:Záložky
 sl:Zaznamki
 sp-rs:Obeleživači
-sq:Shirita
+sq:Faqe të shenjuara
 sr-rs:Обележивачи
 sv:Bokmärken
 tl:Mga Pananda
@@ -6360,6 +6360,7 @@ nl:Snelle browserweergave
 pl:Szybkie wyświetlanie w Internecie
 ru:Быстрый просмотр в Интернете
 sl:Hiter spletni prikaz
+sq:Hap shpejt në internet
 sv:Snabb Webb-Visning
 tr:Hızlı Web Görünümü
 uz:Tez veb ko'rish
@@ -9366,6 +9367,7 @@ mk:Оптимизации за PDF:
 ne:PDF अप्टिमाइजेसन
 ru:Оптимизация PDF:
 sl:Optimizacije PDF:
+sq:PDF Optimizime:
 sv:PDF Optimeringar:
 tr:PDF Optimizasyonları:
 uz:PDF optimizatsiyalari:
@@ -11300,7 +11302,7 @@ pl:Pokaż &Zakładki
 pt:&Mostrar marcadores
 ru:Показать &закладки
 sl:Prikaži &zaznamke
-sq:Tregoj &shiritat
+sq:Tregoj &faqet e shenjuara
 sv:Visa &Bokmärken
 tr:Göster &Sık Kullanılanlar
 uz:&Xatcho'plarni ko'rsatish
@@ -11571,7 +11573,7 @@ si:තිබෙනවිටදී &පිටුසලකුණු පැති�
 sk:Zobraziť bočný panel &záložiek, pokiaľ je dostupný
 sl:Pokaži podokno z &zaznamki, če so na voljo
 sp-rs:Prikaži bočnu traku sa obeleživačima
-sq:Tregoj brezin anësor të &shiritave kur mundësohet
+sq:Tregoj brezin me &faqet e shenjuara kur mundësohen
 sr-rs:Прикажи бочну траку са обележивачима
 sv:Visa &bokmärken när de finns
 ta:புத்தககுறி பட்டை இருந்தல் காட்டு
@@ -12373,7 +12375,7 @@ sk:Zobraziť
 sl:Pogled
 sn:Maonero
 sp-rs:Prikaz
-sq:Pamje
+sq:Pamja
 sr-rs:Приказ
 sv:Visa
 ta:நோக்கு
