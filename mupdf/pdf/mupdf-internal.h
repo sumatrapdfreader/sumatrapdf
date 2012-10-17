@@ -288,7 +288,7 @@ pdf_xobject *pdf_keep_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_drop_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_update_xobject_contents(pdf_document *xref, pdf_xobject *form, fz_buffer *buffer);
 
-void pdf_update_appearance(pdf_document *doc, pdf_obj *obj);
+int pdf_update_appearance(pdf_document *doc, pdf_obj *obj);
 
 /* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
 pdf_xobject *pdf_create_xobject(fz_context *ctx, pdf_obj *dict);
@@ -503,11 +503,23 @@ float pdf_text_stride(fz_context *ctx, pdf_font_desc *fontdesc, float fontsize, 
  * Interactive features
  */
 
+/*
+ * Flags as to the suitability of an annotation for the mouse states up and down
+ * Both flags set mean suitable for both states.
+ */
+enum
+{
+	MOUSE_DOWN_APPEARANCE = 1,
+	MOUSE_UP_APPEARANCE = 2,
+};
+
 struct pdf_annot_s
 {
 	pdf_obj *obj;
 	fz_rect rect;
 	fz_rect pagerect;
+	int mouse_states;
+	int has_states;
 	pdf_xobject *ap;
 	fz_matrix matrix;
 	pdf_annot *next;
@@ -526,6 +538,7 @@ char *pdf_file_spec_to_str(pdf_document *doc, pdf_obj *file_spec);
 fz_link *pdf_load_link_annots(pdf_document *, pdf_obj *annots, fz_matrix page_ctm);
 
 pdf_annot *pdf_load_annots(pdf_document *, pdf_obj *annots, fz_matrix page_ctm);
+void pdf_update_annot(pdf_document *, pdf_annot *annot);
 void pdf_free_annot(fz_context *ctx, pdf_annot *link);
 
 int pdf_field_type(pdf_document *doc, pdf_obj *field);
@@ -555,6 +568,9 @@ struct pdf_page_s
 	pdf_obj *contents;
 	fz_link *links;
 	pdf_annot *annots;
+	float duration;
+	int transition_present;
+	fz_transition transition;
 };
 
 /*

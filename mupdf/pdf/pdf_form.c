@@ -1698,50 +1698,52 @@ static void execute_action(pdf_document *doc, pdf_obj *obj, pdf_obj *a)
 	}
 }
 
-void pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
+int pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
 {
-	if (!pdf_dict_gets(obj, "AP") || pdf_dict_gets(obj, "Dirty"))
+	if (pdf_dict_gets(obj, "AP") && !pdf_dict_gets(obj, "Dirty"))
+		return 0;
+
+	if (!strcmp(pdf_to_name(pdf_dict_gets(obj, "Subtype")), "Widget"))
 	{
-		if (!strcmp(pdf_to_name(pdf_dict_gets(obj, "Subtype")), "Widget"))
+		switch(pdf_field_type(doc, obj))
 		{
-			switch(pdf_field_type(doc, obj))
+		case FZ_WIDGET_TYPE_TEXT:
 			{
-			case FZ_WIDGET_TYPE_TEXT:
+				pdf_obj *formatting = pdf_dict_getp(obj, "AA/F");
+				if (formatting && doc->js)
 				{
-					pdf_obj *formatting = pdf_dict_getp(obj, "AA/F");
-					if (formatting && doc->js)
-					{
-						/* Apply formatting */
-						pdf_js_event e;
+					/* Apply formatting */
+					pdf_js_event e;
 
-						e.target = obj;
-						e.value = pdf_field_value(doc, obj);
-						pdf_js_setup_event(doc->js, &e);
-						execute_action(doc, obj, formatting);
-						/* Update appearance from JS event.value */
-						update_text_appearance(doc, obj, pdf_js_get_event(doc->js)->value);
-					}
-					else
-					{
-						/* Update appearance from field value */
-						update_text_appearance(doc, obj, NULL);
-					}
+					e.target = obj;
+					e.value = pdf_field_value(doc, obj);
+					pdf_js_setup_event(doc->js, &e);
+					execute_action(doc, obj, formatting);
+					/* Update appearance from JS event.value */
+					update_text_appearance(doc, obj, pdf_js_get_event(doc->js)->value);
 				}
-				break;
-			case FZ_WIDGET_TYPE_PUSHBUTTON:
-				update_pushbutton_appearance(doc, obj);
-				break;
-			case FZ_WIDGET_TYPE_LISTBOX:
-			case FZ_WIDGET_TYPE_COMBOBOX:
-				/* Treating listbox and combobox identically for now,
-				 * and the behaviour is most appropriate for a combobox */
-				update_combobox_appearance(doc, obj);
-				break;
+				else
+				{
+					/* Update appearance from field value */
+					update_text_appearance(doc, obj, NULL);
+				}
 			}
+			break;
+		case FZ_WIDGET_TYPE_PUSHBUTTON:
+			update_pushbutton_appearance(doc, obj);
+			break;
+		case FZ_WIDGET_TYPE_LISTBOX:
+		case FZ_WIDGET_TYPE_COMBOBOX:
+			/* Treating listbox and combobox identically for now,
+			* and the behaviour is most appropriate for a combobox */
+			update_combobox_appearance(doc, obj);
+			break;
 		}
-
-		pdf_dict_dels(obj, "Dirty");
 	}
+
+	pdf_dict_dels(obj, "Dirty");
+
+	return 1;
 }
 
 static void execute_action_chain(pdf_document *doc, pdf_obj *obj)

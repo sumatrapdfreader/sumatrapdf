@@ -114,12 +114,8 @@ public class MuPDFCore
 			break;
 		}
 
-		if (changed) {
-			if (page == pageNum)
-				pageNum = -1;
-
+		if (changed)
 			markDirtyInternal(page);
-		}
 
 		return new PassClickResult(changed, wtype, text);
 	}
@@ -129,10 +125,8 @@ public class MuPDFCore
 		gotoPage(page);
 		success = setFocusedWidgetTextInternal(text) != 0 ? true : false;
 
-		if (success) {
-			pageNum = -1;
+		if (success)
 			markDirtyInternal(page);
-		}
 
 		return success;
 	}

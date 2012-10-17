@@ -150,10 +150,10 @@ Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(JNIEnv *env, jobject thiz, int
 JNIEXPORT void JNICALL
 Java_com_artifex_mupdf_MuPDFCore_markDirtyInternal(JNIEnv *env, jobject thiz, int page)
 {
-	if (currentPage != NULL && page == pagenum)
+	if (currentPageList != NULL && page == pagenum)
 	{
-		fz_free_page(doc, currentPage);
-		currentPage = NULL;
+		fz_free_display_list(ctx, currentPageList);
+		currentPageList = NULL;
 	}
 }
 

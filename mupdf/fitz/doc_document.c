@@ -9,8 +9,7 @@ extern struct pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_st
 extern struct xps_document *xps_open_document_with_stream(fz_context *ctx, fz_stream *file);
 extern struct cbz_document *cbz_open_document_with_stream(fz_context *ctx, fz_stream *file);
 
-extern int pdf_js_supported();
-
+extern int pdf_js_supported(void);
 
 static inline int fz_tolower(int c)
 {
@@ -182,6 +181,19 @@ fz_meta(fz_document *doc, int key, void *ptr, int size)
 	if (doc && doc->meta)
 		return doc->meta(doc, key, ptr, size);
 	return FZ_META_UNKNOWN_KEY;
+}
+
+fz_transition *
+fz_page_presentation(fz_document *doc, fz_page *page, float *duration)
+{
+	float dummy;
+	if (duration)
+		*duration = 0;
+	else
+		duration = &dummy;
+	if (doc && doc->page_presentation && page)
+		return doc->page_presentation(doc, page, duration);
+	return NULL;
 }
 
 fz_interactive *fz_interact(fz_document *doc)

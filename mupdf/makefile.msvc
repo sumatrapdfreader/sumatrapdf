@@ -228,7 +228,7 @@ FITZ_DRAW_OBJS = \
 
 FITZ_OBJS = \
 	$(OFZ)\base_error.obj $(OFZ)\base_geometry.obj $(OFZ)\base_getopt.obj $(OFZ)\base_hash.obj \
-	$(OFZ)\base_memory.obj $(OFZ)\base_string.obj $(OFZ)\base_time.obj \
+	$(OFZ)\base_memory.obj $(OFZ)\base_string.obj $(OFZ)\base_time.obj $(OFZ)\base_trans.obj \
 	$(OFZ)\base_context.obj $(OFZ)\crypt_sha2.obj $(OFZ)\dev_gdiplus.obj \
 	$(OFZ)\dev_bbox.obj $(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_text.obj \
 	$(OFZ)\dev_trace.obj $(OFZ)\crypt_aes.obj $(OFZ)\crypt_arc4.obj $(OFZ)\crypt_md5.obj \

@@ -1240,8 +1240,10 @@ pdf_annot *
 pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 {
 	pdf_annot *annot, *head, *tail;
-	pdf_obj *obj, *ap, *as, *n, *rect;
+	pdf_obj *obj, *ap, *as, *n, *d, *c, *rect;
 	int i, len;
+	int mouse_states;
+	int has_states = 0;
 	fz_context *ctx = xref->ctx;
 
 	head = tail = NULL;
@@ -1276,25 +1278,48 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 		{
 			pdf_hotspot *hp = &xref->hotspot;
 
-			n = NULL;
+			n = pdf_dict_gets(ap, "N"); /* normal state */
+			d = pdf_dict_gets(ap, "D"); /* down state */
 
-			if (hp->num == pdf_to_num(obj)
-				&& hp->gen == pdf_to_gen(obj)
-				&& (hp->state & HOTSPOT_POINTER_DOWN))
+			if (n && d)
 			{
-				n = pdf_dict_gets(ap, "D"); /* down state */
+				if (hp->num == pdf_to_num(obj)
+					&& hp->gen == pdf_to_gen(obj)
+					&& (hp->state & HOTSPOT_POINTER_DOWN))
+				{
+					/* Use the down appearance, but as we also have
+					 * a normal appearance, it is suitable only for mouse
+					 * down */
+					c = d;
+					mouse_states = MOUSE_DOWN_APPEARANCE;
+				}
+				else
+				{
+					/* Use the normal appearance, but as we also have
+					 * a down appearance, it is suitable only for mouse
+					 * up */
+					c = n;
+					mouse_states = MOUSE_UP_APPEARANCE;
+				}
+			}
+			else
+			{
+				/* Use whichever appearance we have for both states */
+				c = n?n:d;
+				mouse_states = MOUSE_UP_APPEARANCE|MOUSE_DOWN_APPEARANCE;
 			}
 
-			if (n == NULL)
-				n = pdf_dict_gets(ap, "N"); /* normal state */
 
 			/* SumatraPDF: prevent memory leak */
 			fz_try(ctx)
 			{
 
 			/* lookup current state in sub-dictionary */
-			if (!pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
-				n = pdf_dict_get(n, as);
+			if (!pdf_is_stream(xref, pdf_to_num(c), pdf_to_gen(c)))
+			{
+				has_states = 1;
+				c = pdf_dict_get(c, as);
+			}
 
 			}
 			fz_catch(ctx)
@@ -1309,12 +1334,14 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 			annot->pagerect = fz_transform_rect(page_ctm, annot->rect);
 			annot->ap = NULL;
 			annot->type = pdf_field_type(xref, obj);
+			annot->mouse_states = mouse_states;
+			annot->has_states = has_states;
 
-			if (pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
+			if (pdf_is_stream(xref, pdf_to_num(c), pdf_to_gen(c)))
 			{
 				fz_try(ctx)
 				{
-					annot->ap = pdf_load_xobject(xref, n);
+					annot->ap = pdf_load_xobject(xref, c);
 					pdf_transform_annot(annot);
 				}
 				fz_catch(ctx)
@@ -1350,6 +1377,86 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 	}
 
 	return head;
+}
+
+void
+pdf_update_annot(pdf_document *xref, pdf_annot *annot)
+{
+	pdf_obj *obj, *ap, *as, *n, *d, *c;
+	fz_context *ctx = xref->ctx;
+	int suitable;
+	int mouse_states;
+	pdf_hotspot *hp = &xref->hotspot;
+
+	/* SumatraPDF: prevent regressions */
+	return;
+
+	obj = annot->obj;
+
+	if (hp->num == pdf_to_num(obj)
+		&& hp->gen == pdf_to_gen(obj)
+		&& (hp->state & HOTSPOT_POINTER_DOWN))
+	{
+		mouse_states = MOUSE_DOWN_APPEARANCE;
+	}
+	else
+	{
+		mouse_states = MOUSE_UP_APPEARANCE;
+	}
+
+	suitable = (annot->mouse_states & mouse_states);
+
+	if (pdf_update_appearance(xref, obj) || !suitable || annot->has_states)
+	{
+		ap = pdf_dict_gets(obj, "AP");
+		as = pdf_dict_gets(obj, "AS");
+
+		if (pdf_is_dict(ap))
+		{
+			pdf_hotspot *hp = &xref->hotspot;
+
+			n = pdf_dict_gets(ap, "N"); /* normal state */
+			d = pdf_dict_gets(ap, "D"); /* down state */
+
+			if (mouse_states == MOUSE_DOWN_APPEARANCE)
+				c = d?d:n;
+			else
+				c = n?n:d;
+
+			annot->has_states = 0;
+
+			/* lookup current state in sub-dictionary */
+			if (!pdf_is_stream(xref, pdf_to_num(c), pdf_to_gen(c)))
+			{
+				annot->has_states = 1;
+				c = pdf_dict_get(c, as);
+			}
+
+			/* This test is important to avoid losing the knowledge
+			 * that an appearance stream is for both mouse states */
+			if (!suitable)
+				annot->mouse_states = mouse_states;
+
+			pdf_drop_xobject(ctx, annot->ap);
+			annot->ap = NULL;
+
+			if (pdf_is_stream(xref, pdf_to_num(c), pdf_to_gen(c)))
+			{
+				fz_try(ctx)
+				{
+					annot->ap = pdf_load_xobject(xref, c);
+					pdf_transform_annot(annot);
+				}
+				fz_catch(ctx)
+				{
+					fz_warn(ctx, "ignoring broken annotation");
+				}
+			}
+
+			if (obj == xref->focus_obj)
+				xref->focus = annot;
+		}
+	}
 }
 
 pdf_annot *

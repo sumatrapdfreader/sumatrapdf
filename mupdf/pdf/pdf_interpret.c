@@ -2999,6 +2999,7 @@ pdf_run_page_with_usage(pdf_document *xref, pdf_page *page, fz_device *dev, fz_m
 		{
 			fz_try(ctx)
 			{
+				pdf_update_annot(xref, annot);
 				pdf_run_xobject(csi, page->resources, annot->ap, annot->matrix);
 			}
 			fz_catch(ctx)

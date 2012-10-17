@@ -1285,6 +1285,16 @@ pdf_meta(pdf_document *doc, int key, void *ptr, int size)
 	}
 }
 
+fz_transition *
+pdf_page_presentation(pdf_document *doc, pdf_page *page, float *duration)
+{
+	*duration = page->duration;
+	if (!page->transition_present)
+		return NULL;
+	return &page->transition;
+}
+
+
 static fz_interactive *
 pdf_interact(pdf_document *doc)
 {
@@ -1320,6 +1330,7 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 	doc->super.run_page = NULL; /* see pdf_xref_aux.c */
 	doc->super.free_page = (void*)pdf_free_page;
 	doc->super.meta = (void*)pdf_meta;
+	doc->super.page_presentation = (void*)pdf_page_presentation;
 	doc->super.interact = (void*)pdf_interact;
 	doc->super.write = (void*)pdf_write_document;
 

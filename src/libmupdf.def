@@ -127,6 +127,7 @@ EXPORTS
 	fz_print_outline_xml
 	fz_print_outline
 	fz_free_outline
+	fz_generate_transition
 	fz_open_document
 	fz_open_document_with_stream
 	fz_close_document
@@ -143,6 +144,7 @@ EXPORTS
 	fz_run_page
 	fz_free_page
 	fz_meta
+	fz_page_presentation
 	fz_interact
 	fz_has_unsaved_changes
 	fz_pass_event
@@ -481,6 +483,7 @@ EXPORTS
 	pdf_run_page
 	pdf_run_page_with_usage
 	pdf_meta
+	pdf_page_presentation
 
 	pdf_set_str_len
 	pdf_get_indirect_document
@@ -596,6 +599,7 @@ EXPORTS
 	pdf_file_spec_to_str
 	pdf_load_link_annots
 	pdf_load_annots
+	pdf_update_annot
 	pdf_free_annot
 	pdf_field_type
 	pdf_field_value

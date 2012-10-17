@@ -39,6 +39,7 @@ extern int winsavequery(pdfapp_t*);
 extern int wingetsavepath(pdfapp_t*, char *buf, int len);
 extern void winalert(pdfapp_t *, fz_alert_event *alert);
 extern void winprint(pdfapp_t *);
+extern void winadvancetimer(pdfapp_t *, float duration);
 
 struct pdfapp_s
 {
@@ -56,6 +57,16 @@ struct pdfapp_s
 	int grayscale;
 	fz_colorspace *colorspace;
 	int invert;
+
+	/* presentation mode */
+	int presentation_mode;
+	int transitions_enabled;
+	fz_pixmap *old_image;
+	fz_pixmap *new_image;
+	clock_t start_time;
+	int in_transit;
+	float duration;
+	fz_transition transition;
 
 	/* current page params */
 	int pageno;
@@ -127,5 +138,7 @@ void pdfapp_gotopage(pdfapp_t *app, int number);
 
 void pdfapp_invert(pdfapp_t *app, fz_bbox rect);
 void pdfapp_inverthit(pdfapp_t *app);
+
+void pdfapp_postblit(pdfapp_t *app);
 
 #endif

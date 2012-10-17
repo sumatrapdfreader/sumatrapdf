@@ -398,6 +398,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\base_trans.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\crypt_aes.c"
 				>
 			</File>

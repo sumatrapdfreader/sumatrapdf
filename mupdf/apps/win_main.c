@@ -31,6 +31,7 @@ static BITMAPINFO *dibinf;
 static HCURSOR arrowcurs, handcurs, waitcurs, caretcurs;
 static LRESULT CALLBACK frameproc(HWND, UINT, WPARAM, LPARAM);
 static LRESULT CALLBACK viewproc(HWND, UINT, WPARAM, LPARAM);
+static int timer_pending = 0;
 
 static int justcopied = 0;
 
@@ -824,8 +825,24 @@ void winopenuri(pdfapp_t *app, char *buf)
 	ShellExecuteA(hwndframe, "open", buf, 0, 0, SW_SHOWNORMAL);
 }
 
+#define OUR_TIMER_ID 1
+
+void winadvancetimer(pdfapp_t *app, float delay)
+{
+	timer_pending = 1;
+	SetTimer(hwndview, OUR_TIMER_ID, (unsigned int)(1000*delay), NULL);
+}
+
+static void killtimer(pdfapp_t *app)
+{
+	timer_pending = 0;
+}
+
 void handlekey(int c)
 {
+	if (timer_pending)
+		killtimer(&gapp);
+
 	if (GetCapture() == hwndview)
 		return;
 
@@ -857,6 +874,9 @@ void handlekey(int c)
 
 void handlemouse(int x, int y, int btn, int state)
 {
+	if (state != 0 && timer_pending)
+		killtimer(&gapp);
+
 	if (state != 0 && justcopied)
 	{
 		justcopied = 0;
@@ -958,6 +978,7 @@ viewproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		winblit();
 		hdc = NULL;
 		EndPaint(hwnd, &ps);
+		pdfapp_postblit(&gapp);
 		return 0;
 	}
 
@@ -1008,6 +1029,17 @@ viewproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		else
 			handlekey(LOWORD(wParam) & MK_SHIFT ? '-' : 'j');
 		return 0;
+
+	/* Timer */
+	case WM_TIMER:
+		if (wParam == OUR_TIMER_ID && timer_pending && gapp.presentation_mode)
+		{
+			timer_pending = 0;
+			handlekey(VK_RIGHT + 256);
+			handlemouse(oldx, oldy, 0, 0); /* update cursor */
+			return 0;
+		}
+		break;
 
 	/* Keyboard events */
 

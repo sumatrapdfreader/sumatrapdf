@@ -280,4 +280,9 @@ void pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, 
 */
 int pdf_meta(pdf_document *doc, int key, void *ptr, int size);
 
+/*
+	Presentation interface.
+*/
+fz_transition *pdf_page_presentation(pdf_document *doc, pdf_page *page, float *duration);
+
 #endif

@@ -94,6 +94,9 @@ static int closing = 0;
 static int reloading = 0;
 static int showingpage = 0;
 
+static int advance_scheduled = 0;
+static struct timeval tmo_advance;
+
 /*
  * Dialog boxes
  */
@@ -502,6 +505,18 @@ void winrepaintsearch(pdfapp_t *app)
 	dirtysearch = 1;
 }
 
+void winadvancetimer(pdfapp_t *app, float duration)
+{
+	struct timeval now;
+
+	gettimeofday(&now, NULL);
+	memset(&tmo_advance, 0, sizeof(tmo_advance));
+	tmo_advance.tv_sec = (int)duration;
+	tmo_advance.tv_usec = 1000000 * (duration - tmo_advance.tv_sec);
+	timeradd(&tmo_advance, &now, &tmo_advance);
+	advance_scheduled = 1;
+}
+
 void windrawstringxor(pdfapp_t *app, int x, int y, char *s)
 {
 	int prevfunction;
@@ -561,6 +576,8 @@ void windocopy(pdfapp_t *app)
 void onselreq(Window requestor, Atom selection, Atom target, Atom property, Time time)
 {
 	XEvent nevt;
+
+	advance_scheduled = 0;
 
 	if (property == None)
 		property = target;
@@ -635,6 +652,8 @@ void winopenuri(pdfapp_t *app, char *buf)
 
 static void onkey(int c)
 {
+	advance_scheduled = 0;
+
 	if (justcopied)
 	{
 		justcopied = 0;
@@ -653,6 +672,9 @@ static void onkey(int c)
 
 static void onmouse(int x, int y, int btn, int modifiers, int state)
 {
+	if (state != 0)
+		advance_scheduled = 0;
+
 	if (state != 0 && justcopied)
 	{
 		justcopied = 0;
@@ -695,6 +717,7 @@ int main(int argc, char **argv)
 	struct timeval now;
 	struct timeval tmo;
 	struct timeval *timeout;
+	struct timeval tmo_advance_delay;
 
 	ctx = fz_new_context(NULL, NULL, FZ_STORE_DEFAULT);
 	if (!ctx)
@@ -732,6 +755,7 @@ int main(int argc, char **argv)
 	if (resolution > MAXRES)
 		resolution = MAXRES;
 
+	gapp.transitions_enabled = 1;
 	gapp.scrw = DisplayWidth(xdpy, xscr);
 	gapp.scrh = DisplayHeight(xdpy, xscr);
 	gapp.resolution = resolution;
@@ -748,7 +772,7 @@ int main(int argc, char **argv)
 
 	while (!closing)
 	{
-		while (!closing && XPending(xdpy))
+		while (!closing && XPending(xdpy) && !dirty)
 		{
 			XNextEvent(xdpy, &xevt);
 
@@ -856,6 +880,7 @@ int main(int argc, char **argv)
 				winblitsearch(&gapp);
 			dirty = 0;
 			dirtysearch = 0;
+			pdfapp_postblit(&gapp);
 		}
 
 		if (showingpage && !tmo_at.tv_sec && !tmo_at.tv_usec)
@@ -867,7 +892,7 @@ int main(int argc, char **argv)
 			timeradd(&now, &tmo, &tmo_at);
 		}
 
-		if (XPending(xdpy))
+		if (XPending(xdpy) || dirty)
 			continue;
 
 		timeout = NULL;
@@ -888,6 +913,32 @@ int main(int argc, char **argv)
 				timeout = &tmo;
 		}
 
+		if (advance_scheduled)
+		{
+			gettimeofday(&now, NULL);
+			timersub(&tmo_advance, &now, &tmo_advance_delay);
+			if (tmo_advance_delay.tv_sec <= 0)
+			{
+				/* Too late already */
+				onkey(' ');
+				onmouse(oldx, oldy, 0, 0, 0);
+				advance_scheduled = 0;
+			}
+			else if (timeout == NULL)
+			{
+				timeout = &tmo_advance_delay;
+			}
+			else
+			{
+				struct timeval tmp;
+				timersub(&tmo_advance_delay, timeout, &tmp);
+				if (tmp.tv_sec < 0)
+				{
+					timeout = &tmo_advance_delay;
+				}
+			}
+		}
+
 		FD_SET(x11fd, &fds);
 		if (select(x11fd + 1, &fds, NULL, NULL, timeout) < 0)
 		{
@@ -899,11 +950,20 @@ int main(int argc, char **argv)
 		}
 		if (!FD_ISSET(x11fd, &fds))
 		{
-			tmo_at.tv_sec = 0;
-			tmo_at.tv_usec = 0;
-			timeout = NULL;
-			showingpage = 0;
-			winrepaint(&gapp);
+			if (timeout == &tmo_advance_delay)
+			{
+				onkey(' ');
+				onmouse(oldx, oldy, 0, 0, 0);
+				advance_scheduled = 0;
+			}
+			else
+			{
+				tmo_at.tv_sec = 0;
+				tmo_at.tv_usec = 0;
+				timeout = NULL;
+				showingpage = 0;
+				winrepaint(&gapp);
+			}
 		}
 	}
 

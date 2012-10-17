@@ -1469,6 +1469,7 @@ struct fz_document_s
 	void (*run_page)(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
 	void (*free_page)(fz_document *doc, fz_page *page);
 	int (*meta)(fz_document *doc, int key, void *ptr, int size);
+	fz_transition *(*page_presentation)(fz_document *doc, fz_page *page, float *duration);
 	fz_interactive *(*interact)(fz_document *doc);
 	void (*write)(fz_document *doc, char *filename, fz_write_options *opts);
 	fz_annot *(*first_annot)(fz_document *doc, fz_page *page);

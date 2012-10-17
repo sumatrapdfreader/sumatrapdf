@@ -53,6 +53,10 @@ void winalert(pdfapp_t *app, fz_alert_event *alert)
 	}
 }
 
+void winadvancetimer(pdfapp_t *app, float duration)
+{
+}
+
 void winprint(pdfapp_t *app)
 {
 	fprintf(stderr, "The MuPDF library supports printing, but this application currently does not");
