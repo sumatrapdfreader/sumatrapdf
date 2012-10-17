@@ -2380,8 +2380,8 @@ TCHAR *PdfEngineImpl::ExtractFontList()
 
     StrVec fonts;
     for (size_t i = 0; i < fontList.Count(); i++) {
-        const char *name, *type, *encoding;
-        bool embedded;
+        const char *name = NULL, *type, *encoding;
+        bool embedded = false;
         fz_try(ctx) {
             pdf_obj *font = fontList.At(i);
             pdf_obj *font2 = pdf_array_get(pdf_dict_gets(font, "DescendantFonts"), 0);
