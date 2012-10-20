@@ -46,7 +46,7 @@ The information that we need to remember:
 * text color (when/if we support changing text color)
 * more ?
 
-TODO: reuse styleStack, listDepth, preFormatted from HtmlPage when restarting
+TODO: reuse styleStack, listDepth, preFormatted, dirRtl from HtmlPage when restarting
 layout from a reparseIdx
 
 TODO: HtmlFormatter could be split into DrawInstrBuilder which knows pageDx, pageDy
@@ -70,9 +70,9 @@ static bool ValidReparseIdx(int idx, HtmlPullParser *parser)
     return true;
 }
 
-DrawInstr DrawInstr::Str(const char *s, size_t len, RectF bbox)
+DrawInstr DrawInstr::Str(const char *s, size_t len, RectF bbox, bool rtl)
 {
-    DrawInstr di(InstrString, bbox);
+    DrawInstr di(rtl ? InstrRtlString : InstrString, bbox);
     di.str.s = s;
     di.str.len = len;
     return di;
@@ -138,7 +138,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     pageDx(args->pageDx), pageDy(args->pageDy),
     textAllocator(args->textAllocator), currLineReparseIdx(NULL),
     currX(0), currY(0), currLineTopPadding(0), currLinkIdx(0),
-    listDepth(0), preFormatted(false), currPage(NULL),
+    listDepth(0), preFormatted(false), dirRtl(false), currPage(NULL),
     finishedParsing(false), pageCount(0), measureAlgo(args->measureAlgo),
     keepTagNesting(false)
 {
@@ -153,6 +153,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     DrawStyle style;
     style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = Align_Justify;
+    style.dirRtl = false;
     currLineStyleStack.Append(style);
     styleStack = currLineStyleStack;
 
@@ -239,13 +240,14 @@ void HtmlFormatter::RevertStyleChange()
         DrawStyle style = currLineStyleStack.Pop();
         if (style.font != CurrFont())
             AppendInstr(DrawInstr::SetFont(CurrFont()));
+        dirRtl = style.dirRtl;
     }
 }
 
 static bool IsVisibleDrawInstr(DrawInstr *i)
 {
     switch (i->type) {
-        case InstrString:
+        case InstrString: case InstrRtlString:
         case InstrLine:
         case InstrImage:
             return true;
@@ -259,7 +261,9 @@ REAL HtmlFormatter::CurrLineDx()
 {
     REAL dx = NewLineX();
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if (InstrString == i->type || InstrImage == i->type) {
+        if (InstrString == i->type || InstrRtlString == i->type) {
+            dx += i->bbox.Width;
+        } else if (InstrImage == i->type) {
             dx += i->bbox.Width;
         } else if (InstrElasticSpace == i->type) {
             dx += spaceDx;
@@ -305,7 +309,7 @@ void HtmlFormatter::LayoutLeftStartingAt(REAL offX)
 
     REAL x = offX + NewLineX();
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
-        if (InstrString == i->type || InstrImage == i->type) {
+        if (InstrString == i->type || InstrRtlString == i->type || InstrImage == i->type) {
             i->bbox.X = x;
             x += i->bbox.Width;
             lastInstr = i;
@@ -347,7 +351,9 @@ void HtmlFormatter::JustifyLineBoth()
             ++spaces;
             endsWithSpace = true;
         }
-        else if (InstrString == i->type || InstrImage == i->type)
+        else if (InstrString == i->type || InstrRtlString == i->type)
+            endsWithSpace = false;
+        else if (InstrImage == i->type)
             endsWithSpace = false;
     }
     // don't take a space at the end of the line into account 
@@ -363,7 +369,7 @@ void HtmlFormatter::JustifyLineBoth()
     for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
         if (InstrElasticSpace == i->type)
             offX += extraSpaceDx;
-        else if (InstrString == i->type || InstrImage == i->type) {
+        else if (InstrString == i->type || InstrRtlString == i->type || InstrImage == i->type) {
             i->bbox.X += offX;
             lastStr = i;
         }
@@ -401,6 +407,15 @@ void HtmlFormatter::JustifyCurrLine(AlignAttr align)
         default:
             CrashIf(true);
             break;
+    }
+
+    // when the reading direction is right-to-left, mirror the entire page
+    // so that the first element on a line is the right-most, etc.
+    if (dirRtl) {
+        for (DrawInstr *i = currLineInstr.IterStart(); i; i = currLineInstr.IterNext()) {
+            if (IsVisibleDrawInstr(i))
+                i->bbox.X = pageDx - i->bbox.X - i->bbox.Width;
+        }
     }
 }
 
@@ -657,7 +672,7 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         RectF bbox = MeasureText(gfx, CurrFont(), buf, strLen, measureAlgo);
         EnsureDx(bbox.Width);
         if (bbox.Width <= pageDx - currX) {
-            AppendInstr(DrawInstr::Str(s, end - s, bbox));
+            AppendInstr(DrawInstr::Str(s, end - s, bbox, dirRtl));
             currX += bbox.Width;
             break;
         }
@@ -680,7 +695,7 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         for (int i = lenThatFits - 1; i >= 0; i--) {
             lenThatFits += buf[i] < 0x80 ? 0 : buf[i] < 0x800 ? 1 : 2;
         }
-        AppendInstr(DrawInstr::Str(s, lenThatFits, bbox));
+        AppendInstr(DrawInstr::Str(s, lenThatFits, bbox, dirRtl));
         currX += bbox.Width;
         s += lenThatFits;
     }
@@ -702,7 +717,7 @@ static float ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
     return sizeInPixels;
 }
 
-void HtmlFormatter::HandleAnchorTag(HtmlToken *t, bool idsOnly)
+void HtmlFormatter::HandleAnchorAttr(HtmlToken *t, bool idsOnly)
 {
     if (t->IsEndTag())
         return;
@@ -718,6 +733,16 @@ void HtmlFormatter::HandleAnchorTag(HtmlToken *t, bool idsOnly)
     // append at the start of the line to prevent the anchor
     // from being flushed to the next page (with wrong currY value)
     currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
+}
+
+void HtmlFormatter::HandleDirAttr(HtmlToken *t)
+{
+    // only apply reading direction changes to block elements (for now)
+    if (t->IsStartTag() && !IsInlineTag(t->tag)) {
+        AttrInfo *attr = t->GetAttrByName("dir");
+        if (attr)
+            dirRtl = CurrStyle()->dirRtl = attr->ValIs("RTL");
+    }
 }
 
 void HtmlFormatter::HandleTagBr()
@@ -1023,7 +1048,9 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
     }
 
     // any tag could contain anchor information
-    HandleAnchorTag(t);
+    HandleAnchorAttr(t);
+    // any tag could contain a reading direction change
+    HandleDirAttr(t);
 }
 
 void HtmlFormatter::HandleText(HtmlToken *t)
@@ -1214,6 +1241,15 @@ void DrawHtmlPage(Graphics *g, Vec<DrawInstr> *drawInstructions, REAL offX, REAL
             g->DrawLine(&linkPen, p1, p2);
         } else if (InstrLinkEnd == i->type) {
             // TODO: set text color back again
+        } else if (InstrRtlString == i->type) {
+            size_t strLen = str::Utf8ToWcharBuf(i->str.s, i->str.len, buf, dimof(buf));
+            bbox.GetLocation(&pos);
+            if (showBbox)
+                g->DrawRectangle(&debugPen, bbox);
+            StringFormat rtl;
+            rtl.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
+            pos.X += bbox.Width;
+            g->DrawString(buf, strLen, font, pos, &rtl, &brText);
         } else {
             CrashIf(true);
         }
@@ -1315,7 +1351,7 @@ void MobiFormatter::HandleHtmlTag(HtmlToken *t)
     } else if (Tag_Mbp_Pagebreak == t->tag) {
         ForceNewPage();
     } else if (Tag_A == t->tag) {
-        HandleAnchorTag(t);
+        HandleAnchorAttr(t);
         // handle internal and external links (prefer internal ones)
         if (!HandleTagA(t, "filepos"))
             HandleTagA(t);

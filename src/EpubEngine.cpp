@@ -401,6 +401,29 @@ TCHAR *EbookEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
                     coords.Append(RectI((int)(bbox.x + k * cwidth), bbox.y, (int)cwidth, bbox.dy));
             }
             break;
+        case InstrRtlString:
+            if (coords.Count() > 0 && bbox.BR().x > coords.Last().x) {
+                content.Append(lineSep);
+                coords.AppendBlanks(str::Len(lineSep));
+                CrashIf(*lineSep && !coords.Last().IsEmpty());
+            }
+            else if (insertSpace && coords.Count() > 0) {
+                int swidth = coords.Last().x - bbox.BR().x;
+                if (swidth > 0) {
+                    content.Append(' ');
+                    coords.Append(RectI(bbox.BR().x, bbox.y, swidth, bbox.dy));
+                }
+            }
+            insertSpace = false;
+            {
+                ScopedMem<TCHAR> s(str::conv::FromHtmlUtf8(i->str.s, i->str.len));
+                content.Append(s);
+                size_t len = str::Len(s);
+                double cwidth = 1.0 * bbox.dx / len;
+                for (size_t k = 0; k < len; k++)
+                    coords.Append(RectI((int)(bbox.x + (len - k - 1) * cwidth), bbox.y, (int)cwidth, bbox.dy));
+            }
+            break;
         case InstrElasticSpace:
         case InstrFixedSpace:
             insertSpace = true;
@@ -749,7 +772,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
         HtmlToken tok;
         tok.SetTag(t->type, name, name + str::Len(name));
         HandleTagHx(&tok);
-        HandleAnchorTag(t);
+        HandleAnchorAttr(t);
         if (!isSubtitle && t->IsStartTag()) {
             char *link = (char *)Allocator::Alloc(textAllocator, 24);
             sprintf(link, FB2_TOC_ENTRY_MARK "%d", ++titleCount);
@@ -762,7 +785,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
         else if (t->IsEndTag() && section > 1)
             section--;
         FlushCurrLine(true);
-        HandleAnchorTag(t);
+        HandleAnchorAttr(t);
     }
     else if (Tag_P == t->tag) {
         if (htmlParser->tagNesting.Find(Tag_Title) == -1)
@@ -770,11 +793,11 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
     }
     else if (Tag_Image == t->tag) {
         HandleTagImg(t);
-        HandleAnchorTag(t);
+        HandleAnchorAttr(t);
     }
     else if (Tag_A == t->tag) {
         HandleTagA(t, "href", "http://www.w3.org/1999/xlink");
-        HandleAnchorTag(t, true);
+        HandleAnchorAttr(t, true);
     }
     else if (Tag_Pagebreak == t->tag)
         ForceNewPage();
@@ -1004,8 +1027,9 @@ PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
     // beyond the last visible DrawInstr of a page
     float currY = (float)pageRect.dy;
     for (DrawInstr *i = pageInstrs->IterStart(); i; i = pageInstrs->IterNext()) {
-        if (InstrString == i->type && i->str.s >= start &&
-            i->str.s <= start + htmlLen && i->str.s - start >= filePos) {
+        if ((InstrString == i->type || InstrRtlString == i->type) &&
+            i->str.s >= start && i->str.s <= start + htmlLen &&
+            i->str.s - start >= filePos) {
             currY = i->bbox.Y;
             break;
         }

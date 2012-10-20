@@ -21,10 +21,11 @@ enum DrawInstrType {
     // a fixed space takes a fixed amount of pixels. It's used e.g.
     // to implement paragraph indentation
     InstrFixedSpace,
-    // a vertical line
+    // a horizontal line
     InstrLine,
     // change current font
     InstrSetFont,
+    // an image (raw data for e.g. BitmapFromData)
     InstrImage,
     // marks the beginning of a link (<a> tag)
     InstrLinkStart,
@@ -32,6 +33,8 @@ enum DrawInstrType {
     InstrLinkEnd,
     // marks an anchor an internal link might refer to
     InstrAnchor,
+    // same as InstrString but for RTL text
+    InstrRtlString,
 };
 
 struct DrawInstr {
@@ -41,9 +44,9 @@ struct DrawInstr {
         struct {
             const char *s;
             size_t      len;
-        }                   str;          // InstrString, InstrLinkStart, InstrAnchor
+        }                   str;          // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString
         Font *              font;         // InstrSetFont
-        ImageData           img;
+        ImageData           img;          // InstrImage
     };
     RectF bbox; // common to most instructions
 
@@ -52,7 +55,7 @@ struct DrawInstr {
     DrawInstr(DrawInstrType t, RectF bbox = RectF()) : type(t), bbox(bbox) { }
 
     // helper constructors for instructions that need additional arguments
-    static DrawInstr Str(const char *s, size_t len, RectF bbox);
+    static DrawInstr Str(const char *s, size_t len, RectF bbox, bool rtl=false);
     static DrawInstr Image(char *data, size_t len, RectF bbox);
     static DrawInstr SetFont(Font *font);
     static DrawInstr FixedSpace(float dx);
@@ -63,6 +66,7 @@ struct DrawInstr {
 struct DrawStyle {
     Font *font;
     AlignAttr align;
+    bool dirRtl;
 };
 
 class HtmlPage {
@@ -80,6 +84,7 @@ public:
     // further information that is required for reliable relayouting
     int listDepth;
     bool preFormatted;
+    bool dirRtl;
 };
 
 // just to pack args to HtmlFormatter
@@ -119,7 +124,6 @@ struct HtmlToken;
 class HtmlFormatter
 {
 protected:
-    void HandleAnchorTag(HtmlToken *t, bool idsOnly=false);
     void HandleTagBr();
     void HandleTagP(HtmlToken *t);
     void HandleTagFont(HtmlToken *t);
@@ -127,6 +131,9 @@ protected:
     void HandleTagHx(HtmlToken *t);
     void HandleTagList(HtmlToken *t);
     void HandleTagPre(HtmlToken *t);
+
+    void HandleAnchorAttr(HtmlToken *t, bool idsOnly=false);
+    void HandleDirAttr(HtmlToken *t);
 
     void AutoCloseTags(size_t count);
     void UpdateTagNesting(HtmlToken *t);
@@ -191,6 +198,8 @@ protected:
     int                 listDepth;
     // set if newlines are not to be ignored
     bool                preFormatted;
+    // set if the reading direction is RTL
+    bool                dirRtl;
     // TODO: HtmlPullParser::tagNesting is updated too soon for our purposes
     Vec<HtmlTag>        tagNesting;
     bool                keepTagNesting;
