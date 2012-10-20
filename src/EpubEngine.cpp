@@ -621,6 +621,8 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
+    virtual PageLayoutType PreferredLayout();
+
     virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
     virtual const TCHAR *GetDefaultFileExt() const { return _T(".epub"); }
 
@@ -669,6 +671,13 @@ bool EpubEngineImpl::FinishLoading()
         return false;
 
     return pages->Count() > 0;
+}
+
+PageLayoutType EpubEngineImpl::PreferredLayout()
+{
+    if (doc->IsRTL())
+        return (PageLayoutType)(Layout_Book | Layout_R2L);
+    return Layout_Book;
 }
 
 DocTocItem *EpubEngineImpl::GetTocTree()

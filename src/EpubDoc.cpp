@@ -193,10 +193,10 @@ static inline void AppendChar(str::Str<char>& htmlData, char c)
 /* ********** EPUB ********** */
 
 EpubDoc::EpubDoc(const TCHAR *fileName) :
-    zip(fileName), fileName(str::Dup(fileName)), isNcxToc(false) { }
+    zip(fileName), fileName(str::Dup(fileName)), isNcxToc(false), isRtlDoc(false) { }
 
 EpubDoc::EpubDoc(IStream *stream) :
-    zip(stream), fileName(NULL), isNcxToc(false) { }
+    zip(stream), fileName(NULL), isNcxToc(false), isRtlDoc(false) { }
 
 EpubDoc::~EpubDoc()
 {
@@ -290,6 +290,9 @@ bool EpubDoc::Load()
     node = parser.FindElementByName("spine");
     if (!node)
         return false;
+    ScopedMem<TCHAR> readingDir(node->GetAttribute("page-progression-direction"));
+    if (readingDir)
+        isRtlDoc = str::EqI(readingDir, _T("rtl"));
     for (node = node->down; node; node = node->next) {
         if (!str::Eq(node->name, "itemref"))
             continue;
@@ -416,6 +419,11 @@ TCHAR *EpubDoc::GetProperty(DocumentProperty prop)
 const TCHAR *EpubDoc::GetFileName() const
 {
     return fileName;
+}
+
+bool EpubDoc::IsRTL() const
+{
+    return isRtlDoc;
 }
 
 bool EpubDoc::HasToc() const

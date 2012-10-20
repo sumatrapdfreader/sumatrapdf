@@ -32,6 +32,7 @@ class EpubDoc {
     ScopedMem<TCHAR> tocPath;
     ScopedMem<TCHAR> fileName;
     bool isNcxToc;
+    bool isRtlDoc;
 
     bool Load();
     void ParseMetadata(const char *content);
@@ -49,6 +50,7 @@ public:
 
     TCHAR *GetProperty(DocumentProperty prop);
     const TCHAR *GetFileName() const;
+    bool IsRTL() const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor);
