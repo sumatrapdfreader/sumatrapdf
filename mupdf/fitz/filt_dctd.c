@@ -125,8 +125,10 @@ read_dctd(fz_stream *stm, unsigned char *buf, int len)
 		jpeg_read_header(cinfo, 1);
 
 		/* speed up jpeg decoding a bit */
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1960 * /
 		cinfo->dct_method = JDCT_FASTEST;
 		cinfo->do_fancy_upsampling = FALSE;
+		*/
 
 		/* default value if ColorTransform is not set */
 		if (state->color_transform == -1)
