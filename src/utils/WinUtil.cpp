@@ -452,10 +452,7 @@ HANDLE LaunchProcess(TCHAR *cmdLine, const TCHAR *currDir, DWORD flags)
    monitor. The rectangle is shifted into the work area if necessary. */
 RectI ShiftRectToWorkArea(RectI rect, bool bFully)
 {
-    MONITORINFO mi = { 0 };
-    mi.cbSize = sizeof mi;
-    GetMonitorInfo(MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi);
-    RectI monitor = RectI::FromRECT(mi.rcWork);
+    RectI monitor = GetWorkAreaRect(rect);
 
     if (rect.y + rect.dy <= monitor.y || bFully && rect.y < monitor.y)
         /* Rectangle is too far above work area */
@@ -472,6 +469,17 @@ RectI ShiftRectToWorkArea(RectI rect, bool bFully)
         rect.Offset(monitor.x - rect.x + monitor.dx - rect.dx, 0);
 
     return rect;
+}
+
+RectI GetWorkAreaRect(RectI rect)
+{
+    MONITORINFO mi = { 0 };
+    mi.cbSize = sizeof mi;
+    HMONITOR monitor = MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST);
+    BOOL ok = GetMonitorInfo(monitor, &mi);
+    if (!ok)
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+    return RectI::FromRECT(mi.rcWork);
 }
 
 // returns the dimensions the given window has to have in order to be a fullscreen window

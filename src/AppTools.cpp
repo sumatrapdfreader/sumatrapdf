@@ -593,12 +593,8 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 void EnsureAreaVisibility(RectI& r)
 {
     // adjust to the work-area of the current monitor (not necessarily the primary one)
-    MONITORINFO mi = { 0 };
-    mi.cbSize = sizeof(mi);
-    if (!GetMonitorInfo(MonitorFromRect(&r.ToRECT(), MONITOR_DEFAULTTONEAREST), &mi))
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+    RectI work = GetWorkAreaRect(r);
 
-    RectI work = RectI::FromRECT(mi.rcWork);
     // make sure that the window is neither too small nor bigger than the monitor
     if (r.dx < MIN_WIN_DX || r.dx > work.dx)
         r.dx = (int)min(work.dy * DEF_PAGE_RATIO, work.dx);

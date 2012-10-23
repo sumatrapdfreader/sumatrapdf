@@ -319,8 +319,12 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
     UpdatePropertiesLayout(layoutData, hdc, &rc);
     EndPaint(hwnd, &ps);
 
-    // resize the new window to just match these dimensions
+    // fit the window dimensions into the current monitor's work area
     WindowRect wRc(hwnd);
+    RectI work = GetWorkAreaRect(wRc);
+    rc = rc.Intersect(work);
+    
+    // resize the new window to just match these dimensions
     ClientRect cRc(hwnd);
     wRc.dx += rc.dx - cRc.dx;
     wRc.dy += rc.dy - cRc.dy;

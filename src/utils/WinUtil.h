@@ -70,6 +70,7 @@ inline bool IsCtrlPressed() { return IsKeyPressed(VK_CONTROL); }
 HFONT   GetSimpleFont(HDC hdc, TCHAR *fontName, int fontSize);
 
 RectI   ShiftRectToWorkArea(RectI rect, bool bFully=false);
+RectI   GetWorkAreaRect(RectI rect);
 RectI   GetFullscreenRect(HWND hwnd);
 RectI   GetVirtualScreenRect();
 
