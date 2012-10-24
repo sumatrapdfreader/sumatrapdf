@@ -186,7 +186,7 @@ bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
     ScopedMem<TCHAR> params;
     // Command line format for version 6 and later:
     //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
-    // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf
+    // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#page=5
     //   /P <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?

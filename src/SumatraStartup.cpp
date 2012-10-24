@@ -239,6 +239,25 @@ static bool SetupPluginMode(CommandLineInfo& i)
         gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
     }
 
+    // extract some command line arguments from the URL's hash fragment where available
+    // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
+    if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
+        ScopedMem<TCHAR> args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
+        str::TransChars(args, _T("#"), _T("&"));
+        StrVec parts;
+        parts.Split(args, _T("&"), true);
+        for (size_t k = 0; k < parts.Count(); k++) {
+            TCHAR *part = parts.At(k);
+            int pageNo;
+            if (str::StartsWithI(part, _T("page=")) && str::Parse(part + 4, _T("=%d%$"), &pageNo))
+                i.pageNumber = pageNo;
+            else if (str::StartsWithI(part, _T("nameddest=")) && part[10])
+                str::ReplacePtr(&i.destName, part + 10);
+            else if (!str::FindChar(part, '=') && part[0])
+                str::ReplacePtr(&i.destName, part);
+        }
+    }
+
     return true;
 }
 

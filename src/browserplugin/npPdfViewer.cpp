@@ -522,9 +522,19 @@ static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
         plogf("sp: NPP_StreamAsFile() error: file doesn't exist");
 
     ScopedMem<TCHAR> url(str::conv::FromUtf8(url_utf8));
+    // escape quotation marks and backslashes for CmdLineParser.cpp's ParseQuoted
+    if (str::FindChar(url, '"')) {
+        StrVec parts;
+        parts.Split(url, _T("\""));
+        url.Set(parts.Join(_T("%22")));
+    }
+    if (str::EndsWith(url, _T("\\"))) {
+        url[str::Len(url) - 1] = '\0';
+        url.Set(str::Join(url, _T("%5c")));
+    }
+
     ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -plugin \"%s\" %d \"%s\""),
         data->exepath, url ? url : _T(""), (HWND)data->npwin->window, data->filepath));
-
     data->hProcess = LaunchProcess(cmdLine);
     if (!data->hProcess)
     {
