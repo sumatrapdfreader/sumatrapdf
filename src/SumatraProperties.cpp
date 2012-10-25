@@ -319,15 +319,13 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
     UpdatePropertiesLayout(layoutData, hdc, &rc);
     EndPaint(hwnd, &ps);
 
-    // fit the window dimensions into the current monitor's work area
-    WindowRect wRc(hwnd);
-    RectI work = GetWorkAreaRect(wRc);
-    rc = rc.Intersect(work);
-    
     // resize the new window to just match these dimensions
+    // (as long as they fit into the current monitor's work area)
+    WindowRect wRc(hwnd);
     ClientRect cRc(hwnd);
-    wRc.dx += rc.dx - cRc.dx;
-    wRc.dy += rc.dy - cRc.dy;
+    RectI work = GetWorkAreaRect(WindowRect(hParent));
+    wRc.dx = min(rc.dx + wRc.dx - cRc.dx, work.dx);
+    wRc.dy = min(rc.dy + wRc.dy - cRc.dy, work.dy);
     MoveWindow(hwnd, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
     CenterDialog(hwnd, hParent);
 
