@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f8013da2834854e93e80b85971fda7fa92f79940
+4aef8070621bb1c4969d0673cded47ae838cf29c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1209,7 +1209,7 @@ fa:&کتابچه‌ی راهنمای آنلاین
 fi:&Käyttöohje
 fr:&Manuel
 fy-nl:Utlis
-ga:&Lámhleabhar
+ga:Lá&mhleabhar
 gl:Manual de Instruccións
 he:מדריך
 hi:नियम-पुस्तक(&M)
@@ -2013,7 +2013,7 @@ fa:&چاپ...\tCtrl+P
 fi:&Tulosta...\tCtrl+P
 fr:&Imprimer...\tCtrl+P
 fy-nl:&Ofdrukke...\tCtrl+P
-ga:Clóbhuail\tCtrl+P
+ga:&Clóbhuail\tCtrl+P
 gl:&Imprimir...\tCtrl+P
 he:הדפס...\tCtrl+P
 hi:परिंट करें(&P)\tCtrl+P
@@ -4461,6 +4461,7 @@ eu:Bateragarritasuna
 fa:سازگاری
 fi:Yhteensopivuus
 fr:Compatibilité
+ga:Comhoiriúnacht
 hr:Kompatibilnost
 it:Compatibilità
 kr:호환성
@@ -6352,6 +6353,7 @@ ca:Visualització ràpida de web
 de:Schnelle Webanzeige
 es:Visualización Rápida en Web
 fr:Affichage Web rapide
+ga:Gréasáin dearcadh go tapa
 it:Vista web veloce
 kr:빠른 웹 보기
 mk:Брз веб-преглед
@@ -8890,7 +8892,7 @@ fa:باز کردن در PDF-&XChange
 fi:Avaa PDF-XChange
 fr:Ouvrir dans PDF-XChange
 fy-nl:Iepenje mei PDF-XChange
-ga:Oscail i bPDF-XChange
+ga:Oscail &i PDF-XChange
 gl:Abrir no PDF-XChange
 he:PDF-XChange פתח בקורא
 hr:Otvori u programu PDF-XChange
@@ -8995,7 +8997,7 @@ fa:باز کردن در &Adobe Reader
 fi:Avaa &Adobe Readerissa
 fr:Ouvrir dans &Adobe Reader
 fy-nl:Iepenje mei &Adobe Reader
-ga:Oscail in Adobe Reader
+ga:Oscail in &Adobe Reader
 gl:Abrir no &Adobe Reader
 he:Adobe פתח בקורא
 hr:Otvori u programu &Adobe Reader
@@ -9051,7 +9053,7 @@ fa:باز کردن در &Foxit Reader
 fi:Avaa &Foxit Readerissa
 fr:Ouvrir dans Fo&xit Reader
 fy-nl:Iepenje mei &Foxit Reader
-ga:Oscail i bhFoxit Reader
+ga:Oscail i &Foxit Reader
 gl:Abrir no &Foxit Reader
 he:Foxit פתח בקורא
 hr:Otvori u programu &Foxit Reader
@@ -9107,7 +9109,7 @@ fa:باز کردن در &Microsoft HTML Help
 fi:Avaa Microsoft HTML Help
 fr:Ouvrir dans Microsoft HTML Help
 fy-nl:Iepenje mei Microsoft HTML Help
-ga:Oscail i bMicrosoft HTML Help
+ga:Oscail i &Microsoft HTML Help
 gl:Abrir no Microsoft HTML Help
 he:Microsoft HTML Help פתח בקורא
 hr:Otvori u programu Microsoft HTML Help
@@ -9161,7 +9163,7 @@ fa:باز کردن در Microsoft X&PS-Viewer
 fi:Avaa Microsoft XPS-Viewer
 fr:Ouvrir dans Microsoft XPS-Viewer
 fy-nl:Iepenje mei Microsoft XPS-Viewer
-ga:Oscail i bMicrosoft XPS-Viewer
+ga:Oscail i &Microsoft XPS-Viewer
 gl:Abrir no Microsoft XPS-Viewer
 he:Microsoft XPS-Viewer פתח בקורא
 hr:Otvori u programu Microsoft XPS-Viewer
@@ -9362,6 +9364,7 @@ ca:Optimitzacions del PDF:
 de:PDF Optimierungen:
 es:Optimizaciones de PDF:
 fr:Optimisations PDF
+ga:Optimisations PDF
 it:Ottimizzazioni PDF:
 kr:PDF 최적화:
 mk:Оптимизации за PDF:
@@ -10166,6 +10169,7 @@ eu:Irarkitu I&rudi bezala (oroimen gehiago behar du)
 fa:چاپ به عنوان &عکس (حافظه‌ی بیشتری مصرف می‌شود)
 fi:Tulosta &kuvana (kuluttaa enemmän muistia)
 fr:Imprimer en tant qu'&image (demande plus de mémoire)
+ga:Priontáil mar &íomhá (Tá gá le níos mó cuimhne)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
 it:Stampa come &immagine (richiede più memoria))
 kr:이미지로 인쇄(&I) (더 많은 메모리 필요)
@@ -11294,6 +11298,7 @@ eu:Erakutsi Laster&markak
 fa:ن&شانه‌ها را نشان بده
 fi:Näytä &Kirjanmerkit
 fr:Voir les &Marque-pages
+ga:Lea&bharmharcanna a taispeáint
 hr:Prikaži &oznake
 it:Visualizza segnali&bri
 kr:책갈피 보이기(&B)
@@ -12146,6 +12151,7 @@ ca:PDF etiquetat
 de:PDF mit Tags
 es:PDF Etiquetado
 fr:PDF balisé
+ga:PDF formáid chlibeáilte
 it:PDF marcati
 kr:태그있는 PDF
 mk:Означен PDF
