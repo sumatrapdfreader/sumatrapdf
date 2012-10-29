@@ -140,7 +140,7 @@ public class MuPDFActivity extends Activity
 			Intent intent = getIntent();
 			if (Intent.ACTION_VIEW.equals(intent.getAction())) {
 				Uri uri = intent.getData();
-				if (uri.toString().startsWith("content://media/external/file")) {
+				if (uri.toString().startsWith("content://")) {
 					// Handle view requests from the Transformer Prime's file manager
 					// Hopefully other file managers will use this same scheme, if not
 					// using explicit paths.

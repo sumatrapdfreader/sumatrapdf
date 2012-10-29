@@ -691,7 +691,7 @@ xps_init_document(xps_document *doc)
 	doc->super.load_page = (void*)xps_load_page;
 	doc->super.load_links = (void*)xps_load_links;
 	doc->super.bound_page = (void*)xps_bound_page;
-	doc->super.run_page = (void*)xps_run_page;
+	doc->super.run_page_contents = (void*)xps_run_page;
 	doc->super.free_page = (void*)xps_free_page;
 	doc->super.meta = (void*)xps_meta;
 }

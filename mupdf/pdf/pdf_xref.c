@@ -1327,7 +1327,8 @@ pdf_new_document(fz_context *ctx, fz_stream *file)
 	doc->super.first_annot = (void*)pdf_first_annot;
 	doc->super.next_annot = (void*)pdf_next_annot;
 	doc->super.bound_annot = (void*)pdf_bound_annot;
-	doc->super.run_page = NULL; /* see pdf_xref_aux.c */
+	doc->super.run_page_contents = NULL; /* see pdf_xref_aux.c */
+	doc->super.run_annot = NULL; /* see pdf_xref_aux.c */
 	doc->super.free_page = (void*)pdf_free_page;
 	doc->super.meta = (void*)pdf_meta;
 	doc->super.page_presentation = (void*)pdf_page_presentation;

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MuPDF</string>
+    <string name="version">1.1</string>
     <string name="no_media_warning">Storage Media not present</string>
     <string name="no_media_hint">Sharing the storage media with a PC can make it inaccessible</string>
     <string name="open_failed">Unable to open document</string>
@@ -8,7 +9,7 @@
     <string name="search_backwards">Search backwards</string>
     <string name="search_forwards">Search forwards</string>
     <string name="search_document">Search document</string>
-    <string name="picker_title">MuPDF</string>
+    <string name="picker_title">%1$s %2$s</string>
     <string name="outline_title">Table of Contents</string>
     <string name="enter_password">Enter Password</string>
     <string name="text_not_found">Text not found</string>

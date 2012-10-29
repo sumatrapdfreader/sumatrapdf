@@ -1466,7 +1466,8 @@ struct fz_document_s
 	fz_page *(*load_page)(fz_document *doc, int number);
 	fz_link *(*load_links)(fz_document *doc, fz_page *page);
 	fz_rect (*bound_page)(fz_document *doc, fz_page *page);
-	void (*run_page)(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
+	void (*run_page_contents)(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
+	void (*run_annot)(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
 	void (*free_page)(fz_document *doc, fz_page *page);
 	int (*meta)(fz_document *doc, int key, void *ptr, int size);
 	fz_transition *(*page_presentation)(fz_document *doc, fz_page *page, float *duration);

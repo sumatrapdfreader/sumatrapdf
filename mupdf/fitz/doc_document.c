@@ -162,10 +162,46 @@ fz_bound_annot(fz_document *doc, fz_annot *annot)
 }
 
 void
+fz_run_page_contents(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
+{
+	if (doc && doc->run_page_contents && page)
+		doc->run_page_contents(doc, page, dev, transform, cookie);
+}
+
+void
+fz_run_annot(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
+{
+	if (doc && doc->run_annot && page && annot)
+		doc->run_annot(doc, page, annot, dev, transform, cookie);
+}
+
+void
 fz_run_page(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
 {
-	if (doc && doc->run_page && page)
-		doc->run_page(doc, page, dev, transform, cookie);
+	fz_annot *annot;
+
+	fz_run_page_contents(doc, page, dev, transform, cookie);
+
+	if (cookie && cookie->progress_max != -1)
+	{
+		int count = 1;
+		for (annot = fz_first_annot(doc, page); annot; annot = fz_next_annot(doc, annot))
+			count++;
+		cookie->progress_max += count;
+	}
+
+	for (annot = fz_first_annot(doc, page); annot; annot = fz_next_annot(doc, annot))
+	{
+		/* Check the cookie for aborting */
+		if (cookie)
+		{
+			if (cookie->abort)
+				break;
+			cookie->progress++;
+		}
+
+		fz_run_annot(doc, page, annot, dev, transform, cookie);
+	}
 }
 
 void

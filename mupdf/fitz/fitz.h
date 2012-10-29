@@ -2350,6 +2350,51 @@ fz_rect fz_bound_annot(fz_document *doc, fz_annot *annot);
 void fz_run_page(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
 
 /*
+	fz_run_page_contents: Run a page through a device. Just the main
+	page content, without the annotations, if any.
+
+	page: Page obtained from fz_load_page.
+
+	dev: Device obtained from fz_new_*_device.
+
+	transform: Transform to apply to page. May include for example
+	scaling and rotation, see fz_scale, fz_rotate and fz_concat.
+	Set to fz_identity if no transformation is desired.
+
+	cookie: Communication mechanism between caller and library
+	rendering the page. Intended for multi-threaded applications,
+	while single-threaded applications set cookie to NULL. The
+	caller may abort an ongoing rendering of a page. Cookie also
+	communicates progress information back to the caller. The
+	fields inside cookie are continually updated while the page is
+	rendering.
+*/
+void fz_run_page_contents(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
+
+/*
+	fz_run_annot: Run an annotation through a device.
+
+	page: Page obtained from fz_load_page.
+
+	annot: an annotation.
+
+	dev: Device obtained from fz_new_*_device.
+
+	transform: Transform to apply to page. May include for example
+	scaling and rotation, see fz_scale, fz_rotate and fz_concat.
+	Set to fz_identity if no transformation is desired.
+
+	cookie: Communication mechanism between caller and library
+	rendering the page. Intended for multi-threaded applications,
+	while single-threaded applications set cookie to NULL. The
+	caller may abort an ongoing rendering of a page. Cookie also
+	communicates progress information back to the caller. The
+	fields inside cookie are continually updated while the page is
+	rendering.
+*/
+void fz_run_annot(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
+
+/*
 	fz_free_page: Free a loaded page.
 
 	Does not throw exceptions.

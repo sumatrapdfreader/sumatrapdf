@@ -477,7 +477,7 @@ cbz_init_document(cbz_document *doc)
 	doc->super.count_pages = (void*)cbz_count_pages;
 	doc->super.load_page = (void*)cbz_load_page;
 	doc->super.bound_page = (void*)cbz_bound_page;
-	doc->super.run_page = (void*)cbz_run_page;
+	doc->super.run_page_contents = (void*)cbz_run_page;
 	doc->super.free_page = (void*)cbz_free_page;
 	doc->super.meta = (void*)cbz_meta;
 }

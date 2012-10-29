@@ -1157,7 +1157,7 @@ pdf_create_freetext_annot(pdf_document *xref, pdf_obj *obj)
 {
 	fz_buffer *content = fz_new_buffer(xref->ctx, 256);
 	fz_buffer *base_ap = fz_new_buffer(xref->ctx, 256);
-	pdf_obj *ap = pdf_dict_gets(obj, "DA");
+	pdf_obj *ap = pdf_dict_get_inheritable(xref, obj, "DA");
 	pdf_obj *value = pdf_dict_gets(obj, "Contents");
 	fz_rect rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
 	int align = pdf_to_int(pdf_dict_gets(obj, "Q"));

@@ -253,9 +253,11 @@ public:
 	fz_hash_table *outlines, *fontCollections;
 	TempFile *tempFiles;
 	float *t3color;
+	bool transparency, started;
 
 	userData(fz_context *ctx, HDC hDC, fz_bbox clip) : stack(new userDataStackItem()),
-		ctx(ctx), outlines(NULL), fontCollections(NULL), tempFiles(NULL), t3color(NULL)
+		ctx(ctx), outlines(NULL), fontCollections(NULL), tempFiles(NULL), t3color(NULL),
+		transparency(false), started(false)
 	{
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = _setup(new Graphics(hDC));
@@ -265,11 +267,17 @@ public:
 
 	~userData()
 	{
+		if (transparency && stack && stack->prev && !stack->prev->prev)
+		{
+			transparency = false;
+			popClip();
+		}
 		if (!stack)
 			fz_warn(ctx, "draw stack base item is missing");
 		else if (stack->prev)
 			fz_warn(ctx, "draw stack is not empty");
-		while (stack && stack->prev) {
+		while (stack && stack->prev)
+		{
 			userDataStackItem *item = stack;
 			stack = stack->prev;
 			delete item;
@@ -304,6 +312,7 @@ public:
 		stack = new userDataStackItem(stack->alpha * alpha, stack);
 		graphics->GetClip(&stack->clip);
 		graphics->SetClip(clipRegion, CombineModeIntersect);
+		started = true;
 	}
 
 	void pushClip(GraphicsPath *gpath, float alpha=1.0, bool accumulate=false)
@@ -312,6 +321,7 @@ public:
 			graphics->SetClip(&Region(gpath), CombineModeUnion);
 		else
 			pushClip(&Region(gpath), alpha);
+		started = true;
 	}
 
 	void pushClipMask(fz_pixmap *mask, fz_matrix ctm)
@@ -358,6 +368,10 @@ public:
 
 	void pushClipBlend(fz_rect rect, int blendmode, float alpha, bool isolated, bool knockout)
 	{
+		// heuristic to determine whether we'll have to keep the first
+		// transparency group for rendering annotations as well
+		if (!started)
+			transparency = blendmode == FZ_BLEND_NORMAL && alpha == 1.0f && isolated && !knockout;
 		recordClipMask(rect, false, NULL);
 		stack->layerAlpha *= alpha;
 		stack->blendmode = blendmode | (isolated ? FZ_BLEND_ISOLATED : 0) | (knockout ? FZ_BLEND_KNOCKOUT : 0);
@@ -427,8 +441,11 @@ public:
 
 	void popClip()
 	{
-		assert(stack->prev);
-		if (!stack->prev)
+		assert(stack && stack->prev);
+		if (!stack || !stack->prev)
+			return;
+		
+		if (transparency && !stack->prev->prev)
 			return;
 		
 		assert(!stack->layer == !stack->saveG);
@@ -963,6 +980,7 @@ fz_gdiplus_fill_path(fz_device *dev, fz_path *path, int evenodd, fz_matrix ctm,
 	GraphicsPath *gpath = gdiplus_get_path(path, ctm, evenodd);
 	Brush *brush = gdiplus_get_brush(dev, colorspace, color, alpha);
 	
+	((userData *)dev->user)->started = true;
 	((userData *)dev->user)->graphics->FillPath(brush, gpath);
 	
 	delete brush;
@@ -977,6 +995,7 @@ fz_gdiplus_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, f
 	Brush *brush = gdiplus_get_brush(dev, colorspace, color, alpha);
 	Pen *pen = gdiplus_get_pen(brush, ctm, stroke);
 	
+	((userData *)dev->user)->started = true;
 	((userData *)dev->user)->graphics->DrawPath(pen, gpath);
 	
 	delete pen;
@@ -1262,6 +1281,7 @@ fz_gdiplus_fill_text(fz_device *dev, fz_text *text, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	Brush *brush = gdiplus_get_brush(dev, colorspace, color, alpha);
+	((userData *)dev->user)->started = true;
 	if (text->font->ft_face)
 		gdiplus_run_text(dev, text, ctm, brush);
 	else
@@ -1283,6 +1303,7 @@ fz_gdiplus_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, f
 	
 	Brush *brush = gdiplus_get_brush(dev, colorspace, color, alpha);
 	Pen *pen = gdiplus_get_pen(brush, ctm, stroke);
+	((userData *)dev->user)->started = true;
 	((userData *)dev->user)->graphics->DrawPath(pen, &gpath);
 	
 	delete pen;
@@ -1330,6 +1351,7 @@ extern "C" static void
 fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
 {
 	RectF clipRect;
+	((userData *)dev->user)->started = true;
 	((userData *)dev->user)->graphics->GetClipBounds(&clipRect);
 	fz_rect clip = { clipRect.X, clipRect.Y, clipRect.X + clipRect.Width, clipRect.Y + clipRect.Height };
 	
@@ -1386,6 +1408,7 @@ extern "C" static void
 fz_gdiplus_fill_image(fz_device *dev, fz_image *image, fz_matrix ctm, float alpha)
 {
 	fz_pixmap *pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
+	((userData *)dev->user)->started = true;
 	((userData *)dev->user)->drawPixmap(pixmap, ctm, alpha);
 	fz_drop_pixmap(dev->ctx, pixmap);
 }
@@ -1411,6 +1434,7 @@ fz_gdiplus_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 	}
 	img2->interpolate = pixmap->interpolate;
 	
+	((userData *)dev->user)->started = true;
 	((userData *)dev->user)->drawPixmap(img2, ctm, alpha);
 	
 	fz_drop_pixmap(dev->ctx, img2);

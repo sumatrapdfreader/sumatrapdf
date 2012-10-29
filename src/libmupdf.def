@@ -142,6 +142,8 @@ EXPORTS
 	fz_next_annot
 	fz_bound_annot
 	fz_run_page
+	fz_run_page_contents
+	fz_run_annot
 	fz_free_page
 	fz_meta
 	fz_page_presentation
@@ -482,6 +484,8 @@ EXPORTS
 	pdf_bound_annot
 	pdf_run_page
 	pdf_run_page_with_usage
+	pdf_run_page_contents
+	pdf_run_annot
 	pdf_meta
 	pdf_page_presentation
 

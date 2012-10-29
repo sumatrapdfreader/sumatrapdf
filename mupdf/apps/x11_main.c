@@ -833,9 +833,9 @@ int main(int argc, char **argv)
 				break;
 
 			case MotionNotify:
-				oldx = xevt.xbutton.x;
-				oldy = xevt.xbutton.y;
-				onmouse(xevt.xbutton.x, xevt.xbutton.y, xevt.xbutton.button, xevt.xbutton.state, 0);
+				oldx = xevt.xmotion.x;
+				oldy = xevt.xmotion.y;
+				onmouse(xevt.xmotion.x, xevt.xmotion.y, 0, xevt.xmotion.state, 0);
 				break;
 
 			case ButtonPress:

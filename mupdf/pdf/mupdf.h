@@ -276,6 +276,33 @@ void pdf_run_page(pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix c
 void pdf_run_page_with_usage(pdf_document *doc, pdf_page *page, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie);
 
 /*
+	pdf_run_page_contents: Interpret a loaded page and render it on a device.
+	Just the main page contents without the annotations
+
+	page: A page loaded by pdf_load_page.
+
+	dev: Device used for rendering, obtained from fz_new_*_device.
+
+	ctm: A transformation matrix applied to the objects on the page,
+	e.g. to scale or rotate the page contents as desired.
+*/
+void pdf_run_page_contents(pdf_document *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
+
+/*
+	pdf_run_annot: Interpret an annotation and render it on a device.
+
+	page: A page loaded by pdf_load_page.
+
+	annot: an annotation.
+
+	dev: Device used for rendering, obtained from fz_new_*_device.
+
+	ctm: A transformation matrix applied to the objects on the page,
+	e.g. to scale or rotate the page contents as desired.
+*/
+void pdf_run_annot(pdf_document *xref, pdf_page *page, pdf_annot *annot, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
+
+/*
 	Metadata interface.
 */
 int pdf_meta(pdf_document *doc, int key, void *ptr, int size);

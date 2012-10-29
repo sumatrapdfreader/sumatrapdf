@@ -1434,7 +1434,7 @@ static void update_pushbutton_appearance(pdf_document *doc, pdf_obj *obj)
 			fz_rect clip = rect;
 			fz_rect bounds;
 			fz_matrix mat;
-			char *da = pdf_to_str_buf(pdf_dict_gets(obj, "DA"));
+			char *da = pdf_to_str_buf(get_inheritable(doc, obj, "DA"));
 			char *text = pdf_to_str_buf(tobj);
 
 			clip.x0 += btotal;
@@ -2303,7 +2303,7 @@ void pdf_field_set_text_color(pdf_document *doc, pdf_obj *field, pdf_obj *col)
 	fz_context *ctx = doc->ctx;
 	da_info di;
 	fz_buffer *fzbuf = NULL;
-	char *da = pdf_to_str_buf(pdf_dict_gets(field, "DA"));
+	char *da = pdf_to_str_buf(get_inheritable(doc, field, "DA"));
 	unsigned char *buf;
 	int len;
 	pdf_obj *daobj = NULL;

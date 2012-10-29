@@ -38,6 +38,7 @@ int resolution = 160;
 float pageWidth = 100;
 float pageHeight = 100;
 fz_display_list *currentPageList;
+fz_display_list *currentAnnotationList;
 fz_rect currentMediabox;
 fz_context *ctx;
 int currentPageNumber = -1;
@@ -132,6 +133,11 @@ Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(JNIEnv *env, jobject thiz, int
 			fz_free_display_list(ctx, currentPageList);
 			currentPageList = NULL;
 		}
+		if (currentAnnotationList != NULL)
+		{
+			fz_free_display_list(ctx, currentAnnotationList);
+			currentAnnotationList = NULL;
+		}
 		pagenum = page;
 		currentPage = fz_load_page(doc, pagenum);
 		zoom = resolution / 72;
@@ -150,10 +156,10 @@ Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(JNIEnv *env, jobject thiz, int
 JNIEXPORT void JNICALL
 Java_com_artifex_mupdf_MuPDFCore_markDirtyInternal(JNIEnv *env, jobject thiz, int page)
 {
-	if (currentPageList != NULL && page == pagenum)
+	if (currentAnnotationList != NULL && page == pagenum)
 	{
-		fz_free_display_list(ctx, currentPageList);
-		currentPageList = NULL;
+		fz_free_display_list(ctx, currentAnnotationList);
+		currentAnnotationList = NULL;
 	}
 }
 
@@ -224,14 +230,27 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 			/* Render to list */
 			currentPageList = fz_new_display_list(ctx);
 			dev = fz_new_list_device(ctx, currentPageList);
-			fz_run_page(doc, currentPage, dev, fz_identity, NULL);
+			fz_run_page_contents(doc, currentPage, dev, fz_identity, NULL);
+		}
+		if (currentAnnotationList == NULL)
+		{
+			fz_annot *annot;
+			if (dev)
+			{
+				fz_free_device(dev);
+				dev = NULL;
+			}
+			currentAnnotationList = fz_new_display_list(ctx);
+			dev = fz_new_list_device(ctx, currentAnnotationList);
+			for (annot = fz_first_annot(doc, currentPage); annot; annot = fz_next_annot(doc, annot))
+				fz_run_annot(doc, currentPage, annot, dev, fz_identity, NULL);
 		}
 		rect.x0 = patchX;
 		rect.y0 = patchY;
 		rect.x1 = patchX + patchW;
 		rect.y1 = patchY + patchH;
 		pix = fz_new_pixmap_with_bbox_and_data(ctx, colorspace, rect, pixels);
-		if (currentPageList == NULL)
+		if (currentPageList == NULL && currentAnnotationList == NULL)
 		{
 			fz_clear_pixmap_with_value(ctx, pix, 0xd0);
 			break;
@@ -257,7 +276,10 @@ Java_com_artifex_mupdf_MuPDFCore_drawPage(JNIEnv *env, jobject thiz, jobject bit
 			time = clock();
 			for (i=0; i<100;i++) {
 #endif
-				fz_run_display_list(currentPageList, dev, ctm, bbox, NULL);
+				if (currentPageList)
+					fz_run_display_list(currentPageList, dev, ctm, bbox, NULL);
+				if (currentAnnotationList)
+					fz_run_display_list(currentAnnotationList, dev, ctm, bbox, NULL);
 #ifdef TIME_DISPLAY_LIST
 			}
 			time = clock() - time;
@@ -569,6 +591,8 @@ Java_com_artifex_mupdf_MuPDFCore_destroying(JNIEnv * env, jobject thiz)
 	hit_bbox = NULL;
 	fz_free_display_list(ctx, currentPageList);
 	currentPageList = NULL;
+	fz_free_display_list(ctx, currentAnnotationList);
+	currentAnnotationList = NULL;
 	if (currentPage != NULL)
 	{
 		fz_free_page(doc, currentPage);

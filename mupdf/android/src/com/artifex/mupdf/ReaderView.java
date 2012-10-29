@@ -136,7 +136,8 @@ public class ReaderView extends AdapterView<Adapter>
 			// End of an inertial scroll and the user is not interacting.
 			// The layout is stable
 			View v = mChildViews.get(mCurrent);
-			postSettle(v);
+			if (v != null)
+				postSettle(v);
 		}
 	}
 
