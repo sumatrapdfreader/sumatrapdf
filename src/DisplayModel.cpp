@@ -146,6 +146,7 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
         ds->scrollPos = PointI();
     else
         ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
+    ds->showScrollbars = showScrollbars;
 
     free(ds->decryptionKey);
     ds->decryptionKey = engine->GetDecryptionKey();
@@ -199,7 +200,7 @@ DisplayModel::DisplayModel(BaseEngine *engine, DocType engineType, DisplayModelC
     rotation(0), dpiFactor(1.0f), displayR2L(false),
     presentationMode(false), presZoomVirtual(INVALID_ZOOM),
     presDisplayMode(DM_AUTOMATIC), navHistoryIx(0),
-    dontRenderFlag(false)
+    dontRenderFlag(false), showScrollbars(true)
 {
     CrashIf(!engine || engine->PageCount() <= 0);
 
@@ -588,7 +589,7 @@ RestartLayout:
         if (columnMaxWidth[pageInARow] < pos.dx)
             columnMaxWidth[pageInARow] = pos.dx;
 
-        if (!needHScroll && viewPort.dx < padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right) {
+        if (showScrollbars && !needHScroll && viewPort.dx < padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right) {
             needHScroll = true;
             viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
             goto RestartLayout;
@@ -613,7 +614,7 @@ RestartLayout:
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
     const int canvasDy = currPosY + padding->bottom - padding->inBetweenY;
-    if (!needVScroll && canvasDy > viewPort.dy) {
+    if (showScrollbars && !needVScroll && canvasDy > viewPort.dy) {
         needVScroll = true;
         viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
         goto RestartLayout;
@@ -630,7 +631,7 @@ RestartLayout:
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
     int canvasDx = padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right;
-    if (!needHScroll && canvasDx > viewPort.dx) {
+    if (showScrollbars && !needHScroll && canvasDx > viewPort.dx) {
         needHScroll = true;
         viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
         goto RestartLayout;
@@ -937,7 +938,8 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
     } else {
         RecalcVisibleParts();
         RenderVisibleParts();
-        dmCb->UpdateScrollbars(canvasSize);
+        if (showScrollbars)
+		dmCb->UpdateScrollbars(canvasSize);
     }
 }
 
@@ -1187,7 +1189,7 @@ void DisplayModel::ScrollXTo(int xOff)
     int currPageNo = CurrentPageNo();
     viewPort.x = xOff;
     RecalcVisibleParts();
-    dmCb->UpdateScrollbars(canvasSize);
+    if (showScrollbars) dmCb->UpdateScrollbars(canvasSize);
 
     if (CurrentPageNo() != currPageNo)
         dmCb->PageNoChanged(CurrentPageNo());
@@ -1261,7 +1263,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
     viewPort.y = newYOff;
     RecalcVisibleParts();
     RenderVisibleParts();
-    dmCb->UpdateScrollbars(canvasSize);
+    if (showScrollbars) dmCb->UpdateScrollbars(canvasSize);
     newPageNo = CurrentPageNo();
     if (newPageNo != currPageNo)
         dmCb->PageNoChanged(newPageNo);

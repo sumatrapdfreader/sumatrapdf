@@ -31,6 +31,7 @@
 #define ROTATION_STR                "Rotation"
 #define SCROLL_X_STR                "Scroll X2"
 #define SCROLL_Y_STR                "Scroll Y2"
+#define SCROLL_SHOW_STR             "Show scrollbars"
 #define WINDOW_STATE_STR            "Window State"
 #define WINDOW_X_STR                "Window X"
 #define WINDOW_Y_STR                "Window Y"
@@ -216,6 +217,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     prefs->Add(ROTATION_STR, ds->rotation);
     prefs->Add(SCROLL_X_STR, ds->scrollPos.x);
     prefs->Add(SCROLL_Y_STR, ds->scrollPos.y);
+    prefs->Add(SCROLL_SHOW_STR, ds->showScrollbars);
     prefs->Add(WINDOW_STATE_STR, ds->windowState);
     prefs->Add(WINDOW_X_STR, ds->windowPos.x);
     prefs->Add(WINDOW_Y_STR, ds->windowPos.y);
@@ -432,6 +434,7 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     Retrieve(dict, ROTATION_STR, ds->rotation);
     Retrieve(dict, SCROLL_X_STR, ds->scrollPos.x);
     Retrieve(dict, SCROLL_Y_STR, ds->scrollPos.y);
+    Retrieve(dict, SCROLL_SHOW_STR, ds->showScrollbars);
     Retrieve(dict, WINDOW_STATE_STR, ds->windowState);
     Retrieve(dict, WINDOW_X_STR, ds->windowPos.x);
     Retrieve(dict, WINDOW_Y_STR, ds->windowPos.y);

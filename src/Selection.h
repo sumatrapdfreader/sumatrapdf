@@ -33,6 +33,7 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
 void PaintSelection(WindowInfo *win, HDC hdc);
 void UpdateTextSelection(WindowInfo *win, bool select=true);
 void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit=true, bool relative=false);
+TCHAR *GetSelection(WindowInfo *win);
 void CopySelectionToClipboard(WindowInfo *win);
 void OnSelectAll(WindowInfo *win, bool textOnly=false);
 void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y);

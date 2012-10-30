@@ -17,7 +17,7 @@
 // note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
 //       IDM_ZOOM_FIT_PAGE - IDM_ZOOM_CUSTOM must be in a continuous range!
 STATIC_ASSERT(IDM_VIEW_LAYOUT_LAST - IDM_VIEW_LAYOUT_FIRST == 3, view_layout_range);
-STATIC_ASSERT(IDM_ZOOM_LAST - IDM_ZOOM_FIRST == 17, zoom_range);
+STATIC_ASSERT(IDM_ZOOM_LAST - IDM_ZOOM_FIRST == 18, zoom_range);
 
 struct MenuDef {
     const char *title;

@@ -452,6 +452,51 @@ size_t TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
     return findCount;
 }
 
+// You must free the result if result is non-NULL.
+WCHAR *Replace(WCHAR *orig, WCHAR *rep, WCHAR *with) {
+    WCHAR *result; // the return string
+    WCHAR *ins;    // the next insert point
+    WCHAR *tmp;    // varies
+    int len_rep;  // length of rep
+    int len_with; // length of with
+    int len_front; // distance between rep and end of last rep
+    int count;    // number of replacements
+
+    if (!orig)
+        return orig;
+    if (!rep || !(len_rep = wcslen(rep)))
+        return orig;
+    if (!(ins = wcsstr(orig, rep))) 
+        return orig;
+    if (!with)
+        with = L"";
+    len_with = wcslen(with);
+
+    for (count = 0; tmp = wcsstr(ins, rep); ++count) {
+        ins = tmp + len_rep;
+    }
+
+    // first time through the loop, all the variable are set correctly
+    // from here on,
+    //    tmp points to the end of the result string
+    //    ins points to the next occurrence of rep in orig
+    //    orig points to the remainder of orig after "end of rep"
+    tmp = result = (WCHAR*)malloc((wcslen(orig) + (len_with - len_rep) * count + 1)*sizeof(WCHAR));
+
+    if (!result)
+        return NULL;
+
+    while (count--) {
+        ins = wcsstr(orig, rep);
+        len_front = ins - orig;
+        tmp = wcsncpy(tmp, orig, len_front) + len_front;
+        tmp = wcscpy(tmp, with) + len_with;
+        orig += len_front + len_rep; // move to next "end of rep"
+    }
+    wcscpy(tmp, orig);
+    return result;
+}
+
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters

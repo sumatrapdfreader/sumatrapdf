@@ -834,7 +834,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     ScrollState ss(1, -1, -1);
     bool showAsFullScreen = WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState;
     int showType = SW_NORMAL;
-    if (gGlobalPrefs.windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
+    if (gGlobalPrefs.windowState == WIN_STATE_MAXIMIZED)
         showType = SW_MAXIMIZE;
 
     bool tocVisible = gGlobalPrefs.tocVisible;
@@ -844,7 +844,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
         if (state->windowState == WIN_STATE_NORMAL)
             showType = SW_NORMAL;
-        else if (state->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
+        else if (state->windowState == WIN_STATE_MAXIMIZED)
             showType = SW_MAXIMIZE;
         else if (state->windowState == WIN_STATE_MINIMIZED)
             showType = SW_MINIMIZE;
@@ -925,6 +925,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
                 ss.x = state->scrollPos.x;
                 ss.y = state->scrollPos.y;
             }
+            win->dm->showScrollbars = state->showScrollbars;
             // else let win.dm->Relayout() scroll to fit the page (again)
         } else if (startPage > win->dm->PageCount()) {
             ss.page = win->dm->PageCount();
@@ -1030,6 +1031,7 @@ Error:
         EnterFullscreen(*win);
     if (!isNewWindow && win->presentation && win->dm)
         win->dm->SetPresentationMode(true);
+    win->UpdateScrollbars();
 
     t.Stop();
     dbglog::LogF("LoadDocIntoWindow() time: %.2f", t.GetTimeInMs());
@@ -1194,8 +1196,7 @@ WindowInfo *CreateAndShowWindowInfo()
     if (!win)
         return NULL;
 
-    if (WIN_STATE_FULLSCREEN == gGlobalPrefs.windowState ||
-        WIN_STATE_MAXIMIZED == gGlobalPrefs.windowState)
+    if (WIN_STATE_MAXIMIZED == gGlobalPrefs.windowState)
         ShowWindow(win->hwndFrame, SW_MAXIMIZE);
     else
         ShowWindow(win->hwndFrame, SW_SHOW);
@@ -1550,8 +1551,8 @@ static void UpdateCanvasScrollbars(DisplayModel *dm, HWND hwndCanvas, SizeI canv
         si.nMax = canvas.dx - 1;
         si.nPage = viewPort.dx;
     }
-    ShowScrollBar(hwndCanvas, SB_HORZ, viewPort.dx < canvas.dx);
-    SetScrollInfo(hwndCanvas, SB_HORZ, &si, TRUE);
+	SetScrollInfo(hwndCanvas, SB_HORZ, &si, dm->showScrollbars);
+    ShowScrollBar(hwndCanvas, SB_HORZ, dm->showScrollbars && viewPort.dx < canvas.dx);
 
     if (viewPort.dy >= canvas.dy) {
         si.nPos = 0;
@@ -1570,8 +1571,13 @@ static void UpdateCanvasScrollbars(DisplayModel *dm, HWND hwndCanvas, SizeI canv
             si.nMax -= viewPort.dy - si.nPage;
         }
     }
-    ShowScrollBar(hwndCanvas, SB_VERT, viewPort.dy < canvas.dy);
-    SetScrollInfo(hwndCanvas, SB_VERT, &si, TRUE);
+	SetScrollInfo(hwndCanvas, SB_VERT, &si, dm->showScrollbars);
+    ShowScrollBar(hwndCanvas, SB_VERT, dm->showScrollbars && viewPort.dy < canvas.dy);
+}
+
+void WindowInfo::UpdateScrollbars()
+{
+    UpdateCanvasScrollbars(dm, hwndCanvas, dm->GetCanvasSize());
 }
 
 void WindowInfo::UpdateScrollbars(SizeI canvas)
@@ -2152,20 +2158,29 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 
     PointD ptPage = win.dm->CvtFromScreen(PointI(x, y));
 
+	bool isLeft = x < 10;
+	bool isRight = x > win.canvasRc.dx - 10;
+	bool isTop = y < 10;
+	bool isBottom = y > win.canvasRc.dy - 10;
+
+    bool enabled = win.IsDocLoaded();
+    DisplayMode displayMode = enabled ? win.dm->GetDisplayMode() : gGlobalPrefs.defaultDisplayMode;
+
+    /* if we had a selection and this was just a click, hide the selection */
+    if (win.showSelection && !didDragMouse)
+        ClearSearchResult(&win);
+
     if (didDragMouse)
-        /* pass */;
+		win.UpdateScrollbars();
     else if (win.linkOnLastButtonDown && win.linkOnLastButtonDown->GetRect().Contains(ptPage)) {
         win.linkHandler->GotoLink(win.linkOnLastButtonDown->AsLink());
         SetCursor(gCursorArrow);
     }
-    /* if we had a selection and this was just a click, hide the selection */
-    else if (win.showSelection)
-        ClearSearchResult(&win);
-    /* in presentation mode, change pages on left/right-clicks */
+    /* in presentation mode, change pages on left-clicks */
     else if (win.fullScreen || PM_ENABLED == win.presentation) {
-        if ((key & MK_SHIFT))
+        if (displayModeSingle(displayMode) && isTop || !displayModeSingle(displayMode) && isLeft)
             win.dm->GoToPrevPage(0);
-        else
+        else if (displayModeSingle(displayMode) && isBottom || !displayModeSingle(displayMode) && isRight)
             win.dm->GoToNextPage(0);
     }
     /* return from white/black screens in presentation mode */
@@ -2180,9 +2195,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
 {
     //lf("Left button clicked on %d %d", x, y);
-    if ((win.fullScreen || win.presentation) && !(key & ~MK_LBUTTON) || win.IsAboutWindow()) {
-        // in presentation and fullscreen modes, left clicks turn the page,
-        // make two quick left clicks (AKA one double-click) turn two pages
+	if (win.IsAboutWindow()) {
         OnMouseLeftButtonDown(win, x, y, key);
         return;
     }
@@ -2243,64 +2256,17 @@ static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
-    //lf("Right button clicked on %d %d", x, y);
-    if (!win.IsDocLoaded()) {
-        SetFocus(win.hwndFrame);
-        win.dragStart = PointI(x, y);
-        return;
-    }
-
-    if (MA_SCROLLING == win.mouseAction)
-        win.mouseAction = MA_IDLE;
-    else if (win.mouseAction != MA_IDLE)
-        return;
-    assert(win.dm);
-
     SetFocus(win.hwndFrame);
-
-    win.dragStartPending = true;
-    win.dragStart = PointI(x, y);
-
-    OnDraggingStart(win, x, y, true);
 }
 
 static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
     if (!win.IsDocLoaded()) {
-        bool didDragMouse =
-            abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
-            abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
-        if (!didDragMouse)
-            OnAboutContextMenu(&win, x, y);
+        OnAboutContextMenu(&win, x, y);
         return;
     }
-
-    assert(win.dm);
-    if (MA_DRAGGING_RIGHT != win.mouseAction)
-        return;
-
-    bool didDragMouse = !win.dragStartPending ||
-        abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
-        abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
-    OnDraggingStop(win, x, y, !didDragMouse);
-
-    if (didDragMouse)
-        /* pass */;
-    else if (win.fullScreen || PM_ENABLED == win.presentation) {
-        if ((key & MK_CONTROL))
-            OnContextMenu(&win, x, y);
-        else if ((key & MK_SHIFT))
-            win.dm->GoToNextPage(0);
-        else
-            win.dm->GoToPrevPage(0);
-    }
-    /* return from white/black screens in presentation mode */
-    else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
-        win.ChangePresentationMode(PM_ENABLED);
-    else
-        OnContextMenu(&win, x, y);
-
-    win.mouseAction = MA_IDLE;
+    
+    OnContextMenu(&win, x, y);
 }
 
 static void OnMouseRightButtonDblClick(WindowInfo& win, int x, int y, WPARAM key)
@@ -3038,7 +3004,7 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
     // Set the position and then retrieve it.  Due to adjustments
     // by Windows it may not be the same as the value set.
     si.fMask = SIF_POS;
-    SetScrollInfo(win.hwndCanvas, SB_VERT, &si, TRUE);
+    SetScrollInfo(win.hwndCanvas, SB_VERT, &si, win.dm->showScrollbars);
     GetScrollInfo(win.hwndCanvas, SB_VERT, &si);
 
     // If the position has changed, scroll the window and update it
@@ -3071,7 +3037,7 @@ static void OnHScroll(WindowInfo& win, WPARAM wParam)
     // Set the position and then retrieve it.  Due to adjustments
     // by Windows it may not be the same as the value set.
     si.fMask = SIF_POS;
-    SetScrollInfo(win.hwndCanvas, SB_HORZ, &si, TRUE);
+    SetScrollInfo(win.hwndCanvas, SB_HORZ, &si, win.dm->showScrollbars);
     GetScrollInfo(win.hwndCanvas, SB_HORZ, &si);
 
     // If the position has changed, scroll the window and update it
@@ -3310,7 +3276,6 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     if (!presentation || !win.fullScreen)
         win.prevStyle = ws;
     ws &= ~(WS_BORDER|WS_CAPTION|WS_THICKFRAME);
-    ws |= WS_MAXIMIZE;
 
     win.frameRc = WindowRect(win.hwndFrame);
     RectI rect = GetFullscreenRect(win.hwndFrame);
@@ -4565,6 +4530,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_ZOOM_1600:
         case IDM_ZOOM_800:
         case IDM_ZOOM_400:
+        case IDM_ZOOM_300:
         case IDM_ZOOM_200:
         case IDM_ZOOM_150:
         case IDM_ZOOM_125:
@@ -4598,6 +4564,12 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_VIEW_CONTINUOUS:
             OnMenuViewContinuous(*win);
+            break;
+
+        case IDM_VIEW_SCROLLBAR:
+            win->dm->showScrollbars = !win->dm->showScrollbars;
+            ToggleWindowStyle(win->hwndCanvas, WS_VSCROLL|WS_HSCROLL, win->dm->showScrollbars, GWL_STYLE, true);
+            win->UpdateScrollbars();
             break;
 
         case IDM_VIEW_SHOW_HIDE_TOOLBAR:
@@ -4747,6 +4719,24 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
                 win->dm->Navigate(1);
             break;
 
+        case IDM_SEARCH_ONLINE:
+            // Don't break the shortcut for text boxes
+            if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
+                SendMessage(GetFocus(), WM_COPY, 0, 0);
+            else if (!HasPermission(Perm_CopySelection))
+                break;
+            else if (win->IsChm())
+                win->dm->AsChmEngine()->CopySelection();
+            else if (win->selectionOnPage) {
+                StrVec url;
+                TCHAR *urlBase = L"https://www.google.com/search?q=";
+                TCHAR *q = str::Replace(GetSelection(win), L"&", L"%26");
+                url.Append(str::Dup(urlBase));
+                url.Append(q);
+				LaunchBrowser(url.Join());
+			}
+            break;
+            
         case IDM_COPY_SELECTION:
             // Don't break the shortcut for text boxes
             if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
