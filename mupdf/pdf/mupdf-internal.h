@@ -280,6 +280,7 @@ struct pdf_xobject_s
 	pdf_obj *resources;
 	pdf_obj *contents;
 	pdf_obj *me;
+	int iteration;
 };
 
 pdf_xobject *pdf_load_xobject(pdf_document *doc, pdf_obj *obj);
@@ -288,7 +289,7 @@ pdf_xobject *pdf_keep_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_drop_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_update_xobject_contents(pdf_document *xref, pdf_xobject *form, fz_buffer *buffer);
 
-int pdf_update_appearance(pdf_document *doc, pdf_obj *obj);
+void pdf_update_appearance(pdf_document *doc, pdf_obj *obj);
 
 /* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
 pdf_xobject *pdf_create_xobject(fz_context *ctx, pdf_obj *dict);
@@ -503,26 +504,16 @@ float pdf_text_stride(fz_context *ctx, pdf_font_desc *fontdesc, float fontsize, 
  * Interactive features
  */
 
-/*
- * Flags as to the suitability of an annotation for the mouse states up and down
- * Both flags set mean suitable for both states.
- */
-enum
-{
-	MOUSE_DOWN_APPEARANCE = 1,
-	MOUSE_UP_APPEARANCE = 2,
-};
-
 struct pdf_annot_s
 {
 	pdf_obj *obj;
 	fz_rect rect;
 	fz_rect pagerect;
-	int mouse_states;
-	int has_states;
 	pdf_xobject *ap;
+	int ap_iteration;
 	fz_matrix matrix;
 	pdf_annot *next;
+	pdf_annot *next_changed;
 	int type;
 };
 
@@ -568,6 +559,7 @@ struct pdf_page_s
 	pdf_obj *contents;
 	fz_link *links;
 	pdf_annot *annots;
+	pdf_annot *changed_annots;
 	float duration;
 	int transition_present;
 	fz_transition transition;
@@ -591,7 +583,8 @@ void pdf_remove_item(fz_context *ctx, fz_store_free_fn *free, pdf_obj *key);
  */
 int pdf_has_unsaved_changes(pdf_document *doc);
 int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event);
-fz_rect *pdf_poll_screen_update(pdf_document *doc);
+void pdf_update_page(pdf_document *doc, pdf_page *page);
+pdf_annot *pdf_poll_changed_annot(pdf_document *idoc, pdf_page *page);
 fz_widget *pdf_focused_widget(pdf_document *doc);
 fz_widget *pdf_first_widget(pdf_document *doc, pdf_page *page);
 fz_widget *pdf_next_widget(fz_widget *previous);

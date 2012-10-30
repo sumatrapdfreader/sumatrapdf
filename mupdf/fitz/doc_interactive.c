@@ -16,9 +16,14 @@ int fz_pass_event(fz_interactive *idoc, fz_page *page, fz_ui_event *ui_event)
 	return pdf_pass_event((pdf_document*)idoc, (pdf_page*)page, ui_event);
 }
 
-fz_rect *fz_poll_screen_update(fz_interactive *idoc)
+void fz_update_page(fz_interactive *idoc, fz_page *page)
 {
-	return pdf_poll_screen_update((pdf_document*)idoc);
+	pdf_update_page((pdf_document*)idoc, (pdf_page*)page);
+}
+
+fz_annot *fz_poll_changed_annot(fz_interactive *idoc, fz_page *page)
+{
+	return (fz_annot*)pdf_poll_changed_annot((pdf_document*)idoc, (pdf_page*)page);
 }
 
 fz_widget *fz_focused_widget(fz_interactive *idoc)

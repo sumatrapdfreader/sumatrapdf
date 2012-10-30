@@ -842,7 +842,6 @@ struct fz_pixmap_s
 
 void fz_free_pixmap_imp(fz_context *ctx, fz_storable *pix);
 
-void fz_clear_pixmap_rect_with_value(fz_context *ctx, fz_pixmap *pix, int value, fz_bbox r);
 void fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_bbox r);
 void fz_premultiply_pixmap(fz_context *ctx, fz_pixmap *pix);
 fz_pixmap *fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray, int luminosity);

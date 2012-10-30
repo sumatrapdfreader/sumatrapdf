@@ -156,6 +156,14 @@ Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(JNIEnv *env, jobject thiz, int
 JNIEXPORT void JNICALL
 Java_com_artifex_mupdf_MuPDFCore_markDirtyInternal(JNIEnv *env, jobject thiz, int page)
 {
+	if (currentPage)
+	{
+		fz_interactive *idoc = fz_interact(doc);
+
+		if (idoc)
+			fz_update_page(idoc, currentPage, NULL, NULL);
+	}
+
 	if (currentAnnotationList != NULL && page == pagenum)
 	{
 		fz_free_display_list(ctx, currentAnnotationList);

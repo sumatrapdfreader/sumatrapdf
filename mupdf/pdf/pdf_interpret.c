@@ -2995,7 +2995,6 @@ static void pdf_run_annot_with_usage(pdf_document *xref, pdf_page *page, pdf_ann
 	{
 		fz_try(ctx)
 		{
-			pdf_update_annot(xref, annot);
 			pdf_run_xobject(csi, page->resources, annot->ap, annot->matrix);
 		}
 		fz_catch(ctx)

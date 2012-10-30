@@ -23,6 +23,7 @@ enum panning
 };
 
 static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repaint, int transition);
+static void pdfapp_updatepage(pdfapp_t *app);
 
 static void pdfapp_warn(pdfapp_t *app, const char *fmt, ...)
 {
@@ -485,6 +486,34 @@ static void pdfapp_recreate_annotationslist(pdfapp_t *app)
 
 #define MAX_TITLE 256
 
+static void pdfapp_updatepage(pdfapp_t *app)
+{
+	fz_interactive *idoc = fz_interact(app->doc);
+	fz_device *idev;
+	fz_matrix ctm = pdfapp_viewctm(app);
+	fz_annot *annot;
+
+	fz_update_page(idoc, app->page);
+	pdfapp_recreate_annotationslist(app);
+
+	while ((annot = fz_poll_changed_annot(idoc, app->page)) != NULL)
+	{
+		fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, fz_bound_annot(app->doc, annot)));
+		fz_clear_pixmap_rect_with_value(app->ctx, app->image, 255, bbox);
+		idev = fz_new_draw_device_with_bbox(app->ctx, app->image, bbox);
+
+		if (app->page_list)
+			fz_run_display_list(app->page_list, idev, ctm, bbox, NULL);
+		if (app->annotations_list)
+			fz_run_display_list(app->annotations_list, idev, ctm, bbox, NULL);
+
+		fz_free_device(idev);
+	}
+
+
+	pdfapp_showpage(app, 0, 0, 1, 0);
+}
+
 static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repaint, int transition)
 {
 	char buf[MAX_TITLE];
@@ -506,32 +535,24 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 
 	if (loadpage)
 	{
-		if (loadpage == 1)
+		pdfapp_loadpage(app);
+
+		/* Zero search hit position */
+		app->hit = -1;
+		app->hitlen = 0;
+
+		/* Extract text */
+		app->page_sheet = fz_new_text_sheet(app->ctx);
+		app->page_text = fz_new_text_page(app->ctx, app->page_bbox);
+
+		if (app->page_list || app->annotations_list)
 		{
-			pdfapp_loadpage(app);
-
-			/* Zero search hit position */
-			app->hit = -1;
-			app->hitlen = 0;
-
-			/* Extract text */
-			app->page_sheet = fz_new_text_sheet(app->ctx);
-			app->page_text = fz_new_text_page(app->ctx, app->page_bbox);
-
-			if (app->page_list || app->annotations_list)
-			{
-				tdev = fz_new_text_device(app->ctx, app->page_sheet, app->page_text);
-				if (app->page_list)
-					fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, &cookie);
-				if (app->annotations_list)
-					fz_run_display_list(app->annotations_list, tdev, fz_identity, fz_infinite_bbox, &cookie);
-				fz_free_device(tdev);
-			}
-		}
-		else
-		{
-			/* pdfapp_onmouse passes loadpage == 2, meaning only recreate the annotations list */
-			pdfapp_recreate_annotationslist(app);
+			tdev = fz_new_text_device(app->ctx, app->page_sheet, app->page_text);
+			if (app->page_list)
+				fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, &cookie);
+			if (app->annotations_list)
+				fz_run_display_list(app->annotations_list, tdev, fz_identity, fz_infinite_bbox, &cookie);
+			fz_free_device(tdev);
 		}
 	}
 
@@ -1336,7 +1357,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 			}
 
 			app->nowaitcursor = 1;
-			pdfapp_showpage(app, 2, 1, 1, 0);
+			pdfapp_updatepage(app);
 			app->nowaitcursor = 0;
 			processed = 1;
 		}

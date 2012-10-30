@@ -1698,52 +1698,50 @@ static void execute_action(pdf_document *doc, pdf_obj *obj, pdf_obj *a)
 	}
 }
 
-int pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
+void pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
 {
-	if (pdf_dict_gets(obj, "AP") && !pdf_dict_gets(obj, "Dirty"))
-		return 0;
-
-	if (!strcmp(pdf_to_name(pdf_dict_gets(obj, "Subtype")), "Widget"))
+	if (!pdf_dict_gets(obj, "AP") || pdf_dict_gets(obj, "Dirty"))
 	{
-		switch(pdf_field_type(doc, obj))
+		if (!strcmp(pdf_to_name(pdf_dict_gets(obj, "Subtype")), "Widget"))
 		{
-		case FZ_WIDGET_TYPE_TEXT:
+			switch(pdf_field_type(doc, obj))
 			{
-				pdf_obj *formatting = pdf_dict_getp(obj, "AA/F");
-				if (formatting && doc->js)
+			case FZ_WIDGET_TYPE_TEXT:
 				{
-					/* Apply formatting */
-					pdf_js_event e;
+					pdf_obj *formatting = pdf_dict_getp(obj, "AA/F");
+					if (formatting && doc->js)
+					{
+						/* Apply formatting */
+						pdf_js_event e;
 
-					e.target = obj;
-					e.value = pdf_field_value(doc, obj);
-					pdf_js_setup_event(doc->js, &e);
-					execute_action(doc, obj, formatting);
-					/* Update appearance from JS event.value */
-					update_text_appearance(doc, obj, pdf_js_get_event(doc->js)->value);
+						e.target = obj;
+						e.value = pdf_field_value(doc, obj);
+						pdf_js_setup_event(doc->js, &e);
+						execute_action(doc, obj, formatting);
+						/* Update appearance from JS event.value */
+						update_text_appearance(doc, obj, pdf_js_get_event(doc->js)->value);
+					}
+					else
+					{
+						/* Update appearance from field value */
+						update_text_appearance(doc, obj, NULL);
+					}
 				}
-				else
-				{
-					/* Update appearance from field value */
-					update_text_appearance(doc, obj, NULL);
-				}
+				break;
+			case FZ_WIDGET_TYPE_PUSHBUTTON:
+				update_pushbutton_appearance(doc, obj);
+				break;
+			case FZ_WIDGET_TYPE_LISTBOX:
+			case FZ_WIDGET_TYPE_COMBOBOX:
+				/* Treating listbox and combobox identically for now,
+				 * and the behaviour is most appropriate for a combobox */
+				update_combobox_appearance(doc, obj);
+				break;
 			}
-			break;
-		case FZ_WIDGET_TYPE_PUSHBUTTON:
-			update_pushbutton_appearance(doc, obj);
-			break;
-		case FZ_WIDGET_TYPE_LISTBOX:
-		case FZ_WIDGET_TYPE_COMBOBOX:
-			/* Treating listbox and combobox identically for now,
-			* and the behaviour is most appropriate for a combobox */
-			update_combobox_appearance(doc, obj);
-			break;
 		}
+
+		pdf_dict_dels(obj, "Dirty");
 	}
-
-	pdf_dict_dels(obj, "Dirty");
-
-	return 1;
 }
 
 static void execute_action_chain(pdf_document *doc, pdf_obj *obj)
@@ -2067,9 +2065,46 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
 	return changed;
 }
 
-fz_rect *pdf_poll_screen_update(pdf_document *doc)
+void pdf_update_page(pdf_document *doc, pdf_page *page)
 {
-	return NULL;
+	fz_context *ctx = doc->ctx;
+	pdf_annot *annot;
+
+	page->changed_annots = NULL;
+	for (annot = page->annots; annot; annot = annot->next)
+	{
+		pdf_xobject *ap = pdf_keep_xobject(ctx, annot->ap);
+		int ap_iteration = annot->ap_iteration;
+
+		fz_try(ctx)
+		{
+			pdf_update_annot(doc, annot);
+
+			if ((ap != annot->ap || ap_iteration != annot->ap_iteration))
+			{
+				annot->next_changed = page->changed_annots;
+				page->changed_annots = annot;
+			}
+		}
+		fz_always(ctx)
+		{
+			pdf_drop_xobject(ctx, ap);
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
+		}
+	}
+}
+
+pdf_annot *pdf_poll_changed_annot(pdf_document *idoc, pdf_page *page)
+{
+	pdf_annot *annot = page->changed_annots;
+
+	if (annot)
+		page->changed_annots = annot->next_changed;
+
+	return annot;
 }
 
 fz_widget *pdf_focused_widget(pdf_document *doc)
