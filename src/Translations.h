@@ -4,7 +4,7 @@
 #ifndef Translations_h
 #define Translations_h
 
-namespace Trans {
+namespace trans {
 
 const char *  GuessLanguage();
 const char *  ValidateLanguageCode(const char *code);
@@ -16,10 +16,11 @@ const char *  GetLanguageCode(int langIdx);
 TCHAR *       GetLanguageName(int langIdx);
 bool          IsLanguageRtL(int langIdx);
 
+void          Destroy();
 }
 
 // _TR() marks strings that need to be translated
-#define _TR(x)  Trans::GetTranslation(x)
+#define _TR(x)  trans::GetTranslation(x)
 
 // _TRN() marks strings that need to be translated but are used in a context
 // that doesn't allow calling Trans::GetTranslation() (e.g. when used as part

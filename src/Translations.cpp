@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 #include "Translations.h"
 
-namespace Trans {
+namespace trans {
 
 /*
 This code relies on the following variables that must be defined in
@@ -28,6 +28,40 @@ LangDef gLangData[LANGS_COUNT];
 // numeric index of the current language. 0 ... LANGS_COUNT-1
 static int gCurrLangIdx = 0;
 static const TCHAR **gTranslationCache = NULL;  // cached translations
+
+struct MissingTranslation {
+    const char *s;
+    const TCHAR *translation;
+};
+
+// there should only be one or two missing translations
+static MissingTranslation gMissingTranslations[64];
+static int gMissingTranslationsCount = 0;
+
+static void FreeMissingTranslations()
+{
+    for (int i=0; i < gMissingTranslationsCount; i++) {
+        free((void*)gMissingTranslations[i].translation);
+    }
+    gMissingTranslationsCount = 0;
+}
+
+static const TCHAR *FindOrAddMissingTranslation(const char *s)
+{
+    for (int i = 0; i < gMissingTranslationsCount; i++) {
+        if (s == gMissingTranslations[i].s) {
+            return gMissingTranslations[i].translation;
+        }
+    }
+    if (gMissingTranslationsCount >= dimof(gMissingTranslations))
+        return _T("missing translation");
+
+    gMissingTranslations[gMissingTranslationsCount].s = s;
+    const TCHAR *res = str::conv::FromUtf8(s);
+    gMissingTranslations[gMissingTranslationsCount].translation = res;
+    gMissingTranslationsCount++;
+    return res;
+}
 
 const char *GuessLanguage()
 {
@@ -90,7 +124,6 @@ static int GetTranslationIndex(const char* txt)
 {
     assert(gCurrLangIdx < LANGS_COUNT);
     const char **res = (const char **)bsearch(&txt, &gTranslations, STRINGS_COUNT, sizeof(gTranslations[0]), cmpCharPtrs);
-    assert(res);
     if (!res) {
         // didn't find a translation
         return -1;
@@ -100,7 +133,7 @@ static int GetTranslationIndex(const char* txt)
 }
 
 // Call at program exit to free all memory related to translations functionality.
-extern "C" static void FreeData()
+void Destroy()
 {
     if (!gTranslationCache)
         return;
@@ -109,6 +142,7 @@ extern "C" static void FreeData()
     }
     free((void *)gTranslationCache);
     gTranslationCache = NULL;
+    FreeMissingTranslations();
 }
 
 // Return a properly encoded version of a translation for 'txt'.
@@ -123,13 +157,11 @@ const TCHAR *GetTranslation(const char *txt)
         gTranslationCache = SAZA(const TCHAR *, dimof(gTranslations));
         if (!gTranslationCache)
             return _T("Missing translation!?");
-        atexit(FreeData);
     }
 
     int idx = GetTranslationIndex(txt);
-    assert((idx >= 0) && (idx < STRINGS_COUNT));
     if (-1 == idx)
-        return _T("Missing translation!?");
+        return FindOrAddMissingTranslation(txt);
 
     int transIdx = (gCurrLangIdx * STRINGS_COUNT) + idx;
     // fall back to the English string, if a translation is missing

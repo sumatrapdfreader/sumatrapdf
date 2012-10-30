@@ -112,7 +112,7 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
         tbButton.iBitmap = gToolbarButtons[i].bmpIndex;
         tbButton.fsState = TBSTATE_ENABLED;
         tbButton.fsStyle = TBSTYLE_BUTTON;
-        tbButton.iString = (INT_PTR)Trans::GetTranslation(gToolbarButtons[i].toolTip);
+        tbButton.iString = (INT_PTR)trans::GetTranslation(gToolbarButtons[i].toolTip);
     }
     return tbButton;
 }
@@ -139,7 +139,7 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo *win)
         const char *txt = gToolbarButtons[i].toolTip;
         if (NULL == txt)
             continue;
-        const TCHAR *translation = Trans::GetTranslation(txt);
+        const TCHAR *translation = trans::GetTranslation(txt);
         BuildTBBUTTONINFO(buttonInfo, (TCHAR *)translation);
         res = SendMessage(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)&buttonInfo);
         assert(0 != res);

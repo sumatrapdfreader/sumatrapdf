@@ -182,13 +182,13 @@ bool HasPermission(int permission)
 
 bool CurrLangNameSet(const char *langName)
 {
-    const char *langCode = Trans::ValidateLanguageCode(langName);
+    const char *langCode = trans::ValidateLanguageCode(langName);
     if (!langCode)
         return false;
 
     gGlobalPrefs.currentLanguage = langCode;
 
-    bool ok = Trans::SetCurrentLanguage(langCode);
+    bool ok = trans::SetCurrentLanguage(langCode);
     assert(ok);
     return ok;
 }
@@ -547,8 +547,8 @@ void UpdateCurrentFileDisplayStateForWin(SumatraWindow& win)
 
 bool IsUIRightToLeft()
 {
-    int langIx = Trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
-    return Trans::IsLanguageRtL(langIx);
+    int langIx = trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
+    return trans::IsLanguageRtL(langIx);
 }
 
 // updates the layout for a window to either left-to-right or right-to-left
@@ -3159,11 +3159,11 @@ void ChangeLanguage(const char *langName)
 
 void OnMenuChangeLanguage(HWND hwnd)
 {
-    int langId = Trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
+    int langId = trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
     int newLangId = Dialog_ChangeLanguge(hwnd, langId);
 
     if (newLangId != -1 && langId != newLangId) {
-        const char *langName = Trans::GetLanguageCode(newLangId);
+        const char *langName = trans::GetLanguageCode(newLangId);
         assert(langName);
         if (!langName)
             return;

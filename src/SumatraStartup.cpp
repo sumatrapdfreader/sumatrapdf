@@ -409,7 +409,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
     if (!file::Exists(prefsFilename)) {
         // guess the ui language on first start
-        CurrLangNameSet(Trans::GuessLanguage());
+        CurrLangNameSet(trans::GuessLanguage());
         gFavorites = new Favorites();
     } else {
         assert(gFavorites == NULL);
@@ -569,6 +569,8 @@ Exit:
 
     DrainUiMsgQueue();
     uimsg::Destroy();
+
+    trans::Destroy();
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely

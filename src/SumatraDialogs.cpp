@@ -381,8 +381,8 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         win::SetText(hDlg, _TR("Change Language"));
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         int itemToSelect = 0;
-        for (int langIdx = 0; Trans::GetLanguageCode(langIdx) != NULL; langIdx++) {
-            ScopedMem<TCHAR> langName(Trans::GetLanguageName(langIdx));
+        for (int langIdx = 0; trans::GetLanguageCode(langIdx) != NULL; langIdx++) {
+            ScopedMem<TCHAR> langName(trans::GetLanguageName(langIdx));
             ListBox_AppendString_NoSort(langList, langName);
             int elIdx = ListBox_GetCount(langList) - 1;
             ListBox_SetItemData(langList, elIdx, (LPARAM)langIdx);
