@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4aef8070621bb1c4969d0673cded47ae838cf29c
+dc0b94910249032aa3f1ce79c6a5947f7fe9674e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -180,6 +180,7 @@ sq:&Gjithë faqet e seleksionuara
 sr-rs:Све изабране странице
 sv:&Alla valda sidor
 ta:எல்லா தேர்ந்தெடுத்த பக்கங்களும்
+th:หน้าที่เลือกทั้งหมด
 tl:&Lahat ng napiling pahina
 tr:Tüm seçilen &sayfalar
 tw:所有已選取的頁面(&A)
@@ -236,6 +237,7 @@ sq:&Prapa\tAlt+Left Arrow
 sr-rs:Назад\tAlt+<-
 sv:Tillbaka\tAlt+Pil vänster
 ta:பின்\tAlt+Left Arrow
+th:ถอยกลับ\tAlt+Left Arrow
 tl:Bumalik\tAlt+Left Arrow
 tr:&Geri\tAlt+Sol Ok
 tw:上一停頓頁面\tAlt+<-
@@ -286,6 +288,7 @@ sp-rs:Izgled knjige\tCtrl+8
 sq:&Libër\tCtrl+8
 sr-rs:Изглед књиге\tCtrl+8
 sv:&Bokvy\tCtrl+8
+th:แสดงแบบหนังสือ\tCtrl+8
 tr:&Kitap Görünümü
 tw:書本模式(&B)\tCtrl+8
 uk:Книжна розгортка\tCtrl+8
@@ -401,6 +404,7 @@ sq:&Kopjoj materialin
 sr-rs:Копирај изабрано
 sv:&Kopiera markering
 ta:தேர்ந்தெடுத்தவற்றை நகலெடு
+th:คัดลอกตัวเลือก
 tl:Kopyahin ang napili
 tr:Seçimi &Kopyala
 tw:複製選取的範圍(&C)
@@ -457,6 +461,7 @@ sq:&Kopjoj materialin\tCtrl+C
 sr-rs:Копирај изабрано
 sv:Kopiera markering\tCtrl+C
 ta:தேர்வுசெய்ததை நகல் செய்
+th:คัดลอกตัวเลือก\tCtrl+C
 tl:&Kopyahin ang Napili\tCtrl+C
 tr:Seçileni &kopyala\tCtrl+C
 tw:截取範圍(&C)\tCtrl+C
@@ -3017,6 +3022,7 @@ sq:Shënoj te pëlqimet
 sr-rs:Додавање у одабир
 sv:Lägg till favorit
 ta:விருப்பகளில்  சேர்
+th:เพิ่มรายการโปรด
 tr:Sık kullanılanı ekle
 tw:新增我的最愛
 uk:Додати закладку
@@ -3067,6 +3073,7 @@ sq:Shënoj faqen %s te pëlqimet
 sr-rs:Додај страницу %s међу одабране
 sv:Lägg till sida %s i favoriter
 ta:விருப்பகளில்  பக்கம் %s ஐ சேர்
+th:เพิ่มหน้า %s ไปยังรายการโปรด
 tr:Sayfa %s sık kullanılanlara ekle
 tw:把第 %s 頁加入我的最愛
 uk:Додати %s сторінку до закладок
@@ -3117,6 +3124,7 @@ sq:Mbani shënim faqen %s nën emrin (fakultativ):
 sr-rs:Додај страницу %s међу одабране под (опционо) именом:
 sv:Lägg till sida %s i favoriter med (valfritt) namn:
 ta:விருப்பகளில்  பக்கம் %s ஐ பெயருடன் சேர்
+th:เพิ่มหน้า %s ไปยังรายการโปรดพร้อม (สามารถเลือกได้) ชื่อ:
 tr:Sayfa %s sık kullanılanlara (tercihe bağlı) isimle ekle:
 tw:把第 %s 頁加入我的最愛的名稱(非必要)：
 uk:Додати %s сторінку до закладок з іменем(необов'язково):
@@ -3167,6 +3175,7 @@ sq:Shënoj te pëlqimet
 sr-rs:Додај међу одабране
 sv:Lägg till i favoriter
 ta:விருப்பகளில் சேர்
+th:เพิ่มไปยังรายการโปรด
 tr:Sık kullanılanlara ekle
 tw:加入我的最愛
 uk:Додати до закладок
@@ -3222,6 +3231,7 @@ sq:Avancuar
 sr-rs:Додатно
 sv:Avancerad
 ta:மேம்பட்ட அமைப்புகள்
+th:ขั้นสูง
 tl:Advanced
 tr:Gelişmiş
 tw:進階
@@ -3279,6 +3289,7 @@ sq:Të gjitha skedat
 sr-rs:Све датотеке
 sv:Alla filer
 ta:எல்லா கோப்புகள்
+th:ไฟล์ทั้งหมด
 tl:Lahat ng files
 tr:Tüm dosyalar
 tw:全部檔案
@@ -3330,6 +3341,7 @@ sq:Dokumente të garantuara
 sr-rs:Сви подржани документи
 sv:Alla dokument som stöds
 ta:எல்லா ஆதரிக்கப்பட்ட கோப்புகள்
+th:เอกสารสนับสนุนทั้งหมด
 tr:Bütün desteklenen belgeler
 tw:所有支援的檔案格式
 uk:Всі документи, що підтримуються
@@ -3384,6 +3396,7 @@ sq:Aplikacioni:
 sr-rs:Апликација:
 sv:Programvara:
 ta:செயலி
+th:โปรแกรมใช้งาน:
 tl:Pangalan ng aplikasyon:
 tr:Uygulama:
 tw:程式：
@@ -3501,6 +3514,7 @@ sq:Shtojca: %s
 sr-rs:Прилог : %s
 sv:Bilagor: %s
 ta:இணைப்பு %s
+th:เอกสารแนบ: %s
 tl:Nakasama: %s
 tr:Ek: %s
 tw:附件：%s
@@ -3555,6 +3569,7 @@ sq:Autori:
 sr-rs:Аутор:
 sv:Författare:
 ta:ஆசிரியர்
+th:ผู้แต่ง:
 tl:May-akda:
 tr:Yazar:
 tw:作者：
@@ -3611,6 +3626,7 @@ sq:Automatik
 sr-rs:Аутоматски
 sv:Automatiskt
 ta:தானாக
+th:อัตโนมัติ
 tl:Awtomatiko
 tr:Otomatik
 tw:自動
@@ -3668,6 +3684,7 @@ sq:Verifikoj automatikisht &azhurnimet
 sr-rs:Аутоматски проверавај доступност нове верзије
 sv:Sök &automatisk efter uppdateringar
 ta:தானாக புதுப்பித்த பதிப்பை தேடு
+th:ตรวจสอบการปรับปรุงให้ทันสมัยโดยอัตโนมัติ
 tl:Awtomatikong tignan kung may mga pagbabago
 tr:&Güncellemeleri otomatik olarak kontrol et
 tw:自動檢查軟體更新(&U)
@@ -3724,6 +3741,7 @@ sq:Libër
 sr-rs:Изглед књиге
 sv:Bokuppslag
 ta:ஏடு வடிவி நோக்கு
+th:แสดงแบบหนังสือ
 tl:Pang-aklat na tingin
 tr:Kitap Görünümü
 tw:書本模式
@@ -3838,6 +3856,7 @@ sp-rs:Prečica ka obeleživaču
 sq:Shkurtoret e shenjimit
 sr-rs:Пречица ка обележивачу
 sv:Bokmärkesgenvägar
+th:คั่นหน้าทางลัด
 tr:Yer imi kısayolları
 tw:書籤捷徑
 uk:Закладка ярликів
@@ -3886,6 +3905,7 @@ sp-rs:Obeleži prečicu na strani %s od %s
 sq:Shkurtorja e shenjimit për faqet %s nga %s
 sr-rs:Обележи пречицу на страни %s од %s
 sv:Bokmärk genväg till sida %s av %s
+th:คั่นทางลัดไปยังหน้า %s ของ %s
 tr:%s. sayfasına %s yer imi kısayolu
 tw:書籤捷徑指向第 %s 頁（檔案 %s）
 uk:Закладка ярлика на сторінку %s з %s
@@ -3937,6 +3957,7 @@ sp-rs:Obeleživači
 sq:Faqe të shenjuara
 sr-rs:Обележивачи
 sv:Bokmärken
+th:คั่นหน้า
 tl:Mga Pananda
 tr:Yer imleri
 tw:書籤
@@ -3992,6 +4013,7 @@ sq:bajt
 sr-rs:бајтова
 sv:Byte
 ta:Bytes
+th:ไบต์
 tl:Bytes
 tr:Bayt
 tw:字節
@@ -4044,6 +4066,7 @@ sp-rs:CHM dokumenti
 sq:Dokumente CHM
 sr-rs:CHM документи
 sv:CHM-dokument
+th:เอกสาร CHM
 tr:CHM belgeleri
 tw:CHM 文件
 uk:Документи CHM
@@ -4095,6 +4118,7 @@ sp-rs:Povezivanje na internet nije moguće (greška %#x).
 sq:Nuk mund të lidhet në internet (gabim %#x).
 sr-rs:Повезивање на интернет није могуће (грешка %#x).
 sv:Kan ej ansluta till internet (fel %#x).
+th:ไม่สามารถเชื่อมต่ออินเตอร์เน็ต (ข้อผิดพลาด %#x).
 tl:Hindi makakonekta sa Internet (error %#x).
 tr:İnternete erişilemiyor (hata %#x)
 tw:無法連結網際網路（錯誤：%#x）。
@@ -4152,6 +4176,7 @@ sq:Anuloj
 sr-rs:Откажи
 sv:Avbryt
 ta:இரத்து செய்
+th:ยกเลิก
 tl:Ikansela
 tr:Vazgeç
 tw:取消
@@ -4209,6 +4234,7 @@ sq:Nuk mund të printojë skedën
 sr-rs:Штампање ове датотеке није могуће
 sv:Kan ej skriva ut denna fil
 ta:கோப்பை அச்சிட முடியவில்லை
+th:ไม่สามารถพิมพ์ไฟล์นี้
 tl:Hindi mai-print ang file
 tr:Bu dosyanın yazıcıdan dökümü yapılamaz
 tw:無法列印檔案
@@ -4263,6 +4289,7 @@ sp-rs:Nije moguće pokrenuti inverznu pretragu. Proverite komandnu liniju u pode
 sq:Nuk mund të kërkojë mbrapsht. Ju lutemi të verifikoni komandën te parametrat.
 sr-rs:Није могуће покренути инверзну претрагу. Проверите командну линију у подешавањима.
 sv:Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
+th:ไม่สามารถค้นหาคำสั่งที่ตรงกันข้าม โปรดตรวจสอบแถวคำสั่งในการตั้งค่า
 tl:Hindi ma-execute ang command para sa inverse search. Pakitingnan ang command line sa settings.
 tr:Sondan başa arama komutu başlatılamadı. Ayarlarda komut satırını kontrol ediniz.
 tw:無法進行逆向搜尋。請檢查設定裡的命令列。
@@ -4442,6 +4469,7 @@ sp-rs:Stripovi
 sq:Comic books
 sr-rs:Стрипови
 sv:Serier
+th:หนังสือการ์ตูน
 tr:Çizgi romanlar
 tw:漫畫文件
 uk:Документи CBR, CBZ (комікси)
@@ -4468,12 +4496,14 @@ kr:호환성
 mk:Компатибилност
 ne:मिल्दोजुल्दो
 nl:Compatibiliteit
+no:Kompatibilitet
 pl:Zgodność
 pt:Compatibilidade
 ru:Совместимость
 sl:Združljivost
 sq:Përputhja
 sv:Kompatibilitet
+th:ความสอดคล้องกัน
 tr:Uyumluluk
 uz:Mosligi
 vn:Tính tương thích
@@ -4593,6 +4623,7 @@ sq:Libër në vazhdimësi
 sr-rs:Непрекидно, изглед књиге
 sv:Fortlöpande bokuppslag
 ta:தொடர் ஏடு வடிவ நோக்கு
+th:แสดงแบบหนังสือต่อเนื่อง
 tl:Tuluy-tuloy na tinging pang-aklat
 tr:Devamlı Kitap Gibi Görünüm
 tw:連續書本模式
@@ -4757,6 +4788,7 @@ kr:이미지 복사(&I)
 mk:Копирај &слика
 ne:&छवि प्रतिलिपि बनाउनुहोस्
 nl:Afbeelding kopiëren
+no:Kopier &Bilde
 pl:Kopiuj obraz
 pt:Copiar &imagem
 ru:Скопировать &изображение
@@ -4765,6 +4797,7 @@ sl:Kopiraj &sliko
 sq:Kopjoj &figurën
 sr-rs:Копирај слику
 sv:Kop&iera bild
+th:คัดลอกรูปภาพ
 tr:&Görüntüyü Kopyala
 tw:複製圖片(&I)
 uz:&Rasmni nusxa olish
@@ -4813,6 +4846,7 @@ sp-rs:Kopiraj adresu veze
 sq:Kopjoj adresën e &lidhësit
 sr-rs:Копирај адресу везе
 sv:Kopiera länkadress
+th:คัดลอก Link Address
 tl:Kopyahin nag address ng &link
 tr:&Bağlantı Adresini Kopyala
 tw:複製連結位址(&L)
@@ -4863,6 +4897,7 @@ sp-rs:Kopiraj komentar
 sq:Kopjoj ko&mentin
 sr-rs:Копирај коментар
 sv:Kopiera kommentar
+th:คัดลอกความเห็น
 tl:Kopyahin ang komento
 tr:&Açıklamayı Kopyala
 tw:複製註解(&M)
@@ -4915,6 +4950,7 @@ sp-rs:Kopiranje teksta je odbijeno (može se kopirati samo kao slika)
 sq:Ndalohet kopjimi i tekstit (kopjohet vetëm si figurë)
 sr-rs:Копирање текста је одбијено (може се копирати само као слика)
 sv:Textkopiering tilläts ej (kopierar som bild)
+th:การคัดลอกข้อความถูกปฏิเสธ (คัดลอกแบบรูปภาพเท่านั้น)
 tl:Hindi maaaring kopyahin ang mensahe (kinopya bilang isang imahe lamang)
 tr:Metnin kopyalanması reddedildi (görüntü olarak kopyalandı)
 tw:複製文字失敗（只能複製為圖片）
@@ -4947,6 +4983,7 @@ kr:저작권:
 mk:Авторско право:
 ne:प्रतिलिपिअधिकार:
 nl:Auteursrecht
+no:Opphavsrett:
 pl:Prawo autorskie:
 pt:Direitos de autor:
 ru:Авторское право:
@@ -4955,6 +4992,7 @@ sl:Avtorske pravice:
 sq:Kopirajti:
 sr-rs:Ауторска права:
 sv:Copyright:
+th:ลิขสิทธิ์:
 tr:Telif hakkı:
 tw:版權：
 uz:Mualliflik huquqi:
@@ -5003,6 +5041,7 @@ sp-rs:Nije moguće prikazati osobine štampača
 sq:Nuk mund të marrë vetitë e printerit
 sr-rs:Није могуће приказати особине штампача
 sv:Kunde inte hämta egenskaper för skrivare
+th:ไม่ได้รับคุณสมบัติเครื่องพิมพ์
 tr:Yazıcı özellikleri temin edilemedi
 uk:Неможливо відобразити налаштування друкарки
 uz:Printer xossalarini olib bo'lmadi
@@ -5056,6 +5095,7 @@ sq:Nuk mund të vë në punë printerin
 sr-rs:Није могуће покренути штампач
 sv:Kunde ej använda skrivare
 ta:அச்சுப்பொறியை தொடக்க முடியவில்லை
+th:ไม่สามารถเตรียมเครื่องพิมพ์
 tl:Hindi ma-initialize ang printer
 tr:Yazıcı başlatılamadı
 tw:無法初始化印表機
@@ -5112,6 +5152,7 @@ sq:Nuk mund të radhitë faqen
 sr-rs:Није могуће приказати страницу
 sv:Kunde ej visa sidan
 ta:பக்கத்தை அளிக்க முடியவில்லை
+th:ไม่สามารถแสดงผลหน้าเพจ
 tl:Hindi maipakita ang pahina
 tr:Sayfa oluşturulamadı
 tw:無法產生頁面
@@ -5166,6 +5207,7 @@ sq:Krijuar më:
 sr-rs:Израђена:
 sv:Skapad:
 ta:உருவாக்கப்பட்டது
+th:สร้างแล้ว
 tl:Ginawa noong:
 tr:Yaratılış tarihi:
 tw:檔案建立日期：
@@ -5216,6 +5258,7 @@ sp-rs:Tekuća datoteka
 sq:Skeda aktuale
 sr-rs:Текућа датотека
 sv:Aktuell fil
+th:ไฟล์ปัจจุบัน
 tr:Yürürlükteki dosya
 tw:當前的檔案
 uk:Поточний файл
@@ -5270,6 +5313,7 @@ sq:&Shkalla e caktuar...\tCtrl+Y
 sr-rs:Прилагођено увећање...\tCtrl+Y
 sv:&Anpassad zoom...\tCtrl+Y
 ta:விருப்பிற்கேற்ற பெருக்கம்\tCtrl+Y
+th:กำหนดการซูม...\tCtrl+Y
 tl:Custom na laki...\tCtrl+Y
 tr:Kişiselleştirilmiş &Yakınlaştırma... \tCtrl+Y
 tw:自訂縮放(&C)...\tCtrl+Y
@@ -5326,6 +5370,7 @@ sq:&Formati standard:
 sr-rs:Подразумевани приказ
 sv:Förvalt &utseende
 ta:கோட நிலை வடிவமைப்பு
+th:รูปแบบเริ่มต้น:
 tl:Default na Ayos:
 tr:Varsayılan &Düzen:
 tw:預設閱覽模式：(&L)
@@ -5382,6 +5427,7 @@ sq:&Shkalla standarde:
 sr-rs:Подразумевано увећање
 sv:Förvalt &zoomläge
 ta:கோட நிலை உரு அளவு
+th:ซูมเริ่มต้น:
 tl:Default na Laki:
 tr:Varsayılan &Yakınlaştırma:
 tw:預設比例：(&Z)
@@ -5439,6 +5485,7 @@ sq:Lexuesi standard i PDF-ve nuk mund të ndryshojë në mënyrën portabël
 sr-rs:Подразумевани PDF читач не може бити промењен у преносивном режиму
 sv:SumatraPDF kan ej göras förvald i portabelt läge
 ta:முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை
+th:ค่า PDF reader เริ่มต้นไม่สามารถเปลี่ยนได้ในโหมดพกพา
 tl:Hindi maaaring palitan ang default na PDF reader sa portable na mode
 tr:Varsayılan PDF okuyucu taşınabilir modunda değiştirilemez
 tw:不能在便攜模式更改預設 PDF 閱讀器
@@ -5492,6 +5539,7 @@ sq:Nuk lejohet:
 sr-rs:Није допуштено:
 sv:Saknade Tillstånd:
 ta:அனுமதி மருக்கப்பட்டது
+th:ปฏิเสธการอนุญาต:
 tl:Mga hindi maaaring gawin:
 tr:Reddedilen İzinler:
 tw:權限不足：
@@ -5544,6 +5592,7 @@ sp-rs:DjVu dokumenti
 sq:Dokumente DjVu
 sr-rs:DjVu документи
 sv:DjVu-dokument
+th:เอกสาร DjVu
 tr:DjVu belgeleri
 tw:DjVu 文件
 uk:Документи DjVu
@@ -5597,6 +5646,7 @@ sq:Vetitë e dokumentit
 sr-rs:Особине документа
 sv:Dokumentegenskaper
 ta:கோப்பின் பண்புகள்
+th:คุณสมบัติเอกสาร
 tl:Mga katangian ng dokumento
 tr:Belge Özellikleri
 tw:文件屬性
@@ -6268,6 +6318,7 @@ kr:파일 이름을 바꾸지 못했습니다!
 mk:Не успеав да ја преименувам датотеката!
 ne:नाम फेराई असफल
 nl:Naam niet kunnen wijzigen!
+no:Kunne ikke endre navn på filen!
 pl:Błąd zmiany nazwy pliku!
 pt:Falha ao mudar o nome do ficheiro!
 ru:Ошибка переименования файла!
@@ -6359,6 +6410,7 @@ kr:빠른 웹 보기
 mk:Брз веб-преглед
 ne:द्रुत वेब दृश्य
 nl:Snelle browserweergave
+no:Rask Nettvisning
 pl:Szybkie wyświetlanie w Internecie
 pt:Visualização rápida na web
 ru:Быстрый просмотр в Интернете
@@ -7388,6 +7440,7 @@ kr:글꼴:
 mk:Букви:
 ne:फन्टहरू:
 nl:Lettertypen:
+no:Skrifter:
 pl:Czcionki:
 pt:Tipo de letra:
 ru:Шрифты:
@@ -7426,6 +7479,7 @@ kr:%d 페이지 읽어들이는 중...
 mk:Ја форматирам книгата... %d страници
 ne:पुस्तक स्वरूपण ... %d पृष्ठहरु
 nl:Boek samenstellen... %d paginas
+no:Formater bok... %d sidene
 pl:Formatowanie książki... %d stron
 pt:A formatar livro... %d páginas
 ru:Форматирование книги... %d стр.
@@ -7968,6 +8022,7 @@ kr:%s 파일 불러오는 중...
 mk:Ја вчитувам датотеката %s...
 ne:%s फाइल लोड हुँदैछ ...
 nl:Bestand %s laden...
+no:Laster fil %s...
 pl:Wczytywanie pliku %s...
 pt:A carregar o ficheiro %s...
 ru:Загрузка файла %s...
@@ -9369,6 +9424,7 @@ it:Ottimizzazioni PDF:
 kr:PDF 최적화:
 mk:Оптимизации за PDF:
 ne:PDF अप्टिमाइजेसन
+no:PDF Optimalisering:
 pt:Otimizações PDF:
 ru:Оптимизация PDF:
 sl:Optimizacije PDF:
@@ -10176,6 +10232,7 @@ kr:이미지로 인쇄(&I) (더 많은 메모리 필요)
 mk:Печати како слика (бара повеќе меморија)
 ne:&छविको रुपमा छाप्नुहोस् (धेरै स्मृति चाहिन्छ)
 nl:Als afbeelding afdrukken (vereist meer geheugen)
+no:Skriv ut som &bilde (krever mer minne)
 pt:Imprimir &como imagem (usa mais memória)
 ru:Печатать как &изображение (требуется больше памяти)
 sl:Natisni kot sliko (zahteva več pomnilnika)
@@ -10472,6 +10529,7 @@ kr:이름 바꾸기(&N)...\tF2
 mk:Преименувај... \tF2
 ne:नाम &फेर्नुहोस्...\tF2
 nl:&Naam wijzigen...\tF2
+no:Gi nytt &navn... \tF2
 pl:Zmień &nazwę...\tF2
 pt:Mudar &nome...\tF2
 ru:Пере&именовать...\tF2
@@ -10662,6 +10720,7 @@ kr:바꿀 이름
 mk:Преименувај во
 ne:नाम फेर्नुहोस्
 nl:Naam wijzigen in
+no:Endre Navn Til
 pl:Zmień nazwę na
 pt:Mudar nome para
 ru:Переименовать в
@@ -10699,6 +10758,7 @@ kr:Windows 색 구성표처럼 문서 색 교체(&C)
 mk:Замени ги &боите во документот со палетата на Windows
 ne:कागजात &रङ्गलाई विन्डोज रङ योजना अनुसार बदल्नुहोस्
 nl:Vervang de documentkleuren met Windows kleurenschema
+no:Erstatt dokument &farger med Windows fargeskjema
 pl:Wymień kolory dokumentu na kolory systemowe Windows
 pt:Substituir &cores do documento pelas cores do Windows
 ru:Применить к документу цветовую схему Windows
@@ -11305,6 +11365,7 @@ kr:책갈피 보이기(&B)
 mk:Прикажи &обележувачи
 ne:&पुस्तकचिनोहरू देखाउनुहोस्
 nl:Bladwijzers tonen
+no:Vis &Bookmarks
 pl:Pokaż &Zakładki
 pt:&Mostrar marcadores
 ru:Показать &закладки
@@ -12156,6 +12217,7 @@ it:PDF marcati
 kr:태그있는 PDF
 mk:Означен PDF
 ne:ट्याग गरिएको PDF
+no:Merket PDF
 pt:PDF com tags
 ru:Размеченный PDF
 sl:Označen PDF
@@ -12987,6 +13049,7 @@ sq:[Dikton ndryshimet; freskon] %s
 sr-rs:[Промене су примећене; освежавање] %s
 sv:[Ändringar detekterade; uppdaterar] %s
 ta:[மாற்றங்கள் கண்டுபிடிக்க பட்டுள்ளது; புதுபிக்கபட்டு வருகிறது]%s
+th:[พบการเปลี่ยนแปลง; กำลังเรียกใหม่] %s
 tl:[May napansing mga pagbabago; nagre-refresh] %s
 tr:[Değişiklik tespit edildi; güncelleniyor] %s
 tw:[找到更新，同步中] %s
@@ -13041,6 +13104,7 @@ sq:kopjon tekstin
 sr-rs:копирање текста
 sv:kopierar text
 ta:நகல் எடுக்கப்படுகிறது
+th:คัดลอกข้อความ
 tl:kinokopya ang mensahe
 tr:metin kopyalanıyor
 tw:複製文字中
