@@ -1492,7 +1492,6 @@
     <ClInclude Include="ext\zlib\minizip\zip.h">
       <Filter>zlib\minizip</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\Http.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">

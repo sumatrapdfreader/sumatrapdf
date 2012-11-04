@@ -950,7 +950,14 @@ void GetStressTestInfo(str::Str<char>* s) { }
 
 void GetProgramInfo(str::Str<char>& s)
 {
-    // TODO: implement me
+    s.AppendFmt("Ver: %s", QM(CURR_VERSION));
+#ifdef SVN_PRE_RELEASE_VER
+    s.AppendFmt(".%s pre-release", QM(SVN_PRE_RELEASE_VER));
+#endif
+#ifdef DEBUG
+    s.Append(" dbg");
+#endif
+    s.Append("\r\n");
 }
 
 bool CrashHandlerCanUseNet()
