@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-dc0b94910249032aa3f1ce79c6a5947f7fe9674e
+a691b434a64d034b23d17f6972e62b9613071efa
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -692,7 +692,7 @@ sk:&Súbor
 sl:&Datoteka
 sn:&Faira
 sp-rs:Datoteka
-sq:&Skedari
+sq:&Skedar
 sr-rs:Датотека
 sv:&Arkiv
 ta:கோப்பு
@@ -1706,7 +1706,7 @@ si:&විකල්ප... (O)
 sk:&Možnosti...
 sl:&Možnosti …
 sp-rs:Opcije
-sq:&Mundësi...
+sq:&Opcionet...
 sr-rs:Опције
 sv:&Inställningar...
 ta:விருப்ப பேரம்
@@ -2671,7 +2671,7 @@ sk:&Zobraziť
 sl:&Pogled
 sn:&Maonero
 sp-rs:Prikaz
-sq:&Pamja
+sq:&Pamje
 sr-rs:Приказ
 sv:Vi&sa
 ta:நோக்கு
@@ -3802,7 +3802,7 @@ sk:Záložky\tF12
 sl:Zaznamki\tF12
 sn:Mabhukumaki\tF12
 sp-rs:Obeleživači\tF12
-sq:Faqe të &shenjuara\tF12
+sq:Faqet e &shenjuara\tF12
 sr-rs:Обележивачи\tF12
 sv:Bokmärken\tF12
 ta:புத்தகக்குறி
@@ -3954,7 +3954,7 @@ si:පිටු සලකුණු
 sk:Záložky
 sl:Zaznamki
 sp-rs:Obeleživači
-sq:Faqe të shenjuara
+sq:Faqet e shenjuara
 sr-rs:Обележивачи
 sv:Bokmärken
 th:คั่นหน้า
@@ -6415,7 +6415,7 @@ pl:Szybkie wyświetlanie w Internecie
 pt:Visualização rápida na web
 ru:Быстрый просмотр в Интернете
 sl:Hiter spletni prikaz
-sq:Hap shpejt në internet
+sq:Hapet shpejt në internet
 sv:Snabb Webb-Visning
 tr:Hızlı Web Görünümü
 uz:Tez veb ko'rish
@@ -9759,7 +9759,7 @@ si:පිටුවේ ප්‍රමාණය:
 sk:Veľkosť strany:
 sl:Velikost strani:
 sp-rs:Dimenzije stranice:
-sq:Përmasat e fletës:
+sq:Përmasat:
 sr-rs:Димензије странице:
 sv:Sidstorlek:
 ta:பக்க அளவு
@@ -9986,7 +9986,7 @@ si:මදක් සිටින්න - rendering...
 sk:Prosím počkajte - zobrazovanie...
 sl:Počakajte trenutek, upodobitev poteka …
 sp-rs:Spremanje prikaza...
-sq:Ju lutemi të prisni - radhit...
+sq:Lutemi të prisni radhitjen...
 sr-rs:Спремање приказа...
 sv:Ett ögonblick - förbereder...
 ta:தயவுசெய்து காத்திருக்கவும் - அளிக்கபட்டுவருகிறது...
@@ -11923,7 +11923,7 @@ si:SumatraPDF විකල්ප (O)
 sk:Nastavenia SumatraPDF
 sl:Možnosti SumatraPDF
 sp-rs:Podešavanja programa SumatraPDF
-sq:SumatraPDF Mundësitë
+sq:SumatraPDF Opcionet
 sr-rs:Подешавања програма SumatraPDF
 sv:SumatraPDF Inställningar
 ta:SumatraPDFஇன் விருப்பப பேரம்
@@ -12446,7 +12446,7 @@ sk:Zobraziť
 sl:Pogled
 sn:Maonero
 sp-rs:Prikaz
-sq:Pamja
+sq:Pamje
 sr-rs:Приказ
 sv:Visa
 ta:நோக்கு
@@ -13100,7 +13100,7 @@ si:අකුරු පිටපත්කරන්න
 sk:prebieha kopírovanie textu
 sl:kopiranje besedila
 sp-rs:kopiranje teksta
-sq:kopjon tekstin
+sq:kopjimi i tekstit
 sr-rs:копирање текста
 sv:kopierar text
 ta:நகல் எடுக்கப்படுகிறது
@@ -13155,7 +13155,7 @@ si:ලේඛනය මුද්‍රණය
 sk:prebieha tlač dokumentu
 sl:tiskanje dokumenta
 sp-rs:štampanje dokumenta
-sq:printon dokumentin
+sq:printimi i dokumentit
 sr-rs:штампање документа
 sv:skriver ut dokumentet
 ta:கோப்பு அக்சிடப்படுகிறது
