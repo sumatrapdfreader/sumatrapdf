@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a691b434a64d034b23d17f6972e62b9613071efa
+62629fa8da0c39eeb83a151f1bcaaf674336fa9b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1706,7 +1706,7 @@ si:&විකල්ප... (O)
 sk:&Možnosti...
 sl:&Možnosti …
 sp-rs:Opcije
-sq:&Opcionet...
+sq:&Opsionet...
 sr-rs:Опције
 sv:&Inställningar...
 ta:விருப்ப பேரம்
@@ -9425,6 +9425,7 @@ kr:PDF 최적화:
 mk:Оптимизации за PDF:
 ne:PDF अप्टिमाइजेसन
 no:PDF Optimalisering:
+pl:Optymalizacja PDF:
 pt:Otimizações PDF:
 ru:Оптимизация PDF:
 sl:Optimizacije PDF:
@@ -10233,6 +10234,7 @@ mk:Печати како слика (бара повеќе меморија)
 ne:&छविको रुपमा छाप्नुहोस् (धेरै स्मृति चाहिन्छ)
 nl:Als afbeelding afdrukken (vereist meer geheugen)
 no:Skriv ut som &bilde (krever mer minne)
+pl:Wydrukuj jako &obraz (wymaga więcej pamięci)
 pt:Imprimir &como imagem (usa mais memória)
 ru:Печатать как &изображение (требуется больше памяти)
 sl:Natisni kot sliko (zahteva več pomnilnika)
@@ -11923,7 +11925,7 @@ si:SumatraPDF විකල්ප (O)
 sk:Nastavenia SumatraPDF
 sl:Možnosti SumatraPDF
 sp-rs:Podešavanja programa SumatraPDF
-sq:SumatraPDF Opcionet
+sq:SumatraPDF Opsionet
 sr-rs:Подешавања програма SumatraPDF
 sv:SumatraPDF Inställningar
 ta:SumatraPDFஇன் விருப்பப பேரம்
