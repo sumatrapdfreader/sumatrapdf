@@ -1038,7 +1038,11 @@ pdf_dict_putp(pdf_obj *obj, const char *keys, pdf_obj *val)
 		else
 		{
 			/* Last key. Use it to store the value */
-			pdf_dict_puts(obj, k, val);
+			/* Use val = NULL to request delete */
+			if (val)
+				pdf_dict_puts(obj, k, val);
+			else
+				pdf_dict_dels(obj, k);
 		}
 	}
 }

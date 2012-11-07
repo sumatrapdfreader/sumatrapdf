@@ -51,12 +51,14 @@ public abstract class PageView extends ViewGroup {
 	protected     float     mSourceScale;
 
 	private       ImageView mEntire; // Image rendered at minimum zoom
+	private       BitmapHolder mEntireBm;
 	private       SafeAsyncTask<Void,Void,LinkInfo[]> mGetLinkInfo;
 	private       SafeAsyncTask<Void,Void,Bitmap> mDrawEntire;
 
 	private       Point     mPatchViewSize; // View size on the basis of which the patch was created
 	private       Rect      mPatchArea;
 	private       ImageView mPatch;
+	private       BitmapHolder mPatchBm;
 	private       SafeAsyncTask<PatchInfo,Void,PatchInfo> mDrawPatch;
 	private       RectF     mSearchBoxes[];
 	private       LinkInfo  mLinks[];
@@ -72,9 +74,12 @@ public abstract class PageView extends ViewGroup {
 		mContext    = c;
 		mParentSize = parentSize;
 		setBackgroundColor(BACKGROUND_COLOR);
+		mEntireBm = new BitmapHolder();
+		mPatchBm = new BitmapHolder();
 	}
 
 	protected abstract Bitmap drawPage(int sizeX, int sizeY, int patchX, int patchY, int patchWidth, int patchHeight);
+	protected abstract Bitmap updatePage(BitmapHolder h, int sizeX, int sizeY, int patchX, int patchY, int patchWidth, int patchHeight);
 	protected abstract LinkInfo[] getLinkInfo();
 
 	public void releaseResources() {
@@ -95,11 +100,15 @@ public abstract class PageView extends ViewGroup {
 		if (mSize == null)
 			mSize = mParentSize;
 
-		if (mEntire != null)
+		if (mEntire != null) {
+			mEntireBm.setBm(null);
 			mEntire.setImageBitmap(null);
+		}
 
-		if (mPatch != null)
+		if (mPatch != null) {
+			mPatchBm.setBm(null);
 			mPatch.setImageBitmap(null);
+		}
 
 		if (mBusyIndicator != null) {
 			removeView(mBusyIndicator);
@@ -125,11 +134,15 @@ public abstract class PageView extends ViewGroup {
 		if (mSize == null)
 			mSize = mParentSize;
 
-		if (mEntire != null)
+		if (mEntire != null) {
+			mEntireBm.setBm(null);
 			mEntire.setImageBitmap(null);
+		}
 
-		if (mPatch != null)
+		if (mPatch != null) {
+			mPatchBm.setBm(null);
 			mPatch.setImageBitmap(null);
+		}
 
 		if (mBusyIndicator == null) {
 			mBusyIndicator = new ProgressBar(mContext);
@@ -161,6 +174,7 @@ public abstract class PageView extends ViewGroup {
 		Point newSize = new Point((int)(size.x*mSourceScale), (int)(size.y*mSourceScale));
 		mSize = newSize;
 
+		mEntireBm.setBm(null);
 		mEntire.setImageBitmap(null);
 
 		// Get the link info in the background
@@ -184,6 +198,7 @@ public abstract class PageView extends ViewGroup {
 			}
 
 			protected void onPreExecute() {
+				mEntireBm.setBm(null);
 				mEntire.setImageBitmap(null);
 
 				if (mBusyIndicator == null) {
@@ -204,6 +219,7 @@ public abstract class PageView extends ViewGroup {
 			protected void onPostExecute(Bitmap bm) {
 				removeView(mBusyIndicator);
 				mBusyIndicator = null;
+				mEntireBm.setBm(bm);
 				mEntire.setImageBitmap(bm);
 				invalidate();
 			}
@@ -302,8 +318,10 @@ public abstract class PageView extends ViewGroup {
 				// Zoomed since patch was created
 				mPatchViewSize = null;
 				mPatchArea     = null;
-				if (mPatch != null)
+				if (mPatch != null) {
+					mPatchBm.setBm(null);
 					mPatch.setImageBitmap(null);
+				}
 			} else {
 				mPatch.layout(mPatchArea.left, mPatchArea.top, mPatchArea.right, mPatchArea.bottom);
 			}
@@ -317,7 +335,7 @@ public abstract class PageView extends ViewGroup {
 		}
 	}
 
-	public void addHq(boolean force) {
+	public void addHq(final boolean update) {
 		Rect viewArea = new Rect(getLeft(),getTop(),getRight(),getBottom());
 		// If the viewArea's size matches the unzoomed size, there is no need for an hq patch
 		if (viewArea.width() != mSize.x || viewArea.height() != mSize.y) {
@@ -332,7 +350,7 @@ public abstract class PageView extends ViewGroup {
 			patchArea.offset(-viewArea.left, -viewArea.top);
 
 			// If being asked for the same area as last time, nothing to do
-			if (patchArea.equals(mPatchArea) && patchViewSize.equals(mPatchViewSize) && !force)
+			if (patchArea.equals(mPatchArea) && patchViewSize.equals(mPatchViewSize) && !update)
 				return;
 
 			// Stop the drawing of previous patch if still going
@@ -351,15 +369,24 @@ public abstract class PageView extends ViewGroup {
 
 			mDrawPatch = new SafeAsyncTask<PatchInfo,Void,PatchInfo>() {
 				protected PatchInfo doInBackground(PatchInfo... v) {
+					if (update) {
+					v[0].bm = updatePage(mPatchBm,
+									  v[0].patchViewSize.x, v[0].patchViewSize.y,
+									  v[0].patchArea.left, v[0].patchArea.top,
+									  v[0].patchArea.width(), v[0].patchArea.height());
+					} else {
 					v[0].bm = drawPage(v[0].patchViewSize.x, v[0].patchViewSize.y,
 									  v[0].patchArea.left, v[0].patchArea.top,
 									  v[0].patchArea.width(), v[0].patchArea.height());
+					}
+
 					return v[0];
 				}
 
 				protected void onPostExecute(PatchInfo v) {
 					mPatchViewSize = v.patchViewSize;
 					mPatchArea     = v.patchArea;
+					mPatchBm.setBm(v.bm);
 					mPatch.setImageBitmap(v.bm);
 					//requestLayout();
 					// Calling requestLayout here doesn't lead to a later call to layout. No idea
@@ -388,10 +415,14 @@ public abstract class PageView extends ViewGroup {
 		// Render the page in the background
 		mDrawEntire = new SafeAsyncTask<Void,Void,Bitmap>() {
 			protected Bitmap doInBackground(Void... v) {
-				return drawPage(mSize.x, mSize.y, 0, 0, mSize.x, mSize.y);
+				// Pass the current bitmap as a basis for the update, but use a bitmap
+				// holder so that the held bitmap will be nulled and not hold on to
+				// memory, should this view become redundant.
+				return updatePage(mEntireBm, mSize.x, mSize.y, 0, 0, mSize.x, mSize.y);
 			}
 
 			protected void onPostExecute(Bitmap bm) {
+				mEntireBm.setBm(bm);
 				mEntire.setImageBitmap(bm);
 				invalidate();
 			}
@@ -412,8 +443,10 @@ public abstract class PageView extends ViewGroup {
 			// And get rid of it
 			mPatchViewSize = null;
 			mPatchArea = null;
-			if (mPatch != null)
+			if (mPatch != null) {
+				mPatchBm.setBm(null);
 				mPatch.setImageBitmap(null);
+			}
 	}
 
 	public int getPage() {

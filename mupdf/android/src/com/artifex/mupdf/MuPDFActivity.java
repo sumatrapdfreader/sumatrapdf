@@ -271,6 +271,17 @@ public class MuPDFActivity extends Activity
 					((PageView)v).setSearchBoxes(null);
 
 				((PageView)v).setLinkHighlighting(mLinkState == LinkState.HIGHLIGHT);
+
+				((MuPDFPageView)v).setChangeReporter(new Runnable() {
+					public void run() {
+						mDocView.applyToChildren(new ReaderView.ViewMapper() {
+							@Override
+							void applyToView(View view) {
+								((MuPDFPageView)view).update();
+							}
+						});
+					}
+				});
 			}
 
 			protected void onMoveToChild(int i) {

@@ -20,11 +20,15 @@ public class MuPDFCore
 	/* The native functions */
 	private static native int openFile(String filename);
 	private static native int countPagesInternal();
-	private static native void markDirtyInternal(int page);
 	private static native void gotoPageInternal(int localActionPageNum);
 	private static native float getPageWidth();
 	private static native float getPageHeight();
 	private static native void drawPage(Bitmap bitmap,
+			int pageW, int pageH,
+			int patchX, int patchY,
+			int patchW, int patchH);
+	private static native void updatePageInternal(Bitmap bitmap,
+			int page,
 			int pageW, int pageH,
 			int patchX, int patchY,
 			int patchW, int patchH);
@@ -98,6 +102,30 @@ public class MuPDFCore
 		return bm;
 	}
 
+	public synchronized Bitmap updatePage(BitmapHolder h, int page,
+			int pageW, int pageH,
+			int patchX, int patchY,
+			int patchW, int patchH) {
+		Bitmap bm = null;
+		Bitmap old_bm = h.getBm();
+		h.setBm(null);
+
+		if (old_bm != null)
+			bm = old_bm.copy(Bitmap.Config.ARGB_8888, false);
+
+		old_bm = null;
+
+		if (bm != null) {
+			updatePageInternal(bm, page, pageW, pageH, patchX, patchY, patchW, patchH);
+		} else {
+			bm = Bitmap.createBitmap(patchW, patchH, Config.ARGB_8888);
+			gotoPage(page);
+			drawPage(bm, pageW, pageH, patchX, patchY, patchW, patchH);
+		}
+
+		return bm;
+	}
+
 	public synchronized PassClickResult passClickEvent(int page, float x, float y) {
 		boolean changed = passClickEventInternal(page, x, y) != 0;
 		int type = getFocusedWidgetTypeInternal();
@@ -114,9 +142,6 @@ public class MuPDFCore
 			break;
 		}
 
-		if (changed)
-			markDirtyInternal(page);
-
 		return new PassClickResult(changed, wtype, text);
 	}
 
@@ -124,9 +149,6 @@ public class MuPDFCore
 		boolean success;
 		gotoPage(page);
 		success = setFocusedWidgetTextInternal(text) != 0 ? true : false;
-
-		if (success)
-			markDirtyInternal(page);
 
 		return success;
 	}

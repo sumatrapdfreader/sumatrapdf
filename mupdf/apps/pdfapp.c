@@ -1297,6 +1297,9 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 
 			widget = fz_focused_widget(idoc);
 
+			app->nowaitcursor = 1;
+			pdfapp_updatepage(app);
+
 			if (widget)
 			{
 				switch (fz_widget_get_type(widget))
@@ -1315,6 +1318,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 						while (current_text && !fz_text_widget_set_text(idoc, widget, current_text));
 
 						fz_free(app->ctx, text);
+						pdfapp_updatepage(app);
 					}
 					break;
 
@@ -1340,7 +1344,10 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 							(void)fz_choice_widget_value(idoc, widget, vals);
 
 							if (winchoiceinput(app, nopts, opts, &nvals, vals))
+							{
 								fz_choice_widget_set_value(idoc, widget, nvals, vals);
+								pdfapp_updatepage(app);
+							}
 						}
 						fz_always(ctx)
 						{
@@ -1356,8 +1363,6 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 				}
 			}
 
-			app->nowaitcursor = 1;
-			pdfapp_updatepage(app);
 			app->nowaitcursor = 0;
 			processed = 1;
 		}

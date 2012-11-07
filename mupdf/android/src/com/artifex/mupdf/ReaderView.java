@@ -55,6 +55,10 @@ public class ReaderView extends AdapterView<Adapter>
 	private int               mScrollerLastY;
 	private boolean           mScrollDisabled;
 
+	static abstract class ViewMapper {
+		abstract void applyToView(View view);
+	}
+
 	public ReaderView(Context context) {
 		super(context);
 		mGestureDetector = new GestureDetector(this);
@@ -104,6 +108,11 @@ public class ReaderView extends AdapterView<Adapter>
 	public void resetupChildren() {
 		for (int i = 0; i < mChildViews.size(); i++)
 			onChildSetup(mChildViews.keyAt(i), mChildViews.valueAt(i));
+	}
+
+	public void applyToChildren(ViewMapper mapper) {
+		for (int i = 0; i < mChildViews.size(); i++)
+			mapper.applyToView(mChildViews.valueAt(i));
 	}
 
 	protected void onChildSetup(int i, View v) {}

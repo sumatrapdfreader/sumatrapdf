@@ -32,6 +32,7 @@ public class MuPDFPageView extends PageView {
 	private AlertDialog mTextEntry;
 	private EditText mEditText;
 	private SafeAsyncTask<String,Void,Boolean> mSetWidgetText;
+	private Runnable changeReporter;
 
 	public MuPDFPageView(Context c, MuPDFCore core, Point parentSize) {
 		super(c, parentSize);
@@ -55,7 +56,7 @@ public class MuPDFPageView extends PageView {
 					}
 					@Override
 					protected void onPostExecute(Boolean result) {
-						update();
+						changeReporter.run();
 						if (!result)
 							invokeTextDialog(mEditText.getText().toString());
 					}
@@ -85,6 +86,10 @@ public class MuPDFPageView extends PageView {
 		mTextEntry.show();
 	}
 
+	public void setChangeReporter(Runnable reporter) {
+		changeReporter = reporter;
+	}
+
 	public boolean passClickEvent(float x, float y) {
 		float scale = mSourceScale*(float)getWidth()/(float)mSize.x;
 		final float docRelX = (x - getLeft())/scale;
@@ -107,7 +112,7 @@ public class MuPDFPageView extends PageView {
 				@Override
 				protected void onPostExecute(PassClickResult result) {
 					if (result.changed) {
-						update();
+						changeReporter.run();
 					}
 
 					switch(result.type) {
@@ -128,6 +133,12 @@ public class MuPDFPageView extends PageView {
 	protected Bitmap drawPage(int sizeX, int sizeY,
 			int patchX, int patchY, int patchWidth, int patchHeight) {
 		return mCore.drawPage(mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight);
+	}
+
+	@Override
+	protected Bitmap updatePage(BitmapHolder h, int sizeX, int sizeY,
+			int patchX, int patchY, int patchWidth, int patchHeight) {
+		return mCore.updatePage(h, mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight);
 	}
 
 	@Override

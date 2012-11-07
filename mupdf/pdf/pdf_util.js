@@ -168,6 +168,152 @@ util.printx = function(fmt, val)
 	return res;
 }
 
+util.printf = function()
+{
+	if (arguments.length < 1)
+		return "";
+
+	var res = "";
+	var arg_i = 1;
+	var regexp = /%[^dfsx]*[dfsx]|[^%]*/g;
+	var tokens = arguments[0].match(regexp);
+	var length = tokens ? tokens.length : 0;
+
+	for (var i = 0; i < length; i++)
+	{
+		var tok = tokens[i];
+		if (tok.match(/^%/))
+		{
+			if (arg_i < arguments.length)
+			{
+				var val = arguments[arg_i++];
+				var fval = '';
+				var neg = false;
+				var decsep_re = /^,[0123]/;
+				var flags_re = /^[+ 0#]+/;
+				var width_re = /^\d+/;
+				var prec_re = /^\.\d+/;
+				var conv_re = /^[dfsx]/;
+
+				tok = tok.replace(/^%/, "");
+				var decsep = tok.match(decsep_re);
+				if (decsep) decsep = decsep[0];
+				tok = tok.replace(decsep_re, "");
+				var flags = tok.match(flags_re);
+				if (flags) flags = flags[0];
+				tok = tok.replace(flags_re, "");
+				var width = tok.match(width_re);
+				if (width) width = width[0];
+				tok = tok.replace(width_re, "");
+				var prec = tok.match(prec_re);
+				if (prec) prec = prec[0];
+				tok = tok.replace(prec_re, "");
+				var conv = tok.match(conv_re);
+				if (conv) conv = conv[0];
+
+				prec = prec ? Number(prec.replace(/^\./, '')) : 0;
+				var poschar = (flags && flags.match(/[+ ]/)) ? flags.match(/[+ ]/)[0] : '';
+				var pad = (flags && flags.match(/0/)) ? '0' : ' ';
+
+				var point = '.';
+				var thou = '';
+
+				if (decsep)
+				{
+					switch(decsep)
+					{
+						case ',0': thou = ','; break;
+						case ',1': break;
+						case ',2': thou = '.'; point = ','; break;
+						case ',3': point = ','; break;
+					}
+				}
+
+				switch(conv)
+				{
+					case 'x':
+						val = Math.floor(val);
+						neg = (val < 0);
+						if (neg)
+							val = -val;
+
+						// Convert to hex
+						while (val)
+						{
+							fval = '0123456789ABCDEF'.charAt(val%16) + fval;
+							val = Math.floor(val/16);
+						}
+
+						if (neg)
+							fval = '-' + fval;
+						else
+							fval = poschar + fval;
+						break;
+
+					case 'd':
+						fval = String(Math.floor(val));
+						break;
+
+					case 's':
+						// Always pad strings with space
+						pad = ' ';
+						fval = String(val);
+						break;
+
+					case 'f':
+						fval = String(val);
+
+						if (prec)
+						{
+							var frac = fval.match(/\.\d+/);
+							if (frac)
+							{
+								frac = frac[0];
+								// Matched string includes the dot, so make it
+								// prec+1 in length
+								if (frac.length > prec+1)
+									frac = frac.substr(0, prec+1);
+								else if(frac.length < prec+1)
+									frac += new Array(prec+1-frac.length+1).join('0');
+
+								fval = fval.replace(/\.\d+/, frac);
+							}
+						}
+						break;
+				}
+
+				if (conv.match(/[fd]/))
+				{
+					if (fval >= 0)
+						fval = poschar + fval;
+
+					if (point != '.')
+						fval.replace(/\./, point);
+
+					if (thou)
+					{
+						var intpart = fval.match(/\d+/)[0];
+						intpart = new Array(2-(intpart.length+2)%3+1).join('0') + intpart;
+						intpart = intpart.match(/.../g).join(thou).replace(/^0*[,.]?/,'');
+						fval = fval.replace(/\d+/, intpart);
+					}
+				}
+
+				if (width && fval.length < width)
+					fval = new Array(width - fval.length + 1).join(pad) + fval;
+
+				res += fval;
+			}
+		}
+		else
+		{
+			res += tok;
+		}
+	}
+
+	return res;
+}
+
 function AFMergeChange(event)
 {
 	return event.value;

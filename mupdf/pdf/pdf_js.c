@@ -142,37 +142,43 @@ static pdf_jsimp_obj *app_launchURL(void *jsctx, void *obj, int argc, pdf_jsimp_
 static pdf_obj *load_color(fz_context *ctx, pdf_jsimp *imp, pdf_jsimp_obj *val)
 {
 	pdf_obj *col = NULL;
+	pdf_obj *comp = NULL;
+	pdf_jsimp_obj *jscomp = NULL;
+	int i;
+	int n;
 
-	if (pdf_jsimp_array_len(imp, val) == 4)
+
+	n = pdf_jsimp_array_len(imp, val);
+
+	/* The only legitimate color expressed as an array of length 1
+	 * is [T], meaning transparent. Return a NULL object to represent
+	 * transparent */
+	if (n <= 1)
+		return NULL;
+
+	col = pdf_new_array(ctx, n-1);
+
+	fz_var(comp);
+	fz_var(jscomp);
+	fz_try(ctx)
 	{
-		pdf_obj *comp = NULL;
-		pdf_jsimp_obj *jscomp = NULL;
-		int i;
-
-		col = pdf_new_array(ctx, 3);
-
-		fz_var(comp);
-		fz_var(jscomp);
-		fz_try(ctx)
+		for (i = 0; i < n-1; i++)
 		{
-			for (i = 0; i < 3; i++)
-			{
-				jscomp = pdf_jsimp_array_item(imp, val, i+1);
-				comp = pdf_new_real(ctx, pdf_jsimp_to_number(imp, jscomp));
-				pdf_array_push(col, comp);
-				pdf_jsimp_drop_obj(imp, jscomp);
-				jscomp = NULL;
-				pdf_drop_obj(comp);
-				comp = NULL;
-			}
-		}
-		fz_catch(ctx)
-		{
+			jscomp = pdf_jsimp_array_item(imp, val, i+1);
+			comp = pdf_new_real(ctx, pdf_jsimp_to_number(imp, jscomp));
+			pdf_array_push(col, comp);
 			pdf_jsimp_drop_obj(imp, jscomp);
+			jscomp = NULL;
 			pdf_drop_obj(comp);
-			pdf_drop_obj(col);
-			fz_rethrow(ctx);
+			comp = NULL;
 		}
+	}
+	fz_catch(ctx)
+	{
+		pdf_jsimp_drop_obj(imp, jscomp);
+		pdf_drop_obj(comp);
+		pdf_drop_obj(col);
+		fz_rethrow(ctx);
 	}
 
 	return col;
