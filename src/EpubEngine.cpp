@@ -583,7 +583,7 @@ class EbookTocBuilder : public EbookTocVisitor {
 
 public:
     EbookTocBuilder(BaseEngine *engine) :
-        engine(engine),root(NULL), idCounter(0), isIndex(false) { }
+        engine(engine), root(NULL), idCounter(0), isIndex(false) { }
 
     virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
         PageDestination *dest;
@@ -591,6 +591,11 @@ public:
             dest = NULL;
         else if (IsExternalUrl(url))
             dest = new SimpleDest2(0, RectD(), str::Dup(url));
+        else if (str::FindChar(url, '%')) {
+            ScopedMem<TCHAR> decodedUrl(str::Dup(url));
+            UrlDecode(decodedUrl);
+            dest = engine->GetNamedDest(decodedUrl);
+        }
         else
             dest = engine->GetNamedDest(url);
 
