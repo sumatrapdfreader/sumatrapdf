@@ -199,6 +199,20 @@ static pdf_jsimp_obj *field_buttonSetCaption(void *jsctx, void *obj, int argc, p
 	return NULL;
 }
 
+static pdf_jsimp_obj *field_getName(void *jsctx, void *obj)
+{
+	pdf_js *js = (pdf_js *)jsctx;
+	pdf_obj *field = (pdf_obj *)obj;
+
+	return field ? pdf_jsimp_from_string(js->imp, pdf_field_name(js->doc, field)) : NULL;
+}
+
+static void field_setName(void *jsctx, void *obj, pdf_jsimp_obj *val)
+{
+	pdf_js *js = (pdf_js *)jsctx;
+	fz_warn(js->doc->ctx, "Unexpected call to field_setName");
+}
+
 static pdf_jsimp_obj *field_getDisplay(void *jsctx, void *obj)
 {
 	pdf_js *js = (pdf_js *)jsctx;
@@ -701,6 +715,7 @@ static void declare_dom(pdf_js *js)
 	pdf_jsimp_addproperty(imp, js->fieldtype, "textColor", field_getTextColor, field_setTextColor);
 	pdf_jsimp_addproperty(imp, js->fieldtype, "fillColor", field_getFillColor, field_setFillColor);
 	pdf_jsimp_addproperty(imp, js->fieldtype, "display", field_getDisplay, field_setDisplay);
+	pdf_jsimp_addproperty(imp, js->fieldtype, "name", field_getName, field_setName);
 	pdf_jsimp_addmethod(imp, js->fieldtype, "buttonSetCaption", field_buttonSetCaption);
 
 	/* Create the app type */

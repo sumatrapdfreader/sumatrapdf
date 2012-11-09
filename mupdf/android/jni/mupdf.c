@@ -497,7 +497,7 @@ Java_com_artifex_mupdf_MuPDFCore_updatePageInternal(JNIEnv *env, jobject thiz, j
 		while ((annot = fz_poll_changed_annot(idoc, page)) != NULL)
 		{
 			fz_bbox abox = fz_round_rect(fz_transform_rect(ctm, fz_bound_annot(doc, annot)));
-			abox = fz_intersect_bbox(abox, bbox);
+			abox = fz_intersect_bbox(abox, rect);
 
 			LOGI("Update rectanglefor %s - (%d, %d, %d, %d)", widget_type_string(fz_widget_get_type((fz_widget*)annot)),
 					abox.x0, abox.y0, abox.x1, abox.y1);

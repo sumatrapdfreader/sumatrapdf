@@ -478,8 +478,11 @@ function AFParseDateEx(d, fmt)
 
 function AFDate_KeystrokeEx(fmt)
 {
-	if (event.willCommit && !AFParseDateEx(event.value))
+	if (event.willCommit && !AFParseDateEx(event.value), fmt)
+	{
+		app.alert("Invalid date/time. please ensure that the date/time exists. Field [ "+event.target.name+" ] should match format "+fmt);
 		event.rc = false;
+	}
 }
 
 function AFDate_Keystroke(index)
@@ -506,7 +509,10 @@ function AFDate_Format(index)
 function AFTime_Keystroke(index)
 {
 	if (event.willCommit && !AFParseTime(event.value, null))
+	{
+		app.alert("The value entered does not match the format of the field [ "+event.target.name+" ]");
 		event.rc = false;
+	}
 }
 
 function AFTime_FormatEx(fmt)
@@ -550,7 +556,7 @@ function AFSpecial_KeystrokeEx(fmt)
 				if (!m)
 				{
 					event.rc = false;
-					return;
+					break;
 				}
 				res += MuPDF.convertCase(m[0],cs);
 				val = val.substr(1);
@@ -561,7 +567,7 @@ function AFSpecial_KeystrokeEx(fmt)
 				if (!m)
 				{
 					event.rc = false;
-					return;
+					break;
 				}
 				res += MuPDF.convertCase(m[0],cs);
 				val = val.substr(1);
@@ -572,7 +578,7 @@ function AFSpecial_KeystrokeEx(fmt)
 				if (!m)
 				{
 					event.rc = false;
-					return;
+					break;
 				}
 				res += m[0];
 				val = val.substr(1);
@@ -587,7 +593,7 @@ function AFSpecial_KeystrokeEx(fmt)
 				if (!val)
 				{
 					event.rc = false;
-					return;
+					break;
 				}
 				res += MuPDF.convertCase(val.charAt(0),cs);
 				val = val.substr(1);
@@ -609,7 +615,10 @@ function AFSpecial_KeystrokeEx(fmt)
 		i++;
 	}
 
-	event.value = res;
+	if (event.rc)
+		event.value = res;
+	else if (event.willCommit)
+		app.alert("The value entered does not match the format of the field [ "+event.target.name+" ] should be "+fmt);
 }
 
 function AFSpecial_Keystroke(index)
@@ -635,6 +644,9 @@ function AFSpecial_Keystroke(index)
 					event.rc = false;
 				break;
 		}
+
+		if (!event.rc)
+			app.alert("The value entered does not match the format of the field [ "+event.target.name+" ]");
 	}
 }
 
@@ -667,22 +679,22 @@ function AFNumber_Keystroke(nDec, sepStyle, negStyle, currStyle, strCurrency, bC
 	if (sepStyle & 2)
 	{
 		if (!event.value.match(/^[+-]?\d*[,.]?\d*$/))
-		{
 			event.rc = false;
-			return;
-		}
 	}
 	else
 	{
 		if (!event.value.match(/^[+-]?\d*\.?\d*$/))
-		{
 			event.rc = false;
-			return;
-		}
 	}
 
-	if (event.willCommit && !event.value.match(/\d/))
-		event.rc = false;
+	if (event.willCommit)
+	{
+		if (!event.value.match(/\d/))
+			event.rc = false;
+
+		if (!event.rc)
+			app.alert("The value entered does not match the format of the field [ "+event.target.name+" ]");
+	}
 }
 
 function AFNumber_Format(nDec,sepStyle,negStyle,currStyle,strCurrency,bCurrencyPrepend)
@@ -841,8 +853,23 @@ function AFSimple_Calculate(op, list)
 function AFRange_Validate(lowerCheck, lowerLimit, upperCheck, upperLimit)
 {
 	if (upperCheck && event.value > upperLimit)
+	{
 		event.rc = false;
+	}
 
 	if (lowerCheck && event.value < lowerLimit)
+	{
 		event.rc = false;
+	}
+
+
+	if (!event.rc)
+	{
+		if (lowerCheck && upperCheck)
+			app.alert(util.printf("Invalid value: must be greater than or equal to %s and less than or equal to %s", lowerLimit, upperLimit));
+		else if (lowerCheck)
+			app.alert(util.printf("Invalid value: must be greater than or equal to %s", lowerLimit));
+		else
+			app.alert(util.printf("Invalid value: must be less than or equal to %s", upperLimit));
+	}
 }

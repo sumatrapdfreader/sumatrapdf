@@ -123,12 +123,12 @@ static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
 
 static LRESULT OnMouseWheel(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-   	short delta = GET_WHEEL_DELTA_WPARAM(wParam);
-		if (delta > 0)
-           win->ebookController->AdvancePage(-1);
-        else
-           win->ebookController->AdvancePage(1);
-        return 0;
+    short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+    if (delta > 0)
+        win->ebookController->AdvancePage(-1);
+    else
+        win->ebookController->AdvancePage(1);
+    return 0;
 }
 
 static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)

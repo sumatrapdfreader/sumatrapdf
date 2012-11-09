@@ -541,6 +541,7 @@ void pdf_field_set_button_caption(pdf_document *doc, pdf_obj *field, char *text)
 void pdf_field_set_fill_color(pdf_document *doc, pdf_obj *field, pdf_obj *col);
 void pdf_field_set_text_color(pdf_document *doc, pdf_obj *field, pdf_obj *col);
 int pdf_field_display(pdf_document *doc, pdf_obj *field);
+char *pdf_field_name(pdf_document *doc, pdf_obj *field);
 void pdf_field_set_display(pdf_document *doc, pdf_obj *field, int d);
 pdf_obj *pdf_lookup_field(pdf_obj *form, char *name);
 void pdf_field_reset(pdf_document *doc, pdf_obj *field);

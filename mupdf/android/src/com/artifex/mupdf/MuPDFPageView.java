@@ -3,7 +3,6 @@ package com.artifex.mupdf;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
@@ -62,7 +61,7 @@ public class MuPDFPageView extends PageView {
 					}
 				};
 
-				mSetWidgetText.execute(mEditText.getText().toString());
+				mSetWidgetText.safeExecute(mEditText.getText().toString());
 			}
 		});
 		mTextEntry = mTextEntryBuilder.create();
@@ -123,22 +122,22 @@ public class MuPDFPageView extends PageView {
 				}
 			};
 
-			mPassClick.execute();
+			mPassClick.safeExecute();
 		}
 
 		return hitWidget;
 	}
 
 	@Override
-	protected Bitmap drawPage(int sizeX, int sizeY,
+	protected void drawPage(BitmapHolder h, int sizeX, int sizeY,
 			int patchX, int patchY, int patchWidth, int patchHeight) {
-		return mCore.drawPage(mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight);
+		mCore.drawPage(h, mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight);
 	}
 
 	@Override
-	protected Bitmap updatePage(BitmapHolder h, int sizeX, int sizeY,
+	protected void updatePage(BitmapHolder h, int sizeX, int sizeY,
 			int patchX, int patchY, int patchWidth, int patchHeight) {
-		return mCore.updatePage(h, mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight);
+		mCore.updatePage(h, mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight);
 	}
 
 	@Override
@@ -160,7 +159,7 @@ public class MuPDFPageView extends PageView {
 			}
 		};
 
-		mLoadWidgetAreas.execute();
+		mLoadWidgetAreas.safeExecute();
 
 		super.setPage(page, size);
 	}

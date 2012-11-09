@@ -398,10 +398,24 @@ static void fzbuf_print_da(fz_context *ctx, fz_buffer *fzbuf, da_info *di)
 	if (di->font_name != NULL && di->font_size != 0)
 		fz_buffer_printf(ctx, fzbuf, "/%s %d Tf", di->font_name, di->font_size);
 
-	if (di->col_size != 0)
+	switch (di->col_size)
+	{
+	case 1:
+		fz_buffer_printf(ctx, fzbuf, " %f g", di->col[0]);
+		break;
+
+	case 3:
 		fz_buffer_printf(ctx, fzbuf, " %f %f %f rg", di->col[0], di->col[1], di->col[2]);
-	else
+		break;
+
+	case 4:
+		fz_buffer_printf(ctx, fzbuf, " %f %f %f %f k", di->col[0], di->col[1], di->col[2], di->col[3]);
+		break;
+
+	default:
 		fz_buffer_printf(ctx, fzbuf, " 0 g");
+		break;
+	}
 }
 
 static fz_rect measure_text(pdf_document *doc, font_info *font_rec, const fz_matrix *tm, char *text)
@@ -1091,7 +1105,7 @@ static int get_matrix(pdf_document *doc, pdf_xobject *form, int q, fz_matrix *mt
 	return found;
 }
 
-static void update_text_field_value(fz_context *ctx, pdf_obj *obj, char *text)
+static void update_field_value(fz_context *ctx, pdf_obj *obj, char *text)
 {
 	pdf_obj *sobj = NULL;
 	pdf_obj *grp;
@@ -1890,7 +1904,7 @@ static void recalculate(pdf_document *doc)
 					execute_action(doc, field, calc);
 					/* A calculate action, updates event.value. We need
 					* to place the value in the field */
-					update_text_field_value(doc->ctx, field, pdf_js_get_event(doc->js)->value);
+					update_field_value(doc->ctx, field, pdf_js_get_event(doc->js)->value);
 				}
 			}
 		}
@@ -2170,7 +2184,7 @@ char *pdf_field_value(pdf_document *doc, pdf_obj *field)
 	return get_string_or_stream(doc, get_inheritable(doc, field, "V"));
 }
 
-int pdf_field_set_value(pdf_document *doc, pdf_obj *field, char *text)
+static int set_text_field_value(pdf_document *doc, pdf_obj *field, char *text)
 {
 	pdf_obj *v = pdf_dict_getp(field, "AA/V");
 
@@ -2190,10 +2204,81 @@ int pdf_field_set_value(pdf_document *doc, pdf_obj *field, char *text)
 	}
 
 	doc->dirty = 1;
-	update_text_field_value(doc->ctx, field, text);
-	recalculate(doc);
+	update_field_value(doc->ctx, field, text);
 
 	return 1;
+}
+
+static void update_checkbox_selector(pdf_document *doc, pdf_obj *field, char *val)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_obj *kids = pdf_dict_gets(field, "Kids");
+
+	if (kids)
+	{
+		int i, n = pdf_array_len(kids);
+
+		for (i = 0; i < n; i++)
+			update_checkbox_selector(doc, pdf_array_get(kids, i), val);
+	}
+	else
+	{
+		pdf_obj *n = pdf_dict_getp(field, "AP/N");
+		pdf_obj *oval = NULL;
+
+		fz_var(oval);
+		fz_try(ctx)
+		{
+			if (pdf_dict_gets(n, val))
+				oval = pdf_new_name(ctx, val);
+			else
+				oval = pdf_new_name(ctx, "Off");
+
+			pdf_dict_puts(field, "AS", oval);
+		}
+		fz_always(ctx)
+		{
+			pdf_drop_obj(oval);
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
+		}
+	}
+}
+
+static int set_checkbox_value(pdf_document *doc, pdf_obj *field, char *val)
+{
+	update_checkbox_selector(doc, field, val);
+	update_field_value(doc->ctx, field, val);
+	return 1;
+}
+
+int pdf_field_set_value(pdf_document *doc, pdf_obj *field, char *text)
+{
+	int res = 0;
+
+	switch (pdf_field_type(doc, field))
+	{
+	case FZ_WIDGET_TYPE_TEXT:
+		res = set_text_field_value(doc, field, text);
+		break;
+
+	case FZ_WIDGET_TYPE_CHECKBOX:
+	case FZ_WIDGET_TYPE_RADIOBUTTON:
+		res = set_checkbox_value(doc, field, text);
+		break;
+
+	default:
+		/* text updater will do in most cases */
+		update_field_value(doc->ctx, field, text);
+		res = 1;
+		break;
+	}
+
+	recalculate(doc);
+
+	return res;
 }
 
 char *pdf_field_border_style(pdf_document *doc, pdf_obj *field)
@@ -2301,6 +2386,51 @@ int pdf_field_display(pdf_document *doc, pdf_obj *field)
 	return res;
 }
 
+/*
+ * get the field name in a char buffer that has spare room to
+ * add more characters at the end.
+ */
+static char *get_field_name(pdf_document *doc, pdf_obj *field, int spare)
+{
+	fz_context *ctx = doc->ctx;
+	char *res = NULL;
+	pdf_obj *parent = pdf_dict_gets(field, "Parent");
+	char *lname = pdf_to_str_buf(pdf_dict_gets(field, "T"));
+	int llen = strlen(lname);
+
+	/*
+	 * If we found a name at this point in the field hierarchy
+	 * then we'll need extra space for it and a dot
+	 */
+	if (llen)
+		spare += llen+1;
+
+	if (parent)
+	{
+		res = get_field_name(doc, parent, spare);
+	}
+	else
+	{
+		res = fz_malloc(ctx, spare+1);
+		res[0] = 0;
+	}
+
+	if (llen)
+	{
+		if (res[0])
+			strcat(res, ".");
+
+		strcat(res, lname);
+	}
+
+	return res;
+}
+
+char *pdf_field_name(pdf_document *doc, pdf_obj *field)
+{
+	return get_field_name(doc, field, 0);
+}
+
 void pdf_field_set_display(pdf_document *doc, pdf_obj *field, int d)
 {
 	fz_context *ctx = doc->ctx;
@@ -2377,11 +2507,15 @@ void pdf_field_set_text_color(pdf_document *doc, pdf_obj *field, pdf_obj *col)
 	fz_var(daobj);
 	fz_try(ctx)
 	{
+		int i;
+
 		parse_da(ctx, da, &di);
-		di.col_size = 3;
-		di.col[0] = pdf_to_real(pdf_array_get(col, 0));
-		di.col[1] = pdf_to_real(pdf_array_get(col, 1));
-		di.col[2] = pdf_to_real(pdf_array_get(col, 2));
+		di.col_size = pdf_array_len(col);
+
+		/* SumatraPDF: prevent stack buffer overflow */
+		for (i = 0; i < fz_mini(di.col_size, nelem(di.col)); i++)
+			di.col[i] = pdf_to_real(pdf_array_get(col, i));
+
 		fzbuf = fz_new_buffer(ctx, 0);
 		fzbuf_print_da(ctx, fzbuf, &di);
 		len = fz_buffer_storage(ctx, fzbuf, &buf);

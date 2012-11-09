@@ -615,6 +615,7 @@ EXPORTS
 	pdf_field_set_fill_color
 	pdf_field_set_text_color
 	pdf_field_display
+	pdf_field_name
 	pdf_field_set_display
 	pdf_lookup_field
 	pdf_field_reset
