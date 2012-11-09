@@ -121,13 +121,23 @@ static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
     }
 }
 
+static LRESULT OnMouseWheel(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+   	short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		if (delta > 0)
+           win->ebookController->AdvancePage(-1);
+        else
+           win->ebookController->AdvancePage(1);
+        return 0;
+}
+
 static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
 {
     switch (key) {
-    case VK_LEFT: case VK_PRIOR: case 'P':
+    case VK_LEFT: case VK_UP: case VK_PRIOR: case 'P':
         win->ebookController->AdvancePage(-1);
         break;
-    case VK_RIGHT: case VK_NEXT: case 'N':
+    case VK_RIGHT: case VK_DOWN: case VK_NEXT: case 'N':
         win->ebookController->AdvancePage(1);
         break;
     case VK_SPACE:
@@ -400,6 +410,9 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
 
         case WM_KEYDOWN:
             return OnKeyDown(win, msg, wParam, lParam);
+
+        case WM_MOUSEWHEEL:
+            return OnMouseWheel(win, msg, wParam, lParam);
 
         case WM_COMMAND:
             return OnCommand(win, msg, wParam, lParam);
