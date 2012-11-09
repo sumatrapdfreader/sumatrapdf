@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d366ff4bfff25c8b64b2b08cd8c7283311cc8b96
+caba8699385fab585ba7de08bfbee40ef53f4f6f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -288,6 +288,7 @@ sp-rs:Izgled knjige\tCtrl+8
 sq:&Libër\tCtrl+8
 sr-rs:Изглед књиге\tCtrl+8
 sv:&Bokvy\tCtrl+8
+ta:&புத்தக தோற்றம்\tCtrl+8
 th:แสดงแบบหนังสือ\tCtrl+8
 tr:&Kitap Görünümü
 tw:書本模式(&B)\tCtrl+8
@@ -3856,6 +3857,7 @@ sp-rs:Prečica ka obeleživaču
 sq:Shkurtoret e shenjimit
 sr-rs:Пречица ка обележивачу
 sv:Bokmärkesgenvägar
+ta:புத்தகக்குறி இடுக
 th:คั่นหน้าทางลัด
 tr:Yer imi kısayolları
 tw:書籤捷徑
@@ -3905,6 +3907,7 @@ sp-rs:Obeleži prečicu na strani %s od %s
 sq:Shkurtorja e shenjimit për faqet %s nga %s
 sr-rs:Обележи пречицу на страни %s од %s
 sv:Bokmärk genväg till sida %s av %s
+ta:%s / %s பக்கத்தின் புத்தகக்குறிக்கு குறுக்குவழி
 th:คั่นทางลัดไปยังหน้า %s ของ %s
 tr:%s. sayfasına %s yer imi kısayolu
 tw:書籤捷徑指向第 %s 頁（檔案 %s）
@@ -3957,6 +3960,7 @@ sp-rs:Obeleživači
 sq:Faqet e shenjuara
 sr-rs:Обележивачи
 sv:Bokmärken
+ta:புத்தகக்குறி
 th:คั่นหน้า
 tl:Mga Pananda
 tr:Yer imleri
@@ -4066,6 +4070,7 @@ sp-rs:CHM dokumenti
 sq:Dokumente CHM
 sr-rs:CHM документи
 sv:CHM-dokument
+ta:CHM ஆவணங்கள்
 th:เอกสาร CHM
 tr:CHM belgeleri
 tw:CHM 文件
@@ -4118,6 +4123,7 @@ sp-rs:Povezivanje na internet nije moguće (greška %#x).
 sq:Nuk mund të lidhet në internet (gabim %#x).
 sr-rs:Повезивање на интернет није могуће (грешка %#x).
 sv:Kan ej ansluta till internet (fel %#x).
+ta:இணையத்தில் இணைக்க முடியாது (பிழை %#x).
 th:ไม่สามารถเชื่อมต่ออินเตอร์เน็ต (ข้อผิดพลาด %#x).
 tl:Hindi makakonekta sa Internet (error %#x).
 tr:İnternete erişilemiyor (hata %#x)
@@ -4289,6 +4295,7 @@ sp-rs:Nije moguće pokrenuti inverznu pretragu. Proverite komandnu liniju u pode
 sq:Nuk mund të kërkojë mbrapsht. Ju lutemi të verifikoni komandën te parametrat.
 sr-rs:Није могуће покренути инверзну претрагу. Проверите командну линију у подешавањима.
 sv:Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
+ta:தலைகீழ் தேடல் கட்டளை தொடங்க முடியாது. அமைப்புகளில் கட்டளை வரி சரிபார்க்கவும்
 th:ไม่สามารถค้นหาคำสั่งที่ตรงกันข้าม โปรดตรวจสอบแถวคำสั่งในการตั้งค่า
 tl:Hindi ma-execute ang command para sa inverse search. Pakitingnan ang command line sa settings.
 tr:Sondan başa arama komutu başlatılamadı. Ayarlarda komut satırını kontrol ediniz.
@@ -4469,6 +4476,7 @@ sp-rs:Stripovi
 sq:Comic books
 sr-rs:Стрипови
 sv:Serier
+ta:சித்திரக்கதை புத்தகங்கள்
 th:หนังสือการ์ตูน
 tr:Çizgi romanlar
 tw:漫畫文件
@@ -4503,6 +4511,7 @@ ru:Совместимость
 sl:Združljivost
 sq:Përputhja
 sv:Kompatibilitet
+ta:இணக்கத்தன்மை
 th:ความสอดคล้องกัน
 tr:Uyumluluk
 uz:Mosligi
@@ -4797,6 +4806,7 @@ sl:Kopiraj &sliko
 sq:Kopjoj &figurën
 sr-rs:Копирај слику
 sv:Kop&iera bild
+ta:நகல் & படம்
 th:คัดลอกรูปภาพ
 tr:&Görüntüyü Kopyala
 tw:複製圖片(&I)
@@ -4846,6 +4856,7 @@ sp-rs:Kopiraj adresu veze
 sq:Kopjoj adresën e &lidhësit
 sr-rs:Копирај адресу везе
 sv:Kopiera länkadress
+ta:நகல் &இணைப்பு முகவரி
 th:คัดลอก Link Address
 tl:Kopyahin nag address ng &link
 tr:&Bağlantı Adresini Kopyala
@@ -4897,6 +4908,7 @@ sp-rs:Kopiraj komentar
 sq:Kopjoj ko&mentin
 sr-rs:Копирај коментар
 sv:Kopiera kommentar
+ta:கருத்து நகலெடுக்க
 th:คัดลอกความเห็น
 tl:Kopyahin ang komento
 tr:&Açıklamayı Kopyala
@@ -4950,6 +4962,7 @@ sp-rs:Kopiranje teksta je odbijeno (može se kopirati samo kao slika)
 sq:Ndalohet kopjimi i tekstit (kopjohet vetëm si figurë)
 sr-rs:Копирање текста је одбијено (може се копирати само као слика)
 sv:Textkopiering tilläts ej (kopierar som bild)
+ta:உரை நகல் மறுக்கப்பட்டது (படமாக மட்டும் நகலெடுக்கும்)
 th:การคัดลอกข้อความถูกปฏิเสธ (คัดลอกแบบรูปภาพเท่านั้น)
 tl:Hindi maaaring kopyahin ang mensahe (kinopya bilang isang imahe lamang)
 tr:Metnin kopyalanması reddedildi (görüntü olarak kopyalandı)
@@ -4992,6 +5005,7 @@ sl:Avtorske pravice:
 sq:Kopirajti:
 sr-rs:Ауторска права:
 sv:Copyright:
+ta:காப்புரிமை:
 th:ลิขสิทธิ์:
 tr:Telif hakkı:
 tw:版權：
@@ -5041,6 +5055,7 @@ sp-rs:Nije moguće prikazati osobine štampača
 sq:Nuk mund të marrë vetitë e printerit
 sr-rs:Није могуће приказати особине штампача
 sv:Kunde inte hämta egenskaper för skrivare
+ta:அச்சுப்பொறியின் பண்புகள் பெற முடியவில்லை
 th:ไม่ได้รับคุณสมบัติเครื่องพิมพ์
 tr:Yazıcı özellikleri temin edilemedi
 uk:Неможливо відобразити налаштування друкарки
@@ -5258,6 +5273,7 @@ sp-rs:Tekuća datoteka
 sq:Skeda aktuale
 sr-rs:Текућа датотека
 sv:Aktuell fil
+ta:நடப்பு கோப்பு
 th:ไฟล์ปัจจุบัน
 tr:Yürürlükteki dosya
 tw:當前的檔案
@@ -5592,6 +5608,7 @@ sp-rs:DjVu dokumenti
 sq:Dokumente DjVu
 sr-rs:DjVu документи
 sv:DjVu-dokument
+ta:DjVu ஆவணங்கள்
 th:เอกสาร DjVu
 tr:DjVu belgeleri
 tw:DjVu 文件
@@ -5822,6 +5839,7 @@ sp-rs:EPUB dokumenti
 sq:Libra elektronikë EPUB
 sr-rs:EPUB документи
 sv:EPUB-dokument
+ta:EPUB மின்புத்தகங்கள்
 tr:EPUB belgeleri
 tw:EPUB 文件
 uk:Документи EPUB
@@ -6002,6 +6020,7 @@ sp-rs:Unesite parametre komandne linije koji će se izvršiti prilikom dvoklika 
 sq:Komanda që jepet kur klikoni dy herë dokumentin PDF:
 sr-rs:Унесите параметре командне линије који ће се извршити приликом двоклика на PDF документ:
 sv:Ange kommandorad att aktivera när du dubbelklickar på PDF-dokumentet:
+ta:நீங்கள் PDF ஆவணத்தின் மீது இரட்டை சொடுக்கும் போது செயலாக்க கட்டளை வரி உள்ளிடவும்:
 tl:Pakisulat ang command na gagawin kapag dalawang beses na kli-nik ang dokumentong PDF:
 tr:PDF belgesine çift tıklanınca yürütülecek komutu giriniz:
 tw:輸入當以滑鼠雙擊 PDF 文件時應執行的指令：
@@ -6052,6 +6071,7 @@ sp-rs:Došlo je do greške prilikom učitavanja datoteke %s
 sq:Gabim në hapjen e %s
 sr-rs:Дошло је до грешке приликом учитавања датотеке %s
 sv:Fel vid öppning av %s
+ta:ஏற்றுவதில் பிழை %s
 tr:%s yükleme hatası
 tw:載入 %s 時發生錯誤
 uk:Помилка завантаження %s
@@ -6101,6 +6121,7 @@ sp-rs:Odabir
 sq:P&ëlqej
 sr-rs:Одабир
 sv:F&avoriter
+ta:பிடித்தவை
 tr:S&ık kullanılanlar
 tw:我的最愛(&A)
 uk:Закладки
@@ -6326,6 +6347,7 @@ sk:Súbor se nepodarilo premenovať!
 sl:Preimenovanje datoteke ni uspelo!
 sq:Dështoi riemërtimi i skedës!
 sv:Kunde inte döpa om filen!
+ta:கோப்புக்கு மறுபெயரிட முடியவில்லை!
 tr:Dosyanın ismi değiştirilemedi!
 tw:重新命名該檔案失敗!
 uz:Fayl nomini o'zgartirish muvaffaqiyatsiz tugadi!
@@ -6418,6 +6440,7 @@ ru:Быстрый просмотр в Интернете
 sl:Hiter spletni prikaz
 sq:Hapet shpejt në internet
 sv:Snabb Webb-Visning
+ta:வேகமான வலை பார்வை
 tr:Hızlı Web Görünümü
 uz:Tez veb ko'rish
 vn:Xem dạng Web nhanh
@@ -6465,6 +6488,7 @@ sp-rs:Odabir
 sq:Pëlqej
 sr-rs:Одабир
 sv:Favoriter
+ta:பிடித்தவை
 tr:Sık kullanılanlar
 tw:我的最愛
 uk:Закладки
@@ -6510,6 +6534,7 @@ sp-rs:Datoteka %s nije pronađena
 sq:Nuk gjen skedën %s
 sr-rs:Датотека %s није пронађена
 sv:Fil %s hittades inte
+ta:%s கோப்பு கிடைக்கவில்லை
 tr:%s dosyası bulunamadı
 tw:找不到檔案 %s
 uk:Файл %s не знайдено
@@ -6988,6 +7013,7 @@ sp-rs:Podesi prema sadržaju\tCtrl+3
 sq:Përshtat &materialin\tCtrl+3
 sr-rs:Подеси према садржају\tCtrl+3
 sv:Passa &innehåll\tCtrl+3
+ta:பொருத்தம் & உள்ளடக்கம்\tCtrl+3
 tl:Pagkasyahin ang laman\tCtrl+3
 tr:&İçeriğe ölçekle\tCtrl+3
 tw:合適內容(&C)\tCtrl+3
@@ -7172,6 +7198,7 @@ sp-rs:Podesi prema sadržaju
 sq:Përshtat materialin
 sr-rs:Подеси према садржају
 sv:Passa innehåll
+ta:உள்ளடக்கம் பொருந்துக
 tl:Pagkasyahin ang laman
 tr:İçeriğe ölçekle
 tw:合適內容
@@ -7356,6 +7383,7 @@ sp-rs:Podesi prema širini i prikaži stranice bez prekida
 sq:Përshtat gjerësinë dhe tregoj faqet në vazhdimësi
 sr-rs:Подеси према ширини и прикажи странице без прекида
 sv:Anpassa bredd och visa sidor fortlöpande
+ta:அகலம் பொருத்தி பக்கங்கள் காட்டுக
 tl:Pagkasyahin ang lapad at ipakita nang tuluy-tuloy ang mga pahina
 tr:Genişliğe ölçekle ve sayfaları devamlı göster
 tw:合適寬度且連續顯示頁面
@@ -7408,6 +7436,7 @@ sp-rs:Podesi prema pojedinačnoj stranici
 sq:Përshtat në njëfletësh
 sr-rs:Подеси према појединачној страници
 sv:Anpassa till helsida
+ta:ஒற்றை பக்கம் பொருந்துக
 tl:Pagkasyahin ang isang pahina
 tr:Tek sayfaya ölçekle
 tw:合適單頁
@@ -7450,6 +7479,7 @@ sl:Pisave:
 sq:Fonte:
 sr-rs:Фонтови:
 sv:Typsnitt:
+ta:எழுத்துரு:
 tr:Yazıyüzleri:
 uz:Shriftlar:
 vn:Font chữ
@@ -7489,6 +7519,7 @@ sl:Oblikovanje knjige … %d strani
 sq:Formaton librin... %d faqe
 sr-rs:Форматирање књиге... %d страница
 sv:Formatterar bok... %d sidor
+ta:புத்தகத்தை வடிவமைக்க ... %d பக்கங்கள்
 tr:Kitap biçimlendiriliyor... %d sayfa
 uz:Kitob format qilinmoqda... %d bet
 vn:Đang định dạng sách... %d trang
@@ -11982,6 +12013,7 @@ sp-rs:Ažuriranje SumatraPDF
 sq:SumatraPDF Azhurnimi
 sr-rs:Ажурирање SumatraPDF
 sv:SumatraPDF Uppdatering
+ta:மேம்படுத்தப்பட்ட SumatraPDF
 tl:Update sa SumatraPDF
 tr:SumatraPDF Güncelleme
 tw:SumatraPDF 更新
@@ -12033,6 +12065,7 @@ sp-rs:Program SumatraPDF je krahirao
 sq:SumatraPDF ngeci
 sr-rs:Програм SumatraPDF је крахирао
 sv:SumatraPDF avslutades oväntat
+ta:SumatraPDF செயலிழந்தது
 tl:Nag-crash ang SumatraPDF
 tr:SumatraPDF çöktü
 tw:SumatraPDF 發生錯誤
@@ -12228,6 +12261,7 @@ ru:Размеченный PDF
 sl:Označen PDF
 sq:PDF me etiketa
 sv:Taggad PDF
+ta:குறியிடப்பட்ட PDF
 tr:İşaretlenmiş PDF
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
@@ -12390,6 +12424,7 @@ sp-rs:Nepoznata izvorna datoteka (%s)
 sq:Skedë burimore e panjohur (%s)
 sr-rs:Непозната изворна датотека (%s)
 sv:Okänd källfil (%s)
+ta:(%s) மூல கோப்பு கிடைக்கவில்லை
 tl:Hindi alam na source file (%s)
 tr:Bilinmeyen kaynak dosyası (%s)
 tw:未知參考檔案 (%s)
@@ -12631,6 +12666,7 @@ sp-rs:XPS dokumenti
 sq:Dokumente XPS
 sr-rs:XPS документи
 sv:XPS-dokument
+ta:XPS ஆவணங்கள்
 tr:XPS belgeleri
 tw:XPS 文件
 uk:Документи XPS
