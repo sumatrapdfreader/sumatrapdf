@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-caba8699385fab585ba7de08bfbee40ef53f4f6f
+31a67c9d3ae8010998a1a3ae2a810af651294411
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4467,7 +4467,7 @@ ne:कमिक पुस्तिका
 nl:Stripboeken
 no:Tegneserier
 pl:Komiksy
-pt:Livros Comic
+pt:Banda Desenhada
 ro:Benzi desenate
 ru:Документы CBR, CBZ (комиксы)
 sk:Komiksy
@@ -7623,6 +7623,7 @@ sp-rs:Pronađi tekst na %s. stranici (ponovo)
 sq:Gjen tekstin në faqen %s (përsëri)
 sr-rs:Пронађи текст на %s. страници (поново)
 sv:Hittade text på sida %s (igen)
+ta:உரை %s(மீண்டும்) இருக்கிறது
 tr:Metin sayfa %s bulundu (tekrar)
 tw:於第 %s 頁找到目標（已從頭尋找）
 uk:Знайти текст на сторінці %s (знову)
@@ -7672,6 +7673,7 @@ sp-rs:Nedavno čitano
 sq:Lexime të shpeshta
 sr-rs:Недавно читано
 sv:Mest lästa
+ta:அடிக்கடி படிப்பது
 tr:Sıkça okunan
 tw:經常開啟的檔案
 uk:Часто читані
@@ -7852,6 +7854,7 @@ sp-rs:Sakrij „nedavno čitano”
 sq:Fsheh leximet e shpeshta
 sr-rs:Сакриј „недавно читано”
 sv:Dölj mest lästa
+ta:அடிக்கடி வாசிப்பதை மறைக்க
 tr:Sıkça okunanı gizle
 tw:隱藏經常開啟的檔案
 uk:Приховати часто читані
@@ -7956,6 +7959,7 @@ sp-rs:Datoteke slika (*.%s)
 sq:Figura (*.%s)
 sr-rs:Датотеке слика (*.%s)
 sv:Bildfiler (*.%s)
+ta:பட கோப்புகள் (*.%s)
 tr:Görüntü dosyaları (*.%s)
 tw:圖片檔案 (*.%s)
 uk:Файли зображень (*.%s)
@@ -8063,6 +8067,7 @@ sl:Nalaganje datoteke %s …
 sq:Hap skedën %s...
 sr-rs:Учитавање датотеке %s...
 sv:Laddar fil %s...
+ta:%s கோப்பு ஏற்றப்படுகிறது
 tr:%s dosyası yükleniyor...
 uz:%s fayli yuklanmoqda...
 vn:Đang mở tập tin %s...
@@ -8371,6 +8376,7 @@ sp-rs:Mobi dokumenti
 sq:Dokumente Mobi
 sr-rs:Mobi документи
 sv:Mobi-dokument
+ta:Mobi ஆவணங்கள்
 tr:Mobi belgeleri
 tw:Mobi 文件
 uk:Документи Mobi
@@ -8474,7 +8480,7 @@ nn:Ny versjon (ver. %s) tilgjengeleg. Laste ned?
 no:En ny versjon %s er tilgjenglig. Vil du laste den ned nå?
 pa:ਨਵਾ ਵਰਜਨ %s ਓੁਪਲਭਧ ਹੈ । ਡਾਓੂਨਲੋਡ ਕਰਾਂ ?
 pl:Nowa wersja %s jest dostępna. Pobrać nową wersję?
-pt:Está disponível a versão %s. Transferir nova versão?
+pt:Uma nova versão %s está disponível. Transferir?
 ro:O nouă versiune %s este disponibilă. Descărcați versiunea nouă?
 ru:Доступна новая версия: %s. Загрузить её?
 si:%s නව වෙලුමක්  ඇත. නව වෙළුම බාගතකරන්නද?
@@ -8662,6 +8668,7 @@ sp-rs:Rezultati oko linije %u u datoteci %s nisu pronađeni
 sq:Asnjë rezultat në radhën %u te skeda %s
 sr-rs:Резултати око линије %u у датотеци %s нису пронађени
 sv:Inget resultat hittades vid rad %u i filen %s
+ta:%u வரியில் %s கோப்பில் முடிவுகள் கிடைக்கவில்லை
 tl:Walang nakitang resulta sa line %u ng file %s
 tr:%u satırı etrafında %s dosyasındaki sonuç bulunamadı
 tw:在第 %u 行附近（檔案 %s）找不到目標
@@ -9057,6 +9064,7 @@ sp-rs:Otvori dokument...
 sq:Hap një dokument...
 sr-rs:Отвори документ...
 sv:Öppna ett dokument...
+ta:ஆவணத்தை திறக்க...
 tr:Belge aç...
 tw:開啟檔案...
 uk:Відкрити документ...
@@ -9326,6 +9334,7 @@ sp-rs:Osobine
 sq:V&eti
 sr-rs:Особине
 sv:E&genskaper
+ta:பண்புகள்
 tl:Mga katangian
 tr:Ö&zellikler
 tw:內容(&R)
@@ -9464,6 +9473,7 @@ ru:Оптимизация PDF:
 sl:Optimizacije PDF:
 sq:PDF Optimizime:
 sv:PDF Optimeringar:
+ta:PDF மேம்படுத்தல்கள்
 tr:PDF Optimizasyonları:
 uz:PDF optimizatsiyalari:
 vn:Các tối ưu PDF
@@ -9743,6 +9753,7 @@ sp-rs:Stranica %s
 sq:Faqja %s
 sr-rs:Страница %s
 sv:Sida %s
+ta:பக்கம் %s
 tr:Sayfa %s
 tw:第 %s 頁
 uk:Сторінка %s
@@ -9904,6 +9915,7 @@ sp-rs:Podešavanje veličine stranice
 sq:Shkalla e fletës
 sr-rs:Подешавање величине странице
 sv:Skala om vid utskrift
+ta:பக்கம் அளவுமாற்றம்
 tl:Pagkalaki ng pahina
 tr:Sayfa ölçeklendirme
 tw:頁面縮放
@@ -10074,6 +10086,7 @@ sp-rs:Postscript dokumenti
 sq:Dokumente Postscript
 sr-rs:Postscript документи
 sv:Postscript-dokument
+ta:போஸ்ட்ஸ்கிரிப்ட் ஆவணங்கள்
 tr:Postscript belgeleri
 tw:Postscript 文件
 uk:Документи postscript
@@ -10124,6 +10137,7 @@ sp-rs:Prezentacija\tCtrl+L
 sq:Pr&ezantim\tCtrl+L
 sr-rs:Презентација\tCtrl+L
 sv:Pr&esentation\tCtrl+L
+ta:விளக்கக்காட்சி \tCtrl+L
 tl:Pr&esentasyon\tCtrl+L
 tr:Tan&ıtım\tCtrl+L
 tw:投影片顯示(&E)\tCtrl+L
@@ -10240,6 +10254,7 @@ sp-rs:Štampaj
 sq:Printoj
 sr-rs:Штампај
 sv:Skriv ut
+ta:அச்சிட்டு
 tr:Yazdır
 tw:列印
 uk:Друк
@@ -10273,6 +10288,7 @@ ru:Печатать как &изображение (требуется боль�
 sl:Natisni kot sliko (zahteva več pomnilnika)
 sq:Printoj si &figurë (kërkon shumë RAM)
 sv:Skr&iv ut som bild (mer minnekrävande)
+ta:படத்தை போன்று அச்சிடு (நினைவகம் அதிகமாக தேவைப்படுகிறது)
 tr:Resim olarak bas (daha çok hafıza gerektirir)
 uz:&Rasm sifatida bosib chiqarish (ko'proq xotirani talab qiladi)
 vn:In thành hình ảnh (cần nhiều bộ nhớ hơn)
@@ -10321,6 +10337,7 @@ sp-rs:Opseg štampanja
 sq:Kufiri i printimit
 sr-rs:Опсег штампања
 sv:Skriv ut urval
+ta:அச்சிடும் வரம்பு
 tl:Mga ipi-print na pahina
 tr:Baskı aralığı
 tw:列印範圍
@@ -10371,6 +10388,7 @@ sp-rs:Štampač sa navedenim imenom ne postoji
 sq:Nuk ekziston printeri me këtë emër
 sr-rs:Штампач са наведеним именом не постоји
 sv:Det finns ingen skrivade med angivet namn
+ta:குறிபிட்ட பெயரில் அச்சுப்பொறி இல்லை.
 tr:Girilen isimli Yazıcı bulunamadı
 uk:Друкарки з даним іменем не існує
 uz:Bunday printer mavjud emas
@@ -10419,6 +10437,7 @@ sp-rs:Štampanje je još uvek u toku. Želite li da prekinete štampanje i počn
 sq:Printimi vijon. Do e ndërprisni apo do e filloni nga e para?
 sr-rs:Штампање је још увек у току. Желите ли да прекинете штампање и почнете поново?
 sv:Utskriften pågår fortfarande. Avbryt och börja om?
+ta:அச்சிடுதல் செயல்பாட்டில் உள்ளது. கைவிட்டு மீண்டும் தொடங்கவா?
 tr:Yazıcı hala kullanımda. Durdurup yeniden başlatılsınmı?
 tw:正在列印，是否要放棄並重新設定？
 uk:Друк і далі активний. Відмінити та розпочати знову?
@@ -10468,6 +10487,7 @@ sp-rs:Štampanje %d. stramoce od ukupno %d...
 sq:Printon faqen %d nga %d...
 sr-rs:Штампање %d. страмоце од укупно %d...
 sv:Skriver ut sida %d av %d...
+ta:அச்சிடும் பக்கம் %d உள் %d
 tr:Sayfa %d %d yazdırılıyor...
 tw:列印第 %d 頁（共 %d 頁）
 uk:Друк сторінок з %d до %d...
@@ -10572,6 +10592,7 @@ sk:Preme&novať...\tF2
 sl:Preime&nuj …\tF2
 sq:Rie&mërtoj...\tF2
 sv:Döp om
+ta:மறுபெயரிடுதல்... \tF2
 tr:İsim Değiştir
 tw:重新命名(&N)...\tF2
 uz:&Nomini o'zgartirish...\tF2
@@ -10676,6 +10697,7 @@ sp-rs:Ukloni iz odabranih
 sq:Heq nga pëlqimet
 sr-rs:Уклони из одабраних
 sv:Ta bort från favoriter
+ta:பிடித்தவற்றில் இருந்து நீக்குக
 tr:Sık kullanılanlardan çıkar
 tw:從我的最愛移除
 uk:Видалити із закладок
@@ -10725,6 +10747,7 @@ sp-rs:Ukloni stranicu %s iz odabranih
 sq:Heq faqen %s nga pëlqimet
 sr-rs:Уклони страницу %s из одабраних
 sv:Ta bort sida %s från favoriter
+ta:%s பக்கத்தை பிடித்தவையில் இருந்து நீக்குக
 tr:Sayfa %s sık kullanılanlardan çıkar
 tw:從我的最愛中移除第 %s 頁
 uk:Видалити %s сторінку із закладок
@@ -10763,6 +10786,7 @@ sk:Premenovať na
 sl:Preimenuj v
 sq:Riemërtoj si
 sv:Döp om till
+ta:மறுபெயரிட்டு
 tr:Belirtilen İsme Değiştir
 tw:重新命名為
 uz:Yangi nom
@@ -10802,6 +10826,7 @@ sl:Zamenjaj &barve dokumenta z barvno shemo Windows
 sq:Zëvendësoj &ngjyrat e dokumentit me ngjyrat e Windows-it
 sr-rs:Замени боје документа Windows колор шемом
 sv:Byt ut dokument&färg till Windows färgschema
+ta:ஆவணம் மற்றும் வண்ணங்களை  விண்டோஸ் வண்ண திட்டம் மூலம் மாற்றவும்
 tr:Belgenin &renklerini Windows renk planıyla değiştir
 uz:Hujjat &ranglarini Windows rangli sxemasiga o'zgartirish
 vn:Thay màu tập tin bằng bảng màu Windows
@@ -11046,6 +11071,7 @@ sp-rs:Sačuvaj prečicu...\tCtrl+Shift+S
 sq:&Ruaj s&hkurtoren...\tCtrl+Shift+S
 sr-rs:Сачувај пречицу...\tCtrl+Shift+S
 sv:Spara g&enväg...\tCtrl+Shift+S
+ta:குறுக்குவழி சேமி...\tCtrl+Shift+S
 tr:K&ısayolu kaydet...\tCtrl+Shift+S
 tw:儲存為捷徑...(&H)\tCtrl+Shift+S
 uk:Зберегти ярлик...\tCtrl+Shift+S
@@ -11151,6 +11177,7 @@ sp-rs:Izaberi sve
 sq:Seleksionoj të &gjithë
 sr-rs:Изабери све
 sv:Markera &alla
+ta:அனைத்தையும் தேர்வு செய்
 tl:Piliin lahat
 tr:&Hepsini Seç
 tw:全選(&A)
@@ -11202,6 +11229,7 @@ sp-rs:Izaberi sve\tCtrl+A
 sq:Seleksionoj të &gjithë\tCtrl+A
 sr-rs:Изабери све\tCtrl+A
 sv:Välj &Allt\tCtrl+A
+ta:அனைத்தையும் தேர்வு செய் \tCtrl+A
 tl:Piliin L&ahat\tCtrl+A
 tr:T&ümünü Seç\tCtrl+A
 tw:全選(&A)\tCtrl+A
@@ -11372,6 +11400,7 @@ sp-rs:Omogući inverznu pretragu
 sq:Jepni komandën e kërkimit mbrapsht
 sr-rs:Омогући инверзну претрагу
 sv:Sätt motsatt sök-kommandorad
+ta:தலைகீழ் தேடல் கட்டளை வரி அமைக்க
 th:ตั้งค่าตรงกันข้ามในการค้นหาในโหมด command-line
 tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 tr:Sondan başa arama komut satırı
@@ -11407,6 +11436,7 @@ ru:Показать &закладки
 sl:Prikaži &zaznamke
 sq:Tregoj &faqet e shenjuara
 sv:Visa &Bokmärken
+ta:புத்தகக்குறிகளை காட்டுக
 tr:Göster &Sık Kullanılanlar
 uz:&Xatcho'plarni ko'rsatish
 vn:Hiện chỉ dấu sách
@@ -11576,6 +11606,7 @@ sp-rs:Prikaži odabrane stranice
 sq:Tregoj pëlqimet
 sr-rs:Прикажи одабране странице
 sv:Visa favoriter
+ta:பிடித்தவைகளை காட்டுக
 tr:Sık kullanılanları göster
 tw:顯示我的最愛
 uk:Перелік закладок
@@ -11625,6 +11656,7 @@ sp-rs:Prikaži nedavno čitane
 sq:Tregoj leximet e shpeshta
 sr-rs:Прикажи недавно читане
 sv:Visa mest lästa
+ta:அடிக்கடி படிப்பவை
 tr:Sık okunanları göster
 tw:顯示經常開啟的檔案
 uk:Найбільш часто читані
@@ -11796,6 +11828,7 @@ sp-rs:Oprostite, ovo nije trebalo da se dogodi!\n\nPritisnite dugme 'Otkaži' ak
 sq:Na falni, kjo nuk duhej të ndodhte!\n\nJu lutemi të shtypni 'Anuloj' nëse doni të na ndihmoni që ta ndreqim gabimin.
 sr-rs:Опростите, ово није требало да се догоди!\n\nПритисните дугме 'Откажи' ако желите да нам помогнете у решавању овог проблема.
 sv:Ledsen, det där borde inte ha hänt!\n\nVar god tryck 'Avbryt', om du vill hjälpa oss att korrigera orsaken till denna krash.
+ta:மன்னிக்கவும், இது நடந்திருக்க கூடாது! \n\n தயவு செய்து 'ரத்துதை' அழுத்தவும், எங்களுக்கு இந்த விபத்தினை சரிசெய்ய உதவும்.
 tr:Üzgünüz, bu olmamalıydı!\n\nEğer hatayı düzeltmemize yardımcı olmak istiyorsanız lütfen 'Cancel' a basın.
 tw:噢，抱歉，這不該發生的！\n\n如果你希望協助我們修正這個錯誤，請點選「取消」。
 uk:Вибачте, але це не мало статись!\n\nНатисніть "Відмінити", якщо ви бажаєте допомогти нам виправити причину збою.
