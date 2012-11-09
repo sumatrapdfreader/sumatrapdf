@@ -952,6 +952,42 @@ size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMa
     return sLenConverted;
 }
 
+void UrlDecode(char *url)
+{
+    for (char *src = url; *src; src++, url++) {
+        int val;
+        if (*src == '%' && str::Parse(src, "%%%2x", &val)) {
+            *url = (char)val;
+            src += 2;
+        } else {
+            *url = *src;
+        }
+    }
+    *url = '\0';
+}
+
+void UrlDecode(WCHAR *url)
+{
+    for (WCHAR *src = url; *src; src++, url++) {
+        int val;
+        if (*src == '%' && str::Parse(src, L"%%%2x", &val)) {
+            *url = (WCHAR)val;
+            src += 2;
+        } else {
+            *url = *src;
+        }
+    }
+    *url = '\0';
+}
+
+TCHAR *ToPlainUrl(const TCHAR *url)
+{
+    TCHAR *plainUrl = str::Dup(url);
+    str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
+    UrlDecode(plainUrl);
+    return plainUrl;
+}
+
 namespace conv {
 
 // not exactly a conversion, if it's ANSI, we just copy it verbatim

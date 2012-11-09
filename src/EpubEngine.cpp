@@ -593,7 +593,7 @@ public:
             dest = new SimpleDest2(0, RectD(), str::Dup(url));
         else if (str::FindChar(url, '%')) {
             ScopedMem<TCHAR> decodedUrl(str::Dup(url));
-            UrlDecode(decodedUrl);
+            str::UrlDecode(decodedUrl);
             dest = engine->GetNamedDest(decodedUrl);
         }
         else
@@ -1256,7 +1256,7 @@ public:
 
     ImageData *GetImageData(const char *id, const char *pagePath) {
         ScopedMem<char> url(NormalizeURL(id, pagePath));
-        UrlDecode(url);
+        str::UrlDecode(url);
         for (size_t i = 0; i < images.Count(); i++) {
             if (str::Eq(images.At(i).id, url))
                 return &images.At(i).base;
@@ -1346,14 +1346,6 @@ protected:
     DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
 };
 
-static TCHAR *ToPlainUrl(const TCHAR *url)
-{
-    TCHAR *plainUrl = str::Dup(url);
-    str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
-    UrlDecode(plainUrl);
-    return plainUrl;
-}
-
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
 static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
 {
@@ -1431,7 +1423,7 @@ public:
     virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
         if (!url || IsExternalUrl(url))
             return;
-        ScopedMem<TCHAR> plainUrl(ToPlainUrl(url));
+        ScopedMem<TCHAR> plainUrl(str::ToPlainUrl(url));
         if (added.FindI(plainUrl) != -1)
             return;
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));

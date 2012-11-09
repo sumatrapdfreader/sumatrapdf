@@ -14,8 +14,6 @@ struct ImageData2 {
 };
 
 char *NormalizeURL(const char *url, const char *base);
-void UrlDecode(char *url);
-void UrlDecode(WCHAR *url);
 
 /* ********** EPUB ********** */
 

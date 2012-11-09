@@ -122,6 +122,10 @@ const WCHAR *   Parse(const WCHAR *str, const WCHAR *format, ...);
 
 size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax);
 
+void UrlDecode(char *url);
+void UrlDecode(WCHAR *url);
+TCHAR *ToPlainUrl(const TCHAR *url);
+
 namespace conv {
 
 #ifdef UNICODE

@@ -125,7 +125,7 @@ def gen_analyze_html(stats, ver):
 	s += "</body></html>"
 	return s
 
-def str2bool(s): 
+def str2bool(s):
 	if s.lower() in ("true", "1"): return True
 	if s.lower() in ("false", "0"): return False
 	assert(False)
@@ -135,7 +135,7 @@ def test_ser():
 	print stats.to_s()
 
 class Stats(object):
-	int_fields = ("analyze_sumatra_warnings_count", "analyze_mupdf_warnings_count", "analyze_ext_warnings_count", 
+	int_fields = ("analyze_sumatra_warnings_count", "analyze_mupdf_warnings_count", "analyze_ext_warnings_count",
 		"rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
 		"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
 		"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size")
@@ -193,7 +193,7 @@ class Stats(object):
 			self.__setattr__(name, int(val))
 		else:
 			assert(False)
- 
+
 	def from_s(self, s):
 		lines = s.split("\n")
 		for l in lines:
@@ -314,7 +314,7 @@ def group_by_ver(files):
 	for f in files:
 		(ver, name) = f.split("/", 1)
 		if ver == curr_ver:
-			curr_ver_names.append(name) 
+			curr_ver_names.append(name)
 		else:
 			if curr_ver != None:
 				assert(len(curr_ver_names) > 0)
@@ -324,7 +324,7 @@ def group_by_ver(files):
 	if curr_ver != None:
 		assert(len(curr_ver_names) > 0)
 		res.append([curr_ver, curr_ver_names])
-	return res	
+	return res
 
 g_index_html_css = """
 <style type="text/css">
@@ -356,12 +356,12 @@ g_index_html_css = """
 }
 </style>"""
 
-# return stats for the first successful build before $ver 
+# return stats for the first successful build before $ver
 def stats_for_previous_build(ver):
 	ver = int(ver) - 1
 	while True:
 		stats = stats_for_ver(str(ver))
-		# we assume that we have 
+		# we assume that we have
 		if None == stats: return None
 		if not stats.rel_failed: return stats
 		ver -= 1
@@ -405,7 +405,7 @@ def trim_checkin_comment(s):
 	if len(s) < 78: return (s, False)
 	return (s[:75], True)
 
-# build sumatrapdf/buildbot/index.html summary page that links to each 
+# build sumatrapdf/buildbot/index.html summary page that links to each
 # sumatrapdf/buildbot/${ver}/analyze.html
 def build_index_html():
 	s3_dir = "sumatrapdf/buildbot/"
@@ -516,7 +516,7 @@ def sign(file_path, cert_pwd):
   if not os.path.exists(sign_tool_dest): shutil.copy(sign_tool_src, sign_tool_dest)
   curr_dir = os.getcwd()
   os.chdir(file_dir)
-  run_cmd_throw("ksigncmd.exe", "/f", "cert.pfx", "/p", cert_pwd, file_name)  
+  run_cmd_throw("ksigncmd.exe", "/f", "cert.pfx", "/p", cert_pwd, file_name)
   os.chdir(curr_dir)
 
 def try_sign(obj_dir):
@@ -649,7 +649,7 @@ def build_curr(force=False):
 			build_version(local_ver)
 	else:
 		print("We have already built revision %s" % local_ver)
-				
+
 def build_version_try(ver, try_count = 2):
 	# it can happen we get a valid but intermitten exception e.g.
 	# due to svn command failing due to server hiccup

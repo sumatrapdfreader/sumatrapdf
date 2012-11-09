@@ -110,34 +110,6 @@ char *NormalizeURL(const char *url, const char *base)
     return norm.StealData();
 }
 
-void UrlDecode(char *url)
-{
-    for (char *src = url; *src; src++, url++) {
-        int val;
-        if (*src == '%' && str::Parse(src, "%%%2x", &val)) {
-            *url = (char)val;
-            src += 2;
-        } else {
-            *url = *src;
-        }
-    }
-    *url = '\0';
-}
-
-void UrlDecode(WCHAR *url)
-{
-    for (WCHAR *src = url; *src; src++, url++) {
-        int val;
-        if (*src == '%' && str::Parse(src, L"%%%2x", &val)) {
-            *url = (WCHAR)val;
-            src += 2;
-        } else {
-            *url = *src;
-        }
-    }
-    *url = '\0';
-}
-
 inline char decode64(char c)
 {
     if ('A' <= c && c <= 'Z')
@@ -227,7 +199,7 @@ bool EpubDoc::Load()
         return false;
 
     ScopedMem<TCHAR> contentPathDec(str::Dup(contentPath));
-    UrlDecode(contentPathDec);
+    str::UrlDecode(contentPathDec);
     ScopedMem<char> content(zip.GetFileData(contentPathDec));
     if (!content)
         return false;
@@ -255,7 +227,7 @@ bool EpubDoc::Load()
             if (props && str::Find(props, _T("nav"))) {
                 isNcxToc = false;
                 tocPath.Set(str::Join(contentPath, htmlPath));
-                UrlDecode(tocPath);
+                str::UrlDecode(tocPath);
             }
             if (htmlPath && htmlId) {
                 idPathMap.Append(htmlId.StealData());
@@ -272,7 +244,7 @@ bool EpubDoc::Load()
             // load the image lazily
             ImageData2 data = { 0 };
             data.id = str::conv::ToUtf8(imgPath);
-            UrlDecode(imgPath);
+            str::UrlDecode(imgPath);
             data.idx = zip.GetFileIndex(imgPath);
             images.Append(data);
         }
@@ -281,7 +253,7 @@ bool EpubDoc::Load()
             tocPath.Set(node->GetAttribute("href"));
             if (tocPath) {
                 tocPath.Set(str::Join(contentPath, tocPath));
-                UrlDecode(tocPath);
+                str::UrlDecode(tocPath);
                 isNcxToc = true;
             }
         }
@@ -306,7 +278,7 @@ bool EpubDoc::Load()
 
         ScopedMem<TCHAR> fullPath(str::Join(contentPath, idPathMap.At(idx + 1)));
         ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
-        UrlDecode(fullPath);
+        str::UrlDecode(fullPath);
         ScopedMem<char> html(zip.GetFileData(fullPath));
         if (!html)
             continue;
@@ -1396,7 +1368,7 @@ const char *HtmlDoc::GetTextData(size_t *lenOut)
 ImageData *HtmlDoc::GetImageData(const char *id)
 {
     ScopedMem<char> url(NormalizeURL(id, pagePath));
-    UrlDecode(url);
+    str::UrlDecode(url);
     for (size_t i = 0; i < images.Count(); i++) {
         if (str::Eq(images.At(i).id, url))
             return &images.At(i).base;
