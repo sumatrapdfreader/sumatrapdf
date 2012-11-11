@@ -2,9 +2,7 @@
    License: GPLv3 */
 
 extern "C" {
-__pragma(warning(push))
 #include <fitz-internal.h>
-__pragma(warning(pop))
 }
 
 #include "BaseUtil.h"
