@@ -298,14 +298,14 @@ Vec<char *> *ChmDoc::GetAllPaths()
 */
 static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
 {
-    assert(str::Eq("li", el->name));
+    CrashIf(!el->NameIs("li"));
     el = el->GetChildByName("object");
     if (!el)
         return false;
 
     ScopedMem<TCHAR> name, local;
     for (el = el->GetChildByName("param"); el; el = el->next) {
-        if (!str::Eq("param", el->name))
+        if (!el->NameIs("param"))
             continue;
         ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
         ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
@@ -348,7 +348,7 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
 */
 static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
 {
-    assert(str::Eq("li", el->name));
+    CrashIf(!el->NameIs("li"));
     el = el->GetChildByName("object");
     if (!el)
         return false;
@@ -356,7 +356,7 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
     StrVec references;
     ScopedMem<TCHAR> keyword, name;
     for (el = el->GetChildByName("param"); el; el = el->next) {
-        if (!str::Eq("param", el->name))
+        if (!el->NameIs("param"))
             continue;
         ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
         ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
@@ -400,12 +400,12 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
 
 static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT cp, bool isIndex, int level=1)
 {
-    assert(str::Eq("ul", list->name));
+    CrashIf(!list->NameIs("ul"));
 
     // some broken ToCs wrap every <li> into its own <ul>
-    for (; list && str::Eq(list->name, "ul"); list = list->next) {
+    for (; list && list->NameIs("ul"); list = list->next) {
         for (HtmlElement *el = list->down; el; el = el->next) {
-            if (!str::Eq(el->name, "li"))
+            if (!el->NameIs("li"))
                 continue; // ignore unexpected elements
             bool valid = (isIndex ? VisitChmIndexItem : VisitChmTocItem)(visitor, el, cp, level);
             if (!valid)
@@ -413,7 +413,7 @@ static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT 
 
             HtmlElement *nested = el->GetChildByName("ul");
             // some broken ToCs have the <ul> follow right *after* a <li>
-            if (!nested && el->next && str::Eq(el->next->name, "ul"))
+            if (!nested && el->next && el->next->NameIs("ul"))
                 nested = el->next;
             if (nested)
                 WalkChmTocOrIndex(visitor, nested, cp, isIndex, level + 1);

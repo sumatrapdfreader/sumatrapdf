@@ -16,12 +16,14 @@ static void HtmlParser00()
     HtmlElement *root = p.Parse("<a></A>");
     assert(p.ElementsCount() == 1);
     assert(root);
-    assert(str::Eq("a", root->name));
+    assert(str::Eq(root->name, "a"));
+    assert(root->NameIs("a"));
 
     root = p.Parse("<b></B>");
     assert(p.ElementsCount() == 1);
     assert(root);
-    assert(str::Eq("b", root->name));
+    assert(str::Eq(root->name, "b"));
+    assert(root->NameIs("b"));
 }
 
 static void HtmlParser01()
@@ -186,6 +188,23 @@ static void HtmlParser09()
     assert(str::Eq("main", root->name));
 }
 
+static void HtmlParser10()
+{
+    HtmlParser p;
+    HtmlElement *root = p.Parse("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>");
+    assert(2 == p.ElementsCount());
+    assert(2 == p.TotalAttrCount());
+    assert(root->NameIs("x:a") && root->NameIsNS("a", "http://example.org/ns/x"));
+
+    HtmlElement *node = p.FindElementByName("b");
+    assert(!node);
+    node = p.FindElementByNameNS("b", "http://example.org/ns/x");
+    assert(node);
+    assert(node->NameIs("x:b") && node->NameIsNS("b", "http://example.org/ns/x"));
+    ScopedMem<TCHAR> val(node->GetAttribute("attr"));
+    assert(str::Eq(val, _T("val")));
+}
+
 static void HtmlParserFile()
 {
     TCHAR *fileName = _T("HtmlParseTest00.html");
@@ -242,6 +261,7 @@ static void HtmlParserFile()
 void TrivialHtmlParser_UnitTests()
 {
     unittests::HtmlParserFile();
+    unittests::HtmlParser10();
     unittests::HtmlParser09();
     unittests::HtmlParser08();
     unittests::HtmlParser07();

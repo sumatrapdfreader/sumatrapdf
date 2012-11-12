@@ -199,6 +199,17 @@ bool AttrInfo::NameIs(const char *s) const
     return StrEqNIx(name, nameLen, s);
 }
 
+// for now just ignores any namespace qualifier
+// (i.e. succeeds for "xlink:href" with name="href" and any value of attrNS)
+// TODO: add proper namespace support
+bool AttrInfo::NameIsNS(const char *s, const char *ns) const
+{
+    CrashIf(!ns);
+    const char *nameStart = (const char *)memchr(name, ':', nameLen);
+    nameStart = nameStart ? nameStart + 1 : name;
+    return StrEqNIx(nameStart, nameLen - (nameStart - name), s);
+}
+
 bool AttrInfo::ValIs(const char *s) const
 {
     return StrEqNIx(val, valLen, s);
@@ -234,6 +245,17 @@ bool HtmlToken::NameIs(const char *name) const
     return (str::Len(name) == nLen) && str::StartsWithI(s, name);
 }
 
+// for now just ignores any namespace qualifier
+// (i.e. succeeds for "opf:content" with name="content" and any value of ns)
+// TODO: add proper namespace support
+bool HtmlToken::NameIsNS(const char *name, const char *ns) const
+{
+    CrashIf(!ns);
+    const char *nameStart = (const char *)memchr(s, ':', nLen);
+    nameStart = nameStart ? nameStart + 1 : s;
+    return StrEqNIx(nameStart, nLen - (nameStart - s), name);
+}
+
 // reparse point is an address within html that we can
 // can feed to HtmlPullParser() to start parsing from that point
 const char *HtmlToken::GetReparsePoint() const
@@ -258,16 +280,11 @@ AttrInfo *HtmlToken::GetAttrByName(const char *name)
     return NULL;
 }
 
-// for now just ignores any namespace qualifier
-// (i.e. finds "xlink:href" for name="href" and any value of attrNS)
-// TODO: add proper namespace support
 AttrInfo *HtmlToken::GetAttrByNameNS(const char *name, const char *attrNS)
 {
     nextAttr = NULL; // start from the beginning
     for (AttrInfo *a = NextAttr(); a; a = NextAttr()) {
-        const char *nameStart = (const char *)memchr(a->name, ':', a->nameLen);
-        nameStart = nameStart ? nameStart + 1 : a->name;
-        if (StrEqNIx(nameStart, a->nameLen - (nameStart - a->name), name))
+        if (a->NameIsNS(name, attrNS))
             return a;
     }
     return NULL;

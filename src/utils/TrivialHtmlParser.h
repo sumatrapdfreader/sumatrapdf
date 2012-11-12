@@ -23,6 +23,9 @@ struct HtmlElement {
     HtmlElement *up, *down, *next;
     UINT codepage;
 
+    bool NameIs(const char *name) const;
+    bool NameIsNS(const char *name, const char *ns) const;
+
     TCHAR *GetAttribute(const char *name) const;
     HtmlElement *GetChildByName(const char *name, int idx=0) const;
 };
@@ -78,6 +81,7 @@ public:
     }
 
     HtmlElement *FindElementByName(const char *name, HtmlElement *from=NULL);
+    HtmlElement *FindElementByNameNS(const char *name, const char *ns, HtmlElement *from=NULL);
 };
 
 TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage);

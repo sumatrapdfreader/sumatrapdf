@@ -21,10 +21,26 @@ struct HtmlAttr {
     HtmlAttr *next;
 };
 
+bool HtmlElement::NameIs(const char *name) const
+{
+    return str::Eq(this->name, name);
+}
+
+// for now just ignores any namespace qualifier
+// (i.e. succeeds for "opf:content" with name="content" and any value of ns)
+// TODO: add proper namespace support
+bool HtmlElement::NameIsNS(const char *name, const char *ns) const
+{
+    CrashIf(!ns);
+    const char *nameStart = str::FindChar(this->name, ':');
+    nameStart = nameStart ? nameStart + 1 : this->name;
+    return str::Eq(nameStart, name);
+}
+
 HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
 {
     for (HtmlElement *el = down; el; el = el->next) {
-        if (str::Eq(name, el->name)) {
+        if (el->NameIs(name)) {
             if (0 == idx)
                 return el;
             idx--;
@@ -149,7 +165,7 @@ HtmlElement *HtmlParser::FindParent(char *tagName)
     if (str::Eq(tagName, "li")) {
         // make a list item the child of the closest list
         for (HtmlElement *el = currElement; el; el = el->up) {
-            if (str::Eq(el->name, "ul") || str::Eq(el->name, "ol"))
+            if (el->NameIs("ul") || el->NameIs("ol"))
                 return el;
         }
     }
@@ -187,7 +203,7 @@ void HtmlParser::CloseTag(char *tagName)
     // to allow for lack of closing tags, e.g. in case like
     // <a><b><c></a>, we look for the first parent with matching name
     for (HtmlElement *el = currElement; el; el = el->up) {
-        if (str::Eq(el->name, tagName)) {
+        if (el->NameIs(tagName)) {
             currElement = el->up;
             return;
         }
@@ -270,37 +286,38 @@ HtmlElement *HtmlParser::Parse(const char *s, UINT codepage)
 // Note: name must be lower-case
 HtmlElement *HtmlParser::FindElementByName(const char *name, HtmlElement *from)
 {
-    HtmlElement *el = from;
-    if (!from) {
-        if (!rootElement)
-            return NULL;
-        if (str::Eq(name, rootElement->name))
-            return rootElement;
-        el = rootElement;
-    }
-Next:
+    return FindElementByNameNS(name, NULL, from);
+}
+
+HtmlElement *HtmlParser::FindElementByNameNS(const char *name, const char *ns, HtmlElement *from)
+{
+    HtmlElement *el = from ? from : rootElement;
+    if (from)
+        goto FindNext;
+    if (!el)
+        return NULL;
+CheckNext:
+    if (el->NameIs(name) || ns && el->NameIsNS(name, ns))
+        return el;
+FindNext:
     if (el->down) {
         el = el->down;
-        goto FoundNext;
+        goto CheckNext;
     }
     if (el->next) {
         el = el->next;
-        goto FoundNext;
+        goto CheckNext;
     }
     // backup in the tree
     HtmlElement *parent = el->up;
     while (parent) {
         if (parent->next) {
             el = parent->next;
-            goto FoundNext;
+            goto CheckNext;
         }
         parent = parent->up;
     }
     return NULL;
-FoundNext:
-    if (str::Eq(el->name, name))
-        return el;
-    goto Next;
 }
 
 #ifdef DEBUG

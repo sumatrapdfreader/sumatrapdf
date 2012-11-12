@@ -13,6 +13,7 @@ struct AttrInfo {
     size_t            valLen;
 
     bool NameIs(const char *s) const;
+    bool NameIsNS(const char *s, const char *ns) const;
     bool ValIs(const char *s) const;
 };
 
@@ -58,6 +59,7 @@ struct HtmlToken {
     size_t           nLen;
 
     bool             NameIs(const char *name) const;
+    bool             NameIsNS(const char *name, const char *ns) const;
     AttrInfo *       GetAttrByName(const char *name);
     AttrInfo *       GetAttrByNameNS(const char *name, const char *attrNS);
 

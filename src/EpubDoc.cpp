@@ -164,6 +164,10 @@ static inline void AppendChar(str::Str<char>& htmlData, char c)
 
 /* ********** EPUB ********** */
 
+const char *EPUB_CONTAINER_NS = "urn:oasis:names:tc:opendocument:xmlns:container";
+const char *EPUB_OPF_NS = "http://www.idpf.org/2007/opf";
+const char *EPUB_NCX_NS = "http://www.daisy.org/z3986/2005/ncx/";
+
 EpubDoc::EpubDoc(const TCHAR *fileName) :
     zip(fileName), fileName(str::Dup(fileName)), isNcxToc(false), isRtlDoc(false) { }
 
@@ -191,7 +195,7 @@ bool EpubDoc::Load()
     if (!node)
         return false;
     // only consider the first <rootfile> element (default rendition)
-    node = parser.FindElementByName("rootfile");
+    node = parser.FindElementByNameNS("rootfile", EPUB_CONTAINER_NS);
     if (!node)
         return false;
     ScopedMem<TCHAR> contentPath(node->GetAttribute("full-path"));
@@ -207,7 +211,7 @@ bool EpubDoc::Load()
     node = parser.ParseInPlace(content);
     if (!node)
         return false;
-    node = parser.FindElementByName("manifest");
+    node = parser.FindElementByNameNS("manifest", EPUB_OPF_NS);
     if (!node)
         return false;
 
@@ -259,14 +263,14 @@ bool EpubDoc::Load()
         }
     }
 
-    node = parser.FindElementByName("spine");
+    node = parser.FindElementByNameNS("spine", EPUB_OPF_NS);
     if (!node)
         return false;
     ScopedMem<TCHAR> readingDir(node->GetAttribute("page-progression-direction"));
     if (readingDir)
         isRtlDoc = str::EqI(readingDir, _T("rtl"));
     for (node = node->down; node; node = node->next) {
-        if (!str::Eq(node->name, "itemref"))
+        if (!node->NameIsNS("itemref", EPUB_OPF_NS))
             continue;
         ScopedMem<TCHAR> idref(node->GetAttribute("idref"));
         if (!idref)
@@ -307,9 +311,9 @@ void EpubDoc::ParseMetadata(const char *content)
     HtmlToken *tok;
 
     while ((tok = pullParser.Next())) {
-        if (tok->IsStartTag() && tok->NameIs("metadata"))
+        if (tok->IsStartTag() && tok->NameIsNS("metadata", EPUB_OPF_NS))
             insideMetadata++;
-        else if (tok->IsEndTag() && tok->NameIs("metadata"))
+        else if (tok->IsEndTag() && tok->NameIsNS("metadata", EPUB_OPF_NS))
             insideMetadata--;
         if (!insideMetadata)
             continue;
@@ -456,7 +460,7 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
     HtmlToken *tok;
     // skip to the start of the navMap
     while ((tok = parser.Next()) && !tok->IsError()) {
-        if (tok->IsStartTag() && (tok->NameIs("navMap") || tok->NameIs("ncx:navMap")))
+        if (tok->IsStartTag() && tok->NameIsNS("navMap", EPUB_NCX_NS))
             break;
     }
     if (!tok || tok->IsError())
@@ -464,8 +468,8 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
 
     ScopedMem<TCHAR> itemText, itemSrc;
     int level = 0;
-    while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIs("navMap") && !tok->NameIs("ncx:navMap"))) {
-        if (tok->IsTag() && (tok->NameIs("navPoint") || tok->NameIs("ncx:navPoint"))) {
+    while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS))) {
+        if (tok->IsTag() && tok->NameIsNS("navPoint", EPUB_NCX_NS)) {
             if (itemText) {
                 visitor->visit(itemText, itemSrc, level);
                 itemText.Set(NULL);
@@ -476,13 +480,13 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
             else if (tok->IsEndTag() && level > 0)
                 level--;
         }
-        else if (tok->IsStartTag() && (tok->NameIs("text") || tok->NameIs("ncx:text"))) {
+        else if (tok->IsStartTag() && tok->NameIsNS("text", EPUB_NCX_NS)) {
             if (!(tok = parser.Next()) || tok->IsError())
                 break;
             if (tok->IsText())
                 itemText.Set(FromHtmlUtf8(tok->s, tok->sLen));
         }
-        else if (tok->IsTag() && !tok->IsEndTag() && (tok->NameIs("content") || tok->NameIs("ncx:content"))) {
+        else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS)) {
             AttrInfo *attrInfo = tok->GetAttrByName("src");
             if (attrInfo) {
                 ScopedMem<char> src(str::DupN(attrInfo->val, attrInfo->valLen));
