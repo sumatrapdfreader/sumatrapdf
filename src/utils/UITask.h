@@ -1,3 +1,6 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #ifndef UITask_h
 #define UITask_h
 
@@ -24,7 +27,7 @@ void    Initialize();
 void    Destroy();
 
 // Called from any thread, posts a message to a queue, to be processed by ui thread
-void    Post(UITask *msg);
+void    Post(UITask *);
 
 // Called on ui thread (e.g. in an event loop) to process queued messages.
 // Removes the message from the queue.

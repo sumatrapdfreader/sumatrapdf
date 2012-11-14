@@ -1,9 +1,12 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #include "BaseUtil.h"
 #include "UITask.h"
 
 namespace uitask {
 
-static Vec<UITask*> * gUiTaskQueue;
+static Vec<UITask*> *           gUiTaskQueue;
 static CRITICAL_SECTION         gUiTaskCs;
 static HANDLE                   gUiTaskEvent;
 
@@ -22,11 +25,11 @@ void Destroy()
     CloseHandle(gUiTaskEvent);
 }
 
-void Post(UITask *msg)
+void Post(UITask *task)
 {
-    CrashIf(!msg);
+    CrashIf(!task);
     ScopedCritSec cs(&gUiTaskCs);
-    gUiTaskQueue->Append(msg);
+    gUiTaskQueue->Append(task);
     SetEvent(gUiTaskEvent);
 }
 
