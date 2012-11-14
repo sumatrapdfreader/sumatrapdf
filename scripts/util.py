@@ -81,7 +81,7 @@ def s3UploadFilePublic(local_path, remote_path, silent=False):
   if silent:
     k.set_contents_from_filename(local_path)
   else:
-    k.set_contents_from_filename(local_path, cb=ul_cb)    
+    k.set_contents_from_filename(local_path, cb=ul_cb)
   k.make_public()
 
 def s3UploadDataPublic(data, remote_path):
@@ -111,7 +111,7 @@ def s3List(s3dir):
 def s3Delete(remote_path):
   log("s3 delete '%s'" % remote_path)
   s3PubBucket().new_key(remote_path).delete()
-  
+
 def s3_exist(remote_path):
   return s3PubBucket().get_key(remote_path)
 
@@ -298,7 +298,16 @@ def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
   zf.write(src, src_name)
   zf.close()
 
-# build the .zip with with installer data, will be included as part of 
+def formatInt(x):
+    if x < 0:
+        return '-' + formatInt(-x)
+    result = ''
+    while x >= 1000:
+        x, r = divmod(x, 1000)
+        result = ".%03d%s" % (r, result)
+    return "%d%s" % (x, result)
+
+# build the .zip with with installer data, will be included as part of
 # Installer.exe resources
 def build_installer_data(dir):
   zf = zipfile.ZipFile(os.path.join(dir, "InstallerData.zip"), "w", zipfile.ZIP_BZIP2)
@@ -351,7 +360,7 @@ def load_config():
     c.trans_ul_secret = config.trans_ul_secret
   except:
     # it's ok if doesn't exist, we just won't have the config data
-    pass
+    print("no config.py!")
   return c
 
 def test_load_config():

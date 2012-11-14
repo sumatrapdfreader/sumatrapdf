@@ -469,14 +469,18 @@ def build_index_html():
 		else:
 			prev_stats = stats_for_previous_build(ver)
 			if None == prev_stats:
-				html += td(str(stats.rel_sumatrapdf_exe_size), 4) + "\n"
-				html += td(str(stats.rel_installer_exe_size), 4) + "\n"
+				num_s = formatInt(stats.rel_sumatrapdf_exe_size)
+				html += td(num_s, 4) + "\n"
+				num_s = formatInt(stats.rel_installer_exe_size)
+				html += td(num_s, 4) + "\n"
 			else:
 				s = size_diff_html(stats.rel_sumatrapdf_exe_size - prev_stats.rel_sumatrapdf_exe_size)
-				s = str(stats.rel_sumatrapdf_exe_size) + s
+				num_s = formatInt(stats.rel_sumatrapdf_exe_size)
+				s = num_s + s
 				html += td(s, 4) + "\n"
 				s = size_diff_html(stats.rel_installer_exe_size - prev_stats.rel_installer_exe_size)
-				s = str(stats.rel_installer_exe_size) + s
+				num_s = formatInt(stats.rel_installer_exe_size)
+				s = num_s + s
 				html += td(s, 4) + "\n"
 
 		# checkin comment
@@ -709,10 +713,10 @@ def main():
 	get_cert_pwd() # early exit if problems
 
 	#build_version("6698", skip_release=True)
-	#build_index_html()
+	build_index_html()
 	#build_sizes_json()
 	#build_curr(force=True)
-	buildbot_loop()
+	#buildbot_loop()
 
 if __name__ == "__main__":
 	main()
