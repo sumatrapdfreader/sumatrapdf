@@ -405,6 +405,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedGdiPlus gdiPlus(true);
     mui::Initialize();
     uimsg::Initialize();
+    uitask::Initialize();
 
     ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
     if (!file::Exists(prefsFilename)) {
@@ -569,6 +570,7 @@ Exit:
 
     DrainUiMsgQueue();
     uimsg::Destroy();
+    uitask::Destroy();
 
     trans::Destroy();
 

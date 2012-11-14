@@ -5058,6 +5058,7 @@ static int RunMessageLoop()
         HANDLE handles[MAXIMUM_WAIT_OBJECTS];
         DWORD handleCount = 0;
         handles[handleCount++] = uimsg::GetQueueEvent();
+        handles[handleCount++] = uitask::GetQueueEvent();
         CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
         DWORD res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, INFINITE, wakeMask);
         if (res == WAIT_OBJECT_0) {
