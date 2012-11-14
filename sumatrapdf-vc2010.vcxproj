@@ -337,6 +337,8 @@
     <ClCompile Include="src\utils\JsonParser.cpp" />
     <ClCompile Include="src\utils\JsonParser_ut.cpp" />
     <ClCompile Include="src\utils\Sigslot_ut.cpp" />
+    <ClCompile Include="src\utils\StrFormat.cpp" />
+    <ClCompile Include="src\utils\StrFormat_ut.cpp" />
     <ClCompile Include="src\utils\StrUtil_ut.cpp" />
     <ClCompile Include="src\utils\ThreadUtil.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
@@ -516,6 +518,7 @@
     <ClInclude Include="src\utils\JsonParser.h" />
     <ClInclude Include="src\utils\RefCounted.h" />
     <ClInclude Include="src\utils\Sigslot.h" />
+    <ClInclude Include="src\utils\StrFormat.h" />
     <ClInclude Include="src\utils\ThreadUtil.h" />
     <ClInclude Include="src\utils\Touch.h" />
     <ClInclude Include="src\Translations.h" />

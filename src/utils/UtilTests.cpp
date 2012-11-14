@@ -211,6 +211,7 @@ static void LogTest()
 #include "StrUtil_ut.cpp"
 #include "Vec_ut.cpp"
 #include "ByteOrderDecoder_ut.cpp"
+#include "StrFormat_ut.cpp"
 
 void BaseUtils_UnitTests()
 {
@@ -227,6 +228,7 @@ void BaseUtils_UnitTests()
     BencTest();
     SigSlotTest();
     JsonTest();
+    StrFormatTest();
 }
 
 #endif

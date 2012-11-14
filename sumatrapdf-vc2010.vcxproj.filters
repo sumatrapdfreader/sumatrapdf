@@ -1013,6 +1013,12 @@
     <ClCompile Include="src\utils\UITask.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\StrFormat.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\StrFormat_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1490,6 +1496,9 @@
       <Filter>zlib\minizip</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\UITask.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\StrFormat.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
