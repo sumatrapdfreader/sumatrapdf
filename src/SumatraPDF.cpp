@@ -43,8 +43,6 @@ using namespace Gdiplus;
 #include "Toolbar.h"
 #include "Touch.h"
 #include "Translations.h"
-#include "UiMsgSumatra.h"
-#include "UiMsg.h"
 #include "UITask.h"
 #include "Version.h"
 #include "WindowInfo.h"
@@ -1289,7 +1287,7 @@ static void RenameFileInHistory(const TCHAR *oldPath, const TCHAR *newPath)
 }
 
 // called when a background thread finishes loading mobi file
-static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
+static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingTask *finishedMobiLoading)
 {
     Doc doc(*finishedMobiLoading->doc);
     if (!doc.IsEbook()) {
@@ -4989,32 +4987,16 @@ InitMouseWheelInfo:
     return 0;
 }
 
-static void DispatchUiMsg(UiMsg *msg)
+void FinishedMobiLoadingTask::Execute()
 {
-    if (UiMsg::FinishedMobiLoading == msg->type) {
-        HandleFinishedMobiLoadingMsg(&msg->finishedMobiLoading);
-    } else if (UiMsg::MobiLayout == msg->type) {
-        EbookWindow *win = FindEbookWindowByController(msg->mobiLayout.controller);
-        if (win)
-            win->ebookController->HandleMobiLayoutMsg(&msg->mobiLayout);
-    } else {
-        CrashIf(true);
-    }
-    delete msg;
+    HandleFinishedMobiLoadingMsg(this);
 }
 
-static void DispatchUiMessages()
+void EbookFormattingTask::Execute()
 {
-    for (UiMsg *msg = uimsg::RetrieveNext(); msg; msg = uimsg::RetrieveNext()) {
-        DispatchUiMsg(msg);
-    }
-}
-
-static void DrainUiMsgQueue()
-{
-    for (UiMsg *msg = uimsg::RetrieveNext(); msg; msg = uimsg::RetrieveNext()) {
-        delete msg;
-    }
+    EbookWindow *win = FindEbookWindowByController(this->controller);
+    if (win)
+        win->ebookController->HandleMobiLayoutMsg(this);
 }
 
 static HACCEL gAccelTable;
@@ -5059,23 +5041,20 @@ static int RunMessageLoop()
     for (;;) {
         HANDLE handles[MAXIMUM_WAIT_OBJECTS];
         DWORD handleCount = 0;
-        handles[handleCount++] = uimsg::GetQueueEvent();
         handles[handleCount++] = uitask::GetQueueEvent();
         CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
         DWORD res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, INFINITE, wakeMask);
         if (res == WAIT_OBJECT_0) {
-            DispatchUiMessages();
+            // process these messages here so that we don't have to add this
+            // handling to every WndProc that might receive those messages
+            // note: this isn't called during an inner message loop, so
+            //       Execute() also has to be called from a WndProc
+            uitask::ExecuteAll();
         } else {
             bool shouldExit = ProcessAllMessages();
             if (shouldExit)
                 return 0;
         }
-        // process these messages here so that we don't have to add this
-        // handling to every WndProc that might receive those messages
-        // note: this isn't called during an inner message loop, so
-        //       Execute() also has to be called from a WndProc
-        uitask::ExecuteAll();
-        DispatchUiMessages();
     }
     return 0;
 }

@@ -7,6 +7,7 @@
 #include "Doc.h"
 #include "Sigslot.h"
 #include "SumatraWindow.h"
+#include "UITask.h"
 
 struct  EbookControls;
 class   EbookController;
@@ -17,19 +18,24 @@ struct  HtmlFormatterArgs;
 namespace mui { class Control; }
 using namespace mui;
 
-struct FinishedMobiLoadingData {
+class FinishedMobiLoadingTask : public UITask {
+public:
     TCHAR *         fileName;
     Doc *           doc;
     SumatraWindow   win;
     double          loadingTimeMs;
 
-    void Free() {
+    FinishedMobiLoadingTask() {}
+    ~FinishedMobiLoadingTask() {
         free(fileName);
         delete doc;
     }
+
+    virtual void Execute();
 };
 
-struct EbookFormattingData {
+class EbookFormattingTask : public UITask {
+public:
     enum { MAX_PAGES = 32 };
     HtmlPage *         pages[MAX_PAGES];
     size_t             pageCount;
@@ -37,6 +43,10 @@ struct EbookFormattingData {
     bool               finished;
     EbookController *  controller;
     int                threadNo;
+    EbookFormattingTask() {}
+    ~EbookFormattingTask() {}
+
+    virtual void Execute();
 };
 
 // data used on the ui thread side when handling UiMsg::MobiLayout
@@ -126,8 +136,8 @@ public:
     virtual ~EbookController();
 
     void SetDoc(Doc newDoc, int startReparseIdxArg = -1);
-    void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading);
-    void HandleMobiLayoutMsg(EbookFormattingData *mobiLayout);
+    void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingTask *finishedMobiLoading);
+    void HandleMobiLayoutMsg(EbookFormattingTask *mobiLayout);
     void OnLayoutTimer();
     void AdvancePage(int dist);
     void GoToPage(int newPageNo);

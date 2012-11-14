@@ -160,7 +160,7 @@ UTILS_OBJS = \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj $(OU)\GdiPlusUtil.obj \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
 	$(OU)\HtmlPrettyPrint.obj $(OU)\ThreadUtil.obj $(OU)\DebugLog.obj \
-	$(OU)\UiMsg.obj $(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
+	$(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
 	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj \
 	$(OU)\UITask.obj
 

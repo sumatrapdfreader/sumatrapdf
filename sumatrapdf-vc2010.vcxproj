@@ -387,7 +387,6 @@
     <ClCompile Include="src\utils\HttpUtil.cpp" />
     <ClCompile Include="src\utils\StrUtil.cpp" />
     <ClCompile Include="src\utils\TrivialHtmlParser.cpp" />
-    <ClCompile Include="src\utils\UiMsg.cpp" />
     <ClCompile Include="src\utils\UITask.cpp" />
     <ClCompile Include="src\utils\UtilTests.cpp" />
     <ClCompile Include="src\utils\Vec_ut.cpp" />
@@ -531,7 +530,6 @@
     <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="src\utils\Scoped.h" />
-    <ClInclude Include="src\utils\UiMsg.h" />
     <ClInclude Include="src\utils\UITask.h" />
     <ClInclude Include="src\utils\Vec.h" />
     <ClInclude Include="src\utils\VecSegmented.h" />

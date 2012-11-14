@@ -2,7 +2,6 @@
 #define UITask_h
 
 // TODO:
-// - replace UiMsg with UITask
 // - do I have to add a way to notify HWND via WM_NULL so that it executes
 //   tasks as soon as possible? Can be done by having UITask take HWND or
 //   maybe PostThreadMessage() to ui thread?

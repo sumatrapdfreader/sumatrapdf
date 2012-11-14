@@ -12,8 +12,7 @@
 #include "Translations.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
-#include "UiMsgSumatra.h"
-#include "UiMsg.h"
+#include "UiTask.h"
 #include "DebugLog.h"
 
 /* TODO: when showing a page from pagesFromPage, its page number can be 1
@@ -49,12 +48,12 @@ void ThreadLoadEbook::Run()
     if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
         doc.Delete();
 
-    UiMsg *msg = new UiMsg(UiMsg::FinishedMobiLoading);
-    msg->finishedMobiLoading.doc = new Doc(doc);
-    msg->finishedMobiLoading.fileName = fileName;
-    msg->finishedMobiLoading.win = win;
+    FinishedMobiLoadingTask *msg = new FinishedMobiLoadingTask();
+    msg->doc = new Doc(doc);
+    msg->fileName = fileName;
+    msg->win = win;
     fileName = NULL;
-    uimsg::Post(msg);
+    uitask::Post(msg);
 }
 
 class EbookFormattingThread : public ThreadBase {
@@ -66,7 +65,7 @@ public:
     int                 reparseIdx;
 
     // state used during layout process
-    HtmlPage *  pages[EbookFormattingData::MAX_PAGES];
+    HtmlPage *  pages[EbookFormattingTask::MAX_PAGES];
     int         pageCount;
 
     void        SendPagesIfNecessary(bool force, bool finished, bool fromBeginning);
@@ -106,19 +105,18 @@ void EbookFormattingThread::SendPagesIfNecessary(bool force, bool finished, bool
         force = true;
     if (!force && (pageCount < dimof(pages)))
         return;
-    UiMsg *msg = new UiMsg(UiMsg::MobiLayout);
-    EbookFormattingData *ld = &msg->mobiLayout;
-    ld->finished = finished;
-    ld->fromBeginning = fromBeginning;
+    EbookFormattingTask *msg = new EbookFormattingTask();
+    msg->finished = finished;
+    msg->fromBeginning = fromBeginning;
     if (pageCount > 0)
-        memcpy(ld->pages, pages, pageCount * sizeof(HtmlPage*));
+        memcpy(msg->pages, pages, pageCount * sizeof(HtmlPage*));
     //lf("ThreadLayoutEbook::SendPagesIfNecessary() sending %d pages, finished=%d", pageCount, (int)finished);
-    ld->pageCount = pageCount;
-    ld->threadNo = threadNo;
-    ld->controller = controller;
+    msg->pageCount = pageCount;
+    msg->threadNo = threadNo;
+    msg->controller = controller;
     pageCount = 0;
     memset(pages, 0, sizeof(pages));
-    uimsg::Post(msg);
+    uitask::Post(msg);
 }
 
 // layout pages from a given reparse point (beginning if NULL)
@@ -315,7 +313,7 @@ void EbookController::ShowPage(HtmlPage *pd, bool deleteWhenDone)
 #endif
 }
 
-void EbookController::HandleMobiLayoutMsg(EbookFormattingData *ld)
+void EbookController::HandleMobiLayoutMsg(EbookFormattingTask *ld)
 {
     if (formattingThreadNo != ld->threadNo) {
         // this is a message from cancelled thread, we can disregard
@@ -650,7 +648,7 @@ void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg)
     TriggerBookFormatting();
 }
 
-void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingData *finishedMobiLoading)
+void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingTask *finishedMobiLoading)
 {
     str::ReplacePtr(&fileBeingLoaded, NULL);
     if (NULL == finishedMobiLoading->doc) {

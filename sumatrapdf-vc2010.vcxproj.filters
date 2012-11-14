@@ -959,9 +959,6 @@
     <ClCompile Include="src\ChmDoc.cpp">
       <Filter>sumatra\documents</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\UiMsg.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils\JsonParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1464,9 +1461,6 @@
     </ClInclude>
     <ClInclude Include="src\ChmDoc.h">
       <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\UiMsg.h">
-      <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\JsonParser.h">
       <Filter>utils</Filter>

@@ -404,7 +404,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     InitAllCommonControls();
     ScopedGdiPlus gdiPlus(true);
     mui::Initialize();
-    uimsg::Initialize();
     uitask::Initialize();
 
     ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
@@ -567,9 +566,6 @@ Exit:
     delete gFavorites;
 
     mui::Destroy();
-
-    DrainUiMsgQueue();
-    uimsg::Destroy();
     uitask::Destroy();
 
     trans::Destroy();
