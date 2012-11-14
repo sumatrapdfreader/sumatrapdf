@@ -14,37 +14,24 @@ class   EbookController;
 class   HtmlPage;
 class   PoolAllocator;
 class   EbookFormattingThread;
+class   EbookFormattingTask;
 struct  HtmlFormatterArgs;
 namespace mui { class Control; }
 using namespace mui;
 
 class FinishedMobiLoadingTask : public UITask {
 public:
-    TCHAR *         fileName;
+    ScopedMem<TCHAR>fileName;
     Doc *           doc;
     SumatraWindow   win;
     double          loadingTimeMs;
 
-    FinishedMobiLoadingTask() {}
+    FinishedMobiLoadingTask(SumatraWindow win, Doc *doc, TCHAR *fileName) :
+        win(win), doc(doc), fileName(fileName) {
+    }
     ~FinishedMobiLoadingTask() {
-        free(fileName);
         delete doc;
     }
-
-    virtual void Execute();
-};
-
-class EbookFormattingTask : public UITask {
-public:
-    enum { MAX_PAGES = 32 };
-    HtmlPage *         pages[MAX_PAGES];
-    size_t             pageCount;
-    bool               fromBeginning;
-    bool               finished;
-    EbookController *  controller;
-    int                threadNo;
-    EbookFormattingTask() {}
-    ~EbookFormattingTask() {}
 
     virtual void Execute();
 };
@@ -136,8 +123,7 @@ public:
     virtual ~EbookController();
 
     void SetDoc(Doc newDoc, int startReparseIdxArg = -1);
-    void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingTask *finishedMobiLoading);
-    void HandleMobiLayoutMsg(EbookFormattingTask *mobiLayout);
+    void HandleMobiLayoutDone(EbookFormattingTask *mobiLayout);
     void OnLayoutTimer();
     void AdvancePage(int dist);
     void GoToPage(int newPageNo);

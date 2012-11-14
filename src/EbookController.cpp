@@ -48,13 +48,27 @@ void ThreadLoadEbook::Run()
     if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
         doc.Delete();
 
-    FinishedMobiLoadingTask *msg = new FinishedMobiLoadingTask();
-    msg->doc = new Doc(doc);
-    msg->fileName = fileName;
-    msg->win = win;
+    uitask::Post(new FinishedMobiLoadingTask(win, new Doc(doc), fileName));
     fileName = NULL;
-    uitask::Post(msg);
 }
+
+class EbookFormattingTask : public UITask {
+public:
+    enum { MAX_PAGES = 32 };
+    HtmlPage *         pages[MAX_PAGES];
+    size_t             pageCount;
+    bool               fromBeginning;
+    bool               finished;
+    EbookController *  controller;
+    int                threadNo;
+    EbookFormattingTask() { }
+
+    virtual void Execute() {
+        EbookWindow *win = FindEbookWindowByController(controller);
+        if (win)
+            win->ebookController->HandleMobiLayoutDone(this);
+    }
+};
 
 class EbookFormattingThread : public ThreadBase {
 public:
@@ -313,7 +327,7 @@ void EbookController::ShowPage(HtmlPage *pd, bool deleteWhenDone)
 #endif
 }
 
-void EbookController::HandleMobiLayoutMsg(EbookFormattingTask *ld)
+void EbookController::HandleMobiLayoutDone(EbookFormattingTask *ld)
 {
     if (formattingThreadNo != ld->threadNo) {
         // this is a message from cancelled thread, we can disregard
@@ -646,18 +660,6 @@ void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg)
     CloseCurrentDocument();
     doc = newDoc;
     TriggerBookFormatting();
-}
-
-void EbookController::HandleFinishedMobiLoadingMsg(FinishedMobiLoadingTask *finishedMobiLoading)
-{
-    str::ReplacePtr(&fileBeingLoaded, NULL);
-    if (NULL == finishedMobiLoading->doc) {
-        // TODO: a better way to notify about this, should be a transient message
-        ScopedMem<TCHAR> s(str::Format(_T("Failed to load %s!"), finishedMobiLoading->fileName));
-        ctrls->status->SetText(AsWStrQ(s.Get()));
-        return;
-    }
-    SetDoc(*finishedMobiLoading->doc);
 }
 
 int EbookController::CurrPageReparseIdx() const

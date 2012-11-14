@@ -1286,16 +1286,15 @@ static void RenameFileInHistory(const TCHAR *oldPath, const TCHAR *newPath)
     }
 }
 
-// called when a background thread finishes loading mobi file
-static void HandleFinishedMobiLoadingMsg(FinishedMobiLoadingTask *finishedMobiLoading)
+// called when a background thread finishes loading an ebook
+void FinishedMobiLoadingTask::Execute()
 {
-    Doc doc(*finishedMobiLoading->doc);
-    if (!doc.IsEbook()) {
+    if (!doc->IsEbook()) {
         // TODO: show notification that loading failed
         // TODO: remove from file history
         return;
     }
-    OpenMobiInWindow(doc, finishedMobiLoading->win);
+    OpenMobiInWindow(*doc, win);
 }
 
 // Start loading a mobi file in the background
@@ -1305,7 +1304,7 @@ static void LoadEbookAsync(const TCHAR *fileName, SumatraWindow& win)
     loadThread->Start();
     // make the thread delete itself at the end of processing
     loadThread->Release();
-    // when loading is done, we'll call HandleFinishedMobiLoadingMsg()
+    // when loading is done, we'll call OpenMobiInWindow through FinishedMobiLoadingTask::Execute()
 
     // TODO: we should show a notification in the window user is looking at
 }
@@ -4985,18 +4984,6 @@ InitMouseWheelInfo:
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
-}
-
-void FinishedMobiLoadingTask::Execute()
-{
-    HandleFinishedMobiLoadingMsg(this);
-}
-
-void EbookFormattingTask::Execute()
-{
-    EbookWindow *win = FindEbookWindowByController(this->controller);
-    if (win)
-        win->ebookController->HandleMobiLayoutMsg(this);
 }
 
 static HACCEL gAccelTable;
