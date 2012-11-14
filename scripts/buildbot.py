@@ -713,10 +713,10 @@ def main():
 	get_cert_pwd() # early exit if problems
 
 	#build_version("6698", skip_release=True)
-	build_index_html()
+	#build_index_html()
 	#build_sizes_json()
 	#build_curr(force=True)
-	#buildbot_loop()
+	buildbot_loop()
 
 if __name__ == "__main__":
 	main()
