@@ -134,14 +134,14 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 }
 #endif
 
-class GoToTocLinkWorkItem : public UIThreadWorkItem
+class GoToTocLinkTask : public UITask
 {
     DocTocItem *tocItem;
     HTREEITEM hItem;
     WindowInfo *win;
 
 public:
-    GoToTocLinkWorkItem(WindowInfo *win, DocTocItem *tocItem, HTREEITEM hItem) :
+    GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, HTREEITEM hItem) :
         win(win), tocItem(tocItem), hItem(hItem) { }
 
     virtual void Execute() {
@@ -173,7 +173,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=NULL
         return;
     if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) || tocItem->pageNo) {
         // delay changing the page until the tree messages have been handled
-        QueueWorkItem(new GoToTocLinkWorkItem(win, tocItem, hItem));
+        uitask::Post(new GoToTocLinkTask(win, tocItem, hItem));
     }
 }
 

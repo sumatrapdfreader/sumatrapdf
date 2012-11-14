@@ -341,13 +341,13 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
     EndDoc(hdc);
 }
 
-class PrintThreadUpdateWorkItem : public UIThreadWorkItem {
+class PrintThreadUpdateTask : public UITask {
     NotificationWnd *wnd;
     int current, total;
     WindowInfo *win;
 
 public:
-    PrintThreadUpdateWorkItem(WindowInfo *win, NotificationWnd *wnd, int current, int total)
+    PrintThreadUpdateTask(WindowInfo *win, NotificationWnd *wnd, int current, int total)
         : win(win), wnd(wnd), current(current), total(total) { }
 
     virtual void Execute() {
@@ -356,7 +356,7 @@ public:
     }
 };
 
-class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback, public UIThreadWorkItem {
+class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback, public UITask {
     NotificationWnd *wnd;
     AbortCookieManager cookie;
     bool isCanceled;
@@ -379,7 +379,7 @@ public:
     }
 
     virtual void UpdateProgress(int current, int total) {
-        QueueWorkItem(new PrintThreadUpdateWorkItem(win, wnd, current, total));
+        uitask::Post(new PrintThreadUpdateTask(win, wnd, current, total));
     }
 
     virtual bool WasCanceled() {
@@ -404,7 +404,7 @@ public:
             Sleep(1);
         threadData->thread = threadData->win->printThread;
         PrintToDevice(*threadData->data, threadData, &threadData->cookie);
-        QueueWorkItem(threadData);
+        uitask::Post(threadData);
         return 0;
     }
 

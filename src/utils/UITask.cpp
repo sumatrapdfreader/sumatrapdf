@@ -3,13 +3,13 @@
 
 namespace uitask {
 
-static Vec<UIThreadWorkItem*> * gUiTaskQueue;
+static Vec<UITask*> * gUiTaskQueue;
 static CRITICAL_SECTION         gUiTaskCs;
 static HANDLE                   gUiTaskEvent;
 
 void Initialize()
 {
-    gUiTaskQueue = new Vec<UIThreadWorkItem*>();
+    gUiTaskQueue = new Vec<UITask*>();
     InitializeCriticalSection(&gUiTaskCs);
     gUiTaskEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
@@ -22,7 +22,7 @@ void Destroy()
     CloseHandle(gUiTaskEvent);
 }
 
-void Post(UIThreadWorkItem *msg)
+void Post(UITask *msg)
 {
     CrashIf(!msg);
     ScopedCritSec cs(&gUiTaskCs);
@@ -30,32 +30,20 @@ void Post(UIThreadWorkItem *msg)
     SetEvent(gUiTaskEvent);
 }
 
-UIThreadWorkItem *RetrieveNext()
+UITask *RetrieveNext()
 {
     ScopedCritSec cs(&gUiTaskCs);
     if (0 == gUiTaskQueue->Count())
         return NULL;
-    UIThreadWorkItem *res = gUiTaskQueue->At(0);
+    UITask *res = gUiTaskQueue->At(0);
     CrashIf(!res);
     gUiTaskQueue->RemoveAt(0);
     return res;
 }
 
-HANDLE  GetQueueEvent()
+void ExecuteAll()
 {
-    return gUiTaskEvent;
-}
-
-}
-
-void QueueWorkItem(UIThreadWorkItem *wi)
-{
-    uitask::Post(wi);
-}
-
-void ExecuteUITasks()
-{
-    UIThreadWorkItem *wi;
+    UITask *wi;
     for (;;) {
         wi = uitask::RetrieveNext();
         if (!wi)
@@ -63,5 +51,12 @@ void ExecuteUITasks()
         wi->Execute();
         delete wi;
     }
+}
+
+HANDLE  GetQueueEvent()
+{
+    return gUiTaskEvent;
+}
+
 }
 

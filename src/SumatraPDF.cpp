@@ -673,24 +673,24 @@ void SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
     SaveThumbnail(*ds);
 }
 
-class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public RenderingCallback
+class ThumbnailRenderingTask : public UITask, public RenderingCallback
 {
     ScopedMem<TCHAR> filePath;
     RenderedBitmap *bmp;
     WindowInfo *win;
 
 public:
-    ThumbnailRenderingWorkItem(WindowInfo *win, const TCHAR *filePath) :
+    ThumbnailRenderingTask(WindowInfo *win, const TCHAR *filePath) :
         win(win), filePath(str::Dup(filePath)), bmp(NULL) {
     }
 
-    ~ThumbnailRenderingWorkItem() {
+    ~ThumbnailRenderingTask() {
         delete bmp;
     }
 
     virtual void Callback(RenderedBitmap *bmp) {
         this->bmp = bmp;
-        QueueWorkItem(this);
+        uitask::Post(this);
     }
 
     virtual void Execute() {
@@ -773,7 +773,7 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
         pageRect.dy = (float)THUMBNAIL_DY / zoom;
     pageRect = win.dm->engine->Transform(pageRect, 1, 1.0f, 0, true);
 
-    RenderingCallback *callback = new ThumbnailRenderingWorkItem(&win, win.loadedFilePath);
+    RenderingCallback *callback = new ThumbnailRenderingTask(&win, win.loadedFilePath);
     gRenderCache.Render(win.dm, 1, 0, zoom, pageRect, *callback);
 }
 
@@ -1221,7 +1221,7 @@ static void DeleteWindowInfo(WindowInfo *win)
     delete win;
 }
 
-class FileChangeCallback : public UIThreadWorkItem, public FileChangeObserver
+class FileChangeCallback : public UITask, public FileChangeObserver
 {
     WindowInfo *win;
 public:
@@ -1233,7 +1233,7 @@ public:
         // We cannot call win->Reload directly as it could cause race conditions
         // between the watching thread and the main thread (and only pass a copy of this
         // callback to the UIThreadMarshaller, as the object will be deleted after use)
-        QueueWorkItem(new FileChangeCallback(win));
+        uitask::Post(new FileChangeCallback(win));
     }
 
     virtual void Execute() {
@@ -1730,20 +1730,19 @@ Exit:
     delete req;
 }
 
-// TODO: convert to UiMsg?
-class UpdateDownloadWorkItem : public UIThreadWorkItem, public HttpReqCallback
+class UpdateDownloadTask : public UITask, public HttpReqCallback
 {
     HWND        hwnd;
     bool        autoCheck;
     HttpReq *   req;
 
 public:
-    UpdateDownloadWorkItem(HWND hwnd, bool autoCheck) :
+    UpdateDownloadTask(HWND hwnd, bool autoCheck) :
         hwnd(hwnd), autoCheck(autoCheck), req(NULL) { }
 
     virtual void Callback(HttpReq *aReq) {
         req = aReq;
-        QueueWorkItem(this);
+        uitask::Post(this);
     }
 
     virtual void Execute() {
@@ -1781,7 +1780,7 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
     }
 
     const TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
-    new HttpReq(url, new UpdateDownloadWorkItem(hwnd, autoCheck));
+    new HttpReq(url, new UpdateDownloadTask(hwnd, autoCheck));
 
     FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
@@ -4469,19 +4468,19 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         default:
             // process thread queue events happening during an inner message loop
             // (else the scrolling position isn't updated until the scroll bar is released)
-            ExecuteUITasks();
+            uitask::ExecuteAll();
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
 
-class RepaintCanvasWorkItem : public UIThreadWorkItem
+class RepaintCanvasTask : public UITask
 {
     UINT delay;
     WindowInfo *win;
 
 public:
-    RepaintCanvasWorkItem(WindowInfo *win, UINT delay)
+    RepaintCanvasTask(WindowInfo *win, UINT delay)
         : win(win), delay(delay)
     {}
 
@@ -4499,8 +4498,8 @@ void WindowInfo::RepaintAsync(UINT delay)
 {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    // and let QueueWorkItem call PostMessage for us
-    QueueWorkItem(new RepaintCanvasWorkItem(this, delay));
+    // and let uitask::Post call PostMessage for us
+    uitask::Post(new RepaintCanvasTask(this, delay));
 }
 
 static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -5075,7 +5074,7 @@ static int RunMessageLoop()
         // handling to every WndProc that might receive those messages
         // note: this isn't called during an inner message loop, so
         //       Execute() also has to be called from a WndProc
-        ExecuteUITasks();
+        uitask::ExecuteAll();
         DispatchUiMessages();
     }
     return 0;

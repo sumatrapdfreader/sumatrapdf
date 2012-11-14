@@ -365,12 +365,12 @@ void ToggleFavorites(WindowInfo *win)
     }
 }
 
-class GoToFavoriteWorkItem : public UIThreadWorkItem
+class GoToFavoriteTask : public UITask
 {
     int pageNo;
     WindowInfo *win;
 public:
-    GoToFavoriteWorkItem(WindowInfo *win, int pageNo = -1) :
+    GoToFavoriteTask(WindowInfo *win, int pageNo = -1) :
         win(win), pageNo(pageNo) {}
 
     virtual void Execute() {
@@ -398,7 +398,7 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
 
     WindowInfo *existingWin = FindWindowInfoByFile(f->filePath);
     if (existingWin) {
-        QueueWorkItem(new GoToFavoriteWorkItem(existingWin, fn->pageNo));
+        uitask::Post(new GoToFavoriteTask(existingWin, fn->pageNo));
         return;
     }
 
@@ -420,7 +420,7 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
     LoadArgs args(f->filePath, win);
     win = LoadDocument(args);
     if (win)
-        QueueWorkItem(new GoToFavoriteWorkItem(win, pageNo));
+        uitask::Post(new GoToFavoriteTask(win, pageNo));
 }
 
 void GoToFavoriteByMenuId(WindowInfo *win, int wmId)

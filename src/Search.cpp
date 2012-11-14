@@ -163,13 +163,13 @@ void ClearSearchResult(WindowInfo *win)
     win->RepaintAsync();
 }
 
-class UpdateFindStatusWorkItem : public UIThreadWorkItem {
+class UpdateFindStatusTask : public UITask {
     NotificationWnd *wnd;
     int current, total;
     WindowInfo *win;
 
 public:
-    UpdateFindStatusWorkItem(WindowInfo *win, NotificationWnd *wnd, int current, int total)
+    UpdateFindStatusTask(WindowInfo *win, NotificationWnd *wnd, int current, int total)
         : win(win), wnd(wnd), current(current), total(total) { }
 
     virtual void Execute() {
@@ -236,7 +236,7 @@ struct FindThreadData : public ProgressUpdateUI {
 
     virtual void UpdateProgress(int current, int total) {
         if (wnd && !WasCanceled())
-            QueueWorkItem(new UpdateFindStatusWorkItem(win, wnd, current, total));
+            uitask::Post(new UpdateFindStatusTask(win, wnd, current, total));
     }
 
     virtual bool WasCanceled() {
@@ -244,7 +244,7 @@ struct FindThreadData : public ProgressUpdateUI {
     }
 };
 
-class FindEndWorkItem : public UIThreadWorkItem {
+class FindEndTask : public UITask {
     FindThreadData *ftd;
     TextSel*textSel;
     ScopedHandle    thread;
@@ -253,12 +253,12 @@ class FindEndWorkItem : public UIThreadWorkItem {
     WindowInfo *win;
 
 public:
-    FindEndWorkItem(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
+    FindEndTask(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
                     bool wasModifiedCanceled, bool loopedAround=false) :
         win(win), ftd(ftd), textSel(textSel),
         thread(win->findThread), // close the find thread handle after execution
         loopedAround(loopedAround), wasModifiedCanceled(wasModifiedCanceled) { }
-    ~FindEndWorkItem() { delete ftd; }
+    ~FindEndTask() { delete ftd; }
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
@@ -266,7 +266,7 @@ public:
         if (win->findThread != thread) {
             // Race condition: FindTextOnThread/AbortFinding was
             // called after the previous find thread ended but
-            // before this FindEndWorkItem could be executed
+            // before this FindEndTask could be executed
             return;
         }
         if (!win->IsDocLoaded()) {
@@ -309,15 +309,15 @@ static DWORD WINAPI FindThread(LPVOID data)
     }
 
     // wait for FindTextOnThread to return so that
-    // FindEndWorkItem closes the correct handle to
+    // FindEndTask closes the correct handle to
     // the current find thread
     while (!win->findThread)
         Sleep(1);
 
     if (!win->findCanceled && rect)
-        QueueWorkItem(new FindEndWorkItem(win, ftd, rect, ftd->wasModified, loopedAround));
+        uitask::Post(new FindEndTask(win, ftd, rect, ftd->wasModified, loopedAround));
     else
-        QueueWorkItem(new FindEndWorkItem(win, ftd, NULL, win->findCanceled));
+        uitask::Post(new FindEndTask(win, ftd, NULL, win->findCanceled));
 
     return 0;
 }

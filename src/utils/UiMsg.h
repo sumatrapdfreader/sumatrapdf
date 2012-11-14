@@ -16,7 +16,7 @@ In Go, threads communicate by sending data (not code) over channels. This is
 a simplification of this idea in that there is only one globally visible channel
 that any thread can use to post messages to ui thread.
 
-This is similar to UIThreadWorkItem but it only deals with data, not code. It's
+This is similar to UITask but it only deals with data, not code. It's
 more flexible in that we don't fix how the code to act on a message has to be
 written. It's more tightly coupled in that there must be a dispatch loop in the
 app that knows how to handle every message. That's fine as this code has to be
@@ -32,7 +32,7 @@ notifies about finished rendering.
 Note that UiMsg is not defined here. In order for this to be used in different
 apps, we don't fix anything about UiMsg. I see it as a pure data structure in form
 of a tagged union (like e.g. mui::css::Prop) but it could just as well be a class
-ith inheritance model like UIThreadWorkItem.
+ith inheritance model like UITask.
 
 To make this scheme work an app must #include its definition of what UiMsg is before
 #including UiMsg.h. E.g.:

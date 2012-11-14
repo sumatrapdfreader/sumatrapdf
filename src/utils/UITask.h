@@ -2,25 +2,21 @@
 #define UITask_h
 
 // TODO:
-// - rename to UITask
 // - replace UiMsg with UITask
 // - do I have to add a way to notify HWND via WM_NULL so that it executes
 //   tasks as soon as possible? Can be done by having UITask take HWND or
 //   maybe PostThreadMessage() to ui thread?
 
 // Base class for code that has to be executed on UI thread. Derive your class
-// from UIThreadWorkItem and call QueueWorkItem to schedule execution
+// from UITask and call uitask::Post to schedule execution
 // of its Execute() method on UI thread.
-class UIThreadWorkItem
+class UITask
 {
 public:
-    UIThreadWorkItem() {}
-    virtual ~UIThreadWorkItem() {}
+    UITask() {}
+    virtual ~UITask() {}
     virtual void Execute() = 0;
 };
-
-void QueueWorkItem(UIThreadWorkItem *wi);
-void ExecuteUITasks();
 
 namespace uitask {
 
@@ -29,12 +25,14 @@ void    Initialize();
 void    Destroy();
 
 // Called from any thread, posts a message to a queue, to be processed by ui thread
-void    Post(UIThreadWorkItem *msg);
+void    Post(UITask *msg);
 
 // Called on ui thread (e.g. in an event loop) to process queued messages.
 // Removes the message from the queue.
 // Returns NULL if there are no more messages.
-UIThreadWorkItem * RetrieveNext();
+UITask * RetrieveNext();
+
+void ExecuteAll();
 
 // Gets a handle of uimsg queque event. This event gets notified when
 // a new item is posted to the queue. Can be used to awake ui event
