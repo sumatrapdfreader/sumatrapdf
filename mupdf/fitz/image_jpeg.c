@@ -70,6 +70,16 @@ static void extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, in
 	int offset, ifd_len, res_type = 0;
 	float x_res = 0, y_res = 0;
 
+	if (rlen >= 10 &&
+		read_value(rbuf + 2, 2, 1) == 0xFFE0 &&
+		read_value(rbuf + 6, 4, 1) == 0x4A464946 /* JFIF */ &&
+		read_value(rbuf + 4, 2, 1) <= rlen - 2)
+	{
+		int jfif_len = read_value(rbuf + 4, 2, 1) + 2;
+		rbuf += jfif_len;
+		rlen -= jfif_len;
+	}
+
 	if (rlen < 20 ||
 		read_value(rbuf + 2, 2, 1) != 0xFFE1 ||
 		read_value(rbuf + 6, 4, 1) != 0x45786966 /* Exif */ ||
