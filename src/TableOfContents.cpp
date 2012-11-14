@@ -11,6 +11,7 @@ using namespace Gdiplus;
 #include "resource.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "UITask.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 

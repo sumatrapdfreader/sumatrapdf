@@ -4,55 +4,6 @@
 #ifndef AppTools_h
 #define AppTools_h
 
-class WindowInfo;
-
-// Base class for code that has to be executed on UI thread. Derive your class
-// from UIThreadWorkItem and call QueueWorkItem to schedule execution
-// of its Execute() method on UI thread.
-class UIThreadWorkItem
-{
-public:
-    WindowInfo *win;
-
-    UIThreadWorkItem(WindowInfo *win) : win(win) {}
-    virtual ~UIThreadWorkItem() {}
-    virtual void Execute() = 0;
-};
-
-void QueueWorkItem(UIThreadWorkItem *wi);
-
-class UIThreadWorkItemQueue
-{
-    CRITICAL_SECTION        cs;
-    Vec<UIThreadWorkItem *> items;
-
-public:
-    UIThreadWorkItemQueue() {
-        InitializeCriticalSection(&cs);
-    }
-
-    ~UIThreadWorkItemQueue() {
-        DeleteCriticalSection(&cs);
-        DeleteVecMembers(items);
-    }
-
-    void Queue(UIThreadWorkItem *item);
-
-    void Execute() {
-        // no need to acquire a lock for this check
-        if (items.Count() == 0)
-            return;
-
-        ScopedCritSec scope(&cs);
-        while (items.Count() > 0) {
-            UIThreadWorkItem *wi = items.At(0);
-            items.RemoveAt(0);
-            wi->Execute();
-            delete wi;
-        }
-    }
-};
-
 bool IsValidProgramVersion(char *txt);
 int CompareVersion(TCHAR *txt1, TCHAR *txt2);
 

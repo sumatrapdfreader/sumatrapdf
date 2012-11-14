@@ -45,6 +45,7 @@ using namespace Gdiplus;
 #include "Translations.h"
 #include "UiMsgSumatra.h"
 #include "UiMsg.h"
+#include "UITask.h"
 #include "Version.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
@@ -153,7 +154,6 @@ static HCURSOR                      gCursorNo;
 static HBRUSH                       gBrushNoDocBg;
 static HBITMAP                      gBitmapReloadingCue;
 static RenderCache                  gRenderCache;
-static UIThreadWorkItemQueue        gUIThreadMarshaller;
 static bool                         gCrashOnOpen = false;
 
 // in restricted mode, some features can be disabled (such as
@@ -659,11 +659,6 @@ static int GetPolicies(bool isRestricted)
     }
 
     return Perm_RestrictedUse;
-}
-
-void QueueWorkItem(UIThreadWorkItem *wi)
-{
-    gUIThreadMarshaller.Queue(wi);
 }
 
 void SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
@@ -4472,7 +4467,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         default:
             // process thread queue events happening during an inner message loop
             // (else the scrolling position isn't updated until the scroll bar is released)
-            gUIThreadMarshaller.Execute();
+            ExecuteUITasks();
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
@@ -4992,21 +4987,6 @@ InitMouseWheelInfo:
     return 0;
 }
 
-void UIThreadWorkItemQueue::Queue(UIThreadWorkItem *item)
-{
-    if (!item)
-        return;
-
-    ScopedCritSec scope(&cs);
-    items.Append(item);
-
-    if (item->win) {
-        // hwndCanvas is less likely to enter internal message pump (during which
-        // the messages are not visible to our processing in top-level message pump)
-        PostMessage(item->win->hwndCanvas, WM_NULL, 0, 0);
-    }
-}
-
 static void DispatchUiMsg(UiMsg *msg)
 {
     if (UiMsg::FinishedMobiLoading == msg->type) {
@@ -5091,7 +5071,7 @@ static int RunMessageLoop()
         // handling to every WndProc that might receive those messages
         // note: this isn't called during an inner message loop, so
         //       Execute() also has to be called from a WndProc
-        gUIThreadMarshaller.Execute();
+        ExecuteUITasks();
         DispatchUiMessages();
     }
     return 0;

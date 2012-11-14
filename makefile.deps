@@ -389,6 +389,7 @@ $(OS)\SumatraProperties.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\util
 $(OS)\SumatraProperties.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
 $(OS)\SumatraProperties.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Vec.h
 $(OS)\SumatraProperties.obj: src\utils\WinUtil.h src\WindowInfo.h
+$(OS)\SumatraStartup.obj: src\utils\DebugLog.h
 $(OS)\TableOfContents.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\TableOfContents.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\TableOfContents.obj: src\Doc.h src\FileHistory.h src\resource.h
@@ -528,6 +529,9 @@ $(OU)\TrivialHtmlParser_ut.obj: src\utils\FileUtil.h src\utils\WinUtil.h
 $(OU)\UiMsg.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\UiMsg.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\UiMsg.h
 $(OU)\UiMsg.obj: src\utils\Vec.h
+$(OU)\UITask.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\UITask.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\UITask.h
+$(OU)\UITask.obj: src\utils\Vec.h
 $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
 $(OU)\UtilTests.obj: src\utils\BencUtil_ut.cpp src\utils\ByteOrderDecoder.h src\utils\ByteOrderDecoder_ut.cpp
 $(OU)\UtilTests.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h

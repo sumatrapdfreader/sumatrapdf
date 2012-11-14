@@ -1013,6 +1013,9 @@
     <ClCompile Include="src\utils\Experiments.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\UITask.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1491,6 +1494,9 @@
     </ClInclude>
     <ClInclude Include="ext\zlib\minizip\zip.h">
       <Filter>zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\UITask.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
