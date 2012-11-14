@@ -138,10 +138,11 @@ class GoToTocLinkWorkItem : public UIThreadWorkItem
 {
     DocTocItem *tocItem;
     HTREEITEM hItem;
+    WindowInfo *win;
 
 public:
     GoToTocLinkWorkItem(WindowInfo *win, DocTocItem *tocItem, HTREEITEM hItem) :
-        UIThreadWorkItem(win), tocItem(tocItem), hItem(hItem) { }
+        win(win), tocItem(tocItem), hItem(hItem) { }
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win) || !win->IsDocLoaded() || !tocItem)

@@ -344,10 +344,11 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 class PrintThreadUpdateWorkItem : public UIThreadWorkItem {
     NotificationWnd *wnd;
     int current, total;
+    WindowInfo *win;
 
 public:
     PrintThreadUpdateWorkItem(WindowInfo *win, NotificationWnd *wnd, int current, int total)
-        : UIThreadWorkItem(win), wnd(wnd), current(current), total(total) { }
+        : win(win), wnd(wnd), current(current), total(total) { }
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && win->notifications->Contains(wnd))
@@ -359,13 +360,14 @@ class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback,
     NotificationWnd *wnd;
     AbortCookieManager cookie;
     bool isCanceled;
+    WindowInfo *win;
 
 public:
     PrintData *data;
     HANDLE thread; // close the print thread handle after execution
 
     PrintThreadData(WindowInfo *win, PrintData *data) :
-        UIThreadWorkItem(win), data(data), isCanceled(false), thread(NULL) {
+        win(win), data(data), isCanceled(false), thread(NULL) {
         wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
         win->notifications->Add(wnd);
     }

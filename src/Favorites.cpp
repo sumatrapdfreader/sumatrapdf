@@ -368,10 +368,10 @@ void ToggleFavorites(WindowInfo *win)
 class GoToFavoriteWorkItem : public UIThreadWorkItem
 {
     int pageNo;
-
+    WindowInfo *win;
 public:
     GoToFavoriteWorkItem(WindowInfo *win, int pageNo = -1) :
-        UIThreadWorkItem(win), pageNo(pageNo) {}
+        win(win), pageNo(pageNo) {}
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win))

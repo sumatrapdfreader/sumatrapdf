@@ -677,10 +677,11 @@ class ThumbnailRenderingWorkItem : public UIThreadWorkItem, public RenderingCall
 {
     ScopedMem<TCHAR> filePath;
     RenderedBitmap *bmp;
+    WindowInfo *win;
 
 public:
     ThumbnailRenderingWorkItem(WindowInfo *win, const TCHAR *filePath) :
-        UIThreadWorkItem(win), filePath(str::Dup(filePath)), bmp(NULL) {
+        win(win), filePath(str::Dup(filePath)), bmp(NULL) {
     }
 
     ~ThumbnailRenderingWorkItem() {
@@ -1222,8 +1223,9 @@ static void DeleteWindowInfo(WindowInfo *win)
 
 class FileChangeCallback : public UIThreadWorkItem, public FileChangeObserver
 {
+    WindowInfo *win;
 public:
-    FileChangeCallback(WindowInfo *win) : UIThreadWorkItem(win) { }
+    FileChangeCallback(WindowInfo *win) : win(win) { }
     virtual ~FileChangeCallback() {
     }
 
@@ -1737,7 +1739,7 @@ class UpdateDownloadWorkItem : public UIThreadWorkItem, public HttpReqCallback
 
 public:
     UpdateDownloadWorkItem(HWND hwnd, bool autoCheck) :
-        UIThreadWorkItem(NULL), hwnd(hwnd), autoCheck(autoCheck), req(NULL) { }
+        hwnd(hwnd), autoCheck(autoCheck), req(NULL) { }
 
     virtual void Callback(HttpReq *aReq) {
         req = aReq;
@@ -4476,10 +4478,11 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 class RepaintCanvasWorkItem : public UIThreadWorkItem
 {
     UINT delay;
+    WindowInfo *win;
 
 public:
     RepaintCanvasWorkItem(WindowInfo *win, UINT delay)
-        : UIThreadWorkItem(win), delay(delay)
+        : win(win), delay(delay)
     {}
 
     virtual void Execute() {

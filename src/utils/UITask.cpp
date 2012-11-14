@@ -1,8 +1,6 @@
 #include "BaseUtil.h"
 #include "UITask.h"
 
-#include "WindowInfo.h"
-
 namespace uitask {
 
 static Vec<UIThreadWorkItem*> * gUiTaskQueue;

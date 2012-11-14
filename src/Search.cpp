@@ -166,10 +166,11 @@ void ClearSearchResult(WindowInfo *win)
 class UpdateFindStatusWorkItem : public UIThreadWorkItem {
     NotificationWnd *wnd;
     int current, total;
+    WindowInfo *win;
 
 public:
     UpdateFindStatusWorkItem(WindowInfo *win, NotificationWnd *wnd, int current, int total)
-        : UIThreadWorkItem(win), wnd(wnd), current(current), total(total) { }
+        : win(win), wnd(wnd), current(current), total(total) { }
 
     virtual void Execute() {
         if (WindowInfoStillValid(win) && !win->findCanceled) {
@@ -249,11 +250,12 @@ class FindEndWorkItem : public UIThreadWorkItem {
     ScopedHandle    thread;
     bool    wasModifiedCanceled;
     bool    loopedAround;
+    WindowInfo *win;
 
 public:
     FindEndWorkItem(WindowInfo *win, FindThreadData *ftd, TextSel *textSel,
                     bool wasModifiedCanceled, bool loopedAround=false) :
-        UIThreadWorkItem(win), ftd(ftd), textSel(textSel),
+        win(win), ftd(ftd), textSel(textSel),
         thread(win->findThread), // close the find thread handle after execution
         loopedAround(loopedAround), wasModifiedCanceled(wasModifiedCanceled) { }
     ~FindEndWorkItem() { delete ftd; }
