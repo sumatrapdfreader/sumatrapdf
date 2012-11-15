@@ -593,7 +593,7 @@ public:
             dest = new SimpleDest2(0, RectD(), str::Dup(url));
         else if (str::FindChar(url, '%')) {
             ScopedMem<TCHAR> decodedUrl(str::Dup(url));
-            str::UrlDecode(decodedUrl);
+            str::UrlDecodeInPlace(decodedUrl);
             dest = engine->GetNamedDest(decodedUrl);
         }
         else
@@ -1256,7 +1256,7 @@ public:
 
     ImageData *GetImageData(const char *id, const char *pagePath) {
         ScopedMem<char> url(NormalizeURL(id, pagePath));
-        str::UrlDecode(url);
+        str::UrlDecodeInPlace(url);
         for (size_t i = 0; i < images.Count(); i++) {
             if (str::Eq(images.At(i).id, url))
                 return &images.At(i).base;

@@ -150,9 +150,10 @@ static UINT LcidToCodepage(DWORD lcid)
         { 1060, 1250 }, { 1055, 1254 }
     };
 
-    for (int i = 0; i < dimof(lcidToCodepage); i++)
+    for (int i = 0; i < dimof(lcidToCodepage); i++) {
         if (lcid == lcidToCodepage[i].lcid)
             return lcidToCodepage[i].codepage;
+    }
 
     return CP_CHM_DEFAULT;
 }
@@ -407,7 +408,11 @@ static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT 
         for (HtmlElement *el = list->down; el; el = el->next) {
             if (!el->NameIs("li"))
                 continue; // ignore unexpected elements
-            bool valid = (isIndex ? VisitChmIndexItem : VisitChmTocItem)(visitor, el, cp, level);
+            bool valid;
+            if (isIndex)
+                valid = VisitChmIndexItem(visitor, el, cp, level);
+            else
+                valid = VisitChmTocItem(visitor, el, cp, level);
             if (!valid)
                 continue; // skip incomplete elements and all their children
 

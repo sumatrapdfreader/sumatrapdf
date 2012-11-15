@@ -203,7 +203,7 @@ bool EpubDoc::Load()
         return false;
 
     ScopedMem<TCHAR> contentPathDec(str::Dup(contentPath));
-    str::UrlDecode(contentPathDec);
+    str::UrlDecodeInPlace(contentPathDec);
     ScopedMem<char> content(zip.GetFileData(contentPathDec));
     if (!content)
         return false;
@@ -231,7 +231,7 @@ bool EpubDoc::Load()
             if (props && str::Find(props, _T("nav"))) {
                 isNcxToc = false;
                 tocPath.Set(str::Join(contentPath, htmlPath));
-                str::UrlDecode(tocPath);
+                str::UrlDecodeInPlace(tocPath);
             }
             if (htmlPath && htmlId) {
                 idPathMap.Append(htmlId.StealData());
@@ -248,7 +248,7 @@ bool EpubDoc::Load()
             // load the image lazily
             ImageData2 data = { 0 };
             data.id = str::conv::ToUtf8(imgPath);
-            str::UrlDecode(imgPath);
+            str::UrlDecodeInPlace(imgPath);
             data.idx = zip.GetFileIndex(imgPath);
             images.Append(data);
         }
@@ -257,7 +257,7 @@ bool EpubDoc::Load()
             tocPath.Set(node->GetAttribute("href"));
             if (tocPath) {
                 tocPath.Set(str::Join(contentPath, tocPath));
-                str::UrlDecode(tocPath);
+                str::UrlDecodeInPlace(tocPath);
                 isNcxToc = true;
             }
         }
@@ -282,7 +282,7 @@ bool EpubDoc::Load()
 
         ScopedMem<TCHAR> fullPath(str::Join(contentPath, idPathMap.At(idx + 1)));
         ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
-        str::UrlDecode(fullPath);
+        str::UrlDecodeInPlace(fullPath);
         ScopedMem<char> html(zip.GetFileData(fullPath));
         if (!html)
             continue;
@@ -1372,7 +1372,7 @@ const char *HtmlDoc::GetTextData(size_t *lenOut)
 ImageData *HtmlDoc::GetImageData(const char *id)
 {
     ScopedMem<char> url(NormalizeURL(id, pagePath));
-    str::UrlDecode(url);
+    str::UrlDecodeInPlace(url);
     for (size_t i = 0; i < images.Count(); i++) {
         if (str::Eq(images.At(i).id, url))
             return &images.At(i).base;

@@ -952,7 +952,7 @@ size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMa
     return sLenConverted;
 }
 
-void UrlDecode(char *url)
+void UrlDecodeInPlace(char *url)
 {
     for (char *src = url; *src; src++, url++) {
         int val;
@@ -966,7 +966,7 @@ void UrlDecode(char *url)
     *url = '\0';
 }
 
-void UrlDecode(WCHAR *url)
+void UrlDecodeInPlace(WCHAR *url)
 {
     for (WCHAR *src = url; *src; src++, url++) {
         int val;
@@ -984,7 +984,7 @@ TCHAR *ToPlainUrl(const TCHAR *url)
 {
     TCHAR *plainUrl = str::Dup(url);
     str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
-    UrlDecode(plainUrl);
+    UrlDecodeInPlace(plainUrl);
     return plainUrl;
 }
 
