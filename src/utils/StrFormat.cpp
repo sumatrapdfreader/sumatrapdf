@@ -1,102 +1,222 @@
 /* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#include "BaseUtil.h"
 #include "StrFormat.h"
-
-StrFormatArg::StrFormatArg()
-{
-    tp = TpNone;
-}
-
-StrFormatArg::StrFormatArg(int val)
-{
-    tp = TpInt;
-    i = val;
-}
-
-StrFormatArg::StrFormatArg(const char* val)
-{
-    tp = TpStr;
-    s = val;
-}
-
-StrFormatArg::StrFormatArg(const WCHAR* val)
-{
-    tp = TpWStr;
-    ws = val;
-}
-
-StrFormatArg StrFormatArg::null;
 
 namespace str {
 
-static int ArgsCount(const StrFormatArg& a1, const StrFormatArg& a2, const StrFormatArg& a3,
-    const StrFormatArg& a4, const StrFormatArg& a5, const StrFormatArg& a6)
+Arg::Arg()
 {
-    int n = 0;
-    if (a1.IsNull()) return n;
-    n++;
-    if (a2.IsNull()) return n;
-    n++;
-    if (a3.IsNull()) return n;
-    n++;
-    if (a4.IsNull()) return n;
-    n++;
-    if (a5.IsNull()) return n;
-    n++;
-    if (a6.IsNull()) return n;
-    n++;
-    return n;
+    tp = None;
+}
+
+Arg::Arg(int val)
+{
+    tp = Int;
+    i = val;
+}
+
+Arg::Arg(const char* val)
+{
+    tp = Str;
+    s = val;
+}
+
+Arg::Arg(const WCHAR* val)
+{
+    tp = WStr;
+    ws = val;
+}
+
+Arg Arg::null;
+
+enum { MAX_FMT_ARGS = 6 };
+enum { MAX_FMT_PARTS = MAX_FMT_ARGS * 2 + 1 };
+
+static int ArgsCount(const Arg** args)
+{
+    for (int i = 0; i < MAX_FMT_ARGS; i++) {
+        if (args[i]->IsNull())
+            return i;
+    }
+    return MAX_FMT_ARGS;
 }
 
 // a format strings consists of parts that need to be copied verbatim
 // and args (parts that will be replaced with the argument)
-struct FmtPartInfo {
+struct FmtInfo {
     enum {
-        TpVerbatim,
-        TpArg,
+        Verbatim,
+        Positional,
+        Percent
     };
     int tp;
-    int start;
-    int end;
-    int argNo; // if tp is TpArg
+    // if tp is Verbatim
+    const char *start;
+    int len;
+
+    // if tp is Positional
+    int positionalArgNo;
+
+    // if tp is Percent
+    char percentArg;
 };
 
-enum { MAX_FMT_ARGS = 6 };
-enum { MAX_FMT_PARTS = MAX_FMT_ARGS * 2 };
-
-static void FillFmtPartInfo(FmtPartInfo *fmtPart, int tp, int start, int end, int argNo)
+static int AddFmtVerbatim(FmtInfo *fmt, const char *start, const char *end)
 {
-    if (start == end) return;
+    // don't add empty strings
+    if (start == end) {
+        return 0;
+    }
+    fmt->tp =  FmtInfo::Verbatim;
+    fmt->start = start;
+    fmt->len = end - start;
+    CrashIf(fmt->len <= 0);
+    return 1;
 }
 
-int ParseFormatString(const char *fmt, FmtPartInfo *fmtParts)
+static void AddFmtPositional(FmtInfo *fmt, int argNo)
 {
-    return 0;
-#if 0
-    int currPartNo = 0;
-    int start = 0;
-    const char *s = fmt;
-    while (*s) {
-        if (*s == '{') {
-            FillFmtPartInfo(&fmtParts[currPartNo], FmtPartInfo::TpVerbatim, start, s - fmt - 1, 0);
+    fmt->tp = FmtInfo::Positional;
+    fmt->positionalArgNo = argNo;
+}
+
+// parse '{$n}' part. Returns true if string follows this pattern
+// and false if not.
+// If returns true, sInOut is repositioned after '}'
+static bool ParsePositional(const char **sInOut, int *nOut)
+{
+    const char *s = *sInOut;
+    CrashIf(*s != '{');
+    s++;
+    int n = 0;
+    while (IsDigit(*s)) {
+        n = n * 10 + (*s - '0');
+        ++s;
+    }
+    if (s == *sInOut)
+        return false;
+    if (*s != '}')
+        return false;
+    s++;
+    *sInOut = s;
+    *nOut = n;
+    return true;
+}
+
+static bool PositionalArgExists(FmtInfo *fmtParts, int fmtPartsCount, int n)
+{
+    for (int i = 0; i < fmtPartsCount; i++) {
+        if (fmtParts[i].tp != FmtInfo::Positional)
+            continue;
+        if (fmtParts[i].positionalArgNo == n)
+            return true;
+    }
+    return false;
+}
+
+static int FmtArgsCount(FmtInfo *fmtParts, int n)
+{
+    int nPositional = 0;
+    int nPercent = 0;
+    for (int i = 0; i < n; i++) {
+        if (fmtParts[i].tp == FmtInfo::Positional) {
+            nPositional++;
+        } else if (fmtParts[i].tp == FmtInfo::Percent) {
+            nPercent++;
         }
     }
-#endif
+    if (nPositional > 0) {
+        // we don't allow mixing formatting styles
+        CrashIf(nPercent != 0);
+        return nPositional;
+    }
+    return nPercent;
 }
 
-char *Fmt(const char *fmt, const StrFormatArg& a1, const StrFormatArg& a2, const StrFormatArg& a3,
-           const StrFormatArg& a4, const StrFormatArg& a5, const StrFormatArg& a6)
+int ParseFormatString(const char *fmt, FmtInfo *fmtParts, int maxArgsCount)
 {
-    int argsCount = ArgsCount(a1, a2, a3, a4, a5, a6);
+    int n;
+    int currPartNo = 0;
+    const char *start = fmt;
+    const char *s = fmt;
+    while (*s) {
+        // TODO: add support for %-style formatting
+        // TODO: do we need to support \{ escaping so that it's
+        //       possible to write a verbatim "{0}"
+        if (*s == '{') {
+            const char *end = s;
+            // we allow '{' that don't follow the pattern for positional args,
+            // we treat them as verbatim strings
+            if (ParsePositional(&s, &n)) {
+                CrashIf(n >= maxArgsCount);
+                CrashIf(PositionalArgExists(fmtParts, currPartNo, n));
+                currPartNo += AddFmtVerbatim(&fmtParts[currPartNo], start, end);
+                AddFmtPositional(&fmtParts[currPartNo], n);
+                currPartNo++;
+                start = s;
+            } else {
+                ++s;
+            }
+        } else {
+            ++s;
+        }
+    }
+    currPartNo += AddFmtVerbatim(&fmtParts[currPartNo], start, s);
+    return currPartNo;
+}
+
+static void SerializeArg(Str<char>& s, const Arg *arg)
+{
+    if (arg->tp == Arg::Str) {
+        s.Append(arg->s);
+    } else if (arg->tp == Arg::Int) {
+        s.AppendFmt("%d", arg->i);
+    } else if (arg->tp == Arg::WStr) {
+        CrashIf(true); // TODO: write me
+    } else {
+        CrashIf(true);
+    }
+}
+
+// caller has to free()
+char *Fmt(const char *fmt, const Arg& a0, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5)
+{
+    FmtInfo fmtParts[MAX_FMT_PARTS];
+    const Arg* args[MAX_FMT_ARGS];
+    args[0] = &a0; args[1] = &a1; args[2] = &a2;
+    args[3] = &a3; args[4] = &a4; args[5] = &a5;
+    int argsCount = ArgsCount(args);
     CrashIf(0 == argsCount);
-    return str::Format("%d", argsCount);
+    int nFmtParts = ParseFormatString(fmt, &fmtParts[0], argsCount);
+    CrashIf(argsCount != FmtArgsCount(fmtParts, nFmtParts));
+    Str<char> res;
+    int nPercentArg = 0;
+    for (int i=0; i < nFmtParts; i++) {
+        if (fmtParts[i].tp == FmtInfo::Verbatim) {
+            // TODO: unescape \{ ?
+            const char *s = fmtParts[i].start;
+            int len = fmtParts[i].len;
+            res.Append(s, len);
+        } else if (fmtParts[i].tp == FmtInfo::Positional) {
+            const Arg *arg = args[fmtParts[i].positionalArgNo];
+            SerializeArg(res, arg);
+        } else if (fmtParts[i].tp == FmtInfo::Percent) {
+            const Arg *arg = args[nPercentArg++];
+            // TODO: verify that fmtParts[i].percentArg agrees with arg->tp
+            SerializeArg(res, arg);
+        }
+    }
+    return res.StealData();
 }
 
-WCHAR *Fmt(const WCHAR *fmt, const StrFormatArg& a1, const StrFormatArg& a2, const StrFormatArg& a3,
-            const StrFormatArg& a4, const StrFormatArg& a5, const StrFormatArg& a6)
+WCHAR *Fmt(const WCHAR *fmt, const Arg& a0, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5)
 {
-    int argsCount = ArgsCount(a1, a2, a3, a4, a5, a6);
+    const Arg* args[MAX_FMT_ARGS];
+    args[0] = &a0; args[1] = &a1; args[2] = &a2;
+    args[3] = &a3; args[4] = &a4; args[5] = &a5;
+    int argsCount = ArgsCount(args);
     CrashIf(0 == argsCount);
     return str::Format(L"%d", argsCount);
 }
