@@ -139,12 +139,62 @@ xps_find_image_brush_source_part(xps_document *doc, char *base_uri, xml_element 
 	return xps_read_part(doc, partname);
 }
 
+/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2094 */
+typedef struct {
+	fz_storable storable;
+	char *part_name;
+} xps_image_key;
+
+static void
+xps_free_image_key(fz_context *ctx, fz_storable *key)
+{
+	fz_free(ctx, ((xps_image_key *)key)->part_name);
+	fz_free(ctx, key);
+}
+
+static xps_image_key *
+xps_new_image_key(fz_context *ctx, char *name)
+{
+	xps_image_key *key = fz_malloc_struct(ctx, xps_image_key);
+	key->part_name = fz_strdup(ctx, name);
+	FZ_INIT_STORABLE(key, 1, xps_free_image_key);
+	return key;
+}
+
+static int
+xps_cmp_image_key(void *k1, void *k2)
+{
+	return strcmp(((xps_image_key *)k1)->part_name, ((xps_image_key *)k2)->part_name);
+}
+
+#ifndef NDEBUG
+static void
+xps_debug_image(void *key)
+{
+	printf("(image part=%s) ", ((xps_image_key *)key)->part_name);
+}
+#endif
+
+static fz_store_type xps_image_store_type =
+{
+	NULL,
+	fz_keep_storable,
+	fz_drop_storable,
+	xps_cmp_image_key,
+#ifndef NDEBUG
+	xps_debug_image
+#endif
+};
+
 void
 xps_parse_image_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	char *base_uri, xps_resource *dict, xml_element *root)
 {
 	xps_part *part;
 	fz_image *image;
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2094 */
+	xps_image_key *key = NULL;
+	fz_var(key);
 
 	fz_try(doc->ctx)
 	{
@@ -158,10 +208,17 @@ xps_parse_image_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 
 	fz_try(doc->ctx)
 	{
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2094 */
+		key = xps_new_image_key(doc->ctx, part->name);
+		if (!(image = fz_find_item(doc->ctx, xps_free_image, key, &xps_image_store_type)))
+		{
 		image = xps_load_image(doc->ctx, part->data, part->size);
+		fz_store_item(doc->ctx, key, image, fz_pixmap_size(doc->ctx, ((xps_image *)image)->pix), &xps_image_store_type);
+		}
 	}
 	fz_always(doc->ctx)
 	{
+		fz_drop_storable(doc->ctx, &key->storable);
 		xps_free_part(doc, part);
 	}
 	fz_catch(doc->ctx)

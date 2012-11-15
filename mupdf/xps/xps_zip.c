@@ -662,6 +662,9 @@ xps_close_document(xps_document *doc)
 		font = next;
 	}
 
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2094 */
+	fz_empty_store(doc->ctx);
+
 	xps_free_page_list(doc);
 
 	fz_free(doc->ctx, doc->start_part);
