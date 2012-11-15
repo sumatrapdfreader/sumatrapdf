@@ -368,18 +368,16 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     DWORD grfSTI,
     HANDLE_PTR /*dwReserved*/)
 {
-    // if we don't have content for the url, return S_OK unless
-    // this is a request for parsing url, in which case return S_FALSE
-    // seems counter-intuitive but that's what others seem to be doing
-    HRESULT hr = S_OK;
-    if (grfSTI & PI_PARSE_URL)
-        hr = S_FALSE;
+    // TODO: others seem to return S_OK even if there is no content
+    //       for a URL (unless the PI_PARSE_URL bit is set on grfSTI),
+    //       this does however lead to this HW_IInternetProtocol being
+    //       leaked and to DISPID_DOCUMENTCOMPLETE never being fired
 
     int htmlWindowId;
     ScopedMem<TCHAR> urlRest;
     bool ok = ParseProtoUrl(AsTStrQ(szUrl), &htmlWindowId, &urlRest);
     if (!ok)
-        return hr;
+        return INET_E_INVALID_URL;
 
     ScopedMem<WCHAR> urlRestW(str::conv::ToWStr(urlRest));
     pIProtSink->ReportProgress(BINDSTATUS_FINDINGRESOURCE, urlRestW);
@@ -389,18 +387,18 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     HtmlWindow *win = FindHtmlWindowById(htmlWindowId);
     assert(win);
     if (!win)
-        return hr;
+        return INET_E_OBJECT_NOT_FOUND;
     if (!win->htmlWinCb)
-        return hr;
+        return INET_E_OBJECT_NOT_FOUND;
     ok = win->htmlWinCb->GetDataForUrl(urlRest, &data, &dataLen);
     if (!ok)
-        return hr;
+        return INET_E_DATA_NOT_AVAILABLE;
 
     ScopedMem<TCHAR> mime(MimeFromUrl(urlRest));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, AsWStrQ(mime));
     pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, dataLen, dataLen);
     pIProtSink->ReportResult(S_OK, 200, NULL);
-    return hr;
+    return S_OK;
 }
 
 STDMETHODIMP HW_IInternetProtocol::Read(void *pv, ULONG cb, ULONG *pcbRead)
