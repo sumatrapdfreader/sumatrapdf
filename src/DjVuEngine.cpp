@@ -398,7 +398,7 @@ bool DjVuEngineImpl::Load(const TCHAR *fileName)
         }
     }
 
-    annos = SAZA(miniexp_t, pageCount);
+    annos = AllocArray<miniexp_t>(pageCount);
     for (int i = 0; i < pageCount; i++)
         annos[i] = miniexp_dummy;
 
@@ -450,7 +450,7 @@ RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
 
     RenderedBitmap *bmp = NULL;
     int stride = ((screen.dx * (isBitonal ? 1 : 3) + 3) / 4) * 4;
-    ScopedMem<char> bmpData(SAZA(char, stride * (screen.dy + 5)));
+    ScopedMem<char> bmpData(AllocArray<char>(stride * (screen.dy + 5)));
     if (bmpData) {
 #ifndef DEBUG
         ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
@@ -529,7 +529,7 @@ RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target)
     RectI full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
     ddjvu_rect_t prect = { full.x, full.y, full.dx, full.dy }, rrect = prect;
 
-    ScopedMem<char> bmpData(SAZA(char, full.dx * full.dy + 1));
+    ScopedMem<char> bmpData(AllocArray<char>(full.dx * full.dy + 1));
     if (bmpData && ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, bmpData.Get())) {
         // determine the content box by counting white pixels from the edges
         RectD content(full.dx, -1, 0, 0);

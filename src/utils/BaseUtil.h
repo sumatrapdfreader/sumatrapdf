@@ -51,8 +51,16 @@
 
 /* Ugly name, but the whole point is to make things shorter.
    SAZA = Struct Allocate and Zero memory for Array
-   (note: use operator new for single structs/classes) */
+   (note: use operator new for single structs/classes)
+NOTE: SAZA() is deprecated and will be removed. Use AllocArray<T>() instead.
+*/
 #define SAZA(struct_name, n) (struct_name *)calloc((n), sizeof(struct_name))
+
+template <typename T>
+T *AllocArray(size_t n)
+{
+    return (T*)calloc(n, sizeof(T));
+}
 
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 #define NoOp()      ((void)0)

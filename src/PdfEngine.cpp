@@ -276,7 +276,7 @@ TCHAR *fz_text_page_to_str(fz_text_page *text, TCHAR *lineSep, RectI **coords_ou
         }
     }
 
-    TCHAR *content = SAZA(TCHAR, textLen + 1);
+    TCHAR *content = AllocArray<TCHAR>(textLen + 1);
     if (!content)
         return NULL;
 
@@ -776,7 +776,7 @@ namespace str {
 
 inline TCHAR *FromPdf(pdf_obj *obj)
 {
-    ScopedMem<WCHAR> str(SAZA(WCHAR, pdf_to_str_len(obj) + 1));
+    ScopedMem<WCHAR> str(AllocArray<WCHAR>(pdf_to_str_len(obj) + 1));
     pdf_to_ucs2_buf((unsigned short *)str.Get(), obj);
     return str::conv::FromWStr(str);
 }
@@ -1479,10 +1479,10 @@ bool PdfEngineImpl::FinishLoading()
         return false;
     }
 
-    _pages = SAZA(pdf_page *, PageCount());
+    _pages = AllocArray<pdf_page *>(PageCount());
     _mediaboxes = new RectD[PageCount()];
-    pageComments = SAZA(pdf_annot **, PageCount());
-    imageRects = SAZA(fz_rect *, PageCount());
+    pageComments = AllocArray<pdf_annot **>(PageCount());
+    imageRects = AllocArray<fz_rect *>(PageCount());
 
     if (!_pages || !_mediaboxes || !pageComments || !imageRects)
         return false;
@@ -1676,7 +1676,7 @@ PdfPageRun *PdfEngineImpl::CreatePageRun(pdf_page *page, fz_display_list *list)
     int pageNo = GetPageNo(page);
     if (!imageRects[pageNo-1] && positions.Count() > 0) {
         // the list of page image rectangles is terminated with a null-rectangle
-        fz_rect *rects = SAZA(fz_rect, positions.Count() + 1);
+        fz_rect *rects = AllocArray<fz_rect>(positions.Count() + 1);
         if (rects) {
             for (size_t i = 0; i < positions.Count(); i++) {
                 rects[i] = positions.At(i).rect;
@@ -3139,9 +3139,9 @@ bool XpsEngineImpl::LoadFromStream(fz_stream *stm)
         return false;
     }
 
-    _pages = SAZA(xps_page *, PageCount());
+    _pages = AllocArray<xps_page *>(PageCount());
     _mediaboxes = new RectD[PageCount()];
-    imageRects = SAZA(fz_rect *, PageCount());
+    imageRects = AllocArray<fz_rect *>(PageCount());
 
     if (!_pages || !_mediaboxes || !imageRects)
         return false;
@@ -3216,7 +3216,7 @@ XpsPageRun *XpsEngineImpl::CreatePageRun(xps_page *page, fz_display_list *list)
     int pageNo = GetPageNo(page);
     if (!imageRects[pageNo-1] && positions.Count() > 0) {
         // the list of page image rectangles is terminated with a null-rectangle
-        fz_rect *rects = SAZA(fz_rect, positions.Count() + 1);
+        fz_rect *rects = AllocArray<fz_rect>(positions.Count() + 1);
         if (rects) {
             for (size_t i = 0; i < positions.Count(); i++) {
                 rects[i] = positions.At(i).rect;

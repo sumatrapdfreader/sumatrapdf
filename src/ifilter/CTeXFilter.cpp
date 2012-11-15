@@ -16,7 +16,7 @@ HRESULT CTeXFilter::OnInit()
             return res;
 
         m_pData = str::ToWideChar((char *)data, CP_ACP);
-        m_pBuffer = SAZA(WCHAR, len + 1);
+        m_pBuffer = AllocArray<WCHAR>(len + 1);
         free(data);
 
         if (!m_pData || !m_pBuffer) {
