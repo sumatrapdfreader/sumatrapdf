@@ -46,6 +46,7 @@ def getObjectPath(file):
 @memoize
 def extractIncludes(file):
 	content = open(file, "r").read()
+	content = content.replace("\r\n", "\n")
 	# filter out multi-line comments (could contain #include lines as examples)
 	content = re.sub(r'(?s)/\*.*?\*/', '/* */', content)
 	# try to filter out "#if 0 ... #endif" sections (hacky)

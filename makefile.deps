@@ -389,7 +389,6 @@ $(OS)\SumatraProperties.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\util
 $(OS)\SumatraProperties.obj: src\utils\GeomUtil.h src\utils\RefCounted.h src\utils\Scoped.h
 $(OS)\SumatraProperties.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Vec.h
 $(OS)\SumatraProperties.obj: src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\SumatraStartup.obj: src\utils\DebugLog.h
 $(OS)\TableOfContents.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\TableOfContents.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\TableOfContents.obj: src\Doc.h src\FileHistory.h src\resource.h

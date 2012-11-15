@@ -353,6 +353,18 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\StrFormat.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\StrFormat.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\StrFormat_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\StrUtil.cpp"
 					>
 				</File>
