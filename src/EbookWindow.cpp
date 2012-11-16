@@ -521,6 +521,13 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     const TCHAR *fullPath = doc.GetFilePath();
     DisplayState *ds = gFileHistory.Find(fullPath);
 
+    if (doc.IsNone()) {
+        // TODO: show a notification if winToReplace.AsEbookWindow()
+        if (gFileHistory.MarkFileInexistent(fullPath))
+            SavePrefs();
+        return;
+    }
+
     if (gGlobalPrefs.rememberOpenedFiles) {
         ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs.showStartPage && ds) {

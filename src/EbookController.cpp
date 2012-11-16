@@ -36,6 +36,21 @@ ThreadLoadEbook::ThreadLoadEbook(const TCHAR *fn, EbookController *controller, c
     win = sumWin;
 }
 
+class FinishedEbookLoadingTask : public UITask {
+    SumatraWindow   win;
+    Doc             doc;
+
+public:
+    FinishedEbookLoadingTask(SumatraWindow win, Doc doc) :
+        win(win), doc(doc) {
+    }
+
+    virtual void Execute() {
+        // let OpenMobiInWindow handle the failure case as well
+        OpenMobiInWindow(doc, win);
+    }
+};
+
 void ThreadLoadEbook::Run()
 {
     //lf(_T("ThreadLoadEbook::Run(%s)"), fileName);
@@ -48,8 +63,7 @@ void ThreadLoadEbook::Run()
     if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
         doc.Delete();
 
-    uitask::Post(new FinishedMobiLoadingTask(win, new Doc(doc), fileName));
-    fileName = NULL;
+    uitask::Post(new FinishedEbookLoadingTask(win, doc));
 }
 
 class EbookFormattingTask : public UITask {

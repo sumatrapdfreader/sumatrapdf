@@ -7,7 +7,6 @@
 #include "Doc.h"
 #include "Sigslot.h"
 #include "SumatraWindow.h"
-#include "UITask.h"
 
 struct  EbookControls;
 class   EbookController;
@@ -18,23 +17,6 @@ class   EbookFormattingTask;
 struct  HtmlFormatterArgs;
 namespace mui { class Control; }
 using namespace mui;
-
-class FinishedMobiLoadingTask : public UITask {
-public:
-    ScopedMem<TCHAR>fileName;
-    Doc *           doc;
-    SumatraWindow   win;
-    double          loadingTimeMs;
-
-    FinishedMobiLoadingTask(SumatraWindow win, Doc *doc, TCHAR *fileName) :
-        win(win), doc(doc), fileName(fileName) {
-    }
-    ~FinishedMobiLoadingTask() {
-        delete doc;
-    }
-
-    virtual void Execute();
-};
 
 // data used on the ui thread side when handling UiMsg::MobiLayout
 // it's in its own struct for clarity

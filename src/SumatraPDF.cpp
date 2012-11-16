@@ -1286,17 +1286,6 @@ static void RenameFileInHistory(const TCHAR *oldPath, const TCHAR *newPath)
     }
 }
 
-// called when a background thread finishes loading an ebook
-void FinishedMobiLoadingTask::Execute()
-{
-    if (!doc->IsEbook()) {
-        // TODO: show notification that loading failed
-        // TODO: remove from file history
-        return;
-    }
-    OpenMobiInWindow(*doc, win);
-}
-
 // Start loading a mobi file in the background
 static void LoadEbookAsync(const TCHAR *fileName, SumatraWindow& win)
 {
@@ -1304,7 +1293,7 @@ static void LoadEbookAsync(const TCHAR *fileName, SumatraWindow& win)
     loadThread->Start();
     // make the thread delete itself at the end of processing
     loadThread->Release();
-    // when loading is done, we'll call OpenMobiInWindow through FinishedMobiLoadingTask::Execute()
+    // loadThread will replace win with an EbookWindow on successful loading
 
     // TODO: we should show a notification in the window user is looking at
 }
