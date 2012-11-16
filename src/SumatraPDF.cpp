@@ -4469,10 +4469,8 @@ class RepaintCanvasTask : public UITask
 
 public:
     RepaintCanvasTask(WindowInfo *win, UINT delay)
-        : win(win), delay(delay)
-    {
-        name = "RepaingCanvasTask";
-        hwnd = win->hwndCanvas;
+        : UITask(win->hwndCanvas), win(win), delay(delay) {
+        name = "RepaintCanvasTask";
     }
 
     virtual void Execute() {
@@ -4490,8 +4488,6 @@ void WindowInfo::RepaintAsync(UINT delay)
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
     uitask::Post(new RepaintCanvasTask(this, delay));
-    // TODO: why doesn't a repaint happen without this?
-    PostMessage(hwndCanvas, WM_NULL, 0, 0);
 }
 
 static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
