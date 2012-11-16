@@ -18,7 +18,7 @@ TextSearch::TextSearch(BaseEngine *engine, PageTextCache *textCache) :
     matchWordStart(false), matchWordEnd(false),
     findPage(0), findIndex(0), lastText(NULL)
 {
-    findCache = SAZA(BYTE, this->engine->PageCount());
+    findCache = AllocArray<BYTE>(this->engine->PageCount());
 }
 
 TextSearch::~TextSearch()

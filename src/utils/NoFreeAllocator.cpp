@@ -93,7 +93,7 @@ AllocatorMark::AllocatorMark()
     if (!gStats) {
         CrashAlwaysIf(gCurrMemBlock);
         isFirst = true;
-        gStats = SAZA(AllocStats,1);
+        gStats = AllocArray<AllocStats>(1);
     }
     block = gCurrMemBlock;
     pos = 0;

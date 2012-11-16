@@ -267,7 +267,7 @@ void DisplayModel::BuildPagesInfo()
 {
     assert(!pagesInfo);
     int pageCount = PageCount();
-    pagesInfo = SAZA(PageInfo, pageCount);
+    pagesInfo = AllocArray<PageInfo>(pageCount);
 
     TCHAR unitSystem[2] = { 0 };
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));

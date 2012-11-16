@@ -2969,7 +2969,7 @@ void OnMenuOpen(SumatraWindow& win)
     }
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
 #endif
-    ScopedMem<TCHAR> file(SAZA(TCHAR, ofn.nMaxFile));
+    ScopedMem<TCHAR> file(AllocArray<TCHAR>(ofn.nMaxFile));
     ofn.lpstrFile = file;
 
     if (!GetOpenFileName(&ofn))

@@ -128,7 +128,7 @@ inline char decode64(char c)
 static char *Base64Decode(const char *s, const char *end, size_t *len)
 {
     size_t bound = (end - s) * 3 / 4;
-    char *result = SAZA(char, bound);
+    char *result = AllocArray<char>(bound);
     char *curr = result;
     unsigned char c = 0;
     int step = 0;
@@ -1053,7 +1053,7 @@ char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOu
 
     bool hasPalette = hdr.depth != 16;
     size_t tgaDataSize = 18 + (hasPalette ? 256 * 3 : 0) + width * height * (hasPalette ? 1 : 3);
-    uint8_t *tgaData = SAZA(uint8_t, tgaDataSize);
+    uint8_t *tgaData = AllocArray<uint8_t>(tgaDataSize);
     if (!tgaData)
         return NULL;
 

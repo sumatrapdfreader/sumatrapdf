@@ -121,7 +121,7 @@ TryAgainWOW64:
         DWORD valLen;
         res = RegQueryValueEx(hKey, valName, NULL, NULL, NULL, &valLen);
         if (ERROR_SUCCESS == res) {
-            val = SAZA(TCHAR, valLen / sizeof(TCHAR) + 1);
+            val = AllocArray<TCHAR>(valLen / sizeof(TCHAR) + 1);
             res = RegQueryValueEx(hKey, valName, NULL, NULL, (LPBYTE)val, &valLen);
             if (ERROR_SUCCESS != res)
                 str::ReplacePtr(&val, NULL);
@@ -940,7 +940,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     SizeI size = GetBitmapSize(hbmp);
     DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
     DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
-    unsigned char *bmpData = SAZA(unsigned char, bmpBytes);
+    unsigned char *bmpData = AllocArray<unsigned char>(bmpBytes);
     if (!bmpData)
         return NULL;
 

@@ -7,9 +7,9 @@
 PageTextCache::PageTextCache(BaseEngine *engine) : engine(engine)
 {
     int count = engine->PageCount();
-    coords = SAZA(RectI *, count);
-    text = SAZA(TCHAR *, count);
-    lens = SAZA(int, count);
+    coords = AllocArray<RectI *>(count);
+    text = AllocArray<TCHAR *>(count);
+    lens = AllocArray<int>(count);
 
     InitializeCriticalSection(&access);
 }

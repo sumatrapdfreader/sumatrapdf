@@ -65,7 +65,7 @@ TryAgain64Bit:
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariable(_T("PATH"), NULL, 0);
-    ScopedMem<TCHAR> envpath(SAZA(TCHAR, size));
+    ScopedMem<TCHAR> envpath(AllocArray<TCHAR>(size));
     if (size > 0 && envpath) {
         GetEnvironmentVariable(_T("PATH"), envpath, size);
         StrVec paths;

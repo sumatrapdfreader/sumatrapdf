@@ -510,9 +510,7 @@ $(OU)\Sigslot_ut.obj: src\utils\Sigslot.h
 $(OU)\StrFormat.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\StrFormat.obj: src\utils\Scoped.h src\utils\StrFormat.h src\utils\StrUtil.h
 $(OU)\StrFormat.obj: src\utils\Vec.h
-$(OU)\StrFormat_ut.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
-$(OU)\StrFormat_ut.obj: src\utils\Scoped.h src\utils\StrFormat.h src\utils\StrUtil.h
-$(OU)\StrFormat_ut.obj: src\utils\Vec.h
+$(OU)\StrFormat_ut.obj: src\utils\StrFormat.h
 $(OU)\StrUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\StrUtil.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\StrUtil_ut.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h

@@ -96,13 +96,13 @@ TCHAR *Normalize(const TCHAR *path)
     DWORD cch = GetFullPathName(path, 0, NULL, NULL);
     if (!cch)
         return str::Dup(path);
-    ScopedMem<TCHAR> fullpath(SAZA(TCHAR, cch));
+    ScopedMem<TCHAR> fullpath(AllocArray<TCHAR>(cch));
     GetFullPathName(path, cch, fullpath, NULL);
     // convert to long form
     cch = GetLongPathName(fullpath, NULL, 0);
     if (!cch)
         return fullpath.StealData();
-    TCHAR *normpath = SAZA(TCHAR, cch);
+    TCHAR *normpath = AllocArray<TCHAR>(cch);
     GetLongPathName(fullpath, normpath, cch);
     return normpath;
 }
@@ -115,7 +115,7 @@ TCHAR *ShortPath(const TCHAR *path)
     DWORD cch = GetShortPathName(normpath, NULL, 0);
     if (!cch)
         return normpath;
-    TCHAR *shortpath = SAZA(TCHAR, cch);
+    TCHAR *shortpath = AllocArray<TCHAR>(cch);
     GetShortPathName(normpath, shortpath, cch);
     return shortpath;
 }
@@ -348,7 +348,7 @@ bool StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len)
 {
     if (len == (size_t)-1)
         len = str::Len(magicNumber);
-    ScopedMem<char> header(SAZA(char, len));
+    ScopedMem<char> header(AllocArray<char>(len));
     if (!header)
         return false;
 

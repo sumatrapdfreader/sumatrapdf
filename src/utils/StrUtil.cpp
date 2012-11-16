@@ -233,7 +233,7 @@ char *ToMultiByte(const WCHAR *txt, UINT codePage)
     int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, -1, NULL, 0, NULL, NULL);
     if (0 == requiredBufSize)
         return NULL;
-    char *res = SAZA(char, requiredBufSize);
+    char *res = AllocArray<char>(requiredBufSize);
     if (!res)
         return NULL;
     WideCharToMultiByte(codePage, 0, txt, -1, res, requiredBufSize, NULL, NULL);
@@ -265,7 +265,7 @@ WCHAR *ToWideChar(const char *src, UINT codePage)
     int requiredBufSize = MultiByteToWideChar(codePage, 0, src, -1, NULL, 0);
     if (0 == requiredBufSize)
         return NULL;
-    WCHAR *res = SAZA(WCHAR, requiredBufSize);
+    WCHAR *res = AllocArray<WCHAR>(requiredBufSize);
     if (!res)
         return NULL;
     MultiByteToWideChar(codePage, 0, src, -1, res, requiredBufSize);
@@ -325,7 +325,7 @@ char *FmtV(const char *fmt, va_list args)
             bufCchSize += bufCchSize;
         else
             bufCchSize += 1024;
-        buf = SAZA(char, bufCchSize);
+        buf = AllocArray<char>(bufCchSize);
         if (!buf)
             break;
     }
@@ -372,7 +372,7 @@ WCHAR *FmtV(const WCHAR *fmt, va_list args)
             bufCchSize += bufCchSize;
         else
             bufCchSize += 1024;
-        buf = SAZA(WCHAR, bufCchSize);
+        buf = AllocArray<WCHAR>(bufCchSize);
         if (!buf)
             break;
     }
@@ -571,7 +571,7 @@ size_t  BufAppend(WCHAR *dst, size_t dstCchSize, const WCHAR *s)
 char *MemToHex(const unsigned char *buf, int len)
 {
     /* 2 hex chars per byte, +1 for terminating 0 */
-    char *ret = SAZA(char, 2 * (size_t)len + 1);
+    char *ret = AllocArray<char>(2 * (size_t)len + 1);
     if (!ret)
         return NULL;
     for (int i = 0; i < len; i++)
@@ -606,7 +606,7 @@ TCHAR *FormatNumWithThousandSep(size_t num, LCID locale)
     ScopedMem<TCHAR> buf(str::Format(_T("%Iu"), num));
 
     size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
-    TCHAR *res = SAZA(TCHAR, resLen);
+    TCHAR *res = AllocArray<TCHAR>(resLen);
     if (!res)
         return NULL;
     TCHAR *next = res;
@@ -661,7 +661,7 @@ TCHAR *FormatRomanNumeral(int number)
             len += romandata[i].numeral[1] ? 2 : 1;
     assert(len > 0);
 
-    TCHAR *roman = SAZA(TCHAR, len + 1), *c = roman;
+    TCHAR *roman = AllocArray<TCHAR>(len + 1), *c = roman;
     for (int num = number, i = 0; i < dimof(romandata); i++)
         for (; num >= romandata[i].value; num -= romandata[i].value)
             c += str::BufSet(c, romandata[i].numeral[1] ? 3 : 2, romandata[i].numeral);

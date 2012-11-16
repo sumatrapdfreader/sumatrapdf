@@ -511,7 +511,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     /* by default print all pages */
     pd.nPageRanges = 1;
     pd.nMaxPageRanges = MAXPAGERANGES;
-    PRINTPAGERANGE *ppr = SAZA(PRINTPAGERANGE, MAXPAGERANGES);
+    PRINTPAGERANGE *ppr = AllocArray<PRINTPAGERANGE>(MAXPAGERANGES);
     pd.lpPageRanges = ppr;
     ppr->nFromPage = 1;
     ppr->nToPage = dm->PageCount();
@@ -652,7 +652,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
     // get printer driver information
     DWORD needed = 0;
     GetPrinter(printer, 2, NULL, 0, &needed);
-    ScopedMem<BYTE> infoData(SAZA(BYTE, needed));
+    ScopedMem<BYTE> infoData(AllocArray<BYTE>(needed));
     if (infoData)
         ok = GetPrinter(printer, 2, infoData, needed, &needed);
     if (!ok || !infoData || needed <= sizeof(PRINTER_INFO_2)) goto Exit;

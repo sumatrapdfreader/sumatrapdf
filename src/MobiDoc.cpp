@@ -706,7 +706,7 @@ void MobiDoc::LoadImages()
 {
     if (0 == imagesCount)
         return;
-    images = SAZA(ImageData, imagesCount);
+    images = AllocArray<ImageData>(imagesCount);
     for (size_t i = 0; i < imagesCount; i++) {
         if (!LoadImage(i))
             return;

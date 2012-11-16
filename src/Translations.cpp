@@ -154,7 +154,7 @@ const TCHAR *GetTranslation(const char *txt)
 {
     if (!gTranslationCache) {
         assert(dimof(gTranslations) == STRINGS_COUNT * LANGS_COUNT);
-        gTranslationCache = SAZA(const TCHAR *, dimof(gTranslations));
+        gTranslationCache = AllocArray<const TCHAR *>(dimof(gTranslations));
         if (!gTranslationCache)
             return _T("Missing translation!?");
     }

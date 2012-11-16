@@ -53,7 +53,7 @@ static void OnOpen(HWND hwnd)
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY |
                 OFN_ALLOWMULTISELECT | OFN_EXPLORER;
     ofn.nMaxFile = MAX_PATH * 100;
-    ScopedMem<TCHAR> file(SAZA(TCHAR, ofn.nMaxFile));
+    ScopedMem<TCHAR> file(AllocArray<TCHAR>(ofn.nMaxFile));
     ofn.lpstrFile = file;
 
     if (!GetOpenFileName(&ofn))
