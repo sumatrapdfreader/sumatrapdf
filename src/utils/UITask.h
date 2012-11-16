@@ -5,17 +5,31 @@
 #define UITask_h
 
 // TODO:
-// - do I have to add a way to notify HWND via WM_NULL so that it executes
-//   tasks as soon as possible? Can be done by having UITask take HWND or
-//   maybe PostThreadMessage() to ui thread?
+// - to better encapsulate this functionality, create a hidden window
+//   that we'll use to execute tasks, to replace UITask::hwnd. Not sure
+//   if it'll work. I tried just PostThreadMessage(WM_NULL, ...) to ui
+//   thread but that doesn't get to our processing loop if nested message
+//   loop is executed
 
 // Base class for code that has to be executed on UI thread. Derive your class
 // from UITask and call uitask::Post to schedule execution
-// of its Execute() method on UI thread.
+// of its Execute() method on UI thread
+// The program also has to periodically call uitask::ExecuteAll()
 class UITask
 {
 public:
-    UITask() {}
+    // some tasks need to be processed when doing nested message processing
+    // loop. In those cases the OS runs the message loop itself and we don't
+    // see those messages in our main loop until nested loop finishes
+    // this helps with that problem in that the task can be associated with
+    // a hwnd to which we'll send WM_NULL message. WndProc of those windows
+    // has to call uitask::ExecuteAll()
+    HWND hwnd;
+
+    // for debugging
+    const char *name;
+
+    UITask(HWND hwnd=NULL) : hwnd(hwnd), name("UITask") {}
     virtual ~UITask() {}
     virtual void Execute() = 0;
 };

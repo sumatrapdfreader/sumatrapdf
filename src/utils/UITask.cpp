@@ -4,6 +4,9 @@
 #include "BaseUtil.h"
 #include "UITask.h"
 
+#define NOLOG 1
+#include "DebugLog.h"
+
 namespace uitask {
 
 static Vec<UITask*> *           gUiTaskQueue;
@@ -31,6 +34,9 @@ void Post(UITask *task)
     ScopedCritSec cs(&gUiTaskCs);
     gUiTaskQueue->Append(task);
     SetEvent(gUiTaskEvent);
+    lf("posted a task %s", task->name);
+    if (task->hwnd != NULL)
+        PostMessage(task->hwnd, WM_NULL, 0, 0);
 }
 
 UITask *RetrieveNext()

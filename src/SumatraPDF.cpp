@@ -4461,11 +4461,13 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         case WM_GESTURE:
             return OnGesture(*win, msg, wParam, lParam);
-
-        default:
+        case WM_NULL:
             // process thread queue events happening during an inner message loop
             // (else the scrolling position isn't updated until the scroll bar is released)
             uitask::ExecuteAll();
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+
+        default:
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
@@ -4479,7 +4481,10 @@ class RepaintCanvasTask : public UITask
 public:
     RepaintCanvasTask(WindowInfo *win, UINT delay)
         : win(win), delay(delay)
-    {}
+    {
+        name = "RepaingCanvasTask";
+        hwnd = win->hwndCanvas;
+    }
 
     virtual void Execute() {
         if (!WindowInfoStillValid(win))
