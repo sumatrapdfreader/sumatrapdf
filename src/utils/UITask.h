@@ -29,7 +29,7 @@ public:
     // for debugging
     const char *name;
 
-    UITask(HWND hwnd=NULL) : hwnd(hwnd), name("UITask") {}
+    UITask(HWND hwnd=NULL) : hwnd(hwnd), name("UITask") { }
     virtual ~UITask() {}
     virtual void Execute() = 0;
 };
@@ -41,16 +41,13 @@ void    Initialize();
 void    Destroy();
 
 // Called from any thread, posts a message to a queue, to be processed by ui thread
-void    Post(UITask *);
+void    Post(UITask *task);
 
 // Called on ui thread (e.g. in an event loop) to process queued messages.
-// Removes the message from the queue.
-// Returns NULL if there are no more messages.
-UITask * RetrieveNext();
+// Removes the messages from the queue.
+void    ExecuteAll();
 
-void ExecuteAll();
-
-// Gets a handle of uimsg queque event. This event gets notified when
+// Gets a handle of uitask queue event. This event gets notified when
 // a new item is posted to the queue. Can be used to awake ui event
 // loop if MsgWaitForMultipleObjects() is used, but that's not
 // necessary.
@@ -59,4 +56,3 @@ HANDLE  GetQueueEvent();
 }
 
 #endif
-

@@ -39,7 +39,7 @@ void Post(UITask *task)
         PostMessage(task->hwnd, WM_NULL, 0, 0);
 }
 
-UITask *RetrieveNext()
+static UITask *RetrieveNext()
 {
     ScopedCritSec cs(&gUiTaskCs);
     if (0 == gUiTaskQueue->Count())
@@ -53,19 +53,15 @@ UITask *RetrieveNext()
 void ExecuteAll()
 {
     UITask *wi;
-    for (;;) {
-        wi = uitask::RetrieveNext();
-        if (!wi)
-            return;
+    while ((wi = uitask::RetrieveNext())) {
         wi->Execute();
         delete wi;
     }
 }
 
-HANDLE  GetQueueEvent()
+HANDLE GetQueueEvent()
 {
     return gUiTaskEvent;
 }
 
 }
-
