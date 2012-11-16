@@ -212,6 +212,7 @@ static void LogTest()
 #include "Vec_ut.cpp"
 #include "ByteOrderDecoder_ut.cpp"
 #include "StrFormat_ut.cpp"
+#include "Dict_ut.cpp"
 
 void BaseUtils_UnitTests()
 {
@@ -229,6 +230,7 @@ void BaseUtils_UnitTests()
     SigSlotTest();
     JsonTest();
     StrFormatTest();
+    DictTest();
 }
 
 #endif

@@ -329,6 +329,8 @@
     <ClCompile Include="src\utils\CmdLineParser.cpp" />
     <ClCompile Include="src\utils\DbgHelpDyn.cpp" />
     <ClCompile Include="src\utils\DebugLog.cpp" />
+    <ClCompile Include="src\utils\Dict.cpp" />
+    <ClCompile Include="src\utils\Dict_ut.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
     <ClCompile Include="src\utils\Experiments.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
@@ -511,6 +513,7 @@
     <ClInclude Include="src\utils\ByteReader.h" />
     <ClInclude Include="src\utils\DbgHelpDyn.h" />
     <ClInclude Include="src\utils\DebugLog.h" />
+    <ClInclude Include="src\utils\Dict.h" />
     <ClInclude Include="src\utils\DirIter.h" />
     <ClInclude Include="src\utils\FileTransactions.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />

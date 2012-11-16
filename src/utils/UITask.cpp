@@ -13,12 +13,12 @@ namespace uitask {
 static HWND  gTaskDispatchHwnd;
 
 #define UITASK_CLASS_NAME   _T("UITask_Wnd_Class")
-#define WM_QUEUE_TASK       (WM_USER + 1)
+#define WM_EXECUTE_TASK       (WM_USER + 1)
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     UITask *task;
-    if (WM_QUEUE_TASK == msg) {
+    if (WM_EXECUTE_TASK == msg) {
         task = (UITask*)lParam;
         lf("executing %s", task->name);
         task->Execute();
@@ -43,6 +43,9 @@ void Initialize()
             hinst, NULL);
 }
 
+// note: it's possible (but highly unlikely) that we might leak UITask
+// objects that were sent to the window but not executed/destroyed.
+// There's nothing we can do about it.
 void Destroy()
 {
 }
@@ -51,7 +54,7 @@ void Post(UITask *task)
 {
     CrashIf(!task);
     lf("posting %s", task->name);
-    PostMessage(gTaskDispatchHwnd, WM_QUEUE_TASK, 0, (LPARAM)task);
+    PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)task);
 }
 
 }

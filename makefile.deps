@@ -465,6 +465,12 @@ $(OU)\DebugLog.obj: src\utils\Vec.h
 $(OU)\DialogSizer.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DialogSizer.h
 $(OU)\DialogSizer.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\DialogSizer.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OU)\Dict.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\Dict.h
+$(OU)\Dict.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\Dict.obj: src\utils\Vec.h
+$(OU)\Dict_ut.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\Dict.h
+$(OU)\Dict_ut.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\Dict_ut.obj: src\utils\Vec.h
 $(OU)\DirIter.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DirIter.h
 $(OU)\DirIter.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\DirIter.obj: src\utils\StrUtil.h src\utils\Vec.h
@@ -534,12 +540,12 @@ $(OU)\UITask.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\UITask.obj: src\utils\UITask.h src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
 $(OU)\UtilTests.obj: src\utils\BencUtil_ut.cpp src\utils\ByteOrderDecoder.h src\utils\ByteOrderDecoder_ut.cpp
-$(OU)\UtilTests.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OU)\UtilTests.obj: src\utils\JsonParser.h src\utils\JsonParser_ut.cpp src\utils\Scoped.h
-$(OU)\UtilTests.obj: src\utils\Sigslot.h src\utils\Sigslot_ut.cpp src\utils\SimpleLog.h
-$(OU)\UtilTests.obj: src\utils\StrFormat.h src\utils\StrFormat_ut.cpp src\utils\StrUtil.h
-$(OU)\UtilTests.obj: src\utils\StrUtil_ut.cpp src\utils\Vec.h src\utils\Vec_ut.cpp
-$(OU)\UtilTests.obj: src\utils\WinUtil.h
+$(OU)\UtilTests.obj: src\utils\DebugLog.h src\utils\Dict.h src\utils\Dict_ut.cpp
+$(OU)\UtilTests.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\JsonParser.h
+$(OU)\UtilTests.obj: src\utils\JsonParser_ut.cpp src\utils\Scoped.h src\utils\Sigslot.h
+$(OU)\UtilTests.obj: src\utils\Sigslot_ut.cpp src\utils\SimpleLog.h src\utils\StrFormat.h
+$(OU)\UtilTests.obj: src\utils\StrFormat_ut.cpp src\utils\StrUtil.h src\utils\StrUtil_ut.cpp
+$(OU)\UtilTests.obj: src\utils\Vec.h src\utils\Vec_ut.cpp src\utils\WinUtil.h
 $(OU)\WinUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
 $(OU)\WinUtil.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\WinUtil.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h

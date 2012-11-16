@@ -22,6 +22,13 @@ public:
         return a->Alloc(size);
     }
 
+    static void *AllocZero(Allocator *a, size_t size) {
+        void *m = Allocator::Alloc(a, size);
+        if (m)
+            ZeroMemory(m, size);
+        return m;
+    }
+
     static void Free(Allocator *a, void *p) {
         if (!a)
             free(p);
@@ -116,7 +123,8 @@ public:
         return elPtr;
     }
 
-    PoolAllocator()  {
+    PoolAllocator(size_t rounding = 8)  {
+        allocRounding = rounding;
         minBlockSize = 4096;
         Init();
     }

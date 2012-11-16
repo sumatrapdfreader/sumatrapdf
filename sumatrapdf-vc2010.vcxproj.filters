@@ -1019,6 +1019,12 @@
     <ClCompile Include="src\utils\StrFormat_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\Dict.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\Dict_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1499,6 +1505,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\StrFormat.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Dict.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
