@@ -4495,8 +4495,9 @@ void WindowInfo::RepaintAsync(UINT delay)
 {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    // and let uitask::Post call PostMessage for us
     uitask::Post(new RepaintCanvasTask(this, delay));
+    // TODO: why doesn't a repaint happen without this?
+    PostMessage(hwndCanvas, WM_NULL, 0, 0);
 }
 
 static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
