@@ -217,6 +217,8 @@ OPENJPEG_SRC := \
 $(OPENJPEG_LIB): $(addprefix $(OUT)/opj_, $(OPENJPEG_SRC:%.c=%.o))
 $(OUT)/opj_%.o: $(OPENJPEG_DIR)/libopenjpeg/%.c | $(OUT)
 	$(CC_CMD) -DOPJ_STATIC
+else
+CFLAGS += $(SYS_OPENJPEG_INC)
 endif
 
 # --- ZLIB ---

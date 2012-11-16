@@ -232,7 +232,7 @@ FITZ_OBJS = \
 	$(OFZ)\base_context.obj $(OFZ)\crypt_sha2.obj $(OFZ)\dev_gdiplus.obj \
 	$(OFZ)\dev_bbox.obj $(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_text.obj \
 	$(OFZ)\dev_trace.obj $(OFZ)\crypt_aes.obj $(OFZ)\crypt_arc4.obj $(OFZ)\crypt_md5.obj \
-	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj $(OFZ)\doc_link.obj $(OFZ)\doc_outline.obj \
+	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj $(OFZ)\doc_link.obj $(OFZ)\doc_outline.obj $(OFZ)\doc_search.obj \
 	$(OFZ)\filt_basic.obj $(OFZ)\filt_faxd.obj $(OFZ)\filt_flate.obj $(OFZ)\filt_jbig2d.obj \
 	$(OFZ)\filt_dctd.obj $(OFZ)\filt_lzwd.obj $(OFZ)\filt_predict.obj $(OFZ)\res_store.obj \
 	$(OFZ)\image_jpeg.obj $(OFZ)\image_jpx.obj $(OFZ)\image_png.obj $(OFZ)\image_tiff.obj \

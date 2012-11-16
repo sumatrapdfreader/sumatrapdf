@@ -622,6 +622,8 @@ void fz_write_buffer(fz_context *ctx, fz_buffer *buf, unsigned char *data, int l
 
 void fz_write_buffer_byte(fz_context *ctx, fz_buffer *buf, int val);
 
+void fz_write_buffer_rune(fz_context *ctx, fz_buffer *buf, int val);
+
 void fz_write_buffer_bits(fz_context *ctx, fz_buffer *buf, int val, int bits);
 
 void fz_write_buffer_pad(fz_context *ctx, fz_buffer *buf);

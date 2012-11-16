@@ -117,6 +117,9 @@ EXPORTS
 	fz_print_text_page_html
 	fz_print_text_page_xml
 	fz_print_text_page
+	fz_search_text_page
+	fz_highlight_selection
+	fz_copy_selection
 	fz_new_display_list
 	fz_new_list_device
 	fz_run_display_list
@@ -226,6 +229,7 @@ EXPORTS
 	fz_buffer_cat
 	fz_write_buffer
 	fz_write_buffer_byte
+	fz_write_buffer_rune
 	fz_write_buffer_bits
 	fz_write_buffer_pad
 	fz_buffer_printf

@@ -454,6 +454,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\doc_search.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\filt_basic.c"
 				>
 			</File>

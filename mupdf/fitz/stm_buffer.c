@@ -127,6 +127,17 @@ void fz_write_buffer_byte(fz_context *ctx, fz_buffer *buf, int val)
 	buf->unused_bits = 0;
 }
 
+void fz_write_buffer_rune(fz_context *ctx, fz_buffer *buf, int c)
+{
+	char data[10];
+	int len = fz_runetochar(data, c);
+	if (buf->len + len > buf->cap)
+		fz_ensure_buffer(ctx, buf, buf->len + len);
+	memcpy(buf->data + buf->len, data, len);
+	buf->len += len;
+	buf->unused_bits = 0;
+}
+
 void fz_write_buffer_bits(fz_context *ctx, fz_buffer *buf, int val, int bits)
 {
 	int shift;

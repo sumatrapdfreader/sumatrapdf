@@ -677,11 +677,10 @@ class ThumbnailRenderingTask : public UITask, public RenderingCallback
 {
     ScopedMem<TCHAR> filePath;
     RenderedBitmap *bmp;
-    WindowInfo *win;
 
 public:
-    ThumbnailRenderingTask(WindowInfo *win, const TCHAR *filePath) :
-        win(win), filePath(str::Dup(filePath)), bmp(NULL) {
+    ThumbnailRenderingTask(const TCHAR *filePath) :
+        filePath(str::Dup(filePath)), bmp(NULL) {
     }
 
     ~ThumbnailRenderingTask() {
@@ -773,7 +772,7 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
         pageRect.dy = (float)THUMBNAIL_DY / zoom;
     pageRect = win.dm->engine->Transform(pageRect, 1, 1.0f, 0, true);
 
-    RenderingCallback *callback = new ThumbnailRenderingTask(&win, win.loadedFilePath);
+    RenderingCallback *callback = new ThumbnailRenderingTask(win.loadedFilePath);
     gRenderCache.Render(win.dm, 1, 0, zoom, pageRect, *callback);
 }
 

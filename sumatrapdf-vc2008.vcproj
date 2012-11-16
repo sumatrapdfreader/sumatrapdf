@@ -1029,6 +1029,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\fitz\doc_search.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\filt_basic.c"
 					>
 				</File>

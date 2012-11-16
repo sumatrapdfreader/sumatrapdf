@@ -81,55 +81,71 @@ static void cmyk_to_rgb(fz_context *ctx, fz_colorspace *cs, float *cmyk, float *
 {
 #ifdef SLOWCMYK /* from poppler */
 	float c = cmyk[0], m = cmyk[1], y = cmyk[2], k = cmyk[3];
-	float c1 = 1 - c, m1 = 1 - m, y1 = 1 - y, k1 = 1 - k;
 	float r, g, b, x;
+	float cm = c * m;
+	float c1m = m - cm;
+	float cm1 = c - cm;
+	float c1m1 = 1 - m - cm1;
+	float c1m1y  = c1m1 * y;
+	float c1m1y1 = c1m1 - c1m1y;
+	float c1my  = c1m * y;
+	float c1my1 = c1m - c1my;
+	float cm1y  = cm1 * y;
+	float cm1y1 = cm1 - cm1y;
+	float cmy  = cm * y;
+	float cmy1 = cm - cmy;
 
 	/* this is a matrix multiplication, unrolled for performance */
-	x = c1 * m1 * y1 * k1;	/* 0 0 0 0 */
-	r = g = b = x;
-	x = c1 * m1 * y1 * k;	/* 0 0 0 1 */
+	x = c1m1y1 * k;		/* 0 0 0 1 */
+	r = g = b = c1m1y1 - x;	/* 0 0 0 0 */
 	r += 0.1373 * x;
 	g += 0.1216 * x;
 	b += 0.1255 * x;
-	x = c1 * m1 * y * k1;	/* 0 0 1 0 */
-	r += x;
-	g += 0.9490 * x;
-	x = c1 * m1 * y * k;	/* 0 0 1 1 */
+
+	x = c1m1y * k;		/* 0 0 1 1 */
 	r += 0.1098 * x;
 	g += 0.1020 * x;
-	x = c1 * m * y1 * k1;	/* 0 1 0 0 */
+	x = c1m1y - x;		/* 0 0 1 0 */
+	r += x;
+	g += 0.9490 * x;
+
+	x = c1my1 * k;		/* 0 1 0 1 */
+	r += 0.1412 * x;
+	x = c1my1 - x;		/* 0 1 0 0 */
 	r += 0.9255 * x;
 	b += 0.5490 * x;
-	x = c1 * m * y1 * k;	/* 0 1 0 1 */
-	r += 0.1412 * x;
-	x = c1 * m * y * k1;	/* 0 1 1 0 */
+
+	x = c1my * k;		/* 0 1 1 1 */
+	r += 0.1333 * x;
+	x = c1my - x;		/* 0 1 1 0 */
 	r += 0.9294 * x;
 	g += 0.1098 * x;
 	b += 0.1412 * x;
-	x = c1 * m * y * k;	/* 0 1 1 1 */
-	r += 0.1333 * x;
-	x = c * m1 * y1 * k1;	/* 1 0 0 0 */
-	g += 0.6784 * x;
-	b += 0.9373 * x;
-	x = c * m1 * y1 * k;	/* 1 0 0 1 */
+
+	x = cm1y1 * k;		/* 1 0 0 1 */
 	g += 0.0588 * x;
 	b += 0.1412 * x;
-	x = c * m1 * y * k1;	/* 1 0 1 0 */
+	x = cm1y1 - x;		/* 1 0 0 0 */
+	g += 0.6784 * x;
+	b += 0.9373 * x;
+
+	x = cm1y * k;		/* 1 0 1 1 */
+	g += 0.0745 * x;
+	x = cm1y - x;		/* 1 0 1 0 */
 	g += 0.6510 * x;
 	b += 0.3137 * x;
-	x = c * m1 * y * k;	/* 1 0 1 1 */
-	g += 0.0745 * x;
-	x = c * m * y1 * k1;	/* 1 1 0 0 */
+
+	x = cmy1 * k;		/* 1 1 0 1 */
+	b += 0.0078 * x;
+	x = cmy1 - x;		/* 1 1 0 0 */
 	r += 0.1804 * x;
 	g += 0.1922 * x;
 	b += 0.5725 * x;
-	x = c * m * y1 * k;	/* 1 1 0 1 */
-	b += 0.0078 * x;
-	x = c * m * y * k1;	/* 1 1 1 0 */
+
+	x = cmy * (1-k);	/* 1 1 1 0 */
 	r += 0.2118 * x;
 	g += 0.2119 * x;
 	b += 0.2235 * x;
-
 	rgb[0] = fz_clamp(r, 0, 1);
 	rgb[1] = fz_clamp(g, 0, 1);
 	rgb[2] = fz_clamp(b, 0, 1);
@@ -305,9 +321,20 @@ static void fast_cmyk_to_rgb(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 	unsigned char *s = src->samples;
 	unsigned char *d = dst->samples;
 	int n = src->w * src->h;
+	unsigned int C,M,Y,K,r,g,b;
+
+	C = 0;
+	M = 0;
+	Y = 0;
+	K = 0;
+	r = 255;
+	g = 255;
+	b = 255;
+
 	while (n--)
 	{
 #ifdef SLOWCMYK
+		/* SumatraPDF: prevent rendering regression */
 		float cmyk[4], rgb[3];
 		cmyk[0] = s[0] / 255.0f;
 		cmyk[1] = s[1] / 255.0f;

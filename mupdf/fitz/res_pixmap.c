@@ -396,8 +396,9 @@ void fz_invert_pixmap_rect(fz_pixmap *image, fz_bbox rect)
 		p = image->samples + (unsigned int)((y * image->w + x0) * image->n);
 		for (x = x0; x < x1; x++)
 		{
-			for (n = image->n; n > 0; n--, p++)
+			for (n = image->n; n > 1; n--, p++)
 				*p = 255 - *p;
+			p++;
 		}
 	}
 }

@@ -1818,6 +1818,29 @@ void fz_print_text_page_xml(fz_context *ctx, FILE *out, fz_text_page *page);
 void fz_print_text_page(fz_context *ctx, FILE *out, fz_text_page *page);
 
 /*
+	fz_search_text_page: Search for occurrence of 'needle' in text page.
+
+	Return the number of hits and store hit bboxes in the passed in array.
+
+	NOTE: This is an experimental interface and subject to change without notice.
+*/
+int fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_bbox *hit_bbox, int hit_max);
+
+/*
+	fz_highlight_selection: Return a list of rectangles to highlight given a selection rectangle.
+
+	NOTE: This is an experimental interface and subject to change without notice.
+*/
+int fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_bbox rect, fz_bbox *hit_bbox, int hit_max);
+
+/*
+	fz_copy_selection: Return a newly allocated UTF-8 string with the text for a given selection rectangle.
+
+	NOTE: This is an experimental interface and subject to change without notice.
+*/
+char *fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_bbox rect);
+
+/*
 	Cookie support - simple communication channel between app/library.
 */
 

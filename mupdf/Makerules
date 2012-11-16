@@ -25,10 +25,17 @@ endif
 
 ifeq "$(OS)" "Linux"
 SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
+SYS_OPENJPEG_INC := `pkg-config --cflags libopenjpeg`
 X11_LIBS := -lX11 -lXext
 endif
 
 ifeq "$(OS)" "FreeBSD"
+SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
+LDFLAGS += -L/usr/local/lib
+X11_LIBS := -lX11 -lXext
+endif
+
+ifeq "$(OS)" "SunOS"
 SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
 LDFLAGS += -L/usr/local/lib
 X11_LIBS := -lX11 -lXext
@@ -117,3 +124,4 @@ RANLIB_CMD = $(PLATFORM_DEVELOPER_BIN_DIR)/ranlib $@
 CROSSCOMPILE=yes
 NOX11=yes
 endif
+
