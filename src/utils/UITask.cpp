@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "UITask.h"
+#include "WinUtil.h"
 
 #define NOLOG 1
 #include "DebugLog.h"
@@ -11,33 +12,9 @@ namespace uitask {
 
 static Vec<UITask*> *           gUiTaskQueue;
 static CRITICAL_SECTION         gUiTaskCs;
-static HANDLE                   gUiTaskEvent;
+static HWND                     gTaskDispatchHwnd;
 
-void Initialize()
-{
-    gUiTaskQueue = new Vec<UITask*>();
-    InitializeCriticalSection(&gUiTaskCs);
-    gUiTaskEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-}
-
-void Destroy()
-{
-    DeleteVecMembers(*gUiTaskQueue);
-    delete gUiTaskQueue;
-    DeleteCriticalSection(&gUiTaskCs);
-    CloseHandle(gUiTaskEvent);
-}
-
-void Post(UITask *task)
-{
-    CrashIf(!task);
-    ScopedCritSec cs(&gUiTaskCs);
-    gUiTaskQueue->Append(task);
-    SetEvent(gUiTaskEvent);
-    lf("posted a task %s", task->name);
-    if (task->hwnd != NULL)
-        PostMessage(task->hwnd, WM_NULL, 0, 0);
-}
+#define WND_CLASS _T("UITask_Wnd_Class")
 
 static UITask *RetrieveNext()
 {
@@ -50,18 +27,62 @@ static UITask *RetrieveNext()
     return res;
 }
 
-void ExecuteAll()
+static void ExecuteAll()
 {
-    UITask *wi;
-    while ((wi = uitask::RetrieveNext())) {
-        wi->Execute();
-        delete wi;
+    UITask *task;
+    for (;;) {
+        task = uitask::RetrieveNext();
+        if (!task)
+            return;
+        lf("executing %s", task->name);
+        task->Execute();
+        delete task;
     }
 }
 
-HANDLE GetQueueEvent()
+static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    return gUiTaskEvent;
+    uitask::ExecuteAll();
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+void Initialize()
+{
+    gUiTaskQueue = new Vec<UITask*>();
+    InitializeCriticalSection(&gUiTaskCs);
+
+    WNDCLASSEX  wcex = { 0 };
+    HINSTANCE hinst = GetModuleHandle(NULL);
+    FillWndClassEx(wcex, hinst);
+    wcex.lpfnWndProc    = WndProcTaskDispatch;
+    wcex.lpszClassName  = WND_CLASS;
+    wcex.hIcon          = NULL;
+    wcex.hIconSm        = NULL;
+    RegisterClassEx(&wcex);
+
+    gTaskDispatchHwnd = CreateWindow(
+            WND_CLASS, _T("UITask Dispatch Window"),
+            WS_OVERLAPPED,
+            0, 0, 0, 0,
+            NULL, NULL,
+            hinst, NULL);
+}
+
+void Destroy()
+{
+    DeleteVecMembers(*gUiTaskQueue);
+    delete gUiTaskQueue;
+    DeleteCriticalSection(&gUiTaskCs);
+}
+
+void Post(UITask *task)
+{
+    CrashIf(!task);
+    ScopedCritSec cs(&gUiTaskCs);
+    gUiTaskQueue->Append(task);
+    lf("posting %s", task->name);
+    PostMessage(gTaskDispatchHwnd, WM_NULL, 0, 0);
 }
 
 }
+

@@ -4450,11 +4450,6 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         case WM_GESTURE:
             return OnGesture(*win, msg, wParam, lParam);
-        case WM_NULL:
-            // process thread queue events happening during an inner message loop
-            // (else the scrolling position isn't updated until the scroll bar is released)
-            uitask::ExecuteAll();
-            return DefWindowProc(hwnd, msg, wParam, lParam);
 
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -4469,7 +4464,7 @@ class RepaintCanvasTask : public UITask
 
 public:
     RepaintCanvasTask(WindowInfo *win, UINT delay)
-        : UITask(win->hwndCanvas), win(win), delay(delay) {
+        : win(win), delay(delay) {
         name = "RepaintCanvasTask";
     }
 
@@ -5019,20 +5014,11 @@ static int RunMessageLoop()
     for (;;) {
         HANDLE handles[MAXIMUM_WAIT_OBJECTS];
         DWORD handleCount = 0;
-        handles[handleCount++] = uitask::GetQueueEvent();
         CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
         DWORD res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, INFINITE, wakeMask);
-        if (res == WAIT_OBJECT_0) {
-            // process these messages here so that we don't have to add this
-            // handling to every WndProc that might receive those messages
-            // note: this isn't called during an inner message loop, so
-            //       Execute() also has to be called from a WndProc
-            uitask::ExecuteAll();
-        } else {
-            bool shouldExit = ProcessAllMessages();
-            if (shouldExit)
-                return 0;
-        }
+        bool shouldExit = ProcessAllMessages();
+        if (shouldExit)
+            return 0;
     }
     return 0;
 }
