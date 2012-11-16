@@ -10,46 +10,27 @@
 
 namespace uitask {
 
-static Vec<UITask*> *           gUiTaskQueue;
-static CRITICAL_SECTION         gUiTaskCs;
-static HWND                     gTaskDispatchHwnd;
+static HWND  gTaskDispatchHwnd;
+static UINT  gTaskMsg;
 
 #define WND_CLASS _T("UITask_Wnd_Class")
 
-static UITask *RetrieveNext()
-{
-    ScopedCritSec cs(&gUiTaskCs);
-    if (0 == gUiTaskQueue->Count())
-        return NULL;
-    UITask *res = gUiTaskQueue->At(0);
-    CrashIf(!res);
-    gUiTaskQueue->RemoveAt(0);
-    return res;
-}
-
-static void ExecuteAll()
+static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     UITask *task;
-    for (;;) {
-        task = uitask::RetrieveNext();
-        if (!task)
-            return;
+    if (msg == gTaskMsg) {
+        task = (UITask*)lParam;
         lf("executing %s", task->name);
         task->Execute();
         delete task;
+        return 0;
     }
-}
-
-static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    uitask::ExecuteAll();
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
 void Initialize()
 {
-    gUiTaskQueue = new Vec<UITask*>();
-    InitializeCriticalSection(&gUiTaskCs);
+    gTaskMsg = RegisterWindowMessageA("UITask_Process_Msg");
 
     WNDCLASSEX  wcex = { 0 };
     HINSTANCE hinst = GetModuleHandle(NULL);
@@ -70,18 +51,13 @@ void Initialize()
 
 void Destroy()
 {
-    DeleteVecMembers(*gUiTaskQueue);
-    delete gUiTaskQueue;
-    DeleteCriticalSection(&gUiTaskCs);
 }
 
 void Post(UITask *task)
 {
     CrashIf(!task);
-    ScopedCritSec cs(&gUiTaskCs);
-    gUiTaskQueue->Append(task);
     lf("posting %s", task->name);
-    PostMessage(gTaskDispatchHwnd, WM_NULL, 0, 0);
+    PostMessage(gTaskDispatchHwnd, gTaskMsg, 0, (LPARAM)task);
 }
 
 }
