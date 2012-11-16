@@ -831,10 +831,8 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
 {
     WNDCLASSEX  wcex;
 
-    FillWndClassEx(wcex, hInstance);
-    wcex.lpszClassName  = INSTALLER_FRAME_CLASS_NAME;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    wcex.lpfnWndProc    = WndProcFrame;
+    FillWndClassEx(wcex, hInstance, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
 
     ATOM atom = RegisterClassEx(&wcex);
     return atom != NULL;

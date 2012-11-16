@@ -606,14 +606,12 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 bool RegisterMobiWinClass(HINSTANCE hinst)
 {
     WNDCLASSEX  wcex;
-    FillWndClassEx(wcex, hinst);
+    FillWndClassEx(wcex, hinst, MOBI_FRAME_CLASS_NAME, MobiWndProcFrame);
     // clear out CS_HREDRAW | CS_VREDRAW style so that resizing doesn't
     // cause the whole window redraw
-    wcex.style = 0;
-    wcex.lpszClassName  = MOBI_FRAME_CLASS_NAME;
+    wcex.style          = 0;
     wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-    wcex.lpfnWndProc    = MobiWndProcFrame;
 
     ATOM atom = RegisterClassEx(&wcex);
     return atom != NULL;

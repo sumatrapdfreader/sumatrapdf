@@ -531,7 +531,7 @@ $(OU)\TrivialHtmlParser.obj: src\utils\TrivialHtmlParser_ut.cpp src\utils\Vec.h 
 $(OU)\TrivialHtmlParser_ut.obj: src\utils\FileUtil.h src\utils\WinUtil.h
 $(OU)\UITask.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
 $(OU)\UITask.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\UITask.obj: src\utils\UITask.h src\utils\Vec.h
+$(OU)\UITask.obj: src\utils\UITask.h src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\UtilTests.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
 $(OU)\UtilTests.obj: src\utils\BencUtil_ut.cpp src\utils\ByteOrderDecoder.h src\utils\ByteOrderDecoder_ut.cpp
 $(OU)\UtilTests.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GeomUtil.h

@@ -29,7 +29,7 @@ FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName);
 BOOL    SafeCloseHandle(HANDLE h);
 BOOL    SafeDestroyWindow(HWND hwnd);
 BOOL    SafeDestroyWindow(HWND *hwnd);
-void    FillWndClassEx(WNDCLASSEX &wcex, HINSTANCE hInstance);
+void    FillWndClassEx(WNDCLASSEX& wcex, HINSTANCE hInstance, const TCHAR *clsName, WNDPROC wndproc);
 
 bool   IsAppThemed();
 WORD   GetWindowsVersion();

@@ -30,13 +30,9 @@ static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, 
 
 void Initialize()
 {
-    WNDCLASSEX  wcex = { 0 };
+    WNDCLASSEX  wcex;
     HINSTANCE hinst = GetModuleHandle(NULL);
-    FillWndClassEx(wcex, hinst);
-    wcex.lpfnWndProc    = WndProcTaskDispatch;
-    wcex.lpszClassName  = UITASK_CLASS_NAME;
-    wcex.hIcon          = NULL;
-    wcex.hIconSm        = NULL;
+    FillWndClassEx(wcex, hinst, UITASK_CLASS_NAME, WndProcTaskDispatch);
     RegisterClassEx(&wcex);
 
     gTaskDispatchHwnd = CreateWindow(

@@ -285,10 +285,8 @@ void ShowNotification(WindowInfo *win, const TCHAR *message, bool autoDismiss, b
 bool RegisterNotificationsWndClass(HINSTANCE inst)
 {
     WNDCLASSEX  wcex;
-    FillWndClassEx(wcex, inst);
-    wcex.lpfnWndProc    = NotificationWnd::WndProc;
-    wcex.hCursor        = LoadCursor(NULL, IDC_APPSTARTING);
-    wcex.lpszClassName  = NOTIFICATION_WND_CLASS_NAME;
+    FillWndClassEx(wcex, inst, NOTIFICATION_WND_CLASS_NAME, NotificationWnd::WndProc);
+    wcex.hCursor = LoadCursor(NULL, IDC_APPSTARTING);
     ATOM atom = RegisterClassEx(&wcex);
     return atom != 0;
 }

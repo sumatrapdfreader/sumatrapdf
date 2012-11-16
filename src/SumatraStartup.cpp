@@ -35,54 +35,40 @@ static bool RegisterWinClass(HINSTANCE hinst)
     WNDCLASSEX  wcex;
     ATOM        atom;
 
-    FillWndClassEx(wcex, hinst);
-    wcex.lpfnWndProc    = WndProcFrame;
-    wcex.lpszClassName  = FRAME_CLASS_NAME;
-    wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    wcex.hIconSm        = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SMALL));
+    FillWndClassEx(wcex, hinst, FRAME_CLASS_NAME, WndProcFrame);
+    wcex.hIcon  = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hinst);
-    wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-    wcex.lpfnWndProc    = WndProcCanvas;
-    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-    wcex.lpszClassName  = CANVAS_CLASS_NAME;
+    FillWndClassEx(wcex, hinst, CANVAS_CLASS_NAME, WndProcCanvas);
+    wcex.style |= CS_DBLCLKS;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hinst);
-    wcex.lpfnWndProc    = WndProcAbout;
-    wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    wcex.lpszClassName  = ABOUT_CLASS_NAME;
+    FillWndClassEx(wcex, hinst, ABOUT_CLASS_NAME, WndProcAbout);
+    wcex.hIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hinst);
-    wcex.lpfnWndProc    = WndProcProperties;
-    wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    wcex.lpszClassName  = PROPERTIES_CLASS_NAME;
+    FillWndClassEx(wcex, hinst, PROPERTIES_CLASS_NAME, WndProcProperties);
+    wcex.hIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hinst);
-    wcex.lpfnWndProc    = WndProcSidebarSplitter;
+    FillWndClassEx(wcex, hinst, SIDEBAR_SPLITTER_CLASS_NAME, WndProcSidebarSplitter);
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZEWE);
     wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
-    wcex.lpszClassName  = SIDEBAR_SPLITTER_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
 
-    FillWndClassEx(wcex, hinst);
-    wcex.lpfnWndProc    = WndProcFavSplitter;
+    FillWndClassEx(wcex, hinst, FAV_SPLITTER_CLASS_NAME, WndProcFavSplitter);
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZENS);
     wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
-    wcex.lpszClassName  = FAV_SPLITTER_CLASS_NAME;
     atom = RegisterClassEx(&wcex);
     if (!atom)
         return false;
