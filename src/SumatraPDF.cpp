@@ -49,7 +49,9 @@ using namespace Gdiplus;
 #include "WinUtil.h"
 
 /* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
+#ifndef DISABLE_THREAD_BASED_FILEWATCH
 #define THREAD_BASED_FILEWATCH
+#endif
 
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
@@ -123,7 +125,7 @@ TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
 
-#if !defined(THREAD_BASED_FILEWATCH)
+#ifndef THREAD_BASED_FILEWATCH
 #define FILEWATCH_DELAY_IN_MS       1000
 #endif
 
@@ -1241,16 +1243,6 @@ public:
         }
     }
 };
-
-#ifndef THREAD_BASED_FILEWATCH
-static void RefreshUpdatedFiles() {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        if (win->watcher)
-            win->watcher->CheckForChanges();
-    }
-}
-#endif
 
 static void RenameFileInHistory(const TCHAR *oldPath, const TCHAR *newPath)
 {
@@ -4972,18 +4964,26 @@ InitMouseWheelInfo:
     return 0;
 }
 
-static HACCEL gAccelTable;
+#ifndef THREAD_BASED_FILEWATCH
+static void RefreshUpdatedFiles() {
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *win = gWindows.At(i);
+        if (win->watcher)
+            win->watcher->CheckForChanges();
+    }
+}
+#endif
 
-// return true if should exit
-static bool ProcessAllMessages()
+static int RunMessageLoop()
 {
+    HACCEL accTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
     MSG msg = { 0 };
-    WindowInfo *win = NULL;
 
-    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-        if (msg.message == WM_QUIT)
-            return true;
+#ifndef THREAD_BASED_FILEWATCH
+    const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
+#endif
 
+    while (GetMessage(&msg, NULL, 0, 0)) {
 #ifndef THREAD_BASED_FILEWATCH
         if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
             RefreshUpdatedFiles();
@@ -4991,36 +4991,20 @@ static bool ProcessAllMessages()
         }
 #endif
         // dispatch the accelerator to the correct window
-        win = FindWindowInfoByHwnd(msg.hwnd);
+        WindowInfo *win = FindWindowInfoByHwnd(msg.hwnd);
         HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
-        if (TranslateAccelerator(accHwnd, gAccelTable, &msg))
+        if (TranslateAccelerator(accHwnd, accTable, &msg))
             continue;
 
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-    return false;
-}
 
-#ifndef QS_RAWINPUT
-#define QS_RAWINPUT 0x0400
+#ifndef THREAD_BASED_FILEWATCH
+    KillTimer(NULL, timerID);
 #endif
 
-static int RunMessageLoop()
-{
-    gAccelTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
-    // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1868#c9
-    DWORD wakeMask = QS_ALLINPUT | (GetWindowsVersion() >= 0x0501 ? QS_RAWINPUT : 0);
-    for (;;) {
-        HANDLE handles[MAXIMUM_WAIT_OBJECTS];
-        DWORD handleCount = 0;
-        CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
-        DWORD res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, INFINITE, wakeMask);
-        bool shouldExit = ProcessAllMessages();
-        if (shouldExit)
-            return 0;
-    }
-    return 0;
+    return msg.wParam;
 }
 
 void GetProgramInfo(str::Str<char>& s)

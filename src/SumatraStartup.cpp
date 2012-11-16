@@ -525,10 +525,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (gGlobalPrefs.enableAutoUpdate && gWindows.Count() > 0)
         AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
 
-#ifndef THREAD_BASED_FILEWATCH
-    const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
-#endif
-
     if (i.stressTestPath) {
         gIsStressTesting = true;
         StartStressTest(win, i.stressTestPath, i.stressTestFilter,
@@ -536,10 +532,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     retCode = RunMessageLoop();
-
-#ifndef THREAD_BASED_FILEWATCH
-    KillTimer(NULL, timerID);
-#endif
 
     CleanUpThumbnailCache(gFileHistory);
 
