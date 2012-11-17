@@ -12,7 +12,7 @@ struct JsonValue {
         path(path), type(type), value(value) { }
 };
 
-class JsonVerifier : public json::ValueObserver {
+class JsonVerifier : public json::ValueVisitor {
     JsonValue *data;
     size_t dataLen;
     size_t idx;
@@ -21,7 +21,7 @@ public:
     JsonVerifier(JsonValue *data, size_t dataLen=1) :
         data(data), dataLen(dataLen), idx(0) { }
 
-    virtual bool observe(const char *path, const char *value, json::DataType type) {
+    virtual bool Visit(const char *path, const char *value, json::DataType type) {
         assert(idx < dataLen);
         assert(type == data[idx].type);
         assert(str::Eq(path, data[idx].path));

@@ -24,9 +24,9 @@ class ParseArgs {
 public:
     str::Str<char> path;
     bool canceled;
-    ValueObserver *observer;
+    ValueVisitor *visitor;
 
-    ParseArgs(ValueObserver *observer) : canceled(false), observer(observer) { }
+    ParseArgs(ValueVisitor *visitor) : canceled(false), visitor(visitor) { }
 };
 
 static const char *ParseValue(ParseArgs& args, const char *data);
@@ -73,7 +73,7 @@ static const char *ParseString(ParseArgs& args, const char *data)
     str::Str<char> string;
     data = ExtractString(string, data);
     if (data)
-        args.canceled = !args.observer->observe(args.path.Get(), string.Get(), Type_String);
+        args.canceled = !args.visitor->Visit(args.path.Get(), string.Get(), Type_String);
     return data;
 }
 
@@ -104,7 +104,7 @@ static const char *ParseNumber(ParseArgs& args, const char *data)
         return NULL;
 
     char *number = str::DupN(start, data - start);
-    args.canceled = !args.observer->observe(args.path.Get(), number, Type_Number);
+    args.canceled = !args.visitor->Visit(args.path.Get(), number, Type_Number);
     free(number);
     return data;
 }
@@ -170,7 +170,7 @@ static const char *ParseKeyword(ParseArgs& args, const char *data,
 {
     if (!str::StartsWith(data, keyword))
         return NULL;
-    args.canceled = !args.observer->observe(args.path.Get(), keyword, type);
+    args.canceled = !args.visitor->Visit(args.path.Get(), keyword, type);
     return data + str::Len(keyword);
 }
 
@@ -199,9 +199,9 @@ static const char *ParseValue(ParseArgs& args, const char *data)
     }
 }
 
-bool Parse(const char *data, ValueObserver *observer)
+bool Parse(const char *data, ValueVisitor *visitor)
 {
-    ParseArgs args(observer);
+    ParseArgs args(visitor);
     if (str::StartsWith(data, UTF8_BOM))
         data += 3;
     const char *end = ParseValue(args, data);

@@ -633,7 +633,7 @@ ImageDirEngine *ImageDirEngine::CreateFromFile(const TCHAR *fileName)
 
 ///// CbxEngine handles comic book files (either .cbz or .cbr) /////
 
-class CbxEngineImpl : public ImagesEngine, public CbxEngine, public json::ValueObserver {
+class CbxEngineImpl : public ImagesEngine, public CbxEngine, public json::ValueVisitor {
     friend CbxEngine;
 
 public:
@@ -657,8 +657,8 @@ public:
 
     virtual TCHAR *GetProperty(DocumentProperty prop);
 
-    // json::ValueObserver
-    virtual bool observe(const char *path, const char *value, json::DataType type);
+    // json::ValueVisitor
+    virtual bool Visit(const char *path, const char *value, json::DataType type);
 
 protected:
     bool LoadCbzFile(const TCHAR *fileName);
@@ -827,35 +827,35 @@ void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
         if (tok->NameIs("Title")) {
             ScopedMem<char> value(GetTextContent(parser));
             if (value)
-                observe("/ComicBookInfo/1.0/title", value, json::Type_String);
+                Visit("/ComicBookInfo/1.0/title", value, json::Type_String);
         }
         else if (tok->NameIs("Year")) {
             ScopedMem<char> value(GetTextContent(parser));
             if (value)
-                observe("/ComicBookInfo/1.0/publicationYear", value, json::Type_Number);
+                Visit("/ComicBookInfo/1.0/publicationYear", value, json::Type_Number);
         }
         else if (tok->NameIs("Month")) {
             ScopedMem<char> value(GetTextContent(parser));
             if (value)
-                observe("/ComicBookInfo/1.0/publicationMonth", value, json::Type_Number);
+                Visit("/ComicBookInfo/1.0/publicationMonth", value, json::Type_Number);
         }
         else if (tok->NameIs("Summary")) {
             ScopedMem<char> value(GetTextContent(parser));
             if (value)
-                observe("/X-summary", value, json::Type_String);
+                Visit("/X-summary", value, json::Type_String);
         }
         else if (tok->NameIs("Writer")) {
             ScopedMem<char> value(GetTextContent(parser));
             if (value) {
-                observe("/ComicBookInfo/1.0/credits[0]/person", value, json::Type_String);
-                observe("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type_Bool);
+                Visit("/ComicBookInfo/1.0/credits[0]/person", value, json::Type_String);
+                Visit("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type_Bool);
             }
         }
         else if (tok->NameIs("Penciller")) {
             ScopedMem<char> value(GetTextContent(parser));
             if (value) {
-                observe("/ComicBookInfo/1.0/credits[1]/person", value, json::Type_String);
-                observe("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type_Bool);
+                Visit("/ComicBookInfo/1.0/credits[1]/person", value, json::Type_String);
+                Visit("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type_Bool);
             }
         }
     }
@@ -863,7 +863,7 @@ void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
 
 // extract ComicBookInfo metadata
 // cf. http://code.google.com/p/comicbookinfo/
-bool CbxEngineImpl::observe(const char *path, const char *value, json::DataType type)
+bool CbxEngineImpl::Visit(const char *path, const char *value, json::DataType type)
 {
     if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
         propTitle.Set(str::conv::FromUtf8(value));
