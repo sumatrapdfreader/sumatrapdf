@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "ChmEngine.h"
 #include "ChmDoc.h"
+#include "Dict.h"
 #include "FileUtil.h"
 #include "HtmlWindow.h"
 #include "WinUtil.h"
@@ -339,6 +340,7 @@ void ChmEngineImpl::ZoomTo(float zoomLevel)
 
 class ChmTocBuilder : public EbookTocVisitor {
     ChmDoc *doc;
+
     StrList *pages;
     ChmTocItem **root;
     int idCounter;
@@ -355,10 +357,32 @@ class ChmTocBuilder : public EbookTocVisitor {
         int pageNo = pages->Find(plainUrl) + 1;
         if (pageNo > 0)
             return pageNo;
-
         pages->Append(plainUrl.StealData());
         return pages->Count();
     }
+
+#if 0
+    dict::MapStrToInt urlsSet;
+
+    // TODO: this is experimental because dict::MapStrToInt isn't
+    // completed yet, but it does bring down doc->ParseToc() time
+    // from ~1500 ms to ~1100 ms
+    int CreatePageNoForURL2(const TCHAR *url) {
+        if (!url || IsExternalUrl(url))
+            return 0;
+
+        ScopedMem<TCHAR> plainUrl(str::ToPlainUrl(url));
+        ScopedMem<char> plainUrlA(str::conv::ToUtf8(plainUrl.Get()));
+        if (urlsSet.Insert(plainUrlA.Get(), 0)) {
+            pages->Append(plainUrl.StealData());
+            return pages->Count();
+        }
+
+        int pageNo = pages->Find(plainUrl) + 1;
+        CrashIf(pageNo == 0);
+        return pageNo;
+    }
+#endif
 
 public:
     ChmTocBuilder(ChmDoc *doc, StrList *pages, ChmTocItem **root) :
@@ -385,18 +409,24 @@ public:
     }
 };
 
+#include "Timer.h"
+#include "DebugLog.h"
+
 bool ChmEngineImpl::Load(const TCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
+    Timer t(true);
     doc = ChmDoc::CreateFromFile(fileName);
+    dbglog::LogF("ChmDoc::CreateFromFile(): %.2f ms", t.GetTimeInMs());
     if (!doc)
         return false;
 
     // always make the document's homepage page 1
     pages.Append(str::conv::FromAnsi(doc->GetHomePath()));
     // parse the ToC here, since page numbering depends on it
+    t.Start();
     doc->ParseToc(&ChmTocBuilder(doc, &pages, &tocRoot));
-
+    dbglog::LogF("doc->ParseToc(): %.2f ms", t.GetTimeInMs());
     CrashIf(pages.Count() == 0);
     return pages.Count() > 0;
 }
