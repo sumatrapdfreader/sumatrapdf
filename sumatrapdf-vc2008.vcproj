@@ -329,6 +329,18 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\Dict.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\Dict.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\Dict_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\DirIter.cpp"
 					>
 				</File>

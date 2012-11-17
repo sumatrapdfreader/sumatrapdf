@@ -116,8 +116,9 @@ $(OS)\ChmDoc.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\ChmDoc.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmDoc.h src\ChmEngine.h
 $(OS)\ChmEngine.obj: src\EbookBase.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\ChmEngine.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlWindow.h
-$(OS)\ChmEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\ChmEngine.obj: src\utils\DebugLog.h src\utils\Dict.h src\utils\FileUtil.h
+$(OS)\ChmEngine.obj: src\utils\GeomUtil.h src\utils\HtmlWindow.h src\utils\Scoped.h
+$(OS)\ChmEngine.obj: src\utils\StrUtil.h src\utils\Timer.h src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\utils\WinUtil.h
 $(OS)\CrashHandler.obj: src\AppTools.h src\BaseEngine.h src\CrashHandler.h
 $(OS)\CrashHandler.obj: src\DisplayState.h src\FileHistory.h src\SumatraPDF.h
