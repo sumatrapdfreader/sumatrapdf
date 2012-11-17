@@ -447,7 +447,7 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
             ScopedMem<TCHAR> itemSrc(FromHtmlUtf8(href, str::Len(href)));
             ScopedMem<TCHAR> itemText(str::conv::FromUtf8(text));
             str::NormalizeWS(itemText);
-            visitor->visit(itemText, itemSrc, level);
+            visitor->Visit(itemText, itemSrc, level);
         }
     }
 
@@ -471,7 +471,7 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
     while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS))) {
         if (tok->IsTag() && tok->NameIsNS("navPoint", EPUB_NCX_NS)) {
             if (itemText) {
-                visitor->visit(itemText, itemSrc, level);
+                visitor->Visit(itemText, itemSrc, level);
                 itemText.Set(NULL);
                 itemSrc.Set(NULL);
             }
@@ -948,7 +948,7 @@ bool PalmDoc::ParseToc(EbookTocVisitor *visitor)
 {
     for (size_t i = 0; i < tocEntries.Count(); i++) {
         ScopedMem<TCHAR> name(str::Format(_T(PDB_TOC_ENTRY_MARK) _T("%d"), i + 1));
-        visitor->visit(tocEntries.At(i), name, 1);
+        visitor->Visit(tocEntries.At(i), name, 1);
     }
     return true;
 }
@@ -1633,7 +1633,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
                 level++;
             }
         }
-        visitor->visit(title, id, level);
+        visitor->Visit(title, id, level);
     }
 
     return true;

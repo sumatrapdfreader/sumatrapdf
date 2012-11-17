@@ -330,7 +330,7 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
     if (!name)
         return false;
 
-    visitor->visit(name, local, level);
+    visitor->Visit(name, local, level);
     return true;
 }
 
@@ -389,12 +389,12 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
         return false;
 
     if (references.Count() == 2) {
-        visitor->visit(keyword, references.At(1), level);
+        visitor->Visit(keyword, references.At(1), level);
         return true;
     }
-    visitor->visit(keyword, NULL, level);
+    visitor->Visit(keyword, NULL, level);
     for (size_t i = 0; i < references.Count(); i += 2) {
-        visitor->visit(references.At(i), references.At(i + 1), level + 1);
+        visitor->Visit(references.At(i), references.At(i + 1), level + 1);
     }
     return true;
 }

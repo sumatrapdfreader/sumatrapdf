@@ -364,7 +364,7 @@ public:
     ChmTocBuilder(ChmDoc *doc, StrList *pages, ChmTocItem **root) :
         doc(doc), pages(pages), root(root), idCounter(0) { }
 
-    virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
+    virtual void Visit(const TCHAR *name, const TCHAR *url, int level) {
         int pageNo = CreatePageNoForURL(url);
         ChmTocItem *item = new ChmTocItem(str::Dup(name), pageNo, url ? str::Dup(url) : NULL);
         item->id = ++idCounter;

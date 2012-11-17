@@ -585,7 +585,7 @@ public:
     EbookTocBuilder(BaseEngine *engine) :
         engine(engine), root(NULL), idCounter(0), isIndex(false) { }
 
-    virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
+    virtual void Visit(const TCHAR *name, const TCHAR *url, int level) {
         PageDestination *dest;
         if (!url)
             dest = NULL;
@@ -1398,7 +1398,7 @@ public:
         // first add the homepage
         const char *index = doc->GetHomePath();
         ScopedMem<TCHAR> url(doc->ToStr(index));
-        visit(NULL, url, 0);
+        Visit(NULL, url, 0);
 
         // then add all pages linked to from the table of contents
         doc->ParseToc(this);
@@ -1411,7 +1411,7 @@ public:
                 if (*path == '/')
                     path++;
                 url.Set(str::conv::FromUtf8(path));
-                visit(NULL, url, -1);
+                Visit(NULL, url, -1);
             }
         }
         FreeVecMembers(*paths);
@@ -1420,7 +1420,7 @@ public:
         return html.StealData();
     }
 
-    virtual void visit(const TCHAR *name, const TCHAR *url, int level) {
+    virtual void Visit(const TCHAR *name, const TCHAR *url, int level) {
         if (!url || IsExternalUrl(url))
             return;
         ScopedMem<TCHAR> plainUrl(str::ToPlainUrl(url));
@@ -1471,7 +1471,7 @@ DocTocItem *Chm2EngineImpl::GetTocTree()
         // TODO: ToC code doesn't work too well for displaying an index,
         //       so this should really become a tree of its own (which
         //       doesn't rely on entries being in the same order as pages)
-        builder.visit(_T("Index"), NULL, 1);
+        builder.Visit(_T("Index"), NULL, 1);
         builder.SetIsIndex(true);
         doc->ParseIndex(&builder);
     }
