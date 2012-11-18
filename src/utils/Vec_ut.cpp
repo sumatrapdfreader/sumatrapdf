@@ -1,3 +1,6 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 static void StrVecTest()
 {
     StrVec v;

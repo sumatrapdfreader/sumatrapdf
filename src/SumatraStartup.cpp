@@ -1,3 +1,6 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
 // TODO: for the moment it needs to be included from SumatraPDF.cpp
 // and not compiled as stand-alone
 
