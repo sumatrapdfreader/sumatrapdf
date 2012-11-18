@@ -265,10 +265,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\utils\BaseUtil.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\utils\BitManip.h"
 					>
 				</File>
@@ -320,6 +316,14 @@
 			<Filter
 				Name="tools"
 				>
+				<File
+					RelativePath=".\src\utils\BaseUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\BaseUtil.h"
+					>
+				</File>
 				<File
 					RelativePath=".\src\utils\DebugLog.cpp"
 					>

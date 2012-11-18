@@ -145,7 +145,7 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
 }
 
 size_t roundToPowerOf2(size_t size);
-unsigned int murmur_hash2(const void *key, int len);
+uint32_t murmur_hash2(const void *key, size_t len);
 
 #include "Allocator.h"
 #include "GeomUtil.h"

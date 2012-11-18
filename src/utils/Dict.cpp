@@ -40,14 +40,14 @@ public:
 };
 
 class StrKeyHasherComparator : public HasherComparator {
-    virtual size_t Hash(uintptr_t key) { return (size_t)murmur_hash2((const void*)key, (int)str::Len((const char*)key)); }
+    virtual size_t Hash(uintptr_t key) { return murmur_hash2((const void*)key, str::Len((const char*)key)); }
     virtual bool Equal(uintptr_t k1, uintptr_t k2) { return str::Eq((const char*)k1, (const char*)k2); }
 };
 
 class WStrKeyHasherComparator : public HasherComparator {
     virtual size_t Hash(uintptr_t key) {
         size_t cbLen = str::Len((const WCHAR*)key) * sizeof(WCHAR);
-        return (size_t)murmur_hash2((const void*)key, (int)cbLen);
+        return murmur_hash2((const void*)key, cbLen);
     }
     virtual bool Equal(uintptr_t k1, uintptr_t k2) {
         const WCHAR *s1 = (const WCHAR *)k1;

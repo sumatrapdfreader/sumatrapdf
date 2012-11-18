@@ -10,6 +10,20 @@
 
 #include "DebugLog.h"
 
+static void BaseUtilTest()
+{
+    assert(roundToPowerOf2(0) == 1);
+    assert(roundToPowerOf2(1) == 1);
+    assert(roundToPowerOf2(2) == 2);
+    assert(roundToPowerOf2(3) == 4);
+    assert(roundToPowerOf2(15) == 16);
+    assert(roundToPowerOf2((1 << 13) + 1) == (1 << 14));
+    assert(roundToPowerOf2(MAX_SIZE_T) == MAX_SIZE_T);
+
+    assert(murmur_hash2(NULL, 0) == 0x342CE6C);
+    assert(murmur_hash2("test", 4) != murmur_hash2("Test", 4));
+}
+
 static void GeomTest()
 {
     PointD ptD(12.4, -13.6);
@@ -217,6 +231,7 @@ static void LogTest()
 void BaseUtils_UnitTests()
 {
     plogf("Running BaseUtils unit tests");
+    BaseUtilTest();
     ByteOrderTests();
     GeomTest();
     TStrTest();
