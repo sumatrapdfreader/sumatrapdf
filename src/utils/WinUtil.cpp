@@ -1077,7 +1077,7 @@ bool RunAsUser(TCHAR *cmd)
 {
     CreateProcessWithTokenWProc *_CreateProcessWithTokenW;
     PROCESS_INFORMATION pi = { 0 };
-    STARTUPINFO si = { 0 };
+    STARTUPINFOW si = { 0 };
     HANDLE hProcessToken = 0;
     HANDLE hShellProcess = 0;
     HANDLE hShellProcessToken = 0;
@@ -1098,7 +1098,7 @@ bool RunAsUser(TCHAR *cmd)
     }
 
     tkp.PrivilegeCount = 1;
-    ok = LookupPrivilegeValueW(NULL, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid);
+    ok = LookupPrivilegeValue(NULL, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid);
     if (!ok) {
         lf("RunAsUser(): LookupPrivilegeValue() failed");
         goto Error;
