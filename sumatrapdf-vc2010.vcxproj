@@ -323,6 +323,7 @@
     <ClCompile Include="src\ucrt\src\ucrt_dll.cpp" />
     <ClCompile Include="src\ucrt\src\ucrt_log.cpp" />
     <ClCompile Include="src\ucrt\src\ucrt_win.cpp" />
+    <ClCompile Include="src\utils\BaseUtil.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\ByteOrderDecoder.cpp" />
     <ClCompile Include="src\utils\ByteOrderDecoder_ut.cpp" />
