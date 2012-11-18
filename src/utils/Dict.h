@@ -27,11 +27,26 @@ public:
     MapStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapStrToInt();
 
-    // doesn't allow duplicates. Returns false if the key already exists
-    // (think of it as a "failure" case)
-    bool Insert(const char *key, int val);
+    // if a key doesn't exist, inserts a key with a given value and return true
+    // if a key exists, returns false and sets prevValOut to existing value
+    bool Insert(const char *key, int val, int *prevValOut);
 
     bool GetValue(const char *key, int *valOut);
+};
+
+class MapWStrToInt {
+public:
+    PoolAllocator *allocator;
+    HashTable *h;
+
+    MapWStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
+    ~MapWStrToInt();
+
+    // if a key doesn't exist, inserts a key with a given value and return true
+    // if a key exists, returns false and sets prevValOut to existing value
+    bool Insert(const WCHAR *key, int val, int *prevValOut);
+
+    bool GetValue(const WCHAR *key, int *valOut);
 };
 
 }

@@ -25,12 +25,23 @@ TODO:
 - would hash function be faster if we got bytes one at a time
   but only with a single pass vs. getting 4 at a time but
   doing 2 passes (the first to calculate the length)?
+- would be marginally faster if used a single global instance
+  of StrHasherComparator and WStrHasherComparator. In which case
+  could use a C style function pointer approach (to avoid C++
+  static initializers, which might be called if we use global
+  C++ classes)
 */
 
 #include "BaseUtil.h"
 #include "Dict.h"
 
 namespace dict {
+
+class HasherComparator {
+public:
+    virtual size_t Hash(uintptr_t key) = 0;
+    virtual bool Equal(uintptr_t k1, uintptr_t k2) = 0;
+};
 
 struct HashTableEntry {
     uintptr_t key;
@@ -135,32 +146,6 @@ static void DeleteHashTable(HashTable *h)
     // the rest is freed by allocator
 }
 
-MapStrToInt::MapStrToInt(size_t initialSize)
-{
-    // we use PoolAllocator to allocate HashTableEntry entries
-    // and copies of string keys
-    allocator = new PoolAllocator();
-    allocator->SetAllocRounding(4);
-    h = NewHashTable(initialSize, allocator);
-}
-
-MapStrToInt::~MapStrToInt()
-{
-    DeleteHashTable(h);
-    delete allocator;
-}
-
-class HasherComparator {
-public:
-    virtual size_t Hash(uintptr_t key) = 0;
-    virtual bool Equal(uintptr_t k1, uintptr_t k2) = 0;
-};
-
-class StrKeyHasherComparator : public HasherComparator {
-    virtual size_t Hash(uintptr_t key) { return (size_t)murmur_hash2((const void*)key, (int)str::Len((const char*)key)); }
-    virtual bool Equal(uintptr_t k1, uintptr_t k2) { return str::Eq((const char*)k1, (const char*)k2); }
-};
-
 static void HashTableResizeIfNeeded(HashTable *h, HasherComparator *hc)
 {
     // per http://stackoverflow.com/questions/1603712/when-should-i-do-rehashing-of-entire-hash-table/1604428#1604428
@@ -192,25 +177,20 @@ static void HashTableResizeIfNeeded(HashTable *h, HasherComparator *hc)
     CrashIf(h->nUsed >= (h->nEntries * 3) / 2);
 }
 
-// note: allocator must be NULL for just find, non-NULL for insert
-static HashTableEntry *FindEntryForKey(HashTable *h, HasherComparator *hc, uintptr_t key, Allocator *allocator)
+// note: allocator must be NULL for get, non-NULL for create
+static HashTableEntry *GetOrCreateEntry(HashTable *h, HasherComparator *hc, uintptr_t key, Allocator *allocator, bool& newEntry)
 {
-    bool forInsert = (allocator != NULL);
+    bool shouldCreate = (allocator != NULL);
     size_t hash = hc->Hash(key);
     size_t pos = hash % h->nEntries;
     HashTableEntry *e = h->entries[pos];
-    uintptr_t entryKey;
+    newEntry = false;
     while (e) {
-        entryKey = e->key;
-        if (hc->Equal(key, entryKey)) {
-            // we don't allow inserting duplicate keys
-            if (forInsert)
-                return NULL;
+        if (hc->Equal(key, e->key))
             return e;
-        }
         e = e->next;
     }
-    if (!allocator)
+    if (!shouldCreate)
         return NULL;
 
     e = (HashTableEntry*)Allocator::AllocZero(allocator, sizeof(HashTableEntry));
@@ -219,15 +199,40 @@ static HashTableEntry *FindEntryForKey(HashTable *h, HasherComparator *hc, uintp
     h->nUsed++;
     if (e->next != NULL)
         h->nCollisions++;
+    newEntry = true;
     return e;
 }
 
-bool MapStrToInt::Insert(const char *key, int val)
+class StrKeyHasherComparator : public HasherComparator {
+    virtual size_t Hash(uintptr_t key) { return (size_t)murmur_hash2((const void*)key, (int)str::Len((const char*)key)); }
+    virtual bool Equal(uintptr_t k1, uintptr_t k2) { return str::Eq((const char*)k1, (const char*)k2); }
+};
+
+MapStrToInt::MapStrToInt(size_t initialSize)
+{
+    // we use PoolAllocator to allocate HashTableEntry entries
+    // and copies of string keys
+    allocator = new PoolAllocator();
+    allocator->SetAllocRounding(4);
+    h = NewHashTable(initialSize, allocator);
+}
+
+MapStrToInt::~MapStrToInt()
+{
+    DeleteHashTable(h);
+    delete allocator;
+}
+
+bool MapStrToInt::Insert(const char *key, int val, int *prevVal)
 {
     StrKeyHasherComparator hc;
-    HashTableEntry *e = FindEntryForKey(h, &hc, (uintptr_t)key, allocator);
-    if (!e)
+    bool newEntry;
+    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, allocator, newEntry);
+    if (!newEntry) {
+        if (prevVal)
+            *prevVal = e->val;
         return false;
+    }
     e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, str::Len(key) + 1);
     e->val = (intptr_t)val;
 
@@ -238,7 +243,64 @@ bool MapStrToInt::Insert(const char *key, int val)
 bool MapStrToInt::GetValue(const char *key, int* valOut)
 {
     StrKeyHasherComparator hc;
-    HashTableEntry *e = FindEntryForKey(h, &hc, (uintptr_t)key, NULL);
+    bool newEntry;
+    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, NULL, newEntry);
+    if (!e)
+        return false;
+    *valOut = (int)e->val;
+    return true;
+}
+
+class WStrKeyHasherComparator : public HasherComparator {
+    virtual size_t Hash(uintptr_t key) {
+        size_t cbLen = str::Len((const WCHAR*)key) * sizeof(WCHAR);
+        return (size_t)murmur_hash2((const void*)key, (int)cbLen);
+    }
+    virtual bool Equal(uintptr_t k1, uintptr_t k2) {
+        const WCHAR *s1 = (const WCHAR *)k1;
+        const WCHAR *s2 = (const WCHAR *)k2;
+        return str::Eq(s1, s2);
+    }
+};
+
+MapWStrToInt::MapWStrToInt(size_t initialSize)
+{
+    // we use PoolAllocator to allocate HashTableEntry entries
+    // and copies of string keys
+    allocator = new PoolAllocator();
+    allocator->SetAllocRounding(4);
+    h = NewHashTable(initialSize, allocator);
+}
+
+MapWStrToInt::~MapWStrToInt()
+{
+    DeleteHashTable(h);
+    delete allocator;
+}
+
+bool MapWStrToInt::Insert(const WCHAR *key, int val, int *prevVal)
+{
+    WStrKeyHasherComparator hc;
+    bool newEntry;
+    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, allocator, newEntry);
+    if (!newEntry) {
+        if (prevVal)
+            *prevVal = e->val;
+        return false;
+    }
+    size_t keyCbLen = (str::Len(key) + 1) * sizeof(WCHAR);
+    e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, keyCbLen);
+    e->val = (intptr_t)val;
+
+    HashTableResizeIfNeeded(h, &hc);
+    return true;
+}
+
+bool MapWStrToInt::GetValue(const WCHAR *key, int* valOut)
+{
+    WStrKeyHasherComparator hc;
+    bool newEntry;
+    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, NULL, newEntry);
     if (!e)
         return false;
     *valOut = (int)e->val;

@@ -338,6 +338,8 @@ void ChmEngineImpl::ZoomTo(float zoomLevel)
         htmlWindow->SetZoomPercent((int)zoomLevel);
 }
 
+#define USE_STR_LIST 0
+
 class ChmTocBuilder : public EbookTocVisitor {
     ChmDoc *doc;
 
@@ -346,7 +348,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     int idCounter;
     Vec<DocTocItem *> lastItems;
 
-#if 1
+#if USE_STR_LIST
     // We fake page numbers by doing a depth-first traversal of
     // toc tree and considering each unique html page in toc tree
     // as a page
@@ -362,31 +364,39 @@ class ChmTocBuilder : public EbookTocVisitor {
         return pages->Count();
     }
 #else
-    dict::MapStrToInt urlsSet;
+    // TODO: could use dict::MapWStrToInt instead of StrList in the caller
+    // as well
+    dict::MapWStrToInt urlsSet;
 
-    // TODO: this is experimental because dict::MapStrToInt isn't
-    // completed yet, but it does bring down doc->ParseToc() time
-    // from ~1500 ms to ~1100 ms
     int CreatePageNoForURL(const TCHAR *url) {
         if (!url || IsExternalUrl(url))
             return 0;
 
         ScopedMem<TCHAR> plainUrl(str::ToPlainUrl(url));
-        ScopedMem<char> plainUrlA(str::conv::ToUtf8(plainUrl.Get()));
-        if (urlsSet.Insert(plainUrlA.Get(), 0)) {
+        int pageNo = pages->Count() + 1;
+        bool inserted = urlsSet.Insert(plainUrl, pageNo, &pageNo);
+        if (inserted) {
             pages->Append(plainUrl.StealData());
-            return pages->Count();
+            CrashIf(pageNo != pages->Count());
+        } else {
+            CrashIf(pageNo == pages->Count() + 1);
         }
-
-        int pageNo = pages->Find(plainUrl) + 1;
-        CrashIf(pageNo == 0);
         return pageNo;
     }
 #endif
 
 public:
     ChmTocBuilder(ChmDoc *doc, StrList *pages, ChmTocItem **root) :
-        doc(doc), pages(pages), root(root), idCounter(0) { }
+        doc(doc), pages(pages), root(root), idCounter(0)
+        {
+#if !USE_STR_LIST
+            for (size_t i = 0; i < pages->Count(); i++) {
+                const TCHAR *url = pages->At(i);
+                bool inserted = urlsSet.Insert(url, i + 1, NULL);
+                CrashIf(!inserted);
+            }
+#endif
+        }
 
     virtual void Visit(const TCHAR *name, const TCHAR *url, int level) {
         int pageNo = CreatePageNoForURL(url);

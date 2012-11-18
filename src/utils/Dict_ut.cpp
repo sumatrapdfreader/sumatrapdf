@@ -29,12 +29,13 @@ void DictTest()
     ok = d.GetValue("foo", &val);
     assert(!ok);
 
-    ok = d.Insert("foo", 5);
+    ok = d.Insert("foo", 5, NULL);
     assert(ok);
     ok = d.GetValue("foo", &val);
     assert(val == 5);
-    ok = d.Insert("foo", 8);
+    ok = d.Insert("foo", 8, &val);
     assert(!ok);
+    assert(val == 5);
     ok = d.GetValue("foo", &val);
     assert(val == 5);
     ok = d.GetValue("bar", &val);
@@ -44,7 +45,7 @@ void DictTest()
     for (int i=0; i < 1024; i++) {
         char *k = GenRandomString();
         // no guarantee that the string is unique, so Insert() doesn't always succeeds
-        ok = d.Insert(k, i);
+        ok = d.Insert(k, i, NULL);
         if (!ok)
             continue;
         ok = d.GetValue(k, &val);
