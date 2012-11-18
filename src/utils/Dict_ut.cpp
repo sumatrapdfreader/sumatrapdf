@@ -23,36 +23,60 @@ static char *GenRandomString()
     return &buf[0];
 }
 
-void DictTest()
+void DictTestMapStrToInt()
 {
     dict::MapStrToInt d(4); // start small so that we can test resizing
     bool ok;
     int val;
 
-    ok = d.GetValue("foo", &val);
+    assert(0 == d.Count());
+    ok = d.Get("foo", &val);
+    assert(!ok);
+    ok = d.Remove("foo", NULL);
     assert(!ok);
 
     ok = d.Insert("foo", 5, NULL);
     assert(ok);
-    ok = d.GetValue("foo", &val);
+    assert(1 == d.Count());
+    ok = d.Get("foo", &val);
     assert(val == 5);
     ok = d.Insert("foo", 8, &val);
     assert(!ok);
     assert(val == 5);
-    ok = d.GetValue("foo", &val);
+    ok = d.Get("foo", &val);
     assert(val == 5);
-    ok = d.GetValue("bar", &val);
+    ok = d.Get("bar", &val);
     assert(!ok);
 
+    val = 0;
+    ok = d.Remove("foo", &val);
+    assert(ok);
+    assert(val == 5);
+    assert(0 == d.Count());
+
     srand((unsigned int)time(NULL));
+    Vec<char *> toRemove;
     for (int i=0; i < 1024; i++) {
         char *k = GenRandomString();
-        // no guarantee that the string is unique, so Insert() doesn't always succeeds
         ok = d.Insert(k, i, NULL);
+        // no guarantee that the string is unique, so Insert() doesn't always succeeds
         if (!ok)
             continue;
-        ok = d.GetValue(k, &val);
+        toRemove.Append(str::Dup(k));
+        assert(toRemove.Count() == d.Count());
+        ok = d.Get(k, &val);
         CrashIf(!ok);
         CrashIf(i != val);
     }
+    for (char **k = toRemove.IterStart(); k; k = toRemove.IterNext()) {
+        ok = d.Remove(*k, NULL);
+        assert(ok);
+    }
+    FreeVecMembers(toRemove);
 }
+
+void DictTest()
+{
+    DictTestMapStrToInt();
+}
+

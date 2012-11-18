@@ -21,7 +21,7 @@ Our hash table uses the same parameters as the one in redis
 - size of the hash table is power of two
 
 TODO:
-- remove (make sure to recycle HashTableEntries via free list)
+- add iterator for keys/values
 - would hash function be faster if we got bytes one at a time
   but only with a single pass vs. getting 4 at a time but
   doing 2 passes (the first to calculate the length)?
@@ -32,7 +32,6 @@ TODO:
 
 namespace dict {
 
-
 class HasherComparator {
 public:
     virtual size_t Hash(uintptr_t key) = 0;
@@ -41,7 +40,11 @@ public:
 
 class StrKeyHasherComparator : public HasherComparator {
     virtual size_t Hash(uintptr_t key) { return murmur_hash2((const void*)key, str::Len((const char*)key)); }
-    virtual bool Equal(uintptr_t k1, uintptr_t k2) { return str::Eq((const char*)k1, (const char*)k2); }
+    virtual bool Equal(uintptr_t k1, uintptr_t k2) {
+        const char *s1 = (const char *)k1;
+        const char *s2 = (const char *)k2;
+        return str::Eq(s1, s2);
+    }
 };
 
 class WStrKeyHasherComparator : public HasherComparator {
@@ -68,6 +71,8 @@ struct HashTableEntry {
 // not a class so that it can be allocated with an allocator
 struct HashTable {
     HashTableEntry **entries;
+    HashTableEntry *freeList;
+
     size_t nEntries;
     size_t nUsed; // total number of inserted entries
 
@@ -148,7 +153,12 @@ static HashTableEntry *GetOrCreateEntry(HashTable *h, HasherComparator *hc, uint
     if (!shouldCreate)
         return NULL;
 
-    e = (HashTableEntry*)Allocator::AllocZero(allocator, sizeof(HashTableEntry));
+    if (h->freeList) {
+        e = h->freeList;
+        h->freeList = h->freeList->next;
+    } else {
+        e = (HashTableEntry*)Allocator::AllocZero(allocator, sizeof(HashTableEntry));
+    }
     e->next = h->entries[pos];
     h->entries[pos] = e;
     h->nUsed++;
@@ -156,6 +166,37 @@ static HashTableEntry *GetOrCreateEntry(HashTable *h, HasherComparator *hc, uint
         h->nCollisions++;
     newEntry = true;
     return e;
+}
+
+static bool RemoveEntry(HashTable *h, HasherComparator *hc, uintptr_t key, uintptr_t *removedValOut)
+{
+    size_t hash = hc->Hash(key);
+    size_t pos = hash % h->nEntries;
+    HashTableEntry *e = h->entries[pos];
+    while (e) {
+        if (hc->Equal(key, e->key))
+            break;
+        e = e->next;
+    }
+    if (!e)
+        return false;
+
+    // remove the the entry from the list
+    HashTableEntry *e2 = h->entries[pos];
+    if (e2 == e) {
+        h->entries[pos] = e->next;
+    } else {
+        while (e2->next != e) {
+            e2 = e2->next;
+        }
+        e2->next = e->next;
+    }
+    e->next = h->freeList;
+    h->freeList = e;
+    *removedValOut = e->val;
+    CrashIf(0 == h->nUsed);
+    h->nUsed -= 1;
+    return true;
 }
 
 MapStrToInt::MapStrToInt(size_t initialSize)
@@ -171,6 +212,11 @@ MapStrToInt::~MapStrToInt()
 {
     DeleteHashTable(h);
     delete allocator;
+}
+
+size_t MapStrToInt::Count() const
+{
+    return h->nUsed;
 }
 
 bool MapStrToInt::Insert(const char *key, int val, int *prevVal)
@@ -189,7 +235,16 @@ bool MapStrToInt::Insert(const char *key, int val, int *prevVal)
     return true;
 }
 
-bool MapStrToInt::GetValue(const char *key, int* valOut)
+bool MapStrToInt::Remove(const char *key, int *removedValOut)
+{
+    uintptr_t removedVal;
+    bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &removedVal);
+    if (removed && removedValOut)
+        *removedValOut = removedVal;
+    return removed;
+}
+
+bool MapStrToInt::Get(const char *key, int* valOut)
 {
     StrKeyHasherComparator hc;
     bool newEntry;
@@ -215,6 +270,11 @@ MapWStrToInt::~MapWStrToInt()
     delete allocator;
 }
 
+size_t MapWStrToInt::Count() const
+{
+    return h->nUsed;
+}
+
 bool MapWStrToInt::Insert(const WCHAR *key, int val, int *prevVal)
 {
     bool newEntry;
@@ -232,7 +292,16 @@ bool MapWStrToInt::Insert(const WCHAR *key, int val, int *prevVal)
     return true;
 }
 
-bool MapWStrToInt::GetValue(const WCHAR *key, int* valOut)
+bool MapWStrToInt::Remove(const WCHAR *key, int *removedValOut)
+{
+    uintptr_t removedVal;
+    bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &removedVal);
+    if (removed && removedValOut)
+        *removedValOut = removedVal;
+    return removed;
+}
+
+bool MapWStrToInt::Get(const WCHAR *key, int* valOut)
 {
     WStrKeyHasherComparator hc;
     bool newEntry;

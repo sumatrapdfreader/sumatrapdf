@@ -27,11 +27,13 @@ public:
     MapStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapStrToInt();
 
+    size_t Count() const;
+
     // if a key doesn't exist, inserts a key with a given value and return true
     // if a key exists, returns false and sets prevValOut to existing value
     bool Insert(const char *key, int val, int *prevValOut);
-
-    bool GetValue(const char *key, int *valOut);
+    bool Remove(const char *key, int *removedValOut);
+    bool Get(const char *key, int *valOut);
 };
 
 class MapWStrToInt {
@@ -42,11 +44,13 @@ public:
     MapWStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
     ~MapWStrToInt();
 
+    size_t Count() const;
+
     // if a key doesn't exist, inserts a key with a given value and return true
     // if a key exists, returns false and sets prevValOut to existing value
     bool Insert(const WCHAR *key, int val, int *prevValOut);
-
-    bool GetValue(const WCHAR *key, int *valOut);
+    bool Remove(const WCHAR *key, int *removedValOut);
+    bool Get(const WCHAR *key, int *valOut);
 };
 
 #ifdef UNICODE
