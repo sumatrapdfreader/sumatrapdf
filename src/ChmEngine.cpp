@@ -338,7 +338,7 @@ void ChmEngineImpl::ZoomTo(float zoomLevel)
         htmlWindow->SetZoomPercent((int)zoomLevel);
 }
 
-#define USE_STR_LIST 0
+#define USE_STR_INT_MAP
 
 class ChmTocBuilder : public EbookTocVisitor {
     ChmDoc *doc;
@@ -348,10 +348,10 @@ class ChmTocBuilder : public EbookTocVisitor {
     int idCounter;
     Vec<DocTocItem *> lastItems;
 
-#if USE_STR_LIST
     // We fake page numbers by doing a depth-first traversal of
     // toc tree and considering each unique html page in toc tree
     // as a page
+#ifndef USE_STR_INT_MAP
     int CreatePageNoForURL(const TCHAR *url) {
         if (!url || IsExternalUrl(url))
             return 0;
@@ -364,9 +364,9 @@ class ChmTocBuilder : public EbookTocVisitor {
         return pages->Count();
     }
 #else
-    // TODO: could use dict::MapWStrToInt instead of StrList in the caller
+    // TODO: could use dict::MapTStrToInt instead of StrList in the caller
     // as well
-    dict::MapWStrToInt urlsSet;
+    dict::MapTStrToInt urlsSet;
 
     int CreatePageNoForURL(const TCHAR *url) {
         if (!url || IsExternalUrl(url))
@@ -387,16 +387,15 @@ class ChmTocBuilder : public EbookTocVisitor {
 
 public:
     ChmTocBuilder(ChmDoc *doc, StrList *pages, ChmTocItem **root) :
-        doc(doc), pages(pages), root(root), idCounter(0)
-        {
-#if !USE_STR_LIST
+        doc(doc), pages(pages), root(root), idCounter(0) {
+#ifdef USE_STR_INT_MAP
             for (size_t i = 0; i < pages->Count(); i++) {
                 const TCHAR *url = pages->At(i);
                 bool inserted = urlsSet.Insert(url, i + 1, NULL);
                 CrashIf(!inserted);
             }
 #endif
-        }
+    }
 
     virtual void Visit(const TCHAR *name, const TCHAR *url, int level) {
         int pageNo = CreatePageNoForURL(url);
