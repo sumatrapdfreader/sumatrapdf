@@ -131,18 +131,27 @@ MapStrToInt::~MapStrToInt()
     delete allocator;
 }
 
-// TODO: pass some adapter object that provides Hash() and Compare() functions to make
-// this re-usable for classes with different keys
-static HashTableEntry *FindEntryForKey(MapStrToInt *dict, const char *key, bool forInsert)
+class HasherComparator {
+public:
+    virtual size_t Hash(uintptr_t key) = 0;
+    virtual bool Equal(uintptr_t k1, uintptr_t k2) = 0;
+};
+
+class StrKeyHasherComparator : public HasherComparator {
+    virtual size_t Hash(uintptr_t key) { return (size_t)murmur_hash2((const void*)key, (int)str::Len((const char*)key)); }
+    virtual bool Equal(uintptr_t k1, uintptr_t k2) { return str::Eq((const char*)k1, (const char*)k2); }
+};
+
+static HashTableEntry *FindEntryForKey(MapStrToInt *dict, HasherComparator *hc, uintptr_t key, bool forInsert)
 {
-    size_t hash = murmur_hash2((const void*)key, (int)str::Len(key));
+    size_t hash = hc->Hash(key);
     HashTableEntry **firstEntryPtr = HashTableEntryPtrForHash(dict->h, hash);
     HashTableEntry *e = *firstEntryPtr;
     HashTableEntry **prevPtr = firstEntryPtr;
-    const char *entryKey;
+    uintptr_t entryKey;
     while (e) {
-        entryKey = (const char*)e->key;
-        if (str::Eq(key, entryKey)) {
+        entryKey = e->key;
+        if (hc->Equal(key, entryKey)) {
             if (forInsert)
                 return NULL;
             return e;
@@ -163,7 +172,8 @@ static HashTableEntry *FindEntryForKey(MapStrToInt *dict, const char *key, bool 
 
 bool MapStrToInt::Insert(const char *key, int val)
 {
-    HashTableEntry *e = FindEntryForKey(this, key, true);
+    StrKeyHasherComparator hc;
+    HashTableEntry *e = FindEntryForKey(this, &hc, (uintptr_t)key, true);
     if (!e)
         return false;
     e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, str::Len(key) + 1);
@@ -173,7 +183,8 @@ bool MapStrToInt::Insert(const char *key, int val)
 
 bool MapStrToInt::GetValue(const char *key, int* valOut)
 {
-    HashTableEntry *e = FindEntryForKey(this, key, false);
+    StrKeyHasherComparator hc;
+    HashTableEntry *e = FindEntryForKey(this, &hc, (uintptr_t)key, false);
     if (!e)
         return false;
     *valOut = (int)e->val;
