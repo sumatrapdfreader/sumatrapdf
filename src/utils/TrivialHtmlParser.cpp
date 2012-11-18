@@ -49,13 +49,13 @@ HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
     return NULL;
 }
 
-static TCHAR IntToChar(int codepoint, UINT codepage)
+static TCHAR IntToChar(int codepoint)
 {
 #ifndef UNICODE
     WCHAR wc = codepoint;
     char c = 0;
-    WideCharToMultiByte(codepage, 0, &wc, 1, &c, 1, NULL, NULL);
-    codepoint = c;
+    WideCharToMultiByte(CP_ACP, 0, &wc, 1, &c, 1, NULL, NULL);
+    codepoint = (unsigned char)c;
 #endif
     if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(TCHAR))))
         return '?';
@@ -78,7 +78,7 @@ TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
         int unicode;
         if (str::Parse(src, _T("#%d;"), &unicode) ||
             str::Parse(src, _T("#x%x;"), &unicode)) {
-            *dst++ = IntToChar(unicode, codepage);
+            *dst++ = IntToChar(unicode);
             src = str::FindChar(src, ';') + 1;
             continue;
         }
@@ -93,7 +93,7 @@ TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
             rune = HtmlEntityNameToRune(src, entityLen);
         }
         if (-1 != rune) {
-            *dst++ = IntToChar(rune, codepage);
+            *dst++ = IntToChar(rune);
             src = entityEnd;
             if (*src == _T(';'))
                 ++src;

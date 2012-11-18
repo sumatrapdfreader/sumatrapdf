@@ -49,6 +49,12 @@ public:
     bool GetValue(const WCHAR *key, int *valOut);
 };
 
+#ifdef UNICODE
+typedef MapWStrToInt MapTStrToInt;
+#else
+typedef MapStrToInt MapTStrToInt;
+#endif
+
 }
 
 #endif
