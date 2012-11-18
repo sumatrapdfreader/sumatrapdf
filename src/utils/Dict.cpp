@@ -25,42 +25,12 @@ TODO:
 - would hash function be faster if we got bytes one at a time
   but only with a single pass vs. getting 4 at a time but
   doing 2 passes (the first to calculate the length)?
-- would be marginally faster if used a single global instance
-  of StrHasherComparator and WStrHasherComparator. In which case
-  could use a C style function pointer approach (to avoid C++
-  static initializers, which might be called if we use global
-  C++ classes)
 */
 
 #include "BaseUtil.h"
 #include "Dict.h"
 
 namespace dict {
-
-class HasherComparator {
-public:
-    virtual size_t Hash(uintptr_t key) = 0;
-    virtual bool Equal(uintptr_t k1, uintptr_t k2) = 0;
-};
-
-struct HashTableEntry {
-    uintptr_t key;
-    uintptr_t val;
-    struct HashTableEntry *next;
-};
-
-// not a class so that it can be allocated with an allocator
-struct HashTable {
-    HashTableEntry **entries;
-    size_t nEntries;
-    size_t nUsed; // total number of inserted entries
-
-    // for debugging
-    size_t nResizes;
-    size_t nCollisions;
-};
-
-static uint32_t hash_function_seed = 5381;
 
 /* MurmurHash2, by Austin Appleby
  * Note - This code makes a few assumptions about how your machine behaves -
@@ -73,6 +43,8 @@ static uint32_t hash_function_seed = 5381;
  * 2. It will not produce the same results on little-endian and big-endian
  *    machines.
  */
+static uint32_t hash_function_seed = 5381;
+
 static unsigned int murmur_hash2(const void *key, int len) {
     /* 'm' and 'r' are mixing constants generated offline.
      They're not really 'magic', they just happen to work well.  */
@@ -116,6 +88,49 @@ static unsigned int murmur_hash2(const void *key, int len) {
     return (unsigned int)h;
 }
 
+class HasherComparator {
+public:
+    virtual size_t Hash(uintptr_t key) = 0;
+    virtual bool Equal(uintptr_t k1, uintptr_t k2) = 0;
+};
+
+class StrKeyHasherComparator : public HasherComparator {
+    virtual size_t Hash(uintptr_t key) { return (size_t)murmur_hash2((const void*)key, (int)str::Len((const char*)key)); }
+    virtual bool Equal(uintptr_t k1, uintptr_t k2) { return str::Eq((const char*)k1, (const char*)k2); }
+};
+
+class WStrKeyHasherComparator : public HasherComparator {
+    virtual size_t Hash(uintptr_t key) {
+        size_t cbLen = str::Len((const WCHAR*)key) * sizeof(WCHAR);
+        return (size_t)murmur_hash2((const void*)key, (int)cbLen);
+    }
+    virtual bool Equal(uintptr_t k1, uintptr_t k2) {
+        const WCHAR *s1 = (const WCHAR *)k1;
+        const WCHAR *s2 = (const WCHAR *)k2;
+        return str::Eq(s1, s2);
+    }
+};
+
+static StrKeyHasherComparator gStrKeyHasherComparator;
+static WStrKeyHasherComparator gWStrKeyHasherComparator;
+
+struct HashTableEntry {
+    uintptr_t key;
+    uintptr_t val;
+    struct HashTableEntry *next;
+};
+
+// not a class so that it can be allocated with an allocator
+struct HashTable {
+    HashTableEntry **entries;
+    size_t nEntries;
+    size_t nUsed; // total number of inserted entries
+
+    // for debugging
+    size_t nResizes;
+    size_t nCollisions;
+};
+
 // number of hash table entries should be power of 2
 static size_t roundToPowerOf2(size_t size)
 {
@@ -146,13 +161,8 @@ static void DeleteHashTable(HashTable *h)
     // the rest is freed by allocator
 }
 
-static void HashTableResizeIfNeeded(HashTable *h, HasherComparator *hc)
+static void HashTableResize(HashTable *h, HasherComparator *hc)
 {
-    // per http://stackoverflow.com/questions/1603712/when-should-i-do-rehashing-of-entire-hash-table/1604428#1604428
-    // when using collision chaining, load factor can be 150%
-    if (h->nUsed < (h->nEntries * 3) / 2)
-        return;
-
     size_t newSize = roundToPowerOf2(h->nEntries + 1);
     CrashIf(newSize <= h->nEntries);
     HashTableEntry **newEntries = AllocArray<HashTableEntry*>(newSize);
@@ -175,6 +185,17 @@ static void HashTableResizeIfNeeded(HashTable *h, HasherComparator *hc)
     h->nResizes += 1;
 
     CrashIf(h->nUsed >= (h->nEntries * 3) / 2);
+}
+
+// micro optimization: this is called often, so we want this check inlined. Resizing logic
+// is called rarely, so doesn't need to be inlined
+static inline void HashTableResizeIfNeeded(HashTable *h, HasherComparator *hc)
+{
+    // per http://stackoverflow.com/questions/1603712/when-should-i-do-rehashing-of-entire-hash-table/1604428#1604428
+    // when using collision chaining, load factor can be 150%
+    if (h->nUsed < (h->nEntries * 3) / 2)
+        return;
+    HashTableResize(h, hc);
 }
 
 // note: allocator must be NULL for get, non-NULL for create
@@ -203,11 +224,6 @@ static HashTableEntry *GetOrCreateEntry(HashTable *h, HasherComparator *hc, uint
     return e;
 }
 
-class StrKeyHasherComparator : public HasherComparator {
-    virtual size_t Hash(uintptr_t key) { return (size_t)murmur_hash2((const void*)key, (int)str::Len((const char*)key)); }
-    virtual bool Equal(uintptr_t k1, uintptr_t k2) { return str::Eq((const char*)k1, (const char*)k2); }
-};
-
 MapStrToInt::MapStrToInt(size_t initialSize)
 {
     // we use PoolAllocator to allocate HashTableEntry entries
@@ -225,9 +241,8 @@ MapStrToInt::~MapStrToInt()
 
 bool MapStrToInt::Insert(const char *key, int val, int *prevVal)
 {
-    StrKeyHasherComparator hc;
     bool newEntry;
-    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, allocator, newEntry);
+    HashTableEntry *e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
     if (!newEntry) {
         if (prevVal)
             *prevVal = e->val;
@@ -236,7 +251,7 @@ bool MapStrToInt::Insert(const char *key, int val, int *prevVal)
     e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, str::Len(key) + 1);
     e->val = (intptr_t)val;
 
-    HashTableResizeIfNeeded(h, &hc);
+    HashTableResizeIfNeeded(h, &gStrKeyHasherComparator);
     return true;
 }
 
@@ -250,18 +265,6 @@ bool MapStrToInt::GetValue(const char *key, int* valOut)
     *valOut = (int)e->val;
     return true;
 }
-
-class WStrKeyHasherComparator : public HasherComparator {
-    virtual size_t Hash(uintptr_t key) {
-        size_t cbLen = str::Len((const WCHAR*)key) * sizeof(WCHAR);
-        return (size_t)murmur_hash2((const void*)key, (int)cbLen);
-    }
-    virtual bool Equal(uintptr_t k1, uintptr_t k2) {
-        const WCHAR *s1 = (const WCHAR *)k1;
-        const WCHAR *s2 = (const WCHAR *)k2;
-        return str::Eq(s1, s2);
-    }
-};
 
 MapWStrToInt::MapWStrToInt(size_t initialSize)
 {
@@ -280,9 +283,8 @@ MapWStrToInt::~MapWStrToInt()
 
 bool MapWStrToInt::Insert(const WCHAR *key, int val, int *prevVal)
 {
-    WStrKeyHasherComparator hc;
     bool newEntry;
-    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, allocator, newEntry);
+    HashTableEntry *e = GetOrCreateEntry(h, &gWStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
     if (!newEntry) {
         if (prevVal)
             *prevVal = e->val;
@@ -292,7 +294,7 @@ bool MapWStrToInt::Insert(const WCHAR *key, int val, int *prevVal)
     e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, keyCbLen);
     e->val = (intptr_t)val;
 
-    HashTableResizeIfNeeded(h, &hc);
+    HashTableResizeIfNeeded(h, &gWStrKeyHasherComparator);
     return true;
 }
 
