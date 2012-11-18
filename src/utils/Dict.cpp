@@ -251,19 +251,19 @@ bool MapStrToInt::GetValue(const char *key, int* valOut)
     return true;
 }
 
-class TStrKeyHasherComparator : public HasherComparator {
+class WStrKeyHasherComparator : public HasherComparator {
     virtual size_t Hash(uintptr_t key) {
-        size_t cbLen = str::Len((const TCHAR *)key) * sizeof(TCHAR);
-        return (size_t)murmur_hash2((const void *)key, (int)cbLen);
+        size_t cbLen = str::Len((const WCHAR*)key) * sizeof(WCHAR);
+        return (size_t)murmur_hash2((const void*)key, (int)cbLen);
     }
     virtual bool Equal(uintptr_t k1, uintptr_t k2) {
-        const TCHAR *s1 = (const TCHAR *)k1;
-        const TCHAR *s2 = (const TCHAR *)k2;
+        const WCHAR *s1 = (const WCHAR *)k1;
+        const WCHAR *s2 = (const WCHAR *)k2;
         return str::Eq(s1, s2);
     }
 };
 
-MapTStrToInt::MapTStrToInt(size_t initialSize)
+MapWStrToInt::MapWStrToInt(size_t initialSize)
 {
     // we use PoolAllocator to allocate HashTableEntry entries
     // and copies of string keys
@@ -272,15 +272,15 @@ MapTStrToInt::MapTStrToInt(size_t initialSize)
     h = NewHashTable(initialSize, allocator);
 }
 
-MapTStrToInt::~MapTStrToInt()
+MapWStrToInt::~MapWStrToInt()
 {
     DeleteHashTable(h);
     delete allocator;
 }
 
-bool MapTStrToInt::Insert(const TCHAR *key, int val, int *prevVal)
+bool MapWStrToInt::Insert(const WCHAR *key, int val, int *prevVal)
 {
-    TStrKeyHasherComparator hc;
+    WStrKeyHasherComparator hc;
     bool newEntry;
     HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, allocator, newEntry);
     if (!newEntry) {
@@ -288,7 +288,7 @@ bool MapTStrToInt::Insert(const TCHAR *key, int val, int *prevVal)
             *prevVal = e->val;
         return false;
     }
-    size_t keyCbLen = (str::Len(key) + 1) * sizeof(TCHAR);
+    size_t keyCbLen = (str::Len(key) + 1) * sizeof(WCHAR);
     e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, keyCbLen);
     e->val = (intptr_t)val;
 
@@ -296,9 +296,9 @@ bool MapTStrToInt::Insert(const TCHAR *key, int val, int *prevVal)
     return true;
 }
 
-bool MapTStrToInt::GetValue(const TCHAR *key, int *valOut)
+bool MapWStrToInt::GetValue(const WCHAR *key, int* valOut)
 {
-    TStrKeyHasherComparator hc;
+    WStrKeyHasherComparator hc;
     bool newEntry;
     HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, NULL, newEntry);
     if (!e)

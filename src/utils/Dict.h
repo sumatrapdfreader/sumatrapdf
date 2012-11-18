@@ -34,19 +34,19 @@ public:
     bool GetValue(const char *key, int *valOut);
 };
 
-class MapTStrToInt {
+class MapWStrToInt {
 public:
     PoolAllocator *allocator;
     HashTable *h;
 
-    MapTStrToInt(size_t initialSize=DEFAULT_HASH_TABLE_INITIAL_SIZE);
-    ~MapTStrToInt();
+    MapWStrToInt(size_t initialSize = DEFAULT_HASH_TABLE_INITIAL_SIZE);
+    ~MapWStrToInt();
 
     // if a key doesn't exist, inserts a key with a given value and return true
     // if a key exists, returns false and sets prevValOut to existing value
-    bool Insert(const TCHAR *key, int val, int *prevValOut);
+    bool Insert(const WCHAR *key, int val, int *prevValOut);
 
-    bool GetValue(const TCHAR *key, int *valOut);
+    bool GetValue(const WCHAR *key, int *valOut);
 };
 
 }
