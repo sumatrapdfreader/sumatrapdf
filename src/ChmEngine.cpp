@@ -346,6 +346,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     int idCounter;
     Vec<DocTocItem *> lastItems;
 
+#if 1
     // We fake page numbers by doing a depth-first traversal of
     // toc tree and considering each unique html page in toc tree
     // as a page
@@ -360,14 +361,13 @@ class ChmTocBuilder : public EbookTocVisitor {
         pages->Append(plainUrl.StealData());
         return pages->Count();
     }
-
-#if 0
+#else
     dict::MapStrToInt urlsSet;
 
     // TODO: this is experimental because dict::MapStrToInt isn't
     // completed yet, but it does bring down doc->ParseToc() time
     // from ~1500 ms to ~1100 ms
-    int CreatePageNoForURL2(const TCHAR *url) {
+    int CreatePageNoForURL(const TCHAR *url) {
         if (!url || IsExternalUrl(url))
             return 0;
 
