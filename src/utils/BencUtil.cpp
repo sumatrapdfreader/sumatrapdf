@@ -178,9 +178,10 @@ void BencDict::Add(const char *key, BencObj *obj)
     size_t oix = 0;
     if (keys.Count() > 0 && strcmp(keys.Last(), key) < 0)
         oix = keys.Count();
-    for (; oix < keys.Count(); oix++)
+    for (; oix < keys.Count(); oix++) {
         if (strcmp(keys.At(oix), key) >= 0)
             break;
+    }
 
     if (oix < keys.Count() && str::Eq(keys.At(oix), key)) {
         // overwrite a previous value

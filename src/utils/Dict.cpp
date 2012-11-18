@@ -14,6 +14,17 @@ The classes are based on a generic, untyped uintptr => uintptr
 hash table. The actual dict class is a wrapper that provides
 a type-safe API and handles policy decisions like allocations
 (if they are necessary).
+
+Our hash table uses the same parameters as the one in redis
+(but without complexity of incremental hashing):
+- we use chaining on collisions
+- size of the hash table is power of two
+
+TODO:
+- remove (make sure to recycle HashTableEntries via free list)
+- would hash function be faster if we got bytes one at a time
+  but only with a single pass vs. getting 4 at a time but
+  doing 2 passes (the first to calculate the length)?
 */
 
 #include "BaseUtil.h"
@@ -30,11 +41,11 @@ struct HashTableEntry {
 // not a class so that it can be allocated with an allocator
 struct HashTable {
     HashTableEntry **entries;
-    size_t entriesCount;
-    size_t used;
+    size_t nEntries;
+    size_t nUsed; // total number of inserted entries
 
     // for debugging
-    size_t nRehashes;
+    size_t nResizes;
     size_t nCollisions;
 };
 
@@ -94,14 +105,27 @@ static unsigned int murmur_hash2(const void *key, int len) {
     return (unsigned int)h;
 }
 
+// number of hash table entries should be power of 2
+static size_t roundToPowerOf2(size_t size)
+{
+    size_t n = 4;
+    while (size < LONG_MAX) {
+        if (n >= size)
+            return n;
+        n *= 2;
+    }
+    return LONG_MAX;
+}
+
 static HashTable *NewHashTable(size_t size, Allocator *allocator)
 {
     CrashIf(!allocator); // we'll leak otherwise
     HashTable *h = (HashTable*)Allocator::AllocZero(allocator, sizeof(HashTable));
+    size = roundToPowerOf2(size);
     // entries are not allocated with allocator since those are large blocks
     // and we don't want to waste their memory after 
     h->entries = AllocArray<HashTableEntry*>(size);
-    h->entriesCount = size;
+    h->nEntries = size;
     return h;
 }
 
@@ -111,17 +135,12 @@ static void DeleteHashTable(HashTable *h)
     // the rest is freed by allocator
 }
 
-static HashTableEntry **HashTableEntryPtrForHash(HashTable *h, size_t hash)
-{
-    size_t pos = hash % h->entriesCount;
-    return &h->entries[pos];
-}
-
 MapStrToInt::MapStrToInt(size_t initialSize)
 {
     // we use PoolAllocator to allocate HashTableEntry entries
     // and copies of string keys
-    allocator = new PoolAllocator(4);
+    allocator = new PoolAllocator();
+    allocator->SetAllocRounding(4);
     h = NewHashTable(initialSize, allocator);
 }
 
@@ -142,49 +161,84 @@ class StrKeyHasherComparator : public HasherComparator {
     virtual bool Equal(uintptr_t k1, uintptr_t k2) { return str::Eq((const char*)k1, (const char*)k2); }
 };
 
-static HashTableEntry *FindEntryForKey(MapStrToInt *dict, HasherComparator *hc, uintptr_t key, bool forInsert)
+static void HashTableResizeIfNeeded(HashTable *h, HasherComparator *hc)
 {
+    // per http://stackoverflow.com/questions/1603712/when-should-i-do-rehashing-of-entire-hash-table/1604428#1604428
+    // when using collision chaining, load factor can be 150%
+    if (h->nUsed < (h->nEntries * 3) / 2)
+        return;
+
+    size_t newSize = roundToPowerOf2(h->nEntries + 1);
+    CrashIf(newSize <= h->nEntries);
+    HashTableEntry **newEntries = AllocArray<HashTableEntry*>(newSize);
+    HashTableEntry *e, *next;
+    size_t hash, pos;
+    for (size_t i = 0; i < h->nEntries; i++) {
+        e = h->entries[i];
+        while (e) {
+            next = e->next;
+            hash = hc->Hash(e->key);
+            pos = hash % newSize;
+            e->next = newEntries[pos];
+            newEntries[pos] = e;
+            e = next;
+        }
+    }
+    free(h->entries);
+    h->entries = newEntries;
+    h->nEntries = newSize;
+    h->nResizes += 1;
+
+    CrashIf(h->nUsed >= (h->nEntries * 3) / 2);
+}
+
+// note: allocator must be NULL for just find, non-NULL for insert
+static HashTableEntry *FindEntryForKey(HashTable *h, HasherComparator *hc, uintptr_t key, Allocator *allocator)
+{
+    bool forInsert = (allocator != NULL);
     size_t hash = hc->Hash(key);
-    HashTableEntry **firstEntryPtr = HashTableEntryPtrForHash(dict->h, hash);
-    HashTableEntry *e = *firstEntryPtr;
-    HashTableEntry **prevPtr = firstEntryPtr;
+    size_t pos = hash % h->nEntries;
+    HashTableEntry *e = h->entries[pos];
     uintptr_t entryKey;
     while (e) {
         entryKey = e->key;
         if (hc->Equal(key, entryKey)) {
+            // we don't allow inserting duplicate keys
             if (forInsert)
                 return NULL;
             return e;
         }
-        prevPtr = &e->next;
         e = e->next;
     }
-    if (!forInsert)
+    if (!allocator)
         return NULL;
-    *prevPtr = (HashTableEntry*)Allocator::AllocZero(dict->allocator, sizeof(HashTableEntry));
-    // TODO: rehash if needed
-    if (firstEntryPtr == prevPtr)
-        dict->h->used++;
-    else
-        dict->h->nCollisions++;
-    return *prevPtr;
+
+    e = (HashTableEntry*)Allocator::AllocZero(allocator, sizeof(HashTableEntry));
+    e->next = h->entries[pos];
+    h->entries[pos] = e;
+    h->nUsed++;
+    if (e->next != NULL)
+        h->nCollisions++;
+    return e;
 }
 
 bool MapStrToInt::Insert(const char *key, int val)
 {
     StrKeyHasherComparator hc;
-    HashTableEntry *e = FindEntryForKey(this, &hc, (uintptr_t)key, true);
+    HashTableEntry *e = FindEntryForKey(h, &hc, (uintptr_t)key, allocator);
     if (!e)
         return false;
     e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, str::Len(key) + 1);
     e->val = (intptr_t)val;
+
+    HashTableResizeIfNeeded(h, &hc);
     return true;
 }
 
 bool MapStrToInt::GetValue(const char *key, int* valOut)
 {
     StrKeyHasherComparator hc;
-    HashTableEntry *e = FindEntryForKey(this, &hc, (uintptr_t)key, false);
+    HashTableEntry *e = FindEntryForKey(h, &hc, (uintptr_t)key, NULL);
     if (!e)
         return false;
     *valOut = (int)e->val;
