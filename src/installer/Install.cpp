@@ -100,12 +100,12 @@ static bool InstallCopyFiles()
 }
 
 /* Caller needs to free() the result. */
-static TCHAR *GetDefaultPdfViewer()
+static WCHAR *GetDefaultPdfViewer()
 {
-    ScopedMem<WCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
+    ScopedMem<WCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
     if (buf)
         return buf.StealData();
-    return ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL);
+    return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", NULL);
 }
 
 bool IsBrowserPluginInstalled()
@@ -118,7 +118,7 @@ bool IsBrowserPluginInstalled()
 
 bool IsPdfFilterInstalled()
 {
-    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
+    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\PersistentHandler", NULL));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
@@ -126,16 +126,16 @@ bool IsPdfFilterInstalled()
 
 bool IsPdfPreviewerInstalled()
 {
-    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"), NULL));
+    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}", NULL));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
 }
 
 // Note: doesn't handle (total) sizes above 4GB
-static DWORD GetDirSize(TCHAR *dir)
+static DWORD GetDirSize(WCHAR *dir)
 {
-    ScopedMem<WCHAR> dirPattern(path::Join(dir, _T("*")));
+    ScopedMem<WCHAR> dirPattern(path::Join(dir, L"*"));
     WIN32_FIND_DATA findData;
 
     HANDLE h = FindFirstFile(dirPattern, &findData);
@@ -147,7 +147,7 @@ static DWORD GetDirSize(TCHAR *dir)
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             totalSize += findData.nFileSizeLow;
         }
-        else if (!str::Eq(findData.cFileName, _T(".")) && !str::Eq(findData.cFileName, _T(".."))) {
+        else if (!str::Eq(findData.cFileName, L".") && !str::Eq(findData.cFileName, L"..")) {
             ScopedMem<WCHAR> subdir(path::Join(dir, findData.cFileName));
             totalSize += GetDirSize(subdir);
         }
@@ -158,11 +158,11 @@ static DWORD GetDirSize(TCHAR *dir)
 }
 
 // caller needs to free() the result
-static TCHAR *GetInstallDate()
+static WCHAR *GetInstallDate()
 {
     SYSTEMTIME st;
     GetSystemTime(&st);
-    return str::Format(_T("%04d%02d%02d"), st.wYear, st.wMonth, st.wDay);
+    return str::Format(L"%04d%02d%02d", st.wYear, st.wMonth, st.wDay);
 }
 
 static bool WriteUninstallerRegistryInfo(HKEY hkey)
@@ -336,7 +336,7 @@ static void OnButtonInstall()
     if (!CheckInstallUninstallPossible())
         return;
 
-    TCHAR *userInstallDir = win::GetText(gHwndTextboxInstDir);
+    WCHAR *userInstallDir = win::GetText(gHwndTextboxInstDir);
     if (!str::IsEmpty(userInstallDir))
         str::ReplacePtr(&gGlobalData.installDir, userInstallDir);
     free(userInstallDir);
@@ -438,7 +438,7 @@ static void OnButtonOptions()
     EnableAndShow(gHwndCheckboxRegisterPdfFilter, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
 
-    win::SetText(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("&Options"));
+    win::SetText(gHwndButtonOptions, gShowOptions ? L"Hide &Options" : L"&Options");
 
     ClientRect rc(gHwndFrame);
     rc.dy -= BOTTOM_PART_DY;
@@ -451,14 +451,14 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
 {
     switch (msg) {
     case BFFM_INITIALIZED:
-        if (!str::IsEmpty((TCHAR *)lpData))
+        if (!str::IsEmpty((WCHAR *)lpData))
             SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
         break;
 
     // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
     case BFFM_SELCHANGED:
         {
-            TCHAR path[MAX_PATH];
+            WCHAR path[MAX_PATH];
             if (SHGetPathFromIDList((LPITEMIDLIST)lParam, path) && dir::Exists(path)) {
                 SHFILEINFO sfi;
                 SHGetFileInfo((LPCTSTR)lParam, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
@@ -507,12 +507,12 @@ static void OnButtonBrowse()
     if (!dir::Exists(installDir))
         installDir.Set(path::GetDir(installDir));
 
-    TCHAR path[MAX_PATH];
-    if (BrowseForFolder(gHwndFrame, installDir, _T("Select the folder into which ") TAPP _T(" should be installed:"), path, dimof(path))) {
-        TCHAR *installPath = path;
+    WCHAR path[MAX_PATH];
+    if (BrowseForFolder(gHwndFrame, installDir, L"Select the folder into which " TAPP L" should be installed:", path, dimof(path))) {
+        WCHAR *installPath = path;
         // force paths that aren't entered manually to end in ...\SumatraPDF
         // to prevent unintended installations into e.g. %ProgramFiles% itself
-        if (!str::EndsWithI(path, _T("\\") TAPP))
+        if (!str::EndsWithI(path, L"\\" TAPP))
             installPath = path::Join(path, TAPP);
         win::SetText(gHwndTextboxInstDir, installPath);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);

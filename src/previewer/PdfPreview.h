@@ -4,15 +4,15 @@
 #ifndef PdfPreview_h
 #define PdfPreview_h
 
-#define SZ_PDF_PREVIEW_CLSID    _T("{3D3B1846-CC43-42ae-BFF9-D914083C2BA3}")
+#define SZ_PDF_PREVIEW_CLSID    L"{3D3B1846-CC43-42ae-BFF9-D914083C2BA3}"
 #ifdef BUILD_XPS_PREVIEW
-#define SZ_XPS_PREVIEW_CLSID    _T("{D427A82C-6545-4fbe-8E87-030EDB3BE46D}")
+#define SZ_XPS_PREVIEW_CLSID    L"{D427A82C-6545-4fbe-8E87-030EDB3BE46D}"
 #endif
 #ifdef BUILD_CBZ_PREVIEW
-#define SZ_CBZ_PREVIEW_CLSID    _T("{C29D3E2B-8FF6-4033-A4E8-54221D859D74}")
+#define SZ_CBZ_PREVIEW_CLSID    L"{C29D3E2B-8FF6-4033-A4E8-54221D859D74}"
 #endif
 #ifdef BUILD_TGA_PREVIEW
-#define SZ_TGA_PREVIEW_CLSID    _T("{CB1D63A6-FE5E-4ded-BEA5-3F6AF1A70D08}")
+#define SZ_TGA_PREVIEW_CLSID    L"{CB1D63A6-FE5E-4ded-BEA5-3F6AF1A70D08}"
 #endif
 
 #include "BaseEngine.h"
@@ -27,7 +27,7 @@ class PreviewBase : public IThumbnailProvider, public IInitializeWithStream,
     public IPersistFile, public IExtractImage2
 {
 public:
-    PreviewBase(long *plRefCount, const TCHAR *clsid) : m_lRef(1),
+    PreviewBase(long *plRefCount, const WCHAR *clsid) : m_lRef(1),
         m_plModuleRef(plRefCount), m_pStream(NULL), m_engine(NULL),
         renderer(NULL), m_gdiScope(NULL), m_site(NULL), m_hwnd(NULL),
         m_hwndParent(NULL), m_clsid(clsid), m_extractCx(0) {
@@ -228,7 +228,7 @@ protected:
     HWND        m_hwnd, m_hwndParent;
     RectI       m_rcParent;
     // for IExtractImage2
-    const TCHAR*m_clsid;
+    const WCHAR*m_clsid;
     UINT        m_extractCx;
     FILETIME    m_dateStamp;
 

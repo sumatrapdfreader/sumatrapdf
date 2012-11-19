@@ -16,10 +16,10 @@
 #include "Version.h"
 #include "WinUtil.h"
 
-#define TAPP                _T("SumatraPDF")
-#define EXENAME             TAPP _T(".exe")
+#define TAPP                L"SumatraPDF"
+#define EXENAME             TAPP L".exe"
 
-#define INSTALLER_FRAME_CLASS_NAME    _T("SUMATRA_PDF_INSTALLER_FRAME")
+#define INSTALLER_FRAME_CLASS_NAME    L"SUMATRA_PDF_INSTALLER_FRAME"
 
 #define INSTALLER_WIN_DX    420
 #define INSTALLER_WIN_DY    340
@@ -39,20 +39,20 @@
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
-#define REG_PATH_UNINST     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\") TAPP
+#define REG_PATH_UNINST     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" TAPP
 // Legacy key, only read during an update and removed at uninstallation
-#define REG_PATH_SOFTWARE   _T("Software\\") TAPP
+#define REG_PATH_SOFTWARE   L"Software\\" TAPP
 
-#define REG_CLASSES_APP     _T("Software\\Classes\\") TAPP
-#define REG_CLASSES_PDF     _T("Software\\Classes\\.pdf")
-#define REG_CLASSES_APPS    _T("Software\\Classes\\Applications\\") EXENAME
+#define REG_CLASSES_APP     L"Software\\Classes\\" TAPP
+#define REG_CLASSES_PDF     L"Software\\Classes\\.pdf"
+#define REG_CLASSES_APPS    L"Software\\Classes\\Applications\\" EXENAME
 
-#define REG_EXPLORER_PDF_EXT  _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf")
-#define PROG_ID               _T("ProgId")
-#define APPLICATION           _T("Application")
+#define REG_EXPLORER_PDF_EXT  L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
+#define PROG_ID               L"ProgId"
+#define APPLICATION           L"Application"
 
-#define REG_PATH_PLUGIN     _T("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin")
-#define PLUGIN_PATH         _T("Path")
+#define REG_PATH_PLUGIN     L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin"
+#define PLUGIN_PATH         L"Path"
 
 // Keys we'll set in REG_PATH_UNINST path
 
@@ -92,7 +92,7 @@
 struct GlobalData {
     bool    silent;
     bool    showUsageAndQuit;
-    TCHAR * installDir;
+    WCHAR * installDir;
 #ifndef BUILD_UNINSTALLER
     bool    registerAsDefault;
     bool    installBrowserPlugin;
@@ -100,7 +100,7 @@ struct GlobalData {
     bool    installPdfPreviewer;
 #endif
 
-    TCHAR * firstError;
+    WCHAR * firstError;
     HANDLE  hThread;
     bool    success;
 };
@@ -112,13 +112,13 @@ struct PayloadInfo {
 
 extern GlobalData   gGlobalData;
 extern PayloadInfo  gPayloadData[];
-extern TCHAR *      gSupportedExts[];
+extern WCHAR *      gSupportedExts[];
 extern HINSTANCE    ghinst;
 extern HWND         gHwndFrame;
 extern HWND         gHwndButtonExit;
 extern HWND         gHwndButtonInstUninst;
 extern HFONT        gFontDefault;
-extern TCHAR *      gMsgError;
+extern WCHAR *      gMsgError;
 extern bool         gShowOptions;
 extern bool         gForceCrash;
 extern bool         gReproBug;
@@ -128,27 +128,27 @@ extern Gdiplus::Color COLOR_MSG_OK;
 extern Gdiplus::Color COLOR_MSG_INSTALLATION;
 extern Gdiplus::Color COLOR_MSG_FAILED;
 
-void NotifyFailed(TCHAR *msg);
-TCHAR *GetInstalledExePath();
+void NotifyFailed(WCHAR *msg);
+WCHAR *GetInstalledExePath();
 void OnCreateWindow(HWND hwnd);
 void ShowUsage();
 void CreateMainWindow();
-TCHAR *GetOwnPath();
+WCHAR *GetOwnPath();
 bool OnWmCommand(WPARAM wParam);
-bool CreateProcessHelper(const TCHAR *exe, const TCHAR *args=NULL);
-TCHAR *GetUninstallerPath();
-int KillProcess(TCHAR *processPath, BOOL waitUntilTerminated);
+bool CreateProcessHelper(const WCHAR *exe, const WCHAR *args=NULL);
+WCHAR *GetUninstallerPath();
+int KillProcess(WCHAR *processPath, BOOL waitUntilTerminated);
 void UninstallBrowserPlugin();
 void UninstallPdfFilter();
 void UninstallPdfPreviewer();
 void KillSumatra();
-TCHAR *GetShortcutPath(bool allUsers);
-void SetMsg(TCHAR *msg, Gdiplus::Color color);
+WCHAR *GetShortcutPath(bool allUsers);
+void SetMsg(WCHAR *msg, Gdiplus::Color color);
 void InvalidateFrame();
 bool CheckInstallUninstallPossible(bool silent=false);
 void CreateButtonExit(HWND hwndParent);
 void OnButtonExit();
-HWND CreateDefaultButton(HWND hwndParent, const TCHAR *label, int width, int id=IDOK);
+HWND CreateDefaultButton(HWND hwndParent, const WCHAR *label, int width, int id=IDOK);
 int dpiAdjust(int value);
 void InstallBrowserPlugin();
 void InstallPdfFilter();

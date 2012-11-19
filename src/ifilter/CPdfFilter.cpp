@@ -46,13 +46,13 @@ HRESULT CPdfFilter::OnInit()
 }
 
 // copied from SumatraProperties.cpp
-static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut)
+static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (str::StartsWith(pdfDate, _T("D:")))
+    if (str::StartsWith(pdfDate, L"D:"))
         pdfDate += 2;
-    return str::Parse(pdfDate, _T("%4d%2d%2d") _T("%2d%2d%2d"),
+    return str::Parse(pdfDate, L"%4d%2d%2d" L"%2d%2d%2d",
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
         &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != NULL;
     // don't bother about the day of week, we won't display it anyway

@@ -114,20 +114,20 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     return pClassFactory->QueryInterface(riid, ppv);
 }
 
-#define CLSID_I_THUMBNAIL_PROVIDER  _T("{e357fccd-a995-4576-b01f-234630154e96}")
-#define CLSID_I_EXTRACT_IMAGE       _T("{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}")
-#define CLSID_I_PREVIEW_HANDLER     _T("{8895b1c6-b41f-4c1c-a562-0d564250836f}")
-#define APPID_PREVHOST_EXE          _T("{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}")
-#define APPID_PREVHOST_EXE_WOW64    _T("{534a1e02-d58f-44f0-b58b-36cbed287c7c}")
+#define CLSID_I_THUMBNAIL_PROVIDER  L"{e357fccd-a995-4576-b01f-234630154e96}"
+#define CLSID_I_EXTRACT_IMAGE       L"{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}"
+#define CLSID_I_PREVIEW_HANDLER     L"{8895b1c6-b41f-4c1c-a562-0d564250836f}"
+#define APPID_PREVHOST_EXE          L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}"
+#define APPID_PREVHOST_EXE_WOW64    L"{534a1e02-d58f-44f0-b58b-36cbed287c7c}"
 
 STDAPI DllRegisterServer()
 {
-    TCHAR path[MAX_PATH];
+    WCHAR path[MAX_PATH];
     if (!GetModuleFileName(g_hInstance, path, dimof(path)))
         return HRESULT_FROM_WIN32(GetLastError());
 
     struct {
-        TCHAR *key, *value, *data;
+        WCHAR *key, *value, *data;
     } regVals[] = {
         { _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID,
                 NULL,                   _T("SumatraPDF Preview Handler") },
@@ -229,7 +229,7 @@ STDAPI DllRegisterServer()
 
 STDAPI DllUnregisterServer()
 {
-    const TCHAR *regKeys[] = {
+    const WCHAR *regKeys[] = {
         _T("Software\\Classes\\CLSID\\") SZ_PDF_PREVIEW_CLSID,
         _T("Software\\Classes\\.pdf\\shellex\\") CLSID_I_THUMBNAIL_PROVIDER,
         _T("Software\\Classes\\.pdf\\shellex\\") CLSID_I_EXTRACT_IMAGE,
