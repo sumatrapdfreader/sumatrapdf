@@ -78,11 +78,6 @@ CFLAGSB = $(CFLAGSB) /wd4996
 # /GF  : enable read-only string pooling
 CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy /GF
 
-# Make it easy to compile as ANSI or UNICODE application
-!if "$(_ANSI)"==""
-CFLAGSB = $(CFLAGSB) /D "UNICODE" /D "_UNICODE"
-!endif
-
 # /EHs-c- : disable C++ exceptions (generates smaller binaries)
 CFLAGSB = $(CFLAGSB) /EHs-c- 
 

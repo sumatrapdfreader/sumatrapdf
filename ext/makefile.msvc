@@ -20,14 +20,11 @@ BZIP2_CFLAGS = $(CFLAGSOPT) /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
 BZIP2_CFLAGS = $(BZIP2_CFLAGS) /wd4244
 !endif
 MINIZIP_CFLAGS = $(CFLAGS) /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(EXTDIR)/bzip2
-MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /D "INC_CUSTOM_ALLOC=\"unzalloc.h\"" /D "NOCRYPT"
+MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /D "UNICODE" /D "_UNICODE" /D "INC_CUSTOM_ALLOC=\"unzalloc.h\"" /D "NOCRYPT"
 
 UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL" /D "SILENT"
 # a hack to enable C++ exception handling for UnRAR (without triggering a warning)
 UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
-# a hack to undo /D "UNICODE" since unrar defines it unconditionally, causing
-# compilation warnings
-UNRAR_CFLAGS = $(UNRAR_CFLAGS:UNICODE=IGNORE_THIS)
 
 DJVU_CFLAGS = $(CFLAGSOPT) /D "NEED_JPEG_DECODER" /I$(JPEG_TURBO_DIR)
 DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=0" /D "DDJVUAPI=/**/" /D "MINILISPAPI=/**/"
@@ -35,15 +32,13 @@ DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=0" /D "DDJVUAPI=/**/" /D "MINILISPA
 DJVU_CFLAGS = $(DJVU_CFLAGS) /D "DO_CHANGELOCALE=0"
 # a hack to enable C++ exception handling for libdjvu (without triggering a warning)
 DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
-# undo /D "UNICODE", as libdjvu uses TCHAR functions for char in several places
-DJVU_CFLAGS = $(DJVU_CFLAGS:UNICODE=IGNORE_THIS)
 !if "$(PLATFORM)"=="X64"
 DJVU_CFLAGS = $(DJVU_CFLAGS) /wd4244 /wd4267
 !endif
 
 CHMLIB_CFLAGS = $(CFLAGS) /D "CHM_MT" /wd4244 /wd4018
 # ChmLib also needs PPC_BSTR defined for UNICODE builds
-CHMLIB_CFLAGS = $(CHMLIB_CFLAGS:"_UNICODE"="_UNICODE" /D "PPC_BSTR")
+CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /D "UNICODE" /D "_UNICODE" /D "PPC_BSTR"
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
