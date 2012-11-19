@@ -218,7 +218,7 @@ bool ZipFile::UnzipFile(const TCHAR *filename, const TCHAR *dir, const TCHAR *un
 
 class ZipCreatorData {
 public:
-    StrVec pathsAndZipNames;
+    WStrVec pathsAndZipNames;
 };
 
 ZipCreator::ZipCreator()
@@ -253,17 +253,17 @@ bool ZipCreator::AddFile(const TCHAR *filePath, const TCHAR *nameInZip)
 
 // filePath must be in dir, we use the filePath relative to dir
 // as the zip name
-bool ZipCreator::AddFileFromDir(const TCHAR *filePath, const TCHAR *dir)
+bool ZipCreator::AddFileFromDir(const WCHAR *filePath, const WCHAR *dir)
 {
     if (!str::StartsWith(filePath, dir))
         return false;
-    const TCHAR *nameInZip = filePath + str::Len(dir);
+    const WCHAR *nameInZip = filePath + str::Len(dir);
     if (path::IsSep(*nameInZip))
         ++nameInZip;
     return AddFile(filePath, nameInZip);
 }
 
-bool ZipCreator::SaveAs(const TCHAR *zipFilePath)
+bool ZipCreator::SaveAs(const WCHAR *zipFilePath)
 {
     if (d->pathsAndZipNames.Count() == 0)
         return false;
@@ -279,8 +279,8 @@ bool ZipCreator::SaveAs(const TCHAR *zipFilePath)
 
     size_t fileCount = d->pathsAndZipNames.Count() / 2;
     for (size_t i=0; i<fileCount; i++) {
-        TCHAR *fileName = d->pathsAndZipNames.At(2*i);
-        TCHAR *nameInZip = d->pathsAndZipNames.At(2*i+1);
+        WCHAR *fileName = d->pathsAndZipNames.At(2*i);
+        WCHAR *nameInZip = d->pathsAndZipNames.At(2*i+1);
         ScopedMem<char> nameInZipUtf(str::conv::ToUtf8(nameInZip));
         size_t fileSize;
         char *fileData = file::ReadAll(fileName, &fileSize);

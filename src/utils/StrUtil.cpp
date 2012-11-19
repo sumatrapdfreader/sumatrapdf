@@ -50,14 +50,14 @@ bool EqI(const WCHAR *s1, const WCHAR *s2)
 }
 
 // compares two strings ignoring case and whitespace
-bool EqIS(const TCHAR *s1, const TCHAR *s2)
+bool EqIS(const WCHAR *s1, const WCHAR *s2)
 {
     while (*s1 && *s2) {
         // skip whitespace
-        for (; _istspace(*s1); s1++);
-        for (; _istspace(*s2); s2++);
+        for (; iswspace(*s1); s1++);
+        for (; iswspace(*s2); s2++);
 
-        if (_totlower(*s1) != _totlower(*s2))
+        if (towlower(*s1) != towlower(*s2))
             return false;
         if (*s1) { s1++; s2++; }
     }
@@ -393,27 +393,27 @@ WCHAR *Format(const WCHAR *fmt, ...)
 
 // Trim whitespace characters, in-place, inside s.
 // Returns number of trimmed characters.
-size_t TrimWS(TCHAR *s, TrimOpt opt)
+size_t TrimWS(WCHAR *s, TrimOpt opt)
 {
     size_t sLen = str::Len(s);
-    TCHAR *ns = s;
-    TCHAR *e = s + sLen;
-    TCHAR *ne = e;
+    WCHAR *ns = s;
+    WCHAR *e = s + sLen;
+    WCHAR *ne = e;
     if ((TrimLeft == opt) || (TrimBoth == opt)) {
-        while (_istspace(*ns)) {
+        while (iswspace(*ns)) {
             ++ns;
         }
     }
 
     if ((TrimRight == opt) || (TrimBoth == opt)) {
-        while (((ne - 1) >= ns) && _istspace(ne[-1])) {
+        while (((ne - 1) >= ns) && iswspace(ne[-1])) {
             --ne;
         }
     }
     *ne = 0;
     size_t trimmed = (ns - s) + (e - ne);
     if (ns != s) {
-        size_t toCopy = (sLen - trimmed + 1) * sizeof(TCHAR); // +1 for terminating 0
+        size_t toCopy = (sLen - trimmed + 1) * sizeof(WCHAR); // +1 for terminating 0
         memmove(s, ns, toCopy);
     }
     return trimmed;
@@ -455,13 +455,13 @@ size_t TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters
-size_t NormalizeWS(TCHAR *str)
+size_t NormalizeWS(WCHAR *str)
 {
-    TCHAR *src = str, *dst = str;
+    WCHAR *src = str, *dst = str;
     bool addedSpace = true;
 
     for (; *src; src++) {
-        if (!_istspace(*src)) {
+        if (!iswspace(*src)) {
             *dst++ = *src;
             addedSpace = false;
         }
@@ -471,7 +471,7 @@ size_t NormalizeWS(TCHAR *str)
         }
     }
 
-    if (dst > str && _istspace(*(dst - 1)))
+    if (dst > str && iswspace(*(dst - 1)))
         dst--;
     *dst = '\0';
 
@@ -598,20 +598,20 @@ bool HexToMem(const char *s, unsigned char *buf, int bufLen)
 
 // format a number with a given thousand separator e.g. it turns 1234 into "1,234"
 // Caller needs to free() the result.
-TCHAR *FormatNumWithThousandSep(size_t num, LCID locale)
+WCHAR *FormatNumWithThousandSep(size_t num, LCID locale)
 {
-    TCHAR thousandSep[4];
+    WCHAR thousandSep[4];
     if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep)))
-        str::BufSet(thousandSep, dimof(thousandSep), _T(","));
-    ScopedMem<TCHAR> buf(str::Format(_T("%Iu"), num));
+        str::BufSet(thousandSep, dimof(thousandSep), L",");
+    ScopedMem<WCHAR> buf(str::Format(L"%Iu", num));
 
     size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
-    TCHAR *res = AllocArray<TCHAR>(resLen);
+    WCHAR *res = AllocArray<WCHAR>(resLen);
     if (!res)
         return NULL;
-    TCHAR *next = res;
+    WCHAR *next = res;
     int i = 3 - (str::Len(buf) % 3);
-    for (TCHAR *src = buf.Get(); *src;) {
+    for (WCHAR *src = buf.Get(); *src;) {
         *next++ = *src++;
         if (*src && i == 2)
             next += str::BufSet(next, resLen - (next - res), thousandSep);
@@ -623,32 +623,32 @@ TCHAR *FormatNumWithThousandSep(size_t num, LCID locale)
 
 // Format a floating point number with at most two decimal after the point
 // Caller needs to free the result.
-TCHAR *FormatFloatWithThousandSep(double number, LCID locale)
+WCHAR *FormatFloatWithThousandSep(double number, LCID locale)
 {
     size_t num = (size_t)(number * 100 + 0.5);
 
-    ScopedMem<TCHAR> tmp(FormatNumWithThousandSep(num / 100, locale));
-    TCHAR decimal[4];
+    ScopedMem<WCHAR> tmp(FormatNumWithThousandSep(num / 100, locale));
+    WCHAR decimal[4];
     if (!GetLocaleInfo(locale, LOCALE_SDECIMAL, decimal, dimof(decimal)))
-        str::BufSet(decimal, dimof(decimal), _T("."));
+        str::BufSet(decimal, dimof(decimal), L".");
 
     // always add between one and two decimals after the point
-    ScopedMem<TCHAR> buf(str::Format(_T("%s%s%02d"), tmp, decimal, num % 100));
-    if (str::EndsWith(buf, _T("0")))
+    ScopedMem<WCHAR> buf(str::Format(L"%s%s%02d", tmp, decimal, num % 100));
+    if (str::EndsWith(buf, L"0"))
         buf[str::Len(buf) - 1] = '\0';
 
     return buf.StealData();
 }
 
 // cf. http://rosettacode.org/wiki/Roman_numerals/Encode#C.2B.2B
-TCHAR *FormatRomanNumeral(int number)
+WCHAR *FormatRomanNumeral(int number)
 {
     if (number < 1)
         return NULL;
 
     static struct {
         int value;
-        const TCHAR *numeral;
+        const WCHAR *numeral;
     } romandata[] = {
         { 1000, _T("M") }, { 900, _T("CM") }, { 500, _T("D") }, { 400, _T("CD") },
         {  100, _T("C") }, {  90, _T("XC") }, {  50, _T("L") }, {  40, _T("XL") },
@@ -656,15 +656,19 @@ TCHAR *FormatRomanNumeral(int number)
     };
 
     size_t len = 0;
-    for (int num = number, i = 0; i < dimof(romandata); i++)
-        for (; num >= romandata[i].value; num -= romandata[i].value)
+    for (int num = number, i = 0; i < dimof(romandata); i++) {
+        for (; num >= romandata[i].value; num -= romandata[i].value) {
             len += romandata[i].numeral[1] ? 2 : 1;
+        }
+    }
     assert(len > 0);
 
-    TCHAR *roman = AllocArray<TCHAR>(len + 1), *c = roman;
-    for (int num = number, i = 0; i < dimof(romandata); i++)
-        for (; num >= romandata[i].value; num -= romandata[i].value)
+    WCHAR *roman = AllocArray<WCHAR>(len + 1), *c = roman;
+    for (int num = number, i = 0; i < dimof(romandata); i++) {
+        for (; num >= romandata[i].value; num -= romandata[i].value) {
             c += str::BufSet(c, romandata[i].numeral[1] ? 3 : 2, romandata[i].numeral);
+        }
+    }
 
     return roman;
 }
@@ -674,22 +678,22 @@ TCHAR *FormatRomanNumeral(int number)
    by sorting special characters before alphanumeric characters
    (e.g. ".hg" < "2.pdf" < "100.pdf" < "zzz")
    TODO: use StrCmpLogicalW instead once we no longer support Windows 2000 */
-int CmpNatural(const TCHAR *a, const TCHAR *b)
+int CmpNatural(const WCHAR *a, const WCHAR *b)
 {
     CrashAlwaysIf(!a || !b);
-    const TCHAR *aStart = a, *bStart = b;
+    const WCHAR *aStart = a, *bStart = b;
     int diff = 0;
 
     for (; 0 == diff; a++, b++) {
         // ignore leading and trailing spaces, and differences in whitespace only
-        if (a == aStart || !*a || !*b || _istspace(*a) && _istspace(*b)) {
-            for (; _istspace(*a); a++);
-            for (; _istspace(*b); b++);
+        if (a == aStart || !*a || !*b || iswspace(*a) && iswspace(*b)) {
+            for (; iswspace(*a); a++);
+            for (; iswspace(*b); b++);
         }
         // if two strings are identical when ignoring case, leading zeroes and
         // whitespace, compare them traditionally for a stable sort order
         if (!*a && !*b)
-            return _tcscmp(aStart, bStart);
+            return wcscmp(aStart, bStart);
         if (str::IsDigit(*a) && str::IsDigit(*b)) {
             // ignore leading zeroes
             for (; '0' == *a; a++);
@@ -710,12 +714,12 @@ int CmpNatural(const TCHAR *a, const TCHAR *b)
             b--;
         }
         // sort letters case-insensitively
-        else if (_istalnum(*a) && _istalnum(*b))
-            diff = _totlower(*a) - _totlower(*b);
+        else if (iswalnum(*a) && iswalnum(*b))
+            diff = towlower(*a) - towlower(*b);
         // sort special characters before text and numbers
-        else if (_istalnum(*a))
+        else if (iswalnum(*a))
             return 1;
-        else if (_istalnum(*b))
+        else if (iswalnum(*b))
             return -1;
         // sort special characters by ASCII code
         else
@@ -775,9 +779,9 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
      %d - parses a signed int
      %x - parses an unsigned hex-int
      %f - parses a float
-     %c - parses a single TCHAR
-     %s - parses a string (pass in a TCHAR**, free after use - also on failure!)
-     %S - parses a string into a ScopedMem<TCHAR>
+     %c - parses a single WCHAR
+     %s - parses a string (pass in a WCHAR**, free after use - also on failure!)
+     %S - parses a string into a ScopedMem<WCHAR>
      %? - makes the next single character optional (e.g. "x%?,y" parses both "xy" and "x,y")
      %$ - causes the parsing to fail if it's encountered when not at the end of the string
      %  - skips a single whitespace character
@@ -980,10 +984,10 @@ void UrlDecodeInPlace(WCHAR *url)
     *url = '\0';
 }
 
-TCHAR *ToPlainUrl(const TCHAR *url)
+WCHAR *ToPlainUrl(const WCHAR *url)
 {
-    TCHAR *plainUrl = str::Dup(url);
-    str::TransChars(plainUrl, _T("#?"), _T("\0\0"));
+    WCHAR *plainUrl = str::Dup(url);
+    str::TransChars(plainUrl, L"#?", L"\0\0");
     UrlDecodeInPlace(plainUrl);
     return plainUrl;
 }

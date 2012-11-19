@@ -6,7 +6,7 @@
 
 enum { SEARCH_PAGE, SKIP_PAGE };
 
-#define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
+#define SkipWhitespace(c) for (; iswspace(*(c)); (c)++)
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (iswordchar(c) && (unsigned short)(c) < 0x2E80)
@@ -126,7 +126,7 @@ int TextSearch::MatchLen(const TCHAR *start)
             return -1;
         if (caseSensitive ? *match == *end : CharLower((LPTSTR)LOWORD(*match)) == CharLower((LPTSTR)LOWORD(*end)))
             /* characters are identical */;
-        else if (_istspace(*match) && _istspace(*end))
+        else if (iswspace(*match) && iswspace(*end))
             /* treat all whitespace as identical */;
 #ifdef UNICODE
         // TODO: Adobe Reader seems to have a more extensive list of
@@ -147,7 +147,7 @@ int TextSearch::MatchLen(const TCHAR *start)
         // character that's just missing an encoding (and '?' is the replacement
         // character); cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1574
         if (*match && !isnoncjkwordchar(*(match - 1)) && (*(match - 1) != '?' || *match != '?') ||
-            _istspace(*(match - 1)) && _istspace(*(end - 1))) {
+            iswspace(*(match - 1)) && _istspace(*(end - 1))) {
             SkipWhitespace(match);
             SkipWhitespace(end);
         }

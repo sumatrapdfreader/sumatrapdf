@@ -162,21 +162,21 @@ public:
     virtual bool GetDataForUrl(const TCHAR *url, char **data, size_t *len);
 
 protected:
-    TCHAR *fileName;
+    WCHAR *fileName;
     ChmDoc *doc;
     ChmTocItem *tocRoot;
 
-    StrList pages;
+    WStrList pages;
     int currentPageNo;
     HtmlWindow *htmlWindow;
     ChmNavigationCallback *navCb;
 
     Vec<ChmCacheEntry*> urlDataCache;
 
-    bool Load(const TCHAR *fileName);
-    void DisplayPage(const TCHAR *pageUrl);
+    bool Load(const WCHAR *fileName);
+    void DisplayPage(const WCHAR *pageUrl);
 
-    ChmCacheEntry *FindDataForUrl(const TCHAR *url);
+    ChmCacheEntry *FindDataForUrl(const WCHAR *url);
 };
 
 ChmEngineImpl::ChmEngineImpl() :
@@ -343,7 +343,7 @@ void ChmEngineImpl::ZoomTo(float zoomLevel)
 class ChmTocBuilder : public EbookTocVisitor {
     ChmDoc *doc;
 
-    StrList *pages;
+    WStrList *pages;
     ChmTocItem **root;
     int idCounter;
     Vec<DocTocItem *> lastItems;
@@ -386,19 +386,19 @@ class ChmTocBuilder : public EbookTocVisitor {
 #endif
 
 public:
-    ChmTocBuilder(ChmDoc *doc, StrList *pages, ChmTocItem **root) :
+    ChmTocBuilder(ChmDoc *doc, WStrList *pages, ChmTocItem **root) :
         doc(doc), pages(pages), root(root), idCounter(0)
         {
 #ifdef USE_STR_INT_MAP
             for (size_t i = 0; i < pages->Count(); i++) {
-                const TCHAR *url = pages->At(i);
+                const WCHAR *url = pages->At(i);
                 bool inserted = urlsSet.Insert(url, i + 1, NULL);
                 CrashIf(!inserted);
             }
 #endif
         }
 
-    virtual void Visit(const TCHAR *name, const TCHAR *url, int level) {
+    virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         int pageNo = CreatePageNoForURL(url);
         ChmTocItem *item = new ChmTocItem(str::Dup(name), pageNo, url ? str::Dup(url) : NULL);
         item->id = ++idCounter;
@@ -422,7 +422,7 @@ public:
 #include "Timer.h"
 #include "DebugLog.h"
 
-bool ChmEngineImpl::Load(const TCHAR *fileName)
+bool ChmEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
     Timer t(true);

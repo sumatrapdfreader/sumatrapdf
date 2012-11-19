@@ -49,15 +49,15 @@ TCHAR *ReadIniString(const TCHAR *iniPath, const TCHAR *section, const TCHAR *ke
 void   DisableDataExecution();
 void   EnableDataExecution();
 void   RedirectIOToConsole();
-TCHAR *GetExePath();
+WCHAR *GetExePath();
 int    FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);
 
-TCHAR *ResolveLnk(const TCHAR *path);
-bool   CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
-                    const TCHAR *args=NULL, const TCHAR *description=NULL,
+WCHAR *ResolveLnk(const WCHAR *path);
+bool   CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath,
+                    const WCHAR *args=NULL, const WCHAR *description=NULL,
                     int iconIndex=0);
-IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd=NULL);
-DWORD GetFileVersion(TCHAR *path);
+IDataObject* GetDataObjectForFile(WCHAR *filePath, HWND hwnd=NULL);
+DWORD GetFileVersion(WCHAR *path);
 
 inline bool IsKeyPressed(int key)
 {

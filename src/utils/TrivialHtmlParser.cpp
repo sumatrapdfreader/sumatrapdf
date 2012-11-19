@@ -63,10 +63,10 @@ static TCHAR IntToChar(int codepoint)
 }
 
 // caller needs to free() the result
-TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
+WCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
 {
-    TCHAR *fixed = str::conv::FromCodePage(string, codepage), *dst = fixed;
-    const TCHAR *src = fixed;
+    WCHAR *fixed = str::conv::FromCodePage(string, codepage), *dst = fixed;
+    const WCHAR *src = fixed;
 
     while (*src) {
         if (*src != '&') {
@@ -76,8 +76,8 @@ TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
         src++;
         // numeric entities
         int unicode;
-        if (str::Parse(src, _T("#%d;"), &unicode) ||
-            str::Parse(src, _T("#x%x;"), &unicode)) {
+        if (str::Parse(src, L"#%d;", &unicode) ||
+            str::Parse(src, L"#x%x;", &unicode)) {
             *dst++ = IntToChar(unicode);
             src = str::FindChar(src, ';') + 1;
             continue;
@@ -85,8 +85,8 @@ TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
 
         // named entities
         int rune = -1;
-        const TCHAR *entityEnd = src;
-        while (_istalnum(*entityEnd))
+        const WCHAR *entityEnd = src;
+        while (iswalnum(*entityEnd))
             entityEnd++;
         if (entityEnd != src) {
             size_t entityLen = entityEnd - src;

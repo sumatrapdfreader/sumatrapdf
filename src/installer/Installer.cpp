@@ -51,10 +51,10 @@ bool            gShowOptions = false;
 bool            gForceCrash = false;
 TCHAR *         gMsgError = NULL;
 
-static StrVec           gProcessesToClose;
+static WStrVec          gProcessesToClose;
 static float            gUiDPIFactor = 1.0f;
 
-static ScopedMem<TCHAR> gMsg;
+static ScopedMem<WCHAR> gMsg;
 static Color            gMsgColor;
 
 Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
@@ -70,9 +70,9 @@ Color            COLOR_MSG_FAILED(gCol1);
 
 // list of supported file extensions for which SumatraPDF.exe will
 // be registered as a candidate for the Open With dialog's suggestions
-TCHAR *gSupportedExts[] = {
-    _T(".pdf"), _T(".xps"), _T(".cbz"), _T(".cbr"), _T(".djvu"),
-    _T(".chm"), _T(".mobi"), _T(".epub"), NULL
+WCHAR *gSupportedExts[] = {
+    L".pdf", L".xps", L".cbz", L".cbr", L".djvu",
+    L".chm", L".mobi", L".epub", NULL
 };
 
 // The following list is used to verify that all the required files have been
@@ -354,7 +354,7 @@ static bool IsUsingInstallation(DWORD procId)
 
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
-static void ProcessesUsingInstallation(StrVec& names)
+static void ProcessesUsingInstallation(WStrVec& names)
 {
     FreeVecMembers(names);
     ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
@@ -642,7 +642,7 @@ static void CalcLettersLayout(Graphics& g, Font *f, int dx)
 
 static REAL DrawMessage(Graphics &g, TCHAR *msg, REAL y, REAL dx, Color color)
 {
-    ScopedMem<WCHAR> s(str::conv::ToWStr(msg));
+    ScopedMem<WCHAR> s(str::Dup(msg));
 
     Font f(L"Impact", 16, FontStyleRegular);
     RectF maxbox(0, y, dx, 0);
@@ -697,7 +697,7 @@ static void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     g.RotateTransform(45.f);
     REAL x2 = 15; REAL y2 = -34;
 
-    ScopedMem<WCHAR> ver_s(str::conv::ToWStr(_T("v") CURR_VERSION_STR));
+    WCHAR *ver_s = L"v" CURR_VERSION_STR;
 #if DRAW_TEXT_SHADOW
     SolidBrush b1(Color(0, 0, 0));
     g.DrawString(ver_s, -1, fVer, PointF(x2 - 2, y2 - 1), &b1);
@@ -895,7 +895,7 @@ static int RunApp()
 
 static void ParseCommandLine(TCHAR *cmdLine)
 {
-    StrVec argList;
+    WStrVec argList;
     ParseCmdLine(cmdLine, argList);
 
 #define is_arg(param) str::EqI(arg + 1, _T(param))
@@ -918,7 +918,7 @@ static void ParseCommandLine(TCHAR *cmdLine)
             TCHAR *opts = argList.At(++i);
             str::ToLower(opts);
             str::TransChars(opts, _T(" ;"), _T(",,"));
-            StrVec optlist;
+            WStrVec optlist;
             optlist.Split(opts, _T(","), true);
             if (optlist.Find(_T("plugin")) != -1)
                 gGlobalData.installBrowserPlugin = true;

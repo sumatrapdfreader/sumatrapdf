@@ -354,7 +354,7 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
     if (!el)
         return false;
 
-    StrVec references;
+    WStrVec references;
     ScopedMem<TCHAR> keyword, name;
     for (el = el->GetChildByName("param"); el; el = el->next) {
         if (!el->NameIs("param"))

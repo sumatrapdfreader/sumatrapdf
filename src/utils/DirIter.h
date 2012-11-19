@@ -8,22 +8,22 @@ class DirIter
 {
     bool            recursive;
 
-    StrVec          dirsToVisit;
-    ScopedMem<TCHAR>currDir;
-    ScopedMem<TCHAR>currPath;
+    WStrVec         dirsToVisit;
+    ScopedMem<WCHAR>currDir;
+    ScopedMem<WCHAR>currPath;
     HANDLE          currFindHandle;
     WIN32_FIND_DATA currFindData;
     bool            foundNext;
 
-    bool StartDirIter(const TCHAR *dir);
+    bool StartDirIter(const WCHAR *dir);
     bool TryNextDir();
 
 public:
     DirIter() : foundNext(false), currFindHandle(NULL) { }
     ~DirIter() { FindClose(currFindHandle); }
 
-    bool Start(const TCHAR *dir, bool recursive=false);
-    const TCHAR *Next();
+    bool Start(const WCHAR *dir, bool recursive=false);
+    const WCHAR *Next();
 };
 
 #endif

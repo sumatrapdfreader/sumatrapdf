@@ -180,10 +180,10 @@ static TCHAR *FormatPdfFileStructure(Doc doc)
     ScopedMem<TCHAR> fstruct(doc.GetProperty(Prop_PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
         return NULL;
-    StrVec parts;
+    WStrVec parts;
     parts.Split(fstruct, _T(","), true);
     
-    StrVec props;
+    WStrVec props;
 
     if (parts.Find(_T("linearized")) != -1)
         props.Push(str::Dup(_TR("Fast Web View")));
@@ -206,7 +206,7 @@ static TCHAR *FormatPermissions(Doc doc)
     if (!doc.IsEngine())
         return NULL;
 
-    StrVec denials;
+    WStrVec denials;
 
     if (!doc.AsEngine()->IsPrintingAllowed())
         denials.Push(str::Dup(_TR("printing document")));

@@ -203,7 +203,7 @@ bool GetExePath(LPTSTR lpPath, int len)
     if (!path)
         return false;
 
-    StrVec args;
+    WStrVec args;
     ParseCmdLine(path, args);
     if (!file::Exists(args.At(0)))
         return false;
@@ -524,7 +524,7 @@ static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
     ScopedMem<TCHAR> url(str::conv::FromUtf8(url_utf8));
     // escape quotation marks and backslashes for CmdLineParser.cpp's ParseQuoted
     if (str::FindChar(url, '"')) {
-        StrVec parts;
+        WStrVec parts;
         parts.Split(url, _T("\""));
         url.Set(parts.Join(_T("%22")));
     }

@@ -72,7 +72,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
         m_state = STATE_PDF_TITLE;
         str.Set(m_pdfEngine->GetProperty(Prop_Author));
         if (!str::IsEmpty(str.Get())) {
-            chunkValue.SetTextValue(PKEY_Author, AsWStrQ(str));
+            chunkValue.SetTextValue(PKEY_Author, str);
             return S_OK;
         }
         // fall through
@@ -82,7 +82,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
         str.Set(m_pdfEngine->GetProperty(Prop_Title));
         if (!str) str.Set(m_pdfEngine->GetProperty(Prop_Subject));
         if (!str::IsEmpty(str.Get())) {
-            chunkValue.SetTextValue(PKEY_Title, AsWStrQ(str));
+            chunkValue.SetTextValue(PKEY_Title, str);
             return S_OK;
         }
         // fall through
@@ -107,7 +107,7 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue &chunkValue)
             str.Set(m_pdfEngine->ExtractPageText(m_iPageNo, _T("\r\n")));
             if (str::IsEmpty(str.Get()))
                 continue;
-            chunkValue.SetTextValue(PKEY_Search_Contents, AsWStrQ(str), CHUNK_TEXT);
+            chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
             return S_OK;
         }
         m_state = STATE_PDF_END;

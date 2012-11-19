@@ -9,7 +9,7 @@
 class ZipFile {
     unzFile uf;
     Allocator *allocator;
-    StrList filenames;
+    WStrList filenames;
     Vec<unz_file_info64> fileinfo;
     Vec<unz64_file_pos> filepos;
     uLong commentLen;

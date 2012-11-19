@@ -101,7 +101,7 @@ class PalmDoc {
     ScopedMem<TCHAR> fileName;
     str::Str<char> htmlData;
     Vec<ImageData2> images;
-    StrVec tocEntries;
+    WStrVec tocEntries;
 
     bool Load();
     char *LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOut);

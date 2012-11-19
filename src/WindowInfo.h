@@ -96,7 +96,7 @@ public:
     // state related to favorites
     HWND            hwndFavBox;
     HWND            hwndFavTree;
-    StrVec          expandedFavorites;
+    WStrVec         expandedFavorites;
 
     // vertical splitter for resizing left side panel
     HWND            hwndSidebarSplitter;

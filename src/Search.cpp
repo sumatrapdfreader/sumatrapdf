@@ -713,7 +713,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     UINT_PTR lo, hi;
     UnpackDDElParam(WM_DDE_EXECUTE, lparam, &lo, &hi);
 
-    ScopedMem<TCHAR> cmd;
+    ScopedMem<WCHAR> cmd;
     DDEACK ack = { 0 };
 
     LPVOID command = GlobalLock((HGLOBAL)hi);
@@ -721,21 +721,21 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
         goto Exit;
 
     if (IsWindowUnicode((HWND)wparam))
-        cmd.Set(str::conv::FromWStr((const WCHAR*)command));
+        cmd.Set(str::Dup((const WCHAR*)command));
     else
         cmd.Set(str::conv::FromAnsi((const char*)command));
 
-    const TCHAR *currCmd = cmd;
+    const WCHAR *currCmd = cmd;
     while (!str::IsEmpty(currCmd)) {
-        const TCHAR *nextCmd = NULL;
+        const WCHAR *nextCmd = NULL;
         if (!nextCmd) nextCmd = HandleSyncCmd(currCmd, ack);
         if (!nextCmd) nextCmd = HandleOpenCmd(currCmd, ack);
         if (!nextCmd) nextCmd = HandleGotoCmd(currCmd, ack);
         if (!nextCmd) nextCmd = HandlePageCmd(currCmd, ack);
         if (!nextCmd) nextCmd = HandleSetViewCmd(currCmd, ack);
         if (!nextCmd) {
-            ScopedMem<TCHAR> tmp;
-            nextCmd = str::Parse(currCmd, _T("%S]"), &tmp);
+            ScopedMem<WCHAR> tmp;
+            nextCmd = str::Parse(currCmd, L"%S]", &tmp);
         }
         currCmd = nextCmd;
     }

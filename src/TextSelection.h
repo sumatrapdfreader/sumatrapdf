@@ -6,7 +6,7 @@
 
 #include "BaseEngine.h"
 
-class StrVec;
+class WStrVec;
 
 #define iswordchar(c) IsCharAlphaNumeric(c)
 
@@ -62,7 +62,7 @@ protected:
     int startGlyph, endGlyph;
 
     int FindClosestGlyph(int pageNo, double x, double y);
-    void FillResultRects(int pageNo, int glyph, int length, StrVec *lines=NULL);
+    void FillResultRects(int pageNo, int glyph, int length, WStrVec *lines=NULL);
 };
 
 #endif

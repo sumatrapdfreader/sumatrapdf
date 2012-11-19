@@ -312,48 +312,49 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void **ppvObject)
 // given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
-static bool ParseProtoUrl(const TCHAR *url, int *htmlWindowId, ScopedMem<TCHAR> *urlRest)
+static bool ParseProtoUrl(const WCHAR *url, int *htmlWindowId, ScopedMem<WCHAR> *urlRest)
 {
-    const TCHAR *rest = str::Parse(url, AsTStrQ(HW_PROTO_PREFIX L"://%d/%S"), htmlWindowId, urlRest);
+    const WCHAR *rest = str::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
     return rest && !*rest;
 }
 
-#define DEFAULT_MIME_TYPE   _T("text/html")
+#define DEFAULT_MIME_TYPE   L"text/html"
 
 // caller must free() the result
-static TCHAR *MimeFromUrl(const TCHAR *url)
+static WCHAR *MimeFromUrl(const WCHAR *url)
 {
-    const TCHAR *ext = str::FindCharLast(url, '.');
+    const WCHAR *ext = str::FindCharLast(url, '.');
     if (!ext)
         return str::Dup(DEFAULT_MIME_TYPE);
 
     if (str::FindChar(ext, ';')) {
         // some CHM documents use (image) URLs that are followed by
         // a semi-colon and a number after the file's extension
-        ScopedMem<TCHAR> newUrl(str::DupN(url, str::FindChar(ext, ';') - url));
+        ScopedMem<WCHAR> newUrl(str::DupN(url, str::FindChar(ext, ';') - url));
         return MimeFromUrl(newUrl);
     }
 
     static struct {
-        TCHAR *ext;
-        TCHAR *mimetype;
+        WCHAR *ext;
+        WCHAR *mimetype;
     } mimeTypes[] = {
-        { _T(".html"),  _T("text/html") },
-        { _T(".htm"),   _T("text/html") },
-        { _T(".gif"),   _T("image/gif") },
-        { _T(".png"),   _T("image/png") },
-        { _T(".jpg"),   _T("image/jpeg") },
-        { _T(".jpeg"),  _T("image/jpeg") },
-        { _T(".bmp"),   _T("image/bmp") },
-        { _T(".css"),   _T("text/css") },
-        { _T(".txt"),   _T("text/plain") },
+        { L".html",  L"text/html" },
+        { L".htm",   L"text/html" },
+        { L".gif",   L"image/gif" },
+        { L".png",   L"image/png" },
+        { L".jpg",   L"image/jpeg" },
+        { L".jpeg",  L"image/jpeg" },
+        { L".bmp",   L"image/bmp" },
+        { L".css",   L"text/css" },
+        { L".txt",   L"text/plain" },
     };
 
-    for (int i = 0; i < dimof(mimeTypes); i++)
+    for (int i = 0; i < dimof(mimeTypes); i++) {
         if (str::EqI(ext, mimeTypes[i].ext))
             return str::Dup(mimeTypes[i].mimetype);
+    }
 
-    ScopedMem<TCHAR> contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("Content Type")));
+    ScopedMem<WCHAR> contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"Content Type"));
     if (contentType)
         return contentType.StealData();
 
@@ -374,15 +375,14 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     //       leaked and to DISPID_DOCUMENTCOMPLETE never being fired
 
     int htmlWindowId;
-    ScopedMem<TCHAR> urlRest;
-    bool ok = ParseProtoUrl(AsTStrQ(szUrl), &htmlWindowId, &urlRest);
+    ScopedMem<WCHAR> urlRest;
+    bool ok = ParseProtoUrl(szUrl, &htmlWindowId, &urlRest);
     if (!ok)
         return INET_E_INVALID_URL;
 
-    ScopedMem<WCHAR> urlRestW(str::conv::ToWStr(urlRest));
-    pIProtSink->ReportProgress(BINDSTATUS_FINDINGRESOURCE, urlRestW);
-    pIProtSink->ReportProgress(BINDSTATUS_CONNECTING, urlRestW);
-    pIProtSink->ReportProgress(BINDSTATUS_SENDINGREQUEST, urlRestW);
+    pIProtSink->ReportProgress(BINDSTATUS_FINDINGRESOURCE, urlRest);
+    pIProtSink->ReportProgress(BINDSTATUS_CONNECTING, urlRest);
+    pIProtSink->ReportProgress(BINDSTATUS_SENDINGREQUEST, urlRest);
 
     HtmlWindow *win = FindHtmlWindowById(htmlWindowId);
     assert(win);
@@ -394,8 +394,8 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     if (!ok)
         return INET_E_DATA_NOT_AVAILABLE;
 
-    ScopedMem<TCHAR> mime(MimeFromUrl(urlRest));
-    pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, AsWStrQ(mime));
+    ScopedMem<WCHAR> mime(MimeFromUrl(urlRest));
+    pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
     pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, dataLen, dataLen);
     pIProtSink->ReportResult(S_OK, 200, NULL);
     return S_OK;
@@ -810,7 +810,7 @@ public:
     virtual ~HtmlMoniker();
 
     HRESULT SetHtml(const char *s, size_t len);
-    HRESULT SetBaseUrl(const TCHAR *baseUrl);
+    HRESULT SetBaseUrl(const WCHAR *baseUrl);
 
 public:
     // IUnknown
@@ -856,7 +856,7 @@ private:
     char *      htmlData;
     IStream *   htmlStream;
 
-    TCHAR *     baseUrl;
+    WCHAR *     baseUrl;
 };
 
 HtmlMoniker::HtmlMoniker()
@@ -887,7 +887,7 @@ HRESULT HtmlMoniker::SetHtml(const char *s, size_t len)
     return S_OK;
 }
 
-HRESULT HtmlMoniker::SetBaseUrl(const TCHAR *newBaseUrl)
+HRESULT HtmlMoniker::SetBaseUrl(const WCHAR *newBaseUrl)
 {
     free(baseUrl);
     baseUrl = str::Dup(newBaseUrl);
@@ -901,9 +901,9 @@ STDMETHODIMP HtmlMoniker::BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFI
     return htmlStream->QueryInterface(riid, ppvObj);
 }
 
-static LPOLESTR OleStrDup(TCHAR *s)
+static LPOLESTR OleStrDup(WCHAR *s)
 {
-    size_t cb = sizeof(TCHAR) * (str::Len(s) + 1);
+    size_t cb = sizeof(WCHAR) * (str::Len(s) + 1);
     LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cb);
     memcpy(ret, s, cb);
     return ret;
@@ -1169,18 +1169,18 @@ void HtmlWindow::SetVisible(bool visible)
 
 // Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
 // (will be called from OnBeforeNavigate()
-void HtmlWindow::NavigateToDataUrl(const TCHAR *url)
+void HtmlWindow::NavigateToDataUrl(const WCHAR *url)
 {
-    ScopedMem<TCHAR> fullUrl(str::Format(_T("its://%d/%s"), windowId, url));
+    ScopedMem<WCHAR> fullUrl(str::Format(L"its://%d/%s", windowId, url));
     NavigateToUrl(fullUrl);
 }
 
-void HtmlWindow::NavigateToUrl(const TCHAR *url)
+void HtmlWindow::NavigateToUrl(const WCHAR *url)
 {
     VARIANT urlVar;
     VariantInit(&urlVar);
     urlVar.vt = VT_BSTR;
-    urlVar.bstrVal = SysAllocString(AsWStrQ(url));
+    urlVar.bstrVal = SysAllocString(url);
     if (!urlVar.bstrVal)
         return;
     currentURL.Set(NULL);
@@ -1258,7 +1258,7 @@ void HtmlWindow::SetHtml(const char *s, size_t len)
         htmlContent->Release();
     htmlContent = new HtmlMoniker();
     htmlContent->SetHtml(s, len);
-    ScopedMem<TCHAR> baseUrl(str::Format(AsTStrQ(HW_PROTO_PREFIX L"://%d/"), windowId));
+    ScopedMem<WCHAR> baseUrl(str::Format(HW_PROTO_PREFIX L"://%d/", windowId));
     htmlContent->SetBaseUrl(baseUrl);
 
     ScopedComPtr<IDispatch> docDispatch;
@@ -1321,30 +1321,30 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 
 // called before an url is shown. If returns false, will cancel
 // the navigation.
-bool HtmlWindow::OnBeforeNavigate(const TCHAR *url, bool newWindow)
+bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
 {
     currentURL.Set(NULL);
     if (!htmlWinCb)
         return true;
-    if (str::EqI(_T("about:blank"), url))
+    if (str::EqI(L"about:blank", url))
         return true;
 
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    ScopedMem<TCHAR> urlReal(str::Dup(url));
+    ScopedMem<WCHAR> urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     assert(!ok || protoWindowId == windowId);
     bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
     return shouldNavigate;
 }
 
-void HtmlWindow::OnDocumentComplete(const TCHAR *url)
+void HtmlWindow::OnDocumentComplete(const WCHAR *url)
 {
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    ScopedMem<TCHAR> urlReal(str::Dup(url));
+    ScopedMem<WCHAR> urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     assert(!ok || protoWindowId == windowId);
 
@@ -1425,7 +1425,7 @@ LRESULT HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp)
     return SendMessage(hwndBrowser, msg, wp, lp);
 }
 
-static bool LoadedExpectedPage(const TCHAR *expectedUrl, const TCHAR *loadedUrl)
+static bool LoadedExpectedPage(const WCHAR *expectedUrl, const WCHAR *loadedUrl)
 {
     if (!loadedUrl)
         return false;
@@ -1434,7 +1434,7 @@ static bool LoadedExpectedPage(const TCHAR *expectedUrl, const TCHAR *loadedUrl)
     return str::Eq(expectedUrl, loadedUrl);
 }
 
-bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url)
+bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs, const WCHAR *url)
 {
     Timer timer(true);
     // in some cases (like reading chm from network drive without the right permissions)
@@ -1614,7 +1614,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
         case DISPID_BEFORENAVIGATE2:
         {
             BSTR url = BstrFromVariant(pDispParams->rgvarg[5].pvarVal);
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(AsTStrQ(url), false);
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, false);
             *pDispParams->rgvarg[0].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }
@@ -1636,7 +1636,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
             // on completion of top-level frame. On the other hand, I haven't
             // encountered problems related to that yet
             BSTR url = BstrFromVariant(pDispParams->rgvarg[0].pvarVal);
-            fs->htmlWindow->OnDocumentComplete(AsTStrQ(url));
+            fs->htmlWindow->OnDocumentComplete(url);
             break;
         }
 
@@ -1660,7 +1660,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
         case DISPID_NEWWINDOW3:
         {
             BSTR url = pDispParams->rgvarg[0].bstrVal;
-            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(AsTStrQ(url), true);
+            bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, true);
             *pDispParams->rgvarg[3].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
             break;
         }

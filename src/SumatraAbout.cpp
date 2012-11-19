@@ -715,7 +715,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
         return;
     ScopedMem<TCHAR> pattern(path::Join(thumbsPath, _T("*.png")));
 
-    StrVec files;
+    WStrVec files;
     WIN32_FIND_DATA fdata;
 
     HANDLE hfind = FindFirstFile(pattern, &fdata);

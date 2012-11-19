@@ -28,7 +28,7 @@ public:
 
     // IPersist
     IFACEMETHODIMP GetClassID(CLSID *pClassID) {
-        return CLSIDFromString(AsWStrQ(SZ_TEX_FILTER_HANDLER), pClassID);
+        return CLSIDFromString(SZ_TEX_FILTER_HANDLER, pClassID);
     }
 
 private:

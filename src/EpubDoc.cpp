@@ -216,10 +216,10 @@ bool EpubDoc::Load()
         return false;
 
     if (str::FindChar(contentPath, '/'))
-        *(TCHAR *)(str::FindCharLast(contentPath, '/') + 1) = '\0';
+        *(WCHAR *)(str::FindCharLast(contentPath, '/') + 1) = '\0';
     else
         *contentPath = '\0';
-    StrList idPathMap;
+    WStrList idPathMap;
 
     for (node = node->down; node; node = node->next) {
         ScopedMem<TCHAR> mediatype(node->GetAttribute("media-type"));
@@ -758,7 +758,7 @@ PalmDoc::~PalmDoc()
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // cf. http://wiki.mobileread.com/wiki/TealDoc
-static const char *HandleTealDocTag(str::Str<char>& builder, StrVec& tocEntries, const char *text, size_t len, UINT codePage)
+static const char *HandleTealDocTag(str::Str<char>& builder, WStrVec& tocEntries, const char *text, size_t len, UINT codePage)
 {
     if (len < 9) {
 Fallback:

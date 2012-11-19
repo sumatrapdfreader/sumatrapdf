@@ -88,7 +88,7 @@ void DumpProperties(BaseEngine *engine)
 
     ScopedMem<TCHAR> fontlist(engine->GetProperty(Prop_FontList));
     if (fontlist) {
-        StrVec fonts;
+        WStrVec fonts;
         fonts.Split(fontlist, _T("\n"));
         str.Set(Escape(fonts.Join(_T("\n\t\t"))));
         Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 
-    StrVec argList;
+    WStrVec argList;
     ParseCmdLine(GetCommandLine(), argList);
     if (argList.Count() < 2) {
 Usage:

@@ -56,7 +56,7 @@ private:
     UINT SourceToRecord(const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
     PdfEngine *engine;          // needed for converting between coordinate systems
-    StrVec srcfiles;            // source file names
+    WStrVec srcfiles;           // source file names
     Vec<PdfsyncLine> lines;     // record-to-line mapping
     Vec<PdfsyncPoint> points;   // record-to-point mapping
     Vec<PdfsyncFileIndex> fileIndex; // start and end of entries for a file in <lines>

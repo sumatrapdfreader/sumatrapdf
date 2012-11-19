@@ -42,7 +42,7 @@ static bool ParsePageRanges(const TCHAR *ranges, Vec<PageRange>& result)
     if (!ranges)
         return false;
 
-    StrVec rangeList;
+    WStrVec rangeList;
     rangeList.Split(ranges, _T(","), true);
     rangeList.SortNatural();
 
@@ -160,7 +160,7 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
 
 static void BenchDir(TCHAR *dir)
 {
-    StrVec files;
+    WStrVec files;
     ScopedMem<TCHAR> pattern(str::Format(_T("%s\\*.pdf"), dir));
     CollectPathsFromDirectory(pattern, files, false);
     for (size_t i = 0; i < files.Count(); i++) {
@@ -168,7 +168,7 @@ static void BenchDir(TCHAR *dir)
     }
 }
 
-void BenchFileOrDir(StrVec& pathsToBench)
+void BenchFileOrDir(WStrVec& pathsToBench)
 {
     gLog = new slog::StderrLogger();
 
@@ -191,7 +191,7 @@ inline bool IsSpecialDir(const TCHAR *s)
     return str::Eq(s, _T(".")) || str::Eq(s, _T(".."));
 }
 
-bool CollectPathsFromDirectory(const TCHAR *pattern, StrVec& paths, bool dirsInsteadOfFiles)
+bool CollectPathsFromDirectory(const TCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles)
 {
     ScopedMem<TCHAR> dirPath(path::GetDir(pattern));
 
@@ -219,7 +219,7 @@ static bool IsStressTestSupportedFile(const TCHAR *fileName, const TCHAR *filter
     return EngineManager::IsSupportedFile(!gUseEbookUI, fileName);
 }
 
-static bool CollectStressTestSupportedFilesFromDirectory(const TCHAR *dirPath, const TCHAR *filter, StrVec& paths)
+static bool CollectStressTestSupportedFilesFromDirectory(const TCHAR *dirPath, const TCHAR *filter, WStrVec& paths)
 {
     ScopedMem<TCHAR> pattern(path::Join(dirPath, _T("*")));
 
@@ -320,8 +320,8 @@ class StressTest : public StressTestBase {
     int               fileIndex;
 
     // current state of directory traversal
-    StrVec            filesToOpen;
-    StrVec            dirsToVisit;
+    WStrVec           filesToOpen;
+    WStrVec           dirsToVisit;
 
     bool OpenDir(const TCHAR *dirPath);
     bool OpenFile(const TCHAR *fileName);

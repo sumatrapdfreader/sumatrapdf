@@ -233,7 +233,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
         ScopedMem<TCHAR> args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
         str::TransChars(args, _T("#"), _T("&"));
-        StrVec parts;
+        WStrVec parts;
         parts.Split(args, _T("&"), true);
         for (size_t k = 0; k < parts.Count(); k++) {
             TCHAR *part = parts.At(k);

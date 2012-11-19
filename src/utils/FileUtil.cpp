@@ -165,7 +165,7 @@ bool HasVariableDriveLetter(const TCHAR *path)
            DRIVE_NO_ROOT_DIR == driveType;
 }
 
-static bool MatchWildcardsRec(const TCHAR *filename, const TCHAR *filter)
+static bool MatchWildcardsRec(const WCHAR *filename, const WCHAR *filter)
 {
 #define AtEndOf(str) (*(str) == '\0')
     switch (*filter) {
@@ -179,7 +179,7 @@ static bool MatchWildcardsRec(const TCHAR *filename, const TCHAR *filter)
     case '?':
         return !AtEndOf(filename) && MatchWildcardsRec(filename + 1, filter + 1);
     default:
-        return _totlower(*filename) == _totlower(*filter) &&
+        return towlower(*filename) == towlower(*filter) &&
                MatchWildcardsRec(filename + 1, filter + 1);
     }
 #undef AtEndOf

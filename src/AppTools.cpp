@@ -288,7 +288,7 @@ bool IsExeAssociatedWithPdfExtension()
     if (!tmp)
         return false;
 
-    StrVec argList;
+    WStrVec argList;
     ParseCmdLine(tmp, argList);
     ScopedMem<TCHAR> exePath(GetExePath());
     if (!exePath || !argList.Find(_T("%1")) || !str::Find(tmp, _T("\"%1\"")))
@@ -482,7 +482,7 @@ static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz
     return 0;
 }
 
-void DDEExecute(const TCHAR* server, const TCHAR* topic, const TCHAR* command)
+void DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command)
 {
     unsigned long inst = 0;
     HSZ hszServer = NULL, hszTopic = NULL;
@@ -501,7 +501,8 @@ void DDEExecute(const TCHAR* server, const TCHAR* topic, const TCHAR* command)
     hconv = DdeConnect(inst, hszServer, hszTopic, 0);
     if (!hconv)
         goto Exit;
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
+    DWORD cbLen = (str::Len(command) + 1) * sizeof(WCHAR);
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, cbLen, 0, 0, CF_UNICODETEXT, 0);
     if (!hddedata)
         goto Exit;
 
@@ -571,8 +572,8 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 selStart = selEnd = selStart - 1;
             }
             // remove the previous word (and any spacing after it)
-            for (; selStart > 0 && _istspace(text[selStart - 1]); selStart--);
-            for (; selStart > 0 && !_istspace(text[selStart - 1]); selStart--);
+            for (; selStart > 0 && iswspace(text[selStart - 1]); selStart--);
+            for (; selStart > 0 && !iswspace(text[selStart - 1]); selStart--);
             Edit_SetSel(hwnd, selStart, selEnd);
             SendMessage(hwnd, WM_CLEAR, 0, 0);
         }

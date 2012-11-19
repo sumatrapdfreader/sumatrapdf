@@ -593,7 +593,7 @@ Exit:
 
 static void ApplyPrintSettings(const TCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced)
 {
-    StrVec rangeList;
+    WStrVec rangeList;
     if (settings)
         rangeList.Split(settings, _T(","), true);
 

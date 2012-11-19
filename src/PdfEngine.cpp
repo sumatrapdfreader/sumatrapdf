@@ -415,22 +415,22 @@ fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation)
 }
 
 struct LinkRectList {
-    StrVec links;
+    WStrVec links;
     Vec<fz_rect> coords;
 };
 
-static bool LinkifyCheckMultiline(TCHAR *pageText, TCHAR *pos, RectI *coords)
+static bool LinkifyCheckMultiline(WCHAR *pageText, WCHAR *pos, RectI *coords)
 {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
     // (and that doesn't start with http itself)
     return
         '\n' == *pos && pos > pageText && *(pos + 1) &&
-        !_istalnum(pos[-1]) && !_istspace(pos[1]) &&
+        !iswalnum(pos[-1]) && !iswspace(pos[1]) &&
         coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
         coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
         coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
-        !str::StartsWith(pos + 1, _T("http"));
+        !str::StartsWith(pos + 1, L"http");
 }
 
 static TCHAR *LinkifyFindEnd(TCHAR *start)
@@ -438,7 +438,7 @@ static TCHAR *LinkifyFindEnd(TCHAR *start)
     TCHAR *end;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-    for (end = start; *end && !_istspace(*end); end++);
+    for (end = start; *end && !iswspace(*end); end++);
     if (',' == end[-1] || '.' == end[-1])
         end--;
     // also ignore a closing parenthesis, if the URL doesn't contain any opening one
@@ -476,25 +476,25 @@ static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
 }
 
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
-inline bool IsEmailUsernameChar(TCHAR c)
+inline bool IsEmailUsernameChar(WCHAR c)
 {
-    return _istalnum(c) || c && str::FindChar(_T(".!#$%&'*+-=?^`{|}~"), c);
+    return iswalnum(c) || c && str::FindChar(L".!#$%&'*+-=?^`{|}~", c);
 }
-inline bool IsEmailDomainChar(TCHAR c)
+inline bool IsEmailDomainChar(WCHAR c)
 {
-    return _istalnum(c) || '-' == c;
+    return iswalnum(c) || '-' == c;
 }
 
-static TCHAR *LinkifyFindEmail(TCHAR *pageText, TCHAR *at)
+static WCHAR *LinkifyFindEmail(WCHAR *pageText, WCHAR *at)
 {
-    TCHAR *start;
+    WCHAR *start;
     for (start = at; start > pageText && IsEmailUsernameChar(*(start - 1)); start--);
     return start != at ? start : NULL;
 }
 
-static TCHAR *LinkifyEmailAddress(TCHAR *start)
+static WCHAR *LinkifyEmailAddress(WCHAR *start)
 {
-    TCHAR *end;
+    WCHAR *end;
     for (end = start; IsEmailUsernameChar(*end); end++);
     if (end == start || *end != '@' || !IsEmailDomainChar(*(end + 1)))
         return NULL;
@@ -508,47 +508,47 @@ static TCHAR *LinkifyEmailAddress(TCHAR *start)
 }
 
 // caller needs to delete the result
-static LinkRectList *LinkifyText(TCHAR *pageText, RectI *coords)
+static LinkRectList *LinkifyText(WCHAR *pageText, RectI *coords)
 {
     LinkRectList *list = new LinkRectList;
 
-    for (TCHAR *start = pageText; *start; start++) {
-        TCHAR *end = NULL;
+    for (WCHAR *start = pageText; *start; start++) {
+        WCHAR *end = NULL;
         bool multiline = false;
-        const TCHAR *protocol = NULL;
+        const WCHAR *protocol = NULL;
 
         if ('@' == *start) {
             // potential email address without mailto:
-            TCHAR *email = LinkifyFindEmail(pageText, start);
+            WCHAR *email = LinkifyFindEmail(pageText, start);
             end = email ? LinkifyEmailAddress(email) : NULL;
-            protocol = _T("mailto:");
+            protocol = L"mailto:";
             if (end != NULL)
                 start = email;
         }
-        else if (start > pageText && ('/' == start[-1] || _istalnum(start[-1]))) {
+        else if (start > pageText && ('/' == start[-1] || iswalnum(start[-1]))) {
             // hyperlinks must not be preceded by a slash (indicates a different protocol)
             // or an alphanumeric character (indicates part of a different protocol)
         }
-        else if ('h' == *start && str::Parse(start, _T("http%?s://"))) {
+        else if ('h' == *start && str::Parse(start, L"http%?s://")) {
             end = LinkifyFindEnd(start);
             multiline = LinkifyCheckMultiline(pageText, end, coords);
         }
-        else if ('w' == *start && str::StartsWith(start, _T("www."))) {
+        else if ('w' == *start && str::StartsWith(start, L"www.")) {
             end = LinkifyFindEnd(start);
             multiline = LinkifyCheckMultiline(pageText, end, coords);
-            protocol = _T("http://");
+            protocol = L"http://";
             // ignore www. links without a top-level domain
             if (end - start <= 4 || !multiline && (!_tcschr(start + 5, '.') || _tcschr(start + 5, '.') >= end))
                 end = NULL;
         }
-        else if ('m' == *start && str::StartsWith(start, _T("mailto:"))) {
+        else if ('m' == *start && str::StartsWith(start, L"mailto:")) {
             end = LinkifyEmailAddress(start + 7);
         }
         if (!end)
             continue;
 
         *end = 0;
-        TCHAR *uri = protocol ? str::Join(protocol, start) : str::Dup(start);
+        WCHAR *uri = protocol ? str::Join(protocol, start) : str::Dup(start);
         list->links.Append(uri);
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
@@ -774,11 +774,11 @@ extern "C" {
 namespace str {
     namespace conv {
 
-inline TCHAR *FromPdf(pdf_obj *obj)
+inline WCHAR *FromPdf(pdf_obj *obj)
 {
     ScopedMem<WCHAR> str(AllocArray<WCHAR>(pdf_to_str_len(obj) + 1));
     pdf_to_ucs2_buf((unsigned short *)str.Get(), obj);
-    return str::conv::FromWStr(str);
+    return str.StealData();
 }
 
     }
@@ -889,7 +889,7 @@ void BuildPageLabelRec(pdf_obj *node, int pageCount, Vec<PageLabelInfo>& data)
     }
 }
 
-StrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
+WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
 {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(root, pageCount, data);
@@ -904,7 +904,7 @@ StrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
         return NULL;
     }
 
-    StrVec *labels = new StrVec();
+    WStrVec *labels = new WStrVec();
     labels->AppendBlanks(pageCount);
 
     for (size_t i = 0; i < data.Count() && data.At(i).startAt <= pageCount; i++) {
@@ -923,7 +923,7 @@ StrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
         labels->At(ix) = str::Dup(_T(""));
 
     // ensure that all page labels are unique (by appending a number to duplicates)
-    StrVec dups(*labels);
+    WStrVec dups(*labels);
     dups.Sort();
     for (size_t i = 1; i < dups.Count(); i++) {
         if (!str::Eq(dups.At(i), dups.At(i - 1)))
@@ -1105,7 +1105,7 @@ protected:
     fz_outline    * outline;
     fz_outline    * attachments;
     pdf_obj       * _info;
-    StrVec        * _pagelabels;
+    WStrVec       * _pagelabels;
     pdf_annot   *** pageComments;
     fz_rect      ** imageRects;
 };
@@ -1431,14 +1431,14 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 
     bool ok = false, saveKey = false;
     for (int i = 0; !ok && i < 3; i++) {
-        ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_crypt_key(_doc), &saveKey));
+        ScopedMem<WCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_crypt_key(_doc), &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
             break;
         }
 
-        ScopedMem<WCHAR> wstr(str::conv::ToWStr(pwd));
+        ScopedMem<WCHAR> wstr(str::Dup(pwd));
         fz_try(ctx) {
             char *pwd_doc = pdf_from_ucs2(_doc, (unsigned short *)wstr.Get());
             ok = pwd_doc && pdf_authenticate_password(_doc, pwd_doc);
@@ -2376,7 +2376,7 @@ TCHAR *PdfEngineImpl::ExtractFontList()
 
     ScopedCritSec scope(&ctxAccess);
 
-    StrVec fonts;
+    WStrVec fonts;
     for (size_t i = 0; i < fontList.Count(); i++) {
         const char *name = NULL, *type, *encoding;
         bool embedded = false;
@@ -2462,7 +2462,7 @@ TCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
     }
 
     if (Prop_PdfFileStructure == prop) {
-        StrVec fstruct;
+        WStrVec fstruct;
         if (pdf_to_bool(pdf_dict_gets(_info, "Linearized")))
             fstruct.Append(str::Dup(_T("linearized")));
         if (pdf_to_bool(pdf_dict_gets(_info, "Marked")))
@@ -3587,7 +3587,7 @@ TCHAR *XpsEngineImpl::ExtractFontList()
     ScopedCritSec scope(&ctxAccess);
 
     // collect a list of all included fonts
-    StrVec fonts;
+    WStrVec fonts;
     for (xps_font_cache *font = _doc->font_table; font; font = font->next) {
         ScopedMem<TCHAR> path(str::conv::FromUtf8(font->name));
         ScopedMem<TCHAR> name(str::conv::FromUtf8(font->font->name));

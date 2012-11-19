@@ -13,7 +13,7 @@ static const TCHAR SkipBackslashs(const TCHAR *txt)
 }
 
 /* appends the next quoted argument and returns the position after it */
-static const TCHAR *ParseQuoted(const TCHAR *arg, StrVec *out)
+static const TCHAR *ParseQuoted(const TCHAR *arg, WStrVec *out)
 {
     AssertCrash(arg && '"' == *arg);
     arg++;
@@ -35,7 +35,7 @@ static const TCHAR *ParseQuoted(const TCHAR *arg, StrVec *out)
 }
 
 /* appends the next unquoted argument and returns the position after it */
-static const TCHAR *ParseUnquoted(const TCHAR *arg, StrVec *out)
+static const TCHAR *ParseUnquoted(const TCHAR *arg, WStrVec *out)
 {
     AssertCrash(arg && *arg && ('"' != *arg) && !str::IsWs(*arg));
 
@@ -53,7 +53,7 @@ static const TCHAR *ParseUnquoted(const TCHAR *arg, StrVec *out)
    each '"' that is part of the name is escaped with '\\'
  - unescaped, in which case it start with != '"' and ends with ' ' or '\0'
 */
-void ParseCmdLine(const TCHAR *cmdLine, StrVec& out)
+void ParseCmdLine(const TCHAR *cmdLine, WStrVec& out)
 {
     while (cmdLine) {
         while (str::IsWs(*cmdLine))

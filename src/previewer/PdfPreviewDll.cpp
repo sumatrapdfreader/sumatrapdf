@@ -54,18 +54,18 @@ public:
         ScopedComPtr<IInitializeWithStream> pObject;
 
         CLSID clsid;
-        if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_PDF_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        if (SUCCEEDED(CLSIDFromString(SZ_PDF_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CPdfPreview(&g_lRefCount);
 #ifdef BUILD_XPS_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_XPS_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        else if (SUCCEEDED(CLSIDFromString(SZ_XPS_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CXpsPreview(&g_lRefCount);
 #endif
 #ifdef BUILD_CBZ_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_CBZ_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        else if (SUCCEEDED(CLSIDFromString(SZ_CBZ_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CCbzPreview(&g_lRefCount);
 #endif
 #ifdef BUILD_TGA_PREVIEW
-        else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_TGA_PREVIEW_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        else if (SUCCEEDED(CLSIDFromString(SZ_TGA_PREVIEW_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pObject = new CTgaPreview(&g_lRefCount);
 #endif
         else

@@ -287,9 +287,9 @@ void RedirectIOToConsole()
 
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */
-TCHAR *GetExePath()
+WCHAR *GetExePath()
 {
-    TCHAR buf[MAX_PATH];
+    WCHAR buf[MAX_PATH];
     buf[0] = 0;
     GetModuleFileName(NULL, buf, dimof(buf));
     // TODO: is normalization needed here at all?
@@ -315,9 +315,9 @@ int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
     return (int)diff;
 }
 
-TCHAR *ResolveLnk(const TCHAR * path)
+WCHAR *ResolveLnk(const WCHAR * path)
 {
-    ScopedMem<OLECHAR> olePath(str::conv::ToWStr(path));
+    ScopedMem<OLECHAR> olePath(str::Dup(path));
     if (!olePath)
         return NULL;
 
@@ -347,8 +347,8 @@ TCHAR *ResolveLnk(const TCHAR * path)
     return str::Dup(newPath);
 }
 
-bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
-                    const TCHAR *args, const TCHAR *description, int iconIndex)
+bool CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath,
+                    const WCHAR *args, const WCHAR *description, int iconIndex)
 {
     ScopedCom com;
     ScopedComPtr<IShellLink> lnk;
@@ -366,7 +366,7 @@ bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
     if (FAILED(hr))
         return false;
 
-    lnk->SetWorkingDirectory(ScopedMem<TCHAR>(path::GetDir(exePath)));
+    lnk->SetWorkingDirectory(ScopedMem<WCHAR>(path::GetDir(exePath)));
     // lnk->SetShowCmd(SW_SHOWNORMAL);
     // lnk->SetHotkey(0);
     lnk->SetIconLocation(exePath, iconIndex);
@@ -375,12 +375,12 @@ bool CreateShortcut(const TCHAR *shortcutPath, const TCHAR *exePath,
     if (description)
         lnk->SetDescription(description);
 
-    hr = file->Save(AsWStrQ(shortcutPath), TRUE);
+    hr = file->Save(shortcutPath, TRUE);
     return SUCCEEDED(hr);
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
-IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd)
+IDataObject* GetDataObjectForFile(WCHAR* filePath, HWND hwnd)
 {
     ScopedComPtr<IShellFolder> pDesktopFolder;
     HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
@@ -388,7 +388,7 @@ IDataObject* GetDataObjectForFile(LPCTSTR filePath, HWND hwnd)
         return NULL;
 
     IDataObject* pDataObject = NULL;
-    ScopedMem<WCHAR> lpWPath(str::conv::ToWStr(filePath));
+    ScopedMem<WCHAR> lpWPath(str::Dup(filePath));
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(NULL, NULL, lpWPath, NULL, &pidl, NULL);
     if (SUCCEEDED(hr)) {
@@ -595,7 +595,7 @@ TCHAR *GetDefaultPrinterName()
     return NULL;
 }
 
-bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
+bool CopyTextToClipboard(const WCHAR *text, bool appendOnly)
 {
     assert(text);
     if (!text) return false;
@@ -608,11 +608,11 @@ bool CopyTextToClipboard(const TCHAR *text, bool appendOnly)
 
     HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (str::Len(text) + 1) * sizeof(TCHAR));
     if (handle) {
-        TCHAR *globalText = (TCHAR *)GlobalLock(handle);
+        WCHAR *globalText = (WCHAR *)GlobalLock(handle);
         lstrcpy(globalText, text);
         GlobalUnlock(handle);
 
-        SetClipboardData(CF_T_TEXT, handle);
+        SetClipboardData(CF_UNICODETEXT, handle);
     }
 
     if (!appendOnly)
@@ -702,7 +702,7 @@ void DoubleBuffer::Flush(HDC hdc)
 namespace win {
     namespace menu {
 
-void SetText(HMENU m, UINT id, TCHAR *s)
+void SetText(HMENU m, UINT id, WCHAR *s)
 {
     MENUITEMINFO mii = { 0 };
     mii.cbSize = sizeof(mii);
@@ -716,14 +716,14 @@ void SetText(HMENU m, UINT id, TCHAR *s)
 /* Make a string safe to be displayed as a menu item
    (preserving all & so that they don't get swallowed)
    Caller needs to free() the result. */
-TCHAR *ToSafeString(const TCHAR *str)
+WCHAR *ToSafeString(const WCHAR *str)
 {
     if (!str::FindChar(str, '&'))
         return str::Dup(str);
 
-    StrVec ampSplitter;
-    ampSplitter.Split(str, _T("&"));
-    return ampSplitter.Join(_T("&&"));
+    WStrVec ampSplitter;
+    ampSplitter.Split(str, L"&");
+    return ampSplitter.Join(L"&&");
 }
 
     }
@@ -1073,7 +1073,7 @@ typedef BOOL WINAPI CreateProcessWithTokenWProc(HANDLE hToken, DWORD dwLogonFlag
 
 // Run a given *.exe as a non-elevated (non-admin) process.
 // based on http://stackoverflow.com/questions/3298611/run-my-program-asuser
-bool RunAsUser(TCHAR *cmd)
+bool RunAsUser(WCHAR *cmd)
 {
     CreateProcessWithTokenWProc *_CreateProcessWithTokenW;
     PROCESS_INFORMATION pi = { 0 };
@@ -1086,7 +1086,7 @@ bool RunAsUser(TCHAR *cmd)
     TOKEN_PRIVILEGES tkp = { 0 };
     bool ret = false;
 
-    _CreateProcessWithTokenW = (CreateProcessWithTokenWProc*)LoadDllFunc(_T("Advapi32.lib"), "CreateProcessWithTokenW");
+    _CreateProcessWithTokenW = (CreateProcessWithTokenWProc*)LoadDllFunc(L"Advapi32.lib", "CreateProcessWithTokenW");
     if (!_CreateProcessWithTokenW)
         return false;
 
@@ -1159,7 +1159,7 @@ bool RunAsUser(TCHAR *cmd)
     si.wShowWindow = SW_SHOWNORMAL;
     si.dwFlags = STARTF_USESHOWWINDOW;
 
-    ok = _CreateProcessWithTokenW(hPrimaryToken, 0, NULL, AsWStrQ(cmd), 0, NULL, NULL, &si, &pi);
+    ok = _CreateProcessWithTokenW(hPrimaryToken, 0, NULL, cmd, 0, NULL, NULL, &si, &pi);
     if (!ok) {
         lf("RunAsUser(): CreateProcessWithTokenW() failed");
         goto Error;

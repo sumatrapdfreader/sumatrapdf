@@ -21,7 +21,7 @@ static TCHAR *GetGhostscriptPath()
     };
 
     // find all installed Ghostscript versions
-    StrVec versions;
+    WStrVec versions;
     REGSAM access = KEY_READ | KEY_WOW64_32KEY;
 TryAgain64Bit:
     for (int i = 0; i < dimof(gsProducts); i++) {
@@ -68,7 +68,7 @@ TryAgain64Bit:
     ScopedMem<TCHAR> envpath(AllocArray<TCHAR>(size));
     if (size > 0 && envpath) {
         GetEnvironmentVariable(_T("PATH"), envpath, size);
-        StrVec paths;
+        WStrVec paths;
         paths.Split(envpath, _T(";"), true);
         for (size_t ix = 0; ix < paths.Count(); ix++) {
             ScopedMem<TCHAR> exe(path::Join(paths.At(ix), _T("gswin32c.exe")));

@@ -230,7 +230,7 @@ void CopySelectionToClipboard(WindowInfo *win)
             selText.Set(win->dm->textSelection->ExtractText(_T("\r\n")));
         }
         else {
-            StrVec selections;
+            WStrVec selections;
             for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
                 SelectionOnPage *selOnPage = &win->selectionOnPage->At(i);
                 TCHAR *text = win->dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);

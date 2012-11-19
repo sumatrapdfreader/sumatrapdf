@@ -17,14 +17,14 @@ class HtmlWindowCallback
 public:
     // called when we're about to show a given url. Returning false will
     // stop loading this url
-    virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow) = 0;
+    virtual bool OnBeforeNavigate(const WCHAR *url, bool newWindow) = 0;
 
     // called after html document has been completely loaded
-    virtual void OnDocumentComplete(const TCHAR *url) = 0;
+    virtual void OnDocumentComplete(const WCHAR *url) = 0;
 
     // allows for providing data for a given url.
     // returning false means data wasn't provided.
-    virtual bool GetDataForUrl(const TCHAR *url, char **data, size_t *len) = 0;
+    virtual bool GetDataForUrl(const WCHAR *url, char **data, size_t *len) = 0;
 
     // called when left mouse button is clicked in the web control window.
     // we use it to maintain proper focus (since it's stolen by left click)
@@ -50,7 +50,7 @@ protected:
     DWORD               adviseCookie;
     bool                blankWasShown;
 
-    ScopedMem<TCHAR>    currentURL;
+    ScopedMem<WCHAR>    currentURL;
 
     void EnsureAboutBlankShown();
     void CreateBrowser();
@@ -67,8 +67,8 @@ public:
 
     void OnSize(SizeI size);
     void SetVisible(bool visible);
-    void NavigateToUrl(const TCHAR *url);
-    void NavigateToDataUrl(const TCHAR *url);
+    void NavigateToUrl(const WCHAR *url);
+    void NavigateToDataUrl(const WCHAR *url);
     void SetHtml(const char *s, size_t len=-1);
     void GoBack();
     void GoForward();
@@ -78,13 +78,13 @@ public:
     void FindInCurrentPage();
     void SelectAll();
     void CopySelection();
-    bool WaitUntilLoaded(DWORD maxWaitMs, const TCHAR *url=NULL);
+    bool WaitUntilLoaded(DWORD maxWaitMs, const WCHAR *url=NULL);
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
 
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
-    bool    OnBeforeNavigate(const TCHAR *url, bool newWindow);
-    void    OnDocumentComplete(const TCHAR *url);
+    bool    OnBeforeNavigate(const WCHAR *url, bool newWindow);
+    void    OnDocumentComplete(const WCHAR *url);
     HRESULT OnDragEnter(IDataObject *dataObj);
     HRESULT OnDragDrop(IDataObject *dataObj);
 

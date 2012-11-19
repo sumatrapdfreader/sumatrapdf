@@ -163,11 +163,11 @@ static int                          gPolicyRestrictions = Perm_All;
 // only the listed protocols will be passed to the OS for
 // opening in e.g. a browser or an email client (ignored,
 // if gPolicyRestrictions doesn't contain Perm_DiskAccess)
-static StrVec                       gAllowedLinkProtocols;
+static WStrVec                      gAllowedLinkProtocols;
 // only files of the listed perceived types will be opened
 // externally by LinkHandler::LaunchFile (i.e. when clicking
 // on an in-document link); examples: "audio", "video", ...
-static StrVec                       gAllowedFileTypes;
+static WStrVec                      gAllowedFileTypes;
 
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
@@ -2904,8 +2904,8 @@ void OnMenuOpen(SumatraWindow& win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    str::Str<TCHAR> fileFilter;
-    StrVec filters;
+    str::Str<WCHAR> fileFilter;
+    WStrVec filters;
     for (int i = 0; i < dimof(fileFormats); i++) {
         if (fileFormats[i].available)
             filters.Append(fileFormats[i].filter);
@@ -2984,7 +2984,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     ScopedMem<TCHAR> dir(path::GetDir(win.loadedFilePath));
     pattern.Set(path::Join(dir, pattern));
 
-    StrVec files;
+    WStrVec files;
     if (!CollectPathsFromDirectory(pattern, files))
         return;
 

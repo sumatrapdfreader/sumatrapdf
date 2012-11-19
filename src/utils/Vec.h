@@ -332,23 +332,23 @@ public:
 
 }
 
-// StrVec owns the strings in the list
-class StrVec : public Vec<TCHAR *>
+// WStrVec owns the strings in the list
+class WStrVec : public Vec<WCHAR *>
 {
 public:
-    StrVec() : Vec() { }
-    StrVec(const StrVec& orig) : Vec(orig) {
+    WStrVec() : Vec() { }
+    WStrVec(const WStrVec& orig) : Vec(orig) {
         // make sure not to share string pointers between StrVecs
         for (size_t i = 0; i < len; i++) {
             if (At(i))
                 At(i) = str::Dup(At(i));
         }
     }
-    ~StrVec() {
+    ~WStrVec() {
         FreeVecMembers(*this);
     }
 
-    StrVec& operator=(const StrVec& that) {
+    WStrVec& operator=(const WStrVec& that) {
         if (this != &that) {
             FreeVecMembers(*this);
             Vec::operator=(that);
@@ -360,11 +360,11 @@ public:
         return *this;
     }
 
-    TCHAR *Join(const TCHAR *joint=NULL) {
-        str::Str<TCHAR> tmp(256);
+    WCHAR *Join(const WCHAR *joint=NULL) {
+        str::Str<WCHAR> tmp(256);
         size_t jointLen = joint ? str::Len(joint) : 0;
         for (size_t i = 0; i < len; i++) {
-            TCHAR *s = At(i);
+            WCHAR *s = At(i);
             if (i > 0 && jointLen > 0)
                 tmp.Append(joint, jointLen);
             tmp.Append(s);
@@ -372,18 +372,18 @@ public:
         return tmp.StealData();
     }
 
-    int Find(const TCHAR *string, size_t startAt=0) const {
+    int Find(const WCHAR *string, size_t startAt=0) const {
         for (size_t i = startAt; i < len; i++) {
-            TCHAR *item = At(i);
+            WCHAR *item = At(i);
             if (str::Eq(string, item))
                 return (int)i;
         }
         return -1;
     }
 
-    int FindI(const TCHAR *string, size_t startAt=0) const {
+    int FindI(const WCHAR *string, size_t startAt=0) const {
         for (size_t i = startAt; i < len; i++) {
-            TCHAR *item = At(i);
+            WCHAR *item = At(i);
             if (str::EqI(string, item))
                 return (int)i;
         }
@@ -394,9 +394,9 @@ public:
        (optionally collapsing several consecutive separators into one);
        e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
        (resp. "a", "b", "c" if separators are collapsed) */
-    size_t Split(const TCHAR *string, const TCHAR *separator, bool collapse=false) {
+    size_t Split(const WCHAR *string, const WCHAR *separator, bool collapse=false) {
         size_t start = len;
-        const TCHAR *next;
+        const WCHAR *next;
 
         while ((next = str::Find(string, separator))) {
             if (!collapse || next > string)
@@ -414,19 +414,19 @@ public:
 
 private:
     static int cmpNatural(const void *a, const void *b) {
-        return str::CmpNatural(*(const TCHAR **)a, *(const TCHAR **)b);
+        return str::CmpNatural(*(const WCHAR **)a, *(const WCHAR **)b);
     }
 
     static int cmpAscii(const void *a, const void *b) {
-        return _tcscmp(*(const TCHAR **)a, *(const TCHAR **)b);
+        return wcscmp(*(const WCHAR **)a, *(const WCHAR **)b);
     }
 };
 
-// StrList is a subset of StrVec that's optimized for appending and searching
-// StrList owns the strings it contains and frees them at destruction
-class StrList {
+// WStrList is a subset of WStrVec that's optimized for appending and searching
+// WStrList owns the strings it contains and frees them at destruction
+class WStrList {
     struct Item {
-        TCHAR *string;
+        WCHAR *string;
         uint32_t hash;
     };
 
@@ -436,10 +436,10 @@ class StrList {
 
     // variation of CRC-32 which deals with strings that are
     // mostly ASCII and should be treated case independently
-    static uint32_t GetQuickHashI(const TCHAR *str) {
+    static uint32_t GetQuickHashI(const WCHAR *str) {
         uint32_t crc = 0;
         for (; *str; str++) {
-            uint32_t bits = (crc ^ ((_totlower((wint_t)*str) & 0xFF) << 24)) & 0xFF000000L;
+            uint32_t bits = (crc ^ ((towlower((wint_t)*str) & 0xFF) << 24)) & 0xFF000000L;
             for (int i = 0; i < 8; i++) {
                 if ((bits & 0x80000000L))
                     bits = (bits << 1) ^ 0x04C11DB7L;
@@ -452,16 +452,16 @@ class StrList {
     }
 
 public:
-    StrList(size_t capHint=0, Allocator *allocator=NULL) :
+    WStrList(size_t capHint=0, Allocator *allocator=NULL) :
         items(capHint, allocator), count(0), allocator(allocator) { }
 
-    ~StrList() {
+    ~WStrList() {
         for (Item *item = items.IterStart(); item; item = items.IterNext()) {
             Allocator::Free(allocator, item->string);
         }
     }
 
-    const TCHAR *At(size_t idx) const {
+    const WCHAR *At(size_t idx) const {
         return items.At(idx).string;
     }
 
@@ -470,13 +470,13 @@ public:
     }
 
     // str must have been allocated by allocator and is owned by StrList
-    void Append(TCHAR *str) {
+    void Append(WCHAR *str) {
         Item item = { str, GetQuickHashI(str) };
         items.Append(item);
         count++;
     }
 
-    int Find(const TCHAR *str, size_t startAt=0) const {
+    int Find(const WCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
         Item *item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
@@ -486,7 +486,7 @@ public:
         return -1;
     }
 
-    int FindI(const TCHAR *str, size_t startAt=0) const {
+    int FindI(const WCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
         Item *item = items.LendData();
         for (size_t i = startAt; i < count; i++) {

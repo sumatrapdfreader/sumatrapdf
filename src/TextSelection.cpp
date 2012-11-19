@@ -118,7 +118,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
     return result;
 }
 
-void TextSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *lines)
+void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec *lines)
 {
     int len;
     RectI *coords;
@@ -245,7 +245,7 @@ void TextSelection::CopySelection(TextSelection *orig)
 
 TCHAR *TextSelection::ExtractText(TCHAR *lineSep)
 {
-    StrVec lines;
+    WStrVec lines;
 
     int fromPage = min(startPage, endPage), toPage = max(startPage, endPage);
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);

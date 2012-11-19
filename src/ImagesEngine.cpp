@@ -46,7 +46,7 @@ RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath)
     return rendered;
 }
 
-static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
+static bool GetEncoderClsid(const WCHAR *format, CLSID& clsid)
 {
     UINT numEncoders, size;
     GetImageEncodersSize(&numEncoders, &size);
@@ -54,13 +54,12 @@ static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
         return false;
 
     ScopedMem<ImageCodecInfo> codecInfo((ImageCodecInfo *)malloc(size));
-    ScopedMem<WCHAR> formatW(str::conv::ToWStr(format));
-    if (!codecInfo || !formatW)
+    if (!codecInfo)
         return false;
 
     GetImageEncoders(numEncoders, size, codecInfo);
     for (UINT j = 0; j < numEncoders; j++) {
-        if (str::Eq(codecInfo[j].MimeType, formatW)) {
+        if (str::Eq(codecInfo[j].MimeType, format)) {
             clsid = codecInfo[j].Clsid;
             return true;
         }
@@ -69,26 +68,26 @@ static bool GetEncoderClsid(const TCHAR *format, CLSID& clsid)
     return false;
 }
 
-bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
+bool SaveRenderedBitmap(RenderedBitmap *bmp, const WCHAR *filePath)
 {
     size_t bmpDataLen;
     ScopedMem<char> bmpData((char *)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
     if (!bmpData)
         return false;
 
-    const TCHAR *fileExt = path::GetExt(filePath);
-    if (str::EqI(fileExt, _T(".bmp")))
+    const WCHAR *fileExt = path::GetExt(filePath);
+    if (str::EqI(fileExt, L".bmp"))
         return file::WriteAll(filePath, bmpData.Get(), bmpDataLen);
 
-    const TCHAR *encoders[] = {
-        _T(".png"), _T("image/png"),
-        _T(".jpg"), _T("image/jpeg"),
-        _T(".jpeg"),_T("image/jpeg"),
-        _T(".gif"), _T("image/gif"),
-        _T(".tif"), _T("image/tiff"),
-        _T(".tiff"),_T("image/tiff"),
+    const WCHAR *encoders[] = {
+        L".png", L"image/png",
+        L".jpg",  L"image/jpeg",
+        L".jpeg", L"image/jpeg",
+        L".gif",  L"image/gif",
+        L".tif", L"image/tiff",
+        L".tiff", L"image/tiff",
     };
-    const TCHAR *encoder = NULL;
+    const WCHAR *encoder = NULL;
     for (int i = 0; i < dimof(encoders) && !encoder; i += 2) {
         if (str::EqI(fileExt, encoders[i]))
             encoder = encoders[i+1];
@@ -102,8 +101,7 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath)
     if (!gbmp)
         return false;
 
-    ScopedMem<WCHAR> filePathW(str::conv::ToWStr(filePath));
-    Status status = gbmp->Save(filePathW, &encClsid);
+    Status status = gbmp->Save(filePath, &encClsid);
     delete gbmp;
 
     return status == Ok;
@@ -405,7 +403,7 @@ bool ImageEngineImpl::FinishLoading(Bitmap *bmp)
 #define PropertyTagXPSubject    0x9c9f
 #endif
 
-static TCHAR *GetImageProperty(Bitmap *bmp, PROPID id, PROPID altId=0)
+static WCHAR *GetImageProperty(Bitmap *bmp, PROPID id, PROPID altId=0)
 {
     TCHAR *value = NULL;
     UINT size = bmp->GetPropertyItemSize(id);
@@ -417,7 +415,7 @@ static TCHAR *GetImageProperty(Bitmap *bmp, PROPID id, PROPID altId=0)
         value = str::conv::FromAnsi((char *)item->value);
     else if (PropertyTagTypeByte == item->type && item->length > 0 &&
         0 == (item->length % 2) && !((WCHAR *)item->value)[item->length / 2 - 1]) {
-        value = str::conv::FromWStr((WCHAR *)item->value);
+        value = str::Dup((WCHAR *)item->value);
     }
     free(item);
     if (!value && altId)
@@ -511,7 +509,7 @@ protected:
     virtual Bitmap *LoadImage(int pageNo);
 
     Vec<RectD> mediaboxes;
-    StrVec pageFileNames;
+    WStrVec pageFileNames;
 };
 
 bool ImageDirEngineImpl::LoadImageDir(const TCHAR *dirName)
@@ -674,7 +672,7 @@ protected:
 
     // extracted metadata
     ScopedMem<TCHAR> propTitle;
-    StrVec propAuthors;
+    WStrVec propAuthors;
     ScopedMem<TCHAR> propDate;
     ScopedMem<TCHAR> propModDate;
     ScopedMem<TCHAR> propCreator;
@@ -755,7 +753,7 @@ bool CbxEngineImpl::LoadCbzStream(IStream *stream)
 
 static int cmpAscii(const void *a, const void *b)
 {
-    return _tcscmp(*(const TCHAR **)a, *(const TCHAR **)b);
+    return wcscmp(*(const WCHAR **)a, *(const WCHAR **)b);
 }
 
 bool CbxEngineImpl::FinishLoadingCbz()
@@ -928,7 +926,7 @@ public:
     static int cmpPageByName(const void *o1, const void *o2) {
         ImagesPage *p1 = *(ImagesPage **)o1;
         ImagesPage *p2 = *(ImagesPage **)o2;
-        return _tcscmp(p1->fileName, p2->fileName);
+        return wcscmp(p1->fileName, p2->fileName);
     }
 };
 
