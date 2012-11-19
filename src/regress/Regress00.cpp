@@ -6,7 +6,7 @@
 // http://code.google.com/p/sumatrapdf/issues/detail?id=1926
 static void Regress00()
 {
-    TCHAR *filePath = path::Join(TestFilesDir(), _T("epub\\widget-figure-gallery-20120405.epub"));
+    WCHAR *filePath = path::Join(TestFilesDir(), L"epub\\widget-figure-gallery-20120405.epub");
     VerifyFileExists(filePath);
     Doc doc(Doc::CreateFromFile(filePath));
     CrashAlwaysIf(doc.LoadingFailed());

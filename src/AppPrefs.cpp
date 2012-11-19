@@ -100,9 +100,9 @@ SerializableGlobalPrefs gGlobalPrefs = {
     ABOUT_BG_COLOR_DEFAULT, // int bgColor
     false, // bool escToExit
     false, // bool useSysColors
-    NULL, // TCHAR *inverseSearchCmdLine
+    NULL, // WCHAR *inverseSearchCmdLine
     false, // bool enableTeXEnhancements
-    NULL, // TCHAR *versionToSkip
+    NULL, // WCHAR *versionToSkip
     NULL, // char *lastUpdateTime
     DEFAULT_DISPLAY_MODE, // DisplayMode defaultDisplayMode
     DEFAULT_ZOOM, // float defaultZoom
@@ -158,7 +158,7 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     prefs->Add(GLOBAL_PREFS_ONLY_STR, globalPrefs.globalPrefsOnly);
     prefs->Add(SHOW_RECENT_FILES_STR, globalPrefs.showStartPage);
 
-    const TCHAR *mode = DisplayModeConv::NameFromEnum(globalPrefs.defaultDisplayMode);
+    const WCHAR *mode = DisplayModeConv::NameFromEnum(globalPrefs.defaultDisplayMode);
     prefs->Add(DISPLAY_MODE_STR, mode);
 
     ScopedMem<char> zoom(str::Format("%.4f", globalPrefs.defaultZoom));
@@ -209,7 +209,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
         return prefs;
     }
 
-    const TCHAR *mode = DisplayModeConv::NameFromEnum(ds->displayMode);
+    const WCHAR *mode = DisplayModeConv::NameFromEnum(ds->displayMode);
     prefs->Add(DISPLAY_MODE_STR, mode);
     prefs->Add(PAGE_NO_STR, ds->pageNo);
     prefs->Add(REPARSE_IDX_STR, ds->reparseIdx);
@@ -273,12 +273,12 @@ Error:
     return NULL;
 }
 
-static inline const TCHAR *NullToEmpty(const TCHAR *s)
+static inline const WCHAR *NullToEmpty(const WCHAR *s)
 {
-    return s == NULL ? _T("") : s;
+    return s == NULL ? L"" : s;
 }
 
-static inline const TCHAR *EmptyToNull(const TCHAR *s)
+static inline const WCHAR *EmptyToNull(const WCHAR *s)
 {
     return str::IsEmpty(s) ? NULL : s;
 }
@@ -373,11 +373,11 @@ static void RetrieveRaw(BencDict *dict, const char *key, char *& value)
     }
 }
 
-static void Retrieve(BencDict *dict, const char *key, TCHAR *& value)
+static void Retrieve(BencDict *dict, const char *key, WCHAR *& value)
 {
     BencString *string = dict->GetString(key);
     if (string) {
-        TCHAR *str = string->Value();
+        WCHAR *str = string->Value();
         if (str) {
             free(value);
             value = str;
@@ -562,7 +562,7 @@ Exit:
 namespace Prefs {
 
 /* Load preferences from the preferences file. */
-void Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
+void Load(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
           FileHistory& fileHistory, Favorites **favs)
 {
     size_t prefsFileLen;
@@ -590,7 +590,7 @@ void Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
 #endif
 }
 
-bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites* favs)
+bool Save(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites* favs)
 {
     assert(filepath);
     if (!filepath)
@@ -618,7 +618,7 @@ bool Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
     }
 
 // -view [continuous][singlepage|facing|bookview]
-bool ParseViewMode(DisplayMode *mode, const TCHAR *txt)
+bool ParseViewMode(DisplayMode *mode, const WCHAR *txt)
 {
     IS_STR_ENUM(DM_SINGLE_PAGE);
     IS_STR_ENUM(DM_CONTINUOUS);
@@ -626,7 +626,7 @@ bool ParseViewMode(DisplayMode *mode, const TCHAR *txt)
     IS_STR_ENUM(DM_CONTINUOUS_FACING);
     IS_STR_ENUM(DM_BOOK_VIEW);
     IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
-    if (str::EqIS(txt, _T("continuous single page"))) {
+    if (str::EqIS(txt, L"continuous single page")) {
         *mode = DM_CONTINUOUS;
     }
     return true;
@@ -638,7 +638,7 @@ namespace DisplayModeConv {
     if (val == var) \
         return _T(val##_STR);
 
-const TCHAR *NameFromEnum(DisplayMode var)
+const WCHAR *NameFromEnum(DisplayMode var)
 {
     STR_FROM_ENUM(DM_AUTOMATIC)
     STR_FROM_ENUM(DM_SINGLE_PAGE)
@@ -647,12 +647,12 @@ const TCHAR *NameFromEnum(DisplayMode var)
     STR_FROM_ENUM(DM_CONTINUOUS)
     STR_FROM_ENUM(DM_CONTINUOUS_FACING)
     STR_FROM_ENUM(DM_CONTINUOUS_BOOK_VIEW)
-    return _T("unknown display mode!?");
+    return L"unknown display mode!?";
 }
 
 #undef STR_FROM_ENUM
 
-bool EnumFromName(const TCHAR *txt, DisplayMode *mode)
+bool EnumFromName(const WCHAR *txt, DisplayMode *mode)
 {
     IS_STR_ENUM(DM_AUTOMATIC)
     IS_STR_ENUM(DM_SINGLE_PAGE)
@@ -669,7 +669,7 @@ bool EnumFromName(const TCHAR *txt, DisplayMode *mode)
 }
 
 /* Caller needs to free() the result. */
-TCHAR *GetPrefsFileName()
+WCHAR *GetPrefsFileName()
 {
     return AppGenDataFilename(PREFS_FILE_NAME);
 }
