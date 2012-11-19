@@ -612,7 +612,7 @@ bool Save(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fi
 }
 
 #define IS_STR_ENUM(enumName) \
-    if (str::EqIS(txt, _T(enumName##_STR))) { \
+    if (str::EqIS(txt, TEXT(enumName##_STR))) { \
         *mode = enumName; \
         return true; \
     }
@@ -636,7 +636,7 @@ namespace DisplayModeConv {
 
 #define STR_FROM_ENUM(val) \
     if (val == var) \
-        return _T(val##_STR);
+        return TEXT(val##_STR);
 
 const WCHAR *NameFromEnum(DisplayMode var)
 {

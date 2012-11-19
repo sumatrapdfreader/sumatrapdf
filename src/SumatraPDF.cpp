@@ -965,12 +965,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         }
     }
     title.Set(str::Format(L"%s %s- %s", baseName, docTitle ? docTitle : L"", SUMATRA_WINDOW_TITLE));
-#ifdef UNICODE
     if (IsUIRightToLeft()) {
         // explicitly revert the title, so that filenames aren't garbled
         title.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", baseName));
     }
-#endif
     free(docTitle);
     if (needRefresh)
         title.Set(str::Format(_TR("[Changes detected; refreshing] %s"), title));

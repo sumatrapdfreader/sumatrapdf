@@ -573,7 +573,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float
     int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (idx == -1) {
         ScopedMem<WCHAR> customZoom(win::GetText(GetDlgItem(hDlg, idComboBox)));
-        float zoom = (float)_tstof(customZoom);
+        float zoom = (float)_wtof(customZoom);
         if (zoom > 0)
             newZoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
     } else {

@@ -152,7 +152,7 @@ void WindowInfo::CreateInfotip(const WCHAR *text, RectI& rc, bool multiline)
     ti.lpszText = (WCHAR *)text;
     ti.rect = rc.ToRECT();
 
-    if (multiline || str::FindChar(text, _T('\n')))
+    if (multiline || str::FindChar(text, '\n'))
         SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, MULTILINE_INFOTIP_WIDTH_PX);
     else
         SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, -1);

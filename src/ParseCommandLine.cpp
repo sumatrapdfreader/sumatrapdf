@@ -89,7 +89,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
     ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.Count();
 
-#define is_arg(txt) str::EqI(_T(txt), argument)
+#define is_arg(txt) str::EqI(TEXT(txt), argument)
 #define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
 #define additional_param() argList.At(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
@@ -147,19 +147,19 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
             str::ReplacePtr(&forwardSearchOrigin, argList.At(++n));
-            forwardSearchLine = _ttoi(argList.At(++n));
+            forwardSearchLine = _wtoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
-            fwdSearch.offset = _ttoi(argList.At(++n));
+            fwdSearch.offset = _wtoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-width")) {
-            fwdSearch.width = _ttoi(argList.At(++n));
+            fwdSearch.width = _wtoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-color")) {
             ParseColor(&fwdSearch.color, argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-permanent")) {
-            fwdSearch.permanent = _ttoi(argList.At(++n));
+            fwdSearch.permanent = _wtoi(argList.At(++n));
         }
         else if (is_arg("-esc-to-exit")) {
             escToExit = true;
@@ -182,7 +182,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             str::ReplacePtr(&destName, argList.At(++n));
         }
         else if (is_arg_with_param("-page")) {
-            pageNumber = _ttoi(argList.At(++n));
+            pageNumber = _wtoi(argList.At(++n));
         }
         else if (is_arg("-restrict")) {
             restrictedUse = true;
@@ -227,7 +227,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // the argument is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
-            hwndPluginParent = (HWND)_ttol(argList.At(++n));
+            hwndPluginParent = (HWND)_wtol(argList.At(++n));
         }
         else if (is_arg_with_param("-stress-test")) {
             // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle count>x]

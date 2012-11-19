@@ -9,9 +9,7 @@
 #include "TrivialHtmlParser.h"
 
 #define CHM_MT
-#ifdef UNICODE
 #define PPC_BSTR
-#endif
 #include <chm_lib.h>
 
 ChmDoc::~ChmDoc()
@@ -310,12 +308,10 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
             continue;
         ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
         ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
-#ifdef UNICODE
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes, cp));
         }
-#endif
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;
         else if (str::EqI(attrName, L"Name"))
@@ -361,12 +357,10 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
             continue;
         ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
         ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
-#ifdef UNICODE
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes, cp));
         }
-#endif
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;
         else if (str::EqI(attrName, L"Keyword"))

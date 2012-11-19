@@ -207,11 +207,7 @@ fz_stream *fz_open_file2(fz_context *ctx, const WCHAR *filePath)
     }
 
     fz_try(ctx) {
-#ifdef UNICODE
         file = fz_open_file_w(ctx, filePath);
-#else
-        file = fz_open_file_a(ctx, filePath);
-#endif
     }
     fz_catch(ctx) {
         file = NULL;
@@ -294,13 +290,7 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
         for (fz_text_line *line = block->lines; line < block->lines + block->len; line++) {
             for (fz_text_span *span = line->spans; span < line->spans + line->len; span++) {
                 for (int i = 0; i < span->len; i++) {
-#ifdef UNICODE
                     *dest = span->text[i].c;
-#else
-                    WCHAR c = span->text[i].c;
-                    if (!WideCharToMultiByte(CP_ACP, 0, &c, 1, dest, 1, NULL, NULL))
-                        *dest = '?';
-#endif
                     if (*dest <= 32) {
                         if (!str::IsWs(*dest))
                             *dest = '?';
@@ -538,7 +528,7 @@ static LinkRectList *LinkifyText(WCHAR *pageText, RectI *coords)
             multiline = LinkifyCheckMultiline(pageText, end, coords);
             protocol = L"http://";
             // ignore www. links without a top-level domain
-            if (end - start <= 4 || !multiline && (!_tcschr(start + 5, '.') || _tcschr(start + 5, '.') >= end))
+            if (end - start <= 4 || !multiline && (!wcschr(start + 5, '.') || wcschr(start + 5, '.') >= end))
                 end = NULL;
         }
         else if ('m' == *start && str::StartsWith(start, L"mailto:")) {

@@ -535,9 +535,7 @@ void CreateToc(WindowInfo *win)
             IDC_TOC_BOX + 2 == IDC_TOC_CLOSE &&
             IDC_TOC_BOX + 3 == IDC_TOC_TREE, consecutive_toc_ids);
 
-#ifdef UNICODE
     TreeView_SetUnicodeFormat(win->hwndTocTree, true);
-#endif
 
     if (NULL == DefWndProcTocTree)
         DefWndProcTocTree = (WNDPROC)GetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC);

@@ -913,7 +913,7 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
             if (itemText)
                 str::NormalizeWS(itemText);
             if (!str::IsEmpty(itemText.Get())) {
-                ScopedMem<WCHAR> name(str::Format(_T(FB2_TOC_ENTRY_MARK) L"%d", titleCount));
+                ScopedMem<WCHAR> name(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", titleCount));
                 PageDestination *dest = GetNamedDest(name);
                 EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
                 item->id = titleCount;
@@ -1020,7 +1020,7 @@ bool MobiEngineImpl::Load(const WCHAR *fileName)
 
 PageDestination *MobiEngineImpl::GetNamedDest(const WCHAR *name)
 {
-    int filePos = _ttoi(name);
+    int filePos = _wtoi(name);
     if (filePos < 0 || 0 == filePos && *name != '0')
         return NULL;
     int pageNo;

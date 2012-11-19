@@ -27,8 +27,6 @@ Purpose:	Main include file for sizeable dialogs API
 #ifndef DIALOGSIZER_H
 #define DIALOGSIZER_H
 
-#include <tchar.h>
-
 //	Predefined sizing information
 #define DS_MoveX		1
 #define DS_MoveY		2

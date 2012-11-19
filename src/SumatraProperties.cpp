@@ -84,7 +84,7 @@ static WCHAR *FormatSystemTime(SYSTEMTIME& date)
 
     WCHAR *tmp = buf + ret - 1;
     if (ret > 1)
-        *tmp++ = L' ';
+        *tmp++ = ' ';
     cchBufLen -= ret;
     ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, NULL, tmp, cchBufLen);
     if (0 == ret) // GetTimeFormat() failed
@@ -403,13 +403,11 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
 
     if (dm && dm->engineType != Engine_Chm) {
         str = FormatPageSize(dm->engine, dm->CurrentPageNo(), dm->Rotation());
-#ifdef UNICODE
         if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
             str = str::Format(L"\u202A%s\u202C", ScopedMem<WCHAR>(str));
         }
-#endif
         layoutData->AddProperty(_TR("Page Size:"), str);
     }
 

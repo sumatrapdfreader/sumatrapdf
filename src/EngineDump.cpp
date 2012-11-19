@@ -323,7 +323,7 @@ public:
     }
 };
 
-#define ErrOut(msg, ...) fwprintf(stderr, _T(msg), __VA_ARGS__)
+#define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg), __VA_ARGS__)
 
 int main(int argc, char **argv)
 {

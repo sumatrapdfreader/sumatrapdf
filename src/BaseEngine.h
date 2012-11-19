@@ -260,7 +260,7 @@ public:
     // caller must free() the result
     virtual WCHAR *GetPageLabel(int pageNo) { return str::Format(L"%d", pageNo); }
     // reverts GetPageLabel by returning the first page number having the given label
-    virtual int GetPageByLabel(const WCHAR *label) { return _ttoi(label); }
+    virtual int GetPageByLabel(const WCHAR *label) { return _wtoi(label); }
 
     // whether this document required a password in order to be loaded
     virtual bool IsPasswordProtected() const { return false; }

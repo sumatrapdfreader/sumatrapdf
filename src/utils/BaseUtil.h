@@ -4,10 +4,10 @@
 #ifndef BaseUtil_h
 #define BaseUtil_h
 
-#if defined(_UNICODE) && !defined(UNICODE)
+#ifndef UNICODE
 #define UNICODE
 #endif
-#if defined(UNICODE) && !defined(_UNICODE)
+#ifndef _UNICODE
 #define _UNICODE
 #endif
 
@@ -29,11 +29,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifndef UNICODE
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-#include <tchar.h>
 #include <wchar.h>
 #include <string.h>
 

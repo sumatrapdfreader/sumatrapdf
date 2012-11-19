@@ -19,7 +19,7 @@ static void TStrTest()
     assert(str::EndsWith(str, L"ing") && str::EndsWithI(str, L"ING"));
     assert(!str::EndsWith(str, L"ung"));
     assert(str::IsEmpty((char*)NULL) && str::IsEmpty((WCHAR*)NULL)&& str::IsEmpty(L"") && !str::IsEmpty(str));
-    assert(str::FindChar(str, _T('s')) && !str::FindChar(str, _T('S')));
+    assert(str::FindChar(str, 's') && !str::FindChar(str, 'S'));
     size_t len = str::BufSet(buf, dimof(buf), str);
     assert(len == str::Len(buf) && str::Eq(buf, str));
     len = str::BufSet(buf, 6, str);
@@ -185,15 +185,15 @@ static void TStrTest()
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-    char *strA = str::conv::ToAnsi(_T(TEST_STRING));
+    char *strA = str::conv::ToAnsi(TEXT(TEST_STRING));
     assert(str::Eq(strA, TEST_STRING));
     str = str::conv::FromAnsi(strA);
     free(strA);
-    assert(str::Eq(str, _T(TEST_STRING)));
+    assert(str::Eq(str, TEXT(TEST_STRING)));
     free(str);
 #undef TEST_STRING
 
-    assert(str::IsDigit('0') && str::IsDigit(_T('5')) && str::IsDigit(L'9'));
+    assert(str::IsDigit('0') && str::IsDigit(TEXT('5')) && str::IsDigit(L'9'));
     assert(iswdigit(L'\xB2') && !str::IsDigit(L'\xB2'));
 
     assert(str::CmpNatural(L".hg", L"2.pdf") < 0);

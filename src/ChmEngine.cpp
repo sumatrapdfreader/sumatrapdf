@@ -204,7 +204,7 @@ void ChmEngineImpl::OnDocumentComplete(const WCHAR *url)
 {
     if (!url)
         return;
-    if (*url == L'/')
+    if (*url == '/')
         ++url;
     int pageNo = pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(url))) + 1;
     if (pageNo) {
@@ -364,9 +364,9 @@ class ChmTocBuilder : public EbookTocVisitor {
         return pages->Count();
     }
 #else
-    // TODO: could use dict::MapTStrToInt instead of StrList in the caller
+    // TODO: could use dict::MapWStrToInt instead of StrList in the caller
     // as well
-    dict::MapTStrToInt urlsSet;
+    dict::MapWStrToInt urlsSet;
 
     int CreatePageNoForURL(const WCHAR *url) {
         if (!url || IsExternalUrl(url))

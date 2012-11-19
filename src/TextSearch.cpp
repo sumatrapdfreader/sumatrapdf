@@ -60,13 +60,11 @@ void TextSearch::SetText(WCHAR *text)
             ;
         anchor = str::DupN(text, end - text);
     }
-#ifdef UNICODE
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
     // cf. http://forums.fofou.org/sumatrapdf/topic?id=2432337
     else if (*text == '-' || *text == '\'' || *text == '"')
         anchor = NULL;
-#endif
     else
         anchor = str::DupN(text, 1);
 
@@ -128,7 +126,6 @@ int TextSearch::MatchLen(const WCHAR *start)
             /* characters are identical */;
         else if (iswspace(*match) && iswspace(*end))
             /* treat all whitespace as identical */;
-#ifdef UNICODE
         // TODO: Adobe Reader seems to have a more extensive list of
         //       normalizations - is there an easier way?
         else if (*match == '-' && (0x2010 <= *end && *end <= 0x2014))
@@ -138,7 +135,6 @@ int TextSearch::MatchLen(const WCHAR *start)
             /* make APOSTROPHE also match LEFT/RIGHT SINGLE QUOTATION MARK */;
         else if (*match == '"' && (0x201c <= *end && *end <= 0x201f))
             /* make QUOTATION MARK also match LEFT/RIGHT DOUBLE QUOTATION MARK */;
-#endif
         else
             return -1;
         match++;
@@ -147,7 +143,7 @@ int TextSearch::MatchLen(const WCHAR *start)
         // character that's just missing an encoding (and '?' is the replacement
         // character); cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1574
         if (*match && !isnoncjkwordchar(*(match - 1)) && (*(match - 1) != '?' || *match != '?') ||
-            iswspace(*(match - 1)) && _istspace(*(end - 1))) {
+            iswspace(*(match - 1)) && iswspace(*(end - 1))) {
             SkipWhitespace(match);
             SkipWhitespace(end);
         }

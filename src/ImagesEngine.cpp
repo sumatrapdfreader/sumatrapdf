@@ -991,12 +991,7 @@ static ImagesPage *LoadCurrentCbrPage(HANDLE hArc, RARHeaderDataEx& rarHeader)
     if (!bmp)
         return NULL;
 
-#ifdef UNICODE
-    WCHAR *fileName = rarHeader.FileNameW;
-#else
-    WCHAR *fileName = rarHeader.FileName;
-#endif
-    return new ImagesPage(fileName, bmp);
+    return new ImagesPage(rarHeader.FileNameW, bmp);
 }
 
 bool CbxEngineImpl::LoadCbrFile(const WCHAR *file)
@@ -1007,11 +1002,7 @@ bool CbxEngineImpl::LoadCbrFile(const WCHAR *file)
     fileExt = L".cbr";
 
     RAROpenArchiveDataEx  arcData = { 0 };
-#ifdef UNICODE
-    arcData.ArcNameW = (WCHAR*)file;
-#else
-    arcData.ArcName = (WCHAR*)file;
-#endif
+    arcData.ArcNameW = (WCHAR *)file;
     arcData.OpenMode = RAR_OM_EXTRACT;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
@@ -1028,11 +1019,7 @@ bool CbxEngineImpl::LoadCbrFile(const WCHAR *file)
         if (0 != res)
             break;
 
-#ifdef UNICODE
-        WCHAR *fileName = rarHeader.FileNameW;
-#else
-        WCHAR *fileName = rarHeader.FileName;
-#endif
+        const WCHAR *fileName = rarHeader.FileNameW;
         if (ImageEngine::IsSupportedFile(fileName)) {
             ImagesPage *page = LoadCurrentCbrPage(hArc, rarHeader);
             if (page)

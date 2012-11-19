@@ -187,7 +187,7 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_LOCATION, installDir);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T(PUBLISHER_STR));
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, TEXT(PUBLISHER_STR));
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, L"http://blog.kowalczyk.info/software/sumatrapdf/");
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, L"http://blog.kowalczyk.info/software/sumatrapdf/news.html");

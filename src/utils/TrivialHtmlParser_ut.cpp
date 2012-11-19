@@ -97,7 +97,7 @@ static void HtmlParser03()
     assert(NULL == root->up);
     assert(NULL == root->down);
     ScopedMem<WCHAR> val(root->GetAttribute("att"));
-    assert(str::Eq(val, _T("v\"al")));
+    assert(str::Eq(val, L"v\"al"));
     assert(!root->firstAttr->next);
 }
 
@@ -157,11 +157,7 @@ static void HtmlParser07()
     HtmlElement *root = p.Parse("<test umls=&auml;\xC3\xB6&#xFC; zero=&#1;&#0;&#-1;>", CP_UTF8);
     assert(1 == p.ElementsCount());
     ScopedMem<WCHAR> val(root->GetAttribute("umls"));
-#ifdef UNICODE
     assert(str::Eq(val, L"\xE4\xF6\xFC"));
-#else
-    assert(str::EndsWith(val, "\xFC"));
-#endif
     val.Set(root->GetAttribute("zero"));
     assert(str::Eq(val, L"\x01??"));
 }

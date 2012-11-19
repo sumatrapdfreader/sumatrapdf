@@ -894,7 +894,7 @@ static void ParseCommandLine(WCHAR *cmdLine)
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);
 
-#define is_arg(param) str::EqI(arg + 1, _T(param))
+#define is_arg(param) str::EqI(arg + 1, TEXT(param))
 #define is_arg_with_param(param) (is_arg(param) && i < argList.Count() - 1)
 
     // skip the first arg (exe path)

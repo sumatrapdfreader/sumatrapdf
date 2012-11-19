@@ -835,9 +835,7 @@ void CreateFavorites(WindowInfo *win)
             IDC_FAV_BOX + 2 == IDC_FAV_CLOSE &&
             IDC_FAV_BOX + 3 == IDC_FAV_TREE, consecutive_fav_ids);
 
-#ifdef UNICODE
     TreeView_SetUnicodeFormat(win->hwndFavTree, true);
-#endif
 
     if (NULL == DefWndProcFavTree)
         DefWndProcFavTree = (WNDPROC)GetWindowLongPtr(win->hwndFavTree, GWLP_WNDPROC);

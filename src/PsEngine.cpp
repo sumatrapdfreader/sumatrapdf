@@ -152,14 +152,10 @@ static PdfEngine *psgz2pdf(const WCHAR *fileName)
     if (!tmpFile)
         return NULL;
 
-#ifdef UNICODE
     gzFile inFile = gzopen_w(fileName, "rb");
-#else
-    gzFile inFile = gzopen(fileName, "rb");
-#endif
     if (!inFile)
         return NULL;
-    FILE *outFile = _tfopen(tmpFile, L"wb");
+    FILE *outFile = _wfopen(tmpFile, L"wb");
     if (!outFile) {
         gzclose(inFile);
         return NULL;

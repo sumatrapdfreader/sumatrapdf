@@ -90,7 +90,7 @@ private:
 Synchronizer::Synchronizer(const WCHAR* syncfilepath) :
     indexDiscarded(true), syncfilepath(str::Dup(syncfilepath))
 {
-    _tstat(syncfilepath, &syncfileTimestamp);
+    _wstat(syncfilepath, &syncfileTimestamp);
 }
 
 bool Synchronizer::IsIndexDiscarded() const
@@ -101,7 +101,7 @@ bool Synchronizer::IsIndexDiscarded() const
 
     // has the synchronization file been changed on disk?
     struct _stat newstamp;
-    if (_tstat(syncfilepath, &newstamp) == 0 &&
+    if (_wstat(syncfilepath, &newstamp) == 0 &&
         difftime(newstamp.st_mtime, syncfileTimestamp.st_mtime) > 0) {
         // update time stamp
         memcpy((void *)&syncfileTimestamp, &newstamp, sizeof(syncfileTimestamp));
@@ -115,7 +115,7 @@ int Synchronizer::RebuildIndex()
 {
     indexDiscarded = false;
     // save sync file timestamp
-    _tstat(syncfilepath, &syncfileTimestamp);
+    _wstat(syncfilepath, &syncfileTimestamp);
     return PDFSYNCERR_SUCCESS;
 }
 

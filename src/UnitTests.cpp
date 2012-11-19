@@ -178,10 +178,8 @@ static void UrlExtractTest()
     assert(str::Eq(filename, L"filename.ext"));
     filename.Set(ExtractFilenameFromURL(L"http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
     assert(str::Eq(filename, L"na/me.ext"));
-#ifdef UNICODE
     filename.Set(ExtractFilenameFromURL(L"http://example.net/%E2%82%AC"));
     assert(str::Eq((char *)filename.Get(), "\xAC\x20"));
-#endif
 }
 
 void SumatraPDF_UnitTests()

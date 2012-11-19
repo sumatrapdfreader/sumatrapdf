@@ -563,12 +563,8 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
     data->prevProgress = 0.0f; // force update
     TriggerRepaintOnProgressChange(data);
 
-#ifdef UNICODE
     if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, fname, -1, data->filepath, MAX_PATH))
         MultiByteToWideChar(CP_ACP, 0, fname, -1, data->filepath, MAX_PATH);
-#else
-    str::BufSet(data->filepath, dimof(data->filepath), fname);
-#endif
 
     LaunchWithSumatra(data, stream->url);
 

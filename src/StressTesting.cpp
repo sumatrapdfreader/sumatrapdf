@@ -18,7 +18,7 @@
 #include "WinUtil.h"
 
 static slog::Logger *gLog;
-#define logbench(msg, ...) gLog->LogFmt(_T(msg), __VA_ARGS__)
+#define logbench(msg, ...) gLog->LogFmt(TEXT(msg), __VA_ARGS__)
 
 static bool gIsStressTesting = false;
 

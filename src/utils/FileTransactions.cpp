@@ -42,11 +42,7 @@ static void InitializeTransactions()
     Load(hLibKTM, CommitTransaction);
     Load(hLibKTM, RollbackTransaction);
 #undef Load
-#ifdef UNICODE
 #define Load(lib, func) _ ## func = (func ## Ptr)GetProcAddress(lib, #func "W")
-#else
-#define Load(lib, func) _ ## func = (func ## Ptr)GetProcAddress(lib, #func "A")
-#endif
     Load(hLibKernel, CreateFileTransacted);
     Load(hLibKernel, DeleteFileTransacted);
 #undef Load

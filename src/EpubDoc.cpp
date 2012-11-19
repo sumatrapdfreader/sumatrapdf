@@ -943,7 +943,7 @@ bool PalmDoc::HasToc() const
 bool PalmDoc::ParseToc(EbookTocVisitor *visitor)
 {
     for (size_t i = 0; i < tocEntries.Count(); i++) {
-        ScopedMem<WCHAR> name(str::Format(_T(PDB_TOC_ENTRY_MARK) L"%d", i + 1));
+        ScopedMem<WCHAR> name(str::Format(TEXT(PDB_TOC_ENTRY_MARK) L"%d", i + 1));
         visitor->Visit(tocEntries.At(i), name, 1);
     }
     return true;

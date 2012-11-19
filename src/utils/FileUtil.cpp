@@ -8,7 +8,7 @@ namespace path {
 
 bool IsSep(WCHAR c)
 {
-    return L'\\' == c || L'/' == c;
+    return '\\' == c || '/' == c;
 }
 
 bool IsSep(char c)

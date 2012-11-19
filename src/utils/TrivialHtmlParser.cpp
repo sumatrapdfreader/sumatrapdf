@@ -89,7 +89,7 @@ WCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
         if (-1 != rune) {
             *dst++ = IntToChar(rune);
             src = entityEnd;
-            if (*src == _T(';'))
+            if (*src == ';')
                 ++src;
         } else {
             *dst++ = '&';
