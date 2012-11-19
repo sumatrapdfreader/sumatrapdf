@@ -5,7 +5,7 @@
 #define GdiPlusUtil_h
 
 // used for communicating with DrawCloseButton()
-#define BUTTON_HOVER_TEXT _T("1")
+#define BUTTON_HOVER_TEXT L"1"
 
 // note: must write "using namespace Gdiplus;" before #include "GdiPlusUtil.h"
 // this is to make sure we don't accidentally do that just by including this file

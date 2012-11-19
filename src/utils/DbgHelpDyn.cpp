@@ -544,7 +544,7 @@ __declspec(noinline) bool GetCurrentThreadCallstack(str::Str<char>& s)
 
     CONTEXT ctx;
     // not available under Win2000
-    RtlCaptureContextProc *MyRtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(_T("kernel32.dll"), "RtlCaptureContext");
+    RtlCaptureContextProc *MyRtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(L"kernel32.dll", "RtlCaptureContext");
     if (!MyRtlCaptureContext)
         return false;
 

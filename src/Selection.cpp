@@ -227,7 +227,7 @@ void CopySelectionToClipboard(WindowInfo *win)
         ScopedMem<WCHAR> selText;
         bool isTextSelection = win->dm->textSelection->result.len > 0;
         if (isTextSelection) {
-            selText.Set(win->dm->textSelection->ExtractText(_T("\r\n")));
+            selText.Set(win->dm->textSelection->ExtractText(L"\r\n"));
         }
         else {
             WStrVec selections;

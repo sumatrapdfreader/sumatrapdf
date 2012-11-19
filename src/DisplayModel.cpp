@@ -1416,7 +1416,7 @@ WCHAR *DisplayModel::GetTextInRegion(int pageNo, RectD region)
                 result.Append(*src);
         }
         else if (result.Count() > 0 && result.Last() != '\n')
-            result.Append(_T("\r\n"), 2);
+            result.Append(L"\r\n", 2);
     }
 
     return result.StealData();

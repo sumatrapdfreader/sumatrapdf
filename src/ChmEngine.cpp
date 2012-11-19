@@ -20,9 +20,9 @@ void DebugAlternateChmEngine(bool enable)
 
 static bool IsExternalUrl(const WCHAR *url)
 {
-    return str::StartsWithI(url, _T("http://")) ||
-           str::StartsWithI(url, _T("https://")) ||
-           str::StartsWithI(url, _T("mailto:"));
+    return str::StartsWithI(url, L"http://") ||
+           str::StartsWithI(url, L"https://") ||
+           str::StartsWithI(url, L"mailto:");
 }
 
 class ChmTocItem : public DocTocItem, public PageDestination {
@@ -127,7 +127,7 @@ public:
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
 
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".chm"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".chm"; }
 
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
@@ -260,10 +260,10 @@ void ChmEngineImpl::DisplayPage(const WCHAR *pageUrl)
     // chm files (I don't know such cases, though).
     // A more robust solution would try to match with the actual
     // names of files inside chm package.
-    if (str::StartsWith(pageUrl, _T("..\\")))
+    if (str::StartsWith(pageUrl, L"..\\"))
         pageUrl += 3;
 
-    if (str::StartsWith(pageUrl, _T("/")))
+    if (str::StartsWith(pageUrl, L"/"))
         pageUrl++;
 
     assert(htmlWindow);
@@ -281,7 +281,7 @@ RenderedBitmap *ChmEngineImpl::CreateThumbnail(SizeI size)
     // will be taken over by HtmlWindow anyway) but it can't be NULL.
     int winDx = area.dx + GetSystemMetrics(SM_CXVSCROLL);
     int winDy = area.dy + GetSystemMetrics(SM_CYHSCROLL);
-    HWND hwnd = CreateWindow(WC_STATIC, _T("BrowserCapture"), WS_POPUP,
+    HWND hwnd = CreateWindow(WC_STATIC, L"BrowserCapture", WS_POPUP,
                              0, 0, winDx, winDy, NULL, NULL, NULL, NULL);
     if (!hwnd)
         return NULL;

@@ -35,70 +35,70 @@ static void ParseCommandLineTest()
 {
     {
         CommandLineInfo i;
-        i.ParseCommandLine(_T("SumatraPDF.exe -bench foo.pdf"));
+        i.ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf");
         assert(2 == i.pathsToBenchmark.Count());
-        assert(str::Eq(_T("foo.pdf"), i.pathsToBenchmark.At(0)));
+        assert(str::Eq(L"foo.pdf", i.pathsToBenchmark.At(0)));
         assert(NULL == i.pathsToBenchmark.At(1));
     }
 
     {
         CommandLineInfo i;
-        i.ParseCommandLine(_T("SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5"));
+        i.ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5");
         assert(i.fwdSearch.width == 5);
         assert(2 == i.pathsToBenchmark.Count());
-        assert(str::Eq(_T("foo.pdf"), i.pathsToBenchmark.At(0)));
+        assert(str::Eq(L"foo.pdf", i.pathsToBenchmark.At(0)));
         assert(NULL == i.pathsToBenchmark.At(1));
     }
 
     {
         CommandLineInfo i;
-        i.ParseCommandLine(_T("SumatraPDF.exe -bench bar.pdf loadonly"));
+        i.ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf loadonly");
         assert(2 == i.pathsToBenchmark.Count());
-        assert(str::Eq(_T("bar.pdf"), i.pathsToBenchmark.At(0)));
-        assert(str::Eq(_T("loadonly"), i.pathsToBenchmark.At(1)));
+        assert(str::Eq(L"bar.pdf", i.pathsToBenchmark.At(0)));
+        assert(str::Eq(L"loadonly", i.pathsToBenchmark.At(1)));
     }
 
     {
         CommandLineInfo i;
         assert(i.colorRange[0] == WIN_COL_BLACK && i.colorRange[1] == WIN_COL_WHITE);
-        i.ParseCommandLine(_T("SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef"));
+        i.ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef");
         assert(i.colorRange[0] == RGB(0x12, 0x34, 0x56));
         assert(i.colorRange[1] == RGB(0xAB, 0xCD, 0xEF));
         assert(2 == i.pathsToBenchmark.Count());
-        assert(str::Eq(_T("bar.pdf"), i.pathsToBenchmark.At(0)));
-        assert(str::Eq(_T("1"), i.pathsToBenchmark.At(1)));
+        assert(str::Eq(L"bar.pdf", i.pathsToBenchmark.At(0)));
+        assert(str::Eq(L"1", i.pathsToBenchmark.At(1)));
     }
 
     {
         CommandLineInfo i;
-        i.ParseCommandLine(_T("SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34"));
+        i.ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34");
         assert(4 == i.pathsToBenchmark.Count());
-        assert(str::Eq(_T("bar.pdf"), i.pathsToBenchmark.At(0)));
-        assert(str::Eq(_T("1-5,3"), i.pathsToBenchmark.At(1)));
-        assert(str::Eq(_T("some.pdf"), i.pathsToBenchmark.At(2)));
-        assert(str::Eq(_T("1,3,8-34"), i.pathsToBenchmark.At(3)));
+        assert(str::Eq(L"bar.pdf", i.pathsToBenchmark.At(0)));
+        assert(str::Eq(L"1-5,3", i.pathsToBenchmark.At(1)));
+        assert(str::Eq(L"some.pdf", i.pathsToBenchmark.At(2)));
+        assert(str::Eq(L"1,3,8-34", i.pathsToBenchmark.At(3)));
     }
 
     {
         CommandLineInfo i;
         assert(i.colorRange[0] == WIN_COL_BLACK && i.colorRange[1] == WIN_COL_WHITE);
-        i.ParseCommandLine(_T("SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf"));
+        i.ParseCommandLine(L"SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf");
         assert(true == i.enterPresentation);
         assert(i.colorRange[0] == WIN_COL_WHITE && i.colorRange[1] == WIN_COL_BLACK);
         assert(1248426 == i.bgColor);
         assert(2 == i.fileNames.Count());
-        assert(0 == i.fileNames.Find(_T("foo.pdf")));
-        assert(1 == i.fileNames.Find(_T("bar.pdf")));
+        assert(0 == i.fileNames.Find(L"foo.pdf"));
+        assert(1 == i.fileNames.Find(L"bar.pdf"));
     }
 
     {
         CommandLineInfo i;
         assert(i.colorRange[0] == WIN_COL_BLACK && i.colorRange[1] == WIN_COL_WHITE);
-        i.ParseCommandLine(_T("SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf"));
+        i.ParseCommandLine(L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf");
         assert(i.colorRange[0] == WIN_COL_WHITE && i.colorRange[1] == WIN_COL_BLACK);
         assert(1248426 == i.bgColor);
         assert(1 == i.fileNames.Count());
-        assert(0 == i.fileNames.Find(_T("rosanna.pdf")));
+        assert(0 == i.fileNames.Find(L"rosanna.pdf"));
     }
 
     {
@@ -111,7 +111,7 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
-        i.ParseCommandLine(_T("SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance"));
+        i.ParseCommandLine(L"SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance");
         assert(0 == i.fileNames.Count());
         assert(i.pageNumber == 37);
         assert(i.startView == DM_CONTINUOUS_FACING);
@@ -140,46 +140,46 @@ static void versioncheck_test()
     assert(!IsValidProgramVersion("1..1"));
     assert(!IsValidProgramVersion("1.1\r\n.1"));
 
-    assert(CompareVersion(_T("0.9.3.900"), _T("0.9.3")) > 0);
-    assert(CompareVersion(_T("1.09.300"), _T("1.09.3")) > 0);
-    assert(CompareVersion(_T("1.9.1"), _T("1.09.3")) < 0);
-    assert(CompareVersion(_T("1.2.0"), _T("1.2")) == 0);
-    assert(CompareVersion(_T("1.3.0"), _T("2662")) < 0);
+    assert(CompareVersion(L"0.9.3.900", L"0.9.3") > 0);
+    assert(CompareVersion(L"1.09.300", L"1.09.3") > 0);
+    assert(CompareVersion(L"1.9.1", L"1.09.3") < 0);
+    assert(CompareVersion(L"1.2.0", L"1.2") == 0);
+    assert(CompareVersion(L"1.3.0", L"2662") < 0);
 }
 
 static void BenchRangeTest()
 {
-    assert(IsBenchPagesInfo(_T("1")));
-    assert(IsBenchPagesInfo(_T("2-4")));
-    assert(IsBenchPagesInfo(_T("5,7")));
-    assert(IsBenchPagesInfo(_T("6,8,")));
-    assert(IsBenchPagesInfo(_T("1-3,4,6-9,13")));
-    assert(IsBenchPagesInfo(_T("2-")));
-    assert(IsBenchPagesInfo(_T("loadonly")));
+    assert(IsBenchPagesInfo(L"1"));
+    assert(IsBenchPagesInfo(L"2-4"));
+    assert(IsBenchPagesInfo(L"5,7"));
+    assert(IsBenchPagesInfo(L"6,8,"));
+    assert(IsBenchPagesInfo(L"1-3,4,6-9,13"));
+    assert(IsBenchPagesInfo(L"2-"));
+    assert(IsBenchPagesInfo(L"loadonly"));
 
-    assert(!IsBenchPagesInfo(_T("")));
-    assert(!IsBenchPagesInfo(_T("-2")));
-    assert(!IsBenchPagesInfo(_T("2--4")));
-    assert(!IsBenchPagesInfo(_T("4-2")));
-    assert(!IsBenchPagesInfo(_T("1-3,loadonly")));
+    assert(!IsBenchPagesInfo(L""));
+    assert(!IsBenchPagesInfo(L"-2"));
+    assert(!IsBenchPagesInfo(L"2--4"));
+    assert(!IsBenchPagesInfo(L"4-2"));
+    assert(!IsBenchPagesInfo(L"1-3,loadonly"));
     assert(!IsBenchPagesInfo(NULL));
 }
 
 static void UrlExtractTest()
 {
-    assert(!ExtractFilenameFromURL(_T("")));
-    assert(!ExtractFilenameFromURL(_T("#hash_only")));
-    assert(!ExtractFilenameFromURL(_T("?query=only")));
-    ScopedMem<WCHAR> filename(ExtractFilenameFromURL(_T("http://example.net/filename.ext")));
-    assert(str::Eq(filename, _T("filename.ext")));
-    filename.Set(ExtractFilenameFromURL(_T("http://example.net/filename.ext#with_hash")));
-    assert(str::Eq(filename, _T("filename.ext")));
-    filename.Set(ExtractFilenameFromURL(_T("http://example.net/path/to/filename.ext?more=data")));
-    assert(str::Eq(filename, _T("filename.ext")));
-    filename.Set(ExtractFilenameFromURL(_T("http://example.net/pa%74h/na%2f%6d%65%2ee%78t")));
-    assert(str::Eq(filename, _T("na/me.ext")));
+    assert(!ExtractFilenameFromURL(L""));
+    assert(!ExtractFilenameFromURL(L"#hash_only"));
+    assert(!ExtractFilenameFromURL(L"?query=only"));
+    ScopedMem<WCHAR> filename(ExtractFilenameFromURL(L"http://example.net/filename.ext"));
+    assert(str::Eq(filename, L"filename.ext"));
+    filename.Set(ExtractFilenameFromURL(L"http://example.net/filename.ext#with_hash"));
+    assert(str::Eq(filename, L"filename.ext"));
+    filename.Set(ExtractFilenameFromURL(L"http://example.net/path/to/filename.ext?more=data"));
+    assert(str::Eq(filename, L"filename.ext"));
+    filename.Set(ExtractFilenameFromURL(L"http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
+    assert(str::Eq(filename, L"na/me.ext"));
 #ifdef UNICODE
-    filename.Set(ExtractFilenameFromURL(_T("http://example.net/%E2%82%AC")));
+    filename.Set(ExtractFilenameFromURL(L"http://example.net/%E2%82%AC"));
     assert(str::Eq((char *)filename.Get(), "\xAC\x20"));
 #endif
 }

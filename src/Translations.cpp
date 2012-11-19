@@ -54,7 +54,7 @@ static const WCHAR *FindOrAddMissingTranslation(const char *s)
         }
     }
     if (gMissingTranslationsCount >= dimof(gMissingTranslations))
-        return _T("missing translation");
+        return L"missing translation";
 
     gMissingTranslations[gMissingTranslationsCount].s = s;
     const WCHAR *res = str::conv::FromUtf8(s);
@@ -156,7 +156,7 @@ const WCHAR *GetTranslation(const char *txt)
         assert(dimof(gTranslations) == STRINGS_COUNT * LANGS_COUNT);
         gTranslationCache = AllocArray<const WCHAR *>(dimof(gTranslations));
         if (!gTranslationCache)
-            return _T("Missing translation!?");
+            return L"Missing translation!?";
     }
 
     int idx = GetTranslationIndex(txt);

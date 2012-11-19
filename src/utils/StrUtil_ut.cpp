@@ -6,67 +6,67 @@
 static void TStrTest()
 {
     WCHAR buf[32];
-    WCHAR *str = _T("a string");
+    WCHAR *str = L"a string";
     assert(str::Len(str) == 8);
-    assert(str::Eq(str, _T("a string")) && str::Eq(str, str));
-    assert(!str::Eq(str, NULL) && !str::Eq(str, _T("A String")));
-    assert(str::EqI(str, _T("A String")) && str::EqI(str, str));
+    assert(str::Eq(str, L"a string") && str::Eq(str, str));
+    assert(!str::Eq(str, NULL) && !str::Eq(str, L"A String"));
+    assert(str::EqI(str, L"A String") && str::EqI(str, str));
     assert(!str::EqI(str, NULL) && str::EqI((char*)NULL, (char*)NULL));
-    assert(str::EqN(_T("abcd"), _T("abce"), 3) && !str::EqN(_T("abcd"), _T("Abcd"), 3));
-    assert(str::EqNI(_T("abcd"), _T("ABCE"), 3) && !str::EqNI(_T("abcd"), _T("Ebcd"), 3));
-    assert(str::StartsWith(str, _T("a s")) && str::StartsWithI(str, _T("A Str")));
-    assert(!str::StartsWith(str, _T("Astr")));
-    assert(str::EndsWith(str, _T("ing")) && str::EndsWithI(str, _T("ING")));
-    assert(!str::EndsWith(str, _T("ung")));
-    assert(str::IsEmpty((char*)NULL) && str::IsEmpty((WCHAR*)NULL)&& str::IsEmpty(_T("")) && !str::IsEmpty(str));
+    assert(str::EqN(L"abcd", L"abce", 3) && !str::EqN(L"abcd", L"Abcd", 3));
+    assert(str::EqNI(L"abcd", L"ABCE", 3) && !str::EqNI(L"abcd", L"Ebcd", 3));
+    assert(str::StartsWith(str, L"a s") && str::StartsWithI(str, L"A Str"));
+    assert(!str::StartsWith(str, L"Astr"));
+    assert(str::EndsWith(str, L"ing") && str::EndsWithI(str, L"ING"));
+    assert(!str::EndsWith(str, L"ung"));
+    assert(str::IsEmpty((char*)NULL) && str::IsEmpty((WCHAR*)NULL)&& str::IsEmpty(L"") && !str::IsEmpty(str));
     assert(str::FindChar(str, _T('s')) && !str::FindChar(str, _T('S')));
     size_t len = str::BufSet(buf, dimof(buf), str);
     assert(len == str::Len(buf) && str::Eq(buf, str));
     len = str::BufSet(buf, 6, str);
-    assert(len == 5 && str::Eq(buf, _T("a str")));
+    assert(len == 5 && str::Eq(buf, L"a str"));
 
     str = str::Dup(buf);
     assert(str::Eq(str, buf));
     free(str);
     str = str::DupN(buf, 4);
-    assert(str::Eq(str, _T("a st")));
+    assert(str::Eq(str, L"a st"));
     free(str);
-    str = str::Format(_T("%s"), buf);
+    str = str::Format(L"%s", buf);
     assert(str::Eq(str, buf));
     free(str);
     str = str::Join(buf, buf);
     assert(str::Len(str) == 2 * str::Len(buf));
     free(str);
-    str = str::Join(NULL, _T("ab"));
-    assert(str::Eq(str, _T("ab")));
+    str = str::Join(NULL, L"ab");
+    assert(str::Eq(str, L"ab"));
     free(str);
 
-    str::BufSet(buf, dimof(buf), _T("abc\1efg\1"));
-    size_t count = str::TransChars(buf, _T("ace"), _T("ACE"));
-    assert(str::Eq(buf, _T("AbC\1Efg\1")) && count == 3);
-    count = str::TransChars(buf, _T("\1"), _T("\0"));
-    assert(str::Eq(buf, _T("AbC")) && str::Eq(buf + 4, _T("Efg")) && count == 2);
-    count = str::TransChars(buf, _T(""), _T("X"));
-    assert(str::Eq(buf, _T("AbC")) && count == 0);
+    str::BufSet(buf, dimof(buf), L"abc\1efg\1");
+    size_t count = str::TransChars(buf, L"ace", L"ACE");
+    assert(str::Eq(buf, L"AbC\1Efg\1") && count == 3);
+    count = str::TransChars(buf, L"\1", L"\0");
+    assert(str::Eq(buf, L"AbC") && str::Eq(buf + 4, L"Efg") && count == 2);
+    count = str::TransChars(buf, L"", L"X");
+    assert(str::Eq(buf, L"AbC") && count == 0);
 
-    str::BufSet(buf, dimof(buf), _T("blogarapato"));
-    count = str::RemoveChars(buf, _T("bo"));
+    str::BufSet(buf, dimof(buf), L"blogarapato");
+    count = str::RemoveChars(buf, L"bo");
     assert(3 == count);
-    assert(str::Eq(buf, _T("lgarapat")));
+    assert(str::Eq(buf, L"lgarapat"));
 
-    str::BufSet(buf, dimof(buf), _T("one\r\ntwo\t\v\f\tthree"));
+    str::BufSet(buf, dimof(buf), L"one\r\ntwo\t\v\f\tthree");
     count = str::NormalizeWS(buf);
     assert(4 == count);
-    assert(str::Eq(buf, _T("one two three")));
+    assert(str::Eq(buf, L"one two three"));
 
-    str::BufSet(buf, dimof(buf), _T(" one    two three "));
+    str::BufSet(buf, dimof(buf), L" one    two three ");
     count = str::NormalizeWS(buf);
     assert(5 == count);
-    assert(str::Eq(buf, _T("one two three")));
+    assert(str::Eq(buf, L"one two three"));
 
     count = str::NormalizeWS(buf);
     assert(0 == count);
-    assert(str::Eq(buf, _T("one two three")));
+    assert(str::Eq(buf, L"one two three"));
 
     str = _T("[Open(\"filename.pdf\",0,1,0)]");
     {
@@ -74,7 +74,7 @@ static void TStrTest()
         WCHAR *str1 = NULL;
         const WCHAR *end = str::Parse(str, _T("[Open(\"%s\",%? 0,%u,0)]"), &str1, &u1);
         assert(end && !*end);
-        assert(u1 == 1 && str::Eq(str1, _T("filename.pdf")));
+        assert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
         free(str1);
     }
 
@@ -83,44 +83,44 @@ static void TStrTest()
         ScopedMem<WCHAR> str1;
         const WCHAR *end = str::Parse(str, _T("[Open(\"%S\",0%?,%u,0)]"), &str1, &u1);
         assert(end && !*end);
-        assert(u1 == 1 && str::Eq(str1, _T("filename.pdf")));
+        assert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
 
-        assert(str::Parse(_T("0xABCD"), _T("%x"), &u1));
+        assert(str::Parse(L"0xABCD", L"%x", &u1));
         assert(u1 == 0xABCD);
-        assert(str::Parse(_T("ABCD"), _T("%2x%S"), &u1, &str1));
-        assert(u1 == 0xAB && str::Eq(str1, _T("CD")));
+        assert(str::Parse(L"ABCD", L"%2x%S", &u1, &str1));
+        assert(u1 == 0xAB && str::Eq(str1, L"CD"));
     }
 
     {
         int i1, i2;
-        const WCHAR *end = str::Parse(_T("1, 2+3"), _T("%d,%d"), &i1, &i2);
-        assert(end && str::Eq(end, _T("+3")));
+        const WCHAR *end = str::Parse(L"1, 2+3", L"%d,%d", &i1, &i2);
+        assert(end && str::Eq(end, L"+3"));
         assert(i1 == 1 && i2 == 2);
-        end = str::Parse(end, _T("+3"));
+        end = str::Parse(end, L"+3");
         assert(end && !*end);
 
-        assert(str::Parse(_T(" -2"), _T("%d"), &i1));
+        assert(str::Parse(L" -2", L"%d", &i1));
         assert(i1 == -2);
-        assert(str::Parse(_T(" 2"), _T(" %u"), &i1));
+        assert(str::Parse(L" 2", L" %u", &i1));
         assert(i1 == 2);
-        assert(str::Parse(_T("123-456"), _T("%3d%3d6"), &i1, &i2));
+        assert(str::Parse(L"123-456", L"%3d%3d6", &i1, &i2));
         assert(i1 == 123 && i2 == -45);
-        assert(!str::Parse(_T("123"), _T("%4d"), &i1));
-        assert(str::Parse(_T("654"), _T("%3d"), &i1));
+        assert(!str::Parse(L"123", L"%4d", &i1));
+        assert(str::Parse(L"654", L"%3d", &i1));
         assert(i1 == 654);
     }
 
-    assert(str::Parse(_T("abc"), _T("abc%$")));
-    assert(str::Parse(_T("abc"), _T("a%?bc%?d%$")));
-    assert(!str::Parse(_T("abc"), _T("ab%$")));
-    assert(str::Parse(_T("a \r\n\t b"), _T("a%_b")));
-    assert(str::Parse(_T("ab"), _T("a%_b")));
-    assert(!str::Parse(_T("a,b"), _T("a%_b")));
-    assert(str::Parse(_T("a\tb"), _T("a% b")));
-    assert(!str::Parse(_T("a\r\nb"), _T("a% b")));
-    assert(str::Parse(_T("a\r\nb"), _T("a% %_b")));
-    assert(!str::Parse(_T("ab"), _T("a% b")));
-    assert(!str::Parse(_T("%+"), _T("+")) && !str::Parse(_T("%+"), _T("%+")));
+    assert(str::Parse(L"abc", L"abc%$"));
+    assert(str::Parse(L"abc", L"a%?bc%?d%$"));
+    assert(!str::Parse(L"abc", L"ab%$"));
+    assert(str::Parse(L"a \r\n\t b", L"a%_b"));
+    assert(str::Parse(L"ab", L"a%_b"));
+    assert(!str::Parse(L"a,b", L"a%_b"));
+    assert(str::Parse(L"a\tb", L"a% b"));
+    assert(!str::Parse(L"a\r\nb", L"a% b"));
+    assert(str::Parse(L"a\r\nb", L"a% %_b"));
+    assert(!str::Parse(L"ab", L"a% b"));
+    assert(!str::Parse(L"%+", L"+") && !str::Parse(L"%+", L"%+"));
 
     assert(str::Parse("abcd", 3, "abc%$"));
     assert(str::Parse("abc", 3, "a%?bc%?d%$"));
@@ -131,7 +131,7 @@ static void TStrTest()
         assert(str::Parse(str, 4, "str") == str + 3);
 
         float f1, f2;
-        const WCHAR *end = str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%fz%$"), &f1, &f2);
+        const WCHAR *end = str::Parse(L"%1.23y -2e-3z", L"%%%fy%fz%$", &f1, &f2);
         assert(end && !*end);
         assert(f1 == 1.23f && f2 == -2e-3f);
         f1 = 0; f2 = 0;
@@ -143,11 +143,11 @@ static void TStrTest()
     {
         WCHAR *str1 = NULL;
         WCHAR c1;
-        assert(!str::Parse(_T("no exclamation mark?"), _T("%s!"), &str1));
+        assert(!str::Parse(L"no exclamation mark?", L"%s!", &str1));
         assert(!str1);
-        assert(str::Parse(_T("xyz"), _T("x%cz"), &c1));
+        assert(str::Parse(L"xyz", L"x%cz", &c1));
         assert(c1 == 'y');
-        assert(!str::Parse(_T("leaks memory!?"), _T("%s!%$"), &str1));
+        assert(!str::Parse(L"leaks memory!?", L"%s!%$", &str1));
         free(str1);
     }
 
@@ -196,12 +196,12 @@ static void TStrTest()
     assert(str::IsDigit('0') && str::IsDigit(_T('5')) && str::IsDigit(L'9'));
     assert(iswdigit(L'\xB2') && !str::IsDigit(L'\xB2'));
 
-    assert(str::CmpNatural(_T(".hg"), _T("2.pdf")) < 0);
-    assert(str::CmpNatural(_T("100.pdf"), _T("2.pdf")) > 0);
-    assert(str::CmpNatural(_T("2.pdf"), _T("zzz")) < 0);
-    assert(str::CmpNatural(_T("abc"), _T(".svn")) > 0);
-    assert(str::CmpNatural(_T("ab0200"), _T("AB333")) < 0);
-    assert(str::CmpNatural(_T("a b"), _T("a  c")) < 0);
+    assert(str::CmpNatural(L".hg", L"2.pdf") < 0);
+    assert(str::CmpNatural(L"100.pdf", L"2.pdf") > 0);
+    assert(str::CmpNatural(L"2.pdf", L"zzz") < 0);
+    assert(str::CmpNatural(L"abc", L".svn") > 0);
+    assert(str::CmpNatural(L"ab0200", L"AB333") < 0);
+    assert(str::CmpNatural(L"a b", L"a  c") < 0);
 
 #ifndef LOCALE_INVARIANT
 #define LOCALE_INVARIANT (MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT))
@@ -211,14 +211,14 @@ static void TStrTest()
         size_t number;
         const WCHAR *result;
     } formatNumData[] = {
-        { 1,        _T("1") },
-        { 12,       _T("12") },
-        { 123,      _T("123") },
-        { 1234,     _T("1,234") },
-        { 12345,    _T("12,345") },
-        { 123456,   _T("123,456") },
-        { 1234567,  _T("1,234,567") },
-        { 12345678, _T("12,345,678") },
+        { 1,        L"1" },
+        { 12,       L"12" },
+        { 123,      L"123" },
+        { 1234,     L"1,234" },
+        { 12345,    L"12,345" },
+        { 123456,   L"123,456" },
+        { 1234567,  L"1,234,567" },
+        { 12345678, L"12,345,678" },
     };
 
     for (int i = 0; i < dimof(formatNumData); i++) {
@@ -230,13 +230,13 @@ static void TStrTest()
         double number;
         const WCHAR *result;
     } formatFloatData[] = {
-        { 1,        _T("1.0") },
-        { 1.2,      _T("1.2") },
-        { 1.23,     _T("1.23") },
-        { 1.234,    _T("1.23") },
-        { 12.345,   _T("12.35") },
-        { 123.456,  _T("123.46") },
-        { 1234.5678,_T("1,234.57") },
+        { 1,        L"1.0" },
+        { 1.2,      L"1.2" },
+        { 1.23,     L"1.23" },
+        { 1.234,    L"1.23" },
+        { 12.345,   L"12.35" },
+        { 123.456,  L"123.46" },
+        { 1234.5678,L"1,234.57" },
     };
 
     for (int i = 0; i < dimof(formatFloatData); i++) {
@@ -258,16 +258,16 @@ static void TStrTest()
         int number;
         const WCHAR *result;
     } formatRomanData[] = {
-        { 1,    _T("I") },
-        { 3,    _T("III") },
-        { 6,    _T("VI") },
-        { 14,   _T("XIV") },
-        { 49,   _T("XLIX") },
-        { 176,  _T("CLXXVI") },
-        { 499,  _T("CDXCIX") },
-        { 1666, _T("MDCLXVI") },
-        { 2011, _T("MMXI") },
-        { 12345,_T("MMMMMMMMMMMMCCCXLV") },
+        { 1,    L"I" },
+        { 3,    L"III" },
+        { 6,    L"VI" },
+        { 14,   L"XIV" },
+        { 49,   L"XLIX" },
+        { 176,  L"CLXXVI" },
+        { 499,  L"CDXCIX" },
+        { 1666, L"MDCLXVI" },
+        { 2011, L"MMXI" },
+        { 12345,L"MMMMMMMMMMMMCCCXLV" },
         { 0,    NULL },
         { -133, NULL },
     };
@@ -280,61 +280,61 @@ static void TStrTest()
     {
         size_t trimmed;
         WCHAR *s = NULL;
-        s = str::Dup(_T(""));
+        s = str::Dup(L"");
         trimmed = str::TrimWS(s);
         assert(trimmed == 0);
-        assert(str::Eq(s, _T("")));
+        assert(str::Eq(s, L""));
         trimmed = str::TrimWS(s, str::TrimRight);
         assert(trimmed == 0);
-        assert(str::Eq(s, _T("")));
+        assert(str::Eq(s, L""));
         trimmed = str::TrimWS(s, str::TrimLeft);
         assert(trimmed == 0);
-        assert(str::Eq(s, _T("")));
+        assert(str::Eq(s, L""));
 
-        free(s); s = str::Dup(_T("  \n\t  "));
+        free(s); s = str::Dup(L"  \n\t  ");
         trimmed = str::TrimWS(s);
         assert(trimmed == 6);
-        assert(str::Eq(s, _T("")));
+        assert(str::Eq(s, L""));
 
-        free(s); s = str::Dup(_T("  \n\t  "));
+        free(s); s = str::Dup(L"  \n\t  ");
         trimmed = str::TrimWS(s, str::TrimRight);
         assert(trimmed == 6);
-        assert(str::Eq(s, _T("")));
+        assert(str::Eq(s, L""));
 
-        free(s); s = str::Dup(_T("  \n\t  "));
+        free(s); s = str::Dup(L"  \n\t  ");
         trimmed = str::TrimWS(s, str::TrimLeft);
         assert(trimmed == 6);
-        assert(str::Eq(s, _T("")));
+        assert(str::Eq(s, L""));
 
-        free(s); s = str::Dup(_T("  lola"));
+        free(s); s = str::Dup(L"  lola");
         trimmed = str::TrimWS(s);
         assert(trimmed == 2);
-        assert(str::Eq(s, _T("lola")));
+        assert(str::Eq(s, L"lola"));
 
-        free(s); s = str::Dup(_T("  lola"));
+        free(s); s = str::Dup(L"  lola");
         trimmed = str::TrimWS(s, str::TrimLeft);
         assert(trimmed == 2);
-        assert(str::Eq(s, _T("lola")));
+        assert(str::Eq(s, L"lola"));
 
-        free(s); s = str::Dup(_T("  lola"));
+        free(s); s = str::Dup(L"  lola");
         trimmed = str::TrimWS(s, str::TrimRight);
         assert(trimmed == 0);
-        assert(str::Eq(s, _T("  lola")));
+        assert(str::Eq(s, L"  lola"));
 
-        free(s); s = str::Dup(_T("lola\r\t"));
+        free(s); s = str::Dup(L"lola\r\t");
         trimmed = str::TrimWS(s);
         assert(trimmed == 2);
-        assert(str::Eq(s, _T("lola")));
+        assert(str::Eq(s, L"lola"));
 
-        free(s); s = str::Dup(_T("lola\r\t"));
+        free(s); s = str::Dup(L"lola\r\t");
         trimmed = str::TrimWS(s, str::TrimRight);
         assert(trimmed == 2);
-        assert(str::Eq(s, _T("lola")));
+        assert(str::Eq(s, L"lola"));
 
-        free(s); s = str::Dup(_T("lola\r\t"));
+        free(s); s = str::Dup(L"lola\r\t");
         trimmed = str::TrimWS(s, str::TrimLeft);
         assert(trimmed == 0);
-        assert(str::Eq(s, _T("lola\r\t")));
+        assert(str::Eq(s, L"lola\r\t"));
 
         free(s);
     }
@@ -342,7 +342,7 @@ static void TStrTest()
     assert(!str::ToMultiByte("abc", 9876, 123456));
     assert(!str::ToMultiByte(L"abc", 98765));
     assert(!str::conv::FromCodePage("abc", 12345));
-    assert(!str::conv::ToCodePage(_T("abc"), 987654));
+    assert(!str::conv::ToCodePage(L"abc", 987654));
 
     {
         char buf[6] = { 0 };

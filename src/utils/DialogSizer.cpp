@@ -5,7 +5,7 @@
 
 #include "WinUtil.h"
 
-#define DIALOG_DATA_PROPERTY _T("GipsySoftDialogSizerData")
+#define DIALOG_DATA_PROPERTY L"GipsySoftDialogSizerData"
 
 static LRESULT CALLBACK SizingProc(HWND, UINT, WPARAM, LPARAM);
 

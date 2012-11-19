@@ -8,7 +8,7 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-#define NOTIFICATION_WND_CLASS_NAME _T("SUMATRA_PDF_NOTIFICATION_WINDOW")
+#define NOTIFICATION_WND_CLASS_NAME L"SUMATRA_PDF_NOTIFICATION_WINDOW"
 
 void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
 {

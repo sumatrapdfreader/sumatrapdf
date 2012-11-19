@@ -94,11 +94,11 @@ static void BencTestParseString()
         { "-2:ab", NULL },
         { "2e:ab", NULL },
 
-        { "0:", _T("") },
-        { "1:a", _T("a") },
-        { "2::a", _T(":a") },
-        { "4:spam", _T("spam") },
-        { "4:i23e", _T("i23e") },
+        { "0:", L"" },
+        { "1:a", L"a" },
+        { "2::a", L":a" },
+        { "4:spam", L"spam" },
+        { "4:i23e", L"i23e" },
 #ifdef UNICODE
         { "5:\xC3\xA4\xE2\x82\xAC", L"\u00E4\u20AC" },
 #endif

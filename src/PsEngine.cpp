@@ -14,10 +14,10 @@
 static WCHAR *GetGhostscriptPath()
 {
     WCHAR *gsProducts[] = {
-        _T("AFPL Ghostscript"),
-        _T("Aladdin Ghostscript"),
-        _T("GPL Ghostscript"),
-        _T("GNU Ghostscript"),
+        L"AFPL Ghostscript",
+        L"Aladdin Ghostscript",
+        L"GPL Ghostscript",
+        L"GNU Ghostscript",
     };
 
     // find all installed Ghostscript versions
@@ -26,7 +26,7 @@ static WCHAR *GetGhostscriptPath()
 TryAgain64Bit:
     for (int i = 0; i < dimof(gsProducts); i++) {
         HKEY hkey;
-        ScopedMem<WCHAR> keyName(str::Join(_T("Software\\"), gsProducts[i]));
+        ScopedMem<WCHAR> keyName(str::Join(L"Software\\", gsProducts[i]));
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, access, &hkey) != ERROR_SUCCESS)
             continue;
         WCHAR subkey[32];
@@ -48,33 +48,33 @@ TryAgain64Bit:
     // return the path to the newest installation
     for (size_t ix = versions.Count(); ix > 0; ix--) {
         for (int i = 0; i < dimof(gsProducts); i++) {
-            ScopedMem<WCHAR> keyName(str::Format(_T("Software\\%s\\%s"),
+            ScopedMem<WCHAR> keyName(str::Format(L"Software\\%s\\%s",
                                                  gsProducts[i], versions.At(ix - 1)));
-            ScopedMem<WCHAR> GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, _T("GS_DLL")));
+            ScopedMem<WCHAR> GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, L"GS_DLL"));
             if (!GS_DLL)
                 continue;
             ScopedMem<WCHAR> dir(path::GetDir(GS_DLL));
-            ScopedMem<WCHAR> exe(path::Join(dir, _T("gswin32c.exe")));
+            ScopedMem<WCHAR> exe(path::Join(dir, L"gswin32c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
-            exe.Set(path::Join(dir, _T("gswin64c.exe")));
+            exe.Set(path::Join(dir, L"gswin64c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
         }
     }
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
-    DWORD size = GetEnvironmentVariable(_T("PATH"), NULL, 0);
+    DWORD size = GetEnvironmentVariable(L"PATH", NULL, 0);
     ScopedMem<WCHAR> envpath(AllocArray<WCHAR>(size));
     if (size > 0 && envpath) {
-        GetEnvironmentVariable(_T("PATH"), envpath, size);
+        GetEnvironmentVariable(L"PATH", envpath, size);
         WStrVec paths;
-        paths.Split(envpath, _T(";"), true);
+        paths.Split(envpath, L";", true);
         for (size_t ix = 0; ix < paths.Count(); ix++) {
-            ScopedMem<WCHAR> exe(path::Join(paths.At(ix), _T("gswin32c.exe")));
+            ScopedMem<WCHAR> exe(path::Join(paths.At(ix), L"gswin32c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
-            exe.Set(path::Join(paths.At(ix), _T("gswin64c.exe")));
+            exe.Set(path::Join(paths.At(ix), L"gswin64c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
         }
@@ -98,16 +98,16 @@ static PdfEngine *ps2pdf(const WCHAR *fileName)
 {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     ScopedMem<WCHAR> shortPath(path::ShortPath(fileName));
-    ScopedMem<WCHAR> tmpFile(path::GetTempPath(_T("PsE")));
+    ScopedMem<WCHAR> tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     ScopedMem<WCHAR> gswin32c(GetGhostscriptPath());
     if (!shortPath || !tmpFile || !gswin32c)
         return NULL;
     ScopedMem<WCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, shortPath));
 
-    if (GetEnvironmentVariable(_T("MULOG"), NULL, 0)) {
-        _tprintf(_T("ps2pdf: using Ghostscript from '%s'\n"), gswin32c.Get());
-        _tprintf(_T("ps2pdf: for creating '%s'\n"), tmpFile.Get());
+    if (GetEnvironmentVariable(L"MULOG", NULL, 0)) {
+        wprintf(L"ps2pdf: using Ghostscript from '%s'\n", gswin32c.Get());
+        wprintf(L"ps2pdf: for creating '%s'\n", tmpFile.Get());
     }
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
@@ -132,8 +132,8 @@ static PdfEngine *ps2pdf(const WCHAR *fileName)
     if (!stream)
         return NULL;
 
-    if (GetEnvironmentVariable(_T("MULOG"), NULL, 0))
-        _tprintf(_T("ps2pdf: PDF conversion successful\n"));
+    if (GetEnvironmentVariable(L"MULOG", NULL, 0))
+        _tprintf(L"ps2pdf: PDF conversion successful\n");
 
     return PdfEngine::CreateFromStream(stream);
 }
@@ -147,7 +147,7 @@ inline bool isgzipped(const WCHAR *fileName)
 
 static PdfEngine *psgz2pdf(const WCHAR *fileName)
 {
-    ScopedMem<WCHAR> tmpFile(path::GetTempPath(_T("PsE")));
+    ScopedMem<WCHAR> tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile)
         return NULL;
@@ -159,7 +159,7 @@ static PdfEngine *psgz2pdf(const WCHAR *fileName)
 #endif
     if (!inFile)
         return NULL;
-    FILE *outFile = _tfopen(tmpFile, _T("wb"));
+    FILE *outFile = _tfopen(tmpFile, L"wb");
     if (!outFile) {
         gzclose(inFile);
         return NULL;
@@ -254,7 +254,7 @@ public:
         return pdfEngine ? pdfEngine->GetFileDPI() : 72.0f;
     }
     virtual const WCHAR *GetDefaultFileExt() const {
-        return !fileName || !str::EndsWithI(fileName, _T(".eps")) ? _T(".ps") : _T(".eps");
+        return !fileName || !str::EndsWithI(fileName, L".eps") ? L".ps" : L".eps";
     }
 
     virtual bool BenchLoadPage(int pageNo) {
@@ -328,9 +328,9 @@ bool PsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
                str::StartsWith(header, "\x1B%-12345X@PJL") && str::Find(header, "\n%!PS-Adobe-");
     }
 
-    return str::EndsWithI(fileName, _T(".ps")) ||
-           str::EndsWithI(fileName, _T(".ps.gz")) ||
-           str::EndsWithI(fileName, _T(".eps"));
+    return str::EndsWithI(fileName, L".ps") ||
+           str::EndsWithI(fileName, L".ps.gz") ||
+           str::EndsWithI(fileName, L".eps");
 }
 
 PsEngine *PsEngine::CreateFromFile(const WCHAR *fileName)

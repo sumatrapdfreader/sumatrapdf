@@ -917,7 +917,7 @@ STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
     if (baseUrl)
         *ppszDisplayName = OleStrDup(baseUrl);
     else
-        *ppszDisplayName = OleStrDup(_T(""));
+        *ppszDisplayName = OleStrDup(L"");
     return S_OK;
 }
 
@@ -1242,8 +1242,8 @@ void HtmlWindow::EnsureAboutBlankShown()
 {
     if (blankWasShown)
         return;
-    NavigateToUrl(_T("about:blank"));
-    WaitUntilLoaded(INFINITE, _T("about:blank"));
+    NavigateToUrl(L"about:blank");
+    WaitUntilLoaded(INFINITE, L"about:blank");
     blankWasShown = true;
 }
 

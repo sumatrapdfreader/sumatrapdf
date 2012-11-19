@@ -22,7 +22,7 @@ using namespace Gdiplus;
 
 RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
 {
-    if (str::EndsWithI(filePath, _T(".bmp"))) {
+    if (str::EndsWithI(filePath, L".bmp")) {
         HBITMAP hbmp = (HBITMAP)LoadImage(NULL, filePath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
         if (!hbmp)
             return NULL;
@@ -378,7 +378,7 @@ bool ImageEngineImpl::FinishLoading(Bitmap *bmp)
     pages.Append(bmp);
     assert(pages.Count() == 1);
 
-    if (str::Eq(fileExt, _T(".tif"))) {
+    if (str::Eq(fileExt, L".tif")) {
         // extract all frames from multi-page TIFFs
         UINT frames = bmp->GetFrameCount(&FrameDimensionPage);
         for (UINT i = 1; i < frames; i++) {
@@ -451,14 +451,14 @@ bool ImageEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
         fileName = GfxFileExtFromData(header, sizeof(header));
     }
 
-    return str::EndsWithI(fileName, _T(".png")) ||
-           str::EndsWithI(fileName, _T(".jpg")) || str::EndsWithI(fileName, _T(".jpeg")) ||
-           str::EndsWithI(fileName, _T(".gif")) ||
-           str::EndsWithI(fileName, _T(".tif")) || str::EndsWithI(fileName, _T(".tiff")) ||
-           str::EndsWithI(fileName, _T(".bmp")) ||
-           str::EndsWithI(fileName, _T(".tga")) ||
-           str::EndsWithI(fileName, _T(".jxr")) || str::EndsWithI(fileName, _T(".hdp")) ||
-                                                   str::EndsWithI(fileName, _T(".wdp"));
+    return str::EndsWithI(fileName, L".png") ||
+           str::EndsWithI(fileName, L".jpg") || str::EndsWithI(fileName, L".jpeg") ||
+           str::EndsWithI(fileName, L".gif") ||
+           str::EndsWithI(fileName, L".tif") || str::EndsWithI(fileName, L".tiff") ||
+           str::EndsWithI(fileName, L".bmp") ||
+           str::EndsWithI(fileName, L".tga") ||
+           str::EndsWithI(fileName, L".jxr") || str::EndsWithI(fileName, L".hdp") ||
+                                                   str::EndsWithI(fileName, L".wdp");
 }
 
 ImageEngine *ImageEngine::CreateFromFile(const WCHAR *fileName)
@@ -515,9 +515,9 @@ protected:
 bool ImageDirEngineImpl::LoadImageDir(const WCHAR *dirName)
 {
     fileName = str::Dup(dirName);
-    fileExt = _T("");
+    fileExt = L"";
 
-    ScopedMem<WCHAR> pattern(path::Join(dirName, _T("*")));
+    ScopedMem<WCHAR> pattern(path::Join(dirName, L"*"));
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -758,18 +758,18 @@ static int cmpAscii(const void *a, const void *b)
 
 bool CbxEngineImpl::FinishLoadingCbz()
 {
-    fileExt = _T(".cbz");
+    fileExt = L".cbz";
 
     Vec<const WCHAR *> allFileNames;
 
     for (size_t idx = 0; idx < cbzFile->GetFileCount(); idx++) {
         const WCHAR *fileName = cbzFile->GetFileName(idx);
         // bail, if we accidentally try to load an XPS file
-        if (fileName && str::StartsWith(fileName, _T("_rels/.rels")))
+        if (fileName && str::StartsWith(fileName, L"_rels/.rels"))
             return false;
         if (fileName && ImageEngine::IsSupportedFile(fileName) &&
             // OS X occasionally leaves metadata with image extensions
-            !str::StartsWith(path::GetBaseName(fileName), _T("."))) {
+            !str::StartsWith(path::GetBaseName(fileName), L".")) {
             allFileNames.Append(fileName);
         }
         else {
@@ -778,7 +778,7 @@ bool CbxEngineImpl::FinishLoadingCbz()
     }
     assert(allFileNames.Count() == cbzFile->GetFileCount());
 
-    ScopedMem<char> metadata(cbzFile->GetFileData(_T("ComicInfo.xml")));
+    ScopedMem<char> metadata(cbzFile->GetFileData(L"ComicInfo.xml"));
     if (metadata)
         ParseComicInfoXml(metadata);
     metadata.Set(cbzFile->GetComment());
@@ -866,9 +866,9 @@ bool CbxEngineImpl::Visit(const char *path, const char *value, json::DataType ty
     if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
         propTitle.Set(str::conv::FromUtf8(value));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear"))
-        propDate.Set(str::Format(_T("%s/%d"), propDate ? propDate : _T(""), atoi(value)));
+        propDate.Set(str::Format(L"%s/%d", propDate ? propDate : L"", atoi(value)));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth"))
-        propDate.Set(str::Format(_T("%d%s"), atoi(value), propDate ? propDate : _T("")));
+        propDate.Set(str::Format(L"%d%s", atoi(value), propDate ? propDate : L""));
     else if (json::Type_String == type && str::Eq(path, "/appID"))
         propCreator.Set(str::conv::FromUtf8(value));
     else if (json::Type_String == type && str::Eq(path, "/lastModified"))
@@ -899,7 +899,7 @@ WCHAR *CbxEngineImpl::GetProperty(DocumentProperty prop)
     case Prop_Title:
         return propTitle ? str::Dup(propTitle) : NULL;
     case Prop_Author:
-        return propAuthors.Count() ? propAuthors.Join(_T(", ")) : NULL;
+        return propAuthors.Count() ? propAuthors.Join(L", ") : NULL;
     case Prop_CreationDate:
         return propDate ? str::Dup(propDate) : NULL;
     case Prop_ModificationDate:
@@ -1004,7 +1004,7 @@ bool CbxEngineImpl::LoadCbrFile(const WCHAR *file)
     if (!file)
         return false;
     fileName = str::Dup(file);
-    fileExt = _T(".cbr");
+    fileExt = L".cbr";
 
     RAROpenArchiveDataEx  arcData = { 0 };
 #ifdef UNICODE
@@ -1038,7 +1038,7 @@ bool CbxEngineImpl::LoadCbrFile(const WCHAR *file)
             if (page)
                 found.Append(page);
         }
-        else if (str::EqI(fileName, _T("ComicInfo.xml"))) {
+        else if (str::EqI(fileName, L"ComicInfo.xml")) {
             ScopedMem<char> xmlData(LoadCurrentCbrFile(hArc, rarHeader, NULL));
             if (xmlData)
                 ParseComicInfoXml(xmlData);
@@ -1080,10 +1080,10 @@ bool CbxEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
         return file::StartsWith(fileName, "Rar!\x1A\x07\x00", 7);
     }
 
-    return str::EndsWithI(fileName, _T(".cbz")) ||
-           str::EndsWithI(fileName, _T(".cbr")) ||
-           str::EndsWithI(fileName, _T(".zip")) && !str::EndsWithI(fileName, _T(".fb2.zip")) ||
-           str::EndsWithI(fileName, _T(".rar"));
+    return str::EndsWithI(fileName, L".cbz") ||
+           str::EndsWithI(fileName, L".cbr") ||
+           str::EndsWithI(fileName, L".zip") && !str::EndsWithI(fileName, L".fb2.zip") ||
+           str::EndsWithI(fileName, L".rar");
 }
 
 CbxEngine *CbxEngine::CreateFromFile(const WCHAR *fileName)
@@ -1091,7 +1091,7 @@ CbxEngine *CbxEngine::CreateFromFile(const WCHAR *fileName)
     assert(IsSupportedFile(fileName) || IsSupportedFile(fileName, true));
     CbxEngineImpl *engine = new CbxEngineImpl();
     bool ok = false;
-    if (str::EndsWithI(fileName, _T(".cbz")) || str::EndsWithI(fileName, _T(".zip")) ||
+    if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
         file::StartsWith(fileName, "PK\x03\x04")) {
         ok = engine->LoadCbzFile(fileName);
     }
@@ -1100,7 +1100,7 @@ CbxEngine *CbxEngine::CreateFromFile(const WCHAR *fileName)
         // just have been misnamed (which apparently happens occasionally)
         delete engine;
         engine = new CbxEngineImpl();
-        if (str::EndsWithI(fileName, _T(".cbr")) || str::EndsWithI(fileName, _T(".rar")) ||
+        if (str::EndsWithI(fileName, L".cbr") || str::EndsWithI(fileName, L".rar") ||
             file::StartsWith(fileName, "Rar!\x1A\x07\x00", 7)) {
             ok = engine->LoadCbrFile(fileName);
         }

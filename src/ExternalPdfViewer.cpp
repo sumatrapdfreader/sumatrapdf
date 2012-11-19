@@ -13,9 +13,9 @@
 static WCHAR *GetAcrobatPath()
 {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL));
+    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe", NULL));
     if (!path)
-        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL));
+        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe", NULL));
     if (path && file::Exists(path))
         return path.StealData();
     return NULL;
@@ -23,11 +23,11 @@ static WCHAR *GetAcrobatPath()
 
 static WCHAR *GetFoxitPath()
 {
-    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon")));
+    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader", L"DisplayIcon"));
     if (path && file::Exists(path))
         return path.StealData();
     // Registry value for Foxit 5 (and maybe later)
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader_is1"), _T("DisplayIcon")));
+    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader_is1", L"DisplayIcon"));
     if (path && file::Exists(path))
         return path.StealData();
     return NULL;
@@ -35,12 +35,12 @@ static WCHAR *GetFoxitPath()
 
 static WCHAR *GetPDFXChangePath()
 {
-    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
+    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
     if (!path)
-        path.Set(ReadRegStr(HKEY_CURRENT_USER,  _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
+        path.Set(ReadRegStr(HKEY_CURRENT_USER,  L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
     if (!path)
         return false;
-    ScopedMem<WCHAR> exePath(path::Join(path, _T("PDFXCview.exe")));
+    ScopedMem<WCHAR> exePath(path::Join(path, L"PDFXCview.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
     return NULL;
@@ -53,7 +53,7 @@ static WCHAR *GetXPSViewerPath()
     UINT res = GetSystemDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
         return NULL;
-    ScopedMem<WCHAR> exePath(path::Join(buffer, _T("xpsrchvw.exe")));
+    ScopedMem<WCHAR> exePath(path::Join(buffer, L"xpsrchvw.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
 #ifndef _WIN64
@@ -64,7 +64,7 @@ static WCHAR *GetXPSViewerPath()
         res = GetWindowsDirectory(buffer, dimof(buffer));
         if (!res || res >= dimof(buffer))
             return NULL;
-        exePath.Set(path::Join(buffer, _T("Sysnative\\xpsrchvw.exe")));
+        exePath.Set(path::Join(buffer, L"Sysnative\\xpsrchvw.exe"));
         if (file::Exists(exePath))
             return exePath.StealData();
     }
@@ -79,13 +79,13 @@ static WCHAR *GetHtmlHelpPath()
     UINT res = GetWindowsDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
         return NULL;
-    ScopedMem<WCHAR> exePath(path::Join(buffer, _T("hh.exe")));
+    ScopedMem<WCHAR> exePath(path::Join(buffer, L"hh.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
     res = GetSystemDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
         return NULL;
-    exePath.Set(path::Join(buffer, _T("hh.exe")));
+    exePath.Set(path::Join(buffer, L"hh.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
     return NULL;
@@ -118,7 +118,7 @@ bool ViewWithFoxit(WindowInfo *win, WCHAR *args)
     if (!exePath)
         return false;
     if (!args)
-        args = _T("");
+        args = L"";
 
     // Foxit cmd-line format:
     // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
@@ -149,7 +149,7 @@ bool ViewWithPDFXChange(WindowInfo *win, WCHAR *args)
     if (!exePath)
         return false;
     if (!args)
-        args = _T("");
+        args = L"";
 
     // PDFXChange cmd-line format:
     // [/A "param=value [&param2=value ..."] [PDF filename]
@@ -181,7 +181,7 @@ bool ViewWithAcrobat(WindowInfo *win, WCHAR *args)
         return false;
 
     if (!args)
-        args = _T("");
+        args = L"";
 
     ScopedMem<WCHAR> params;
     // Command line format for version 6 and later:
@@ -207,7 +207,7 @@ bool CanViewWithXPSViewer(WindowInfo *win)
     if (win->IsDocLoaded() && win->dm->engineType != Engine_XPS)
         return false;
     // or a file ending in .xps has failed to be loaded
-    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, _T(".xps")))
+    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".xps"))
         return false;
     ScopedMem<WCHAR> path(GetXPSViewerPath());
     return path != NULL;
@@ -223,7 +223,7 @@ bool ViewWithXPSViewer(WindowInfo *win, WCHAR *args)
         return false;
 
     if (!args)
-        args = _T("");
+        args = L"";
 
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
@@ -242,7 +242,7 @@ bool CanViewWithHtmlHelp(WindowInfo *win)
     if (win->IsDocLoaded() && win->dm->engineType != Engine_Chm && win->dm->engineType != Engine_Chm2)
         return false;
     // or a file ending in .chm has failed to be loaded
-    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, _T(".chm")))
+    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".chm"))
         return false;
     ScopedMem<WCHAR> path(GetHtmlHelpPath());
     return path != NULL;
@@ -258,7 +258,7 @@ bool ViewWithHtmlHelp(WindowInfo *win, WCHAR *args)
         return false;
 
     if (!args)
-        args = _T("");
+        args = L"";
 
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())

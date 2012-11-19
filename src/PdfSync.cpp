@@ -18,10 +18,10 @@
 // Minimal vertical distance
 #define PDFSYNC_EPSILON_Y       20
 
-#define PDFSYNC_EXTENSION       _T(".pdfsync")
+#define PDFSYNC_EXTENSION       L".pdfsync"
 
-#define SYNCTEX_EXTENSION       _T(".synctex")
-#define SYNCTEXGZ_EXTENSION     _T(".synctex.gz")
+#define SYNCTEX_EXTENSION       L".synctex"
+#define SYNCTEXGZ_EXTENSION     L".synctex.gz"
 
 struct PdfsyncFileIndex {
     size_t start, end; // first and one-after-last index of lines associated with a file
@@ -134,7 +134,7 @@ int Synchronizer::Create(const WCHAR *pdffilename, PdfEngine *engine, Synchroniz
         return PDFSYNCERR_INVALID_ARGUMENT;
 
     const WCHAR *fileExt = path::GetExt(pdffilename);
-    if (!str::EqI(fileExt, _T(".pdf")))
+    if (!str::EqI(fileExt, L".pdf"))
         return PDFSYNCERR_INVALID_ARGUMENT;
 
     ScopedMem<WCHAR> baseName(str::DupN(pdffilename, fileExt - pdffilename));
@@ -175,9 +175,9 @@ WCHAR * Synchronizer::PrepareCommandline(const WCHAR* pattern, const WCHAR* file
         if (*perc == 'f')
             cmdline.AppendAndFree(path::Normalize(filename));
         else if (*perc == 'l')
-            cmdline.AppendFmt(_T("%u"), line);
+            cmdline.AppendFmt(L"%u", line);
         else if (*perc == 'c')
-            cmdline.AppendFmt(_T("%u"), col);
+            cmdline.AppendFmt(L"%u", col);
         else if (*perc == '%')
             cmdline.Append('%');
         else
@@ -216,7 +216,7 @@ int Pdfsync::RebuildIndex()
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransChars(line, "*/", " \\");
     ScopedMem<WCHAR> jobName(str::conv::FromAnsi(line));
-    jobName.Set(str::Join(jobName, _T(".tex")));
+    jobName.Set(str::Join(jobName, L".tex"));
     jobName.Set(PrependDir(jobName));
 
     line = Advance0Line(line, dataEnd);
@@ -286,10 +286,10 @@ int Pdfsync::RebuildIndex()
                 if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"')
                     filename.Set(str::DupN(filename + 1, str::Len(filename) - 2));
                 // undecorate the filepath: replace * by space and / by \ 
-                str::TransChars(filename, _T("*/"), _T(" \\"));
+                str::TransChars(filename, L"*/", L" \\");
                 // if the file name extension is not specified then add the suffix '.tex'
                 if (str::IsEmpty(path::GetExt(filename)))
-                    filename.Set(str::Join(filename, _T(".tex")));
+                    filename.Set(str::Join(filename, L".tex"));
                 // ensure that the path is absolute
                 if (PathIsRelative(filename))
                     filename.Set(PrependDir(filename));
@@ -528,7 +528,7 @@ TryAgainAnsi:
         return PDFSYNCERR_OUTOFMEMORY;
 
     // undecorate the filepath: replace * by space and / by \ 
-    str::TransChars(filename, _T("*/"), _T(" \\"));
+    str::TransChars(filename, L"*/", L" \\");
     // Convert the source filepath to an absolute path
     if (PathIsRelative(filename))
         filename.Set(PrependDir(filename));

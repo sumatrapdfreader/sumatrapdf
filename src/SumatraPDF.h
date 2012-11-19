@@ -9,15 +9,15 @@
 
 #define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
 
-#define FRAME_CLASS_NAME        _T("SUMATRA_PDF_FRAME")
-#define SUMATRA_WINDOW_TITLE    _T("SumatraPDF")
+#define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
+#define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
 
-#define WEBSITE_MAIN_URL         _T("http://blog.kowalczyk.info/software/sumatrapdf/")
-#define WEBSITE_MANUAL_URL       _T("http://blog.kowalczyk.info/software/sumatrapdf/manual.html")
-#define WEBSITE_TRANSLATIONS_URL _T("http://blog.kowalczyk.info/software/sumatrapdf/translations.html")
+#define WEBSITE_MAIN_URL         L"http://blog.kowalczyk.info/software/sumatrapdf/"
+#define WEBSITE_MANUAL_URL       L"http://blog.kowalczyk.info/software/sumatrapdf/manual.html"
+#define WEBSITE_TRANSLATIONS_URL L"http://blog.kowalczyk.info/software/sumatrapdf/translations.html"
 
 #ifndef CRASH_REPORT_URL
-#define CRASH_REPORT_URL         _T("http://blog.kowalczyk.info/software/sumatrapdf/develop.html")
+#define CRASH_REPORT_URL         L"http://blog.kowalczyk.info/software/sumatrapdf/develop.html"
 #endif
 
 // permissions that can be revoked (or explicitly set) through Group Policies
@@ -58,9 +58,9 @@ enum MenuToolbarFlags {
 
 /* styling for About/Properties windows */
 
-#define LEFT_TXT_FONT           _T("Arial")
+#define LEFT_TXT_FONT           L"Arial"
 #define LEFT_TXT_FONT_SIZE      12
-#define RIGHT_TXT_FONT          _T("Arial Black")
+#define RIGHT_TXT_FONT          L"Arial Black"
 #define RIGHT_TXT_FONT_SIZE     12
 // for backward compatibility use a value that older versions will render as yellow
 #define ABOUT_BG_COLOR_DEFAULT  (RGB(0xff, 0xf2, 0) - 0x80000000)

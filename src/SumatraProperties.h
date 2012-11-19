@@ -6,7 +6,7 @@
 
 #include "SumatraWindow.h"
 
-#define PROPERTIES_CLASS_NAME   _T("SUMATRA_PDF_PROPERTIES")
+#define PROPERTIES_CLASS_NAME   L"SUMATRA_PDF_PROPERTIES"
 
 enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
 

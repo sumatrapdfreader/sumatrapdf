@@ -115,7 +115,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
     if (gPluginMode) {
         fileName.Set(ExtractFilenameFromURL(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        di.lpszDocName = fileName ? fileName : _T("filename");
+        di.lpszDocName = fileName ? fileName : L"filename";
     }
     else
         di.lpszDocName = engine.FileName();
@@ -368,7 +368,7 @@ public:
 
     PrintThreadData(WindowInfo *win, PrintData *data) :
         win(win), data(data), isCanceled(false), thread(NULL) {
-        wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
+        wnd = new NotificationWnd(win->hwndCanvas, L"", _TR("Printing page %d of %d..."), this);
         win->notifications->Add(wnd);
     }
 
@@ -454,7 +454,7 @@ static HGLOBAL GlobalMemDup(void *data, size_t len)
 /* Show Print Dialog box to allow user to select the printer
 and the pages to print.
 
-For reference: In order to print with Adobe Reader instead: ViewWithAcrobat(win, _T("/P"));
+For reference: In order to print with Adobe Reader instead: ViewWithAcrobat(win, L"/P");
 
 Note: The following only applies for printing as image
 

@@ -57,33 +57,33 @@
 // Keys we'll set in REG_PATH_UNINST path
 
 // REG_SZ, a path to installed executable (or "$path,0" to force the first icon)
-#define DISPLAY_ICON _T("DisplayIcon")
+#define DISPLAY_ICON L"DisplayIcon"
 // REG_SZ, e.g "SumatraPDF" (TAPP)
-#define DISPLAY_NAME _T("DisplayName")
+#define DISPLAY_NAME L"DisplayName"
 // REG_SZ, e.g. "1.2" (CURR_VERSION_STR)
-#define DISPLAY_VERSION _T("DisplayVersion")
+#define DISPLAY_VERSION L"DisplayVersion"
 // REG_DWORD, get size of installed directory after copying files
-#define ESTIMATED_SIZE _T("EstimatedSize")
+#define ESTIMATED_SIZE L"EstimatedSize"
 // REG_SZ, the current date as YYYYMMDD
-#define INSTALL_DATE _T("InstallDate")
+#define INSTALL_DATE L"InstallDate"
 // REG_DWORD, set to 1
-#define NO_MODIFY _T("NoModify")
+#define NO_MODIFY L"NoModify"
 // REG_DWORD, set to 1
-#define NO_REPAIR _T("NoRepair")
+#define NO_REPAIR L"NoRepair"
 // REG_SZ, e.g. "Krzysztof Kowalczyk" (PUBLISHER_STR)
-#define PUBLISHER _T("Publisher")
+#define PUBLISHER L"Publisher"
 // REG_SZ, path to uninstaller exe
-#define UNINSTALL_STRING _T("UninstallString")
+#define UNINSTALL_STRING L"UninstallString"
 // REG_SZ, e.g. "http://blog.kowalczyk.info/software/sumatrapdf/"
-#define URL_INFO_ABOUT _T("URLInfoAbout")
+#define URL_INFO_ABOUT L"URLInfoAbout"
 // REG_SZ, e.g. "http://blog.kowalczyk.info/software/sumatrapdf/news.html"
-#define URL_UPDATE_INFO _T("URLUpdateInfo")
+#define URL_UPDATE_INFO L"URLUpdateInfo"
 // REG_SZ, same as INSTALL_DIR below
-#define INSTALL_LOCATION _T("InstallLocation")
+#define INSTALL_LOCATION L"InstallLocation"
 
 // Installation directory (set in HKLM REG_PATH_SOFTWARE
 // for compatibility with the old NSIS installer)
-#define INSTALL_DIR _T("Install_Dir")
+#define INSTALL_DIR L"Install_Dir"
 
 #define ID_BUTTON_EXIT                11
 

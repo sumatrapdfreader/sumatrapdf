@@ -53,9 +53,9 @@ static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (str::StartsWith(pdfDate, _T("D:")))
+    if (str::StartsWith(pdfDate, L"D:"))
         pdfDate += 2;
-    return str::Parse(pdfDate, _T("%4d%2d%2d") _T("%2d%2d%2d"),
+    return str::Parse(pdfDate, L"%4d%2d%2d" L"%2d%2d%2d",
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
         &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != NULL;
     // don't bother about the day of week, we won't display it anyway
@@ -67,9 +67,9 @@ static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
 static bool IsoDateParse(const WCHAR *xpsDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    const WCHAR *end = str::Parse(xpsDate, _T("%4d-%2d-%2d"), &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    const WCHAR *end = str::Parse(xpsDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) // time is optional
-        str::Parse(end, _T("T%2d:%2d:%2dZ"), &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+        str::Parse(end, L"T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
     return end != NULL;
     // don't bother about the day of week, we won't display it anyway
 }
@@ -136,7 +136,7 @@ static WCHAR *FormatSizeSuccint(size_t size)
     ScopedMem<WCHAR> sizestr(str::FormatFloatWithThousandSep(s));
     if (!unit)
         return sizestr.StealData();
-    return str::Format(_T("%s %s"), sizestr, unit);
+    return str::Format(L"%s %s", sizestr, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
@@ -147,7 +147,7 @@ static WCHAR *FormatFileSize(size_t size)
     ScopedMem<WCHAR> n1(FormatSizeSuccint(size));
     ScopedMem<WCHAR> n2(str::FormatNumWithThousandSep(size));
 
-    return str::Format(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
+    return str::Format(L"%s (%s %s)", n1, n2, _TR("Bytes"));
 }
 
 // format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
@@ -172,7 +172,7 @@ static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     ScopedMem<WCHAR> strWidth(str::FormatFloatWithThousandSep(width));
     ScopedMem<WCHAR> strHeight(str::FormatFloatWithThousandSep(height));
 
-    return str::Format(_T("%s x %s %s"), strWidth, strHeight, isMetric ? _T("cm") : _T("in"));
+    return str::Format(L"%s x %s %s", strWidth, strHeight, isMetric ? L"cm" : L"in");
 }
 
 static WCHAR *FormatPdfFileStructure(Doc doc)
@@ -181,22 +181,22 @@ static WCHAR *FormatPdfFileStructure(Doc doc)
     if (str::IsEmpty(fstruct.Get()))
         return NULL;
     WStrVec parts;
-    parts.Split(fstruct, _T(","), true);
+    parts.Split(fstruct, L",", true);
     
     WStrVec props;
 
-    if (parts.Find(_T("linearized")) != -1)
+    if (parts.Find(L"linearized") != -1)
         props.Push(str::Dup(_TR("Fast Web View")));
-    if (parts.Find(_T("tagged")) != -1)
+    if (parts.Find(L"tagged") != -1)
         props.Push(str::Dup(_TR("Tagged PDF")));
-    if (parts.Find(_T("PDFX")) != -1)
-        props.Push(str::Dup(_T("PDF/X (ISO 15930)")));
-    if (parts.Find(_T("PDFA1")) != -1)
-        props.Push(str::Dup(_T("PDF/A (ISO 19005)")));
-    if (parts.Find(_T("PDFE1")) != -1)
-        props.Push(str::Dup(_T("PDF/E (ISO 24517)")));
+    if (parts.Find(L"PDFX") != -1)
+        props.Push(str::Dup(L"PDF/X (ISO 15930)"));
+    if (parts.Find(L"PDFA1") != -1)
+        props.Push(str::Dup(L"PDF/A (ISO 19005)"));
+    if (parts.Find(L"PDFE1") != -1)
+        props.Push(str::Dup(L"PDF/E (ISO 24517)"));
 
-    return props.Join(_T(", "));
+    return props.Join(L", ");
 }
 
 // returns a list of permissions denied by this document
@@ -213,7 +213,7 @@ static WCHAR *FormatPermissions(Doc doc)
     if (!doc.AsEngine()->IsCopyingTextAllowed())
         denials.Push(str::Dup(_TR("copying text")));
 
-    return denials.Join(_T(", "));
+    return denials.Join(L", ");
 }
 
 void PropertiesLayout::AddProperty(const WCHAR *key, WCHAR *value)
@@ -397,7 +397,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     }
 
     if (doc.IsEngine()) {
-        str = str::Format(_T("%d"), doc.AsEngine()->PageCount());
+        str = str::Format(L"%d", doc.AsEngine()->PageCount());
         layoutData->AddProperty(_TR("Number of Pages:"), str);
     }
 
@@ -407,7 +407,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            str = str::Format(_T("\u202A%s\u202C"), ScopedMem<WCHAR>(str));
+            str = str::Format(L"\u202A%s\u202C", ScopedMem<WCHAR>(str));
         }
 #endif
         layoutData->AddProperty(_TR("Page Size:"), str);
@@ -422,7 +422,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         str = doc.GetProperty(Prop_FontList);
         if (str) {
             // add a space between basic and extended file properties
-            layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));
+            layoutData->AddProperty(L" ", str::Dup(L" "));
         }
         layoutData->AddProperty(_TR("Fonts:"), str);
     }
@@ -512,7 +512,7 @@ static void CopyPropertiesToClipboard(HWND hwnd)
     str::Str<WCHAR> lines(256);
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
-        lines.AppendFmt(_T("%s %s\r\n"), el->leftTxt, el->rightTxt);
+        lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt);
     }
 
     CopyTextToClipboard(lines.LendData());

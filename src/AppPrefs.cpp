@@ -15,7 +15,7 @@
 #include "Translations.h"
 #include "WindowInfo.h"
 
-#define PREFS_FILE_NAME         _T("sumatrapdfprefs.dat")
+#define PREFS_FILE_NAME         L"sumatrapdfprefs.dat"
 
 #define MAX_REMEMBERED_FILES 1000
 

@@ -12,7 +12,7 @@ namespace uitask {
 
 static HWND  gTaskDispatchHwnd;
 
-#define UITASK_CLASS_NAME   _T("UITask_Wnd_Class")
+#define UITASK_CLASS_NAME   L"UITask_Wnd_Class"
 #define WM_EXECUTE_TASK       (WM_USER + 1)
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -36,7 +36,7 @@ void Initialize()
     RegisterClassEx(&wcex);
 
     gTaskDispatchHwnd = CreateWindow(
-            UITASK_CLASS_NAME, _T("UITask Dispatch Window"),
+            UITASK_CLASS_NAME, L"UITask Dispatch Window",
             WS_OVERLAPPED,
             0, 0, 0, 0,
             NULL, NULL,

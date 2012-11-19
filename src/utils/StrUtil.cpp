@@ -650,9 +650,9 @@ WCHAR *FormatRomanNumeral(int number)
         int value;
         const WCHAR *numeral;
     } romandata[] = {
-        { 1000, _T("M") }, { 900, _T("CM") }, { 500, _T("D") }, { 400, _T("CD") },
-        {  100, _T("C") }, {  90, _T("XC") }, {  50, _T("L") }, {  40, _T("XL") },
-        {   10, _T("X") }, {   9, _T("IX") }, {   5, _T("V") }, {   4, _T("IV") }, { 1, _T("I") }
+        { 1000, L"M" }, { 900, L"CM" }, { 500, L"D" }, { 400, L"CD" },
+        {  100, L"C" }, {  90, L"XC" }, {  50, L"L" }, {  40, L"XL" },
+        {   10, L"X" }, {   9, L"IX" }, {   5, L"V" }, {   4, L"IV" }, { 1, L"I" }
     };
 
     size_t len = 0;

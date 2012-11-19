@@ -250,7 +250,7 @@ Doc Doc::CreateFromFile(const WCHAR *filePath)
     // set above, set a generic error message
     if (doc.IsNone()) {
         CrashIf(doc.loadingErrorMessage);
-        doc.loadingErrorMessage = str::Format(_T("Error loading %s"), filePath);
+        doc.loadingErrorMessage = str::Format(L"Error loading %s", filePath);
     }
     CrashIf(!doc.generic && !doc.IsNone());
     return doc;

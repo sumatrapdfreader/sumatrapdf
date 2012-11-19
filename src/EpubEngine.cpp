@@ -629,7 +629,7 @@ public:
     virtual PageLayoutType PreferredLayout();
 
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".epub"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".epub"; }
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
@@ -841,7 +841,7 @@ public:
 
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
     virtual const WCHAR *GetDefaultFileExt() const {
-        return doc && doc->IsZipped() ? _T(".fb2z") : _T(".fb2");
+        return doc && doc->IsZipped() ? L".fb2z" : L".fb2";
     }
 
     virtual bool HasTocTree() const;
@@ -913,7 +913,7 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
             if (itemText)
                 str::NormalizeWS(itemText);
             if (!str::IsEmpty(itemText.Get())) {
-                ScopedMem<WCHAR> name(str::Format(_T(FB2_TOC_ENTRY_MARK) _T("%d"), titleCount));
+                ScopedMem<WCHAR> name(str::Format(_T(FB2_TOC_ENTRY_MARK) L"%d", titleCount));
                 PageDestination *dest = GetNamedDest(name);
                 EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
                 item->id = titleCount;
@@ -927,7 +927,7 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
             if (str::IsEmpty(itemText.Get()))
                 itemText.Set(text.StealData());
             else
-                itemText.Set(str::Join(itemText, _T(" "), text));
+                itemText.Set(str::Join(itemText, L" ", text));
         }
     }
 
@@ -964,7 +964,7 @@ public:
     }
 
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".mobi"; }
 
     virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const { return tocReparsePoint != NULL; }
@@ -1005,9 +1005,9 @@ bool MobiEngineImpl::Load(const WCHAR *fileName)
         while ((ref = parser.FindElementByName("reference", ref))) {
             ScopedMem<WCHAR> type(ref->GetAttribute("type"));
             ScopedMem<WCHAR> filepos(ref->GetAttribute("filepos"));
-            if (str::EqI(type, _T("toc")) && filepos) {
+            if (str::EqI(type, L"toc") && filepos) {
                 unsigned int pos;
-                if (str::Parse(filepos, _T("%u%$"), &pos) && pos < args.htmlStrLen) {
+                if (str::Parse(filepos, L"%u%$", &pos) && pos < args.htmlStrLen) {
                     tocReparsePoint = args.htmlStr + pos;
                     break;
                 }
@@ -1072,7 +1072,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
         if (itemLink && tok->IsText()) {
             ScopedMem<WCHAR> linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
             if (itemText)
-                itemText.Set(str::Join(itemText, _T(" "), linkText));
+                itemText.Set(str::Join(itemText, L" ", linkText));
             else
                 itemText.Set(linkText.StealData());
         }
@@ -1121,8 +1121,8 @@ bool MobiEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
         return str::Eq(pdbReader.GetDbType(), "BOOKMOBI");
     }
 
-    return str::EndsWithI(fileName, _T(".mobi")) ||
-           str::EndsWithI(fileName, _T(".prc"));
+    return str::EndsWithI(fileName, L".mobi") ||
+           str::EndsWithI(fileName, L".prc");
 }
 
 MobiEngine *MobiEngine::CreateFromFile(const WCHAR *fileName)
@@ -1174,7 +1174,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".pdb"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".pdb"; }
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
@@ -1330,7 +1330,7 @@ public:
     }
 
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".chm"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".chm"; }
 
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
@@ -1471,7 +1471,7 @@ DocTocItem *Chm2EngineImpl::GetTocTree()
         // TODO: ToC code doesn't work too well for displaying an index,
         //       so this should really become a tree of its own (which
         //       doesn't rely on entries being in the same order as pages)
-        builder.Visit(_T("Index"), NULL, 1);
+        builder.Visit(L"Index", NULL, 1);
         builder.SetIsIndex(true);
         doc->ParseIndex(&builder);
     }
@@ -1508,7 +1508,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".tcr"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".tcr"; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
 protected:
@@ -1600,7 +1600,7 @@ public:
     }
 
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".html"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".html"; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
 protected:
@@ -1704,7 +1704,7 @@ public:
     }
 
     virtual const WCHAR *GetDefaultFileExt() const {
-        return fileName ? path::GetExt(fileName) : _T(".txt");
+        return fileName ? path::GetExt(fileName) : L".txt";
     }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 

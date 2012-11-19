@@ -8,7 +8,7 @@
 #include "FileHistory.h"
 #include "WindowInfo.h" // for StaticLinkInfo
 
-#define ABOUT_CLASS_NAME        _T("SUMATRA_PDF_ABOUT")
+#define ABOUT_CLASS_NAME        L"SUMATRA_PDF_ABOUT"
 
 void OnMenuAbout();
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -17,11 +17,11 @@ void  DrawAboutPage(WindowInfo& win, HDC hdc);
 
 const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info=NULL);
 
-#define SLINK_OPEN_FILE _T("<File,Open>")
-#define SLINK_LIST_SHOW _T("<View,ShowList>")
-#define SLINK_LIST_HIDE _T("<View,HideList>")
+#define SLINK_OPEN_FILE L"<File,Open>"
+#define SLINK_LIST_SHOW L"<View,ShowList>"
+#define SLINK_LIST_HIDE L"<View,HideList>"
 
-#define THUMBNAILS_DIR_NAME _T("sumatrapdfcache")
+#define THUMBNAILS_DIR_NAME L"sumatrapdfcache"
 // thumbnails are 150px high and have a ratio of sqrt(2) : 1
 #define THUMBNAIL_DX        212
 #define THUMBNAIL_DY        150

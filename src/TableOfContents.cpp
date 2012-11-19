@@ -55,7 +55,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
         item.cchTextMax = INFOTIPSIZE;
         TreeView_GetItem(hTV, &item);
         infotip.Append(item.pszText);
-        infotip.Append(_T("\r\n"));
+        infotip.Append(L"\r\n");
     }
 
     if (tocItem->GetLink() && Dest_LaunchEmbedded == tocItem->GetLink()->GetDestType())
@@ -100,7 +100,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     ScopedMem<WCHAR> label;
     if (tocItem->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
         label.Set(win->dm->engine->GetPageLabel(tocItem->pageNo));
-        label.Set(str::Join(_T("  "), label));
+        label.Set(str::Join(L"  ", label));
     }
     if (label && str::EndsWith(item.pszText, label)) {
         RECT rcPageNo = rcFullWidth;
@@ -222,7 +222,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (entry->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
         ScopedMem<WCHAR> label(win->dm->engine->GetPageLabel(entry->pageNo));
-        ScopedMem<WCHAR> text(str::Format(_T("%s  %s"), entry->title, label));
+        ScopedMem<WCHAR> text(str::Format(L"%s  %s", entry->title, label));
         tvinsert.itemex.pszText = text;
         return TreeView_InsertItem(hwnd, &tvinsert);
     }
@@ -512,19 +512,19 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 void CreateToc(WindowInfo *win)
 {
     // toc windows
-    win->hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
+    win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD,
                                    0, 0, gGlobalPrefs.sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, ghinst, NULL);
-    HWND title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND title = CreateWindow(WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                               0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
     win::SetText(title, _TR("Bookmarks"));
 
-    HWND hwndClose = CreateWindow(WC_STATIC, _T(""),
+    HWND hwndClose = CreateWindow(WC_STATIC, L"",
                                   SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                                   0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_TOC_CLOSE, ghinst, NULL);
 
-    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
+    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"TOC",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,

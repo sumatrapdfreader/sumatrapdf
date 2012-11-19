@@ -189,7 +189,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR *filePath, UINT index)
     if (!filePath || !menuFile) return;
 
     ScopedMem<WCHAR> fileName(win::menu::ToSafeString(path::GetBaseName(filePath)));
-    ScopedMem<WCHAR> menuString(str::Format(_T("&%d) %s"), (index + 1) % 10, fileName));
+    ScopedMem<WCHAR> menuString(str::Format(L"&%d) %s", (index + 1) % 10, fileName));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
@@ -395,7 +395,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         }
     }
 
-    if (!win->IsDocLoaded() && !win->IsAboutWindow() && str::EndsWithI(win->loadedFilePath, _T(".pdf"))) {
+    if (!win->IsDocLoaded() && !win->IsAboutWindow() && str::EndsWithI(win->loadedFilePath, L".pdf")) {
         for (int i = 0; i < dimof(menusToEnableIfBrokenPDF); i++) {
             UINT id = menusToEnableIfBrokenPDF[i];
             win::menu::SetEnabled(win->menu, id, true);
@@ -595,7 +595,7 @@ HMENU BuildMenu(WindowInfo *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 #ifdef SHOW_DEBUG_MENU_ITEMS
     m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
 #endif
 
     return mainMenu;
@@ -623,7 +623,7 @@ HMENU BuildMenu(EbookWindow *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 #ifdef SHOW_DEBUG_MENU_ITEMS
     m = BuildMenuFromMenuDef(menuDefDebugEbooks, dimof(menuDefDebugEbooks), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
 #endif
     return mainMenu;
 }

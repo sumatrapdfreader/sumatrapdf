@@ -842,13 +842,13 @@ int CmpPageLabelInfo(const void *a, const void *b)
 WCHAR *FormatPageLabel(const char *type, int pageNo, const WCHAR *prefix)
 {
     if (str::Eq(type, "D"))
-        return str::Format(_T("%s%d"), prefix, pageNo);
+        return str::Format(L"%s%d", prefix, pageNo);
     if (str::EqI(type, "R")) {
         // roman numbering style
         ScopedMem<WCHAR> number(str::FormatRomanNumeral(pageNo));
         if (*type == 'r')
             str::ToLower(number.Get());
-        return str::Format(_T("%s%s"), prefix, number);
+        return str::Format(L"%s%s", prefix, number);
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
@@ -858,7 +858,7 @@ WCHAR *FormatPageLabel(const char *type, int pageNo, const WCHAR *prefix)
             number.Append(number.At(0));
         if (*type == 'a')
             str::ToLower(number.Get());
-        return str::Format(_T("%s%s"), prefix, number.Get());
+        return str::Format(L"%s%s", prefix, number.Get());
     }
     return str::Dup(prefix);
 }
@@ -920,7 +920,7 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
     }
 
     for (int ix = 0; (ix = labels->Find(NULL, ix)) != -1; ix++)
-        labels->At(ix) = str::Dup(_T(""));
+        labels->At(ix) = str::Dup(L"");
 
     // ensure that all page labels are unique (by appending a number to duplicates)
     WStrVec dups(*labels);
@@ -932,7 +932,7 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
         while ((ix = labels->Find(dups.At(i), ix + 1)) != -1) {
             ScopedMem<WCHAR> unique;
             do {
-                unique.Set(str::Format(_T("%s.%d"), dups.At(i), ++counter));
+                unique.Set(str::Format(L"%s.%d", dups.At(i), ++counter));
             } while (labels->Find(unique) != -1);
             str::ReplacePtr(&labels->At(ix), unique);
         }
@@ -1028,7 +1028,7 @@ public:
     }
 
     virtual float GetFileDPI() const { return 72.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".pdf"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".pdf"; }
 
     virtual bool BenchLoadPage(int pageNo) { return GetPdfPage(pageNo) != NULL; }
 
@@ -1345,7 +1345,7 @@ OpenEmbeddedFile:
         return FinishLoading();
 
     int num, gen;
-    embedMarks = (WCHAR *)str::Parse(embedMarks, _T(":%d:%d"), &num, &gen);
+    embedMarks = (WCHAR *)str::Parse(embedMarks, L":%d:%d", &num, &gen);
     assert(embedMarks);
     if (!embedMarks || !pdf_is_stream(_doc, num, gen))
         return false;
@@ -1555,7 +1555,7 @@ PdfTocItem *PdfEngineImpl::BuildTocTree(fz_outline *entry, int& idCounter)
     PdfTocItem *node = NULL;
 
     for (; entry; entry = entry->next) {
-        WCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
+        WCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(L"");
         PdfTocItem *item = new PdfTocItem(name, PdfLink(this, &entry->dest));
         item->open = entry->is_open;
         item->id = ++idCounter;
@@ -2121,7 +2121,7 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
     assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
-    WCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
+    WCHAR *pageText = ExtractPageText(page, L"\n", &coords, Target_View, true);
     if (!pageText) {
         return;
     }
@@ -2442,7 +2442,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
         return NULL;
 
     fonts.SortNatural();
-    return fonts.Join(_T("\n"));
+    return fonts.Join(L"\n");
 }
 
 WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
@@ -2454,19 +2454,19 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
         int major = _doc->version / 10, minor = _doc->version % 10;
         if (1 == major && 7 == minor && pdf_crypt_version(_doc) == 5) {
             if (pdf_crypt_revision(_doc) == 5)
-                return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
+                return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 3);
             if (pdf_crypt_revision(_doc) == 6)
-                return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 8);
+                return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 8);
         }
-        return str::Format(_T("%d.%d"), major, minor);
+        return str::Format(L"%d.%d", major, minor);
     }
 
     if (Prop_PdfFileStructure == prop) {
         WStrVec fstruct;
         if (pdf_to_bool(pdf_dict_gets(_info, "Linearized")))
-            fstruct.Append(str::Dup(_T("linearized")));
+            fstruct.Append(str::Dup(L"linearized"));
         if (pdf_to_bool(pdf_dict_gets(_info, "Marked")))
-            fstruct.Append(str::Dup(_T("tagged")));
+            fstruct.Append(str::Dup(L"tagged"));
         if (pdf_dict_gets(_info, "OutputIntents")) {
             for (int i = 0; i < pdf_array_len(pdf_dict_gets(_info, "OutputIntents")); i++) {
                 pdf_obj *intent = pdf_array_get(pdf_dict_gets(_info, "OutputIntents"), i);
@@ -2474,7 +2474,7 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
                 fstruct.Append(str::conv::FromUtf8(pdf_to_name(intent) + 4));
             }
         }
-        return fstruct.Count() > 0 ? fstruct.Join(_T(",")) : NULL;
+        return fstruct.Count() > 0 ? fstruct.Join(L",") : NULL;
     }
 
     if (Prop_FontList == prop)
@@ -2646,7 +2646,7 @@ WCHAR *PdfLink::GetValue() const
                 x = (int)(pt.x - rect.x + 0.5);
                 y = (int)(pt.y - rect.y + 0.5);
             }
-            ScopedMem<WCHAR> uri(str::Format(_T("%s?%d,%d"), path, x, y));
+            ScopedMem<WCHAR> uri(str::Format(L"%s?%d,%d", path, x, y));
             free(path);
             path = uri.StealData();
         }
@@ -2655,9 +2655,9 @@ WCHAR *PdfLink::GetValue() const
         // note: we (intentionally) don't support the /Win specific Launch parameters
         if (link->ld.launch.file_spec)
             path = str::conv::FromUtf8(link->ld.launch.file_spec);
-        if (path && link->ld.launch.embedded_num && str::EndsWithI(path, _T(".pdf"))) {
+        if (path && link->ld.launch.embedded_num && str::EndsWithI(path, L".pdf")) {
             free(path);
-            path = str::Format(_T("%s:%d:%d"), engine->FileName(),
+            path = str::Format(L"%s:%d:%d", engine->FileName(),
                 link->ld.launch.embedded_num, link->ld.launch.embedded_gen);
         }
         break;
@@ -2792,7 +2792,7 @@ bool PdfEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
         return false;
     }
 
-    return str::EndsWithI(fileName, _T(".pdf")) || findEmbedMarks(fileName);
+    return str::EndsWithI(fileName, L".pdf") || findEmbedMarks(fileName);
 }
 
 PdfEngine *PdfEngine::CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
@@ -2868,7 +2868,7 @@ public:
     virtual WCHAR *GetProperty(DocumentProperty prop);
 
     virtual float GetFileDPI() const { return 72.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".xps"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".xps"; }
 
     virtual bool BenchLoadPage(int pageNo) { return GetXpsPage(pageNo) != NULL; }
 
@@ -3591,13 +3591,13 @@ WCHAR *XpsEngineImpl::ExtractFontList()
     for (xps_font_cache *font = _doc->font_table; font; font = font->next) {
         ScopedMem<WCHAR> path(str::conv::FromUtf8(font->name));
         ScopedMem<WCHAR> name(str::conv::FromUtf8(font->font->name));
-        fonts.Append(str::Format(_T("%s (%s)"), name, path::GetBaseName(path)));
+        fonts.Append(str::Format(L"%s (%s)", name, path::GetBaseName(path)));
     }
     if (fonts.Count() == 0)
         return NULL;
 
     fonts.SortNatural();
-    return fonts.Join(_T("\n"));
+    return fonts.Join(L"\n");
 }
 
 WCHAR *XpsEngineImpl::GetProperty(DocumentProperty prop)
@@ -3675,7 +3675,7 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
     assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
-    WCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);
+    WCHAR *pageText = ExtractPageText(page, L"\n", &coords, true);
     if (!pageText)
         return;
 
@@ -3778,7 +3778,7 @@ XpsTocItem *XpsEngineImpl::BuildTocTree(fz_outline *entry, int& idCounter)
     XpsTocItem *node = NULL;
 
     for (; entry; entry = entry->next) {
-        WCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
+        WCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(L"");
         XpsTocItem *item = new XpsTocItem(name, XpsLink(this, &entry->dest));
         item->id = ++idCounter;
         item->open = entry->is_open;
@@ -3825,12 +3825,12 @@ bool XpsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         ZipFile zip(fileName);
-        return zip.GetFileIndex(_T("_rels/.rels")) != (size_t)-1 ||
-               zip.GetFileIndex(_T("_rels/.rels/[0].piece")) != (size_t)-1 ||
-               zip.GetFileIndex(_T("_rels/.rels/[0].last.piece")) != (size_t)-1;
+        return zip.GetFileIndex(L"_rels/.rels") != (size_t)-1 ||
+               zip.GetFileIndex(L"_rels/.rels/[0].piece") != (size_t)-1 ||
+               zip.GetFileIndex(L"_rels/.rels/[0].last.piece") != (size_t)-1;
     }
 
-    return str::EndsWithI(fileName, _T(".xps"));
+    return str::EndsWithI(fileName, L".xps");
 }
 
 XpsEngine *XpsEngine::CreateFromFile(const WCHAR *fileName)

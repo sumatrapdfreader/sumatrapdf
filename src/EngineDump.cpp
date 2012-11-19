@@ -29,11 +29,11 @@ char *Escape(WCHAR *string, bool keepString=false)
     str::Str<WCHAR> escaped(256);
     for (WCHAR *s = string; *s; s++) {
         switch (*s) {
-        case '&': escaped.Append(_T("&amp;")); break;
-        case '<': escaped.Append(_T("&lt;")); break;
-        case '>': escaped.Append(_T("&gt;")); break;
-        case '"': escaped.Append(_T("&quot;")); break;
-        case '\'': escaped.Append(_T("&amp;")); break;
+        case '&': escaped.Append(L"&amp;"); break;
+        case '<': escaped.Append(L"&lt;"); break;
+        case '>': escaped.Append(L"&gt;"); break;
+        case '"': escaped.Append(L"&quot;"); break;
+        case '\'': escaped.Append(L"&amp;"); break;
         default: escaped.Append(*s); break;
         }
     }
@@ -89,8 +89,8 @@ void DumpProperties(BaseEngine *engine)
     ScopedMem<WCHAR> fontlist(engine->GetProperty(Prop_FontList));
     if (fontlist) {
         WStrVec fonts;
-        fonts.Split(fontlist, _T("\n"));
-        str.Set(Escape(fonts.Join(_T("\n\t\t"))));
+        fonts.Split(fontlist, L"\n");
+        str.Set(Escape(fonts.Join(L"\n\t\t")));
         Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
     }
 }
@@ -218,7 +218,7 @@ void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
     Out("\t>\n");
 
     if (fullDump) {
-        ScopedMem<char> text(Escape(engine->ExtractPageText(pageNo, _T("\n"))));
+        ScopedMem<char> text(Escape(engine->ExtractPageText(pageNo, L"\n")));
         if (text)
             Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.Get());
     }
@@ -303,7 +303,7 @@ void RenderDocument(BaseEngine *engine, const WCHAR *renderPath)
         RenderedBitmap *bmp = engine->RenderBitmap(pageNo, 1.0, 0);
         size_t len = 0;
         ScopedMem<unsigned char> data;
-        if (bmp && str::EndsWithI(renderPath, _T(".bmp")))
+        if (bmp && str::EndsWithI(renderPath, L".bmp"))
             data.Set(SerializeBitmap(bmp->GetBitmap(), &len));
         else if (bmp)
             data.Set(tga::SerializeBitmap(bmp->GetBitmap(), &len));
@@ -364,15 +364,15 @@ Usage:
     bool loadOnly = false;
 
     for (size_t i = 2; i < argList.Count(); i++) {
-        if (str::Eq(argList.At(i), _T("-full")))
+        if (str::Eq(argList.At(i), L"-full"))
             fullDump = true;
-        else if (str::Eq(argList.At(i), _T("-pwd")) && i + 1 < argList.Count())
+        else if (str::Eq(argList.At(i), L"-pwd") && i + 1 < argList.Count())
             password = argList.At(++i);
-        else if (str::Eq(argList.At(i), _T("-render")) && i + 1 < argList.Count())
+        else if (str::Eq(argList.At(i), L"-render") && i + 1 < argList.Count())
             renderPath = argList.At(++i);
-        else if (str::Eq(argList.At(i), _T("-alt")))
+        else if (str::Eq(argList.At(i), L"-alt"))
             useAlternateHandlers = true;
-        else if (str::Eq(argList.At(i), _T("-loadonly")))
+        else if (str::Eq(argList.At(i), L"-loadonly"))
             loadOnly = true;
         else
             goto Usage;

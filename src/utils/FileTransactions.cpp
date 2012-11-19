@@ -32,8 +32,8 @@ static void InitializeTransactions()
         return;
     initialized = true;
 
-    HMODULE hLibKTM = SafeLoadLibrary(_T("ktmw32.dll"));
-    HMODULE hLibKernel = SafeLoadLibrary(_T("kernel32.dll"));
+    HMODULE hLibKTM = SafeLoadLibrary(L"ktmw32.dll");
+    HMODULE hLibKernel = SafeLoadLibrary(L"kernel32.dll");
     if (!hLibKTM || !hLibKernel)
         return;
 

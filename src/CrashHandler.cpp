@@ -21,15 +21,15 @@
 
 #ifndef SYMBOL_DOWNLOAD_URL
 #ifdef SVN_PRE_RELEASE_VER
-#define SYMBOL_DOWNLOAD_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T(".pdb.zip")
+#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" _T(QM(SVN_PRE_RELEASE_VER)) L".pdb.zip"
 #else
-#define SYMBOL_DOWNLOAD_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb.zip")
+#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" _T(QM(CURR_VERSION)) L".pdb.zip"
 #endif
 #endif
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
-#define CRASH_SUBMIT_SERVER _T("blog.kowalczyk.info")
-#define CRASH_SUBMIT_URL    _T("/app/crashsubmit?appname=SumatraPDF")
+#define CRASH_SUBMIT_SERVER L"blog.kowalczyk.info"
+#define CRASH_SUBMIT_URL    L"/app/crashsubmit?appname=SumatraPDF"
 #endif
 
 // The following functions allow crash handler to be used by both installer
@@ -552,7 +552,7 @@ static bool BuildSymbolPath()
 #endif
 
     path.Append(gSymbolsDir);
-    //path.Append(_T(";"));
+    //path.Append(L";");
 #if 0
     // this probably wouldn't work anyway because it requires symsrv.dll in the same directory
     // as dbghelp.dll and it's not present with the os-provided dbghelp.dll

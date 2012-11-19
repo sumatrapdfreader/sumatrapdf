@@ -34,24 +34,24 @@
 
 #define COL_BLUE_LINK           RGB(0x00, 0x20, 0xa0)
 
-#define SUMATRA_TXT_FONT        _T("Arial Black")
+#define SUMATRA_TXT_FONT        L"Arial Black"
 #define SUMATRA_TXT_FONT_SIZE   24
 
-#define VERSION_TXT_FONT        _T("Arial Black")
+#define VERSION_TXT_FONT        L"Arial Black"
 #define VERSION_TXT_FONT_SIZE   12
 
-#define VERSION_TXT             _T("v") CURR_VERSION_STR
+#define VERSION_TXT             L"v" CURR_VERSION_STR
 #ifdef SVN_PRE_RELEASE_VER
- #define VERSION_SUB_TXT        _T("Pre-release")
+ #define VERSION_SUB_TXT        L"Pre-release"
 #else
- #define VERSION_SUB_TXT        _T("")
+ #define VERSION_SUB_TXT        L""
 #endif
 
 // TODO: replace this link with a better one where license information is nicely collected/linked
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
-#define URL_LICENSE _T("http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS")
+#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS"
 #else
-#define URL_LICENSE _T("http://sumatrapdf.googlecode.com/svn/tags/") CURR_VERSION_STR _T("rel/AUTHORS")
+#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/tags/" CURR_VERSION_STR L"rel/AUTHORS"
 #endif
 
 static HWND gHwndAbout;
@@ -70,24 +70,24 @@ struct AboutLayoutInfoEl {
 };
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    { _T("website"),        _T("SumatraPDF website"),   WEBSITE_MAIN_URL},
-    { _T("forums"),         _T("SumatraPDF forums"),    _T("http://blog.kowalczyk.info/forum_sumatra") },
-    { _T("programming"),    _T("Krzysztof Kowalczyk"),  _T("http://blog.kowalczyk.info") },
-    { _T("programming"),    _T("Simon B\xFCnzli"),      _T("http://www.zeniko.ch/#SumatraPDF") },
-    { _T("programming"),    _T("William Blum"),         _T("http://william.famille-blum.org/") },
-    { _T("license"),        _T("open source"),          URL_LICENSE },
+    { L"website",        L"SumatraPDF website",   WEBSITE_MAIN_URL},
+    { L"forums",         L"SumatraPDF forums",    L"http://blog.kowalczyk.info/forum_sumatra" },
+    { L"programming",    L"Krzysztof Kowalczyk",  L"http://blog.kowalczyk.info" },
+    { L"programming",    L"Simon B\xFCnzli",      L"http://www.zeniko.ch/#SumatraPDF" },
+    { L"programming",    L"William Blum",         L"http://william.famille-blum.org/" },
+    { L"license",        L"open source",          URL_LICENSE },
 #ifdef SVN_PRE_RELEASE_VER
-    { _T("a note"),         _T("Pre-release version, for testing only!"), NULL },
+    { L"a note",         L"Pre-release version, for testing only!", NULL },
 #endif
 #ifdef DEBUG
-    { _T("a note"),         _T("Debug version, for testing only!"), NULL },
+    { L"a note",         L"Debug version, for testing only!", NULL },
 #endif
-    { _T("pdf rendering"),  _T("MuPDF"),                _T("http://mupdf.com") },
+    { L"pdf rendering",  L"MuPDF",                L"http://mupdf.com" },
     // TODO: remove these two lines in favor of the above license link?
-    { _T("program icon"),   _T("Zenon"),                _T("http://www.flashvidz.tk/") },
-    { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/") },
-    { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html") },
-    { _T("translations"),   _T("Contribute translation"), WEBSITE_TRANSLATIONS_URL },
+    { L"program icon",   L"Zenon",                L"http://www.flashvidz.tk/" },
+    { L"toolbar icons",  L"Yusuke Kamiyamane",    L"http://p.yusukekamiyamane.com/" },
+    { L"translators",    L"The Translators",      L"http://blog.kowalczyk.info/software/sumatrapdf/translators.html" },
+    { L"translations",   L"Contribute translation", WEBSITE_TRANSLATIONS_URL },
     { NULL, NULL, NULL }
 };
 
@@ -178,7 +178,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
 
 static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 {
-    ScopedFont fontLeftTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
+    ScopedFont fontLeftTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
@@ -545,8 +545,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     HPEN penThumbBorder = CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
 
-    ScopedFont fontSumatraTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 24));
-    ScopedFont fontLeftTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
+    ScopedFont fontSumatraTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 24));
+    ScopedFont fontLeftTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
 
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
 
@@ -704,7 +704,7 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
         return NULL;
     ScopedMem<WCHAR> fname(str::conv::FromAnsi(fingerPrint));
 
-    return str::Format(_T("%s\\%s.png"), thumbsPath, fname);
+    return str::Format(L"%s\\%s.png", thumbsPath, fname);
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
@@ -713,7 +713,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     ScopedMem<WCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return;
-    ScopedMem<WCHAR> pattern(path::Join(thumbsPath, _T("*.png")));
+    ScopedMem<WCHAR> pattern(path::Join(thumbsPath, L"*.png"));
 
     WStrVec files;
     WIN32_FIND_DATA fdata;

@@ -57,7 +57,7 @@ static bool RemoveUninstallerRegistryInfo(HKEY hkey)
 static void UnregisterFromBeingDefaultViewer(HKEY hkey)
 {
     ScopedMem<WCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
-    ScopedMem<WCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf")));
+    ScopedMem<WCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf"));
     if (!curr || !str::Eq(curr, TAPP)) {
         // not the default, do nothing
     } else if (prev) {
@@ -111,14 +111,14 @@ static void RemoveOwnRegistryKeys()
         UnregisterFromBeingDefaultViewer(keys[i]);
         DeleteRegKey(keys[i], REG_CLASSES_APP);
         DeleteRegKey(keys[i], REG_CLASSES_APPS);
-        SHDeleteValue(keys[i], REG_CLASSES_PDF _T("\\OpenWithProgids"), TAPP);
+        SHDeleteValue(keys[i], REG_CLASSES_PDF L"\\OpenWithProgids", TAPP);
 
         for (int j = 0; NULL != gSupportedExts[j]; j++) {
-            ScopedMem<WCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[j], _T("\\OpenWithProgids")));
+            ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
             SHDeleteValue(keys[i], keyname, TAPP);
             DeleteEmptyRegKey(keys[i], keyname);
 
-            keyname.Set(str::Join(_T("Software\\Classes\\"), gSupportedExts[j], _T("\\OpenWithList\\") EXENAME));
+            keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithList\\" EXENAME));
             if (!DeleteRegKey(keys[i], keyname))
                 continue;
             // remove empty keys that the installer might have created
@@ -208,11 +208,11 @@ bool ExecuteUninstallerFromTempDir()
         return false;
 
     if (!CopyFile(GetOwnPath(), tempPath, FALSE)) {
-        NotifyFailed(_T("Failed to copy uninstaller to temp directory"));
+        NotifyFailed(L"Failed to copy uninstaller to temp directory");
         return false;
     }
 
-    ScopedMem<WCHAR> args(str::Format(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T("")));
+    ScopedMem<WCHAR> args(str::Format(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? L"/s" : L""));
     bool ok = CreateProcessHelper(tempPath, args);
 
     // mark the uninstaller for removal at shutdown (note: works only for administrators)

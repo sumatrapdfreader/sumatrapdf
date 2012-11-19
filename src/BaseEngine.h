@@ -234,7 +234,7 @@ public:
 
     // the DPI for a file is needed when converting internal measures to physical ones
     virtual float GetFileDPI() const { return 96.0f; }
-    // the default file extension for a document like the currently loaded one (e.g. _T(".pdf"))
+    // the default file extension for a document like the currently loaded one (e.g. L".pdf")
     virtual const WCHAR *GetDefaultFileExt() const = 0;
 
     // returns a list of all available elements for this page
@@ -258,7 +258,7 @@ public:
     virtual bool HasPageLabels() { return false; }
     // returns a label to be displayed instead of the page number
     // caller must free() the result
-    virtual WCHAR *GetPageLabel(int pageNo) { return str::Format(_T("%d"), pageNo); }
+    virtual WCHAR *GetPageLabel(int pageNo) { return str::Format(L"%d", pageNo); }
     // reverts GetPageLabel by returning the first page number having the given label
     virtual int GetPageByLabel(const WCHAR *label) { return _ttoi(label); }
 

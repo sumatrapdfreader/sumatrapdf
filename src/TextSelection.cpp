@@ -42,9 +42,9 @@ const WCHAR *PageTextCache::GetData(int pageNo, int *lenOut, RectI **coordsOut)
     ScopedCritSec scope(&access);
 
     if (!text[pageNo - 1]) {
-        text[pageNo - 1] = engine->ExtractPageText(pageNo, _T("\n"), &coords[pageNo - 1]);
+        text[pageNo - 1] = engine->ExtractPageText(pageNo, L"\n", &coords[pageNo - 1]);
         if (!text[pageNo - 1]) {
-            text[pageNo - 1] = str::Dup(_T(""));
+            text[pageNo - 1] = str::Dup(L"");
             lens[pageNo - 1] = 0;
         }
         else {

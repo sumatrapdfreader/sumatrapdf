@@ -53,12 +53,12 @@ WCHAR *GetDir(const WCHAR *path)
 {
     const WCHAR *baseName = GetBaseName(path);
     if (baseName == path) // relative directory
-        return str::Dup(_T("."));
+        return str::Dup(L".");
     if (baseName == path + 1) // relative root
         return str::DupN(path, 1);
     if (baseName == path + 3 && path[1] == ':') // local drive root
         return str::DupN(path, 3);
-    if (baseName == path + 2 && str::StartsWith(path, _T("\\\\"))) // server root
+    if (baseName == path + 2 && str::StartsWith(path, L"\\\\")) // server root
         return str::Dup(path);
     // any subdirectory
     return str::DupN(path, baseName - path - 1);
@@ -70,7 +70,7 @@ WCHAR *Join(const WCHAR *path, const WCHAR *filename)
         filename++;
     WCHAR *sep = NULL;
     if (!IsSep(path[str::Len(path) - 1]))
-        sep = _T("\\");
+        sep = L"\\";
     return str::Join(path, sep, filename);
 }
 

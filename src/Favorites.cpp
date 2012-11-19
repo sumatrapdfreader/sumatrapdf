@@ -211,10 +211,10 @@ static bool HasFavorites()
 static WCHAR *FavReadableName(FavName *fn)
 {
     // TODO: save non-default page labels (cf. BaseEngine::GetPageLabel)
-    ScopedMem<WCHAR> label(str::Format(_T("%d"), fn->pageNo));
+    ScopedMem<WCHAR> label(str::Format(L"%d", fn->pageNo));
     if (fn->name) {
         ScopedMem<WCHAR> pageNo(str::Format(_TR("(page %s)"), label));
-        return str::Join(fn->name, _T(" "), pageNo);
+        return str::Join(fn->name, L" ", pageNo);
     }
     return str::Format(_TR("Page %s"), label);
 }
@@ -224,9 +224,9 @@ static WCHAR *FavCompactReadableName(FileFavs *fav, FavName *fn, bool isCurrent=
 {
     ScopedMem<WCHAR> rn(FavReadableName(fn));
     if (isCurrent)
-        return str::Format(_T("%s : %s"), _TR("Current file"), rn);
+        return str::Format(L"%s : %s", _TR("Current file"), rn);
     const WCHAR *fp = path::GetBaseName(fav->filePath);
-    return str::Format(_T("%s : %s"), fp, rn);
+    return str::Format(L"%s : %s", fp, rn);
 }
 
 static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined, bool isCurrent)
@@ -812,19 +812,19 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
 void CreateFavorites(WindowInfo *win)
 {
-    win->hwndFavBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
+    win->hwndFavBox = CreateWindow(WC_STATIC, L"", WS_CHILD,
                                    0, 0, gGlobalPrefs.sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, ghinst, NULL);
-    HWND title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND title = CreateWindow(WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                               0, 0, 0, 0, win->hwndFavBox, (HMENU)IDC_FAV_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
     win::SetText(title, _TR("Favorites"));
 
-    HWND hwndClose = CreateWindow(WC_STATIC, _T(""),
+    HWND hwndClose = CreateWindow(WC_STATIC, L"",
                                   SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                                   0, 0, 16, 16, win->hwndFavBox, (HMENU)IDC_FAV_CLOSE, ghinst, NULL);
 
-    win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("Fav"),
+    win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"Fav",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,

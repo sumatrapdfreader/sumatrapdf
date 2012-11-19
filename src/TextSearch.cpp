@@ -40,7 +40,7 @@ void TextSearch::SetText(WCHAR *text)
     // (that behavior already "kind of" exists without special treatment, but
     // usually is not quite what a user expects, so let's try to be cleverer)
     this->matchWordStart = text[0] == ' ' && text[1] != ' ';
-    this->matchWordEnd = str::EndsWith(text, _T(" ")) && !str::EndsWith(text, _T("  "));
+    this->matchWordEnd = str::EndsWith(text, L" ") && !str::EndsWith(text, L"  ");
 
     if (text[0] == ' ')
         text++;
@@ -70,7 +70,7 @@ void TextSearch::SetText(WCHAR *text)
     else
         anchor = str::DupN(text, 1);
 
-    if (str::EndsWith(this->findText, _T(" ")))
+    if (str::EndsWith(this->findText, L" "))
         this->findText[str::Len(this->findText) - 1] = '\0';
 
     memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
@@ -99,7 +99,7 @@ void TextSearch::SetLastResult(TextSelection *sel)
 {
     CopySelection(sel);
 
-    ScopedMem<WCHAR> selection(ExtractText(_T(" ")));
+    ScopedMem<WCHAR> selection(ExtractText(L" "));
     str::NormalizeWS(selection);
     SetText(selection);
 

@@ -82,7 +82,7 @@ static void HtmlParser04()
     assert(NULL == root->up);
     assert(NULL == root->down);
     ScopedMem<WCHAR> val(root->GetAttribute("att"));
-    assert(str::Eq(val, _T("va'l")));
+    assert(str::Eq(val, L"va'l"));
     assert(!root->firstAttr->next);
 }
 
@@ -120,13 +120,13 @@ static void HtmlParser02()
     assert(NULL == el->next);
     assert(root == el->up);
     ScopedMem<WCHAR> val(el->GetAttribute("at1"));
-    assert(str::Eq(val, _T("<quo&ted>")));
+    assert(str::Eq(val, L"<quo&ted>"));
     val.Set(el->GetAttribute("at2"));
-    assert(str::Eq(val, _T("also quoted")));
+    assert(str::Eq(val, L"also quoted"));
     val.Set(el->GetAttribute("att3"));
-    assert(str::Eq(val, _T("notquoted")));
+    assert(str::Eq(val, L"notquoted"));
     val.Set(el->GetAttribute("att4"));
-    assert(str::Eq(val, _T("end")));
+    assert(str::Eq(val, L"end"));
 }
 
 static void HtmlParser06()
@@ -163,13 +163,13 @@ static void HtmlParser07()
     assert(str::EndsWith(val, "\xFC"));
 #endif
     val.Set(root->GetAttribute("zero"));
-    assert(str::Eq(val, _T("\x01??")));
+    assert(str::Eq(val, L"\x01??"));
 }
 
 static void HtmlParser08()
 {
     ScopedMem<WCHAR> val(DecodeHtmlEntitites("&auml&test;&&ouml-", CP_ACP));
-    assert(str::Eq(val.Get(), _T("\xE4&test;&\xF6-")));
+    assert(str::Eq(val.Get(), L"\xE4&test;&\xF6-"));
 }
 
 static void HtmlParser09()
@@ -180,7 +180,7 @@ static void HtmlParser09()
     assert(1 == p.TotalAttrCount());
     assert(str::Eq("root", root->name));
     ScopedMem<WCHAR> val(root->GetAttribute("attr"));
-    assert(str::Eq(val, _T("<!-- comment -->")));
+    assert(str::Eq(val, L"<!-- comment -->"));
 
     root = p.Parse("<!-- comment with \" and \' --><main />");
     assert(1 == p.ElementsCount());
@@ -202,17 +202,17 @@ static void HtmlParser10()
     assert(node);
     assert(node->NameIs("x:b") && node->NameIsNS("b", "http://example.org/ns/x"));
     ScopedMem<WCHAR> val(node->GetAttribute("attr"));
-    assert(str::Eq(val, _T("val")));
+    assert(str::Eq(val, L"val"));
 }
 
 static void HtmlParserFile()
 {
-    WCHAR *fileName = _T("HtmlParseTest00.html");
+    WCHAR *fileName = L"HtmlParseTest00.html";
     // We assume we're being run from obj-[dbg|rel], so the test
     // files are in ..\src\utils directory relative to exe's dir
     ScopedMem<WCHAR> exePath(GetExePath());
     const WCHAR *exeDir = path::GetBaseName(exePath);
-    ScopedMem<WCHAR> p1(path::Join(exeDir, _T("..\\src\\utils")));
+    ScopedMem<WCHAR> p1(path::Join(exeDir, L"..\\src\\utils"));
     ScopedMem<WCHAR> p2(path::Join(p1, fileName));
     char *d = file::ReadAll(p2, NULL);
     // it's ok if we fail - we assume we were not run from the
@@ -238,7 +238,7 @@ static void HtmlParserFile()
     el = el->down;
     assert(str::Eq(el->name, "object"));
     ScopedMem<WCHAR> val(el->GetAttribute("type"));
-    assert(str::Eq(val, _T("text/sitemap")));
+    assert(str::Eq(val, L"text/sitemap"));
     el = el->down;
     assert(str::Eq(el->name, "param"));
     assert(!el->down);

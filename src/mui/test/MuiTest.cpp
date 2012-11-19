@@ -6,7 +6,7 @@
 
 using namespace mui;
 
-#define FRAME_CLASS_NAME    _T("MUI_TEST_FRAME")
+#define FRAME_CLASS_NAME    L"MUI_TEST_FRAME"
 
 #define WIN_DX    720
 #define WIN_DY    640
@@ -43,9 +43,9 @@ static void OnOpen(HWND hwnd)
     ofn.hwndOwner = hwnd;
 
     str::Str<WCHAR> fileFilter;
-    fileFilter.Append(_T("All supported documents"));
+    fileFilter.Append(L"All supported documents");
 
-    ofn.lpstrFilter = _T("All supported documents\0;*.mobi;*.awz;\0\0");
+    ofn.lpstrFilter = L"All supported documents\0;*.mobi;*.awz;\0\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
@@ -190,7 +190,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     win::GetHwndDpi(NULL, &gUiDPIFactor);
 
     gHwndFrame = CreateWindow(
-            FRAME_CLASS_NAME, _T("Mui Test"),
+            FRAME_CLASS_NAME, L"Mui Test",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT,
             dpiAdjust(WIN_DX), dpiAdjust(WIN_DY),

@@ -55,7 +55,7 @@ static void WStrVecTest()
         ScopedMem<WCHAR> joined(v2.Join(L";"));
         assert(str::Eq(joined, L"a;b;c"));
         ScopedMem<WCHAR> last(v2.Pop());
-        assert(v2.Count() == 2 && str::Eq(last, _T("c")));
+        assert(v2.Count() == 2 && str::Eq(last, L"c"));
     }
 }
 
@@ -63,15 +63,15 @@ static void StrListTest()
 {
     WStrList l;
     assert(l.Count() == 0);
-    l.Append(str::Dup(_T("one")));
-    l.Append(str::Dup(_T("two")));
-    l.Append(str::Dup(_T("One")));
+    l.Append(str::Dup(L"one"));
+    l.Append(str::Dup(L"two"));
+    l.Append(str::Dup(L"One"));
     assert(l.Count() == 3);
-    assert(str::Eq(l.At(0), _T("one")));
-    assert(str::EqI(l.At(2), _T("one")));
-    assert(l.Find(_T("One")) == 2);
-    assert(l.FindI(_T("One")) == 0);
-    assert(l.Find(_T("Two")) == -1);
+    assert(str::Eq(l.At(0), L"one"));
+    assert(str::EqI(l.At(2), L"one"));
+    assert(l.Find(L"One") == 2);
+    assert(l.FindI(L"One") == 0);
+    assert(l.Find(L"Two") == -1);
 }
 
 static size_t VecTestAppendFmt()

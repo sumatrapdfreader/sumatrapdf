@@ -56,7 +56,7 @@ public:
     {
         if (s) {
             log.Append(s);
-            log.Append(_T("\r\n"));
+            log.Append(L"\r\n");
         }
     }
 
@@ -71,7 +71,7 @@ public:
     {
         if (s) {
             // DbgView displays one line per OutputDebugString call
-            OutputDebugString(ScopedMem<WCHAR>(str::Format(_T("%s\n"), s)));
+            OutputDebugString(ScopedMem<WCHAR>(str::Format(L"%s\n", s)));
         }
     }
 };
@@ -86,7 +86,7 @@ public:
     virtual void Log(WCHAR *s)
     {
         if (s)
-            fwprintf(stderr, _T("%s\n"), s);
+            fwprintf(stderr, L"%s\n", s);
     }
 };
 

@@ -25,7 +25,7 @@ using namespace Gdiplus;
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-#define MOBI_FRAME_CLASS_NAME    _T("SUMATRA_MOBI_FRAME")
+#define MOBI_FRAME_CLASS_NAME    L"SUMATRA_MOBI_FRAME"
 
 #define WIN_DX    720
 #define WIN_DY    640
@@ -546,7 +546,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         SHAddToRecentDocs(SHARD_PATH, fullPath);
 
-    ScopedMem<WCHAR> winTitle(str::Format(_T("%s - %s"), path::GetBaseName(fullPath), SUMATRA_WINDOW_TITLE));
+    ScopedMem<WCHAR> winTitle(str::Format(L"%s - %s", path::GetBaseName(fullPath), SUMATRA_WINDOW_TITLE));
 
     if (winToReplace.AsEbookWindow()) {
         EbookWindow *mw = winToReplace.AsEbookWindow();

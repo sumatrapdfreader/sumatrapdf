@@ -54,7 +54,7 @@ void FillWndClassEx(WNDCLASSEX& wcex, HINSTANCE hInstance, const WCHAR *clsName,
 // that is compatible with earlier windows versions.
 bool IsAppThemed()
 {
-    FARPROC pIsAppThemed = LoadDllFunc(_T("uxtheme.dll"), "IsAppThemed");
+    FARPROC pIsAppThemed = LoadDllFunc(L"uxtheme.dll", "IsAppThemed");
     if (!pIsAppThemed)
         return false;
     if (pIsAppThemed())
@@ -72,7 +72,7 @@ bool IsRunningInWow64()
 {
 #ifndef _WIN64
     typedef BOOL (WINAPI *IsWow64ProcessProc)(HANDLE, PBOOL);
-    IsWow64ProcessProc _IsWow64Process = (IsWow64ProcessProc)LoadDllFunc(_T("kernel32.dll"), "IsWow64Process");
+    IsWow64ProcessProc _IsWow64Process = (IsWow64ProcessProc)LoadDllFunc(L"kernel32.dll", "IsWow64Process");
     BOOL isWow = FALSE;
     if (_IsWow64Process)
         _IsWow64Process(GetCurrentProcess(), &isWow);
@@ -221,7 +221,7 @@ void EnableDataExecution()
 {
     // first try the documented SetProcessDEPPolicy
     SetProcessDEPPolicyFunc spdp;
-    spdp = (SetProcessDEPPolicyFunc) LoadDllFunc(_T("kernel32.dll"), "SetProcessDEPPolicy");
+    spdp = (SetProcessDEPPolicyFunc) LoadDllFunc(L"kernel32.dll", "SetProcessDEPPolicy");
     if (spdp) {
         spdp(0);
         return;
@@ -231,7 +231,7 @@ void EnableDataExecution()
     _NtSetInformationProcess ntsip;
     DWORD depMode = MEM_EXECUTE_OPTION_ENABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
 
-    ntsip = (_NtSetInformationProcess)LoadDllFunc(_T("ntdll.dll"), "NtSetInformationProcess");
+    ntsip = (_NtSetInformationProcess)LoadDllFunc(L"ntdll.dll", "NtSetInformationProcess");
     if (ntsip)
         ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
 }
@@ -240,7 +240,7 @@ void DisableDataExecution()
 {
     // first try the documented SetProcessDEPPolicy
     SetProcessDEPPolicyFunc spdp;
-    spdp = (SetProcessDEPPolicyFunc) LoadDllFunc(_T("kernel32.dll"), "SetProcessDEPPolicy");
+    spdp = (SetProcessDEPPolicyFunc) LoadDllFunc(L"kernel32.dll", "SetProcessDEPPolicy");
     if (spdp) {
         spdp(PROCESS_DEP_ENABLE);
         return;
@@ -250,7 +250,7 @@ void DisableDataExecution()
     _NtSetInformationProcess ntsip;
     DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
 
-    ntsip = (_NtSetInformationProcess)LoadDllFunc(_T("ntdll.dll"), "NtSetInformationProcess");
+    ntsip = (_NtSetInformationProcess)LoadDllFunc(L"ntdll.dll", "NtSetInformationProcess");
     if (ntsip)
         ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
 }
@@ -414,7 +414,7 @@ DWORD GetFileVersion(WCHAR *path)
     if (versionInfo && GetFileVersionInfo(path, handle, size, versionInfo)) {
         VS_FIXEDFILEINFO *fileInfo;
         UINT len;
-        if (VerQueryValue(versionInfo, _T("\\"), (LPVOID *)&fileInfo, &len))
+        if (VerQueryValue(versionInfo, L"\\", (LPVOID *)&fileInfo, &len))
             fileVersion = fileInfo->dwFileVersionMS;
     }
 
@@ -1002,7 +1002,7 @@ typedef BOOL WINAPI SaferCloseLevelProc(SAFER_LEVEL_HANDLE hLevelHandle);
 // instead)
 HANDLE CreateProcessAtLevel(const WCHAR *exe, const WCHAR *args, DWORD level)
 {
-    HMODULE h = SafeLoadLibrary(_T("Advapi32.dll"));
+    HMODULE h = SafeLoadLibrary(L"Advapi32.dll");
     if (!h)
         return NULL;
 #define ImportProc(func) func ## Proc *_ ## func = (func ## Proc *)GetProcAddress(h, #func)
@@ -1017,7 +1017,7 @@ HANDLE CreateProcessAtLevel(const WCHAR *exe, const WCHAR *args, DWORD level)
     if (!_SaferCreateLevel(SAFER_SCOPEID_USER, level, 0, &slh, NULL))
         return NULL;
 
-    ScopedMem<WCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
+    ScopedMem<WCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : L""));
     PROCESS_INFORMATION pi;
     STARTUPINFO si = { 0 };
     si.cb = sizeof(si);
@@ -1180,7 +1180,7 @@ Error:
 
 // Note: MS_ENH_RSA_AES_PROV_XP isn't defined in the SDK shipping with VS2008
 #ifndef MS_ENH_RSA_AES_PROV_XP
-#define MS_ENH_RSA_AES_PROV_XP _T("Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)")
+#define MS_ENH_RSA_AES_PROV_XP L"Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)"
 #endif
 #ifndef PROV_RSA_AES
 #define PROV_RSA_AES 24

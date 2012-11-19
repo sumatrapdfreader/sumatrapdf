@@ -12,7 +12,7 @@
 #define CURR_VERSION_COMMA 2,2,0
 #endif
 
-#define APP_NAME_STR       _T("SumatraPDF")
+#define APP_NAME_STR       L"SumatraPDF"
 
 // #define SVN_PRE_RELEASE_VER 2295
 

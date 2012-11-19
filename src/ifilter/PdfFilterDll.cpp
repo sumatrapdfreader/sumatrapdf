@@ -123,7 +123,7 @@ STDAPI DllRegisterServer()
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",
                 NULL,                   path },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",
-                _T("ThreadingModel"),   L"Both" },
+                L"ThreadingModel",   L"Both" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
                 NULL,                   L"SumatraPDF IFilter Persistent Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER L"\\PersistentAddinsRegistered",

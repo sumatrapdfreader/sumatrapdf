@@ -336,7 +336,7 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
     // (unless they're of an allowed perceived type) and never launch any external
     // file in plugin mode (where documents are supposed to be self-contained)
     WCHAR drive;
-    if (str::StartsWith(path, _T("\\")) || str::Parse(path, _T("%c:\\"), &drive) || gPluginMode) {
+    if (str::StartsWith(path, L"\\") || str::Parse(path, L"%c:\\", &drive) || gPluginMode) {
         return;
     }
 

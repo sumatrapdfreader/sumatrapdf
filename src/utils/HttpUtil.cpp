@@ -9,7 +9,7 @@
 #include "WinUtil.h"
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
-#define USER_AGENT _T("BaseHTTP")
+#define USER_AGENT L"BaseHTTP"
 
 // returns ERROR_SUCCESS or an error code
 DWORD HttpGet(const WCHAR *url, str::Str<char> *dataOut)
@@ -110,7 +110,7 @@ bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, st
         goto Exit;
 
     DWORD flags = INTERNET_FLAG_KEEP_CONNECTION;
-    hReq = HttpOpenRequest(hConn, _T("POST"), url, NULL, NULL, NULL, flags, NULL);
+    hReq = HttpOpenRequest(hConn, L"POST", url, NULL, NULL, NULL, flags, NULL);
     if (!hReq)
         goto Exit;
     char *hdr = NULL;

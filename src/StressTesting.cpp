@@ -43,16 +43,16 @@ static bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange>& result)
         return false;
 
     WStrVec rangeList;
-    rangeList.Split(ranges, _T(","), true);
+    rangeList.Split(ranges, L",", true);
     rangeList.SortNatural();
 
     for (size_t i = 0; i < rangeList.Count(); i++) {
         int start, end;
-        if (str::Parse(rangeList.At(i), _T("%d-%d%$"), &start, &end) && 0 < start && start <= end)
+        if (str::Parse(rangeList.At(i), L"%d-%d%$", &start, &end) && 0 < start && start <= end)
             result.Append(PageRange(start, end));
-        else if (str::Parse(rangeList.At(i), _T("%d-%$"), &start) && 0 < start)
+        else if (str::Parse(rangeList.At(i), L"%d-%$", &start) && 0 < start)
             result.Append(PageRange(start, INT_MAX));
-        else if (str::Parse(rangeList.At(i), _T("%d%$"), &start) && 0 < start)
+        else if (str::Parse(rangeList.At(i), L"%d%$", &start) && 0 < start)
             result.Append(PageRange(start, start));
         else
             return false;
@@ -109,7 +109,7 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
 bool IsBenchPagesInfo(const WCHAR *s)
 {
-    return str::EqI(s, _T("loadonly")) || IsValidPageRange(s);
+    return str::EqI(s, L"loadonly") || IsValidPageRange(s);
 }
 
 static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
@@ -161,7 +161,7 @@ static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
 static void BenchDir(WCHAR *dir)
 {
     WStrVec files;
-    ScopedMem<WCHAR> pattern(str::Format(_T("%s\\*.pdf"), dir));
+    ScopedMem<WCHAR> pattern(str::Format(L"%s\\*.pdf", dir));
     CollectPathsFromDirectory(pattern, files, false);
     for (size_t i = 0; i < files.Count(); i++) {
         BenchFile(files.At(i), NULL);
@@ -188,7 +188,7 @@ void BenchFileOrDir(WStrVec& pathsToBench)
 
 inline bool IsSpecialDir(const WCHAR *s)
 {
-    return str::Eq(s, _T(".")) || str::Eq(s, _T(".."));
+    return str::Eq(s, L".") || str::Eq(s, L"..");
 }
 
 bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles)
@@ -221,7 +221,7 @@ static bool IsStressTestSupportedFile(const WCHAR *fileName, const WCHAR *filter
 
 static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR *dirPath, const WCHAR *filter, WStrVec& paths)
 {
-    ScopedMem<WCHAR> pattern(path::Join(dirPath, _T("*")));
+    ScopedMem<WCHAR> pattern(path::Join(dirPath, L"*"));
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -263,10 +263,10 @@ static WCHAR *FormatTime(int totalSecs)
     int mins = totalMins % 60;
     int hrs = totalMins / 60;
     if (hrs > 0)
-        return str::Format(_T("%d hrs %d mins %d secs"), hrs, mins, secs);
+        return str::Format(L"%d hrs %d mins %d secs", hrs, mins, secs);
     if (mins > 0)
-        return str::Format(_T("%d mins %d secs"), mins, secs);
-    return str::Format(_T("%d secs"), secs);
+        return str::Format(L"%d mins %d secs", mins, secs);
+    return str::Format(L"%d secs", secs);
 }
 
 static void FormatTime(int totalSecs, str::Str<char> *s)
@@ -353,7 +353,7 @@ void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *rang
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
 
     basePath.Set(str::Dup(path));
-    fileFilter.Set(filter && !str::Eq(filter, _T("*")) ? str::Dup(filter) : NULL);
+    fileFilter.Set(filter && !str::Eq(filter, L"*") ? str::Dup(filter) : NULL);
     if (file::Exists(basePath)) {
         filesToOpen.Append(str::Dup(basePath));
         ParsePageRanges(ranges, pageRanges);
@@ -364,7 +364,7 @@ void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *rang
     }
     else {
         // Note: dev only, don't translate
-        ScopedMem<WCHAR> s(str::Format(_T("Path '%s' doesn't exist"), path));
+        ScopedMem<WCHAR> s(str::Format(L"Path '%s' doesn't exist", path));
         ShowNotification(win, s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
         Finished(false);
         return;
@@ -390,7 +390,7 @@ void StressTest::Finished(bool success)
     if (success) {
         int secs = SecsSinceSystemTime(stressStartTime);
         ScopedMem<WCHAR> tm(FormatTime(secs));
-        ScopedMem<WCHAR> s(str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
+        ScopedMem<WCHAR> s(str::Format(L"Stress test complete, rendered %d files in %s", filesCount, tm));
         ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
     }
 
@@ -405,7 +405,7 @@ bool StressTest::OpenDir(const WCHAR *dirPath)
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
     filesToOpen.SortNatural();
 
-    ScopedMem<WCHAR> pattern(str::Format(_T("%s\\*"), dirPath));
+    ScopedMem<WCHAR> pattern(str::Format(L"%s\\*", dirPath));
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
@@ -445,7 +445,7 @@ bool StressTest::GoToNextFile()
 bool StressTest::OpenFile(const WCHAR *fileName)
 {
     bool reuse = rand() % 3 != 1;
-    _tprintf(_T("%s\n"), fileName);
+    _tprintf(L"%s\n", fileName);
     fflush(stdout);
     LoadArgs args(fileName, NULL, true /* show */, reuse);
     WindowInfo *w = LoadDocument(args);
@@ -497,13 +497,13 @@ bool StressTest::OpenFile(const WCHAR *fileName)
     // search immediately in single page documents
     if (1 == pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
-        win::SetText(win->hwndFindBox, _T("!z_yt"));
+        win::SetText(win->hwndFindBox, L"!z_yt");
         FindTextOnThread(win);
     }
 
     int secs = SecsSinceSystemTime(stressStartTime);
     ScopedMem<WCHAR> tm(FormatTime(secs));
-    ScopedMem<WCHAR> s(str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
+    ScopedMem<WCHAR> s(str::Format(L"File %d: %s, time: %s", filesCount, fileName, tm));
     ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
 
     return true;
@@ -512,7 +512,7 @@ bool StressTest::OpenFile(const WCHAR *fileName)
 bool StressTest::GoToNextPage()
 {
     double pageRenderTime = currPageRenderTime.GetTimeInMs();
-    ScopedMem<WCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage, (int)pageRenderTime));
+    ScopedMem<WCHAR> s(str::Format(L"Page %d rendered in %d milliseconds", currPage, (int)pageRenderTime));
     ShowNotification(win, s, true, false, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;
@@ -537,7 +537,7 @@ bool StressTest::GoToNextPage()
     // current API doesn't make it easy
     if (currPage == pageForSearchStart) {
         // use text that is unlikely to be found, so that we search all pages
-        win::SetText(win->hwndFindBox, _T("!z_yt"));
+        win::SetText(win->hwndFindBox, L"!z_yt");
         FindTextOnThread(win);
     }
 

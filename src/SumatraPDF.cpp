@@ -97,14 +97,14 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 #define COL_WINDOW_BG           RGB(0x99, 0x99, 0x99)
 #endif
 
-#define CANVAS_CLASS_NAME            _T("SUMATRA_PDF_CANVAS")
-#define SIDEBAR_SPLITTER_CLASS_NAME  _T("SidebarSplitter")
-#define FAV_SPLITTER_CLASS_NAME      _T("FavSplitter")
-#define RESTRICTIONS_FILE_NAME       _T("sumatrapdfrestrict.ini")
-#define CRASH_DUMP_FILE_NAME         _T("sumatrapdfcrash.dmp")
+#define CANVAS_CLASS_NAME            L"SUMATRA_PDF_CANVAS"
+#define SIDEBAR_SPLITTER_CLASS_NAME  L"SidebarSplitter"
+#define FAV_SPLITTER_CLASS_NAME      L"FavSplitter"
+#define RESTRICTIONS_FILE_NAME       L"sumatrapdfrestrict.ini"
+#define CRASH_DUMP_FILE_NAME         L"sumatrapdfcrash.dmp"
 
-#define DEFAULT_LINK_PROTOCOLS       _T("http,https,mailto")
-#define DEFAULT_FILE_PERCEIVED_TYPES _T("audio,video")
+#define DEFAULT_LINK_PROTOCOLS       L"http,https,mailto"
+#define DEFAULT_FILE_PERCEIVED_TYPES L"audio,video"
 
 #define SPLITTER_DX         5
 #define SIDEBAR_MIN_WIDTH   150
@@ -195,17 +195,17 @@ bool CurrLangNameSet(const char *langName)
 
 #ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
-#define SUMATRA_UPDATE_INFO_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt")
+#define SUMATRA_UPDATE_INFO_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt"
 #else
-#define SUMATRA_UPDATE_INFO_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-latest.txt")
+#define SUMATRA_UPDATE_INFO_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-latest.txt"
 #endif
 #endif
 
 #ifndef SVN_UPDATE_LINK
 #ifdef SVN_PRE_RELEASE_VER
-#define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf/prerelease.html")
+#define SVN_UPDATE_LINK         L"http://blog.kowalczyk.info/software/sumatrapdf/prerelease.html"
 #else
-#define SVN_UPDATE_LINK         _T("http://blog.kowalczyk.info/software/sumatrapdf/download-free-pdf-viewer.html")
+#define SVN_UPDATE_LINK         L"http://blog.kowalczyk.info/software/sumatrapdf/download-free-pdf-viewer.html"
 #endif
 #endif
 
@@ -220,13 +220,13 @@ bool LaunchBrowser(const WCHAR *url)
 
     // check if this URL's protocol is allowed
     ScopedMem<WCHAR> protocol;
-    if (!str::Parse(url, _T("%S:"), &protocol))
+    if (!str::Parse(url, L"%S:", &protocol))
         return false;
     str::ToLower(protocol);
     if (gAllowedLinkProtocols.Find(protocol) == -1)
         return false;
 
-    return LaunchFile(url, NULL, _T("open"));
+    return LaunchFile(url, NULL, L"open");
 }
 
 // lets the shell open a file of any supported perceived type
@@ -238,14 +238,14 @@ bool OpenFileExternally(const WCHAR *path)
 
     // check if this file's perceived type is allowed
     const WCHAR *ext = path::GetExt(path);
-    ScopedMem<WCHAR> perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
+    ScopedMem<WCHAR> perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
-    if (str::EndsWithI(path, _T(".htm")) || str::EndsWithI(path, _T(".html")) || str::EndsWithI(path, _T(".xhtml")))
-        perceivedType.Set(str::Dup(_T("webpage")));
+    if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml"))
+        perceivedType.Set(str::Dup(L"webpage"));
     if (str::IsEmpty(perceivedType.Get()))
         return false;
     str::ToLower(perceivedType);
-    if (gAllowedFileTypes.Find(perceivedType) == -1 && gAllowedFileTypes.Find(_T("*")) == -1)
+    if (gAllowedFileTypes.Find(perceivedType) == -1 && gAllowedFileTypes.Find(L"*") == -1)
         return false;
 
     // TODO: only do this for trusted files (cf. IsUntrustedFile)?
@@ -610,13 +610,13 @@ static int GetPolicies(bool isRestricted)
         const WCHAR *name;
         int perm;
     } policies[] = {
-        { _T("InternetAccess"), Perm_InternetAccess },
-        { _T("DiskAccess"),     Perm_DiskAccess },
-        { _T("SavePreferences"),Perm_SavePreferences },
-        { _T("RegistryAccess"), Perm_RegistryAccess },
-        { _T("PrinterAccess"),  Perm_PrinterAccess },
-        { _T("CopySelection"),  Perm_CopySelection },
-        { _T("FullscreenAccess"),Perm_FullscreenAccess },
+        { L"InternetAccess", Perm_InternetAccess },
+        { L"DiskAccess",     Perm_DiskAccess },
+        { L"SavePreferences",Perm_SavePreferences },
+        { L"RegistryAccess", Perm_RegistryAccess },
+        { L"PrinterAccess",  Perm_PrinterAccess },
+        { L"CopySelection",  Perm_CopySelection },
+        { L"FullscreenAccess",Perm_FullscreenAccess },
     };
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
@@ -631,30 +631,30 @@ static int GetPolicies(bool isRestricted)
     if (file::Exists(restrictPath)) {
         int policy = Perm_RestrictedUse;
         for (size_t i = 0; i < dimof(policies); i++) {
-            int check = GetPrivateProfileInt(_T("Policies"), policies[i].name, 0, restrictPath);
+            int check = GetPrivateProfileInt(L"Policies", policies[i].name, 0, restrictPath);
             if (check)
                 policy = policy | policies[i].perm;
         }
 
         // determine the list of allowed link protocols and perceived file types
         if ((policy & Perm_DiskAccess)) {
-            ScopedMem<WCHAR> protocols(ReadIniString(restrictPath, _T("Policies"), _T("LinkProtocols")));
+            ScopedMem<WCHAR> protocols(ReadIniString(restrictPath, L"Policies", L"LinkProtocols"));
             str::ToLower(protocols);
-            str::TransChars(protocols, _T(":; "), _T(",,,"));
-            gAllowedLinkProtocols.Split(protocols, _T(","), true);
+            str::TransChars(protocols, L":; ", L",,,");
+            gAllowedLinkProtocols.Split(protocols, L",", true);
 
-            ScopedMem<WCHAR> types(ReadIniString(restrictPath, _T("Policies"), _T("SafeFileTypes")));
+            ScopedMem<WCHAR> types(ReadIniString(restrictPath, L"Policies", L"SafeFileTypes"));
             str::ToLower(types);
-            str::TransChars(types, _T(":; "), _T(",,,"));
-            gAllowedFileTypes.Split(types, _T(","), true);
+            str::TransChars(types, L":; ", L",,,");
+            gAllowedFileTypes.Split(types, L",", true);
         }
 
         return policy;
     }
 
     if (!isRestricted) {
-        gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, _T(","));
-        gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, _T(","));
+        gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
+        gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
         return Perm_All;
     }
 
@@ -906,7 +906,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
             chmEngine->SetParentHwnd(win->hwndCanvas);
     } else if (allowFailure) {
         delete prevModel;
-        ScopedMem<WCHAR> title2(str::Format(_T("%s - %s"), path::GetBaseName(args.fileName), SUMATRA_WINDOW_TITLE));
+        ScopedMem<WCHAR> title2(str::Format(L"%s - %s", path::GetBaseName(args.fileName), SUMATRA_WINDOW_TITLE));
         win::SetText(win->hwndFrame, title2);
         goto Error;
     } else {
@@ -959,16 +959,16 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     if (docTitle) {
         str::NormalizeWS(docTitle);
         if (!str::IsEmpty(docTitle)) {
-            ScopedMem<WCHAR> docTitleBit(str::Format(_T("- [%s] "), docTitle));
+            ScopedMem<WCHAR> docTitleBit(str::Format(L"- [%s] ", docTitle));
             free(docTitle);
             docTitle = docTitleBit.StealData();
         }
     }
-    title.Set(str::Format(_T("%s %s- %s"), baseName, docTitle ? docTitle : _T(""), SUMATRA_WINDOW_TITLE));
+    title.Set(str::Format(L"%s %s- %s", baseName, docTitle ? docTitle : L"", SUMATRA_WINDOW_TITLE));
 #ifdef UNICODE
     if (IsUIRightToLeft()) {
         // explicitly revert the title, so that filenames aren't garbled
-        title.Set(str::Format(_T("%s %s- %s"), SUMATRA_WINDOW_TITLE, docTitle ? docTitle : _T(""), baseName));
+        title.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle ? docTitle : L"", baseName));
     }
 #endif
     free(docTitle);
@@ -1104,11 +1104,11 @@ static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 
 static void CreateSidebar(WindowInfo* win)
 {
-    win->hwndSidebarSplitter = CreateWindow(SIDEBAR_SPLITTER_CLASS_NAME, _T(""),
+    win->hwndSidebarSplitter = CreateWindow(SIDEBAR_SPLITTER_CLASS_NAME, L"",
         WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
 
     CreateToc(win);
-    win->hwndFavSplitter = CreateWindow(FAV_SPLITTER_CLASS_NAME, _T(""),
+    win->hwndFavSplitter = CreateWindow(FAV_SPLITTER_CLASS_NAME, L"",
         WS_CHILDWINDOW, 0, 0, 0, 0, win->hwndFrame, (HMENU)0, ghinst, NULL);
     CreateFavorites(win);
 
@@ -1485,10 +1485,10 @@ void WindowInfo::PageNoChanged(int pageNo)
     if (NULL == wnd)
         return;
 
-    ScopedMem<WCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->PageCount()));
+    ScopedMem<WCHAR> pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, dm->PageCount()));
     if (dm->engine && dm->engine->HasPageLabels()) {
         ScopedMem<WCHAR> label(dm->engine->GetPageLabel(pageNo));
-        pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, pageNo, dm->PageCount()));
+        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, pageNo, dm->PageCount()));
     }
     wnd->UpdateMessage(pageInfo);
 }
@@ -1625,7 +1625,7 @@ void OnDropFiles(HDROP hDrop)
     for (int i = 0; i < count; i++)
     {
         DragQueryFile(hDrop, i, filePath, dimof(filePath));
-        if (str::EndsWithI(filePath, _T(".lnk"))) {
+        if (str::EndsWithI(filePath, L".lnk")) {
             ScopedMem<WCHAR> resolved(ResolveLnk(filePath));
             if (resolved)
                 str::BufSet(filePath, dimof(filePath), resolved);
@@ -1664,7 +1664,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 
     ScopedMem<WCHAR> verTxt(str::conv::FromAnsi(txt));
     /* reduce the string to a single line (resp. drop the newline) */
-    str::TransChars(verTxt, _T("\r\n"), _T("\0\0"));
+    str::TransChars(verTxt, L"\r\n", L"\0\0");
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
         if (!silent)
@@ -1756,7 +1756,7 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
             return;
     }
 
-    const WCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
+    const WCHAR *url = SUMATRA_UPDATE_INFO_URL L"?v=" UPDATE_CHECK_VER;
     new HttpReq(url, new UpdateDownloadTask(hwnd, autoCheck));
 
     FILETIME ft;
@@ -1903,7 +1903,7 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
             renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
-            ScopedFont fontRightTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
+            ScopedFont fontRightTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             SetTextColor(hdc, gRenderCache.colorRange[0]);
             if (renderDelay != RENDER_DELAY_FAILED) {
@@ -2123,9 +2123,9 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
             } else if (str::Eq(url, SLINK_LIST_SHOW)) {
                 gGlobalPrefs.showStartPage = true;
                 win.RedrawAll(true);
-            } else if (!str::StartsWithI(url, _T("http:")) &&
-                       !str::StartsWithI(url, _T("https:")) &&
-                       !str::StartsWithI(url, _T("mailto:"))) 
+            } else if (!str::StartsWithI(url, L"http:") &&
+                       !str::StartsWithI(url, L"https:") &&
+                       !str::StartsWithI(url, L"mailto:")) 
             {
                 LoadArgs args(url, &win);
                 LoadDocument(args);
@@ -2330,7 +2330,7 @@ static void OnPaint(WindowInfo& win)
         // and/or open it in an external viewer (e.g. Adobe Reader might
         // be able to handle PDFs that are too broken for MuPDF),
         // a notification would break this
-        ScopedFont fontRightTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
+        ScopedFont fontRightTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
         HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
@@ -2521,10 +2521,10 @@ static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<WCHAR>& fileFilter
         case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
-        case Engine_Fb2:    fileFilter.Append(_T("FictionBooks")); break;
-        case Engine_Pdb:    fileFilter.Append(_T("PalmDOC")); break;
+        case Engine_Fb2:    fileFilter.Append(L"FictionBooks"); break;
+        case Engine_Pdb:    fileFilter.Append(L"PalmDOC"); break;
         case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
-        case Engine_Tcr:    fileFilter.Append(_T("TCR ebooks")); break;
+        case Engine_Tcr:    fileFilter.Append(L"TCR ebooks"); break;
         case Engine_Txt:    fileFilter.Append(_TR("Text documents")); break;
         default:            fileFilter.Append(_TR("PDF documents")); break;
     }
@@ -2541,7 +2541,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (gPluginMode) {
         urlName.Set(ExtractFilenameFromURL(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        srcFileName = urlName ? urlName : _T("filename");
+        srcFileName = urlName ? urlName : L"filename";
     }
 
     assert(srcFileName);
@@ -2558,18 +2558,18 @@ static void OnMenuSaveAs(WindowInfo& win)
     // methods too early on)
     str::Str<WCHAR> fileFilter(256);
     AppendFileFilterForDoc(win.dm, fileFilter);
-    fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
+    fileFilter.AppendFmt(L"\1*%s\1", defExt);
     if (hasCopyPerm) {
         fileFilter.Append(_TR("Text documents"));
-        fileFilter.Append(_T("\1*.txt\1"));
+        fileFilter.Append(L"\1*.txt\1");
     }
     if (canConvertToPDF) {
         fileFilter.Append(_TR("PDF documents"));
-        fileFilter.Append(_T("\1*.pdf\1"));
+        fileFilter.Append(L"\1*.pdf\1");
     }
     fileFilter.Append(_TR("All files"));
-    fileFilter.Append(_T("\1*.*\1"));
-    str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
+    fileFilter.Append(L"\1*.*\1");
+    str::TransChars(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
@@ -2578,7 +2578,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         // remove the container document's extension and include
         // the embedding reference in the suggested filename
         WCHAR *colon = (WCHAR *)str::FindChar(dstFileName, ':');
-        str::TransChars(colon, _T(":"), _T("_"));
+        str::TransChars(colon, L":", L"_");
         WCHAR *ext;
         for (ext = colon; ext > dstFileName && *ext != '.'; ext--);
         if (ext == dstFileName)
@@ -2609,20 +2609,20 @@ static void OnMenuSaveAs(WindowInfo& win)
     WCHAR * realDstFileName = dstFileName;
     // Make sure that the file has a valid ending
     if (!str::EndsWithI(dstFileName, defExt) &&
-        !(hasCopyPerm && str::EndsWithI(dstFileName, _T(".txt"))) &&
-        !(canConvertToPDF && str::EndsWithI(dstFileName, _T(".pdf")))) {
+        !(hasCopyPerm && str::EndsWithI(dstFileName, L".txt")) &&
+        !(canConvertToPDF && str::EndsWithI(dstFileName, L".pdf"))) {
         if (hasCopyPerm && 2 == ofn.nFilterIndex)
-            defExt = _T(".txt");
+            defExt = L".txt";
         else if (canConvertToPDF && (hasCopyPerm ? 3 : 2) == ofn.nFilterIndex)
-            defExt = _T(".pdf");
-        realDstFileName = str::Format(_T("%s%s"), dstFileName, defExt);
+            defExt = L".pdf";
+        realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
     // Extract all text when saving as a plain text file
-    if (hasCopyPerm && str::EndsWithI(realDstFileName, _T(".txt"))) {
+    if (hasCopyPerm && str::EndsWithI(realDstFileName, L".txt")) {
         str::Str<WCHAR> text(1024);
         for (int pageNo = 1; pageNo <= win.dm->PageCount(); pageNo++) {
-            WCHAR *tmp = win.dm->engine->ExtractPageText(pageNo, _T("\r\n"), NULL, Target_Export);
+            WCHAR *tmp = win.dm->engine->ExtractPageText(pageNo, L"\r\n", NULL, Target_Export);
             text.AppendAndFree(tmp);
         }
 
@@ -2633,7 +2633,7 @@ static void OnMenuSaveAs(WindowInfo& win)
             MessageBoxWarning(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"));
     }
     // Convert the Postscript file into a PDF one
-    else if (canConvertToPDF && str::EndsWithI(realDstFileName, _T(".pdf"))) {
+    else if (canConvertToPDF && str::EndsWithI(realDstFileName, L".pdf")) {
         size_t dataLen;
         ScopedMem<unsigned char> data(static_cast<PsEngine *>(win.dm->engine)->GetPDFData(&dataLen));
         ok = data && file::WriteAll(realDstFileName, data, dataLen);
@@ -2660,7 +2660,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         } else {
             WCHAR *msgBuf, *errorMsg;
             if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPTSTR)&msgBuf, 0, NULL)) {
-                errorMsg = str::Format(_T("%s\n\n%s"), _TR("Failed to save a file"), msgBuf);
+                errorMsg = str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf);
                 LocalFree(msgBuf);
             } else {
                 errorMsg = str::Dup(_TR("Failed to save a file"));
@@ -2683,13 +2683,13 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, size_t len)
         return false;
 
     WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), fileName ? fileName : _T(""));
+    str::BufSet(dstFileName, dimof(dstFileName), fileName ? fileName : L"");
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<WCHAR> fileFilter(str::Format(_T("%s\1*.*\1"), _TR("All files")));
-    str::TransChars(fileFilter, _T("\1"), _T("\0"));
+    ScopedMem<WCHAR> fileFilter(str::Format(L"%s\1*.*\1", _TR("All files")));
+    str::TransChars(fileFilter, L"\1", L"\0");
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
@@ -2727,8 +2727,8 @@ static void OnMenuRenameFile(WindowInfo &win)
     const WCHAR *defExt = win.dm->engine->GetDefaultFileExt();
     str::Str<WCHAR> fileFilter(256);
     AppendFileFilterForDoc(win.dm, fileFilter);
-    fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
-    str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
+    fileFilter.AppendFmt(L"\1*%s\1", defExt);
+    str::TransChars(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
@@ -2788,15 +2788,15 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     WCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be replaced with .lnk
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.dm->FilePath()));
-    str::TransChars(dstFileName, _T(":"), _T("_"));
+    str::TransChars(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<WCHAR> fileFilter(str::Format(_T("%s\1*.lnk\1"), _TR("Bookmark Shortcuts")));
-    str::TransChars(fileFilter, _T("\1"), _T("\0"));
+    ScopedMem<WCHAR> fileFilter(str::Format(L"%s\1*.lnk\1", _TR("Bookmark Shortcuts")));
+    str::TransChars(fileFilter, L"\1", L"\0");
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
@@ -2805,25 +2805,25 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
     ofn.nFilterIndex = 1;
-    ofn.lpstrDefExt = _T("lnk");
+    ofn.lpstrDefExt = L"lnk";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     if (!GetSaveFileName(&ofn))
         return;
 
     ScopedMem<WCHAR> filename(str::Dup(dstFileName));
-    if (!str::EndsWithI(dstFileName, _T(".lnk")))
-        filename.Set(str::Join(dstFileName, _T(".lnk")));
+    if (!str::EndsWithI(dstFileName, L".lnk"))
+        filename.Set(str::Join(dstFileName, L".lnk"));
 
     ScrollState ss = win.dm->GetScrollState();
     const WCHAR *viewMode = DisplayModeConv::NameFromEnum(win.dm->GetDisplayMode());
-    ScopedMem<WCHAR> ZoomVirtual(str::Format(_T("%.2f"), win.dm->ZoomVirtual()));
+    ScopedMem<WCHAR> ZoomVirtual(str::Format(L"%.2f", win.dm->ZoomVirtual()));
     if (ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
-        ZoomVirtual.Set(str::Dup(_T("fitpage")));
+        ZoomVirtual.Set(str::Dup(L"fitpage"));
     else if (ZOOM_FIT_WIDTH == win.dm->ZoomVirtual())
-        ZoomVirtual.Set(str::Dup(_T("fitwidth")));
+        ZoomVirtual.Set(str::Dup(L"fitwidth"));
     else if (ZOOM_FIT_CONTENT == win.dm->ZoomVirtual())
-        ZoomVirtual.Set(str::Dup(_T("fitcontent")));
+        ZoomVirtual.Set(str::Dup(L"fitcontent"));
 
     ScopedMem<WCHAR> exePath(GetExePath());
     ScopedMem<WCHAR> args(str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
@@ -2888,18 +2888,18 @@ void OnMenuOpen(SumatraWindow& win)
         WCHAR *filter;
         bool available;
     } fileFormats[] = {
-        { _TR("PDF documents"),         _T("*.pdf"),        true },
-        { _TR("XPS documents"),         _T("*.xps"),        true },
-        { _TR("DjVu documents"),        _T("*.djvu"),       true },
-        { _TR("Postscript documents"),  _T("*.ps;*.eps"),   PsEngine::IsAvailable() },
-        { _TR("Comic books"),           _T("*.cbz;*.cbr"),  true },
-        { _TR("CHM documents"),         _T("*.chm"),        true },
-        { _TR("Mobi documents"),        _T("*.mobi"),       true },
-        { _TR("EPUB ebooks"),           _T("*.epub"),       true },
-        { _T("FictionBooks"),           _T("*.fb2;*.fb2z;*.zfb2"), !gUseEbookUI },
-        { _T("PalmDOC"),                _T("*.pdb"),        !gUseEbookUI },
-        { _T("TCR ebooks"),             _T("*.tcr"),        !gUseEbookUI },
-        { _TR("Text documents"),        _T("*.txt;*.log;*.nfo;file_id.diz;read.me"), !gUseEbookUI },
+        { _TR("PDF documents"),         L"*.pdf",        true },
+        { _TR("XPS documents"),         L"*.xps",        true },
+        { _TR("DjVu documents"),        L"*.djvu",       true },
+        { _TR("Postscript documents"),  L"*.ps;*.eps",   PsEngine::IsAvailable() },
+        { _TR("Comic books"),           L"*.cbz;*.cbr",  true },
+        { _TR("CHM documents"),         L"*.chm",        true },
+        { _TR("Mobi documents"),        L"*.mobi",       true },
+        { _TR("EPUB ebooks"),           L"*.epub",       true },
+        { L"FictionBooks",           L"*.fb2;*.fb2z;*.zfb2", !gUseEbookUI },
+        { L"PalmDOC",                L"*.pdb",        !gUseEbookUI },
+        { L"TCR ebooks",             L"*.tcr",        !gUseEbookUI },
+        { _TR("Text documents"),        L"*.txt;*.log;*.nfo;file_id.diz;read.me", !gUseEbookUI },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -2912,7 +2912,7 @@ void OnMenuOpen(SumatraWindow& win)
     }
     fileFilter.Append(_TR("All supported documents"));
     fileFilter.Append('\1');
-    fileFilter.AppendAndFree(filters.Join(_T(";")));
+    fileFilter.AppendAndFree(filters.Join(L";"));
     fileFilter.Append('\1');
     filters.Reset();
 
@@ -2920,11 +2920,11 @@ void OnMenuOpen(SumatraWindow& win)
         if (fileFormats[i].available) {
             const WCHAR *name = fileFormats[i].name;
             WCHAR *filter = fileFormats[i].filter;
-            fileFilter.AppendAndFree(str::Format(_T("%s\1%s\1"), name, filter));
+            fileFilter.AppendAndFree(str::Format(L"%s\1%s\1", name, filter));
         }
     }
-    fileFilter.AppendAndFree(str::Format(_T("%s\1*.*\1"), _TR("All files")));
-    str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
+    fileFilter.AppendAndFree(str::Format(L"%s\1*.*\1", _TR("All files")));
+    str::TransChars(fileFilter.Get(), L"\1", L"\0");
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
@@ -2980,7 +2980,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     const WCHAR *fileExt = path::GetExt(win.loadedFilePath);
     if (win.IsDocLoaded())
         fileExt = win.dm->engine->GetDefaultFileExt();
-    ScopedMem<WCHAR> pattern(str::Format(_T("*%s"), fileExt));
+    ScopedMem<WCHAR> pattern(str::Format(L"*%s", fileExt));
     ScopedMem<WCHAR> dir(path::GetDir(win.loadedFilePath));
     pattern.Set(path::Join(dir, pattern));
 
@@ -3648,10 +3648,10 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
         // total pages count a one-key action (unless they're already visible)
         if (!gGlobalPrefs.toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->CurrentPageNo(), total = win.dm->PageCount();
-            ScopedMem<WCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
+            ScopedMem<WCHAR> pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
                 ScopedMem<WCHAR> label(win.dm->engine->GetPageLabel(current));
-                pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, current, total));
+                pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, current, total));
             }
             bool autoDismiss = !IsShiftPressed();
             ShowNotification(&win, pageInfo, autoDismiss, false, NG_PAGE_INFO_HELPER);
@@ -3885,7 +3885,7 @@ LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             TrackMouseEvent(&tme);
         }
     } else if (WM_MOUSELEAVE == msg) {
-        win::SetText(hwnd, _T(""));
+        win::SetText(hwnd, L"");
         stateChanged = true;
     }
 

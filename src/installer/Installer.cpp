@@ -322,7 +322,7 @@ bool RegisterServerDLL(WCHAR *dllPath, bool unregister=false)
     }
 
     if (_SetDllDirectory)
-        _SetDllDirectory(_T(""));
+        _SetDllDirectory(L"");
 
     OleUninitialize();
 
@@ -940,7 +940,7 @@ static void ParseCommandLine(WCHAR *cmdLine)
     }
 }
 
-#define CRASH_DUMP_FILE_NAME         _T("suminstaller.dmp")
+#define CRASH_DUMP_FILE_NAME         L"suminstaller.dmp"
 
 // no-op but must be defined for CrashHandler.cpp
 void CrashHandlerMessage() { }

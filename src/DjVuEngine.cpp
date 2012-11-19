@@ -233,7 +233,7 @@ public:
 
     // DPI isn't constant for all pages and thus premultiplied
     virtual float GetFileDPI() const { return 300.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const { return _T(".djvu"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".djvu"; }
 
     // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
@@ -878,7 +878,7 @@ bool DjVuEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
     if (sniff)
         return file::StartsWith(fileName, "AT&T");
 
-    return str::EndsWithI(fileName, _T(".djvu"));
+    return str::EndsWithI(fileName, L".djvu");
 }
 
 DjVuEngine *DjVuEngine::CreateFromFile(const WCHAR *fileName)

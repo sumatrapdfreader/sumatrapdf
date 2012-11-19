@@ -183,7 +183,7 @@ EpubDoc::~EpubDoc()
 
 bool EpubDoc::Load()
 {
-    ScopedMem<char> container(zip.GetFileData(_T("META-INF/container.xml")));
+    ScopedMem<char> container(zip.GetFileData(L"META-INF/container.xml"));
     if (!container)
         return false;
     HtmlParser parser;
@@ -219,12 +219,12 @@ bool EpubDoc::Load()
 
     for (node = node->down; node; node = node->next) {
         ScopedMem<WCHAR> mediatype(node->GetAttribute("media-type"));
-        if (str::Eq(mediatype, _T("application/xhtml+xml"))) {
+        if (str::Eq(mediatype, L"application/xhtml+xml")) {
             ScopedMem<WCHAR> htmlPath(node->GetAttribute("href"));
             ScopedMem<WCHAR> htmlId(node->GetAttribute("id"));
             // EPUB 3 ToC
             ScopedMem<WCHAR> props(node->GetAttribute("properties"));
-            if (props && str::Find(props, _T("nav"))) {
+            if (props && str::Find(props, L"nav")) {
                 isNcxToc = false;
                 tocPath.Set(str::Join(contentPath, htmlPath));
                 str::UrlDecodeInPlace(tocPath);
@@ -234,9 +234,9 @@ bool EpubDoc::Load()
                 idPathMap.Append(htmlPath.StealData());
             }
         }
-        else if (str::Eq(mediatype, _T("image/png"))  ||
-                 str::Eq(mediatype, _T("image/jpeg")) ||
-                 str::Eq(mediatype, _T("image/gif"))) {
+        else if (str::Eq(mediatype, L"image/png")  ||
+                 str::Eq(mediatype, L"image/jpeg") ||
+                 str::Eq(mediatype, L"image/gif")) {
             ScopedMem<WCHAR> imgPath(node->GetAttribute("href"));
             if (!imgPath)
                 continue;
@@ -248,7 +248,7 @@ bool EpubDoc::Load()
             data.idx = zip.GetFileIndex(imgPath);
             images.Append(data);
         }
-        else if (str::Eq(mediatype, _T("application/x-dtbncx+xml")) && !tocPath) {
+        else if (str::Eq(mediatype, L"application/x-dtbncx+xml") && !tocPath) {
             // EPUB 2 ToC
             tocPath.Set(node->GetAttribute("href"));
             if (tocPath) {
@@ -264,7 +264,7 @@ bool EpubDoc::Load()
         return false;
     ScopedMem<WCHAR> readingDir(node->GetAttribute("page-progression-direction"));
     if (readingDir)
-        isRtlDoc = str::EqI(readingDir, _T("rtl"));
+        isRtlDoc = str::EqI(readingDir, L"rtl");
     for (node = node->down; node; node = node->next) {
         if (!node->NameIsNS("itemref", EPUB_OPF_NS))
             continue;
@@ -514,7 +514,7 @@ bool EpubDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         ZipFile zip(fileName);
-        ScopedMem<char> mimetype(zip.GetFileData(_T("mimetype")));
+        ScopedMem<char> mimetype(zip.GetFileData(L"mimetype"));
         if (!mimetype)
             return false;
         // trailing whitespace is allowed for the mimetype file
@@ -526,14 +526,14 @@ bool EpubDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
         // a proper EPUB document has a "mimetype" file with content
         // "application/epub+zip" as the first entry in its ZIP structure
         /* cf. http://forums.fofou.org/sumatrapdf/topic?id=2599331
-        if (!str::Eq(zip.GetFileName(0), _T("mimetype")))
+        if (!str::Eq(zip.GetFileName(0), L"mimetype"))
             return false; */
         return str::Eq(mimetype, "application/epub+zip") ||
                // also open renamed .ibooks files
                // cf. http://en.wikipedia.org/wiki/IBooks#Formats
                str::Eq(mimetype, "application/x-ibooks+zip");
     }
-    return str::EndsWithI(fileName, _T(".epub"));
+    return str::EndsWithI(fileName, L".epub");
 }
 
 EpubDoc *EpubDoc::CreateFromFile(const WCHAR *fileName)
@@ -573,9 +573,9 @@ bool Fb2Doc::Load()
 {
     size_t len;
     ScopedMem<char> data;
-    if (str::EndsWithI(fileName, _T(".zip")) ||
-        str::EndsWithI(fileName, _T(".fb2z")) ||
-        str::EndsWithI(fileName, _T(".zfb2"))) {
+    if (str::EndsWithI(fileName, L".zip") ||
+        str::EndsWithI(fileName, L".fb2z") ||
+        str::EndsWithI(fileName, L".zfb2")) {
         ZipFile archive(fileName);
         data.Set(archive.GetFileData((size_t)0, &len));
         isZipped = true;
@@ -631,7 +631,7 @@ bool Fb2Doc::Load()
                     ScopedMem<char> tmp(str::DupN(tok->s, tok->sLen));
                     ScopedMem<WCHAR> author(DecodeHtmlEntitites(tmp, CP_UTF8));
                     if (docAuthor)
-                        docAuthor.Set(str::Join(docAuthor, _T(" "), author));
+                        docAuthor.Set(str::Join(docAuthor, L" ", author));
                     else
                         docAuthor.Set(author.StealData());
                 }
@@ -723,10 +723,10 @@ bool Fb2Doc::IsZipped() const
 
 bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    return str::EndsWithI(fileName, _T(".fb2"))  ||
-           str::EndsWithI(fileName, _T(".fb2z")) ||
-           str::EndsWithI(fileName, _T(".zfb2")) ||
-           str::EndsWithI(fileName, _T(".fb2.zip"));
+    return str::EndsWithI(fileName, L".fb2")  ||
+           str::EndsWithI(fileName, L".fb2z") ||
+           str::EndsWithI(fileName, L".zfb2") ||
+           str::EndsWithI(fileName, L".fb2.zip");
 }
 
 Fb2Doc *Fb2Doc::CreateFromFile(const WCHAR *fileName)
@@ -913,13 +913,13 @@ ImageData *PalmDoc::GetImageData(const char *id)
     ScopedMem<WCHAR> src(str::conv::FromUtf8(id));
     WCHAR *colon = (WCHAR *)str::FindCharLast(src.Get(), ':');
     uint32_t idx;
-    if (!colon || !str::Parse(colon + 1, _T("%u%$"), &idx))
+    if (!colon || !str::Parse(colon + 1, L"%u%$", &idx))
         return NULL;
     *colon = '\0';
     ScopedMem<WCHAR> dbPath(path::GetDir(GetFileName()));
     dbPath.Set(path::Join(dbPath, src));
     if (!file::Exists(dbPath))
-        dbPath.Set(str::Join(dbPath, _T(".pdb")));
+        dbPath.Set(str::Join(dbPath, L".pdb"));
 
     ImageData2 data = { 0 };
     data.base.data = LoadTealPaintImage(dbPath, idx, &data.base.len);
@@ -943,7 +943,7 @@ bool PalmDoc::HasToc() const
 bool PalmDoc::ParseToc(EbookTocVisitor *visitor)
 {
     for (size_t i = 0; i < tocEntries.Count(); i++) {
-        ScopedMem<WCHAR> name(str::Format(_T(PDB_TOC_ENTRY_MARK) _T("%d"), i + 1));
+        ScopedMem<WCHAR> name(str::Format(_T(PDB_TOC_ENTRY_MARK) L"%d", i + 1));
         visitor->Visit(tocEntries.At(i), name, 1);
     }
     return true;
@@ -1214,7 +1214,7 @@ bool PalmDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
                str::Eq(pdbReader.GetDbType(), "DataTlPt");
     }
 
-    return str::EndsWithI(fileName, _T(".pdb"));
+    return str::EndsWithI(fileName, L".pdb");
 }
 
 PalmDoc *PalmDoc::CreateFromFile(const WCHAR *fileName)
@@ -1290,7 +1290,7 @@ bool TcrDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
     if (sniff)
         return file::StartsWith(fileName, TCR_HEADER);
 
-    return str::EndsWithI(fileName, _T(".tcr"));
+    return str::EndsWithI(fileName, L".tcr");
 }
 
 TcrDoc *TcrDoc::CreateFromFile(const WCHAR *fileName)
@@ -1375,7 +1375,7 @@ ImageData *HtmlDoc::GetImageData(const char *id)
     }
 
     ScopedMem<WCHAR> path(str::conv::FromUtf8(url));
-    str::TransChars(path, _T("/"), _T("\\"));
+    str::TransChars(path, L"/", L"\\");
     ImageData2 data = { 0 };
     data.base.data = file::ReadAll(path, &data.base.len);
     if (!data.base.data)
@@ -1408,9 +1408,9 @@ const WCHAR *HtmlDoc::GetFileName() const
 
 bool HtmlDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    return str::EndsWithI(fileName, _T(".html")) ||
-           str::EndsWithI(fileName, _T(".htm")) ||
-           str::EndsWithI(fileName, _T(".xhtml"));
+    return str::EndsWithI(fileName, L".html") ||
+           str::EndsWithI(fileName, L".htm") ||
+           str::EndsWithI(fileName, L".xhtml");
 }
 
 HtmlDoc *HtmlDoc::CreateFromFile(const WCHAR *fileName)
@@ -1524,7 +1524,7 @@ bool TxtDoc::Load()
         return false;
 
     int rfc;
-    isRFC = str::Parse(path::GetBaseName(fileName), _T("rfc%d.txt%$"), &rfc) != NULL;
+    isRFC = str::Parse(path::GetBaseName(fileName), L"rfc%d.txt%$", &rfc) != NULL;
 
     char *curr = text;
     if (str::StartsWith(text.Get(), UTF8_BOM))
@@ -1637,14 +1637,14 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
 
 bool TxtDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    return str::EndsWithI(fileName, _T(".txt")) ||
-           str::EndsWithI(fileName, _T(".log")) ||
+    return str::EndsWithI(fileName, L".txt") ||
+           str::EndsWithI(fileName, L".log") ||
            // http://en.wikipedia.org/wiki/.nfo
-           str::EndsWithI(fileName, _T(".nfo")) ||
+           str::EndsWithI(fileName, L".nfo") ||
            // http://en.wikipedia.org/wiki/FILE_ID.DIZ
-           str::EndsWithI(fileName, _T("\\file_id.diz")) ||
+           str::EndsWithI(fileName, L"\\file_id.diz") ||
            // http://en.wikipedia.org/wiki/Read.me
-           str::EndsWithI(fileName, _T("\\Read.me"));
+           str::EndsWithI(fileName, L"\\Read.me");
 }
 
 TxtDoc *TxtDoc::CreateFromFile(const WCHAR *fileName)
