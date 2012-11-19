@@ -133,7 +133,7 @@ static TCHAR *FormatSizeSuccint(size_t size)
         unit = _TR("KB");
     }
 
-    ScopedMem<TCHAR> sizestr(str::FormatFloatWithThousandSep(s));
+    ScopedMem<WCHAR> sizestr(str::FormatFloatWithThousandSep(s));
     if (!unit)
         return sizestr.StealData();
     return str::Format(_T("%s %s"), sizestr, unit);
@@ -144,8 +144,8 @@ static TCHAR *FormatSizeSuccint(size_t size)
 // Caller needs to free the result
 static TCHAR *FormatFileSize(size_t size)
 {
-    ScopedMem<TCHAR> n1(FormatSizeSuccint(size));
-    ScopedMem<TCHAR> n2(str::FormatNumWithThousandSep(size));
+    ScopedMem<WCHAR> n1(FormatSizeSuccint(size));
+    ScopedMem<WCHAR> n2(str::FormatNumWithThousandSep(size));
 
     return str::Format(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
 }
@@ -169,15 +169,15 @@ static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     if (((int)(height * 100)) % 100 == 99)
         height += 0.01;
 
-    ScopedMem<TCHAR> strWidth(str::FormatFloatWithThousandSep(width));
-    ScopedMem<TCHAR> strHeight(str::FormatFloatWithThousandSep(height));
+    ScopedMem<WCHAR> strWidth(str::FormatFloatWithThousandSep(width));
+    ScopedMem<WCHAR> strHeight(str::FormatFloatWithThousandSep(height));
 
     return str::Format(_T("%s x %s %s"), strWidth, strHeight, isMetric ? _T("cm") : _T("in"));
 }
 
 static TCHAR *FormatPdfFileStructure(Doc doc)
 {
-    ScopedMem<TCHAR> fstruct(doc.GetProperty(Prop_PdfFileStructure));
+    ScopedMem<WCHAR> fstruct(doc.GetProperty(Prop_PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
         return NULL;
     WStrVec parts;
@@ -407,7 +407,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            str = str::Format(_T("\u202A%s\u202C"), ScopedMem<TCHAR>(str));
+            str = str::Format(_T("\u202A%s\u202C"), ScopedMem<WCHAR>(str));
         }
 #endif
         layoutData->AddProperty(_TR("Page Size:"), str);

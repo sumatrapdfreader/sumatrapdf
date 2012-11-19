@@ -31,7 +31,7 @@ static TCHAR *GetValidTempDir()
 
 static TCHAR *GetTempUninstallerPath()
 {
-    ScopedMem<TCHAR> tempDir(GetValidTempDir());
+    ScopedMem<WCHAR> tempDir(GetValidTempDir());
     if (!tempDir)
         return NULL;
     // Using fixed (unlikely) name instead of GetTempFileName()
@@ -41,7 +41,7 @@ static TCHAR *GetTempUninstallerPath()
 
 BOOL IsUninstallerNeeded()
 {
-    ScopedMem<TCHAR> exePath(GetInstalledExePath());
+    ScopedMem<WCHAR> exePath(GetInstalledExePath());
     return file::Exists(exePath);
 }
 
@@ -56,8 +56,8 @@ static bool RemoveUninstallerRegistryInfo(HKEY hkey)
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey)
 {
-    ScopedMem<TCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
-    ScopedMem<TCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf")));
+    ScopedMem<WCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
+    ScopedMem<WCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf")));
     if (!curr || !str::Eq(curr, TAPP)) {
         // not the default, do nothing
     } else if (prev) {
@@ -67,7 +67,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
-    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
+    ScopedMem<WCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
     if (str::Eq(buf, TAPP)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
         if (res != ERROR_SUCCESS)
@@ -114,7 +114,7 @@ static void RemoveOwnRegistryKeys()
         SHDeleteValue(keys[i], REG_CLASSES_PDF _T("\\OpenWithProgids"), TAPP);
 
         for (int j = 0; NULL != gSupportedExts[j]; j++) {
-            ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[j], _T("\\OpenWithProgids")));
+            ScopedMem<WCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[j], _T("\\OpenWithProgids")));
             SHDeleteValue(keys[i], keyname, TAPP);
             DeleteEmptyRegKey(keys[i], keyname);
 
@@ -136,12 +136,12 @@ static BOOL RemoveEmptyDirectory(TCHAR *dir)
     WIN32_FIND_DATA findData;
     BOOL success = TRUE;
 
-    ScopedMem<TCHAR> dirPattern(path::Join(dir, _T("*")));
+    ScopedMem<WCHAR> dirPattern(path::Join(dir, _T("*")));
     HANDLE h = FindFirstFile(dirPattern, &findData);
     if (h != INVALID_HANDLE_VALUE)
     {
         do {
-            ScopedMem<TCHAR> path(path::Join(dir, findData.cFileName));
+            ScopedMem<WCHAR> path(path::Join(dir, findData.cFileName));
             DWORD attrs = findData.dwFileAttributes;
             // filter out directories. Even though there shouldn't be any
             // subdirectories, it also filters out the standard "." and ".."
@@ -170,8 +170,8 @@ static BOOL RemoveInstalledFiles()
     BOOL success = TRUE;
 
     for (int i = 0; NULL != gPayloadData[i].filepath; i++) {
-        ScopedMem<TCHAR> relPath(str::conv::FromUtf8(gPayloadData[i].filepath));
-        ScopedMem<TCHAR> path(path::Join(gGlobalData.installDir, relPath));
+        ScopedMem<WCHAR> relPath(str::conv::FromUtf8(gPayloadData[i].filepath));
+        ScopedMem<WCHAR> path(path::Join(gGlobalData.installDir, relPath));
 
         if (file::Exists(path))
             success &= DeleteFile(path);
@@ -191,8 +191,8 @@ static BOOL RemoveInstalledFiles()
 bool ExecuteUninstallerFromTempDir()
 {
     // only need to sublaunch if running from installation dir
-    ScopedMem<TCHAR> ownDir(path::GetDir(GetOwnPath()));
-    ScopedMem<TCHAR> tempPath(GetTempUninstallerPath());
+    ScopedMem<WCHAR> ownDir(path::GetDir(GetOwnPath()));
+    ScopedMem<WCHAR> tempPath(GetTempUninstallerPath());
 
     // no temp directory available?
     if (!tempPath)
@@ -212,7 +212,7 @@ bool ExecuteUninstallerFromTempDir()
         return false;
     }
 
-    ScopedMem<TCHAR> args(str::Format(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T("")));
+    ScopedMem<WCHAR> args(str::Format(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? _T("/s") : _T("")));
     bool ok = CreateProcessHelper(tempPath, args);
 
     // mark the uninstaller for removal at shutdown (note: works only for administrators)
@@ -223,7 +223,7 @@ bool ExecuteUninstallerFromTempDir()
 
 static bool RemoveShortcut(bool allUsers)
 {
-    ScopedMem<TCHAR> p(GetShortcutPath(allUsers));
+    ScopedMem<WCHAR> p(GetShortcutPath(allUsers));
     if (!p.Get())
         return false;
     bool ok = DeleteFile(p);

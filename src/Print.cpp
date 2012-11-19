@@ -108,7 +108,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 
     HDC hdc = pd.hdc;
     BaseEngine& engine = *pd.engine;
-    ScopedMem<TCHAR> fileName;
+    ScopedMem<WCHAR> fileName;
 
     DOCINFO di = { 0 };
     di.cbSize = sizeof (DOCINFO);
@@ -633,7 +633,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
     if (!HasPermission(Perm_PrinterAccess))
         return false;
 
-    ScopedMem<TCHAR> fileName2(path::Normalize(fileName));
+    ScopedMem<WCHAR> fileName2(path::Normalize(fileName));
     BaseEngine *engine = EngineManager::CreateEngine(!gUseEbookUI, fileName2);
     if (!engine || !engine->IsPrintingAllowed()) {
         if (displayErrors)

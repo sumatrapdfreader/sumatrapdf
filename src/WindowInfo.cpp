@@ -201,7 +201,7 @@ void LinkHandler::GotoLink(PageDestination *link)
         return;
 
     DisplayModel *dm = owner->dm;
-    ScopedMem<TCHAR> path(link->GetDestValue());
+    ScopedMem<WCHAR> path(link->GetDestValue());
     PageDestType type = link->GetDestType();
     if (Dest_ScrollTo == type) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
@@ -340,7 +340,7 @@ void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
         return;
     }
 
-    ScopedMem<TCHAR> fullPath(path::GetDir(owner->dm->FilePath()));
+    ScopedMem<WCHAR> fullPath(path::GetDir(owner->dm->FilePath()));
     fullPath.Set(path::Join(fullPath, path));
     fullPath.Set(path::Normalize(fullPath));
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
@@ -360,7 +360,7 @@ void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
+            ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
             ShowNotification(owner, msg, true /* autoDismiss */, true /* highlight */);
         }
         return;
@@ -370,7 +370,7 @@ void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
     if (!link)
         return;
 
-    ScopedMem<TCHAR> name(link->GetDestName());
+    ScopedMem<WCHAR> name(link->GetDestName());
     if (!name)
         newWin->linkHandler->ScrollTo(link);
     else {
@@ -410,7 +410,7 @@ static bool MatchFuzzy(const TCHAR *s1, const TCHAR *s2, bool partially=false)
 PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const TCHAR *name, bool partially)
 {
     for (; item; item = item->next) {
-        ScopedMem<TCHAR> fuzTitle(NormalizeFuzzy(item->title));
+        ScopedMem<WCHAR> fuzTitle(NormalizeFuzzy(item->title));
         if (MatchFuzzy(fuzTitle, name, partially))
             return item->GetLink();
         PageDestination *dest = FindTocItem(item->child, name, partially);
@@ -437,7 +437,7 @@ void LinkHandler::GotoNamedDest(const TCHAR *name)
     }
     else if (engine()->HasTocTree()) {
         DocTocItem *root = engine()->GetTocTree();
-        ScopedMem<TCHAR> fuzName(NormalizeFuzzy(name));
+        ScopedMem<WCHAR> fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName);
         if (!dest)
             dest = FindTocItem(root, fuzName, true);

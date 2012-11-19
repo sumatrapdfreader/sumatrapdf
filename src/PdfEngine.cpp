@@ -451,7 +451,7 @@ static TCHAR *LinkifyFindEnd(TCHAR *start)
 static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *start, RectI *coords)
 {
     size_t lastIx = list->coords.Count() - 1;
-    ScopedMem<TCHAR> uri(list->links.At(lastIx));
+    ScopedMem<WCHAR> uri(list->links.At(lastIx));
     TCHAR *end = start;
     bool multiline = false;
 
@@ -845,7 +845,7 @@ TCHAR *FormatPageLabel(const char *type, int pageNo, const TCHAR *prefix)
         return str::Format(_T("%s%d"), prefix, pageNo);
     if (str::EqI(type, "R")) {
         // roman numbering style
-        ScopedMem<TCHAR> number(str::FormatRomanNumeral(pageNo));
+        ScopedMem<WCHAR> number(str::FormatRomanNumeral(pageNo));
         if (*type == 'r')
             str::ToLower(number.Get());
         return str::Format(_T("%s%s"), prefix, number);
@@ -911,7 +911,7 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
         int secLen = pageCount + 1 - data.At(i).startAt;
         if (i < data.Count() - 1 && data.At(i + 1).startAt <= pageCount)
             secLen = data.At(i + 1).startAt - data.At(i).startAt;
-        ScopedMem<TCHAR> prefix(str::conv::FromPdf(data.At(i).prefix));
+        ScopedMem<WCHAR> prefix(str::conv::FromPdf(data.At(i).prefix));
         for (int j = 0; j < secLen; j++) {
             free(labels->At(data.At(i).startAt + j - 1));
             labels->At(data.At(i).startAt + j - 1) =
@@ -930,7 +930,7 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
             continue;
         int ix = labels->Find(dups.At(i)), counter = 0;
         while ((ix = labels->Find(dups.At(i), ix + 1)) != -1) {
-            ScopedMem<TCHAR> unique;
+            ScopedMem<WCHAR> unique;
             do {
                 unique.Set(str::Format(_T("%s.%d"), dups.At(i), ++counter));
             } while (labels->Find(unique) != -1);
@@ -2062,7 +2062,7 @@ PageElement *PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt)
             if (fz_is_pt_in_rect(rect, p)) {
                 ScopedCritSec scope(&ctxAccess);
 
-                ScopedMem<TCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
+                ScopedMem<WCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
                 return new PdfComment(contents, fz_rect_to_RectD(rect), pageNo);
             }
         }
@@ -2100,7 +2100,7 @@ Vec<PageElement *> *PdfEngineImpl::GetElements(int pageNo)
         for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
             pdf_annot *annot = pageComments[pageNo-1][i];
             fz_rect rect = fz_transform_rect(page->ctm, annot->rect);
-            ScopedMem<TCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
+            ScopedMem<WCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
             els->Append(new PdfComment(contents, fz_rect_to_RectD(rect), pageNo));
         }
     }
@@ -2434,7 +2434,7 @@ TCHAR *PdfEngineImpl::ExtractFontList()
             info.Append(")");
         }
 
-        ScopedMem<TCHAR> fontInfo(str::conv::FromUtf8(info.LendData()));
+        ScopedMem<WCHAR> fontInfo(str::conv::FromUtf8(info.LendData()));
         if (fontInfo && fonts.Find(fontInfo) == -1)
             fonts.Append(fontInfo.StealData());
     }
@@ -2626,7 +2626,7 @@ TCHAR *PdfLink::GetValue() const
     case FZ_LINK_URI:
         path = str::conv::FromUtf8(link->ld.uri.uri);
         if (IsRelativeURI(path)) {
-            ScopedMem<TCHAR> base;
+            ScopedMem<WCHAR> base;
             fz_try(engine->ctx) {
                 pdf_obj *obj = pdf_dict_gets(engine->_doc->trailer, "Root");
                 obj = pdf_dict_gets(pdf_dict_gets(obj, "URI"), "Base");
@@ -2635,7 +2635,7 @@ TCHAR *PdfLink::GetValue() const
             }
             fz_catch(engine->ctx) { }
             if (!str::IsEmpty(base.Get())) {
-                ScopedMem<TCHAR> uri(str::Join(base, path));
+                ScopedMem<WCHAR> uri(str::Join(base, path));
                 free(path);
                 path = uri.StealData();
             }
@@ -2646,7 +2646,7 @@ TCHAR *PdfLink::GetValue() const
                 x = (int)(pt.x - rect.x + 0.5);
                 y = (int)(pt.y - rect.y + 0.5);
             }
-            ScopedMem<TCHAR> uri(str::Format(_T("%s?%d,%d"), path, x, y));
+            ScopedMem<WCHAR> uri(str::Format(_T("%s?%d,%d"), path, x, y));
             free(path);
             path = uri.StealData();
         }
@@ -3589,8 +3589,8 @@ TCHAR *XpsEngineImpl::ExtractFontList()
     // collect a list of all included fonts
     WStrVec fonts;
     for (xps_font_cache *font = _doc->font_table; font; font = font->next) {
-        ScopedMem<TCHAR> path(str::conv::FromUtf8(font->name));
-        ScopedMem<TCHAR> name(str::conv::FromUtf8(font->font->name));
+        ScopedMem<WCHAR> path(str::conv::FromUtf8(font->name));
+        ScopedMem<WCHAR> name(str::conv::FromUtf8(font->font->name));
         fonts.Append(str::Format(_T("%s (%s)"), name, path::GetBaseName(path)));
     }
     if (fonts.Count() == 0)

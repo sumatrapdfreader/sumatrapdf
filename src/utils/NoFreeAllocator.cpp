@@ -11,7 +11,7 @@ Consider this piece of code:
 
 bool NormalizedFileExists(const TCHAR *path)
 {
-    ScopedMem<TCHAR> normpath(Normalize(path));
+    ScopedMem<WCHAR> normpath(Normalize(path));
     return FileExist(normpath.Get());
 }
 

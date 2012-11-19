@@ -6,9 +6,9 @@
 
 static bool TryLoadMemTrace()
 {
-    ScopedMem<TCHAR> exePath(GetExePath());
-    ScopedMem<TCHAR> exeDir(path::GetDir(exePath));
-    ScopedMem<TCHAR> dllPath(path::Join(exeDir, _T("memtrace.dll")));
+    ScopedMem<WCHAR> exePath(GetExePath());
+    ScopedMem<WCHAR> exeDir(path::GetDir(exePath));
+    ScopedMem<WCHAR> dllPath(path::Join(exeDir, _T("memtrace.dll")));
     if (!LoadLibrary(dllPath))
         return false;
     return true;
@@ -134,7 +134,7 @@ static void OpenUsingDde(const TCHAR *filePath, CommandLineInfo& i, bool isFirst
     TCHAR fullpath[MAX_PATH];
     GetFullPathName(filePath, dimof(fullpath), fullpath, NULL);
 
-    ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
+    ScopedMem<WCHAR> cmd(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     if (i.destName && isFirstWin) {
         cmd.Set(str::Format(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
@@ -152,7 +152,7 @@ static void OpenUsingDde(const TCHAR *filePath, CommandLineInfo& i, bool isFirst
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
-        ScopedMem<TCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
+        ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
         cmd.Set(str::Format(_T("[") DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
                                     filePath, sourcePath, i.forwardSearchLine));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
@@ -193,7 +193,7 @@ static WindowInfo *LoadOnStartup(const TCHAR *filePath, CommandLineInfo& i, bool
     if (i.forwardSearchOrigin && i.forwardSearchLine && win->pdfsync) {
         UINT page;
         Vec<RectI> rects;
-            ScopedMem<TCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
+            ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
         int ret = win->pdfsync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);
     }
@@ -231,7 +231,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
-        ScopedMem<TCHAR> args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
+        ScopedMem<WCHAR> args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
         str::TransChars(args, _T("#"), _T("&"));
         WStrVec parts;
         parts.Split(args, _T("&"), true);
@@ -379,13 +379,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // don't bother sending crash reports when running under Wine
     // as they're not helpful
     if (!RunningUnderWine()) {
-        ScopedMem<TCHAR> symDir;
-        ScopedMem<TCHAR> tmpDir(path::GetTempPath());
+        ScopedMem<WCHAR> symDir;
+        ScopedMem<WCHAR> tmpDir(path::GetTempPath());
         if (tmpDir)
             symDir.Set(path::Join(tmpDir, _T("SumatraPDF-symbols")));
         else
             symDir.Set(AppGenDataFilename(_T("SumatraPDF-symbols")));
-        ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
+        ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
         InstallCrashHandler(crashDumpPath, symDir);
     }
 
@@ -395,7 +395,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     mui::Initialize();
     uitask::Initialize();
 
-    ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
+    ScopedMem<WCHAR> prefsFilename(GetPrefsFileName());
     if (!file::Exists(prefsFilename)) {
         // guess the ui language on first start
         CurrLangNameSet(trans::GuessLanguage());

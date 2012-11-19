@@ -72,7 +72,7 @@ static bool InstallCopyFiles()
         // skip files that are only uninstalled
         if (!gPayloadData[i].install)
             continue;
-        ScopedMem<TCHAR> filepathT(str::conv::FromUtf8(gPayloadData[i].filepath));
+        ScopedMem<WCHAR> filepathT(str::conv::FromUtf8(gPayloadData[i].filepath));
 
         size_t size;
         ScopedMem<char> data(archive.GetFileData(filepathT, &size));
@@ -81,10 +81,10 @@ static bool InstallCopyFiles()
             return false;
         }
 
-        ScopedMem<TCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepathT)));
+        ScopedMem<WCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepathT)));
         bool ok = trans.WriteAll(extpath, data, size);
         if (!ok) {
-            ScopedMem<TCHAR> msg(str::Format(_T("Couldn't write %s to disk"), filepathT));
+            ScopedMem<WCHAR> msg(str::Format(_T("Couldn't write %s to disk"), filepathT));
             NotifyFailed(msg);
             return false;
         }
@@ -102,7 +102,7 @@ static bool InstallCopyFiles()
 /* Caller needs to free() the result. */
 static TCHAR *GetDefaultPdfViewer()
 {
-    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
+    ScopedMem<WCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
     if (buf)
         return buf.StealData();
     return ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL);
@@ -110,7 +110,7 @@ static TCHAR *GetDefaultPdfViewer()
 
 bool IsBrowserPluginInstalled()
 {
-    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH));
+    ScopedMem<WCHAR> buf(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH));
     if (!buf)
         buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH));
     return file::Exists(buf);
@@ -118,7 +118,7 @@ bool IsBrowserPluginInstalled()
 
 bool IsPdfFilterInstalled()
 {
-    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
+    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
@@ -126,7 +126,7 @@ bool IsPdfFilterInstalled()
 
 bool IsPdfPreviewerInstalled()
 {
-    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"), NULL));
+    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"), NULL));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
@@ -135,7 +135,7 @@ bool IsPdfPreviewerInstalled()
 // Note: doesn't handle (total) sizes above 4GB
 static DWORD GetDirSize(TCHAR *dir)
 {
-    ScopedMem<TCHAR> dirPattern(path::Join(dir, _T("*")));
+    ScopedMem<WCHAR> dirPattern(path::Join(dir, _T("*")));
     WIN32_FIND_DATA findData;
 
     HANDLE h = FindFirstFile(dirPattern, &findData);
@@ -148,7 +148,7 @@ static DWORD GetDirSize(TCHAR *dir)
             totalSize += findData.nFileSizeLow;
         }
         else if (!str::Eq(findData.cFileName, _T(".")) && !str::Eq(findData.cFileName, _T(".."))) {
-            ScopedMem<TCHAR> subdir(path::Join(dir, findData.cFileName));
+            ScopedMem<WCHAR> subdir(path::Join(dir, findData.cFileName));
             totalSize += GetDirSize(subdir);
         }
     } while (FindNextFile(h, &findData) != 0);
@@ -169,10 +169,10 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
 {
     bool success = true;
 
-    ScopedMem<TCHAR> uninstallerPath(GetUninstallerPath());
-    ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
-    ScopedMem<TCHAR> installDate(GetInstallDate());
-    ScopedMem<TCHAR> installDir(path::GetDir(installedExePath));
+    ScopedMem<WCHAR> uninstallerPath(GetUninstallerPath());
+    ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
+    ScopedMem<WCHAR> installDate(GetInstallDate());
+    ScopedMem<WCHAR> installDir(path::GetDir(installedExePath));
 
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
@@ -200,25 +200,25 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey)
 {
     bool success = true;
 
-    ScopedMem<TCHAR> exePath(GetInstalledExePath());
+    ScopedMem<WCHAR> exePath(GetInstalledExePath());
     if (HKEY_LOCAL_MACHINE == hkey)
         success &= WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\") EXENAME, NULL, exePath);
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
-    ScopedMem<TCHAR> iconPath(str::Join(exePath, _T(",1")));
+    ScopedMem<WCHAR> iconPath(str::Join(exePath, _T(",1")));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\DefaultIcon"), NULL, iconPath);
-    ScopedMem<TCHAR> cmdPath(str::Format(_T("\"%s\" \"%%1\""), exePath));
+    ScopedMem<WCHAR> cmdPath(str::Format(_T("\"%s\" \"%%1\""), exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\Open\\Command"), NULL, cmdPath);
-    ScopedMem<TCHAR> printPath(str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath));
+    ScopedMem<WCHAR> printPath(str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\Print\\Command"), NULL, printPath);
-    ScopedMem<TCHAR> printToPath(str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath));
+    ScopedMem<WCHAR> printToPath(str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\PrintTo\\Command"), NULL, printToPath);
     // don't add REG_CLASSES_APPS _T("\\SupportedTypes"), as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
 
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
     for (int i = 0; NULL != gSupportedExts[i]; i++) {
-        ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") EXENAME));
+        ScopedMem<WCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") EXENAME));
         success &= CreateRegKey(hkey, keyname);
         // TODO: stop removing this after version 1.8 (was wrongly created for version 1.6)
         keyname.Set(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
@@ -249,10 +249,10 @@ static void CreateButtonRunSumatra(HWND hwndParent)
 
 static bool CreateAppShortcut(bool allUsers)
 {
-    ScopedMem<TCHAR> shortcutPath(GetShortcutPath(allUsers));
+    ScopedMem<WCHAR> shortcutPath(GetShortcutPath(allUsers));
     if (!shortcutPath.Get())
         return false;
-    ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
+    ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
@@ -270,7 +270,7 @@ DWORD WINAPI InstallerThread(LPVOID data)
     if (gGlobalData.registerAsDefault) {
         // need to sublaunch SumatraPDF.exe instead of replicating the code
         // because registration uses translated strings
-        ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
+        ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
         CreateProcessHelper(installedExePath, _T("-register-for-pdf"));
     }
 
@@ -403,7 +403,7 @@ void OnInstallationFinished()
 
 static void OnButtonStartSumatra()
 {
-    ScopedMem<TCHAR> exePath(GetInstalledExePath());
+    ScopedMem<WCHAR> exePath(GetInstalledExePath());
 #if 0
     // try to create the process as a normal user
     ScopedHandle h(CreateProcessAtLevel(exePath));
@@ -502,7 +502,7 @@ static BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCa
 
 static void OnButtonBrowse()
 {
-    ScopedMem<TCHAR> installDir(win::GetText(gHwndTextboxInstDir));
+    ScopedMem<WCHAR> installDir(win::GetText(gHwndTextboxInstDir));
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir))
         installDir.Set(path::GetDir(installDir));
@@ -597,7 +597,7 @@ void OnCreateWindow(HWND hwnd)
     SetWindowFont(gHwndButtonBrowseDir, gFontDefault, TRUE);
     rc.y += 2 * staticDy;
 
-    ScopedMem<TCHAR> defaultViewer(GetDefaultPdfViewer());
+    ScopedMem<WCHAR> defaultViewer(GetDefaultPdfViewer());
     BOOL hasOtherViewer = !str::EqI(defaultViewer, TAPP);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 

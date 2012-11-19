@@ -76,7 +76,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wPar
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != NULL);
 
-        ScopedMem<TCHAR> txt(str::Format(_TR("Enter password for %s"), data->fileName));
+        ScopedMem<WCHAR> txt(str::Format(_TR("Enter password for %s"), data->fileName));
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, _T(""));
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Password:"));
@@ -157,7 +157,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             SetWindowLong(editPageNo, GWL_STYLE, GetWindowLong(editPageNo, GWL_STYLE) & ~ES_NUMBER);
         assert(data->currPageLabel);
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, data->currPageLabel);
-        ScopedMem<TCHAR> totalCount(str::Format(_TR("(of %d)"), data->pageCount));
+        ScopedMem<WCHAR> totalCount(str::Format(_TR("(of %d)"), data->pageCount));
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
 
         Edit_SelectAll(editPageNo);
@@ -382,7 +382,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         int itemToSelect = 0;
         for (int langIdx = 0; trans::GetLanguageCode(langIdx) != NULL; langIdx++) {
-            ScopedMem<TCHAR> langName(trans::GetLanguageName(langIdx));
+            ScopedMem<WCHAR> langName(trans::GetLanguageName(langIdx));
             ListBox_AppendString_NoSort(langList, langName);
             int elIdx = ListBox_GetCount(langList) - 1;
             ListBox_SetItemData(langList, elIdx, (LPARAM)langIdx);
@@ -572,7 +572,7 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float
 
     int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (idx == -1) {
-        ScopedMem<TCHAR> customZoom(win::GetText(GetDlgItem(hDlg, idComboBox)));
+        ScopedMem<WCHAR> customZoom(win::GetText(GetDlgItem(hDlg, idComboBox)));
         float zoom = (float)_tstof(customZoom);
         if (zoom > 0)
             newZoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
@@ -735,7 +735,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 
         if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
             // Fill the combo with the list of possible inverse search commands
-            ScopedMem<TCHAR> inverseSearch(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
+            ScopedMem<WCHAR> inverseSearch(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
             // Try to select a correct default when first showing this dialog
             if (!prefs->inverseSearchCmdLine)
                 prefs->inverseSearchCmdLine = inverseSearch;
@@ -929,7 +929,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win::SetText(hDlg, _TR("Add Favorite"));
-        ScopedMem<TCHAR> s(str::Format(_TR("Add page %s to favorites with (optional) name:"), data->pageNo));
+        ScopedMem<WCHAR> s(str::Format(_TR("Add page %s to favorites with (optional) name:"), data->pageNo));
         SetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
@@ -947,7 +947,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         assert(data);
         WORD cmd = LOWORD(wParam);
         if (IDOK == cmd) {
-            ScopedMem<TCHAR> name(win::GetText(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT)));
+            ScopedMem<WCHAR> name(win::GetText(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT)));
             str::TrimWS(name);
             if (!str::IsEmpty(name.Get()))
                 data->favName = name.StealData();
@@ -968,7 +968,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 // returns true if the user wants to add a favorite.
 // favName is the name the user wants the favorite to have
 // (passing in a non-NULL favName will use it as default name)
-bool Dialog_AddFavorite(HWND hwnd, const TCHAR *pageNo, ScopedMem<TCHAR>& favName)
+bool Dialog_AddFavorite(HWND hwnd, const TCHAR *pageNo, ScopedMem<WCHAR>& favName)
 {
     Dialog_AddFav_Data data;
     data.pageNo = pageNo;

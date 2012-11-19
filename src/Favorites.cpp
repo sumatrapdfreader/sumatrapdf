@@ -211,9 +211,9 @@ static bool HasFavorites()
 static TCHAR *FavReadableName(FavName *fn)
 {
     // TODO: save non-default page labels (cf. BaseEngine::GetPageLabel)
-    ScopedMem<TCHAR> label(str::Format(_T("%d"), fn->pageNo));
+    ScopedMem<WCHAR> label(str::Format(_T("%d"), fn->pageNo));
     if (fn->name) {
-        ScopedMem<TCHAR> pageNo(str::Format(_TR("(page %s)"), label));
+        ScopedMem<WCHAR> pageNo(str::Format(_TR("(page %s)"), label));
         return str::Join(fn->name, _T(" "), pageNo);
     }
     return str::Format(_TR("Page %s"), label);
@@ -222,7 +222,7 @@ static TCHAR *FavReadableName(FavName *fn)
 // caller has to free() the result
 static TCHAR *FavCompactReadableName(FileFavs *fav, FavName *fn, bool isCurrent=false)
 {
-    ScopedMem<TCHAR> rn(FavReadableName(fn));
+    ScopedMem<WCHAR> rn(FavReadableName(fn));
     if (isCurrent)
         return str::Format(_T("%s : %s"), _TR("Current file"), rn);
     const TCHAR *fp = path::GetBaseName(fav->filePath);
@@ -238,7 +238,7 @@ static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined, b
     for (size_t i = 0; i < items; i++) {
         FavName *fn = f->favNames.At(i);
         fn->menuId = idx++;
-        ScopedMem<TCHAR> s;
+        ScopedMem<WCHAR> s;
         if (combined)
             s.Set(FavCompactReadableName(f, fn, isCurrent));
         else
@@ -318,7 +318,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
             if (f == currFileFav) {
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
-                ScopedMem<TCHAR> s(win::menu::ToSafeString(fileName));
+                ScopedMem<WCHAR> s(win::menu::ToSafeString(fileName));
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, s);
             }
         }
@@ -339,15 +339,15 @@ void RebuildFavMenu(WindowInfo *win, HMENU menu)
         win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
         AppendFavMenus(menu, NULL);
     } else {
-        ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(win->currPageNo));
+        ScopedMem<WCHAR> label(win->dm->engine->GetPageLabel(win->currPageNo));
         bool isBookmarked = gFavorites->IsPageInFavorites(win->dm->FilePath(), win->currPageNo);
         if (isBookmarked) {
             win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
-            ScopedMem<TCHAR> s(str::Format(_TR("Remove page %s from favorites"), label));
+            ScopedMem<WCHAR> s(str::Format(_TR("Remove page %s from favorites"), label));
             win::menu::SetText(menu, IDM_FAV_DEL, s);
         } else {
             win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
-            ScopedMem<TCHAR> s(str::Format(_TR("Add page %s to favorites"), label));
+            ScopedMem<WCHAR> s(str::Format(_TR("Add page %s to favorites"), label));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
         }
         AppendFavMenus(menu, win->dm->FilePath());
@@ -462,7 +462,7 @@ static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, FavName *
     tvinsert.itemex.state = 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)fn;
-    ScopedMem<TCHAR> s(FavReadableName(fn));
+    ScopedMem<WCHAR> s(FavReadableName(fn));
     tvinsert.itemex.pszText = s;
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
@@ -573,7 +573,7 @@ static DocTocItem *TocItemForPageNo(DocTocItem *item, int pageNo)
 void AddFavorite(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
-    ScopedMem<TCHAR> name;
+    ScopedMem<WCHAR> name;
     if (win->dm->HasTocTree()) {
         // use the current ToC heading as default name
         DocTocItem *root = win->dm->engine->GetTocTree();
@@ -582,7 +582,7 @@ void AddFavorite(WindowInfo *win)
             name.Set(str::Dup(item->title));
         delete root;
     }
-    ScopedMem<TCHAR> pageLabel(win->dm->engine->GetPageLabel(pageNo));
+    ScopedMem<WCHAR> pageLabel(win->dm->engine->GetPageLabel(pageNo));
 
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd)

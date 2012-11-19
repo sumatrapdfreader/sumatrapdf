@@ -517,7 +517,7 @@ bool ImageDirEngineImpl::LoadImageDir(const TCHAR *dirName)
     fileName = str::Dup(dirName);
     fileExt = _T("");
 
-    ScopedMem<TCHAR> pattern(path::Join(dirName, _T("*")));
+    ScopedMem<WCHAR> pattern(path::Join(dirName, _T("*")));
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -671,14 +671,14 @@ protected:
     Vec<RectD> mediaboxes;
 
     // extracted metadata
-    ScopedMem<TCHAR> propTitle;
+    ScopedMem<WCHAR> propTitle;
     WStrVec propAuthors;
-    ScopedMem<TCHAR> propDate;
-    ScopedMem<TCHAR> propModDate;
-    ScopedMem<TCHAR> propCreator;
-    ScopedMem<TCHAR> propSummary;
+    ScopedMem<WCHAR> propDate;
+    ScopedMem<WCHAR> propModDate;
+    ScopedMem<WCHAR> propCreator;
+    ScopedMem<WCHAR> propSummary;
     // temporary state needed for extracting metadata
-    ScopedMem<TCHAR> propAuthorTmp;
+    ScopedMem<WCHAR> propAuthorTmp;
 
     // used for lazily loading page images (only supported for .cbz files)
     CRITICAL_SECTION fileAccess;
@@ -916,7 +916,7 @@ TCHAR *CbxEngineImpl::GetProperty(DocumentProperty prop)
 
 class ImagesPage {
 public:
-    ScopedMem<TCHAR>fileName; // for sorting image files
+    ScopedMem<WCHAR>fileName; // for sorting image files
     Bitmap *        bmp;
 
     ImagesPage(const TCHAR *fileName, Bitmap *bmp) : bmp(bmp),

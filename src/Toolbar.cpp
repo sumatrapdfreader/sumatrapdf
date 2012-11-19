@@ -205,7 +205,7 @@ void UpdateFindbox(WindowInfo* win)
 
 static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourceId)
 {
-    ScopedMem<TCHAR> path(AppGenDataFilename(filename));
+    ScopedMem<WCHAR> path(AppGenDataFilename(filename));
 
     if (path) {
         HBITMAP hBmp = (HBITMAP)LoadImage(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -405,7 +405,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
     } else if (WM_CHAR == message) {
         switch (wParam) {
         case VK_RETURN: {
-            ScopedMem<TCHAR> buf(win::GetText(win->hwndPageBox));
+            ScopedMem<WCHAR> buf(win::GetText(win->hwndPageBox));
             int newPageNo = win->dm->engine->GetPageByLabel(buf);
             if (win->dm->ValidPageNo(newPageNo)) {
                 win->dm->GoToPage(newPageNo, 0, true);
@@ -469,7 +469,7 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
         buf = str::Format(_T(" / %d"), pageCount);
     else {
         buf = str::Format(_T(" (%d / %d)"), win->dm->CurrentPageNo(), pageCount);
-        ScopedMem<TCHAR> buf2(str::Format(_T(" (%d / %d)"), pageCount, pageCount));
+        ScopedMem<WCHAR> buf2(str::Format(_T(" (%d / %d)"), pageCount, pageCount));
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf2);
     }
 

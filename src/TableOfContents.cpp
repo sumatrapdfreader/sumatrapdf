@@ -35,7 +35,7 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
 {
     DocTocItem *tocItem = (DocTocItem *)nmit->lParam;
-    ScopedMem<TCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
+    ScopedMem<WCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
     if (!path)
         return;
 
@@ -97,7 +97,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     // Draw the page number right-aligned (if there is one)
     WindowInfo *win = FindWindowInfoByHwnd(hTV);
     DocTocItem *tocItem = (DocTocItem *)item.lParam;
-    ScopedMem<TCHAR> label;
+    ScopedMem<WCHAR> label;
     if (tocItem->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
         label.Set(win->dm->engine->GetPageLabel(tocItem->pageNo));
         label.Set(str::Join(_T("  "), label));
@@ -221,8 +221,8 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (entry->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
-        ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(entry->pageNo));
-        ScopedMem<TCHAR> text(str::Format(_T("%s  %s"), entry->title, label));
+        ScopedMem<WCHAR> label(win->dm->engine->GetPageLabel(entry->pageNo));
+        ScopedMem<WCHAR> text(str::Format(_T("%s  %s"), entry->title, label));
         tvinsert.itemex.pszText = text;
         return TreeView_InsertItem(hwnd, &tvinsert);
     }

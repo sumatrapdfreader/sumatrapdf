@@ -183,13 +183,13 @@ static MenuDef menuDefContextStart[] = {
     { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
 };
 
-static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
+static void AddFileMenuItem(HMENU menuFile, const WCHAR *filePath, UINT index)
 {
     assert(filePath && menuFile);
     if (!filePath || !menuFile) return;
 
-    ScopedMem<TCHAR> fileName(win::menu::ToSafeString(path::GetBaseName(filePath)));
-    ScopedMem<TCHAR> menuString(str::Format(_T("&%d) %s"), (index + 1) % 10, fileName));
+    ScopedMem<WCHAR> fileName(win::menu::ToSafeString(path::GetBaseName(filePath)));
+    ScopedMem<WCHAR> menuString(str::Format(_T("&%d) %s"), (index + 1) % 10, fileName));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
@@ -214,7 +214,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flag
                 AppendMenu(menu, MF_SEPARATOR, 0, NULL);
             wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
-            ScopedMem<TCHAR> tmp(str::conv::FromUtf8(md.title));
+            ScopedMem<WCHAR> tmp(str::conv::FromUtf8(md.title));
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         } else {
@@ -468,7 +468,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
         return;
 
     PageElement *pageEl = win->dm->GetElementAtPos(PointI(x, y));
-    ScopedMem<TCHAR> value(pageEl ? pageEl->GetValue() : NULL);
+    ScopedMem<WCHAR> value(pageEl ? pageEl->GetValue() : NULL);
     CrashIf(value && !pageEl);
     RenderedBitmap *bmp = NULL;
 

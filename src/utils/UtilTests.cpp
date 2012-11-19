@@ -103,7 +103,7 @@ static void FileUtilTest()
     const TCHAR *baseName = path::GetBaseName(path1);
     assert(str::Eq(baseName, _T("SumatraPDF.exe")));
 
-    ScopedMem<TCHAR> dirName(path::GetDir(path1));
+    ScopedMem<WCHAR> dirName(path::GetDir(path1));
     assert(str::Eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
     baseName = path::GetBaseName(dirName);
     assert(str::Eq(baseName, _T("SumatraPDF")));

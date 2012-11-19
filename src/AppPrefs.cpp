@@ -400,7 +400,7 @@ static void Retrieve(BencDict *dict, const char *key, DisplayMode& value)
 {
     BencString *string = dict->GetString(key);
     if (string) {
-        ScopedMem<TCHAR> mode(string->Value());
+        ScopedMem<WCHAR> mode(string->Value());
         if (mode)
             DisplayModeConv::EnumFromName(mode, &value);
     }
@@ -542,7 +542,7 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
         BencArray *favData = favsArr->GetArray(i+1);
         if (!filePathBenc || !favData)
             break;
-        ScopedMem<TCHAR> filePath(filePathBenc->Value());
+        ScopedMem<WCHAR> filePath(filePathBenc->Value());
         for (size_t j = 0; j < favData->Length(); j += 2) {
             // we're lenient about errors
             BencInt *pageNoBenc = favData->GetInt(j);
@@ -550,7 +550,7 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
             if (!pageNoBenc || !nameBenc)
                 break;
             int pageNo = (int)pageNoBenc->Value();
-            ScopedMem<TCHAR> name(nameBenc->Value());
+            ScopedMem<WCHAR> name(nameBenc->Value());
             favs->AddOrReplace(filePath, pageNo, EmptyToNull(name));
         }
     }
@@ -696,7 +696,7 @@ bool SavePrefs()
     if (!HasPermission(Perm_SavePreferences))
         return false;
 
-    ScopedMem<TCHAR> path(GetPrefsFileName());
+    ScopedMem<WCHAR> path(GetPrefsFileName());
     bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory, gFavorites);
     if (!ok)
         return false;
@@ -712,7 +712,7 @@ bool SavePrefs()
 // refresh the preferences when a different SumatraPDF process saves them
 bool ReloadPrefs()
 {
-    ScopedMem<TCHAR> path(GetPrefsFileName());
+    ScopedMem<WCHAR> path(GetPrefsFileName());
 
     FILETIME time = file::GetModificationTime(path);
     if (time.dwLowDateTime == gGlobalPrefs.lastPrefUpdate.dwLowDateTime &&

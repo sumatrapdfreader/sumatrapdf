@@ -16,7 +16,7 @@
 // caller must free() the result
 char *Escape(TCHAR *string, bool keepString=false)
 {
-    ScopedMem<TCHAR> freeOnReturn;
+    ScopedMem<WCHAR> freeOnReturn;
     if (!keepString)
         freeOnReturn.Set(string);
 
@@ -86,7 +86,7 @@ void DumpProperties(BaseEngine *engine)
         Out("\t\tPreferredLayout=\"%d\"\n", engine->PreferredLayout());
     Out("\t/>\n");
 
-    ScopedMem<TCHAR> fontlist(engine->GetProperty(Prop_FontList));
+    ScopedMem<WCHAR> fontlist(engine->GetProperty(Prop_FontList));
     if (fontlist) {
         WStrVec fonts;
         fonts.Split(fontlist, _T("\n"));
@@ -98,7 +98,7 @@ void DumpProperties(BaseEngine *engine)
 // caller must free() the result
 char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
 {
-    if (ScopedMem<TCHAR>(dest->GetDestName())) {
+    if (ScopedMem<WCHAR>(dest->GetDestName())) {
         ScopedMem<char> name(Escape(dest->GetDestName()));
         return str::Format("Name=\"%s\"", name);
     }
@@ -307,7 +307,7 @@ void RenderDocument(BaseEngine *engine, const TCHAR *renderPath)
             data.Set(SerializeBitmap(bmp->GetBitmap(), &len));
         else if (bmp)
             data.Set(tga::SerializeBitmap(bmp->GetBitmap(), &len));
-        ScopedMem<TCHAR> pageBmpPath(str::Format(renderPath, pageNo));
+        ScopedMem<WCHAR> pageBmpPath(str::Format(renderPath, pageNo));
         file::WriteAll(pageBmpPath, data, len);
         delete bmp;
     }
@@ -343,11 +343,11 @@ Usage:
         return 0;
     }
 
-    ScopedMem<TCHAR> filePath;
+    ScopedMem<WCHAR> filePath;
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(argList.At(1), &fdata);
     if (INVALID_HANDLE_VALUE != hfind) {
-        ScopedMem<TCHAR> dir(path::GetDir(argList.At(1)));
+        ScopedMem<WCHAR> dir(path::GetDir(argList.At(1)));
         filePath.Set(path::Join(dir, fdata.cFileName));
         FindClose(hfind);
     }

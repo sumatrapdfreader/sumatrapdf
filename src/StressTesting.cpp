@@ -161,7 +161,7 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
 static void BenchDir(TCHAR *dir)
 {
     WStrVec files;
-    ScopedMem<TCHAR> pattern(str::Format(_T("%s\\*.pdf"), dir));
+    ScopedMem<WCHAR> pattern(str::Format(_T("%s\\*.pdf"), dir));
     CollectPathsFromDirectory(pattern, files, false);
     for (size_t i = 0; i < files.Count(); i++) {
         BenchFile(files.At(i), NULL);
@@ -193,7 +193,7 @@ inline bool IsSpecialDir(const TCHAR *s)
 
 bool CollectPathsFromDirectory(const TCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles)
 {
-    ScopedMem<TCHAR> dirPath(path::GetDir(pattern));
+    ScopedMem<WCHAR> dirPath(path::GetDir(pattern));
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -221,7 +221,7 @@ static bool IsStressTestSupportedFile(const TCHAR *fileName, const TCHAR *filter
 
 static bool CollectStressTestSupportedFilesFromDirectory(const TCHAR *dirPath, const TCHAR *filter, WStrVec& paths)
 {
-    ScopedMem<TCHAR> pattern(path::Join(dirPath, _T("*")));
+    ScopedMem<WCHAR> pattern(path::Join(dirPath, _T("*")));
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -313,8 +313,8 @@ class StressTest : public StressTestBase {
     SYSTEMTIME        stressStartTime;
     int               cycles;
     Vec<PageRange>    pageRanges;
-    ScopedMem<TCHAR>  basePath;
-    ScopedMem<TCHAR>  fileFilter;
+    ScopedMem<WCHAR>  basePath;
+    ScopedMem<WCHAR>  fileFilter;
     // range of files to render (files get a new index when going through several cycles)
     Vec<PageRange>    fileRanges;
     int               fileIndex;
@@ -364,7 +364,7 @@ void StressTest::Start(const TCHAR *path, const TCHAR *filter, const TCHAR *rang
     }
     else {
         // Note: dev only, don't translate
-        ScopedMem<TCHAR> s(str::Format(_T("Path '%s' doesn't exist"), path));
+        ScopedMem<WCHAR> s(str::Format(_T("Path '%s' doesn't exist"), path));
         ShowNotification(win, s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
         Finished(false);
         return;
@@ -389,8 +389,8 @@ void StressTest::Finished(bool success)
 
     if (success) {
         int secs = SecsSinceSystemTime(stressStartTime);
-        ScopedMem<TCHAR> tm(FormatTime(secs));
-        ScopedMem<TCHAR> s(str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
+        ScopedMem<WCHAR> tm(FormatTime(secs));
+        ScopedMem<WCHAR> s(str::Format(_T("Stress test complete, rendered %d files in %s"), filesCount, tm));
         ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
     }
 
@@ -405,7 +405,7 @@ bool StressTest::OpenDir(const TCHAR *dirPath)
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
     filesToOpen.SortNatural();
 
-    ScopedMem<TCHAR> pattern(str::Format(_T("%s\\*"), dirPath));
+    ScopedMem<WCHAR> pattern(str::Format(_T("%s\\*"), dirPath));
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
@@ -416,7 +416,7 @@ bool StressTest::GoToNextFile()
     for (;;) {
         while (filesToOpen.Count() > 0) {
             // test next file
-            ScopedMem<TCHAR> path(filesToOpen.At(0));
+            ScopedMem<WCHAR> path(filesToOpen.At(0));
             filesToOpen.RemoveAt(0);
             if (!IsInRange(fileRanges, ++fileIndex))
                 continue;
@@ -426,7 +426,7 @@ bool StressTest::GoToNextFile()
 
         if (dirsToVisit.Count() > 0) {
             // test next directory
-            ScopedMem<TCHAR> path(dirsToVisit.At(0));
+            ScopedMem<WCHAR> path(dirsToVisit.At(0));
             dirsToVisit.RemoveAt(0);
             OpenDir(path);
             continue;
@@ -502,8 +502,8 @@ bool StressTest::OpenFile(const TCHAR *fileName)
     }
 
     int secs = SecsSinceSystemTime(stressStartTime);
-    ScopedMem<TCHAR> tm(FormatTime(secs));
-    ScopedMem<TCHAR> s(str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
+    ScopedMem<WCHAR> tm(FormatTime(secs));
+    ScopedMem<WCHAR> s(str::Format(_T("File %d: %s, time: %s"), filesCount, fileName, tm));
     ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
 
     return true;
@@ -512,7 +512,7 @@ bool StressTest::OpenFile(const TCHAR *fileName)
 bool StressTest::GoToNextPage()
 {
     double pageRenderTime = currPageRenderTime.GetTimeInMs();
-    ScopedMem<TCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage, (int)pageRenderTime));
+    ScopedMem<WCHAR> s(str::Format(_T("Page %d rendered in %d milliseconds"), currPage, (int)pageRenderTime));
     ShowNotification(win, s, true, false, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;

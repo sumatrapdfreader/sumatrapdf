@@ -99,7 +99,7 @@ void TextSearch::SetLastResult(TextSelection *sel)
 {
     CopySelection(sel);
 
-    ScopedMem<TCHAR> selection(ExtractText(_T(" ")));
+    ScopedMem<WCHAR> selection(ExtractText(_T(" ")));
     str::NormalizeWS(selection);
     SetText(selection);
 

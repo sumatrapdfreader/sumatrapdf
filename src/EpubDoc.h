@@ -27,8 +27,8 @@ class EpubDoc {
     str::Str<char> htmlData;
     Vec<ImageData2> images;
     Vec<Metadata> props;
-    ScopedMem<TCHAR> tocPath;
-    ScopedMem<TCHAR> fileName;
+    ScopedMem<WCHAR> tocPath;
+    ScopedMem<WCHAR> fileName;
     bool isNcxToc;
     bool isRtlDoc;
 
@@ -64,11 +64,11 @@ class HtmlPullParser;
 struct HtmlToken;
 
 class Fb2Doc {
-    ScopedMem<TCHAR> fileName;
+    ScopedMem<WCHAR> fileName;
     str::Str<char> xmlData;
     Vec<ImageData2> images;
-    ScopedMem<TCHAR> docTitle;
-    ScopedMem<TCHAR> docAuthor;
+    ScopedMem<WCHAR> docTitle;
+    ScopedMem<WCHAR> docAuthor;
     ScopedMem<char> coverImage;
 
     bool isZipped;
@@ -98,7 +98,7 @@ public:
 class PdbReader;
 
 class PalmDoc {
-    ScopedMem<TCHAR> fileName;
+    ScopedMem<WCHAR> fileName;
     str::Str<char> htmlData;
     Vec<ImageData2> images;
     WStrVec tocEntries;
@@ -126,7 +126,7 @@ public:
 /* ********** TCR (Text Compression for (Psion) Reader) ********** */
 
 class TcrDoc {
-    ScopedMem<TCHAR> fileName;
+    ScopedMem<WCHAR> fileName;
     str::Str<char> htmlData;
 
     bool Load();
@@ -145,15 +145,15 @@ public:
 /* ********** Plain HTML ********** */
 
 class HtmlDoc {
-    ScopedMem<TCHAR> fileName;
+    ScopedMem<WCHAR> fileName;
     ScopedMem<char> htmlData;
     ScopedMem<char> pagePath;
     Vec<ImageData2> images;
 
-    ScopedMem<TCHAR> title;
-    ScopedMem<TCHAR> author;
-    ScopedMem<TCHAR> date;
-    ScopedMem<TCHAR> copyright;
+    ScopedMem<WCHAR> title;
+    ScopedMem<WCHAR> author;
+    ScopedMem<WCHAR> date;
+    ScopedMem<WCHAR> copyright;
 
     bool Load();
 
@@ -174,7 +174,7 @@ public:
 /* ********** Plain Text ********** */
 
 class TxtDoc {
-    ScopedMem<TCHAR> fileName;
+    ScopedMem<WCHAR> fileName;
     str::Str<char> htmlData;
     bool isRFC;
 

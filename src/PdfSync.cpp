@@ -48,7 +48,7 @@ public:
         assert(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
     }
 
-    virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col);
+    virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UINT *line, UINT *col);
     virtual int SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
 
 private:
@@ -77,7 +77,7 @@ public:
         synctex_scanner_free(scanner);
     }
 
-    virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col);
+    virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UINT *line, UINT *col);
     virtual int SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
 
 private:
@@ -121,7 +121,7 @@ int Synchronizer::RebuildIndex()
 
 TCHAR * Synchronizer::PrependDir(const TCHAR* filename) const
 {
-    ScopedMem<TCHAR> dir(path::GetDir(syncfilepath));
+    ScopedMem<WCHAR> dir(path::GetDir(syncfilepath));
     return path::Join(dir, filename);
 }
 
@@ -137,18 +137,18 @@ int Synchronizer::Create(const TCHAR *pdffilename, PdfEngine *engine, Synchroniz
     if (!str::EqI(fileExt, _T(".pdf")))
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    ScopedMem<TCHAR> baseName(str::DupN(pdffilename, fileExt - pdffilename));
+    ScopedMem<WCHAR> baseName(str::DupN(pdffilename, fileExt - pdffilename));
 
     // Check if a PDFSYNC file is present
-    ScopedMem<TCHAR> syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
+    ScopedMem<WCHAR> syncFile(str::Join(baseName, PDFSYNC_EXTENSION));
     if (file::Exists(syncFile)) {
         *sync = new Pdfsync(syncFile, engine);
         return *sync ? PDFSYNCERR_SUCCESS : PDFSYNCERR_OUTOFMEMORY;
     }
 
     // check if SYNCTEX or compressed SYNCTEX file is present
-    ScopedMem<TCHAR> texGzFile(str::Join(baseName, SYNCTEXGZ_EXTENSION));
-    ScopedMem<TCHAR> texFile(str::Join(baseName, SYNCTEX_EXTENSION));
+    ScopedMem<WCHAR> texGzFile(str::Join(baseName, SYNCTEXGZ_EXTENSION));
+    ScopedMem<WCHAR> texFile(str::Join(baseName, SYNCTEX_EXTENSION));
 
     if (file::Exists(texGzFile) || file::Exists(texFile)) {
         // due to a bug with synctex_parser.c, this must always be
@@ -215,7 +215,7 @@ int Pdfsync::RebuildIndex()
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransChars(line, "*/", " \\");
-    ScopedMem<TCHAR> jobName(str::conv::FromAnsi(line));
+    ScopedMem<WCHAR> jobName(str::conv::FromAnsi(line));
     jobName.Set(str::Join(jobName, _T(".tex")));
     jobName.Set(PrependDir(jobName));
 
@@ -280,7 +280,7 @@ int Pdfsync::RebuildIndex()
 
         case '(':
             {
-                ScopedMem<TCHAR> filename(str::conv::FromAnsi(line + 1));
+                ScopedMem<WCHAR> filename(str::conv::FromAnsi(line + 1));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"')
@@ -327,7 +327,7 @@ static int cmpLineRecords(const void *a, const void *b)
     return ((PdfsyncLine *)a)->record - ((PdfsyncLine *)b)->record;
 }
 
-int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col)
+int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UINT *line, UINT *col)
 {
     if (IsIndexDiscarded())
         if (RebuildIndex() != PDFSYNCERR_SUCCESS)
@@ -403,7 +403,7 @@ UINT Pdfsync::SourceToRecord(const TCHAR* srcfilename, UINT line, UINT col, Vec<
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    ScopedMem<TCHAR> srcfilepath;
+    ScopedMem<WCHAR> srcfilepath;
     // convert the source file to an absolute path
     if (PathIsRelative(srcfilename))
         srcfilepath.Set(PrependDir(srcfilename));
@@ -506,7 +506,7 @@ int SyncTex::RebuildIndex() {
     return Synchronizer::RebuildIndex();
 }
 
-int SyncTex::DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col)
+int SyncTex::DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UINT *line, UINT *col)
 {
     if (IsIndexDiscarded())
         if (RebuildIndex() != PDFSYNCERR_SUCCESS)
@@ -553,7 +553,7 @@ int SyncTex::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *pa
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     assert(this->scanner);
 
-    ScopedMem<TCHAR> srcfilepath;
+    ScopedMem<WCHAR> srcfilepath;
     // convert the source file to an absolute path
     if (PathIsRelative(srcfilename))
         srcfilepath.Set(PrependDir(srcfilename));

@@ -184,7 +184,7 @@ TCHAR *GetOwnPath()
 
 static TCHAR *GetInstallationDir()
 {
-    ScopedMem<TCHAR> dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, INSTALL_LOCATION));
+    ScopedMem<WCHAR> dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, INSTALL_LOCATION));
     if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, INSTALL_LOCATION));
     // fall back to the legacy key if the official one isn't present yet
     if (!dir) dir.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_SOFTWARE, INSTALL_DIR));
@@ -257,7 +257,7 @@ TCHAR *GetShortcutPath(bool allUsers)
 /* if the app is running, we have to kill it so that we can over-write the executable */
 void KillSumatra()
 {
-    ScopedMem<TCHAR> exePath(GetInstalledExePath());
+    ScopedMem<WCHAR> exePath(GetInstalledExePath());
     KillProcess(exePath, TRUE);
 }
 
@@ -286,7 +286,7 @@ void InvalidateFrame()
 
 bool CreateProcessHelper(const TCHAR *exe, const TCHAR *args)
 {
-    ScopedMem<TCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
+    ScopedMem<WCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
     ScopedHandle process(LaunchProcess(cmd));
     return process != NULL;
 }
@@ -306,7 +306,7 @@ bool RegisterServerDLL(TCHAR *dllPath, bool unregister=false)
     SetDllDirectoryProc _SetDllDirectory = (SetDllDirectoryProc)LoadDllFunc(_T("Kernel32.dll"), "SetDllDirectoryA");
 #endif
     if (_SetDllDirectory) {
-        ScopedMem<TCHAR> dllDir(path::GetDir(dllPath));
+        ScopedMem<WCHAR> dllDir(path::GetDir(dllPath));
         _SetDllDirectory(dllDir);
     }
 
@@ -335,8 +335,8 @@ static bool IsUsingInstallation(DWORD procId)
     if (snap == INVALID_HANDLE_VALUE)
         return false;
 
-    ScopedMem<TCHAR> libmupdf(path::Join(gGlobalData.installDir, _T("libmupdf.dll")));
-    ScopedMem<TCHAR> browserPlugin(GetBrowserPluginPath());
+    ScopedMem<WCHAR> libmupdf(path::Join(gGlobalData.installDir, _T("libmupdf.dll")));
+    ScopedMem<WCHAR> browserPlugin(GetBrowserPluginPath());
 
     MODULEENTRY32 mod;
     mod.dwSize = sizeof(mod);
@@ -401,7 +401,7 @@ static const TCHAR *ReadableProcName(const TCHAR *procPath)
 
 static void SetCloseProcessMsg()
 {
-    ScopedMem<TCHAR> procNames(str::Dup(ReadableProcName(gProcessesToClose.At(0))));
+    ScopedMem<WCHAR> procNames(str::Dup(ReadableProcName(gProcessesToClose.At(0))));
     for (size_t i = 1; i < gProcessesToClose.Count(); i++) {
         const TCHAR *name = ReadableProcName(gProcessesToClose.At(i));
         if (i < gProcessesToClose.Count() - 1)
@@ -409,7 +409,7 @@ static void SetCloseProcessMsg()
         else
             procNames.Set(str::Join(procNames, _T(" and "), name));
     }
-    ScopedMem<TCHAR> s(str::Format(_T("Please close %s to proceed!"), procNames));
+    ScopedMem<WCHAR> s(str::Format(_T("Please close %s to proceed!"), procNames));
     SetMsg(s, COLOR_MSG_FAILED);
 }
 
@@ -432,42 +432,42 @@ bool CheckInstallUninstallPossible(bool silent)
 
 void InstallBrowserPlugin()
 {
-    ScopedMem<TCHAR> dllPath(GetBrowserPluginPath());
+    ScopedMem<WCHAR> dllPath(GetBrowserPluginPath());
     if (!RegisterServerDLL(dllPath))
         NotifyFailed(_T("Couldn't install browser plugin"));
 }
 
 void UninstallBrowserPlugin()
 {
-    ScopedMem<TCHAR> dllPath(GetBrowserPluginPath());
+    ScopedMem<WCHAR> dllPath(GetBrowserPluginPath());
     if (!RegisterServerDLL(dllPath, true))
         NotifyFailed(_T("Couldn't uninstall browser plugin"));
 }
 
 void InstallPdfFilter()
 {
-    ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
+    ScopedMem<WCHAR> dllPath(GetPdfFilterPath());
     if (!RegisterServerDLL(dllPath))
         NotifyFailed(_T("Couldn't install PDF search filter"));
 }
 
 void UninstallPdfFilter()
 {
-    ScopedMem<TCHAR> dllPath(GetPdfFilterPath());
+    ScopedMem<WCHAR> dllPath(GetPdfFilterPath());
     if (!RegisterServerDLL(dllPath, true))
         NotifyFailed(_T("Couldn't uninstall PDF search filter"));
 }
 
 void InstallPdfPreviewer()
 {
-    ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
+    ScopedMem<WCHAR> dllPath(GetPdfPreviewerPath());
     if (!RegisterServerDLL(dllPath))
         NotifyFailed(_T("Couldn't install PDF previewer"));
 }
 
 void UninstallPdfPreviewer()
 {
-    ScopedMem<TCHAR> dllPath(GetPdfPreviewerPath());
+    ScopedMem<WCHAR> dllPath(GetPdfPreviewerPath());
     if (!RegisterServerDLL(dllPath, true))
         NotifyFailed(_T("Couldn't uninstall PDF previewer"));
 }
@@ -975,7 +975,7 @@ static void InstallInstallerCrashHandler()
 
     // save symbols directly into %TEMP% (so that the installer doesn't
     // unnecessarily leave an empty directory behind if it doesn't have to)
-    ScopedMem<TCHAR> crashDumpPath(path::Join(tempDir, CRASH_DUMP_FILE_NAME));
+    ScopedMem<WCHAR> crashDumpPath(path::Join(tempDir, CRASH_DUMP_FILE_NAME));
     InstallCrashHandler(crashDumpPath, tempDir);
 }
 

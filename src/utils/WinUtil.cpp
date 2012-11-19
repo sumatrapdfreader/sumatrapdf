@@ -1017,7 +1017,7 @@ HANDLE CreateProcessAtLevel(const TCHAR *exe, const TCHAR *args, DWORD level)
     if (!_SaferCreateLevel(SAFER_SCOPEID_USER, level, 0, &slh, NULL))
         return NULL;
 
-    ScopedMem<TCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
+    ScopedMem<WCHAR> cmd(str::Format(_T("\"%s\" %s"), exe, args ? args : _T("")));
     PROCESS_INFORMATION pi;
     STARTUPINFO si = { 0 };
     si.cb = sizeof(si);

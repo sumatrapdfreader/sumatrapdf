@@ -80,7 +80,7 @@ static void TStrTest()
 
     {
         UINT u1 = 0;
-        ScopedMem<TCHAR> str1;
+        ScopedMem<WCHAR> str1;
         const TCHAR *end = str::Parse(str, _T("[Open(\"%S\",0%?,%u,0)]"), &str1, &u1);
         assert(end && !*end);
         assert(u1 == 1 && str::Eq(str1, _T("filename.pdf")));
@@ -222,7 +222,7 @@ static void TStrTest()
     };
 
     for (int i = 0; i < dimof(formatNumData); i++) {
-        ScopedMem<TCHAR> tmp(str::FormatNumWithThousandSep(formatNumData[i].number, LOCALE_INVARIANT));
+        ScopedMem<WCHAR> tmp(str::FormatNumWithThousandSep(formatNumData[i].number, LOCALE_INVARIANT));
         assert(str::Eq(tmp, formatNumData[i].result));
     }
 
@@ -240,7 +240,7 @@ static void TStrTest()
     };
 
     for (int i = 0; i < dimof(formatFloatData); i++) {
-        ScopedMem<TCHAR> tmp(str::FormatFloatWithThousandSep(formatFloatData[i].number, LOCALE_INVARIANT));
+        ScopedMem<WCHAR> tmp(str::FormatFloatWithThousandSep(formatFloatData[i].number, LOCALE_INVARIANT));
         assert(str::Eq(tmp, formatFloatData[i].result));
     }
 
@@ -273,7 +273,7 @@ static void TStrTest()
     };
 
     for (int i = 0; i < dimof(formatRomanData); i++) {
-        ScopedMem<TCHAR> tmp(str::FormatRomanNumeral(formatRomanData[i].number));
+        ScopedMem<WCHAR> tmp(str::FormatRomanNumeral(formatRomanData[i].number));
         assert(str::Eq(tmp, formatRomanData[i].result));
     }
 

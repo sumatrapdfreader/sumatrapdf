@@ -208,7 +208,7 @@ static bool SetupSymbolPath()
     }
 
     BOOL ok = FALSE;
-    ScopedMem<TCHAR> tpath(str::conv::FromWStr(path));
+    ScopedMem<WCHAR> tpath(str::conv::FromWStr(path));
     if (_SymSetSearchPathW) {
         ok = _SymSetSearchPathW(GetCurrentProcess(), path);
         if (!ok)

@@ -26,7 +26,7 @@ static TCHAR *GetGhostscriptPath()
 TryAgain64Bit:
     for (int i = 0; i < dimof(gsProducts); i++) {
         HKEY hkey;
-        ScopedMem<TCHAR> keyName(str::Join(_T("Software\\"), gsProducts[i]));
+        ScopedMem<WCHAR> keyName(str::Join(_T("Software\\"), gsProducts[i]));
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, access, &hkey) != ERROR_SUCCESS)
             continue;
         TCHAR subkey[32];
@@ -48,13 +48,13 @@ TryAgain64Bit:
     // return the path to the newest installation
     for (size_t ix = versions.Count(); ix > 0; ix--) {
         for (int i = 0; i < dimof(gsProducts); i++) {
-            ScopedMem<TCHAR> keyName(str::Format(_T("Software\\%s\\%s"),
+            ScopedMem<WCHAR> keyName(str::Format(_T("Software\\%s\\%s"),
                                                  gsProducts[i], versions.At(ix - 1)));
-            ScopedMem<TCHAR> GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, _T("GS_DLL")));
+            ScopedMem<WCHAR> GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, _T("GS_DLL")));
             if (!GS_DLL)
                 continue;
-            ScopedMem<TCHAR> dir(path::GetDir(GS_DLL));
-            ScopedMem<TCHAR> exe(path::Join(dir, _T("gswin32c.exe")));
+            ScopedMem<WCHAR> dir(path::GetDir(GS_DLL));
+            ScopedMem<WCHAR> exe(path::Join(dir, _T("gswin32c.exe")));
             if (file::Exists(exe))
                 return exe.StealData();
             exe.Set(path::Join(dir, _T("gswin64c.exe")));
@@ -65,13 +65,13 @@ TryAgain64Bit:
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariable(_T("PATH"), NULL, 0);
-    ScopedMem<TCHAR> envpath(AllocArray<TCHAR>(size));
+    ScopedMem<WCHAR> envpath(AllocArray<TCHAR>(size));
     if (size > 0 && envpath) {
         GetEnvironmentVariable(_T("PATH"), envpath, size);
         WStrVec paths;
         paths.Split(envpath, _T(";"), true);
         for (size_t ix = 0; ix < paths.Count(); ix++) {
-            ScopedMem<TCHAR> exe(path::Join(paths.At(ix), _T("gswin32c.exe")));
+            ScopedMem<WCHAR> exe(path::Join(paths.At(ix), _T("gswin32c.exe")));
             if (file::Exists(exe))
                 return exe.StealData();
             exe.Set(path::Join(paths.At(ix), _T("gswin64c.exe")));
@@ -84,7 +84,7 @@ TryAgain64Bit:
 }
 
 class ScopedFile {
-    ScopedMem<TCHAR> path;
+    ScopedMem<WCHAR> path;
 
 public:
     ScopedFile(const TCHAR *path) : path(path ? str::Dup(path) : NULL) { }
@@ -97,13 +97,13 @@ public:
 static PdfEngine *ps2pdf(const TCHAR *fileName)
 {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
-    ScopedMem<TCHAR> shortPath(path::ShortPath(fileName));
-    ScopedMem<TCHAR> tmpFile(path::GetTempPath(_T("PsE")));
+    ScopedMem<WCHAR> shortPath(path::ShortPath(fileName));
+    ScopedMem<WCHAR> tmpFile(path::GetTempPath(_T("PsE")));
     ScopedFile tmpFileScope(tmpFile);
-    ScopedMem<TCHAR> gswin32c(GetGhostscriptPath());
+    ScopedMem<WCHAR> gswin32c(GetGhostscriptPath());
     if (!shortPath || !tmpFile || !gswin32c)
         return NULL;
-    ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, shortPath));
+    ScopedMem<WCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, shortPath));
 
     if (GetEnvironmentVariable(_T("MULOG"), NULL, 0)) {
         _tprintf(_T("ps2pdf: using Ghostscript from '%s'\n"), gswin32c.Get());
@@ -147,7 +147,7 @@ inline bool isgzipped(const TCHAR *fileName)
 
 static PdfEngine *psgz2pdf(const TCHAR *fileName)
 {
-    ScopedMem<TCHAR> tmpFile(path::GetTempPath(_T("PsE")));
+    ScopedMem<WCHAR> tmpFile(path::GetTempPath(_T("PsE")));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile)
         return NULL;
@@ -305,7 +305,7 @@ protected:
 
 bool PsEngine::IsAvailable()
 {
-    ScopedMem<TCHAR> gswin32c(GetGhostscriptPath());
+    ScopedMem<WCHAR> gswin32c(GetGhostscriptPath());
     return gswin32c.Get() != NULL;
 }
 

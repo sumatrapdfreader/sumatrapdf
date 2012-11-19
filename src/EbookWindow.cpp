@@ -546,7 +546,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         SHAddToRecentDocs(SHARD_PATH, fullPath);
 
-    ScopedMem<TCHAR> winTitle(str::Format(_T("%s - %s"), path::GetBaseName(fullPath), SUMATRA_WINDOW_TITLE));
+    ScopedMem<WCHAR> winTitle(str::Format(_T("%s - %s"), path::GetBaseName(fullPath), SUMATRA_WINDOW_TITLE));
 
     if (winToReplace.AsEbookWindow()) {
         EbookWindow *mw = winToReplace.AsEbookWindow();

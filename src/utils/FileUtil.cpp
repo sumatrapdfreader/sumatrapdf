@@ -96,7 +96,7 @@ TCHAR *Normalize(const TCHAR *path)
     DWORD cch = GetFullPathName(path, 0, NULL, NULL);
     if (!cch)
         return str::Dup(path);
-    ScopedMem<TCHAR> fullpath(AllocArray<TCHAR>(cch));
+    ScopedMem<WCHAR> fullpath(AllocArray<TCHAR>(cch));
     GetFullPathName(path, cch, fullpath, NULL);
     // convert to long form
     cch = GetLongPathName(fullpath, NULL, 0);
@@ -111,7 +111,7 @@ TCHAR *Normalize(const TCHAR *path)
 // can be used for interaction with non-UNICODE aware applications
 TCHAR *ShortPath(const TCHAR *path)
 {
-    ScopedMem<TCHAR> normpath(Normalize(path));
+    ScopedMem<WCHAR> normpath(Normalize(path));
     DWORD cch = GetShortPathName(normpath, NULL, 0);
     if (!cch)
         return normpath;
@@ -144,8 +144,8 @@ bool IsSame(const TCHAR *path1, const TCHAR *path2)
     if (!needFallback)
         return isSame;
 
-    ScopedMem<TCHAR> npath1(Normalize(path1));
-    ScopedMem<TCHAR> npath2(Normalize(path2));
+    ScopedMem<WCHAR> npath1(Normalize(path1));
+    ScopedMem<WCHAR> npath2(Normalize(path2));
     // consider the files different, if their paths can't be normalized
     if (!npath1 || !npath2)
         return false;
@@ -358,14 +358,14 @@ bool StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len)
 
 int GetZoneIdentifier(const TCHAR *filePath)
 {
-    ScopedMem<TCHAR> path(str::Join(filePath, _T(":Zone.Identifier")));
+    ScopedMem<WCHAR> path(str::Join(filePath, _T(":Zone.Identifier")));
     return GetPrivateProfileInt(_T("ZoneTransfer"), _T("ZoneId"), URLZONE_INVALID, path);
 }
 
 bool SetZoneIdentifier(const TCHAR *filePath, int zoneId)
 {
-    ScopedMem<TCHAR> path(str::Join(filePath, _T(":Zone.Identifier")));
-    ScopedMem<TCHAR> id(str::Format(_T("%d"), zoneId));
+    ScopedMem<WCHAR> path(str::Join(filePath, _T(":Zone.Identifier")));
+    ScopedMem<WCHAR> id(str::Format(_T("%d"), zoneId));
     return WritePrivateProfileString(_T("ZoneTransfer"), _T("ZoneId"), id, path);
 }
 
@@ -400,7 +400,7 @@ bool Create(const TCHAR *dir)
 // creates a directory and all its parent directories that don't exist yet
 bool CreateAll(const TCHAR *dir)
 {
-    ScopedMem<TCHAR> parent(path::GetDir(dir));
+    ScopedMem<WCHAR> parent(path::GetDir(dir));
     if (!str::Eq(parent, dir) && !Exists(parent))
         CreateAll(parent);
     return Create(dir);

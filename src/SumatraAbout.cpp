@@ -699,10 +699,10 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
     CalcMD5Digest((unsigned char *)pathU.Get(), str::Len(pathU), digest);
     ScopedMem<char> fingerPrint(str::MemToHex(digest, 16));
 
-    ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    ScopedMem<WCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return NULL;
-    ScopedMem<TCHAR> fname(str::conv::FromAnsi(fingerPrint));
+    ScopedMem<WCHAR> fname(str::conv::FromAnsi(fingerPrint));
 
     return str::Format(_T("%s\\%s.png"), thumbsPath, fname);
 }
@@ -710,10 +710,10 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(FileHistory& fileHistory)
 {
-    ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    ScopedMem<WCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return;
-    ScopedMem<TCHAR> pattern(path::Join(thumbsPath, _T("*.png")));
+    ScopedMem<WCHAR> pattern(path::Join(thumbsPath, _T("*.png")));
 
     WStrVec files;
     WIN32_FIND_DATA fdata;
@@ -730,7 +730,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     Vec<DisplayState *> list;
     fileHistory.GetFrequencyOrder(list);
     for (size_t i = 0; i < list.Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
-        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(list.At(i)->filePath));
+        ScopedMem<WCHAR> bmpPath(GetThumbnailPath(list.At(i)->filePath));
         if (!bmpPath)
             continue;
         int idx = files.Find(path::GetBaseName(bmpPath));
@@ -741,7 +741,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     }
 
     for (size_t i = 0; i < files.Count(); i++) {
-        ScopedMem<TCHAR> bmpPath(path::Join(thumbsPath, files.At(i)));
+        ScopedMem<WCHAR> bmpPath(path::Join(thumbsPath, files.At(i)));
         file::Delete(bmpPath);
     }
 }
@@ -752,7 +752,7 @@ static bool LoadThumbnail(DisplayState& ds)
         delete ds.thumbnail;
     ds.thumbnail = NULL;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return false;
 
@@ -765,7 +765,7 @@ bool HasThumbnail(DisplayState& ds)
     if (!ds.thumbnail && !LoadThumbnail(ds))
         return false;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return true;
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
@@ -784,10 +784,10 @@ void SaveThumbnail(DisplayState& ds)
     if (!ds.thumbnail)
         return;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return;
-    ScopedMem<TCHAR> thumbsPath(path::GetDir(bmpPath));
+    ScopedMem<WCHAR> thumbsPath(path::GetDir(bmpPath));
     if (dir::Create(thumbsPath))
         SaveRenderedBitmap(ds.thumbnail, bmpPath);
 }
@@ -797,7 +797,7 @@ void RemoveThumbnail(DisplayState& ds)
     if (!HasThumbnail(ds))
         return;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (bmpPath)
         file::Delete(bmpPath);
     delete ds.thumbnail;

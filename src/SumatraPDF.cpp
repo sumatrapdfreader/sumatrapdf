@@ -219,7 +219,7 @@ bool LaunchBrowser(const TCHAR *url)
         return false;
 
     // check if this URL's protocol is allowed
-    ScopedMem<TCHAR> protocol;
+    ScopedMem<WCHAR> protocol;
     if (!str::Parse(url, _T("%S:"), &protocol))
         return false;
     str::ToLower(protocol);
@@ -238,7 +238,7 @@ bool OpenFileExternally(const TCHAR *path)
 
     // check if this file's perceived type is allowed
     const TCHAR *ext = path::GetExt(path);
-    ScopedMem<TCHAR> perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
+    ScopedMem<WCHAR> perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, _T(".htm")) || str::EndsWithI(path, _T(".html")) || str::EndsWithI(path, _T(".xhtml")))
         perceivedType.Set(str::Dup(_T("webpage")));
@@ -346,7 +346,7 @@ bool WindowInfoStillValid(WindowInfo *win)
 // Find the first window showing a given PDF file
 WindowInfo* FindWindowInfoByFile(const TCHAR *file)
 {
-    ScopedMem<TCHAR> normFile(path::Normalize(file));
+    ScopedMem<WCHAR> normFile(path::Normalize(file));
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
@@ -403,7 +403,7 @@ TCHAR *HwndPasswordUI::GetPassword(const TCHAR *fileName, unsigned char *fileDig
 
     // extract the filename from the URL in plugin mode instead
     // of using the more confusing temporary filename
-    ScopedMem<TCHAR> urlName;
+    ScopedMem<WCHAR> urlName;
     if (gPluginMode) {
         urlName.Set(ExtractFilenameFromURL(gPluginURL));
         if (urlName)
@@ -621,7 +621,7 @@ static int GetPolicies(bool isRestricted)
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
     // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
-    ScopedMem<TCHAR> restrictPath(GetExePath());
+    ScopedMem<WCHAR> restrictPath(GetExePath());
     if (restrictPath) {
         restrictPath.Set(path::GetDir(restrictPath));
         restrictPath.Set(path::Join(restrictPath, RESTRICTIONS_FILE_NAME));
@@ -638,12 +638,12 @@ static int GetPolicies(bool isRestricted)
 
         // determine the list of allowed link protocols and perceived file types
         if ((policy & Perm_DiskAccess)) {
-            ScopedMem<TCHAR> protocols(ReadIniString(restrictPath, _T("Policies"), _T("LinkProtocols")));
+            ScopedMem<WCHAR> protocols(ReadIniString(restrictPath, _T("Policies"), _T("LinkProtocols")));
             str::ToLower(protocols);
             str::TransChars(protocols, _T(":; "), _T(",,,"));
             gAllowedLinkProtocols.Split(protocols, _T(","), true);
 
-            ScopedMem<TCHAR> types(ReadIniString(restrictPath, _T("Policies"), _T("SafeFileTypes")));
+            ScopedMem<WCHAR> types(ReadIniString(restrictPath, _T("Policies"), _T("SafeFileTypes")));
             str::ToLower(types);
             str::TransChars(types, _T(":; "), _T(",,,"));
             gAllowedFileTypes.Split(types, _T(","), true);
@@ -675,7 +675,7 @@ void SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
 
 class ThumbnailRenderingTask : public UITask, public RenderingCallback
 {
-    ScopedMem<TCHAR> filePath;
+    ScopedMem<WCHAR> filePath;
     RenderedBitmap *bmp;
 
 public:
@@ -812,7 +812,7 @@ static void UnsubclassCanvas(HWND hwnd)
 static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     DisplayState *state, bool isNewWindow, bool allowFailure, bool placeWindow)
 {
-    ScopedMem<TCHAR> title;
+    ScopedMem<WCHAR> title;
     WindowInfo *win = args.win;
 
     // TODO: remove time logging before release
@@ -884,7 +884,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     /* see http://code.google.com/p/sumatrapdf/issues/detail?id=1570
     if (!win.dm) {
         // TODO: this should be "Error opening %s". Change after 1.7 is released
-        ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
+        ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
         ShowNotification(&win, msg, true, false, NG_RESPONSE_TO_ACTION);
         // TODO: CloseWindow() does slightly more than this
         //       (also, some code presumes that there is at least one window with
@@ -906,7 +906,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
             chmEngine->SetParentHwnd(win->hwndCanvas);
     } else if (allowFailure) {
         delete prevModel;
-        ScopedMem<TCHAR> title2(str::Format(_T("%s - %s"), path::GetBaseName(args.fileName), SUMATRA_WINDOW_TITLE));
+        ScopedMem<WCHAR> title2(str::Format(_T("%s - %s"), path::GetBaseName(args.fileName), SUMATRA_WINDOW_TITLE));
         win::SetText(win->hwndFrame, title2);
         goto Error;
     } else {
@@ -959,7 +959,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     if (docTitle) {
         str::NormalizeWS(docTitle);
         if (!str::IsEmpty(docTitle)) {
-            ScopedMem<TCHAR> docTitleBit(str::Format(_T("- [%s] "), docTitle));
+            ScopedMem<WCHAR> docTitleBit(str::Format(_T("- [%s] "), docTitle));
             free(docTitle);
             docTitle = docTitleBit.StealData();
         }
@@ -1068,7 +1068,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     bool isNewWindow = false;
     bool showWin = true;
     bool placeWindow = false;
-    ScopedMem<TCHAR> path(str::Dup(win->loadedFilePath));
+    ScopedMem<WCHAR> path(str::Dup(win->loadedFilePath));
     HwndPasswordUI pwdUI(win->hwndFrame);
     LoadArgs args(path, win);
     args.showWin = showWin;
@@ -1299,7 +1299,7 @@ static bool DocumentPathExists(const TCHAR *path)
         // remove information needed for pointing at embedded documents
         // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
         // container document exists
-        ScopedMem<TCHAR> realPath(str::DupN(path, str::FindChar(path + 2, ':') - path));
+        ScopedMem<WCHAR> realPath(str::DupN(path, str::FindChar(path + 2, ':') - path));
         return file::Exists(realPath);
     }
     return false;
@@ -1328,7 +1328,7 @@ void LoadDocument2(const TCHAR *fileName, SumatraWindow& win)
 // TODO: write me
 static WindowInfo* LoadDocumentNew(LoadArgs& args)
 {
-    ScopedMem<TCHAR> fullPath(path::Normalize(args.fileName));
+    ScopedMem<WCHAR> fullPath(path::Normalize(args.fileName));
     // TODO: try to find file on other drives if doesn't exist
 
     CrashIf(true);
@@ -1345,14 +1345,14 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     if (gCrashOnOpen)
         CrashMe();
 
-    ScopedMem<TCHAR> fullPath(path::Normalize(args.fileName));
+    ScopedMem<WCHAR> fullPath(path::Normalize(args.fileName));
     WindowInfo *win = args.win;
 
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
     if (failEarly && gFileHistory.Find(fullPath)) {
-        ScopedMem<TCHAR> adjPath(str::Dup(fullPath));
+        ScopedMem<WCHAR> adjPath(str::Dup(fullPath));
         if (AdjustVariableDriveLetter(adjPath)) {
             RenameFileInHistory(fullPath, adjPath);
             fullPath.Set(adjPath.StealData());
@@ -1363,7 +1363,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
     if (failEarly) {
-        ScopedMem<TCHAR> msg(str::Format(_TR("File %s not found"), fullPath));
+        ScopedMem<WCHAR> msg(str::Format(_TR("File %s not found"), fullPath));
         ShowNotification(win, msg, true /* autoDismiss */, true /* highlight */);
         // display the notification ASAP (SavePrefs() can introduce a notable delay)
         win->RedrawAll(true);
@@ -1469,7 +1469,7 @@ void WindowInfo::PageNoChanged(int pageNo)
         return;
 
     if (INVALID_PAGE_NO != pageNo) {
-        ScopedMem<TCHAR> buf(dm->engine->GetPageLabel(pageNo));
+        ScopedMem<WCHAR> buf(dm->engine->GetPageLabel(pageNo));
         win::SetText(hwndPageBox, buf);
         ToolbarUpdateStateForWindow(this, false);
         if (dm->engine && dm->engine->HasPageLabels())
@@ -1485,9 +1485,9 @@ void WindowInfo::PageNoChanged(int pageNo)
     if (NULL == wnd)
         return;
 
-    ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->PageCount()));
+    ScopedMem<WCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), pageNo, dm->PageCount()));
     if (dm->engine && dm->engine->HasPageLabels()) {
-        ScopedMem<TCHAR> label(dm->engine->GetPageLabel(pageNo));
+        ScopedMem<WCHAR> label(dm->engine->GetPageLabel(pageNo));
         pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, pageNo, dm->PageCount()));
     }
     wnd->UpdateMessage(pageInfo);
@@ -1626,7 +1626,7 @@ void OnDropFiles(HDROP hDrop)
     {
         DragQueryFile(hDrop, i, filePath, dimof(filePath));
         if (str::EndsWithI(filePath, _T(".lnk"))) {
-            ScopedMem<TCHAR> resolved(ResolveLnk(filePath));
+            ScopedMem<WCHAR> resolved(ResolveLnk(filePath));
             if (resolved)
                 str::BufSet(filePath, dimof(filePath), resolved);
         }
@@ -1662,7 +1662,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     if (!IsValidProgramVersion(txt))
         return ERROR_INTERNET_INVALID_URL;
 
-    ScopedMem<TCHAR> verTxt(str::conv::FromAnsi(txt));
+    ScopedMem<WCHAR> verTxt(str::conv::FromAnsi(txt));
     /* reduce the string to a single line (resp. drop the newline) */
     str::TransChars(verTxt, _T("\r\n"), _T("\0\0"));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
@@ -1692,7 +1692,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 
 static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpReq *req, bool autoCheck)
 {
-    ScopedMem<TCHAR> msg;
+    ScopedMem<WCHAR> msg;
 
     if (!IsWindowVisible(hwnd) || !req)
         goto Exit;
@@ -2334,7 +2334,7 @@ static void OnPaint(WindowInfo& win)
         HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
         SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
-        ScopedMem<TCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
+        ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
         DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());
         SelectObject(hdc, hPrevFont);
     } else {
@@ -2537,7 +2537,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (!win.IsDocLoaded()) return;
 
     const TCHAR *srcFileName = win.dm->FilePath();
-    ScopedMem<TCHAR> urlName;
+    ScopedMem<WCHAR> urlName;
     if (gPluginMode) {
         urlName.Set(ExtractFilenameFromURL(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
@@ -2688,7 +2688,7 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, size_t len)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(str::Format(_T("%s\1*.*\1"), _TR("All files")));
+    ScopedMem<WCHAR> fileFilter(str::Format(_T("%s\1*.*\1"), _TR("All files")));
     str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
@@ -2736,7 +2736,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (str::EndsWithI(dstFileName, defExt))
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
 
-    ScopedMem<TCHAR> initDir(path::GetDir(srcFileName));
+    ScopedMem<WCHAR> initDir(path::GetDir(srcFileName));
 
     OPENFILENAME ofn = { 0 };
     ofn.lStructSize = sizeof(ofn);
@@ -2757,7 +2757,7 @@ static void OnMenuRenameFile(WindowInfo &win)
 
     UpdateCurrentFileDisplayStateForWinInfo(&win);
     // note: srcFileName is deleted together with the DisplayModel
-    ScopedMem<TCHAR> srcFilePath(str::Dup(srcFileName));
+    ScopedMem<WCHAR> srcFilePath(str::Dup(srcFileName));
     CloseDocumentInWindow(&win);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
@@ -2770,7 +2770,7 @@ static void OnMenuRenameFile(WindowInfo &win)
         return;
     }
 
-    ScopedMem<TCHAR> newPath(path::Normalize(dstFileName));
+    ScopedMem<WCHAR> newPath(path::Normalize(dstFileName));
     RenameFileInHistory(srcFilePath, newPath);
 
     LoadArgs args(dstFileName, &win);
@@ -2795,7 +2795,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<TCHAR> fileFilter(str::Format(_T("%s\1*.lnk\1"), _TR("Bookmark Shortcuts")));
+    ScopedMem<WCHAR> fileFilter(str::Format(_T("%s\1*.lnk\1"), _TR("Bookmark Shortcuts")));
     str::TransChars(fileFilter, _T("\1"), _T("\0"));
 
     OPENFILENAME ofn = { 0 };
@@ -2811,13 +2811,13 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     if (!GetSaveFileName(&ofn))
         return;
 
-    ScopedMem<TCHAR> filename(str::Dup(dstFileName));
+    ScopedMem<WCHAR> filename(str::Dup(dstFileName));
     if (!str::EndsWithI(dstFileName, _T(".lnk")))
         filename.Set(str::Join(dstFileName, _T(".lnk")));
 
     ScrollState ss = win.dm->GetScrollState();
     const TCHAR *viewMode = DisplayModeConv::NameFromEnum(win.dm->GetDisplayMode());
-    ScopedMem<TCHAR> ZoomVirtual(str::Format(_T("%.2f"), win.dm->ZoomVirtual()));
+    ScopedMem<WCHAR> ZoomVirtual(str::Format(_T("%.2f"), win.dm->ZoomVirtual()));
     if (ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
         ZoomVirtual.Set(str::Dup(_T("fitpage")));
     else if (ZOOM_FIT_WIDTH == win.dm->ZoomVirtual())
@@ -2825,11 +2825,11 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     else if (ZOOM_FIT_CONTENT == win.dm->ZoomVirtual())
         ZoomVirtual.Set(str::Dup(_T("fitcontent")));
 
-    ScopedMem<TCHAR> exePath(GetExePath());
-    ScopedMem<TCHAR> args(str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
+    ScopedMem<WCHAR> exePath(GetExePath());
+    ScopedMem<WCHAR> args(str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
                           win.dm->FilePath(), ss.page, viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
-    ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(ss.page));
-    ScopedMem<TCHAR> desc(str::Format(_TR("Bookmark shortcut to page %s of %s"),
+    ScopedMem<WCHAR> label(win.dm->engine->GetPageLabel(ss.page));
+    ScopedMem<WCHAR> desc(str::Format(_TR("Bookmark shortcut to page %s of %s"),
                           label, path::GetBaseName(win.dm->FilePath())));
 
     CreateShortcut(filename, exePath, args, desc, 1);
@@ -2949,7 +2949,7 @@ void OnMenuOpen(SumatraWindow& win)
     }
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
 #endif
-    ScopedMem<TCHAR> file(AllocArray<TCHAR>(ofn.nMaxFile));
+    ScopedMem<WCHAR> file(AllocArray<TCHAR>(ofn.nMaxFile));
     ofn.lpstrFile = file;
 
     if (!GetOpenFileName(&ofn))
@@ -2963,7 +2963,7 @@ void OnMenuOpen(SumatraWindow& win)
     }
 
     while (*fileName) {
-        ScopedMem<TCHAR> filePath(path::Join(ofn.lpstrFile, fileName));
+        ScopedMem<WCHAR> filePath(path::Join(ofn.lpstrFile, fileName));
         if (filePath)
             LoadDocument2(filePath, win);
         fileName += str::Len(fileName) + 1;
@@ -2980,8 +2980,8 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     const TCHAR *fileExt = path::GetExt(win.loadedFilePath);
     if (win.IsDocLoaded())
         fileExt = win.dm->engine->GetDefaultFileExt();
-    ScopedMem<TCHAR> pattern(str::Format(_T("*%s"), fileExt));
-    ScopedMem<TCHAR> dir(path::GetDir(win.loadedFilePath));
+    ScopedMem<WCHAR> pattern(str::Format(_T("*%s"), fileExt));
+    ScopedMem<WCHAR> dir(path::GetDir(win.loadedFilePath));
     pattern.Set(path::Join(dir, pattern));
 
     WStrVec files;
@@ -3259,8 +3259,8 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
     }
 
-    ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(win.dm->CurrentPageNo()));
-    ScopedMem<TCHAR> newPageLabel(Dialog_GoToPage(win.hwndFrame, label, win.dm->PageCount(),
+    ScopedMem<WCHAR> label(win.dm->engine->GetPageLabel(win.dm->CurrentPageNo()));
+    ScopedMem<WCHAR> newPageLabel(Dialog_GoToPage(win.hwndFrame, label, win.dm->PageCount(),
                                                   !win.dm->engine->HasPageLabels()));
     if (!newPageLabel)
         return;
@@ -3648,9 +3648,9 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
         // total pages count a one-key action (unless they're already visible)
         if (!gGlobalPrefs.toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->CurrentPageNo(), total = win.dm->PageCount();
-            ScopedMem<TCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
+            ScopedMem<WCHAR> pageInfo(str::Format(_T("%s %d / %d"), _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
-                ScopedMem<TCHAR> label(win.dm->engine->GetPageLabel(current));
+                ScopedMem<WCHAR> label(win.dm->engine->GetPageLabel(current));
                 pageInfo.Set(str::Format(_T("%s %s (%d / %d)"), _TR("Page:"), label, current, total));
             }
             bool autoDismiss = !IsShiftPressed();
@@ -3847,7 +3847,7 @@ void LayoutTreeContainer(HWND hwndContainer, int id)
     HWND hwndClose = GetDlgItem(hwndContainer, id + 2);
     HWND hwndTree  = GetDlgItem(hwndContainer, id + 3);
 
-    ScopedMem<TCHAR> title(win::GetText(hwndTitle));
+    ScopedMem<WCHAR> title(win::GetText(hwndTitle));
     SizeI size = TextSizeInHwnd(hwndTitle, title);
 
     WindowInfo *win = FindWindowInfoByHwnd(hwndContainer);
@@ -3873,7 +3873,7 @@ LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 {
     bool stateChanged = false;
     if (WM_MOUSEMOVE == msg) {
-        ScopedMem<TCHAR> s(win::GetText(hwnd));
+        ScopedMem<WCHAR> s(win::GetText(hwnd));
         if (!str::Eq(s, BUTTON_HOVER_TEXT)) {
             win::SetText(hwnd, BUTTON_HOVER_TEXT);
             stateChanged = true;
@@ -4041,7 +4041,7 @@ static LRESULT OnSetCursor(WindowInfo& win, HWND hwnd)
                 PointI pti(pt.x, pt.y);
                 PageElement *pageEl = win.dm->GetElementAtPos(pti);
                 if (pageEl) {
-                    ScopedMem<TCHAR> text(pageEl->GetValue());
+                    ScopedMem<WCHAR> text(pageEl->GetValue());
                     RectI rc = win.dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
                     win.CreateInfotip(text, rc, true);
 

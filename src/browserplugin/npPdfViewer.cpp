@@ -143,7 +143,7 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
         return E_UNEXPECTED;
     }
     
-    ScopedMem<TCHAR> mimeType(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/pdf")));
+    ScopedMem<WCHAR> mimeType(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/pdf")));
     EnsureRegKey(mimeType);
     mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/vnd.ms-xpsdocument")));
     EnsureRegKey(mimeType);
@@ -171,7 +171,7 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
 
 DLLEXPORT STDAPI DllUnregisterServer(VOID)
 {
-    ScopedMem<TCHAR> mozPluginPath(ReadRegStr(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH")));
+    ScopedMem<WCHAR> mozPluginPath(ReadRegStr(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH")));
     if (mozPluginPath)
     {
         TCHAR szModulePath[MAX_PATH];
@@ -199,7 +199,7 @@ bool GetExePath(LPTSTR lpPath, int len)
     
     *lpPath = '\0';
     // Try to get the path from the registry (set e.g. when making the default PDF viewer)
-    ScopedMem<TCHAR> path(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Classes\\SumatraPDF\\Shell\\Open\\Command"), NULL));
+    ScopedMem<WCHAR> path(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Classes\\SumatraPDF\\Shell\\Open\\Command"), NULL));
     if (!path)
         return false;
 
@@ -214,7 +214,7 @@ bool GetExePath(LPTSTR lpPath, int len)
 
 HANDLE CreateTempFile(TCHAR *filePathBufOut, size_t bufSize)
 {
-    ScopedMem<TCHAR> tmpPath(path::GetTempPath(_T("nPV")));
+    ScopedMem<WCHAR> tmpPath(path::GetTempPath(_T("nPV")));
     if (!tmpPath)
     {
         plogf("sp: CreateTempFile(): GetTempPath() failed");
@@ -272,7 +272,7 @@ static TCHAR *FormatSizeSuccint(size_t size) {
         unit = _T("KB");
     }
     
-    ScopedMem<TCHAR> sizestr(str::FormatFloatWithThousandSep(s));
+    ScopedMem<WCHAR> sizestr(str::FormatFloatWithThousandSep(s));
     if (!unit)
         return sizestr.StealData();
     
@@ -318,7 +318,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             FillRect(hDCBuffer, &rcProgress.ToRECT(), brushProgress);
             DeleteObject(brushProgress);
             
-            ScopedMem<TCHAR> currSize(FormatSizeSuccint(data->currSize));
+            ScopedMem<WCHAR> currSize(FormatSizeSuccint(data->currSize));
             if (0 == data->totalSize || data->currSize > data->totalSize)
             {
                 // total size unknown or bogus => show just the current size
@@ -326,8 +326,8 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             }
             else
             {
-                ScopedMem<TCHAR> totalSize(FormatSizeSuccint(data->totalSize));
-                ScopedMem<TCHAR> s(str::Format(_T("%s of %s"), currSize, totalSize));
+                ScopedMem<WCHAR> totalSize(FormatSizeSuccint(data->totalSize));
+                ScopedMem<WCHAR> s(str::Format(_T("%s of %s"), currSize, totalSize));
                 DrawCenteredText(hDCBuffer, rcProgressAll, s);
             }
         }
@@ -371,7 +371,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     }
 
     if (pluginType)
-        plogf("sp:   pluginType: %s ", ScopedMem<TCHAR>(str::conv::FromAnsi(pluginType)));
+        plogf("sp:   pluginType: %s ", ScopedMem<WCHAR>(str::conv::FromAnsi(pluginType)));
     if (saved)
         plogf("sp:   SavedData: len=%d", saved->len);
 
@@ -521,7 +521,7 @@ static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
     if (!file::Exists(data->filepath))
         plogf("sp: NPP_StreamAsFile() error: file doesn't exist");
 
-    ScopedMem<TCHAR> url(str::conv::FromUtf8(url_utf8));
+    ScopedMem<WCHAR> url(str::conv::FromUtf8(url_utf8));
     // escape quotation marks and backslashes for CmdLineParser.cpp's ParseQuoted
     if (str::FindChar(url, '"')) {
         WStrVec parts;
@@ -533,7 +533,7 @@ static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
         url.Set(str::Join(url, _T("%5c")));
     }
 
-    ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -plugin \"%s\" %d \"%s\""),
+    ScopedMem<WCHAR> cmdLine(str::Format(_T("\"%s\" -plugin \"%s\" %d \"%s\""),
         data->exepath, url ? url : _T(""), (HWND)data->npwin->window, data->filepath));
     data->hProcess = LaunchProcess(cmdLine);
     if (!data->hProcess)
@@ -554,7 +554,7 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
         goto Exit;
     }
 
-    plogf("sp: NPP_StreamAsFile() fname=%s", ScopedMem<TCHAR>(str::conv::FromAnsi(fname)));
+    plogf("sp: NPP_StreamAsFile() fname=%s", ScopedMem<WCHAR>(str::conv::FromAnsi(fname)));
 
     if (data->hFile)
         plogf("sp: NPP_StreamAsFile() error: data->hFile is != NULL (should be NULL)");
@@ -588,7 +588,7 @@ NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason rea
     if (stream)
     {
         if (stream->url)
-            plogf("sp:   url: %s", ScopedMem<TCHAR>(str::conv::FromUtf8(stream->url)));
+            plogf("sp:   url: %s", ScopedMem<WCHAR>(str::conv::FromUtf8(stream->url)));
         plogf("sp:   end: %d", stream->end);
     }
 

@@ -15,7 +15,7 @@ public:
     {
         va_list args;
         va_start(args, fmt);
-        ScopedMem<TCHAR> s(str::FmtV(fmt, args));
+        ScopedMem<WCHAR> s(str::FmtV(fmt, args));
         Log(s);
         va_end(args);
     }
@@ -71,7 +71,7 @@ public:
     {
         if (s) {
             // DbgView displays one line per OutputDebugString call
-            OutputDebugString(ScopedMem<TCHAR>(str::Format(_T("%s\n"), s)));
+            OutputDebugString(ScopedMem<WCHAR>(str::Format(_T("%s\n"), s)));
         }
     }
 };

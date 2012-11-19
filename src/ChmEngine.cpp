@@ -27,7 +27,7 @@ static bool IsExternalUrl(const TCHAR *url)
 
 class ChmTocItem : public DocTocItem, public PageDestination {
 public:
-    ScopedMem<TCHAR> url;
+    ScopedMem<WCHAR> url;
 
     ChmTocItem(TCHAR *title, int pageNo, TCHAR *url) :
         DocTocItem(title, pageNo), url(url) { }
@@ -206,7 +206,7 @@ void ChmEngineImpl::OnDocumentComplete(const TCHAR *url)
         return;
     if (*url == _T('/'))
         ++url;
-    int pageNo = pages.Find(ScopedMem<TCHAR>(str::ToPlainUrl(url))) + 1;
+    int pageNo = pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(url))) + 1;
     if (pageNo) {
         currentPageNo = pageNo;
         if (navCb)
@@ -250,7 +250,7 @@ void ChmEngineImpl::DisplayPage(const TCHAR *pageUrl)
         return;
     }
 
-    int pageNo = pages.Find(ScopedMem<TCHAR>(str::ToPlainUrl(pageUrl))) + 1;
+    int pageNo = pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(pageUrl))) + 1;
     if (pageNo)
         currentPageNo = pageNo;
 
@@ -356,7 +356,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         if (!url || IsExternalUrl(url))
             return 0;
 
-        ScopedMem<TCHAR> plainUrl(str::ToPlainUrl(url));
+        ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
         int pageNo = pages->Find(plainUrl) + 1;
         if (pageNo > 0)
             return pageNo;
@@ -372,7 +372,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         if (!url || IsExternalUrl(url))
             return 0;
 
-        ScopedMem<TCHAR> plainUrl(str::ToPlainUrl(url));
+        ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
         int pageNo = pages->Count() + 1;
         bool inserted = urlsSet.Insert(plainUrl, pageNo, &pageNo);
         if (inserted) {
@@ -454,7 +454,7 @@ ChmCacheEntry *ChmEngineImpl::FindDataForUrl(const TCHAR *url)
 // Load and cache data for a given url inside CHM file.
 bool ChmEngineImpl::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
 {
-    ScopedMem<TCHAR> plainUrl(str::ToPlainUrl(url));
+    ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
     ChmCacheEntry *e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(plainUrl);
@@ -473,7 +473,7 @@ bool ChmEngineImpl::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
 
 PageDestination *ChmEngineImpl::GetNamedDest(const TCHAR *name)
 {
-    ScopedMem<TCHAR> plainUrl(str::ToPlainUrl(name));
+    ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(name));
     int pageNo = pages.Find(plainUrl) + 1;
     if (pageNo > 0)
         return new ChmTocItem(NULL, pageNo, str::Dup(name));

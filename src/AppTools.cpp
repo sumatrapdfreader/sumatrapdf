@@ -71,12 +71,12 @@ bool IsRunningInPortableMode()
         return sCacheIsPortable != 0;
     sCacheIsPortable = 1;
 
-    ScopedMem<TCHAR> exePath(GetExePath());
+    ScopedMem<WCHAR> exePath(GetExePath());
     if (!exePath)
         return true;
 
     // if we can't get a path, assume we're not running from "Program Files"
-    ScopedMem<TCHAR> installedPath(NULL);
+    ScopedMem<WCHAR> installedPath(NULL);
     installedPath.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\") APP_NAME_STR, _T("Install_Dir")));
     if (!installedPath)
         installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\") APP_NAME_STR, _T("Install_Dir")));
@@ -112,10 +112,10 @@ bool IsRunningInPortableMode()
 /* Caller needs to free() the result. */
 TCHAR *AppGenDataFilename(TCHAR *fileName)
 {
-    ScopedMem<TCHAR> path;
+    ScopedMem<WCHAR> path;
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        ScopedMem<TCHAR> exePath(GetExePath());
+        ScopedMem<WCHAR> exePath(GetExePath());
         if (exePath)
             path.Set(path::GetDir(exePath));
     } else {
@@ -213,11 +213,11 @@ UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 
 void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
-    ScopedMem<TCHAR> exePath(GetExePath());
+    ScopedMem<WCHAR> exePath(GetExePath());
     if (!exePath)
         return;
 
-    ScopedMem<TCHAR> prevHandler(NULL);
+    ScopedMem<WCHAR> prevHandler(NULL);
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
     if (prevHandler && !str::Eq(prevHandler, APP_NAME_STR))
@@ -230,7 +230,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell"), NULL, _T("open"));
 
-    ScopedMem<TCHAR> cmdPath(str::Format(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
+    ScopedMem<WCHAR> cmdPath(str::Format(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
     bool ok = WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\open\\command"), NULL, cmdPath);
 
     // also register for printing
@@ -259,7 +259,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 bool IsExeAssociatedWithPdfExtension()
 {
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    ScopedMem<TCHAR> tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, _T("Progid")));
+    ScopedMem<WCHAR> tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, _T("Progid")));
     if (tmp && !str::Eq(tmp, APP_NAME_STR))
         return false;
 
@@ -290,7 +290,7 @@ bool IsExeAssociatedWithPdfExtension()
 
     WStrVec argList;
     ParseCmdLine(tmp, argList);
-    ScopedMem<TCHAR> exePath(GetExePath());
+    ScopedMem<WCHAR> exePath(GetExePath());
     if (!exePath || !argList.Find(_T("%1")) || !str::Find(tmp, _T("\"%1\"")))
         return false;
 
@@ -300,7 +300,7 @@ bool IsExeAssociatedWithPdfExtension()
 // caller needs to free() the result
 TCHAR *ExtractFilenameFromURL(const TCHAR *url)
 {
-    ScopedMem<TCHAR> urlName(str::Dup(url));
+    ScopedMem<WCHAR> urlName(str::Dup(url));
     // try to extract the file name from the URL (last path component before query or hash)
     str::TransChars(urlName, _T("/?#"), _T("\\\0\0"));
     urlName.Set(str::Dup(path::GetBaseName(urlName)));
@@ -330,7 +330,7 @@ TCHAR *ExtractFilenameFromURL(const TCHAR *url)
 // an untrusted zone (e.g. by the browser that's downloaded them)
 bool IsUntrustedFile(const TCHAR *filePath, const TCHAR *fileURL)
 {
-    ScopedMem<TCHAR> protocol;
+    ScopedMem<WCHAR> protocol;
     if (fileURL && str::Parse(fileURL, _T("%S:"), &protocol))
         if (str::Len(protocol) > 1 && !str::EqI(protocol, _T("file")))
             return true;
@@ -339,7 +339,7 @@ bool IsUntrustedFile(const TCHAR *filePath, const TCHAR *fileURL)
         return true;
 
     // check all parents of embedded files and ADSs as well
-    ScopedMem<TCHAR> path(str::Dup(filePath));
+    ScopedMem<WCHAR> path(str::Dup(filePath));
     while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
         *_tcsrchr(path, ':') = '\0';
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET)
@@ -426,7 +426,7 @@ static struct {
 LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
 {
     LPTSTR firstEditor = NULL;
-    ScopedMem<TCHAR> path(NULL);
+    ScopedMem<WCHAR> path(NULL);
 
     TCHAR *editorToSkip = NULL;
 
@@ -443,7 +443,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         TCHAR *exePath;
         if (editor_rules[i].Type == SiblingPath) {
             // remove file part
-            ScopedMem<TCHAR> dir(path::GetDir(path));
+            ScopedMem<WCHAR> dir(path::GetDir(path));
             exePath = path::Join(dir, editor_rules[i].BinaryFilename);
         } else if (editor_rules[i].Type == BinaryDir)
             exePath = path::Join(path, editor_rules[i].BinaryFilename);
@@ -563,7 +563,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case UWM_DELAYED_CTRL_BACK:
         {
-            ScopedMem<TCHAR> text(win::GetText(hwnd));
+            ScopedMem<WCHAR> text(win::GetText(hwnd));
             int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
             // remove the rectangle produced by Ctrl+Backspace
             if (selStart > 0 && text[selStart - 1] == '\x7F') {

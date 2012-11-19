@@ -252,7 +252,7 @@ bool ChmDoc::Load(const TCHAR *fileName)
 
 TCHAR *ChmDoc::GetProperty(DocumentProperty prop)
 {
-    ScopedMem<TCHAR> result;
+    ScopedMem<WCHAR> result;
     if (Prop_Title == prop && title)
         result.Set(ToStr(title));
     else if (Prop_CreatorApp == prop && creator)
@@ -304,12 +304,12 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
     if (!el)
         return false;
 
-    ScopedMem<TCHAR> name, local;
+    ScopedMem<WCHAR> name, local;
     for (el = el->GetChildByName("param"); el; el = el->next) {
         if (!el->NameIs("param"))
             continue;
-        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
-        ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
+        ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
+        ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
 #ifdef UNICODE
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
@@ -355,12 +355,12 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
         return false;
 
     WStrVec references;
-    ScopedMem<TCHAR> keyword, name;
+    ScopedMem<WCHAR> keyword, name;
     for (el = el->GetChildByName("param"); el; el = el->next) {
         if (!el->NameIs("param"))
             continue;
-        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
-        ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
+        ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
+        ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
 #ifdef UNICODE
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));

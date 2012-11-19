@@ -224,7 +224,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     if (!win->dm->engine->IsCopyingTextAllowed())
         ShowNotification(win, _TR("Copying text was denied (copying as image only)"));
     else if (!win->dm->engine->IsImageCollection()) {
-        ScopedMem<TCHAR> selText;
+        ScopedMem<WCHAR> selText;
         bool isTextSelection = win->dm->textSelection->result.len > 0;
         if (isTextSelection) {
             selText.Set(win->dm->textSelection->ExtractText(_T("\r\n")));

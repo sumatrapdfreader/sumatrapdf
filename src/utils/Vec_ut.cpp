@@ -44,7 +44,7 @@ static void WStrVecTest()
         assert(count == 5 && v2.Find(L"c") == 3);
         assert(v2.Find(L"") == 2 && v2.Find(L"", 3) == 4 && v2.Find(L"", 5) == -1);
         assert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
-        ScopedMem<TCHAR> joined(v2.Join(L";"));
+        ScopedMem<WCHAR> joined(v2.Join(L";"));
         assert(str::Eq(joined, L"a;b;;c;"));
     }
 
@@ -52,9 +52,9 @@ static void WStrVecTest()
         WStrVec v2;
         size_t count = v2.Split(L"a,b,,c,", L",", true);
         assert(count == 3 && v2.Find(L"c") == 2);
-        ScopedMem<TCHAR> joined(v2.Join(L";"));
+        ScopedMem<WCHAR> joined(v2.Join(L";"));
         assert(str::Eq(joined, L"a;b;c"));
-        ScopedMem<TCHAR> last(v2.Pop());
+        ScopedMem<WCHAR> last(v2.Pop());
         assert(v2.Count() == 2 && str::Eq(last, _T("c")));
     }
 }

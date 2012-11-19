@@ -75,7 +75,7 @@ void NotificationWnd::UpdateProgress(int current, int total)
         total = 1;
     progress = limitValue(100 * current / total, 0, 100);
     if (hasProgress && progressMsg) {
-        ScopedMem<TCHAR> message(str::Format(progressMsg, current, total));
+        ScopedMem<WCHAR> message(str::Format(progressMsg, current, total));
         UpdateMessage(message);
     }
 }
@@ -138,7 +138,7 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
             rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
         if (wnd->hasCancel)
             rectMsg.dx -= 20;
-        ScopedMem<TCHAR> text(win::GetText(hwnd));
+        ScopedMem<WCHAR> text(win::GetText(hwnd));
         DrawText(hdc, text, -1, &rectMsg.ToRECT(), DT_SINGLELINE | DT_NOPREFIX);
 
         if (wnd->hasCancel)

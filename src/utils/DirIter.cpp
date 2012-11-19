@@ -10,7 +10,7 @@
 bool DirIter::StartDirIter(const TCHAR *dir)
 {
     currDir.Set(str::Dup(dir));
-    ScopedMem<TCHAR> pattern(path::Join(currDir, _T("*")));
+    ScopedMem<WCHAR> pattern(path::Join(currDir, _T("*")));
     currFindHandle = FindFirstFile(pattern, &currFindData);
     if (INVALID_HANDLE_VALUE == currFindHandle)
         return false;
@@ -20,7 +20,7 @@ bool DirIter::StartDirIter(const TCHAR *dir)
 bool DirIter::TryNextDir()
 {
     while (dirsToVisit.Count() > 0) {
-        ScopedMem<TCHAR> nextDir(dirsToVisit.Pop());
+        ScopedMem<WCHAR> nextDir(dirsToVisit.Pop());
         // it's ok if we fail, this might be an auth problem,
         // we keep going
         bool ok = StartDirIter(nextDir);

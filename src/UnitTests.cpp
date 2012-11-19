@@ -170,7 +170,7 @@ static void UrlExtractTest()
     assert(!ExtractFilenameFromURL(_T("")));
     assert(!ExtractFilenameFromURL(_T("#hash_only")));
     assert(!ExtractFilenameFromURL(_T("?query=only")));
-    ScopedMem<TCHAR> filename(ExtractFilenameFromURL(_T("http://example.net/filename.ext")));
+    ScopedMem<WCHAR> filename(ExtractFilenameFromURL(_T("http://example.net/filename.ext")));
     assert(str::Eq(filename, _T("filename.ext")));
     filename.Set(ExtractFilenameFromURL(_T("http://example.net/filename.ext#with_hash")));
     assert(str::Eq(filename, _T("filename.ext")));

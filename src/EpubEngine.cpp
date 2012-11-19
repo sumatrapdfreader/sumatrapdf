@@ -135,7 +135,7 @@ class SimpleDest2 : public PageDestination {
 protected:
     int pageNo;
     RectD rect;
-    ScopedMem<TCHAR> value;
+    ScopedMem<WCHAR> value;
 
 public:
     SimpleDest2(int pageNo, RectD rect, TCHAR *value=NULL) :
@@ -393,7 +393,7 @@ TCHAR *EbookEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
             }
             insertSpace = false;
             {
-                ScopedMem<TCHAR> s(str::conv::FromHtmlUtf8(i->str.s, i->str.len));
+                ScopedMem<WCHAR> s(str::conv::FromHtmlUtf8(i->str.s, i->str.len));
                 content.Append(s);
                 size_t len = str::Len(s);
                 double cwidth = 1.0 * bbox.dx / len;
@@ -416,7 +416,7 @@ TCHAR *EbookEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_o
             }
             insertSpace = false;
             {
-                ScopedMem<TCHAR> s(str::conv::FromHtmlUtf8(i->str.s, i->str.len));
+                ScopedMem<WCHAR> s(str::conv::FromHtmlUtf8(i->str.s, i->str.len));
                 content.Append(s);
                 size_t len = str::Len(s);
                 double cwidth = 1.0 * bbox.dx / len;
@@ -446,7 +446,7 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
     if (!isInternal)
         return new EbookLink(link, rect, NULL, pageNo);
 
-    ScopedMem<TCHAR> id;
+    ScopedMem<WCHAR> id;
     DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
     if (baseAnchor) {
         ScopedMem<char> basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
@@ -592,7 +592,7 @@ public:
         else if (IsExternalUrl(url))
             dest = new SimpleDest2(0, RectD(), str::Dup(url));
         else if (str::FindChar(url, '%')) {
-            ScopedMem<TCHAR> decodedUrl(str::Dup(url));
+            ScopedMem<WCHAR> decodedUrl(str::Dup(url));
             str::UrlDecodeInPlace(decodedUrl);
             dest = engine->GetNamedDest(decodedUrl);
         }
@@ -891,7 +891,7 @@ bool Fb2EngineImpl::HasTocTree() const
 DocTocItem *Fb2EngineImpl::GetTocTree()
 {
     EbookTocItem *root = NULL;
-    ScopedMem<TCHAR> itemText;
+    ScopedMem<WCHAR> itemText;
     int titleCount = 0;
     bool inTitle = false;
     int level = 0;
@@ -913,7 +913,7 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
             if (itemText)
                 str::NormalizeWS(itemText);
             if (!str::IsEmpty(itemText.Get())) {
-                ScopedMem<TCHAR> name(str::Format(_T(FB2_TOC_ENTRY_MARK) _T("%d"), titleCount));
+                ScopedMem<WCHAR> name(str::Format(_T(FB2_TOC_ENTRY_MARK) _T("%d"), titleCount));
                 PageDestination *dest = GetNamedDest(name);
                 EbookTocItem *item = new EbookTocItem(itemText.StealData(), dest);
                 item->id = titleCount;
@@ -923,7 +923,7 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
             inTitle = false;
         }
         else if (inTitle && tok->IsText()) {
-            ScopedMem<TCHAR> text(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
+            ScopedMem<WCHAR> text(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
             if (str::IsEmpty(itemText.Get()))
                 itemText.Set(text.StealData());
             else
@@ -1003,8 +1003,8 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     if (parser.Parse(args.htmlStr)) {
         HtmlElement *ref = NULL;
         while ((ref = parser.FindElementByName("reference", ref))) {
-            ScopedMem<TCHAR> type(ref->GetAttribute("type"));
-            ScopedMem<TCHAR> filepos(ref->GetAttribute("filepos"));
+            ScopedMem<WCHAR> type(ref->GetAttribute("type"));
+            ScopedMem<WCHAR> filepos(ref->GetAttribute("filepos"));
             if (str::EqI(type, _T("toc")) && filepos) {
                 unsigned int pos;
                 if (str::Parse(filepos, _T("%u%$"), &pos) && pos < args.htmlStrLen) {
@@ -1059,8 +1059,8 @@ DocTocItem *MobiEngineImpl::GetTocTree()
         return NULL;
 
     EbookTocItem *root = NULL;
-    ScopedMem<TCHAR> itemText;
-    ScopedMem<TCHAR> itemLink;
+    ScopedMem<WCHAR> itemText;
+    ScopedMem<WCHAR> itemLink;
     int itemLevel = 0;
     int idCounter = 0;
 
@@ -1070,7 +1070,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
     HtmlToken *tok;
     while ((tok = parser.Next()) && !tok->IsError()) {
         if (itemLink && tok->IsText()) {
-            ScopedMem<TCHAR> linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
+            ScopedMem<WCHAR> linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
             if (itemText)
                 itemText.Set(str::Join(itemText, _T(" "), linkText));
             else
@@ -1397,7 +1397,7 @@ public:
     char *GetHtml() {
         // first add the homepage
         const char *index = doc->GetHomePath();
-        ScopedMem<TCHAR> url(doc->ToStr(index));
+        ScopedMem<WCHAR> url(doc->ToStr(index));
         Visit(NULL, url, 0);
 
         // then add all pages linked to from the table of contents
@@ -1423,7 +1423,7 @@ public:
     virtual void Visit(const TCHAR *name, const TCHAR *url, int level) {
         if (!url || IsExternalUrl(url))
             return;
-        ScopedMem<TCHAR> plainUrl(str::ToPlainUrl(url));
+        ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
         if (added.FindI(plainUrl) != -1)
             return;
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
@@ -1635,7 +1635,7 @@ bool HtmlEngineImpl::Load(const TCHAR *fileName)
 }
 
 class RemoteHtmlDest : public SimpleDest2 {
-    ScopedMem<TCHAR> name;
+    ScopedMem<WCHAR> name;
 
 public:
     RemoteHtmlDest(const TCHAR *relativeURL) : SimpleDest2(0, RectD()) {
@@ -1658,7 +1658,7 @@ PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pag
     if (!isInternal || !link->str.len || '#' == *link->str.s)
         return EbookEngine::CreatePageLink(link, rect, pageNo);
 
-    ScopedMem<TCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     PageDestination *dest = new RemoteHtmlDest(url);
     return new EbookLink(link, rect, dest, pageNo, true);
 }

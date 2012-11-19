@@ -195,7 +195,7 @@ REAL GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo)
 void DrawCloseButton(DRAWITEMSTRUCT *dis)
 {
     RectI r(RectI::FromRECT(dis->rcItem));
-    ScopedMem<TCHAR> s(win::GetText(dis->hwndItem));
+    ScopedMem<WCHAR> s(win::GetText(dis->hwndItem));
     bool onHover = str::Eq(s, BUTTON_HOVER_TEXT);
 
     Graphics g(dis->hDC);
