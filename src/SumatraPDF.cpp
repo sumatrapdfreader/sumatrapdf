@@ -2826,7 +2826,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
         ZoomVirtual.Set(str::Dup(L"fitcontent"));
 
     ScopedMem<WCHAR> exePath(GetExePath());
-    ScopedMem<WCHAR> args(str::Format(_T("\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance"),
+    ScopedMem<WCHAR> args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d -reuse-instance",
                           win.dm->FilePath(), ss.page, viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
     ScopedMem<WCHAR> label(win.dm->engine->GetPageLabel(ss.page));
     ScopedMem<WCHAR> desc(str::Format(_TR("Bookmark shortcut to page %s of %s"),

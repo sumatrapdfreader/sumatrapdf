@@ -68,11 +68,11 @@ static void TStrTest()
     assert(0 == count);
     assert(str::Eq(buf, L"one two three"));
 
-    str = _T("[Open(\"filename.pdf\",0,1,0)]");
+    str = L"[Open(\"filename.pdf\",0,1,0)]";
     {
         UINT u1 = 0;
         WCHAR *str1 = NULL;
-        const WCHAR *end = str::Parse(str, _T("[Open(\"%s\",%? 0,%u,0)]"), &str1, &u1);
+        const WCHAR *end = str::Parse(str, L"[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
         assert(end && !*end);
         assert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
         free(str1);
@@ -81,7 +81,7 @@ static void TStrTest()
     {
         UINT u1 = 0;
         ScopedMem<WCHAR> str1;
-        const WCHAR *end = str::Parse(str, _T("[Open(\"%S\",0%?,%u,0)]"), &str1, &u1);
+        const WCHAR *end = str::Parse(str, L"[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
         assert(end && !*end);
         assert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
 

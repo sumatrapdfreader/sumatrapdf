@@ -724,7 +724,7 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 	if (fontlistMS.len == 0)
 		fz_throw(ctx, "fonterror: couldn't find any fonts");
 
-	if (GetEnvironmentVariable(_T("MULOG"), NULL, 0))
+	if (GetEnvironmentVariable(L"MULOG", NULL, 0))
 		printf("pdf_load_windows_font: looking for font '%s'\n", fontname);
 
 	// work on a normalized copy of the font name
@@ -790,7 +790,7 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 	if (!found)
 		fz_throw(ctx, "couldn't find system font '%s'", orig_name);
 
-	if (GetEnvironmentVariable(_T("MULOG"), NULL, 0))
+	if (GetEnvironmentVariable(L"MULOG", NULL, 0))
 		printf("pdf_load_windows_font: loading font from '%s'\n", found->fontpath);
 
 	font->font = fz_new_font_from_file(ctx, orig_name, found->fontpath, found->index,

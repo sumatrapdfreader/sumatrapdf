@@ -134,26 +134,26 @@ static void OpenUsingDde(const WCHAR *filePath, CommandLineInfo& i, bool isFirst
     WCHAR fullpath[MAX_PATH];
     GetFullPathName(filePath, dimof(fullpath), fullpath, NULL);
 
-    ScopedMem<WCHAR> cmd(str::Format(L"[" DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
+    ScopedMem<WCHAR> cmd(str::Format(L"[" DDECOMMAND_OPEN L"(\"%s\", 0, 1, 0)]", fullpath));
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     if (i.destName && isFirstWin) {
-        cmd.Set(str::Format(L"[" DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
+        cmd.Set(str::Format(L"[" DDECOMMAND_GOTO L"(\"%s\", \"%s\")]", fullpath, i.destName));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
     else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.Set(str::Format(L"[" DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
+        cmd.Set(str::Format(L"[" DDECOMMAND_PAGE L"(\"%s\", %d)]", fullpath, i.pageNumber));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
     if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
             i.startScroll.x != -1 && i.startScroll.y != -1) && isFirstWin) {
         const WCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
-        cmd.Set(str::Format(L"[" DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
+        cmd.Set(str::Format(L"[" DDECOMMAND_SETVIEW L"(\"%s\", \"%s\", %.2f, %d, %d)]",
                                     fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
-        cmd.Set(str::Format(L"[" DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
+        cmd.Set(str::Format(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]",
                                     filePath, sourcePath, i.forwardSearchLine));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }

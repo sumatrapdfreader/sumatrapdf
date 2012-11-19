@@ -204,7 +204,7 @@ void ChmEngineImpl::OnDocumentComplete(const WCHAR *url)
 {
     if (!url)
         return;
-    if (*url == _T('/'))
+    if (*url == L'/')
         ++url;
     int pageNo = pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(url))) + 1;
     if (pageNo) {

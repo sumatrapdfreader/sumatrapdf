@@ -519,19 +519,19 @@ static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<WCHAR> pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
-    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u)]"),
+    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%? \"%S\",%u,%u)]",
                                    &pdfFile, &srcFile, &line, &col);
     if (!next)
-        next = str::Parse(cmd, L"[" DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u,%u,%u)]"),
+        next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%? \"%S\",%u,%u,%u,%u)]",
                           &pdfFile, &srcFile, &line, &col, &newWindow, &setFocus);
     // allow to omit the pdffile path, so that editors don't have to know about
     // multi-file projects (requires that the PDF has already been opened)
     if (!next) {
         pdfFile.Set(NULL);
-        next = str::Parse(cmd, L"[" DDECOMMAND_SYNC _T("(\"%S\",%u,%u)]"),
+        next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%u,%u)]",
                           &srcFile, &line, &col);
         if (!next)
-            next = str::Parse(cmd, L"[" DDECOMMAND_SYNC _T("(\"%S\",%u,%u,%u,%u)]"),
+            next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%u,%u,%u,%u)]",
                               &srcFile, &line, &col, &newWindow, &setFocus);
     }
 
@@ -582,9 +582,9 @@ static const WCHAR *HandleOpenCmd(const WCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<WCHAR> pdfFile;
     BOOL newWindow = 0, setFocus = 0, forceRefresh = 0;
-    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_OPEN _T("(\"%S\")]"), &pdfFile);
+    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_OPEN L"(\"%S\")]", &pdfFile);
     if (!next)
-        next = str::Parse(cmd, L"[" DDECOMMAND_OPEN _T("(\"%S\",%u,%u,%u)]"),
+        next = str::Parse(cmd, L"[" DDECOMMAND_OPEN L"(\"%S\",%u,%u,%u)]",
                           &pdfFile, &newWindow, &setFocus, &forceRefresh);
     if (!next)
         return NULL;
@@ -616,7 +616,7 @@ static const WCHAR *HandleOpenCmd(const WCHAR *cmd, DDEACK& ack)
 static const WCHAR *HandleGotoCmd(const WCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<WCHAR> pdfFile, destName;
-    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_GOTO _T("(\"%S\",%? \"%S\")]"),
+    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_GOTO L"(\"%S\",%? \"%S\")]",
                                    &pdfFile, &destName);
     if (!next)
         return NULL;
@@ -642,7 +642,7 @@ static const WCHAR *HandlePageCmd(const WCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<WCHAR> pdfFile;
     UINT page;
-    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_PAGE _T("(\"%S\",%u)]"),
+    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_PAGE L"(\"%S\",%u)]",
                                    &pdfFile, &page);
     if (!next)
         return false;
@@ -673,10 +673,10 @@ static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
     ScopedMem<WCHAR> pdfFile, viewMode;
     float zoom = INVALID_ZOOM;
     PointI scroll(-1, -1);
-    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f)]"),
+    const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_SETVIEW L"(\"%S\",%? \"%S\",%f)]",
                                    &pdfFile, &viewMode, &zoom);
     if (!next)
-        next = str::Parse(cmd, L"[" DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f,%d,%d)]"),
+        next = str::Parse(cmd, L"[" DDECOMMAND_SETVIEW L"(\"%S\",%? \"%S\",%f,%d,%d)]",
                           &pdfFile, &viewMode, &zoom, &scroll.x, &scroll.y);
     if (!next)
         return NULL;

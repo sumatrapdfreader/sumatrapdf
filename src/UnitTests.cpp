@@ -103,10 +103,10 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
-        i.ParseCommandLine(_T("SumatraPDF.exe \"foo \\\" bar \\\\.pdf\" un\\\"quoted.pdf"));
+        i.ParseCommandLine(L"SumatraPDF.exe \"foo \\\" bar \\\\.pdf\" un\\\"quoted.pdf");
         assert(2 == i.fileNames.Count());
-        assert(0 == i.fileNames.Find(_T("foo \" bar \\\\.pdf")));
-        assert(1 == i.fileNames.Find(_T("un\\\"quoted.pdf")));
+        assert(0 == i.fileNames.Find(L"foo \" bar \\\\.pdf"));
+        assert(1 == i.fileNames.Find(L"un\\\"quoted.pdf"));
     }
 
     {
@@ -121,7 +121,7 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
-        i.ParseCommandLine(_T("SumatraPDF.exe -view \"single page\" -zoom 237.45 -scroll -21,-1"));
+        i.ParseCommandLine(L"SumatraPDF.exe -view \"single page\" -zoom 237.45 -scroll -21,-1");
         assert(0 == i.fileNames.Count());
         assert(i.startView == DM_SINGLE_PAGE);
         assert(i.startZoom == 237.45f);

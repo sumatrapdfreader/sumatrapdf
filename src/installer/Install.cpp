@@ -207,11 +207,11 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey)
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     ScopedMem<WCHAR> iconPath(str::Join(exePath, L",1"));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\DefaultIcon", NULL, iconPath);
-    ScopedMem<WCHAR> cmdPath(str::Format(_T("\"%s\" \"%%1\""), exePath));
+    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\"", exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Open\\Command", NULL, cmdPath);
-    ScopedMem<WCHAR> printPath(str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath));
+    ScopedMem<WCHAR> printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", NULL, printPath);
-    ScopedMem<WCHAR> printToPath(str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath));
+    ScopedMem<WCHAR> printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\PrintTo\\Command", NULL, printToPath);
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
@@ -670,10 +670,10 @@ void CreateMainWindow()
 
 void ShowUsage()
 {
-    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/register][/opt plugin,...]\n\
+    MessageBox(NULL, TAPP L"-install.exe [/s][/d <path>][/register][/opt plugin,...]\n\
     \n\
-    /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
-    /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
-    /register\tregisters ") TAPP _T(" as the default PDF viewer.\n\
-    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer)."), TAPP L" Installer Usage", MB_OK | MB_ICONINFORMATION);
+    /s\tinstalls " TAPP L" silently (without user interaction).\n\
+    /d\tchanges the directory where " TAPP L" will be installed.\n\
+    /register\tregisters " TAPP L" as the default PDF viewer.\n\
+    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer).", TAPP L" Installer Usage", MB_OK | MB_ICONINFORMATION);
 }

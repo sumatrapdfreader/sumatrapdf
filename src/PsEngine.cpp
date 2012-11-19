@@ -103,7 +103,7 @@ static PdfEngine *ps2pdf(const WCHAR *fileName)
     ScopedMem<WCHAR> gswin32c(GetGhostscriptPath());
     if (!shortPath || !tmpFile || !gswin32c)
         return NULL;
-    ScopedMem<WCHAR> cmdLine(str::Format(_T("\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\""), gswin32c, tmpFile, shortPath));
+    ScopedMem<WCHAR> cmdLine(str::Format(L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c .setpdfwrite -f \"%s\"", gswin32c, tmpFile, shortPath));
 
     if (GetEnvironmentVariable(L"MULOG", NULL, 0)) {
         wprintf(L"ps2pdf: using Ghostscript from '%s'\n", gswin32c.Get());

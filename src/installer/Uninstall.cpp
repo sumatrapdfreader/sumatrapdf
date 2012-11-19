@@ -212,7 +212,7 @@ bool ExecuteUninstallerFromTempDir()
         return false;
     }
 
-    ScopedMem<WCHAR> args(str::Format(_T("/d \"%s\" %s"), gGlobalData.installDir, gGlobalData.silent ? L"/s" : L""));
+    ScopedMem<WCHAR> args(str::Format(L"/d \"%s\" %s", gGlobalData.installDir, gGlobalData.silent ? L"/s" : L""));
     bool ok = CreateProcessHelper(tempPath, args);
 
     // mark the uninstaller for removal at shutdown (note: works only for administrators)

@@ -125,9 +125,9 @@ bool ViewWithFoxit(WindowInfo *win, WCHAR *args)
     // TODO: Foxit allows passing password and zoom
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(_T("\"%s\" %s -n %d"), win->dm->FilePath(), args, win->dm->CurrentPageNo()));
+        params.Set(str::Format(L"\"%s\" %s -n %d", win->dm->FilePath(), args, win->dm->CurrentPageNo()));
     else
-        params.Set(str::Format(_T("\"%s\" %s"), win->loadedFilePath, args));
+        params.Set(str::Format(L"\"%s\" %s", win->loadedFilePath, args));
     return LaunchFile(exePath, params);
 }
 
@@ -156,9 +156,9 @@ bool ViewWithPDFXChange(WindowInfo *win, WCHAR *args)
     // /A params: page=<page number>
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->CurrentPageNo(), win->dm->FilePath()));
+        params.Set(str::Format(L"%s /A \"page=%d\" \"%s\"", args, win->dm->CurrentPageNo(), win->dm->FilePath()));
     else
-        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
     return LaunchFile(exePath, params);
 }
 
@@ -191,9 +191,9 @@ bool ViewWithAcrobat(WindowInfo *win, WCHAR *args)
     // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?
     if (win->IsDocLoaded() && HIWORD(GetFileVersion(exePath)) >= 6)
-        params.Set(str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->CurrentPageNo(), args, win->dm->FilePath()));
+        params.Set(str::Format(L"/A \"page=%d\" %s \"%s\"", win->dm->CurrentPageNo(), args, win->dm->FilePath()));
     else
-        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
 
     return LaunchFile(exePath, params);
 }
@@ -227,9 +227,9 @@ bool ViewWithXPSViewer(WindowInfo *win, WCHAR *args)
 
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(_T("%s \"%s\""), args, win->dm->FilePath()));
+        params.Set(str::Format(L"%s \"%s\"", args, win->dm->FilePath()));
     else
-        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
     return LaunchFile(exePath, params);
 }
 
@@ -262,8 +262,8 @@ bool ViewWithHtmlHelp(WindowInfo *win, WCHAR *args)
 
     ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(_T("%s \"%s\""), args, win->dm->FilePath()));
+        params.Set(str::Format(L"%s \"%s\"", args, win->dm->FilePath()));
     else
-        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
     return LaunchFile(exePath, params);
 }

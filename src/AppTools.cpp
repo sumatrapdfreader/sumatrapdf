@@ -369,51 +369,51 @@ static struct {
                                         // use placeholder '%f' for path to source file and '%l' for line number.
 } editor_rules[] = {
     L"WinEdt",             BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe", NULL,
-                              L"WinEdt.exe", _T("\"[Open(|%f|);SelPar(%l,8)]\""),
+                              L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"",
 
     L"WinEdt",             BinaryDir, HKEY_CURRENT_USER, L"Software\\WinEdt", L"Install Root",
-                              L"WinEdt.exe", _T("\"[Open(|%f|);SelPar(%l,8)]\""),
+                              L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"",
 
     L"Notepad++",          BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\notepad++.exe", NULL,
-                              L"WinEdt.exe", _T("-n%l \"%f\""),
+                              L"WinEdt.exe", L"-n%l \"%f\"",
 
     L"Notepad++",          BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Notepad++", NULL,
-                              L"notepad++.exe", _T("-n%l \"%f\""),
+                              L"notepad++.exe", L"-n%l \"%f\"",
 
     L"Notepad++",          BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Notepad++", L"DisplayIcon",
-                              L"notepad++.exe", _T("-n%l \"%f\""),
+                              L"notepad++.exe", L"-n%l \"%f\"",
 
     L"TeXnicCenter Alpha", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenterNT", L"AppPath",
-                              L"TeXnicCenter.exe", _T("/ddecmd \"[goto('%f', '%l')]\""),
+                              L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
 
     L"TeXnicCenter Alpha", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter Alpha_is1", L"InstallLocation",
-                              L"TeXnicCenter.exe", _T("/ddecmd \"[goto('%f', '%l')]\""),
+                              L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
 
     L"TeXnicCenter",       BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenter", L"AppPath",
-                              L"TEXCNTR.exe", _T("/ddecmd \"[goto('%f', '%l')]\""),
+                              L"TEXCNTR.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
 
     L"TeXnicCenter",       BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter_is1", L"InstallLocation",
-                              L"TEXCNTR.exe", _T("/ddecmd \"[goto('%f', '%l')]\""),
+                              L"TEXCNTR.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
 
     L"WinShell",           BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1", L"InstallLocation",
-                              L"WinShell.exe", _T("-c \"%f\" -l %l"),
+                              L"WinShell.exe", L"-c \"%f\" -l %l",
 
     L"Gvim",               BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
-                              L"gvim.exe", _T("\"%f\" +%l"),
+                              L"gvim.exe", L"\"%f\" +%l",
 
     // TODO: add this rule only if the latex-suite for ViM is installed (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
     L"Gvim+latex-suite",   BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
-                             L"gvim.exe", _T("-c \":RemoteOpen +%l %f\""),
+                             L"gvim.exe", L"-c \":RemoteOpen +%l %f\"",
 
     L"Texmaker",           SiblingPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Texmaker", L"UninstallString",
-                              L"texmaker.exe", _T("\"%f\" -line %l"),
+                              L"texmaker.exe", L"\"%f\" -line %l",
 
     L"TeXworks",           BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1", L"InstallLocation",
-                              L"TeXworks.exe", _T("-p=%l  \"%f\""),
+                              L"TeXworks.exe", L"-p=%l  \"%f\"",
 
     // TODO: find a way to detect where emacs is installed
     //L"ntEmacs",            BinaryPath, HKEY_LOCAL_MACHINE, L"???", L"???",
-    //                          L"emacsclientw.exe", _T("+%l \"%f\""),
+    //                          L"emacsclientw.exe", l"+%l \"%f\"",
 };
 
 // Detect TeX editors installed on the system and construct the

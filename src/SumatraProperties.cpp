@@ -84,7 +84,7 @@ static WCHAR *FormatSystemTime(SYSTEMTIME& date)
 
     WCHAR *tmp = buf + ret - 1;
     if (ret > 1)
-        *tmp++ = _T(' ');
+        *tmp++ = L' ';
     cchBufLen -= ret;
     ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, NULL, tmp, cchBufLen);
     if (0 == ret) // GetTimeFormat() failed
