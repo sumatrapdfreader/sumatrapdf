@@ -9,7 +9,7 @@ in which it was allocated.
 
 Consider this piece of code:
 
-bool NormalizedFileExists(const TCHAR *path)
+bool NormalizedFileExists(const WCHAR *path)
 {
     ScopedMem<WCHAR> normpath(Normalize(path));
     return FileExist(normpath.Get());
@@ -17,9 +17,9 @@ bool NormalizedFileExists(const TCHAR *path)
 
 This is a simpler version but it leaks:
 
-bool NormalizedFileExists(const TCHAR *path)
+bool NormalizedFileExists(const WCHAR *path)
 {
-    TCHAR *normpath = Normalize(path);
+    WCHAR *normpath = Normalize(path);
     return FileExist(normpath);
 }
 

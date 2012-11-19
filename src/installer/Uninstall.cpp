@@ -12,31 +12,31 @@
 // Try harder getting temporary directory
 // Caller needs to free() the result.
 // Returns NULL if fails for any reason.
-static TCHAR *GetValidTempDir()
+static WCHAR *GetValidTempDir()
 {
-    TCHAR d[MAX_PATH];
+    WCHAR d[MAX_PATH];
     DWORD res = GetTempPath(dimof(d), d);
     if ((0 == res) || (res >= MAX_PATH)) {
-        NotifyFailed(_T("Couldn't obtain temporary directory"));
+        NotifyFailed(L"Couldn't obtain temporary directory");
         return NULL;
     }
     BOOL success = CreateDirectory(d, NULL);
     if (!success && (ERROR_ALREADY_EXISTS != GetLastError())) {
         LogLastError();
-        NotifyFailed(_T("Couldn't create temporary directory"));
+        NotifyFailed(L"Couldn't create temporary directory");
         return NULL;
     }
     return str::Dup(d);
 }
 
-static TCHAR *GetTempUninstallerPath()
+static WCHAR *GetTempUninstallerPath()
 {
     ScopedMem<WCHAR> tempDir(GetValidTempDir());
     if (!tempDir)
         return NULL;
     // Using fixed (unlikely) name instead of GetTempFileName()
     // so that we don't litter temp dir with copies of ourselves
-    return path::Join(tempDir, _T("sum~inst.exe"));
+    return path::Join(tempDir, L"sum~inst.exe");
 }
 
 BOOL IsUninstallerNeeded()
@@ -79,12 +79,12 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
         if (res != ERROR_SUCCESS)
             LogLastError(res);
     }
-    buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
+    buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
     if (str::Eq(buf, TAPP))
-        DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), true);
+        DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", true);
 }
 
-static bool DeleteEmptyRegKey(HKEY root, const TCHAR *keyName)
+static bool DeleteEmptyRegKey(HKEY root, const WCHAR *keyName)
 {
     HKEY hkey;
     if (RegOpenKeyEx(root, keyName, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
@@ -122,21 +122,21 @@ static void RemoveOwnRegistryKeys()
             if (!DeleteRegKey(keys[i], keyname))
                 continue;
             // remove empty keys that the installer might have created
-            *(TCHAR *)str::FindCharLast(keyname, '\\') = '\0';
+            *(WCHAR *)str::FindCharLast(keyname, '\\') = '\0';
             if (!DeleteEmptyRegKey(keys[i], keyname))
                 continue;
-            *(TCHAR *)str::FindCharLast(keyname, '\\') = '\0';
+            *(WCHAR *)str::FindCharLast(keyname, '\\') = '\0';
             DeleteEmptyRegKey(keys[i], keyname);
         }
     }
 }
 
-static BOOL RemoveEmptyDirectory(TCHAR *dir)
+static BOOL RemoveEmptyDirectory(WCHAR *dir)
 {
     WIN32_FIND_DATA findData;
     BOOL success = TRUE;
 
-    ScopedMem<WCHAR> dirPattern(path::Join(dir, _T("*")));
+    ScopedMem<WCHAR> dirPattern(path::Join(dir, L"*"));
     HANDLE h = FindFirstFile(dirPattern, &findData);
     if (h != INVALID_HANDLE_VALUE)
     {
@@ -146,8 +146,8 @@ static BOOL RemoveEmptyDirectory(TCHAR *dir)
             // filter out directories. Even though there shouldn't be any
             // subdirectories, it also filters out the standard "." and ".."
             if ((attrs & FILE_ATTRIBUTE_DIRECTORY) &&
-                !str::Eq(findData.cFileName, _T(".")) &&
-                !str::Eq(findData.cFileName, _T(".."))) {
+                !str::Eq(findData.cFileName, L".") &&
+                !str::Eq(findData.cFileName, L"..")) {
                 success &= RemoveEmptyDirectory(path);
             }
         } while (FindNextFile(h, &findData) != 0);
@@ -238,18 +238,18 @@ DWORD WINAPI UninstallerThread(LPVOID data)
 {
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
-    TCHAR *exePath = GetUninstallerPath();
+    WCHAR *exePath = GetUninstallerPath();
     if (!path::IsSame(exePath, GetOwnPath()))
         KillProcess(exePath, TRUE);
     free(exePath);
 
     if (!RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) &&
         !RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
-        NotifyFailed(_T("Failed to delete uninstaller registry keys"));
+        NotifyFailed(L"Failed to delete uninstaller registry keys");
     }
 
     if (!RemoveShortcut(true) && !RemoveShortcut(false))
-        NotifyFailed(_T("Couldn't remove the shortcut"));
+        NotifyFailed(L"Couldn't remove the shortcut");
 
     UninstallBrowserPlugin();
     UninstallPdfFilter();
@@ -257,7 +257,7 @@ DWORD WINAPI UninstallerThread(LPVOID data)
     RemoveOwnRegistryKeys();
 
     if (!RemoveInstalledFiles())
-        NotifyFailed(_T("Couldn't remove installation directory"));
+        NotifyFailed(L"Couldn't remove installation directory");
 
     // always succeed, even for partial uninstallations
     gGlobalData.success = true;
@@ -276,7 +276,7 @@ static void OnButtonUninstall()
 
     // disable the button during uninstallation
     EnableWindow(gHwndButtonInstUninst, FALSE);
-    SetMsg(_T("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
+    SetMsg(L"Uninstallation in progress...", COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
     gGlobalData.hThread = CreateThread(NULL, 0, UninstallerThread, NULL, 0, 0);
@@ -287,7 +287,7 @@ void OnUninstallationFinished()
     DestroyWindow(gHwndButtonInstUninst);
     gHwndButtonInstUninst = NULL;
     CreateButtonExit(gHwndFrame);
-    SetMsg(TAPP _T(" has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
+    SetMsg(TAPP " has been uninstalled.", gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gGlobalData.firstError;
     InvalidateFrame();
 
@@ -318,13 +318,13 @@ bool OnWmCommand(WPARAM wParam)
 
 void OnCreateWindow(HWND hwnd)
 {
-    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _T("Uninstall ") TAPP, 150);
+    gHwndButtonInstUninst = CreateDefaultButton(hwnd, L"Uninstall " TAPP, 150);
 }
 
 void CreateMainWindow()
 {
-    gHwndFrame = CreateWindow(
-        INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Uninstaller"),
+    gHwndFrame = CreateWindowW(
+        INSTALLER_FRAME_CLASS_NAME, TAPP L" " CURR_VERSION_STR L" Uninstaller",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
         CW_USEDEFAULT, CW_USEDEFAULT,
         dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
@@ -334,8 +334,8 @@ void CreateMainWindow()
 
 void ShowUsage()
 {
-    MessageBox(NULL, _T("uninstall.exe [/s][/d <path>]\n\
+    MessageBoxW(NULL, L"uninstall.exe [/s][/d <path>]\n\
     \n\
-    /s\tuninstalls ") TAPP _T(" silently (without user interaction).\n\
-    /d\tchanges the directory from where ") TAPP _T(" will be uninstalled."), TAPP _T(" Uninstaller Usage"), MB_OK | MB_ICONINFORMATION);
+    /s\tuninstalls " TAPP L" silently (without user interaction).\n\
+    /d\tchanges the directory from where " TAPP L" will be uninstalled.", TAPP L" Uninstaller Usage", MB_OK | MB_ICONINFORMATION);
 }
