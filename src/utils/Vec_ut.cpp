@@ -6,7 +6,7 @@ static void WStrVecTest()
     WStrVec v;
     v.Append(str::Dup(L"foo"));
     v.Append(str::Dup(L"bar"));
-    TCHAR *s = v.Join();
+    WCHAR *s = v.Join();
     assert(v.Count() == 2);
     assert(str::Eq(L"foobar", s));
     free(s);

@@ -12,7 +12,7 @@
 #define USER_AGENT _T("BaseHTTP")
 
 // returns ERROR_SUCCESS or an error code
-DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut)
+DWORD HttpGet(const WCHAR *url, str::Str<char> *dataOut)
 {
     DWORD error = ERROR_SUCCESS;
 
@@ -49,7 +49,7 @@ Error:
 }
 
 // Download content of a url to a file
-bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
+bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
 {
     bool ok = false;
     char buf[1024];
@@ -96,7 +96,7 @@ Exit:
     return ok;
 }
 
-bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, str::Str<char> *data)
+bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, str::Str<char> *data)
 {
     str::Str<char> resp(2048);
     bool ok = false;
@@ -177,7 +177,7 @@ DWORD WINAPI HttpReq::DownloadThread(LPVOID data)
     return 0;
 }
 
-HttpReq::HttpReq(const TCHAR *url, HttpReqCallback *callback) :
+HttpReq::HttpReq(const WCHAR *url, HttpReqCallback *callback) :
     thread(NULL), callback(callback), error(0),
     url(str::Dup(url)), data(new str::Str<char>(256))
 {

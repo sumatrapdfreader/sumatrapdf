@@ -5,8 +5,8 @@
 
 static void TStrTest()
 {
-    TCHAR buf[32];
-    TCHAR *str = _T("a string");
+    WCHAR buf[32];
+    WCHAR *str = _T("a string");
     assert(str::Len(str) == 8);
     assert(str::Eq(str, _T("a string")) && str::Eq(str, str));
     assert(!str::Eq(str, NULL) && !str::Eq(str, _T("A String")));
@@ -71,8 +71,8 @@ static void TStrTest()
     str = _T("[Open(\"filename.pdf\",0,1,0)]");
     {
         UINT u1 = 0;
-        TCHAR *str1 = NULL;
-        const TCHAR *end = str::Parse(str, _T("[Open(\"%s\",%? 0,%u,0)]"), &str1, &u1);
+        WCHAR *str1 = NULL;
+        const WCHAR *end = str::Parse(str, _T("[Open(\"%s\",%? 0,%u,0)]"), &str1, &u1);
         assert(end && !*end);
         assert(u1 == 1 && str::Eq(str1, _T("filename.pdf")));
         free(str1);
@@ -81,7 +81,7 @@ static void TStrTest()
     {
         UINT u1 = 0;
         ScopedMem<WCHAR> str1;
-        const TCHAR *end = str::Parse(str, _T("[Open(\"%S\",0%?,%u,0)]"), &str1, &u1);
+        const WCHAR *end = str::Parse(str, _T("[Open(\"%S\",0%?,%u,0)]"), &str1, &u1);
         assert(end && !*end);
         assert(u1 == 1 && str::Eq(str1, _T("filename.pdf")));
 
@@ -93,7 +93,7 @@ static void TStrTest()
 
     {
         int i1, i2;
-        const TCHAR *end = str::Parse(_T("1, 2+3"), _T("%d,%d"), &i1, &i2);
+        const WCHAR *end = str::Parse(_T("1, 2+3"), _T("%d,%d"), &i1, &i2);
         assert(end && str::Eq(end, _T("+3")));
         assert(i1 == 1 && i2 == 2);
         end = str::Parse(end, _T("+3"));
@@ -131,7 +131,7 @@ static void TStrTest()
         assert(str::Parse(str, 4, "str") == str + 3);
 
         float f1, f2;
-        const TCHAR *end = str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%fz%$"), &f1, &f2);
+        const WCHAR *end = str::Parse(_T("%1.23y -2e-3z"), _T("%%%fy%fz%$"), &f1, &f2);
         assert(end && !*end);
         assert(f1 == 1.23f && f2 == -2e-3f);
         f1 = 0; f2 = 0;
@@ -141,8 +141,8 @@ static void TStrTest()
     }
 
     {
-        TCHAR *str1 = NULL;
-        TCHAR c1;
+        WCHAR *str1 = NULL;
+        WCHAR c1;
         assert(!str::Parse(_T("no exclamation mark?"), _T("%s!"), &str1));
         assert(!str1);
         assert(str::Parse(_T("xyz"), _T("x%cz"), &c1));
@@ -209,7 +209,7 @@ static void TStrTest()
 
     struct {
         size_t number;
-        const TCHAR *result;
+        const WCHAR *result;
     } formatNumData[] = {
         { 1,        _T("1") },
         { 12,       _T("12") },
@@ -228,7 +228,7 @@ static void TStrTest()
 
     struct {
         double number;
-        const TCHAR *result;
+        const WCHAR *result;
     } formatFloatData[] = {
         { 1,        _T("1.0") },
         { 1.2,      _T("1.2") },
@@ -256,7 +256,7 @@ static void TStrTest()
 
     struct {
         int number;
-        const TCHAR *result;
+        const WCHAR *result;
     } formatRomanData[] = {
         { 1,    _T("I") },
         { 3,    _T("III") },
@@ -279,7 +279,7 @@ static void TStrTest()
 
     {
         size_t trimmed;
-        TCHAR *s = NULL;
+        WCHAR *s = NULL;
         s = str::Dup(_T(""));
         trimmed = str::TrimWS(s);
         assert(trimmed == 0);

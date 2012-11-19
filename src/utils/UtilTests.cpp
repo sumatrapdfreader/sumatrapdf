@@ -98,9 +98,9 @@ static void GeomTest()
 
 static void FileUtilTest()
 {
-    TCHAR *path1 = _T("C:\\Program Files\\SumatraPDF\\SumatraPDF.exe");
+    WCHAR *path1 = _T("C:\\Program Files\\SumatraPDF\\SumatraPDF.exe");
 
-    const TCHAR *baseName = path::GetBaseName(path1);
+    const WCHAR *baseName = path::GetBaseName(path1);
     assert(str::Eq(baseName, _T("SumatraPDF.exe")));
 
     ScopedMem<WCHAR> dirName(path::GetDir(path1));
@@ -120,7 +120,7 @@ static void FileUtilTest()
     assert(str::Eq(dirName, _T("/")));
 
     path1 = _T("C:\\Program Files");
-    TCHAR *path2 = path::Join(_T("C:\\"), _T("Program Files"));
+    WCHAR *path2 = path::Join(_T("C:\\"), _T("Program Files"));
     assert(str::Eq(path1, path2));
     free(path2);
     path2 = path::Join(path1, _T("SumatraPDF"));

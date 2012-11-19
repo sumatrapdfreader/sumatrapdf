@@ -49,17 +49,11 @@ HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
     return NULL;
 }
 
-static TCHAR IntToChar(int codepoint)
+static WCHAR IntToChar(int codepoint)
 {
-#ifndef UNICODE
-    WCHAR wc = codepoint;
-    char c = 0;
-    WideCharToMultiByte(CP_ACP, 0, &wc, 1, &c, 1, NULL, NULL);
-    codepoint = (unsigned char)c;
-#endif
-    if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(TCHAR))))
+    if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(WCHAR))))
         return '?';
-    return (TCHAR)codepoint;
+    return (WCHAR)codepoint;
 }
 
 // caller needs to free() the result
@@ -141,7 +135,7 @@ HtmlAttr *HtmlParser::AllocAttr(char *name, HtmlAttr *next)
 }
 
 // caller needs to free() the result
-TCHAR *HtmlElement::GetAttribute(const char *name) const
+WCHAR *HtmlElement::GetAttribute(const char *name) const
 {
     for (HtmlAttr *attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name))
