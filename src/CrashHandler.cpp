@@ -585,12 +585,12 @@ static ExeType DetectExeType()
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        TCHAR *name = mod.szModule;
-        if (str::EqI(name, _T("libmupdf.dll"))) {
+        WCHAR *name = mod.szModule;
+        if (str::EqI(name, L"libmupdf.dll")) {
             exeType = ExeSumatraLib;
             break;
         }
-        if (str::StartsWithI(name, _T("SumatraPDF-")) && str::EndsWithI(name, _T("install.exe"))) {
+        if (str::StartsWithI(name, L"SumatraPDF-") && str::EndsWithI(name, L"install.exe")) {
             exeType = ExeInstaller;
             break;
         }
@@ -609,7 +609,7 @@ void CrashLogFmt(const char *fmt, ...)
     va_end(args);
 }
 
-void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
+void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
 {
     assert(!gDumpEvent && !gDumpThread);
 

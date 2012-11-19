@@ -591,34 +591,34 @@ Exit:
     GlobalFree(pd.hDevMode);
 }
 
-static void ApplyPrintSettings(const TCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced)
+static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced)
 {
     WStrVec rangeList;
     if (settings)
-        rangeList.Split(settings, _T(","), true);
+        rangeList.Split(settings, L",", true);
 
     for (size_t i = 0; i < rangeList.Count(); i++) {
         PRINTPAGERANGE pr;
-        if (str::Parse(rangeList.At(i), _T("%d-%d%$"), &pr.nFromPage, &pr.nToPage)) {
+        if (str::Parse(rangeList.At(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         }
-        else if (str::Parse(rangeList.At(i), _T("%d%$"), &pr.nFromPage)) {
+        else if (str::Parse(rangeList.At(i), L"%d%$", &pr.nFromPage)) {
             pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         }
-        else if (str::Eq(rangeList.At(i), _T("even")))
+        else if (str::Eq(rangeList.At(i), L"even"))
             advanced.range = PrintRangeEven;
-        else if (str::Eq(rangeList.At(i), _T("odd")))
+        else if (str::Eq(rangeList.At(i), L"odd"))
             advanced.range = PrintRangeOdd;
-        else if (str::Eq(rangeList.At(i), _T("noscale")))
+        else if (str::Eq(rangeList.At(i), L"noscale"))
             advanced.scale = PrintScaleNone;
-        else if (str::Eq(rangeList.At(i), _T("shrink")))
+        else if (str::Eq(rangeList.At(i), L"shrink"))
             advanced.scale = PrintScaleShrink;
-        else if (str::Eq(rangeList.At(i), _T("fit")))
+        else if (str::Eq(rangeList.At(i), L"fit"))
             advanced.scale = PrintScaleFit;
-        else if (str::Eq(rangeList.At(i), _T("compat")))
+        else if (str::Eq(rangeList.At(i), L"compat"))
             advanced.asImage = true;
     }
 
@@ -628,7 +628,7 @@ static void ApplyPrintSettings(const TCHAR *settings, int pageCount, Vec<PRINTPA
     }
 }
 
-bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors, const TCHAR *settings)
+bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErrors, const WCHAR *settings)
 {
     if (!HasPermission(Perm_PrinterAccess))
         return false;

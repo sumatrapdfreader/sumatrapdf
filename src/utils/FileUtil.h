@@ -11,42 +11,42 @@ bool         IsSep(char c);
 
 const WCHAR *GetBaseName(const WCHAR *path);
 const char * GetBaseName(const char *path);
-const TCHAR *GetExt(const TCHAR *path);
+const WCHAR *GetExt(const WCHAR *path);
 
-TCHAR *      GetDir(const TCHAR *path);
-TCHAR *      Join(const TCHAR *path, const TCHAR *filename);
-TCHAR *      Normalize(const TCHAR *path);
-TCHAR *      ShortPath(const TCHAR *path);
-bool         IsSame(const TCHAR *path1, const TCHAR *path2);
-bool         HasVariableDriveLetter(const TCHAR *path);
-bool         Match(const TCHAR *path, const TCHAR *filter);
-bool         IsAbsolute(const TCHAR *path);
+WCHAR *      GetDir(const WCHAR *path);
+WCHAR *      Join(const WCHAR *path, const WCHAR *filename);
+WCHAR *      Normalize(const WCHAR *path);
+WCHAR *      ShortPath(const WCHAR *path);
+bool         IsSame(const WCHAR *path1, const WCHAR *path2);
+bool         HasVariableDriveLetter(const WCHAR *path);
+bool         Match(const WCHAR *path, const WCHAR *filter);
+bool         IsAbsolute(const WCHAR *path);
 
-TCHAR *      GetTempPath(const TCHAR *filePrefix=NULL);
+WCHAR *      GetTempPath(const WCHAR *filePrefix=NULL);
 
 }
 
 namespace file {
 
-bool         Exists(const TCHAR *filePath);
-char *       ReadAll(const TCHAR *filePath, size_t *fileSizeOut);
-bool         ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen);
-bool         WriteAll(const TCHAR *filePath, const void *data, size_t dataLen);
-size_t       GetSize(const TCHAR *filePath);
-bool         Delete(const TCHAR *filePath);
-FILETIME     GetModificationTime(const TCHAR *filePath);
-bool         SetModificationTime(const TCHAR *filePath, FILETIME lastMod);
-bool         StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len=-1);
-int          GetZoneIdentifier(const TCHAR *filePath);
-bool         SetZoneIdentifier(const TCHAR *filePath, int zoneId=URLZONE_INTERNET);
+bool         Exists(const WCHAR *filePath);
+char *       ReadAll(const WCHAR *filePath, size_t *fileSizeOut);
+bool         ReadAll(const WCHAR *filePath, char *buffer, size_t bufferLen);
+bool         WriteAll(const WCHAR *filePath, const void *data, size_t dataLen);
+size_t       GetSize(const WCHAR *filePath);
+bool         Delete(const WCHAR *filePath);
+FILETIME     GetModificationTime(const WCHAR *filePath);
+bool         SetModificationTime(const WCHAR *filePath, FILETIME lastMod);
+bool         StartsWith(const WCHAR *filePath, const char *magicNumber, size_t len=-1);
+int          GetZoneIdentifier(const WCHAR *filePath);
+bool         SetZoneIdentifier(const WCHAR *filePath, int zoneId=URLZONE_INTERNET);
 
 }
 
 namespace dir {
 
-bool         Exists(const TCHAR *dir);
-bool         Create(const TCHAR *dir);
-bool         CreateAll(const TCHAR *dir);
+bool         Exists(const WCHAR *dir);
+bool         Create(const WCHAR *dir);
+bool         CreateAll(const WCHAR *dir);
 
 }
 

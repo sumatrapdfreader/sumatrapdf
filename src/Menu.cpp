@@ -218,7 +218,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flag
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         } else {
-            const TCHAR *tmp = trans::GetTranslation(md.title);
+            const WCHAR *tmp = trans::GetTranslation(md.title);
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         }
@@ -320,7 +320,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
     for (ix = 0; ix < dimof(menuDefFile) && menuDefFile[ix].id != IDM_PRINT; ix++);
     assert(ix < dimof(menuDefFile));
     if (ix < dimof(menuDefFile)) {
-        const TCHAR *printItem = trans::GetTranslation(menuDefFile[ix].title);
+        const WCHAR *printItem = trans::GetTranslation(menuDefFile[ix].title);
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
         if (!filePrintAllowed || !disableOnly)
@@ -421,7 +421,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
     if (!HasPermission(Perm_SavePreferences | Perm_DiskAccess) || !gGlobalPrefs.rememberOpenedFiles || !gGlobalPrefs.showStartPage)
         return;
 
-    const TCHAR *filePath = GetStaticLink(win->staticLinks, x, y);
+    const WCHAR *filePath = GetStaticLink(win->staticLinks, x, y);
     if (!filePath || *filePath == '<')
         return;
 

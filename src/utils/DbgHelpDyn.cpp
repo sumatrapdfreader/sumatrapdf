@@ -159,10 +159,10 @@ bool Load()
     if (_MiniDumpWriteDump)
         return true;
 #if 0
-    TCHAR *dbghelpPath = _T("C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll");
+    WCHAR *dbghelpPath = L"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll";
     HMODULE h = LoadLibrary(dbghelpPath);
 #else
-    HMODULE h = SafeLoadLibrary(_T("dbghelp.dll"));
+    HMODULE h = SafeLoadLibrary(L"dbghelp.dll");
 #endif
     if (!h) {
         plog("dbghelp::Load(): failed to load dbghelp.dll");
@@ -330,7 +330,7 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
     }
 }
 
-void WriteMiniDump(const TCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump)
+void WriteMiniDump(const WCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump)
 {
     if (!Initialize(NULL) || !_MiniDumpWriteDump)
         return;
