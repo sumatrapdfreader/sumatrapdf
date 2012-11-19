@@ -38,7 +38,7 @@ class EpubDoc {
     bool ParseNcxToc(const char *data, size_t dataLen, const char *pagePath, EbookTocVisitor *visitor);
 
 public:
-    EpubDoc(const TCHAR *fileName);
+    EpubDoc(const WCHAR *fileName);
     EpubDoc(IStream *stream);
     ~EpubDoc();
 
@@ -46,15 +46,15 @@ public:
     size_t GetTextDataSize();
     ImageData *GetImageData(const char *id, const char *pagePath);
 
-    TCHAR *GetProperty(DocumentProperty prop);
-    const TCHAR *GetFileName() const;
+    WCHAR *GetProperty(DocumentProperty prop);
+    const WCHAR *GetFileName() const;
     bool IsRTL() const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor);
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static EpubDoc *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static EpubDoc *CreateFromFile(const WCHAR *fileName);
     static EpubDoc *CreateFromStream(IStream *stream);
 };
 
@@ -78,19 +78,19 @@ class Fb2Doc {
     void ExtractImage(HtmlPullParser *parser, HtmlToken *tok);
 
 public:
-    Fb2Doc(const TCHAR *fileName);
+    Fb2Doc(const WCHAR *fileName);
     ~Fb2Doc();
 
     const char *GetTextData(size_t *lenOut);
     ImageData *GetImageData(const char *id);
     ImageData *GetCoverImage();
 
-    TCHAR *GetProperty(DocumentProperty prop);
-    const TCHAR *GetFileName() const;
+    WCHAR *GetProperty(DocumentProperty prop);
+    const WCHAR *GetFileName() const;
     bool IsZipped() const;
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static Fb2Doc *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static Fb2Doc *CreateFromFile(const WCHAR *fileName);
 };
 
 /* ********** PalmDOC (and TealDoc) ********** */
@@ -104,23 +104,23 @@ class PalmDoc {
     WStrVec tocEntries;
 
     bool Load();
-    char *LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOut);
+    char *LoadTealPaintImage(const WCHAR *dbFile, size_t idx, size_t *lenOut);
     bool LoadTealPaintImageTile(PdbReader *pdbReader, size_t idx, uint8_t *pixels, int left, int top, int width, int height, int stride, bool hasPalette);
     char *GetTealPaintImageName(PdbReader *pdbReader, size_t idx, bool& isValid);
 
 public:
-    PalmDoc(const TCHAR *fileName);
+    PalmDoc(const WCHAR *fileName);
     ~PalmDoc();
 
     const char *GetTextData(size_t *lenOut);
     ImageData *GetImageData(const char *id);
-    const TCHAR *GetFileName() const;
+    const WCHAR *GetFileName() const;
 
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor);
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static PalmDoc *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static PalmDoc *CreateFromFile(const WCHAR *fileName);
 };
 
 /* ********** TCR (Text Compression for (Psion) Reader) ********** */
@@ -132,14 +132,14 @@ class TcrDoc {
     bool Load();
 
 public:
-    TcrDoc(const TCHAR *fileName);
+    TcrDoc(const WCHAR *fileName);
     ~TcrDoc();
 
     const char *GetTextData(size_t *lenOut);
-    const TCHAR *GetFileName() const;
+    const WCHAR *GetFileName() const;
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static TcrDoc *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static TcrDoc *CreateFromFile(const WCHAR *fileName);
 };
 
 /* ********** Plain HTML ********** */
@@ -158,17 +158,17 @@ class HtmlDoc {
     bool Load();
 
 public:
-    HtmlDoc(const TCHAR *fileName);
+    HtmlDoc(const WCHAR *fileName);
     ~HtmlDoc();
 
     const char *GetTextData(size_t *lenOut);
     ImageData *GetImageData(const char *id);
 
-    TCHAR *GetProperty(DocumentProperty prop);
-    const TCHAR *GetFileName() const;
+    WCHAR *GetProperty(DocumentProperty prop);
+    const WCHAR *GetFileName() const;
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static HtmlDoc *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static HtmlDoc *CreateFromFile(const WCHAR *fileName);
 };
 
 /* ********** Plain Text ********** */
@@ -181,17 +181,17 @@ class TxtDoc {
     bool Load();
 
 public:
-    TxtDoc(const TCHAR *fileName);
+    TxtDoc(const WCHAR *fileName);
 
     const char *GetTextData(size_t *lenOut);
-    const TCHAR *GetFileName() const;
+    const WCHAR *GetFileName() const;
 
     bool IsRFC() const;
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor *visitor);
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static TxtDoc *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static TxtDoc *CreateFromFile(const WCHAR *fileName);
 };
 
 #endif

@@ -71,7 +71,7 @@ bool FileTransaction::Commit()
     return _CommitTransaction(hTrans);
 }
 
-HANDLE FileTransaction::CreateFile(const TCHAR *filePath, DWORD dwDesiredAccess, DWORD dwCreationDisposition)
+HANDLE FileTransaction::CreateFile(const WCHAR *filePath, DWORD dwDesiredAccess, DWORD dwCreationDisposition)
 {
     if (hTrans) {
         HANDLE hFile = _CreateFileTransacted(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL, hTrans, NULL, NULL);
@@ -82,7 +82,7 @@ HANDLE FileTransaction::CreateFile(const TCHAR *filePath, DWORD dwDesiredAccess,
     return ::CreateFile(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
-bool FileTransaction::WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
+bool FileTransaction::WriteAll(const WCHAR *filePath, void *data, size_t dataLen)
 {
     if (!hTrans)
         return file::WriteAll(filePath, data, dataLen);
@@ -98,7 +98,7 @@ bool FileTransaction::WriteAll(const TCHAR *filePath, void *data, size_t dataLen
     return ok && dataLen == (size_t)size;
 }
 
-bool FileTransaction::Delete(const TCHAR *filePath)
+bool FileTransaction::Delete(const WCHAR *filePath)
 {
     if (hTrans) {
         BOOL ok = _DeleteFileTransacted(filePath, hTrans);
@@ -109,7 +109,7 @@ bool FileTransaction::Delete(const TCHAR *filePath)
     return file::Delete(filePath);
 }
 
-bool FileTransaction::SetModificationTime(const TCHAR *filePath, FILETIME lastMod)
+bool FileTransaction::SetModificationTime(const WCHAR *filePath, FILETIME lastMod)
 {
     if (!hTrans)
         return file::SetModificationTime(filePath, lastMod);

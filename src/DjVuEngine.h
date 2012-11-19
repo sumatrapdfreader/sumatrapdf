@@ -8,8 +8,8 @@
 
 class DjVuEngine : public BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static DjVuEngine *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static DjVuEngine *CreateFromFile(const WCHAR *fileName);
 };
 
 #endif

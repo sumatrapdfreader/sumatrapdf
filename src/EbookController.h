@@ -38,7 +38,7 @@ class EbookController : public sigslot::has_slots
     Doc             doc;
 
     // only set while we load the file on a background thread, used in UpdateStatus()
-    TCHAR *         fileBeingLoaded;
+    WCHAR *         fileBeingLoaded;
 
     // TODO: this should be recycled along with pages so that its
     // memory use doesn't grow without bounds

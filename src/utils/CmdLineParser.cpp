@@ -5,7 +5,7 @@
 #include "CmdLineParser.h"
 
 /* returns the next character in '*txt' that isn't a backslash */
-static const TCHAR SkipBackslashs(const TCHAR *txt)
+static const WCHAR SkipBackslashs(const WCHAR *txt)
 {
     AssertCrash(txt && '\\' == *txt);
     while ('\\' == *++txt);
@@ -13,13 +13,13 @@ static const TCHAR SkipBackslashs(const TCHAR *txt)
 }
 
 /* appends the next quoted argument and returns the position after it */
-static const TCHAR *ParseQuoted(const TCHAR *arg, WStrVec *out)
+static const WCHAR *ParseQuoted(const WCHAR *arg, WStrVec *out)
 {
     AssertCrash(arg && '"' == *arg);
     arg++;
 
-    str::Str<TCHAR> txt(str::Len(arg) / 2);
-    const TCHAR *next;
+    str::Str<WCHAR> txt(str::Len(arg) / 2);
+    const WCHAR *next;
     for (next = arg; *next && *next != '"'; next++) {
         // skip escaped quotation marks according to
         // http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
@@ -35,11 +35,11 @@ static const TCHAR *ParseQuoted(const TCHAR *arg, WStrVec *out)
 }
 
 /* appends the next unquoted argument and returns the position after it */
-static const TCHAR *ParseUnquoted(const TCHAR *arg, WStrVec *out)
+static const WCHAR *ParseUnquoted(const WCHAR *arg, WStrVec *out)
 {
     AssertCrash(arg && *arg && ('"' != *arg) && !str::IsWs(*arg));
 
-    const TCHAR *next;
+    const WCHAR *next;
     // contrary to http://msdn.microsoft.com/en-us/library/17w5ykft.aspx
     // we don't treat quotation marks or backslashes in non-quoted
     // arguments in any special way
@@ -53,7 +53,7 @@ static const TCHAR *ParseUnquoted(const TCHAR *arg, WStrVec *out)
    each '"' that is part of the name is escaped with '\\'
  - unescaped, in which case it start with != '"' and ends with ' ' or '\0'
 */
-void ParseCmdLine(const TCHAR *cmdLine, WStrVec& out)
+void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out)
 {
     while (cmdLine) {
         while (str::IsWs(*cmdLine))

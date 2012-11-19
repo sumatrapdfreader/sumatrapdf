@@ -8,21 +8,21 @@
 
 class PasswordUI {
 public:
-    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+    virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey) = 0;
 };
 
 class PdfEngine : public BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static PdfEngine *CreateFromFile(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static PdfEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
     static PdfEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI=NULL);
 };
 
 class XpsEngine : public BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static XpsEngine *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static XpsEngine *CreateFromFile(const WCHAR *fileName);
     static XpsEngine *CreateFromStream(IStream *stream);
 };
 

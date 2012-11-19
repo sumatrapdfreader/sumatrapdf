@@ -29,7 +29,7 @@ void FormattingTemp::DeletePages()
     DeleteVecMembers(pagesFromPage);
 }
 
-ThreadLoadEbook::ThreadLoadEbook(const TCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
+ThreadLoadEbook::ThreadLoadEbook(const WCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
     controller(controller)
 {
     fileName = str::Dup(fn);

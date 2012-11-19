@@ -39,7 +39,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
     if (!path)
         return;
 
-    str::Str<TCHAR> infotip;
+    str::Str<WCHAR> infotip;
 
     RECT rcLine, rcLabel;
     HWND hTV = nmit->hdr.hwndFrom;
@@ -47,7 +47,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLine, FALSE);
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLabel, TRUE);
     if (rcLine.right + 2 < rcLabel.right) {
-        TCHAR buf[INFOTIPSIZE+1] = { 0 };  // +1 just in case
+        WCHAR buf[INFOTIPSIZE+1] = { 0 };  // +1 just in case
         TVITEM item;
         item.hItem = nmit->hItem;
         item.mask = TVIF_TEXT;
@@ -86,7 +86,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     FillRect(ncd->hdc, &rcFullWidth, GetSysColorBrush(COLOR_WINDOW));
 
     // Get the label's text
-    TCHAR szText[MAX_PATH];
+    WCHAR szText[MAX_PATH];
     TVITEM item;
     item.hItem = hItem;
     item.mask = TVIF_TEXT | TVIF_PARAM;
@@ -311,18 +311,18 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
 }
 
 // copied from mupdf/fitz/dev_text.c
-#define ISLEFTTORIGHTCHAR(c) ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
-#define ISRIGHTTOLEFTCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
+#define ISLEFTTORIGHWCHAR(c) ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
+#define ISRIGHTTOLEFWCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
 
 static void GetLeftRightCounts(DocTocItem *node, int& l2r, int& r2l)
 {
     if (!node)
         return;
     if (node->title) {
-        for (const TCHAR *c = node->title; *c; c++) {
-            if (ISLEFTTORIGHTCHAR(*c))
+        for (const WCHAR *c = node->title; *c; c++) {
+            if (ISLEFTTORIGHWCHAR(*c))
                 l2r++;
-            else if (ISRIGHTTOLEFTCHAR(*c))
+            else if (ISRIGHTTOLEFWCHAR(*c))
                 r2l++;
         }
     }

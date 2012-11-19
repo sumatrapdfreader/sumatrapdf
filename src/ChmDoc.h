@@ -21,7 +21,7 @@ class ChmDoc {
     bool ParseSystemData();
     bool ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool isIndex);
 
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
 
 public:
     ChmDoc() : codepage(0) { }
@@ -31,9 +31,9 @@ public:
     unsigned char *GetData(const char *fileName, size_t *lenOut);
 
     char *ToUtf8(const unsigned char *text, UINT overrideCP=0);
-    TCHAR *ToStr(const char *text);
+    WCHAR *ToStr(const char *text);
 
-    TCHAR *GetProperty(DocumentProperty prop);
+    WCHAR *GetProperty(DocumentProperty prop);
     const char *GetHomePath();
     Vec<char *> *GetAllPaths();
 
@@ -42,8 +42,8 @@ public:
     bool HasIndex() const;
     bool ParseIndex(EbookTocVisitor *visitor);
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static ChmDoc *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static ChmDoc *CreateFromFile(const WCHAR *fileName);
 };
 
 #endif

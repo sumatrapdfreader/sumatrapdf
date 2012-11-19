@@ -4,8 +4,8 @@
 #ifndef StressTesting_h
 #define StressTesting_h
 
-bool IsValidPageRange(const TCHAR *ranges);
-bool IsBenchPagesInfo(const TCHAR *s);
+bool IsValidPageRange(const WCHAR *ranges);
+bool IsBenchPagesInfo(const WCHAR *s);
 void BenchFileOrDir(WStrVec& pathsToBench);
 bool IsStressTesting();
 
@@ -21,8 +21,8 @@ public:
     virtual void GetLogInfo(str::Str<char> *s) = 0;
 };
 
-bool CollectPathsFromDirectory(const TCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles=false);
-void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *filter,
-                     const TCHAR *ranges, int cycles, RenderCache *renderCache);
+bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles=false);
+void StartStressTest(WindowInfo *win, const WCHAR *path, const WCHAR *filter,
+                     const WCHAR *ranges, int cycles, RenderCache *renderCache);
 
 #endif

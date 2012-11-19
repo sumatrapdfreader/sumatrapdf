@@ -14,7 +14,7 @@
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
 // caller must free() the result
-char *Escape(TCHAR *string, bool keepString=false)
+char *Escape(WCHAR *string, bool keepString=false)
 {
     ScopedMem<WCHAR> freeOnReturn;
     if (!keepString)
@@ -26,8 +26,8 @@ char *Escape(TCHAR *string, bool keepString=false)
     if (!str::FindChar(string, '<') && !str::FindChar(string, '&') && !str::FindChar(string, '"'))
         return str::conv::ToUtf8(string);
 
-    str::Str<TCHAR> escaped(256);
-    for (TCHAR *s = string; *s; s++) {
+    str::Str<WCHAR> escaped(256);
+    for (WCHAR *s = string; *s; s++) {
         switch (*s) {
         case '&': escaped.Append(_T("&amp;")); break;
         case '<': escaped.Append(_T("&lt;")); break;
@@ -44,7 +44,7 @@ void DumpProperties(BaseEngine *engine)
 {
     Out("\t<Properties\n");
     ScopedMem<char> str;
-    str.Set(Escape((TCHAR *)engine->FileName(), true));
+    str.Set(Escape((WCHAR *)engine->FileName(), true));
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty(Prop_Title)));
     if (str)
@@ -297,7 +297,7 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out("</EngineDump>\n");
 }
 
-void RenderDocument(BaseEngine *engine, const TCHAR *renderPath)
+void RenderDocument(BaseEngine *engine, const WCHAR *renderPath)
 {
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderedBitmap *bmp = engine->RenderBitmap(pageNo, 1.0, 0);
@@ -314,10 +314,10 @@ void RenderDocument(BaseEngine *engine, const TCHAR *renderPath)
 }
 
 class PasswordHolder : public PasswordUI {
-    const TCHAR *password;
+    const WCHAR *password;
 public:
-    PasswordHolder(const TCHAR *password) : password(password) { }
-    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+    PasswordHolder(const WCHAR *password) : password(password) { }
+    virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey) {
         return password ? str::Dup(password) : NULL;
     }
@@ -358,8 +358,8 @@ Usage:
     }
 
     bool fullDump = false;
-    TCHAR *password = NULL;
-    TCHAR *renderPath = NULL;
+    WCHAR *password = NULL;
+    WCHAR *renderPath = NULL;
     bool useAlternateHandlers = false;
     bool loadOnly = false;
 

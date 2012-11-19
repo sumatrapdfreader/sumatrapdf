@@ -18,7 +18,7 @@ void DebugAlternateChmEngine(bool enable)
     gDebugAlternateChmEngine = enable;
 }
 
-static bool IsExternalUrl(const TCHAR *url)
+static bool IsExternalUrl(const WCHAR *url)
 {
     return str::StartsWithI(url, _T("http://")) ||
            str::StartsWithI(url, _T("https://")) ||
@@ -29,7 +29,7 @@ class ChmTocItem : public DocTocItem, public PageDestination {
 public:
     ScopedMem<WCHAR> url;
 
-    ChmTocItem(TCHAR *title, int pageNo, TCHAR *url) :
+    ChmTocItem(WCHAR *title, int pageNo, WCHAR *url) :
         DocTocItem(title, pageNo), url(url) { }
     ChmTocItem *Clone();
 
@@ -43,7 +43,7 @@ public:
     virtual RectD GetDestRect() const {
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
-    virtual TCHAR *GetDestValue() const {
+    virtual WCHAR *GetDestValue() const {
         if (url && IsExternalUrl(url))
             return str::Dup(url);
         return NULL;
@@ -64,11 +64,11 @@ ChmTocItem *ChmTocItem::Clone()
 
 class ChmCacheEntry {
 public:
-    TCHAR *url;
+    WCHAR *url;
     char *data;
     size_t size;
 
-    ChmCacheEntry(const TCHAR *url) : data(NULL), size(0) {
+    ChmCacheEntry(const WCHAR *url) : data(NULL), size(0) {
         this->url = str::Dup(url);
     }
     ~ChmCacheEntry() {
@@ -87,7 +87,7 @@ public:
         return CreateFromFile(fileName);
     }
 
-    virtual const TCHAR *FileName() const { return fileName; };
+    virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return pages.Count(); }
 
     virtual RectD PageMediabox(int pageNo) { return RectD(); }
@@ -118,20 +118,20 @@ public:
         return (unsigned char *)file::ReadAll(fileName, cbCount);
     }
 
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
         return NULL;
     }
 
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
-    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
 
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return _T(".chm"); }
 
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name);
+    virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const { return tocRoot != NULL; }
     // Callers delete the ToC tree, so we return a copy
     // (probably faster than re-creating it from html every time)
@@ -156,10 +156,10 @@ public:
     }
 
     // from HtmlWindowCallback
-    virtual bool OnBeforeNavigate(const TCHAR *url, bool newWindow);
-    virtual void OnDocumentComplete(const TCHAR *url);
+    virtual bool OnBeforeNavigate(const WCHAR *url, bool newWindow);
+    virtual void OnDocumentComplete(const WCHAR *url);
     virtual void OnLButtonDown() { if (navCb) navCb->FocusFrame(true); }
-    virtual bool GetDataForUrl(const TCHAR *url, char **data, size_t *len);
+    virtual bool GetDataForUrl(const WCHAR *url, char **data, size_t *len);
 
 protected:
     WCHAR *fileName;
@@ -200,7 +200,7 @@ ChmEngineImpl::~ChmEngineImpl()
 // Called after html document has been loaded.
 // Sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
-void ChmEngineImpl::OnDocumentComplete(const TCHAR *url)
+void ChmEngineImpl::OnDocumentComplete(const WCHAR *url)
 {
     if (!url)
         return;
@@ -216,7 +216,7 @@ void ChmEngineImpl::OnDocumentComplete(const TCHAR *url)
 
 // Called before we start loading html for a given url. Will block
 // loading if returns false.
-bool ChmEngineImpl::OnBeforeNavigate(const TCHAR *url, bool newWindow)
+bool ChmEngineImpl::OnBeforeNavigate(const WCHAR *url, bool newWindow)
 {
     // ensure that JavaScript doesn't keep the focus
     // in the HtmlWindow when a new page is loaded
@@ -240,7 +240,7 @@ void ChmEngineImpl::SetParentHwnd(HWND hwnd)
     htmlWindow = new HtmlWindow(hwnd, this);
 }
 
-void ChmEngineImpl::DisplayPage(const TCHAR *pageUrl)
+void ChmEngineImpl::DisplayPage(const WCHAR *pageUrl)
 {
     if (IsExternalUrl(pageUrl)) {
         // open external links in an external browser
@@ -352,7 +352,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     // We fake page numbers by doing a depth-first traversal of
     // toc tree and considering each unique html page in toc tree
     // as a page
-    int CreatePageNoForURL(const TCHAR *url) {
+    int CreatePageNoForURL(const WCHAR *url) {
         if (!url || IsExternalUrl(url))
             return 0;
 
@@ -368,7 +368,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     // as well
     dict::MapTStrToInt urlsSet;
 
-    int CreatePageNoForURL(const TCHAR *url) {
+    int CreatePageNoForURL(const WCHAR *url) {
         if (!url || IsExternalUrl(url))
             return 0;
 
@@ -441,7 +441,7 @@ bool ChmEngineImpl::Load(const WCHAR *fileName)
     return pages.Count() > 0;
 }
 
-ChmCacheEntry *ChmEngineImpl::FindDataForUrl(const TCHAR *url)
+ChmCacheEntry *ChmEngineImpl::FindDataForUrl(const WCHAR *url)
 {
     for (size_t i = 0; i < urlDataCache.Count(); i++) {
         ChmCacheEntry *e = urlDataCache.At(i);
@@ -452,7 +452,7 @@ ChmCacheEntry *ChmEngineImpl::FindDataForUrl(const TCHAR *url)
 }
 
 // Load and cache data for a given url inside CHM file.
-bool ChmEngineImpl::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
+bool ChmEngineImpl::GetDataForUrl(const WCHAR *url, char **data, size_t *len)
 {
     ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
     ChmCacheEntry *e = FindDataForUrl(plainUrl);
@@ -471,7 +471,7 @@ bool ChmEngineImpl::GetDataForUrl(const TCHAR *url, char **data, size_t *len)
     return true;
 }
 
-PageDestination *ChmEngineImpl::GetNamedDest(const TCHAR *name)
+PageDestination *ChmEngineImpl::GetNamedDest(const WCHAR *name)
 {
     ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(name));
     int pageNo = pages.Find(plainUrl) + 1;
@@ -480,14 +480,14 @@ PageDestination *ChmEngineImpl::GetNamedDest(const TCHAR *name)
     return NULL;
 }
 
-bool ChmEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool ChmEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (gDebugAlternateChmEngine)
         return false;
     return ChmDoc::IsSupportedFile(fileName, sniff);
 }
 
-ChmEngine *ChmEngine::CreateFromFile(const TCHAR *fileName)
+ChmEngine *ChmEngine::CreateFromFile(const WCHAR *fileName)
 {
     ChmEngineImpl *engine = new ChmEngineImpl();
     if (!engine->Load(fileName)) {

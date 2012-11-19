@@ -56,13 +56,13 @@
 
 static HWND gHwndAbout;
 static HWND gHwndAboutTooltip = NULL;
-static const TCHAR *gClickedURL = NULL;
+static const WCHAR *gClickedURL = NULL;
 
 struct AboutLayoutInfoEl {
     /* static data, must be provided */
-    const TCHAR *   leftTxt;
-    const TCHAR *   rightTxt;
-    const TCHAR *   url;
+    const WCHAR *   leftTxt;
+    const WCHAR *   rightTxt;
+    const WCHAR *   url;
 
     /* data calculated by the layout */
     RectI           leftPos;
@@ -101,7 +101,7 @@ static Vec<StaticLinkInfo> gLinkInfo;
 
 static void DrawSumatraPDF(HDC hdc, PointI pt)
 {
-    const TCHAR *txt = APP_NAME_STR;
+    const WCHAR *txt = APP_NAME_STR;
 #ifdef ABOUT_USE_LESS_COLORS
     // simple black version
     SetTextColor(hdc, ABOUT_BORDER_COL);
@@ -130,7 +130,7 @@ static SizeI CalcSumatraVersionSize(HDC hdc)
 
     SIZE txtSize;
     /* calculate minimal top box size */
-    const TCHAR *txt = APP_NAME_STR;
+    const WCHAR *txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     result.dy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
     result.dx = txtSize.cx;
@@ -159,7 +159,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
     SetBkMode(hdc, TRANSPARENT);
 
     SIZE txtSize;
-    const TCHAR *txt = APP_NAME_STR;
+    const WCHAR *txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI mainRect(rect.x + (rect.dx - txtSize.cx) / 2,
                    rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
@@ -176,7 +176,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
     SelectObject(hdc, oldFont);
 }
 
-static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
+static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 {
     ScopedFont fontLeftTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
@@ -370,7 +370,7 @@ static void OnPaintAbout(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
+const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
 {
     if (!HasPermission(Perm_DiskAccess))
         return NULL;
@@ -435,7 +435,7 @@ static void CreateInfotipForLink(StaticLinkInfo& linkInfo)
     ti.cbSize = sizeof(ti);
     ti.hwnd = gHwndAbout;
     ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (TCHAR *)linkInfo.infotip;
+    ti.lpszText = (WCHAR *)linkInfo.infotip;
     ti.rect = linkInfo.rect.ToRECT();
 
     SendMessage(gHwndAboutTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
@@ -457,7 +457,7 @@ static void ClearInfotip()
 
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    const TCHAR * url;
+    const WCHAR * url;
     POINT pt;
 
     switch (message)
@@ -587,7 +587,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     SelectObject(hdc, fontSumatraTxt);
     SIZE txtSize;
-    const TCHAR *txt = _TR("Frequently Read");
+    const WCHAR *txt = _TR("Frequently Read");
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl)
@@ -686,7 +686,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 }
 
 // TODO: create in TEMP directory instead?
-static TCHAR *GetThumbnailPath(const TCHAR *filePath)
+static WCHAR *GetThumbnailPath(const WCHAR *filePath)
 {
     // create a fingerprint of a (normalized) path for the file name
     // I'd have liked to also include the file's last modification time

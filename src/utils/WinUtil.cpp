@@ -11,15 +11,15 @@
 #include "DebugLog.h"
 
 // Loads a DLL explicitly from the system's library collection
-HMODULE SafeLoadLibrary(const TCHAR *dllName)
+HMODULE SafeLoadLibrary(const WCHAR *dllName)
 {
-    TCHAR dllPath[MAX_PATH];
+    WCHAR dllPath[MAX_PATH];
     GetSystemDirectory(dllPath, dimof(dllPath));
     PathAppend(dllPath, dllName);
     return LoadLibrary(dllPath);
 }
 
-FARPROC LoadDllFunc(TCHAR *dllName, const char *funcName)
+FARPROC LoadDllFunc(WCHAR *dllName, const char *funcName)
 {
     HMODULE h = SafeLoadLibrary(dllName);
     if (!h)
@@ -39,7 +39,7 @@ void InitAllCommonControls()
     InitCommonControlsEx(&cex);
 }
 
-void FillWndClassEx(WNDCLASSEX& wcex, HINSTANCE hInstance, const TCHAR *clsName, WNDPROC wndproc)
+void FillWndClassEx(WNDCLASSEX& wcex, HINSTANCE hInstance, const WCHAR *clsName, WNDPROC wndproc)
 {
     ZeroMemory(&wcex, sizeof(WNDCLASSEX));
     wcex.cbSize         = sizeof(WNDCLASSEX);
@@ -97,7 +97,7 @@ void LogLastError(DWORD err)
 }
 
 // return true if a given registry key (path) exists
-bool RegKeyExists(HKEY keySub, const TCHAR *keyName)
+bool RegKeyExists(HKEY keySub, const WCHAR *keyName)
 {
     HKEY hKey;
     LONG res = RegOpenKey(keySub, keyName, &hKey);
@@ -112,9 +112,9 @@ bool RegKeyExists(HKEY keySub, const TCHAR *keyName)
 }
 
 // called needs to free() the result
-TCHAR *ReadRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName)
+WCHAR *ReadRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName)
 {
-    TCHAR *val = NULL;
+    WCHAR *val = NULL;
     REGSAM access = KEY_READ;
     HKEY hKey;
 TryAgainWOW64:
@@ -123,7 +123,7 @@ TryAgainWOW64:
         DWORD valLen;
         res = RegQueryValueEx(hKey, valName, NULL, NULL, NULL, &valLen);
         if (ERROR_SUCCESS == res) {
-            val = AllocArray<TCHAR>(valLen / sizeof(TCHAR) + 1);
+            val = AllocArray<WCHAR>(valLen / sizeof(WCHAR) + 1);
             res = RegQueryValueEx(hKey, valName, NULL, NULL, (LPBYTE)val, &valLen);
             if (ERROR_SUCCESS != res)
                 str::ReplacePtr(&val, NULL);
@@ -143,19 +143,19 @@ TryAgainWOW64:
     return val;
 }
 
-bool WriteRegStr(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, const TCHAR *value)
+bool WriteRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, const WCHAR *value)
 {
-    LSTATUS res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(str::Len(value) + 1) * sizeof(TCHAR));
+    LSTATUS res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value, (DWORD)(str::Len(value) + 1) * sizeof(WCHAR));
     return ERROR_SUCCESS == res;
 }
 
-bool WriteRegDWORD(HKEY keySub, const TCHAR *keyName, const TCHAR *valName, DWORD value)
+bool WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD value)
 {
     LSTATUS res = SHSetValue(keySub, keyName, valName, REG_DWORD, (const VOID *)&value, sizeof(DWORD));
     return ERROR_SUCCESS == res;
 }
 
-bool CreateRegKey(HKEY keySub, const TCHAR *keyName)
+bool CreateRegKey(HKEY keySub, const WCHAR *keyName)
 {
     HKEY hKey;
     if (RegCreateKeyEx(keySub, keyName, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
@@ -168,7 +168,7 @@ bool CreateRegKey(HKEY keySub, const TCHAR *keyName)
 #pragma warning(disable: 6248) // "Setting a SECURITY_DESCRIPTOR's DACL to NULL will result in an unprotected object"
 // try to remove any access restrictions on the key
 // by granting everybody all access to this key (NULL DACL)
-static void ResetRegKeyAcl(HKEY keySub, const TCHAR *keyName)
+static void ResetRegKeyAcl(HKEY keySub, const WCHAR *keyName)
 {
     HKEY hKey;
     LONG res = RegOpenKeyEx(keySub, keyName, 0, WRITE_DAC, &hKey);
@@ -182,7 +182,7 @@ static void ResetRegKeyAcl(HKEY keySub, const TCHAR *keyName)
 }
 #pragma warning(pop)
 
-bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst)
+bool DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst)
 {
     if (resetACLFirst)
         ResetRegKeyAcl(keySub, keyName);
@@ -191,10 +191,10 @@ bool DeleteRegKey(HKEY keySub, const TCHAR *keyName, bool resetACLFirst)
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
-TCHAR *ReadIniString(const TCHAR *iniPath, const TCHAR *section, const TCHAR *key)
+WCHAR *ReadIniString(const WCHAR *iniPath, const WCHAR *section, const WCHAR *key)
 {
     DWORD bufCch = 64*512; // so max memory use is 64k
-    TCHAR *value = (TCHAR*)malloc(bufCch*sizeof(TCHAR));
+    WCHAR *value = (WCHAR*)malloc(bufCch*sizeof(WCHAR));
     if (value)
         GetPrivateProfileString(section, key, NULL, value, bufCch-1, iniPath);
     return value;
@@ -339,7 +339,7 @@ WCHAR *ResolveLnk(const WCHAR * path)
     if (FAILED(hRes))
         return NULL;
 
-    TCHAR newPath[MAX_PATH];
+    WCHAR newPath[MAX_PATH];
     hRes = lnk->GetPath(newPath, MAX_PATH, NULL, 0);
     if (FAILED(hRes))
         return NULL;
@@ -404,7 +404,7 @@ IDataObject* GetDataObjectForFile(WCHAR* filePath, HWND hwnd)
 }
 
 // The result value contains major and minor version in the high resp. the low WORD
-DWORD GetFileVersion(TCHAR *path)
+DWORD GetFileVersion(WCHAR *path)
 {
     DWORD fileVersion = 0;
     DWORD handle;
@@ -421,7 +421,7 @@ DWORD GetFileVersion(TCHAR *path)
     return fileVersion;
 }
 
-bool LaunchFile(const TCHAR *path, const TCHAR *params, const TCHAR *verb, bool hidden)
+bool LaunchFile(const WCHAR *path, const WCHAR *params, const WCHAR *verb, bool hidden)
 {
     if (!path)
         return false;
@@ -436,7 +436,7 @@ bool LaunchFile(const TCHAR *path, const TCHAR *params, const TCHAR *verb, bool 
     return ShellExecuteEx(&sei);
 }
 
-HANDLE LaunchProcess(TCHAR *cmdLine, const TCHAR *currDir, DWORD flags)
+HANDLE LaunchProcess(WCHAR *cmdLine, const WCHAR *currDir, DWORD flags)
 {
     PROCESS_INFORMATION pi = { 0 };
     STARTUPINFO si = { 0 };
@@ -525,14 +525,14 @@ void PaintLine(HDC hdc, RectI& rect)
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
-void DrawCenteredText(HDC hdc, RectI& r, const TCHAR *txt, bool isRTL)
+void DrawCenteredText(HDC hdc, RectI& r, const WCHAR *txt, bool isRTL)
 {
     SetBkMode(hdc, TRANSPARENT);
     DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (isRTL ? DT_RTLREADING : 0));
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SizeI TextSizeInHwnd(HWND hwnd, const TCHAR *txt)
+SizeI TextSizeInHwnd(HWND hwnd, const WCHAR *txt)
 {
     SIZE sz;
     size_t txtLen = str::Len(txt);
@@ -586,9 +586,9 @@ void CenterDialog(HWND hDlg, HWND hParent)
 
 /* Get the name of default printer or NULL if not exists.
    The caller needs to free() the result */
-TCHAR *GetDefaultPrinterName()
+WCHAR *GetDefaultPrinterName()
 {
-    TCHAR buf[512];
+    WCHAR buf[512];
     DWORD bufSize = dimof(buf);
     if (GetDefaultPrinter(buf, &bufSize))
         return str::Dup(buf);
@@ -606,7 +606,7 @@ bool CopyTextToClipboard(const WCHAR *text, bool appendOnly)
         EmptyClipboard();
     }
 
-    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (str::Len(text) + 1) * sizeof(TCHAR));
+    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (str::Len(text) + 1) * sizeof(WCHAR));
     if (handle) {
         WCHAR *globalText = (WCHAR *)GlobalLock(handle);
         lstrcpy(globalText, text);
@@ -729,7 +729,7 @@ WCHAR *ToSafeString(const WCHAR *str)
     }
 }
 
-HFONT GetSimpleFont(HDC hdc, TCHAR *fontName, int fontSize)
+HFONT GetSimpleFont(HDC hdc, WCHAR *fontName, int fontSize)
 {
     LOGFONT lf = { 0 };
 
@@ -855,10 +855,10 @@ UINT GuessTextCodepage(const char *data, size_t len, UINT default)
 
 namespace win {
 
-TCHAR *GetText(HWND hwnd)
+WCHAR *GetText(HWND hwnd)
 {
     size_t  cchTxtLen = GetTextLen(hwnd);
-    TCHAR * txt = (TCHAR*)calloc(cchTxtLen + 1, sizeof(TCHAR));
+    WCHAR * txt = (WCHAR*)calloc(cchTxtLen + 1, sizeof(WCHAR));
     if (NULL == txt)
         return NULL;
     SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
@@ -1000,7 +1000,7 @@ typedef BOOL WINAPI SaferCloseLevelProc(SAFER_LEVEL_HANDLE hLevelHandle);
 // note: the intended purpose of this code was to launch non-elevated process
 // from elevated process, but it doesn't seem to do that (we use RunAsUser()
 // instead)
-HANDLE CreateProcessAtLevel(const TCHAR *exe, const TCHAR *args, DWORD level)
+HANDLE CreateProcessAtLevel(const WCHAR *exe, const WCHAR *args, DWORD level)
 {
     HMODULE h = SafeLoadLibrary(_T("Advapi32.dll"));
     if (!h)

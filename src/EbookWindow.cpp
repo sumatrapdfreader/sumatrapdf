@@ -32,7 +32,7 @@ using namespace Gdiplus;
 
 static bool gShowTextBoundingBoxes = false;
 
-const TCHAR *EbookWindow::LoadedFilePath() const
+const WCHAR *EbookWindow::LoadedFilePath() const
 {
     if (ebookController)
         return ebookController->GetDoc().GetFilePath();
@@ -518,7 +518,7 @@ static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
 
 void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 {
-    const TCHAR *fullPath = doc.GetFilePath();
+    const WCHAR *fullPath = doc.GetFilePath();
     DisplayState *ds = gFileHistory.Find(fullPath);
 
     if (doc.IsNone()) {
@@ -617,7 +617,7 @@ bool RegisterMobiWinClass(HINSTANCE hinst)
     return atom != NULL;
 }
 
-bool IsEbookFile(const TCHAR *fileName)
+bool IsEbookFile(const WCHAR *fileName)
 {
     return MobiDoc::IsSupportedFile(fileName) ||
            EpubDoc::IsSupportedFile(fileName);

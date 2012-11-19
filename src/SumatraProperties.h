@@ -12,7 +12,7 @@ enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
 
 class PropertyEl {
 public:
-    PropertyEl(const TCHAR *leftTxt, TCHAR *rightTxt)
+    PropertyEl(const WCHAR *leftTxt, WCHAR *rightTxt)
         : leftTxt(leftTxt), rightTxt(rightTxt) { }
     ~PropertyEl() {
         // free the text on the right. Text on left is static, so doesn't need to be freed
@@ -21,8 +21,8 @@ public:
 
     /* A property is always in format:
     Name (left): Value (right) */
-    const TCHAR *   leftTxt;
-    TCHAR *         rightTxt;
+    const WCHAR *   leftTxt;
+    WCHAR *         rightTxt;
 
     /* data calculated by the layout */
     RectI           leftPos;
@@ -33,8 +33,8 @@ class PropertiesLayout : public Vec<PropertyEl *> {
 public:
     PropertiesLayout() : hwnd(NULL), hwndParent(NULL) { }
     ~PropertiesLayout() { DeleteVecMembers(*this); }
-    void AddProperty(const TCHAR *key, TCHAR *value);
-    bool HasProperty(const TCHAR *key);
+    void AddProperty(const WCHAR *key, WCHAR *value);
+    bool HasProperty(const WCHAR *key);
 
     HWND    hwnd;
     HWND    hwndParent;

@@ -233,7 +233,7 @@ void CopySelectionToClipboard(WindowInfo *win)
             WStrVec selections;
             for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
                 SelectionOnPage *selOnPage = &win->selectionOnPage->At(i);
-                TCHAR *text = win->dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);
+                WCHAR *text = win->dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);
                 if (text)
                     selections.Push(text);
             }

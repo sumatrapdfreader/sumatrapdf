@@ -13,9 +13,7 @@
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
-/* ********** Codepage conversion helpers ********** */
-
-inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
+inline WCHAR *FromHtmlUtf8(const char *s, size_t len)
 {
     ScopedMem<char> tmp(str::DupN(s, len));
     return DecodeHtmlEntitites(tmp, CP_UTF8);
@@ -72,8 +70,6 @@ static UINT GetCodepageFromPI(const char *xmlPI)
     }
     return CP_ACP;
 }
-
-/* ********** URL handling helpers ********** */
 
 char *NormalizeURL(const char *url, const char *base)
 {
@@ -168,7 +164,7 @@ const char *EPUB_CONTAINER_NS = "urn:oasis:names:tc:opendocument:xmlns:container
 const char *EPUB_OPF_NS = "http://www.idpf.org/2007/opf";
 const char *EPUB_NCX_NS = "http://www.daisy.org/z3986/2005/ncx/";
 
-EpubDoc::EpubDoc(const TCHAR *fileName) :
+EpubDoc::EpubDoc(const WCHAR *fileName) :
     zip(fileName), fileName(str::Dup(fileName)), isNcxToc(false), isRtlDoc(false) { }
 
 EpubDoc::EpubDoc(IStream *stream) :
@@ -383,7 +379,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     return NULL;
 }
 
-TCHAR *EpubDoc::GetProperty(DocumentProperty prop)
+WCHAR *EpubDoc::GetProperty(DocumentProperty prop)
 {
     for (size_t i = 0; i < props.Count(); i++) {
         if (props.At(i).prop == prop)
@@ -392,7 +388,7 @@ TCHAR *EpubDoc::GetProperty(DocumentProperty prop)
     return NULL;
 }
 
-const TCHAR *EpubDoc::GetFileName() const
+const WCHAR *EpubDoc::GetFileName() const
 {
     return fileName;
 }
@@ -514,7 +510,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
     return ParseNavToc(tocData, tocDataLen, pagePath, visitor);
 }
 
-bool EpubDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool EpubDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         ZipFile zip(fileName);
@@ -540,7 +536,7 @@ bool EpubDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, _T(".epub"));
 }
 
-EpubDoc *EpubDoc::CreateFromFile(const TCHAR *fileName)
+EpubDoc *EpubDoc::CreateFromFile(const WCHAR *fileName)
 {
     EpubDoc *doc = new EpubDoc(fileName);
     if (!doc || !doc->Load()) {
@@ -562,7 +558,7 @@ EpubDoc *EpubDoc::CreateFromStream(IStream *stream)
 
 /* ********** FictionBook ********** */
 
-Fb2Doc::Fb2Doc(const TCHAR *fileName) : fileName(str::Dup(fileName)),
+Fb2Doc::Fb2Doc(const WCHAR *fileName) : fileName(str::Dup(fileName)),
     isZipped(false), hasToc(false) { }
 
 Fb2Doc::~Fb2Doc()
@@ -706,7 +702,7 @@ ImageData *Fb2Doc::GetCoverImage()
     return GetImageData(coverImage);
 }
 
-TCHAR *Fb2Doc::GetProperty(DocumentProperty prop)
+WCHAR *Fb2Doc::GetProperty(DocumentProperty prop)
 {
     if (Prop_Title == prop && docTitle)
         return str::Dup(docTitle);
@@ -715,7 +711,7 @@ TCHAR *Fb2Doc::GetProperty(DocumentProperty prop)
     return NULL;
 }
 
-const TCHAR *Fb2Doc::GetFileName() const
+const WCHAR *Fb2Doc::GetFileName() const
 {
     return fileName;
 }
@@ -725,7 +721,7 @@ bool Fb2Doc::IsZipped() const
     return isZipped;
 }
 
-bool Fb2Doc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return str::EndsWithI(fileName, _T(".fb2"))  ||
            str::EndsWithI(fileName, _T(".fb2z")) ||
@@ -733,7 +729,7 @@ bool Fb2Doc::IsSupportedFile(const TCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, _T(".fb2.zip"));
 }
 
-Fb2Doc *Fb2Doc::CreateFromFile(const TCHAR *fileName)
+Fb2Doc *Fb2Doc::CreateFromFile(const WCHAR *fileName)
 {
     Fb2Doc *doc = new Fb2Doc(fileName);
     if (!doc || !doc->Load()) {
@@ -745,7 +741,7 @@ Fb2Doc *Fb2Doc::CreateFromFile(const TCHAR *fileName)
 
 /* ********** PalmDOC (and TealDoc) ********** */
 
-PalmDoc::PalmDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+PalmDoc::PalmDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)) { }
 
 PalmDoc::~PalmDoc()
 {
@@ -915,7 +911,7 @@ ImageData *PalmDoc::GetImageData(const char *id)
     }
 
     ScopedMem<WCHAR> src(str::conv::FromUtf8(id));
-    TCHAR *colon = (TCHAR *)str::FindCharLast(src.Get(), ':');
+    WCHAR *colon = (WCHAR *)str::FindCharLast(src.Get(), ':');
     uint32_t idx;
     if (!colon || !str::Parse(colon + 1, _T("%u%$"), &idx))
         return NULL;
@@ -934,7 +930,7 @@ ImageData *PalmDoc::GetImageData(const char *id)
     return &images.Last().base;
 }
 
-const TCHAR *PalmDoc::GetFileName() const
+const WCHAR *PalmDoc::GetFileName() const
 {
     return fileName;
 }
@@ -1024,7 +1020,7 @@ static bool GetTealPaintHeader(const char *data, size_t size, TealPaintHeader *h
 }
 
 // converts a TealPaint image into TGA (which is simpler to do than BMP)
-char *PalmDoc::LoadTealPaintImage(const TCHAR *dbFile, size_t idx, size_t *lenOut)
+char *PalmDoc::LoadTealPaintImage(const WCHAR *dbFile, size_t idx, size_t *lenOut)
 {
     PdbReader pdbReader(dbFile);
     if (!str::Eq(pdbReader.GetDbType(), "DataTlPt"))
@@ -1209,7 +1205,7 @@ char *PalmDoc::GetTealPaintImageName(PdbReader *pdbReader, size_t idx, bool& isV
     return str::DupN(name, data + size - name);
 }
 
-bool PalmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool PalmDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         PdbReader pdbReader(fileName);
@@ -1221,7 +1217,7 @@ bool PalmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, _T(".pdb"));
 }
 
-PalmDoc *PalmDoc::CreateFromFile(const TCHAR *fileName)
+PalmDoc *PalmDoc::CreateFromFile(const WCHAR *fileName)
 {
     PalmDoc *doc = new PalmDoc(fileName);
     if (!doc || !doc->Load()) {
@@ -1237,7 +1233,7 @@ PalmDoc *PalmDoc::CreateFromFile(const TCHAR *fileName)
 #define TCR_HEADER      "!!8-Bit!!"
 #define TCR_HEADER_LEN  strlen(TCR_HEADER)
 
-TcrDoc::TcrDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+TcrDoc::TcrDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)) { }
 TcrDoc::~TcrDoc() { }
 
 bool TcrDoc::Load()
@@ -1284,12 +1280,12 @@ const char *TcrDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-const TCHAR *TcrDoc::GetFileName() const
+const WCHAR *TcrDoc::GetFileName() const
 {
     return fileName;
 }
 
-bool TcrDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool TcrDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff)
         return file::StartsWith(fileName, TCR_HEADER);
@@ -1297,7 +1293,7 @@ bool TcrDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, _T(".tcr"));
 }
 
-TcrDoc *TcrDoc::CreateFromFile(const TCHAR *fileName)
+TcrDoc *TcrDoc::CreateFromFile(const WCHAR *fileName)
 {
     TcrDoc *doc = new TcrDoc(fileName);
     if (!doc || !doc->Load()) {
@@ -1309,7 +1305,7 @@ TcrDoc *TcrDoc::CreateFromFile(const TCHAR *fileName)
 
 /* ********** Plain HTML ********** */
 
-HtmlDoc::HtmlDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)) { }
+HtmlDoc::HtmlDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)) { }
 
 HtmlDoc::~HtmlDoc()
 {
@@ -1389,7 +1385,7 @@ ImageData *HtmlDoc::GetImageData(const char *id)
     return &images.Last().base;
 }
 
-TCHAR *HtmlDoc::GetProperty(DocumentProperty prop)
+WCHAR *HtmlDoc::GetProperty(DocumentProperty prop)
 {
     switch (prop) {
     case Prop_Title:
@@ -1405,19 +1401,19 @@ TCHAR *HtmlDoc::GetProperty(DocumentProperty prop)
     }
 }
 
-const TCHAR *HtmlDoc::GetFileName() const
+const WCHAR *HtmlDoc::GetFileName() const
 {
     return fileName;
 }
 
-bool HtmlDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool HtmlDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return str::EndsWithI(fileName, _T(".html")) ||
            str::EndsWithI(fileName, _T(".htm")) ||
            str::EndsWithI(fileName, _T(".xhtml"));
 }
 
-HtmlDoc *HtmlDoc::CreateFromFile(const TCHAR *fileName)
+HtmlDoc *HtmlDoc::CreateFromFile(const WCHAR *fileName)
 {
     HtmlDoc *doc = new HtmlDoc(fileName);
     if (!doc || !doc->Load()) {
@@ -1429,7 +1425,7 @@ HtmlDoc *HtmlDoc::CreateFromFile(const TCHAR *fileName)
 
 /* ********** Plain Text ********** */
 
-TxtDoc::TxtDoc(const TCHAR *fileName) : fileName(str::Dup(fileName)), isRFC(false) { }
+TxtDoc::TxtDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)), isRFC(false) { }
 
 static char *TextFindLinkEnd(str::Str<char>& htmlData, char *curr, bool fromWww=false)
 {
@@ -1600,7 +1596,7 @@ const char *TxtDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-const TCHAR *TxtDoc::GetFileName() const
+const WCHAR *TxtDoc::GetFileName() const
 {
     return fileName;
 }
@@ -1628,7 +1624,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
         ScopedMem<WCHAR> id(el->GetAttribute("id"));
         int level = 1;
         if (str::IsDigit(*title)) {
-            const TCHAR *dot = str::FindChar(title, '.');
+            const WCHAR *dot = str::FindChar(title, '.');
             while ((dot = str::FindChar(dot + 1, '.'))) {
                 level++;
             }
@@ -1639,7 +1635,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
     return true;
 }
 
-bool TxtDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool TxtDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return str::EndsWithI(fileName, _T(".txt")) ||
            str::EndsWithI(fileName, _T(".log")) ||
@@ -1651,7 +1647,7 @@ bool TxtDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, _T("\\Read.me"));
 }
 
-TxtDoc *TxtDoc::CreateFromFile(const TCHAR *fileName)
+TxtDoc *TxtDoc::CreateFromFile(const WCHAR *fileName)
 {
     TxtDoc *doc = new TxtDoc(fileName);
     if (!doc || !doc->Load()) {

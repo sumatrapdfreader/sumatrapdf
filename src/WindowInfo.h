@@ -42,12 +42,12 @@ struct TouchState {
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
     StaticLinkInfo() : target(NULL), infotip(NULL) { }
-    StaticLinkInfo(RectI rect, const TCHAR *target, const TCHAR *infotip=NULL) :
+    StaticLinkInfo(RectI rect, const WCHAR *target, const WCHAR *infotip=NULL) :
         rect(rect), target(target), infotip(infotip) { }
 
     RectI rect;
-    const TCHAR *target;
-    const TCHAR *infotip;
+    const WCHAR *target;
+    const WCHAR *infotip;
 };
 
 /* Describes information related to one window with (optional) a document
@@ -67,7 +67,7 @@ public:
     bool IsChm() const { return dm && dm->engineType == Engine_Chm; }
     bool IsNotPdf() const { return dm && dm->engineType != Engine_PDF; }
 
-    TCHAR *         loadedFilePath;
+    WCHAR *         loadedFilePath;
     DisplayModel *  dm;
 
     HWND            hwndFrame;
@@ -172,7 +172,7 @@ public:
 
     LinkHandler *   linkHandler;
     PageElement *   linkOnLastButtonDown;
-    const TCHAR *   url;
+    const WCHAR *   url;
 
     // synchronizer based on .pdfsync file
     Synchronizer *  pdfsync;
@@ -210,12 +210,12 @@ public:
     void ToggleZoom();
     void MoveDocBy(int dx, int dy);
 
-    void CreateInfotip(const TCHAR *text, RectI& rc, bool multiline=false);
+    void CreateInfotip(const WCHAR *text, RectI& rc, bool multiline=false);
     void DeleteInfotip();
 
     // DisplayModelCallback implementation (incl. ChmNavigationCallback)
     virtual void PageNoChanged(int pageNo);
-    virtual void LaunchBrowser(const TCHAR *url);
+    virtual void LaunchBrowser(const WCHAR *url);
     virtual void FocusFrame(bool always);
     virtual void Repaint() { RepaintAsync(); };
     virtual void UpdateScrollbars(SizeI canvas);
@@ -228,22 +228,22 @@ class LinkHandler {
     BaseEngine *engine() const;
 
     void ScrollTo(PageDestination *dest);
-    void LaunchFile(const TCHAR *path, PageDestination *link);
-    PageDestination *FindTocItem(DocTocItem *item, const TCHAR *name, bool partially=false);
+    void LaunchFile(const WCHAR *path, PageDestination *link);
+    PageDestination *FindTocItem(DocTocItem *item, const WCHAR *name, bool partially=false);
 
 public:
     LinkHandler(WindowInfo& win) : owner(&win) { }
 
     void GotoLink(PageDestination *link);
-    void GotoNamedDest(const TCHAR *name);
+    void GotoNamedDest(const WCHAR *name);
 };
 
 class LinkSaver : public LinkSaverUI {
     WindowInfo *owner;
-    const TCHAR *fileName;
+    const WCHAR *fileName;
 
 public:
-    LinkSaver(WindowInfo& win, const TCHAR *fileName) : owner(&win), fileName(fileName) { }
+    LinkSaver(WindowInfo& win, const WCHAR *fileName) : owner(&win), fileName(fileName) { }
 
     virtual bool SaveEmbedded(unsigned char *data, size_t cbCount);
 };

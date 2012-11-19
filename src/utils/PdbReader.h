@@ -19,7 +19,7 @@ class PdbReader {
     bool ParseHeader();
 
 public:
-    PdbReader(const TCHAR *filePath);
+    PdbReader(const WCHAR *filePath);
 
     const char *GetDbType();
     size_t GetRecordCount();

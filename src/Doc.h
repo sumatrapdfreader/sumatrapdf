@@ -57,12 +57,12 @@ protected:
     //
     // TODO: replace with an enumeration so that translation
     //       can more easily happen in UI code?
-    TCHAR *loadingErrorMessage;
+    WCHAR *loadingErrorMessage;
 
     // A copy of the file path. We need this because while in
     // most cases we can extract it from the wrapped object,
     // if loading failed we don't have it but might need it
-    TCHAR *filePath;
+    WCHAR *filePath;
 
     union {
         void *generic;
@@ -72,7 +72,7 @@ protected:
         MobiTestDoc *mobiTestDoc;
     };
 
-    const TCHAR *GetFilePathFromDoc() const;
+    const WCHAR *GetFilePathFromDoc() const;
     void FreeStrings();
 
 public:
@@ -110,19 +110,19 @@ public:
     // instead of adding these to Doc, they could also be part
     // of a virtual EbookDoc interface that *Doc implement so
     // that the compiler can choose the correct method automatically
-    const TCHAR *GetFilePath() const;
-    TCHAR *GetProperty(DocumentProperty prop);
+    const WCHAR *GetFilePath() const;
+    WCHAR *GetProperty(DocumentProperty prop);
     const char *GetHtmlData(size_t &len);
     size_t GetHtmlDataSize();
     ImageData *GetCoverImage();
 
-    static Doc CreateFromFile(const TCHAR *filePath);
+    static Doc CreateFromFile(const WCHAR *filePath);
 };
 
 namespace EngineManager {
 
-bool IsSupportedFile(bool enableEbookEngines, const TCHAR *filePath, bool sniff=false);
-BaseEngine *CreateEngine(bool enableEbookEngines, const TCHAR *filePath, PasswordUI *pwdUI=NULL, DocType *typeOut=NULL);
+bool IsSupportedFile(bool enableEbookEngines, const WCHAR *filePath, bool sniff=false);
+BaseEngine *CreateEngine(bool enableEbookEngines, const WCHAR *filePath, PasswordUI *pwdUI=NULL, DocType *typeOut=NULL);
 
 }
 

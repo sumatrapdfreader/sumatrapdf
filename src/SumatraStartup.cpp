@@ -128,10 +128,10 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return true;
 }
 
-static void OpenUsingDde(const TCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
+static void OpenUsingDde(const WCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
 {
     // delegate file opening to a previously running instance by sending a DDE message
-    TCHAR fullpath[MAX_PATH];
+    WCHAR fullpath[MAX_PATH];
     GetFullPathName(filePath, dimof(fullpath), fullpath, NULL);
 
     ScopedMem<WCHAR> cmd(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
@@ -146,7 +146,7 @@ static void OpenUsingDde(const TCHAR *filePath, CommandLineInfo& i, bool isFirst
     }
     if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
             i.startScroll.x != -1 && i.startScroll.y != -1) && isFirstWin) {
-        const TCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
+        const WCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
         cmd.Set(str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
                                     fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
@@ -159,7 +159,7 @@ static void OpenUsingDde(const TCHAR *filePath, CommandLineInfo& i, bool isFirst
     }
 }
 
-static WindowInfo *LoadOnStartup(const TCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
+static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
 {
     bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
     LoadArgs args(filePath, NULL, showWin);
@@ -236,7 +236,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
         WStrVec parts;
         parts.Split(args, _T("&"), true);
         for (size_t k = 0; k < parts.Count(); k++) {
-            TCHAR *part = parts.At(k);
+            WCHAR *part = parts.At(k);
             int pageNo;
             if (str::StartsWithI(part, _T("page=")) && str::Parse(part + 4, _T("=%d%$"), &pageNo))
                 i.pageNumber = pageNo;

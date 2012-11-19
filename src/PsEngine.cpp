@@ -11,9 +11,9 @@
 
 #include <zlib.h>
 
-static TCHAR *GetGhostscriptPath()
+static WCHAR *GetGhostscriptPath()
 {
-    TCHAR *gsProducts[] = {
+    WCHAR *gsProducts[] = {
         _T("AFPL Ghostscript"),
         _T("Aladdin Ghostscript"),
         _T("GPL Ghostscript"),
@@ -29,7 +29,7 @@ TryAgain64Bit:
         ScopedMem<WCHAR> keyName(str::Join(_T("Software\\"), gsProducts[i]));
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, access, &hkey) != ERROR_SUCCESS)
             continue;
-        TCHAR subkey[32];
+        WCHAR subkey[32];
         for (DWORD ix = 0; RegEnumKey(hkey, ix, subkey, dimof(subkey)) == ERROR_SUCCESS; ix++)
             versions.Append(str::Dup(subkey));
         RegCloseKey(hkey);
@@ -65,7 +65,7 @@ TryAgain64Bit:
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariable(_T("PATH"), NULL, 0);
-    ScopedMem<WCHAR> envpath(AllocArray<TCHAR>(size));
+    ScopedMem<WCHAR> envpath(AllocArray<WCHAR>(size));
     if (size > 0 && envpath) {
         GetEnvironmentVariable(_T("PATH"), envpath, size);
         WStrVec paths;
@@ -87,14 +87,14 @@ class ScopedFile {
     ScopedMem<WCHAR> path;
 
 public:
-    ScopedFile(const TCHAR *path) : path(path ? str::Dup(path) : NULL) { }
+    ScopedFile(const WCHAR *path) : path(path ? str::Dup(path) : NULL) { }
     ~ScopedFile() {
         if (path)
             file::Delete(path);
     }
 };
 
-static PdfEngine *ps2pdf(const TCHAR *fileName)
+static PdfEngine *ps2pdf(const WCHAR *fileName)
 {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     ScopedMem<WCHAR> shortPath(path::ShortPath(fileName));
@@ -138,14 +138,14 @@ static PdfEngine *ps2pdf(const TCHAR *fileName)
     return PdfEngine::CreateFromStream(stream);
 }
 
-inline bool isgzipped(const TCHAR *fileName)
+inline bool isgzipped(const WCHAR *fileName)
 {
     char header[2] = { 0 };
     file::ReadAll(fileName, header, sizeof(header));
     return str::EqN(header, "\x1F\x8B", sizeof(header));
 }
 
-static PdfEngine *psgz2pdf(const TCHAR *fileName)
+static PdfEngine *psgz2pdf(const WCHAR *fileName)
 {
     ScopedMem<WCHAR> tmpFile(path::GetTempPath(_T("PsE")));
     ScopedFile tmpFileScope(tmpFile);
@@ -199,7 +199,7 @@ public:
         return clone;
     }
 
-    virtual const TCHAR *FileName() const { return fileName; };
+    virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const {
         return pdfEngine ? pdfEngine->PageCount() : 0;
     }
@@ -231,7 +231,7 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount) {
         return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : NULL;
     }
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
         return pdfEngine ? pdfEngine->ExtractPageText(pageNo, lineSep, coords_out, target) : NULL;
     }
@@ -241,7 +241,7 @@ public:
     virtual PageLayoutType PreferredLayout() {
         return pdfEngine ? pdfEngine->PreferredLayout() : Layout_Single;
     }
-    virtual TCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
     virtual bool IsPrintingAllowed() {
         return pdfEngine ? pdfEngine->IsPrintingAllowed() : true;
@@ -253,7 +253,7 @@ public:
     virtual float GetFileDPI() const {
         return pdfEngine ? pdfEngine->GetFileDPI() : 72.0f;
     }
-    virtual const TCHAR *GetDefaultFileExt() const {
+    virtual const WCHAR *GetDefaultFileExt() const {
         return !fileName || !str::EndsWithI(fileName, _T(".eps")) ? _T(".ps") : _T(".eps");
     }
 
@@ -268,7 +268,7 @@ public:
         return pdfEngine ? pdfEngine->GetElementAtPos(pageNo, pt) : NULL;
     }
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name) {
+    virtual PageDestination *GetNamedDest(const WCHAR *name) {
         return pdfEngine ? pdfEngine->GetNamedDest(name) : NULL;
     }
     virtual bool HasTocTree() const {
@@ -287,10 +287,10 @@ public:
     }
 
 protected:
-    TCHAR *fileName;
+    WCHAR *fileName;
     PdfEngine *pdfEngine;
 
-    bool Load(const TCHAR *fileName) {
+    bool Load(const WCHAR *fileName) {
         assert(!this->fileName && !pdfEngine);
         if (!fileName)
             return false;
@@ -309,7 +309,7 @@ bool PsEngine::IsAvailable()
     return gswin32c.Get() != NULL;
 }
 
-bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool PsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (!IsAvailable())
         return false;
@@ -333,7 +333,7 @@ bool PsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, _T(".eps"));
 }
 
-PsEngine *PsEngine::CreateFromFile(const TCHAR *fileName)
+PsEngine *PsEngine::CreateFromFile(const WCHAR *fileName)
 {
     PsEngineImpl *engine = new PsEngineImpl();
     if (!engine->Load(fileName)) {

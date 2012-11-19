@@ -13,7 +13,7 @@ class WStrVec;
 class PageTextCache {
     BaseEngine* engine;
     RectI    ** coords;
-    TCHAR    ** text;
+    WCHAR    ** text;
     int       * lens;
 
     CRITICAL_SECTION access;
@@ -23,7 +23,7 @@ public:
     ~PageTextCache();
 
     bool HasData(int pageNo);
-    const TCHAR *GetData(int pageNo, int *lenOut=NULL, RectI **coordsOut=NULL);
+    const WCHAR *GetData(int pageNo, int *lenOut=NULL, RectI **coordsOut=NULL);
 };
 
 struct TextSel {
@@ -49,7 +49,7 @@ public:
     }
     void SelectWordAt(int pageNo, double x, double y);
     void CopySelection(TextSelection *orig);
-    TCHAR *ExtractText(TCHAR *lineSep);
+    WCHAR *ExtractText(WCHAR *lineSep);
     void Reset();
 
     TextSel result;

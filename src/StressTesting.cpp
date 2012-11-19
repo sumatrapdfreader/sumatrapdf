@@ -37,7 +37,7 @@ struct PageRange {
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns NULL on parsing errors)
 // caller must delete the result
-static bool ParsePageRanges(const TCHAR *ranges, Vec<PageRange>& result)
+static bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange>& result)
 {
     if (!ranges)
         return false;
@@ -64,7 +64,7 @@ static bool ParsePageRanges(const TCHAR *ranges, Vec<PageRange>& result)
 // a valid page range is a non-empty, comma separated list of either
 // single page ("3") numbers, closed intervals "2-4" or intervals
 // unlimited to the right ("5-")
-bool IsValidPageRange(const TCHAR *ranges)
+bool IsValidPageRange(const WCHAR *ranges)
 {
     Vec<PageRange> rangeList;
     return ParsePageRanges(ranges, rangeList);
@@ -107,12 +107,12 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
 // <s> can be:
 // * "loadonly"
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
-bool IsBenchPagesInfo(const TCHAR *s)
+bool IsBenchPagesInfo(const WCHAR *s)
 {
     return str::EqI(s, _T("loadonly")) || IsValidPageRange(s);
 }
 
-static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
+static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
 {
     if (!file::Exists(filePath)) {
         return;
@@ -158,7 +158,7 @@ static void BenchFile(TCHAR *filePath, const TCHAR *pagesSpec)
     logbench("Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
 }
 
-static void BenchDir(TCHAR *dir)
+static void BenchDir(WCHAR *dir)
 {
     WStrVec files;
     ScopedMem<WCHAR> pattern(str::Format(_T("%s\\*.pdf"), dir));
@@ -174,7 +174,7 @@ void BenchFileOrDir(WStrVec& pathsToBench)
 
     size_t n = pathsToBench.Count() / 2;
     for (size_t i = 0; i < n; i++) {
-        TCHAR *path = pathsToBench.At(2 * i);
+        WCHAR *path = pathsToBench.At(2 * i);
         if (file::Exists(path))
             BenchFile(path, pathsToBench.At(2 * i + 1));
         else if (dir::Exists(path))
@@ -186,12 +186,12 @@ void BenchFileOrDir(WStrVec& pathsToBench)
     delete gLog;
 }
 
-inline bool IsSpecialDir(const TCHAR *s)
+inline bool IsSpecialDir(const WCHAR *s)
 {
     return str::Eq(s, _T(".")) || str::Eq(s, _T(".."));
 }
 
-bool CollectPathsFromDirectory(const TCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles)
+bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles)
 {
     ScopedMem<WCHAR> dirPath(path::GetDir(pattern));
 
@@ -212,14 +212,14 @@ bool CollectPathsFromDirectory(const TCHAR *pattern, WStrVec& paths, bool dirsIn
     return paths.Count() > 0;
 }
 
-static bool IsStressTestSupportedFile(const TCHAR *fileName, const TCHAR *filter)
+static bool IsStressTestSupportedFile(const WCHAR *fileName, const WCHAR *filter)
 {
     if (filter && !path::Match(fileName, filter))
         return false;
     return EngineManager::IsSupportedFile(!gUseEbookUI, fileName);
 }
 
-static bool CollectStressTestSupportedFilesFromDirectory(const TCHAR *dirPath, const TCHAR *filter, WStrVec& paths)
+static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR *dirPath, const WCHAR *filter, WStrVec& paths)
 {
     ScopedMem<WCHAR> pattern(path::Join(dirPath, _T("*")));
 
@@ -256,7 +256,7 @@ static int SecsSinceSystemTime(SYSTEMTIME& time)
     return SystemTimeDiffInSecs(currTime, time);
 }
 
-static TCHAR *FormatTime(int totalSecs)
+static WCHAR *FormatTime(int totalSecs)
 {
     int secs = totalSecs % 60;
     int totalMins = totalSecs / 60;
@@ -323,8 +323,8 @@ class StressTest : public StressTestBase {
     WStrVec           filesToOpen;
     WStrVec           dirsToVisit;
 
-    bool OpenDir(const TCHAR *dirPath);
-    bool OpenFile(const TCHAR *fileName);
+    bool OpenDir(const WCHAR *dirPath);
+    bool OpenFile(const WCHAR *fileName);
 
     bool GoToNextPage();
     bool GoToNextFile();
@@ -338,13 +338,13 @@ public:
         filesCount(0), cycles(1), fileIndex(0)
         { }
 
-    void Start(const TCHAR *path, const TCHAR *filter, const TCHAR *ranges, int cycles);
+    void Start(const WCHAR *path, const WCHAR *filter, const WCHAR *ranges, int cycles);
 
     virtual void OnTimer();
     virtual void GetLogInfo(str::Str<char> *s);
 };
 
-void StressTest::Start(const TCHAR *path, const TCHAR *filter, const TCHAR *ranges, int cycles)
+void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *ranges, int cycles)
 {
     srand((unsigned int)time(NULL));
     GetSystemTime(&stressStartTime);
@@ -398,7 +398,7 @@ void StressTest::Finished(bool success)
     delete this;
 }
 
-bool StressTest::OpenDir(const TCHAR *dirPath)
+bool StressTest::OpenDir(const WCHAR *dirPath)
 {
     assert(filesToOpen.Count() == 0);
 
@@ -442,7 +442,7 @@ bool StressTest::GoToNextFile()
     }
 }
 
-bool StressTest::OpenFile(const TCHAR *fileName)
+bool StressTest::OpenFile(const WCHAR *fileName)
 {
     bool reuse = rand() % 3 != 1;
     _tprintf(_T("%s\n"), fileName);
@@ -603,8 +603,8 @@ void StressTest::GetLogInfo(str::Str<char> *s)
     s->AppendFmt(", currPage: %d", currPage);
 }
 
-void StartStressTest(WindowInfo *win, const TCHAR *path, const TCHAR *filter,
-                     const TCHAR *ranges, int cycles, RenderCache *renderCache)
+void StartStressTest(WindowInfo *win, const WCHAR *path, const WCHAR *filter,
+                     const WCHAR *ranges, int cycles, RenderCache *renderCache)
 {
     // gPredictiveRender = false;
     gIsStressTesting = true;

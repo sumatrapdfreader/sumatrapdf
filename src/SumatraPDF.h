@@ -80,7 +80,7 @@ extern HCURSOR                  gCursorIBeam;
 extern HBRUSH                   gBrushLogoBg;
 extern HBRUSH                   gBrushAboutBg;
 extern HFONT                    gDefaultGuiFont;
-extern TCHAR *                  gPluginURL;
+extern WCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
 extern Vec<EbookWindow*>        gEbookWindows;
 extern Favorites *              gFavorites;
@@ -92,8 +92,8 @@ extern WNDPROC                  DefWndProcCloseButton;
 LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 bool  HasPermission(int permission);
 bool  IsUIRightToLeft();
-bool  LaunchBrowser(const TCHAR *url);
-bool  OpenFileExternally(const TCHAR *path);
+bool  LaunchBrowser(const WCHAR *url);
+bool  OpenFileExternally(const WCHAR *path);
 void  AssociateExeWithPdfExtension();
 void  CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose);
 void  SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible);
@@ -122,11 +122,11 @@ void  CloseDocumentAndDeleteWindowInfo(WindowInfo *win);
 void  OnMenuAbout();
 void  QuitIfNoMoreWindows();
 bool  ShouldSaveThumbnail(DisplayState& ds);
-void  SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp);
+void  SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp);
 
-WindowInfo* FindWindowInfoByFile(const TCHAR *file);
+WindowInfo* FindWindowInfoByFile(const WCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
-WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file);
+WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file);
 
 // TODO: this is hopefully temporary
 // LoadDocument carries a lot of state, this holds them in
@@ -134,21 +134,21 @@ WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file);
 class LoadArgs
 {
 public:
-    LoadArgs(const TCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false)
+    LoadArgs(const WCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false)
     {
         this->fileName = fileName;
         this->win = win;
         this->showWin = showWin;
         this->forceReuse = forceReuse;
     }
-    const TCHAR *fileName;
+    const WCHAR *fileName;
     WindowInfo *win;
     bool showWin;
     bool forceReuse;
 };
 
 WindowInfo* LoadDocument(LoadArgs& args);
-void        LoadDocument2(const TCHAR *fileName, SumatraWindow& win);
+void        LoadDocument2(const WCHAR *fileName, SumatraWindow& win);
 WindowInfo *CreateAndShowWindowInfo();
 
 #endif

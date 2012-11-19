@@ -81,7 +81,7 @@ char *ChmDoc::ToUtf8(const unsigned char *text, UINT overrideCP)
     return str::ToMultiByte(s, codepage, CP_UTF8);
 }
 
-TCHAR *ChmDoc::ToStr(const char *text)
+WCHAR *ChmDoc::ToStr(const char *text)
 {
     return str::conv::FromCodePage(text, codepage);
 }
@@ -213,9 +213,9 @@ bool ChmDoc::ParseSystemData()
     return true;
 }
 
-bool ChmDoc::Load(const TCHAR *fileName)
+bool ChmDoc::Load(const WCHAR *fileName)
 {
-    chmHandle = chm_open((TCHAR *)fileName);
+    chmHandle = chm_open((WCHAR *)fileName);
     if (!chmHandle)
         return false;
 
@@ -250,7 +250,7 @@ bool ChmDoc::Load(const TCHAR *fileName)
     return true;
 }
 
-TCHAR *ChmDoc::GetProperty(DocumentProperty prop)
+WCHAR *ChmDoc::GetProperty(DocumentProperty prop)
 {
     ScopedMem<WCHAR> result;
     if (Prop_Title == prop && title)
@@ -478,7 +478,7 @@ bool ChmDoc::ParseIndex(EbookTocVisitor *visitor)
     return ParseTocOrIndex(visitor, indexPath, true);
 }
 
-bool ChmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool ChmDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff)
         return file::StartsWith(fileName, "ITSF");
@@ -486,7 +486,7 @@ bool ChmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
     return str::EndsWithI(fileName, _T(".chm"));
 }
 
-ChmDoc *ChmDoc::CreateFromFile(const TCHAR *fileName)
+ChmDoc *ChmDoc::CreateFromFile(const WCHAR *fileName)
 {
     ChmDoc *doc = new ChmDoc();
     if (!doc || !doc->Load(fileName)) {

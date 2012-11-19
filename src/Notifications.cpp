@@ -10,7 +10,7 @@
 
 #define NOTIFICATION_WND_CLASS_NAME _T("SUMATRA_PDF_NOTIFICATION_WINDOW")
 
-void NotificationWnd::CreatePopup(HWND parent, const TCHAR *message)
+void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
 {
     NONCLIENTMETRICS ncm = { 0 };
     ncm.cbSize = sizeof(ncm);
@@ -30,7 +30,7 @@ void NotificationWnd::CreatePopup(HWND parent, const TCHAR *message)
     ShowWindow(self, SW_SHOW);
 }
 
-void NotificationWnd::UpdateWindowPosition(const TCHAR *message, bool init)
+void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
 {
     // compute the length of the message
     RECT rc = ClientRect(self).ToRECT();
@@ -85,7 +85,7 @@ bool NotificationWnd::WasCanceled()
     return isCanceled;
 }
 
-void NotificationWnd::UpdateMessage(const TCHAR *message, int timeoutInMS, bool highlight)
+void NotificationWnd::UpdateMessage(const WCHAR *message, int timeoutInMS, bool highlight)
 {
     win::SetText(self, message);
     this->highlight = highlight;
@@ -276,7 +276,7 @@ void Notifications::Relayout()
     }
 }
 
-void ShowNotification(WindowInfo *win, const TCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
+void ShowNotification(WindowInfo *win, const WCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
 {
     NotificationWnd *wnd = new NotificationWnd(win->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, win->notifications);
     win->notifications->Add(wnd, groupId);

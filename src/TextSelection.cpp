@@ -8,7 +8,7 @@ PageTextCache::PageTextCache(BaseEngine *engine) : engine(engine)
 {
     int count = engine->PageCount();
     coords = AllocArray<RectI *>(count);
-    text = AllocArray<TCHAR *>(count);
+    text = AllocArray<WCHAR *>(count);
     lens = AllocArray<int>(count);
 
     InitializeCriticalSection(&access);
@@ -37,7 +37,7 @@ bool PageTextCache::HasData(int pageNo)
     return text[pageNo - 1] != NULL;
 }
 
-const TCHAR *PageTextCache::GetData(int pageNo, int *lenOut, RectI **coordsOut)
+const WCHAR *PageTextCache::GetData(int pageNo, int *lenOut, RectI **coordsOut)
 {
     ScopedCritSec scope(&access);
 
@@ -89,7 +89,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
 {
     int textLen;
     RectI *coords;
-    const TCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
+    const WCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
     double maxDist = -1;
     int result = -1;
 
@@ -122,7 +122,7 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec *
 {
     int len;
     RectI *coords;
-    const TCHAR *text = textCache->GetData(pageNo, &len, &coords);
+    const WCHAR *text = textCache->GetData(pageNo, &len, &coords);
     RectI mediabox = engine->PageMediabox(pageNo).Round();
     RectI *c = &coords[glyph], *end = c + length;
     for (; c < end; c++) {
@@ -164,7 +164,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y)
 {
     int textLen;
     RectI *coords;
-    const TCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
+    const WCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
 
     int glyphIx = FindClosestGlyph(pageNo, x, y);
     PointI pt = PointD(x, y).Convert<int>();
@@ -223,7 +223,7 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y)
 {
     int ix = FindClosestGlyph(pageNo, x, y);
     int textLen;
-    const TCHAR *text = textCache->GetData(pageNo, &textLen);
+    const WCHAR *text = textCache->GetData(pageNo, &textLen);
 
     for (; ix > 0; ix--)
         if (!iswordchar(text[ix - 1]))
@@ -243,7 +243,7 @@ void TextSelection::CopySelection(TextSelection *orig)
     SelectUpTo(orig->endPage, orig->endGlyph);
 }
 
-TCHAR *TextSelection::ExtractText(TCHAR *lineSep)
+WCHAR *TextSelection::ExtractText(WCHAR *lineSep)
 {
     WStrVec lines;
 

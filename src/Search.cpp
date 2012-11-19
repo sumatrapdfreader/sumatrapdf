@@ -418,7 +418,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
         return true;
     }
 
-    TCHAR *inverseSearch = gGlobalPrefs.inverseSearchCmdLine;
+    WCHAR *inverseSearch = gGlobalPrefs.inverseSearchCmdLine;
     if (!inverseSearch)
         // Detect a text editor and use it as the default inverse search handler for now
         inverseSearch = AutoDetectInverseSearchCommands();
@@ -445,7 +445,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void ShowForwardSearchResult(WindowInfo *win, const TCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
+void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
     win->fwdSearchMark.rects.Reset();
     const PageInfo *pi = win->dm->GetPageInfo(page);
@@ -515,11 +515,11 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 
 // Synchronization command format:
 // [<DDECOMMAND_SYNC>(["<pdffile>",]"<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
-static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
+static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<WCHAR> pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
-    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u)]"),
+    const WCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u)]"),
                                    &pdfFile, &srcFile, &line, &col);
     if (!next)
         next = str::Parse(cmd, _T("[") DDECOMMAND_SYNC _T("(\"%S\",%? \"%S\",%u,%u,%u,%u)]"),
@@ -578,11 +578,11 @@ static const TCHAR *HandleSyncCmd(const TCHAR *cmd, DDEACK& ack)
 
 // Open file DDE command, format:
 // [<DDECOMMAND_OPEN>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
-static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
+static const WCHAR *HandleOpenCmd(const WCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<WCHAR> pdfFile;
     BOOL newWindow = 0, setFocus = 0, forceRefresh = 0;
-    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_OPEN _T("(\"%S\")]"), &pdfFile);
+    const WCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_OPEN _T("(\"%S\")]"), &pdfFile);
     if (!next)
         next = str::Parse(cmd, _T("[") DDECOMMAND_OPEN _T("(\"%S\",%u,%u,%u)]"),
                           &pdfFile, &newWindow, &setFocus, &forceRefresh);
@@ -613,10 +613,10 @@ static const TCHAR *HandleOpenCmd(const TCHAR *cmd, DDEACK& ack)
 
 // Jump to named destination DDE command. Command format:
 // [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
-static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
+static const WCHAR *HandleGotoCmd(const WCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<WCHAR> pdfFile, destName;
-    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_GOTO _T("(\"%S\",%? \"%S\")]"),
+    const WCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_GOTO _T("(\"%S\",%? \"%S\")]"),
                                    &pdfFile, &destName);
     if (!next)
         return NULL;
@@ -638,11 +638,11 @@ static const TCHAR *HandleGotoCmd(const TCHAR *cmd, DDEACK& ack)
 
 // Jump to page DDE command. Format:
 // [<DDECOMMAND_PAGE>("<pdffilepath>", <page number>)]
-static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
+static const WCHAR *HandlePageCmd(const WCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<WCHAR> pdfFile;
     UINT page;
-    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_PAGE _T("(\"%S\",%u)]"),
+    const WCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_PAGE _T("(\"%S\",%u)]"),
                                    &pdfFile, &page);
     if (!next)
         return false;
@@ -668,12 +668,12 @@ static const TCHAR *HandlePageCmd(const TCHAR *cmd, DDEACK& ack)
 
 // Set view mode and zoom level. Format:
 // [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
-static const TCHAR *HandleSetViewCmd(const TCHAR *cmd, DDEACK& ack)
+static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
 {
     ScopedMem<WCHAR> pdfFile, viewMode;
     float zoom = INVALID_ZOOM;
     PointI scroll(-1, -1);
-    const TCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f)]"),
+    const WCHAR *next = str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f)]"),
                                    &pdfFile, &viewMode, &zoom);
     if (!next)
         next = str::Parse(cmd, _T("[") DDECOMMAND_SETVIEW _T("(\"%S\",%? \"%S\",%f,%d,%d)]"),

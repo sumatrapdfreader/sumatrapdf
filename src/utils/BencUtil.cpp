@@ -47,7 +47,7 @@ static const char *ParseBencInt(const char *bytes, int64_t& value)
     return bytes;
 }
 
-BencString::BencString(const TCHAR *value) : BencObj(BT_STRING)
+BencString::BencString(const WCHAR *value) : BencObj(BT_STRING)
 {
     assert(value);
     this->value = str::conv::ToUtf8(value);
@@ -61,7 +61,7 @@ BencString::BencString(const char *rawValue, size_t len) : BencObj(BT_STRING)
     value = str::DupN(rawValue, len);
 }
 
-TCHAR *BencString::Value() const
+WCHAR *BencString::Value() const
 {
     return str::conv::FromUtf8(value);
 }

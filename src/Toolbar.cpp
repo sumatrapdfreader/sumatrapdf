@@ -121,7 +121,7 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
                     TBSTYLE_TOOLTIPS | TBSTYLE_FLAT | \
                     TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
-static void BuildTBBUTTONINFO(TBBUTTONINFO& info, TCHAR *txt)
+static void BuildTBBUTTONINFO(TBBUTTONINFO& info, WCHAR *txt)
 {
     info.cbSize = sizeof(TBBUTTONINFO);
     info.dwMask = TBIF_TEXT | TBIF_BYINDEX;
@@ -139,8 +139,8 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo *win)
         const char *txt = gToolbarButtons[i].toolTip;
         if (NULL == txt)
             continue;
-        const TCHAR *translation = trans::GetTranslation(txt);
-        BuildTBBUTTONINFO(buttonInfo, (TCHAR *)translation);
+        const WCHAR *translation = trans::GetTranslation(txt);
+        BuildTBBUTTONINFO(buttonInfo, (WCHAR *)translation);
         res = SendMessage(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)&buttonInfo);
         assert(0 != res);
     }
@@ -203,7 +203,7 @@ void UpdateFindbox(WindowInfo* win)
     }
 }
 
-static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourceId)
+static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR * filename, INT resourceId)
 {
     ScopedMem<WCHAR> path(AppGenDataFilename(filename));
 
@@ -306,7 +306,7 @@ void UpdateToolbarFindText(WindowInfo *win)
     if (!showUI)
         return;
 
-    const TCHAR *text = _TR("Find:");
+    const WCHAR *text = _TR("Find:");
     win::SetText(win->hwndFindText, text);
 
     WindowRect findWndRect(win->hwndFindBg);
@@ -443,7 +443,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 
 void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
 {
-    const TCHAR *text = _TR("Page:");
+    const WCHAR *text = _TR("Page:");
     if (!updateOnly)
         win::SetText(win->hwndPageText, text);
     SizeI size = TextSizeInHwnd(win->hwndPageText, text);
@@ -456,7 +456,7 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
     int pos_x = r.right + 10;
     int pos_y = (r.bottom - pageWndRect.dy) / 2;
 
-    TCHAR *buf;
+    WCHAR *buf;
     SizeI size2;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size

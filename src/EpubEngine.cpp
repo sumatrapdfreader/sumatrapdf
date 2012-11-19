@@ -30,7 +30,7 @@ using namespace Gdiplus;
 namespace str {
     namespace conv {
 
-inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
+inline WCHAR *FromHtmlUtf8(const char *s, size_t len)
 {
     ScopedMem<char> tmp(str::DupN(s, len));
     return DecodeHtmlEntitites(tmp, CP_UTF8);
@@ -39,7 +39,7 @@ inline TCHAR *FromHtmlUtf8(const char *s, size_t len)
     }
 }
 
-inline bool IsExternalUrl(const TCHAR *url)
+inline bool IsExternalUrl(const WCHAR *url)
 {
     return str::FindChar(url, ':') != NULL;
 }
@@ -63,7 +63,7 @@ public:
     EbookEngine();
     virtual ~EbookEngine();
 
-    virtual const TCHAR *FileName() const { return fileName; };
+    virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return pages ? pages->Count() : 0; }
 
     virtual RectD PageMediabox(int pageNo) { return pageRect; }
@@ -85,7 +85,7 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount) {
         return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : NULL;
     }
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     // make RenderCache request larger tiles than per default
     virtual bool HasClipOptimizations(int pageNo) { return false; }
@@ -94,12 +94,12 @@ public:
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name);
+    virtual PageDestination *GetNamedDest(const WCHAR *name);
 
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
 protected:
-    TCHAR *fileName;
+    WCHAR *fileName;
     Vec<HtmlPage *> *pages;
     Vec<PageAnchor> anchors;
     // contains for each page the last anchor indicating
@@ -138,13 +138,13 @@ protected:
     ScopedMem<WCHAR> value;
 
 public:
-    SimpleDest2(int pageNo, RectD rect, TCHAR *value=NULL) :
+    SimpleDest2(int pageNo, RectD rect, WCHAR *value=NULL) :
         pageNo(pageNo), rect(rect), value(value) { }
 
     virtual PageDestType GetDestType() const { return value ? Dest_LaunchURL : Dest_ScrollTo; }
     virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const { return rect; }
-    virtual TCHAR *GetDestValue() const { return value ? str::Dup(value) : NULL; }
+    virtual WCHAR *GetDestValue() const { return value ? str::Dup(value) : NULL; }
 };
 
 class EbookLink : public PageElement, public PageDestination {
@@ -163,7 +163,7 @@ public:
     virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect.Convert<double>(); }
-    virtual TCHAR *GetValue() const {
+    virtual WCHAR *GetValue() const {
         if (!dest || showUrl)
             return str::conv::FromHtmlUtf8(link->str.s, link->str.len);
         return NULL;
@@ -173,7 +173,7 @@ public:
     virtual PageDestType GetDestType() const { return Dest_LaunchURL; }
     virtual int GetDestPageNo() const { return 0; }
     virtual RectD GetDestRect() const { return RectD(); }
-    virtual TCHAR *GetDestValue() const { return GetValue(); }
+    virtual WCHAR *GetDestValue() const { return GetValue(); }
 };
 
 class ImageDataElement : public PageElement {
@@ -188,7 +188,7 @@ public:
     virtual PageElementType GetType() const { return Element_Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return bbox.Convert<double>(); }
-    virtual TCHAR *GetValue() const { return NULL; }
+    virtual WCHAR *GetValue() const { return NULL; }
 
     virtual RenderedBitmap *GetImage() {
         HBITMAP hbmp;
@@ -207,7 +207,7 @@ class EbookTocItem : public DocTocItem {
     PageDestination *dest;
 
 public:
-    EbookTocItem(TCHAR *title, PageDestination *dest) :
+    EbookTocItem(WCHAR *title, PageDestination *dest) :
         DocTocItem(title, dest ? dest->GetDestPageNo() : 0), dest(dest) { }
     ~EbookTocItem() { delete dest; }
 
@@ -366,11 +366,11 @@ static RectI GetInstrBbox(DrawInstr *instr, float pageBorder)
     return bbox.Round();
 }
 
-TCHAR *EbookEngine::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
+WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     ScopedCritSec scope(&pagesAccess);
 
-    str::Str<TCHAR> content;
+    str::Str<WCHAR> content;
     Vec<RectI> coords;
     bool insertSpace = false;
 
@@ -502,7 +502,7 @@ PageElement *EbookEngine::GetElementAtPos(int pageNo, PointD pt)
     return el;
 }
 
-PageDestination *EbookEngine::GetNamedDest(const TCHAR *name)
+PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
 {
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
     const char *id = name_utf8;
@@ -585,7 +585,7 @@ public:
     EbookTocBuilder(BaseEngine *engine) :
         engine(engine), root(NULL), idCounter(0), isIndex(false) { }
 
-    virtual void Visit(const TCHAR *name, const TCHAR *url, int level) {
+    virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         PageDestination *dest;
         if (!url)
             dest = NULL;
@@ -628,8 +628,8 @@ public:
 
     virtual PageLayoutType PreferredLayout();
 
-    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".epub"); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual const WCHAR *GetDefaultFileExt() const { return _T(".epub"); }
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
@@ -637,14 +637,14 @@ public:
 protected:
     EpubDoc *doc;
 
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
     bool Load(IStream *stream);
     bool FinishLoading();
 
     DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
 };
 
-bool EpubEngineImpl::Load(const TCHAR *fileName)
+bool EpubEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
     doc = EpubDoc::CreateFromFile(fileName);
@@ -692,12 +692,12 @@ DocTocItem *EpubEngineImpl::GetTocTree()
     return builder.GetRoot();
 }
 
-bool EpubEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool EpubEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return EpubDoc::IsSupportedFile(fileName, sniff);
 }
 
-EpubEngine *EpubEngine::CreateFromFile(const TCHAR *fileName)
+EpubEngine *EpubEngine::CreateFromFile(const WCHAR *fileName)
 {
     EpubEngineImpl *engine = new EpubEngineImpl();
     if (!engine->Load(fileName)) {
@@ -839,8 +839,8 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-    virtual const TCHAR *GetDefaultFileExt() const {
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual const WCHAR *GetDefaultFileExt() const {
         return doc && doc->IsZipped() ? _T(".fb2z") : _T(".fb2");
     }
 
@@ -850,10 +850,10 @@ public:
 protected:
     Fb2Doc *doc;
 
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
 };
 
-bool Fb2EngineImpl::Load(const TCHAR *fileName)
+bool Fb2EngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
 
@@ -934,12 +934,12 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
     return root;
 }
 
-bool Fb2Engine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool Fb2Engine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return Fb2Doc::IsSupportedFile(fileName, sniff);
 }
 
-Fb2Engine *Fb2Engine::CreateFromFile(const TCHAR *fileName)
+Fb2Engine *Fb2Engine::CreateFromFile(const WCHAR *fileName)
 {
     Fb2EngineImpl *engine = new Fb2EngineImpl();
     if (!engine->Load(fileName)) {
@@ -963,10 +963,10 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual const WCHAR *GetDefaultFileExt() const { return _T(".mobi"); }
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name);
+    virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const { return tocReparsePoint != NULL; }
     virtual DocTocItem *GetTocTree();
 
@@ -975,10 +975,10 @@ protected:
     const char *tocReparsePoint;
     ScopedMem<char> pdbHtml;
 
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
 };
 
-bool MobiEngineImpl::Load(const TCHAR *fileName)
+bool MobiEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
 
@@ -1018,7 +1018,7 @@ bool MobiEngineImpl::Load(const TCHAR *fileName)
     return pages->Count() > 0;
 }
 
-PageDestination *MobiEngineImpl::GetNamedDest(const TCHAR *name)
+PageDestination *MobiEngineImpl::GetNamedDest(const WCHAR *name)
 {
     int filePos = _ttoi(name);
     if (filePos < 0 || 0 == filePos && *name != '0')
@@ -1114,7 +1114,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
     return root;
 }
 
-bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool MobiEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         PdbReader pdbReader(fileName);
@@ -1125,7 +1125,7 @@ bool MobiEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, _T(".prc"));
 }
 
-MobiEngine *MobiEngine::CreateFromFile(const TCHAR *fileName)
+MobiEngine *MobiEngine::CreateFromFile(const WCHAR *fileName)
 {
     MobiEngineImpl *engine = new MobiEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1174,7 +1174,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".pdb"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return _T(".pdb"); }
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
     virtual DocTocItem *GetTocTree();
@@ -1182,10 +1182,10 @@ public:
 protected:
     PalmDoc *doc;
 
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
 };
 
-bool PdbEngineImpl::Load(const TCHAR *fileName)
+bool PdbEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
 
@@ -1216,12 +1216,12 @@ DocTocItem *PdbEngineImpl::GetTocTree()
     return builder.GetRoot();
 }
 
-bool PdbEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool PdbEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return PalmDoc::IsSupportedFile(fileName, sniff);
 }
 
-PdbEngine *PdbEngine::CreateFromFile(const TCHAR *fileName)
+PdbEngine *PdbEngine::CreateFromFile(const WCHAR *fileName)
 {
     PdbEngineImpl *engine = new PdbEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1329,8 +1329,8 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".chm"); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual const WCHAR *GetDefaultFileExt() const { return _T(".chm"); }
 
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
@@ -1341,7 +1341,7 @@ protected:
     ChmDoc *doc;
     ChmDataCache *dataCache;
 
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
 
     DocTocItem *BuildTocTree(HtmlPullParser& parser, int& idCounter);
 };
@@ -1420,7 +1420,7 @@ public:
         return html.StealData();
     }
 
-    virtual void Visit(const TCHAR *name, const TCHAR *url, int level) {
+    virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         if (!url || IsExternalUrl(url))
             return;
         ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
@@ -1437,7 +1437,7 @@ public:
     }
 };
 
-bool Chm2EngineImpl::Load(const TCHAR *fileName)
+bool Chm2EngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
     doc = ChmDoc::CreateFromFile(fileName);
@@ -1478,12 +1478,12 @@ DocTocItem *Chm2EngineImpl::GetTocTree()
     return builder.GetRoot();
 }
 
-bool Chm2Engine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool Chm2Engine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return ChmDoc::IsSupportedFile(fileName, sniff);
 }
 
-Chm2Engine *Chm2Engine::CreateFromFile(const TCHAR *fileName)
+Chm2Engine *Chm2Engine::CreateFromFile(const WCHAR *fileName)
 {
     Chm2EngineImpl *engine = new Chm2EngineImpl();
     if (!engine->Load(fileName)) {
@@ -1508,16 +1508,16 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".tcr"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return _T(".tcr"); }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
 protected:
     TcrDoc *doc;
 
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
 };
 
-bool TcrEngineImpl::Load(const TCHAR *fileName)
+bool TcrEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
 
@@ -1539,12 +1539,12 @@ bool TcrEngineImpl::Load(const TCHAR *fileName)
     return pages->Count() > 0;
 }
 
-bool TcrEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool TcrEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return TcrDoc::IsSupportedFile(fileName, sniff);
 }
 
-TcrEngine *TcrEngine::CreateFromFile(const TCHAR *fileName)
+TcrEngine *TcrEngine::CreateFromFile(const WCHAR *fileName)
 {
     TcrEngineImpl *engine = new TcrEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1599,19 +1599,19 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual TCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".html"); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual const WCHAR *GetDefaultFileExt() const { return _T(".html"); }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
 protected:
     HtmlDoc *doc;
 
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
 
     virtual PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
 };
 
-bool HtmlEngineImpl::Load(const TCHAR *fileName)
+bool HtmlEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
 
@@ -1638,8 +1638,8 @@ class RemoteHtmlDest : public SimpleDest2 {
     ScopedMem<WCHAR> name;
 
 public:
-    RemoteHtmlDest(const TCHAR *relativeURL) : SimpleDest2(0, RectD()) {
-        const TCHAR *id = str::FindChar(relativeURL, '#');
+    RemoteHtmlDest(const WCHAR *relativeURL) : SimpleDest2(0, RectD()) {
+        const WCHAR *id = str::FindChar(relativeURL, '#');
         if (id) {
             value.Set(str::DupN(relativeURL, id - relativeURL));
             name.Set(str::Dup(id));
@@ -1649,7 +1649,7 @@ public:
     }
 
     virtual PageDestType GetDestType() const { return Dest_LaunchFile; }
-    virtual TCHAR *GetDestName() const { return name ? str::Dup(name) : NULL; }
+    virtual WCHAR *GetDestName() const { return name ? str::Dup(name) : NULL; }
 };
 
 PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
@@ -1663,12 +1663,12 @@ PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pag
     return new EbookLink(link, rect, dest, pageNo, true);
 }
 
-bool HtmlEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool HtmlEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return HtmlDoc::IsSupportedFile(fileName, sniff);
 }
 
-HtmlEngine *HtmlEngine::CreateFromFile(const TCHAR *fileName)
+HtmlEngine *HtmlEngine::CreateFromFile(const WCHAR *fileName)
 {
     HtmlEngineImpl *engine = new HtmlEngineImpl();
     if (!engine->Load(fileName)) {
@@ -1703,7 +1703,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual const TCHAR *GetDefaultFileExt() const {
+    virtual const WCHAR *GetDefaultFileExt() const {
         return fileName ? path::GetExt(fileName) : _T(".txt");
     }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
@@ -1714,10 +1714,10 @@ public:
 protected:
     TxtDoc *doc;
 
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
 };
 
-bool TxtEngineImpl::Load(const TCHAR *fileName)
+bool TxtEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
 
@@ -1752,12 +1752,12 @@ DocTocItem *TxtEngineImpl::GetTocTree()
     return builder.GetRoot();
 }
 
-bool TxtEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool TxtEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     return TxtDoc::IsSupportedFile(fileName, sniff);
 }
 
-TxtEngine *TxtEngine::CreateFromFile(const TCHAR *fileName)
+TxtEngine *TxtEngine::CreateFromFile(const WCHAR *fileName)
 {
     TxtEngineImpl *engine = new TxtEngineImpl();
     if (!engine->Load(fileName)) {

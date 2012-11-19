@@ -42,7 +42,7 @@ static void OnOpen(HWND hwnd)
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
 
-    str::Str<TCHAR> fileFilter;
+    str::Str<WCHAR> fileFilter;
     fileFilter.Append(_T("All supported documents"));
 
     ofn.lpstrFilter = _T("All supported documents\0;*.mobi;*.awz;\0\0");
@@ -53,13 +53,13 @@ static void OnOpen(HWND hwnd)
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY |
                 OFN_ALLOWMULTISELECT | OFN_EXPLORER;
     ofn.nMaxFile = MAX_PATH * 100;
-    ScopedMem<TCHAR> file(AllocArray<TCHAR>(ofn.nMaxFile));
+    ScopedMem<WCHAR> file(AllocArray<WCHAR>(ofn.nMaxFile));
     ofn.lpstrFile = file;
 
     if (!GetOpenFileName(&ofn))
         return;
 
-    TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
+    WCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
         gEbookController->LoadMobi(ofn.lpstrFile);

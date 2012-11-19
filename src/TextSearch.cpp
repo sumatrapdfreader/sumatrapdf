@@ -33,7 +33,7 @@ void TextSearch::Reset()
     TextSelection::Reset();
 }
 
-void TextSearch::SetText(TCHAR *text)
+void TextSearch::SetText(WCHAR *text)
 {
     // search text starting with a single space enables the 'Match word start'
     // and search text ending in a single space enables the 'Match word end' option
@@ -55,7 +55,7 @@ void TextSearch::SetText(TCHAR *text)
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (isnoncjkwordchar(*text)) {
-        TCHAR *end;
+        WCHAR *end;
         for (end = text; isnoncjkwordchar(*end); end++)
             ;
         anchor = str::DupN(text, end - text);
@@ -111,9 +111,9 @@ void TextSearch::SetLastResult(TextSelection *sel)
 
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
-int TextSearch::MatchLen(const TCHAR *start)
+int TextSearch::MatchLen(const WCHAR *start)
 {
-    const TCHAR *match = findText, *end = start;
+    const WCHAR *match = findText, *end = start;
 
     if (matchWordStart && start > pageText && iswordchar(start[-1]) && iswordchar(start[0]))
         return -1;
@@ -159,9 +159,9 @@ int TextSearch::MatchLen(const TCHAR *start)
     return (int)(end - start);
 }
 
-static const TCHAR *GetNextIndex(const TCHAR *base, int offset, bool forward)
+static const WCHAR *GetNextIndex(const WCHAR *base, int offset, bool forward)
 {
-    const TCHAR *c = base + offset + (forward ? 0 : -1);
+    const WCHAR *c = base + offset + (forward ? 0 : -1);
     if (c < base || !*c)
         return NULL;
     return c;
@@ -175,7 +175,7 @@ bool TextSearch::FindTextInPage(int pageNo)
         pageNo = findPage;
     findPage = pageNo;
 
-    const TCHAR *found;
+    const WCHAR *found;
     int length;
     do {
         if (!anchor)
@@ -237,7 +237,7 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
     return false;
 }
 
-TextSel *TextSearch::FindFirst(int page, TCHAR *text, ProgressUpdateUI *tracker)
+TextSel *TextSearch::FindFirst(int page, WCHAR *text, ProgressUpdateUI *tracker)
 {
     SetText(text);
 

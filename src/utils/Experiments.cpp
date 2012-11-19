@@ -20,7 +20,7 @@ class ZipFileInfo {
     friend class ZipExtractor;
 public:
     // of interest to callers of ZipExtractor APIs
-    TCHAR *     fileName;
+    WCHAR *     fileName;
     FILETIME    fileTime;
 
 private:
@@ -39,20 +39,20 @@ private:
     ZipExtractor(Allocator *allocator);
 
 public:
-    static ZipExtractor *CreateFromFile(const TCHAR *path, Allocator *allocator=NULL);
+    static ZipExtractor *CreateFromFile(const WCHAR *path, Allocator *allocator=NULL);
     static ZipExtractor *CreateFromStream(IStream *stream, Allocator *allocator=NULL);
 
     ~ZipExtractor();
 
     Vec<ZipFileInfo> *GetFileInfos();
-    bool ExtractTo(size_t fileInfoIdx, const TCHAR *dir, const TCHAR *extractedName = NULL);
+    bool ExtractTo(size_t fileInfoIdx, const WCHAR *dir, const WCHAR *extractedName = NULL);
     void *GetFileData(size_t fileInfoIdx, size_t *lenOut=NULL);
 };
 
 struct ZipExtractorData {
     Allocator *allocator;
     Vec<ZipFileInfo> fileInfos;
-    const TCHAR *path;
+    const WCHAR *path;
     IStream *stream;
 };
 
@@ -69,7 +69,7 @@ ZipExtractor::~ZipExtractor()
     delete d;
 }
 
-ZipExtractor *ZipExtractor::CreateFromFile(const TCHAR *path, Allocator *allocator)
+ZipExtractor *ZipExtractor::CreateFromFile(const WCHAR *path, Allocator *allocator)
 {
     ZipExtractor *ze = new ZipExtractor(allocator);
     ze->d->path = path;
@@ -90,13 +90,13 @@ Vec<ZipFileInfo> *ZipExtractor::GetFileInfos()
     return NULL;
 }
 
-bool ZipExtractor::ExtractTo(size_t fileInfoIdx, const TCHAR *dir, const TCHAR *extractedName)
+bool ZipExtractor::ExtractTo(size_t fileInfoIdx, const WCHAR *dir, const WCHAR *extractedName)
 {
     size_t fileDataSize;
     void *fileData = GetFileData(fileInfoIdx, &fileDataSize);
     if (!fileData)
         return false;
-    TCHAR *path = path::Join(dir, extractedName);
+    WCHAR *path = path::Join(dir, extractedName);
     bool ok = file::WriteAll(path, fileData, fileDataSize);
     free(fileData);
     return ok;

@@ -138,7 +138,7 @@ void WindowInfo::MoveDocBy(int dx, int dy)
 
 #define MULTILINE_INFOTIP_WIDTH_PX 500
 
-void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc, bool multiline)
+void WindowInfo::CreateInfotip(const WCHAR *text, RectI& rc, bool multiline)
 {
     if (str::IsEmpty(text)) {
         this->DeleteInfotip();
@@ -149,7 +149,7 @@ void WindowInfo::CreateInfotip(const TCHAR *text, RectI& rc, bool multiline)
     ti.cbSize = sizeof(ti);
     ti.hwnd = this->hwndCanvas;
     ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (TCHAR *)text;
+    ti.lpszText = (WCHAR *)text;
     ti.rect = rc.ToRECT();
 
     if (multiline || str::FindChar(text, _T('\n')))
@@ -174,7 +174,7 @@ void WindowInfo::DeleteInfotip()
     infotipVisible = false;
 }
 
-void WindowInfo::LaunchBrowser(const TCHAR *url)
+void WindowInfo::LaunchBrowser(const WCHAR *url)
 {
     ::LaunchBrowser(url);
 }
@@ -330,12 +330,12 @@ void LinkHandler::ScrollTo(PageDestination *dest)
     dm->GoToPage(pageNo, scroll.y, true, scroll.x);
 }
 
-void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
+void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
 {
     // for safety, only handle relative paths and only open them in SumatraPDF
     // (unless they're of an allowed perceived type) and never launch any external
     // file in plugin mode (where documents are supposed to be self-contained)
-    TCHAR drive;
+    WCHAR drive;
     if (str::StartsWith(path, _T("\\")) || str::Parse(path, _T("%c:\\"), &drive) || gPluginMode) {
         return;
     }
@@ -384,30 +384,31 @@ void LinkHandler::LaunchFile(const TCHAR *path, PageDestination *link)
 
 // normalizes case and whitespace in the string
 // caller needs to free() the result
-static TCHAR *NormalizeFuzzy(const TCHAR *str)
+static WCHAR *NormalizeFuzzy(const WCHAR *str)
 {
-    TCHAR *dup = str::Dup(str);
+    WCHAR *dup = str::Dup(str);
     CharLower(dup);
     str::NormalizeWS(dup);
     // cf. AddTocItemToView
     return dup;
 }
 
-static bool MatchFuzzy(const TCHAR *s1, const TCHAR *s2, bool partially=false)
+static bool MatchFuzzy(const WCHAR *s1, const WCHAR *s2, bool partially=false)
 {
     if (!partially)
         return str::Eq(s1, s2);
 
     // only match at the start of a word (at the beginning and after a space)
-    for (const TCHAR *last = s1; (last = str::Find(last, s2)); last++)
+    for (const WCHAR *last = s1; (last = str::Find(last, s2)); last++) {
         if (last == s1 || *(last - 1) == ' ')
             return true;
+    }
     return false;
 }
 
 // finds the first ToC entry that (partially) matches a given normalized name
 // (ignoring case and whitespace differences)
-PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const TCHAR *name, bool partially)
+PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const WCHAR *name, bool partially)
 {
     for (; item; item = item->next) {
         ScopedMem<WCHAR> fuzTitle(NormalizeFuzzy(item->title));
@@ -420,7 +421,7 @@ PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const TCHAR *name, b
     return NULL;
 }
 
-void LinkHandler::GotoNamedDest(const TCHAR *name)
+void LinkHandler::GotoNamedDest(const WCHAR *name)
 {
     assert(owner && owner->linkHandler == this);
     if (!engine())

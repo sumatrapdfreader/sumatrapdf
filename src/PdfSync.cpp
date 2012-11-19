@@ -42,18 +42,18 @@ struct PdfsyncPoint {
 class Pdfsync : public Synchronizer
 {
 public:
-    Pdfsync(const TCHAR* syncfilename, PdfEngine *engine) :
+    Pdfsync(const WCHAR* syncfilename, PdfEngine *engine) :
         Synchronizer(syncfilename), engine(engine)
     {
         assert(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
     }
 
     virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UINT *line, UINT *col);
-    virtual int SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
+    virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects);
 
 private:
     int RebuildIndex();
-    UINT SourceToRecord(const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
+    UINT SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
     PdfEngine *engine;          // needed for converting between coordinate systems
     WStrVec srcfiles;           // source file names
@@ -67,7 +67,7 @@ private:
 class SyncTex : public Synchronizer
 {
 public:
-    SyncTex(const TCHAR* syncfilename, PdfEngine *engine) :
+    SyncTex(const WCHAR* syncfilename, PdfEngine *engine) :
         Synchronizer(syncfilename), engine(engine), scanner(NULL)
     {
         assert(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
@@ -78,7 +78,7 @@ public:
     }
 
     virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UINT *line, UINT *col);
-    virtual int SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
+    virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects);
 
 private:
     int RebuildIndex();
@@ -87,7 +87,7 @@ private:
     synctex_scanner_t scanner;
 };
 
-Synchronizer::Synchronizer(const TCHAR* syncfilepath) :
+Synchronizer::Synchronizer(const WCHAR* syncfilepath) :
     indexDiscarded(true), syncfilepath(str::Dup(syncfilepath))
 {
     _tstat(syncfilepath, &syncfileTimestamp);
@@ -119,7 +119,7 @@ int Synchronizer::RebuildIndex()
     return PDFSYNCERR_SUCCESS;
 }
 
-TCHAR * Synchronizer::PrependDir(const TCHAR* filename) const
+WCHAR * Synchronizer::PrependDir(const WCHAR* filename) const
 {
     ScopedMem<WCHAR> dir(path::GetDir(syncfilepath));
     return path::Join(dir, filename);
@@ -128,12 +128,12 @@ TCHAR * Synchronizer::PrependDir(const TCHAR* filename) const
 // Create a Synchronizer object for a PDF file.
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
-int Synchronizer::Create(const TCHAR *pdffilename, PdfEngine *engine, Synchronizer **sync)
+int Synchronizer::Create(const WCHAR *pdffilename, PdfEngine *engine, Synchronizer **sync)
 {
     if (!sync || !engine)
         return PDFSYNCERR_INVALID_ARGUMENT;
 
-    const TCHAR *fileExt = path::GetExt(pdffilename);
+    const WCHAR *fileExt = path::GetExt(pdffilename);
     if (!str::EqI(fileExt, _T(".pdf")))
         return PDFSYNCERR_INVALID_ARGUMENT;
 
@@ -162,10 +162,10 @@ int Synchronizer::Create(const TCHAR *pdffilename, PdfEngine *engine, Synchroniz
 
 // Replace in 'pattern' the macros %f %l %c by 'filename', 'line' and 'col'
 // the caller must free() the result
-TCHAR * Synchronizer::PrepareCommandline(const TCHAR* pattern, const TCHAR* filename, UINT line, UINT col)
+WCHAR * Synchronizer::PrepareCommandline(const WCHAR* pattern, const WCHAR* filename, UINT line, UINT col)
 {
-    const TCHAR* perc;
-    str::Str<TCHAR> cmdline(256);
+    const WCHAR* perc;
+    str::Str<WCHAR> cmdline(256);
 
     while ((perc = str::FindChar(pattern, '%'))) {
         cmdline.Append(pattern, perc - pattern);
@@ -398,7 +398,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UIN
 // (within a range of EPSILON_LINE)
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
-UINT Pdfsync::SourceToRecord(const TCHAR* srcfilename, UINT line, UINT col, Vec<size_t> &records)
+UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<size_t> &records)
 {
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;
@@ -451,7 +451,7 @@ UINT Pdfsync::SourceToRecord(const TCHAR* srcfilename, UINT line, UINT col, Vec<
     return PDFSYNCERR_SUCCESS;
 }
 
-int Pdfsync::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
+int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
 {
     if (IsIndexDiscarded())
         if (RebuildIndex() != PDFSYNCERR_SUCCESS)
@@ -546,7 +546,7 @@ TryAgainAnsi:
     return PDFSYNCERR_SUCCESS;
 }
 
-int SyncTex::SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
+int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
 {
     if (IsIndexDiscarded())
         if (RebuildIndex() != PDFSYNCERR_SUCCESS)

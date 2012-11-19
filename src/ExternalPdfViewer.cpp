@@ -10,7 +10,7 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 
-static TCHAR *GetAcrobatPath()
+static WCHAR *GetAcrobatPath()
 {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
     ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL));
@@ -21,7 +21,7 @@ static TCHAR *GetAcrobatPath()
     return NULL;
 }
 
-static TCHAR *GetFoxitPath()
+static WCHAR *GetFoxitPath()
 {
     ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon")));
     if (path && file::Exists(path))
@@ -33,7 +33,7 @@ static TCHAR *GetFoxitPath()
     return NULL;
 }
 
-static TCHAR *GetPDFXChangePath()
+static WCHAR *GetPDFXChangePath()
 {
     ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
     if (!path)
@@ -46,10 +46,10 @@ static TCHAR *GetPDFXChangePath()
     return NULL;
 }
 
-static TCHAR *GetXPSViewerPath()
+static WCHAR *GetXPSViewerPath()
 {
     // the XPS-Viewer seems to always be installed into %WINDIR%\system32
-    TCHAR buffer[MAX_PATH];
+    WCHAR buffer[MAX_PATH];
     UINT res = GetSystemDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
         return NULL;
@@ -72,10 +72,10 @@ static TCHAR *GetXPSViewerPath()
     return NULL;
 }
 
-static TCHAR *GetHtmlHelpPath()
+static WCHAR *GetHtmlHelpPath()
 {
     // the Html Help viewer seems to be installed either into %WINDIR% or %WINDIR%\system32
-    TCHAR buffer[MAX_PATH];
+    WCHAR buffer[MAX_PATH];
     UINT res = GetWindowsDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
         return NULL;
@@ -109,7 +109,7 @@ bool CanViewWithFoxit(WindowInfo *win)
     return path != NULL;
 }
 
-bool ViewWithFoxit(WindowInfo *win, TCHAR *args)
+bool ViewWithFoxit(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithFoxit(win))
         return false;
@@ -140,7 +140,7 @@ bool CanViewWithPDFXChange(WindowInfo *win)
     return path != NULL;
 }
 
-bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args)
+bool ViewWithPDFXChange(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithPDFXChange(win))
         return false;
@@ -171,7 +171,7 @@ bool CanViewWithAcrobat(WindowInfo *win)
     return exePath != NULL;
 }
 
-bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
+bool ViewWithAcrobat(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithAcrobat(win))
         return false;
@@ -213,7 +213,7 @@ bool CanViewWithXPSViewer(WindowInfo *win)
     return path != NULL;
 }
 
-bool ViewWithXPSViewer(WindowInfo *win, TCHAR *args)
+bool ViewWithXPSViewer(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithXPSViewer(win))
         return false;
@@ -248,7 +248,7 @@ bool CanViewWithHtmlHelp(WindowInfo *win)
     return path != NULL;
 }
 
-bool ViewWithHtmlHelp(WindowInfo *win, TCHAR *args)
+bool ViewWithHtmlHelp(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithHtmlHelp(win))
         return false;

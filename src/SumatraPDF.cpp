@@ -76,7 +76,7 @@ bool             gUseEbookUI = false;
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
-TCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
+WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
 #define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
 #define ABOUT_BG_GRAY_COLOR     RGB(0xCC, 0xCC, 0xCC)
@@ -213,7 +213,7 @@ bool CurrLangNameSet(const char *langName)
 
 // lets the shell open a URI for any supported scheme in
 // the appropriate application (web browser, mail client, etc.)
-bool LaunchBrowser(const TCHAR *url)
+bool LaunchBrowser(const WCHAR *url)
 {
     if (!HasPermission(Perm_DiskAccess))
         return false;
@@ -231,13 +231,13 @@ bool LaunchBrowser(const TCHAR *url)
 
 // lets the shell open a file of any supported perceived type
 // in the default application for opening such files
-bool OpenFileExternally(const TCHAR *path)
+bool OpenFileExternally(const WCHAR *path)
 {
     if (!HasPermission(Perm_DiskAccess))
         return false;
 
     // check if this file's perceived type is allowed
-    const TCHAR *ext = path::GetExt(path);
+    const WCHAR *ext = path::GetExt(path);
     ScopedMem<WCHAR> perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, _T("PerceivedType")));
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, _T(".htm")) || str::EndsWithI(path, _T(".html")) || str::EndsWithI(path, _T(".xhtml")))
@@ -344,7 +344,7 @@ bool WindowInfoStillValid(WindowInfo *win)
 }
 
 // Find the first window showing a given PDF file
-WindowInfo* FindWindowInfoByFile(const TCHAR *file)
+WindowInfo* FindWindowInfoByFile(const WCHAR *file)
 {
     ScopedMem<WCHAR> normFile(path::Normalize(file));
 
@@ -358,7 +358,7 @@ WindowInfo* FindWindowInfoByFile(const TCHAR *file)
 }
 
 // Find the first window that has been produced from <file>
-WindowInfo* FindWindowInfoBySyncFile(const TCHAR *file)
+WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file)
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
@@ -378,14 +378,14 @@ public:
     HwndPasswordUI(HWND hwnd) : hwnd(hwnd)
     {}
 
-    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+    virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey);
 };
 
 /* Get password for a given 'fileName', can be NULL if user cancelled the
    dialog box or if the encryption key has been filled in instead.
    Caller needs to free() the result. */
-TCHAR *HwndPasswordUI::GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                unsigned char decryptionKeyOut[32], bool *saveKey)
 {
     DisplayState *fileFromHistory = gFileHistory.Find(fileName);
@@ -607,7 +607,7 @@ void UpdateRtlLayoutForAllWindows()
 static int GetPolicies(bool isRestricted)
 {
     static struct {
-        const TCHAR *name;
+        const WCHAR *name;
         int perm;
     } policies[] = {
         { _T("InternetAccess"), Perm_InternetAccess },
@@ -661,7 +661,7 @@ static int GetPolicies(bool isRestricted)
     return Perm_RestrictedUse;
 }
 
-void SaveThumbnailForFile(const TCHAR *filePath, RenderedBitmap *bmp)
+void SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp)
 {
     DisplayState *ds = gFileHistory.Find(filePath);
     if (!ds || !bmp) {
@@ -679,7 +679,7 @@ class ThumbnailRenderingTask : public UITask, public RenderingCallback
     RenderedBitmap *bmp;
 
 public:
-    ThumbnailRenderingTask(const TCHAR *filePath) :
+    ThumbnailRenderingTask(const WCHAR *filePath) :
         filePath(str::Dup(filePath)), bmp(NULL) {
     }
 
@@ -954,8 +954,8 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         UpdateToolbarFindText(win);
     }
 
-    const TCHAR *baseName = path::GetBaseName(win->dm->FilePath());
-    TCHAR *docTitle = win->dm->engine ? win->dm->engine->GetProperty(Prop_Title) : NULL;
+    const WCHAR *baseName = path::GetBaseName(win->dm->FilePath());
+    WCHAR *docTitle = win->dm->engine ? win->dm->engine->GetProperty(Prop_Title) : NULL;
     if (docTitle) {
         str::NormalizeWS(docTitle);
         if (!str::IsEmpty(docTitle)) {
@@ -1243,7 +1243,7 @@ public:
     }
 };
 
-static void RenameFileInHistory(const TCHAR *oldPath, const TCHAR *newPath)
+static void RenameFileInHistory(const WCHAR *oldPath, const WCHAR *newPath)
 {
     DisplayState *ds = gFileHistory.Find(newPath);
     bool oldIsPinned = false;
@@ -1278,7 +1278,7 @@ static void RenameFileInHistory(const TCHAR *oldPath, const TCHAR *newPath)
 }
 
 // Start loading a mobi file in the background
-static void LoadEbookAsync(const TCHAR *fileName, SumatraWindow& win)
+static void LoadEbookAsync(const WCHAR *fileName, SumatraWindow& win)
 {
     ThreadLoadEbook *loadThread = new ThreadLoadEbook(fileName, NULL, win);
     loadThread->Start();
@@ -1291,7 +1291,7 @@ static void LoadEbookAsync(const TCHAR *fileName, SumatraWindow& win)
 
 // document path is either a file or a directory
 // (when browsing images inside directory).
-static bool DocumentPathExists(const TCHAR *path)
+static bool DocumentPathExists(const WCHAR *path)
 {
     if (file::Exists(path) || dir::Exists(path))
         return true;
@@ -1305,7 +1305,7 @@ static bool DocumentPathExists(const TCHAR *path)
     return false;
 }
 
-void LoadDocument2(const TCHAR *fileName, SumatraWindow& win)
+void LoadDocument2(const WCHAR *fileName, SumatraWindow& win)
 {
     // TODO: opening non-mobi files from mobi window doesn't work exactly
     // the same as opening them from non-mobi window
@@ -1619,7 +1619,7 @@ static bool RegisterForPdfExtentions(HWND hwnd)
 
 void OnDropFiles(HDROP hDrop)
 {
-    TCHAR       filePath[MAX_PATH];
+    WCHAR       filePath[MAX_PATH];
     const int   count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
 
     for (int i = 0; i < count; i++)
@@ -1637,7 +1637,7 @@ void OnDropFiles(HDROP hDrop)
     DragFinish(hDrop);
 }
 
-static void MessageBoxWarning(HWND hwnd, const TCHAR *msg, const TCHAR *title = NULL)
+static void MessageBoxWarning(HWND hwnd, const WCHAR *msg, const WCHAR *title = NULL)
 {
     UINT type =  MB_OK | MB_ICONEXCLAMATION | (IsUIRightToLeft() ? MB_RTLREADING : 0);
     if (!title)
@@ -1756,7 +1756,7 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
             return;
     }
 
-    const TCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
+    const WCHAR *url = SUMATRA_UPDATE_INFO_URL _T("?v=") UPDATE_CHECK_VER;
     new HttpReq(url, new UpdateDownloadTask(hwnd, autoCheck));
 
     FILETIME ft;
@@ -2113,7 +2113,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
 {
     if (win.IsAboutWindow()) {
         SetFocus(win.hwndFrame);
-        const TCHAR *url = GetStaticLink(win.staticLinks, x, y);
+        const WCHAR *url = GetStaticLink(win.staticLinks, x, y);
         if (url && url == win.url) {
             if (str::Eq(url, SLINK_OPEN_FILE))
                 SendMessage(win.hwndFrame, WM_COMMAND, IDM_OPEN, 0);
@@ -2509,9 +2509,9 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     }
 }
 
-static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<TCHAR>& fileFilter)
+static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<WCHAR>& fileFilter)
 {
-    const TCHAR *defExt = dm->engine->GetDefaultFileExt();
+    const WCHAR *defExt = dm->engine->GetDefaultFileExt();
     switch (dm->engineType) {
         case Engine_XPS:    fileFilter.Append(_TR("XPS documents")); break;
         case Engine_DjVu:   fileFilter.Append(_TR("DjVu documents")); break;
@@ -2536,7 +2536,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     assert(win.dm);
     if (!win.IsDocLoaded()) return;
 
-    const TCHAR *srcFileName = win.dm->FilePath();
+    const WCHAR *srcFileName = win.dm->FilePath();
     ScopedMem<WCHAR> urlName;
     if (gPluginMode) {
         urlName.Set(ExtractFilenameFromURL(gPluginURL));
@@ -2552,11 +2552,11 @@ static void OnMenuSaveAs(WindowInfo& win)
                        win.dm->engine->IsCopyingTextAllowed();
     bool canConvertToPDF = Engine_PS == win.dm->engineType;
 
-    const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
+    const WCHAR *defExt = win.dm->engine->GetDefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    str::Str<TCHAR> fileFilter(256);
+    str::Str<WCHAR> fileFilter(256);
     AppendFileFilterForDoc(win.dm, fileFilter);
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
     if (hasCopyPerm) {
@@ -2571,19 +2571,19 @@ static void OnMenuSaveAs(WindowInfo& win)
     fileFilter.Append(_T("\1*.*\1"));
     str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
-    TCHAR dstFileName[MAX_PATH];
+    WCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
     if (str::FindChar(dstFileName, ':')) {
         // handle embed-marks (for embedded PDF documents):
         // remove the container document's extension and include
         // the embedding reference in the suggested filename
-        TCHAR *colon = (TCHAR *)str::FindChar(dstFileName, ':');
+        WCHAR *colon = (WCHAR *)str::FindChar(dstFileName, ':');
         str::TransChars(colon, _T(":"), _T("_"));
-        TCHAR *ext;
+        WCHAR *ext;
         for (ext = colon; ext > dstFileName && *ext != '.'; ext--);
         if (ext == dstFileName)
             ext = colon;
-        memmove(ext, colon, (str::Len(colon) + 1) * sizeof(TCHAR));
+        memmove(ext, colon, (str::Len(colon) + 1) * sizeof(WCHAR));
     }
     // Remove the extension so that it can be re-added depending on the chosen filter
     else if (str::EndsWithI(dstFileName, defExt))
@@ -2606,7 +2606,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     if (!ok)
         return;
 
-    TCHAR * realDstFileName = dstFileName;
+    WCHAR * realDstFileName = dstFileName;
     // Make sure that the file has a valid ending
     if (!str::EndsWithI(dstFileName, defExt) &&
         !(hasCopyPerm && str::EndsWithI(dstFileName, _T(".txt"))) &&
@@ -2620,9 +2620,9 @@ static void OnMenuSaveAs(WindowInfo& win)
 
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && str::EndsWithI(realDstFileName, _T(".txt"))) {
-        str::Str<TCHAR> text(1024);
+        str::Str<WCHAR> text(1024);
         for (int pageNo = 1; pageNo <= win.dm->PageCount(); pageNo++) {
-            TCHAR *tmp = win.dm->engine->ExtractPageText(pageNo, _T("\r\n"), NULL, Target_Export);
+            WCHAR *tmp = win.dm->engine->ExtractPageText(pageNo, _T("\r\n"), NULL, Target_Export);
             text.AppendAndFree(tmp);
         }
 
@@ -2658,7 +2658,7 @@ static void OnMenuSaveAs(WindowInfo& win)
             if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop))
                 SetFileAttributes(realDstFileName, attributes & ~attributesToDrop);
         } else {
-            TCHAR *msgBuf, *errorMsg;
+            WCHAR *msgBuf, *errorMsg;
             if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPTSTR)&msgBuf, 0, NULL)) {
                 errorMsg = str::Format(_T("%s\n\n%s"), _TR("Failed to save a file"), msgBuf);
                 LocalFree(msgBuf);
@@ -2682,7 +2682,7 @@ bool LinkSaver::SaveEmbedded(unsigned char *data, size_t len)
     if (!HasPermission(Perm_DiskAccess))
         return false;
 
-    TCHAR dstFileName[MAX_PATH];
+    WCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), fileName ? fileName : _T(""));
 
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -2716,7 +2716,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (!win.IsDocLoaded()) return;
     if (gPluginMode) return;
 
-    const TCHAR *srcFileName = win.dm->FilePath();
+    const WCHAR *srcFileName = win.dm->FilePath();
     // this happens e.g. for embedded documents
     if (!file::Exists(srcFileName))
         return;
@@ -2724,13 +2724,13 @@ static void OnMenuRenameFile(WindowInfo &win)
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
-    str::Str<TCHAR> fileFilter(256);
+    const WCHAR *defExt = win.dm->engine->GetDefaultFileExt();
+    str::Str<WCHAR> fileFilter(256);
     AppendFileFilterForDoc(win.dm, fileFilter);
     fileFilter.AppendFmt(_T("\1*%s\1"), defExt);
     str::TransChars(fileFilter.Get(), _T("\1"), _T("\0"));
 
-    TCHAR dstFileName[MAX_PATH];
+    WCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
     // Remove the extension so that it can be re-added depending on the chosen filter
     if (str::EndsWithI(dstFileName, defExt))
@@ -2783,9 +2783,9 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     CrashIf(!win.dm);
     if (!win.IsDocLoaded()) return;
 
-    const TCHAR *defExt = win.dm->engine->GetDefaultFileExt();
+    const WCHAR *defExt = win.dm->engine->GetDefaultFileExt();
 
-    TCHAR dstFileName[MAX_PATH];
+    WCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be replaced with .lnk
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.dm->FilePath()));
     str::TransChars(dstFileName, _T(":"), _T("_"));
@@ -2816,7 +2816,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
         filename.Set(str::Join(dstFileName, _T(".lnk")));
 
     ScrollState ss = win.dm->GetScrollState();
-    const TCHAR *viewMode = DisplayModeConv::NameFromEnum(win.dm->GetDisplayMode());
+    const WCHAR *viewMode = DisplayModeConv::NameFromEnum(win.dm->GetDisplayMode());
     ScopedMem<WCHAR> ZoomVirtual(str::Format(_T("%.2f"), win.dm->ZoomVirtual()));
     if (ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
         ZoomVirtual.Set(str::Dup(_T("fitpage")));
@@ -2850,8 +2850,8 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
             // all the selected filenames
             int cbLength = CommDlg_OpenSave_GetSpec(GetParent(hDlg), NULL, 0) + MAX_PATH;
             if (cbLength >= 0 && lpofn->nMaxFile < (DWORD)cbLength) {
-                TCHAR *oldBuffer = lpofn->lpstrFile;
-                lpofn->lpstrFile = (LPTSTR)realloc(lpofn->lpstrFile, cbLength * sizeof(TCHAR));
+                WCHAR *oldBuffer = lpofn->lpstrFile;
+                lpofn->lpstrFile = (LPTSTR)realloc(lpofn->lpstrFile, cbLength * sizeof(WCHAR));
                 if (lpofn->lpstrFile)
                     lpofn->nMaxFile = cbLength;
                 else
@@ -2884,8 +2884,8 @@ void OnMenuOpen(SumatraWindow& win)
         return;
 
     struct {
-        const TCHAR *name;
-        TCHAR *filter;
+        const WCHAR *name;
+        WCHAR *filter;
         bool available;
     } fileFormats[] = {
         { _TR("PDF documents"),         _T("*.pdf"),        true },
@@ -2918,8 +2918,8 @@ void OnMenuOpen(SumatraWindow& win)
 
     for (int i = 0; i < dimof(fileFormats); i++) {
         if (fileFormats[i].available) {
-            const TCHAR *name = fileFormats[i].name;
-            TCHAR *filter = fileFormats[i].filter;
+            const WCHAR *name = fileFormats[i].name;
+            WCHAR *filter = fileFormats[i].filter;
             fileFilter.AppendAndFree(str::Format(_T("%s\1%s\1"), name, filter));
         }
     }
@@ -2949,13 +2949,13 @@ void OnMenuOpen(SumatraWindow& win)
     }
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
 #endif
-    ScopedMem<WCHAR> file(AllocArray<TCHAR>(ofn.nMaxFile));
+    ScopedMem<WCHAR> file(AllocArray<WCHAR>(ofn.nMaxFile));
     ofn.lpstrFile = file;
 
     if (!GetOpenFileName(&ofn))
         return;
 
-    TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
+    WCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
         LoadDocument2(ofn.lpstrFile, win);
@@ -2977,7 +2977,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
 
     // TODO: browse through all supported file types at the same time?
-    const TCHAR *fileExt = path::GetExt(win.loadedFilePath);
+    const WCHAR *fileExt = path::GetExt(win.loadedFilePath);
     if (win.IsDocLoaded())
         fileExt = win.dm->engine->GetDefaultFileExt();
     ScopedMem<WCHAR> pattern(str::Format(_T("*%s"), fileExt));
@@ -3526,8 +3526,8 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
 static void FrameOnChar(WindowInfo& win, WPARAM key)
 {
-    if (IsCharUpper((TCHAR)key))
-        key = (TCHAR)CharLower((LPTSTR)(TCHAR)key);
+    if (IsCharUpper((WCHAR)key))
+        key = (WCHAR)CharLower((LPTSTR)(WCHAR)key);
 
     if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation) {
         win.ChangePresentationMode(PM_ENABLED);

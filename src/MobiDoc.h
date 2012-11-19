@@ -14,7 +14,7 @@ enum PdbDocType { Pdb_Unknown, Pdb_Mobipocket, Pdb_PalmDoc, Pdb_TealDoc };
 
 class MobiDoc
 {
-    TCHAR *             fileName;
+    WCHAR *             fileName;
 
     PdbReader *         pdbReader;
 
@@ -38,7 +38,7 @@ class MobiDoc
     };
     Vec<Metadata>       props;
 
-    MobiDoc(const TCHAR *filePath);
+    MobiDoc(const WCHAR *filePath);
 
     bool    ParseHeader();
     bool    LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);
@@ -58,12 +58,12 @@ public:
     size_t              GetBookHtmlSize() const { return doc->Size(); }
     ImageData *         GetCoverImage();
     ImageData *         GetImage(size_t imgRecIndex) const;
-    const TCHAR *       GetFileName() const { return fileName; }
-    TCHAR *             GetProperty(DocumentProperty prop);
+    const WCHAR *       GetFileName() const { return fileName; }
+    WCHAR *             GetProperty(DocumentProperty prop);
     PdbDocType          GetDocType() const { return docType; }
 
-    static bool         IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static MobiDoc *    CreateFromFile(const TCHAR *fileName);
+    static bool         IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static MobiDoc *    CreateFromFile(const WCHAR *fileName);
 };
 
 // for testing MobiFormatter

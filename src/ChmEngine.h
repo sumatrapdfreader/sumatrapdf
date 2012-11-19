@@ -13,7 +13,7 @@ public:
     // can be initiated from inside html control
     virtual void PageNoChanged(int pageNo) = 0;
     // tell the UI to launch the given URL in an external web browser
-    virtual void LaunchBrowser(const TCHAR *url) = 0;
+    virtual void LaunchBrowser(const WCHAR *url) = 0;
     // tell the UI to move focus back to the main window
     // (if always == false, then focus is only moved if it's inside
     // an HtmlWindow and thus outside the reach of the main UI)
@@ -38,8 +38,8 @@ public:
     virtual int CurrentPageNo() const = 0;
     virtual LRESULT PassUIMsg(UINT msg, WPARAM wParam, LPARAM lParam) = 0;
 
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static ChmEngine *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static ChmEngine *CreateFromFile(const WCHAR *fileName);
 };
 
 void DebugAlternateChmEngine(bool enable);

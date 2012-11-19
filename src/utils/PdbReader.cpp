@@ -39,7 +39,7 @@ struct PdbRecordHeader {
 STATIC_ASSERT(sizeof(PdbHeader) == kPdbHeaderLen, pdbHeaderSize);
 STATIC_ASSERT(sizeof(PdbRecordHeader) == 8, pdbRecHeaderSize);
 
-PdbReader::PdbReader(const TCHAR *filePath) :
+PdbReader::PdbReader(const WCHAR *filePath) :
     data(file::ReadAll(filePath, &dataSize))
 {
     if (!ParseHeader())

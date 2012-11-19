@@ -8,25 +8,25 @@
 
 class ImageEngine : public virtual BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static ImageEngine *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static ImageEngine *CreateFromFile(const WCHAR *fileName);
     static ImageEngine *CreateFromStream(IStream *stream);
 };
 
 class ImageDirEngine : public virtual BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static ImageDirEngine *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static ImageDirEngine *CreateFromFile(const WCHAR *fileName);
 };
 
 class CbxEngine : public virtual BaseEngine {
 public:
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static CbxEngine *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static CbxEngine *CreateFromFile(const WCHAR *fileName);
     static CbxEngine *CreateFromStream(IStream *stream);
 };
 
-RenderedBitmap *LoadRenderedBitmap(const TCHAR *filePath);
-bool SaveRenderedBitmap(RenderedBitmap *bmp, const TCHAR *filePath);
+RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath);
+bool SaveRenderedBitmap(RenderedBitmap *bmp, const WCHAR *filePath);
 
 #endif
