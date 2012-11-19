@@ -37,7 +37,7 @@ static WCHAR *GetPDFXChangePath()
 {
     ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
     if (!path)
-        path.Set(ReadRegStr(HKEY_CURRENT_USER,  L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
+        path.Set(ReadRegStr(HKEY_CURRENT_USER, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
     if (!path)
         return false;
     ScopedMem<WCHAR> exePath(path::Join(path, L"PDFXCview.exe"));

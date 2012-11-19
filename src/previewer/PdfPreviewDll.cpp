@@ -147,14 +147,14 @@ STDAPI DllRegisterServer()
         { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
                 SZ_PDF_PREVIEW_CLSID,   L"SumatraPDF Preview Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_PDF_PREVIEW_CLSID,
-                L"AppId",            IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
 #ifdef BUILD_XPS_PREVIEW
         { L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID,
                 NULL,                   L"SumatraPDF XPS Preview Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID L"\\InProcServer32",
                 NULL,                   path },
         { L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID L"\\InProcServer32",
-                L"ThreadingModel",   L"Apartment" },
+                L"ThreadingModel",      L"Apartment" },
         // IThumbnailProvider
         { L"Software\\Classes\\.xps\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
                 NULL,                   SZ_XPS_PREVIEW_CLSID },
@@ -167,7 +167,7 @@ STDAPI DllRegisterServer()
         { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
                 SZ_XPS_PREVIEW_CLSID,   L"SumatraPDF XPS Preview Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_XPS_PREVIEW_CLSID,
-                L"AppId",            IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
 #endif
 #ifdef BUILD_CBZ_PREVIEW
         { L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID,
@@ -188,7 +188,7 @@ STDAPI DllRegisterServer()
         { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
                 SZ_CBZ_PREVIEW_CLSID,   L"SumatraPDF CBZ Preview Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID,
-                L"AppId",            IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
 #endif
 #ifdef BUILD_TGA_PREVIEW
         { L"Software\\Classes\\CLSID\\" SZ_TGA_PREVIEW_CLSID,
@@ -196,7 +196,7 @@ STDAPI DllRegisterServer()
         { L"Software\\Classes\\CLSID\\" SZ_TGA_PREVIEW_CLSID L"\\InProcServer32",
                 NULL,                   path },
         { L"Software\\Classes\\CLSID\\" SZ_TGA_PREVIEW_CLSID L"\\InProcServer32",
-                L"ThreadingModel",   L"Apartment" },
+                L"ThreadingModel",      L"Apartment" },
         // IThumbnailProvider
         { L"Software\\Classes\\.tga\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
                 NULL,                   SZ_TGA_PREVIEW_CLSID },
@@ -209,7 +209,7 @@ STDAPI DllRegisterServer()
         { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
                 SZ_TGA_PREVIEW_CLSID,   L"SumatraPDF TGA Preview Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_TGA_PREVIEW_CLSID,
-                L"AppId",            IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
+                L"AppId",               IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE },
 #endif
     };
 

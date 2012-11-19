@@ -80,11 +80,11 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const WCHAR *filePath)
         return file::WriteAll(filePath, bmpData.Get(), bmpDataLen);
 
     const WCHAR *encoders[] = {
-        L".png", L"image/png",
+        L".png",  L"image/png",
         L".jpg",  L"image/jpeg",
         L".jpeg", L"image/jpeg",
         L".gif",  L"image/gif",
-        L".tif", L"image/tiff",
+        L".tif",  L"image/tiff",
         L".tiff", L"image/tiff",
     };
     const WCHAR *encoder = NULL;
