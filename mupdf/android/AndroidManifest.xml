@@ -3,6 +3,7 @@
       package="com.artifex.mupdf"
       android:versionCode="1"
       android:versionName="@string/version">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <supports-screens android:smallScreens="true"
                       android:normalScreens="true"
                       android:largeScreens="true"

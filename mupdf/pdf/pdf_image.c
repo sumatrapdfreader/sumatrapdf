@@ -6,7 +6,7 @@ typedef struct pdf_image_key_s pdf_image_key;
 struct pdf_image_key_s {
 	int refs;
 	fz_image *image;
-	int factor;
+	int l2factor;
 };
 
 static void pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image);
@@ -38,7 +38,7 @@ pdf_make_hash_image_key(fz_store_hash *hash, void *key_)
 	pdf_image_key *key = (pdf_image_key *)key_;
 
 	hash->u.pi.ptr = key->image;
-	hash->u.pi.i = key->factor;
+	hash->u.pi.i = key->l2factor;
 	return 1;
 }
 
@@ -76,7 +76,7 @@ pdf_cmp_image_key(void *k0_, void *k1_)
 	pdf_image_key *k0 = (pdf_image_key *)k0_;
 	pdf_image_key *k1 = (pdf_image_key *)k1_;
 
-	return k0->image == k1->image && k0->factor == k1->factor;
+	return k0->image == k1->image && k0->l2factor == k1->l2factor;
 }
 
 #ifndef NDEBUG
@@ -85,7 +85,7 @@ pdf_debug_image(void *key_)
 {
 	pdf_image_key *key = (pdf_image_key *)key_;
 
-	printf("(image %d x %d sf=%d) ", key->image->w, key->image->h, key->factor);
+	printf("(image %d x %d sf=%d) ", key->image->w, key->image->h, key->l2factor);
 }
 #endif
 
@@ -101,14 +101,15 @@ static fz_store_type pdf_image_store_type =
 };
 
 static fz_pixmap *
-decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int in_line, int indexed, int factor, int cache)
+decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int in_line, int indexed, int l2factor, int native_l2factor, int cache)
 {
 	fz_pixmap *tile = NULL;
 	fz_pixmap *existing_tile;
 	int stride, len, i;
 	unsigned char *samples = NULL;
-	int w = (image->base.w + (factor-1)) / factor;
-	int h = (image->base.h + (factor-1)) / factor;
+	int f = 1<<native_l2factor;
+	int w = (image->base.w + f-1) >> native_l2factor;
+	int h = (image->base.h + f-1) >> native_l2factor;
 	/* SumatraPDF: prevent use of uninitialized value */
 	pdf_image_key *key = NULL;
 	fz_var(key);
@@ -198,6 +199,14 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 		fz_rethrow(ctx);
 	}
 
+	/* Now apply any extra subsampling required */
+	if (l2factor - native_l2factor > 0)
+	{
+		if (l2factor - native_l2factor > 8)
+			l2factor = native_l2factor + 8;
+		fz_subsample_pixmap(ctx, tile, l2factor - native_l2factor);
+	}
+
 	if (!cache)
 		return tile;
 
@@ -208,7 +217,7 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 		key = fz_malloc_struct(ctx, pdf_image_key);
 		key->refs = 1;
 		key->image = fz_keep_image(ctx, &image->base);
-		key->factor = factor;
+		key->l2factor = l2factor;
 		existing_tile = fz_store_item(ctx, key, tile, fz_pixmap_size(ctx, tile), &pdf_image_store_type);
 		if (existing_tile)
 		{
@@ -250,8 +259,9 @@ pdf_image_get_pixmap(fz_context *ctx, fz_image *image_, int w, int h)
 	pdf_image *image = (pdf_image *)image_;
 	fz_pixmap *tile;
 	fz_stream *stm;
-	int factor;
+	int l2factor;
 	pdf_image_key key;
+	int native_l2factor;
 
 	/* Check for 'simple' images which are just pixmaps */
 	if (image->buffer == NULL)
@@ -270,27 +280,29 @@ pdf_image_get_pixmap(fz_context *ctx, fz_image *image_, int w, int h)
 
 	/* What is our ideal factor? */
 	if (w == 0 || h == 0)
-		factor = 1;
+		l2factor = 0;
 	else
-		for (factor=1; image->base.w/(2*factor) >= w && image->base.h/(2*factor) >= h && factor < 8; factor *= 2);
+		for (l2factor=0; image->base.w>>(l2factor+1) >= w && image->base.h>>(l2factor+1) >= h && l2factor < 8; l2factor++);
 
 	/* Can we find any suitable tiles in the cache? */
 	key.refs = 1;
 	key.image = &image->base;
-	key.factor = factor;
+	key.l2factor = l2factor;
 	do
 	{
 		tile = fz_find_item(ctx, fz_free_pixmap_imp, &key, &pdf_image_store_type);
 		if (tile)
 			return tile;
-		key.factor >>= 1;
+		key.l2factor--;
 	}
-	while (key.factor > 0);
+	while (key.l2factor >= 0);
 
 	/* We need to make a new one. */
-	stm = fz_open_image_decomp_stream(ctx, image->buffer, &factor);
+	native_l2factor = l2factor;
+	stm = fz_open_image_decomp_stream(ctx, image->buffer, &native_l2factor);
+	l2factor = native_l2factor; /* SumatraPDF: this doesn't work yet */
 
-	return decomp_image_from_stream(ctx, stm, image, 0, 0, factor, 1);
+	return decomp_image_from_stream(ctx, stm, image, 0, 0, l2factor, native_l2factor, 1);
 }
 
 static pdf_image *
@@ -453,7 +465,7 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 			stm = pdf_open_stream(xref, pdf_to_num(dict), pdf_to_gen(dict));
 		}
 
-		image->tile = decomp_image_from_stream(ctx, stm, image, cstm != NULL, indexed, 1, 0);
+		image->tile = decomp_image_from_stream(ctx, stm, image, cstm != NULL, indexed, 0, 0, 0);
 	}
 	fz_catch(ctx)
 	{

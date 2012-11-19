@@ -760,7 +760,7 @@ fz_stream *fz_open_a85d(fz_stream *chain);
 fz_stream *fz_open_ahxd(fz_stream *chain);
 fz_stream *fz_open_rld(fz_stream *chain);
 fz_stream *fz_open_dctd(fz_stream *chain, int color_transform);
-fz_stream *fz_open_resized_dctd(fz_stream *chain, int color_transform, int factor);
+fz_stream *fz_open_resized_dctd(fz_stream *chain, int color_transform, int l2factor);
 fz_stream *fz_open_faxd(fz_stream *chain,
 	int k, int end_of_line, int encoded_byte_align,
 	int columns, int rows, int end_of_block, int black_is_1);
@@ -850,6 +850,7 @@ fz_pixmap *fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray, int luminosity);
 unsigned int fz_pixmap_size(fz_context *ctx, fz_pixmap *pix);
 
 fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_bbox *clip);
+void fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor);
 
 fz_bbox fz_pixmap_bbox_no_ctx(fz_pixmap *src);
 
@@ -859,7 +860,7 @@ typedef struct fz_compressed_buffer_s fz_compressed_buffer;
 unsigned int fz_compressed_buffer_size(fz_compressed_buffer *buffer);
 
 fz_stream *fz_open_compressed_buffer(fz_context *ctx, fz_compressed_buffer *);
-fz_stream *fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *, int *factor);
+fz_stream *fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *, int *l2factor);
 
 enum
 {

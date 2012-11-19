@@ -266,6 +266,7 @@ EXPORTS
 	fz_alpha_from_gray
 	fz_pixmap_size
 	fz_scale_pixmap
+	fz_subsample_pixmap
 	fz_pixmap_bbox_no_ctx
 	fz_compressed_buffer_size
 	fz_open_compressed_buffer

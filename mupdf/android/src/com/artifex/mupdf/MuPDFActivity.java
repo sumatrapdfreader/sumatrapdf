@@ -1,5 +1,7 @@
 package com.artifex.mupdf;
 
+import java.util.concurrent.Executor;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -10,6 +12,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.RectF;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -31,6 +34,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.ViewSwitcher;
 
+class ThreadPerTaskExecutor implements Executor {
+	public void execute(Runnable r) {
+		new Thread(r).start();
+	}
+}
 class SearchTaskResult {
 	public final String txt;
 	public final int   pageNumber;
@@ -99,6 +107,106 @@ public class MuPDFActivity extends Activity
 	private AlertDialog.Builder mAlertBuilder;
 	private LinkState    mLinkState = LinkState.DEFAULT;
 	private final Handler mHandler = new Handler();
+	private AsyncTask<Void,Void,MuPDFAlert> mAlertTask;
+
+	public void createAlertWaiter() {
+		// All mupdf library calls are performed on asynchronous tasks to avoid stalling
+		// the UI. Some calls can lead to javascript-invoked requests to display an
+		// alert dialog and collect a reply from the user. The task has to be blocked
+		// until the user's reply is received. This method creates an asynchronous task,
+		// the purpose of which is to wait of these requests and produce the dialog
+		// in response, while leaving the core blocked. When the dialog receives the
+		// user's response, it is sent to the core via replyToAlert, unblocking it.
+		// Another alert-waiting task is then created to pick up the next alert.
+		if (mAlertTask != null) {
+			mAlertTask.cancel(true);
+			mAlertTask = null;
+		}
+		mAlertTask = new SafeAsyncTask<Void,Void,MuPDFAlert>() {
+
+			@Override
+			protected MuPDFAlert doInBackground(Void... arg0) {
+				return core.waitForAlert();
+			}
+
+			@Override
+			protected void onPostExecute(final MuPDFAlert result) {
+				// core.waitForAlert may return null when shutting down
+				if (result == null)
+					return;
+				final MuPDFAlert.ButtonPressed pressed[] = new MuPDFAlert.ButtonPressed[3];
+				for(int i = 0; i < 3; i++)
+					pressed[i] = MuPDFAlert.ButtonPressed.None;
+				DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						int index = 0;
+						switch (which) {
+						case AlertDialog.BUTTON1: index=0; break;
+						case AlertDialog.BUTTON2: index=1; break;
+						case AlertDialog.BUTTON3: index=2; break;
+						}
+						result.buttonPressed = pressed[index];
+						// Send the user's response to the core, so that it can
+						// continue processing.
+						core.replyToAlert(result);
+						// Create another alert-waiter to pick up the next alert.
+						createAlertWaiter();
+					}
+				};
+				AlertDialog alert = mAlertBuilder.create();
+				alert.setTitle(result.title);
+				alert.setMessage(result.message);
+				switch (result.iconType)
+				{
+				case Error:
+					break;
+				case Warning:
+					break;
+				case Question:
+					break;
+				case Status:
+					break;
+				}
+				switch (result.buttonGroupType)
+				{
+				case OkCancel:
+					alert.setButton(AlertDialog.BUTTON2, "Cancel", listener);
+					pressed[1] = MuPDFAlert.ButtonPressed.Cancel;
+				case Ok:
+					alert.setButton(AlertDialog.BUTTON1, "Ok", listener);
+					pressed[0] = MuPDFAlert.ButtonPressed.Ok;
+					break;
+				case YesNoCancel:
+					alert.setButton(AlertDialog.BUTTON3, "Cancel", listener);
+					pressed[2] = MuPDFAlert.ButtonPressed.Cancel;
+				case YesNo:
+					alert.setButton(AlertDialog.BUTTON1, "Yes", listener);
+					pressed[0] = MuPDFAlert.ButtonPressed.Yes;
+					alert.setButton(AlertDialog.BUTTON2, "No", listener);
+					pressed[1] = MuPDFAlert.ButtonPressed.No;
+					break;
+				}
+				alert.setOnCancelListener(new DialogInterface.OnCancelListener() {
+					public void onCancel(DialogInterface dialog) {
+						result.buttonPressed = MuPDFAlert.ButtonPressed.None;
+						core.replyToAlert(result);
+						createAlertWaiter();
+					}
+				});
+
+				alert.show();
+			}
+		};
+
+		mAlertTask.executeOnExecutor(new ThreadPerTaskExecutor());
+	}
+
+	public void destroyAlertWaiter() {
+		if (mAlertTask != null) {
+			mAlertTask.cancel(true);
+			mAlertTask = null;
+		}
+	}
 
 	private MuPDFCore openFile(String path)
 	{
@@ -205,6 +313,7 @@ public class MuPDFActivity extends Activity
 	public void createUI(Bundle savedInstanceState) {
 		if (core == null)
 			return;
+
 		// Now create the UI.
 		// First create the document view making use of the ReaderView's internal
 		// gesture recognition
@@ -521,6 +630,10 @@ public class MuPDFActivity extends Activity
 	{
 		if (core != null)
 			core.onDestroy();
+		if (mAlertTask != null) {
+			mAlertTask.cancel(true);
+			mAlertTask = null;
+		}
 		core = null;
 		super.onDestroy();
 	}
@@ -767,5 +880,23 @@ public class MuPDFActivity extends Activity
 			searchModeOff();
 		}
 		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+	protected void onStart() {
+		if (core != null)
+			core.startAlerts();
+
+		createAlertWaiter();
+		super.onStart();
+	}
+
+	@Override
+	protected void onStop() {
+		destroyAlertWaiter();
+		if (core != null)
+			core.stopAlerts();
+
+		super.onStop();
 	}
 }

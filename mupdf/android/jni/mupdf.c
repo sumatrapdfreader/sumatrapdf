@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <time.h>
+#include <pthread.h>
 #include <android/log.h>
 #include <android/bitmap.h>
 
@@ -7,11 +8,16 @@
 #include <stdlib.h>
 #include <math.h>
 
+#ifdef NDK_PROFILER
+#include "prof.h"
+#endif
+
 #include "fitz.h"
 #include "mupdf.h"
 
 #define LOG_TAG "libmupdf"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#define LOGT(...) __android_log_print(ANDROID_LOG_INFO,"alert",__VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
 /* Set to 1 to enable debug log traces. */
@@ -87,11 +93,126 @@ static void dump_annotation_display_lists()
 	}
 }
 
+// fin_lock and fin_lock2 are used during shutdown. The two waiting tasks
+// show_alert and waitForAlertInternal respectively take these locks while
+// waiting. During shutdown, the conditions are signaled and then the fin_locks
+// are taken momentarily to ensure the blocked threads leave the controlled
+// area of code before the mutexes and condition variables are destroyed.
+static pthread_mutex_t fin_lock;
+static pthread_mutex_t fin_lock2;
+// alert_lock is the main lock guarding the variables directly below.
+static pthread_mutex_t alert_lock;
+// Flag indicating if the alert system is active. When not active, both
+// show_alert and waitForAlertInternal return immediately.
+static int alerts_active;
+// Pointer to the alert struct passed in by show_alert, and valid while
+// show_alert is blocked.
+static fz_alert_event *current_alert;
+// Flag and condition varibles to signal a request is present and a reply
+// is present, respectively. The condition variables alone are not sufficient
+// because of the pthreads permit spurious signals.
+static int alert_request;
+static int alert_reply;
+static pthread_cond_t alert_request_cond;
+static pthread_cond_t alert_reply_cond;
+
+static void show_alert(fz_alert_event *alert)
+{
+	pthread_mutex_lock(&fin_lock2);
+	pthread_mutex_lock(&alert_lock);
+
+	LOGT("Enter show_alert: %s", alert->title);
+	alert->button_pressed = 0;
+
+	if (alerts_active)
+	{
+		current_alert = alert;
+		alert_request = 1;
+		pthread_cond_signal(&alert_request_cond);
+
+		while (alerts_active && !alert_reply)
+			pthread_cond_wait(&alert_reply_cond, &alert_lock);
+		alert_reply = 0;
+		current_alert = NULL;
+	}
+
+	LOGT("Exit show_alert");
+
+	pthread_mutex_unlock(&alert_lock);
+	pthread_mutex_unlock(&fin_lock2);
+}
+
+static void event_cb(fz_doc_event *event, void *data)
+{
+	switch (event->type)
+	{
+	case FZ_DOCUMENT_EVENT_ALERT:
+		show_alert(fz_access_alert_event(event));
+		break;
+	}
+}
+
+static void alerts_init()
+{
+	fz_interactive *idoc = fz_interact(doc);
+
+	if (!idoc)
+		return;
+
+	alerts_active = 0;
+	alert_request = 0;
+	alert_reply = 0;
+	pthread_mutex_init(&fin_lock, NULL);
+	pthread_mutex_init(&fin_lock2, NULL);
+	pthread_mutex_init(&alert_lock, NULL);
+	pthread_cond_init(&alert_request_cond, NULL);
+	pthread_cond_init(&alert_reply_cond, NULL);
+
+	fz_set_doc_event_callback(idoc, event_cb, NULL);
+	LOGT("alert_init");
+}
+
+static void alerts_fin()
+{
+	fz_interactive *idoc = fz_interact(doc);
+
+	if (!idoc)
+		return;
+
+	LOGT("Enter alerts_fin");
+	fz_set_doc_event_callback(idoc, NULL, NULL);
+
+	// Set alerts_active false and wake up show_alert and waitForAlertInternal,
+	pthread_mutex_lock(&alert_lock);
+	current_alert = NULL;
+	alerts_active = 0;
+	pthread_cond_signal(&alert_request_cond);
+	pthread_cond_signal(&alert_reply_cond);
+	pthread_mutex_unlock(&alert_lock);
+
+	// Wait for the fin_locks.
+	pthread_mutex_lock(&fin_lock);
+	pthread_mutex_unlock(&fin_lock);
+	pthread_mutex_lock(&fin_lock2);
+	pthread_mutex_unlock(&fin_lock2);
+
+	pthread_cond_destroy(&alert_reply_cond);
+	pthread_cond_destroy(&alert_request_cond);
+	pthread_mutex_destroy(&alert_lock);
+	pthread_mutex_destroy(&fin_lock2);
+	pthread_mutex_destroy(&fin_lock);
+	LOGT("Exit alerts_fin");
+}
+
 JNIEXPORT int JNICALL
 Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jfilename)
 {
 	const char *filename;
 	int result = 0;
+
+#ifdef NDK_PROFILER
+	monstartup("libmupdf.so");
+#endif
 
 	filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
 	if (filename == NULL)
@@ -117,6 +238,7 @@ Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jf
 		fz_try(ctx)
 		{
 			doc = fz_open_document(ctx, (char *)filename);
+			alerts_init();
 		}
 		fz_catch(ctx)
 		{
@@ -818,14 +940,25 @@ Java_com_artifex_mupdf_MuPDFCore_destroying(JNIEnv * env, jobject thiz)
 {
 	int i;
 
+	LOGI("Destroying");
 	fz_free(ctx, hit_bbox);
 	hit_bbox = NULL;
 
 	for (i = 0; i < NUM_CACHE; i++)
 		drop_page_cache(&pages[i]);
 
+	alerts_fin();
+
 	fz_close_document(doc);
 	doc = NULL;
+#ifdef NDK_PROFILER
+	// Apparently we should really be writing to whatever path we get
+	// from calling getFilesDir() in the java part, which supposedly
+	// gives /sdcard/data/data/com.artifex.MuPDF/gmon.out, but that's
+	// unfriendly.
+	setenv("CPUPROFILE", "/sdcard/gmon.out", 1);
+	moncleanup();
+#endif
 }
 
 JNIEXPORT jobjectArray JNICALL
@@ -1124,4 +1257,117 @@ Java_com_artifex_mupdf_MuPDFCore_getFocusedWidgetTypeInternal(JNIEnv * env, jobj
 	}
 
 	return NONE;
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_artifex_mupdf_MuPDFCore_waitForAlertInternal(JNIEnv * env, jobject thiz)
+{
+	jclass alertClass;
+	jmethodID ctor;
+	jstring title;
+	jstring message;
+	int alert_present;
+	fz_alert_event alert;
+
+	LOGT("Enter waitForAlert");
+	pthread_mutex_lock(&fin_lock);
+	pthread_mutex_lock(&alert_lock);
+
+	while (alerts_active && !alert_request)
+		pthread_cond_wait(&alert_request_cond, &alert_lock);
+	alert_request = 0;
+
+	alert_present = (alerts_active && current_alert);
+
+	if (alert_present)
+		alert = *current_alert;
+
+	pthread_mutex_unlock(&alert_lock);
+	pthread_mutex_unlock(&fin_lock);
+	LOGT("Exit waitForAlert %d", alert_present);
+
+	if (!alert_present)
+		return NULL;
+
+	alertClass = (*env)->FindClass(env, "com/artifex/mupdf/MuPDFAlertInternal");
+	if (alertClass == NULL)
+		return NULL;
+
+	ctor = (*env)->GetMethodID(env, alertClass, "<init>", "(Ljava/lang/String;IILjava/lang/String;I)V");
+	if (ctor == NULL)
+		return NULL;
+
+	title = (*env)->NewStringUTF(env, alert.title);
+	if (title == NULL)
+		return NULL;
+
+	message = (*env)->NewStringUTF(env, alert.message);
+	if (message == NULL)
+		return NULL;
+
+	return (*env)->NewObject(env, alertClass, ctor, title, alert.icon_type, alert.button_group_type, message, alert.button_pressed);
+}
+
+JNIEXPORT void JNICALL
+Java_com_artifex_mupdf_MuPDFCore_replyToAlertInternal(JNIEnv * env, jobject thiz, jobject alert)
+{
+	jclass alertClass;
+	jfieldID field;
+	int button_pressed;
+
+	alertClass = (*env)->FindClass(env, "com/artifex/mupdf/MuPDFAlertInternal");
+	if (alertClass == NULL)
+		return;
+
+	field = (*env)->GetFieldID(env, alertClass, "buttonPressed", "I");
+	if (field == NULL)
+		return;
+
+	button_pressed = (*env)->GetIntField(env, alert, field);
+
+	LOGT("Enter replyToAlert");
+	pthread_mutex_lock(&alert_lock);
+
+	if (alerts_active && current_alert)
+	{
+		// Fill in button_pressed and signal reply received.
+		current_alert->button_pressed = button_pressed;
+		alert_reply = 1;
+		pthread_cond_signal(&alert_reply_cond);
+	}
+
+	pthread_mutex_unlock(&alert_lock);
+	LOGT("Exit replyToAlert");
+}
+
+JNIEXPORT void JNICALL
+Java_com_artifex_mupdf_MuPDFCore_startAlertsInternal(JNIEnv * env, jobject thiz)
+{
+	LOGT("Enter startAlerts");
+	pthread_mutex_lock(&alert_lock);
+
+	alert_reply = 0;
+	alert_request = 0;
+	alerts_active = 1;
+	current_alert = NULL;
+
+	pthread_mutex_unlock(&alert_lock);
+	LOGT("Exit startAlerts");
+}
+
+JNIEXPORT void JNICALL
+Java_com_artifex_mupdf_MuPDFCore_stopAlertsInternal(JNIEnv * env, jobject thiz)
+{
+	LOGT("Enter stopAlerts");
+	pthread_mutex_lock(&alert_lock);
+
+	alert_reply = 0;
+	alert_request = 0;
+	alerts_active = 0;
+	current_alert = NULL;
+	pthread_cond_signal(&alert_reply_cond);
+	pthread_cond_signal(&alert_request_cond);
+
+	pthread_mutex_unlock(&alert_lock);
+	LOGT("Exit stopAleerts");
 }

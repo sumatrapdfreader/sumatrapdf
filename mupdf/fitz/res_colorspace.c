@@ -316,6 +316,31 @@ static void fast_cmyk_to_gray(fz_pixmap *dst, fz_pixmap *src)
 	}
 }
 
+#if 0
+static void
+fast_cmyk_to_rgb_ARM(unsigned char *dst, unsigned char *src, int n)
+{
+	asm volatile(
+	ENTER_ARM
+	"stmfd	r13!,{r4-r12,r14}				\n"
+	"@ r0 = dst						\n"
+	"@ r1 = src						\n"
+	"@ r2 = weights						\n"
+	"mov	r4, #0			@ r4 = CMYK = 0		\n"
+	"mvn	r5, #0xFF000000		@ r5 = RGB = FFFFFF	\n"
+	"1:							\n"
+	"ldr	r3, [r1], #4		@ r3 = cmyk		\n"
+	"cmp	r3, r4			@ if (cmyk == CMYK)	\n"
+	"beq	match			@   goto match		\n"
+	"cmp	r3, #0			@ if (cmyk = 0000)	\n"
+	"beq	black			@
+
+	"ldmfd	r13!,{r4-r7,r9,PC}	@ pop, return to thumb	\n"
+	ENTER_THUMB
+	);
+}
+#endif
+
 static void fast_cmyk_to_rgb(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
