@@ -33,7 +33,7 @@ static void EnumeratePrinters()
         bool fDefault = false;
         if (info5Arr[i].Attributes & PRINTER_ATTRIBUTE_DEFAULT)
             fDefault = true;
-        _tprintf(L"Name: %s, port: %s, default: %d\n", printerName, printerPort, (int)fDefault);
+        wprintf(L"Name: %s, port: %s, default: %d\n", printerName, printerPort, (int)fDefault);
     }
     WCHAR buf[512];
     bufSize = dimof(buf);

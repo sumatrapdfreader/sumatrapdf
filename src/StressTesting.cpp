@@ -445,7 +445,7 @@ bool StressTest::GoToNextFile()
 bool StressTest::OpenFile(const WCHAR *fileName)
 {
     bool reuse = rand() % 3 != 1;
-    _tprintf(L"%s\n", fileName);
+    wprintf(L"%s\n", fileName);
     fflush(stdout);
     LoadArgs args(fileName, NULL, true /* show */, reuse);
     WindowInfo *w = LoadDocument(args);

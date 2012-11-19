@@ -133,7 +133,7 @@ static PdfEngine *ps2pdf(const WCHAR *fileName)
         return NULL;
 
     if (GetEnvironmentVariable(L"MULOG", NULL, 0))
-        _tprintf(L"ps2pdf: PDF conversion successful\n");
+        printf("ps2pdf: PDF conversion successful\n");
 
     return PdfEngine::CreateFromStream(stream);
 }
