@@ -5,20 +5,20 @@
 #define AppTools_h
 
 bool IsValidProgramVersion(char *txt);
-int CompareVersion(TCHAR *txt1, TCHAR *txt2);
+int CompareVersion(WCHAR *txt1, WCHAR *txt2);
 
 bool IsRunningInPortableMode();
-TCHAR *AppGenDataFilename(TCHAR *pFilename);
-bool AdjustVariableDriveLetter(TCHAR *path);
+WCHAR *AppGenDataFilename(WCHAR *pFilename);
+bool AdjustVariableDriveLetter(WCHAR *path);
 
 void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 
-TCHAR *ExtractFilenameFromURL(const TCHAR *url);
-bool IsUntrustedFile(const TCHAR *filePath, const TCHAR *fileUrl=NULL);
+WCHAR *ExtractFilenameFromURL(const WCHAR *url);
+bool IsUntrustedFile(const WCHAR *filePath, const WCHAR *fileUrl=NULL);
 
-LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
-void   DDEExecute(LPCTSTR server, LPCTSTR topic, LPCTSTR command);
+WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo=NULL);
+void   DDEExecute(LPCWSTR server, LPCWSTR topic, LPCWSTR command);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

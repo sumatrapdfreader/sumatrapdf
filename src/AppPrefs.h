@@ -109,7 +109,7 @@ bool    Save(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory&
 namespace DisplayModeConv {
 
 const WCHAR *   NameFromEnum(DisplayMode var);
-bool            EnumFromName(const TCHAR *txt, DisplayMode *resOut);
+bool            EnumFromName(const WCHAR *txt, DisplayMode *resOut);
 
 }
 

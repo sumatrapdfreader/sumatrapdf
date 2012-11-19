@@ -43,7 +43,7 @@ public:
         delete thumbnail;
     }
 
-    TCHAR *             filePath;
+    WCHAR *             filePath;
 
     // in order to prevent documents that haven't been opened
     // for a while but used to be opened very frequently

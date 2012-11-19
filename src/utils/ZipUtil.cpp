@@ -12,7 +12,7 @@
 #include <iowin32s.h>
 #include <zip.h>
 
-ZipFile::ZipFile(const TCHAR *path, Allocator *allocator) :
+ZipFile::ZipFile(const WCHAR *path, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator), filepos(0, allocator),
     allocator(allocator), commentLen(0)
 {
@@ -62,11 +62,11 @@ void ZipFile::ExtractFilenames()
         char fileName[MAX_PATH];
         err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
         if (err == UNZ_OK) {
-            TCHAR fileNameT[MAX_PATH];
+            WCHAR fileNameT[MAX_PATH];
             UINT cp = (finfo.flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
             str::conv::FromCodePageBuf(fileNameT, dimof(fileNameT), fileName, cp);
-            filenames.Append((TCHAR *)Allocator::Dup(allocator, fileNameT,
-                (str::Len(fileNameT) + 1) * sizeof(TCHAR)));
+            filenames.Append((WCHAR *)Allocator::Dup(allocator, fileNameT,
+                (str::Len(fileNameT) + 1) * sizeof(WCHAR)));
             fileinfo.Append(finfo);
 
             unz64_file_pos fpos;
@@ -80,7 +80,7 @@ void ZipFile::ExtractFilenames()
     commentLen = ginfo.size_comment;
 }
 
-size_t ZipFile::GetFileIndex(const TCHAR *filename)
+size_t ZipFile::GetFileIndex(const WCHAR *filename)
 {
     return filenames.FindI(filename);
 }
@@ -91,14 +91,14 @@ size_t ZipFile::GetFileCount() const
     return filenames.Count();
 }
 
-const TCHAR *ZipFile::GetFileName(size_t fileindex)
+const WCHAR *ZipFile::GetFileName(size_t fileindex)
 {
     if (fileindex >= filenames.Count())
         return NULL;
     return filenames.At(fileindex);
 }
 
-char *ZipFile::GetFileData(const TCHAR *filename, size_t *len)
+char *ZipFile::GetFileData(const WCHAR *filename, size_t *len)
 {
     return GetFileData(GetFileIndex(filename), len);
 }
@@ -157,7 +157,7 @@ char *ZipFile::GetFileData(size_t fileindex, size_t *len)
     return result;
 }
 
-FILETIME ZipFile::GetFileTime(const TCHAR *filename)
+FILETIME ZipFile::GetFileTime(const WCHAR *filename)
 {
     return GetFileTime(GetFileIndex(filename));
 }
@@ -192,22 +192,22 @@ char *ZipFile::GetComment(size_t *len)
     return comment;
 }
 
-bool ZipFile::UnzipFile(const TCHAR *filename, const TCHAR *dir, const TCHAR *unzippedName)
+bool ZipFile::UnzipFile(const WCHAR *filename, const WCHAR *dir, const WCHAR *unzippedName)
 {
     size_t len;
     char *data = GetFileData(filename, &len);
     if (!data)
         return false;
 
-    str::Str<TCHAR> filePath(MAX_PATH * 2, allocator);
+    str::Str<WCHAR> filePath(MAX_PATH * 2, allocator);
     filePath.Append(dir);
-    if (!str::EndsWith(filePath.Get(), _T("\\")))
-        filePath.Append(_T("\\"));
+    if (!str::EndsWith(filePath.Get(), L"\\"))
+        filePath.Append(L"\\");
     if (unzippedName) {
         filePath.Append(unzippedName);
     } else {
         filePath.Append(filename);
-        str::TransChars(filePath.Get(), _T("/"), _T("\\"));
+        str::TransChars(filePath.Get(), L"/", L"\\");
     }
 
     bool ok = file::WriteAll(filePath.Get(), data, len);
@@ -235,7 +235,7 @@ ZipCreator::~ZipCreator()
 // it's not a good idea to save absolute windows-style
 // in the zip file, so we try to pick an intelligent
 // name if filePath is absolute and nameInZip is NULL
-bool ZipCreator::AddFile(const TCHAR *filePath, const TCHAR *nameInZip)
+bool ZipCreator::AddFile(const WCHAR *filePath, const WCHAR *nameInZip)
 {
     if (!file::Exists(filePath))
         return false;

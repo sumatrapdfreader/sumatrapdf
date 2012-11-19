@@ -287,7 +287,7 @@ void OnUninstallationFinished()
     DestroyWindow(gHwndButtonInstUninst);
     gHwndButtonInstUninst = NULL;
     CreateButtonExit(gHwndFrame);
-    SetMsg(TAPP " has been uninstalled.", gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
+    SetMsg(TAPP L" has been uninstalled.", gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gGlobalData.firstError;
     InvalidateFrame();
 

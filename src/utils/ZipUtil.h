@@ -15,27 +15,27 @@ class ZipFile {
     uLong commentLen;
 
 public:
-    ZipFile(const TCHAR *path, Allocator *allocator=NULL);
+    ZipFile(const WCHAR *path, Allocator *allocator=NULL);
     ZipFile(IStream *stream, Allocator *allocator=NULL);
     ~ZipFile();
 
     size_t GetFileCount() const;
     // the result is owned by ZipFile
-    const TCHAR *GetFileName(size_t fileindex);
+    const WCHAR *GetFileName(size_t fileindex);
     // reverts GetFileName
-    size_t GetFileIndex(const TCHAR *filename);
+    size_t GetFileIndex(const WCHAR *filename);
 
     // caller must free() the result (or rather Allocator::Free it)
-    char *GetFileData(const TCHAR *filename, size_t *len=NULL);
+    char *GetFileData(const WCHAR *filename, size_t *len=NULL);
     char *GetFileData(size_t fileindex, size_t *len=NULL);
 
-    FILETIME GetFileTime(const TCHAR *filename);
+    FILETIME GetFileTime(const WCHAR *filename);
     FILETIME GetFileTime(size_t fileindex);
 
     // caller must free() the result (or rather Allocator::Free it)
     char *GetComment(size_t *len=NULL);
 
-    bool UnzipFile(const TCHAR *filename, const TCHAR *dir, const TCHAR *unzippedName=NULL);
+    bool UnzipFile(const WCHAR *filename, const WCHAR *dir, const WCHAR *unzippedName=NULL);
 
 protected:
     void ExtractFilenames();
@@ -49,9 +49,9 @@ public:
     ZipCreator();
     ~ZipCreator();
 
-    bool AddFile(const TCHAR *filePath, const TCHAR *nameInZip=NULL);
-    bool AddFileFromDir(const TCHAR *filePath, const TCHAR *dir);
-    bool SaveAs(const TCHAR *zipFilePath);
+    bool AddFile(const WCHAR *filePath, const WCHAR *nameInZip=NULL);
+    bool AddFileFromDir(const WCHAR *filePath, const WCHAR *dir);
+    bool SaveAs(const WCHAR *zipFilePath);
 };
 
 #endif

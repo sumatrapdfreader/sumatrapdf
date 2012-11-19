@@ -7,10 +7,10 @@
 #include "FileUtil.h"
 
 // Start directory traversal in a given dir
-bool DirIter::StartDirIter(const TCHAR *dir)
+bool DirIter::StartDirIter(const WCHAR *dir)
 {
     currDir.Set(str::Dup(dir));
-    ScopedMem<WCHAR> pattern(path::Join(currDir, _T("*")));
+    ScopedMem<WCHAR> pattern(path::Join(currDir, L"*"));
     currFindHandle = FindFirstFile(pattern, &currFindData);
     if (INVALID_HANDLE_VALUE == currFindHandle)
         return false;
@@ -31,7 +31,7 @@ bool DirIter::TryNextDir()
 }
 
 // Start iteration in a given dir. Returns false if error.
-bool DirIter::Start(const TCHAR *dir, bool recursive)
+bool DirIter::Start(const WCHAR *dir, bool recursive)
 {
     this->recursive = recursive;
     foundNext = StartDirIter(dir);
@@ -56,7 +56,7 @@ static bool IsRegularFile(DWORD fileAttr)
 }
 
 // "." and ".." are special
-static bool IsSpecialDir(const TCHAR *s)
+static bool IsSpecialDir(const WCHAR *s)
 {
     if ('.' == *s++) {
         if (*s == 0)
@@ -70,21 +70,21 @@ static bool IsSpecialDir(const TCHAR *s)
 // Returns a path of the next file (relative to the path passed to Start()).
 // Returns NULL if finished iteration.
 // Returned value is valid only until we call Next() again.
-const TCHAR *DirIter::Next()
+const WCHAR *DirIter::Next()
 {
     // when we enter here, currFindData has info for an entry
     // we haven't processed yet (filled by StartDirIter() or
     // ourselves at the end) unless foundNext is false
     currPath.Set(NULL);
     while (foundNext && !currPath) {
-        TCHAR *f = currFindData.cFileName;
+        WCHAR *f = currFindData.cFileName;
         if ((currFindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             if (recursive && !IsSpecialDir(f)) {
-                TCHAR *d = path::Join(currDir, f);
+                WCHAR *d = path::Join(currDir, f);
                 dirsToVisit.Append(d);
             }
         } else if (IsRegularFile(currFindData.dwFileAttributes)) {
-            TCHAR *p = path::Join(currDir, f);
+            WCHAR *p = path::Join(currDir, f);
             currPath.Set(p);
         }
         BOOL hasMore = FindNextFile(currFindHandle, &currFindData);
