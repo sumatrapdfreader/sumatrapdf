@@ -12,8 +12,8 @@ typedef HANDLE (WINAPI * CreateTransactionPtr)(LPSECURITY_ATTRIBUTES lpTransacti
 typedef BOOL (WINAPI * CommitTransactionPtr)(HANDLE TransactionHandle);
 typedef BOOL (WINAPI * RollbackTransactionPtr)(HANDLE TransactionHandle);
 // from WinBase.h
-typedef HANDLE (WINAPI * CreateFileTransactedPtr)(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, HANDLE hTransaction, PUSHORT pusMiniVersion, PVOID pExtendedParameter);
-typedef BOOL (WINAPI * DeleteFileTransactedPtr)(LPCTSTR lpFileName, HANDLE hTransaction);
+typedef HANDLE (WINAPI * CreateFileTransactedPtr)(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, HANDLE hTransaction, PUSHORT pusMiniVersion, PVOID pExtendedParameter);
+typedef BOOL (WINAPI * DeleteFileTransactedPtr)(LPCWSTR lpFileName, HANDLE hTransaction);
 // from WinError.h
 #ifndef ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED
 #define ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED 6832L

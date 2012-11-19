@@ -311,8 +311,8 @@ void UpdateTocExpansionState(WindowInfo *win, HTREEITEM hItem)
 }
 
 // copied from mupdf/fitz/dev_text.c
-#define ISLEFTTORIGHWCHAR(c) ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
-#define ISRIGHTTOLEFWCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
+#define ISLEFTTORIGHTCHAR(c) ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
+#define ISRIGHTTOLEFTCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
 
 static void GetLeftRightCounts(DocTocItem *node, int& l2r, int& r2l)
 {
@@ -320,9 +320,9 @@ static void GetLeftRightCounts(DocTocItem *node, int& l2r, int& r2l)
         return;
     if (node->title) {
         for (const WCHAR *c = node->title; *c; c++) {
-            if (ISLEFTTORIGHWCHAR(*c))
+            if (ISLEFTTORIGHTCHAR(*c))
                 l2r++;
-            else if (ISRIGHTTOLEFWCHAR(*c))
+            else if (ISRIGHTTOLEFTCHAR(*c))
                 r2l++;
         }
     }

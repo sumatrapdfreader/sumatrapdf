@@ -156,7 +156,7 @@ public:
 
     // IPersist (for Windows XP)
     IFACEMETHODIMP GetClassID(CLSID *pClassID) {
-        return CLSIDFromString(m_clsid, pClassID);
+        return CLSIDFromString((WCHAR *)m_clsid, pClassID);
     }
 
     // IPersistFile (for Windows XP)

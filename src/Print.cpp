@@ -642,7 +642,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     }
 
     HANDLE printer;
-    bool ok = OpenPrinter((LPTSTR)printerName, &printer, NULL);
+    bool ok = OpenPrinter((WCHAR *)printerName, &printer, NULL);
     if (!ok) {
         if (displayErrors)
             MessageBox(NULL, _TR("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
@@ -659,7 +659,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
 
     DWORD structSize = DocumentProperties(NULL,
         printer,                /* Handle to our printer. */
-        (LPTSTR)printerName,    /* Name of the printer. */ 
+        (WCHAR *)printerName,   /* Name of the printer. */ 
         NULL,                   /* Asking for size, so */
         NULL,                   /* these are not used. */
         0);                     /* Zero returns buffer size. */
@@ -670,7 +670,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     // Get the default DevMode for the printer and modify it for your needs.
     DWORD returnCode = DocumentProperties(NULL,
         printer,
-        (LPTSTR)printerName,
+        (WCHAR *)printerName,
         devMode,        /* The address of the buffer to fill. */
         NULL,           /* Not using the input buffer. */
         DM_OUT_BUFFER); /* Have the output buffer filled. */
@@ -688,7 +688,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
      */
     DocumentProperties(NULL,
         printer,
-        (LPTSTR)printerName,
+        (WCHAR *)printerName,
         devMode,        /* Reuse our buffer for output. */
         devMode,        /* Pass the driver our changes. */
         DM_IN_BUFFER |  /* Commands to Merge our changes and */

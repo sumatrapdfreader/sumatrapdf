@@ -116,13 +116,13 @@ DLLEXPORT NPError WINAPI NP_Shutdown(void)
     return NPERR_NO_ERROR;
 }
 
-bool EnsureRegKey(LPCTSTR lpKey)
+bool EnsureRegKey(const WCHAR *lpKey)
 {
     CreateRegKey(HKEY_LOCAL_MACHINE, lpKey);
     return CreateRegKey(HKEY_CURRENT_USER, lpKey);
 }
 
-bool SetRegValue(LPCTSTR lpKey, LPCTSTR lpName, LPCTSTR lpValue)
+bool SetRegValue(const WCHAR *lpKey, const WCHAR *lpName, const WCHAR *lpValue)
 {
     WriteRegStr(HKEY_LOCAL_MACHINE, lpKey, lpName, lpValue);
     return WriteRegStr(HKEY_CURRENT_USER, lpKey, lpName, lpValue);
@@ -189,7 +189,7 @@ DLLEXPORT STDAPI DllUnregisterServer(VOID)
 
 /* ::::: Auxiliary Methods ::::: */
 
-bool GetExePath(LPTSTR lpPath, int len)
+bool GetExePath(WCHAR *lpPath, size_t len)
 {
     // Search the plugin's directory first
     GetModuleFileName(g_hInstance, lpPath, len - 2);
@@ -236,7 +236,7 @@ HANDLE CreateTempFile(WCHAR *filePathBufOut, size_t bufSize)
 
 struct InstanceData {
     NPWindow *  npwin;
-    LPCTSTR     message;
+    LPCWSTR     message;
     WCHAR       filepath[MAX_PATH];
     HANDLE      hFile;
     HANDLE      hProcess;

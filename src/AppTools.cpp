@@ -359,13 +359,13 @@ enum EditorPathType {
 };
 
 static struct {
-    PTSTR          Name;                // Editor name
+    const WCHAR *  Name;                // Editor name
     EditorPathType Type;                // Type of the path information obtained from the registry
     HKEY           RegRoot;             // Root of the regkey
-    PTSTR          RegKey;              // Registry key path
-    PTSTR          RegValue;            // Registry value name
-    PTSTR          BinaryFilename;      // Editor's binary file name
-    PTSTR          InverseSearchArgs;   // Parameters to be passed to the editor;
+    const WCHAR *  RegKey;              // Registry key path
+    const WCHAR *  RegValue;            // Registry value name
+    const WCHAR *  BinaryFilename;      // Editor's binary file name
+    const WCHAR *  InverseSearchArgs;   // Parameters to be passed to the editor;
                                         // use placeholder '%f' for path to source file and '%l' for line number.
 } editor_rules[] = {
     L"WinEdt",             BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe", NULL,
@@ -423,12 +423,12 @@ static struct {
 //      hwndCombo   -- (optional) handle to a combo list that will be filled with the list of possible inverse search commands.
 // Returns:
 //      the inverse search command of the first detected editor (the caller needs to free() the result).
-LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
+WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
 {
-    LPTSTR firstEditor = NULL;
+    WCHAR *firstEditor = NULL;
     ScopedMem<WCHAR> path(NULL);
 
-    WCHAR *editorToSkip = NULL;
+    const WCHAR *editorToSkip = NULL;
 
     for (int i = 0; i < dimof(editor_rules); i++)
     {

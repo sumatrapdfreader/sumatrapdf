@@ -2659,7 +2659,7 @@ static void OnMenuSaveAs(WindowInfo& win)
                 SetFileAttributes(realDstFileName, attributes & ~attributesToDrop);
         } else {
             WCHAR *msgBuf, *errorMsg;
-            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPTSTR)&msgBuf, 0, NULL)) {
+            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPWSTR)&msgBuf, 0, NULL)) {
                 errorMsg = str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf);
                 LocalFree(msgBuf);
             } else {
@@ -2851,7 +2851,7 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
             int cbLength = CommDlg_OpenSave_GetSpec(GetParent(hDlg), NULL, 0) + MAX_PATH;
             if (cbLength >= 0 && lpofn->nMaxFile < (DWORD)cbLength) {
                 WCHAR *oldBuffer = lpofn->lpstrFile;
-                lpofn->lpstrFile = (LPTSTR)realloc(lpofn->lpstrFile, cbLength * sizeof(WCHAR));
+                lpofn->lpstrFile = (LPWSTR)realloc(lpofn->lpstrFile, cbLength * sizeof(WCHAR));
                 if (lpofn->lpstrFile)
                     lpofn->nMaxFile = cbLength;
                 else
@@ -3527,7 +3527,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 static void FrameOnChar(WindowInfo& win, WPARAM key)
 {
     if (IsCharUpper((WCHAR)key))
-        key = (WCHAR)CharLower((LPTSTR)(WCHAR)key);
+        key = (WCHAR)CharLower((LPWSTR)(WCHAR)key);
 
     if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation) {
         win.ChangePresentationMode(PM_ENABLED);
