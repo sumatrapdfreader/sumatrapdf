@@ -539,12 +539,12 @@ static bool BuildSymbolPath()
 
 #if 0
     WCHAR buf[512];
-    DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, dimof(buf));
+    DWORD res = GetEnvironmentVariable(L"_NT_SYMBOL_PATH", buf, dimof(buf));
     if (0 < res && res < dimof(buf)) {
         path.Append(buf);
         path.Append(L";");
     }
-    res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, dimof(buf));
+    res = GetEnvironmentVariable(L"_NT_ALTERNATE_SYMBOL_PATH", buf, dimof(buf));
     if (0 < res && res < dimof(buf)) {
         path.Append(buf);
         path.Append(L";");

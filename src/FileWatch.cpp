@@ -166,8 +166,8 @@ bool FileWatcher::NotifyChange()
 
     // Note: the ReadDirectoryChangesW API fills the buffer with WCHAR strings.
     for (;;) {
-        ScopedMem<WCHAR> filenameW(str::DupN(pFileNotify->FileName, pFileNotify->FileNameLength / sizeof(WCHAR)));
-        bool isWatchedFile = str::EqI(filenameW, path::GetBaseName(filePath));
+        ScopedMem<WCHAR> filename(str::DupN(pFileNotify->FileName, pFileNotify->FileNameLength / sizeof(WCHAR)));
+        bool isWatchedFile = str::EqI(filename, path::GetBaseName(filePath));
 
         // is it the file that is being watched?
         if (isWatchedFile && pFileNotify->Action == FILE_ACTION_MODIFIED) {

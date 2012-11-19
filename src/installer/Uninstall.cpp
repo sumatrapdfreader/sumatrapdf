@@ -323,7 +323,7 @@ void OnCreateWindow(HWND hwnd)
 
 void CreateMainWindow()
 {
-    gHwndFrame = CreateWindowW(
+    gHwndFrame = CreateWindow(
         INSTALLER_FRAME_CLASS_NAME, TAPP L" " CURR_VERSION_STR L" Uninstaller",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
         CW_USEDEFAULT, CW_USEDEFAULT,
@@ -334,7 +334,7 @@ void CreateMainWindow()
 
 void ShowUsage()
 {
-    MessageBoxW(NULL, L"uninstall.exe [/s][/d <path>]\n\
+    MessageBox(NULL, L"uninstall.exe [/s][/d <path>]\n\
     \n\
     /s\tuninstalls " TAPP L" silently (without user interaction).\n\
     /d\tchanges the directory from where " TAPP L" will be uninstalled.", TAPP L" Uninstaller Usage", MB_OK | MB_ICONINFORMATION);

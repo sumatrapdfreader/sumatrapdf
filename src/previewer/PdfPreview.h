@@ -161,7 +161,7 @@ public:
 
     // IPersistFile (for Windows XP)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
-        HANDLE hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
             return E_INVALIDARG;
         DWORD size = GetFileSize(hFile, NULL), read;
