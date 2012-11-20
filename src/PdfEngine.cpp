@@ -468,7 +468,7 @@ static WCHAR *LinkifyMultilineText(LinkRectList *list, WCHAR *pageText, WCHAR *s
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
 inline bool IsEmailUsernameChar(WCHAR c)
 {
-    return iswalnum(c) || c && str::FindChar(L".!#$%&'*+-=?^`{|}~", c);
+    return iswalnum(c) || c && str::FindChar(L"!#$%&'*+/=?^_`{|}~-", c);
 }
 inline bool IsEmailDomainChar(WCHAR c)
 {
