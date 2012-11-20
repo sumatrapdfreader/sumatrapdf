@@ -300,7 +300,6 @@ pdf_image_get_pixmap(fz_context *ctx, fz_image *image_, int w, int h)
 	/* We need to make a new one. */
 	native_l2factor = l2factor;
 	stm = fz_open_image_decomp_stream(ctx, image->buffer, &native_l2factor);
-	l2factor = native_l2factor; /* SumatraPDF: this doesn't work yet */
 
 	return decomp_image_from_stream(ctx, stm, image, 0, 0, l2factor, native_l2factor, 1);
 }
