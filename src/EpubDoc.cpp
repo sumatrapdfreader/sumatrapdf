@@ -1458,7 +1458,9 @@ static char *TextFindLinkEnd(str::Str<char>& htmlData, char *curr, bool fromWww=
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
 inline bool IsEmailUsernameChar(char c)
 {
-    return isalnum((unsigned char)c) || c && str::FindChar(".!#$%&'*+/=?^_`{|}~-", c);
+    // explicitly excluding the '/' from the list, as it is more
+    // often part of a URL or path than of an email address
+    return isalnum((unsigned char)c) || c && str::FindChar(".!#$%&'*+=?^_`{|}~-", c);
 }
 inline bool IsEmailDomainChar(char c)
 {
