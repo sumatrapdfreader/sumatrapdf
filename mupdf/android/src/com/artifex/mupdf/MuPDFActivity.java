@@ -12,7 +12,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.RectF;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -102,14 +101,17 @@ public class MuPDFActivity extends Activity
 	private ImageButton  mSearchBack;
 	private ImageButton  mSearchFwd;
 	private EditText     mSearchText;
-	private SafeAsyncTask<Void,Integer,SearchTaskResult> mSearchTask;
+	private AsyncTask<Void,Integer,SearchTaskResult> mSearchTask;
 	//private SearchTaskResult mSearchTaskResult;
 	private AlertDialog.Builder mAlertBuilder;
 	private LinkState    mLinkState = LinkState.DEFAULT;
 	private final Handler mHandler = new Handler();
+	private boolean mAlertsActive= false;
 	private AsyncTask<Void,Void,MuPDFAlert> mAlertTask;
+	private AlertDialog mAlertDialog;
 
 	public void createAlertWaiter() {
+		mAlertsActive = true;
 		// All mupdf library calls are performed on asynchronous tasks to avoid stalling
 		// the UI. Some calls can lead to javascript-invoked requests to display an
 		// alert dialog and collect a reply from the user. The task has to be blocked
@@ -122,10 +124,17 @@ public class MuPDFActivity extends Activity
 			mAlertTask.cancel(true);
 			mAlertTask = null;
 		}
-		mAlertTask = new SafeAsyncTask<Void,Void,MuPDFAlert>() {
+		if (mAlertDialog != null) {
+			mAlertDialog.cancel();
+			mAlertDialog = null;
+		}
+		mAlertTask = new AsyncTask<Void,Void,MuPDFAlert>() {
 
 			@Override
 			protected MuPDFAlert doInBackground(Void... arg0) {
+				if (!mAlertsActive)
+					return null;
+
 				return core.waitForAlert();
 			}
 
@@ -139,23 +148,26 @@ public class MuPDFActivity extends Activity
 					pressed[i] = MuPDFAlert.ButtonPressed.None;
 				DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
-						int index = 0;
-						switch (which) {
-						case AlertDialog.BUTTON1: index=0; break;
-						case AlertDialog.BUTTON2: index=1; break;
-						case AlertDialog.BUTTON3: index=2; break;
+						mAlertDialog = null;
+						if (mAlertsActive) {
+							int index = 0;
+							switch (which) {
+							case AlertDialog.BUTTON1: index=0; break;
+							case AlertDialog.BUTTON2: index=1; break;
+							case AlertDialog.BUTTON3: index=2; break;
+							}
+							result.buttonPressed = pressed[index];
+							// Send the user's response to the core, so that it can
+							// continue processing.
+							core.replyToAlert(result);
+							// Create another alert-waiter to pick up the next alert.
+							createAlertWaiter();
 						}
-						result.buttonPressed = pressed[index];
-						// Send the user's response to the core, so that it can
-						// continue processing.
-						core.replyToAlert(result);
-						// Create another alert-waiter to pick up the next alert.
-						createAlertWaiter();
 					}
 				};
-				AlertDialog alert = mAlertBuilder.create();
-				alert.setTitle(result.title);
-				alert.setMessage(result.message);
+				mAlertDialog = mAlertBuilder.create();
+				mAlertDialog.setTitle(result.title);
+				mAlertDialog.setMessage(result.message);
 				switch (result.iconType)
 				{
 				case Error:
@@ -170,31 +182,34 @@ public class MuPDFActivity extends Activity
 				switch (result.buttonGroupType)
 				{
 				case OkCancel:
-					alert.setButton(AlertDialog.BUTTON2, "Cancel", listener);
+					mAlertDialog.setButton(AlertDialog.BUTTON2, "Cancel", listener);
 					pressed[1] = MuPDFAlert.ButtonPressed.Cancel;
 				case Ok:
-					alert.setButton(AlertDialog.BUTTON1, "Ok", listener);
+					mAlertDialog.setButton(AlertDialog.BUTTON1, "Ok", listener);
 					pressed[0] = MuPDFAlert.ButtonPressed.Ok;
 					break;
 				case YesNoCancel:
-					alert.setButton(AlertDialog.BUTTON3, "Cancel", listener);
+					mAlertDialog.setButton(AlertDialog.BUTTON3, "Cancel", listener);
 					pressed[2] = MuPDFAlert.ButtonPressed.Cancel;
 				case YesNo:
-					alert.setButton(AlertDialog.BUTTON1, "Yes", listener);
+					mAlertDialog.setButton(AlertDialog.BUTTON1, "Yes", listener);
 					pressed[0] = MuPDFAlert.ButtonPressed.Yes;
-					alert.setButton(AlertDialog.BUTTON2, "No", listener);
+					mAlertDialog.setButton(AlertDialog.BUTTON2, "No", listener);
 					pressed[1] = MuPDFAlert.ButtonPressed.No;
 					break;
 				}
-				alert.setOnCancelListener(new DialogInterface.OnCancelListener() {
+				mAlertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
 					public void onCancel(DialogInterface dialog) {
-						result.buttonPressed = MuPDFAlert.ButtonPressed.None;
-						core.replyToAlert(result);
-						createAlertWaiter();
+						mAlertDialog = null;
+						if (mAlertsActive) {
+							result.buttonPressed = MuPDFAlert.ButtonPressed.None;
+							core.replyToAlert(result);
+							createAlertWaiter();
+						}
 					}
 				});
 
-				alert.show();
+				mAlertDialog.show();
 			}
 		};
 
@@ -202,6 +217,11 @@ public class MuPDFActivity extends Activity
 	}
 
 	public void destroyAlertWaiter() {
+		mAlertsActive = false;
+		if (mAlertDialog != null) {
+			mAlertDialog.cancel();
+			mAlertDialog = null;
+		}
 		if (mAlertTask != null) {
 			mAlertTask.cancel(true);
 			mAlertTask = null;
@@ -794,7 +814,7 @@ public class MuPDFActivity extends Activity
 		});
 		progressDialog.setMax(core.countPages());
 
-		mSearchTask = new SafeAsyncTask<Void,Integer,SearchTaskResult>() {
+		mSearchTask = new AsyncTask<Void,Integer,SearchTaskResult>() {
 			@Override
 			protected SearchTaskResult doInBackground(Void... params) {
 				int index = startIndex;
@@ -857,7 +877,7 @@ public class MuPDFActivity extends Activity
 			}
 		};
 
-		mSearchTask.safeExecute();
+		mSearchTask.execute();
 	}
 
 	@Override

@@ -24,13 +24,13 @@ class PassClickResult {
 
 public class MuPDFPageView extends PageView {
 	private final MuPDFCore mCore;
-	private SafeAsyncTask<Void,Void,PassClickResult> mPassClick;
+	private AsyncTask<Void,Void,PassClickResult> mPassClick;
 	private RectF mWidgetAreas[];
-	private SafeAsyncTask<Void,Void,RectF[]> mLoadWidgetAreas;
+	private AsyncTask<Void,Void,RectF[]> mLoadWidgetAreas;
 	private AlertDialog.Builder mTextEntryBuilder;
 	private AlertDialog mTextEntry;
 	private EditText mEditText;
-	private SafeAsyncTask<String,Void,Boolean> mSetWidgetText;
+	private AsyncTask<String,Void,Boolean> mSetWidgetText;
 	private Runnable changeReporter;
 
 	public MuPDFPageView(Context c, MuPDFCore core, Point parentSize) {
@@ -48,7 +48,7 @@ public class MuPDFPageView extends PageView {
 		});
 		mTextEntryBuilder.setPositiveButton("Okay", new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int which) {
-				mSetWidgetText = new SafeAsyncTask<String,Void,Boolean> () {
+				mSetWidgetText = new AsyncTask<String,Void,Boolean> () {
 					@Override
 					protected Boolean doInBackground(String... arg0) {
 						return mCore.setFocusedWidgetText(mPageNumber, arg0[0]);
@@ -61,7 +61,7 @@ public class MuPDFPageView extends PageView {
 					}
 				};
 
-				mSetWidgetText.safeExecute(mEditText.getText().toString());
+				mSetWidgetText.execute(mEditText.getText().toString());
 			}
 		});
 		mTextEntry = mTextEntryBuilder.create();
@@ -102,7 +102,7 @@ public class MuPDFPageView extends PageView {
 		}
 
 		if (hitWidget) {
-			mPassClick = new SafeAsyncTask<Void,Void,PassClickResult>() {
+			mPassClick = new AsyncTask<Void,Void,PassClickResult>() {
 				@Override
 				protected PassClickResult doInBackground(Void... arg0) {
 					return mCore.passClickEvent(mPageNumber, docRelX, docRelY);
@@ -122,7 +122,7 @@ public class MuPDFPageView extends PageView {
 				}
 			};
 
-			mPassClick.safeExecute();
+			mPassClick.execute();
 		}
 
 		return hitWidget;
@@ -147,7 +147,7 @@ public class MuPDFPageView extends PageView {
 
 	@Override
 	public void setPage(final int page, PointF size) {
-		mLoadWidgetAreas = new SafeAsyncTask<Void,Void,RectF[]> () {
+		mLoadWidgetAreas = new AsyncTask<Void,Void,RectF[]> () {
 			@Override
 			protected RectF[] doInBackground(Void... arg0) {
 				return mCore.getWidgetAreas(page);
@@ -159,7 +159,7 @@ public class MuPDFPageView extends PageView {
 			}
 		};
 
-		mLoadWidgetAreas.safeExecute();
+		mLoadWidgetAreas.execute();
 
 		super.setPage(page, size);
 	}

@@ -15,7 +15,7 @@ struct pdf_js_s
 
 static pdf_jsimp_obj *app_alert(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
 {
-	pdf_js  *js = (pdf_js *)jsctx;
+	pdf_js *js = (pdf_js *)jsctx;
 	fz_context *ctx = js->doc->ctx;
 	pdf_jsimp_obj *cMsg_obj = NULL;
 	pdf_jsimp_obj *nIcon_obj = NULL;
@@ -186,9 +186,9 @@ static pdf_obj *load_color(fz_context *ctx, pdf_jsimp *imp, pdf_jsimp_obj *val)
 
 static pdf_jsimp_obj *field_buttonSetCaption(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
 {
-	pdf_js  *js = (pdf_js *)jsctx;
+	pdf_js *js = (pdf_js *)jsctx;
 	pdf_obj *field = (pdf_obj *)obj;
-	char    *name;
+	char *name;
 
 	if (argc != 1)
 		return NULL;
@@ -448,7 +448,7 @@ static char *utf8_to_pdf(fz_context *ctx, char *utf8)
 
 static pdf_jsimp_obj *doc_getField(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
 {
-	pdf_js  *js = (pdf_js *)jsctx;
+	pdf_js *js = (pdf_js *)jsctx;
 	fz_context *ctx = js->doc->ctx;
 	pdf_obj *dict = NULL;
 	char *utf8;
@@ -513,7 +513,7 @@ static void reset_field(pdf_js *js, pdf_jsimp_obj *item)
 
 static pdf_jsimp_obj *doc_resetForm(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
 {
-	pdf_js  *js = (pdf_js *)jsctx;
+	pdf_js *js = (pdf_js *)jsctx;
 	fz_context *ctx = js->doc->ctx;
 	pdf_jsimp_obj *arr = NULL;
 	pdf_jsimp_obj *elem = NULL;
@@ -581,7 +581,7 @@ static pdf_jsimp_obj *doc_resetForm(void *jsctx, void *obj, int argc, pdf_jsimp_
 
 static pdf_jsimp_obj *doc_print(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
 {
-	pdf_js  *js = (pdf_js *)jsctx;
+	pdf_js *js = (pdf_js *)jsctx;
 
 	pdf_event_issue_print(js->doc);
 
@@ -590,7 +590,7 @@ static pdf_jsimp_obj *doc_print(void *jsctx, void *obj, int argc, pdf_jsimp_obj 
 
 static pdf_jsimp_obj *doc_mailDoc(void *jsctx, void *obj, int argc, pdf_jsimp_obj *args[])
 {
-	pdf_js  *js = (pdf_js *)jsctx;
+	pdf_js *js = (pdf_js *)jsctx;
 	fz_context *ctx = js->doc->ctx;
 	pdf_jsimp_obj *bUI_obj = NULL;
 	pdf_jsimp_obj *cTo_obj = NULL;
@@ -690,7 +690,7 @@ static pdf_jsimp_obj *doc_mailDoc(void *jsctx, void *obj, int argc, pdf_jsimp_ob
 
 static void declare_dom(pdf_js *js)
 {
-	pdf_jsimp      *imp       = js->imp;
+	pdf_jsimp *imp = js->imp;
 
 	/* Create the document type */
 	js->doctype = pdf_jsimp_new_type(imp, NULL);
@@ -748,7 +748,7 @@ static void preload_helpers(pdf_js *js)
 pdf_js *pdf_new_js(pdf_document *doc)
 {
 	fz_context *ctx = doc->ctx;
-	pdf_js     *js = NULL;
+	pdf_js *js = NULL;
 
 	fz_var(js);
 	fz_try(ctx)
@@ -784,7 +784,7 @@ void pdf_js_load_document_level(pdf_js *js)
 {
 	pdf_document *doc = js->doc;
 	fz_context *ctx = doc->ctx;
-	pdf_obj    *javascript = NULL;
+	pdf_obj *javascript = NULL;
 	char *codebuf = NULL;
 
 	fz_var(javascript);

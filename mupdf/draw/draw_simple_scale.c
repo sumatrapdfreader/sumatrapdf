@@ -611,8 +611,8 @@ scale_row_to_temp1(unsigned char *dst, unsigned char *src, fz_weights *weights)
 	"subs	r9, r9, #1		@ len--			\n"
 	"blt	3f			@ while (len >= 0)	\n"
 	"2:				@ {			\n"
-	"ldrgt	r6, [r2], #4		@ r6  = *contrib++	\n"
-	"ldrgtb	r7, [r4], #1		@ r7  = *min++		\n"
+	"ldrgt	r6, [r2], #4		@ r6 = *contrib++	\n"
+	"ldrgtb	r7, [r4], #1		@ r7 = *min++		\n"
 	"ldr	r12,[r2], #4		@ r12 = *contrib++	\n"
 	"ldrb	r14,[r4], #1		@ r14 = *min++		\n"
 	"mlagt	r5, r6, r7, r5		@ g += r6 * r7		\n"
@@ -818,7 +818,7 @@ scale_row_from_temp(unsigned char *dst, unsigned char *src, fz_weights *weights,
 	"blt	4f			@ while (x >= 0) {	\n"
 #ifndef ARCH_ARM_CAN_LOAD_UNALIGNED
 	"tst	r3, #3			@ if ((r3 & 3)		\n"
-	"tsteq	r1, #3			@     || (r1 & 3))	\n"
+	"tsteq	r1, #3			@	|| (r1 & 3))	\n"
 	"bne	4f			@ can't do fast code	\n"
 #endif
 	"ldr	r9, =0x00FF00FF		@ r9 = 0x00FF00FF	\n"

@@ -1731,9 +1731,8 @@ fz_draw_free_user(fz_device *devp)
 			fz_drop_pixmap(ctx, state[1].shape);
 	}
 	/* We never free the dest/mask/shape at level 0, as:
-	 *  1) dest is passed in and ownership remains with the
-	 *     caller.
-	 *  2) shape and mask are NULL at level 0.
+	 * 1) dest is passed in and ownership remains with the caller.
+	 * 2) shape and mask are NULL at level 0.
 	 */
 	if (dev->stack != &dev->init_stack[0])
 		fz_free(ctx, dev->stack);

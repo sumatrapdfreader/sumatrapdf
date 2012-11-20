@@ -275,7 +275,7 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 		{
 			combine = 3;
 		}
-		else	/* Assume it's the default (AnyOn) */
+		else /* Assume it's the default (AnyOn) */
 		{
 			combine = 0;
 		}

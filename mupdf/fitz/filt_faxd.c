@@ -31,7 +31,7 @@ enum
 	cfd_white_initial_bits = 8,
 	cfd_black_initial_bits = 7,
 	cfd_2d_initial_bits = 7,
-	cfd_uncompressed_initial_bits = 6	/* must be 6 */
+	cfd_uncompressed_initial_bits = 6 /* must be 6 */
 };
 
 /* non-run codes in tables */

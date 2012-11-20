@@ -8,23 +8,25 @@
 
 typedef struct pdf_write_options_s pdf_write_options;
 
-/* As part of linearization, we need to keep a list of what objects are used
- * by what page. We do this by recording the objects used in a given page
- * in a page_objects structure. We have a list of these structures (one per
- * page) in the page_objects_list structure.
- *
- * The page_objects structure maintains a heap in the object array, so
- * insertion takes log n time, and we can heapsort and dedupe at the end for
- * a total worse case n log n time.
- *
- * The magic heap invariant is that:
- *   entry[n] >= entry[(n+1)*2-1] & entry[n] >= entry[(n+1)*2]
- * or equivalently:
- *   entry[(n-1)>>1] >= entry[n]
- *
- * For a discussion of the heap data structure (and heapsort) see Kingston,
- * "Algorithms and Data Structures".
- */
+/*
+	As part of linearization, we need to keep a list of what objects are used
+	by what page. We do this by recording the objects used in a given page
+	in a page_objects structure. We have a list of these structures (one per
+	page) in the page_objects_list structure.
+
+	The page_objects structure maintains a heap in the object array, so
+	insertion takes log n time, and we can heapsort and dedupe at the end for
+	a total worse case n log n time.
+
+	The magic heap invariant is that:
+		entry[n] >= entry[(n+1)*2-1] & entry[n] >= entry[(n+1)*2]
+	or equivalently:
+		entry[(n-1)>>1] >= entry[n]
+
+	For a discussion of the heap data structure (and heapsort) see Kingston,
+	"Algorithms and Data Structures".
+*/
+
 typedef struct {
 	int num_shared;
 	int page_object_number;
@@ -249,23 +251,26 @@ page_objects_sort(fz_context *ctx, page_objects *po)
 static int
 order_ge(int ui, int uj)
 {
-	/* For linearization, we need to order the sections as follows:
-	 *  Remaining pages
-	 *  Shared objects
-	 *  Objects not associated with any page
-	 *  (Linearization params)
-	 *  Catalogue (and other document level objects)
-	 *  First page
-	 *  (Primary Hint stream) (*)
-	 *  Any free objects
-	 * Note, this is NOT the same order they appear in
-	 * the final file!
-	 *
-	 * The PDF reference gives us the option of putting the hint stream
-	 * after the first page, and we take it, for simplicity.
-	 */
-	/* If the 2 objects are in the same section, then page object comes
-	 * first. */
+	/*
+	For linearization, we need to order the sections as follows:
+
+		Remaining pages
+		Shared objects
+		Objects not associated with any page
+		(Linearization params)
+		Catalogue (and other document level objects)
+		First page
+		(Primary Hint stream) (*)
+		Any free objects
+
+	Note, this is NOT the same order they appear in
+	the final file!
+
+	The PDF reference gives us the option of putting the hint stream
+	after the first page, and we take it, for simplicity.
+	*/
+
+	/* If the 2 objects are in the same section, then page object comes first. */
 	if (((ui ^ uj) & ~USE_PAGE_OBJECT) == 0)
 		return ((ui & USE_PAGE_OBJECT) == 0);
 	/* Put unused objects last */
@@ -463,7 +468,7 @@ page_objects_dump(pdf_write_options *opts)
 		for (j = 0; j < p->len; j++)
 		{
 			int o = p->object[j];
-			fprintf(stderr, "  Object %d: use=%x\n", o, opts->use_list[o]);
+			fprintf(stderr, "\tObject %d: use=%x\n", o, opts->use_list[o]);
 		}
 		fprintf(stderr, "Byte range=%d->%d\n", p->min_ofs, p->max_ofs);
 		fprintf(stderr, "Number of objects=%d, Number of shared objects=%d\n", p->num_objects, p->num_shared);
@@ -1536,7 +1541,7 @@ static void expandstream(pdf_document *xref, pdf_write_options *opts, pdf_obj *o
 
 static int is_image_filter(char *s)
 {
-	if (	!strcmp(s, "CCITTFaxDecode") || !strcmp(s, "CCF") ||
+	if (!strcmp(s, "CCITTFaxDecode") || !strcmp(s, "CCF") ||
 		!strcmp(s, "DCTDecode") || !strcmp(s, "DCT") ||
 		!strcmp(s, "RunLengthDecode") || !strcmp(s, "RL") ||
 		!strcmp(s, "JBIG2Decode") ||

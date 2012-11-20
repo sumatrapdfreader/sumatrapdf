@@ -245,9 +245,9 @@ fz_paint_triangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbo
 	for (i = 0; i < len; i++)
 	{
 		gel[i][0] = floorf(poly[i][0] + 0.5f) * 65536; /* trunc and fix */
-		gel[i][1] = floorf(poly[i][1] + 0.5f);	/* y is not fixpoint */
+		gel[i][1] = floorf(poly[i][1] + 0.5f); /* y is not fixpoint */
 		for (k = 2; k < n; k++)
-			gel[i][k] = poly[i][k] * 65536;	/* fix with precision */
+			gel[i][k] = poly[i][k] * 65536; /* fix with precision */
 	}
 
 	top = bot = 0;

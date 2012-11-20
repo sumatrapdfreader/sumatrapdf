@@ -53,14 +53,14 @@ public abstract class PageView extends ViewGroup {
 
 	private       ImageView mEntire; // Image rendered at minimum zoom
 	private       BitmapHolder mEntireBm;
-	private       SafeAsyncTask<Void,Void,LinkInfo[]> mGetLinkInfo;
-	private       SafeAsyncTask<Void,Void,Void> mDrawEntire;
+	private       AsyncTask<Void,Void,LinkInfo[]> mGetLinkInfo;
+	private       AsyncTask<Void,Void,Void> mDrawEntire;
 
 	private       Point     mPatchViewSize; // View size on the basis of which the patch was created
 	private       Rect      mPatchArea;
 	private       ImageView mPatch;
 	private       BitmapHolder mPatchBm;
-	private       SafeAsyncTask<PatchInfo,Void,PatchInfo> mDrawPatch;
+	private       AsyncTask<PatchInfo,Void,PatchInfo> mDrawPatch;
 	private       RectF     mSearchBoxes[];
 	private       LinkInfo  mLinks[];
 	private       View      mSearchView;
@@ -179,7 +179,7 @@ public abstract class PageView extends ViewGroup {
 		mEntire.setImageBitmap(null);
 
 		// Get the link info in the background
-		mGetLinkInfo = new SafeAsyncTask<Void,Void,LinkInfo[]>() {
+		mGetLinkInfo = new AsyncTask<Void,Void,LinkInfo[]>() {
 			protected LinkInfo[] doInBackground(Void... v) {
 				return getLinkInfo();
 			}
@@ -190,10 +190,10 @@ public abstract class PageView extends ViewGroup {
 			}
 		};
 
-		mGetLinkInfo.safeExecute();
+		mGetLinkInfo.execute();
 
 		// Render the page in the background
-		mDrawEntire = new SafeAsyncTask<Void,Void,Void>() {
+		mDrawEntire = new AsyncTask<Void,Void,Void>() {
 			protected Void doInBackground(Void... v) {
 				drawPage(mEntireBm, mSize.x, mSize.y, 0, 0, mSize.x, mSize.y);
 				return null;
@@ -226,7 +226,7 @@ public abstract class PageView extends ViewGroup {
 			}
 		};
 
-		mDrawEntire.safeExecute();
+		mDrawEntire.execute();
 
 		if (mSearchView == null) {
 			mSearchView = new View(mContext) {
@@ -381,7 +381,7 @@ public abstract class PageView extends ViewGroup {
 				mSearchView.bringToFront();
 			}
 
-			mDrawPatch = new SafeAsyncTask<PatchInfo,Void,PatchInfo>() {
+			mDrawPatch = new AsyncTask<PatchInfo,Void,PatchInfo>() {
 				protected PatchInfo doInBackground(PatchInfo... v) {
 					if (v[0].completeRedraw) {
 					drawPage(v[0].bm, v[0].patchViewSize.x, v[0].patchViewSize.y,
@@ -410,7 +410,7 @@ public abstract class PageView extends ViewGroup {
 				}
 			};
 
-			mDrawPatch.safeExecute(new PatchInfo(patchViewSize, patchArea, mPatchBm, completeRedraw));
+			mDrawPatch.execute(new PatchInfo(patchViewSize, patchArea, mPatchBm, completeRedraw));
 		}
 	}
 
@@ -427,7 +427,7 @@ public abstract class PageView extends ViewGroup {
 		}
 
 		// Render the page in the background
-		mDrawEntire = new SafeAsyncTask<Void,Void,Void>() {
+		mDrawEntire = new AsyncTask<Void,Void,Void>() {
 			protected Void doInBackground(Void... v) {
 				// Pass the current bitmap as a basis for the update, but use a bitmap
 				// holder so that the held bitmap will be nulled and not hold on to
@@ -442,7 +442,7 @@ public abstract class PageView extends ViewGroup {
 			}
 		};
 
-		mDrawEntire.safeExecute();
+		mDrawEntire.execute();
 
 		addHq(true);
 	}
