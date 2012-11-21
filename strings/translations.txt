@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-31a67c9d3ae8010998a1a3ae2a810af651294411
+7b2280433609da92fc5d04c7de8235530912a778
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4759,7 +4759,7 @@ sk:Prispieť k prekladu programu
 sl:Prispevajte prevod
 sn:Batsira kuturikira
 sp-rs:Učestvuj u prevođenju
-sq:Kontribuoj përkthimin
+sq:Kontribuoj në përkthim
 sr-rs:Учествуј у превођењу
 sv:Bidra med översättning
 ta:மொழிபெயர்ப்புக்கு பங்களி
@@ -5382,7 +5382,7 @@ si:පෙරනිමි දැක්ම:
 sk:Predvolené &umiestnenie:
 sl:&Privzeta postavitev:
 sp-rs:Podrazumevani prikaz
-sq:&Formati standard:
+sq:&Faqosja standarde:
 sr-rs:Подразумевани приказ
 sv:Förvalt &utseende
 ta:கோட நிலை வடிவமைப்பு
@@ -9471,7 +9471,7 @@ pl:Optymalizacja PDF:
 pt:Otimizações PDF:
 ru:Оптимизация PDF:
 sl:Optimizacije PDF:
-sq:PDF Optimizime:
+sq:PDF optimizimet:
 sv:PDF Optimeringar:
 ta:PDF மேம்படுத்தல்கள்
 tr:PDF Optimizasyonları:
@@ -9521,7 +9521,7 @@ si:PDF නිශ්පාදකය:
 sk:Vytvorené v:
 sl:PDF izdelovalec:
 sp-rs:PDF izradio
-sq:PDF Prodhuesi:
+sq:PDF prodhuesi:
 sr-rs:PDF израдио
 sv:PDF-programvara:
 ta:PDF உற்பத்தியாளர்
@@ -9576,7 +9576,7 @@ si:PDF වෙළුම:
 sk:PDF Verzia:
 sl:Verzija PDF:
 sp-rs:PDF verzija:
-sq:PDF Versioni:
+sq:PDF versioni:
 sr-rs:PDF верзија:
 sv:PDF-version:
 ta:PDF பதிப்பு
@@ -11991,7 +11991,7 @@ si:SumatraPDF විකල්ප (O)
 sk:Nastavenia SumatraPDF
 sl:Možnosti SumatraPDF
 sp-rs:Podešavanja programa SumatraPDF
-sq:SumatraPDF Opsionet
+sq:SumatraPDF opsionet
 sr-rs:Подешавања програма SumatraPDF
 sv:SumatraPDF Inställningar
 ta:SumatraPDFஇன் விருப்பப பேரம்
@@ -12043,7 +12043,7 @@ ru:Обновление SumatraPDF
 sk:Aktualizácia SumatraPDF
 sl:Posodobitev SumatraPDF
 sp-rs:Ažuriranje SumatraPDF
-sq:SumatraPDF Azhurnimi
+sq:SumatraPDF azhurnimi
 sr-rs:Ажурирање SumatraPDF
 sv:SumatraPDF Uppdatering
 ta:மேம்படுத்தப்பட்ட SumatraPDF
