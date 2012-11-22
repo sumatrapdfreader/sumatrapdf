@@ -8,10 +8,7 @@
 #include "FileHistory.h"
 #include "WindowInfo.h" // for StaticLinkInfo
 
-#define ABOUT_CLASS_NAME        L"SUMATRA_PDF_ABOUT"
-
 void OnMenuAbout();
-LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 void  DrawAboutPage(WindowInfo& win, HDC hdc);
 

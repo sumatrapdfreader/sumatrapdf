@@ -1028,6 +1028,9 @@
     <ClCompile Include="src\utils\BaseUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\SumatraAbout2.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1512,6 +1515,12 @@
     </ClInclude>
     <ClInclude Include="src\utils\Dict.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SumatraAbout.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SumatraAbout2.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

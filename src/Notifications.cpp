@@ -282,11 +282,11 @@ void ShowNotification(WindowInfo *win, const WCHAR *message, bool autoDismiss, b
     win->notifications->Add(wnd, groupId);
 }
 
-bool RegisterNotificationsWndClass(HINSTANCE inst)
+void RegisterNotificationsWndClass(HINSTANCE inst)
 {
     WNDCLASSEX  wcex;
     FillWndClassEx(wcex, inst, NOTIFICATION_WND_CLASS_NAME, NotificationWnd::WndProc);
     wcex.hCursor = LoadCursor(NULL, IDC_APPSTARTING);
     ATOM atom = RegisterClassEx(&wcex);
-    return atom != 0;
+    CrashIf(!atom);
 }

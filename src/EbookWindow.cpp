@@ -603,7 +603,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     win->ebookController->SetDoc(doc, startReparseIdx);
 }
 
-bool RegisterMobiWinClass(HINSTANCE hinst)
+void RegisterMobiWinClass(HINSTANCE hinst)
 {
     WNDCLASSEX  wcex;
     FillWndClassEx(wcex, hinst, MOBI_FRAME_CLASS_NAME, MobiWndProcFrame);
@@ -614,7 +614,7 @@ bool RegisterMobiWinClass(HINSTANCE hinst)
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 
     ATOM atom = RegisterClassEx(&wcex);
-    return atom != NULL;
+    CrashIf(!atom);
 }
 
 bool IsEbookFile(const WCHAR *fileName)

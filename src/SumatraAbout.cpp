@@ -10,6 +10,7 @@
 #include "FileUtil.h"
 #include "ImagesEngine.h"
 #include "PdfEngine.h"
+#include "resource.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"
@@ -29,6 +30,8 @@
 #define ABOUT_TXT_DY                6
 #define ABOUT_RECT_PADDING          8
 #define ABOUT_INNER_PADDING         6
+
+#define ABOUT_CLASS_NAME        L"SUMATRA_PDF_ABOUT"
 
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 
@@ -54,6 +57,7 @@
 #define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/tags/" CURR_VERSION_STR L"rel/AUTHORS"
 #endif
 
+static ATOM gAtomAbout;
 static HWND gHwndAbout;
 static HWND gHwndAboutTooltip = NULL;
 static const WCHAR *gClickedURL = NULL;
@@ -387,40 +391,6 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
     return NULL;
 }
 
-void OnMenuAbout() {
-    if (gHwndAbout) {
-        SetActiveWindow(gHwndAbout);
-        return;
-    }
-
-    gHwndAbout = CreateWindow(
-            ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
-            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            NULL, NULL,
-            ghinst, NULL);
-    if (!gHwndAbout)
-        return;
-
-    // get the dimensions required for the about box's content
-    RectI rc;
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(gHwndAbout, &ps);
-    UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
-    EndPaint(gHwndAbout, &ps);
-    rc.Inflate(ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
-
-    // resize the new window to just match these dimensions
-    WindowRect wRc(gHwndAbout);
-    ClientRect cRc(gHwndAbout);
-    wRc.dx += rc.dx - cRc.dx;
-    wRc.dy += rc.dy - cRc.dy;
-    MoveWindow(gHwndAbout, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
-
-    ShowWindow(gHwndAbout, SW_SHOW);
-}
-
 static void CreateInfotipForLink(StaticLinkInfo& linkInfo)
 {
     if (gHwndAboutTooltip)
@@ -511,6 +481,49 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
+}
+
+void OnMenuAbout()
+{
+    if (gHwndAbout) {
+        SetActiveWindow(gHwndAbout);
+        return;
+    }
+
+    if (!gAtomAbout) {
+        WNDCLASSEX  wcex;
+        FillWndClassEx(wcex, ghinst, ABOUT_CLASS_NAME, WndProcAbout);
+        wcex.hIcon = LoadIcon(ghinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+        gAtomAbout = RegisterClassEx(&wcex);
+        CrashIf(!gAtomAbout);
+    }
+
+    gHwndAbout = CreateWindow(
+            ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
+            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            NULL, NULL,
+            ghinst, NULL);
+    if (!gHwndAbout)
+        return;
+
+    // get the dimensions required for the about box's content
+    RectI rc;
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(gHwndAbout, &ps);
+    UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
+    EndPaint(gHwndAbout, &ps);
+    rc.Inflate(ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
+
+    // resize the new window to just match these dimensions
+    WindowRect wRc(gHwndAbout);
+    ClientRect cRc(gHwndAbout);
+    wRc.dx += rc.dx - cRc.dx;
+    wRc.dy += rc.dy - cRc.dy;
+    MoveWindow(gHwndAbout, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
+
+    ShowWindow(gHwndAbout, SW_SHOW);
 }
 
 void DrawAboutPage(WindowInfo& win, HDC hdc)
