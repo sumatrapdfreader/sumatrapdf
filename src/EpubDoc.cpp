@@ -215,28 +215,14 @@ bool EpubDoc::Load()
         *(WCHAR *)(str::FindCharLast(contentPath, '/') + 1) = '\0';
     else
         *contentPath = '\0';
-    WStrList idPathMap;
+
+    WStrList idList, pathList;
 
     for (node = node->down; node; node = node->next) {
         ScopedMem<WCHAR> mediatype(node->GetAttribute("media-type"));
-        if (str::Eq(mediatype, L"application/xhtml+xml")) {
-            ScopedMem<WCHAR> htmlPath(node->GetAttribute("href"));
-            ScopedMem<WCHAR> htmlId(node->GetAttribute("id"));
-            // EPUB 3 ToC
-            ScopedMem<WCHAR> props(node->GetAttribute("properties"));
-            if (props && str::Find(props, L"nav")) {
-                isNcxToc = false;
-                tocPath.Set(str::Join(contentPath, htmlPath));
-                str::UrlDecodeInPlace(tocPath);
-            }
-            if (htmlPath && htmlId) {
-                idPathMap.Append(htmlId.StealData());
-                idPathMap.Append(htmlPath.StealData());
-            }
-        }
-        else if (str::Eq(mediatype, L"image/png")  ||
-                 str::Eq(mediatype, L"image/jpeg") ||
-                 str::Eq(mediatype, L"image/gif")) {
+        if (str::Eq(mediatype, L"image/png")  ||
+            str::Eq(mediatype, L"image/jpeg") ||
+            str::Eq(mediatype, L"image/gif")) {
             ScopedMem<WCHAR> imgPath(node->GetAttribute("href"));
             if (!imgPath)
                 continue;
@@ -248,13 +234,21 @@ bool EpubDoc::Load()
             data.idx = zip.GetFileIndex(imgPath);
             images.Append(data);
         }
-        else if (str::Eq(mediatype, L"application/x-dtbncx+xml") && !tocPath) {
-            // EPUB 2 ToC
-            tocPath.Set(node->GetAttribute("href"));
-            if (tocPath) {
-                tocPath.Set(str::Join(contentPath, tocPath));
+        else if (str::Eq(mediatype, L"application/xhtml+xml") ||
+                 str::Eq(mediatype, L"application/x-dtbncx+xml") ||
+                 str::Eq(mediatype, L"text/html") ||
+                 str::Eq(mediatype, L"text/xml")) {
+            ScopedMem<WCHAR> htmlPath(node->GetAttribute("href"));
+            ScopedMem<WCHAR> htmlId(node->GetAttribute("id"));
+            // EPUB 3 ToC
+            ScopedMem<WCHAR> props(node->GetAttribute("properties"));
+            if (props && str::Find(props, L"nav") && str::Eq(mediatype, L"application/xhtml+xml")) {
+                tocPath.Set(str::Join(contentPath, htmlPath));
                 str::UrlDecodeInPlace(tocPath);
-                isNcxToc = true;
+            }
+            if (htmlPath && htmlId) {
+                idList.Append(htmlId.StealData());
+                pathList.Append(htmlPath.StealData());
             }
         }
     }
@@ -262,21 +256,25 @@ bool EpubDoc::Load()
     node = parser.FindElementByNameNS("spine", EPUB_OPF_NS);
     if (!node)
         return false;
+    // EPUB 2 ToC
+    ScopedMem<WCHAR> tocId(node->GetAttribute("toc"));
+    if (tocId && !tocPath && idList.Find(tocId) != -1) {
+        tocPath.Set(str::Join(contentPath, pathList.At(idList.Find(tocId))));
+        str::UrlDecodeInPlace(tocPath);
+        isNcxToc = true;
+    }
     ScopedMem<WCHAR> readingDir(node->GetAttribute("page-progression-direction"));
     if (readingDir)
         isRtlDoc = str::EqI(readingDir, L"rtl");
+
     for (node = node->down; node; node = node->next) {
         if (!node->NameIsNS("itemref", EPUB_OPF_NS))
             continue;
         ScopedMem<WCHAR> idref(node->GetAttribute("idref"));
-        if (!idref)
-            continue;
-        int idx = -1;
-        while ((idx = idPathMap.Find(idref, idx + 1)) != -1 && (idx % 2) == 1);
-        if (-1 == idx)
+        if (!idref || idList.Find(idref) == -1)
             continue;
 
-        ScopedMem<WCHAR> fullPath(str::Join(contentPath, idPathMap.At(idx + 1)));
+        ScopedMem<WCHAR> fullPath(str::Join(contentPath, pathList.At(idList.Find(idref))));
         ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
         str::UrlDecodeInPlace(fullPath);
         ScopedMem<char> html(zip.GetFileData(fullPath));
