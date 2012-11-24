@@ -47,43 +47,7 @@ browsing/searching those files.
 This would be a good feature for those who have large collections of PDFs
 (compared to using file explorer or open file dialog for locating the file).
 
-8. To make translating Sumatra even easier on translators, a web service
-(built on App Engine because it's capable enough and simplest to
-deploy) allowing people to translate program strings (it wouldn't be
-limited to Sumatra (others could setup their own projects for translation).
-
-It would have an API for project owners to upload the strings to translate
-and download translations as well as web UI to add/modify strings to translate.
-
-Translators could add/modify translations for their language. We would keep
-full history of edits, to make reverts easy. We would never delete translations
-(they could be marked as no longer used but we would keep them and their
-translations in case they are used again).
-
-All translations would be in public domain (translators would have to agree
-to that) to make it easy on project owners.
-
-System would be smart enough to suggest translations across project i.e.
-if a given string is already translated in project A, there should be an
-easy way to copy those translations to project B.
-
-Translators (and project owners) would have to sign in with their google
-credentials (to prevent vandalism and easy revert of rogue translator's translations).
-
-Anonymous users could suggest translations but they would have to be approved
-by a signed-in translator or project admin.
-
-We would auto-generate a translation contribution page (like
-http://blog.kowalczyk.info/software/sumatrapdf/translators.html) so that
-project owners can give credit to their translators. A translator
-could opt-out from being listed there.
-
-The big idea is to make contributing a translation as easy as possible.
-Our system is as easy as I could make it but not easy in the absolute sense.
-
-The code would of course be open-source.
-
-10. Native client version (https://developers.google.com/native-client/).
+8. Native client version (https://developers.google.com/native-client/).
 
 There are some challenges (need completely custom UI, fonts aren't as easy
 to get at, CHM support would be much harder). The upside is we would have
