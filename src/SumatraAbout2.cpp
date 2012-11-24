@@ -32,7 +32,7 @@ void OnMenuAbout2()
         FillWndClassEx(wcex, ghinst, WND_CLASS_ABOUT2, WndProcAbout2);
         wcex.hIcon = LoadIcon(ghinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
         gAboutWndAtom = RegisterClassEx(&wcex);
-        CrashIf(!gAboutWndAtom)
+        CrashIf(!gAboutWndAtom);
     }
     gHwndAbout2 = CreateWindow(
             WND_CLASS_ABOUT2, ABOUT_WIN_TITLE,

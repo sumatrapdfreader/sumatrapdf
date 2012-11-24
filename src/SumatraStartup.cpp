@@ -41,29 +41,29 @@ static bool RegisterWinClass(HINSTANCE hinst)
     FillWndClassEx(wcex, hinst, FRAME_CLASS_NAME, WndProcFrame);
     wcex.hIcon  = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     atom = RegisterClassEx(&wcex);
-    CrashIf(!atom)
+    CrashIf(!atom);
 
     FillWndClassEx(wcex, hinst, CANVAS_CLASS_NAME, WndProcCanvas);
     wcex.style |= CS_DBLCLKS;
     atom = RegisterClassEx(&wcex);
-    CrashIf(!atom)
+    CrashIf(!atom);
 
     FillWndClassEx(wcex, hinst, PROPERTIES_CLASS_NAME, WndProcProperties);
     wcex.hIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     atom = RegisterClassEx(&wcex);
-    CrashIf(!atom)
+    CrashIf(!atom);
 
     FillWndClassEx(wcex, hinst, SIDEBAR_SPLITTER_CLASS_NAME, WndProcSidebarSplitter);
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZEWE);
     wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
     atom = RegisterClassEx(&wcex);
-    CrashIf(!atom)
+    CrashIf(!atom);
 
     FillWndClassEx(wcex, hinst, FAV_SPLITTER_CLASS_NAME, WndProcFavSplitter);
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZENS);
     wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
     atom = RegisterClassEx(&wcex);
-    CrashIf(!atom)
+    CrashIf(!atom);
 
     RegisterNotificationsWndClass(hinst);
     RegisterMobiWinClass(hinst);
