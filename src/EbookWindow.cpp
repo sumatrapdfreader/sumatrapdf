@@ -522,7 +522,34 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     DisplayState *ds = gFileHistory.Find(fullPath);
 
     if (doc.IsNone()) {
-        // TODO: show a notification if winToReplace.AsEbookWindow()
+        // TODO: a hack. In LoadDocumentOld(), if current window IsAboutWindow(),
+        // we set loadedFilePath to prevent a crash if multiple ebook files are
+        // dropped on about window. We need to undo that in case of failure
+        // or else the window will be stuck in an invalid state (not about window
+        // but not a document window either)
+        WindowInfo *w = winToReplace.AsWindowInfo();
+        if (str::Eq(w->loadedFilePath, doc.GetFilePath())) {
+            free(w->loadedFilePath);
+            w->loadedFilePath = NULL;
+            // this is now about window. We don't want to show it if we're already
+            // showing other windows (the scenario: dragging ebook file on a window
+            // showing a document, we create invisible window for this document and
+            // we don't want to show empty window if loading fails
+            if (gEbookWindows.Count() > 0 || gWindows.Count() > 1) {
+                CloseWindow(w, false, false);
+                if (gFileHistory.MarkFileInexistent(fullPath))
+                    SavePrefs();
+                // TODO: notify the use that loading failed (e.g. show a notification)
+                return;
+            }
+        }
+        // TODO: notify the user that loading failed (e.g. show a notification)
+
+        // TODO: this is not a great solution. In case of opening
+        // file from cmd-line, we create a window but don't show it
+        // if loading afils, we have to show the window. If window
+        // is already visible, this is a no-op
+        ShowWindow(winToReplace.HwndFrame(), SW_SHOW);
         if (gFileHistory.MarkFileInexistent(fullPath))
             SavePrefs();
         return;

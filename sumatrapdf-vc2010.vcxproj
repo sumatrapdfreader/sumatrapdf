@@ -505,6 +505,7 @@
     <ClInclude Include="src\SumatraDialogs.h" />
     <ClInclude Include="src\SumatraPDF.h" />
     <ClInclude Include="src\SumatraProperties.h" />
+    <ClInclude Include="src\SumatraWindow.h" />
     <ClInclude Include="src\TableOfContents.h" />
     <ClInclude Include="src\TextSearch.h" />
     <ClInclude Include="src\TextSelection.h" />

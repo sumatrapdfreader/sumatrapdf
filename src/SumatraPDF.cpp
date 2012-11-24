@@ -1387,7 +1387,9 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
             win = CreateWindowInfo();
         }
         if (win->IsAboutWindow()) {
-            // don't crash if multiple Mobi files are opened at once
+            // don't crash if multiple ebook files are opened at once
+            // (e.g. via dragging on the window)
+            // TODO: figure out a better way to handle this
             win->loadedFilePath = str::Dup(fullPath);
         }
         LoadEbookAsync(fullPath, SumatraWindow::Make(win));
