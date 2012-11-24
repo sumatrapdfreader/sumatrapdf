@@ -95,9 +95,9 @@ void CrashMe(); // in StrUtil.cpp
 // in some builds, so it shouldn't contain the actual logic of the code
 
 #define CrashAlwaysIf(cond) \
-    { if (cond) \
+    do { if (cond) \
         CrashMe(); \
-    __analysis_assume(!(cond)); }
+    __analysis_assume(!(cond)); } while (0)
 
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
 #define CrashIf(cond) CrashAlwaysIf(cond)
