@@ -289,11 +289,16 @@ Uninstaller:   $(OS) $(UNINSTALLER_APP)
 PDFFilter:     $(OS) $(LIBMUPDF_DLL) $(PDFFILTER_DLL)
 PdfPreview:    $(OS) $(LIBMUPDF_DLL) $(PDFPREVIEW_DLL)
 BrowserPlugin: $(OS) $(BROWSER_PLUGIN)
-PdfBench:      $(OS) $(PDFBENCH_APP)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
 tester:        $(OS) $(TESTER_APP)
 memtrace:      $(OS) $(MEMTRACE_DLL)
 regress:       $(OS) $(REGRESS_APP)
+mudraw:        $(O)  $(MUDRAW_APP)
+mutool:        $(O)  $(MUTOOL_APP)
+PdfBench:      $(OS) $(PDFBENCH_APP)
+
+# build tool_objs instead of the tools themselves to speed up linking
+tool_objs:     $(OS) $(ENGINEDUMP_OBJS) $(TESTER_OBJS) $(MEMTRACE_OBJS) $(REGRESS_OBJS) $(MUDRAW_OBJS) $(MUTOOL_OBJS) $(PDFBENCH_OBJS)
 
 $(OS): $(O) $(OE)
 	@if not exist $(OS) mkdir $(OS)
