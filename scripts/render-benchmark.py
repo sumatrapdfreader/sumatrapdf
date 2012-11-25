@@ -2,8 +2,8 @@
 Runs a loading and rendering benchmark for a given number of files
 (10 times each).
 
-Note: If SumatraPDF.exe can't be found in the path, pass a path to
-      it as the first argument.
+Note: If SumatraPDF.exe can't be found in either ..\obj-rel\ or %PATH%,
+      pass a path to it as the first argument.
 
 render-benchmark.py obj-dbg\SumatraPDF.exe file1.pdf file2.xps
 """
@@ -14,9 +14,9 @@ from subprocess import Popen, PIPE
 def log(str):
 	sys.stderr.write(str + "\n")
 
-def runBenchmark(SumatraPDF, file, repeats):
+def runBenchmark(SumatraPDFExe, file, repeats):
 	log("-> %s (%d times)" % (file, repeats))
-	proc = Popen([SumatraPDF] + ["-bench", file] * repeats, stdout=PIPE, stderr=PIPE)
+	proc = Popen([SumatraPDFExe] + ["-bench", file] * repeats, stdout=PIPE, stderr=PIPE)
 	return proc.communicate()[1]
 
 def matchLine(line, regex, result=None):
@@ -68,17 +68,19 @@ def main():
 		sys.exit(0)
 	
 	if sys.argv[1].lower().endswith(".exe"):
-		SumatraPDF = sys.argv.pop(1)
+		SumatraPDFExe = sys.argv.pop(1)
 	else:
-		SumatraPDF = "SumatraPDF.exe"
+		SumatraPDFExe = os.path.join(os.path.split(__file__)[0], "..", "obj-rel", "SumatraPDF.exe")
+		if not os.path.exists(SumatraPDFExe):
+			SumatraPDFExe = "SumatraPDF.exe"
 	
 	benchData = ""
-	log("Running benchmark with %s..." % SumatraPDF)
+	log("Running benchmark with %s..." % os.path.relpath(SumatraPDFExe))
 	for file in sys.argv[1:]:
 		try:
-			benchData += runBenchmark(SumatraPDF, file, 10) + "\n"
+			benchData += runBenchmark(SumatraPDFExe, file, 10) + "\n"
 		except:
-			log("Error: %s not found" % SumatraPDF)
+			log("Error: %s not found" % os.path.relpath(SumatraPDFExe))
 			return
 	log("")
 	

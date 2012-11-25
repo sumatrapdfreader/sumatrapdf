@@ -11,12 +11,8 @@ Checkout SumatraPDF sources (which include the MuPDF sources):
   svn checkout http://sumatrapdf.googlecode.com/svn/trunk/ sumatrapdf
 
 Run buildwin.bat and you'll end up with several executables:
- * pdfbench
- * pdfclean
- * pdfdraw
- * pdfinfo
- * pdfshow
- * pdfextract
+ * mudraw
+ * mutool
  * pdfview
 in obj-rel-win and obj-dbg-win directories. Those are sample programs
 using mpudf.
@@ -28,7 +24,7 @@ Mupdf depends on several libraries that are not easily available on Windows:
  * freetype
  * libjpeg for jpeg image format decoding
  * zlib for zlib decompression
- * openjpeg or jasper for jpeg2000 image format decoding 
+ * openjpeg for jpeg2000 image format decoding 
  * jbig2dec for jbig2 image format decoding
 
 They're part of SumatraPDF sources so you need to checkout Sumatra sources

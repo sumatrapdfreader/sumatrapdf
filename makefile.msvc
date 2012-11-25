@@ -41,7 +41,7 @@ EXTDIR=ext
 !endif
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump PdfBench tester memtrace regress
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump tester memtrace regress
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -295,10 +295,9 @@ memtrace:      $(OS) $(MEMTRACE_DLL)
 regress:       $(OS) $(REGRESS_APP)
 mudraw:        $(O)  $(MUDRAW_APP)
 mutool:        $(O)  $(MUTOOL_APP)
-PdfBench:      $(OS) $(PDFBENCH_APP)
 
 # build tool_objs instead of the tools themselves to speed up linking
-tool_objs:     $(OS) $(ENGINEDUMP_OBJS) $(TESTER_OBJS) $(MEMTRACE_OBJS) $(REGRESS_OBJS) $(MUDRAW_OBJS) $(MUTOOL_OBJS) $(PDFBENCH_OBJS)
+tool_objs:     $(OS) $(ENGINEDUMP_OBJS) $(TESTER_OBJS) $(MEMTRACE_OBJS) $(REGRESS_OBJS) $(MUDRAW_OBJS) $(MUTOOL_OBJS)
 
 $(OS): $(O) $(OE)
 	@if not exist $(OS) mkdir $(OS)

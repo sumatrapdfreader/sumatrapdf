@@ -278,16 +278,12 @@ LIBS_OBJS = \
 	$(MUCBZ_OBJS)
 
 MUAPPS_OBJS = \
-	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\mudraw.obj $(OA)\pdfbench.obj \
-	$(OA)\pdfshow.obj $(OA)\pdfclean.obj $(OA)\pdfinfo.obj $(OA)\pdfextract.obj \
-	$(OA)\pdfposter.obj
+	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\mudraw.obj $(OA)\pdfshow.obj \
+	$(OA)\pdfclean.obj $(OA)\pdfinfo.obj $(OA)\pdfextract.obj $(OA)\pdfposter.obj
 
 PDFAPP_RES = $(OA)\pdfview.res
 PDFAPP_OBJS = $(LIBS_OBJS) $(OA)\win_main.obj $(OA)\pdfapp.obj $(PDFAPP_RES)
 PDFAPP_APP = $(O)\pdfview.exe
-
-PDFBENCH_OBJS = $(LIBS_OBJS) $(OA)\pdfbench.obj
-PDFBENCH_APP = $(O)\pdfbench.exe
 
 MUTOOL_OBJS = $(LIBS_OBJS) $(OA)\mutool.obj $(OA)\pdfshow.obj \
 	$(OA)\pdfclean.obj $(OA)\pdfinfo.obj $(OA)\pdfextract.obj $(OA)\pdfposter.obj
@@ -299,7 +295,7 @@ MUDRAW_APP = $(O)\mudraw.exe
 FONTDUMP_OBJS = $(OP)\fontdump.obj
 FONTDUMP_APP = $(O)\fontdump.exe
 
-all: $(O) $(MUDRAW_APP) $(MUTOOL_APP) $(PDFAPP_APP) $(PDFBENCH_APP)
+all: $(O) $(MUDRAW_APP) $(MUTOOL_APP) $(PDFAPP_APP)
 
 clean: force
 	-rmdir /S /Q $(O) $(MUPDF_GEN_DIR)
@@ -322,9 +318,6 @@ $(O): force
 
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
 	rc /r /fo$@ $(MUPDF_DIR)\apps\win_res.rc
-
-$(PDFBENCH_APP): $(PDFBENCH_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(FONTDUMP_APP): $(FONTDUMP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
