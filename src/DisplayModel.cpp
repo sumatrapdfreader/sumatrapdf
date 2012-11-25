@@ -938,8 +938,7 @@ void DisplayModel::ChangeViewPortSize(SizeI newViewPortSize)
     } else {
         RecalcVisibleParts();
         RenderVisibleParts();
-        if (showScrollbars)
-		dmCb->UpdateScrollbars(canvasSize);
+        if (showScrollbars) dmCb->UpdateScrollbars(canvasSize);
     }
 }
 

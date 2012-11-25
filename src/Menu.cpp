@@ -40,7 +40,7 @@ void MenuUpdateDisplayMode(WindowInfo* win, HMENU menu)
     CheckMenuRadioItem(menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     win::menu::SetChecked(menu, IDM_VIEW_CONTINUOUS, displayModeContinuous(displayMode));
     win::menu::SetChecked(menu, IDM_VIEW_SCROLLBAR, win->dm->showScrollbars);
-	win::menu::SetChecked(menu, IDM_VIEW_FULLSCREEN, win->fullScreen);
+    win::menu::SetChecked(menu, IDM_VIEW_FULLSCREEN, win->fullScreen);
 }
 
 static MenuDef menuDefFile[] = {
@@ -73,7 +73,7 @@ static MenuDef menuDefView[] = {
     { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
     { _TRN("&Book View\tCtrl+8"),           IDM_VIEW_BOOK,              MF_NOT_FOR_CHM },
     { _TRN("Show &pages continuously"),     IDM_VIEW_CONTINUOUS,        MF_NOT_FOR_CHM },
-    { _TRN("Show &scrollbars"),             IDM_VIEW_SCROLLBAR,         MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
+    { _TRN("Show scr&ollbars"),             IDM_VIEW_SCROLLBAR,         MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
     { _TRN("Rotate &Left\tCtrl+Shift+-"),   IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM },
     { _TRN("Rotate &Right\tCtrl+Shift++"),  IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM },
@@ -467,13 +467,13 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
     DestroyMenu(popup);
 }
 
-TCHAR *GetSearchText(WindowInfo* win)
+WCHAR *GetSearchText(WindowInfo* win)
 {
-	TCHAR *t = GetSelection(win);
+    WCHAR *t = GetSelection(win);
     if (str::IsEmpty(t)) return NULL;
-	if (str::Len(t) >= 40)
-		wcsncpy(t+37, L"...", 4);
-	return str::Format(L"S&earch Google for '%s'\tCtrl+E", t);
+    if (str::Len(t) >= 40)
+        wcsncpy(t+37, L"...", 4);
+    return str::Format(L"S&earch Google for '%s'\tCtrl+E", t);
 }
 
 void OnContextMenu(WindowInfo* win, int x, int y)
@@ -506,7 +506,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     if (!pageEl || pageEl->GetType() != Element_Image)
         win::menu::Remove(popup, IDM_COPY_IMAGE);
 
-    ScopedMem<TCHAR> selText(GetSearchText(win));
+    ScopedMem<WCHAR> selText(GetSearchText(win));
     if (str::IsEmpty(selText.Get())) {
         win::menu::Remove(popup, IDM_COPY_SELECTION);
         win::menu::Remove(popup, IDM_SEARCH_ONLINE);

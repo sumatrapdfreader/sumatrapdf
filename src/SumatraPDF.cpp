@@ -1551,7 +1551,7 @@ static void UpdateCanvasScrollbars(DisplayModel *dm, HWND hwndCanvas, SizeI canv
         si.nMax = canvas.dx - 1;
         si.nPage = viewPort.dx;
     }
-	SetScrollInfo(hwndCanvas, SB_HORZ, &si, dm->showScrollbars);
+    SetScrollInfo(hwndCanvas, SB_HORZ, &si, dm->showScrollbars);
     ShowScrollBar(hwndCanvas, SB_HORZ, dm->showScrollbars && viewPort.dx < canvas.dx);
 
     if (viewPort.dy >= canvas.dy) {
@@ -1571,7 +1571,7 @@ static void UpdateCanvasScrollbars(DisplayModel *dm, HWND hwndCanvas, SizeI canv
             si.nMax -= viewPort.dy - si.nPage;
         }
     }
-	SetScrollInfo(hwndCanvas, SB_VERT, &si, dm->showScrollbars);
+    SetScrollInfo(hwndCanvas, SB_VERT, &si, dm->showScrollbars);
     ShowScrollBar(hwndCanvas, SB_VERT, dm->showScrollbars && viewPort.dy < canvas.dy);
 }
 
@@ -2171,7 +2171,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         ClearSearchResult(&win);
 
     if (didDragMouse)
-		win.UpdateScrollbars();
+        win.UpdateScrollbars();
     else if (win.linkOnLastButtonDown && win.linkOnLastButtonDown->GetRect().Contains(ptPage)) {
         win.linkHandler->GotoLink(win.linkOnLastButtonDown->AsLink());
         SetCursor(gCursorArrow);
