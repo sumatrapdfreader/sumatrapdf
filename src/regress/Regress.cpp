@@ -53,7 +53,8 @@ option to specify this directory, for now just add your location(s) to the list 
 static bool FindTestFilesDir()
 {
     WCHAR *dirsToCheck[] = {
-        L"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra"
+        L"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
+        L"C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"
     };
     for (size_t i = 0; i < dimof(dirsToCheck); i++) {
         WCHAR *dir = dirsToCheck[i];
@@ -168,6 +169,8 @@ static void UninstallCrashHandler()
 static void RunTests()
 {
     Regress00();
+    Regress01();
+    Regress02();
 }
 
 extern "C"

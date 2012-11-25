@@ -1522,6 +1522,9 @@
     <ClInclude Include="src\SumatraAbout2.h">
       <Filter>sumatra</Filter>
     </ClInclude>
+    <ClInclude Include="src\SumatraWindow.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">
