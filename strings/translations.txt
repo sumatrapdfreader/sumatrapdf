@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7b2280433609da92fc5d04c7de8235530912a778
+0653ef9aafb0d6c5c66030ce8d6fcd30d9df5e78
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -9458,6 +9458,7 @@ br:Otimizações PDF:
 ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
 de:PDF Optimierungen:
+el:Βελτιστοποίηση PDF
 es:Optimizaciones de PDF:
 fr:Optimisations PDF
 ga:Optimisations PDF
