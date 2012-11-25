@@ -14,7 +14,7 @@
 
 #define WEBSITE_MAIN_URL         L"http://blog.kowalczyk.info/software/sumatrapdf/"
 #define WEBSITE_MANUAL_URL       L"http://blog.kowalczyk.info/software/sumatrapdf/manual.html"
-#define WEBSITE_TRANSLATIONS_URL L"http://blog.kowalczyk.info/software/sumatrapdf/translations.html"
+#define WEBSITE_TRANSLATIONS_URL L"http://code.google.com/p/sumatrapdf/wiki/HelpTranslateSumatra"
 
 #ifndef CRASH_REPORT_URL
 #define CRASH_REPORT_URL         L"http://blog.kowalczyk.info/software/sumatrapdf/develop.html"

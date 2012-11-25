@@ -90,7 +90,7 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     // TODO: remove these two lines in favor of the above license link?
     { L"program icon",   L"Zenon",                L"http://www.flashvidz.tk/" },
     { L"toolbar icons",  L"Yusuke Kamiyamane",    L"http://p.yusukekamiyamane.com/" },
-    { L"translators",    L"The Translators",      L"http://blog.kowalczyk.info/software/sumatrapdf/translators.html" },
+    { L"translators",    L"The Translators",      L"http://code.google.com/p/sumatrapdf/source/browse/trunk/TRANSLATORS" },
     { L"translations",   L"Contribute translation", WEBSITE_TRANSLATIONS_URL },
     { NULL, NULL, NULL }
 };
