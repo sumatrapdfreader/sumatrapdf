@@ -108,14 +108,14 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 
     HDC hdc = pd.hdc;
     BaseEngine& engine = *pd.engine;
-    ScopedMem<TCHAR> fileName;
+    ScopedMem<WCHAR> fileName;
 
     DOCINFO di = { 0 };
     di.cbSize = sizeof (DOCINFO);
     if (gPluginMode) {
         fileName.Set(ExtractFilenameFromURL(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        di.lpszDocName = fileName ? fileName : _T("filename");
+        di.lpszDocName = fileName ? fileName : L"filename";
     }
     else
         di.lpszDocName = engine.FileName();
@@ -368,7 +368,7 @@ public:
 
     PrintThreadData(WindowInfo *win, PrintData *data) :
         win(win), data(data), isCanceled(false), thread(NULL) {
-        wnd = new NotificationWnd(win->hwndCanvas, _T(""), _TR("Printing page %d of %d..."), this);
+        wnd = new NotificationWnd(win->hwndCanvas, L"", _TR("Printing page %d of %d..."), this);
         win->notifications->Add(wnd);
     }
 
@@ -454,7 +454,7 @@ static HGLOBAL GlobalMemDup(void *data, size_t len)
 /* Show Print Dialog box to allow user to select the printer
 and the pages to print.
 
-For reference: In order to print with Adobe Reader instead: ViewWithAcrobat(win, _T("/P"));
+For reference: In order to print with Adobe Reader instead: ViewWithAcrobat(win, L"/P");
 
 Note: The following only applies for printing as image
 
@@ -591,34 +591,34 @@ Exit:
     GlobalFree(pd.hDevMode);
 }
 
-static void ApplyPrintSettings(const TCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced)
+static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advanced)
 {
-    StrVec rangeList;
+    WStrVec rangeList;
     if (settings)
-        rangeList.Split(settings, _T(","), true);
+        rangeList.Split(settings, L",", true);
 
     for (size_t i = 0; i < rangeList.Count(); i++) {
         PRINTPAGERANGE pr;
-        if (str::Parse(rangeList.At(i), _T("%d-%d%$"), &pr.nFromPage, &pr.nToPage)) {
+        if (str::Parse(rangeList.At(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         }
-        else if (str::Parse(rangeList.At(i), _T("%d%$"), &pr.nFromPage)) {
+        else if (str::Parse(rangeList.At(i), L"%d%$", &pr.nFromPage)) {
             pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         }
-        else if (str::Eq(rangeList.At(i), _T("even")))
+        else if (str::Eq(rangeList.At(i), L"even"))
             advanced.range = PrintRangeEven;
-        else if (str::Eq(rangeList.At(i), _T("odd")))
+        else if (str::Eq(rangeList.At(i), L"odd"))
             advanced.range = PrintRangeOdd;
-        else if (str::Eq(rangeList.At(i), _T("noscale")))
+        else if (str::Eq(rangeList.At(i), L"noscale"))
             advanced.scale = PrintScaleNone;
-        else if (str::Eq(rangeList.At(i), _T("shrink")))
+        else if (str::Eq(rangeList.At(i), L"shrink"))
             advanced.scale = PrintScaleShrink;
-        else if (str::Eq(rangeList.At(i), _T("fit")))
+        else if (str::Eq(rangeList.At(i), L"fit"))
             advanced.scale = PrintScaleFit;
-        else if (str::Eq(rangeList.At(i), _T("compat")))
+        else if (str::Eq(rangeList.At(i), L"compat"))
             advanced.asImage = true;
     }
 
@@ -628,12 +628,12 @@ static void ApplyPrintSettings(const TCHAR *settings, int pageCount, Vec<PRINTPA
     }
 }
 
-bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErrors, const TCHAR *settings)
+bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErrors, const WCHAR *settings)
 {
     if (!HasPermission(Perm_PrinterAccess))
         return false;
 
-    ScopedMem<TCHAR> fileName2(path::Normalize(fileName));
+    ScopedMem<WCHAR> fileName2(path::Normalize(fileName));
     BaseEngine *engine = EngineManager::CreateEngine(!gUseEbookUI, fileName2);
     if (!engine || !engine->IsPrintingAllowed()) {
         if (displayErrors)
@@ -642,7 +642,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
     }
 
     HANDLE printer;
-    bool ok = OpenPrinter((LPTSTR)printerName, &printer, NULL);
+    bool ok = OpenPrinter((WCHAR *)printerName, &printer, NULL);
     if (!ok) {
         if (displayErrors)
             MessageBox(NULL, _TR("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
@@ -659,7 +659,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
 
     DWORD structSize = DocumentProperties(NULL,
         printer,                /* Handle to our printer. */
-        (LPTSTR)printerName,    /* Name of the printer. */ 
+        (WCHAR *)printerName,   /* Name of the printer. */ 
         NULL,                   /* Asking for size, so */
         NULL,                   /* these are not used. */
         0);                     /* Zero returns buffer size. */
@@ -670,7 +670,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
     // Get the default DevMode for the printer and modify it for your needs.
     DWORD returnCode = DocumentProperties(NULL,
         printer,
-        (LPTSTR)printerName,
+        (WCHAR *)printerName,
         devMode,        /* The address of the buffer to fill. */
         NULL,           /* Not using the input buffer. */
         DM_OUT_BUFFER); /* Have the output buffer filled. */
@@ -688,7 +688,7 @@ bool PrintFile(const TCHAR *fileName, const TCHAR *printerName, bool displayErro
      */
     DocumentProperties(NULL,
         printer,
-        (LPTSTR)printerName,
+        (WCHAR *)printerName,
         devMode,        /* Reuse our buffer for output. */
         devMode,        /* Pass the driver our changes. */
         DM_IN_BUFFER |  /* Commands to Merge our changes and */

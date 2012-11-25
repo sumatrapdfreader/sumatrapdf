@@ -70,14 +70,14 @@ void FileWatcher::StartWatchThread()
     hWatchingThread = CreateThread(NULL, 0, WatchingThread, this, 0, &watchingthreadID);
 }
 
-void FileWatcher::Init(const TCHAR* fileFullPath)
+void FileWatcher::Init(const WCHAR* fileFullPath)
 {
     // if the thread already exists then stop it
     if (IsThreadRunning())
         SynchronousAbort();
 
     str::ReplacePtr(&filePath, fileFullPath);
-    TCHAR *dirPath = path::GetDir(filePath);
+    WCHAR *dirPath = path::GetDir(filePath);
 
     hDir = CreateFile(
         dirPath, // pointer to the directory containing the tex files
@@ -166,9 +166,8 @@ bool FileWatcher::NotifyChange()
 
     // Note: the ReadDirectoryChangesW API fills the buffer with WCHAR strings.
     for (;;) {
-        ScopedMem<WCHAR> filenameW(str::DupN(pFileNotify->FileName, pFileNotify->FileNameLength / sizeof(WCHAR)));
-        ScopedMem<TCHAR> notifyFilename(str::conv::FromWStr(filenameW));
-        bool isWatchedFile = str::EqI(notifyFilename, path::GetBaseName(filePath));
+        ScopedMem<WCHAR> filename(str::DupN(pFileNotify->FileName, pFileNotify->FileNameLength / sizeof(WCHAR)));
+        bool isWatchedFile = str::EqI(filename, path::GetBaseName(filePath));
 
         // is it the file that is being watched?
         if (isWatchedFile && pFileNotify->Action == FILE_ACTION_MODIFIED) {

@@ -34,11 +34,11 @@ bool IsValidProgramVersion(char *txt)
 }
 
 // extract the next (positive) number from the string *txt
-static unsigned int ExtractNextNumber(TCHAR **txt)
+static unsigned int ExtractNextNumber(WCHAR **txt)
 {
     unsigned int val = 0;
-    const TCHAR *next = str::Parse(*txt, _T("%u%?."), &val);
-    *txt = next ? (TCHAR *)next : *txt + str::Len(*txt);
+    const WCHAR *next = str::Parse(*txt, L"%u%?.", &val);
+    *txt = next ? (WCHAR *)next : *txt + str::Len(*txt);
     return val;
 }
 
@@ -48,7 +48,7 @@ static unsigned int ExtractNextNumber(TCHAR **txt)
 //   0.9.3.900 is greater than 0.9.3
 //   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
 //   1.2.0 is the same as 1.2
-int CompareVersion(TCHAR *txt1, TCHAR *txt2)
+int CompareVersion(WCHAR *txt1, WCHAR *txt2)
 {
     while (*txt1 || *txt2) {
         unsigned int v1 = ExtractNextNumber(&txt1);
@@ -71,17 +71,17 @@ bool IsRunningInPortableMode()
         return sCacheIsPortable != 0;
     sCacheIsPortable = 1;
 
-    ScopedMem<TCHAR> exePath(GetExePath());
+    ScopedMem<WCHAR> exePath(GetExePath());
     if (!exePath)
         return true;
 
     // if we can't get a path, assume we're not running from "Program Files"
-    ScopedMem<TCHAR> installedPath(NULL);
-    installedPath.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\") APP_NAME_STR, _T("Install_Dir")));
+    ScopedMem<WCHAR> installedPath(NULL);
+    installedPath.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\" APP_NAME_STR, L"Install_Dir"));
     if (!installedPath)
-        installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\") APP_NAME_STR, _T("Install_Dir")));
+        installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, L"Software\\" APP_NAME_STR, L"Install_Dir"));
     if (installedPath) {
-        if (!str::EndsWithI(installedPath.Get(), _T(".exe")))
+        if (!str::EndsWithI(installedPath.Get(), L".exe"))
             installedPath.Set(path::Join(installedPath.Get(), path::GetBaseName(exePath)));
         if (path::IsSame(installedPath, exePath)) {
             sCacheIsPortable = 0;
@@ -89,15 +89,15 @@ bool IsRunningInPortableMode()
         }
     }
 
-    TCHAR programFilesDir[MAX_PATH] = { 0 };
+    WCHAR programFilesDir[MAX_PATH] = { 0 };
     BOOL ok = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
     if (!ok)
         return true;
 
     // check if one of the exePath's parent directories is "Program Files"
     // (or a junction to it)
-    TCHAR *baseName;
-    while ((baseName = (TCHAR*)path::GetBaseName(exePath)) > exePath) {
+    WCHAR *baseName;
+    while ((baseName = (WCHAR*)path::GetBaseName(exePath)) > exePath) {
         baseName[-1] = '\0';
         if (path::IsSame(programFilesDir, exePath)) {
             sCacheIsPortable = 0;
@@ -110,17 +110,17 @@ bool IsRunningInPortableMode()
 
 /* Generate the full path for a filename used by the app in the userdata path. */
 /* Caller needs to free() the result. */
-TCHAR *AppGenDataFilename(TCHAR *fileName)
+WCHAR *AppGenDataFilename(WCHAR *fileName)
 {
-    ScopedMem<TCHAR> path;
+    ScopedMem<WCHAR> path;
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        ScopedMem<TCHAR> exePath(GetExePath());
+        ScopedMem<WCHAR> exePath(GetExePath());
         if (exePath)
             path.Set(path::GetDir(exePath));
     } else {
         /* Use %APPDATA% */
-        TCHAR dir[MAX_PATH];
+        WCHAR dir[MAX_PATH];
         dir[0] = '\0';
         BOOL ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
         if (ok) {
@@ -139,7 +139,7 @@ TCHAR *AppGenDataFilename(TCHAR *fileName)
 // Updates the drive letter for a path that could have been on a removable drive,
 // if that same path can be found on a different removable drive
 // returns true if the path has been changed
-bool AdjustVariableDriveLetter(TCHAR *path)
+bool AdjustVariableDriveLetter(WCHAR *path)
 {
     // Don't bother if the file path is still valid
     if (file::Exists(path))
@@ -149,8 +149,8 @@ bool AdjustVariableDriveLetter(TCHAR *path)
         return false;
 
     // Iterate through all (other) removable drives and try to find the file there
-    TCHAR szDrive[] = _T("A:\\");
-    TCHAR origDrive = path[0];
+    WCHAR szDrive[] = L"A:\\";
+    WCHAR origDrive = path[0];
     for (DWORD driveMask = GetLogicalDrives(); driveMask; driveMask >>= 1) {
         if ((driveMask & 1) && szDrive[0] != origDrive && path::HasVariableDriveLetter(szDrive)) {
             path[0] = szDrive[0];
@@ -206,50 +206,50 @@ Note: When making changes below, please also adjust WriteExtendedFileExtensionIn
 UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 
 */
-#define REG_CLASSES_APP     _T("Software\\Classes\\") APP_NAME_STR
-#define REG_CLASSES_PDF     _T("Software\\Classes\\.pdf")
+#define REG_CLASSES_APP     L"Software\\Classes\\" APP_NAME_STR
+#define REG_CLASSES_PDF     L"Software\\Classes\\.pdf"
 
-#define REG_EXPLORER_PDF_EXT _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf")
+#define REG_EXPLORER_PDF_EXT L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
 
 void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
-    ScopedMem<TCHAR> exePath(GetExePath());
+    ScopedMem<WCHAR> exePath(GetExePath());
     if (!exePath)
         return;
 
-    ScopedMem<TCHAR> prevHandler(NULL);
+    ScopedMem<WCHAR> prevHandler(NULL);
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
     if (prevHandler && !str::Eq(prevHandler, APP_NAME_STR))
-        WriteRegStr(hkey, REG_CLASSES_APP, _T("previous.pdf"), prevHandler);
+        WriteRegStr(hkey, REG_CLASSES_APP, L"previous.pdf", prevHandler);
 
     WriteRegStr(hkey, REG_CLASSES_APP, NULL, _TR("PDF Document"));
-    TCHAR *icon_path = str::Join(exePath, _T(",1"));
-    WriteRegStr(hkey, REG_CLASSES_APP _T("\\DefaultIcon"), NULL, icon_path);
+    WCHAR *icon_path = str::Join(exePath, L",1");
+    WriteRegStr(hkey, REG_CLASSES_APP L"\\DefaultIcon", NULL, icon_path);
     free(icon_path);
 
-    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell"), NULL, _T("open"));
+    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell", NULL, L"open");
 
-    ScopedMem<TCHAR> cmdPath(str::Format(_T("\"%s\" \"%%1\""), exePath)); // "${exePath}" "%1"
-    bool ok = WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\open\\command"), NULL, cmdPath);
+    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\"", exePath)); // "${exePath}" "%1"
+    bool ok = WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\open\\command", NULL, cmdPath);
 
     // also register for printing
-    cmdPath.Set(str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath)); // "${exePath}" -print-to-default "%1"
-    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\print\\command"), NULL, cmdPath);
+    cmdPath.Set(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath)); // "${exePath}" -print-to-default "%1"
+    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\print\\command", NULL, cmdPath);
 
     // also register for printing to specific printer
-    cmdPath.Set(str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath)); // "${exePath}" -print-to "%2" "%1"
-    WriteRegStr(hkey, REG_CLASSES_APP _T("\\shell\\printto\\command"), NULL, cmdPath);
+    cmdPath.Set(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath)); // "${exePath}" -print-to "%2" "%1"
+    WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\printto\\command", NULL, cmdPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
     if (ok) {
         WriteRegStr(hkey, REG_CLASSES_PDF, NULL, APP_NAME_STR);
         // TODO: also add SumatraPDF to the Open With lists for the other supported extensions?
-        WriteRegStr(hkey, REG_CLASSES_PDF _T("\\OpenWithProgids"), APP_NAME_STR, _T(""));
+        WriteRegStr(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR, L"");
         if (hkey == HKEY_CURRENT_USER) {
-            WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, _T("Progid"), APP_NAME_STR);
-            SHDeleteValue(hkey, REG_EXPLORER_PDF_EXT, _T("Application"));
-            DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), true);
+            WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, L"Progid", APP_NAME_STR);
+            SHDeleteValue(hkey, REG_EXPLORER_PDF_EXT, L"Application");
+            DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT L"\\UserChoice", true);
         }
     }
 }
@@ -259,50 +259,50 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 bool IsExeAssociatedWithPdfExtension()
 {
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    ScopedMem<TCHAR> tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, _T("Progid")));
+    ScopedMem<WCHAR> tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Progid"));
     if (tmp && !str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR.exe
-    tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, _T("Application")));
-    if (tmp && !str::EqI(tmp, APP_NAME_STR _T(".exe")))
+    tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Application"));
+    if (tmp && !str::EqI(tmp, APP_NAME_STR L".exe"))
         return false;
 
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), _T("Progid")));
+    tmp.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", L"Progid"));
     if (tmp && !str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // HKEY_CLASSES_ROOT\.pdf default key must exist and be equal to APP_NAME_STR
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL));
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", NULL));
     if (!str::Eq(tmp, APP_NAME_STR))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open default key must be: open
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR _T("\\shell"), NULL));
-    if (!str::EqI(tmp, _T("open")))
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR L"\\shell", NULL));
+    if (!str::EqI(tmp, L"open"))
         return false;
 
     // HKEY_CLASSES_ROOT\SumatraPDF\shell\open\command default key must be: "${exe_path}" "%1"
-    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR _T("\\shell\\open\\command"), NULL));
+    tmp.Set(ReadRegStr(HKEY_CLASSES_ROOT, APP_NAME_STR L"\\shell\\open\\command", NULL));
     if (!tmp)
         return false;
 
-    StrVec argList;
+    WStrVec argList;
     ParseCmdLine(tmp, argList);
-    ScopedMem<TCHAR> exePath(GetExePath());
-    if (!exePath || !argList.Find(_T("%1")) || !str::Find(tmp, _T("\"%1\"")))
+    ScopedMem<WCHAR> exePath(GetExePath());
+    if (!exePath || !argList.Find(L"%1") || !str::Find(tmp, L"\"%1\""))
         return false;
 
     return path::IsSame(exePath, argList.At(0));
 }
 
 // caller needs to free() the result
-TCHAR *ExtractFilenameFromURL(const TCHAR *url)
+WCHAR *ExtractFilenameFromURL(const WCHAR *url)
 {
-    ScopedMem<TCHAR> urlName(str::Dup(url));
+    ScopedMem<WCHAR> urlName(str::Dup(url));
     // try to extract the file name from the URL (last path component before query or hash)
-    str::TransChars(urlName, _T("/?#"), _T("\\\0\0"));
+    str::TransChars(urlName, L"/?#", L"\\\0\0");
     urlName.Set(str::Dup(path::GetBaseName(urlName)));
     // unescape hex-escapes (these are usually UTF-8)
     if (str::FindChar(urlName, '%')) {
@@ -328,20 +328,20 @@ TCHAR *ExtractFilenameFromURL(const TCHAR *url)
 // files are considered untrusted, if they're either loaded from a
 // non-file URL in plugin mode, or if they're marked as being from
 // an untrusted zone (e.g. by the browser that's downloaded them)
-bool IsUntrustedFile(const TCHAR *filePath, const TCHAR *fileURL)
+bool IsUntrustedFile(const WCHAR *filePath, const WCHAR *fileURL)
 {
-    ScopedMem<TCHAR> protocol;
-    if (fileURL && str::Parse(fileURL, _T("%S:"), &protocol))
-        if (str::Len(protocol) > 1 && !str::EqI(protocol, _T("file")))
+    ScopedMem<WCHAR> protocol;
+    if (fileURL && str::Parse(fileURL, L"%S:", &protocol))
+        if (str::Len(protocol) > 1 && !str::EqI(protocol, L"file"))
             return true;
 
     if (file::GetZoneIdentifier(filePath) >= URLZONE_INTERNET)
         return true;
 
     // check all parents of embedded files and ADSs as well
-    ScopedMem<TCHAR> path(str::Dup(filePath));
+    ScopedMem<WCHAR> path(str::Dup(filePath));
     while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
-        *_tcsrchr(path, ':') = '\0';
+        *wcsrchr(path, ':') = '\0';
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET)
             return true;
     }
@@ -359,61 +359,61 @@ enum EditorPathType {
 };
 
 static struct {
-    PTSTR          Name;                // Editor name
+    const WCHAR *  Name;                // Editor name
     EditorPathType Type;                // Type of the path information obtained from the registry
     HKEY           RegRoot;             // Root of the regkey
-    PTSTR          RegKey;              // Registry key path
-    PTSTR          RegValue;            // Registry value name
-    PTSTR          BinaryFilename;      // Editor's binary file name
-    PTSTR          InverseSearchArgs;   // Parameters to be passed to the editor;
+    const WCHAR *  RegKey;              // Registry key path
+    const WCHAR *  RegValue;            // Registry value name
+    const WCHAR *  BinaryFilename;      // Editor's binary file name
+    const WCHAR *  InverseSearchArgs;   // Parameters to be passed to the editor;
                                         // use placeholder '%f' for path to source file and '%l' for line number.
 } editor_rules[] = {
-    _T("WinEdt"),             BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe"), NULL,
-                              _T("WinEdt.exe"), _T("\"[Open(|%f|);SelPar(%l,8)]\""),
+    L"WinEdt",             BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe", NULL,
+                              L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"",
 
-    _T("WinEdt"),             BinaryDir, HKEY_CURRENT_USER, _T("Software\\WinEdt"), _T("Install Root"),
-                              _T("WinEdt.exe"), _T("\"[Open(|%f|);SelPar(%l,8)]\""),
+    L"WinEdt",             BinaryDir, HKEY_CURRENT_USER, L"Software\\WinEdt", L"Install Root",
+                              L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"",
 
-    _T("Notepad++"),          BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\notepad++.exe"), NULL,
-                              _T("WinEdt.exe"), _T("-n%l \"%f\""),
+    L"Notepad++",          BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\notepad++.exe", NULL,
+                              L"WinEdt.exe", L"-n%l \"%f\"",
 
-    _T("Notepad++"),          BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Notepad++"), NULL,
-                              _T("notepad++.exe"), _T("-n%l \"%f\""),
+    L"Notepad++",          BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Notepad++", NULL,
+                              L"notepad++.exe", L"-n%l \"%f\"",
 
-    _T("Notepad++"),          BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Notepad++"), _T("DisplayIcon"),
-                              _T("notepad++.exe"), _T("-n%l \"%f\""),
+    L"Notepad++",          BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Notepad++", L"DisplayIcon",
+                              L"notepad++.exe", L"-n%l \"%f\"",
 
-    _T("TeXnicCenter Alpha"), BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\ToolsCenter\\TeXnicCenterNT"), _T("AppPath"),
-                              _T("TeXnicCenter.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
+    L"TeXnicCenter Alpha", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenterNT", L"AppPath",
+                              L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
 
-    _T("TeXnicCenter Alpha"), BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter Alpha_is1"), _T("InstallLocation"),
-                              _T("TeXnicCenter.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
+    L"TeXnicCenter Alpha", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter Alpha_is1", L"InstallLocation",
+                              L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
 
-    _T("TeXnicCenter"),       BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\ToolsCenter\\TeXnicCenter"), _T("AppPath"),
-                              _T("TEXCNTR.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
+    L"TeXnicCenter",       BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenter", L"AppPath",
+                              L"TEXCNTR.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
 
-    _T("TeXnicCenter"),       BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter_is1"), _T("InstallLocation"),
-                              _T("TEXCNTR.exe"), _T("/ddecmd \"[goto('%f', '%l')]\""),
+    L"TeXnicCenter",       BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter_is1", L"InstallLocation",
+                              L"TEXCNTR.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
 
-    _T("WinShell"),           BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1"), _T("InstallLocation"),
-                              _T("WinShell.exe"), _T("-c \"%f\" -l %l"),
+    L"WinShell",           BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1", L"InstallLocation",
+                              L"WinShell.exe", L"-c \"%f\" -l %l",
 
-    _T("Gvim"),               BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Vim\\Gvim"), _T("path"),
-                              _T("gvim.exe"), _T("\"%f\" +%l"),
+    L"Gvim",               BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
+                              L"gvim.exe", L"\"%f\" +%l",
 
     // TODO: add this rule only if the latex-suite for ViM is installed (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
-    _T("Gvim+latex-suite"),   BinaryPath, HKEY_LOCAL_MACHINE, _T("Software\\Vim\\Gvim"), _T("path"),
-                             _T("gvim.exe"), _T("-c \":RemoteOpen +%l %f\""),
+    L"Gvim+latex-suite",   BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
+                             L"gvim.exe", L"-c \":RemoteOpen +%l %f\"",
 
-    _T("Texmaker"),           SiblingPath, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Texmaker"), _T("UninstallString"),
-                              _T("texmaker.exe"), _T("\"%f\" -line %l"),
+    L"Texmaker",           SiblingPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Texmaker", L"UninstallString",
+                              L"texmaker.exe", L"\"%f\" -line %l",
 
-    _T("TeXworks"),           BinaryDir, HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1"), _T("InstallLocation"),
-                              _T("TeXworks.exe"), _T("-p=%l  \"%f\""),
+    L"TeXworks",           BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1", L"InstallLocation",
+                              L"TeXworks.exe", L"-p=%l  \"%f\"",
 
     // TODO: find a way to detect where emacs is installed
-    //_T("ntEmacs"),            BinaryPath, HKEY_LOCAL_MACHINE, _T("???"), _T("???"),
-    //                          _T("emacsclientw.exe"), _T("+%l \"%f\""),
+    //L"ntEmacs",            BinaryPath, HKEY_LOCAL_MACHINE, L"???", L"???",
+    //                          L"emacsclientw.exe", l"+%l \"%f\"",
 };
 
 // Detect TeX editors installed on the system and construct the
@@ -423,12 +423,12 @@ static struct {
 //      hwndCombo   -- (optional) handle to a combo list that will be filled with the list of possible inverse search commands.
 // Returns:
 //      the inverse search command of the first detected editor (the caller needs to free() the result).
-LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
+WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
 {
-    LPTSTR firstEditor = NULL;
-    ScopedMem<TCHAR> path(NULL);
+    WCHAR *firstEditor = NULL;
+    ScopedMem<WCHAR> path(NULL);
 
-    TCHAR *editorToSkip = NULL;
+    const WCHAR *editorToSkip = NULL;
 
     for (int i = 0; i < dimof(editor_rules); i++)
     {
@@ -440,17 +440,17 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
         if (!path)
             continue;
 
-        TCHAR *exePath;
+        WCHAR *exePath;
         if (editor_rules[i].Type == SiblingPath) {
             // remove file part
-            ScopedMem<TCHAR> dir(path::GetDir(path));
+            ScopedMem<WCHAR> dir(path::GetDir(path));
             exePath = path::Join(dir, editor_rules[i].BinaryFilename);
         } else if (editor_rules[i].Type == BinaryDir)
             exePath = path::Join(path, editor_rules[i].BinaryFilename);
         else // if (editor_rules[i].Type == BinaryPath)
             exePath = str::Dup(path);
 
-        TCHAR *editorCmd = str::Format(_T("\"%s\" %s"), exePath, editor_rules[i].InverseSearchArgs);
+        WCHAR *editorCmd = str::Format(L"\"%s\" %s", exePath, editor_rules[i].InverseSearchArgs);
         free(exePath);
 
         if (!hwndCombo) {
@@ -469,7 +469,7 @@ LPTSTR AutoDetectInverseSearchCommands(HWND hwndCombo)
 
     // Fall back to notepad as a default handler
     if (!firstEditor) {
-        firstEditor = str::Dup(_T("notepad %f"));
+        firstEditor = str::Dup(L"notepad %f");
         if (hwndCombo)
             ComboBox_AddString(hwndCombo, firstEditor);
     }
@@ -482,7 +482,7 @@ static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz
     return 0;
 }
 
-void DDEExecute(const TCHAR* server, const TCHAR* topic, const TCHAR* command)
+void DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command)
 {
     unsigned long inst = 0;
     HSZ hszServer = NULL, hszTopic = NULL;
@@ -501,7 +501,8 @@ void DDEExecute(const TCHAR* server, const TCHAR* topic, const TCHAR* command)
     hconv = DdeConnect(inst, hszServer, hszTopic, 0);
     if (!hconv)
         goto Exit;
-    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, (DWORD)(str::Len(command) + 1) * sizeof(TCHAR), 0, 0, CF_T_TEXT, 0);
+    DWORD cbLen = (str::Len(command) + 1) * sizeof(WCHAR);
+    hddedata = DdeCreateDataHandle(inst, (BYTE*)command, cbLen, 0, 0, CF_UNICODETEXT, 0);
     if (!hddedata)
         goto Exit;
 
@@ -562,7 +563,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case UWM_DELAYED_CTRL_BACK:
         {
-            ScopedMem<TCHAR> text(win::GetText(hwnd));
+            ScopedMem<WCHAR> text(win::GetText(hwnd));
             int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
             // remove the rectangle produced by Ctrl+Backspace
             if (selStart > 0 && text[selStart - 1] == '\x7F') {
@@ -571,8 +572,8 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 selStart = selEnd = selStart - 1;
             }
             // remove the previous word (and any spacing after it)
-            for (; selStart > 0 && _istspace(text[selStart - 1]); selStart--);
-            for (; selStart > 0 && !_istspace(text[selStart - 1]); selStart--);
+            for (; selStart > 0 && iswspace(text[selStart - 1]); selStart--);
+            for (; selStart > 0 && !iswspace(text[selStart - 1]); selStart--);
             Edit_SetSel(hwnd, selStart, selEnd);
             SendMessage(hwnd, WM_CLEAR, 0, 0);
         }

@@ -47,7 +47,7 @@ static const char *ParseBencInt(const char *bytes, int64_t& value)
     return bytes;
 }
 
-BencString::BencString(const TCHAR *value) : BencObj(BT_STRING)
+BencString::BencString(const WCHAR *value) : BencObj(BT_STRING)
 {
     assert(value);
     this->value = str::conv::ToUtf8(value);
@@ -61,7 +61,7 @@ BencString::BencString(const char *rawValue, size_t len) : BencObj(BT_STRING)
     value = str::DupN(rawValue, len);
 }
 
-TCHAR *BencString::Value() const
+WCHAR *BencString::Value() const
 {
     return str::conv::FromUtf8(value);
 }
@@ -178,9 +178,10 @@ void BencDict::Add(const char *key, BencObj *obj)
     size_t oix = 0;
     if (keys.Count() > 0 && strcmp(keys.Last(), key) < 0)
         oix = keys.Count();
-    for (; oix < keys.Count(); oix++)
+    for (; oix < keys.Count(); oix++) {
         if (strcmp(keys.At(oix), key) >= 0)
             break;
+    }
 
     if (oix < keys.Count() && str::Eq(keys.At(oix), key)) {
         // overwrite a previous value

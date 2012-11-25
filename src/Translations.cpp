@@ -27,11 +27,11 @@ LangDef gLangData[LANGS_COUNT];
 
 // numeric index of the current language. 0 ... LANGS_COUNT-1
 static int gCurrLangIdx = 0;
-static const TCHAR **gTranslationCache = NULL;  // cached translations
+static const WCHAR **gTranslationCache = NULL;  // cached translations
 
 struct MissingTranslation {
     const char *s;
-    const TCHAR *translation;
+    const WCHAR *translation;
 };
 
 // there should only be one or two missing translations
@@ -46,7 +46,7 @@ static void FreeMissingTranslations()
     gMissingTranslationsCount = 0;
 }
 
-static const TCHAR *FindOrAddMissingTranslation(const char *s)
+static const WCHAR *FindOrAddMissingTranslation(const char *s)
 {
     for (int i = 0; i < gMissingTranslationsCount; i++) {
         if (s == gMissingTranslations[i].s) {
@@ -54,10 +54,10 @@ static const TCHAR *FindOrAddMissingTranslation(const char *s)
         }
     }
     if (gMissingTranslationsCount >= dimof(gMissingTranslations))
-        return _T("missing translation");
+        return L"missing translation";
 
     gMissingTranslations[gMissingTranslationsCount].s = s;
-    const TCHAR *res = str::conv::FromUtf8(s);
+    const WCHAR *res = str::conv::FromUtf8(s);
     gMissingTranslations[gMissingTranslationsCount].translation = res;
     gMissingTranslationsCount++;
     return res;
@@ -150,13 +150,13 @@ void Destroy()
 // array. That way the client doesn't have to worry about the lifetime of the string.
 // All allocated strings can be freed with Trans::FreeData(), which should be
 // done at program exit so that we're guaranteed no-one is using the data
-const TCHAR *GetTranslation(const char *txt)
+const WCHAR *GetTranslation(const char *txt)
 {
     if (!gTranslationCache) {
         assert(dimof(gTranslations) == STRINGS_COUNT * LANGS_COUNT);
-        gTranslationCache = AllocArray<const TCHAR *>(dimof(gTranslations));
+        gTranslationCache = AllocArray<const WCHAR *>(dimof(gTranslations));
         if (!gTranslationCache)
-            return _T("Missing translation!?");
+            return L"Missing translation!?";
     }
 
     int idx = GetTranslationIndex(txt);
@@ -197,7 +197,7 @@ const char *GetLanguageCode(int langIdx)
 }
 
 // caller needs to free() the result
-TCHAR *GetLanguageName(int langIdx)
+WCHAR *GetLanguageName(int langIdx)
 {
     assert(IsValidLangIdx(langIdx));
     if (!IsValidLangIdx(langIdx))

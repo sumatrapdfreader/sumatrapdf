@@ -774,3 +774,123 @@ fz_drop_image(fz_context *ctx, fz_image *image)
 {
 	fz_drop_storable(ctx, &image->storable);
 }
+
+void
+fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
+{
+	int dst_w, dst_h, w, h, fwd, fwd2, fwd3, back, back2, x, y, n, xx, yy, nn, f;
+	unsigned char *s, *d;
+
+	if (!tile)
+		return;
+	s = d = tile->samples;
+	f = 1<<factor;
+	w = tile->w;
+	h = tile->h;
+	n = tile->n;
+	dst_w = (w + f-1)>>factor;
+	dst_h = (h + f-1)>>factor;
+	fwd = w*n;
+	back = f*fwd-n;
+	back2 = f*n-1;
+	fwd2 = (f-1)*n;
+	fwd3 = (f-1)*fwd;
+	factor *= 2;
+	for (y = h - f; y >= 0; y -= f)
+	{
+		for (x = w - f; x >= 0; x -= f)
+		{
+			for (nn = n; nn > 0; nn--)
+			{
+				int v = 0;
+				for (xx = f; xx > 0; xx--)
+				{
+					for (yy = f; yy > 0; yy--)
+					{
+						v += *s;
+						s += fwd;
+					}
+					s -= back;
+				}
+				*d++ = v >> factor;
+				s -= back2;
+			}
+			s += fwd2;
+		}
+		/* Do any strays */
+		x += f;
+		if (x > 0)
+		{
+			int div = x * f;
+			int fwd4 = (x-1) * n;
+			int back4 = x*n-1;
+			for (nn = n; nn > 0; nn--)
+			{
+				int v = 0;
+				for (xx = x; xx > 0; xx--)
+				{
+					for (yy = f; yy > 0; yy--)
+					{
+						v += *s;
+						s += fwd;
+					}
+					s -= back;
+				}
+				*d++ = v / div;
+				s -= back4;
+			}
+			s += fwd4;
+		}
+		s += fwd3;
+	}
+	/* Do any stray line */
+	y += f;
+	if (y > 0)
+	{
+		int div = y * f;
+		back = fwd * y - n;
+		for (x = w - f; x >= 0; x -= f)
+		{
+			for (nn = n; nn > 0; nn--)
+			{
+				int v = 0;
+				for (xx = f; xx > 0; xx--)
+				{
+					for (yy = y; yy > 0; yy--)
+					{
+						v += *s;
+						s += fwd;
+					}
+					s -= back;
+				}
+				*d++ = v / div;
+				s -= back2;
+			}
+			s += fwd2;
+		}
+		/* Do any stray at the end of the stray line */
+		x += f;
+		if (x > 0)
+		{
+			int div = x * y;
+			for (nn = n; nn > 0; nn--)
+			{
+				int v = 0;
+				for (xx = x; xx > 0; xx--)
+				{
+					for (yy = y; yy > 0; yy--)
+					{
+						v += *s;
+						s += fwd;
+					}
+					s -= back;
+				}
+				*d++ = v / div;
+				s -= back2;
+			}
+		}
+	}
+	tile->w = dst_w;
+	tile->h = dst_h;
+	tile->samples = fz_resize_array(ctx, tile->samples, dst_w * n, dst_h);
+}

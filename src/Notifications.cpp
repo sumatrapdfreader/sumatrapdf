@@ -8,9 +8,9 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-#define NOTIFICATION_WND_CLASS_NAME _T("SUMATRA_PDF_NOTIFICATION_WINDOW")
+#define NOTIFICATION_WND_CLASS_NAME L"SUMATRA_PDF_NOTIFICATION_WINDOW"
 
-void NotificationWnd::CreatePopup(HWND parent, const TCHAR *message)
+void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
 {
     NONCLIENTMETRICS ncm = { 0 };
     ncm.cbSize = sizeof(ncm);
@@ -30,7 +30,7 @@ void NotificationWnd::CreatePopup(HWND parent, const TCHAR *message)
     ShowWindow(self, SW_SHOW);
 }
 
-void NotificationWnd::UpdateWindowPosition(const TCHAR *message, bool init)
+void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
 {
     // compute the length of the message
     RECT rc = ClientRect(self).ToRECT();
@@ -75,7 +75,7 @@ void NotificationWnd::UpdateProgress(int current, int total)
         total = 1;
     progress = limitValue(100 * current / total, 0, 100);
     if (hasProgress && progressMsg) {
-        ScopedMem<TCHAR> message(str::Format(progressMsg, current, total));
+        ScopedMem<WCHAR> message(str::Format(progressMsg, current, total));
         UpdateMessage(message);
     }
 }
@@ -85,7 +85,7 @@ bool NotificationWnd::WasCanceled()
     return isCanceled;
 }
 
-void NotificationWnd::UpdateMessage(const TCHAR *message, int timeoutInMS, bool highlight)
+void NotificationWnd::UpdateMessage(const WCHAR *message, int timeoutInMS, bool highlight)
 {
     win::SetText(self, message);
     this->highlight = highlight;
@@ -138,7 +138,7 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
             rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
         if (wnd->hasCancel)
             rectMsg.dx -= 20;
-        ScopedMem<TCHAR> text(win::GetText(hwnd));
+        ScopedMem<WCHAR> text(win::GetText(hwnd));
         DrawText(hdc, text, -1, &rectMsg.ToRECT(), DT_SINGLELINE | DT_NOPREFIX);
 
         if (wnd->hasCancel)
@@ -276,17 +276,17 @@ void Notifications::Relayout()
     }
 }
 
-void ShowNotification(WindowInfo *win, const TCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
+void ShowNotification(WindowInfo *win, const WCHAR *message, bool autoDismiss, bool highlight, NotificationGroup groupId)
 {
     NotificationWnd *wnd = new NotificationWnd(win->hwndCanvas, message, autoDismiss ? 3000 : 0, highlight, win->notifications);
     win->notifications->Add(wnd, groupId);
 }
 
-bool RegisterNotificationsWndClass(HINSTANCE inst)
+void RegisterNotificationsWndClass(HINSTANCE inst)
 {
     WNDCLASSEX  wcex;
     FillWndClassEx(wcex, inst, NOTIFICATION_WND_CLASS_NAME, NotificationWnd::WndProc);
     wcex.hCursor = LoadCursor(NULL, IDC_APPSTARTING);
     ATOM atom = RegisterClassEx(&wcex);
-    return atom != 0;
+    CrashIf(!atom);
 }

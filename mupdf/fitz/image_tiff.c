@@ -52,7 +52,7 @@ struct tiff
 
 	unsigned ycbcrsubsamp[2];
 
-	unsigned char *jpegtables;		/* point into "file" buffer */
+	unsigned char *jpegtables; /* point into "file" buffer */
 	unsigned jpegtableslen;
 
 	unsigned char *profile;

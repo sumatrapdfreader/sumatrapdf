@@ -1,74 +1,77 @@
-static void StrVecTest()
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
+static void WStrVecTest()
 {
-    StrVec v;
-    v.Append(str::Dup(_T("foo")));
-    v.Append(str::Dup(_T("bar")));
-    TCHAR *s = v.Join();
+    WStrVec v;
+    v.Append(str::Dup(L"foo"));
+    v.Append(str::Dup(L"bar"));
+    WCHAR *s = v.Join();
     assert(v.Count() == 2);
-    assert(str::Eq(_T("foobar"), s));
+    assert(str::Eq(L"foobar", s));
     free(s);
 
-    s = v.Join(_T(";"));
+    s = v.Join(L";");
     assert(v.Count() == 2);
-    assert(str::Eq(_T("foo;bar"), s));
+    assert(str::Eq(L"foo;bar", s));
     free(s);
 
-    v.Append(str::Dup(_T("glee")));
-    s = v.Join(_T("_ _"));
+    v.Append(str::Dup(L"glee"));
+    s = v.Join(L"_ _");
     assert(v.Count() == 3);
-    assert(str::Eq(_T("foo_ _bar_ _glee"), s));
+    assert(str::Eq(L"foo_ _bar_ _glee", s));
     free(s);
 
     v.Sort();
     s = v.Join();
-    assert(str::Eq(_T("barfooglee"), s));
+    assert(str::Eq(L"barfooglee", s));
     free(s);
 
     {
-        StrVec v2(v);
-        assert(str::Eq(v2.At(1), _T("foo")));
-        v2.Append(str::Dup(_T("nobar")));
-        assert(str::Eq(v2.At(3), _T("nobar")));
+        WStrVec v2(v);
+        assert(str::Eq(v2.At(1), L"foo"));
+        v2.Append(str::Dup(L"nobar"));
+        assert(str::Eq(v2.At(3), L"nobar"));
         v2 = v;
         assert(v2.Count() == 3 && v2.At(0) != v.At(0));
-        assert(str::Eq(v2.At(1), _T("foo")));
-        assert(&v2.At(2) == v2.AtPtr(2) && str::Eq(*v2.AtPtr(2), _T("glee")));
+        assert(str::Eq(v2.At(1), L"foo"));
+        assert(&v2.At(2) == v2.AtPtr(2) && str::Eq(*v2.AtPtr(2), L"glee"));
     }
 
     {
-        StrVec v2;
-        size_t count = v2.Split(_T("a,b,,c,"), _T(","));
-        assert(count == 5 && v2.Find(_T("c")) == 3);
-        assert(v2.Find(_T("")) == 2 && v2.Find(_T(""), 3) == 4 && v2.Find(_T(""), 5) == -1);
-        assert(v2.Find(_T("B")) == -1 && v2.FindI(_T("B")) == 1);
-        ScopedMem<TCHAR> joined(v2.Join(_T(";")));
-        assert(str::Eq(joined, _T("a;b;;c;")));
+        WStrVec v2;
+        size_t count = v2.Split(L"a,b,,c,", L",");
+        assert(count == 5 && v2.Find(L"c") == 3);
+        assert(v2.Find(L"") == 2 && v2.Find(L"", 3) == 4 && v2.Find(L"", 5) == -1);
+        assert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
+        ScopedMem<WCHAR> joined(v2.Join(L";"));
+        assert(str::Eq(joined, L"a;b;;c;"));
     }
 
     {
-        StrVec v2;
-        size_t count = v2.Split(_T("a,b,,c,"), _T(","), true);
-        assert(count == 3 && v2.Find(_T("c")) == 2);
-        ScopedMem<TCHAR> joined(v2.Join(_T(";")));
-        assert(str::Eq(joined, _T("a;b;c")));
-        ScopedMem<TCHAR> last(v2.Pop());
-        assert(v2.Count() == 2 && str::Eq(last, _T("c")));
+        WStrVec v2;
+        size_t count = v2.Split(L"a,b,,c,", L",", true);
+        assert(count == 3 && v2.Find(L"c") == 2);
+        ScopedMem<WCHAR> joined(v2.Join(L";"));
+        assert(str::Eq(joined, L"a;b;c"));
+        ScopedMem<WCHAR> last(v2.Pop());
+        assert(v2.Count() == 2 && str::Eq(last, L"c"));
     }
 }
 
 static void StrListTest()
 {
-    StrList l;
+    WStrList l;
     assert(l.Count() == 0);
-    l.Append(str::Dup(_T("one")));
-    l.Append(str::Dup(_T("two")));
-    l.Append(str::Dup(_T("One")));
+    l.Append(str::Dup(L"one"));
+    l.Append(str::Dup(L"two"));
+    l.Append(str::Dup(L"One"));
     assert(l.Count() == 3);
-    assert(str::Eq(l.At(0), _T("one")));
-    assert(str::EqI(l.At(2), _T("one")));
-    assert(l.Find(_T("One")) == 2);
-    assert(l.FindI(_T("One")) == 0);
-    assert(l.Find(_T("Two")) == -1);
+    assert(str::Eq(l.At(0), L"one"));
+    assert(str::EqI(l.At(2), L"one"));
+    assert(l.Find(L"One") == 2);
+    assert(l.FindI(L"One") == 0);
+    assert(l.Find(L"Two") == -1);
 }
 
 static size_t VecTestAppendFmt()

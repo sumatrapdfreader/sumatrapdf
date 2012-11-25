@@ -1,6 +1,6 @@
 #include "fitz-internal.h"
 
-static inline int tolower(int c)
+static inline int fz_tolower(int c)
 {
 	/* TODO: proper unicode case folding */
 	if (c >= 'A' && c <= 'Z')
@@ -79,7 +79,7 @@ static int match(fz_text_page *page, const char *s, int n)
 		}
 		else
 		{
-			if (tolower(c) != tolower(charat(page, n)))
+			if (fz_tolower(c) != fz_tolower(charat(page, n)))
 				return 0;
 			n++;
 		}

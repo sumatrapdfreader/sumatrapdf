@@ -26,7 +26,7 @@ per-file basis in FileHistory.
 
 class FavName {
 public:
-   FavName(int pageNo, const TCHAR *name) : pageNo(pageNo), name(NULL)
+   FavName(int pageNo, const WCHAR *name) : pageNo(pageNo), name(NULL)
    {
        SetName(name);
    }
@@ -36,13 +36,13 @@ public:
        free(name);
    }
 
-   void SetName(const TCHAR *name)
+   void SetName(const WCHAR *name)
    {
        str::ReplacePtr(&this->name, name);
    }
 
    int     pageNo;
-   TCHAR * name;
+   WCHAR * name;
    int     menuId; // assigned in AppendFavMenuItems()
 };
 
@@ -54,10 +54,10 @@ class FileFavs {
    static int SortByPageNo(const void *a, const void *b);
 
 public:
-   TCHAR *         filePath;
+   WCHAR *         filePath;
    Vec<FavName *>  favNames;
 
-   FileFavs(const TCHAR *fp) : filePath(str::Dup(fp)) { }
+   FileFavs(const WCHAR *fp) : filePath(str::Dup(fp)) { }
 
    ~FileFavs() {
        DeleteVecMembers(favNames);
@@ -76,13 +76,13 @@ public:
    bool GetByMenuId(int menuId, size_t& idx);
    bool HasFavName(FavName *fn);
    bool Remove(int pageNo);
-   void AddOrReplace(int pageNo, const TCHAR *name);
+   void AddOrReplace(int pageNo, const WCHAR *name);
 };
 
 class Favorites {
 
    // filePathCache points to a string inside FileFavs, so doesn't need to free()d
-   TCHAR *  filePathCache;
+   WCHAR *  filePathCache;
    size_t   idxCache;
 
    void RemoveFav(FileFavs *fav, size_t idx);
@@ -101,11 +101,11 @@ public:
    FileFavs *GetByMenuId(int menuId, size_t& idx);
    FileFavs *GetByFavName(FavName *fn);
    void ResetMenuIds();
-   FileFavs *GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL);
-   bool IsPageInFavorites(const TCHAR *filePath, int pageNo);
-   void AddOrReplace(const TCHAR *filePath, int pageNo, const TCHAR *name);
-   void Remove(const TCHAR *filePath, int pageNo);
-   void RemoveAllForFile(const TCHAR *filePath);
+   FileFavs *GetFavByFilePath(const WCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL);
+   bool IsPageInFavorites(const WCHAR *filePath, int pageNo);
+   void AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name);
+   void Remove(const WCHAR *filePath, int pageNo);
+   void RemoveAllForFile(const WCHAR *filePath);
 };
 
 void AddFavorite(WindowInfo *win);

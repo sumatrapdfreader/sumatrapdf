@@ -8,7 +8,7 @@ namespace path {
 
 bool IsSep(WCHAR c)
 {
-    return L'\\' == c || L'/' == c;
+    return '\\' == c || '/' == c;
 }
 
 bool IsSep(char c)
@@ -30,45 +30,47 @@ const WCHAR *GetBaseName(const WCHAR *path)
 const char *GetBaseName(const char *path)
 {
     const char *fileBaseName = path + str::Len(path);
-    for (; fileBaseName > path; fileBaseName--)
+    for (; fileBaseName > path; fileBaseName--) {
         if (IsSep(fileBaseName[-1]))
             break;
+    }
     return fileBaseName;
 }
 
 // Note: returns pointer inside <path>, do not free
-const TCHAR *GetExt(const TCHAR *path)
+const WCHAR *GetExt(const WCHAR *path)
 {
-    const TCHAR *ext = path + str::Len(path);
-    for (; ext > path && !IsSep(*ext); ext--)
+    const WCHAR *ext = path + str::Len(path);
+    for (; ext > path && !IsSep(*ext); ext--) {
         if (*ext == '.')
             return ext;
+    }
     return path + str::Len(path);
 }
 
-// Caller has to free
-TCHAR *GetDir(const TCHAR *path)
+// Caller has to free()
+WCHAR *GetDir(const WCHAR *path)
 {
-    const TCHAR *baseName = GetBaseName(path);
+    const WCHAR *baseName = GetBaseName(path);
     if (baseName == path) // relative directory
-        return str::Dup(_T("."));
+        return str::Dup(L".");
     if (baseName == path + 1) // relative root
         return str::DupN(path, 1);
     if (baseName == path + 3 && path[1] == ':') // local drive root
         return str::DupN(path, 3);
-    if (baseName == path + 2 && str::StartsWith(path, _T("\\\\"))) // server root
+    if (baseName == path + 2 && str::StartsWith(path, L"\\\\")) // server root
         return str::Dup(path);
     // any subdirectory
     return str::DupN(path, baseName - path - 1);
 }
 
-TCHAR *Join(const TCHAR *path, const TCHAR *filename)
+WCHAR *Join(const WCHAR *path, const WCHAR *filename)
 {
     if (IsSep(*filename))
         filename++;
-    TCHAR *sep = NULL;
+    WCHAR *sep = NULL;
     if (!IsSep(path[str::Len(path) - 1]))
-        sep = _T("\\");
+        sep = L"\\";
     return str::Join(path, sep, filename);
 }
 
@@ -90,39 +92,39 @@ TCHAR *Join(const TCHAR *path, const TCHAR *filename)
 // e.g. suppose the a file "C:\foo\Bar.Pdf" exists on the file system then
 //    "c:\foo\bar.pdf" becomes "c:\foo\Bar.Pdf"
 //    "C:\foo\BAR.PDF" becomes "C:\foo\Bar.Pdf"
-TCHAR *Normalize(const TCHAR *path)
+WCHAR *Normalize(const WCHAR *path)
 {
     // convert to absolute path, change slashes into backslashes
     DWORD cch = GetFullPathName(path, 0, NULL, NULL);
     if (!cch)
         return str::Dup(path);
-    ScopedMem<TCHAR> fullpath(AllocArray<TCHAR>(cch));
+    ScopedMem<WCHAR> fullpath(AllocArray<WCHAR>(cch));
     GetFullPathName(path, cch, fullpath, NULL);
     // convert to long form
     cch = GetLongPathName(fullpath, NULL, 0);
     if (!cch)
         return fullpath.StealData();
-    TCHAR *normpath = AllocArray<TCHAR>(cch);
+    WCHAR *normpath = AllocArray<WCHAR>(cch);
     GetLongPathName(fullpath, normpath, cch);
     return normpath;
 }
 
 // Normalizes the file path and the converts it into a short form that
 // can be used for interaction with non-UNICODE aware applications
-TCHAR *ShortPath(const TCHAR *path)
+WCHAR *ShortPath(const WCHAR *path)
 {
-    ScopedMem<TCHAR> normpath(Normalize(path));
+    ScopedMem<WCHAR> normpath(Normalize(path));
     DWORD cch = GetShortPathName(normpath, NULL, 0);
     if (!cch)
         return normpath;
-    TCHAR *shortpath = AllocArray<TCHAR>(cch);
+    WCHAR *shortpath = AllocArray<WCHAR>(cch);
     GetShortPathName(normpath, shortpath, cch);
     return shortpath;
 }
 
 // Code adapted from http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
 // Determine if 2 paths point ot the same file...
-bool IsSame(const TCHAR *path1, const TCHAR *path2)
+bool IsSame(const WCHAR *path1, const WCHAR *path2)
 {
     bool isSame = false, needFallback = true;
     HANDLE handle1 = CreateFile(path1, 0, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
@@ -144,18 +146,18 @@ bool IsSame(const TCHAR *path1, const TCHAR *path2)
     if (!needFallback)
         return isSame;
 
-    ScopedMem<TCHAR> npath1(Normalize(path1));
-    ScopedMem<TCHAR> npath2(Normalize(path2));
+    ScopedMem<WCHAR> npath1(Normalize(path1));
+    ScopedMem<WCHAR> npath2(Normalize(path2));
     // consider the files different, if their paths can't be normalized
     if (!npath1 || !npath2)
         return false;
     return str::EqI(npath1, npath2);
 }
 
-bool HasVariableDriveLetter(const TCHAR *path)
+bool HasVariableDriveLetter(const WCHAR *path)
 {
-    TCHAR root[] = _T("?:\\");
-    root[0] = _totupper(path[0]);
+    WCHAR root[] = L"?:\\";
+    root[0] = towupper(path[0]);
     if (root[0] < 'A' || 'Z' < root[0])
         return false;
 
@@ -165,7 +167,7 @@ bool HasVariableDriveLetter(const TCHAR *path)
            DRIVE_NO_ROOT_DIR == driveType;
 }
 
-static bool MatchWildcardsRec(const TCHAR *filename, const TCHAR *filter)
+static bool MatchWildcardsRec(const WCHAR *filename, const WCHAR *filter)
 {
 #define AtEndOf(str) (*(str) == '\0')
     switch (*filter) {
@@ -179,7 +181,7 @@ static bool MatchWildcardsRec(const TCHAR *filename, const TCHAR *filter)
     case '?':
         return !AtEndOf(filename) && MatchWildcardsRec(filename + 1, filter + 1);
     default:
-        return _totlower(*filename) == _totlower(*filter) &&
+        return towlower(*filename) == towlower(*filter) &&
                MatchWildcardsRec(filename + 1, filter + 1);
     }
 #undef AtEndOf
@@ -190,7 +192,7 @@ static bool MatchWildcardsRec(const TCHAR *filename, const TCHAR *filter)
    (e.g. "*.pdf;*.xps;?.*" will match all PDF and XPS files and
    all filenames consisting of only a single character and
    having any extension) */
-bool Match(const TCHAR *path, const TCHAR *filter)
+bool Match(const WCHAR *path, const WCHAR *filter)
 {
     path = GetBaseName(path);
     while (str::FindChar(filter, ';')) {
@@ -201,22 +203,22 @@ bool Match(const TCHAR *path, const TCHAR *filter)
     return MatchWildcardsRec(path, filter);
 }
 
-bool IsAbsolute(const TCHAR *path)
+bool IsAbsolute(const WCHAR *path)
 {
     return !PathIsRelative(path);
 }
 
 // returns the path to either the %TEMP% directory or a
 // non-existing file inside whose name starts with filePrefix
-TCHAR *GetTempPath(const TCHAR *filePrefix)
+WCHAR *GetTempPath(const WCHAR *filePrefix)
 {
-    TCHAR tempDir[MAX_PATH - 14];
+    WCHAR tempDir[MAX_PATH - 14];
     DWORD res = ::GetTempPath(dimof(tempDir), tempDir);
     if (!res || res >= dimof(tempDir))
         return NULL;
     if (!filePrefix)
         return str::Dup(tempDir);
-    TCHAR path[MAX_PATH];
+    WCHAR path[MAX_PATH];
     if (!GetTempFileName(tempDir, filePrefix, 0, path))
         return NULL;
     return str::Dup(path);
@@ -226,7 +228,7 @@ TCHAR *GetTempPath(const TCHAR *filePrefix)
 
 namespace file {
 
-bool Exists(const TCHAR *filePath)
+bool Exists(const WCHAR *filePath)
 {
     if (NULL == filePath)
         return false;
@@ -241,7 +243,7 @@ bool Exists(const TCHAR *filePath)
     return true;
 }
 
-size_t GetSize(const TCHAR *filePath)
+size_t GetSize(const WCHAR *filePath)
 {
     ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
@@ -264,7 +266,7 @@ size_t GetSize(const TCHAR *filePath)
 #endif
 }
 
-char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
+char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut)
 {
     size_t size = GetSize(filePath);
     if (INVALID_FILE_SIZE == size)
@@ -293,7 +295,7 @@ char *ReadAll(const TCHAR *filePath, size_t *fileSizeOut)
     return data;
 }
 
-bool ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen)
+bool ReadAll(const WCHAR *filePath, char *buffer, size_t bufferLen)
 {
     ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
@@ -305,7 +307,7 @@ bool ReadAll(const TCHAR *filePath, char *buffer, size_t bufferLen)
     return ok && sizeRead == bufferLen;
 }
 
-bool WriteAll(const TCHAR *filePath, const void *data, size_t dataLen)
+bool WriteAll(const WCHAR *filePath, const void *data, size_t dataLen)
 {
     ScopedHandle h(CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL));
@@ -319,13 +321,13 @@ bool WriteAll(const TCHAR *filePath, const void *data, size_t dataLen)
 }
 
 // Return true if the file wasn't there or was successfully deleted
-bool Delete(const TCHAR *filePath)
+bool Delete(const WCHAR *filePath)
 {
     BOOL ok = DeleteFile(filePath);
     return ok || GetLastError() == ERROR_FILE_NOT_FOUND;
 }
 
-FILETIME GetModificationTime(const TCHAR *filePath)
+FILETIME GetModificationTime(const WCHAR *filePath)
 {
     FILETIME lastMod = { 0 };
     ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
@@ -335,7 +337,7 @@ FILETIME GetModificationTime(const TCHAR *filePath)
     return lastMod;
 }
 
-bool SetModificationTime(const TCHAR *filePath, FILETIME lastMod)
+bool SetModificationTime(const WCHAR *filePath, FILETIME lastMod)
 {
     ScopedHandle h(CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL,
                               OPEN_EXISTING, 0, NULL));
@@ -344,7 +346,7 @@ bool SetModificationTime(const TCHAR *filePath, FILETIME lastMod)
     return SetFileTime(h, NULL, NULL, &lastMod);
 }
 
-bool StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len)
+bool StartsWith(const WCHAR *filePath, const char *magicNumber, size_t len)
 {
     if (len == (size_t)-1)
         len = str::Len(magicNumber);
@@ -356,24 +358,24 @@ bool StartsWith(const TCHAR *filePath, const char *magicNumber, size_t len)
     return memeq(header, magicNumber, len);
 }
 
-int GetZoneIdentifier(const TCHAR *filePath)
+int GetZoneIdentifier(const WCHAR *filePath)
 {
-    ScopedMem<TCHAR> path(str::Join(filePath, _T(":Zone.Identifier")));
-    return GetPrivateProfileInt(_T("ZoneTransfer"), _T("ZoneId"), URLZONE_INVALID, path);
+    ScopedMem<WCHAR> path(str::Join(filePath, L":Zone.Identifier"));
+    return GetPrivateProfileInt(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, path);
 }
 
-bool SetZoneIdentifier(const TCHAR *filePath, int zoneId)
+bool SetZoneIdentifier(const WCHAR *filePath, int zoneId)
 {
-    ScopedMem<TCHAR> path(str::Join(filePath, _T(":Zone.Identifier")));
-    ScopedMem<TCHAR> id(str::Format(_T("%d"), zoneId));
-    return WritePrivateProfileString(_T("ZoneTransfer"), _T("ZoneId"), id, path);
+    ScopedMem<WCHAR> path(str::Join(filePath, L":Zone.Identifier"));
+    ScopedMem<WCHAR> id(str::Format(L"%d", zoneId));
+    return WritePrivateProfileString(L"ZoneTransfer", L"ZoneId", id, path);
 }
 
 }
 
 namespace dir {
 
-bool Exists(const TCHAR *dir)
+bool Exists(const WCHAR *dir)
 {
     if (NULL == dir)
         return false;
@@ -389,7 +391,7 @@ bool Exists(const TCHAR *dir)
 }
 
 // Return true if a directory already exists or has been successfully created
-bool Create(const TCHAR *dir)
+bool Create(const WCHAR *dir)
 {
     BOOL ok = CreateDirectory(dir, NULL);
     if (ok)
@@ -398,9 +400,9 @@ bool Create(const TCHAR *dir)
 }
 
 // creates a directory and all its parent directories that don't exist yet
-bool CreateAll(const TCHAR *dir)
+bool CreateAll(const WCHAR *dir)
 {
-    ScopedMem<TCHAR> parent(path::GetDir(dir));
+    ScopedMem<WCHAR> parent(path::GetDir(dir));
     if (!str::Eq(parent, dir) && !Exists(parent))
         CreateAll(parent);
     return Create(dir);

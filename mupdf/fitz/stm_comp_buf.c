@@ -15,7 +15,7 @@ fz_free_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buf)
 
 
 fz_stream *
-fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *buffer, int *factor)
+fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *buffer, int *l2factor)
 {
 	fz_stream *chain = fz_open_buffer(ctx, buffer->buffer);
 	fz_compression_params *params = &buffer->params;
@@ -23,7 +23,7 @@ fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *buffer, int *
 	switch (params->type)
 	{
 	case FZ_IMAGE_FAX:
-		*factor = 1;
+		*l2factor = 0;
 		return fz_open_faxd(chain,
 				params->u.fax.k,
 				params->u.fax.end_of_line,
@@ -33,26 +33,26 @@ fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *buffer, int *
 				params->u.fax.end_of_block,
 				params->u.fax.black_is_1);
 	case FZ_IMAGE_JPEG:
-		if (*factor > 8)
-			*factor = 8;
-		return fz_open_resized_dctd(chain, params->u.jpeg.color_transform, *factor);
+		if (*l2factor > 3)
+			*l2factor = 3;
+		return fz_open_resized_dctd(chain, params->u.jpeg.color_transform, *l2factor);
 	case FZ_IMAGE_RLD:
-		*factor = 1;
+		*l2factor = 0;
 		return fz_open_rld(chain);
 	case FZ_IMAGE_FLATE:
-		*factor = 1;
+		*l2factor = 0;
 		chain = fz_open_flated(chain);
 		if (params->u.flate.predictor > 1)
 			chain = fz_open_predict(chain, params->u.flate.predictor, params->u.flate.columns, params->u.flate.colors, params->u.flate.bpc);
 		return chain;
 	case FZ_IMAGE_LZW:
-		*factor = 1;
+		*l2factor = 0;
 		chain = fz_open_lzwd(chain, params->u.lzw.early_change);
 		if (params->u.lzw.predictor > 1)
 			chain = fz_open_predict(chain, params->u.lzw.predictor, params->u.lzw.columns, params->u.lzw.colors, params->u.lzw.bpc);
 		return chain;
 	default:
-		*factor = 1;
+		*l2factor = 0;
 		break;
 	}
 
@@ -62,9 +62,9 @@ fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *buffer, int *
 fz_stream *
 fz_open_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buffer)
 {
-	int factor = 1;
+	int l2factor = 0;
 
-	return fz_open_image_decomp_stream(ctx, buffer, &factor);
+	return fz_open_image_decomp_stream(ctx, buffer, &l2factor);
 }
 
 unsigned int

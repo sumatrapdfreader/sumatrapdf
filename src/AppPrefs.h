@@ -6,7 +6,7 @@
 
 #include "DisplayState.h"
 
-bool ParseViewMode(DisplayMode *mode, const TCHAR *txt);
+bool ParseViewMode(DisplayMode *mode, const WCHAR *txt);
 
 /* enum from windowState */
 enum {
@@ -50,14 +50,14 @@ struct SerializableGlobalPrefs {
     bool useSysColors;
 
     /* pattern used to launch the editor when doing inverse search */
-    TCHAR *inverseSearchCmdLine;
+    WCHAR *inverseSearchCmdLine;
     /* whether to expose the SyncTeX enhancements to the user */
     bool enableTeXEnhancements;
 
     /* When we show 'new version available', user has an option to check
        'skip this version'. This remembers which version is to be skipped.
        If NULL - don't skip */
-    TCHAR *versionToSkip;
+    WCHAR *versionToSkip;
 
     char *lastUpdateTime;
 
@@ -101,19 +101,19 @@ class Favorites;
 
 namespace Prefs {
 
-void    Load(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites **favs);
-bool    Save(TCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites *favs);
+void    Load(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites **favs);
+bool    Save(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites *favs);
 
 }
 
 namespace DisplayModeConv {
 
-const TCHAR *   NameFromEnum(DisplayMode var);
-bool            EnumFromName(const TCHAR *txt, DisplayMode *resOut);
+const WCHAR *   NameFromEnum(DisplayMode var);
+bool            EnumFromName(const WCHAR *txt, DisplayMode *resOut);
 
 }
 
-TCHAR *GetPrefsFileName();
+WCHAR *GetPrefsFileName();
 bool SavePrefs();
 bool ReloadPrefs();
 

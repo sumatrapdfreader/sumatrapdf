@@ -164,7 +164,7 @@ usage(void)
 	fprintf(stderr, "\nSyntax: mujstest -o <filename> [ -p <prefix> ] [-v] <scriptfile>\n");
 	fprintf(stderr, "\n<filename> should sensibly be of the form file-%%d.png\n");
 	fprintf(stderr, "\n<prefix> is a path prefix to apply to filenames within the script\n");
-	fprintf(stderr, "\n-v    verbose\n");
+	fprintf(stderr, "\n-v\tverbose\n");
 	fprintf(stderr, "\nscriptfile contains a list of commands:\n");
 	fprintf(stderr, "\tPASSWORD <password>\tSet the password\n");
 	fprintf(stderr, "\tOPEN <filename>\tOpen a file\n");

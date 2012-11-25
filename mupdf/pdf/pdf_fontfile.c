@@ -156,8 +156,14 @@ pdf_lookup_substitute_cjk_font(int ros, int serif, unsigned int *len)
 /* SumatraPDF: also load fonts included with Windows */
 #ifdef _WIN32
 
+#ifndef UNICODE
+#define UNICODE
+#endif
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+
 #include <windows.h>
-#include <tchar.h>
 
 // TODO: Use more of FreeType for TTF parsing (for performance reasons,
 //       the fonts can't be parsed completely, though)
@@ -606,9 +612,9 @@ parseTTCs(fz_context *ctx, char *path)
 }
 
 static void
-extend_system_font_list(fz_context *ctx, const TCHAR *path)
+extend_system_font_list(fz_context *ctx, const WCHAR *path)
 {
-	TCHAR szPath[MAX_PATH], *lpFileName;
+	WCHAR szPath[MAX_PATH], *lpFileName;
 	WIN32_FIND_DATA FileData;
 	HANDLE hList;
 
@@ -629,13 +635,8 @@ extend_system_font_list(fz_context *ctx, const TCHAR *path)
 			char szPathAnsi[MAX_PATH], *fileExt;
 			BOOL isNonAnsiPath = FALSE;
 			lstrcpyn(lpFileName, FileData.cFileName, szPath + MAX_PATH - lpFileName);
-#ifdef _UNICODE
 			// FreeType uses fopen and thus requires the path to be in the ANSI code page
 			WideCharToMultiByte(CP_ACP, 0, szPath, -1, szPathAnsi, sizeof(szPathAnsi), NULL, &isNonAnsiPath);
-#else
-			strcpy(szPathAnsi, szPath);
-			isNonAnsiPath = strchr(szPathAnsi, '?') != NULL;
-#endif
 			fileExt = szPathAnsi + strlen(szPathAnsi) - 4;
 			fz_try(ctx)
 			{
@@ -665,13 +666,13 @@ destroy_system_font_list(void)
 static void
 create_system_font_list(fz_context *ctx)
 {
-	TCHAR szFontDir[MAX_PATH];
+	WCHAR szFontDir[MAX_PATH];
 	UINT cch;
 
 #ifdef DEBUG
 	// allow to overwrite system fonts for debugging purposes
 	// (either pass a full path or a search pattern such as "fonts\*.ttf")
-	cch = GetEnvironmentVariable(_T("MUPDF_FONTS_PATTERN"), szFontDir, nelem(szFontDir));
+	cch = GetEnvironmentVariable(L"MUPDF_FONTS_PATTERN", szFontDir, nelem(szFontDir));
 	if (0 < cch && cch < nelem(szFontDir))
 		extend_system_font_list(ctx, szFontDir);
 #endif
@@ -679,7 +680,7 @@ create_system_font_list(fz_context *ctx)
 	cch = GetWindowsDirectory(szFontDir, nelem(szFontDir) - 12);
 	if (0 < cch && cch < nelem(szFontDir) - 12)
 	{
-		_tcscat_s(szFontDir, MAX_PATH, _T("\\Fonts\\*.?t?"));
+		wcscat_s(szFontDir, MAX_PATH, L"\\Fonts\\*.?t?");
 		extend_system_font_list(ctx, szFontDir);
 	}
 
@@ -690,10 +691,10 @@ create_system_font_list(fz_context *ctx)
 	{
 		// If no CJK fallback font is builtin but one has been shipped separately (in the same
 		// directory as the main executable), add it to the list of loadable system fonts
-		TCHAR szFile[MAX_PATH], *lpFileName;
+		WCHAR szFile[MAX_PATH], *lpFileName;
 		GetModuleFileName(0, szFontDir, MAX_PATH);
 		GetFullPathName(szFontDir, MAX_PATH, szFile, &lpFileName);
-		lstrcpyn(lpFileName, _T("DroidSansFallback.ttf"), szFile + MAX_PATH - lpFileName);
+		lstrcpyn(lpFileName, L"DroidSansFallback.ttf", szFile + MAX_PATH - lpFileName);
 		extend_system_font_list(ctx, szFile);
 	}
 #endif
@@ -724,7 +725,7 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 	if (fontlistMS.len == 0)
 		fz_throw(ctx, "fonterror: couldn't find any fonts");
 
-	if (GetEnvironmentVariable(_T("MULOG"), NULL, 0))
+	if (GetEnvironmentVariable(L"MULOG", NULL, 0))
 		printf("pdf_load_windows_font: looking for font '%s'\n", fontname);
 
 	// work on a normalized copy of the font name
@@ -790,7 +791,7 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 	if (!found)
 		fz_throw(ctx, "couldn't find system font '%s'", orig_name);
 
-	if (GetEnvironmentVariable(_T("MULOG"), NULL, 0))
+	if (GetEnvironmentVariable(L"MULOG", NULL, 0))
 		printf("pdf_load_windows_font: loading font from '%s'\n", found->fontpath);
 
 	font->font = fz_new_font_from_file(ctx, orig_name, found->fontpath, found->index,

@@ -17,7 +17,7 @@ struct ImageData {
 
 class EbookTocVisitor {
 public:
-    virtual void Visit(const TCHAR *name, const TCHAR *url, int level) = 0;
+    virtual void Visit(const WCHAR *name, const WCHAR *url, int level) = 0;
 };
 
 #endif

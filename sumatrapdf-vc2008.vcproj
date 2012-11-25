@@ -25,7 +25,7 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe all_sumatrapdf all EXTCFLAGS=/DDISABLE_EBOOK_UI"
+				BuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe SumatraPDF Installer Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump mudraw mutool tool_objs EXTCFLAGS=/DDISABLE_EBOOK_UI"
 				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe rebuild"
 				CleanCommandLine="nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe clean"
 				Output="obj-dbg\sumatrapdf.exe"
@@ -46,7 +46,7 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe all_sumatrapdf"
+				BuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe all_sumatrapdf all"
 				ReBuildCommandLine="nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe rebuild"
 				CleanCommandLine="nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe clean"
 				Output="obj-rel\sumatrapdf.exe"
@@ -265,10 +265,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\utils\BaseUtil.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\utils\BitManip.h"
 					>
 				</File>
@@ -320,6 +316,14 @@
 			<Filter
 				Name="tools"
 				>
+				<File
+					RelativePath=".\src\utils\BaseUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\BaseUtil.h"
+					>
+				</File>
 				<File
 					RelativePath=".\src\utils\DebugLog.cpp"
 					>

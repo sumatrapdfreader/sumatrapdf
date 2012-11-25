@@ -471,7 +471,7 @@ static bool IsValidCompression(int comprType)
             (COMPRESSION_HUFF == comprType);
 }
 
-MobiDoc::MobiDoc(const TCHAR *filePath) :
+MobiDoc::MobiDoc(const WCHAR *filePath) :
     fileName(str::Dup(filePath)), pdbReader(NULL),
     docType(Pdb_Unknown), docRecCount(0), compressionType(0), docUncompressedSize(0),
     doc(NULL), multibyte(false), trailersCount(0), imageFirstRec(0),
@@ -841,7 +841,7 @@ char *MobiDoc::GetBookHtmlData(size_t& lenOut) const
     return doc->Get();
 }
 
-TCHAR *MobiDoc::GetProperty(DocumentProperty prop)
+WCHAR *MobiDoc::GetProperty(DocumentProperty prop)
 {
     for (size_t i = 0; i < props.Count(); i++) {
         if (props.At(i).prop == prop)
@@ -850,13 +850,13 @@ TCHAR *MobiDoc::GetProperty(DocumentProperty prop)
     return NULL;
 }
 
-bool MobiDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool MobiDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     // TODO: also accept .prc as MobiEngine::IsSupportedFile ?
-    return str::EndsWithI(fileName, _T(".mobi"));
+    return str::EndsWithI(fileName, L".mobi");
 }
 
-MobiDoc *MobiDoc::CreateFromFile(const TCHAR *fileName)
+MobiDoc *MobiDoc::CreateFromFile(const WCHAR *fileName)
 {
     MobiDoc *mb = new MobiDoc(fileName);
     if (!mb->LoadDocument()) {

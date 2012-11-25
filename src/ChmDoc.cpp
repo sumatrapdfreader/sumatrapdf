@@ -9,9 +9,7 @@
 #include "TrivialHtmlParser.h"
 
 #define CHM_MT
-#ifdef UNICODE
 #define PPC_BSTR
-#endif
 #include <chm_lib.h>
 
 ChmDoc::~ChmDoc()
@@ -81,7 +79,7 @@ char *ChmDoc::ToUtf8(const unsigned char *text, UINT overrideCP)
     return str::ToMultiByte(s, codepage, CP_UTF8);
 }
 
-TCHAR *ChmDoc::ToStr(const char *text)
+WCHAR *ChmDoc::ToStr(const char *text)
 {
     return str::conv::FromCodePage(text, codepage);
 }
@@ -213,9 +211,9 @@ bool ChmDoc::ParseSystemData()
     return true;
 }
 
-bool ChmDoc::Load(const TCHAR *fileName)
+bool ChmDoc::Load(const WCHAR *fileName)
 {
-    chmHandle = chm_open((TCHAR *)fileName);
+    chmHandle = chm_open((WCHAR *)fileName);
     if (!chmHandle)
         return false;
 
@@ -250,9 +248,9 @@ bool ChmDoc::Load(const TCHAR *fileName)
     return true;
 }
 
-TCHAR *ChmDoc::GetProperty(DocumentProperty prop)
+WCHAR *ChmDoc::GetProperty(DocumentProperty prop)
 {
-    ScopedMem<TCHAR> result;
+    ScopedMem<WCHAR> result;
     if (Prop_Title == prop && title)
         result.Set(ToStr(title));
     else if (Prop_CreatorApp == prop && creator)
@@ -304,26 +302,24 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
     if (!el)
         return false;
 
-    ScopedMem<TCHAR> name, local;
+    ScopedMem<WCHAR> name, local;
     for (el = el->GetChildByName("param"); el; el = el->next) {
         if (!el->NameIs("param"))
             continue;
-        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
-        ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
-#ifdef UNICODE
+        ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
+        ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes, cp));
         }
-#endif
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;
-        else if (str::EqI(attrName, _T("Name")))
+        else if (str::EqI(attrName, L"Name"))
             name.Set(attrVal.StealData());
-        else if (str::EqI(attrName, _T("Local"))) {
+        else if (str::EqI(attrName, L"Local")) {
             // remove the ITS protocol and any filename references from the URLs
-            if (str::Find(attrVal, _T("::/")))
-                attrVal.Set(str::Dup(str::Find(attrVal, _T("::/")) + 3));
+            if (str::Find(attrVal, L"::/"))
+                attrVal.Set(str::Dup(str::Find(attrVal, L"::/") + 3));
             local.Set(attrVal.StealData());
         }
     }
@@ -354,33 +350,31 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
     if (!el)
         return false;
 
-    StrVec references;
-    ScopedMem<TCHAR> keyword, name;
+    WStrVec references;
+    ScopedMem<WCHAR> keyword, name;
     for (el = el->GetChildByName("param"); el; el = el->next) {
         if (!el->NameIs("param"))
             continue;
-        ScopedMem<TCHAR> attrName(el->GetAttribute("name"));
-        ScopedMem<TCHAR> attrVal(el->GetAttribute("value"));
-#ifdef UNICODE
+        ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
+        ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes, cp));
         }
-#endif
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;
-        else if (str::EqI(attrName, _T("Keyword")))
+        else if (str::EqI(attrName, L"Keyword"))
             keyword.Set(attrVal.StealData());
-        else if (str::EqI(attrName, _T("Name"))) {
+        else if (str::EqI(attrName, L"Name")) {
             name.Set(attrVal.StealData());
             // some CHM documents seem to use a lonely Name instead of Keyword
             if (!keyword)
                 keyword.Set(str::Dup(name));
         }
-        else if (str::EqI(attrName, _T("Local")) && name) {
+        else if (str::EqI(attrName, L"Local") && name) {
             // remove the ITS protocol and any filename references from the URLs
-            if (str::Find(attrVal, _T("::/")))
-                attrVal.Set(str::Dup(str::Find(attrVal, _T("::/")) + 3));
+            if (str::Find(attrVal, L"::/"))
+                attrVal.Set(str::Dup(str::Find(attrVal, L"::/") + 3));
             references.Append(name.StealData());
             references.Append(attrVal.StealData());
         }
@@ -478,15 +472,15 @@ bool ChmDoc::ParseIndex(EbookTocVisitor *visitor)
     return ParseTocOrIndex(visitor, indexPath, true);
 }
 
-bool ChmDoc::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool ChmDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff)
         return file::StartsWith(fileName, "ITSF");
 
-    return str::EndsWithI(fileName, _T(".chm"));
+    return str::EndsWithI(fileName, L".chm");
 }
 
-ChmDoc *ChmDoc::CreateFromFile(const TCHAR *fileName)
+ChmDoc *ChmDoc::CreateFromFile(const WCHAR *fileName)
 {
     ChmDoc *doc = new ChmDoc();
     if (!doc || !doc->Load(fileName)) {

@@ -31,7 +31,7 @@ enum
 	cfd_white_initial_bits = 8,
 	cfd_black_initial_bits = 7,
 	cfd_2d_initial_bits = 7,
-	cfd_uncompressed_initial_bits = 6	/* must be 6 */
+	cfd_uncompressed_initial_bits = 6 /* must be 6 */
 };
 
 /* non-run codes in tables */
@@ -175,37 +175,77 @@ static inline int getbit(const unsigned char *buf, int x)
 	return ( buf[x >> 3] >> ( 7 - (x & 7) ) ) & 1;
 }
 
-static int
+static const unsigned char mask[8] = {
+	0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01, 0
+};
+
+static const unsigned char clz[256] = {
+	8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+static inline int
 find_changing(const unsigned char *line, int x, int w)
 {
-	int a, b;
+	int a, b, m, W;
 
 	if (!line)
 		return w;
 
-	if (x == -1)
+	/* We assume w > 0, -1 <= x < w */
+	if (x < 0)
 	{
-		a = 0;
 		x = 0;
+		m = 0xFF;
 	}
 	else
 	{
-		a = getbit(line, x);
-		x++;
+		/* Mask out the bits we've already used (including the one
+		 * we started from) */
+		m = mask[x & 7];
 	}
-
-	while (x < w)
+	W = w>>3;
+	x >>= 3;
+	a = line[x];
+	b = a ^ (a>>1);
+	b &= m;
+	while (b == 0)
 	{
-		b = getbit(line, x);
-		if (a != b)
-			break;
-		x++;
+		if (++x >= W)
+			goto nearend;
+		b = a & 1;
+		a = line[x];
+		b = (b<<7) ^ a ^ (a>>1);
 	}
-
+	return (x<<3) + clz[b];
+nearend:
+	/* We have less than a byte to go. If no stray bits, exit now. */
+	if ((x<<3) == w)
+		return w;
+	b = a&1;
+	a = line[x];
+	b = (b<<7) ^ a ^ (a>>1);
+	x = (x<<3) + clz[b];
+	if (x > w)
+		x = w;
 	return x;
 }
 
-static int
+static inline int
 find_changing_color(const unsigned char *line, int x, int w, int color)
 {
 	if (!line)

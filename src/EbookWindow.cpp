@@ -25,14 +25,14 @@ using namespace Gdiplus;
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-#define MOBI_FRAME_CLASS_NAME    _T("SUMATRA_MOBI_FRAME")
+#define MOBI_FRAME_CLASS_NAME    L"SUMATRA_MOBI_FRAME"
 
 #define WIN_DX    720
 #define WIN_DY    640
 
 static bool gShowTextBoundingBoxes = false;
 
-const TCHAR *EbookWindow::LoadedFilePath() const
+const WCHAR *EbookWindow::LoadedFilePath() const
 {
     if (ebookController)
         return ebookController->GetDoc().GetFilePath();
@@ -518,11 +518,38 @@ static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
 
 void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 {
-    const TCHAR *fullPath = doc.GetFilePath();
+    const WCHAR *fullPath = doc.GetFilePath();
     DisplayState *ds = gFileHistory.Find(fullPath);
 
     if (doc.IsNone()) {
-        // TODO: show a notification if winToReplace.AsEbookWindow()
+        // TODO: a hack. In LoadDocumentOld(), if current window IsAboutWindow(),
+        // we set loadedFilePath to prevent a crash if multiple ebook files are
+        // dropped on about window. We need to undo that in case of failure
+        // or else the window will be stuck in an invalid state (not about window
+        // but not a document window either)
+        WindowInfo *w = winToReplace.AsWindowInfo();
+        if (str::Eq(w->loadedFilePath, doc.GetFilePath())) {
+            free(w->loadedFilePath);
+            w->loadedFilePath = NULL;
+            // this is now about window. We don't want to show it if we're already
+            // showing other windows (the scenario: dragging ebook file on a window
+            // showing a document, we create invisible window for this document and
+            // we don't want to show empty window if loading fails
+            if (gEbookWindows.Count() > 0 || gWindows.Count() > 1) {
+                CloseWindow(w, false, false);
+                if (gFileHistory.MarkFileInexistent(fullPath))
+                    SavePrefs();
+                // TODO: notify the use that loading failed (e.g. show a notification)
+                return;
+            }
+        }
+        // TODO: notify the user that loading failed (e.g. show a notification)
+
+        // TODO: this is not a great solution. In case of opening
+        // file from cmd-line, we create a window but don't show it
+        // if loading afils, we have to show the window. If window
+        // is already visible, this is a no-op
+        ShowWindow(winToReplace.HwndFrame(), SW_SHOW);
         if (gFileHistory.MarkFileInexistent(fullPath))
             SavePrefs();
         return;
@@ -546,7 +573,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         SHAddToRecentDocs(SHARD_PATH, fullPath);
 
-    ScopedMem<TCHAR> winTitle(str::Format(_T("%s - %s"), path::GetBaseName(fullPath), SUMATRA_WINDOW_TITLE));
+    ScopedMem<WCHAR> winTitle(str::Format(L"%s - %s", path::GetBaseName(fullPath), SUMATRA_WINDOW_TITLE));
 
     if (winToReplace.AsEbookWindow()) {
         EbookWindow *mw = winToReplace.AsEbookWindow();
@@ -603,7 +630,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     win->ebookController->SetDoc(doc, startReparseIdx);
 }
 
-bool RegisterMobiWinClass(HINSTANCE hinst)
+void RegisterMobiWinClass(HINSTANCE hinst)
 {
     WNDCLASSEX  wcex;
     FillWndClassEx(wcex, hinst, MOBI_FRAME_CLASS_NAME, MobiWndProcFrame);
@@ -614,10 +641,10 @@ bool RegisterMobiWinClass(HINSTANCE hinst)
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
 
     ATOM atom = RegisterClassEx(&wcex);
-    return atom != NULL;
+    CrashIf(!atom);
 }
 
-bool IsEbookFile(const TCHAR *fileName)
+bool IsEbookFile(const WCHAR *fileName)
 {
     return MobiDoc::IsSupportedFile(fileName) ||
            EpubDoc::IsSupportedFile(fileName);

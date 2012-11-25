@@ -13,12 +13,12 @@ struct EbookControls;
 class  EbookController;
 
 class ThreadLoadEbook : public ThreadBase {
-    TCHAR *             fileName; // we own this memory
+    WCHAR *             fileName; // we own this memory
     EbookController *   controller;
 public:
     SumatraWindow       win;
 
-    ThreadLoadEbook(const TCHAR *fileName, EbookController *controller, const SumatraWindow& sumWin);
+    ThreadLoadEbook(const WCHAR *fileName, EbookController *controller, const SumatraWindow& sumWin);
     virtual ~ThreadLoadEbook() { free(fileName); }
 
     // ThreadBase
@@ -40,15 +40,15 @@ public:
     mui::HwndWrapper *  hwndWrapper;
     EbookController *   ebookController;
     TouchState          touchState;
-    const TCHAR *       LoadedFilePath() const;
+    const WCHAR *       LoadedFilePath() const;
 };
 
 EbookWindow* FindEbookWindowByController(EbookController *controller);
 void   OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace);
-bool   RegisterMobiWinClass(HINSTANCE hinst);
+void   RegisterMobiWinClass(HINSTANCE hinst);
 void   RebuildMenuBarForEbookWindows();
 void   DeleteEbookWindow(EbookWindow *win, bool forceDelete = false);
-bool   IsEbookFile(const TCHAR *fileName);
+bool   IsEbookFile(const WCHAR *fileName);
 
 Doc    GetDocForWindow(SumatraWindow& win);
 

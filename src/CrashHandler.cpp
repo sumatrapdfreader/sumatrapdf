@@ -21,15 +21,15 @@
 
 #ifndef SYMBOL_DOWNLOAD_URL
 #ifdef SVN_PRE_RELEASE_VER
-#define SYMBOL_DOWNLOAD_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-") _T(QM(SVN_PRE_RELEASE_VER)) _T(".pdb.zip")
+#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER)) L".pdb.zip"
 #else
-#define SYMBOL_DOWNLOAD_URL _T("http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-") _T(QM(CURR_VERSION)) _T(".pdb.zip")
+#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION)) L".pdb.zip"
 #endif
 #endif
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
-#define CRASH_SUBMIT_SERVER _T("blog.kowalczyk.info")
-#define CRASH_SUBMIT_URL    _T("/app/crashsubmit?appname=SumatraPDF")
+#define CRASH_SUBMIT_SERVER L"blog.kowalczyk.info"
+#define CRASH_SUBMIT_URL    L"/app/crashsubmit?appname=SumatraPDF"
 #endif
 
 // The following functions allow crash handler to be used by both installer
@@ -85,13 +85,13 @@ static CrashHandlerAllocator *gCrashHandlerAllocator = NULL;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
-static TCHAR *  gCrashDumpPath = NULL;
+static WCHAR *  gCrashDumpPath = NULL;
 static WCHAR *  gSymbolPathW = NULL;
-static TCHAR *  gSymbolsDir = NULL;
-static TCHAR *  gPdbZipPath = NULL;
-static TCHAR *  gLibMupdfPdbPath = NULL;
-static TCHAR *  gSumatraPdfPdbPath = NULL;
-static TCHAR *  gInstallerPdbPath = NULL;
+static WCHAR *  gSymbolsDir = NULL;
+static WCHAR *  gPdbZipPath = NULL;
+static WCHAR *  gLibMupdfPdbPath = NULL;
+static WCHAR *  gSumatraPdfPdbPath = NULL;
+static WCHAR *  gInstallerPdbPath = NULL;
 static char *   gSystemInfo = NULL;
 static char *   gModulesInfo = NULL;
 static str::Str<char> *gAdditionalInfo = NULL;
@@ -184,11 +184,11 @@ static bool DeleteSymbolsIfExist()
 }
 
 // static (single .exe) build
-static bool UnpackStaticSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
+static bool UnpackStaticSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
 {
-    lf(_T("UnpackStaticSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
+    lf(L"UnpackStaticSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
     ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
-    if (!archive.UnzipFile(_T("SumatraPDF.pdb"), symDir)) {
+    if (!archive.UnzipFile(L"SumatraPDF.pdb", symDir)) {
         plog("Failed to unzip SumatraPDF.pdb");
         return false;
     }
@@ -196,15 +196,15 @@ static bool UnpackStaticSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
 }
 
 // lib (.exe + libmupdf.dll) release and pre-release builds
-static bool UnpackLibSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
+static bool UnpackLibSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
 {
-    lf(_T("UnpackLibSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
+    lf(L"UnpackLibSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
     ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
-    if (!archive.UnzipFile(_T("libmupdf.pdb"), symDir)) {
+    if (!archive.UnzipFile(L"libmupdf.pdb", symDir)) {
         plog("Failed to unzip libmupdf.pdb");
         return false;
     }
-    if (!archive.UnzipFile(_T("SumatraPDF-no-MuPDF.pdb"), symDir)) {
+    if (!archive.UnzipFile(L"SumatraPDF-no-MuPDF.pdb", symDir)) {
         plog("Failed to unzip SumatraPDF-no-MuPDF.pdb");
         return false;
     }
@@ -212,11 +212,11 @@ static bool UnpackLibSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
 }
 
 // an installer
-static bool UnpackInstallerSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
+static bool UnpackInstallerSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
 {
-    lf(_T("UnpackInstallerSymbols(): unpacking %s to dir %s"), pdbZipPath, symDir);
+    lf(L"UnpackInstallerSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
     ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
-    if (!archive.UnzipFile(_T("Installer.pdb"), symDir)) {
+    if (!archive.UnzipFile(L"Installer.pdb", symDir)) {
         plog("Failed to unzip Installer.pdb");
         return false;
     }
@@ -229,7 +229,7 @@ static bool UnpackInstallerSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
 // Returns false if downloading or extracting failed
 // note: to simplify callers, it could choose pdbZipPath by itself (in a temporary
 // directory) as the file is deleted on exit anyway
-static bool DownloadAndUnzipSymbols(const TCHAR *pdbZipPath, const TCHAR *symDir)
+static bool DownloadAndUnzipSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
 {
     lf("DownloadAndUnzipSymbols() started");
     if (!symDir || !dir::Exists(symDir)) {
@@ -414,9 +414,9 @@ static void GetOsVersion(str::Str<char>& s)
 
 static void GetProcessorName(str::Str<char>& s)
 {
-    TCHAR *name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor"), _T("ProcessorNameString"));
+    WCHAR *name = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor", L"ProcessorNameString");
     if (!name) // if more than one processor
-        name = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0"), _T("ProcessorNameString"));
+        name = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", L"ProcessorNameString");
     if (!name)
         return;
 
@@ -427,8 +427,8 @@ static void GetProcessorName(str::Str<char>& s)
 
 static void GetMachineName(str::Str<char>& s)
 {
-    TCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemFamily"));
-    TCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, _T("HARDWARE\\DESCRIPTION\\System\\BIOS"), _T("SystemVersion"));
+    WCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
+    WCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
     ScopedMem<char> s1u(s1 ? str::conv::ToUtf8(s1) : NULL);
     ScopedMem<char> s2u(s2 ? str::conv::ToUtf8(s2) : NULL);
 
@@ -511,15 +511,15 @@ static void BuildSystemInfo()
     gSystemInfo = s.StealData();
 }
 
-static bool StoreCrashDumpPaths(const TCHAR *symDir)
+static bool StoreCrashDumpPaths(const WCHAR *symDir)
 {
     if (!symDir)
         return false;
     gSymbolsDir = str::Dup(symDir);
-    gPdbZipPath = path::Join(symDir, _T("symbols_tmp.zip"));
-    gLibMupdfPdbPath = path::Join(symDir, _T("SumatraPDF.pdb"));
-    gSumatraPdfPdbPath = path::Join(symDir, _T("libmupdf.pdb"));
-    gInstallerPdbPath = path::Join(symDir, _T("Installer.pdb"));
+    gPdbZipPath = path::Join(symDir, L"symbols_tmp.zip");
+    gLibMupdfPdbPath = path::Join(symDir, L"SumatraPDF.pdb");
+    gSumatraPdfPdbPath = path::Join(symDir, L"libmupdf.pdb");
+    gInstallerPdbPath = path::Join(symDir, L"Installer.pdb");
     return true;
 }
 
@@ -539,20 +539,20 @@ static bool BuildSymbolPath()
 
 #if 0
     WCHAR buf[512];
-    DWORD res = GetEnvironmentVariableW(L"_NT_SYMBOL_PATH", buf, dimof(buf));
+    DWORD res = GetEnvironmentVariable(L"_NT_SYMBOL_PATH", buf, dimof(buf));
     if (0 < res && res < dimof(buf)) {
         path.Append(buf);
         path.Append(L";");
     }
-    res = GetEnvironmentVariableW(L"_NT_ALTERNATE_SYMBOL_PATH", buf, dimof(buf));
+    res = GetEnvironmentVariable(L"_NT_ALTERNATE_SYMBOL_PATH", buf, dimof(buf));
     if (0 < res && res < dimof(buf)) {
         path.Append(buf);
         path.Append(L";");
     }
 #endif
 
-    path.Append(AsWStrQ(gSymbolsDir));
-    //path.Append(_T(";"));
+    path.Append(gSymbolsDir);
+    //path.Append(L";");
 #if 0
     // this probably wouldn't work anyway because it requires symsrv.dll in the same directory
     // as dbghelp.dll and it's not present with the os-provided dbghelp.dll
@@ -563,8 +563,8 @@ static bool BuildSymbolPath()
 #endif
 #if 0
     // when running local builds, *.pdb is in the same dir as *.exe
-    ScopedMem<TCHAR> exePath(GetExePath());
-    path.AppendFmt(L"%s", AsWStrQ(exePath));
+    ScopedMem<WCHAR> exePath(GetExePath());
+    path.Append(exePath);
 #endif
     gSymbolPathW = path.StealData();
     if (!gSymbolPathW)
@@ -585,12 +585,12 @@ static ExeType DetectExeType()
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        TCHAR *name = mod.szModule;
-        if (str::EqI(name, _T("libmupdf.dll"))) {
+        WCHAR *name = mod.szModule;
+        if (str::EqI(name, L"libmupdf.dll")) {
             exeType = ExeSumatraLib;
             break;
         }
-        if (str::StartsWithI(name, _T("SumatraPDF-")) && str::EndsWithI(name, _T("install.exe"))) {
+        if (str::StartsWithI(name, L"SumatraPDF-") && str::EndsWithI(name, L"install.exe")) {
             exeType = ExeInstaller;
             break;
         }
@@ -609,7 +609,7 @@ void CrashLogFmt(const char *fmt, ...)
     va_end(args);
 }
 
-void InstallCrashHandler(const TCHAR *crashDumpPath, const TCHAR *symDir)
+void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
 {
     assert(!gDumpEvent && !gDumpThread);
 

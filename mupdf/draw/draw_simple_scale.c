@@ -20,6 +20,13 @@ intermediate results rather than ints.
  */
 #define SINGLE_PIXEL_SPECIALS
 
+#ifdef NDK_PROFILER
+extern void __gnu_mcount_nc(void);
+#define ENTER_PG "push {lr}\nbl __gnu_mcount_nc\n"
+#else
+#define ENTER_PG
+#endif
+
 /* If we're compiling as thumb code, then we need to tell the compiler
  * to enter and exit ARM mode around our assembly sections. If we move
  * the ARM functions to a separate file and arrange for it to be compiled
@@ -27,8 +34,8 @@ intermediate results rather than ints.
  */
 #ifdef ARCH_ARM
 #ifdef ARCH_THUMB
-#define ENTER_ARM ".balign 4\nmov r12,pc\nbx r12\n0:.arm\n"
-#define ENTER_THUMB "9:.thumb\n"
+#define ENTER_ARM ".balign 4\nmov r12,pc\nbx r12\n0:.arm\n" ENTER_PG
+#define ENTER_THUMB "9:.thumb\n" ENTER_PG
 #else
 #define ENTER_ARM
 #define ENTER_THUMB
@@ -583,10 +590,9 @@ __attribute__((naked));
 static void
 scale_row_to_temp1(unsigned char *dst, unsigned char *src, fz_weights *weights)
 {
-	/* possible optimisation in here; unroll inner loops to avoid stall. */
 	asm volatile(
 	ENTER_ARM
-	"stmfd	r13!,{r4-r5,r9,r14}				\n"
+	"stmfd	r13!,{r4-r7,r9,r14}				\n"
 	"@ r0 = dst						\n"
 	"@ r1 = src						\n"
 	"@ r2 = weights						\n"
@@ -594,7 +600,7 @@ scale_row_to_temp1(unsigned char *dst, unsigned char *src, fz_weights *weights)
 	"ldr	r3, [r2],#20		@ r3 = count r2 = &index\n"
 	"ldr	r4, [r2]		@ r4 = index[0]		\n"
 	"cmp	r12,#0			@ if (flip)		\n"
-	"beq	4f			@ {			\n"
+	"beq	5f			@ {			\n"
 	"add	r2, r2, r4, LSL #2	@ r2 = &index[index[0]] \n"
 	"add	r0, r0, r3		@ dst += count		\n"
 	"1:							\n"
@@ -602,43 +608,47 @@ scale_row_to_temp1(unsigned char *dst, unsigned char *src, fz_weights *weights)
 	"ldr	r9, [r2], #4		@ r9 = len = *contrib++	\n"
 	"mov	r5, #128		@ r5 = a = 128		\n"
 	"add	r4, r1, r4		@ r4 = min = &src[r4]	\n"
-	"cmp	r9, #0			@ while (len-- > 0)	\n"
-	"beq	3f			@ {			\n"
-	"2:							\n"
+	"subs	r9, r9, #1		@ len--			\n"
+	"blt	3f			@ while (len >= 0)	\n"
+	"2:				@ {			\n"
+	"ldrgt	r6, [r2], #4		@ r6 = *contrib++	\n"
+	"ldrgtb	r7, [r4], #1		@ r7 = *min++		\n"
 	"ldr	r12,[r2], #4		@ r12 = *contrib++	\n"
 	"ldrb	r14,[r4], #1		@ r14 = *min++		\n"
-	"subs	r9, r9, #1		@ r9 = len--		\n"
-	"@stall on r14						\n"
+	"mlagt	r5, r6, r7, r5		@ g += r6 * r7		\n"
+	"subs	r9, r9, #2		@ r9 = len -= 2		\n"
 	"mla	r5, r12,r14,r5		@ g += r14 * r12	\n"
-	"bgt	2b			@ }			\n"
+	"bge	2b			@ }			\n"
 	"3:							\n"
 	"mov	r5, r5, lsr #8		@ g >>= 8		\n"
 	"strb	r5,[r0, #-1]!		@ *--dst=a		\n"
 	"subs	r3, r3, #1		@ i--			\n"
 	"bgt	1b			@ 			\n"
-	"ldmfd	r13!,{r4-r5,r9,PC}	@ pop, return to thumb	\n"
-	"4:"
-	"add	r2, r2, r4, LSL #2	@ r2 = &index[index[0]] \n"
+	"ldmfd	r13!,{r4-r7,r9,PC}	@ pop, return to thumb	\n"
 	"5:"
+	"add	r2, r2, r4, LSL #2	@ r2 = &index[index[0]] \n"
+	"6:"
 	"ldr	r4, [r2], #4		@ r4 = *contrib++	\n"
 	"ldr	r9, [r2], #4		@ r9 = len = *contrib++	\n"
 	"mov	r5, #128		@ r5 = a = 128		\n"
 	"add	r4, r1, r4		@ r4 = min = &src[r4]	\n"
-	"cmp	r9, #0			@ while (len-- > 0)	\n"
-	"beq	7f			@ {			\n"
-	"6:							\n"
+	"subs	r9, r9, #1		@ len--			\n"
+	"blt	9f			@ while (len > 0)	\n"
+	"7:				@ {			\n"
+	"ldrgt	r6, [r2], #4		@ r6 = *contrib++	\n"
+	"ldrgtb	r7, [r4], #1		@ r7 = *min++		\n"
 	"ldr	r12,[r2], #4		@ r12 = *contrib++	\n"
 	"ldrb	r14,[r4], #1		@ r14 = *min++		\n"
-	"subs	r9, r9, #1		@ r9 = len--		\n"
-	"@stall on r14						\n"
+	"mlagt	r5, r6,r7,r5		@ a += r6 * r7		\n"
+	"subs	r9, r9, #2		@ r9 = len -= 2		\n"
 	"mla	r5, r12,r14,r5		@ a += r14 * r12	\n"
-	"bgt	6b			@ }			\n"
-	"7:							\n"
+	"bge	7b			@ }			\n"
+	"9:							\n"
 	"mov	r5, r5, LSR #8		@ a >>= 8		\n"
 	"strb	r5, [r0], #1		@ *dst++=a		\n"
 	"subs	r3, r3, #1		@ i--			\n"
-	"bgt	5b			@ 			\n"
-	"ldmfd	r13!,{r4-r5,r9,PC}	@ pop, return to thumb	\n"
+	"bgt	6b			@ 			\n"
+	"ldmfd	r13!,{r4-r7,r9,PC}	@ pop, return to thumb	\n"
 	ENTER_THUMB
 	);
 }
@@ -808,7 +818,7 @@ scale_row_from_temp(unsigned char *dst, unsigned char *src, fz_weights *weights,
 	"blt	4f			@ while (x >= 0) {	\n"
 #ifndef ARCH_ARM_CAN_LOAD_UNALIGNED
 	"tst	r3, #3			@ if ((r3 & 3)		\n"
-	"tsteq	r1, #3			@     || (r1 & 3))	\n"
+	"tsteq	r1, #3			@	|| (r1 & 3))	\n"
 	"bne	4f			@ can't do fast code	\n"
 #endif
 	"ldr	r9, =0x00FF00FF		@ r9 = 0x00FF00FF	\n"

@@ -188,13 +188,13 @@ static MenuDef menuDefContextStart[] = {
     { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
 };
 
-static void AddFileMenuItem(HMENU menuFile, const TCHAR *filePath, UINT index)
+static void AddFileMenuItem(HMENU menuFile, const WCHAR *filePath, UINT index)
 {
     assert(filePath && menuFile);
     if (!filePath || !menuFile) return;
 
-    ScopedMem<TCHAR> fileName(win::menu::ToSafeString(path::GetBaseName(filePath)));
-    ScopedMem<TCHAR> menuString(str::Format(_T("&%d) %s"), (index + 1) % 10, fileName));
+    ScopedMem<WCHAR> fileName(win::menu::ToSafeString(path::GetBaseName(filePath)));
+    ScopedMem<WCHAR> menuString(str::Format(L"&%d) %s", (index + 1) % 10, fileName));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
@@ -219,11 +219,11 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flag
                 AppendMenu(menu, MF_SEPARATOR, 0, NULL);
             wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
-            ScopedMem<TCHAR> tmp(str::conv::FromUtf8(md.title));
+            ScopedMem<WCHAR> tmp(str::conv::FromUtf8(md.title));
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         } else {
-            const TCHAR *tmp = trans::GetTranslation(md.title);
+            const WCHAR *tmp = trans::GetTranslation(md.title);
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         }
@@ -326,7 +326,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
     for (ix = 0; ix < dimof(menuDefFile) && menuDefFile[ix].id != IDM_PRINT; ix++);
     assert(ix < dimof(menuDefFile));
     if (ix < dimof(menuDefFile)) {
-        const TCHAR *printItem = trans::GetTranslation(menuDefFile[ix].title);
+        const WCHAR *printItem = trans::GetTranslation(menuDefFile[ix].title);
         if (!filePrintAllowed)
             printItem = _TR("&Print... (denied)");
         if (!filePrintAllowed || !disableOnly)
@@ -401,7 +401,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         }
     }
 
-    if (!win->IsDocLoaded() && !win->IsAboutWindow() && str::EndsWithI(win->loadedFilePath, _T(".pdf"))) {
+    if (!win->IsDocLoaded() && !win->IsAboutWindow() && str::EndsWithI(win->loadedFilePath, L".pdf")) {
         for (int i = 0; i < dimof(menusToEnableIfBrokenPDF); i++) {
             UINT id = menusToEnableIfBrokenPDF[i];
             win::menu::SetEnabled(win->menu, id, true);
@@ -427,7 +427,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
     if (!HasPermission(Perm_SavePreferences | Perm_DiskAccess) || !gGlobalPrefs.rememberOpenedFiles || !gGlobalPrefs.showStartPage)
         return;
 
-    const TCHAR *filePath = GetStaticLink(win->staticLinks, x, y);
+    const WCHAR *filePath = GetStaticLink(win->staticLinks, x, y);
     if (!filePath || *filePath == '<')
         return;
 
@@ -483,7 +483,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
         return;
 
     PageElement *pageEl = win->dm->GetElementAtPos(PointI(x, y));
-    ScopedMem<TCHAR> value(pageEl ? pageEl->GetValue() : NULL);
+    ScopedMem<WCHAR> value(pageEl ? pageEl->GetValue() : NULL);
     CrashIf(value && !pageEl);
     RenderedBitmap *bmp = NULL;
 
@@ -632,7 +632,7 @@ HMENU BuildMenu(WindowInfo *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 #ifdef SHOW_DEBUG_MENU_ITEMS
     m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
 #endif
 
     return mainMenu;
@@ -660,7 +660,7 @@ HMENU BuildMenu(EbookWindow *win)
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 #ifdef SHOW_DEBUG_MENU_ITEMS
     m = BuildMenuFromMenuDef(menuDefDebugEbooks, dimof(menuDefDebugEbooks), CreateMenu(), filter);
-    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _T("Debug"));
+    AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
 #endif
     return mainMenu;
 }

@@ -35,11 +35,11 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
 {
     DocTocItem *tocItem = (DocTocItem *)nmit->lParam;
-    ScopedMem<TCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
+    ScopedMem<WCHAR> path(tocItem->GetLink() ? tocItem->GetLink()->GetDestValue() : NULL);
     if (!path)
         return;
 
-    str::Str<TCHAR> infotip;
+    str::Str<WCHAR> infotip;
 
     RECT rcLine, rcLabel;
     HWND hTV = nmit->hdr.hwndFrom;
@@ -47,7 +47,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLine, FALSE);
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLabel, TRUE);
     if (rcLine.right + 2 < rcLabel.right) {
-        TCHAR buf[INFOTIPSIZE+1] = { 0 };  // +1 just in case
+        WCHAR buf[INFOTIPSIZE+1] = { 0 };  // +1 just in case
         TVITEM item;
         item.hItem = nmit->hItem;
         item.mask = TVIF_TEXT;
@@ -55,7 +55,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
         item.cchTextMax = INFOTIPSIZE;
         TreeView_GetItem(hTV, &item);
         infotip.Append(item.pszText);
-        infotip.Append(_T("\r\n"));
+        infotip.Append(L"\r\n");
     }
 
     if (tocItem->GetLink() && Dest_LaunchEmbedded == tocItem->GetLink()->GetDestType())
@@ -86,7 +86,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     FillRect(ncd->hdc, &rcFullWidth, GetSysColorBrush(COLOR_WINDOW));
 
     // Get the label's text
-    TCHAR szText[MAX_PATH];
+    WCHAR szText[MAX_PATH];
     TVITEM item;
     item.hItem = hItem;
     item.mask = TVIF_TEXT | TVIF_PARAM;
@@ -97,10 +97,10 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     // Draw the page number right-aligned (if there is one)
     WindowInfo *win = FindWindowInfoByHwnd(hTV);
     DocTocItem *tocItem = (DocTocItem *)item.lParam;
-    ScopedMem<TCHAR> label;
+    ScopedMem<WCHAR> label;
     if (tocItem->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
         label.Set(win->dm->engine->GetPageLabel(tocItem->pageNo));
-        label.Set(str::Join(_T("  "), label));
+        label.Set(str::Join(L"  ", label));
     }
     if (label && str::EndsWith(item.pszText, label)) {
         RECT rcPageNo = rcFullWidth;
@@ -221,8 +221,8 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (entry->pageNo && win && win->IsDocLoaded() && win->dm->engine) {
-        ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(entry->pageNo));
-        ScopedMem<TCHAR> text(str::Format(_T("%s  %s"), entry->title, label));
+        ScopedMem<WCHAR> label(win->dm->engine->GetPageLabel(entry->pageNo));
+        ScopedMem<WCHAR> text(str::Format(L"%s  %s", entry->title, label));
         tvinsert.itemex.pszText = text;
         return TreeView_InsertItem(hwnd, &tvinsert);
     }
@@ -319,7 +319,7 @@ static void GetLeftRightCounts(DocTocItem *node, int& l2r, int& r2l)
     if (!node)
         return;
     if (node->title) {
-        for (const TCHAR *c = node->title; *c; c++) {
+        for (const WCHAR *c = node->title; *c; c++) {
             if (ISLEFTTORIGHTCHAR(*c))
                 l2r++;
             else if (ISRIGHTTOLEFTCHAR(*c))
@@ -512,19 +512,19 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 void CreateToc(WindowInfo *win)
 {
     // toc windows
-    win->hwndTocBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
+    win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD,
                                    0, 0, gGlobalPrefs.sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, ghinst, NULL);
-    HWND title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND title = CreateWindow(WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                               0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
     win::SetText(title, _TR("Bookmarks"));
 
-    HWND hwndClose = CreateWindow(WC_STATIC, _T(""),
+    HWND hwndClose = CreateWindow(WC_STATIC, L"",
                                   SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                                   0, 0, 16, 16, win->hwndTocBox, (HMENU)IDC_TOC_CLOSE, ghinst, NULL);
 
-    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("TOC"),
+    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"TOC",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,
@@ -535,9 +535,7 @@ void CreateToc(WindowInfo *win)
             IDC_TOC_BOX + 2 == IDC_TOC_CLOSE &&
             IDC_TOC_BOX + 3 == IDC_TOC_TREE, consecutive_toc_ids);
 
-#ifdef UNICODE
     TreeView_SetUnicodeFormat(win->hwndTocTree, true);
-#endif
 
     if (NULL == DefWndProcTocTree)
         DefWndProcTocTree = (WNDPROC)GetWindowLongPtr(win->hwndTocTree, GWLP_WNDPROC);

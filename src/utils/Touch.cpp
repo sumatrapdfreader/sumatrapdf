@@ -22,7 +22,7 @@ static void InitializeGestures()
         return;
     initialized = true;
 
-    HMODULE hLib = SafeLoadLibrary(_T("user32.dll"));
+    HMODULE hLib = SafeLoadLibrary(L"user32.dll");
     if (!hLib)
         return;
 

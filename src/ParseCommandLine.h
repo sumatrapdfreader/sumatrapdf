@@ -8,21 +8,21 @@
 
 class CommandLineInfo {
 public:
-    StrVec      fileNames;
+    WStrVec     fileNames;
     // pathsToBenchmark contain 2 strings per each file to benchmark:
     // - name of the file to benchmark
     // - optional (NULL if not available) string that represents which pages
     //   to benchmark. It can also be a string "loadonly" which means we'll
     //   only benchmark loading of the catalog
-    StrVec      pathsToBenchmark;
+    WStrVec     pathsToBenchmark;
     bool        makeDefault;
     bool        exitOnPrint;
     bool        printDialog;
-    TCHAR *     printerName;
-    TCHAR *     printSettings;
+    WCHAR *     printerName;
+    WCHAR *     printSettings;
     int         bgColor;
-    TCHAR *     inverseSearchCmdLine;
-    TCHAR *     forwardSearchOrigin;
+    WCHAR *     inverseSearchCmdLine;
+    WCHAR *     forwardSearchOrigin;
     int         forwardSearchLine;
     struct {
         int     offset;
@@ -33,7 +33,7 @@ public:
     bool        escToExit;
     bool        reuseInstance;
     char *      lang;
-    TCHAR *     destName;
+    WCHAR *     destName;
     int         pageNumber;
     bool        restrictedUse;
     COLORREF    colorRange[2]; // foreground color / background color
@@ -44,15 +44,15 @@ public:
     PointI      startScroll;
     bool        showConsole;
     HWND        hwndPluginParent;
-    TCHAR *     pluginURL;
+    WCHAR *     pluginURL;
     bool        exitImmediately;
     bool        silent;
     bool        cbxR2L;
 
     // stress-testing related
-    TCHAR *     stressTestPath;
-    TCHAR *     stressTestFilter; // NULL is equivalent to "*" (i.e. all files)
-    TCHAR *     stressTestRanges;
+    WCHAR *     stressTestPath;
+    WCHAR *     stressTestFilter; // NULL is equivalent to "*" (i.e. all files)
+    WCHAR *     stressTestRanges;
     int         stressTestCycles;
 
     bool        crashOnOpen;
@@ -90,7 +90,7 @@ public:
         free(pluginURL);
     }
 
-    void ParseCommandLine(TCHAR *cmdLine);
+    void ParseCommandLine(WCHAR *cmdLine);
 };
 
 #endif

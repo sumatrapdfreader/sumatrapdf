@@ -75,7 +75,7 @@ bool FileFavs::Remove(int pageNo)
     return true;
 }
 
-void FileFavs::AddOrReplace(int pageNo, const TCHAR *name)
+void FileFavs::AddOrReplace(int pageNo, const WCHAR *name)
 {
     int idx = FindByPage(pageNo);
     if (idx != -1) {
@@ -123,7 +123,7 @@ void Favorites::ResetMenuIds()
     }
 }
 
-FileFavs *Favorites::GetFavByFilePath(const TCHAR *filePath, bool createIfNotExist, size_t *idx)
+FileFavs *Favorites::GetFavByFilePath(const WCHAR *filePath, bool createIfNotExist, size_t *idx)
 {
     // it's likely that we'll ask about the info for the same
     // file as in previous call, so use one element cache
@@ -157,7 +157,7 @@ FileFavs *Favorites::GetFavByFilePath(const TCHAR *filePath, bool createIfNotExi
     return fav;
 }
 
-bool Favorites::IsPageInFavorites(const TCHAR *filePath, int pageNo)
+bool Favorites::IsPageInFavorites(const WCHAR *filePath, int pageNo)
 {
     FileFavs *fav = GetFavByFilePath(filePath);
     if (!fav)
@@ -165,13 +165,13 @@ bool Favorites::IsPageInFavorites(const TCHAR *filePath, int pageNo)
     return fav->Exists(pageNo);
 }
 
-void Favorites::AddOrReplace(const TCHAR *filePath, int pageNo, const TCHAR *name)
+void Favorites::AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name)
 {
     FileFavs *fav = GetFavByFilePath(filePath, true);
     fav->AddOrReplace(pageNo, name);
 }
 
-void Favorites::Remove(const TCHAR *filePath, int pageNo)
+void Favorites::Remove(const WCHAR *filePath, int pageNo)
 {
     size_t idx;
     FileFavs *fav = GetFavByFilePath(filePath, false, &idx);
@@ -182,7 +182,7 @@ void Favorites::Remove(const TCHAR *filePath, int pageNo)
         RemoveFav(fav, idx);
 }
 
-void Favorites::RemoveAllForFile(const TCHAR *filePath)
+void Favorites::RemoveAllForFile(const WCHAR *filePath)
 {
     size_t idx;
     FileFavs *fav = GetFavByFilePath(filePath, false, &idx);
@@ -208,25 +208,25 @@ static bool HasFavorites()
 }
 
 // caller has to free() the result
-static TCHAR *FavReadableName(FavName *fn)
+static WCHAR *FavReadableName(FavName *fn)
 {
     // TODO: save non-default page labels (cf. BaseEngine::GetPageLabel)
-    ScopedMem<TCHAR> label(str::Format(_T("%d"), fn->pageNo));
+    ScopedMem<WCHAR> label(str::Format(L"%d", fn->pageNo));
     if (fn->name) {
-        ScopedMem<TCHAR> pageNo(str::Format(_TR("(page %s)"), label));
-        return str::Join(fn->name, _T(" "), pageNo);
+        ScopedMem<WCHAR> pageNo(str::Format(_TR("(page %s)"), label));
+        return str::Join(fn->name, L" ", pageNo);
     }
     return str::Format(_TR("Page %s"), label);
 }
 
 // caller has to free() the result
-static TCHAR *FavCompactReadableName(FileFavs *fav, FavName *fn, bool isCurrent=false)
+static WCHAR *FavCompactReadableName(FileFavs *fav, FavName *fn, bool isCurrent=false)
 {
-    ScopedMem<TCHAR> rn(FavReadableName(fn));
+    ScopedMem<WCHAR> rn(FavReadableName(fn));
     if (isCurrent)
-        return str::Format(_T("%s : %s"), _TR("Current file"), rn);
-    const TCHAR *fp = path::GetBaseName(fav->filePath);
-    return str::Format(_T("%s : %s"), fp, rn);
+        return str::Format(L"%s : %s", _TR("Current file"), rn);
+    const WCHAR *fp = path::GetBaseName(fav->filePath);
+    return str::Format(L"%s : %s", fp, rn);
 }
 
 static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined, bool isCurrent)
@@ -238,7 +238,7 @@ static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined, b
     for (size_t i = 0; i < items; i++) {
         FavName *fn = f->favNames.At(i);
         fn->menuId = idx++;
-        ScopedMem<TCHAR> s;
+        ScopedMem<WCHAR> s;
         if (combined)
             s.Set(FavCompactReadableName(f, fn, isCurrent));
         else
@@ -250,12 +250,12 @@ static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined, b
 
 static int SortByBaseFileName(const void *a, const void *b)
 {
-    TCHAR *filePathA = *(TCHAR**)a;
-    TCHAR *filePathB = *(TCHAR**)b;
+    WCHAR *filePathA = *(WCHAR**)a;
+    WCHAR *filePathB = *(WCHAR**)b;
     return str::CmpNatural(path::GetBaseName(filePathA), path::GetBaseName(filePathB));
 }
 
-static void GetSortedFilePaths(Favorites *favorites, Vec<TCHAR*>& filePathsSortedOut, FileFavs *toIgnore)
+static void GetSortedFilePaths(Favorites *favorites, Vec<WCHAR*>& filePathsSortedOut, FileFavs *toIgnore)
 {
     for (size_t i = 0; i < favorites->favs.Count(); i++) {
         FileFavs *f = favorites->favs.At(i);
@@ -276,7 +276,7 @@ static void GetSortedFilePaths(Favorites *favorites, Vec<TCHAR*>& filePathsSorte
 // Note: not sure if that's the best layout. Maybe we should always use submenu and
 // put the submenu for current file as the first one (potentially named as "Current file"
 // or some such, to make it stand out from other submenus)
-static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
+static void AppendFavMenus(HMENU m, const WCHAR *currFilePath)
 {
     // To minimize mouse movement when navigating current file via favorites
     // menu, put favorites for current file first
@@ -286,7 +286,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
     }
 
     // sort the files with favorites by base file name of file path
-    Vec<TCHAR*> filePathsSorted;
+    Vec<WCHAR*> filePathsSorted;
     if (HasPermission(Perm_DiskAccess)) {
         // only show favorites for other files, if we're allowed to open them
         GetSortedFilePaths(gFavorites, filePathsSorted, currFileFav);
@@ -306,8 +306,8 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
     if (menusCount > MAX_FAV_MENUS)
         menusCount = MAX_FAV_MENUS;
     for (size_t i = 0; i < menusCount; i++) {
-        TCHAR *filePath = filePathsSorted.At(i);
-        const TCHAR *fileName = path::GetBaseName(filePath);
+        WCHAR *filePath = filePathsSorted.At(i);
+        const WCHAR *fileName = path::GetBaseName(filePath);
         FileFavs *f = gFavorites->GetFavByFilePath(filePath);
         HMENU sub = m;
         bool combined = (f->favNames.Count() == 1);
@@ -318,7 +318,7 @@ static void AppendFavMenus(HMENU m, const TCHAR *currFilePath)
             if (f == currFileFav) {
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
-                ScopedMem<TCHAR> s(win::menu::ToSafeString(fileName));
+                ScopedMem<WCHAR> s(win::menu::ToSafeString(fileName));
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, s);
             }
         }
@@ -339,15 +339,15 @@ void RebuildFavMenu(WindowInfo *win, HMENU menu)
         win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
         AppendFavMenus(menu, NULL);
     } else {
-        ScopedMem<TCHAR> label(win->dm->engine->GetPageLabel(win->currPageNo));
+        ScopedMem<WCHAR> label(win->dm->engine->GetPageLabel(win->currPageNo));
         bool isBookmarked = gFavorites->IsPageInFavorites(win->dm->FilePath(), win->currPageNo);
         if (isBookmarked) {
             win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
-            ScopedMem<TCHAR> s(str::Format(_TR("Remove page %s from favorites"), label));
+            ScopedMem<WCHAR> s(str::Format(_TR("Remove page %s from favorites"), label));
             win::menu::SetText(menu, IDM_FAV_DEL, s);
         } else {
             win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
-            ScopedMem<TCHAR> s(str::Format(_TR("Add page %s to favorites"), label));
+            ScopedMem<WCHAR> s(str::Format(_TR("Add page %s to favorites"), label));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
         }
         AppendFavMenus(menu, win->dm->FilePath());
@@ -462,7 +462,7 @@ static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, FavName *
     tvinsert.itemex.state = 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)fn;
-    ScopedMem<TCHAR> s(FavReadableName(fn));
+    ScopedMem<WCHAR> s(FavReadableName(fn));
     tvinsert.itemex.pszText = s;
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
@@ -477,7 +477,7 @@ static void InsertFavSecondLevelNodes(HWND hwnd, HTREEITEM parent, FileFavs *f)
 
 static HTREEITEM InsertFavTopLevelNode(HWND hwnd, FileFavs *fav, bool isExpanded)
 {
-    TCHAR *s = NULL;
+    WCHAR *s = NULL;
     bool collapsed = fav->favNames.Count() == 1;
     if (collapsed)
         isExpanded = false;
@@ -494,7 +494,7 @@ static HTREEITEM InsertFavTopLevelNode(HWND hwnd, FileFavs *fav, bool isExpanded
         s = FavCompactReadableName(fav, fn);
         tvinsert.itemex.pszText = s;
     } else {
-        tvinsert.itemex.pszText = (TCHAR*)path::GetBaseName(fav->filePath);
+        tvinsert.itemex.pszText = (WCHAR*)path::GetBaseName(fav->filePath);
     }
     HTREEITEM ret = TreeView_InsertItem(hwnd, &tvinsert);
     free(s);
@@ -507,7 +507,7 @@ void PopulateFavTreeIfNeeded(WindowInfo *win)
     if (TreeView_GetCount(hwndTree) > 0)
         return;
 
-    Vec<TCHAR*> filePathsSorted;
+    Vec<WCHAR*> filePathsSorted;
     GetSortedFilePaths(gFavorites, filePathsSorted, NULL);
 
     SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
@@ -573,7 +573,7 @@ static DocTocItem *TocItemForPageNo(DocTocItem *item, int pageNo)
 void AddFavorite(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
-    ScopedMem<TCHAR> name;
+    ScopedMem<WCHAR> name;
     if (win->dm->HasTocTree()) {
         // use the current ToC heading as default name
         DocTocItem *root = win->dm->engine->GetTocTree();
@@ -582,7 +582,7 @@ void AddFavorite(WindowInfo *win)
             name.Set(str::Dup(item->title));
         delete root;
     }
-    ScopedMem<TCHAR> pageLabel(win->dm->engine->GetPageLabel(pageNo));
+    ScopedMem<WCHAR> pageLabel(win->dm->engine->GetPageLabel(pageNo));
 
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd)
@@ -597,7 +597,7 @@ void AddFavorite(WindowInfo *win)
 void DelFavorite(WindowInfo *win)
 {
     int pageNo = win->currPageNo;
-    TCHAR *filePath = win->loadedFilePath;
+    WCHAR *filePath = win->loadedFilePath;
     RememberFavTreeExpansionStateForAllWindows();
     gFavorites->Remove(filePath, pageNo);
     UpdateFavoritesTreeForAllWindows();
@@ -812,19 +812,19 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
 void CreateFavorites(WindowInfo *win)
 {
-    win->hwndFavBox = CreateWindow(WC_STATIC, _T(""), WS_CHILD,
+    win->hwndFavBox = CreateWindow(WC_STATIC, L"", WS_CHILD,
                                    0, 0, gGlobalPrefs.sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, ghinst, NULL);
-    HWND title = CreateWindow(WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND title = CreateWindow(WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                               0, 0, 0, 0, win->hwndFavBox, (HMENU)IDC_FAV_TITLE, ghinst, NULL);
     SetWindowFont(title, gDefaultGuiFont, FALSE);
     win::SetText(title, _TR("Favorites"));
 
-    HWND hwndClose = CreateWindow(WC_STATIC, _T(""),
+    HWND hwndClose = CreateWindow(WC_STATIC, L"",
                                   SS_OWNERDRAW | SS_NOTIFY | WS_CHILD | WS_VISIBLE,
                                   0, 0, 16, 16, win->hwndFavBox, (HMENU)IDC_FAV_CLOSE, ghinst, NULL);
 
-    win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, _T("Fav"),
+    win->hwndFavTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"Fav",
                                       TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
                                       TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
                                       WS_TABSTOP|WS_VISIBLE|WS_CHILD,
@@ -835,9 +835,7 @@ void CreateFavorites(WindowInfo *win)
             IDC_FAV_BOX + 2 == IDC_FAV_CLOSE &&
             IDC_FAV_BOX + 3 == IDC_FAV_TREE, consecutive_fav_ids);
 
-#ifdef UNICODE
     TreeView_SetUnicodeFormat(win->hwndFavTree, true);
-#endif
 
     if (NULL == DefWndProcFavTree)
         DefWndProcFavTree = (WNDPROC)GetWindowLongPtr(win->hwndFavTree, GWLP_WNDPROC);

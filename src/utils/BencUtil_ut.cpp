@@ -80,7 +80,7 @@ static void BencTestParseString()
 {
     struct {
         const char *    benc;
-        TCHAR *         value;
+        WCHAR *         value;
     } testData[] = {
         { NULL, NULL },
         { "", NULL },
@@ -94,14 +94,12 @@ static void BencTestParseString()
         { "-2:ab", NULL },
         { "2e:ab", NULL },
 
-        { "0:", _T("") },
-        { "1:a", _T("a") },
-        { "2::a", _T(":a") },
-        { "4:spam", _T("spam") },
-        { "4:i23e", _T("i23e") },
-#ifdef UNICODE
+        { "0:", L"" },
+        { "1:a", L"a" },
+        { "2::a", L":a" },
+        { "4:spam", L"spam" },
+        { "4:i23e", L"i23e" },
         { "5:\xC3\xA4\xE2\x82\xAC", L"\u00E4\u20AC" },
-#endif
     };
 
     for (int i = 0; i < dimof(testData); i++) {
@@ -109,7 +107,7 @@ static void BencTestParseString()
         if (testData[i].value) {
             assert(obj);
             assert(obj->Type() == BT_STRING);
-            ScopedMem<TCHAR> value(static_cast<BencString *>(obj)->Value());
+            ScopedMem<WCHAR> value(static_cast<BencString *>(obj)->Value());
             assert(str::Eq(value, testData[i].value));
             BencTestSerialization(obj, testData[i].benc);
             delete obj;
@@ -279,11 +277,11 @@ static void GenRandStr(char *buf, int bufLen)
     buf[l] = 0;
 }
 
-static void GenRandTStr(TCHAR *buf, int bufLen)
+static void GenRandTStr(WCHAR *buf, int bufLen)
 {
     int l = rand() % (bufLen - 1);
     for (int i = 0; i < l; i++) {
-        TCHAR c = (TCHAR)(33 + (rand() % (174 - 33)));
+        WCHAR c = (WCHAR)(33 + (rand() % (174 - 33)));
         buf[i] = c;
     }
     buf[l] = 0;
@@ -293,7 +291,7 @@ static void BencTestStress()
 {
     char key[64];
     char val[64];
-    TCHAR tval[64];
+    WCHAR tval[64];
     Vec<BencObj*> stack(29);
     BencDict *startDict = new BencDict();
     BencDict *d = startDict;
@@ -365,7 +363,7 @@ static void BencTestStress()
                 a->Add(tval);
             } else {
                 GenRandStr(key, dimof(key));
-                d->Add((const char*)key, (const TCHAR *)val);
+                d->Add((const char*)key, (const WCHAR *)val);
             }
         }
     }

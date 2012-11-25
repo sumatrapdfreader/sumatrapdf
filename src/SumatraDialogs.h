@@ -6,15 +6,15 @@
 
 struct SerializableGlobalPrefs;
 
-TCHAR * Dialog_GoToPage(HWND hwnd, const TCHAR *currentPageLabel, int pageCount, bool onlyNumeric=true);
-TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase);
-TCHAR * Dialog_GetPassword(HWND hwnd, const TCHAR *fileName, bool *rememberPassword);
+WCHAR * Dialog_GoToPage(HWND hwnd, const WCHAR *currentPageLabel, int pageCount, bool onlyNumeric=true);
+WCHAR * Dialog_Find(HWND hwnd, const WCHAR *previousSearch, bool *matchCase);
+WCHAR * Dialog_GetPassword(HWND hwnd, const WCHAR *fileName, bool *rememberPassword);
 INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut);
 int     Dialog_ChangeLanguge(HWND hwnd, int currLangId);
-INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const TCHAR *currentVersion, const TCHAR *newVersion, bool *skipThisVersion);
+INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const WCHAR *currentVersion, const WCHAR *newVersion, bool *skipThisVersion);
 bool    Dialog_CustomZoom(HWND hwnd, bool forChm, float *currZoomInOut);
 INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs);
-bool    Dialog_AddFavorite(HWND hwnd, const TCHAR *pageNo, ScopedMem<TCHAR>& favName);
+bool    Dialog_AddFavorite(HWND hwnd, const WCHAR *pageNo, ScopedMem<WCHAR>& favName);
 
 enum PrintRangeAdv { PrintRangeAll = 0, PrintRangeEven, PrintRangeOdd };
 enum PrintScaleAdv { PrintScaleNone = 0, PrintScaleShrink, PrintScaleFit };

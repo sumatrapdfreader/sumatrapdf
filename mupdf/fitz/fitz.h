@@ -2577,7 +2577,7 @@ typedef struct fz_ui_event_s
 	{
 		struct
 		{
-			int   ptype;
+			int ptype;
 			fz_point pt;
 		} pointer;
 	} event;
@@ -2909,14 +2909,14 @@ typedef struct fz_write_options_s fz_write_options;
 */
 struct fz_write_options_s
 {
-	int do_ascii;    /*	If non-zero then attempt (where possible) to
-				make the output ascii. */
-	int do_expand;	/*	Bitflags; each non zero bit indicates an aspect
+	int do_ascii; /* If non-zero then attempt (where possible) to make
+				the output ascii. */
+	int do_expand; /* Bitflags; each non zero bit indicates an aspect
 				of the file that should be 'expanded' on
 				writing. */
-	int do_garbage;	/*	If non-zero then attempt (where possible) to
+	int do_garbage; /* If non-zero then attempt (where possible) to
 				garbage collect the file before writing. */
-	int do_linear;   /*	If non-zero then write linearised. */
+	int do_linear; /* If non-zero then write linearised. */
 };
 
 /*	An enumeration of bitflags to use in the above 'do_expand' field of

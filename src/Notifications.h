@@ -42,23 +42,23 @@ class NotificationWnd : public ProgressUpdateUI {
     bool isCanceled;
     int  progress;
     int  progressWidth;
-    TCHAR *progressMsg; // must contain two %d (for current and total)
+    WCHAR *progressMsg; // must contain two %d (for current and total)
 
-    void CreatePopup(HWND parent, const TCHAR *message);
-    void UpdateWindowPosition(const TCHAR *message, bool init=false);
+    void CreatePopup(HWND parent, const WCHAR *message);
+    void UpdateWindowPosition(const WCHAR *message, bool init=false);
 
 public:
     static const int TL_MARGIN = 8;
     int groupId; // for use by Notifications
 
     // Note: in most cases use ShowNotification() and not assemble them manually
-    NotificationWnd(HWND parent, const TCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *cb=NULL) :
+    NotificationWnd(HWND parent, const WCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *cb=NULL) :
         hasProgress(false), hasCancel(!timeoutInMS), notificationCb(cb), highlight(highlight), progressMsg(NULL) {
         CreatePopup(parent, message);
         if (timeoutInMS)
             SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, NULL);
     }
-    NotificationWnd(HWND parent, const TCHAR *message, const TCHAR *progressMsg, NotificationWndCallback *cb=NULL) :
+    NotificationWnd(HWND parent, const WCHAR *message, const WCHAR *progressMsg, NotificationWndCallback *cb=NULL) :
         hasProgress(true), hasCancel(true), notificationCb(cb), highlight(false), isCanceled(false), progress(0) {
         this->progressMsg = progressMsg ? str::Dup(progressMsg) : NULL;
         CreatePopup(parent, message);
@@ -75,7 +75,7 @@ public:
         return RectI(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
     }
 
-    void UpdateMessage(const TCHAR *message, int timeoutInMS=0, bool highlight=false);
+    void UpdateMessage(const WCHAR *message, int timeoutInMS=0, bool highlight=false);
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     // ProgressUpdateUI methods
@@ -104,7 +104,7 @@ public:
     virtual void RemoveNotification(NotificationWnd *wnd);
 };
 
-void ShowNotification(WindowInfo *win, const TCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
-bool RegisterNotificationsWndClass(HINSTANCE inst);
+void ShowNotification(WindowInfo *win, const WCHAR *message, bool autoDismiss=true, bool highlight=false, NotificationGroup groupId=NG_RESPONSE_TO_ACTION);
+void RegisterNotificationsWndClass(HINSTANCE inst);
 
 #endif

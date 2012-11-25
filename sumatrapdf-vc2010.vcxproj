@@ -47,7 +47,7 @@
     <_ProjectFileVersion>10.0.30128.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe SumatraPDF</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\sumatrapdf.exe</NMakeOutput>
@@ -308,6 +308,7 @@
     <ClCompile Include="src\Selection.cpp" />
     <ClCompile Include="src\StressTesting.cpp" />
     <ClCompile Include="src\SumatraAbout.cpp" />
+    <ClCompile Include="src\SumatraAbout2.cpp" />
     <ClCompile Include="src\SumatraDialogs.cpp" />
     <ClCompile Include="src\SumatraPDF.cpp" />
     <ClCompile Include="src\SumatraProperties.cpp" />
@@ -323,6 +324,7 @@
     <ClCompile Include="src\ucrt\src\ucrt_dll.cpp" />
     <ClCompile Include="src\ucrt\src\ucrt_log.cpp" />
     <ClCompile Include="src\ucrt\src\ucrt_win.cpp" />
+    <ClCompile Include="src\utils\BaseUtil.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\ByteOrderDecoder.cpp" />
     <ClCompile Include="src\utils\ByteOrderDecoder_ut.cpp" />
@@ -498,9 +500,12 @@
     <ClInclude Include="src\Search.h" />
     <ClInclude Include="src\Selection.h" />
     <ClInclude Include="src\StressTesting.h" />
+    <ClInclude Include="src\SumatraAbout.h" />
+    <ClInclude Include="src\SumatraAbout2.h" />
     <ClInclude Include="src\SumatraDialogs.h" />
     <ClInclude Include="src\SumatraPDF.h" />
     <ClInclude Include="src\SumatraProperties.h" />
+    <ClInclude Include="src\SumatraWindow.h" />
     <ClInclude Include="src\TableOfContents.h" />
     <ClInclude Include="src\TextSearch.h" />
     <ClInclude Include="src\TextSelection.h" />

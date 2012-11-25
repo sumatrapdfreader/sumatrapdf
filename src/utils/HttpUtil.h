@@ -4,9 +4,9 @@
 #ifndef HttpUtil_h
 #define HttpUtil_h
 
-bool  HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, str::Str<char> *data);
-DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut);
-bool  HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath);
+bool  HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, str::Str<char> *data);
+DWORD HttpGet(const WCHAR *url, str::Str<char> *dataOut);
+bool  HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath);
 
 class HttpReqCallback;
 
@@ -18,11 +18,11 @@ class HttpReq {
     static DWORD WINAPI DownloadThread(LPVOID data);
 
 public:
-    TCHAR *         url;
+    WCHAR *         url;
     str::Str<char> *data;
     DWORD           error;
 
-    HttpReq(const TCHAR *url, HttpReqCallback *callback=NULL);
+    HttpReq(const WCHAR *url, HttpReqCallback *callback=NULL);
     ~HttpReq();
 };
 

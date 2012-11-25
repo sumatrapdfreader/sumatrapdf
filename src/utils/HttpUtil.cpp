@@ -9,10 +9,10 @@
 #include "WinUtil.h"
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
-#define USER_AGENT _T("BaseHTTP")
+#define USER_AGENT L"BaseHTTP"
 
 // returns ERROR_SUCCESS or an error code
-DWORD HttpGet(const TCHAR *url, str::Str<char> *dataOut)
+DWORD HttpGet(const WCHAR *url, str::Str<char> *dataOut)
 {
     DWORD error = ERROR_SUCCESS;
 
@@ -49,7 +49,7 @@ Error:
 }
 
 // Download content of a url to a file
-bool HttpGetToFile(const TCHAR *url, const TCHAR *destFilePath)
+bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
 {
     bool ok = false;
     char buf[1024];
@@ -96,7 +96,7 @@ Exit:
     return ok;
 }
 
-bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, str::Str<char> *data)
+bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, str::Str<char> *data)
 {
     str::Str<char> resp(2048);
     bool ok = false;
@@ -110,7 +110,7 @@ bool HttpPost(const TCHAR *server, const TCHAR *url, str::Str<char> *headers, st
         goto Exit;
 
     DWORD flags = INTERNET_FLAG_KEEP_CONNECTION;
-    hReq = HttpOpenRequest(hConn, _T("POST"), url, NULL, NULL, NULL, flags, NULL);
+    hReq = HttpOpenRequest(hConn, L"POST", url, NULL, NULL, NULL, flags, NULL);
     if (!hReq)
         goto Exit;
     char *hdr = NULL;
@@ -177,7 +177,7 @@ DWORD WINAPI HttpReq::DownloadThread(LPVOID data)
     return 0;
 }
 
-HttpReq::HttpReq(const TCHAR *url, HttpReqCallback *callback) :
+HttpReq::HttpReq(const WCHAR *url, HttpReqCallback *callback) :
     thread(NULL), callback(callback), error(0),
     url(str::Dup(url)), data(new str::Str<char>(256))
 {

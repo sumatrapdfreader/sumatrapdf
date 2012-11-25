@@ -6,7 +6,7 @@
 
 using namespace mui;
 
-#define FRAME_CLASS_NAME    _T("MUI_TEST_FRAME")
+#define FRAME_CLASS_NAME    L"MUI_TEST_FRAME"
 
 #define WIN_DX    720
 #define WIN_DY    640
@@ -42,10 +42,10 @@ static void OnOpen(HWND hwnd)
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwnd;
 
-    str::Str<TCHAR> fileFilter;
-    fileFilter.Append(_T("All supported documents"));
+    str::Str<WCHAR> fileFilter;
+    fileFilter.Append(L"All supported documents");
 
-    ofn.lpstrFilter = _T("All supported documents\0;*.mobi;*.awz;\0\0");
+    ofn.lpstrFilter = L"All supported documents\0;*.mobi;*.awz;\0\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
@@ -53,13 +53,13 @@ static void OnOpen(HWND hwnd)
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY |
                 OFN_ALLOWMULTISELECT | OFN_EXPLORER;
     ofn.nMaxFile = MAX_PATH * 100;
-    ScopedMem<TCHAR> file(AllocArray<TCHAR>(ofn.nMaxFile));
+    ScopedMem<WCHAR> file(AllocArray<WCHAR>(ofn.nMaxFile));
     ofn.lpstrFile = file;
 
     if (!GetOpenFileName(&ofn))
         return;
 
-    TCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
+    WCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without NULL separator
         gEbookController->LoadMobi(ofn.lpstrFile);
@@ -190,7 +190,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     win::GetHwndDpi(NULL, &gUiDPIFactor);
 
     gHwndFrame = CreateWindow(
-            FRAME_CLASS_NAME, _T("Mui Test"),
+            FRAME_CLASS_NAME, L"Mui Test",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT,
             dpiAdjust(WIN_DX), dpiAdjust(WIN_DY),

@@ -31,26 +31,26 @@
 #endif
 
 #if NOLOG == 0
-const TCHAR *DllMainReason(DWORD reason)
+const WCHAR *DllMainReason(DWORD reason)
 {
     if (DLL_PROCESS_ATTACH == reason)
-        return _T("DLL_PROCESS_ATTACH");
+        return L"DLL_PROCESS_ATTACH";
     if (DLL_PROCESS_DETACH == reason)
-        return _T("DLL_PROCESS_DETACH");
+        return L"DLL_PROCESS_DETACH";
     if (DLL_THREAD_ATTACH == reason)
-        return _T("DLL_THREAD_ATTACH");
+        return L"DLL_THREAD_ATTACH";
     if (DLL_THREAD_DETACH == reason)
-        return _T("DLL_THREAD_DETACH");
-    return _T("UNKNOWN");
+        return L"DLL_THREAD_DETACH";
+    return L"UNKNOWN";
 }
 #endif
 
 NPNetscapeFuncs gNPNFuncs;
 HINSTANCE g_hInstance = NULL;
 #ifndef _WIN64
-const TCHAR *g_lpRegKey = _T("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin");
+const WCHAR *g_lpRegKey = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin";
 #else
-const TCHAR *g_lpRegKey = _T("Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64");
+const WCHAR *g_lpRegKey = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64";
 #endif
 
 
@@ -116,13 +116,13 @@ DLLEXPORT NPError WINAPI NP_Shutdown(void)
     return NPERR_NO_ERROR;
 }
 
-bool EnsureRegKey(LPCTSTR lpKey)
+bool EnsureRegKey(const WCHAR *lpKey)
 {
     CreateRegKey(HKEY_LOCAL_MACHINE, lpKey);
     return CreateRegKey(HKEY_CURRENT_USER, lpKey);
 }
 
-bool SetRegValue(LPCTSTR lpKey, LPCTSTR lpName, LPCTSTR lpValue)
+bool SetRegValue(const WCHAR *lpKey, const WCHAR *lpName, const WCHAR *lpValue)
 {
     WriteRegStr(HKEY_LOCAL_MACHINE, lpKey, lpName, lpValue);
     return WriteRegStr(HKEY_CURRENT_USER, lpKey, lpName, lpValue);
@@ -133,37 +133,37 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
     if (!EnsureRegKey(g_lpRegKey))
         return E_UNEXPECTED;
     
-    TCHAR szPath[MAX_PATH];
+    WCHAR szPath[MAX_PATH];
     GetModuleFileName(g_hInstance, szPath, MAX_PATH);
-    if (!SetRegValue(g_lpRegKey, _T("Description"), _T("SumatraPDF Browser Plugin")) ||
-        !SetRegValue(g_lpRegKey, _T("Path"), szPath) ||
-        !SetRegValue(g_lpRegKey, _T("Version"), _T("0")) ||
-        !SetRegValue(g_lpRegKey, _T("ProductName"), _T("SumatraPDF Browser Plugin")))
+    if (!SetRegValue(g_lpRegKey, L"Description", L"SumatraPDF Browser Plugin") ||
+        !SetRegValue(g_lpRegKey, L"Path", szPath) ||
+        !SetRegValue(g_lpRegKey, L"Version", L"0") ||
+        !SetRegValue(g_lpRegKey, L"ProductName", L"SumatraPDF Browser Plugin"))
     {
         return E_UNEXPECTED;
     }
     
-    ScopedMem<TCHAR> mimeType(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/pdf")));
+    ScopedMem<WCHAR> mimeType(str::Join(g_lpRegKey, L"\\MimeTypes\\application/pdf"));
     EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/vnd.ms-xpsdocument")));
+    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\application/vnd.ms-xpsdocument"));
     EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\application/oxps")));
+    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\application/oxps"));
     EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\image/vnd.djvu")));
+    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\image/vnd.djvu"));
     EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\image/x-djvu")));
+    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\image/x-djvu"));
     EnsureRegKey(mimeType);
-    mimeType.Set(str::Join(g_lpRegKey, _T("\\MimeTypes\\image/x.djvu")));
+    mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\image/x.djvu"));
     EnsureRegKey(mimeType);
     
     // Work around Mozilla bug https://bugzilla.mozilla.org/show_bug.cgi?id=581848 which
     // makes Firefox up to version 3.6.* ignore all but the first plugin for a given MIME type
     // (per http://code.google.com/p/sumatrapdf/issues/detail?id=1254#c12 Foxit does the same)
-    *(TCHAR *)path::GetBaseName(szPath) = '\0';
-    if (SHGetValue(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"), NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
+    *(WCHAR *)path::GetBaseName(szPath) = '\0';
+    if (SHGetValue(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
     {
-        WriteRegStr(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"), szPath);
-        SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)_T("Environment"), SMTO_ABORTIFHUNG, 5000, NULL);
+        WriteRegStr(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", szPath);
+        SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, NULL);
     }
     
     return S_OK;
@@ -171,13 +171,13 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
 
 DLLEXPORT STDAPI DllUnregisterServer(VOID)
 {
-    ScopedMem<TCHAR> mozPluginPath(ReadRegStr(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH")));
+    ScopedMem<WCHAR> mozPluginPath(ReadRegStr(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH"));
     if (mozPluginPath)
     {
-        TCHAR szModulePath[MAX_PATH];
+        WCHAR szModulePath[MAX_PATH];
         GetModuleFileName(g_hInstance, szModulePath, MAX_PATH);
         if (str::StartsWithI(szModulePath, mozPluginPath))
-            SHDeleteValue(HKEY_CURRENT_USER, _T("Environment"), _T("MOZ_PLUGIN_PATH"));
+            SHDeleteValue(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH");
     }
     
     DeleteRegKey(HKEY_LOCAL_MACHINE, g_lpRegKey);
@@ -189,21 +189,21 @@ DLLEXPORT STDAPI DllUnregisterServer(VOID)
 
 /* ::::: Auxiliary Methods ::::: */
 
-bool GetExePath(LPTSTR lpPath, int len)
+bool GetExePath(WCHAR *lpPath, size_t len)
 {
     // Search the plugin's directory first
     GetModuleFileName(g_hInstance, lpPath, len - 2);
-    str::BufSet((TCHAR *)path::GetBaseName(lpPath), len - 2 - (path::GetBaseName(lpPath) - lpPath), _T("SumatraPDF.exe"));
+    str::BufSet((WCHAR *)path::GetBaseName(lpPath), len - 2 - (path::GetBaseName(lpPath) - lpPath), L"SumatraPDF.exe");
     if (file::Exists(lpPath))
         return true;
     
     *lpPath = '\0';
     // Try to get the path from the registry (set e.g. when making the default PDF viewer)
-    ScopedMem<TCHAR> path(ReadRegStr(HKEY_CURRENT_USER, _T("Software\\Classes\\SumatraPDF\\Shell\\Open\\Command"), NULL));
+    ScopedMem<WCHAR> path(ReadRegStr(HKEY_CURRENT_USER, L"Software\\Classes\\SumatraPDF\\Shell\\Open\\Command", NULL));
     if (!path)
         return false;
 
-    StrVec args;
+    WStrVec args;
     ParseCmdLine(path, args);
     if (!file::Exists(args.At(0)))
         return false;
@@ -212,9 +212,9 @@ bool GetExePath(LPTSTR lpPath, int len)
     return true;
 }
 
-HANDLE CreateTempFile(TCHAR *filePathBufOut, size_t bufSize)
+HANDLE CreateTempFile(WCHAR *filePathBufOut, size_t bufSize)
 {
-    ScopedMem<TCHAR> tmpPath(path::GetTempPath(_T("nPV")));
+    ScopedMem<WCHAR> tmpPath(path::GetTempPath(L"nPV"));
     if (!tmpPath)
     {
         plogf("sp: CreateTempFile(): GetTempPath() failed");
@@ -236,11 +236,11 @@ HANDLE CreateTempFile(TCHAR *filePathBufOut, size_t bufSize)
 
 struct InstanceData {
     NPWindow *  npwin;
-    LPCTSTR     message;
-    TCHAR       filepath[MAX_PATH];
+    LPCWSTR     message;
+    WCHAR       filepath[MAX_PATH];
     HANDLE      hFile;
     HANDLE      hProcess;
-    TCHAR       exepath[MAX_PATH];
+    WCHAR       exepath[MAX_PATH];
     float       progress, prevProgress;
     uint32_t    totalSize, currSize;
 };
@@ -252,31 +252,31 @@ enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
-static TCHAR *FormatSizeSuccint(size_t size) {
-    const TCHAR *unit = NULL;
+static WCHAR *FormatSizeSuccint(size_t size) {
+    const WCHAR *unit = NULL;
     double s = (double)size;
 
     if (size > GB)
     {
         s /= GB;
-        unit = _T("GB");
+        unit = L"GB";
     }
     else if (size > MB)
     {
         s /= MB;
-        unit = _T("MB");
+        unit = L"MB";
     }
     else
     {
         s /= KB;
-        unit = _T("KB");
+        unit = L"KB";
     }
     
-    ScopedMem<TCHAR> sizestr(str::FormatFloatWithThousandSep(s));
+    ScopedMem<WCHAR> sizestr(str::FormatFloatWithThousandSep(s));
     if (!unit)
         return sizestr.StealData();
     
-    return str::Format(_T("%s %s"), sizestr, unit);
+    return str::Format(L"%s %s", sizestr, unit);
 }
 
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
@@ -288,7 +288,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         PAINTSTRUCT ps;
         HDC hDC = BeginPaint(hWnd, &ps);
         HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
-        HFONT hFont = GetSimpleFont(hDC, _T("MS Shell Dlg"), 14);
+        HFONT hFont = GetSimpleFont(hDC, L"MS Shell Dlg", 14);
         
         // set up double buffering
         RectI rcClient = ClientRect(hWnd);
@@ -318,7 +318,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             FillRect(hDCBuffer, &rcProgress.ToRECT(), brushProgress);
             DeleteObject(brushProgress);
             
-            ScopedMem<TCHAR> currSize(FormatSizeSuccint(data->currSize));
+            ScopedMem<WCHAR> currSize(FormatSizeSuccint(data->currSize));
             if (0 == data->totalSize || data->currSize > data->totalSize)
             {
                 // total size unknown or bogus => show just the current size
@@ -326,8 +326,8 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             }
             else
             {
-                ScopedMem<TCHAR> totalSize(FormatSizeSuccint(data->totalSize));
-                ScopedMem<TCHAR> s(str::Format(_T("%s of %s"), currSize, totalSize));
+                ScopedMem<WCHAR> totalSize(FormatSizeSuccint(data->totalSize));
+                ScopedMem<WCHAR> s(str::Format(L"%s of %s", currSize, totalSize));
                 DrawCenteredText(hDCBuffer, rcProgressAll, s);
             }
         }
@@ -371,7 +371,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     }
 
     if (pluginType)
-        plogf("sp:   pluginType: %s ", ScopedMem<TCHAR>(str::conv::FromAnsi(pluginType)));
+        plogf("sp:   pluginType: %s ", ScopedMem<WCHAR>(str::conv::FromAnsi(pluginType)));
     if (saved)
         plogf("sp:   SavedData: len=%d", saved->len);
 
@@ -386,9 +386,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
     
     if (GetExePath(data->exepath, dimof(data->exepath)))
-        data->message = _T("Opening document in SumatraPDF...");
+        data->message = L"Opening document in SumatraPDF...";
     else
-        data->message = _T("Error: SumatraPDF hasn't been found!");
+        data->message = L"Error: SumatraPDF hasn't been found!";
     
     return NPERR_NO_ERROR;
 }
@@ -521,25 +521,25 @@ static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
     if (!file::Exists(data->filepath))
         plogf("sp: NPP_StreamAsFile() error: file doesn't exist");
 
-    ScopedMem<TCHAR> url(str::conv::FromUtf8(url_utf8));
+    ScopedMem<WCHAR> url(str::conv::FromUtf8(url_utf8));
     // escape quotation marks and backslashes for CmdLineParser.cpp's ParseQuoted
     if (str::FindChar(url, '"')) {
-        StrVec parts;
-        parts.Split(url, _T("\""));
-        url.Set(parts.Join(_T("%22")));
+        WStrVec parts;
+        parts.Split(url, L"\"");
+        url.Set(parts.Join(L"%22"));
     }
-    if (str::EndsWith(url, _T("\\"))) {
+    if (str::EndsWith(url, L"\\")) {
         url[str::Len(url) - 1] = '\0';
-        url.Set(str::Join(url, _T("%5c")));
+        url.Set(str::Join(url, L"%5c"));
     }
 
-    ScopedMem<TCHAR> cmdLine(str::Format(_T("\"%s\" -plugin \"%s\" %d \"%s\""),
-        data->exepath, url ? url : _T(""), (HWND)data->npwin->window, data->filepath));
+    ScopedMem<WCHAR> cmdLine(str::Format(L"\"%s\" -plugin \"%s\" %d \"%s\"",
+        data->exepath, url ? url : L"", (HWND)data->npwin->window, data->filepath));
     data->hProcess = LaunchProcess(cmdLine);
     if (!data->hProcess)
     {
         plogf("sp: NPP_StreamAsFile() error: couldn't run SumatraPDF!");
-        data->message = _T("Error: Couldn't run SumatraPDF!");
+        data->message = L"Error: Couldn't run SumatraPDF!";
     }
 }
 
@@ -550,11 +550,11 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
     if (!fname)
     {
         plogf("sp: NPP_StreamAsFile() error: fname is NULL");
-        data->message = _T("Error: The document couldn't be downloaded!");
+        data->message = L"Error: The document couldn't be downloaded!";
         goto Exit;
     }
 
-    plogf("sp: NPP_StreamAsFile() fname=%s", ScopedMem<TCHAR>(str::conv::FromAnsi(fname)));
+    plogf("sp: NPP_StreamAsFile() fname=%s", ScopedMem<WCHAR>(str::conv::FromAnsi(fname)));
 
     if (data->hFile)
         plogf("sp: NPP_StreamAsFile() error: data->hFile is != NULL (should be NULL)");
@@ -563,12 +563,8 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
     data->prevProgress = 0.0f; // force update
     TriggerRepaintOnProgressChange(data);
 
-#ifdef UNICODE
     if (!MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, fname, -1, data->filepath, MAX_PATH))
         MultiByteToWideChar(CP_ACP, 0, fname, -1, data->filepath, MAX_PATH);
-#else
-    str::BufSet(data->filepath, dimof(data->filepath), fname);
-#endif
 
     LaunchWithSumatra(data, stream->url);
 
@@ -588,7 +584,7 @@ NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason rea
     if (stream)
     {
         if (stream->url)
-            plogf("sp:   url: %s", ScopedMem<TCHAR>(str::conv::FromUtf8(stream->url)));
+            plogf("sp:   url: %s", ScopedMem<WCHAR>(str::conv::FromUtf8(stream->url)));
         plogf("sp:   end: %d", stream->end);
     }
 
@@ -650,7 +646,7 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 
     if (*data->filepath)
     {
-        TCHAR tempDir[MAX_PATH];
+        WCHAR tempDir[MAX_PATH];
         DWORD len = GetTempPath(MAX_PATH, tempDir);
         if (0 < len && len < MAX_PATH && str::StartsWithI(data->filepath, tempDir))
         {

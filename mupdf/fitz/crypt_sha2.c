@@ -34,13 +34,13 @@ static inline uint64_t bswap64(uint64_t num)
 	if (!isbigendian())
 	{
 		return ( (((num) << 56))
-		       | (((num) << 40) & 0x00FF000000000000ULL)
-		       | (((num) << 24) & 0x0000FF0000000000ULL)
-		       | (((num) <<  8) & 0x000000FF00000000ULL)
-		       | (((num) >>  8) & 0x00000000FF000000ULL)
-		       | (((num) >> 24) & 0x0000000000FF0000ULL)
-		       | (((num) >> 40) & 0x000000000000FF00ULL)
-		       | (((num) >> 56)) );
+				| (((num) << 40) & 0x00FF000000000000ULL)
+				| (((num) << 24) & 0x0000FF0000000000ULL)
+				| (((num) << 8) & 0x000000FF00000000ULL)
+				| (((num) >> 8) & 0x00000000FF000000ULL)
+				| (((num) >> 24) & 0x0000000000FF0000ULL)
+				| (((num) >> 40) & 0x000000000000FF00ULL)
+				| (((num) >> 56)) );
 	}
 	return num;
 }

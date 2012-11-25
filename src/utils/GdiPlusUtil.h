@@ -5,7 +5,7 @@
 #define GdiPlusUtil_h
 
 // used for communicating with DrawCloseButton()
-#define BUTTON_HOVER_TEXT _T("1")
+#define BUTTON_HOVER_TEXT L"1"
 
 // note: must write "using namespace Gdiplus;" before #include "GdiPlusUtil.h"
 // this is to make sure we don't accidentally do that just by including this file
@@ -23,7 +23,7 @@ void     DrawCloseButton(DRAWITEMSTRUCT *dis);
 
 void     GetBaseTransform(Matrix& m, RectF pageRect, float zoom, int rotation);
 
-const TCHAR * GfxFileExtFromData(const char *data, size_t len);
+const WCHAR * GfxFileExtFromData(const char *data, size_t len);
 bool          IsGdiPlusNativeFormat(const char *data, size_t len);
 Bitmap *      BitmapFromData(const char *data, size_t len);
 Size          BitmapSizeFromData(const char *data, size_t len);

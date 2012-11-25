@@ -86,13 +86,13 @@ static void cmyk_to_rgb(fz_context *ctx, fz_colorspace *cs, float *cmyk, float *
 	float c1m = m - cm;
 	float cm1 = c - cm;
 	float c1m1 = 1 - m - cm1;
-	float c1m1y  = c1m1 * y;
+	float c1m1y = c1m1 * y;
 	float c1m1y1 = c1m1 - c1m1y;
-	float c1my  = c1m * y;
+	float c1my = c1m * y;
 	float c1my1 = c1m - c1my;
-	float cm1y  = cm1 * y;
+	float cm1y = cm1 * y;
 	float cm1y1 = cm1 - cm1y;
-	float cmy  = cm * y;
+	float cmy = cm * y;
 	float cmy1 = cm - cmy;
 
 	/* this is a matrix multiplication, unrolled for performance */
@@ -316,6 +316,31 @@ static void fast_cmyk_to_gray(fz_pixmap *dst, fz_pixmap *src)
 	}
 }
 
+#if 0
+static void
+fast_cmyk_to_rgb_ARM(unsigned char *dst, unsigned char *src, int n)
+{
+	asm volatile(
+	ENTER_ARM
+	"stmfd	r13!,{r4-r12,r14}				\n"
+	"@ r0 = dst						\n"
+	"@ r1 = src						\n"
+	"@ r2 = weights						\n"
+	"mov	r4, #0			@ r4 = CMYK = 0		\n"
+	"mvn	r5, #0xFF000000		@ r5 = RGB = FFFFFF	\n"
+	"1:							\n"
+	"ldr	r3, [r1], #4		@ r3 = cmyk		\n"
+	"cmp	r3, r4			@ if (cmyk == CMYK)	\n"
+	"beq	match			@   goto match		\n"
+	"cmp	r3, #0			@ if (cmyk = 0000)	\n"
+	"beq	black			@
+
+	"ldmfd	r13!,{r4-r7,r9,PC}	@ pop, return to thumb	\n"
+	ENTER_THUMB
+	);
+}
+#endif
+
 static void fast_cmyk_to_rgb(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 {
 	unsigned char *s = src->samples;
@@ -335,6 +360,128 @@ static void fast_cmyk_to_rgb(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 	{
 #ifdef SLOWCMYK
 		/* SumatraPDF: prevent rendering regression */
+#if 0
+		unsigned int c = s[0];
+		unsigned int m = s[1];
+		unsigned int y = s[2];
+		unsigned int k = s[3];
+		unsigned int cm, c1m, cm1, c1m1, c1m1y, c1m1y1, c1my, c1my1, cm1y, cm1y1, cmy, cmy1;
+		unsigned int x0, x1;
+
+		if (c == C && m == M && y == Y && k == K)
+		{
+			/* Nothing to do */
+		}
+		else if (k == 0 && c == 0 && m == 0 && y == 0)
+		{
+			r = g = b = 255;
+		}
+		else if (k == 255)
+		{
+			r = g = b = 0;
+		}
+		else
+		{
+			c += c>>7;
+			m += m>>7;
+			y += y>>7;
+			k += k>>7;
+			y >>= 1; /* Ditch 1 bit of Y to avoid overflow */
+			cm = c * m;
+			c1m = (m<<8) - cm;
+			cm1 = (c<<8) - cm;
+			c1m1 = ((256 - m)<<8) - cm1;
+			c1m1y = c1m1 * y;
+			c1m1y1 = (c1m1<<7) - c1m1y;
+			c1my = c1m * y;
+			c1my1 = (c1m<<7) - c1my;
+			cm1y = cm1 * y;
+			cm1y1 = (cm1<<7) - cm1y;
+			cmy = cm * y;
+			cmy1 = (cm<<7) - cmy;
+
+			/* this is a matrix multiplication, unrolled for performance */
+			x1 = c1m1y1 * k;	/* 0 0 0 1 */
+			x0 = (c1m1y1<<8) - x1;	/* 0 0 0 0 */
+			x1 = x1>>8;		/* From 23 fractional bits to 15 */
+			r = g = b = x0;
+			r += 35 * x1;	/* 0.1373 */
+			g += 31 * x1;	/* 0.1216 */
+			b += 32 * x1;	/* 0.1255 */
+
+			x1 = c1m1y * k;		/* 0 0 1 1 */
+			x0 = (c1m1y<<8) - x1;	/* 0 0 1 0 */
+			x1 >>= 8;		/* From 23 fractional bits to 15 */
+			r += 28 * x1;	/* 0.1098 */
+			g += 26 * x1;	/* 0.1020 */
+			r += x0;
+			x0 >>= 8;		/* From 23 fractional bits to 15 */
+			g += 243 * x0;	/* 0.9490 */
+
+			x1 = c1my1 * k;		/* 0 1 0 1 */
+			x0 = (c1my1<<8) - x1;	/* 0 1 0 0 */
+			x1 >>= 8;		/* From 23 fractional bits to 15 */
+			x0 >>= 8;		/* From 23 fractional bits to 15 */
+			r += 36 * x1;	/* 0.1412 */
+			r += 237 * x0;	/* 0.9255 */
+			b += 141 * x0;	/* 0.5490 */
+
+			x1 = c1my * k;		/* 0 1 1 1 */
+			x0 = (c1my<<8) - x1;	/* 0 1 1 0 */
+			x1 >>= 8;		/* From 23 fractional bits to 15 */
+			x0 >>= 8;		/* From 23 fractional bits to 15 */
+			r += 34 * x1;	/* 0.1333 */
+			r += 238 * x0;	/* 0.9294 */
+			g += 28 * x0;	/* 0.1098 */
+			b += 36 * x0;	/* 0.1412 */
+
+			x1 = cm1y1 * k;		/* 1 0 0 1 */
+			x0 = (cm1y1<<8) - x1;	/* 1 0 0 0 */
+			x1 >>= 8;		/* From 23 fractional bits to 15 */
+			x0 >>= 8;		/* From 23 fractional bits to 15 */
+			g += 15 * x1;	/* 0.0588 */
+			b += 36 * x1;	/* 0.1412 */
+			g += 174 * x0;	/* 0.6784 */
+			b += 240 * x0;	/* 0.9373 */
+
+			x1 = cm1y * k;		/* 1 0 1 1 */
+			x0 = (cm1y<<8) - x1;	/* 1 0 1 0 */
+			x1 >>= 8;		/* From 23 fractional bits to 15 */
+			x0 >>= 8;		/* From 23 fractional bits to 15 */
+			g += 19 * x1;	/* 0.0745 */
+			g += 167 * x0;	/* 0.6510 */
+			b += 80 * x0;	/* 0.3137 */
+
+			x1 = cmy1 * k;		/* 1 1 0 1 */
+			x0 = (cmy1<<8) - x1;	/* 1 1 0 0 */
+			x1 >>= 8;		/* From 23 fractional bits to 15 */
+			x0 >>= 8;		/* From 23 fractional bits to 15 */
+			b += 2 * x1;	/* 0.0078 */
+			r += 46 * x0;	/* 0.1804 */
+			g += 49 * x0;	/* 0.1922 */
+			b += 147 * x0;	/* 0.5725 */
+
+			x0 = cmy * (256-k);	/* 1 1 1 0 */
+			x0 >>= 8;		/* From 23 fractional bits to 15 */
+			r += 54 * x0;	/* 0.2118 */
+			g += 54 * x0;	/* 0.2119 */
+			b += 57 * x0;	/* 0.2235 */
+
+			r -= (r>>8);
+			g -= (g>>8);
+			b -= (b>>8);
+			r = r>>23;
+			g = g>>23;
+			b = b>>23;
+			C = c;
+			M = m;
+			Y = y;
+			K = k;
+		}
+		d[0] = r;
+		d[1] = g;
+		d[2] = b;
+#else
 		float cmyk[4], rgb[3];
 		cmyk[0] = s[0] / 255.0f;
 		cmyk[1] = s[1] / 255.0f;
@@ -344,6 +491,7 @@ static void fast_cmyk_to_rgb(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 		d[0] = rgb[0] * 255;
 		d[1] = rgb[1] * 255;
 		d[2] = rgb[2] * 255;
+#endif
 #else
 		d[0] = 255 - (unsigned char)fz_mini(s[0] + s[3], 255);
 		d[1] = 255 - (unsigned char)fz_mini(s[1] + s[3], 255);

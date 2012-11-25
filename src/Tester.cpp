@@ -33,7 +33,7 @@ static bool gSaveImages = false;
 // if true, we'll do a layout of mobi files
 static bool gLayout = false;
 // directory to which we'll save mobi html and images
-#define MOBI_SAVE_DIR _T("..\\ebooks-converted")
+#define MOBI_SAVE_DIR L"..\\ebooks-converted"
 
 static int Usage()
 {
@@ -46,11 +46,11 @@ static int Usage()
     return 1;
 }
 
-static void MobiSaveHtml(const TCHAR *filePathBase, MobiDoc *mb)
+static void MobiSaveHtml(const WCHAR *filePathBase, MobiDoc *mb)
 {
     CrashAlwaysIf(!gSaveHtml);
 
-    ScopedMem<TCHAR> outFile(str::Join(filePathBase, _T("_pp.html")));
+    ScopedMem<WCHAR> outFile(str::Join(filePathBase, L"_pp.html"));
 
     size_t htmlLen;
     const char *html = mb->GetBookHtmlData(htmlLen);
@@ -58,22 +58,22 @@ static void MobiSaveHtml(const TCHAR *filePathBase, MobiDoc *mb)
     char *ppHtml = PrettyPrintHtml(html, htmlLen, ppHtmlLen);
     file::WriteAll(outFile.Get(), ppHtml, ppHtmlLen);
 
-    outFile.Set(str::Join(filePathBase, _T(".html")));
+    outFile.Set(str::Join(filePathBase, L".html"));
     file::WriteAll(outFile.Get(), html, htmlLen);
 }
 
-static void MobiSaveImage(const TCHAR *filePathBase, size_t imgNo, ImageData *img)
+static void MobiSaveImage(const WCHAR *filePathBase, size_t imgNo, ImageData *img)
 {
     // it's valid to not have image data at a given index
     if (!img || !img->data)
         return;
-    const TCHAR *ext = GfxFileExtFromData((char*)img->data, img->len);
+    const WCHAR *ext = GfxFileExtFromData((char*)img->data, img->len);
     CrashAlwaysIf(!ext);
-    ScopedMem<TCHAR> fileName(str::Format(_T("%s_img_%d%s"), filePathBase, imgNo, ext));
+    ScopedMem<WCHAR> fileName(str::Format(L"%s_img_%d%s", filePathBase, imgNo, ext));
     file::WriteAll(fileName.Get(), img->data, img->len);
 }
 
-static void MobiSaveImages(const TCHAR *filePathBase, MobiDoc *mb)
+static void MobiSaveImages(const WCHAR *filePathBase, MobiDoc *mb)
 {
     for (size_t i = 0; i < mb->imagesCount; i++) {
         MobiSaveImage(filePathBase, i, mb->GetImage(i+1));
@@ -99,9 +99,9 @@ static void MobiLayout(MobiDoc *mobiDoc)
     delete pages;
 }
 
-static void MobiTestFile(const TCHAR *filePath)
+static void MobiTestFile(const WCHAR *filePath)
 {
-    _tprintf(_T("Testing file '%s'\n"), filePath);
+    wprintf(L"Testing file '%s'\n", filePath);
     MobiDoc *mobiDoc = MobiDoc::CreateFromFile(filePath);
     if (!mobiDoc) {
         printf(" error: failed to parse the file\n");
@@ -111,7 +111,7 @@ static void MobiTestFile(const TCHAR *filePath)
     if (gLayout) {
         Timer t(true);
         MobiLayout(mobiDoc);
-        _tprintf(_T("Spent %.2f ms laying out %s\n"), t.GetTimeInMs(), filePath);
+        wprintf(L"Spent %.2f ms laying out %s\n", t.GetTimeInMs(), filePath);
     }
 
     if (gSaveHtml || gSaveImages) {
@@ -119,11 +119,11 @@ static void MobiTestFile(const TCHAR *filePath)
         // construct a base name for extracted html/image files in the form
         // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
         // remove the file extension
-        TCHAR *dir = MOBI_SAVE_DIR;
+        WCHAR *dir = MOBI_SAVE_DIR;
         dir::CreateAll(dir);
-        ScopedMem<TCHAR> fileName(str::Dup(path::GetBaseName(filePath)));
-        ScopedMem<TCHAR> filePathBase(path::Join(dir, fileName));
-        TCHAR *ext = (TCHAR*)str::FindCharLast(filePathBase.Get(), '.');
+        ScopedMem<WCHAR> fileName(str::Dup(path::GetBaseName(filePath)));
+        ScopedMem<WCHAR> filePathBase(path::Join(dir, fileName));
+        WCHAR *ext = (WCHAR*)str::FindCharLast(filePathBase.Get(), '.');
         *ext = 0;
 
         if (gSaveHtml)
@@ -135,25 +135,25 @@ static void MobiTestFile(const TCHAR *filePath)
     delete mobiDoc;
 }
 
-static bool IsMobiFile(const TCHAR *f)
+static bool IsMobiFile(const WCHAR *f)
 {
     // TODO: also .prc and .pdb ?
-    return str::EndsWithI(f, _T(".mobi")) ||
-           str::EndsWithI(f, _T(".azw")) ||
-           str::EndsWithI(f, _T(".azw1"));
+    return str::EndsWithI(f, L".mobi") ||
+           str::EndsWithI(f, L".azw") ||
+           str::EndsWithI(f, L".azw1");
 }
 
-static void MobiTestDir(TCHAR *dir)
+static void MobiTestDir(WCHAR *dir)
 {
-    _tprintf(_T("Testing mobi files in '%s'\n"), dir);
+    wprintf(L"Testing mobi files in '%s'\n", dir);
     DirIter di;
     if (!di.Start(dir, true)) {
-        _tprintf(_T("Error: invalid directory '%s'\n"), dir);
+        wprintf(L"Error: invalid directory '%s'\n", dir);
         return;
     }
 
     for (;;) {
-        const TCHAR *p = di.Next();
+        const WCHAR *p = di.Next();
         if (NULL == p)
             break;
         if (IsMobiFile(p))
@@ -163,7 +163,7 @@ static void MobiTestDir(TCHAR *dir)
 
 static void MobiTest(char *dirOrFile)
 {
-    TCHAR *tmp = nf::str::conv::FromAnsi(dirOrFile);
+    WCHAR *tmp = nf::str::conv::FromAnsi(dirOrFile);
 
     if (file::Exists(tmp) && IsMobiFile(tmp))
         MobiTestFile(tmp);
@@ -175,15 +175,15 @@ static void MobiTest(char *dirOrFile)
 // ./obj-dbg/tester.exe, so we use the known files 
 void ZipCreateTest()
 {
-    TCHAR *zipFileName = _T("tester-tmp.zip");
+    WCHAR *zipFileName = L"tester-tmp.zip";
     file::Delete(zipFileName);
     ZipCreator *zc = new ZipCreator();
-    bool ok = zc->AddFile(_T("makefile.deps"));
+    bool ok = zc->AddFile(L"makefile.deps");
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.deps");
         return;
     }
-    ok = zc->AddFile(_T("makefile.msvc"));
+    ok = zc->AddFile(L"makefile.msvc");
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.msvc");
         return;

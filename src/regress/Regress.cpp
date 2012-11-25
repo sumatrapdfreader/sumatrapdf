@@ -28,9 +28,9 @@ using namespace Gdiplus;
 
 #include "DebugLog.h"
 
-static TCHAR *gTestFilesDir;
+static WCHAR *gTestFilesDir;
 
-static TCHAR *TestFilesDir()
+static WCHAR *TestFilesDir()
 {
     return gTestFilesDir;
 }
@@ -52,11 +52,12 @@ static void printflush(const char *s)
 option to specify this directory, for now just add your location(s) to the list */
 static bool FindTestFilesDir()
 {
-    TCHAR *dirsToCheck[] = {
-        _T("C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra")
+    WCHAR *dirsToCheck[] = {
+        L"C:\\Documents and Settings\\kkowalczyk\\My Documents\\Google Drive\\Sumatra",
+        L"C:\\Users\\kkowalczyk\\Google Drive\\Sumatra"
     };
     for (size_t i = 0; i < dimof(dirsToCheck); i++) {
-        TCHAR *dir = dirsToCheck[i];
+        WCHAR *dir = dirsToCheck[i];
         if (dir::Exists(dir)) {
             gTestFilesDir = dir;
             return true;
@@ -65,10 +66,10 @@ static bool FindTestFilesDir()
     return false;
 }
 
-static void VerifyFileExists(const TCHAR *filePath)
+static void VerifyFileExists(const WCHAR *filePath)
 {
     if (!file::Exists(filePath)) {
-        _tprintf(_T("File '%s' doesn't exist!\n"), filePath);
+        wprintf(L"File '%s' doesn't exist!\n", filePath);
         exit(1);
     }
 }
@@ -168,6 +169,8 @@ static void UninstallCrashHandler()
 static void RunTests()
 {
     Regress00();
+    Regress01();
+    Regress02();
 }
 
 extern "C"

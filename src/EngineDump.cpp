@@ -14,9 +14,9 @@
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
 // caller must free() the result
-char *Escape(TCHAR *string, bool keepString=false)
+char *Escape(WCHAR *string, bool keepString=false)
 {
-    ScopedMem<TCHAR> freeOnReturn;
+    ScopedMem<WCHAR> freeOnReturn;
     if (!keepString)
         freeOnReturn.Set(string);
 
@@ -26,14 +26,14 @@ char *Escape(TCHAR *string, bool keepString=false)
     if (!str::FindChar(string, '<') && !str::FindChar(string, '&') && !str::FindChar(string, '"'))
         return str::conv::ToUtf8(string);
 
-    str::Str<TCHAR> escaped(256);
-    for (TCHAR *s = string; *s; s++) {
+    str::Str<WCHAR> escaped(256);
+    for (WCHAR *s = string; *s; s++) {
         switch (*s) {
-        case '&': escaped.Append(_T("&amp;")); break;
-        case '<': escaped.Append(_T("&lt;")); break;
-        case '>': escaped.Append(_T("&gt;")); break;
-        case '"': escaped.Append(_T("&quot;")); break;
-        case '\'': escaped.Append(_T("&amp;")); break;
+        case '&': escaped.Append(L"&amp;"); break;
+        case '<': escaped.Append(L"&lt;"); break;
+        case '>': escaped.Append(L"&gt;"); break;
+        case '"': escaped.Append(L"&quot;"); break;
+        case '\'': escaped.Append(L"&amp;"); break;
         default: escaped.Append(*s); break;
         }
     }
@@ -44,7 +44,7 @@ void DumpProperties(BaseEngine *engine)
 {
     Out("\t<Properties\n");
     ScopedMem<char> str;
-    str.Set(Escape((TCHAR *)engine->FileName(), true));
+    str.Set(Escape((WCHAR *)engine->FileName(), true));
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty(Prop_Title)));
     if (str)
@@ -86,11 +86,11 @@ void DumpProperties(BaseEngine *engine)
         Out("\t\tPreferredLayout=\"%d\"\n", engine->PreferredLayout());
     Out("\t/>\n");
 
-    ScopedMem<TCHAR> fontlist(engine->GetProperty(Prop_FontList));
+    ScopedMem<WCHAR> fontlist(engine->GetProperty(Prop_FontList));
     if (fontlist) {
-        StrVec fonts;
-        fonts.Split(fontlist, _T("\n"));
-        str.Set(Escape(fonts.Join(_T("\n\t\t"))));
+        WStrVec fonts;
+        fonts.Split(fontlist, L"\n");
+        str.Set(Escape(fonts.Join(L"\n\t\t")));
         Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
     }
 }
@@ -98,7 +98,7 @@ void DumpProperties(BaseEngine *engine)
 // caller must free() the result
 char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
 {
-    if (ScopedMem<TCHAR>(dest->GetDestName())) {
+    if (ScopedMem<WCHAR>(dest->GetDestName())) {
         ScopedMem<char> name(Escape(dest->GetDestName()));
         return str::Format("Name=\"%s\"", name);
     }
@@ -218,7 +218,7 @@ void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
     Out("\t>\n");
 
     if (fullDump) {
-        ScopedMem<char> text(Escape(engine->ExtractPageText(pageNo, _T("\n"))));
+        ScopedMem<char> text(Escape(engine->ExtractPageText(pageNo, L"\n")));
         if (text)
             Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.Get());
     }
@@ -297,33 +297,33 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out("</EngineDump>\n");
 }
 
-void RenderDocument(BaseEngine *engine, const TCHAR *renderPath)
+void RenderDocument(BaseEngine *engine, const WCHAR *renderPath)
 {
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderedBitmap *bmp = engine->RenderBitmap(pageNo, 1.0, 0);
         size_t len = 0;
         ScopedMem<unsigned char> data;
-        if (bmp && str::EndsWithI(renderPath, _T(".bmp")))
+        if (bmp && str::EndsWithI(renderPath, L".bmp"))
             data.Set(SerializeBitmap(bmp->GetBitmap(), &len));
         else if (bmp)
             data.Set(tga::SerializeBitmap(bmp->GetBitmap(), &len));
-        ScopedMem<TCHAR> pageBmpPath(str::Format(renderPath, pageNo));
+        ScopedMem<WCHAR> pageBmpPath(str::Format(renderPath, pageNo));
         file::WriteAll(pageBmpPath, data, len);
         delete bmp;
     }
 }
 
 class PasswordHolder : public PasswordUI {
-    const TCHAR *password;
+    const WCHAR *password;
 public:
-    PasswordHolder(const TCHAR *password) : password(password) { }
-    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+    PasswordHolder(const WCHAR *password) : password(password) { }
+    virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey) {
         return password ? str::Dup(password) : NULL;
     }
 };
 
-#define ErrOut(msg, ...) _ftprintf(stderr, _T(msg), __VA_ARGS__)
+#define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg), __VA_ARGS__)
 
 int main(int argc, char **argv)
 {
@@ -334,7 +334,7 @@ int main(int argc, char **argv)
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 
-    StrVec argList;
+    WStrVec argList;
     ParseCmdLine(GetCommandLine(), argList);
     if (argList.Count() < 2) {
 Usage:
@@ -343,11 +343,11 @@ Usage:
         return 0;
     }
 
-    ScopedMem<TCHAR> filePath;
+    ScopedMem<WCHAR> filePath;
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(argList.At(1), &fdata);
     if (INVALID_HANDLE_VALUE != hfind) {
-        ScopedMem<TCHAR> dir(path::GetDir(argList.At(1)));
+        ScopedMem<WCHAR> dir(path::GetDir(argList.At(1)));
         filePath.Set(path::Join(dir, fdata.cFileName));
         FindClose(hfind);
     }
@@ -358,21 +358,21 @@ Usage:
     }
 
     bool fullDump = false;
-    TCHAR *password = NULL;
-    TCHAR *renderPath = NULL;
+    WCHAR *password = NULL;
+    WCHAR *renderPath = NULL;
     bool useAlternateHandlers = false;
     bool loadOnly = false;
 
     for (size_t i = 2; i < argList.Count(); i++) {
-        if (str::Eq(argList.At(i), _T("-full")))
+        if (str::Eq(argList.At(i), L"-full"))
             fullDump = true;
-        else if (str::Eq(argList.At(i), _T("-pwd")) && i + 1 < argList.Count())
+        else if (str::Eq(argList.At(i), L"-pwd") && i + 1 < argList.Count())
             password = argList.At(++i);
-        else if (str::Eq(argList.At(i), _T("-render")) && i + 1 < argList.Count())
+        else if (str::Eq(argList.At(i), L"-render") && i + 1 < argList.Count())
             renderPath = argList.At(++i);
-        else if (str::Eq(argList.At(i), _T("-alt")))
+        else if (str::Eq(argList.At(i), L"-alt"))
             useAlternateHandlers = true;
-        else if (str::Eq(argList.At(i), _T("-loadonly")))
+        else if (str::Eq(argList.At(i), L"-loadonly"))
             loadOnly = true;
         else
             goto Usage;

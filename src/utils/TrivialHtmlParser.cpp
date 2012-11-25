@@ -49,24 +49,18 @@ HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
     return NULL;
 }
 
-static TCHAR IntToChar(int codepoint, UINT codepage)
+static WCHAR IntToChar(int codepoint)
 {
-#ifndef UNICODE
-    WCHAR wc = codepoint;
-    char c = 0;
-    WideCharToMultiByte(codepage, 0, &wc, 1, &c, 1, NULL, NULL);
-    codepoint = c;
-#endif
-    if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(TCHAR))))
+    if (codepoint <= 0 || codepoint >= (1 << (8 * sizeof(WCHAR))))
         return '?';
-    return (TCHAR)codepoint;
+    return (WCHAR)codepoint;
 }
 
 // caller needs to free() the result
-TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
+WCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
 {
-    TCHAR *fixed = str::conv::FromCodePage(string, codepage), *dst = fixed;
-    const TCHAR *src = fixed;
+    WCHAR *fixed = str::conv::FromCodePage(string, codepage), *dst = fixed;
+    const WCHAR *src = fixed;
 
     while (*src) {
         if (*src != '&') {
@@ -76,26 +70,26 @@ TCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
         src++;
         // numeric entities
         int unicode;
-        if (str::Parse(src, _T("#%d;"), &unicode) ||
-            str::Parse(src, _T("#x%x;"), &unicode)) {
-            *dst++ = IntToChar(unicode, codepage);
+        if (str::Parse(src, L"#%d;", &unicode) ||
+            str::Parse(src, L"#x%x;", &unicode)) {
+            *dst++ = IntToChar(unicode);
             src = str::FindChar(src, ';') + 1;
             continue;
         }
 
         // named entities
         int rune = -1;
-        const TCHAR *entityEnd = src;
-        while (_istalnum(*entityEnd))
+        const WCHAR *entityEnd = src;
+        while (iswalnum(*entityEnd))
             entityEnd++;
         if (entityEnd != src) {
             size_t entityLen = entityEnd - src;
             rune = HtmlEntityNameToRune(src, entityLen);
         }
         if (-1 != rune) {
-            *dst++ = IntToChar(rune, codepage);
+            *dst++ = IntToChar(rune);
             src = entityEnd;
-            if (*src == _T(';'))
+            if (*src == ';')
                 ++src;
         } else {
             *dst++ = '&';
@@ -141,7 +135,7 @@ HtmlAttr *HtmlParser::AllocAttr(char *name, HtmlAttr *next)
 }
 
 // caller needs to free() the result
-TCHAR *HtmlElement::GetAttribute(const char *name) const
+WCHAR *HtmlElement::GetAttribute(const char *name) const
 {
     for (HtmlAttr *attr = firstAttr; attr; attr = attr->next) {
         if (str::EqI(attr->name, name))

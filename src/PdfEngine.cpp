@@ -184,7 +184,7 @@ ProducingPaletteDone:
     free(bmi);
 }
 
-fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
+fz_stream *fz_open_file2(fz_context *ctx, const WCHAR *filePath)
 {
     fz_stream *file = NULL;
     size_t fileSize = file::GetSize(filePath);
@@ -207,11 +207,7 @@ fz_stream *fz_open_file2(fz_context *ctx, const TCHAR *filePath)
     }
 
     fz_try(ctx) {
-#ifdef UNICODE
         file = fz_open_file_w(ctx, filePath);
-#else
-        file = fz_open_file_a(ctx, filePath);
-#endif
     }
     fz_catch(ctx) {
         file = NULL;
@@ -263,7 +259,7 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
     fz_drop_buffer(file->ctx, buffer);
 }
 
-TCHAR *fz_text_page_to_str(fz_text_page *text, TCHAR *lineSep, RectI **coords_out=NULL)
+WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_out=NULL)
 {
     size_t lineSepLen = str::Len(lineSep);
     size_t textLen = 0;
@@ -276,7 +272,7 @@ TCHAR *fz_text_page_to_str(fz_text_page *text, TCHAR *lineSep, RectI **coords_ou
         }
     }
 
-    TCHAR *content = AllocArray<TCHAR>(textLen + 1);
+    WCHAR *content = AllocArray<WCHAR>(textLen + 1);
     if (!content)
         return NULL;
 
@@ -289,18 +285,12 @@ TCHAR *fz_text_page_to_str(fz_text_page *text, TCHAR *lineSep, RectI **coords_ou
         }
     }
 
-    TCHAR *dest = content;
+    WCHAR *dest = content;
     for (fz_text_block *block = text->blocks; block < text->blocks + text->len; block++) {
         for (fz_text_line *line = block->lines; line < block->lines + block->len; line++) {
             for (fz_text_span *span = line->spans; span < line->spans + line->len; span++) {
                 for (int i = 0; i < span->len; i++) {
-#ifdef UNICODE
                     *dest = span->text[i].c;
-#else
-                    WCHAR c = span->text[i].c;
-                    if (!WideCharToMultiByte(CP_ACP, 0, &c, 1, dest, 1, NULL, NULL))
-                        *dest = '?';
-#endif
                     if (*dest <= 32) {
                         if (!str::IsWs(*dest))
                             *dest = '?';
@@ -415,30 +405,30 @@ fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation)
 }
 
 struct LinkRectList {
-    StrVec links;
+    WStrVec links;
     Vec<fz_rect> coords;
 };
 
-static bool LinkifyCheckMultiline(TCHAR *pageText, TCHAR *pos, RectI *coords)
+static bool LinkifyCheckMultiline(WCHAR *pageText, WCHAR *pos, RectI *coords)
 {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
     // (and that doesn't start with http itself)
     return
         '\n' == *pos && pos > pageText && *(pos + 1) &&
-        !_istalnum(pos[-1]) && !_istspace(pos[1]) &&
+        !iswalnum(pos[-1]) && !iswspace(pos[1]) &&
         coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
         coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
         coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
-        !str::StartsWith(pos + 1, _T("http"));
+        !str::StartsWith(pos + 1, L"http");
 }
 
-static TCHAR *LinkifyFindEnd(TCHAR *start)
+static WCHAR *LinkifyFindEnd(WCHAR *start)
 {
-    TCHAR *end;
+    WCHAR *end;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-    for (end = start; *end && !_istspace(*end); end++);
+    for (end = start; *end && !iswspace(*end); end++);
     if (',' == end[-1] || '.' == end[-1])
         end--;
     // also ignore a closing parenthesis, if the URL doesn't contain any opening one
@@ -448,11 +438,11 @@ static TCHAR *LinkifyFindEnd(TCHAR *start)
     return end;
 }
 
-static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *start, RectI *coords)
+static WCHAR *LinkifyMultilineText(LinkRectList *list, WCHAR *pageText, WCHAR *start, RectI *coords)
 {
     size_t lastIx = list->coords.Count() - 1;
-    ScopedMem<TCHAR> uri(list->links.At(lastIx));
-    TCHAR *end = start;
+    ScopedMem<WCHAR> uri(list->links.At(lastIx));
+    WCHAR *end = start;
     bool multiline = false;
 
     do {
@@ -476,25 +466,27 @@ static TCHAR *LinkifyMultilineText(LinkRectList *list, TCHAR *pageText, TCHAR *s
 }
 
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
-inline bool IsEmailUsernameChar(TCHAR c)
+inline bool IsEmailUsernameChar(WCHAR c)
 {
-    return _istalnum(c) || c && str::FindChar(_T(".!#$%&'*+-=?^`{|}~"), c);
+    // explicitly excluding the '/' from the list, as it is more
+    // often part of a URL or path than of an email address
+    return iswalnum(c) || c && str::FindChar(L".!#$%&'*+=?^_`{|}~-", c);
 }
-inline bool IsEmailDomainChar(TCHAR c)
+inline bool IsEmailDomainChar(WCHAR c)
 {
-    return _istalnum(c) || '-' == c;
+    return iswalnum(c) || '-' == c;
 }
 
-static TCHAR *LinkifyFindEmail(TCHAR *pageText, TCHAR *at)
+static WCHAR *LinkifyFindEmail(WCHAR *pageText, WCHAR *at)
 {
-    TCHAR *start;
+    WCHAR *start;
     for (start = at; start > pageText && IsEmailUsernameChar(*(start - 1)); start--);
     return start != at ? start : NULL;
 }
 
-static TCHAR *LinkifyEmailAddress(TCHAR *start)
+static WCHAR *LinkifyEmailAddress(WCHAR *start)
 {
-    TCHAR *end;
+    WCHAR *end;
     for (end = start; IsEmailUsernameChar(*end); end++);
     if (end == start || *end != '@' || !IsEmailDomainChar(*(end + 1)))
         return NULL;
@@ -508,47 +500,47 @@ static TCHAR *LinkifyEmailAddress(TCHAR *start)
 }
 
 // caller needs to delete the result
-static LinkRectList *LinkifyText(TCHAR *pageText, RectI *coords)
+static LinkRectList *LinkifyText(WCHAR *pageText, RectI *coords)
 {
     LinkRectList *list = new LinkRectList;
 
-    for (TCHAR *start = pageText; *start; start++) {
-        TCHAR *end = NULL;
+    for (WCHAR *start = pageText; *start; start++) {
+        WCHAR *end = NULL;
         bool multiline = false;
-        const TCHAR *protocol = NULL;
+        const WCHAR *protocol = NULL;
 
         if ('@' == *start) {
             // potential email address without mailto:
-            TCHAR *email = LinkifyFindEmail(pageText, start);
+            WCHAR *email = LinkifyFindEmail(pageText, start);
             end = email ? LinkifyEmailAddress(email) : NULL;
-            protocol = _T("mailto:");
+            protocol = L"mailto:";
             if (end != NULL)
                 start = email;
         }
-        else if (start > pageText && ('/' == start[-1] || _istalnum(start[-1]))) {
+        else if (start > pageText && ('/' == start[-1] || iswalnum(start[-1]))) {
             // hyperlinks must not be preceded by a slash (indicates a different protocol)
             // or an alphanumeric character (indicates part of a different protocol)
         }
-        else if ('h' == *start && str::Parse(start, _T("http%?s://"))) {
+        else if ('h' == *start && str::Parse(start, L"http%?s://")) {
             end = LinkifyFindEnd(start);
             multiline = LinkifyCheckMultiline(pageText, end, coords);
         }
-        else if ('w' == *start && str::StartsWith(start, _T("www."))) {
+        else if ('w' == *start && str::StartsWith(start, L"www.")) {
             end = LinkifyFindEnd(start);
             multiline = LinkifyCheckMultiline(pageText, end, coords);
-            protocol = _T("http://");
+            protocol = L"http://";
             // ignore www. links without a top-level domain
-            if (end - start <= 4 || !multiline && (!_tcschr(start + 5, '.') || _tcschr(start + 5, '.') >= end))
+            if (end - start <= 4 || !multiline && (!wcschr(start + 5, '.') || wcschr(start + 5, '.') >= end))
                 end = NULL;
         }
-        else if ('m' == *start && str::StartsWith(start, _T("mailto:"))) {
+        else if ('m' == *start && str::StartsWith(start, L"mailto:")) {
             end = LinkifyEmailAddress(start + 7);
         }
         if (!end)
             continue;
 
         *end = 0;
-        TCHAR *uri = protocol ? str::Join(protocol, start) : str::Dup(start);
+        WCHAR *uri = protocol ? str::Join(protocol, start) : str::Dup(start);
         list->links.Append(uri);
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
@@ -774,11 +766,11 @@ extern "C" {
 namespace str {
     namespace conv {
 
-inline TCHAR *FromPdf(pdf_obj *obj)
+inline WCHAR *FromPdf(pdf_obj *obj)
 {
     ScopedMem<WCHAR> str(AllocArray<WCHAR>(pdf_to_str_len(obj) + 1));
     pdf_to_ucs2_buf((unsigned short *)str.Get(), obj);
-    return str::conv::FromWStr(str);
+    return str.StealData();
 }
 
     }
@@ -839,26 +831,26 @@ int CmpPageLabelInfo(const void *a, const void *b)
     return ((PageLabelInfo *)a)->startAt - ((PageLabelInfo *)b)->startAt;
 }
 
-TCHAR *FormatPageLabel(const char *type, int pageNo, const TCHAR *prefix)
+WCHAR *FormatPageLabel(const char *type, int pageNo, const WCHAR *prefix)
 {
     if (str::Eq(type, "D"))
-        return str::Format(_T("%s%d"), prefix, pageNo);
+        return str::Format(L"%s%d", prefix, pageNo);
     if (str::EqI(type, "R")) {
         // roman numbering style
-        ScopedMem<TCHAR> number(str::FormatRomanNumeral(pageNo));
+        ScopedMem<WCHAR> number(str::FormatRomanNumeral(pageNo));
         if (*type == 'r')
             str::ToLower(number.Get());
-        return str::Format(_T("%s%s"), prefix, number);
+        return str::Format(L"%s%s", prefix, number);
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
-        str::Str<TCHAR> number;
+        str::Str<WCHAR> number;
         number.Append('A' + (pageNo - 1) % 26);
         for (int i = 0; i < (pageNo - 1) / 26; i++)
             number.Append(number.At(0));
         if (*type == 'a')
             str::ToLower(number.Get());
-        return str::Format(_T("%s%s"), prefix, number.Get());
+        return str::Format(L"%s%s", prefix, number.Get());
     }
     return str::Dup(prefix);
 }
@@ -889,7 +881,7 @@ void BuildPageLabelRec(pdf_obj *node, int pageCount, Vec<PageLabelInfo>& data)
     }
 }
 
-StrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
+WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
 {
     Vec<PageLabelInfo> data;
     BuildPageLabelRec(root, pageCount, data);
@@ -904,14 +896,14 @@ StrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
         return NULL;
     }
 
-    StrVec *labels = new StrVec();
+    WStrVec *labels = new WStrVec();
     labels->AppendBlanks(pageCount);
 
     for (size_t i = 0; i < data.Count() && data.At(i).startAt <= pageCount; i++) {
         int secLen = pageCount + 1 - data.At(i).startAt;
         if (i < data.Count() - 1 && data.At(i + 1).startAt <= pageCount)
             secLen = data.At(i + 1).startAt - data.At(i).startAt;
-        ScopedMem<TCHAR> prefix(str::conv::FromPdf(data.At(i).prefix));
+        ScopedMem<WCHAR> prefix(str::conv::FromPdf(data.At(i).prefix));
         for (int j = 0; j < secLen; j++) {
             free(labels->At(data.At(i).startAt + j - 1));
             labels->At(data.At(i).startAt + j - 1) =
@@ -920,19 +912,19 @@ StrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
     }
 
     for (int ix = 0; (ix = labels->Find(NULL, ix)) != -1; ix++)
-        labels->At(ix) = str::Dup(_T(""));
+        labels->At(ix) = str::Dup(L"");
 
     // ensure that all page labels are unique (by appending a number to duplicates)
-    StrVec dups(*labels);
+    WStrVec dups(*labels);
     dups.Sort();
     for (size_t i = 1; i < dups.Count(); i++) {
         if (!str::Eq(dups.At(i), dups.At(i - 1)))
             continue;
         int ix = labels->Find(dups.At(i)), counter = 0;
         while ((ix = labels->Find(dups.At(i), ix + 1)) != -1) {
-            ScopedMem<TCHAR> unique;
+            ScopedMem<WCHAR> unique;
             do {
-                unique.Set(str::Format(_T("%s.%d"), dups.At(i), ++counter));
+                unique.Set(str::Format(L"%s.%d", dups.At(i), ++counter));
             } while (labels->Find(unique) != -1);
             str::ReplacePtr(&labels->At(ix), unique);
         }
@@ -992,7 +984,7 @@ public:
     virtual ~PdfEngineImpl();
     virtual PdfEngineImpl *Clone();
 
-    virtual const TCHAR *FileName() const { return _fileName; };
+    virtual const WCHAR *FileName() const { return _fileName; };
     virtual int PageCount() const {
         // make sure that pdf_load_page_tree is called as soon as
         // _doc is defined, so that pdf_count_pages can't throw
@@ -1014,11 +1006,11 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo);
     virtual PageLayoutType PreferredLayout();
-    virtual TCHAR *GetProperty(DocumentProperty prop);
+    virtual WCHAR *GetProperty(DocumentProperty prop);
 
     virtual bool IsPrintingAllowed() {
         return pdf_has_permission(_doc, PDF_PERM_PRINT);
@@ -1028,28 +1020,28 @@ public:
     }
 
     virtual float GetFileDPI() const { return 72.0f; }
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".pdf"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".pdf"; }
 
     virtual bool BenchLoadPage(int pageNo) { return GetPdfPage(pageNo) != NULL; }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name);
+    virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const {
         return outline != NULL || attachments != NULL;
     }
     virtual DocTocItem *GetTocTree();
 
     virtual bool HasPageLabels() { return _pagelabels != NULL; }
-    virtual TCHAR *GetPageLabel(int pageNo);
-    virtual int GetPageByLabel(const TCHAR *label);
+    virtual WCHAR *GetPageLabel(int pageNo);
+    virtual int GetPageByLabel(const WCHAR *label);
 
     virtual bool IsPasswordProtected() const { return isProtected; }
     virtual char *GetDecryptionKey() const;
 
 protected:
-    TCHAR *_fileName;
+    WCHAR *_fileName;
     char *_decryptionKey;
     bool isProtected;
 
@@ -1063,7 +1055,7 @@ protected:
     CRITICAL_SECTION pagesAccess;
     pdf_page **     _pages;
 
-    virtual bool    Load(const TCHAR *fileName, PasswordUI *pwdUI=NULL);
+    virtual bool    Load(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
     virtual bool    Load(IStream *stream, PasswordUI *pwdUI=NULL);
     bool            Load(fz_stream *stm, PasswordUI *pwdUI=NULL);
     bool            LoadFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
@@ -1080,7 +1072,7 @@ protected:
                                fz_matrix *ctm, float zoom, int rotation,
                                RectD *pageRect, RenderTarget target, AbortCookie **cookie_out);
     bool            PreferGdiPlusDevice(pdf_page *page, float zoom, fz_rect clip);
-    TCHAR         * ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out=NULL,
+    WCHAR         * ExtractPageText(pdf_page *page, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
     Vec<PdfPageRun*>runCache; // ordered most recently used first
@@ -1096,7 +1088,7 @@ protected:
     void            LinkifyPageText(pdf_page *page);
     pdf_annot    ** ProcessPageAnnotations(pdf_page *page);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
-    TCHAR         * ExtractFontList();
+    WCHAR         * ExtractFontList();
     bool            IsLinearizedFile();
 
     bool            SaveEmbedded(LinkSaverUI& saveUI, int num, int gen);
@@ -1105,7 +1097,7 @@ protected:
     fz_outline    * outline;
     fz_outline    * attachments;
     pdf_obj       * _info;
-    StrVec        * _pagelabels;
+    WStrVec       * _pagelabels;
     pdf_annot   *** pageComments;
     fz_rect      ** imageRects;
 };
@@ -1129,25 +1121,25 @@ public:
     virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
-    virtual TCHAR *GetValue() const;
+    virtual WCHAR *GetValue() const;
     virtual PageDestination *AsLink() { return this; }
 
     virtual PageDestType GetDestType() const;
     virtual int GetDestPageNo() const;
     virtual RectD GetDestRect() const;
-    virtual TCHAR *GetDestValue() const { return GetValue(); }
-    virtual TCHAR *GetDestName() const;
+    virtual WCHAR *GetDestValue() const { return GetValue(); }
+    virtual WCHAR *GetDestName() const;
 
     virtual bool SaveEmbedded(LinkSaverUI& saveUI);
 };
 
 class PdfComment : public PageElement {
-    TCHAR *content;
+    WCHAR *content;
     RectD rect;
     int pageNo;
 
 public:
-    PdfComment(const TCHAR *content, RectD rect, int pageNo=-1) :
+    PdfComment(const WCHAR *content, RectD rect, int pageNo=-1) :
         content(str::Dup(content)), rect(rect), pageNo(pageNo) { }
     virtual ~PdfComment() {
         free(content);
@@ -1156,14 +1148,14 @@ public:
     virtual PageElementType GetType() const { return Element_Comment; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
-    virtual TCHAR *GetValue() const { return str::Dup(content); }
+    virtual WCHAR *GetValue() const { return str::Dup(content); }
 };
 
 class PdfTocItem : public DocTocItem {
     PdfLink link;
 
 public:
-    PdfTocItem(TCHAR *title, PdfLink link) : DocTocItem(title), link(link) { }
+    PdfTocItem(WCHAR *title, PdfLink link) : DocTocItem(title), link(link) { }
 
     virtual PageDestination *GetLink() { return &link; }
 };
@@ -1181,7 +1173,7 @@ public:
     virtual PageElementType GetType() const { return Element_Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
-    virtual TCHAR *GetValue() const { return NULL; }
+    virtual WCHAR *GetValue() const { return NULL; }
 
     virtual RenderedBitmap *GetImage() {
         return engine->GetPageImage(pageNo, rect, imageIx);
@@ -1262,7 +1254,7 @@ class PasswordCloner : public PasswordUI {
 public:
     PasswordCloner(unsigned char *cryptKey) : cryptKey(cryptKey) { }
 
-    virtual TCHAR * GetPassword(const TCHAR *fileName, unsigned char *fileDigest,
+    virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey)
     {
         memcpy(decryptionKeyOut, cryptKey, 32);
@@ -1296,12 +1288,12 @@ PdfEngineImpl *PdfEngineImpl::Clone()
     return clone;
 }
 
-static const TCHAR *findEmbedMarks(const TCHAR *fileName)
+static const WCHAR *findEmbedMarks(const WCHAR *fileName)
 {
-    const TCHAR *embedMarks = NULL;
+    const WCHAR *embedMarks = NULL;
 
     int colonCount = 0;
-    for (const TCHAR *c = fileName + str::Len(fileName) - 1; c > fileName; c--) {
+    for (const WCHAR *c = fileName + str::Len(fileName) - 1; c > fileName; c--) {
         if (*c == ':') {
             if (!str::IsDigit(*(c + 1)))
                 break;
@@ -1315,7 +1307,7 @@ static const TCHAR *findEmbedMarks(const TCHAR *fileName)
     return embedMarks;
 }
 
-bool PdfEngineImpl::Load(const TCHAR *fileName, PasswordUI *pwdUI)
+bool PdfEngineImpl::Load(const WCHAR *fileName, PasswordUI *pwdUI)
 {
     assert(!_fileName && !_doc && ctx);
     _fileName = str::Dup(fileName);
@@ -1325,7 +1317,7 @@ bool PdfEngineImpl::Load(const TCHAR *fileName, PasswordUI *pwdUI)
     fz_stream *file;
     // File names ending in :<digits>:<digits> are interpreted as containing
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
-    TCHAR *embedMarks = (TCHAR *)findEmbedMarks(_fileName);
+    WCHAR *embedMarks = (WCHAR *)findEmbedMarks(_fileName);
     if (embedMarks)
         *embedMarks = '\0';
     fz_try(ctx) {
@@ -1345,7 +1337,7 @@ OpenEmbeddedFile:
         return FinishLoading();
 
     int num, gen;
-    embedMarks = (TCHAR *)str::Parse(embedMarks, _T(":%d:%d"), &num, &gen);
+    embedMarks = (WCHAR *)str::Parse(embedMarks, L":%d:%d", &num, &gen);
     assert(embedMarks);
     if (!embedMarks || !pdf_is_stream(_doc, num, gen))
         return false;
@@ -1431,14 +1423,14 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 
     bool ok = false, saveKey = false;
     for (int i = 0; !ok && i < 3; i++) {
-        ScopedMem<TCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_crypt_key(_doc), &saveKey));
+        ScopedMem<WCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_crypt_key(_doc), &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
             break;
         }
 
-        ScopedMem<WCHAR> wstr(str::conv::ToWStr(pwd));
+        ScopedMem<WCHAR> wstr(str::Dup(pwd));
         fz_try(ctx) {
             char *pwd_doc = pdf_from_ucs2(_doc, (unsigned short *)wstr.Get());
             ok = pwd_doc && pdf_authenticate_password(_doc, pwd_doc);
@@ -1555,7 +1547,7 @@ PdfTocItem *PdfEngineImpl::BuildTocTree(fz_outline *entry, int& idCounter)
     PdfTocItem *node = NULL;
 
     for (; entry; entry = entry->next) {
-        TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
+        WCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(L"");
         PdfTocItem *item = new PdfTocItem(name, PdfLink(this, &entry->dest));
         item->open = entry->is_open;
         item->id = ++idCounter;
@@ -1589,7 +1581,7 @@ DocTocItem *PdfEngineImpl::GetTocTree()
     return node;
 }
 
-PageDestination *PdfEngineImpl::GetNamedDest(const TCHAR *name)
+PageDestination *PdfEngineImpl::GetNamedDest(const WCHAR *name)
 {
     ScopedCritSec scope(&ctxAccess);
 
@@ -2062,7 +2054,7 @@ PageElement *PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt)
             if (fz_is_pt_in_rect(rect, p)) {
                 ScopedCritSec scope(&ctxAccess);
 
-                ScopedMem<TCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
+                ScopedMem<WCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
                 return new PdfComment(contents, fz_rect_to_RectD(rect), pageNo);
             }
         }
@@ -2100,7 +2092,7 @@ Vec<PageElement *> *PdfEngineImpl::GetElements(int pageNo)
         for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
             pdf_annot *annot = pageComments[pageNo-1][i];
             fz_rect rect = fz_transform_rect(page->ctm, annot->rect);
-            ScopedMem<TCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
+            ScopedMem<WCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
             els->Append(new PdfComment(contents, fz_rect_to_RectD(rect), pageNo));
         }
     }
@@ -2121,7 +2113,7 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
     assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
-    TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, Target_View, true);
+    WCHAR *pageText = ExtractPageText(page, L"\n", &coords, Target_View, true);
     if (!pageText) {
         return;
     }
@@ -2231,7 +2223,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     return bmp;
 }
 
-TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
+WCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, WCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
 {
     if (!page)
         return NULL;
@@ -2263,7 +2255,7 @@ TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **co
 
     ScopedCritSec scope(&ctxAccess);
 
-    TCHAR *content = NULL;
+    WCHAR *content = NULL;
     if (ok)
         content = fz_text_page_to_str(text, lineSep, coords_out);
     fz_free_text_page(ctx, text);
@@ -2272,7 +2264,7 @@ TCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, TCHAR *lineSep, RectI **co
     return content;
 }
 
-TCHAR *PdfEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
+WCHAR *PdfEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     pdf_page *page = GetPdfPage(pageNo, true);
     if (page)
@@ -2288,7 +2280,7 @@ TCHAR *PdfEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords
     }
     LeaveCriticalSection(&ctxAccess);
 
-    TCHAR *result = ExtractPageText(page, lineSep, coords_out, target);
+    WCHAR *result = ExtractPageText(page, lineSep, coords_out, target);
 
     EnterCriticalSection(&ctxAccess);
     pdf_free_page(_doc, page);
@@ -2354,7 +2346,7 @@ static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList)
     }
 }
 
-TCHAR *PdfEngineImpl::ExtractFontList()
+WCHAR *PdfEngineImpl::ExtractFontList()
 {
     Vec<pdf_obj *> fontList;
 
@@ -2376,7 +2368,7 @@ TCHAR *PdfEngineImpl::ExtractFontList()
 
     ScopedCritSec scope(&ctxAccess);
 
-    StrVec fonts;
+    WStrVec fonts;
     for (size_t i = 0; i < fontList.Count(); i++) {
         const char *name = NULL, *type, *encoding;
         bool embedded = false;
@@ -2434,7 +2426,7 @@ TCHAR *PdfEngineImpl::ExtractFontList()
             info.Append(")");
         }
 
-        ScopedMem<TCHAR> fontInfo(str::conv::FromUtf8(info.LendData()));
+        ScopedMem<WCHAR> fontInfo(str::conv::FromUtf8(info.LendData()));
         if (fontInfo && fonts.Find(fontInfo) == -1)
             fonts.Append(fontInfo.StealData());
     }
@@ -2442,10 +2434,10 @@ TCHAR *PdfEngineImpl::ExtractFontList()
         return NULL;
 
     fonts.SortNatural();
-    return fonts.Join(_T("\n"));
+    return fonts.Join(L"\n");
 }
 
-TCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
+WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
 {
     if (!_doc)
         return NULL;
@@ -2454,19 +2446,19 @@ TCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
         int major = _doc->version / 10, minor = _doc->version % 10;
         if (1 == major && 7 == minor && pdf_crypt_version(_doc) == 5) {
             if (pdf_crypt_revision(_doc) == 5)
-                return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 3);
+                return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 3);
             if (pdf_crypt_revision(_doc) == 6)
-                return str::Format(_T("%d.%d Adobe Extension Level %d"), major, minor, 8);
+                return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 8);
         }
-        return str::Format(_T("%d.%d"), major, minor);
+        return str::Format(L"%d.%d", major, minor);
     }
 
     if (Prop_PdfFileStructure == prop) {
-        StrVec fstruct;
+        WStrVec fstruct;
         if (pdf_to_bool(pdf_dict_gets(_info, "Linearized")))
-            fstruct.Append(str::Dup(_T("linearized")));
+            fstruct.Append(str::Dup(L"linearized"));
         if (pdf_to_bool(pdf_dict_gets(_info, "Marked")))
-            fstruct.Append(str::Dup(_T("tagged")));
+            fstruct.Append(str::Dup(L"tagged"));
         if (pdf_dict_gets(_info, "OutputIntents")) {
             for (int i = 0; i < pdf_array_len(pdf_dict_gets(_info, "OutputIntents")); i++) {
                 pdf_obj *intent = pdf_array_get(pdf_dict_gets(_info, "OutputIntents"), i);
@@ -2474,7 +2466,7 @@ TCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
                 fstruct.Append(str::conv::FromUtf8(pdf_to_name(intent) + 4));
             }
         }
-        return fstruct.Count() > 0 ? fstruct.Join(_T(",")) : NULL;
+        return fstruct.Count() > 0 ? fstruct.Join(L",") : NULL;
     }
 
     if (Prop_FontList == prop)
@@ -2585,7 +2577,7 @@ bool PdfEngineImpl::HasClipOptimizations(int pageNo)
     return true;
 }
 
-TCHAR *PdfEngineImpl::GetPageLabel(int pageNo)
+WCHAR *PdfEngineImpl::GetPageLabel(int pageNo)
 {
     if (!_pagelabels || pageNo < 1 || PageCount() < pageNo)
         return BaseEngine::GetPageLabel(pageNo);
@@ -2593,7 +2585,7 @@ TCHAR *PdfEngineImpl::GetPageLabel(int pageNo)
     return str::Dup(_pagelabels->At(pageNo - 1));
 }
 
-int PdfEngineImpl::GetPageByLabel(const TCHAR *label)
+int PdfEngineImpl::GetPageByLabel(const WCHAR *label)
 {
     int pageNo = _pagelabels ? _pagelabels->Find(label) + 1 : 0;
     if (!pageNo)
@@ -2602,15 +2594,15 @@ int PdfEngineImpl::GetPageByLabel(const TCHAR *label)
     return pageNo;
 }
 
-static bool IsRelativeURI(const TCHAR *uri)
+static bool IsRelativeURI(const WCHAR *uri)
 {
-    const TCHAR *colon = str::FindChar(uri, ':');
-    const TCHAR *slash = str::FindChar(uri, '/');
+    const WCHAR *colon = str::FindChar(uri, ':');
+    const WCHAR *slash = str::FindChar(uri, '/');
 
     return !colon || (slash && colon > slash);
 }
 
-TCHAR *PdfLink::GetValue() const
+WCHAR *PdfLink::GetValue() const
 {
     if (!link || !engine)
         return NULL;
@@ -2620,13 +2612,13 @@ TCHAR *PdfLink::GetValue() const
 
     ScopedCritSec scope(&engine->ctxAccess);
 
-    TCHAR *path = NULL;
+    WCHAR *path = NULL;
 
     switch (link->kind) {
     case FZ_LINK_URI:
         path = str::conv::FromUtf8(link->ld.uri.uri);
         if (IsRelativeURI(path)) {
-            ScopedMem<TCHAR> base;
+            ScopedMem<WCHAR> base;
             fz_try(engine->ctx) {
                 pdf_obj *obj = pdf_dict_gets(engine->_doc->trailer, "Root");
                 obj = pdf_dict_gets(pdf_dict_gets(obj, "URI"), "Base");
@@ -2635,7 +2627,7 @@ TCHAR *PdfLink::GetValue() const
             }
             fz_catch(engine->ctx) { }
             if (!str::IsEmpty(base.Get())) {
-                ScopedMem<TCHAR> uri(str::Join(base, path));
+                ScopedMem<WCHAR> uri(str::Join(base, path));
                 free(path);
                 path = uri.StealData();
             }
@@ -2646,7 +2638,7 @@ TCHAR *PdfLink::GetValue() const
                 x = (int)(pt.x - rect.x + 0.5);
                 y = (int)(pt.y - rect.y + 0.5);
             }
-            ScopedMem<TCHAR> uri(str::Format(_T("%s?%d,%d"), path, x, y));
+            ScopedMem<WCHAR> uri(str::Format(L"%s?%d,%d", path, x, y));
             free(path);
             path = uri.StealData();
         }
@@ -2655,9 +2647,9 @@ TCHAR *PdfLink::GetValue() const
         // note: we (intentionally) don't support the /Win specific Launch parameters
         if (link->ld.launch.file_spec)
             path = str::conv::FromUtf8(link->ld.launch.file_spec);
-        if (path && link->ld.launch.embedded_num && str::EndsWithI(path, _T(".pdf"))) {
+        if (path && link->ld.launch.embedded_num && str::EndsWithI(path, L".pdf")) {
             free(path);
-            path = str::Format(_T("%s:%d:%d"), engine->FileName(),
+            path = str::Format(L"%s:%d:%d", engine->FileName(),
                 link->ld.launch.embedded_num, link->ld.launch.embedded_gen);
         }
         break;
@@ -2766,7 +2758,7 @@ RectD PdfLink::GetDestRect() const
     return result;
 }
 
-TCHAR *PdfLink::GetDestName() const
+WCHAR *PdfLink::GetDestName() const
 {
     if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.rname)
         return NULL;
@@ -2779,7 +2771,7 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI)
     return engine->SaveEmbedded(saveUI, link->ld.launch.embedded_num, link->ld.launch.embedded_gen);
 }
 
-bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool PdfEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         char header[1024];
@@ -2792,10 +2784,10 @@ bool PdfEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
         return false;
     }
 
-    return str::EndsWithI(fileName, _T(".pdf")) || findEmbedMarks(fileName);
+    return str::EndsWithI(fileName, L".pdf") || findEmbedMarks(fileName);
 }
 
-PdfEngine *PdfEngine::CreateFromFile(const TCHAR *fileName, PasswordUI *pwdUI)
+PdfEngine *PdfEngine::CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI)
 {
     PdfEngineImpl *engine = new PdfEngineImpl();
     if (!engine || !fileName || !engine->Load(fileName, pwdUI)) {
@@ -2840,7 +2832,7 @@ public:
     virtual ~XpsEngineImpl();
     virtual XpsEngineImpl *Clone();
 
-    virtual const TCHAR *FileName() const { return _fileName; };
+    virtual const WCHAR *FileName() const { return _fileName; };
     virtual int PageCount() const {
         return _doc ? xps_count_pages(_doc) : 0;
     }
@@ -2860,29 +2852,29 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
     }
     virtual bool HasClipOptimizations(int pageNo);
-    virtual TCHAR *GetProperty(DocumentProperty prop);
+    virtual WCHAR *GetProperty(DocumentProperty prop);
 
     virtual float GetFileDPI() const { return 72.0f; }
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".xps"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".xps"; }
 
     virtual bool BenchLoadPage(int pageNo) { return GetXpsPage(pageNo) != NULL; }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name);
+    virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const { return _outline != NULL; }
     virtual DocTocItem *GetTocTree();
 
     fz_rect FindDestRect(const char *target);
 
 protected:
-    TCHAR *_fileName;
+    WCHAR *_fileName;
 
     // make sure to never ask for _pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
@@ -2894,7 +2886,7 @@ protected:
     CRITICAL_SECTION _pagesAccess;
     xps_page **     _pages;
 
-    virtual bool    Load(const TCHAR *fileName);
+    virtual bool    Load(const WCHAR *fileName);
     virtual bool    Load(IStream *stream);
     bool            Load(fz_stream *stm);
     bool            LoadFromStream(fz_stream *stm);
@@ -2910,7 +2902,7 @@ protected:
     bool            RenderPage(HDC hDC, xps_page *page, RectI screenRect,
                                fz_matrix *ctm, float zoom, int rotation,
                                RectD *pageRect, AbortCookie **cookie_out);
-    TCHAR         * ExtractPageText(xps_page *page, TCHAR *lineSep,
+    WCHAR         * ExtractPageText(xps_page *page, WCHAR *lineSep,
                                     RectI **coords_out=NULL, bool cacheRun=false);
 
     Vec<XpsPageRun*>runCache; // ordered most recently used first
@@ -2924,7 +2916,7 @@ protected:
     XpsTocItem    * BuildTocTree(fz_outline *entry, int& idCounter);
     void            LinkifyPageText(xps_page *page, int pageNo);
     RenderedBitmap *GetPageImage(int pageNo, RectD rect, size_t imageIx);
-    TCHAR         * ExtractFontList();
+    WCHAR         * ExtractFontList();
 
     RectD         * _mediaboxes;
     fz_outline    * _outline;
@@ -2946,7 +2938,7 @@ public:
     virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
-    virtual TCHAR *GetValue() const {
+    virtual WCHAR *GetValue() const {
         if (link && FZ_LINK_URI == link->kind)
             return str::conv::FromUtf8(link->ld.uri.uri);
         return NULL;
@@ -2972,14 +2964,14 @@ public:
             return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
         return fz_rect_to_RectD(engine->FindDestRect(link->ld.gotor.rname));
     }
-    virtual TCHAR *GetDestValue() const { return GetValue(); }
+    virtual WCHAR *GetDestValue() const { return GetValue(); }
 };
 
 class XpsTocItem : public DocTocItem {
     XpsLink link;
 
 public:
-    XpsTocItem(TCHAR *title, XpsLink link) : DocTocItem(title), link(link) { }
+    XpsTocItem(WCHAR *title, XpsLink link) : DocTocItem(title), link(link) { }
 
     virtual PageDestination *GetLink() { return &link; }
 };
@@ -2997,7 +2989,7 @@ public:
     virtual PageElementType GetType() const { return Element_Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
-    virtual TCHAR *GetValue() const { return NULL; }
+    virtual WCHAR *GetValue() const { return NULL; }
 
     virtual RenderedBitmap *GetImage() {
         return engine->GetPageImage(pageNo, rect, imageIx);
@@ -3071,7 +3063,7 @@ XpsEngineImpl *XpsEngineImpl::Clone()
     return clone;
 }
 
-bool XpsEngineImpl::Load(const TCHAR *fileName)
+bool XpsEngineImpl::Load(const WCHAR *fileName)
 {
     assert(!_fileName && !_doc && ctx);
     _fileName = str::Dup(fileName);
@@ -3526,7 +3518,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     return bitmap;
 }
 
-TCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **coords_out, bool cacheRun)
+WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, WCHAR *lineSep, RectI **coords_out, bool cacheRun)
 {
     if (!page)
         return NULL;
@@ -3558,7 +3550,7 @@ TCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, TCHAR *lineSep, RectI **co
 
     ScopedCritSec scope(&ctxAccess);
 
-    TCHAR *content = fz_text_page_to_str(text, lineSep, coords_out);
+    WCHAR *content = fz_text_page_to_str(text, lineSep, coords_out);
     fz_free_text_page(ctx, text);
     fz_free_text_sheet(ctx, sheet);
 
@@ -3578,7 +3570,7 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
     return data;
 }
 
-TCHAR *XpsEngineImpl::ExtractFontList()
+WCHAR *XpsEngineImpl::ExtractFontList()
 {
     // load and parse all pages
     for (int i = 1; i <= PageCount(); i++)
@@ -3587,20 +3579,20 @@ TCHAR *XpsEngineImpl::ExtractFontList()
     ScopedCritSec scope(&ctxAccess);
 
     // collect a list of all included fonts
-    StrVec fonts;
+    WStrVec fonts;
     for (xps_font_cache *font = _doc->font_table; font; font = font->next) {
-        ScopedMem<TCHAR> path(str::conv::FromUtf8(font->name));
-        ScopedMem<TCHAR> name(str::conv::FromUtf8(font->font->name));
-        fonts.Append(str::Format(_T("%s (%s)"), name, path::GetBaseName(path)));
+        ScopedMem<WCHAR> path(str::conv::FromUtf8(font->name));
+        ScopedMem<WCHAR> name(str::conv::FromUtf8(font->font->name));
+        fonts.Append(str::Format(L"%s (%s)", name, path::GetBaseName(path)));
     }
     if (fonts.Count() == 0)
         return NULL;
 
     fonts.SortNatural();
-    return fonts.Join(_T("\n"));
+    return fonts.Join(L"\n");
 }
 
-TCHAR *XpsEngineImpl::GetProperty(DocumentProperty prop)
+WCHAR *XpsEngineImpl::GetProperty(DocumentProperty prop)
 {
     if (Prop_FontList == prop)
         return ExtractFontList();
@@ -3675,7 +3667,7 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
     assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
-    TCHAR *pageText = ExtractPageText(page, _T("\n"), &coords, true);
+    WCHAR *pageText = ExtractPageText(page, L"\n", &coords, true);
     if (!pageText)
         return;
 
@@ -3760,7 +3752,7 @@ fz_rect XpsEngineImpl::FindDestRect(const char *target)
     return found->rect;
 }
 
-PageDestination *XpsEngineImpl::GetNamedDest(const TCHAR *name)
+PageDestination *XpsEngineImpl::GetNamedDest(const WCHAR *name)
 {
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
     if (!str::StartsWith(name_utf8.Get(), "#"))
@@ -3778,7 +3770,7 @@ XpsTocItem *XpsEngineImpl::BuildTocTree(fz_outline *entry, int& idCounter)
     XpsTocItem *node = NULL;
 
     for (; entry; entry = entry->next) {
-        TCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(_T(""));
+        WCHAR *name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(L"");
         XpsTocItem *item = new XpsTocItem(name, XpsLink(this, &entry->dest));
         item->id = ++idCounter;
         item->open = entry->is_open;
@@ -3821,19 +3813,19 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo)
     return true;
 }
 
-bool XpsEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool XpsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         ZipFile zip(fileName);
-        return zip.GetFileIndex(_T("_rels/.rels")) != (size_t)-1 ||
-               zip.GetFileIndex(_T("_rels/.rels/[0].piece")) != (size_t)-1 ||
-               zip.GetFileIndex(_T("_rels/.rels/[0].last.piece")) != (size_t)-1;
+        return zip.GetFileIndex(L"_rels/.rels") != (size_t)-1 ||
+               zip.GetFileIndex(L"_rels/.rels/[0].piece") != (size_t)-1 ||
+               zip.GetFileIndex(L"_rels/.rels/[0].last.piece") != (size_t)-1;
     }
 
-    return str::EndsWithI(fileName, _T(".xps"));
+    return str::EndsWithI(fileName, L".xps");
 }
 
-XpsEngine *XpsEngine::CreateFromFile(const TCHAR *fileName)
+XpsEngine *XpsEngine::CreateFromFile(const WCHAR *fileName)
 {
     XpsEngineImpl *engine = new XpsEngineImpl();
     if (!engine || !fileName || !engine->Load(fileName)) {

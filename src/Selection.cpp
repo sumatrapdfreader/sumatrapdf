@@ -210,9 +210,9 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
     UpdateToolbarState(win);
 }
 
-TCHAR *GetSelection(WindowInfo *win)
+WCHAR *GetSelection(WindowInfo *win)
 {
-    ScopedMem<TCHAR> selText;
+    ScopedMem<WCHAR> selText;
 
     if (!win->selectionOnPage) return NULL;
     CrashIf(win->selectionOnPage->Count() == 0);
@@ -225,13 +225,13 @@ TCHAR *GetSelection(WindowInfo *win)
     else if (!win->dm->engine->IsImageCollection()) {
         bool isTextSelection = win->dm->textSelection->result.len > 0;
         if (isTextSelection) {
-            selText.Set(win->dm->textSelection->ExtractText(_T("\r\n")));
+            selText.Set(win->dm->textSelection->ExtractText(L"\r\n"));
         }
         else {
-            StrVec selections;
+            WStrVec selections;
             for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
                 SelectionOnPage *selOnPage = &win->selectionOnPage->At(i);
-                TCHAR *text = win->dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);
+                WCHAR *text = win->dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);
                 if (text)
                     selections.Push(text);
             }
@@ -247,7 +247,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();
 
-    ScopedMem<TCHAR> selText(GetSelection(win));
+    ScopedMem<WCHAR> selText(GetSelection(win));
 
     // don't copy empty text
     if (!str::IsEmpty(selText.Get()))

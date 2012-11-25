@@ -8,7 +8,7 @@ PageTextCache::PageTextCache(BaseEngine *engine) : engine(engine)
 {
     int count = engine->PageCount();
     coords = AllocArray<RectI *>(count);
-    text = AllocArray<TCHAR *>(count);
+    text = AllocArray<WCHAR *>(count);
     lens = AllocArray<int>(count);
 
     InitializeCriticalSection(&access);
@@ -37,14 +37,14 @@ bool PageTextCache::HasData(int pageNo)
     return text[pageNo - 1] != NULL;
 }
 
-const TCHAR *PageTextCache::GetData(int pageNo, int *lenOut, RectI **coordsOut)
+const WCHAR *PageTextCache::GetData(int pageNo, int *lenOut, RectI **coordsOut)
 {
     ScopedCritSec scope(&access);
 
     if (!text[pageNo - 1]) {
-        text[pageNo - 1] = engine->ExtractPageText(pageNo, _T("\n"), &coords[pageNo - 1]);
+        text[pageNo - 1] = engine->ExtractPageText(pageNo, L"\n", &coords[pageNo - 1]);
         if (!text[pageNo - 1]) {
-            text[pageNo - 1] = str::Dup(_T(""));
+            text[pageNo - 1] = str::Dup(L"");
             lens[pageNo - 1] = 0;
         }
         else {
@@ -89,7 +89,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
 {
     int textLen;
     RectI *coords;
-    const TCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
+    const WCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
     double maxDist = -1;
     int result = -1;
 
@@ -118,11 +118,11 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
     return result;
 }
 
-void TextSelection::FillResultRects(int pageNo, int glyph, int length, StrVec *lines)
+void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec *lines)
 {
     int len;
     RectI *coords;
-    const TCHAR *text = textCache->GetData(pageNo, &len, &coords);
+    const WCHAR *text = textCache->GetData(pageNo, &len, &coords);
     RectI mediabox = engine->PageMediabox(pageNo).Round();
     RectI *c = &coords[glyph], *end = c + length;
     for (; c < end; c++) {
@@ -164,7 +164,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y)
 {
     int textLen;
     RectI *coords;
-    const TCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
+    const WCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
 
     int glyphIx = FindClosestGlyph(pageNo, x, y);
     PointI pt = PointD(x, y).Convert<int>();
@@ -223,7 +223,7 @@ void TextSelection::SelectWordAt(int pageNo, double x, double y)
 {
     int ix = FindClosestGlyph(pageNo, x, y);
     int textLen;
-    const TCHAR *text = textCache->GetData(pageNo, &textLen);
+    const WCHAR *text = textCache->GetData(pageNo, &textLen);
 
     for (; ix > 0; ix--)
         if (!iswordchar(text[ix - 1]))
@@ -243,9 +243,9 @@ void TextSelection::CopySelection(TextSelection *orig)
     SelectUpTo(orig->endPage, orig->endGlyph);
 }
 
-TCHAR *TextSelection::ExtractText(TCHAR *lineSep)
+WCHAR *TextSelection::ExtractText(WCHAR *lineSep)
 {
-    StrVec lines;
+    WStrVec lines;
 
     int fromPage = min(startPage, endPage), toPage = max(startPage, endPage);
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);

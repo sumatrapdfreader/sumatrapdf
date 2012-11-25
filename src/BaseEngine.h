@@ -78,11 +78,11 @@ public:
     virtual RectD GetDestRect() const = 0;
     // string value associated with the destination (e.g. a path or a URL)
     // caller must free() the result
-    virtual TCHAR *GetDestValue() const { return NULL; }
+    virtual WCHAR *GetDestValue() const { return NULL; }
     // the name of this destination (reverses BaseEngine::GetNamedDest) or NULL
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
     // caller must free() the result
-    virtual TCHAR *GetDestName() const { return NULL; }
+    virtual WCHAR *GetDestName() const { return NULL; }
 
     // if this destination's target is an embedded file, this allows to
     // save that file efficiently (the LinkSaverUI might get passed a link
@@ -105,7 +105,7 @@ public:
     virtual RectD GetRect() const = 0;
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
-    virtual TCHAR *GetValue() const = 0;
+    virtual WCHAR *GetValue() const = 0;
 
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
@@ -121,7 +121,7 @@ class DocTocItem {
 
 public:
     // the item's visible label
-    TCHAR *title;
+    WCHAR *title;
     // whether any child elements are to be displayed
     bool open;
     // page this item points to (0 for non-page destinations)
@@ -136,7 +136,7 @@ public:
     // next sibling
     DocTocItem *next;
 
-    DocTocItem(TCHAR *title, int pageNo=0) :
+    DocTocItem(WCHAR *title, int pageNo=0) :
         title(title), open(true), pageNo(pageNo), id(0), child(NULL), next(NULL), last(NULL) { }
 
     virtual ~DocTocItem() {
@@ -178,7 +178,7 @@ public:
     virtual BaseEngine *Clone() = 0;
 
     // the name of the file this engine handles
-    virtual const TCHAR *FileName() const = 0;
+    virtual const WCHAR *FileName() const = 0;
     // number of pages the loaded document contains
     virtual int PageCount() const = 0;
 
@@ -212,7 +212,7 @@ public:
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
     // caller needs to free() the result
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) = 0;
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
@@ -223,7 +223,7 @@ public:
     virtual bool IsImageCollection() { return false; }
 
     // access to various document properties (such as Author, Title, etc.)
-    virtual TCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document
@@ -234,8 +234,8 @@ public:
 
     // the DPI for a file is needed when converting internal measures to physical ones
     virtual float GetFileDPI() const { return 96.0f; }
-    // the default file extension for a document like the currently loaded one (e.g. _T(".pdf"))
-    virtual const TCHAR *GetDefaultFileExt() const = 0;
+    // the default file extension for a document like the currently loaded one (e.g. L".pdf")
+    virtual const WCHAR *GetDefaultFileExt() const = 0;
 
     // returns a list of all available elements for this page
     // caller must delete the result (including all elements contained in the Vec)
@@ -246,7 +246,7 @@ public:
 
     // creates a PageDestination from a name (or NULL for invalid names)
     // caller must delete the result
-    virtual PageDestination *GetNamedDest(const TCHAR *name) { return NULL; }
+    virtual PageDestination *GetNamedDest(const WCHAR *name) { return NULL; }
     // checks whether this document has an associated Table of Contents
     virtual bool HasTocTree() const { return false; }
     // returns the root element for the loaded document's Table of Contents
@@ -258,9 +258,9 @@ public:
     virtual bool HasPageLabels() { return false; }
     // returns a label to be displayed instead of the page number
     // caller must free() the result
-    virtual TCHAR *GetPageLabel(int pageNo) { return str::Format(_T("%d"), pageNo); }
+    virtual WCHAR *GetPageLabel(int pageNo) { return str::Format(L"%d", pageNo); }
     // reverts GetPageLabel by returning the first page number having the given label
-    virtual int GetPageByLabel(const TCHAR *label) { return _ttoi(label); }
+    virtual int GetPageByLabel(const WCHAR *label) { return _wtoi(label); }
 
     // whether this document required a password in order to be loaded
     virtual bool IsPasswordProtected() const { return false; }

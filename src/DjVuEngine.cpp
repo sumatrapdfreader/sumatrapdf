@@ -88,7 +88,7 @@ public:
     virtual RectD GetDestRect() const {
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
-    virtual TCHAR *GetDestValue() const {
+    virtual WCHAR *GetDestValue() const {
         if (Dest_LaunchURL == GetDestType())
             return str::conv::FromUtf8(link);
         return NULL;
@@ -99,7 +99,7 @@ class DjVuLink : public PageElement {
     DjVuDestination *dest;
     int pageNo;
     RectD rect;
-    TCHAR *value;
+    WCHAR *value;
 
 public:
     DjVuLink(int pageNo, RectI rect, const char *link, const char *comment) :
@@ -116,7 +116,7 @@ public:
     virtual PageElementType GetType() const { return Element_Link; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
-    virtual TCHAR *GetValue() const {
+    virtual WCHAR *GetValue() const {
         if (value)
             return str::Dup(value);
         if (Dest_LaunchURL == dest->GetDestType())
@@ -186,7 +186,7 @@ public:
             ddjvu_message_pop(ctx);
     }
 
-    ddjvu_document_t *OpenFile(const TCHAR *fileName) {
+    ddjvu_document_t *OpenFile(const WCHAR *fileName) {
         ScopedCritSec scope(&lock);
         ScopedMem<char> fileNameUtf8(str::conv::ToUtf8(fileName));
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
@@ -207,7 +207,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual const TCHAR *FileName() const { return fileName; };
+    virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return pageCount; }
 
     virtual RectD PageMediabox(int pageNo) {
@@ -226,14 +226,14 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual TCHAR * ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
     // DPI isn't constant for all pages and thus premultiplied
     virtual float GetFileDPI() const { return 300.0f; }
-    virtual const TCHAR *GetDefaultFileExt() const { return _T(".djvu"); }
+    virtual const WCHAR *GetDefaultFileExt() const { return L".djvu"; }
 
     // we currently don't load pages lazily, so there's nothing to do here
     virtual bool BenchLoadPage(int pageNo) { return true; }
@@ -241,12 +241,12 @@ public:
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
-    virtual PageDestination *GetNamedDest(const TCHAR *name);
+    virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const { return outline != miniexp_nil; }
     virtual DocTocItem *GetTocTree();
 
 protected:
-    TCHAR *fileName;
+    WCHAR *fileName;
 
     int pageCount;
     RectD *mediaboxes;
@@ -257,11 +257,11 @@ protected:
 
     Vec<ddjvu_fileinfo_t> fileInfo;
 
-    bool ExtractPageText(miniexp_t item, const TCHAR *lineSep,
-                         str::Str<TCHAR>& extracted, Vec<RectI>& coords);
+    bool ExtractPageText(miniexp_t item, const WCHAR *lineSep,
+                         str::Str<WCHAR>& extracted, Vec<RectI>& coords);
     char *ResolveNamedDest(const char *name);
     DjVuTocItem *BuildTocTree(miniexp_t entry, int& idCounter, bool topLevel);
-    bool Load(const TCHAR *fileName);
+    bool Load(const WCHAR *fileName);
     bool LoadMediaboxes();
 };
 
@@ -362,7 +362,7 @@ bool DjVuEngineImpl::LoadMediaboxes()
     return true;
 }
 
-bool DjVuEngineImpl::Load(const TCHAR *fileName)
+bool DjVuEngineImpl::Load(const WCHAR *fileName)
 {
     if (!gDjVuContext.Initialize())
         return false;
@@ -611,7 +611,7 @@ unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
-bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const TCHAR *lineSep, str::Str<TCHAR>& extracted, Vec<RectI>& coords)
+bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR *lineSep, str::Str<WCHAR>& extracted, Vec<RectI>& coords)
 {
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type))
@@ -631,7 +631,7 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const TCHAR *lineSep, str::
     miniexp_t str = miniexp_car(item);
     if (miniexp_stringp(str) && !miniexp_cdr(item)) {
         const char *content = miniexp_to_str(str);
-        TCHAR *value = str::conv::FromUtf8(content);
+        WCHAR *value = str::conv::FromUtf8(content);
         if (value) {
             size_t len = str::Len(value);
             // TODO: split the rectangle into individual parts per glyph
@@ -658,7 +658,7 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const TCHAR *lineSep, str::
     return !item;
 }
 
-TCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coords_out, RenderTarget target)
+WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -668,7 +668,7 @@ TCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, TCHAR *lineSep, RectI **coord
     if (miniexp_nil == pagetext)
         return NULL;
 
-    str::Str<TCHAR> extracted;
+    str::Str<WCHAR> extracted;
     Vec<RectI> coords;
     bool success = ExtractPageText(pagetext, lineSep, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);
@@ -813,7 +813,7 @@ char *DjVuEngineImpl::ResolveNamedDest(const char *name)
     return NULL;
 }
 
-PageDestination *DjVuEngineImpl::GetNamedDest(const TCHAR *name)
+PageDestination *DjVuEngineImpl::GetNamedDest(const WCHAR *name)
 {
     ScopedMem<char> nameUtf8(str::conv::ToUtf8(name));
     if (!str::StartsWith(nameUtf8.Get(), "#"))
@@ -873,15 +873,15 @@ DocTocItem *DjVuEngineImpl::GetTocTree()
     return BuildTocTree(outline, idCounter, true);
 }
 
-bool DjVuEngine::IsSupportedFile(const TCHAR *fileName, bool sniff)
+bool DjVuEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff)
         return file::StartsWith(fileName, "AT&T");
 
-    return str::EndsWithI(fileName, _T(".djvu"));
+    return str::EndsWithI(fileName, L".djvu");
 }
 
-DjVuEngine *DjVuEngine::CreateFromFile(const TCHAR *fileName)
+DjVuEngine *DjVuEngine::CreateFromFile(const WCHAR *fileName)
 {
     DjVuEngineImpl *engine = new DjVuEngineImpl();
     if (!engine->Load(fileName)) {

@@ -270,7 +270,7 @@ void DisplayModel::BuildPagesInfo()
     int pageCount = PageCount();
     pagesInfo = AllocArray<PageInfo>(pageCount);
 
-    TCHAR unitSystem[2] = { 0 };
+    WCHAR unitSystem[2] = { 0 };
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     RectD defaultRect;
     if (unitSystem[0] == '0') // metric A4 size
@@ -1401,16 +1401,16 @@ void DisplayModel::RotateBy(int newRotation)
 
 /* Given <region> (in user coordinates ) on page <pageNo>, copies text in that region
  * into a newly allocated buffer (which the caller needs to free()). */
-TCHAR *DisplayModel::GetTextInRegion(int pageNo, RectD region)
+WCHAR *DisplayModel::GetTextInRegion(int pageNo, RectD region)
 {
     RectI *coords;
-    const TCHAR *pageText = textCache->GetData(pageNo, NULL, &coords);
+    const WCHAR *pageText = textCache->GetData(pageNo, NULL, &coords);
     if (str::IsEmpty(pageText))
         return NULL;
 
-    str::Str<TCHAR> result;
+    str::Str<WCHAR> result;
     RectI regionI = region.Round();
-    for (const TCHAR *src = pageText; *src; src++) {
+    for (const WCHAR *src = pageText; *src; src++) {
         if (*src != '\n') {
             RectI rect = coords[src - pageText];
             RectI isect = regionI.Intersect(rect);
@@ -1418,7 +1418,7 @@ TCHAR *DisplayModel::GetTextInRegion(int pageNo, RectD region)
                 result.Append(*src);
         }
         else if (result.Count() > 0 && result.Last() != '\n')
-            result.Append(_T("\r\n"), 2);
+            result.Append(L"\r\n", 2);
     }
 
     return result.StealData();

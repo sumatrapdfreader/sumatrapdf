@@ -72,19 +72,19 @@ static bool InstallCopyFiles()
         // skip files that are only uninstalled
         if (!gPayloadData[i].install)
             continue;
-        ScopedMem<TCHAR> filepathT(str::conv::FromUtf8(gPayloadData[i].filepath));
+        ScopedMem<WCHAR> filepathT(str::conv::FromUtf8(gPayloadData[i].filepath));
 
         size_t size;
         ScopedMem<char> data(archive.GetFileData(filepathT, &size));
         if (!data) {
-            NotifyFailed(_T("Some files to be installed are damaged or missing"));
+            NotifyFailed(L"Some files to be installed are damaged or missing");
             return false;
         }
 
-        ScopedMem<TCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepathT)));
+        ScopedMem<WCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepathT)));
         bool ok = trans.WriteAll(extpath, data, size);
         if (!ok) {
-            ScopedMem<TCHAR> msg(str::Format(_T("Couldn't write %s to disk"), filepathT));
+            ScopedMem<WCHAR> msg(str::Format(L"Couldn't write %s to disk", filepathT));
             NotifyFailed(msg);
             return false;
         }
@@ -100,17 +100,17 @@ static bool InstallCopyFiles()
 }
 
 /* Caller needs to free() the result. */
-static TCHAR *GetDefaultPdfViewer()
+static WCHAR *GetDefaultPdfViewer()
 {
-    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT _T("\\UserChoice"), PROG_ID));
+    ScopedMem<WCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
     if (buf)
         return buf.StealData();
-    return ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf"), NULL);
+    return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", NULL);
 }
 
 bool IsBrowserPluginInstalled()
 {
-    ScopedMem<TCHAR> buf(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH));
+    ScopedMem<WCHAR> buf(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH));
     if (!buf)
         buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH));
     return file::Exists(buf);
@@ -118,7 +118,7 @@ bool IsBrowserPluginInstalled()
 
 bool IsPdfFilterInstalled()
 {
-    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\PersistentHandler"), NULL));
+    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\PersistentHandler", NULL));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
@@ -126,16 +126,16 @@ bool IsPdfFilterInstalled()
 
 bool IsPdfPreviewerInstalled()
 {
-    ScopedMem<TCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, _T(".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}"), NULL));
+    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}", NULL));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
 }
 
 // Note: doesn't handle (total) sizes above 4GB
-static DWORD GetDirSize(TCHAR *dir)
+static DWORD GetDirSize(WCHAR *dir)
 {
-    ScopedMem<TCHAR> dirPattern(path::Join(dir, _T("*")));
+    ScopedMem<WCHAR> dirPattern(path::Join(dir, L"*"));
     WIN32_FIND_DATA findData;
 
     HANDLE h = FindFirstFile(dirPattern, &findData);
@@ -147,8 +147,8 @@ static DWORD GetDirSize(TCHAR *dir)
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             totalSize += findData.nFileSizeLow;
         }
-        else if (!str::Eq(findData.cFileName, _T(".")) && !str::Eq(findData.cFileName, _T(".."))) {
-            ScopedMem<TCHAR> subdir(path::Join(dir, findData.cFileName));
+        else if (!str::Eq(findData.cFileName, L".") && !str::Eq(findData.cFileName, L"..")) {
+            ScopedMem<WCHAR> subdir(path::Join(dir, findData.cFileName));
             totalSize += GetDirSize(subdir);
         }
     } while (FindNextFile(h, &findData) != 0);
@@ -158,21 +158,21 @@ static DWORD GetDirSize(TCHAR *dir)
 }
 
 // caller needs to free() the result
-static TCHAR *GetInstallDate()
+static WCHAR *GetInstallDate()
 {
     SYSTEMTIME st;
     GetSystemTime(&st);
-    return str::Format(_T("%04d%02d%02d"), st.wYear, st.wMonth, st.wDay);
+    return str::Format(L"%04d%02d%02d", st.wYear, st.wMonth, st.wDay);
 }
 
 static bool WriteUninstallerRegistryInfo(HKEY hkey)
 {
     bool success = true;
 
-    ScopedMem<TCHAR> uninstallerPath(GetUninstallerPath());
-    ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
-    ScopedMem<TCHAR> installDate(GetInstallDate());
-    ScopedMem<TCHAR> installDir(path::GetDir(installedExePath));
+    ScopedMem<WCHAR> uninstallerPath(GetUninstallerPath());
+    ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
+    ScopedMem<WCHAR> installDate(GetInstallDate());
+    ScopedMem<WCHAR> installDir(path::GetDir(installedExePath));
 
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
@@ -180,17 +180,17 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!WindowsVerVistaOrGreater())
-        success &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, TAPP _T(" ") CURR_VERSION_STR);
+        success &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, TAPP L" " CURR_VERSION_STR);
     DWORD size = GetDirSize(gGlobalData.installDir) / 1024;
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, size);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_LOCATION, installDir);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, _T(PUBLISHER_STR));
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, TEXT(PUBLISHER_STR));
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, _T("http://blog.kowalczyk.info/software/sumatrapdf/"));
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, _T("http://blog.kowalczyk.info/software/sumatrapdf/news.html"));
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, L"http://blog.kowalczyk.info/software/sumatrapdf/");
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, L"http://blog.kowalczyk.info/software/sumatrapdf/news.html");
 
     return success;
 }
@@ -200,34 +200,34 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey)
 {
     bool success = true;
 
-    ScopedMem<TCHAR> exePath(GetInstalledExePath());
+    ScopedMem<WCHAR> exePath(GetInstalledExePath());
     if (HKEY_LOCAL_MACHINE == hkey)
-        success &= WriteRegStr(hkey, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\") EXENAME, NULL, exePath);
+        success &= WriteRegStr(hkey, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" EXENAME, NULL, exePath);
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
-    ScopedMem<TCHAR> iconPath(str::Join(exePath, _T(",1")));
-    success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\DefaultIcon"), NULL, iconPath);
-    ScopedMem<TCHAR> cmdPath(str::Format(_T("\"%s\" \"%%1\""), exePath));
-    success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\Open\\Command"), NULL, cmdPath);
-    ScopedMem<TCHAR> printPath(str::Format(_T("\"%s\" -print-to-default \"%%1\""), exePath));
-    success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\Print\\Command"), NULL, printPath);
-    ScopedMem<TCHAR> printToPath(str::Format(_T("\"%s\" -print-to \"%%2\" \"%%1\""), exePath));
-    success &= WriteRegStr(hkey, REG_CLASSES_APPS _T("\\Shell\\PrintTo\\Command"), NULL, printToPath);
-    // don't add REG_CLASSES_APPS _T("\\SupportedTypes"), as that prevents SumatraPDF.exe to
+    ScopedMem<WCHAR> iconPath(str::Join(exePath, L",1"));
+    success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\DefaultIcon", NULL, iconPath);
+    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\"", exePath));
+    success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Open\\Command", NULL, cmdPath);
+    ScopedMem<WCHAR> printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath));
+    success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", NULL, printPath);
+    ScopedMem<WCHAR> printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath));
+    success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\PrintTo\\Command", NULL, printToPath);
+    // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
 
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
     for (int i = 0; NULL != gSupportedExts[i]; i++) {
-        ScopedMem<TCHAR> keyname(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") EXENAME));
+        ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
         success &= CreateRegKey(hkey, keyname);
         // TODO: stop removing this after version 1.8 (was wrongly created for version 1.6)
-        keyname.Set(str::Join(_T("Software\\Classes\\"), gSupportedExts[i], _T("\\OpenWithList\\") TAPP));
+        keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" TAPP));
         DeleteRegKey(hkey, keyname);
     }
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
-    success &= WriteRegStr(hkey, REG_CLASSES_PDF, _T("Content Type"), _T("application/pdf"));
-    success &= WriteRegStr(hkey, _T("Software\\Classes\\MIME\\Database\\Content Type\\application/pdf"), _T("Extension"), _T(".pdf"));
+    success &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
+    success &= WriteRegStr(hkey, L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf", L"Extension", L".pdf");
 
     return success;
 }
@@ -237,22 +237,22 @@ static bool CreateInstallationDirectory()
     bool ok = dir::CreateAll(gGlobalData.installDir);
     if (!ok) {
         LogLastError();
-        NotifyFailed(_T("Couldn't create the installation directory"));
+        NotifyFailed(L"Couldn't create the installation directory");
     }
     return ok;
 }
 
 static void CreateButtonRunSumatra(HWND hwndParent)
 {
-    gHwndButtonRunSumatra = CreateDefaultButton(hwndParent, _T("Start ") TAPP, 120, ID_BUTTON_START_SUMATRA);
+    gHwndButtonRunSumatra = CreateDefaultButton(hwndParent, L"Start " TAPP, 120, ID_BUTTON_START_SUMATRA);
 }
 
 static bool CreateAppShortcut(bool allUsers)
 {
-    ScopedMem<TCHAR> shortcutPath(GetShortcutPath(allUsers));
+    ScopedMem<WCHAR> shortcutPath(GetShortcutPath(allUsers));
     if (!shortcutPath.Get())
         return false;
-    ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
+    ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
@@ -270,8 +270,8 @@ DWORD WINAPI InstallerThread(LPVOID data)
     if (gGlobalData.registerAsDefault) {
         // need to sublaunch SumatraPDF.exe instead of replicating the code
         // because registration uses translated strings
-        ScopedMem<TCHAR> installedExePath(GetInstalledExePath());
-        CreateProcessHelper(installedExePath, _T("-register-for-pdf"));
+        ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
+        CreateProcessHelper(installedExePath, L"-register-for-pdf");
     }
 
     if (gGlobalData.installBrowserPlugin)
@@ -290,7 +290,7 @@ DWORD WINAPI InstallerThread(LPVOID data)
         UninstallPdfPreviewer();
 
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
-        NotifyFailed(_T("Failed to create a shortcut"));
+        NotifyFailed(L"Failed to create a shortcut");
         goto Error;
     }
 
@@ -300,11 +300,11 @@ DWORD WINAPI InstallerThread(LPVOID data)
 
     if (!WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) &&
         !WriteUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
-        NotifyFailed(_T("Failed to write the uninstallation information to the registry"));
+        NotifyFailed(L"Failed to write the uninstallation information to the registry");
     }
     if (!WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE) &&
         !WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER)) {
-        NotifyFailed(_T("Failed to write the extended file extension information to the registry"));
+        NotifyFailed(L"Failed to write the extended file extension information to the registry");
     }
     ProgressStep();
 
@@ -336,7 +336,7 @@ static void OnButtonInstall()
     if (!CheckInstallUninstallPossible())
         return;
 
-    TCHAR *userInstallDir = win::GetText(gHwndTextboxInstDir);
+    WCHAR *userInstallDir = win::GetText(gHwndTextboxInstDir);
     if (!str::IsEmpty(userInstallDir))
         str::ReplacePtr(&gGlobalData.installDir, userInstallDir);
     free(userInstallDir);
@@ -375,7 +375,7 @@ static void OnButtonInstall()
 
     EnableWindow(gHwndButtonInstUninst, FALSE);
 
-    SetMsg(_T("Installation in progress..."), COLOR_MSG_INSTALLATION);
+    SetMsg(L"Installation in progress...", COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
     gGlobalData.hThread = CreateThread(NULL, 0, InstallerThread, NULL, 0, 0);
@@ -390,10 +390,10 @@ void OnInstallationFinished()
 
     if (gGlobalData.success) {
         CreateButtonRunSumatra(gHwndFrame);
-        SetMsg(_T("Thank you! ") TAPP _T(" has been installed."), COLOR_MSG_OK);
+        SetMsg(L"Thank you! " TAPP L" has been installed.", COLOR_MSG_OK);
     } else {
         CreateButtonExit(gHwndFrame);
-        SetMsg(_T("Installation failed!"), COLOR_MSG_FAILED);
+        SetMsg(L"Installation failed!", COLOR_MSG_FAILED);
     }
     gMsgError = gGlobalData.firstError;
     InvalidateFrame();
@@ -403,7 +403,7 @@ void OnInstallationFinished()
 
 static void OnButtonStartSumatra()
 {
-    ScopedMem<TCHAR> exePath(GetInstalledExePath());
+    ScopedMem<WCHAR> exePath(GetInstalledExePath());
 #if 0
     // try to create the process as a normal user
     ScopedHandle h(CreateProcessAtLevel(exePath));
@@ -438,7 +438,7 @@ static void OnButtonOptions()
     EnableAndShow(gHwndCheckboxRegisterPdfFilter, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
 
-    win::SetText(gHwndButtonOptions, gShowOptions ? _T("Hide &Options") : _T("&Options"));
+    win::SetText(gHwndButtonOptions, gShowOptions ? L"Hide &Options" : L"&Options");
 
     ClientRect rc(gHwndFrame);
     rc.dy -= BOTTOM_PART_DY;
@@ -451,17 +451,17 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
 {
     switch (msg) {
     case BFFM_INITIALIZED:
-        if (!str::IsEmpty((TCHAR *)lpData))
+        if (!str::IsEmpty((WCHAR *)lpData))
             SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
         break;
 
     // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
     case BFFM_SELCHANGED:
         {
-            TCHAR path[MAX_PATH];
+            WCHAR path[MAX_PATH];
             if (SHGetPathFromIDList((LPITEMIDLIST)lParam, path) && dir::Exists(path)) {
                 SHFILEINFO sfi;
-                SHGetFileInfo((LPCTSTR)lParam, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
+                SHGetFileInfo((LPCWSTR)lParam, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
                 if (!(sfi.dwAttributes & SFGAO_LINK))
                     break;
             }
@@ -473,7 +473,7 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARA
     return 0;
 }
 
-static BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCaption, LPTSTR lpszBuf, DWORD dwBufSize)
+static BOOL BrowseForFolder(HWND hwnd, const WCHAR *lpszInitialFolder, const WCHAR *lpszCaption, WCHAR *lpszBuf, DWORD dwBufSize)
 {
     if (lpszBuf == NULL || dwBufSize < MAX_PATH)
         return FALSE;
@@ -502,17 +502,17 @@ static BOOL BrowseForFolder(HWND hwnd, LPCTSTR lpszInitialFolder, LPCTSTR lpszCa
 
 static void OnButtonBrowse()
 {
-    ScopedMem<TCHAR> installDir(win::GetText(gHwndTextboxInstDir));
+    ScopedMem<WCHAR> installDir(win::GetText(gHwndTextboxInstDir));
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir))
         installDir.Set(path::GetDir(installDir));
 
-    TCHAR path[MAX_PATH];
-    if (BrowseForFolder(gHwndFrame, installDir, _T("Select the folder into which ") TAPP _T(" should be installed:"), path, dimof(path))) {
-        TCHAR *installPath = path;
+    WCHAR path[MAX_PATH];
+    if (BrowseForFolder(gHwndFrame, installDir, L"Select the folder into which " TAPP L" should be installed:", path, dimof(path))) {
+        WCHAR *installPath = path;
         // force paths that aren't entered manually to end in ...\SumatraPDF
         // to prevent unintended installations into e.g. %ProgramFiles% itself
-        if (!str::EndsWithI(path, _T("\\") TAPP))
+        if (!str::EndsWithI(path, L"\\" TAPP))
             installPath = path::Join(path, TAPP);
         win::SetText(gHwndTextboxInstDir, installPath);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);
@@ -564,13 +564,13 @@ bool OnWmCommand(WPARAM wParam)
 // not the top), we should layout controls starting at the bottom and go up
 void OnCreateWindow(HWND hwnd)
 {
-    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _T("Install ") TAPP, 140);
+    gHwndButtonInstUninst = CreateDefaultButton(hwnd, L"Install " TAPP, 140);
 
     RectI rc(WINDOW_MARGIN, 0, dpiAdjust(96), PUSH_BUTTON_DY);
     ClientRect r(hwnd);
     rc.y = r.dy - rc.dy - WINDOW_MARGIN;
 
-    gHwndButtonOptions = CreateWindow(WC_BUTTON, _T("&Options"),
+    gHwndButtonOptions = CreateWindow(WC_BUTTON, L"&Options",
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         rc.x, rc.y, rc.dx, rc.dy, hwnd,
                         (HMENU)ID_BUTTON_OPTIONS, ghinst, NULL);
@@ -578,7 +578,7 @@ void OnCreateWindow(HWND hwnd)
 
     int staticDy = dpiAdjust(20);
     rc.y = TITLE_PART_DY + WINDOW_MARGIN;
-    gHwndStaticInstDir = CreateWindow(WC_STATIC, _T("Install ") TAPP _T(" into the following &folder:"),
+    gHwndStaticInstDir = CreateWindow(WC_STATIC, L"Install " TAPP L" into the following &folder:",
                                       WS_CHILD,
                                       rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
                                       hwnd, NULL, ghinst, NULL);
@@ -590,14 +590,14 @@ void OnCreateWindow(HWND hwnd)
                                        rc.x, rc.y, r.dx - 3 * rc.x - staticDy, staticDy,
                                        hwnd, NULL, ghinst, NULL);
     SetWindowFont(gHwndTextboxInstDir, gFontDefault, TRUE);
-    gHwndButtonBrowseDir = CreateWindow(WC_BUTTON, _T("&..."),
+    gHwndButtonBrowseDir = CreateWindow(WC_BUTTON, L"&...",
                                         BS_PUSHBUTTON | WS_CHILD | WS_TABSTOP,
                                         r.dx - rc.x - staticDy, rc.y, staticDy, staticDy,
                                         hwnd, (HMENU)ID_BUTTON_BROWSE, ghinst, NULL);
     SetWindowFont(gHwndButtonBrowseDir, gFontDefault, TRUE);
     rc.y += 2 * staticDy;
 
-    ScopedMem<TCHAR> defaultViewer(GetDefaultPdfViewer());
+    ScopedMem<WCHAR> defaultViewer(GetDefaultPdfViewer());
     BOOL hasOtherViewer = !str::EqI(defaultViewer, TAPP);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
@@ -605,7 +605,7 @@ void OnCreateWindow(HWND hwnd)
     // the alternative (disabling the checkbox) is more confusing
     if (!isSumatraDefaultViewer) {
         gHwndCheckboxRegisterDefault = CreateWindow(
-            WC_BUTTON, _T("Use ") TAPP _T(" as the &default PDF reader"),
+            WC_BUTTON, L"Use " TAPP L" as the &default PDF reader",
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
             rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
             hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
@@ -617,7 +617,7 @@ void OnCreateWindow(HWND hwnd)
     }
 
     gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
-        WC_BUTTON, _T("Install PDF &browser plugin for Firefox, Chrome and Opera"),
+        WC_BUTTON, L"Install PDF &browser plugin for Firefox, Chrome and Opera",
         WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
         rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
         hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
@@ -632,7 +632,7 @@ void OnCreateWindow(HWND hwnd)
 #endif
     {
         gHwndCheckboxRegisterPdfFilter = CreateWindow(
-            WC_BUTTON, _T("Let Windows Desktop Search &search PDF documents"),
+            WC_BUTTON, L"Let Windows Desktop Search &search PDF documents",
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
             rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
             hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
@@ -643,7 +643,7 @@ void OnCreateWindow(HWND hwnd)
 
     // for Windows XP, this means only basic thumbnail support
     gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
-        WC_BUTTON, _T("Let Windows show &previews of PDF documents"),
+        WC_BUTTON, L"Let Windows show &previews of PDF documents",
         WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
         rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
         hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, ghinst, NULL);
@@ -660,7 +660,7 @@ void OnCreateWindow(HWND hwnd)
 void CreateMainWindow()
 {
     gHwndFrame = CreateWindow(
-        INSTALLER_FRAME_CLASS_NAME, TAPP _T(" ") CURR_VERSION_STR _T(" Installer"),
+        INSTALLER_FRAME_CLASS_NAME, TAPP L" " CURR_VERSION_STR L" Installer",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
         CW_USEDEFAULT, CW_USEDEFAULT,
         dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
@@ -670,10 +670,10 @@ void CreateMainWindow()
 
 void ShowUsage()
 {
-    MessageBox(NULL, TAPP _T("-install.exe [/s][/d <path>][/register][/opt plugin,...]\n\
+    MessageBox(NULL, TAPP L"-install.exe [/s][/d <path>][/register][/opt plugin,...]\n\
     \n\
-    /s\tinstalls ") TAPP _T(" silently (without user interaction).\n\
-    /d\tchanges the directory where ") TAPP _T(" will be installed.\n\
-    /register\tregisters ") TAPP _T(" as the default PDF viewer.\n\
-    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer)."), TAPP _T(" Installer Usage"), MB_OK | MB_ICONINFORMATION);
+    /s\tinstalls " TAPP L" silently (without user interaction).\n\
+    /d\tchanges the directory where " TAPP L" will be installed.\n\
+    /register\tregisters " TAPP L" as the default PDF viewer.\n\
+    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer).", TAPP L" Installer Usage", MB_OK | MB_ICONINFORMATION);
 }

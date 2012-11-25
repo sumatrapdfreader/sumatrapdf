@@ -3,10 +3,32 @@
 
 // must be #included from Regress.cpp
 
+// test that a given epub file loads correctly. crash otherwise
+static void RegressTestEpubLoading(const WCHAR *fileName)
+{
+    WCHAR *filePath = path::Join(TestFilesDir(), fileName);
+    VerifyFileExists(filePath);
+    Doc doc(Doc::CreateFromFile(filePath));
+    CrashAlwaysIf(doc.LoadingFailed());
+    CrashAlwaysIf(Doc_Epub != doc.GetDocType());
+}
+
+// http://code.google.com/p/sumatrapdf/issues/detail?id=2102
+static void Regress02()
+{
+    RegressTestEpubLoading(L"epub\\sumatra-crash-nov-23-2012.epub");
+}
+
+// http://code.google.com/p/sumatrapdf/issues/detail?id=2091
+static void Regress01()
+{
+    RegressTestEpubLoading(L"epub\\sumatra-crash-nov-12-2012.epub");
+}
+
 // http://code.google.com/p/sumatrapdf/issues/detail?id=1926
 static void Regress00()
 {
-    TCHAR *filePath = path::Join(TestFilesDir(), _T("epub\\widget-figure-gallery-20120405.epub"));
+    WCHAR *filePath = path::Join(TestFilesDir(), L"epub\\widget-figure-gallery-20120405.epub");
     VerifyFileExists(filePath);
     Doc doc(Doc::CreateFromFile(filePath));
     CrashAlwaysIf(doc.LoadingFailed());

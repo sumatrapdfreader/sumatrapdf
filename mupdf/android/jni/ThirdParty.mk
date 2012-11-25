@@ -21,6 +21,9 @@ LOCAL_CFLAGS := \
 	-DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON -DHAVE_STDINT_H \
 	'-DFT_CONFIG_MODULES_H="slimftmodules.h"' \
 	'-DFT_CONFIG_OPTIONS_H="slimftoptions.h"'
+ifdef NDK_PROFILER
+LOCAL_CFLAGS += -pg -DNDK_PROFILER -O2
+endif
 
 LOCAL_MODULE := mupdfthirdparty
 LOCAL_SRC_FILES := \

@@ -109,7 +109,7 @@ public:
     DisplayModel(BaseEngine *engine, DocType engineType, DisplayModelCallback *dmCb);
     ~DisplayModel();
 
-    const TCHAR *FilePath() const { return engine->FileName(); }
+    const WCHAR *FilePath() const { return engine->FileName(); }
     /* number of pages in the document */
     int  PageCount() const { return engine->PageCount(); }
     bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= engine->PageCount(); }
@@ -183,7 +183,7 @@ public:
     float           NextZoomStep(float towardsLevel);
     void            RotateBy(int rotation);
 
-    TCHAR *         GetTextInRegion(int pageNo, RectD region);
+    WCHAR *         GetTextInRegion(int pageNo, RectD region);
     bool            IsOverText(PointI pt);
     PageElement *   GetElementAtPos(PointI pt);
 

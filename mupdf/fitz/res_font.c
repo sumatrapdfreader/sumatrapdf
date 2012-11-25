@@ -145,9 +145,9 @@ struct fz_font_context_s {
 };
 
 #undef __FTERRORS_H__
-#define FT_ERRORDEF(e, v, s)	{ (e), (s) },
+#define FT_ERRORDEF(e, v, s) { (e), (s) },
 #define FT_ERROR_START_LIST
-#define FT_ERROR_END_LIST	{ 0, NULL }
+#define FT_ERROR_END_LIST { 0, NULL }
 
 struct ft_error
 {

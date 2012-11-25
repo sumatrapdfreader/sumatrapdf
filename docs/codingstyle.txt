@@ -30,7 +30,7 @@ class ThisIsClass
     bool   firstDataMember;
     int    second;
 
-    bool   ThisIsMethod(int inArgsGoFirst, TCHAR *outArgsGoLast);
+    bool   ThisIsMethod(int inArgsGoFirst, WCHAR *outArgsGoLast);
 };
 
 bool ThisIsFunction(int inArgsGoFirst, int *outArgsGoLast)

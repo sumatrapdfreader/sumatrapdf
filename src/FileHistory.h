@@ -74,7 +74,7 @@ public:
         return NULL;
     }
 
-    DisplayState *Find(const TCHAR *filePath) const {
+    DisplayState *Find(const WCHAR *filePath) const {
         for (size_t i = 0; i < states.Count(); i++) {
             if (str::EqI(states.At(i)->filePath, filePath))
                 return states.At(i);
@@ -82,7 +82,7 @@ public:
         return NULL;
     }
 
-    DisplayState *MarkFileLoaded(const TCHAR *filePath) {
+    DisplayState *MarkFileLoaded(const WCHAR *filePath) {
         CrashIf(!filePath);
         // if a history entry with the same name already exists,
         // then reuse it. That way we don't have duplicates and
@@ -99,7 +99,7 @@ public:
         return state;
     }
 
-    bool MarkFileInexistent(const TCHAR *filePath) {
+    bool MarkFileInexistent(const WCHAR *filePath) {
         assert(filePath);
         DisplayState *state = Find(filePath);
         if (!state)

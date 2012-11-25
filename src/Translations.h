@@ -9,11 +9,11 @@ namespace trans {
 const char *  GuessLanguage();
 const char *  ValidateLanguageCode(const char *code);
 bool          SetCurrentLanguage(const char *code);
-const TCHAR * GetTranslation(const char *txt);
+const WCHAR * GetTranslation(const char *txt);
 
 int           GetLanguageIndex(const char *code);
 const char *  GetLanguageCode(int langIdx);
-TCHAR *       GetLanguageName(int langIdx);
+WCHAR *       GetLanguageName(int langIdx);
 bool          IsLanguageRtL(int langIdx);
 
 void          Destroy();

@@ -49,13 +49,13 @@ void DeletePropertiesWindow(HWND hwndParent)
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
-static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut)
+static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
-    if (str::StartsWith(pdfDate, _T("D:")))
+    if (str::StartsWith(pdfDate, L"D:"))
         pdfDate += 2;
-    return str::Parse(pdfDate, _T("%4d%2d%2d") _T("%2d%2d%2d"),
+    return str::Parse(pdfDate, L"%4d%2d%2d" L"%2d%2d%2d",
         &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
         &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != NULL;
     // don't bother about the day of week, we won't display it anyway
@@ -64,27 +64,27 @@ static bool PdfDateParse(const TCHAR *pdfDate, SYSTEMTIME *timeOut)
 // See: ISO 8601 specification
 // Format:  "YYYY-MM-DDTHH:MM:SSZ"
 // Example: "2011-04-19T22:10:48Z"
-static bool IsoDateParse(const TCHAR *xpsDate, SYSTEMTIME *timeOut)
+static bool IsoDateParse(const WCHAR *xpsDate, SYSTEMTIME *timeOut)
 {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    const TCHAR *end = str::Parse(xpsDate, _T("%4d-%2d-%2d"), &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    const WCHAR *end = str::Parse(xpsDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) // time is optional
-        str::Parse(end, _T("T%2d:%2d:%2dZ"), &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+        str::Parse(end, L"T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
     return end != NULL;
     // don't bother about the day of week, we won't display it anyway
 }
 
-static TCHAR *FormatSystemTime(SYSTEMTIME& date)
+static WCHAR *FormatSystemTime(SYSTEMTIME& date)
 {
-    TCHAR buf[512];
+    WCHAR buf[512];
     int cchBufLen = dimof(buf);
     int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, NULL, buf, cchBufLen);
     if (0 == ret) // GetDateFormat() failed
         ret = 1;
 
-    TCHAR *tmp = buf + ret - 1;
+    WCHAR *tmp = buf + ret - 1;
     if (ret > 1)
-        *tmp++ = _T(' ');
+        *tmp++ = ' ';
     cchBufLen -= ret;
     ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, NULL, tmp, cchBufLen);
     if (0 == ret) // GetTimeFormat() failed
@@ -97,7 +97,7 @@ static TCHAR *FormatSystemTime(SYSTEMTIME& date)
 // format e.g. "12/22/2009 5:19:33 PM"
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // The conversion happens in place
-static void ConvDateToDisplay(TCHAR **s, bool (* DateParse)(const TCHAR *date, SYSTEMTIME *timeOut))
+static void ConvDateToDisplay(WCHAR **s, bool (* DateParse)(const WCHAR *date, SYSTEMTIME *timeOut))
 {
     if (!s || !*s || !DateParse)
         return;
@@ -107,7 +107,7 @@ static void ConvDateToDisplay(TCHAR **s, bool (* DateParse)(const TCHAR *date, S
     if (!ok)
         return;
 
-    TCHAR *formatted = FormatSystemTime(date);
+    WCHAR *formatted = FormatSystemTime(date);
     if (formatted) {
         free(*s);
         *s = formatted;
@@ -117,9 +117,9 @@ static void ConvDateToDisplay(TCHAR **s, bool (* DateParse)(const TCHAR *date, S
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
-static TCHAR *FormatSizeSuccint(size_t size)
+static WCHAR *FormatSizeSuccint(size_t size)
 {
-    const TCHAR *unit = NULL;
+    const WCHAR *unit = NULL;
     double s = (double)size;
 
     if (size > GB) {
@@ -133,31 +133,31 @@ static TCHAR *FormatSizeSuccint(size_t size)
         unit = _TR("KB");
     }
 
-    ScopedMem<TCHAR> sizestr(str::FormatFloatWithThousandSep(s));
+    ScopedMem<WCHAR> sizestr(str::FormatFloatWithThousandSep(s));
     if (!unit)
         return sizestr.StealData();
-    return str::Format(_T("%s %s"), sizestr, unit);
+    return str::Format(L"%s %s", sizestr, unit);
 }
 
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
-static TCHAR *FormatFileSize(size_t size)
+static WCHAR *FormatFileSize(size_t size)
 {
-    ScopedMem<TCHAR> n1(FormatSizeSuccint(size));
-    ScopedMem<TCHAR> n2(str::FormatNumWithThousandSep(size));
+    ScopedMem<WCHAR> n1(FormatSizeSuccint(size));
+    ScopedMem<WCHAR> n2(str::FormatNumWithThousandSep(size));
 
-    return str::Format(_T("%s (%s %s)"), n1, n2, _TR("Bytes"));
+    return str::Format(L"%s (%s %s)", n1, n2, _TR("Bytes"));
 }
 
 // format page size according to locale (e.g. "29.7 x 20.9 cm" or "11.69 x 8.23 in")
 // Caller needs to free the result
-static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
+static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
 {
     RectD mediabox = engine->PageMediabox(pageNo);
     SizeD size = engine->Transform(mediabox, pageNo, 1.0, rotation).Size();
 
-    TCHAR unitSystem[2];
+    WCHAR unitSystem[2];
     GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     bool isMetric = unitSystem[0] == '0';
     double unitsPerInch = isMetric ? 2.54 : 1.0;
@@ -169,54 +169,54 @@ static TCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     if (((int)(height * 100)) % 100 == 99)
         height += 0.01;
 
-    ScopedMem<TCHAR> strWidth(str::FormatFloatWithThousandSep(width));
-    ScopedMem<TCHAR> strHeight(str::FormatFloatWithThousandSep(height));
+    ScopedMem<WCHAR> strWidth(str::FormatFloatWithThousandSep(width));
+    ScopedMem<WCHAR> strHeight(str::FormatFloatWithThousandSep(height));
 
-    return str::Format(_T("%s x %s %s"), strWidth, strHeight, isMetric ? _T("cm") : _T("in"));
+    return str::Format(L"%s x %s %s", strWidth, strHeight, isMetric ? L"cm" : L"in");
 }
 
-static TCHAR *FormatPdfFileStructure(Doc doc)
+static WCHAR *FormatPdfFileStructure(Doc doc)
 {
-    ScopedMem<TCHAR> fstruct(doc.GetProperty(Prop_PdfFileStructure));
+    ScopedMem<WCHAR> fstruct(doc.GetProperty(Prop_PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
         return NULL;
-    StrVec parts;
-    parts.Split(fstruct, _T(","), true);
+    WStrVec parts;
+    parts.Split(fstruct, L",", true);
     
-    StrVec props;
+    WStrVec props;
 
-    if (parts.Find(_T("linearized")) != -1)
+    if (parts.Find(L"linearized") != -1)
         props.Push(str::Dup(_TR("Fast Web View")));
-    if (parts.Find(_T("tagged")) != -1)
+    if (parts.Find(L"tagged") != -1)
         props.Push(str::Dup(_TR("Tagged PDF")));
-    if (parts.Find(_T("PDFX")) != -1)
-        props.Push(str::Dup(_T("PDF/X (ISO 15930)")));
-    if (parts.Find(_T("PDFA1")) != -1)
-        props.Push(str::Dup(_T("PDF/A (ISO 19005)")));
-    if (parts.Find(_T("PDFE1")) != -1)
-        props.Push(str::Dup(_T("PDF/E (ISO 24517)")));
+    if (parts.Find(L"PDFX") != -1)
+        props.Push(str::Dup(L"PDF/X (ISO 15930)"));
+    if (parts.Find(L"PDFA1") != -1)
+        props.Push(str::Dup(L"PDF/A (ISO 19005)"));
+    if (parts.Find(L"PDFE1") != -1)
+        props.Push(str::Dup(L"PDF/E (ISO 24517)"));
 
-    return props.Join(_T(", "));
+    return props.Join(L", ");
 }
 
 // returns a list of permissions denied by this document
 // Caller needs to free the result
-static TCHAR *FormatPermissions(Doc doc)
+static WCHAR *FormatPermissions(Doc doc)
 {
     if (!doc.IsEngine())
         return NULL;
 
-    StrVec denials;
+    WStrVec denials;
 
     if (!doc.AsEngine()->IsPrintingAllowed())
         denials.Push(str::Dup(_TR("printing document")));
     if (!doc.AsEngine()->IsCopyingTextAllowed())
         denials.Push(str::Dup(_TR("copying text")));
 
-    return denials.Join(_T(", "));
+    return denials.Join(L", ");
 }
 
-void PropertiesLayout::AddProperty(const TCHAR *key, TCHAR *value)
+void PropertiesLayout::AddProperty(const WCHAR *key, WCHAR *value)
 {
     // don't display value-less properties
     if (!str::IsEmpty(value))
@@ -225,7 +225,7 @@ void PropertiesLayout::AddProperty(const TCHAR *key, TCHAR *value)
         free(value);
 }
 
-bool PropertiesLayout::HasProperty(const TCHAR *key)
+bool PropertiesLayout::HasProperty(const WCHAR *key)
 {
     for (size_t i = 0; i < Count(); i++) {
         if (str::Eq(key, At(i)->leftTxt))
@@ -338,7 +338,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     CrashIf(!doc.IsEngine() && !doc.IsEbook());
     DocType engineType = doc.GetDocType();
 
-    TCHAR *str = str::Dup(gPluginMode ? gPluginURL : doc.GetFilePath());
+    WCHAR *str = str::Dup(gPluginMode ? gPluginURL : doc.GetFilePath());
     layoutData->AddProperty(_TR("File:"), str);
 
     str = doc.GetProperty(Prop_Title);
@@ -397,19 +397,17 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     }
 
     if (doc.IsEngine()) {
-        str = str::Format(_T("%d"), doc.AsEngine()->PageCount());
+        str = str::Format(L"%d", doc.AsEngine()->PageCount());
         layoutData->AddProperty(_TR("Number of Pages:"), str);
     }
 
     if (dm && dm->engineType != Engine_Chm) {
         str = FormatPageSize(dm->engine, dm->CurrentPageNo(), dm->Rotation());
-#ifdef UNICODE
         if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            str = str::Format(_T("\u202A%s\u202C"), ScopedMem<TCHAR>(str));
+            str = str::Format(L"\u202A%s\u202C", ScopedMem<WCHAR>(str));
         }
-#endif
         layoutData->AddProperty(_TR("Page Size:"), str);
     }
 
@@ -422,7 +420,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         str = doc.GetProperty(Prop_FontList);
         if (str) {
             // add a space between basic and extended file properties
-            layoutData->AddProperty(_T(" "), str::Dup(_T(" ")));
+            layoutData->AddProperty(L" ", str::Dup(L" "));
         }
         layoutData->AddProperty(_TR("Fonts:"), str);
     }
@@ -509,10 +507,10 @@ static void CopyPropertiesToClipboard(HWND hwnd)
         return;
 
     // concatenate all the properties into a multi-line string
-    str::Str<TCHAR> lines(256);
+    str::Str<WCHAR> lines(256);
     for (size_t i = 0; i < layoutData->Count(); i++) {
         PropertyEl *el = layoutData->At(i);
-        lines.AppendFmt(_T("%s %s\r\n"), el->leftTxt, el->rightTxt);
+        lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt);
     }
 
     CopyTextToClipboard(lines.LendData());

@@ -12,8 +12,8 @@ public:
 
 public:
     static bool IsAvailable();
-    static bool IsSupportedFile(const TCHAR *fileName, bool sniff=false);
-    static PsEngine *CreateFromFile(const TCHAR *fileName);
+    static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
+    static PsEngine *CreateFromFile(const WCHAR *fileName);
 };
 
 #endif

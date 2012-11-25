@@ -14,7 +14,7 @@ public:
 class FileWatcher {
 public:
     // Watching file modifications using a loop
-    void Init(const TCHAR* filefullpath);
+    void Init(const WCHAR* filefullpath);
     bool CheckForChanges(DWORD waittime=0);
 
     // Watching file modification via a thread
@@ -34,7 +34,7 @@ public:
 private:
     HANDLE          hDir;      // handle of the directory to watch
     FileChangeObserver *observer; // function called when a file change is detected
-    TCHAR *         filePath;  // path to the file watched
+    WCHAR *         filePath;  // path to the file watched
 
     FILE_NOTIFY_INFORMATION buffer[2][512];
         // a double buffer where the Windows API ReadDirectory will store the list

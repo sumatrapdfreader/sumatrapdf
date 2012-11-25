@@ -10,6 +10,7 @@
 #include "FileUtil.h"
 #include "ImagesEngine.h"
 #include "PdfEngine.h"
+#include "resource.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Version.h"
@@ -30,39 +31,42 @@
 #define ABOUT_RECT_PADDING          8
 #define ABOUT_INNER_PADDING         6
 
+#define ABOUT_CLASS_NAME        L"SUMATRA_PDF_ABOUT"
+
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 
 #define COL_BLUE_LINK           RGB(0x00, 0x20, 0xa0)
 
-#define SUMATRA_TXT_FONT        _T("Arial Black")
+#define SUMATRA_TXT_FONT        L"Arial Black"
 #define SUMATRA_TXT_FONT_SIZE   24
 
-#define VERSION_TXT_FONT        _T("Arial Black")
+#define VERSION_TXT_FONT        L"Arial Black"
 #define VERSION_TXT_FONT_SIZE   12
 
-#define VERSION_TXT             _T("v") CURR_VERSION_STR
+#define VERSION_TXT             L"v" CURR_VERSION_STR
 #ifdef SVN_PRE_RELEASE_VER
- #define VERSION_SUB_TXT        _T("Pre-release")
+ #define VERSION_SUB_TXT        L"Pre-release"
 #else
- #define VERSION_SUB_TXT        _T("")
+ #define VERSION_SUB_TXT        L""
 #endif
 
 // TODO: replace this link with a better one where license information is nicely collected/linked
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
-#define URL_LICENSE _T("http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS")
+#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS"
 #else
-#define URL_LICENSE _T("http://sumatrapdf.googlecode.com/svn/tags/") CURR_VERSION_STR _T("rel/AUTHORS")
+#define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/tags/" CURR_VERSION_STR L"rel/AUTHORS"
 #endif
 
+static ATOM gAtomAbout;
 static HWND gHwndAbout;
 static HWND gHwndAboutTooltip = NULL;
-static const TCHAR *gClickedURL = NULL;
+static const WCHAR *gClickedURL = NULL;
 
 struct AboutLayoutInfoEl {
     /* static data, must be provided */
-    const TCHAR *   leftTxt;
-    const TCHAR *   rightTxt;
-    const TCHAR *   url;
+    const WCHAR *   leftTxt;
+    const WCHAR *   rightTxt;
+    const WCHAR *   url;
 
     /* data calculated by the layout */
     RectI           leftPos;
@@ -70,24 +74,24 @@ struct AboutLayoutInfoEl {
 };
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    { _T("website"),        _T("SumatraPDF website"),   WEBSITE_MAIN_URL},
-    { _T("forums"),         _T("SumatraPDF forums"),    _T("http://blog.kowalczyk.info/forum_sumatra") },
-    { _T("programming"),    _T("Krzysztof Kowalczyk"),  _T("http://blog.kowalczyk.info") },
-    { _T("programming"),    _T("Simon B\xFCnzli"),      _T("http://www.zeniko.ch/#SumatraPDF") },
-    { _T("programming"),    _T("William Blum"),         _T("http://william.famille-blum.org/") },
-    { _T("license"),        _T("open source"),          URL_LICENSE },
+    { L"website",        L"SumatraPDF website",   WEBSITE_MAIN_URL},
+    { L"forums",         L"SumatraPDF forums",    L"http://blog.kowalczyk.info/forum_sumatra" },
+    { L"programming",    L"Krzysztof Kowalczyk",  L"http://blog.kowalczyk.info" },
+    { L"programming",    L"Simon B\xFCnzli",      L"http://www.zeniko.ch/#SumatraPDF" },
+    { L"programming",    L"William Blum",         L"http://william.famille-blum.org/" },
+    { L"license",        L"open source",          URL_LICENSE },
 #ifdef SVN_PRE_RELEASE_VER
-    { _T("a note"),         _T("Pre-release version, for testing only!"), NULL },
+    { L"a note",         L"Pre-release version, for testing only!", NULL },
 #endif
 #ifdef DEBUG
-    { _T("a note"),         _T("Debug version, for testing only!"), NULL },
+    { L"a note",         L"Debug version, for testing only!", NULL },
 #endif
-    { _T("pdf rendering"),  _T("MuPDF"),                _T("http://mupdf.com") },
+    { L"pdf rendering",  L"MuPDF",                L"http://mupdf.com" },
     // TODO: remove these two lines in favor of the above license link?
-    { _T("program icon"),   _T("Zenon"),                _T("http://www.flashvidz.tk/") },
-    { _T("toolbar icons"),  _T("Yusuke Kamiyamane"),    _T("http://p.yusukekamiyamane.com/") },
-    { _T("translators"),    _T("The Translators"),      _T("http://blog.kowalczyk.info/software/sumatrapdf/translators.html") },
-    { _T("translations"),   _T("Contribute translation"), WEBSITE_TRANSLATIONS_URL },
+    { L"program icon",   L"Zenon",                L"http://www.flashvidz.tk/" },
+    { L"toolbar icons",  L"Yusuke Kamiyamane",    L"http://p.yusukekamiyamane.com/" },
+    { L"translators",    L"The Translators",      L"http://code.google.com/p/sumatrapdf/source/browse/trunk/TRANSLATORS" },
+    { L"translations",   L"Contribute translation", WEBSITE_TRANSLATIONS_URL },
     { NULL, NULL, NULL }
 };
 
@@ -101,7 +105,7 @@ static Vec<StaticLinkInfo> gLinkInfo;
 
 static void DrawSumatraPDF(HDC hdc, PointI pt)
 {
-    const TCHAR *txt = APP_NAME_STR;
+    const WCHAR *txt = APP_NAME_STR;
 #ifdef ABOUT_USE_LESS_COLORS
     // simple black version
     SetTextColor(hdc, ABOUT_BORDER_COL);
@@ -130,7 +134,7 @@ static SizeI CalcSumatraVersionSize(HDC hdc)
 
     SIZE txtSize;
     /* calculate minimal top box size */
-    const TCHAR *txt = APP_NAME_STR;
+    const WCHAR *txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     result.dy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
     result.dx = txtSize.cx;
@@ -159,7 +163,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
     SetBkMode(hdc, TRANSPARENT);
 
     SIZE txtSize;
-    const TCHAR *txt = APP_NAME_STR;
+    const WCHAR *txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI mainRect(rect.x + (rect.dx - txtSize.cx) / 2,
                    rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
@@ -176,9 +180,9 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
     SelectObject(hdc, oldFont);
 }
 
-static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const TCHAR *txt)
+static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 {
-    ScopedFont fontLeftTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
+    ScopedFont fontLeftTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
@@ -370,7 +374,7 @@ static void OnPaintAbout(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
+const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
 {
     if (!HasPermission(Perm_DiskAccess))
         return NULL;
@@ -387,40 +391,6 @@ const TCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
     return NULL;
 }
 
-void OnMenuAbout() {
-    if (gHwndAbout) {
-        SetActiveWindow(gHwndAbout);
-        return;
-    }
-
-    gHwndAbout = CreateWindow(
-            ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
-            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            NULL, NULL,
-            ghinst, NULL);
-    if (!gHwndAbout)
-        return;
-
-    // get the dimensions required for the about box's content
-    RectI rc;
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(gHwndAbout, &ps);
-    UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
-    EndPaint(gHwndAbout, &ps);
-    rc.Inflate(ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
-
-    // resize the new window to just match these dimensions
-    WindowRect wRc(gHwndAbout);
-    ClientRect cRc(gHwndAbout);
-    wRc.dx += rc.dx - cRc.dx;
-    wRc.dy += rc.dy - cRc.dy;
-    MoveWindow(gHwndAbout, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
-
-    ShowWindow(gHwndAbout, SW_SHOW);
-}
-
 static void CreateInfotipForLink(StaticLinkInfo& linkInfo)
 {
     if (gHwndAboutTooltip)
@@ -435,7 +405,7 @@ static void CreateInfotipForLink(StaticLinkInfo& linkInfo)
     ti.cbSize = sizeof(ti);
     ti.hwnd = gHwndAbout;
     ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (TCHAR *)linkInfo.infotip;
+    ti.lpszText = (WCHAR *)linkInfo.infotip;
     ti.rect = linkInfo.rect.ToRECT();
 
     SendMessage(gHwndAboutTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
@@ -457,7 +427,7 @@ static void ClearInfotip()
 
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    const TCHAR * url;
+    const WCHAR * url;
     POINT pt;
 
     switch (message)
@@ -513,6 +483,49 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
     return 0;
 }
 
+void OnMenuAbout()
+{
+    if (gHwndAbout) {
+        SetActiveWindow(gHwndAbout);
+        return;
+    }
+
+    if (!gAtomAbout) {
+        WNDCLASSEX  wcex;
+        FillWndClassEx(wcex, ghinst, ABOUT_CLASS_NAME, WndProcAbout);
+        wcex.hIcon = LoadIcon(ghinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
+        gAtomAbout = RegisterClassEx(&wcex);
+        CrashIf(!gAtomAbout);
+    }
+
+    gHwndAbout = CreateWindow(
+            ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
+            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            NULL, NULL,
+            ghinst, NULL);
+    if (!gHwndAbout)
+        return;
+
+    // get the dimensions required for the about box's content
+    RectI rc;
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(gHwndAbout, &ps);
+    UpdateAboutLayoutInfo(gHwndAbout, hdc, &rc);
+    EndPaint(gHwndAbout, &ps);
+    rc.Inflate(ABOUT_RECT_PADDING, ABOUT_RECT_PADDING);
+
+    // resize the new window to just match these dimensions
+    WindowRect wRc(gHwndAbout);
+    ClientRect cRc(gHwndAbout);
+    wRc.dx += rc.dx - cRc.dx;
+    wRc.dy += rc.dy - cRc.dy;
+    MoveWindow(gHwndAbout, wRc.x, wRc.y, wRc.dx, wRc.dy, FALSE);
+
+    ShowWindow(gHwndAbout, SW_SHOW);
+}
+
 void DrawAboutPage(WindowInfo& win, HDC hdc)
 {
     ClientRect rc(win.hwndCanvas);
@@ -545,8 +558,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     HPEN penThumbBorder = CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK);
     HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
 
-    ScopedFont fontSumatraTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 24));
-    ScopedFont fontLeftTxt(GetSimpleFont(hdc, _T("MS Shell Dlg"), 14));
+    ScopedFont fontSumatraTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 24));
+    ScopedFont fontLeftTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
 
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
 
@@ -587,7 +600,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     SelectObject(hdc, fontSumatraTxt);
     SIZE txtSize;
-    const TCHAR *txt = _TR("Frequently Read");
+    const WCHAR *txt = _TR("Frequently Read");
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl)
@@ -686,7 +699,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 }
 
 // TODO: create in TEMP directory instead?
-static TCHAR *GetThumbnailPath(const TCHAR *filePath)
+static WCHAR *GetThumbnailPath(const WCHAR *filePath)
 {
     // create a fingerprint of a (normalized) path for the file name
     // I'd have liked to also include the file's last modification time
@@ -699,23 +712,23 @@ static TCHAR *GetThumbnailPath(const TCHAR *filePath)
     CalcMD5Digest((unsigned char *)pathU.Get(), str::Len(pathU), digest);
     ScopedMem<char> fingerPrint(str::MemToHex(digest, 16));
 
-    ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    ScopedMem<WCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return NULL;
-    ScopedMem<TCHAR> fname(str::conv::FromAnsi(fingerPrint));
+    ScopedMem<WCHAR> fname(str::conv::FromAnsi(fingerPrint));
 
-    return str::Format(_T("%s\\%s.png"), thumbsPath, fname);
+    return str::Format(L"%s\\%s.png", thumbsPath, fname);
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(FileHistory& fileHistory)
 {
-    ScopedMem<TCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    ScopedMem<WCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return;
-    ScopedMem<TCHAR> pattern(path::Join(thumbsPath, _T("*.png")));
+    ScopedMem<WCHAR> pattern(path::Join(thumbsPath, L"*.png"));
 
-    StrVec files;
+    WStrVec files;
     WIN32_FIND_DATA fdata;
 
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -730,7 +743,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     Vec<DisplayState *> list;
     fileHistory.GetFrequencyOrder(list);
     for (size_t i = 0; i < list.Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
-        ScopedMem<TCHAR> bmpPath(GetThumbnailPath(list.At(i)->filePath));
+        ScopedMem<WCHAR> bmpPath(GetThumbnailPath(list.At(i)->filePath));
         if (!bmpPath)
             continue;
         int idx = files.Find(path::GetBaseName(bmpPath));
@@ -741,7 +754,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     }
 
     for (size_t i = 0; i < files.Count(); i++) {
-        ScopedMem<TCHAR> bmpPath(path::Join(thumbsPath, files.At(i)));
+        ScopedMem<WCHAR> bmpPath(path::Join(thumbsPath, files.At(i)));
         file::Delete(bmpPath);
     }
 }
@@ -752,7 +765,7 @@ static bool LoadThumbnail(DisplayState& ds)
         delete ds.thumbnail;
     ds.thumbnail = NULL;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return false;
 
@@ -765,7 +778,7 @@ bool HasThumbnail(DisplayState& ds)
     if (!ds.thumbnail && !LoadThumbnail(ds))
         return false;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return true;
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
@@ -784,10 +797,10 @@ void SaveThumbnail(DisplayState& ds)
     if (!ds.thumbnail)
         return;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return;
-    ScopedMem<TCHAR> thumbsPath(path::GetDir(bmpPath));
+    ScopedMem<WCHAR> thumbsPath(path::GetDir(bmpPath));
     if (dir::Create(thumbsPath))
         SaveRenderedBitmap(ds.thumbnail, bmpPath);
 }
@@ -797,7 +810,7 @@ void RemoveThumbnail(DisplayState& ds)
     if (!HasThumbnail(ds))
         return;
 
-    ScopedMem<TCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (bmpPath)
         file::Delete(bmpPath);
     delete ds.thumbnail;

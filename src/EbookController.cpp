@@ -29,7 +29,7 @@ void FormattingTemp::DeletePages()
     DeleteVecMembers(pagesFromPage);
 }
 
-ThreadLoadEbook::ThreadLoadEbook(const TCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
+ThreadLoadEbook::ThreadLoadEbook(const WCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
     controller(controller)
 {
     fileName = str::Dup(fn);
@@ -53,11 +53,11 @@ public:
 
 void ThreadLoadEbook::Run()
 {
-    //lf(_T("ThreadLoadEbook::Run(%s)"), fileName);
+    //lf(L"ThreadLoadEbook::Run(%s)", fileName);
     Timer t(true);
     Doc doc = Doc::CreateFromFile(fileName);
     double loadingTimeMs = t.GetTimeInMs();
-    //lf(_T("Loaded %s in %.2f ms"), fileName, t.GetTimeInMs());
+    //lf(L"Loaded %s in %.2f ms", fileName, t.GetTimeInMs());
 
     // don't load PalmDoc, etc. files as long as they're not correctly formatted
     if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
@@ -586,13 +586,13 @@ void EbookController::UpdateStatus()
 
     if (FormattingInProgress()) {
         ScopedMem<WCHAR> s(str::Format(_TR("Formatting the book... %d pages"), pageCount));
-        ctrls->status->SetText(s.Get());
+        ctrls->status->SetText(s);
         ctrls->progress->SetFilled(0.f);
         return;
     }
 
-    ScopedMem<WCHAR> s(str::Format(_T("%s %d / %d"), _TR("Page:"), currPageNo, pageCount));
-    ctrls->status->SetText(s.Get());
+    ScopedMem<WCHAR> s(str::Format(L"%s %d / %d", _TR("Page:"), currPageNo, pageCount));
+    ctrls->status->SetText(s);
     if (GetPagesFromBeginning())
         ctrls->progress->SetFilled(PercFromInt(GetPagesFromBeginning()->Count(), currPageNo));
     else

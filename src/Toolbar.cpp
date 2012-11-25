@@ -122,7 +122,7 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
                     TBSTYLE_TOOLTIPS | TBSTYLE_FLAT | \
                     TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
-static void BuildTBBUTTONINFO(TBBUTTONINFO& info, TCHAR *txt)
+static void BuildTBBUTTONINFO(TBBUTTONINFO& info, WCHAR *txt)
 {
     info.cbSize = sizeof(TBBUTTONINFO);
     info.dwMask = TBIF_TEXT | TBIF_BYINDEX;
@@ -140,8 +140,8 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo *win)
         const char *txt = gToolbarButtons[i].toolTip;
         if (NULL == txt)
             continue;
-        const TCHAR *translation = trans::GetTranslation(txt);
-        BuildTBBUTTONINFO(buttonInfo, (TCHAR *)translation);
+        const WCHAR *translation = trans::GetTranslation(txt);
+        BuildTBBUTTONINFO(buttonInfo, (WCHAR *)translation);
         res = SendMessage(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)&buttonInfo);
         assert(0 != res);
     }
@@ -204,9 +204,9 @@ void UpdateFindbox(WindowInfo* win)
     }
 }
 
-static HBITMAP LoadExternalBitmap(HINSTANCE hInst, TCHAR * filename, INT resourceId)
+static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR * filename, INT resourceId)
 {
-    ScopedMem<TCHAR> path(AppGenDataFilename(filename));
+    ScopedMem<WCHAR> path(AppGenDataFilename(filename));
 
     if (path) {
         HBITMAP hBmp = (HBITMAP)LoadImage(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
@@ -307,7 +307,7 @@ void UpdateToolbarFindText(WindowInfo *win)
     if (!showUI)
         return;
 
-    const TCHAR *text = _TR("Find:");
+    const WCHAR *text = _TR("Find:");
     win::SetText(win->hwndFindText, text);
 
     WindowRect findWndRect(win->hwndFindBg);
@@ -365,15 +365,15 @@ void UpdateToolbarState(WindowInfo *win)
 
 static void CreateFindBox(WindowInfo& win)
 {
-    HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                             0, 1, (int)(FIND_BOX_WIDTH * win.uiDPIFactor), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 4),
                             win.hwndToolbar, (HMENU)0, ghinst, NULL);
 
-    HWND find = CreateWindowEx(0, WC_EDIT, _T(""), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
+    HWND find = CreateWindowEx(0, WC_EDIT, L"", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL,
                             0, 1, (int)(FIND_BOX_WIDTH * win.uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 2),
                             win.hwndToolbar, (HMENU)0, ghinst, NULL);
 
-    HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
 
     SetWindowFont(label, gDefaultGuiFont, FALSE);
@@ -406,7 +406,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
     } else if (WM_CHAR == message) {
         switch (wParam) {
         case VK_RETURN: {
-            ScopedMem<TCHAR> buf(win::GetText(win->hwndPageBox));
+            ScopedMem<WCHAR> buf(win::GetText(win->hwndPageBox));
             int newPageNo = win->dm->engine->GetPageByLabel(buf);
             if (win->dm->ValidPageNo(newPageNo)) {
                 win->dm->GoToPage(newPageNo, 0, true);
@@ -444,7 +444,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
 
 void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
 {
-    const TCHAR *text = _TR("Page:");
+    const WCHAR *text = _TR("Page:");
     if (!updateOnly)
         win::SetText(win->hwndPageText, text);
     SizeI size = TextSizeInHwnd(win->hwndPageText, text);
@@ -457,7 +457,7 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
     int pos_x = r.right + 10;
     int pos_y = (r.bottom - pageWndRect.dy) / 2;
 
-    TCHAR *buf;
+    WCHAR *buf;
     SizeI size2;
     if (-1 == pageCount) {
         // preserve hwndPageTotal's text and size
@@ -465,12 +465,12 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
         size2 = ClientRect(win->hwndPageTotal).Size();
         size2.dx -= TB_TEXT_PADDING_RIGHT;
     } else if (!pageCount)
-        buf = str::Dup(_T(""));
+        buf = str::Dup(L"");
     else if (!win->dm || !win->dm->engine || !win->dm->engine->HasPageLabels())
-        buf = str::Format(_T(" / %d"), pageCount);
+        buf = str::Format(L" / %d", pageCount);
     else {
-        buf = str::Format(_T(" (%d / %d)"), win->dm->CurrentPageNo(), pageCount);
-        ScopedMem<TCHAR> buf2(str::Format(_T(" (%d / %d)"), pageCount, pageCount));
+        buf = str::Format(L" (%d / %d)", win->dm->CurrentPageNo(), pageCount);
+        ScopedMem<WCHAR> buf2(str::Format(L" (%d / %d)", pageCount, pageCount));
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf2);
     }
 
@@ -512,18 +512,18 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
 
 static void CreatePageBox(WindowInfo& win)
 {
-    HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                             0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 4),
                             win.hwndToolbar, (HMENU)0, ghinst, NULL);
 
-    HWND page = CreateWindowEx(0, WC_EDIT, _T("0"), WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
+    HWND page = CreateWindowEx(0, WC_EDIT, L"0", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT,
                             0, 1, (int)(PAGE_BOX_WIDTH * win.uiDPIFactor - 2 * GetSystemMetrics(SM_CXEDGE)), (int)(TOOLBAR_MIN_ICON_SIZE * win.uiDPIFactor + 2),
                             win.hwndToolbar, (HMENU)0, ghinst, NULL);
 
-    HWND label = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
 
-    HWND total = CreateWindowEx(0, WC_STATIC, _T(""), WS_VISIBLE | WS_CHILD,
+    HWND total = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                             0, 1, 0, 0, win.hwndToolbar, (HMENU)0, ghinst, NULL);
 
     SetWindowFont(label, gDefaultGuiFont, FALSE);
@@ -557,7 +557,7 @@ void CreateToolbar(WindowInfo *win)
 
     // the name of the bitmap contains the number of icons so that after adding/removing
     // icons a complete default toolbar is used rather than an incomplete customized one
-    HBITMAP hbmp = LoadExternalBitmap(ghinst, _T("toolbar_11.bmp"), IDB_TOOLBAR);
+    HBITMAP hbmp = LoadExternalBitmap(ghinst, L"toolbar_11.bmp", IDB_TOOLBAR);
     SizeI size = GetBitmapSize(hbmp);
     // stretch the toolbar bitmaps for higher DPI settings
     // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
@@ -612,7 +612,7 @@ void CreateToolbar(WindowInfo *win)
     if (IsAppThemed())
         rbBand.fStyle |= RBBS_CHILDEDGE;
     rbBand.hbmBack = NULL;
-    rbBand.lpText     = _T("Toolbar");
+    rbBand.lpText     = L"Toolbar";
     rbBand.hwndChild  = hwndToolbar;
     rbBand.cxMinChild = (rc.right - rc.left) * TOOLBAR_BUTTONS_COUNT;
     rbBand.cyMinChild = (rc.bottom - rc.top) + 2 * rc.top;

@@ -195,7 +195,7 @@ REAL GetSpaceDx(Graphics *g, Font *f, TextMeasureAlgorithm algo)
 void DrawCloseButton(DRAWITEMSTRUCT *dis)
 {
     RectI r(RectI::FromRECT(dis->rcItem));
-    ScopedMem<TCHAR> s(win::GetText(dis->hwndItem));
+    ScopedMem<WCHAR> s(win::GetText(dis->hwndItem));
     bool onHover = str::Eq(s, BUTTON_HOVER_TEXT);
 
     Graphics g(dis->hDC);
@@ -287,6 +287,8 @@ enum ImgFormat {
     Img_JXR, Img_PNG, Img_TGA, Img_TIFF,
 };
 
+
+
 static ImgFormat GfxFormatFromData(const char *data, size_t len)
 {
     if (!data || len < 8)
@@ -309,16 +311,16 @@ static ImgFormat GfxFormatFromData(const char *data, size_t len)
     return Img_Unknown;
 }
 
-const TCHAR *GfxFileExtFromData(const char *data, size_t len)
+const WCHAR *GfxFileExtFromData(const char *data, size_t len)
 {
     switch (GfxFormatFromData(data, len)) {
-    case Img_BMP:  return _T(".bmp");
-    case Img_GIF:  return _T(".gif");
-    case Img_JPEG: return _T(".jpg");
-    case Img_JXR:  return _T(".jxr");
-    case Img_PNG:  return _T(".png");
-    case Img_TGA:  return _T(".tga");
-    case Img_TIFF: return _T(".tif");
+    case Img_BMP:  return L".bmp";
+    case Img_GIF:  return L".gif";
+    case Img_JPEG: return L".jpg";
+    case Img_JXR:  return L".jxr";
+    case Img_PNG:  return L".png";
+    case Img_TGA:  return L".tga";
+    case Img_TIFF: return L".tif";
     default:       return NULL;
     }
 }

@@ -27,7 +27,7 @@ bool Eq(const char *s1, const char *s2);
 bool Eq(const WCHAR *s1, const WCHAR *s2);
 bool EqI(const char *s1, const char *s2);
 bool EqI(const WCHAR *s1, const WCHAR *s2);
-bool EqIS(const TCHAR *s1, const TCHAR *s2);
+bool EqIS(const WCHAR *s1, const WCHAR *s2);
 bool EqN(const char *s1, const char *s2, size_t len);
 bool EqN(const WCHAR *s1, const WCHAR *s2, size_t len);
 bool EqNI(const char *s1, const char *s2, size_t len);
@@ -92,15 +92,15 @@ WCHAR * Format(const WCHAR *fmt, ...);
 inline bool IsWs(char c) { return isspace((unsigned char)c); }
 inline bool IsWs(WCHAR c) { return iswspace(c); }
 inline bool IsDigit(char c) { return '0' <= c && c <= '9'; }
-inline bool IsDigit(WCHAR c) { return L'0' <= c && c <= L'9'; }
-size_t  TrimWS(TCHAR *s, TrimOpt opt=TrimBoth);
+inline bool IsDigit(WCHAR c) { return '0' <= c && c <= '9'; }
+size_t  TrimWS(WCHAR *s, TrimOpt opt=TrimBoth);
 
 size_t  TransChars(char *str, const char *oldChars, const char *newChars);
 size_t  TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars);
 
 WCHAR *Replace(WCHAR *orig, WCHAR *rep, WCHAR *with);
 
-size_t  NormalizeWS(TCHAR *str);
+size_t  NormalizeWS(WCHAR *str);
 size_t  RemoveChars(char *str, const char *toRemove);
 size_t  RemoveChars(WCHAR *str, const WCHAR *toRemove);
 
@@ -112,11 +112,11 @@ size_t  BufAppend(WCHAR *dst, size_t dstCchSize, const WCHAR *s);
 char *  MemToHex(const unsigned char *buf, int len);
 bool    HexToMem(const char *s, unsigned char *buf, int bufLen);
 
-TCHAR * FormatFloatWithThousandSep(double number, LCID locale=LOCALE_USER_DEFAULT);
-TCHAR * FormatNumWithThousandSep(size_t num, LCID locale=LOCALE_USER_DEFAULT);
-TCHAR * FormatRomanNumeral(int number);
+WCHAR * FormatFloatWithThousandSep(double number, LCID locale=LOCALE_USER_DEFAULT);
+WCHAR * FormatNumWithThousandSep(size_t num, LCID locale=LOCALE_USER_DEFAULT);
+WCHAR * FormatRomanNumeral(int number);
 
-int     CmpNatural(const TCHAR *a, const TCHAR *b);
+int     CmpNatural(const WCHAR *a, const WCHAR *b);
 
 const char  *   Parse(const char *str, const char *format, ...);
 const char  *   Parse(const char *str, size_t len, const char *format, ...);
@@ -127,25 +127,17 @@ size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMa
 void UrlDecodeInPlace(char *url);
 void UrlDecodeInPlace(WCHAR *url);
 // TODO: a better name
-TCHAR *ToPlainUrl(const TCHAR *url);
+WCHAR *ToPlainUrl(const WCHAR *url);
 
 namespace conv {
 
-#ifdef UNICODE
-inline TCHAR *  FromWStr(const WCHAR *src) { return Dup(src); }
-inline WCHAR *  ToWStr(const TCHAR *src) { return Dup(src); }
-inline TCHAR *  FromCodePage(const char *src, UINT cp) { return ToWideChar(src, cp); }
-inline char *   ToCodePage(const TCHAR *src, UINT cp) { return ToMultiByte(src, cp); }
-#else
-inline TCHAR *  FromWStr(const WCHAR *src) { return ToMultiByte(src, CP_ACP); }
-inline WCHAR *  ToWStr(const TCHAR *src) { return ToWideChar(src, CP_ACP); }
-inline TCHAR *  FromCodePage(const char *src, UINT cp) { return ToMultiByte(src, cp, CP_ACP); }
-inline char *   ToCodePage(const TCHAR *src, UINT cp) { return ToMultiByte(src, CP_ACP, cp); }
-#endif
-inline TCHAR *  FromUtf8(const char *src) { return FromCodePage(src, CP_UTF8); }
-inline char *   ToUtf8(const TCHAR *src) { return ToCodePage(src, CP_UTF8); }
-inline TCHAR *  FromAnsi(const char *src) { return FromCodePage(src, CP_ACP); }
-inline char *   ToAnsi(const TCHAR *src) { return ToCodePage(src, CP_ACP); }
+inline WCHAR *  FromCodePage(const char *src, UINT cp) { return ToWideChar(src, cp); }
+inline char *   ToCodePage(const WCHAR *src, UINT cp) { return ToMultiByte(src, cp); }
+
+inline WCHAR *  FromUtf8(const char *src) { return FromCodePage(src, CP_UTF8); }
+inline char *   ToUtf8(const WCHAR *src) { return ToCodePage(src, CP_UTF8); }
+inline WCHAR *  FromAnsi(const char *src) { return FromCodePage(src, CP_ACP); }
+inline char *   ToAnsi(const WCHAR *src) { return ToCodePage(src, CP_ACP); }
 
 size_t ToCodePageBuf(char *buf, size_t cbBufSize, const char *s, UINT cp);
 size_t FromCodePageBuf(char *buf, size_t cchBufSize, const char *s, UINT cp);
@@ -156,23 +148,8 @@ size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp);
 
 }
 
-// Quick conversions are no-ops for UNICODE builds
-#ifdef UNICODE
-#define AsWStrQ(src) ((WCHAR *)(src))
-#define AsTStrQ(src) ((TCHAR *)(src))
-#else
-#define AsWStrQ(src) (ScopedMem<WCHAR>(str::conv::ToWStr(src)))
-#define AsTStrQ(src) (ScopedMem<TCHAR>(str::conv::FromWStr(src)))
-#endif
-
 #define _MemToHex(ptr) str::MemToHex((const unsigned char *)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (unsigned char *)(ptr), sizeof(*ptr))
-
-#ifdef UNICODE
-  #define CF_T_TEXT CF_UNICODETEXT
-#else
-  #define CF_T_TEXT CF_TEXT
-#endif
 
 #define UTF8_BOM    "\xEF\xBB\xBF"
 #define UTF16_BOM   "\xFF\xFE"

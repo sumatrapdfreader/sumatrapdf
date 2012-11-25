@@ -12,8 +12,8 @@ typedef HANDLE (WINAPI * CreateTransactionPtr)(LPSECURITY_ATTRIBUTES lpTransacti
 typedef BOOL (WINAPI * CommitTransactionPtr)(HANDLE TransactionHandle);
 typedef BOOL (WINAPI * RollbackTransactionPtr)(HANDLE TransactionHandle);
 // from WinBase.h
-typedef HANDLE (WINAPI * CreateFileTransactedPtr)(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, HANDLE hTransaction, PUSHORT pusMiniVersion, PVOID pExtendedParameter);
-typedef BOOL (WINAPI * DeleteFileTransactedPtr)(LPCTSTR lpFileName, HANDLE hTransaction);
+typedef HANDLE (WINAPI * CreateFileTransactedPtr)(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, HANDLE hTransaction, PUSHORT pusMiniVersion, PVOID pExtendedParameter);
+typedef BOOL (WINAPI * DeleteFileTransactedPtr)(LPCWSTR lpFileName, HANDLE hTransaction);
 // from WinError.h
 #ifndef ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED
 #define ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED 6832L
@@ -32,8 +32,8 @@ static void InitializeTransactions()
         return;
     initialized = true;
 
-    HMODULE hLibKTM = SafeLoadLibrary(_T("ktmw32.dll"));
-    HMODULE hLibKernel = SafeLoadLibrary(_T("kernel32.dll"));
+    HMODULE hLibKTM = SafeLoadLibrary(L"ktmw32.dll");
+    HMODULE hLibKernel = SafeLoadLibrary(L"kernel32.dll");
     if (!hLibKTM || !hLibKernel)
         return;
 
@@ -42,11 +42,7 @@ static void InitializeTransactions()
     Load(hLibKTM, CommitTransaction);
     Load(hLibKTM, RollbackTransaction);
 #undef Load
-#ifdef UNICODE
 #define Load(lib, func) _ ## func = (func ## Ptr)GetProcAddress(lib, #func "W")
-#else
-#define Load(lib, func) _ ## func = (func ## Ptr)GetProcAddress(lib, #func "A")
-#endif
     Load(hLibKernel, CreateFileTransacted);
     Load(hLibKernel, DeleteFileTransacted);
 #undef Load
@@ -71,7 +67,7 @@ bool FileTransaction::Commit()
     return _CommitTransaction(hTrans);
 }
 
-HANDLE FileTransaction::CreateFile(const TCHAR *filePath, DWORD dwDesiredAccess, DWORD dwCreationDisposition)
+HANDLE FileTransaction::CreateFile(const WCHAR *filePath, DWORD dwDesiredAccess, DWORD dwCreationDisposition)
 {
     if (hTrans) {
         HANDLE hFile = _CreateFileTransacted(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL, hTrans, NULL, NULL);
@@ -82,7 +78,7 @@ HANDLE FileTransaction::CreateFile(const TCHAR *filePath, DWORD dwDesiredAccess,
     return ::CreateFile(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
-bool FileTransaction::WriteAll(const TCHAR *filePath, void *data, size_t dataLen)
+bool FileTransaction::WriteAll(const WCHAR *filePath, void *data, size_t dataLen)
 {
     if (!hTrans)
         return file::WriteAll(filePath, data, dataLen);
@@ -98,7 +94,7 @@ bool FileTransaction::WriteAll(const TCHAR *filePath, void *data, size_t dataLen
     return ok && dataLen == (size_t)size;
 }
 
-bool FileTransaction::Delete(const TCHAR *filePath)
+bool FileTransaction::Delete(const WCHAR *filePath)
 {
     if (hTrans) {
         BOOL ok = _DeleteFileTransacted(filePath, hTrans);
@@ -109,7 +105,7 @@ bool FileTransaction::Delete(const TCHAR *filePath)
     return file::Delete(filePath);
 }
 
-bool FileTransaction::SetModificationTime(const TCHAR *filePath, FILETIME lastMod)
+bool FileTransaction::SetModificationTime(const WCHAR *filePath, FILETIME lastMod)
 {
     if (!hTrans)
         return file::SetModificationTime(filePath, lastMod);

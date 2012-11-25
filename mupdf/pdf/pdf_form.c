@@ -56,8 +56,8 @@ enum
 
 enum
 {
-	Q_Left  = 0,
-	Q_Cent  = 1,
+	Q_Left = 0,
+	Q_Cent = 1,
 	Q_Right = 2
 };
 
@@ -203,7 +203,7 @@ static int get_field_flags(pdf_document *doc, pdf_obj *obj)
 int pdf_field_type(pdf_document *doc, pdf_obj *obj)
 {
 	char *type = get_field_type_name(doc, obj);
-	int   flags = get_field_flags(doc, obj);
+	int flags = get_field_flags(doc, obj);
 
 	if (!strcmp(type, "Btn"))
 	{
@@ -514,8 +514,7 @@ static fz_buffer *create_aligned_text_buffer(pdf_document *doc, fz_rect *clip, t
 	{
 		fz_rect rect = measure_text(doc, &info->font_rec, tm, text);
 
-		atm.e -= info->q == Q_Right ? rect.x1
-							  : (rect.x1 - rect.x0) / 2;
+		atm.e -= info->q == Q_Right ? rect.x1 : (rect.x1 - rect.x0) / 2;
 	}
 
 	return create_text_buffer(ctx, clip, info, &atm, text);
@@ -793,7 +792,7 @@ static fz_buffer *create_text_appearance(pdf_document *doc, fz_rect *bbox, fz_ma
 	fz_var(fztmp);
 	fz_try(ctx)
 	{
-	    float ascent, descent;
+		float ascent, descent;
 		fz_matrix tm;
 
 		variable = (info->font_rec.da_rec.font_size == 0);
@@ -941,7 +940,7 @@ static void update_marked_content(pdf_document *doc, pdf_xobject *form, fz_buffe
 	fz_stream *str_outer = NULL;
 	fz_stream *str_inner = NULL;
 	unsigned char *buf;
-	int            len;
+	int len;
 	fz_buffer *newbuf = NULL;
 
 	pdf_lexbuf_init(ctx, &lbuf, PDF_LEXBUF_SMALL);
@@ -1546,7 +1545,7 @@ void pdf_field_reset(pdf_document *doc, pdf_obj *field)
 	 * FIXME: we assume for now that V has not been set unequal
 	 * to DV higher in the hierarchy than "field".
 	 *
-	 *  At the bottom of the hierarchy we may find widget annotations
+	 * At the bottom of the hierarchy we may find widget annotations
 	 * that aren't also fields, but DV and V will not be present in their
 	 * dictionaries, and attempts to remove V will be harmless. */
 	pdf_obj *dv = pdf_dict_gets(field, "DV");
@@ -1943,7 +1942,7 @@ static void toggle_check_box(pdf_document *doc, pdf_obj *obj)
 	}
 	else
 	{
-	    pdf_obj *n, *key = NULL;
+		pdf_obj *n, *key = NULL;
 		int len, i;
 
 		n = pdf_dict_getp(obj, "AP/N");
@@ -2020,7 +2019,7 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
 {
 	pdf_annot *annot;
 	pdf_hotspot *hp = &doc->hotspot;
-	fz_point  *pt = &(ui_event->event.pointer.pt);
+	fz_point *pt = &(ui_event->event.pointer.pt);
 	int changed = 0;
 
 	for (annot = page->annots; annot; annot = annot->next)

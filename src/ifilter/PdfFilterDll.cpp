@@ -57,10 +57,10 @@ public:
         ScopedComPtr<IFilter> pFilter;
 
         CLSID clsid;
-        if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_PDF_FILTER_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        if (SUCCEEDED(CLSIDFromString(SZ_PDF_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new CPdfFilter(&g_lRefCount);
 #ifdef BUILD_TEX_IFILTER
-        else if (SUCCEEDED(CLSIDFromString(AsWStrQ(SZ_TEX_FILTER_CLSID), &clsid)) && IsEqualCLSID(m_clsid, clsid))
+        else if (SUCCEEDED(CLSIDFromString(SZ_TEX_FILTER_CLSID, &clsid)) && IsEqualCLSID(m_clsid, clsid))
             pFilter = new CTeXFilter(&g_lRefCount);
 #endif
         else
@@ -111,41 +111,41 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
 STDAPI DllRegisterServer()
 {
-    TCHAR path[MAX_PATH];
+    WCHAR path[MAX_PATH];
     if (!GetModuleFileName(g_hInstance, path, dimof(path)))
         return HRESULT_FROM_WIN32(GetLastError());
 
     struct {
-        TCHAR *key, *value, *data;
+        WCHAR *key, *value, *data;
     } regVals[] = {
-        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_CLSID,
-                NULL,                   _T("SumatraPDF IFilter") },
-        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_CLSID _T("\\InProcServer32"),
+        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,
+                NULL,                   L"SumatraPDF IFilter" },
+        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",
                 NULL,                   path },
-        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_CLSID _T("\\InProcServer32"),
-                _T("ThreadingModel"),   _T("Both") },
-        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_HANDLER,
-                NULL,                   _T("SumatraPDF IFilter Persistent Handler") },
-        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_HANDLER _T("\\PersistentAddinsRegistered"),
-                NULL,                   _T("") },
-        { _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_HANDLER _T("\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}"),
+        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID L"\\InProcServer32",
+                L"ThreadingModel",   L"Both" },
+        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
+                NULL,                   L"SumatraPDF IFilter Persistent Handler" },
+        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER L"\\PersistentAddinsRegistered",
+                NULL,                   L"" },
+        { L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
                 NULL,                   SZ_PDF_FILTER_CLSID },
-        { _T("Software\\Classes\\.pdf\\PersistentHandler"),
+        { L"Software\\Classes\\.pdf\\PersistentHandler",
                 NULL,                   SZ_PDF_FILTER_HANDLER },
 #ifdef BUILD_TEX_IFILTER
-        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID,
-                NULL,                   _T("SumatraPDF IFilter") },
-        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID _T("\\InProcServer32"),
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID,
+                NULL,                   L"SumatraPDF IFilter" },
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",
                 NULL,                   path },
-        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID _T("\\InProcServer32"),
-                _T("ThreadingModel"),  _T("Both") },
-        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_HANDLER,
-                NULL,                   _T("SumatraPDF LaTeX IFilter Persistent Handler") },
-        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_HANDLER _T("\\PersistentAddinsRegistered"),
-                NULL,                   _T("") },
-        { _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_HANDLER _T("\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}"),
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID L"\\InProcServer32",
+                L"ThreadingModel",      L"Both" },
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER,
+                NULL,                   L"SumatraPDF LaTeX IFilter Persistent Handler" },
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER L"\\PersistentAddinsRegistered",
+                NULL,                   L"" },
+        { L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",
                 NULL,                   SZ_TEX_FILTER_CLSID },
-        { _T("Software\\Classes\\.tex\\PersistentHandler"),
+        { L"Software\\Classes\\.tex\\PersistentHandler",
                 NULL,                   SZ_TEX_FILTER_HANDLER },
 #endif
     };
@@ -162,14 +162,14 @@ STDAPI DllRegisterServer()
 
 STDAPI DllUnregisterServer()
 {
-    const TCHAR *regKeys[] = {
-        _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_CLSID,
-        _T("Software\\Classes\\CLSID\\") SZ_PDF_FILTER_HANDLER,
-        _T("Software\\Classes\\.pdf\\PersistentHandler"),
+    const WCHAR *regKeys[] = {
+        L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_CLSID,
+        L"Software\\Classes\\CLSID\\" SZ_PDF_FILTER_HANDLER,
+        L"Software\\Classes\\.pdf\\PersistentHandler"
 #ifdef BUILD_TEX_IFILTER
-        _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_CLSID,
-        _T("Software\\Classes\\CLSID\\") SZ_TEX_FILTER_HANDLER,
-        _T("Software\\Classes\\.tex\\PersistentHandler"),
+        L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_CLSID,
+        L"Software\\Classes\\CLSID\\" SZ_TEX_FILTER_HANDLER,
+        L"Software\\Classes\\.tex\\PersistentHandler",
 #endif
     };
 

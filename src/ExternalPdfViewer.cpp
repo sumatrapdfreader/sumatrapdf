@@ -10,50 +10,50 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 
-static TCHAR *GetAcrobatPath()
+static WCHAR *GetAcrobatPath()
 {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe"), NULL));
+    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe", NULL));
     if (!path)
-        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe"), NULL));
+        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe", NULL));
     if (path && file::Exists(path))
         return path.StealData();
     return NULL;
 }
 
-static TCHAR *GetFoxitPath()
+static WCHAR *GetFoxitPath()
 {
-    ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader"), _T("DisplayIcon")));
+    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader", L"DisplayIcon"));
     if (path && file::Exists(path))
         return path.StealData();
     // Registry value for Foxit 5 (and maybe later)
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader_is1"), _T("DisplayIcon")));
+    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader_is1", L"DisplayIcon"));
     if (path && file::Exists(path))
         return path.StealData();
     return NULL;
 }
 
-static TCHAR *GetPDFXChangePath()
+static WCHAR *GetPDFXChangePath()
 {
-    ScopedMem<TCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
+    ScopedMem<WCHAR> path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
     if (!path)
-        path.Set(ReadRegStr(HKEY_CURRENT_USER,  _T("Software\\Tracker Software\\PDFViewer"), _T("InstallPath")));
+        path.Set(ReadRegStr(HKEY_CURRENT_USER, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
     if (!path)
         return false;
-    ScopedMem<TCHAR> exePath(path::Join(path, _T("PDFXCview.exe")));
+    ScopedMem<WCHAR> exePath(path::Join(path, L"PDFXCview.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
     return NULL;
 }
 
-static TCHAR *GetXPSViewerPath()
+static WCHAR *GetXPSViewerPath()
 {
     // the XPS-Viewer seems to always be installed into %WINDIR%\system32
-    TCHAR buffer[MAX_PATH];
+    WCHAR buffer[MAX_PATH];
     UINT res = GetSystemDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
         return NULL;
-    ScopedMem<TCHAR> exePath(path::Join(buffer, _T("xpsrchvw.exe")));
+    ScopedMem<WCHAR> exePath(path::Join(buffer, L"xpsrchvw.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
 #ifndef _WIN64
@@ -64,7 +64,7 @@ static TCHAR *GetXPSViewerPath()
         res = GetWindowsDirectory(buffer, dimof(buffer));
         if (!res || res >= dimof(buffer))
             return NULL;
-        exePath.Set(path::Join(buffer, _T("Sysnative\\xpsrchvw.exe")));
+        exePath.Set(path::Join(buffer, L"Sysnative\\xpsrchvw.exe"));
         if (file::Exists(exePath))
             return exePath.StealData();
     }
@@ -72,20 +72,20 @@ static TCHAR *GetXPSViewerPath()
     return NULL;
 }
 
-static TCHAR *GetHtmlHelpPath()
+static WCHAR *GetHtmlHelpPath()
 {
     // the Html Help viewer seems to be installed either into %WINDIR% or %WINDIR%\system32
-    TCHAR buffer[MAX_PATH];
+    WCHAR buffer[MAX_PATH];
     UINT res = GetWindowsDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
         return NULL;
-    ScopedMem<TCHAR> exePath(path::Join(buffer, _T("hh.exe")));
+    ScopedMem<WCHAR> exePath(path::Join(buffer, L"hh.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
     res = GetSystemDirectory(buffer, dimof(buffer));
     if (!res || res >= dimof(buffer))
         return NULL;
-    exePath.Set(path::Join(buffer, _T("hh.exe")));
+    exePath.Set(path::Join(buffer, L"hh.exe"));
     if (file::Exists(exePath))
         return exePath.StealData();
     return NULL;
@@ -105,29 +105,29 @@ bool CanViewWithFoxit(WindowInfo *win)
     // Requirements: a valid filename and a valid path to Foxit
     if (win && win->IsNotPdf() || !CanViewExternally(win))
         return false;
-    ScopedMem<TCHAR> path(GetFoxitPath());
+    ScopedMem<WCHAR> path(GetFoxitPath());
     return path != NULL;
 }
 
-bool ViewWithFoxit(WindowInfo *win, TCHAR *args)
+bool ViewWithFoxit(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithFoxit(win))
         return false;
 
-    ScopedMem<TCHAR> exePath(GetFoxitPath());
+    ScopedMem<WCHAR> exePath(GetFoxitPath());
     if (!exePath)
         return false;
     if (!args)
-        args = _T("");
+        args = L"";
 
     // Foxit cmd-line format:
     // [PDF filename] [-n <page number>] [-pwd <password>] [-z <zoom>]
     // TODO: Foxit allows passing password and zoom
-    ScopedMem<TCHAR> params;
+    ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(_T("\"%s\" %s -n %d"), win->dm->FilePath(), args, win->dm->CurrentPageNo()));
+        params.Set(str::Format(L"\"%s\" %s -n %d", win->dm->FilePath(), args, win->dm->CurrentPageNo()));
     else
-        params.Set(str::Format(_T("\"%s\" %s"), win->loadedFilePath, args));
+        params.Set(str::Format(L"\"%s\" %s", win->loadedFilePath, args));
     return LaunchFile(exePath, params);
 }
 
@@ -136,29 +136,29 @@ bool CanViewWithPDFXChange(WindowInfo *win)
     // Requirements: a valid filename and a valid path to PDF X-Change
     if (win && win->IsNotPdf() || !CanViewExternally(win))
         return false;
-    ScopedMem<TCHAR> path(GetPDFXChangePath());
+    ScopedMem<WCHAR> path(GetPDFXChangePath());
     return path != NULL;
 }
 
-bool ViewWithPDFXChange(WindowInfo *win, TCHAR *args)
+bool ViewWithPDFXChange(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithPDFXChange(win))
         return false;
 
-    ScopedMem<TCHAR> exePath(GetPDFXChangePath());
+    ScopedMem<WCHAR> exePath(GetPDFXChangePath());
     if (!exePath)
         return false;
     if (!args)
-        args = _T("");
+        args = L"";
 
     // PDFXChange cmd-line format:
     // [/A "param=value [&param2=value ..."] [PDF filename]
     // /A params: page=<page number>
-    ScopedMem<TCHAR> params;
+    ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(_T("%s /A \"page=%d\" \"%s\""), args, win->dm->CurrentPageNo(), win->dm->FilePath()));
+        params.Set(str::Format(L"%s /A \"page=%d\" \"%s\"", args, win->dm->CurrentPageNo(), win->dm->FilePath()));
     else
-        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
     return LaunchFile(exePath, params);
 }
 
@@ -167,23 +167,23 @@ bool CanViewWithAcrobat(WindowInfo *win)
     // Requirements: a valid filename and a valid path to Adobe Reader
     if (win && win->IsNotPdf() || !CanViewExternally(win))
         return false;
-    ScopedMem<TCHAR> exePath(GetAcrobatPath());
+    ScopedMem<WCHAR> exePath(GetAcrobatPath());
     return exePath != NULL;
 }
 
-bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
+bool ViewWithAcrobat(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithAcrobat(win))
         return false;
 
-    ScopedMem<TCHAR> exePath(GetAcrobatPath());
+    ScopedMem<WCHAR> exePath(GetAcrobatPath());
     if (!exePath)
         return false;
 
     if (!args)
-        args = _T("");
+        args = L"";
 
-    ScopedMem<TCHAR> params;
+    ScopedMem<WCHAR> params;
     // Command line format for version 6 and later:
     //   /A "page=%d&zoom=%.1f,%d,%d&..." <filename>
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#page=5
@@ -191,9 +191,9 @@ bool ViewWithAcrobat(WindowInfo *win, TCHAR *args)
     // see http://www.adobe.com/devnet/acrobat/pdfs/Acrobat_SDK_developer_faq.pdf#page=24
     // TODO: Also set zoom factor and scroll to current position?
     if (win->IsDocLoaded() && HIWORD(GetFileVersion(exePath)) >= 6)
-        params.Set(str::Format(_T("/A \"page=%d\" %s \"%s\""), win->dm->CurrentPageNo(), args, win->dm->FilePath()));
+        params.Set(str::Format(L"/A \"page=%d\" %s \"%s\"", win->dm->CurrentPageNo(), args, win->dm->FilePath()));
     else
-        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
 
     return LaunchFile(exePath, params);
 }
@@ -207,29 +207,29 @@ bool CanViewWithXPSViewer(WindowInfo *win)
     if (win->IsDocLoaded() && win->dm->engineType != Engine_XPS)
         return false;
     // or a file ending in .xps has failed to be loaded
-    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, _T(".xps")))
+    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".xps"))
         return false;
-    ScopedMem<TCHAR> path(GetXPSViewerPath());
+    ScopedMem<WCHAR> path(GetXPSViewerPath());
     return path != NULL;
 }
 
-bool ViewWithXPSViewer(WindowInfo *win, TCHAR *args)
+bool ViewWithXPSViewer(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithXPSViewer(win))
         return false;
 
-    ScopedMem<TCHAR> exePath(GetXPSViewerPath());
+    ScopedMem<WCHAR> exePath(GetXPSViewerPath());
     if (!exePath)
         return false;
 
     if (!args)
-        args = _T("");
+        args = L"";
 
-    ScopedMem<TCHAR> params;
+    ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(_T("%s \"%s\""), args, win->dm->FilePath()));
+        params.Set(str::Format(L"%s \"%s\"", args, win->dm->FilePath()));
     else
-        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
     return LaunchFile(exePath, params);
 }
 
@@ -242,28 +242,28 @@ bool CanViewWithHtmlHelp(WindowInfo *win)
     if (win->IsDocLoaded() && win->dm->engineType != Engine_Chm && win->dm->engineType != Engine_Chm2)
         return false;
     // or a file ending in .chm has failed to be loaded
-    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, _T(".chm")))
+    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".chm"))
         return false;
-    ScopedMem<TCHAR> path(GetHtmlHelpPath());
+    ScopedMem<WCHAR> path(GetHtmlHelpPath());
     return path != NULL;
 }
 
-bool ViewWithHtmlHelp(WindowInfo *win, TCHAR *args)
+bool ViewWithHtmlHelp(WindowInfo *win, WCHAR *args)
 {
     if (!CanViewWithHtmlHelp(win))
         return false;
 
-    ScopedMem<TCHAR> exePath(GetHtmlHelpPath());
+    ScopedMem<WCHAR> exePath(GetHtmlHelpPath());
     if (!exePath)
         return false;
 
     if (!args)
-        args = _T("");
+        args = L"";
 
-    ScopedMem<TCHAR> params;
+    ScopedMem<WCHAR> params;
     if (win->IsDocLoaded())
-        params.Set(str::Format(_T("%s \"%s\""), args, win->dm->FilePath()));
+        params.Set(str::Format(L"%s \"%s\"", args, win->dm->FilePath()));
     else
-        params.Set(str::Format(_T("%s \"%s\""), args, win->loadedFilePath));
+        params.Set(str::Format(L"%s \"%s\"", args, win->loadedFilePath));
     return LaunchFile(exePath, params);
 }

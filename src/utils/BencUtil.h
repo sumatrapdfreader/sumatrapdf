@@ -42,13 +42,13 @@ class BencString : public BencObj {
     char *value;
 
 protected:
-    BencString(const TCHAR *value);
+    BencString(const WCHAR *value);
     BencString(const char *rawValue, size_t len);
 
 public:
     virtual ~BencString() { free(value); }
 
-    TCHAR *Value() const;
+    WCHAR *Value() const;
     const char *RawValue() const { return value; }
 
     virtual char *Encode() const;
@@ -79,7 +79,7 @@ public:
         if (!obj || value.Find(obj) != -1) return;
         value.Append(obj);
     }
-    void Add(const TCHAR *string) {
+    void Add(const WCHAR *string) {
         assert(string);
         if (string)
             Add(new BencString(string));
@@ -129,7 +129,7 @@ public:
     size_t Length() const { return values.Count(); }
 
     void Add(const char *key, BencObj *obj);
-    void Add(const char *key, const TCHAR *string) {
+    void Add(const char *key, const WCHAR *string) {
         assert(string);
         if (string)
             Add(key, new BencString(string));

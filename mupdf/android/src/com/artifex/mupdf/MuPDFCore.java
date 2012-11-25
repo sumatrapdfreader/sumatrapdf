@@ -43,6 +43,10 @@ public class MuPDFCore
 	private static native boolean hasOutlineInternal();
 	private static native boolean needsPasswordInternal();
 	private static native boolean authenticatePasswordInternal(String password);
+	private static native MuPDFAlertInternal waitForAlertInternal();
+	private static native void replyToAlertInternal(MuPDFAlertInternal alert);
+	private static native void startAlertsInternal();
+	private static native void stopAlertsInternal();
 	private static native void destroying();
 
 	public static native boolean javascriptSupported();
@@ -82,6 +86,23 @@ public class MuPDFCore
 	public synchronized PointF getPageSize(int page) {
 		gotoPage(page);
 		return new PointF(pageWidth, pageHeight);
+	}
+
+	public MuPDFAlert waitForAlert() {
+		MuPDFAlertInternal alert = waitForAlertInternal();
+		return alert != null ? alert.toAlert() : null;
+	}
+
+	public void replyToAlert(MuPDFAlert alert) {
+		replyToAlertInternal(new MuPDFAlertInternal(alert));
+	}
+
+	public void stopAlerts() {
+		stopAlertsInternal();
+	}
+
+	public void startAlerts() {
+		startAlertsInternal();
 	}
 
 	public synchronized void onDestroy() {

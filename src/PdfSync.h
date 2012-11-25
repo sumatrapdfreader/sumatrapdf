@@ -25,7 +25,7 @@ class PdfEngine;
 class Synchronizer
 {
 public:
-    Synchronizer(const TCHAR* syncfilepath);
+    Synchronizer(const WCHAR* syncfilepath);
     virtual ~Synchronizer() { }
 
     // Inverse-search:
@@ -35,14 +35,14 @@ public:
     //  - filename: receives the name of the source file
     //  - line: receives the line number
     //  - col: receives the column number
-    virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<TCHAR>& filename, UINT *line, UINT *col) = 0;
+    virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UINT *line, UINT *col) = 0;
 
     // Forward-search:
     // The result is returned in page and rects (list of rectangles to highlight).
-    virtual int SourceToDoc(const TCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects) = 0;
+    virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI>& rects) = 0;
 
     // the caller must free() the command line
-    TCHAR * PrepareCommandline(const TCHAR* pattern, const TCHAR* filename, UINT line, UINT col);
+    WCHAR * PrepareCommandline(const WCHAR* pattern, const WCHAR* filename, UINT line, UINT col);
 
 private:
     bool indexDiscarded; // true if the index needs to be recomputed (needs to be set to true when a change to the pdfsync file is detected)
@@ -51,12 +51,12 @@ private:
 protected:
     bool IsIndexDiscarded() const;
     int RebuildIndex();
-    TCHAR * PrependDir(const TCHAR* filename) const;
+    WCHAR * PrependDir(const WCHAR* filename) const;
 
-    ScopedMem<TCHAR> syncfilepath;  // path to the synchronization file
+    ScopedMem<WCHAR> syncfilepath;  // path to the synchronization file
 
 public:
-    static int Create(const TCHAR *pdffilename, PdfEngine *engine, Synchronizer **sync);
+    static int Create(const WCHAR *pdffilename, PdfEngine *engine, Synchronizer **sync);
 };
 
 #endif

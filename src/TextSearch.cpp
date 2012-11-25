@@ -6,7 +6,7 @@
 
 enum { SEARCH_PAGE, SKIP_PAGE };
 
-#define SkipWhitespace(c) for (; _istspace(*(c)); (c)++)
+#define SkipWhitespace(c) for (; iswspace(*(c)); (c)++)
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (iswordchar(c) && (unsigned short)(c) < 0x2E80)
@@ -33,14 +33,14 @@ void TextSearch::Reset()
     TextSelection::Reset();
 }
 
-void TextSearch::SetText(TCHAR *text)
+void TextSearch::SetText(WCHAR *text)
 {
     // search text starting with a single space enables the 'Match word start'
     // and search text ending in a single space enables the 'Match word end' option
     // (that behavior already "kind of" exists without special treatment, but
     // usually is not quite what a user expects, so let's try to be cleverer)
     this->matchWordStart = text[0] == ' ' && text[1] != ' ';
-    this->matchWordEnd = str::EndsWith(text, _T(" ")) && !str::EndsWith(text, _T("  "));
+    this->matchWordEnd = str::EndsWith(text, L" ") && !str::EndsWith(text, L"  ");
 
     if (text[0] == ' ')
         text++;
@@ -55,22 +55,20 @@ void TextSearch::SetText(TCHAR *text)
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (isnoncjkwordchar(*text)) {
-        TCHAR *end;
+        WCHAR *end;
         for (end = text; isnoncjkwordchar(*end); end++)
             ;
         anchor = str::DupN(text, end - text);
     }
-#ifdef UNICODE
     // Adobe Reader also matches certain hard-to-type Unicode
     // characters when searching for easy-to-type homoglyphs
     // cf. http://forums.fofou.org/sumatrapdf/topic?id=2432337
     else if (*text == '-' || *text == '\'' || *text == '"')
         anchor = NULL;
-#endif
     else
         anchor = str::DupN(text, 1);
 
-    if (str::EndsWith(this->findText, _T(" ")))
+    if (str::EndsWith(this->findText, L" "))
         this->findText[str::Len(this->findText) - 1] = '\0';
 
     memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
@@ -99,7 +97,7 @@ void TextSearch::SetLastResult(TextSelection *sel)
 {
     CopySelection(sel);
 
-    ScopedMem<TCHAR> selection(ExtractText(_T(" ")));
+    ScopedMem<WCHAR> selection(ExtractText(L" "));
     str::NormalizeWS(selection);
     SetText(selection);
 
@@ -111,9 +109,9 @@ void TextSearch::SetLastResult(TextSelection *sel)
 
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
-int TextSearch::MatchLen(const TCHAR *start)
+int TextSearch::MatchLen(const WCHAR *start)
 {
-    const TCHAR *match = findText, *end = start;
+    const WCHAR *match = findText, *end = start;
 
     if (matchWordStart && start > pageText && iswordchar(start[-1]) && iswordchar(start[0]))
         return -1;
@@ -124,11 +122,10 @@ int TextSearch::MatchLen(const TCHAR *start)
     while (*match) {
         if (!*end)
             return -1;
-        if (caseSensitive ? *match == *end : CharLower((LPTSTR)LOWORD(*match)) == CharLower((LPTSTR)LOWORD(*end)))
+        if (caseSensitive ? *match == *end : CharLower((LPWSTR)LOWORD(*match)) == CharLower((LPWSTR)LOWORD(*end)))
             /* characters are identical */;
-        else if (_istspace(*match) && _istspace(*end))
+        else if (iswspace(*match) && iswspace(*end))
             /* treat all whitespace as identical */;
-#ifdef UNICODE
         // TODO: Adobe Reader seems to have a more extensive list of
         //       normalizations - is there an easier way?
         else if (*match == '-' && (0x2010 <= *end && *end <= 0x2014))
@@ -138,7 +135,6 @@ int TextSearch::MatchLen(const TCHAR *start)
             /* make APOSTROPHE also match LEFT/RIGHT SINGLE QUOTATION MARK */;
         else if (*match == '"' && (0x201c <= *end && *end <= 0x201f))
             /* make QUOTATION MARK also match LEFT/RIGHT DOUBLE QUOTATION MARK */;
-#endif
         else
             return -1;
         match++;
@@ -147,7 +143,7 @@ int TextSearch::MatchLen(const TCHAR *start)
         // character that's just missing an encoding (and '?' is the replacement
         // character); cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1574
         if (*match && !isnoncjkwordchar(*(match - 1)) && (*(match - 1) != '?' || *match != '?') ||
-            _istspace(*(match - 1)) && _istspace(*(end - 1))) {
+            iswspace(*(match - 1)) && iswspace(*(end - 1))) {
             SkipWhitespace(match);
             SkipWhitespace(end);
         }
@@ -159,9 +155,9 @@ int TextSearch::MatchLen(const TCHAR *start)
     return (int)(end - start);
 }
 
-static const TCHAR *GetNextIndex(const TCHAR *base, int offset, bool forward)
+static const WCHAR *GetNextIndex(const WCHAR *base, int offset, bool forward)
 {
-    const TCHAR *c = base + offset + (forward ? 0 : -1);
+    const WCHAR *c = base + offset + (forward ? 0 : -1);
     if (c < base || !*c)
         return NULL;
     return c;
@@ -175,7 +171,7 @@ bool TextSearch::FindTextInPage(int pageNo)
         pageNo = findPage;
     findPage = pageNo;
 
-    const TCHAR *found;
+    const WCHAR *found;
     int length;
     do {
         if (!anchor)
@@ -237,7 +233,7 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
     return false;
 }
 
-TextSel *TextSearch::FindFirst(int page, TCHAR *text, ProgressUpdateUI *tracker)
+TextSel *TextSearch::FindFirst(int page, WCHAR *text, ProgressUpdateUI *tracker)
 {
     SetText(text);
 

@@ -160,7 +160,7 @@ bool Doc::IsEngine() const
 }
 
 // the caller should make sure there is a document object
-const TCHAR *Doc::GetFilePathFromDoc() const
+const WCHAR *Doc::GetFilePathFromDoc() const
 {
     switch (type) {
     case Doc_Epub:
@@ -177,11 +177,11 @@ const TCHAR *Doc::GetFilePathFromDoc() const
     }
 }
 
-const TCHAR *Doc::GetFilePath() const
+const WCHAR *Doc::GetFilePath() const
 {
     if (filePath) {
         // verify it's consistent with the path in the doc
-        const TCHAR *docPath = GetFilePathFromDoc();
+        const WCHAR *docPath = GetFilePathFromDoc();
         CrashIf(docPath && !str::Eq(filePath, docPath));
         return filePath;
     }
@@ -189,7 +189,7 @@ const TCHAR *Doc::GetFilePath() const
     return GetFilePathFromDoc();
 }
 
-TCHAR *Doc::GetProperty(DocumentProperty prop)
+WCHAR *Doc::GetProperty(DocumentProperty prop)
 {
     if (Doc_Mobi == type)
         return mobiDoc->GetProperty(prop);
@@ -237,7 +237,7 @@ ImageData *Doc::GetCoverImage()
     return mobiDoc->GetCoverImage();
 }
 
-Doc Doc::CreateFromFile(const TCHAR *filePath)
+Doc Doc::CreateFromFile(const WCHAR *filePath)
 {
     Doc doc;
     if (MobiDoc::IsSupportedFile(filePath))
@@ -250,7 +250,7 @@ Doc Doc::CreateFromFile(const TCHAR *filePath)
     // set above, set a generic error message
     if (doc.IsNone()) {
         CrashIf(doc.loadingErrorMessage);
-        doc.loadingErrorMessage = str::Format(_T("Error loading %s"), filePath);
+        doc.loadingErrorMessage = str::Format(L"Error loading %s", filePath);
     }
     CrashIf(!doc.generic && !doc.IsNone());
     return doc;
@@ -258,7 +258,7 @@ Doc Doc::CreateFromFile(const TCHAR *filePath)
 
 namespace EngineManager {
 
-bool IsSupportedFile(bool enableEbookEngines, const TCHAR *filePath, bool sniff)
+bool IsSupportedFile(bool enableEbookEngines, const WCHAR *filePath, bool sniff)
 {
     return PdfEngine::IsSupportedFile(filePath, sniff)  ||
            XpsEngine::IsSupportedFile(filePath, sniff)  ||
@@ -280,7 +280,7 @@ bool IsSupportedFile(bool enableEbookEngines, const TCHAR *filePath, bool sniff)
            );
 }
 
-BaseEngine *CreateEngine(bool enableEbookEngines, const TCHAR *filePath, PasswordUI *pwdUI, DocType *typeOut)
+BaseEngine *CreateEngine(bool enableEbookEngines, const WCHAR *filePath, PasswordUI *pwdUI, DocType *typeOut)
 {
     CrashIf(!filePath);
 

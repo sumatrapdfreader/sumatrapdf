@@ -60,8 +60,8 @@ static INT_PTR CreateDialogBox(int dlgId, HWND parent, DLGPROC DlgProc, LPARAM d
 
 /* For passing data to/from GetPassword dialog */
 struct Dialog_GetPassword_Data {
-    const TCHAR *  fileName;   /* name of the file for which we need the password */
-    TCHAR *        pwdOut;     /* password entered by the user */
+    const WCHAR *  fileName;   /* name of the file for which we need the password */
+    WCHAR *        pwdOut;     /* password entered by the user */
     bool *         remember;   /* remember the password (encrypted) or ask again? */
 };
 
@@ -76,9 +76,9 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wPar
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_PASSWORD), data->remember != NULL);
 
-        ScopedMem<TCHAR> txt(str::Format(_TR("Enter password for %s"), data->fileName));
+        ScopedMem<WCHAR> txt(str::Format(_TR("Enter password for %s"), data->fileName));
         SetDlgItemText(hDlg, IDC_GET_PASSWORD_LABEL, txt);
-        SetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, _T(""));
+        SetDlgItemText(hDlg, IDC_GET_PASSWORD_EDIT, L"");
         SetDlgItemText(hDlg, IDC_STATIC, _TR("&Password:"));
         SetDlgItemText(hDlg, IDC_REMEMBER_PASSWORD, _TR("&Remember the password for this document"));
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
@@ -117,7 +117,7 @@ static INT_PTR CALLBACK Dialog_GetPassword_Proc(HWND hDlg, UINT msg, WPARAM wPar
    NULL if user cancelled the dialog or there was an error.
    Caller needs to free() the result.
 */
-TCHAR *Dialog_GetPassword(HWND hwndParent, const TCHAR *fileName, bool *rememberPassword)
+WCHAR *Dialog_GetPassword(HWND hwndParent, const WCHAR *fileName, bool *rememberPassword)
 {
     Dialog_GetPassword_Data data = { 0 };
     data.fileName = fileName;
@@ -134,10 +134,10 @@ TCHAR *Dialog_GetPassword(HWND hwndParent, const TCHAR *fileName, bool *remember
 
 /* For passing data to/from GoToPage dialog */
 struct Dialog_GoToPage_Data {
-    const TCHAR *   currPageLabel;  // currently shown page label
+    const WCHAR *   currPageLabel;  // currently shown page label
     int             pageCount;      // total number of pages
     bool            onlyNumeric;    // whether the page label must be numeric
-    TCHAR *         newPageLabel;   // page number entered by user
+    WCHAR *         newPageLabel;   // page number entered by user
 };
 
 static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -157,7 +157,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             SetWindowLong(editPageNo, GWL_STYLE, GetWindowLong(editPageNo, GWL_STYLE) & ~ES_NUMBER);
         assert(data->currPageLabel);
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_EDIT, data->currPageLabel);
-        ScopedMem<TCHAR> totalCount(str::Format(_TR("(of %d)"), data->pageCount));
+        ScopedMem<WCHAR> totalCount(str::Format(_TR("(of %d)"), data->pageCount));
         SetDlgItemText(hDlg, IDC_GOTO_PAGE_LABEL_OF, totalCount);
 
         Edit_SelectAll(editPageNo);
@@ -195,7 +195,7 @@ static INT_PTR CALLBACK Dialog_GoToPage_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 /* Shows a 'go to page' dialog and returns the page label entered by the user
    or NULL if user clicked the "cancel" button or there was an error.
    The caller must free() the result. */
-TCHAR *Dialog_GoToPage(HWND hwnd, const TCHAR *currentPageLabel, int pageCount, bool onlyNumeric)
+WCHAR *Dialog_GoToPage(HWND hwnd, const WCHAR *currentPageLabel, int pageCount, bool onlyNumeric)
 {
     Dialog_GoToPage_Data data;
     data.currPageLabel = currentPageLabel;
@@ -210,7 +210,7 @@ TCHAR *Dialog_GoToPage(HWND hwnd, const TCHAR *currentPageLabel, int pageCount, 
 
 /* For passing data to/from Find dialog */
 struct Dialog_Find_Data {
-    TCHAR * searchTerm;
+    WCHAR * searchTerm;
     bool    matchCase;
     WNDPROC editWndProc;
 };
@@ -272,10 +272,10 @@ static INT_PTR CALLBACK Dialog_Find_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPA
 /* Shows a 'Find' dialog and returns the new search term entered by the user
    or NULL if the search was canceled. previousSearch is the search term to
    be displayed as default. */
-TCHAR * Dialog_Find(HWND hwnd, const TCHAR *previousSearch, bool *matchCase)
+WCHAR * Dialog_Find(HWND hwnd, const WCHAR *previousSearch, bool *matchCase)
 {
     Dialog_Find_Data data;
-    data.searchTerm = (TCHAR *)previousSearch;
+    data.searchTerm = (WCHAR *)previousSearch;
     data.matchCase = matchCase ? *matchCase : false;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_FIND, hwnd,
@@ -382,7 +382,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         int itemToSelect = 0;
         for (int langIdx = 0; trans::GetLanguageCode(langIdx) != NULL; langIdx++) {
-            ScopedMem<TCHAR> langName(trans::GetLanguageName(langIdx));
+            ScopedMem<WCHAR> langName(trans::GetLanguageName(langIdx));
             ListBox_AppendString_NoSort(langList, langName);
             int elIdx = ListBox_GetCount(langList) - 1;
             ListBox_SetItemData(langList, elIdx, (LPARAM)langIdx);
@@ -448,15 +448,15 @@ int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
 
 /* For passing data to/from 'new version available' dialog */
 struct Dialog_NewVersion_Data {
-    const TCHAR *currVersion;
-    const TCHAR *newVersion;
+    const WCHAR *currVersion;
+    const WCHAR *newVersion;
     bool skipThisVersion;
 };
 
 static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     Dialog_NewVersion_Data *  data;
-    TCHAR *txt;
+    WCHAR *txt;
 
     if (WM_INITDIALOG == msg)
     {
@@ -511,7 +511,7 @@ static INT_PTR CALLBACK Dialog_NewVersion_Proc(HWND hDlg, UINT msg, WPARAM wPara
     return FALSE;
 }
 
-INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const TCHAR *currentVersion, const TCHAR *newVersion, bool *skipThisVersion)
+INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const WCHAR *currentVersion, const WCHAR *newVersion, bool *skipThisVersion)
 {
     Dialog_NewVersion_Data data;
     data.currVersion = currentVersion;
@@ -535,22 +535,22 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
         SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Page"));
         SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Width"));
         SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_TR("Fit Content"));
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("-"));
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("6400%"));
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("3200%"));
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("1600%"));
+        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"-");
+        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"6400%");
+        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"3200%");
+        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"1600%");
     }
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("800%"));
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("400%"));
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("200%"));
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("150%"));
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("125%"));
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("100%"));
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("50%"));
-    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("25%"));
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"800%");
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"400%");
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"200%");
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"150%");
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"125%");
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"100%");
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"50%");
+    SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"25%");
     if (!forChm) {
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("12.5%"));
-        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)_T("8.33%"));
+        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"12.5%");
+        SendDlgItemMessage(hDlg, idComboBox, CB_ADDSTRING, 0, (LPARAM)L"8.33%");
     }
     int first = forChm ? 7 : 0;
     int last = forChm ? dimof(gItemZoom) - 2 : dimof(gItemZoom);
@@ -560,7 +560,7 @@ static void SetupZoomComboBox(HWND hDlg, UINT idComboBox, bool forChm, float cur
     }
 
     if (SendDlgItemMessage(hDlg, idComboBox, CB_GETCURSEL, 0, 0) == -1) {
-        TCHAR *customZoom = str::Format(_T("%.0f%%"), currZoom);
+        WCHAR *customZoom = str::Format(L"%.0f%%", currZoom);
         SetDlgItemText(hDlg, idComboBox, customZoom);
         free(customZoom);
     }
@@ -572,8 +572,8 @@ static float GetZoomComboBoxValue(HWND hDlg, UINT idComboBox, bool forChm, float
 
     int idx = ComboBox_GetCurSel(GetDlgItem(hDlg, idComboBox));
     if (idx == -1) {
-        ScopedMem<TCHAR> customZoom(win::GetText(GetDlgItem(hDlg, idComboBox)));
-        float zoom = (float)_tstof(customZoom);
+        ScopedMem<WCHAR> customZoom(win::GetText(GetDlgItem(hDlg, idComboBox)));
+        float zoom = (float)_wtof(customZoom);
         if (zoom > 0)
             newZoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
     } else {
@@ -735,7 +735,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 
         if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
             // Fill the combo with the list of possible inverse search commands
-            ScopedMem<TCHAR> inverseSearch(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
+            ScopedMem<WCHAR> inverseSearch(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
             // Try to select a correct default when first showing this dialog
             if (!prefs->inverseSearchCmdLine)
                 prefs->inverseSearchCmdLine = inverseSearch;
@@ -917,8 +917,8 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem
 }
 
 struct Dialog_AddFav_Data {
-    const TCHAR *pageNo;
-    TCHAR *favName;
+    const WCHAR *pageNo;
+    WCHAR *favName;
 };
 
 static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
@@ -929,7 +929,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         assert(data);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)data);
         win::SetText(hDlg, _TR("Add Favorite"));
-        ScopedMem<TCHAR> s(str::Format(_TR("Add page %s to favorites with (optional) name:"), data->pageNo));
+        ScopedMem<WCHAR> s(str::Format(_TR("Add page %s to favorites with (optional) name:"), data->pageNo));
         SetDlgItemText(hDlg, IDC_ADD_PAGE_STATIC, s);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
@@ -947,7 +947,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         assert(data);
         WORD cmd = LOWORD(wParam);
         if (IDOK == cmd) {
-            ScopedMem<TCHAR> name(win::GetText(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT)));
+            ScopedMem<WCHAR> name(win::GetText(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT)));
             str::TrimWS(name);
             if (!str::IsEmpty(name.Get()))
                 data->favName = name.StealData();
@@ -968,7 +968,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 // returns true if the user wants to add a favorite.
 // favName is the name the user wants the favorite to have
 // (passing in a non-NULL favName will use it as default name)
-bool Dialog_AddFavorite(HWND hwnd, const TCHAR *pageNo, ScopedMem<TCHAR>& favName)
+bool Dialog_AddFavorite(HWND hwnd, const WCHAR *pageNo, ScopedMem<WCHAR>& favName)
 {
     Dialog_AddFav_Data data;
     data.pageNo = pageNo;

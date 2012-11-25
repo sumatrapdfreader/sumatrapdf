@@ -10,6 +10,20 @@
 
 #include "DebugLog.h"
 
+static void BaseUtilTest()
+{
+    assert(roundToPowerOf2(0) == 1);
+    assert(roundToPowerOf2(1) == 1);
+    assert(roundToPowerOf2(2) == 2);
+    assert(roundToPowerOf2(3) == 4);
+    assert(roundToPowerOf2(15) == 16);
+    assert(roundToPowerOf2((1 << 13) + 1) == (1 << 14));
+    assert(roundToPowerOf2(MAX_SIZE_T) == MAX_SIZE_T);
+
+    assert(murmur_hash2(NULL, 0) == 0x342CE6C);
+    assert(murmur_hash2("test", 4) != murmur_hash2("Test", 4));
+}
+
 static void GeomTest()
 {
     PointD ptD(12.4, -13.6);
@@ -84,47 +98,47 @@ static void GeomTest()
 
 static void FileUtilTest()
 {
-    TCHAR *path1 = _T("C:\\Program Files\\SumatraPDF\\SumatraPDF.exe");
+    WCHAR *path1 = L"C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
 
-    const TCHAR *baseName = path::GetBaseName(path1);
-    assert(str::Eq(baseName, _T("SumatraPDF.exe")));
+    const WCHAR *baseName = path::GetBaseName(path1);
+    assert(str::Eq(baseName, L"SumatraPDF.exe"));
 
-    ScopedMem<TCHAR> dirName(path::GetDir(path1));
-    assert(str::Eq(dirName, _T("C:\\Program Files\\SumatraPDF")));
+    ScopedMem<WCHAR> dirName(path::GetDir(path1));
+    assert(str::Eq(dirName, L"C:\\Program Files\\SumatraPDF"));
     baseName = path::GetBaseName(dirName);
-    assert(str::Eq(baseName, _T("SumatraPDF")));
+    assert(str::Eq(baseName, L"SumatraPDF"));
 
-    dirName.Set(path::GetDir(_T("C:\\Program Files")));
-    assert(str::Eq(dirName, _T("C:\\")));
+    dirName.Set(path::GetDir(L"C:\\Program Files"));
+    assert(str::Eq(dirName, L"C:\\"));
     dirName.Set(path::GetDir(dirName));
-    assert(str::Eq(dirName, _T("C:\\")));
-    dirName.Set(path::GetDir(_T("\\\\server")));
-    assert(str::Eq(dirName, _T("\\\\server")));
-    dirName.Set(path::GetDir(_T("file.exe")));
-    assert(str::Eq(dirName, _T(".")));
-    dirName.Set(path::GetDir(_T("/etc")));
-    assert(str::Eq(dirName, _T("/")));
+    assert(str::Eq(dirName, L"C:\\"));
+    dirName.Set(path::GetDir(L"\\\\server"));
+    assert(str::Eq(dirName, L"\\\\server"));
+    dirName.Set(path::GetDir(L"file.exe"));
+    assert(str::Eq(dirName, L"."));
+    dirName.Set(path::GetDir(L"/etc"));
+    assert(str::Eq(dirName, L"/"));
 
-    path1 = _T("C:\\Program Files");
-    TCHAR *path2 = path::Join(_T("C:\\"), _T("Program Files"));
+    path1 = L"C:\\Program Files";
+    WCHAR *path2 = path::Join(L"C:\\", L"Program Files");
     assert(str::Eq(path1, path2));
     free(path2);
-    path2 = path::Join(path1, _T("SumatraPDF"));
-    assert(str::Eq(path2, _T("C:\\Program Files\\SumatraPDF")));
+    path2 = path::Join(path1, L"SumatraPDF");
+    assert(str::Eq(path2, L"C:\\Program Files\\SumatraPDF"));
     free(path2);
-    path2 = path::Join(_T("C:\\"), _T("\\Windows"));
-    assert(str::Eq(path2, _T("C:\\Windows")));
+    path2 = path::Join(L"C:\\", L"\\Windows");
+    assert(str::Eq(path2, L"C:\\Windows"));
     free(path2);
 
-    assert(path::Match(_T("C:\\file.pdf"), _T("*.pdf")));
-    assert(path::Match(_T("C:\\file.pdf"), _T("file.*")));
-    assert(path::Match(_T("C:\\file.pdf"), _T("*.xps;*.pdf")));
-    assert(path::Match(_T("C:\\file.pdf"), _T("*.xps;*.pdf;*.djvu")));
-    assert(path::Match(_T("C:\\file.pdf"), _T("f??e.p?f")));
-    assert(!path::Match(_T("C:\\file.pdf"), _T("*.xps;*.djvu")));
-    assert(!path::Match(_T("C:\\dir.xps\\file.pdf"), _T("*.xps;*.djvu")));
-    assert(!path::Match(_T("C:\\file.pdf"), _T("f??f.p?f")));
-    assert(!path::Match(_T("C:\\.pdf"), _T("?.pdf")));
+    assert(path::Match(L"C:\\file.pdf", L"*.pdf"));
+    assert(path::Match(L"C:\\file.pdf", L"file.*"));
+    assert(path::Match(L"C:\\file.pdf", L"*.xps;*.pdf"));
+    assert(path::Match(L"C:\\file.pdf", L"*.xps;*.pdf;*.djvu"));
+    assert(path::Match(L"C:\\file.pdf", L"f??e.p?f"));
+    assert(!path::Match(L"C:\\file.pdf", L"*.xps;*.djvu"));
+    assert(!path::Match(L"C:\\dir.xps\\file.pdf", L"*.xps;*.djvu"));
+    assert(!path::Match(L"C:\\file.pdf", L"f??f.p?f"));
+    assert(!path::Match(L"C:\\.pdf", L"?.pdf"));
 }
 
 static void WinUtilTest()
@@ -161,7 +175,7 @@ static void WinUtilTest()
 static void LogTest()
 {
     slog::MultiLogger log;
-    log.LogAndFree(str::Dup(_T("Don't leak me!")));
+    log.LogAndFree(str::Dup(L"Don't leak me!"));
 
     slog::MemoryLogger logAll;
     log.AddLogger(&logAll);
@@ -169,12 +183,12 @@ static void LogTest()
     {
         slog::MemoryLogger ml;
         log.AddLogger(&ml);
-        log.Log(_T("Test1"));
-        ml.Log(_T("ML"));
-        ml.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        log.Log(L"Test1");
+        ml.Log(L"ML");
+        ml.LogFmt(L"%s : %d", L"filen\xE4me.pdf", 25);
         log.RemoveLogger(&ml);
 
-        assert(str::Eq(ml.GetData(), _T("Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n")));
+        assert(str::Eq(ml.GetData(), L"Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n"));
     }
 
     {
@@ -182,9 +196,9 @@ static void LogTest()
         CreatePipe(&hRead, &hWrite, NULL, 0);
         slog::FileLogger fl(hWrite);
         log.AddLogger(&fl);
-        log.Log(_T("Test2"));
-        fl.Log(_T("FL"));
-        log.LogFmt(_T("%s : %d"), _T("filen\xE4me.pdf"), 25);
+        log.Log(L"Test2");
+        fl.Log(L"FL");
+        log.LogFmt(L"%s : %d", L"filen\xE4me.pdf", 25);
         log.RemoveLogger(&fl);
 
         char pipeData[32];
@@ -197,7 +211,7 @@ static void LogTest()
         CloseHandle(hRead);
     }
 
-    assert(str::Eq(logAll.GetData(), _T("Test1\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n")));
+    assert(str::Eq(logAll.GetData(), L"Test1\r\nTest2\r\nfilen\xE4me.pdf : 25\r\n"));
     log.RemoveLogger(&logAll);
 
     // don't leak the logger, don't crash on logging NULL
@@ -217,12 +231,13 @@ static void LogTest()
 void BaseUtils_UnitTests()
 {
     plogf("Running BaseUtils unit tests");
+    BaseUtilTest();
     ByteOrderTests();
     GeomTest();
     TStrTest();
     FileUtilTest();
     VecTest();
-    StrVecTest();
+    WStrVecTest();
     StrListTest();
     WinUtilTest();
     LogTest();

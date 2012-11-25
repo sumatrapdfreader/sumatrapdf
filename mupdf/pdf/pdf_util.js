@@ -478,7 +478,7 @@ function AFParseDateEx(d, fmt)
 
 function AFDate_KeystrokeEx(fmt)
 {
-	if (event.willCommit && !AFParseDateEx(event.value), fmt)
+	if (event.willCommit && !AFParseDateEx(event.value, fmt))
 	{
 		app.alert("Invalid date/time. please ensure that the date/time exists. Field [ "+event.target.name+" ] should match format "+fmt);
 		event.rc = false;

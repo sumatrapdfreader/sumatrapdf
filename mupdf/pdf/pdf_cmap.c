@@ -312,8 +312,8 @@ static int cmprange(const void *va, const void *vb)
 void
 pdf_sort_cmap(fz_context *ctx, pdf_cmap *cmap)
 {
-	pdf_range *a;			/* last written range on output */
-	pdf_range *b;			/* current range examined on input */
+	pdf_range *a; /* last written range on output */
+	pdf_range *b; /* current range examined on input */
 
 	if (cmap->rlen == 0)
 		return;

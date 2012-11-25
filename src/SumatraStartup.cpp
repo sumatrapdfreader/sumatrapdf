@@ -1,11 +1,14 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
 // TODO: for the moment it needs to be included from SumatraPDF.cpp
 // and not compiled as stand-alone
 
 static bool TryLoadMemTrace()
 {
-    ScopedMem<TCHAR> exePath(GetExePath());
-    ScopedMem<TCHAR> exeDir(path::GetDir(exePath));
-    ScopedMem<TCHAR> dllPath(path::Join(exeDir, _T("memtrace.dll")));
+    ScopedMem<WCHAR> exePath(GetExePath());
+    ScopedMem<WCHAR> exeDir(path::GetDir(exePath));
+    ScopedMem<WCHAR> dllPath(path::Join(exeDir, L"memtrace.dll"));
     if (!LoadLibrary(dllPath))
         return false;
     return true;
@@ -38,46 +41,32 @@ static bool RegisterWinClass(HINSTANCE hinst)
     FillWndClassEx(wcex, hinst, FRAME_CLASS_NAME, WndProcFrame);
     wcex.hIcon  = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     atom = RegisterClassEx(&wcex);
-    if (!atom)
-        return false;
+    CrashIf(!atom);
 
     FillWndClassEx(wcex, hinst, CANVAS_CLASS_NAME, WndProcCanvas);
     wcex.style |= CS_DBLCLKS;
     atom = RegisterClassEx(&wcex);
-    if (!atom)
-        return false;
-
-    FillWndClassEx(wcex, hinst, ABOUT_CLASS_NAME, WndProcAbout);
-    wcex.hIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    atom = RegisterClassEx(&wcex);
-    if (!atom)
-        return false;
+    CrashIf(!atom);
 
     FillWndClassEx(wcex, hinst, PROPERTIES_CLASS_NAME, WndProcProperties);
     wcex.hIcon = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     atom = RegisterClassEx(&wcex);
-    if (!atom)
-        return false;
+    CrashIf(!atom);
 
     FillWndClassEx(wcex, hinst, SIDEBAR_SPLITTER_CLASS_NAME, WndProcSidebarSplitter);
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZEWE);
     wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
     atom = RegisterClassEx(&wcex);
-    if (!atom)
-        return false;
+    CrashIf(!atom);
 
     FillWndClassEx(wcex, hinst, FAV_SPLITTER_CLASS_NAME, WndProcFavSplitter);
     wcex.hCursor        = LoadCursor(NULL, IDC_SIZENS);
     wcex.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
     atom = RegisterClassEx(&wcex);
-    if (!atom)
-        return false;
+    CrashIf(!atom);
 
-    if (!RegisterNotificationsWndClass(hinst))
-        return false;
-
-    if (!RegisterMobiWinClass(hinst))
-        return false;
+    RegisterNotificationsWndClass(hinst);
+    RegisterMobiWinClass(hinst);
 
     return true;
 }
@@ -125,38 +114,38 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     return true;
 }
 
-static void OpenUsingDde(const TCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
+static void OpenUsingDde(const WCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
 {
     // delegate file opening to a previously running instance by sending a DDE message
-    TCHAR fullpath[MAX_PATH];
+    WCHAR fullpath[MAX_PATH];
     GetFullPathName(filePath, dimof(fullpath), fullpath, NULL);
 
-    ScopedMem<TCHAR> cmd(str::Format(_T("[") DDECOMMAND_OPEN _T("(\"%s\", 0, 1, 0)]"), fullpath));
+    ScopedMem<WCHAR> cmd(str::Format(L"[" DDECOMMAND_OPEN L"(\"%s\", 0, 1, 0)]", fullpath));
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     if (i.destName && isFirstWin) {
-        cmd.Set(str::Format(_T("[") DDECOMMAND_GOTO _T("(\"%s\", \"%s\")]"), fullpath, i.destName));
+        cmd.Set(str::Format(L"[" DDECOMMAND_GOTO L"(\"%s\", \"%s\")]", fullpath, i.destName));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
     else if (i.pageNumber > 0 && isFirstWin) {
-        cmd.Set(str::Format(_T("[") DDECOMMAND_PAGE _T("(\"%s\", %d)]"), fullpath, i.pageNumber));
+        cmd.Set(str::Format(L"[" DDECOMMAND_PAGE L"(\"%s\", %d)]", fullpath, i.pageNumber));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
     if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
             i.startScroll.x != -1 && i.startScroll.y != -1) && isFirstWin) {
-        const TCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
-        cmd.Set(str::Format(_T("[") DDECOMMAND_SETVIEW _T("(\"%s\", \"%s\", %.2f, %d, %d)]"),
+        const WCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
+        cmd.Set(str::Format(L"[" DDECOMMAND_SETVIEW L"(\"%s\", \"%s\", %.2f, %d, %d)]",
                                     fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
-        ScopedMem<TCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
-        cmd.Set(str::Format(_T("[") DDECOMMAND_SYNC _T("(\"%s\", \"%s\", %d, 0, 0, 1)]"),
+        ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
+        cmd.Set(str::Format(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]",
                                     filePath, sourcePath, i.forwardSearchLine));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
 }
 
-static WindowInfo *LoadOnStartup(const TCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
+static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
 {
     bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
     LoadArgs args(filePath, NULL, showWin);
@@ -190,7 +179,7 @@ static WindowInfo *LoadOnStartup(const TCHAR *filePath, CommandLineInfo& i, bool
     if (i.forwardSearchOrigin && i.forwardSearchLine && win->pdfsync) {
         UINT page;
         Vec<RectI> rects;
-            ScopedMem<TCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
+            ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
         int ret = win->pdfsync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);
     }
@@ -228,16 +217,16 @@ static bool SetupPluginMode(CommandLineInfo& i)
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
-        ScopedMem<TCHAR> args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
-        str::TransChars(args, _T("#"), _T("&"));
-        StrVec parts;
-        parts.Split(args, _T("&"), true);
+        ScopedMem<WCHAR> args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
+        str::TransChars(args, L"#", L"&");
+        WStrVec parts;
+        parts.Split(args, L"&", true);
         for (size_t k = 0; k < parts.Count(); k++) {
-            TCHAR *part = parts.At(k);
+            WCHAR *part = parts.At(k);
             int pageNo;
-            if (str::StartsWithI(part, _T("page=")) && str::Parse(part + 4, _T("=%d%$"), &pageNo))
+            if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo))
                 i.pageNumber = pageNo;
-            else if (str::StartsWithI(part, _T("nameddest=")) && part[10])
+            else if (str::StartsWithI(part, L"nameddest=") && part[10])
                 str::ReplacePtr(&i.destName, part + 10);
             else if (!str::FindChar(part, '=') && part[0])
                 str::ReplacePtr(&i.destName, part);
@@ -279,7 +268,7 @@ static void GetCommandLineInfo(CommandLineInfo& i)
 
 static bool RunningUnderWine()
 {
-    return RegKeyExists(HKEY_LOCAL_MACHINE, _T("Software\\Wine"));
+    return RegKeyExists(HKEY_LOCAL_MACHINE, L"Software\\Wine");
 }
 
 #if 0
@@ -376,13 +365,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // don't bother sending crash reports when running under Wine
     // as they're not helpful
     if (!RunningUnderWine()) {
-        ScopedMem<TCHAR> symDir;
-        ScopedMem<TCHAR> tmpDir(path::GetTempPath());
+        ScopedMem<WCHAR> symDir;
+        ScopedMem<WCHAR> tmpDir(path::GetTempPath());
         if (tmpDir)
-            symDir.Set(path::Join(tmpDir, _T("SumatraPDF-symbols")));
+            symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
         else
-            symDir.Set(AppGenDataFilename(_T("SumatraPDF-symbols")));
-        ScopedMem<TCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
+            symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
+        ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
         InstallCrashHandler(crashDumpPath, symDir);
     }
 
@@ -392,7 +381,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     mui::Initialize();
     uitask::Initialize();
 
-    ScopedMem<TCHAR> prefsFilename(GetPrefsFileName());
+    ScopedMem<WCHAR> prefsFilename(GetPrefsFileName());
     if (!file::Exists(prefsFilename)) {
         // guess the ui language on first start
         CurrLangNameSet(trans::GuessLanguage());
@@ -464,7 +453,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (i.fileNames.Count() == 0 && gGlobalPrefs.rememberOpenedFiles && gGlobalPrefs.showStartPage) {
         // make the shell prepare the image list, so that it's ready when the first window's loaded
         SHFILEINFO sfi;
-        SHGetFileInfo(_T(".pdf"), 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+        SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
     WindowInfo *win = NULL;

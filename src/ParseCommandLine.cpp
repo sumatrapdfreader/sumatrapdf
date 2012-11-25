@@ -28,14 +28,14 @@ static void EnumeratePrinters()
     if (!fOk) return;
     printf("Printers: %ld\n", printersCount);
     for (DWORD i = 0; i < printersCount; i++) {
-        const TCHAR *printerName = info5Arr[i].pPrinterName;
-        const TCHAR *printerPort = info5Arr[i].pPortName;
+        const WCHAR *printerName = info5Arr[i].pPrinterName;
+        const WCHAR *printerPort = info5Arr[i].pPortName;
         bool fDefault = false;
         if (info5Arr[i].Attributes & PRINTER_ATTRIBUTE_DEFAULT)
             fDefault = true;
-        _tprintf(_T("Name: %s, port: %s, default: %d\n"), printerName, printerPort, (int)fDefault);
+        wprintf(L"Name: %s, port: %s, default: %d\n", printerName, printerPort, (int)fDefault);
     }
-    TCHAR buf[512];
+    WCHAR buf[512];
     bufSize = dimof(buf);
     fOk = GetDefaultPrinter(buf, &bufSize);
     if (!fOk) {
@@ -47,56 +47,56 @@ static void EnumeratePrinters()
 #endif
 
 /* Parse 'txt' as hex color and return the result in 'destColor' */
-static void ParseColor(int *destColor, const TCHAR* txt)
+static void ParseColor(int *destColor, const WCHAR* txt)
 {
     if (!destColor)
         return;
-    if (str::StartsWith(txt, _T("0x")))
+    if (str::StartsWith(txt, L"0x"))
         txt += 2;
-    else if (str::StartsWith(txt, _T("#")))
+    else if (str::StartsWith(txt, L"#"))
         txt += 1;
 
     unsigned int r, g, b;
-    if (str::Parse(txt, _T("%2x%2x%2x%$"), &r, &g, &b))
+    if (str::Parse(txt, L"%2x%2x%2x%$", &r, &g, &b))
         *destColor = RGB(r, g, b);
 }
 
 // -zoom [fitwidth|fitpage|fitcontent|100%] (with 100% meaning actual size)
-static void ParseZoomValue(float *zoom, const TCHAR *txt)
+static void ParseZoomValue(float *zoom, const WCHAR *txt)
 {
-    if (str::EqIS(txt, _T("fit page")))
+    if (str::EqIS(txt, L"fit page"))
         *zoom = ZOOM_FIT_PAGE;
-    else if (str::EqIS(txt, _T("fit width")))
+    else if (str::EqIS(txt, L"fit width"))
         *zoom = ZOOM_FIT_WIDTH;
-    else if (str::EqIS(txt, _T("fit content")))
+    else if (str::EqIS(txt, L"fit content"))
         *zoom = ZOOM_FIT_CONTENT;
     else
-        str::Parse(txt, _T("%f"), zoom);
+        str::Parse(txt, L"%f", zoom);
 }
 
 // -scroll x,y
-static void ParseScrollValue(PointI *scroll, const TCHAR *txt)
+static void ParseScrollValue(PointI *scroll, const WCHAR *txt)
 {
     int x, y;
-    if (str::Parse(txt, _T("%d,%d%$"), &x, &y))
+    if (str::Parse(txt, L"%d,%d%$", &x, &y))
         *scroll = PointI(x, y);
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
+void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
 {
-    StrVec argList;
+    WStrVec argList;
     ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.Count();
 
-#define is_arg(txt) str::EqI(_T(txt), argument)
+#define is_arg(txt) str::EqI(TEXT(txt), argument)
 #define is_arg_with_param(txt) (is_arg(txt) && param != NULL)
 #define additional_param() argList.At(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
 
     for (size_t n = 1; n < argCount; n++) {
-        TCHAR *argument = argList.At(n);
-        TCHAR *param = NULL;
+        WCHAR *argument = argList.At(n);
+        WCHAR *param = NULL;
         if (argCount > n + 1)
             param = argList.At(n + 1);
 
@@ -110,7 +110,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             silent = true;
         }
         else if (is_arg("-print-to-default")) {
-            TCHAR *name = GetDefaultPrinterName();
+            WCHAR *name = GetDefaultPrinterName();
             if (name) {
                 str::ReplacePtr(&printerName, name);
                 free(name);
@@ -127,7 +127,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             // advanced options [even|odd] and [noscale|shrink|fit]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
             str::ReplacePtr(&printSettings, argList.At(++n));
-            str::RemoveChars(printSettings, _T(" "));
+            str::RemoveChars(printSettings, L" ");
         }
         else if (is_arg("-exit-on-print")) {
             // only affects -print-dialog (-print-to and -print-to-default
@@ -147,19 +147,19 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
             str::ReplacePtr(&forwardSearchOrigin, argList.At(++n));
-            forwardSearchLine = _ttoi(argList.At(++n));
+            forwardSearchLine = _wtoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
-            fwdSearch.offset = _ttoi(argList.At(++n));
+            fwdSearch.offset = _wtoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-width")) {
-            fwdSearch.width = _ttoi(argList.At(++n));
+            fwdSearch.width = _wtoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-color")) {
             ParseColor(&fwdSearch.color, argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-permanent")) {
-            fwdSearch.permanent = _ttoi(argList.At(++n));
+            fwdSearch.permanent = _wtoi(argList.At(++n));
         }
         else if (is_arg("-esc-to-exit")) {
             escToExit = true;
@@ -182,7 +182,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             str::ReplacePtr(&destName, argList.At(++n));
         }
         else if (is_arg_with_param("-page")) {
-            pageNumber = _ttoi(argList.At(++n));
+            pageNumber = _wtoi(argList.At(++n));
         }
         else if (is_arg("-restrict")) {
             restrictedUse = true;
@@ -227,7 +227,7 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
             // the argument is a (numeric) window handle to
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
-            hwndPluginParent = (HWND)_ttol(argList.At(++n));
+            hwndPluginParent = (HWND)_wtol(argList.At(++n));
         }
         else if (is_arg_with_param("-stress-test")) {
             // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle count>x]
@@ -245,13 +245,13 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
                 str::ReplacePtr(&stressTestRanges, additional_param());
                 n++;
             }
-            if (has_additional_param() && str::Parse(additional_param(), _T("%dx%$"), &num) && num > 0) {
+            if (has_additional_param() && str::Parse(additional_param(), L"%dx%$", &num) && num > 0) {
                 stressTestCycles = num;
                 n++;
             }
         }
         else if (is_arg_with_param("-bench")) {
-            TCHAR *s = str::Dup(argList.At(++n));
+            WCHAR *s = str::Dup(argList.At(++n));
             pathsToBenchmark.Push(s);
             s = NULL;
             if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
@@ -267,8 +267,8 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
         } else if (is_arg_with_param("-manga-mode")) {
             // TODO: we should have a ui for this instead of remembering it globally
             // in prefs
-            TCHAR *s = argList.At(++n);
-            cbxR2L = str::EqI(_T("true"), s) || str::Eq(_T("1"), s);
+            WCHAR *s = argList.At(++n);
+            cbxR2L = str::EqI(L"true", s) || str::Eq(L"1", s);
         }
 #ifdef DEBUG
         else if (is_arg("-enum-printers")) {
@@ -280,8 +280,8 @@ void CommandLineInfo::ParseCommandLine(TCHAR *cmdLine)
 #endif
         else {
             // Remember this argument as a filename to open
-            TCHAR *filepath = NULL;
-            if (str::EndsWithI(argList.At(n), _T(".lnk")))
+            WCHAR *filepath = NULL;
+            if (str::EndsWithI(argList.At(n), L".lnk"))
                 filepath = ResolveLnk(argList.At(n));
             if (!filepath)
                 filepath = str::Dup(argList.At(n));

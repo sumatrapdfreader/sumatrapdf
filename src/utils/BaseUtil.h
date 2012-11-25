@@ -4,10 +4,10 @@
 #ifndef BaseUtil_h
 #define BaseUtil_h
 
-#if defined(_UNICODE) && !defined(UNICODE)
+#ifndef UNICODE
 #define UNICODE
 #endif
-#if defined(UNICODE) && !defined(_UNICODE)
+#ifndef _UNICODE
 #define _UNICODE
 #endif
 
@@ -29,11 +29,6 @@
 #define new DEBUG_NEW
 #endif
 
-#ifndef UNICODE
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-#include <tchar.h>
 #include <wchar.h>
 #include <string.h>
 
@@ -100,9 +95,9 @@ void CrashMe(); // in StrUtil.cpp
 // in some builds, so it shouldn't contain the actual logic of the code
 
 #define CrashAlwaysIf(cond) \
-    { if (cond) \
+    do { if (cond) \
         CrashMe(); \
-    __analysis_assume(!(cond)); }
+    __analysis_assume(!(cond)); } while (0)
 
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
 #define CrashIf(cond) CrashAlwaysIf(cond)
@@ -143,6 +138,9 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
 {
     return 0 == memcmp(s1, s2, len);
 }
+
+size_t roundToPowerOf2(size_t size);
+uint32_t murmur_hash2(const void *key, size_t len);
 
 #include "Allocator.h"
 #include "GeomUtil.h"
