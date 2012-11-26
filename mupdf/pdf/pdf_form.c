@@ -239,7 +239,15 @@ static pdf_obj *find_head_of_field_group(pdf_obj *obj)
 
 static void pdf_field_mark_dirty(fz_context *ctx, pdf_obj *field)
 {
-	if (!pdf_dict_gets(field, "Dirty"))
+	pdf_obj *kids = pdf_dict_gets(field, "Kids");
+	if (kids)
+	{
+		int i, n = pdf_array_len(kids);
+
+		for (i = 0; i < n; i++)
+			pdf_field_mark_dirty(ctx, pdf_array_get(kids, i));
+	}
+	else if (!pdf_dict_gets(field, "Dirty"))
 	{
 		pdf_obj *nullobj = pdf_new_null(ctx);
 		fz_try(ctx)

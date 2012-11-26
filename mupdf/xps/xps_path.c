@@ -465,7 +465,7 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 }
 
 static void
-xps_parse_arc_segment(fz_context *doc, fz_path *path, xml_element *root, int stroking, int *skipped_stroke)
+xps_parse_arc_segment(fz_context *doc, fz_path *path, fz_xml *root, int stroking, int *skipped_stroke)
 {
 	/* ArcSegment pretty much follows the SVG algorithm for converting an
 	 * arc in endpoint representation to an arc in centerpoint
@@ -478,12 +478,12 @@ xps_parse_arc_segment(fz_context *doc, fz_path *path, xml_element *root, int str
 	float size_x, size_y;
 	int is_stroked;
 
-	char *point_att = xml_att(root, "Point");
-	char *size_att = xml_att(root, "Size");
-	char *rotation_angle_att = xml_att(root, "RotationAngle");
-	char *is_large_arc_att = xml_att(root, "IsLargeArc");
-	char *sweep_direction_att = xml_att(root, "SweepDirection");
-	char *is_stroked_att = xml_att(root, "IsStroked");
+	char *point_att = fz_xml_att(root, "Point");
+	char *size_att = fz_xml_att(root, "Size");
+	char *rotation_angle_att = fz_xml_att(root, "RotationAngle");
+	char *is_large_arc_att = fz_xml_att(root, "IsLargeArc");
+	char *sweep_direction_att = fz_xml_att(root, "SweepDirection");
+	char *is_stroked_att = fz_xml_att(root, "IsStroked");
 
 	if (!point_att || !size_att || !rotation_angle_att || !is_large_arc_att || !sweep_direction_att)
 	{
@@ -516,10 +516,10 @@ xps_parse_arc_segment(fz_context *doc, fz_path *path, xml_element *root, int str
 }
 
 static void
-xps_parse_poly_quadratic_bezier_segment(fz_context *doc, fz_path *path, xml_element *root, int stroking, int *skipped_stroke)
+xps_parse_poly_quadratic_bezier_segment(fz_context *doc, fz_path *path, fz_xml *root, int stroking, int *skipped_stroke)
 {
-	char *points_att = xml_att(root, "Points");
-	char *is_stroked_att = xml_att(root, "IsStroked");
+	char *points_att = fz_xml_att(root, "Points");
+	char *is_stroked_att = fz_xml_att(root, "IsStroked");
 	float x[2], y[2];
 	int is_stroked;
 	fz_point pt;
@@ -565,10 +565,10 @@ xps_parse_poly_quadratic_bezier_segment(fz_context *doc, fz_path *path, xml_elem
 }
 
 static void
-xps_parse_poly_bezier_segment(fz_context *doc, fz_path *path, xml_element *root, int stroking, int *skipped_stroke)
+xps_parse_poly_bezier_segment(fz_context *doc, fz_path *path, fz_xml *root, int stroking, int *skipped_stroke)
 {
-	char *points_att = xml_att(root, "Points");
-	char *is_stroked_att = xml_att(root, "IsStroked");
+	char *points_att = fz_xml_att(root, "Points");
+	char *is_stroked_att = fz_xml_att(root, "IsStroked");
 	float x[3], y[3];
 	int is_stroked;
 	char *s;
@@ -605,10 +605,10 @@ xps_parse_poly_bezier_segment(fz_context *doc, fz_path *path, xml_element *root,
 }
 
 static void
-xps_parse_poly_line_segment(fz_context *doc, fz_path *path, xml_element *root, int stroking, int *skipped_stroke)
+xps_parse_poly_line_segment(fz_context *doc, fz_path *path, fz_xml *root, int stroking, int *skipped_stroke)
 {
-	char *points_att = xml_att(root, "Points");
-	char *is_stroked_att = xml_att(root, "IsStroked");
+	char *points_att = fz_xml_att(root, "Points");
+	char *is_stroked_att = fz_xml_att(root, "IsStroked");
 	int is_stroked;
 	float x, y;
 	char *s;
@@ -638,9 +638,9 @@ xps_parse_poly_line_segment(fz_context *doc, fz_path *path, xml_element *root, i
 }
 
 static void
-xps_parse_path_figure(fz_context *doc, fz_path *path, xml_element *root, int stroking)
+xps_parse_path_figure(fz_context *doc, fz_path *path, fz_xml *root, int stroking)
 {
-	xml_element *node;
+	fz_xml *node;
 
 	char *is_closed_att;
 	char *start_point_att;
@@ -653,9 +653,9 @@ xps_parse_path_figure(fz_context *doc, fz_path *path, xml_element *root, int str
 
 	int skipped_stroke = 0;
 
-	is_closed_att = xml_att(root, "IsClosed");
-	start_point_att = xml_att(root, "StartPoint");
-	is_filled_att = xml_att(root, "IsFilled");
+	is_closed_att = fz_xml_att(root, "IsClosed");
+	start_point_att = fz_xml_att(root, "StartPoint");
+	is_filled_att = fz_xml_att(root, "IsFilled");
 
 	if (is_closed_att)
 		is_closed = !strcmp(is_closed_att, "true");
@@ -669,15 +669,15 @@ xps_parse_path_figure(fz_context *doc, fz_path *path, xml_element *root, int str
 
 	fz_moveto(doc, path, start_x, start_y);
 
-	for (node = xml_down(root); node; node = xml_next(node))
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(xml_tag(node), "ArcSegment"))
+		if (!strcmp(fz_xml_tag(node), "ArcSegment"))
 			xps_parse_arc_segment(doc, path, node, stroking, &skipped_stroke);
-		if (!strcmp(xml_tag(node), "PolyBezierSegment"))
+		if (!strcmp(fz_xml_tag(node), "PolyBezierSegment"))
 			xps_parse_poly_bezier_segment(doc, path, node, stroking, &skipped_stroke);
-		if (!strcmp(xml_tag(node), "PolyLineSegment"))
+		if (!strcmp(fz_xml_tag(node), "PolyLineSegment"))
 			xps_parse_poly_line_segment(doc, path, node, stroking, &skipped_stroke);
-		if (!strcmp(xml_tag(node), "PolyQuadraticBezierSegment"))
+		if (!strcmp(fz_xml_tag(node), "PolyQuadraticBezierSegment"))
 			xps_parse_poly_quadratic_bezier_segment(doc, path, node, stroking, &skipped_stroke);
 	}
 
@@ -691,28 +691,28 @@ xps_parse_path_figure(fz_context *doc, fz_path *path, xml_element *root, int str
 }
 
 fz_path *
-xps_parse_path_geometry(xps_document *doc, xps_resource *dict, xml_element *root, int stroking, int *fill_rule)
+xps_parse_path_geometry(xps_document *doc, xps_resource *dict, fz_xml *root, int stroking, int *fill_rule)
 {
-	xml_element *node;
+	fz_xml *node;
 
 	char *figures_att;
 	char *fill_rule_att;
 	char *transform_att;
 
-	xml_element *transform_tag = NULL;
-	xml_element *figures_tag = NULL; /* only used by resource */
+	fz_xml *transform_tag = NULL;
+	fz_xml *figures_tag = NULL; /* only used by resource */
 
 	fz_matrix transform;
 	fz_path *path;
 
-	figures_att = xml_att(root, "Figures");
-	fill_rule_att = xml_att(root, "FillRule");
-	transform_att = xml_att(root, "Transform");
+	figures_att = fz_xml_att(root, "Figures");
+	fill_rule_att = fz_xml_att(root, "FillRule");
+	transform_att = fz_xml_att(root, "Transform");
 
-	for (node = xml_down(root); node; node = xml_next(node))
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(xml_tag(node), "PathGeometry.Transform"))
-			transform_tag = xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "PathGeometry.Transform"))
+			transform_tag = fz_xml_down(node);
 	}
 
 	xps_resolve_resource_reference(doc, dict, &transform_att, &transform_tag, NULL);
@@ -740,9 +740,9 @@ xps_parse_path_geometry(xps_document *doc, xps_resource *dict, xml_element *root
 	if (figures_tag)
 		xps_parse_path_figure(doc->ctx, path, figures_tag, stroking);
 
-	for (node = xml_down(root); node; node = xml_next(node))
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(xml_tag(node), "PathFigure"))
+		if (!strcmp(fz_xml_tag(node), "PathFigure"))
 			xps_parse_path_figure(doc->ctx, path, node, stroking);
 	}
 
@@ -766,7 +766,7 @@ xps_parse_line_cap(char *attr)
 }
 
 void
-xps_clip(xps_document *doc, fz_matrix ctm, xps_resource *dict, char *clip_att, xml_element *clip_tag)
+xps_clip(xps_document *doc, fz_matrix ctm, xps_resource *dict, char *clip_att, fz_xml *clip_tag)
 {
 	fz_path *path;
 	int fill_rule = 0;
@@ -787,9 +787,9 @@ xps_clip(xps_document *doc, fz_matrix ctm, xps_resource *dict, char *clip_att, x
  */
 
 void
-xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *dict, xml_element *root)
+xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *dict, fz_xml *root)
 {
-	xml_element *node;
+	fz_xml *node;
 
 	char *fill_uri;
 	char *stroke_uri;
@@ -803,12 +803,12 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	char *opacity_att;
 	char *opacity_mask_att;
 
-	xml_element *transform_tag = NULL;
-	xml_element *clip_tag = NULL;
-	xml_element *data_tag = NULL;
-	xml_element *fill_tag = NULL;
-	xml_element *stroke_tag = NULL;
-	xml_element *opacity_mask_tag = NULL;
+	fz_xml *transform_tag = NULL;
+	fz_xml *clip_tag = NULL;
+	fz_xml *data_tag = NULL;
+	fz_xml *fill_tag = NULL;
+	fz_xml *stroke_tag = NULL;
+	fz_xml *opacity_mask_tag = NULL;
 
 	char *fill_opacity_att = NULL;
 	char *stroke_opacity_att = NULL;
@@ -837,38 +837,38 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	 * Extract attributes and extended attributes.
 	 */
 
-	transform_att = xml_att(root, "RenderTransform");
-	clip_att = xml_att(root, "Clip");
-	data_att = xml_att(root, "Data");
-	fill_att = xml_att(root, "Fill");
-	stroke_att = xml_att(root, "Stroke");
-	opacity_att = xml_att(root, "Opacity");
-	opacity_mask_att = xml_att(root, "OpacityMask");
+	transform_att = fz_xml_att(root, "RenderTransform");
+	clip_att = fz_xml_att(root, "Clip");
+	data_att = fz_xml_att(root, "Data");
+	fill_att = fz_xml_att(root, "Fill");
+	stroke_att = fz_xml_att(root, "Stroke");
+	opacity_att = fz_xml_att(root, "Opacity");
+	opacity_mask_att = fz_xml_att(root, "OpacityMask");
 
-	stroke_dash_array_att = xml_att(root, "StrokeDashArray");
-	stroke_dash_cap_att = xml_att(root, "StrokeDashCap");
-	stroke_dash_offset_att = xml_att(root, "StrokeDashOffset");
-	stroke_end_line_cap_att = xml_att(root, "StrokeEndLineCap");
-	stroke_start_line_cap_att = xml_att(root, "StrokeStartLineCap");
-	stroke_line_join_att = xml_att(root, "StrokeLineJoin");
-	stroke_miter_limit_att = xml_att(root, "StrokeMiterLimit");
-	stroke_thickness_att = xml_att(root, "StrokeThickness");
-	navigate_uri_att = xml_att(root, "FixedPage.NavigateUri");
+	stroke_dash_array_att = fz_xml_att(root, "StrokeDashArray");
+	stroke_dash_cap_att = fz_xml_att(root, "StrokeDashCap");
+	stroke_dash_offset_att = fz_xml_att(root, "StrokeDashOffset");
+	stroke_end_line_cap_att = fz_xml_att(root, "StrokeEndLineCap");
+	stroke_start_line_cap_att = fz_xml_att(root, "StrokeStartLineCap");
+	stroke_line_join_att = fz_xml_att(root, "StrokeLineJoin");
+	stroke_miter_limit_att = fz_xml_att(root, "StrokeMiterLimit");
+	stroke_thickness_att = fz_xml_att(root, "StrokeThickness");
+	navigate_uri_att = fz_xml_att(root, "FixedPage.NavigateUri");
 
-	for (node = xml_down(root); node; node = xml_next(node))
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(xml_tag(node), "Path.RenderTransform"))
-			transform_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "Path.OpacityMask"))
-			opacity_mask_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "Path.Clip"))
-			clip_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "Path.Fill"))
-			fill_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "Path.Stroke"))
-			stroke_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "Path.Data"))
-			data_tag = xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Path.RenderTransform"))
+			transform_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Path.OpacityMask"))
+			opacity_mask_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Path.Clip"))
+			clip_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Path.Fill"))
+			fill_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Path.Stroke"))
+			stroke_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Path.Data"))
+			data_tag = fz_xml_down(node);
 	}
 
 	fill_uri = base_uri;
@@ -889,17 +889,17 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 	if (!data_att && !data_tag)
 		return;
 
-	if (fill_tag && !strcmp(xml_tag(fill_tag), "SolidColorBrush"))
+	if (fill_tag && !strcmp(fz_xml_tag(fill_tag), "SolidColorBrush"))
 	{
-		fill_opacity_att = xml_att(fill_tag, "Opacity");
-		fill_att = xml_att(fill_tag, "Color");
+		fill_opacity_att = fz_xml_att(fill_tag, "Opacity");
+		fill_att = fz_xml_att(fill_tag, "Color");
 		fill_tag = NULL;
 	}
 
-	if (stroke_tag && !strcmp(xml_tag(stroke_tag), "SolidColorBrush"))
+	if (stroke_tag && !strcmp(fz_xml_tag(stroke_tag), "SolidColorBrush"))
 	{
-		stroke_opacity_att = xml_att(stroke_tag, "Opacity");
-		stroke_att = xml_att(stroke_tag, "Color");
+		stroke_opacity_att = fz_xml_att(stroke_tag, "Opacity");
+		stroke_att = fz_xml_att(stroke_tag, "Color");
 		stroke_tag = NULL;
 	}
 
@@ -995,7 +995,7 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 		area = fz_bound_path(doc->ctx, path, NULL, ctm);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(doc, area, navigate_uri_att, xml_att(root, "Name"), 0);
+	xps_extract_anchor_info(doc, area, navigate_uri_att, fz_xml_att(root, "Name"), 0);
 	navigate_uri_att = NULL;
 
 	if (navigate_uri_att)

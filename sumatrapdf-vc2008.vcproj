@@ -989,6 +989,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\fitz\base_xml.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\crypt_aes.c"
 					>
 				</File>
@@ -1426,10 +1430,6 @@
 				</File>
 				<File
 					RelativePath=".\mupdf\xps\xps_util.c"
-					>
-				</File>
-				<File
-					RelativePath=".\mupdf\xps\xps_xml.c"
 					>
 				</File>
 				<File

@@ -34,7 +34,7 @@ static inline float lerp(float a, float b, float x)
 }
 
 static int
-xps_parse_gradient_stops(xps_document *doc, char *base_uri, xml_element *node,
+xps_parse_gradient_stops(xps_document *doc, char *base_uri, fz_xml *node,
 	struct stop *stops, int maxcount)
 {
 	fz_colorspace *colorspace;
@@ -50,10 +50,10 @@ xps_parse_gradient_stops(xps_document *doc, char *base_uri, xml_element *node,
 	count = 0;
 	while (node && count < maxcount)
 	{
-		if (!strcmp(xml_tag(node), "GradientStop"))
+		if (!strcmp(fz_xml_tag(node), "GradientStop"))
 		{
-			char *offset = xml_att(node, "Offset");
-			char *color = xml_att(node, "Color");
+			char *offset = fz_xml_att(node, "Offset");
+			char *color = fz_xml_att(node, "Color");
 			if (offset && color)
 			{
 				stops[count].offset = fz_atof(offset);
@@ -70,7 +70,7 @@ xps_parse_gradient_stops(xps_document *doc, char *base_uri, xml_element *node,
 				count ++;
 			}
 		}
-		node = xml_next(node);
+		node = fz_xml_next(node);
 	}
 
 	if (count == 0)
@@ -292,7 +292,7 @@ static inline float point_inside_circle(float px, float py, float x, float y, fl
 static void
 xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	struct stop *stops, int count,
-	xml_element *root, int spread)
+	fz_xml *root, int spread)
 {
 	float x0, y0, r0;
 	float x1, y1, r1;
@@ -301,10 +301,10 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	float invscale;
 	int i, ma = 1;
 
-	char *center_att = xml_att(root, "Center");
-	char *origin_att = xml_att(root, "GradientOrigin");
-	char *radius_x_att = xml_att(root, "RadiusX");
-	char *radius_y_att = xml_att(root, "RadiusY");
+	char *center_att = fz_xml_att(root, "Center");
+	char *origin_att = fz_xml_att(root, "GradientOrigin");
+	char *radius_x_att = fz_xml_att(root, "RadiusX");
+	char *radius_y_att = fz_xml_att(root, "RadiusY");
 
 	x0 = y0 = 0.0;
 	x1 = y1 = 1.0;
@@ -372,15 +372,15 @@ xps_draw_radial_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 static void
 xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 	struct stop *stops, int count,
-	xml_element *root, int spread)
+	fz_xml *root, int spread)
 {
 	float x0, y0, x1, y1;
 	int i, mi, ma;
 	float dx, dy, x, y, k;
 	fz_point p1, p2;
 
-	char *start_point_att = xml_att(root, "StartPoint");
-	char *end_point_att = xml_att(root, "EndPoint");
+	char *start_point_att = fz_xml_att(root, "StartPoint");
+	char *end_point_att = fz_xml_att(root, "EndPoint");
 
 	x0 = y0 = 0;
 	x1 = y1 = 1;
@@ -431,10 +431,10 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 
 static void
 xps_parse_gradient_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
-	char *base_uri, xps_resource *dict, xml_element *root,
-	void (*draw)(xps_document *, fz_matrix, fz_rect, struct stop *, int, xml_element *, int))
+	char *base_uri, xps_resource *dict, fz_xml *root,
+	void (*draw)(xps_document *, fz_matrix, fz_rect, struct stop *, int, fz_xml *, int))
 {
-	xml_element *node;
+	fz_xml *node;
 
 	char *opacity_att;
 	char *interpolation_att;
@@ -442,30 +442,30 @@ xps_parse_gradient_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	char *mapping_att;
 	char *transform_att;
 
-	xml_element *transform_tag = NULL;
-	xml_element *stop_tag = NULL;
+	fz_xml *transform_tag = NULL;
+	fz_xml *stop_tag = NULL;
 
 	struct stop stop_list[MAX_STOPS];
 	int stop_count;
 	fz_matrix transform;
 	int spread_method;
 
-	opacity_att = xml_att(root, "Opacity");
-	interpolation_att = xml_att(root, "ColorInterpolationMode");
-	spread_att = xml_att(root, "SpreadMethod");
-	mapping_att = xml_att(root, "MappingMode");
-	transform_att = xml_att(root, "Transform");
+	opacity_att = fz_xml_att(root, "Opacity");
+	interpolation_att = fz_xml_att(root, "ColorInterpolationMode");
+	spread_att = fz_xml_att(root, "SpreadMethod");
+	mapping_att = fz_xml_att(root, "MappingMode");
+	transform_att = fz_xml_att(root, "Transform");
 
-	for (node = xml_down(root); node; node = xml_next(node))
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(xml_tag(node), "LinearGradientBrush.Transform"))
-			transform_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "RadialGradientBrush.Transform"))
-			transform_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "LinearGradientBrush.GradientStops"))
-			stop_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "RadialGradientBrush.GradientStops"))
-			stop_tag = xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "LinearGradientBrush.Transform"))
+			transform_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "RadialGradientBrush.Transform"))
+			transform_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "LinearGradientBrush.GradientStops"))
+			stop_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "RadialGradientBrush.GradientStops"))
+			stop_tag = fz_xml_down(node);
 	}
 
 	xps_resolve_resource_reference(doc, dict, &transform_att, &transform_tag, NULL);
@@ -509,14 +509,14 @@ xps_parse_gradient_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 
 void
 xps_parse_linear_gradient_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
-	char *base_uri, xps_resource *dict, xml_element *root)
+	char *base_uri, xps_resource *dict, fz_xml *root)
 {
 	xps_parse_gradient_brush(doc, ctm, area, base_uri, dict, root, xps_draw_linear_gradient);
 }
 
 void
 xps_parse_radial_gradient_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
-	char *base_uri, xps_resource *dict, xml_element *root)
+	char *base_uri, xps_resource *dict, fz_xml *root)
 {
 	xps_parse_gradient_brush(doc, ctm, area, base_uri, dict, root, xps_draw_radial_gradient);
 }

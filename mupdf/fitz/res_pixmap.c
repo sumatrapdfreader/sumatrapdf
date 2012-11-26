@@ -775,6 +775,187 @@ fz_drop_image(fz_context *ctx, fz_image *image)
 	fz_drop_storable(ctx, &image->storable);
 }
 
+#ifdef ARCH_ARM
+static void
+fz_subsample_pixmap_ARM(unsigned char *ptr, int w, int h, int f, int factor,
+			int n, int fwd, int back, int back2, int fwd2,
+			int divX, int back4, int fwd4, int fwd3,
+			int divY, int back5, int divXY)
+__attribute__((naked));
+
+static void
+fz_subsample_pixmap_ARM(unsigned char *ptr, int w, int h, int f, int factor,
+			int n, int fwd, int back, int back2, int fwd2,
+			int divX, int back4, int fwd4, int fwd3,
+			int divY, int back5, int divXY)
+{
+	asm volatile(
+	ENTER_ARM
+	"stmfd	r13!,{r1,r4-r11,r14}					\n"
+	"@STACK:r1,<9>,factor,n,fwd,back,back2,fwd2,divX,back4,fwd4,fwd3,divY,back5,divXY\n"
+	"@ r0 = src = ptr						\n"
+	"@ r1 = w							\n"
+	"@ r2 = h							\n"
+	"@ r3 = f							\n"
+	"mov	r9, r0			@ r9 = dst = ptr		\n"
+	"ldr	r6, [r13,#4*12]		@ r6 = fwd			\n"
+	"ldr	r7, [r13,#4*13]		@ r7 = back			\n"
+	"subs	r2, r2, r3		@ r2 = h -= f			\n"
+	"blt	11f			@ Skip if less than a full row	\n"
+	"1:				@ for (y = h; y > 0; y--) {	\n"
+	"ldr	r1, [r13]		@ r1 = w			\n"
+	"subs	r1, r1, r3		@ r1 = w -= f			\n"
+	"blt	6f			@ Skip if less than a full col	\n"
+	"ldr	r4, [r13,#4*10]		@ r4 = factor			\n"
+	"ldr	r8, [r13,#4*14]		@ r8 = back2			\n"
+	"ldr	r12,[r13,#4*15]		@ r12= fwd2			\n"
+	"2:				@ for (x = w; x > 0; x--) {	\n"
+	"ldr	r5, [r13,#4*11]		@ for (nn = n; nn > 0; n--) {	\n"
+	"3:				@				\n"
+	"mov	r14,#0			@ r14= v = 0			\n"
+	"sub	r5, r5, r3, LSL #8	@ for (xx = f; xx > 0; x--) {	\n"
+	"4:				@				\n"
+	"add	r5, r5, r3, LSL #16	@ for (yy = f; yy > 0; y--) {	\n"
+	"5:				@				\n"
+	"ldrb	r11,[r0], r6		@ r11= *src	src += fwd	\n"
+	"subs	r5, r5, #1<<16		@ xx--				\n"
+	"add	r14,r14,r11		@ v += r11			\n"
+	"bgt	5b			@ }				\n"
+	"sub	r0, r0, r7		@ src -= back			\n"
+	"adds	r5, r5, #1<<8		@ yy--				\n"
+	"blt	4b			@ }				\n"
+	"mov	r14,r14,LSR r4		@ r14 = v >>= factor		\n"
+	"strb	r14,[r9], #1		@ *d++ = r14			\n"
+	"sub	r0, r0, r8		@ s -= back2			\n"
+	"subs	r5, r5, #1		@ n--				\n"
+	"bgt	3b			@ }				\n"
+	"add	r0, r0, r12		@ s += fwd2			\n"
+	"subs	r1, r1, r3		@ x -= f			\n"
+	"bge	2b			@ }				\n"
+	"6:				@ Less than a full column left	\n"
+	"adds	r1, r1, r3		@ x += f			\n"
+	"beq	11f			@ if (x == 0) next row		\n"
+	"@ r0 = src							\n"
+	"@ r1 = x							\n"
+	"@ r2 = y							\n"
+	"@ r3 = f							\n"
+	"@ r4 = factor							\n"
+	"@ r6 = fwd							\n"
+	"@ r7 = back							\n"
+	"@STACK:r1,<9>,factor,n,fwd,back,back2,fwd2,divX,back4,fwd4,fwd3,divY,back5,divXY\n"
+	"ldr	r5, [r13,#4*11]		@ for (nn = n; nn > 0; n--) {	\n"
+	"ldr	r4, [r13,#4*16]		@ r4 = divX			\n"
+	"ldr	r8, [r13,#4*17]		@ r8 = back4			\n"
+	"ldr	r12,[r13,#4*18]		@ r12= fwd4			\n"
+	"8:				@				\n"
+	"mov	r14,#0			@ r14= v = 0			\n"
+	"sub	r5, r5, r1, LSL #8	@ for (xx = x; xx > 0; x--) {	\n"
+	"9:				@				\n"
+	"add	r5, r5, r3, LSL #16	@ for (yy = f; yy > 0; y--) {	\n"
+	"10:				@				\n"
+	"ldrb	r11,[r0], r6		@ r11= *src	src += fwd	\n"
+	"subs	r5, r5, #1<<16		@ xx--				\n"
+	"add	r14,r14,r11		@ v += r11			\n"
+	"bgt	10b			@ }				\n"
+	"sub	r0, r0, r7		@ src -= back			\n"
+	"adds	r5, r5, #1<<8		@ yy--				\n"
+	"blt	9b			@ }				\n"
+	"mul	r14,r4, r14		@ r14= v *= divX		\n"
+	"mov	r14,r14,LSR #16		@ r14= v >>= 16			\n"
+	"strb	r14,[r9], #1		@ *d++ = r14			\n"
+	"sub	r0, r0, r8		@ s -= back4			\n"
+	"subs	r5, r5, #1		@ n--				\n"
+	"bgt	8b			@ }				\n"
+	"add	r0, r0, r12		@ s += fwd4			\n"
+	"11:				@				\n"
+	"ldr	r14,[r13,#4*19]		@ r14 = fwd3			\n"
+	"subs	r2, r2, r3		@ h -= f			\n"
+	"add	r0, r0, r14		@ s += fwd3			\n"
+	"bge	1b			@ }				\n"
+	"adds	r2, r2, r3		@ h += f			\n"
+	"beq	21f			@ if no stray row, end		\n"
+	"@ So doing one last (partial) row				\n"
+	"@STACK:r1,<9>,factor,n,fwd,back,back2,fwd2,divX,back4,fwd4,fwd3,divY,back5,divXY\n"
+	"@ r0 = src = ptr						\n"
+	"@ r1 = w							\n"
+	"@ r2 = h							\n"
+	"@ r3 = f							\n"
+	"@ r4 = factor							\n"
+	"@ r5 = n							\n"
+	"@ r6 = fwd							\n"
+	"12:				@ for (y = h; y > 0; y--) {	\n"
+	"ldr	r1, [r13]		@ r1 = w			\n"
+	"ldr	r7, [r13,#4*21]		@ r7 = back5			\n"
+	"ldr	r8, [r13,#4*14]		@ r8 = back2			\n"
+	"subs	r1, r1, r3		@ r1 = w -= f			\n"
+	"blt	17f			@ Skip if less than a full col	\n"
+	"ldr	r4, [r13,#4*20]		@ r4 = divY			\n"
+	"ldr	r12,[r13,#4*15]		@ r12= fwd2			\n"
+	"13:				@ for (x = w; x > 0; x--) {	\n"
+	"ldr	r5, [r13,#4*11]		@ for (nn = n; nn > 0; n--) {	\n"
+	"14:				@				\n"
+	"mov	r14,#0			@ r14= v = 0			\n"
+	"sub	r5, r5, r3, LSL #8	@ for (xx = f; xx > 0; x--) {	\n"
+	"15:				@				\n"
+	"add	r5, r5, r2, LSL #16	@ for (yy = y; yy > 0; y--) {	\n"
+	"16:				@				\n"
+	"ldrb	r11,[r0], r6		@ r11= *src	src += fwd	\n"
+	"subs	r5, r5, #1<<16		@ xx--				\n"
+	"add	r14,r14,r11		@ v += r11			\n"
+	"bgt	16b			@ }				\n"
+	"sub	r0, r0, r7		@ src -= back5			\n"
+	"adds	r5, r5, #1<<8		@ yy--				\n"
+	"blt	15b			@ }				\n"
+	"mul	r14,r4, r14		@ r14 = x *= divY		\n"
+	"mov	r14,r14,LSR #16		@ r14 = v >>= 16		\n"
+	"strb	r14,[r9], #1		@ *d++ = r14			\n"
+	"sub	r0, r0, r8		@ s -= back2			\n"
+	"subs	r5, r5, #1		@ n--				\n"
+	"bgt	14b			@ }				\n"
+	"add	r0, r0, r12		@ s += fwd2			\n"
+	"subs	r1, r1, r3		@ x -= f			\n"
+	"bge	13b			@ }				\n"
+	"17:				@ Less than a full column left	\n"
+	"adds	r1, r1, r3		@ x += f			\n"
+	"beq	21f			@ if (x == 0) end		\n"
+	"@ r0 = src							\n"
+	"@ r1 = x							\n"
+	"@ r2 = y							\n"
+	"@ r3 = f							\n"
+	"@ r4 = factor							\n"
+	"@ r6 = fwd							\n"
+	"@ r7 = back5							\n"
+	"@ r8 = back2							\n"
+	"@STACK:r1,<9>,factor,n,fwd,back,back2,fwd2,divX,back4,fwd4,fwd3,divY,back5,divXY\n"
+	"ldr	r4, [r13,#4*22]		@ r4 = divXY			\n"
+	"ldr	r5, [r13,#4*11]		@ for (nn = n; nn > 0; n--) {	\n"
+	"18:				@				\n"
+	"mov	r14,#0			@ r14= v = 0			\n"
+	"sub	r5, r5, r1, LSL #8	@ for (xx = x; xx > 0; x--) {	\n"
+	"19:				@				\n"
+	"add	r5, r5, r2, LSL #16	@ for (yy = y; yy > 0; y--) {	\n"
+	"20:				@				\n"
+	"ldrb	r11,[r0],r6		@ r11= *src	src += fwd	\n"
+	"subs	r5, r5, #1<<16		@ xx--				\n"
+	"add	r14,r14,r11		@ v += r11			\n"
+	"bgt	20b			@ }				\n"
+	"sub	r0, r0, r7		@ src -= back5			\n"
+	"adds	r5, r5, #1<<8		@ yy--				\n"
+	"blt	19b			@ }				\n"
+	"mul	r14,r4, r14		@ r14= v *= divX		\n"
+	"mov	r14,r14,LSR #16		@ r14= v >>= 16			\n"
+	"strb	r14,[r9], #1		@ *d++ = r14			\n"
+	"sub	r0, r0, r8		@ s -= back2			\n"
+	"subs	r5, r5, #1		@ n--				\n"
+	"bgt	18b			@ }				\n"
+	"21:				@				\n"
+	"ldmfd	r13!,{r1,r4-r11,PC}	@ pop, return to thumb		\n"
+	ENTER_THUMB
+	);
+}
+
+#endif
+
 void
 fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 {
@@ -796,6 +977,21 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 	fwd2 = (f-1)*n;
 	fwd3 = (f-1)*fwd;
 	factor *= 2;
+#ifdef ARCH_ARM
+	{
+		int strayX = w%f;
+		int divX = (strayX ? 65536/(strayX*f) : 0);
+		int fwd4 = (strayX-1) * n;
+		int back4 = strayX*n-1;
+		int strayY = h%f;
+		int divY = (strayY ? 65536/(strayY*f) : 0);
+		int back5 = fwd * strayY - n;
+		int divXY = (strayY*strayX ? 65536/(strayX*strayY) : 0);
+		fz_subsample_pixmap_ARM(s, w, h, f, factor, n, fwd, back,
+					back2, fwd2, divX, back4, fwd4, fwd3,
+					divY, back5, divXY);
+	}
+#else
 	for (y = h - f; y >= 0; y -= f)
 	{
 		for (x = w - f; x >= 0; x -= f)
@@ -848,7 +1044,7 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 	if (y > 0)
 	{
 		int div = y * f;
-		back = fwd * y - n;
+		int back5 = fwd * y - n;
 		for (x = w - f; x >= 0; x -= f)
 		{
 			for (nn = n; nn > 0; nn--)
@@ -861,7 +1057,7 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 						v += *s;
 						s += fwd;
 					}
-					s -= back;
+					s -= back5;
 				}
 				*d++ = v / div;
 				s -= back2;
@@ -872,7 +1068,7 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 		x += f;
 		if (x > 0)
 		{
-			int div = x * y;
+			div = x * y;
 			for (nn = n; nn > 0; nn--)
 			{
 				int v = 0;
@@ -883,13 +1079,14 @@ fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor)
 						v += *s;
 						s += fwd;
 					}
-					s -= back;
+					s -= back5;
 				}
 				*d++ = v / div;
 				s -= back2;
 			}
 		}
 	}
+#endif
 	tile->w = dst_w;
 	tile->h = dst_h;
 	tile->samples = fz_resize_array(ctx, tile->samples, dst_w * n, dst_h);

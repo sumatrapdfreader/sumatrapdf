@@ -281,14 +281,14 @@ xps_free_page_list(xps_document *doc)
  */
 
 static void
-xps_parse_metadata_imp(xps_document *doc, xml_element *item, xps_fixdoc *fixdoc)
+xps_parse_metadata_imp(xps_document *doc, fz_xml *item, xps_fixdoc *fixdoc)
 {
 	while (item)
 	{
-		if (!strcmp(xml_tag(item), "Relationship"))
+		if (!strcmp(fz_xml_tag(item), "Relationship"))
 		{
-			char *target = xml_att(item, "Target");
-			char *type = xml_att(item, "Type");
+			char *target = fz_xml_att(item, "Target");
+			char *type = fz_xml_att(item, "Type");
 			if (target && type)
 			{
 				char tgtbuf[1024];
@@ -297,14 +297,14 @@ xps_parse_metadata_imp(xps_document *doc, xml_element *item, xps_fixdoc *fixdoc)
 					doc->start_part = fz_strdup(doc->ctx, tgtbuf);
 				if (!strcmp(type, REL_DOC_STRUCTURE) && fixdoc)
 					fixdoc->outline = fz_strdup(doc->ctx, tgtbuf);
-				if (!xml_att(item, "Id"))
+				if (!fz_xml_att(item, "Id"))
 					fz_warn(doc->ctx, "missing relationship id for %s", target);
 			}
 		}
 
-		if (!strcmp(xml_tag(item), "DocumentReference"))
+		if (!strcmp(fz_xml_tag(item), "DocumentReference"))
 		{
-			char *source = xml_att(item, "Source");
+			char *source = fz_xml_att(item, "Source");
 			if (source)
 			{
 				char srcbuf[1024];
@@ -313,11 +313,11 @@ xps_parse_metadata_imp(xps_document *doc, xml_element *item, xps_fixdoc *fixdoc)
 			}
 		}
 
-		if (!strcmp(xml_tag(item), "PageContent"))
+		if (!strcmp(fz_xml_tag(item), "PageContent"))
 		{
-			char *source = xml_att(item, "Source");
-			char *width_att = xml_att(item, "Width");
-			char *height_att = xml_att(item, "Height");
+			char *source = fz_xml_att(item, "Source");
+			char *width_att = fz_xml_att(item, "Width");
+			char *height_att = fz_xml_att(item, "Height");
 			int width = width_att ? atoi(width_att) : 0;
 			int height = height_att ? atoi(height_att) : 0;
 			if (source)
@@ -328,23 +328,23 @@ xps_parse_metadata_imp(xps_document *doc, xml_element *item, xps_fixdoc *fixdoc)
 			}
 		}
 
-		if (!strcmp(xml_tag(item), "LinkTarget"))
+		if (!strcmp(fz_xml_tag(item), "LinkTarget"))
 		{
-			char *name = xml_att(item, "Name");
+			char *name = fz_xml_att(item, "Name");
 			if (name)
 				xps_add_link_target(doc, name);
 		}
 
-		xps_parse_metadata_imp(doc, xml_down(item), fixdoc);
+		xps_parse_metadata_imp(doc, fz_xml_down(item), fixdoc);
 
-		item = xml_next(item);
+		item = fz_xml_next(item);
 	}
 }
 
 static void
 xps_parse_metadata(xps_document *doc, xps_part *part, xps_fixdoc *fixdoc)
 {
-	xml_element *root;
+	fz_xml *root;
 	char buf[1024];
 	char *s;
 
@@ -365,9 +365,9 @@ xps_parse_metadata(xps_document *doc, xps_part *part, xps_fixdoc *fixdoc)
 	doc->base_uri = buf;
 	doc->part_uri = part->name;
 
-	root = xml_parse_document(doc->ctx, part->data, part->size);
+	root = fz_parse_xml(doc->ctx, part->data, part->size);
 	xps_parse_metadata_imp(doc, root, fixdoc);
-	xml_free_element(doc->ctx, root);
+	fz_free_xml(doc->ctx, root);
 
 	doc->base_uri = NULL;
 	doc->part_uri = NULL;
@@ -433,7 +433,7 @@ static void
 xps_load_fixed_page(xps_document *doc, xps_page *page)
 {
 	xps_part *part;
-	xml_element *root;
+	fz_xml *root;
 	char *width_att;
 	char *height_att;
 
@@ -442,7 +442,7 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	fz_var(part);
 	fz_try(doc->ctx)
 	{
-	root = xml_parse_document(doc->ctx, part->data, part->size);
+	root = fz_parse_xml(doc->ctx, part->data, part->size);
 	}
 	fz_catch(doc->ctx)
 	{
@@ -452,36 +452,36 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	if (!root)
 		fz_throw(doc->ctx, "FixedPage missing root element");
 
-	if (!strcmp(xml_tag(root), "mc:AlternateContent"))
+	if (!strcmp(fz_xml_tag(root), "mc:AlternateContent"))
 	{
-		xml_element *node = xps_lookup_alternate_content(root);
+		fz_xml *node = xps_lookup_alternate_content(root);
 		if (!node)
 		{
-			xml_free_element(doc->ctx, root);
+			fz_free_xml(doc->ctx, root);
 			fz_throw(doc->ctx, "FixedPage missing alternate root element");
 		}
-		xml_detach(node);
-		xml_free_element(doc->ctx, root);
+		fz_detach_xml(node);
+		fz_free_xml(doc->ctx, root);
 		root = node;
 	}
 
-	if (strcmp(xml_tag(root), "FixedPage"))
+	if (strcmp(fz_xml_tag(root), "FixedPage"))
 	{
-		xml_free_element(doc->ctx, root);
+		fz_free_xml(doc->ctx, root);
 		fz_throw(doc->ctx, "expected FixedPage element");
 	}
 
-	width_att = xml_att(root, "Width");
+	width_att = fz_xml_att(root, "Width");
 	if (!width_att)
 	{
-		xml_free_element(doc->ctx, root);
+		fz_free_xml(doc->ctx, root);
 		fz_throw(doc->ctx, "FixedPage missing required attribute: Width");
 	}
 
-	height_att = xml_att(root, "Height");
+	height_att = fz_xml_att(root, "Height");
 	if (!height_att)
 	{
-		xml_free_element(doc->ctx, root);
+		fz_free_xml(doc->ctx, root);
 		fz_throw(doc->ctx, "FixedPage missing required attribute: Height");
 	}
 
@@ -527,7 +527,7 @@ xps_free_page(xps_document *doc, xps_page *page)
 {
 	/* only free the XML contents */
 	if (page->root)
-		xml_free_element(doc->ctx, page->root);
+		fz_free_xml(doc->ctx, page->root);
 	page->root = NULL;
 }
 
@@ -547,7 +547,7 @@ xps_bound_page_quick_and_dirty(xps_document *doc, int number)
 {
 	fz_rect bounds = fz_empty_rect;
 	byte *end = NULL;
-	xml_element *root;
+	fz_xml *root;
 
 	xps_page *page = xps_get_page(doc, number);
 	xps_part *part = page ? xps_read_part(doc, page->name) : NULL;
@@ -581,7 +581,7 @@ xps_bound_page_quick_and_dirty(xps_document *doc, int number)
 	// have to append a closing "</FixedPage>" to the byte data)
 	fz_try(doc->ctx)
 	{
-		root = xml_parse_document(doc->ctx, part->data, (int)(end - part->data));
+		root = fz_parse_xml(doc->ctx, part->data, (int)(end - part->data));
 	}
 	fz_always(doc->ctx)
 	{
@@ -592,16 +592,16 @@ xps_bound_page_quick_and_dirty(xps_document *doc, int number)
 		fz_rethrow(doc->ctx);
 	}
 
-	if (!strcmp(xml_tag(root), "FixedPage"))
+	if (!strcmp(fz_xml_tag(root), "FixedPage"))
 	{
-		char *value = xml_att(root, "Width");
+		char *value = fz_xml_att(root, "Width");
 		if (value)
 			bounds.x1 = fz_atof(value) * 72.0f / 96.0f;
-		value = xml_att(root, "Height");
+		value = fz_xml_att(root, "Height");
 		if (value)
 			bounds.y1 = fz_atof(value) * 72.0f / 96.0f;
 	}
-	xml_free_element(doc->ctx, root);
+	fz_free_xml(doc->ctx, root);
 
 	return bounds;
 }

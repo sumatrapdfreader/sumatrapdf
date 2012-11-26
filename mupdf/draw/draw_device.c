@@ -40,6 +40,8 @@ struct fz_draw_device_s
 	fz_context *ctx;
 	int flags;
 	int top;
+	fz_scale_cache *cache_x;
+	fz_scale_cache *cache_y;
 	fz_draw_state *stack;
 	int stack_max;
 	fz_draw_state init_stack[STACK_SIZE];
@@ -937,9 +939,10 @@ fz_draw_fill_shade(fz_device *devp, fz_shade *shade, fz_matrix ctm, float alpha)
 }
 
 static fz_pixmap *
-fz_transform_pixmap(fz_context *ctx, fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int dy, int gridfit, fz_bbox *clip)
+fz_transform_pixmap(fz_draw_device *dev, fz_pixmap *image, fz_matrix *ctm, int x, int y, int dx, int dy, int gridfit, fz_bbox *clip)
 {
 	fz_pixmap *scaled;
+	fz_context *ctx = dev->ctx;
 
 	if (ctm->a != 0 && ctm->b == 0 && ctm->c == 0 && ctm->d != 0)
 	{
@@ -947,7 +950,7 @@ fz_transform_pixmap(fz_context *ctx, fz_pixmap *image, fz_matrix *ctm, int x, in
 		fz_matrix m = *ctm;
 		if (gridfit)
 			fz_gridfit_matrix(&m);
-		scaled = fz_scale_pixmap(ctx, image, m.e, m.f, m.a, m.d, clip);
+		scaled = fz_scale_pixmap_cached(ctx, image, m.e, m.f, m.a, m.d, clip, dev->cache_x, dev->cache_y);
 		if (!scaled)
 			return NULL;
 		ctm->a = scaled->w;
@@ -971,7 +974,7 @@ fz_transform_pixmap(fz_context *ctx, fz_pixmap *image, fz_matrix *ctm, int x, in
 			rclip.x1 = clip->y1;
 			rclip.y1 = clip->x1;
 		}
-		scaled = fz_scale_pixmap(ctx, image, m.f, m.e, m.b, m.c, (clip ? &rclip : 0));
+		scaled = fz_scale_pixmap_cached(ctx, image, m.f, m.e, m.b, m.c, (clip ? &rclip : 0), dev->cache_x, dev->cache_y);
 		if (!scaled)
 			return NULL;
 		ctm->b = scaled->w;
@@ -984,7 +987,7 @@ fz_transform_pixmap(fz_context *ctx, fz_pixmap *image, fz_matrix *ctm, int x, in
 	/* Downscale, non rectilinear case */
 	if (dx > 0 && dy > 0)
 	{
-		scaled = fz_scale_pixmap(ctx, image, 0, 0, (float)dx, (float)dy, NULL);
+		scaled = fz_scale_pixmap_cached(ctx, image, 0, 0, (float)dx, (float)dy, NULL, dev->cache_x, dev->cache_y);
 		return scaled;
 	}
 
@@ -1048,14 +1051,14 @@ fz_draw_fill_image(fz_device *devp, fz_image *image, fz_matrix ctm, float alpha)
 		if (dx < pixmap->w && dy < pixmap->h)
 		{
 			int gridfit = alpha == 1.0f && !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
-			scaled = fz_transform_pixmap(ctx, pixmap, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
+			scaled = fz_transform_pixmap(dev, pixmap, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
 			if (!scaled)
 			{
 				if (dx < 1)
 					dx = 1;
 				if (dy < 1)
 					dy = 1;
-				scaled = fz_scale_pixmap(ctx, pixmap, pixmap->x, pixmap->y, dx, dy, NULL);
+				scaled = fz_scale_pixmap_cached(ctx, pixmap, pixmap->x, pixmap->y, dx, dy, NULL, dev->cache_x, dev->cache_y);
 			}
 			if (scaled)
 				pixmap = scaled;
@@ -1128,14 +1131,14 @@ fz_draw_fill_image_mask(fz_device *devp, fz_image *image, fz_matrix ctm,
 		if (dx < pixmap->w && dy < pixmap->h)
 		{
 			int gridfit = alpha == 1.0f && !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
-			scaled = fz_transform_pixmap(dev->ctx, pixmap, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
+			scaled = fz_transform_pixmap(dev, pixmap, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
 			if (!scaled)
 			{
 				if (dx < 1)
 					dx = 1;
 				if (dy < 1)
 					dy = 1;
-				scaled = fz_scale_pixmap(dev->ctx, pixmap, pixmap->x, pixmap->y, dx, dy, NULL);
+				scaled = fz_scale_pixmap_cached(dev->ctx, pixmap, pixmap->x, pixmap->y, dx, dy, NULL, dev->cache_x, dev->cache_y);
 			}
 			if (scaled)
 				pixmap = scaled;
@@ -1227,14 +1230,14 @@ fz_draw_clip_image_mask(fz_device *devp, fz_image *image, fz_rect *rect, fz_matr
 		if (dx < pixmap->w && dy < pixmap->h)
 		{
 			int gridfit = !(dev->flags & FZ_DRAWDEV_FLAGS_TYPE3);
-			scaled = fz_transform_pixmap(dev->ctx, pixmap, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
+			scaled = fz_transform_pixmap(dev, pixmap, &ctm, state->dest->x, state->dest->y, dx, dy, gridfit, &clip);
 			if (!scaled)
 			{
 				if (dx < 1)
 					dx = 1;
 				if (dy < 1)
 					dy = 1;
-				scaled = fz_scale_pixmap(dev->ctx, pixmap, pixmap->x, pixmap->y, dx, dy, NULL);
+				scaled = fz_scale_pixmap_cached(dev->ctx, pixmap, pixmap->x, pixmap->y, dx, dy, NULL, dev->cache_x, dev->cache_y);
 			}
 			if (scaled)
 				pixmap = scaled;
@@ -1736,6 +1739,8 @@ fz_draw_free_user(fz_device *devp)
 	 */
 	if (dev->stack != &dev->init_stack[0])
 		fz_free(ctx, dev->stack);
+	fz_free_scale_cache(ctx, dev->cache_x);
+	fz_free_scale_cache(ctx, dev->cache_y);
 	fz_free_gel(dev->gel);
 	fz_free(ctx, dev);
 }
@@ -1753,6 +1758,8 @@ fz_new_draw_device(fz_context *ctx, fz_pixmap *dest)
 		ddev->flags = 0;
 		ddev->ctx = ctx;
 		ddev->top = 0;
+		ddev->cache_x = fz_new_scale_cache(ctx);
+		ddev->cache_y = fz_new_scale_cache(ctx);
 		ddev->stack = &ddev->init_stack[0];
 		ddev->stack_max = STACK_SIZE;
 		ddev->stack[0].dest = dest;
@@ -1768,6 +1775,8 @@ fz_new_draw_device(fz_context *ctx, fz_pixmap *dest)
 	}
 	fz_catch(ctx)
 	{
+		fz_free_scale_cache(ctx, ddev->cache_x);
+		fz_free_scale_cache(ctx, ddev->cache_y);
 		fz_free_gel(ddev->gel);
 		fz_free(ctx, ddev);
 		fz_rethrow(ctx);

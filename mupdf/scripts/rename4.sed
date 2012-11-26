@@ -1,0 +1,11 @@
+s/\<xml_element\>/fz_xml/g
+s/\<xml_element\>/fz_xml/g
+s/\<xml_parse_document\>/fz_parse_xml/g
+s/\<xml_next\>/fz_xml_next/g
+s/\<xml_down\>/fz_xml_down/g
+s/\<xml_tag\>/fz_xml_tag/g
+s/\<xml_att\>/fz_xml_att/g
+s/\<xml_text\>/fz_xml_text/g
+s/\<xml_free_element\>/fz_free_xml/g
+s/\<xml_print_element\>/fz_print_xml/g
+s/\<xml_detach\>/fz_detach_xml/g

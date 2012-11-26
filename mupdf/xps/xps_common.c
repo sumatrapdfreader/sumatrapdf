@@ -8,56 +8,56 @@ static inline int unhex(int a)
 	return 0;
 }
 
-xml_element *
-xps_lookup_alternate_content(xml_element *node)
+fz_xml *
+xps_lookup_alternate_content(fz_xml *node)
 {
-	for (node = xml_down(node); node; node = xml_next(node))
+	for (node = fz_xml_down(node); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(xml_tag(node), "mc:Choice") && xml_att(node, "Requires"))
+		if (!strcmp(fz_xml_tag(node), "mc:Choice") && fz_xml_att(node, "Requires"))
 		{
 			char list[64];
 			char *next = list, *item;
-			fz_strlcpy(list, xml_att(node, "Requires"), sizeof(list));
+			fz_strlcpy(list, fz_xml_att(node, "Requires"), sizeof(list));
 			while ((item = fz_strsep(&next, " \t\r\n")) && (!*item || !strcmp(item, "xps")));
 			if (!item)
-				return xml_down(node);
+				return fz_xml_down(node);
 		}
-		else if (!strcmp(xml_tag(node), "mc:Fallback"))
-			return xml_down(node);
+		else if (!strcmp(fz_xml_tag(node), "mc:Fallback"))
+			return fz_xml_down(node);
 	}
 	return NULL;
 }
 
 void
-xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node)
+xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node)
 {
 	if (doc->cookie && doc->cookie->abort)
 		return;
 	/* SolidColorBrushes are handled in a special case and will never show up here */
-	if (!strcmp(xml_tag(node), "ImageBrush"))
+	if (!strcmp(fz_xml_tag(node), "ImageBrush"))
 		xps_parse_image_brush(doc, ctm, area, base_uri, dict, node);
-	else if (!strcmp(xml_tag(node), "VisualBrush"))
+	else if (!strcmp(fz_xml_tag(node), "VisualBrush"))
 		xps_parse_visual_brush(doc, ctm, area, base_uri, dict, node);
-	else if (!strcmp(xml_tag(node), "LinearGradientBrush"))
+	else if (!strcmp(fz_xml_tag(node), "LinearGradientBrush"))
 		xps_parse_linear_gradient_brush(doc, ctm, area, base_uri, dict, node);
-	else if (!strcmp(xml_tag(node), "RadialGradientBrush"))
+	else if (!strcmp(fz_xml_tag(node), "RadialGradientBrush"))
 		xps_parse_radial_gradient_brush(doc, ctm, area, base_uri, dict, node);
 	else
-		fz_warn(doc->ctx, "unknown brush tag: %s", xml_tag(node));
+		fz_warn(doc->ctx, "unknown brush tag: %s", fz_xml_tag(node));
 }
 
 void
-xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, xml_element *node)
+xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node)
 {
 	if (doc->cookie && doc->cookie->abort)
 		return;
-	if (!strcmp(xml_tag(node), "Path"))
+	if (!strcmp(fz_xml_tag(node), "Path"))
 		xps_parse_path(doc, ctm, base_uri, dict, node);
-	if (!strcmp(xml_tag(node), "Glyphs"))
+	if (!strcmp(fz_xml_tag(node), "Glyphs"))
 		xps_parse_glyphs(doc, ctm, base_uri, dict, node);
-	if (!strcmp(xml_tag(node), "Canvas"))
+	if (!strcmp(fz_xml_tag(node), "Canvas"))
 		xps_parse_canvas(doc, ctm, area, base_uri, dict, node);
-	if (!strcmp(xml_tag(node), "mc:AlternateContent"))
+	if (!strcmp(fz_xml_tag(node), "mc:AlternateContent"))
 	{
 		node = xps_lookup_alternate_content(node);
 		if (node)
@@ -69,7 +69,7 @@ xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri
 void
 xps_begin_opacity(xps_document *doc, fz_matrix ctm, fz_rect area,
 	char *base_uri, xps_resource *dict,
-	char *opacity_att, xml_element *opacity_mask_tag)
+	char *opacity_att, fz_xml *opacity_mask_tag)
 {
 	float opacity;
 
@@ -80,10 +80,10 @@ xps_begin_opacity(xps_document *doc, fz_matrix ctm, fz_rect area,
 	if (opacity_att)
 		opacity = fz_atof(opacity_att);
 
-	if (opacity_mask_tag && !strcmp(xml_tag(opacity_mask_tag), "SolidColorBrush"))
+	if (opacity_mask_tag && !strcmp(fz_xml_tag(opacity_mask_tag), "SolidColorBrush"))
 	{
-		char *scb_opacity_att = xml_att(opacity_mask_tag, "Opacity");
-		char *scb_color_att = xml_att(opacity_mask_tag, "Color");
+		char *scb_opacity_att = fz_xml_att(opacity_mask_tag, "Opacity");
+		char *scb_color_att = fz_xml_att(opacity_mask_tag, "Color");
 		if (scb_opacity_att)
 			opacity = opacity * fz_atof(scb_opacity_att);
 		if (scb_color_att)
@@ -112,7 +112,7 @@ xps_begin_opacity(xps_document *doc, fz_matrix ctm, fz_rect area,
 
 void
 xps_end_opacity(xps_document *doc, char *base_uri, xps_resource *dict,
-	char *opacity_att, xml_element *opacity_mask_tag)
+	char *opacity_att, fz_xml *opacity_mask_tag)
 {
 	if (!opacity_att && !opacity_mask_tag)
 		return;
@@ -122,7 +122,7 @@ xps_end_opacity(xps_document *doc, char *base_uri, xps_resource *dict,
 
 	if (opacity_mask_tag)
 	{
-		if (strcmp(xml_tag(opacity_mask_tag), "SolidColorBrush"))
+		if (strcmp(fz_xml_tag(opacity_mask_tag), "SolidColorBrush"))
 			fz_pop_clip(doc->dev);
 	}
 }
@@ -153,15 +153,15 @@ xps_parse_render_transform(xps_document *doc, char *transform, fz_matrix *matrix
 }
 
 void
-xps_parse_matrix_transform(xps_document *doc, xml_element *root, fz_matrix *matrix)
+xps_parse_matrix_transform(xps_document *doc, fz_xml *root, fz_matrix *matrix)
 {
 	char *transform;
 
 	*matrix = fz_identity;
 
-	if (!strcmp(xml_tag(root), "MatrixTransform"))
+	if (!strcmp(fz_xml_tag(root), "MatrixTransform"))
 	{
-		transform = xml_att(root, "Matrix");
+		transform = fz_xml_att(root, "Matrix");
 		if (transform)
 			xps_parse_render_transform(doc, transform, matrix);
 	}

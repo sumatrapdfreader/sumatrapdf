@@ -370,9 +370,9 @@ xps_parse_glyphs_imp(xps_document *doc, fz_matrix ctm,
 
 void
 xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
-		char *base_uri, xps_resource *dict, xml_element *root)
+		char *base_uri, xps_resource *dict, fz_xml *root)
 {
-	xml_element *node;
+	fz_xml *node;
 
 	char *fill_uri;
 	char *opacity_mask_uri;
@@ -394,10 +394,10 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 	char *opacity_mask_att;
 	char *navigate_uri_att;
 
-	xml_element *transform_tag = NULL;
-	xml_element *clip_tag = NULL;
-	xml_element *fill_tag = NULL;
-	xml_element *opacity_mask_tag = NULL;
+	fz_xml *transform_tag = NULL;
+	fz_xml *clip_tag = NULL;
+	fz_xml *fill_tag = NULL;
+	fz_xml *opacity_mask_tag = NULL;
 
 	char *fill_opacity_att = NULL;
 
@@ -420,33 +420,33 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 	 * Extract attributes and extended attributes.
 	 */
 
-	bidi_level_att = xml_att(root, "BidiLevel");
-	caret_stops_att = xml_att(root, "CaretStops");
-	fill_att = xml_att(root, "Fill");
-	font_size_att = xml_att(root, "FontRenderingEmSize");
-	font_uri_att = xml_att(root, "FontUri");
-	origin_x_att = xml_att(root, "OriginX");
-	origin_y_att = xml_att(root, "OriginY");
-	is_sideways_att = xml_att(root, "IsSideways");
-	indices_att = xml_att(root, "Indices");
-	unicode_att = xml_att(root, "UnicodeString");
-	style_att = xml_att(root, "StyleSimulations");
-	transform_att = xml_att(root, "RenderTransform");
-	clip_att = xml_att(root, "Clip");
-	opacity_att = xml_att(root, "Opacity");
-	opacity_mask_att = xml_att(root, "OpacityMask");
-	navigate_uri_att = xml_att(root, "FixedPage.NavigateUri");
+	bidi_level_att = fz_xml_att(root, "BidiLevel");
+	caret_stops_att = fz_xml_att(root, "CaretStops");
+	fill_att = fz_xml_att(root, "Fill");
+	font_size_att = fz_xml_att(root, "FontRenderingEmSize");
+	font_uri_att = fz_xml_att(root, "FontUri");
+	origin_x_att = fz_xml_att(root, "OriginX");
+	origin_y_att = fz_xml_att(root, "OriginY");
+	is_sideways_att = fz_xml_att(root, "IsSideways");
+	indices_att = fz_xml_att(root, "Indices");
+	unicode_att = fz_xml_att(root, "UnicodeString");
+	style_att = fz_xml_att(root, "StyleSimulations");
+	transform_att = fz_xml_att(root, "RenderTransform");
+	clip_att = fz_xml_att(root, "Clip");
+	opacity_att = fz_xml_att(root, "Opacity");
+	opacity_mask_att = fz_xml_att(root, "OpacityMask");
+	navigate_uri_att = fz_xml_att(root, "FixedPage.NavigateUri");
 
-	for (node = xml_down(root); node; node = xml_next(node))
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		if (!strcmp(xml_tag(node), "Glyphs.RenderTransform"))
-			transform_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "Glyphs.OpacityMask"))
-			opacity_mask_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "Glyphs.Clip"))
-			clip_tag = xml_down(node);
-		if (!strcmp(xml_tag(node), "Glyphs.Fill"))
-			fill_tag = xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Glyphs.RenderTransform"))
+			transform_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Glyphs.OpacityMask"))
+			opacity_mask_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Glyphs.Clip"))
+			clip_tag = fz_xml_down(node);
+		if (!strcmp(fz_xml_tag(node), "Glyphs.Fill"))
+			fill_tag = fz_xml_down(node);
 	}
 
 	fill_uri = base_uri;
@@ -572,7 +572,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 	area = fz_bound_text(doc->ctx, text, ctm);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(doc, area, navigate_uri_att, xml_att(root, "Name"), 0);
+	xps_extract_anchor_info(doc, area, navigate_uri_att, fz_xml_att(root, "Name"), 0);
 	navigate_uri_att = NULL;
 
 	if (navigate_uri_att)
@@ -582,10 +582,10 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 
 	/* If it's a solid color brush fill/stroke do a simple fill */
 
-	if (fill_tag && !strcmp(xml_tag(fill_tag), "SolidColorBrush"))
+	if (fill_tag && !strcmp(fz_xml_tag(fill_tag), "SolidColorBrush"))
 	{
-		fill_opacity_att = xml_att(fill_tag, "Opacity");
-		fill_att = xml_att(fill_tag, "Color");
+		fill_opacity_att = fz_xml_att(fill_tag, "Opacity");
+		fill_att = fz_xml_att(fill_tag, "Color");
 		fill_tag = NULL;
 	}
 

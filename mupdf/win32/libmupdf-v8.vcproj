@@ -671,10 +671,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\xps\xps_xml.c"
-				>
-			</File>
-			<File
 				RelativePath="..\xps\xps_zip.c"
 				>
 			</File>

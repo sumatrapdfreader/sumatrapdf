@@ -10,7 +10,7 @@ ZLIB := zlib
 FREETYPE := freetype
 V8 := v8-3.9
 
-LOCAL_CFLAGS += -DARCH_ARM -DARCH_THUMB -DARCH_ARM_CAN_LOAD_UNALIGNED
+LOCAL_CFLAGS += -DARCH_ARM -DARCH_THUMB -DARCH_ARM_CAN_LOAD_UNALIGNED -DAA_BITS=8
 ifdef NDK_PROFILER
 LOCAL_CFLAGS += -pg -DNDK_PROFILER -O2
 endif
@@ -85,6 +85,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/draw/draw_mesh.c \
 	$(MY_ROOT)/draw/draw_paint.c \
 	$(MY_ROOT)/draw/draw_path.c \
+	$(MY_ROOT)/draw/draw_simple_scale.c \
 	$(MY_ROOT)/draw/draw_unpack.c \
 	$(MY_ROOT)/pdf/pdf_annot.c \
 	$(MY_ROOT)/pdf/pdf_cmap.c \

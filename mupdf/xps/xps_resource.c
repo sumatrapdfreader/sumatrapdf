@@ -1,6 +1,6 @@
 #include "muxps-internal.h"
 
-static xml_element *
+static fz_xml *
 xps_find_resource(xps_document *doc, xps_resource *dict, char *name, char **urip)
 {
 	xps_resource *head, *node;
@@ -19,7 +19,7 @@ xps_find_resource(xps_document *doc, xps_resource *dict, char *name, char **urip
 	return NULL;
 }
 
-static xml_element *
+static fz_xml *
 xps_parse_resource_reference(xps_document *doc, xps_resource *dict, char *att, char **urip)
 {
 	char name[1024];
@@ -38,11 +38,11 @@ xps_parse_resource_reference(xps_document *doc, xps_resource *dict, char *att, c
 
 void
 xps_resolve_resource_reference(xps_document *doc, xps_resource *dict,
-		char **attp, xml_element **tagp, char **urip)
+		char **attp, fz_xml **tagp, char **urip)
 {
 	if (*attp)
 	{
-		xml_element *rsrc = xps_parse_resource_reference(doc, dict, *attp, urip);
+		fz_xml *rsrc = xps_parse_resource_reference(doc, dict, *attp, urip);
 		if (rsrc)
 		{
 			*attp = NULL;
@@ -58,7 +58,7 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 	char part_uri[1024];
 	xps_resource *dict;
 	xps_part *part;
-	xml_element *xml;
+	fz_xml *xml;
 	char *s;
 
 	/* External resource dictionaries MUST NOT reference other resource dictionaries */
@@ -67,7 +67,7 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 	/* SumatraPDF: fix memory leak */
 	fz_try(doc->ctx)
 	{
-	xml = xml_parse_document(doc->ctx, part->data, part->size);
+	xml = fz_parse_xml(doc->ctx, part->data, part->size);
 	}
 	fz_catch(doc->ctx)
 	{
@@ -78,9 +78,9 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 	if (!xml)
 		return NULL;
 
-	if (strcmp(xml_tag(xml), "ResourceDictionary"))
+	if (strcmp(fz_xml_tag(xml), "ResourceDictionary"))
 	{
-		xml_free_element(doc->ctx, xml);
+		fz_free_xml(doc->ctx, xml);
 		fz_throw(doc->ctx, "expected ResourceDictionary element");
 	}
 
@@ -97,23 +97,23 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 }
 
 xps_resource *
-xps_parse_resource_dictionary(xps_document *doc, char *base_uri, xml_element *root)
+xps_parse_resource_dictionary(xps_document *doc, char *base_uri, fz_xml *root)
 {
 	xps_resource *head;
 	xps_resource *entry;
-	xml_element *node;
+	fz_xml *node;
 	char *source;
 	char *key;
 
-	source = xml_att(root, "Source");
+	source = fz_xml_att(root, "Source");
 	if (source)
 		return xps_parse_remote_resource_dictionary(doc, base_uri, source);
 
 	head = NULL;
 
-	for (node = xml_down(root); node; node = xml_next(node))
+	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		key = xml_att(node, "x:Key");
+		key = fz_xml_att(node, "x:Key");
 		if (key)
 		{
 			entry = fz_malloc_struct(doc->ctx, xps_resource);
@@ -141,7 +141,7 @@ xps_free_resource_dictionary(xps_document *doc, xps_resource *dict)
 	{
 		next = dict->next;
 		if (dict->base_xml)
-			xml_free_element(doc->ctx, dict->base_xml);
+			fz_free_xml(doc->ctx, dict->base_xml);
 		if (dict->base_uri)
 			fz_free(doc->ctx, dict->base_uri);
 		fz_free(doc->ctx, dict);

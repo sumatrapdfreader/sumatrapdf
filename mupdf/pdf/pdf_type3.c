@@ -172,6 +172,8 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 				{
 					fontdesc->font->t3procs[i] = pdf_load_stream(xref, pdf_to_num(obj), pdf_to_gen(obj));
 					fontdesc->size += fontdesc->font->t3procs[i]->cap;
+					fz_prepare_t3_glyph(ctx, fontdesc->font, i);
+					fontdesc->size += 0; // TODO: display list size calculation
 				}
 			}
 		}

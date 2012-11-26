@@ -35,6 +35,15 @@ EXPORTS
 	fz_runetochar
 	fz_runelen
 	fz_getopt
+	fz_parse_xml
+	fz_xml_next
+	fz_xml_down
+	fz_xml_tag
+	fz_xml_att
+	fz_xml_text
+	fz_free_xml
+	fz_detach_xml
+	fz_debug_xml
 	fz_concat
 	fz_scale
 	fz_shear
@@ -266,6 +275,9 @@ EXPORTS
 	fz_alpha_from_gray
 	fz_pixmap_size
 	fz_scale_pixmap
+	fz_new_scale_cache
+	fz_free_scale_cache
+	fz_scale_pixmap_cached
 	fz_subsample_pixmap
 	fz_pixmap_bbox_no_ctx
 	fz_compressed_buffer_size
@@ -328,6 +340,7 @@ EXPORTS
 	fz_render_glyph
 	fz_render_stroked_glyph
 	fz_render_t3_glyph_direct
+	fz_prepare_t3_glyph
 	fz_new_text
 	fz_add_text
 	fz_free_text
@@ -661,14 +674,6 @@ EXPORTS
 
 ; MuXPS exports
 
-	xml_parse_document
-	xml_next
-	xml_down
-	xml_tag
-	xml_att
-	xml_free_element
-	xml_print_element
-	xml_detach
 	xps_open_document
 	xps_open_document_with_stream
 	xps_close_document

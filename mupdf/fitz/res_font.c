@@ -38,6 +38,7 @@ fz_new_font(fz_context *ctx, char *name, int use_glyph_bbox, int glyph_count)
 	font->t3matrix = fz_identity;
 	font->t3resources = NULL;
 	font->t3procs = NULL;
+	font->t3lists = NULL;
 	font->t3widths = NULL;
 	font->t3flags = NULL;
 	font->t3doc = NULL;
@@ -98,9 +99,14 @@ fz_drop_font(fz_context *ctx, fz_font *font)
 		if (font->t3resources)
 			font->t3freeres(font->t3doc, font->t3resources);
 		for (i = 0; i < 256; i++)
+		{
 			if (font->t3procs[i])
 				fz_drop_buffer(ctx, font->t3procs[i]);
+			if (font->t3lists[i])
+				fz_free_display_list(ctx, font->t3lists[i]);
+		}
 		fz_free(ctx, font->t3procs);
+		fz_free(ctx, font->t3lists);
 		fz_free(ctx, font->t3widths);
 		fz_free(ctx, font->t3flags);
 	}
@@ -849,6 +855,7 @@ fz_new_type3_font(fz_context *ctx, char *name, fz_matrix matrix)
 
 	font = fz_new_font(ctx, name, 1, 256);
 	font->t3procs = fz_malloc_array(ctx, 256, sizeof(fz_buffer*));
+	font->t3lists = fz_malloc_array(ctx, 256, sizeof(fz_display_list*));
 	font->t3widths = fz_malloc_array(ctx, 256, sizeof(float));
 	font->t3flags = fz_malloc_array(ctx, 256, sizeof(char));
 
@@ -856,6 +863,7 @@ fz_new_type3_font(fz_context *ctx, char *name, fz_matrix matrix)
 	for (i = 0; i < 256; i++)
 	{
 		font->t3procs[i] = NULL;
+		font->t3lists[i] = NULL;
 		font->t3widths[i] = 0;
 		font->t3flags[i] = 0;
 	}
@@ -863,21 +871,19 @@ fz_new_type3_font(fz_context *ctx, char *name, fz_matrix matrix)
 	return font;
 }
 
-static fz_rect
-fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
+void
+fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid)
 {
-	fz_matrix ctm;
-	void *contents;
-	fz_rect bounds;
-	fz_bbox bbox;
+	fz_buffer *contents;
 	fz_device *dev;
 
 	contents = font->t3procs[gid];
 	if (!contents)
-		return fz_transform_rect(trm, fz_empty_rect);
+		return;
 
-	ctm = fz_concat(font->t3matrix, trm);
-	dev = fz_new_bbox_device(ctx, &bbox);
+	font->t3lists[gid] = fz_new_display_list(ctx);
+
+	dev = fz_new_list_device(ctx, font->t3lists[gid]);
 	dev->flags = FZ_DEVFLAG_FILLCOLOR_UNDEFINED |
 			FZ_DEVFLAG_STROKECOLOR_UNDEFINED |
 			FZ_DEVFLAG_STARTCAP_UNDEFINED |
@@ -886,8 +892,27 @@ fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 			FZ_DEVFLAG_LINEJOIN_UNDEFINED |
 			FZ_DEVFLAG_MITERLIMIT_UNDEFINED |
 			FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
-	font->t3run(font->t3doc, font->t3resources, contents, dev, ctm, NULL);
+	font->t3run(font->t3doc, font->t3resources, contents, dev, fz_identity, NULL);
 	font->t3flags[gid] = dev->flags;
+	fz_free_device(dev);
+}
+
+static fz_rect
+fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
+{
+	fz_display_list *list;
+	fz_matrix ctm;
+	fz_rect bounds;
+	fz_bbox bbox;
+	fz_device *dev;
+
+	list = font->t3lists[gid];
+	if (!list)
+		return fz_transform_rect(trm, fz_empty_rect);
+
+	ctm = fz_concat(font->t3matrix, trm);
+	dev = fz_new_bbox_device(ctx, &bbox);
+	fz_run_display_list(list, dev, ctm, fz_infinite_bbox, NULL);
 	fz_free_device(dev);
 
 	bounds.x0 = bbox.x0;
@@ -900,8 +925,8 @@ fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 fz_pixmap *
 fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_colorspace *model, fz_bbox scissor)
 {
+	fz_display_list *list;
 	fz_matrix ctm;
-	void *contents;
 	fz_bbox bbox;
 	fz_device *dev;
 	fz_pixmap *glyph;
@@ -910,8 +935,8 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 	if (gid < 0 || gid > 255)
 		return NULL;
 
-	contents = font->t3procs[gid];
-	if (!contents)
+	list = font->t3lists[gid];
+	if (!list)
 		return NULL;
 
 	if (font->t3flags[gid] & FZ_DEVFLAG_MASK)
@@ -944,7 +969,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 
 	ctm = fz_concat(font->t3matrix, trm);
 	dev = fz_new_draw_device_type3(ctx, glyph);
-	font->t3run(font->t3doc, font->t3resources, contents, dev, ctm, NULL);
+	fz_run_display_list(list, dev, ctm, fz_infinite_bbox, NULL);
 	fz_free_device(dev);
 
 	if (!model)
@@ -1025,7 +1050,7 @@ fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 		{
 			if (font->ft_face)
 				font->bbox_table[gid] = fz_bound_ft_glyph(ctx, font, gid, fz_identity);
-			else if (font->t3procs)
+			else if (font->t3lists)
 				font->bbox_table[gid] = fz_bound_t3_glyph(ctx, font, gid, fz_identity);
 			else
 				font->bbox_table[gid] = fz_empty_rect;

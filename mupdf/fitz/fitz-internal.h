@@ -77,6 +77,30 @@ void fz_synchronize_begin();
 void fz_synchronize_end();
 #endif
 
+/* ARM assembly specific defines */
+
+#ifdef ARCH_ARM
+#ifdef NDK_PROFILER
+extern void __gnu_mcount_nc(void);
+#define ENTER_PG "push {lr}\nbl __gnu_mcount_nc\n"
+#else
+#define ENTER_PG
+#endif
+
+/* If we're compiling as thumb code, then we need to tell the compiler
+ * to enter and exit ARM mode around our assembly sections. If we move
+ * the ARM functions to a separate file and arrange for it to be compiled
+ * without thumb mode, we can save some time on entry.
+ */
+#ifdef ARCH_THUMB
+#define ENTER_ARM ".balign 4\nmov r12,pc\nbx r12\n0:.arm\n" ENTER_PG
+#define ENTER_THUMB "9:.thumb\n" ENTER_PG
+#else
+#define ENTER_ARM
+#define ENTER_THUMB
+#endif
+#endif
+
 /*
  * Basic runtime and utility functions
  */
@@ -850,6 +874,13 @@ fz_pixmap *fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray, int luminosity);
 unsigned int fz_pixmap_size(fz_context *ctx, fz_pixmap *pix);
 
 fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_bbox *clip);
+
+typedef struct fz_scale_cache_s fz_scale_cache;
+
+fz_scale_cache *fz_new_scale_cache(fz_context *ctx);
+void fz_free_scale_cache(fz_context *ctx, fz_scale_cache *cache);
+fz_pixmap *fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_bbox *clip, fz_scale_cache *cache_x, fz_scale_cache *cache_y);
+
 void fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor);
 
 fz_bbox fz_pixmap_bbox_no_ctx(fz_pixmap *src);
@@ -996,6 +1027,7 @@ struct fz_font_s
 	fz_matrix t3matrix;
 	void *t3resources;
 	fz_buffer **t3procs; /* has 256 entries if used */
+	fz_display_list **t3lists; /* has 256 entries if used */
 	float *t3widths; /* has 256 entries if used */
 	char *t3flags; /* has 256 entries if used */
 	void *t3doc; /* a pdf_document for the callback */
@@ -1142,6 +1174,7 @@ fz_pixmap *fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, f
 fz_pixmap *fz_render_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_colorspace *model, fz_bbox scissor);
 fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_matrix, fz_stroke_state *stroke, fz_bbox scissor);
 void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate);
+void fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid);
 
 /*
  * Text buffer.

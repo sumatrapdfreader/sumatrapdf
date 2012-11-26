@@ -224,7 +224,7 @@ FITZ_DRAW_OBJS = \
 FITZ_OBJS = \
 	$(OFZ)\base_error.obj $(OFZ)\base_geometry.obj $(OFZ)\base_getopt.obj $(OFZ)\base_hash.obj \
 	$(OFZ)\base_memory.obj $(OFZ)\base_string.obj $(OFZ)\base_time.obj $(OFZ)\base_trans.obj \
-	$(OFZ)\base_context.obj $(OFZ)\crypt_sha2.obj $(OFZ)\dev_gdiplus.obj \
+	$(OFZ)\base_context.obj $(OFZ)\base_xml.obj $(OFZ)\crypt_sha2.obj $(OFZ)\dev_gdiplus.obj \
 	$(OFZ)\dev_bbox.obj $(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_text.obj \
 	$(OFZ)\dev_trace.obj $(OFZ)\crypt_aes.obj $(OFZ)\crypt_arc4.obj $(OFZ)\crypt_md5.obj \
 	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj $(OFZ)\doc_link.obj $(OFZ)\doc_outline.obj $(OFZ)\doc_search.obj \
@@ -252,7 +252,7 @@ MUPDF_OBJS = \
 MUXPS_OBJS = \
 	$(OX)\xps_common.obj $(OX)\xps_doc.obj $(OX)\xps_glyphs.obj $(OX)\xps_gradient.obj \
 	$(OX)\xps_image.obj $(OX)\xps_path.obj $(OX)\xps_resource.obj $(OX)\xps_tile.obj \
-	$(OX)\xps_util.obj $(OX)\xps_xml.obj $(OX)\xps_zip.obj $(OX)\xps_outline.obj
+	$(OX)\xps_util.obj $(OX)\xps_zip.obj $(OX)\xps_outline.obj
 
 MUCBZ_OBJS = \
 	$(OX)\mucbz.obj

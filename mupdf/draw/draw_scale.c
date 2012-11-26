@@ -273,6 +273,21 @@ struct fz_weights_s
 	int index[1];
 };
 
+struct fz_scale_cache_s
+{
+	int src_w;
+	float x;
+	float dst_w;
+	fz_scale_filter *filter;
+	int vertical;
+	int dst_w_int;
+	int patch_l;
+	int patch_r;
+	int n;
+	int flip;
+	fz_weights *weights;
+};
+
 static fz_weights *
 new_weights(fz_context *ctx, fz_scale_filter *filter, int src_w, float dst_w, int patch_w, int n, int flip, int patch_l)
 {
@@ -493,12 +508,36 @@ check_weights(fz_weights *weights, int j, int w, float x, float wf)
 }
 
 static fz_weights *
-make_weights(fz_context *ctx, int src_w, float x, float dst_w, fz_scale_filter *filter, int vertical, int dst_w_int, int patch_l, int patch_r, int n, int flip)
+make_weights(fz_context *ctx, int src_w, float x, float dst_w, fz_scale_filter *filter, int vertical, int dst_w_int, int patch_l, int patch_r, int n, int flip, fz_scale_cache *cache)
 {
 	fz_weights *weights;
 	float F, G;
 	float window;
 	int j;
+
+	if (cache)
+	{
+		if (cache->src_w == src_w && cache->x == x && cache->dst_w == dst_w &&
+			cache->filter == filter && cache->vertical == vertical &&
+			cache->dst_w_int == dst_w_int &&
+			cache->patch_l == patch_l && cache->patch_r == patch_r &&
+			cache->n == n && cache->flip == flip)
+		{
+			return cache->weights;
+		}
+		cache->src_w = src_w;
+		cache->x = x;
+		cache->dst_w = dst_w;
+		cache->filter = filter;
+		cache->vertical = vertical;
+		cache->dst_w_int = dst_w_int;
+		cache->patch_l = patch_l;
+		cache->patch_r = patch_r;
+		cache->n = n;
+		cache->flip = flip;
+		fz_free(ctx, cache->weights);
+		cache->weights = NULL;
+	}
 
 	if (dst_w < src_w)
 	{
@@ -537,6 +576,10 @@ make_weights(fz_context *ctx, int src_w, float x, float dst_w, fz_scale_filter *
 		}
 	}
 	weights->count++; /* weights->count = dst_w_int now */
+	if (cache)
+	{
+		cache->weights = weights;
+	}
 	return weights;
 }
 
@@ -1197,6 +1240,12 @@ scale_single_col(unsigned char *dst, unsigned char *src, fz_weights *weights, in
 fz_pixmap *
 fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_bbox *clip)
 {
+	return fz_scale_pixmap_cached(ctx, src, x, y, w, h, clip, NULL, NULL);
+}
+
+fz_pixmap *
+fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_bbox *clip, fz_scale_cache *cache_x, fz_scale_cache *cache_y)
+{
 	fz_scale_filter *filter = &fz_scale_filter_simple;
 	fz_weights *contrib_rows = NULL;
 	fz_weights *contrib_cols = NULL;
@@ -1332,20 +1381,22 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 			contrib_cols = NULL;
 		else
 #endif /* SINGLE_PIXEL_SPECIALS */
-			contrib_cols = make_weights(ctx, src->w, x, w, filter, 0, dst_w_int, patch.x0, patch.x1, src->n, flip_x);
+			contrib_cols = make_weights(ctx, src->w, x, w, filter, 0, dst_w_int, patch.x0, patch.x1, src->n, flip_x, cache_x);
 #ifdef SINGLE_PIXEL_SPECIALS
 		if (src->h == 1)
 			contrib_rows = NULL;
 		else
 #endif /* SINGLE_PIXEL_SPECIALS */
-			contrib_rows = make_weights(ctx, src->h, y, h, filter, 1, dst_h_int, patch.y0, patch.y1, src->n, flip_y);
+			contrib_rows = make_weights(ctx, src->h, y, h, filter, 1, dst_h_int, patch.y0, patch.y1, src->n, flip_y, cache_y);
 
 		output = fz_new_pixmap(ctx, src->colorspace, patch.x1 - patch.x0, patch.y1 - patch.y0);
 	}
 	fz_catch(ctx)
 	{
-		fz_free(ctx, contrib_cols);
-		fz_free(ctx, contrib_rows);
+		if (!cache_x)
+			fz_free(ctx, contrib_cols);
+		if (!cache_y)
+			fz_free(ctx, contrib_rows);
 		fz_rethrow(ctx);
 	}
 	output->x = dst_x_int;
@@ -1389,8 +1440,10 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 		fz_catch(ctx)
 		{
 			fz_drop_pixmap(ctx, output);
-			fz_free(ctx, contrib_cols);
-			fz_free(ctx, contrib_rows);
+			if (!cache_x)
+				fz_free(ctx, contrib_cols);
+			if (!cache_y)
+				fz_free(ctx, contrib_rows);
 			fz_rethrow(ctx);
 		}
 		switch (src->n)
@@ -1435,7 +1488,24 @@ fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, floa
 	}
 
 cleanup:
-	fz_free(ctx, contrib_rows);
-	fz_free(ctx, contrib_cols);
+	if (!cache_y)
+		fz_free(ctx, contrib_rows);
+	if (!cache_x)
+		fz_free(ctx, contrib_cols);
 	return output;
+}
+
+void
+fz_free_scale_cache(fz_context *ctx, fz_scale_cache *sc)
+{
+	if (!sc)
+		return;
+	fz_free(ctx, sc->weights);
+	fz_free(ctx, sc);
+}
+
+fz_scale_cache *
+fz_new_scale_cache(fz_context *ctx)
+{
+	return fz_malloc_struct(ctx, fz_scale_cache);
 }

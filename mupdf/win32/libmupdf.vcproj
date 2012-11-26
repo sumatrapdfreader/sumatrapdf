@@ -402,6 +402,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\base_xml.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\crypt_aes.c"
 				>
 			</File>
@@ -667,10 +671,6 @@
 			</File>
 			<File
 				RelativePath="..\xps\xps_util.c"
-				>
-			</File>
-			<File
-				RelativePath="..\xps\xps_xml.c"
 				>
 			</File>
 			<File
