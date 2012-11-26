@@ -88,7 +88,7 @@ void    CenterDialog(HWND hDlg, HWND hParent=NULL);
 WCHAR * GetDefaultPrinterName();
 bool    CopyTextToClipboard(const WCHAR *text, bool appendOnly=false);
 bool    CopyImageToClipboard(HBITMAP hbmp, bool appendOnly=false);
-void    ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE);
+void    ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE, bool redraw = false);
 
 IStream*CreateStreamFromData(const void *data, size_t len);
 void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=NULL);

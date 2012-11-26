@@ -4,6 +4,8 @@
 //
 #define IDI_SUMATRAPDF                  1
 #define IDI_PDFDOC                      2
+#define IDM_VIEW_SCROLLBAR              112
+#define IDM_SEARCH_ONLINE               113
 #define IDD_DIALOG_GOTO_PAGE            129
 #define IDD_DIALOG_GET_PASSWORD         130
 #define IDD_DIALOG_PDF_ASSOCIATE        131
@@ -56,16 +58,17 @@
 #define IDM_ZOOM_1600                   445
 #define IDM_ZOOM_800                    446
 #define IDM_ZOOM_400                    447
-#define IDM_ZOOM_200                    448
-#define IDM_ZOOM_150                    449
-#define IDM_ZOOM_125                    450
-#define IDM_ZOOM_100                    451
-#define IDM_ZOOM_50                     452
-#define IDM_ZOOM_25                     453
-#define IDM_ZOOM_12_5                   454
-#define IDM_ZOOM_8_33                   455
-#define IDM_ZOOM_FIT_CONTENT            456
-#define IDM_ZOOM_CUSTOM                 457
+#define IDM_ZOOM_300                    448
+#define IDM_ZOOM_200                    449
+#define IDM_ZOOM_150                    450
+#define IDM_ZOOM_125                    451
+#define IDM_ZOOM_100                    452
+#define IDM_ZOOM_50                     453
+#define IDM_ZOOM_25                     454
+#define IDM_ZOOM_12_5                   455
+#define IDM_ZOOM_8_33                   456
+#define IDM_ZOOM_FIT_CONTENT            457
+#define IDM_ZOOM_CUSTOM                 458
 #define IDM_CONTRIBUTE_TRANSLATION      460
 #define IDM_VIEW_WITH_ACROBAT           470
 #define IDM_VIEW_WITH_FOXIT             471
@@ -195,8 +198,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        141
-#define _APS_NEXT_COMMAND_VALUE         32771
+#define _APS_NEXT_COMMAND_VALUE         32775
 #define _APS_NEXT_CONTROL_VALUE         1080
-#define _APS_NEXT_SYMED_VALUE           110
+#define _APS_NEXT_SYMED_VALUE           114
 #endif
 #endif

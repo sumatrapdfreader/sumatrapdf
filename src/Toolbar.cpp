@@ -33,6 +33,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { -1,  0,                     NULL,                   0 },
     { 4,   IDT_VIEW_FIT_WIDTH,    _TRN("Fit Width and Show Pages Continuously"), 0 },
     { 5,   IDT_VIEW_FIT_PAGE,     _TRN("Fit a Single Page"), 0 },
+    { 5,   IDM_VIEW_FULLSCREEN,   _TRN("F&ullscreen\tF11"), 0 },
     { 6,   IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0 },
     { 7,   IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0 },
     { -1,  IDM_FIND_FIRST,        NULL,                   0 },

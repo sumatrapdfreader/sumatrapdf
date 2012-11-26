@@ -19,13 +19,13 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-void MenuUpdateDisplayMode(WindowInfo* win)
+void MenuUpdateDisplayMode(WindowInfo* win, HMENU menu)
 {
     bool enabled = win->IsDocLoaded();
     DisplayMode displayMode = enabled ? win->dm->GetDisplayMode() : gGlobalPrefs.defaultDisplayMode;
 
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++)
-        win::menu::SetEnabled(win->menu, id, enabled);
+        win::menu::SetEnabled(menu, id, enabled);
 
     UINT id = 0;
     if (displayModeSingle(displayMode))
@@ -37,8 +37,10 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     else
         assert(!win->dm && DM_AUTOMATIC == displayMode);
 
-    CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
-    win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, displayModeContinuous(displayMode));
+    CheckMenuRadioItem(menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
+    win::menu::SetChecked(menu, IDM_VIEW_CONTINUOUS, displayModeContinuous(displayMode));
+    win::menu::SetChecked(menu, IDM_VIEW_SCROLLBAR, win->dm->showScrollbars);
+    win::menu::SetChecked(menu, IDM_VIEW_FULLSCREEN, win->fullScreen);
 }
 
 static MenuDef menuDefFile[] = {
@@ -62,7 +64,7 @@ static MenuDef menuDefFile[] = {
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
     { SEP_ITEM,                             0,                          0 },
-    { _TRN("E&xit\tCtrl+Q"),                IDM_EXIT,                   0 }
+    { _TRN("E&xit\tEsc"),                   IDM_EXIT,                   0 }
 };
 
 // the whole menu is MF_NOT_FOR_EBOOK_UI
@@ -71,12 +73,13 @@ static MenuDef menuDefView[] = {
     { _TRN("&Facing\tCtrl+7"),              IDM_VIEW_FACING,            MF_NOT_FOR_CHM },
     { _TRN("&Book View\tCtrl+8"),           IDM_VIEW_BOOK,              MF_NOT_FOR_CHM },
     { _TRN("Show &pages continuously"),     IDM_VIEW_CONTINUOUS,        MF_NOT_FOR_CHM },
+    { _TRN("Show scr&ollbars"),             IDM_VIEW_SCROLLBAR,         MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
     { _TRN("Rotate &Left\tCtrl+Shift+-"),   IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM },
     { _TRN("Rotate &Right\tCtrl+Shift++"),  IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
     { _TRN("Pr&esentation\tCtrl+L"),        IDM_VIEW_PRESENTATION_MODE, MF_REQ_FULLSCREEN },
-    { _TRN("F&ullscreen\tCtrl+Shift+L"),    IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
+    { _TRN("F&ullscreen\tF11"),             IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
     { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },
     { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0 },
     { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, 0 },
@@ -111,6 +114,7 @@ static MenuDef menuDefZoom[] = {
     { "1600%",                              IDM_ZOOM_1600,              MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { "800%",                               IDM_ZOOM_800,               MF_NO_TRANSLATE | MF_NOT_FOR_CHM },
     { "400%",                               IDM_ZOOM_400,               MF_NO_TRANSLATE },
+    { "300%",                               IDM_ZOOM_300,               MF_NO_TRANSLATE },
     { "200%",                               IDM_ZOOM_200,               MF_NO_TRANSLATE },
     { "150%",                               IDM_ZOOM_150,               MF_NO_TRANSLATE },
     { "125%",                               IDM_ZOOM_125,               MF_NO_TRANSLATE },
@@ -163,12 +167,13 @@ static MenuDef menuDefDebugEbooks[] = {
 
 // the whole menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
-    { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
+    { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Image"),                  IDM_COPY_IMAGE,             MF_REQ_ALLOW_COPY },
+    { _TRN(""),                             IDM_SEARCH_ONLINE,                 MF_NO_TRANSLATE },
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY },
-    { _TRN("Select &All"),                  IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
+    { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY },
     { SEP_ITEM,                             0,                          MF_PLUGIN_MODE_ONLY | MF_REQ_ALLOW_COPY },
     { _TRN("&Save As..."),                  IDM_SAVEAS,                 MF_PLUGIN_MODE_ONLY | MF_REQ_DISK_ACCESS },
     { _TRN("&Print..."),                    IDM_PRINT,                  MF_PLUGIN_MODE_ONLY | MF_REQ_PRINTER_ACCESS },
@@ -255,6 +260,7 @@ static struct {
     { IDM_ZOOM_1600,    1600.0 },
     { IDM_ZOOM_800,     800.0  },
     { IDM_ZOOM_400,     400.0  },
+    { IDM_ZOOM_300,     300.0  },
     { IDM_ZOOM_200,     200.0  },
     { IDM_ZOOM_150,     150.0  },
     { IDM_ZOOM_125,     125.0  },
@@ -303,13 +309,13 @@ static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
         CheckMenuRadioItem(m, IDM_ZOOM_100, IDM_ZOOM_100, IDM_ZOOM_100, MF_BYCOMMAND);
 }
 
-void MenuUpdateZoom(WindowInfo* win)
+void MenuUpdateZoom(WindowInfo* win, HMENU menu)
 {
     float zoomVirtual = gGlobalPrefs.defaultZoom;
     if (win->IsDocLoaded())
         zoomVirtual = win->dm->ZoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
-    ZoomMenuItemCheck(win->menu, menuId, win->IsDocLoaded());
+    ZoomMenuItemCheck(menu, menuId, win->IsDocLoaded());
 }
 
 void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly=false) {
@@ -375,8 +381,8 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
 
     win::menu::SetChecked(win->menu, IDM_FAV_TOGGLE, gGlobalPrefs.favVisible);
     win::menu::SetChecked(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.toolbarVisible);
-    MenuUpdateDisplayMode(win);
-    MenuUpdateZoom(win);
+    MenuUpdateDisplayMode(win, win->menu);
+    MenuUpdateZoom(win, win->menu);
 
     if (win->IsDocLoaded()) {
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, win->dm->CanNavigate(-1));
@@ -461,6 +467,15 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
     DestroyMenu(popup);
 }
 
+WCHAR *GetSearchText(WindowInfo* win)
+{
+    WCHAR *t = GetSelection(win);
+    if (str::IsEmpty(t)) return NULL;
+    if (str::Len(t) >= 40)
+        wcsncpy(t+37, L"...", 4);
+    return str::Format(L"S&earch Google for '%s'\tCtrl+E", t);
+}
+
 void OnContextMenu(WindowInfo* win, int x, int y)
 {
     assert(win->IsDocLoaded());
@@ -473,6 +488,17 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     RenderedBitmap *bmp = NULL;
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
+
+	AppendMenu(popup, MF_SEPARATOR, 0, NULL);
+    HMENU m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu());
+    AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
+	AppendMenu(popup, MF_SEPARATOR, 0, NULL);
+    m = BuildMenuFromMenuDef(menuDefView, dimof(menuDefView), CreateMenu());
+    AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&View"));
+	AppendMenu(popup, MF_SEPARATOR, 0, NULL);
+    m = BuildMenuFromMenuDef(menuDefZoom, dimof(menuDefZoom), CreateMenu());
+    AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Zoom"));
+
     if (!value || pageEl->GetType() != Element_Link)
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
     if (!value || pageEl->GetType() != Element_Comment)
@@ -480,26 +506,33 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     if (!pageEl || pageEl->GetType() != Element_Image)
         win::menu::Remove(popup, IDM_COPY_IMAGE);
 
-    if (!win->selectionOnPage)
-        win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
+    ScopedMem<WCHAR> selText(GetSearchText(win));
+    if (str::IsEmpty(selText.Get())) {
+        win::menu::Remove(popup, IDM_COPY_SELECTION);
+        win::menu::Remove(popup, IDM_SEARCH_ONLINE);
+        // remove separator
+        if (!GetMenuItemID(popup, 0)) RemoveMenu(popup, 0, MF_BYPOSITION);
+    } else
+        win::menu::SetText(popup, IDM_SEARCH_ONLINE, selText.Get());
+
+    AppendMenu(popup, MF_SEPARATOR, 0, NULL);
+    AppendMenu(popup, MF_STRING | (win->fullScreen ? MF_CHECKED : MF_UNCHECKED), IDM_VIEW_FULLSCREEN, _TR("F&ullscreen\tF11")); 
+    AppendMenu(popup, MF_SEPARATOR, 0, NULL);
+    AppendMenu(popup, MF_STRING, IDM_EXIT, _TR("E&xit\tEsc"));
+        
     MenuUpdatePrintItem(win, popup, true);
     win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->dm->HasTocTree());
     win::menu::SetChecked(popup, IDM_VIEW_BOOKMARKS, win->tocVisible);
-
+    win::menu::SetChecked(popup, IDM_FAV_TOGGLE, gGlobalPrefs.favVisible);
+    win::menu::SetChecked(popup, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.toolbarVisible);
+    MenuUpdateDisplayMode(win, popup);
+    MenuUpdateZoom(win, popup);
+    
     POINT pt = { x, y };
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON,
                              pt.x, pt.y, 0, win->hwndFrame, NULL);
     switch (cmd) {
-    case IDM_COPY_SELECTION:
-    case IDM_SELECT_ALL:
-    case IDM_SAVEAS:
-    case IDM_PRINT:
-    case IDM_VIEW_BOOKMARKS:
-    case IDM_PROPERTIES:
-        SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
-        break;
-
     case IDM_COPY_LINK_TARGET:
     case IDM_COPY_COMMENT:
         CopyTextToClipboard(value);
@@ -512,6 +545,10 @@ void OnContextMenu(WindowInfo* win, int x, int y)
                 CopyImageToClipboard(bmp->GetBitmap());
             delete bmp;
         }
+        break;
+        
+    default:
+        SendMessage(win->hwndFrame, WM_COMMAND, cmd, 0);
         break;
     }
 

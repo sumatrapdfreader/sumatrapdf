@@ -62,6 +62,7 @@ public:
 
     enum DisplayMode    displayMode;
     PointI              scrollPos;
+    bool                showScrollbars;
     int                 pageNo;
     // for bookmarking ebook files: offset of the current page reparse
     // point within html

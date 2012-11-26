@@ -154,6 +154,7 @@ protected:
 public:
     bool            NeedHScroll() const { return viewPort.dy < totalViewPortSize.dy; }
     bool            NeedVScroll() const { return viewPort.dx < totalViewPortSize.dx; }
+    bool            showScrollbars;
 
     void            ChangeViewPortSize(SizeI newViewPortSize);
 
@@ -187,6 +188,8 @@ public:
     PageElement *   GetElementAtPos(PointI pt);
 
     ScreenPagePadding *GetPadding() { return padding; }
+
+    SizeI           GetCanvasSize() { return canvasSize; }
 
     int             GetPageNoByPoint(PointI pt);
     int             GetPageNextToPoint(PointI pt);
