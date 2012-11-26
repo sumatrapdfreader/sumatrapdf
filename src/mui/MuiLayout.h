@@ -149,21 +149,35 @@ public:
 // Grid consists of rows and columns
 class GridLayout : public ILayout
 {
+    struct GridCell {
+        ILayout *el;
+        Size desiredSize;
+        // TODO: more data
+    };
+
 protected:
-    int rows;
-    int cols;
-    Size                 desiredSize; // calculated in Measure()
+    int     rows;
+    int     cols;
+    
+    // if dirty is true, rows/cols and ld must be rebuilt from els
+    bool    dirty;
+    // it's rows * cols in size
+    GridCell *cells;
+
+    Size    desiredSize; // calculated in Measure()
+
+    void RebuildCellData();
+    GridCell *GetCell(int row, int col) const;
 
 public:
     Vec<GridLayoutData>  els;
 
-    GridLayout(int rows, int cols) : rows(rows), cols(cols) { }
+    GridLayout() : dirty(true), cells(NULL) { }
     GridLayout& Add(GridLayoutData&);
 
     virtual ~GridLayout();
     virtual void Measure(const Size availableSize);
     virtual Size DesiredSize() { return desiredSize; }
     virtual void Arrange(const Rect finalRect);
-
 };
 

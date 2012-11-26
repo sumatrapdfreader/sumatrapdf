@@ -114,26 +114,81 @@ void VerticalLayout::Arrange(const Rect finalRect)
     }
 }
 
+// TODO: to properly handle adding element to the grid at any
+// time, we would need to request repaint here, so we would need
+// to know parent window, the way Control does, further
+// unifying the notion of control and layout.
 GridLayout& GridLayout::Add(GridLayoutData& ld)
 {
     CrashIf(ld.row >= rows);
     CrashIf(ld.col >= cols);
     els.Append(ld);
+    dirty = true;
     return *this;
 }
 
 GridLayout::~GridLayout()
 {
+    free(cells);
+}
+
+GridLayout::GridCell *GridLayout::GetCell(int row, int col) const
+{
+    CrashIf(row >= rows);
+    CrashIf(col >= cols);
+    return &cells[col + row * rows];
+}
+
+void GridLayout::RebuildCellData()
+{
+    // calculate how many columns and rows we need and build 2d cells
+    // array, a cell for each column/row
+    int cols = 0, rows = 0;
+    for (GridLayoutData *d = els.IterStart(); d; d = els.IterNext()) {
+        if (d->col > cols)
+            cols = d->col;
+        if (d->row > rows)
+            rows = d->row;
+    }
+    free(cells);
+    cells = AllocArray<GridCell>(cols * rows);
+    GridCell *cell;
+    for (GridLayoutData *d = els.IterStart(); d; d = els.IterNext()) {
+        cell = GetCell(d->row, d->col);
+        cell->el = d->el;
+    }
+    // TODO: collapse empty rows (where each cell has no element)
+
+    // TODO: not sure if I want to disallow empty grids, but do for now
+    CrashIf(0 == rows);
+    CrashIf(0 == cells);
 }
 
 void GridLayout::Measure(const Size availableSize)
 {
+    // if there were elements added/removed from the grid,
+    // we need to rebuild info about cells
+    if (dirty)
+        RebuildCellData();
 
+    GridCell *cell;
+    ILayout *el;
+    for (int row = 0; row < rows; row++) {
+        for (int col = 0; col < cols; col++) {
+            cell = GetCell(row, col);
+            el = cell->el;
+            if (!el)
+                continue;
+            el->Measure(availableSize);
+            cell->desiredSize = el->DesiredSize();
+        }
+    }
+    // TODO: finish me
 }
 
 void GridLayout::Arrange(const Rect finalRect)
 {
-
+    // TODO: write me
 }
 
 }
