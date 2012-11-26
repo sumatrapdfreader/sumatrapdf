@@ -237,8 +237,7 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     if (!graphicsPath)
         return;
 
-    // graphicsPath bbox can have non-zero X,Y, so must take that
-    // into account
+    // graphicsPath bbox can have non-zero X,Y
     Rect gpBbox;
     Brush *brFill = BrushFromColorData(s->fill, bbox);
     Brush *brStroke = BrushFromColorData(s->stroke, bbox);

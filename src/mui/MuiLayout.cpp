@@ -114,4 +114,26 @@ void VerticalLayout::Arrange(const Rect finalRect)
     }
 }
 
+GridLayout& GridLayout::Add(GridLayoutData& ld)
+{
+    CrashIf(ld.row >= rows);
+    CrashIf(ld.col >= cols);
+    els.Append(ld);
+    return *this;
+}
+
+GridLayout::~GridLayout()
+{
+}
+
+void GridLayout::Measure(const Size availableSize)
+{
+
+}
+
+void GridLayout::Arrange(const Rect finalRect)
+{
+
+}
+
 }

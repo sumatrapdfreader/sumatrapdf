@@ -9,6 +9,9 @@
 #endif
 #define MuiButton_h
 
+// Button is a combined label/button control. It can have 2 visual states:
+// regular and when mouse is over it.
+
 class Button : public Control
 {
     // use SetStyles() to set
@@ -36,7 +39,7 @@ public:
     size_t          textDx; // cached measured text width
 };
 
-// TODO: maybe should combine Button and ButtonVector into one
+// TODO: maybe should combine Button and ButtonVector into one?
 class ButtonVector : public Control
 {
     // use SetStyles() to set

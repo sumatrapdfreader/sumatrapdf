@@ -34,6 +34,7 @@ using namespace Gdiplus;
 #include "Search.h"
 #include "Selection.h"
 #include "SumatraAbout.h"
+#include "SumatraAbout2.h"
 #include "SumatraDialogs.h"
 #include "SumatraProperties.h"
 #include "SumatraWindow.h"
@@ -4691,7 +4692,11 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_ABOUT:
+#ifdef DEBUG
+            OnMenuAbout2();
+#else
             OnMenuAbout();
+#endif
             break;
 
         case IDM_CHECK_UPDATE:

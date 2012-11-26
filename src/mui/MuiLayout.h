@@ -125,3 +125,45 @@ public:
     virtual void Arrange(const Rect finalRect);
 };
 
+struct GridLayoutData {
+    ILayout *el;
+    int row, col;
+public:
+    GridLayoutData() {
+        el = NULL;
+        row = 0;
+        col = 0;
+    }
+    GridLayoutData(const GridLayoutData& other) {
+        el = other.el;
+        row = other.row;
+        col = other.col;
+    }
+    void Set(ILayout *el, int row, int col) {
+        this->el = el;
+        this->row = row;
+        this->col = col;
+    }
+};
+
+// Grid consists of rows and columns
+class GridLayout : public ILayout
+{
+protected:
+    int rows;
+    int cols;
+    Size                 desiredSize; // calculated in Measure()
+
+public:
+    Vec<GridLayoutData>  els;
+
+    GridLayout(int rows, int cols) : rows(rows), cols(cols) { }
+    GridLayout& Add(GridLayoutData&);
+
+    virtual ~GridLayout();
+    virtual void Measure(const Size availableSize);
+    virtual Size DesiredSize() { return desiredSize; }
+    virtual void Arrange(const Rect finalRect);
+
+};
+
