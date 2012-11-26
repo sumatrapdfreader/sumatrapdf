@@ -1,3 +1,6 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
 #include "BaseUtil.h"
 #include "SumatraAbout2.h"
 #include "Mui.h"
@@ -5,6 +8,7 @@
 #include "resource.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "Version.h"
 #include "WinUtil.h"
 
 using namespace mui;
@@ -83,7 +87,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
     mainWnd->SetStyle(styleMainWnd);
 
     int rows = dimof(gAboutLayoutInfo);
-    GridLayout *l = new GridLayout(rows, 2);
+    GridLayout *l = new GridLayout();
     GridLayoutData ld;
 
     for (int row = 0; row < rows; row++) {
@@ -93,7 +97,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
 
         ld.Set(new Button(left, NULL, NULL), row, 0);
         l->Add(ld);
-        ld.Set(new Button(right, NULL, NULL), 0, 1);
+        ld.Set(new Button(right, NULL, NULL), row, 1);
         l->Add(ld);
     }
 

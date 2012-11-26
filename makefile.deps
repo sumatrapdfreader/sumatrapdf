@@ -354,9 +354,13 @@ $(OS)\SumatraAbout.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUti
 $(OS)\SumatraAbout.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\SumatraAbout.obj: src\WindowInfo.h
 $(OS)\SumatraAbout2.obj: src\BaseEngine.h src\DisplayState.h src\FileHistory.h
-$(OS)\SumatraAbout2.obj: src\resource.h src\SumatraAbout2.h src\SumatraPDF.h
-$(OS)\SumatraAbout2.obj: src\SumatraWindow.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\SumatraAbout2.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OS)\SumatraAbout2.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
+$(OS)\SumatraAbout2.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
+$(OS)\SumatraAbout2.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
+$(OS)\SumatraAbout2.obj: src\mui\MuiScrollBar.h src\resource.h src\SumatraAbout2.h
+$(OS)\SumatraAbout2.obj: src\SumatraPDF.h src\SumatraWindow.h src\Translations.h
+$(OS)\SumatraAbout2.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
+$(OS)\SumatraAbout2.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\Sigslot.h
 $(OS)\SumatraAbout2.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\SumatraDialogs.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\SumatraDialogs.obj: src\DisplayState.h src\FileHistory.h src\Resource.h
@@ -377,17 +381,17 @@ $(OS)\SumatraPDF.obj: src\mui\MuiScrollBar.h src\Notifications.h src\ParseComman
 $(OS)\SumatraPDF.obj: src\PdfEngine.h src\PdfSync.h src\Print.h
 $(OS)\SumatraPDF.obj: src\PsEngine.h src\RenderCache.h src\resource.h
 $(OS)\SumatraPDF.obj: src\Resource.h src\Search.h src\Selection.h
-$(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraDialogs.h
-$(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\SumatraStartup.cpp
-$(OS)\SumatraPDF.obj: src\SumatraWindow.h src\TableOfContents.h src\TextSearch.h
-$(OS)\SumatraPDF.obj: src\TextSelection.h src\Toolbar.h src\Translations.h
-$(OS)\SumatraPDF.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
-$(OS)\SumatraPDF.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OS)\SumatraPDF.obj: src\utils\HtmlWindow.h src\utils\HttpUtil.h src\utils\RefCounted.h
-$(OS)\SumatraPDF.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
-$(OS)\SumatraPDF.obj: src\utils\ThreadUtil.h src\utils\Timer.h src\utils\Touch.h
-$(OS)\SumatraPDF.obj: src\utils\UITask.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\SumatraPDF.obj: src\Version.h src\WindowInfo.h
+$(OS)\SumatraPDF.obj: src\StressTesting.h src\SumatraAbout.h src\SumatraAbout2.h
+$(OS)\SumatraPDF.obj: src\SumatraDialogs.h src\SumatraPDF.h src\SumatraProperties.h
+$(OS)\SumatraPDF.obj: src\SumatraStartup.cpp src\SumatraWindow.h src\TableOfContents.h
+$(OS)\SumatraPDF.obj: src\TextSearch.h src\TextSelection.h src\Toolbar.h
+$(OS)\SumatraPDF.obj: src\Translations.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\SumatraPDF.obj: src\utils\DebugLog.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
+$(OS)\SumatraPDF.obj: src\utils\GeomUtil.h src\utils\HtmlWindow.h src\utils\HttpUtil.h
+$(OS)\SumatraPDF.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sigslot.h
+$(OS)\SumatraPDF.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Timer.h
+$(OS)\SumatraPDF.obj: src\utils\Touch.h src\utils\UITask.h src\utils\Vec.h
+$(OS)\SumatraPDF.obj: src\utils\WinUtil.h src\Version.h src\WindowInfo.h
 $(OS)\SumatraProperties.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\SumatraProperties.obj: src\DisplayState.h src\Doc.h src\EbookWindow.h
 $(OS)\SumatraProperties.obj: src\FileHistory.h src\resource.h src\SumatraPDF.h

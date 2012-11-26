@@ -1,3 +1,6 @@
+/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
 #ifndef SumatraAbout2_h
 #define SumatraAbout2_h
 

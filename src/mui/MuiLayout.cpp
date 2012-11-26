@@ -120,8 +120,6 @@ void VerticalLayout::Arrange(const Rect finalRect)
 // unifying the notion of control and layout.
 GridLayout& GridLayout::Add(GridLayoutData& ld)
 {
-    CrashIf(ld.row >= rows);
-    CrashIf(ld.col >= cols);
     els.Append(ld);
     dirty = true;
     return *this;
@@ -145,11 +143,14 @@ void GridLayout::RebuildCellData()
     // array, a cell for each column/row
     int cols = 0, rows = 0;
     for (GridLayoutData *d = els.IterStart(); d; d = els.IterNext()) {
-        if (d->col > cols)
-            cols = d->col;
-        if (d->row > rows)
-            rows = d->row;
+        if (d->col >= cols)
+            cols = d->col + 1;
+        if (d->row >= rows)
+            rows = d->row + 1;
     }
+    this->rows = rows;
+    this->cols = cols;
+
     free(cells);
     cells = AllocArray<GridCell>(cols * rows);
     GridCell *cell;
@@ -161,7 +162,7 @@ void GridLayout::RebuildCellData()
 
     // TODO: not sure if I want to disallow empty grids, but do for now
     CrashIf(0 == rows);
-    CrashIf(0 == cells);
+    CrashIf(0 == cols);
 }
 
 void GridLayout::Measure(const Size availableSize)
