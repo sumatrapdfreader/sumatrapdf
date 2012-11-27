@@ -149,8 +149,7 @@ public:
 // Grid consists of rows and columns
 class GridLayout : public ILayout
 {
-    struct GridCell {
-        ILayout *el;
+    struct Cell {
         Size desiredSize;
         // TODO: more data
     };
@@ -161,18 +160,26 @@ protected:
     
     // if dirty is true, rows/cols and ld must be rebuilt from els
     bool    dirty;
-    // it's rows * cols in size
-    GridCell *cells;
+    // cells is rows * cols in size
+    int nCells;
+    Cell *cells;
+    Cell *lastCell;
+    // maxColWidth is an array of cols size and contains
+    // maximum width of each column (the width of the widest
+    // cell in that column)
+    int *maxColWidth;
+    int *maxRowHeight;
 
     Size    desiredSize; // calculated in Measure()
 
-    void RebuildCellData();
-    GridCell *GetCell(int row, int col) const;
+    void RebuildCellDataIfNeeded();
+    Cell *GetCell(int row, int col) const;
+    Point GetCellPos(int row, int col) const;
 
 public:
     Vec<GridLayoutData>  els;
 
-    GridLayout() : dirty(true), cells(NULL) { }
+    GridLayout();
     GridLayout& Add(GridLayoutData&);
 
     virtual ~GridLayout();

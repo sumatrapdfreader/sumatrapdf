@@ -86,10 +86,10 @@ static void CreateAboutMuiWindow(HWND hwnd)
     mainWnd->SetMinSize(Size(320, 200));
     mainWnd->SetStyle(styleMainWnd);
 
-    int rows = dimof(gAboutLayoutInfo);
     GridLayout *l = new GridLayout();
     GridLayoutData ld;
 
+    int rows = dimof(gAboutLayoutInfo);
     for (int row = 0; row < rows; row++) {
         const WCHAR *left = gAboutLayoutInfo[row].leftTxt;
         const WCHAR *right = gAboutLayoutInfo[row].rightTxt;

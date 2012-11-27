@@ -125,71 +125,123 @@ GridLayout& GridLayout::Add(GridLayoutData& ld)
     return *this;
 }
 
+GridLayout::GridLayout() : dirty(true), cells(NULL), maxColWidth(NULL), maxRowHeight(NULL)
+{
+}
+
 GridLayout::~GridLayout()
 {
     free(cells);
+    free(maxColWidth);
+    free(maxRowHeight);
 }
 
-GridLayout::GridCell *GridLayout::GetCell(int row, int col) const
+GridLayout::Cell *GridLayout::GetCell(int row, int col) const
 {
     CrashIf(row >= rows);
     CrashIf(col >= cols);
-    return &cells[col + row * rows];
+    // TODO: wouldn't work if cols == 0
+    int n = col + (row * (cols - 1));
+    CrashIf(n < 0);
+    CrashIf(n >= nCells);
+    Cell *res = cells + n;
+    CrashIf(res >= lastCell);
+    CrashIf(res < cells);
+    return res;
 }
 
-void GridLayout::RebuildCellData()
+// if there were elements added/removed from the grid,
+// we need to rebuild info about cells
+void GridLayout::RebuildCellDataIfNeeded()
 {
+    if (!dirty)
+        return;
+
     // calculate how many columns and rows we need and build 2d cells
     // array, a cell for each column/row
-    int cols = 0, rows = 0;
+    cols = 0;
+    rows = 0;
+
     for (GridLayoutData *d = els.IterStart(); d; d = els.IterNext()) {
         if (d->col >= cols)
             cols = d->col + 1;
         if (d->row >= rows)
             rows = d->row + 1;
     }
-    this->rows = rows;
-    this->cols = cols;
 
     free(cells);
-    cells = AllocArray<GridCell>(cols * rows);
-    GridCell *cell;
-    for (GridLayoutData *d = els.IterStart(); d; d = els.IterNext()) {
-        cell = GetCell(d->row, d->col);
-        cell->el = d->el;
-    }
-    // TODO: collapse empty rows (where each cell has no element)
+    nCells = cols * rows;
+    cells = AllocArray<Cell>(nCells);
+    lastCell = cells + nCells;
 
     // TODO: not sure if I want to disallow empty grids, but do for now
     CrashIf(0 == rows);
     CrashIf(0 == cols);
+
+    free(maxColWidth);
+    maxColWidth = AllocArray<int>(this->cols);
+    free(maxRowHeight);
+    maxRowHeight = AllocArray<int>(this->rows);
+    dirty = false;
 }
 
 void GridLayout::Measure(const Size availableSize)
 {
-    // if there were elements added/removed from the grid,
-    // we need to rebuild info about cells
-    if (dirty)
-        RebuildCellData();
+    RebuildCellDataIfNeeded();
 
-    GridCell *cell;
+    Cell *cell;
     ILayout *el;
-    for (int row = 0; row < rows; row++) {
-        for (int col = 0; col < cols; col++) {
-            cell = GetCell(row, col);
-            el = cell->el;
-            if (!el)
-                continue;
-            el->Measure(availableSize);
-            cell->desiredSize = el->DesiredSize();
-        }
+    int col, row;
+    for (GridLayoutData *d = els.IterStart(); d; d = els.IterNext()) {
+        col = d->col;
+        row = d->row;
+        el = d->el;
+
+        cell = GetCell(row, col);
+        el->Measure(availableSize);
+        cell->desiredSize = el->DesiredSize();
+        if (cell->desiredSize.Width > maxColWidth[col])
+            maxColWidth[col] = cell->desiredSize.Width;
+        if (cell->desiredSize.Height > maxRowHeight[row])
+            maxRowHeight[row] = cell->desiredSize.Height;
     }
-    // TODO: finish me
+    int desiredWidth = 0;
+    int desiredHeight = 0;
+    for (int row=0; row < rows; row++) {
+        desiredHeight += maxRowHeight[row];
+    }
+    for (int col=0; col < cols; col++) {
+        desiredWidth += maxColWidth[col];
+    }
+    // TODO: what to do if desired size is more than availableSize?
+    desiredSize.Width = desiredWidth;
+    desiredSize.Height = desiredHeight;
+}
+
+Point GridLayout::GetCellPos(int row, int col) const
+{
+    int x = 0, y = 0;
+    for (int c = 0; c < col; c++) {
+        x += maxColWidth[c];
+    }
+    for (int r = 0; r < row; r++) {
+        y += maxRowHeight[r];
+    }
+    return Point(x, y);
 }
 
 void GridLayout::Arrange(const Rect finalRect)
 {
-    // TODO: write me
+    Cell *cell;
+    ILayout *el;
+
+    for (GridLayoutData *d = els.IterStart(); d; d = els.IterNext()) {
+        cell = GetCell(d->row, d->col);
+        el = d->el;
+        Point pos(GetCellPos(d->row, d->col));
+        Rect r(pos, cell->desiredSize);
+        el->Arrange(r);
+    }
 }
 
 }
