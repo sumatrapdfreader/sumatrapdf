@@ -140,8 +140,7 @@ GridLayout::Cell *GridLayout::GetCell(int row, int col) const
 {
     CrashIf(row >= rows);
     CrashIf(col >= cols);
-    // TODO: wouldn't work if cols == 0
-    int n = col + (row * (cols - 1));
+    int n = (row * cols) + col;
     CrashIf(n < 0);
     CrashIf(n >= nCells);
     Cell *res = cells + n;
