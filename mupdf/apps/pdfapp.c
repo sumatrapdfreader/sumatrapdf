@@ -187,6 +187,7 @@ void pdfapp_open(pdfapp_t *app, char *filename, int reload)
 			}
 		}
 
+		app->docpath = fz_strdup(ctx, filename);
 		app->doctitle = filename;
 		if (strrchr(app->doctitle, '\\'))
 			app->doctitle = strrchr(app->doctitle, '\\') + 1;
@@ -248,6 +249,10 @@ void pdfapp_close(pdfapp_t *app)
 		fz_free(app->ctx, app->doctitle);
 	app->doctitle = NULL;
 
+	if (app->docpath)
+		fz_free(app->ctx, app->docpath);
+	app->docpath = NULL;
+
 	if (app->image)
 		fz_drop_pixmap(app->ctx, app->image);
 	app->image = NULL;
@@ -277,6 +282,32 @@ void pdfapp_close(pdfapp_t *app)
 	fz_flush_warnings(app->ctx);
 }
 
+static int gen_tmp_file(char *buf, int len)
+{
+	int i;
+	char *name = strrchr(buf, '/');
+
+	if (name == NULL)
+		name = strrchr(buf, '\\');
+
+	if (name != NULL)
+		name++;
+	else
+		name = buf;
+
+	for (i = 0; i < 10000; i++)
+	{
+		FILE *f;
+		snprintf(name, buf+len-name, "tmp%04d", i);
+		f = fopen(buf, "r");
+		if (f == NULL)
+			return 1;
+		fclose(f);
+	}
+
+	return 0;
+}
+
 static int pdfapp_save(pdfapp_t *app)
 {
 	char buf[PATH_MAX];
@@ -290,7 +321,44 @@ static int pdfapp_save(pdfapp_t *app)
 		opts.do_garbage = 1;
 		opts.do_linear = 0;
 
-		fz_write_document(app->doc, buf, &opts);
+		if (strcmp(buf, app->docpath) == 0)
+		{
+			if (gen_tmp_file(buf, PATH_MAX))
+			{
+				int written;
+
+				fz_var(written);
+				fz_try(app->ctx)
+				{
+					fz_write_document(app->doc, buf, &opts);
+					written = 1;
+				}
+				fz_catch(app->ctx)
+				{
+					written = 0;
+				}
+
+				if (written)
+				{
+					char buf2[PATH_MAX];
+					strncpy(buf2, app->docpath, PATH_MAX);
+					pdfapp_close(app);
+					winreplacefile(buf, buf2);
+					pdfapp_open(app, buf2, 1);
+				}
+
+				return written;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			fz_write_document(app->doc, buf, &opts);
+			return 1;
+		}
 
 		return 1;
 	}

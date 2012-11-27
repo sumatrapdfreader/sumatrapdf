@@ -48,6 +48,8 @@ public class MuPDFCore
 	private static native void startAlertsInternal();
 	private static native void stopAlertsInternal();
 	private static native void destroying();
+	private static native boolean hasChangesInternal();
+	private static native void saveInternal();
 
 	public static native boolean javascriptSupported();
 
@@ -195,5 +197,13 @@ public class MuPDFCore
 
 	public synchronized boolean authenticatePassword(String password) {
 		return authenticatePasswordInternal(password);
+	}
+
+	public synchronized boolean hasChanges() {
+		return hasChangesInternal();
+	}
+
+	public synchronized void save() {
+		saveInternal();
 	}
 }

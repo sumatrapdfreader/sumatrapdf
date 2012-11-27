@@ -57,6 +57,7 @@ int resolution = 160;
 fz_context *ctx;
 fz_bbox *hit_bbox = NULL;
 int current;
+char *current_path = NULL;
 
 page_cache pages[NUM_CACHE] = {{0}};
 
@@ -93,6 +94,7 @@ static void dump_annotation_display_lists()
 	}
 }
 
+static alerts_initialised = 0;
 // fin_lock and fin_lock2 are used during shutdown. The two waiting tasks
 // show_alert and waitForAlertInternal respectively take these locks while
 // waiting. During shutdown, the conditions are signaled and then the fin_locks
@@ -156,7 +158,7 @@ static void alerts_init()
 {
 	fz_interactive *idoc = fz_interact(doc);
 
-	if (!idoc)
+	if (!idoc || alerts_initialised)
 		return;
 
 	alerts_active = 0;
@@ -170,17 +172,18 @@ static void alerts_init()
 
 	fz_set_doc_event_callback(idoc, event_cb, NULL);
 	LOGT("alert_init");
+	alerts_initialised = 1;
 }
 
 static void alerts_fin()
 {
 	fz_interactive *idoc = fz_interact(doc);
-
-	if (!idoc)
+	if (!alerts_initialised)
 		return;
 
 	LOGT("Enter alerts_fin");
-	fz_set_doc_event_callback(idoc, NULL, NULL);
+	if (idoc)
+		fz_set_doc_event_callback(idoc, NULL, NULL);
 
 	// Set alerts_active false and wake up show_alert and waitForAlertInternal,
 	pthread_mutex_lock(&alert_lock);
@@ -202,6 +205,7 @@ static void alerts_fin()
 	pthread_mutex_destroy(&fin_lock2);
 	pthread_mutex_destroy(&fin_lock);
 	LOGT("Exit alerts_fin");
+	alerts_initialised = 0;
 }
 
 JNIEXPORT int JNICALL
@@ -237,6 +241,7 @@ Java_com_artifex_mupdf_MuPDFCore_openFile(JNIEnv * env, jobject thiz, jstring jf
 		LOGE("Opening document...");
 		fz_try(ctx)
 		{
+			current_path = fz_strdup(ctx, (char *)filename);
 			doc = fz_open_document(ctx, (char *)filename);
 			alerts_init();
 		}
@@ -935,12 +940,10 @@ Java_com_artifex_mupdf_MuPDFCore_searchPage(JNIEnv * env, jobject thiz, jstring 
 	return arr;
 }
 
-JNIEXPORT void JNICALL
-Java_com_artifex_mupdf_MuPDFCore_destroying(JNIEnv * env, jobject thiz)
+static void close_doc()
 {
 	int i;
 
-	LOGI("Destroying");
 	fz_free(ctx, hit_bbox);
 	hit_bbox = NULL;
 
@@ -951,6 +954,16 @@ Java_com_artifex_mupdf_MuPDFCore_destroying(JNIEnv * env, jobject thiz)
 
 	fz_close_document(doc);
 	doc = NULL;
+}
+
+JNIEXPORT void JNICALL
+Java_com_artifex_mupdf_MuPDFCore_destroying(JNIEnv * env, jobject thiz)
+{
+	LOGI("Destroying");
+	close_doc();
+	fz_free(ctx, current_path);
+	current_path = NULL;
+
 #ifdef NDK_PROFILER
 	// Apparently we should really be writing to whatever path we get
 	// from calling getFilesDir() in the java part, which supposedly
@@ -1220,7 +1233,7 @@ Java_com_artifex_mupdf_MuPDFCore_setFocusedWidgetTextInternal(JNIEnv * env, jobj
 
 			if (focus)
 			{
-				result = fz_text_widget_set_text(idoc, focus, text);
+				result = fz_text_widget_set_text(idoc, focus, (char *)text);
 				dump_annotation_display_lists();
 			}
 		}
@@ -1305,7 +1318,7 @@ Java_com_artifex_mupdf_MuPDFCore_waitForAlertInternal(JNIEnv * env, jobject thiz
 	if (message == NULL)
 		return NULL;
 
-	return (*env)->NewObject(env, alertClass, ctor, title, alert.icon_type, alert.button_group_type, message, alert.button_pressed);
+	return (*env)->NewObject(env, alertClass, ctor, message, alert.icon_type, alert.button_group_type, title, alert.button_pressed);
 }
 
 JNIEXPORT void JNICALL
@@ -1343,6 +1356,9 @@ Java_com_artifex_mupdf_MuPDFCore_replyToAlertInternal(JNIEnv * env, jobject thiz
 JNIEXPORT void JNICALL
 Java_com_artifex_mupdf_MuPDFCore_startAlertsInternal(JNIEnv * env, jobject thiz)
 {
+	if (!alerts_initialised)
+		return;
+
 	LOGT("Enter startAlerts");
 	pthread_mutex_lock(&alert_lock);
 
@@ -1358,6 +1374,9 @@ Java_com_artifex_mupdf_MuPDFCore_startAlertsInternal(JNIEnv * env, jobject thiz)
 JNIEXPORT void JNICALL
 Java_com_artifex_mupdf_MuPDFCore_stopAlertsInternal(JNIEnv * env, jobject thiz)
 {
+	if (!alerts_initialised)
+		return;
+
 	LOGT("Enter stopAlerts");
 	pthread_mutex_lock(&alert_lock);
 
@@ -1370,4 +1389,75 @@ Java_com_artifex_mupdf_MuPDFCore_stopAlertsInternal(JNIEnv * env, jobject thiz)
 
 	pthread_mutex_unlock(&alert_lock);
 	LOGT("Exit stopAleerts");
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_artifex_mupdf_MuPDFCore_hasChangesInternal(JNIEnv * env, jobject thiz)
+{
+	fz_interactive *idoc = fz_interact(doc);
+
+	return (idoc && fz_has_unsaved_changes(idoc)) ? JNI_TRUE : JNI_FALSE;
+}
+
+static char *tmp_path(char *path)
+{
+	int f;
+	char *buf = malloc(strlen(path) + 6 + 1);
+	if (!buf)
+		return NULL;
+
+	strcpy(buf, path);
+	strcat(buf, "XXXXXX");
+
+	f = mkstemp(buf);
+
+	if (f >= 0)
+	{
+		close(f);
+		return buf;
+	}
+	else
+	{
+		free(buf);
+		return NULL;
+	}
+}
+
+JNIEXPORT void JNICALL
+Java_com_artifex_mupdf_MuPDFCore_saveInternal(JNIEnv * env, jobject thiz)
+{
+	if (doc && current_path)
+	{
+		char *tmp;
+		fz_write_options opts;
+		opts.do_ascii = 1;
+		opts.do_expand = 0;
+		opts.do_garbage = 1;
+		opts.do_linear = 0;
+
+		tmp = tmp_path(current_path);
+		if (tmp)
+		{
+			int written;
+
+			fz_var(written);
+			fz_try(ctx)
+			{
+				fz_write_document(doc, tmp, &opts);
+				written = 1;
+			}
+			fz_catch(ctx)
+			{
+				written = 0;
+			}
+
+			if (written)
+			{
+				close_doc();
+				rename(tmp, current_path);
+			}
+
+			free(tmp);
+		}
+	}
 }

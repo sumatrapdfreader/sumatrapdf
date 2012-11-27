@@ -2,8 +2,9 @@
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp"
-    android:textSize="20dp" >
-    
-
+	android:paddingTop="8dp"
+	android:paddingBottom="8dp"
+	android:paddingLeft="12dp"
+	android:paddingRight="12dp"
+    android:textAppearance="?android:attr/textAppearanceLarge" >
 </TextView>

@@ -11,7 +11,7 @@
         android:layout_toLeftOf="@+id/page"
         android:singleLine="true"
         android:layout_centerVertical="true"
-        android:paddingLeft="10dp"
+        android:paddingLeft="8dp"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
@@ -21,7 +21,7 @@
         android:layout_alignBaseline="@+id/title"
         android:layout_alignBottom="@+id/title"
         android:layout_alignParentRight="true"
-        android:paddingRight="10dp"
+        android:paddingRight="8dp"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </RelativeLayout>

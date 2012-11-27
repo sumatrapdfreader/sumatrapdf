@@ -41,8 +41,8 @@ class OpaqueImageView extends ImageView {
 }
 
 public abstract class PageView extends ViewGroup {
-	private static final int HIGHLIGHT_COLOR = 0x805555FF;
-	private static final int LINK_COLOR = 0x80FFCC88;
+	private static final int HIGHLIGHT_COLOR = 0x802572AC;
+	private static final int LINK_COLOR = 0x80AC7225;
 	private static final int BACKGROUND_COLOR = 0xFFFFFFFF;
 	private static final int PROGRESS_DIALOG_DELAY = 200;
 	private final Context   mContext;

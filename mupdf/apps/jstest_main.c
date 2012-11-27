@@ -107,6 +107,10 @@ int wingetsavepath(pdfapp_t *app, char *buf, int len)
 	return 0;
 }
 
+void winreplacefile(char *source, char *target)
+{
+}
+
 void wincursor(pdfapp_t *app, int curs)
 {
 }

@@ -16,6 +16,7 @@ public class OutlineActivity extends ListActivity {
 	    setListAdapter(new OutlineAdapter(getLayoutInflater(),mItems));
 	    // Restore the position within the list from last viewing
 	    getListView().setSelection(OutlineActivityData.get().position);
+        getListView().setDividerHeight(0);
 	    setResult(-1);
 	}
 

@@ -19,6 +19,8 @@
 #define WM_MOUSEWHEEL 0x020A
 #endif
 
+#define MIN(x,y) ((x) < (y) ? (x) : (y))
+
 #define ID_ABOUT	0x1000
 #define ID_DOCINFO	0x1001
 
@@ -37,8 +39,10 @@ static int justcopied = 0;
 
 static pdfapp_t gapp;
 
-static wchar_t wbuf[1024];
-static char filename[1024];
+#define PATH_MAX (1024)
+
+static wchar_t wbuf[PATH_MAX];
+static char filename[PATH_MAX];
 
 /*
  * Create registry keys to associate MuPDF with PDF and XPS files.
@@ -189,30 +193,63 @@ int winfilename(wchar_t *buf, int len)
 
 int wingetsavepath(pdfapp_t *app, char *buf, int len)
 {
-	OPENFILENAMEA ofn;
-	buf[0] = 0;
-	if (strlen(filename) < (unsigned int)len)
-		strcpy(buf, filename);
+	wchar_t twbuf[PATH_MAX];
+	OPENFILENAME ofn;
+
+	wcscpy(twbuf, wbuf);
 	memset(&ofn, 0, sizeof(OPENFILENAME));
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = hwndframe;
-	ofn.lpstrFile = buf;
-	ofn.nMaxFile = len;
+	ofn.lpstrFile = twbuf;
+	ofn.nMaxFile = PATH_MAX;
 	ofn.lpstrInitialDir = NULL;
-	ofn.lpstrTitle = "MuPDF: Save PDF file";
-	ofn.lpstrFilter = "Documents (*.pdf;*.xps;*.cbz;*.zip)\0*.zip;*.cbz;*.xps;*.pdf\0PDF Files (*.pdf)\0*.pdf\0XPS Files (*.xps)\0*.xps\0CBZ Files (*.cbz;*.zip)\0*.zip;*.cbz\0All Files\0*\0\0";
+	ofn.lpstrTitle = L"MuPDF: Save PDF file";
+	ofn.lpstrFilter = L"Documents (*.pdf;*.xps;*.cbz;*.zip)\0*.zip;*.cbz;*.xps;*.pdf\0PDF Files (*.pdf)\0*.pdf\0XPS Files (*.xps)\0*.xps\0CBZ Files (*.cbz;*.zip)\0*.zip;*.cbz\0All Files\0*\0\0";
 	ofn.Flags = OFN_HIDEREADONLY;
-	if (GetSaveFileNameA(&ofn))
+	if (GetSaveFileName(&ofn))
 	{
-		if (strlen(buf) < sizeof(filename))
-			strcpy(filename, buf);
+		int code = WideCharToMultiByte(CP_UTF8, 0, twbuf, -1, buf, MIN(PATH_MAX, len), NULL, NULL);
+		if (code == 0)
+		{
+			winerror(&gapp, "cannot convert filename to utf-8");
+			return 0;
+		}
 
+		wcscpy(wbuf, twbuf);
+		strcpy(filename, buf);
 		return 1;
 	}
 	else
 	{
 		return 0;
 	}
+}
+
+void winreplacefile(char *source, char *target)
+{
+	wchar_t wsource[PATH_MAX];
+	wchar_t wtarget[PATH_MAX];
+
+	int sz = MultiByteToWideChar(CP_UTF8, 0, source, -1, wsource, PATH_MAX);
+	if (sz == 0)
+	{
+		winerror(&gapp, "cannot convert filename to Unicode");
+		return;
+	}
+
+	sz = MultiByteToWideChar(CP_UTF8, 0, target, -1, wtarget, PATH_MAX);
+	if (sz == 0)
+	{
+		winerror(&gapp, "cannot convert filename to Unicode");
+		return;
+	}
+
+#if (_WIN32_WINNT >= 0x0500)
+	ReplaceFile(wtarget, wsource, NULL, REPLACEFILE_IGNORE_MERGE_ERRORS, NULL, NULL);
+#else
+	DeleteFile(wtarget);
+	MoveFile(wsource, wtarget);
+#endif
 }
 
 static char pd_filename[256] = "The file is encrypted.";

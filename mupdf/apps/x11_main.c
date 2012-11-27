@@ -273,6 +273,11 @@ int wingetsavepath(pdfapp_t *app, char *buf, int len)
 	return 0;
 }
 
+void winreplacefile(char *source, char *target)
+{
+	rename(source, target);
+}
+
 void cleanup(pdfapp_t *app)
 {
 	fz_context *ctx = app->ctx;

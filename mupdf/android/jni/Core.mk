@@ -42,6 +42,7 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/fitz/base_memory.c \
 	$(MY_ROOT)/fitz/base_string.c \
 	$(MY_ROOT)/fitz/base_time.c \
+	$(MY_ROOT)/fitz/base_xml.c \
 	$(MY_ROOT)/fitz/crypt_aes.c \
 	$(MY_ROOT)/fitz/crypt_arc4.c \
 	$(MY_ROOT)/fitz/crypt_md5.c \
@@ -130,7 +131,6 @@ LOCAL_SRC_FILES := \
 	$(MY_ROOT)/xps/xps_resource.c \
 	$(MY_ROOT)/xps/xps_tile.c \
 	$(MY_ROOT)/xps/xps_util.c \
-	$(MY_ROOT)/xps/xps_xml.c \
 	$(MY_ROOT)/xps/xps_zip.c \
 	$(MY_ROOT)/cbz/mucbz.c
 ifdef V8_BUILD

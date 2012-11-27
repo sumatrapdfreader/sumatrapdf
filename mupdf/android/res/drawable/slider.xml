@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" 
-    android:shape="rectangle">
-    <padding android:left="15dp"
-        android:right="15dp"
-        android:top="5dp"
-        android:bottom="5dp" />
-    <solid android:color="@color/bar" />
-</shape>

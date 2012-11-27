@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,6 +39,7 @@ class ThreadPerTaskExecutor implements Executor {
 		new Thread(r).start();
 	}
 }
+
 class SearchTaskResult {
 	public final String txt;
 	public final int   pageNumber;
@@ -76,10 +78,10 @@ class ProgressDialogX extends ProgressDialog {
 		super.cancel();
 	}
 }
+
 public class MuPDFActivity extends Activity
 {
 	/* The core rendering instance */
-	private enum LinkState {DEFAULT, HIGHLIGHT, INHIBIT};
 	private final int    TAP_PAGE_MARGIN = 5;
 	private static final int    SEARCH_PROGRESS_DELAY = 200;
 	private MuPDFCore    core;
@@ -96,7 +98,7 @@ public class MuPDFActivity extends Activity
 	private ImageButton  mCancelButton;
 	private ImageButton  mOutlineButton;
 	private ViewSwitcher mTopBarSwitcher;
-// XXX	private ImageButton  mLinkButton;
+	private ImageButton  mLinkButton;
 	private boolean      mTopBarIsSearch;
 	private ImageButton  mSearchBack;
 	private ImageButton  mSearchFwd;
@@ -104,7 +106,7 @@ public class MuPDFActivity extends Activity
 	private AsyncTask<Void,Integer,SearchTaskResult> mSearchTask;
 	//private SearchTaskResult mSearchTaskResult;
 	private AlertDialog.Builder mAlertBuilder;
-	private LinkState    mLinkState = LinkState.DEFAULT;
+	private boolean    mLinkHighlight = false;
 	private final Handler mHandler = new Handler();
 	private boolean mAlertsActive= false;
 	private AsyncTask<Void,Void,MuPDFAlert> mAlertTask;
@@ -351,12 +353,9 @@ public class MuPDFActivity extends Activity
 						super.moveToNext();
 					} else {
 						int linkPage = -1;
-						if (mLinkState != LinkState.INHIBIT) {
-							if (pageView != null) {
-// XXX							linkPage = pageView.hitLinkPage(e.getX(), e.getY());
-							}
+						if (mLinkHighlight && pageView != null) {
+							linkPage = pageView.hitLinkPage(e.getX(), e.getY());
 						}
-
 						if (linkPage != -1) {
 							mDocView.setDisplayedViewIndex(linkPage);
 						} else {
@@ -399,7 +398,7 @@ public class MuPDFActivity extends Activity
 				else
 					((PageView)v).setSearchBoxes(null);
 
-				((PageView)v).setLinkHighlighting(mLinkState == LinkState.HIGHLIGHT);
+				((PageView)v).setLinkHighlighting(mLinkHighlight);
 
 				((MuPDFPageView)v).setChangeReporter(new Runnable() {
 					public void run() {
@@ -416,7 +415,7 @@ public class MuPDFActivity extends Activity
 			protected void onMoveToChild(int i) {
 				if (core == null)
 					return;
-				mPageNumberView.setText(String.format("%d/%d", i+1, core.countPages()));
+				mPageNumberView.setText(String.format("%d / %d", i+1, core.countPages()));
 				mPageSlider.setMax((core.countPages()-1) * mPageSliderRes);
 				mPageSlider.setProgress(i * mPageSliderRes);
 				if (SearchTaskResult.get() != null && SearchTaskResult.get().pageNumber != i) {
@@ -485,6 +484,8 @@ public class MuPDFActivity extends Activity
 		// Search invoking buttons are disabled while there is no text specified
 		mSearchBack.setEnabled(false);
 		mSearchFwd.setEnabled(false);
+		mSearchBack.setColorFilter(Color.argb(255, 128, 128, 128));
+		mSearchFwd.setColorFilter(Color.argb(255, 128, 128, 128));
 
 		// React to interaction with the text widget
 		mSearchText.addTextChangedListener(new TextWatcher() {
@@ -493,6 +494,13 @@ public class MuPDFActivity extends Activity
 				boolean haveText = s.toString().length() > 0;
 				mSearchBack.setEnabled(haveText);
 				mSearchFwd.setEnabled(haveText);
+				if (haveText) {
+					mSearchBack.setColorFilter(Color.argb(255, 255, 255, 255));
+					mSearchFwd.setColorFilter(Color.argb(255, 255, 255, 255));
+				} else {
+					mSearchBack.setColorFilter(Color.argb(255, 128, 128, 128));
+					mSearchFwd.setColorFilter(Color.argb(255, 128, 128, 128));
+				}
 
 				// Remove any previous search results
 				if (SearchTaskResult.get() != null && !mSearchText.getText().toString().equals(SearchTaskResult.get().txt)) {
@@ -535,30 +543,20 @@ public class MuPDFActivity extends Activity
 			}
 		});
 
-/* XXX
 		mLinkButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				switch(mLinkState) {
-				case DEFAULT:
-					mLinkState = LinkState.HIGHLIGHT;
-					mLinkButton.setImageResource(R.drawable.ic_hl_link);
-					//Inform pages of the change.
-					mDocView.resetupChildren();
-					break;
-				case HIGHLIGHT:
-					mLinkState = LinkState.INHIBIT;
-					mLinkButton.setImageResource(R.drawable.ic_nolink);
-					//Inform pages of the change.
-					mDocView.resetupChildren();
-					break;
-				case INHIBIT:
-					mLinkState = LinkState.DEFAULT;
-					mLinkButton.setImageResource(R.drawable.ic_link);
-					break;
+				if (mLinkHighlight) {
+					mLinkButton.setColorFilter(Color.argb(0xFF, 255, 255, 255));
+					mLinkHighlight = false;
+				} else {
+					// LINK_COLOR tint
+					mLinkButton.setColorFilter(Color.argb(0xFF, 172, 114, 37));
+					mLinkHighlight = true;
 				}
+				// Inform pages of the change.
+				mDocView.resetupChildren();
 			}
 		});
-*/
 
 		if (core.hasOutline()) {
 			mOutlineButton.setOnClickListener(new View.OnClickListener() {
@@ -755,7 +753,7 @@ public class MuPDFActivity extends Activity
 	void updatePageNumView(int index) {
 		if (core == null)
 			return;
-		mPageNumberView.setText(String.format("%d/%d", index+1, core.countPages()));
+		mPageNumberView.setText(String.format("%d / %d", index+1, core.countPages()));
 	}
 
 	void makeButtonsView() {
@@ -770,7 +768,7 @@ public class MuPDFActivity extends Activity
 		mSearchBack = (ImageButton)mButtonsView.findViewById(R.id.searchBack);
 		mSearchFwd = (ImageButton)mButtonsView.findViewById(R.id.searchForward);
 		mSearchText = (EditText)mButtonsView.findViewById(R.id.searchText);
-// XXX		mLinkButton = (ImageButton)mButtonsView.findViewById(R.id.linkButton);
+		mLinkButton = (ImageButton)mButtonsView.findViewById(R.id.linkButton);
 		mTopBarSwitcher.setVisibility(View.INVISIBLE);
 		mPageNumberView.setVisibility(View.INVISIBLE);
 		mPageSlider.setVisibility(View.INVISIBLE);
@@ -918,5 +916,27 @@ public class MuPDFActivity extends Activity
 			core.stopAlerts();
 
 		super.onStop();
+	}
+
+	@Override
+	public void onBackPressed() {
+		if (core.hasChanges()) {
+			DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					if (which == AlertDialog.BUTTON_POSITIVE)
+						core.save();
+
+					finish();
+				}
+			};
+			AlertDialog alert = mAlertBuilder.create();
+			alert.setTitle("MuPDF");
+			alert.setMessage("Document has changes. Save them?");
+			alert.setButton(AlertDialog.BUTTON_POSITIVE, "Yes", listener);
+			alert.setButton(AlertDialog.BUTTON_NEGATIVE, "No", listener);
+			alert.show();
+		} else {
+			super.onBackPressed();
+		}
 	}
 }

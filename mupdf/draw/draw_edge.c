@@ -497,26 +497,53 @@ sort_active(fz_edge **a, int n)
 	}
 }
 
-static void
-insert_active(fz_gel *gel, int y, int *e)
+static int
+insert_active(fz_gel *gel, int y, int *e_)
 {
+	int h_min = INT_MAX;
+	int e = *e_;
+
 	/* insert edges that start here */
-	while (*e < gel->len && gel->edges[*e].y == y) {
-		if (gel->alen + 1 == gel->acap) {
-			int newcap = gel->acap + 64;
-			fz_edge **newactive = fz_resize_array(gel->ctx, gel->active, newcap, sizeof(fz_edge*));
-			gel->active = newactive;
-			gel->acap = newcap;
+	if (e < gel->len && gel->edges[e].y == y)
+	{
+		do {
+			if (gel->alen + 1 == gel->acap) {
+				int newcap = gel->acap + 64;
+				fz_edge **newactive = fz_resize_array(gel->ctx, gel->active, newcap, sizeof(fz_edge*));
+				gel->active = newactive;
+				gel->acap = newcap;
+			}
+			gel->active[gel->alen++] = &gel->edges[e++];
+		} while (e < gel->len && gel->edges[e].y == y);
+		*e_ = e;
+	}
+
+	if (e < gel->len)
+		h_min = gel->edges[e].y - y;
+
+	for (e=0; e < gel->alen; e++)
+	{
+		if (gel->active[e]->xmove != 0 || gel->active[e]->adj_up != 0)
+		{
+			h_min = 1;
+			break;
 		}
-		gel->active[gel->alen++] = &gel->edges[(*e)++];
+		if (gel->active[e]->h < h_min)
+		{
+			h_min = gel->active[e]->h;
+			if (h_min == 1)
+				break;
+		}
 	}
 
 	/* shell-sort the edges by increasing x */
 	sort_active(gel->active, gel->alen);
+
+	return h_min;
 }
 
 static void
-advance_active(fz_gel *gel)
+advance_active(fz_gel *gel, int inc)
 {
 	fz_edge *edge;
 	int i = 0;
@@ -525,7 +552,7 @@ advance_active(fz_gel *gel)
 	{
 		edge = gel->active[i];
 
-		edge->h --;
+		edge->h -= inc;
 
 		/* terminator! */
 		if (edge->h == 0) {
@@ -548,7 +575,7 @@ advance_active(fz_gel *gel)
  * Anti-aliased scan conversion.
  */
 
-static inline void add_span_aa(fz_aa_context *ctxaa, int *list, int x0, int x1, int xofs)
+static inline void add_span_aa(fz_aa_context *ctxaa, int *list, int x0, int x1, int xofs, int h)
 {
 	int x0pix, x0sub;
 	int x1pix, x1sub;
@@ -560,27 +587,30 @@ static inline void add_span_aa(fz_aa_context *ctxaa, int *list, int x0, int x1, 
 	x0 -= xofs;
 	x1 -= xofs;
 
-	x0pix = x0 / fz_aa_hscale;
-	x0sub = x0 % fz_aa_hscale;
-	x1pix = x1 / fz_aa_hscale;
-	x1sub = x1 % fz_aa_hscale;
+	/* The cast to unsigned below helps the compiler produce faster
+	 * code on ARMs as the multiply by reciprocal trick it uses does not
+	 * need to correct for signedness. */
+	x0pix = ((unsigned int)x0) / fz_aa_hscale;
+	x0sub = ((unsigned int)x0) % fz_aa_hscale;
+	x1pix = ((unsigned int)x1) / fz_aa_hscale;
+	x1sub = ((unsigned int)x1) % fz_aa_hscale;
 
 	if (x0pix == x1pix)
 	{
-		list[x0pix] += x1sub - x0sub;
-		list[x0pix+1] += x0sub - x1sub;
+		list[x0pix] += h*(x1sub - x0sub);
+		list[x0pix+1] += h*(x0sub - x1sub);
 	}
 
 	else
 	{
-		list[x0pix] += fz_aa_hscale - x0sub;
-		list[x0pix+1] += x0sub;
-		list[x1pix] += x1sub - fz_aa_hscale;
-		list[x1pix+1] += -x1sub;
+		list[x0pix] += h*(fz_aa_hscale - x0sub);
+		list[x0pix+1] += h*x0sub;
+		list[x1pix] += h*(x1sub - fz_aa_hscale);
+		list[x1pix+1] += h*-x1sub;
 	}
 }
 
-static inline void non_zero_winding_aa(fz_gel *gel, int *list, int xofs)
+static inline void non_zero_winding_aa(fz_gel *gel, int *list, int xofs, int h)
 {
 	int winding = 0;
 	int x = 0;
@@ -592,12 +622,12 @@ static inline void non_zero_winding_aa(fz_gel *gel, int *list, int xofs)
 		if (!winding && (winding + gel->active[i]->ydir))
 			x = gel->active[i]->x;
 		if (winding && !(winding + gel->active[i]->ydir))
-			add_span_aa(ctxaa, list, x, gel->active[i]->x, xofs);
+			add_span_aa(ctxaa, list, x, gel->active[i]->x, xofs, h);
 		winding += gel->active[i]->ydir;
 	}
 }
 
-static inline void even_odd_aa(fz_gel *gel, int *list, int xofs)
+static inline void even_odd_aa(fz_gel *gel, int *list, int xofs, int h)
 {
 	int even = 0;
 	int x = 0;
@@ -609,7 +639,7 @@ static inline void even_odd_aa(fz_gel *gel, int *list, int xofs)
 		if (!even)
 			x = gel->active[i]->x;
 		else
-			add_span_aa(ctxaa, list, x, gel->active[i]->x, xofs);
+			add_span_aa(ctxaa, list, x, gel->active[i]->x, xofs, h);
 		even = !even;
 	}
 }
@@ -645,6 +675,7 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 	int yd, yc;
 	fz_context *ctx = gel->ctx;
 	fz_aa_context *ctxaa = ctx->aa;
+	int height, h0, rh;
 
 	int xmin = fz_idiv(gel->bbox.x0, fz_aa_hscale);
 	int xmax = fz_idiv(gel->bbox.x1, fz_aa_hscale) + 1;
@@ -669,50 +700,148 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 		fz_throw(ctx, "scan conversion failed (malloc failure)");
 	}
 	memset(deltas, 0, (xmax - xmin + 1) * sizeof(int));
+	gel->alen = 0;
+
+	/* The theory here is that we have a list of the edges (gel) of length
+	 * gel->len. We have an initially empty list of 'active' edges (of
+	 * length gel->alen). As we increase y, we move any edge that is
+	 * active at this point into the active list. We know that any edge
+	 * before index 'e' is either active, or has been retired.
+	 * Once the length of the active list is 0, and e has reached gel->len
+	 * we know we are finished.
+	 *
+	 * As we move through the list, we group fz_aa_vscale 'sub scanlines'
+	 * into single scanlines, and we blit them.
+	 */
 
 	e = 0;
 	y = gel->edges[0].y;
-	yc = fz_idiv(y, fz_aa_vscale);
-	yd = yc;
+	yd = fz_idiv(y, fz_aa_vscale);
 
+	/* Quickly skip to the start of the clip region */
+	while (yd < clip.y0 && (gel->alen > 0 || e < gel->len))
+	{
+		/* rh = remaining height = number of subscanlines left to be
+		 * inserted into the current scanline, which will be plotted
+		 * at yd. */
+		rh = (yd+1)*fz_aa_vscale - y;
+
+		/* height = The number of subscanlines with identical edge
+		 * positions (i.e. 1 if we have any non vertical edges). */
+		height = insert_active(gel, y, &e);
+		h0 = height;
+		if (h0 >= rh)
+		{
+			/* We have enough subscanlines to skip to the next
+			 * scanline. */
+			h0 -= rh;
+			yd++;
+		}
+		/* Skip any whole scanlines we can */
+		while (yd < clip.y0 && h0 >= fz_aa_vscale)
+		{
+			h0 -= fz_aa_vscale;
+			yd++;
+		}
+		/* If we haven't hit the start of the clip region, then we
+		 * have less than a scanline left. */
+		if (yd < clip.y0)
+		{
+			h0 = 0;
+		}
+		height -= h0;
+		advance_active(gel, height);
+
+		y += height;
+	}
+
+	/* Now do the active lines */
 	while (gel->alen > 0 || e < gel->len)
 	{
-		yc = fz_idiv(y, fz_aa_vscale);
+		yc = fz_idiv(y, fz_aa_vscale);	/* yc = current scanline */
+		/* rh = remaining height = number of subscanlines left to be
+		 * inserted into the current scanline, which will be plotted
+		 * at yd. */
+		rh = (yc+1)*fz_aa_vscale - y;
 		if (yc != yd)
 		{
-			if (yd >= clip.y0 && yd < clip.y1)
+			undelta_aa(ctxaa, alphas, deltas, skipx + clipn);
+			blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
+			memset(deltas, 0, (skipx + clipn) * sizeof(int));
+		}
+		yd = yc;
+		if (yd >= clip.y1)
+			break;
+
+		/* height = The number of subscanlines with identical edge
+		 * positions (i.e. 1 if we have any non vertical edges). */
+		height = insert_active(gel, y, &e);
+		h0 = height;
+		if (h0 > rh)
+		{
+			if (rh < fz_aa_vscale)
 			{
+				/* We have to finish a scanline off, and we
+				 * have more sub scanlines than will fit into
+				 * it. */
+				if (eofill)
+					even_odd_aa(gel, deltas, xofs, rh);
+				else
+					non_zero_winding_aa(gel, deltas, xofs, rh);
 				undelta_aa(ctxaa, alphas, deltas, skipx + clipn);
 				blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
 				memset(deltas, 0, (skipx + clipn) * sizeof(int));
+				yd++;
+				if (yd >= clip.y1)
+					break;
+				h0 -= rh;
+			}
+			if (h0 > fz_aa_vscale)
+			{
+				/* Calculate the deltas for any completely full
+				 * scanlines. */
+				h0 -= fz_aa_vscale;
+				if (eofill)
+					even_odd_aa(gel, deltas, xofs, fz_aa_vscale);
+				else
+					non_zero_winding_aa(gel, deltas, xofs, fz_aa_vscale);
+				undelta_aa(ctxaa, alphas, deltas, skipx + clipn);
+				do
+				{
+					/* Do any successive whole scanlines - no need
+					 * to recalculate deltas here. */
+					blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
+					yd++;
+					if (yd >= clip.y1)
+						goto clip_ended;
+					h0 -= fz_aa_vscale;
+				}
+				while (h0 > 0);
+				/* If we have exactly one full scanline left
+				 * to go, then the deltas/alphas are set up
+				 * already. */
+				if (h0 == 0)
+					goto advance;
+				memset(deltas, 0, (skipx + clipn) * sizeof(int));
+				h0 += fz_aa_vscale;
 			}
 		}
-		yd = yc;
+		if (eofill)
+			even_odd_aa(gel, deltas, xofs, h0);
+		else
+			non_zero_winding_aa(gel, deltas, xofs, h0);
+advance:
+		advance_active(gel, height);
 
-		insert_active(gel, y, &e);
-
-		if (yd >= clip.y0 && yd < clip.y1)
-		{
-			if (eofill)
-				even_odd_aa(gel, deltas, xofs);
-			else
-				non_zero_winding_aa(gel, deltas, xofs);
-		}
-
-		advance_active(gel);
-
-		if (gel->alen > 0)
-			y ++;
-		else if (e < gel->len)
-			y = gel->edges[e].y;
+		y += height;
 	}
 
-	if (yd >= clip.y0 && yd < clip.y1)
+	if (yd < clip.y1)
 	{
 		undelta_aa(ctxaa, alphas, deltas, skipx + clipn);
 		blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
 	}
-
+clip_ended:
 	fz_free(ctx, deltas);
 	fz_free(ctx, alphas);
 }
@@ -788,7 +917,7 @@ fz_scan_convert_sharp(fz_gel *gel, int eofill, fz_bbox clip,
 				non_zero_winding_sharp(gel, y, clip, dst, color);
 		}
 
-		advance_active(gel);
+		advance_active(gel, 1);
 
 		if (gel->alen > 0)
 			y ++;

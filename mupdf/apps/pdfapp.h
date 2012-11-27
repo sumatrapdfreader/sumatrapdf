@@ -40,11 +40,13 @@ extern int wingetsavepath(pdfapp_t*, char *buf, int len);
 extern void winalert(pdfapp_t *, fz_alert_event *alert);
 extern void winprint(pdfapp_t *);
 extern void winadvancetimer(pdfapp_t *, float duration);
+extern void winreplacefile(char *source, char *target);
 
 struct pdfapp_s
 {
 	/* current document params */
 	fz_document *doc;
+	char *docpath;
 	char *doctitle;
 	fz_outline *outline;
 

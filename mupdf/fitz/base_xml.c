@@ -46,8 +46,8 @@ void fz_debug_xml(fz_xml *item, int level)
 			else {
 				printf("/>\n");
 			}
-			item = item->next;
 		}
+		item = item->next;
 	}
 }
 
@@ -394,6 +394,7 @@ static char *convert_to_utf8(fz_context *doc, unsigned char *s, int n)
 	int c;
 
 	if (s[0] == 0xFE && s[1] == 0xFF) {
+		/* SumatraPDF: skip BOM in xml_parse_document_imp */
 		dst = d = fz_malloc(doc, n * 2);
 		while (s + 1 < e) {
 			c = s[0] << 8 | s[1];
@@ -405,6 +406,7 @@ static char *convert_to_utf8(fz_context *doc, unsigned char *s, int n)
 	}
 
 	if (s[0] == 0xFF && s[1] == 0xFE) {
+		/* SumatraPDF: skip BOM in xml_parse_document_imp */
 		dst = d = fz_malloc(doc, n * 2);
 		while (s + 1 < e) {
 			c = s[0] | s[1] << 8;
