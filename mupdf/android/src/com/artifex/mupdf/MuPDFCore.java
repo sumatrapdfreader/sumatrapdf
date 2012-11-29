@@ -15,47 +15,52 @@ public class MuPDFCore
 	private int numPages = -1;
 	private float pageWidth;
 	private float pageHeight;
+	private long globals;
 
 	/* The native functions */
-	private static native int openFile(String filename);
-	private static native int countPagesInternal();
-	private static native void gotoPageInternal(int localActionPageNum);
-	private static native float getPageWidth();
-	private static native float getPageHeight();
-	private static native void drawPage(Bitmap bitmap,
+	private native long openFile(String filename);
+	private native int countPagesInternal();
+	private native void gotoPageInternal(int localActionPageNum);
+	private native float getPageWidth();
+	private native float getPageHeight();
+	private native void drawPage(Bitmap bitmap,
 			int pageW, int pageH,
 			int patchX, int patchY,
 			int patchW, int patchH);
-	private static native void updatePageInternal(Bitmap bitmap,
+	private native void updatePageInternal(Bitmap bitmap,
 			int page,
 			int pageW, int pageH,
 			int patchX, int patchY,
 			int patchW, int patchH);
-	private static native RectF[] searchPage(String text);
-	private static native int getPageLink(int page, float x, float y);
-	private static native int passClickEventInternal(int page, float x, float y);
-	private static native int setFocusedWidgetTextInternal(String text);
-	private static native String getFocusedWidgetTextInternal();
-	private static native int getFocusedWidgetTypeInternal();
-	private static native LinkInfo [] getPageLinksInternal(int page);
-	private static native RectF[] getWidgetAreasInternal(int page);
-	private static native OutlineItem [] getOutlineInternal();
-	private static native boolean hasOutlineInternal();
-	private static native boolean needsPasswordInternal();
-	private static native boolean authenticatePasswordInternal(String password);
-	private static native MuPDFAlertInternal waitForAlertInternal();
-	private static native void replyToAlertInternal(MuPDFAlertInternal alert);
-	private static native void startAlertsInternal();
-	private static native void stopAlertsInternal();
-	private static native void destroying();
-	private static native boolean hasChangesInternal();
-	private static native void saveInternal();
+	private native RectF[] searchPage(String text);
+	private native int getPageLink(int page, float x, float y);
+	private native int passClickEventInternal(int page, float x, float y);
+	private native void setFocusedWidgetChoiceSelectedInternal(String [] selected);
+	private native String [] getFocusedWidgetChoiceSelected();
+	private native String [] getFocusedWidgetChoiceOptions();
+	private native int setFocusedWidgetTextInternal(String text);
+	private native String getFocusedWidgetTextInternal();
+	private native int getFocusedWidgetTypeInternal();
+	private native LinkInfo [] getPageLinksInternal(int page);
+	private native RectF[] getWidgetAreasInternal(int page);
+	private native OutlineItem [] getOutlineInternal();
+	private native boolean hasOutlineInternal();
+	private native boolean needsPasswordInternal();
+	private native boolean authenticatePasswordInternal(String password);
+	private native MuPDFAlertInternal waitForAlertInternal();
+	private native void replyToAlertInternal(MuPDFAlertInternal alert);
+	private native void startAlertsInternal();
+	private native void stopAlertsInternal();
+	private native void destroying();
+	private native boolean hasChangesInternal();
+	private native void saveInternal();
 
 	public static native boolean javascriptSupported();
 
 	public MuPDFCore(String filename) throws Exception
 	{
-		if (openFile(filename) <= 0)
+		globals = openFile(filename);
+		if (globals == 0)
 		{
 			throw new Exception("Failed to open "+filename);
 		}
@@ -109,6 +114,7 @@ public class MuPDFCore
 
 	public synchronized void onDestroy() {
 		destroying();
+		globals = 0;
 	}
 
 	public synchronized void drawPage(BitmapHolder h, int page,
@@ -141,21 +147,18 @@ public class MuPDFCore
 
 	public synchronized PassClickResult passClickEvent(int page, float x, float y) {
 		boolean changed = passClickEventInternal(page, x, y) != 0;
-		int type = getFocusedWidgetTypeInternal();
-		WidgetType wtype = WidgetType.values()[type];
-		String text;
 
-		switch (wtype)
+		switch (WidgetType.values()[getFocusedWidgetTypeInternal()])
 		{
 		case TEXT:
-			text = getFocusedWidgetTextInternal();
-			break;
+			return new PassClickResultText(changed, getFocusedWidgetTextInternal());
+		case LISTBOX:
+		case COMBOBOX:
+			return new PassClickResultChoice(changed, getFocusedWidgetChoiceOptions(), getFocusedWidgetChoiceSelected());
 		default:
-			text = "";
-			break;
+			return new PassClickResult(changed);
 		}
 
-		return new PassClickResult(changed, wtype, text);
 	}
 
 	public synchronized boolean setFocusedWidgetText(int page, String text) {
@@ -164,6 +167,10 @@ public class MuPDFCore
 		success = setFocusedWidgetTextInternal(text) != 0 ? true : false;
 
 		return success;
+	}
+
+	public synchronized void setFocusedWidgetChoiceSelected(String [] selected) {
+		setFocusedWidgetChoiceSelectedInternal(selected);
 	}
 
 	public synchronized int hitLinkPage(int page, float x, float y) {

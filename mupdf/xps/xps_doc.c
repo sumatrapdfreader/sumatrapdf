@@ -376,22 +376,24 @@ xps_parse_metadata(xps_document *doc, xps_part *part, xps_fixdoc *fixdoc)
 static void
 xps_read_and_process_metadata_part(xps_document *doc, char *name, xps_fixdoc *fixdoc)
 {
-	if (xps_has_part(doc, name))
+	fz_context *ctx = doc->ctx;
+	xps_part *part;
+
+	if (!xps_has_part(doc, name))
+		return;
+
+	part = xps_read_part(doc, name);
+	fz_try(ctx)
 	{
-		xps_part *part = xps_read_part(doc, name);
-		/* SumatraPDF: fix memory leak */
-		fz_try(doc->ctx)
-		{
 		xps_parse_metadata(doc, part, fixdoc);
-		}
-		fz_always(doc->ctx)
-		{
+	}
+	fz_always(ctx)
+	{
 		xps_free_part(doc, part);
-		}
-		fz_catch(doc->ctx)
-		{
-			fz_rethrow(doc->ctx);
-		}
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
 	}
 }
 
@@ -436,19 +438,21 @@ xps_load_fixed_page(xps_document *doc, xps_page *page)
 	fz_xml *root;
 	char *width_att;
 	char *height_att;
+	fz_context *ctx = doc->ctx;
 
 	part = xps_read_part(doc, page->name);
-	/* SumatraPDF: fix memory leak */
-	fz_var(part);
-	fz_try(doc->ctx)
+	fz_try(ctx)
 	{
-	root = fz_parse_xml(doc->ctx, part->data, part->size);
+		root = fz_parse_xml(doc->ctx, part->data, part->size);
 	}
-	fz_catch(doc->ctx)
+	fz_always(ctx)
+	{
+		xps_free_part(doc, part);
+	}
+	fz_catch(ctx)
 	{
 		root = NULL;
 	}
-	xps_free_part(doc, part);
 	if (!root)
 		fz_throw(doc->ctx, "FixedPage missing root element");
 

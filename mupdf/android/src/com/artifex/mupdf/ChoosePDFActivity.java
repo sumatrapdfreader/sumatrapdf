@@ -65,8 +65,7 @@ public class ChoosePDFActivity extends ListActivity {
 		mDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
 		// Create a list adapter...
-		List<String> fileNames = new ArrayList<String>();
-		adapter = new ArrayAdapter<String>(this, R.layout.picker_entry, fileNames);
+		adapter = new ArrayAdapter<String>(this, R.layout.picker_entry);
 		setListAdapter(adapter);
 
 		// ...that is updated dynamically when files are scanned
@@ -88,6 +87,7 @@ public class ChoosePDFActivity extends ListActivity {
 				if (mFiles != null)
 					for (File f : mFiles)
 						adapter.add(f.getName());
+				adapter.sort(String.CASE_INSENSITIVE_ORDER);
 			}
 		};
 

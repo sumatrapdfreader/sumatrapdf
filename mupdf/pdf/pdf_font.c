@@ -315,9 +315,8 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, c
 			pdf_load_substitute_cjk_font(ctx, fontdesc, fontname, PDF_ROS_KOREA, serif);
 		else
 		{
-			/* SumatraPDF: don't warn for Adobe-Identity fonts */
 			if (strcmp(collection, "Adobe-Identity") != 0)
-			fz_warn(ctx, "unknown cid collection: %s", collection);
+				fz_warn(ctx, "unknown cid collection: %s", collection);
 			pdf_load_substitute_font(ctx, fontdesc, fontname, mono, serif, bold, italic);
 		}
 	}

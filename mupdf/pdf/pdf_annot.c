@@ -1244,16 +1244,19 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 	int i, len;
 	fz_context *ctx = xref->ctx;
 
+	fz_var(annot);
+
 	head = tail = NULL;
-	annot = NULL;
 
 	len = pdf_array_len(annots);
 	for (i = 0; i < len; i++)
 	{
 		obj = pdf_array_get(annots, i);
 
+		/* SumatraPDF: synthesize appearance streams for a few more annotations */
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
-		if ((annot = pdf_update_tx_widget_annot(xref, obj)))
+		if ((annot = pdf_update_tx_widget_annot(xref, obj)) ||
+			!pdf_is_dict(pdf_dict_gets(obj, "AP")) && (annot = pdf_create_annot_with_appearance(xref, obj)))
 		{
 			if (!head)
 				head = tail = annot;
@@ -1272,7 +1275,11 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 		ap = pdf_dict_gets(obj, "AP");
 		as = pdf_dict_gets(obj, "AS");
 
-		if (pdf_is_dict(ap))
+		if (!pdf_is_dict(ap))
+			continue;
+
+		annot = NULL;
+		fz_try(ctx)
 		{
 			pdf_hotspot *hp = &xref->hotspot;
 
@@ -1288,20 +1295,9 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 			if (n == NULL)
 				n = pdf_dict_gets(ap, "N"); /* normal state */
 
-			/* SumatraPDF: prevent memory leak */
-			fz_try(ctx)
-			{
-
 			/* lookup current state in sub-dictionary */
 			if (!pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
 				n = pdf_dict_get(n, as);
-
-			}
-			fz_catch(ctx)
-			{
-				fz_warn(ctx, "ignoring broken annotation");
-				continue;
-			}
 
 			annot = fz_malloc_struct(ctx, pdf_annot);
 			annot->obj = pdf_keep_obj(obj);
@@ -1312,16 +1308,9 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 
 			if (pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
 			{
-				fz_try(ctx)
-				{
-					annot->ap = pdf_load_xobject(xref, n);
-					pdf_transform_annot(annot);
-					annot->ap_iteration = annot->ap->iteration;
-				}
-				fz_catch(ctx)
-				{
-					fz_warn(ctx, "ignoring broken annotation");
-				}
+				annot->ap = pdf_load_xobject(xref, n);
+				pdf_transform_annot(annot);
+				annot->ap_iteration = annot->ap->iteration;
 			}
 
 			annot->next = NULL;
@@ -1337,16 +1326,10 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 				tail = annot;
 			}
 		}
-		/* SumatraPDF: synthesize appearance streams for a few more annotations */
-		else if ((annot = pdf_create_annot_with_appearance(xref, obj)))
+		fz_catch(ctx)
 		{
-			if (!head)
-				head = tail = annot;
-			else
-			{
-				tail->next = annot;
-				tail = annot;
-			}
+			fz_free(ctx, annot);
+			fz_warn(ctx, "ignoring broken annotation");
 		}
 	}
 

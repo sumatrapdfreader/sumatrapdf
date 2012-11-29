@@ -96,7 +96,6 @@ static void savefont(pdf_obj *dict, int num)
 			ext = "cff";
 		else if (!strcmp(subtype, "CIDFontType0C"))
 			ext = "cid";
-		/* SumatraPDF: extract OpenType fonts */
 		else if (!strcmp(subtype, "OpenType"))
 			ext = "otf";
 		else

@@ -57,55 +57,46 @@ pdf_load_xobject(pdf_document *xref, pdf_obj *dict)
 	/* Store item immediately, to avoid possible recursion if objects refer back to this one */
 	pdf_store_item(ctx, dict, form, pdf_xobject_size(form));
 
-	obj = pdf_dict_gets(dict, "BBox");
-	form->bbox = pdf_to_rect(ctx, obj);
-
-	obj = pdf_dict_gets(dict, "Matrix");
-	if (obj)
-		form->matrix = pdf_to_matrix(ctx, obj);
-	else
-		form->matrix = fz_identity;
-
-	form->isolated = 0;
-	form->knockout = 0;
-	form->transparency = 0;
-
-	obj = pdf_dict_gets(dict, "Group");
-	if (obj)
-	{
-		pdf_obj *attrs = obj;
-
-		form->isolated = pdf_to_bool(pdf_dict_gets(attrs, "I"));
-		form->knockout = pdf_to_bool(pdf_dict_gets(attrs, "K"));
-
-		obj = pdf_dict_gets(attrs, "S");
-		if (pdf_is_name(obj) && !strcmp(pdf_to_name(obj), "Transparency"))
-			form->transparency = 1;
-
-		obj = pdf_dict_gets(attrs, "CS");
-		if (obj)
-		{
-			/* SumatraPDF: fix memory leak */
-			fz_try(ctx)
-			{
-			form->colorspace = pdf_load_colorspace(xref, obj);
-			if (!form->colorspace)
-				fz_throw(ctx, "cannot load xobject colorspace");
-			}
-			fz_catch(ctx)
-			{
-				pdf_drop_xobject(ctx, form);
-				fz_rethrow(ctx);
-			}
-		}
-	}
-
-	form->resources = pdf_dict_gets(dict, "Resources");
-	if (form->resources)
-		pdf_keep_obj(form->resources);
-
 	fz_try(ctx)
 	{
+		obj = pdf_dict_gets(dict, "BBox");
+		form->bbox = pdf_to_rect(ctx, obj);
+
+		obj = pdf_dict_gets(dict, "Matrix");
+		if (obj)
+			form->matrix = pdf_to_matrix(ctx, obj);
+		else
+			form->matrix = fz_identity;
+
+		form->isolated = 0;
+		form->knockout = 0;
+		form->transparency = 0;
+
+		obj = pdf_dict_gets(dict, "Group");
+		if (obj)
+		{
+			pdf_obj *attrs = obj;
+
+			form->isolated = pdf_to_bool(pdf_dict_gets(attrs, "I"));
+			form->knockout = pdf_to_bool(pdf_dict_gets(attrs, "K"));
+
+			obj = pdf_dict_gets(attrs, "S");
+			if (pdf_is_name(obj) && !strcmp(pdf_to_name(obj), "Transparency"))
+				form->transparency = 1;
+
+			obj = pdf_dict_gets(attrs, "CS");
+			if (obj)
+			{
+				form->colorspace = pdf_load_colorspace(xref, obj);
+				if (!form->colorspace)
+					fz_throw(ctx, "cannot load xobject colorspace");
+			}
+		}
+
+		form->resources = pdf_dict_gets(dict, "Resources");
+		if (form->resources)
+			pdf_keep_obj(form->resources);
+
 		form->contents = pdf_keep_obj(dict);
 	}
 	fz_catch(ctx)

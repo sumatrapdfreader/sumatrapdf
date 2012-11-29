@@ -28,12 +28,12 @@ static char getline_buffer[LONGLINE];
 
 void winwarn(pdfapp_t *app, char *msg)
 {
-	fprintf(stderr, "warning: %s", msg);
+	fprintf(stderr, "warning: %s\n", msg);
 }
 
 void winerror(pdfapp_t *app, char *msg)
 {
-	fprintf(stderr, "%s", msg);
+	fprintf(stderr, "%s\n", msg);
 	exit(1);
 }
 

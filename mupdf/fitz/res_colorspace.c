@@ -723,7 +723,8 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 	float srcv[FZ_MAX_COLORS];
 	float dstv[FZ_MAX_COLORS];
 	int srcn, dstn;
-	int y, x, k, i;
+	int k, i;
+	unsigned int xy;
 
 	fz_colorspace *ss = src->colorspace;
 	fz_colorspace *ds = dst->colorspace;
@@ -738,44 +739,40 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 	srcn = ss->n;
 	dstn = ds->n;
 
+	xy = (unsigned int)(src->w * src->h);
+
 	/* Special case for Lab colorspace (scaling of components to float) */
 	if (!strcmp(ss->name, "Lab") && srcn == 3)
 	{
-		for (y = 0; y < src->h; y++)
+		for (; xy > 0; xy--)
 		{
-			for (x = 0; x < src->w; x++)
-			{
-				srcv[0] = *s++ / 255.0f * 100;
-				srcv[1] = *s++ - 128;
-				srcv[2] = *s++ - 128;
+			srcv[0] = *s++ / 255.0f * 100;
+			srcv[1] = *s++ - 128;
+			srcv[2] = *s++ - 128;
 
-				fz_convert_color(ctx, ds, dstv, ss, srcv);
+			fz_convert_color(ctx, ds, dstv, ss, srcv);
 
-				for (k = 0; k < dstn; k++)
-					*d++ = dstv[k] * 255;
+			for (k = 0; k < dstn; k++)
+				*d++ = dstv[k] * 255;
 
-				*d++ = *s++;
-			}
+			*d++ = *s++;
 		}
 	}
 
 	/* Brute-force for small images */
-	else if (src->w * src->h < 256)
+	else if (xy < 256)
 	{
-		for (y = 0; y < src->h; y++)
+		for (; xy > 0; xy--)
 		{
-			for (x = 0; x < src->w; x++)
-			{
-				for (k = 0; k < srcn; k++)
-					srcv[k] = *s++ / 255.0f;
+			for (k = 0; k < srcn; k++)
+				srcv[k] = *s++ / 255.0f;
 
-				fz_convert_color(ctx, ds, dstv, ss, srcv);
+			fz_convert_color(ctx, ds, dstv, ss, srcv);
 
-				for (k = 0; k < dstn; k++)
-					*d++ = dstv[k] * 255;
+			for (k = 0; k < dstn; k++)
+				*d++ = dstv[k] * 255;
 
-				*d++ = *s++;
-			}
+			*d++ = *s++;
 		}
 	}
 
@@ -792,15 +789,12 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 				lookup[i * dstn + k] = dstv[k] * 255;
 		}
 
-		for (y = 0; y < src->h; y++)
+		for (; xy > 0; xy--)
 		{
-			for (x = 0; x < src->w; x++)
-			{
-				i = *s++;
-				for (k = 0; k < dstn; k++)
-					*d++ = lookup[i * dstn + k];
-				*d++ = *s++;
-			}
+			i = *s++;
+			for (k = 0; k < dstn; k++)
+				*d++ = lookup[i * dstn + k];
+			*d++ = *s++;
 		}
 	}
 
@@ -809,13 +803,24 @@ fz_std_conv_pixmap(fz_context *ctx, fz_pixmap *dst, fz_pixmap *src)
 	{
 		fz_hash_table *lookup;
 		unsigned char *color;
+		unsigned char dummy = s[0] ^ 255;
+		unsigned char *sold = &dummy;
 
 		lookup = fz_new_hash_table(ctx, 509, srcn, -1);
 
-		for (y = 0; y < src->h; y++)
+		for (; xy > 0; xy--)
 		{
-			for (x = 0; x < src->w; x++)
+			if (*s == *sold && memcmp(sold,s,srcn) == 0)
 			{
+				sold = s;
+				memcpy(d, d-dstn-1, dstn);
+				d += dstn;
+				s += srcn;
+				*d++ = *s++;
+			}
+			else
+			{
+				sold = s;
 				color = fz_hash_find(ctx, lookup, s);
 				if (color)
 				{

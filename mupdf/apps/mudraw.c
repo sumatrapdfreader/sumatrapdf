@@ -454,7 +454,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 					fprintf(mujstest_file, "TEXT %d\n", mujstest_count);
 					break;
 				case FZ_WIDGET_CONTENT_SPECIAL:
-					fprintf(mujstest_file, "TEXT %lld\n", 46702919800 + mujstest_count);
+					fprintf(mujstest_file, "TEXT %lld\n", 46702919800LL + mujstest_count);
 					break;
 				case FZ_WIDGET_CONTENT_DATE:
 					fprintf(mujstest_file, "TEXT Jun %d 1979\n", 1 + ((13 + mujstest_count) % 30));

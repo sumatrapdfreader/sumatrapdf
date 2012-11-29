@@ -10,15 +10,47 @@ import android.view.LayoutInflater;
 import android.view.WindowManager;
 import android.widget.EditText;
 
+abstract class PassClickResultVisitor {
+	public abstract void visitText(PassClickResultText result);
+	public abstract void visitChoice(PassClickResultChoice result);
+}
+
 class PassClickResult {
 	public final boolean changed;
-	public final WidgetType type;
+
+	public PassClickResult(boolean _changed) {
+		changed = _changed;
+	}
+
+	public void acceptVisitor(PassClickResultVisitor visitor) {
+	}
+}
+
+class PassClickResultText extends PassClickResult {
 	public final String text;
 
-	public PassClickResult(boolean _changed, WidgetType _type, String _text) {
-		changed = _changed;
-		type = _type;
+	public PassClickResultText(boolean _changed, String _text) {
+		super(_changed);
 		text = _text;
+	}
+
+	public void acceptVisitor(PassClickResultVisitor visitor) {
+		visitor.visitText(this);
+	}
+}
+
+class PassClickResultChoice extends PassClickResult {
+	public final String [] options;
+	public final String [] selected;
+
+	public PassClickResultChoice(boolean _changed, String [] _options, String [] _selected) {
+		super(_changed);
+		options = _options;
+		selected = _selected;
+	}
+
+	public void acceptVisitor(PassClickResultVisitor visitor) {
+		visitor.visitChoice(this);
 	}
 }
 
@@ -28,9 +60,11 @@ public class MuPDFPageView extends PageView {
 	private RectF mWidgetAreas[];
 	private AsyncTask<Void,Void,RectF[]> mLoadWidgetAreas;
 	private AlertDialog.Builder mTextEntryBuilder;
+	private AlertDialog.Builder mChoiceEntryBuilder;
 	private AlertDialog mTextEntry;
 	private EditText mEditText;
 	private AsyncTask<String,Void,Boolean> mSetWidgetText;
+	private AsyncTask<String,Void,Void> mSetWidgetChoice;
 	private Runnable changeReporter;
 
 	public MuPDFPageView(Context c, MuPDFCore core, Point parentSize) {
@@ -65,6 +99,9 @@ public class MuPDFPageView extends PageView {
 			}
 		});
 		mTextEntry = mTextEntryBuilder.create();
+
+		mChoiceEntryBuilder = new AlertDialog.Builder(c);
+		mChoiceEntryBuilder.setTitle("MuPDF: choose value");
 	}
 
 	public int hitLinkPage(float x, float y) {
@@ -83,6 +120,30 @@ public class MuPDFPageView extends PageView {
 		mEditText.setText(text);
 		mTextEntry.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
 		mTextEntry.show();
+	}
+
+	private void invokeChoiceDialog(final String [] options) {
+		mChoiceEntryBuilder.setItems(options, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				mSetWidgetChoice = new AsyncTask<String,Void,Void>() {
+					@Override
+					protected Void doInBackground(String... params) {
+						String [] sel = {params[0]};
+						mCore.setFocusedWidgetChoiceSelected(sel);
+						return null;
+					}
+
+					@Override
+					protected void onPostExecute(Void result) {
+						changeReporter.run();
+					}
+				};
+
+				mSetWidgetChoice.execute(options[which]);
+			}
+		});
+		AlertDialog dialog = mChoiceEntryBuilder.create();
+		dialog.show();
 	}
 
 	public void setChangeReporter(Runnable reporter) {
@@ -114,11 +175,17 @@ public class MuPDFPageView extends PageView {
 						changeReporter.run();
 					}
 
-					switch(result.type) {
-					case TEXT:
-						invokeTextDialog(result.text);
-						break;
-					}
+					result.acceptVisitor(new PassClickResultVisitor() {
+						@Override
+						public void visitText(PassClickResultText result) {
+							invokeTextDialog(result.text);
+						}
+
+						@Override
+						public void visitChoice(PassClickResultChoice result) {
+							invokeChoiceDialog(result.options);
+						}
+					});
 				}
 			};
 

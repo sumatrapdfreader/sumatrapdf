@@ -202,9 +202,29 @@ static pdf_jsimp_obj *field_buttonSetCaption(void *jsctx, void *obj, int argc, p
 static pdf_jsimp_obj *field_getName(void *jsctx, void *obj)
 {
 	pdf_js *js = (pdf_js *)jsctx;
+	fz_context *ctx = js->doc->ctx;
 	pdf_obj *field = (pdf_obj *)obj;
+	char *name;
+	pdf_jsimp_obj *oname = NULL;
 
-	return field ? pdf_jsimp_from_string(js->imp, pdf_field_name(js->doc, field)) : NULL;
+	if (field == NULL)
+		return NULL;
+
+	name = pdf_field_name(js->doc, field);
+	fz_try(ctx)
+	{
+		oname = pdf_jsimp_from_string(js->imp, name);
+	}
+	fz_always(ctx)
+	{
+		fz_free(ctx, name);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+
+	return oname;
 }
 
 static void field_setName(void *jsctx, void *obj, pdf_jsimp_obj *val)

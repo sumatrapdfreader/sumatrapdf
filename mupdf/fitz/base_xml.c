@@ -270,10 +270,6 @@ static char *xml_parse_document_imp(struct parser *x, char *p)
 	char *mark;
 	int quote;
 
-	/* SumatraPDF: ignore the BOM */
-	if (p[0] == '\xEF' && p[1] == '\xBB' && p[2] == '\xBF')
-		p += 3;
-
 parse_text:
 	mark = p;
 	while (*p && *p != '<') ++p;
@@ -394,7 +390,7 @@ static char *convert_to_utf8(fz_context *doc, unsigned char *s, int n)
 	int c;
 
 	if (s[0] == 0xFE && s[1] == 0xFF) {
-		/* SumatraPDF: skip BOM in xml_parse_document_imp */
+		s += 2;
 		dst = d = fz_malloc(doc, n * 2);
 		while (s + 1 < e) {
 			c = s[0] << 8 | s[1];
@@ -406,7 +402,7 @@ static char *convert_to_utf8(fz_context *doc, unsigned char *s, int n)
 	}
 
 	if (s[0] == 0xFF && s[1] == 0xFE) {
-		/* SumatraPDF: skip BOM in xml_parse_document_imp */
+		s += 2;
 		dst = d = fz_malloc(doc, n * 2);
 		while (s + 1 < e) {
 			c = s[0] | s[1] << 8;
@@ -433,23 +429,23 @@ fz_parse_xml(fz_context *ctx, unsigned char *s, int n)
 	parser.head = &root;
 	parser.ctx = ctx;
 
-	/* SumatraPDF: fix memory leak */
-	fz_try(ctx)
-	{
-
+	/* skip BOM in UTF-8 text */
+	if (s[0] == 0xEF && s[1] == 0xBB && s[2] == 0xBF)
+		/* SumatraPDF: don't bother converting UTF-8 to UTF-8 */
+		p = (char*)(s += 3);
+	else
 	p = convert_to_utf8(ctx, s, n);
 
-	error = xml_parse_document_imp(&parser, p);
-	if (error)
-		fz_throw(ctx, "%s", error);
-
+	fz_try(ctx)
+	{
+		error = xml_parse_document_imp(&parser, p);
+		if (error)
+			fz_throw(ctx, "%s", error);
 	}
 	fz_always(ctx)
 	{
-
-	if (p != (char*)s)
-		fz_free(ctx, p);
-
+		if (p != (char*)s)
+			fz_free(ctx, p);
 	}
 	fz_catch(ctx)
 	{

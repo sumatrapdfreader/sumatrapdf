@@ -60,20 +60,23 @@ xps_parse_remote_resource_dictionary(xps_document *doc, char *base_uri, char *so
 	xps_part *part;
 	fz_xml *xml;
 	char *s;
+	fz_context *ctx = doc->ctx;
 
 	/* External resource dictionaries MUST NOT reference other resource dictionaries */
 	xps_resolve_url(part_name, base_uri, source_att, sizeof part_name);
 	part = xps_read_part(doc, part_name);
-	/* SumatraPDF: fix memory leak */
-	fz_try(doc->ctx)
+	fz_try(ctx)
 	{
-	xml = fz_parse_xml(doc->ctx, part->data, part->size);
+		xml = fz_parse_xml(doc->ctx, part->data, part->size);
 	}
-	fz_catch(doc->ctx)
+	fz_always(ctx)
+	{
+		xps_free_part(doc, part);
+	}
+	fz_catch(ctx)
 	{
 		xml = NULL;
 	}
-	xps_free_part(doc, part);
 
 	if (!xml)
 		return NULL;

@@ -595,6 +595,9 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 	if (!app->nowaitcursor)
 		wincursor(app, WAIT);
 
+	if (!app->transitions_enabled || !app->presentation_mode)
+		transition = 0;
+
 	if (transition)
 	{
 		app->old_image = app->image;
@@ -668,7 +671,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 			fz_invert_pixmap(app->ctx, app->image);
 	}
 
-	if (transition && app->transitions_enabled && app->presentation_mode)
+	if (transition)
 	{
 		fz_transition *new_trans;
 		app->new_image = app->image;
