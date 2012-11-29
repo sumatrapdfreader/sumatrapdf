@@ -3495,7 +3495,8 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     } else if (VK_HOME == key && IsCtrlPressed()) {
         win->dm->GoToFirstPage();
     } else if (VK_END == key && IsCtrlPressed()) {
-        win->dm->GoToLastPage();
+        if (!win->dm->GoToLastPage())
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
@@ -3512,7 +3513,8 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     } else if (VK_HOME == key) {
         win->dm->GoToFirstPage();
     } else if (VK_END == key) {
-        win->dm->GoToLastPage();
+        if (!win->dm->GoToLastPage())
+            SendMessage(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
     } else if (VK_MULTIPLY == key) {
         win->dm->RotateBy(90);
     } else if (VK_DIVIDE == key) {
