@@ -354,7 +354,8 @@ static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=NULL)
     for (int i = 0; i < dimof(mimeTypes); i++) {
         if (str::EqI(ext, mimeTypes[i].ext)) {
             // trust an image's data more than its extension
-            if (imgExt && str::StartsWith(mimeTypes[i].mimetype, L"image/")) {
+            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) &&
+                str::StartsWith(mimeTypes[i].mimetype, L"image/")) {
                 for (int j = 0; j < dimof(mimeTypes); j++) {
                     if (str::Eq(imgExt, mimeTypes[j].ext))
                         return str::Dup(mimeTypes[j].mimetype);
