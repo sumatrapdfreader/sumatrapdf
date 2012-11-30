@@ -238,6 +238,14 @@ void GridLayout::Arrange(const Rect finalRect)
         cell = GetCell(d->row, d->col);
         el = d->el;
         Point pos(GetCellPos(d->row, d->col));
+        int elDx = el->DesiredSize().Width;
+        int containerDx = maxColWidth[d->col];
+        int xOff = d->horizAlign.CalcOffset(elDx, containerDx);
+        pos.X += xOff;
+        int elDy = el->DesiredSize().Height;
+        int containerDy = maxRowHeight[d->row];
+        int yOff = d->vertAlign.CalcOffset(elDy, containerDy);
+        pos.Y += yOff;
         Rect r(pos, cell->desiredSize);
         el->Arrange(r);
     }

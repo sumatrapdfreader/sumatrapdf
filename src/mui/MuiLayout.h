@@ -86,7 +86,7 @@ struct DirectionalLayoutData {
         desiredSize = other.desiredSize;
     }
 
-    void Set(ILayout *el, float sla, float snla, ElAlignData& a) {
+    void Set(ILayout *el, float sla, float snla, const ElAlignData& a) {
         element = el;
         sizeLayoutAxis = sla;
         sizeNonLayoutAxis = snla;
@@ -128,21 +128,35 @@ public:
 struct GridLayoutData {
     ILayout *el;
     int row, col;
+    // cell of the grid can be bigger than the element.
+    // vertAlign and horizAlign define how the element
+    // is laid out within the cell
+    ElAlignData vertAlign;
+    ElAlignData horizAlign;
+
 public:
     GridLayoutData() {
         el = NULL;
         row = 0;
         col = 0;
+        vertAlign.Set(ElAlignTop);
+        horizAlign.Set(ElAlignLeft);
     }
+
     GridLayoutData(const GridLayoutData& other) {
         el = other.el;
         row = other.row;
         col = other.col;
+        vertAlign = other.vertAlign;
+        horizAlign = other.horizAlign;
     }
-    void Set(ILayout *el, int row, int col) {
+
+    void Set(ILayout *el, int row, int col, ElAlign horizAlign = ElAlignLeft, ElAlign vertAlign = ElAlignBottom) {
         this->el = el;
         this->row = row;
         this->col = col;
+        this->vertAlign.Set(vertAlign);
+        this->horizAlign.Set(horizAlign);
     }
 };
 

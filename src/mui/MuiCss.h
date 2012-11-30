@@ -47,12 +47,13 @@ bool IsWidthProp(PropType type);
 bool IsColorProp(PropType type);
 bool IsAlignProp(PropType type);
 
-// Align is aname  common so to avoid potential conflicts, use ElAlign
+// Align is a common name so to avoid potential conflicts, use ElAlign
 // which stands for Element Align.
 // Top/Left and Bottom/Right are represented by the same ElAlignData
 // values but they're semantically different, so we given them unique names
+// Note: must start at 0 and the order must match g_ElAlignVals
 enum ElAlign {
-    ElAlignCenter,
+    ElAlignCenter = 0,
     ElAlignTop,
     ElAlignBottom,
     ElAlignLeft,
@@ -74,7 +75,7 @@ enum ElAlign {
 //  - (1.f, 0.f) makes left edge of the element align with right edge of the container
 //    i.e. |container||el|
 // This is more flexible than, say, VerticalAlignment property in WPF.
-// Note: this can be extended for values outside of <0.f - 1.f> range.
+// Note: this could be extended for values outside of <0.f - 1.f> range.
 struct ElAlignData {
 
     float elementPoint;
@@ -86,31 +87,28 @@ struct ElAlignData {
     int CalcOffset(int elSize, int containerSize);
 };
 
+extern struct ElAlignData g_ElAlignVals[5];
+
 // we can't have constructors in ElInContainerAlign, so those are
 // helper methods for constructing them
 static inline ElAlignData GetElAlignCenter() {
-    ElAlignData align = { .5f, .5f };
-    return align;
+    return g_ElAlignVals[ElAlignCenter];
 }
 
 static inline ElAlignData GetElAlignTop() {
-    ElAlignData align = { 0.f, 0.f };
-    return align;
+    return g_ElAlignVals[ElAlignTop];
 }
 
 static inline ElAlignData GetElAlignLeft() {
-    ElAlignData align = { 0.f, 0.f };
-    return align;
+    return g_ElAlignVals[ElAlignLeft];
 }
 
 static inline ElAlignData GetElAlignBottom() {
-    ElAlignData align = { 1.f, 1.f };
-    return align;
+    return g_ElAlignVals[ElAlignBottom];
 }
 
 static inline ElAlignData GetElAlignRight() {
-    ElAlignData align = { 1.f, 1.f };
-    return align;
+    return g_ElAlignVals[ElAlignRight];
 }
 
 static inline ElAlignData GetElAlign(float ep, float cp) {

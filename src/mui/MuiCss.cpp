@@ -257,20 +257,20 @@ bool ElAlignData::operator==(const ElAlignData& other) const
     return ((elementPoint == other.elementPoint) && (containerPoint == other.containerPoint));
 }
 
+// Note: the order must match enum ElAlign
+struct ElAlignData g_ElAlignVals[5] = {
+    { .5f, .5f }, // ElAlignCenter
+    { 0.f, 0.f }, // ElAlignTop
+    { 1.f, 1.f }, // ElAlignBottom
+    { 0.f, 0.f }, // ElAlignLeft
+    { 1.f, 1.f }, // ElAlignRight
+};
+
 void ElAlignData::Set(ElAlign align)
 {
-    if (ElAlignCenter == align) {
-        elementPoint   = .5f;
-        containerPoint = .5f;
-    } else if ((ElAlignTop == align) || (ElAlignLeft == align)) {
-        elementPoint   = 0.f;
-        containerPoint = 0.f;
-    } else if ((ElAlignBottom == align) || (ElAlignRight == align)) {
-        elementPoint   = 1.f;
-        containerPoint = 1.f;
-    } else {
-        CrashIf(true);
-    }
+    CrashIf(align > dimof(g_ElAlignVals));
+    elementPoint = g_ElAlignVals[align].elementPoint;
+    containerPoint = g_ElAlignVals[align].containerPoint;
 }
 
 // calculates the offset of an element within container

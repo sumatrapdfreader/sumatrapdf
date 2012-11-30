@@ -24,6 +24,8 @@ static HWND gHwndAbout2 = NULL;
 static HwndWrapper *mainWnd = NULL;
 
 static Style *   styleMainWnd = NULL;
+static Style *   styleBtnLeft = NULL;
+static Style *   styleBtnLeftOver = NULL;
 
 #define COLOR_LIGHT_BLUE    "64C7EF"
 
@@ -31,6 +33,8 @@ static Style *   styleMainWnd = NULL;
 extern "C" static void DeleteAboutStyles()
 {
     delete styleMainWnd;
+    delete styleBtnLeft;
+    delete styleBtnLeftOver;
 }
 
 static void CreateAboutStyles()
@@ -41,6 +45,18 @@ static void CreateAboutStyles()
 
     styleMainWnd = new Style();
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_BLUE));
+
+    styleBtnLeft = new Style();
+    styleBtnLeft->Set(Prop::AllocFontName(L"Tahoma"));
+    styleBtnLeft->Set(Prop::AllocFontWeight(FontStyleRegular));
+    styleBtnLeft->Set(Prop::AllocFontSize(10.5f));
+    styleBtnLeft->Set(Prop::AllocColorSolid(PropColor, "blue"));
+    styleBtnLeft->Set(Prop::AllocPadding(2, 4, 2, 4));
+    styleBtnLeft->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    styleBtnLeft->SetBorderWidth(0);
+
+    styleBtnLeftOver = new Style(styleBtnLeft);
+    styleBtnLeftOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
     atexit(DeleteAboutStyles);
 }
 
@@ -95,7 +111,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
         const WCHAR *right = gAboutLayoutInfo[row].rightTxt;
         // TODO: use url
 
-        ld.Set(new Button(left, NULL, NULL), row, 0);
+        ld.Set(new Button(left, styleBtnLeft, styleBtnLeftOver), row, 0, ElAlignRight);
         l->Add(ld);
         ld.Set(new Button(right, NULL, NULL), row, 1);
         l->Add(ld);
@@ -162,7 +178,7 @@ void OnMenuAbout2()
             WND_CLASS_ABOUT2, ABOUT_WIN_TITLE,
             WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
             CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT,
+            520, 400,
             NULL, NULL,
             ghinst, NULL);
     if (!gHwndAbout2)
