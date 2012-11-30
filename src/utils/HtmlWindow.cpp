@@ -11,6 +11,8 @@
 
 #include "Timer.h"
 #include "WinUtil.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 
 #pragma comment(lib, "urlmon")
 
@@ -321,7 +323,7 @@ static bool ParseProtoUrl(const WCHAR *url, int *htmlWindowId, ScopedMem<WCHAR> 
 #define DEFAULT_MIME_TYPE   L"text/html"
 
 // caller must free() the result
-static WCHAR *MimeFromUrl(const WCHAR *url)
+static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=NULL)
 {
     const WCHAR *ext = str::FindCharLast(url, '.');
     if (!ext)
@@ -331,7 +333,7 @@ static WCHAR *MimeFromUrl(const WCHAR *url)
         // some CHM documents use (image) URLs that are followed by
         // a semi-colon and a number after the file's extension
         ScopedMem<WCHAR> newUrl(str::DupN(url, str::FindChar(ext, ';') - url));
-        return MimeFromUrl(newUrl);
+        return MimeFromUrl(newUrl, imgExt);
     }
 
     static struct {
@@ -350,8 +352,16 @@ static WCHAR *MimeFromUrl(const WCHAR *url)
     };
 
     for (int i = 0; i < dimof(mimeTypes); i++) {
-        if (str::EqI(ext, mimeTypes[i].ext))
+        if (str::EqI(ext, mimeTypes[i].ext)) {
+            // trust an image's data more than its extension
+            if (imgExt && str::StartsWith(mimeTypes[i].mimetype, L"image/")) {
+                for (int j = 0; j < dimof(mimeTypes); j++) {
+                    if (str::Eq(imgExt, mimeTypes[j].ext))
+                        return str::Dup(mimeTypes[j].mimetype);
+                }
+            }
             return str::Dup(mimeTypes[i].mimetype);
+        }
     }
 
     ScopedMem<WCHAR> contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"Content Type"));
@@ -394,7 +404,8 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     if (!ok)
         return INET_E_DATA_NOT_AVAILABLE;
 
-    ScopedMem<WCHAR> mime(MimeFromUrl(urlRest));
+    const WCHAR *imgExt = GfxFileExtFromData(data, dataLen);
+    ScopedMem<WCHAR> mime(MimeFromUrl(urlRest, imgExt));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
     pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, dataLen, dataLen);
     pIProtSink->ReportResult(S_OK, 200, NULL);
