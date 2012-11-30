@@ -75,7 +75,7 @@ RectI   GetFullscreenRect(HWND hwnd);
 RectI   GetVirtualScreenRect();
 
 bool    LaunchFile(const WCHAR *path, const WCHAR *params=NULL, const WCHAR *verb=NULL, bool hidden=false);
-HANDLE  LaunchProcess(WCHAR *cmdLine, const WCHAR *currDir=NULL, DWORD flags=0);
+HANDLE  LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir=NULL, DWORD flags=0);
 
 void    PaintRect(HDC hdc, RectI& rect);
 void    PaintLine(HDC hdc, RectI& rect);

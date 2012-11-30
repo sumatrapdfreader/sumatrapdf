@@ -436,14 +436,16 @@ bool LaunchFile(const WCHAR *path, const WCHAR *params, const WCHAR *verb, bool 
     return ShellExecuteEx(&sei);
 }
 
-HANDLE LaunchProcess(WCHAR *cmdLine, const WCHAR *currDir, DWORD flags)
+HANDLE LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir, DWORD flags)
 {
     PROCESS_INFORMATION pi = { 0 };
     STARTUPINFO si = { 0 };
     si.cb = sizeof(si);
 
-    // per msdn, cmdLine has to be writeable
-    if (!CreateProcess(NULL, cmdLine, NULL, NULL, FALSE, flags, NULL, currDir, &si, &pi))
+    // CreateProcess() might modify cmd line argument, so make a copy
+    // in case caller provides a read-only string
+    ScopedMem<WCHAR> cmdLineCopy(str::Dup(cmdLine));
+    if (!CreateProcess(NULL, cmdLineCopy, NULL, NULL, FALSE, flags, NULL, currDir, &si, &pi))
         return NULL;
 
     CloseHandle(pi.hThread);
