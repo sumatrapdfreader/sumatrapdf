@@ -52,7 +52,7 @@ public:
 
 ChmTocItem *ChmTocItem::Clone()
 {
-    ChmTocItem *res = new ChmTocItem(str::Dup(title), pageNo, url ? str::Dup(url) : NULL);
+    ChmTocItem *res = new ChmTocItem(str::Dup(title), pageNo, str::Dup(url));
     res->open = open;
     res->id = id;
     if (child)
@@ -400,7 +400,7 @@ public:
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         int pageNo = CreatePageNoForURL(url);
-        ChmTocItem *item = new ChmTocItem(str::Dup(name), pageNo, url ? str::Dup(url) : NULL);
+        ChmTocItem *item = new ChmTocItem(str::Dup(name), pageNo, str::Dup(url));
         item->id = ++idCounter;
         item->open = level == 1;
 

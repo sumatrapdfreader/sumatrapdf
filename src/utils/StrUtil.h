@@ -14,8 +14,8 @@ enum TrimOpt {
 inline size_t Len(const char *s) { return strlen(s); }
 inline size_t Len(const WCHAR *s) { return wcslen(s); }
 
-inline char *  Dup(const char *s) { return _strdup(s); }
-inline WCHAR * Dup(const WCHAR *s) { return _wcsdup(s); }
+inline char *  Dup(const char *s) { return s ? _strdup(s) : NULL; }
+inline WCHAR * Dup(const WCHAR *s) { return s ? _wcsdup(s) : NULL; }
 
 void ReplacePtr(char **s, const char *snew);
 void ReplacePtr(WCHAR **s, const WCHAR *snew);

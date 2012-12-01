@@ -325,7 +325,7 @@ ImageEngine *ImageEngineImpl::Clone()
         return NULL;
 
     ImageEngineImpl *clone = new ImageEngineImpl();
-    clone->fileName = fileName ? str::Dup(fileName) : NULL;
+    clone->fileName = str::Dup(fileName);
     clone->fileExt = fileExt;
     if (fileStream)
         fileStream->Clone(&clone->fileStream);
@@ -897,18 +897,18 @@ WCHAR *CbxEngineImpl::GetProperty(DocumentProperty prop)
 {
     switch (prop) {
     case Prop_Title:
-        return propTitle ? str::Dup(propTitle) : NULL;
+        return str::Dup(propTitle);
     case Prop_Author:
         return propAuthors.Count() ? propAuthors.Join(L", ") : NULL;
     case Prop_CreationDate:
-        return propDate ? str::Dup(propDate) : NULL;
+        return str::Dup(propDate);
     case Prop_ModificationDate:
-        return propModDate ? str::Dup(propModDate) : NULL;
+        return str::Dup(propModDate);
     case Prop_CreatorApp:
-        return propCreator ? str::Dup(propCreator) : NULL;
+        return str::Dup(propCreator);
     // TODO: replace with Prop_Summary
     case Prop_Subject:
-        return propSummary ? str::Dup(propSummary) : NULL;
+        return str::Dup(propSummary);
     default:
         return NULL;
     }

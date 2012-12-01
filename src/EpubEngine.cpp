@@ -144,7 +144,7 @@ public:
     virtual PageDestType GetDestType() const { return value ? Dest_LaunchURL : Dest_ScrollTo; }
     virtual int GetDestPageNo() const { return pageNo; }
     virtual RectD GetDestRect() const { return rect; }
-    virtual WCHAR *GetDestValue() const { return value ? str::Dup(value) : NULL; }
+    virtual WCHAR *GetDestValue() const { return str::Dup(value); }
 };
 
 class EbookLink : public PageElement, public PageDestination {
@@ -1649,7 +1649,7 @@ public:
     }
 
     virtual PageDestType GetDestType() const { return Dest_LaunchFile; }
-    virtual WCHAR *GetDestName() const { return name ? str::Dup(name) : NULL; }
+    virtual WCHAR *GetDestName() const { return str::Dup(name); }
 };
 
 PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)

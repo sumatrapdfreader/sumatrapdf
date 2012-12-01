@@ -319,7 +319,7 @@ public:
     PasswordHolder(const WCHAR *password) : password(password) { }
     virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey) {
-        return password ? str::Dup(password) : NULL;
+        return str::Dup(password);
     }
 };
 

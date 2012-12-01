@@ -87,7 +87,7 @@ class ScopedFile {
     ScopedMem<WCHAR> path;
 
 public:
-    ScopedFile(const WCHAR *path) : path(path ? str::Dup(path) : NULL) { }
+    ScopedFile(const WCHAR *path) : path(str::Dup(path)) { }
     ~ScopedFile() {
         if (path)
             file::Delete(path);

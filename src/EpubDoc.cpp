@@ -1387,13 +1387,13 @@ WCHAR *HtmlDoc::GetProperty(DocumentProperty prop)
 {
     switch (prop) {
     case Prop_Title:
-        return title ? str::Dup(title) : NULL;
+        return str::Dup(title);
     case Prop_Author:
-        return author ? str::Dup(author) : NULL;
+        return str::Dup(author);
     case Prop_CreationDate:
-        return date ? str::Dup(date) : NULL;
+        return str::Dup(date);
     case Prop_Copyright:
-        return copyright ? str::Dup(copyright) : NULL;
+        return str::Dup(copyright);
     default:
         return NULL;
     }

@@ -60,7 +60,7 @@ public:
     }
     NotificationWnd(HWND parent, const WCHAR *message, const WCHAR *progressMsg, NotificationWndCallback *cb=NULL) :
         hasProgress(true), hasCancel(true), notificationCb(cb), highlight(false), isCanceled(false), progress(0) {
-        this->progressMsg = progressMsg ? str::Dup(progressMsg) : NULL;
+        this->progressMsg = str::Dup(progressMsg);
         CreatePopup(parent, message);
     }
     ~NotificationWnd() {
