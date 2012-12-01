@@ -1,22 +1,13 @@
 #include "fitz-internal.h"
 
 #include <jpeglib.h>
-#include <setjmp.h>
 
-struct jpeg_error_mgr_jmp
-{
-	struct jpeg_error_mgr super;
-	/* SumatraPDF: prevent inconsistent ctx state */
-	fz_context *ctx;
-	char msg[JMSG_LENGTH_MAX];
-};
-
+/* SumatraPDF: prevent inconsistent ctx state */
 static void error_exit(j_common_ptr cinfo)
 {
-	struct jpeg_error_mgr_jmp *err = (struct jpeg_error_mgr_jmp *)cinfo->err;
-	cinfo->err->format_message(cinfo, err->msg);
-	/* SumatraPDF: prevent inconsistent ctx state */
-	fz_throw(err->ctx, "jpeg error: %s", err->msg);
+	char msg[JMSG_LENGTH_MAX];
+	cinfo->err->format_message(cinfo, msg);
+	fz_throw((fz_context *)cinfo->client_data, "jpeg error: %s", msg);
 }
 
 static void init_source(j_decompress_ptr cinfo)
@@ -137,14 +128,13 @@ fz_pixmap *
 fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 {
 	struct jpeg_decompress_struct cinfo;
-	struct jpeg_error_mgr_jmp err;
+	struct jpeg_error_mgr err;
 	struct jpeg_source_mgr src;
 	unsigned char *row[1], *sp, *dp;
 	fz_colorspace *colorspace;
 	unsigned int x;
 	int k;
 	fz_pixmap *image = NULL;
-	fz_var(image);
 
 	fz_var(image);
 	fz_var(row);
@@ -154,10 +144,9 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 	fz_try(ctx)
 	{
 		/* SumatraPDF: prevent inconsistent ctx state */
-		err.ctx = ctx;
-
-		cinfo.err = jpeg_std_error(&err.super);
-		err.super.error_exit = error_exit;
+		cinfo.client_data = ctx;
+		cinfo.err = jpeg_std_error(&err);
+		err.error_exit = error_exit;
 
 		jpeg_create_decompress(&cinfo);
 
