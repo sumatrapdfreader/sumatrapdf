@@ -23,6 +23,11 @@ struct Print_Advanced_Data {
     PrintRangeAdv range;
     PrintScaleAdv scale;
     bool asImage;
+
+    Print_Advanced_Data(PrintRangeAdv range=PrintRangeAll,
+                        PrintScaleAdv scale=PrintScaleShrink,
+                        bool asImage=false) :
+        range(range), scale(scale), asImage(asImage) { }
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem<DLGTEMPLATE>& dlgTemplate);

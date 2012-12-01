@@ -17,42 +17,38 @@
 #include "WinUtil.h"
 
 struct PrintData {
-    HDC hdc; // owned by PrintData
-
+    ScopedMem<WCHAR> driverName, printerName, portName;
+    ScopedMem<DEVMODE> devMode;
     BaseEngine *engine;
     Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
     Vec<SelectionOnPage> sel;   // empty when printing a page range
+    Print_Advanced_Data advData;
     int rotation;
-    PrintRangeAdv rangeAdv;
-    PrintScaleAdv scaleAdv;
-    bool printAsImage;
-    short orientation;
 
-    PrintData(BaseEngine *engine, HDC hdc, DEVMODE *devMode,
-              Vec<PRINTPAGERANGE>& ranges, int rotation=0,
-              PrintRangeAdv rangeAdv=PrintRangeAll,
-              PrintScaleAdv scaleAdv=PrintScaleShrink,
-              bool printAsImage=false,
-              Vec<SelectionOnPage> *sel=NULL) :
-        engine(NULL), hdc(hdc), rotation(rotation),
-        rangeAdv(rangeAdv), scaleAdv(scaleAdv), printAsImage(printAsImage)
+    PrintData(BaseEngine *engine, PRINTER_INFO_2 *printerInfo, DEVMODE *devMode,
+              Vec<PRINTPAGERANGE>& ranges, Print_Advanced_Data& advData,
+              int rotation=0, Vec<SelectionOnPage> *sel=NULL) :
+        engine(NULL), advData(advData), rotation(rotation)
     {
         if (engine)
             this->engine = engine->Clone();
+
+        if (printerInfo) {
+            driverName.Set(str::Dup(printerInfo->pDriverName));
+            printerName.Set(str::Dup(printerInfo->pPrinterName));
+            portName.Set(str::Dup(printerInfo->pPortName));
+        }
+        if (devMode)
+            this->devMode.Set((LPDEVMODE)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra));
 
         if (!sel)
             this->ranges = ranges;
         else
             this->sel = *sel;
-
-        orientation = 0;
-        if (devMode && (devMode->dmFields & DM_ORIENTATION))
-            orientation = devMode->dmOrientation;
     }
 
     ~PrintData() {
         delete engine;
-        DeleteDC(hdc);
     }
 };
 
@@ -85,6 +81,14 @@ public:
     }
 };
 
+class ScopeHDC {
+    HDC hdc;
+public:
+    ScopeHDC(HDC hdc) : hdc(hdc) { }
+    ~ScopeHDC() { DeleteDC(hdc); }
+    operator HDC() const { return hdc; }
+};
+
 class ScopeDisableDEP {
 public:
     ScopeDisableDEP() { EnableDataExecution(); }
@@ -101,12 +105,15 @@ static RectD BoundSelectionOnPage(Vec<SelectionOnPage>& sel, int pageNo)
     return bounds;
 }
 
-static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, AbortCookieManager *abortCookie=NULL)
+static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, AbortCookieManager *abortCookie=NULL)
 {
     AssertCrash(pd.engine);
-    if (!pd.engine) return;
+    if (!pd.engine)
+        return false;
+    AssertCrash(pd.printerName);
+    if (!pd.printerName)
+        return false;
 
-    HDC hdc = pd.hdc;
     BaseEngine& engine = *pd.engine;
     ScopedMem<WCHAR> fileName;
 
@@ -137,7 +144,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
     }
     AssertCrash(total > 0);
     if (0 == total)
-        return;
+        return false;
     if (progressUI)
         progressUI->UpdateProgress(current, total);
 
@@ -150,8 +157,13 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
     // much more complicated to implement
     ScopeDisableDEP scopeNoDEP;
 
+    // cf. http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
+    ScopeHDC hdc(CreateDC(pd.driverName, pd.printerName, pd.portName, pd.devMode));
+    if (!hdc)
+        return false;
+
     if (StartDoc(hdc, &di) <= 0)
-        return;
+        return false;
 
     // MM_TEXT: Each logical unit is mapped to one device pixel.
     // Positive x is to the right; positive y is down.
@@ -165,8 +177,8 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
     const float dpiFactor = min(GetDeviceCaps(hdc, LOGPIXELSX) / engine.GetFileDPI(),
                                 GetDeviceCaps(hdc, LOGPIXELSY) / engine.GetFileDPI());
     bool bPrintPortrait = paperSize.dx < paperSize.dy;
-    if (pd.orientation)
-        bPrintPortrait = DMORIENT_PORTRAIT == pd.orientation;
+    if (pd.devMode && (pd.devMode.Get()->dmFields & DM_ORIENTATION))
+        bPrintPortrait = DMORIENT_PORTRAIT == pd.devMode.Get()->dmOrientation;
 
     if (pd.sel.Count() > 0) {
         for (int pageNo = 1; pageNo <= engine.PageCount(); pageNo++) {
@@ -184,9 +196,9 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                              (float)printable.dy / bSize.dy);
             // use the correct zoom values, if the page fits otherwise
             // and the user didn't ask for anything else (default setting)
-            if (PrintScaleShrink == pd.scaleAdv)
+            if (PrintScaleShrink == pd.advData.scale)
                 zoom = min(dpiFactor, zoom);
-            else if (PrintScaleNone == pd.scaleAdv)
+            else if (PrintScaleNone == pd.advData.scale)
                 zoom = dpiFactor;
 
             for (size_t i = 0; i < pd.sel.Count(); i++) {
@@ -195,7 +207,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 
                 RectD *clipRegion = &pd.sel.At(i).rect;
                 PointI offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
-                if (!pd.printAsImage) {
+                if (!pd.advData.asImage) {
                     RectI rc((int)(printable.dx - bSize.dx * zoom) / 2 + offset.x,
                              (int)(printable.dy - bSize.dy * zoom) / 2 + offset.y,
                              (int)(clipRegion->dx * zoom), (int)(clipRegion->dy * zoom));
@@ -228,21 +240,21 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 
             if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
-                return;
+                return false;
             }
             current++;
         }
 
         EndDoc(hdc);
-        return;
+        return false;
     }
 
     // print all the pages the user requested
     for (size_t i = 0; i < pd.ranges.Count(); i++) {
         int dir = pd.ranges.At(i).nFromPage > pd.ranges.At(i).nToPage ? -1 : 1;
         for (DWORD pageNo = pd.ranges.At(i).nFromPage; pageNo != pd.ranges.At(i).nToPage + dir; pageNo += dir) {
-            if ((PrintRangeEven == pd.rangeAdv && pageNo % 2 != 0) ||
-                (PrintRangeOdd == pd.rangeAdv && pageNo % 2 == 0))
+            if ((PrintRangeEven == pd.advData.range && pageNo % 2 != 0) ||
+                (PrintRangeOdd == pd.advData.range && pageNo % 2 == 0))
                 continue;
             if (progressUI)
                 progressUI->UpdateProgress(current, total);
@@ -273,7 +285,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
             // center the page on the physical paper (default behavior)
             PointI offset(-printable.x, -printable.y);
 
-            if (pd.scaleAdv != PrintScaleNone) {
+            if (pd.advData.scale != PrintScaleNone) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 RectD rect = engine.PageContentBox(pageNo, Target_Print);
@@ -284,7 +296,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                            (float)paperSize.dy / pSize.dy)));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
-                if (PrintScaleShrink == pd.scaleAdv && dpiFactor < zoom)
+                if (PrintScaleShrink == pd.advData.scale && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // make sure that no content lies in the non-printable paper margins
                 RectT<float> onPaper((paperSize.dx - pSize.dx * zoom) / 2 + cbox.x * zoom,
@@ -300,7 +312,7 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                     offset.y -= (int)(onPaper.BR().y - printable.BR().y);
             }
 
-            if (!pd.printAsImage) {
+            if (!pd.advData.asImage) {
                 RectI rc = RectI::FromXY((int)(paperSize.dx - pSize.dx * zoom) / 2 + offset.x,
                                          (int)(paperSize.dy - pSize.dy * zoom) / 2 + offset.y,
                                          paperSize.dx, paperSize.dy);
@@ -332,13 +344,14 @@ static void PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 
             if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
-                return;
+                return false;
             }
             current++;
         }
     }
 
     EndDoc(hdc);
+    return true;
 }
 
 class PrintThreadUpdateTask : public UITask {
@@ -478,6 +491,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 
     bool printSelection = false;
     Vec<PRINTPAGERANGE> ranges;
+    PRINTER_INFO_2 printerInfo = { 0 };
 
     if (!HasPermission(Perm_PrinterAccess)) return;
 
@@ -504,7 +518,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     ZeroMemory(&pd, sizeof(PRINTDLGEX));
     pd.lStructSize = sizeof(PRINTDLGEX);
     pd.hwndOwner   = win->hwndFrame;
-    pd.Flags       = PD_RETURNDC | PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
+    pd.Flags       = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;
     if (!win->selectionOnPage)
         pd.Flags |= PD_NOSELECTION;
     pd.nCopies     = 1;
@@ -519,7 +533,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     pd.nMaxPage = dm->PageCount();
     pd.nStartPage = START_PAGE_GENERAL;
 
-    Print_Advanced_Data advanced = { PrintRangeAll, defaultScaleAdv, defaultAsImage };
+    Print_Advanced_Data advanced(PrintRangeAll, defaultScaleAdv, defaultAsImage);
     ScopedMem<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
     pd.lphPropertyPages = &hPsp;
@@ -569,11 +583,17 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
             ranges.Append(pd.lpPageRanges[i]);
     }
 
+    LPDEVNAMES devNames = (LPDEVNAMES)GlobalLock(pd.hDevNames);
     LPDEVMODE devMode = (LPDEVMODE)GlobalLock(pd.hDevMode);
-    PrintData *data = new PrintData(dm->engine, pd.hDC, devMode, ranges, dm->Rotation(),
-                                    advanced.range, advanced.scale, advanced.asImage,
-                                    printSelection ? win->selectionOnPage : NULL);
-    pd.hDC = NULL; // deleted by PrintData
+    if (devNames) {
+        printerInfo.pDriverName = (LPWSTR)devNames + devNames->wDriverOffset;
+        printerInfo.pPrinterName = (LPWSTR)devNames + devNames->wDeviceOffset;
+        printerInfo.pPortName = (LPWSTR)devNames + devNames->wOutputOffset;
+    }
+    PrintData *data = new PrintData(dm->engine, &printerInfo, devMode, ranges, advanced,
+                                    dm->Rotation(), printSelection ? win->selectionOnPage : NULL);
+    if (devNames)
+        GlobalUnlock(pd.hDevNames);
     if (devMode)
         GlobalUnlock(pd.hDevMode);
 
@@ -586,7 +606,6 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 
 Exit:
     free(ppr);
-    DeleteDC(pd.hDC);
     GlobalFree(pd.hDevNames);
     GlobalFree(pd.hDevMode);
 }
@@ -652,9 +671,9 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     // get printer driver information
     DWORD needed = 0;
     GetPrinter(printer, 2, NULL, 0, &needed);
-    ScopedMem<BYTE> infoData(AllocArray<BYTE>(needed));
+    ScopedMem<PRINTER_INFO_2> infoData((PRINTER_INFO_2 *)AllocArray<BYTE>(needed));
     if (infoData)
-        ok = GetPrinter(printer, 2, infoData, needed, &needed);
+        ok = GetPrinter(printer, 2, (LPBYTE)infoData.Get(), needed, &needed);
     if (!ok || !infoData || needed <= sizeof(PRINTER_INFO_2)) goto Exit;
 
     DWORD structSize = DocumentProperties(NULL,
@@ -664,7 +683,6 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
         NULL,                   /* these are not used. */
         0);                     /* Zero returns buffer size. */
     LPDEVMODE devMode = (LPDEVMODE)malloc(structSize);
-    HDC hdcPrint = NULL;
     if (!devMode) goto Exit;
 
     // Get the default DevMode for the printer and modify it for your needs.
@@ -697,29 +715,20 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     ClosePrinter(printer);
     printer = NULL;
 
-    PRINTER_INFO_2 *info = (PRINTER_INFO_2 *)infoData.Get();
-    hdcPrint = CreateDC(info->pDriverName, info->pPrinterName, info->pPortName, devMode);
-    if (!hdcPrint) {
-        if (displayErrors)
-            MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
-        goto Exit;
-    }
-
     {
-        Print_Advanced_Data advanced = { PrintRangeAll, PrintScaleShrink, false };
+        Print_Advanced_Data advanced;
         Vec<PRINTPAGERANGE> ranges;
         ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced);
 
-        PrintData pd(engine, hdcPrint, devMode, ranges, 0,
-                     advanced.range, advanced.scale, advanced.asImage);
-        hdcPrint = NULL; // deleted by PrintData
-        PrintToDevice(pd);
-        ok = true;
+        PrintData pd(engine, infoData, devMode, ranges, advanced);
+        ok = PrintToDevice(pd);
+        if (!ok && displayErrors)
+            MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."),
+                MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
     }
 
 Exit:
     free(devMode);
-    DeleteDC(hdcPrint);
     if (printer)
         ClosePrinter(printer);
     delete engine;
