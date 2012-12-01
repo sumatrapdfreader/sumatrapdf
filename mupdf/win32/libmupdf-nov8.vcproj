@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="libmupdf-v8"
-	ProjectGUID="{2E5DAFDB-A060-4011-B760-32F6A3A4BC9D}"
+	Name="libmupdf-nov8"
+	ProjectGUID="{EC81A9F3-88A6-4170-B7B4-C41CB789A7F6}"
 	RootNamespace="mupdf"
 	>
 	<Platforms>
@@ -211,19 +211,7 @@
 			Name="pdf"
 			>
 			<File
-				RelativePath="..\pdf\pdf_js.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pdf\pdf_jsimp_cpp.c"
-				>
-			</File>
-			<File
-				RelativePath="..\pdf\pdf_jsimp_cpp.h"
-				>
-			</File>
-			<File
-				RelativePath="..\pdf\pdf_jsimp_v8.cpp"
+				RelativePath="..\pdf\pdf_js_none.c"
 				>
 			</File>
 		</Filter>

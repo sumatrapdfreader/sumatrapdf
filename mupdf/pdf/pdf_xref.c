@@ -423,8 +423,17 @@ pdf_read_xref(pdf_document *xref, int ofs, pdf_lexbuf *buf)
 	return trailer;
 }
 
+typedef struct ofs_list_s ofs_list;
+
+struct ofs_list_s
+{
+	int max;
+	int len;
+	int *list;
+};
+
 static void
-pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf, fz_buffer *seen_ofs)
+do_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf, ofs_list *offsets)
 {
 	pdf_obj *trailer = NULL;
 	fz_context *ctx = xref->ctx;
@@ -435,24 +444,28 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf, fz_buffer *
 	fz_var(xrefstmofs);
 	fz_var(prevofs);
 
-	/* SumatraPDF: prevent infinite recursion */
-	seen_ofs = seen_ofs ? fz_keep_buffer(ctx, seen_ofs) : fz_new_buffer(ctx, 10 * sizeof(int));
-
 	fz_try(ctx)
 	{
 		do
 		{
-			/* SumatraPDF: prevent infinite recursion */
 			int i;
-			for (i = 0; i < seen_ofs->len; i += sizeof(int))
-				if (*(int *)(seen_ofs->data + i) == ofs)
+			/* Avoid potential infinite recursion */
+			for (i = 0; i < offsets->len; i ++)
+			{
+				if (offsets->list[i] == ofs)
 					break;
-			if (i < seen_ofs->len)
+			}
+			if (i < offsets->len)
 			{
 				fz_warn(ctx, "ignoring xref recursion with offset %d", ofs);
 				break;
 			}
-			fz_write_buffer(ctx, seen_ofs, (unsigned char *)&ofs, sizeof(int));
+			if (offsets->len == offsets->max)
+			{
+				offsets->list = fz_resize_array(ctx, offsets->list, offsets->max*2, sizeof(int));
+				offsets->max *= 2;
+			}
+			offsets->list[offsets->len++] = ofs;
 
 			trailer = pdf_read_xref(xref, ofs, buf);
 
@@ -468,7 +481,7 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf, fz_buffer *
 			/* We only recurse if we have both xrefstm and prev.
 			 * Hopefully this happens infrequently. */
 			if (xrefstmofs && prevofs)
-				pdf_read_xref_sections(xref, xrefstmofs, buf, seen_ofs);
+				do_read_xref_sections(xref, xrefstmofs, buf, offsets);
 			if (prevofs)
 				ofs = prevofs;
 			else if (xrefstmofs)
@@ -478,15 +491,33 @@ pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf, fz_buffer *
 		}
 		while (prevofs || xrefstmofs);
 	}
-	/* SumatraPDF: prevent infinite recursion */
-	fz_always(ctx)
-	{
-		fz_drop_buffer(ctx, seen_ofs);
-	}
 	fz_catch(ctx)
 	{
 		pdf_drop_obj(trailer);
 		fz_throw(ctx, "cannot read xref at offset %d", ofs);
+	}
+}
+
+static void
+pdf_read_xref_sections(pdf_document *xref, int ofs, pdf_lexbuf *buf)
+{
+	fz_context *ctx = xref->ctx;
+	ofs_list list;
+
+	list.len = 0;
+	list.max = 10;
+	list.list = fz_malloc_array(ctx, 10, sizeof(int));
+	fz_try(ctx)
+	{
+		do_read_xref_sections(xref, ofs, buf, &list);
+	}
+	fz_always(ctx)
+	{
+		fz_free(ctx, list.list);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
 	}
 }
 
@@ -516,7 +547,7 @@ pdf_load_xref(pdf_document *xref, pdf_lexbuf *buf)
 	if (size > xref->len)
 		pdf_resize_xref(xref, size);
 
-	pdf_read_xref_sections(xref, xref->startxref, buf, NULL);
+	pdf_read_xref_sections(xref, xref->startxref, buf);
 
 	/* broken pdfs where first object is not free */
 	if (xref->table[0].type != 'f')

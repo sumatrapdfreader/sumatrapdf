@@ -27,7 +27,6 @@ struct tiff
 	/* colormap */
 	unsigned *colormap;
 
-	/* SumatraPDF: prevent read overflows */
 	unsigned stripoffsetslen;
 	unsigned stripbytecountslen;
 	unsigned colormaplen;
@@ -285,7 +284,6 @@ fz_expand_tiff_colormap(struct tiff *tiff)
 	if (tiff->bitspersample != 4 && tiff->bitspersample != 8)
 		fz_throw(tiff->ctx, "invalid number of bits for RGBPal");
 
-	/* SumatraPDF: prevent read overflows */
 	if (tiff->colormaplen < (unsigned)maxval * 3)
 		fz_throw(tiff->ctx, "insufficient colormap data");
 
@@ -345,11 +343,9 @@ fz_decode_tiff_strips(struct tiff *tiff)
 	unsigned strip;
 	unsigned i;
 
-	/* SumatraPDF: prevent NULL-pointer dereference */
 	if (!tiff->rowsperstrip || !tiff->stripoffsets || !tiff->stripbytecounts)
 		fz_throw(tiff->ctx, "no image data in tiff; maybe it is tiled");
 
-	/* SumatraPDF: prevent read overflows */
 	if (tiff->stripoffsetslen < (tiff->imagelength - 1) / tiff->rowsperstrip + 1 ||
 		tiff->stripbytecountslen < (tiff->imagelength - 1) / tiff->rowsperstrip + 1)
 		fz_throw(tiff->ctx, "insufficient strip offset data");
@@ -672,21 +668,18 @@ fz_read_tiff_tag(struct tiff *tiff, unsigned offset)
 	case StripOffsets:
 		tiff->stripoffsets = fz_malloc_array(tiff->ctx, count, sizeof(unsigned));
 		fz_read_tiff_tag_value(tiff->stripoffsets, tiff, type, value, count);
-		/* SumatraPDF: prevent read overflows */
 		tiff->stripoffsetslen = count;
 		break;
 
 	case StripByteCounts:
 		tiff->stripbytecounts = fz_malloc_array(tiff->ctx, count, sizeof(unsigned));
 		fz_read_tiff_tag_value(tiff->stripbytecounts, tiff, type, value, count);
-		/* SumatraPDF: prevent read overflows */
 		tiff->stripbytecountslen = count;
 		break;
 
 	case ColorMap:
 		tiff->colormap = fz_malloc_array(tiff->ctx, count, sizeof(unsigned));
 		fz_read_tiff_tag_value(tiff->colormap, tiff, type, value, count);
-		/* SumatraPDF: prevent read overflows */
 		tiff->colormaplen = count;
 		break;
 

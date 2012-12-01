@@ -103,7 +103,6 @@ struct pdf_csi_s
 	pdf_gstate *gstate;
 	int gcap;
 	int gtop;
-	/* SumatraPDF: ensure clip stack consistency */
 	int gbot;
 
 	/* cookie support */
@@ -376,6 +375,7 @@ static void
 pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
+	fz_context *ctx = csi->dev->ctx;
 
 	if (gstate->softmask)
 	{
@@ -390,18 +390,25 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 
 		fz_begin_mask(csi->dev, bbox, gstate->luminosity,
 			softmask->colorspace, gstate->softmask_bc);
-		/* SumatraPDF: letting this error through would mess up clip stacks */
-		fz_try(csi->dev->ctx)
+		fz_try(ctx)
 		{
-		pdf_run_xobject(csi, NULL, softmask, fz_identity);
+			pdf_run_xobject(csi, NULL, softmask, fz_identity);
 		}
-		fz_catch(csi->dev->ctx) { /* ignore error */ }
+		fz_catch(ctx)
+		{
+			/* FIXME: Ignore error - nasty, but if we throw from
+			 * here the clip stack would be messed up. */
+			if (csi->cookie)
+				csi->cookie->errors++;
+		}
+
 		/* SumatraPDF: support transfer functions */
 		if (gstate->softmask_tr)
 		{
 			fz_apply_transfer_function(csi->dev, gstate->softmask_tr, 1);
 			gstate->softmask_tr = tr;
 		}
+
 		fz_end_mask(csi->dev);
 
 		gstate->softmask = softmask;
@@ -1095,7 +1102,6 @@ pdf_new_csi(pdf_document *xref, fz_device *dev, fz_matrix ctm, char *event, fz_c
 		if (gstate)
 			copy_state(ctx, &csi->gstate[0], gstate);
 		csi->gtop = 0;
-		/* SumatraPDF: ensure clip stack consistency */
 		csi->gbot = 0;
 
 		csi->cookie = cookie;
@@ -1161,7 +1167,6 @@ pdf_grestore(pdf_csi *csi)
 	pdf_gstate *gs = csi->gstate + csi->gtop;
 	int clip_depth = gs->clip_depth;
 
-	/* SumatraPDF: ensure clip stack consistency */
 	if (csi->gtop <= csi->gbot)
 	{
 		fz_warn(ctx, "gstate underflow in content stream");
@@ -1500,19 +1505,26 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, fz_matrix t
 
 				fz_begin_mask(csi->dev, bbox, gstate->luminosity,
 					softmask->colorspace, gstate->softmask_bc);
-				/* SumatraPDF: letting this error through would mess up clip stacks */
-				/* TODO: the same might also occur when pdf_run_contents_object throws below or in pdf_show_pattern */
 				fz_try(ctx)
 				{
-				pdf_run_xobject(csi, resources, softmask, fz_identity);
+					pdf_run_xobject(csi, resources, softmask, fz_identity);
 				}
-				fz_catch(ctx) { /* ignore error */ }
+				fz_catch(ctx)
+				{
+					/* FIXME: Ignore error - nasty, but if
+					 * we throw from here the clip stack
+					 * would be messed up */
+					if (csi->cookie)
+						csi->cookie->errors++;
+				}
+
 				/* SumatraPDF: support transfer functions */
 				if (tr)
 				{
 					fz_apply_transfer_function(csi->dev, tr, 1);
 					fz_drop_transfer_function(ctx, tr);
 				}
+
 				fz_end_mask(csi->dev);
 
 				pdf_drop_xobject(ctx, softmask);
@@ -2859,7 +2871,6 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	fz_context *ctx = csi->dev->ctx;
 	pdf_lexbuf *buf;
 	int save_in_text;
-	/* SumatraPDF: ensure clip stack consistency */
 	int save_gbot;
 
 	fz_var(buf);
@@ -2871,7 +2882,6 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	pdf_lexbuf_init(ctx, buf, PDF_LEXBUF_SMALL);
 	save_in_text = csi->in_text;
 	csi->in_text = 0;
-	/* SumatraPDF: ensure clip stack consistency */
 	save_gbot = csi->gbot;
 	csi->gbot = csi->gtop;
 	fz_try(ctx)
@@ -2882,6 +2892,9 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 	{
 		fz_warn(ctx, "Content stream parsing error - rendering truncated");
 	}
+	while (csi->gtop > csi->gbot)
+		pdf_grestore(csi);
+	csi->gbot = save_gbot;
 	csi->in_text = save_in_text;
 	/* SumatraPDF: ensure clip stack consistency */
 	csi->gbot = save_gbot;

@@ -2519,8 +2519,8 @@ void pdf_field_set_text_color(pdf_document *doc, pdf_obj *field, pdf_obj *col)
 		parse_da(ctx, da, &di);
 		di.col_size = pdf_array_len(col);
 
-		/* SumatraPDF: prevent stack buffer overflow */
-		for (i = 0; i < fz_mini(di.col_size, nelem(di.col)); i++)
+		len = fz_mini(di.col_size, nelem(di.col));
+		for (i = 0; i < len; i++)
 			di.col[i] = pdf_to_real(pdf_array_get(col, i));
 
 		fzbuf = fz_new_buffer(ctx, 0);

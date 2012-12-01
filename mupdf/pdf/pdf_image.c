@@ -110,11 +110,11 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 	int f = 1<<native_l2factor;
 	int w = (image->base.w + f-1) >> native_l2factor;
 	int h = (image->base.h + f-1) >> native_l2factor;
-	/* SumatraPDF: prevent use of uninitialized value */
 	pdf_image_key *key = NULL;
-	fz_var(key);
+
 	fz_var(tile);
 	fz_var(samples);
+	fz_var(key);
 
 	fz_try(ctx)
 	{
