@@ -3,8 +3,8 @@
 
 #include "BaseUtil.h"
 #include "SumatraAbout2.h"
-#include "Mui.h"
 
+#include "Mui.h"
 #include "resource.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
@@ -120,8 +120,8 @@ static void CreateAboutMuiWindow(HWND hwnd)
     EventMgr *em = mainWnd->evtMgr;
     CrashIf(!em);
 
-    GridLayout *l = new GridLayout();
-    GridLayoutData ld;
+    Grid *l = new Grid();
+    Grid::CellData ld;
 
     int rows = dimof(gAboutLayoutInfo);
     Button *b;

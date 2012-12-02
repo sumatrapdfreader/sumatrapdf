@@ -1031,6 +1031,9 @@
     <ClCompile Include="src\SumatraAbout2.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="src\mui\MuiGrid.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1524,6 +1527,9 @@
     </ClInclude>
     <ClInclude Include="src\SumatraWindow.h">
       <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mui\MuiGrid.h">
+      <Filter>mui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

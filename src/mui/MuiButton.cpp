@@ -7,8 +7,6 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlParserLookup.h"
 
-#include "WinUtil.h"
-
 namespace mui {
 
 Button::Button(const WCHAR *s, Style *def, Style *mouseOver)

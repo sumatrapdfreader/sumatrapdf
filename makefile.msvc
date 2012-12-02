@@ -176,7 +176,7 @@ MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \
 	$(OMUI)\MuiPainter.obj $(OMUI)\MuiControl.obj $(OMUI)\MuiButton.obj \
 	$(OMUI)\MuiScrollBar.obj $(OMUI)\MuiEventMgr.obj $(OMUI)\MuiHwndWrapper.obj \
-	$(OMUI)\SvgPath.obj
+	$(OMUI)\MuiGrid.obj $(OMUI)\SvgPath.obj
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj \

@@ -22,6 +22,7 @@ using namespace css;
 #include "MuiControl.h"
 #include "MuiButton.h"
 #include "MuiScrollBar.h"
+#include "MuiGrid.h"
 #include "MuiHwndWrapper.h"
 #include "MuiPainter.h"
 #include "MuiEventMgr.h"

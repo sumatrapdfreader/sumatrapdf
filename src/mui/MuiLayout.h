@@ -27,8 +27,6 @@ public:
     virtual void Arrange(const Rect finalRect) = 0;
 };
 
-class Control;
-
 #define SizeSelf    666.f
 
 // Defines how we layout a single element within a container
@@ -122,83 +120,6 @@ class VerticalLayout : public DirectionalLayout
 public:
     VerticalLayout() { }
 
-    virtual void Arrange(const Rect finalRect);
-};
-
-struct GridLayoutData {
-    ILayout *el;
-    int row, col;
-    // cell of the grid can be bigger than the element.
-    // vertAlign and horizAlign define how the element
-    // is laid out within the cell
-    ElAlignData vertAlign;
-    ElAlignData horizAlign;
-
-public:
-    GridLayoutData() {
-        el = NULL;
-        row = 0;
-        col = 0;
-        vertAlign.Set(ElAlignTop);
-        horizAlign.Set(ElAlignLeft);
-    }
-
-    GridLayoutData(const GridLayoutData& other) {
-        el = other.el;
-        row = other.row;
-        col = other.col;
-        vertAlign = other.vertAlign;
-        horizAlign = other.horizAlign;
-    }
-
-    void Set(ILayout *el, int row, int col, ElAlign horizAlign = ElAlignLeft, ElAlign vertAlign = ElAlignBottom) {
-        this->el = el;
-        this->row = row;
-        this->col = col;
-        this->vertAlign.Set(vertAlign);
-        this->horizAlign.Set(horizAlign);
-    }
-};
-
-// Grid consists of rows and columns
-class GridLayout : public ILayout
-{
-    struct Cell {
-        Size desiredSize;
-        // TODO: more data
-    };
-
-protected:
-    int     rows;
-    int     cols;
-    
-    // if dirty is true, rows/cols and ld must be rebuilt from els
-    bool    dirty;
-    // cells is rows * cols in size
-    int nCells;
-    Cell *cells;
-    Cell *lastCell;
-    // maxColWidth is an array of cols size and contains
-    // maximum width of each column (the width of the widest
-    // cell in that column)
-    int *maxColWidth;
-    int *maxRowHeight;
-
-    Size    desiredSize; // calculated in Measure()
-
-    void RebuildCellDataIfNeeded();
-    Cell *GetCell(int row, int col) const;
-    Point GetCellPos(int row, int col) const;
-
-public:
-    Vec<GridLayoutData>  els;
-
-    GridLayout();
-    GridLayout& Add(GridLayoutData&);
-
-    virtual ~GridLayout();
-    virtual void Measure(const Size availableSize);
-    virtual Size DesiredSize() { return desiredSize; }
     virtual void Arrange(const Rect finalRect);
 };
 
