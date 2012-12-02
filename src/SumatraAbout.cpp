@@ -53,8 +53,12 @@
 // TODO: replace this link with a better one where license information is nicely collected/linked
 #if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
 #define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS"
+#define URL_AUTHORS L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS"
+#define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/trunk/TRANSLATORS"
 #else
 #define URL_LICENSE L"http://sumatrapdf.googlecode.com/svn/tags/" CURR_VERSION_STR L"rel/AUTHORS"
+#define URL_AUTHORS L"http://sumatrapdf.googlecode.com/svn/tags/" CURR_VERSION_STR L"rel/AUTHORS"
+#define URL_TRANSLATORS L"http://sumatrapdf.googlecode.com/svn/tags/" CURR_VERSION_STR L"rel/TRANSLATORS"
 #endif
 
 static ATOM gAtomAbout;
@@ -77,8 +81,8 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { L"website",        L"SumatraPDF website",   WEBSITE_MAIN_URL},
     { L"manual",         L"SumatraPDF manual",    WEBSITE_MANUAL_URL },
     { L"forums",         L"SumatraPDF forums",    L"http://blog.kowalczyk.info/forum_sumatra" },
-    { L"programming",    L"The Programmers",      L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS" },
-    { L"translations",   L"The Translators",      L"http://code.google.com/p/sumatrapdf/source/browse/trunk/TRANSLATORS" },
+    { L"programming",    L"The Programmers",      URL_AUTHORS },
+    { L"translations",   L"The Translators",      URL_TRANSLATORS },
     { L"licenses",       L"Various Open Source",  URL_LICENSE },
 #ifdef SVN_PRE_RELEASE_VER
     { L"a note",         L"Pre-release version, for testing only!", NULL },
