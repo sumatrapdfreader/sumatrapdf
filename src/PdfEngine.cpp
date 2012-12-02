@@ -423,17 +423,20 @@ static bool LinkifyCheckMultiline(WCHAR *pageText, WCHAR *pos, RectI *coords)
         !str::StartsWith(pos + 1, L"http");
 }
 
-static WCHAR *LinkifyFindEnd(WCHAR *start)
+static WCHAR *LinkifyFindEnd(WCHAR *start, bool atStart)
 {
     WCHAR *end;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
     for (end = start; *end && !iswspace(*end); end++);
-    if (',' == end[-1] || '.' == end[-1])
+    if (',' == end[-1] || '.' == end[-1] || '?' == end[-1] || '!' == end[-1])
         end--;
     // also ignore a closing parenthesis, if the URL doesn't contain any opening one
     if (')' == end[-1] && (!str::FindChar(start, '(') || str::FindChar(start, '(') >= end))
         end--;
+    // cut the link at the first double quote if it's also preceded by one
+    if (!atStart && start[-1] == '"' && str::FindChar(start, '"') && str::FindChar(start, '"') < end)
+        end = (WCHAR *)str::FindChar(start, '"');
 
     return end;
 }
@@ -446,7 +449,7 @@ static WCHAR *LinkifyMultilineText(LinkRectList *list, WCHAR *pageText, WCHAR *s
     bool multiline = false;
 
     do {
-        end = LinkifyFindEnd(start);
+        end = LinkifyFindEnd(start, start == pageText);
         multiline = LinkifyCheckMultiline(pageText, end, coords);
         *end = 0;
 
@@ -522,11 +525,11 @@ static LinkRectList *LinkifyText(WCHAR *pageText, RectI *coords)
             // or an alphanumeric character (indicates part of a different protocol)
         }
         else if ('h' == *start && str::Parse(start, L"http%?s://")) {
-            end = LinkifyFindEnd(start);
+            end = LinkifyFindEnd(start, start == pageText);
             multiline = LinkifyCheckMultiline(pageText, end, coords);
         }
         else if ('w' == *start && str::StartsWith(start, L"www.")) {
-            end = LinkifyFindEnd(start);
+            end = LinkifyFindEnd(start, start == pageText);
             multiline = LinkifyCheckMultiline(pageText, end, coords);
             protocol = L"http://";
             // ignore www. links without a top-level domain

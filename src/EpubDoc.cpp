@@ -1425,16 +1425,19 @@ HtmlDoc *HtmlDoc::CreateFromFile(const WCHAR *fileName)
 
 TxtDoc::TxtDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)), isRFC(false) { }
 
-static char *TextFindLinkEnd(str::Str<char>& htmlData, char *curr, bool fromWww=false)
+static char *TextFindLinkEnd(str::Str<char>& htmlData, char *curr, bool atStart, bool fromWww=false)
 {
     char *end = curr;
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
     for (; *end && !str::IsWs(*end); end++);
-    if (',' == end[-1] || '.' == end[-1])
+    if (',' == end[-1] || '.' == end[-1] || '?' == end[-1] || '!' == end[-1])
         end--;
     // also ignore a closing parenthesis, if the URL doesn't contain any opening one
     if (')' == end[-1] && (!str::FindChar(curr, '(') || str::FindChar(curr, '(') >= end))
         end--;
+    // cut the link at the first double quote if it's also preceded by one
+    if (!atStart && curr[-1] == '"' && str::FindChar(curr, '"') && str::FindChar(curr, '"') < end)
+        end = (char *)str::FindChar(curr, '"');
 
     if (fromWww && (end - curr <= 4 || !str::FindChar(curr + 5, '.') ||
                     str::FindChar(curr + 5, '.') >= end)) {
@@ -1547,9 +1550,9 @@ bool TxtDoc::Load()
         else if (curr > text && ('/' == curr[-1] || isalnum((unsigned char)curr[-1])))
             /* don't check for a link at this position */;
         else if ('h' == *curr && str::Parse(curr, "http%?s://"))
-            linkEnd = TextFindLinkEnd(htmlData, curr);
+            linkEnd = TextFindLinkEnd(htmlData, curr, curr == text);
         else if ('w' == *curr && str::StartsWith(curr, "www."))
-            linkEnd = TextFindLinkEnd(htmlData, curr, true);
+            linkEnd = TextFindLinkEnd(htmlData, curr, curr == text, true);
         else if ('m' == *curr && str::StartsWith(curr, "mailto:"))
             linkEnd = TextFindEmailEnd(htmlData, curr);
         else if (isRFC && curr > text && 'R' == *curr && str::Parse(curr, "RFC %d", &rfc))
