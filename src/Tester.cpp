@@ -7,6 +7,9 @@
    Currently it only does one test: mobi file parsing. */
 
 #include "BaseUtil.h"
+
+#include "CmdLineParser.h"
+#include <conio.h>
 #include "DirIter.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
@@ -254,8 +257,12 @@ void ZipCreateTest()
     delete zc;
 }
 
-#include "CmdLineParser.h"
-#include <conio.h>
+// ucrt doesn't have _getch(), so implement it as a no-op here
+#if defined(WITH_UCRT)
+int _getch()
+{
+}
+#endif
 
 int TesterMain()
 {
