@@ -553,6 +553,7 @@ def build_release(stats, ver):
 	log_path = os.path.join(get_logs_cache_dir(), ver + "_rel_log.txt")
 	s = out + "\n====STDERR:\n" + err
 	open(log_path, "w").write(strip_empty_lines(s))
+	out = strip_empty_lines(out)
 
 	stats.rel_build_log = None
 	stats.rel_failed = False

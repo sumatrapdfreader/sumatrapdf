@@ -261,6 +261,7 @@ void ZipCreateTest()
 #if defined(WITH_UCRT)
 int _getch()
 {
+    return 0;
 }
 #endif
 
