@@ -103,29 +103,11 @@ Control::~Control()
     delete layout;
     DeleteVecMembers(children);
     free(toolTip);
-    if (!parent)
-        return;
-    HwndWrapper *root = GetRootHwndWnd(parent);
-    CrashIf(!root);
-    // TODO: why doesn't this call ButtonUrl::UnRegisterOwnEventHandlers()
-    // but Control::UnRegisterEventHandlers() ???
-    UnRegisterOwnEventHandlers(root->evtMgr);
 }
 
 void Control::SetParent(Control *newParent)
 {
-    HwndWrapper *prevRoot = NULL;
-    if (parent)
-        prevRoot = GetRootHwndWnd(parent);
-    HwndWrapper *newRoot = GetRootHwndWnd(newParent);
-    CrashIf(!newRoot);
-
     parent = newParent;
-
-    if (prevRoot)
-        UnRegisterOwnEventHandlers(prevRoot->evtMgr);
-
-    RegisterOwnEventHandlers(newRoot->evtMgr);
 }
 
 Control *Control::GetChild(size_t idx) const
