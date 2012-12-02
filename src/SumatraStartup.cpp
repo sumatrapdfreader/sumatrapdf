@@ -295,10 +295,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
+#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     if (str::StartsWith(lpCmdLine, "/tester")) {
         extern int TesterMain(); // in Tester.cpp
         return TesterMain();
     }
+
+    if (str::StartsWith(lpCmdLine, "/regress")) {
+        extern int RegressMain(); // in Regress.cpp
+        return RegressMain();
+    }
+#endif
 
     RunUnitTests();
 

@@ -16,6 +16,7 @@ To write new regression test:
 */
 
 #include "BaseUtil.h"
+#include <conio.h>
 #include "DbgHelpDyn.h"
 #include "DirIter.h"
 #include "Doc.h"
@@ -26,6 +27,7 @@ using namespace Gdiplus;
 #include "Mui.h"
 #include "WinUtil.h"
 
+#define NOLOG 1
 #include "DebugLog.h"
 
 static WCHAR *gTestFilesDir;
@@ -173,11 +175,16 @@ static void RunTests()
     Regress02();
 }
 
-extern "C"
-int main(int argc, char **argv)
+int RegressMain()
 {
-    if (!FindTestFilesDir())
-        return Usage();
+    RedirectIOToConsole();
+
+    if (!FindTestFilesDir()) {
+        Usage();
+        printf("Press any key to finish\n");
+        _getch();
+        return 0;
+    }
 
     InstallCrashHandler();
     InitAllCommonControls();
@@ -188,5 +195,7 @@ int main(int argc, char **argv)
     printflush("All tests completed successfully!\n");
     mui::Destroy();
     UninstallCrashHandler();
+    printf("Press any key to finish\n");
+    _getch();
     return 0;
 }
