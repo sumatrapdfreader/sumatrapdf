@@ -25,17 +25,13 @@ static HwndWrapper *mainWnd = NULL;
 
 static Style *   styleMainWnd = NULL;
 static Style *   styleBtnLeft = NULL;
-static Style *   styleBtnLeftOver = NULL;
 static Style *   styleBtnRight = NULL;
-
-#define COLOR_LIGHT_BLUE    "64C7EF"
 
 // should only be called once at the end of the program
 extern "C" static void DeleteAboutStyles()
 {
     delete styleMainWnd;
     delete styleBtnLeft;
-    delete styleBtnLeftOver;
     delete styleBtnRight;
 }
 
@@ -56,9 +52,6 @@ static void CreateAboutStyles()
     styleBtnLeft->Set(Prop::AllocPadding(2, 4, 2, 4));
     styleBtnLeft->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     styleBtnLeft->SetBorderWidth(0);
-
-    //styleBtnLeftOver = new Style(styleBtnLeft);
-    //styleBtnLeftOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
 
     styleBtnRight = new Style(styleBtnLeft);
     styleBtnRight->Set(Prop::AllocFontName(L"Arial Black"));
@@ -137,7 +130,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
         const WCHAR *right = gAboutLayoutInfo[row].rightTxt;
         const WCHAR *url = gAboutLayoutInfo[row].url;
 
-        b = new Button(left, styleBtnLeft, styleBtnLeftOver);
+        b = new Button(left, styleBtnLeft, NULL);
         ld.Set(b, row, 0, ElAlignRight);
         l->Add(ld);
         mainWnd->AddChild(b);
@@ -147,7 +140,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
             b->SetToolTip(url);
             b->hCursor = gCursorHand;
         } else {
-            b = new Button(right, styleBtnLeft, styleBtnLeftOver);
+            b = new Button(right, styleBtnLeft, NULL);
         }
         mainWnd->AddChild(b);
         em->EventsForControl(b)->Clicked.connect(gButtonUrlHandler, &ButtonUrlHandler::Clicked);
