@@ -58,11 +58,15 @@ HwndWrapper::HwndWrapper(HWND hwnd)
 
 HwndWrapper::~HwndWrapper()
 {
-    delete evtMgr;
+    // TODO: this is called before our ~Control destructor
+    // ~Control destructor also deletes the children and
+    // they need to refer to EventMgr to unregister their
+    // handlers, but it's been deleted by then
+    //delete evtMgr;
     delete painter;
 }
 
-// mark for re-layout at the earliest convenience
+// mark for re-layout as soon as possible
 void HwndWrapper::RequestLayout()
 {
     layoutRequested = true;

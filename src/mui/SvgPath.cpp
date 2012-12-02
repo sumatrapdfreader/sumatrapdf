@@ -44,18 +44,18 @@ enum PathInstrType {
     Count, Unknown = Count
 };
 
+// the order must match order of PathInstrType enums
+static char *instructions = "MmLlHhVvCcSsQqTtAaZz";
+
 struct SvgPathInstr {
     SvgPathInstr(PathInstrType type) : type(type) { }
 
     PathInstrType   type;
     // the meaning of values depends on InstrType. We could be more safe 
-    // by giving them symbolic names but this way simplifies parsing
+    // by giving them symbolic names but this gives us simpler parsing
     float           v[6];
     bool            largeArc, sweep;
 };
-
-// the order must match order of InstrType enums
-static char *instructions = "MmLlHhVvCcSsQqTtAaZz";
 
 static PathInstrType GetInstructionType(char c)
 {

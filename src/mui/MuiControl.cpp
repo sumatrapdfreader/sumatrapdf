@@ -34,7 +34,9 @@ Control::~Control()
         return;
     HwndWrapper *root = GetRootHwndWnd(parent);
     CrashIf(!root);
-    UnRegisterEventHandlers(root->evtMgr);
+    // TODO: why doesn't this call ButtonUrl::UnRegisterOwnEventHandlers()
+    // but Control::UnRegisterEventHandlers() ???
+    UnRegisterOwnEventHandlers(root->evtMgr);
 }
 
 void Control::SetParent(Control *newParent)
@@ -48,9 +50,9 @@ void Control::SetParent(Control *newParent)
     parent = newParent;
 
     if (prevRoot)
-        UnRegisterEventHandlers(prevRoot->evtMgr);
+        UnRegisterOwnEventHandlers(prevRoot->evtMgr);
 
-    RegisterEventHandlers(newRoot->evtMgr);
+    RegisterOwnEventHandlers(newRoot->evtMgr);
 }
 
 Control *Control::GetChild(size_t idx) const
@@ -173,7 +175,22 @@ void Control::SetPosition(const Rect& p)
     hwnd->evtMgr->NotifySizeChanged(this, p.Width, p.Height);
 }
 
-// convert position (x,y) int coordiantes of root window
+void Control::MapMyToRootPos(int& x, int& y) const
+{
+    // calculate the offset of window w within its root window
+    x += pos.X;
+    y += pos.Y;
+    const Control *c = this;
+    if (c->parent)
+        c = c->parent;
+    while (!c->hwndParent) {
+        x += c->pos.X;
+        y += c->pos.Y;
+        c = c->parent;
+    }
+}
+
+// convert position (x,y) in coordinates of root window
 // to position in this window's coordinates
 void Control::MapRootToMyPos(int& x, int& y) const
 {
