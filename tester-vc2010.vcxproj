@@ -110,7 +110,6 @@
     <ClCompile Include="src\mui\MuiPainter.cpp" />
     <ClCompile Include="src\mui\MuiScrollBar.cpp" />
     <ClCompile Include="src\HtmlFormatter.cpp" />
-    <ClCompile Include="src\Tester.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\DirIter.cpp" />
     <ClCompile Include="src\utils\FileUtil.cpp" />
@@ -145,9 +144,6 @@
     <ClInclude Include="src\utils\NoFreeAllocator.h" />
     <ClInclude Include="src\utils\StrUtil.h" />
     <ClInclude Include="src\utils\Vec.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="docs\ebook-todo.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

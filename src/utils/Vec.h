@@ -105,6 +105,11 @@ public:
         return *this;
     }
 
+    T& operator[](size_t idx) {
+        CrashIf(idx >= len);
+        return els[idx];
+    }
+
     void Reset() {
         len = 0;
         cap = INTERNAL_BUF_SIZE - PADDING;

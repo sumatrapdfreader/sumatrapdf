@@ -315,6 +315,7 @@
     <ClCompile Include="src\SumatraProperties.cpp" />
     <ClCompile Include="src\SumatraStartup.cpp" />
     <ClCompile Include="src\TableOfContents.cpp" />
+    <ClCompile Include="src\Tester.cpp" />
     <ClCompile Include="src\TextSearch.cpp" />
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\Toolbar.cpp" />

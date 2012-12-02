@@ -14,9 +14,6 @@
   to do html layout (i.e. make html layout we do
   for ebooks also available as part of mui).
 
-. instead of making tooltip just WCHAR*, make it an arbitrary
-  Control, for greater creative control
-
 . Grid: add support for colSpan
 
 . Grid: add support for providing border via style. Grid
@@ -38,6 +35,9 @@ by giving windows a way to declare they have selectable text/elements
 
 . some claim GDI+ text drawing is slower than GDI, so we could try
 to use GDI instead
+
+. instead of making tooltip just WCHAR*, make it an arbitrary
+  Control, for greater creative control
 
 . use anti-graint library for graphics, instead of gdi+
 

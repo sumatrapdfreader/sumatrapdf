@@ -15,11 +15,12 @@ using namespace Gdiplus;
 #include "HtmlPrettyPrint.h"
 #include "MobiDoc.h"
 #include "Mui.h"
-#include "NoFreeAllocator.h"
+#include "PdfEngine.h"
 #include "Timer.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
+#define NOLOG 0
 #include "DebugLog.h"
 
 // if true, we'll save html content of a mobi ebook as well
@@ -43,7 +44,67 @@ static int Usage()
     printf("  -save-html] - will save html content of mobi file\n");
     printf("  -save-images - will save images extracted from mobi files\n");
     printf("  -zip-create - creates a sample zip file that needs to be manually checked that it worked\n");
+    printf("  -bench-md5 - compare Window's md5 vs. our code\n");
     return 1;
+}
+
+/* This benchmarks md5 checksum using fitz code (CalcMD5Digest()) and
+Windows' CryptoAPI (CalcMD5DigestWin(). The results are usually in CryptoApi
+favor (the first run is on cold cache, the second on warm cache):
+10MB
+CalcMD5Digest   : 76.913000 ms
+CalcMD5DigestWin: 92.389000 ms
+diff: -15.476000
+5MB
+CalcMD5Digest   : 17.556000 ms
+CalcMD5DigestWin: 13.125000 ms
+diff: 4.431000
+1MB
+CalcMD5Digest   : 3.329000 ms
+CalcMD5DigestWin: 2.834000 ms
+diff: 0.495000
+10MB
+CalcMD5Digest   : 33.682000 ms
+CalcMD5DigestWin: 25.918000 ms
+diff: 7.764000
+5MB
+CalcMD5Digest   : 16.174000 ms
+CalcMD5DigestWin: 12.853000 ms
+diff: 3.321000
+1MB
+CalcMD5Digest   : 3.534000 ms
+CalcMD5DigestWin: 2.605000 ms
+diff: 0.929000
+*/
+
+static void BenchMD5Size(void *data, size_t dataSize, char *desc)
+{
+    unsigned char d1[16], d2[16];
+    Timer t1(true);
+    CalcMD5Digest((unsigned char*)data, dataSize, d1);
+    double dur1 = t1.GetTimeInMs();
+
+    Timer t2(true);
+    CalcMD5DigestWin(data, dataSize, d2);
+    bool same = memeq(d1, d2, 16);
+    CrashAlwaysIf(!same);
+    double dur2 = t2.GetTimeInMs();
+    double diff = dur1 - dur2;
+    plogf("%s\nCalcMD5Digest   : %f ms\nCalcMD5DigestWin: %f ms\ndiff: %f", desc, dur1, dur2, diff);
+}
+
+static void BenchMD5()
+{
+    size_t dataSize = 10*1024*1024;
+    void *data = malloc(dataSize);
+    BenchMD5Size(data, dataSize, "10MB");
+    BenchMD5Size(data, dataSize / 2, "5MB");
+    BenchMD5Size(data, dataSize / 10, "1MB");
+    // repeat to see if timings change drastically
+    BenchMD5Size(data, dataSize, "10MB");
+    BenchMD5Size(data, dataSize / 2, "5MB");
+    BenchMD5Size(data, dataSize / 10, "1MB");
+    free(data);
 }
 
 static void MobiSaveHtml(const WCHAR *filePathBase, MobiDoc *mb)
@@ -161,14 +222,12 @@ static void MobiTestDir(WCHAR *dir)
     }
 }
 
-static void MobiTest(char *dirOrFile)
+static void MobiTest(WCHAR *dirOrFile)
 {
-    WCHAR *tmp = nf::str::conv::FromAnsi(dirOrFile);
-
-    if (file::Exists(tmp) && IsMobiFile(tmp))
-        MobiTestFile(tmp);
+    if (file::Exists(dirOrFile) && IsMobiFile(dirOrFile))
+        MobiTestFile(dirOrFile);
     else
-        MobiTestDir(tmp);
+        MobiTestDir(dirOrFile);
 }
 
 // we assume this is called from main sumatradirectory, e.g. as:
@@ -195,39 +254,45 @@ void ZipCreateTest()
     delete zc;
 }
 
-extern "C"
-int main(int argc, char **argv)
-{
-    nf::AllocatorMark allocatorMark;
+#include "CmdLineParser.h"
+#include <conio.h>
 
-    int i = 1;
-    int left = argc - 1;
+int TesterMain()
+{
+    RedirectIOToConsole();
+
+    WCHAR *cmdLine = GetCommandLine();
+
+    WStrVec argv;
+    ParseCmdLine(cmdLine, argv);
 
     InitAllCommonControls();
     ScopedGdiPlus gdi;
     mui::Initialize();
 
-    char *dirOrFile = NULL;
-    bool mobiTest = false;
+    WCHAR *dirOrFile = NULL;
 
+    bool mobiTest = false;
+    int left = argv.Count() - 2;
+    int i = 2; // skip program name and "/tester"
     while (left > 0) {
-        if (str::Eq(argv[i], "-mobi")) {
+        if (str::Eq(argv[i], L"-mobi")) {
             ++i; --left;
             if (left < 1)
                 return Usage();
             mobiTest = true;
             dirOrFile = argv[i];
             ++i; --left;
-        } else if (str::Eq(argv[i], "-layout")) {
+        } else if (str::Eq(argv[i], L"-layout")) {
             gLayout = true;
             ++i; --left;
-        } else if (str::Eq(argv[i], "-save-html")) {
+        } else if (str::Eq(argv[i], L"-save-html")) {
             gSaveHtml = true;
             ++i; --left;
-        } else if (str::Eq(argv[i], "-save-images")) {
+        } else if (str::Eq(argv[i], L"-save-images")) {
             gSaveImages = true;
             ++i; --left;
-        } else if (str::Eq(argv[i], "-zip-create")) {
+        } else if (str::Eq(argv[i], L"-zip-create")) {
             ZipCreateTest();
             ++i; --left;
         } else {
@@ -236,10 +301,13 @@ int main(int argc, char **argv)
         }
     }
 
-    if (!mobiTest)
-        return Usage();
-    MobiTest(dirOrFile);
-
+    if (!mobiTest) {
+        Usage();
+    } else {
+        MobiTest(dirOrFile);
+    }
+    printf("Press any key to exit\n");
+    _getch();
     mui::Destroy();
     return 0;
 }

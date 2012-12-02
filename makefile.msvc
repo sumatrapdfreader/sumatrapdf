@@ -41,7 +41,7 @@ EXTDIR=ext
 !endif
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump tester memtrace regress
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump memtrace regress
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 
@@ -118,9 +118,6 @@ INSTALLER_APP   = $(O)\Installer.exe
 INSTALLER_RES   = $(OS)\Installer.res
 UNINSTALLER_APP = $(O)\uninstall.exe
 UNINSTALLER_RES = $(OS)\Uninstaller.res
-
-TESTER_APP      = $(O)\tester.exe
-TESTER_CFLAGS   = $(SUMATRA_CFLAGS)
 
 REGRESS_APP      = $(O)\regress.exe
 REGRESS_CFLAGS   = $(SUMATRA_CFLAGS)
@@ -204,19 +201,15 @@ SUMATRA_OBJS = \
 	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(SUMATRA_RES) \
-	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) $(EBOOK_OBJS) $(MUI_OBJS)
- 
+	$(OS)\Tester.obj \
+	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) $(EBOOK_OBJS) $(MUI_OBJS) \
+
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
 	$(UTILS_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS)
 
 UNINSTALLER_OBJS = \
 	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_OBJS)
-
-TESTER_OBJS = \
-	$(UTILS_OBJS) $(MUI_OBJS) $(OS)\Tester.obj $(OU)\PdbReader.obj \
-	$(OS)\HtmlFormatter.obj $(OU)\NoFreeAllocator.obj $(OS)\MobiDoc.obj \
-	$(OS)\Doc.obj $(ENGINE_OBJS) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj
 
 REGRESS_OBJS = \
 	$(UTILS_OBJS) $(MUI_OBJS) $(OS)\Regress.obj $(OU)\PdbReader.obj \
@@ -294,14 +287,13 @@ PDFFilter:     $(OS) $(LIBMUPDF_DLL) $(PDFFILTER_DLL)
 PdfPreview:    $(OS) $(LIBMUPDF_DLL) $(PDFPREVIEW_DLL)
 BrowserPlugin: $(OS) $(BROWSER_PLUGIN)
 EngineDump:    $(OS) $(ENGINEDUMP_APP)
-tester:        $(OS) $(TESTER_APP)
 memtrace:      $(OS) $(MEMTRACE_DLL)
 regress:       $(OS) $(REGRESS_APP)
 mudraw:        $(O)  $(MUDRAW_APP)
 mutool:        $(O)  $(MUTOOL_APP)
 
 # build tool_objs instead of the tools themselves to speed up linking
-tool_objs:     $(OS) $(ENGINEDUMP_OBJS) $(TESTER_OBJS) $(MEMTRACE_OBJS) $(REGRESS_OBJS) $(MUDRAW_OBJS) $(MUTOOL_OBJS)
+tool_objs:     $(OS) $(ENGINEDUMP_OBJS) $(MEMTRACE_OBJS) $(REGRESS_OBJS) $(MUDRAW_OBJS) $(MUTOOL_OBJS)
 
 $(OS): $(O) $(OE)
 	@if not exist $(OS) mkdir $(OS)
@@ -337,9 +329,6 @@ $(INSTALLER_APP): $(INSTALLER_OBJS)
 
 $(UNINSTALLER_APP): $(UNINSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
-
-$(TESTER_APP): $(TESTER_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 $(REGRESS_APP): $(REGRESS_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE

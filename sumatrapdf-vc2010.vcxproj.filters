@@ -84,6 +84,9 @@
     <Filter Include="ucrt\mingw">
       <UniqueIdentifier>{97cc2de5-f8a5-42f4-9dea-fc29da03eb0c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="tester">
+      <UniqueIdentifier>{55c58e95-d6b6-47b8-8433-4010c683a5f3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -1033,6 +1036,9 @@
     </ClCompile>
     <ClCompile Include="src\mui\MuiGrid.cpp">
       <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tester.cpp">
+      <Filter>tester</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

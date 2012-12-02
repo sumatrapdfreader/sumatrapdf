@@ -271,68 +271,6 @@ static bool RunningUnderWine()
     return RegKeyExists(HKEY_LOCAL_MACHINE, L"Software\\Wine");
 }
 
-#if 0
-/* This benchmarks md5 checksum using fitz code (CalcMD5Digest()) and
-Windows' CryptoAPI (CalcMD5DigestWin(). The results are usually in CryptoApi
-favor (the first run is on cold cache, the second on warm cache):
-10MB
-CalcMD5Digest   : 76.913000 ms
-CalcMD5DigestWin: 92.389000 ms
-diff: -15.476000
-5MB
-CalcMD5Digest   : 17.556000 ms
-CalcMD5DigestWin: 13.125000 ms
-diff: 4.431000
-1MB
-CalcMD5Digest   : 3.329000 ms
-CalcMD5DigestWin: 2.834000 ms
-diff: 0.495000
-10MB
-CalcMD5Digest   : 33.682000 ms
-CalcMD5DigestWin: 25.918000 ms
-diff: 7.764000
-5MB
-CalcMD5Digest   : 16.174000 ms
-CalcMD5DigestWin: 12.853000 ms
-diff: 3.321000
-1MB
-CalcMD5Digest   : 3.534000 ms
-CalcMD5DigestWin: 2.605000 ms
-diff: 0.929000
-*/
-
-#define NOLOG 0
-#include "DebugLog.h"
-static void BenchMD5Size(void *data, size_t dataSize, char *desc)
-{
-    unsigned char d1[16], d2[16];
-    Timer t1(true);
-    CalcMD5Digest((unsigned char*)data, dataSize, d1);
-    double dur1 = t1.GetTimeInMs();
-
-    Timer t2(true);
-    CalcMD5DigestWin(data, dataSize, d2);
-    bool same = memeq(d1, d2, 16);
-    CrashAlwaysIf(!same);
-    double dur2 = t2.GetTimeInMs();
-    double diff = dur1 - dur2;
-    plogf("%s\nCalcMD5Digest   : %f ms\nCalcMD5DigestWin: %f ms\ndiff: %f", desc, dur1, dur2, diff);
-}
-
-static void BenchMD5()
-{
-    size_t dataSize = 10*1024*1024;
-    void *data = malloc(dataSize);
-    BenchMD5Size(data, dataSize, "10MB");
-    BenchMD5Size(data, dataSize / 2, "5MB");
-    BenchMD5Size(data, dataSize / 10, "1MB");
-    // repeat to see if timings change drastically
-    BenchMD5Size(data, dataSize, "10MB");
-    BenchMD5Size(data, dataSize / 2, "5MB");
-    BenchMD5Size(data, dataSize / 10, "1MB");
-    free(data);
-}
-#endif
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -347,19 +285,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     TryLoadMemTrace();
 #endif
 
-    //BenchMD5();
 
     DisableDataExecution();
     // ensure that C functions behave consistently under all OS locales
     // (use Win32 functions where localized input or output is desired)
     setlocale(LC_ALL, "C");
-
-    RunUnitTests();
-
     // don't show system-provided dialog boxes when accessing files on drives
     // that are not mounted (e.g. a: drive without floppy or cd rom drive
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+
+    if (str::StartsWith(lpCmdLine, "/tester")) {
+        extern int TesterMain(); // in Tester.cpp
+        return TesterMain();
+    }
+
+    RunUnitTests();
+
     srand((unsigned int)time(NULL));
 
     // don't bother sending crash reports when running under Wine
