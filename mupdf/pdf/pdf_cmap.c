@@ -207,7 +207,7 @@ add_range(fz_context *ctx, pdf_cmap *cmap, int low, int high, int flag, int offs
 	/* SumatraPDF: range check (should be unsigned short instead of int) */
 	if ((low & ~0xffff) || (high & ~0xffff) || low > high)
 	{
-		/* fz_warn(ctx, "range limits out of range (%d/%d)", low, high); */
+		fz_warn(ctx, "range limits out of range (%d/%d)", low, high);
 		return;
 	}
 	/* If the range is too large to be represented, split it */

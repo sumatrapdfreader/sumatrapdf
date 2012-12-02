@@ -473,6 +473,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\mui\MuiGrid.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\mui\MuiGrid.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\mui\MuiHwndWrapper.cpp"
 					>
 				</File>

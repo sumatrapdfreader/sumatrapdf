@@ -612,7 +612,7 @@ void CrashLogFmt(const char *fmt, ...)
     va_end(args);
 }
 
-#if !defined(WITH_UCRT)
+#ifndef WITH_UCRT
 
 void __cdecl onSignalAbort(int code) {
     // put the signal back because can be called many times
@@ -666,7 +666,7 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
         return;
     gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
 
-#if !defined(WITH_UCRT)
+#ifndef WITH_UCRT
     signal(SIGABRT, onSignalAbort);
     set_terminate(onTerminate);
     set_unexpected(onUnexpected);
