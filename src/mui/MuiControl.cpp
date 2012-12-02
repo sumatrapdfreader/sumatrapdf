@@ -270,9 +270,14 @@ void Control::Paint(Graphics *gfx, int offX, int offY)
         return;
 }
 
-void Control::SetStyle(Style *style)
+bool Control::SetStyle(Style *style)
 {
-    cachedStyle = CacheStyle(style);
+    CachedStyle *newCachedStyle = CacheStyle(style);
+    if (newCachedStyle != cachedStyle) {
+        cachedStyle = newCachedStyle;
+        return true;
+    }
+    return false;
 }
 
 }

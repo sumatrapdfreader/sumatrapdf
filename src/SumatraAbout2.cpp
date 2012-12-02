@@ -130,7 +130,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
         const WCHAR *right = gAboutLayoutInfo[row].rightTxt;
         const WCHAR *url = gAboutLayoutInfo[row].url;
 
-        b = new Button(left, styleBtnLeft, NULL);
+        b = new Button(left, styleBtnLeft, styleBtnLeft);
         ld.Set(b, row, 0, ElAlignRight);
         l->Add(ld);
         mainWnd->AddChild(b);
@@ -140,7 +140,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
             b->SetToolTip(url);
             b->hCursor = gCursorHand;
         } else {
-            b = new Button(right, styleBtnLeft, NULL);
+            b = new Button(right, styleBtnLeft, styleBtnLeft);
         }
         mainWnd->AddChild(b);
         em->EventsForControl(b)->Clicked.connect(gButtonUrlHandler, &ButtonUrlHandler::Clicked);
@@ -155,6 +155,7 @@ static void DestroyAboutMuiWindow()
 {
     EventMgr *em = mainWnd->evtMgr;
     size_t n = mainWnd->GetChildCount();
+    // TODO: probably should disconnect everything when deleting a window
     for (size_t i = 0; i < n; i++)
     {
         Control *c = mainWnd->GetChild(i);
@@ -177,24 +178,28 @@ static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     }
 
     switch (msg) {
+        case WM_CHAR:
+            if (VK_ESCAPE == wParam)
+                DestroyWindow(hwnd);
+            break;
 
-    case WM_CREATE:
-        CreateAboutMuiWindow(hwnd);
-        break;
+        case WM_CREATE:
+            CreateAboutMuiWindow(hwnd);
+            break;
 
-    case WM_DESTROY:
-        DestroyAboutMuiWindow();
-        break;
+        case WM_DESTROY:
+            DestroyAboutMuiWindow();
+            break;
 
-    case WM_ERASEBKGND:
-        return 0;
+        case WM_ERASEBKGND:
+            return 0;
 
-    case WM_PAINT:
-        mainWnd->OnPaint(hwnd);
-        break;
+        case WM_PAINT:
+            mainWnd->OnPaint(hwnd);
+            break;
 
-    default:
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        default:
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
     return 0;
 }

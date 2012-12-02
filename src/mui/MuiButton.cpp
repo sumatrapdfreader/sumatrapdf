@@ -46,15 +46,17 @@ static Size GetBorderAndPaddingSize(CachedStyle *s)
 void Button::NotifyMouseEnter()
 {
     Control::NotifyMouseEnter();
-    SetStyle(styleMouseOver);
-    RecalculateSize(true);
+    bool changed = SetStyle(styleMouseOver);
+    if (changed)
+        RecalculateSize(true);
 }
 
 void Button::NotifyMouseLeave()
 {
     Control::NotifyMouseLeave();
-    SetStyle(styleDefault);
-    RecalculateSize(true);
+    bool changed = SetStyle(styleDefault);
+    if (changed)
+        RecalculateSize(true);
 }
 
 // Update desired size of the button. If the size changes, trigger layout
@@ -175,15 +177,17 @@ ButtonVector::~ButtonVector()
 void ButtonVector::NotifyMouseEnter()
 {
     Control::NotifyMouseEnter();
-    SetStyle(styleMouseOver);
-    RecalculateSize(true);
+    bool changed = SetStyle(styleMouseOver);
+    if (changed)
+        RecalculateSize(true);
 }
 
 void ButtonVector::NotifyMouseLeave()
 {
     Control::NotifyMouseLeave();
-    SetStyle(styleDefault);
-    RecalculateSize(true);
+    bool changed = SetStyle(styleDefault);
+    if (changed)
+        RecalculateSize(true);
 }
 
 void ButtonVector::SetGraphicsPath(GraphicsPath *gp)

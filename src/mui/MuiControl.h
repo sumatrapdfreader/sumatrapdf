@@ -91,7 +91,7 @@ public:
     // makes if fast to access them anywhere without repeating the work
     // of searching the style inheritance chain
     CachedStyle *   cachedStyle;
-    void            SetStyle(Style *style);
+    bool            SetStyle(Style *style);
 
     // only used by HwndWrapper but we need it here
     // TODO: figure out to not have it in every Control
