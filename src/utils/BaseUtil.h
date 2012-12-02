@@ -74,7 +74,7 @@ STATIC_ASSERT(4 == sizeof(uint32),  uint32_is_4_bytes);
 STATIC_ASSERT(8 == sizeof(int64),   int64_is_8_bytes);
 STATIC_ASSERT(8 == sizeof(uint64),  uint64_is_8_bytes);
 
-void CrashMe(); // in StrUtil.cpp
+void CrashMe();
 
 // CrashIf() is like assert() except it crashes in debug and pre-release builds.
 // The idea is that assert() indicates "can't possibly happen" situation and if

@@ -3,6 +3,13 @@
 
 #include "BaseUtil.h"
 
+// force no inlining because we want to see it on the callstack
+__declspec(noinline) void CrashMe()
+{
+    // 0x40000015 is STATUS_FATAL_APP_EXIT, but is only defined in post-XP sdk
+    RaiseException(0x40000015, EXCEPTION_NONCONTINUABLE, 0, 0);
+}
+
 size_t roundToPowerOf2(size_t size)
 {
     size_t n = 1;

@@ -3,7 +3,10 @@
 
 #include "BaseUtil.h"
 #include <dbghelp.h>
+#include <exception>
 #include <tlhelp32.h>
+#include <signal.h>
+
 #include "AppTools.h"
 #include "CrashHandler.h"
 #include "DbgHelpDyn.h"
@@ -609,6 +612,27 @@ void CrashLogFmt(const char *fmt, ...)
     va_end(args);
 }
 
+void __cdecl onSignalAbort(int code) {
+    // put the signal back because can be called many times
+    // (from multiple threads) and raise() resets the handler
+    signal(SIGABRT, onSignalAbort);
+    CrashMe();
+}
+
+// shadow crt's _purecall() so that we're called instead of CRT
+int __cdecl _purecall() {
+    CrashMe();
+    return 0;
+}
+
+void onTerminate() {
+    CrashMe();
+}
+
+void onUnexpected() {
+    CrashMe();
+}
+
 void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
 {
     assert(!gDumpEvent && !gDumpThread);
@@ -638,6 +662,10 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
     if (!gDumpThread)
         return;
     gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
+
+    signal(SIGABRT, onSignalAbort);
+    set_terminate(onTerminate);
+    set_unexpected(onUnexpected);
 }
 
 void UninstallCrashHandler()
