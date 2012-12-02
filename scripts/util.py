@@ -33,6 +33,7 @@ def uniquify(array):
   return list(set(array))
 
 def strip_empty_lines(s):
+  s = s.replace("\r\n", "\n")
   lines = [l.strip() for l in s.split("\n") if len(l.strip()) > 0]
   return string.join(lines, "\n")
 
