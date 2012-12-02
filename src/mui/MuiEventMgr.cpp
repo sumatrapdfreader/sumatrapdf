@@ -19,7 +19,7 @@ EventMgr::~EventMgr()
 {
     // for good programming hygene, we want event subscribers
     // to unsubscribe
-    //CrashIf(0 != eventHandlers.Count());
+    CrashIf(0 != eventHandlers.Count());
 }
 
 // Set minimum size that will be enforced by handling WM_GETMINMAXINFO

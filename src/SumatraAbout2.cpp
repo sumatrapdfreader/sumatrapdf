@@ -103,34 +103,78 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { L"translations",   L"Contribute translation", WEBSITE_TRANSLATIONS_URL }
 };
 
+static HCURSOR gCursorHand = NULL;
+
+class ButtonUrlHandler : public sigslot::has_slots
+{
+public:
+    void Clicked(Control *c, int x, int y);
+};
+
+void ButtonUrlHandler::Clicked(Control *c, int x, int y)
+{
+    WCHAR *url = c->toolTip;
+    LaunchBrowser(url);
+}
+
+// we only need one instance
+static ButtonUrlHandler *gButtonUrlHandler = NULL;
+
 static void CreateAboutMuiWindow(HWND hwnd)
 {
+    if (!gCursorHand)
+        gCursorHand  = LoadCursor(NULL, IDC_HAND);
+    if (!gButtonUrlHandler)
+        gButtonUrlHandler = new ButtonUrlHandler();
+
     CreateAboutStyles();
     mainWnd = new HwndWrapper(hwnd);
     mainWnd->SetMinSize(Size(320, 200));
     mainWnd->SetStyle(styleMainWnd);
+    EventMgr *em = mainWnd->evtMgr;
+    CrashIf(!em);
 
     GridLayout *l = new GridLayout();
     GridLayoutData ld;
 
     int rows = dimof(gAboutLayoutInfo);
+    Button *b;
     for (int row = 0; row < rows; row++) {
         const WCHAR *left = gAboutLayoutInfo[row].leftTxt;
         const WCHAR *right = gAboutLayoutInfo[row].rightTxt;
         const WCHAR *url = gAboutLayoutInfo[row].url;
 
-        ld.Set(new Button(left, styleBtnLeft, styleBtnLeftOver), row, 0, ElAlignRight);
+        b = new Button(left, styleBtnLeft, styleBtnLeftOver);
+        ld.Set(b, row, 0, ElAlignRight);
         l->Add(ld);
-        ld.Set(new ButtonUrl(right, url, styleBtnRight, styleBtnRight), row, 1);
+        mainWnd->AddChild(b);
+
+        b = new Button(right, styleBtnRight, styleBtnRight);
+        b->SetToolTip(url);
+        b->hCursor = gCursorHand;
+        mainWnd->AddChild(b);
+        em->EventsForControl(b)->Clicked.connect(gButtonUrlHandler, &ButtonUrlHandler::Clicked);
+        ld.Set(b, row, 1);
         l->Add(ld);
     }
 
-    // TODO: add some way to automatically add layout's children to window?
-    for (GridLayoutData *ld = l->els.IterStart(); ld; ld = l->els.IterNext())
-    {
-        mainWnd->AddChild(reinterpret_cast<Control*>(ld->el));
-    }
     mainWnd->layout = l;
+}
+
+static void DestroyAboutMuiWindow()
+{
+    EventMgr *em = mainWnd->evtMgr;
+    size_t n = mainWnd->GetChildCount();
+    for (size_t i = 0; i < n; i++)
+    {
+        Control *c = mainWnd->GetChild(i);
+        em->EventsForControl(c)->Clicked.disconnect_all();
+    }
+    delete gButtonUrlHandler;
+    gButtonUrlHandler = NULL;
+    gHwndAbout2 = NULL;
+    delete mainWnd;
+    mainWnd = NULL;
 }
 
 static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -149,9 +193,7 @@ static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         break;
 
     case WM_DESTROY:
-        delete mainWnd;
-        mainWnd = NULL;
-        gHwndAbout2 = NULL;
+        DestroyAboutMuiWindow();
         break;
 
     case WM_ERASEBKGND:

@@ -1,10 +1,6 @@
 . instead of Control:hCursor, make cursor be part of the style.
   This is more css-like and we'll make Control smaller
 
-. instead of ButtonUrl, provide a generic support for tooltip
-  for all controls and handle url clicking purely in user code.
-  Re-enable assert in EventMgr::~EventMgr() when done.
-
 . Control::RegisterOwnEventHandlers() is flawed due to how
   the lifetime of HwndWrapper and its children controls works
   Either fix it somehow or remove the functionality.

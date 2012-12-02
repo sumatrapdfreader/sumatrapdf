@@ -45,12 +45,14 @@ static Size GetBorderAndPaddingSize(CachedStyle *s)
 
 void Button::NotifyMouseEnter()
 {
+    Control::NotifyMouseEnter();
     SetStyle(styleMouseOver);
     RecalculateSize(true);
 }
 
 void Button::NotifyMouseLeave()
 {
+    Control::NotifyMouseLeave();
     SetStyle(styleDefault);
     RecalculateSize(true);
 }
@@ -155,100 +157,6 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
 }
 
-static HCURSOR gButtonUrlCursorHand = NULL;
-
-ButtonUrl::ButtonUrl(const WCHAR *s, const WCHAR *url, Style *def, Style *mouseOver)
-    : Button(s, def, mouseOver)
-{
-    if (!gButtonUrlCursorHand)
-        gButtonUrlCursorHand  = LoadCursor(NULL, IDC_HAND);
-    hCursor = gButtonUrlCursorHand;
-    this->url = str::Dup(url);
-}
-
-ButtonUrl::~ButtonUrl()
-{
-    free(url);
-}
-
-static HWND gHwndAboutTooltip2 = NULL;
-
-static void CreateInfotipForLink(HWND hwndParent, const WCHAR *url, RECT pos)
-{
-    if (gHwndAboutTooltip2)
-        return;
-
-    HINSTANCE hinst =  GetModuleHandle(NULL);
-    gHwndAboutTooltip2 = CreateWindowEx(WS_EX_TOPMOST,
-        TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        hwndParent, NULL, hinst, NULL);
-
-    TOOLINFO ti = { 0 };
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = hwndParent;
-    ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (WCHAR *)url;
-    ti.rect = pos;
-
-    SendMessage(gHwndAboutTooltip2, TTM_ADDTOOL, 0, (LPARAM)&ti);
-}
-
-static void ClearInfotip(HWND hwndParent)
-{
-    if (!gHwndAboutTooltip2)
-        return;
-
-    TOOLINFO ti = { 0 };
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = hwndParent;
-
-    SendMessage(gHwndAboutTooltip2, TTM_DELTOOL, 0, (LPARAM)&ti);
-    DestroyWindow(gHwndAboutTooltip2);
-    gHwndAboutTooltip2 = NULL;
-}
-
-void ButtonUrl::NotifyMouseEnter()
-{
-    Button::NotifyMouseEnter();
-    // show url as a tooltip
-    HwndWrapper *hw = GetRootHwndWnd(this);
-    HWND hwndParent = hw->hwndParent;
-    int x = 0, y = 0;
-    MapMyToRootPos(x, y);
-    RECT pos = { x, y, 0, 0 };
-    pos.right = x + this->pos.Width;
-    pos.bottom = y + this->pos.Height;
-    CreateInfotipForLink(hwndParent, url, pos);
-}
-
-void ButtonUrl::NotifyMouseLeave()
-{
-    Button::NotifyMouseLeave();
-    // hide url tooltip
-    HwndWrapper *hw = GetRootHwndWnd(this);
-    HWND hwndParent = hw->hwndParent;
-    ClearInfotip(hwndParent);
-}
-
-void ButtonUrl::RegisterOwnEventHandlers(EventMgr *em)
-{
-    // TODO: could have just one global object for all buttons
-    em->EventsForControl(this)->Clicked.connect(this, &ButtonUrl::Clicked);
-}
-
-void ButtonUrl::UnRegisterOwnEventHandlers(EventMgr *em)
-{
-    // TODO: could have just one global object for all buttons
-    em->EventsForControl(this)->Clicked.disconnect_all();
-}
-
-void ButtonUrl::Clicked(Control *c, int x, int y)
-{
-    ButtonUrl *b = reinterpret_cast<ButtonUrl*>(c);
-    LaunchFile(b->url, NULL, L"open");
-}
-
 ButtonVector::ButtonVector(GraphicsPath *gp)
 {
     wantedInputBits = (uint16)-1; // wants everything
@@ -266,12 +174,14 @@ ButtonVector::~ButtonVector()
 
 void ButtonVector::NotifyMouseEnter()
 {
+    Control::NotifyMouseEnter();
     SetStyle(styleMouseOver);
     RecalculateSize(true);
 }
 
 void ButtonVector::NotifyMouseLeave()
 {
+    Control::NotifyMouseLeave();
     SetStyle(styleDefault);
     RecalculateSize(true);
 }

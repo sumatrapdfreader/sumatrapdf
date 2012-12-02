@@ -57,8 +57,8 @@ public:
     // is over them. The intention is that in response to those a window should
     // only do minimal processing that affects the window itself, not the rest
     // of the system
-    virtual void NotifyMouseEnter() {}
-    virtual void NotifyMouseLeave() {}
+    virtual void NotifyMouseEnter();
+    virtual void NotifyMouseLeave();
 
     virtual void NotifyMouseMove(int x, int y) {}
 
@@ -78,6 +78,8 @@ public:
     void Hide();
     void Show();
 
+    void SetToolTip(const WCHAR *);
+
     void MeasureChildren(Size availableSize) const;
     void MapMyToRootPos(int&x, int& y) const;
     void MapRootToMyPos(int& x, int& y) const;
@@ -89,6 +91,8 @@ public:
 
     ILayout *       layout;
     Control *       parent;
+
+    WCHAR *         toolTip;
 
     // we cache properties for the current style during SetStyle() which
     // makes if fast to access them anywhere without repeating the work

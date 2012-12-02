@@ -39,25 +39,6 @@ public:
     size_t          textDx; // cached measured text width
 };
 
-// shows a tooltip with the url when moused over
-// launches a browser with the url when clickeds
-class ButtonUrl : public Button, public sigslot::has_slots
-{
-public:
-    ButtonUrl(const WCHAR *s, const WCHAR *url, Style *def, Style *mouseOver);
-    virtual ~ButtonUrl();
-
-    virtual void NotifyMouseEnter();
-    virtual void NotifyMouseLeave();
-
-    virtual void RegisterOwnEventHandlers(EventMgr *evtMgr);
-    virtual void UnRegisterOwnEventHandlers(EventMgr *evtMgr);
-
-    void Clicked(Control *c, int x, int y);
-
-    WCHAR * url;
-};
-
 // TODO: maybe should combine Button and ButtonVector into one?
 class ButtonVector : public Control
 {

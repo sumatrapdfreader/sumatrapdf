@@ -6,6 +6,43 @@
 
 namespace mui {
 
+static HWND gHwndControlTooltip = NULL;
+
+static void CreateInfotipForLink(HWND hwndParent, const WCHAR *url, RECT pos)
+{
+    if (gHwndControlTooltip)
+        return;
+
+    HINSTANCE hinst =  GetModuleHandle(NULL);
+    gHwndControlTooltip = CreateWindowEx(WS_EX_TOPMOST,
+        TOOLTIPS_CLASS, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        hwndParent, NULL, hinst, NULL);
+
+    TOOLINFO ti = { 0 };
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = hwndParent;
+    ti.uFlags = TTF_SUBCLASS;
+    ti.lpszText = (WCHAR *)url;
+    ti.rect = pos;
+
+    SendMessage(gHwndControlTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+}
+
+static void ClearInfotip(HWND hwndParent)
+{
+    if (!gHwndControlTooltip)
+        return;
+
+    TOOLINFO ti = { 0 };
+    ti.cbSize = sizeof(ti);
+    ti.hwnd = hwndParent;
+
+    SendMessage(gHwndControlTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
+    DestroyWindow(gHwndControlTooltip);
+    gHwndControlTooltip = NULL;
+}
+
 // we use uint16 for those
 STATIC_ASSERT(Control::WantedInputBitLast < 16, max16bitsForWantedIntputBits);
 STATIC_ASSERT(Control::StateBitLast < 16, max16bitsForStateBits);
@@ -15,6 +52,7 @@ Control::Control(Control *newParent)
     wantedInputBits = 0;
     stateBits = 0;
     zOrder = 0;
+    toolTip = NULL;
     parent = NULL;
     hwndParent = NULL;
     layout = NULL;
@@ -26,10 +64,45 @@ Control::Control(Control *newParent)
         SetParent(newParent);
 }
 
+void Control::SetToolTip(const WCHAR *toolTip)
+{
+    str::ReplacePtr(&this->toolTip, toolTip);
+    if (NULL == toolTip)
+        wantedInputBits &= WantsMouseOverBit;
+    else
+        wantedInputBits |= WantsMouseOverBit;
+}
+
+// note: all derived classes must call Control::NotifyMouseEnter()
+// from their own NotifyMouseEnter().
+void Control::NotifyMouseEnter()
+{
+    // show url as a tooltip
+    HwndWrapper *hw = GetRootHwndWnd(this);
+    HWND hwndParent = hw->hwndParent;
+    int x = 0, y = 0;
+    MapMyToRootPos(x, y);
+    RECT pos = { x, y, 0, 0 };
+    pos.right = x + this->pos.Width;
+    pos.bottom = y + this->pos.Height;
+    CreateInfotipForLink(hwndParent, toolTip, pos);
+}
+
+// note: all derived classes must call Control::NotifyMouseLeave()
+// from their own NotifyMouseLeave().
+void Control::NotifyMouseLeave()
+{
+    // hide url tooltip
+    HwndWrapper *hw = GetRootHwndWnd(this);
+    HWND hwndParent = hw->hwndParent;
+    ClearInfotip(hwndParent);
+}
+
 Control::~Control()
 {
     delete layout;
     DeleteVecMembers(children);
+    free(toolTip);
     if (!parent)
         return;
     HwndWrapper *root = GetRootHwndWnd(parent);
