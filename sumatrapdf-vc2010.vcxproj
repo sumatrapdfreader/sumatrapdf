@@ -629,6 +629,7 @@
     <None Include="makefile.msvc" />
     <None Include="src\closetoc.bmp" />
     <None Include="src\dragcursor.cur" />
+    <None Include="src\mui\mui-todo.txt" />
     <None Include="src\PdfDoc.ico" />
     <None Include="src\reloading.bmp" />
     <None Include="src\sample_mobi.html" />

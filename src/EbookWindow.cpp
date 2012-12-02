@@ -345,6 +345,11 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, !gUseEbookUI);
             DebugAlternateChmEngine(!gUseEbookUI);
             break;
+
+        case IDM_DEBUG_MUI:
+            SetDebugPaint(!IsDebugPaint());
+            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !IsDebugPaint());
+            break;
 #endif
 
         case IDM_ABOUT:

@@ -4788,6 +4788,11 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             DebugAlternateChmEngine(!gUseEbookUI);
             break;
 
+        case IDM_DEBUG_MUI:
+            SetDebugPaint(!IsDebugPaint());
+            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !IsDebugPaint());
+            break;
+
         case IDM_DEBUG_CRASH_ME:
             CrashMe();
             break;

@@ -150,6 +150,7 @@ static MenuDef menuDefDebug[] = {
     { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
     { "Toggle PDF/XPS renderer",            IDM_DEBUG_GDI_RENDERER,     MF_NO_TRANSLATE },
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
+    { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
 //  { SEP_ITEM,                             0,                          0 },
 //  { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
 };

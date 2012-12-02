@@ -97,6 +97,7 @@
 #define IDM_DEBUG_CRASH_ME              592
 #define IDM_LOAD_MOBI_SAMPLE            593
 #define IDM_DEBUG_EBOOK_UI              594
+#define IDM_DEBUG_MUI                   595
 #define IDM_FAV_FIRST                   600
 #define IDM_FAV_LAST                    800
 #define IDC_GOTO_PAGE_EDIT              1000

@@ -26,6 +26,7 @@ static HwndWrapper *mainWnd = NULL;
 static Style *   styleMainWnd = NULL;
 static Style *   styleBtnLeft = NULL;
 static Style *   styleBtnLeftOver = NULL;
+static Style *   styleBtnRight = NULL;
 
 #define COLOR_LIGHT_BLUE    "64C7EF"
 
@@ -35,6 +36,7 @@ extern "C" static void DeleteAboutStyles()
     delete styleMainWnd;
     delete styleBtnLeft;
     delete styleBtnLeftOver;
+    delete styleBtnRight;
 }
 
 static void CreateAboutStyles()
@@ -57,6 +59,12 @@ static void CreateAboutStyles()
 
     styleBtnLeftOver = new Style(styleBtnLeft);
     styleBtnLeftOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
+
+    styleBtnRight = new Style(styleBtnLeft);
+    FontStyle fstyle = static_cast<FontStyle>(FontStyleBold|FontStyleUnderline);
+    styleBtnRight->Set(Prop::AllocFontWeight(fstyle));
+    styleBtnRight->Set(Prop::AllocColorSolid(PropColor, "blue"));
+
     atexit(DeleteAboutStyles);
 }
 
@@ -109,11 +117,11 @@ static void CreateAboutMuiWindow(HWND hwnd)
     for (int row = 0; row < rows; row++) {
         const WCHAR *left = gAboutLayoutInfo[row].leftTxt;
         const WCHAR *right = gAboutLayoutInfo[row].rightTxt;
-        // TODO: use url
+        const WCHAR *url = gAboutLayoutInfo[row].url;
 
         ld.Set(new Button(left, styleBtnLeft, styleBtnLeftOver), row, 0, ElAlignRight);
         l->Add(ld);
-        ld.Set(new Button(right, NULL, NULL), row, 1);
+        ld.Set(new ButtonUrl(right, url, styleBtnRight, styleBtnRight), row, 1);
         l->Add(ld);
     }
 

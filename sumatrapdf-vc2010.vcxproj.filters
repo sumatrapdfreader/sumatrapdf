@@ -1738,6 +1738,9 @@
     <None Include="docs\releaseplan.txt">
       <Filter>docs</Filter>
     </None>
+    <None Include="src\mui\mui-todo.txt">
+      <Filter>mui</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\SumatraPDF.rc">
