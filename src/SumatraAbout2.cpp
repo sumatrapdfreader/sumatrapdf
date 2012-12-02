@@ -46,25 +46,24 @@ static void CreateAboutStyles()
         return;
 
     styleMainWnd = new Style();
-    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_BLUE));
+    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, "fff200"));
 
     styleBtnLeft = new Style();
-    styleBtnLeft->Set(Prop::AllocFontName(L"Tahoma"));
+    styleBtnLeft->Set(Prop::AllocFontName(L"Arial"));
     styleBtnLeft->Set(Prop::AllocFontWeight(FontStyleRegular));
-    styleBtnLeft->Set(Prop::AllocFontSize(10.5f));
-    styleBtnLeft->Set(Prop::AllocColorSolid(PropColor, "blue"));
+    styleBtnLeft->Set(Prop::AllocFontSize(9.f));
+    styleBtnLeft->Set(Prop::AllocColorSolid(PropColor, "black"));
     styleBtnLeft->Set(Prop::AllocPadding(2, 4, 2, 4));
     styleBtnLeft->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     styleBtnLeft->SetBorderWidth(0);
 
-    styleBtnLeftOver = new Style(styleBtnLeft);
-    styleBtnLeftOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
+    //styleBtnLeftOver = new Style(styleBtnLeft);
+    //styleBtnLeftOver->Set(Prop::AllocColorSolid(PropBgColor, "white"));
 
     styleBtnRight = new Style(styleBtnLeft);
-    FontStyle fstyle = static_cast<FontStyle>(FontStyleBold|FontStyleUnderline);
-    styleBtnRight->Set(Prop::AllocFontWeight(fstyle));
-    styleBtnRight->Set(Prop::AllocColorSolid(PropColor, "blue"));
-
+    styleBtnRight->Set(Prop::AllocFontName(L"Arial Black"));
+    styleBtnRight->Set(Prop::AllocFontWeight(FontStyleUnderline));
+    styleBtnRight->Set(Prop::AllocColorSolid(PropColor, "0020a0"));
     atexit(DeleteAboutStyles);
 }
 
@@ -84,23 +83,17 @@ struct AboutLayoutInfoEl {
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { L"website",        L"SumatraPDF website",   WEBSITE_MAIN_URL},
+    { L"manual",         L"SumatraPDF manual",    WEBSITE_MANUAL_URL },
     { L"forums",         L"SumatraPDF forums",    L"http://blog.kowalczyk.info/forum_sumatra" },
-    { L"programming",    L"Krzysztof Kowalczyk",  L"http://blog.kowalczyk.info" },
-    { L"programming",    L"Simon B\xFCnzli",      L"http://www.zeniko.ch/#SumatraPDF" },
-    { L"programming",    L"William Blum",         L"http://william.famille-blum.org/" },
-    { L"license",        L"open source",          URL_LICENSE },
+    { L"programming",    L"The Programmers",      L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS" },
+    { L"translations",   L"The Translators",      L"http://code.google.com/p/sumatrapdf/source/browse/trunk/TRANSLATORS" },
+    { L"licenses",       L"Various Open Source",  URL_LICENSE },
 #ifdef SVN_PRE_RELEASE_VER
     { L"a note",         L"Pre-release version, for testing only!", NULL },
 #endif
 #ifdef DEBUG
     { L"a note",         L"Debug version, for testing only!", NULL },
 #endif
-    { L"pdf rendering",  L"MuPDF",                L"http://mupdf.com" },
-    // TODO: remove these two lines in favor of the above license link?
-    { L"program icon",   L"Zenon",                L"http://www.flashvidz.tk/" },
-    { L"toolbar icons",  L"Yusuke Kamiyamane",    L"http://p.yusukekamiyamane.com/" },
-    { L"translators",    L"The Translators",      L"http://blog.kowalczyk.info/software/sumatrapdf/translators.html" },
-    { L"translations",   L"Contribute translation", WEBSITE_TRANSLATIONS_URL }
 };
 
 static HCURSOR gCursorHand = NULL;
@@ -149,9 +142,13 @@ static void CreateAboutMuiWindow(HWND hwnd)
         l->Add(ld);
         mainWnd->AddChild(b);
 
-        b = new Button(right, styleBtnRight, styleBtnRight);
-        b->SetToolTip(url);
-        b->hCursor = gCursorHand;
+        if (url) {
+            b = new Button(right, styleBtnRight, styleBtnRight);
+            b->SetToolTip(url);
+            b->hCursor = gCursorHand;
+        } else {
+            b = new Button(right, styleBtnLeft, styleBtnLeftOver);
+        }
         mainWnd->AddChild(b);
         em->EventsForControl(b)->Clicked.connect(gButtonUrlHandler, &ButtonUrlHandler::Clicked);
         ld.Set(b, row, 1);

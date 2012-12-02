@@ -75,23 +75,17 @@ struct AboutLayoutInfoEl {
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
     { L"website",        L"SumatraPDF website",   WEBSITE_MAIN_URL},
+    { L"manual",         L"SumatraPDF manual",    WEBSITE_MANUAL_URL },
     { L"forums",         L"SumatraPDF forums",    L"http://blog.kowalczyk.info/forum_sumatra" },
-    { L"programming",    L"Krzysztof Kowalczyk",  L"http://blog.kowalczyk.info" },
-    { L"programming",    L"Simon B\xFCnzli",      L"http://www.zeniko.ch/#SumatraPDF" },
-    { L"programming",    L"William Blum",         L"http://william.famille-blum.org/" },
-    { L"license",        L"open source",          URL_LICENSE },
+    { L"programming",    L"The Programmers",      L"http://sumatrapdf.googlecode.com/svn/trunk/AUTHORS" },
+    { L"translations",   L"The Translators",      L"http://code.google.com/p/sumatrapdf/source/browse/trunk/TRANSLATORS" },
+    { L"licenses",       L"Various Open Source",  URL_LICENSE },
 #ifdef SVN_PRE_RELEASE_VER
     { L"a note",         L"Pre-release version, for testing only!", NULL },
 #endif
 #ifdef DEBUG
     { L"a note",         L"Debug version, for testing only!", NULL },
 #endif
-    { L"pdf rendering",  L"MuPDF",                L"http://mupdf.com" },
-    // TODO: remove these two lines in favor of the above license link?
-    { L"program icon",   L"Zenon",                L"http://www.flashvidz.tk/" },
-    { L"toolbar icons",  L"Yusuke Kamiyamane",    L"http://p.yusukekamiyamane.com/" },
-    { L"translators",    L"The Translators",      L"http://code.google.com/p/sumatrapdf/source/browse/trunk/TRANSLATORS" },
-    { L"translations",   L"Contribute translation", WEBSITE_TRANSLATIONS_URL },
     { NULL, NULL, NULL }
 };
 
@@ -254,8 +248,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
 
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++)
+    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, (int)str::Len(el->leftTxt));
+    }
 
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
