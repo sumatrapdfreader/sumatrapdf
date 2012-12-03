@@ -115,10 +115,10 @@ void Grid::Measure(const Size availableSize)
     }
     int desiredWidth = 0;
     int desiredHeight = 0;
-    for (int row=0; row < rows; row++) {
+    for (row=0; row < rows; row++) {
         desiredHeight += maxRowHeight[row];
     }
-    for (int col=0; col < cols; col++) {
+    for (col=0; col < cols; col++) {
         desiredWidth += maxColWidth[col];
     }
     // TODO: what to do if desired size is more than availableSize?

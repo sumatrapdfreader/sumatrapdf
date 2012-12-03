@@ -182,7 +182,7 @@ int RegressMain()
     if (!FindTestFilesDir()) {
         Usage();
         printf("Press any key to finish\n");
-        _getch();
+        (void)_getch();
         return 0;
     }
 
@@ -196,6 +196,6 @@ int RegressMain()
     mui::Destroy();
     UninstallCrashHandler();
     printf("Press any key to finish\n");
-    _getch();
+    (void)_getch();
     return 0;
 }

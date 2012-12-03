@@ -315,7 +315,7 @@ int TesterMain()
         MobiTest(dirOrFile);
     }
     printf("Press any key to exit\n");
-    _getch();
+    (void)_getch();
     mui::Destroy();
     return 0;
 }
