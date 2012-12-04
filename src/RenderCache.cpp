@@ -125,10 +125,11 @@ static RectI GetTileRectDevice(BaseEngine *engine, int pageNo, int rotation, flo
     RectD mediabox = engine->PageMediabox(pageNo);
 
     if (tile.res && tile.res != INVALID_TILE_RES) {
-        double width = mediabox.dx / (1 << tile.res);
+        CrashIf(tile.res > 30);
+        double width = mediabox.dx / (1ULL << tile.res);
         mediabox.x += tile.col * width;
         mediabox.dx = width;
-        double height = mediabox.dy / (1 << tile.res);
+        double height = mediabox.dy / (1ULL << tile.res);
         mediabox.y += ((1 << tile.res) - tile.row - 1) * height;
         mediabox.dy = height;
     }
