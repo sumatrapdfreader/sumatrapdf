@@ -268,7 +268,7 @@ struct ElAlignData g_ElAlignVals[5] = {
 
 void ElAlignData::Set(ElAlign align)
 {
-    CrashIf(align > dimof(g_ElAlignVals));
+    CrashIf(align >= dimof(g_ElAlignVals));
     elementPoint = g_ElAlignVals[align].elementPoint;
     containerPoint = g_ElAlignVals[align].containerPoint;
 }
