@@ -563,7 +563,8 @@ CachedStyle *CacheStyle(Style *style)
     Prop* props[PropsCount] = { 0 };
     if (!GetAllProps(style1, props))
         GetAllProps(style2, props);
-    CrashIf(!FoundAllProps(props));
+    for (size_t i = 0; i < dimof(props); i++)
+        CrashIf(!props[i]);
 
     CachedStyle s;
     s.fontName             = props[PropFontName]->fontName;
