@@ -515,22 +515,26 @@ static pdf_annot *
 pdf_create_link_annot(pdf_document *xref, pdf_obj *obj)
 {
 	pdf_obj *border, *dashes;
+	float border_width;
 	fz_buffer *content;
 	fz_rect rect;
 	float rgb[3];
 	int i, n;
 
 	border = pdf_dict_gets(obj, "Border");
-	if (pdf_to_real(pdf_array_get(border, 2)) <= 0)
+	border_width = pdf_to_real(pdf_array_get(border, 2));
+	dashes = pdf_array_get(border, 3);
+
+	/* Adobe Reader omits the border if dashes isn't an array */
+	if (border_width <= 0 || dashes && !pdf_is_array(dashes))
 		return NULL;
 
 	pdf_get_annot_color(obj, rgb);
-	dashes = pdf_array_get(border, 3);
 	rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
 
 	// TODO: draw rounded rectangles if the first two /Border values are non-zero
 	content = fz_new_buffer(xref->ctx, 128);
-	fz_buffer_printf(xref->ctx, content, "q %.4f w [", pdf_to_real(pdf_array_get(border, 2)));
+	fz_buffer_printf(xref->ctx, content, "q %.4f w [", border_width);
 	for (i = 0, n = pdf_array_len(dashes); i < n; i++)
 		fz_buffer_printf(xref->ctx, content, "%.4f ", pdf_to_real(pdf_array_get(dashes, i)));
 	fz_buffer_printf(xref->ctx, content, "] 0 d %.4f %.4f %.4f RG 0 0 %.4f %.4f re S Q",
