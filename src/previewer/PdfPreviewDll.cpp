@@ -105,6 +105,11 @@ STDAPI DllCanUnloadNow(VOID)
     return g_lRefCount == 0 ? S_OK : S_FALSE;
 }
 
+// disable warning C6387 which is wrongly issued due to a compiler bug; cf.
+// http://connect.microsoft.com/VisualStudio/feedback/details/498862/c6387-warning-on-stock-dllgetclassobject-code-with-static-analyser
+#pragma warning(push)
+#pragma warning(disable: 6387) /* '*ppv' might be '0': this does not adhere to the specification for the function 'DllGetClassObject' */
+
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
@@ -113,6 +118,8 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
         return E_OUTOFMEMORY;
     return pClassFactory->QueryInterface(riid, ppv);
 }
+
+#pragma warning(pop)
 
 #define CLSID_I_THUMBNAIL_PROVIDER  L"{e357fccd-a995-4576-b01f-234630154e96}"
 #define CLSID_I_EXTRACT_IMAGE       L"{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}"

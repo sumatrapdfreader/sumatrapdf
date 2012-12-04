@@ -238,7 +238,7 @@ void Control::MapMyToRootPos(int& x, int& y) const
     const Control *c = this;
     if (c->parent)
         c = c->parent;
-    while (!c->hwndParent) {
+    while (c && !c->hwndParent) {
         x += c->pos.X;
         y += c->pos.Y;
         c = c->parent;
