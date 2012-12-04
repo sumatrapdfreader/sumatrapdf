@@ -199,7 +199,8 @@ static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             return 0;
 
         case WM_PAINT:
-            mainWnd->OnPaint(hwnd);
+            if (mainWnd)
+                mainWnd->OnPaint(hwnd);
             break;
 
         default:

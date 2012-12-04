@@ -10,8 +10,6 @@
 #   note: building on X64 isn't officially supported and might unintentionally be broken
 #WITH_ANALYZE=yes
 #   use /analyze for all code
-#WITH_UCRT=yes|no
-#   if 'yes', compile with ucrt for smaller binaries size
 
 # Set default configuration
 !if "$(CFG)"==""
@@ -21,15 +19,9 @@ CFG=dbg
 # O is directory where object and binary files go
 O = obj-$(CFG)
 
-# for now use regular crt in debug builds to get memory leak detection
-!if "$(WITH_UCRT)"=="" && "$(CFG)"!="dbg"
-WITH_UCRT=yes
-!endif
-
 # for x86 : obj-dbg and obj-rel ; for x64 : obj-dbg64 and obj-rel64
 !if "$(PLATFORM)"=="X64"
 O = $(O)64
-WITH_UCRT=no # uCRT not tested on x64
 !endif
 
 !if "$(MUPDF_DIR)"==""
@@ -63,10 +55,6 @@ CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
 CFLAGS = $(CFLAGS) /D "WINVER=0x0500" /D "_WIN32_WINNT=0x0500"
 # Suppress warning C4800: forcing value to bool 'true' or 'false'
 CFLAGS = $(CFLAGS) /wd4800
-
-!if "$(WITH_UCRT)"=="yes"
-CFLAGS = $(CFLAGS) /D "WITH_UCRT"
-!endif
 
 !if "$(WITH_ANALYZE)"=="yes"
 CFLAGS = /analyze:WX- $(CFLAGS)
@@ -141,15 +129,6 @@ BROWSER_PLUGIN_RES = $(ODLL)\npPdfViewer.res
 BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
-
-UCRT_OBJS = \
-	$(OS)\ucrt.obj $(OS)\ucrt_asm.obj $(OS)\ucrt_math.obj \
-	$(OS)\ucrt_log.obj $(OS)\_wstat64i32.obj $(OS)\_stat64i32.obj \
-	src\ucrt\lib\msvcrt_dll.lib src\ucrt\lib\ntdll_dll.lib
-
-UCRT_WIN_OBJS = $(UCRT_OBJS) $(OS)\ucrt_win.obj
-UCRT_DLL_OBJS = $(UCRT_OBJS) $(OS)\ucrt_dll.obj
-UCRT_CON_OBJS = $(UCRT_OBJS) $(OS)\ucrt_console.obj
 
 UTILS_OBJS = \
 	$(OU)\BencUtil.obj $(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
@@ -233,17 +212,6 @@ MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
 
 LIBMUPDF_OBJS = $(LIBS_OBJS)
-
-!if "$(WITH_UCRT)"=="yes"
-INSTALLER_OBJS      = $(INSTALLER_OBJS) $(UCRT_WIN_OBJS)
-UNINSTALLER_OBJS    = $(UNINSTALLER_OBJS) $(UCRT_WIN_OBJS)
-SUMATRA_OBJS        = $(SUMATRA_OBJS) $(UCRT_WIN_OBJS)
-PDFFILTER_OBJS      = $(PDFFILTER_OBJS) $(UCRT_DLL_OBJS)
-PDFPREVIEW_OBJS     = $(PDFPREVIEW_OBJS) $(UCRT_DLL_OBJS)
-BROWSER_PLUGIN_OBJS = $(BROWSER_PLUGIN_OBJS) $(UCRT_DLL_OBJS)
-ENGINEDUMP_OBJS     = $(ENGINEDUMP_OBJS) $(UCRT_CON_OBJS)
-LIBMUPDF_OBJS       = $(LIBMUPDF_OBJS) $(OS)\libmupdf_stub.obj $(UCRT_DLL_OBJS)
-!endif
 
 !if "$(BUILD_TEX_IFILTER)"!=""
 PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(ODLL)\CTeXFilter.obj
@@ -348,16 +316,6 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 
 $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
-{src\ucrt\src}.cpp{$(OS)}.obj::
-	$(CC) $(UCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
-
-{src\ucrt\src\mingw}.c{$(OS)}.obj::
-	$(CC) $(UCRT_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
-
-# http://msdn.microsoft.com/en-us/library/s0ksfwcf.aspx
-{src\ucrt\src}.asm{$(OS)}.obj:
-	ml /c /coff /Fo$(OS)\ $<
 
 {src\utils}.cpp{$(OU)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OU)\ /Fd$(O)\vc80.pdb $<

@@ -426,12 +426,13 @@ $(OS)\Tester.obj: src\HtmlFormatter.h src\MobiDoc.h src\mui\Mui.h
 $(OS)\Tester.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiControl.h
 $(OS)\Tester.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiGrid.h
 $(OS)\Tester.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
-$(OS)\Tester.obj: src\mui\MuiScrollBar.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Tester.obj: src\utils\DebugLog.h src\utils\DirIter.h src\utils\FileUtil.h
-$(OS)\Tester.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
-$(OS)\Tester.obj: src\utils\HtmlPrettyPrint.h src\utils\NoFreeAllocator.h src\utils\Scoped.h
-$(OS)\Tester.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\Timer.h
-$(OS)\Tester.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
+$(OS)\Tester.obj: src\mui\MuiScrollBar.h src\PdfEngine.h src\utils\Allocator.h
+$(OS)\Tester.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\DebugLog.h
+$(OS)\Tester.obj: src\utils\DirIter.h src\utils\FileUtil.h src\utils\GdiPlusUtil.h
+$(OS)\Tester.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\HtmlPrettyPrint.h
+$(OS)\Tester.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
+$(OS)\Tester.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\Tester.obj: src\utils\ZipUtil.h
 $(OS)\TextSearch.obj: src\BaseEngine.h src\TextSearch.h src\TextSelection.h
 $(OS)\TextSearch.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OS)\TextSearch.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
