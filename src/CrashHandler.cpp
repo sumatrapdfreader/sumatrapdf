@@ -612,8 +612,6 @@ void CrashLogFmt(const char *fmt, ...)
     va_end(args);
 }
 
-#ifndef WITH_UCRT
-
 void __cdecl onSignalAbort(int code) {
     // put the signal back because can be called many times
     // (from multiple threads) and raise() resets the handler
@@ -628,7 +626,6 @@ void onTerminate() {
 void onUnexpected() {
     CrashMe();
 }
-#endif
 
 // shadow crt's _purecall() so that we're called instead of CRT
 int __cdecl _purecall() {
@@ -666,11 +663,9 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
         return;
     gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
 
-#ifndef WITH_UCRT
     signal(SIGABRT, onSignalAbort);
     set_terminate(onTerminate);
     set_unexpected(onUnexpected);
-#endif
 }
 
 void UninstallCrashHandler()

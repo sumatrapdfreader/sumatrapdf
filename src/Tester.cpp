@@ -3,13 +3,11 @@
 
 /* A driver for various tests. The idea is that instead of having a separate
    executable and related makefile additions for each test, we have one test
-   driver which dispatches desired test based on cmd-line arguments.
-   Currently it only does one test: mobi file parsing. */
+   driver which dispatches desired test based on cmd-line arguments. */
 
 #include "BaseUtil.h"
 
 #include "CmdLineParser.h"
-#include <conio.h>
 #include "DirIter.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
@@ -22,9 +20,6 @@ using namespace Gdiplus;
 #include "Timer.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-
-#define NOLOG 0
-#include "DebugLog.h"
 
 // if true, we'll save html content of a mobi ebook as well
 // as pretty-printed html to MOBI_SAVE_DIR. The name will be
@@ -48,6 +43,7 @@ static int Usage()
     printf("  -save-images - will save images extracted from mobi files\n");
     printf("  -zip-create - creates a sample zip file that needs to be manually checked that it worked\n");
     printf("  -bench-md5 - compare Window's md5 vs. our code\n");
+    system("pause");
     return 1;
 }
 
@@ -93,7 +89,7 @@ static void BenchMD5Size(void *data, size_t dataSize, char *desc)
     CrashAlwaysIf(!same);
     double dur2 = t2.GetTimeInMs();
     double diff = dur1 - dur2;
-    plogf("%s\nCalcMD5Digest   : %f ms\nCalcMD5DigestWin: %f ms\ndiff: %f", desc, dur1, dur2, diff);
+    printf("%s\nCalcMD5Digest   : %f ms\nCalcMD5DigestWin: %f ms\ndiff: %f\n", desc, dur1, dur2, diff);
 }
 
 static void BenchMD5()
@@ -257,14 +253,6 @@ void ZipCreateTest()
     delete zc;
 }
 
-// ucrt doesn't have _getch(), so implement it as a no-op here
-#if defined(WITH_UCRT)
-int _getch()
-{
-    return 0;
-}
-#endif
-
 int TesterMain()
 {
     RedirectIOToConsole();
@@ -281,41 +269,45 @@ int TesterMain()
     WCHAR *dirOrFile = NULL;
 
     bool mobiTest = false;
-    int left = argv.Count() - 2;
-    int i = 2; // skip program name and "/tester"
-    while (left > 0) {
+    size_t i = 2; // skip program name and "/tester"
+    while (i < argv.Count()) {
         if (str::Eq(argv[i], L"-mobi")) {
-            ++i; --left;
-            if (left < 1)
+            ++i;
+            if (i == argv.Count())
                 return Usage();
             mobiTest = true;
             dirOrFile = argv[i];
-            ++i; --left;
+            ++i;
         } else if (str::Eq(argv[i], L"-layout")) {
             gLayout = true;
-            ++i; --left;
+            ++i;
         } else if (str::Eq(argv[i], L"-save-html")) {
             gSaveHtml = true;
-            ++i; --left;
+            ++i;
         } else if (str::Eq(argv[i], L"-save-images")) {
             gSaveImages = true;
-            ++i; --left;
+            ++i;
         } else if (str::Eq(argv[i], L"-zip-create")) {
             ZipCreateTest();
-            ++i; --left;
+            ++i;
+        } else if (str::Eq(argv[i], L"-bench-md5")) {
+            BenchMD5();
+            ++i;
         } else {
             // unknown argument
             return Usage();
         }
     }
+    if (2 == i) {
+        // no arguments
+        return Usage();
+    }
 
-    if (!mobiTest) {
-        Usage();
-    } else {
+    if (mobiTest) {
         MobiTest(dirOrFile);
     }
-    printf("Press any key to exit\n");
-    (void)_getch();
+
     mui::Destroy();
+    system("pause");
     return 0;
 }

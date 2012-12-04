@@ -16,7 +16,6 @@ To write new regression test:
 */
 
 #include "BaseUtil.h"
-#include <conio.h>
 #include "DbgHelpDyn.h"
 #include "DirIter.h"
 #include "Doc.h"
@@ -26,9 +25,6 @@ using namespace Gdiplus;
 #include "HtmlFormatter.h"
 #include "Mui.h"
 #include "WinUtil.h"
-
-#define NOLOG 1
-#include "DebugLog.h"
 
 static WCHAR *gTestFilesDir;
 
@@ -41,6 +37,7 @@ static int Usage()
 {
     printf("regress.exe\n");
     printf("Error: didn't find test files on this computer!\n");
+    system("pause");
     return 1;
 }
 
@@ -72,6 +69,7 @@ static void VerifyFileExists(const WCHAR *filePath)
 {
     if (!file::Exists(filePath)) {
         wprintf(L"File '%s' doesn't exist!\n", filePath);
+        system("pause");
         exit(1);
     }
 }
@@ -180,10 +178,7 @@ int RegressMain()
     RedirectIOToConsole();
 
     if (!FindTestFilesDir()) {
-        Usage();
-        printf("Press any key to finish\n");
-        (void)_getch();
-        return 0;
+        return Usage();
     }
 
     InstallCrashHandler();
@@ -192,10 +187,11 @@ int RegressMain()
     mui::Initialize();
 
     RunTests();
+
     printflush("All tests completed successfully!\n");
     mui::Destroy();
     UninstallCrashHandler();
-    printf("Press any key to finish\n");
-    (void)_getch();
+
+    system("pause");
     return 0;
 }
