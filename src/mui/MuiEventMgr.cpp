@@ -18,7 +18,6 @@ EventMgr::EventMgr(HwndWrapper *wndRoot)
 EventMgr::~EventMgr()
 {
     // unsubscribe event handlers for all controls
-    // TODO: we still seem to leak connections
     EventHandler *h;
     for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
         delete h->events;
@@ -54,13 +53,14 @@ void EventMgr::RemoveEventsForControl(Control *c)
 
 ControlEvents *EventMgr::EventsForControl(Control *c)
 {
-    for (EventHandler *h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
+    EventHandler *h;
+    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
         if (h->ctrlSource == c)
             return h->events;
     }
     ControlEvents *events = new ControlEvents();
-    EventHandler h = { c, events };
-    eventHandlers.Append(h);
+    EventHandler eh = { c, events };
+    eventHandlers.Append(eh);
     return events;
 }
 

@@ -443,6 +443,38 @@ size_t TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
     return findCount;
 }
 
+char *Replace(const char *s, const char *toReplace, const char *replaceWith)
+{
+    Vec<char> res;
+    char first = *toReplace++;
+    size_t replaceWithLen = str::Len(replaceWith);
+    while (*s) {
+        if (*s != first) {
+            res.Append(*s++);
+            continue;
+        }
+
+        const char *tmp = s + 1;
+        const char *tmp2 = toReplace;
+        while (*tmp == *tmp2) {
+            if (*tmp == 0) {
+                res.Append(replaceWith, replaceWithLen);
+                goto Exit;
+            }
+            ++tmp;
+            ++tmp2;
+        }
+        if (!*tmp2) {
+            res.Append(replaceWith, replaceWithLen);
+            s = tmp;
+        } else {
+            res.Append(*s++);
+        }
+    }
+Exit:
+    return res.StealData();
+}
+
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters

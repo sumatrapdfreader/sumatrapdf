@@ -234,7 +234,7 @@ void BaseUtils_UnitTests()
     BaseUtilTest();
     ByteOrderTests();
     GeomTest();
-    TStrTest();
+    StrTest();
     FileUtilTest();
     VecTest();
     WStrVecTest();

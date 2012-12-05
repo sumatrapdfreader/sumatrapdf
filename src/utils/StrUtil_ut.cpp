@@ -3,7 +3,28 @@
 
 #include "BaseUtil.h"
 
-static void TStrTest()
+static void StrReplaceTestOne(const char *s, const char *toReplace, const char *replaceWith, const char *expected)
+{
+    char *res = str::Replace(s, toReplace, replaceWith);
+    assert(str::Eq(res, expected));
+    free(res);
+}
+
+static void StrReplaceTest()
+{
+    const char *d[] = {
+        "golagon", "gon", "rabato", "golarabato",
+        "a", "a", "bor", "bor",
+        "abora", "a", "", "bor",
+        "aaaaaa", "a", "b", "bbbbbb"
+    };
+    size_t n = dimof(d) / 4;
+    for (size_t i = 0; i < n; i++) {
+        StrReplaceTestOne(d[i*4], d[i*4+1], d[i*4+2], d[i*4+3]);
+    }
+}
+
+static void StrTest()
 {
     WCHAR buf[32];
     WCHAR *str = L"a string";
@@ -374,4 +395,5 @@ static void TStrTest()
         assert(str::Eq(L"12345", buf));
     }
 
+    StrReplaceTest();
 }
