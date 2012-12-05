@@ -24,6 +24,7 @@ static HWND gHwndAbout2 = NULL;
 static HwndWrapper *mainWnd = NULL;
 
 static Style *   styleMainWnd = NULL;
+static Style *   styleGrid = NULL;
 static Style *   styleBtnLeft = NULL;
 static Style *   styleBtnRight = NULL;
 
@@ -31,6 +32,7 @@ static Style *   styleBtnRight = NULL;
 extern "C" static void DeleteAboutStyles()
 {
     delete styleMainWnd;
+    delete styleGrid;
     delete styleBtnLeft;
     delete styleBtnRight;
 }
@@ -42,7 +44,11 @@ static void CreateAboutStyles()
         return;
 
     styleMainWnd = new Style();
-    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, "fff200"));
+    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, "0xfff200"));
+
+    styleGrid = new Style();
+    // just for testing: set grid background to semi-transparent white
+    styleGrid->Set(Prop::AllocColorSolid(PropBgColor, "#a0ffffff"));
 
     styleBtnLeft = new Style();
     styleBtnLeft->Set(Prop::AllocFontName(L"Arial"));
@@ -124,7 +130,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
     EventMgr *em = mainWnd->evtMgr;
     CrashIf(!em);
 
-    Grid *grid = new Grid();
+    Grid *grid = new Grid(styleGrid);
     Grid::CellData ld;
 
     int rows = dimof(gAboutLayoutInfo);

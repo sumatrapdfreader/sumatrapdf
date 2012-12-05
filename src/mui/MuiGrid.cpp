@@ -92,7 +92,16 @@ void Grid::RebuildCellDataIfNeeded()
 
 void Grid::Paint(Graphics *gfx, int offX, int offY)
 {
-    // TODO: write me
+    if (!IsVisible())
+        return;
+
+    CachedStyle *s = cachedStyle;
+
+    RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
+    Brush *brBgColor = BrushFromColorData(s->bgColor, bbox);
+    gfx->FillRectangle(brBgColor, bbox);
+
+    // TODO: draw border
 }
 
 void Grid::Measure(const Size availableSize)
@@ -148,6 +157,16 @@ void Grid::Arrange(const Rect finalRect)
         Rect r(pos, cell->desiredSize);
         el->Arrange(r);
     }
+    // if we're smaller than finalRect, we'll only use as much as
+    // we need
+    // TODO: this probably belongs in MuiHandWrapper::TopLevelLayout
+    // so that it works for any type of control, but for now it'll do
+    Rect r(finalRect);
+    if (r.Width > desiredSize.Width)
+        r.Width = desiredSize.Width;
+    if (r.Height > desiredSize.Height)
+        r.Height = desiredSize.Height;
+    SetPosition(r);
 }
 
 } // namespace mui
