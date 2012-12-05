@@ -748,8 +748,9 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
         int idx = files.Find(path::GetBaseName(bmpPath));
         if (idx != -1) {
             CrashIf(idx < 0 || files.Count() <= (size_t)idx);
-            free(files.At(idx));
+            WCHAR *fileName = files.At(idx);
             files.RemoveAt(idx);
+            free(fileName);
         }
     }
 
