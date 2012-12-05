@@ -160,11 +160,11 @@ static void CreateAboutMuiWindow(HWND hwnd)
 
 static void DestroyAboutMuiWindow()
 {
-    gButtonUrlHandler = NULL;
     gHwndAbout2 = NULL;
     delete mainWnd;
     mainWnd = NULL;
     delete gButtonUrlHandler;
+    gButtonUrlHandler = NULL;
 }
 
 static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
