@@ -310,6 +310,22 @@ pdf_parse_action(pdf_document *xref, pdf_obj *action)
 		ld.ld.gotor.rname = rname;
 		}
 	}
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2117 */
+	else if (!strcmp(pdf_to_name(obj), "JavaScript"))
+	{
+		/* hackily extract the first URL the JavaScript action might open */
+		char *js = pdf_to_utf8(xref, pdf_dict_gets(action, "JS"));
+		char *url = strstr(js, "getURL(\"");
+		if (url && strchr(url + 8, '"'))
+		{
+			url += 8;
+			*strchr(url, '"') = '\0';
+			ld.kind = FZ_LINK_URI;
+			ld.ld.uri.is_map = 0;
+			ld.ld.uri.uri = fz_strdup(ctx, url);
+		}
+		fz_free(ctx, js);
+	}
 	return ld;
 }
 
@@ -527,7 +543,11 @@ pdf_create_link_annot(pdf_document *xref, pdf_obj *obj)
 
 	/* Adobe Reader omits the border if dashes isn't an array */
 	if (border_width <= 0 || dashes && !pdf_is_array(dashes))
+	{
+		if (border && (border_width || dashes))
+			fz_warn(xref->ctx, "ignoring invalid link /Border array");
 		return NULL;
+	}
 
 	pdf_get_annot_color(obj, rgb);
 	rect = pdf_to_rect(xref->ctx, pdf_dict_gets(obj, "Rect"));
