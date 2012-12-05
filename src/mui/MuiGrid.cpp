@@ -101,12 +101,15 @@ void Grid::Paint(Graphics *gfx, int offX, int offY)
     Brush *brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
-    // TODO: draw border
+    Rect r(offX, offY, pos.Width, pos.Height);
+    DrawBorder(gfx, r, s);
 }
 
 void Grid::Measure(const Size availableSize)
 {
     RebuildCellDataIfNeeded();
+
+    Size borderSize(GetBorderAndPaddingSize(cachedStyle));
 
     Cell *cell;
     Control *el;
@@ -114,9 +117,13 @@ void Grid::Measure(const Size availableSize)
     for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
         col = d->col;
         row = d->row;
-        el = d->el;
-
         cell = GetCell(row, col);
+        cell->desiredSize.Width = 0;
+        cell->desiredSize.Height = 0;
+        el = d->el;
+        if (!el->IsVisible())
+            continue;
+
         el->Measure(availableSize);
         cell->desiredSize = el->DesiredSize();
         if (cell->desiredSize.Width > maxColWidth[col])
@@ -133,8 +140,8 @@ void Grid::Measure(const Size availableSize)
         desiredWidth += maxColWidth[col];
     }
     // TODO: what to do if desired size is more than availableSize?
-    desiredSize.Width = desiredWidth;
-    desiredSize.Height = desiredHeight;
+    desiredSize.Width = desiredWidth + borderSize.Width;
+    desiredSize.Height = desiredHeight + borderSize.Height;
 }
 
 void Grid::Arrange(const Rect finalRect)

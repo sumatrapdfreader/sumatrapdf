@@ -49,6 +49,8 @@ static void CreateAboutStyles()
     styleGrid = new Style();
     // just for testing: set grid background to semi-transparent white
     styleGrid->Set(Prop::AllocColorSolid(PropBgColor, "#a0ffffff"));
+    styleGrid->SetBorderWidth(2.f);
+    styleGrid->SetBorderColor(ParseCssColor("#000"));
 
     styleBtnLeft = new Style();
     styleBtnLeft->Set(Prop::AllocFontName(L"Arial"));

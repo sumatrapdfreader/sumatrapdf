@@ -261,5 +261,8 @@ CachedStyle* CacheStyle(Style *style);
 Brush *BrushFromColorData(ColorData *color, const Rect& r);
 Brush *BrushFromColorData(ColorData *color, const RectF& r);
 
+ARGB ParseCssColor(const char *color);
+Size GetBorderAndPaddingSize(CachedStyle *s);
+
 } // namespace css
 

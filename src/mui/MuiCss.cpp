@@ -195,7 +195,7 @@ static bool GetKnownCssColor(const char *name, ARGB& colOut)
 // rrggbb, #rrggbb, #aarrggbb, #rgb, 0xrgb, 0xrrggbb
 // rgb(r,g,b), rgba(r,g,b,a) rgb(r%, g%, b%), rgba(r%, g%, b%, a%)
 // cf. https://developer.mozilla.org/en/CSS/color_value
-static ARGB ParseCssColor(const char *color)
+ARGB ParseCssColor(const char *color)
 {
     // parse #RRGGBB and #RGB and rgb(R,G,B)
     int a, r, g, b;
@@ -630,6 +630,23 @@ Brush *BrushFromColorData(ColorData *color, const RectF& r)
 Brush *BrushFromColorData(ColorData *color, const Rect& r)
 {
     return BrushFromColorData(color, RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
+}
+
+static void AddBorders(int& dx, int& dy, CachedStyle *s)
+{
+    const BorderWidth& bw = s->borderWidth;
+    // note: width is a float, not sure how I should round them
+    dx += (int)(bw.left + bw.right);
+    dy += (int)(bw.top + bw.bottom);
+}
+
+Size GetBorderAndPaddingSize(CachedStyle *s)
+{
+    Padding pad = s->padding;
+    int dx = pad.left + pad.right;
+    int dy = pad.top  + pad.bottom;
+    AddBorders(dx, dy, s);
+    return Size(dx, dy);
 }
 
 } // namespace css

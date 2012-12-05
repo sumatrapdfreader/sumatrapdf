@@ -24,23 +24,6 @@ Button::~Button()
     free(text);
 }
 
-static void AddBorders(int& dx, int& dy, CachedStyle *s)
-{
-    const BorderWidth& bw = s->borderWidth;
-    // note: width is a float, not sure how I should round them
-    dx += (int)(bw.left + bw.right);
-    dy += (int)(bw.top + bw.bottom);
-}
-
-static Size GetBorderAndPaddingSize(CachedStyle *s)
-{
-    Padding pad = s->padding;
-    int dx = pad.left + pad.right;
-    int dy = pad.top  + pad.bottom;
-    AddBorders(dx, dy, s);
-    return Size(dx, dy);
-}
-
 void Button::NotifyMouseEnter()
 {
     Control::NotifyMouseEnter();
