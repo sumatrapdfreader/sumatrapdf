@@ -585,6 +585,7 @@ RestartLayout:
 
         if (displayModeShowCover(GetDisplayMode()) && pageNo == 1 && columns - pageInARow > 1)
             pageInARow++;
+        CrashIf(pageInARow >= dimof(columnMaxWidth));
         if (columnMaxWidth[pageInARow] < pos.dx)
             columnMaxWidth[pageInARow] = pos.dx;
 
@@ -654,16 +655,24 @@ RestartLayout:
             continue;
         }
         // leave first spot empty in cover page mode
-        if (displayModeShowCover(GetDisplayMode()) && pageNo == 1)
-            pageOffX += columnMaxWidth[pageInARow++] + padding->inBetweenX;
+        if (displayModeShowCover(GetDisplayMode()) && pageNo == 1) {
+            CrashIf(pageInARow >= dimof(columnMaxWidth));
+            pageOffX += columnMaxWidth[pageInARow] + padding->inBetweenX;
+            ++pageInARow;
+        }
+        CrashIf(pageInARow >= dimof(columnMaxWidth));
         pageInfo->pos.x = pageOffX + (columnMaxWidth[pageInARow] - pageInfo->pos.dx) / 2;
         // center the cover page over the first two spots in non-continuous mode
-        if (displayModeShowCover(GetDisplayMode()) && pageNo == 1 && !displayModeContinuous(GetDisplayMode()))
+        if (displayModeShowCover(GetDisplayMode()) && pageNo == 1 && !displayModeContinuous(GetDisplayMode())) {
             pageInfo->pos.x = offX + padding->left + (columnMaxWidth[0] + padding->inBetweenX + columnMaxWidth[1] - pageInfo->pos.dx) / 2;
+        }
         // mirror the page layout when displaying a Right-to-Left document
         if (displayR2L && columns > 1)
             pageInfo->pos.x = canvasDx - pageInfo->pos.x - pageInfo->pos.dx;
-        pageOffX += columnMaxWidth[pageInARow++] + padding->inBetweenX;
+
+        CrashIf(pageInARow >= dimof(columnMaxWidth));
+        pageOffX += columnMaxWidth[pageInARow] + padding->inBetweenX;
+        ++pageInARow;
         assert(pageOffX >= 0 && pageInfo->pos.x >= 0);
 
         if (pageInARow == columns) {
