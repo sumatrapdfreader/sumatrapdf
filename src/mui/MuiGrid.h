@@ -16,7 +16,7 @@ class Grid : public Control
 {
 public:
     struct CellData {
-        ILayout *el;
+        Control *el;
         int row, col;
         // cell of the grid can be bigger than the element.
         // vertAlign and horizAlign define how the element
@@ -40,7 +40,7 @@ public:
             horizAlign = other.horizAlign;
         }
 
-        void Set(ILayout *el, int row, int col, ElAlign horizAlign = ElAlignLeft, ElAlign vertAlign = ElAlignBottom) {
+        void Set(Control *el, int row, int col, ElAlign horizAlign = ElAlignLeft, ElAlign vertAlign = ElAlignBottom) {
             this->el = el;
             this->row = row;
             this->col = col;

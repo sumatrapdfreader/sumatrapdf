@@ -23,7 +23,9 @@ Grid::~Grid()
 // unifying the notion of control and layout.
 Grid& Grid::Add(Grid::CellData& ld)
 {
+    CrashIf(!ld.el);
     els.Append(ld);
+    AddChild(ld.el);
     dirty = true;
     return *this;
 }
@@ -98,7 +100,7 @@ void Grid::Measure(const Size availableSize)
     RebuildCellDataIfNeeded();
 
     Cell *cell;
-    ILayout *el;
+    Control *el;
     int col, row;
     for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
         col = d->col;
@@ -129,7 +131,7 @@ void Grid::Measure(const Size availableSize)
 void Grid::Arrange(const Rect finalRect)
 {
     Cell *cell;
-    ILayout *el;
+    Control *el;
 
     for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
         cell = GetCell(d->row, d->col);

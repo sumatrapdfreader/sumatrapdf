@@ -58,11 +58,7 @@ HwndWrapper::HwndWrapper(HWND hwnd)
 
 HwndWrapper::~HwndWrapper()
 {
-    // TODO: this is called before our ~Control destructor
-    // ~Control destructor also deletes the children and
-    // they need to refer to EventMgr to unregister their
-    // handlers, but it's been deleted by then
-    //delete evtMgr;
+    delete evtMgr;
     delete painter;
 }
 

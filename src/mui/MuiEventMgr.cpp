@@ -17,9 +17,12 @@ EventMgr::EventMgr(HwndWrapper *wndRoot)
 
 EventMgr::~EventMgr()
 {
-    // for good programming hygene, we want event subscribers
-    // to unsubscribe
-    CrashIf(0 != eventHandlers.Count());
+    // unsubscribe event handlers for all controls
+    // TODO: we still seem to leak connections
+    EventHandler *h;
+    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
+        delete h->events;
+    }
 }
 
 // Set minimum size that will be enforced by handling WM_GETMINMAXINFO

@@ -170,7 +170,12 @@ void Control::Measure(const Size availableSize)
     if (layout) {
         layout->Measure(availableSize);
     } else {
-        desiredSize = Size();
+        if (children.Count() == 1) {
+            ILayout *l = children.At(0);
+            l->Measure(availableSize);
+        } else {
+            desiredSize = Size();
+        }
     }
 }
 
@@ -192,6 +197,11 @@ void Control::Arrange(const Rect finalRect)
     if (layout) {
         // might over-write position if our layout knows about us
         layout->Arrange(finalRect);
+    } else {
+        if (children.Count() == 1) {
+            ILayout *l = children.At(0);
+            l->Arrange(finalRect);
+        }
     }
 }
 

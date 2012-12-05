@@ -124,7 +124,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
     EventMgr *em = mainWnd->evtMgr;
     CrashIf(!em);
 
-    Grid *l = new Grid();
+    Grid *grid = new Grid();
     Grid::CellData ld;
 
     int rows = dimof(gAboutLayoutInfo);
@@ -136,8 +136,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
 
         b = new Button(left, styleBtnLeft, styleBtnLeft);
         ld.Set(b, row, 0, ElAlignRight);
-        l->Add(ld);
-        mainWnd->AddChild(b);
+        grid->Add(ld);
 
         if (url) {
             b = new Button(right, styleBtnRight, styleBtnRight);
@@ -146,30 +145,20 @@ static void CreateAboutMuiWindow(HWND hwnd)
         } else {
             b = new Button(right, styleBtnLeft, styleBtnLeft);
         }
-        mainWnd->AddChild(b);
         em->EventsForControl(b)->Clicked.connect(gButtonUrlHandler, &ButtonUrlHandler::Clicked);
         ld.Set(b, row, 1);
-        l->Add(ld);
+        grid->Add(ld);
     }
-
-    mainWnd->layout = l;
+    mainWnd->AddChild(grid);
 }
 
 static void DestroyAboutMuiWindow()
 {
-    EventMgr *em = mainWnd->evtMgr;
-    size_t n = mainWnd->GetChildCount();
-    // TODO: probably should disconnect everything when deleting a window
-    for (size_t i = 0; i < n; i++)
-    {
-        Control *c = mainWnd->GetChild(i);
-        em->EventsForControl(c)->Clicked.disconnect_all();
-    }
-    delete gButtonUrlHandler;
     gButtonUrlHandler = NULL;
     gHwndAbout2 = NULL;
     delete mainWnd;
     mainWnd = NULL;
+    delete gButtonUrlHandler;
 }
 
 static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
