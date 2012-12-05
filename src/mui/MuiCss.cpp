@@ -192,7 +192,7 @@ static bool GetKnownCssColor(const char *name, ARGB& colOut)
 }
 
 // Parses css-like color formats:
-// rrggbb, #rrggbb, #aarrggbb, #rgb
+// rrggbb, #rrggbb, #aarrggbb, #rgb, 0xrgb, 0xrrggbb
 // rgb(r,g,b), rgba(r,g,b,a) rgb(r%, g%, b%), rgba(r%, g%, b%, a%)
 // cf. https://developer.mozilla.org/en/CSS/color_value
 static ARGB ParseCssColor(const char *color)
@@ -200,23 +200,30 @@ static ARGB ParseCssColor(const char *color)
     // parse #RRGGBB and #RGB and rgb(R,G,B)
     int a, r, g, b;
 
-    // #rgb is shorthand for #rrggbb
-    if (str::Parse(color, "#%1x%1x%1x%$", &r, &g, &b)) {
+    // a bit too relaxed, but by skipping 0x and #
+    // we'll easily parse all variations of hex-encoded values
+    if (color[0] == '0' && color[1] == 'x')
+        color += 2;
+
+    if (*color == '#')
+        ++color;
+
+    // parse: #rgb, 0xrgb, rgb (which is a shortcut for #rrggbb)
+    if (str::Parse(color, "%1x%1x%1x%$", &r, &g, &b)) {
         r |= (r << 4);
         g |= (g << 4);
         b |= (b << 4);
         return MKRGB(r, g, b);
     }
 
-    // rrggbb, #rrggbb and rgb(n,n,n)
-    if (str::Parse(color, "#%2x%2x%2x%$", &r, &g, &b) ||
-        str::Parse(color, "%2x%2x%2x%$", &r, &g, &b) ||
+    // parse rrggbb, #rrggbb, 0xrrggbb and rgb(n,n,n)
+    if (str::Parse(color, "%2x%2x%2x%$", &r, &g, &b) ||
         str::Parse(color, "rgb(%d,%d,%d)", &r, &g, &b)) {
         return MKRGB(r, g, b);
     }
 
-    // parse rgba(R,G,B,A) and #aarrggbb
-    if (str::Parse(color, "#%2x%2x%2x%2x%$", &a, &r, &g, &b) ||
+    // parse aarrggbb, #aarrggbb, 0xaarrggbb and rgba(R,G,B,A)
+    if (str::Parse(color, "%2x%2x%2x%2x%$", &a, &r, &g, &b) ||
         str::Parse(color, "rgba(%d,%d,%d,%d)", &r, &g, &b, &a)) {
         return MKARGB(a, r, g, b);
     }
@@ -563,8 +570,9 @@ CachedStyle *CacheStyle(Style *style)
     Prop* props[PropsCount] = { 0 };
     if (!GetAllProps(style1, props))
         GetAllProps(style2, props);
-    for (size_t i = 0; i < dimof(props); i++)
+    for (size_t i = 0; i < dimof(props); i++) {
         CrashIf(!props[i]);
+    }
 
     CachedStyle s;
     s.fontName             = props[PropFontName]->fontName;
