@@ -813,7 +813,7 @@ gdiplus_get_brush(fz_device *dev, fz_colorspace *colorspace, float *color, float
 }
 
 static GraphicsPath *
-gdiplus_get_path(fz_path *path, fz_matrix ctm, int evenodd=1)
+gdiplus_get_path(fz_path *path, fz_matrix ctm, bool has_caps, int evenodd=1)
 {
 	PointF *points = new PointF[path->len / 2];
 	BYTE *types = new BYTE[path->len / 2];
@@ -835,6 +835,9 @@ gdiplus_get_path(fz_path *path, fz_matrix ctm, int evenodd=1)
 			break;
 		case FZ_LINETO:
 			points[len].X = path->items[i++].v; points[len].Y = path->items[i++].v;
+			// zero-length paths are omitted by GDI+ even if the have start/end caps
+			if (has_caps && points[len].Equals(points[len - 1]))
+				points[len].X += 0.01f / fz_matrix_expansion(ctm);
 			types[len++] = PathPointTypeLine;
 			break;
 		case FZ_CURVETO:
@@ -977,7 +980,7 @@ extern "C" static void
 fz_gdiplus_fill_path(fz_device *dev, fz_path *path, int evenodd, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	GraphicsPath *gpath = gdiplus_get_path(path, ctm, evenodd);
+	GraphicsPath *gpath = gdiplus_get_path(path, ctm, false, evenodd);
 	Brush *brush = gdiplus_get_brush(dev, colorspace, color, alpha);
 	
 	((userData *)dev->user)->started = true;
@@ -991,7 +994,7 @@ extern "C" static void
 fz_gdiplus_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	GraphicsPath *gpath = gdiplus_get_path(path, ctm);
+	GraphicsPath *gpath = gdiplus_get_path(path, ctm, stroke->start_cap || stroke->end_cap);
 	Brush *brush = gdiplus_get_brush(dev, colorspace, color, alpha);
 	Pen *pen = gdiplus_get_pen(brush, ctm, stroke);
 	
@@ -1006,7 +1009,7 @@ fz_gdiplus_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, f
 extern "C" static void
 fz_gdiplus_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int evenodd, fz_matrix ctm)
 {
-	GraphicsPath *gpath = gdiplus_get_path(path, ctm, evenodd);
+	GraphicsPath *gpath = gdiplus_get_path(path, ctm, false, evenodd);
 	
 	// TODO: clipping non-rectangular areas doesn't result in anti-aliased edges
 	if (path->len > 0)
@@ -1020,7 +1023,7 @@ fz_gdiplus_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int evenodd, 
 extern "C" static void
 fz_gdiplus_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
-	GraphicsPath *gpath = gdiplus_get_path(path, ctm);
+	GraphicsPath *gpath = gdiplus_get_path(path, ctm, stroke->start_cap || stroke->end_cap);
 	
 	Pen *pen = gdiplus_get_pen(&SolidBrush(Color()), ctm, stroke);
 	gpath->Widen(pen);
@@ -1149,7 +1152,7 @@ ft_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_hash_table *outlines
 	FT_Outline_Decompose(&face->glyph->outline, &OutlineFuncs, &PathContext(ctx, path));
 	int evenodd = face->glyph->outline.flags & FT_OUTLINE_EVEN_ODD_FILL;
 	
-	glyph = gdiplus_get_path(path, fz_scale(ft_get_width_scale(font, gid), 1), evenodd);
+	glyph = gdiplus_get_path(path, fz_scale(ft_get_width_scale(font, gid), 1), false, evenodd);
 	
 	fz_free_path(ctx, path);
 	fz_hash_insert(ctx, outlines, &key, glyph);
