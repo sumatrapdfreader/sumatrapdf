@@ -49,7 +49,7 @@ BitmapCacheEntry *RenderCache::Find(DisplayModel *dm, int pageNo, int rotation, 
 {
     ScopedCritSec scope(&cacheAccess);
     BitmapCacheEntry *entry;
-    rotation = normalizeRotation(rotation);
+    rotation = NormalizeRotation(rotation);
     for (int i = 0; i < cacheCount; i++) {
         entry = cache[i];
         if ((dm == entry->dm) && (pageNo == entry->pageNo) && (rotation == entry->rotation) &&
@@ -85,7 +85,7 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
     ScopedCritSec scope(&cacheAccess);
     assert(req.dm);
 
-    req.rotation = normalizeRotation(req.rotation);
+    req.rotation = NormalizeRotation(req.rotation);
     assert(cacheCount <= MAX_BITMAPS_CACHED);
 
     /* It's possible there still is a cached bitmap with different zoom/rotation */
@@ -317,7 +317,7 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
     bool ok = false;
     if (!dm || dm->dontRenderFlag) goto Exit;
 
-    int rotation = normalizeRotation(dm->Rotation());
+    int rotation = NormalizeRotation(dm->Rotation());
     float zoom = dm->ZoomReal(pageNo);
 
     if (curReq && (curReq->pageNo == pageNo) && (curReq->dm == dm) && (curReq->tile == tile)) {

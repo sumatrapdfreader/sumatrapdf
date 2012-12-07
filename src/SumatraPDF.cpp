@@ -304,7 +304,7 @@ void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCont
     if (!win->IsDocLoaded())
         return;
 
-    if (keepContinuous && displayModeContinuous(win->dm->GetDisplayMode())) {
+    if (keepContinuous && IsContinuous(win->dm->GetDisplayMode())) {
         switch (displayMode) {
             case DM_SINGLE_PAGE: displayMode = DM_CONTINUOUS; break;
             case DM_FACING: displayMode = DM_CONTINUOUS_FACING; break;
@@ -3021,7 +3021,7 @@ static void OnVScroll(WindowInfo& win, WPARAM wParam)
 
     int iVertPos = si.nPos;
     int lineHeight = 16;
-    if (!displayModeContinuous(win.dm->GetDisplayMode()) && ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
+    if (!IsContinuous(win.dm->GetDisplayMode()) && ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
         lineHeight = 1;
 
     switch (LOWORD(wParam)) {
@@ -3192,15 +3192,15 @@ static void OnMenuViewContinuous(WindowInfo& win)
     switch (newMode) {
         case DM_SINGLE_PAGE:
         case DM_CONTINUOUS:
-            newMode = displayModeContinuous(newMode) ? DM_SINGLE_PAGE : DM_CONTINUOUS;
+            newMode = IsContinuous(newMode) ? DM_SINGLE_PAGE : DM_CONTINUOUS;
             break;
         case DM_FACING:
         case DM_CONTINUOUS_FACING:
-            newMode = displayModeContinuous(newMode) ? DM_FACING : DM_CONTINUOUS_FACING;
+            newMode = IsContinuous(newMode) ? DM_FACING : DM_CONTINUOUS_FACING;
             break;
         case DM_BOOK_VIEW:
         case DM_CONTINUOUS_BOOK_VIEW:
-            newMode = displayModeContinuous(newMode) ? DM_BOOK_VIEW : DM_CONTINUOUS_BOOK_VIEW;
+            newMode = IsContinuous(newMode) ? DM_BOOK_VIEW : DM_CONTINUOUS_BOOK_VIEW;
             break;
     }
     SwitchToDisplayMode(&win, newMode);
@@ -3617,7 +3617,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
         OnMenuViewContinuous(win);
         break;
     case 'b':
-        if (!displayModeSingle(win.dm->GetDisplayMode())) {
+        if (!IsSingle(win.dm->GetDisplayMode())) {
             // "e-book view": flip a single page
             bool forward = !IsShiftPressed();
             int currPage = win.dm->CurrentPageNo();
@@ -3625,7 +3625,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
                 break;
 
             DisplayMode newMode = DM_BOOK_VIEW;
-            if (displayModeShowCover(win.dm->GetDisplayMode()))
+            if (DisplayModeShowCover(win.dm->GetDisplayMode()))
                 newMode = DM_FACING;
             SwitchToDisplayMode(&win, newMode, true);
 
@@ -4167,7 +4167,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
     }
 
     // make sure to scroll whole pages in non-continuous Fit Content mode
-    if (!displayModeContinuous(win.dm->GetDisplayMode()) &&
+    if (!IsContinuous(win.dm->GetDisplayMode()) &&
         ZOOM_FIT_CONTENT == win.dm->ZoomVirtual()) {
         if (delta > 0)
             win.dm->GoToPrevPage(0);
@@ -4212,7 +4212,7 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
         win.wheelAccumDelta += gDeltaPerLine;
     }
 
-    if (!horizontal && !displayModeContinuous(win.dm->GetDisplayMode()) &&
+    if (!horizontal && !IsContinuous(win.dm->GetDisplayMode()) &&
         GetScrollPos(win.hwndCanvas, SB_VERT) == currentScrollPos) {
         if (delta > 0)
             win.dm->GoToPrevPage(-1);

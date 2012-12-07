@@ -28,17 +28,17 @@ void MenuUpdateDisplayMode(WindowInfo* win)
         win::menu::SetEnabled(win->menu, id, enabled);
 
     UINT id = 0;
-    if (displayModeSingle(displayMode))
+    if (IsSingle(displayMode))
         id = IDM_VIEW_SINGLE_PAGE;
-    else if (displayModeFacing(displayMode))
+    else if (IsFacing(displayMode))
         id = IDM_VIEW_FACING;
-    else if (displayModeShowCover(displayMode))
+    else if (DisplayModeShowCover(displayMode))
         id = IDM_VIEW_BOOK;
     else
         assert(!win->dm && DM_AUTOMATIC == displayMode);
 
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
-    win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, displayModeContinuous(displayMode));
+    win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
 }
 
 static MenuDef menuDefFile[] = {

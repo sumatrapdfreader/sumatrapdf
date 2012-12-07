@@ -273,10 +273,10 @@ public:
     bool            dontRenderFlag;
 };
 
-bool    displayModeContinuous(DisplayMode displayMode);
-bool    displayModeSingle(DisplayMode displayMode);
-bool    displayModeFacing(DisplayMode displayMode);
-bool    displayModeShowCover(DisplayMode displayMode);
-int     normalizeRotation(int rotation);
+bool    IsContinuous(DisplayMode displayMode);
+bool    IsSingle(DisplayMode displayMode);
+bool    IsFacing(DisplayMode displayMode);
+bool    DisplayModeShowCover(DisplayMode displayMode);
+int     NormalizeRotation(int rotation);
 
 #endif
