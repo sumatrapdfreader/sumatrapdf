@@ -291,7 +291,7 @@ void Utf8Encode(char *& dst, int c)
 // doesn't allocate)
 bool BufFmtV(char *buf, size_t bufCchSize, const char *fmt, va_list args)
 {
-    int count = vsnprintf(buf, bufCchSize, fmt, args);
+    int count = _vsnprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
     buf[bufCchSize-1] = 0;
     if ((count >= 0) && ((size_t)count < bufCchSize))
         return true;
@@ -305,7 +305,7 @@ char *FmtV(const char *fmt, va_list args)
     char  * buf = message;
     for (;;)
     {
-        int count = vsnprintf(buf, bufCchSize, fmt, args);
+        int count = _vsnprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
         if ((count >= 0) && ((size_t)count < bufCchSize))
             break;
         /* we have to make the buffer bigger. The algorithm used to calculate
@@ -338,7 +338,7 @@ char *Format(const char *fmt, ...)
 
 bool BufFmtV(WCHAR *buf, size_t bufCchSize, const WCHAR *fmt, va_list args)
 {
-    int count = _vsnwprintf(buf, bufCchSize, fmt, args);
+    int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
     buf[bufCchSize-1] = 0;
     if ((count >= 0) && ((size_t)count < bufCchSize))
         return true;
@@ -352,7 +352,7 @@ WCHAR *FmtV(const WCHAR *fmt, va_list args)
     WCHAR * buf = message;
     for (;;)
     {
-        int count = _vsnwprintf(buf, bufCchSize, fmt, args);
+        int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
         if ((count >= 0) && ((size_t)count < bufCchSize))
             break;
         /* we have to make the buffer bigger. The algorithm used to calculate
@@ -543,8 +543,8 @@ size_t BufSet(char *dst, size_t dstCchSize, const char *src)
     size_t srcCchSize = str::Len(src);
     size_t toCopy = min(dstCchSize - 1, srcCchSize);
 
-    strncpy(dst, src, toCopy);
-    dst[toCopy] = 0;
+    errno_t err = strncpy_s(dst, dstCchSize, src, toCopy);
+    CrashIf(err || dst[toCopy] != '\0');
 
     return toCopy;
 }
@@ -556,15 +556,15 @@ size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
     size_t srcCchSize = str::Len(src);
     size_t toCopy = min(dstCchSize - 1, srcCchSize);
 
-    wcsncpy(dst, src, toCopy);
-    dst[toCopy] = 0;
+    errno_t err = wcsncpy_s(dst, dstCchSize, src, toCopy);
+    CrashIf(err || dst[toCopy] != '\0');
 
     return toCopy;
 }
 
 // append as much of s at the end of dst (which must be properly null-terminated)
 // as will fit. 
-size_t  BufAppend(char *dst, size_t dstCchSize, const char *s)
+size_t BufAppend(char *dst, size_t dstCchSize, const char *s)
 {
     size_t srcCchSize = str::Len(s);
     size_t currDstCchLen = str::Len(dst);
@@ -572,12 +572,14 @@ size_t  BufAppend(char *dst, size_t dstCchSize, const char *s)
         return 0;
     size_t left = dstCchSize - currDstCchLen - 1;
     size_t toCopy = min(left, srcCchSize);
-    strncpy(dst + currDstCchLen, s, toCopy);
-    dst[currDstCchLen + toCopy] = 0;
+
+    errno_t err = strncpy_s(dst + currDstCchLen, dstCchSize, s, toCopy);
+    CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
+
     return toCopy;
 }
 
-size_t  BufAppend(WCHAR *dst, size_t dstCchSize, const WCHAR *s)
+size_t BufAppend(WCHAR *dst, size_t dstCchSize, const WCHAR *s)
 {
     size_t srcCchSize = str::Len(s);
     size_t currDstCchLen = str::Len(dst);
@@ -585,8 +587,10 @@ size_t  BufAppend(WCHAR *dst, size_t dstCchSize, const WCHAR *s)
         return 0;
     size_t left = dstCchSize - currDstCchLen - 1;
     size_t toCopy = min(left, srcCchSize);
-    wcsncpy(dst + currDstCchLen, s, toCopy);
-    dst[currDstCchLen + toCopy] = 0;
+
+    errno_t err = wcsncpy_s(dst + currDstCchLen, dstCchSize, s, toCopy);
+    CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
+
     return toCopy;
 }
 
@@ -598,7 +602,7 @@ char *MemToHex(const unsigned char *buf, int len)
     if (!ret)
         return NULL;
     for (int i = 0; i < len; i++)
-        sprintf(ret + 2 * i, "%02x", *buf++);
+        sprintf_s(ret + 2 * i, 3, "%02x", *buf++);
     ret[2 * len] = '\0';
     return ret;
 }
@@ -611,7 +615,7 @@ bool HexToMem(const char *s, unsigned char *buf, int bufLen)
 {
     for (; bufLen > 0; bufLen--) {
         int c;
-        if (1 != sscanf(s, "%02x", &c))
+        if (1 != sscanf_s(s, "%02x", &c))
             return false;
         s += 2;
         *buf++ = (unsigned char)c;

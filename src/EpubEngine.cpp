@@ -789,7 +789,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
         HandleAnchorAttr(t);
         if (!isSubtitle && t->IsStartTag()) {
             char *link = (char *)Allocator::Alloc(textAllocator, 24);
-            sprintf(link, FB2_TOC_ENTRY_MARK "%d", ++titleCount);
+            sprintf_s(link, 24, FB2_TOC_ENTRY_MARK "%d", ++titleCount);
             currPage->instructions.Append(DrawInstr::Anchor(link, str::Len(link), RectF(0, currY, pageDx, 0)));
         }
     }

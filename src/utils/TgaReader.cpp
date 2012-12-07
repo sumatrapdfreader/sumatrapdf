@@ -209,7 +209,8 @@ static void CopyMetadata(const char *data, size_t len, Bitmap *bmp)
         SetImageProperty(bmp, PropertyTagArtist, extAreaLE->author);
     if (IsFieldSet((const char *)extAreaLE->dateTime, sizeof(extAreaLE->dateTime), true)) {
         char dateTime[20];
-        int count = _snprintf(dateTime, dimof(dateTime), "%04d-%02d-%02d %02d:%02d:%02d",
+        int count = _snprintf_s(dateTime, dimof(dateTime), _TRUNCATE,
+            "%04d-%02d-%02d %02d:%02d:%02d",
             convLE(extAreaLE->dateTime[2]), convLE(extAreaLE->dateTime[1]),
             convLE(extAreaLE->dateTime[0]), convLE(extAreaLE->dateTime[3]),
             convLE(extAreaLE->dateTime[4]), convLE(extAreaLE->dateTime[5]));
@@ -220,7 +221,7 @@ static void CopyMetadata(const char *data, size_t len, Bitmap *bmp)
         char software[49];
         str::BufSet(software, 41, extAreaLE->progName);
         if (convLE(extAreaLE->progVersion) != 0) {
-            _snprintf(software + str::Len(software), 9, " %d.%d%c",
+            _snprintf_s(software + str::Len(software), 9, _TRUNCATE, " %d.%d%c",
                 convLE(extAreaLE->progVersion) / 100,
                 convLE(extAreaLE->progVersion) % 100,
                 extAreaLE->progVersionC != ' ' ? extAreaLE->progVersionC : '\0');

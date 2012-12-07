@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define nelem(x) (sizeof(x)/sizeof((x)[0]))
+/* SumatraPDF: compile with the same warnings disabled as all MuPDF code */
+#include <fitz.h>
 
 int pdfclean_main(int argc, char *argv[]);
 int pdfextract_main(int argc, char *argv[]);

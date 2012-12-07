@@ -84,7 +84,7 @@ $(OMUI)\MuiHwndWrapper.obj: src\mui\MuiGrid.h src\mui\MuiHwndWrapper.h src\mui\M
 $(OMUI)\MuiHwndWrapper.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocator.h
 $(OMUI)\MuiHwndWrapper.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\GeomUtil.h
 $(OMUI)\MuiHwndWrapper.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
-$(OMUI)\MuiHwndWrapper.obj: src\utils\Vec.h
+$(OMUI)\MuiHwndWrapper.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OMUI)\MuiLayout.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
 $(OMUI)\MuiLayout.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
 $(OMUI)\MuiLayout.obj: src\mui\MuiGrid.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
@@ -371,9 +371,9 @@ $(OS)\SumatraAbout2.obj: src\mui\MuiGrid.h src\mui\MuiHwndWrapper.h src\mui\MuiL
 $(OS)\SumatraAbout2.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\resource.h
 $(OS)\SumatraAbout2.obj: src\SumatraAbout2.h src\SumatraPDF.h src\SumatraWindow.h
 $(OS)\SumatraAbout2.obj: src\Translations.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\SumatraAbout2.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\SumatraAbout2.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\SumatraAbout2.obj: src\utils\WinUtil.h src\Version.h
+$(OS)\SumatraAbout2.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OS)\SumatraAbout2.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
+$(OS)\SumatraAbout2.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\SumatraDialogs.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\SumatraDialogs.obj: src\DisplayState.h src\FileHistory.h src\Resource.h
 $(OS)\SumatraDialogs.obj: src\SumatraDialogs.h src\SumatraPDF.h src\SumatraWindow.h
