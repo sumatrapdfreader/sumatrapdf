@@ -17,10 +17,7 @@ Grid::~Grid()
     free(maxRowHeight);
 }
 
-// TODO: to properly handle adding element to the grid at any
-// time, we would need to request repaint here, so we would need
-// to know parent window, the way Control does, further
-// unifying the notion of control and layout.
+// TODO: request repaint?
 Grid& Grid::Add(Grid::CellData& ld)
 {
     CrashIf(!ld.el);
@@ -67,7 +64,8 @@ void Grid::RebuildCellDataIfNeeded()
     cols = 0;
     rows = 0;
 
-    for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
+    Grid::CellData *d;
+    for (d = els.IterStart(); d; d = els.IterNext()) {
         int maxCols = d->col + d->colSpan;
         if (maxCols > cols)
             cols = maxCols;
@@ -91,6 +89,22 @@ void Grid::RebuildCellDataIfNeeded()
     dirty = false;
 }
 
+Rect Grid::GetCellBbox(Grid::CellData *d)
+{
+    Rect r;
+    // TODO: probably add Grid's border to X
+    Point p(GetCellPos(d->row, d->col));
+    r.X = p.X;
+    r.Y = p.Y;
+    r.Height = maxRowHeight[d->row];
+    int totalDx = 0;
+    for (int i = d->col; i < d->col + d->colSpan; i++) {
+        totalDx += maxColWidth[i];
+    }
+    r.Width = totalDx;
+    return r;
+}
+
 void Grid::Paint(Graphics *gfx, int offX, int offY)
 {
     CrashIf(!IsVisible());
@@ -102,6 +116,18 @@ void Grid::Paint(Graphics *gfx, int offX, int offY)
 
     Rect r(offX, offY, pos.Width, pos.Height);
     DrawBorder(gfx, r, s);
+
+    Grid::CellData *d;
+    for (d = els.IterStart(); d; d = els.IterNext()) {
+        if (!d->cachedStyle)
+            continue;
+
+        Rect cellRect(GetCellBbox(d));
+        cellRect.X += offX;
+        cellRect.Y += offY;
+        s = d->cachedStyle;
+        DrawBorder(gfx, cellRect, s);
+    }
 }
 
 Size Grid::Measure(const Size availableSize)
@@ -123,6 +149,9 @@ Size Grid::Measure(const Size availableSize)
         // calculate max dx of each column (dx of widest cell in the row)
         //  and max dy of each row (dy of tallest cell in the column)
         el->Measure(availableSize);
+
+        // TODO: take cell's border and padding into account
+
         cell->desiredSize = el->DesiredSize();
         // if a cell spans multiple columns, we don't count its size here
         if (d->colSpan == 1) {

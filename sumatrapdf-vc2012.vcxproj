@@ -244,6 +244,7 @@
     <ClCompile Include="src\mui\MuiControl.cpp" />
     <ClCompile Include="src\mui\MuiCss.cpp" />
     <ClCompile Include="src\mui\MuiEventMgr.cpp" />
+    <ClCompile Include="src\mui\MuiGrid.cpp" />
     <ClCompile Include="src\mui\MuiHwndWrapper.cpp" />
     <ClCompile Include="src\mui\MuiLayout.cpp" />
     <ClCompile Include="src\mui\MuiPainter.cpp" />
@@ -261,6 +262,7 @@
     <ClCompile Include="src\Selection.cpp" />
     <ClCompile Include="src\StressTesting.cpp" />
     <ClCompile Include="src\SumatraAbout.cpp" />
+    <ClCompile Include="src\SumatraAbout2.cpp" />
     <ClCompile Include="src\SumatraDialogs.cpp" />
     <ClCompile Include="src\SumatraPDF.cpp" />
     <ClCompile Include="src\SumatraProperties.cpp" />
@@ -403,6 +405,7 @@
     <ClInclude Include="src\mui\MuiControl.h" />
     <ClInclude Include="src\mui\MuiCss.h" />
     <ClInclude Include="src\mui\MuiEventMgr.h" />
+    <ClInclude Include="src\mui\MuiGrid.h" />
     <ClInclude Include="src\mui\MuiHwndWrapper.h" />
     <ClInclude Include="src\mui\MuiLayout.h" />
     <ClInclude Include="src\mui\MuiPainter.h" />
@@ -420,6 +423,8 @@
     <ClInclude Include="src\Search.h" />
     <ClInclude Include="src\Selection.h" />
     <ClInclude Include="src\StressTesting.h" />
+    <ClInclude Include="src\SumatraAbout.h" />
+    <ClInclude Include="src\SumatraAbout2.h" />
     <ClInclude Include="src\SumatraDialogs.h" />
     <ClInclude Include="src\SumatraPDF.h" />
     <ClInclude Include="src\TableOfContents.h" />
@@ -472,7 +477,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\releasenotes.txt" />
-    <None Include="docs\release_plan.txt" />
     <None Include="docs\wishlist.txt" />
     <None Include="ext\libjpeg-turbo\simd\jcclrmmx.asm" />
     <None Include="ext\libjpeg-turbo\simd\jcclrss2-64.asm" />

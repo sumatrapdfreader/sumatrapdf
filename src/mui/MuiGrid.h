@@ -16,17 +16,19 @@ class Grid : public Control
 {
 public:
     struct CellData {
-        Control *el;
-        int row, col;
-        int colSpan;
+        Control *     el;
+        CachedStyle * cachedStyle;
+        int           row, col;
+        int           colSpan;
         // cell of the grid can be bigger than the element.
         // vertAlign and horizAlign define how the element
         // is laid out within the cell
-        ElAlignData vertAlign;
-        ElAlignData horizAlign;
+        ElAlignData   vertAlign;
+        ElAlignData   horizAlign;
 
         CellData() {
             el = NULL;
+            cachedStyle = NULL;
             row = 0;
             col = 0;
             colSpan = 1;
@@ -36,19 +38,31 @@ public:
 
         CellData(const CellData& other) {
             el = other.el;
+            cachedStyle = other.cachedStyle;
             row = other.row;
             col = other.col;
+            colSpan = other.colSpan;
             vertAlign = other.vertAlign;
             horizAlign = other.horizAlign;
         }
 
         void Set(Control *el, int row, int col, ElAlign horizAlign = ElAlignLeft, ElAlign vertAlign = ElAlignBottom) {
             this->el = el;
+            this->cachedStyle = NULL;
             this->row = row;
             this->col = col;
             this->colSpan = 1; // this can be re-used, so re-set to default value
             this->vertAlign.Set(vertAlign);
             this->horizAlign.Set(horizAlign);
+        }
+
+        bool SetStyle(Style *s) {
+            CachedStyle *newCachedStyle = CacheStyle(s);
+            if (newCachedStyle != cachedStyle) {
+                cachedStyle = newCachedStyle;
+                return true;
+            }
+            return false;
         }
     };
 
@@ -75,9 +89,10 @@ private:
 
     Size    desiredSize; // calculated in Measure()
 
-    void RebuildCellDataIfNeeded();
-    Cell *GetCell(int row, int col) const;
-    Point GetCellPos(int row, int col) const;
+    void   RebuildCellDataIfNeeded();
+    Cell * GetCell(int row, int col) const;
+    Point  GetCellPos(int row, int col) const;
+    Rect   GetCellBbox(Grid::CellData *d);
 
 public:
     Vec<CellData>  els;

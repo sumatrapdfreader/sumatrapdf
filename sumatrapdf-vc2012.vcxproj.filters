@@ -57,6 +57,9 @@
     <Filter Include="ucrt">
       <UniqueIdentifier>{0e2de5f1-02d4-4ed8-93e9-f2ac13fd859b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="doc">
+      <UniqueIdentifier>{827a44ad-ea83-4cc0-9ddd-b97a4dc40140}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -878,6 +881,12 @@
     <ClCompile Include="src\ucrt\src\ucrt_win.cpp">
       <Filter>ucrt</Filter>
     </ClCompile>
+    <ClCompile Include="src\mui\MuiGrid.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SumatraAbout2.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1276,6 +1285,15 @@
     <ClInclude Include="src\ucrt\src\ucrt_log.h">
       <Filter>ucrt</Filter>
     </ClInclude>
+    <ClInclude Include="src\mui\MuiGrid.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SumatraAbout.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SumatraAbout2.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\closetoc.bmp">
@@ -1467,15 +1485,18 @@
     <None Include="src\reloading.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="docs\releasenotes.txt" />
-    <None Include="docs\wishlist.txt" />
-    <None Include="docs\release_plan.txt" />
     <None Include="makefile.msvc" />
     <None Include="src\ucrt\src\ucrt_asm.asm">
       <Filter>ucrt</Filter>
     </None>
     <None Include="src\ucrt\src\ucrt_math.asm">
       <Filter>ucrt</Filter>
+    </None>
+    <None Include="docs\releasenotes.txt">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="docs\wishlist.txt">
+      <Filter>doc</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

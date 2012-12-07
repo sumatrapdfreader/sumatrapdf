@@ -30,6 +30,8 @@ static HwndWrapper *mainWnd = NULL;
 
 static Style *   styleMainWnd = NULL;
 static Style *   styleGrid = NULL;
+static Style *   styleCellLeft = NULL;
+static Style *   styleCellLogo = NULL;
 static Style *   styleBtnLeft = NULL;
 static Style *   styleBtnRight = NULL;
 static Style *   styleLogo = NULL;
@@ -39,6 +41,8 @@ extern "C" static void DeleteAboutStyles()
 {
     delete styleMainWnd;
     delete styleGrid;
+    delete styleCellLeft;
+    delete styleCellLogo;
     delete styleLogo;
     delete styleBtnLeft;
     delete styleBtnRight;
@@ -57,6 +61,20 @@ static void CreateAboutStyles()
     styleGrid->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     styleGrid->SetBorderWidth(1.5f);
     styleGrid->SetBorderColor(ParseCssColor("#000"));
+
+    styleCellLeft = new Style();
+    // TODO: should change gStyleDefault to something more reasonable so no
+    // need to re-define border style so much
+    styleCellLeft->SetBorderWidth(0);
+    styleCellLeft->Set(Prop::AllocWidth(PropBorderRightWidth, 1.f));
+    styleCellLeft->SetBorderColor(ParseCssColor("black"));
+    styleCellLeft->Set(Prop::AllocPadding(2, 4, 2, 0));
+
+    styleCellLogo = new Style();
+    styleCellLogo->SetBorderWidth(0);
+    styleCellLogo->Set(Prop::AllocWidth(PropBorderBottomWidth, 1.f));
+    styleCellLogo->SetBorderColor(ParseCssColor("black"));
+    styleCellLogo->Set(Prop::AllocPadding(2, 0, 2, 0));
 
     styleLogo = new Style();
     styleLogo->Set(Prop::AllocFontName(SUMATRA_TXT_FONT));
@@ -212,6 +230,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
     SumatraLogo *logo = new SumatraLogo();
     logo->SetStyle(styleLogo);
     ld.Set(logo, 0, 0, ElAlignCenter);
+    ld.SetStyle(styleCellLogo);
     ld.colSpan = 2;
     grid->Add(ld);
 
@@ -225,6 +244,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
         int row = n + 1;
         b = new Button(left, styleBtnLeft, styleBtnLeft);
         ld.Set(b, row, 0, ElAlignRight);
+        ld.SetStyle(styleCellLeft);
         grid->Add(ld);
 
         if (url) {
