@@ -4,11 +4,16 @@
 #include "BaseUtil.h"
 
 // force no inlining because we want to see it on the callstack
+#pragma warning(push)
+#pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
+// Note: trying doing this via RaiseException(0x40000015, EXCEPTION_NONCONTINUABLE, 0, 0);
+// but it seemed to confuse callstack walking
 __declspec(noinline) void CrashMe()
 {
-    // 0x40000015 is STATUS_FATAL_APP_EXIT, but is only defined in post-XP sdk
-    RaiseException(0x40000015, EXCEPTION_NONCONTINUABLE, 0, 0);
+    char *p = NULL;
+    *p = 0;
 }
+#pragma warning(pop)
 
 size_t roundToPowerOf2(size_t size)
 {
