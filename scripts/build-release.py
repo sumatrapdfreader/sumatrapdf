@@ -94,14 +94,12 @@ def sign(file_path, cert_pwd):
   file_dir = os.path.dirname(file_path)
   file_name = os.path.basename(file_path)
   cert_src = os.path.join("scripts", "cert.pfx")
-  sign_tool_src = os.path.join("bin", "ksigncmd.exe")
   cert_dest = os.path.join(file_dir, "cert.pfx")
-  sign_tool_dest = os.path.join(file_dir, "ksigncmd.exe")
   if not os.path.exists(cert_dest): shutil.copy(cert_src, cert_dest)
-  if not os.path.exists(sign_tool_dest): shutil.copy(sign_tool_src, sign_tool_dest)
   curr_dir = os.getcwd()
   os.chdir(file_dir)
-  run_cmd_throw("ksigncmd.exe", "/f", "cert.pfx", "/p", cert_pwd, file_name)  
+  run_cmd_throw("signtool.exe", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
+ "/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx", "/p", cert_pwd, file_name)  
   os.chdir(curr_dir)
 
 def main():
