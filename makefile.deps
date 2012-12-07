@@ -259,8 +259,6 @@ $(OS)\Installer.obj: src\utils\FileUtil.h src\utils\FrameTimeoutCalculator.h src
 $(OS)\Installer.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Timer.h
 $(OS)\Installer.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
 $(OS)\Installer.obj: src\Version.h
-$(OS)\libmupdf_stub.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
-$(OS)\libmupdf_stub.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Menu.obj: src\AppPrefs.h src\BaseEngine.h src\ChmEngine.h
 $(OS)\Menu.obj: src\DisplayModel.h src\DisplayState.h src\Doc.h
 $(OS)\Menu.obj: src\EbookWindow.h src\ExternalPdfViewer.h src\Favorites.h

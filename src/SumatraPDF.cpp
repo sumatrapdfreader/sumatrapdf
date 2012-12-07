@@ -2442,7 +2442,6 @@ void CloseDocumentInWindow(WindowInfo *win)
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039
     // HeapValidate() is left here to help us catch the possibility that the fix
     // in FileWatcher::SynchronousAbort() isn't correct
-    // TODO: add _get_heap_handle() to ucrt
     HeapValidate((HANDLE)_get_heap_handle(), 0, NULL);
 #endif
 }

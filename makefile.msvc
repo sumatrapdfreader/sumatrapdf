@@ -63,6 +63,10 @@ CFLAGS = /analyze:WX- $(CFLAGS)
 CFLAGS = $(CFLAGS) /wd6211
 !endif
 
+!if "$(CFG)"=="dbg"
+CFLAGS = $(CFLAGS)  /D "DEBUG" /D "_DEBUG"
+!endif
+
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /Isrc/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
 	/I$(MUPDF_DIR)\xps /Isrc /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
@@ -75,14 +79,8 @@ UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/utils/msvc /Isrc /Isrc/installer \
 	/D "BUILD_UNINSTALLER"
 
-UCRT_CFLAGS = $(CFLAGS)
-
 RC_FLAGS = $(EXTCFLAGS)
-
 !if "$(CFG)"=="dbg"
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /D "DEBUG" /D "_DEBUG"
-INSTALLER_CFLAGS = $(INSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
-UNINSTALLER_CFLAGS = $(UNINSTALLER_CFLAGS) /D "DEBUG" /D "_DEBUG"
 RC_FLAGS = $(RC_FLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
@@ -211,8 +209,6 @@ ENGINEDUMP_OBJS = \
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
 
-LIBMUPDF_OBJS = $(LIBS_OBJS)
-
 !if "$(BUILD_TEX_IFILTER)"!=""
 PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(ODLL)\CTeXFilter.obj
 PDFFILTER_CFLAGS = $(PDFFILTER_CFLAGS) /D "BUILD_TEX_IFILTER"
@@ -275,8 +271,8 @@ $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(OS)\MuPDF_Exports.obj
 $(LIBMUPDF_RES): src\libmupdf.rc src\Version.h
 	rc /r /fo$@ $(RC_FLAGS) src\libmupdf.rc
 
-$(LIBMUPDF_DLL): $(LIBMUPDF_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
-	$(LD) /DLL $(LDFLAGS) $(LIBMUPDF_OBJS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
+$(LIBMUPDF_DLL): $(LIBS_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
+	$(LD) /DLL $(LDFLAGS) $(LIBS_OBJS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData.zip" src\installer\Installer.rc
