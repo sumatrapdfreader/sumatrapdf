@@ -4,6 +4,8 @@
 #include "BaseUtil.h"
 #include "SumatraAbout2.h"
 
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 #include "Mui.h"
 #include "resource.h"
 #include "SumatraPDF.h"
@@ -19,6 +21,9 @@ layout logic */
 #define WND_CLASS_ABOUT2        L"WND_CLASS_SUMATRA_ABOUT2"
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 
+#define SUMATRA_TXT_FONT        L"Arial Black"
+#define SUMATRA_TXT_FONT_SIZE   20.f
+
 static ATOM gAboutWndAtom = 0;
 static HWND gHwndAbout2 = NULL;
 static HwndWrapper *mainWnd = NULL;
@@ -27,12 +32,14 @@ static Style *   styleMainWnd = NULL;
 static Style *   styleGrid = NULL;
 static Style *   styleBtnLeft = NULL;
 static Style *   styleBtnRight = NULL;
+static Style *   styleLogo = NULL;
 
 // should only be called once at the end of the program
 extern "C" static void DeleteAboutStyles()
 {
     delete styleMainWnd;
     delete styleGrid;
+    delete styleLogo;
     delete styleBtnLeft;
     delete styleBtnRight;
 }
@@ -47,10 +54,13 @@ static void CreateAboutStyles()
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, "0xfff200"));
 
     styleGrid = new Style();
-    // just for testing: set grid background to semi-transparent white
-    styleGrid->Set(Prop::AllocColorSolid(PropBgColor, "#a0ffffff"));
+    styleGrid->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     styleGrid->SetBorderWidth(2.f);
     styleGrid->SetBorderColor(ParseCssColor("#000"));
+
+    styleLogo = new Style();
+    styleLogo->Set(Prop::AllocFontName(SUMATRA_TXT_FONT));
+    styleLogo->Set(Prop::AllocFontSize(SUMATRA_TXT_FONT_SIZE));
 
     styleBtnLeft = new Style();
     styleBtnLeft->Set(Prop::AllocFontName(L"Arial"));
@@ -103,6 +113,68 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 
 static HCURSOR gCursorHand = NULL;
 
+#define COL1 RGB(196, 64, 50)
+#define COL2 RGB(227, 107, 35)
+#define COL3 RGB(93,  160, 40)
+#define COL4 RGB(69, 132, 190)
+#define COL5 RGB(112, 115, 207)
+
+#define LOGO_TEXT L"SumatraPDF"
+
+static COLORREF gSumatraLogoCols[] = { COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1 };
+
+class SumatraLogo : public Control
+{
+public:
+    SumatraLogo() {}
+    virtual ~SumatraLogo() {}
+    virtual Size Measure(const Size availableSize);
+    virtual void Paint(Graphics *gfx, int offX, int offY);
+};
+
+Size SumatraLogo::Measure(const Size availableSize)
+{
+    Graphics *gfx = AllocGraphicsForMeasureText();
+    CachedStyle *s = cachedStyle;
+    Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+    const WCHAR *txt = LOGO_TEXT;
+    RectF bbox;
+    int textDx = 0;
+    while (*txt) {
+        bbox = MeasureText(gfx, font, txt, 1);
+        textDx += CeilI(bbox.Width);
+        txt++;
+    }
+    desiredSize.Width = textDx;
+    desiredSize.Height = CeilI(font->GetHeight(gfx));
+    FreeGraphicsForMeasureText(gfx);
+    return desiredSize;
+}
+
+void SumatraLogo::Paint(Graphics *gfx, int offX, int offY)
+{
+    CrashIf(!IsVisible());
+
+    CachedStyle *s = cachedStyle;
+    Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+
+    int x = offX; int y = offY;
+    int n = 0;
+    const WCHAR *txt = LOGO_TEXT;
+    RectF bbox;
+    while (*txt) {
+        Color c;
+        c.SetFromCOLORREF(gSumatraLogoCols[n++]);
+        SolidBrush col(c);
+        if (n >= dimof(gSumatraLogoCols))
+            n = 0;
+        gfx->DrawString(txt, 1, font, PointF((REAL)x, (REAL)y), NULL, &col);
+        bbox = MeasureText(gfx, font, txt, 1);
+        x += CeilI(bbox.Width);
+        txt++;
+    }
+}
+
 class ButtonUrlHandler : public sigslot::has_slots
 {
 public:
@@ -137,13 +209,19 @@ static void CreateAboutMuiWindow(HWND hwnd)
     Grid *grid = new Grid(styleGrid);
     Grid::CellData ld;
 
+    SumatraLogo *logo = new SumatraLogo();
+    logo->SetStyle(styleLogo);
+    ld.Set(logo, 0, 0, ElAlignCenter);
+    grid->Add(ld);
+
     int rows = dimof(gAboutLayoutInfo);
     Button *b;
-    for (int row = 0; row < rows; row++) {
-        const WCHAR *left = gAboutLayoutInfo[row].leftTxt;
-        const WCHAR *right = gAboutLayoutInfo[row].rightTxt;
-        const WCHAR *url = gAboutLayoutInfo[row].url;
+    for (int n = 0; n < rows; n++) {
+        const WCHAR *left = gAboutLayoutInfo[n].leftTxt;
+        const WCHAR *right = gAboutLayoutInfo[n].rightTxt;
+        const WCHAR *url = gAboutLayoutInfo[n].url;
 
+        int row = n + 1;
         b = new Button(left, styleBtnLeft, styleBtnLeft);
         ld.Set(b, row, 0, ElAlignRight);
         grid->Add(ld);

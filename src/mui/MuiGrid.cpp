@@ -92,9 +92,7 @@ void Grid::RebuildCellDataIfNeeded()
 
 void Grid::Paint(Graphics *gfx, int offX, int offY)
 {
-    if (!IsVisible())
-        return;
-
+    CrashIf(!IsVisible());
     CachedStyle *s = cachedStyle;
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);

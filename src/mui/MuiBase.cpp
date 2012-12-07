@@ -197,4 +197,10 @@ void FreeGraphicsForMeasureText(Graphics *gfx)
     CrashIf(true);
 }
 
+int CeilI(float n)
+{
+    n = ceil(n);
+    return (int)n;
+}
+
 }

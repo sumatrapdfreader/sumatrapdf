@@ -60,6 +60,8 @@ Size PageControl::GetDrawableSize()
 
 void PageControl::Paint(Graphics *gfx, int offX, int offY)
 {
+    CrashIf(!IsVisible());
+
 #if 0
     // for testing mouse move, paint a blue circle at current cursor position
     if ((-1 != cursorX) && (-1 != cursorY)) {

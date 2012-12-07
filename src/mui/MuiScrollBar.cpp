@@ -71,9 +71,7 @@ float ScrollBar::GetPercAt(int x)
 
 void ScrollBar::Paint(Graphics *gfx, int offX, int offY)
 {
-    if (!IsVisible())
-        return;
-
+    CrashIf(!IsVisible());
     // TODO: take padding into account
     CachedStyle *s = cachedStyle;
 

@@ -32,3 +32,5 @@ Font *      GetCachedFont(const WCHAR *name, float size, FontStyle style);
 Graphics *  AllocGraphicsForMeasureText();
 void        FreeGraphicsForMeasureText(Graphics *gfx);
 
+int         CeilI(float n);
+

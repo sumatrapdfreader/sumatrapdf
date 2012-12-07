@@ -60,13 +60,13 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
     RectF bbox;
     if (text) {
         bbox = MeasureText(gfx, font, text);
-        textDx = (size_t)bbox.Width; // TODO: round up?
+        textDx = CeilI(bbox.Width);
         // bbox shouldn't be bigger than fontDy. We apply magic adjustment because
         // bbox is bigger in n-th decimal point
         CrashIf(fontDy + .5f < bbox.Height);
     }
     desiredSize.Width  += textDx;
-    desiredSize.Height += (INT)fontDy; // TODO: round up?
+    desiredSize.Height += CeilI(fontDy);
     FreeGraphicsForMeasureText(gfx);
 
     if (!prevSize.Equals(desiredSize))
@@ -118,8 +118,7 @@ static int AlignedOffset(int containerDx, int elDx, AlignAttr align)
 
 void Button::Paint(Graphics *gfx, int offX, int offY)
 {
-    if (!IsVisible())
-        return;
+    CrashIf(!IsVisible());
 
     CachedStyle *s = cachedStyle;
 
@@ -216,8 +215,7 @@ Size ButtonVector::Measure(const Size availableSize)
 
 void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
 {
-    if (!IsVisible())
-        return;
+    CrashIf(!IsVisible());
 
     CachedStyle *s = cachedStyle;
 
