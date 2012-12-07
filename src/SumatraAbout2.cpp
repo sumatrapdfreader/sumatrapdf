@@ -20,6 +20,14 @@ layout logic */
 
 #define WND_CLASS_ABOUT2        L"WND_CLASS_SUMATRA_ABOUT2"
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
+#define TABLE_BORDER_WIDTH      2.f
+
+#define VERSION_TXT             L"v" CURR_VERSION_STR
+#ifdef SVN_PRE_RELEASE_VER
+ #define VERSION_SUB_TXT        L"Pre-release"
+#else
+ #define VERSION_SUB_TXT        L""
+#endif
 
 #define SUMATRA_TXT_FONT        L"Arial Black"
 #define SUMATRA_TXT_FONT_SIZE   18.f
@@ -31,10 +39,11 @@ static HwndWrapper *mainWnd = NULL;
 static Style *   styleMainWnd = NULL;
 static Style *   styleGrid = NULL;
 static Style *   styleCellLeft = NULL;
-static Style *   styleCellLogo = NULL;
+static Style *   styleCellVer = NULL;
+static Style *   styleLogo = NULL;
+static Style *   styleBtnVer = NULL;
 static Style *   styleBtnLeft = NULL;
 static Style *   styleBtnRight = NULL;
-static Style *   styleLogo = NULL;
 
 // should only be called once at the end of the program
 extern "C" static void DeleteAboutStyles()
@@ -42,8 +51,9 @@ extern "C" static void DeleteAboutStyles()
     delete styleMainWnd;
     delete styleGrid;
     delete styleCellLeft;
-    delete styleCellLogo;
+    delete styleCellVer;
     delete styleLogo;
+    delete styleBtnVer;
     delete styleBtnLeft;
     delete styleBtnRight;
 }
@@ -59,7 +69,7 @@ static void CreateAboutStyles()
 
     styleGrid = new Style();
     styleGrid->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    styleGrid->SetBorderWidth(1.5f);
+    styleGrid->SetBorderWidth(TABLE_BORDER_WIDTH);
     styleGrid->SetBorderColor(ParseCssColor("#000"));
 
     styleCellLeft = new Style();
@@ -70,22 +80,29 @@ static void CreateAboutStyles()
     styleCellLeft->SetBorderColor(ParseCssColor("black"));
     styleCellLeft->Set(Prop::AllocPadding(2, 4, 2, 0));
 
-    styleCellLogo = new Style();
-    styleCellLogo->SetBorderWidth(0);
-    styleCellLogo->Set(Prop::AllocWidth(PropBorderBottomWidth, 1.f));
-    styleCellLogo->SetBorderColor(ParseCssColor("black"));
-    styleCellLogo->Set(Prop::AllocPadding(2, 0, 2, 0));
+    styleCellVer = new Style();
+    styleCellVer->SetBorderWidth(0);
+    styleCellVer->Set(Prop::AllocWidth(PropBorderBottomWidth, TABLE_BORDER_WIDTH));
+    styleCellVer->SetBorderColor(ParseCssColor("black"));
+    styleCellVer->Set(Prop::AllocPadding(2, 0, 2, 0));
 
     styleLogo = new Style();
     styleLogo->Set(Prop::AllocFontName(SUMATRA_TXT_FONT));
     styleLogo->Set(Prop::AllocFontSize(SUMATRA_TXT_FONT_SIZE));
+
+    styleBtnVer = new Style();
+    styleBtnVer->Set(Prop::AllocFontName(SUMATRA_TXT_FONT));
+    styleBtnVer->Set(Prop::AllocFontSize(10.f));
+    styleBtnVer->SetBorderWidth(0);
+    styleBtnVer->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    styleBtnVer->SetPadding(0, 0, 6, 0);
 
     styleBtnLeft = new Style();
     styleBtnLeft->Set(Prop::AllocFontName(L"Arial"));
     styleBtnLeft->Set(Prop::AllocFontWeight(FontStyleRegular));
     styleBtnLeft->Set(Prop::AllocFontSize(9.f));
     styleBtnLeft->Set(Prop::AllocColorSolid(PropColor, "black"));
-    styleBtnLeft->Set(Prop::AllocPadding(2, 4, 2, 4));
+    styleBtnLeft->Set(Prop::AllocPadding(2, 8, 2, 16));
     styleBtnLeft->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
     styleBtnLeft->SetBorderWidth(0);
 
@@ -217,9 +234,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
 
     CreateAboutStyles();
     mainWnd = new HwndWrapper(hwnd);
-    //mainWnd->sizeToFit = true;
     mainWnd->centerContent = true;
-    //mainWnd->SetMinSize(Size(320, 200));
     mainWnd->SetStyle(styleMainWnd);
     EventMgr *em = mainWnd->evtMgr;
     CrashIf(!em);
@@ -230,18 +245,22 @@ static void CreateAboutMuiWindow(HWND hwnd)
     SumatraLogo *logo = new SumatraLogo();
     logo->SetStyle(styleLogo);
     ld.Set(logo, 0, 0, ElAlignCenter);
-    ld.SetStyle(styleCellLogo);
     ld.colSpan = 2;
     grid->Add(ld);
 
+    Button *b = new Button(VERSION_TXT, styleBtnVer, styleBtnVer);
+    ld.Set(b, 1, 0, ElAlignCenter);
+    ld.colSpan = 2;
+    ld.SetStyle(styleCellVer);
+    grid->Add(ld);
+
     int rows = dimof(gAboutLayoutInfo);
-    Button *b;
     for (int n = 0; n < rows; n++) {
         const WCHAR *left = gAboutLayoutInfo[n].leftTxt;
         const WCHAR *right = gAboutLayoutInfo[n].rightTxt;
         const WCHAR *url = gAboutLayoutInfo[n].url;
 
-        int row = n + 1;
+        int row = n + 2;
         b = new Button(left, styleBtnLeft, styleBtnLeft);
         ld.Set(b, row, 0, ElAlignRight);
         ld.SetStyle(styleCellLeft);

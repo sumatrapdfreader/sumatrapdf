@@ -213,6 +213,10 @@ public:
     void SetBorderWidth(float width);
     void SetBorderColor(ARGB color);
 
+    void SetPadding(int width);
+    void SetPadding(int topBottom, int leftRight);
+    void SetPadding(int top, int right, int bottom, int left);
+
     Style * GetInheritsFrom() const;
     size_t GetIdentity() const;
 };

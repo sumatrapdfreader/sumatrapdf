@@ -491,6 +491,21 @@ void Style::Set(Prop *prop)
     ++gen;
 }
 
+void Style::SetPadding(int width)
+{
+    Set(Prop::AllocPadding(width, width, width, width));
+}
+
+void Style::SetPadding(int topBottom, int leftRight)
+{
+    Set(Prop::AllocPadding(topBottom, leftRight, topBottom, leftRight));
+}
+
+void Style::SetPadding(int top, int right, int bottom, int left)
+{
+    Set(Prop::AllocPadding(top, right, bottom, left));
+}
+
 void Style::SetBorderWidth(float width)
 {
     Set(Prop::AllocWidth(PropBorderTopWidth, width));
