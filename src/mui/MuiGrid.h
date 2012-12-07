@@ -18,6 +18,7 @@ public:
     struct CellData {
         Control *el;
         int row, col;
+        int colSpan;
         // cell of the grid can be bigger than the element.
         // vertAlign and horizAlign define how the element
         // is laid out within the cell
@@ -28,6 +29,7 @@ public:
             el = NULL;
             row = 0;
             col = 0;
+            colSpan = 1;
             vertAlign.Set(ElAlignTop);
             horizAlign.Set(ElAlignLeft);
         }
@@ -44,6 +46,7 @@ public:
             this->el = el;
             this->row = row;
             this->col = col;
+            this->colSpan = 1; // this can be re-used, so re-set to default value
             this->vertAlign.Set(vertAlign);
             this->horizAlign.Set(horizAlign);
         }

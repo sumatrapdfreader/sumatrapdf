@@ -22,7 +22,7 @@ layout logic */
 #define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
 
 #define SUMATRA_TXT_FONT        L"Arial Black"
-#define SUMATRA_TXT_FONT_SIZE   20.f
+#define SUMATRA_TXT_FONT_SIZE   18.f
 
 static ATOM gAboutWndAtom = 0;
 static HWND gHwndAbout2 = NULL;
@@ -55,7 +55,7 @@ static void CreateAboutStyles()
 
     styleGrid = new Style();
     styleGrid->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    styleGrid->SetBorderWidth(2.f);
+    styleGrid->SetBorderWidth(1.5f);
     styleGrid->SetBorderColor(ParseCssColor("#000"));
 
     styleLogo = new Style();
@@ -212,6 +212,7 @@ static void CreateAboutMuiWindow(HWND hwnd)
     SumatraLogo *logo = new SumatraLogo();
     logo->SetStyle(styleLogo);
     ld.Set(logo, 0, 0, ElAlignCenter);
+    ld.colSpan = 2;
     grid->Add(ld);
 
     int rows = dimof(gAboutLayoutInfo);

@@ -68,8 +68,9 @@ void Grid::RebuildCellDataIfNeeded()
     rows = 0;
 
     for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
-        if (d->col >= cols)
-            cols = d->col + 1;
+        int maxCols = d->col + d->colSpan;
+        if (maxCols > cols)
+            cols = maxCols;
         if (d->row >= rows)
             rows = d->row + 1;
     }
@@ -122,13 +123,22 @@ Size Grid::Measure(const Size availableSize)
         if (!el->IsVisible())
             continue;
 
+        // calculate max dx of each column (dx of widest cell in the row)
+        //  and max dy of each row (dy of tallest cell in the column)
         el->Measure(availableSize);
         cell->desiredSize = el->DesiredSize();
-        if (cell->desiredSize.Width > maxColWidth[col])
-            maxColWidth[col] = cell->desiredSize.Width;
+        // if a cell spans multiple columns, we don't count its size here
+        if (d->colSpan == 1) {
+            if (cell->desiredSize.Width > maxColWidth[col])
+                maxColWidth[col] = cell->desiredSize.Width;
+        }
         if (cell->desiredSize.Height > maxRowHeight[row])
             maxRowHeight[row] = cell->desiredSize.Height;
     }
+    // TODO: account for cells with colSpan > 1. If cell.dx >
+    // total dx of columns it spans, we widen the columns by
+    // equally re-distributing the difference among columns
+
     int desiredWidth = 0;
     int desiredHeight = 0;
     for (row=0; row < rows; row++) {
@@ -153,7 +163,11 @@ void Grid::Arrange(const Rect finalRect)
         el = d->el;
         Point pos(GetCellPos(d->row, d->col));
         int elDx = el->DesiredSize().Width;
-        int containerDx = maxColWidth[d->col];
+        int containerDx = 0;
+        for (int i = d->col; i < d->col + d->colSpan; i++) {
+            containerDx += maxColWidth[i];
+        }
+
         int xOff = d->horizAlign.CalcOffset(elDx, containerDx);
         pos.X += xOff;
         int elDy = el->DesiredSize().Height;
