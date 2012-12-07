@@ -112,11 +112,8 @@ Size Grid::Measure(const Size availableSize)
 
     Cell *cell;
     Control *el;
-    int col, row;
     for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
-        col = d->col;
-        row = d->row;
-        cell = GetCell(row, col);
+        cell = GetCell(d->row, d->col);
         cell->desiredSize.Width = 0;
         cell->desiredSize.Height = 0;
         el = d->el;
@@ -129,22 +126,46 @@ Size Grid::Measure(const Size availableSize)
         cell->desiredSize = el->DesiredSize();
         // if a cell spans multiple columns, we don't count its size here
         if (d->colSpan == 1) {
-            if (cell->desiredSize.Width > maxColWidth[col])
-                maxColWidth[col] = cell->desiredSize.Width;
+            if (cell->desiredSize.Width > maxColWidth[d->col])
+                maxColWidth[d->col] = cell->desiredSize.Width;
         }
-        if (cell->desiredSize.Height > maxRowHeight[row])
-            maxRowHeight[row] = cell->desiredSize.Height;
+        if (cell->desiredSize.Height > maxRowHeight[d->row])
+            maxRowHeight[d->row] = cell->desiredSize.Height;
     }
-    // TODO: account for cells with colSpan > 1. If cell.dx >
-    // total dx of columns it spans, we widen the columns by
-    // equally re-distributing the difference among columns
+
+    // account for cells with colSpan > 1. If cell.dx > total dx
+    // of columns it spans, we widen the columns by equally
+    // re-distributing the difference among columns
+    for (Grid::CellData *d = els.IterStart(); d; d = els.IterNext()) {
+        if (d->colSpan == 1)
+            continue;
+        cell = GetCell(d->row, d->col);
+
+        int totalDx = 0;
+        for (int i = d->col; i < d->col + d->colSpan; i++) {
+            totalDx += maxColWidth[i];
+        }
+        int diff = cell->desiredSize.Width - totalDx;
+        if (diff > 0) {
+            int diffPerCol = diff / d->colSpan;
+            int rest = diff % d->colSpan;
+            // note: we could try to redistribute rest for ideal sizing instead of
+            // over-sizing but not sure if that would matter in practice
+            if (rest > 0)
+                diffPerCol += 1;
+            CrashIf(diffPerCol * d->colSpan < diff);
+            for (int i = d->col; i < d->col + d->colSpan; i++) {
+                maxColWidth[i] += diffPerCol;
+            }
+        }
+    }
 
     int desiredWidth = 0;
     int desiredHeight = 0;
-    for (row=0; row < rows; row++) {
+    for (int row=0; row < rows; row++) {
         desiredHeight += maxRowHeight[row];
     }
-    for (col=0; col < cols; col++) {
+    for (int col=0; col < cols; col++) {
         desiredWidth += maxColWidth[col];
     }
     // TODO: what to do if desired size is more than availableSize?
