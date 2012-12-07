@@ -81,12 +81,13 @@ void Button::SetText(const WCHAR *s)
     RecalculateSize(true);
 }
 
-void Button::Measure(const Size availableSize)
+Size Button::Measure(const Size availableSize)
 {
     // desiredSize is calculated when we change the
     // text, font or other attributes that influence
     // the size so it doesn't have to be calculated
     // here
+    return desiredSize;
 }
 
 void Button::SetStyles(Style *def, Style *mouseOver)
@@ -207,9 +208,10 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
         RequestRepaint(this);
 }
 
-void ButtonVector::Measure(const Size availableSize)
+Size ButtonVector::Measure(const Size availableSize)
 {
     // do nothing: calculated in RecalculateSize()
+    return desiredSize;
 }
 
 void ButtonVector::Paint(Graphics *gfx, int offX, int offY)

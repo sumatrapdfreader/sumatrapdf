@@ -20,12 +20,14 @@ DirectionalLayout& DirectionalLayout::Add(DirectionalLayoutData& ld, bool ownsEl
     return *this;
 }
 
-void DirectionalLayout::Measure(const Size availableSize)
+Size DirectionalLayout::Measure(const Size availableSize)
 {
     for (DirectionalLayoutData *e = els.IterStart(); e; e = els.IterNext()) {
         e->element->Measure(availableSize);
         e->desiredSize = e->element->DesiredSize();
     }
+    // TODO: this is wrong
+    return desiredSize;
 }
 
 static int CalcScaledClippedSize(int size, float scale, int selfSize)

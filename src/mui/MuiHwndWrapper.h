@@ -20,10 +20,15 @@ class HwndWrapper : public Control
 {
     bool    layoutRequested;
     bool    repaintRequested;
+    bool    firstLayout;
 
 public:
     Painter *           painter;
     EventMgr *          evtMgr;
+    // size the window to fit the size of the content on first layout
+    bool                sizeToFit;
+    // center the content within the window. Incompatible with sizeToFit
+    bool                centerContent;
 
     HwndWrapper(HWND hwnd = NULL);
     virtual ~HwndWrapper();
@@ -37,5 +42,9 @@ public:
     void            SetHwnd(HWND hwnd);
     void            OnPaint(HWND hwnd);
 
-    virtual void    TopLevelLayout();
+    // ILayout
+    virtual Size Measure(const Size availableSize);
+    virtual void Arrange(const Rect finalRect);
+
+    void           TopLevelLayout();
 };

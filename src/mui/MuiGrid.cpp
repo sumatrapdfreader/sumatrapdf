@@ -105,7 +105,7 @@ void Grid::Paint(Graphics *gfx, int offX, int offY)
     DrawBorder(gfx, r, s);
 }
 
-void Grid::Measure(const Size availableSize)
+Size Grid::Measure(const Size availableSize)
 {
     RebuildCellDataIfNeeded();
 
@@ -142,6 +142,7 @@ void Grid::Measure(const Size availableSize)
     // TODO: what to do if desired size is more than availableSize?
     desiredSize.Width = desiredWidth + borderSize.Width;
     desiredSize.Height = desiredHeight + borderSize.Height;
+    return desiredSize;
 }
 
 void Grid::Arrange(const Rect finalRect)

@@ -1251,3 +1251,33 @@ void CalcSha1DigestWin(void *data, size_t byteCount, unsigned char digest[32])
     CryptDestroyHash(hHash);
     CryptReleaseContext(hProv,0);
 }
+
+static int RectDx(RECT& r)
+{
+    return r.right - r.left;
+}
+
+static int RectDy(RECT& r)
+{
+    return r.bottom - r.top;
+}
+
+void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu)
+{
+    WINDOWINFO wi = { 0 };
+    wi.cbSize = sizeof(wi);
+    GetWindowInfo(hwnd, &wi);
+
+    RECT r = { 0 };
+    r.right = dx; r.bottom = dy;
+    DWORD style = wi.dwStyle;
+    DWORD exStyle = wi.dwExStyle;
+    AdjustWindowRectEx(&r, style, hasMenu, exStyle);
+    if ((dx == RectDx(wi.rcClient)) && (dy == RectDy(wi.rcClient)))
+        return;
+
+    dx = RectDx(r); dy = RectDy(r);
+    int x = wi.rcWindow.left;
+    int y = wi.rcWindow.top;
+    MoveWindow(hwnd, x, y, dx, dy, TRUE);
+}

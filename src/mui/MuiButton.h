@@ -27,7 +27,7 @@ public:
 
     void RecalculateSize(bool repaintIfSizeDidntChange);
 
-    virtual void Measure(const Size availableSize);
+    virtual Size Measure(const Size availableSize);
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
     virtual void NotifyMouseEnter();
@@ -57,7 +57,7 @@ public:
 
     void RecalculateSize(bool repaintIfSizeDidntChange);
 
-    virtual void Measure(const Size availableSize);
+    virtual Size Measure(const Size availableSize);
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
     virtual void NotifyMouseEnter();

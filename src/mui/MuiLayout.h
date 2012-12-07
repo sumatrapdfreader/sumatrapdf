@@ -22,7 +22,7 @@ class ILayout
 {
 public:
     virtual ~ILayout() {};
-    virtual void Measure(const Size availableSize) = 0;
+    virtual Size Measure(const Size availableSize) = 0;
     virtual Size DesiredSize() = 0;
     virtual void Arrange(const Rect finalRect) = 0;
 };
@@ -103,7 +103,7 @@ public:
 
     DirectionalLayout& Add(DirectionalLayoutData& ld, bool ownsElement=false);
 
-    virtual void Measure(const Size availableSize);
+    virtual Size Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect) { CrashIf(true); }
 };
 

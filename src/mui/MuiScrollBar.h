@@ -43,7 +43,7 @@ class ScrollBar : public Control
 public:
     ScrollBar(int onOverDy = 12, int inactiveDy = 5);
     ~ScrollBar() { }
-    virtual void Measure(const Size availableSize);
+    virtual Size Measure(const Size availableSize);
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 

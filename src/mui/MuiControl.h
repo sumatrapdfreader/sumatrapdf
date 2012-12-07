@@ -49,7 +49,7 @@ public:
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
     // ILayout
-    virtual void Measure(const Size availableSize);
+    virtual Size Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect);
     virtual Size DesiredSize();
 

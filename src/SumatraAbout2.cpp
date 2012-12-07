@@ -127,7 +127,9 @@ static void CreateAboutMuiWindow(HWND hwnd)
 
     CreateAboutStyles();
     mainWnd = new HwndWrapper(hwnd);
-    mainWnd->SetMinSize(Size(320, 200));
+    //mainWnd->sizeToFit = true;
+    mainWnd->centerContent = true;
+    //mainWnd->SetMinSize(Size(320, 200));
     mainWnd->SetStyle(styleMainWnd);
     EventMgr *em = mainWnd->evtMgr;
     CrashIf(!em);

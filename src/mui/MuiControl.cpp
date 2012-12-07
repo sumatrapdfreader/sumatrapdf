@@ -165,18 +165,17 @@ void Control::AddChild(Control *c1, Control *c2, Control *c3)
     if (c3) AddChild(c3);
 }
 
-void Control::Measure(const Size availableSize)
+Size Control::Measure(const Size availableSize)
 {
     if (layout) {
-        layout->Measure(availableSize);
-    } else {
-        if (children.Count() == 1) {
-            ILayout *l = children.At(0);
-            l->Measure(availableSize);
-        } else {
-            desiredSize = Size();
-        }
+        return layout->Measure(availableSize);
     }
+    if (children.Count() == 1) {
+        ILayout *l = children.At(0);
+        return l->Measure(availableSize);
+    }
+    desiredSize = Size();
+    return desiredSize;
 }
 
 Size Control::DesiredSize()

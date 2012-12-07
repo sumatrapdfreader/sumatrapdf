@@ -25,7 +25,7 @@ ScrollBar::ScrollBar(int onOverDy, int inactiveDy)
     bit::Set(wantedInputBits, WantsMouseOverBit, WantsMouseClickBit);
 }
 
-void ScrollBar::Measure(const Size availableSize)
+Size ScrollBar::Measure(const Size availableSize)
 {
     // dx is max available
     desiredSize.Width = availableSize.Width;
@@ -39,6 +39,7 @@ void ScrollBar::Measure(const Size availableSize)
         dy = availableSize.Height;
 
     desiredSize.Height = dy;
+    return desiredSize;
 }
 
 void ScrollBar::NotifyMouseEnter()
