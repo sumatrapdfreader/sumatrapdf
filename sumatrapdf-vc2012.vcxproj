@@ -271,12 +271,15 @@
     <ClCompile Include="src\TextSearch.cpp" />
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\Toolbar.cpp" />
-    <ClCompile Include="src\ucrt\src\ucrt.cpp" />
-    <ClCompile Include="src\ucrt\src\ucrt_console.cpp" />
-    <ClCompile Include="src\ucrt\src\ucrt_dll.cpp" />
-    <ClCompile Include="src\ucrt\src\ucrt_log.cpp" />
-    <ClCompile Include="src\ucrt\src\ucrt_win.cpp" />
+    <ClCompile Include="src\utils\BaseUtil.cpp" />
+    <ClCompile Include="src\utils\BitReader.cpp" />
+    <ClCompile Include="src\utils\ByteOrderDecoder.cpp" />
+    <ClCompile Include="src\utils\CmdLineParser.cpp" />
+    <ClCompile Include="src\utils\DbgHelpDyn.cpp" />
     <ClCompile Include="src\utils\DebugLog.cpp" />
+    <ClCompile Include="src\utils\Dict.cpp" />
+    <ClCompile Include="src\utils\Dict_ut.cpp" />
+    <ClCompile Include="src\utils\DirIter.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
@@ -431,10 +434,16 @@
     <ClInclude Include="src\TextSearch.h" />
     <ClInclude Include="src\TextSelection.h" />
     <ClInclude Include="src\Toolbar.h" />
-    <ClInclude Include="src\ucrt\src\ucrt_log.h" />
     <ClInclude Include="src\UiMsgSumatra.h" />
     <ClInclude Include="src\utils\Allocator.h" />
+    <ClInclude Include="src\utils\BitManip.h" />
+    <ClInclude Include="src\utils\BitReader.h" />
+    <ClInclude Include="src\utils\ByteOrderDecoder.h" />
+    <ClInclude Include="src\utils\ByteReader.h" />
+    <ClInclude Include="src\utils\DbgHelpDyn.h" />
     <ClInclude Include="src\utils\DebugLog.h" />
+    <ClInclude Include="src\utils\Dict.h" />
+    <ClInclude Include="src\utils\DirIter.h" />
     <ClInclude Include="src\utils\FileTransactions.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
@@ -542,8 +551,6 @@
     <None Include="src\SumatraPDF-smaller.ico" />
     <None Include="src\SumatraPDF.ico" />
     <None Include="src\toolbar_11.bmp" />
-    <None Include="src\ucrt\src\ucrt_asm.asm" />
-    <None Include="src\ucrt\src\ucrt_math.asm" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\SumatraPDF.exe.manifest" />

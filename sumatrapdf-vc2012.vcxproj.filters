@@ -54,9 +54,6 @@
     <Filter Include="sumatra\engines">
       <UniqueIdentifier>{ff27589d-73b0-4269-b0ed-6d2edbe11db6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ucrt">
-      <UniqueIdentifier>{0e2de5f1-02d4-4ed8-93e9-f2ac13fd859b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="doc">
       <UniqueIdentifier>{827a44ad-ea83-4cc0-9ddd-b97a4dc40140}</UniqueIdentifier>
     </Filter>
@@ -866,26 +863,35 @@
     <ClCompile Include="src\utils\GdiPlusUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\ucrt\src\ucrt.cpp">
-      <Filter>ucrt</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ucrt\src\ucrt_console.cpp">
-      <Filter>ucrt</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ucrt\src\ucrt_dll.cpp">
-      <Filter>ucrt</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ucrt\src\ucrt_log.cpp">
-      <Filter>ucrt</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ucrt\src\ucrt_win.cpp">
-      <Filter>ucrt</Filter>
-    </ClCompile>
     <ClCompile Include="src\mui\MuiGrid.cpp">
       <Filter>mui</Filter>
     </ClCompile>
     <ClCompile Include="src\SumatraAbout2.cpp">
       <Filter>sumatra</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\BaseUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\BitReader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\ByteOrderDecoder.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\CmdLineParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\DbgHelpDyn.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\Dict.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\Dict_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\DirIter.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1282,9 +1288,6 @@
     <ClInclude Include="src\utils\GdiPlusUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\ucrt\src\ucrt_log.h">
-      <Filter>ucrt</Filter>
-    </ClInclude>
     <ClInclude Include="src\mui\MuiGrid.h">
       <Filter>mui</Filter>
     </ClInclude>
@@ -1293,6 +1296,27 @@
     </ClInclude>
     <ClInclude Include="src\SumatraAbout2.h">
       <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\BitManip.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\BitReader.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\ByteOrderDecoder.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\ByteReader.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\DbgHelpDyn.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\Dict.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\DirIter.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1486,12 +1510,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="makefile.msvc" />
-    <None Include="src\ucrt\src\ucrt_asm.asm">
-      <Filter>ucrt</Filter>
-    </None>
-    <None Include="src\ucrt\src\ucrt_math.asm">
-      <Filter>ucrt</Filter>
-    </None>
     <None Include="docs\releasenotes.txt">
       <Filter>doc</Filter>
     </None>

@@ -74,7 +74,16 @@ STATIC_ASSERT(4 == sizeof(uint32),  uint32_is_4_bytes);
 STATIC_ASSERT(8 == sizeof(int64),   int64_is_8_bytes);
 STATIC_ASSERT(8 == sizeof(uint64),  uint64_is_8_bytes);
 
-void CrashMe();
+#pragma warning(push)
+#pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
+// Note: trying doing this via RaiseException(0x40000015, EXCEPTION_NONCONTINUABLE, 0, 0);
+// but it seemed to confuse callstack walking
+inline void CrashMe()
+{
+    char *p = NULL;
+    *p = 0;
+}
+#pragma warning(pop)
 
 // CrashIf() is like assert() except it crashes in debug and pre-release builds.
 // The idea is that assert() indicates "can't possibly happen" situation and if
