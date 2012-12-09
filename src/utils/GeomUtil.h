@@ -50,6 +50,10 @@ public :
         return SizeT<int>((int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
 
+    bool IsEmpty() const {
+        return dx == 0 || dy == 0;
+    }
+
     bool operator==(SizeT<T>& other) {
         return this->dx == other.dx && this->dy == other.dy;
     }
@@ -217,4 +221,3 @@ inline RectI MapRectToWindow(RectI rect, HWND hwndFrom, HWND hwndTo)
 }
 
 #endif
-

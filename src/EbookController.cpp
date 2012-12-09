@@ -74,7 +74,7 @@ public:
     bool               fromBeginning;
     bool               finished;
     EbookController *  controller;
-    int                threadNo;
+    LONG               threadNo;
     EbookFormattingTask() { }
 
     virtual void Execute() {
@@ -140,7 +140,7 @@ void EbookFormattingThread::SendPagesIfNecessary(bool force, bool finished, bool
         memcpy(msg->pages, pages, pageCount * sizeof(HtmlPage*));
     //lf("ThreadLayoutEbook::SendPagesIfNecessary() sending %d pages, finished=%d", pageCount, (int)finished);
     msg->pageCount = pageCount;
-    msg->threadNo = threadNo;
+    msg->threadNo = GetNo();
     msg->controller = controller;
     pageCount = 0;
     memset(pages, 0, sizeof(pages));
@@ -203,7 +203,7 @@ void EbookFormattingThread::Run()
 EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls),
     fileBeingLoaded(NULL), pagesFromBeginning(NULL), pagesFromPage(NULL),
     currPageNo(0), pageShown(NULL), deletePageShown(false),
-    pageDx(0), pageDy(0), formattingThread(NULL), formattingThreadNo(-1),
+    pageSize(0, 0), formattingThread(NULL), formattingThreadNo(-1),
     startReparseIdx(-1)
 {
     EventMgr *em = ctrls->mainWnd->evtMgr;
@@ -216,7 +216,7 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls),
 
 EbookController::~EbookController()
 {
-    StopFormattingThread(true);
+    StopFormattingThread();
     EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
     evtMgr->RemoveEventsForControl(ctrls->next);
     evtMgr->RemoveEventsForControl(ctrls->prev);
@@ -232,15 +232,15 @@ void EbookController::DeletePageShown()
     pageShown = NULL;
 }
 
-// stop layout thread and optionally terminate it (if we're closing
-// a document we'll delete the ebook data so we can't have the thread
-// keep using it)
-void EbookController::StopFormattingThread(bool forceTerminate)
+// stop layout thread (if we're closing a document we'll delete
+// the ebook data, so we can't have the thread keep using it)
+void EbookController::StopFormattingThread()
 {
     if (!formattingThread)
         return;
-    if (formattingThread->RequestCancelAndWaitToStop(1000, forceTerminate))
-        formattingThread->Release();
+    bool ok = formattingThread->RequestCancelAndWaitToStop();
+    CrashIf(!ok);
+    formattingThread->Release();
     formattingThread = NULL;
     formattingThreadNo = -1;
     formattingTemp.DeletePages();
@@ -249,13 +249,13 @@ void EbookController::StopFormattingThread(bool forceTerminate)
 void EbookController::CloseCurrentDocument()
 {
     ctrls->page->SetPage(NULL);
-    StopFormattingThread(true);
+    StopFormattingThread();
     DeletePageShown();
     DeletePages(&pagesFromBeginning);
     DeletePages(&pagesFromPage);
     doc.Delete();
     formattingTemp.reparseIdx = 0; // mark as being laid out from the beginning
-    pageDx = 0; pageDy = 0;
+    pageSize = SizeI(0, 0);
 }
 
 void EbookController::DeletePages(Vec<HtmlPage*>** pages)
@@ -431,7 +431,7 @@ void EbookController::HandleMobiLayoutDone(EbookFormattingTask *ld)
             pagesFromPage->Append(pages, pageCount);
             formattingTemp.pagesFromPage.Reset();
         }
-        StopFormattingThread(false);
+        StopFormattingThread();
     }
     UpdateStatus();
 }
@@ -469,22 +469,23 @@ HtmlPage *EbookController::PreserveTempPageShown()
 
 void EbookController::TriggerBookFormatting()
 {
-    Size s = ctrls->page->GetDrawableSize();    int dx = s.Width; int dy = s.Height;
-    if ((0 == dx) || (0 == dy)) {
+    Size s = ctrls->page->GetDrawableSize();
+    SizeI size(s.Width, s.Height);
+    if (size.IsEmpty()) {
         // we haven't been sized yet
         return;
     }
-    CrashIf((dx < 100) || (dy < 40));
+    CrashIf(size.dx < 100 || size.dy < 40);
     if (!doc.IsEbook())
         return;
 
-    if ((pageDx == dx) && (pageDy == dy)) {
+    if (pageSize == size) {
         //lf("EbookController::TriggerBookFormatting() - skipping layout because same as last size");
         return;
     }
 
     //lf("(%3d,%3d) EbookController::TriggerBookFormatting", dx, dy);
-    pageDx = dx; pageDy = dy; // set it early to prevent re-doing layout at the same size
+    pageSize = size; // set it early to prevent re-doing layout at the same size
     HtmlPage *newPage = PreserveTempPageShown();
     if (newPage) {
         CrashIf((formattingTemp.reparseIdx != 0) && 
@@ -493,7 +494,7 @@ void EbookController::TriggerBookFormatting()
         CrashIf(formattingTemp.reparseIdx != 0);
     }
 
-    StopFormattingThread(false);
+    StopFormattingThread();
 
     DeletePages(&pagesFromBeginning);
     DeletePages(&pagesFromPage);
@@ -502,7 +503,7 @@ void EbookController::TriggerBookFormatting()
     CrashIf(formattingTemp.pagesFromPage.Count() > 0);
 
     ShowPage(newPage, newPage != NULL);
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, dx, dy, &textAllocator);
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, size.dx, size.dy, &textAllocator);
     formattingThread = new EbookFormattingThread(doc, args, this);
     formattingThreadNo = formattingThread->GetNo();
     CrashIf(formattingTemp.reparseIdx < 0);

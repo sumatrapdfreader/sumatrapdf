@@ -41,6 +41,9 @@ static void GeomTest()
     szD = szI.Convert<double>();
     assert(SizeD(8, -3) == szD);
 
+    assert(!szD.IsEmpty() && !szI.IsEmpty());
+    assert(SizeI().IsEmpty() && SizeD().IsEmpty());
+
     struct SRIData {
         int     x1s, x1e, y1s, y1e;
         int     x2s, x2e, y2s, y2e;

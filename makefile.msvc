@@ -33,7 +33,7 @@ EXTDIR=ext
 !endif
 
 # default target
-all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump memtrace
+all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump
 
 ##### add configuration changes that should also affect MuPDF before this line #####
 

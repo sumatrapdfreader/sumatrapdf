@@ -68,12 +68,12 @@ class EbookController : public sigslot::has_slots
     // if true, we need to delete pageShown if we no longer need it
     bool            deletePageShown;
 
-     // size of the page for which pages were generated
-    int             pageDx, pageDy;
+    // size of the page for which pages were generated
+    SizeI           pageSize;
 
     EbookFormattingThread *formattingThread;
-    int               formattingThreadNo;
-    FormattingTemp        formattingTemp;
+    LONG            formattingThreadNo;
+    FormattingTemp  formattingTemp;
 
     // when loading a new mobiDoc, this indicates the page we should
     // show after loading. -1 indicates no action needed
@@ -91,7 +91,7 @@ class EbookController : public sigslot::has_slots
     bool        GoOnePageForward(Vec<HtmlPage*> *pages);
     void        GoOnePageForward();
     size_t      GetMaxPageCount();
-    void        StopFormattingThread(bool forceTerminate);
+    void        StopFormattingThread();
     void        CloseCurrentDocument();
 
     // event handlers

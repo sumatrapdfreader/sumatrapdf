@@ -41,5 +41,6 @@ def main():
 	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
 	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", "WITH_ANALYZE=yes", config, extcflags, platform, "all_sumatrapdf")
 	pretty_print_errors(out)
+
 if __name__ == "__main__":
 	main()

@@ -40,25 +40,18 @@ static void SetThreadName(DWORD dwThreadID, char* threadName)
 
 static LONG gThreadNoSeq = 0;
 
-ThreadBase::ThreadBase() :
-      hThread(NULL), cancelRequested(0), threadName(NULL)
+ThreadBase::ThreadBase(const char *name) :
+    hThread(NULL), cancelRequested(false),
+    threadNo(InterlockedIncrement(&gThreadNoSeq)),
+    threadName(str::Dup(name))
 {
-    threadNo = (int)InterlockedIncrement(&gThreadNoSeq);
     //lf("ThreadBase() %d", threadNo);
-}
-
-ThreadBase::ThreadBase(const char *name)
-{
-    threadName = str::Dup(name);
-    cancelRequested = 0;
-    hThread = NULL;
 }
 
 ThreadBase::~ThreadBase()
 {
     //lf("~ThreadBase() %d", threadNo);
     CloseHandle(hThread);
-    free(threadName);
 }
 
 DWORD WINAPI ThreadBase::ThreadProc(void *data)
@@ -73,24 +66,19 @@ DWORD WINAPI ThreadBase::ThreadProc(void *data)
 
 void ThreadBase::Start()
 {
-    AddRef(); // will be unref'd at the end of ThreadBase::ThreadProc
+    AddRef(); // will be Release()'d at the end of ThreadBase::ThreadProc
     hThread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
 }
 
-bool ThreadBase::RequestCancelAndWaitToStop(DWORD waitMs, bool terminate)
+bool ThreadBase::RequestCancelAndWaitToStop(DWORD waitMs)
 {
     RequestCancel();
+
     DWORD res = WaitForSingleObject(hThread, waitMs);
     if (WAIT_OBJECT_0 == res) {
         CloseHandle(hThread);
         hThread = NULL;
         return true;
     }
-    if (terminate) {
-        TerminateThread(hThread, 1);
-        CloseHandle(hThread);
-        hThread = NULL;
-    }
     return false;
 }
-
