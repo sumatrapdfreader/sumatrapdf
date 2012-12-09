@@ -401,7 +401,7 @@ ps_run(fz_context *ctx, psobj *code, ps_stack *st, int pc)
 			case PS_OP_DIV:
 				r2 = ps_pop_real(st);
 				r1 = ps_pop_real(st);
-				if (fabsf(r2) < FLT_EPSILON)
+				if (fabsf(r2) >= FLT_EPSILON)
 					ps_push_real(st, r1 / r2);
 				else
 					ps_push_real(st, DIV_BY_ZERO(r1, r2, -FLT_MAX, FLT_MAX));
