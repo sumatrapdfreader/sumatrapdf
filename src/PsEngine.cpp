@@ -155,9 +155,9 @@ static PdfEngine *psgz2pdf(const WCHAR *fileName)
     gzFile inFile = gzopen_w(fileName, "rb");
     if (!inFile)
         return NULL;
-    FILE *outFile;
+    FILE *outFile = NULL;
     errno_t err = _wfopen_s(&outFile, tmpFile, L"wb");
-    if (err != 0) {
+    if (err != 0 || !outFile) {
         gzclose(inFile);
         return NULL;
     }

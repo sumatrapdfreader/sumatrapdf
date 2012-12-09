@@ -2373,7 +2373,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
 
     WStrVec fonts;
     for (size_t i = 0; i < fontList.Count(); i++) {
-        const char *name = NULL, *type, *encoding;
+        const char *name = NULL, *type = NULL, *encoding = NULL;
         bool embedded = false;
         fz_try(ctx) {
             pdf_obj *font = fontList.At(i);
@@ -2411,6 +2411,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
         fz_catch(ctx) {
             continue;
         }
+        CrashIf(!name || !type || !encoding);
 
         str::Str<char> info;
         if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, NULL, 0))
