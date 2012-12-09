@@ -2,12 +2,13 @@
 
 #include <jpeglib.h>
 
-/* SumatraPDF: prevent inconsistent ctx state */
 static void error_exit(j_common_ptr cinfo)
 {
 	char msg[JMSG_LENGTH_MAX];
+	fz_context *ctx = (fz_context *)cinfo->client_data;
+
 	cinfo->err->format_message(cinfo, msg);
-	fz_throw((fz_context *)cinfo->client_data, "jpeg error: %s", msg);
+	fz_throw(ctx, "jpeg error: %s", msg);
 }
 
 static void init_source(j_decompress_ptr cinfo)
@@ -143,7 +144,6 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 
 	fz_try(ctx)
 	{
-		/* SumatraPDF: prevent inconsistent ctx state */
 		cinfo.client_data = ctx;
 		cinfo.err = jpeg_std_error(&err);
 		err.error_exit = error_exit;
@@ -213,12 +213,15 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 	{
 		fz_free(ctx, row[0]);
 		row[0] = NULL;
-		/* SumatraPDF: prevent inconsistent ctx state */
 		fz_try(ctx)
 		{
+			/* Annoyingly, jpeg_finish_decompress can throw */
 			jpeg_finish_decompress(&cinfo);
 		}
-		fz_catch(ctx) { }
+		fz_catch(ctx)
+		{
+			/* Ignore any errors here */
+		}
 		jpeg_destroy_decompress(&cinfo);
 	}
 	fz_catch(ctx)

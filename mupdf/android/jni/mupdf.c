@@ -1037,7 +1037,10 @@ JNIEXPORT jobjectArray JNICALL
 Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz, int pageNumber)
 {
 	jclass       linkInfoClass;
-	jmethodID    ctor;
+	jclass       linkInfoInternalClass;
+	jclass       linkInfoExternalClass;
+	jmethodID    ctorInternal;
+	jmethodID    ctorExternal;
 	jobjectArray arr;
 	jobject      linkInfo;
 	fz_matrix    ctm;
@@ -1050,8 +1053,14 @@ Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz
 
 	linkInfoClass = (*env)->FindClass(env, "com/artifex/mupdf/LinkInfo");
 	if (linkInfoClass == NULL) return NULL;
-	ctor = (*env)->GetMethodID(env, linkInfoClass, "<init>", "(FFFFI)V");
-	if (ctor == NULL) return NULL;
+	linkInfoInternalClass = (*env)->FindClass(env, "com/artifex/mupdf/LinkInfoInternal");
+	if (linkInfoInternalClass == NULL) return NULL;
+	linkInfoExternalClass = (*env)->FindClass(env, "com/artifex/mupdf/LinkInfoExternal");
+	if (linkInfoExternalClass == NULL) return NULL;
+	ctorInternal = (*env)->GetMethodID(env, linkInfoInternalClass, "<init>", "(FFFFI)V");
+	if (ctorInternal == NULL) return NULL;
+	ctorExternal = (*env)->GetMethodID(env, linkInfoExternalClass, "<init>", "(FFFFLjava/lang/String;)V");
+	if (ctorExternal == NULL) return NULL;
 
 	Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(env, thiz, pageNumber);
 	pc = &glo->pages[glo->current];
@@ -1065,8 +1074,12 @@ Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz
 	count = 0;
 	for (link = list; link; link = link->next)
 	{
-		if (link->dest.kind == FZ_LINK_GOTO)
+		switch (link->dest.kind)
+		{
+		case FZ_LINK_GOTO:
+		case FZ_LINK_URI:
 			count++ ;
+		}
 	}
 
 	arr = (*env)->NewObjectArray(env, count, linkInfoClass, NULL);
@@ -1075,19 +1088,35 @@ Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz
 	count = 0;
 	for (link = list; link; link = link->next)
 	{
-		if (link->dest.kind == FZ_LINK_GOTO)
-		{
-			fz_rect rect = fz_transform_rect(ctm, link->rect);
+		fz_rect rect = fz_transform_rect(ctm, link->rect);
 
-			linkInfo = (*env)->NewObject(env, linkInfoClass, ctor,
+		switch (link->dest.kind)
+		{
+		case FZ_LINK_GOTO:
+		{
+			linkInfo = (*env)->NewObject(env, linkInfoInternalClass, ctorInternal,
 					(float)rect.x0, (float)rect.y0, (float)rect.x1, (float)rect.y1,
 					link->dest.ld.gotor.page);
-			if (linkInfo == NULL) return NULL;
-			(*env)->SetObjectArrayElement(env, arr, count, linkInfo);
-			(*env)->DeleteLocalRef(env, linkInfo);
-
-			count ++;
+			break;
 		}
+
+		case FZ_LINK_URI:
+		{
+			jstring juri = (*env)->NewStringUTF(env, link->dest.ld.uri.uri);
+			linkInfo = (*env)->NewObject(env, linkInfoExternalClass, ctorExternal,
+					(float)rect.x0, (float)rect.y0, (float)rect.x1, (float)rect.y1,
+					juri);
+			break;
+		}
+
+		default:
+			continue;
+		}
+
+		if (linkInfo == NULL) return NULL;
+		(*env)->SetObjectArrayElement(env, arr, count, linkInfo);
+		(*env)->DeleteLocalRef(env, linkInfo);
+		count++;
 	}
 
 	return arr;
@@ -1147,53 +1176,6 @@ Java_com_artifex_mupdf_MuPDFCore_getWidgetAreasInternal(JNIEnv * env, jobject th
 	}
 
 	return arr;
-}
-
-JNIEXPORT int JNICALL
-Java_com_artifex_mupdf_MuPDFCore_getPageLink(JNIEnv * env, jobject thiz, int pageNumber, float x, float y)
-{
-	fz_matrix ctm;
-	float zoom;
-	fz_link *link;
-	fz_point p;
-	page_cache *pc;
-	globals *glo = get_globals(env, thiz);
-
-	Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(env, thiz, pageNumber);
-	pc = &glo->pages[glo->current];
-	if (pc->number != pageNumber || pc->page == NULL)
-		return -1;
-
-	p.x = x;
-	p.y = y;
-
-	/* Ultimately we should probably return a pointer to a java structure
-	 * with the link details in, but for now, page number will suffice.
-	 */
-	zoom = glo->resolution / 72;
-	ctm = fz_scale(zoom, zoom);
-	ctm = fz_invert_matrix(ctm);
-
-	p = fz_transform_point(ctm, p);
-
-	for (link = fz_load_links(glo->doc, pc->page); link; link = link->next)
-	{
-		if (p.x >= link->rect.x0 && p.x <= link->rect.x1)
-			if (p.y >= link->rect.y0 && p.y <= link->rect.y1)
-				break;
-	}
-
-	if (link == NULL)
-		return -1;
-
-	if (link->dest.kind == FZ_LINK_URI)
-	{
-		//gotouri(link->dest.ld.uri.uri);
-		return -1;
-	}
-	else if (link->dest.kind == FZ_LINK_GOTO)
-		return link->dest.ld.gotor.page;
-	return -1;
 }
 
 JNIEXPORT int JNICALL

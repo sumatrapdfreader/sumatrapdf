@@ -33,7 +33,6 @@ public class MuPDFCore
 			int patchX, int patchY,
 			int patchW, int patchH);
 	private native RectF[] searchPage(String text);
-	private native int getPageLink(int page, float x, float y);
 	private native int passClickEventInternal(int page, float x, float y);
 	private native void setFocusedWidgetChoiceSelectedInternal(String [] selected);
 	private native String [] getFocusedWidgetChoiceSelected();
@@ -171,10 +170,6 @@ public class MuPDFCore
 
 	public synchronized void setFocusedWidgetChoiceSelected(String [] selected) {
 		setFocusedWidgetChoiceSelectedInternal(selected);
-	}
-
-	public synchronized int hitLinkPage(int page, float x, float y) {
-		return getPageLink(page, x, y);
 	}
 
 	public synchronized LinkInfo [] getPageLinks(int page) {

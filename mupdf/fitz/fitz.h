@@ -255,12 +255,15 @@ void fz_var_imp(void *);
 #define fz_always(ctx) \
 		} while (0); \
 	} \
-	{ do { \
+	if (ctx->error->stack[ctx->error->top].code < 3) \
+	{ \
+		ctx->error->stack[ctx->error->top].code++; \
+		do { \
 
 #define fz_catch(ctx) \
 		} while(0); \
 	} \
-	if (ctx->error->stack[ctx->error->top--].code)
+	if (ctx->error->stack[ctx->error->top--].code > 1)
 
 int fz_push_try(fz_error_context *ex);
 /* SumatraPDF: add filename and line number to errors and warnings */

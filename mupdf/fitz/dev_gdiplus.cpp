@@ -607,6 +607,8 @@ protected:
 			return;
 		}
 		
+		fz_color_converter cc;
+		fz_find_color_converter(&cc, ctx, fz_device_gray, fz_device_rgb);
 		for (int row = 0; row < bounds.Height; row++)
 		{
 			LPBYTE Scan0 = (LPBYTE)data.Scan0 + row * data.Stride;
@@ -621,7 +623,7 @@ protected:
 					color[0] = maskScan0[col * 4] / 255.0f;
 					color[1] = maskScan0[col * 4 + 1] / 255.0f;
 					color[2] = maskScan0[col * 4 + 2] / 255.0f;
-					fz_convert_color(ctx, fz_device_gray, &gray, fz_device_rgb, color);
+					cc.convert(&cc, &gray, color);
 					alpha = gray * 255;
 				}
 				Scan0[col * 4 + 3] *= alpha / 255.0f;

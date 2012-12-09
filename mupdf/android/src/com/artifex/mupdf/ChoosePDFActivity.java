@@ -2,8 +2,8 @@ package com.artifex.mupdf;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -83,11 +83,17 @@ public class ChoosePDFActivity extends ListActivity {
 						return false;
 					}
 				});
+
+				Arrays.sort(mFiles, new Comparator<File>() {
+					public int compare(File arg0, File arg1) {
+						return arg0.getName().compareToIgnoreCase(arg1.getName());
+					}
+				});
+
 				adapter.clear();
 				if (mFiles != null)
 					for (File f : mFiles)
 						adapter.add(f.getName());
-				adapter.sort(String.CASE_INSENSITIVE_ORDER);
 			}
 		};
 

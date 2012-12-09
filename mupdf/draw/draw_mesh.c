@@ -367,9 +367,11 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest,
 
 		if (shade->use_function)
 		{
+			fz_color_converter cc;
+			fz_find_color_converter(&cc, ctx, dest->colorspace, shade->colorspace);
 			for (i = 0; i < 256; i++)
 			{
-				fz_convert_color(ctx, dest->colorspace, color, shade->colorspace, shade->function[i]);
+				cc.convert(&cc, color, shade->function[i]);
 				for (k = 0; k < dest->colorspace->n; k++)
 					clut[i][k] = color[k] * 255;
 				clut[i][k] = shade->function[i][shade->colorspace->n] * 255;

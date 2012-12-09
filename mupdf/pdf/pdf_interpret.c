@@ -691,6 +691,7 @@ pdf_flush_text(pdf_csi *csi)
 
 	fz_try(ctx)
 	{
+		/* SumatraPDF: text_bbox is in device space */
 		pdf_begin_group(csi, csi->text_bbox);
 
 		if (doinvisible)

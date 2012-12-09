@@ -352,12 +352,21 @@ public class MuPDFActivity extends Activity
 					} else if (e.getX() > super.getWidth()*(TAP_PAGE_MARGIN-1)/TAP_PAGE_MARGIN) {
 						super.moveToNext();
 					} else {
-						int linkPage = -1;
+						LinkInfo link = null;
 						if (mLinkHighlight && pageView != null) {
-							linkPage = pageView.hitLinkPage(e.getX(), e.getY());
+							link = pageView.hitLink(e.getX(), e.getY());
 						}
-						if (linkPage != -1) {
-							mDocView.setDisplayedViewIndex(linkPage);
+						if (link != null) {
+							link.acceptVisitor(new LinkInfoVisitor() {
+								@Override
+								public void visitInternal(LinkInfoInternal li) {
+									mDocView.setDisplayedViewIndex(li.pageNumber);
+								}
+								@Override
+								public void visitExternal(LinkInfoExternal li) {
+									// Clicked on an external link: li.url
+								}
+							});
 						} else {
 							if (!mButtonsVisible) {
 								showButtons();

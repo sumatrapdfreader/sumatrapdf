@@ -44,6 +44,35 @@ void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
 
 /* Error context */
 
+/* When we first setjmp, code is set to 0. Whenever we throw, we add 2 to
+ * this code. Whenever we enter the always block, we add 1.
+ *
+ * fz_push_try sets code to 0.
+ * If (fz_throw called within fz_try)
+ *     fz_throw makes code = 2.
+ *     If (no always block present)
+ *         enter catch region with code = 2. OK.
+ *     else
+ *         fz_always entered as code < 3; Makes code = 3;
+ *         if (fz_throw called within fz_always)
+ *             fz_throw makes code = 5
+ *             fz_always is not reentered.
+ *             catch region entered with code = 5. OK.
+ *         else
+ *             catch region entered with code = 3. OK
+ * else
+ *     if (no always block present)
+ *         catch region not entered as code = 0. OK.
+ *     else
+ *         fz_always entered as code < 3. makes code = 1
+ *         if (fz_throw called within fz_always)
+ *             fz_throw makes code = 3;
+ *             fz_always NOT entered as code >= 3
+ *             catch region entered with code = 3. OK.
+ *         else
+ *             catch region entered with code = 1.
+ */
+
 /* SumatraPDF: force crash so that we get crash report */
 inline void fz_crash_abort()
 {
@@ -54,7 +83,7 @@ inline void fz_crash_abort()
 static void throw(fz_error_context *ex)
 {
 	if (ex->top >= 0) {
-		fz_longjmp(ex->stack[ex->top].buffer, 1);
+		fz_longjmp(ex->stack[ex->top].buffer, ex->stack[ex->top].code + 2);
 	} else {
 		fprintf(stderr, "uncaught exception: %s\n", ex->message);
 		LOGE("uncaught exception: %s\n", ex->message);
@@ -68,14 +97,14 @@ int fz_push_try(fz_error_context *ex)
 	ex->top++;
 	/* Normal case, get out of here quick */
 	if (ex->top < nelem(ex->stack)-1)
-		return 1;
+		return 1; /* We exit here, and the setjmp sets the code to 0 */
 	/* We reserve the top slot on the exception stack purely to cope with
 	 * the case when we overflow. If we DO hit this, then we 'throw'
 	 * immediately - returning 0 stops the setjmp happening and takes us
 	 * direct to the always/catch clauses. */
 	assert(ex->top == nelem(ex->stack)-1);
 	strcpy(ex->message, "exception stack overflow!");
-	ex->stack[ex->top].code = 1;
+	ex->stack[ex->top].code = 2;
 	/* SumatraPDF: print error message */
 	fprintf(stderr, "! %s:%d: %s\n", __FILE__, __LINE__, ex->message);
 	LOGE("error: %s\n", ex->message);

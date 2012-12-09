@@ -62,7 +62,7 @@ public abstract class PageView extends ViewGroup {
 	private       BitmapHolder mPatchBm;
 	private       AsyncTask<PatchInfo,Void,PatchInfo> mDrawPatch;
 	private       RectF     mSearchBoxes[];
-	private       LinkInfo  mLinks[];
+	protected     LinkInfo  mLinks[];
 	private       View      mSearchView;
 	private       boolean   mIsBlank;
 	private       boolean   mHighlightLinks;
@@ -250,9 +250,9 @@ public abstract class PageView extends ViewGroup {
 						// Work out current total scale factor
 						// from source to view
 						paint.setColor(LINK_COLOR);
-						for (RectF rect : mLinks)
-							canvas.drawRect(rect.left*scale, rect.top*scale,
-									        rect.right*scale, rect.bottom*scale,
+						for (LinkInfo link : mLinks)
+							canvas.drawRect(link.rect.left*scale, link.rect.top*scale,
+									        link.rect.right*scale, link.rect.bottom*scale,
 									        paint);
 					}
 				}

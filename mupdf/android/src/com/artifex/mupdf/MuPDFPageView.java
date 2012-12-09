@@ -104,7 +104,7 @@ public class MuPDFPageView extends PageView {
 		mChoiceEntryBuilder.setTitle("MuPDF: choose value");
 	}
 
-	public int hitLinkPage(float x, float y) {
+	public LinkInfo hitLink(float x, float y) {
 		// Since link highlighting was implemented, the super class
 		// PageView has had sufficient information to be able to
 		// perform this method directly. Making that change would
@@ -113,7 +113,11 @@ public class MuPDFPageView extends PageView {
 		float docRelX = (x - getLeft())/scale;
 		float docRelY = (y - getTop())/scale;
 
-		return mCore.hitLinkPage(mPageNumber, docRelX, docRelY);
+		for (LinkInfo l: mLinks)
+			if (l.rect.contains(docRelX, docRelY))
+				return l;
+
+		return null;
 	}
 
 	private void invokeTextDialog(String text) {

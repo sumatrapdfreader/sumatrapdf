@@ -904,25 +904,51 @@ fz_scan_convert_sharp(fz_gel *gel, int eofill, fz_bbox clip,
 {
 	int e = 0;
 	int y = gel->edges[0].y;
+	int height;
 
+	gel->alen = 0;
+
+	/* Skip any lines before the clip region */
+	if (y < clip.y0)
+	{
+		while (gel->alen > 0 || e < gel->len)
+		{
+			height = insert_active(gel, y, &e);
+			y += height;
+			if (y >= clip.y0)
+			{
+				height -= y - clip.y0;
+				y = clip.y0;
+				break;
+			}
+		}
+	}
+
+	/* Now process as lines within the clip region */
 	while (gel->alen > 0 || e < gel->len)
 	{
-		insert_active(gel, y, &e);
+		height = insert_active(gel, y, &e);
 
-		if (y >= clip.y0 && y < clip.y1)
+		if (gel->alen == 0)
+			y += height;
+		else
 		{
-			if (eofill)
-				even_odd_sharp(gel, y, clip, dst, color);
-			else
-				non_zero_winding_sharp(gel, y, clip, dst, color);
+			if (height >= clip.y1 - y)
+				height = clip.y1 - y;
+
+			while (height--)
+			{
+				if (eofill)
+					even_odd_sharp(gel, y, clip, dst, color);
+				else
+					non_zero_winding_sharp(gel, y, clip, dst, color);
+				y++;
+			}
 		}
+		if (y >= clip.y1)
+			break;
 
-		advance_active(gel, 1);
-
-		if (gel->alen > 0)
-			y ++;
-		else if (e < gel->len)
-			y = gel->edges[e].y;
+		advance_active(gel, height);
 	}
 }
 

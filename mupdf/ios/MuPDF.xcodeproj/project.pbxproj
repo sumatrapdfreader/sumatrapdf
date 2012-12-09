@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9644E9A0146ACEC000E5B70A /* document.c in Sources */ = {isa = PBXBuildFile; fileRef = 9644E99E146ACEC000E5B70A /* document.c */; };
 		9668C8D91476A30200D7BA52 /* About.xps in Resources */ = {isa = PBXBuildFile; fileRef = 9668C8D81476A30200D7BA52 /* About.xps */; };
 		968F2E9C14539C880085264E /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2E9B14539C880085264E /* UIKit.framework */; };
 		968F2E9E14539C880085264E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 968F2E9D14539C880085264E /* Foundation.framework */; };
@@ -18,6 +17,7 @@
 		96B6AF8415D16A7E00EAAF7B /* x_alt_blue@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 96B6AF8215D16A7E00EAAF7B /* x_alt_blue@2x.png */; };
 		96BD2B38145AC485001CEBC3 /* Icon-72.png in Resources */ = {isa = PBXBuildFile; fileRef = 96BD2B35145AC485001CEBC3 /* Icon-72.png */; };
 		96BD2B39145AC485001CEBC3 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 96BD2B36145AC485001CEBC3 /* Icon.png */; };
+		96EC0F931672AAC60007F804 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 96EC0F921672AAC60007F804 /* Default-568h@2x.png */; };
 		96F2341514603FBA004A8A22 /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 96F2341414603FBA004A8A22 /* Icon@2x.png */; };
 /* End PBXBuildFile section */
 
@@ -32,8 +32,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		9644E99E146ACEC000E5B70A /* document.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = document.c; sourceTree = "<group>"; };
-		9644E99F146ACEC000E5B70A /* document.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = document.h; sourceTree = "<group>"; };
 		9668C8D81476A30200D7BA52 /* About.xps */ = {isa = PBXFileReference; lastKnownFileType = file; path = About.xps; sourceTree = "<group>"; };
 		968461E214642DB00012AE09 /* libLibraries.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLibraries.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		968F2E8E14539BEB0085264E /* build_libs.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build_libs.sh; sourceTree = "<group>"; };
@@ -47,6 +45,7 @@
 		96B6AF8215D16A7E00EAAF7B /* x_alt_blue@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "x_alt_blue@2x.png"; sourceTree = "<group>"; };
 		96BD2B35145AC485001CEBC3 /* Icon-72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon-72.png"; sourceTree = "<group>"; };
 		96BD2B36145AC485001CEBC3 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		96EC0F921672AAC60007F804 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		96F2341414603FBA004A8A22 /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -76,8 +75,6 @@
 				96B6AF8215D16A7E00EAAF7B /* x_alt_blue@2x.png */,
 				968F2E8F14539BEB0085264E /* Info.plist */,
 				968F2E8E14539BEB0085264E /* build_libs.sh */,
-				9644E99E146ACEC000E5B70A /* document.c */,
-				9644E99F146ACEC000E5B70A /* document.h */,
 				968F2E9014539BEB0085264E /* main.m */,
 			);
 			name = Sources;
@@ -105,6 +102,7 @@
 		96A3B27414539BAD00D0A895 = {
 			isa = PBXGroup;
 			children = (
+				96EC0F921672AAC60007F804 /* Default-568h@2x.png */,
 				968F2E9214539BF10085264E /* Sources */,
 				968F2E9A14539C880085264E /* Frameworks */,
 				968F2E9814539C880085264E /* Products */,
@@ -184,6 +182,7 @@
 				9668C8D91476A30200D7BA52 /* About.xps in Resources */,
 				96B6AF8315D16A7E00EAAF7B /* x_alt_blue.png in Resources */,
 				96B6AF8415D16A7E00EAAF7B /* x_alt_blue@2x.png in Resources */,
+				96EC0F931672AAC60007F804 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,7 +212,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				968F2EB014539CDA0085264E /* main.m in Sources */,
-				9644E9A0146ACEC000E5B70A /* document.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

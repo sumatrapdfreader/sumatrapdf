@@ -566,14 +566,16 @@ size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
 // as will fit. 
 size_t BufAppend(char *dst, size_t dstCchSize, const char *s)
 {
-    size_t srcCchSize = str::Len(s);
+    CrashAlwaysIf(0 == dstCchSize);
+
     size_t currDstCchLen = str::Len(dst);
     if (currDstCchLen + 1 >= dstCchSize)
         return 0;
     size_t left = dstCchSize - currDstCchLen - 1;
+    size_t srcCchSize = str::Len(s);
     size_t toCopy = min(left, srcCchSize);
 
-    errno_t err = strncpy_s(dst + currDstCchLen, dstCchSize, s, toCopy);
+    errno_t err = strncat_s(dst, dstCchSize, s, toCopy);
     CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
 
     return toCopy;
@@ -581,14 +583,16 @@ size_t BufAppend(char *dst, size_t dstCchSize, const char *s)
 
 size_t BufAppend(WCHAR *dst, size_t dstCchSize, const WCHAR *s)
 {
-    size_t srcCchSize = str::Len(s);
+    CrashAlwaysIf(0 == dstCchSize);
+
     size_t currDstCchLen = str::Len(dst);
     if (currDstCchLen + 1 >= dstCchSize)
         return 0;
     size_t left = dstCchSize - currDstCchLen - 1;
+    size_t srcCchSize = str::Len(s);
     size_t toCopy = min(left, srcCchSize);
 
-    errno_t err = wcsncpy_s(dst + currDstCchLen, dstCchSize, s, toCopy);
+    errno_t err = wcsncat_s(dst, dstCchSize, s, toCopy);
     CrashIf(err || dst[currDstCchLen + toCopy] != '\0');
 
     return toCopy;
@@ -638,12 +642,13 @@ WCHAR *FormatNumWithThousandSep(size_t num, LCID locale)
         return NULL;
     WCHAR *next = res;
     int i = 3 - (str::Len(buf) % 3);
-    for (WCHAR *src = buf.Get(); *src;) {
+    for (WCHAR *src = buf.Get(); *src; ) {
         *next++ = *src++;
         if (*src && i == 2)
             next += str::BufSet(next, resLen - (next - res), thousandSep);
         i = (i + 1) % 3;
     }
+    *next = '\0';
 
     return res;
 }

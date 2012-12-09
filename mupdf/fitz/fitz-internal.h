@@ -1000,6 +1000,22 @@ void fz_free_colorspace_imp(fz_context *ctx, fz_storable *colorspace);
 
 void fz_convert_color(fz_context *ctx, fz_colorspace *dsts, float *dstv, fz_colorspace *srcs, float *srcv);
 
+typedef struct fz_color_converter_s fz_color_converter;
+
+/* This structure is public because it allows us to avoid dynamic allocations.
+ * Callers should only rely on the convert entry - the rest of the structure
+ * is subject to change without notice.
+ */
+struct fz_color_converter_s
+{
+	void (*convert)(fz_color_converter *, float *, float *);
+	fz_context *ctx;
+	fz_colorspace *ds;
+	fz_colorspace *ss;
+};
+
+void fz_find_color_converter(fz_color_converter *cc, fz_context *ctx, fz_colorspace *ds, fz_colorspace *ss);
+
 /*
  * Fonts come in two variants:
  *	Regular fonts are handled by FreeType.
