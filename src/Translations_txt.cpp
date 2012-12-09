@@ -11782,8 +11782,8 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Kichiktirish",
   "Miqyos faktori",
   "[O'zgarishlar aniqlangan; yangilanmoqda] %s",
-  "matn nusxa olinmoqda",
-  "hujjat bosib chiqarilmoqda",
+  "matnni nusxa olish",
+  "hujjatni bosib chiqarish",
 
   /* Translations for language vn */
   "Gi\341\273\233i thi\341\273\207u",

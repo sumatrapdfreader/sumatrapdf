@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0653ef9aafb0d6c5c66030ce8d6fcd30d9df5e78
+4e1b5e988953def98e859d4a95073d98fbc842ee
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -13184,7 +13184,7 @@ tl:kinokopya ang mensahe
 tr:metin kopyalanıyor
 tw:複製文字中
 uk:копіювання тексту
-uz:matn nusxa olinmoqda
+uz:matnni nusxa olish
 vn:đang chép văn bản
 :printing document
 am:Ֆայլը տպվում է
@@ -13238,5 +13238,5 @@ tl:ipini-print ang dokumento
 tr:belge yazdırılıyor
 tw:文件列印中
 uk:друк документа
-uz:hujjat bosib chiqarilmoqda
+uz:hujjatni bosib chiqarish
 vn:đang in tập tin
