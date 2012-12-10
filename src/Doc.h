@@ -19,6 +19,7 @@
 
 class BaseEngine;
 class EpubDoc;
+class Fb2Doc;
 class MobiDoc;
 class MobiTestDoc;
 class PasswordUI;
@@ -29,7 +30,7 @@ enum DocumentProperty;
 enum DocType {
     Doc_None = 0, Engine_None = 0,
 
-    Doc_Epub,
+    Doc_Epub, Doc_Fb2,
     Doc_Mobi, Doc_MobiTest,
 
     // the EngineManager tries to create a new engine
@@ -67,8 +68,9 @@ protected:
     union {
         void *generic;
         BaseEngine *engine; // we can always cast to the right type based on type
-        EpubDoc * epubDoc;
-        MobiDoc * mobiDoc;
+        EpubDoc *   epubDoc;
+        Fb2Doc *    fb2Doc;
+        MobiDoc *   mobiDoc;
         MobiTestDoc *mobiTestDoc;
     };
 
@@ -84,6 +86,7 @@ public:
     Doc() { Clear(); }
     Doc(BaseEngine *doc, DocType engineType);
     Doc(EpubDoc *doc);
+    Doc(Fb2Doc *doc);
     Doc(MobiDoc *doc);
     Doc(MobiTestDoc *doc);
 
@@ -102,6 +105,7 @@ public:
 
     BaseEngine *AsEngine() const;
     EpubDoc *AsEpub() const;
+    Fb2Doc *AsFb2() const;
     MobiDoc *AsMobi() const;
     MobiTestDoc *AsMobiTest() const;
 

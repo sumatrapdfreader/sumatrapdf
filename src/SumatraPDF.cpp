@@ -2521,7 +2521,7 @@ static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<WCHAR>& fileFilter
         case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
         case Engine_Mobi:   fileFilter.Append(_TR("Mobi documents")); break;
-        case Engine_Fb2:    fileFilter.Append(L"FictionBooks"); break;
+        case Engine_Fb2:    fileFilter.Append(_TR("FictionBook documents")); break;
         case Engine_Pdb:    fileFilter.Append(L"PalmDOC"); break;
         case Engine_Chm2:   fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Tcr:    fileFilter.Append(L"TCR ebooks"); break;
@@ -2896,7 +2896,7 @@ void OnMenuOpen(SumatraWindow& win)
         { _TR("CHM documents"),         L"*.chm",        true },
         { _TR("Mobi documents"),        L"*.mobi",       true },
         { _TR("EPUB ebooks"),           L"*.epub",       true },
-        { L"FictionBooks",              L"*.fb2;*.fb2z;*.zfb2", !gUseEbookUI },
+        { _TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2", true },
         { L"PalmDOC",                   L"*.pdb",        !gUseEbookUI },
         { L"TCR ebooks",                L"*.tcr",        !gUseEbookUI },
         { _TR("Text documents"),        L"*.txt;*.log;*.nfo;file_id.diz;read.me", !gUseEbookUI },

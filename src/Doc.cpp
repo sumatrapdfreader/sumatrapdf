@@ -53,6 +53,9 @@ void Doc::Delete()
     case Doc_Epub:
         delete epubDoc;
         break;
+    case Doc_Fb2:
+        delete fb2Doc;
+        break;
     case Doc_Mobi:
         delete mobiDoc;
         break;
@@ -84,6 +87,13 @@ Doc::Doc(EpubDoc *doc)
     Clear();
     type = doc ? Doc_Epub : Doc_None;
     epubDoc = doc;
+}
+
+Doc::Doc(Fb2Doc *doc)
+{
+    Clear();
+    type = doc ? Doc_Fb2 : Doc_None;
+    fb2Doc = doc;
 }
 
 Doc::Doc(MobiDoc *doc)
@@ -136,10 +146,26 @@ EpubDoc *Doc::AsEpub() const
     return NULL;
 }
 
+Fb2Doc *Doc::AsFb2() const
+{
+    if (Doc_Fb2 == type)
+        return fb2Doc;
+    return NULL;
+}
+
 // return true if this is document supported by ebook UI
 bool Doc::IsEbook() const
 {
-    return (Doc_Mobi == type) || (Doc_MobiTest == type) || (Doc_Epub == type);
+    switch (type) {
+    case Doc_Epub:
+    case Doc_Fb2:
+    case Doc_Mobi:
+    case Doc_MobiTest:
+        return true;
+    default:
+        CrashIf(!IsEngine() && !IsNone());
+        return false;
+    }
 }
 
 bool Doc::IsEngine() const
@@ -165,6 +191,8 @@ const WCHAR *Doc::GetFilePathFromDoc() const
     switch (type) {
     case Doc_Epub:
         return epubDoc->GetFileName();
+    case Doc_Fb2:
+        return fb2Doc->GetFileName();
     case Doc_Mobi:
         return mobiDoc->GetFileName();
     case Doc_MobiTest:
@@ -191,24 +219,34 @@ const WCHAR *Doc::GetFilePath() const
 
 WCHAR *Doc::GetProperty(DocumentProperty prop)
 {
-    if (Doc_Mobi == type)
-        return mobiDoc->GetProperty(prop);
-    if (Doc_Epub == type)
+    switch (type) {
+    case Doc_Epub:
         return epubDoc->GetProperty(prop);
-    if (IsEngine())
+    case Doc_Fb2:
+        return fb2Doc->GetProperty(prop);
+    case Doc_Mobi:
+        return mobiDoc->GetProperty(prop);
+    case Doc_MobiTest:
+        return NULL;
+    case Doc_None:
+        return NULL;
+    default:
+        CrashIf(!IsEngine());
         return engine->GetProperty(prop);
-    return NULL;
+    }
 }
 
 const char *Doc::GetHtmlData(size_t &len)
 {
     switch (type) {
+    case Doc_Epub:
+        return epubDoc->GetTextData(&len);
+    case Doc_Fb2:
+        return fb2Doc->GetTextData(&len);
     case Doc_Mobi:
         return mobiDoc->GetBookHtmlData(len);
     case Doc_MobiTest:
         return mobiTestDoc->GetBookHtmlData(len);
-    case Doc_Epub:
-        return epubDoc->GetTextData(&len);
     default:
         CrashIf(true);
         return NULL;
@@ -218,12 +256,14 @@ const char *Doc::GetHtmlData(size_t &len)
 size_t Doc::GetHtmlDataSize()
 {
     switch (type) {
+    case Doc_Epub:
+        return epubDoc->GetTextDataSize();
+    case Doc_Fb2:
+        return fb2Doc->GetTextDataSize();
     case Doc_Mobi:
         return mobiDoc->GetBookHtmlSize();
     case Doc_MobiTest:
         return mobiTestDoc->GetBookHtmlSize();
-    case Doc_Epub:
-        return epubDoc->GetTextDataSize();
     default:
         CrashIf(true);
         return NULL;
@@ -232,18 +272,25 @@ size_t Doc::GetHtmlDataSize()
 
 ImageData *Doc::GetCoverImage()
 {
-    if (type != Doc_Mobi)
+    switch (type) {
+    case Doc_Fb2:
+        return fb2Doc->GetCoverImage();
+    case Doc_Mobi:
+        return mobiDoc->GetCoverImage();
+    default:
         return NULL;
-    return mobiDoc->GetCoverImage();
+    }
 }
 
 Doc Doc::CreateFromFile(const WCHAR *filePath)
 {
     Doc doc;
-    if (MobiDoc::IsSupportedFile(filePath))
-        doc = Doc(MobiDoc::CreateFromFile(filePath));
-    else if (EpubDoc::IsSupportedFile(filePath))
+    if (EpubDoc::IsSupportedFile(filePath))
         doc = Doc(EpubDoc::CreateFromFile(filePath));
+    else if (Fb2Doc::IsSupportedFile(filePath))
+        doc = Doc(Fb2Doc::CreateFromFile(filePath));
+    else if (MobiDoc::IsSupportedFile(filePath))
+        doc = Doc(MobiDoc::CreateFromFile(filePath));
 
     doc.filePath = str::Dup(filePath);
     // if failed to load and more specific error message hasn't been

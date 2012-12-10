@@ -5,6 +5,7 @@ Next version:
 
 2.2 (2012-??-??)
 
+* add support for FictionBook ebook format
 * add support for PDF documents encrypted with Acrobat X
 * “Print as image” compatibility option for documents that fail to print properly
 * -manga-mode [1|true|0|false] for proper display of manga comic books

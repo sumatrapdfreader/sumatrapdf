@@ -503,7 +503,7 @@ static RenderedBitmap *ThumbFromCoverPage(Doc doc)
 
 static void CreateThumbnailForDoc(Doc doc, DisplayState& ds)
 {
-    CrashIf(!doc.AsMobi() && !doc.AsEpub());
+    CrashIf(!doc.AsEpub() && !doc.AsFb2() && !doc.AsMobi());
 
     if (!ShouldSaveThumbnail(ds))
         return;
@@ -651,8 +651,9 @@ void RegisterMobiWinClass(HINSTANCE hinst)
 
 bool IsEbookFile(const WCHAR *fileName)
 {
-    return MobiDoc::IsSupportedFile(fileName) ||
-           EpubDoc::IsSupportedFile(fileName);
+    return EpubDoc::IsSupportedFile(fileName) ||
+           Fb2Doc::IsSupportedFile(fileName) ||
+           MobiDoc::IsSupportedFile(fileName);
 }
 
 Doc GetDocForWindow(SumatraWindow& win)

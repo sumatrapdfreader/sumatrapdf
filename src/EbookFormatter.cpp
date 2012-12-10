@@ -27,12 +27,14 @@ HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator
 
 HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
 {
+    if (doc.AsEpub())
+        return new EpubFormatter(args, doc.AsEpub());
+    if (doc.AsFb2())
+        return new Fb2Formatter(args, doc.AsFb2());
     if (doc.AsMobi())
         return new MobiFormatter(args, doc.AsMobi());
     if (doc.AsMobiTest())
         return new MobiFormatter(args, NULL);
-    if (doc.AsEpub())
-        return new EpubFormatter(args, doc.AsEpub());
     CrashIf(true);
     return NULL;
 }

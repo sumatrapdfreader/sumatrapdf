@@ -684,6 +684,11 @@ const char *Fb2Doc::GetTextData(size_t *lenOut)
     return xmlData.Get();
 }
 
+size_t Fb2Doc::GetTextDataSize()
+{
+    return xmlData.Size();
+}
+
 ImageData *Fb2Doc::GetImageData(const char *id)
 {
     for (size_t i = 0; i < images.Count(); i++) {

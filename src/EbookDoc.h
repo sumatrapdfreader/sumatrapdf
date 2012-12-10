@@ -82,6 +82,7 @@ public:
     ~Fb2Doc();
 
     const char *GetTextData(size_t *lenOut);
+    size_t GetTextDataSize();
     ImageData *GetImageData(const char *id);
     ImageData *GetCoverImage();
 
