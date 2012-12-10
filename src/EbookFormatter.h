@@ -36,7 +36,6 @@ public:
 class EpubDoc;
 
 class EpubFormatter : public HtmlFormatter {
-protected:
     virtual void HandleTagImg(HtmlToken *t);
     virtual void HandleTagPagebreak(HtmlToken *t);
     virtual void HandleHtmlTag(HtmlToken *t);
@@ -51,6 +50,67 @@ protected:
 public:
     EpubFormatter(HtmlFormatterArgs *args, EpubDoc *doc) :
         HtmlFormatter(args), epubDoc(doc), hiddenDepth(0) { }
+};
+
+/* formatting extensions for FictionBook */
+
+#define FB2_TOC_ENTRY_MARK "ToC!Entry!"
+
+class Fb2Doc;
+
+class Fb2Formatter : public HtmlFormatter {
+    int section;
+    int titleCount;
+
+    virtual void HandleTagImg(HtmlToken *t);
+    void HandleTagAsHtml(HtmlToken *t, const char *name);
+    virtual void HandleHtmlTag(HtmlToken *t);
+
+    virtual bool IgnoreText() { return false; }
+
+    Fb2Doc *fb2Doc;
+
+public:
+    Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc);
+};
+
+/* formatting extensions for PalmDOC */
+
+class PalmDoc;
+
+class PdbFormatter : public HtmlFormatter {
+    virtual void HandleTagImg(HtmlToken *t);
+
+    PalmDoc *palmDoc;
+
+public:
+    PdbFormatter(HtmlFormatterArgs *args, PalmDoc *doc) :
+        HtmlFormatter(args), palmDoc(doc) { }
+};
+
+/* formatting extensions for standalone HTML */
+
+class HtmlDoc;
+
+class HtmlFileFormatter : public HtmlFormatter {
+protected:
+    virtual void HandleTagImg(HtmlToken *t);
+
+    HtmlDoc *htmlDoc;
+
+public:
+    HtmlFileFormatter(HtmlFormatterArgs *args, HtmlDoc *doc) :
+        HtmlFormatter(args), htmlDoc(doc) { }
+};
+
+/* formatting extensions for TXT */
+
+class TxtFormatter : public HtmlFormatter {
+protected:
+    virtual void HandleTagPagebreak(HtmlToken *t) { ForceNewPage(); }
+
+public:
+    TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
 };
 
 #endif

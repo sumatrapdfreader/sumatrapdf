@@ -717,116 +717,6 @@ EpubEngine *EpubEngine::CreateFromStream(IStream *stream)
     return engine;
 }
 
-/* formatting extensions for FictionBook2 */
-
-#define FB2_TOC_ENTRY_MARK "ToC!Entry!"
-
-class Fb2Formatter : public HtmlFormatter {
-    int section;
-    int titleCount;
-
-    virtual void HandleTagImg(HtmlToken *t);
-    void HandleTagAsHtml(HtmlToken *t, const char *name);
-    virtual void HandleHtmlTag(HtmlToken *t);
-
-    virtual bool IgnoreText() { return false; }
-
-    Fb2Doc *fb2Doc;
-
-public:
-    Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc);
-};
-
-Fb2Formatter::Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc) :
-    HtmlFormatter(args), fb2Doc(doc), section(1), titleCount(0)
-{
-    if (args->reparseIdx != 0)
-        return;
-    ImageData *cover = doc->GetCoverImage();
-    if (!cover)
-        return;
-    EmitImage(cover);
-    // render larger images alone on the cover page,
-    // smaller images just separated by a horizontal line
-    if (0 == currLineInstr.Count())
-        /* the image was broken */;
-    else if (currLineInstr.Last().bbox.Height > args->pageDy / 2)
-        ForceNewPage();
-    else
-        EmitHr();
-}
-
-void Fb2Formatter::HandleTagImg(HtmlToken *t)
-{
-    CrashIf(!fb2Doc);
-    if (t->IsEndTag())
-        return;
-    AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
-    if (!attr)
-        return;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = fb2Doc->GetImageData(src);
-    if (img)
-        EmitImage(img);
-}
-
-void Fb2Formatter::HandleTagAsHtml(HtmlToken *t, const char *name)
-{
-    HtmlToken tok;
-    tok.SetTag(t->type, name, name + str::Len(name));
-    HtmlFormatter::HandleHtmlTag(&tok);
-}
-
-// the name doesn't quite fit: this handles FB2 tags
-void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
-{
-    if (Tag_Title == t->tag || Tag_Subtitle == t->tag) {
-        bool isSubtitle = Tag_Subtitle == t->tag;
-        ScopedMem<char> name(str::Format("h%d", section + (isSubtitle ? 1 : 0)));
-        HtmlToken tok;
-        tok.SetTag(t->type, name, name + str::Len(name));
-        HandleTagHx(&tok);
-        HandleAnchorAttr(t);
-        if (!isSubtitle && t->IsStartTag()) {
-            char *link = (char *)Allocator::Alloc(textAllocator, 24);
-            sprintf_s(link, 24, FB2_TOC_ENTRY_MARK "%d", ++titleCount);
-            currPage->instructions.Append(DrawInstr::Anchor(link, str::Len(link), RectF(0, currY, pageDx, 0)));
-        }
-    }
-    else if (Tag_Section == t->tag) {
-        if (t->IsStartTag())
-            section++;
-        else if (t->IsEndTag() && section > 1)
-            section--;
-        FlushCurrLine(true);
-        HandleAnchorAttr(t);
-    }
-    else if (Tag_P == t->tag) {
-        if (htmlParser->tagNesting.Find(Tag_Title) == -1)
-            HtmlFormatter::HandleHtmlTag(t);
-    }
-    else if (Tag_Image == t->tag) {
-        HandleTagImg(t);
-        HandleAnchorAttr(t);
-    }
-    else if (Tag_A == t->tag) {
-        HandleTagA(t, "href", "http://www.w3.org/1999/xlink");
-        HandleAnchorAttr(t, true);
-    }
-    else if (Tag_Pagebreak == t->tag)
-        ForceNewPage();
-    else if (Tag_Strong == t->tag)
-        HandleTagAsHtml(t, "b");
-    else if (t->NameIs("emphasis"))
-        HandleTagAsHtml(t, "i");
-    else if (t->NameIs("epigraph"))
-        HandleTagAsHtml(t, "blockquote");
-    else if (t->NameIs("empty-line")) {
-        if (!t->IsEndTag())
-            EmitParagraph(0);
-    }
-}
-
 /* BaseEngine for handling FictionBook2 documents */
 
 class Fb2EngineImpl : public EbookEngine, public Fb2Engine {
@@ -1133,33 +1023,6 @@ MobiEngine *MobiEngine::CreateFromFile(const WCHAR *fileName)
         return NULL;
     }
     return engine;
-}
-
-/* formatting extensions for PalmDOC */
-
-class PdbFormatter : public HtmlFormatter {
-protected:
-    virtual void HandleTagImg(HtmlToken *t);
-
-    PalmDoc *palmDoc;
-
-public:
-    PdbFormatter(HtmlFormatterArgs *args, PalmDoc *doc) :
-        HtmlFormatter(args), palmDoc(doc) { }
-};
-
-void PdbFormatter::HandleTagImg(HtmlToken *t)
-{
-    CrashIf(!palmDoc);
-    if (t->IsEndTag())
-        return;
-    AttrInfo *attr = t->GetAttrByName("src");
-    if (!attr)
-        return;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = palmDoc->GetImageData(src);
-    if (img)
-        EmitImage(img);
 }
 
 /* BaseEngine for handling PalmDOC documents (and extensions such as TealDoc) */
@@ -1554,33 +1417,6 @@ TcrEngine *TcrEngine::CreateFromFile(const WCHAR *fileName)
     return engine;
 }
 
-/* formatting extensions for HTML */
-
-class HtmlFormatter2 : public HtmlFormatter {
-protected:
-    virtual void HandleTagImg(HtmlToken *t);
-
-    HtmlDoc *htmlDoc;
-
-public:
-    HtmlFormatter2(HtmlFormatterArgs *args, HtmlDoc *doc) :
-        HtmlFormatter(args), htmlDoc(doc) { }
-};
-
-void HtmlFormatter2::HandleTagImg(HtmlToken *t)
-{
-    CrashIf(!htmlDoc);
-    if (t->IsEndTag())
-        return;
-    AttrInfo *attr = t->GetAttrByName("src");
-    if (!attr)
-        return;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = htmlDoc->GetImageData(src);
-    if (img)
-        EmitImage(img);
-}
-
 /* BaseEngine for handling HTML documents */
 /* (mainly to allow creating minimal regression test testcases more easily) */
 
@@ -1627,7 +1463,7 @@ bool HtmlEngineImpl::Load(const WCHAR *fileName)
     args.fontSize = DEFAULT_FONT_SIZE;
     args.textAllocator = &allocator;
 
-    pages = HtmlFormatter2(&args, doc).FormatAllPages(false);
+    pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors())
         return false;
 
@@ -1677,16 +1513,6 @@ HtmlEngine *HtmlEngine::CreateFromFile(const WCHAR *fileName)
     }
     return engine;
 }
-
-/* formatting extensions for TXT */
-
-class TxtFormatter : public HtmlFormatter {
-protected:
-    virtual void HandleTagPagebreak(HtmlToken *t) { ForceNewPage(); }
-
-public:
-    TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }
-};
 
 /* BaseEngine for handling TXT documents */
 
