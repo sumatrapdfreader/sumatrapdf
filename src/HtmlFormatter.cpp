@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "HtmlFormatter.h"
-#include "EbookDoc.h"
+
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"

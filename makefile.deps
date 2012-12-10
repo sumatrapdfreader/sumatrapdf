@@ -173,10 +173,10 @@ $(OS)\EbookControls.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiContro
 $(OS)\EbookControls.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiGrid.h
 $(OS)\EbookControls.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
 $(OS)\EbookControls.obj: src\mui\MuiScrollBar.h src\mui\SvgPath.h src\utils\Allocator.h
-$(OS)\EbookControls.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\DbgHelpDyn.h
-$(OS)\EbookControls.obj: src\utils\DebugLog.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OS)\EbookControls.obj: src\utils\HtmlParserLookup.h src\utils\Scoped.h src\utils\Sigslot.h
-$(OS)\EbookControls.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\EbookControls.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\DebugLog.h
+$(OS)\EbookControls.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
+$(OS)\EbookControls.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
+$(OS)\EbookControls.obj: src\utils\Vec.h
 $(OS)\EbookDoc.obj: src\BaseEngine.h src\EbookBase.h src\EbookDoc.h
 $(OS)\EbookDoc.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\EbookDoc.obj: src\utils\ByteReader.h src\utils\FileUtil.h src\utils\GeomUtil.h
@@ -238,15 +238,15 @@ $(OS)\Favorites.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\FileWatch.obj: src\FileWatch.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\FileWatch.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OS)\FileWatch.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\HtmlFormatter.obj: src\BaseEngine.h src\EbookBase.h src\EbookDoc.h
-$(OS)\HtmlFormatter.obj: src\HtmlFormatter.h src\mui\Mui.h src\mui\MuiBase.h
-$(OS)\HtmlFormatter.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
-$(OS)\HtmlFormatter.obj: src\mui\MuiEventMgr.h src\mui\MuiGrid.h src\mui\MuiHwndWrapper.h
-$(OS)\HtmlFormatter.obj: src\mui\MuiLayout.h src\mui\MuiPainter.h src\mui\MuiScrollBar.h
-$(OS)\HtmlFormatter.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
-$(OS)\HtmlFormatter.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
-$(OS)\HtmlFormatter.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\Sigslot.h
-$(OS)\HtmlFormatter.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\ZipUtil.h
+$(OS)\HtmlFormatter.obj: src\BaseEngine.h src\EbookBase.h src\HtmlFormatter.h
+$(OS)\HtmlFormatter.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
+$(OS)\HtmlFormatter.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
+$(OS)\HtmlFormatter.obj: src\mui\MuiGrid.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
+$(OS)\HtmlFormatter.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocator.h
+$(OS)\HtmlFormatter.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\GdiPlusUtil.h
+$(OS)\HtmlFormatter.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h
+$(OS)\HtmlFormatter.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
+$(OS)\HtmlFormatter.obj: src\utils\Vec.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
