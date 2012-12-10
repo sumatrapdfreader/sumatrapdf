@@ -749,7 +749,7 @@
     <ClCompile Include="src\EngineDump.cpp">
       <Filter>sumatra\documents</Filter>
     </ClCompile>
-    <ClCompile Include="src\EpubEngine.cpp">
+    <ClCompile Include="src\EbookEngine.cpp">
       <Filter>sumatra\documents</Filter>
     </ClCompile>
     <ClCompile Include="src\ChmEngine.cpp">
@@ -953,7 +953,7 @@
     <ClCompile Include="src\Doc.cpp">
       <Filter>sumatra\documents</Filter>
     </ClCompile>
-    <ClCompile Include="src\EpubDoc.cpp">
+    <ClCompile Include="src\EbookDoc.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
     <ClCompile Include="src\Notifications.cpp">
@@ -1375,7 +1375,7 @@
     <ClInclude Include="src\mui\SvgPath.h">
       <Filter>mui</Filter>
     </ClInclude>
-    <ClInclude Include="src\EpubEngine.h">
+    <ClInclude Include="src\EbookEngine.h">
       <Filter>sumatra\documents</Filter>
     </ClInclude>
     <ClInclude Include="src\BaseEngine.h">
@@ -1483,7 +1483,7 @@
     <ClInclude Include="src\utils\RefCounted.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\EpubDoc.h">
+    <ClInclude Include="src\EbookDoc.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="src\ChmDoc.h">

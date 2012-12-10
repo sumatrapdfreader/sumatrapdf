@@ -7,12 +7,12 @@
 #include "BaseEngine.h"
 #include "ChmEngine.h"
 #include "DjVuEngine.h"
-#include "EpubEngine.h"
+#include "EbookEngine.h"
 #include "ImagesEngine.h"
 #include "PdfEngine.h"
 #include "PsEngine.h"
 
-#include "EpubDoc.h"
+#include "EbookDoc.h"
 #include "MobiDoc.h"
 
 Doc::Doc(const Doc& other)

@@ -5,9 +5,9 @@
 // (pages are mostly layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
 #include "BaseUtil.h"
-#include "EpubEngine.h"
+#include "EbookEngine.h"
 
-#include "EpubDoc.h"
+#include "EbookDoc.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"

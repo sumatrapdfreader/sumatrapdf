@@ -599,23 +599,23 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\EbookDoc.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookDoc.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookEngine.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookEngine.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\EngineDump.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\EpubDoc.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\EpubDoc.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\EpubEngine.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\EpubEngine.h"
 					>
 				</File>
 				<File

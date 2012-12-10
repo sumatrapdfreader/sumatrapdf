@@ -158,7 +158,7 @@ ENGINE_OBJS = \
 	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
 	$(OS)\ChmEngine.obj $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
-	$(OS)\EpubEngine.obj $(OS)\EpubDoc.obj
+	$(OS)\EbookEngine.obj $(OS)\EbookDoc.obj
 
 EBOOK_OBJS = \
 	$(OS)\MobiDoc.obj $(OU)\PdbReader.obj $(OS)\HtmlFormatter.obj \

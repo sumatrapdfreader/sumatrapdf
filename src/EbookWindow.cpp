@@ -9,7 +9,7 @@
 #include "BaseEngine.h"
 #include "EbookController.h"
 #include "EbookControls.h"
-#include "EpubDoc.h"
+#include "EbookDoc.h"
 #include "FileHistory.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"

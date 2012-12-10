@@ -78,7 +78,7 @@ public:
     Graphics gfx;
 
     GlobalGraphicsHack() : bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp) {
-        // cf. EpubEngineImpl::RenderPage
+        // cf. EbookEngine::RenderPage
         gfx.SetCompositingQuality(CompositingQualityHighQuality);
         gfx.SetSmoothingMode(SmoothingModeAntiAlias);
         gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);

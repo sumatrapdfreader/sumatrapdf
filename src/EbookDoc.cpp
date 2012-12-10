@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "EpubDoc.h"
+#include "EbookDoc.h"
 
 #include "ByteReader.h"
 #include "FileUtil.h"
