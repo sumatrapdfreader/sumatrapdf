@@ -615,6 +615,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\EbookFormatter.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\EbookFormatter.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\EngineDump.cpp"
 					>
 				</File>

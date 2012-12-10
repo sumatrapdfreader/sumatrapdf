@@ -19,10 +19,10 @@ To write new regression test:
 #include "DbgHelpDyn.h"
 #include "DirIter.h"
 #include "Doc.h"
+#include "EbookFormatter.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "HtmlFormatter.h"
 #include "Mui.h"
 #include "WinUtil.h"
 

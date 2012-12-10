@@ -9,10 +9,10 @@
 
 #include "CmdLineParser.h"
 #include "DirIter.h"
+#include "EbookFormatter.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "HtmlFormatter.h"
 #include "HtmlPrettyPrint.h"
 #include "MobiDoc.h"
 #include "Mui.h"

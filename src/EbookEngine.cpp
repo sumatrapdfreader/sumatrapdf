@@ -8,11 +8,11 @@
 #include "EbookEngine.h"
 
 #include "EbookDoc.h"
+#include "EbookFormatter.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
-#include "HtmlFormatter.h"
 #include "MiniMui.h"
 #include "PdbReader.h"
 #include "TrivialHtmlParser.h"
