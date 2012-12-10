@@ -49,6 +49,7 @@ void   RegisterMobiWinClass(HINSTANCE hinst);
 void   RebuildMenuBarForEbookWindows();
 void   DeleteEbookWindow(EbookWindow *win, bool forceDelete = false);
 bool   IsEbookFile(const WCHAR *fileName);
+void   RestartLayoutTimer(EbookController *controller);
 
 Doc    GetDocForWindow(SumatraWindow& win);
 

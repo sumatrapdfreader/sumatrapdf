@@ -66,6 +66,7 @@ DWORD WINAPI ThreadBase::ThreadProc(void *data)
 
 void ThreadBase::Start()
 {
+    CrashIf(hThread);
     AddRef(); // will be Release()'d at the end of ThreadBase::ThreadProc
     hThread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
 }

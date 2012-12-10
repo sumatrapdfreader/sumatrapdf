@@ -20,9 +20,6 @@
    while showing second page whose reparse point will be within the first page
    after resize. */
 
-// in EbookWindow.cpp
-extern void RestartLayoutTimer(EbookController *controller);
-
 void FormattingTemp::DeletePages()
 {
     DeleteVecMembers(pagesFromBeginning);
@@ -56,8 +53,10 @@ void ThreadLoadEbook::Run()
     //lf(L"ThreadLoadEbook::Run(%s)", fileName);
     Timer t(true);
     Doc doc = Doc::CreateFromFile(fileName);
+    // TODO: even under heavy load, Doc::CreateFromFile doesn't take more
+    //       than 50ms - any reason not to synchronously load ebooks?
     double loadingTimeMs = t.GetTimeInMs();
-    //lf(L"Loaded %s in %.2f ms", fileName, t.GetTimeInMs());
+    lf(L"Loaded %s in %.2f ms", fileName, loadingTimeMs);
 
     // don't load PalmDoc, etc. files as long as they're not correctly formatted
     if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
