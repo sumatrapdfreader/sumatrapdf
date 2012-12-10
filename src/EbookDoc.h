@@ -65,6 +65,8 @@ struct HtmlToken;
 
 class Fb2Doc {
     ScopedMem<WCHAR> fileName;
+    IStream *stream;
+
     str::Str<char> xmlData;
     Vec<ImageData2> images;
     ScopedMem<WCHAR> docTitle;
@@ -79,6 +81,7 @@ class Fb2Doc {
 
 public:
     Fb2Doc(const WCHAR *fileName);
+    Fb2Doc(IStream *stream);
     ~Fb2Doc();
 
     const char *GetTextData(size_t *lenOut);
@@ -92,6 +95,7 @@ public:
 
     static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
     static Fb2Doc *CreateFromFile(const WCHAR *fileName);
+    static Fb2Doc *CreateFromStream(IStream *stream);
 };
 
 /* ********** PalmDOC (and TealDoc) ********** */

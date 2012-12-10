@@ -557,7 +557,12 @@ EpubDoc *EpubDoc::CreateFromStream(IStream *stream)
 /* ********** FictionBook ********** */
 
 Fb2Doc::Fb2Doc(const WCHAR *fileName) : fileName(str::Dup(fileName)),
-    isZipped(false), hasToc(false) { }
+    stream(NULL), isZipped(false), hasToc(false) { }
+
+Fb2Doc::Fb2Doc(IStream *stream) : fileName(NULL),
+    stream(stream), isZipped(false), hasToc(false) {
+    stream->AddRef();
+}
 
 Fb2Doc::~Fb2Doc()
 {
@@ -565,13 +570,17 @@ Fb2Doc::~Fb2Doc()
         free(images.At(i).base.data);
         free(images.At(i).id);
     }
+    if (stream)
+        stream->Release();
 }
 
 bool Fb2Doc::Load()
 {
     size_t len;
     ScopedMem<char> data;
-    if (str::EndsWithI(fileName, L".zip") ||
+    if (!fileName && stream)
+        data.Set((char *)GetDataFromStream(stream, &len));
+    else if (str::EndsWithI(fileName, L".zip") ||
         str::EndsWithI(fileName, L".fb2z") ||
         str::EndsWithI(fileName, L".zfb2")) {
         ZipFile archive(fileName);
@@ -735,6 +744,16 @@ bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 Fb2Doc *Fb2Doc::CreateFromFile(const WCHAR *fileName)
 {
     Fb2Doc *doc = new Fb2Doc(fileName);
+    if (!doc || !doc->Load()) {
+        delete doc;
+        return NULL;
+    }
+    return doc;
+}
+
+Fb2Doc *Fb2Doc::CreateFromStream(IStream *stream)
+{
+    Fb2Doc *doc = new Fb2Doc(stream);
     if (!doc || !doc->Load()) {
         delete doc;
         return NULL;

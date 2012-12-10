@@ -315,13 +315,15 @@ BaseEngine *CXpsPreview::LoadEngine(IStream *stream)
 }
 #endif
 
-#ifdef BUILD_CBZ_PREVIEW
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_TGA_PREVIEW)
 #include "ImagesEngine.h"
 
+#ifdef BUILD_CBZ_PREVIEW
 BaseEngine *CCbzPreview::LoadEngine(IStream *stream)
 {
     return CbxEngine::CreateFromStream(stream);
 }
+#endif
 
 #ifdef BUILD_TGA_PREVIEW
 BaseEngine *CTgaPreview::LoadEngine(IStream *stream)
