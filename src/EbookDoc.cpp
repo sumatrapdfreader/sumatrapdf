@@ -762,7 +762,7 @@ static const char *HandleTealDocTag(str::Str<char>& builder, WStrVec& tocEntries
     if (len < 9) {
 Fallback:
         builder.Append("&lt;");
-        return text + 1;
+        return text;
     }
     if (!str::StartsWithI(text, "<BOOKMARK") &&
         !str::StartsWithI(text, "<HEADER") &&
@@ -834,19 +834,8 @@ Fallback:
     }
     else if (tok->NameIs("TEALPAINT")) {
         // <TEALPAINT SRC="Pictures" INDEX=0 LINK=SUPERMAP SUPERIMAGE=1 SUPERW=640 SUPERH=480>
-        AttrInfo *attr = tok->GetAttrByName("SRC");
-        if (attr) {
-            builder.Append("<img src=\"");
-            builder.Append(attr->val, attr->valLen);
-            attr = tok->GetAttrByName("INDEX");
-            if (!attr)
-                attr = tok->GetAttrByName("IMAGE");
-            uint32_t idx;
-            if (!attr || !str::Parse(attr->val, attr->valLen, "%u", &idx))
-                idx = 0;
-            builder.AppendFmt(":%u\">", idx);
-            return tok->s + tok->sLen;
-        }
+        // support removed in r7047
+        return tok->s + tok->sLen;
     }
     goto Fallback;
 }
@@ -854,26 +843,8 @@ Fallback:
 bool PalmDoc::Load()
 {
     MobiDoc *mobiDoc = MobiDoc::CreateFromFile(fileName);
-    if (!mobiDoc) {
-        // just display all images out of a TealPaint database
-        PdbReader pdb(fileName);
-        if (str::Eq(pdb.GetDbType(), "DataTlPt")) {
-            ScopedMem<char> src(str::conv::ToUtf8(path::GetBaseName(fileName)));
-            for (uint32_t i = 0; i < pdb.GetRecordCount(); i++) {
-                bool isValid = false;
-                ScopedMem<char> name(GetTealPaintImageName(&pdb, i, isValid));
-                if (!isValid)
-                    continue;
-                if (htmlData.Size() > 0)
-                    htmlData.Append("<hr>");
-                htmlData.AppendFmt("<p align=center id=\"" PDB_TOC_ENTRY_MARK "%u\"><img src=\"%s:%u\"></p>",
-                    name ? tocEntries.Count() + 1 : 0, src, i);
-                if (name)
-                    tocEntries.Append(str::conv::FromAnsi(name));
-            }
-        }
-        return htmlData.Size() > 0;
-    }
+    if (!mobiDoc)
+        return false;
     if (Pdb_PalmDoc != mobiDoc->GetDocType() && Pdb_TealDoc != mobiDoc->GetDocType()) {
         delete mobiDoc;
         return false;
@@ -906,33 +877,6 @@ const char *PalmDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-ImageData *PalmDoc::GetImageData(const char *id)
-{
-    for (size_t i = 0; i < images.Count(); i++) {
-        if (str::Eq(images.At(i).id, id))
-            return &images.At(i).base;
-    }
-
-    ScopedMem<WCHAR> src(str::conv::FromUtf8(id));
-    WCHAR *colon = (WCHAR *)str::FindCharLast(src.Get(), ':');
-    uint32_t idx;
-    if (!colon || !str::Parse(colon + 1, L"%u%$", &idx))
-        return NULL;
-    *colon = '\0';
-    ScopedMem<WCHAR> dbPath(path::GetDir(GetFileName()));
-    dbPath.Set(path::Join(dbPath, src));
-    if (!file::Exists(dbPath))
-        dbPath.Set(str::Join(dbPath, L".pdb"));
-
-    ImageData2 data = { 0 };
-    data.base.data = LoadTealPaintImage(dbPath, idx, &data.base.len);
-    if (!data.base.data)
-        return NULL;
-    data.id = str::Dup(id);
-    images.Append(data);
-    return &images.Last().base;
-}
-
 const WCHAR *PalmDoc::GetFileName() const
 {
     return fileName;
@@ -952,269 +896,12 @@ bool PalmDoc::ParseToc(EbookTocVisitor *visitor)
     return true;
 }
 
-// cf. http://www.tealpoint.com/developr.htm
-#pragma pack(push)
-#pragma pack(1)
-
-struct TealPaintHeader {
-    uint32_t headSize; // = thumbOffset
-    uint32_t thumbSize;
-    uint32_t bodyOffset;
-    uint32_t bodySize;
-    uint32_t nameOffset;
-    uint8_t  flags;
-    uint8_t  compression;
-    uint16_t width;
-    uint16_t height;
-    uint16_t depth;
-};
-
-#pragma pack(pop)
-
-STATIC_ASSERT(sizeof(TealPaintHeader) == 28, tealPaintHeaderSize);
-
-class TealByteReader {
-    uint8_t *data;
-    size_t len;
-    bool compressed;
-
-    size_t offset;
-    int repeat;
-    bool repeatSame;
-
-public:
-    TealByteReader(const char *data, size_t len, bool compressed) :
-        data((uint8_t *)data), len(len), compressed(compressed),
-        offset(0), repeat(0), repeatSame(false) { }
-
-    uint8_t Read() {
-        if (offset >= len)
-            return 0;
-        if (!compressed)
-            return data[offset++];
-        // TealPaint optionally uses byte-wise RLE compression
-        if (0 == repeat) {
-            repeat = (data[offset] >> 1) + 1;
-            repeatSame = data[offset] & 0x1;
-            if (++offset >= len)
-                return 0;
-        }
-        return 0 != --repeat && repeatSame ? data[offset] : data[offset++];
-    }
-};
-
-static bool GetTealPaintHeader(const char *data, size_t size, TealPaintHeader *hdr)
-{
-    if (!data || size < sizeof(*hdr))
-        return false;
-    bool ok = ByteReader(data, size).UnpackBE(hdr, sizeof(*hdr), "5d2b3w");
-    CrashIf(!ok);
-    if (hdr->headSize < sizeof(*hdr) - 2)
-        return false;
-    if (hdr->headSize < sizeof(*hdr))
-        hdr->depth = 1;
-    if (hdr->depth != 1 && hdr->depth != 2 && hdr->depth != 4 && hdr->depth != 8 && hdr->depth != 16)
-        return false;
-    if (hdr->bodyOffset > size || hdr->bodySize > size - hdr->bodyOffset)
-        return false;
-    if (0 < hdr->nameOffset && hdr->nameOffset < hdr->headSize || hdr->nameOffset >= size)
-        return false;
-    return true;
-}
-
-// converts a TealPaint image into TGA (which is simpler to do than BMP)
-char *PalmDoc::LoadTealPaintImage(const WCHAR *dbFile, size_t idx, size_t *lenOut)
-{
-    PdbReader pdbReader(dbFile);
-    if (!str::Eq(pdbReader.GetDbType(), "DataTlPt"))
-        return NULL;
-
-    size_t size;
-    const char *data = pdbReader.GetRecord(idx, &size);
-    TealPaintHeader hdr;
-    if (!GetTealPaintHeader(data, size, &hdr))
-        return NULL;
-
-    bool isExtended = false;
-    uint32_t col, row, width, height;
-    if (hdr.nameOffset != 0 && str::Parse(data + hdr.nameOffset, size - hdr.nameOffset,
-                                          "#(%u,%u) - %ux%u", &col, &row, &width, &height)) {
-        if (col != 0 || row != 0)
-            return NULL;
-        if (width > (uint16_t)-1 || height > (uint16_t)-1)
-            return NULL;
-        isExtended = true;
-    }
-    else {
-        width = hdr.width;
-        height = hdr.height;
-    }
-
-    bool hasPalette = hdr.depth != 16;
-    size_t tgaDataSize = 18 + (hasPalette ? 256 * 3 : 0) + width * height * (hasPalette ? 1 : 3);
-    uint8_t *tgaData = AllocArray<uint8_t>(tgaDataSize);
-    if (!tgaData)
-        return NULL;
-
-    // encode TGA header
-    uint8_t *tgaHeader = tgaData;
-    tgaHeader[1] = hasPalette ? 1 : 0; // has palette
-    tgaHeader[2] = hasPalette ? 1 : 2; // uncompressed palette/truetype
-    tgaHeader[6] = 256 >> 8; // palette size
-    tgaHeader[7] = 24; // palette bit depth
-    tgaHeader[12] = width & 0xFF; tgaHeader[13] = width >> 8;
-    tgaHeader[14] = height & 0xFF; tgaHeader[15] = height >> 8;
-    tgaHeader[16] = hasPalette ? 8 : 24; // data bit depth
-    tgaHeader[17] = 0x20; // upside down
-
-    // encode TealPaint palette
-    if (hasPalette) {
-        uint8_t *palette = tgaData + 18;
-        static int colorScale[] = { 255, 204, 153, 102, 51, 17 };
-        for (int r = 0; r < 6; r++) {
-            for (int g = 0; g < 6; g++) {
-                for (int b = 0; b < 6; b++) {
-                    int i = r * 18 + g + b * 6 + (b < 3 ? 0 : 90);
-                    palette[i * 3 + 2] = colorScale[r];
-                    palette[i * 3 + 1] = colorScale[g];
-                    palette[i * 3 + 0] = colorScale[b];
-                }
-            }
-        }
-        static int grayScale[] = { 34, 68, 85, 119, 136, 170, 187, 221, 238, 204 };
-        for (int i = 0; i < 10; i++) {
-            palette[(216 + i) * 3 + 2] = palette[(216 + i) * 3 + 1] = palette[(216 + i) * 3 + 0] = grayScale[i];
-        }
-        for (int i = 0; i < 4; i++) {
-            palette[(226 + i) * 3 + 2] = i < 2 ? 136 : 0;
-            palette[(226 + i) * 3 + 1] = i >= 2 ? 136 : 0;
-            palette[(226 + i) * 3 + 0] = (i % 2) != 0 ? 136 : 0;
-        }
-    }
-
-    // encode pixel data (tile-by-tile)
-    uint8_t *pixels = tgaData + 18 + (hasPalette ? 256 * 3 : 0);
-    if (isExtended) {
-        int rows = (height + 159) / 160, cols = (width + 159) / 160;
-        for (int y = 0; y < rows; y++) {
-            for (int x = 0; x < cols; x++) {
-                LoadTealPaintImageTile(&pdbReader, idx + y * cols + x, pixels,
-                                       x * 160, y * 160, x < cols - 1 ? 160 : width % 160,
-                                       y < rows - 1 ? 160 : height % 160,
-                                       width * (hasPalette ? 1 : 3), hasPalette);
-            }
-        }
-    }
-    else
-        LoadTealPaintImageTile(&pdbReader, idx, pixels, 0, 0, width, height,
-                               width * (hasPalette ? 1 : 3), hasPalette);
-    if (lenOut)
-        *lenOut = tgaDataSize;
-    return (char *)tgaData;
-}
-
-bool PalmDoc::LoadTealPaintImageTile(PdbReader *pdbReader, size_t idx, uint8_t *pixels, int left, int top, int width, int height, int stride, bool hasPalette)
-{
-    size_t size;
-    const char *data = pdbReader->GetRecord(idx, &size);
-    TealPaintHeader hdr;
-    if (!GetTealPaintHeader(data, size, &hdr))
-        return false;
-    if (hasPalette != (16 != hdr.depth))
-        return false;
-    if (hdr.width < width)
-        width = hdr.width;
-    if (hdr.height < height)
-        height = hdr.height;
-
-    // decode image data
-    TealByteReader r(data + hdr.bodyOffset, min(hdr.bodySize, size - hdr.bodyOffset), hdr.compression);
-    static int paletteIdx2[] = { 0, 221, 218, 255 };
-    static int paletteIdx4[] = { 0, 224, 223, 25, 222, 221, 50, 220, 219, 165, 218, 217, 190, 216, 215, 255 };
-    int bwidth;
-    if (1 == hdr.depth)
-        bwidth = (hdr.width + 15) / 16 * 16;
-    else if (2 == hdr.depth)
-        bwidth = (hdr.width + 3) / 4 * 4;
-    else
-        bwidth = (hdr.width + 1) / 2 * 2;
-
-    for (int y = 0; y < height; y++) {
-        uint8_t *pix = pixels + (top + y) * stride + left * (hasPalette ? 1 : 3);
-        for (int x = 0; x < bwidth; ) {
-            uint8_t c = r.Read();
-            switch (hdr.depth) {
-            case 1:
-                for (int i = 0; i < 8; i++, c <<= 1) {
-                    if (x++ < width)
-                        *pix++ = c & 0x80 ? 255 : 0;
-                }
-                break;
-            case 2:
-                for (int i = 0; i < 4; i++, c <<= 2) {
-                    if (x++ < width)
-                        *pix++ = paletteIdx2[(c & 0xC0) >> 6];
-                }
-                break;
-            case 4:
-                for (int i = 0; i < 2; i++, c <<= 4) {
-                    if (x++ < width)
-                        *pix++ = paletteIdx4[(c & 0xF0) >> 4];
-                }
-                break;
-            case 8:
-                if (x++ < width)
-                    *pix++ = c;
-                break;
-            case 16:
-                if (x++ < width) {
-                    uint16_t c2 = (c << 8) | r.Read();
-                    *pix++ = (c2 << 3) & 0xF8; // blue
-                    *pix++ = (c2 >> 3) & 0xFC; // green
-                    *pix++ = (c2 >> 8) & 0xF8; // red
-                }
-                else
-                    r.Read();
-                break;
-            default:
-                CrashIf(true);
-            }
-        }
-    }
-
-    return true;
-}
-
-char *PalmDoc::GetTealPaintImageName(PdbReader *pdbReader, size_t idx, bool& isValid)
-{
-    size_t size;
-    const char *data = pdbReader->GetRecord(idx, &size);
-    TealPaintHeader hdr;
-    if (!GetTealPaintHeader(data, size, &hdr))
-        return NULL;
-    isValid = true;
-    if (!hdr.nameOffset)
-        return NULL;
-    uint32_t col, row, width, height;
-    const char *name = str::Parse(data + hdr.nameOffset, size - hdr.nameOffset, "#(%u,%u) - %ux%u", &col, &row, &width, &height);
-    if (!name)
-        return str::DupN(data + hdr.nameOffset, size - hdr.nameOffset);
-    if (col != 0 || row != 0) {
-        isValid = false;
-        return NULL;
-    }
-    if (name < data + size && str::IsWs(*name))
-        name++;
-    return str::DupN(name, data + size - name);
-}
-
 bool PalmDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         PdbReader pdbReader(fileName);
         return str::Eq(pdbReader.GetDbType(), "TEXtREAd") ||
-               str::Eq(pdbReader.GetDbType(), "TEXtTlDc") ||
-               str::Eq(pdbReader.GetDbType(), "DataTlPt");
+               str::Eq(pdbReader.GetDbType(), "TEXtTlDc");
     }
 
     return str::EndsWithI(fileName, L".pdb");

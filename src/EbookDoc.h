@@ -105,16 +105,12 @@ class PalmDoc {
     WStrVec tocEntries;
 
     bool Load();
-    char *LoadTealPaintImage(const WCHAR *dbFile, size_t idx, size_t *lenOut);
-    bool LoadTealPaintImageTile(PdbReader *pdbReader, size_t idx, uint8_t *pixels, int left, int top, int width, int height, int stride, bool hasPalette);
-    char *GetTealPaintImageName(PdbReader *pdbReader, size_t idx, bool& isValid);
 
 public:
     PalmDoc(const WCHAR *fileName);
     ~PalmDoc();
 
     const char *GetTextData(size_t *lenOut);
-    ImageData *GetImageData(const char *id);
     const WCHAR *GetFileName() const;
 
     bool HasToc() const;

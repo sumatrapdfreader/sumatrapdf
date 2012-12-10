@@ -79,8 +79,6 @@ public:
 class PalmDoc;
 
 class PdbFormatter : public HtmlFormatter {
-    virtual void HandleTagImg(HtmlToken *t);
-
     PalmDoc *palmDoc;
 
 public:

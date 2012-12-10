@@ -321,22 +321,6 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
     }
 }
 
-/* PalmDOC-specific formatting methods */
-
-void PdbFormatter::HandleTagImg(HtmlToken *t)
-{
-    CrashIf(!palmDoc);
-    if (t->IsEndTag())
-        return;
-    AttrInfo *attr = t->GetAttrByName("src");
-    if (!attr)
-        return;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    ImageData *img = palmDoc->GetImageData(src);
-    if (img)
-        EmitImage(img);
-}
-
 /* standalone HTML-specific formatting methods */
 
 void HtmlFileFormatter::HandleTagImg(HtmlToken *t)
