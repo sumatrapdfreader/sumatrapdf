@@ -1,6 +1,5 @@
 Major user-visible changes in each release:
-2.2 - fb2 in ebook ui; new translation system as described
-      in wishlist.txt; rebrand as Sumatra Reader
+2.2 - fb2 in ebook ui
 2.3 - text support (in it's own ui)
 2.4 - hex display (can show any file in hex/text view; it's own ui)
 
@@ -12,10 +11,6 @@ More detailed list for 2.2:
   doesn't involve closing the window
 - mobi: closing mobi document when initial formatting is going on,
   we loose the position in the file (it gets reset to 0)
-- a web-based translation system as described in wishlist.txt
-  Server written in Go + python scripts to upload strings for
-  translation and download translations
-  https://github.com/kjk/apptranslator
 - closing last ebook window via 'x' if it has opened document
   leaks memory
 - ???
