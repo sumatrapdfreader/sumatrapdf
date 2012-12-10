@@ -20,8 +20,8 @@ Doc::Doc(const Doc& other)
     Clear();
     type = other.type;
     generic = other.generic;
-    str::ReplacePtr(&loadingErrorMessage, other.loadingErrorMessage);
-    str::ReplacePtr(&filePath, other.filePath);
+    error = other.error;
+    filePath.Set(str::Dup(other.filePath));
 }
 
 Doc& Doc::operator=(const Doc& other)
@@ -29,21 +29,14 @@ Doc& Doc::operator=(const Doc& other)
     if (this != &other) {
         type = other.type;
         generic = other.generic;
-        str::ReplacePtr(&loadingErrorMessage, other.loadingErrorMessage);
-        str::ReplacePtr(&filePath, other.filePath);
+        error = other.error;
+        filePath.Set(str::Dup(other.filePath));
     }
     return *this;
 }
 
 Doc::~Doc()
 {
-    FreeStrings();
-}
-
-void Doc::FreeStrings()
-{
-    str::ReplacePtr(&loadingErrorMessage, NULL);
-    str::ReplacePtr(&filePath, NULL);
 }
 
 // delete underlying object
@@ -70,7 +63,6 @@ void Doc::Delete()
         break;
     }
 
-    FreeStrings();
     Clear();
 }
 
@@ -113,9 +105,9 @@ Doc::Doc(MobiTestDoc *doc)
 void Doc::Clear()
 {
     type = Doc_None;
-    loadingErrorMessage = NULL;
-    filePath = NULL;
     generic = NULL;
+    error = Error_None;
+    filePath.Set(NULL);
 }
 
 BaseEngine *Doc::AsEngine() const
@@ -292,12 +284,12 @@ Doc Doc::CreateFromFile(const WCHAR *filePath)
     else if (MobiDoc::IsSupportedFile(filePath))
         doc = Doc(MobiDoc::CreateFromFile(filePath));
 
-    doc.filePath = str::Dup(filePath);
     // if failed to load and more specific error message hasn't been
     // set above, set a generic error message
     if (doc.IsNone()) {
-        CrashIf(doc.loadingErrorMessage);
-        doc.loadingErrorMessage = str::Format(L"Error loading %s", filePath);
+        CrashIf(doc.error);
+        doc.error = Error_Unknown;
+        doc.filePath.Set(str::Dup(filePath));
     }
     CrashIf(!doc.generic && !doc.IsNone());
     return doc;

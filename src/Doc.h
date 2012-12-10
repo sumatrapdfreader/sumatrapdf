@@ -44,6 +44,10 @@ enum DocType {
     Engine_Epub, Engine_Fb2, Engine_Mobi, Engine_Pdb, Engine_Chm2, Engine_Tcr, Engine_Html, Engine_Txt,
 };
 
+enum DocError {
+    Error_None, Error_Unknown,
+};
+
 class Doc
 {
 protected:
@@ -54,16 +58,11 @@ protected:
     // of the time it's a generic error message but can be
     // more specific e.g. mobi loading might specify that
     // loading failed due to DRM
-    // The caller can also display it's own message.
-    //
-    // TODO: replace with an enumeration so that translation
-    //       can more easily happen in UI code?
-    WCHAR *loadingErrorMessage;
+    DocError error;
 
-    // A copy of the file path. We need this because while in
-    // most cases we can extract it from the wrapped object,
-    // if loading failed we don't have it but might need it
-    WCHAR *filePath;
+    // A copy of the file path which is needed in case of an error (else
+    // the file path is supposed to be stored inside the wrapped *Doc or engine)
+    ScopedMem<WCHAR> filePath;
 
     union {
         void *generic;
@@ -75,7 +74,6 @@ protected:
     };
 
     const WCHAR *GetFilePathFromDoc() const;
-    void FreeStrings();
 
 public:
     Doc(const Doc& other);
@@ -99,8 +97,8 @@ public:
     bool IsEngine() const;
 
     bool LoadingFailed() const {
-        CrashIf(loadingErrorMessage && !IsNone());
-        return NULL != loadingErrorMessage;
+        CrashIf(error && !IsNone());
+        return error != Error_None;
     }
 
     BaseEngine *AsEngine() const;
