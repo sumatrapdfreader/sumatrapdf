@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4e1b5e988953def98e859d4a95073d98fbc842ee
+a3be17982909019e7f99aa71882151447e092d97
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6494,6 +6494,10 @@ tw:我的最愛
 uk:Закладки
 uz:Tanlanganlar
 vn:Ưa thích
+:FictionBook documents
+br:Documentos FictionBook
+de:FictionBook-Dokumente
+pl:Dokumenty FictionBook
 :File %s not found
 am:%s ֆայլը չի գտնվել
 ar:الملف %s غير موجود

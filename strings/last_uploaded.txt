@@ -114,6 +114,7 @@ Failed to rename the file!
 Failed to save a file
 Fast Web View
 Favorites
+FictionBook documents
 File %s not found
 File Size:
 File:
