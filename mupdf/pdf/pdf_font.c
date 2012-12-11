@@ -720,7 +720,7 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 						else
 							etable[i] = ft_char_index(face, aglcode);
 						/* SumatraPDF: prefer non-zero gids */
-						if (aglcode && !etable[i])
+						if (!etable[i])
 							etable[i] = ft_char_index(face, i);
 					}
 				}
@@ -729,6 +729,14 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 			/* MacRoman cmap */
 			else if (!symbolic && face->charmap && face->charmap->platform_id == 1)
 			{
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2123 */
+				if (pdf_is_name(encoding) && !strcmp(pdf_to_name(encoding), "MacExpertEncoding"))
+				{
+					if (FT_HAS_GLYPH_NAMES(face))
+						for (i = 0; i < 256; i++)
+							estrings[i] = NULL;
+				}
+				else
 				for (i = 0; i < 256; i++)
 				{
 					if (estrings[i])
@@ -739,7 +747,7 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 						else
 							etable[i] = ft_char_index(face, k);
 						/* SumatraPDF: prefer non-zero gids */
-						if (k > 0 && !etable[i])
+						if (!etable[i])
 							etable[i] = ft_char_index(face, i);
 					}
 				}
