@@ -10510,7 +10510,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Error al Guardar el Archivo",
   "Visualizaci\303\263n R\303\241pida en Web",
   "Favoritos",
-  NULL,
+  "Documentos FictionBook",
   "El archivo %s no se encuentra",
   "Tama\303\261o del Archivo:",
   "Archivo:",

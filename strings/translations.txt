@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-bc0d0975a5b4021a6ba8b643cd024dec81f21c57
+0a943537feba195f33c1eeb5841f6f710fa7d0c9
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6499,6 +6499,7 @@ br:Documentos FictionBook
 ca-xv:Documents FictionBook
 ca:Documents FictionBook
 de:FictionBook-Dokumente
+es:Documentos FictionBook
 pl:Dokumenty FictionBook
 ru:Документы FictionBook
 sq:Dokumente FictionBook
