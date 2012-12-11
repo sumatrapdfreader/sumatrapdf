@@ -148,7 +148,7 @@ void Destroy()
 // Return a properly encoded version of a translation for 'txt'.
 // Memory for the string needs to be allocated and is cached in gTranslationCache
 // array. That way the client doesn't have to worry about the lifetime of the string.
-// All allocated strings can be freed with Trans::FreeData(), which should be
+// All allocated strings can be freed with Trans::Destroy(), which should be
 // done at program exit so that we're guaranteed no-one is using the data
 const WCHAR *GetTranslation(const char *txt)
 {

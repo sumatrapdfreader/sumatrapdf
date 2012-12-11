@@ -14,15 +14,9 @@ bool IsStressTesting();
 class WindowInfo;
 class RenderCache;
 
-class StressTestBase {
-public:
-    virtual ~StressTestBase() { }
-    virtual void OnTimer() = 0;
-    virtual void GetLogInfo(str::Str<char> *s) = 0;
-};
-
-bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles=false);
 void StartStressTest(WindowInfo *win, const WCHAR *path, const WCHAR *filter,
                      const WCHAR *ranges, int cycles, RenderCache *renderCache);
+void OnStressTestTimer(WindowInfo *win);
+void FinishStressTest(WindowInfo *win);
 
 #endif

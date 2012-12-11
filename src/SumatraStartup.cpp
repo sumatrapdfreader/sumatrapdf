@@ -450,7 +450,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
 
     if (i.stressTestPath) {
-        gIsStressTesting = true;
         StartStressTest(win, i.stressTestPath, i.stressTestFilter,
                         i.stressTestRanges, i.stressTestCycles, &gRenderCache);
     }

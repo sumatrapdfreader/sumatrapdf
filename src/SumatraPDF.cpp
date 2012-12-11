@@ -9,6 +9,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
+#include "DirIter.h"
 #include "Doc.h"
 #include "EbookController.h"
 #include "EbookWindow.h"
@@ -144,8 +145,6 @@ Vec<WindowInfo*>             gWindows;
 Vec<EbookWindow*>            gEbookWindows;
 FileHistory                  gFileHistory;
 Favorites *                  gFavorites;
-
-static bool                         gIsStressTesting = false;
 
 static HCURSOR                      gCursorDrag;
 static HCURSOR                      gCursorScroll;
@@ -727,7 +726,7 @@ bool ShouldSaveThumbnail(DisplayState& ds)
         return false;
 
     // don't accumulate thumbnails during a stress test
-    if (gIsStressTesting)
+    if (IsStressTesting())
         return false;
 
     // don't create thumbnails for files that won't need them anytime soon
@@ -2371,29 +2370,6 @@ void OnMenuExit()
 
     SavePrefs();
     PostQuitMessage(0);
-}
-
-// note: used from CrashHanlder.cpp, should not allocate memory
-void GetStressTestInfo(str::Str<char>* s)
-{
-    // only add paths to files encountered during an explicit stress test
-    // (for privacy reasons, users should be able to decide themselves
-    // whether they want to share what files they had opened during a crash)
-    if (!gIsStressTesting)
-        return;
-
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *w = gWindows.At(i);
-        if (!w || !w->dm || !w->loadedFilePath)
-            continue;
-
-        s->Append("File: ");
-        char buf[256];
-        str::conv::ToCodePageBuf(buf, dimof(buf), w->loadedFilePath, CP_UTF8);
-        s->Append(buf);
-        w->stressTest->GetLogInfo(s);
-        s->Append("\r\n");
-    }
 }
 
 size_t TotalWindowsCount()
@@ -4122,7 +4098,7 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         break;
 
     case DIR_STRESS_TIMER_ID:
-        win.stressTest->OnTimer();
+        OnStressTestTimer(&win);
         break;
     }
 }

@@ -6,6 +6,7 @@
 
 #include "AppPrefs.h"
 #include "AppTools.h"
+#include "DirIter.h"
 #include "Doc.h"
 #include "FileUtil.h"
 #include "Notifications.h"
@@ -191,27 +192,6 @@ inline bool IsSpecialDir(const WCHAR *s)
     return str::Eq(s, L".") || str::Eq(s, L"..");
 }
 
-bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles)
-{
-    ScopedMem<WCHAR> dirPath(path::GetDir(pattern));
-
-    WIN32_FIND_DATA fdata;
-    HANDLE hfind = FindFirstFile(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind)
-        return false;
-
-    do {
-        bool append = !dirsInsteadOfFiles;
-        if ((fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-            append = dirsInsteadOfFiles && !IsSpecialDir(fdata.cFileName);
-        if (append)
-            paths.Append(path::Join(dirPath, fdata.cFileName));
-    } while (FindNextFile(hfind, &fdata));
-    FindClose(hfind);
-
-    return paths.Count() > 0;
-}
-
 static bool IsStressTestSupportedFile(const WCHAR *fileName, const WCHAR *filter)
 {
     if (filter && !path::Match(fileName, filter))
@@ -302,7 +282,7 @@ static void MakeRandomSelection(DisplayModel *dm, int pageNo)
 a human advancing one page at a time. This is mostly to run through a large number
 of PDFs before a release to make sure we're crash proof. */
 
-class StressTest : public StressTestBase {
+class StressTest {
     WindowInfo *      win;
     RenderCache *     renderCache;
     Timer             currPageRenderTime;
@@ -340,8 +320,8 @@ public:
 
     void Start(const WCHAR *path, const WCHAR *filter, const WCHAR *ranges, int cycles);
 
-    virtual void OnTimer();
-    virtual void GetLogInfo(str::Str<char> *s);
+    void OnTimer();
+    void GetLogInfo(str::Str<char> *s);
 };
 
 void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *ranges, int cycles)
@@ -595,12 +575,35 @@ Next:
     TickTimer();
 }
 
-// used from CrashHandler, shouldn't allocate memory
+// note: used from CrashHandler, shouldn't allocate memory
 void StressTest::GetLogInfo(str::Str<char> *s)
 {
     s->AppendFmt(", stress test rendered %d files in ", filesCount);
     FormatTime(SecsSinceSystemTime(stressStartTime), s);
     s->AppendFmt(", currPage: %d", currPage);
+}
+
+// note: used from CrashHandler.cpp, should not allocate memory
+void GetStressTestInfo(str::Str<char>* s)
+{
+    // only add paths to files encountered during an explicit stress test
+    // (for privacy reasons, users should be able to decide themselves
+    // whether they want to share what files they had opened during a crash)
+    if (!gIsStressTesting)
+        return;
+
+    for (size_t i = 0; i < gWindows.Count(); i++) {
+        WindowInfo *w = gWindows.At(i);
+        if (!w || !w->dm || !w->loadedFilePath)
+            continue;
+
+        s->Append("File: ");
+        char buf[256];
+        str::conv::ToCodePageBuf(buf, dimof(buf), w->loadedFilePath, CP_UTF8);
+        s->Append(buf);
+        w->stressTest->GetLogInfo(s);
+        s->Append("\r\n");
+    }
 }
 
 void StartStressTest(WindowInfo *win, const WCHAR *path, const WCHAR *filter,
@@ -614,4 +617,14 @@ void StartStressTest(WindowInfo *win, const WCHAR *path, const WCHAR *filter,
     StressTest *dst = new StressTest(win, renderCache);
     win->stressTest = dst;
     dst->Start(path, filter, ranges, cycles);
+}
+
+void OnStressTestTimer(WindowInfo *win)
+{
+    win->stressTest->OnTimer();
+}
+
+void FinishStressTest(WindowInfo *win)
+{
+    delete win->stressTest;
 }

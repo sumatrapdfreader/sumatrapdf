@@ -49,7 +49,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 
 WindowInfo::~WindowInfo()
 {
-    delete stressTest;
+    FinishStressTest(this);
 
     delete pdfsync;
     delete watcher;

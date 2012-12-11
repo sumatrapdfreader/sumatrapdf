@@ -584,7 +584,6 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
 }
 
-
 /* Default size for the window, happens to be american A4 size (I think) */
 #define DEF_PAGE_RATIO          (612.0/792.0)
 

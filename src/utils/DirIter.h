@@ -26,4 +26,6 @@ public:
     const WCHAR *Next();
 };
 
+bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles=true);
+
 #endif

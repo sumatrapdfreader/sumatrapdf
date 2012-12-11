@@ -93,3 +93,24 @@ const WCHAR *DirIter::Next()
     }
     return currPath;
 }
+
+bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles)
+{
+    ScopedMem<WCHAR> dirPath(path::GetDir(pattern));
+
+    WIN32_FIND_DATA fdata;
+    HANDLE hfind = FindFirstFile(pattern, &fdata);
+    if (INVALID_HANDLE_VALUE == hfind)
+        return false;
+
+    do {
+        bool append = !dirsInsteadOfFiles;
+        if ((fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            append = dirsInsteadOfFiles && !IsSpecialDir(fdata.cFileName);
+        if (append)
+            paths.Append(path::Join(dirPath, fdata.cFileName));
+    } while (FindNextFile(hfind, &fdata));
+    FindClose(hfind);
+
+    return paths.Count() > 0;
+}
