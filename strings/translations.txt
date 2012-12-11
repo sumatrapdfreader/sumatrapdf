@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a3be17982909019e7f99aa71882151447e092d97
+bc0d0975a5b4021a6ba8b643cd024dec81f21c57
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6361,7 +6361,7 @@ bn:সঞ্চিকা সংরক্ষণে ব্যর্থ
 br:Erro ao salvar o arquivo.
 bs:Neuspješno spašavanje fajla
 by:Немагчыма захаваць файл
-ca-xv:S'ha produït un error en alçar el fitxer.
+ca-xv:S'ha produït un error en guardar el fitxer.
 ca:S'ha produït un error en desar el fitxer.
 cn:保存文件失败
 cy:Methwyd cadw ffeil
@@ -6496,8 +6496,12 @@ uz:Tanlanganlar
 vn:Ưa thích
 :FictionBook documents
 br:Documentos FictionBook
+ca-xv:Documents FictionBook
+ca:Documents FictionBook
 de:FictionBook-Dokumente
 pl:Dokumenty FictionBook
+ru:Документы FictionBook
+sq:Dokumente FictionBook
 :File %s not found
 am:%s ֆայլը չի գտնվել
 ar:الملف %s غير موجود
@@ -10037,7 +10041,7 @@ si:මදක් සිටින්න - rendering...
 sk:Prosím počkajte - zobrazovanie...
 sl:Počakajte trenutek, upodobitev poteka …
 sp-rs:Spremanje prikaza...
-sq:Lutemi të prisni radhitjen...
+sq:Lutemi të prisni - po radhitet...
 sr-rs:Спремање приказа...
 sv:Ett ögonblick - förbereder...
 ta:தயவுசெய்து காத்திருக்கவும் - அளிக்கபட்டுவருகிறது...
@@ -10976,7 +10980,7 @@ bn:সংরক্ষণ এই রূপে
 br:Salvar como
 bs:Spasi kao
 by:Захаваць як
-ca-xv:Anomena i alça
+ca-xv:Anomena i guarda
 ca:Anomena i desa
 cn:另存为
 cy:Cadw fel
@@ -11039,7 +11043,7 @@ ar:حفظ الاختصار...\tCtrl+Shift+S
 bg:Запамети &кратък път към файла...\tCtrl+Shift+S
 br:S&alvar atalho...\tCtrl+Shift+S
 bs:Spasi k&raticu...\tCtrl+Shift+S
-ca-xv:Alça una &drecera...\tCtrl+Maj+5
+ca-xv:Guarda una &drecera...\tCtrl+Maj+5
 ca:Desa una &drecera...\tCtrl+Maj+5
 cn:保存快捷方式(&H)...\tCtrl+Shift+S
 cz:U&ložit zástupce...\tCtrl+Shift+S
@@ -11713,7 +11717,7 @@ si:තිබෙනවිටදී &පිටුසලකුණු පැති�
 sk:Zobraziť bočný panel &záložiek, pokiaľ je dostupný
 sl:Pokaži podokno z &zaznamki, če so na voljo
 sp-rs:Prikaži bočnu traku sa obeleživačima
-sq:Tregoj brezin me &faqet e shenjuara kur mundësohen
+sq:Tregoj &faqet e shenjuara kur janë të gatshme
 sr-rs:Прикажи бочну траку са обележивачима
 sv:Visa &bokmärken när de finns
 ta:புத்தககுறி பட்டை இருந்தல் காட்டு
@@ -12882,7 +12886,7 @@ si:විශාලනය (Z)
 sk:Zmeniť veľkosť
 sl:Povečava
 sp-rs:Uvećaj
-sq:Shtrij
+sq:Përshtat
 sr-rs:Увећај
 sv:Zoom
 ta:பெரிதக்கு
@@ -13069,7 +13073,7 @@ si:විශාලන කළමනාකරණය
 sk:Veľkosť zobrazenia
 sl:Faktor povečave
 sp-rs:Procenat uvećanja
-sq:Faktori shkallë
+sq:Koeficienti i zmadhimit
 sr-rs:Проценат увећања
 sv:Zoomfaktor
 ta:பெரிதக்கக்காரணி
