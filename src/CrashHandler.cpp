@@ -137,11 +137,6 @@ static char *BuildCrashInfoText()
     dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     dbghelp::GetAllThreadsCallstacks(s);
     s.Append("\r\n");
-#if 0 // disabled because crashes in release builds
-    s.AppendFmt("Thread: %x\r\n", GetCurrentThreadId());
-    dbghelp::GetCurrentThreadCallstack(s);
-    s.Append("\r\n");
-#endif
     s.Append(gModulesInfo);
 
     s.Append("\r\n");

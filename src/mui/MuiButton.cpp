@@ -6,6 +6,7 @@
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlParserLookup.h"
+#include "CrashHandler.h"
 
 namespace mui {
 
@@ -63,7 +64,13 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
         textDx = CeilI(bbox.Width);
         // bbox shouldn't be bigger than fontDy. We apply magic adjustment because
         // bbox is bigger in n-th decimal point
-        CrashIf(fontDy + .5f < bbox.Height);
+        if (fontDy + .5f < bbox.Height) {
+            float diff = fontDy + .5f - bbox.Height;
+            char *fontName = str::conv::ToUtf8(s->fontName);
+            char *s = str::conv::ToUtf8(text);
+            CrashLogFmt("fontDy + .5.f=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'\r\n", (float)(fontDy + .5f), (float)bbox.Height, diff, fontName, s);
+            CrashIf(fontDy + .5f < bbox.Height);
+        }
     }
     desiredSize.Width  += textDx;
     desiredSize.Height += CeilI(fontDy);
