@@ -126,11 +126,11 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void **ppvObject);
-    STDMETHODIMP_(ULONG) AddRef() { return ++refCount; }
+    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
     STDMETHODIMP_(ULONG) Release();
 
 protected:
-    int refCount;
+    LONG refCount;
 
     HW_IOleInPlaceFrame *           oleInPlaceFrame;
     HW_IOleInPlaceSiteWindowless *  oleInPlaceSiteWindowless;
@@ -194,6 +194,34 @@ static void FreeWindowId(int windowId)
 // {F1EC293F-DBBD-4A4B-94F4-FA52BA0BA6EE}
 static const GUID CLSID_HW_IInternetProtocol = { 0xf1ec293f, 0xdbbd, 0x4a4b, { 0x94, 0xf4, 0xfa, 0x52, 0xba, 0xb, 0xa6, 0xee } };
 
+/* TODO: can I implement AddRef()/Release() in all classes below just by
+   inheriting this "mixin" ? */
+/*
+class ComRefCounted {
+    LONG refCount;
+    ComRefCounted() {
+        refCount = 1;
+    }
+    STDMETHODIMP_(ULONG) AddRef();
+    STDMETHODIMP_(ULONG) Release();
+};
+
+STDMETHODIMP_(ULONG) ComRefCounted::Release()
+{
+    return InterlockedIncrement(&refCount);
+}
+
+STDMETHODIMP_(ULONG) ComRefCounted::Release()
+{
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
+}
+*/
+
 class HW_IInternetProtocolInfo : public IInternetProtocolInfo
 {
 public:
@@ -205,7 +233,7 @@ protected:
 public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
-    STDMETHODIMP_(ULONG) AddRef() { return ++refCount; }
+    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
     STDMETHODIMP_(ULONG) Release();
 
     // IInternetProtocolInfo
@@ -226,15 +254,17 @@ public:
     { return INET_E_DEFAULT_ACTION; }
 
 protected:
-    int refCount;
+    LONG refCount;
 };
 
 STDMETHODIMP_(ULONG) HW_IInternetProtocolInfo::Release()
 {
-    if (--refCount != 0)
-        return refCount;
-    delete this;
-    return 0;
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
 }
 
 STDMETHODIMP HW_IInternetProtocolInfo::QueryInterface(REFIID riid, void **ppvObject)
@@ -261,7 +291,7 @@ protected:
 public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
-    STDMETHODIMP_(ULONG) AddRef() { return ++refCount; }
+    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
     STDMETHODIMP_(ULONG) Release();
 
     // IInternetProtocol
@@ -281,7 +311,7 @@ public:
     STDMETHODIMP LockRequest(DWORD dwOptions) { return S_OK; }
     STDMETHODIMP UnlockRequest() { return S_OK; }
 protected:
-    int refCount;
+    LONG refCount;
 
     // those are filled in Start() and represent data to be sent
     // for a given url
@@ -292,10 +322,12 @@ protected:
 
 STDMETHODIMP_(ULONG) HW_IInternetProtocol::Release()
 {
-    if (--refCount != 0)
-        return refCount;
-    delete this;
-    return 0;
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
 }
 
 STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void **ppvObject)
@@ -449,7 +481,7 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
-    STDMETHODIMP_(ULONG) AddRef() { return ++refCount; }
+    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
     STDMETHODIMP_(ULONG) Release();
 
     // IClassFactory
@@ -457,15 +489,17 @@ public:
     STDMETHODIMP LockServer(BOOL fLock) { return S_OK; }
 
 protected:
-    int refCount;
+    LONG refCount;
 };
 
 STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release()
 {
-    if (--refCount != 0)
-        return refCount;
-    delete this;
-    return 0;
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
 }
 
 STDMETHODIMP HW_IInternetProtocolFactory::QueryInterface(REFIID riid, void **ppvObject)
@@ -863,7 +897,7 @@ public:
     STDMETHODIMP GetClassID(CLSID *pClassID) { return E_NOTIMPL; }
 
 private:
-    int         refCount;
+    LONG        refCount;
 
     char *      htmlData;
     IStream *   htmlStream;
@@ -955,15 +989,17 @@ STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void **ppvObject)
 
 STDMETHODIMP_(ULONG) HtmlMoniker::AddRef()
 {
-    return refCount++;
+    return InterlockedIncrement(&refCount);
 }
 
 STDMETHODIMP_(ULONG) HtmlMoniker::Release()
 {
-    if (--refCount != 0)
-        return refCount;
-    delete this;
-    return 0;
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
 }
 
 static HWND GetBrowserControlHwnd(HWND hwndControlParent)
@@ -1557,11 +1593,12 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
 
 STDMETHODIMP_(ULONG) FrameSite::Release()
 {
-    assert(refCount > 0);
-    if (--refCount != 0)
-        return refCount;
-    delete this;
-    return 0;
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
 }
 
 // IDispatch
