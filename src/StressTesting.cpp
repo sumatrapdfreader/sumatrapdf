@@ -73,9 +73,10 @@ bool IsValidPageRange(const WCHAR *ranges)
 
 inline bool IsInRange(Vec<PageRange>& ranges, int pageNo)
 {
-    for (size_t i = 0; i < ranges.Count(); i++)
+    for (size_t i = 0; i < ranges.Count(); i++) {
         if (ranges.At(i).start <= pageNo && pageNo <= ranges.At(i).end)
             return true;
+    }
     return false;
 }
 
@@ -278,6 +279,105 @@ static void MakeRandomSelection(DisplayModel *dm, int pageNo)
     }
 }
 
+// encapsulates the logic of getting the next file to test, so
+// that we can implement different strategies
+class TestFileProvider {
+public:
+    virtual ~TestFileProvider() {}
+    // returns path of the next file to test or NULL if done
+    virtual WCHAR *NextFile() = 0;
+    // start the iteration from the beginning
+    virtual void Restart() = 0;
+};
+
+class OneFileProvider : public TestFileProvider {
+    ScopedMem<WCHAR> filePath;
+    bool provided;
+public:
+    OneFileProvider(const WCHAR *path) {
+        filePath.Set(str::Dup(path));
+        provided = false;
+    }
+
+    virtual ~OneFileProvider() {}
+
+    virtual WCHAR *NextFile() {
+        if (provided)
+            return NULL;
+        provided = true;
+        return filePath;
+    }
+
+    virtual void Restart() {
+        provided = false;
+    }
+};
+
+class DirFileProvider : public TestFileProvider {
+
+    ScopedMem<WCHAR>  startDir;
+    ScopedMem<WCHAR>  fileFilter;
+
+    // current state of directory traversal
+    WStrVec           filesToOpen;
+    WStrVec           dirsToVisit;
+
+    bool OpenDir(const WCHAR *dirPath);
+public:
+    DirFileProvider(const WCHAR *path, const WCHAR *filter);
+    virtual ~DirFileProvider();
+    virtual WCHAR *NextFile();
+    virtual void Restart();
+};
+
+DirFileProvider::DirFileProvider(const WCHAR *path, const WCHAR *filter)
+{
+    startDir.Set(str::Dup(path));
+    if (filter && !str::Eq(filter, L"*"))
+        fileFilter.Set(str::Dup(filter));
+}
+
+DirFileProvider::~DirFileProvider()
+{
+}
+
+bool DirFileProvider::OpenDir(const WCHAR *dirPath)
+{
+    assert(filesToOpen.Count() == 0);
+
+    bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
+    filesToOpen.SortNatural();
+
+    ScopedMem<WCHAR> pattern(str::Format(L"%s\\*", dirPath));
+    bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
+
+    return hasFiles || hasSubDirs;
+}
+
+WCHAR *DirFileProvider::NextFile()
+{
+    while (filesToOpen.Count() > 0) {
+        ScopedMem<WCHAR> path(filesToOpen.At(0));
+        filesToOpen.RemoveAt(0);
+        return path.StealData();
+    }
+
+    if (dirsToVisit.Count() > 0) {
+        // test next directory
+        ScopedMem<WCHAR> path(dirsToVisit.At(0));
+        dirsToVisit.RemoveAt(0);
+        OpenDir(path);
+        return NextFile();
+    }
+
+    return NULL;
+}
+
+void DirFileProvider::Restart()
+{
+    OpenDir(startDir);
+}
+
 /* The idea of StressTest is to render a lot of PDFs sequentially, simulating
 a human advancing one page at a time. This is mostly to run through a large number
 of PDFs before a release to make sure we're crash proof. */
@@ -293,17 +393,12 @@ class StressTest {
     SYSTEMTIME        stressStartTime;
     int               cycles;
     Vec<PageRange>    pageRanges;
-    ScopedMem<WCHAR>  basePath;
-    ScopedMem<WCHAR>  fileFilter;
     // range of files to render (files get a new index when going through several cycles)
     Vec<PageRange>    fileRanges;
     int               fileIndex;
 
-    // current state of directory traversal
-    WStrVec           filesToOpen;
-    WStrVec           dirsToVisit;
+    TestFileProvider *fileProvider;
 
-    bool OpenDir(const WCHAR *dirPath);
     bool OpenFile(const WCHAR *fileName);
 
     bool GoToNextPage();
@@ -329,21 +424,16 @@ void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *rang
     srand((unsigned int)time(NULL));
     GetSystemTime(&stressStartTime);
 
-    // forbid entering sleep mode during tests
-    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-
-    basePath.Set(str::Dup(path));
-    fileFilter.Set(filter && !str::Eq(filter, L"*") ? str::Dup(filter) : NULL);
-    if (file::Exists(basePath)) {
-        filesToOpen.Append(str::Dup(basePath));
+    if (file::Exists(path)) {
+        fileProvider = new OneFileProvider(path);
         ParsePageRanges(ranges, pageRanges);
     }
-    else if (dir::Exists(basePath)) {
-        OpenDir(basePath);
+    else if (dir::Exists(path)) {
+        fileProvider = new DirFileProvider(path, filter);
         ParsePageRanges(ranges, fileRanges);
     }
     else {
-        // Note: dev only, don't translate
+        // Note: string dev only, don't translate
         ScopedMem<WCHAR> s(str::Format(L"Path '%s' doesn't exist", path));
         ShowNotification(win, s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
         Finished(false);
@@ -378,48 +468,22 @@ void StressTest::Finished(bool success)
     delete this;
 }
 
-bool StressTest::OpenDir(const WCHAR *dirPath)
-{
-    assert(filesToOpen.Count() == 0);
-
-    bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
-    filesToOpen.SortNatural();
-
-    ScopedMem<WCHAR> pattern(str::Format(L"%s\\*", dirPath));
-    bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
-
-    return hasFiles || hasSubDirs;
-}
-
 bool StressTest::GoToNextFile()
 {
     for (;;) {
-        while (filesToOpen.Count() > 0) {
-            // test next file
-            ScopedMem<WCHAR> path(filesToOpen.At(0));
-            filesToOpen.RemoveAt(0);
+        WCHAR *nextFile = fileProvider->NextFile();
+        if (nextFile) {
             if (!IsInRange(fileRanges, ++fileIndex))
                 continue;
-            if (OpenFile(path))
+            if (OpenFile(nextFile))
                 return true;
-        }
-
-        if (dirsToVisit.Count() > 0) {
-            // test next directory
-            ScopedMem<WCHAR> path(dirsToVisit.At(0));
-            dirsToVisit.RemoveAt(0);
-            OpenDir(path);
             continue;
         }
-
         if (--cycles <= 0)
             return false;
-        // start next cycle
-        if (file::Exists(basePath))
-            filesToOpen.Append(str::Dup(basePath));
-        else
-            OpenDir(basePath);
     }
+    fileProvider->Restart();
+    return GoToNextFile();
 }
 
 bool StressTest::OpenFile(const WCHAR *fileName)
@@ -589,7 +653,7 @@ void GetStressTestInfo(str::Str<char>* s)
     // only add paths to files encountered during an explicit stress test
     // (for privacy reasons, users should be able to decide themselves
     // whether they want to share what files they had opened during a crash)
-    if (!gIsStressTesting)
+    if (!IsStressTesting())
         return;
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
@@ -613,6 +677,8 @@ void StartStressTest(WindowInfo *win, const WCHAR *path, const WCHAR *filter,
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
     gUseEbookUI = false;
+    // forbid entering sleep mode during tests
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     // dst will be deleted when the stress ends
     StressTest *dst = new StressTest(win, renderCache);
     win->stressTest = dst;
