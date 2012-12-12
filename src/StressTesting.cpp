@@ -335,6 +335,7 @@ DirFileProvider::DirFileProvider(const WCHAR *path, const WCHAR *filter)
     startDir.Set(str::Dup(path));
     if (filter && !str::Eq(filter, L"*"))
         fileFilter.Set(str::Dup(filter));
+    OpenDir(path);
 }
 
 DirFileProvider::~DirFileProvider()
