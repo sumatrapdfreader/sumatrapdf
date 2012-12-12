@@ -29,6 +29,10 @@ fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, int w, int h
 {
 	fz_pixmap *pix;
 
+	/* SumatraPDF: prevent potential integer overflow due to signed/unsigned mismatch */
+	if (w < 0 || h < 0)
+		fz_throw(ctx, "dimension %d x %d indicates integer overflow", w, h);
+
 	pix = fz_malloc_struct(ctx, fz_pixmap);
 	FZ_INIT_STORABLE(pix, 1, fz_free_pixmap_imp);
 	pix->x = 0;
