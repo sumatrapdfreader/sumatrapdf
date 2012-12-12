@@ -319,13 +319,6 @@
     <ClCompile Include="src\TextSearch.cpp" />
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\Toolbar.cpp" />
-    <ClCompile Include="src\ucrt\src\mingw\_stat64i32.c" />
-    <ClCompile Include="src\ucrt\src\mingw\_wstat64i32.c" />
-    <ClCompile Include="src\ucrt\src\ucrt.cpp" />
-    <ClCompile Include="src\ucrt\src\ucrt_console.cpp" />
-    <ClCompile Include="src\ucrt\src\ucrt_dll.cpp" />
-    <ClCompile Include="src\ucrt\src\ucrt_log.cpp" />
-    <ClCompile Include="src\ucrt\src\ucrt_win.cpp" />
     <ClCompile Include="src\utils\BaseUtil.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\ByteOrderDecoder.cpp" />
@@ -513,7 +506,6 @@
     <ClInclude Include="src\TextSearch.h" />
     <ClInclude Include="src\TextSelection.h" />
     <ClInclude Include="src\Toolbar.h" />
-    <ClInclude Include="src\ucrt\src\ucrt_log.h" />
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\BitManip.h" />
     <ClInclude Include="src\utils\BitReader.h" />
@@ -639,8 +631,6 @@
     <None Include="src\SumatraPDF-smaller.ico" />
     <None Include="src\SumatraPDF.ico" />
     <None Include="src\toolbar_11.bmp" />
-    <None Include="src\ucrt\src\ucrt_asm.asm" />
-    <None Include="src\ucrt\src\ucrt_math.asm" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\installer\Installer.exe.manifest" />
