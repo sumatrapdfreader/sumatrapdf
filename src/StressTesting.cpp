@@ -164,7 +164,7 @@ static void BenchDir(WCHAR *dir)
 {
     WStrVec files;
     ScopedMem<WCHAR> pattern(str::Format(L"%s\\*.pdf", dir));
-    CollectPathsFromDirectory(pattern, files, false);
+    CollectPathsFromDirectory(pattern, files);
     for (size_t i = 0; i < files.Count(); i++) {
         BenchFile(files.At(i), NULL);
     }
