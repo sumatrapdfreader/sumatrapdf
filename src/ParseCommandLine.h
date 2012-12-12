@@ -54,6 +54,8 @@ public:
     WCHAR *     stressTestFilter; // NULL is equivalent to "*" (i.e. all files)
     WCHAR *     stressTestRanges;
     int         stressTestCycles;
+    int         stressParallelCount;
+    bool        stressRandomizeFiles;
 
     bool        crashOnOpen;
 
@@ -67,7 +69,9 @@ public:
         showConsole(false), exitImmediately(false), silent(false), cbxR2L(false),
         forwardSearchOrigin(NULL), forwardSearchLine(0),
         stressTestPath(NULL), stressTestFilter(NULL),
-        stressTestRanges(NULL), stressTestCycles(1), crashOnOpen(false)
+        stressTestRanges(NULL), stressTestCycles(1), stressParallelCount(1),
+        stressRandomizeFiles(false),
+        crashOnOpen(false)
     {
         colorRange[0] = RGB(0, 0, 0); // black
         colorRange[1] = RGB(0xFF, 0xFF, 0xFF); // white

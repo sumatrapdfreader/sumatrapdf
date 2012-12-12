@@ -250,6 +250,12 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
                 n++;
             }
         }
+        else if (is_arg_with_param("-n")) {
+            stressParallelCount = _wtoi(argList.At(++n));
+        }
+        else if (is_arg("-rand")) {
+            stressRandomizeFiles = true;
+        }
         else if (is_arg_with_param("-bench")) {
             WCHAR *s = str::Dup(argList.At(++n));
             pathsToBenchmark.Push(s);
