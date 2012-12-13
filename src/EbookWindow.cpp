@@ -602,9 +602,14 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 
     WindowInfo *winInfo = winToReplace.AsWindowInfo();
     bool wasMaximized = false;
-    if (winInfo && winInfo->hwndFrame)
+    if (winInfo && winInfo->hwndFrame) {
         wasMaximized = IsZoomed(winInfo->hwndFrame);
-    CloseDocumentAndDeleteWindowInfo(winInfo);
+        // hide the window instead of destroying it so that
+        // windows doesn't set a window from a different
+        // process as foreground window instead of the once
+        // created below
+        ShowWindow(winInfo->hwndFrame, SW_HIDE);
+    }
 
     HWND hwnd = CreateWindow(
             MOBI_FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
@@ -612,8 +617,10 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
             windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
             NULL, NULL,
             ghinst, NULL);
-    if (!hwnd)
+    if (!hwnd) {
+        CloseDocumentAndDeleteWindowInfo(winInfo);
         return;
+    }
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         DragAcceptFiles(hwnd, TRUE);
     if (Touch::SupportsGestures()) {
@@ -633,6 +640,8 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 
     ShowWindow(hwnd, wasMaximized ? SW_SHOWMAXIMIZED : SW_SHOW);
     win->ebookController->SetDoc(doc, startReparseIdx);
+
+    CloseDocumentAndDeleteWindowInfo(winInfo);
 }
 
 void RegisterMobiWinClass(HINSTANCE hinst)
