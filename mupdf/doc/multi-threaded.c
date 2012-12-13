@@ -116,7 +116,7 @@ void lock_mutex(void *user, int lock)
 {
 	pthread_mutex_t *mutex = (pthread_mutex_t *) user;
 
-	if (pthread_mutex_lock(&mutex[lock]) < 0)
+	if (pthread_mutex_lock(&mutex[lock]) != 0)
 		fail("pthread_mutex_lock()");
 }
 
@@ -124,7 +124,7 @@ void unlock_mutex(void *user, int lock)
 {
 	pthread_mutex_t *mutex = (pthread_mutex_t *) user;
 
-	if (pthread_mutex_unlock(&mutex[lock]) < 0)
+	if (pthread_mutex_unlock(&mutex[lock]) != 0)
 		fail("pthread_mutex_unlock()");
 }
 
@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 
 	for (i = 0; i < FZ_LOCK_MAX; i++)
 	{
-		if (pthread_mutex_init(&mutex[i], NULL) < 0)
+		if (pthread_mutex_init(&mutex[i], NULL) != 0)
 			fail("pthread_mutex_init()");
 	}
 
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
 
 		// Create the thread and pass it the data structure.
 
-		if (pthread_create(&thread[i], NULL, renderer, data) < 0)
+		if (pthread_create(&thread[i], NULL, renderer, data) != 0)
 			fail("pthread_create()");
 	}
 
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
 		char filename[42];
 		struct data *data;
 
-		if (pthread_join(thread[i], (void **) &data) < 0)
+		if (pthread_join(thread[i], (void **) &data) != 0)
 			fail("pthread_join");
 
 		sprintf(filename, "out%04d.png", i);

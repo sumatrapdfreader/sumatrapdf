@@ -5,10 +5,9 @@
 struct info
 {
 	fz_context *ctx;
-	/* SumatraPDF: prevent warning C4018 (signed/unsigned comparison) and a potential integer overflow */
-	int width, height, depth, n;
+	unsigned int width, height, depth, n;
 	int interlace, indexed;
-	int size;
+	unsigned int size;
 	unsigned char *samples;
 	unsigned char palette[256*4];
 	int transparency;
@@ -81,11 +80,11 @@ static inline int paeth(int a, int b, int c)
 }
 
 static void
-png_predict(unsigned char *samples, int width, int height, int n, int depth)
+png_predict(unsigned char *samples, unsigned int width, unsigned int height, unsigned int n, unsigned int depth)
 {
-	int stride = (width * n * depth + 7) / 8;
-	int bpp = (n * depth + 7) / 8;
-	int i, row;
+	unsigned int stride = (width * n * depth + 7) / 8;
+	unsigned int bpp = (n * depth + 7) / 8;
+	unsigned int i, row;
 
 	for (row = 0; row < height; row ++)
 	{
@@ -157,13 +156,13 @@ png_predict(unsigned char *samples, int width, int height, int n, int depth)
 	}
 }
 
-static const int adam7_ix[7] = { 0, 4, 0, 2, 0, 1, 0 };
-static const int adam7_dx[7] = { 8, 8, 4, 4, 2, 2, 1 };
-static const int adam7_iy[7] = { 0, 0, 4, 0, 2, 0, 1 };
-static const int adam7_dy[7] = { 8, 8, 8, 4, 4, 2, 2 };
+static const unsigned int adam7_ix[7] = { 0, 4, 0, 2, 0, 1, 0 };
+static const unsigned int adam7_dx[7] = { 8, 8, 4, 4, 2, 2, 1 };
+static const unsigned int adam7_iy[7] = { 0, 0, 4, 0, 2, 0, 1 };
+static const unsigned int adam7_dy[7] = { 8, 8, 8, 4, 4, 2, 2 };
 
 static void
-png_deinterlace_passes(struct info *info, int *w, int *h, int *ofs)
+png_deinterlace_passes(struct info *info, unsigned int *w, unsigned int *h, unsigned int *ofs)
 {
 	int p, bpp = info->depth * info->n;
 	ofs[0] = 0;
@@ -181,21 +180,21 @@ png_deinterlace_passes(struct info *info, int *w, int *h, int *ofs)
 }
 
 static void
-png_deinterlace(struct info *info, int *passw, int *passh, int *passofs)
+png_deinterlace(struct info *info, unsigned int *passw, unsigned int *passh, unsigned int *passofs)
 {
-	int n = info->n;
-	int depth = info->depth;
-	int stride = (info->width * n * depth + 7) / 8;
+	unsigned int n = info->n;
+	unsigned int depth = info->depth;
+	unsigned int stride = (info->width * n * depth + 7) / 8;
 	unsigned char *output;
-	int p, x, y, k;
+	unsigned int p, x, y, k;
 
 	output = fz_malloc_array(info->ctx, info->height, stride);
 
 	for (p = 0; p < 7; p++)
 	{
-		unsigned char *sp = info->samples + (unsigned int)(passofs[p]);
-		int w = passw[p];
-		int h = passh[p];
+		unsigned char *sp = info->samples + (passofs[p]);
+		unsigned int w = passw[p];
+		unsigned int h = passh[p];
 
 		png_predict(sp, w, h, n, depth);
 		for (y = 0; y < h; y++)
@@ -220,7 +219,7 @@ png_deinterlace(struct info *info, int *passw, int *passh, int *passofs)
 }
 
 static void
-png_read_ihdr(struct info *info, unsigned char *p, int size)
+png_read_ihdr(struct info *info, unsigned char *p, unsigned int size)
 {
 	int color, compression, filter;
 
@@ -279,7 +278,7 @@ png_read_ihdr(struct info *info, unsigned char *p, int size)
 }
 
 static void
-png_read_plte(struct info *info, unsigned char *p, int size)
+png_read_plte(struct info *info, unsigned char *p, unsigned int size)
 {
 	int n = size / 3;
 	int i;
@@ -307,9 +306,9 @@ png_read_plte(struct info *info, unsigned char *p, int size)
 }
 
 static void
-png_read_trns(struct info *info, unsigned char *p, int size)
+png_read_trns(struct info *info, unsigned char *p, unsigned int size)
 {
-	int i;
+	unsigned int i;
 
 	info->transparency = 1;
 
@@ -336,7 +335,7 @@ png_read_trns(struct info *info, unsigned char *p, int size)
 }
 
 static void
-png_read_idat(struct info *info, unsigned char *p, int size, z_stream *stm)
+png_read_idat(struct info *info, unsigned char *p, unsigned int size, z_stream *stm)
 {
 	int code;
 
@@ -355,7 +354,7 @@ png_read_idat(struct info *info, unsigned char *p, int size, z_stream *stm)
 }
 
 static void
-png_read_phys(struct info *info, unsigned char *p, int size)
+png_read_phys(struct info *info, unsigned char *p, unsigned int size)
 {
 	if (size != 9)
 		fz_throw(info->ctx, "pHYs chunk is the wrong size");
@@ -367,9 +366,9 @@ png_read_phys(struct info *info, unsigned char *p, int size)
 }
 
 static void
-png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
+png_read_image(fz_context *ctx, struct info *info, unsigned char *p, unsigned int total)
 {
-	int passw[7], passh[7], passofs[8];
+	unsigned int passw[7], passh[7], passofs[8];
 	unsigned int code, size;
 	z_stream stm;
 
@@ -382,7 +381,7 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 	/* Read signature */
 
 	if (total < 8 + 12 || memcmp(p, png_signature, 8))
-		fz_throw(info->ctx, "not a png image (wrong signature)");
+		fz_throw(ctx, "not a png image (wrong signature)");
 
 	p += 8;
 	total -= 8;
@@ -390,17 +389,13 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 	/* Read IHDR chunk (must come first) */
 
 	size = getuint(p);
-	/* SumatraPDF: prevent potential signed/unsigned overflow issues */
-	if (size > INT_MAX - 12)
-		fz_throw(info->ctx, "potential integer overflow");
-
-	if ((int)size + 12 > total)
-		fz_throw(info->ctx, "premature end of data in png image");
+	if (total < 12 || size > total - 12)
+		fz_throw(ctx, "premature end of data in png image");
 
 	if (!memcmp(p + 4, "IHDR", 4))
 		png_read_ihdr(info, p + 8, size);
 	else
-		fz_throw(info->ctx, "png file must start with IHDR chunk");
+		fz_throw(ctx, "png file must start with IHDR chunk");
 
 	p += size + 12;
 	total -= size + 12;
@@ -421,7 +416,7 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 
 	stm.zalloc = zalloc;
 	stm.zfree = zfree;
-	stm.opaque = info->ctx;
+	stm.opaque = ctx;
 
 	stm.next_out = info->samples;
 	stm.avail_out = info->size;
@@ -443,8 +438,8 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 			if (size > INT_MAX - 12)
 				fz_throw(info->ctx, "potential integer overflow");
 
-			if ((int)size + 12 > total)
-				fz_throw(info->ctx, "premature end of data in png image");
+			if (total < 12 || size > total - 12)
+				fz_throw(ctx, "premature end of data in png image");
 
 			if (!memcmp(p + 4, "PLTE", 4))
 				png_read_plte(info, p + 8, size);
@@ -472,7 +467,7 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, int total)
 	if (code != Z_OK)
 	{
 		fz_free(ctx, info->samples);
-		fz_throw(info->ctx, "zlib error: %s", stm.msg);
+		fz_throw(ctx, "zlib error: %s", stm.msg);
 	}
 
 	/* Apply prediction filter and deinterlacing */
@@ -496,14 +491,14 @@ png_expand_palette(fz_context *ctx, struct info *info, fz_pixmap *src)
 	fz_pixmap *dst = fz_new_pixmap(ctx, fz_device_rgb, src->w, src->h);
 	unsigned char *sp = src->samples;
 	unsigned char *dp = dst->samples;
-	int x, y;
+	unsigned int x, y;
 
 	dst->xres = src->xres;
 	dst->yres = src->yres;
 
-	for (y = 0; y < info->height; y++)
+	for (y = info->height; y > 0; y--)
 	{
-		for (x = 0; x < info->width; x++)
+		for (x = info->width; x > 0; x--)
 		{
 			int v = *sp << 2;
 			*dp++ = info->palette[v];
@@ -521,10 +516,10 @@ png_expand_palette(fz_context *ctx, struct info *info, fz_pixmap *src)
 static void
 png_mask_transparency(struct info *info, fz_pixmap *dst)
 {
-	int stride = (info->width * info->n * info->depth + 7) / 8;
-	int depth = info->depth;
-	int n = info->n;
-	int x, y, k, t;
+	unsigned int stride = (info->width * info->n * info->depth + 7) / 8;
+	unsigned int depth = info->depth;
+	unsigned int n = info->n;
+	unsigned int x, y, k, t;
 
 	for (y = 0; y < info->height; y++)
 	{

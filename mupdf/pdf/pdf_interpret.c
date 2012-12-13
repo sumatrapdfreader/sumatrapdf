@@ -1726,13 +1726,10 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 				else
 					gstate->luminosity = 0;
 
-				/* SumatraPDF: don't pointlessly check for /TR2 */
-				if (pdf_dict_gets(val, "TR"))
-				{
-					tr = pdf_dict_gets(val, "TR");
-					/* SumatraPDF: support transfer functions */
+				tr = pdf_dict_gets(val, "TR");
+				/* SumatraPDF: support transfer functions */
+				if (tr)
 					gstate->softmask_tr = pdf_load_transfer_function(csi->xref, tr, 0);
-				}
 			}
 			else if (pdf_is_name(val) && !strcmp(pdf_to_name(val), "None"))
 			{

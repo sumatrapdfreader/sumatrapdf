@@ -751,9 +751,10 @@ int main(int argc, char **argv)
 	if (argc - fz_optind == 1)
 		pageno = atoi(argv[fz_optind++]);
 
+	pdfapp_init(ctx, &gapp);
+
 	winopen();
 
-	pdfapp_init(ctx, &gapp);
 	if (resolution == -1)
 		resolution = winresolution();
 	if (resolution < MINRES)

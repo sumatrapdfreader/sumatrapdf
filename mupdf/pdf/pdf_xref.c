@@ -1006,11 +1006,18 @@ pdf_load_obj_stm(pdf_document *xref, int num, int gen, pdf_lexbuf *buf)
 
 			if (xref->table[numbuf[i]].type == 'o' && xref->table[numbuf[i]].ofs == num)
 			{
-				/* SumatraPDF: prevent use-after-free */
-				if (xref->table[numbuf[i]].obj)
+				/* If we already have an entry for this object,
+				 * we'd like to drop it and use the new one -
+				 * but this means that anyone currently holding
+				 * a pointer to the old one will be left with a
+				 * stale pointer. Instead, we drop the new one
+				 * and trust that the old one is correct. */
+				if (xref->table[numbuf[i]].obj) {
+					if (pdf_objcmp(xref->table[numbuf[i]].obj, obj))
+						fz_warn(ctx, "Encountered new definition for object %d - keeping the original one", numbuf[i]);
 					pdf_drop_obj(obj);
-				else
-				xref->table[numbuf[i]].obj = obj;
+				} else
+					xref->table[numbuf[i]].obj = obj;
 			}
 			else
 			{
