@@ -1,6 +1,6 @@
 diff -rPu5 freetype2.orig\src\cff\cffobjs.c freetype2\src\cff\cffobjs.c
---- freetype2.orig\src\cff\cffobjs.c	Sat Feb 11 11:25:55 2012
-+++ freetype2\src\cff\cffobjs.c	Thu Sep 20 19:07:54 2012
+--- freetype2.orig\src\cff\cffobjs.c	Sat Feb 11 10:25:55 2012
++++ freetype2\src\cff\cffobjs.c	Thu Sep 20 18:07:54 2012
 @@ -471,10 +471,12 @@
            family_name[idx + 1] = '\0';
        }
@@ -29,8 +29,8 @@ diff -rPu5 freetype2.orig\src\cff\cffobjs.c freetype2\src\cff\cffobjs.c
          FT_TRACE2(( "  not an OpenType/CFF font\n" ));
          error = CFF_Err_Unknown_File_Format;
 diff -rPu5 freetype2.orig\src\sfnt\sfobjs.c freetype2\src\sfnt\sfobjs.c
---- freetype2.orig\src\sfnt\sfobjs.c	Thu Jun 14 07:35:58 2012
-+++ freetype2\src\sfnt\sfobjs.c	Thu Sep 20 19:08:53 2012
+--- freetype2.orig\src\sfnt\sfobjs.c	Thu Jun 14 06:35:58 2012
++++ freetype2\src\sfnt\sfobjs.c	Thu Sep 20 18:08:53 2012
 @@ -491,12 +491,13 @@
      if ( FT_STREAM_SEEK( face->ttc_header.offsets[face_index] ) )
        return error;
@@ -48,8 +48,8 @@ diff -rPu5 freetype2.orig\src\sfnt\sfobjs.c freetype2\src\sfnt\sfobjs.c
  
      return error;
 diff -rPu5 freetype2.orig\src\sfnt\ttload.c freetype2\src\sfnt\ttload.c
---- freetype2.orig\src\sfnt\ttload.c	Thu Jun 14 07:35:58 2012
-+++ freetype2\src\sfnt\ttload.c	Thu Sep 20 19:08:29 2012
+--- freetype2.orig\src\sfnt\ttload.c	Thu Jun 14 06:35:58 2012
++++ freetype2\src\sfnt\ttload.c	Thu Dec 13 13:19:26 2012
 @@ -366,11 +366,12 @@
      if ( error )
      {
@@ -64,3 +64,20 @@ diff -rPu5 freetype2.orig\src\sfnt\ttload.c freetype2\src\sfnt\ttload.c
      face->num_tables = sfnt.num_tables;
      face->format_tag = sfnt.format_tag;
  
+@@ -1238,12 +1239,15 @@
+ 
+     num_ranges = face->gasp.numRanges;
+     FT_TRACE3(( "numRanges: %u\n", num_ranges ));
+ 
+     if ( FT_QNEW_ARRAY( gaspranges, num_ranges ) ||
+-         FT_FRAME_ENTER( num_ranges * 4L )      )
++         FT_FRAME_ENTER( num_ranges * 4L )      ) {
++      /* SumatraPDF: fix memory leak */
++      FT_FREE(gaspranges);
+       goto Exit;
++    }
+ 
+     face->gasp.gaspRanges = gaspranges;
+ 
+     for ( j = 0; j < num_ranges; j++ )
+     {
