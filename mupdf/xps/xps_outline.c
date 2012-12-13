@@ -138,7 +138,15 @@ xps_load_outline(xps_document *doc)
 
 	for (fixdoc = doc->first_fixdoc; fixdoc; fixdoc = fixdoc->next) {
 		if (fixdoc->outline) {
+			/* SumatraPDF: fix memory leak */
+			fz_try(doc->ctx)
+			{
 			outline = xps_load_document_structure(doc, fixdoc);
+			}
+			fz_catch(doc->ctx)
+			{
+				outline = NULL;
+			}
 			if (!outline)
 				continue;
 			if (!head)
@@ -276,7 +284,10 @@ xps_open_doc_props(xps_document *doc)
 	fz_xml *item;
 
 	if (!root || strcmp(fz_xml_tag(root), "Relationships") != 0)
+	{
+		fz_free_xml(doc->ctx, root);
 		fz_throw(doc->ctx, "couldn't parse part '/_rels/.rels'");
+	}
 
 	for (item = fz_xml_down(root); item; item = fz_xml_next(item))
 	{
