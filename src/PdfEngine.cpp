@@ -3665,9 +3665,11 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
     // make MuXPS extract all links and named destinations from the page
     assert(!GetPageRun(page, true));
     XpsPageRun *run = GetPageRun(page);
-    assert(run);
+    assert(!run == !page->links_resolved);
     if (run)
         DropPageRun(run);
+    else
+        page->links_resolved = 1;
     assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
