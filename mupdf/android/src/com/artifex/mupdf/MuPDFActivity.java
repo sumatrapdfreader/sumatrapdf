@@ -360,11 +360,16 @@ public class MuPDFActivity extends Activity
 							link.acceptVisitor(new LinkInfoVisitor() {
 								@Override
 								public void visitInternal(LinkInfoInternal li) {
+									// Clicked on an internal (GoTo) link
 									mDocView.setDisplayedViewIndex(li.pageNumber);
 								}
 								@Override
 								public void visitExternal(LinkInfoExternal li) {
-									// Clicked on an external link: li.url
+									// Clicked on an external (URI) link: li.url
+								}
+								@Override
+								public void visitRemote(LinkInfoRemote li) {
+									// Clicked on a remote (GoToR) link
 								}
 							});
 						} else {

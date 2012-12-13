@@ -691,8 +691,8 @@ pdf_flush_text(pdf_csi *csi)
 
 	fz_try(ctx)
 	{
-		/* SumatraPDF: text_bbox is in device space */
-		pdf_begin_group(csi, csi->text_bbox);
+		fz_rect tb = fz_transform_rect(gstate->ctm, csi->text_bbox);
+		pdf_begin_group(csi, tb);
 
 		if (doinvisible)
 			fz_ignore_text(csi->dev, text, gstate->ctm);
@@ -711,7 +711,7 @@ pdf_flush_text(pdf_csi *csi)
 				if (gstate->fill.pattern)
 				{
 					fz_clip_text(csi->dev, text, gstate->ctm, 0);
-					pdf_show_pattern(csi, gstate->fill.pattern, csi->text_bbox, PDF_FILL);
+					pdf_show_pattern(csi, gstate->fill.pattern, tb, PDF_FILL);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -740,7 +740,7 @@ pdf_flush_text(pdf_csi *csi)
 				if (gstate->stroke.pattern)
 				{
 					fz_clip_stroke_text(csi->dev, text, gstate->stroke_state, gstate->ctm);
-					pdf_show_pattern(csi, gstate->stroke.pattern, csi->text_bbox, PDF_STROKE);
+					pdf_show_pattern(csi, gstate->stroke.pattern, tb, PDF_STROKE);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -869,8 +869,6 @@ pdf_show_char(pdf_csi *csi, int cid)
 	if (render_direct)
 		csi->text_mode = 3 /* invisible */;
 	{
-		/* SumatraPDF: text_bbox is in device space */
-		bbox = fz_transform_rect(gstate->ctm, bbox);
 		csi->text_bbox = fz_union_rect(csi->text_bbox, bbox);
 
 		/* add glyph to textobject */

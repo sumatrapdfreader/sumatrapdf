@@ -204,10 +204,10 @@ add_table(fz_context *ctx, pdf_cmap *cmap, int value)
 static void
 add_range(fz_context *ctx, pdf_cmap *cmap, int low, int high, int flag, int offset)
 {
-	/* SumatraPDF: range check (should be unsigned short instead of int) */
-	if ((low & ~0xffff) || (high & ~0xffff) || low > high)
+	/* Sanity check ranges */
+	if (low < 0 || low > 65535 || high < 0 || high > 65535 || low > high)
 	{
-		fz_warn(ctx, "range limits out of range (%d/%d)", low, high);
+		fz_warn(ctx, "range limits out of range in cmap %s", cmap->cmap_name);
 		return;
 	}
 	/* If the range is too large to be represented, split it */
@@ -282,7 +282,7 @@ pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, int low, int *values, int l
 		values[0] >= 0xD800 && values[0] <= 0xDBFF &&
 		values[1] >= 0xDC00 && values[1] <= 0xDFFF)
 	{
-		fz_warn(ctx, "ignoring surrogate pair mapping in cmap");
+		fz_warn(ctx, "ignoring surrogate pair mapping in cmap %s", cmap->cmap_name);
 		return;
 	}
 

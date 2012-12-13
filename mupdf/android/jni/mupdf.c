@@ -1039,8 +1039,10 @@ Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz
 	jclass       linkInfoClass;
 	jclass       linkInfoInternalClass;
 	jclass       linkInfoExternalClass;
+	jclass       linkInfoRemoteClass;
 	jmethodID    ctorInternal;
 	jmethodID    ctorExternal;
+	jmethodID    ctorRemote;
 	jobjectArray arr;
 	jobject      linkInfo;
 	fz_matrix    ctm;
@@ -1057,10 +1059,14 @@ Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz
 	if (linkInfoInternalClass == NULL) return NULL;
 	linkInfoExternalClass = (*env)->FindClass(env, "com/artifex/mupdf/LinkInfoExternal");
 	if (linkInfoExternalClass == NULL) return NULL;
+	linkInfoRemoteClass = (*env)->FindClass(env, "com/artifex/mupdf/LinkInfoRemote");
+	if (linkInfoRemoteClass == NULL) return NULL;
 	ctorInternal = (*env)->GetMethodID(env, linkInfoInternalClass, "<init>", "(FFFFI)V");
 	if (ctorInternal == NULL) return NULL;
 	ctorExternal = (*env)->GetMethodID(env, linkInfoExternalClass, "<init>", "(FFFFLjava/lang/String;)V");
 	if (ctorExternal == NULL) return NULL;
+	ctorRemote = (*env)->GetMethodID(env, linkInfoRemoteClass, "<init>", "(FFFFLjava/lang/String;IZ)V");
+	if (ctorRemote == NULL) return NULL;
 
 	Java_com_artifex_mupdf_MuPDFCore_gotoPageInternal(env, thiz, pageNumber);
 	pc = &glo->pages[glo->current];
@@ -1077,6 +1083,7 @@ Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz
 		switch (link->dest.kind)
 		{
 		case FZ_LINK_GOTO:
+		case FZ_LINK_GOTOR:
 		case FZ_LINK_URI:
 			count++ ;
 		}
@@ -1097,6 +1104,15 @@ Java_com_artifex_mupdf_MuPDFCore_getPageLinksInternal(JNIEnv * env, jobject thiz
 			linkInfo = (*env)->NewObject(env, linkInfoInternalClass, ctorInternal,
 					(float)rect.x0, (float)rect.y0, (float)rect.x1, (float)rect.y1,
 					link->dest.ld.gotor.page);
+			break;
+		}
+
+		case FZ_LINK_GOTOR:
+		{
+			jstring juri = (*env)->NewStringUTF(env, link->dest.ld.gotor.file_spec);
+			linkInfo = (*env)->NewObject(env, linkInfoRemoteClass, ctorRemote,
+					(float)rect.x0, (float)rect.y0, (float)rect.x1, (float)rect.y1,
+					juri, link->dest.ld.gotor.page, link->dest.ld.gotor.new_window ? JNI_TRUE : JNI_FALSE);
 			break;
 		}
 

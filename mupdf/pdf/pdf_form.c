@@ -1545,11 +1545,10 @@ pdf_obj *pdf_lookup_field(pdf_obj *form, char *name)
 	return dict;
 }
 
-void pdf_field_reset(pdf_document *doc, pdf_obj *field)
+static void reset_field(pdf_document *doc, pdf_obj *field)
 {
 	fz_context *ctx = doc->ctx;
-	/* Descend through the hierarchy, setting V to DV where
-	 * ever DV is present, and deleting V where DV is not.
+	/* Set V to DV whereever DV is present, and delete V where DV is not.
 	 * FIXME: we assume for now that V has not been set unequal
 	 * to DV higher in the hierarchy than "field".
 	 *
@@ -1558,25 +1557,13 @@ void pdf_field_reset(pdf_document *doc, pdf_obj *field)
 	 * dictionaries, and attempts to remove V will be harmless. */
 	pdf_obj *dv = pdf_dict_gets(field, "DV");
 	pdf_obj *kids = pdf_dict_gets(field, "Kids");
-	pdf_obj *noreset = pdf_dict_gets(field, "NoReset");
-
-	/* Don't process fields we have marked not to be reset */
-	if (noreset)
-		return;
 
 	if (dv)
 		pdf_dict_puts(field, "V", dv);
 	else
 		pdf_dict_dels(field, "V");
 
-	if (kids)
-	{
-		int i, n = pdf_array_len(kids);
-
-		for (i = 0; i < n; i++)
-			pdf_field_reset(doc, pdf_array_get(kids, i));
-	}
-	else
+	if (kids == NULL)
 	{
 		/* The leaves of the tree are widget annotations
 		 * In some cases we need to update the appearance state;
@@ -1621,21 +1608,100 @@ void pdf_field_reset(pdf_document *doc, pdf_obj *field)
 	doc->dirty = 1;
 }
 
+void pdf_field_reset(pdf_document *doc, pdf_obj *field)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_obj *kids = pdf_dict_gets(field, "Kids");
 
-static void reset_form(pdf_document *doc, pdf_obj *fields, int exclude)
+	reset_field(doc, field);
+
+	if (kids)
+	{
+		int i, n = pdf_array_len(kids);
+
+		for (i = 0; i < n; i++)
+			pdf_field_reset(doc, pdf_array_get(kids, i));
+	}
+}
+
+static void add_field_hierarchy_to_array(pdf_obj *array, pdf_obj *field)
+{
+	pdf_obj *kids = pdf_dict_gets(field, "Kids");
+	pdf_obj *exclude = pdf_dict_gets(field, "Exclude");
+
+	if (exclude)
+		return;
+
+	pdf_array_push(array, field);
+
+	if (kids)
+	{
+		int i, n = pdf_array_len(kids);
+
+		for (i = 0; i < n; i++)
+			add_field_hierarchy_to_array(array, pdf_array_get(kids, i));
+	}
+}
+
+/*
+	When resetting or submitting a form, the fields to act upon are defined
+	by an array of either field references or field names, plus a flag determining
+	whether to act upon the fields in the array, or all fields other than those in
+	the array. specified_fields interprets this information and produces the array
+	of fields to be acted upon.
+*/
+static pdf_obj *specified_fields(pdf_document *doc, pdf_obj *fields, int exclude)
 {
 	fz_context *ctx = doc->ctx;
 	pdf_obj *form = pdf_dict_getp(doc->trailer, "Root/AcroForm/Fields");
 	int i, n;
+	pdf_obj *result = pdf_new_array(ctx, 0);
+	pdf_obj *nil  = NULL;
 
-	/* The 'fields' array not being present signals that all fields
-	 * should be reset, so handle it using the exclude case - excluding none */
-	if (exclude || !fields)
+	fz_var(nil);
+	fz_try(ctx)
 	{
-		/* mark the fields we don't want to reset */
-		pdf_obj *nil = pdf_new_null(ctx);
+		/* The 'fields' array not being present signals that all fields
+		* should be acted upon, so handle it using the exclude case - excluding none */
+		if (exclude || !fields)
+		{
+			/* mark the fields we don't want to act upon */
+			nil = pdf_new_null(ctx);
 
-		fz_try(ctx)
+			n = pdf_array_len(fields);
+
+			for (i = 0; i < n; i++)
+			{
+				pdf_obj *field = pdf_array_get(fields, i);
+
+				if (pdf_is_string(field))
+					field = pdf_lookup_field(form, pdf_to_str_buf(field));
+
+				if (field)
+					pdf_dict_puts(field, "Exclude", nil);
+			}
+
+			/* Act upon all unmarked fields */
+			n = pdf_array_len(form);
+
+			for (i = 0; i < n; i++)
+				add_field_hierarchy_to_array(result, pdf_array_get(form, i));
+
+			/* Unmark the marked fields */
+			n = pdf_array_len(fields);
+
+			for (i = 0; i < n; i++)
+			{
+				pdf_obj *field = pdf_array_get(fields, i);
+
+				if (pdf_is_string(field))
+					field = pdf_lookup_field(form, pdf_to_str_buf(field));
+
+				if (field)
+					pdf_dict_dels(field, "Exclude");
+			}
+		}
+		else
 		{
 			n = pdf_array_len(fields);
 
@@ -1647,52 +1713,42 @@ static void reset_form(pdf_document *doc, pdf_obj *fields, int exclude)
 					field = pdf_lookup_field(form, pdf_to_str_buf(field));
 
 				if (field)
-					pdf_dict_puts(field, "NoReset", nil);
+					add_field_hierarchy_to_array(result, field);
 			}
 		}
-		fz_always(ctx)
-		{
-			pdf_drop_obj(nil);
-		}
-		fz_catch(ctx)
-		{
-			fz_rethrow(ctx);
-		}
-
-		/* reset all unmarked fields */
-		n = pdf_array_len(form);
-
-		for (i = 0; i < n; i++)
-			pdf_field_reset(doc, pdf_array_get(form, i));
-
-		/* Unmark the marked fields */
-		n = pdf_array_len(fields);
-
-		for (i = 0; i < n; i++)
-		{
-			pdf_obj *field = pdf_array_get(fields, i);
-
-			if (pdf_is_string(field))
-				field = pdf_lookup_field(form, pdf_to_str_buf(field));
-
-			if (field)
-				pdf_dict_dels(field, "NoReset");
-		}
 	}
-	else
+	fz_always(ctx)
 	{
-		n = pdf_array_len(fields);
+		pdf_drop_obj(nil);
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(result);
+		fz_rethrow(ctx);
+	}
+
+	return result;
+}
+
+static void reset_form(pdf_document *doc, pdf_obj *fields, int exclude)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_obj *sfields = specified_fields(doc, fields, exclude);
+
+	fz_try(ctx)
+	{
+		int i, n = pdf_array_len(sfields);
 
 		for (i = 0; i < n; i++)
-		{
-			pdf_obj *field = pdf_array_get(fields, i);
-
-			if (pdf_is_string(field))
-				field = pdf_lookup_field(form, pdf_to_str_buf(field));
-
-			if (field)
-				pdf_field_reset(doc, field);
-		}
+			reset_field(doc, pdf_array_get(sfields, i));
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(sfields);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
 	}
 }
 
