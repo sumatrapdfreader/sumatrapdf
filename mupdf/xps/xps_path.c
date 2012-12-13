@@ -453,7 +453,10 @@ xps_parse_abbreviated_geometry(xps_document *doc, char *geom, int *fill_rule)
 			break;
 
 		default:
-			/* eek */
+			/* SumatraPDF: prevent infinite loop */
+			fz_warn(doc->ctx, "ignoring invalid command '%c'", cmd);
+			while (i < n && (args[i][0] == '+' || args[i][0] == '.' || args[i][0] == '-' || (args[i][0] >= '0' && args[i][0] <= '9')))
+				i ++;
 			break;
 		}
 
