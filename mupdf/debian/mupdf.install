@@ -1,5 +1,0 @@
-debian/mupdf.xpm usr/share/pixmaps
-debian/mupdf.png usr/share/pixmaps
-debian/mupdf.desktop usr/share/applications
-debian/mupdf.applications usr/share/application-registry
-debian/tmp/usr/bin/mupdf

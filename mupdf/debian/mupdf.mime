@@ -1,2 +1,0 @@
-application/pdf; mupdf %s; test=test -n "$DISPLAY" ; nametemplate=%s.pdf; priority=5
-application/x-pdf; mupdf %s; test=test -n "$DISPLAY" ; nametemplate=%s.pdf; priority=5

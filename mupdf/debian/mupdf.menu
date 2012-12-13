@@ -1,8 +1,0 @@
-?package(mupdf):\
-	needs="x11" \
-	section="Applications/Viewers" \
-	command="/usr/bin/mupdf" \
-	title="MuPDF" \
-	hints="Documents" \
-	icon="/usr/share/pixmaps/mupdf.xpm" \
-	longtitle="MuPDF: A lightweight PDF viewer written in portable C"

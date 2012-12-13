@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" 
-    android:shape="rectangle">
-    <padding android:left="8dp"
-        android:right="8dp"
-        android:top="1dp"
-        android:bottom="2dp" />
-    <solid android:color="@color/page_indicator" />
-</shape>
