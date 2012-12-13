@@ -115,9 +115,7 @@
 # include <windows.h>
 # define HAS_WCHAR 1
 # define HAS_WCTYPE 1
-// SumatraPDF: disable HAS_MBSTATE so that it doesn't use mbrlen() etc.
-// so that we don't have to implement them in ucrt
-# define HAS_MBSTATE 0
+# define HAS_MBSTATE 1
 #endif
 
 #if HAS_WCHAR
