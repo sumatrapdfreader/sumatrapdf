@@ -5011,7 +5011,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Buch wird formatiert\342\200\246 Seite %d",
   "Text auf Seite %s gefunden",
   "Text auf Seite %s gefunden (erneut)",
-  "Oft gelesenene Dokumente",
+  "Oft gelesene Dokumente",
   NULL,
   "Gehe zu Seite",
   "Oft gelesene Dokumente ausblenden",

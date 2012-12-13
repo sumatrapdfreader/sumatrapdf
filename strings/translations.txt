@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-134457d4075dbc213beffe7b06db019a8e90027e
+59029f674eaf57567991b05c35d90acf026d7b1d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7655,7 +7655,7 @@ ca-xv:Llegits més freqüents
 ca:Llegits més freqüents
 cn:最近阅读
 cz:Často čtené dokumenty
-de:Oft gelesenene Dokumente
+de:Oft gelesene Dokumente
 dk:Hyppigt læste
 el:Συχνά Αναγνωσμένα Αρχεία
 es:Lo más leído
