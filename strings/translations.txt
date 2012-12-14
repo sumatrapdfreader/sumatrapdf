@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-59029f674eaf57567991b05c35d90acf026d7b1d
+10782bc758597d0db9115749470d73ae238e3117
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4619,7 +4619,7 @@ lt:Nenutrūkstama knygos peržiūra
 mk:Книга со непрекинат поглед
 my:Paparan buku berterusan
 ne:निरन्तर पुस्तिका दृश्य
-nl:Doorlopend boekaanzicht
+nl:Doorlopende boekweergave
 no:Kontinuerlig bokvisning
 pl:Widok odczytu - układ ciągły
 pt:Como livro contínuo
@@ -6504,6 +6504,7 @@ ca:Documents FictionBook
 de:FictionBook-Dokumente
 es:Documentos FictionBook
 fr:Documents FictionBook
+nl:FictionBook documenten
 pl:Dokumenty FictionBook
 ru:Документы FictionBook
 sq:Dokumente FictionBook
@@ -9483,6 +9484,7 @@ it:Ottimizzazioni PDF:
 kr:PDF 최적화:
 mk:Оптимизации за PDF:
 ne:PDF अप्टिमाइजेसन
+nl:PDF Optimalisaties
 no:PDF Optimalisering:
 pl:Optymalizacja PDF:
 pt:Otimizações PDF:
@@ -12310,6 +12312,7 @@ it:PDF marcati
 kr:태그있는 PDF
 mk:Означен PDF
 ne:ट्याग गरिएको PDF
+nl:Tagged PDF
 no:Merket PDF
 pt:PDF com tags
 ru:Размеченный PDF
