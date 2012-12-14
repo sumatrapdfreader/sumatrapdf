@@ -449,10 +449,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (gGlobalPrefs.enableAutoUpdate && gWindows.Count() > 0)
         AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
 
-    if (i.stressTestPath) {
-        StartStressTest(win, i.stressTestPath, i.stressTestFilter,
-                        i.stressTestRanges, i.stressTestCycles, &gRenderCache);
-    }
+    if (i.stressTestPath)
+        StartStressTest(&i, win, &gRenderCache);
 
     retCode = RunMessageLoop();
 

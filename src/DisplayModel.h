@@ -278,5 +278,6 @@ bool    IsSingle(DisplayMode displayMode);
 bool    IsFacing(DisplayMode displayMode);
 bool    DisplayModeShowCover(DisplayMode displayMode);
 int     NormalizeRotation(int rotation);
+bool    IsValidZoom(float zoomLevel);
 
 #endif

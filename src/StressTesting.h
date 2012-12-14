@@ -9,14 +9,13 @@ bool IsBenchPagesInfo(const WCHAR *s);
 void BenchFileOrDir(WStrVec& pathsToBench);
 bool IsStressTesting();
 
-#define DIR_STRESS_TIMER_ID 101
-
 class WindowInfo;
 class RenderCache;
+class CommandLineInfo;
 
-void StartStressTest(WindowInfo *win, const WCHAR *path, const WCHAR *filter,
-                     const WCHAR *ranges, int cycles, RenderCache *renderCache);
-void OnStressTestTimer(WindowInfo *win);
+void StartStressTest(CommandLineInfo *, WindowInfo *, RenderCache *);
+
+void OnStressTestTimer(WindowInfo *win, int timerId);
 void FinishStressTest(WindowInfo *win);
 
 #endif

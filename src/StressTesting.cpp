@@ -9,7 +9,9 @@
 #include "DirIter.h"
 #include "Doc.h"
 #include "FileUtil.h"
+#include "HtmlWindow.h"
 #include "Notifications.h"
+#include "ParseCommandLine.h"
 #include "RenderCache.h"
 #include "SimpleLog.h"
 #include "Search.h"
@@ -18,10 +20,13 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
+#define FIRST_STRESS_TIMER_ID 101
+
 static slog::Logger *gLog;
 #define logbench(msg, ...) gLog->LogFmt(TEXT(msg), __VA_ARGS__)
 
 static bool gIsStressTesting = false;
+static int gCurrStressTimerId = FIRST_STRESS_TIMER_ID;
 
 bool IsStressTesting()
 {
@@ -290,26 +295,38 @@ public:
     virtual void Restart() = 0;
 };
 
-class OneFileProvider : public TestFileProvider {
-    ScopedMem<WCHAR> filePath;
-    bool provided;
+class FilesProvider : public TestFileProvider {
+    WStrVec files;
+    size_t provided;
 public:
-    OneFileProvider(const WCHAR *path) {
-        filePath.Set(str::Dup(path));
-        provided = false;
+    FilesProvider(const WCHAR *path) {
+        files.Append(str::Dup(path));
+        provided = 0;
+    }
+    FilesProvider(WStrVec& newFiles, int n, int off) {
+        // get ever n-th file
+        size_t i = 0;
+        for (;;) {
+            size_t fileIdx = i + off;
+            if (fileIdx >= newFiles.Count())
+                break;
+            WCHAR *f = newFiles[fileIdx];
+            files.Append(str::Dup(f));
+            i += n;
+        }
+        provided = 0;
     }
 
-    virtual ~OneFileProvider() {}
+    virtual ~FilesProvider() {}
 
     virtual WCHAR *NextFile() {
-        if (provided)
+        if (provided >= files.Count())
             return NULL;
-        provided = true;
-        return filePath;
+        return files[provided++];
     }
 
     virtual void Restart() {
-        provided = false;
+        provided = 0;
     }
 };
 
@@ -379,6 +396,21 @@ void DirFileProvider::Restart()
     OpenDir(startDir);
 }
 
+static size_t GetAllMatchingFiles(const WCHAR *dir, const WCHAR *filter, WStrVec& files)
+{
+    WStrVec dirsToVisit;
+    dirsToVisit.Append(str::Dup(dir));
+
+    while (dirsToVisit.Count() > 0) {
+        ScopedMem<WCHAR> path(dirsToVisit[0]);
+        dirsToVisit.RemoveAt(0);
+        CollectStressTestSupportedFilesFromDirectory(path, filter, files);
+        ScopedMem<WCHAR> pattern(str::Format(L"%s\\*", path));
+        CollectPathsFromDirectory(pattern, dirsToVisit, true);
+    }
+    return files.Count();
+}
+
 /* The idea of StressTest is to render a lot of PDFs sequentially, simulating
 a human advancing one page at a time. This is mostly to run through a large number
 of PDFs before a release to make sure we're crash proof. */
@@ -390,6 +422,7 @@ class StressTest {
     int               currPage;
     int               pageForSearchStart;
     int               filesCount; // number of files processed so far
+    int               timerId;
 
     SYSTEMTIME        stressStartTime;
     int               cycles;
@@ -411,14 +444,33 @@ class StressTest {
 public:
     StressTest(WindowInfo *win, RenderCache *renderCache) :
         win(win), renderCache(renderCache), currPage(0), pageForSearchStart(0),
-        filesCount(0), cycles(1), fileIndex(0)
-        { }
+        filesCount(0), cycles(1), fileIndex(0), fileProvider(NULL)
+    {
+        timerId = gCurrStressTimerId++;
+    }
 
     void Start(const WCHAR *path, const WCHAR *filter, const WCHAR *ranges, int cycles);
+    void Start(FilesProvider *fileProvider, int cycles);
 
-    void OnTimer();
+    void OnTimer(int timerIdGot);
     void GetLogInfo(str::Str<char> *s);
 };
+
+void StressTest::Start(FilesProvider *fileProvider, int cycles)
+{
+    srand((unsigned int)time(NULL));
+    GetSystemTime(&stressStartTime);
+
+    this->fileProvider = fileProvider;
+    this->cycles = cycles;
+
+    if (pageRanges.Count() == 0)
+        pageRanges.Append(PageRange());
+    if (fileRanges.Count() == 0)
+        fileRanges.Append(PageRange());
+
+    TickTimer();
+}
 
 void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *ranges, int cycles)
 {
@@ -426,7 +478,7 @@ void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *rang
     GetSystemTime(&stressStartTime);
 
     if (file::Exists(path)) {
-        fileProvider = new OneFileProvider(path);
+        fileProvider = new FilesProvider(path);
         ParsePageRanges(ranges, pageRanges);
     }
     else if (dir::Exists(path)) {
@@ -447,16 +499,12 @@ void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *rang
     if (fileRanges.Count() == 0)
         fileRanges.Append(PageRange());
 
-    if (GoToNextFile())
-        TickTimer();
-    else
-        Finished(true);
+    TickTimer();
 }
 
 void StressTest::Finished(bool success)
 {
-    win->stressTest = NULL;
-    SetThreadExecutionState(ES_CONTINUOUS);
+    win->stressTest = NULL; // make sure we're not double-deleted
 
     if (success) {
         int secs = SecsSinceSystemTime(stressStartTime);
@@ -492,6 +540,12 @@ bool StressTest::OpenFile(const WCHAR *fileName)
     bool reuse = rand() % 3 != 1;
     wprintf(L"%s\n", fileName);
     fflush(stdout);
+
+    // TODO: force re-use if we can't CloseWindow()
+    // We need to get rid of html window nested message pump somehow, but after 2.2
+    if (win->IsChm() && InHtmlNestedMessagePump())
+        reuse = true;
+
     LoadArgs args(fileName, NULL, true /* show */, reuse);
     WindowInfo *w = LoadDocument(args);
     if (!w)
@@ -603,14 +657,21 @@ bool StressTest::GoToNextPage()
 
 void StressTest::TickTimer()
 {
-    SetTimer(win->hwndFrame, DIR_STRESS_TIMER_ID, USER_TIMER_MINIMUM, NULL);
+    SetTimer(win->hwndFrame, timerId, USER_TIMER_MINIMUM, NULL);
 }
 
-void StressTest::OnTimer()
+void StressTest::OnTimer(int timerIdGot)
 {
-    KillTimer(win->hwndFrame, DIR_STRESS_TIMER_ID);
-    if (!win->dm || !win->dm->engine)
+    CrashIf(timerId != timerIdGot);
+    KillTimer(win->hwndFrame, timerId);
+    if (!win->dm || !win->dm->engine) {
+        if (!GoToNextFile()) {
+            Finished(true);
+            return;
+        }
+        TickTimer();
         return;
+    }
 
     // chm documents aren't rendered and we block until we show them
     // so we can assume previous page has been shown and go to next page
@@ -671,8 +732,7 @@ void GetStressTestInfo(str::Str<char>* s)
     }
 }
 
-void StartStressTest(WindowInfo *win, const WCHAR *path, const WCHAR *filter,
-                     const WCHAR *ranges, int cycles, RenderCache *renderCache)
+void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCache)
 {
     // gPredictiveRender = false;
     gIsStressTesting = true;
@@ -680,15 +740,49 @@ void StartStressTest(WindowInfo *win, const WCHAR *path, const WCHAR *filter,
     gUseEbookUI = false;
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
-    // dst will be deleted when the stress ends
-    StressTest *dst = new StressTest(win, renderCache);
-    win->stressTest = dst;
-    dst->Start(path, filter, ranges, cycles);
+
+    int n = i->stressParallelCount;
+    if (n > 1) {
+        WindowInfo **windows = AllocArray<WindowInfo*>(n);
+        windows[0] = win;
+        for (int j=1; j<n; j++) {
+            windows[j] = CreateAndShowWindowInfo();
+            if (!windows[j])
+                return;
+        }
+        WStrVec filesToTest;
+
+        wprintf(L"Scanning for files in directory %s\n", i->stressTestPath);
+        fflush(stdout);
+        size_t filesCount = GetAllMatchingFiles(i->stressTestPath, i->stressTestFilter, filesToTest);
+        if (0 == filesCount) {
+            wprintf(L"Didn't find any files matching filter '%s'\n", i->stressTestFilter);
+            return;
+        }
+        wprintf(L"Found %d files\n", (int)filesCount);
+        fflush(stdout);
+        for (int j=0; j<n; j++) {
+            // dst will be deleted when the stress ends
+            win = windows[j];
+            StressTest *dst = new StressTest(win, renderCache);
+            win->stressTest = dst;
+            // divide filesToTest among each window
+            FilesProvider *filesProvider = new FilesProvider(filesToTest, n, j);
+            dst->Start(filesProvider, i->stressTestCycles);
+        }
+
+        free(windows);
+    } else {
+        // dst will be deleted when the stress ends
+        StressTest *dst = new StressTest(win, renderCache);
+        win->stressTest = dst;
+        dst->Start(i->stressTestPath, i->stressTestFilter, i->stressTestRanges, i->stressTestCycles);
+    }
 }
 
-void OnStressTestTimer(WindowInfo *win)
+void OnStressTestTimer(WindowInfo *win, int timerId)
 {
-    win->stressTest->OnTimer();
+    win->stressTest->OnTimer(timerId);
 }
 
 void FinishStressTest(WindowInfo *win)

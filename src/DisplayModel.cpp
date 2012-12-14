@@ -121,7 +121,7 @@ static bool IsZoomVirtual(float zoomLevel)
     return false;
 }
 
-static bool IsValidZoom(float zoomLevel)
+bool IsValidZoom(float zoomLevel)
 {
     if (IsZoomVirtual(zoomLevel))
         return true;
@@ -139,6 +139,7 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
     ds->displayMode = presentationMode ? presDisplayMode : GetDisplayMode();
     ds->rotation = rotation;
     ds->zoomVirtual = presentationMode ? presZoomVirtual : zoomVirtual;
+    CrashIf(!IsValidZoom(ds->zoomVirtual));
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;

@@ -4097,8 +4097,8 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
         ReloadDocument(&win, true);
         break;
 
-    case DIR_STRESS_TIMER_ID:
-        OnStressTestTimer(&win);
+    default:
+        OnStressTestTimer(&win, (int)timerId);
         break;
     }
 }

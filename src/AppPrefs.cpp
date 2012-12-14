@@ -161,6 +161,8 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     const WCHAR *mode = DisplayModeConv::NameFromEnum(globalPrefs.defaultDisplayMode);
     prefs->Add(DISPLAY_MODE_STR, mode);
 
+    CrashIf(!IsValidZoom(globalPrefs.defaultZoom));
+
     ScopedMem<char> zoom(str::Format("%.4f", globalPrefs.defaultZoom));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
     prefs->Add(WINDOW_STATE_STR, globalPrefs.windowState);
@@ -225,6 +227,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     prefs->Add(TOC_VISIBLE_STR, ds->tocVisible);
     prefs->Add(SIDEBAR_DX_STR, ds->sidebarDx);
 
+    CrashIf(!IsValidZoom(ds->zoomVirtual));
     ScopedMem<char> zoom(str::Format("%.4f", ds->zoomVirtual));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
 
