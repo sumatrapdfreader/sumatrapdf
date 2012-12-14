@@ -176,7 +176,7 @@ static void aes_gen_tables( void )
 /*
  * AES key schedule (encryption)
  */
-void aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
+int aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
 {
 	int i;
 	unsigned long *RK;
@@ -194,7 +194,7 @@ void aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
 	case 128: ctx->nr = 10; break;
 	case 192: ctx->nr = 12; break;
 	case 256: ctx->nr = 14; break;
-	default : return;
+	default : return 1;
 	}
 
 #if defined(PADLOCK_ALIGN16)
@@ -274,12 +274,13 @@ void aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
 
 		break;
 	}
+	return 0;
 }
 
 /*
  * AES key schedule (decryption)
  */
-void aes_setkey_dec( aes_context *ctx, const unsigned char *key, int keysize )
+int aes_setkey_dec(aes_context *ctx, const unsigned char *key, int keysize)
 {
 	int i, j;
 	aes_context cty;
@@ -291,7 +292,7 @@ void aes_setkey_dec( aes_context *ctx, const unsigned char *key, int keysize )
 	case 128: ctx->nr = 10; break;
 	case 192: ctx->nr = 12; break;
 	case 256: ctx->nr = 14; break;
-	default : return;
+	default: return 1;
 	}
 
 #if defined(PADLOCK_ALIGN16)
@@ -300,7 +301,9 @@ void aes_setkey_dec( aes_context *ctx, const unsigned char *key, int keysize )
 	ctx->rk = RK = ctx->buf;
 #endif
 
-	aes_setkey_enc( &cty, key, keysize );
+	i = aes_setkey_enc( &cty, key, keysize );
+	if (i)
+		return i;
 	SK = cty.rk + cty.nr * 4;
 
 	*RK++ = *SK++;
@@ -325,6 +328,7 @@ void aes_setkey_dec( aes_context *ctx, const unsigned char *key, int keysize )
 	*RK++ = *SK++;
 
 	memset( &cty, 0, sizeof( aes_context ) );
+	return 0;
 }
 
 #define AES_FROUND(X0,X1,X2,X3,Y0,Y1,Y2,Y3)	\

@@ -398,8 +398,8 @@ struct fz_aes_s
 	unsigned long buf[68]; /* unaligned data */
 };
 
-void aes_setkey_enc( fz_aes *ctx, const unsigned char *key, int keysize );
-void aes_setkey_dec( fz_aes *ctx, const unsigned char *key, int keysize );
+int aes_setkey_enc( fz_aes *ctx, const unsigned char *key, int keysize );
+int aes_setkey_dec( fz_aes *ctx, const unsigned char *key, int keysize );
 void aes_crypt_cbc( fz_aes *ctx, int mode, int length,
 	unsigned char iv[16],
 	const unsigned char *input,

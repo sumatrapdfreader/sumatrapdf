@@ -248,7 +248,7 @@ nearend:
 static inline int
 find_changing_color(const unsigned char *line, int x, int w, int color)
 {
-	if (!line)
+	if (!line || x >= w)
 		return w;
 
 	x = find_changing(line, (x > 0 || !color) ? x : -1, w);
@@ -270,6 +270,9 @@ static const unsigned char rm[8] = {
 static inline void setbits(unsigned char *line, int x0, int x1)
 {
 	int a0, a1, b0, b1, a;
+
+	if (x1 <= x0)
+		return;
 
 	a0 = x0 >> 3;
 	a1 = x1 >> 3;

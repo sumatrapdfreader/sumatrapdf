@@ -674,7 +674,8 @@ fz_open_aesd(fz_stream *chain, unsigned char *key, unsigned keylen)
 	{
 		state = fz_malloc_struct(ctx, fz_aesd);
 		state->chain = chain;
-		aes_setkey_dec(&state->aes, key, keylen * 8);
+		if (aes_setkey_dec(&state->aes, key, keylen * 8))
+			fz_throw(ctx, "AES key init failed (keylen=%d)", keylen * 8);
 		state->ivcount = 0;
 		state->rp = state->bp;
 		state->wp = state->bp;

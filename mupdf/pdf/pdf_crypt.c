@@ -403,7 +403,7 @@ pdf_compute_encryption_key(pdf_crypt *crypt, unsigned char *password, int pwlen,
  */
 
 static void
-pdf_compute_encryption_key_r5(pdf_crypt *crypt, unsigned char *password, int pwlen, int ownerkey, unsigned char *validationkey)
+pdf_compute_encryption_key_r5(fz_context *ctx, pdf_crypt *crypt, unsigned char *password, int pwlen, int ownerkey, unsigned char *validationkey)
 {
 	unsigned char buffer[128 + 8 + 48];
 	fz_sha256 sha256;
@@ -439,7 +439,8 @@ pdf_compute_encryption_key_r5(pdf_crypt *crypt, unsigned char *password, int pwl
 
 	/* clear password buffer and use it as iv */
 	memset(buffer + 32, 0, sizeof(buffer) - 32);
-	aes_setkey_dec(&aes, buffer, crypt->length);
+	if (aes_setkey_dec(&aes, buffer, crypt->length))
+		fz_throw(ctx, "AES key init failed (keylen=%d)", crypt->length);
 	aes_crypt_cbc(&aes, AES_DECRYPT, 32, buffer + 32, ownerkey ? crypt->oe : crypt->ue, crypt->key);
 }
 
@@ -451,7 +452,7 @@ pdf_compute_encryption_key_r5(pdf_crypt *crypt, unsigned char *password, int pwl
  */
 
 static void
-pdf_compute_hardened_hash_r6(unsigned char *password, int pwlen, unsigned char salt[16], unsigned char *ownerkey, unsigned char hash[32])
+pdf_compute_hardened_hash_r6(fz_context *ctx, unsigned char *password, int pwlen, unsigned char salt[16], unsigned char *ownerkey, unsigned char hash[32])
 {
 	unsigned char data[(128 + 64 + 48) * 64];
 	unsigned char block[64];
@@ -483,7 +484,8 @@ pdf_compute_hardened_hash_r6(unsigned char *password, int pwlen, unsigned char s
 			memcpy(data + j * data_len, data, data_len);
 
 		/* Step 3: encrypt data using data block as key and iv */
-		aes_setkey_enc(&aes, block, 128);
+		if (aes_setkey_enc(&aes, block, 128))
+			fz_throw(ctx, "AES key init failed (keylen=%d)", 128);
 		aes_crypt_cbc(&aes, AES_ENCRYPT, data_len * 64, block + 16, data, data);
 
 		/* Step 4: determine SHA-2 hash size for this round */
@@ -517,7 +519,7 @@ pdf_compute_hardened_hash_r6(unsigned char *password, int pwlen, unsigned char s
 }
 
 static void
-pdf_compute_encryption_key_r6(pdf_crypt *crypt, unsigned char *password, int pwlen, int ownerkey, unsigned char *validationkey)
+pdf_compute_encryption_key_r6(fz_context *ctx, pdf_crypt *crypt, unsigned char *password, int pwlen, int ownerkey, unsigned char *validationkey)
 {
 	unsigned char hash[32];
 	unsigned char iv[16];
@@ -526,14 +528,15 @@ pdf_compute_encryption_key_r6(pdf_crypt *crypt, unsigned char *password, int pwl
 	if (pwlen > 127)
 		pwlen = 127;
 
-	pdf_compute_hardened_hash_r6(password, pwlen,
+	pdf_compute_hardened_hash_r6(ctx, password, pwlen,
 		(ownerkey ? crypt->o : crypt->u) + 32,
 		ownerkey ? crypt->u : NULL, validationkey);
-	pdf_compute_hardened_hash_r6(password, pwlen,
+	pdf_compute_hardened_hash_r6(ctx, password, pwlen,
 		crypt->u + 40, NULL, hash);
 
 	memset(iv, 0, sizeof(iv));
-	aes_setkey_dec(&aes, hash, 256);
+	if (aes_setkey_dec(&aes, hash, 256))
+		fz_throw(ctx, "AES key init failed (keylen=256)");
 	aes_crypt_cbc(&aes, AES_DECRYPT, 32, iv,
 		ownerkey ? crypt->oe : crypt->ue, crypt->key);
 }
@@ -544,7 +547,7 @@ pdf_compute_encryption_key_r6(pdf_crypt *crypt, unsigned char *password, int pwl
  */
 
 static void
-pdf_compute_user_password(pdf_crypt *crypt, unsigned char *password, int pwlen, unsigned char *output)
+pdf_compute_user_password(fz_context *ctx, pdf_crypt *crypt, unsigned char *password, int pwlen, unsigned char *output)
 {
 	if (crypt->r == 2)
 	{
@@ -588,12 +591,12 @@ pdf_compute_user_password(pdf_crypt *crypt, unsigned char *password, int pwlen, 
 
 	if (crypt->r == 5)
 	{
-		pdf_compute_encryption_key_r5(crypt, password, pwlen, 0, output);
+		pdf_compute_encryption_key_r5(ctx, crypt, password, pwlen, 0, output);
 	}
 
 	if (crypt->r == 6)
 	{
-		pdf_compute_encryption_key_r6(crypt, password, pwlen, 0, output);
+		pdf_compute_encryption_key_r6(ctx, crypt, password, pwlen, 0, output);
 	}
 }
 
@@ -605,10 +608,10 @@ pdf_compute_user_password(pdf_crypt *crypt, unsigned char *password, int pwlen, 
  */
 
 static int
-pdf_authenticate_user_password(pdf_crypt *crypt, unsigned char *password, int pwlen)
+pdf_authenticate_user_password(fz_context *ctx, pdf_crypt *crypt, unsigned char *password, int pwlen)
 {
 	unsigned char output[32];
-	pdf_compute_user_password(crypt, password, pwlen, output);
+	pdf_compute_user_password(ctx, crypt, password, pwlen, output);
 	if (crypt->r == 2 || crypt->r == 5 || crypt->r == 6)
 		return memcmp(output, crypt->u, 32) == 0;
 	if (crypt->r == 3 || crypt->r == 4)
@@ -624,7 +627,7 @@ pdf_authenticate_user_password(pdf_crypt *crypt, unsigned char *password, int pw
  */
 
 static int
-pdf_authenticate_owner_password(pdf_crypt *crypt, unsigned char *ownerpass, int pwlen)
+pdf_authenticate_owner_password(fz_context *ctx, pdf_crypt *crypt, unsigned char *ownerpass, int pwlen)
 {
 	unsigned char pwbuf[32];
 	unsigned char key[32];
@@ -637,13 +640,13 @@ pdf_authenticate_owner_password(pdf_crypt *crypt, unsigned char *ownerpass, int 
 	if (crypt->r == 5)
 	{
 		/* PDF 1.7 ExtensionLevel 3 algorithm 3.12 */
-		pdf_compute_encryption_key_r5(crypt, ownerpass, pwlen, 1, key);
+		pdf_compute_encryption_key_r5(ctx, crypt, ownerpass, pwlen, 1, key);
 		return !memcmp(key, crypt->o, 32);
 	}
 	else if (crypt->r == 6)
 	{
 		/* PDF 1.7 ExtensionLevel 8 algorithm */
-		pdf_compute_encryption_key_r6(crypt, ownerpass, pwlen, 1, key);
+		pdf_compute_encryption_key_r6(ctx, crypt, ownerpass, pwlen, 1, key);
 		return !memcmp(key, crypt->o, 32);
 	}
 
@@ -693,7 +696,7 @@ pdf_authenticate_owner_password(pdf_crypt *crypt, unsigned char *ownerpass, int 
 		}
 	}
 
-	return pdf_authenticate_user_password(crypt, userpass, 32);
+	return pdf_authenticate_user_password(ctx, crypt, userpass, 32);
 }
 
 int
@@ -703,9 +706,9 @@ pdf_authenticate_password(pdf_document *xref, char *password)
 	{
 		if (!password)
 			password = "";
-		if (pdf_authenticate_user_password(xref->crypt, (unsigned char *)password, strlen(password)))
+		if (pdf_authenticate_user_password(xref->ctx, xref->crypt, (unsigned char *)password, strlen(password)))
 			return 1;
-		if (pdf_authenticate_owner_password(xref->crypt, (unsigned char *)password, strlen(password)))
+		if (pdf_authenticate_owner_password(xref->ctx, xref->crypt, (unsigned char *)password, strlen(password)))
 			return 1;
 		return 0;
 	}
@@ -860,7 +863,8 @@ pdf_crypt_obj_imp(fz_context *ctx, pdf_crypt *crypt, pdf_obj *obj, unsigned char
 				unsigned char iv[16];
 				fz_aes aes;
 				memcpy(iv, s, 16);
-				aes_setkey_dec(&aes, key, keylen * 8);
+				if (aes_setkey_dec(&aes, key, keylen * 8))
+					fz_throw(ctx, "AES key init failed (keylen=%d)", keylen * 8);
 				aes_crypt_cbc(&aes, AES_DECRYPT, n - 16, iv, s + 16, s);
 				/* delete space used for iv and padding bytes at end */
 				if (s[n - 17] < 1 || s[n - 17] > 16)

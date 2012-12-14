@@ -932,9 +932,9 @@ load_sample_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int num,
 	for (i = 0; i < func->m; i++)
 	{
 		func->u.sa.size[i] = pdf_to_int(pdf_array_get(obj, i));
-		if (func->u.sa.size[i] < 0)
+		if (func->u.sa.size[i] <= 0)
 		{
-			fz_warn(ctx, "negative sample function dimension size");
+			fz_warn(ctx, "non-positive sample function dimension size");
 			func->u.sa.size[i] = 1;
 		}
 	}
