@@ -53,6 +53,8 @@ pdf_load_outline_imp(pdf_document *xref, pdf_obj *dict)
 	}
 	fz_catch(ctx)
 	{
+		/* SumatraPDF: fix memory leak */
+		fz_free_outline(ctx, first);
 		fz_rethrow(ctx);
 	}
 

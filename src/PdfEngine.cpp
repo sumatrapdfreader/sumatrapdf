@@ -1488,7 +1488,7 @@ bool PdfEngineImpl::FinishLoading()
         outline = pdf_load_outline(_doc);
     }
     fz_catch(ctx) {
-        // ignore errors from pdf_loadoutline()
+        // ignore errors from pdf_load_outline()
         // this information is not critical and checking the
         // error might prevent loading some pdfs that would
         // otherwise get displayed

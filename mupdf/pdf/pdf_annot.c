@@ -382,8 +382,19 @@ pdf_load_link_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 	n = pdf_array_len(annots);
 	for (i = 0; i < n; i++)
 	{
+		/* SumatraPDF: fix memory leak */
+		fz_try(xref->ctx)
+		{
+
 		obj = pdf_array_get(annots, i);
 		link = pdf_load_link(xref, obj, page_ctm);
+
+		}
+		fz_catch(xref->ctx)
+		{
+			link = NULL;
+		}
+
 		if (link)
 		{
 			if (!head)
@@ -460,6 +471,7 @@ pdf_create_annot(pdf_document *xref, fz_rect rect, pdf_obj *base_obj, fz_buffer 
 	fz_try(xref->ctx)
 	{
 		int num = pdf_create_object(xref);
+		pdf_update_object(xref, num, base_obj);
 		pdf_update_stream(xref, num, content);
 		form->contents = pdf_new_indirect(xref->ctx, num, 0, xref);
 
@@ -1275,6 +1287,10 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 	len = pdf_array_len(annots);
 	for (i = 0; i < len; i++)
 	{
+		/* SumatraPDF: fix memory leak */
+		fz_try(ctx)
+		{
+
 		obj = pdf_array_get(annots, i);
 
 		/* SumatraPDF: synthesize appearance streams for a few more annotations */
@@ -1289,7 +1305,7 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 				tail->next = annot;
 				tail = annot;
 			}
-			continue;
+			obj = NULL;
 		}
 
 		/* SumatraPDF: prevent regressions */
@@ -1298,6 +1314,13 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 		rect = pdf_dict_gets(obj, "Rect");
 		ap = pdf_dict_gets(obj, "AP");
 		as = pdf_dict_gets(obj, "AS");
+
+			pdf_is_dict(ap);
+		}
+		fz_catch(ctx)
+		{
+			ap = NULL;
+		}
 
 		if (!pdf_is_dict(ap))
 			continue;
