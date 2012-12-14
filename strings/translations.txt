@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-10782bc758597d0db9115749470d73ae238e3117
+b9ef8756e8c8b063be42b87992ab7e5a17d42241
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4489,6 +4489,7 @@ ar:التوافق
 br:Compatibilidade
 ca-xv:Compatibilitat
 ca:Compatibilitat
+cn:兼容性
 cz:Kompatibilita
 de:Kompatibilität
 el:Συμβατότητα
@@ -6425,7 +6426,9 @@ ar:تهيئة الويب السريعة
 br:Visualização rápida na Web
 ca-xv:Visualització ràpida de web
 ca:Visualització ràpida de web
+cn:快速WEB查看(线性PDF)
 de:Schnelle Webanzeige
+el:Γρήγορη Διαδικτυακή Προβολή
 es:Visualización Rápida en Web
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
@@ -6501,7 +6504,9 @@ vn:Ưa thích
 br:Documentos FictionBook
 ca-xv:Documents FictionBook
 ca:Documents FictionBook
+cn:小说文档
 de:FictionBook-Dokumente
+el:Έγγραφα FictionBook
 es:Documentos FictionBook
 fr:Documents FictionBook
 nl:FictionBook documenten
@@ -9474,6 +9479,7 @@ ar:تحسينات البي دي إف
 br:Otimizações PDF:
 ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
+cn:PDF 优化：
 de:PDF Optimierungen:
 el:Βελτιστοποίηση PDF
 es:Optimizaciones de PDF:
@@ -10286,6 +10292,7 @@ ar:اطبع كصورة (يحتاج إلى ذاكرة أكثر)
 br:Imprimir como &imagem (requer mais memória)
 ca-xv:Imprimeix com a &imatge (requereix més memòria)
 ca:Imprimeix com a &imatge (requereix més memòria)
+cn:打印为图像(需要更多的内存)(&I)
 cz:Tisknout jako &obrázek (vyžaduje více paměti)
 de:Als B&ild drucken (benötigt mehr Speicher)
 el:Εκτύπωση ως &εικόνα (απαιτεί περισσότερη μνήμη)
@@ -11437,6 +11444,7 @@ ar:إظهار العلامات
 br:Mostrar Fa&voritos
 ca-xv:Mostra els &marcadors
 ca:Mostra els &marcadors
+cn:显示书签(&B)
 cz:Zobrazit &záložky
 de:Lese&zeichen anzeigen
 el:Εμφάνιση &Σελιδοδεικτών
@@ -12303,7 +12311,9 @@ ar:البي دي إف الموسومة
 br:PDF com marcações (tags)
 ca-xv:PDF etiquetat
 ca:PDF etiquetat
+cn:已标记PDF
 de:PDF mit Tags
+el:PDF με ετικέττα
 es:PDF Etiquetado
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
