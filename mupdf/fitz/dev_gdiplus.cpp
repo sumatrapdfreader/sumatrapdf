@@ -329,12 +329,11 @@ public:
 		Region clipRegion(Rect(0, 0, 1, 1));
 		clipRegion.Transform(&Matrix(ctm.a, ctm.b, ctm.c, ctm.d, ctm.e, ctm.f));
 		pushClip(&clipRegion);
-		graphics->GetClip(&clipRegion);
 		stack->layerAlpha = stack->alpha;
 		stack->alpha = 1.0;
 		
 		RectF bounds;
-		clipRegion.GetBounds(&bounds, graphics);
+		graphics->GetClipBounds(&bounds);
 		stack->bounds.X = floorf(bounds.X); stack->bounds.Width = ceilf(bounds.Width) + 1;
 		stack->bounds.Y = floorf(bounds.Y); stack->bounds.Height = ceilf(bounds.Height) + 1;
 		
@@ -407,6 +406,13 @@ public:
 		stack->tileCtm = ctm;
 		stack->tileCtm.e = bbox.x0;
 		stack->tileCtm.f = bbox.y0;
+		
+		RectF bounds;
+		stack->saveG->GetClipBounds(&bounds);
+		bounds.Inflate(stack->bounds.Width, stack->bounds.Height);
+		fz_rect area2 = { bounds.X, bounds.Y, bounds.X + bounds.Width, bounds.Y + bounds.Height };
+		area2 = fz_transform_rect(fz_invert_matrix(stack->tileCtm), area2);
+		area = fz_intersect_rect(area, area2);
 		
 		stack->tileArea.x0 = floorf(area.x0 / xstep);
 		stack->tileArea.y0 = floorf(area.y0 / ystep);

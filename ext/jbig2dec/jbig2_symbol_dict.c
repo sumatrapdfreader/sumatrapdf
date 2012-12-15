@@ -767,16 +767,24 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
     int exflag = 0;
     int64_t limit = params->SDNUMINSYMS + params->SDNUMNEWSYMS;
     int32_t exrunlength;
+    /* SumatraPDF: prevent infinite loop */
+    int zerolength = 0;
 
     while (i < limit) {
       if (params->SDHUFF)
         exrunlength = jbig2_huffman_get(hs, SBHUFFRSIZE, &code);
       else
         code = jbig2_arith_int_decode(IAEX, as, &exrunlength);
-      if (code || (exrunlength > limit - i)) {
+      /* SumatraPDF: prevent infinite loop */
+      zerolength = exrunlength > 0 ? 0 : zerolength + 1;
+      if (code || (exrunlength > limit - i) || (exrunlength < 0) || (zerolength > 4)) {
         if (code)
           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "failed to decode exrunlength for exported symbols");
+        /* SumatraPDF: prevent infinite loop */
+        else if (exrunlength <= 0)
+          jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+            "runlength too small in export symbol table (%d <= 0)\n", exrunlength);
         else
           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
             "runlength too large in export symbol table (%d > %d - %d)\n",

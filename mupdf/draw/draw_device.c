@@ -1622,6 +1622,18 @@ fz_draw_end_tile(fz_device *devp)
 	area = state[1].area;
 	ctm = state[1].ctm;
 
+	/* SumatraPDF: only draw what's really necessary */
+	{
+		fz_rect area2;
+		area2.x0 = fz_max(state[0].dest->x, state[0].scissor.x0) - state[1].dest->w;
+		area2.y0 = fz_max(state[0].dest->y, state[0].scissor.y0) - state[1].dest->h;
+		area2.x1 = fz_min(state[0].dest->x + state[0].dest->w, state[0].scissor.x1) + state[1].dest->w;
+		area2.y1 = fz_min(state[0].dest->y + state[0].dest->h, state[0].scissor.y1) + state[1].dest->h;
+		ctm.e = state[1].dest->x; ctm.f = state[1].dest->y;
+		area2 = fz_transform_rect(fz_invert_matrix(ctm), area2);
+		area = fz_intersect_rect(area, area2);
+	}
+
 	x0 = floorf(area.x0 / xstep);
 	y0 = floorf(area.y0 / ystep);
 	/* SumatraPDF: fix rounding issue in pattern_with_extra_q.pdf */

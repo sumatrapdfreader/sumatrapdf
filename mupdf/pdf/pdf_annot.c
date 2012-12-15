@@ -725,7 +725,7 @@ pdf_create_text_annot(pdf_document *xref, pdf_obj *obj)
 		fz_buffer_printf(ctx, content, " 1 0 0 1 0 1 cm ");
 		fz_buffer_printf(ctx, content, content_ap, rgb[0], rgb[1], rgb[2]);
 		fz_buffer_printf(ctx, content, " Q", content_ap);
-	
+
 		obj = pdf_clone_for_view_only(xref, obj);
 	}
 	fz_catch(ctx)

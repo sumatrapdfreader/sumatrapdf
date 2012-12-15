@@ -1,6 +1,6 @@
 diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
---- jbig2dec.orig\jbig2.h	Sun Aug 26 13:06:26 2012
-+++ jbig2dec\jbig2.h	Thu Jul 05 15:18:19 2012
+--- jbig2dec.orig\jbig2.h	Sun Aug 26 12:06:26 2012
++++ jbig2dec\jbig2.h	Thu Jul 05 14:18:19 2012
 @@ -27,16 +27,19 @@
  
  /* To enable Memento, either uncomment the following, or arrange to
@@ -22,8 +22,8 @@ diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
  typedef enum {
    JBIG2_SEVERITY_DEBUG,
 diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
---- jbig2dec.orig\jbig2_huffman.c	Sun Aug 26 13:06:26 2012
-+++ jbig2dec\jbig2_huffman.c	Sat Aug 18 19:20:14 2012
+--- jbig2dec.orig\jbig2_huffman.c	Sun Aug 26 12:06:26 2012
++++ jbig2dec\jbig2_huffman.c	Sat Aug 18 18:20:14 2012
 @@ -253,11 +253,12 @@
    for (;;)
      {
@@ -39,8 +39,8 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
        {
            if (oob)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
---- jbig2dec.orig\jbig2_symbol_dict.c	Sun Aug 26 13:06:26 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Sun Aug 26 12:47:50 2012
+--- jbig2dec.orig\jbig2_symbol_dict.c	Sun Aug 26 12:06:26 2012
++++ jbig2dec\jbig2_symbol_dict.c	Sat Dec 15 16:40:37 2012
 @@ -147,11 +147,12 @@
      Jbig2Segment *rsegment;
      int n_dicts = 0;
@@ -118,27 +118,57 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
  	    "reading %dx%d uncompressed bitmap"
  	    " for %d symbols (%d bytes)",
  	    image->width, image->height, NSYMSDECODED - HCFIRSTSYM, BMSIZE);
-@@ -686,10 +702,17 @@
- 	    dst += image->stride;
+@@ -687,10 +703,17 @@
  	    src += stride;
  	  }
  	} else {
  	  Jbig2GenericRegionParams rparams;
-+
+ 
 +	  /* SumatraPDF: prevent read access violation */
 +	  if (size - jbig2_huffman_offset(hs) < BMSIZE) {
 +	    jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number, "not enough data for decoding (%d/%d)", BMSIZE, size - jbig2_huffman_offset(hs));
 +	    jbig2_image_release(ctx, image);
 +	    goto cleanup4;
 +	  }
- 
++
  	  jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
  	    "reading %dx%d collective bitmap for %d symbols (%d bytes)",
  	    image->width, image->height, NSYMSDECODED - HCFIRSTSYM, BMSIZE);
  
+ 	  rparams.MMR = 1;
+@@ -742,20 +765,28 @@
+     int j = 0;
+     int k;
+     int exflag = 0;
+     int64_t limit = params->SDNUMINSYMS + params->SDNUMNEWSYMS;
+     int32_t exrunlength;
++    /* SumatraPDF: prevent infinite loop */
++    int zerolength = 0;
+ 
+     while (i < limit) {
+       if (params->SDHUFF)
+         exrunlength = jbig2_huffman_get(hs, SBHUFFRSIZE, &code);
+       else
+         code = jbig2_arith_int_decode(IAEX, as, &exrunlength);
+-      if (code || (exrunlength > limit - i)) {
++      /* SumatraPDF: prevent infinite loop */
++      zerolength = exrunlength > 0 ? 0 : zerolength + 1;
++      if (code || (exrunlength > limit - i) || (exrunlength < 0) || (zerolength > 4)) {
+         if (code)
+           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+             "failed to decode exrunlength for exported symbols");
++        /* SumatraPDF: prevent infinite loop */
++        else if (exrunlength <= 0)
++          jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
++            "runlength too small in export symbol table (%d <= 0)\n", exrunlength);
+         else
+           jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+             "runlength too large in export symbol table (%d > %d - %d)\n",
+             exrunlength, params->SDNUMEXSYMS, j);
+         /* skip to the cleanup code and return SDEXSYMS = NULL */
 diff -rPu5 jbig2dec.orig\jbig2_text.c jbig2dec\jbig2_text.c
---- jbig2dec.orig\jbig2_text.c	Sun Aug 26 13:06:26 2012
-+++ jbig2dec\jbig2_text.c	Sun Aug 19 01:58:18 2012
+--- jbig2dec.orig\jbig2_text.c	Sun Aug 26 12:06:26 2012
++++ jbig2dec\jbig2_text.c	Sun Aug 19 00:58:18 2012
 @@ -300,10 +300,16 @@
  
  		index = 0;
