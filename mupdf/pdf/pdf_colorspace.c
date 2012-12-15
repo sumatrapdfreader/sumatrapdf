@@ -267,14 +267,21 @@ load_indexed(pdf_document *xref, pdf_obj *array)
 				fz_throw(ctx, "cannot open colorspace lookup table (%d 0 R)", pdf_to_num(lookup));
 			}
 
+			/* SumatraPDF: fix memory leak */
+			fz_try(ctx)
+			{
+
 			i = fz_read(file, idx->lookup, n);
-			if (i < 0)
+
+			}
+			fz_always(ctx)
 			{
 				fz_close(file);
+			}
+			fz_catch(ctx)
+			{
 				fz_throw(ctx, "cannot read colorspace lookup table (%d 0 R)", pdf_to_num(lookup));
 			}
-
-			fz_close(file);
 		}
 		else
 		{
