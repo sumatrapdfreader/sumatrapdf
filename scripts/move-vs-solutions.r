@@ -16,7 +16,6 @@ fix-vs2008-line: func [l] [
     l: replace l "obj-" "..\obj-"
     l: replace l {".\scripts} {"..\scripts}
     l: replace l {IncludeSearchPath="} {IncludeSearchPath="..\}
-    l
 ]
 
 fix-vs2008-vcproj: func [srcfile [file!] /local lines] [
@@ -33,7 +32,6 @@ fix-vs2010-line: func [l] [
     l: replace l {Manifest Include="} {Manifest Include="..\}
     l: replace l "obj-" "..\obj-"
     l: replace/all l {$(ProjectDir)} {$(ProjectDir)..}
-    l
 ]
 
 fix-vs2010-vcproj: func [srcfile [file!] /local lines] [
