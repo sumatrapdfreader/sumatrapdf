@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b9ef8756e8c8b063be42b87992ab7e5a17d42241
+cb2678b95fd54ecb0a99b7898a5aa844ea306ada
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3442,6 +3442,7 @@ kr:PDF 파일 확장자를 연결할까요?
 kw:Keskelmi orth restrennow PDF?
 lt:Susieti su PDF failais?
 mk:Да управувам со PDF-датотеки?
+ml:capture
 mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
 ne:PDF फाइलहरु सँग सम्बन्धन गराउने?
 nl:Associëren met PDF-bestanden?
