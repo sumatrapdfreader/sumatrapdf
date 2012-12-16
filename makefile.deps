@@ -354,13 +354,13 @@ $(OS)\Selection.obj: src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\StressTesting.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\StressTesting.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\StressTesting.obj: src\Doc.h src\FileHistory.h src\Notifications.h
-$(OS)\StressTesting.obj: src\RenderCache.h src\Search.h src\StressTesting.h
-$(OS)\StressTesting.obj: src\SumatraPDF.h src\SumatraWindow.h src\TextSearch.h
-$(OS)\StressTesting.obj: src\TextSelection.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\StressTesting.obj: src\utils\DirIter.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\StressTesting.obj: src\utils\Scoped.h src\utils\SimpleLog.h src\utils\StrUtil.h
-$(OS)\StressTesting.obj: src\utils\Timer.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\StressTesting.obj: src\WindowInfo.h
+$(OS)\StressTesting.obj: src\ParseCommandLine.h src\RenderCache.h src\Search.h
+$(OS)\StressTesting.obj: src\StressTesting.h src\SumatraPDF.h src\SumatraWindow.h
+$(OS)\StressTesting.obj: src\TextSearch.h src\TextSelection.h src\utils\Allocator.h
+$(OS)\StressTesting.obj: src\utils\BaseUtil.h src\utils\DirIter.h src\utils\FileUtil.h
+$(OS)\StressTesting.obj: src\utils\GeomUtil.h src\utils\HtmlWindow.h src\utils\Scoped.h
+$(OS)\StressTesting.obj: src\utils\SimpleLog.h src\utils\StrUtil.h src\utils\Timer.h
+$(OS)\StressTesting.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\SumatraAbout.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\SumatraAbout.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\SumatraAbout.obj: src\Doc.h src\FileHistory.h src\ImagesEngine.h

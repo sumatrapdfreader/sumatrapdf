@@ -403,9 +403,9 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 		}
 
 		/* SumatraPDF: support transfer functions */
-		if (gstate->softmask_tr)
+		if (tr)
 		{
-			fz_apply_transfer_function(csi->dev, gstate->softmask_tr, 1);
+			fz_apply_transfer_function(csi->dev, tr, 1);
 			gstate->softmask_tr = tr;
 		}
 
