@@ -180,8 +180,10 @@ public:
     }
 
     void SpinMessageLoop(bool wait=true) {
+#if THREADMODEL!=NOTHREADS
         if (wait)
             ddjvu_message_wait(ctx);
+#endif
         while (ddjvu_message_peek(ctx))
             ddjvu_message_pop(ctx);
     }

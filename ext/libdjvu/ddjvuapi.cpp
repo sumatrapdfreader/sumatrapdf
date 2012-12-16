@@ -3843,6 +3843,8 @@ get_file_anno(GP<DjVuFile> file)
                 return miniexp_status(DDJVU_JOB_STOPPED);
               return miniexp_status(DDJVU_JOB_FAILED);
             }
+          /* SumatraPDF: TODO: how to prevent a potentially infinite loop? */
+          return miniexp_status(DDJVU_JOB_FAILED);
         }
       return miniexp_dummy;
     }
