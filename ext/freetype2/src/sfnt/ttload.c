@@ -1240,14 +1240,11 @@
     num_ranges = face->gasp.numRanges;
     FT_TRACE3(( "numRanges: %u\n", num_ranges ));
 
-    if ( FT_QNEW_ARRAY( gaspranges, num_ranges ) ||
-         FT_FRAME_ENTER( num_ranges * 4L )      ) {
-      /* SumatraPDF: fix memory leak */
-      FT_FREE(gaspranges);
+    if ( FT_QNEW_ARRAY( face->gasp.gaspRanges, num_ranges ) ||
+         FT_FRAME_ENTER( num_ranges * 4L )      )
       goto Exit;
-    }
 
-    face->gasp.gaspRanges = gaspranges;
+    gaspranges = face->gasp.gaspRanges;
 
     for ( j = 0; j < num_ranges; j++ )
     {

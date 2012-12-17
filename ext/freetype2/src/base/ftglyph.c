@@ -596,6 +596,9 @@
   Exit:
     if ( error && bitmap )
       FT_Done_Glyph( FT_GLYPH( bitmap ) );
+    /* SumatraPDF: fix memory leak */
+    if ( error )
+      ft_glyphslot_free_bitmap(&dummy);
 
     return error;
 
