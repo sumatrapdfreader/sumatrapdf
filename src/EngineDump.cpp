@@ -327,10 +327,6 @@ public:
 
 int main(int argc, char **argv)
 {
-#ifdef DEBUG
-    // _CrtSetBreakAlloc(527);
-#endif
-
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 
@@ -362,6 +358,7 @@ Usage:
     WCHAR *renderPath = NULL;
     bool useAlternateHandlers = false;
     bool loadOnly = false;
+    int breakAlloc = 0;
 
     for (size_t i = 2; i < argList.Count(); i++) {
         if (str::Eq(argList.At(i), L"-full"))
@@ -374,9 +371,21 @@ Usage:
             useAlternateHandlers = true;
         else if (str::Eq(argList.At(i), L"-loadonly"))
             loadOnly = true;
+#ifdef DEBUG
+        else if (str::Eq(argList.At(i), L"-breakalloc") && i + 1 < argList.Count())
+            breakAlloc = _wtoi(argList.At(++i));
+#endif
         else
             goto Usage;
     }
+
+#ifdef DEBUG
+    if (breakAlloc) {
+        _CrtSetBreakAlloc(breakAlloc);
+        if (!IsDebuggerPresent())
+            MessageBox(NULL, L"Keep your debugger ready for the allocation breakpoint...", L"EngineDump", MB_ICONINFORMATION);
+    }
+#endif
 
     // optionally use GDI+ rendering for PDF/XPS and the original ChmEngine for CHM
     DebugGdiPlusDevice(useAlternateHandlers);
