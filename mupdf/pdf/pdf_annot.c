@@ -1257,7 +1257,7 @@ pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 				}
 			}
 			/* TODO: try to reverse the encoding instead of replacing the font */
-			if (!fontdesc || fontdesc->cid_to_gid && !fontdesc->cid_to_ucs)
+			if (fontdesc && fontdesc->cid_to_gid && !fontdesc->cid_to_ucs || !fontdesc && pdf_dict_gets(res, "Font"))
 			{
 				pdf_obj *new_font = pdf_dict_from_string(xref, "<< /Type /Font /BaseFont /Helvetica /Subtype /Type1 >>");
 				fz_free(ctx, font_name);
@@ -1524,7 +1524,8 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 		fz_catch(ctx)
 		{
 			/* SumatraPDF: fix memory leak */
-			pdf_free_annot(ctx, annot);
+			if (annot)
+				pdf_free_annot(ctx, annot);
 			fz_warn(ctx, "ignoring broken annotation");
 		}
 	}

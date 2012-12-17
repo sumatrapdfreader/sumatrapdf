@@ -175,8 +175,9 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
     if (CurrFont() != newFont)
         AppendInstr(DrawInstr::SetFont(newFont));
 
-    currLineStyleStack.Append(currLineStyleStack.Last());
-    CurrStyle()->font = newFont;
+    DrawStyle style = currLineStyleStack.Last();
+    style.font = newFont;
+    currLineStyleStack.Append(style);
 }
 
 void HtmlFormatter::SetFont(Font *font, FontStyle fs, float fontSize)
@@ -213,8 +214,9 @@ void HtmlFormatter::ChangeFontStyle(FontStyle fs, bool addStyle)
 
 void HtmlFormatter::SetAlignment(AlignAttr align)
 {
-    currLineStyleStack.Append(currLineStyleStack.Last());
-    CurrStyle()->align = align;
+    DrawStyle style = currLineStyleStack.Last();
+    style.align = align;
+    currLineStyleStack.Append(style);
 }
 
 void HtmlFormatter::RevertStyleChange()
