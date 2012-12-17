@@ -62,14 +62,18 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
     if (text) {
         bbox = MeasureText(gfx, font, text);
         textDx = CeilI(bbox.Width);
-        // bbox shouldn't be bigger than fontDy. We apply magic adjustment because
-        // bbox is bigger in n-th decimal point
-        if (fontDy + .5f < bbox.Height) {
-            float diff = fontDy + .5f - bbox.Height;
+        // I theorize that bbox shouldn't be bigger than fontDy. However, in practice
+        // it is (e.g. for Lucida Grande and text "Page: 0 / 0", bbox.Dy is 19.00
+        // and fontDy is 18.11). I still want to know if the difference gets even bigger
+        // than that
+        float maxDiff = 1.f;
+        if (bbox.Height > fontDy + maxDiff) {
+            fontDy = bbox.Height;
+            float diff = fontDy + maxDiff - bbox.Height;
             char *fontName = str::conv::ToUtf8(s->fontName);
             char *tmp = str::conv::ToUtf8(text);
-            CrashLogFmt("fontDy + .5.f=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'\r\n", (float)(fontDy + .5f), (float)bbox.Height, diff, fontName, tmp);
-            CrashIf(fontDy + .5f < bbox.Height);
+            CrashLogFmt("fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'\r\n", (float)fontDy, (float)bbox.Height, diff, fontName, tmp);
+            CrashIf(diff < 0);
         }
     }
     desiredSize.Width  += textDx;
