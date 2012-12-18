@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-cb2678b95fd54ecb0a99b7898a5aa844ea306ada
+3afdcbbcb5f245aacfac6beefb8873eb57e5c0cf
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4187,7 +4187,7 @@ th:ยกเลิก
 tl:Ikansela
 tr:Vazgeç
 tw:取消
-uk:Відмінити
+uk:Скасувати
 uz:Bekor qilish
 vn:Hủy
 :Cannot print this file
@@ -4502,6 +4502,7 @@ fr:Compatibilité
 ga:Comhoiriúnacht
 hr:Kompatibilnost
 it:Compatibilità
+ja:互換性
 kr:호환성
 mk:Компатибилност
 ne:मिल्दोजुल्दो
@@ -4517,6 +4518,8 @@ sv:Kompatibilitet
 ta:இணக்கத்தன்மை
 th:ความสอดคล้องกัน
 tr:Uyumluluk
+tw:兼容性
+uk:Сумісність
 uz:Mosligi
 vn:Tính tương thích
 :Continuous
@@ -4796,6 +4799,7 @@ hr:Kopiraj Sl&iku
 hu:&Kép másolása
 id:Salin &Gambar
 it:Copia &immagine
+ja:画像をコピー(&I)
 kr:이미지 복사(&I)
 mk:Копирај &слика
 ne:&छवि प्रतिलिपि बनाउनुहोस्
@@ -4813,6 +4817,7 @@ ta:நகல் & படம்
 th:คัดลอกรูปภาพ
 tr:&Görüntüyü Kopyala
 tw:複製圖片(&I)
+uk:Скопіювати зображення
 uz:&Rasmni nusxa olish
 vn:Sao chép hình ảnh
 :Copy &Link Address
@@ -4995,6 +5000,7 @@ hr:Autorsko pravo
 hu:Szerzői jog:
 id:Hak Cipta
 it:Copyright:
+ja:コピーライト:
 kr:저작권:
 mk:Авторско право:
 ne:प्रतिलिपिअधिकार:
@@ -5012,6 +5018,7 @@ ta:காப்புரிமை:
 th:ลิขสิทธิ์:
 tr:Telif hakkı:
 tw:版權：
+uk:Копірайт:
 uz:Mualliflik huquqi:
 vn:Quyền tác giả:
 :Could not obtain Printer properties
@@ -6338,6 +6345,7 @@ hr:Neuspjeh u preimenovanju datoteke!
 hu:A fájl átnevezése sikertelen
 id:Gagal mengganti nama berkas!
 it:Impossibile rinominare il file
+ja:ファイル名の変更に失敗しました！
 kr:파일 이름을 바꾸지 못했습니다!
 mk:Не успеав да ја преименувам датотеката!
 ne:नाम फेराई असफल
@@ -6354,6 +6362,7 @@ sv:Kunde inte döpa om filen!
 ta:கோப்புக்கு மறுபெயரிட முடியவில்லை!
 tr:Dosyanın ismi değiştirilemedi!
 tw:重新命名該檔案失敗!
+uk:Не вдалося перейменувати файл!
 uz:Fayl nomini o'zgartirish muvaffaqiyatsiz tugadi!
 vn:Không thể đổi tên tập tin!
 :Failed to save a file
@@ -6435,6 +6444,7 @@ fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
 hr:Brzi Web prikaz
 it:Vista web veloce
+ja:高速ウェブ表示
 kr:빠른 웹 보기
 mk:Брз веб-преглед
 ne:द्रुत वेब दृश्य
@@ -6449,6 +6459,7 @@ sr-rs:Брзи преглед на мрежи
 sv:Snabb Webb-Visning
 ta:வேகமான வலை பார்வை
 tr:Hızlı Web Görünümü
+uk:Швидкий веб перегляд
 uz:Tez veb ko'rish
 vn:Xem dạng Web nhanh
 :Favorites
@@ -6510,12 +6521,16 @@ de:FictionBook-Dokumente
 el:Έγγραφα FictionBook
 es:Documentos FictionBook
 fr:Documents FictionBook
+hr:FictionBook dokumenti
+it:Documenti FictionBook
+ja:フィクション文章
 nl:FictionBook documenten
 pl:Dokumenty FictionBook
 ru:Документы FictionBook
 sq:Dokumente FictionBook
 sr-rs:FictionBook докуменат
 sv:FictionBook dokument
+uk:Документи FictionBook
 vn:Tập tin FictionBook
 :File %s not found
 am:%s ֆայլը չի գտնվել
@@ -7489,6 +7504,7 @@ hr:Fontovi:
 hu:Betűk:
 id:Huruf
 it:Font:
+ja:フォント:
 kr:글꼴:
 mk:Букви:
 ne:फन्टहरू:
@@ -7504,6 +7520,8 @@ sr-rs:Фонтови:
 sv:Typsnitt:
 ta:எழுத்துரு:
 tr:Yazıyüzleri:
+tw:字體
+uk:Шрифти
 uz:Shriftlar:
 vn:Font chữ
 :Formatting the book... %d pages
@@ -7529,6 +7547,7 @@ hr:Oblikovanje knjige... %d stranica
 hu:Könyv formázása... %d oldal
 id:Memformat buku... %d halaman
 it:Formattazione del libro ... %d pagine
+ja:製本中… %d ページ
 kr:%d 페이지 읽어들이는 중...
 mk:Ја форматирам книгата... %d страници
 ne:पुस्तक स्वरूपण ... %d पृष्ठहरु
@@ -7544,6 +7563,7 @@ sr-rs:Форматирање књиге... %d страница
 sv:Formatterar bok... %d sidor
 ta:புத்தகத்தை வடிவமைக்க ... %d பக்கங்கள்
 tr:Kitap biçimlendiriliyor... %d sayfa
+uk:Форматується книга... %d сторінок
 uz:Kitob format qilinmoqda... %d bet
 vn:Đang định dạng sách... %d trang
 :Found text at page %s
@@ -7628,7 +7648,7 @@ hr:Tekst pronađen na stranici %s (opet)
 hu:Találat a(z) %s. oldalon (ismét)
 id:Teks ditemukan pada halaman %s (lagi)
 it:Trovato testo alla pagina %s (ancora)
-ja:%s ページに指定された文字列が見つかりました（一週）
+ja:%s ページに指定された文字列が見つかりました（一周）
 ka:ტექსტი ნაპოვნია %s გვერდზე (ხელახლა)
 kr:%s 페이지에서 (다시) 문자열 찾음
 lt:Rastas tekstas %s puslapyje (vėl)
@@ -8077,6 +8097,7 @@ hr:Pokretanje datoteke %s...
 hu:Fájl beolvasása %s...
 id:Memuat berkas %s...
 it:Caricamento file %s...
+ja:%s を読込中…
 kr:%s 파일 불러오는 중...
 mk:Ја вчитувам датотеката %s...
 ne:%s फाइल लोड हुँदैछ ...
@@ -8092,6 +8113,7 @@ sr-rs:Учитавање датотеке %s...
 sv:Laddar fil %s...
 ta:%s கோப்பு ஏற்றப்படுகிறது
 tr:%s dosyası yükleniyor...
+uk:Завантажується файл %s...
 uz:%s fayli yuklanmoqda...
 vn:Đang mở tập tin %s...
 :MB
@@ -9016,7 +9038,7 @@ hr:Otvori u programu PDF-XChange
 hu:Megnyitás PDF-XChangeben
 id:Buka di PDF-&XChange
 it:Apri con PDF-XChange
-ja:PDF-XChange で開く(&A)
+ja:PDF-XChange で開く(&I)
 ka:გახსნა PDF-XChange-ში
 kr:PDF-XChange로 열기(&I)
 kw:Ygeri yn PDF-XChange
@@ -9178,7 +9200,7 @@ hr:Otvori u programu &Foxit Reader
 hu:Megnyitás &Foxit Readerben
 id:Buka di &Foxit Reader
 it:Apri con &Foxit Reader
-ja:Foxit Reader で開く(&A)
+ja:Foxit Reader で開く(&F)
 ka:გახსნა &Foxit Reader-ში
 kr:Foxit Reader로 열기(&F)
 kw:Ygeri yn &Foxit Reader
@@ -9234,6 +9256,7 @@ hr:Otvori u programu Microsoft HTML Help
 hu:Megnyitás Microsoft HTML Helpben
 id:Buka dengan Microsoft HTML Help
 it:Apri con Microsoft HTML Help
+ja:Microsoft HTML ヘルプで開く(&M)
 ka:გახსნა Microsoft HTML Help-ში
 kr:Microsoft HTML Help로 열기(&M)
 kw:Ygeri yn Microsoft HTML Help
@@ -9288,6 +9311,7 @@ hr:Otvori u programu Microsoft XPS-Viewer
 hu:Megnyitás Microsoft XPS-Viewerben
 id:Buka dengan Microsoft XPS-Viewer
 it:Apri con Microsoft XPS-Viewer
+ja:Microsoft XPS-Viewerで開く(&M)
 ka:გახსნა Microsoft XPS-Viewer-ში
 kr:Microsoft XPS-Viewer로 열기(&M)
 kw:Ygeri yn Microsoft XPS-Viewer
@@ -9488,6 +9512,7 @@ fr:Optimisations PDF
 ga:Optimisations PDF
 hr:PDF optimizacija:
 it:Ottimizzazioni PDF:
+ja:PDF 最適化:
 kr:PDF 최적화:
 mk:Оптимизации за PDF:
 ne:PDF अप्टिमाइजेसन
@@ -9502,6 +9527,7 @@ sr-rs:PDF оптимизација
 sv:PDF Optimeringar:
 ta:PDF மேம்படுத்தல்கள்
 tr:PDF Optimizasyonları:
+uk:Оптимізації PDF:
 uz:PDF optimizatsiyalari:
 vn:Các tối ưu PDF
 :PDF Producer:
@@ -10305,6 +10331,7 @@ fr:Imprimer en tant qu'&image (demande plus de mémoire)
 ga:Priontáil mar &íomhá (Tá gá le níos mó cuimhne)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
 it:Stampa come &immagine (richiede più memoria))
+ja:画像として印刷 (より多くのメモリを必要とします) (&I)
 kr:이미지로 인쇄(&I) (더 많은 메모리 필요)
 mk:Печати како слика (бара повеќе меморија)
 ne:&छविको रुपमा छाप्नुहोस् (धेरै स्मृति चाहिन्छ)
@@ -10319,6 +10346,7 @@ sr-rs:Штампати као слику (захтева више мемориј
 sv:Skr&iv ut som bild (mer minnekrävande)
 ta:படத்தை போன்று அச்சிடு (நினைவகம் அதிகமாக தேவைப்படுகிறது)
 tr:Resim olarak bas (daha çok hafıza gerektirir)
+uk:Роздрукувати як зображення
 uz:&Rasm sifatida bosib chiqarish (ko'proq xotirani talab qiladi)
 vn:In thành hình ảnh (cần nhiều bộ nhớ hơn)
 :Print range
@@ -10609,6 +10637,7 @@ hr:Preime&novati...\tF2
 hu:Átnevezés...\tF2
 id:&Ganti Nama...\tF2
 it:Ri&nomina...\tF2
+ja:名前を変更(&N)...\tF2
 kr:이름 바꾸기(&N)...\tF2
 mk:Преименувај... \tF2
 ne:नाम &फेर्नुहोस्...\tF2
@@ -10625,6 +10654,7 @@ sv:Döp om
 ta:மறுபெயரிடுதல்... \tF2
 tr:İsim Değiştir
 tw:重新命名(&N)...\tF2
+uk:Перейменувати...\tF2
 uz:&Nomini o'zgartirish...\tF2
 vn:Đổi tê&n...\tF2
 :Remember &opened files
@@ -10804,6 +10834,7 @@ hr:Preimenuj u
 hu:Átnevezés
 id:Ganti Nama Menjadi
 it:Rinomina in
+ja:名前の変更名
 kr:바꿀 이름
 mk:Преименувај во
 ne:नाम फेर्नुहोस्
@@ -10820,6 +10851,7 @@ sv:Döp om till
 ta:மறுபெயரிட்டு
 tr:Belirtilen İsme Değiştir
 tw:重新命名為
+uk:Перейменувати в
 uz:Yangi nom
 vn:Đổi tên thành
 :Replace document &colors with Windows color scheme
@@ -10844,6 +10876,7 @@ hr:Zamijeni boje dokumenta s postavkama &Windows boja
 hu:Helyettesíti a dokumentum &színeket Windows színsémával
 id:Ganti &warna dokumen dengan skema warna Windows
 it:Sostituisci &colori documento con schema colore di Windows
+ja:Windows カラースキーマへ色を置き換える(&C)
 kr:Windows 색 구성표처럼 문서 색 교체(&C)
 mk:Замени ги &боите во документот со палетата на Windows
 ne:कागजात &रङ्गलाई विन्डोज रङ योजना अनुसार बदल्नुहोस्
@@ -10859,6 +10892,7 @@ sr-rs:Замени боје документа Windows колор шемом
 sv:Byt ut dokument&färg till Windows färgschema
 ta:ஆவணம் மற்றும் வண்ணங்களை  விண்டோஸ் வண்ண திட்டம் மூலம் மாற்றவும்
 tr:Belgenin &renklerini Windows renk planıyla değiştir
+uk:Замінити кольори у документі використовуючи кольорову схему Windows
 uz:Hujjat &ranglarini Windows rangli sxemasiga o'zgartirish
 vn:Thay màu tập tin bằng bảng màu Windows
 :Rotate &Left\tCtrl+Shift+-
@@ -11457,6 +11491,7 @@ fr:Voir les &Marque-pages
 ga:Lea&bharmharcanna a taispeáint
 hr:Prikaži &oznake
 it:Visualizza segnali&bri
+ja:ブックマークを表示(&B)
 kr:책갈피 보이기(&B)
 mk:Прикажи &обележувачи
 ne:&पुस्तकचिनोहरू देखाउनुहोस्
@@ -11471,6 +11506,7 @@ sr-rs:Прикажи обележене
 sv:Visa &Bokmärken
 ta:புத்தகக்குறிகளை காட்டுக
 tr:Göster &Sık Kullanılanlar
+uk:Показати закладки
 uz:&Xatcho'plarni ko'rsatish
 vn:Hiện chỉ dấu sách
 :Show &Toolbar
@@ -11864,7 +11900,7 @@ sv:Ledsen, det där borde inte ha hänt!\n\nVar god tryck 'Avbryt', om du vill h
 ta:மன்னிக்கவும், இது நடந்திருக்க கூடாது! \n\n தயவு செய்து 'ரத்துதை' அழுத்தவும், எங்களுக்கு இந்த விபத்தினை சரிசெய்ய உதவும்.
 tr:Üzgünüz, bu olmamalıydı!\n\nEğer hatayı düzeltmemize yardımcı olmak istiyorsanız lütfen 'Cancel' a basın.
 tw:噢，抱歉，這不該發生的！\n\n如果你希望協助我們修正這個錯誤，請點選「取消」。
-uk:Вибачте, але це не мало статись!\n\nНатисніть "Відмінити", якщо ви бажаєте допомогти нам виправити причину збою.
+uk:Вибачте, але це не мало статись!\n\nНатисніть "Скасувати", якщо ви бажаєте допомогти нам виправити причину збою.
 uz:Kutilmagan voqea sodir bo'ldi.\n\nUshbu nosozlikni tuzatish uchun bizga yordam bermoqchi bo'lsaniz 'Bekor qilish' tugmasini bosing.
 vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Hủy', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
 :Source file %s has no synchronization point
@@ -12320,6 +12356,7 @@ fr:PDF balisé
 ga:PDF formáid chlibeáilte
 hr:Strukturirani PDF
 it:PDF marcati
+ja:タグ付き PDF
 kr:태그있는 PDF
 mk:Означен PDF
 ne:ट्याग गरिएको PDF
@@ -12333,6 +12370,7 @@ sr-rs:Означени PDF
 sv:Taggad PDF
 ta:குறியிடப்பட்ட PDF
 tr:İşaretlenmiş PDF
+uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
 :Text documents
