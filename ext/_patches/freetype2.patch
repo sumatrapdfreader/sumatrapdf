@@ -1,15 +1,18 @@
 diff -rPu5 freetype2.orig\src\base\ftglyph.c freetype2\src\base\ftglyph.c
 --- freetype2.orig\src\base\ftglyph.c	Tue Jan 17 11:32:16 2012
-+++ freetype2\src\base\ftglyph.c	Mon Dec 17 18:39:51 2012
-@@ -594,10 +594,13 @@
++++ freetype2\src\base\ftglyph.c	Tue Dec 18 09:18:58 2012
+@@ -594,10 +594,16 @@
      *the_glyph = FT_GLYPH( bitmap );
  
    Exit:
      if ( error && bitmap )
        FT_Done_Glyph( FT_GLYPH( bitmap ) );
 +    /* SumatraPDF: fix memory leak */
-+    if ( error )
-+      ft_glyphslot_free_bitmap(&dummy);
++    if ( error && (dummy.internal->flags & FT_GLYPH_OWN_BITMAP) )
++    {
++      FT_Memory memory = library->memory;
++      FT_FREE(dummy.bitmap.buffer);
++    }
  
      return error;
  
@@ -66,7 +69,7 @@ diff -rPu5 freetype2.orig\src\sfnt\sfobjs.c freetype2\src\sfnt\sfobjs.c
      return error;
 diff -rPu5 freetype2.orig\src\sfnt\ttload.c freetype2\src\sfnt\ttload.c
 --- freetype2.orig\src\sfnt\ttload.c	Thu Jun 14 06:35:58 2012
-+++ freetype2\src\sfnt\ttload.c	Mon Dec 17 20:12:26 2012
++++ freetype2\src\sfnt\ttload.c	Mon Dec 17 20:35:33 2012
 @@ -366,11 +366,12 @@
      if ( error )
      {
