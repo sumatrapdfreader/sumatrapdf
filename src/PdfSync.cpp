@@ -521,6 +521,9 @@ int SyncTex::DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UIN
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
 
     const char *name = synctex_scanner_get_name(this->scanner, synctex_node_tag(node));
+    if (!name)
+        return PDFSYNCERR_UNKNOWN_SOURCEFILE;
+
     bool isUtf8 = true;
     filename.Set(str::conv::FromUtf8(name));
 TryAgainAnsi:
