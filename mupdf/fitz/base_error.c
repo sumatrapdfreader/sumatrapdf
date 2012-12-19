@@ -19,7 +19,7 @@ void fz_flush_warnings(fz_context *ctx)
 }
 
 /* SumatraPDF: add filename and line number to errors and warnings */
-void fz_warn_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
+void fz_warn_imp(fz_context *ctx, char *file, int line, const char *fmt, ...)
 {
 	va_list ap;
 	char buf[sizeof ctx->warn->message];
@@ -111,7 +111,7 @@ int fz_push_try(fz_error_context *ex)
 	return 0;
 }
 
-char *fz_caught(fz_context *ctx)
+const char *fz_caught(fz_context *ctx)
 {
 	assert(ctx);
 	assert(ctx->error);
@@ -119,7 +119,7 @@ char *fz_caught(fz_context *ctx)
 }
 
 /* SumatraPDF: add filename and line number to errors and warnings */
-void fz_throw_imp(fz_context *ctx, char *file, int line, char *fmt, ...)
+void fz_throw_imp(fz_context *ctx, char *file, int line, const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);

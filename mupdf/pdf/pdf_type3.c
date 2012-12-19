@@ -2,9 +2,9 @@
 #include "mupdf-internal.h"
 
 static void
-pdf_run_glyph_func(void *doc, void *rdb, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
+pdf_run_glyph_func(void *doc, void *rdb, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate, int nested_depth)
 {
-	pdf_run_glyph(doc, (pdf_obj *)rdb, contents, dev, ctm, gstate);
+	pdf_run_glyph(doc, (pdf_obj *)rdb, contents, dev, ctm, gstate, nested_depth);
 }
 
 static void
@@ -172,7 +172,6 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 				{
 					fontdesc->font->t3procs[i] = pdf_load_stream(xref, pdf_to_num(obj), pdf_to_gen(obj));
 					fontdesc->size += fontdesc->font->t3procs[i]->cap;
-					fz_prepare_t3_glyph(ctx, fontdesc->font, i);
 					fontdesc->size += 0; // TODO: display list size calculation
 				}
 			}
@@ -185,4 +184,26 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 		fz_throw(ctx, "cannot load type3 font (%d %d R)", pdf_to_num(dict), pdf_to_gen(dict));
 	}
 	return fontdesc;
+}
+
+void pdf_load_type3_glyphs(pdf_document *xref, pdf_font_desc *fontdesc, int nested_depth)
+{
+	int i;
+	fz_context *ctx = xref->ctx;
+
+	fz_try(ctx)
+	{
+		for (i = 0; i < 256; i++)
+		{
+			if (fontdesc->font->t3procs[i])
+			{
+				fz_prepare_t3_glyph(ctx, fontdesc->font, i, nested_depth);
+				fontdesc->size += 0; // TODO: display list size calculation
+			}
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_warn(ctx, "Type3 glyph load failed: %s", fz_caught(ctx));
+	}
 }

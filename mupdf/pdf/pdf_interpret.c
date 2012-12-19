@@ -70,6 +70,8 @@ struct pdf_csi_s
 	fz_device *dev;
 	pdf_document *xref;
 
+	int nested_depth;
+
 	/* usage mode for optional content groups */
 	char *event; /* "View", "Print", "Export" */
 
@@ -692,6 +694,11 @@ pdf_flush_text(pdf_csi *csi)
 	fz_try(ctx)
 	{
 		fz_rect tb = fz_transform_rect(gstate->ctm, csi->text_bbox);
+
+		/* Don't bother sending a text group with nothing in it */
+		if (text->len == 0)
+			break;
+
 		pdf_begin_group(csi, tb);
 
 		if (doinvisible)
@@ -835,7 +842,9 @@ pdf_show_char(pdf_csi *csi, int cid)
 	bbox.x1 += 1;
 	bbox.y1 += 1;
 
-	render_direct = !fz_glyph_cacheable(ctx, fontdesc->font, gid);
+	/* If we are a type3 font within a type 3 font, or are otherwise
+	 * uncachable, then render direct. */
+	render_direct = (!fontdesc->font->ft_face && csi->nested_depth > 0) || !fz_glyph_cacheable(ctx, fontdesc->font, gid);
 
 	/* flush buffered text if face or matrix or rendermode has changed */
 	if (!csi->text ||
@@ -861,9 +870,9 @@ pdf_show_char(pdf_csi *csi, int cid)
 	{
 		/* Render the glyph stream direct here (only happens for
 		 * type3 glyphs that seem to inherit current graphics
-		 * attributes) */
+		 * attributes, or type 3 glyphs within type3 glyphs). */
 		fz_matrix composed = fz_concat(trm, gstate->ctm);
-		fz_render_t3_glyph_direct(ctx, csi->dev, fontdesc->font, gid, composed, gstate);
+		fz_render_t3_glyph_direct(ctx, csi->dev, fontdesc->font, gid, composed, gstate, csi->nested_depth);
 	}
 	/* SumatraPDF: still allow text extraction */
 	if (render_direct)
@@ -1061,7 +1070,7 @@ copy_state(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
 
 
 static pdf_csi *
-pdf_new_csi(pdf_document *xref, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie, pdf_gstate *gstate)
+pdf_new_csi(pdf_document *xref, fz_device *dev, fz_matrix ctm, char *event, fz_cookie *cookie, pdf_gstate *gstate, int nested)
 {
 	pdf_csi *csi;
 	fz_context *ctx = dev->ctx;
@@ -1097,6 +1106,7 @@ pdf_new_csi(pdf_document *xref, fz_device *dev, fz_matrix ctm, char *event, fz_c
 		csi->gstate = fz_malloc_array(ctx, csi->gcap, sizeof(pdf_gstate));
 
 		csi->top_ctm = ctm;
+		csi->nested_depth = nested;
 		pdf_init_gstate(ctx, &csi->gstate[0], ctm);
 		if (gstate)
 			copy_state(ctx, &csi->gstate[0], gstate);
@@ -1615,7 +1625,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 					gstate->font = NULL;
 				}
 
-				gstate->font = pdf_load_font(csi->xref, rdb, font);
+				gstate->font = pdf_load_font(csi->xref, rdb, font, csi->nested_depth);
 				if (!gstate->font)
 					fz_throw(ctx, "cannot find font in store");
 				gstate->size = pdf_to_real(pdf_array_get(val, 1));
@@ -2185,7 +2195,7 @@ static void pdf_run_Tf(pdf_csi *csi, pdf_obj *rdb)
 	if (!obj)
 		fz_throw(ctx, "cannot find font resource: '%s'", csi->name);
 
-	gstate->font = pdf_load_font(csi->xref, rdb, obj);
+	gstate->font = pdf_load_font(csi->xref, rdb, obj, csi->nested_depth);
 }
 
 static void pdf_run_Tr(pdf_csi *csi)
@@ -2320,11 +2330,15 @@ static void pdf_run_d(pdf_csi *csi)
 
 static void pdf_run_d0(pdf_csi *csi)
 {
+	if (csi->nested_depth > 1)
+		return;
 	csi->dev->flags |= FZ_DEVFLAG_COLOR;
 }
 
 static void pdf_run_d1(pdf_csi *csi)
 {
+	if (csi->nested_depth > 1)
+		return;
 	csi->dev->flags |= FZ_DEVFLAG_MASK;
 	csi->dev->flags &= ~(FZ_DEVFLAG_FILLCOLOR_UNDEFINED |
 				FZ_DEVFLAG_STROKECOLOR_UNDEFINED |
@@ -2965,7 +2979,7 @@ static void pdf_run_page_contents_with_usage(pdf_document *xref, pdf_page *page,
 	if (page->transparency)
 		fz_begin_group(dev, fz_transform_rect(ctm, page->mediabox), 1, 0, 0, 1);
 
-	csi = pdf_new_csi(xref, dev, ctm, event, cookie, NULL);
+	csi = pdf_new_csi(xref, dev, ctm, event, cookie, NULL, 0);
 	fz_try(ctx)
 	{
 		pdf_run_contents_object(csi, page->resources, page->contents);
@@ -3008,7 +3022,7 @@ static void pdf_run_annot_with_usage(pdf_document *xref, pdf_page *page, pdf_ann
 	if (!strcmp(event, "View") && (flags & (1 << 5))) /* NoView */
 		return;
 
-	csi = pdf_new_csi(xref, dev, ctm, event, cookie, NULL);
+	csi = pdf_new_csi(xref, dev, ctm, event, cookie, NULL, 0);
 	if (!pdf_is_hidden_ocg(pdf_dict_gets(annot->obj, "OC"), csi, page->resources))
 	{
 		fz_try(ctx)
@@ -3069,13 +3083,15 @@ pdf_run_page(pdf_document *xref, pdf_page *page, fz_device *dev, fz_matrix ctm, 
 }
 
 void
-pdf_run_glyph(pdf_document *xref, pdf_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate)
+pdf_run_glyph(pdf_document *xref, pdf_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate, int nested_depth)
 {
-	pdf_csi *csi = pdf_new_csi(xref, dev, ctm, "View", NULL, gstate);
+	pdf_csi *csi = pdf_new_csi(xref, dev, ctm, "View", NULL, gstate, nested_depth+1);
 	fz_context *ctx = xref->ctx;
 
 	fz_try(ctx)
 	{
+		if (nested_depth > 10)
+			fz_throw(ctx, "Too many nestings of Type3 glyphs");
 		pdf_run_contents_buffer(csi, resources, contents);
 	}
 	fz_always(ctx)

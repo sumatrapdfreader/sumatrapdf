@@ -371,7 +371,7 @@ static void get_font_info(pdf_document *doc, pdf_obj *dr, char *da, font_info *f
 	parse_da(ctx, da, &font_rec->da_rec);
 	if (font_rec->da_rec.font_name == NULL)
 		fz_throw(ctx, "No font name in default appearance");
-	font_rec->font = pdf_load_font(doc, dr, pdf_dict_gets(pdf_dict_gets(dr, "Font"), font_rec->da_rec.font_name));
+	font_rec->font = pdf_load_font(doc, dr, pdf_dict_gets(pdf_dict_gets(dr, "Font"), font_rec->da_rec.font_name), 0);
 }
 
 static void font_info_fin(fz_context *ctx, font_info *font_rec)

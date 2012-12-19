@@ -1256,13 +1256,14 @@ pdf_make_width_table(fz_context *ctx, pdf_font_desc *fontdesc)
 }
 
 pdf_font_desc *
-pdf_load_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
+pdf_load_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, int nested_depth)
 {
 	char *subtype;
 	pdf_obj *dfonts;
 	pdf_obj *charprocs;
 	fz_context *ctx = xref->ctx;
 	pdf_font_desc *fontdesc;
+	int type3 = 0;
 
 	if ((fontdesc = pdf_find_item(ctx, pdf_free_font_imp, dict)))
 	{
@@ -1282,11 +1283,15 @@ pdf_load_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 	else if (subtype && !strcmp(subtype, "TrueType"))
 		fontdesc = pdf_load_simple_font(xref, dict);
 	else if (subtype && !strcmp(subtype, "Type3"))
+	{
 		fontdesc = pdf_load_type3_font(xref, rdb, dict);
+		type3 = 1;
+	}
 	else if (charprocs)
 	{
 		fz_warn(ctx, "unknown font format, guessing type3.");
 		fontdesc = pdf_load_type3_font(xref, rdb, dict);
+		type3 = 1;
 	}
 	else if (dfonts)
 	{
@@ -1304,6 +1309,9 @@ pdf_load_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 		pdf_make_width_table(ctx, fontdesc);
 
 	pdf_store_item(ctx, dict, fontdesc, fontdesc->size);
+
+	if (type3)
+		pdf_load_type3_glyphs(xref, fontdesc, nested_depth);
 
 	return fontdesc;
 }

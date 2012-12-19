@@ -11,6 +11,7 @@ EXPORTS
 	fz_throw_imp
 	fz_rethrow
 	fz_warn_imp
+	fz_caught
 	fz_flush_warnings
 	fz_new_context
 	fz_clone_context
@@ -298,6 +299,7 @@ EXPORTS
 	fz_drop_colorspace
 	fz_free_colorspace_imp
 	fz_convert_color
+	fz_find_color_converter
 	ft_error_string
 	fz_new_font_context
 	fz_keep_font_context
@@ -606,6 +608,7 @@ EXPORTS
 	pdf_lookup_substitute_font
 	pdf_lookup_substitute_cjk_font
 	pdf_load_type3_font
+	pdf_load_type3_glyphs
 	pdf_load_font
 	pdf_load_windows_font
 	pdf_load_similar_cjk_font

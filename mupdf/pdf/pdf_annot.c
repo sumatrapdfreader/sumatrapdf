@@ -1105,7 +1105,7 @@ pdf_get_string_width(pdf_document *xref, pdf_obj *res, fz_buffer *base, unsigned
 	{
 		pdf_string_to_Tj(ctx, base, string, end);
 		fz_buffer_printf(ctx, base, "ET Q EMC");
-		pdf_run_glyph(xref, res, base, dev, fz_identity, NULL);
+		pdf_run_glyph(xref, res, base, dev, fz_identity, NULL, 0);
 		width = bbox.x1 - bbox.x0;
 	}
 	fz_always(ctx)
@@ -1249,7 +1249,7 @@ pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 			{
 				fz_try(ctx)
 				{
-					fontdesc = pdf_load_font(xref, res, font_obj);
+					fontdesc = pdf_load_font(xref, res, font_obj, 0);
 				}
 				fz_catch(ctx)
 				{

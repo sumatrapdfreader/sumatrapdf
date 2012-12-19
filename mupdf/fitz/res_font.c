@@ -872,7 +872,7 @@ fz_new_type3_font(fz_context *ctx, char *name, fz_matrix matrix)
 }
 
 void
-fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid)
+fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid, int nested_depth)
 {
 	fz_buffer *contents;
 	fz_device *dev;
@@ -880,6 +880,9 @@ fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid)
 	contents = font->t3procs[gid];
 	if (!contents)
 		return;
+
+	/* We've not already loaded this one! */
+	assert(font->t3lists[gid] == NULL);
 
 	font->t3lists[gid] = fz_new_display_list(ctx);
 
@@ -892,7 +895,7 @@ fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid)
 			FZ_DEVFLAG_LINEJOIN_UNDEFINED |
 			FZ_DEVFLAG_MITERLIMIT_UNDEFINED |
 			FZ_DEVFLAG_LINEWIDTH_UNDEFINED;
-	font->t3run(font->t3doc, font->t3resources, contents, dev, fz_identity, NULL);
+	font->t3run(font->t3doc, font->t3resources, contents, dev, fz_identity, NULL, 0);
 	font->t3flags[gid] = dev->flags;
 	fz_free_device(dev);
 }
@@ -984,7 +987,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_co
 }
 
 void
-fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate)
+fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate, int nested_depth)
 {
 	fz_matrix ctm;
 	void *contents;
@@ -1010,7 +1013,7 @@ fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gi
 	}
 
 	ctm = fz_concat(font->t3matrix, trm);
-	font->t3run(font->t3doc, font->t3resources, contents, dev, ctm, gstate);
+	font->t3run(font->t3doc, font->t3resources, contents, dev, ctm, gstate, nested_depth);
 }
 
 #ifndef NDEBUG

@@ -1266,6 +1266,13 @@ gdiplus_run_t3_text(fz_device *dev, fz_text *text, fz_matrix ctm,
 	if (gpath)
 		fz_warn(dev->ctx, "stroking Type 3 glyphs is not supported");
 	
+	// TODO: support Type 3 glyphs recursively drawing other Type 3 glyphs
+	if (((userData *)dev->user)->t3color)
+	{
+		fz_warn(dev->ctx, "drawing Type 3 glyphs recursively is not supported");
+		return;
+	}
+	
 	float rgb[3];
 	fz_convert_color(dev->ctx, fz_device_rgb, rgb, colorspace, color);
 	((userData *)dev->user)->t3color = rgb;
@@ -1281,7 +1288,7 @@ gdiplus_run_t3_text(fz_device *dev, fz_text *text, fz_matrix ctm,
 		ctm2 = fz_concat(text->trm, ctm2);
 		ctm2 = fz_concat(font->t3matrix, ctm2);
 		
-		font->t3run((void *)font->t3doc, font->t3resources, font->t3procs[gid], dev, ctm2, NULL);
+		font->t3run(font->t3doc, font->t3resources, font->t3procs[gid], dev, ctm2, NULL, 0);
 	}
 	
 	((userData *)dev->user)->t3color = NULL;
@@ -1455,22 +1462,9 @@ fz_gdiplus_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 extern "C" static void
 fz_gdiplus_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
 {
-	// always push a clip mask so that the stack remains consistent even in case of error
-	fz_pixmap *pixmap = NULL;
-	fz_var(pixmap);
-	fz_try(dev->ctx)
-	{
-		pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
-	}
-	fz_always(dev->ctx)
-	{
-		((userData *)dev->user)->pushClipMask(pixmap, ctm);
-		fz_drop_pixmap(dev->ctx, pixmap);
-	}
-	fz_catch(dev->ctx)
-	{
-		fz_rethrow(dev->ctx);
-	}
+	fz_pixmap *pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
+	((userData *)dev->user)->pushClipMask(pixmap, ctm);
+	fz_drop_pixmap(dev->ctx, pixmap);
 }
 
 extern "C" static void
