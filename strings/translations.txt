@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3afdcbbcb5f245aacfac6beefb8873eb57e5c0cf
+fec1865f9dcead2397d3917f43ef55106d85a2c8
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4487,6 +4487,7 @@ vn:Truyện tranh comic
 :Compatibility
 am:Համատեղելիությունը
 ar:التوافق
+bg:Съвместимост
 br:Compatibilidade
 ca-xv:Compatibilitat
 ca:Compatibilitat
@@ -6327,6 +6328,7 @@ vn:Trang kép
 :Failed to rename the file!
 am:Հնարավոր չեղավ անվանափոխել ֆայլը։
 ar:فشل في إعادة تسمية الملف!
+bg:Преименуването не беше успешно!
 br:Falha ao renomear o arquivo!
 bs:Neuspješna promjena naziva faja!
 ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
@@ -6433,6 +6435,7 @@ uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Fast Web View
 ar:تهيئة الويب السريعة
+bg:Бърз Web изглед
 br:Visualização rápida na Web
 ca-xv:Visualització ràpida de web
 ca:Visualització ràpida de web
@@ -6513,6 +6516,7 @@ uk:Закладки
 uz:Tanlanganlar
 vn:Ưa thích
 :FictionBook documents
+bg:Документи FictionBook
 br:Documentos FictionBook
 ca-xv:Documents FictionBook
 ca:Documents FictionBook
@@ -6525,12 +6529,14 @@ hr:FictionBook dokumenti
 it:Documenti FictionBook
 ja:フィクション文章
 nl:FictionBook documenten
+no:FictionBook-dokumenter
 pl:Dokumenty FictionBook
 ru:Документы FictionBook
 sq:Dokumente FictionBook
 sr-rs:FictionBook докуменат
 sv:FictionBook dokument
 uk:Документи FictionBook
+uz:FictionBook hujjatlari
 vn:Tập tin FictionBook
 :File %s not found
 am:%s ֆայլը չի գտնվել
@@ -8773,7 +8779,7 @@ tl:Walang makitang synchronization file
 tr:Herhangi bir senkronizasyon dosyası bulunamadı
 tw:找不到同步檔案
 uk:Файли синхронізації не знайдено
-uz:Sinxronizatsiya fayli topilmadi
+uz:Sinxronlanish fayli topilmadi
 vn:Không tìm thấy tập tin đồng bộ nào
 :No synchronization info at this position
 am:Այստեղ չկա համաժամեցնելու համար տեղեկություն
@@ -8829,7 +8835,7 @@ tl:Walang makitang detalye ng synchronization dito
 tr:Bu konumda senkronizasyon bilgisi mevcut değildir
 tw:沒有同步資料
 uk:Немає Інформації про синхронізацію на цій позиції
-uz:Bu joyda sinxronizatsiya ma'lumoti yo'q
+uz:Bu joyda sinxronlanish ma'lumoti yo'q
 vn:Không có thông tin đồng bộ ở chỗ này
 :Number of Pages:
 am:Էջերի քանակը.
@@ -9501,6 +9507,7 @@ uz:PDF hujjati
 vn:Tập tin PDF
 :PDF Optimizations:
 ar:تحسينات البي دي إف
+bg:PDF оптимизации:
 br:Otimizações PDF:
 ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
@@ -10316,6 +10323,7 @@ vn:In
 :Print as &image (requires more memory)
 am:Տպել որպես &նկար (պահանջում է լր. հիշողություն)
 ar:اطبع كصورة (يحتاج إلى ذاكرة أكثر)
+bg:Отпечатай като изображение (изисква повече памет)
 br:Imprimir como &imagem (requer mais memória)
 ca-xv:Imprimeix com a &imatge (requereix més memòria)
 ca:Imprimeix com a &imatge (requereix més memòria)
@@ -10619,6 +10627,7 @@ vn:Lỗi in.
 :Re&name...\tF2
 am:Ան&վանափոխել...\tF2
 ar:إعادة تسمية...\tF2
+bg:Преименувай...\tF2
 br:Re&nomear...\tF2
 bs:Promije&ni naziv...\tF2
 ca-xv:Canvia el &nom...\tF2
@@ -10816,6 +10825,7 @@ vn:Xoá trang %s khỏi Ưa thích
 :Rename To
 am:Անվանափոխել՝
 ar:إعادة تسمية إلى
+bg:Преименувай на
 br:Renomear para
 bs:Promije&ni naziv u
 ca-xv:Canvia el nom a
@@ -11476,6 +11486,7 @@ vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks
 am:Ցուցադրել &Էջանիշերը
 ar:إظهار العلامات
+bg:Покажи отметките
 br:Mostrar Fa&voritos
 ca-xv:Mostra els &marcadors
 ca:Mostra els &marcadors
@@ -11902,7 +11913,7 @@ tr:Üzgünüz, bu olmamalıydı!\n\nEğer hatayı düzeltmemize yardımcı olmak
 tw:噢，抱歉，這不該發生的！\n\n如果你希望協助我們修正這個錯誤，請點選「取消」。
 uk:Вибачте, але це не мало статись!\n\nНатисніть "Скасувати", якщо ви бажаєте допомогти нам виправити причину збою.
 uz:Kutilmagan voqea sodir bo'ldi.\n\nUshbu nosozlikni tuzatish uchun bizga yordam bermoqchi bo'lsaniz 'Bekor qilish' tugmasini bosing.
-vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Hủy', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
+vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
 :Source file %s has no synchronization point
 am:%s ֆայլը չունի համաժամեցման կետ
 ar:الملف المصدر %s لم تتم مزامنته عند هذه النقطة
@@ -11957,7 +11968,7 @@ tl:Walang synchronization point ang source file na %s
 tr:%s kaynak dosyasında senkronizasyon noktası yoktur
 tw:參考檔案 %s 沒有同步點
 uk:Файл-джерело %s немає точки синхронізації
-uz:%s manba faylida sinxronizatsiya nuqtasi yo'q
+uz:%s manba faylida sinxronlanish nuqtasi yo'q
 vn:Tập tin nguồn %s không có điểm đồng bộ
 :Subject:
 am:Ֆայլը.
@@ -12341,7 +12352,7 @@ tl:Hindi mabuksan ang synchronization file
 tr:Senkronizasyon dosyası açılamadı
 tw:無法開啟同步檔案
 uk:Неможливо відкрити файл синхронізації
-uz:Sinxronizatsiya faylini ochib bo'lmadi
+uz:Sinxronlanish faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tagged PDF
 ar:البي دي إف الموسومة
@@ -13147,7 +13158,7 @@ tl:Antas ng laki
 tr:Yakınlaştırma faktörü
 tw:縮放比例
 uk:Масштаб
-uz:Miqyos faktori
+uz:Miqyos omili
 vn:Hệ số thu phóng
 :[Changes detected; refreshing] %s
 am:[Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s

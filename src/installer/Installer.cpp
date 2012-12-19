@@ -150,8 +150,6 @@ static BOOL KillProcIdWithName(DWORD processId, WCHAR *processPath, BOOL waitUnt
     return TRUE;
 }
 
-#define MAX_PROCESSES 1024
-
 int KillProcess(WCHAR *processPath, BOOL waitUntilTerminated)
 {
     ScopedHandle hProcSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
