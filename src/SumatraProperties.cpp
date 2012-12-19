@@ -403,7 +403,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
 
     if (dm && dm->engineType != Engine_Chm) {
         str = FormatPageSize(dm->engine, dm->CurrentPageNo(), dm->Rotation());
-        if (IsUIRightToLeft() && WindowsVerVistaOrGreater()) {
+        if (IsUIRightToLeft() && IsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
             str = str::Format(L"\u202A%s\u202C", ScopedMem<WCHAR>(str));

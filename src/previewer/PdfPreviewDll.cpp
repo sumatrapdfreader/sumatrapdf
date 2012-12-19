@@ -223,7 +223,7 @@ STDAPI DllRegisterServer()
     for (int i = 0; i < dimof(regVals); i++) {
         // don't register for IExtractImage on systems which accept IThumbnailProvider
         // (because it doesn't offer anything beyond what IThumbnailProvider does)
-        if (WindowsVerVistaOrGreater() && str::EndsWith(regVals[i].key, CLSID_I_EXTRACT_IMAGE))
+        if (IsVistaOrGreater() && str::EndsWith(regVals[i].key, CLSID_I_EXTRACT_IMAGE))
             continue;
         WriteRegStr(HKEY_LOCAL_MACHINE, regVals[i].key, regVals[i].value, regVals[i].data);
         bool ok = WriteRegStr(HKEY_CURRENT_USER, regVals[i].key, regVals[i].value, regVals[i].data);

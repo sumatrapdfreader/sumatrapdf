@@ -35,7 +35,7 @@ bool   IsAppThemed();
 WORD   GetWindowsVersion();
 bool   IsRunningInWow64();
 
-inline bool WindowsVerVistaOrGreater() { return GetWindowsVersion() >= 0x0600; }
+inline bool IsVistaOrGreater() { return GetWindowsVersion() >= 0x0600; }
 
 void   LogLastError(DWORD err=0);
 bool   RegKeyExists(HKEY keySub, const WCHAR *keyName);

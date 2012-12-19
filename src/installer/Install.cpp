@@ -179,7 +179,7 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
-    if (!WindowsVerVistaOrGreater())
+    if (!IsVistaOrGreater())
         success &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, TAPP L" " CURR_VERSION_STR);
     DWORD size = GetDirSize(gGlobalData.installDir) / 1024;
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, size);

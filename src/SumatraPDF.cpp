@@ -2917,7 +2917,7 @@ void OnMenuOpen(SumatraWindow& win)
     // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
     ofn.nMaxFile = MAX_PATH * 100;
 #if 0
-    if (!WindowsVerVistaOrGreater())
+    if (!IsVistaOrGreater())
     {
         ofn.lpfnHook = FileOpenHook;
         ofn.Flags |= OFN_ENABLEHOOK;
