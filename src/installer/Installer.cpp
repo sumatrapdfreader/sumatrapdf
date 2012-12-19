@@ -147,9 +147,6 @@ static BOOL KillProcIdWithName(DWORD processId, WCHAR *processPath, BOOL waitUnt
     if (waitUntilTerminated)
         WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
 
-    UpdateWindow(FindWindow(NULL, L"Shell_TrayWnd"));
-    UpdateWindow(GetDesktopWindow());
-
     return TRUE;
 }
 
@@ -172,6 +169,10 @@ int KillProcess(WCHAR *processPath, BOOL waitUntilTerminated)
             killCount++;
     } while (Process32Next(hProcSnapshot, &pe32));
 
+    if (killCount > 0) {
+        UpdateWindow(FindWindow(NULL, L"Shell_TrayWnd"));
+        UpdateWindow(GetDesktopWindow());
+    }
     return killCount;
 }
 
