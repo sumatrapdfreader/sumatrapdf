@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType tables definitions and interface                 */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 1996-2005, 2008-2011 by                                      */
+/*  Copyright 1996-2005, 2008-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -600,6 +600,16 @@ FT_BEGIN_HEADER
   /*    by the sfnt, truetype, and opentype drivers.  See @FT_Sfnt_Tag for */
   /*    a list.                                                            */
   /*                                                                       */
+  /*    Here an example how to access the `vhea' table:                    */
+  /*                                                                       */
+  /*    {                                                                  */
+  /*      TT_VertHeader*  vert_header;                                     */
+  /*                                                                       */
+  /*                                                                       */
+  /*      vert_header =                                                    */
+  /*        (TT_VertHeader*)FT_Get_Sfnt_Table( face, ft_sfnt_vhea );       */
+  /*    }                                                                  */
+  /*                                                                       */
   FT_EXPORT( void* )
   FT_Get_Sfnt_Table( FT_Face      face,
                      FT_Sfnt_Tag  tag );
@@ -729,6 +739,9 @@ FT_BEGIN_HEADER
   /* <Return>                                                              */
   /*    The language ID of `charmap'.  If `charmap' doesn't belong to a    */
   /*    TrueType/sfnt face, just return~0 as the default value.            */
+  /*                                                                       */
+  /*    For a format~14 cmap (to access Unicode IVS), the return value is  */
+  /*    0xFFFFFFFF.                                                        */
   /*                                                                       */
   FT_EXPORT( FT_ULong )
   FT_Get_CMap_Language_ID( FT_CharMap  charmap );

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for Indic scripts (body).               */
 /*                                                                         */
-/*  Copyright 2007, 2011 by                                                */
+/*  Copyright 2007, 2011, 2012 by                                          */
 /*  Rahul Bhalerao <rahul.bhalerao@redhat.com>, <b.rahul.pm@gmail.com>.    */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -46,7 +46,7 @@
       face->charmap = NULL;
     else
     {
-      af_cjk_metrics_init_widths( metrics, face, 0x7530 );
+      af_cjk_metrics_init_widths( metrics, face );
 #if 0
       /* either need indic specific blue_chars[] or just skip blue zones */
       af_cjk_metrics_init_blues( metrics, face, af_cjk_blue_chars );
@@ -116,6 +116,7 @@
   AF_DEFINE_SCRIPT_CLASS( af_indic_script_class,
     AF_SCRIPT_INDIC,
     af_indic_uniranges,
+    'o', /* XXX */
 
     sizeof ( AF_CJKMetricsRec ),
 
@@ -138,6 +139,7 @@
   AF_DEFINE_SCRIPT_CLASS( af_indic_script_class,
     AF_SCRIPT_INDIC,
     af_indic_uniranges,
+    0,
 
     sizeof ( AF_CJKMetricsRec ),
 

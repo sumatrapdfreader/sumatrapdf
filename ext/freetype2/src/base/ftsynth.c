@@ -63,7 +63,7 @@
     transform.xx = 0x10000L;
     transform.yx = 0x00000L;
 
-    transform.xy = 0x06000L;
+    transform.xy = 0x0366AL;
     transform.yy = 0x10000L;
 
     FT_Outline_Transform( outline, &transform );

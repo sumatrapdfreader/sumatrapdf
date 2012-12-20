@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for raster module.   */
 /*                                                                         */
-/*  Copyright 2009, 2010 by                                                */
+/*  Copyright 2009, 2010, 2012 by                                          */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -51,7 +51,7 @@
   {
     FT_PIC_Container* pic_container = &library->pic_container;
     FT_Error          error         = Raster_Err_Ok;
-    RasterPIC*        container;
+    RasterPIC*        container     = NULL;
     FT_Memory         memory        = library->memory;
 
 

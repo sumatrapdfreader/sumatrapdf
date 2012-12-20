@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (body).                                 */
 /*                                                                         */
-/*  Copyright 2003-2007, 2009-2011 by                                      */
+/*  Copyright 2003-2007, 2009-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -19,6 +19,17 @@
 #include "afhints.h"
 #include "aferrors.h"
 #include FT_INTERNAL_CALC_H
+#include FT_INTERNAL_DEBUG_H
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
+  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
+  /* messages during execution.                                            */
+  /*                                                                       */
+#undef  FT_COMPONENT
+#define FT_COMPONENT  trace_afhints
 
 
   /* Get new segment for given axis. */
@@ -70,7 +81,7 @@
                           FT_Int        fpos,
                           AF_Direction  dir,
                           FT_Memory     memory,
-                          AF_Edge      *aedge )
+                          AF_Edge      *anedge )
   {
     FT_Error  error = AF_Err_Ok;
     AF_Edge   edge  = NULL;
@@ -124,7 +135,7 @@
     edge->dir  = (FT_Char)dir;
 
   Exit:
-    *aedge = edge;
+    *anedge = edge;
     return error;
   }
 
@@ -175,29 +186,27 @@
     AF_Point  point;
 
 
-    printf( "Table of points:\n" );
-    printf(   "  [ index |  xorg |  yorg | xscale | yscale"
-              " |  xfit |  yfit |  flags ]\n" );
+    FT_TRACE7(( "Table of points:\n"
+                "  [ index |  xorg |  yorg | xscale | yscale"
+                " |  xfit |  yfit |  flags ]\n" ));
 
     for ( point = points; point < limit; point++ )
-    {
-      printf( "  [ %5d | %5d | %5d | %6.2f | %6.2f"
-              " | %5.2f | %5.2f | %c%c%c%c%c%c ]\n",
-              point - points,
-              point->fx,
-              point->fy,
-              point->ox / 64.0,
-              point->oy / 64.0,
-              point->x / 64.0,
-              point->y / 64.0,
-              ( point->flags & AF_FLAG_WEAK_INTERPOLATION ) ? 'w' : ' ',
-              ( point->flags & AF_FLAG_INFLECTION )         ? 'i' : ' ',
-              ( point->flags & AF_FLAG_EXTREMA_X )          ? '<' : ' ',
-              ( point->flags & AF_FLAG_EXTREMA_Y )          ? 'v' : ' ',
-              ( point->flags & AF_FLAG_ROUND_X )            ? '(' : ' ',
-              ( point->flags & AF_FLAG_ROUND_Y )            ? 'u' : ' ');
-    }
-    printf( "\n" );
+      FT_TRACE7(( "  [ %5d | %5d | %5d | %6.2f | %6.2f"
+                  " | %5.2f | %5.2f | %c%c%c%c%c%c ]\n",
+                  point - points,
+                  point->fx,
+                  point->fy,
+                  point->ox / 64.0,
+                  point->oy / 64.0,
+                  point->x / 64.0,
+                  point->y / 64.0,
+                  ( point->flags & AF_FLAG_WEAK_INTERPOLATION ) ? 'w' : ' ',
+                  ( point->flags & AF_FLAG_INFLECTION )         ? 'i' : ' ',
+                  ( point->flags & AF_FLAG_EXTREMA_X )          ? '<' : ' ',
+                  ( point->flags & AF_FLAG_EXTREMA_Y )          ? 'v' : ' ',
+                  ( point->flags & AF_FLAG_ROUND_X )            ? '(' : ' ',
+                  ( point->flags & AF_FLAG_ROUND_Y )            ? 'u' : ' '));
+    FT_TRACE7(( "\n" ));
   }
 #ifdef __cplusplus
   }
@@ -226,7 +235,7 @@
     if ( pos == 0 )
       return "normal";
 
-    temp[pos] = 0;
+    temp[pos] = '\0';
 
     return temp;
   }
@@ -246,30 +255,41 @@
     for ( dimension = 1; dimension >= 0; dimension-- )
     {
       AF_AxisHints  axis     = &hints->axis[dimension];
+      AF_Point      points   = hints->points;
+      AF_Edge       edges    = axis->edges;
       AF_Segment    segments = axis->segments;
       AF_Segment    limit    = segments + axis->num_segments;
       AF_Segment    seg;
 
 
-      printf ( "Table of %s segments:\n",
-               dimension == AF_DIMENSION_HORZ ? "vertical" : "horizontal" );
-      printf ( "  [ index |  pos  |  dir  | link | serif |"
-               " height | extra |    flags    ]\n" );
+      FT_TRACE7(( "Table of %s segments:\n",
+                  dimension == AF_DIMENSION_HORZ ? "vertical"
+                                                 : "horizontal" ));
+      if (axis->num_segments)
+        FT_TRACE7(( "  [ index |  pos  |  dir  | from"
+                    " |  to  | link | serif | edge"
+                    " | height | extra |    flags    ]\n" ));
+      else
+        FT_TRACE7(( "  (none)\n" ));
 
       for ( seg = segments; seg < limit; seg++ )
-      {
-        printf ( "  [ %5d | %5.2g | %5s | %4d | %5d | %6d | %5d | %11s ]\n",
-                 seg - segments,
-                 dimension == AF_DIMENSION_HORZ ? (int)seg->first->ox / 64.0
-                                                : (int)seg->first->oy / 64.0,
-                 af_dir_str( (AF_Direction)seg->dir ),
-                 AF_INDEX_NUM( seg->link, segments ),
-                 AF_INDEX_NUM( seg->serif, segments ),
-                 seg->height,
-                 seg->height - ( seg->max_coord - seg->min_coord ),
-                 af_edge_flags_to_string( (AF_Edge_Flags)seg->flags ) );
-      }
-      printf( "\n" );
+        FT_TRACE7(( "  [ %5d | %5.2g | %5s | %4d"
+                    " | %4d | %4d | %5d | %4d"
+                    " | %6d | %5d | %11s ]\n",
+                    seg - segments,
+                    dimension == AF_DIMENSION_HORZ
+                                 ? (int)seg->first->ox / 64.0
+                                 : (int)seg->first->oy / 64.0,
+                    af_dir_str( (AF_Direction)seg->dir ),
+                    AF_INDEX_NUM( seg->first, points ),
+                    AF_INDEX_NUM( seg->last, points ),
+                    AF_INDEX_NUM( seg->link, segments ),
+                    AF_INDEX_NUM( seg->serif, segments ),
+                    AF_INDEX_NUM( seg->edge, edges ),
+                    seg->height,
+                    seg->height - ( seg->max_coord - seg->min_coord ),
+                    af_edge_flags_to_string( (AF_Edge_Flags)seg->flags ) ));
+      FT_TRACE7(( "\n" ));
     }
   }
 #ifdef __cplusplus
@@ -363,26 +383,28 @@
        *  note: AF_DIMENSION_HORZ corresponds to _vertical_ edges
        *        since they have a constant X coordinate.
        */
-      printf ( "Table of %s edges:\n",
-               dimension == AF_DIMENSION_HORZ ? "vertical" : "horizontal" );
-      printf ( "  [ index |  pos  |  dir  | link |"
-               " serif | blue | opos  |  pos  |    flags    ]\n" );
+      FT_TRACE7(( "Table of %s edges:\n",
+                  dimension == AF_DIMENSION_HORZ ? "vertical"
+                                                 : "horizontal" ));
+      if ( axis->num_edges )
+        FT_TRACE7(( "  [ index |  pos  |  dir  | link"
+                    " | serif | blue | opos  |  pos  |    flags    ]\n" ));
+      else
+        FT_TRACE7(( "  (none)\n" ));
 
       for ( edge = edges; edge < limit; edge++ )
-      {
-        printf ( "  [ %5d | %5.2g | %5s | %4d |"
-                 " %5d |   %c  | %5.2f | %5.2f | %11s ]\n",
-                 edge - edges,
-                 (int)edge->opos / 64.0,
-                 af_dir_str( (AF_Direction)edge->dir ),
-                 AF_INDEX_NUM( edge->link, edges ),
-                 AF_INDEX_NUM( edge->serif, edges ),
-                 edge->blue_edge ? 'y' : 'n',
-                 edge->opos / 64.0,
-                 edge->pos / 64.0,
-                 af_edge_flags_to_string( (AF_Edge_Flags)edge->flags ) );
-      }
-      printf( "\n" );
+        FT_TRACE7(( "  [ %5d | %5.2g | %5s | %4d"
+                    " | %5d |   %c  | %5.2f | %5.2f | %11s ]\n",
+                    edge - edges,
+                    (int)edge->opos / 64.0,
+                    af_dir_str( (AF_Direction)edge->dir ),
+                    AF_INDEX_NUM( edge->link, edges ),
+                    AF_INDEX_NUM( edge->serif, edges ),
+                    edge->blue_edge ? 'y' : 'n',
+                    edge->opos / 64.0,
+                    edge->pos / 64.0,
+                    af_edge_flags_to_string( (AF_Edge_Flags)edge->flags ) ));
+      FT_TRACE7(( "\n" ));
     }
   }
 #ifdef __cplusplus
@@ -494,8 +516,8 @@
       }
     }
 
-    /* return no direction if arm lengths differ too much */
-    /* (value 14 is heuristic)                            */
+    /* return no direction if arm lengths differ too much            */
+    /* (value 14 is heuristic, corresponding to approx. 4.1 degrees) */
     ss *= 14;
     if ( FT_ABS( ll ) <= FT_ABS( ss ) )
       dir = AF_DIR_NONE;
@@ -516,40 +538,40 @@
   FT_LOCAL_DEF( void )
   af_glyph_hints_done( AF_GlyphHints  hints )
   {
-    if ( hints && hints->memory )
+    FT_Memory  memory = hints->memory;
+    int        dim;
+
+
+    if ( !( hints && hints->memory ) )
+      return;
+
+    /*
+     *  note that we don't need to free the segment and edge
+     *  buffers since they are really within the hints->points array
+     */
+    for ( dim = 0; dim < AF_DIMENSION_MAX; dim++ )
     {
-      FT_Memory  memory = hints->memory;
-      int        dim;
+      AF_AxisHints  axis = &hints->axis[dim];
 
 
-      /*
-       *  note that we don't need to free the segment and edge
-       *  buffers since they are really within the hints->points array
-       */
-      for ( dim = 0; dim < AF_DIMENSION_MAX; dim++ )
-      {
-        AF_AxisHints  axis = &hints->axis[dim];
+      axis->num_segments = 0;
+      axis->max_segments = 0;
+      FT_FREE( axis->segments );
 
-
-        axis->num_segments = 0;
-        axis->max_segments = 0;
-        FT_FREE( axis->segments );
-
-        axis->num_edges = 0;
-        axis->max_edges = 0;
-        FT_FREE( axis->edges );
-      }
-
-      FT_FREE( hints->contours );
-      hints->max_contours = 0;
-      hints->num_contours = 0;
-
-      FT_FREE( hints->points );
-      hints->num_points = 0;
-      hints->max_points = 0;
-
-      hints->memory = NULL;
+      axis->num_edges = 0;
+      axis->max_edges = 0;
+      FT_FREE( axis->edges );
     }
+
+    FT_FREE( hints->contours );
+    hints->max_contours = 0;
+    hints->num_contours = 0;
+
+    FT_FREE( hints->points );
+    hints->num_points = 0;
+    hints->max_points = 0;
+
+    hints->memory = NULL;
   }
 
 
@@ -745,7 +767,7 @@
 
           /* check for weak points */
 
-          if ( point->flags & ( AF_FLAG_CONIC | AF_FLAG_CUBIC ) )
+          if ( point->flags & AF_FLAG_CONTROL )
           {
           Is_Weak_Point:
             point->flags |= AF_FLAG_WEAK_INTERPOLATION;

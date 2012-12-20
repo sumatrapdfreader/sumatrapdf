@@ -362,7 +362,7 @@
                     FT_Long    *offsets,
                     FT_Error   *errors )
   {
-    FT_Long  i;
+    FT_Int  i;
 
 
     for ( i = 0; i < FT_RACCESS_N_RULES; i++ )
@@ -827,7 +827,7 @@
                     FT_Long    *offsets,
                     FT_Error   *errors )
   {
-    int  i;
+    FT_Int  i;
 
     FT_UNUSED( library );
     FT_UNUSED( stream );

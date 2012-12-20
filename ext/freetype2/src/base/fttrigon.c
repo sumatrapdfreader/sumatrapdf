@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType trigonometric functions (body).                             */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004, 2005 by                              */
+/*  Copyright 2001-2005, 2012 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,25 +21,30 @@
 #include FT_TRIGONOMETRY_H
 
 
-  /* the following is 0.2715717684432231 * 2^30 */
-#define FT_TRIG_COSCALE  0x11616E8EUL
+#ifdef FT_LONG64
+  typedef FT_INT64  FT_Int64;
+#endif
+
+
+  /* the Cordic shrink factor 0.607252935008887 * 2^32 */
+#define FT_TRIG_SCALE    0x9B74EDA8UL
+
+  /* the following is 0.607252935008887 * 2^30 */
+#define FT_TRIG_COSCALE  0x26DD3B6AUL
 
   /* this table was generated for FT_PI = 180L << 16, i.e. degrees */
 #define FT_TRIG_MAX_ITERS  23
 
   static const FT_Fixed
-  ft_trig_arctan_table[24] =
+  ft_trig_arctan_table[23] =
   {
-    4157273L, 2949120L, 1740967L, 919879L, 466945L, 234379L, 117304L,
-    58666L, 29335L, 14668L, 7334L, 3667L, 1833L, 917L, 458L, 229L, 115L,
+    2949120L, 1740967L, 919879L, 466945L, 234379L, 117304L, 58666L,
+    29335L, 14668L, 7334L, 3667L, 1833L, 917L, 458L, 229L, 115L,
     57L, 29L, 14L, 7L, 4L, 2L, 1L
   };
 
-  /* the Cordic shrink factor, multiplied by 2^32 */
-#define FT_TRIG_SCALE    1166391785UL  /* 0x4585BA38UL */
 
-
-#ifdef FT_CONFIG_HAS_INT64
+#ifdef FT_LONG64
 
   /* multiply a given value by the CORDIC shrink factor */
   static FT_Fixed
@@ -58,7 +63,7 @@
     return ( s >= 0 ) ? val : -val;
   }
 
-#else /* !FT_CONFIG_HAS_INT64 */
+#else /* !FT_LONG64 */
 
   /* multiply a given value by the CORDIC shrink factor */
   static FT_Fixed
@@ -72,10 +77,10 @@
     val = ( val >= 0 ) ? val : -val;
 
     v1 = (FT_UInt32)val >> 16;
-    v2 = (FT_UInt32)(val & 0xFFFFL);
+    v2 = (FT_UInt32)( val & 0xFFFFL );
 
-    k1 = (FT_UInt32)FT_TRIG_SCALE >> 16;       /* constant */
-    k2 = (FT_UInt32)(FT_TRIG_SCALE & 0xFFFFL);   /* constant */
+    k1 = (FT_UInt32)FT_TRIG_SCALE >> 16;           /* constant */
+    k2 = (FT_UInt32)( FT_TRIG_SCALE & 0xFFFFL );   /* constant */
 
     hi   = k1 * v1;
     lo1  = k1 * v2 + k2 * v1;       /* can't overflow */
@@ -93,7 +98,7 @@
     return ( s >= 0 ) ? val : -val;
   }
 
-#endif /* !FT_CONFIG_HAS_INT64 */
+#endif /* !FT_LONG64 */
 
 
   static FT_Int
@@ -209,25 +214,9 @@
       theta -= FT_ANGLE_PI;
     }
 
-    /* Initial pseudorotation, with left shift */
     arctanptr = ft_trig_arctan_table;
 
-    if ( theta < 0 )
-    {
-      xtemp  = x + ( y << 1 );
-      y      = y - ( x << 1 );
-      x      = xtemp;
-      theta += *arctanptr++;
-    }
-    else
-    {
-      xtemp  = x - ( y << 1 );
-      y      = y + ( x << 1 );
-      x      = xtemp;
-      theta -= *arctanptr++;
-    }
-
-    /* Subsequent pseudorotations, with right shifts */
+    /* Pseudorotations, with right shifts */
     i = 0;
     do
     {
@@ -255,9 +244,9 @@
   static void
   ft_trig_pseudo_polarize( FT_Vector*  vec )
   {
-    FT_Fixed         theta;
-    FT_Fixed         yi, i;
-    FT_Fixed         x, y;
+    FT_Angle         theta;
+    FT_Int           i;
+    FT_Fixed         x, y, xtemp;
     const FT_Fixed  *arctanptr;
 
 
@@ -278,41 +267,23 @@
 
     arctanptr = ft_trig_arctan_table;
 
-    if ( y < 0 )
-    {
-      /* Rotate positive */
-      yi     = y + ( x << 1 );
-      x      = x - ( y << 1 );
-      y      = yi;
-      theta -= *arctanptr++;  /* Subtract angle */
-    }
-    else
-    {
-      /* Rotate negative */
-      yi     = y - ( x << 1 );
-      x      = x + ( y << 1 );
-      y      = yi;
-      theta += *arctanptr++;  /* Add angle */
-    }
-
+    /* Pseudorotations, with right shifts */
     i = 0;
     do
     {
-      if ( y < 0 )
+      if ( y > 0 )
       {
-        /* Rotate positive */
-        yi     = y + ( x >> i );
-        x      = x - ( y >> i );
-        y      = yi;
-        theta -= *arctanptr++;
+        xtemp  = x + ( y >> i );
+        y      = y - ( x >> i );
+        x      = xtemp;
+        theta += *arctanptr++;
       }
       else
       {
-        /* Rotate negative */
-        yi     = y - ( x >> i );
-        x      = x + ( y >> i );
-        y      = yi;
-        theta += *arctanptr++;
+        xtemp  = x - ( y >> i );
+        y      = y + ( x >> i );
+        x      = xtemp;
+        theta -= *arctanptr++;
       }
     } while ( ++i < FT_TRIG_MAX_ITERS );
 

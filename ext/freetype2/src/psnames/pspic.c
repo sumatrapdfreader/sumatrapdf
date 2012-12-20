@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for psnames module.  */
 /*                                                                         */
-/*  Copyright 2009, 2010 by                                                */
+/*  Copyright 2009, 2010, 2012 by                                          */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,6 +22,7 @@
 #include "pspic.h"
 #include "psnamerr.h"
 
+
 #ifdef FT_CONFIG_OPTION_PIC
 
   /* forward declaration of PIC init functions from psmodule.c */
@@ -36,11 +37,12 @@
   FT_Init_Class_pscmaps_interface( FT_Library              library,
                                    FT_Service_PsCMapsRec*  clazz );
 
+
   void
   psnames_module_class_pic_free( FT_Library  library )
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
-    FT_Memory  memory = library->memory;
+    FT_Memory          memory        = library->memory;
 
 
     if ( pic_container->psnames )
@@ -48,7 +50,7 @@
       PSModulePIC*  container = (PSModulePIC*)pic_container->psnames;
 
 
-      if(container->pscmaps_services)
+      if ( container->pscmaps_services )
         FT_Destroy_Class_pscmaps_services( library,
                                            container->pscmaps_services );
       container->pscmaps_services = NULL;
@@ -63,7 +65,7 @@
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
     FT_Error           error         = PSnames_Err_Ok;
-    PSModulePIC*       container;
+    PSModulePIC*       container     = NULL;
     FT_Memory          memory        = library->memory;
 
 
@@ -73,7 +75,8 @@
     FT_MEM_SET( container, 0, sizeof ( *container ) );
     pic_container->psnames = container;
 
-    /* initialize pointer table - this is how the module usually expects this data */
+    /* initialize pointer table -                       */
+    /* this is how the module usually expects this data */
     error = FT_Create_Class_pscmaps_services(
               library, &container->pscmaps_services );
     if ( error )
@@ -81,7 +84,7 @@
     FT_Init_Class_pscmaps_interface( library,
                                      &container->pscmaps_interface );
 
-Exit:
+  Exit:
     if ( error )
       psnames_module_class_pic_free( library );
     return error;

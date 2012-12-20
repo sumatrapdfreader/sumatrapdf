@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (specification).                        */
 /*                                                                         */
-/*  Copyright 2003-2008, 2010-2011 by                                      */
+/*  Copyright 2003-2008, 2010-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -254,7 +254,7 @@ FT_BEGIN_HEADER
     FT_Char    out_dir;  /* direction of outwards vector */
 
     FT_Pos     ox, oy;   /* original, scaled position                   */
-    FT_Short   fx, fy;   /* original, unscaled position (font units)    */
+    FT_Short   fx, fy;   /* original, unscaled position (in font units) */
     FT_Pos     x, y;     /* current position                            */
     FT_Pos     u, v;     /* current (x,y) or (y,x) depending on context */
 
@@ -290,19 +290,19 @@ FT_BEGIN_HEADER
 
   typedef struct  AF_EdgeRec_
   {
-    FT_Short    fpos;       /* original, unscaled position (font units) */
-    FT_Pos      opos;       /* original, scaled position                */
-    FT_Pos      pos;        /* current position                         */
+    FT_Short    fpos;       /* original, unscaled position (in font units) */
+    FT_Pos      opos;       /* original, scaled position                   */
+    FT_Pos      pos;        /* current position                            */
 
     FT_Byte     flags;      /* edge flags                                   */
     FT_Char     dir;        /* edge direction                               */
     FT_Fixed    scale;      /* used to speed up interpolation between edges */
-    AF_Width    blue_edge;  /* non-NULL if this is a blue edge              */
 
-    AF_Edge     link;       /* link edge                 */
-    AF_Edge     serif;      /* primary edge for serifs   */
-    FT_Short    num_linked; /* number of linked edges    */
-    FT_Int      score;      /* used during stem matching */
+    AF_Width    blue_edge;  /* non-NULL if this is a blue edge */
+    AF_Edge     link;       /* link edge                       */
+    AF_Edge     serif;      /* primary edge for serifs         */
+    FT_Short    num_linked; /* number of linked edges          */
+    FT_Int      score;      /* used during stem matching       */
 
     AF_Segment  first;      /* first segment in edge */
     AF_Segment  last;       /* last segment in edge  */

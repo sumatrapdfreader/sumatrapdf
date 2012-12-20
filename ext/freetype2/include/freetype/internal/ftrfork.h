@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (specification).                    */
 /*                                                                         */
-/*  Copyright 2004, 2006, 2007 by                                          */
+/*  Copyright 2004, 2006, 2007, 2012 by                                    */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -80,25 +80,36 @@ FT_BEGIN_HEADER
   } ft_raccess_guess_rec;
 
 #ifndef FT_CONFIG_OPTION_PIC
+
   /* this array is a storage in non-PIC mode, so ; is needed in END */
-#define CONST_FT_RFORK_RULE_ARRAY_BEGIN( name, type ) \
-        const type name[] = {
-#define CONST_FT_RFORK_RULE_ARRAY_ENTRY( func_suffix, type_suffix ) \
-        { raccess_guess_##func_suffix, FT_RFork_Rule_##type_suffix },
-#define CONST_FT_RFORK_RULE_ARRAY_END };
+#define CONST_FT_RFORK_RULE_ARRAY_BEGIN( name, type )  \
+          const type name[] = {
+#define CONST_FT_RFORK_RULE_ARRAY_ENTRY( func_suffix, type_suffix )  \
+          { raccess_guess_ ## func_suffix,                           \
+            FT_RFork_Rule_ ## type_suffix },
+#define CONST_FT_RFORK_RULE_ARRAY_END  };
+
 #else /* FT_CONFIG_OPTION_PIC */
+
   /* this array is a function in PIC mode, so no ; is needed in END */
-#define CONST_FT_RFORK_RULE_ARRAY_BEGIN( name, type ) \
-        void FT_Init_##name ( type* storage ) {       \
-          type *local = storage;                      \
-          int i = 0;
-#define CONST_FT_RFORK_RULE_ARRAY_ENTRY( func_suffix, type_suffix ) \
-        local[i].func = raccess_guess_##func_suffix;                \
-        local[i].type = FT_RFork_Rule_##type_suffix;                \
-        i++;
-#define CONST_FT_RFORK_RULE_ARRAY_END }
+#define CONST_FT_RFORK_RULE_ARRAY_BEGIN( name, type )  \
+          void                                         \
+          FT_Init_ ## name( type*  storage )           \
+          {                                            \
+            type*  local = storage;                    \
+                                                       \
+                                                       \
+            int  i = 0;
+#define CONST_FT_RFORK_RULE_ARRAY_ENTRY( func_suffix, type_suffix )  \
+          local[i].func = raccess_guess_ ## func_suffix;             \
+          local[i].type = FT_RFork_Rule_ ## type_suffix;             \
+          i++;
+#define CONST_FT_RFORK_RULE_ARRAY_END  }
+
 #endif /* FT_CONFIG_OPTION_PIC */
+
 #endif /* FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK */
+
 
   /*************************************************************************/
   /*                                                                       */

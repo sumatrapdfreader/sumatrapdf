@@ -78,8 +78,6 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
 
-#ifdef TT_USE_BYTECODE_INTERPRETER
-
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
@@ -107,8 +105,6 @@ FT_BEGIN_HEADER
   FT_MulDiv_No_Round( FT_Long  a,
                       FT_Long  b,
                       FT_Long  c );
-
-#endif /* TT_USE_BYTECODE_INTERPRETER */
 
 
   /*

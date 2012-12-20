@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType and CFF data/program tables loader (body).                  */
 /*                                                                         */
-/*  Copyright 1996-2011 by                                                 */
+/*  Copyright 1996-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1439,6 +1439,7 @@
     FT_ULong         base_offset;
     CFF_FontRecDict  dict;
     CFF_IndexRec     string_index;
+    FT_Int           subfont_index;
 
 
     FT_ZERO( font );
@@ -1483,13 +1484,35 @@
 
     font->num_strings = string_index.count;
 
-    /* well, we don't really forget the `disabled' fonts... */
-    font->num_faces = font->name_index.count;
-    if ( face_index >= (FT_Int)font->num_faces )
+    if ( pure_cff )
     {
-      FT_ERROR(( "cff_font_load: incorrect face index = %d\n",
-                 face_index ));
-      error = CFF_Err_Invalid_Argument;
+      /* well, we don't really forget the `disabled' fonts... */
+      subfont_index = face_index;
+
+      if ( subfont_index >= (FT_Int)font->name_index.count )
+      {
+        FT_ERROR(( "cff_font_load:"
+                   " invalid subfont index for pure CFF font (%d)\n",
+                   subfont_index ));
+        error = CFF_Err_Invalid_Argument;
+        goto Exit;
+      }
+
+      font->num_faces = font->name_index.count;
+    }
+    else
+    {
+      subfont_index = 0;
+
+      if ( font->name_index.count > 1 )
+      {
+        FT_ERROR(( "cff_font_load:"
+                   " invalid CFF font with multiple subfonts\n"
+                   "              "
+                   " in SFNT wrapper\n" ));
+        error = CFF_Err_Invalid_File_Format;
+        goto Exit;
+      }
     }
 
     /* in case of a font format check, simply exit now */
@@ -1500,7 +1523,7 @@
     FT_TRACE4(( "parsing top-level\n" ));
     error = cff_subfont_load( &font->top_font,
                               &font->font_dict_index,
-                              face_index,
+                              subfont_index,
                               stream,
                               base_offset,
                               library );
@@ -1615,7 +1638,7 @@
 
     /* get the font name (/CIDFontName for CID-keyed fonts, */
     /* /FontName otherwise)                                 */
-    font->font_name = cff_index_get_name( font, face_index );
+    font->font_name = cff_index_get_name( font, subfont_index );
 
   Exit:
     cff_index_done( &string_index );

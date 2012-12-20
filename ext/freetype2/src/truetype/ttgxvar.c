@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType GX Font Variation loader                                    */
 /*                                                                         */
-/*  Copyright 2004-2011 by                                                 */
+/*  Copyright 2004-2012 by                                                 */
 /*  David Turner, Robert Wilhelm, Werner Lemberg, and George Williams.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -91,7 +91,7 @@
   /* indicates that there is a delta for every point without needing to    */
   /* enumerate all of them.                                                */
   /*                                                                       */
-#define ALL_POINTS  (FT_UShort*)( -1 )
+#define ALL_POINTS  (FT_UShort*)( ~0 )
 
 
 #define GX_PT_POINTS_ARE_WORDS      0x80
@@ -501,11 +501,9 @@
                       FT_Fixed*  im_end_coords )
   {
     FT_UInt   i;
-    FT_Fixed  apply;
-    FT_Fixed  temp;
+    FT_Fixed  apply = 0x10000L;
 
 
-    apply = 0x10000L;
     for ( i = 0; i < blend->num_axis; ++i )
     {
       if ( tuple_coords[i] == 0 )
@@ -525,11 +523,10 @@
 
       else if ( !( tupleIndex & GX_TI_INTERMEDIATE_TUPLE ) )
         /* not an intermediate tuple */
-        apply = FT_MulDiv( apply,
+        apply = FT_MulFix( apply,
                            blend->normalizedcoords[i] > 0
                              ? blend->normalizedcoords[i]
-                             : -blend->normalizedcoords[i],
-                           0x10000L );
+                             : -blend->normalizedcoords[i] );
 
       else if ( blend->normalizedcoords[i] <= im_start_coords[i] ||
                 blend->normalizedcoords[i] >= im_end_coords[i]   )
@@ -539,20 +536,14 @@
       }
 
       else if ( blend->normalizedcoords[i] < tuple_coords[i] )
-      {
-        temp = FT_MulDiv( blend->normalizedcoords[i] - im_start_coords[i],
-                          0x10000L,
-                          tuple_coords[i] - im_start_coords[i]);
-        apply = FT_MulDiv( apply, temp, 0x10000L );
-      }
+        apply = FT_MulDiv( apply,
+                           blend->normalizedcoords[i] - im_start_coords[i],
+                           tuple_coords[i] - im_start_coords[i] );
 
       else
-      {
-        temp = FT_MulDiv( im_end_coords[i] - blend->normalizedcoords[i],
-                          0x10000L,
-                          im_end_coords[i] - tuple_coords[i] );
-        apply = FT_MulDiv( apply, temp, 0x10000L );
-      }
+        apply = FT_MulDiv( apply,
+                           im_end_coords[i] - blend->normalizedcoords[i],
+                           im_end_coords[i] - tuple_coords[i] );
     }
 
     return apply;
@@ -712,7 +703,7 @@
       mmvar->num_axis =
         fvar_head.axisCount;
       mmvar->num_designs =
-        (FT_UInt)-1;           /* meaningless in this context; each glyph */
+        ~0;                    /* meaningless in this context; each glyph */
                                /* may have a different number of designs  */
                                /* (or tuples, as called by Apple)         */
       mmvar->num_namedstyles =
@@ -1034,19 +1025,11 @@
       }
 
       if ( coords[i] < a->def )
-      {
-        normalized[i] = -FT_MulDiv( coords[i] - a->def,
-                                    0x10000L,
-                                    a->minimum - a->def );
-      }
+        normalized[i] = -FT_DivFix( coords[i] - a->def, a->minimum - a->def );
       else if ( a->maximum == a->def )
         normalized[i] = 0;
       else
-      {
-        normalized[i] = FT_MulDiv( coords[i] - a->def,
-                                   0x10000L,
-                                   a->maximum - a->def );
-      }
+        normalized[i] = FT_DivFix( coords[i] - a->def, a->maximum - a->def );
     }
 
     if ( !blend->avar_checked )
@@ -1061,15 +1044,11 @@
           if ( normalized[i] < av->correspondence[j].fromCoord )
           {
             normalized[i] =
-              FT_MulDiv(
-                FT_MulDiv(
-                  normalized[i] - av->correspondence[j - 1].fromCoord,
-                  0x10000L,
-                  av->correspondence[j].fromCoord -
-                    av->correspondence[j - 1].fromCoord ),
-                av->correspondence[j].toCoord -
-                  av->correspondence[j - 1].toCoord,
-                0x10000L ) +
+              FT_MulDiv( normalized[i] - av->correspondence[j - 1].fromCoord,
+                         av->correspondence[j].toCoord -
+                           av->correspondence[j - 1].toCoord,
+                         av->correspondence[j].fromCoord -
+                           av->correspondence[j - 1].fromCoord ) +
               av->correspondence[j - 1].toCoord;
             break;
           }

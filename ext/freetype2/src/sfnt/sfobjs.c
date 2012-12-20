@@ -493,9 +493,8 @@
 
     /* check that we have a valid TrueType file */
     error = sfnt->load_font_dir( face, stream );
-    /* SumatraPDF: accept CFF OpenType fonts without 'head' */
-    // if ( error )
-    //   return error;
+    if ( error )
+      return error;
 
     face->root.num_faces  = face->ttc_header.count;
     face->root.face_index = face_index;
@@ -509,7 +508,7 @@
     FT_TRACE2(( "`" #x "' " ));                               \
     FT_TRACE3(( "-->\n" ));                                   \
                                                               \
-    error = sfnt->load_##x( face, stream );                   \
+    error = sfnt->load_ ## x( face, stream );                 \
                                                               \
     FT_TRACE2(( "%s\n", ( !error )                            \
                         ? "loaded"                            \
@@ -525,7 +524,7 @@
                 vertical ? "vertical " : "" ));               \
     FT_TRACE3(( "-->\n" ));                                   \
                                                               \
-    error = sfnt->load_##x( face, stream, vertical );         \
+    error = sfnt->load_ ## x( face, stream, vertical );       \
                                                               \
     FT_TRACE2(( "%s\n", ( !error )                            \
                         ? "loaded"                            \
@@ -535,11 +534,11 @@
     FT_TRACE3(( "\n" ));                                      \
   } while ( 0 )
 
-#define GET_NAME( id, field )                                 \
-  do {                                                        \
-    error = tt_face_get_name( face, TT_NAME_ID_##id, field ); \
-    if ( error )                                              \
-      goto Exit;                                              \
+#define GET_NAME( id, field )                                   \
+  do {                                                          \
+    error = tt_face_get_name( face, TT_NAME_ID_ ## id, field ); \
+    if ( error )                                                \
+      goto Exit;                                                \
   } while ( 0 )
 
 
@@ -556,12 +555,13 @@
 #endif
     FT_Bool       has_outline;
     FT_Bool       is_apple_sbit;
-    FT_Bool       ignore_preferred_family = FALSE;
+    FT_Bool       ignore_preferred_family    = FALSE;
     FT_Bool       ignore_preferred_subfamily = FALSE;
 
     SFNT_Service  sfnt = (SFNT_Service)face->sfnt;
 
     FT_UNUSED( face_index );
+
 
     /* Check parameters */
 
@@ -668,7 +668,7 @@
                  get_glyph_metrics                                 )
           {
             face->horizontal.number_Of_HMetrics = 0;
-            error = SFNT_Err_Ok;
+            error                               = SFNT_Err_Ok;
           }
 #endif
         }
@@ -695,7 +695,7 @@
                  get_glyph_metrics                                 )
           {
             face->horizontal.number_Of_HMetrics = 0;
-            error = SFNT_Err_Ok;
+            error                               = SFNT_Err_Ok;
           }
 #endif
 

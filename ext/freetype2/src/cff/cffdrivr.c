@@ -412,8 +412,8 @@
     cmap_info->language = 0;
     cmap_info->format   = 0;
 
-    if ( cmap->clazz != &FT_CFF_CMAP_ENCODING_CLASS_REC_GET &&
-         cmap->clazz != &FT_CFF_CMAP_UNICODE_CLASS_REC_GET  )
+    if ( cmap->clazz != &CFF_CMAP_ENCODING_CLASS_REC_GET &&
+         cmap->clazz != &CFF_CMAP_UNICODE_CLASS_REC_GET  )
     {
       FT_Module           sfnt    = FT_Get_Module( library, "sfnt" );
       FT_Service_TTCMaps  service =
@@ -579,19 +579,19 @@
 #ifndef FT_CONFIG_OPTION_NO_GLYPH_NAMES
   FT_DEFINE_SERVICEDESCREC6(cff_services,
     FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_CFF,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &FT_CFF_SERVICE_PS_INFO_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_CFF_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_GLYPH_DICT,           &FT_CFF_SERVICE_GLYPH_DICT_GET,
-    FT_SERVICE_ID_TT_CMAP,              &FT_CFF_SERVICE_GET_CMAP_INFO_GET,
-    FT_SERVICE_ID_CID,                  &FT_CFF_SERVICE_CID_INFO_GET
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_GLYPH_DICT,           &CFF_SERVICE_GLYPH_DICT_GET,
+    FT_SERVICE_ID_TT_CMAP,              &CFF_SERVICE_GET_CMAP_INFO_GET,
+    FT_SERVICE_ID_CID,                  &CFF_SERVICE_CID_INFO_GET
   )
 #else
   FT_DEFINE_SERVICEDESCREC5(cff_services,
     FT_SERVICE_ID_XF86_NAME,            FT_XF86_FORMAT_CFF,
-    FT_SERVICE_ID_POSTSCRIPT_INFO,      &FT_CFF_SERVICE_PS_INFO_GET,
-    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_CFF_SERVICE_PS_NAME_GET,
-    FT_SERVICE_ID_TT_CMAP,              &FT_CFF_SERVICE_GET_CMAP_INFO_GET,
-    FT_SERVICE_ID_CID,                  &FT_CFF_SERVICE_CID_INFO_GET
+    FT_SERVICE_ID_POSTSCRIPT_INFO,      &CFF_SERVICE_PS_INFO_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &CFF_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_TT_CMAP,              &CFF_SERVICE_GET_CMAP_INFO_GET,
+    FT_SERVICE_ID_CID,                  &CFF_SERVICE_CID_INFO_GET
   )
 #endif
 
@@ -604,7 +604,7 @@
     FT_Module_Interface  result;
 
 
-    /* FT_CFF_SERVICES_GET derefers `library' in PIC mode */
+    /* CFF_SERVICES_GET derefers `library' in PIC mode */
 #ifdef FT_CONFIG_OPTION_PIC
     if ( !driver )
       return NULL;
@@ -613,7 +613,7 @@
       return NULL;
 #endif
 
-    result = ft_service_list_lookup( FT_CFF_SERVICES_GET, module_interface );
+    result = ft_service_list_lookup( CFF_SERVICES_GET, module_interface );
     if ( result != NULL )
       return result;
 

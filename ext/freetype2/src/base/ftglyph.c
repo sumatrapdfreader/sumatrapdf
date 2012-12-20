@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType convenience functions to handle glyphs (body).              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2007, 2008, 2010 by       */
+/*  Copyright 1996-2005, 2007, 2008, 2010, 2012 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -510,7 +510,7 @@
     FT_GlyphSlotRec           dummy;
     FT_GlyphSlot_InternalRec  dummy_internal;
     FT_Error                  error = FT_Err_Ok;
-    FT_Glyph                  glyph;
+    FT_Glyph                  b, glyph;
     FT_BitmapGlyph            bitmap = NULL;
     const FT_Glyph_Class*     clazz;
 
@@ -547,10 +547,10 @@
     dummy.format   = clazz->glyph_format;
 
     /* create result bitmap glyph */
-    error = ft_new_glyph( library, FT_BITMAP_GLYPH_CLASS_GET,
-                          (FT_Glyph*)(void*)&bitmap );
+    error = ft_new_glyph( library, FT_BITMAP_GLYPH_CLASS_GET, &b );
     if ( error )
       goto Exit;
+    bitmap = (FT_BitmapGlyph)b;
 
 #if 1
     /* if `origin' is set, translate the glyph image */
@@ -596,12 +596,6 @@
   Exit:
     if ( error && bitmap )
       FT_Done_Glyph( FT_GLYPH( bitmap ) );
-    /* SumatraPDF: fix memory leak */
-    if ( error && (dummy.internal->flags & FT_GLYPH_OWN_BITMAP) )
-    {
-      FT_Memory memory = library->memory;
-      FT_FREE(dummy.bitmap.buffer);
-    }
 
     return error;
 

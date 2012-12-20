@@ -29,6 +29,7 @@
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_IDS_H
 
+#include FT_SERVICE_PROPERTIES_H
 #include FT_SERVICE_SFNT_H
 #include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_GLYPH_DICT_H
@@ -651,7 +652,7 @@
 
     if ( autohint )
     {
-      FT_AutoHinter_Service  hinting;
+      FT_AutoHinter_Interface  hinting;
 
 
       /* try to load embedded bitmaps first if available            */
@@ -680,7 +681,7 @@
         internal->transform_flags = 0;
 
         /* load auto-hinted outline */
-        hinting = (FT_AutoHinter_Service)hinter->clazz->module_interface;
+        hinting = (FT_AutoHinter_Interface)hinter->clazz->module_interface;
 
         error   = hinting->load_glyph( (FT_AutoHinter)hinter,
                                        slot, face->size,
@@ -2055,10 +2056,11 @@
     }
     else
     {
+      error = FT_Err_Missing_Module;
+
       /* check each font driver for an appropriate format */
       cur   = library->modules;
       limit = cur + library->num_modules;
-
 
       for ( ; cur < limit; cur++ )
       {
@@ -2109,30 +2111,30 @@
         }
       }
 
-  Fail3:
-    /* If we are on the mac, and we get an FT_Err_Invalid_Stream_Operation */
-    /* it may be because we have an empty data fork, so we need to check   */
-    /* the resource fork.                                                  */
-    if ( FT_ERROR_BASE( error ) != FT_Err_Cannot_Open_Stream       &&
-         FT_ERROR_BASE( error ) != FT_Err_Unknown_File_Format      &&
-         FT_ERROR_BASE( error ) != FT_Err_Invalid_Stream_Operation )
-      goto Fail2;
+    Fail3:
+      /* If we are on the mac, and we get an                          */
+      /* FT_Err_Invalid_Stream_Operation it may be because we have an */
+      /* empty data fork, so we need to check the resource fork.      */
+      if ( FT_ERROR_BASE( error ) != FT_Err_Cannot_Open_Stream       &&
+           FT_ERROR_BASE( error ) != FT_Err_Unknown_File_Format      &&
+           FT_ERROR_BASE( error ) != FT_Err_Invalid_Stream_Operation )
+        goto Fail2;
 
 #if !defined( FT_MACINTOSH ) && defined( FT_CONFIG_OPTION_MAC_FONTS )
-    error = load_mac_face( library, stream, face_index, aface, args );
-    if ( !error )
-    {
-      /* We don't want to go to Success here.  We've already done that. */
-      /* On the other hand, if we succeeded we still need to close this */
-      /* stream (we opened a different stream which extracted the       */
-      /* interesting information out of this stream here.  That stream  */
-      /* will still be open and the face will point to it).             */
-      FT_Stream_Free( stream, external_stream );
-      return error;
-    }
+      error = load_mac_face( library, stream, face_index, aface, args );
+      if ( !error )
+      {
+        /* We don't want to go to Success here.  We've already done that. */
+        /* On the other hand, if we succeeded we still need to close this */
+        /* stream (we opened a different stream which extracted the       */
+        /* interesting information out of this stream here.  That stream  */
+        /* will still be open and the face will point to it).             */
+        FT_Stream_Free( stream, external_stream );
+        return error;
+      }
 
-    if ( FT_ERROR_BASE( error ) != FT_Err_Unknown_File_Format )
-      goto Fail2;
+      if ( FT_ERROR_BASE( error ) != FT_Err_Unknown_File_Format )
+        goto Fail2;
 #endif  /* !FT_MACINTOSH && FT_CONFIG_OPTION_MAC_FONTS */
 
       /* no driver is able to handle this format */
@@ -4301,19 +4303,18 @@
   {
     FT_Pointer  result = NULL;
 
+
     if ( module )
     {
       FT_ASSERT( module->clazz && module->clazz->get_interface );
 
-     /* first, look for the service in the module
-      */
+      /* first, look for the service in the module */
       if ( module->clazz->get_interface )
         result = module->clazz->get_interface( module, service_id );
 
       if ( result == NULL )
       {
-       /* we didn't find it, look in all other modules then
-        */
+        /* we didn't find it, look in all other modules then */
         FT_Library  library = module->library;
         FT_Module*  cur     = library->modules;
         FT_Module*  limit   = cur + library->num_modules;
@@ -4379,6 +4380,118 @@
       }
     }
     return FT_Err_Invalid_Driver_Handle;
+  }
+
+
+  FT_Error
+  ft_property_do( FT_Library        library,
+                  const FT_String*  module_name,
+                  const FT_String*  property_name,
+                  void*             value,
+                  FT_Bool           set )
+  {
+    FT_Module*           cur;
+    FT_Module*           limit;
+    FT_Module_Interface  interface;
+
+    FT_Service_Properties  service;
+
+#ifdef FT_DEBUG_LEVEL_ERROR
+    const FT_String*  set_name  = "FT_Property_Set";
+    const FT_String*  get_name  = "FT_Property_Get";
+    const FT_String*  func_name = set ? set_name : get_name;
+#endif
+
+    FT_Bool  missing_func;
+
+
+    if ( !library )
+      return FT_Err_Invalid_Library_Handle;
+
+    if ( !module_name || !property_name || !value )
+      return FT_Err_Invalid_Argument;
+
+    cur   = library->modules;
+    limit = cur + library->num_modules;
+
+    /* search module */
+    for ( ; cur < limit; cur++ )
+      if ( !ft_strcmp( cur[0]->clazz->module_name, module_name ) )
+        break;
+
+    if ( cur == limit )
+    {
+      FT_ERROR(( "%s: can't find module `%s'\n",
+                 func_name, module_name ));
+      return FT_Err_Missing_Module;
+    }
+
+    /* check whether we have a service interface */
+    if ( !cur[0]->clazz->get_interface )
+    {
+      FT_ERROR(( "%s: module `%s' doesn't support properties\n",
+                 func_name, module_name ));
+      return FT_Err_Unimplemented_Feature;
+    }
+
+    /* search property service */
+    interface = cur[0]->clazz->get_interface( cur[0],
+                                              FT_SERVICE_ID_PROPERTIES );
+    if ( !interface )
+    {
+      FT_ERROR(( "%s: module `%s' doesn't support properties\n",
+                 func_name, module_name ));
+      return FT_Err_Unimplemented_Feature;
+    }
+
+    service = (FT_Service_Properties)interface;
+
+    if ( set )
+      missing_func = !service->set_property;
+    else
+      missing_func = !service->get_property;
+
+    if ( missing_func )
+    {
+      FT_ERROR(( "%s: property service of module `%s' is broken\n",
+                 func_name, module_name ));
+      return FT_Err_Unimplemented_Feature;
+    }
+
+    return set ? service->set_property( cur[0], property_name, value )
+               : service->get_property( cur[0], property_name, value );
+  }
+
+
+  /* documentation is in ftmodapi.h */
+
+  FT_Error
+  FT_Property_Set( FT_Library        library,
+                   const FT_String*  module_name,
+                   const FT_String*  property_name,
+                   const void*       value )
+  {
+    return ft_property_do( library,
+                           module_name,
+                           property_name,
+                           (void*)value,
+                           TRUE );
+  }
+
+
+  /* documentation is in ftmodapi.h */
+
+  FT_Error
+  FT_Property_Get( FT_Library        library,
+                   const FT_String*  module_name,
+                   const FT_String*  property_name,
+                   void*             value )
+  {
+    return ft_property_do( library,
+                           module_name,
+                           property_name,
+                           value,
+                           FALSE );
   }
 
 

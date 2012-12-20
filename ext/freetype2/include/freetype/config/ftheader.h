@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Build macros of the FreeType 2 library.                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2010 by */
+/*  Copyright 1996-2008, 2010, 2012 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -313,6 +313,19 @@
    *
    */
 #define FT_RENDER_H  <freetype/ftrender.h>
+
+
+  /*************************************************************************
+   *
+   * @macro:
+   *   FT_AUTOHINTER_H
+   *
+   * @description:
+   *   A macro used in #include statements to name the file containing
+   *   structures and macros related to the auto-hinting module.
+   *
+   */
+#define FT_AUTOHINTER_H  <freetype/ftautoh.h>
 
 
   /*************************************************************************

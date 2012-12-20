@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF token stream parser (body)                                       */
 /*                                                                         */
-/*  Copyright 1996-2004, 2007-2011 by                                      */
+/*  Copyright 1996-2004, 2007-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -105,6 +105,7 @@
 
   Bad:
     val = 0;
+    FT_TRACE4(( "!!!END OF DATA:!!!" ));
     goto Exit;
   }
 
@@ -136,7 +137,7 @@
     FT_UInt   phase;
 
     FT_Long   result, number, exponent;
-    FT_Int    sign = 0, exponent_sign = 0;
+    FT_Int    sign = 0, exponent_sign = 0, have_overflow = 0;
     FT_Long   exponent_add, integer_length, fraction_length;
 
 
@@ -165,7 +166,7 @@
 
         /* Make sure we don't read past the end. */
         if ( p >= limit )
-          goto Exit;
+          goto Bad;
       }
 
       /* Get the nibble. */
@@ -202,7 +203,7 @@
 
           /* Make sure we don't read past the end. */
           if ( p >= limit )
-            goto Exit;
+            goto Bad;
         }
 
         /* Get the nibble. */
@@ -241,7 +242,7 @@
 
           /* Make sure we don't read past the end. */
           if ( p >= limit )
-            goto Exit;
+            goto Bad;
         }
 
         /* Get the nibble. */
@@ -250,15 +251,26 @@
         if ( nib >= 10 )
           break;
 
-        exponent = exponent * 10 + nib;
-
         /* Arbitrarily limit exponent. */
         if ( exponent > 1000 )
-          goto Exit;
+          have_overflow = 1;
+        else
+          exponent = exponent * 10 + nib;
       }
 
       if ( exponent_sign )
         exponent = -exponent;
+    }
+
+    if ( !number )
+      goto Exit;
+
+    if ( have_overflow )
+    {
+      if ( exponent_sign )
+        goto Underflow;
+      else
+        goto Overflow;
     }
 
     /* We don't check `power_ten' and `exponent_add'. */
@@ -286,15 +298,20 @@
 
             /* Make `scaling' as small as possible. */
             new_fraction_length = FT_MIN( exponent, 5 );
-            exponent           -= new_fraction_length;
             shift               = new_fraction_length - fraction_length;
 
-            number *= power_tens[shift];
-            if ( number > 0x7FFFL )
+            if ( shift > 0 )
             {
-              number   /= 10;
-              exponent += 1;
+              exponent -= new_fraction_length;
+              number   *= power_tens[shift];
+              if ( number > 0x7FFFL )
+              {
+                number   /= 10;
+                exponent += 1;
+              }
             }
+            else
+              exponent -= fraction_length;
           }
           else
             exponent -= fraction_length;
@@ -322,9 +339,10 @@
       integer_length  += exponent;
       fraction_length -= exponent;
 
-      /* Check for overflow and underflow. */
-      if ( FT_ABS( integer_length ) > 5 )
-        goto Exit;
+      if ( integer_length > 5 )
+        goto Overflow;
+      if ( integer_length < -5 )
+        goto Underflow;
 
       /* Remove non-significant digits. */
       if ( integer_length < 0 )
@@ -353,17 +371,32 @@
         number *= power_tens[-fraction_length];
 
         if ( number > 0x7FFFL )
-          goto Exit;
+          goto Overflow;
 
         result = number << 16;
       }
     }
 
+  Exit:
     if ( sign )
       result = -result;
 
-  Exit:
     return result;
+
+  Overflow:
+    result = 0x7FFFFFFFL;
+    FT_TRACE4(( "!!!OVERFLOW:!!!" ));
+    goto Exit;
+
+  Underflow:
+    result = 0;
+    FT_TRACE4(( "!!!UNDERFLOW:!!!" ));
+    goto Exit;
+
+  Bad:
+    result = 0;
+    FT_TRACE4(( "!!!END OF DATA:!!!" ));
+    goto Exit;
   }
 
 
@@ -378,10 +411,44 @@
 
   /* read a floating point number, either integer or real */
   static FT_Fixed
+  do_fixed( FT_Byte**  d,
+            FT_Long    scaling )
+  {
+    if ( **d == 30 )
+      return cff_parse_real( d[0], d[1], scaling, NULL );
+    else
+    {
+      FT_Long  val = cff_parse_integer( d[0], d[1] );
+
+
+      if ( scaling )
+        val *= power_tens[scaling];
+
+      if ( val > 0x7FFF )
+      {
+        val = 0x7FFFFFFFL;
+        goto Overflow;
+      }
+      else if ( val < -0x7FFF )
+      {
+        val = -0x7FFFFFFFL;
+        goto Overflow;
+      }
+
+      return val << 16;
+
+    Overflow:
+      FT_TRACE4(( "!!!OVERFLOW:!!!" ));
+      return val;
+    }
+  }
+
+
+  /* read a floating point number, either integer or real */
+  static FT_Fixed
   cff_parse_fixed( FT_Byte**  d )
   {
-    return **d == 30 ? cff_parse_real( d[0], d[1], 0, NULL )
-                     : cff_parse_integer( d[0], d[1] ) << 16;
+    return do_fixed( d, 0 );
   }
 
 
@@ -391,9 +458,7 @@
   cff_parse_fixed_scaled( FT_Byte**  d,
                           FT_Long    scaling )
   {
-    return **d == 30 ? cff_parse_real( d[0], d[1], scaling, NULL )
-                     : ( cff_parse_integer( d[0], d[1] ) *
-                           power_tens[scaling] ) << 16;
+    return do_fixed( d, scaling );
   }
 
 
@@ -730,7 +795,7 @@
   FT_Create_Class_cff_field_handlers( FT_Library           library,
                                       CFF_Field_Handler**  output_class )
   {
-    CFF_Field_Handler*  clazz;
+    CFF_Field_Handler*  clazz  = NULL;
     FT_Error            error;
     FT_Memory           memory = library->memory;
 
@@ -944,7 +1009,7 @@
         }
         code = code | parser->object_code;
 
-        for ( field = FT_CFF_FIELD_HANDLERS_GET; field->kind; field++ )
+        for ( field = CFF_FIELD_HANDLERS_GET; field->kind; field++ )
         {
           if ( field->code == (FT_Int)code )
           {

@@ -473,8 +473,6 @@
     }
   }
 
-/* SumatraPDF: accept CFF OpenType fonts without 'head' */
-#include "../sfnt/sferrors.h"
 
   FT_LOCAL_DEF( FT_Error )
   cff_face_init( FT_Stream      stream,
@@ -515,8 +513,7 @@
 
     /* check whether we have a valid OpenType file */
     error = sfnt->init_face( stream, face, face_index, num_params, params );
-    /* SumatraPDF: accept CFF OpenType fonts without 'head' */
-    if ( !error || error == SFNT_Err_Table_Missing )
+    if ( !error )
     {
       if ( face->format_tag != TTAG_OTTO )  /* `OTTO'; OpenType/CFF font */
       {
@@ -529,14 +526,6 @@
       if ( face_index < 0 )
         return CFF_Err_Ok;
 
-      /* UNDOCUMENTED!  A CFF in an SFNT can have only a single font. */
-      if ( face_index > 0 )
-      {
-        FT_ERROR(( "cff_face_init: invalid face index\n" ));
-        error = CFF_Err_Invalid_Argument;
-        goto Exit;
-      }
-
       sfnt_format = 1;
 
       /* now, the font can be either an OpenType/CFF font, or an SVG CEF */
@@ -547,7 +536,8 @@
         pure_cff = 0;
 
         /* load font directory */
-        error = sfnt->load_face( stream, face, 0, num_params, params );
+        error = sfnt->load_face( stream, face, face_index,
+                                 num_params, params );
         if ( error )
           goto Exit;
       }
@@ -557,10 +547,6 @@
         error = sfnt->load_cmap( face, stream );
         if ( error )
           goto Exit;
-
-        /* XXX: we don't load the GPOS table, as OpenType Layout     */
-        /* support will be added later to a layout library on top of */
-        /* FreeType 2                                                */
       }
 
       /* now load the CFF part of the file */
@@ -971,7 +957,7 @@
 
         nn = (FT_UInt)cffface->num_charmaps;
 
-        error = FT_CMap_New( &FT_CFF_CMAP_UNICODE_CLASS_REC_GET, NULL,
+        error = FT_CMap_New( &CFF_CMAP_UNICODE_CLASS_REC_GET, NULL,
                              &cmaprec, NULL );
         if ( error && FT_Err_No_Unicode_Glyph_Name != error )
           goto Exit;
@@ -1003,19 +989,19 @@
           {
             cmaprec.encoding_id = TT_ADOBE_ID_STANDARD;
             cmaprec.encoding    = FT_ENCODING_ADOBE_STANDARD;
-            clazz               = &FT_CFF_CMAP_ENCODING_CLASS_REC_GET;
+            clazz               = &CFF_CMAP_ENCODING_CLASS_REC_GET;
           }
           else if ( encoding->offset == 1 )
           {
             cmaprec.encoding_id = TT_ADOBE_ID_EXPERT;
             cmaprec.encoding    = FT_ENCODING_ADOBE_EXPERT;
-            clazz               = &FT_CFF_CMAP_ENCODING_CLASS_REC_GET;
+            clazz               = &CFF_CMAP_ENCODING_CLASS_REC_GET;
           }
           else
           {
             cmaprec.encoding_id = TT_ADOBE_ID_CUSTOM;
             cmaprec.encoding    = FT_ENCODING_ADOBE_CUSTOM;
-            clazz               = &FT_CFF_CMAP_ENCODING_CLASS_REC_GET;
+            clazz               = &CFF_CMAP_ENCODING_CLASS_REC_GET;
           }
 
           error = FT_CMap_New( clazz, NULL, &cmaprec, NULL );

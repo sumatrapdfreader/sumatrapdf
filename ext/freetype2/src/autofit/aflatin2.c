@@ -18,6 +18,7 @@
 
 #include FT_ADVANCES_H
 
+#include "afglobal.h"
 #include "aflatin.h"
 #include "aflatin2.h"
 #include "aferrors.h"
@@ -56,8 +57,7 @@
 
   FT_LOCAL_DEF( void )
   af_latin2_metrics_init_widths( AF_LatinMetrics  metrics,
-                                 FT_Face          face,
-                                 FT_ULong         charcode )
+                                 FT_Face          face )
   {
     /* scan the array of segments in each direction */
     AF_GlyphHintsRec  hints[1];
@@ -76,7 +76,8 @@
       AF_Scaler            scaler = &dummy->root.scaler;
 
 
-      glyph_index = FT_Get_Char_Index( face, charcode );
+      glyph_index = FT_Get_Char_Index( face,
+                                       metrics->root.clazz->standard_char );
       if ( glyph_index == 0 )
         goto Exit;
 
@@ -198,8 +199,8 @@
     /* 'af_latin2_blue_chars[blues]' string, then compute its top-most or */
     /* bottom-most points (depending on `AF_IS_TOP_BLUE')                 */
 
-    FT_TRACE5(( "blue zones computation\n" ));
-    FT_TRACE5(( "------------------------------------------------\n" ));
+    FT_TRACE5(( "blue zones computation\n"
+                "======================\n\n" ));
 
     for ( bb = 0; bb < AF_LATIN_BLUE_MAX; bb++ )
     {
@@ -209,7 +210,7 @@
       FT_Pos*      blue_shoot;
 
 
-      FT_TRACE5(( "blue %3d: ", bb ));
+      FT_TRACE5(( "blue zone %d:\n", bb ));
 
       num_flats  = 0;
       num_rounds = 0;
@@ -221,8 +222,6 @@
         FT_Vector*  points;
         FT_Bool     round;
 
-
-        FT_TRACE5(( "'%c'", *p ));
 
         /* load the character in the face -- skip unknown or empty ones */
         glyph_index = FT_Get_Char_Index( face, (FT_UInt)*p );
@@ -285,13 +284,14 @@
               best_last  = last;
             }
           }
-          FT_TRACE5(( "%5d", best_y ));
+          FT_TRACE5(( "  %c  %d", *p, best_y ));
         }
 
         /* now check whether the point belongs to a straight or round   */
         /* segment; we first need to find in which contour the extremum */
         /* lies, then inspect its previous and next points              */
         {
+          FT_Pos  best_x = points[best_point].x;
           FT_Int  start, end, prev, next;
           FT_Pos  dist;
 
@@ -302,13 +302,16 @@
 
           do
           {
-            prev = start-1;
+            prev = start - 1;
             if ( prev < best_first )
               prev = best_last;
 
-            dist = points[prev].y - best_y;
-            if ( dist < -5 || dist > 5 )
-              break;
+            dist = FT_ABS( points[prev].y - best_y );
+            /* accept a small distance or a small angle (both values are */
+            /* heuristic; value 20 corresponds to approx. 2.9 degrees)   */
+            if ( dist > 5 )
+              if ( FT_ABS( points[prev].x - best_x ) <= 20 * dist )
+                break;
 
             start = prev;
 
@@ -316,13 +319,14 @@
 
           do
           {
-            next = end+1;
+            next = end + 1;
             if ( next > best_last )
               next = best_first;
 
-            dist = points[next].y - best_y;
-            if ( dist < -5 || dist > 5 )
-              break;
+            dist = FT_ABS( points[next].y - best_y );
+            if ( dist > 5 )
+              if ( FT_ABS( points[next].x - best_x ) <= 20 * dist )
+                break;
 
             end = next;
 
@@ -333,7 +337,7 @@
             FT_CURVE_TAG( glyph->outline.tags[start] ) != FT_CURVE_TAG_ON ||
             FT_CURVE_TAG( glyph->outline.tags[ end ] ) != FT_CURVE_TAG_ON );
 
-          FT_TRACE5(( "%c ", round ? 'r' : 'f' ));
+          FT_TRACE5(( " (%s)\n", round ? "round" : "flat" ));
         }
 
         if ( round )
@@ -342,15 +346,13 @@
           flats[num_flats++]   = best_y;
       }
 
-      FT_TRACE5(( "\n" ));
-
       if ( num_flats == 0 && num_rounds == 0 )
       {
         /*
          *  we couldn't find a single glyph to compute this blue zone,
          *  we will simply ignore it then
          */
-        FT_TRACE5(( "empty\n" ));
+        FT_TRACE5(( "  empty\n" ));
         continue;
       }
 
@@ -393,7 +395,13 @@
 
 
         if ( AF_LATIN_IS_TOP_BLUE( bb ) ^ over_ref )
-          *blue_shoot = *blue_ref = ( shoot + ref ) / 2;
+        {
+          *blue_ref   =
+          *blue_shoot = ( shoot + ref ) / 2;
+
+          FT_TRACE5(( "  [overshoot smaller than reference,"
+                      " taking mean value]\n" ));
+        }
       }
 
       blue->flags = 0;
@@ -408,7 +416,9 @@
       if ( bb == AF_LATIN_BLUE_SMALL_TOP )
         blue->flags |= AF_LATIN_BLUE_ADJUSTMENT;
 
-      FT_TRACE5(( "-- ref = %ld, shoot = %ld\n", *blue_ref, *blue_shoot ));
+      FT_TRACE5(( "    -> reference = %ld\n"
+                  "       overshoot = %ld\n",
+                  *blue_ref, *blue_shoot ));
     }
 
     return;
@@ -491,8 +501,7 @@
 
     if ( !error )
     {
-      /* For now, compute the standard width and height from the `o'. */
-      af_latin2_metrics_init_widths( metrics, face, 'o' );
+      af_latin2_metrics_init_widths( metrics, face );
       af_latin2_metrics_init_blues( metrics, face );
       af_latin2_metrics_check_digits( metrics, face );
     }
@@ -553,8 +562,26 @@
 
       if ( blue )
       {
-        FT_Pos  scaled = FT_MulFix( blue->shoot.org, scaler->y_scale );
-        FT_Pos  fitted = ( scaled + 40 ) & ~63;
+        FT_Pos   scaled;
+        FT_Pos   threshold;
+        FT_Pos   fitted;
+        FT_UInt  limit;
+        FT_UInt  ppem;
+
+
+        scaled    = FT_MulFix( blue->shoot.org, scaler->y_scale );
+        ppem      = metrics->root.scaler.face->size->metrics.x_ppem;
+        limit     = metrics->root.globals->increase_x_height;
+        threshold = 40;
+
+        /* if the `increase-x-height' property is active, */
+        /* we round up much more often                    */
+        if ( limit                                 &&
+             ppem <= limit                         &&
+             ppem >= AF_PROP_INCREASE_X_HEIGHT_MIN )
+          threshold = 52;
+
+        fitted = ( scaled + threshold ) & ~63;
 
 #if 1
         if ( scaled != fitted )
@@ -2360,6 +2387,7 @@
   AF_DEFINE_SCRIPT_CLASS( af_latin2_script_class,
     AF_SCRIPT_LATIN2,
     af_latin2_uniranges,
+    'o',
 
     sizeof ( AF_LatinMetricsRec ),
 

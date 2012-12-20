@@ -770,11 +770,11 @@
       /* XXX: Use encoding independent value for 0x1a */
       if ( buf[start] != '#' && buf[start] != 0x1a && end > start )
       {
-        error = (*cb)( buf + start, end - start, lineno,
+        error = (*cb)( buf + start, (unsigned long)( end - start ), lineno,
                        (void*)&cb, client_data );
         /* Redo if we have encountered CHARS without properties. */
         if ( error == -1 )
-          error = (*cb)( buf + start, end - start, lineno,
+          error = (*cb)( buf + start, (unsigned long)( end - start ), lineno,
                          (void*)&cb, client_data );
         if ( error )
           break;
@@ -1624,12 +1624,16 @@
       if ( p->glyph_enc == -1 && p->list.used > 2 )
         p->glyph_enc = _bdf_atol( p->list.field[2], 0, 10 );
 
+      if ( p->glyph_enc < -1 )
+        p->glyph_enc = -1;
+
       FT_TRACE4(( DBGMSG2, p->glyph_enc ));
 
       /* Check that the encoding is in the Unicode range because  */
       /* otherwise p->have (a bitmap with static size) overflows. */
-      if ( p->glyph_enc > 0                               &&
-           (size_t)p->glyph_enc >= sizeof ( p->have ) * 8 )
+      if ( p->glyph_enc > 0                                      &&
+           (size_t)p->glyph_enc >= sizeof ( p->have ) /
+                                   sizeof ( unsigned long ) * 32 )
       {
         FT_ERROR(( "_bdf_parse_glyphs: " ERRMSG5, lineno, "ENCODING" ));
         error = BDF_Err_Invalid_File_Format;
@@ -2169,7 +2173,10 @@
       p->cnt = p->font->props_size = _bdf_atoul( p->list.field[1], 0, 10 );
 
       if ( FT_NEW_ARRAY( p->font->props, p->cnt ) )
+      {
+        p->font->props_size = 0;
         goto Exit;
+      }
 
       p->flags |= _BDF_PROPS;
       *next     = _bdf_parse_properties;

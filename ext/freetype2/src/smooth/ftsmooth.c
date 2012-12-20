@@ -117,6 +117,10 @@
 
     FT_Raster_Params  params;
 
+    FT_Bool  have_translated_origin = FALSE;
+    FT_Bool  have_outline_shifted   = FALSE;
+    FT_Bool  have_buffer            = FALSE;
+
 
     /* check glyph image format */
     if ( slot->format != render->glyph_format )
@@ -127,13 +131,19 @@
 
     /* check mode */
     if ( mode != required_mode )
-      return Smooth_Err_Cannot_Render_Glyph;
+    {
+      error = Smooth_Err_Cannot_Render_Glyph;
+      goto Exit;
+    }
 
     outline = &slot->outline;
 
     /* translate the outline to the new origin if needed */
     if ( origin )
+    {
       FT_Outline_Translate( outline, origin->x, origin->y );
+      have_translated_origin = TRUE;
+    }
 
     /* compute the control box, and grid fit it */
     FT_Outline_Get_CBox( outline, &cbox );
@@ -148,17 +158,19 @@
       FT_ERROR(( "ft_smooth_render_generic: glyph too large:"
                  " xMin = %d, xMax = %d\n",
                  cbox.xMin >> 6, cbox.xMax >> 6 ));
-      return Smooth_Err_Raster_Overflow;
+      error = Smooth_Err_Raster_Overflow;
+      goto Exit;
     }
     else
-      width  = ( cbox.xMax - cbox.xMin ) >> 6;
+      width = ( cbox.xMax - cbox.xMin ) >> 6;
 
     if ( cbox.yMin < 0 && cbox.yMax > FT_INT_MAX + cbox.yMin )
     {
       FT_ERROR(( "ft_smooth_render_generic: glyph too large:"
                  " yMin = %d, yMax = %d\n",
                  cbox.yMin >> 6, cbox.yMax >> 6 ));
-      return Smooth_Err_Raster_Overflow;
+      error = Smooth_Err_Raster_Overflow;
+      goto Exit;
     }
     else
       height = ( cbox.yMax - cbox.yMin ) >> 6;
@@ -221,13 +233,14 @@
 
 #if FT_UINT_MAX > 0xFFFFU
 
-    /* Required check is ( pitch * height < FT_ULONG_MAX ),     */
-    /* but we care realistic cases only. Always pitch <= width. */
+    /* Required check is (pitch * height < FT_ULONG_MAX),        */
+    /* but we care realistic cases only.  Always pitch <= width. */
     if ( width > 0x7FFF || height > 0x7FFF )
     {
       FT_ERROR(( "ft_smooth_render_generic: glyph too large: %u x %u\n",
                  width, height ));
-      return Smooth_Err_Raster_Overflow;
+      error = Smooth_Err_Raster_Overflow;
+      goto Exit;
     }
 
 #endif
@@ -240,9 +253,12 @@
 
     /* translate outline to render it into the bitmap */
     FT_Outline_Translate( outline, -x_shift, -y_shift );
+    have_outline_shifted = TRUE;
 
     if ( FT_ALLOC( bitmap->buffer, (FT_ULong)pitch * height ) )
       goto Exit;
+    else
+      have_buffer = TRUE;
 
     slot->internal->flags |= FT_GLYPH_OWN_BITMAP;
 
@@ -288,6 +304,9 @@
           vec->y /= 3;
     }
 
+    if ( error )
+      goto Exit;
+
     if ( slot->library->lcd_filter_func )
       slot->library->lcd_filter_func( bitmap, mode, slot->library );
 
@@ -295,6 +314,8 @@
 
     /* render outline into bitmap */
     error = render->raster_render( render->raster, &params );
+    if ( error )
+      goto Exit;
 
     /* expand it horizontally */
     if ( hmul )
@@ -346,25 +367,35 @@
 
 #endif /* !FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
 
-    FT_Outline_Translate( outline, x_shift, y_shift );
-
     /*
      * XXX: on 16bit system, we return an error for huge bitmap
      * to prevent an overflow.
      */
     if ( x_left > FT_INT_MAX || y_top > FT_INT_MAX )
-      return Smooth_Err_Invalid_Pixel_Size;
-
-    if ( error )
+    {
+      error = Smooth_Err_Invalid_Pixel_Size;
       goto Exit;
+    }
 
     slot->format      = FT_GLYPH_FORMAT_BITMAP;
     slot->bitmap_left = (FT_Int)x_left;
     slot->bitmap_top  = (FT_Int)y_top;
 
+    /* everything is fine; don't deallocate buffer */
+    have_buffer = FALSE;
+
+    error = Smooth_Err_Ok;
+
   Exit:
-    if ( outline && origin )
+    if ( have_outline_shifted )
+      FT_Outline_Translate( outline, x_shift, y_shift );
+    if ( have_translated_origin )
       FT_Outline_Translate( outline, -origin->x, -origin->y );
+    if ( have_buffer )
+    {
+      FT_FREE( bitmap->buffer );
+      slot->internal->flags &= ~FT_GLYPH_OWN_BITMAP;
+    }
 
     return error;
   }

@@ -318,7 +318,7 @@
   }
 
 
-  /* add current glyph to the base image - and prepare for another */
+  /* add current glyph to the base image -- and prepare for another */
   FT_BASE_DEF( void )
   FT_GlyphLoader_Add( FT_GlyphLoader  loader )
   {

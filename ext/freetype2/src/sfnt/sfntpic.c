@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for sfnt module.     */
 /*                                                                         */
-/*  Copyright 2009, 2010 by                                                */
+/*  Copyright 2009, 2010, 2012 by                                          */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,12 +22,13 @@
 #include "sfntpic.h"
 #include "sferrors.h"
 
+
 #ifdef FT_CONFIG_OPTION_PIC
 
   /* forward declaration of PIC init functions from sfdriver.c */
   FT_Error
   FT_Create_Class_sfnt_services( FT_Library           library,
-                                 FT_ServiceDescRec**  ouput_class );
+                                 FT_ServiceDescRec**  output_class );
 
   void
   FT_Destroy_Class_sfnt_services( FT_Library          library,
@@ -68,11 +69,12 @@
   FT_Destroy_Class_tt_cmap_classes( FT_Library      library,
                                     TT_CMap_Class*  clazz );
 
+
   void
   sfnt_module_class_pic_free( FT_Library  library )
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
-    FT_Memory  memory = library->memory;
+    FT_Memory          memory        = library->memory;
 
 
     if ( pic_container->sfnt )
@@ -84,10 +86,12 @@
         FT_Destroy_Class_sfnt_services( library,
                                         container->sfnt_services );
       container->sfnt_services = NULL;
+
       if ( container->tt_cmap_classes )
         FT_Destroy_Class_tt_cmap_classes( library,
                                           container->tt_cmap_classes );
       container->tt_cmap_classes = NULL;
+
       FT_FREE( container );
       pic_container->sfnt = NULL;
     }
@@ -95,12 +99,12 @@
 
 
   FT_Error
-  sfnt_module_class_pic_init(  FT_Library library )
+  sfnt_module_class_pic_init( FT_Library library )
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
-    FT_Error           error = SFNT_Err_Ok;
-    sfntModulePIC*     container;
-    FT_Memory          memory = library->memory;
+    FT_Error           error         = SFNT_Err_Ok;
+    sfntModulePIC*     container     = NULL;
+    FT_Memory          memory        = library->memory;
 
 
     /* allocate pointer, clear and set global container pointer */
@@ -109,11 +113,13 @@
     FT_MEM_SET( container, 0, sizeof ( *container ) );
     pic_container->sfnt = container;
 
-    /* initialize pointer table - this is how the module usually expects this data */
+    /* initialize pointer table -                       */
+    /* this is how the module usually expects this data */
     error = FT_Create_Class_sfnt_services( library,
                                            &container->sfnt_services );
     if ( error )
       goto Exit;
+
     error = FT_Create_Class_tt_cmap_classes( library,
                                              &container->tt_cmap_classes );
     if ( error )
@@ -132,13 +138,11 @@
 #endif
     FT_Init_Class_sfnt_interface( library, &container->sfnt_interface );
 
-Exit:
+  Exit:
     if ( error )
       sfnt_module_class_pic_free( library );
     return error;
   }
-
-
 
 #endif /* FT_CONFIG_OPTION_PIC */
 

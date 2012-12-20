@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for pshinter module. */
 /*                                                                         */
-/*  Copyright 2009, 2010 by                                                */
+/*  Copyright 2009, 2010, 2012 by                                          */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,6 +22,7 @@
 #include "pshpic.h"
 #include "pshnterr.h"
 
+
 #ifdef FT_CONFIG_OPTION_PIC
 
   /* forward declaration of PIC init functions from pshmod.c */
@@ -33,7 +34,7 @@
   pshinter_module_class_pic_free( FT_Library  library )
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
-    FT_Memory  memory = library->memory;
+    FT_Memory          memory        = library->memory;
 
 
     if ( pic_container->pshinter )
@@ -49,7 +50,7 @@
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
     FT_Error           error         = PSH_Err_Ok;
-    PSHinterPIC*       container;
+    PSHinterPIC*       container     = NULL;
     FT_Memory          memory        = library->memory;
 
 
@@ -63,13 +64,12 @@
     FT_Init_Class_pshinter_interface(
       library, &container->pshinter_interface );
 
-/*Exit:*/
     if( error )
       pshinter_module_class_pic_free( library );
     return error;
   }
 
-
 #endif /* FT_CONFIG_OPTION_PIC */
+
 
 /* END */

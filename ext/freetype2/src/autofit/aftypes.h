@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter types (specification only).                              */
 /*                                                                         */
-/*  Copyright 2003-2009, 2011 by                                           */
+/*  Copyright 2003-2009, 2011-2012 by                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -87,8 +87,9 @@ extern void*  _af_debug_hints;
                FT_Pos*  table );
 
   FT_LOCAL( void )
-  af_sort_widths( FT_UInt   count,
-                  AF_Width  widths );
+  af_sort_and_quantize_widths( FT_UInt*  count,
+                               AF_Width  widths,
+                               FT_Pos    threshold );
 
 
   /*************************************************************************/
@@ -228,12 +229,12 @@ extern void*  _af_debug_hints;
 
   typedef enum  AF_Script_
   {
-    AF_SCRIPT_NONE  = 0,
+    AF_SCRIPT_DUMMY = 0,
     AF_SCRIPT_LATIN = 1,
     AF_SCRIPT_CJK   = 2,
     AF_SCRIPT_INDIC = 3,
 #ifdef FT_OPTION_AUTOFIT2
-    AF_SCRIPT_LATIN2,
+    AF_SCRIPT_LATIN2 = 4,
 #endif
 
     /* add new scripts here.  Don't forget to update the list in */
@@ -245,12 +246,15 @@ extern void*  _af_debug_hints;
 
 
   typedef struct AF_ScriptClassRec_ const*  AF_ScriptClass;
+  typedef struct AF_FaceGlobalsRec_*        AF_FaceGlobals;
 
   typedef struct  AF_ScriptMetricsRec_
   {
     AF_ScriptClass  clazz;
     AF_ScalerRec    scaler;
     FT_Bool         digits_have_same_width;
+
+    AF_FaceGlobals  globals;    /* to access properties */
 
   } AF_ScriptMetricsRec, *AF_ScriptMetrics;
 
@@ -294,8 +298,9 @@ extern void*  _af_debug_hints;
 
   typedef struct  AF_ScriptClassRec_
   {
-    AF_Script                   script;
-    AF_Script_UniRange          script_uni_ranges; /* last must be { 0, 0 } */
+    AF_Script           script;
+    AF_Script_UniRange  script_uni_ranges; /* last must be { 0, 0 }        */
+    FT_UInt32           standard_char;     /* for default width and height */
 
     FT_Offset                   script_metrics_size;
     AF_Script_InitMetricsFunc   script_metrics_init;
@@ -315,13 +320,14 @@ extern void*  _af_debug_hints;
   FT_CALLBACK_TABLE const AF_ScriptClassRec     \
   script_class;
 
-#define AF_DEFINE_SCRIPT_CLASS( script_class, script_, ranges, m_size,     \
+#define AF_DEFINE_SCRIPT_CLASS( script_class, script_, ranges, def_char,   \
+                                m_size,                                    \
                                 m_init, m_scale, m_done, h_init, h_apply ) \
-  FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec                            \
-  script_class =                                                           \
+  FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec  script_class =            \
   {                                                                        \
     script_,                                                               \
     ranges,                                                                \
+    def_char,                                                              \
                                                                            \
     m_size,                                                                \
                                                                            \
@@ -335,17 +341,19 @@ extern void*  _af_debug_hints;
 
 #else /* FT_CONFIG_OPTION_PIC */
 
-#define AF_DECLARE_SCRIPT_CLASS( script_class )          \
-  FT_LOCAL( void )                                       \
-  FT_Init_Class_##script_class( AF_ScriptClassRec* ac );
+#define AF_DECLARE_SCRIPT_CLASS( script_class )             \
+  FT_LOCAL( void )                                          \
+  FT_Init_Class_ ## script_class( AF_ScriptClassRec*  ac );
 
-#define AF_DEFINE_SCRIPT_CLASS( script_class, script_, ranges, m_size,     \
+#define AF_DEFINE_SCRIPT_CLASS( script_class, script_, ranges, def_char,   \
+                                m_size,                                    \
                                 m_init, m_scale, m_done, h_init, h_apply ) \
   FT_LOCAL_DEF( void )                                                     \
-  FT_Init_Class_##script_class( AF_ScriptClassRec* ac )                    \
+  FT_Init_Class_ ## script_class( AF_ScriptClassRec*  ac )                 \
   {                                                                        \
     ac->script               = script_;                                    \
     ac->script_uni_ranges    = ranges;                                     \
+    ac->default_char         = def_char;                                   \
                                                                            \
     ac->script_metrics_size  = m_size;                                     \
                                                                            \

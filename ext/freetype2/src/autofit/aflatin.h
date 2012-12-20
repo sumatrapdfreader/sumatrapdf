@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin script (specification).       */
 /*                                                                         */
-/*  Copyright 2003-2007, 2009, 2011 by                                     */
+/*  Copyright 2003-2007, 2009, 2011-2012 by                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,7 +27,7 @@ FT_BEGIN_HEADER
 
   /* the latin-specific script class */
 
-  AF_DECLARE_SCRIPT_CLASS(af_latin_script_class)
+  AF_DECLARE_SCRIPT_CLASS( af_latin_script_class )
 
 
   /* constants are given with units_per_em == 2048 in mind */
@@ -133,8 +133,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( void )
   af_latin_metrics_init_widths( AF_LatinMetrics  metrics,
-                                FT_Face          face,
-                                FT_ULong         charcode );
+                                FT_Face          face );
 
   FT_LOCAL( void )
   af_latin_metrics_check_digits( AF_LatinMetrics  metrics,
@@ -174,25 +173,17 @@ FT_BEGIN_HEADER
 
 
   /*
-   *  This shouldn't normally be exported.  However, other scripts might
-   *  like to use this function as-is.
+   *  The next functions shouldn't normally be exported.  However, other
+   *  scripts might like to use these functions as-is.
    */
   FT_LOCAL( FT_Error )
   af_latin_hints_compute_segments( AF_GlyphHints  hints,
                                    AF_Dimension   dim );
 
-  /*
-   *  This shouldn't normally be exported.  However, other scripts might
-   *  want to use this function as-is.
-   */
   FT_LOCAL( void )
   af_latin_hints_link_segments( AF_GlyphHints  hints,
                                 AF_Dimension   dim );
 
-  /*
-   *  This shouldn't normally be exported.  However, other scripts might
-   *  want to use this function as-is.
-   */
   FT_LOCAL( FT_Error )
   af_latin_hints_compute_edges( AF_GlyphHints  hints,
                                 AF_Dimension   dim );

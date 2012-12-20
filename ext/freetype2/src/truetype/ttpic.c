@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType position independent code services for truetype module. */
 /*                                                                         */
-/*  Copyright 2009, 2010 by                                                */
+/*  Copyright 2009, 2010, 2012 by                                          */
 /*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,11 +41,12 @@
   FT_Init_Class_tt_service_truetype_glyf(
     FT_Service_TTGlyfRec*  sv_ttglyf );
 
+
   void
   tt_driver_class_pic_free( FT_Library  library )
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
-    FT_Memory  memory = library->memory;
+    FT_Memory          memory        = library->memory;
 
 
     if ( pic_container->truetype )
@@ -67,7 +68,7 @@
   {
     FT_PIC_Container*  pic_container = &library->pic_container;
     FT_Error           error         = TT_Err_Ok;
-    TTModulePIC*       container;
+    TTModulePIC*       container     = NULL;
     FT_Memory          memory        = library->memory;
 
 
@@ -77,7 +78,8 @@
     FT_MEM_SET( container, 0, sizeof ( *container ) );
     pic_container->truetype = container;
 
-    /* initialize pointer table - this is how the module usually expects this data */
+    /* initialize pointer table - this is how the module usually */
+    /* expects this data                                         */
     error = FT_Create_Class_tt_services( library,
                                          &container->tt_services );
     if ( error )
@@ -88,6 +90,7 @@
 #endif
     FT_Init_Class_tt_service_truetype_glyf(
       &container->tt_service_truetype_glyf );
+
 Exit:
     if ( error )
       tt_driver_class_pic_free( library );

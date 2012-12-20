@@ -92,6 +92,7 @@ FT_BEGIN_HEADER
 
 #endif /* !C++ */
 
+
   /*
    * @macro:
    *   FT_FACE_FIND_GLOBAL_SERVICE
@@ -167,7 +168,12 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Macro>                                                               */
-  /*    FT_DEFINE_SERVICEDESCREC1 .. FT_DEFINE_SERVICEDESCREC6             */
+  /*    FT_DEFINE_SERVICEDESCREC1                                          */
+  /*    FT_DEFINE_SERVICEDESCREC2                                          */
+  /*    FT_DEFINE_SERVICEDESCREC3                                          */
+  /*    FT_DEFINE_SERVICEDESCREC4                                          */
+  /*    FT_DEFINE_SERVICEDESCREC5                                          */
+  /*    FT_DEFINE_SERVICEDESCREC6                                          */
   /*                                                                       */
   /* <Description>                                                         */
   /*    Used to initialize an array of FT_ServiceDescRec structures.       */
@@ -283,7 +289,7 @@ FT_BEGIN_HEADER
   FT_Create_Class_ ## class_( FT_Library           library,                 \
                               FT_ServiceDescRec**  output_class )           \
   {                                                                         \
-    FT_ServiceDescRec*  clazz;                                              \
+    FT_ServiceDescRec*  clazz  = NULL;                                      \
     FT_Error            error;                                              \
     FT_Memory           memory = library->memory;                           \
                                                                             \
@@ -319,7 +325,7 @@ FT_BEGIN_HEADER
   FT_Create_Class_ ## class_( FT_Library           library,                 \
                               FT_ServiceDescRec**  output_class )           \
   {                                                                         \
-    FT_ServiceDescRec*  clazz;                                              \
+    FT_ServiceDescRec*  clazz  = NULL;                                      \
     FT_Error            error;                                              \
     FT_Memory           memory = library->memory;                           \
                                                                             \
@@ -358,7 +364,7 @@ FT_BEGIN_HEADER
   FT_Create_Class_ ## class_( FT_Library           library,                 \
                               FT_ServiceDescRec**  output_class )           \
   {                                                                         \
-    FT_ServiceDescRec*  clazz;                                              \
+    FT_ServiceDescRec*  clazz  = NULL;                                      \
     FT_Error            error;                                              \
     FT_Memory           memory = library->memory;                           \
                                                                             \
@@ -400,7 +406,7 @@ FT_BEGIN_HEADER
   FT_Create_Class_ ## class_( FT_Library           library,                 \
                               FT_ServiceDescRec**  output_class )           \
   {                                                                         \
-    FT_ServiceDescRec*  clazz;                                              \
+    FT_ServiceDescRec*  clazz  = NULL;                                      \
     FT_Error            error;                                              \
     FT_Memory           memory = library->memory;                           \
                                                                             \
@@ -445,7 +451,7 @@ FT_BEGIN_HEADER
   FT_Create_Class_ ## class_( FT_Library           library,                 \
                               FT_ServiceDescRec**  output_class )           \
   {                                                                         \
-    FT_ServiceDescRec*  clazz;                                              \
+    FT_ServiceDescRec*  clazz  = NULL;                                      \
     FT_Error            error;                                              \
     FT_Memory           memory = library->memory;                           \
                                                                             \
@@ -493,7 +499,7 @@ FT_BEGIN_HEADER
   FT_Create_Class_ ## class_( FT_Library           library,                 \
                               FT_ServiceDescRec**  output_class)            \
   {                                                                         \
-    FT_ServiceDescRec*  clazz;                                              \
+    FT_ServiceDescRec*  clazz  = NULL;                                      \
     FT_Error            error;                                              \
     FT_Memory           memory = library->memory;                           \
                                                                             \
@@ -573,7 +579,7 @@ FT_BEGIN_HEADER
   /*
    *  A magic number used within the services cache.
    */
-#define FT_SERVICE_UNAVAILABLE  ((FT_Pointer)-2)  /* magic number */
+#define FT_SERVICE_UNAVAILABLE  ((FT_Pointer)~1)  /* magic number */
 
 
   /*
@@ -671,6 +677,7 @@ FT_BEGIN_HEADER
 #define FT_SERVICE_POSTSCRIPT_CMAPS_H   <freetype/internal/services/svpscmap.h>
 #define FT_SERVICE_POSTSCRIPT_INFO_H    <freetype/internal/services/svpsinfo.h>
 #define FT_SERVICE_POSTSCRIPT_NAME_H    <freetype/internal/services/svpostnm.h>
+#define FT_SERVICE_PROPERTIES_H         <freetype/internal/services/svprop.h>
 #define FT_SERVICE_SFNT_H               <freetype/internal/services/svsfnt.h>
 #define FT_SERVICE_TRUETYPE_ENGINE_H    <freetype/internal/services/svtteng.h>
 #define FT_SERVICE_TT_CMAP_H            <freetype/internal/services/svttcmap.h>

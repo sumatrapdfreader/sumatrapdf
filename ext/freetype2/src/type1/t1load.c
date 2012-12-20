@@ -239,18 +239,11 @@
     for ( j = 1; j < axismap->num_points; ++j )
     {
       if ( ncv <= axismap->blend_points[j] )
-      {
-        FT_Fixed  t = FT_MulDiv( ncv - axismap->blend_points[j - 1],
-                                 0x10000L,
-                                 axismap->blend_points[j] -
-                                   axismap->blend_points[j - 1] );
-
         return INT_TO_FIXED( axismap->design_points[j - 1] ) +
-                 FT_MulDiv( t,
-                            axismap->design_points[j] -
-                              axismap->design_points[j - 1],
-                            1L );
-      }
+               ( axismap->design_points[j] - axismap->design_points[j - 1] ) *
+               FT_DivFix( ncv - axismap->blend_points[j - 1],
+                          axismap->blend_points[j] -
+                            axismap->blend_points[j - 1] );
     }
 
     return INT_TO_FIXED( axismap->design_points[axismap->num_points - 1] );
@@ -327,7 +320,7 @@
 
     mmvar->num_axis        = mmaster.num_axis;
     mmvar->num_designs     = mmaster.num_designs;
-    mmvar->num_namedstyles = (FT_UInt)-1;                /* Does not apply */
+    mmvar->num_namedstyles = ~0;                         /* Does not apply */
     mmvar->axis            = (FT_Var_Axis*)&mmvar[1];
                                       /* Point to axes after MM_Var struct */
     mmvar->namedstyle      = NULL;
@@ -340,8 +333,8 @@
       mmvar->axis[i].def     = ( mmvar->axis[i].minimum +
                                    mmvar->axis[i].maximum ) / 2;
                             /* Does not apply.  But this value is in range */
-      mmvar->axis[i].strid   = (FT_UInt)-1;    /* Does not apply */
-      mmvar->axis[i].tag     = (FT_ULong)-1;   /* Does not apply */
+      mmvar->axis[i].strid   = ~0;                       /* Does not apply */
+      mmvar->axis[i].tag     = ~0;                       /* Does not apply */
 
       if ( ft_strcmp( mmvar->axis[i].name, "Weight" ) == 0 )
         mmvar->axis[i].tag = FT_MAKE_TAG( 'w', 'g', 'h', 't' );
@@ -622,7 +615,7 @@
         goto Exit;
       }
 
-      if ( FT_ALLOC( blend->axis_names[n], len + 1 ) )
+      if ( FT_ALLOC( blend->axis_names[n], (FT_Long)( len + 1 ) ) )
         goto Exit;
 
       name = (FT_Byte*)blend->axis_names[n];
@@ -1131,8 +1124,7 @@
     /* 1000 / temp_scale, because temp_scale was already multiplied by   */
     /* 1000 (in t1_tofixed, from psobjs.c).                              */
 
-    root->units_per_EM = (FT_UShort)( FT_DivFix( 1000 * 0x10000L,
-                                                 temp_scale ) >> 16 );
+    root->units_per_EM = (FT_UShort)FT_DivFix( 1000, temp_scale );
 
     /* we need to scale the values by 1.0/temp_scale */
     if ( temp_scale != 0x10000L )
@@ -1284,7 +1276,7 @@
 
           cur = parser->root.cursor;
 
-          if ( *cur == '/' && cur + 2 < limit && n < count )
+          if ( cur + 2 < limit && *cur == '/' && n < count )
           {
             FT_PtrDist  len;
 
@@ -1293,6 +1285,8 @@
 
             parser->root.cursor = cur;
             T1_Skip_PS_Token( parser );
+            if ( parser->root.cursor >= limit )
+              return;
             if ( parser->root.error )
               return;
 
@@ -1512,6 +1506,12 @@
 
 
     num_glyphs = (FT_Int)T1_ToInt( parser );
+    if ( num_glyphs < 0 )
+    {
+      error = T1_Err_Invalid_File_Format;
+      goto Fail;
+    }
+
     /* some fonts like Optima-Oblique not only define the /CharStrings */
     /* array but access it also                                        */
     if ( num_glyphs == 0 || parser->root.error )

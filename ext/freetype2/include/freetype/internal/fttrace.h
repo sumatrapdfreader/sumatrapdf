@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Tracing handling (specification only).                               */
 /*                                                                         */
-/*  Copyright 2002, 2004-2007, 2009, 2011 by                               */
+/*  Copyright 2002, 2004-2007, 2009, 2011-2012 by                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -73,6 +73,7 @@ FT_TRACE_DEF( t1parse )
   /* PostScript helper module `psaux' */
 FT_TRACE_DEF( t1decode )
 FT_TRACE_DEF( psobjs )
+FT_TRACE_DEF( psconv )
 
   /* PostScript hinting module `pshinter' */
 FT_TRACE_DEF( pshrec )
@@ -136,6 +137,8 @@ FT_TRACE_DEF( gxvprop )
 FT_TRACE_DEF( gxvlcar )
 
   /* autofit components */
+FT_TRACE_DEF( afmodule )
+FT_TRACE_DEF( afhints )
 FT_TRACE_DEF( afcjk )
 FT_TRACE_DEF( aflatin )
 FT_TRACE_DEF( aflatin2 )

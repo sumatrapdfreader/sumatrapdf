@@ -789,7 +789,7 @@
   FT_Stroker_New( FT_Library   library,
                   FT_Stroker  *astroker )
   {
-    FT_Error    error;
+    FT_Error    error;           /* assigned in FT_NEW */
     FT_Memory   memory;
     FT_Stroker  stroker = NULL;
 
@@ -1126,9 +1126,8 @@
           middle.y += stroker->center.y;
 
           /* compute first angle point */
-          length = FT_MulFix( radius,
-                              FT_DivFix( 0x10000L - sigma,
-                                         ft_pos_abs( FT_Sin( theta ) ) ) );
+          length = FT_MulDiv( radius, 0x10000L - sigma,
+                              ft_pos_abs( FT_Sin( theta ) ) );
 
           FT_Vector_From_Polar( &delta, length, phi + rotate );
           delta.x += middle.x;
@@ -1495,7 +1494,7 @@
               sinA = ft_pos_abs( FT_Sin( alpha1 - gamma ) );
               sinB = ft_pos_abs( FT_Sin( beta - gamma ) );
 
-              alen = FT_DivFix( FT_MulFix( blen, sinA ), sinB );
+              alen = FT_MulDiv( blen, sinA, sinB );
 
               FT_Vector_From_Polar( &delta, alen, beta );
               delta.x += start.x;
@@ -1702,7 +1701,7 @@
               sinA = ft_pos_abs( FT_Sin( alpha1 - gamma ) );
               sinB = ft_pos_abs( FT_Sin( beta - gamma ) );
 
-              alen = FT_DivFix( FT_MulFix( blen, sinA ), sinB );
+              alen = FT_MulDiv( blen, sinA, sinB );
 
               FT_Vector_From_Polar( &delta, alen, beta );
               delta.x += start.x;

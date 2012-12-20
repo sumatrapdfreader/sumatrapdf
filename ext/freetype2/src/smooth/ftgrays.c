@@ -1091,11 +1091,11 @@ typedef ptrdiff_t  FT_PtrDist;
         if ( s > s_limit )
           goto Split;
 
-        /* If P1 or P2 is outside P0-P3, split the curve. */
-        if ( dy * dy1 + dx * dx1 < 0                                     ||
-             dy * dy2 + dx * dx2 < 0                                     ||
-             dy * (arc[3].y - arc[1].y) + dx * (arc[3].x - arc[1].x) < 0 ||
-             dy * (arc[3].y - arc[2].y) + dx * (arc[3].x - arc[2].x) < 0 )
+        /* Split super curvy segments where the off points are so far
+           from the chord that the angles P0-P1-P3 or P0-P2-P3 become 
+           acute as detected by appropriate dot products. */
+        if ( dx1 * ( dx1 - dx ) + dy1 * ( dy1 - dy ) > 0 ||
+             dx2 * ( dx2 - dx ) + dy2 * ( dy2 - dy ) > 0 )
           goto Split;
 
         /* No reason to split. */
@@ -1400,7 +1400,26 @@ typedef ptrdiff_t  FT_PtrDist;
       ras.render_span( ras.span_y, ras.num_gray_spans,
                        ras.gray_spans, ras.render_span_data );
 
+#ifdef FT_DEBUG_LEVEL_TRACE
+
+    if ( ras.num_gray_spans > 0 )
+    {
+      FT_Span*  span;
+      int       n;
+
+
+      FT_TRACE7(( "y = %3d ", ras.span_y ));
+      span = ras.gray_spans;
+      for ( n = 0; n < ras.num_gray_spans; n++, span++ )
+        FT_TRACE7(( "[%d..%d]:%02x ",
+                    span->x, span->x + span->len - 1, span->coverage ));
+      FT_TRACE7(( "\n" ));
+    }
+
     FT_TRACE7(( "gray_sweep: end\n" ));
+
+#endif /* FT_DEBUG_LEVEL_TRACE */
+
   }
 
 
