@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fec1865f9dcead2397d3917f43ef55106d85a2c8
+cc659fab8f6ba3669fb46ac15133b363545ac57e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -372,6 +372,7 @@ ca:&Copia la selecció
 cn:复制选择内容(&C)\tCtrl+C
 cz:&Kopírovat výběr
 de:Auswahl &kopieren
+dk:&Kopier Markering
 el:&Αντιγραφή Επιλογής
 es:&Copiar selección
 et:K&opeeri valik
@@ -2098,7 +2099,7 @@ ne:यो कागजातको पासवर्ड &सम्झनुह�
 nl:Wachtwoord onthouden voor dit document
 no:&Husk passordet for dette dokumentet
 pl:Pamiętaj &hasło dla tego dokumentu
-pt:&Lembrar a palavra-passe deste documento
+pt:&Lembrar palavra-passe deste documento
 ro:&Reține parola acestui document
 ru:Запомнит&ь пароль для этого документа
 si:මෙම ගොනුව සදහා මුරපදය &මතක තබාගන්න
@@ -3675,7 +3676,7 @@ ne:&अद्यावधिकहरु स्वतः जाँच्नु�
 nl:Automatisch controleren op &updates
 no:Automatisk sjekk for &oppdateringer
 pl:&Szukaj aktualizacji automatycznie
-pt:&Verificar atualizações automaticamente
+pt:&Procurar atualizações automaticamente
 ro:Urmărește automat versiuni noi
 ru:&Автоматически проверять обновления
 si:යාවත්කාලකිරීම් ස්වයක්‍රීයව සොයන්න
@@ -4414,7 +4415,7 @@ nn:&Sjå etter ny versjon
 no:&Se etter oppdateringer...
 pa:ਨਵੇ ਵਰਜਨ ਲਈ ਚੈੱਕ ਕਰੋ(&C)
 pl:Szukaj &aktualizacji
-pt:Verificar at&ualizações
+pt:Procurar at&ualizações
 ro:Verifică apariția unei versiuni noi
 ru:Проверить наличие новой &версии
 si:&යාවත්කාලීනකිරීම් සදහා සොයන්න
@@ -4468,7 +4469,7 @@ ne:कमिक पुस्तिका
 nl:Stripboeken
 no:Tegneserier
 pl:Komiksy
-pt:Banda Desenhada
+pt:Banda desenhada
 ro:Benzi desenate
 ru:Документы CBR, CBZ (комиксы)
 sk:Komiksy
@@ -4494,6 +4495,7 @@ ca:Compatibilitat
 cn:兼容性
 cz:Kompatibilita
 de:Kompatibilität
+dk:Kompatibilitet
 el:Συμβατότητα
 es:Compatibilidad
 eu:Bateragarritasuna
@@ -4788,6 +4790,7 @@ ca:Copia la &imatge
 cn:复制图片(&I)
 cz:Kopírovat &obrázek
 de:&Bild kopieren
+dk:Kopier &Billede
 el:Αντιγραφή &Εικόνας
 es:Copiar &Imagen
 et:Kopeeri &pilt
@@ -4990,6 +4993,7 @@ ca:Copyright:
 cn:版权:
 cz:Autorská práva:
 de:Copyright:
+dk:Copyright:
 el:Πνευματική ιδιοκτησία:
 es:Derecho de autor:
 et:Autoriõigus:
@@ -5902,7 +5906,7 @@ nn:Skriv inn passord
 no:Skriv inn passord
 pa:ਪਾਸਵਰਡ ਭਰੋ
 pl:Podaj hasło
-pt:Indique a palavra-passe
+pt:Introduza a palavra-passe
 ro:Introduceți parola
 ru:Введите пароль
 si:මුරපදය ඇතුලුකරන්න
@@ -5967,7 +5971,7 @@ nn:Skriv inn passord for %s
 no:Skriv inn passord for %s
 pa:%s ਲਈ ਪਾਸਵਰਡ ਭਰੋ
 pl:Podaj hasło dla %s
-pt:Indique a palavra-passe de %s
+pt:Introduza a palavra-passe de %s
 ro:Introduceți parola pentru %s
 ru:Введите пароль для %s
 si:%s සඳහා මුරපදය ඇතුල්කරන්න
@@ -6336,6 +6340,7 @@ ca:S'ha produït un error en canviar el nom del fitxer!
 cn:无法重命名!
 cz:Soubor se nepodařilo přejmenovat!
 de:Die Datei konnte nicht umbenannt werden!
+dk:Fejl ved omdøbning af fil!
 el:Η μετονομασία του αρχείου απέτυχε!
 es:¡No se puede renombrar el fichero!
 et:Faili ümbernimetamine ebaõnnestus.
@@ -6441,6 +6446,7 @@ ca-xv:Visualització ràpida de web
 ca:Visualització ràpida de web
 cn:快速WEB查看(线性PDF)
 de:Schnelle Webanzeige
+dk:Hurtig Internet Visning
 el:Γρήγορη Διαδικτυακή Προβολή
 es:Visualización Rápida en Web
 fr:Affichage Web rapide
@@ -6522,6 +6528,7 @@ ca-xv:Documents FictionBook
 ca:Documents FictionBook
 cn:小说文档
 de:FictionBook-Dokumente
+dk:FiktionBogs dokumenter
 el:Έγγραφα FictionBook
 es:Documentos FictionBook
 fr:Documents FictionBook
@@ -6531,6 +6538,7 @@ ja:フィクション文章
 nl:FictionBook documenten
 no:FictionBook-dokumenter
 pl:Dokumenty FictionBook
+pt:Livros de ficção
 ru:Документы FictionBook
 sq:Dokumente FictionBook
 sr-rs:FictionBook докуменат
@@ -6549,6 +6557,7 @@ ca:No s'ha trobat el fitxer %s
 cn:无法找到文件 %s
 cz:Soubor %s nebyl nalezen
 de:Datei %s nicht gefunden
+dk:Fil %s ikke fundet
 el:Το αρχείο %s δε βρέθηκε
 es:El archivo %s no se encuentra
 et:Faili %s ei leitud
@@ -7498,6 +7507,7 @@ ca:Tipus de lletra:
 cn:字体:
 cz:Písma:
 de:Schriftarten:
+dk:Skrifttyper:
 el:Γραμματοσειρές:
 es:Fuentes:
 et:Fondid:
@@ -7541,6 +7551,7 @@ ca:S'està formatant el llibre... %d pàgines
 cn:正在格式化 %d 页
 cz:Formátování knihy... %d stránek
 de:Buch wird formatiert… Seite %d
+dk:Formatere bogen... %d sider
 el:Διαμόρφωση του βιβλίου... %d σελίδες
 es:Dando formato al libro... %d páginas
 et:Raamatu vormindamine... %d lehekülge
@@ -7713,7 +7724,7 @@ ne:प्रायजसो पढिएको
 nl:Vaak gelezen
 no:Ofte leste
 pl:Ostatnio otwierane
-pt:Lidos frequentemente
+pt:Frequentes
 ro:Citite frecvent
 ru:Часто используемые документы
 sk:Často čítané dokumenty
@@ -8091,6 +8102,7 @@ ca:S'està carregant el fitxer %s...
 cn:正在加载 %s...
 cz:Načítání souboru %s...
 de:%s wird geladen…
+dk:Indlæser fil %s...
 el:Φόρτωση του αρχείου %s
 es:Cargando fichero %s...
 et:Faili %s laadimine...
@@ -9513,6 +9525,7 @@ ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
 cn:PDF 优化：
 de:PDF Optimierungen:
+dk:PDF Optimeringer:
 el:Βελτιστοποίηση PDF
 es:Optimizaciones de PDF:
 fr:Optimisations PDF
@@ -10330,6 +10343,7 @@ ca:Imprimeix com a &imatge (requereix més memòria)
 cn:打印为图像(需要更多的内存)(&I)
 cz:Tisknout jako &obrázek (vyžaduje více paměti)
 de:Als B&ild drucken (benötigt mehr Speicher)
+dk:Print som &Billede (kræver mere hukommelse)
 el:Εκτύπωση ως &εικόνα (απαιτεί περισσότερη μνήμη)
 es:Imprimir como &image (se necesita más memoria)
 eu:Irarkitu I&rudi bezala (oroimen gehiago behar du)
@@ -10635,6 +10649,7 @@ ca:Canvia el &nom...\tF2
 cn:重命名(&N)...\tF2
 cz:Přejme&novat...\tF2
 de:Umbe&nennen…\tF2
+dk:Om&døb... \tF2
 el:&Μετονομασία...\tF2
 es:Re&nombrar...\tF2
 et:&Nimeta ümber...\tF2
@@ -10833,6 +10848,7 @@ ca:Canvia el nom a
 cn:重命名到
 cz:Přejmenovat na
 de:Umbenennen zu
+dk:Omdøb Til
 el:Μετονομασία
 es:Renombrando a
 et:Nimeta ümber
@@ -10875,6 +10891,7 @@ ca:Substitueix els &colors del document amb l'esquema de colors del Windows
 cn:采用系统颜色方案(&C)
 cz:Barvy dokumentu nahradit barevným s&chématem systému Windows
 de:Dokumenten&farben durch Windows-Farbschema ersetzen
+dk:Erstat dokument &farver med Windows farveskema
 el:Αντικατάσταση των &χρωμάτων του εγγράφου με το θέμα των Windows
 es:Reemplazar &colores del documento con el esquema de color de Windows
 et:Asenda dokumendi &värvid Windowsi värviskeemiga
@@ -11493,6 +11510,7 @@ ca:Mostra els &marcadors
 cn:显示书签(&B)
 cz:Zobrazit &záložky
 de:Lese&zeichen anzeigen
+dk:Vis &Bogmærker
 el:Εμφάνιση &Σελιδοδεικτών
 es:Mostrar &Bookmarks
 eu:Erakutsi Laster&markak
@@ -12361,6 +12379,7 @@ ca-xv:PDF etiquetat
 ca:PDF etiquetat
 cn:已标记PDF
 de:PDF mit Tags
+dk:Tagged PDF
 el:PDF με ετικέττα
 es:PDF Etiquetado
 fr:PDF balisé
