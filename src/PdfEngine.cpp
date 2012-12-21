@@ -2125,7 +2125,7 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (fz_link *next = page->links; next && !overlaps; next = next->next)
-            overlaps = fz_calc_overlap(next->rect, list->coords.At(i)) >= 0.25f;
+            overlaps = fz_calc_overlap(list->coords.At(i), next->rect) >= 0.25f;
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
@@ -3681,7 +3681,7 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (fz_link *next = page->links; next && !overlaps; next = next->next)
-            overlaps = fz_calc_overlap(next->rect, list->coords.At(i)) >= 0.25f;
+            overlaps = fz_calc_overlap(list->coords.At(i), next->rect) >= 0.25f;
         if (!overlaps) {
             ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
