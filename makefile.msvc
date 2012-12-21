@@ -92,7 +92,6 @@ LIBS = $(LIBS) \
 OS   = $(O)\sumatrapdf
 OU   = $(O)\utils
 ODLL = $(O)\applibs
-OEB  = $(O)\ebooktest
 OMUI = $(O)\mui
 OM   = $(O)\memtrace
 
@@ -258,7 +257,6 @@ $(OS): $(O) $(OE)
 	@if not exist $(OS) mkdir $(OS)
 	@if not exist $(OU) mkdir $(OU)
 	@if not exist $(ODLL) mkdir $(ODLL)
-	@if not exist $(OEB) mkdir $(OEB)
 	@if not exist $(OMUI) mkdir $(OMUI)
 	@if not exist $(OM) mkdir $(OM)
 
