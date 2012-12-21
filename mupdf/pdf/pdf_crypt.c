@@ -791,19 +791,23 @@ pdf_crypt_length(pdf_document *xref)
  */
 
 static int
-pdf_compute_object_key(pdf_crypt *crypt, pdf_crypt_filter *cf, int num, int gen, unsigned char *key)
+pdf_compute_object_key(pdf_crypt *crypt, pdf_crypt_filter *cf, int num, int gen, unsigned char *key, int max_len)
 {
 	fz_md5 md5;
 	unsigned char message[5];
+	int key_len = crypt->length / 8;
+
+	if (key_len > max_len)
+		key_len = max_len;
 
 	if (cf->method == PDF_CRYPT_AESV3)
 	{
-		memcpy(key, crypt->key, crypt->length / 8);
-		return crypt->length / 8;
+		memcpy(key, crypt->key, key_len);
+		return key_len;
 	}
 
 	fz_md5_init(&md5);
-	fz_md5_update(&md5, crypt->key, crypt->length / 8);
+	fz_md5_update(&md5, crypt->key, key_len);
 	message[0] = (num) & 0xFF;
 	message[1] = (num >> 8) & 0xFF;
 	message[2] = (num >> 16) & 0xFF;
@@ -816,9 +820,9 @@ pdf_compute_object_key(pdf_crypt *crypt, pdf_crypt_filter *cf, int num, int gen,
 
 	fz_md5_final(&md5, key);
 
-	if (crypt->length / 8 + 5 > 16)
+	if (key_len + 5 > 16)
 		return 16;
-	return crypt->length / 8 + 5;
+	return key_len + 5;
 }
 
 /*
@@ -900,7 +904,7 @@ pdf_crypt_obj(fz_context *ctx, pdf_crypt *crypt, pdf_obj *obj, int num, int gen)
 	unsigned char key[32];
 	int len;
 
-	len = pdf_compute_object_key(crypt, &crypt->strf, num, gen, key);
+	len = pdf_compute_object_key(crypt, &crypt->strf, num, gen, key, 32);
 
 	pdf_crypt_obj_imp(ctx, crypt, obj, key, len);
 }
@@ -917,7 +921,7 @@ pdf_open_crypt_imp(fz_stream *chain, pdf_crypt *crypt, pdf_crypt_filter *stmf, i
 	int len;
 
 	crypt->ctx = chain->ctx;
-	len = pdf_compute_object_key(crypt, stmf, num, gen, key);
+	len = pdf_compute_object_key(crypt, stmf, num, gen, key, 32);
 
 	if (stmf->method == PDF_CRYPT_RC4)
 		return fz_open_arc4(chain, key, len);

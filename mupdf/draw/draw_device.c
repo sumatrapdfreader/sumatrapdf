@@ -472,11 +472,7 @@ draw_glyph(unsigned char *colorbv, fz_pixmap *dst, fz_pixmap *msk,
 	int x, y, w, h;
 
 	bbox = fz_pixmap_bbox_no_ctx(msk);
-	bbox.x0 += xorig;
-	bbox.y0 += yorig;
-	bbox.x1 += xorig;
-	bbox.y1 += yorig;
-
+	bbox = fz_translate_bbox(bbox, xorig, yorig);
 	bbox = fz_intersect_bbox(bbox, scissor); /* scissor < dst */
 	x = bbox.x0;
 	y = bbox.y0;

@@ -1037,6 +1037,15 @@ fz_rect fz_union_rect(fz_rect a, fz_rect b);
 fz_bbox fz_union_bbox(fz_bbox a, fz_bbox b);
 
 /*
+	fz_translate_bbox: Translate bounding box.
+
+	Translate a bbox by a given x and y offset. Allows for overflow.
+
+	Does not throw exceptions.
+*/
+fz_bbox fz_translate_bbox(fz_bbox a, int xoff, int yoff);
+
+/*
 	fz_transform_point: Apply a transformation to a point.
 
 	transform: Transformation matrix to apply. See fz_concat,

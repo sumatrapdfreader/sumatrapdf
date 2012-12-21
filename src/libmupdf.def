@@ -59,6 +59,7 @@ EXPORTS
 	fz_intersect_bbox
 	fz_union_rect
 	fz_union_bbox
+	fz_translate_bbox
 	fz_transform_point
 	fz_transform_vector
 	fz_transform_rect
