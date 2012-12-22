@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-cc659fab8f6ba3669fb46ac15133b363545ac57e
+a9d8ccc4c7084ad380ff18c8694d07e9fcf9e8e9
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4498,6 +4498,7 @@ de:Kompatibilität
 dk:Kompatibilitet
 el:Συμβατότητα
 es:Compatibilidad
+et:Ühilduvus
 eu:Bateragarritasuna
 fa:سازگاری
 fi:Yhteensopivuus
@@ -6449,6 +6450,7 @@ de:Schnelle Webanzeige
 dk:Hurtig Internet Visning
 el:Γρήγορη Διαδικτυακή Προβολή
 es:Visualización Rápida en Web
+et:Kiire veebivaade
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
 hr:Brzi Web prikaz
@@ -6531,6 +6533,7 @@ de:FictionBook-Dokumente
 dk:FiktionBogs dokumenter
 el:Έγγραφα FictionBook
 es:Documentos FictionBook
+et:FictionBook-dokumendid
 fr:Documents FictionBook
 hr:FictionBook dokumenti
 it:Documenti FictionBook
@@ -9528,6 +9531,7 @@ de:PDF Optimierungen:
 dk:PDF Optimeringer:
 el:Βελτιστοποίηση PDF
 es:Optimizaciones de PDF:
+et:PDF-i optimeerimised:
 fr:Optimisations PDF
 ga:Optimisations PDF
 hr:PDF optimizacija:
@@ -10346,6 +10350,7 @@ de:Als B&ild drucken (benötigt mehr Speicher)
 dk:Print som &Billede (kræver mere hukommelse)
 el:Εκτύπωση ως &εικόνα (απαιτεί περισσότερη μνήμη)
 es:Imprimir como &image (se necesita más memoria)
+et:Prindi kui p&ilt (nõuab rohkem mälu)
 eu:Irarkitu I&rudi bezala (oroimen gehiago behar du)
 fa:چاپ به عنوان &عکس (حافظه‌ی بیشتری مصرف می‌شود)
 fi:Tulosta &kuvana (kuluttaa enemmän muistia)
@@ -11513,6 +11518,7 @@ de:Lese&zeichen anzeigen
 dk:Vis &Bogmærker
 el:Εμφάνιση &Σελιδοδεικτών
 es:Mostrar &Bookmarks
+et:Näita &järjehoidjaid
 eu:Erakutsi Laster&markak
 fa:ن&شانه‌ها را نشان بده
 fi:Näytä &Kirjanmerkit
@@ -12382,6 +12388,7 @@ de:PDF mit Tags
 dk:Tagged PDF
 el:PDF με ετικέττα
 es:PDF Etiquetado
+et:Siltidega PDF
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
 hr:Strukturirani PDF
