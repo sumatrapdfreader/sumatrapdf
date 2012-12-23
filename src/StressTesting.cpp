@@ -391,12 +391,17 @@ void DirFileProvider::Restart()
     OpenDir(startDir);
 }
 
-static size_t GetAllMatchingFiles(const WCHAR *dir, const WCHAR *filter, WStrVec& files)
+static size_t GetAllMatchingFiles(const WCHAR *dir, const WCHAR *filter, WStrVec& files, bool showProgress)
 {
     WStrVec dirsToVisit;
     dirsToVisit.Append(str::Dup(dir));
 
     while (dirsToVisit.Count() > 0) {
+        if (showProgress) {
+            wprintf(L".");
+            fflush(stdout);
+        }
+
         ScopedMem<WCHAR> path(dirsToVisit[0]);
         dirsToVisit.RemoveAt(0);
         CollectStressTestSupportedFilesFromDirectory(path, filter, files);
@@ -818,20 +823,21 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
 
         wprintf(L"Scanning for files in directory %s\n", i->stressTestPath);
         fflush(stdout);
-        size_t filesCount = GetAllMatchingFiles(i->stressTestPath, i->stressTestFilter, filesToTest);
+        size_t filesCount = GetAllMatchingFiles(i->stressTestPath, i->stressTestFilter, filesToTest, true);
         if (0 == filesCount) {
             wprintf(L"Didn't find any files matching filter '%s'\n", i->stressTestFilter);
             return;
         }
-        wprintf(L"Found %d files\n", (int)filesCount);
+        wprintf(L"Found %d files", (int)filesCount);
         fflush(stdout);
         if (i->stressRandomizeFiles) {
             // TODO: should probably allow over-writing the 100 limit
             RandomizeFiles(filesToTest, 100);
             filesCount = filesToTest.Count();
-            wprintf(L"After randomization: %d files\n", (int)filesCount);
-            fflush(stdout);
+            wprintf(L"\nAfter randomization: %d files", (int)filesCount);
         }
+        wprintf(L"\n");
+        fflush(stdout);
 
         for (int j=0; j<n; j++) {
             // dst will be deleted when the stress ends
