@@ -458,7 +458,6 @@ public:
 
 void StressTest::Start(FilesProvider *fileProvider, int cycles)
 {
-    srand((unsigned int)time(NULL));
     GetSystemTime(&stressStartTime);
 
     this->fileProvider = fileProvider;
@@ -472,9 +471,9 @@ void StressTest::Start(FilesProvider *fileProvider, int cycles)
     TickTimer();
 }
 
+
 void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *ranges, int cycles)
 {
-    srand((unsigned int)time(NULL));
     GetSystemTime(&stressStartTime);
 
     if (file::Exists(path)) {
@@ -732,6 +731,80 @@ void GetStressTestInfo(str::Str<char>* s)
     }
 }
 
+enum { MaxTypes = 32 };
+struct FilesPerType {
+    WCHAR *ext; // without the '.'
+    WStrVec *filesAll;
+    WStrVec *filesRandom;
+};
+
+// Select random files to test. We want to test each file type equally, so
+// we first group them by file extension and then select up to maxPerType
+// for each extension, randomly, and inter-leave the files with different
+// extensions, so their testing is evenly distributed.
+// Returns result in <files>.
+static void RandomizeFiles(WStrVec& files, int maxPerType)
+{
+    int nTypes = 0;
+    FilesPerType filesPerType[MaxTypes];
+
+    for (size_t i=0; i < files.Count(); i++) {
+        WCHAR *file = files.At(i);
+        const WCHAR *ext = str::FindCharLast(file, L'.');
+        CrashAlwaysIf(!ext);
+        ext++;
+        int typeNo = -1;
+        for (int j=0; j<nTypes; j++) {
+            if (str::EqI(ext, filesPerType[j].ext)) {
+                typeNo = j;
+                break;
+            }
+        }
+        if (-1 == typeNo) {
+            typeNo = nTypes++;
+            CrashAlwaysIf(nTypes >= MaxTypes);
+            filesPerType[typeNo].ext = str::Dup(ext);
+            filesPerType[typeNo].filesAll = new WStrVec();
+            filesPerType[typeNo].filesRandom = NULL;
+        }
+        filesPerType[typeNo].filesAll->Append(str::Dup(file));
+    }
+
+    for (int j=0; j<nTypes; j++) {
+        WStrVec *all = filesPerType[j].filesAll;
+        WStrVec *random = new WStrVec();
+        filesPerType[j].filesRandom = random;
+
+        for (int n=0; n < maxPerType && all->Count() > 0; n++) {
+            int idx = rand() % all->Count();
+            WCHAR *file = all->At(idx);
+            random->Append(file);
+            all->RemoveAtFast(idx);
+        }
+    }
+
+    files.Reset();
+    bool gotAll = false;
+    while (!gotAll) {
+        gotAll = true;
+        for (int j=0; j<nTypes; j++) {
+            WStrVec *random = filesPerType[j].filesRandom;
+            if (random->Count() > 0) {
+                gotAll = false;
+                WCHAR *file = random->At(0);
+                files.Append(file);
+                random->RemoveAtFast(0);
+            }
+        }
+    }
+
+    for (int j=0; j<nTypes; j++) {
+        free(filesPerType[j].ext);
+        delete filesPerType[j].filesAll;
+        delete filesPerType[j].filesRandom;
+    }
+}
+
 void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCache)
 {
     // gPredictiveRender = false;
@@ -740,9 +813,10 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
     gUseEbookUI = false;
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+    srand((unsigned int)time(NULL));
 
     int n = i->stressParallelCount;
-    if (n > 1) {
+    if (n > 1 || i->stressRandomizeFiles) {
         WindowInfo **windows = AllocArray<WindowInfo*>(n);
         windows[0] = win;
         for (int j=1; j<n; j++) {
@@ -761,6 +835,14 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
         }
         wprintf(L"Found %d files\n", (int)filesCount);
         fflush(stdout);
+        if (i->stressRandomizeFiles) {
+            // TODO: should probably allow over-writing the 100 limit
+            RandomizeFiles(filesToTest, 100);
+            filesCount = filesToTest.Count();
+            wprintf(L"After randomization: %d files\n", (int)filesCount);
+            fflush(stdout);
+        }
+
         for (int j=0; j<n; j++) {
             // dst will be deleted when the stress ends
             win = windows[j];
