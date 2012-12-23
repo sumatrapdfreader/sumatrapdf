@@ -1,5 +1,13 @@
 #include "fitz-internal.h"
 
+/* SumatraPDF */
+static int g_logging_enabled = 1;
+
+void fz_set_logging(int enabled)
+{
+    g_logging_enabled = enabled;
+}
+
 /* Warning context */
 
 void fz_var_imp(void *var)
@@ -11,8 +19,12 @@ void fz_flush_warnings(fz_context *ctx)
 {
 	if (ctx->warn->count > 1)
 	{
-		fprintf(stderr, "warning: ... repeated %d times ...\n", ctx->warn->count);
-		LOGE("warning: ... repeated %d times ...\n", ctx->warn->count);
+		/* SumatraPDF */
+		if (g_logging_enabled)
+		{
+			fprintf(stderr, "warning: ... repeated %d times ...\n", ctx->warn->count);
+			LOGE("warning: ... repeated %d times ...\n", ctx->warn->count);
+		}
 	}
 	ctx->warn->message[0] = 0;
 	ctx->warn->count = 0;
@@ -34,9 +46,13 @@ void fz_warn_imp(fz_context *ctx, char *file, int line, const char *fmt, ...)
 	}
 	else
 	{
-		fz_flush_warnings(ctx);
-		fprintf(stderr, "- %s:%d: %s\n", file, line, buf);
-		LOGE("warning: %s\n", buf);
+		/* SumatraPDF */
+		if (g_logging_enabled)
+		{
+			fz_flush_warnings(ctx);
+			fprintf(stderr, "- %s:%d: %s\n", file, line, buf);
+			LOGE("warning: %s\n", buf);
+		}
 		fz_strlcpy(ctx->warn->message, buf, sizeof ctx->warn->message);
 		ctx->warn->count = 1;
 	}
@@ -106,8 +122,11 @@ int fz_push_try(fz_error_context *ex)
 	strcpy(ex->message, "exception stack overflow!");
 	ex->stack[ex->top].code = 2;
 	/* SumatraPDF: print error message */
-	fprintf(stderr, "! %s:%d: %s\n", __FILE__, __LINE__, ex->message);
-	LOGE("error: %s\n", ex->message);
+	if (g_logging_enabled)
+	{
+		fprintf(stderr, "! %s:%d: %s\n", __FILE__, __LINE__, ex->message);
+		LOGE("error: %s\n", ex->message);
+	}
 	return 0;
 }
 
@@ -127,9 +146,12 @@ void fz_throw_imp(fz_context *ctx, char *file, int line, const char *fmt, ...)
 	va_end(args);
 
 	fz_flush_warnings(ctx);
-	fprintf(stderr, "! %s:%d: %s\n", file, line, ctx->error->message);
-	LOGE("error: %s\n", ctx->error->message);
-
+	/* SumatraPDF */
+	if (g_logging_enabled)
+	{
+		fprintf(stderr, "! %s:%d: %s\n", file, line, ctx->error->message);
+		LOGE("error: %s\n", ctx->error->message);
+	}
 	throw(ctx->error);
 }
 

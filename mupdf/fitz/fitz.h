@@ -3013,4 +3013,7 @@ enum
 */
 void fz_write_document(fz_document *doc, char *filename, fz_write_options *opts);
 
+/* SumatraPDF */
+void fz_set_logging(int);
+
 #endif

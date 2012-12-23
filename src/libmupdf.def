@@ -406,6 +406,7 @@ EXPORTS
 	fz_paint_pixmap_with_rect
 	fz_blend_pixmap
 	fz_blend_pixel
+	fz_set_logging
 
 ; MuPDF exports
 

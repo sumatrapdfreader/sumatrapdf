@@ -4,6 +4,10 @@
 #include "BaseUtil.h"
 #include "StressTesting.h"
 
+extern "C" {
+#include "mupdf.h"
+}
+
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "DirIter.h"
@@ -814,6 +818,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     srand((unsigned int)time(NULL));
+    fz_set_logging(0);
 
     int n = i->stressParallelCount;
     if (n > 1 || i->stressRandomizeFiles) {
