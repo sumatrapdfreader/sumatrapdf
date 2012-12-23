@@ -4,10 +4,6 @@
 #include "BaseUtil.h"
 #include "StressTesting.h"
 
-extern "C" {
-#include "mupdf.h"
-}
-
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "DirIter.h"
@@ -307,16 +303,11 @@ public:
         files.Append(str::Dup(path));
         provided = 0;
     }
-    FilesProvider(WStrVec& newFiles, int n, int off) {
-        // get ever n-th file
-        size_t i = 0;
-        for (;;) {
-            size_t fileIdx = i + off;
-            if (fileIdx >= newFiles.Count())
-                break;
-            WCHAR *f = newFiles[fileIdx];
+    FilesProvider(WStrVec& newFiles, int n, int offset) {
+        // get every n-th file starting at offset
+        for (size_t i = offset; i < newFiles.Count(); i += n) {
+            WCHAR *f = newFiles[i];
             files.Append(str::Dup(f));
-            i += n;
         }
         provided = 0;
     }
@@ -435,6 +426,7 @@ class StressTest {
     Vec<PageRange>    fileRanges;
     int               fileIndex;
 
+    // owned by StressTest
     TestFileProvider *fileProvider;
 
     bool OpenFile(const WCHAR *fileName);
@@ -452,15 +444,18 @@ public:
     {
         timerId = gCurrStressTimerId++;
     }
+    ~StressTest() {
+        delete fileProvider;
+    }
 
     void Start(const WCHAR *path, const WCHAR *filter, const WCHAR *ranges, int cycles);
-    void Start(FilesProvider *fileProvider, int cycles);
+    void Start(TestFileProvider *fileProvider, int cycles);
 
     void OnTimer(int timerIdGot);
     void GetLogInfo(str::Str<char> *s);
 };
 
-void StressTest::Start(FilesProvider *fileProvider, int cycles)
+void StressTest::Start(TestFileProvider *fileProvider, int cycles)
 {
     GetSystemTime(&stressStartTime);
 
@@ -475,34 +470,24 @@ void StressTest::Start(FilesProvider *fileProvider, int cycles)
     TickTimer();
 }
 
-
 void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *ranges, int cycles)
 {
-    GetSystemTime(&stressStartTime);
-
     if (file::Exists(path)) {
-        fileProvider = new FilesProvider(path);
+        FilesProvider *filesProvider = new FilesProvider(path);
         ParsePageRanges(ranges, pageRanges);
+        Start(filesProvider, cycles);
     }
     else if (dir::Exists(path)) {
-        fileProvider = new DirFileProvider(path, filter);
+        DirFileProvider *dirFileProvider = new DirFileProvider(path, filter);
         ParsePageRanges(ranges, fileRanges);
+        Start(dirFileProvider, cycles);
     }
     else {
         // Note: string dev only, don't translate
         ScopedMem<WCHAR> s(str::Format(L"Path '%s' doesn't exist", path));
         ShowNotification(win, s, false /* autoDismiss */, true, NG_STRESS_TEST_SUMMARY);
         Finished(false);
-        return;
     }
-
-    this->cycles = cycles;
-    if (pageRanges.Count() == 0)
-        pageRanges.Append(PageRange());
-    if (fileRanges.Count() == 0)
-        fileRanges.Append(PageRange());
-
-    TickTimer();
 }
 
 void StressTest::Finished(bool success)
@@ -533,9 +518,8 @@ bool StressTest::GoToNextFile()
         }
         if (--cycles <= 0)
             return false;
+        fileProvider->Restart();
     }
-    fileProvider->Restart();
-    return GoToNextFile();
 }
 
 bool StressTest::OpenFile(const WCHAR *fileName)
@@ -818,7 +802,8 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     srand((unsigned int)time(NULL));
-    fz_set_logging(0);
+    // redirect stderr to NUL to disable (MuPDF) logging
+    FILE *nul; freopen_s(&nul, "NUL", "w", stderr);
 
     int n = i->stressParallelCount;
     if (n > 1 || i->stressRandomizeFiles) {

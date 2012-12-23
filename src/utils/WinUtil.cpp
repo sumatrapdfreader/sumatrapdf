@@ -271,17 +271,17 @@ void RedirectIOToConsole()
 
     // redirect unbuffered STDOUT to the console
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
-    *stdout = *(FILE *)_fdopen(hConHandle, "w");
+    *stdout = *_fdopen(hConHandle, "w");
     setvbuf(stdout, NULL, _IONBF, 0);
 
     // redirect unbuffered STDERR to the console
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
-    *stderr = *(FILE *)_fdopen(hConHandle, "w");
+    *stderr = *_fdopen(hConHandle, "w");
     setvbuf(stderr, NULL, _IONBF, 0);
 
     // redirect unbuffered STDIN to the console
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
-    *stdin = *(FILE *)_fdopen(hConHandle, "r");
+    *stdin = *_fdopen(hConHandle, "r");
     setvbuf(stdin, NULL, _IONBF, 0);
 }
 
