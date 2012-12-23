@@ -319,8 +319,11 @@ public:
 	{
 		if (accumulate)
 			graphics->SetClip(&Region(gpath), CombineModeUnion);
-		else
+		// contrary to Fitz, GDI+ ignores empty paths when clipping
+		else if (gpath->GetPointCount() > 0)
 			pushClip(&Region(gpath), alpha);
+		else
+			pushClip(&Region(Rect()), alpha);
 		started = true;
 	}
 
@@ -1020,10 +1023,7 @@ fz_gdiplus_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int evenodd, 
 	GraphicsPath *gpath = gdiplus_get_path(path, ctm, false, evenodd);
 	
 	// TODO: clipping non-rectangular areas doesn't result in anti-aliased edges
-	if (path->len > 0)
-		((userData *)dev->user)->pushClip(gpath);
-	else
-		((userData *)dev->user)->pushClip(&Region(Rect()));
+	((userData *)dev->user)->pushClip(gpath);
 	
 	delete gpath;
 }
@@ -1036,10 +1036,7 @@ fz_gdiplus_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_str
 	Pen *pen = gdiplus_get_pen(&SolidBrush(Color()), ctm, stroke);
 	gpath->Widen(pen);
 	
-	if (path->len > 0)
-		((userData *)dev->user)->pushClip(gpath);
-	else
-		((userData *)dev->user)->pushClip(&Region(Rect()));
+	((userData *)dev->user)->pushClip(gpath);
 	
 	delete pen;
 	delete gpath;

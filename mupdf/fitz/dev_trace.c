@@ -120,6 +120,10 @@ fz_trace_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, f
 	else
 		printf(" winding=\"nonzero\"");
 	fz_trace_matrix(ctm);
+	/* SumatraPDF: prevent NULL-pointer dereference */
+	if (!rect)
+		printf(">\n");
+	else
 	printf(" contentbbox=\"%g %g %g %g\">\n", rect->x0, rect->y0, rect->x1, rect->y1);
 	fz_trace_path(path, 0);
 	printf("</clip_path>\n");
