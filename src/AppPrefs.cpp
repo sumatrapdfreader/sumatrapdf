@@ -6,6 +6,7 @@
 
 #include "AppTools.h"
 #include "BencUtil.h"
+#include "CrashHandler.h"
 #include "DisplayState.h"
 #include "Favorites.h"
 #include "FileHistory.h"
@@ -227,6 +228,18 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     prefs->Add(TOC_VISIBLE_STR, ds->tocVisible);
     prefs->Add(SIDEBAR_DX_STR, ds->sidebarDx);
 
+    // BUG: 2140
+    if (!IsValidZoom(ds->zoomVirtual)) {
+        CrashLogFmt("Invalid ds->zoomVirtual: %.4f\n", ds->zoomVirtual);
+        const WCHAR *ext = str::FindCharLast(ds->filePath, L'.');
+        if (ext) {
+            ScopedMem<char> extA(str::conv::ToUtf8(ext));
+            CrashLogFmt("File type: %s\n", extA.Get());
+        }
+        CrashLogFmt("DisplayMode: %d\n", ds->displayMode);
+        CrashLogFmt("PageNo: %d\n", ds->pageNo);
+    }
+
     CrashIf(!IsValidZoom(ds->zoomVirtual));
     ScopedMem<char> zoom(str::Format("%.4f", ds->zoomVirtual));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
@@ -234,8 +247,9 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     if (ds->tocState && ds->tocState->Count() > 0) {
         BencArray *tocState = new BencArray();
         if (tocState) {
-            for (size_t i = 0; i < ds->tocState->Count(); i++)
+            for (size_t i = 0; i < ds->tocState->Count(); i++) {
                 tocState->Add(ds->tocState->At(i));
+            }
             prefs->Add(TOC_STATE_STR, tocState);
         }
     }
