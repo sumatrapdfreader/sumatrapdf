@@ -423,6 +423,23 @@ static void Retrieve(BencDict *dict, const char *key, DisplayMode& value)
     }
 }
 
+static void DeserializeToc(BencDict *dict, DisplayState *ds)
+{
+    BencArray *tocState = dict->GetArray(TOC_STATE_STR);
+    if (!tocState)
+        return;
+    size_t len = tocState->Length();
+    ds->tocState = new Vec<int>(len);
+    if (!ds->tocState)
+        return;
+
+    for (size_t i = 0; i < len; i++) {
+        BencInt *intObj = tocState->GetInt(i);
+        if (intObj)
+            ds->tocState->Append((int)intObj->Value());
+    }
+}
+
 static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOnly)
 {
     DisplayState *ds = new DisplayState();
@@ -463,18 +480,7 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     if (!IsValidZoom(ds->zoomVirtual))
         ds->zoomVirtual = 100.f;
 
-    BencArray *tocState = dict->GetArray(TOC_STATE_STR);
-    if (tocState) {
-        size_t len = tocState->Length();
-        ds->tocState = new Vec<int>(len);
-        if (ds->tocState) {
-            for (size_t i = 0; i < len; i++) {
-                BencInt *intObj = tocState->GetInt(i);
-                if (intObj)
-                    ds->tocState->Append((int)intObj->Value());
-            }
-        }
-    }
+    DeserializeToc(dict, ds);
 
     return ds;
 }
