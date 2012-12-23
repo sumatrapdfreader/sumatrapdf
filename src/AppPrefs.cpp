@@ -459,6 +459,10 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     Retrieve(dict, ZOOM_VIRTUAL_STR, ds->zoomVirtual);
     Retrieve(dict, USE_GLOBAL_VALUES_STR, ds->useGlobalValues);
 
+    // work-around https://code.google.com/p/sumatrapdf/issues/detail?id=2140
+    if (!IsValidZoom(ds->zoomVirtual))
+        ds->zoomVirtual = 100.f;
+
     BencArray *tocState = dict->GetArray(TOC_STATE_STR);
     if (tocState) {
         size_t len = tocState->Length();
