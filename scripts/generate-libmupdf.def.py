@@ -8,9 +8,9 @@ from util import verify_started_in_right_directory
 
 def generateExports(header, exclude=[]):
 	data = open(header, "r").read()
-	data = re.sub(r"^#ifndef NDEBUG\s.*?^#endif", "", data, 0, re.MULTILINE | re.DOTALL)
-	data = re.sub(r"^#ifdef ARCH_ARM\s.*?^#endif", "", data, 0, re.MULTILINE | re.DOTALL)
-	functions = re.findall(r"^\w+ (?:\w+ )?\*?(\w+)\(.*?\);", data, re.MULTILINE | re.DOTALL)
+	data = re.sub(r"(?sm)^#ifndef NDEBUG\s.*?^#endif", "", data, 0)
+	data = re.sub(r"(?sm)^#ifdef ARCH_ARM\s.*?^#endif", "", data, 0)
+	functions = re.findall(r"(?sm)^\w+ (?:\w+ )?\*?(\w+)\(.*?\);", data)
 	exports = "\n".join(["\t" + name for name in functions if name not in exclude])
 	return exports
 
