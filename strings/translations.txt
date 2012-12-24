@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a9d8ccc4c7084ad380ff18c8694d07e9fcf9e8e9
+ff9314174632920f8ea2fd0189d3b2f42de0010e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3196,7 +3196,7 @@ cn:高级
 cy:Uwch
 cz:Upřesnit
 de:Weiteres
-dk:Advanceret
+dk:Avanceret
 el:Προχωρημένα
 es:Avanzado
 et:Muud
@@ -4038,7 +4038,7 @@ cn:CHM 文档
 cy:Dogfennau CHM
 cz:CHM dokumenty
 de:CHM Hilfe-Dateien
-dk:CHM documenter
+dk:CHM-dokumenter
 el:Έγγραφα CHM
 es:Documentos CHM
 et:CHM-dokumendid
@@ -4261,7 +4261,7 @@ cn:无法运行反向搜索命令。请检查设置中的命令行。
 cy:Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
 cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
-dk:Kan ikke starte invers søge kommando. Tjek venligst kommandolinjen i indstillingerne.
+dk:Kan ikke starte invers søgekommando. Tjek venligst kommandolinjen i indstillingerne.
 el:Δεν είναι δυνατή η εκκίνηση αντίστροφης αναζήτησης. Παρακαλώ ελέγξτε τη γραμμή εντολών στις ρυθμίσεις.
 es:No se puede iniciar el comando de búsqueda inversa. Verifique la línea de comandos en la configuración.
 et:Pööratud otsingu alustamine ebaõnnestus. Kontrolli seadistustest käsurida.
@@ -4730,7 +4730,7 @@ cn:提供翻译
 cy:Cyfrannu cyfieithiad.
 cz:Zaslat překlad
 de:Übersetzung beisteuern
-dk:Bidgrag med oversættelse
+dk:Bidrag med oversættelse
 el:Βοηθήστε στη Μετάφραση
 es:Contribuir en la traducción
 et:Osale tõlkimises
@@ -5590,7 +5590,7 @@ cn:DjVu 文件
 cy:Dogfennau DjVu
 cz:DjVu dokumenty
 de:DjVu-Dokumente
-dk:DjVu documenter
+dk:DjVu-dokumenter
 el:Έγγραφα DjVu
 es:Documentos DjVu
 et:DjVu-dokumendid
@@ -5643,7 +5643,7 @@ cn:文档属性
 cy:Priodweddau Dogfen
 cz:Vlastnosti dokumentu
 de:Dokumenteigenschaften
-dk:dokumentegenskaber
+dk:Dokumentegenskaber
 el:Ιδιότητες Εγγράφου
 es:Propiedades del Documento
 et:Dokumendi omadused
@@ -5821,7 +5821,7 @@ cn:EPUB 文档
 cy:Dogfennau EPUB
 cz:EPUB dokumenty
 de:EPUB E-Bücher
-dk:EPUB documenter
+dk:EPUB-dokumenter
 el:Έγγραφα EPUB
 es:Documentos EPUB
 et:EPUB-dokumendid
@@ -7554,7 +7554,7 @@ ca:S'està formatant el llibre... %d pàgines
 cn:正在格式化 %d 页
 cz:Formátování knihy... %d stránek
 de:Buch wird formatiert… Seite %d
-dk:Formatere bogen... %d sider
+dk:Formaterer bogen... %d sider
 el:Διαμόρφωση του βιβλίου... %d σελίδες
 es:Dando formato al libro... %d páginas
 et:Raamatu vormindamine... %d lehekülge
@@ -9149,7 +9149,7 @@ cn:在 &Adobe Reader 中打开
 cy:Agor yn &Adobe Reader
 cz:Otevřít v programu &Adobe Reader
 de:Mit &Adobe Reader öffnen
-dk:Åben med &Adobe Reader
+dk:Åbn med &Adobe Reader
 el:Άνοιγμα με &Adobe Reader
 es:Abrir en &Adobe Reader
 et:Ava &Adobe Readeris
@@ -9261,7 +9261,7 @@ cn:在 Microsoft HTML Help 中打开
 cy:Agor yn Microsoft HTML Help
 cz:Otevřít v programu Microsoft HTML Help
 de:Mit &Microsoft HTML Hilfe öffnen
-dk:Åben med Microsoft HTML Help
+dk:Åbn med Microsoft HTML Help
 el:Άνοιγμα με Microsoft HTML Help
 es:Abrir en Microsoft HTML Help
 et:Ava Microsoft HTML Helpga
@@ -12777,7 +12777,7 @@ cn:XPS 文件
 cy:Dogfennau XPS
 cz:XPS dokumenty
 de:XPS-Dokumente
-dk:XPS documenter
+dk:XPS-dokumenter
 el:Έγγραφα XPS
 es:Documentos XPS
 et:XPS-dokumendid
