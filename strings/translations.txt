@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ff9314174632920f8ea2fd0189d3b2f42de0010e
+6ff9876dfa080fdfaea3e4ecac9ef6634a693d7d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -77,7 +77,7 @@ bs:Stvarna veličina\tCtrl+1
 by:Рэальны памер\tCtrl+1
 ca-xv:Mida &real\tCtrl+1
 ca:Mida &real\tCtrl+1
-cn:实际大小(&U)\tCtrl+1
+cn:实际大小(&A)\tCtrl+1
 cy:&Gwir Faint\tCtrl+1
 cz:Skutečná &velikost\tCtrl+1
 de:&Tatsächliche Größe\tStrg+1
@@ -421,7 +421,7 @@ br:Copiar seleção\tCtrl+C
 bs:Kopiraj označeno\tCtrl+C
 ca-xv:&Copia la selecció\tCtrl+C
 ca:&Copia la selecció\tCtrl+C
-cn:复制所选内容\tCtrl+C
+cn:复制所选内容(&C)\tCtrl+C
 cy:Copïo'r Dewis\tCtrl+C
 cz:&Kopírovat výběr\tCtrl+C
 de:Auswahl &kopieren\tStrg+C
@@ -481,7 +481,7 @@ bs:Nemoj me ponovo pitati
 by:Больш не пытаць
 ca-xv:&No ho tornes a preguntar
 ca:&No ho tornis a preguntar
-cn:以后不再询问
+cn:以后不再询问(&D)
 cy:&Peidio gofyn eto
 cz:&Příště se již neptat
 de:Nicht &wieder fragen.
@@ -773,7 +773,7 @@ bs:Prva stranica\tHome
 by:Першая старонка\tHome
 ca-xv:&Primera pàgina\tInici
 ca:&Primera pàgina\tInici
-cn:第一页\tHome
+cn:第一页(&F)\tHome
 cy:Tudalen Gyntaf\tHome
 cz:První &stránka\tHome
 de:&Erste Seite\tPos1
@@ -1082,7 +1082,7 @@ bs:Posljednja stranica\tEnd
 by:Апошняя старонка\tEnd
 ca-xv:Ú&ltima pàgina\tFinal
 ca:Ú&ltima pàgina\tFinal
-cn:最后一页\tEnd
+cn:最后一页(&L)\tEnd
 cy:Tudalen Olaf\tEnd
 cz:Pos&lední stránka\tEnd
 de:&Letzte Seite\tEnde
@@ -1322,7 +1322,7 @@ bs:Sljedeća stranica\t->
 by:Наступная старонка\t->
 ca-xv:Pàgina &següent\t->
 ca:Pàgina &següent\t->
-cn:下一页\t->
+cn:下一页(&N)\t->
 cy:Tudalen Nesaf\t->
 cz:Další strá&nka\tŠipka vpravo
 de:&Nächste Seite\t->
@@ -1836,7 +1836,7 @@ bs:Prethodna stranica\t<-
 by:Папярэдняя старонка\t<-
 ca-xv:Pàgina &anterior\t<-
 ca:Pàgina &anterior\t<-
-cn:上一页\t<-
+cn:上一页(&P)\t<-
 cy:Tudalen Flaenorol\t<-
 cz:&Předchozí stránka\tŠipka vlevo
 de:&Vorherige Seite\t<-
@@ -2511,7 +2511,7 @@ bs:&Propusti ovu verziju.
 by:Прапусціць гэту версію.
 ca-xv:&Omet esta versió
 ca:&Omet aquesta versió
-cn:跳过此版本
+cn:跳过此版本(&S)
 cy:&Hepgor y fersiwn yma.
 cz:&Přeskočit tuto verzi
 de:&Diese Version überspringen.
@@ -2577,7 +2577,7 @@ cn:使用原始页面大小(&U)
 cy:&Defnyddio maint gwreiddiol y dudalen
 cz:Po&užít původní velikost stránky
 de:Seitengröße &nicht anpassen
-dk:&Brug original sidestørrelser
+dk:&Brug originale sidestørrelser
 el:&Χρησιμοποίηση μεγέθους αρχικών σελίδων
 es:&Usar el tamaño original de la página
 et:&Kasuta algseid lehekülje suuruseid
@@ -5074,6 +5074,7 @@ sv:Kunde inte hämta egenskaper för skrivare
 ta:அச்சுப்பொறியின் பண்புகள் பெற முடியவில்லை
 th:ไม่ได้รับคุณสมบัติเครื่องพิมพ์
 tr:Yazıcı özellikleri temin edilemedi
+tw:無法取得印表機之屬性
 uk:Неможливо відобразити налаштування друкарки
 uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
@@ -5758,7 +5759,7 @@ cn:退出(&X)\tCtrl+Q
 cy:&Gadael\tCtrl+Q
 cz:&Konec\tCtrl+Q
 de:&Beenden\tStrg+Q
-dk:S&lut\tCtrl+Q
+dk:&Afslut\tCtrl+Q
 el:Έ&ξοδος\tCtrl+Q
 es:&Salir\tCtrl+Q
 et:Väl&ju\tCtrl+Q
@@ -6470,6 +6471,7 @@ sr-rs:Брзи преглед на мрежи
 sv:Snabb Webb-Visning
 ta:வேகமான வலை பார்வை
 tr:Hızlı Web Görünümü
+tw:快速網頁模式
 uk:Швидкий веб перегляд
 uz:Tez veb ko'rish
 vn:Xem dạng Web nhanh
@@ -6530,7 +6532,7 @@ ca-xv:Documents FictionBook
 ca:Documents FictionBook
 cn:小说文档
 de:FictionBook-Dokumente
-dk:FiktionBogs dokumenter
+dk:FictionBook-dokumenter
 el:Έγγραφα FictionBook
 es:Documentos FictionBook
 et:FictionBook-dokumendid
@@ -7031,7 +7033,7 @@ br:Ajustar ao &conteúdo\tCtrl+3
 bs:Uklopi s&adržaj\tCtrl+3
 ca-xv:Ajusta el &contingut\tCtrl+3
 ca:Ajusta el &contingut\tCtrl+3
-cn:适合内容\tCtrl+3
+cn:适合内容(&C)\tCtrl+3
 cy:Ffitio'r &Cynnwys\tCtrl+3
 cz:Přizpůsobit &obsah\tCtrl+3
 de:An &Inhalt anpassen\tStrg+3
@@ -7583,6 +7585,7 @@ sr-rs:Форматирање књиге... %d страница
 sv:Formatterar bok... %d sidor
 ta:புத்தகத்தை வடிவமைக்க ... %d பக்கங்கள்
 tr:Kitap biçimlendiriliyor... %d sayfa
+tw:格式化書本... %d 頁
 uk:Форматується книга... %d сторінок
 uz:Kitob format qilinmoqda... %d bet
 vn:Đang định dạng sách... %d trang
@@ -8134,6 +8137,7 @@ sr-rs:Учитавање датотеке %s...
 sv:Laddar fil %s...
 ta:%s கோப்பு ஏற்றப்படுகிறது
 tr:%s dosyası yükleniyor...
+tw:讀取檔案 %s...
 uk:Завантажується файл %s...
 uz:%s fayli yuklanmoqda...
 vn:Đang mở tập tin %s...
@@ -9039,7 +9043,7 @@ bs:Otvori u PDF-XChange
 by:Адкрыць у PDF-XChange
 ca-xv:Obri amb el PDF-XChange
 ca:Obre amb el PDF-XChange
-cn:在 PDF-XChange 中打开
+cn:在 PDF-XChange 中打开(&I)
 cy:Agor yn PDF-XChange
 cz:Otevřít v programu PDF-XChange
 de:Mit PDF-&XChange öffnen
@@ -9257,7 +9261,7 @@ bs:Otvori u Microsoft HTML Help
 by:Адкрыць у Microsoft HTML Help
 ca-xv:Obri amb el Microsoft HTML Help
 ca:Obre amb el Microsoft HTML Help
-cn:在 Microsoft HTML Help 中打开
+cn:在 &Microsoft HTML Help 中打开
 cy:Agor yn Microsoft HTML Help
 cz:Otevřít v programu Microsoft HTML Help
 de:Mit &Microsoft HTML Hilfe öffnen
@@ -9312,7 +9316,7 @@ bs:Otvori u Microsoft XPS-Viewer
 by:Адкрыць у Microsoft XPS-Viewer
 ca-xv:Obri amb el Microsoft XPS-Viewer
 ca:Obre amb el Microsoft XPS-Viewer
-cn:在 Microsoft XPS-Viewer 中打开
+cn:在 &Microsoft XPS-Viewer 中打开
 cy:Agor yn Microsoft XPS-Viewer
 cz:Otevřít v programu Microsoft XPS-Viewer
 de:Mit &Microsoft XPS-Viewer öffnen
@@ -9551,6 +9555,7 @@ sr-rs:PDF оптимизација
 sv:PDF Optimeringar:
 ta:PDF மேம்படுத்தல்கள்
 tr:PDF Optimizasyonları:
+tw:最佳化 PDF
 uk:Оптимізації PDF:
 uz:PDF optimizatsiyalari:
 vn:Các tối ưu PDF
@@ -10373,6 +10378,7 @@ sr-rs:Штампати као слику (захтева више мемориј
 sv:Skr&iv ut som bild (mer minnekrävande)
 ta:படத்தை போன்று அச்சிடு (நினைவகம் அதிகமாக தேவைப்படுகிறது)
 tr:Resim olarak bas (daha çok hafıza gerektirir)
+tw:列印成圖像 (需要更多的記憶體) (&I)
 uk:Роздрукувати як зображення
 uz:&Rasm sifatida bosib chiqarish (ko'proq xotirani talab qiladi)
 vn:In thành hình ảnh (cần nhiều bộ nhớ hơn)
@@ -10853,7 +10859,7 @@ ca:Canvia el nom a
 cn:重命名到
 cz:Přejmenovat na
 de:Umbenennen zu
-dk:Omdøb Til
+dk:Omdøb til
 el:Μετονομασία
 es:Renombrando a
 et:Nimeta ümber
@@ -10924,6 +10930,7 @@ sr-rs:Замени боје документа Windows колор шемом
 sv:Byt ut dokument&färg till Windows färgschema
 ta:ஆவணம் மற்றும் வண்ணங்களை  விண்டோஸ் வண்ண திட்டம் மூலம் மாற்றவும்
 tr:Belgenin &renklerini Windows renk planıyla değiştir
+tw:採用Windows的配色方案來取代文件的配色 (&C)
 uk:Замінити кольори у документі використовуючи кольорову схему Windows
 uz:Hujjat &ranglarini Windows rangli sxemasiga o'zgartirish
 vn:Thay màu tập tin bằng bảng màu Windows
@@ -11541,6 +11548,7 @@ sr-rs:Прикажи обележене
 sv:Visa &Bokmärken
 ta:புத்தகக்குறிகளை காட்டுக
 tr:Göster &Sık Kullanılanlar
+tw:顯示書籤 (&B)
 uk:Показати закладки
 uz:&Xatcho'plarni ko'rsatish
 vn:Hiện chỉ dấu sách
@@ -12407,6 +12415,7 @@ sr-rs:Означени PDF
 sv:Taggad PDF
 ta:குறியிடப்பட்ட PDF
 tr:İşaretlenmiş PDF
+tw:有標籤的 PDF
 uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
@@ -13143,7 +13152,7 @@ cn:缩放比例
 cy:Ffactor Chwyddo
 cz:Měřítko přiblížení
 de:Zoomfaktor
-dk:Zoom faktor
+dk:Zoomfaktor
 el:Ποσοστό μεγέθυνσης
 es:Proporción de Zoom
 et:Suurendusaste
