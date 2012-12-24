@@ -9,6 +9,7 @@
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
+#include "DebugLog.h"
 #include "DirIter.h"
 #include "Doc.h"
 #include "EbookController.h"
@@ -673,7 +674,69 @@ void SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp)
     SaveThumbnail(*ds);
 }
 
-class ThumbnailRenderingTask : public UITask, public RenderingCallback, public ChmThumbnailCallback
+class ChmThumbnailTask : public UITask, public ChmNavigationCallback
+{
+    ChmEngine *engine;
+    HWND hwnd;
+    RenderedBitmap *bmp;
+
+public:
+    ChmThumbnailTask(ChmEngine *engine, HWND hwnd) :
+        engine(engine), hwnd(hwnd), bmp(NULL) { }
+
+    ~ChmThumbnailTask() {
+        delete engine;
+        DestroyWindow(hwnd);
+        delete bmp;
+    }
+
+    virtual void Execute() {
+        SaveThumbnailForFile(engine->FileName(), bmp);
+        bmp = NULL;
+    }
+
+    virtual void PageNoChanged(int pageNo) {
+        CrashIf(pageNo != 1);
+        RectI area(0, 0, THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
+        bmp = engine->TakeScreenshot(area, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
+        uitask::Post(this);
+    }
+
+    virtual void LaunchBrowser(const WCHAR *url) { }
+    virtual void FocusFrame(bool always) { }
+};
+
+// Create a thumbnail of chm document by loading it again and rendering
+// its first page to a hwnd specially created for it.
+static void CreateChmThumbnail(WindowInfo& win)
+{
+    ChmEngine *engine = ChmEngine::CreateFromFile(win.loadedFilePath);
+    if (!engine)
+        return;
+
+    // We render twice the size of thumbnail and scale it down
+    int winDx = THUMBNAIL_DX * 2 + GetSystemMetrics(SM_CXVSCROLL);
+    int winDy = THUMBNAIL_DY * 2 + GetSystemMetrics(SM_CYHSCROLL);
+    // reusing WC_STATIC. I don't think exact class matters (WndProc
+    // will be taken over by HtmlWindow anyway) but it can't be NULL.
+    HWND hwnd = CreateWindow(WC_STATIC, L"BrowserCapture", WS_POPUP,
+                             0, 0, winDx, winDy, NULL, NULL, NULL, NULL);
+    if (!hwnd) {
+        delete engine;
+        return;
+    }
+#if 0 // when debugging set to 1 to see the window
+    ShowWindow(hwnd, SW_SHOW);
+#endif
+
+    // engine and window will be destroyed by the callback once it's invoked
+    ChmThumbnailTask *callback = new ChmThumbnailTask(engine, hwnd);
+    engine->SetParentHwnd(hwnd);
+    engine->SetNavigationCalback(callback);
+    engine->DisplayPage(1);
+}
+
+class ThumbnailRenderingTask : public UITask, public RenderingCallback
 {
     ScopedMem<WCHAR> filePath;
     RenderedBitmap *bmp;
@@ -697,19 +760,6 @@ public:
         bmp = NULL;
     }
 };
-
-// Create a thumbnail of chm document by loading it again and rendering
-// its first page to a hwnd specially created for it.
-static void CreateChmThumbnail(WindowInfo* win)
-{
-    CrashIf(!win->IsChm());
-    ChmEngine *chmEngine = static_cast<ChmEngine *>(win->dm->AsChmEngine()->Clone());
-    if (!chmEngine)
-        return;
-    SizeI thumbSize(THUMBNAIL_DX, THUMBNAIL_DY);
-    ChmThumbnailCallback *callback = new ThumbnailRenderingTask(chmEngine->FileName());
-    chmEngine->CreateThumbnailAsync(thumbSize, callback);
-}
 
 bool ShouldSaveThumbnail(DisplayState& ds)
 {
@@ -750,7 +800,7 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     }
 
     if (win.IsChm()) {
-        CreateChmThumbnail(&win);
+        CreateChmThumbnail(win);
         return;
     }
 
@@ -791,8 +841,6 @@ static void UnsubclassCanvas(HWND hwnd)
     SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProcCanvas);
     SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)0);
 }
-
-#include "DebugLog.h"
 
 // isNewWindow : if true then 'win' refers to a newly created window that needs
 //   to be resized and placed
