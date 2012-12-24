@@ -20,6 +20,11 @@ public:
     virtual void FocusFrame(bool always) = 0;
 };
 
+class ChmThumbnailCallback {
+public:
+    virtual void Callback(RenderedBitmap *bmp=NULL) = 0;
+};
+
 class ChmEngine : public BaseEngine {
 
 public:
@@ -27,7 +32,7 @@ public:
     virtual void DisplayPage(int pageNo) = 0;
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) = 0;
 
-    virtual void CreateThumbnailOfFirstPageAsync(SizeI size) = 0;
+    virtual void CreateThumbnailAsync(SizeI size, ChmThumbnailCallback *callback) = 0;
     virtual void GoToDestination(PageDestination *link) = 0;
 
     virtual void PrintCurrentPage() = 0;

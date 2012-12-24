@@ -673,7 +673,7 @@ void SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp)
     SaveThumbnail(*ds);
 }
 
-class ThumbnailRenderingTask : public UITask, public RenderingCallback
+class ThumbnailRenderingTask : public UITask, public RenderingCallback, public ChmThumbnailCallback
 {
     ScopedMem<WCHAR> filePath;
     RenderedBitmap *bmp;
@@ -707,7 +707,9 @@ static void CreateChmThumbnail(WindowInfo* win)
     if (!chmEngine)
         return;
     SizeI thumbSize(THUMBNAIL_DX, THUMBNAIL_DY);
-    chmEngine->CreateThumbnailOfFirstPageAsync(thumbSize);}
+    ChmThumbnailCallback *callback = new ThumbnailRenderingTask(chmEngine->FileName());
+    chmEngine->CreateThumbnailAsync(thumbSize, callback);
+}
 
 bool ShouldSaveThumbnail(DisplayState& ds)
 {

@@ -13,12 +13,6 @@
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
-// this is just to resolve compilation problem. This is defined in SumatraPDF.cpp
-// and used in ChmEngine.cpp
-void SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp)
-{
-}
-
 // caller must free() the result
 char *Escape(WCHAR *string, bool keepString=false)
 {

@@ -79,6 +79,9 @@ public:
 struct ThumbnailCreationData {
     HWND hwnd;
     SizeI size;
+    ChmThumbnailCallback *cb;
+
+    ThumbnailCreationData(SizeI size, ChmThumbnailCallback *cb) : size(size), cb(cb) { }
 };
 
 class ChmEngineImpl : public ChmEngine, public HtmlWindowCallback {
@@ -108,8 +111,7 @@ public:
          return NULL;
     }
 
-    void CreateAndSaveThumbnail();
-    virtual void CreateThumbnailOfFirstPageAsync(SizeI size);
+    virtual void CreateThumbnailAsync(SizeI size, ChmThumbnailCallback *callback);
 
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
                          RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
@@ -184,6 +186,7 @@ protected:
     bool Load(const WCHAR *fileName);
     void DisplayPage(const WCHAR *pageUrl);
 
+    void CreateAndSaveThumbnail();
     ChmCacheEntry *FindDataForUrl(const WCHAR *url);
 };
 
@@ -210,10 +213,9 @@ ChmEngineImpl::~ChmEngineImpl()
 // will be called and we'll finish the job
 // Note: this doesn't belong here but the way the code is structured,
 // it's even harder to write it differently
-void ChmEngineImpl::CreateThumbnailOfFirstPageAsync(SizeI size)
+void ChmEngineImpl::CreateThumbnailAsync(SizeI size, ChmThumbnailCallback *callback)
 {
-    thumbnailCreationData = new ThumbnailCreationData();
-    thumbnailCreationData->size = size;
+    thumbnailCreationData = new ThumbnailCreationData(size, callback);
 
     // We render twice the size of thumbnail and scale it down
     RectI area(0, 0, size.dx * 2, size.dy * 2);
@@ -235,25 +237,15 @@ void ChmEngineImpl::CreateThumbnailOfFirstPageAsync(SizeI size)
     DisplayPage(1);
 }
 
-// in SumatraPDF.h
-extern void  SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp);
-
-// TODO: not sure if this happens on UI thread
-// if not, marshall on UI thread. If yes, could do the SaveThumbnailForFile() on a thread
 void ChmEngineImpl::CreateAndSaveThumbnail()
 {
     RenderedBitmap *bmp = NULL;
     SizeI size = thumbnailCreationData->size;
     RectI area(0, 0, size.dx * 2, size.dy * 2);
     HBITMAP hbmp = htmlWindow->TakeScreenshot(area, size);
-    if (!hbmp)
-        goto Exit;
-    bmp = new RenderedBitmap(hbmp, size);
-    if (!bmp)
-        goto Exit;
-    const WCHAR *filePath =  FileName();
-    SaveThumbnailForFile(filePath, bmp);
-Exit:
+    if (hbmp)
+        bmp = new RenderedBitmap(hbmp, size);
+    thumbnailCreationData->cb->Callback(bmp);
     DestroyWindow(thumbnailCreationData->hwnd);
 }
 
