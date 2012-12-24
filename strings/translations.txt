@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6ff9876dfa080fdfaea3e4ecac9ef6634a693d7d
+d43f551cb97266789d2d398d934a8cbb82ed108c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3401,7 +3401,7 @@ ta:செயலி
 th:โปรแกรมใช้งาน:
 tl:Pangalan ng aplikasyon:
 tr:Uygulama:
-tw:程式：
+tw:應用程式：
 uk:Прикладна програма:
 uz:Dastur:
 vn:Ứng dụng:
@@ -3690,7 +3690,7 @@ ta:தானாக புதுப்பித்த பதிப்பை த�
 th:ตรวจสอบการปรับปรุงให้ทันสมัยโดยอัตโนมัติ
 tl:Awtomatikong tignan kung may mga pagbabago
 tr:&Güncellemeleri otomatik olarak kontrol et
-tw:自動檢查軟體更新(&U)
+tw:自動檢查更新(&U)
 uk:Автоматична перевірка оновлень
 uz:&Yangi versiyani avtomatik ravishda tekshirish
 vn:Tự động kiểm tra cập nhật
@@ -6040,7 +6040,7 @@ sv:Ange kommandorad att aktivera när du dubbelklickar på PDF-dokumentet:
 ta:நீங்கள் PDF ஆவணத்தின் மீது இரட்டை சொடுக்கும் போது செயலாக்க கட்டளை வரி உள்ளிடவும்:
 tl:Pakisulat ang command na gagawin kapag dalawang beses na kli-nik ang dokumentong PDF:
 tr:PDF belgesine çift tıklanınca yürütülecek komutu giriniz:
-tw:輸入當以滑鼠雙擊 PDF 文件時應執行的指令：
+tw:請輸入滑鼠雙擊 PDF 文件時應執行的指令：
 uk:Введіть командну стрічку, що викликається при подвійному клацані на PDF-документі:
 uz:PDF-hujjatni ikki marta bosganda ishga tushadigan buyruq satrini kiriting:
 vn:Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
@@ -6548,6 +6548,7 @@ ru:Документы FictionBook
 sq:Dokumente FictionBook
 sr-rs:FictionBook докуменат
 sv:FictionBook dokument
+tw:FictionBook(fb2) 文件
 uk:Документи FictionBook
 uz:FictionBook hujjatlari
 vn:Tập tin FictionBook
@@ -10480,6 +10481,7 @@ sr-rs:Штампач са наведеним именом не постоји
 sv:Det finns ingen skrivade med angivet namn
 ta:குறிபிட்ட பெயரில் அச்சுப்பொறி இல்லை.
 tr:Girilen isimli Yazıcı bulunamadı
+tw:指定之印表機不存在
 uk:Друкарки з даним іменем не існує
 uz:Bunday printer mavjud emas
 vn:Máy in với tên được cho không tồn tại
@@ -11942,7 +11944,7 @@ sr-rs:Опростите, ово није требало да се догоди!
 sv:Ledsen, det där borde inte ha hänt!\n\nVar god tryck 'Avbryt', om du vill hjälpa oss att korrigera orsaken till denna krash.
 ta:மன்னிக்கவும், இது நடந்திருக்க கூடாது! \n\n தயவு செய்து 'ரத்துதை' அழுத்தவும், எங்களுக்கு இந்த விபத்தினை சரிசெய்ய உதவும்.
 tr:Üzgünüz, bu olmamalıydı!\n\nEğer hatayı düzeltmemize yardımcı olmak istiyorsanız lütfen 'Cancel' a basın.
-tw:噢，抱歉，這不該發生的！\n\n如果你希望協助我們修正這個錯誤，請點選「取消」。
+tw:抱歉，這不該發生的！\n\n如果你希望協助我們修正這個錯誤，請點選「取消」。
 uk:Вибачте, але це не мало статись!\n\nНатисніть "Скасувати", якщо ви бажаєте допомогти нам виправити причину збою.
 uz:Kutilmagan voqea sodir bo'ldi.\n\nUshbu nosozlikni tuzatish uchun bizga yordam bermoqchi bo'lsaniz 'Bekor qilish' tugmasini bosing.
 vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', nếu bạn muốn giúp chúng tôi sửa chữa lý do của trường hợp lỗi này.
@@ -12415,7 +12417,7 @@ sr-rs:Означени PDF
 sv:Taggad PDF
 ta:குறியிடப்பட்ட PDF
 tr:İşaretlenmiş PDF
-tw:有標籤的 PDF
+tw:已標示的 PDF
 uk:PDF з мітками
 uz:Belgilangan PDF
 vn:PDF được gắn thẻ
@@ -12886,7 +12888,7 @@ ta:உங்களிடம் புதிய பதிப்பு உள்�
 th:โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
 tl:Ito ang pinakabagong bersyon.
 tr:En güncel sürümü kullanmaktasınız.
-tw:目前使用的版本為最新版。
+tw:您的版本已是最新版。
 uk:Ви вже маєте найновішу версію.
 uz:Sizda so'nggi versiya.
 vn:Bạn đang dùng phiên bản mới nhất.
@@ -12949,7 +12951,7 @@ sv:Du har version %s
 ta:உங்களின் பதிப்பு %s
 tl:Ang bersyong nasa iyo ay %s
 tr:Kullandığınız sürüm: %s
-tw:您使用的版本 %s
+tw:您使用的版本為 %s
 uk:Ви використовуєте версію %s
 uz:Sizdagi versiya %s
 vn:Bạn đang dùng phiên bản %s
