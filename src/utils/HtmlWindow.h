@@ -8,8 +8,6 @@
 class FrameSite;
 class HtmlMoniker;
 
-bool InHtmlNestedMessagePump();
-
 // HtmlWindowCallback allows HtmlWindow to notify other code about notable
 // events or delegate some of the functionality.
 class HtmlWindowCallback
@@ -52,7 +50,7 @@ protected:
 
     ScopedMem<WCHAR>    currentURL;
 
-    void EnsureAboutBlankShown();
+    void NavigateToAboutBlank();
     void CreateBrowser();
 
     void SubclassHwnd();
@@ -78,7 +76,6 @@ public:
     void FindInCurrentPage();
     void SelectAll();
     void CopySelection();
-    bool WaitUntilLoaded(DWORD maxWaitMs, const WCHAR *url=NULL);
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
 

@@ -699,25 +699,15 @@ public:
 };
 
 // Create a thumbnail of chm document by loading it again and rendering
-// its first page to a hwnd specially created for it. An alternative
-// would be to reuse ChmEngine/HtmlWindow we already have but it has
-// its own problem.
-// Could be done in background but no need to do that unless it's
-// too slow (I've measured it at ~1sec for a sample document)
-static void CreateChmThumbnail(WindowInfo& win, DisplayState& ds)
+// its first page to a hwnd specially created for it.
+static void CreateChmThumbnail(WindowInfo* win)
 {
-    assert(win.IsChm());
-    if (!win.IsChm()) return;
-
-    ChmEngine *chmEngine = static_cast<ChmEngine *>(win.dm->AsChmEngine()->Clone());
+    CrashIf(!win->IsChm());
+    ChmEngine *chmEngine = static_cast<ChmEngine *>(win->dm->AsChmEngine()->Clone());
     if (!chmEngine)
         return;
-
     SizeI thumbSize(THUMBNAIL_DX, THUMBNAIL_DY);
-    RenderedBitmap *bmp = chmEngine->CreateThumbnail(thumbSize);
-    SaveThumbnailForFile(win.loadedFilePath, bmp);
-    delete chmEngine;
-}
+    chmEngine->CreateThumbnailOfFirstPageAsync(thumbSize);}
 
 bool ShouldSaveThumbnail(DisplayState& ds)
 {
@@ -758,7 +748,7 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     }
 
     if (win.IsChm()) {
-        CreateChmThumbnail(win, ds);
+        CreateChmThumbnail(&win);
         return;
     }
 
@@ -1037,9 +1027,6 @@ Error:
 
 void ReloadDocument(WindowInfo *win, bool autorefresh)
 {
-    if (win->IsChm() && InHtmlNestedMessagePump())
-        return;
-
     DisplayState ds;
     ds.useGlobalValues = gGlobalPrefs.globalPrefsOnly;
     if (!win->IsDocLoaded()) {
@@ -2361,9 +2348,6 @@ void OnMenuExit()
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (win->IsChm() && InHtmlNestedMessagePump()) {
-            return;
-        }
         AbortFinding(win);
         AbortPrinting(win);
     }
@@ -2450,10 +2434,6 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     // when used as an embedded plugin, closing should happen automatically
     // when the parent window is destroyed (cf. WM_DESTROY)
     if (gPluginMode && !forceClose)
-        return;
-
-    bool wasChm = win->IsChm();
-    if (wasChm && InHtmlNestedMessagePump())
         return;
 
     if (win->IsDocLoaded())

@@ -533,11 +533,6 @@ bool StressTest::OpenFile(const WCHAR *fileName)
     wprintf(L"%s\n", fileName);
     fflush(stdout);
 
-    // TODO: force re-use if we can't CloseWindow()
-    // We need to get rid of html window nested message pump somehow, but after 2.2
-    if (win->IsChm() && InHtmlNestedMessagePump())
-        reuse = true;
-
     LoadArgs args(fileName, NULL, true /* show */, reuse);
     WindowInfo *w = LoadDocument(args);
     if (!w)

@@ -7,7 +7,6 @@
 #include "Dict.h"
 #include "FileUtil.h"
 #include "HtmlWindow.h"
-#include "WinUtil.h"
 
 // when set, always returns false from ChmEngine::IsSupportedFile
 // so that an alternative implementation can be used
@@ -77,8 +76,15 @@ public:
     }
 };
 
+struct ThumbnailCreationData {
+    HWND hwnd;
+    SizeI size;
+};
+
 class ChmEngineImpl : public ChmEngine, public HtmlWindowCallback {
     friend ChmEngine;
+
+    ThumbnailCreationData *thumbnailCreationData;
 
 public:
     ChmEngineImpl();
@@ -101,6 +107,9 @@ public:
          // TOOD: assert(0);
          return NULL;
     }
+
+    void CreateAndSaveThumbnail();
+    virtual void CreateThumbnailOfFirstPageAsync(SizeI size);
 
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
                          RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
@@ -140,7 +149,6 @@ public:
     virtual void SetParentHwnd(HWND hwnd);
     virtual void DisplayPage(int pageNo) { DisplayPage(pages.At(pageNo - 1)); }
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
-    virtual RenderedBitmap *CreateThumbnail(SizeI size);
     virtual void GoToDestination(PageDestination *link);
 
     virtual void PrintCurrentPage() { if (htmlWindow) htmlWindow->PrintCurrentPage(); }
@@ -181,7 +189,7 @@ protected:
 
 ChmEngineImpl::ChmEngineImpl() :
     fileName(NULL), doc(NULL), tocRoot(NULL),
-    htmlWindow(NULL), navCb(NULL), currentPageNo(1)
+    htmlWindow(NULL), navCb(NULL), currentPageNo(1), thumbnailCreationData(NULL)
 {
 }
 
@@ -193,8 +201,60 @@ ChmEngineImpl::~ChmEngineImpl()
     delete htmlWindow;
     delete tocRoot;
     delete doc;
+    delete thumbnailCreationData;
     free(fileName);
     DeleteVecMembers(urlDataCache);
+}
+
+// this initiaties loading of a page. When it's done, OnDocumentComplete()
+// will be called and we'll finish the job
+// Note: this doesn't belong here but the way the code is structured,
+// it's even harder to write it differently
+void ChmEngineImpl::CreateThumbnailOfFirstPageAsync(SizeI size)
+{
+    thumbnailCreationData = new ThumbnailCreationData();
+    thumbnailCreationData->size = size;
+
+    // We render twice the size of thumbnail and scale it down
+    RectI area(0, 0, size.dx * 2, size.dy * 2);
+
+    // reusing WC_STATIC. I don't think exact class matters (WndProc
+    // will be taken over by HtmlWindow anyway) but it can't be NULL.
+    int winDx = area.dx + GetSystemMetrics(SM_CXVSCROLL);
+    int winDy = area.dy + GetSystemMetrics(SM_CYHSCROLL);
+    thumbnailCreationData->hwnd = CreateWindow(WC_STATIC, L"BrowserCapture", WS_POPUP,
+                             0, 0, winDx, winDy, NULL, NULL, NULL, NULL);
+    if (!thumbnailCreationData->hwnd) {
+        delete this;
+    }
+
+#if 0 // when debugging set to 1 to see the window
+    ShowWindow(thumbnailCreationData->hwnd, SW_SHOW);
+#endif
+    SetParentHwnd(thumbnailCreationData->hwnd);
+    DisplayPage(1);
+}
+
+// in SumatraPDF.h
+extern void  SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp);
+
+// TODO: not sure if this happens on UI thread
+// if not, marshall on UI thread. If yes, could do the SaveThumbnailForFile() on a thread
+void ChmEngineImpl::CreateAndSaveThumbnail()
+{
+    RenderedBitmap *bmp = NULL;
+    SizeI size = thumbnailCreationData->size;
+    RectI area(0, 0, size.dx * 2, size.dy * 2);
+    HBITMAP hbmp = htmlWindow->TakeScreenshot(area, size);
+    if (!hbmp)
+        goto Exit;
+    bmp = new RenderedBitmap(hbmp, size);
+    if (!bmp)
+        goto Exit;
+    const WCHAR *filePath =  FileName();
+    SaveThumbnailForFile(filePath, bmp);
+Exit:
+    DestroyWindow(thumbnailCreationData->hwnd);
 }
 
 // Called after html document has been loaded.
@@ -202,6 +262,12 @@ ChmEngineImpl::~ChmEngineImpl()
 // the right page number, select the right item in toc tree)
 void ChmEngineImpl::OnDocumentComplete(const WCHAR *url)
 {
+    if (thumbnailCreationData) {
+        CreateAndSaveThumbnail();
+        delete this;
+        return;
+    }
+
     if (!url)
         return;
     if (*url == '/')
@@ -269,38 +335,6 @@ void ChmEngineImpl::DisplayPage(const WCHAR *pageUrl)
     assert(htmlWindow);
     if (htmlWindow)
         htmlWindow->NavigateToDataUrl(pageUrl);
-}
-
-RenderedBitmap *ChmEngineImpl::CreateThumbnail(SizeI size)
-{
-    RenderedBitmap *bmp = NULL;
-    // We render twice the size of thumbnail and scale it down
-    RectI area(0, 0, size.dx * 2, size.dy * 2);
-
-    // reusing WC_STATIC. I don't think exact class matters (WndProc
-    // will be taken over by HtmlWindow anyway) but it can't be NULL.
-    int winDx = area.dx + GetSystemMetrics(SM_CXVSCROLL);
-    int winDy = area.dy + GetSystemMetrics(SM_CYHSCROLL);
-    HWND hwnd = CreateWindow(WC_STATIC, L"BrowserCapture", WS_POPUP,
-                             0, 0, winDx, winDy, NULL, NULL, NULL, NULL);
-    if (!hwnd)
-        return NULL;
-
-#if 0 // when debugging set to 1 to see the window
-    ShowWindow(hwnd, SW_SHOW);
-#endif
-    SetParentHwnd(hwnd);
-    DisplayPage(1);
-    if (!htmlWindow || !htmlWindow->WaitUntilLoaded(5 * 1000))
-        goto Exit;
-    HBITMAP hbmp = htmlWindow->TakeScreenshot(area, size);
-    if (!hbmp)
-        goto Exit;
-    bmp = new RenderedBitmap(hbmp, size);
-
-Exit:
-    DestroyWindow(hwnd);
-    return bmp;
 }
 
 void ChmEngineImpl::GoToDestination(PageDestination *link)

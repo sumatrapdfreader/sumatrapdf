@@ -423,7 +423,10 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     pIProtSink->ReportProgress(BINDSTATUS_SENDINGREQUEST, urlRest);
 
     HtmlWindow *win = FindHtmlWindowById(htmlWindowId);
-    assert(win);
+    //TODO: this now happens due to events happening on HtmlWindow
+    //used to take a screenshot, so ignore it. Is there a way
+    //to cancel things and not get her?
+    //assert(win);
     if (!win)
         return INET_E_OBJECT_NOT_FOUND;
     if (!win->htmlWinCb)
@@ -1146,7 +1149,7 @@ void HtmlWindow::CreateBrowser()
     webBrowser->put_RegisterAsBrowser(VARIANT_FALSE);
     webBrowser->put_RegisterAsDropTarget(VARIANT_TRUE);
 
-    EnsureAboutBlankShown();
+    NavigateToAboutBlank();
     SubclassHwnd();
 }
 
@@ -1221,11 +1224,7 @@ void HtmlWindow::NavigateToDataUrl(const WCHAR *url)
 void HtmlWindow::NavigateToUrl(const WCHAR *url)
 {
     VARIANT urlVar;
-    VariantInit(&urlVar);
-    urlVar.vt = VT_BSTR;
-    urlVar.bstrVal = SysAllocString(url);
-    if (!urlVar.bstrVal)
-        return;
+    VariantInitBstr(urlVar, url);
     currentURL.Set(NULL);
     webBrowser->Navigate2(&urlVar, 0, 0, 0, 0);
     VariantClear(&urlVar);
@@ -1281,13 +1280,11 @@ void HtmlWindow::CopySelection()
     webBrowser->ExecWB(OLECMDID_COPY, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
 }
 
-void HtmlWindow::EnsureAboutBlankShown()
+void HtmlWindow::NavigateToAboutBlank()
 {
     if (blankWasShown)
         return;
     NavigateToUrl(L"about:blank");
-    WaitUntilLoaded(INFINITE, L"about:blank");
-    blankWasShown = true;
 }
 
 void HtmlWindow::SetHtml(const char *s, size_t len)
@@ -1384,6 +1381,12 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
 
 void HtmlWindow::OnDocumentComplete(const WCHAR *url)
 {
+    // we don't notify about "about:blank"
+    if (str::EqI(L"about:blank", url)) {
+        blankWasShown = true;
+        return;
+    }
+
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
@@ -1428,69 +1431,10 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject *dataObj)
     return hDrop != NULL ? S_OK : E_FAIL;
 }
 
-// Just to be safe, we use Interlocked*() functions
-// to maintain pumpNestCount
-static LONG pumpNestCount = 0;
-
-static void PumpRemainingMessages()
-{
-    MSG msg;
-    InterlockedIncrement(&pumpNestCount);
-    for (;;) {
-        bool moreMessages = PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
-        if (!moreMessages)
-            goto Exit;
-        GetMessage(&msg, NULL, 0, 0);
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-Exit:
-    InterlockedDecrement(&pumpNestCount);
-}
-
-// TODO: this is a terrible hack. When we're processing messages
-// with the intention of advancing browser window, we might process
-// a message that will cause us to close the chm document and related
-// classes while we're still using them, so we use this function
-// to block those cases.
-// The right fix is to move to truly async processing where instead
-// of busy-waiting for html loading to finish, we schedule the
-// remaining of the code to be executed in document loaded
-// notification/callback
-bool InHtmlNestedMessagePump()
-{
-    return pumpNestCount > 0;
-}
-
 LRESULT HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp)
 {
     HWND hwndBrowser = GetBrowserControlHwnd(hwndParent);
     return SendMessage(hwndBrowser, msg, wp, lp);
-}
-
-static bool LoadedExpectedPage(const WCHAR *expectedUrl, const WCHAR *loadedUrl)
-{
-    if (!loadedUrl)
-        return false;
-    if (!expectedUrl)
-        return true;
-    return str::Eq(expectedUrl, loadedUrl);
-}
-
-bool HtmlWindow::WaitUntilLoaded(DWORD maxWaitMs, const WCHAR *url)
-{
-    Timer timer(true);
-    // in some cases (like reading chm from network drive without the right permissions)
-    // web control might navigate to about:blank instead of the url we asked for, so
-    // we stop when navigation is finished but only consider it successful if
-    // we navigated to the url we asked for
-    // TODO: we have a race here: if user chooses e.g. to close the document while we're
-    // here, we'll close the ChmEngine etc. and try to use it after we exit.
-    while (!currentURL && (timer.GetTimeInMs() < maxWaitMs)) {
-        PumpRemainingMessages();
-        Sleep(100);
-    }
-    return LoadedExpectedPage(url, currentURL);
 }
 
 FrameSite::FrameSite(HtmlWindow * win)
