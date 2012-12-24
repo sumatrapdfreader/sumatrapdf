@@ -1281,3 +1281,11 @@ void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu)
     int y = wi.rcWindow.top;
     MoveWindow(hwnd, x, y, dx, dy, TRUE);
 }
+
+void VariantInitBstr(VARIANT& urlVar, const WCHAR *s)
+{
+    VariantInit(&urlVar);
+    urlVar.vt = VT_BSTR;
+    urlVar.bstrVal = SysAllocString(s);
+}
+
