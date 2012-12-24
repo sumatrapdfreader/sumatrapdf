@@ -126,8 +126,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void **ppvObject);
-    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
-    STDMETHODIMP_(ULONG) Release();
+    ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release();
 
 protected:
     LONG refCount;
@@ -202,16 +202,11 @@ class ComRefCounted {
     ComRefCounted() {
         refCount = 1;
     }
-    STDMETHODIMP_(ULONG) AddRef();
-    STDMETHODIMP_(ULONG) Release();
+    ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release();
 };
 
-STDMETHODIMP_(ULONG) ComRefCounted::Release()
-{
-    return InterlockedIncrement(&refCount);
-}
-
-STDMETHODIMP_(ULONG) ComRefCounted::Release()
+ULONG STDMETHODCALLTYPE ComRefCounted::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
@@ -233,8 +228,8 @@ protected:
 public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
-    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
-    STDMETHODIMP_(ULONG) Release();
+    ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release();
 
     // IInternetProtocolInfo
     STDMETHODIMP ParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD dwParseFlags,
@@ -257,7 +252,7 @@ protected:
     LONG refCount;
 };
 
-STDMETHODIMP_(ULONG) HW_IInternetProtocolInfo::Release()
+ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
@@ -291,8 +286,8 @@ protected:
 public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
-    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
-    STDMETHODIMP_(ULONG) Release();
+    ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release();
 
     // IInternetProtocol
     STDMETHODIMP Start(
@@ -320,7 +315,7 @@ protected:
     size_t dataCurrPos;
 };
 
-STDMETHODIMP_(ULONG) HW_IInternetProtocol::Release()
+ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
@@ -481,8 +476,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
-    STDMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
-    STDMETHODIMP_(ULONG) Release();
+    ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
+    ULONG STDMETHODCALLTYPE Release();
 
     // IClassFactory
     STDMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject);
@@ -574,8 +569,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IOleWindow
     STDMETHODIMP GetWindow(HWND*);
@@ -606,8 +601,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IOleWindow
     STDMETHODIMP GetWindow(HWND* h)
@@ -658,8 +653,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IOleClientSite
     STDMETHODIMP SaveObject() { return S_OK; }
@@ -680,8 +675,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IOleControlSite
     STDMETHODIMP OnControlInfoChanged() { return S_OK; }
@@ -703,8 +698,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IOleCommandTarget
     STDMETHODIMP QueryStatus(const GUID*, ULONG, OLECMD[], OLECMDTEXT*);
@@ -721,8 +716,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IParseDisplayName
     STDMETHODIMP ParseDisplayName(IBindCtx*, LPOLESTR, ULONG*, IMoniker**) { return E_NOTIMPL; }
@@ -751,8 +746,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IDispatch
     STDMETHODIMP GetIDsOfNames(REFIID, OLECHAR**, unsigned int, LCID, DISPID*) { return E_NOTIMPL; }
@@ -771,8 +766,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IAdviseSink
     void STDMETHODCALLTYPE OnDataChange(FORMATETC*, STGMEDIUM*) { }
@@ -800,8 +795,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IDocHostUIHandler
     STDMETHODIMP ShowContextMenu(DWORD dwID, POINT *ppt, IUnknown *pcmdtReserved, IDispatch *pdispReserved) { return S_FALSE; }
@@ -830,8 +825,8 @@ public:
 
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
-    STDMETHODIMP_(ULONG) AddRef() { return fs->AddRef(); }
-    STDMETHODIMP_(ULONG) Release() { return fs->Release(); }
+    ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
+    ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     STDMETHODIMP DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
         HRESULT hr = fs->htmlWindow->OnDragEnter(pDataObj);
@@ -861,8 +856,8 @@ public:
 public:
     // IUnknown
     STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
-    STDMETHODIMP_(ULONG) AddRef(void);
-    STDMETHODIMP_(ULONG) Release(void);
+    ULONG STDMETHODCALLTYPE AddRef(void);
+    ULONG STDMETHODCALLTYPE Release(void);
 
     // IMoniker
     STDMETHODIMP BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj);
@@ -987,12 +982,12 @@ STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void **ppvObject)
     return S_OK;
 }
 
-STDMETHODIMP_(ULONG) HtmlMoniker::AddRef()
+ULONG STDMETHODCALLTYPE HtmlMoniker::AddRef()
 {
     return InterlockedIncrement(&refCount);
 }
 
-STDMETHODIMP_(ULONG) HtmlMoniker::Release()
+ULONG STDMETHODCALLTYPE HtmlMoniker::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
@@ -1591,7 +1586,7 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
     return S_OK;
 }
 
-STDMETHODIMP_(ULONG) FrameSite::Release()
+ULONG STDMETHODCALLTYPE FrameSite::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
