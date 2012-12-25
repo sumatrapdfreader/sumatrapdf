@@ -32,6 +32,15 @@ def TgaRleUnpack(data):
 			i += 3
 	return "".join(exp)
 
+def TgaCmpColor(col1, col2):
+	# returns 0 for identical colors, 1 for similar colors and 2 for different colors
+	if col1 == col2:
+		return 0
+	rgb1, rgb2 = struct.unpack('<BBB', col1), struct.unpack('<BBB', col2)
+	if (rgb1[0] - rgb2[0]) ** 2 + (rgb1[1] - rgb2[1]) ** 2 + (rgb1[2] - rgb2[2]) ** 2 < 75:
+		return 1
+	return 2
+
 def BitmapDiff(tgaRef, tgaCmp, tgaDiff):
 	# ensure that the comparison bitmap exists
 	if not os.path.isfile(tgaCmp):
@@ -56,20 +65,21 @@ def BitmapDiff(tgaRef, tgaCmp, tgaDiff):
 	if len(cmpData) < width * height * 3:
 		refData += "\xFF" * (width * height * 3 - len(cmpData))
 	
-	# write a black pixel for identical and a red pixel for different color values
-	# (packed as a type 9 TGA file - 8-bit indexed run-length encoded)
-	diff = [struct.pack("<BBBHHBHHHHBB", 0, 1, 9, 0, 2, 24, 0, 0, width, height, 8, 0) + "\x00\x00\x00\x00\x00\xFF"]
+	# write a black pixel for identical, a dark red pixel for similar and a
+	# bright red pixel for different color values (packed as a type 9 TGA file,
+	# 8-bit indexed run-length encoded)
+	diff = [struct.pack("<BBBHHBHHHHBB", 0, 1, 9, 0, 3, 24, 0, 0, width, height, 8, 0), "\x00\x00\x00", "\x00\x00\x80", "\x00\x00\xFF"]
 	for i in range(height):
 		refLine = refData[i * width * 3:(i + 1) * width * 3]
 		cmpLine = cmpData[i * width * 3:(i + 1) * width * 3]
 		j = 0
 		# reencode the difference file line-by-line
 		while j < width:
-			same = refLine[j*3:j*3+3] == cmpLine[j*3:j*3+3]
+			color = TgaCmpColor(refLine[j*3:j*3+3], cmpLine[j*3:j*3+3])
 			k = j + 1
-			while k < width and k - j < 128 and (refLine[k*3:k*3+3] == cmpLine[k*3:k*3+3]) == same:
+			while k < width and k - j < 128 and color == TgaCmpColor(refLine[k*3:k*3+3], cmpLine[k*3:k*3+3]):
 				k += 1
-			diff.append(struct.pack("BB", k - j - 1 + 128, 0 if same else 1))
+			diff.append(struct.pack("BB", k - j - 1 + 128, color))
 			j = k
 	
 	# add the file footer
