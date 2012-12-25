@@ -442,6 +442,9 @@ pdf_load_page(pdf_document *xref, int number)
 
 		if (pdf_resources_use_blending(ctx, page->resources))
 			page->transparency = 1;
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2107 */
+		else if (!strcmp(pdf_to_name(pdf_dict_getp(pageobj, "Group/S")), "Transparency"))
+			page->transparency = 1;
 
 		for (annot = page->annots; annot && !page->transparency; annot = annot->next)
 			if (annot->ap && pdf_resources_use_blending(ctx, annot->ap->resources))

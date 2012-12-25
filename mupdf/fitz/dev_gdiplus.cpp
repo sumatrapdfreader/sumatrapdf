@@ -561,6 +561,7 @@ public:
 		if (!image->interpolate && !alwaysInterpolate && graphics == this->graphics)
 		{
 			GraphicsState state = graphics->Save();
+			// TODO: why does this lead to subpar results when printing?
 			graphics->SetInterpolationMode(InterpolationModeNearestNeighbor);
 			graphics->DrawImage(&PixmapBitmap(ctx, image), corners, 3, 0, 0, image->w, image->h, UnitPixel, &DrawImageAttributes(alpha));
 			graphics->Restore(state);
@@ -571,6 +572,11 @@ public:
 			{
 				int w = floorf(image->w * scale + 0.5f);
 				int h = floorf(image->h * scale + 0.5f);
+				if (fz_is_rectilinear(ctm))
+				{
+					w = floorf(hypotf(corners[0].X - corners[1].X, corners[0].Y - corners[1].Y) + 0.5f);
+					h = floorf(hypotf(corners[0].X - corners[2].X, corners[0].Y - corners[2].Y) + 0.5f);
+				}
 				fz_pixmap *scaledPixmap = fz_scale_pixmap(ctx, image, 0, 0, w, h, NULL);
 				if (scaledPixmap)
 					graphics->DrawImage(&PixmapBitmap(ctx, scaledPixmap), corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
@@ -595,7 +601,7 @@ protected:
 		graphics->SetInterpolationMode(InterpolationModeHighQualityBicubic);
 		graphics->SetSmoothingMode(SmoothingModeHighQuality);
 		graphics->SetTextRenderingHint(TextRenderingHintAntiAlias);
-		graphics->SetPixelOffsetMode(PixelOffsetModeHighQuality);
+		graphics->SetPixelOffsetMode(PixelOffsetModeHalf);
 		
 		return graphics;
 	}
