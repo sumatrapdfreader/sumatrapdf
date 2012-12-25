@@ -304,6 +304,13 @@
 
     *anoutline = null_outline;
 
+    if ( numContours < 0                  ||
+         (FT_UInt)numContours > numPoints )
+      return FT_Err_Invalid_Argument;
+
+    if ( numPoints > FT_OUTLINE_POINTS_MAX )
+      return FT_Err_Array_Too_Large;
+
     if ( FT_NEW_ARRAY( anoutline->points,   numPoints   ) ||
          FT_NEW_ARRAY( anoutline->tags,     numPoints   ) ||
          FT_NEW_ARRAY( anoutline->contours, numContours ) )
