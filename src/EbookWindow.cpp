@@ -541,7 +541,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
             // showing a document, we create invisible window for this document and
             // we don't want to show empty window if loading fails
             if (gEbookWindows.Count() > 0 || gWindows.Count() > 1) {
-                CloseWindow(w, false, false);
+                CloseWindow(w, false);
                 if (gFileHistory.MarkFileInexistent(fullPath))
                     SavePrefs();
                 // TODO: notify the use that loading failed (e.g. show a notification)
