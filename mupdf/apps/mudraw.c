@@ -571,8 +571,8 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		printf("page %s %d", filename, pagenum);
 
 #ifdef GDI_PLUS_BMP_RENDERER
-	// hack: use -d to "disable GDI+" when saving as TGA
-	if (output && (strstr(output, ".bmp") || strstr(output, ".tga") && uselist))
+	// hack: use -G0 to "enable GDI+" when saving as TGA
+	if (output && (strstr(output, ".bmp") || strstr(output, ".tga") && !gamma_value))
 		drawbmp(ctx, doc, page, list, pagenum);
 	else
 #endif
