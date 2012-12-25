@@ -111,6 +111,8 @@ static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
     if (TotalWindowsCount() > 0)
         return;
     if (quitIfLast) {
+        // TODO: the way we call SavePrefs() is all over the place. More principled approach would be better
+        SavePrefs();
         PostQuitMessage(0);
         return;
     }
