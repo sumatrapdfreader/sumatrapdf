@@ -215,10 +215,10 @@ $(OS)\EbookWindow.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Touc
 $(OS)\EbookWindow.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
 $(OS)\EbookWindow.obj: src\WindowInfo.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\Doc.h
-$(OS)\EngineDump.obj: src\PdfEngine.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\EngineDump.obj: src\utils\CmdLineParser.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\EngineDump.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TgaReader.h
-$(OS)\EngineDump.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\EngineDump.obj: src\ImagesEngine.h src\PdfEngine.h src\utils\Allocator.h
+$(OS)\EngineDump.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
+$(OS)\EngineDump.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EngineDump.obj: src\utils\TgaReader.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\ExternalPdfViewer.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\ExternalPdfViewer.obj: src\DisplayState.h src\Doc.h src\ExternalPdfViewer.h
 $(OS)\ExternalPdfViewer.obj: src\FileHistory.h src\SumatraPDF.h src\SumatraWindow.h
@@ -250,8 +250,8 @@ $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
 $(OS)\ImagesEngine.obj: src\utils\HtmlPullParser.h src\utils\JsonParser.h src\utils\Scoped.h
-$(OS)\ImagesEngine.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
-$(OS)\ImagesEngine.obj: src\utils\ZipUtil.h
+$(OS)\ImagesEngine.obj: src\utils\StrUtil.h src\utils\TgaReader.h src\utils\Vec.h
+$(OS)\ImagesEngine.obj: src\utils\WinUtil.h src\utils\ZipUtil.h
 $(OS)\Install.obj: src\BaseEngine.h src\ifilter\PdfFilter.h src\previewer\PdfPreview.h
 $(OS)\Install.obj: src\installer\Installer.h src\installer\Resource.h src\utils\FileTransactions.h
 $(OS)\Install.obj: src\utils\FileUtil.h src\utils\Timer.h src\utils\WinUtil.h

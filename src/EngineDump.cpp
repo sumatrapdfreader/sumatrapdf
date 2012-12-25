@@ -7,6 +7,7 @@
 #include "CmdLineParser.h"
 #include "Doc.h"
 #include "FileUtil.h"
+#include "ImagesEngine.h"
 #include "PdfEngine.h"
 #include "TgaReader.h"
 #include "WinUtil.h"
@@ -301,14 +302,10 @@ void RenderDocument(BaseEngine *engine, const WCHAR *renderPath)
 {
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderedBitmap *bmp = engine->RenderBitmap(pageNo, 1.0, 0);
-        size_t len = 0;
-        ScopedMem<unsigned char> data;
-        if (bmp && str::EndsWithI(renderPath, L".bmp"))
-            data.Set(SerializeBitmap(bmp->GetBitmap(), &len));
-        else if (bmp)
-            data.Set(tga::SerializeBitmap(bmp->GetBitmap(), &len));
+        if (!bmp)
+            continue;
         ScopedMem<WCHAR> pageBmpPath(str::Format(renderPath, pageNo));
-        file::WriteAll(pageBmpPath, data, len);
+        SaveRenderedBitmap(bmp, pageBmpPath);
         delete bmp;
     }
 }
@@ -336,7 +333,7 @@ int main(int argc, char **argv)
 Usage:
         ErrOut("%s <filename> [-pwd <password>][-full][-alt][-render <path-%%d.tga>]\n",
             path::GetBaseName(argList.At(0)));
-        return 0;
+        return 2;
     }
 
     ScopedMem<WCHAR> filePath;

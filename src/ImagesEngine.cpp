@@ -9,6 +9,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "JsonParser.h"
+#include "TgaReader.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
@@ -70,12 +71,19 @@ static bool GetEncoderClsid(const WCHAR *format, CLSID& clsid)
 
 bool SaveRenderedBitmap(RenderedBitmap *bmp, const WCHAR *filePath)
 {
+    const WCHAR *fileExt = path::GetExt(filePath);
+    if (str::EqI(fileExt, L".tga")) {
+        size_t tgaDataLen;
+        ScopedMem<unsigned char> tgaData(tga::SerializeBitmap(bmp->GetBitmap(), &tgaDataLen));
+        if (!tgaData)
+            return false;
+        return file::WriteAll(filePath, tgaData.Get(), tgaDataLen);
+    }
+
     size_t bmpDataLen;
     ScopedMem<char> bmpData((char *)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
     if (!bmpData)
         return false;
-
-    const WCHAR *fileExt = path::GetExt(filePath);
     if (str::EqI(fileExt, L".bmp"))
         return file::WriteAll(filePath, bmpData.Get(), bmpDataLen);
 
@@ -92,7 +100,6 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const WCHAR *filePath)
         if (str::EqI(fileExt, encoders[i]))
             encoder = encoders[i+1];
     }
-
     CLSID encClsid;
     if (!encoder || !GetEncoderClsid(encoder, encClsid))
         return false;
@@ -100,7 +107,6 @@ bool SaveRenderedBitmap(RenderedBitmap *bmp, const WCHAR *filePath)
     Bitmap *gbmp = BitmapFromData(bmpData, bmpDataLen);
     if (!gbmp)
         return false;
-
     Status status = gbmp->Save(filePath, &encClsid);
     delete gbmp;
 
