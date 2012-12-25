@@ -485,8 +485,7 @@ Exit:
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
-    if (!RunningUnderWine())
-        UninstallCrashHandler();
+    UninstallCrashHandler();
 
 #ifdef DEBUG
     // output leaks after all destructors of static objects have run
