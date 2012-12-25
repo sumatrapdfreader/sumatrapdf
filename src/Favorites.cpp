@@ -749,6 +749,9 @@ static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 
     switch (msg) {
 
+        case WM_ERASEBKGND:
+            return FALSE;
+
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs.escToExit)
                 DestroyWindow(win->hwndFrame);
@@ -812,7 +815,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
 
 void CreateFavorites(WindowInfo *win)
 {
-    win->hwndFavBox = CreateWindow(WC_STATIC, L"", WS_CHILD,
+    win->hwndFavBox = CreateWindow(WC_STATIC, L"", WS_CHILD|WS_CLIPCHILDREN,
                                    0, 0, gGlobalPrefs.sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, ghinst, NULL);
     HWND title = CreateWindow(WC_STATIC, L"", WS_VISIBLE | WS_CHILD,

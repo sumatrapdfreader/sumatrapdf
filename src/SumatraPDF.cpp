@@ -3903,6 +3903,8 @@ LRESULT CALLBACK WndProcCloseButton(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     } else if (WM_MOUSELEAVE == msg) {
         win::SetText(hwnd, L"");
         stateChanged = true;
+    } else if (WM_ERASEBKGND == msg) {
+        return FALSE;
     }
 
     if (stateChanged) {

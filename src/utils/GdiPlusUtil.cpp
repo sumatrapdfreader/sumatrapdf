@@ -206,7 +206,7 @@ void DrawCloseButton(DRAWITEMSTRUCT *dis)
     Color c;
     c.SetFromCOLORREF(GetSysColor(COLOR_BTNFACE)); // hoping this is always the right color
     SolidBrush bgBrush(c);
-    g.FillRectangle(&bgBrush, r.x, r.y, r.dx, r.dy);
+    g.FillRectangle(&bgBrush, r.x-1, r.y-1, r.dx+2, r.dy+2);  //A little bigger than our target to prevent edge smoothing blending background in
 
     // in onhover state, background is a red-ish circle
     if (onHover) {

@@ -430,6 +430,8 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
         return CallWindowProc(DefWndProcTocTree, hwnd, message, wParam, lParam);
 
     switch (message) {
+        case WM_ERASEBKGND:
+            return FALSE;
         case WM_CHAR:
             if (VK_ESCAPE == wParam && gGlobalPrefs.escToExit)
                 DestroyWindow(win->hwndFrame);
@@ -512,7 +514,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 void CreateToc(WindowInfo *win)
 {
     // toc windows
-    win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD,
+    win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD|WS_CLIPCHILDREN,
                                    0, 0, gGlobalPrefs.sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, ghinst, NULL);
     HWND title = CreateWindow(WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
