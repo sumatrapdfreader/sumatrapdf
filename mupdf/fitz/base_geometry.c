@@ -170,7 +170,8 @@ const fz_bbox fz_infinite_bbox = { 1, 1, -1, -1 };
 const fz_bbox fz_empty_bbox = { 0, 0, 0, 0 };
 const fz_bbox fz_unit_bbox = { 0, 0, 1, 1 };
 
-#define SAFE_INT(f) ((f > INT_MAX) ? INT_MAX : ((f < INT_MIN) ? INT_MIN : (int)f))
+/* SumatraPDF: prevent an integer overflow */
+#define SAFE_INT(f) (((f) > INT_MAX || (f) > (1 << 30) && (int)(f) < 0) ? INT_MAX : (((f) < INT_MIN || (f) < -(1 << 30) && (int)(f) > 0) ? INT_MIN : (int)(f)))
 fz_bbox
 fz_bbox_covering_rect(fz_rect f)
 {
