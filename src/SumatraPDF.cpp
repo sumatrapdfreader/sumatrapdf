@@ -2090,8 +2090,8 @@ static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
     case MA_SELECTING:
         win.selectionRect.dx = x - win.selectionRect.x;
         win.selectionRect.dy = y - win.selectionRect.y;
-        win.RepaintAsync();
         OnSelectionEdgeAutoscroll(&win, x, y);
+        win.RepaintAsync();
         break;
     case MA_DRAGGING:
     case MA_DRAGGING_RIGHT:
@@ -4093,7 +4093,8 @@ static void OnTimer(WindowInfo& win, HWND hwnd, WPARAM timerId)
             win.MoveDocBy(win.xScrollSpeed, win.yScrollSpeed);
         else if (MA_SELECTING == win.mouseAction || MA_SELECTING_TEXT == win.mouseAction) {
             GetCursorPosInHwnd(win.hwndCanvas, pt);
-            OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
+            if (NeedsSelectionEdgeAutoscroll(&win, pt.x, pt.y))
+                OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
         }
         else {
             KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);

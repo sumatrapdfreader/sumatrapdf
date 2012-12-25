@@ -35,6 +35,7 @@ void UpdateTextSelection(WindowInfo *win, bool select=true);
 void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit=true, bool relative=false);
 void CopySelectionToClipboard(WindowInfo *win);
 void OnSelectAll(WindowInfo *win, bool textOnly=false);
+bool NeedsSelectionEdgeAutoscroll(WindowInfo *win, int x, int y);
 void OnSelectionEdgeAutoscroll(WindowInfo *win, int x, int y);
 void OnSelectionStart(WindowInfo *win, int x, int y, WPARAM key);
 void OnSelectionStop(WindowInfo *win, int x, int y, bool aborted);
