@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d43f551cb97266789d2d398d934a8cbb82ed108c
+ebcb771232052f69cc683717a4ed9eadbc22ce68
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3054,7 +3054,7 @@ gl:Engadir páxina %s aos favoritos
 he:למועדפים %s הוסף עמוד
 hr:Dodaj stranicu %s u favorite
 hu:%s. oldal hozzáadása a kedvencekhez
-id:Tambah Halaman %s Ke favorit
+id:Tambah Halaman %s Ke Favorit
 it:Aggiungi pagina %s ai Preferiti
 ja:ページ %s を追加
 ka:%s გვერდის რჩეულებში დამატება
@@ -4505,6 +4505,7 @@ fi:Yhteensopivuus
 fr:Compatibilité
 ga:Comhoiriúnacht
 hr:Kompatibilnost
+id:Kompabilitas
 it:Compatibilità
 ja:互換性
 kr:호환성
@@ -6455,6 +6456,7 @@ et:Kiire veebivaade
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
 hr:Brzi Web prikaz
+id:Tampilan Web Cepat
 it:Vista web veloce
 ja:高速ウェブ表示
 kr:빠른 웹 보기
@@ -6538,6 +6540,7 @@ es:Documentos FictionBook
 et:FictionBook-dokumendid
 fr:Documents FictionBook
 hr:FictionBook dokumenti
+id:Dokumen FictionBook
 it:Documenti FictionBook
 ja:フィクション文章
 nl:FictionBook documenten
@@ -9540,6 +9543,7 @@ et:PDF-i optimeerimised:
 fr:Optimisations PDF
 ga:Optimisations PDF
 hr:PDF optimizacija:
+id:Optimisasi PDF
 it:Ottimizzazioni PDF:
 ja:PDF 最適化:
 kr:PDF 최적화:
@@ -10363,6 +10367,7 @@ fi:Tulosta &kuvana (kuluttaa enemmän muistia)
 fr:Imprimer en tant qu'&image (demande plus de mémoire)
 ga:Priontáil mar &íomhá (Tá gá le níos mó cuimhne)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
+id:Cetak Sebagai Gambar (butuh banyak memori)
 it:Stampa come &immagine (richiede più memoria))
 ja:画像として印刷 (より多くのメモリを必要とします) (&I)
 kr:이미지로 인쇄(&I) (더 많은 메모리 필요)
@@ -11534,6 +11539,7 @@ fi:Näytä &Kirjanmerkit
 fr:Voir les &Marque-pages
 ga:Lea&bharmharcanna a taispeáint
 hr:Prikaži &oznake
+id:Tampilkan &Markah
 it:Visualizza segnali&bri
 ja:ブックマークを表示(&B)
 kr:책갈피 보이기(&B)
@@ -12402,6 +12408,7 @@ et:Siltidega PDF
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
 hr:Strukturirani PDF
+id:PDF Terlabeli
 it:PDF marcati
 ja:タグ付き PDF
 kr:태그있는 PDF
