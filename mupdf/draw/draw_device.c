@@ -1761,7 +1761,10 @@ fz_draw_apply_transfer_function(fz_device *devp, fz_transfer_function *tr, int f
 		else if (dest->n > 2)
 			for (n = 0; n < dest->n - 1; n++)
 				*s++ = tr->function[n][*s];
-		*s++ = for_mask ? tr->function[3][*s] : *s;
+		if (for_mask && !dev->stack[dev->top].luminosity)
+			*s++ = tr->function[3][*s];
+		else
+			s++;
 	}
 #ifdef DUMP_GROUP_BLENDS
 	fz_dump_blend(dev->ctx, dest, " mapped to ");

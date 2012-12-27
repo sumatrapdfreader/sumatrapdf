@@ -45,7 +45,7 @@ class PixmapBitmap : public Bitmap
 
 public:
 	PixmapBitmap(fz_context *ctx, fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h,
-		pixmap->has_alpha ? PixelFormat32bppARGB :
+		pixmap->has_alpha ? PixelFormat32bppPARGB:
 		pixmap->colorspace != fz_device_gray ? PixelFormat24bppRGB :
 		pixmap->single_bit ? PixelFormat1bppIndexed : PixelFormat8bppIndexed),
 		palette(NULL), ctx(ctx)
@@ -370,7 +370,7 @@ public:
 		stack->bounds.Y = floorf(bounds.Y); stack->bounds.Height = ceilf(bounds.Height) + 1;
 		
 		stack->saveG = graphics;
-		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
+		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppPARGB);
 		graphics = _setup(new Graphics(stack->layer));
 		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
 		graphics->SetClip(&Region(stack->bounds));
@@ -378,7 +378,7 @@ public:
 		if (mask)
 		{
 			assert(mask->n == 1 && !mask->colorspace);
-			stack->mask = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
+			stack->mask = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppPARGB);
 			
 			Graphics g2(stack->mask);
 			_setup(&g2);
@@ -412,7 +412,7 @@ public:
 	{
 		assert(stack->layer && !stack->mask);
 		stack->mask = stack->layer;
-		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
+		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppPARGB);
 		delete graphics;
 		graphics = _setup(new Graphics(stack->layer));
 		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
@@ -428,7 +428,7 @@ public:
 		stack->bounds.Y = bbox.y0; stack->bounds.Height = bbox.y1 - bbox.y0;
 		
 		stack->saveG = graphics;
-		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppARGB);
+		stack->layer = new Bitmap(stack->bounds.Width, stack->bounds.Height, PixelFormat32bppPARGB);
 		graphics = _setup(new Graphics(stack->layer));
 		graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
 		graphics->SetClip(&Region(stack->bounds));
@@ -497,7 +497,7 @@ public:
 #ifdef DUMP_BITMAP_STEPS
 			dumpLayer("before blending onto white background for annotations");
 #endif
-			Bitmap *whiteBg = new Bitmap(stack->layer->GetWidth(), stack->layer->GetHeight(), PixelFormat32bppARGB);
+			Bitmap *whiteBg = new Bitmap(stack->layer->GetWidth(), stack->layer->GetHeight(), PixelFormat32bppPARGB);
 			delete graphics;
 			graphics = _setup(new Graphics(whiteBg));
 			graphics->Clear(Color::White);
@@ -538,8 +538,6 @@ public:
 				dumpLayer("  applying blending to layer");
 #endif
 			}
-			// TODO: semi-transparent white gets minimally darker with every step
-			// (due to repeated unpremultiplication and premultiplication?)
 			graphics->DrawImage(stack->layer, stack->bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel, &DrawImageAttributes(stack->layerAlpha));
 #ifdef DUMP_BITMAP_STEPS
 			dumpLayer(" result of popClip", true);
@@ -581,7 +579,7 @@ public:
 			{
 				for (int n = 0; n < 3; n++)
 					Scan0[col * 4 + n] = tr->function[2 - n][Scan0[col * 4 + n]];
-				if (for_mask)
+				if (for_mask && !stack->luminosity)
 					Scan0[col * 4 + 3] = tr->function[3][Scan0[col * 4 + 3]];
 			}
 		}
@@ -794,10 +792,10 @@ protected:
 		if (!bgStack || (group->blendmode & FZ_BLEND_ISOLATED))
 		{
 			if ((group->blendmode & FZ_BLEND_KNOCKOUT))
-				return new Bitmap(clipBounds.Width, clipBounds.Height, PixelFormat32bppARGB);
+				return new Bitmap(clipBounds.Width, clipBounds.Height, PixelFormat32bppPARGB);
 			
 			clipBounds.Offset(-group->bounds.X, -group->bounds.Y);
-			return group->layer->Clone(clipBounds, PixelFormat32bppARGB);
+			return group->layer->Clone(clipBounds, PixelFormat32bppPARGB);
 		}
 		
 		Bitmap *backdrop = _flattenBlendBackdrop(bgStack, clipBounds);
