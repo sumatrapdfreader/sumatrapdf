@@ -253,6 +253,8 @@ GExceptionHandler::rethrow(void)
 
 // ------ MEMORY MANAGEMENT HANDLER
 
+/* SumatraPDF: prevent exception handler overriding when not building stand-alone libdjvu */
+#ifndef ALLOW_GLOBAL_OOM_HANDLING
 #ifndef NEED_DJVU_MEMORY
 // This is not activated when C++ memory management
 // is overidden.  The overriding functions handle
@@ -273,6 +275,7 @@ static void (*old_handler)() = set_new_handler(throw_memory_error);
 #  endif // ! WIN32
 # endif // !_MSC_VER
 #endif // !NEED_DJVU_MEMORY
+#endif
 
 
 #ifdef HAVE_NAMESPACES
