@@ -264,7 +264,8 @@ fz_dump_bitmap(fz_context *ctx, Bitmap *bmp, const char *msg)
 	fz_free(ctx, codecInfo);
 	
 	WCHAR filename[MAX_PATH];
-	_swprintf(filename, L"gdump%03d.png", count);
+	_snwprintf(filename, nelem(filename), L"gdump%03d - %S.png", count, msg);
+	filename[MAX_PATH - 1] = '\0';
 	printf("%03d: %s (%dx%d)\n", count, msg, bmp->GetWidth(), bmp->GetHeight());
 	count++;
 	
@@ -400,7 +401,6 @@ public:
 	{
 		// heuristic to determine whether we'll have to keep the first
 		// transparency group for rendering annotations as well
-		// TODO: GDI+ sometimes produces unexpected results if the main background isn't white
 		if (!started)
 			transparency = blendmode == FZ_BLEND_NORMAL && alpha == 1.0f && isolated && !knockout;
 		recordClipMask(rect, false, NULL);
@@ -456,7 +456,7 @@ public:
 	{
 		assert(stack->layer && stack->saveG && stack->xstep && stack->ystep);
 #ifdef DUMP_BITMAP_STEPS
-		fz_dump_bitmap(ctx, stack->layer, "a single tile");
+		dumpLayer("a single tile");
 #endif
 		
 		for (int y = stack->tileArea.y0; y < stack->tileArea.y1; y++)
@@ -478,11 +478,7 @@ public:
 		stack->layer = NULL;
 		
 #ifdef DUMP_BITMAP_STEPS
-		userDataStackItem *bgStack = stack->prev;
-		while (bgStack && !bgStack->layer)
-			bgStack = bgStack->prev;
-		if (bgStack)
-			fz_dump_bitmap(ctx, bgStack->layer, "result of applyTiling");
+		dumpLayer("result of applyTiling", true);
 #endif
 		popClip();
 	}
@@ -498,6 +494,9 @@ public:
 			// instead of blending onto the (white) background, blend onto
 			// a white layer so that blending for annotations works as expected
 			assert(stack->layer);
+#ifdef DUMP_BITMAP_STEPS
+			dumpLayer("before blending onto white background for annotations");
+#endif
 			Bitmap *whiteBg = new Bitmap(stack->layer->GetWidth(), stack->layer->GetHeight(), PixelFormat32bppARGB);
 			delete graphics;
 			graphics = _setup(new Graphics(whiteBg));
@@ -506,7 +505,7 @@ public:
 			delete stack->layer;
 			stack->layer = whiteBg;
 #ifdef DUMP_BITMAP_STEPS
-			fz_dump_bitmap(ctx, stack->layer, "after blending onto white background for annotations");
+			dumpLayer("after blending onto white background for annotations");
 #endif
 			return;
 		}
@@ -515,12 +514,8 @@ public:
 		if (stack->layer)
 		{
 #ifdef DUMP_BITMAP_STEPS
-			fz_dump_bitmap(ctx, stack->layer, "layer at start of popClip");
-			userDataStackItem *bgStack = stack->prev;
-			while (bgStack && !bgStack->layer)
-				bgStack = bgStack->prev;
-			if (bgStack)
-				fz_dump_bitmap(ctx, bgStack->layer, " background at start of popClip");
+			dumpLayer("layer at start of popClip");
+			dumpLayer(" background at start of popClip", true);
 #endif
 			delete graphics;
 			graphics = stack->saveG;
@@ -532,7 +527,7 @@ public:
 #endif
 				_applyMask(stack->layer, stack->mask, stack->luminosity);
 #ifdef DUMP_BITMAP_STEPS
-				fz_dump_bitmap(ctx, stack->layer, "  result of _applyMask");
+				dumpLayer("  result of _applyMask");
 #endif
 			}
 			int blendmode = stack->blendmode & FZ_BLEND_MODEMASK;
@@ -540,13 +535,14 @@ public:
 			{
 				_applyBlend(stack->layer, stack->bounds, blendmode);
 #ifdef DUMP_BITMAP_STEPS
-				fz_dump_bitmap(ctx, stack->layer, "  applying blending to layer");
+				dumpLayer("  applying blending to layer");
 #endif
 			}
+			// TODO: semi-transparent white gets minimally darker with every step
+			// (due to repeated unpremultiplication and premultiplication?)
 			graphics->DrawImage(stack->layer, stack->bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel, &DrawImageAttributes(stack->layerAlpha));
 #ifdef DUMP_BITMAP_STEPS
-			if (bgStack)
-				fz_dump_bitmap(ctx, bgStack->layer, " result of popClip");
+			dumpLayer(" result of popClip", true);
 #endif
 		}
 		
@@ -567,11 +563,11 @@ public:
 			fz_warn(ctx, "layer stack item required for transfer functions");
 			return;
 		}
+#ifdef DUMP_BITMAP_STEPS
+		dumpLayer("layer before transfer function");
+#endif
 		
 		Bitmap *layer = fgStack->layer;
-#ifdef DUMP_BITMAP_STEPS
-		fz_dump_bitmap(ctx, layer, "layer before transfer function");
-#endif
 		Rect bounds(0, 0, layer->GetWidth(), layer->GetHeight());
 		BitmapData data;
 		Status status = layer->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
@@ -593,7 +589,7 @@ public:
 		layer->UnlockBits(&data);
 		
 #ifdef DUMP_BITMAP_STEPS
-		fz_dump_bitmap(ctx, layer, "layer after transfer function");
+		dumpLayer("layer after transfer function");
 #endif
 	}
 
@@ -690,13 +686,8 @@ public:
 			fz_dump_bitmap(ctx, &PixmapBitmap(ctx, image), "image to draw");
 #endif
 		}
-		
 #ifdef DUMP_BITMAP_STEPS
-		userDataStackItem *bgStack = stack->prev;
-		while (bgStack && !bgStack->layer)
-			bgStack = bgStack->prev;
-		if (bgStack)
-			fz_dump_bitmap(ctx, bgStack->layer, "result of drawPixmap");
+		dumpLayer("result of drawPixmap");
 #endif
 	}
 
@@ -898,6 +889,18 @@ protected:
 		}
 		return true;
 	}
+
+#ifdef DUMP_BITMAP_STEPS
+public:
+	void dumpLayer(const char *msg, bool bgLayer=false) const
+	{
+		userDataStackItem *bgStack = bgLayer ? stack->prev : stack;
+		while (bgStack && !bgStack->layer)
+			bgStack = bgStack->prev;
+		if (bgStack)
+			fz_dump_bitmap(ctx, bgStack->layer, msg);
+	}
+#endif
 };
 
 static void
