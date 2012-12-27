@@ -305,7 +305,12 @@ void RenderDocument(BaseEngine *engine, const WCHAR *renderPath)
         if (!bmp)
             continue;
         ScopedMem<WCHAR> pageBmpPath(str::Format(renderPath, pageNo));
-        SaveRenderedBitmap(bmp, pageBmpPath);
+        if (!SaveRenderedBitmap(bmp, pageBmpPath)) {
+            size_t tgaDataLen;
+            ScopedMem<unsigned char> tgaData(tga::SerializeBitmap(bmp->GetBitmap(), &tgaDataLen));
+            if (tgaData)
+                file::WriteAll(pageBmpPath, tgaData.Get(), tgaDataLen);
+        }
         delete bmp;
     }
 }
