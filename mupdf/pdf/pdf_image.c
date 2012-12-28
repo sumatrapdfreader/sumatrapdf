@@ -32,6 +32,34 @@ pdf_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
 	pix->single_bit = 0; /* SumatraPDF: allow optimizing 1-bit pixmaps */
 }
 
+/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
+static void
+pdf_unblend_masked_tile(fz_context *ctx, fz_pixmap *tile, pdf_image *image)
+{
+	fz_pixmap *mask = image->base.mask->get_pixmap(ctx, image->base.mask, 0, 0);
+	unsigned char *s = mask->samples, *end = s + mask->w * mask->h;
+	unsigned char *d = tile->samples;
+	int k;
+
+	if (tile->w != mask->w || tile->h != mask->h)
+	{
+		fz_warn(ctx, "mask must be of same size as image for /Matte");
+		fz_drop_pixmap(ctx, mask);
+		return;
+	}
+
+	for (; s < end; s++, d += tile->n)
+	{
+		if (!*s)
+			continue;
+		for (k = 0; k < image->n; k++)
+			d[k] = image->colorkey[k] + (d[k] - image->colorkey[k]) * 255 / *s;
+	}
+
+	fz_drop_pixmap(ctx, mask);
+	tile->single_bit = 0; /* SumatraPDF: allow optimizing 1-bit pixmaps */
+}
+
 static int
 pdf_make_hash_image_key(fz_store_hash *hash, void *key_)
 {
@@ -170,7 +198,7 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 		fz_free(ctx, samples);
 		samples = NULL;
 
-		if (image->usecolorkey)
+		if (image->usecolorkey && !image->base.mask)
 			pdf_mask_color_key(tile, image->n, image->colorkey);
 
 		if (indexed)
@@ -185,6 +213,10 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 		{
 			fz_decode_tile(tile, image->decode);
 		}
+
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
+		if (image->usecolorkey && image->base.mask)
+			pdf_unblend_masked_tile(ctx, tile, image);
 	}
 	fz_always(ctx)
 	{
@@ -417,6 +449,14 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 				fz_warn(ctx, "Ignoring recursive image soft mask");
 			else
 				mask = (fz_image *)pdf_load_image_imp(xref, rdb, obj, NULL, 1);
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
+			obj = pdf_dict_getp(dict, "SMask/Matte");
+			if (pdf_is_array(obj) && mask)
+			{
+				usecolorkey = 2;
+				for (i = 0; i < n; i++)
+					image->colorkey[i] = pdf_to_int(pdf_array_get(obj, i));
+			}
 		}
 		else if (pdf_is_array(obj))
 		{
