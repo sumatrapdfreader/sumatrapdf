@@ -128,6 +128,72 @@ static fz_store_type pdf_image_store_type =
 #endif
 };
 
+/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1333 */
+static fz_pixmap *
+decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int in_line, int indexed, int l2factor, int native_l2factor, int cache);
+
+static fz_pixmap *
+decomp_image_banded(fz_context *ctx, fz_stream *stm, pdf_image *image, int indexed, int l2factor, int native_l2factor, int cache)
+{
+	fz_pixmap *tile = NULL, *part = NULL;
+	int w = (image->base.w + (1 << l2factor) - 1) >> l2factor;
+	int h = (image->base.h + (1 << l2factor) - 1) >> l2factor;
+	int part_h, orig_h = image->base.h;
+	int band = 1 << fz_maxi(8, l2factor);
+
+	fz_var(tile);
+	fz_var(part);
+
+	fz_try(ctx)
+	{
+		tile = fz_new_pixmap(ctx, image->base.colorspace, w, h);
+		tile->interpolate = image->interpolate;
+		tile->has_alpha = 0; /* SumatraPDF: allow optimizing non-alpha pixmaps */
+		/* decompress the image in bands of 256 lines */
+		for (part_h = h; part_h > 0; part_h -= band >> l2factor)
+		{
+			image->base.h = part_h >= band >> l2factor ? band : orig_h % band;
+			part = decomp_image_from_stream(ctx, fz_keep_stream(stm), image, -1, indexed, l2factor, native_l2factor, 0);
+			memcpy(tile->samples + (h - part_h) * tile->w * tile->n, part->samples, part->h * part->w * part->n);
+			tile->has_alpha |= part->has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
+			fz_drop_pixmap(ctx, part);
+			part = NULL;
+		}
+	}
+	fz_always(ctx)
+	{
+		image->base.h = orig_h;
+		fz_close(stm);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_pixmap(ctx, part);
+		fz_drop_pixmap(ctx, tile);
+		fz_rethrow(ctx);
+	}
+
+	if (cache)
+	{
+		pdf_image_key *key = NULL;
+		fz_var(key);
+		fz_try(ctx)
+		{
+			key = fz_malloc_struct(ctx, pdf_image_key);
+			key->refs = 1;
+			key->image = fz_keep_image(ctx, &image->base);
+			key->l2factor = l2factor;
+			fz_store_item(ctx, key, tile, fz_pixmap_size(ctx, tile), &pdf_image_store_type);
+		}
+		fz_always(ctx)
+		{
+			pdf_drop_image_key(ctx, key);
+		}
+		fz_catch(ctx) { }
+	}
+
+	return tile;
+}
+
 static fz_pixmap *
 decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int in_line, int indexed, int l2factor, int native_l2factor, int cache)
 {
@@ -143,6 +209,10 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 	fz_var(tile);
 	fz_var(samples);
 	fz_var(key);
+
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1333 */
+	if (l2factor - native_l2factor > 0 && in_line != -1)
+		return decomp_image_banded(ctx, stm, image, indexed, l2factor, native_l2factor, cache);
 
 	fz_try(ctx)
 	{
