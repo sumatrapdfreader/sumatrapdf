@@ -245,6 +245,31 @@ gdiplus_transform_point(fz_matrix ctm, float x, float y)
 	return PointF(point.x, point.y);
 }
 
+static fz_pixmap *
+fz_scale_pixmap_near(fz_context *ctx, fz_pixmap *src, int w, int h)
+{
+	fz_pixmap *dst = fz_new_pixmap(ctx, src->colorspace, w, h);
+	unsigned char *d = dst->samples;
+	
+	int scale_x = (src->w << 16) / w;
+	int scale_y = (src->h << 16) / h;
+	for (int y = 0; y < h; y++)
+	{
+		unsigned char *line = src->samples + ((y * scale_y + (1 << 12)) >> 16) * src->w * src->n;
+		for (int x = 0; x < w; x++)
+		{
+			unsigned char *s = line + ((x * scale_x + (1 << 12)) >> 16) * src->n;
+			for (int n = 0; n < src->n; n++)
+				*d++ = *s++;
+		}
+	}
+	
+	dst->interpolate = src->interpolate;
+	dst->has_alpha = src->has_alpha;
+	dst->single_bit = src->single_bit;
+	return dst;
+}
+
 inline BYTE BlendScreen(BYTE s, BYTE bg) { return 255 - (255 - s) * (255 - bg) / 255; }
 
 #ifdef DUMP_BITMAP_STEPS
@@ -638,7 +663,27 @@ public:
 			hypotf(ctm.a, ctm.b) > image->w && hypotf(ctm.c, ctm.d) > image->h &&
 			hypotf(ctm.a, ctm.b) < 2 * image->w && hypotf(ctm.c, ctm.d) < 2 * image->h;
 		
-		if (!image->interpolate && !alwaysInterpolate && graphics == this->graphics)
+		if (!image->interpolate && !alwaysInterpolate && scale > 1.0 && fz_maxi(image->w, image->h) < 200 && fz_is_rectilinear(ctm))
+		{
+			fz_pixmap *scaledPixmap = NULL;
+			fz_var(scaledPixmap);
+			fz_try(ctx)
+			{
+				int w = floorf(hypotf(corners[0].X - corners[1].X, corners[0].Y - corners[1].Y) + 0.5f);
+				int h = floorf(hypotf(corners[0].X - corners[2].X, corners[0].Y - corners[2].Y) + 0.5f);
+				scaledPixmap = fz_scale_pixmap_near(ctx, image, w, h);
+				graphics->DrawImage(&PixmapBitmap(ctx, scaledPixmap), corners, 3, 0, 0, w, h, UnitPixel, &DrawImageAttributes(alpha));
+#ifdef DUMP_BITMAP_STEPS
+				fz_dump_bitmap(ctx, &PixmapBitmap(ctx, scaledPixmap), "scaled image to draw");
+#endif
+			}
+			fz_always(ctx)
+			{
+				fz_drop_pixmap(ctx, scaledPixmap);
+			}
+			fz_catch(ctx) { }
+		}
+		else if (!image->interpolate && !alwaysInterpolate && graphics == this->graphics)
 		{
 			GraphicsState state = graphics->Save();
 			// TODO: why does this lead to subpar results when printing?
@@ -649,19 +694,14 @@ public:
 #endif
 			graphics->Restore(state);
 		}
-		else if (scale < 1.0 && fz_mini(image->w, image->h) > 100 && !image->has_alpha)
+		else if (scale < 1.0 && fz_mini(image->w, image->h) > 100 && !image->has_alpha && fz_is_rectilinear(ctm))
 		{
 			fz_pixmap *scaledPixmap = NULL;
 			fz_var(scaledPixmap);
 			fz_try(ctx)
 			{
-				int w = floorf(image->w * scale + 0.5f);
-				int h = floorf(image->h * scale + 0.5f);
-				if (fz_is_rectilinear(ctm))
-				{
-					w = floorf(hypotf(corners[0].X - corners[1].X, corners[0].Y - corners[1].Y) + 0.5f);
-					h = floorf(hypotf(corners[0].X - corners[2].X, corners[0].Y - corners[2].Y) + 0.5f);
-				}
+				int w = floorf(hypotf(corners[0].X - corners[1].X, corners[0].Y - corners[1].Y) + 0.5f);
+				int h = floorf(hypotf(corners[0].X - corners[2].X, corners[0].Y - corners[2].Y) + 0.5f);
 				scaledPixmap = fz_scale_pixmap(ctx, image, 0, 0, w, h, NULL);
 				if (scaledPixmap)
 				{
