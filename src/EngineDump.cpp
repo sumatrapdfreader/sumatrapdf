@@ -41,7 +41,7 @@ char *Escape(WCHAR *string, bool keepString=false)
     return str::conv::ToUtf8(escaped.Get());
 }
 
-void DumpProperties(BaseEngine *engine)
+void DumpProperties(BaseEngine *engine, bool fullDump)
 {
     Out("\t<Properties\n");
     ScopedMem<char> str;
@@ -87,12 +87,14 @@ void DumpProperties(BaseEngine *engine)
         Out("\t\tPreferredLayout=\"%d\"\n", engine->PreferredLayout());
     Out("\t/>\n");
 
-    ScopedMem<WCHAR> fontlist(engine->GetProperty(Prop_FontList));
-    if (fontlist) {
-        WStrVec fonts;
-        fonts.Split(fontlist, L"\n");
-        str.Set(Escape(fonts.Join(L"\n\t\t")));
-        Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
+    if (fullDump) {
+        ScopedMem<WCHAR> fontlist(engine->GetProperty(Prop_FontList));
+        if (fontlist) {
+            WStrVec fonts;
+            fonts.Split(fontlist, L"\n");
+            str.Set(Escape(fonts.Join(L"\n\t\t")));
+            Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
+        }
     }
 }
 
@@ -289,7 +291,7 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out(UTF8_BOM);
     Out("<?xml version=\"1.0\"?>\n");
     Out("<EngineDump>\n");
-    DumpProperties(engine);
+    DumpProperties(engine, fullDump);
     DumpToc(engine);
     for (int i = 1; i <= engine->PageCount(); i++)
         DumpPageContent(engine, i, fullDump);
