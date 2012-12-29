@@ -36,7 +36,10 @@ pdf_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
 static void
 pdf_unblend_masked_tile(fz_context *ctx, fz_pixmap *tile, pdf_image *image)
 {
-	fz_pixmap *mask = image->base.mask->get_pixmap(ctx, image->base.mask, 0, 0);
+	/* pdf_image_get_pixmap tends to return too large tiles */
+	int min_w = 1 << (int)floorf(logf(tile->w) / logf(2));
+	int min_h = 1 << (int)floorf(logf(tile->h) / logf(2));
+	fz_pixmap *mask = image->base.mask->get_pixmap(ctx, image->base.mask, min_w, min_h);
 	unsigned char *s = mask->samples, *end = s + mask->w * mask->h;
 	unsigned char *d = tile->samples;
 	int k;
@@ -159,6 +162,9 @@ decomp_image_banded(fz_context *ctx, fz_stream *stm, pdf_image *image, int index
 			fz_drop_pixmap(ctx, part);
 			part = NULL;
 		}
+		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
+		if (image->usecolorkey && image->base.mask)
+			pdf_unblend_masked_tile(ctx, tile, image);
 	}
 	fz_always(ctx)
 	{
@@ -211,7 +217,7 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 	fz_var(key);
 
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1333 */
-	if (l2factor - native_l2factor > 0 && in_line != -1)
+	if (l2factor - native_l2factor > 0 && image->base.w > (1 << 8) && in_line != -1)
 		return decomp_image_banded(ctx, stm, image, indexed, l2factor, native_l2factor, cache);
 
 	fz_try(ctx)
@@ -285,7 +291,7 @@ decomp_image_from_stream(fz_context *ctx, fz_stream *stm, pdf_image *image, int 
 		}
 
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
-		if (image->usecolorkey && image->base.mask)
+		if (image->usecolorkey && image->base.mask && in_line != -1)
 			pdf_unblend_masked_tile(ctx, tile, image);
 	}
 	fz_always(ctx)
