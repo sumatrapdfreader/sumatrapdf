@@ -185,6 +185,8 @@ Print
 Print as &image (requires more memory)
 Print range
 Printer with given name doesn't exist
+Printing in progress.
+Printing is still in progress. Abort and quit?
 Printing is still in progress. Abort and start over?
 Printing page %d of %d...
 Printing problem.
