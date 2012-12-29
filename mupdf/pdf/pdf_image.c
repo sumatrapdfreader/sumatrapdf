@@ -450,6 +450,17 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 				fz_drop_pixmap(ctx, image->tile);
 				image->tile = mask_pixmap;
 			}
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693517 */
+			else if (image->base.mask)
+			{
+				obj = pdf_dict_getp(dict, "SMask/Matte");
+				if (pdf_is_array(obj))
+				{
+					image->usecolorkey = 2;
+					for (i = 0; i < image->n; i++)
+						image->colorkey[i] = pdf_to_int(pdf_array_get(obj, i));
+				}
+			}
 			break; /* Out of fz_try */
 		}
 
