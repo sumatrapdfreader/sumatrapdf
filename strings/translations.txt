@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ebcb771232052f69cc683717a4ed9eadbc22ce68
+6bcb3eadefac7e17821921d7ea27649d5d1cd9dd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -10490,6 +10490,10 @@ tw:指定之印表機不存在
 uk:Друкарки з даним іменем не існує
 uz:Bunday printer mavjud emas
 vn:Máy in với tên được cho không tồn tại
+:Printing in progress.
+de:Drucken - SumatraPDF
+:Printing is still in progress. Abort and quit?
+de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
 :Printing is still in progress. Abort and start over?
 am:Տպվում է։ Կանգնեցնե՞լ։
 ar:الطباعة جارية. أوقفها وأعدها مرة أخرى؟
