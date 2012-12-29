@@ -90,7 +90,7 @@ static MenuDef menuDefGoTo[] = {
     { _TRN("&Previous Page\tLeft Arrow"),   IDM_GOTO_PREV_PAGE,         0 },
     { _TRN("&First Page\tHome"),            IDM_GOTO_FIRST_PAGE,        0 },
     { _TRN("&Last Page\tEnd"),              IDM_GOTO_LAST_PAGE,         0 },
-    { _TRN("Pa&ge...\tCtrl+G"),             IDM_GOTO_PAGE,              MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Pa&ge...\tCtrl+G"),             IDM_GOTO_PAGE,              0 },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Back\tAlt+Left Arrow"),        IDM_GOTO_NAV_BACK,          MF_NOT_FOR_EBOOK_UI },
     { _TRN("F&orward\tAlt+Right Arrow"),    IDM_GOTO_NAV_FORWARD,       MF_NOT_FOR_EBOOK_UI },

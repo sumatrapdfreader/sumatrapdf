@@ -90,7 +90,6 @@ class EbookController : public sigslot::has_slots
     bool        FormattingInProgress() const { return formattingThread != NULL; }
     bool        GoOnePageForward(Vec<HtmlPage*> *pages);
     void        GoOnePageForward();
-    size_t      GetMaxPageCount();
     void        StopFormattingThread();
     void        CloseCurrentDocument();
 
@@ -108,6 +107,8 @@ public:
     void HandleMobiLayoutDone(EbookFormattingTask *mobiLayout);
     void OnLayoutTimer();
     void AdvancePage(int dist);
+    int  GetCurrentPageNo() const { return (int)currPageNo; }
+    size_t GetMaxPageCount();
     void GoToPage(int newPageNo);
     void GoToLastPage();
     Doc  GetDoc() const { return doc; }

@@ -17,9 +17,10 @@ using namespace Gdiplus;
 #include "Menu.h"
 #include "MobiDoc.h"
 #include "Resource.h"
-#include "SumatraProperties.h"
 #include "SumatraAbout.h"
+#include "SumatraDialogs.h"
 #include "SumatraPDF.h"
+#include "SumatraProperties.h"
 #include "Touch.h"
 #include "Translations.h"
 #include "WindowInfo.h"
@@ -263,6 +264,21 @@ static void OnLoadMobiSample(EbookWindow *win)
 }
 #endif
 
+static void OnMenuGoToPage(EbookWindow *win)
+{
+    int pageNo = win->ebookController->GetCurrentPageNo();
+    int maxPage = (int)win->ebookController->GetMaxPageCount();
+    ScopedMem<WCHAR> label(str::Format(L"%d", pageNo));
+    WCHAR *newPageStr = Dialog_GoToPage(win->hwndFrame, label, maxPage);
+    if (!newPageStr)
+        return;
+
+    int newPageNo = 0;
+    str::Parse(newPageStr, L"%d", &newPageNo);
+    if (newPageNo > 0)
+        win->ebookController->GoToPage(newPageNo);
+}
+
 static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     int wmId = LOWORD(wParam);
@@ -319,11 +335,9 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             break;
 #endif
 
-#if 0
         case IDM_GOTO_PAGE:
-            OnMenuGoToPage(*win);
+            OnMenuGoToPage(win);
             break;
-#endif
 
         case IDM_VISIT_WEBSITE:
             LaunchBrowser(WEBSITE_MAIN_URL);
