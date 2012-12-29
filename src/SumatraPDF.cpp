@@ -2398,6 +2398,11 @@ void OnMenuExit()
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
+        if (win->printThread && !win->printCanceled) {
+            int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_YESNO | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            if (IDNO == res)
+                return;
+        }
         AbortFinding(win);
         AbortPrinting(win);
     }
@@ -2488,6 +2493,12 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     // when the parent window is destroyed (cf. WM_DESTROY)
     if (gPluginMode && !forceClose)
         return;
+
+    if (win->printThread && !win->printCanceled) {
+        int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and quit?"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_YESNO | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+        if (IDNO == res)
+            return;
+    }
 
     if (win->IsDocLoaded())
         win->dm->dontRenderFlag = true;

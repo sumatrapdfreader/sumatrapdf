@@ -206,14 +206,14 @@ $(OS)\EbookWindow.obj: src\mui\MuiBase.h src\mui\MuiButton.h src\mui\MuiControl.
 $(OS)\EbookWindow.obj: src\mui\MuiCss.h src\mui\MuiEventMgr.h src\mui\MuiGrid.h
 $(OS)\EbookWindow.obj: src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h src\mui\MuiPainter.h
 $(OS)\EbookWindow.obj: src\mui\MuiScrollBar.h src\resource.h src\Resource.h
-$(OS)\EbookWindow.obj: src\SumatraAbout.h src\SumatraPDF.h src\SumatraProperties.h
-$(OS)\EbookWindow.obj: src\SumatraWindow.h src\Translations.h src\utils\Allocator.h
-$(OS)\EbookWindow.obj: src\utils\BaseUtil.h src\utils\BitManip.h src\utils\FileUtil.h
-$(OS)\EbookWindow.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
-$(OS)\EbookWindow.obj: src\utils\RefCounted.h src\utils\Scoped.h src\utils\Sigslot.h
-$(OS)\EbookWindow.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Touch.h
-$(OS)\EbookWindow.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
-$(OS)\EbookWindow.obj: src\WindowInfo.h
+$(OS)\EbookWindow.obj: src\SumatraAbout.h src\SumatraDialogs.h src\SumatraPDF.h
+$(OS)\EbookWindow.obj: src\SumatraProperties.h src\SumatraWindow.h src\Translations.h
+$(OS)\EbookWindow.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitManip.h
+$(OS)\EbookWindow.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OS)\EbookWindow.obj: src\utils\HtmlParserLookup.h src\utils\RefCounted.h src\utils\Scoped.h
+$(OS)\EbookWindow.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\ThreadUtil.h
+$(OS)\EbookWindow.obj: src\utils\Touch.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\EbookWindow.obj: src\utils\ZipUtil.h src\WindowInfo.h
 $(OS)\EngineDump.obj: src\BaseEngine.h src\ChmEngine.h src\Doc.h
 $(OS)\EngineDump.obj: src\ImagesEngine.h src\PdfEngine.h src\utils\Allocator.h
 $(OS)\EngineDump.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\FileUtil.h
