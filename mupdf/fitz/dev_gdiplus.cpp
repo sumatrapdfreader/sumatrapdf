@@ -255,10 +255,10 @@ fz_scale_pixmap_near(fz_context *ctx, fz_pixmap *src, int w, int h)
 	int scale_y = (src->h << 16) / h;
 	for (int y = 0; y < h; y++)
 	{
-		unsigned char *line = src->samples + ((y * scale_y + (1 << 12)) >> 16) * src->w * src->n;
+		unsigned char *line = src->samples + fz_mini((y * scale_y + (1 << 10)) >> 16, src->h - 1) * src->w * src->n;
 		for (int x = 0; x < w; x++)
 		{
-			unsigned char *s = line + ((x * scale_x + (1 << 12)) >> 16) * src->n;
+			unsigned char *s = line + fz_mini((x * scale_x + (1 << 10)) >> 16, src->w - 1) * src->n;
 			for (int n = 0; n < src->n; n++)
 				*d++ = *s++;
 		}
@@ -669,6 +669,9 @@ public:
 			fz_var(scaledPixmap);
 			fz_try(ctx)
 			{
+#ifdef DUMP_BITMAP_STEPS
+				fz_dump_bitmap(ctx, &PixmapBitmap(ctx, image), "image to scale");
+#endif
 				int w = floorf(hypotf(corners[0].X - corners[1].X, corners[0].Y - corners[1].Y) + 0.5f);
 				int h = floorf(hypotf(corners[0].X - corners[2].X, corners[0].Y - corners[2].Y) + 0.5f);
 				scaledPixmap = fz_scale_pixmap_near(ctx, image, w, h);
@@ -700,6 +703,9 @@ public:
 			fz_var(scaledPixmap);
 			fz_try(ctx)
 			{
+#ifdef DUMP_BITMAP_STEPS
+				fz_dump_bitmap(ctx, &PixmapBitmap(ctx, image), "image to scale");
+#endif
 				int w = floorf(hypotf(corners[0].X - corners[1].X, corners[0].Y - corners[1].Y) + 0.5f);
 				int h = floorf(hypotf(corners[0].X - corners[2].X, corners[0].Y - corners[2].Y) + 0.5f);
 				scaledPixmap = fz_scale_pixmap(ctx, image, 0, 0, w, h, NULL);
