@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-45085c29b0ab1de3b2cc45c6f7755de8a81644e1
+9909002c043568ed930f794068147b464630889d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3049,7 +3049,7 @@ et:Lisa lemmik
 eu:Gehitu Gogokoena
 fa:افزودن به موارد برگزیده
 fi:Lisää suosikki
-fr:Ajouter des Favoris
+fr:Ajouter un favori
 ga:Cuir ceanán leis
 gl:Engadir Favorito
 he:הוסף מועדף
@@ -3101,7 +3101,7 @@ et:Lisa lehekülg %s lemmikutesse
 eu:Gehitu %s Orrialdea Gogokoenetara
 fa:افزودن صفحه‌ی %s به موارد برگزیده
 fi:Lisää sivu %s suosikkeihin
-fr:Ajouter page %s aux favoris
+fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s le na ceanáin
 gl:Engadir páxina %s aos favoritos
 he:למועדפים %s הוסף עמוד
@@ -3153,7 +3153,7 @@ et:Lisa lehekülg %s lemmikutesse (valikulise) nimega:
 eu:Gehitu %s Gogokoenetara Izenarekin (aukerazkoa):
 fa:افزودن صفحه‌ی %s به موارد برگزیده با نام(اختیاری):
 fi:Lisää sivu %s suosikkeihin (valinnaisella) nimellä:
-fr:Ajouter page %s aux favoris avec un nom (optionnel):
+fr:Ajouter la page %s aux favoris avec un nom (optionnel):
 ga:Cuir leathanach a %s le na ceanáin le ainm (roghnach):
 gl:Engadir páxina %s aos favoritos  cun nome (opcional):
 he:למועדפים בשם %s הוסף עמוד:
@@ -5036,7 +5036,7 @@ et:Teksti kopeerimine on keelatud (kopeerida saab vaid pildina)
 eu:Idazkia kopiatzea eragotzita (kopiatzea irudi bezala bakarrik)
 fa:رونوشت‌گیری از متن ممنوع است (رونوشت فقط به صورت عکس)
 fi:Tekstin kopioiminen kiellettiin (kopioidaan vain kuvana)
-fr:La copie en texte est refusée (seule une capture d’écran est faite)
+fr:La copie de texte est refusée (seule une capture d’écran est faite)
 ga:Níorbh fhéidir téacs a mhacasamhlú (macasamhlú mar íomhá amháin)
 gl:Copiar texto foi denegado (copiando só coma imaxe)
 he:העתקת טקסט נדחית (מועתק רק כתמונה)
@@ -10328,7 +10328,7 @@ et:Postscript-dokumendid
 eu:Postscript agirak
 fa:Postscript اسناد
 fi:Postscript-asiakirjat
-fr:Documents Posrscript
+fr:Documents Postscript
 ga:Cáipéisí Postscript
 gl:Documentos Postscript
 he:מסמכי פוסטקריפט
@@ -10645,7 +10645,7 @@ et:Antud nimega printerit ei leidu
 eu:Ez dagi emandako izenik duen irarkailurik
 fa:چاپگری با نام داده شده وجود ندارد
 fi:Annetun nimistä tulostinta ei ole
-fr:l'immprimante avec le nom donné n'existe pas
+fr:Il n'y a pas d'imprimante de ce nom
 ga:Níl clóire leis an ainm sin ann
 gl:A impresora co nome indicado non existe
 he:אין מדפסת בשם שניתן
@@ -10683,6 +10683,8 @@ br:Imprimindo...
 de:Drucken - SumatraPDF
 es:Impresión en progreso.
 fr:Impression en cours
+it:Stampa in corso...
+ja:印刷を実行中です。
 ru:Идёт печать.
 tr:Baskı devam ediyor.
 :Printing is still in progress. Abort and quit?
@@ -10691,6 +10693,8 @@ br:Ainda imprimindo... Interromper e sair?
 de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
 es:Impresión aún en progreso. ¿Cancelar y salir?
 fr:Impression toujours en cours. Annuler et quitter ?
+it:La stampa è ancora in corso. Vuoi interromperla e uscire?
+ja:印刷を実行中です。中止して終了しますか？
 ru:Печать продолжается. Отменить и выйти?
 :Printing is still in progress. Abort and start over?
 am:Տպվում է։ Կանգնեցնե՞լ։
@@ -10711,7 +10715,7 @@ et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 eu:Irarketa oraindik garatzen ari da. Utzi eta berriro hasi?
 fa:در حال چاپ کردن.انصراف و شروع مجدد؟
 fi:Tulostaminen on vielä käynnissä. Keskeytetäänkö ja aloitetaan uudelleen?
-fr:Une impression est déjà en cours. L'annuler et recommencer ?
+fr:Impression toujours en cours. Annuler et recommencer ?
 ga:Tá sé fós ag clóbhualadh. Tobscoir agus tosaigh arís?
 gl:A impresión está aínda en curso. Detela e recomezar?
 he:הדפסה בתהליך. לבטל ולהתחיל מחדש?
@@ -13532,7 +13536,7 @@ et:teksti kopeerimine
 eu:idazkia kopiatzen
 fa:در حال رونوشت متن
 fi:Kopioidaan tekstiä
-fr:copie du texte
+fr:copie de texte
 ga:ag macasamhlú an téacs
 gl:copiando texto
 he:מעתיק טקסט
