@@ -94,8 +94,16 @@ fz_mesh_type2_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 	p1.y = shade->u.l_or_r.coords[1][1];
 	p1 = fz_transform_point(ctm, p1);
 
-	theta = atan2f(p1.y - p0.y, p1.x - p0.x);
-	theta += (float)M_PI * 0.5f;
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693520 */
+	{
+		fz_point v_ortho;
+		fz_matrix ctm_no_transl = ctm;
+		ctm_no_transl.e = ctm_no_transl.f = 0;
+		v_ortho.x = (shade->u.l_or_r.coords[1][1] - shade->u.l_or_r.coords[0][1]);
+		v_ortho.y = -(shade->u.l_or_r.coords[1][0] - shade->u.l_or_r.coords[0][0]);
+		v_ortho = fz_transform_point(ctm_no_transl, v_ortho);
+		theta = atan2f(v_ortho.y, v_ortho.x);
+	}
 
 	v0.p = fz_point_on_circle(p0, HUGENUM, theta);
 	v1.p = fz_point_on_circle(p1, HUGENUM, theta);
