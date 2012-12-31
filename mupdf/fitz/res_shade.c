@@ -99,8 +99,8 @@ fz_mesh_type2_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 		fz_point v_ortho;
 		fz_matrix ctm_no_transl = ctm;
 		ctm_no_transl.e = ctm_no_transl.f = 0;
-		v_ortho.x = (shade->u.l_or_r.coords[1][1] - shade->u.l_or_r.coords[0][1]);
-		v_ortho.y = -(shade->u.l_or_r.coords[1][0] - shade->u.l_or_r.coords[0][0]);
+		v_ortho.x = -(shade->u.l_or_r.coords[1][1] - shade->u.l_or_r.coords[0][1]);
+		v_ortho.y = (shade->u.l_or_r.coords[1][0] - shade->u.l_or_r.coords[0][0]);
 		v_ortho = fz_transform_point(ctm_no_transl, v_ortho);
 		theta = atan2f(v_ortho.y, v_ortho.x);
 	}

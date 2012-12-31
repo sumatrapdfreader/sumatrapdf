@@ -391,7 +391,8 @@ xps_draw_linear_gradient(xps_document *doc, fz_matrix ctm, fz_rect area,
 		xps_parse_point(end_point_att, &x1, &y1);
 
 	p1.x = x0; p1.y = y0; p2.x = x1; p2.y = y1;
-	p1 = fz_transform_point(ctm, p1); p2 = fz_transform_point(ctm, p2);
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693520 */
+	area = fz_transform_rect(fz_invert_matrix(ctm), area);
 	x = p2.x - p1.x; y = p2.y - p1.y;
 	k = ((area.x0 - p1.x) * x + (area.y0 - p1.y) * y) / (x * x + y * y);
 	mi = floorf(k); ma = ceilf(k);
