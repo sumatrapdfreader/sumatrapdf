@@ -1,4 +1,4 @@
-# This file lists for each language code the name under which the language 
+# This file lists for each language code the name under which the language
 # and its variants are known to the Microsoft SDK (LANG_* and SUBLANG_*_*).
 
 # E.g. for "en" this allows to produce MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL)
@@ -8,65 +8,66 @@
 
 # code	Language	Sublanguage/Variant/Dialect (empty if neutral)	Layout (RTL or empty)
 en	English	# keep default language on first line
-am	Armenian	
-af	Afrikaans	
+am	Armenian
+az	Azeri
+af	Afrikaans
 pt	Portuguese	# Portuguese
 br	Portuguese	Brazilian
-bg	Bulgarian	
-de	German	
-tr	Turkish	
-by	Belarusian	
-hu	Hungarian	
-lt	Lithuanian	
-my	Malay	
-ja	Japanese	
+bg	Bulgarian
+de	German
+tr	Turkish
+by	Belarusian
+hu	Hungarian
+lt	Lithuanian
+my	Malay
+ja	Japanese
 fa	Farsi		RTL
-it	Italian	
-nl	Dutch	
-fi	Finnish	
-ca	Catalan	
-ca-xv	# Catalan Valencian	
-sl	Slovenian	
+it	Italian
+nl	Dutch
+fi	Finnish
+ca	Catalan
+ca-xv	# Catalan Valencian
+sl	Slovenian
 sr-rs	Serbian	Cyrillic
-ml	Malayalam	
+ml	Malayalam
 he	Hebrew		RTL
 sp-rs	Serbian	Latin
-id	Indonesian	
-mk	Macedonian	
-ro	Romanian	
-sk	Slovak	
-vn	Vietnamese	
-kr	Korean	
-bn	Bengali	
+id	Indonesian
+mk	Macedonian
+ro	Romanian
+sk	Slovak
+vn	Vietnamese
+kr	Korean
+bn	Bengali
 cn	Chinese	Simplified
-fr	French	
-ru	Russian	
-gl	Galician	
-es	Spanish	
+fr	French
+ru	Russian
+gl	Galician
+es	Spanish
 ar	Arabic		RTL
-uk	Ukrainian	
-eu	Basque	
-el	Greek	
-hr	Croatian	
-tl	Filipino	
-sn	# Shona	
+uk	Ukrainian
+eu	Basque
+el	Greek
+hr	Croatian
+tl	Filipino
+sn	# Shona
 tw	Chinese	Traditional
-cy	Welsh	
-ga	Irish	
-mm	# Burmese	
-pa	Punjabi	
-hi	Hindi	
+cy	Welsh
+ga	Irish
+mm	# Burmese
+pa	Punjabi
+hi	Hindi
 nn	Norwegian	Nynorsk
-sv	Swedish	
-pl	Polish	
-dk	Danish	
-ta	Tamil	
-cz	Czech	
-th	Thai	
+sv	Swedish
+pl	Polish
+dk	Danish
+ta	Tamil
+cz	Czech
+th	Thai
 no	Norwegian	Bokmal
-kw	# Cornish	
-fy-nl	Frisian	
-si	Sinhalese	
+kw	# Cornish
+fy-nl	Frisian
+si	Sinhalese
 bs	Bosnian	Bosnia Herzegovina Latin
 ka	Georgian
 et	Estonian

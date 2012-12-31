@@ -3,6 +3,7 @@
   ["en", "English"],
   ["cn", "Chinese Simplified (简体中文)"],
   ["af", "Afrikaans"],
+  ["az", "Azeri (آذربایجان دیلی)"],
   ["ca", "Catalan (Català)"],
   ["am", "Armenian (Հայերեն)"],
   ["it", "Italian (Italiano)"],

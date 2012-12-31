@@ -49,7 +49,7 @@ def downloadTranslations():
 from langs import g_langs
 
 # Returns 'strings' dict that maps an original, untranslated string to
-# an array of translation, where each translation is a tuple 
+# an array of translation, where each translation is a tuple
 # (language, text translated into this language)
 def parseTranslations(s):
     lines = [l for l in s.split("\n")[2:]]
@@ -101,7 +101,7 @@ def generateCode(s):
     remove_incomplete_translations(langs, strings, strings_dict)
     gen_c_code(langs, strings_dict, c_file_name, langs_idx)
 
-# returns True if translation files have been re-generated and 
+# returns True if translation files have been re-generated and
 # need to be commited
 def downloadAndUpdateTranslationsIfChanged():
     try:
@@ -131,5 +131,10 @@ def downloadAndUpdateTranslationsIfChanged():
     saveLastDownload(s)
     return True
 
+def regenerateLangs():
+    s = open(lastDownloadFilePath(), "rb").read()
+    generateCode(s)
+
 if __name__ == "__main__":
+    #regenerateLangs()
     downloadAndUpdateTranslationsIfChanged()
