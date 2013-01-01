@@ -78,8 +78,7 @@ void RenderCache::DropCacheEntry(BitmapCacheEntry *entry)
     assert(entry);
     if (!entry) return;
     if (0 == --entry->refs) {
-        delete entry->bitmap;
-        free(entry);
+        delete entry;
     }
 }
 
@@ -113,9 +112,8 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
     }
 
     // Copy the PageRenderRequest as it will be reused
-    BitmapCacheEntry entry = { req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bitmap, 1 };
-    cache[cacheCount] = (BitmapCacheEntry *)_memdup(&entry);
-    assert(cache[cacheCount]);
+    cache[cacheCount] = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bitmap);
+    CrashIf(!cache[cacheCount]);
     if (!cache[cacheCount])
         delete bitmap;
     else
@@ -221,7 +219,7 @@ void RenderCache::KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm)
                 cache[i]->dm = newDm;
             // make sure that the page is rerendered eventually
             cache[i]->zoom = INVALID_ZOOM;
-            cache[i]->bitmap->outOfDate = true;
+            cache[i]->outOfDate = true;
         }
     }
 }
@@ -281,7 +279,7 @@ bool RenderCache::ReduceTileSize()
 
 void RenderCache::Render(DisplayModel *dm, int pageNo, RenderingCallback *callback)
 {
-    TilePosition tile = { GetTileRes(dm, pageNo), 0, 0 };
+    TilePosition tile(GetTileRes(dm, pageNo), 0, 0);
     Render(dm, pageNo, tile, true, callback);
 
     // render both tiles of the first row when splitting a page in four
@@ -626,7 +624,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
     }
 
     if (renderOutOfDateCue)
-        *renderOutOfDateCue = renderedBmp->outOfDate;
+        *renderOutOfDateCue = entry->outOfDate;
 
     DropCacheEntry(entry);
     return 0;
@@ -640,7 +638,7 @@ UINT RenderCache::PaintTiles(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo
     float zoom = dm->ZoomReal();
     int tileCount = 1 << tileRes;
 
-    TilePosition tile = { tileRes, 0, 0 };
+    TilePosition tile(tileRes, 0, 0);
 
     UINT renderTimeMin = (UINT)-1;
     for (tile.row = 0; tile.row < tileCount; tile.row++) {
@@ -676,7 +674,7 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 #ifdef CONSERVE_MEMORY
     if (0 == renderTime && !renderedReplacement) {
         // free tiles with different resolution
-        TilePosition tile = { tileRes, -1, 0 };
+        TilePosition tile(tileRes, (USHORT)-1, 0);
         FreePage(dm, pageNo, &tile);
     }
     FreeNotVisible();

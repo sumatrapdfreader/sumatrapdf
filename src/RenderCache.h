@@ -20,6 +20,7 @@ public:
 struct TilePosition {
     USHORT res, row, col;
 
+    TilePosition(USHORT res=-1, USHORT row=-1, USHORT col=-1) : res(res), row(row), col(col) { }
     bool operator==(TilePosition other) const {
         return res == other.res && row == other.row && col == other.col;
     }
@@ -27,7 +28,7 @@ struct TilePosition {
 
 /* We keep a cache of rendered bitmaps. BitmapCacheEntry keeps data
    that uniquely identifies rendered page (dm, pageNo, rotation, zoom)
-   and corresponding rendered bitmap.
+   and the corresponding rendered bitmap.
 */
 struct BitmapCacheEntry {
     DisplayModel *   dm;
@@ -36,8 +37,14 @@ struct BitmapCacheEntry {
     float            zoom;
     TilePosition     tile;
 
+    // owned by the BitmapCacheEntry
     RenderedBitmap * bitmap;
+    bool             outOfDate;
     int              refs;
+
+    BitmapCacheEntry(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition tile, RenderedBitmap *bitmap) :
+        dm(dm), pageNo(pageNo), rotation(rotation), zoom(zoom), tile(tile), bitmap(bitmap), outOfDate(false), refs(1) { }
+    ~BitmapCacheEntry() { delete bitmap; }
 };
 
 /* Even though this looks a lot like a BitmapCacheEntry, we keep it

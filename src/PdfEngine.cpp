@@ -971,6 +971,11 @@ struct PdfPageRun {
     size_t path_len;
     size_t clip_path_len;
     int refs;
+
+    PdfPageRun(pdf_page *page, fz_display_list *list, ListInspectionData& data) :
+        page(page), list(list), size_est(data.mem_estimate),
+        req_blending(data.req_blending), req_t3_fonts(data.req_t3_fonts),
+        path_len(data.path_len), clip_path_len(data.clip_path_len), refs(1) { }
 };
 
 class PdfTocItem;
@@ -1678,11 +1683,7 @@ PdfPageRun *PdfEngineImpl::CreatePageRun(pdf_page *page, fz_display_list *list)
         }
     }
 
-    PdfPageRun newRun = {
-        page, list, data.mem_estimate, data.req_blending,
-        data.req_t3_fonts, data.path_len, data.clip_path_len, 1
-    };
-    return (PdfPageRun *)_memdup(&newRun);
+    return new PdfPageRun(page, list, data);
 }
 
 PdfPageRun *PdfEngineImpl::GetPageRun(pdf_page *page, bool tryOnly)
@@ -1791,7 +1792,7 @@ void PdfEngineImpl::DropPageRun(PdfPageRun *run, bool forceRemove)
             EnterCriticalSection(&ctxAccess);
             fz_free_display_list(ctx, run->list);
             LeaveCriticalSection(&ctxAccess);
-            free(run);
+            delete run;
         }
     }
 
@@ -2822,6 +2823,9 @@ struct XpsPageRun {
     fz_display_list *list;
     size_t size_est;
     int refs;
+
+    XpsPageRun(xps_page *page, fz_display_list *list, ListInspectionData& data) :
+        page(page), list(list), size_est(data.mem_estimate), refs(1) { }
 };
 
 class XpsTocItem;
@@ -3221,8 +3225,7 @@ XpsPageRun *XpsEngineImpl::CreatePageRun(xps_page *page, fz_display_list *list)
         }
     }
 
-    XpsPageRun newRun = { page, list, data.mem_estimate, 1 };
-    return (XpsPageRun *)_memdup(&newRun);
+    return new XpsPageRun(page, list, data);
 }
 
 XpsPageRun *XpsEngineImpl::GetPageRun(xps_page *page, bool tryOnly)
@@ -3328,7 +3331,7 @@ void XpsEngineImpl::DropPageRun(XpsPageRun *run, bool forceRemove)
         if (0 == run->refs) {
             ScopedCritSec ctxScope(&ctxAccess);
             fz_free_display_list(ctx, run->list);
-            free(run);
+            delete run;
         }
     }
 }

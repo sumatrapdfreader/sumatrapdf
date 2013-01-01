@@ -21,10 +21,10 @@ public:
         return PointT<int>((int)floor(x + 0.5), (int)floor(y + 0.5));
     }
 
-    bool operator==(PointT<T>& other) {
+    bool operator==(PointT<T>& other) const {
         return this->x == other.x && this->y == other.y;
     }
-    bool operator!=(PointT<T>& other) {
+    bool operator!=(PointT<T>& other) const {
         return !this->operator==(other);
     }
 };
@@ -54,10 +54,10 @@ public :
         return dx == 0 || dy == 0;
     }
 
-    bool operator==(SizeT<T>& other) {
+    bool operator==(SizeT<T>& other) const {
         return this->dx == other.dx && this->dy == other.dy;
     }
-    bool operator!=(SizeT<T>& other) {
+    bool operator!=(SizeT<T>& other) const {
         return !this->operator==(other);
     }
 };
@@ -177,11 +177,11 @@ public:
     }
 #endif
 
-    bool operator==(RectT<T>& other) {
+    bool operator==(RectT<T>& other) const {
         return this->x == other.x && this->y == other.y &&
                this->dx == other.dx && this->dy == other.dy;
     }
-    bool operator!=(RectT<T>& other) {
+    bool operator!=(RectT<T>& other) const {
         return !this->operator==(other);
     }
 };

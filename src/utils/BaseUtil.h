@@ -141,7 +141,6 @@ inline void *memdup(const void *data, size_t len)
         memcpy(dup, data, len);
     return dup;
 }
-#define _memdup(ptr) memdup(ptr, sizeof(*(ptr)))
 
 inline bool memeq(const void *s1, const void *s2, size_t len)
 {

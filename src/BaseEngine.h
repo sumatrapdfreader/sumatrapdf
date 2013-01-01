@@ -34,11 +34,7 @@ protected:
     SizeI size;
 
 public:
-    // whether this bitmap will (have to) be replaced soon
-    bool outOfDate;
-
-    RenderedBitmap(HBITMAP hbmp, SizeI size) :
-        hbmp(hbmp), size(size), outOfDate(false) { }
+    RenderedBitmap(HBITMAP hbmp, SizeI size) : hbmp(hbmp), size(size) { }
     ~RenderedBitmap() { DeleteObject(hbmp); }
 
     RenderedBitmap *Clone() {
