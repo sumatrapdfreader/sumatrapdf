@@ -2371,7 +2371,6 @@ static void OnPaint(WindowInfo& win)
         // a notification would break this
         ScopedFont fontRightTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
         HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-        SetBkMode(hdc, TRANSPARENT);
         FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
         ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
         DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());

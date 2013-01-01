@@ -166,13 +166,11 @@ static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom
 }
 
 /* Free all bitmaps in the cache that are of a specific page (or all pages
-   of the given DisplayModel, or even all invisible pages). Returns TRUE if freed
-   at least one item. */
-bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
+   of the given DisplayModel, or even all invisible pages). */
+void RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
 {
     ScopedCritSec scope(&cacheAccess);
     int cacheCountTmp = cacheCount;
-    bool freedSomething = false;
     int curPos = 0;
 
     for (int i = 0; i < cacheCountTmp; i++) {
@@ -198,7 +196,6 @@ bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
         }
 
         if (shouldFree) {
-            freedSomething = true;
             DropCacheEntry(entry);
             cache[i] = NULL;
             cacheCount--;
@@ -209,7 +206,6 @@ bool RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
         if (!shouldFree)
             curPos++;
     }
-    return freedSomething;
 }
 
 // keep the cached bitmaps for visible pages to avoid flickering during a reload.
@@ -226,20 +222,6 @@ void RenderCache::KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm)
             cache[i]->bitmap->outOfDate = true;
         }
     }
-}
-
-/* Free all bitmaps cached for a given <dm>. Returns TRUE if freed
-   at least one item. */
-bool RenderCache::FreeForDisplayModel(DisplayModel *dm)
-{
-    return FreePage(dm);
-}
-
-/* Free all bitmaps in the cache that are not visible. Returns TRUE if freed
-   at least one item. */
-bool RenderCache::FreeNotVisible()
-{
-    return FreePage();
 }
 
 // determine the count of tiles required for a page at a given zoom level
@@ -576,9 +558,6 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             if (bmp && !req.dm->engine->IsImageCollection())
                 UpdateBitmapColorRange(bmp->GetBitmap(), cache->colorRange);
             cache->Add(req, bmp);
-#ifdef CONSERVE_MEMORY
-            cache->FreeNotVisible();
-#endif
             req.dm->RepaintDisplay();
         }
     }
@@ -698,6 +677,7 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
         TilePosition tile = { tileRes, -1, 0 };
         FreePage(dm, pageNo, &tile);
     }
+    FreeNotVisible();
 #endif
 
     return renderTimeMin;

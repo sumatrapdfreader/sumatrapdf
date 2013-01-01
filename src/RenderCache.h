@@ -96,7 +96,7 @@ public:
     void    CancelRendering(DisplayModel *dm);
     bool    Exists(DisplayModel *dm, int pageNo, int rotation,
                    float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
-    bool    FreeForDisplayModel(DisplayModel *dm);
+    void    FreeForDisplayModel(DisplayModel *dm) { FreePage(dm); }
     void    KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
     UINT    Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
                   PageInfo *pageInfo, bool *renderOutOfDateCue);
@@ -108,7 +108,6 @@ protected:
     bool    ClearCurrentRequest();
     bool    GetNextRequest(PageRenderRequest *req);
     void    Add(PageRenderRequest &req, RenderedBitmap *bitmap);
-    bool    FreeNotVisible();
 
 private:
     USHORT  GetTileRes(DisplayModel *dm, int pageNo);
@@ -132,7 +131,8 @@ private:
     BitmapCacheEntry *  Find(DisplayModel *dm, int pageNo, int rotation,
                              float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
     void    DropCacheEntry(BitmapCacheEntry *entry);
-    bool    FreePage(DisplayModel *dm=NULL, int pageNo=-1, TilePosition *tile=NULL);
+    void    FreePage(DisplayModel *dm=NULL, int pageNo=-1, TilePosition *tile=NULL);
+    void    FreeNotVisible() { FreePage(); }
 
     UINT    PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
                       TilePosition tile, RectI tileOnScreen, bool renderMissing,
