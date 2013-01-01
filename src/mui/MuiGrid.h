@@ -74,13 +74,11 @@ public:
 private:
     int     rows;
     int     cols;
-    
+
     // if dirty is true, rows/cols and ld must be rebuilt from els
     bool    dirty;
     // cells is rows * cols in size
-    int nCells;
     Cell *cells;
-    Cell *lastCell;
     // maxColWidth is an array of cols size and contains
     // maximum width of each column (the width of the widest
     // cell in that column)
@@ -110,4 +108,3 @@ public:
     virtual Size DesiredSize() { return desiredSize; }
     virtual void Arrange(const Rect finalRect);
 };
-

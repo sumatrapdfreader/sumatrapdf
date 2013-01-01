@@ -23,7 +23,7 @@ public:
     }
 
     static void *AllocZero(Allocator *a, size_t size) {
-        void *m = Allocator::Alloc(a, size);
+        void *m = Alloc(a, size);
         if (m)
             ZeroMemory(m, size);
         return m;
@@ -43,7 +43,7 @@ public:
     }
 
     static void *Dup(Allocator *a, void *mem, size_t size, size_t padding=0) {
-        void *newMem = Allocator::Alloc(a, size + padding);
+        void *newMem = Alloc(a, size + padding);
         if (newMem)
             memcpy(newMem, mem, size);
         return newMem;
@@ -123,9 +123,8 @@ public:
         return elPtr;
     }
 
-    PoolAllocator(size_t rounding = 8)  {
-        allocRounding = rounding;
-        minBlockSize = 4096;
+    PoolAllocator(size_t rounding=8) : minBlockSize(4096),
+        allocRounding(rounding), currIter(NULL), iterPos(-1) {
         Init();
     }
 

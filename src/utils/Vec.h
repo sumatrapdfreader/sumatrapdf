@@ -71,8 +71,8 @@ protected:
 
 public:
     // allocator is not owned by Vec and must outlive it
-    Vec(size_t capHint=0, Allocator *allocator=NULL)
-        : capacityHint(capHint), allocator(allocator)
+    Vec(size_t capHint=0, Allocator *allocator=NULL) :
+        capacityHint(capHint), allocator(allocator), iterCurr(NULL)
     {
         els = buf;
         Reset();
@@ -83,12 +83,9 @@ public:
     }
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
-    Vec(const Vec& orig) {
-        capacityHint = 0;
+    // note: we don't inherit allocator as it's not needed for our use cases
+    Vec(const Vec& orig) : capacityHint(0), allocator(NULL), iterCurr(NULL) {
         els = buf;
-        // note: we don't inherit allocator as it's not needed for
-        // our use cases
-        allocator = NULL;
         Reset();
         EnsureCap(orig.cap);
         // use memcpy, as Vec only supports POD types

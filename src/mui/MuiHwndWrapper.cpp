@@ -8,9 +8,9 @@
 
 namespace mui {
 
-HwndWrapper::HwndWrapper(HWND hwnd)
-    : painter(NULL), evtMgr(NULL), layoutRequested(false), firstLayout(true), 
-    sizeToFit(false), centerContent(false)
+HwndWrapper::HwndWrapper(HWND hwnd) :
+    painter(NULL), evtMgr(NULL), layoutRequested(false), firstLayout(true), 
+    sizeToFit(false), centerContent(false), repaintRequested(false)
 {
     if (hwnd)
         SetHwnd(hwnd);

@@ -70,7 +70,7 @@ struct DrawStyle {
 
 class HtmlPage {
 public:
-    HtmlPage() : reparseIdx(0), listDepth(0), preFormatted(false) { }
+    HtmlPage() : reparseIdx(0), listDepth(0), preFormatted(false), dirRtl(false) { }
 
     Vec<DrawInstr>  instructions;
     // if we start parsing html again from reparseIdx, we should

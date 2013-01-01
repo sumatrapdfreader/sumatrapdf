@@ -59,15 +59,14 @@ class DjVuDestination : public PageDestination {
     //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
     //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
     //   http://example.net/#hyperlink
-    char *link;
+    ScopedMem<char> link;
 
     bool IsPageLink(const char *link) const {
-        return link[0] == '#' && (str::IsDigit(link[1]) || link[1] == ' ' && str::IsDigit(link[2]));
+        return link && link[0] == '#' && (str::IsDigit(link[1]) || link[1] == ' ' && str::IsDigit(link[2]));
     }
 
 public:
     DjVuDestination(const char *link) : link(str::Dup(link)) { }
-    ~DjVuDestination() { free(link); }
 
     virtual PageDestType GetDestType() const {
         if (IsPageLink(link))

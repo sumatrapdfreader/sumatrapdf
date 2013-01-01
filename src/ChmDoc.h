@@ -24,7 +24,7 @@ class ChmDoc {
     bool Load(const WCHAR *fileName);
 
 public:
-    ChmDoc() : codepage(0) { }
+    ChmDoc() : chmHandle(NULL), codepage(0) { }
     ~ChmDoc();
 
     bool HasData(const char *fileName);
