@@ -223,6 +223,21 @@ int pdf_field_type(pdf_document *doc, pdf_obj *obj)
 		else
 			return FZ_WIDGET_TYPE_LISTBOX;
 	}
+	/* SumatraPDF: support more annotation types */
+	else if (!*(type = pdf_to_name(pdf_dict_gets(obj, "Subtype"))))
+		return FZ_WIDGET_TYPE_NOT_WIDGET;
+	else if (!strcmp(type, "Link"))
+		return FZ_WIDGET_TYPE_LINK;
+	else if (!strcmp(type, "Text"))
+		return FZ_WIDGET_TYPE_TEXT_ICON;
+	else if (!strcmp(type, "FileAttachment"))
+		return FZ_WIDGET_TYPE_FILE;
+	else if (!strcmp(type, "Highlight"))
+		return FZ_WIDGET_TYPE_TEXT_HIGHLIGHT;
+	else if (!strcmp(type, "Underline") || !strcmp(type, "StrikeOut") || !strcmp(type, "Squiggly"))
+		return FZ_WIDGET_TYPE_TEXT_MARKUP;
+	else if (!strcmp(type, "FreeText"))
+		return FZ_WIDGET_TYPE_FREETEXT;
 	else
 		return FZ_WIDGET_TYPE_NOT_WIDGET;
 }

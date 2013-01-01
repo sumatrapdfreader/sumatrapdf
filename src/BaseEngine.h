@@ -10,7 +10,7 @@ enum RenderTarget { Target_View, Target_Print, Target_Export };
 enum PageLayoutType { Layout_Single = 0, Layout_Facing = 1, Layout_Book = 2,
                       Layout_R2L = 16, Layout_NonContinuous = 32 };
 
-enum PageElementType { Element_Link, Element_Comment, Element_Image };
+enum PageElementType { Element_Link, Element_Image, Element_Annotation };
 
 enum PageDestType { Dest_None,
     Dest_ScrollTo, Dest_LaunchURL, Dest_LaunchEmbedded, Dest_LaunchFile,
@@ -18,6 +18,8 @@ enum PageDestType { Dest_None,
     Dest_FindDialog, Dest_FullScreen, Dest_GoBack, Dest_GoForward,
     Dest_GoToPageDialog, Dest_PrintDialog, Dest_SaveAsDialog, Dest_ZoomToDialog,
 };
+
+enum PageAnnotType { Annot_Comment, Annot_Highlight };
 
 enum DocumentProperty {
     Prop_Title, Prop_Author, Prop_Copyright, Prop_Subject,
@@ -90,6 +92,20 @@ public:
     virtual bool SaveEmbedded(LinkSaverUI &saveUI) { return false; }
 };
 
+// an user annotation on page
+class PageAnnotation {
+protected:
+    PageAnnotType type;
+    RectD rect;
+
+public:
+    PageAnnotation(PageAnnotType type, RectD rect) : type(type), rect(rect) { }
+    virtual ~PageAnnotation() { }
+
+    PageAnnotType GetAnnotType() const { return type; }
+    RectD GetAnnotRect() const { return rect; }
+};
+
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT    -999.9
 
@@ -110,6 +126,9 @@ public:
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
     virtual PageDestination *AsLink() { return NULL; }
+    // if this element is a page annotation, this returns additional data
+    // (the result is owned by the PageElement and MUST NOT be deleted)
+    virtual PageAnnotation *AsAnnot() { return NULL; }
     // if this element is an image, this returns it
     // caller must delete the result
     virtual RenderedBitmap *GetImage() { return NULL; }
@@ -272,6 +291,19 @@ public:
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
+
+    // ***** experimental API to support page annotations *****
+    // whether this engine supports adding, removing and saving of annotations
+    // (such as text highlighting, comments, etc.)
+    // virtual bool SupportsAnnotations() { return false; }
+    // adds an annotation to the document (returns false if the annotation type isn't supported)
+    // virtual bool AddAnnotation(int pageNo, PageAnnotation *) { return false; }
+    // removes an existing annotation from the document
+    // virtual bool RemoveAnnotation(int pageNo, PageAnnotation *) { return false; }
+    // TODO: figure out how to best save modified documents
+    // virtual unsigned char *Serialize(size_t *lenOut) { return NULL; }
+    // saves the document including annotations to a file (overwrites the current file when filename is NULL)
+    // virtual bool SaveModifications(const WCHAR *filename=NULL) { return false; }
 };
 
 #endif

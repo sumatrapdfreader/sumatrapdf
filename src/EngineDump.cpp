@@ -173,6 +173,21 @@ void DumpToc(BaseEngine *engine)
     delete root;
 }
 
+const char *ElementTypeToStr(PageElement *el)
+{
+    switch (el->GetType()) {
+    case Element_Link: return "Link";
+    case Element_Image: return "Image";
+    case Element_Annotation:
+        switch (el->AsAnnot()->GetAnnotType()) {
+        case Annot_Comment: return "Comment";
+        }
+        // fall through
+    default:
+        return "Unknown";
+    }
+}
+
 const char *PageDestToStr(PageDestType destType)
 {
 #define HandleType(type) if (destType == Dest_ ## type) return #type;
@@ -231,14 +246,15 @@ void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
         Out("\t\t<PageElements>\n");
         for (size_t i = 0; i < els->Count(); i++) {
             RectD rect = els->At(i)->GetRect();
-            Out("\t\t\t<Element\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n", rect.x, rect.y, rect.dx, rect.dy);
+            Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n",
+                ElementTypeToStr(els->At(i)), rect.x, rect.y, rect.dx, rect.dy);
             PageDestination *dest = els->At(i)->AsLink();
             if (dest) {
                 if (dest->GetDestType() != Dest_None)
-                    Out("\t\t\t\tType=\"%s\"\n", PageDestToStr(dest->GetDestType()));
+                    Out("\t\t\t\tLinkType=\"%s\"\n", PageDestToStr(dest->GetDestType()));
                 ScopedMem<char> value(Escape(dest->GetDestValue()));
                 if (value)
-                    Out("\t\t\t\tTarget=\"%s\"\n", value.Get());
+                    Out("\t\t\t\tLinkTarget=\"%s\"\n", value.Get());
                 if (dest->GetDestPageNo())
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
                 ScopedMem<char> rectStr(DestRectToStr(engine, dest));

@@ -1101,7 +1101,7 @@ protected:
     fz_outline    * attachments;
     pdf_obj       * _info;
     WStrVec       * _pagelabels;
-    pdf_annot   *** pageComments;
+    pdf_annot   *** pageAnnots;
     fz_rect      ** imageRects;
 };
 
@@ -1136,22 +1136,20 @@ public:
     virtual bool SaveEmbedded(LinkSaverUI& saveUI);
 };
 
-class PdfComment : public PageElement {
-    WCHAR *content;
-    RectD rect;
+class PdfComment : public PageElement, public PageAnnotation {
+    ScopedMem<WCHAR> content;
     int pageNo;
 
 public:
-    PdfComment(const WCHAR *content, RectD rect, int pageNo=-1) :
-        content(str::Dup(content)), rect(rect), pageNo(pageNo) { }
-    virtual ~PdfComment() {
-        free(content);
-    }
+    PdfComment(const WCHAR *content, RectD rect, int pageNo) :
+        PageAnnotation(Annot_Comment, rect),
+        content(str::Dup(content)), pageNo(pageNo) { }
 
-    virtual PageElementType GetType() const { return Element_Comment; }
+    virtual PageElementType GetType() const { return Element_Annotation; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
     virtual WCHAR *GetValue() const { return str::Dup(content); }
+    virtual PageAnnotation *AsAnnot() { return this; }
 };
 
 class PdfTocItem : public DocTocItem {
@@ -1187,7 +1185,7 @@ PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
     _pages(NULL), _mediaboxes(NULL), _info(NULL),
     outline(NULL), attachments(NULL), _pagelabels(NULL),
     _decryptionKey(NULL), isProtected(false),
-    pageComments(NULL), imageRects(NULL)
+    pageAnnots(NULL), imageRects(NULL)
 {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
@@ -1217,11 +1215,11 @@ PdfEngineImpl::~PdfEngineImpl()
     fz_free_outline(ctx, attachments);
     pdf_drop_obj(_info);
 
-    if (pageComments) {
+    if (pageAnnots) {
         for (int i = 0; i < PageCount(); i++) {
-            free(pageComments[i]);
+            free(pageAnnots[i]);
         }
-        free(pageComments);
+        free(pageAnnots);
     }
     if (imageRects) {
         for (int i = 0; i < PageCount(); i++) {
@@ -1476,10 +1474,10 @@ bool PdfEngineImpl::FinishLoading()
 
     _pages = AllocArray<pdf_page *>(PageCount());
     _mediaboxes = new RectD[PageCount()];
-    pageComments = AllocArray<pdf_annot **>(PageCount());
+    pageAnnots = AllocArray<pdf_annot **>(PageCount());
     imageRects = AllocArray<fz_rect *>(PageCount());
 
-    if (!_pages || !_mediaboxes || !pageComments || !imageRects)
+    if (!_pages || !_mediaboxes || !pageAnnots || !imageRects)
         return false;
 
     ScopedCritSec scope(&ctxAccess);
@@ -1636,7 +1634,7 @@ pdf_page *PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy)
             page = pdf_load_page(_doc, pageNo - 1);
             _pages[pageNo-1] = page;
             LinkifyPageText(page);
-            pageComments[pageNo-1] = ProcessPageAnnotations(page);
+            pageAnnots[pageNo-1] = ProcessPageAnnotations(page);
         }
         fz_catch(ctx) { }
     }
@@ -2050,9 +2048,9 @@ PageElement *PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt)
             return new PdfLink(this, &link->dest, link->rect, pageNo, &p);
     }
 
-    if (pageComments[pageNo-1]) {
-        for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
-            pdf_annot *annot = pageComments[pageNo-1][i];
+    if (pageAnnots[pageNo-1]) {
+        for (size_t i = 0; pageAnnots[pageNo-1][i]; i++) {
+            pdf_annot *annot = pageAnnots[pageNo-1][i];
             fz_rect rect = fz_transform_rect(page->ctm, annot->rect);
             if (fz_is_pt_in_rect(rect, p)) {
                 ScopedCritSec scope(&ctxAccess);
@@ -2089,11 +2087,11 @@ Vec<PageElement *> *PdfEngineImpl::GetElements(int pageNo)
             els->Append(new PdfImage(this, pageNo, imageRects[pageNo-1][i], i));
     }
 
-    if (pageComments[pageNo-1]) {
+    if (pageAnnots[pageNo-1]) {
         ScopedCritSec scope(&ctxAccess);
 
-        for (size_t i = 0; pageComments[pageNo-1][i]; i++) {
-            pdf_annot *annot = pageComments[pageNo-1][i];
+        for (size_t i = 0; pageAnnots[pageNo-1][i]; i++) {
+            pdf_annot *annot = pageAnnots[pageNo-1][i];
             fz_rect rect = fz_transform_rect(page->ctm, annot->rect);
             ScopedMem<WCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
             els->Append(new PdfComment(contents, fz_rect_to_RectD(rect), pageNo));
@@ -2145,11 +2143,10 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
 
 pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
 {
-    Vec<pdf_annot *> comments;
+    Vec<pdf_annot *> annots;
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
-        char *subtype = pdf_to_name(pdf_dict_gets(annot->obj, "Subtype"));
-        if (str::Eq(subtype, "FileAttachment")) {
+        if (FZ_WIDGET_TYPE_FILE == annot->type) {
             pdf_obj *file = pdf_dict_gets(annot->obj, "FS");
             fz_rect rect = pdf_to_rect(ctx, pdf_dict_gets(annot->obj, "Rect"));
             pdf_obj *embedded = pdf_dict_getsa(pdf_dict_gets(file, "EF"), "DOS", "F");
@@ -2165,22 +2162,25 @@ pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
                 fz_link *link = fz_new_link(ctx, rect, ld);
                 link->next = page->links;
                 page->links = link;
+                // TODO: expose /Contents in addition to the file path
+            }
+            else if (!str::IsEmpty(pdf_to_str_buf(pdf_dict_gets(annot->obj, "Contents")))) {
+                annots.Append(annot);
             }
         }
-        if (!str::IsEmpty(pdf_to_str_buf(pdf_dict_gets(annot->obj, "Contents"))) &&
-            !str::Eq(subtype, "FreeText")) {
-            comments.Append(annot);
+        else if (!str::IsEmpty(pdf_to_str_buf(pdf_dict_gets(annot->obj, "Contents"))) && annot->type != FZ_WIDGET_TYPE_FREETEXT) {
+            annots.Append(annot);
         }
     }
 
-    if (comments.Count() == 0)
+    if (annots.Count() == 0)
         return NULL;
 
     // re-order list into top-to-bottom order (i.e. last-to-first)
-    comments.Reverse();
+    annots.Reverse();
     // add sentinel value
-    comments.Append(NULL);
-    return comments.StealData();
+    annots.Append(NULL);
+    return annots.StealData();
 }
 
 RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIx)

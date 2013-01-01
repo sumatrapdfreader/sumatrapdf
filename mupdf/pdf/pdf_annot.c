@@ -454,7 +454,7 @@ pdf_transform_annot(pdf_annot *annot)
 /* TODO: reuse code from pdf_form.c where possible and reasonable */
 
 static pdf_annot *
-pdf_create_annot(pdf_document *xref, fz_rect rect, pdf_obj *base_obj, fz_buffer *content, pdf_obj *resources, int transparency)
+pdf_create_annot(pdf_document *xref, fz_rect rect, pdf_obj *base_obj, fz_buffer *content, pdf_obj *resources, int transparency, int type)
 {
 	fz_context *ctx = xref->ctx;
 	pdf_xobject *form = NULL;
@@ -498,6 +498,7 @@ pdf_create_annot(pdf_document *xref, fz_rect rect, pdf_obj *base_obj, fz_buffer 
 	annot->rect = rect;
 	annot->ap = form;
 	annot->next = NULL;
+	annot->type = type;
 
 	pdf_transform_annot(annot);
 
@@ -604,7 +605,7 @@ pdf_create_link_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot(xref, rect, obj, content, NULL, 0);
+	return pdf_create_annot(xref, rect, obj, content, NULL, 0, FZ_WIDGET_TYPE_LINK);
 }
 
 // appearance streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
@@ -734,7 +735,7 @@ pdf_create_text_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot(xref, rect, obj, content, NULL, 0);
+	return pdf_create_annot(xref, rect, obj, content, NULL, 0, FZ_WIDGET_TYPE_TEXT_ICON);
 }
 
 // appearance streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
@@ -818,7 +819,7 @@ pdf_create_file_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot(xref, rect, obj, content, NULL, 0);
+	return pdf_create_annot(xref, rect, obj, content, NULL, 0, FZ_WIDGET_TYPE_FILE);
 }
 
 /* SumatraPDF: partial support for text markup annotations */
@@ -898,7 +899,7 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, resources, 1);
+	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, resources, 1, FZ_WIDGET_TYPE_TEXT_HIGHLIGHT);
 }
 
 static pdf_annot *
@@ -949,7 +950,7 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, NULL, 0);
+	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, NULL, 0, FZ_WIDGET_TYPE_TEXT_MARKUP);
 }
 
 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
@@ -1310,7 +1311,7 @@ pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 	}
 
 	rect = fz_transform_rect(fz_rotate(-rotate), rect);
-	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, res ? pdf_keep_obj(res) : NULL, 0);
+	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, res ? pdf_keep_obj(res) : NULL, 0, FZ_WIDGET_TYPE_TEXT);
 }
 
 /* SumatraPDF: partial support for freetext annotations */
@@ -1395,7 +1396,7 @@ pdf_create_freetext_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, res, 0);
+	return pdf_create_annot(xref, rect, pdf_keep_obj(obj), content, res, 0, FZ_WIDGET_TYPE_FREETEXT);
 }
 
 static pdf_annot *
