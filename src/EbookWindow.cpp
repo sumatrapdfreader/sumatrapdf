@@ -134,6 +134,8 @@ static LRESULT OnMouseWheel(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lP
     return 0;
 }
 
+static void OnMenuGoToPage(EbookWindow *win);
+
 static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
 {
     switch (key) {
@@ -159,6 +161,9 @@ static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
         break;
     case 'Q':
         CloseEbookWindow(win, true, true);
+        break;
+    case 'G':
+        OnMenuGoToPage(win);
         break;
     case VK_ESCAPE:
         if (gGlobalPrefs.escToExit)
