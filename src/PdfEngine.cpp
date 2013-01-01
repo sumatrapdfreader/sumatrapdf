@@ -1141,20 +1141,20 @@ public:
     virtual bool SaveEmbedded(LinkSaverUI& saveUI);
 };
 
-class PdfComment : public PageElement, public PageAnnotation {
+class PdfComment : public PageElement {
+    PageAnnotation annot;
     ScopedMem<WCHAR> content;
     int pageNo;
 
 public:
     PdfComment(const WCHAR *content, RectD rect, int pageNo) :
-        PageAnnotation(Annot_Comment, rect),
-        content(str::Dup(content)), pageNo(pageNo) { }
+        annot(Annot_Comment, rect), content(str::Dup(content)), pageNo(pageNo) { }
 
     virtual PageElementType GetType() const { return Element_Annotation; }
     virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return rect; }
+    virtual RectD GetRect() const { return annot.rect; }
     virtual WCHAR *GetValue() const { return str::Dup(content); }
-    virtual PageAnnotation *AsAnnot() { return this; }
+    virtual PageAnnotation *GetAnnot() { return &this->annot; }
 };
 
 class PdfTocItem : public DocTocItem {

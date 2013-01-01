@@ -179,8 +179,9 @@ const char *ElementTypeToStr(PageElement *el)
     case Element_Link: return "Link";
     case Element_Image: return "Image";
     case Element_Annotation:
-        switch (el->AsAnnot()->GetAnnotType()) {
+        switch (el->GetAnnot()->type) {
         case Annot_Comment: return "Comment";
+        case Annot_Highlight: return "Highlight";
         }
         // fall through
     default:

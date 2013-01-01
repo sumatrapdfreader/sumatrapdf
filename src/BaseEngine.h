@@ -89,17 +89,11 @@ public:
 };
 
 // an user annotation on page
-class PageAnnotation {
-protected:
-    PageAnnotType type;
-    RectD rect;
+struct PageAnnotation {
+    const PageAnnotType type;
+    const RectD rect;
 
-public:
     PageAnnotation(PageAnnotType type, RectD rect) : type(type), rect(rect) { }
-    virtual ~PageAnnotation() { }
-
-    PageAnnotType GetAnnotType() const { return type; }
-    RectD GetAnnotRect() const { return rect; }
 };
 
 // use in PageDestination::GetDestRect for values that don't matter
@@ -124,7 +118,7 @@ public:
     virtual PageDestination *AsLink() { return NULL; }
     // if this element is a page annotation, this returns additional data
     // (the result is owned by the PageElement and MUST NOT be deleted)
-    virtual PageAnnotation *AsAnnot() { return NULL; }
+    virtual PageAnnotation *GetAnnot() { return NULL; }
     // if this element is an image, this returns it
     // caller must delete the result
     virtual RenderedBitmap *GetImage() { return NULL; }
@@ -289,15 +283,14 @@ public:
     virtual bool BenchLoadPage(int pageNo) = 0;
 
     // ***** experimental API to support page annotations *****
-    // whether this engine supports adding, removing and saving of annotations
-    // (such as text highlighting, comments, etc.)
-    // virtual bool SupportsAnnotations() { return false; }
-    // adds an annotation to the document (returns false if the annotation type isn't supported)
-    // virtual bool AddAnnotation(int pageNo, PageAnnotation *) { return false; }
+    // whether this engine supports adding, removing and saving of annotations of a given type
+    // virtual bool SupportsAnnotation(PageAnnotType type) { return false; }
+    // adds an annotation to the document
+    // virtual void AddAnnotation(int pageNo, PageAnnotation *annot) { CrashIf(true); }
     // removes an existing annotation from the document
-    // virtual bool RemoveAnnotation(int pageNo, PageAnnotation *) { return false; }
+    // virtual void RemoveAnnotation(int pageNo, PageAnnotation *annot) { }
     // TODO: figure out how to best save modified documents
-    // virtual unsigned char *Serialize(size_t *lenOut) { return NULL; }
+    // virtual unsigned char *GetFileData(size_t *lenOut) { return NULL; }
     // saves the document including annotations to a file (overwrites the current file when filename is NULL)
     // virtual bool SaveModifications(const WCHAR *filename=NULL) { return false; }
 };

@@ -476,7 +476,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
     if (!value || pageEl->GetType() != Element_Link)
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
-    if (!value || pageEl->GetType() != Element_Annotation || pageEl->AsAnnot()->GetAnnotType() != Annot_Comment)
+    if (!value || pageEl->GetType() != Element_Annotation || pageEl->GetAnnot()->type != Annot_Comment)
         win::menu::Remove(popup, IDM_COPY_COMMENT);
     if (!pageEl || pageEl->GetType() != Element_Image)
         win::menu::Remove(popup, IDM_COPY_IMAGE);
