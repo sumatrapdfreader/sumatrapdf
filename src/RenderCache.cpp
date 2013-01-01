@@ -11,6 +11,9 @@
    due to insufficient (GDI) memory. */
 #define CONSERVE_MEMORY
 
+// define to view the tile boundaries
+#undef SHOW_TILE_LAYOUT
+
 RenderCache::RenderCache()
     : cacheCount(0), requestCount(0),
       maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)),
@@ -124,7 +127,7 @@ static RectI GetTileRectDevice(BaseEngine *engine, int pageNo, int rotation, flo
 {
     RectD mediabox = engine->PageMediabox(pageNo);
 
-    if (tile.res && tile.res != INVALID_TILE_RES) {
+    if (tile.res > 0 && tile.res != INVALID_TILE_RES) {
         CrashIf(tile.res > 30);
         double width = mediabox.dx / (1ULL << tile.res);
         mediabox.x += tile.col * width;
@@ -150,12 +153,12 @@ static RectI GetTileOnScreen(BaseEngine *engine, int pageNo, int rotation, float
     return bbox;
 }
 
-static bool IsTileVisible(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition tile, float fuzz=0)
+static bool IsTileVisible(DisplayModel *dm, int pageNo, TilePosition tile, float fuzz=0)
 {
     if (!dm) return false;
     PageInfo *pageInfo = dm->GetPageInfo(pageNo);
     if (!dm->engine || !pageInfo) return false;
-    RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
+    RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, dm->Rotation(), dm->ZoomReal(), tile, pageInfo->pageOnScreen);
     // consider nearby tiles visible depending on the fuzz factor
     tileOnScreen.x -= (int)(tileOnScreen.dx * fuzz * 0.5);
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
@@ -191,8 +194,7 @@ void RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
             // all invisible pages resp. page tiles
             shouldFree = !entry->dm->PageVisibleNearby(entry->pageNo);
             if (!shouldFree && entry->tile.res > 1)
-                shouldFree = !IsTileVisible(entry->dm, entry->pageNo, entry->rotation,
-                                            entry->zoom, entry->tile, 2.0);
+                shouldFree = !IsTileVisible(entry->dm, entry->pageNo, entry->tile, 2.0);
         }
 
         if (shouldFree) {
@@ -487,7 +489,7 @@ void RenderCache::ClearQueueForDisplayModel(DisplayModel *dm, int pageNo, TilePo
     for (int i = 0; i < reqCount; i++) {
         PageRenderRequest *req = &(requests[i]);
         bool shouldRemove = req->dm == dm && (pageNo == INVALID_PAGE_NO || req->pageNo == pageNo) &&
-            (!tile || req->tile.res != tile->res || !IsTileVisible(dm, req->pageNo, req->rotation, req->zoom, *tile, 0.5));
+            (!tile || req->tile.res != tile->res || !IsTileVisible(dm, req->pageNo, *tile, 0.5));
         if (i != curPos)
             requests[curPos] = requests[i];
         if (shouldRemove) {
@@ -615,7 +617,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 
         DeleteDC(bmpDC);
 
-#ifdef DEBUG_TILE_LAYOUT
+#ifdef SHOW_TILE_LAYOUT
         HPEN pen = CreatePen(PS_SOLID, 1, RGB(0xff, 0xff, 0x00));
         HGDIOBJ oldPen = SelectObject(hdc, pen);
         PaintRect(hdc, bounds);

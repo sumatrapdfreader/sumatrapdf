@@ -20,7 +20,7 @@ public:
 struct TilePosition {
     USHORT res, row, col;
 
-    bool operator==(TilePosition other) {
+    bool operator==(TilePosition other) const {
         return res == other.res && row == other.row && col == other.col;
     }
 };
