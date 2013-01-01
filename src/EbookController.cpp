@@ -84,7 +84,6 @@ public:
 };
 
 class EbookFormattingThread : public ThreadBase {
-public:
     // provided by the caller
     Doc                 doc; // we own it
     HtmlFormatterArgs * formatterArgs; // we own it
@@ -95,18 +94,19 @@ public:
     HtmlPage *  pages[EbookFormattingTask::MAX_PAGES];
     int         pageCount;
 
+public:
     void        SendPagesIfNecessary(bool force, bool finished, bool fromBeginning);
     bool        Format(int reparseIdx);
 
-    EbookFormattingThread(Doc doc, HtmlFormatterArgs *arsg, EbookController *ctrl);
+    EbookFormattingThread(Doc doc, HtmlFormatterArgs *args, EbookController *ctrl, int reparseIdx=0);
     virtual ~EbookFormattingThread();
 
     // ThreadBase
     virtual void Run();
 };
 
-EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs *args, EbookController *ctrl) :
-    doc(doc), formatterArgs(args), controller(ctrl), pageCount(0)
+EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs *args, EbookController *ctrl, int reparseIdx) :
+    doc(doc), formatterArgs(args), controller(ctrl), reparseIdx(reparseIdx), pageCount(0)
 {
     AssertCrash(doc.IsEbook() || (doc.IsNone() && (NULL != args->htmlStr)));
 }
@@ -500,21 +500,20 @@ void EbookController::TriggerBookFormatting()
 
     CrashIf(formattingTemp.pagesFromBeginning.Count() > 0);
     CrashIf(formattingTemp.pagesFromPage.Count() > 0);
+    CrashIf(formattingTemp.reparseIdx < 0);
+    CrashIf(formattingTemp.reparseIdx > (int)doc.GetHtmlDataSize());
 
     ShowPage(newPage, newPage != NULL);
     HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, size.dx, size.dy, &textAllocator);
-    formattingThread = new EbookFormattingThread(doc, args, this);
+    formattingThread = new EbookFormattingThread(doc, args, this, formattingTemp.reparseIdx);
     formattingThreadNo = formattingThread->GetNo();
-    CrashIf(formattingTemp.reparseIdx < 0);
-    CrashIf(formattingTemp.reparseIdx > (int)args->htmlStrLen);
-    formattingThread->reparseIdx = formattingTemp.reparseIdx;
     formattingThread->Start();
     UpdateStatus();
 }
 
 void EbookController::OnLayoutTimer()
 {
-    formattingTemp.reparseIdx = NULL;
+    formattingTemp.reparseIdx = 0;
     if (pageShown)
         formattingTemp.reparseIdx = pageShown->reparseIdx;
     TriggerBookFormatting();
@@ -682,4 +681,3 @@ int EbookController::CurrPageReparseIdx() const
         return 0;
     return pageShown->reparseIdx;
 }
-

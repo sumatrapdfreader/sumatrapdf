@@ -397,6 +397,7 @@ char *wintextinput(pdfapp_t *app, char *inittext, int retry)
 	int code;
 	td_retry = retry;
 	strncpy(td_textinput, inittext?inittext:"", sizeof(td_textinput));
+	td_textinput[nelem(td_textinput)-1] = '\0'; /* SumatraPDF: prevent buffer overrund */
 	code = DialogBoxW(NULL, L"IDD_DLOGTEXT", hwndframe, dlogtextproc);
 	if (code <= 0)
 		winerror(app, "cannot create text input dialog");

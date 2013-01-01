@@ -39,11 +39,13 @@ void DictTestMapStrToInt()
     assert(ok);
     assert(1 == d.Count());
     ok = d.Get("foo", &val);
+    assert(ok);
     assert(val == 5);
     ok = d.Insert("foo", 8, &val);
     assert(!ok);
     assert(val == 5);
     ok = d.Get("foo", &val);
+    assert(ok);
     assert(val == 5);
     ok = d.Get("bar", &val);
     assert(!ok);

@@ -302,7 +302,7 @@ bool Initialize(const WCHAR *symPathW, bool force)
     }
 
     DWORD symOptions = _SymGetOptions();
-    symOptions = (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
+    symOptions |= (SYMOPT_LOAD_LINES | SYMOPT_DEFERRED_LOADS | SYMOPT_UNDNAME);
     symOptions |= SYMOPT_FAIL_CRITICAL_ERRORS; // don't show system msg box on errors
     _SymSetOptions(symOptions);
 

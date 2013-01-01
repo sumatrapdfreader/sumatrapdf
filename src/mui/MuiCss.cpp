@@ -273,15 +273,8 @@ struct ElAlignData g_ElAlignVals[5] = {
     { 1.f, 1.f }, // ElAlignRight
 };
 
-void ElAlignData::Set(ElAlign align)
-{
-    CrashIf(align >= dimof(g_ElAlignVals));
-    elementPoint = g_ElAlignVals[align].elementPoint;
-    containerPoint = g_ElAlignVals[align].containerPoint;
-}
-
 // calculates the offset of an element within container
-int ElAlignData::CalcOffset(int elSize, int containerSize)
+int ElAlignData::CalcOffset(int elSize, int containerSize) const
 {
     int ep = (int)((float)elSize        * elementPoint  );
     int cp = (int)((float)containerSize * containerPoint);
@@ -399,7 +392,7 @@ Prop *Prop::AllocAlign(PropType type, ElAlign align)
 {
     CrashIf(!IsAlignProp(type));
     Prop p(type);
-    p.elAlign.Set(align);
+    p.elAlign = GetElAlign(align);
     return UniqifyProp(p);
 }
 

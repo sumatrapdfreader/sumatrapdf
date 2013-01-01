@@ -100,8 +100,8 @@ bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, st
 {
     str::Str<char> resp(2048);
     bool ok = false;
-    HINTERNET hInet = NULL, hConn = NULL, hReq = NULL;
-    hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    HINTERNET hConn = NULL, hReq = NULL;
+    HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (!hInet)
         goto Exit;
     hConn = InternetConnect(hInet, server, INTERNET_DEFAULT_HTTP_PORT,

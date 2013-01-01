@@ -706,10 +706,9 @@ static void OnFavTreeContextMenu(WindowInfo *win, PointI pt)
         }
     }
 
-    FavName *toDelete = NULL;
     item.mask = TVIF_PARAM;
     TreeView_GetItem(win->hwndFavTree, &item);
-    toDelete = (FavName*)item.lParam;
+    FavName *toDelete = (FavName *)item.lParam;
 
     HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, dimof(menuDefFavContext), CreatePopupMenu());
 

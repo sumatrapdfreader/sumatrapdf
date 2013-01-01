@@ -26,34 +26,21 @@ public:
         ElAlignData   vertAlign;
         ElAlignData   horizAlign;
 
-        CellData() {
-            el = NULL;
-            cachedStyle = NULL;
-            row = 0;
-            col = 0;
-            colSpan = 1;
-            vertAlign.Set(ElAlignTop);
-            horizAlign.Set(ElAlignLeft);
-        }
+        CellData() : el(NULL), cachedStyle(NULL), row(0), col(0), colSpan(1),
+            vertAlign(GetElAlignTop()), horizAlign(GetElAlignLeft()) { }
 
-        CellData(const CellData& other) {
-            el = other.el;
-            cachedStyle = other.cachedStyle;
-            row = other.row;
-            col = other.col;
-            colSpan = other.colSpan;
-            vertAlign = other.vertAlign;
-            horizAlign = other.horizAlign;
-        }
+        CellData(const CellData& other) : el(other.el), cachedStyle(other.cachedStyle),
+            row(other.row), col(other.col), colSpan(other.colSpan),
+            vertAlign(other.vertAlign), horizAlign(other.horizAlign) { }
 
-        void Set(Control *el, int row, int col, ElAlign horizAlign = ElAlignLeft, ElAlign vertAlign = ElAlignBottom) {
+        void Set(Control *el, int row, int col, ElAlign horizAlign=ElAlignLeft, ElAlign vertAlign=ElAlignBottom) {
             this->el = el;
             this->cachedStyle = NULL;
             this->row = row;
             this->col = col;
             this->colSpan = 1; // this can be re-used, so re-set to default value
-            this->vertAlign.Set(vertAlign);
-            this->horizAlign.Set(horizAlign);
+            this->vertAlign = GetElAlign(vertAlign);
+            this->horizAlign = GetElAlign(horizAlign);
         }
 
         bool SetStyle(Style *s) {

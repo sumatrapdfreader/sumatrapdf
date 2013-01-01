@@ -339,8 +339,6 @@ pdf_load_link(pdf_document *xref, pdf_obj *dict, fz_matrix page_ctm)
 	fz_context *ctx = xref->ctx;
 	fz_link_dest ld;
 
-	dest = NULL;
-
 	obj = pdf_dict_gets(dict, "Rect");
 	if (obj)
 		bbox = pdf_to_rect(ctx, obj);
