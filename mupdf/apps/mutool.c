@@ -2,10 +2,6 @@
  * mutool -- swiss army knife of pdf manipulation tools
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 /* SumatraPDF: compile with the same warnings disabled as all MuPDF code */
 #include <fitz.h>
 

@@ -342,7 +342,7 @@ static int pdfapp_save(pdfapp_t *app)
 				{
 					char buf2[PATH_MAX];
 					strncpy(buf2, app->docpath, PATH_MAX);
-					buf2[PATH_MAX-1] = '\0'; /* SumatraPDF: prevent buffer overflow */
+					buf2[nelem(buf2)-1] = '\0'; /* SumatraPDF: prevent buffer overflow */
 					pdfapp_close(app);
 					winreplacefile(buf, buf2);
 					pdfapp_open(app, buf2, 1);
