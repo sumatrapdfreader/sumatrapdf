@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-45a715fe38a4a39c23a3e49d6ec06569ca5dfc2d
+a0169d0d36549be41553245b6d47641935acdbdc
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5246,7 +5246,7 @@ ta:அச்சுப்பொறியின் பண்புகள் ப
 th:ไม่ได้รับคุณสมบัติเครื่องพิมพ์
 tr:Yazıcı özellikleri temin edilemedi
 tw:無法取得印表機之屬性
-uk:Неможливо відобразити налаштування друкарки
+uk:Неможливо отримати налаштування друкарки
 uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
 :Couldn't initialize printer
@@ -10857,6 +10857,8 @@ pt:Impressão em curso.
 ru:Идёт печать.
 sv:Utskrift pågår.
 tr:Baskı devam ediyor.
+uk:Триває друк.
+uz:Bosib chiqarilmoqda.
 vn:Đang in.
 :Printing is still in progress. Abort and quit?
 az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
@@ -10875,6 +10877,8 @@ nl:Nog steeds aan het printen. Annuleren en stoppen?
 pt:Impressão ainda em curso. Abortar e sair?
 ru:Печать продолжается. Отменить и выйти?
 sv:Utskrift pågår fortfarande. Avbryt och avsluta?
+uk:Друк ще не завершено. Перервати та вийти?
+uz:Bosib chiqarilmoqda. Bekor qilib chiqilsinmi?
 vn:Vẫn còn đang in. Hủy bỏ và thoát ra?
 :Printing is still in progress. Abort and start over?
 am:Տպվում է։ Կանգնեցնե՞լ։
@@ -10924,7 +10928,7 @@ sv:Utskriften pågår fortfarande. Avbryt och börja om?
 ta:அச்சிடுதல் செயல்பாட்டில் உள்ளது. கைவிட்டு மீண்டும் தொடங்கவா?
 tr:Yazıcı hala kullanımda. Durdurup yeniden başlatılsınmı?
 tw:正在列印，是否要放棄並重新設定？
-uk:Друк і далі активний. Відмінити та розпочати знову?
+uk:Друк ще не завершено. Перервати та розпочати знову?
 uz:Bosib chiqarish tugatilmagan. Bekor qilinib qaytadan boshlansinmi?
 vn:Vẫn còn đang in. Thoát và bắt đầu lại?
 :Printing page %d of %d...
@@ -11867,7 +11871,7 @@ ta:மின்மடல்லாக அனுப்பு...
 tl:Ipadala sa &email...
 tr:&E-mail ile yolla...
 tw:發送電郵...(&E)
-uk:Відішліть через E-mail...
+uk:Надіслати через E-mail...
 uz:&Elektron pochta orqali yuborish...
 vn:Gửi qua &email...
 :Set inverse search command-line
@@ -12040,7 +12044,7 @@ th:แสดงแถบเครื่องมือ
 tl:Ipakita ang toolbar
 tr:&Araç çubuğunu göster
 tw:顯示工具列(&T)
-uk:Показати пенал
+uk:Показати панель інструментів
 uz:&Asboblar panelini ko'rsatish
 vn:Hiện thanh công cụ
 :Show &pages continuously
@@ -12256,7 +12260,7 @@ ta:புத்தககுறி பட்டை இருந்தல் க�
 tl:Ipakita ang &bookmarks sidebar kung naangkop
 tr:Yer &imleri yan çubuğunu bulunduğunda göster
 tw:顯示書籤欄(&B)
-uk:Якщо доступно відображати полосу закладок
+uk:Якщо доступно, показати бокову панель закладок
 uz:Mavjud bo'lganda &xatcho'plar panelini ko'rsatish
 vn:Hiện chỉ dấu sách nếu có
 :Single Page

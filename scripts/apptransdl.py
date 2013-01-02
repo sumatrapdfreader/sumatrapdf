@@ -4,7 +4,8 @@
 # If changed, saves them as strings/translations.txt and
 # re-generates src/Translations_txt.cpp
 
-from extract_strings import extract_strings_from_c_files
+from extract_strings import extract_strings_from_c_files, dump_missing_per_language, load_lang_index
+from update_translations import get_untranslated_as_list, remove_incomplete_translations, gen_c_code
 import os.path, sys, string, urllib2
 from util import load_config
 
@@ -46,8 +47,6 @@ def downloadTranslations():
     print("Download done")
     return s
 
-from langs import g_langs
-
 # Returns 'strings' dict that maps an original, untranslated string to
 # an array of translation, where each translation is a tuple
 # (language, text translated into this language)
@@ -74,10 +73,6 @@ def parseTranslations(s):
         strings[curr_str] = curr_translations
     return strings
 
-from extract_strings import extract_strings_from_c_files, dump_missing_per_language, load_lang_index
-from update_translations import get_untranslated_as_list, remove_incomplete_translations, gen_c_code
-from update_translations import lang_sort_func
-
 g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
 
 # Generate Translations_txt.cpp based on translations in s that we downloaded
@@ -85,8 +80,6 @@ g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
 def generateCode(s):
     strings_dict = parseTranslations(s)
     strings = extract_strings_from_c_files()
-    langs_idx = load_lang_index()
-    langs = g_langs
     for s in strings_dict.keys():
         if s not in strings:
             del strings_dict[s]
@@ -96,10 +89,10 @@ def generateCode(s):
         if s not in strings_dict:
             strings_dict[s] = []
 
-    langs.sort(lang_sort_func)
+    langs_idx = load_lang_index()
     c_file_name = os.path.join(g_src_dir, "Translations_txt.cpp")
-    remove_incomplete_translations(langs, strings, strings_dict)
-    gen_c_code(langs, strings_dict, c_file_name, langs_idx)
+    remove_incomplete_translations(langs_idx, strings, strings_dict)
+    gen_c_code(langs_idx, strings_dict, c_file_name)
 
 # returns True if translation files have been re-generated and
 # need to be commited
