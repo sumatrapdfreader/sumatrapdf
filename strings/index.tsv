@@ -6,6 +6,8 @@
 
 # See http://msdn.microsoft.com/en-us/library/dd318693.aspx for the full list.
 
+# Note: you also need to modify langs.py when adding a new language.
+
 # code	Language	Sublanguage/Variant/Dialect (empty if neutral)	Layout (RTL or empty)
 en	English	# keep default language on first line
 am	Armenian
@@ -74,3 +76,4 @@ et	Estonian
 uz	Uzbek
 sq	Albanian
 ne	Nepali
+ku	Central Kurdish	Central Kurdish Iraq
