@@ -234,7 +234,7 @@ find_changing(const unsigned char *line, int x, int w)
 	return (x<<3) + clz[b];
 nearend:
 	/* We have less than a byte to go. If no stray bits, exit now. */
-	if ((x<<3) == w)
+	if ((x<<3) >= w)
 		return w;
 	b = a&1;
 	a = line[x];
