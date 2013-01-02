@@ -141,6 +141,7 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual bool SaveFileAs(const WCHAR *copyFileName);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) { return NULL; }
     virtual bool HasClipOptimizations(int pageNo) { return false; }
@@ -305,6 +306,20 @@ unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
     if (fileName)
         return (unsigned char *)file::ReadAll(fileName, cbCount);
     return NULL;
+}
+
+bool ImagesEngine::SaveFileAs(const WCHAR *copyFileName)
+{
+    if (fileName) {
+        BOOL ok = CopyFile(fileName, copyFileName, FALSE);
+        if (ok)
+            return true;
+    }
+    size_t dataLen;
+    ScopedMem<unsigned char> data(GetFileData(&dataLen));
+    if (data)
+        return file::WriteAll(copyFileName, data.Get(), dataLen);
+    return false;
 }
 
 ///// ImageEngine handles a single image file /////
@@ -500,6 +515,9 @@ public:
     virtual RectD PageMediabox(int pageNo);
 
     virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
+    virtual bool SaveFileAs(const WCHAR *copyFileName) { return false; }
+
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
     // TODO: is there a better place to expose pageFileNames than through page labels?
     virtual bool HasPageLabels() { return true; }

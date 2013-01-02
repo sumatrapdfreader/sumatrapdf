@@ -118,6 +118,9 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount) {
         return (unsigned char *)file::ReadAll(fileName, cbCount);
     }
+    virtual bool SaveFileAs(const WCHAR *copyFileName) {
+        return CopyFile(fileName, copyFileName, FALSE);
+    }
 
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
@@ -129,6 +132,9 @@ public:
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
 
     virtual const WCHAR *GetDefaultFileExt() const { return L".chm"; }
+
+    virtual Vec<PageElement *> *GetElements(int pageNo) { return NULL; }
+    virtual PageElement *GetElementAtPos(int pageNo, PointD pt) { return NULL; }
 
     virtual bool BenchLoadPage(int pageNo) { return true; }
 

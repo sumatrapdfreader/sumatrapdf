@@ -499,7 +499,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     assert(dm);
     if (!dm) return;
 
-    if (!dm->engine || !dm->engine->IsPrintingAllowed())
+    if (!dm->engine || !dm->engine->AllowsPrinting())
         return;
 
     if (win->IsChm()) {
@@ -654,7 +654,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
 
     ScopedMem<WCHAR> fileName2(path::Normalize(fileName));
     BaseEngine *engine = EngineManager::CreateEngine(!gUseEbookUI, fileName2);
-    if (!engine || !engine->IsPrintingAllowed()) {
+    if (!engine || !engine->AllowsPrinting()) {
         if (displayErrors)
             MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         return false;

@@ -86,7 +86,7 @@ static bool IsToolbarButtonEnabled(WindowInfo *win, int buttonNo)
         return !gPluginMode;
 
     case IDM_PRINT:
-        return win->dm->engine && win->dm->engine->IsPrintingAllowed();
+        return win->dm->engine && win->dm->engine->AllowsPrinting();
 
     case IDM_FIND_NEXT:
     case IDM_FIND_PREV:

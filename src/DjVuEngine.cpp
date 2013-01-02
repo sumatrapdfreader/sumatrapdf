@@ -227,10 +227,13 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual bool SaveFileAs(const WCHAR *copyFileName);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
     // DPI isn't constant for all pages and thus premultiplied
     virtual float GetFileDPI() const { return 300.0f; }
@@ -610,6 +613,11 @@ RectD DjVuEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation
 unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
 {
     return (unsigned char *)file::ReadAll(fileName, cbCount);
+}
+
+bool DjVuEngineImpl::SaveFileAs(const WCHAR *copyFileName)
+{
+    return CopyFile(fileName, copyFileName, FALSE);
 }
 
 bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR *lineSep, str::Str<WCHAR>& extracted, Vec<RectI>& coords)

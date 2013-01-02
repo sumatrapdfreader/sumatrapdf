@@ -85,6 +85,9 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount) {
         return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : NULL;
     }
+    virtual bool SaveFileAs(const WCHAR *copyFileName) {
+        return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
+    }
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     // make RenderCache request larger tiles than per default
@@ -1037,6 +1040,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
     virtual const WCHAR *GetDefaultFileExt() const { return L".pdb"; }
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
@@ -1371,6 +1375,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
     virtual const WCHAR *GetDefaultFileExt() const { return L".tcr"; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
@@ -1529,6 +1534,7 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
     virtual const WCHAR *GetDefaultFileExt() const {
         return fileName ? path::GetExt(fileName) : L".txt";
     }

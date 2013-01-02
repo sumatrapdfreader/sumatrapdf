@@ -221,7 +221,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     if (!OpenClipboard(NULL)) return;
     EmptyClipboard();
 
-    if (!win->dm->engine->IsCopyingTextAllowed())
+    if (!win->dm->engine->AllowsCopyingText())
         ShowNotification(win, _TR("Copying text was denied (copying as image only)"));
     else if (!win->dm->engine->IsImageCollection()) {
         ScopedMem<WCHAR> selText;

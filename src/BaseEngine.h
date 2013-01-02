@@ -91,9 +91,11 @@ public:
 // an user annotation on page
 struct PageAnnotation {
     const PageAnnotType type;
+    const int pageNo;
     const RectD rect;
 
-    PageAnnotation(PageAnnotType type, RectD rect) : type(type), rect(rect) { }
+    PageAnnotation(PageAnnotType type, int pageNo, RectD rect) :
+        type(type), pageNo(pageNo), rect(rect) { }
 };
 
 // use in PageDestination::GetDestRect for values that don't matter
@@ -217,7 +219,9 @@ public:
     // returns the binary data for the current file
     // (e.g. for saving again when the file has already been deleted)
     // caller needs to free() the result
-    virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
+    virtual unsigned char *GetFileData(size_t *cbCount) = 0;
+    // saves a copy of the current file under a different name (overwriting an existing file)
+    virtual bool SaveFileAs(const WCHAR *copyFileName) = 0;
     // extracts all text found in the given page (and optionally also the
     // coordinates of the individual glyphs)
     // caller needs to free() the result
@@ -232,14 +236,16 @@ public:
     virtual bool IsImageCollection() { return false; }
 
     // access to various document properties (such as Author, Title, etc.)
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) = 0;
 
+    // whether this engine supports adding, removing and saving of annotations of a given type
+    virtual bool SupportsAnnotation(PageAnnotType type) { return false; }
     // TODO: needs a more general interface
     // whether it is allowed to print the current document
-    virtual bool IsPrintingAllowed() { return true; }
+    virtual bool AllowsPrinting() { return true; }
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)
-    virtual bool IsCopyingTextAllowed() { return true; }
+    virtual bool AllowsCopyingText() { return true; }
 
     // the DPI for a file is needed when converting internal measures to physical ones
     virtual float GetFileDPI() const { return 96.0f; }
@@ -248,10 +254,10 @@ public:
 
     // returns a list of all available elements for this page
     // caller must delete the result (including all elements contained in the Vec)
-    virtual Vec<PageElement *> *GetElements(int pageNo) { return NULL; }
+    virtual Vec<PageElement *> *GetElements(int pageNo) = 0;
     // returns the element at a given point or NULL if there's none
     // caller must delete the result
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt) { return NULL; }
+    virtual PageElement *GetElementAtPos(int pageNo, PointD pt) = 0;
 
     // creates a PageDestination from a name (or NULL for invalid names)
     // caller must delete the result
@@ -281,18 +287,6 @@ public:
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
-
-    // ***** experimental API to support page annotations *****
-    // whether this engine supports adding, removing and saving of annotations of a given type
-    // virtual bool SupportsAnnotation(PageAnnotType type) { return false; }
-    // adds an annotation to the document
-    // virtual void AddAnnotation(int pageNo, PageAnnotation *annot) { CrashIf(true); }
-    // removes an existing annotation from the document
-    // virtual void RemoveAnnotation(int pageNo, PageAnnotation *annot) { }
-    // TODO: figure out how to best save modified documents
-    // virtual unsigned char *GetFileData(size_t *lenOut) { return NULL; }
-    // saves the document including annotations to a file (overwrites the current file when filename is NULL)
-    // virtual bool SaveModifications(const WCHAR *filename=NULL) { return false; }
 };
 
 #endif

@@ -1014,16 +1014,17 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual bool SaveFileAs(const WCHAR *copyFileName);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo);
     virtual PageLayoutType PreferredLayout();
     virtual WCHAR *GetProperty(DocumentProperty prop);
 
-    virtual bool IsPrintingAllowed() {
+    virtual bool AllowsPrinting() {
         return pdf_has_permission(_doc, PDF_PERM_PRINT);
     }
-    virtual bool IsCopyingTextAllowed() {
+    virtual bool AllowsCopyingText() {
         return pdf_has_permission(_doc, PDF_PERM_COPY);
     }
 
@@ -1144,14 +1145,13 @@ public:
 class PdfComment : public PageElement {
     PageAnnotation annot;
     ScopedMem<WCHAR> content;
-    int pageNo;
 
 public:
     PdfComment(const WCHAR *content, RectD rect, int pageNo) :
-        annot(Annot_Comment, rect), content(str::Dup(content)), pageNo(pageNo) { }
+        annot(Annot_Comment, pageNo, rect), content(str::Dup(content)) { }
 
     virtual PageElementType GetType() const { return Element_Annotation; }
-    virtual int GetPageNo() const { return pageNo; }
+    virtual int GetPageNo() const { return annot.pageNo; }
     virtual RectD GetRect() const { return annot.rect; }
     virtual WCHAR *GetValue() const { return str::Dup(content); }
     virtual PageAnnotation *GetAnnot() { return &this->annot; }
@@ -2550,6 +2550,20 @@ unsigned char *PdfEngineImpl::GetFileData(size_t *cbCount)
     return data;
 }
 
+bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName)
+{
+    size_t dataLen;
+    ScopedMem<unsigned char> data(GetFileData(&dataLen));
+    if (data) {
+        bool ok = file::WriteAll(copyFileName, data.Get(), dataLen);
+        if (ok)
+            return true;
+    }
+    if (!_fileName)
+        return false;
+    return CopyFile(_fileName, copyFileName, FALSE);
+}
+
 bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num, int gen)
 {
     ScopedCritSec scope(&ctxAccess);
@@ -2860,6 +2874,7 @@ public:
     virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
 
     virtual unsigned char *GetFileData(size_t *cbCount);
+    virtual bool SaveFileAs(const WCHAR *copyFileName);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
@@ -3575,6 +3590,20 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
         return _fileName ? (unsigned char *)file::ReadAll(_fileName, cbCount) : NULL;
     }
     return data;
+}
+
+bool XpsEngineImpl::SaveFileAs(const WCHAR *copyFileName)
+{
+    size_t dataLen;
+    ScopedMem<unsigned char> data(GetFileData(&dataLen));
+    if (data) {
+        bool ok = file::WriteAll(copyFileName, data.Get(), dataLen);
+        if (ok)
+            return true;
+    }
+    if (!_fileName)
+        return false;
+    return CopyFile(_fileName, copyFileName, FALSE);
 }
 
 WCHAR *XpsEngineImpl::ExtractFontList()

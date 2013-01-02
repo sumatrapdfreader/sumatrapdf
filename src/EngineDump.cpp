@@ -77,9 +77,9 @@ void DumpProperties(BaseEngine *engine, bool fullDump)
     str.Set(Escape(engine->GetProperty(Prop_PdfFileStructure)));
     if (str)
         Out("\t\tPdfFileStructure=\"%s\"\n", str.Get());
-    if (!engine->IsPrintingAllowed())
+    if (!engine->AllowsPrinting())
         Out("\t\tPrintingAllowed=\"no\"\n");
-    if (!engine->IsCopyingTextAllowed())
+    if (!engine->AllowsCopyingText())
         Out("\t\tCopyingTextAllowed=\"no\"\n");
     if (engine->IsImageCollection())
         Out("\t\tImageCollection=\"yes\"\n");

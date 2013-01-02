@@ -228,6 +228,9 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount) {
         return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : NULL;
     }
+    virtual bool SaveFileAs(const WCHAR *copyFileName) {
+        return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
+    }
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
         return pdfEngine ? pdfEngine->ExtractPageText(pageNo, lineSep, coords_out, target) : NULL;
@@ -240,11 +243,11 @@ public:
     }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
-    virtual bool IsPrintingAllowed() {
-        return pdfEngine ? pdfEngine->IsPrintingAllowed() : true;
+    virtual bool AllowsPrinting() {
+        return pdfEngine ? pdfEngine->AllowsPrinting() : true;
     }
-    virtual bool IsCopyingTextAllowed() {
-        return pdfEngine ? pdfEngine->IsCopyingTextAllowed() : true;
+    virtual bool AllowsCopyingText() {
+        return pdfEngine ? pdfEngine->AllowsCopyingText() : true;
     }
 
     virtual float GetFileDPI() const {
@@ -279,8 +282,8 @@ public:
         return pdfEngine ? pdfEngine->GetDecryptionKey() : NULL;
     }
 
-    virtual unsigned char *GetPDFData(size_t *cbCount) {
-        return pdfEngine->GetFileData(cbCount);
+    virtual bool SaveFileAsPDF(const WCHAR *copyFileName) {
+        return pdfEngine->SaveFileAs(copyFileName);
     }
 
 protected:

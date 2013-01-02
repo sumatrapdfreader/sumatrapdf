@@ -2576,7 +2576,7 @@ static void OnMenuSaveAs(WindowInfo& win)
 
     // Can't save a document's content as plain text if text copying isn't allowed
     bool hasCopyPerm = !win.dm->engine->IsImageCollection() &&
-                       win.dm->engine->IsCopyingTextAllowed();
+                       win.dm->engine->AllowsCopyingText();
     bool canConvertToPDF = Engine_PS == win.dm->engineType;
 
     const WCHAR *defExt = win.dm->engine->GetDefaultFileExt();
@@ -2645,6 +2645,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
+    ScopedMem<WCHAR> errorMsg;
     // Extract all text when saving as a plain text file
     if (hasCopyPerm && str::EndsWithI(realDstFileName, L".txt")) {
         str::Str<WCHAR> text(1024);
@@ -2656,46 +2657,32 @@ static void OnMenuSaveAs(WindowInfo& win)
         ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
         ScopedMem<char> textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
         ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
-        if (!ok)
-            MessageBoxWarning(win.hwndFrame, _TR("Failed to save a file"), _TR("Warning"));
     }
     // Convert the Postscript file into a PDF one
-    else if (canConvertToPDF && str::EndsWithI(realDstFileName, L".pdf")) {
-        size_t dataLen;
-        ScopedMem<unsigned char> data(static_cast<PsEngine *>(win.dm->engine)->GetPDFData(&dataLen));
-        ok = data && file::WriteAll(realDstFileName, data, dataLen);
-        if (!ok)
-            MessageBoxWarning(win.hwndFrame, _TR("Failed to save a file"));
+    else if (Engine_PS == win.dm->engineType && str::EndsWithI(realDstFileName, L".pdf")) {
+        ok = static_cast<PsEngine *>(win.dm->engine)->SaveFileAsPDF(realDstFileName);
     }
     // Recreate inexistant files from memory...
     else if (!file::Exists(srcFileName)) {
-        size_t dataLen;
-        ScopedMem<unsigned char> data(win.dm->engine->GetFileData(&dataLen));
-        ok = data && file::WriteAll(realDstFileName, data, dataLen);
-        if (!ok)
-            MessageBoxWarning(win.hwndFrame, _TR("Failed to save a file"));
+        ok = win.dm->engine->SaveFileAs(realDstFileName);
     }
     // ... else just copy the file
     else {
-        ok = CopyFileEx(srcFileName, realDstFileName, NULL, NULL, NULL, 0);
+        WCHAR *msgBuf;
+        ok = CopyFile(srcFileName, realDstFileName, FALSE);
         if (ok) {
             // Make sure that the copy isn't write-locked or hidden
             const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
             DWORD attributes = GetFileAttributes(realDstFileName);
             if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop))
                 SetFileAttributes(realDstFileName, attributes & ~attributesToDrop);
-        } else {
-            WCHAR *msgBuf, *errorMsg;
-            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPWSTR)&msgBuf, 0, NULL)) {
-                errorMsg = str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf);
-                LocalFree(msgBuf);
-            } else {
-                errorMsg = str::Dup(_TR("Failed to save a file"));
-            }
-            MessageBoxWarning(win.hwndFrame, errorMsg);
-            free(errorMsg);
+        } else if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), 0, (LPWSTR)&msgBuf, 0, NULL)) {
+            errorMsg.Set(str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf));
+            LocalFree(msgBuf);
         }
     }
+    if (!ok)
+        MessageBoxWarning(win.hwndFrame, errorMsg ? errorMsg : _TR("Failed to save a file"));
 
     if (ok && IsUntrustedFile(win.dm->FilePath(), gPluginURL))
         file::SetZoneIdentifier(realDstFileName);
