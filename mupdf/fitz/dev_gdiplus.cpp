@@ -686,7 +686,7 @@ public:
 			}
 			fz_catch(ctx) { }
 		}
-		else if (!image->interpolate && !alwaysInterpolate && graphics == this->graphics)
+		else if (!image->interpolate && !alwaysInterpolate)
 		{
 			GraphicsState state = graphics->Save();
 			// TODO: why does this lead to subpar results when printing?
