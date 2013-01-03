@@ -439,6 +439,15 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		/* special case for JPEG2000 images */
 		if (pdf_is_jpx_image(ctx, dict))
 		{
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693527 */
+			if (forcemask && pdf_is_dict(pdf_dict_getsa(dict, "SMask", "Mask")))
+			{
+				fz_warn(ctx, "Ignoring recursive image soft mask");
+				fz_free(ctx, image);
+				image = NULL;
+				break; /* Out of fz_try */
+			}
+
 			pdf_load_jpx(xref, dict, image);
 
 			if (forcemask)
