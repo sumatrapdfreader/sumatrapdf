@@ -10,6 +10,18 @@ load_icc_based(pdf_document *xref, pdf_obj *dict)
 
 	n = pdf_to_int(pdf_dict_gets(dict, "N"));
 
+	/* SumatraPDF: support alternate colorspaces for ICCBased */
+	if (pdf_dict_gets(dict, "Alternate"))
+	{
+		fz_colorspace *cs_alt = pdf_load_colorspace(xref, pdf_dict_gets(dict, "Alternate"));
+		if (cs_alt->n != n)
+		{
+			fz_drop_colorspace(xref->ctx, cs_alt);
+			fz_throw(xref->ctx, "ICCBased /Alternate colorspace must have %d components (not %d)", n, cs_alt->n);
+		}
+		return cs_alt;
+	}
+
 	switch (n)
 	{
 	case 1: return fz_device_gray;
