@@ -1037,6 +1037,13 @@ fz_rect fz_union_rect(fz_rect a, fz_rect b);
 fz_bbox fz_union_bbox(fz_bbox a, fz_bbox b);
 
 /*
+	fz_expand_bbox: Expand a bbox by a given amount in all directions.
+
+	Does not throw exceptions.
+*/
+fz_bbox fz_expand_bbox(fz_bbox b, int expand);
+
+/*
 	fz_translate_bbox: Translate bounding box.
 
 	Translate a bbox by a given x and y offset. Allows for overflow.
@@ -2990,6 +2997,9 @@ struct fz_write_options_s
 	int do_garbage; /* If non-zero then attempt (where possible) to
 				garbage collect the file before writing. */
 	int do_linear; /* If non-zero then write linearised. */
+	int continue_on_error; /* If non-zero, errors are (optionally)
+					counted and writing continues. */
+	int *errors;   /* Pointer to a place to store a count of errors */
 };
 
 /*	An enumeration of bitflags to use in the above 'do_expand' field of

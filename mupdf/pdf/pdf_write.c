@@ -56,6 +56,8 @@ struct pdf_write_options_s
 	int *ofs_list;
 	int *gen_list;
 	int *renumber_map;
+	int continue_on_error;
+	int *errors;
 	/* The following extras are required for linearization */
 	int *rev_renumber_map;
 	int *rev_gen_list;
@@ -1573,7 +1575,23 @@ static void writeobject(pdf_document *xref, pdf_write_options *opts, int num, in
 	pdf_obj *type;
 	fz_context *ctx = xref->ctx;
 
-	obj = pdf_load_object(xref, num, gen);
+	fz_try(ctx)
+	{
+		obj = pdf_load_object(xref, num, gen);
+	}
+	fz_catch(ctx)
+	{
+		if (opts->continue_on_error)
+		{
+			fprintf(opts->out, "%d %d obj\nnull\nendobj\n", num, gen);
+			if (opts->errors)
+				(*opts->errors)++;
+			fz_warn(ctx, fz_caught(ctx));
+			return;
+		}
+		else
+			fz_rethrow(ctx);
+	}
 
 	/* skip ObjStm and XRef objects */
 	if (pdf_is_dict(obj))
@@ -1634,10 +1652,28 @@ static void writeobject(pdf_document *xref, pdf_write_options *opts, int num, in
 			if (pdf_dict_gets(obj, "Width") != NULL && pdf_dict_gets(obj, "Height") != NULL)
 				dontexpand = !(opts->do_expand & fz_expand_images);
 		}
-		if (opts->do_expand && !dontexpand && !pdf_is_jpx_image(ctx, obj))
-			expandstream(xref, opts, obj, num, gen);
-		else
-			copystream(xref, opts, obj, num, gen);
+		fz_try(ctx)
+		{
+			if (opts->do_expand && !dontexpand && !pdf_is_jpx_image(ctx, obj))
+				expandstream(xref, opts, obj, num, gen);
+			else
+				copystream(xref, opts, obj, num, gen);
+		}
+		fz_catch(ctx)
+		{
+			if (opts->continue_on_error)
+			{
+				fprintf(opts->out, "%d %d obj\nnull\nendobj\n", num, gen);
+				if (opts->errors)
+					(*opts->errors)++;
+				fz_warn(ctx, fz_caught(ctx));
+			}
+			else
+			{
+				pdf_drop_obj(obj);
+				fz_rethrow(ctx);
+			}
+		}
 	}
 
 	pdf_drop_obj(obj);
@@ -2149,6 +2185,8 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 		opts.renumber_map = fz_malloc_array(ctx, xref->len + 3, sizeof(int));
 		opts.rev_renumber_map = fz_malloc_array(ctx, xref->len + 3, sizeof(int));
 		opts.rev_gen_list = fz_malloc_array(ctx, xref->len + 3, sizeof(int));
+		opts.continue_on_error = fz_opts->continue_on_error;
+		opts.errors = fz_opts->errors;
 
 		for (num = 0; num < xref->len; num++)
 		{

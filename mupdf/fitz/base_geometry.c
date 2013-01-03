@@ -3,6 +3,24 @@
 #define MAX4(a,b,c,d) fz_max(fz_max(a,b), fz_max(c,d))
 #define MIN4(a,b,c,d) fz_min(fz_min(a,b), fz_min(c,d))
 
+/*	A useful macro to add with overflow detection and clamping.
+
+	We want to do "b = a + x", but to allow for overflow. Consider the
+	top bits, and the cases in which overflow occurs:
+
+	overflow    a   x   b ~a^x  a^b   (~a^x)&(a^b)
+	   no       0   0   0   1    0          0
+	   yes      0   0   1   1    1          1
+	   no       0   1   0   0    0          0
+	   no       0   1   1   0    1          0
+	   no       1   0   0   0    1          0
+	   no       1   0   1   0    0          0
+	   yes      1   1   0   1    1          1
+	   no       1   1   1   1    0          0
+*/
+#define ADD_WITH_SAT(b,a,x) \
+	((b) = (a) + (x), (b) = (((~(a)^(x))&((a)^(b))) < 0 ? ((x) < 0 ? INT_MIN : INT_MAX) : (b)))
+
 /* Matrices, points and affine transformations */
 
 const fz_matrix fz_identity = { 1, 0, 0, 1, 0, 0 };
@@ -254,39 +272,13 @@ fz_bbox
 fz_translate_bbox(fz_bbox a, int xoff, int yoff)
 {
 	fz_bbox b;
-	b.x0 = a.x0 + xoff;
-	b.y0 = a.y0 + yoff;
-	b.x1 = a.x1 + xoff;
-	b.y1 = a.y1 + yoff;
-	/* Check for overflow */
-	if (((~a.x0^xoff)&(a.x0^b.x0)) < 0)
-	{
-		if (xoff < 0)
-			b.x0 = INT_MIN;
-		else
-			b.x0 = INT_MAX;
-	}
-	if (((~a.x1^xoff)&(a.x1^b.x1)) < 0)
-	{
-		if (xoff < 0)
-			b.x1 = INT_MIN;
-		else
-			b.x1 = INT_MAX;
-	}
-	if (((~a.y0^yoff)&(a.y0^b.y0)) < 0)
-	{
-		if (yoff < 0)
-			b.y0 = INT_MIN;
-		else
-			b.y0 = INT_MAX;
-	}
-	if (((~a.y1^yoff)&(a.y1^b.y1)) < 0)
-	{
-		if (yoff < 0)
-			b.y1 = INT_MIN;
-		else
-			b.y1 = INT_MAX;
-	}
+
+	if (fz_is_empty_rect(a)) return a;
+	if (fz_is_infinite_rect(a)) return a;
+	ADD_WITH_SAT(b.x0, a.x0, xoff);
+	ADD_WITH_SAT(b.y0, a.y0, yoff);
+	ADD_WITH_SAT(b.x1, a.x1, xoff);
+	ADD_WITH_SAT(b.y1, a.y1, yoff);
 	return b;
 }
 
@@ -349,6 +341,22 @@ fz_transform_bbox(fz_matrix m, fz_bbox b)
 	b.y0 = MIN4(s.y, t.y, u.y, v.y);
 	b.x1 = MAX4(s.x, t.x, u.x, v.x);
 	b.y1 = MAX4(s.y, t.y, u.y, v.y);
+	return b;
+
+}
+
+fz_bbox
+fz_expand_bbox(fz_bbox a, int expand)
+{
+	fz_bbox b;
+
+	if (fz_is_infinite_bbox(a))
+		return a;
+
+	ADD_WITH_SAT(b.x0, a.x0, -expand);
+	ADD_WITH_SAT(b.y0, a.y0, -expand);
+	ADD_WITH_SAT(b.x1, a.x1,  expand);
+	ADD_WITH_SAT(b.y1, a.y1,  expand);
 	return b;
 
 }

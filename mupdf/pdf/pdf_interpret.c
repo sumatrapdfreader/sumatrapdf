@@ -156,6 +156,11 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 	pdf_obj *obj, *obj2;
 	char *type;
 	pdf_ocg_descriptor *desc = csi->xref->ocg;
+	fz_context *ctx = csi->dev->ctx;
+
+	/* Avoid infinite recursions */
+	if (pdf_dict_marked(ocg))
+		return 0;
 
 	/* If no ocg descriptor, everything is visible */
 	if (!desc)
@@ -281,28 +286,41 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 			combine = 0;
 		}
 
-		obj = pdf_dict_gets(ocg, "OCGs");
-		on = combine & 1;
-		if (pdf_is_array(obj)) {
-			int i, len;
-			len = pdf_array_len(obj);
-			for (i = 0; i < len; i++)
+		if (pdf_dict_mark(ocg))
+			fz_throw(ctx, "Failed to mark OCG - out of memory?");
+		fz_try(ctx)
+		{
+			obj = pdf_dict_gets(ocg, "OCGs");
+			on = combine & 1;
+			if (pdf_is_array(obj)) {
+				int i, len;
+				len = pdf_array_len(obj);
+				for (i = 0; i < len; i++)
+				{
+					int hidden;
+					hidden = pdf_is_hidden_ocg(pdf_array_get(obj, i), csi, rdb);
+					if ((combine & 1) == 0)
+						hidden = !hidden;
+					if (combine & 2)
+						on &= hidden;
+					else
+						on |= hidden;
+				}
+			}
+			else
 			{
-				int hidden;
-				hidden = pdf_is_hidden_ocg(pdf_array_get(obj, i), csi, rdb);
+				on = pdf_is_hidden_ocg(obj, csi, rdb);
 				if ((combine & 1) == 0)
-					hidden = !hidden;
-				if (combine & 2)
-					on &= hidden;
-				else
-					on |= hidden;
+					on = !on;
 			}
 		}
-		else
+		fz_always(ctx)
 		{
-			on = pdf_is_hidden_ocg(obj, csi, rdb);
-			if ((combine & 1) == 0)
-				on = !on;
+			pdf_dict_unmark(ocg);
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
 		}
 		return !on;
 	}
@@ -413,6 +431,7 @@ pdf_begin_group(pdf_csi *csi, fz_rect bbox)
 
 		fz_end_mask(csi->dev);
 
+		gstate = csi->gstate + csi->gtop;
 		gstate->softmask = softmask;
 		gstate->ctm = save_ctm;
 	}
