@@ -38,6 +38,10 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 
 	fz_try(ctx)
 	{
+		/* SumatraPDF: prevent infinite recursion */
+		if (pdf_dict_mark(stmobj))
+			fz_throw(ctx, "infinite recursion in pdf_load_embedded_cmap");
+
 		file = pdf_open_stream(xref, pdf_to_num(stmobj), pdf_to_gen(stmobj));
 		phase = 1;
 		cmap = pdf_load_cmap(ctx, file);
@@ -64,6 +68,11 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 		}
 
 		pdf_store_item(ctx, stmobj, cmap, pdf_cmap_size(ctx, cmap));
+	}
+	/* SumatraPDF: prevent infinite recursion */
+	fz_always(ctx)
+	{
+		pdf_dict_unmark(stmobj);
 	}
 	fz_catch(ctx)
 	{

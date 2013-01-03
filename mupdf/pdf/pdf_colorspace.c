@@ -403,6 +403,9 @@ pdf_load_colorspace_imp(pdf_document *xref, pdf_obj *obj)
 	return NULL; /* Stupid MSVC */
 }
 
+/* SumatraPDF: prevent infinite recursion */
+static fz_colorspace k_device_recursion = { {-1, fz_free_colorspace_imp}, 0, "Recursion!", 0, NULL, NULL };
+
 fz_colorspace *
 pdf_load_colorspace(pdf_document *xref, pdf_obj *obj)
 {
@@ -411,10 +414,29 @@ pdf_load_colorspace(pdf_document *xref, pdf_obj *obj)
 
 	if ((cs = pdf_find_item(ctx, fz_free_colorspace_imp, obj)))
 	{
+		/* SumatraPDF: prevent infinite recursion */
+		if (cs == &k_device_recursion)
+			fz_throw(ctx, "infinite recursion in pdf_load_colorspace");
 		return cs;
 	}
 
+	/* SumatraPDF: prevent infinite recursion */
+	pdf_store_item(ctx, obj, &k_device_recursion, 0);
+	fz_try(ctx)
+	{
+
 	cs = pdf_load_colorspace_imp(xref, obj);
+
+	/* SumatraPDF: prevent infinite recursion */
+	}
+	fz_always(ctx)
+	{
+		pdf_remove_item(ctx, fz_free_colorspace_imp, obj);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 
 	pdf_store_item(ctx, obj, cs, cs->size);
 

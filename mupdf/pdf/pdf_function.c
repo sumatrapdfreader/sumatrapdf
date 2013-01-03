@@ -1448,6 +1448,10 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 
 	fz_try(ctx)
 	{
+		/* SumatraPDF: prevent infinite recursion */
+		if (pdf_dict_mark(dict))
+			fz_throw(ctx, "infinite recursion in pdf_load_function");
+
 		switch(func->type)
 		{
 		case SAMPLE:
@@ -1472,6 +1476,11 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 		}
 
 		pdf_store_item(ctx, dict, func, func->size);
+	}
+	/* SumatraPDF: prevent infinite recursion */
+	fz_always(ctx)
+	{
+		pdf_dict_unmark(dict);
 	}
 	fz_catch(ctx)
 	{

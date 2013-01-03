@@ -267,6 +267,8 @@ fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_
 		if (existing)
 		{
 			/* Take a new reference */
+			/* SumatraPDF: don't increase the reference of static objects */
+			if (existing->val->refs > 0)
 			existing->val->refs++;
 			fz_unlock(ctx, FZ_LOCK_ALLOC);
 			fz_free(ctx, item);
