@@ -45,6 +45,8 @@ void CalcMD5Digest(unsigned char *data, size_t byteCount, unsigned char digest[1
     fz_md5_final(&md5, digest);
 }
 
+///// extensions to Fitz that are usable for both PDF and XPS /////
+
 inline fz_rect fz_bbox_to_rect(fz_bbox bbox)
 {
     fz_rect result = { (float)bbox.x0, (float)bbox.y0, (float)bbox.x1, (float)bbox.y1 };
@@ -762,6 +764,60 @@ public:
     virtual void Abort() { cookie.abort = 1; }
 };
 
+extern "C" static void
+fz_lock_context_cs(void *user, int lock)
+{
+    // we use a single critical section for all locks,
+    // since that critical section (ctxAccess) should
+    // be guarding all fz_context access anyway and
+    // thus already be in place (in debug builds we
+    // crash if that assertion doesn't hold)
+    CRITICAL_SECTION *cs = (CRITICAL_SECTION *)user;
+    BOOL ok = TryEnterCriticalSection(cs);
+    if (!ok) {
+        CrashIf(true);
+        EnterCriticalSection(cs);
+    }
+}
+
+extern "C" static void
+fz_unlock_context_cs(void *user, int lock)
+{
+    CRITICAL_SECTION *cs = (CRITICAL_SECTION *)user;
+    LeaveCriticalSection(cs);
+}
+
+void fz_run_user_annots(Vec<PageAnnotation>& userAnnots, int pageNo, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, fz_cookie *cookie)
+{
+    for (size_t i = 0; i < userAnnots.Count() && (!cookie || !cookie->abort); i++) {
+        PageAnnotation& annot = userAnnots.At(i);
+        if (pageNo != annot.pageNo || Annot_Highlight != annot.type)
+            continue;
+        // skip annotation if it isn't visible
+        fz_rect rect = fz_RectD_to_rect(annot.rect);
+        rect = fz_transform_rect(ctm, rect);
+        fz_bbox bbox = fz_bbox_covering_rect(rect);
+        if (fz_is_empty_bbox(fz_intersect_bbox(bbox, clipbox)))
+            continue;
+        // prepare text highlighting path (cf. pdf_create_highlight_annot in pdf_annot.c)
+        fz_path *path = fz_new_path(dev->ctx);
+        fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.TL().y);
+        fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.TL().y);
+        fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
+        fz_lineto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y);
+        fz_closepath(dev->ctx, path);
+        fz_colorspace *cs = fz_find_device_colorspace(dev->ctx, "DeviceRGB");
+        float color[3] = { 0.8863f, 0.7686f, 0.8863f };
+        // render path with transparency effect
+        fz_begin_group(dev, rect, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
+        fz_fill_path(dev, path, 0, ctm, cs, color, 0.8f);
+        fz_end_group(dev);
+        fz_free_path(dev->ctx, path);
+    }
+}
+
+///// PDF-specific extensions to Fitz/MuPDF /////
+
 extern "C" {
 #include <mupdf-internal.h>
 }
@@ -937,29 +993,6 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
     return labels;
 }
 
-extern "C" static void
-fz_lock_context_cs(void *user, int lock)
-{
-    // we use a single critical section for all locks,
-    // since that critical section (ctxAccess) should
-    // be guarding all fz_context access anyway and
-    // thus already be in place (in debug builds we
-    // crash if that assertion doesn't hold)
-    CRITICAL_SECTION *cs = (CRITICAL_SECTION *)user;
-    BOOL ok = TryEnterCriticalSection(cs);
-    if (!ok) {
-        CrashIf(true);
-        EnterCriticalSection(cs);
-    }
-}
-
-extern "C" static void
-fz_unlock_context_cs(void *user, int lock)
-{
-    CRITICAL_SECTION *cs = (CRITICAL_SECTION *)user;
-    LeaveCriticalSection(cs);
-}
-
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageRun {
@@ -1021,10 +1054,13 @@ public:
     virtual PageLayoutType PreferredLayout();
     virtual WCHAR *GetProperty(DocumentProperty prop);
 
-    virtual bool AllowsPrinting() {
+    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const;
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+
+    virtual bool AllowsPrinting() const {
         return pdf_has_permission(_doc, PDF_PERM_PRINT);
     }
-    virtual bool AllowsCopyingText() {
+    virtual bool AllowsCopyingText() const {
         return pdf_has_permission(_doc, PDF_PERM_COPY);
     }
 
@@ -1109,6 +1145,8 @@ protected:
     WStrVec       * _pagelabels;
     pdf_annot   *** pageAnnots;
     fz_rect      ** imageRects;
+
+    Vec<PageAnnotation> userAnnots;
 };
 
 class PdfLink : public PageElement, public PageDestination {
@@ -1290,6 +1328,8 @@ PdfEngineImpl *PdfEngineImpl::Clone()
         delete clone->_decryptionKey;
         clone->_decryptionKey = NULL;
     }
+
+    clone->UpdateUserAnnotations(&userAnnots);
 
     return clone;
 }
@@ -1652,7 +1692,6 @@ int PdfEngineImpl::GetPageNo(pdf_page *page)
     for (int i = 0; i < PageCount(); i++)
         if (page == _pages[i])
             return i + 1;
-    assert(0);
     return 0;
 }
 
@@ -1754,7 +1793,12 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
     if (Target_View == target && (run = GetPageRun(page, !cacheRun))) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
+            if (userAnnots.Count() > 0 && !page->transparency)
+                fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
             fz_run_display_list(run->list, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
+            if (userAnnots.Count() > 0 && !page->transparency)
+                fz_end_group(dev);
+            fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -1766,12 +1810,20 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
         ScopedCritSec scope(&ctxAccess);
         char *targetName = target == Target_Print ? "Print" :
                            target == Target_Export ? "Export" : "View";
+        bool hasTransparency = page->transparency;
+        fz_var(hasTransparency);
         fz_try(ctx) {
+            page->transparency = hasTransparency || userAnnots.Count() > 0;
+                fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
             pdf_run_page_with_usage(_doc, page, dev, ctm, targetName, cookie ? &cookie->cookie : NULL);
+            if (userAnnots.Count() > 0 && !page->transparency)
+                fz_end_group(dev);
+            fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
         }
+        page->transparency = hasTransparency;
     }
 
     EnterCriticalSection(&ctxAccess);
@@ -2497,6 +2549,23 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
     return NULL;
 };
 
+bool PdfEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
+{
+    if (forSaving)
+        return false; // for now
+    return Annot_Highlight == type;
+}
+
+void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)
+{
+    // TODO: use a new critical section to avoid blocking the UI thread
+    ScopedCritSec scope(&ctxAccess);
+    if (list)
+        userAnnots = *list;
+    else
+        userAnnots.Reset();
+}
+
 char *PdfEngineImpl::GetDecryptionKey() const
 {
     if (!_decryptionKey)
@@ -2882,6 +2951,9 @@ public:
     virtual bool HasClipOptimizations(int pageNo);
     virtual WCHAR *GetProperty(DocumentProperty prop);
 
+    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const;
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+
     virtual float GetFileDPI() const { return 72.0f; }
     virtual const WCHAR *GetDefaultFileExt() const { return L".xps"; }
 
@@ -2945,6 +3017,8 @@ protected:
     fz_outline    * _outline;
     xps_doc_props * _info;
     fz_rect      ** imageRects;
+
+    Vec<PageAnnotation> userAnnots;
 };
 
 class XpsLink : public PageElement, public PageDestination {
@@ -3083,6 +3157,8 @@ XpsEngineImpl *XpsEngineImpl::Clone()
         return NULL;
     }
 
+    clone->UpdateUserAnnotations(&userAnnots);
+
     return clone;
 }
 
@@ -3209,7 +3285,6 @@ int XpsEngineImpl::GetPageNo(xps_page *page)
     for (int i = 0; i < PageCount(); i++)
         if (page == _pages[i])
             return i + 1;
-    assert(0);
     return 0;
 }
 
@@ -3311,7 +3386,12 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bb
     if (run) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
+            if (userAnnots.Count() > 0)
+                fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
             fz_run_display_list(run->list, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
+            if (userAnnots.Count() > 0)
+                fz_end_group(dev);
+            fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -3322,7 +3402,12 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bb
     else {
         ScopedCritSec scope(&ctxAccess);
         fz_try(ctx) {
+            if (userAnnots.Count() > 0)
+                fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
             xps_run_page(_doc, page, dev, ctm, cookie ? &cookie->cookie : NULL);
+            if (userAnnots.Count() > 0)
+                fz_end_group(dev);
+            fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -3645,6 +3730,23 @@ WCHAR *XpsEngineImpl::GetProperty(DocumentProperty prop)
     }
     return value ? str::conv::FromUtf8(value) : NULL;
 };
+
+bool XpsEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
+{
+    if (forSaving)
+        return false; // for now
+    return Annot_Highlight == type;
+}
+
+void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)
+{
+    // TODO: use a new critical section to avoid blocking the UI thread
+    ScopedCritSec scope(&ctxAccess);
+    if (list)
+        userAnnots = *list;
+    else
+        userAnnots.Reset();
+}
 
 PageElement *XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt)
 {

@@ -527,6 +527,8 @@ public:
 			graphics = _setup(new Graphics(whiteBg));
 			graphics->Clear(Color::White);
 			graphics->DrawImage(stack->layer, stack->bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel, &DrawImageAttributes(1.0f));
+			graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
+			graphics->SetClip(&Region(stack->bounds));
 			delete stack->layer;
 			stack->layer = whiteBg;
 #ifdef DUMP_BITMAP_STEPS

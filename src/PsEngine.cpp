@@ -241,12 +241,26 @@ public:
     virtual PageLayoutType PreferredLayout() {
         return pdfEngine ? pdfEngine->PreferredLayout() : Layout_Single;
     }
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) {
+        // omit properties created by Ghostscript
+        if (!pdfEngine || Prop_CreationDate == prop || Prop_ModificationDate == prop ||
+            Prop_PdfVersion == prop || Prop_PdfProducer == prop || Prop_PdfFileStructure == prop) {
+            return NULL;
+        }
+        return pdfEngine->GetProperty(prop);
+    }
 
-    virtual bool AllowsPrinting() {
+    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const {
+        return !forSaving && pdfEngine && pdfEngine->SupportsAnnotation(type);
+    }
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) {
+        if (pdfEngine) pdfEngine->UpdateUserAnnotations(list);
+    }
+
+    virtual bool AllowsPrinting() const {
         return pdfEngine ? pdfEngine->AllowsPrinting() : true;
     }
-    virtual bool AllowsCopyingText() {
+    virtual bool AllowsCopyingText() const {
         return pdfEngine ? pdfEngine->AllowsCopyingText() : true;
     }
 

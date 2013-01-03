@@ -3676,6 +3676,23 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     case '$':
         ToggleGdiDebugging();
         break;
+    case 0xA7:
+        if (win.dm->engine->SupportsAnnotation(Annot_Highlight)) {
+            // convert the current selection into a text highlighting annotation
+            if (!win.showSelection || !win.selectionOnPage)
+                win.dm->engine->UpdateUserAnnotations(NULL);
+            else {
+                Vec<PageAnnotation> annots;
+                for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
+                    SelectionOnPage& sel = win.selectionOnPage->At(i);
+                    annots.Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect));
+                }
+                win.dm->engine->UpdateUserAnnotations(&annots);
+                ClearSearchResult(&win);
+                win.CleanUp(win.dm);
+                win.RepaintAsync();
+            }
+        }
 #endif
     }
 }

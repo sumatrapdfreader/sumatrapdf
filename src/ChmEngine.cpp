@@ -32,7 +32,7 @@ public:
 
     ChmTocItem(WCHAR *title, int pageNo, WCHAR *url) :
         DocTocItem(title, pageNo), url(url) { }
-    ChmTocItem *Clone();
+    ChmTocItem *Clone() const;
 
     virtual PageDestination *GetLink() { return this; }
     virtual PageDestType GetDestType() const {
@@ -51,7 +51,7 @@ public:
     }
 };
 
-ChmTocItem *ChmTocItem::Clone()
+ChmTocItem *ChmTocItem::Clone() const
 {
     ChmTocItem *res = new ChmTocItem(str::Dup(title), pageNo, str::Dup(url));
     res->open = open;

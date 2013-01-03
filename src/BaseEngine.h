@@ -19,7 +19,7 @@ enum PageDestType { Dest_None,
     Dest_GoToPageDialog, Dest_PrintDialog, Dest_SaveAsDialog, Dest_ZoomToDialog,
 };
 
-enum PageAnnotType { Annot_Comment, Annot_Highlight };
+enum PageAnnotType { Annot_None, Annot_Comment, Annot_Highlight };
 
 enum DocumentProperty {
     Prop_Title, Prop_Author, Prop_Copyright, Prop_Subject,
@@ -37,7 +37,7 @@ public:
     RenderedBitmap(HBITMAP hbmp, SizeI size) : hbmp(hbmp), size(size) { }
     ~RenderedBitmap() { DeleteObject(hbmp); }
 
-    RenderedBitmap *Clone() {
+    RenderedBitmap *Clone() const {
         HBITMAP hbmp2 = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, 0);
         return new RenderedBitmap(hbmp2, size);
     }
@@ -47,7 +47,7 @@ public:
     SizeI Size() const { return size; }
 
     // render the bitmap into the target rectangle (streching and skewing as requird)
-    void StretchDIBits(HDC hdc, RectI target) {
+    void StretchDIBits(HDC hdc, RectI target) const {
         HDC bmpDC = CreateCompatibleDC(hdc);
         HGDIOBJ oldBmp = SelectObject(bmpDC, hbmp);
         SetStretchBltMode(hdc, HALFTONE);
@@ -94,8 +94,17 @@ struct PageAnnotation {
     const int pageNo;
     const RectD rect;
 
+    PageAnnotation() : type(Annot_None), pageNo(-1) { }
     PageAnnotation(PageAnnotType type, int pageNo, RectD rect) :
         type(type), pageNo(pageNo), rect(rect) { }
+
+    // TODO: can operator= be written for const fields without hacks?
+    PageAnnotation& operator=(const PageAnnotation& other) {
+        *(PageAnnotType *)&type = other.type;
+        *(int *)&pageNo = other.pageNo;
+        *(RectD *)&rect = other.rect;
+        return *this;
+    }
 };
 
 // use in PageDestination::GetDestRect for values that don't matter
@@ -233,19 +242,25 @@ public:
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
     // whether the content should be displayed as images instead of as document pages
     // (e.g. with a black background and less padding in between and without search UI)
-    virtual bool IsImageCollection() { return false; }
+    virtual bool IsImageCollection() const { return false; }
 
     // access to various document properties (such as Author, Title, etc.)
     virtual WCHAR *GetProperty(DocumentProperty prop) = 0;
 
-    // whether this engine supports adding, removing and saving of annotations of a given type
-    virtual bool SupportsAnnotation(PageAnnotType type) { return false; }
+    // TODO: generalize from PageAnnotation to PageModification
+    // whether this engine supports adding user annotations of a given type
+    // (either for rendering or for saving)
+    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const { return false; }
+    // informs the engine about annotations the user made so that they can be rendered, etc.
+    // (this call supercedes any prior call to UpdateUserAnnotations)
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
+
     // TODO: needs a more general interface
     // whether it is allowed to print the current document
-    virtual bool AllowsPrinting() { return true; }
+    virtual bool AllowsPrinting() const { return true; }
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)
-    virtual bool AllowsCopyingText() { return true; }
+    virtual bool AllowsCopyingText() const { return true; }
 
     // the DPI for a file is needed when converting internal measures to physical ones
     virtual float GetFileDPI() const { return 96.0f; }

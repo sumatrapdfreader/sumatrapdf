@@ -146,7 +146,7 @@ public:
                                     RenderTarget target=Target_View) { return NULL; }
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
-    virtual bool IsImageCollection() { return true; }
+    virtual bool IsImageCollection() const { return true; }
 
     virtual const WCHAR *GetDefaultFileExt() const { return fileExt; }
 
