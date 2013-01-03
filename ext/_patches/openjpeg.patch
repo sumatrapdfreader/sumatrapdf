@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
---- openjpeg.orig\image.c	Thu Sep 13 09:58:39 2012
-+++ openjpeg\image.c	Thu Sep 20 19:28:51 2012
+--- openjpeg.orig\image.c	Thu Sep 13 08:58:39 2012
++++ openjpeg\image.c	Thu Sep 20 18:28:51 2012
 @@ -81,9 +81,11 @@
  					opj_free(image_comp->data);
  				}
@@ -14,8 +14,8 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  }
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
---- openjpeg.orig\j2k.c	Thu Sep 13 09:58:39 2012
-+++ openjpeg\j2k.c	Thu Sep 20 20:35:01 2012
+--- openjpeg.orig\j2k.c	Thu Sep 13 08:58:39 2012
++++ openjpeg\j2k.c	Thu Jan 03 11:10:30 2013
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -80,7 +80,21 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
      {
          opj_event_msg(j2k->cinfo, EVT_ERROR, "Out of memory\n");
          return;
-@@ -582,10 +600,16 @@
+@@ -568,10 +586,13 @@
+     {
+         opj_event_msg(j2k->cinfo, EVT_ERROR, "Out of memory\n");
+         return;
+     }
+ 	cp->tileno_size = 0;
++	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2152 */
++	for (i = 0; i < cp->tw * cp->th; i++)
++		cp->tileno[i] = -1;
+ 	
+ #ifdef USE_JPWL
+ 	if (j2k->cp->correct) {
+ 		if (!cp->tcps) {
+ 			opj_event_msg(j2k->cinfo, JPWL_ASSUME ? EVT_WARNING : EVT_ERROR,
+@@ -582,10 +603,16 @@
  			}
  		}
  	}
@@ -97,7 +111,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		cp->tcps[i].numpocs = 0;
  		cp->tcps[i].first = 1;
  	}
-@@ -821,10 +845,17 @@
+@@ -821,10 +848,17 @@
  	opj_image_t *image = j2k->image;
  	opj_cio_t *cio = j2k->cio;
  	
@@ -115,7 +129,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  }
  
  static void j2k_write_qcx(opj_j2k_t *j2k, int compno) {
-@@ -1005,10 +1036,18 @@
+@@ -1005,10 +1039,18 @@
  		/* keep your private count of tiles */
  		backup_compno++;
  	};
@@ -134,7 +148,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
  static void j2k_write_poc(opj_j2k_t *j2k) {
  	int len, numpchgs, i;
-@@ -1048,11 +1087,12 @@
+@@ -1048,11 +1090,12 @@
  	opj_cio_t *cio = j2k->cio;
  	
  	old_poc = tcp->POC ? tcp->numpocs + 1 : 0;
@@ -148,7 +162,23 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		opj_poc_t *poc;
  		poc = &tcp->pocs[i];
  		poc->resno0 = cio_read(cio, 1);	/* RSpoc_i */
-@@ -1588,10 +1628,18 @@
+@@ -1327,10 +1370,15 @@
+ 		if (status == 0) {
+ 			cp->tileno[cp->tileno_size] = tileno;
+ 			cp->tileno_size++;
+ 		}
+ 	}
++	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2152 */
++	if (cp->tileno_size >= cp->tw * cp->th) {
++		opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: too many tiles (max %d)\n", cp->tw * cp->th);
++		return;
++	}
+ 	
+ 	totlen = cio_read(cio, 4);
+ 
+ #ifdef USE_JPWL
+ 	if (j2k->cp->correct) {
+@@ -1588,10 +1636,18 @@
  			}
  		}
  	};
@@ -167,7 +197,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
  static void j2k_write_eoc(opj_j2k_t *j2k) {
  	opj_cio_t *cio = j2k->cio;
-@@ -2256,11 +2304,12 @@
+@@ -2256,11 +2312,12 @@
  		numpocs_tile = 0;
  		tcp->POC = 0;
  		if (parameters->numpocs) {
@@ -182,8 +212,8 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  					tcp_poc->compno0	= parameters->POC[numpocs_tile].compno0;
  					tcp_poc->layno1		= parameters->POC[numpocs_tile].layno1;
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
---- openjpeg.orig\jp2.c	Thu Sep 13 09:58:39 2012
-+++ openjpeg\jp2.c	Thu Sep 20 20:35:01 2012
+--- openjpeg.orig\jp2.c	Thu Sep 13 08:58:39 2012
++++ openjpeg\jp2.c	Thu Sep 20 19:35:01 2012
 @@ -171,10 +171,15 @@
  			box->length = cio_numbytesleft(cio) + 12;
  	}
@@ -293,7 +323,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  
 diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 --- openjpeg.orig\opj_config.h	Thu Jan 01 01:00:00 1970
-+++ openjpeg\opj_config.h	Thu Sep 20 20:35:01 2012
++++ openjpeg\opj_config.h	Thu Sep 20 19:35:01 2012
 @@ -0,0 +1,41 @@
 +/* If you want to build the library manually without using
 + * 'configure' or 'CMake'

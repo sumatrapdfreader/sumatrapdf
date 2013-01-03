@@ -588,6 +588,9 @@ static void j2k_read_siz(opj_j2k_t *j2k) {
         return;
     }
 	cp->tileno_size = 0;
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2152 */
+	for (i = 0; i < cp->tw * cp->th; i++)
+		cp->tileno[i] = -1;
 	
 #ifdef USE_JPWL
 	if (j2k->cp->correct) {
@@ -1368,6 +1371,11 @@ static void j2k_read_sot(opj_j2k_t *j2k) {
 			cp->tileno[cp->tileno_size] = tileno;
 			cp->tileno_size++;
 		}
+	}
+	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2152 */
+	if (cp->tileno_size >= cp->tw * cp->th) {
+		opj_event_msg(j2k->cinfo, EVT_ERROR, "JPWL: too many tiles (max %d)\n", cp->tw * cp->th);
+		return;
 	}
 	
 	totlen = cio_read(cio, 4);
