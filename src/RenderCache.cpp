@@ -184,7 +184,8 @@ void RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
                 // a given tile of the page or all tiles not rendered at a given resolution
                 // (and at resolution 0 for quick zoom previews)
                 shouldFree = shouldFree && (entry->tile == *tile ||
-                    tile->row == (USHORT)-1 && entry->tile.res > 0 && entry->tile.res != tile->res);
+                    tile->row == (USHORT)-1 && entry->tile.res > 0 && entry->tile.res != tile->res ||
+                    tile->row == (USHORT)-1 && entry->tile.res == 0 && entry->outOfDate);
         } else if (dm) {
             // all pages of this DisplayModel
             shouldFree = (cache[i]->dm == dm);
@@ -576,8 +577,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 
     if (!entry) {
         if (!isRemoteSession) {
-            if (renderedReplacement)
-                *renderedReplacement = true;
+            *renderedReplacement = true;
             entry = Find(dm, pageNo, dm->Rotation(), INVALID_ZOOM, &tile);
         }
         renderDelay = GetRenderDelay(dm, pageNo, tile);
@@ -623,8 +623,11 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 #endif
     }
 
-    if (renderOutOfDateCue)
-        *renderOutOfDateCue = entry->outOfDate;
+    if (entry->outOfDate) {
+        if (renderOutOfDateCue)
+            *renderOutOfDateCue = true;
+        AssertCrash(*renderedReplacement);
+    }
 
     DropCacheEntry(entry);
     return 0;
@@ -673,6 +676,8 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 
 #ifdef CONSERVE_MEMORY
     if (0 == renderTime && !renderedReplacement) {
+        if (renderOutOfDateCue)
+            *renderOutOfDateCue = false;
         // free tiles with different resolution
         TilePosition tile(tileRes, (USHORT)-1, 0);
         FreePage(dm, pageNo, &tile);
