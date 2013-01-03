@@ -787,7 +787,7 @@ fz_unlock_context_cs(void *user, int lock)
     LeaveCriticalSection(cs);
 }
 
-void fz_run_user_annots(Vec<PageAnnotation>& userAnnots, int pageNo, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, fz_cookie *cookie)
+static void fz_run_user_annots(Vec<PageAnnotation>& userAnnots, int pageNo, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, fz_cookie *cookie)
 {
     for (size_t i = 0; i < userAnnots.Count() && (!cookie || !cookie->abort); i++) {
         PageAnnotation& annot = userAnnots.At(i);
@@ -814,6 +814,20 @@ void fz_run_user_annots(Vec<PageAnnotation>& userAnnots, int pageNo, fz_device *
         fz_end_group(dev);
         fz_free_path(dev->ctx, path);
     }
+}
+
+static void fz_run_page_transparency(Vec<PageAnnotation>& userAnnots, int pageno, fz_device *dev, fz_bbox clipbox, bool endGroup, bool hasTransparency=false)
+{
+    if (hasTransparency)
+        return;
+    for (size_t i = 0; i < userAnnots.Count() && !hasTransparency; i++)
+        hasTransparency = pageno == userAnnots.At(i).pageNo;
+    if (!hasTransparency)
+        return;
+    if (!endGroup)
+        fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
+    else
+        fz_end_group(dev);
 }
 
 ///// PDF-specific extensions to Fitz/MuPDF /////
@@ -1793,11 +1807,9 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
     if (Target_View == target && (run = GetPageRun(page, !cacheRun))) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            if (userAnnots.Count() > 0 && !page->transparency)
-                fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
+            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, false, page->transparency);
             fz_run_display_list(run->list, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
-            if (userAnnots.Count() > 0 && !page->transparency)
-                fz_end_group(dev);
+            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, true, page->transparency);
             fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
@@ -1810,20 +1822,15 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
         ScopedCritSec scope(&ctxAccess);
         char *targetName = target == Target_Print ? "Print" :
                            target == Target_Export ? "Export" : "View";
-        bool hasTransparency = page->transparency;
-        fz_var(hasTransparency);
         fz_try(ctx) {
-            page->transparency = hasTransparency || userAnnots.Count() > 0;
-                fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
+            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, false, page->transparency);
             pdf_run_page_with_usage(_doc, page, dev, ctm, targetName, cookie ? &cookie->cookie : NULL);
-            if (userAnnots.Count() > 0 && !page->transparency)
-                fz_end_group(dev);
+            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, true, page->transparency);
             fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
         }
-        page->transparency = hasTransparency;
     }
 
     EnterCriticalSection(&ctxAccess);
@@ -3386,11 +3393,9 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bb
     if (run) {
         EnterCriticalSection(&ctxAccess);
         fz_try(ctx) {
-            if (userAnnots.Count() > 0)
-                fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
+            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, false);
             fz_run_display_list(run->list, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
-            if (userAnnots.Count() > 0)
-                fz_end_group(dev);
+            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, true);
             fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
@@ -3402,11 +3407,9 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bb
     else {
         ScopedCritSec scope(&ctxAccess);
         fz_try(ctx) {
-            if (userAnnots.Count() > 0)
-                fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
+            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, false);
             xps_run_page(_doc, page, dev, ctm, cookie ? &cookie->cookie : NULL);
-            if (userAnnots.Count() > 0)
-                fz_end_group(dev);
+            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, true);
             fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
