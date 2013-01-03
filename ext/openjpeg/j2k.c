@@ -1559,6 +1559,8 @@ static void j2k_read_sod(opj_j2k_t *j2k) {
 		truncate = 1;		/* Case of a truncate codestream */
 	}	
 
+    /* cf. http://code.google.com/p/openjpeg/issues/detail?id=205 */
+    if (len >= 4)
    {/* chop padding bytes: */
     unsigned char *s, *e; 
 
@@ -1569,6 +1571,8 @@ static void j2k_read_sod(opj_j2k_t *j2k) {
 
   if(e[-2] == 0x00 && e[-1] == 0x00) /* padding bytes */
   {
+    /* cf. http://code.google.com/p/openjpeg/issues/detail?id=205 */
+    if ((s = memchr(s, 0xff, e - s - 1)) && *(s + 1) == 0xd9)
 	while(e > s)
  {
 	if(e[-2] == 0xff && e[-1] == 0xd9)	break;

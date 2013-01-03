@@ -15,7 +15,7 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Thu Sep 13 08:58:39 2012
-+++ openjpeg\j2k.c	Thu Jan 03 11:31:35 2013
++++ openjpeg\j2k.c	Fri Jan 04 00:06:58 2013
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -173,7 +173,32 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  		}
  	}
  	
-@@ -1588,10 +1634,18 @@
+@@ -1511,20 +1557,24 @@
+ 
+ 	if (len == cio_numbytesleft(cio) + 1) {
+ 		truncate = 1;		/* Case of a truncate codestream */
+ 	}	
+ 
++    /* cf. http://code.google.com/p/openjpeg/issues/detail?id=205 */
++    if (len >= 4)
+    {/* chop padding bytes: */
+     unsigned char *s, *e; 
+ 
+     s = cio_getbp(cio);
+     e = s + len;
+ 
+   if(len > 8) s = e - 8;
+ 
+   if(e[-2] == 0x00 && e[-1] == 0x00) /* padding bytes */
+   {
++    /* cf. http://code.google.com/p/openjpeg/issues/detail?id=205 */
++    if ((s = memchr(s, 0xff, e - s - 1)) && *(s + 1) == 0xd9)
+ 	while(e > s)
+  {
+ 	if(e[-2] == 0xff && e[-1] == 0xd9)	break;
+   --len; --e; truncate = 1;
+  }
+@@ -1588,10 +1638,18 @@
  			}
  		}
  	};
@@ -192,7 +217,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
  static void j2k_write_eoc(opj_j2k_t *j2k) {
  	opj_cio_t *cio = j2k->cio;
-@@ -2256,11 +2310,12 @@
+@@ -2256,11 +2314,12 @@
  		numpocs_tile = 0;
  		tcp->POC = 0;
  		if (parameters->numpocs) {
