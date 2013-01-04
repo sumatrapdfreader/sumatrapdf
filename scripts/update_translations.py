@@ -128,7 +128,7 @@ def gen_c_code(langs_idx, strings_dict, file_name, encode_to_utf=False):
         lines.append("  /* Translations for language %s */" % lang[0])
         lines += ["  %s," % c_escape(t, encode_to_utf) for t in trans]
     translations = "\n".join(lines)
-    print [l[1] for l in langs_idx]
+    #print [l[1] for l in langs_idx]
     lang_data = ['{ "%s", %s, %s, %d },' % (lang[0], c_escape(lang[1]), make_lang_id(lang), 1 if is_rtl_lang(lang) else 0) for lang in langs_idx]
     lang_data = "\n    ".join(lang_data)
     

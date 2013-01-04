@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a0169d0d36549be41553245b6d47641935acdbdc
+409f6e15a20e2e576b4f8c6565e4f48f835ca3fd
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7,7 +7,7 @@ ar:حول البرنامج
 az:Proqram &haqqında
 bg:За &програмата
 bn:&আমাদের সম্পর্কে
-br:S&obre o SumatraPDF
+br:S&obre
 bs:&O programu...
 by:Аб праграме
 ca-xv:&Quant a...
@@ -10857,6 +10857,7 @@ pt:Impressão em curso.
 ru:Идёт печать.
 sv:Utskrift pågår.
 tr:Baskı devam ediyor.
+tw:正在列印
 uk:Триває друк.
 uz:Bosib chiqarilmoqda.
 vn:Đang in.
@@ -10877,6 +10878,7 @@ nl:Nog steeds aan het printen. Annuleren en stoppen?
 pt:Impressão ainda em curso. Abortar e sair?
 ru:Печать продолжается. Отменить и выйти?
 sv:Utskrift pågår fortfarande. Avbryt och avsluta?
+tw:正在列印，要中止並放棄嗎？
 uk:Друк ще не завершено. Перервати та вийти?
 uz:Bosib chiqarilmoqda. Bekor qilib chiqilsinmi?
 vn:Vẫn còn đang in. Hủy bỏ và thoát ra?
@@ -11069,6 +11071,7 @@ eu:Be&rrizendatu...\tF2
 fa:تغییر  &نام...\tF2
 fr:Re&nommer...\tF2
 ga:Athainmnigh...\tF2
+he:שנה שם...\tF2
 hr:Preime&novati...\tF2
 hu:Átnevezés...\tF2
 id:&Ganti Nama...\tF2
@@ -11322,6 +11325,7 @@ eu:Ordeztu agiri &margoak Windowsen margo eskemarekin
 fa:جایگزینی &رنگ‌های سند با طرح رنگ ویندوز
 fr:Remplacer les &couleurs du document par le schéma de couleurs Windows
 ga:Ionadaigh dathanna na cáipéise le córas dathanna Windows
+he:החלף את צבעי המסמך עם ערכת צבעי חלונות
 hr:Zamijeni boje dokumenta s postavkama &Windows boja
 hu:Helyettesíti a dokumentum &színeket Windows színsémával
 id:Ganti &warna dokumen dengan skema warna Windows
