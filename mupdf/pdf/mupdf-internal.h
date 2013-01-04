@@ -31,7 +31,7 @@ struct pdf_image_s
  * tokenizer and low-level object parser
  */
 
-enum
+typedef enum
 {
 	PDF_TOK_ERROR, PDF_TOK_EOF,
 	PDF_TOK_OPEN_ARRAY, PDF_TOK_CLOSE_ARRAY,
@@ -43,7 +43,7 @@ enum
 	PDF_TOK_STREAM, PDF_TOK_ENDSTREAM,
 	PDF_TOK_XREF, PDF_TOK_TRAILER, PDF_TOK_STARTXREF,
 	PDF_NUM_TOKENS
-};
+} pdf_token;
 
 enum
 {
@@ -188,7 +188,7 @@ fz_stream *pdf_open_stream_with_offset(pdf_document *doc, int num, int gen, pdf_
 fz_stream *pdf_open_compressed_stream(fz_context *ctx, fz_compressed_buffer *);
 fz_stream *pdf_open_contents_stream(pdf_document *xref, pdf_obj *obj);
 fz_buffer *pdf_load_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
-fz_buffer *pdf_load_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
+fz_buffer *pdf_load_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen, int *truncated);
 fz_stream *pdf_open_raw_renumbered_stream(pdf_document *doc, int num, int gen, int orig_num, int orig_gen);
 
 void pdf_repair_xref(pdf_document *doc, pdf_lexbuf *buf);

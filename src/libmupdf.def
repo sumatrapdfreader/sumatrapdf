@@ -59,6 +59,7 @@ EXPORTS
 	fz_intersect_bbox
 	fz_union_rect
 	fz_union_bbox
+	fz_expand_bbox
 	fz_translate_bbox
 	fz_transform_point
 	fz_transform_vector
@@ -247,6 +248,7 @@ EXPORTS
 	fz_new_stream
 	fz_keep_stream
 	fz_fill_buffer
+	fz_read_best
 	fz_read_line
 	fz_open_copy
 	fz_open_null
@@ -435,9 +437,9 @@ EXPORTS
 	pdf_is_indirect
 	pdf_is_stream
 	pdf_objcmp
-	pdf_dict_marked
-	pdf_dict_mark
-	pdf_dict_unmark
+	pdf_obj_marked
+	pdf_obj_mark
+	pdf_obj_unmark
 	pdf_to_bool
 	pdf_to_int
 	pdf_to_real

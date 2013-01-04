@@ -236,7 +236,7 @@ pdf_parse_array(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 	pdf_obj *ary = NULL;
 	pdf_obj *obj = NULL;
 	int a = 0, b = 0, n = 0;
-	int tok;
+	pdf_token tok;
 	fz_context *ctx = file->ctx;
 	pdf_obj *op;
 
@@ -376,7 +376,7 @@ pdf_parse_dict(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 	pdf_obj *dict;
 	pdf_obj *key = NULL;
 	pdf_obj *val = NULL;
-	int tok;
+	pdf_token tok;
 	int a, b;
 	fz_context *ctx = file->ctx;
 
@@ -492,7 +492,7 @@ pdf_parse_dict(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 pdf_obj *
 pdf_parse_stm_obj(pdf_document *xref, fz_stream *file, pdf_lexbuf *buf)
 {
-	int tok;
+	pdf_token tok;
 	fz_context *ctx = file->ctx;
 
 	tok = pdf_lex(file, buf);
@@ -522,7 +522,7 @@ pdf_parse_ind_obj(pdf_document *xref,
 {
 	pdf_obj *obj = NULL;
 	int num = 0, gen = 0, stm_ofs;
-	int tok;
+	pdf_token tok;
 	int a, b;
 	fz_context *ctx = file->ctx;
 

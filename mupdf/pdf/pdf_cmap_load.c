@@ -31,6 +31,9 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 	fz_var(file);
 	fz_var(cmap);
 
+	if (pdf_obj_marked(stmobj))
+		fz_throw(ctx, "Recursion in embedded cmap");
+
 	if ((cmap = pdf_find_item(ctx, pdf_free_cmap_imp, stmobj)))
 	{
 		return cmap;
@@ -38,10 +41,6 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 
 	fz_try(ctx)
 	{
-		/* SumatraPDF: prevent infinite recursion */
-		if (pdf_dict_mark(stmobj))
-			fz_throw(ctx, "infinite recursion in pdf_load_embedded_cmap");
-
 		file = pdf_open_stream(xref, pdf_to_num(stmobj), pdf_to_gen(stmobj));
 		phase = 1;
 		cmap = pdf_load_cmap(ctx, file);
@@ -62,17 +61,15 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 		else if (pdf_is_indirect(obj))
 		{
 			phase = 3;
+			pdf_obj_mark(obj);
 			usecmap = pdf_load_embedded_cmap(xref, obj);
+			pdf_obj_unmark(obj);
+			phase = 4;
 			pdf_set_usecmap(ctx, cmap, usecmap);
 			pdf_drop_cmap(ctx, usecmap);
 		}
 
 		pdf_store_item(ctx, stmobj, cmap, pdf_cmap_size(ctx, cmap));
-	}
-	/* SumatraPDF: prevent infinite recursion */
-	fz_always(ctx)
-	{
-		pdf_dict_unmark(stmobj);
 	}
 	fz_catch(ctx)
 	{
@@ -87,7 +84,11 @@ pdf_load_embedded_cmap(pdf_document *xref, pdf_obj *stmobj)
 		else if (phase < 3)
 			fz_throw(ctx, "cannot load system usecmap '%s'", pdf_to_name(obj));
 		else
+		{
+			if (phase == 3)
+				pdf_obj_unmark(obj);
 			fz_throw(ctx, "cannot load embedded usecmap (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
+		}
 	}
 
 	return cmap;

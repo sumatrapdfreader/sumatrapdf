@@ -18,7 +18,7 @@ struct entry
 static void
 pdf_repair_obj(fz_stream *file, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, pdf_obj **encrypt, pdf_obj **id)
 {
-	int tok;
+	pdf_token tok;
 	int stm_len;
 	int n;
 	fz_context *ctx = file->ctx;
@@ -143,7 +143,7 @@ pdf_repair_obj_stm(pdf_document *xref, int num, int gen)
 {
 	pdf_obj *obj;
 	fz_stream *stm = NULL;
-	int tok;
+	pdf_token tok;
 	int i, n, count;
 	fz_context *ctx = xref->ctx;
 	pdf_lexbuf buf;
@@ -226,7 +226,7 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 	int gen = 0;
 	int tmpofs, numofs = 0, genofs = 0;
 	int stm_len, stm_ofs = 0;
-	int tok;
+	pdf_token tok;
 	int next;
 	int i, n, c;
 	fz_context *ctx = xref->ctx;

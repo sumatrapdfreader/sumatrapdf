@@ -313,7 +313,7 @@ static void parse_da(fz_context *ctx, char *da, da_info *di)
 {
 	float stack[32];
 	int top = 0;
-	int tok;
+	pdf_token tok;
 	char *name = NULL;
 	pdf_lexbuf lbuf;
 	fz_stream *str = fz_open_memory(ctx, (unsigned char *)da, strlen(da));
@@ -958,7 +958,7 @@ static fz_buffer *create_text_appearance(pdf_document *doc, fz_rect *bbox, fz_ma
 static void update_marked_content(pdf_document *doc, pdf_xobject *form, fz_buffer *fzbuf)
 {
 	fz_context *ctx = doc->ctx;
-	int tok;
+	pdf_token tok;
 	pdf_lexbuf lbuf;
 	fz_stream *str_outer = NULL;
 	fz_stream *str_inner = NULL;
@@ -1191,6 +1191,7 @@ static pdf_xobject *load_or_create_form(pdf_document *doc, pdf_obj *obj, fz_rect
 			tobj = pdf_new_dict(ctx, 1);
 			pdf_dict_puts(obj, "AP", tobj);
 			ap = tobj;
+			pdf_drop_obj(tobj);
 			tobj = NULL;
 		}
 
@@ -1200,6 +1201,7 @@ static pdf_xobject *load_or_create_form(pdf_document *doc, pdf_obj *obj, fz_rect
 			tobj = pdf_new_xobject(doc, rect, &mat);
 			pdf_dict_puts(ap, dn, tobj);
 			formobj = tobj;
+			pdf_drop_obj(tobj);
 			tobj = NULL;
 			create_form = 1;
 		}

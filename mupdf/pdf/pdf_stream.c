@@ -458,8 +458,8 @@ pdf_guess_filter_length(int len, char *filter)
 	return len;
 }
 
-fz_buffer *
-pdf_load_image_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen, fz_compression_params *params)
+static fz_buffer *
+pdf_load_image_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen, fz_compression_params *params, int *truncated)
 {
 	fz_context *ctx = xref->ctx;
 	fz_stream *stm = NULL;
@@ -487,7 +487,10 @@ pdf_load_image_stream(pdf_document *xref, int num, int gen, int orig_num, int or
 
 	fz_try(ctx)
 	{
-		buf = fz_read_all(stm, len);
+		if (truncated)
+			buf = fz_read_best(stm, len, truncated);
+		else
+			buf = fz_read_all(stm, len);
 	}
 	fz_always(ctx)
 	{
@@ -507,13 +510,13 @@ pdf_load_image_stream(pdf_document *xref, int num, int gen, int orig_num, int or
 fz_buffer *
 pdf_load_stream(pdf_document *xref, int num, int gen)
 {
-	return pdf_load_image_stream(xref, num, gen, num, gen, NULL);
+	return pdf_load_image_stream(xref, num, gen, num, gen, NULL, NULL);
 }
 
 fz_buffer *
-pdf_load_renumbered_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen)
+pdf_load_renumbered_stream(pdf_document *xref, int num, int gen, int orig_num, int orig_gen, int *truncated)
 {
-	return pdf_load_image_stream(xref, num, gen, orig_num, orig_gen, NULL);
+	return pdf_load_image_stream(xref, num, gen, orig_num, orig_gen, NULL, truncated);
 }
 
 fz_compressed_buffer *
@@ -524,7 +527,7 @@ pdf_load_compressed_stream(pdf_document *xref, int num, int gen)
 
 	fz_try(ctx)
 	{
-		bc->buffer = pdf_load_image_stream(xref, num, gen, num, gen, &bc->params);
+		bc->buffer = pdf_load_image_stream(xref, num, gen, num, gen, &bc->params, NULL);
 	}
 	fz_catch(ctx)
 	{

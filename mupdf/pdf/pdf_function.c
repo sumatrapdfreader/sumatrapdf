@@ -703,7 +703,7 @@ resize_code(fz_context *ctx, pdf_function *func, int newsize)
 static void
 parse_code(pdf_function *func, fz_stream *stream, int *codeptr, pdf_lexbuf *buf)
 {
-	int tok;
+	pdf_token tok;
 	int opptr, elseptr, ifptr;
 	int a, b, mid, cmp;
 	fz_context *ctx = stream->ctx;
@@ -844,7 +844,7 @@ load_postscript_func(pdf_function *func, pdf_document *xref, pdf_obj *dict, int 
 	fz_stream *stream = NULL;
 	int codeptr;
 	pdf_lexbuf buf;
-	int tok;
+	pdf_token tok;
 	fz_context *ctx = xref->ctx;
 	int locked = 0;
 
@@ -1236,7 +1236,10 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 	obj = pdf_dict_gets(dict, "Functions");
 	if (!pdf_is_array(obj))
 		fz_throw(ctx, "stitching function has no input functions");
+
+	fz_try(ctx)
 	{
+		pdf_obj_mark(obj);
 		k = pdf_array_len(obj);
 
 		func->u.st.funcs = fz_malloc_array(ctx, k, sizeof(pdf_function*));
@@ -1258,7 +1261,14 @@ load_stitching_func(pdf_function *func, pdf_document *xref, pdf_obj *dict)
 				fz_warn(ctx, "wrong number of outputs for sub function %d", i);
 		}
 	}
-
+	fz_always(ctx)
+	{
+		pdf_obj_unmark(obj);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 
 	obj = pdf_dict_gets(dict, "Bounds");
 	if (!pdf_is_array(obj))
@@ -1402,6 +1412,9 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 	pdf_obj *obj;
 	int i;
 
+	if (pdf_obj_marked(dict))
+		fz_throw(ctx, "Recursion in function definition");
+
 	if ((func = pdf_find_item(ctx, pdf_free_function_imp, dict)))
 	{
 		return func;
@@ -1448,10 +1461,6 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 
 	fz_try(ctx)
 	{
-		/* SumatraPDF: prevent infinite recursion */
-		if (pdf_dict_mark(dict))
-			fz_throw(ctx, "infinite recursion in pdf_load_function");
-
 		switch(func->type)
 		{
 		case SAMPLE:
@@ -1476,11 +1485,6 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 		}
 
 		pdf_store_item(ctx, dict, func, func->size);
-	}
-	/* SumatraPDF: prevent infinite recursion */
-	fz_always(ctx)
-	{
-		pdf_dict_unmark(dict);
 	}
 	fz_catch(ctx)
 	{

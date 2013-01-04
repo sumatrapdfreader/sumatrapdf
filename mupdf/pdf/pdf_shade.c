@@ -405,6 +405,11 @@ pdf_load_shading_dict(pdf_document *xref, pdf_obj *dict, fz_matrix transform)
 					fz_throw(ctx, "cannot load shading function (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
 			}
 		}
+		else if (type < 4)
+		{
+			/* Functions are compulsory for types 1,2,3 */
+			fz_throw(ctx, "cannot load shading function (%d %d R)", pdf_to_num(obj), pdf_to_gen(obj));
+		}
 
 		shade->type = type;
 		switch (type)

@@ -44,10 +44,10 @@ int pdf_is_stream(pdf_document *doc, int num, int gen);
 
 int pdf_objcmp(pdf_obj *a, pdf_obj *b);
 
-/* dict marking and unmarking functions - to avoid infinite recursions */
-int pdf_dict_marked(pdf_obj *obj);
-int pdf_dict_mark(pdf_obj *obj);
-void pdf_dict_unmark(pdf_obj *obj);
+/* obj marking and unmarking functions - to avoid infinite recursions. */
+int pdf_obj_marked(pdf_obj *obj);
+int pdf_obj_mark(pdf_obj *obj);
+void pdf_obj_unmark(pdf_obj *obj);
 
 /* safe, silent failure, no error reporting on type mismatches */
 int pdf_to_bool(pdf_obj *obj);

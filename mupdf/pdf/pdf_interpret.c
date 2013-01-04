@@ -159,7 +159,7 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 	fz_context *ctx = csi->dev->ctx;
 
 	/* Avoid infinite recursions */
-	if (pdf_dict_marked(ocg))
+	if (pdf_obj_marked(ocg))
 		return 0;
 
 	/* If no ocg descriptor, everything is visible */
@@ -286,8 +286,8 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 			combine = 0;
 		}
 
-		if (pdf_dict_mark(ocg))
-			fz_throw(ctx, "Failed to mark OCG - out of memory?");
+		if (pdf_obj_mark(ocg))
+			return 0; /* Should never happen */
 		fz_try(ctx)
 		{
 			obj = pdf_dict_gets(ocg, "OCGs");
@@ -316,7 +316,7 @@ pdf_is_hidden_ocg(pdf_obj *ocg, pdf_csi *csi, pdf_obj *rdb)
 		}
 		fz_always(ctx)
 		{
-			pdf_dict_unmark(ocg);
+			pdf_obj_unmark(ocg);
 		}
 		fz_catch(ctx)
 		{
@@ -1499,7 +1499,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, fz_matrix t
 	int popmask;
 
 	/* Avoid infinite recursion */
-	if (xobj == NULL || pdf_dict_mark(xobj->me))
+	if (xobj == NULL || pdf_obj_mark(xobj->me))
 		return;
 
 	fz_var(gstate);
@@ -1599,7 +1599,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, fz_matrix t
 			pdf_grestore(csi);
 		}
 
-		pdf_dict_unmark(xobj->me);
+		pdf_obj_unmark(xobj->me);
 	}
 	fz_catch(ctx)
 	{
@@ -2730,7 +2730,7 @@ static void
 pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 {
 	fz_context *ctx = csi->dev->ctx;
-	int tok = PDF_TOK_ERROR;
+	pdf_token tok = PDF_TOK_ERROR;
 	int in_array;
 	int ignoring_errors = 0;
 
@@ -2809,9 +2809,11 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 				case PDF_TOK_OPEN_ARRAY:
 					if (!csi->in_text)
 					{
-						/* SumatraPDF: fix memory leak */
-						pdf_drop_obj(csi->obj);
-						csi->obj = NULL;
+						if (csi->obj)
+						{
+							pdf_drop_obj(csi->obj);
+							csi->obj = NULL;
+						}
 						csi->obj = pdf_parse_array(csi->xref, file, buf);
 					}
 					else
@@ -2821,9 +2823,11 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 					break;
 
 				case PDF_TOK_OPEN_DICT:
-					/* SumatraPDF: fix memory leak */
-					pdf_drop_obj(csi->obj);
-					csi->obj = NULL;
+					if (csi->obj)
+					{
+						pdf_drop_obj(csi->obj);
+						csi->obj = NULL;
+					}
 					csi->obj = pdf_parse_dict(csi->xref, file, buf);
 					break;
 
@@ -2857,9 +2861,11 @@ pdf_run_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file, pdf_lexbuf *buf)
 					}
 					else
 					{
-						/* SumatraPDF: fix memory leak */
-						pdf_drop_obj(csi->obj);
-						csi->obj = NULL;
+						if (csi->obj)
+						{
+							pdf_drop_obj(csi->obj);
+							csi->obj = NULL;
+						}
 						csi->obj = pdf_new_string(ctx, buf->scratch, buf->len);
 					}
 					break;

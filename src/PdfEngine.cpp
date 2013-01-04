@@ -931,10 +931,10 @@ WCHAR *FormatPageLabel(const char *type, int pageNo, const WCHAR *prefix)
 void BuildPageLabelRec(pdf_obj *node, int pageCount, Vec<PageLabelInfo>& data)
 {
     pdf_obj *obj;
-    if ((obj = pdf_dict_gets(node, "Kids")) && !pdf_dict_mark(node)) {
+    if ((obj = pdf_dict_gets(node, "Kids")) && !pdf_obj_mark(node)) {
         for (int i = 0; i < pdf_array_len(obj); i++)
             BuildPageLabelRec(pdf_array_get(obj, i), pageCount, data);
-        pdf_dict_unmark(node);
+        pdf_obj_unmark(node);
     }
     else if ((obj = pdf_dict_gets(node, "Nums"))) {
         for (int i = 0; i < pdf_array_len(obj); i += 2) {
@@ -2402,9 +2402,9 @@ static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList)
     for (int k = 0; k < pdf_dict_len(xobjs); k++) {
         pdf_obj *xobj = pdf_dict_get_val(xobjs, k);
         pdf_obj *xres = pdf_dict_gets(xobj, "Resources");
-        if (xobj && xres && !pdf_dict_mark(xobj)) {
+        if (xobj && xres && !pdf_obj_mark(xobj)) {
             pdf_extract_fonts(xres, fontList);
-            pdf_dict_unmark(xobj);
+            pdf_obj_unmark(xobj);
         }
     }
 }

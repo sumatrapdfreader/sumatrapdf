@@ -689,6 +689,21 @@ fz_stream *fz_new_stream(fz_context *ctx, void*, int(*)(fz_stream*, unsigned cha
 fz_stream *fz_keep_stream(fz_stream *stm);
 void fz_fill_buffer(fz_stream *stm);
 
+/*
+	fz_read_best: Attempt to read a stream into a buffer. If truncated
+	is NULL behaves as fz_read_all, otherwise does not throw exceptions
+	in the case of failure, but instead sets a truncated flag.
+
+	stm: The stream to read from.
+
+	initial: Suggested initial size for the buffer.
+
+	truncated: Flag to store success/failure indication in.
+
+	Returns a buffer created from reading from the stream.
+*/
+fz_buffer *fz_read_best(fz_stream *stm, int initial, int *truncated);
+
 void fz_read_line(fz_stream *stm, char *buf, int max);
 
 static inline int fz_read_byte(fz_stream *stm)
