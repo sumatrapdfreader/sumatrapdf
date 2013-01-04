@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-409f6e15a20e2e576b4f8c6565e4f48f835ca3fd
+ac7cd6b5cf540a9b21625354ff2d7e945d3be87b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -73,7 +73,7 @@ af:&Gewone Grootte\tCtrl+1
 am:Իրական &չափը\tCtrl+1
 ar:الحجم الحقيقي\tCtrl+1
 az:&Həqiqi ölçü\tCtrl+1
-bg:&Оригинален размер\tCtrl+1
+bg:&Оригинален (реален) размер\tCtrl+1
 bn:বাস্তবিক আকার\tCtrl+1
 br:&Tamanho real\tCtrl+1
 bs:Stvarna veličina\tCtrl+1
@@ -2644,7 +2644,7 @@ vn:Bỏ qua phiên bản này.
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
 az:Səhifələrin &həqiqi ölçüsü
-bg:Използвай &оригиналната големина
+bg:Използване на &оригиналните размери на страниците
 br:&Usar tamanhos de página originais
 bs:Koristi &originalne veličine stranica
 ca-xv:&Usa la mida de pàgina original
@@ -3069,7 +3069,7 @@ vn:Giới thiệu SumatraPDF
 am:Ավելացնել ընտրյալներին
 ar:أضف للمفضلة
 az:Seçilmişlərə əlavə et
-bg:Добави Любими
+bg:Добавяне към любимите
 br:Adicionar Favorito
 bs:Dodaj favorit
 ca-xv:Afig un preferit
@@ -3123,7 +3123,7 @@ vn:Thêm Ưa thích
 am:Ավելացնել %s էջը ընտրյալներին
 ar:أضف الصفحة %s للمفضلة
 az:%s. səhifəni seçilmişlərə əlavə et
-bg:Добави страница %s към любимите
+bg:Добавяне на страница %s към любимите
 br:Adicionar página %s aos Favoritos
 bs:Dodaj stranicu %s u favorite
 ca-xv:Afig la pàgina %s als preferits
@@ -3176,7 +3176,7 @@ vn:Thêm trang %s vào Ưa thích
 am:Ավելացնել %s էջը ընտրյալներին հետևյալ անվամբ`
 ar:أضف الصفحة %s للمفضلة باسم (اختياري):
 az:%s. səhifəni bu (istənilən) adla seçilmişlərə əlavə et:
-bg:Добави страница %s към любимите с име (по избор):
+bg:Добавяне на страница %s към любимите с име (по избор):
 br:Adicionar página %s aos Favoritos com outro nome (opcional):
 bs:Dodaj stranicu %s u favorite sa (opcionalnim) nazivom:
 ca-xv:Afig la pàgina %s als preferits amb el nom (opcional):
@@ -3229,7 +3229,7 @@ vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 am:Ավելացնել ընտրյալներին
 ar:أضف للمفضلة
 az:Seçilmişlərə əlavə et
-bg:Добави към любимите
+bg:Добавяне към любимите
 br:Adicionar aos Favoritos
 bs:Dodaj u favorite
 ca-xv:Afig als preferits
@@ -3283,7 +3283,7 @@ vn:Thêm vào Ưa thích
 am:Ընդլայնված
 ar:متقدم
 az:Əlavə
-bg:Допълнителни
+bg:Разширени (Допълнителни)
 br:Avançado
 bs:Napredno
 by:Дадаткова
@@ -3364,6 +3364,7 @@ fy-nl:Alle bestannen
 ga:Gach comhad
 gl:Todos os arquivos
 he:כל הקבצים
+hi:समस्त फाइलें
 hr:Sve datoteke
 hu:Minden fájl
 id:Semua Berkas
@@ -3514,7 +3515,7 @@ af:Assosieer Met PDF lêers?
 am:Ասոցիացնե՞լ PDF ֆայլերի հետ։
 ar:ربط مع ملفات البي دي إف
 az:PDF fayllarla əlaqə yaradılsın?
-bg:По подразбиране за PDF файлове?
+bg:Указване на програмата като такава по подразбиране за отваряне на PDF файлове?
 bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
 br:Associar com arquivos PDF?
 bs:Asocirati sa PDF datotekama?
@@ -3835,6 +3836,7 @@ fy-nl:Boekbyld
 ga:Leabhar-amharc
 gl:Vista Libro
 he:תצוגת ספר
+hi:पुस्तक दृश्य
 hr:Knjiški pregled
 hu:Könyv (oldalpár címlappal)
 id:Tampilan Buku
@@ -4651,6 +4653,7 @@ fr:Compatibilité
 ga:Comhoiriúnacht
 he:תאימות
 hr:Kompatibilnost
+hu:Kompatibilitás
 id:Kompabilitas
 it:Compatibilità
 ja:互換性
@@ -4768,6 +4771,7 @@ fy-nl:Fierder mei boekbyld
 ga:Leabhar-amharc leanúnach
 gl:Vista continua de libro
 he:תצוגת ספר רציפה
+hi:निरंतरित पुस्तक दृश्य
 hr:Slijedni knjiški pogled
 hu:Folyamatos könyv
 id:Tampilan Buku Secara Kontinu
@@ -6721,6 +6725,7 @@ fr:Favoris
 ga:Ceanáin
 gl:Favoritos
 he:מועדפים
+hi:पसंदीदा
 hr:Favoriti
 hu:Kedvencek
 id:Favorit
@@ -6765,6 +6770,7 @@ et:FictionBook-dokumendid
 fr:Documents FictionBook
 he:מסמכי FictionBook
 hr:FictionBook dokumenti
+hu:FictionBook fájlok
 id:Dokumen FictionBook
 it:Documenti FictionBook
 ja:フィクション文章
@@ -7040,6 +7046,7 @@ fy-nl:Sykje
 ga:Aimsigh
 gl:Procurar
 he:חפש
+hi:खोजें
 hr:Pronađi
 hu:Keresés
 id:Cari
@@ -9863,6 +9870,7 @@ fr:Optimisations PDF
 ga:Optimisations PDF
 he:אופטימיזציות PDF:
 hr:PDF optimizacija:
+hu:PDF optimalizálás:
 id:Optimisasi PDF
 it:Ottimizzazioni PDF:
 ja:PDF 最適化:
@@ -10713,6 +10721,7 @@ fr:Imprimer en tant qu'&image (demande plus de mémoire)
 ga:Priontáil mar &íomhá (Tá gá le níos mó cuimhne)
 he:הדפס כתמונה (צורך יותר זכרון)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
+hu:Nyomtatás képként (több memóriát igényel)
 id:Cetak Sebagai Gambar (butuh banyak memori)
 it:Stampa come &immagine (richiede più memoria))
 ja:画像として印刷 (より多くのメモリを必要とします) (&I)
@@ -10841,6 +10850,7 @@ uz:Bunday printer mavjud emas
 vn:Máy in với tên được cho không tồn tại
 :Printing in progress.
 az:Çap davam edir.
+bg:Печатане...
 br:Imprimindo...
 cn:正在打印
 de:Drucken - SumatraPDF
@@ -10848,6 +10858,7 @@ el:Εκτύπωση σε εξέλιξη
 es:Impresión en progreso.
 fr:Impression en cours
 he:נשלח להדפסה
+hu:Nyomtatás folyamatban.
 id:Dalam proses mencetak
 it:Stampa in corso...
 ja:印刷を実行中です。
@@ -10855,6 +10866,7 @@ kr:프린트중입니다.
 nl:Aan het printen.
 pt:Impressão em curso.
 ru:Идёт печать.
+sq:Printimi vijon.
 sv:Utskrift pågår.
 tr:Baskı devam ediyor.
 tw:正在列印
@@ -10863,6 +10875,7 @@ uz:Bosib chiqarilmoqda.
 vn:Đang in.
 :Printing is still in progress. Abort and quit?
 az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
+bg:Печатането все още е на ход. Сигурни ли сте, че искате принудително да го откажете и да излезете?
 br:Ainda imprimindo... Interromper e sair?
 cn:仍然在打印。中断并放弃？
 de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
@@ -10870,6 +10883,7 @@ el:Η εκτύπωση είναι ακόμα σε εξέλιξη. Ακύρωση
 es:Impresión aún en progreso. ¿Cancelar y salir?
 fr:Impression toujours en cours. Annuler et quitter ?
 he:הדפסה עדיין לא הסתיימה. להפסיק פעולה ולצאת?
+hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
 id:Sedang dalam proses mencetak. Batalkan dan keluar?
 it:La stampa è ancora in corso. Vuoi interromperla e uscire?
 ja:印刷を実行中です。中止して終了しますか？
@@ -10877,6 +10891,7 @@ kr:프린트중입니다. 취소후 종료하시겠습니까?
 nl:Nog steeds aan het printen. Annuleren en stoppen?
 pt:Impressão ainda em curso. Abortar e sair?
 ru:Печать продолжается. Отменить и выйти?
+sq:Printimi vijon. Do e ndërprisni dhe e pezulloni?
 sv:Utskrift pågår fortfarande. Avbryt och avsluta?
 tw:正在列印，要中止並放棄嗎？
 uk:Друк ще не завершено. Перервати та вийти?
@@ -10924,7 +10939,7 @@ ru:Печать ещё не завершена. Отменить и начать
 sk:Prebieha tlač. Prerušiť a začať znova?
 sl:Tiskanje je še vedno v teku. Prekinem in začnem znova?
 sp-rs:Štampanje je još uvek u toku. Želite li da prekinete štampanje i počnete ponovo?
-sq:Printimi vijon. Do e ndërprisni apo do e filloni nga e para?
+sq:Printimi vijon. Do e ndërprisni dhe e filloni nga e para?
 sr-rs:Штампање је још увек у току. Желите ли да прекинете штампање и почнете поново?
 sv:Utskriften pågår fortfarande. Avbryt och börja om?
 ta:அச்சிடுதல் செயல்பாட்டில் உள்ளது. கைவிட்டு மீண்டும் தொடங்கவா?
@@ -11963,6 +11978,7 @@ fr:Voir les &Marque-pages
 ga:Lea&bharmharcanna a taispeáint
 he:הראה סימניות
 hr:Prikaži &oznake
+hu:Könyvjelzők mutatása
 id:Tampilkan &Markah
 it:Visualizza segnali&bri
 ja:ブックマークを表示(&B)
@@ -12338,7 +12354,7 @@ vn:Trang đơn
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Մերժել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 ar:عذرا, لا يجدر أن يحدث ما حدث!\n\n الرجاء الضغط على 'إلغاء', إذا كنت تريد مساعدتنا في حل هذه المشكلة
 az:Bağışlayın, gözlənilməz xəta baş verdi!\n\nProblemin həllində bizə kömək etmək üçün "İmtina" düyməsinə basın.
-bg:Извинете, това не би трябвало да се случва!\n\nНатиснете 'Отказ', ако искате да ни помогнете да поправим причината за това спиране.
+bg:Извинете, това не би трябвало да се случва!\n\nМоля, натиснете „Отказ“, ако искате да ни помогнете да поправим причината за този срив (спиране).
 br:Desculpe, isso não deveria ter acontecido!\n\nAperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.
 bs:Oprostite, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam želite pomoći ispraviti uzrok ovog rušenja.
 ca-xv:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'este error
@@ -12389,7 +12405,7 @@ vn:Xin lỗi, điều đó không nên xảy ra!\n\nVui lòng bấm 'Cancel', n�
 am:%s ֆայլը չունի համաժամեցման կետ
 ar:الملف المصدر %s لم تتم مزامنته عند هذه النقطة
 az:%s mənbə faylının sinxronlaşdırma mövqeyi yoxdur
-bg:Източникът %s няма точка на синхронизация
+bg:Файлът-източник %s няма точка на синхронизация
 br:O arquivo fonte %s não tem ponto de sincronização
 bs:Izvorni fajl %s nema sinhronizacijske tačke
 by:Адсутнічае кропка сінхранізацыі ў зыходным файле %s
@@ -12446,7 +12462,7 @@ vn:Tập tin nguồn %s không có điểm đồng bộ
 am:Ֆայլը.
 ar:الموضوع
 az:Mövzu:
-bg:Относно:
+bg:Относно (тема):
 br:Assunto:
 bs:Tema:
 ca-xv:Assumpte:
@@ -12613,7 +12629,7 @@ vn:Cập nhật SumatraPDF
 am:SumatraPDF-ի ձախողում
 ar:مشكلة في SumatraPDF
 az:SumatraPDF əməliyyatı qəza ilə nəticələndi
-bg:SumatraPDF спря
+bg:SumatraPDF се срина (спря внезапно)
 br:O SumatraPDF travou
 bs:SumatraPDF se srušio
 ca-xv:El SumatraPDF ha fallat
@@ -12666,7 +12682,7 @@ vn:SumatraPDF đã ngưng hoạt đọng
 am:PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
 ar:قارئ SumatraPDF هو الافتراضي
 az:SumatraPDF PDF faylları ilə əlaqələndirilmişdir
-bg:SumatraPDF е вашият PDF четец
+bg:SumatraPDF е вашият PDF четец по подразбиране
 br:O SumatraPDF é o seu leitor PDF padrão
 bs:SumatraPDF je vaš glavni čitač PDF fajlova
 by:SumatraPDF асацыявана з файламі PDF
@@ -12724,7 +12740,7 @@ vn:SumatraPDF là trình đọc PDF chính của bạn
 am:PDF ֆայլերը ասոցիացվեցին SumatraPDF-ի հետ
 ar:قارئ SumatraPDF يجب أن يكون القارئ الافتراضي
 az:SumatraPDF artıq PDF faylları ilə əlaqələndirilmişdir
-bg:SumatraPDF вече трябва да е четец на PDF по подразбиране
+bg:SumatraPDF вече трябва да е указана като подразбиращ се четец на/за PDF файлове
 br:O SumatraPDF deve ser agora seu leitor PDF padrão
 bs:SumatraPDF bi sad trebao biti vaš glavni čitač PDF fajlova
 by:Зараз SumatraPDF асацыявана з файламі PDF
@@ -12837,6 +12853,7 @@ vn:Không mở được tập tin đồng bộ
 :Tagged PDF
 ar:البي دي إف الموسومة
 az:Teqlənmiş PDF
+bg:Етикетирен .PDF файл (Tagged PDF)
 br:PDF com marcações (tags)
 ca-xv:PDF etiquetat
 ca:PDF etiquetat
@@ -12850,6 +12867,7 @@ fr:PDF balisé
 ga:PDF formáid chlibeáilte
 he:PDF מתוייג
 hr:Strukturirani PDF
+hu:Címkézett PDF
 id:PDF Terlabeli
 it:PDF marcati
 ja:タグ付き PDF
@@ -12987,7 +13005,7 @@ vn:Tựa đề
 am:Անհայտ ֆայլ (%s)
 ar:ملف مصدري غير معروف (%s)
 az:Naməlum mənbə faylı (%s)
-bg:Непознат файлов източник (%s)
+bg:Файлът, избран за източник, е непознат (%s)
 br:Arquivo fonte desconhecido (%s)
 bs:Nepoznat izvorni fajl (%s)
 by:Невядомы зыходны файл (%s)
@@ -13112,7 +13130,7 @@ af:&Besoek Webtuiste
 am:Ծրագրի &կայքը
 ar:&زيارة موقع البرنامج
 az:Proqramın &vebsaytına keç
-bg:Посетете &сайта
+bg:Посетете &уебсайта
 bn:&আমাদের অন্তর্জালস্থান দর্শন করুন
 br:&Visitar a página do SumatraPDF
 bs:&Posjeti web stranicu
@@ -13475,7 +13493,7 @@ af:Zoem In
 am:Մեծացնել
 ar:تكبير
 az:Böyüt
-bg:Увеличи
+bg:Увеличаване
 bn:বৃহৎ বিবর্ধন
 br:Aumentar zoom
 bs:Uvećaj
@@ -13542,7 +13560,7 @@ af:Zoem Uit
 am:Փոքրացնել
 ar:تصغير
 az:Kiçilt
-bg:Намали
+bg:Намаляне
 bn:ক্ষুদ্র বিবর্ধন
 br:Diminuir zoom
 bs:Umanji
