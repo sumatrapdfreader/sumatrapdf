@@ -667,6 +667,9 @@ def build_version_try(ver, try_count = 2):
 			# rethrow assert() exceptions, they come from our code
 			# and we should stop
 			if isinstance(e, AssertionError):
+				print("assert happened:")
+				print(str(e))
+				traceback.print_exc()
 				raise e
 			print(str(e))
 			traceback.print_exc()
