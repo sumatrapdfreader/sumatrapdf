@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ac7cd6b5cf540a9b21625354ff2d7e945d3be87b
+da03c04172be411d7123a3c7202446fdbf2d6b4d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2664,6 +2664,7 @@ fr:&Utiliser les dimensions d'origine
 ga:&Bain feidhm as méideanna bunaidh an leathanaigh
 gl:&Usar tamaños de páxina orixinais
 he:השתמש במידות דף מקוריות
+hi:एवं वास्तविक पृष्ठ आकार
 hr:Koristi &originalne veličine stranica
 hu:Eredeti oldalméret használata
 id:&Gunakan ukuran halaman sebenarnya
@@ -4123,6 +4124,7 @@ fy-nl:Bytes
 ga:Bearta
 gl:Bytes
 he:ביטים
+hi:बाइट्स
 hr:Bajtova
 hu:bájt
 id:Bytes
@@ -4668,6 +4670,7 @@ pt:Compatibilidade
 ro:Compatibilitate
 ru:Совместимость
 sl:Združljivost
+sp-rs:Kompatibilnost
 sq:Përputhja
 sr-rs:Компатибилност
 sv:Kompatibilitet
@@ -4979,6 +4982,7 @@ pt:Copiar &imagem
 ru:Скопировать &изображение
 sk:Kopírovať &obrázok
 sl:Kopiraj &sliko
+sp-rs:Kopiraj sliku
 sq:Kopjoj &figurën
 sr-rs:Копирај слику
 sv:Kop&iera bild
@@ -5190,6 +5194,7 @@ pt:Direitos de autor:
 ru:Авторское право:
 sk:Autorské práva:
 sl:Avtorske pravice:
+sp-rs:Autorska prava:
 sq:Kopirajti:
 sr-rs:Ауторска права:
 sv:Copyright:
@@ -5450,6 +5455,7 @@ fr:Fichier actuel
 ga:Comhad reatha
 gl:Ficheiro actual
 he:קובץ נוכחי
+hi:वर्तमान दस्तावेज़
 hr:Trenutna datoteka
 hu:Jelenlegi fájl
 id:Berkas sekarang
@@ -6586,6 +6592,7 @@ pt:Falha ao mudar o nome do ficheiro!
 ru:Ошибка переименования файла!
 sk:Súbor se nepodarilo premenovať!
 sl:Preimenovanje datoteke ni uspelo!
+sp-rs:Nemoguće je preimenovati datoteku!
 sq:Dështoi riemërtimi i skedës!
 sr-rs:Немогуће је преименовати датотеку!
 sv:Kunde inte döpa om filen!
@@ -6680,6 +6687,7 @@ fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
 he:הצגת רשת מהירה
 hr:Brzi Web prikaz
+hu:Gyors web-nézet
 id:Tampilan Web Cepat
 it:Vista web veloce
 ja:高速ウェブ表示
@@ -6693,6 +6701,7 @@ pt:Visualização rápida na web
 ro:Vizualizare rapidă web
 ru:Быстрый просмотр в Интернете
 sl:Hiter spletni prikaz
+sp-rs:Brzi pregled na mreži
 sq:Hapet shpejt në internet
 sr-rs:Брзи преглед на мрежи
 sv:Snabb Webb-Visning
@@ -6781,6 +6790,7 @@ no:FictionBook-dokumenter
 pl:Dokumenty FictionBook
 pt:Livros de ficção
 ru:Документы FictionBook
+sp-rs:FictionBook dokumenti
 sq:Dokumente FictionBook
 sr-rs:FictionBook докуменат
 sv:FictionBook dokument
@@ -7803,6 +7813,7 @@ ro:Fonturi:
 ru:Шрифты:
 sk:Písma:
 sl:Pisave:
+sp-rs:Fontovi:
 sq:Fonte:
 sr-rs:Фонтови:
 sv:Typsnitt:
@@ -7850,6 +7861,7 @@ ro:Formatează cartea... %d pagini
 ru:Форматирование книги... %d стр.
 sk:Formátovanie knihy... %d stránok
 sl:Oblikovanje knjige … %d strani
+sp-rs:Formatiranje knjige... %d stranica
 sq:Formaton librin... %d faqe
 sr-rs:Форматирање књиге... %d страница
 sv:Formatterar bok... %d sidor
@@ -8420,6 +8432,7 @@ pt:A carregar o ficheiro %s...
 ru:Загрузка файла %s...
 sk:Načítavanie súboru %s...
 sl:Nalaganje datoteke %s …
+sp-rs:Učitavanje datoteke %s...
 sq:Hap skedën %s...
 sr-rs:Учитавање датотеке %s...
 sv:Laddar fil %s...
@@ -9188,6 +9201,7 @@ fy-nl:Oantal sides:
 ga:Líon na leathanaigh:
 gl:Número de Páxinas:
 he:מספר עמודים:
+hi:पृषठ संख्या
 hr:Broj stranica:
 hu:Oldalak száma:
 id:Jumlah Halaman:
@@ -9246,6 +9260,7 @@ fy-nl:OK
 ga:Tá go maith
 gl:OK
 he:אשר
+hi:ठीक
 hr:U redu
 hu:OK
 id:OK
@@ -9428,6 +9443,7 @@ fr:Ouvrir un document...
 ga:Oscail cáipéis...
 gl:Abrir un documento...
 he:פתח מסמך...
+hi:एक दस्तावेज़ खोलें
 hr:Otvori dokument...
 hu:Fájl megnyitása...
 id:Buka Dokumen...
@@ -9883,6 +9899,7 @@ pl:Optymalizacja PDF:
 pt:Otimizações PDF:
 ru:Оптимизация PDF:
 sl:Optimizacije PDF:
+sp-rs:PDF optimizacija:
 sq:PDF optimizimet:
 sr-rs:PDF оптимизација
 sv:PDF Optimeringar:
@@ -10735,6 +10752,7 @@ pt:Imprimir &como imagem (usa mais memória)
 ro:Printează ca &image (ocupă mai multă memorie)
 ru:Печатать как &изображение (требуется больше памяти)
 sl:Natisni kot sliko (zahteva več pomnilnika)
+sp-rs:Štampati kao sliku (zahteva više memorije)
 sq:Printoj si &figurë (kërkon shumë RAM)
 sr-rs:Штампати као слику (захтева више меморије)
 sv:Skr&iv ut som bild (mer minnekrävande)
@@ -11103,6 +11121,7 @@ pt:Mudar &nome...\tF2
 ru:Пере&именовать...\tF2
 sk:Preme&novať...\tF2
 sl:Preime&nuj …\tF2
+sp-rs:Preimenuj...\tF2
 sq:Rie&mërtoj...\tF2
 sr-rs:Преименуј...\tF2
 sv:Döp om
@@ -11311,6 +11330,7 @@ ro:Redenumește la
 ru:Переименовать в
 sk:Premenovať na
 sl:Preimenuj v
+sp-rs:Preimenuj u
 sq:Riemërtoj si
 sr-rs:Преименуј у
 sv:Döp om till
@@ -12880,6 +12900,7 @@ pt:PDF com tags
 ro:PDF etichetat
 ru:Размеченный PDF
 sl:Označen PDF
+sp-rs:Označeni PDF
 sq:PDF me etiketa
 sr-rs:Означени PDF
 sv:Taggad PDF
