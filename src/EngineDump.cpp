@@ -70,7 +70,7 @@ void DumpProperties(BaseEngine *engine, bool fullDump)
         Out("\t\tCreator=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty(Prop_PdfProducer)));
     if (str)
-        Out("\t\tProducer=\"%s\"\n", str.Get());
+        Out("\t\tPdfProducer=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty(Prop_PdfVersion)));
     if (str)
         Out("\t\tPdfVersion=\"%s\"\n", str.Get());

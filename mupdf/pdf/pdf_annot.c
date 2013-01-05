@@ -848,7 +848,7 @@ fz_straighten_rect(fz_rect rect)
 }
 
 #define ANNOT_HIGHLIGHT_AP_RESOURCES \
-	"<< /ExtGState << /GS << /Type/ExtGState /ca 0.8 /AIS false /BM /Multiply >> >> >>"
+	"<< /ExtGState << /GS << /Type /ExtGState /ca 0.8 /AIS false /BM /Multiply >> >> >>"
 
 static pdf_annot *
 pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
