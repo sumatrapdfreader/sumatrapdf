@@ -1544,18 +1544,17 @@ bool DoCachePageRendering(WindowInfo *win, int pageNo)
 }
 
 /* Send the request to render a given page to a rendering thread */
-void WindowInfo::RenderPage(int pageNo)
+void WindowInfo::RequestRendering(int pageNo)
 {
     assert(dm);
-    if (!dm)
-        return;
+    if (!dm) return;
     // don't render any plain images on the rendering thread,
     // they'll be rendered directly in DrawDocument during
     // WM_PAINT on the UI thread
     if (!DoCachePageRendering(this, pageNo))
         return;
 
-    gRenderCache.Render(dm, pageNo, NULL);
+    gRenderCache.RequestRendering(dm, pageNo);
 }
 
 void WindowInfo::CleanUp(DisplayModel *dm)

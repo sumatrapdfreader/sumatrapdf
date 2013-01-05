@@ -180,12 +180,13 @@ void RenderCache::FreePage(DisplayModel *dm, int pageNo, TilePosition *tile)
         if (dm && pageNo != INVALID_PAGE_NO) {
             // a specific page
             shouldFree = (entry->dm == dm) && (entry->pageNo == pageNo);
-            if (tile)
+            if (tile) {
                 // a given tile of the page or all tiles not rendered at a given resolution
                 // (and at resolution 0 for quick zoom previews)
                 shouldFree = shouldFree && (entry->tile == *tile ||
                     tile->row == (USHORT)-1 && entry->tile.res > 0 && entry->tile.res != tile->res ||
                     tile->row == (USHORT)-1 && entry->tile.res == 0 && entry->outOfDate);
+            }
         } else if (dm) {
             // all pages of this DisplayModel
             shouldFree = (cache[i]->dm == dm);
@@ -278,44 +279,46 @@ bool RenderCache::ReduceTileSize()
     return true;
 }
 
-void RenderCache::Render(DisplayModel *dm, int pageNo, RenderingCallback *callback)
+void RenderCache::RequestRendering(DisplayModel *dm, int pageNo)
 {
     TilePosition tile(GetTileRes(dm, pageNo), 0, 0);
-    Render(dm, pageNo, tile, true, callback);
+    // only honor the request if there's a good chance that the
+    // rendered tile will actually be used
+    if (tile.res > 1)
+        return;
 
+    RequestRendering(dm, pageNo, tile);
     // render both tiles of the first row when splitting a page in four
     // (which always happens on larger displays for Fit Width)
     if (tile.res == 1 && !IsRenderQueueFull()) {
         tile.col = 1;
-        Render(dm, pageNo, tile, false);
+        RequestRendering(dm, pageNo, tile, false);
     }
 }
 
 /* Render a bitmap for page <pageNo> in <dm>. */
-void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueue, RenderingCallback *callback)
+void RenderCache::RequestRendering(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueueForPage)
 {
-    assert(dm);
-
     ScopedCritSec scope(&requestAccess);
-    bool ok = false;
-    if (!dm || dm->dontRenderFlag) goto Exit;
+    assert(dm);
+    if (!dm || dm->dontRenderFlag)
+        return;
 
     int rotation = NormalizeRotation(dm->Rotation());
     float zoom = dm->ZoomReal(pageNo);
 
     if (curReq && (curReq->pageNo == pageNo) && (curReq->dm == dm) && (curReq->tile == tile)) {
-        if ((curReq->zoom != zoom) || (curReq->rotation != rotation)) {
-            /* Currently rendered page is for the same page but with different zoom
-            or rotation, so abort it */
-            AbortCurrentRequest();
-        } else {
+        if ((curReq->zoom == zoom) && (curReq->rotation == rotation)) {
             /* we're already rendering exactly the same page */
-            goto Exit;
+            return;
         }
+        /* Currently rendered page is for the same page but with different zoom
+        or rotation, so abort it */
+        AbortCurrentRequest();
     }
 
     // clear requests for tiles of different resolution and invisible tiles
-    if (clearQueue)
+    if (clearQueueForPage)
         ClearQueueForDisplayModel(dm, pageNo, &tile);
 
     for (int i = 0; i < requestCount; i++) {
@@ -329,29 +332,23 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, TilePosition tile, bool c
                 tmp = requests[requestCount-1];
                 requests[requestCount-1] = *req;
                 *req = tmp;
-                goto Exit;
             } else {
                 /* There was a request queued for the same page but with different
                    zoom or rotation, so only replace this request */
                 req->zoom = zoom;
                 req->rotation = rotation;
-
-                goto Exit;
             }
+            return;
         }
     }
 
     if (Exists(dm, pageNo, rotation, zoom, &tile)) {
         /* This page has already been rendered in the correct dimensions
            and isn't about to be rerendered in different dimensions */
-        goto Exit;
+        return;
     }
 
-    ok = Render(dm, pageNo, rotation, zoom, &tile, NULL, callback);
-
-Exit:
-    if (!ok && callback)
-        callback->Callback();
+    Render(dm, pageNo, rotation, zoom, &tile);
 }
 
 void RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom, RectD pageRect, RenderingCallback& callback)
@@ -582,7 +579,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
         }
         renderDelay = GetRenderDelay(dm, pageNo, tile);
         if (renderMissing && RENDER_DELAY_UNDEFINED == renderDelay && !IsRenderQueueFull())
-            Render(dm, pageNo, tile);
+            RequestRendering(dm, pageNo, tile);
     }
     RenderedBitmap *renderedBmp = entry ? entry->bitmap : NULL;
     HBITMAP hbmp = renderedBmp ? renderedBmp->GetBitmap() : NULL;

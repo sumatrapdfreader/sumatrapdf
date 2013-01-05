@@ -16,7 +16,7 @@ public:
 };
 
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
- * A given tile starts at (col / 2^res * page_width, row / 2^res * page_height). */
+   A given tile starts at (col / 2^res * page_width, row / 2^res * page_height). */
 struct TilePosition {
     USHORT res, row, col;
 
@@ -29,8 +29,7 @@ struct TilePosition {
 
 /* We keep a cache of rendered bitmaps. BitmapCacheEntry keeps data
    that uniquely identifies rendered page (dm, pageNo, rotation, zoom)
-   and the corresponding rendered bitmap.
-*/
+   and the corresponding rendered bitmap. */
 struct BitmapCacheEntry {
     DisplayModel *   dm;
     int              pageNo;
@@ -98,7 +97,7 @@ public:
     RenderCache();
     ~RenderCache();
 
-    void    Render(DisplayModel *dm, int pageNo, RenderingCallback *callback=NULL);
+    void    RequestRendering(DisplayModel *dm, int pageNo);
     void    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
                    RectD pageRect, RenderingCallback& callback);
     void    CancelRendering(DisplayModel *dm);
@@ -125,8 +124,7 @@ private:
                 return requestCount == MAX_PAGE_REQUESTS;
             }
     UINT    GetRenderDelay(DisplayModel *dm, int pageNo, TilePosition tile);
-    void    Render(DisplayModel *dm, int pageNo, TilePosition tile,
-                   bool clearQueue=true, RenderingCallback *callback=NULL);
+    void    RequestRendering(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueueForPage=true);
     bool    Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
                    TilePosition *tile=NULL, RectD *pageRect=NULL,
                    RenderingCallback *callback=NULL);
