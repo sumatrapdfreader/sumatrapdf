@@ -235,6 +235,9 @@ public:
 
     virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
+    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const;
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+
     // DPI isn't constant for all pages and thus premultiplied
     virtual float GetFileDPI() const { return 300.0f; }
     virtual const WCHAR *GetDefaultFileExt() const { return L".djvu"; }
@@ -258,9 +261,11 @@ protected:
     ddjvu_document_t *doc;
     miniexp_t outline;
     miniexp_t *annos;
+    Vec<PageAnnotation> userAnnots;
 
     Vec<ddjvu_fileinfo_t> fileInfo;
 
+    void AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, int rotation, RectI screen);
     bool ExtractPageText(miniexp_t item, const WCHAR *lineSep,
                          str::Str<WCHAR>& extracted, Vec<RectI>& coords);
     char *ResolveNamedDest(const char *name);
@@ -426,6 +431,32 @@ bool DjVuEngineImpl::Load(const WCHAR *fileName)
     return true;
 }
 
+void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, int rotation, RectI screen)
+{
+    if (!bmp || userAnnots.Count() == 0)
+        return;
+
+    HDC hdc = CreateCompatibleDC(NULL);
+    HGDIOBJ prevBmp = SelectObject(hdc, bmp->GetBitmap());
+    {
+        using namespace Gdiplus;
+        Graphics g(hdc);
+        g.SetCompositingQuality(CompositingQualityHighQuality);
+        g.SetPageUnit(UnitPixel);
+
+        for (size_t i = 0; i < userAnnots.Count(); i++) {
+            PageAnnotation& annot = userAnnots.At(i);
+            if (annot.pageNo != pageNo || annot.type != Annot_Highlight)
+                continue;
+            RectD arect = Transform(annot.rect, pageNo, zoom, rotation);
+            arect.Offset(-screen.x, -screen.y);
+            g.FillRectangle(&SolidBrush(Color(95, 135, 67, 135)), arect.ToGdipRectF());
+        }
+    }
+    SelectObject(hdc, prevBmp);
+    DeleteDC(hdc);
+}
+
 RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
@@ -463,12 +494,15 @@ RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
         //       in debug builds when passing in DDJVU_RENDER_COLOR
         ddjvu_render_mode_t mode = DDJVU_RENDER_MASKONLY;
 #endif
-        if (ddjvu_page_render(page, mode, &prect, &rrect, fmt, stride, bmpData.Get()))
+        if (ddjvu_page_render(page, mode, &prect, &rrect, fmt, stride, bmpData.Get())) {
             bmp = new RenderedDjVuPixmap(bmpData, screen.Size(), isBitonal);
+            AddUserAnnots(bmp, pageNo, zoom, rotation, screen);
+        }
     }
 
     ddjvu_format_release(fmt);
     ddjvu_page_release(page);
+
     return bmp;
 }
 
@@ -711,6 +745,20 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coord
     }
 
     return extracted.StealData();
+}
+
+bool DjVuEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
+{
+    return !forSaving && Annot_Highlight == type;
+}
+
+void DjVuEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)
+{
+    ScopedCritSec scope(&gDjVuContext.lock);
+    if (list)
+        userAnnots = *list;
+    else
+        userAnnots.Reset();
 }
 
 Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)

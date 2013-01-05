@@ -114,7 +114,7 @@ void Painter::Paint(HWND hwnd, bool isDirty)
     // for two reasons:
     // - I don't know which part exactly needs to be repainted
     // - it can be tricky if background is a gradient
-    // I thought I could just do PaintBackground(&gDC, Rect(0, 0, r.dx, r.dy))
+    // I thought I could just do PaintBackground(&gDC, r.ToGdipRect())
     // but that generates flickr which leads me to believe that either
     // Graphics::FillRectangle() ignores clip region or clip region is not set
     // properly. Current solution detects a resize, paints a background and the
@@ -122,7 +122,7 @@ void Painter::Paint(HWND hwnd, bool isDirty)
     // sometimes causes flickr
     // See http://www.catch22.net/tuts/flicker for info on win repainting
     if (cacheBmp && !sizeDuringLastPaint.Equals(Size(r.dx, r.dy))) {
-        PaintBackground(&gDC, Rect(0, 0, r.dx, r.dy));
+        PaintBackground(&gDC, r.ToGdipRect());
         gDC.DrawImage(cacheBmp, 0, 0);
         sizeDuringLastPaint = Size(r.dx, r.dy);
     }
@@ -145,7 +145,7 @@ void Painter::Paint(HWND hwnd, bool isDirty)
         InitGraphicsMode(&g);
         g.SetClip(&clip, CombineModeReplace);
 
-        PaintBackground(&g, Rect(0, 0, r.dx, r.dy));
+        PaintBackground(&g, r.ToGdipRect());
         PaintWindowsInZOrder(&g, wnd);
     }
 

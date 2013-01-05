@@ -131,6 +131,9 @@ public:
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
 
+    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const { return false; }
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
+
     virtual const WCHAR *GetDefaultFileExt() const { return L".chm"; }
 
     virtual Vec<PageElement *> *GetElements(int pageNo) { return NULL; }

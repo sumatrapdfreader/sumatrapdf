@@ -787,12 +787,23 @@ fz_unlock_context_cs(void *user, int lock)
     LeaveCriticalSection(cs);
 }
 
-static void fz_run_user_annots(Vec<PageAnnotation>& userAnnots, int pageNo, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, fz_cookie *cookie)
+static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int pageNo)
 {
-    for (size_t i = 0; i < userAnnots.Count() && (!cookie || !cookie->abort); i++) {
+    Vec<PageAnnotation> result;
+    for (size_t i = 0; i < userAnnots.Count(); i++) {
         PageAnnotation& annot = userAnnots.At(i);
-        if (pageNo != annot.pageNo || Annot_Highlight != annot.type)
-            continue;
+        // include all annotations for pageNo that can be rendered by fz_run_user_annots
+        if (pageNo == annot.pageNo && Annot_Highlight == annot.type)
+            result.Append(annot);
+    }
+    return result;
+}
+
+static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device *dev, fz_matrix ctm, fz_bbox clipbox, fz_cookie *cookie)
+{
+    for (size_t i = 0; i < pageAnnots.Count() && (!cookie || !cookie->abort); i++) {
+        PageAnnotation& annot = pageAnnots.At(i);
+        CrashIf(Annot_Highlight != annot.type);
         // skip annotation if it isn't visible
         fz_rect rect = fz_RectD_to_rect(annot.rect);
         rect = fz_transform_rect(ctm, rect);
@@ -816,13 +827,9 @@ static void fz_run_user_annots(Vec<PageAnnotation>& userAnnots, int pageNo, fz_d
     }
 }
 
-static void fz_run_page_transparency(Vec<PageAnnotation>& userAnnots, int pageno, fz_device *dev, fz_bbox clipbox, bool endGroup, bool hasTransparency=false)
+static void fz_run_page_transparency(Vec<PageAnnotation>& pageAnnots, fz_device *dev, fz_bbox clipbox, bool endGroup, bool hasTransparency=false)
 {
-    if (hasTransparency)
-        return;
-    for (size_t i = 0; i < userAnnots.Count() && !hasTransparency; i++)
-        hasTransparency = pageno == userAnnots.At(i).pageNo;
-    if (!hasTransparency)
+    if (hasTransparency || pageAnnots.Count() == 0)
         return;
     if (!endGroup)
         fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
@@ -1805,11 +1812,12 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
     PdfPageRun *run;
     if (Target_View == target && (run = GetPageRun(page, !cacheRun))) {
         EnterCriticalSection(&ctxAccess);
+        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
-            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, false, page->transparency);
+            fz_run_page_transparency(pageAnnots, dev, clipbox, false, page->transparency);
             fz_run_display_list(run->list, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
-            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, true, page->transparency);
-            fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
+            fz_run_page_transparency(pageAnnots, dev, clipbox, true, page->transparency);
+            fz_run_user_page_annots(pageAnnots, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -1821,11 +1829,12 @@ bool PdfEngineImpl::RunPage(pdf_page *page, fz_device *dev, fz_matrix ctm, Rende
         ScopedCritSec scope(&ctxAccess);
         char *targetName = target == Target_Print ? "Print" :
                            target == Target_Export ? "Export" : "View";
+        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
-            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, false, page->transparency);
+            fz_run_page_transparency(pageAnnots, dev, clipbox, false, page->transparency);
             pdf_run_page_with_usage(_doc, page, dev, ctm, targetName, cookie ? &cookie->cookie : NULL);
-            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, true, page->transparency);
-            fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
+            fz_run_page_transparency(pageAnnots, dev, clipbox, true, page->transparency);
+            fz_run_user_page_annots(pageAnnots, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -3391,11 +3400,12 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bb
     XpsPageRun *run = GetPageRun(page, !cacheRun);
     if (run) {
         EnterCriticalSection(&ctxAccess);
+        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
-            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, false);
+            fz_run_page_transparency(pageAnnots, dev, clipbox, false);
             fz_run_display_list(run->list, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
-            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, true);
-            fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
+            fz_run_page_transparency(pageAnnots, dev, clipbox, true);
+            fz_run_user_page_annots(pageAnnots, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;
@@ -3405,11 +3415,12 @@ bool XpsEngineImpl::RunPage(xps_page *page, fz_device *dev, fz_matrix ctm, fz_bb
     }
     else {
         ScopedCritSec scope(&ctxAccess);
+        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
-            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, false);
+            fz_run_page_transparency(pageAnnots, dev, clipbox, false);
             xps_run_page(_doc, page, dev, ctm, cookie ? &cookie->cookie : NULL);
-            fz_run_page_transparency(userAnnots, GetPageNo(page), dev, clipbox, true);
-            fz_run_user_annots(userAnnots, GetPageNo(page), dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
+            fz_run_page_transparency(pageAnnots, dev, clipbox, true);
+            fz_run_user_page_annots(pageAnnots, dev, ctm, clipbox, cookie ? &cookie->cookie : NULL);
         }
         fz_catch(ctx) {
             ok = false;

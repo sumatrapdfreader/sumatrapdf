@@ -94,6 +94,9 @@ public:
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Book; }
 
+    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const;
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
 
@@ -112,15 +115,16 @@ protected:
     PoolAllocator allocator;
     // needed since pages::IterStart/IterNext aren't thread-safe
     CRITICAL_SECTION pagesAccess;
+    // access to userAnnots is protected by pagesAccess
+    Vec<PageAnnotation> userAnnots;
     // needed to undo the DPI specific UnitPoint-UnitPixel conversion
     int currFontDpi;
-
+    // page dimensions can vary between filetypes
     RectD pageRect;
     float pageBorder;
 
     void GetTransform(Matrix& m, float zoom, int rotation) {
-        GetBaseTransform(m, RectF(0, 0, (float)pageRect.dx, (float)pageRect.dy),
-                         zoom, rotation);
+        GetBaseTransform(m, pageRect.ToGdipRectF(), zoom, rotation);
     }
     bool ExtractPageAnchors();
     void FixFontSizeForResolution(HDC hDC);
@@ -330,6 +334,16 @@ void EbookEngine::FixFontSizeForResolution(HDC hDC)
     currFontDpi = dpi;
 }
 
+static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pageNo)
+{
+    for (size_t i = 0; i < userAnnots.Count(); i++) {
+        PageAnnotation& annot = userAnnots.At(i);
+        if (annot.pageNo != pageNo || annot.type != Annot_Highlight)
+            continue;
+        g.FillRectangle(&SolidBrush(Color(95, 135, 67, 135)), annot.rect.ToGdipRectF());
+    }
+}
+
 bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
@@ -342,7 +356,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
 
     Color white(0xFF, 0xFF, 0xFF);
-    Rect screenR(screenRect.x, screenRect.y, screenRect.dx, screenRect.dy);
+    Rect screenR(screenRect.ToGdipRect());
     g.SetClip(screenR);
     screenR.Inflate(1, 1);
     g.FillRectangle(&SolidBrush(white), screenR);
@@ -359,6 +373,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     ScopedCritSec scope(&pagesAccess);
     FixFontSizeForResolution(hDC);
     DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, &Color(Color::Black), cookie ? &cookie->abort : NULL);
+    DrawAnnotations(g, userAnnots, pageNo);
     return !(cookie && cookie->abort);
 }
 
@@ -440,6 +455,20 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_o
         memcpy(*coords_out, coords.LendData(), coords.Count() * sizeof(RectI));
     }
     return content.StealData();
+}
+
+bool EbookEngine::SupportsAnnotation(PageAnnotType type, bool forSaving) const
+{
+    return !forSaving && Annot_Highlight == type;
+}
+
+void EbookEngine::UpdateUserAnnotations(Vec<PageAnnotation> *list)
+{
+    ScopedCritSec scope(&pagesAccess);
+    if (list)
+        userAnnots = *list;
+    else
+        userAnnots.Reset();
 }
 
 PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)

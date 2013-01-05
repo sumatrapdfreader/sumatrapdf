@@ -239,10 +239,10 @@ public:
     // TODO: generalize from PageAnnotation to PageModification
     // whether this engine supports adding user annotations of a given type
     // (either for rendering or for saving)
-    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const { return false; }
+    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const = 0;
     // informs the engine about annotations the user made so that they can be rendered, etc.
     // (this call supercedes any prior call to UpdateUserAnnotations)
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) = 0;
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document

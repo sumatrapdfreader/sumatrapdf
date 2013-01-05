@@ -175,6 +175,17 @@ public:
     static RectT FromRECT(RECT& rect) {
         return FromXY(rect.left, rect.top, rect.right, rect.bottom);
     }
+
+#ifdef GDIPVER
+    Gdiplus::Rect ToGdipRect() const {
+        RectT<int> rect(this->Convert<int>());
+        return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
+    }
+    Gdiplus::RectF ToGdipRectF() const {
+        RectT<float> rectF(this->Convert<float>());
+        return Gdiplus::RectF(rectF.x, rectF.y, rectF.dx, rectF.dy);
+    }
+#endif
 #endif
 
     bool operator==(RectT<T>& other) const {

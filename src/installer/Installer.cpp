@@ -712,7 +712,8 @@ static void DrawFrame2(Graphics &g, RectI r)
     CalcLettersLayout(g, &f, r.dx);
 
     SolidBrush bgBrush(Color(0xff, 0xf2, 0));
-    Rect r2(r.y - 1, r.x - 1, r.dx + 1, r.dy + 1);
+    Rect r2(r.ToGdipRect());
+    r2.Inflate(1, 1);
     g.FillRectangle(&bgBrush, r2);
 
     Font f2(L"Impact", 16, FontStyleRegular);
