@@ -1202,11 +1202,10 @@ public:
     PdfComment(const WCHAR *content, RectD rect, int pageNo) :
         annot(Annot_Comment, pageNo, rect), content(str::Dup(content)) { }
 
-    virtual PageElementType GetType() const { return Element_Annotation; }
+    virtual PageElementType GetType() const { return Element_Comment; }
     virtual int GetPageNo() const { return annot.pageNo; }
     virtual RectD GetRect() const { return annot.rect; }
     virtual WCHAR *GetValue() const { return str::Dup(content); }
-    virtual PageAnnotation *GetAnnot() { return &this->annot; }
 };
 
 class PdfTocItem : public DocTocItem {

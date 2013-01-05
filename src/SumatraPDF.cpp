@@ -1869,8 +1869,6 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
             for (size_t i = 0; i < els->Count(); i++) {
                 if (els->At(i)->GetType() == Element_Image)
                     continue;
-                if (els->At(i)->GetType() == Element_Annotation && els->At(i)->GetAnnot()->type != Annot_Comment)
-                    continue;
                 RectI rect = dm.CvtToScreen(pageNo, els->At(i)->GetRect());
                 RectI isect = viewPortRect.Intersect(rect);
                 if (!isect.IsEmpty())

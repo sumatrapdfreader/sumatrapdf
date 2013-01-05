@@ -178,14 +178,8 @@ const char *ElementTypeToStr(PageElement *el)
     switch (el->GetType()) {
     case Element_Link: return "Link";
     case Element_Image: return "Image";
-    case Element_Annotation:
-        switch (el->GetAnnot()->type) {
-        case Annot_Comment: return "Comment";
-        case Annot_Highlight: return "Highlight";
-        }
-        // fall through
-    default:
-        return "Unknown";
+    case Element_Comment: return "Comment";
+    default: return "Unknown";
     }
 }
 

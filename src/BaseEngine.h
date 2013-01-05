@@ -10,7 +10,7 @@ enum RenderTarget { Target_View, Target_Print, Target_Export };
 enum PageLayoutType { Layout_Single = 0, Layout_Facing = 1, Layout_Book = 2,
                       Layout_R2L = 16, Layout_NonContinuous = 32 };
 
-enum PageElementType { Element_Link, Element_Image, Element_Annotation };
+enum PageElementType { Element_Link, Element_Image, Element_Comment };
 
 enum PageDestType { Dest_None,
     Dest_ScrollTo, Dest_LaunchURL, Dest_LaunchEmbedded, Dest_LaunchFile,
@@ -90,21 +90,13 @@ public:
 
 // an user annotation on page
 struct PageAnnotation {
-    const PageAnnotType type;
-    const int pageNo;
-    const RectD rect;
+    PageAnnotType type;
+    int pageNo;
+    RectD rect;
 
     PageAnnotation() : type(Annot_None), pageNo(-1) { }
     PageAnnotation(PageAnnotType type, int pageNo, RectD rect) :
         type(type), pageNo(pageNo), rect(rect) { }
-
-    // TODO: can operator= be written for const fields without hacks?
-    PageAnnotation& operator=(const PageAnnotation& other) {
-        *(PageAnnotType *)&type = other.type;
-        *(int *)&pageNo = other.pageNo;
-        *(RectD *)&rect = other.rect;
-        return *this;
-    }
 };
 
 // use in PageDestination::GetDestRect for values that don't matter
@@ -127,9 +119,6 @@ public:
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
     virtual PageDestination *AsLink() { return NULL; }
-    // if this element is a page annotation, this returns additional data
-    // (the result is owned by the PageElement and MUST NOT be deleted)
-    virtual PageAnnotation *GetAnnot() { return NULL; }
     // if this element is an image, this returns it
     // caller must delete the result
     virtual RenderedBitmap *GetImage() { return NULL; }
