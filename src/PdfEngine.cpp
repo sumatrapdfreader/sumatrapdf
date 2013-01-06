@@ -2676,19 +2676,27 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
 
     fz_try(ctx) {
         list = pdf_file_update_start_w(ctx, fileName, next_num + PageCount() + userAnnots.Count() + 1);
-        // append appearance stream for all highlights (required e.g. for Chrome's built-in viewer)
-        int ap_num = next_num++;
-        obj = pdf_new_obj_from_str(ctx, ap_dict);
-        buf = fz_new_buffer(ctx, (int)str::Len(ap_stream));
-        memcpy(buf->data, ap_stream, (buf->len = (int)str::Len(ap_stream)));
-        pdf_file_update_append(list, obj, ap_num, 0, buf);
-        pdf_drop_obj(obj);
-        obj = NULL;
-        fz_drop_buffer(ctx, buf);
-        buf = NULL;
-        // prepare the annotation template object
-        obj = pdf_new_obj_from_str(ctx, annot_dict);
-        pdf_dict_puts_drop(pdf_dict_gets(obj, "AP"), "N", pdf_new_indirect(ctx, ap_num, 0, NULL));
+        if (!_doc->crypt) {
+            // append appearance stream for all highlights (required e.g. for Chrome's built-in viewer)
+            int ap_num = next_num++;
+            obj = pdf_new_obj_from_str(ctx, ap_dict);
+            buf = fz_new_buffer(ctx, (int)str::Len(ap_stream));
+            memcpy(buf->data, ap_stream, (buf->len = (int)str::Len(ap_stream)));
+            pdf_file_update_append(list, obj, ap_num, 0, buf);
+            pdf_drop_obj(obj);
+            obj = NULL;
+            fz_drop_buffer(ctx, buf);
+            buf = NULL;
+            // prepare the annotation template object
+            obj = pdf_new_obj_from_str(ctx, annot_dict);
+            pdf_dict_puts_drop(pdf_dict_gets(obj, "AP"), "N", pdf_new_indirect(ctx, ap_num, 0, NULL));
+        }
+        else {
+            // prepare the annotation template object
+            obj = pdf_new_obj_from_str(ctx, annot_dict);
+            // TODO: else we'd have to encrypt the appearance stream
+            pdf_dict_dels(obj, "AP");
+        }
         // append annotations per page
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
             // TODO: this will skip annotations for broken documents
@@ -2727,6 +2735,7 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
                 pdf_file_update_append(list, obj, next_num++, 0, NULL);
             }
             // write the page object with the update /Annots array back to the file
+            pdf_dict_dels(pdf_dict_gets(page, "Resources"), ".useBM");
             pdf_file_update_append(list, page, pdf_to_num(_doc->page_refs[pageNo-1]), pdf_to_gen(_doc->page_refs[pageNo-1]), NULL);
             pdf_drop_obj(page);
             page = NULL;

@@ -2393,7 +2393,7 @@ pdf_file_update_end(pdf_file_update_list *list, pdf_obj *prev_trailer, int prev_
 {
 	fz_context *ctx = list->ctx;
 	int from, to, startxref;
-	pdf_obj *trailer = NULL;
+	pdf_obj *trailer = NULL, *obj;
 
 	fz_var(trailer);
 
@@ -2421,10 +2421,18 @@ pdf_file_update_end(pdf_file_update_list *list, pdf_obj *prev_trailer, int prev_
 	fprintf(list->file, "trailer\n");
 	fz_try(ctx)
 	{
-		trailer = pdf_copy_dict(ctx, prev_trailer);
+		trailer = pdf_new_dict(ctx, 5);
 		pdf_dict_puts_drop(trailer, "Size", pdf_new_int(ctx, to));
 		pdf_dict_puts_drop(trailer, "Prev", pdf_new_int(ctx, prev_xref_offset));
+		if ((obj = pdf_dict_gets(prev_trailer, "Root")))
+			pdf_dict_puts(trailer, "Root", obj);
+		if ((obj = pdf_dict_gets(prev_trailer, "Info")))
+			pdf_dict_puts(trailer, "Info", obj);
+		if ((obj = pdf_dict_gets(prev_trailer, "Encrypt")))
+			pdf_dict_puts(trailer, "Encrypt", obj);
 		// TODO: update the second entry in the optional /ID array
+		if ((obj = pdf_dict_gets(prev_trailer, "ID")))
+			pdf_dict_puts(trailer, "ID", obj);
 		pdf_fprint_obj(list->file, trailer, 1);
 		fprintf(list->file, "startxref\n%d\n%%%%EOF\n", startxref);
 	}
