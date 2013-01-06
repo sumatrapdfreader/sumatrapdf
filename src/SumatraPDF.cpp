@@ -2533,7 +2533,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     }
 }
 
-static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<WCHAR>& fileFilter)
+// returns false if no filter has been appended
+static bool AppendFileFilterForDoc(DisplayModel *dm, str::Str<WCHAR>& fileFilter)
 {
     const WCHAR *defExt = dm->engine->GetDefaultFileExt();
     switch (dm->engineType) {
@@ -2541,6 +2542,7 @@ static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<WCHAR>& fileFilter
         case Engine_DjVu:   fileFilter.Append(_TR("DjVu documents")); break;
         case Engine_ComicBook: fileFilter.Append(_TR("Comic books")); break;
         case Engine_Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), defExt + 1); break;
+        case Engine_ImageDir: return false; // only show "All files"
         case Engine_PS:     fileFilter.Append(_TR("Postscript documents")); break;
         case Engine_Chm:    fileFilter.Append(_TR("CHM documents")); break;
         case Engine_Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
@@ -2552,6 +2554,7 @@ static void AppendFileFilterForDoc(DisplayModel *dm, str::Str<WCHAR>& fileFilter
         case Engine_Txt:    fileFilter.Append(_TR("Text documents")); break;
         default:            fileFilter.Append(_TR("PDF documents")); break;
     }
+    return true;
 }
 
 static void OnMenuSaveAs(WindowInfo& win)
@@ -2581,8 +2584,8 @@ static void OnMenuSaveAs(WindowInfo& win)
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     str::Str<WCHAR> fileFilter(256);
-    AppendFileFilterForDoc(win.dm, fileFilter);
-    fileFilter.AppendFmt(L"\1*%s\1", defExt);
+    if (AppendFileFilterForDoc(win.dm, fileFilter))
+        fileFilter.AppendFmt(L"\1*%s\1", defExt);
     if (hasCopyPerm) {
         fileFilter.Append(_TR("Text documents"));
         fileFilter.Append(L"\1*.txt\1");
@@ -2737,7 +2740,8 @@ static void OnMenuRenameFile(WindowInfo &win)
     // methods too early on)
     const WCHAR *defExt = win.dm->engine->GetDefaultFileExt();
     str::Str<WCHAR> fileFilter(256);
-    AppendFileFilterForDoc(win.dm, fileFilter);
+    bool ok = AppendFileFilterForDoc(win.dm, fileFilter);
+    CrashIf(!ok);
     fileFilter.AppendFmt(L"\1*%s\1", defExt);
     str::TransChars(fileFilter.Get(), L"\1", L"\0");
 
@@ -2762,7 +2766,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     ofn.lpstrDefExt = defExt + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    bool ok = GetSaveFileName(&ofn);
+    ok = GetSaveFileName(&ofn);
     if (!ok)
         return;
 

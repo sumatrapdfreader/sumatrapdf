@@ -481,7 +481,7 @@ bool ImageEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
            str::EndsWithI(fileName, L".bmp") ||
            str::EndsWithI(fileName, L".tga") ||
            str::EndsWithI(fileName, L".jxr") || str::EndsWithI(fileName, L".hdp") ||
-                                                   str::EndsWithI(fileName, L".wdp");
+                                                str::EndsWithI(fileName, L".wdp");
 }
 
 ImageEngine *ImageEngine::CreateFromFile(const WCHAR *fileName)
@@ -517,7 +517,7 @@ public:
     virtual RectD PageMediabox(int pageNo);
 
     virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
-    virtual bool SaveFileAs(const WCHAR *copyFileName) { return false; }
+    virtual bool SaveFileAs(const WCHAR *copyFileName);
 
     virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
@@ -636,6 +636,20 @@ DocTocItem *ImageDirEngineImpl::GetTocTree()
         root->AddSibling(item);
     }
     return root;
+}
+
+bool ImageDirEngineImpl::SaveFileAs(const WCHAR *copyFileName)
+{
+    // only copy the files if the target directory doesn't exist yet
+    if (!CreateDirectory(copyFileName, NULL))
+        return false;
+    bool ok = true;
+    for (size_t i = 0; i < pageFileNames.Count(); i++) {
+        const WCHAR *filePathOld = pageFileNames.At(i);
+        ScopedMem<WCHAR> filePathNew(path::Join(copyFileName, path::GetBaseName(filePathOld)));
+        ok = ok && CopyFile(filePathOld, filePathNew, TRUE);
+    }
+    return ok;
 }
 
 bool ImageDirEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
