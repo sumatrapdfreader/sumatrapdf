@@ -424,6 +424,7 @@ EXPORTS
 	pdf_new_matrix
 	pdf_copy_array
 	pdf_copy_dict
+	pdf_new_obj_from_str
 	pdf_keep_obj
 	pdf_drop_obj
 	pdf_is_null
@@ -647,6 +648,10 @@ EXPORTS
 	pdf_store_item
 	pdf_find_item
 	pdf_remove_item
+	pdf_file_update_start
+	pdf_file_update_start_w
+	pdf_file_update_append
+	pdf_file_update_end
 	pdf_has_unsaved_changes
 	pdf_pass_event
 	pdf_update_page

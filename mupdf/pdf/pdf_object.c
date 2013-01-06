@@ -1172,6 +1172,31 @@ pdf_drop_obj(pdf_obj *obj)
 		fz_free(obj->ctx, obj);
 }
 
+/* SumatraPDF: convenience method to easily create nested objects */
+pdf_obj *pdf_new_obj_from_str(fz_context *ctx, const char *src)
+{
+	pdf_obj *result;
+	pdf_lexbuf lexbuf;
+	fz_stream *stream = fz_open_memory(ctx, (unsigned char *)src, strlen(src));
+
+	pdf_lexbuf_init(ctx, &lexbuf, PDF_LEXBUF_SMALL);
+	fz_try(ctx)
+	{
+		result = pdf_parse_stm_obj(NULL, stream, &lexbuf);
+	}
+	fz_always(ctx)
+	{
+		pdf_lexbuf_fin(&lexbuf);
+		fz_close(stream);
+	}
+	fz_catch(ctx)
+	{
+		return NULL;
+	}
+
+	return result;
+}
+
 /* Pretty printing objects */
 
 struct fmt

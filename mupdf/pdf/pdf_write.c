@@ -2298,3 +2298,134 @@ void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz
 		fz_rethrow(ctx);
 	}
 }
+
+/* SumatraPDF: support PDF document updates */
+struct pdf_file_update_list_s
+{
+	fz_context *ctx;
+	FILE *file;
+	int max_num;
+	int *offset, *gen;
+};
+
+static pdf_file_update_list *
+pdf_file_update_start_fd(fz_context *ctx, int fd, int max_xref_size)
+{
+	pdf_file_update_list *list;
+	FILE *file = _fdopen(fd, "ab");
+	if (!file)
+		fz_throw(ctx, "couldn't open file descriptor");
+	// for convenience, the offset and gen arrays follow directly after the struct
+	list = fz_calloc(ctx, sizeof(pdf_file_update_list) / sizeof(int) + 2 * max_xref_size, sizeof(int));
+	list->ctx = ctx;
+	list->file = file;
+	list->max_num = max_xref_size - 1;
+	list->offset = (int *)(list + 1);
+	list->gen = list->offset + max_xref_size;
+	fprintf(list->file, "\n");
+	return list;
+}
+
+pdf_file_update_list *
+pdf_file_update_start(fz_context *ctx, const char *filepath, int max_xref_size)
+{
+	int fd = open(filepath, _O_WRONLY | O_APPEND | O_BINARY, 0);
+	if (fd == -1)
+		fz_throw(ctx, "cannot open %s", filepath);
+	return pdf_file_update_start_fd(ctx, fd, max_xref_size);
+}
+
+#ifdef _WIN32
+pdf_file_update_list *
+pdf_file_update_start_w(fz_context *ctx, const wchar_t *filepath, int max_xref_size)
+{
+	int fd = _wopen(filepath, _O_WRONLY | O_APPEND | O_BINARY, 0);
+	if (fd == -1)
+		fz_throw(ctx, "cannot open %Ls", filepath);
+	return pdf_file_update_start_fd(ctx, fd, max_xref_size);
+}
+#endif
+
+void
+pdf_file_update_append(pdf_file_update_list *list, pdf_obj *dict, int num, int gen, fz_buffer *stream)
+{
+	fz_context *ctx = list->ctx;
+	if (num > list->max_num || num <= 0)
+		fz_throw(ctx, "can't add more than %d objects (%d %d R)", list->max_num, num, gen);
+	if (gen < list->gen[num])
+		fz_throw(ctx, "won't update objects of previous generation (%d %d/%d R)", num, gen, list->gen[num]);
+	list->offset[num] = ftell(list->file);
+	list->gen[num] = gen;
+	fprintf(list->file, "%d %d obj\n", num, gen);
+	if (!stream || pdf_to_int(pdf_dict_gets(dict, "Length")) == stream->len)
+	{
+		pdf_fprint_obj(list->file, dict, 1);
+	}
+	else
+	{
+		pdf_obj *clone = pdf_copy_dict(ctx, dict);
+		fz_var(clone);
+		fz_try(ctx)
+		{
+			pdf_dict_puts_drop(clone, "Length", pdf_new_int(ctx, stream->len));
+			pdf_fprint_obj(list->file, clone, 1);
+		}
+		fz_always(ctx)
+		{
+			pdf_drop_obj(clone);
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
+		}
+	}
+	if (stream)
+	{
+		fprintf(list->file, "stream\n");
+		fwrite(stream->data, 1, stream->len, list->file);
+		fprintf(list->file, "\nendstream\n");
+	}
+	fprintf(list->file, "endobj\n");
+}
+
+void
+pdf_file_update_end(pdf_file_update_list *list, pdf_obj *prev_trailer, int prev_xref_offset)
+{
+	fz_context *ctx = list->ctx;
+	int from, to, startxref;
+	pdf_obj *trailer = NULL;
+
+	fz_var(trailer);
+
+	startxref = ftell(list->file);
+	fprintf(list->file, "xref\n");
+	for (from = 0; from < list->max_num; from++)
+	{
+		if (!list->offset[from] && from > 0)
+			continue;
+		for (to = from + 1; to < list->max_num && list->offset[to]; to++);
+		fprintf(list->file, "%d %d\n", from, to - from);
+		for (; from < to; from++)
+			fprintf(list->file, "%010d %05d %c \n", list->offset[from], list->gen[from], from > 0 ? 'n' : 'f');
+	}
+
+	fprintf(list->file, "trailer\n");
+	fz_try(ctx)
+	{
+		trailer = pdf_copy_dict(ctx, prev_trailer);
+		pdf_dict_puts_drop(trailer, "Size", pdf_new_int(ctx, to));
+		pdf_dict_puts_drop(trailer, "Prev", pdf_new_int(ctx, prev_xref_offset));
+		pdf_fprint_obj(list->file, trailer, 1);
+		fprintf(list->file, "startxref\n%d\n%%%%EOF\n", startxref);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(trailer);
+		fclose(list->file);
+		fz_free(ctx, list);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}

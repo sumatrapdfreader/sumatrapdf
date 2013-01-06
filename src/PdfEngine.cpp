@@ -1158,6 +1158,7 @@ protected:
     bool            IsLinearizedFile();
 
     bool            SaveEmbedded(LinkSaverUI& saveUI, int num, int gen);
+    bool            SaveUserAnnots(const WCHAR *fileName);
 
     RectD         * _mediaboxes;
     fz_outline    * outline;
@@ -2641,11 +2642,115 @@ bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName)
     if (data) {
         bool ok = file::WriteAll(copyFileName, data.Get(), dataLen);
         if (ok)
-            return true;
+            return SaveUserAnnots(copyFileName);
     }
     if (!_fileName)
         return false;
-    return CopyFile(_fileName, copyFileName, FALSE);
+    bool ok = CopyFile(_fileName, copyFileName, FALSE);
+    if (!ok)
+        return false;
+    return SaveUserAnnots(copyFileName);
+}
+
+bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
+{
+    if (!userAnnots.Count())
+        return true;
+
+    ScopedCritSec scope1(&pagesAccess);
+    ScopedCritSec scope2(&ctxAccess);
+
+    static const char *ap_dict = "<< /Type /XObject /Subtype /Form /BBox [0 0 1 1] /Resources << /ExtGState << /GS << /Type /ExtGState /ca 0.8 /AIS false /BM /Multiply >> >> /ProcSet [/PDF] >> >>";
+    static const char *ap_stream = "q /GS gs 0.886275 0.768627 0.886275 rg 0 0 1 1 re f Q";
+    static const char *annot_dict = "<< /Type /Annot /Subtype /Highlight /C [0.886275 0.768627 0.886275] /AP << >> >>";
+
+    bool ok = true;
+    pdf_obj *obj = NULL, *obj2 = NULL, *page = NULL;
+    fz_buffer *buf = NULL;
+    pdf_file_update_list *list = NULL;
+    int next_num = _doc->len;
+
+    fz_var(obj);
+    fz_var(obj2);
+    fz_var(page);
+    fz_var(buf);
+    fz_var(list);
+
+    fz_try(ctx) {
+        list = pdf_file_update_start_w(ctx, fileName, next_num + PageCount() + userAnnots.Count() + 1);
+        // append appearance stream for all highlights (required e.g. for Chrome's built-in viewer)
+        int ap_num = next_num++;
+        obj = pdf_new_obj_from_str(ctx, ap_dict);
+        buf = fz_new_buffer(ctx, (int)str::Len(ap_stream));
+        memcpy(buf->data, ap_stream, (buf->len = (int)str::Len(ap_stream)));
+        pdf_file_update_append(list, obj, ap_num, 0, buf);
+        pdf_drop_obj(obj);
+        obj = NULL;
+        fz_drop_buffer(ctx, buf);
+        buf = NULL;
+        // prepare the annotation template object
+        obj = pdf_new_obj_from_str(ctx, annot_dict);
+        pdf_dict_puts_drop(pdf_dict_gets(obj, "AP"), "N", pdf_new_indirect(ctx, ap_num, 0, NULL));
+        // append annotations per page
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            // TODO: this will skip annotations for broken documents
+            if (!GetPdfPage(pageNo) || !pdf_to_num(_doc->page_refs[pageNo-1])) {
+                ok = false;
+                break;
+            }
+            Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+            if (pageAnnots.Count() == 0)
+                continue;
+            // get the page's /Annots array for appending
+            page = pdf_copy_dict(ctx, _doc->page_objs[pageNo-1]);
+            if (!pdf_is_array(pdf_dict_gets(page, "Annots")))
+                pdf_dict_puts_drop(page, "Annots", pdf_new_array(ctx, pageAnnots.Count()));
+            pdf_obj *annots = pdf_dict_gets(page, "Annots");
+            // append all annotations for the current page
+            for (size_t i = 0; i < pageAnnots.Count(); i++) {
+                PageAnnotation& annot = pageAnnots.At(i);
+                CrashIf(annot.type != Annot_Highlight);
+                // update the annotation's /Rect (converted to raw user space)
+                fz_rect r = fz_RectD_to_rect(annot.rect);
+                r = fz_transform_rect(fz_invert_matrix(GetPdfPage(pageNo)->ctm), r);
+                pdf_dict_puts_drop(obj, "Rect", pdf_new_rect(ctx, &r));
+                // all /QuadPoints must lie within /Rect
+                ScopedMem<char> quadpoints(str::Format("[%.4f %.4f %.4f %.4f %.4f %.4f %.4f %.4f]",
+                                                       r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0));
+                pdf_dict_puts_drop(obj, "QuadPoints", pdf_new_obj_from_str(ctx, quadpoints));
+                // add a reference back to the page
+                pdf_dict_puts_drop(obj, "P", pdf_new_indirect(ctx, pdf_to_num(_doc->page_refs[pageNo-1]), pdf_to_gen(_doc->page_refs[pageNo-1]), NULL));
+                // append a reference to the annotation to the page's /Annots entry
+                obj2 = pdf_new_indirect(ctx, next_num, 0, NULL);
+                pdf_array_push(annots, obj2);
+                pdf_drop_obj(obj2);
+                obj2 = NULL;
+                // finally write the annotation to the file
+                pdf_file_update_append(list, obj, next_num++, 0, NULL);
+            }
+            // write the page object with the update /Annots array back to the file
+            pdf_file_update_append(list, page, pdf_to_num(_doc->page_refs[pageNo-1]), pdf_to_gen(_doc->page_refs[pageNo-1]), NULL);
+            pdf_drop_obj(page);
+            page = NULL;
+        }
+    }
+    fz_always(ctx) {
+        pdf_drop_obj(obj);
+        pdf_drop_obj(obj2);
+        pdf_drop_obj(page);
+        fz_drop_buffer(ctx, buf);
+        if (list) {
+            // write xref, trailer and startxref entries and clean up
+            fz_try(ctx) {
+                pdf_file_update_end(list, _doc->trailer, _doc->startxref);
+            }
+            fz_catch(ctx) { }
+        }
+    }
+    fz_catch(ctx) {
+        return false;
+    }
+    return ok;
 }
 
 bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num, int gen)

@@ -503,44 +503,22 @@ pdf_create_annot(pdf_document *xref, fz_rect rect, pdf_obj *base_obj, fz_buffer 
 	return annot;
 }
 
-static pdf_obj *
-pdf_dict_from_string(pdf_document *xref, char *string)
-{
-	fz_context *ctx = xref->ctx;
-	pdf_obj *result;
-	fz_stream *stream = fz_open_memory(ctx, string, strlen(string));
-
-	fz_try(ctx)
-	{
-		result = pdf_parse_stm_obj(NULL, stream, &xref->lexbuf.base);
-	}
-	fz_always(ctx)
-	{
-		fz_close(stream);
-	}
-	fz_catch(ctx)
-	{
-		return NULL;
-	}
-
-	return result;
-}
-
 #define ANNOT_OC_VIEW_ONLY \
 	"<< /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >>"
 
 static pdf_obj *
 pdf_clone_for_view_only(pdf_document *xref, pdf_obj *obj)
 {
-	obj = pdf_copy_dict(xref->ctx, obj);
+	fz_context *ctx = xref->ctx;
+	obj = pdf_copy_dict(ctx, obj);
 
-	fz_try(xref->ctx)
+	fz_try(ctx)
 	{
-		pdf_dict_puts_drop(obj, "OC", pdf_dict_from_string(xref, ANNOT_OC_VIEW_ONLY));
+		pdf_dict_puts_drop(obj, "OC", pdf_new_obj_from_str(ctx, ANNOT_OC_VIEW_ONLY));
 	}
-	fz_catch(xref->ctx)
+	fz_catch(ctx)
 	{
-		fz_warn(xref->ctx, "annotation might be printed unexpectedly");
+		fz_warn(ctx, "annotation might be printed unexpectedly");
 	}
 
 	return obj;
@@ -889,7 +867,7 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 		}
 		fz_buffer_printf(ctx, content, "f Q");
 
-		resources = pdf_dict_from_string(xref, ANNOT_HIGHLIGHT_AP_RESOURCES);
+		resources = pdf_new_obj_from_str(ctx, ANNOT_HIGHLIGHT_AP_RESOURCES);
 	}
 	fz_catch(ctx)
 	{
@@ -1258,7 +1236,7 @@ pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 			/* TODO: try to reverse the encoding instead of replacing the font */
 			if (fontdesc && fontdesc->cid_to_gid && !fontdesc->cid_to_ucs || !fontdesc && pdf_dict_gets(res, "Font"))
 			{
-				pdf_obj *new_font = pdf_dict_from_string(xref, "<< /Type /Font /BaseFont /Helvetica /Subtype /Type1 >>");
+				pdf_obj *new_font = pdf_new_obj_from_str(ctx, "<< /Type /Font /BaseFont /Helvetica /Subtype /Type1 >>");
 				fz_free(ctx, font_name);
 				font_name = NULL;
 				font_name = fz_strdup(ctx, "Default");
@@ -1326,7 +1304,7 @@ pdf_create_freetext_annot(pdf_document *xref, pdf_obj *obj)
 	pdf_obj *value = pdf_dict_gets(obj, "Contents");
 	fz_rect rect = pdf_to_rect(ctx, pdf_dict_gets(obj, "Rect"));
 	int align = pdf_to_int(pdf_dict_gets(obj, "Q"));
-	pdf_obj *res = pdf_dict_from_string(xref, ANNOT_FREETEXT_AP_RESOURCES);
+	pdf_obj *res = pdf_new_obj_from_str(ctx, ANNOT_FREETEXT_AP_RESOURCES);
 	unsigned short *ucs2 = NULL, *rest;
 	char *r;
 	float x;
