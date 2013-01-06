@@ -2666,6 +2666,12 @@ static void OnMenuSaveAs(WindowInfo& win)
     else if (!file::Exists(srcFileName)) {
         ok = win.dm->engine->SaveFileAs(realDstFileName);
     }
+#ifdef DEBUG
+    // ... as well as files containing annotations ...
+    else if (win.dm->engine->SupportsAnnotation(Annot_Highlight, true)) {
+        ok = win.dm->engine->SaveFileAs(realDstFileName);
+    }
+#endif
     // ... else just copy the file
     else {
         WCHAR *msgBuf;
@@ -3689,9 +3695,9 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
                     annots.Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect));
                 }
                 win.dm->engine->UpdateUserAnnotations(&annots);
+                gRenderCache.CancelRendering(win.dm);
+                gRenderCache.KeepForDisplayModel(win.dm, win.dm);
                 ClearSearchResult(&win);
-                win.CleanUp(win.dm);
-                win.RepaintAsync();
             }
         }
 #endif
@@ -4876,6 +4882,11 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_DEBUG_MUI:
             SetDebugPaint(!IsDebugPaint());
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !IsDebugPaint());
+            break;
+
+        case IDM_DEBUG_ANNOTATION:
+            if (win)
+                FrameOnChar(*win, 0xA7);
             break;
 
         case IDM_DEBUG_CRASH_ME:

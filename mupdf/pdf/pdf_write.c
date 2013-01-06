@@ -2397,6 +2397,15 @@ pdf_file_update_end(pdf_file_update_list *list, pdf_obj *prev_trailer, int prev_
 
 	fz_var(trailer);
 
+	if (!prev_xref_offset)
+	{
+		// don't bother writing xref and trailer, if the document has to be repaired anyway
+		fprintf(list->file, "startxref\nrepairme!\n%%%%EOF\n");
+		fclose(list->file);
+		fz_free(ctx, list);
+		return;
+	}
+
 	startxref = ftell(list->file);
 	fprintf(list->file, "xref\n");
 	for (from = 0; from < list->max_num; from++)
@@ -2415,6 +2424,7 @@ pdf_file_update_end(pdf_file_update_list *list, pdf_obj *prev_trailer, int prev_
 		trailer = pdf_copy_dict(ctx, prev_trailer);
 		pdf_dict_puts_drop(trailer, "Size", pdf_new_int(ctx, to));
 		pdf_dict_puts_drop(trailer, "Prev", pdf_new_int(ctx, prev_xref_offset));
+		// TODO: update the second entry in the optional /ID array
 		pdf_fprint_obj(list->file, trailer, 1);
 		fprintf(list->file, "startxref\n%d\n%%%%EOF\n", startxref);
 	}

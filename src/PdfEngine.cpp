@@ -2567,8 +2567,6 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
 
 bool PdfEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
 {
-    if (forSaving)
-        return false; // for now
     return Annot_Highlight == type;
 }
 
