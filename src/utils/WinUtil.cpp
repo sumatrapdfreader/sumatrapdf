@@ -995,51 +995,6 @@ double GetProcessRunningTime()
     return timeInMs;
 }
 
-typedef BOOL WINAPI SaferCreateLevelProc(DWORD dwScopeId, DWORD dwLevelId, DWORD OpenFlags, SAFER_LEVEL_HANDLE *pLevelHandle, LPVOID lpReserved);
-typedef BOOL WINAPI SaferComputeTokenFromLevelProc(SAFER_LEVEL_HANDLE LevelHandle, HANDLE InAccessToken, PHANDLE OutAccessToken, DWORD dwFlags, LPVOID lpReserved);
-typedef BOOL WINAPI SaferCloseLevelProc(SAFER_LEVEL_HANDLE hLevelHandle);
-
-// note: the intended purpose of this code was to launch non-elevated process
-// from elevated process, but it doesn't seem to do that (we use RunAsUser()
-// instead)
-HANDLE CreateProcessAtLevel(const WCHAR *exe, const WCHAR *args, DWORD level)
-{
-    HMODULE h = SafeLoadLibrary(L"Advapi32.dll");
-    if (!h)
-        return NULL;
-#define ImportProc(func) func ## Proc *_ ## func = (func ## Proc *)GetProcAddress(h, #func)
-    ImportProc(SaferCreateLevel);
-    ImportProc(SaferComputeTokenFromLevel);
-    ImportProc(SaferCloseLevel);
-#undef ImportProc
-    if (!_SaferCreateLevel || !_SaferComputeTokenFromLevel || !_SaferCloseLevel)
-        return NULL;
-
-    SAFER_LEVEL_HANDLE slh;
-    if (!_SaferCreateLevel(SAFER_SCOPEID_USER, level, 0, &slh, NULL))
-        return NULL;
-
-    ScopedMem<WCHAR> cmd(str::Format(L"\"%s\" %s", exe, args ? args : L""));
-    PROCESS_INFORMATION pi;
-    STARTUPINFO si = { 0 };
-    si.cb = sizeof(si);
-
-    HANDLE token;
-    if (!_SaferComputeTokenFromLevel(slh, NULL, &token, 0, NULL))
-        goto Error;
-    if (!CreateProcessAsUser(token, NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-        goto Error;
-
-    CloseHandle(pi.hThread);
-    _SaferCloseLevel(slh);
-    return pi.hProcess;
-
-Error:
-    LogLastError();
-    _SaferCloseLevel(slh);
-    return NULL;
-}
-
 // This is just to satisfy /analyze. CloseHandle(NULL) works perfectly fine
 // but /analyze complains anyway
 BOOL SafeCloseHandle(HANDLE h)
@@ -1067,117 +1022,34 @@ BOOL SafeDestroyWindow(HWND *hwnd)
     return ok;
 }
 
-// CreateProcessWithTokenW() only available since Vista
-typedef BOOL WINAPI CreateProcessWithTokenWProc(HANDLE hToken, DWORD dwLogonFlags,
-    LPCWSTR lpApplicationName, LPWSTR lpCommandLine, DWORD dwCreationFlags,
-    LPVOID lpEnvironment, LPCWSTR lpCurrentDirectory, LPSTARTUPINFOW lpStartupInfo,
-    LPPROCESS_INFORMATION lpProcessInformation);
-
-// Run a given *.exe as a non-elevated (non-admin) process.
-// based on http://stackoverflow.com/questions/3298611/run-my-program-asuser
-bool RunAsUser(WCHAR *cmd)
+// based on http://mdb-blog.blogspot.com/2013/01/nsis-lunch-program-as-user-from-uac.html
+// uses $WINDIR\explorer.exe to launch cmd
+// Another primising approach is documented at:
+// http://brandonlive.com/2008/04/27/getting-the-shell-to-run-an-application-for-you-part-2-how/
+// Approaches tried but didn't work:
+// - http://stackoverflow.com/questions/3298611/run-my-program-asuser
+// - using CreateProcessAsUser() with hand-crafted token
+// It'll always run the process, might fail to run non-elevated if fails to find explorer.exe
+// Also, if explorer.exe is running elevated, it'll probably run elevated as well.
+void RunNonElevated(WCHAR *cmd)
 {
-    CreateProcessWithTokenWProc *_CreateProcessWithTokenW;
-    PROCESS_INFORMATION pi = { 0 };
-    STARTUPINFOW si = { 0 };
-    HANDLE hProcessToken = 0;
-    HANDLE hShellProcess = 0;
-    HANDLE hShellProcessToken = 0;
-    HANDLE hPrimaryToken = 0;
-    DWORD retLength, pid;
-    TOKEN_PRIVILEGES tkp = { 0 };
-    bool ret = false;
+    HANDLE h;
+    WCHAR buf[MAX_PATH+1] = { 0 };
+    ScopedMem<WCHAR> cmd2;
+    ScopedMem<WCHAR> explorerPath;
+    DWORD res = GetEnvironmentVariable(L"WINDIR", buf, dimof(buf));
+    WCHAR *toRun = cmd;
 
-    _CreateProcessWithTokenW = (CreateProcessWithTokenWProc*)LoadDllFunc(L"Advapi32.lib", "CreateProcessWithTokenW");
-    if (!_CreateProcessWithTokenW)
-        return false;
-
-    // Enable SeIncreaseQuotaPrivilege in this process (won't work if current process is not elevated)
-    BOOL ok = OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hProcessToken);
-    if (!ok) {
-        lf("RunAsUser(): OpenProcessToken() failed");
-        goto Error;
-    }
-
-    tkp.PrivilegeCount = 1;
-    ok = LookupPrivilegeValue(NULL, SE_INCREASE_QUOTA_NAME, &tkp.Privileges[0].Luid);
-    if (!ok) {
-        lf("RunAsUser(): LookupPrivilegeValue() failed");
-        goto Error;
-    }
-   
-    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    ok = AdjustTokenPrivileges(hProcessToken, FALSE, &tkp, 0, NULL, &retLength);
-    if (!ok || (ERROR_SUCCESS != GetLastError())) {
-        lf("RunAsUser(): AdjustTokenPrivileges() failed");
-        goto Error;
-    }
-
-    // Get an HWND representing the desktop shell.
-    // Note: this will fail if the shell is not running (crashed or terminated),
-    // or the default shell has been replaced with a custom shell. This also won't
-    // return what you probably want if Explorer has been terminated and
-    // restarted elevated.b
-    HWND hwnd = GetShellWindow();
-    if (NULL == hwnd) {
-        lf("RunAsUser(): GetShellWindow() failed");
-        goto Error;
-    }
-
-    // Get the PID of the desktop shell process.
-    GetWindowThreadProcessId(hwnd, &pid);
-    if (0 == pid) {
-        lf("RunAsUser(): GetWindowThreadProcessId() failed");
-        goto Error;
-    }
-
-    // Open the desktop shell process in order to query it (get its token)
-    hShellProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
-    if (0 == hShellProcess) {
-        lf("RunAsUser(): OpenProcess() failed");
-        goto Error;
-    }
-
-    // Get the process token of the desktop shell.
-    ok = OpenProcessToken(hShellProcess, TOKEN_DUPLICATE, &hShellProcessToken);
-    if (!ok) {
-        lf("RunAsUser(): OpenProcessToken() failed");
-        goto Error;
-    }
-
-    // Duplicate the shell's process token to get a primary token.
-    // Based on experimentation, this is the minimal set of rights required 
-    // for CreateProcessWithTokenW (contrary to current documentation).
-    //DWORD tokenRights = TOKEN_QUERY || TOKEN_ASSIGN_PRIMARY || TOKEN_DUPLICATE || TOKEN_ADJUST_DEFAULT || TOKEN_ADJUST_SESSIONID || TOKEN_IMPERSONATE;
-    // TODO: tokenRights could probably be trimmed but the one above is not enough
-    DWORD tokenRights = TOKEN_ALL_ACCESS;
-    ok = DuplicateTokenEx(hShellProcessToken, tokenRights, NULL, SecurityImpersonation, TokenPrimary, &hPrimaryToken);
-    if (!ok) {
-        lf("RunAsUser(): DuplicateTokenEx() failed");
-        goto Error;
-    }
-
-    si.cb = sizeof(si);
-    si.wShowWindow = SW_SHOWNORMAL;
-    si.dwFlags = STARTF_USESHOWWINDOW;
-
-    ok = _CreateProcessWithTokenW(hPrimaryToken, 0, NULL, cmd, 0, NULL, NULL, &si, &pi);
-    if (!ok) {
-        lf("RunAsUser(): CreateProcessWithTokenW() failed");
-        goto Error;
-    }
-
-    ret = true;
-Exit:
-    CloseHandle(hProcessToken);
-    CloseHandle(pi.hProcess);
-    SafeCloseHandle(hShellProcessToken);
-    SafeCloseHandle(hPrimaryToken);
-    SafeCloseHandle(hShellProcess);
-    return ret;
-Error:
-    LogLastError();
-    goto Exit;
+    if (0 == res || res > dimof(buf))
+        goto Run;
+    explorerPath.Set(path::Join(buf, L"explorer.exe"));
+    if (!file::Exists(explorerPath))
+        goto Run;
+    cmd2.Set(str::Format(L"\"%s\" \"%s\"", explorerPath.Get(), cmd));
+    toRun = cmd2;
+Run:
+    h = LaunchProcess(toRun);
+    SafeCloseHandle(h);
 }
 
 // Note: MS_ENH_RSA_AES_PROV_XP isn't defined in the SDK shipping with VS2008
