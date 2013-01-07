@@ -1031,24 +1031,19 @@ BOOL SafeDestroyWindow(HWND *hwnd)
 // - using CreateProcessAsUser() with hand-crafted token
 // It'll always run the process, might fail to run non-elevated if fails to find explorer.exe
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
-void RunNonElevated(WCHAR *cmd)
+void RunNonElevated(const WCHAR *exePath)
 {
-    HANDLE h;
-    WCHAR buf[MAX_PATH+1] = { 0 };
-    ScopedMem<WCHAR> cmd2;
-    ScopedMem<WCHAR> explorerPath;
-    DWORD res = GetEnvironmentVariable(L"WINDIR", buf, dimof(buf));
-    WCHAR *toRun = cmd;
-
-    if (0 == res || res > dimof(buf))
+    ScopedMem<WCHAR> cmd, explorerPath;
+    WCHAR buf[MAX_PATH] = { 0 };
+    UINT res = GetWindowsDirectory(buf, dimof(buf));
+    if (0 == res || res >= dimof(buf))
         goto Run;
     explorerPath.Set(path::Join(buf, L"explorer.exe"));
     if (!file::Exists(explorerPath))
         goto Run;
-    cmd2.Set(str::Format(L"\"%s\" \"%s\"", explorerPath.Get(), cmd));
-    toRun = cmd2;
+    cmd.Set(str::Format(L"\"%s\" \"%s\"", explorerPath.Get(), exePath));
 Run:
-    h = LaunchProcess(toRun);
+    HANDLE h = LaunchProcess(cmd ? cmd : exePath);
     SafeCloseHandle(h);
 }
 

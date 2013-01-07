@@ -2322,6 +2322,7 @@ pdf_file_update_start_fd(fz_context *ctx, int fd, int max_xref_size)
 	list->max_num = max_xref_size - 1;
 	list->offset = (int *)(list + 1);
 	list->gen = list->offset + max_xref_size;
+	list->gen[0] = 65535;
 	fprintf(list->file, "\n");
 	return list;
 }
