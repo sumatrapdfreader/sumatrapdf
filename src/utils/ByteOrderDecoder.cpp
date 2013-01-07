@@ -25,18 +25,10 @@ uint32 UInt32LE(const uint8* d)
 }
 
 ByteOrderDecoder::ByteOrderDecoder(const char *d, size_t len, ByteOrder order)
-    : left(len), byteOrder(order)
-{
-    data = (const uint8*)d;
-    curr = data;
-}
+    : data((const uint8 *)d), left(len), byteOrder(order), curr(data) { }
 
 ByteOrderDecoder::ByteOrderDecoder(const uint8 *d, size_t len, ByteOrder order)
-    : left(len), byteOrder(order)
-{
-    data = d;
-    curr = data;
-}
+    : data(d), left(len), byteOrder(order), curr(data) { }
 
 uint16 ByteOrderDecoder::UInt16()
 {
@@ -81,3 +73,9 @@ void ByteOrderDecoder::Skip(size_t len)
     curr += len;
 }
 
+void ByteOrderDecoder::Unskip(size_t len)
+{
+    CrashIf(curr < data + len);
+    left += len;
+    curr -= len;
+}

@@ -58,21 +58,6 @@ static void DecodePalmDocHeader(const char *buf, PalmDocHeader* hdr)
     CrashIf(kPalmDocHeaderLen != d.Offset());
 }
 
-enum MobiDocType {
-    TypeMobiDoc = 2,
-    TypePalmDoc = 3,
-    TypeAudio = 4,
-    TypeNews = 257,
-    TypeNewsFeed = 258,
-    TypeNewsMagazin = 259,
-    TypePics = 513,
-    TypeWord = 514,
-    TypeXls = 515,
-    TypePpt = 516,
-    TypeText = 517,
-    TyepHtml = 518
-};
-
 // http://wiki.mobileread.com/wiki/MOBI#MOBI_Header
 // Note: the real length of MobiHeader is in MobiHeader.hdrLen. This is just
 // the size of the struct
@@ -82,7 +67,7 @@ enum MobiDocType {
 struct MobiHeader {
     char         id[4];
     uint32       hdrLen;   // including 4 id bytes
-    uint32       type;     // MobiDocType
+    uint32       type;
     uint32       textEncoding;
     uint32       uniqueId;
     uint32       mobiFormatVersion;
@@ -474,7 +459,7 @@ static bool IsValidCompression(int comprType)
 MobiDoc::MobiDoc(const WCHAR *filePath) :
     fileName(str::Dup(filePath)), pdbReader(NULL),
     docType(Pdb_Unknown), docRecCount(0), compressionType(0), docUncompressedSize(0),
-    doc(NULL), multibyte(false), trailersCount(0), imageFirstRec(0),
+    doc(NULL), multibyte(false), trailersCount(0), imageFirstRec(0), coverImageRec(0),
     imagesCount(0), images(NULL), huffDic(NULL), textEncoding(CP_UTF8)
 {
 }
@@ -529,9 +514,8 @@ bool MobiDoc::ParseHeader()
     docUncompressedSize = palmDocHdr.uncompressedDocSize;
 
     if (kPalmDocHeaderLen == recSize) {
-        CrashIf(Pdb_Mobipocket == docType);
         // TODO: calculate imageFirstRec / imagesCount
-        return true;
+        return Pdb_Mobipocket != docType;
     }
     if (kPalmDocHeaderLen + kMobiHeaderMinLen > recSize) {
         lf("not enough data for decoding MobiHeader");
@@ -620,6 +604,8 @@ bool MobiDoc::DecodeExthHeader(const char *data, size_t dataLen)
         return false;
 
     for (uint32 i = 0; i < count; i++) {
+        if (d.Offset() > dataLen - 8)
+            return false;
         uint32 type = d.UInt32();
         uint32 length = d.UInt32();
         if (length < 8 || length > dataLen - d.Offset() + 8)
@@ -633,6 +619,12 @@ bool MobiDoc::DecodeExthHeader(const char *data, size_t dataLen)
         case 106: prop.prop = Prop_CreationDate; break;
         case 108: prop.prop = Prop_CreatorApp; break;
         case 109: prop.prop = Prop_Copyright; break;
+        case 201:
+            if (length == 12 && imageFirstRec) {
+                d.Unskip(4);
+                coverImageRec = imageFirstRec + d.UInt32();
+            }
+            continue;
         case 503: prop.prop = Prop_Title; break;
         default:  continue;
         }
@@ -727,27 +719,14 @@ ImageData *MobiDoc::GetImage(size_t imgRecIndex) const
     return &images[imgRecIndex];
 }
 
-// first two images seem to be the same picture of the cover
-// except at different resolutions
 ImageData *MobiDoc::GetCoverImage()
 {
-    size_t coverImage = 0;
-    Size size;
-    size_t maxImageNo = min(imagesCount, 2);
-    for (size_t i = 0; i < maxImageNo; i++) {
-        if (!images[i].data)
-            continue;
-        Size s = BitmapSizeFromData(images[i].data, images[i].len);
-        int32 prevSize = size.Width * size.Height;
-        int32 currSize = s.Width * s.Height;
-        if (currSize > prevSize) {
-            coverImage = i;
-            size = s;
-        }
-    }
-    if (size.Empty())
+    if (!coverImageRec || coverImageRec < imageFirstRec)
         return NULL;
-    return &images[coverImage];
+    size_t imageNo = coverImageRec - imageFirstRec;
+    if (imageNo >= imagesCount || !images[imageNo].data)
+        return NULL;
+    return &images[imageNo];
 }
 
 // each record can have extra data at the end, which we must discard
