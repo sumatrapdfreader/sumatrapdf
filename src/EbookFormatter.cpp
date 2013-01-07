@@ -42,7 +42,7 @@ HtmlFormatter *CreateFormatter(Doc doc, HtmlFormatterArgs* args)
 /* Mobi-specific formatting methods */
 
 MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc *doc) :
-    HtmlFormatter(args), doc(doc), coverImage(NULL)
+    HtmlFormatter(args), doc(doc)
 {
     bool fromBeginning = (0 == args->reparseIdx);
     if (!doc || !fromBeginning)
@@ -52,18 +52,11 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc *doc) :
     if (!img)
         return;
 
-    // this is a heuristic that tries to filter images that are not
-    // cover images, like in http://www.sethgodin.com/sg/docs/StopStealingDreams-SethGodin.mobi
-    // TODO: a better way would be to only add the image if one isn't
-    // present at the beginning of html
-    Size size = BitmapSizeFromData(img->data, img->len);
-    if ((size.Width < 320) || (size.Height < 200))
-        return;
-
-    coverImage = img;
     // TODO: vertically center the cover image?
-    EmitImage(coverImage);
-    ForceNewPage();
+    EmitImage(img);
+    // only add a new page if the image isn't broken
+    if (currLineInstr.Count() > 0)
+        ForceNewPage();
 }
 
 // parses size in the form "1em" or "3pt". To interpret ems we need emInPoints
@@ -127,11 +120,6 @@ void MobiFormatter::HandleTagImg(HtmlToken *t)
         return;
     ImageData *img = doc->GetImage(n);
     if (!img)
-        return;
-
-    // if the image we're adding early on is the same as cover
-    // image, then skip it. 5 is a heuristic
-    if ((img == coverImage) && (pageCount < 5))
         return;
 
     EmitImage(img);
