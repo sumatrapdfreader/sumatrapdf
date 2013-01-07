@@ -2187,11 +2187,15 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         OnSelectionStop(&win, x, y, !didDragMouse);
 
     PointD ptPage = win.dm->CvtFromScreen(PointI(x, y));
+    // TODO: win.linkHandler->GotoLink might spin the event loop
+    PageElement *activeLink = win.linkOnLastButtonDown;
+    win.linkOnLastButtonDown = NULL;
+    win.mouseAction = MA_IDLE;
 
     if (didDragMouse)
         /* pass */;
-    else if (win.linkOnLastButtonDown && win.linkOnLastButtonDown->GetRect().Contains(ptPage)) {
-        win.linkHandler->GotoLink(win.linkOnLastButtonDown->AsLink());
+    else if (activeLink && activeLink->GetRect().Contains(ptPage)) {
+        win.linkHandler->GotoLink(activeLink->AsLink());
         SetCursor(gCursorArrow);
     }
     /* if we had a selection and this was just a click, hide the selection */
@@ -2208,9 +2212,7 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     else if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation)
         win.ChangePresentationMode(PM_ENABLED);
 
-    win.mouseAction = MA_IDLE;
-    delete win.linkOnLastButtonDown;
-    win.linkOnLastButtonDown = NULL;
+    delete activeLink;
 }
 
 static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
@@ -2320,6 +2322,8 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);
     OnDraggingStop(win, x, y, !didDragMouse);
 
+    win.mouseAction = MA_IDLE;
+
     if (didDragMouse)
         /* pass */;
     else if (win.fullScreen || PM_ENABLED == win.presentation) {
@@ -2335,8 +2339,6 @@ static void OnMouseRightButtonUp(WindowInfo& win, int x, int y, WPARAM key)
         win.ChangePresentationMode(PM_ENABLED);
     else
         OnContextMenu(&win, x, y);
-
-    win.mouseAction = MA_IDLE;
 }
 
 static void OnMouseRightButtonDblClick(WindowInfo& win, int x, int y, WPARAM key)
