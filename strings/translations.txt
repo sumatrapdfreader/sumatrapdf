@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-da03c04172be411d7123a3c7202446fdbf2d6b4d
+b5d719f7a4a545b4d94fbed9ab30da7af81b71ce
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4747,7 +4747,7 @@ tl:Tuloy-tuloy
 tr:Devamlı
 tw:連續頁面
 uk:Протяжний
-uz:To'xtovsiz
+uz:Uzluksiz
 vn:Liên tiếp
 :Continuous Book View
 am:Շարունակել գրքի տեսքով
@@ -4807,7 +4807,7 @@ tl:Tuluy-tuloy na tinging pang-aklat
 tr:Devamlı Kitap Gibi Görünüm
 tw:連續書本模式
 uk:Книжковий безперервний
-uz:To'xtovsiz kitob ko'rinishi
+uz:Uzluksiz kitob ko'rinishi
 vn:Xem sách liên tiếp
 :Continuous Facing
 af:Vertoon Aanmekaar
@@ -4875,7 +4875,7 @@ tl:Tuloy-tuloy na Magkaharap
 tr:Devamlı çift sayfa
 tw:連續雙頁模式
 uk:Дві протяжні сторінки
-uz:To'xtovsiz ikkita betdan
+uz:Uzluksiz ikkita betdan
 vn:Trang kép liên tiếp
 :Contribute Translation
 af:Dra By Tot Ñ Vertaling.
@@ -7718,7 +7718,7 @@ tl:Pagkasyahin ang lapad at ipakita nang tuluy-tuloy ang mga pahina
 tr:Genişliğe ölçekle ve sayfaları devamlı göster
 tw:合適寬度且連續顯示頁面
 uk:Розмістити по ширині на безперервній сторінці
-uz:Eniga moslash va to'xtovsiz
+uz:Eniga moslash va uzluksiz
 vn:Vừa chiều rộng và Xem trang liên tiếp
 :Fit a Single Page
 am:Ձգել մեկ էջի չափով
@@ -10886,6 +10886,7 @@ pt:Impressão em curso.
 ru:Идёт печать.
 sq:Printimi vijon.
 sv:Utskrift pågår.
+ta:அச்சு பணியில் உள்ளது
 tr:Baskı devam ediyor.
 tw:正在列印
 uk:Триває друк.
@@ -10911,6 +10912,7 @@ pt:Impressão ainda em curso. Abortar e sair?
 ru:Печать продолжается. Отменить и выйти?
 sq:Printimi vijon. Do e ndërprisni dhe e pezulloni?
 sv:Utskrift pågår fortfarande. Avbryt och avsluta?
+ta:அச்சடித்தல் செயலில் உள்ளது. நிறுத்தி ரத்து செய்?
 tw:正在列印，要中止並放棄嗎？
 uk:Друк ще не завершено. Перервати та вийти?
 uz:Bosib chiqarilmoqda. Bekor qilib chiqilsinmi?
@@ -12142,7 +12144,7 @@ tl:Ipakita nang tuloy-tuloy ang mga &pahina
 tr:&Sayfaları devamlı göster
 tw:連續顯示頁面(&P)
 uk:Відображати сторінки безперервно
-uz:&Betlarni to'xtovsiz ko'rsatish
+uz:&Betlarni uzluksiz ko'rsatish
 vn:Xem trang liên tiếp
 :Show Favorites
 am:Ցուցադրել ընտրյալները
@@ -13502,7 +13504,7 @@ sp-rs:Uvećaj
 sq:Përshtat
 sr-rs:Увећај
 sv:Zoom
-ta:பெரிதக்கு
+ta:உரு அளவு
 tl:Laki
 tr:Yakınlaştırma
 tw:縮放
@@ -13692,7 +13694,7 @@ sp-rs:Procenat uvećanja
 sq:Koeficienti i zmadhimit
 sr-rs:Проценат увећања
 sv:Zoomfaktor
-ta:பெரிதக்கக்காரணி
+ta:உருக்காரணி
 tl:Antas ng laki
 tr:Yakınlaştırma faktörü
 tw:縮放比例
