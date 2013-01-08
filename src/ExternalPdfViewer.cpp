@@ -206,8 +206,8 @@ bool CanViewWithXPSViewer(WindowInfo *win)
     // allow viewing with XPS-Viewer, if either an XPS document is loaded...
     if (win->IsDocLoaded() && win->dm->engineType != Engine_XPS)
         return false;
-    // or a file ending in .xps has failed to be loaded
-    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".xps"))
+    // or a file ending in .xps or .oxps has failed to be loaded
+    if (!win->IsDocLoaded() && !str::EndsWithI(win->loadedFilePath, L".xps") && !str::EndsWithI(win->loadedFilePath, L".oxps"))
         return false;
     ScopedMem<WCHAR> path(GetXPSViewerPath());
     return path != NULL;

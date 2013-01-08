@@ -5,6 +5,7 @@ Next version:
 
 2.3 (2013-??-??)
 
+* add support for OpenXPS documents
 * "Go To Page" for ebook format
 
 2.2 (2012-12-24)

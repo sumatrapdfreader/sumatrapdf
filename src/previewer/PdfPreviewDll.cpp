@@ -165,11 +165,17 @@ STDAPI DllRegisterServer()
         // IThumbnailProvider
         { L"Software\\Classes\\.xps\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
                 NULL,                   SZ_XPS_PREVIEW_CLSID },
+        { L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
+                NULL,                   SZ_XPS_PREVIEW_CLSID },
         // IExtractImage (for Windows XP)
         { L"Software\\Classes\\.xps\\shellex\\" CLSID_I_EXTRACT_IMAGE,
                 NULL,                   SZ_XPS_PREVIEW_CLSID },
+        { L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_EXTRACT_IMAGE,
+                NULL,                   SZ_XPS_PREVIEW_CLSID },
         // IPreviewHandler
         { L"Software\\Classes\\.xps\\shellex\\" CLSID_I_PREVIEW_HANDLER,
+                NULL,                   SZ_XPS_PREVIEW_CLSID },
+        { L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_PREVIEW_HANDLER,
                 NULL,                   SZ_XPS_PREVIEW_CLSID },
         { L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers",
                 SZ_XPS_PREVIEW_CLSID,   L"SumatraPDF XPS Preview Handler" },
@@ -246,6 +252,9 @@ STDAPI DllUnregisterServer()
         L"Software\\Classes\\.xps\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
         L"Software\\Classes\\.xps\\shellex\\" CLSID_I_EXTRACT_IMAGE,
         L"Software\\Classes\\.xps\\shellex\\" CLSID_I_PREVIEW_HANDLER,
+        L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER,
+        L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_EXTRACT_IMAGE,
+        L"Software\\Classes\\.oxps\\shellex\\" CLSID_I_PREVIEW_HANDLER,
 #endif
 #ifdef BUILD_CBZ_PREVIEW
         L"Software\\Classes\\CLSID\\" SZ_CBZ_PREVIEW_CLSID,

@@ -2912,7 +2912,7 @@ void OnMenuOpen(SumatraWindow& win)
         bool available;
     } fileFormats[] = {
         { _TR("PDF documents"),         L"*.pdf",        true },
-        { _TR("XPS documents"),         L"*.xps",        true },
+        { _TR("XPS documents"),         L"*.xps;*.oxps", true },
         { _TR("DjVu documents"),        L"*.djvu",       true },
         { _TR("Postscript documents"),  L"*.ps;*.eps",   PsEngine::IsAvailable() },
         { _TR("Comic books"),           L"*.cbz;*.cbr",  true },
