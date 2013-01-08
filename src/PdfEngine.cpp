@@ -4087,7 +4087,7 @@ bool XpsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
                zip.GetFileIndex(L"_rels/.rels/[0].last.piece") != (size_t)-1;
     }
 
-    return str::EndsWithI(fileName, L".xps");
+    return str::EndsWithI(fileName, L".xps") || str::EndsWithI(fileName, L".oxps");
 }
 
 XpsEngine *XpsEngine::CreateFromFile(const WCHAR *fileName)
