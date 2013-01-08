@@ -660,7 +660,7 @@ opj_bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color)
         return OPJ_FALSE;
         }
 	  /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-	  if (box.length <= 8) return OPJ_FALSE;
+	  if (box.length < 8) return OPJ_FALSE;
       cio_skip(cio, box.length - 8);
 
       if(cio->bp >= cio->end) return OPJ_FALSE;
@@ -687,7 +687,7 @@ opj_bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color)
       if( !jp2_read_colr(jp2, cio, &box, color))
         {
         /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-        if (box.length <= 8) return OPJ_FALSE;
+        if (box.length < 8) return OPJ_FALSE;
         cio_seek(cio, box.init_pos + 8);
         cio_skip(cio, box.length - 8);
         }
@@ -699,7 +699,7 @@ opj_bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color)
       if( !jp2_read_cdef(jp2, cio, &box, color))
         {
         /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-        if (box.length <= 8) return OPJ_FALSE;
+        if (box.length < 8) return OPJ_FALSE;
         cio_seek(cio, box.init_pos + 8);
         cio_skip(cio, box.length - 8);
         }
@@ -711,7 +711,7 @@ opj_bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color)
       if( !jp2_read_pclr(jp2, cio, &box, color))
         {
         /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-        if (box.length <= 8) return OPJ_FALSE;
+        if (box.length < 8) return OPJ_FALSE;
         cio_seek(cio, box.init_pos + 8);
         cio_skip(cio, box.length - 8);
         }
@@ -723,7 +723,7 @@ opj_bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color)
       if( !jp2_read_cmap(jp2, cio, &box, color))
         {
         /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-        if (box.length <= 8) return OPJ_FALSE;
+        if (box.length < 8) return OPJ_FALSE;
         cio_seek(cio, box.init_pos + 8);
         cio_skip(cio, box.length - 8);
         }
@@ -731,7 +731,7 @@ opj_bool jp2_read_jp2h(opj_jp2_t *jp2, opj_cio_t *cio, opj_jp2_color_t *color)
       continue;
       }
     /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-    if (box.length <= 8) return OPJ_FALSE;
+    if (box.length < 8) return OPJ_FALSE;
     cio_seek(cio, box.init_pos + 8);
     cio_skip(cio, box.length - 8);
     if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
@@ -928,7 +928,7 @@ static opj_bool jp2_read_jp2c(opj_jp2_t *jp2, opj_cio_t *cio, unsigned int *j2k_
 	do {
 		if(JP2_JP2C != box.type) {
 			/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-			if (box.length <= 8) return OPJ_FALSE;
+			if (box.length < 8) return OPJ_FALSE;
 			cio_skip(cio, box.length - 8);
 			if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
 		}
@@ -936,7 +936,7 @@ static opj_bool jp2_read_jp2c(opj_jp2_t *jp2, opj_cio_t *cio, unsigned int *j2k_
 
 	*j2k_codestream_offset = cio_tell(cio);
 	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-	if (box.length <= 8) return OPJ_FALSE;
+	if (box.length < 8) return OPJ_FALSE;
 	*j2k_codestream_length = box.length - 8;
 
 	return OPJ_TRUE;

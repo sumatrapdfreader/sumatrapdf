@@ -233,7 +233,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  					tcp_poc->layno1		= parameters->POC[numpocs_tile].layno1;
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Thu Sep 13 08:58:39 2012
-+++ openjpeg\jp2.c	Thu Sep 20 19:35:01 2012
++++ openjpeg\jp2.c	Tue Jan 08 22:35:14 2013
 @@ -171,10 +171,15 @@
  			box->length = cio_numbytesleft(cio) + 12;
  	}
@@ -257,7 +257,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
          return OPJ_FALSE;
          }
 +	  /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+	  if (box.length <= 8) return OPJ_FALSE;
++	  if (box.length < 8) return OPJ_FALSE;
        cio_skip(cio, box.length - 8);
  
        if(cio->bp >= cio->end) return OPJ_FALSE;
@@ -270,7 +270,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
        if( !jp2_read_colr(jp2, cio, &box, color))
          {
 +        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+        if (box.length <= 8) return OPJ_FALSE;
++        if (box.length < 8) return OPJ_FALSE;
          cio_seek(cio, box.init_pos + 8);
          cio_skip(cio, box.length - 8);
          }
@@ -282,7 +282,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
        if( !jp2_read_cdef(jp2, cio, &box, color))
          {
 +        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+        if (box.length <= 8) return OPJ_FALSE;
++        if (box.length < 8) return OPJ_FALSE;
          cio_seek(cio, box.init_pos + 8);
          cio_skip(cio, box.length - 8);
          }
@@ -294,7 +294,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
        if( !jp2_read_pclr(jp2, cio, &box, color))
          {
 +        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+        if (box.length <= 8) return OPJ_FALSE;
++        if (box.length < 8) return OPJ_FALSE;
          cio_seek(cio, box.init_pos + 8);
          cio_skip(cio, box.length - 8);
          }
@@ -306,7 +306,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
        if( !jp2_read_cmap(jp2, cio, &box, color))
          {
 +        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+        if (box.length <= 8) return OPJ_FALSE;
++        if (box.length < 8) return OPJ_FALSE;
          cio_seek(cio, box.init_pos + 8);
          cio_skip(cio, box.length - 8);
          }
@@ -314,7 +314,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
        continue;
        }
 +    /* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+    if (box.length <= 8) return OPJ_FALSE;
++    if (box.length < 8) return OPJ_FALSE;
      cio_seek(cio, box.init_pos + 8);
      cio_skip(cio, box.length - 8);
      if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
@@ -327,7 +327,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  	do {
  		if(JP2_JP2C != box.type) {
 +			/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+			if (box.length <= 8) return OPJ_FALSE;
++			if (box.length < 8) return OPJ_FALSE;
  			cio_skip(cio, box.length - 8);
  			if( jp2_read_boxhdr(cinfo, cio, &box) == OPJ_FALSE ) return OPJ_FALSE;
  		}
@@ -335,7 +335,7 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  
  	*j2k_codestream_offset = cio_tell(cio);
 +	/* cf. http://code.google.com/p/openjpeg/issues/detail?id=155 */
-+	if (box.length <= 8) return OPJ_FALSE;
++	if (box.length < 8) return OPJ_FALSE;
  	*j2k_codestream_length = box.length - 8;
  
  	return OPJ_TRUE;
