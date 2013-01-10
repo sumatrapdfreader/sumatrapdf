@@ -43,7 +43,8 @@ void FileWatcher::SynchronousAbort()
         LogLastError();
 
     DWORD numBytesTransferred;
-    ok = GetOverlappedResult(hDir, &overl, &numBytesTransferred, TRUE);
+    // TODO: do I need this at all?
+    ok = GetOverlappedResult(hDir, &overl, &numBytesTransferred, FALSE);
     if (!ok) {
         DWORD err = GetLastError();
         if (ERROR_OPERATION_ABORTED != err)
