@@ -50,6 +50,12 @@ inline T *AllocArray(size_t n)
     return (T*)calloc(n, sizeof(T));
 }
 
+template <typename T>
+inline T *AllocStruct()
+{
+    return (T*)calloc(1, sizeof(T));
+}
+
 #define dimof(X)    (sizeof(X)/sizeof((X)[0]))
 #define NoOp()      ((void)0)
 
