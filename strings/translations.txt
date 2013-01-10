@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b5d719f7a4a545b4d94fbed9ab30da7af81b71ce
+69652ec73d6857f642e7d45b7ccbc0446f31a166
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6790,6 +6790,7 @@ no:FictionBook-dokumenter
 pl:Dokumenty FictionBook
 pt:Livros de ficção
 ru:Документы FictionBook
+sl:FictionBook dokumenti
 sp-rs:FictionBook dokumenti
 sq:Dokumente FictionBook
 sr-rs:FictionBook докуменат
@@ -10069,7 +10070,7 @@ ro:Documente PDF
 ru:Документы PDF
 si:PDF ගොනුව
 sk:PDF dokumenty
-sl:Dokumenti PDF
+sl:PDF dokumenti
 sp-rs:PDF dokumenti
 sq:Dokumente PDF
 sr-rs:PDF документи
@@ -10532,7 +10533,7 @@ pt:Documentos Postscript
 ro:Documente Postscript
 ru:Документы Postscript
 sk:Postscript dokumenty
-sl:Postscript dokument
+sl:Postscript dokumenti
 sp-rs:Postscript dokumenti
 sq:Dokumente Postscript
 sr-rs:Postscript документи
@@ -10872,6 +10873,7 @@ bg:Печатане...
 br:Imprimindo...
 cn:正在打印
 de:Drucken - SumatraPDF
+dk:Udskrift igang
 el:Εκτύπωση σε εξέλιξη
 es:Impresión en progreso.
 fr:Impression en cours
@@ -10884,6 +10886,7 @@ kr:프린트중입니다.
 nl:Aan het printen.
 pt:Impressão em curso.
 ru:Идёт печать.
+sl:Tiskanje v teku.
 sq:Printimi vijon.
 sv:Utskrift pågår.
 ta:அச்சு பணியில் உள்ளது
@@ -10898,6 +10901,7 @@ bg:Печатането все още е на ход. Сигурни ли сте
 br:Ainda imprimindo... Interromper e sair?
 cn:仍然在打印。中断并放弃？
 de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
+dk:Udskrift er stadig igang. Afbryd?
 el:Η εκτύπωση είναι ακόμα σε εξέλιξη. Ακύρωση και Έξοδος;
 es:Impresión aún en progreso. ¿Cancelar y salir?
 fr:Impression toujours en cours. Annuler et quitter ?
@@ -10910,6 +10914,7 @@ kr:프린트중입니다. 취소후 종료하시겠습니까?
 nl:Nog steeds aan het printen. Annuleren en stoppen?
 pt:Impressão ainda em curso. Abortar e sair?
 ru:Печать продолжается. Отменить и выйти?
+sl:Tiskanje je še vedno v teku. Prekinem in končam?
 sq:Printimi vijon. Do e ndërprisni dhe e pezulloni?
 sv:Utskrift pågår fortfarande. Avbryt och avsluta?
 ta:அச்சடித்தல் செயலில் உள்ளது. நிறுத்தி ரத்து செய்?
