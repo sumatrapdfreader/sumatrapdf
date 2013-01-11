@@ -1460,6 +1460,12 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     bool loaded = LoadDocIntoWindow(args, &pwdUI, NULL, isNewWindow, 
         true /* allowFailure */, true /* placeWindow */);
 
+    if (gPluginMode) {
+        // hide the menu for embedded documents opened from the plugin
+        SetMenu(win->hwndFrame, NULL);
+        return win;
+    }
+
     if (!loaded) {
         if (gFileHistory.MarkFileInexistent(fullPath))
             SavePrefs();
@@ -2491,7 +2497,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
 
     // when used as an embedded plugin, closing should happen automatically
     // when the parent window is destroyed (cf. WM_DESTROY)
-    if (gPluginMode && !forceClose)
+    if (gPluginMode && gWindows.Find(win) == 0 && !forceClose)
         return;
 
     if (win->printThread && !win->printCanceled) {
