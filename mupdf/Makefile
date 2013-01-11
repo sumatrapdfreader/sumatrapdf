@@ -209,11 +209,11 @@ incdir ?= $(prefix)/include
 mandir ?= $(prefix)/share/man
 
 install: $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUTOOL)
-	install -d $(bindir) $(libdir) $(incdir) $(mandir)/man1
-	install $(FITZ_LIB) $(libdir)
-	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h $(incdir)
-	install $(MUVIEW) $(MUDRAW) $(MUTOOL) $(bindir)
-	install $(wildcard apps/man/*.1) $(mandir)/man1
+	install -d $(DESTDIR)$(bindir) $(DESTDIR)$(libdir) $(DESTDIR)$(incdir) $(DESTDIR)$(mandir)/man1
+	install $(FITZ_LIB) $(DESTDIR)$(libdir)
+	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h $(DESTDIR)$(incdir)
+	install $(MUVIEW) $(MUDRAW) $(MUBUSY) $(DESTDIR)$(bindir)
+	install $(wildcard apps/man/*.1) $(DESTDIR)$(mandir)/man1
 
 # --- Clean and Default ---
 

@@ -19,7 +19,7 @@ typedef struct cbz_page_s cbz_page;
 
 	filename: a path to a file as it would be given to open(2).
 */
-cbz_document *cbz_open_document(fz_context *ctx, char *filename);
+cbz_document *cbz_open_document(fz_context *ctx, const char *filename);
 
 /*
 	cbz_open_document_with_stream: Opens a document.

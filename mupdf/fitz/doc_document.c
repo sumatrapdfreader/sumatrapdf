@@ -1,9 +1,9 @@
 #include "fitz-internal.h"
 
 /* Yuck! Promiscuous we are. */
-extern struct pdf_document *pdf_open_document(fz_context *ctx, char *filename);
-extern struct xps_document *xps_open_document(fz_context *ctx, char *filename);
-extern struct cbz_document *cbz_open_document(fz_context *ctx, char *filename);
+extern struct pdf_document *pdf_open_document(fz_context *ctx, const char *filename);
+extern struct xps_document *xps_open_document(fz_context *ctx, const char *filename);
+extern struct cbz_document *cbz_open_document(fz_context *ctx, const char *filename);
 
 extern struct pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_stream *file);
 extern struct xps_document *xps_open_document_with_stream(fz_context *ctx, fz_stream *file);
@@ -18,7 +18,7 @@ static inline int fz_tolower(int c)
 	return c;
 }
 
-static inline int fz_strcasecmp(char *a, char *b)
+static inline int fz_strcasecmp(const char *a, const char *b)
 {
 	while (fz_tolower(*a) == fz_tolower(*b))
 	{
@@ -30,7 +30,7 @@ static inline int fz_strcasecmp(char *a, char *b)
 }
 
 fz_document *
-fz_open_document_with_stream(fz_context *ctx, char *magic, fz_stream *stream)
+fz_open_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stream)
 {
 	char *ext = strrchr(magic, '.');
 
@@ -56,7 +56,7 @@ fz_open_document_with_stream(fz_context *ctx, char *magic, fz_stream *stream)
 }
 
 fz_document *
-fz_open_document(fz_context *ctx, char *filename)
+fz_open_document(fz_context *ctx, const char *filename)
 {
 	char *ext = strrchr(filename, '.');
 

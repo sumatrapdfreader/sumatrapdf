@@ -196,6 +196,7 @@ EXPORTS
 	fz_synchronize_begin
 	fz_synchronize_end
 	fz_atof
+	fz_atoi
 	fz_new_hash_table
 	fz_empty_hash
 	fz_free_hash

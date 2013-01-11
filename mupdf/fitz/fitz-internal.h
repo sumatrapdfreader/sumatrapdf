@@ -252,6 +252,9 @@ static inline float my_atan2f(float o, float a)
 /* Range checking atof */
 float fz_atof(const char *s);
 
+/* atoi that copes with NULL */
+int fz_atoi(const char *s);
+
 /*
  * Generic hash-table with fixed-length keys.
  */

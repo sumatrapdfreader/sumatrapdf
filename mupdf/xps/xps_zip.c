@@ -553,7 +553,7 @@ xps_has_part(xps_document *doc, char *partname)
 }
 
 static xps_document *
-xps_open_document_with_directory(fz_context *ctx, char *directory)
+xps_open_document_with_directory(fz_context *ctx, const char *directory)
 {
 	xps_document *doc;
 
@@ -600,7 +600,7 @@ xps_open_document_with_stream(fz_context *ctx, fz_stream *file)
 }
 
 xps_document *
-xps_open_document(fz_context *ctx, char *filename)
+xps_open_document(fz_context *ctx, const char *filename)
 {
 	char buf[2048];
 	fz_stream *file;

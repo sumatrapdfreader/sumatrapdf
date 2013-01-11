@@ -312,7 +312,7 @@ cbz_open_document_with_stream(fz_context *ctx, fz_stream *file)
 }
 
 cbz_document *
-cbz_open_document(fz_context *ctx, char *filename)
+cbz_open_document(fz_context *ctx, const char *filename)
 {
 	fz_stream *file;
 	cbz_document *doc;

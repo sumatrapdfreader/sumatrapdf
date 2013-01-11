@@ -88,7 +88,7 @@ pdf_read_old_trailer(pdf_document *xref, pdf_lexbuf *buf)
 		fz_strsep(&s, " "); /* ignore ofs */
 		if (!s)
 			fz_throw(xref->ctx, "invalid range marker in xref");
-		len = atoi(fz_strsep(&s, " "));
+		len = fz_atoi(fz_strsep(&s, " "));
 
 		/* broken pdfs where the section is not on a separate line */
 		if (s && *s != '\0')
@@ -211,8 +211,8 @@ pdf_read_old_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 		fz_read_line(xref->file, buf->scratch, buf->size);
 		s = buf->scratch;
-		ofs = atoi(fz_strsep(&s, " "));
-		len = atoi(fz_strsep(&s, " "));
+		ofs = fz_atoi(fz_strsep(&s, " "));
+		len = fz_atoi(fz_strsep(&s, " "));
 
 		/* broken pdfs where the section is not on a separate line */
 		if (s && *s != '\0')

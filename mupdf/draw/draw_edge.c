@@ -933,10 +933,12 @@ fz_scan_convert_sharp(fz_gel *gel, int eofill, fz_bbox clip,
 			y += height;
 		else
 		{
+			int h;
 			if (height >= clip.y1 - y)
 				height = clip.y1 - y;
 
-			while (height--)
+			h = height;
+			while (h--)
 			{
 				if (eofill)
 					even_odd_sharp(gel, y, clip, dst, color);

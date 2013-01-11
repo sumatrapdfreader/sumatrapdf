@@ -19,7 +19,7 @@ typedef struct xps_page_s xps_page;
 
 	filename: a path to a file as it would be given to open(2).
 */
-xps_document *xps_open_document(fz_context *ctx, char *filename);
+xps_document *xps_open_document(fz_context *ctx, const char *filename);
 
 /*
 	xps_open_document_with_stream: Opens a document.

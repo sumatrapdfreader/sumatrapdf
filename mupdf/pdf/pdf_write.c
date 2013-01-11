@@ -566,7 +566,7 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 		for (other = 1; other < num; other++)
 		{
 			pdf_obj *a, *b;
-			int differ, newnum;
+			int differ, newnum, streama, streamb;
 
 			if (num == other || !opts->use_list[num] || !opts->use_list[other])
 				continue;
@@ -579,7 +579,11 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 			 */
 			fz_try(ctx)
 			{
-				differ = (pdf_is_stream(xref, num, 0) || pdf_is_stream(xref, other, 0));
+				streama = pdf_is_stream(xref, num, 0);
+				streamb = pdf_is_stream(xref, other, 0);
+				differ = streama || streamb;
+				if (streama && streamb && opts->do_garbage >= 4)
+					differ = 0;
 			}
 			fz_catch(ctx)
 			{
@@ -597,6 +601,40 @@ static void removeduplicateobjs(pdf_document *xref, pdf_write_options *opts)
 
 			if (pdf_objcmp(a, b))
 				continue;
+
+			if (streama && streamb)
+			{
+				/* Check to see if streams match too. */
+				fz_buffer *sa = NULL;
+				fz_buffer *sb = NULL;
+
+				fz_var(sa);
+				fz_var(sb);
+
+				differ = 1;
+				fz_try(ctx)
+				{
+					unsigned char *dataa, *datab;
+					int lena, lenb;
+					sa = pdf_load_raw_renumbered_stream(xref, num, 0, num, 0);
+					sb = pdf_load_raw_renumbered_stream(xref, other, 0, other, 0);
+					lena = fz_buffer_storage(ctx, sa, &dataa);
+					lenb = fz_buffer_storage(ctx, sb, &datab);
+					if (lena == lenb && memcmp(dataa, datab, lena) == 0)
+						differ = 0;
+				}
+				fz_always(ctx)
+				{
+					fz_drop_buffer(ctx, sa);
+					fz_drop_buffer(ctx, sb);
+				}
+				fz_catch(ctx)
+				{
+					fz_rethrow(ctx);
+				}
+				if (differ)
+					continue;
+			}
 
 			/* Keep the lowest numbered object */
 			newnum = fz_mini(num, other);
