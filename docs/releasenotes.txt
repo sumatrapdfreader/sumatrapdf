@@ -1,4 +1,4 @@
-The idea is to record here changes that deserve mentioning in
+﻿The idea is to record here changes that deserve mentioning in
 the release notes, as we make them, to make the release process easier.
 
 Next version:
@@ -7,6 +7,10 @@ Next version:
 
 * add support for OpenXPS documents
 * "Go To Page" for ebook format
+
+2.2.1 (2013-??-??)
+
+* fix multiple crashes and regressions accidentally introduced with version 2.2
 
 2.2 (2012-12-24)
 
