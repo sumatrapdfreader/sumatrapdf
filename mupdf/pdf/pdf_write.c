@@ -2347,12 +2347,9 @@ struct pdf_file_update_list_s
 };
 
 static pdf_file_update_list *
-pdf_file_update_start_fd(fz_context *ctx, int fd, int max_xref_size)
+pdf_file_update_start_file(fz_context *ctx, FILE *file, int max_xref_size)
 {
 	pdf_file_update_list *list;
-	FILE *file = _fdopen(fd, "ab");
-	if (!file)
-		fz_throw(ctx, "couldn't open file descriptor");
 	// for convenience, the offset and gen arrays follow directly after the struct
 	list = fz_calloc(ctx, sizeof(pdf_file_update_list) / sizeof(int) + 2 * max_xref_size, sizeof(int));
 	list->ctx = ctx;
@@ -2368,20 +2365,20 @@ pdf_file_update_start_fd(fz_context *ctx, int fd, int max_xref_size)
 pdf_file_update_list *
 pdf_file_update_start(fz_context *ctx, const char *filepath, int max_xref_size)
 {
-	int fd = open(filepath, _O_WRONLY | O_APPEND | O_BINARY, 0);
-	if (fd == -1)
+	FILE *file = fopen(filepath, "ab");
+	if (!file)
 		fz_throw(ctx, "cannot open %s", filepath);
-	return pdf_file_update_start_fd(ctx, fd, max_xref_size);
+	return pdf_file_update_start_file(ctx, file, max_xref_size);
 }
 
 #ifdef _WIN32
 pdf_file_update_list *
 pdf_file_update_start_w(fz_context *ctx, const wchar_t *filepath, int max_xref_size)
 {
-	int fd = _wopen(filepath, _O_WRONLY | O_APPEND | O_BINARY, 0);
-	if (fd == -1)
+	FILE *file = _wfopen(filepath, L"ab");
+	if (!file)
 		fz_throw(ctx, "cannot open %Ls", filepath);
-	return pdf_file_update_start_fd(ctx, fd, max_xref_size);
+	return pdf_file_update_start_file(ctx, file, max_xref_size);
 }
 #endif
 
