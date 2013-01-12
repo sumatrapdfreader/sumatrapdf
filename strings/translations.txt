@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-69652ec73d6857f642e7d45b7ccbc0446f31a166
+0d94d2ef6bf1a15f65fc6b42411cfe3a989dd938
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1481,7 +1481,7 @@ vn:Không
 :&No, thanks
 am:&Ոչ, շնորհակալություն
 ar:&كلا ، شكراً
-az:&Xeyr, təşəkkür edirəm
+az:&Xeyr, təşəkkür!
 bg:&Не, благодаря
 br:&Não, obrigado
 bs:&Ne, hvala
@@ -13400,7 +13400,7 @@ vn:Bạn đang dùng phiên bản mới nhất.
 af:Jy Het Weergawe %s
 am:Դուք օգտագործում եք %s տարբերակը
 ar:لديك النسخة %s
-az:Siz %s versiyanı istifadə edirsiniz
+az:Siz proqramın %s versiyasını istifadə edirsiniz
 bg:Вашата версия е %s
 bn:আপনার সংস্করণটি হল %s
 br:Você tem a versão %s
