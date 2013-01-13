@@ -306,7 +306,7 @@ static ImgFormat GfxFormatFromData(const char *data, size_t len)
         return Img_TIFF;
     if (tga::HasSignature(data, len))
         return Img_TGA;
-    if (memeq(data, "\x49\x49\xBC\x01", 4) || memeq(data, "\x49\x49\xBC\x00", 4))
+    if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4))
         return Img_JXR;
     return Img_Unknown;
 }
@@ -420,21 +420,28 @@ Size BitmapSizeFromData(const char *data, size_t len)
         }
         break;
     case Img_JXR:
-        if (len >= 10 && r.DWordLE(4) == 8) {
-            WORD ifdLen = r.WordLE(8);
-            for (size_t i = 0; i < ifdLen && 10 + (i + 1) * 12 < len; i++) {
-                size_t idx = 10 + i * 12;
-                if (r.WordLE(idx + 0) == 0xBC80 && r.WordLE(idx + 2) == 4 && r.DWordLE(idx + 4) == 1)
-                    result.Width = r.DWordLE(idx + 8);
-                if (r.WordLE(idx + 0) == 0xBC80 && r.WordLE(idx + 2) == 3 && r.DWordLE(idx + 4) == 1)
-                    result.Width = r.WordLE(idx + 8);
-                if (r.WordLE(idx + 0) == 0xBC80 && r.WordLE(idx + 2) == 1 && r.DWordLE(idx + 4) == 1)
+    case Img_TIFF:
+        if (len >= 10) {
+            bool isBE = r.Byte(0) == 'M', isJXR = r.Byte(2) == 0xBC;
+            CrashIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
+            const WORD WIDTH = isJXR ? 0xBC80 : 0x0100, HEIGHT = isJXR ? 0xBC81 : 0x0101;
+            size_t idx = r.DWord(4, isBE);
+            WORD count = idx <= len - 2 ? r.Word(idx, isBE) : 0;
+            for (idx += 2; count > 0 && idx <= len - 12; count--, idx += 12) {
+                WORD tag = r.Word(idx, isBE), type = r.Word(idx + 2, isBE);
+                if (r.DWord(idx + 4, isBE) != 1)
+                    continue;
+                else if (WIDTH == tag && 4 == type)
+                    result.Width = r.DWord(idx + 8, isBE);
+                else if (WIDTH == tag && 3 == type)
+                    result.Width = r.Word(idx + 8, isBE);
+                else if (WIDTH == tag && 1 == type)
                     result.Width = r.Byte(idx + 8);
-                if (r.WordLE(idx + 0) == 0xBC81 && r.WordLE(idx + 2) == 4 && r.DWordLE(idx + 4) == 1)
-                    result.Height = r.DWordLE(idx + 8);
-                if (r.WordLE(idx + 0) == 0xBC81 && r.WordLE(idx + 2) == 3 && r.DWordLE(idx + 4) == 1)
-                    result.Height = r.WordLE(idx + 8);
-                if (r.WordLE(idx + 0) == 0xBC81 && r.WordLE(idx + 2) == 1 && r.DWordLE(idx + 4) == 1)
+                else if (HEIGHT == tag && 4 == type)
+                    result.Height = r.DWord(idx + 8, isBE);
+                else if (HEIGHT == tag && 3 == type)
+                    result.Height = r.Word(idx + 8, isBE);
+                else if (HEIGHT == tag && 1 == type)
                     result.Height = r.Byte(idx + 8);
             }
         }
@@ -451,14 +458,11 @@ Size BitmapSizeFromData(const char *data, size_t len)
             result.Height = r.WordLE(14);
         }
         break;
-    case Img_TIFF:
-        // TODO: speed this up (if necessary)
-        break;
     }
 
     if (result.Empty()) {
         // let GDI+ extract the image size if we've failed
-        // (currently happens for animated GIFs and for all TIFFs)
+        // (currently happens for animated GIFs)
         Bitmap *bmp = BitmapFromData(data, len);
         if (bmp)
             result = Size(bmp->GetWidth(), bmp->GetHeight());

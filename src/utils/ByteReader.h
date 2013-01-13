@@ -10,7 +10,7 @@ class ByteReader {
 
     // Unpacks a structure from the data according to the given format
     // e.g. the format "32b2w6d" unpacks 32 Bytes, 2 16-bit Words and 6 32-bit Dwords
-    bool Unpack(char *strct, size_t size, const char *format, bool LE, size_t off) {
+    bool Unpack(void *strct, size_t size, const char *format, size_t off, bool isBE) {
         int repeat = 0;
         size_t idx = 0;
         for (const char *c = format; *c; c++) {
@@ -22,19 +22,19 @@ class ByteReader {
             case 'b':
                 if (off + idx + 1 > len || idx + 1 > size)
                     return false;
-                *(uint8_t *)(strct + idx) = Byte(off + idx);
+                *(uint8_t *)((uint8_t *)strct + idx) = Byte(off + idx);
                 idx += 1;
                 break;
             case 'w':
                 if (off + idx + 2 > len || idx + 2 > size)
                     return false;
-                *(uint16_t *)(strct + idx) = LE ? WordLE(off + idx) : WordBE(off + idx);
+                *(uint16_t *)((uint8_t *)strct + idx) = Word(off + idx, isBE);
                 idx += 2;
                 break;
             case 'd':
                 if (off + idx + 4 > len || idx + 4 > size)
                     return false;
-                *(uint32_t *)(strct + idx) = LE ? DWordLE(off + idx) : DWordBE(off + idx);
+                *(uint32_t *)((uint8_t *)strct + idx) = DWord(off + idx, isBE);
                 idx += 4;
                 break;
             default:
@@ -70,6 +70,10 @@ public:
         return 0;
     }
 
+    uint16_t Word(size_t off, bool isBE) {
+        return isBE ? WordBE(off) : WordLE(off);
+    }
+
     uint32_t DWordLE(size_t off) {
         if (off + 4 <= len)
             return d[off] | (d[off + 1] << 8) | (d[off + 2] << 16) | (d[off + 3] << 24);
@@ -82,6 +86,10 @@ public:
         return 0;
     }
 
+    uint32_t DWord(size_t off, bool isBE) {
+        return isBE ? DWordBE(off) : DWordLE(off);
+    }
+
     const char *Find(size_t off, uint8_t byte) {
         if (off >= len)
             return NULL;
@@ -89,11 +97,15 @@ public:
     }
 
     bool UnpackLE(void *strct, size_t size, const char *format, size_t off=0) {
-        return Unpack((char *)strct, size, format, true, off);
+        return Unpack(strct, size, format, off, false);
     }
 
     bool UnpackBE(void *strct, size_t size, const char *format, size_t off=0) {
-        return Unpack((char *)strct, size, format, false, off);
+        return Unpack(strct, size, format, off, true);
+    }
+
+    bool Unpack(void *strct, size_t size, const char *format, bool isBE, size_t off=0) {
+        return Unpack(strct, size, format, off, isBE);
     }
 };
 
