@@ -395,6 +395,8 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
                 while (i + j < w && j < 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3)) {
                     j++;
                 }
+                if (i + j < w && j < 128)
+                    j--;
                 tgaData.Append(j - 1);
                 tgaData.Append(line + i * 3, j * 3);
             }

@@ -739,6 +739,8 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 			else
 			{
 				for (; i + j < pixmap->w && j < 128 && !memeq(line + (i + j - 1) * n, line + (i + j) * n, d) != 0; j++);
+				if (i + j < pixmap->w && j < 128)
+					j--;
 				putc(j - 1, fp);
 				for (; j > 0; j--, i++)
 					tga_put_pixel(line + i * n, d, fp);

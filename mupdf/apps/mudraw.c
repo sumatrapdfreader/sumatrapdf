@@ -321,6 +321,8 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 					else
 					{
 						for (; i + j < width && j < 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3) != 0; j++);
+						if (i + j < width && j < 128)
+							j--;
 						putc(j - 1, f);
 						fwrite(line + i * 3, 1, j * 3, f);
 					}

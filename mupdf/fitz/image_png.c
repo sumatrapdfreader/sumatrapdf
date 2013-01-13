@@ -434,9 +434,6 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, unsigned in
 		while (total > 8)
 		{
 			size = getuint(p);
-			/* SumatraPDF: prevent potential signed/unsigned overflow issues */
-			if (size > INT_MAX - 12)
-				fz_throw(info->ctx, "potential integer overflow");
 
 			if (total < 12 || size > total - 12)
 				fz_throw(ctx, "premature end of data in png image");

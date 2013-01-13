@@ -65,6 +65,10 @@ def BitmapDiff(tgaRef, tgaCmp, tgaDiff):
 	if len(cmpData) < width * height * 3:
 		refData += "\xFF" * (width * height * 3 - len(cmpData))
 	
+	# bail if the files are just differently compressed
+	if refData == cmpData:
+		return False
+	
 	# write a black pixel for identical, a dark red pixel for similar and a
 	# bright red pixel for different color values (packed as a type 9 TGA file,
 	# 8-bit indexed run-length encoded)
