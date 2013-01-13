@@ -176,7 +176,6 @@ bool HasSignature(const char *data, size_t len)
     if (!GetPixelFormat(headerLE))
         return false;
     return true;
-
 }
 
 static void SetImageProperty(Bitmap *bmp, PROPID id, const char *asciiValue)
@@ -260,12 +259,12 @@ static inline void CopyPixel(char *dst, const char *src, int n)
 
 static void ReadPixel(ReadState& s, char *dst)
 {
-    if (s.isRLE && 0 == s.repeat && s.data + s.n < s.end) {
+    if (s.isRLE && 0 == s.repeat && s.data < s.end) {
         s.repeat = (*s.data & 0x7F) + 1;
         s.repeatSame = (*s.data & 0x80);
         s.data++;
     }
-    else if (s.data + s.n > s.end) {
+    if (s.data + s.n > s.end) {
         s.failed = true;
         return;
     }
