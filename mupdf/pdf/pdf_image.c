@@ -155,7 +155,7 @@ decomp_image_banded(fz_context *ctx, fz_stream *stm, pdf_image *image, int index
 		/* decompress the image in bands of 256 lines */
 		for (part_h = h; part_h > 0; part_h -= band >> l2factor)
 		{
-			image->base.h = part_h >= band >> l2factor ? band : orig_h % band;
+			image->base.h = part_h > band >> l2factor ? band : (orig_h - 1) % band + 1;
 			part = decomp_image_from_stream(ctx, fz_keep_stream(stm), image, -1, indexed, l2factor, native_l2factor, 0);
 			memcpy(tile->samples + (h - part_h) * tile->w * tile->n, part->samples, part->h * part->w * part->n);
 			tile->has_alpha |= part->has_alpha; /* SumatraPDF: allow optimizing non-alpha pixmaps */
