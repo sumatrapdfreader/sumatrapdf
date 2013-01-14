@@ -209,7 +209,8 @@ UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 #define REG_CLASSES_APP     L"Software\\Classes\\" APP_NAME_STR
 #define REG_CLASSES_PDF     L"Software\\Classes\\.pdf"
 
-#define REG_EXPLORER_PDF_EXT L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.pdf"
+#define REG_WIN_CURR        L"Software\\Microsoft\\Windows\\CurrentVersion"
+#define REG_EXPLORER_PDF_EXT REG_WIN_CURR L"\\Explorer\\FileExts\\.pdf"
 
 void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
@@ -359,61 +360,47 @@ enum EditorPathType {
 };
 
 static struct {
-    const WCHAR *  Name;                // Editor name
+    const WCHAR *  BinaryFilename;      // Editor's binary file name
+    const WCHAR *  InverseSearchArgs;   // Parameters to be passed to the editor;
+                                        // use placeholder '%f' for path to source file and '%l' for line number.
     EditorPathType Type;                // Type of the path information obtained from the registry
     HKEY           RegRoot;             // Root of the regkey
     const WCHAR *  RegKey;              // Registry key path
     const WCHAR *  RegValue;            // Registry value name
-    const WCHAR *  BinaryFilename;      // Editor's binary file name
-    const WCHAR *  InverseSearchArgs;   // Parameters to be passed to the editor;
-                                        // use placeholder '%f' for path to source file and '%l' for line number.
 } editor_rules[] = {
-    L"WinEdt",             BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\WinEdt.exe", NULL,
-                              L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"",
-
-    L"WinEdt",             BinaryDir, HKEY_CURRENT_USER, L"Software\\WinEdt", L"Install Root",
-                              L"WinEdt.exe", L"\"[Open(|%f|);SelPar(%l,8)]\"",
-
-    L"Notepad++",          BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\notepad++.exe", NULL,
-                              L"WinEdt.exe", L"-n%l \"%f\"",
-
-    L"Notepad++",          BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Notepad++", NULL,
-                              L"notepad++.exe", L"-n%l \"%f\"",
-
-    L"Notepad++",          BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Notepad++", L"DisplayIcon",
-                              L"notepad++.exe", L"-n%l \"%f\"",
-
-    L"TeXnicCenter Alpha", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenterNT", L"AppPath",
-                              L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
-
-    L"TeXnicCenter Alpha", BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter Alpha_is1", L"InstallLocation",
-                              L"TeXnicCenter.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
-
-    L"TeXnicCenter",       BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenter", L"AppPath",
-                              L"TEXCNTR.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
-
-    L"TeXnicCenter",       BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\TeXnicCenter_is1", L"InstallLocation",
-                              L"TEXCNTR.exe", L"/ddecmd \"[goto('%f', '%l')]\"",
-
-    L"WinShell",           BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\WinShell_is1", L"InstallLocation",
-                              L"WinShell.exe", L"-c \"%f\" -l %l",
-
-    L"Gvim",               BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
-                              L"gvim.exe", L"\"%f\" +%l",
-
+    L"WinEdt.exe",      L"\"[Open(|%f|);SelPar(%l,8)]\"",   BinaryPath,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\App Paths\\WinEdt.exe", NULL,
+    L"WinEdt.exe",      L"\"[Open(|%f|);SelPar(%l,8)]\"",   BinaryDir,
+                        HKEY_CURRENT_USER,  L"Software\\WinEdt", L"Install Root",
+    L"notepad++.exe",   L"-n%l \"%f\"",                     BinaryPath,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\App Paths\\notepad++.exe", NULL,
+    L"notepad++.exe",   L"-n%l \"%f\"",                     BinaryDir,
+                        HKEY_LOCAL_MACHINE, L"Software\\Notepad++", NULL,
+    L"notepad++.exe",   L"-n%l \"%f\"",                     BinaryPath,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Notepad++", L"DisplayIcon",
+    L"TeXnicCenter.exe",L"/ddecmd \"[goto('%f', '%l')]\"",  BinaryDir,
+                        HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenterNT", L"AppPath",
+    L"TeXnicCenter.exe",L"/ddecmd \"[goto('%f', '%l')]\"",  BinaryDir,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation",
+    L"TeXnicCenter.exe",L"/ddecmd \"[goto('%f', '%l')]\"",  BinaryDir,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\TeXnicCenter Alpha_is1", L"InstallLocation",
+    L"TEXCNTR.exe",     L"/ddecmd \"[goto('%f', '%l')]\"",  BinaryDir,
+                        HKEY_LOCAL_MACHINE, L"Software\\ToolsCenter\\TeXnicCenter", L"AppPath",
+    L"TEXCNTR.exe",     L"/ddecmd \"[goto('%f', '%l')]\"",  BinaryDir,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\TeXnicCenter_is1", L"InstallLocation",
+    L"WinShell.exe",    L"-c \"%f\" -l %l",                 BinaryDir,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\WinShell_is1", L"InstallLocation",
+    L"gvim.exe",        L"\"%f\" +%l",                      BinaryPath,
+                        HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
     // TODO: add this rule only if the latex-suite for ViM is installed (http://vim-latex.sourceforge.net/documentation/latex-suite.txt)
-    L"Gvim+latex-suite",   BinaryPath, HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
-                             L"gvim.exe", L"-c \":RemoteOpen +%l %f\"",
-
-    L"Texmaker",           SiblingPath, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Texmaker", L"UninstallString",
-                              L"texmaker.exe", L"\"%f\" -line %l",
-
-    L"TeXworks",           BinaryDir, HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1", L"InstallLocation",
-                              L"TeXworks.exe", L"-p=%l  \"%f\"",
-
+    L"gvim.exe",        L"-c \":RemoteOpen +%l %f\"",       BinaryPath,
+                        HKEY_LOCAL_MACHINE, L"Software\\Vim\\Gvim", L"path",
+    L"texmaker.exe",    L"\"%f\" -line %l",                 SiblingPath,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\Texmaker", L"UninstallString",
+    L"TeXworks.exe",    L"-p=%l \"%f\"",                    BinaryDir,
+                        HKEY_LOCAL_MACHINE, REG_WIN_CURR L"\\Uninstall\\{41DA4817-4D2A-4D83-AD02-6A2D95DC8DCB}_is1", L"InstallLocation",
     // TODO: find a way to detect where emacs is installed
-    //L"ntEmacs",            BinaryPath, HKEY_LOCAL_MACHINE, L"???", L"???",
-    //                          L"emacsclientw.exe", l"+%l \"%f\"",
+    // L"emacsclientw.exe",L"+%l \"%f\"", BinaryPath, HKEY_LOCAL_MACHINE, L"???", L"???",
 };
 
 // Detect TeX editors installed on the system and construct the
@@ -426,45 +413,43 @@ static struct {
 WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
 {
     WCHAR *firstEditor = NULL;
-    ScopedMem<WCHAR> path(NULL);
+    WStrList foundExes;
 
-    const WCHAR *editorToSkip = NULL;
-
-    for (int i = 0; i < dimof(editor_rules); i++)
-    {
-        if (editorToSkip && str::Eq(editorToSkip, editor_rules[i].Name))
-            continue;
-        editorToSkip = NULL;
-
-        path.Set(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
+    for (int i = 0; i < dimof(editor_rules); i++) {
+        ScopedMem<WCHAR> path(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
         if (!path)
             continue;
 
-        WCHAR *exePath;
+        ScopedMem<WCHAR> exePath;
         if (editor_rules[i].Type == SiblingPath) {
             // remove file part
             ScopedMem<WCHAR> dir(path::GetDir(path));
-            exePath = path::Join(dir, editor_rules[i].BinaryFilename);
-        } else if (editor_rules[i].Type == BinaryDir)
-            exePath = path::Join(path, editor_rules[i].BinaryFilename);
+            exePath.Set(path::Join(dir, editor_rules[i].BinaryFilename));
+        }
+        else if (editor_rules[i].Type == BinaryDir)
+            exePath.Set(path::Join(path, editor_rules[i].BinaryFilename));
         else // if (editor_rules[i].Type == BinaryPath)
-            exePath = str::Dup(path);
+            exePath.Set(path.StealData());
+        // don't show duplicate entries
+        if (foundExes.FindI(exePath) != -1)
+            continue;
+        // don't show inexistent paths (and don't try again for them)
+        if (!file::Exists(exePath)) {
+            foundExes.Append(exePath.StealData());
+            continue;
+        }
 
-        WCHAR *editorCmd = str::Format(L"\"%s\" %s", exePath, editor_rules[i].InverseSearchArgs);
-        free(exePath);
+        ScopedMem<WCHAR> editorCmd(str::Format(L"\"%s\" %s", exePath, editor_rules[i].InverseSearchArgs));
 
         if (!hwndCombo) {
             // no need to fill a combo box: return immeditately after finding an editor.
-            return editorCmd;
+            return editorCmd.StealData();
         }
 
-        if (!firstEditor)
-            firstEditor = str::Dup(editorCmd);
         ComboBox_AddString(hwndCombo, editorCmd);
-        free(editorCmd);
-
-        // skip the remaining rules for this editor
-        editorToSkip = editor_rules[i].Name;
+        if (!firstEditor)
+            firstEditor = editorCmd.StealData();
+        foundExes.Append(exePath.StealData());
     }
 
     // Fall back to notepad as a default handler
