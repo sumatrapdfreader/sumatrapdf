@@ -358,7 +358,6 @@ void UpdateToolbarState(WindowInfo *win)
         win->prevZoomVirtual = INVALID_ZOOM;
 }
 
-
 #define TOOLBAR_MIN_ICON_SIZE 16
 #define FIND_BOX_WIDTH 160
 

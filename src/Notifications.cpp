@@ -186,7 +186,6 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
-
 int Notifications::GetWndX(NotificationWnd *wnd)
 {
     RectI rect = WindowRect(wnd->hwnd());

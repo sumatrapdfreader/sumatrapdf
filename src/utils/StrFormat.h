@@ -39,7 +39,6 @@ public:
 
     bool IsNull() const { return tp == None; }
 
-
     union {
         int i;
         const char *s;

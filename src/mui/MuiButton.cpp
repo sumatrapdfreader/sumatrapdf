@@ -285,5 +285,4 @@ void ButtonVector::SetStyles(Style *def, Style *mouseOver)
     RecalculateSize(true);
 }
 
-
 }

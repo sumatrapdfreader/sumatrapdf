@@ -287,8 +287,6 @@ enum ImgFormat {
     Img_JXR, Img_PNG, Img_TGA, Img_TIFF,
 };
 
-
-
 static ImgFormat GfxFormatFromData(const char *data, size_t len)
 {
     if (!data || len < 8)

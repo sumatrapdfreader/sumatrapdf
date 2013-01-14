@@ -285,7 +285,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     TryLoadMemTrace();
 #endif
 
-
     DisableDataExecution();
     // ensure that C functions behave consistently under all OS locales
     // (use Win32 functions where localized input or output is desired)

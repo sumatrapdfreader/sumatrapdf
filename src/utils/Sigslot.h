@@ -1710,7 +1710,6 @@ public:
     }
 };
 
-
 template<class arg1_t, class arg2_t, class arg3_t, class arg4_t,
 class arg5_t, class arg6_t>
 class signal6 : public _signal_base6<arg1_t, arg2_t, arg3_t,

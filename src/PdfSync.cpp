@@ -488,7 +488,6 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *pa
     return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 }
 
-
 // SYNCTEX synchronizer
 
 int SyncTex::RebuildIndex() {

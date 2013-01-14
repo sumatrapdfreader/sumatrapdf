@@ -98,7 +98,6 @@ static void GeomTest()
     }
 }
 
-
 static void FileUtilTest()
 {
     WCHAR *path1 = L"C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
