@@ -19,8 +19,11 @@ def EngineDump(EngineDumpExe, file, tgaPath):
 	return xmlDump
 
 def TgaRleUnpack(data):
-	# unpacks data from a type 10 TGA file (24-bit run-length encoded)
-	exp, i = [], 0
+	# unpacks data from a type 2 TGA file (24-bit uncompressed)
+	# or a type 10 TGA file (24-bit run-length encoded)
+	if len(data) >= 18 and struct.unpack("B", data[2]) == 2:
+		return data[18:]
+	exp, i = [], 18
 	while i + 4 < len(data):
 		bit = struct.unpack("B", data[i])[0] + 1
 		i += 1
@@ -36,7 +39,7 @@ def TgaCmpColor(col1, col2):
 	# returns 0 for identical colors, 1 for similar colors and 2 for different colors
 	if col1 == col2:
 		return 0
-	rgb1, rgb2 = struct.unpack('<BBB', col1), struct.unpack('<BBB', col2)
+	rgb1, rgb2 = struct.unpack("<BBB", col1), struct.unpack("<BBB", col2)
 	if (rgb1[0] - rgb2[0]) ** 2 + (rgb1[1] - rgb2[1]) ** 2 + (rgb1[2] - rgb2[2]) ** 2 < 75:
 		return 1
 	return 2
@@ -55,13 +58,13 @@ def BitmapDiff(tgaRef, tgaCmp, tgaDiff):
 		return True
 	
 	# determine bitmap dimensions
-	width, height = struct.unpack('<HH', ref[12:16])
+	width, height = struct.unpack("<HH", ref[12:16])
 	
 	# unpack the run-length encoded data
-	refData = TgaRleUnpack(ref[18:])
+	refData = TgaRleUnpack(ref)
 	if len(refData) < width * height * 3:
 		refData += "\x00" * (width * height * 3 - len(refData))
-	cmpData = TgaRleUnpack(cmp[18:])
+	cmpData = TgaRleUnpack(cmp)
 	if len(cmpData) < width * height * 3:
 		refData += "\xFF" * (width * height * 3 - len(cmpData))
 	
