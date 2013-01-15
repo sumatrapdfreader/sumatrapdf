@@ -2567,6 +2567,17 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
 
 bool PdfEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
 {
+    if (forSaving) {
+        // TODO: updating some encrypted documents currently breaks them for Adobe Reader
+        if (_doc->crypt)
+            return false;
+        // TODO: support updating of documents where pages aren't all numbered objects?
+        for (int i = 0; i < PageCount(); i++) {
+            if (pdf_to_num(_doc->page_refs[i]) == 0)
+                return false;
+        }
+    }
+
     return Annot_Highlight == type;
 }
 
