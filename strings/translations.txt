@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0d94d2ef6bf1a15f65fc6b42411cfe3a989dd938
+da246e0531ac53fd41bbdbea752f9065d5dae913
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -762,6 +762,7 @@ it:&Ricerca:
 ja:検索する文字列(&F):
 ka:პო&ვნა:
 kr:찾기(&F):
+ku:دۆزینەوەی&:
 kw:&Kavos pyth:
 lt:&Surasti
 mk:&Најди што:
@@ -1205,6 +1206,7 @@ it:&Ingrandimento:
 ja:拡大率(&M):
 ka:მას&შტაბირება:
 kr:확대(&M):
+ku:گەورەکردن&:
 kw:&Brasheans:
 lt:&Mastelis
 mk:&Зголемување
@@ -1327,6 +1329,7 @@ it:&Maiuscole/minuscole
 ja:大文字と小文字を区別する(&M)
 ka:&Учитывать регистр
 kr:대/소문자 구분(&M)
+ku:ئەنجامی هاوشێوە&
 kw:An &Keth kas
 lt:&Skirti didžiąsias ir mažąsias raides
 mk:&Разликувај мали и големи букви
@@ -1568,6 +1571,7 @@ it:S&olo pagine dispari
 ja:偶数ページのみ(&O)
 ka:მხოლოდ &კენტი გვერდები
 kr:홀수 페이지만(&O)
+ku:تەنها پەڕە تاکەکان&
 lt:&Tik nelyginiai puslapiai
 mk:Само &непарни страници
 my:&Mukasurat ganjil sahaja
@@ -2033,6 +2037,7 @@ it:Stam&pa... (rifiutato)
 ja:印刷... (拒否されました)(&P)
 ka:&ამობეჭდვა... (გაუქმდა)
 kr:인쇄(&P)... (거부됨)
+ku:(چاپکردن... (ڕەتکرایەوە&
 lt:&Spausdinti... (neprieinama)
 mk:&Печати... (denied)
 my:&Cetak... (dinafikan)
@@ -2379,6 +2384,7 @@ it:&Salva con nome...\t<Ctrl>+S
 ja:名前を付けて保存(&S)...\tCtrl+S
 ka:შენახვა &როგორც...\tCtrl+S
 kr:다른 이름으로 저장(&S)...\tCtrl+S
+ku:&...پاراستن وەکو\tCtrl+S
 kw:&Gwitha avel...\tCtrl+S
 lt:Į&rašyti kaip...\tCtrl+S
 mk:&Зачувај како...\tCtrl+S
@@ -2553,6 +2559,7 @@ it:Pagina &singola\t<Ctrl>+6
 ja:単一ページ(&S)\tCtrl+6
 ka:&თითო გვერდად\tCtrl+6
 kr:한 페이지씩(&S)\tCtrl+6
+ku:پەڕەی تاک&\tCtrl+6
 lt:&Vienas puslapis\tCtrl+6
 mk:Единечна страница\tCtrl+6
 ne:&एकल पृष्ठ\tCtrl+6
@@ -2610,6 +2617,7 @@ it:&Ignora questa versione
 ja:このバージョンをスキップする(&S)
 ka:ამ ვერსიის გამოტოვება
 kr:이 버전 건너뛰기(&S)
+ku:فەرامۆشکردنی ئەم وەشانە&
 kw:&Tremena an versyon ma
 lt:Pralei&sti šią versiją
 mk:&Прескокни ја оваа верзија
@@ -2672,6 +2680,7 @@ it:&Usa larghezza pagina originale
 ja:元のページ サイズを使用する(&U)
 ka:&გვერდების ორიგინალი ზომის გამოყენება
 kr:원래 페이지 크기 사용(&U)
+ku:بەکارهێنانی قەبارەی ڕاستەقینەی پەڕەکان&
 lt:Na&udoti originalius puslapių dydžius
 mk:&Користи оригинални димензии на страници
 ne:&मौलिक पृष्ठ साईज प्रयोग गर्नुहोस्
@@ -2859,6 +2868,7 @@ it:&Ingrandimento
 ja:ズーム(&Z)
 ka:მას&შტაბი
 kr:배율(&Z)
+ku:نزیک خستنەوە&
 kw:&Zoum
 lt:&Mastelis
 mk:&Зумирање
@@ -2923,6 +2933,7 @@ it:(di %d)
 ja:(%d 中)
 ka:(დან %d)
 kr:(총 %d 중)
+ku:(%d لە)
 kw:(a %d)
 lt:(iš %d)
 mk:(од %d)
@@ -2977,6 +2988,7 @@ it:(pagina %s)
 ja:(ページ %s)
 ka:(გვერდი %s)
 kr:(%s 페이지)
+ku:(پەڕە %s)
 lt:(%s psl.)
 mk:(страница %s)
 ne:(पृष्ठ %s)
@@ -6678,6 +6690,7 @@ br:Visualização rápida na Web
 ca-xv:Visualització ràpida de web
 ca:Visualització ràpida de web
 cn:快速WEB查看(线性PDF)
+cz:Rychlé zobrazování z webu
 de:Schnelle Webanzeige
 dk:Hurtig Internet Visning
 el:Γρήγορη Διαδικτυακή Προβολή
@@ -6692,6 +6705,7 @@ id:Tampilan Web Cepat
 it:Vista web veloce
 ja:高速ウェブ表示
 kr:빠른 웹 보기
+ku:شێوازی پیشاندانی خێرای ماڵپەر
 mk:Брз веб-преглед
 ne:द्रुत वेब दृश्य
 nl:Snelle browserweergave
@@ -6771,6 +6785,7 @@ br:Documentos FictionBook
 ca-xv:Documents FictionBook
 ca:Documents FictionBook
 cn:小说文档
+cz:Dokumenty FictionBook
 de:FictionBook-Dokumente
 dk:FictionBook-dokumenter
 el:Έγγραφα FictionBook
@@ -7194,6 +7209,7 @@ it:Trova precedente
 ja:前を検索
 ka:წინას პოვნა
 kr:이전 찾기
+ku:دۆزینەوەی پێشوو
 kw:Kavos Kyns
 lt:Rasti ankstesnį
 mk:Најди претходно
@@ -7322,6 +7338,7 @@ it:Adatta a &contenuto\t<Ctrl>+3
 ja:内容に合わせる(&C)\tCtrl+3
 ka:&შიგთავსის მიხედვით\tCtrl+3
 kr:내용에 맞춤(&C)\tCtrl+3
+ku:گونجاندنی &پێکهاتە\tCtrl+3
 lt:Visas puslapio &turinys\tCtrl+3
 mk:Прилагоди на &содржина\tCtrl+3
 ne:&सामग्री अटाउनुहोस्\tCtrl+3
@@ -7381,6 +7398,7 @@ it:&Pagina intera\t<Ctrl>+0
 ja:ページに合わせる(&P)\tCtrl+0
 ka:&გვერდის ზომაზე მორგება\tCtrl+0
 kr:페이지(세로) 맞춤(&P)\tCtrl+0
+ku:گونجاندنی &پەڕە\tCtrl+0
 kw:Desedha &Folen\tCtrl+0
 lt:Visas &puslapis\tCtrl+0
 mk:Прилагоди на &страница\tCtrl+0
@@ -7448,6 +7466,7 @@ it:Adatta a &larghezza pagina\t<Ctrl>+2
 ja:幅に合わせる(&W)\tCtrl+2
 ka:&სიგანეზე მორგება\tCtrl+2
 kr:너비(가로) 맞춤(&H)\tCtrl+2
+ku:گونجاندنی &فراوانی\tCtrl+2
 kw:&Desedha Les\tCtrl+2
 lt:Visas puslapio pl&otis\tCtrl+2
 mk:Прилагоди на &ширина\tCtrl+2
@@ -7510,6 +7529,7 @@ it:Adatta a contenuto
 ja:内容に合わせる
 ka:შიგთავსის მიხედვით
 kr:내용에 맞춤
+ku:گونجاندنی پێکهاتە
 lt:Visas puslapio turinys
 mk:Прилагоди на содржина
 ne:सामग्री अटाउनुहोस्
@@ -7569,6 +7589,7 @@ it:Adatta a pagina
 ja:ページに合わせる
 ka:გვერდის ზომაზე მორგება
 kr:페이지(세로) 맞춤
+ku:گونجاندنی پەڕە
 kw:Desedha Folen
 lt:Visas puslapis
 mk:Прилагоди на страница
@@ -7636,6 +7657,7 @@ it:Adatta a larghezza pagina
 ja:幅に合わせる
 ka:სიგანეზე მორგება
 kr:너비(가로) 맞춤
+ku:گونجاندنی فراوانی
 kw:Desedha Les
 lt:Visas puslapio plotis
 mk:Прилагоди на ширина
@@ -7698,6 +7720,7 @@ it:Adatta alla larghezza e visualizza le pagine in modo continuo
 ja:幅に合わせて連続してページを表示する
 ka:ფანჯრის სიგანეზე მორგება და გვერდების შეუწყვეტლივ ჩვენება
 kr:지속적인 너비 맞춤과 페이지 보기
+ku:گونجاندنی فراوانی و پیشاندانی پەڕەکان بە بەردەوامی
 lt:Visas puslapio plotis, nenutrūkstama peržiūra
 mk:Прилагоди на широчина и прикажи страници непрекинато
 ne:चौडाई अटाउनुहोस् र पृष्ठहरु निरन्तर देखाउनुहोस्
@@ -7752,6 +7775,7 @@ it:Visualizza una pagina singola
 ja:単一のページに合わせる
 ka:გვერდის მორგება ფანჯრის ზომაზე
 kr:한 페이지 맞춤
+ku:گونجاندنی یەک پەڕە
 lt:Visas puslapis
 mk:Прилагоди на поединечна страница
 ne:एकल पृष्ठ अटाउनुहोस्
@@ -7905,6 +7929,7 @@ it:Testo trovato a pagina %s
 ja:ページ %s でテキストが見つかりました
 ka:ტექსტი ნაპოვნია %s გვერდზე
 kr:%s 페이지에서 문자열 찾음
+ku:دەق دۆزرایەوە لە پەڕەکەدا %s
 kw:Tekst kevys war folen %s
 lt:Ieškoti teksto %s puslapyje
 mk:Пронајдов текст на страница %s
@@ -7959,6 +7984,7 @@ it:Trovato testo alla pagina %s (ancora)
 ja:%s ページに指定された文字列が見つかりました（一周）
 ka:ტექსტი ნაპოვნია %s გვერდზე (ხელახლა)
 kr:%s 페이지에서 (다시) 문자열 찾음
+ku:(دەق دۆزرایەوە لە پەڕەکەدا (دووبارە %s
 lt:Rastas tekstas %s puslapyje (vėl)
 mk:Пронајдов текст на страница %s (повторно)
 ne:पृष्ठ %s मा पाठ भेटियो (पुनः)
@@ -8612,6 +8638,7 @@ it:Imposta SumatraPDF come lettore PDF predefinito
 ja:SumatraPDF を規定の PDF リーダーにする
 ka:მოხდეს SumatraPDF-ის ასოცირება PDF ფაილებთან
 kr:SumatraPDF를 기본 PDF 리더로 만들기
+ku:PDF وەکو خوێنەرەوەی سەرەکی فایلەکانی SumatraPDF ڕێکخستنی
 kw:Gwra SumatraPDF ow fennredyer PDF
 lt:„SumatraPDF“ nustatymas numatytąja PDF žiūrykle
 mk:Направи ја SumatraPDF основен читач на PDF
@@ -8679,6 +8706,7 @@ it:Maiuscole/minuscole
 ja:大文字と小文字を区別する
 ka:მთავრულის გათვალისწინებით
 kr:대/소문자 구분
+ku:ئەنجامی هاوشێوە
 kw:An keth kas
 lt:Skirti didžiąsias ir mažąsias raides
 mk:Разликувај мали и големи букви
@@ -9041,6 +9069,7 @@ id:Tidak ditemukan hasil pada baris %u di dalam berkas %s
 it:Nessun risultato trovato intorno alla riga %u nel file %s
 ja:行 %u はファイル %s に見つかりません
 kr:%u 행 (%s 파일) 주변에서 발견된 결과가 없습니다.
+ku:%u هیچ ئەنجامێک نەدۆزرایەوە لە دێڕی %s لە فایلی
 kw:Ny veu kevys sywyans vyth a-dro dhe linen %u y'n restren %s
 lt:Aplink eilutę %u faile %s nerasta jokių rezultatų
 mk:Не најдов резултати околу линијата %u во датотеката %s
@@ -9623,6 +9652,7 @@ it:Apri con Microsoft HTML Help
 ja:Microsoft HTML ヘルプで開く(&M)
 ka:გახსნა Microsoft HTML Help-ში
 kr:Microsoft HTML Help로 열기(&M)
+ku:Microsoft HTML کردنەوە  بەهۆی &یارمەتی
 kw:Ygeri yn Microsoft HTML Help
 mk:Отвори со Microsoft HTML Help
 ne:Microsoft HTML Help मा &खोल्नुहोस्
@@ -9679,6 +9709,7 @@ it:Apri con Microsoft XPS-Viewer
 ja:Microsoft XPS-Viewerで開く(&M)
 ka:გახსნა Microsoft XPS-Viewer-ში
 kr:Microsoft XPS-Viewer로 열기(&M)
+ku:Microsoft XPS کردنەوەی بەهۆی &پیشاندەری
 kw:Ygeri yn Microsoft XPS-Viewer
 mk:Отвори со Microsoft XPS-Viewer
 ne:Microsoft XPS-Viewer मा &खोल्नुहोस्
@@ -9878,6 +9909,7 @@ br:Otimizações PDF:
 ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
 cn:PDF 优化：
+cz:Optimalizace PDF:
 de:PDF Optimierungen:
 dk:PDF Optimeringer:
 el:Βελτιστοποίηση PDF
@@ -9892,6 +9924,7 @@ id:Optimisasi PDF
 it:Ottimizzazioni PDF:
 ja:PDF 最適化:
 kr:PDF 최적화:
+ku:PDF ڕێکخستنی:
 mk:Оптимизации за PDF:
 ne:PDF अप्टिमाइजेसन
 nl:PDF Optimalisaties
@@ -10523,6 +10556,7 @@ it:Documenti PostScript
 ja:PostScript ドキュメント
 ka:Postscript დოკუმენტები
 kr:Postscript 문서
+ku:Postscript بەڵگەنامەنکانی
 lt:„PostScript“ dokumentai
 mk:Postscript-документи
 ne:पोस्ट स्क्रिप्ट कागजातहरु
@@ -10744,6 +10778,7 @@ id:Cetak Sebagai Gambar (butuh banyak memori)
 it:Stampa come &immagine (richiede più memoria))
 ja:画像として印刷 (より多くのメモリを必要とします) (&I)
 kr:이미지로 인쇄(&I) (더 많은 메모리 필요)
+ku:(چاپکردن بەشێوەی &وێنە (پێویستی بە یادگەی زیاترە
 mk:Печати како слика (бара повеќе меморија)
 ne:&छविको रुपमा छाप्नुहोस् (धेरै स्मृति चाहिन्छ)
 nl:Als afbeelding afdrukken (vereist meer geheugen)
@@ -10794,6 +10829,7 @@ it:Stampa intervallo
 ja:印刷範囲
 ka:ბეჭდვის დიაპაზონი
 kr:인쇄 범위
+ku:زنجیرەی چاپکردن
 lt:Spausdinimo intervalas
 mk:Опсег за печатење
 ne:छपाई दायरा
@@ -10872,6 +10908,7 @@ az:Çap davam edir.
 bg:Печатане...
 br:Imprimindo...
 cn:正在打印
+cz:Probíhá tisk
 de:Drucken - SumatraPDF
 dk:Udskrift igang
 el:Εκτύπωση σε εξέλιξη
@@ -10883,6 +10920,7 @@ id:Dalam proses mencetak
 it:Stampa in corso...
 ja:印刷を実行中です。
 kr:프린트중입니다.
+ku:چاپکردن لە ئەنجامداندایە
 nl:Aan het printen.
 pt:Impressão em curso.
 ru:Идёт печать.
@@ -10900,6 +10938,7 @@ az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
 bg:Печатането все още е на ход. Сигурни ли сте, че искате принудително да го откажете и да излезете?
 br:Ainda imprimindo... Interromper e sair?
 cn:仍然在打印。中断并放弃？
+cz:Tisk stále probíhá. Přerušit a odejít?
 de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
 dk:Udskrift er stadig igang. Afbryd?
 el:Η εκτύπωση είναι ακόμα σε εξέλιξη. Ακύρωση και Έξοδος;
@@ -11003,6 +11042,7 @@ it:Stampa pagina %d di %d...
 ja:%d / %d ページ目を印刷中...
 ka:მიმდინარეობს %d (%d-იდან) გვერდის ამობეჭდვა...
 kr:%d / %d 페이지 인쇄하는 중...
+ku:...%d پەڕە لە %d چاپکردنی
 lt:Spausdinamas %d puslapis iš %d...
 mk:Печатење на страница %d од %d...
 ne:पृष्ठ %d (कुल %d मध्ये) को छपाई हुदैछ ...
@@ -11060,6 +11100,7 @@ it:Problemi di stampa.
 ja:印刷の問題です。
 ka:ამობეჭდვის პრობლემა.
 kr:인쇄하는 중 문제 발생.
+ku:.کێشە هەیە لە  چاپکردندا
 kw:Kaletter ow pryntya
 lt:Spausdinimo problema.
 mk:Проблем при печатење.
@@ -11278,6 +11319,7 @@ it:Rimuovi la pagina %s dai Preferiti
 ja:ページ %s をお気に入りから削除
 ka:%s გვერდის წაშლა რჩეულებიდან
 kr:즐겨찾기에서 %s 페이지 제거
+ku:لە لیستی پەسەندەکاندا %s لابردنی پەڕەی
 lt:Pašalinti %s puslapį iš parankinių
 mk:Отстрани страница %s од омилени
 ne:मनपर्ने बाट पृष्ठ %s लाई हटाउनुहोस्
@@ -11429,6 +11471,7 @@ it:Ruota a &sinistra\t<Ctrl> <Maiusc> -
 ja:左に回転(&L)\tCtrl+Shift+-
 ka:მარ&ცხნივ გადაბრუნება\tCtrl+Shift+-
 kr:반시계 방향으로 회전(&L)\tCtrl+Shift+-
+ku:سوڕانەوە بۆلای &چەپ\tCtrl+Shift+-
 kw:Treylya a-gledh\tCtrl+Shift+-
 lt:Pasukti į &kairę\tCtrl+Shift+-
 mk:Ротирај на лево\tCtrl+Shift+-
@@ -11496,6 +11539,7 @@ it:Ruota a &destra\t<Ctrl> <Maiusc> +
 ja:右に回転(&R)\tCtrl+Shift++
 ka:მარ&ჯვნივ გადაბრუნება\tCtrl+Shift++
 kr:시계 방향으로 회전(&R)\tCtrl+Shift++
+ku:سوڕانەوە بۆلای &ڕاست\tCtrl+Shift++
 kw:Treylya a-dhyhow\tCtrl+Shift++
 lt:Pasukti į &dešinę\tCtrl+Shift++
 mk:Ротирај на десно\tCtrl+Shift++
@@ -11625,6 +11669,7 @@ it:Salva &collegamento\t<Ctrl>+<Maiusc>+S
 ja:ショートカットを作成(&H)...\tCtrl+Shift+S
 ka:&ჩანიშვნა…\tCtrl+Shift+S
 kr:바로가기 저장(&H)...\tCtrl+Shift+S
+ku:...پاراستنی کورتە&ئایکۆن\tCtrl+Shift+S
 mk:Зачувај &кратенка...\tCtrl+Shift+S
 ne:&सर्टकट बचत गर्नुहोस्...\tCtrl+Shift+S
 nl:Snelkoppeling opslaan...\tCtrl+Shift+S
@@ -11786,6 +11831,7 @@ it:Selezion&a tutto\t<Ctrl>+A
 ja:すべて選択(&A)\tCtrl+A
 ka:ყ&ველას მონიშვნა\tCtrl+A
 kr:모두 선택(&A)\tCtrl+A
+ku:دیاریکردنی &هەمووی\tCtrl+A
 lt:Pažymėti &viską\tCtrl+A
 mk:Избери сè\tCtrl+A
 ne:सबै &चयन गर्नुहोस्\tCtrl+A
@@ -11896,6 +11942,7 @@ it:Invia via &email...
 ja:電子メールで送信(&E)...
 ka:&ელ.ფოსტით გაგზავნა...
 kr:이메일로 보내기(&E)...
+ku:...ناردن بەهۆی &پۆستی ئەلکترۆنیەوە
 kw:Danvon der &e-bost...
 lt:Siųsti el. &paštu...
 mk:Испрати по &е-пошта...
@@ -12010,6 +12057,7 @@ id:Tampilkan &Markah
 it:Visualizza segnali&bri
 ja:ブックマークを表示(&B)
 kr:책갈피 보이기(&B)
+ku:پیشنادانی &نیشانەکراوەکان
 mk:Прикажи &обележувачи
 ne:&पुस्तकचिनोहरू देखाउनुहोस्
 nl:Bladwijzers tonen
@@ -12063,6 +12111,7 @@ it:&Barra strumenti
 ja:ツール バーの表示(&T)
 ka:&ხელსაწყოთა ზოლის ჩვენება
 kr:도구모음 보이기(&T)
+ku:پیشاندانی &شریتی ئامراز
 kw:Diskwedhes toulvar
 lt:Rodyti &priemonių juostą
 mk:Прикажи алатник
@@ -12126,6 +12175,7 @@ it:&Pagine in modo continuo
 ja:連続してページを表示(&P)
 ka:&გვერდების შეუწყვეტლივ ჩვენება
 kr:연속적으로 페이지 보이기(&P)
+ku:پیشاندانی پەڕەکان &بە بەردەوامی
 kw:Diskwedhes folennow heb aswa
 lt:&Puslapius rodyti nenutrūkstamai
 mk:Прикажувај страници непрекинато
@@ -12181,6 +12231,7 @@ it:Visualizza Preferiti
 ja:お気に入りの表示
 ka:რჩეულების ჩვენება
 kr:즐겨찾기 보이기
+ku:پیشاندانی پەسەندەکان
 lt:Rodyti parankinius
 mk:Прикажи омилени
 ne:मनपर्नेहरु देखाउनुहोस्
@@ -12232,6 +12283,7 @@ it:Visualizza letto frequentemente
 ja:よく読むファイル一覧を表示
 ka:ხშირად წაკითხულების ჩვენება
 kr:최근에 읽은 파일 보이기
+ku:پیشاندانی زۆرترین خوێنراوەکان
 lt:Rodyti dažniausiai skaitomus
 mk:Прикажи често читани
 ne:प्रायजसो पढिएको देखाउनुहोस्
@@ -12346,6 +12398,7 @@ it:Pagina singola
 ja:単一のページ
 ka:ერთ-გვერდიანი
 kr:한 페이지씩
+ku:پەڕەی تاک
 kw:Unn folen hepken
 lt:Atskirais puslapiais
 mk:Една страница
@@ -12574,6 +12627,7 @@ it:Opzioni di SumatraPDF
 ja:SumatraPDF のオプション
 ka:SumatraPDF-ის პარამეტრები
 kr:SumatraPDF 옵션
+ku:SumatraPDF هەڵبژاردنەکانی
 kw:Etholyow SumatraPDF
 lt:„SumatraPDF“ nuostatos
 mk:Поставувања на SumatraPDF
@@ -12630,6 +12684,7 @@ it:Controllo aggiornamenti SumatraPDF
 ja:SumatraPDF の更新
 ka:SumatraPDF-ის განახლება
 kr:SumatraPDF 업데이트
+ku:SumatraPDF نوێکردنەوەی
 lt:„SumatraPDF“ naujinimas
 mk:Надградување на SumatraPDF
 ne:SumatraPDF अद्यावधिक
@@ -12683,6 +12738,7 @@ it:SumatraPDF ha incontrato un errore irreparabile
 ja:SumatraPDF がクラッシュしました
 ka:SumatraPDF-ის მუშაობა ავარიულად დასრულდა
 kr:SumatraPDF 충돌남
+ku:تێکچوو SumatraPDF
 lt:„SumatraPDF“ strigo
 mk:SumatraPDF се сруши
 ne:SumatraPDF बिग्रियो
@@ -12738,6 +12794,7 @@ it:SumatraPDF è il lettore PDF predefinito
 ja:SumatraPDF は規定の PDF リーダーです
 ka:SumatraPDF თქვენი ძირითადი PDF წამკითხველია
 kr:SumatraPDF는 기본 PDF 리더입니다.
+ku:ە PDF خوێنەرەوەی سەرەکی فایلەکانی SumatraPDF
 kw:SumatraPDF yw dha bennredyer PDF
 lt:„SumatraPDF“ yra numatytoji PDF žiūryklė
 mk:SumatraPDF е Вашиот основен читач на PDF
@@ -12796,6 +12853,7 @@ it:Ora SumatraPDF dovrebbe essere il lettore PDF predefinito
 ja:SumatraPDF は規定の PDF リーダーになりました
 ka:ამიერიდან SumatraPDF თქვენი ძირითადი PDF წამკითხველია
 kr:SumatraPDF는 이제 기본 PDF 리더여야 합니다.
+ku:PDF ئێستا ئەبێت بە خوێنەرەوەی سەرەکی فایلەکانی SumatraPDF
 kw:Alemma rag y fydh SumatraPDF dha bennredyer PDF
 lt:Dabar „SumatraPDF“ bus numatytoji PDF žiūryklė
 mk:Сега SumatraPDF би требало да е Вашиот основен читач на PDF
@@ -12853,6 +12911,7 @@ it:Il file di sincronizzazione non può essere aperto
 ja:同期化ファイルが開けません
 ka:სინქრონიზაციის ფაილის გახსნა ვერ მოხერხდა
 kr:동기화 파일을 열 수 없습니다.
+ku:فایلی هاوکاتکراو ناتوانرێت بکرێتەوە
 kw:Ny yllir ygeri an restren gettermynegi
 lt:Sinchronizacijos failas negali būti atvertas
 mk:Синхронизациската датотека не може да се отвори
@@ -12885,6 +12944,7 @@ br:PDF com marcações (tags)
 ca-xv:PDF etiquetat
 ca:PDF etiquetat
 cn:已标记PDF
+cz:Tagované PDF
 de:PDF mit Tags
 dk:Tagged PDF
 el:PDF με ετικέττα
@@ -12949,6 +13009,7 @@ it:Documenti di testo
 ja:テキスト ドキュメント
 ka:ტექსტური დოკუმენტები
 kr:텍스트 문서
+ku:بەڵگەنامە دەقییەکان
 kw:Restrennow tekst
 lt:Tekstiniai dokumentai
 mk:Текстуални документи
@@ -13005,6 +13066,7 @@ it:Titolo:
 ja:タイトル:
 ka:სათაური:
 kr:제목:
+ku:ناونیشان:
 lt:Pavadinimas:
 mk:Наслов:
 my:Tajuk:
@@ -13062,6 +13124,7 @@ it:File sorgente sconosciuto (%s)
 ja:不明なソース ファイル (%s)
 ka:წყაროს ფაილი უცნობია (%s)
 kr:알 수 없는 원본 파일 (%s)
+ku:(%s) فایلە سەرچاوە نەناسراوەکان
 kw:Restren-bennfenten anaswonnys (%s)
 lt:Nežinomas pradinis failas (%s)
 mk:Непозната изворна датотека (%s)
@@ -13122,6 +13185,7 @@ it:Visualizza
 ja:表示
 ka:ხედი
 kr:보기
+ku:پیشاندان
 kw:Gwel
 lt:Rodymas
 mk:Поглед
@@ -13189,6 +13253,7 @@ it:Visita il sito &web
 ja:Web サイトの訪問(&W)
 ka:&ვებ-გვერდზე გადასვლა
 kr:웹 사이트 방문(&V)
+ku:سەردانکردنی &ماڵپەڕ
 kw:&Mos dhe'n wiasva
 lt:Interneto &svetainė
 mk:Посети веб-сајт
@@ -13253,6 +13318,7 @@ it:Attenzione
 ja:警告
 ka:გაფრთხილება
 kr:경고
+ku:ئاگادارکردنەوە
 kw:Gwarnyans
 lt:Įspėjimas
 mk:Предупредување
@@ -13310,6 +13376,7 @@ it:Documenti XPS
 ja:XPS ドキュメント
 ka:XPS დოკუმენტები
 kr:XPS 문서
+ku:XPS بەڵگەنامەکانی
 lt:XPS dokumentai
 mk:XPS-документи
 ne:XPS कागजातहरु
@@ -13367,6 +13434,7 @@ it:Il programma è aggiornato.
 ja:最新のバージョンです。
 ka:თქვენ იყენებთ უახლეს ვერსიას.
 kr:최신 버전입니다.
+ku:.تۆ دواین وەشانت هەیە
 kw:Yma'n versyon nowyttha genes.
 lt:Jūs naudojatės naujausia programos laida.
 mk:Ја имате најновата верзија.
@@ -13432,6 +13500,7 @@ it:Versione attuale: %s
 ja:バージョン %s です
 ka:თქვენ იყენებთ %s ვერსიას
 kr:현재 버전은 %s 입니다.
+ku:ت هەیە %s تۆ وەشانی
 kw:Yma versyon %s genes
 lt:Jūsų naudojama laida: %s
 mk:Ја имате верзијата %s
@@ -13492,6 +13561,7 @@ it:Zoom
 ja:OK
 ka:მასშტაბი
 kr:배율
+ku:نزیک خستنەوە
 kw:Zoumya
 lt:Mastelis
 mk:Зумирање
@@ -13552,6 +13622,7 @@ it:Ingrandimento
 ja:拡大
 ka:გადიდება
 kr:확대
+ku:نزیک خستنەوە
 kw:Zoumya a-bervedh
 lt:Padidinti
 mk:Зголеми
@@ -13619,6 +13690,7 @@ it:Riduzione
 ja:縮小
 ka:დაპატარავება
 kr:축소
+ku:دوور خستنەوە
 kw:Zoumya dhe-ves
 lt:Sumažinti
 mk:Намали
@@ -13852,6 +13924,7 @@ it:Stampa documento...
 ja:印刷するドキュメント
 ka:დოკუმენტი იბეჭდება
 kr:문서 인쇄하는 중
+ku:چاپکردنی بەڵگەنامە
 lt:spausdinamas dokumentas
 mk:печатам документ
 my:mencetak dokumen
