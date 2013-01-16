@@ -167,12 +167,22 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 		{
 			if (estrings[i])
 			{
+				/* SumatraPDF: don't reject fonts with few broken glyphs */
+				fz_try(ctx)
+				{
+
 				obj = pdf_dict_gets(charprocs, estrings[i]);
 				if (pdf_is_stream(xref, pdf_to_num(obj), pdf_to_gen(obj)))
 				{
 					fontdesc->font->t3procs[i] = pdf_load_stream(xref, pdf_to_num(obj), pdf_to_gen(obj));
 					fontdesc->size += fontdesc->font->t3procs[i]->cap;
 					fontdesc->size += 0; // TODO: display list size calculation
+				}
+
+				}
+				fz_catch(ctx)
+				{
+					fz_warn(ctx, "failed to get data for type 3 glyph '%s'", estrings[i]);
 				}
 			}
 		}

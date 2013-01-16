@@ -1070,7 +1070,8 @@ fz_outline_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm)
 {
 	if (!font->ft_face)
 	{
-		fz_warn(ctx, "cannot convert type3 glyph to path");
+		/* SumatraPDF: silence warning (it's always followed by "cannot render glyph") */
+		/* fz_warn(ctx, "cannot convert type3 glyph to path"); */
 		return NULL;
 	}
 
