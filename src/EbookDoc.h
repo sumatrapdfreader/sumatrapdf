@@ -46,7 +46,7 @@ public:
     size_t GetTextDataSize();
     ImageData *GetImageData(const char *id, const char *pagePath);
 
-    WCHAR *GetProperty(DocumentProperty prop);
+    WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
     bool IsRTL() const;
 
@@ -89,7 +89,7 @@ public:
     ImageData *GetImageData(const char *id);
     ImageData *GetCoverImage();
 
-    WCHAR *GetProperty(DocumentProperty prop);
+    WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
     bool IsZipped() const;
 
@@ -115,6 +115,8 @@ public:
     ~PalmDoc();
 
     const char *GetTextData(size_t *lenOut);
+
+    WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
 
     bool HasToc() const;
@@ -137,6 +139,8 @@ public:
     ~TcrDoc();
 
     const char *GetTextData(size_t *lenOut);
+
+    WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
 
     static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
@@ -165,7 +169,7 @@ public:
     const char *GetTextData(size_t *lenOut);
     ImageData *GetImageData(const char *id);
 
-    WCHAR *GetProperty(DocumentProperty prop);
+    WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
 
     static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
@@ -185,6 +189,8 @@ public:
     TxtDoc(const WCHAR *fileName);
 
     const char *GetTextData(size_t *lenOut);
+
+    WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
 
     bool IsRFC() const;

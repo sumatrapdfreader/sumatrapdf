@@ -377,7 +377,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     return NULL;
 }
 
-WCHAR *EpubDoc::GetProperty(DocumentProperty prop)
+WCHAR *EpubDoc::GetProperty(DocumentProperty prop) const
 {
     for (size_t i = 0; i < props.Count(); i++) {
         if (props.At(i).prop == prop)
@@ -714,7 +714,7 @@ ImageData *Fb2Doc::GetCoverImage()
     return GetImageData(coverImage);
 }
 
-WCHAR *Fb2Doc::GetProperty(DocumentProperty prop)
+WCHAR *Fb2Doc::GetProperty(DocumentProperty prop) const
 {
     if (Prop_Title == prop && docTitle)
         return str::Dup(docTitle);
@@ -896,6 +896,11 @@ const char *PalmDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
+WCHAR *PalmDoc::GetProperty(DocumentProperty prop) const
+{
+    return NULL;
+}
+
 const WCHAR *PalmDoc::GetFileName() const
 {
     return fileName;
@@ -987,6 +992,11 @@ const char *TcrDoc::GetTextData(size_t *lenOut)
 {
     *lenOut = htmlData.Size();
     return htmlData.Get();
+}
+
+WCHAR *TcrDoc::GetProperty(DocumentProperty prop) const
+{
+    return NULL;
 }
 
 const WCHAR *TcrDoc::GetFileName() const
@@ -1094,7 +1104,7 @@ ImageData *HtmlDoc::GetImageData(const char *id)
     return &images.Last().base;
 }
 
-WCHAR *HtmlDoc::GetProperty(DocumentProperty prop)
+WCHAR *HtmlDoc::GetProperty(DocumentProperty prop) const
 {
     switch (prop) {
     case Prop_Title:
@@ -1308,6 +1318,11 @@ const char *TxtDoc::GetTextData(size_t *lenOut)
 {
     *lenOut = htmlData.Size();
     return htmlData.Get();
+}
+
+WCHAR *TxtDoc::GetProperty(DocumentProperty prop) const
+{
+    return NULL;
 }
 
 const WCHAR *TxtDoc::GetFileName() const

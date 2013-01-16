@@ -128,6 +128,8 @@ protected:
     }
     bool ExtractPageAnchors();
     void FixFontSizeForResolution(HDC hDC);
+    WCHAR *ExtractFontList();
+
     virtual PageElement *CreatePageLink(DrawInstr *link, RectI rect, int pageNo);
 
     Vec<DrawInstr> *GetHtmlPage(int pageNo) {
@@ -587,6 +589,42 @@ PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
     return NULL;
 }
 
+WCHAR *EbookEngine::ExtractFontList()
+{
+    ScopedCritSec scope(&pagesAccess);
+
+    Vec<Font *> seenFonts;
+    WStrVec fonts;
+
+    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+        Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
+        if (!pageInstrs)
+            continue;
+
+        for (size_t k = 0; k < pageInstrs->Count(); k++) {
+            DrawInstr *i = &pageInstrs->At(k);
+            if (InstrSetFont != i->type || seenFonts.Find(i->font) != -1)
+                continue;
+            seenFonts.Append(i->font);
+
+            FontFamily family;
+            Status ok = i->font->GetFamily(&family);
+            if (ok != Ok)
+                continue;
+            WCHAR fontName[LF_FACESIZE];
+            ok = family.GetFamilyName(fontName);
+            if (ok != Ok || fonts.FindI(fontName) != -1)
+                continue;
+            fonts.Append(str::Dup(fontName));
+        }
+    }
+    if (fonts.Count() == 0)
+        return NULL;
+
+    fonts.SortNatural();
+    return fonts.Join(L"\n");
+}
+
 static void AppendTocItem(EbookTocItem *& root, EbookTocItem *item, int level)
 {
     if (!root) {
@@ -660,7 +698,9 @@ public:
 
     virtual PageLayoutType PreferredLayout();
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) {
+        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+    }
     virtual const WCHAR *GetDefaultFileExt() const { return L".epub"; }
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
@@ -761,7 +801,9 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) {
+        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+    }
     virtual const WCHAR *GetDefaultFileExt() const {
         return doc && doc->IsZipped() ? L".fb2z" : L".fb2";
     }
@@ -885,7 +927,9 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) {
+        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+    }
     virtual const WCHAR *GetDefaultFileExt() const { return L".mobi"; }
 
     virtual PageDestination *GetNamedDest(const WCHAR *name);
@@ -1069,7 +1113,9 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) {
+        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+    }
     virtual const WCHAR *GetDefaultFileExt() const { return L".pdb"; }
 
     virtual bool HasTocTree() const { return doc->HasToc(); }
@@ -1225,7 +1271,9 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) {
+        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+    }
     virtual const WCHAR *GetDefaultFileExt() const { return L".chm"; }
 
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
@@ -1404,7 +1452,9 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) {
+        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+    }
     virtual const WCHAR *GetDefaultFileExt() const { return L".tcr"; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
@@ -1469,7 +1519,9 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
+    virtual WCHAR *GetProperty(DocumentProperty prop) {
+        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+    }
     virtual const WCHAR *GetDefaultFileExt() const { return L".html"; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
@@ -1563,7 +1615,9 @@ public:
         return fileName ? CreateFromFile(fileName) : NULL;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) {
+        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+    }
     virtual const WCHAR *GetDefaultFileExt() const {
         return fileName ? path::GetExt(fileName) : L".txt";
     }
