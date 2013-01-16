@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-da246e0531ac53fd41bbdbea752f9065d5dae913
+32a13a944fa868fe5353783cde52e3dd415e0742
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -887,6 +887,7 @@ it:&Adatta pagine alla zona stampabile
 ja:ページを印刷可能領域に合わせる(&F)
 ka:გვერდების ბეჭდვად არეში &განთავსება
 kr:인쇄 영역에 페이지 맞추기(&F)
+ku:گونجاندنی پەڕەکان بۆ شوێنی چاپکردن&
 lt:Pritaikyti puslapių dydį prie spausdinamo ploto
 mk:&Прилагоди страници на зона за печатење
 my:&Muatkan halaman pada kawasan boleh cetak
@@ -2161,6 +2162,7 @@ it:&Ricorda la password per questo documento
 ja:このドキュメントのパスワードを記憶する(&R)
 ka:ამ დოკუმენტისთვის პაროლის და&მახსოვრება
 kr:이 문서의 비밀번호 기억(&R)
+ku:بیرخستنەوەی تێپەڕە ووشە بۆ ئەم بەڵگەنامەیە&
 lt:Įsiminti šio dokumento &slaptažodį
 mk:&Запомни ја лозинката за овој документ
 my:&Ingat katalaluan untuk dokumen ini
@@ -6683,6 +6685,7 @@ uk:Не можна зберегти файл.
 uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Fast Web View
+am:Արագ վեբ դիտում
 ar:تهيئة الويب السريعة
 az:Sürətli veb-görüntü
 bg:Бърз Web изглед
@@ -6779,6 +6782,7 @@ uk:Закладки
 uz:Tanlanganlar
 vn:Ưa thích
 :FictionBook documents
+am:FictionBook փաստաթղթեր
 az:FictionBook sənədləri
 bg:Документи FictionBook
 br:Documentos FictionBook
@@ -8277,6 +8281,7 @@ it:Consiglio: usare <F3> per trovare il successivo
 ja:ヒント: 再び検索するには F3 キーを使用します
 ka:ქარაგმა: ძებნის განმეორებისთვის გამოიყენეთ ღიალკი "F3"
 kr:힌트: 다시 찾으려면 F3 키를 누르세요.
+ku:بەکاربهێنە بۆ دووبارە دۆزینەوە F3 فێرکاری: دوگمەی
 kw:Hynt: Devnydhya alhwedhen F3 rag daskavos
 lt:Patarimas: ieškodami kito atitikmens naudokite klavišą F3
 mk:Совет: За повторно пребарување користете F3 од тастатурата
@@ -9902,6 +9907,7 @@ uk:PDF документ
 uz:PDF hujjati
 vn:Tập tin PDF
 :PDF Optimizations:
+am:PDF-ի լավարկում.
 ar:تحسينات البي دي إف
 az:PDF optimallaşdırması:
 bg:PDF оптимизации:
@@ -10325,6 +10331,7 @@ it:Pagina numero %u inesistente
 ja:ページ番号 %u が存在しません
 ka:%u გვერდი არ არსებობს
 kr:%u 페이지가 존재하지 않습니다.
+ku:بوونی نیە %u پەڕەی ژمارە
 kw:Nyns eus folen %u
 lt:Puslapio numerio %u nėra
 mk:Страница со број %u не постои
@@ -10904,6 +10911,7 @@ uk:Друкарки з даним іменем не існує
 uz:Bunday printer mavjud emas
 vn:Máy in với tên được cho không tồn tại
 :Printing in progress.
+am:Տպվում է:
 az:Çap davam edir.
 bg:Печатане...
 br:Imprimindo...
@@ -10934,6 +10942,7 @@ uk:Триває друк.
 uz:Bosib chiqarilmoqda.
 vn:Đang in.
 :Printing is still in progress. Abort and quit?
+am:Տպվում է: Ընդհատե՞լ և փակել:
 az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
 bg:Печатането все още е на ход. Сигурни ли сте, че искате принудително да го откажете и да излезете?
 br:Ainda imprimindo... Interromper e sair?
@@ -11416,6 +11425,7 @@ id:Ganti &warna dokumen dengan skema warna Windows
 it:Sostituisci &colori documento con schema colore di Windows
 ja:Windows カラースキーマへ色を置き換える(&C)
 kr:Windows 색 구성표처럼 문서 색 교체(&C)
+ku:گۆڕینی ڕەنگی بەڵگەنامەکان & بۆ ڕەنگی ویندۆز
 mk:Замени ги &боите во документот со палетата на Windows
 ne:कागजात &रङ्गलाई विन्डोज रङ योजना अनुसार बदल्नुहोस्
 nl:Vervang de documentkleuren met Windows kleurenschema
@@ -11723,6 +11733,7 @@ it:Ricerca: %d di %d...
 ja:%d (%d 中) を検索しています...
 ka:მიმდინარეობს ძებნა %d %d-იდან...
 kr:%d / %d (을)를 검색하는 중...
+ku:...%d لە %d گەڕانی
 kw:Ow hwilas %d a %d...
 lt:Ieškoma %d iš %d...
 mk:Пребарувам %d од %d страници...
@@ -11886,6 +11897,7 @@ it:Seleziona contenuti con <Ctrl>+pulsante sinistro del mouse
 ja:Ctrl+左マウス ボタンで内容を選択します
 ka:აირჩიეთ შიგთავსი, Ctrl და მაუსის მარცხენა ღილაკზე დაჭერით
 kr:Ctrl+마우스 왼쪽 버튼으로 내용을 선택합니다.
+ku:Ctrl پێکهاتەکان دیاریبکە بەهۆی کلیکی چەپ و
 kw:Dewis dalgh gans Ctrl+boton-logosen kledh
 lt:Turinį žymėkite su Ctrl+kairiuoju pelės klavišu
 mk:Селектирај со Ctrl и левото копче на глувчето
@@ -12937,6 +12949,7 @@ uk:Неможливо відкрити файл синхронізації
 uz:Sinxronlanish faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tagged PDF
+am:Կցված PDF
 ar:البي دي إف الموسومة
 az:Teqlənmiş PDF
 bg:Етикетирен .PDF файл (Tagged PDF)
@@ -12959,6 +12972,7 @@ id:PDF Terlabeli
 it:PDF marcati
 ja:タグ付き PDF
 kr:태그있는 PDF
+ku:ە دیاریکراوەکان PDF
 mk:Означен PDF
 ne:ट्याग गरिएको PDF
 nl:Tagged PDF
