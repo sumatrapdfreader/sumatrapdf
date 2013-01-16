@@ -47,7 +47,6 @@ bool   DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst=false)
 WCHAR *ReadIniString(const WCHAR *iniPath, const WCHAR *section, const WCHAR *key);
 
 void   DisableDataExecution();
-void   EnableDataExecution();
 void   RedirectIOToConsole();
 WCHAR *GetExePath();
 int    FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2);

@@ -89,12 +89,6 @@ public:
     operator HDC() const { return hdc; }
 };
 
-class ScopeDisableDEP {
-public:
-    ScopeDisableDEP() { EnableDataExecution(); }
-    ~ScopeDisableDEP() { DisableDataExecution(); }
-};
-
 static RectD BoundSelectionOnPage(Vec<SelectionOnPage>& sel, int pageNo)
 {
     RectD bounds;
@@ -147,15 +141,6 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
         return false;
     if (progressUI)
         progressUI->UpdateProgress(current, total);
-
-    // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1882
-    // According to our crash dumps, Cannon printer drivers (caprenn.dll etc.)
-    // are buggy and like to crash during printing with DEP violation
-    // We disable dep during printing to hopefully not crash
-    // TODO: even better would be to print in a separate process so that
-    // crashes during printing wouldn't affect the main process. It's also
-    // much more complicated to implement
-    ScopeDisableDEP scopeNoDEP;
 
     // cf. http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
     ScopeHDC hdc(CreateDC(pd.driverName, pd.printerName, pd.portName, pd.devMode));

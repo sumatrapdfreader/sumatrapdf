@@ -216,25 +216,6 @@ typedef BOOL (WINAPI* SetProcessDEPPolicyFunc)(DWORD dwFlags);
 #define PROCESS_DEP_ENABLE 0x1
 #define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION     0x2
 #endif
- 
-void EnableDataExecution()
-{
-    // first try the documented SetProcessDEPPolicy
-    SetProcessDEPPolicyFunc spdp;
-    spdp = (SetProcessDEPPolicyFunc) LoadDllFunc(L"kernel32.dll", "SetProcessDEPPolicy");
-    if (spdp) {
-        spdp(0);
-        return;
-    }
-
-    // now try undocumented NtSetInformationProcess
-    _NtSetInformationProcess ntsip;
-    DWORD depMode = MEM_EXECUTE_OPTION_ENABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
-
-    ntsip = (_NtSetInformationProcess)LoadDllFunc(L"ntdll.dll", "NtSetInformationProcess");
-    if (ntsip)
-        ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
-}
 
 void DisableDataExecution()
 {
