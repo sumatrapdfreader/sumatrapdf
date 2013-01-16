@@ -21,7 +21,9 @@ Next version:
 * add support for PDF documents encrypted with Acrobat X
 * “Print as image” compatibility option for documents that fail to print properly
 * -manga-mode [1|true|0|false] for proper display of manga comic books
-* fix multiple crashes caused by overflows
+* fixed a reuse-after-free crash reported by John Leitch from
+  Microsoft Vulnerability Research (MSVR)
+* fixed multiple crashes caused by overflows
 
 2.1.1 (2012-05-07):
 
