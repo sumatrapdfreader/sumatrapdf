@@ -5,6 +5,16 @@
 #include <windows.h>
 #endif
 
+// from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
+// those definition are not present in 7.0A SDK my VS 2010 uses
+#ifndef LANG_CENTRAL_KURDISH
+#define LANG_CENTRAL_KURDISH 0x92
+#endif
+
+#ifndef SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ
+#define SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ 0x01
+#endif
+
 #define LANGS_COUNT   52
 #define STRINGS_COUNT 240
 
@@ -48,7 +58,7 @@ LangDef gLangData[LANGS_COUNT] = {
     { "it", "Italian (Italiano)", _LANGID(LANG_ITALIAN), 0 },
     { "ja", "Japanese (\346\227\245\346\234\254\350\252\236)", _LANGID(LANG_JAPANESE), 0 },
     { "kr", "Korean (\355\225\234\352\265\255\354\226\264)", _LANGID(LANG_KOREAN), 0 },
-    { "ku", "Kurdish (\331\203\331\210\330\261\330\257\333\214)", MAKELANGID(LANG_CENTRAL KURDISH, SUBLANG_CENTRAL KURDISH_CENTRAL_KURDISH_IRAQ), 0 },
+    { "ku", "Kurdish (\331\203\331\210\330\261\330\257\333\214)", MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ), 0 },
     { "lt", "Lithuanian (Lietuvi\305\263)", _LANGID(LANG_LITHUANIAN), 0 },
     { "mk", "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)", _LANGID(LANG_MACEDONIAN), 0 },
     { "ne", "Nepali (\340\244\250\340\245\207\340\244\252\340\244\276\340\244\262\340\245\200)", _LANGID(LANG_NEPALI), 0 },

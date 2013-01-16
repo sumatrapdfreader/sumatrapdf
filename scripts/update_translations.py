@@ -36,6 +36,16 @@ TRANSLATIONS_TXT_C = """\
 #include <windows.h>
 #endif
 
+// from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
+// those definition are not present in 7.0A SDK my VS 2010 uses
+#ifndef LANG_CENTRAL_KURDISH
+#define LANG_CENTRAL_KURDISH 0x92
+#endif
+
+#ifndef SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ
+#define SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ 0x01
+#endif
+
 #define LANGS_COUNT   %(langs_count)d
 #define STRINGS_COUNT %(translations_count)d
 
@@ -99,9 +109,10 @@ def lang_sort_func(x,y):
 def make_lang_id(lang):
     ids = lang[2]
     if ids is None:
-        id = "-1" # invalid LANGID
-    elif len(ids) == 2:
-        id = "MAKELANGID(LANG_%s, SUBLANG_%s_%s)" % (ids[0], ids[0], ids[1].replace(" ", "_"))
+        return "-1"
+    ids = [el.replace(" ", "_") for el in ids]
+    if len(ids) == 2:
+        id = "MAKELANGID(LANG_%s, SUBLANG_%s_%s)" % (ids[0], ids[0], ids[1])
     else:
         assert len(ids) == 1
         id = "_LANGID(LANG_%s)" % (ids[0])
@@ -115,7 +126,7 @@ def gen_c_code(langs_idx, strings_dict, file_name, encode_to_utf=False):
     assert DEFAULT_LANG == langs_idx[0][0]
     langs_count = len(langs_idx)
     translations_count = len(strings_dict)
-    
+
     keys = strings_dict.keys()
     keys.sort(cmp=key_sort_func)
     lines = []
@@ -131,7 +142,7 @@ def gen_c_code(langs_idx, strings_dict, file_name, encode_to_utf=False):
     #print [l[1] for l in langs_idx]
     lang_data = ['{ "%s", %s, %s, %d },' % (lang[0], c_escape(lang[1]), make_lang_id(lang), 1 if is_rtl_lang(lang) else 0) for lang in langs_idx]
     lang_data = "\n    ".join(lang_data)
-    
+
     file_content = TRANSLATIONS_TXT_C % locals()
     file(file_name, "wb").write(file_content)
 
@@ -185,13 +196,18 @@ def main_obsolete():
             strings_dict[s] = []
 
     langs_idx = load_lang_index()
-    # check that index.py agrees with the language files
+    # check that langs_def.py agrees with the language files
+    #print(langs)
+    #print(langs_idx)
     for lang in langs + langs_idx:
         lang1, lang2 = [l for l in langs_idx if l[0] == lang[0]], [l for l in langs if l[0] == lang[0]]
-        assert len(lang1) == 1 and len(lang2) == 1 and lang1[0][1] == lang2[0][1]
+        if not (len(lang1) == 1 and len(lang2) == 1 and lang1[0][1] == lang2[0][1]):
+            print("lang1: %s" % str(lang1))
+            print("lang2: %s" % str(lang2))
+            assert len(lang1) == 1 and len(lang2) == 1 and lang1[0][1] == lang2[0][1]
 
     c_file_name = os.path.join(g_src_dir, "Translations_txt.cpp")
-    gen_and_upload_js(strings_dict, langs_idx, contributors)
+    #gen_and_upload_js(strings_dict, langs_idx, contributors)
     remove_incomplete_translations(langs_idx, strings, strings_dict)
     gen_c_code(langs_idx, strings_dict, c_file_name, encode_to_utf=True)
 

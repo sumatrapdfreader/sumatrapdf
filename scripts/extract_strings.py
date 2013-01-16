@@ -133,7 +133,7 @@ def load_one_strings_file(file_path, lang_code, strings_dict, langs_dict, contri
 
 # Returns a tuple (strings, langs, contributors)
 # 'strings' maps an original, untranslated string to
-# an array of translation, where each translation is a tuple 
+# an array of translation, where each translation is a tuple
 # (language, text translated into this language)
 # 'langs' is an array of language definition tuples. First item in a tuple
 # is language iso code (e.g. "en" or "sp-rs" and second is language name
@@ -289,9 +289,8 @@ def untranslated_count_for_lang(strings_dict, lang):
     return count
 
 def load_lang_index():
-    env = {}
-    execfile(os.path.join(STRINGS_PATH, "index.py"), env)
-    return env["LangIndex"]
+    import langs_def
+    return langs_def.LangIndex
 
 def main_obsolete():
     (strings_dict, langs, contributors) = load_strings_file()
@@ -301,6 +300,6 @@ def main_obsolete():
         write_out_strings_files(strings_dict, langs, contributors, untranslated)
     else:
         dump_missing_for_language(strings_dict, sys.argv[1])
-    
+
 if __name__ == "__main__":
     print("Run update_translations.py instead")
