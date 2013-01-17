@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-32a13a944fa868fe5353783cde52e3dd415e0742
+688425087686a837ca4d2cf105d5229e7c34d1f6
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1865,6 +1865,7 @@ it:&PIN documento
 ja:ドキュメントをピンする&(P)
 ka:დოკუმენიტს &მიმაგრება
 kr:문서 고정(&P)
+ku:دیاریکردنی بەڵگەنامە&
 lt:Pasi&žymėti dokumentą
 mk:Закачи документ
 ne:कागजातलाई &टाँस्नुहोस्
@@ -2220,6 +2221,7 @@ it:&Ricorda queste impostazioni per ogni documento
 ja:ドキュメントごとにこれらの設定を記憶する(&R)
 ka:ამ პარამეტრების ყველა დოკუმენტზე &მორგება
 kr:각 문서의 설정 기억(&R)
+ku:بیرخستنەوەی ئەم هەڵبژاردنە بۆ هەموو بەڵگەنامەکان&
 kw:Gwitha an etholy&ow ma rag pub restren
 lt:Įsiminti šias &nuostatas kiekvienam dokumentui
 mk:&Запомни ги овие поставувања за секој документ
@@ -2508,6 +2510,7 @@ it:Riduci pagine alla zona &stampabile (se necessario)
 ja:必要な場合はページを印刷可能領域に縮小する(&S)
 ka:გვერდების შემცირება ბეჭდვად არეში ჩასატევად (თუ საჭიროა)
 kr:인쇄 영역에 맞춰 (필요한 경우) 페이지 축소(&S)
+ku:(کورتکردنەوەی پەڕەکان بۆ شوێنی چاپکردن (ئەگەر پێویست بوو&
 lt:&Sumažinti puslapių dydį iki spausdinamo ploto (jei reikia)
 mk:&Намали страници според зона за печатење (ако е потребно)
 ne:पृष्ठहरुलाई छाप्नयोग्य क्षेत्रमा &खुम्च्याउनुहोस् (आवस्यक परेमा)
@@ -4436,6 +4439,7 @@ it:Impossibile eseguire il comando di ricerca inversa. Controllare la riga di co
 ja:逆順検索コマンドを開始できません。設定でコマンド ラインをチェックしてください。
 ka:შებრუნებული ძებნის ბრძანების გაშვება ვერ მოხერხდა. გთხოვთ შეამოწმეთ ბრძანებების სტრიქონის პარამეტრები.
 kr:역 검색 명령을 시작할 수 없습니다. 설정에서 명령줄을 확인하세요.
+ku:ناتوانرێت فرمانی گەڕانی پێچەوانە ئەنجام بدرێت. تکایە فرمانی هێڵ بپشکنە لە ڕێکخستنەکاندا
 kw:Ny yllir dalleth arhadow gorthhwilas.  Check an linen arhadow y'n settyansow mar pleg.
 lt:Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
 mk:Не можам да започнам со обратното пребарување. Провери ја командната линија во поставувањата.
@@ -6249,6 +6253,7 @@ it:Inserire la linea di comando da eseguire quando fai doppio clic su un documen
 ja:PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力:
 ka:შეიყვანეთ ბრძანების სტრიქონი რომლის გამოძახებაც PDF დოკუმენტზე ორჯერ დაწპაკუნების შემდეგ გსურთ:
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
+ku::کرا PDF فرمانی هێڵ بنوسە بۆ یارمەتیدان کاتێک دوو کلیک لەسەر بەڵگەنامەی
 lt:Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
 mk:Внесете команда, за да се извршува при секое двојно кликнунвање на PDF-документот:
 ne:PDF कागजातमा दोहोरो क्लिक गर्दा आह्वान गर्ने आदेश पङ्‌क्ति प्रविष्ट गराउनुहोस्:
@@ -7880,6 +7885,7 @@ id:Memformat buku... %d halaman
 it:Formattazione del libro ... %d pagine
 ja:製本中… %d ページ
 kr:%d 페이지 읽어들이는 중...
+ku:پەڕە %d ... فۆڕماتکردنی پەڕەکانی پەرتووک
 mk:Ја форматирам книгата... %d страници
 ne:पुस्तक स्वरूपण ... %d पृष्ठहरु
 nl:Boek samenstellen... %d paginas
@@ -9130,6 +9136,7 @@ it:Non è stato trovato il file di sincronizzazione
 ja:同期ファイルが見つかりません
 ka:სინქრონიზაციის ფაილი ვერ მოიძებნა
 kr:동기화 파일을 찾을 수 없습니다.
+ku:هیچ فایلێکی هاوکاتکردن نەدۆزرایەوە
 kw:Ny veu kevys restren gettermynegi vyth
 lt:Sinchronizacijos failas nerastas
 mk:Не најдов синхронизациска датотека
@@ -9187,6 +9194,7 @@ it:Nessuna informazione di sincronizzazione in questa posizione
 ja:この位置に同期情報がありません
 ka:ამ პოზიციაზე სინქრონიზაციის ინფორმაცია არ არის
 kr:이 위치의 동기화 정보가 없습니다.
+ku:هیچ زانیارییەکی هاوکاتکردن نیە لەم شوێنەدا
 kw:Ny veu kevys derivadow kettermynegi y'n le ma
 lt:Nėra sinchronizacijos informacijos šioje pozicijoje
 mk:Нема информации за синхронизација на оваа позиција
@@ -10387,6 +10395,7 @@ it:Adattamento pagina
 ja:ページの拡大縮小
 ka:გვერდის მასშტაბირება
 kr:페이지 배율 조정하는 중
+ku:ڕیزکردنی پەڕەکان
 lt:Puslapio mastelis
 mk:Размер на страница
 ne:पृष्ठ मापन
@@ -10616,6 +10625,7 @@ it:Pr&esentazione\t<Ctrl>+L
 ja:プレゼンテーション(&E)\tCtrl+L
 ka:წარმოდგ&ენა\tCtrl+L
 kr:프레젠테이션(&E)\tCtrl+L
+ku:پڕ& بە شاشە بەبێ شریتی ئامرازەکان\tCtrl+L
 lt:&Pateiktis\tCtrl+L
 mk:Презентација\tCtrl+L
 ne:प्रस्तुती&करण\tCtrl+L
@@ -10889,6 +10899,7 @@ it:La stampante con quel nome non esiste
 ja:指定されたプリンタが見つかりません
 ka:მოცემული სახელის მქონე პრინეტრი არ არსებობს
 kr:지정된 이름의 프린터가 존재하지 않습니다.
+ku:هیچ چاپکەرێک بەو ناوە بوونی نیە
 lt:Spausdintuvo tokiu vardu nėra
 mk:Не постои печатач со зададеното име
 ne:दिईएको नाम भएको मुद्रक अवस्थित छैन
@@ -10915,6 +10926,7 @@ am:Տպվում է:
 az:Çap davam edir.
 bg:Печатане...
 br:Imprimindo...
+ca:Impressio en procés.
 cn:正在打印
 cz:Probíhá tisk
 de:Drucken - SumatraPDF
@@ -10946,6 +10958,7 @@ am:Տպվում է: Ընդհատե՞լ և փակել:
 az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
 bg:Печатането все още е на ход. Сигурни ли сте, че искате принудително да го откажете и да излезете?
 br:Ainda imprimindo... Interromper e sair?
+ca:La impressió encara està en procés. Voleu aturar i sortir?
 cn:仍然在打印。中断并放弃？
 cz:Tisk stále probíhá. Přerušit a odejít?
 de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
@@ -10959,6 +10972,7 @@ id:Sedang dalam proses mencetak. Batalkan dan keluar?
 it:La stampa è ancora in corso. Vuoi interromperla e uscire?
 ja:印刷を実行中です。中止して終了しますか？
 kr:프린트중입니다. 취소후 종료하시겠습니까?
+ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان و دەرچوون؟
 nl:Nog steeds aan het printen. Annuleren en stoppen?
 pt:Impressão ainda em curso. Abortar e sair?
 ru:Печать продолжается. Отменить и выйти?
@@ -11000,6 +11014,7 @@ it:La stampa è in corso. Interrompere e ricominciare?
 ja:印刷は既に実行されています。中止または再実行しますか？
 ka:მიმდინარეობს ამობეჭდვა. გსურთ გაუქმება და ხელახლა დაწყება?
 kr:인쇄를 진행하는 중입니다. 중지하고 다시 시작할까요?
+ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان و دەستپێکردنەوە؟
 lt:Spausdinimas dar nebaigtas. Ar norite jį nutraukti ir pradėti iš naujo?
 mk:Печатењето трае сè уште. Да го запрам и да почнам одново?
 ne:छपाई कार्य प्रगति हुदैछ | परित्याग गरि पुनः सुरु गर्ने?
@@ -12015,6 +12030,7 @@ it:Imposta la ricerca inversa via riga di comando
 ja:逆順検索コマンドラインの設定
 ka:შებრუნებული ძებნის ბრძანების სტრიქონის დაყენება
 kr:명령줄 역 탐색 설정
+ku:ڕێکخستنی هێڵی پێچەوانەی گەڕان
 kw:Settya linen-arhadow gorthhwilas
 lt:Nustatyti atvirkščios paieškos komandinę eilutę
 mk:Активирај инверзно пребарување
@@ -12350,6 +12366,7 @@ it:Visualizza la &barra laterale dei segnalibri quando disponibile
 ja:利用可能ならブックマーク サイド バーを表示(&B)
 ka:&სანიშნეთა ზოლის ჩვენება (თუ შესაძლებელია)
 kr:사용 가능한 경우 책갈피 옆구리 표시줄 보이기(&B)
+ku:پیشاندانی &نیشانەکراوەکان لە تەنیشتەوە ئەگەر هەبوو
 kw:Diskwedhes &amalvar an lyververkyow mars eus onan
 lt:Rodyti &žymų parankinę, kai yra žymų
 mk:Прикажи го алатникот со &обележувачи кога е достапен
@@ -12472,6 +12489,7 @@ it:Questo non doveva succedere!\n\nSe vuoi aiutarci a capire la causa del blocco
 ja:謎のエラーが発生しました！\n\n「キャンセル」をクリックして、このエラーが起こった状況を報告して下さると助かります。
 ka:ბოდიშს გიხდით, ეს არ უნდა მომხდარიყო!\n\nთუ გსურთ რომ დაგვეხმაროთ ამ პრობლემის მოგვარებაში, გთხოვთ დააწკაპუნეთ ღილაკს 'გაუქმება'.
 kr:미안합니다, 그런 일이 일어날 리가 없는데!\n\n이 충돌의 원인을 해결하는데 도움을 주려면, '취소'를 누르세요.
+ku:تکایە کلیک لەسەر 'پاشگەزبونەوە' ، بکە ئەگەر ئەتەوێ یارمەتیدەرمان بیت لە جارەسەرکردنی ئەم کێشەیە\n\n !ببورە، لە ڕوودانی ئەم کێشەیە
 lt:Apgailestaujame, taip neturėjo nutikti!\n\nSpustelėkite „Atsisakyti“, jeigu norite mums padėti pašalinti šios strigties priežastį.
 mk:Извинете, ова не требаше да се случи!\n\nДоколку сакате да ни помогнете да го отстраниме овој проблем, Ве молам изберете 'Откажи'.
 ne:माफ गर्नुहोला, यस्तो हुनुहुदैनथ्यो\n\nयदि तपाई यो क्र्यास ठिक गर्न सहयोग गर्न चाहानुहुन्छ भने कृपया 'रद्द गर्नुस्' मा थिच्नुस |
@@ -12526,6 +12544,7 @@ it:Il file sorgente %s non ha nessun punto di sincronizzazione
 ja:ソース ファイル %s には同期ポイントがありません
 ka:წყაროს ფაილს %s არ აქვს სინქრონიზაციის წერტილები
 kr:원본 파일 %s (은)는 동기화 지점이 없습니다.
+ku:خاڵی هاوکاتکردنی نیە %s سەرچاوەی فایلی
 kw:Nyns eus poynt kettermynegi vyth y'n restren %s
 lt:Pradinis failas %s  neturi sinchronizacijos taško
 mk:Изворната датотека %s нема синхронизациска точка
@@ -13768,6 +13787,7 @@ it:Fattore di ingrandimento
 ja:拡大率
 ka:მასშტაბი
 kr:배율 계수
+ku:نزیک خستنەوەی تایبەت
 kw:Faktor-zoum
 lt:Mastelis
 mk:Степен на зумирање
