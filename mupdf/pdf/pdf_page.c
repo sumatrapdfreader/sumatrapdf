@@ -242,7 +242,8 @@ pdf_resources_use_blending(fz_context *ctx, pdf_obj *rdb)
 	if (!rdb)
 		return 0;
 
-	/* Have we been here before and stashed an answer? */
+	/* SumatraPDF: disable a barely needed optimization which doesn't clean up after itself */
+	/* Have we been here before and stashed an answer? * /
 	obj = pdf_dict_gets(rdb, ".useBM");
 	if (obj)
 		return pdf_to_bool(obj);
@@ -285,7 +286,8 @@ found:
 		fz_rethrow(ctx);
 	}
 
-	put_marker_bool(ctx, rdb, ".useBM", useBM);
+	/* SumatraPDF: disable a barely needed optimization which doesn't clean up after itself */
+	// put_marker_bool(ctx, rdb, ".useBM", useBM);
 	return useBM;
 }
 
