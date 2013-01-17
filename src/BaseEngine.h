@@ -274,12 +274,12 @@ public:
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering
-    virtual bool HasPageLabels() { return false; }
+    virtual bool HasPageLabels() const { return false; }
     // returns a label to be displayed instead of the page number
     // caller must free() the result
-    virtual WCHAR *GetPageLabel(int pageNo) { return str::Format(L"%d", pageNo); }
+    virtual WCHAR *GetPageLabel(int pageNo) const { return str::Format(L"%d", pageNo); }
     // reverts GetPageLabel by returning the first page number having the given label
-    virtual int GetPageByLabel(const WCHAR *label) { return _wtoi(label); }
+    virtual int GetPageByLabel(const WCHAR *label) const { return _wtoi(label); }
 
     // whether this document required a password in order to be loaded
     virtual bool IsPasswordProtected() const { return false; }

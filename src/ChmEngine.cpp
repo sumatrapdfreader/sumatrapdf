@@ -90,11 +90,7 @@ public:
 
     virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return pages.Count(); }
-
     virtual RectD PageMediabox(int pageNo) { return RectD(); }
-    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
-        return RectD();
-    }
 
     virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */

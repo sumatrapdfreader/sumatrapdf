@@ -522,9 +522,9 @@ public:
     virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
     // TODO: is there a better place to expose pageFileNames than through page labels?
-    virtual bool HasPageLabels() { return true; }
-    virtual WCHAR *GetPageLabel(int pageNo);
-    virtual int GetPageByLabel(const WCHAR *label);
+    virtual bool HasPageLabels() const { return true; }
+    virtual WCHAR *GetPageLabel(int pageNo) const;
+    virtual int GetPageByLabel(const WCHAR *label) const;
 
     virtual bool HasTocTree() const { return true; }
     virtual DocTocItem *GetTocTree();
@@ -583,7 +583,7 @@ RectD ImageDirEngineImpl::PageMediabox(int pageNo)
     return mediaboxes.At(pageNo - 1);
 }
 
-WCHAR *ImageDirEngineImpl::GetPageLabel(int pageNo)
+WCHAR *ImageDirEngineImpl::GetPageLabel(int pageNo) const
 {
     if (pageNo < 1 || PageCount() < pageNo)
         return BaseEngine::GetPageLabel(pageNo);
@@ -592,7 +592,7 @@ WCHAR *ImageDirEngineImpl::GetPageLabel(int pageNo)
     return str::DupN(fileName, path::GetExt(fileName) - fileName);
 }
 
-int ImageDirEngineImpl::GetPageByLabel(const WCHAR *label)
+int ImageDirEngineImpl::GetPageByLabel(const WCHAR *label) const
 {
     for (size_t i = 0; i < pageFileNames.Count(); i++) {
         const WCHAR *fileName = path::GetBaseName(pageFileNames.At(i));

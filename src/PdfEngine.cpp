@@ -1099,9 +1099,9 @@ public:
     }
     virtual DocTocItem *GetTocTree();
 
-    virtual bool HasPageLabels() { return _pagelabels != NULL; }
-    virtual WCHAR *GetPageLabel(int pageNo);
-    virtual int GetPageByLabel(const WCHAR *label);
+    virtual bool HasPageLabels() const { return _pagelabels != NULL; }
+    virtual WCHAR *GetPageLabel(int pageNo) const;
+    virtual int GetPageByLabel(const WCHAR *label) const;
 
     virtual bool IsPasswordProtected() const { return isProtected; }
     virtual char *GetDecryptionKey() const;
@@ -2658,6 +2658,7 @@ bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName)
     bool ok = CopyFile(_fileName, copyFileName, FALSE);
     if (!ok)
         return false;
+    // TODO: try to recover when SaveUserAnnots fails?
     return SaveUserAnnots(copyFileName);
 }
 
@@ -2773,7 +2774,9 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
             fz_try(ctx) {
                 pdf_file_update_end(list, _doc->trailer, _doc->startxref);
             }
-            fz_catch(ctx) { }
+            fz_catch(ctx) {
+                ok = false;
+            }
         }
     }
     fz_catch(ctx) {
@@ -2814,7 +2817,7 @@ bool PdfEngineImpl::HasClipOptimizations(int pageNo)
     return true;
 }
 
-WCHAR *PdfEngineImpl::GetPageLabel(int pageNo)
+WCHAR *PdfEngineImpl::GetPageLabel(int pageNo) const
 {
     if (!_pagelabels || pageNo < 1 || PageCount() < pageNo)
         return BaseEngine::GetPageLabel(pageNo);
@@ -2822,7 +2825,7 @@ WCHAR *PdfEngineImpl::GetPageLabel(int pageNo)
     return str::Dup(_pagelabels->At(pageNo - 1));
 }
 
-int PdfEngineImpl::GetPageByLabel(const WCHAR *label)
+int PdfEngineImpl::GetPageByLabel(const WCHAR *label) const
 {
     int pageNo = _pagelabels ? _pagelabels->Find(label) + 1 : 0;
     if (!pageNo)
