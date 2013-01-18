@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-688425087686a837ca4d2cf105d5229e7c34d1f6
+d9c59403233605ce3f579cce23626f7dd67e32c4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1268,7 +1268,7 @@ it:&Manuale in linea (in inglese)
 ja:マニュアル(&M)
 ka:&სახელმძღვანელო
 kr:설명서(&M)
-ku:دەستی&
+ku:فێرکاری&
 kw:&Kowethlyver
 lt:Naudotojo &vadovas
 mk:Прирачник за употреба
@@ -4678,7 +4678,7 @@ id:Kompabilitas
 it:Compatibilità
 ja:互換性
 kr:호환성
-ku:گونجان
+ku:گونجاو
 mk:Компатибилност
 ne:मिल्दोजुल्दो
 nl:Compatibiliteit
@@ -11183,7 +11183,7 @@ id:&Ganti Nama...\tF2
 it:Ri&nomina...\tF2
 ja:名前を変更(&N)...\tF2
 kr:이름 바꾸기(&N)...\tF2
-ku:...گۆڕینی&ناو\tF2
+ku:...گۆڕینی &ناو\tF2
 mk:Преименувај... \tF2
 ne:नाम &फेर्नुहोस्...\tF2
 nl:&Naam wijzigen...\tF2
