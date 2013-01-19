@@ -3700,7 +3700,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
                 Vec<PageAnnotation> annots;
                 for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
                     SelectionOnPage& sel = win.selectionOnPage->At(i);
-                    annots.Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect));
+                    annots.Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, RGB(0xE2, 0xC4, 0xE2)));
                 }
                 win.dm->engine->UpdateUserAnnotations(&annots);
                 gRenderCache.CancelRendering(win.dm);

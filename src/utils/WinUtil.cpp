@@ -954,6 +954,34 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     return bmpData;
 }
 
+COLORREF AdjustLightness(COLORREF c, float factor)
+{
+    BYTE R = GetRValue(c), G = GetGValue(c), B = GetBValue(c);
+    // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma
+    BYTE M = max(max(R, G), B), m = min(min(R, G), B);
+    if (M == m) {
+        // for grayscale values, lightness is proportional to the color value
+        BYTE X = (BYTE)limitValue((int)floorf(M * factor + 0.5f), 0, 255);
+        return RGB(X, X, X);
+    }
+    BYTE C = M - m;
+    BYTE Ha = (BYTE)abs(M == R ? G - B : M == G ? B - R : R - G);
+    // cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
+    float L2 = (float)(M + m);
+    // cf. http://en.wikipedia.org/wiki/HSV_color_space#Saturation
+    float S = C / (L2 > 255.0f ? 510.0f - L2 : L2);
+
+    L2 = limitValue(L2 * factor, 0.0f, 510.0f);
+    // cf. http://en.wikipedia.org/wiki/HSV_color_space#From_HSL
+    float C1 = (L2 > 255.0f ? 510.0f - L2 : L2) * S;
+    float X1 = C1 * Ha / C;
+    float m1 = (L2 - C1) / 2;
+    R = (BYTE)floorf((M == R ? C1 : m != R ? X1 : 0) + m1 + 0.5f);
+    G = (BYTE)floorf((M == G ? C1 : m != G ? X1 : 0) + m1 + 0.5f);
+    B = (BYTE)floorf((M == B ? C1 : m != B ? X1 : 0) + m1 + 0.5f);
+    return RGB(R, G, B);
+}
+
 // This is meant to measure program startup time from the user perspective.
 // One place to measure it is at the beginning of WinMain().
 // Another place is on the first run of WM_PAINT of the message loop of main window.

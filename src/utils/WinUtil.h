@@ -165,6 +165,7 @@ void    InitAllCommonControls();
 SizeI   GetBitmapSize(HBITMAP hbmp);
 void    UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2]);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
+COLORREF AdjustLightness(COLORREF c, float factor);
 double  GetProcessRunningTime();
 
 void RunNonElevated(const WCHAR *exePath);

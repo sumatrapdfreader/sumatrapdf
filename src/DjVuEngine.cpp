@@ -431,6 +431,15 @@ bool DjVuEngineImpl::Load(const WCHAR *fileName)
     return true;
 }
 
+static Gdiplus::Color Unblend(COLORREF c, BYTE alpha)
+{
+    BYTE R = GetRValue(c), G = GetGValue(c), B = GetBValue(c);
+    R = (BYTE)floorf(max(R - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    G = (BYTE)floorf(max(G - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    B = (BYTE)floorf(max(B - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    return Gdiplus::Color(alpha, R, G, B);
+}
+
 void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, int rotation, RectI screen)
 {
     if (!bmp || userAnnots.Count() == 0)
@@ -450,7 +459,7 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
                 continue;
             RectD arect = Transform(annot.rect, pageNo, zoom, rotation);
             arect.Offset(-screen.x, -screen.y);
-            g.FillRectangle(&SolidBrush(Color(95, 135, 67, 135)), arect.ToGdipRectF());
+            g.FillRectangle(&SolidBrush(Unblend(annot.color, 95)), arect.ToGdipRectF());
         }
     }
     SelectObject(hdc, prevBmp);

@@ -93,10 +93,11 @@ struct PageAnnotation {
     PageAnnotType type;
     int pageNo;
     RectD rect;
+    COLORREF color;
 
-    PageAnnotation() : type(Annot_None), pageNo(-1) { }
-    PageAnnotation(PageAnnotType type, int pageNo, RectD rect) :
-        type(type), pageNo(pageNo), rect(rect) { }
+    PageAnnotation() : type(Annot_None), pageNo(-1), color(-1) { }
+    PageAnnotation(PageAnnotType type, int pageNo, RectD rect, COLORREF color) :
+        type(type), pageNo(pageNo), rect(rect), color(color) { }
 };
 
 // use in PageDestination::GetDestRect for values that don't matter

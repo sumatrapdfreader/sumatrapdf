@@ -336,13 +336,23 @@ void EbookEngine::FixFontSizeForResolution(HDC hDC)
     currFontDpi = dpi;
 }
 
+// TODO: use AdjustLightness instead to compensate for the alpha?
+static Color Unblend(COLORREF c, BYTE alpha)
+{
+    BYTE R = GetRValue(c), G = GetGValue(c), B = GetBValue(c);
+    R = (BYTE)floorf(max(R - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    G = (BYTE)floorf(max(G - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    B = (BYTE)floorf(max(B - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    return Color(alpha, R, G, B);
+}
+
 static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pageNo)
 {
     for (size_t i = 0; i < userAnnots.Count(); i++) {
         PageAnnotation& annot = userAnnots.At(i);
         if (annot.pageNo != pageNo || annot.type != Annot_Highlight)
             continue;
-        g.FillRectangle(&SolidBrush(Color(95, 135, 67, 135)), annot.rect.ToGdipRectF());
+        g.FillRectangle(&SolidBrush(Unblend(annot.color, 95)), annot.rect.ToGdipRectF());
     }
 }
 
