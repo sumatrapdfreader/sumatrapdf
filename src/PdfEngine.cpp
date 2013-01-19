@@ -803,13 +803,13 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device *
 {
     for (size_t i = 0; i < pageAnnots.Count() && (!cookie || !cookie->abort); i++) {
         PageAnnotation& annot = pageAnnots.At(i);
-        CrashIf(Annot_Highlight != annot.type);
         // skip annotation if it isn't visible
         fz_rect rect = fz_RectD_to_rect(annot.rect);
         rect = fz_transform_rect(ctm, rect);
         fz_bbox bbox = fz_bbox_covering_rect(rect);
         if (fz_is_empty_bbox(fz_intersect_bbox(bbox, clipbox)))
             continue;
+        CrashIf(Annot_Highlight != annot.type);
         // prepare text highlighting path (cf. pdf_create_highlight_annot in pdf_annot.c)
         fz_path *path = fz_new_path(dev->ctx);
         fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.TL().y);

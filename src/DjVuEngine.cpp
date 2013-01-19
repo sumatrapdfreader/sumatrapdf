@@ -431,6 +431,7 @@ bool DjVuEngineImpl::Load(const WCHAR *fileName)
     return true;
 }
 
+// TODO: use AdjustLightness instead to compensate for the alpha?
 static Gdiplus::Color Unblend(COLORREF c, BYTE alpha)
 {
     BYTE R = GetRValue(c), G = GetGValue(c), B = GetBValue(c);
@@ -438,6 +439,11 @@ static Gdiplus::Color Unblend(COLORREF c, BYTE alpha)
     G = (BYTE)floorf(max(G - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
     B = (BYTE)floorf(max(B - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
     return Gdiplus::Color(alpha, R, G, B);
+}
+
+static Gdiplus::Color FromColorRef(COLORREF c)
+{
+    return Gdiplus::Color(GetRValue(c), GetGValue(c), GetBValue(c));
 }
 
 void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, int rotation, RectI screen)
@@ -455,11 +461,40 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
 
         for (size_t i = 0; i < userAnnots.Count(); i++) {
             PageAnnotation& annot = userAnnots.At(i);
-            if (annot.pageNo != pageNo || annot.type != Annot_Highlight)
+            if (annot.pageNo != pageNo)
                 continue;
             RectD arect = Transform(annot.rect, pageNo, zoom, rotation);
             arect.Offset(-screen.x, -screen.y);
-            g.FillRectangle(&SolidBrush(Unblend(annot.color, 95)), arect.ToGdipRectF());
+            PointF p1, p2;
+            switch (annot.type) {
+            case Annot_Highlight:
+                g.FillRectangle(&SolidBrush(Unblend(annot.color, 95)), arect.ToGdipRectF());
+                break;
+            case Annot_Underline:
+                p1 = PointF((float)arect.x, (float)arect.BR().y);
+                p2 = PointF((float)arect.BR().x, p1.Y);
+                g.DrawLine(&Pen(FromColorRef(annot.color), zoom), p1, p2);
+                break;
+            case Annot_StrikeOut:
+                p1 = PointF((float)arect.x, (float)arect.y + (float)arect.dy / 2);
+                p2 = PointF((float)arect.BR().x, p1.Y);
+                g.DrawLine(&Pen(FromColorRef(annot.color), zoom), p1, p2);
+                break;
+            case Annot_Squiggly:
+                p1 = PointF((float)arect.x, (float)arect.BR().y - 0.25f * zoom);
+                p2 = PointF((float)arect.BR().x, p1.Y);
+                {
+                    Pen p(FromColorRef(annot.color), 0.5f * zoom);
+                    REAL dash[2] = { 2, 2 };
+                    p.SetDashPattern(dash, dimof(dash));
+                    p.SetDashOffset(1);
+                    g.DrawLine(&p, p1, p2);
+                    p.SetDashOffset(3);
+                    p1.Y += 0.5f * zoom; p2.Y += 0.5f * zoom;
+                    g.DrawLine(&p, p1, p2);
+                }
+                break;
+            }
         }
     }
     SelectObject(hdc, prevBmp);
@@ -758,7 +793,14 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coord
 
 bool DjVuEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
 {
-    return !forSaving && Annot_Highlight == type;
+    if (forSaving)
+        return false;
+    switch (type) {
+    case Annot_Highlight: case Annot_Underline: case Annot_StrikeOut: case Annot_Squiggly:
+        return true;
+    default:
+        return false;
+    }
 }
 
 void DjVuEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)

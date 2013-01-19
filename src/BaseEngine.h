@@ -19,7 +19,10 @@ enum PageDestType { Dest_None,
     Dest_GoToPageDialog, Dest_PrintDialog, Dest_SaveAsDialog, Dest_ZoomToDialog,
 };
 
-enum PageAnnotType { Annot_None, Annot_Comment, Annot_Highlight };
+enum PageAnnotType {
+    Annot_None, Annot_Comment,
+    Annot_Highlight, Annot_Underline, Annot_StrikeOut, Annot_Squiggly,
+};
 
 enum DocumentProperty {
     Prop_Title, Prop_Author, Prop_Copyright, Prop_Subject,
