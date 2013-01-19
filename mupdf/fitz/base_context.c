@@ -88,6 +88,10 @@ fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int ma
 
 	ctx = new_context_phase1(alloc, locks);
 
+	/* SumatraPDF: check the return value of new_context_phase1 */
+	if (!ctx)
+		return NULL;
+
 	/* Now initialise sections that are shared */
 	fz_try(ctx)
 	{
@@ -122,6 +126,9 @@ fz_clone_context_internal(fz_context *ctx)
 	if (ctx == NULL || ctx->alloc == NULL)
 		return NULL;
 	new_ctx = new_context_phase1(ctx->alloc, ctx->locks);
+	/* SumatraPDF: check the return value of new_context_phase1 */
+	if (!new_ctx)
+		return NULL;
 	/* Inherit AA defaults from old context. */
 	fz_copy_aa_context(new_ctx, ctx);
 	/* Keep thread lock checking happy by copying pointers first and locking under new context */
