@@ -373,16 +373,17 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
             g.DrawLine(&Pen(FromColorRef(annot.color)), p1, p2);
             break;
         case Annot_Squiggly:
-            p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y - 0.25f);
-            p2 = PointF((float)annot.rect.BR().x, p1.Y);
             {
                 Pen p(FromColorRef(annot.color), 0.5f);
                 REAL dash[2] = { 2, 2 };
                 p.SetDashPattern(dash, dimof(dash));
                 p.SetDashOffset(1);
+                p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y - 0.25f);
+                p2 = PointF((float)annot.rect.BR().x, p1.Y);
                 g.DrawLine(&p, p1, p2);
                 p.SetDashOffset(3);
-                p1.Y += 0.5f; p2.Y += 0.5f;
+                p1.Y += 0.5f;
+                p2.Y += 0.5f;
                 g.DrawLine(&p, p1, p2);
             }
             break;

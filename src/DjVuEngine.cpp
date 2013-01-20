@@ -463,35 +463,36 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
             PageAnnotation& annot = userAnnots.At(i);
             if (annot.pageNo != pageNo)
                 continue;
-            RectD arect = Transform(annot.rect, pageNo, zoom, rotation);
-            arect.Offset(-screen.x, -screen.y);
-            PointF p1, p2;
+            RectD arect;
             switch (annot.type) {
             case Annot_Highlight:
+                arect = Transform(annot.rect, pageNo, zoom, rotation);
+                arect.Offset(-screen.x, -screen.y);
                 g.FillRectangle(&SolidBrush(Unblend(annot.color, 95)), arect.ToGdipRectF());
                 break;
             case Annot_Underline:
-                p1 = PointF((float)arect.x, (float)arect.BR().y);
-                p2 = PointF((float)arect.BR().x, p1.Y);
-                g.DrawLine(&Pen(FromColorRef(annot.color), zoom), p1, p2);
-                break;
             case Annot_StrikeOut:
-                p1 = PointF((float)arect.x, (float)arect.y + (float)arect.dy / 2);
-                p2 = PointF((float)arect.BR().x, p1.Y);
-                g.DrawLine(&Pen(FromColorRef(annot.color), zoom), p1, p2);
+                arect = RectD(annot.rect.x, annot.rect.BR().y, annot.rect.dx, 0);
+                if (Annot_StrikeOut == annot.type)
+                    arect.y -= annot.rect.dy / 2;
+                arect = Transform(arect, pageNo, zoom, rotation);
+                arect.Offset(-screen.x, -screen.y);
+                g.DrawLine(&Pen(FromColorRef(annot.color), zoom), (float)arect.x,
+                           (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                 break;
             case Annot_Squiggly:
-                p1 = PointF((float)arect.x, (float)arect.BR().y - 0.25f * zoom);
-                p2 = PointF((float)arect.BR().x, p1.Y);
                 {
                     Pen p(FromColorRef(annot.color), 0.5f * zoom);
                     REAL dash[2] = { 2, 2 };
                     p.SetDashPattern(dash, dimof(dash));
                     p.SetDashOffset(1);
-                    g.DrawLine(&p, p1, p2);
+                    arect = Transform(RectD(annot.rect.x, annot.rect.BR().y - 0.25f, annot.rect.dx, 0), pageNo, zoom, rotation);
+                    arect.Offset(-screen.x, -screen.y);
+                    g.DrawLine(&p, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                     p.SetDashOffset(3);
-                    p1.Y += 0.5f * zoom; p2.Y += 0.5f * zoom;
-                    g.DrawLine(&p, p1, p2);
+                    arect = Transform(RectD(annot.rect.x, annot.rect.BR().y + 0.25f, annot.rect.dx, 0), pageNo, zoom, rotation);
+                    arect.Offset(-screen.x, -screen.y);
+                    g.DrawLine(&p, (float)arect.x, (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                 }
                 break;
             }
