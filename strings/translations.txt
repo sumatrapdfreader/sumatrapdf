@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d9c59403233605ce3f579cce23626f7dd67e32c4
+1df5d64a360bb76f3c7b8dd0b789a1efbdc2ee58
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4501,7 +4501,7 @@ it:Lingua interfaccia (Change language)
 ja:言語の変更 (Change Language)
 ka:ენის შეცვლა (Change Language)
 kr:언어 바꾸기(Change Language)
-ku:گۆڕینی زمان
+ku:(Change Language) گۆڕینی زمان
 kw:Chanjya yeth (Change Language)
 lt:Keisti kalbą (Change Language)
 mk:Смени јазик (Change Language)
@@ -6704,6 +6704,7 @@ dk:Hurtig Internet Visning
 el:Γρήγορη Διαδικτυακή Προβολή
 es:Visualización Rápida en Web
 et:Kiire veebivaade
+fa:تماشای بی درنگ
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
 he:הצגת רשת מהירה
@@ -6800,6 +6801,7 @@ dk:FictionBook-dokumenter
 el:Έγγραφα FictionBook
 es:Documentos FictionBook
 et:FictionBook-dokumendid
+fa:اسناد کتاب تخیلی
 fr:Documents FictionBook
 he:מסמכי FictionBook
 hr:FictionBook dokumenti
@@ -9929,6 +9931,7 @@ dk:PDF Optimeringer:
 el:Βελτιστοποίηση PDF
 es:Optimizaciones de PDF:
 et:PDF-i optimeerimised:
+fa:PDF بهینه سازی
 fr:Optimisations PDF
 ga:Optimisations PDF
 he:אופטימיזציות PDF:
@@ -10933,6 +10936,7 @@ de:Drucken - SumatraPDF
 dk:Udskrift igang
 el:Εκτύπωση σε εξέλιξη
 es:Impresión en progreso.
+fa:در حال چاپ شدن.
 fr:Impression en cours
 he:נשלח להדפסה
 hu:Nyomtatás folyamatban.
@@ -10965,6 +10969,7 @@ de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
 dk:Udskrift er stadig igang. Afbryd?
 el:Η εκτύπωση είναι ακόμα σε εξέλιξη. Ακύρωση και Έξοδος;
 es:Impresión aún en progreso. ¿Cancelar y salir?
+fa:در حال چاپ شدن. انصراف و خروج؟
 fr:Impression toujours en cours. Annuler et quitter ?
 he:הדפסה עדיין לא הסתיימה. להפסיק פעולה ולצאת?
 hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
@@ -12982,6 +12987,7 @@ dk:Tagged PDF
 el:PDF με ετικέττα
 es:PDF Etiquetado
 et:Siltidega PDF
+fa:نشان دار  PDF
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
 he:PDF מתוייג
