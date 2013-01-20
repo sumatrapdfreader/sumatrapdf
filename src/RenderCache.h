@@ -105,6 +105,9 @@ public:
                    float zoom=INVALID_ZOOM, TilePosition *tile=NULL);
     void    FreeForDisplayModel(DisplayModel *dm) { FreePage(dm); }
     void    KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm);
+    // returns how much time in ms has past since the most recent rendering
+    // request for the visible part of the page if nothing at all could be
+    // painted, 0 if something has been painted and RENDER_DELAY_FAILED on failure
     UINT    Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
                   PageInfo *pageInfo, bool *renderOutOfDateCue);
 
@@ -118,6 +121,7 @@ protected:
 
 private:
     USHORT  GetTileRes(DisplayModel *dm, int pageNo);
+    USHORT  GetMaxTileRes(DisplayModel *dm, int pageNo, int rotation);
     bool    ReduceTileSize();
 
     bool    IsRenderQueueFull() const {
@@ -143,10 +147,6 @@ private:
     UINT    PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
                       TilePosition tile, RectI tileOnScreen, bool renderMissing,
                       bool *renderOutOfDateCue, bool *renderedReplacement);
-    UINT    PaintTiles(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
-                      RectI pageOnScreen, USHORT tileRes, bool renderMissing,
-                      bool *renderOutOfDateCue, bool *renderedReplacement);
-
 };
 
 #endif

@@ -51,10 +51,9 @@ RenderCache::~RenderCache()
 BitmapCacheEntry *RenderCache::Find(DisplayModel *dm, int pageNo, int rotation, float zoom, TilePosition *tile)
 {
     ScopedCritSec scope(&cacheAccess);
-    BitmapCacheEntry *entry;
     rotation = NormalizeRotation(rotation);
     for (int i = 0; i < cacheCount; i++) {
-        entry = cache[i];
+        BitmapCacheEntry *entry = cache[i];
         if ((dm == entry->dm) && (pageNo == entry->pageNo) && (rotation == entry->rotation) &&
             (INVALID_ZOOM == zoom || zoom == entry->zoom) && (!tile || entry->tile == *tile)) {
             entry->refs++;
@@ -253,6 +252,20 @@ USHORT RenderCache::GetTileRes(DisplayModel *dm, int pageNo)
         res = (USHORT)ceilf(log(factorAvg) / log(2.0f));
     // limit res to 30, so that (1 << res) doesn't overflow for 32-bit signed int
     return min(res, 30);
+}
+
+// get the maximum resolution available for the given page
+USHORT RenderCache::GetMaxTileRes(DisplayModel *dm, int pageNo, int rotation)
+{
+    ScopedCritSec scope(&cacheAccess);
+    USHORT maxRes = 0;
+    for (int i = 0; i < cacheCount; i++) {
+        if (cache[i]->dm == dm && cache[i]->pageNo == pageNo &&
+            cache[i]->rotation == rotation) {
+            maxRes = max(cache[i]->tile.res, maxRes);
+        }
+    }
+    return maxRes;
 }
 
 // reduce the size of tiles in order to hopefully use less memory overall
@@ -574,7 +587,8 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 
     if (!entry) {
         if (!isRemoteSession) {
-            *renderedReplacement = true;
+            if (renderedReplacement)
+                *renderedReplacement = true;
             entry = Find(dm, pageNo, dm->Rotation(), INVALID_ZOOM, &tile);
         }
         renderDelay = GetRenderDelay(dm, pageNo, tile);
@@ -623,37 +637,19 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
     if (entry->outOfDate) {
         if (renderOutOfDateCue)
             *renderOutOfDateCue = true;
-        AssertCrash(*renderedReplacement);
+        CrashIf(renderedReplacement && !*renderedReplacement);
     }
 
     DropCacheEntry(entry);
     return 0;
 }
 
-UINT RenderCache::PaintTiles(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
-                             RectI pageOnScreen, USHORT tileRes, bool renderMissing,
-                             bool *renderOutOfDateCue, bool *renderedReplacement)
+static int cmpTilePosition(const void *a, const void *b)
 {
-    int rotation = dm->Rotation();
-    float zoom = dm->ZoomReal();
-    int tileCount = 1 << tileRes;
-
-    TilePosition tile(tileRes, 0, 0);
-
-    UINT renderTimeMin = (UINT)-1;
-    for (tile.row = 0; tile.row < tileCount; tile.row++) {
-        for (tile.col = 0; tile.col < tileCount; tile.col++) {
-            RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, pageOnScreen);
-            tileOnScreen = pageOnScreen.Intersect(tileOnScreen);
-            RectI isect = bounds.Intersect(tileOnScreen);
-            if (!isect.IsEmpty()) {
-                UINT renderTime = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, renderMissing, renderOutOfDateCue, renderedReplacement);
-                renderTimeMin = min(renderTime, renderTimeMin);
-            }
-        }
-    }
-
-    return renderTimeMin;
+    const TilePosition *ta = (const TilePosition *)a, *tb = (const TilePosition *)b;
+    return ta->res != tb->res ? ta->res - tb->res :
+           ta->row != tb->row ? ta->row - tb->row :
+                                ta->col - tb->col;
 }
 
 UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
@@ -661,26 +657,54 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
 {
     assert(pageInfo->shown && 0.0 != pageInfo->visibleRatio);
 
-    USHORT tileRes = GetTileRes(dm, pageNo);
-    bool renderedReplacement;
-    UINT renderTime = RENDER_DELAY_UNDEFINED, renderTimeMin = renderTime = RENDER_DELAY_UNDEFINED;
-    for (int res = 0; res <= tileRes; res++) {
-        renderedReplacement = false;
-        renderTime = PaintTiles(hdc, bounds, dm, pageNo, pageInfo->pageOnScreen,
-                                res, res == tileRes, renderOutOfDateCue, &renderedReplacement);
-        renderTimeMin = min(renderTime, renderTimeMin);
+    int rotation = dm->Rotation();
+    float zoom = dm->ZoomReal();
+    USHORT targetRes = GetTileRes(dm, pageNo);
+    USHORT maxRes = GetMaxTileRes(dm, pageNo, rotation);
+    if (maxRes < targetRes)
+        maxRes = targetRes;
+
+    Vec<TilePosition> queue;
+    queue.Append(TilePosition(0, 0, 0));
+    UINT renderDelayMin = RENDER_DELAY_UNDEFINED;
+    bool neededScaling = false;
+
+    while (queue.Count() > 0) {
+        TilePosition tile = queue.At(0);
+        queue.RemoveAt(0);
+        RectI tileOnScreen = GetTileOnScreen(dm->engine, pageNo, rotation, zoom, tile, pageInfo->pageOnScreen);
+        tileOnScreen = pageInfo->pageOnScreen.Intersect(tileOnScreen);
+        RectI isect = bounds.Intersect(tileOnScreen);
+        if (isect.IsEmpty())
+            continue;
+
+        bool isTargetRes = tile.res == targetRes;
+        UINT renderDelay = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, isTargetRes,
+                                     renderOutOfDateCue, isTargetRes ? &neededScaling : NULL);
+        if (!(isTargetRes && 0 == renderDelay) && tile.res < maxRes) {
+            queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2));
+            queue.Append(TilePosition(tile.res + 1, tile.row * 2, tile.col * 2 + 1));
+            queue.Append(TilePosition(tile.res + 1, tile.row * 2 + 1, tile.col * 2));
+            queue.Append(TilePosition(tile.res + 1, tile.row * 2 + 1, tile.col * 2 + 1));
+        }
+        if (isTargetRes && renderDelay > 0)
+            neededScaling = true;
+        renderDelayMin = min(renderDelay, renderDelayMin);
+        // paint tiles from left to right from top to bottom
+        if (tile.res > 0 && queue.Count() > 0 && tile.res < queue.At(0).res)
+            queue.Sort(cmpTilePosition);
     }
 
 #ifdef CONSERVE_MEMORY
-    if (0 == renderTime && !renderedReplacement) {
+    if (!neededScaling) {
         if (renderOutOfDateCue)
             *renderOutOfDateCue = false;
         // free tiles with different resolution
-        TilePosition tile(tileRes, (USHORT)-1, 0);
+        TilePosition tile(targetRes, (USHORT)-1, 0);
         FreePage(dm, pageNo, &tile);
     }
     FreeNotVisible();
 #endif
 
-    return renderTimeMin;
+    return renderDelayMin;
 }
