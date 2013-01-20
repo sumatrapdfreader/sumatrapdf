@@ -1423,7 +1423,7 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, fz_matrix page_ctm)
 		/* SumatraPDF: synthesize appearance streams for a few more annotations */
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
 		if ((annot = pdf_update_tx_widget_annot(xref, obj)) ||
-			!pdf_is_dict(pdf_dict_gets(obj, "AP")) && (annot = pdf_create_annot_with_appearance(xref, obj)))
+			!pdf_is_dict(pdf_dict_getp(obj, "AP/N")) && (annot = pdf_create_annot_with_appearance(xref, obj)))
 		{
 			if (!head)
 				head = tail = annot;
