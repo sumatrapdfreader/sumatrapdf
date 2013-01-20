@@ -44,7 +44,7 @@ LangIndex = [
 	('ja',	'Japanese (日本語)',	('Japanese',)),
 	('ka',	'Georgian (ქართული)',	('Georgian',)),
 	('kr',	'Korean (한국어)',	('Korean',)),
-	('ku',	'Kurdish (كوردی)',	('Central Kurdish', 'Central Kurdish Iraq'),	'RTL'),
+	('ku',	'Kurdish (كوردی)',	('Central Kurdish', 'Central Kurdish Iraq',),	'RTL'),
 	('kw',	'Cornish (Kernewek)',	None,),
 	('lt',	'Lithuanian (Lietuvių)',	('Lithuanian',)),
 	('mk',	'Macedonian (македонски)',	('Macedonian',)),
