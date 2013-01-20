@@ -792,9 +792,14 @@ static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnno
     Vec<PageAnnotation> result;
     for (size_t i = 0; i < userAnnots.Count(); i++) {
         PageAnnotation& annot = userAnnots.At(i);
+        if (annot.pageNo != pageNo)
+            continue;
         // include all annotations for pageNo that can be rendered by fz_run_user_annots
-        if (pageNo == annot.pageNo && Annot_Highlight == annot.type)
+        switch (annot.type) {
+        case Annot_Highlight: case Annot_Underline: case Annot_StrikeOut: case Annot_Squiggly:
             result.Append(annot);
+            break;
+        }
     }
     return result;
 }
@@ -809,20 +814,53 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device *
         fz_bbox bbox = fz_bbox_covering_rect(rect);
         if (fz_is_empty_bbox(fz_intersect_bbox(bbox, clipbox)))
             continue;
-        CrashIf(Annot_Highlight != annot.type);
-        // prepare text highlighting path (cf. pdf_create_highlight_annot in pdf_annot.c)
+        // prepare text highlighting path (cf. pdf_create_highlight_annot
+        // and pdf_create_markup_annot in pdf_annot.c)
         fz_path *path = fz_new_path(dev->ctx);
-        fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.TL().y);
-        fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.TL().y);
-        fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
-        fz_lineto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y);
-        fz_closepath(dev->ctx, path);
+        fz_stroke_state *stroke = NULL;
+        switch (annot.type) {
+        case Annot_Highlight:
+            fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.TL().y);
+            fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.TL().y);
+            fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
+            fz_lineto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y);
+            fz_closepath(dev->ctx, path);
+            break;
+        case Annot_Underline:
+            fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y);
+            fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
+            break;
+        case Annot_StrikeOut:
+            fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.TL().y + annot.rect.dy / 2);
+            fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.TL().y + annot.rect.dy / 2);
+            break;
+        case Annot_Squiggly:
+            fz_moveto(dev->ctx, path, annot.rect.TL().x + 2, annot.rect.BR().y);
+            fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
+            fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.5f);
+            fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.5f);
+            stroke = fz_new_stroke_state_with_len(dev->ctx, 2);
+            stroke->linewidth = 0.5f;
+            stroke->dash_list[stroke->dash_len++] = 2;
+            stroke->dash_list[stroke->dash_len++] = 2;
+            break;
+        default:
+            CrashIf(true);
+        }
         fz_colorspace *cs = fz_find_device_colorspace(dev->ctx, "DeviceRGB");
         float color[3] = { GetRValue(annot.color) / 255.f, GetGValue(annot.color) / 255.f, GetBValue(annot.color) / 255.f };
-        // render path with transparency effect
-        fz_begin_group(dev, rect, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
-        fz_fill_path(dev, path, 0, ctm, cs, color, 0.8f);
-        fz_end_group(dev);
+        if (Annot_Highlight == annot.type) {
+            // render path with transparency effect
+            fz_begin_group(dev, rect, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
+            fz_fill_path(dev, path, 0, ctm, cs, color, 0.8f);
+            fz_end_group(dev);
+        }
+        else {
+            if (!stroke)
+                stroke = fz_new_stroke_state(dev->ctx);
+            fz_stroke_path(dev, path, stroke, ctm, cs, color, 1.0f);
+            fz_drop_stroke_state(dev->ctx, stroke);
+        }
         fz_free_path(dev->ctx, path);
     }
 }
@@ -830,6 +868,15 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device *
 static void fz_run_page_transparency(Vec<PageAnnotation>& pageAnnots, fz_device *dev, fz_bbox clipbox, bool endGroup, bool hasTransparency=false)
 {
     if (hasTransparency || pageAnnots.Count() == 0)
+        return;
+    bool needsTransparency = false;
+    for (size_t i = 0; i < pageAnnots.Count(); i++) {
+        if (Annot_Highlight == pageAnnots.At(i).type) {
+            needsTransparency = true;
+            break;
+        }
+    }
+    if (!needsTransparency)
         return;
     if (!endGroup)
         fz_begin_group(dev, fz_bbox_to_rect(clipbox), 1, 0, 0, 1);
@@ -2576,9 +2623,16 @@ bool PdfEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
             if (pdf_to_num(_doc->page_refs[i]) == 0)
                 return false;
         }
+        // TODO: support saving Underline, StrikeOut and Squiggly annotations
+        return Annot_Highlight == type;
     }
 
-    return Annot_Highlight == type;
+    switch (type) {
+    case Annot_Highlight: case Annot_Underline: case Annot_StrikeOut: case Annot_Squiggly:
+        return true;
+    default:
+        return false;
+    }
 }
 
 void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)
@@ -3905,7 +3959,13 @@ bool XpsEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
 {
     if (forSaving)
         return false; // for now
-    return Annot_Highlight == type;
+
+    switch (type) {
+    case Annot_Highlight: case Annot_Underline: case Annot_StrikeOut: case Annot_Squiggly:
+        return true;
+    default:
+        return false;
+    }
 }
 
 void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)
