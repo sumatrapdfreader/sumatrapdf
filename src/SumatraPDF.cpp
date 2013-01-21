@@ -725,13 +725,19 @@ static void CreateChmThumbnail(WindowInfo& win)
         delete engine;
         return;
     }
+    bool ok = engine->SetParentHwnd(hwnd);
+    if (!ok) {
+        DestroyWindow(hwnd);
+        delete engine;
+        return;
+    }
+
 #if 0 // when debugging set to 1 to see the window
     ShowWindow(hwnd, SW_SHOW);
 #endif
 
     // engine and window will be destroyed by the callback once it's invoked
     ChmThumbnailTask *callback = new ChmThumbnailTask(engine, hwnd);
-    engine->SetParentHwnd(hwnd);
     engine->SetNavigationCalback(callback);
     engine->DisplayPage(1);
 }
@@ -899,19 +905,30 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
     DocType engineType;
     BaseEngine *engine = EngineManager::CreateEngine(!gUseEbookUI, args.fileName, pwdUI, &engineType);
+
+    if (engine && Engine_Chm == engineType) {
+        // make sure that MSHTML can't be used as a potential exploit
+        // vector through another browser and our plugin (which doesn't
+        // advertise itself for Chm documents but could be tricked into
+        // loading one nonetheless)
+        if (gPluginMode && IsUntrustedFile(args.fileName, gPluginURL)) {
+            delete engine;
+            engine = NULL;
+            engineType = Engine_None;
+        }
+        // if CLSID_WebBrowser isn't available, fall back on Chm2Engine
+        else if (!static_cast<ChmEngine *>(engine)->SetParentHwnd(win->hwndCanvas)) {
+            delete engine;
+            DebugAlternateChmEngine(true);
+            engine = EngineManager::CreateEngine(true, args.fileName, pwdUI, &engineType);
+            CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
+        }
+    }
+
     if (engine)
         win->dm = new DisplayModel(engine, engineType, win);
     else
         win->dm = NULL;
-
-    // make sure that MSHTML can't be used as a potential exploit
-    // vector through another browser and our plugin (which doesn't
-    // advertise itself for Chm documents but could be tricked into
-    // loading one nonetheless)
-    if (gPluginMode && win->dm && win->dm->AsChmEngine() && IsUntrustedFile(args.fileName, gPluginURL)) {
-        delete win->dm;
-        win->dm = NULL;
-    }
 
     bool needRefresh = !win->dm;
 
@@ -941,9 +958,6 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
             win->dm->CopyNavHistory(*prevModel);
         }
         delete prevModel;
-        ChmEngine *chmEngine = win->dm->AsChmEngine();
-        if (chmEngine)
-            chmEngine->SetParentHwnd(win->hwndCanvas);
     } else if (allowFailure) {
         delete prevModel;
         ScopedMem<WCHAR> title2(str::Format(L"%s - %s", path::GetBaseName(args.fileName), SUMATRA_WINDOW_TITLE));

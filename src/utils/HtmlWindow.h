@@ -36,6 +36,7 @@ class HtmlWindow
 protected:
     friend class FrameSite;
 
+    int                 windowId;
     HWND                hwndParent;
     IWebBrowser2 *      webBrowser;
     IOleObject *        oleObject;
@@ -50,17 +51,15 @@ protected:
 
     ScopedMem<WCHAR>    currentURL;
 
+    HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb);
+
     void NavigateToAboutBlank();
-    void CreateBrowser();
+    bool CreateBrowser();
 
     void SubclassHwnd();
     void UnsubclassHwnd();
 
 public:
-    WNDPROC wndProcBrowserPrev;
-    HtmlWindowCallback *htmlWinCb;
-
-    HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb);
     ~HtmlWindow();
 
     void OnSize(SizeI size);
@@ -87,7 +86,12 @@ public:
 
     bool canGoBack;
     bool canGoForward;
-    int  windowId;
+
+    // TODO: not for public use
+    WNDPROC wndProcBrowserPrev;
+    HtmlWindowCallback *htmlWinCb;
+
+    static HtmlWindow *Create(HWND hwndParent, HtmlWindowCallback *cb);
 };
 
 #endif

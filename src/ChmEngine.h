@@ -22,7 +22,7 @@ public:
 
 class ChmEngine : public BaseEngine {
 public:
-    virtual void SetParentHwnd(HWND hwnd) = 0;
+    virtual bool SetParentHwnd(HWND hwnd) = 0;
     virtual void DisplayPage(int pageNo) = 0;
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) = 0;
 

@@ -143,7 +143,7 @@ public:
     // (probably faster than re-creating it from html every time)
     virtual DocTocItem *GetTocTree() { return tocRoot ? tocRoot->Clone() : NULL; }
 
-    virtual void SetParentHwnd(HWND hwnd);
+    virtual bool SetParentHwnd(HWND hwnd);
     virtual void DisplayPage(int pageNo) { DisplayPage(pages.At(pageNo - 1)); }
     virtual void SetNavigationCalback(ChmNavigationCallback *cb) { navCb = cb; }
 
@@ -240,11 +240,11 @@ bool ChmEngineImpl::OnBeforeNavigate(const WCHAR *url, bool newWindow)
     return true;
 }
 
-void ChmEngineImpl::SetParentHwnd(HWND hwnd)
+bool ChmEngineImpl::SetParentHwnd(HWND hwnd)
 {
     CrashIf(htmlWindow);
-    delete htmlWindow;
-    htmlWindow = new HtmlWindow(hwnd, this);
+    htmlWindow = HtmlWindow::Create(hwnd, this);
+    return htmlWindow != NULL;
 }
 
 void ChmEngineImpl::DisplayPage(const WCHAR *pageUrl)

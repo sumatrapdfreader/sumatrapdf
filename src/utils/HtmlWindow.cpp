@@ -1057,6 +1057,8 @@ void HtmlWindow::SubclassHwnd()
 
 void HtmlWindow::UnsubclassHwnd()
 {
+    if (!wndProcBrowserPrev)
+        return;
     SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)wndProcBrowserPrev);
     SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)0);
 }
@@ -1072,21 +1074,21 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     assert(hwndParent);
     RegisterInternetProtocolFactory();
     windowId = GenNewWindowId(this);
-    CreateBrowser();
 }
 
-void HtmlWindow::CreateBrowser()
+bool HtmlWindow::CreateBrowser()
 {
-    IUnknown *p;
+    ScopedComPtr<IUnknown> p;
     HRESULT hr = CoCreateInstance(CLSID_WebBrowser, NULL,
-                    CLSCTX_ALL, IID_IUnknown, (void**)&p);
-    assert(SUCCEEDED(hr));
+                                  CLSCTX_ALL, IID_IUnknown, (void**)&p);
+    if (FAILED(hr)) return false;
     hr = p->QueryInterface(IID_IViewObject, (void**)&viewObject);
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr)) return false;
     hr = p->QueryInterface(IID_IOleObject, (void**)&oleObject);
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr)) return false;
 
     FrameSite *fs = new FrameSite(this);
+    ScopedComPtr<IUnknown> fsScope(fs);
 
     DWORD status;
     oleObject->GetMiscStatus(DVASPECT_CONTENT, &status);
@@ -1104,10 +1106,10 @@ void HtmlWindow::CreateBrowser()
     }
 
     hr = p->QueryInterface(IID_IOleInPlaceObject, (void**)&oleInPlaceObject);
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr)) return false;
 
     hr = oleInPlaceObject->GetWindow(&oleObjectHwnd);
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr)) return false;
 
     ::SetActiveWindow(oleObjectHwnd);
     RECT rc = ClientRect(hwndParent).ToRECT();
@@ -1126,16 +1128,14 @@ void HtmlWindow::CreateBrowser()
         oleObject->SetClientSite(fs->oleClientSite);
 
     hr = p->QueryInterface(IID_IWebBrowser2, (void**)&webBrowser);
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr)) return false;
 
-    IConnectionPointContainer *cpContainer;
+    ScopedComPtr<IConnectionPointContainer> cpContainer;
     hr = p->QueryInterface(IID_IConnectionPointContainer, (void**)&cpContainer);
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr)) return false;
     hr = cpContainer->FindConnectionPoint(DIID_DWebBrowserEvents2, &connectionPoint);
-    assert(SUCCEEDED(hr));
+    if (FAILED(hr)) return false;
     connectionPoint->Advise(fs->hwDWebBrowserEvents2, &adviseCookie);
-    cpContainer->Release();
-    fs->Release();
 
     // TODO: disallow accessing any random url?
     //webBrowser->put_Offline(VARIANT_TRUE);
@@ -1151,6 +1151,18 @@ void HtmlWindow::CreateBrowser()
 
     NavigateToAboutBlank();
     SubclassHwnd();
+
+    return true;
+}
+
+HtmlWindow *HtmlWindow::Create(HWND hwndParent, HtmlWindowCallback *cb)
+{
+    HtmlWindow *htmlWin = new HtmlWindow(hwndParent, cb);
+    if (!htmlWin->CreateBrowser()) {
+        delete htmlWin;
+        return NULL;
+    }
+    return htmlWin;
 }
 
 HtmlWindow::~HtmlWindow()
@@ -1173,10 +1185,8 @@ HtmlWindow::~HtmlWindow()
 
     if (viewObject)
         viewObject->Release();
-
     if (htmlContent)
         htmlContent->Release();
-
     if (webBrowser)
         webBrowser->Release();
 
