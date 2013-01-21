@@ -181,7 +181,10 @@ pdf_load_builtin_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname)
 
 #ifdef _WIN32
 	/* SumatraPDF: prefer system fonts unless a base font is explicitly requested */
-	if (!pdf_lookup_builtin_font(fontname, &len))
+	char *clean_name = clean_font_name(fontname);
+	if (!pdf_lookup_builtin_font(fontname, &len) &&
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
+		(clean_name == fontname || strncmp(clean_name, "Times-", 6) != 0))
 	{
 		/* TODO: the metrics for Times-Roman and Courier don't match
 		   those of Windows' Times New Roman and Courier New; for
