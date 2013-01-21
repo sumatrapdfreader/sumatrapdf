@@ -2676,7 +2676,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     }
 #ifdef DEBUG
     // ... as well as files containing annotations ...
-    else if (win.dm->engine->SupportsAnnotation(Annot_Highlight, true)) {
+    else if (win.dm->engine->SupportsAnnotation(true)) {
         ok = win.dm->engine->SaveFileAs(realDstFileName);
     }
 #endif
@@ -3692,7 +3692,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
         ToggleGdiDebugging();
         break;
     case 0xA7:
-        if (win.dm->engine->SupportsAnnotation(Annot_Highlight)) {
+        if (win.dm->engine->SupportsAnnotation()) {
             // convert the current selection into a text highlighting annotation
             if (!win.showSelection || !win.selectionOnPage)
                 win.dm->engine->UpdateUserAnnotations(NULL);
@@ -3703,7 +3703,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
                     annots.Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, RGB(0xE2, 0xC4, 0xE2)));
                     // annots.Append(PageAnnotation(Annot_Underline, sel.pageNo, sel.rect, RGB(0x00, 0x00, 0x00)));
                     // annots.Append(PageAnnotation(Annot_StrikeOut, sel.pageNo, sel.rect, RGB(0x80, 0x80, 0x80)));
-                    // annots.Append(PageAnnotation(Annot_Squiggly, sel.pageNo, sel.rect, RGB(0xFF, 0x00, 0x00)));
+                    annots.Append(PageAnnotation(Annot_Squiggly, sel.pageNo, sel.rect, RGB(0xFF, 0x00, 0x00)));
                 }
                 win.dm->engine->UpdateUserAnnotations(&annots);
                 gRenderCache.CancelRendering(win.dm);

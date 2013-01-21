@@ -235,7 +235,7 @@ public:
 
     virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
-    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const;
+    virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
 
     // DPI isn't constant for all pages and thus premultiplied
@@ -790,18 +790,6 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coord
     }
 
     return extracted.StealData();
-}
-
-bool DjVuEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
-{
-    if (forSaving)
-        return false;
-    switch (type) {
-    case Annot_Highlight: case Annot_Underline: case Annot_StrikeOut: case Annot_Squiggly:
-        return true;
-    default:
-        return false;
-    }
 }
 
 void DjVuEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)

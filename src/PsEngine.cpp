@@ -250,8 +250,8 @@ public:
         return pdfEngine->GetProperty(prop);
     }
 
-    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const {
-        return !forSaving && pdfEngine && pdfEngine->SupportsAnnotation(type);
+    virtual bool SupportsAnnotation(bool forSaving=false) const {
+        return !forSaving && pdfEngine && pdfEngine->SupportsAnnotation();
     }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) {
         if (pdfEngine) pdfEngine->UpdateUserAnnotations(list);

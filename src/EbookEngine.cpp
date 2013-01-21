@@ -94,7 +94,7 @@ public:
     virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Book; }
 
-    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const;
+    virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
@@ -502,18 +502,6 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_o
         memcpy(*coords_out, coords.LendData(), coords.Count() * sizeof(RectI));
     }
     return content.StealData();
-}
-
-bool EbookEngine::SupportsAnnotation(PageAnnotType type, bool forSaving) const
-{
-    if (forSaving)
-        return false;
-    switch (type) {
-    case Annot_Highlight: case Annot_Underline: case Annot_StrikeOut: case Annot_Squiggly:
-        return true;
-    default:
-        return false;
-    }
 }
 
 void EbookEngine::UpdateUserAnnotations(Vec<PageAnnotation> *list)

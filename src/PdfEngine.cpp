@@ -1122,7 +1122,7 @@ public:
     virtual PageLayoutType PreferredLayout();
     virtual WCHAR *GetProperty(DocumentProperty prop);
 
-    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const;
+    virtual bool SupportsAnnotation(bool forSaving=false) const;
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
 
     virtual bool AllowsPrinting() const {
@@ -1255,7 +1255,7 @@ class PdfComment : public PageElement {
 
 public:
     PdfComment(const WCHAR *content, RectD rect, int pageNo) :
-        annot(Annot_Comment, pageNo, rect, (COLORREF)0), content(str::Dup(content)) { }
+        annot(Annot_None, pageNo, rect, (COLORREF)0), content(str::Dup(content)) { }
 
     virtual PageElementType GetType() const { return Element_Comment; }
     virtual int GetPageNo() const { return annot.pageNo; }
@@ -2612,7 +2612,7 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
     return NULL;
 };
 
-bool PdfEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
+bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const
 {
     if (forSaving) {
         // TODO: updating some encrypted documents currently breaks them for Adobe Reader
@@ -2624,13 +2624,7 @@ bool PdfEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
                 return false;
         }
     }
-
-    switch (type) {
-    case Annot_Highlight: case Annot_Underline: case Annot_StrikeOut: case Annot_Squiggly:
-        return true;
-    default:
-        return false;
-    }
+    return true;
 }
 
 void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)
@@ -3196,7 +3190,7 @@ public:
     virtual bool HasClipOptimizations(int pageNo);
     virtual WCHAR *GetProperty(DocumentProperty prop);
 
-    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const;
+    virtual bool SupportsAnnotation(bool forSaving=false) const;
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
 
     virtual float GetFileDPI() const { return 72.0f; }
@@ -3974,17 +3968,9 @@ WCHAR *XpsEngineImpl::GetProperty(DocumentProperty prop)
     return value ? str::conv::FromUtf8(value) : NULL;
 };
 
-bool XpsEngineImpl::SupportsAnnotation(PageAnnotType type, bool forSaving) const
+bool XpsEngineImpl::SupportsAnnotation(bool forSaving) const
 {
-    if (forSaving)
-        return false; // for now
-
-    switch (type) {
-    case Annot_Highlight: case Annot_Underline: case Annot_StrikeOut: case Annot_Squiggly:
-        return true;
-    default:
-        return false;
-    }
+    return !forSaving; // for now
 }
 
 void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)

@@ -148,7 +148,7 @@ public:
     virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
     virtual bool IsImageCollection() const { return true; }
 
-    virtual bool SupportsAnnotation(PageAnnotType type, bool forSaving=false) const { return false; }
+    virtual bool SupportsAnnotation(bool forSaving=false) const { return false; }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
 
     virtual const WCHAR *GetDefaultFileExt() const { return fileExt; }
