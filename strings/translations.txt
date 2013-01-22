@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1df5d64a360bb76f3c7b8dd0b789a1efbdc2ee58
+ede40bf140483c2461b36500bebc0071b28f30d6
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1685,7 +1685,7 @@ it:&Apri...\tCtrl+O
 ja:開く(&O)...\tCtrl+O
 ka:&გახსნა...\tCtrl+O
 kr:열기(&O)...\tCtrl+O
-ku:...کردنەوە&\tCtrl+O
+ku:کردنەوە...&\tCtrl+O
 kw:&Ygor...\tCtrl+O
 lt:&Atverti...\tCtrl+O
 mk:&Отвори...\tCtrl+O
@@ -1750,7 +1750,7 @@ it:&Opzioni...
 ja:オプション(&O)...
 ka:&პარამეტრები...
 kr:옵션(&O)...
-ku:...هەڵبژاردنەکان&
+ku:هەڵبژاردنەکان...&
 kw:&Etholyow...
 lt:&Nuostatos...
 mk:&Опции...
@@ -1985,7 +1985,7 @@ it:&Stampa
 ja:印刷(&P)...
 ka:&ამობეჭდვა...
 kr:인쇄(&P)...
-ku:چاپکردن&
+ku:چاپکردن...&
 lt:&Spausdinti...
 mk:&Печати...
 ne:&छाप्नुहोस् ...
@@ -2100,7 +2100,7 @@ it:Stam&pa...\tCtrl+P
 ja:印刷(&P)...\tCtrl+P
 ka:&ამობეჭდვა...\tCtrl+P
 kr:인쇄(&P)...\tCtrl+P
-ku:...چاپکردن&\tCtrl+P
+ku:چاپکردن...&\tCtrl+P
 kw:&Pryntya\tCtrl+P
 lt:&Spausdinti...\tCtrl+P
 mk:&Печати...\tCtrl+P
@@ -2329,7 +2329,7 @@ it:&Salva come...
 ja:名前を付けて保存(&S)...
 ka:შენახვა &როგორც...
 kr:다른 이름으로 저장(&S)...
-ku:...پاراستن وەکو&
+ku:پاراستن وەکو...&
 lt:Į&rašyti kaip...
 mk:&Зачувај како...
 ne:ब&चत गर्नुहोस्...
@@ -2388,7 +2388,7 @@ it:&Salva con nome...\t<Ctrl>+S
 ja:名前を付けて保存(&S)...\tCtrl+S
 ka:შენახვა &როგორც...\tCtrl+S
 kr:다른 이름으로 저장(&S)...\tCtrl+S
-ku:&...پاراستن وەکو\tCtrl+S
+ku:&پاراستن وەکو...\tCtrl+S
 kw:&Gwitha avel...\tCtrl+S
 lt:Į&rašyti kaip...\tCtrl+S
 mk:&Зачувај како...\tCtrl+S
@@ -2938,7 +2938,7 @@ it:(di %d)
 ja:(%d 中)
 ka:(დან %d)
 kr:(총 %d 중)
-ku:(%d لە)
+ku:(لە %d)
 kw:(a %d)
 lt:(iš %d)
 mk:(од %d)
@@ -3051,7 +3051,7 @@ it:Informazioni su SumatraPDF
 ja:SumatraPDF のバージョン情報
 ka:SumatraPDF-ის შესახებ
 kr:SumatraPDF 정보
-ku:SumatraPDF دەربارەی
+ku:دەربارەی SumatraPDF
 kw:A-dro dhe SumatraPDF
 lt:Apie „SumatraPDF“
 mk:За SumatraPDF
@@ -3114,7 +3114,7 @@ it:Aggiungi ai Preferiti
 ja:お気に入りに追加
 ka:რჩეულებში დამატება
 kr:즐겨찾기 추가
-ku:زیادکردنی پەسەند
+ku:زیادکردنی بۆ لیستی پەسەندەکان
 lt:Sukurti žymą
 mk:Додади омилен
 ne:मनपर्नेमा थप्नुहोस्
@@ -4501,7 +4501,7 @@ it:Lingua interfaccia (Change language)
 ja:言語の変更 (Change Language)
 ka:ენის შეცვლა (Change Language)
 kr:언어 바꾸기(Change Language)
-ku:(Change Language) گۆڕینی زمان
+ku:گۆڕینی زمان (Change Language)
 kw:Chanjya yeth (Change Language)
 lt:Keisti kalbą (Change Language)
 mk:Смени јазик (Change Language)
@@ -4628,7 +4628,7 @@ it:Fumetti
 ja:マンガ本
 ka:CBR, CBZ დოკუმენტები (კომიქსები)
 kr:만화 책
-ku:(پەرتووکی کۆمیدی (گاڵتەجاڕی
+ku:پەرتووکی کۆمیدی
 lt:Komiksų knygelės
 mk:Стрипови
 ne:कमिक पुस्तिका
@@ -5536,7 +5536,7 @@ it:Ingrandimento personali&zzato\t<Ctrl>+Y
 ja:拡大率の指定(&Z)...\tCtrl+Y
 ka:&მასშტაბის მითითება...\tCtrl+Y
 kr:사용자 지정 배율(&Z)...\tCtrl+Y
-ku:...هێنانەپێشەوەی &تایبەت\tCtrl+Y
+ku:هێنانەپێشەوەی &تایبەت...\tCtrl+Y
 kw:&Zoum arbennik...\tCtrl+Y
 lt:Pasirinkti &mastelį...\tCtrl+Y
 mk:&Зумирање по избор...\tCtrl+Y
@@ -6253,7 +6253,7 @@ it:Inserire la linea di comando da eseguire quando fai doppio clic su un documen
 ja:PDF ドキュメント上でダブルクリックしたときに呼び出すコマンドラインを入力:
 ka:შეიყვანეთ ბრძანების სტრიქონი რომლის გამოძახებაც PDF დოკუმენტზე ორჯერ დაწპაკუნების შემდეგ გსურთ:
 kr:PDF 문서를 더블 클릭할 때 호출할 명령줄 입력:
-ku::کرا PDF فرمانی هێڵ بنوسە بۆ یارمەتیدان کاتێک دوو کلیک لەسەر بەڵگەنامەی
+ku:کرا PDF فرمانی هێڵ بنوسە بۆ یارمەتیدان کاتێک دوو کلیک لەسەر بەڵگەنامەی:
 lt:Įveskite komandinę eilutę, vykdomą atverčiant PDF dokumentą:
 mk:Внесете команда, за да се извршува при секое двојно кликнунвање на PDF-документот:
 ne:PDF कागजातमा दोहोरो क्लिक गर्दा आह्वान गर्ने आदेश पङ्‌क्ति प्रविष्ट गराउनुहोस्:
@@ -6601,7 +6601,7 @@ id:Gagal mengganti nama berkas!
 it:Impossibile rinominare il file
 ja:ファイル名の変更に失敗しました！
 kr:파일 이름을 바꾸지 못했습니다!
-ku:!گۆڕینی ناوی فایل سەرکەوتونەبوو
+ku:گۆڕینی ناوی فایل سەرکەوتونەبوو!
 mk:Не успеав да ја преименувам датотеката!
 ne:नाम फेराई असफल
 nl:Naam niet kunnen wijzigen!
@@ -7026,7 +7026,7 @@ it:Tro&va...\t<Ctrl>+F
 ja:検索(&D)...\tCtrl+F
 ka:&ძიება...\tCtrl+F
 kr:찾기(&D)...\tCtrl+F
-ku:...دۆ&زینەوە\tCtrl+F
+ku:دۆ&زینەوە...\tCtrl+F
 kw:Kavos...\tCtrl+F
 lt:&Ieškoti...\tCtrl+F
 mk:Најди...\tCtrl+F
@@ -7887,7 +7887,7 @@ id:Memformat buku... %d halaman
 it:Formattazione del libro ... %d pagine
 ja:製本中… %d ページ
 kr:%d 페이지 읽어들이는 중...
-ku:پەڕە %d ... فۆڕماتکردنی پەڕەکانی پەرتووک
+ku:پەڕە %d  فۆڕماتکردنی پەڕەکانی پەرتووک ...
 mk:Ја форматирам книгата... %d страници
 ne:पुस्तक स्वरूपण ... %d पृष्ठहरु
 nl:Boek samenstellen... %d paginas
@@ -8344,7 +8344,7 @@ it:File immagine (*.%s)
 ja:画像ファイル (*.%s)
 ka:ნახატი ფაილები (*.%s)
 kr:이미지 파일 (*.%s)
-ku:(*.%s) فایلەکانی وێنە
+ku:(*.%s) فایلە وێنەییەکان
 lt:Grafiniai failai (*.%s)
 mk:Слики (*.%s)
 ne:छवि फाइल (*.%s)
@@ -8462,7 +8462,7 @@ id:Memuat berkas %s...
 it:Caricamento file %s...
 ja:%s を読込中…
 kr:%s 파일 불러오는 중...
-ku:... %s کردنەوەی فایلی
+ku:%s کردنەوەی فایلی ...
 mk:Ја вчитувам датотеката %s...
 ne:%s फाइल लोड हुँदैछ ...
 nl:Bestand %s laden...
@@ -9496,7 +9496,7 @@ it:Apri documento...
 ja:ドキュメントを開く...
 ka:დოკუმენტის გახსნა...
 kr:문서 열기...
-ku:...کردنەوەی بەڵگەنامە
+ku:کردنەوەی بەڵگەنامە...
 lt:Atverti dokumentą...
 mk:Отвори документ...
 ne:कागजात खोल्नुहोस्
@@ -10168,7 +10168,7 @@ it:Pa&gina...\t<Ctrl>+G
 ja:ページ指定(&G)...\tCtrl+G
 ka:&გვერდის მითითება...\tCtrl+G
 kr:페이지 이동(&G)...\tCtrl+G
-ku:...پە&ڕە\tCtrl+G
+ku:پە&ڕە...\tCtrl+G
 kw:Folen...\tCtrl+G
 lt:P&uslapis...\tCtrl+G
 mk:Страница...\tCtrl+G
@@ -10230,7 +10230,7 @@ it:Pagina %s
 ja:ページ %s
 ka:%s გვერდი
 kr:%s 페이지
-ku:%s پەڕەی
+ku:پەڕەی %s
 lt:%s puslapis
 mk:страница %s
 ne:पृष्ठ %s
@@ -10520,7 +10520,7 @@ it:Rendering in corso - attendere...
 ja:描画中...
 ka:მიმდინარეობს რენდერი, გთხოვთ მოიცადეთ...
 kr:렌더링하는 중, 잠시만 기다리세요...
-ku:...تکایە چاوەڕوانبە - پوختە ئەکرێت
+ku:تکایە چاوەڕوانبە - پوختە ئەکرێت...
 kw:Gortos, mar pleg - ow rendra...
 lt:Prašome palaukti – atvaizduojama...
 mk:Ве молам почекајте - создавам приказ...
@@ -11071,7 +11071,7 @@ it:Stampa pagina %d di %d...
 ja:%d / %d ページ目を印刷中...
 ka:მიმდინარეობს %d (%d-იდან) გვერდის ამობეჭდვა...
 kr:%d / %d 페이지 인쇄하는 중...
-ku:...%d پەڕە لە %d چاپکردنی
+ku:%d پەڕە لە %d چاپکردنی...
 lt:Spausdinamas %d puslapis iš %d...
 mk:Печатење на страница %d од %d...
 ne:पृष्ठ %d (कुल %d मध्ये) को छपाई हुदैछ ...
@@ -11129,7 +11129,7 @@ it:Problemi di stampa.
 ja:印刷の問題です。
 ka:ამობეჭდვის პრობლემა.
 kr:인쇄하는 중 문제 발생.
-ku:.کێشە هەیە لە  چاپکردندا
+ku:کێشە هەیە لە  چاپکردندا.
 kw:Kaletter ow pryntya
 lt:Spausdinimo problema.
 mk:Проблем при печатење.
@@ -11188,7 +11188,7 @@ id:&Ganti Nama...\tF2
 it:Ri&nomina...\tF2
 ja:名前を変更(&N)...\tF2
 kr:이름 바꾸기(&N)...\tF2
-ku:...گۆڕینی &ناو\tF2
+ku:گۆڕینی &ناو...\tF2
 mk:Преименувај... \tF2
 ne:नाम &फेर्नुहोस्...\tF2
 nl:&Naam wijzigen...\tF2
@@ -11699,7 +11699,7 @@ it:Salva &collegamento\t<Ctrl>+<Maiusc>+S
 ja:ショートカットを作成(&H)...\tCtrl+Shift+S
 ka:&ჩანიშვნა…\tCtrl+Shift+S
 kr:바로가기 저장(&H)...\tCtrl+Shift+S
-ku:...پاراستنی کورتە&ئایکۆن\tCtrl+Shift+S
+ku:پاراستنی کورتە&ئایکۆن...\tCtrl+Shift+S
 mk:Зачувај &кратенка...\tCtrl+Shift+S
 ne:&सर्टकट बचत गर्नुहोस्...\tCtrl+Shift+S
 nl:Snelkoppeling opslaan...\tCtrl+Shift+S
@@ -11974,7 +11974,7 @@ it:Invia via &email...
 ja:電子メールで送信(&E)...
 ka:&ელ.ფოსტით გაგზავნა...
 kr:이메일로 보내기(&E)...
-ku:...ناردن بەهۆی &پۆستی ئەلکترۆنیەوە
+ku:ناردن بەهۆی &پۆستی ئەلکترۆنیەوە...
 kw:Danvon der &e-bost...
 lt:Siųsti el. &paštu...
 mk:Испрати по &е-пошта...
@@ -12663,7 +12663,7 @@ it:Opzioni di SumatraPDF
 ja:SumatraPDF のオプション
 ka:SumatraPDF-ის პარამეტრები
 kr:SumatraPDF 옵션
-ku:SumatraPDF هەڵبژاردنەکانی
+ku:هەڵبژاردنەکانی SumatraPDF
 kw:Etholyow SumatraPDF
 lt:„SumatraPDF“ nuostatos
 mk:Поставувања на SumatraPDF
@@ -12720,7 +12720,7 @@ it:Controllo aggiornamenti SumatraPDF
 ja:SumatraPDF の更新
 ka:SumatraPDF-ის განახლება
 kr:SumatraPDF 업데이트
-ku:SumatraPDF نوێکردنەوەی
+ku:نوێکردنەوەی SumatraPDF
 lt:„SumatraPDF“ naujinimas
 mk:Надградување на SumatraPDF
 ne:SumatraPDF अद्यावधिक
@@ -13163,7 +13163,7 @@ it:File sorgente sconosciuto (%s)
 ja:不明なソース ファイル (%s)
 ka:წყაროს ფაილი უცნობია (%s)
 kr:알 수 없는 원본 파일 (%s)
-ku:(%s) فایلە سەرچاوە نەناسراوەکان
+ku:فایلە سەرچاوە نەناسراوەکان (%s)
 kw:Restren-bennfenten anaswonnys (%s)
 lt:Nežinomas pradinis failas (%s)
 mk:Непозната изворна датотека (%s)
@@ -13473,7 +13473,7 @@ it:Il programma è aggiornato.
 ja:最新のバージョンです。
 ka:თქვენ იყენებთ უახლეს ვერსიას.
 kr:최신 버전입니다.
-ku:.تۆ دواین وەشانت هەیە
+ku:تۆ دواین وەشانت هەیە.
 kw:Yma'n versyon nowyttha genes.
 lt:Jūs naudojatės naujausia programos laida.
 mk:Ја имате најновата верзија.
