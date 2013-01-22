@@ -1098,16 +1098,14 @@ bool HtmlWindow::CreateBrowser()
     if (setClientSiteFirst)
         oleObject->SetClientSite(fs->oleClientSite);
 
-    IPersistStreamInit * psInit = NULL;
-    hr = p->QueryInterface(IID_IPersistStreamInit, (void**)&psInit);
-    if (SUCCEEDED(hr) && psInit != NULL) {
+    ScopedComQIPtr<IPersistStreamInit> psInit(p);
+    if (psInit) {
         hr = psInit->InitNew();
         assert(SUCCEEDED(hr));
     }
 
     hr = p->QueryInterface(IID_IOleInPlaceObject, (void**)&oleInPlaceObject);
     if (FAILED(hr)) return false;
-
     hr = oleInPlaceObject->GetWindow(&oleObjectHwnd);
     if (FAILED(hr)) return false;
 
@@ -1130,9 +1128,8 @@ bool HtmlWindow::CreateBrowser()
     hr = p->QueryInterface(IID_IWebBrowser2, (void**)&webBrowser);
     if (FAILED(hr)) return false;
 
-    ScopedComPtr<IConnectionPointContainer> cpContainer;
-    hr = p->QueryInterface(IID_IConnectionPointContainer, (void**)&cpContainer);
-    if (FAILED(hr)) return false;
+    ScopedComQIPtr<IConnectionPointContainer> cpContainer(p);
+    if (!cpContainer) return false;
     hr = cpContainer->FindConnectionPoint(DIID_DWebBrowserEvents2, &connectionPoint);
     if (FAILED(hr)) return false;
     connectionPoint->Advise(fs->hwDWebBrowserEvents2, &adviseCookie);
@@ -1187,8 +1184,10 @@ HtmlWindow::~HtmlWindow()
         viewObject->Release();
     if (htmlContent)
         htmlContent->Release();
-    if (webBrowser)
-        webBrowser->Release();
+    if (webBrowser) {
+        ULONG refCount = webBrowser->Release();
+        CrashIf(refCount != 0);
+    }
 
     FreeWindowId(windowId);
     UnregisterInternetProtocolFactory();

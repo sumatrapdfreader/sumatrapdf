@@ -921,6 +921,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
             delete engine;
             DebugAlternateChmEngine(true);
             engine = EngineManager::CreateEngine(true, args.fileName, pwdUI, &engineType);
+            DebugAlternateChmEngine(false);
             CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
         }
     }
