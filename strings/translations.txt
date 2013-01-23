@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ede40bf140483c2461b36500bebc0071b28f30d6
+06a99374324dcceb2694767013d2bdd13f296671
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -10936,6 +10936,7 @@ de:Drucken - SumatraPDF
 dk:Udskrift igang
 el:Εκτύπωση σε εξέλιξη
 es:Impresión en progreso.
+et:Printimine on pooleli.
 fa:در حال چاپ شدن.
 fr:Impression en cours
 he:נשלח להדפסה
@@ -10969,6 +10970,7 @@ de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
 dk:Udskrift er stadig igang. Afbryd?
 el:Η εκτύπωση είναι ακόμα σε εξέλιξη. Ακύρωση και Έξοδος;
 es:Impresión aún en progreso. ¿Cancelar y salir?
+et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 fa:در حال چاپ شدن. انصراف و خروج؟
 fr:Impression toujours en cours. Annuler et quitter ?
 he:הדפסה עדיין לא הסתיימה. להפסיק פעולה ולצאת?
