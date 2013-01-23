@@ -9,7 +9,7 @@ struct pdf_image_key_s {
 	int l2factor;
 };
 
-static void pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image);
+static void pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image, int forcemask);
 
 static void
 pdf_mask_color_key(fz_pixmap *pix, int n, int *colorkey)
@@ -439,16 +439,7 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 		/* special case for JPEG2000 images */
 		if (pdf_is_jpx_image(ctx, dict))
 		{
-			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693527 */
-			if (forcemask && pdf_is_dict(pdf_dict_getsa(dict, "SMask", "Mask")))
-			{
-				fz_warn(ctx, "Ignoring recursive image soft mask");
-				fz_free(ctx, image);
-				image = NULL;
-				break; /* Out of fz_try */
-			}
-
-			pdf_load_jpx(xref, dict, image);
+			pdf_load_jpx(xref, dict, image, forcemask);
 
 			if (forcemask)
 			{
@@ -633,7 +624,7 @@ pdf_is_jpx_image(fz_context *ctx, pdf_obj *dict)
 }
 
 static void
-pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image)
+pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image, int forcemask)
 {
 	fz_buffer *buf = NULL;
 	fz_colorspace *colorspace = NULL;
@@ -669,7 +660,10 @@ pdf_load_jpx(pdf_document *xref, pdf_obj *dict, pdf_image *image)
 		obj = pdf_dict_getsa(dict, "SMask", "Mask");
 		if (pdf_is_dict(obj))
 		{
-			image->base.mask = (fz_image *)pdf_load_image_imp(xref, NULL, obj, NULL, 1);
+			if (forcemask)
+				fz_warn(ctx, "Ignoring recursive JPX soft mask");
+			else
+				image->base.mask = (fz_image *)pdf_load_image_imp(xref, NULL, obj, NULL, 1);
 		}
 
 		obj = pdf_dict_getsa(dict, "Decode", "D");
