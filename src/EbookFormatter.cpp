@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "EbookFormatter.h"
+
+#include "CssParser.h"
 #include "EbookDoc.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -63,12 +65,15 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc *doc) :
 // to be passed by the caller
 static float ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
 {
-    float x = 0;
     float sizeInPoints = 0;
-    if (str::Parse(s, len, "%fem", &x)) {
-        sizeInPoints = x * emInPoints;
-    } else if (str::Parse(s, len, "%fpt", &x)) {
-        sizeInPoints = x;
+    if (str::Parse(s, len, "%fem", &sizeInPoints)) {
+        sizeInPoints *= emInPoints;
+    } else if (str::Parse(s, len, "%fpt", &sizeInPoints)) {
+        // no conversion needed
+    } else if (str::Parse(s, len, "%fpx", &sizeInPoints)) {
+        return sizeInPoints;
+    } else {
+        return 0;
     }
     // TODO: take dpi into account
     float sizeInPixels = sizeInPoints;
@@ -77,7 +82,7 @@ static float ParseSizeAsPixels(const char *s, size_t len, float emInPoints)
 
 void MobiFormatter::HandleSpacing_Mobi(HtmlToken *t)
 {
-    if (t->IsEndTag())
+    if (!t->IsStartTag())
         return;
 
     // best I can tell, in mobi <p width="1em" height="3pt> means that
@@ -193,6 +198,25 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken *t)
         EmitImage(img);
 }
 
+void EpubFormatter::HandleBlockStyling(HtmlToken *t)
+{
+    if (!t->IsStartTag())
+        return;
+    AttrInfo *attr = t->GetAttrByName("style");
+    if (!attr)
+        return;
+
+    CssPullParser parser(attr->val, attr->valLen);
+    const CssProperty *prop;
+    while ((prop = parser.NextProp())) {
+        if (Css_Text_Indent == prop->type) {
+            float lineIndent = ParseSizeAsPixels(prop->s, prop->sLen, CurrFont()->GetSize());
+            if (lineIndent > 0)
+                EmitParagraph(lineIndent);
+        }
+    }
+}
+
 void EpubFormatter::HandleHtmlTag(HtmlToken *t)
 {
     CrashIf(!t->IsTag());
@@ -208,6 +232,10 @@ void EpubFormatter::HandleHtmlTag(HtmlToken *t)
         UpdateTagNesting(t);
     else if (Tag_Image == t->tag)
         HandleTagSvgImage(t);
+    else if (Tag_P == t->tag) {
+        HtmlFormatter::HandleHtmlTag(t);
+        HandleBlockStyling(t);
+    }
     else
         HtmlFormatter::HandleHtmlTag(t);
 }
@@ -323,4 +351,31 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken *t)
     ImageData *img = htmlDoc->GetImageData(src);
     if (img)
         EmitImage(img);
+}
+
+void HtmlFileFormatter::HandleHtmlTag(HtmlToken *t)
+{
+    HtmlFormatter::HandleHtmlTag(t);
+    if (Tag_P == t->tag) {
+        HandleBlockStyling(t);
+    }
+}
+
+void HtmlFileFormatter::HandleBlockStyling(HtmlToken *t)
+{
+    if (!t->IsStartTag())
+        return;
+    AttrInfo *attr = t->GetAttrByName("style");
+    if (!attr)
+        return;
+
+    CssPullParser parser(attr->val, attr->valLen);
+    const CssProperty *prop;
+    while ((prop = parser.NextProp())) {
+        if (Css_Text_Indent == prop->type) {
+            float lineIndent = ParseSizeAsPixels(prop->s, prop->sLen, CurrFont()->GetSize());
+            if (lineIndent > 0)
+                EmitParagraph(lineIndent);
+        }
+    }
 }

@@ -33,4 +33,11 @@ bool            IsInlineTag(HtmlTag item);
 AlignAttr       FindAlignAttr(const char *name, size_t len);
 uint32_t        FindHtmlEntityRune(const char *name, size_t len);
 
+enum CssProp {
+    Css_Color, Css_Font, Css_Font_Family, Css_Font_Size, Css_Font_Weight,
+    Css_Text_Indent, Css_Unknown
+};
+
+CssProp         FindCssProp(const char *name, size_t len);
+
 #endif

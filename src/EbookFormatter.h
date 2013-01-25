@@ -37,6 +37,7 @@ class EpubFormatter : public HtmlFormatter {
     virtual void HandleHtmlTag(HtmlToken *t);
     virtual bool IgnoreText();
 
+    void HandleBlockStyling(HtmlToken *t);
     void HandleTagSvgImage(HtmlToken *t);
 
     EpubDoc *epubDoc;
@@ -89,6 +90,8 @@ class HtmlDoc;
 class HtmlFileFormatter : public HtmlFormatter {
 protected:
     virtual void HandleTagImg(HtmlToken *t);
+    virtual void HandleHtmlTag(HtmlToken *t);
+    void HandleBlockStyling(HtmlToken *t);
 
     HtmlDoc *htmlDoc;
 

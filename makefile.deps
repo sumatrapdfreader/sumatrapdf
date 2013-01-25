@@ -193,9 +193,9 @@ $(OS)\EbookEngine.obj: src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\EbookFormatter.obj: src\BaseEngine.h src\Doc.h src\EbookBase.h
 $(OS)\EbookFormatter.obj: src\EbookDoc.h src\EbookFormatter.h src\HtmlFormatter.h
 $(OS)\EbookFormatter.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\EbookFormatter.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
-$(OS)\EbookFormatter.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\EbookFormatter.obj: src\utils\Vec.h src\utils\ZipUtil.h
+$(OS)\EbookFormatter.obj: src\utils\CssParser.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
+$(OS)\EbookFormatter.obj: src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h src\utils\Scoped.h
+$(OS)\EbookFormatter.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\EbookWindow.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\EbookWindow.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\EbookWindow.obj: src\Doc.h src\EbookBase.h src\EbookController.h
@@ -489,6 +489,10 @@ $(OU)\ByteOrderDecoder_ut.obj: src\utils\ByteOrderDecoder.h
 $(OU)\CmdLineParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\CmdLineParser.h
 $(OU)\CmdLineParser.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\CmdLineParser.obj: src\utils\Vec.h
+$(OU)\CssParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\CssParser.h
+$(OU)\CssParser.obj: src\utils\CssParser_ut.cpp src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
+$(OU)\CssParser.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OU)\CssParser.obj: src\utils\Vec.h
 $(OU)\DbgHelpDyn.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DbgHelpDyn.h
 $(OU)\DbgHelpDyn.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\DbgHelpDyn.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h

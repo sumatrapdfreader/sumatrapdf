@@ -147,6 +147,10 @@ for (name, value) in List_MathML2_Entities:
 	assert name not in entitydefs
 	List_HTML_Entities.append((name, str(value)))
 
+########## CSS properties ##########
+
+List_CSS_Props = "color font font-family font-size font-weight text-indent"
+
 ########## CSS colors ##########
 
 # array of name/value for css colors, value is what goes inside MKRGB()
@@ -182,6 +186,9 @@ bool            IsInlineTag(HtmlTag item);
 AlignAttr       FindAlignAttr(const char *name, size_t len);
 uint32_t        FindHtmlEntityRune(const char *name, size_t len);
 
+%(enum_cssprop)s
+CssProp         FindCssProp(const char *name, size_t len);
+
 #endif
 """
 
@@ -200,17 +207,20 @@ Template_Lookup_Code = """\
 %(code_inlinetag)s
 %(code_alignattr)s
 %(code_htmlentity)s
+%(code_cssprop)s
 """
 
 def main():
 	tags = [(name, getEnumName(name, "Tag")) for name in List_HTML_Tags.split()]
 	attrs = [(name, getEnumName(name, "Attr")) for name in List_HTML_Attrs.split()]
 	aligns = [(name, getEnumName(name, "Align")) for name in List_Align_Attrs.split()]
+	cssProps = [(name, getEnumName(name, "Css")) for name in List_CSS_Props.split()]
 	cssColors = [(name, "MKRGB(%s)" % value) for (name, value) in List_CSS_Colors]
 	
 	enum_htmltag = createTypeEnum(tags, "HtmlTag", "Tag_NotFound")
 	enum_htmlattr = createTypeEnum(attrs, "HtmlAttr", "Attr_NotFound")
 	enum_alignattr = createTypeEnum(aligns, "AlignAttr", "Align_NotFound")
+	enum_cssprop = createTypeEnum(cssProps, "CssProp", "Css_Unknown")
 	
 	code_defines = Template_Defines
 	code_htmltag = createFastFinder(tags, "HtmlTag", "Tag_NotFound", True)
@@ -219,6 +229,7 @@ def main():
 	code_inlinetag = createFastSelector(tags, List_Inline_Tags.split(), "IsInlineTag", "HtmlTag")
 	code_alignattr = createFastFinder(aligns, "AlignAttr", "Align_NotFound", True)
 	code_htmlentity = Template_Entities_Comment + "\n" + createFastFinder(List_HTML_Entities, "uint32_t", "-1", False, "HtmlEntityRune")
+	code_cssprop = createFastFinder(cssProps, "CssProp", "Css_Unknown", True)
 	code_csscolor = createFastFinder(cssColors, "ARGB", "MKRGBA(0,0,0,0)", True, "CssColor")
 	
 	content = Template_Lookup_Header % locals()

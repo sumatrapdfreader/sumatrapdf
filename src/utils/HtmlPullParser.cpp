@@ -36,7 +36,7 @@ int HtmlEntityNameToRune(const WCHAR *name, size_t nameLen)
     return FindHtmlEntityRune(asciiName, nameLen);
 }
 
-static bool SkipUntil(const char*& s, const char *end, char c)
+bool SkipUntil(const char*& s, const char *end, char c)
 {
     while ((s < end) && (*s != c)) {
         ++s;
@@ -44,7 +44,7 @@ static bool SkipUntil(const char*& s, const char *end, char c)
     return *s == c;
 }
 
-static bool SkipUntil(const char*& s, const char *end, char *term)
+bool SkipUntil(const char*& s, const char *end, char *term)
 {
     size_t len = str::Len(term);
     for (; s < end; s++) {

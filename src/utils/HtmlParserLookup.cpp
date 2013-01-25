@@ -1277,3 +1277,24 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
     }
     return -1;
 }
+
+CssProp FindCssProp(const char *name, size_t len)
+{
+    uint32_t key = 0 == len ? 0 : 1 == len ? STR1i(name) :
+                   2 == len ? STR2i(name) : 3 == len ? STR3i(name) : STR4i(name);
+    switch (key) {
+    case CS4('c','o','l','o'):
+        if (5 == len && CS1('r') == STR1i(name + 4)) return Css_Color;
+        break;
+    case CS4('f','o','n','t'):
+        if (4 == len) return Css_Font;
+        if (11 == len && str::EqNI(name + 4, "-family", 7)) return Css_Font_Family;
+        if (9 == len && str::EqNI(name + 4, "-size", 5)) return Css_Font_Size;
+        if (11 == len && str::EqNI(name + 4, "-weight", 7)) return Css_Font_Weight;
+        break;
+    case CS4('t','e','x','t'):
+        if (11 == len && str::EqNI(name + 4, "-indent", 7)) return Css_Text_Indent;
+        break;
+    }
+    return Css_Unknown;
+}

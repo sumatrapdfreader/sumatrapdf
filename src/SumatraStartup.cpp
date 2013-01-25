@@ -245,6 +245,8 @@ static void RunUnitTests()
     HtmlPullParser_UnitTests();
     extern void TrivialHtmlParser_UnitTests();
     TrivialHtmlParser_UnitTests();
+    extern void CssParser_UnitTests();
+    CssParser_UnitTests();
     extern void SumatraPDF_UnitTests();
     SumatraPDF_UnitTests();
 #endif
