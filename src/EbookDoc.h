@@ -45,6 +45,7 @@ public:
     const char *GetTextData(size_t *lenOut);
     size_t GetTextDataSize();
     ImageData *GetImageData(const char *id, const char *pagePath);
+    char *GetFileData(const char *relPath, const char *pagePath, size_t *lenOut);
 
     WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;
@@ -168,6 +169,7 @@ public:
 
     const char *GetTextData(size_t *lenOut);
     ImageData *GetImageData(const char *id);
+    char *GetFileData(const char *relPath, size_t *lenOut);
 
     WCHAR *GetProperty(DocumentProperty prop) const;
     const WCHAR *GetFileName() const;

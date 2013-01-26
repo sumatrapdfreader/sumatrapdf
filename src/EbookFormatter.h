@@ -31,18 +31,35 @@ public:
 
 class EpubDoc;
 
+struct StyleRule {
+    HtmlTag     tag;
+    uint32_t    classHash;
+
+    enum Unit { px, pt, em, inherit };
+
+    float       textIndent;
+    Unit        textIndentUnit;
+    AlignAttr   textAlign;
+
+    StyleRule() : tag(Tag_NotFound), classHash(0),
+        textIndent(0), textIndentUnit(inherit), textAlign(Align_NotFound) { }
+};
+
 class EpubFormatter : public HtmlFormatter {
     virtual void HandleTagImg(HtmlToken *t);
     virtual void HandleTagPagebreak(HtmlToken *t);
     virtual void HandleHtmlTag(HtmlToken *t);
     virtual bool IgnoreText();
 
+    void HandleTagStyle(HtmlToken *t);
+    void HandleTagLink(HtmlToken *t);
     void HandleBlockStyling(HtmlToken *t);
     void HandleTagSvgImage(HtmlToken *t);
 
     EpubDoc *epubDoc;
     ScopedMem<char> pagePath;
     size_t hiddenDepth;
+    Vec<StyleRule> styles;
 
 public:
     EpubFormatter(HtmlFormatterArgs *args, EpubDoc *doc) :
@@ -91,9 +108,13 @@ class HtmlFileFormatter : public HtmlFormatter {
 protected:
     virtual void HandleTagImg(HtmlToken *t);
     virtual void HandleHtmlTag(HtmlToken *t);
+
     void HandleBlockStyling(HtmlToken *t);
+    void HandleTagStyle(HtmlToken *t);
+    void HandleTagLink(HtmlToken *t);
 
     HtmlDoc *htmlDoc;
+    Vec<StyleRule> styles;
 
 public:
     HtmlFileFormatter(HtmlFormatterArgs *args, HtmlDoc *doc) :

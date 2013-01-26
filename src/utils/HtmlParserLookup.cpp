@@ -1286,14 +1286,51 @@ CssProp FindCssProp(const char *name, size_t len)
     case CS4('c','o','l','o'):
         if (5 == len && CS1('r') == STR1i(name + 4)) return Css_Color;
         break;
+    case CS4('d','i','s','p'):
+        if (7 == len && CS3('l','a','y') == STR3i(name + 4)) return Css_Display;
+        break;
     case CS4('f','o','n','t'):
         if (4 == len) return Css_Font;
         if (11 == len && str::EqNI(name + 4, "-family", 7)) return Css_Font_Family;
         if (9 == len && str::EqNI(name + 4, "-size", 5)) return Css_Font_Size;
+        if (10 == len && str::EqNI(name + 4, "-style", 6)) return Css_Font_Style;
         if (11 == len && str::EqNI(name + 4, "-weight", 7)) return Css_Font_Weight;
         break;
+    case CS4('l','i','s','t'):
+        if (10 == len && str::EqNI(name + 4, "-style", 6)) return Css_List_Style;
+        break;
+    case CS4('m','a','r','g'):
+        if (6 == len && CS2('i','n') == STR2i(name + 4)) return Css_Margin;
+        if (13 == len && str::EqNI(name + 4, "in-bottom", 9)) return Css_Margin_Bottom;
+        if (11 == len && str::EqNI(name + 4, "in-left", 7)) return Css_Margin_Left;
+        if (12 == len && str::EqNI(name + 4, "in-right", 8)) return Css_Margin_Right;
+        if (10 == len && str::EqNI(name + 4, "in-top", 6)) return Css_Margin_Top;
+        break;
+    case CS4('m','a','x','-'):
+        if (9 == len && str::EqNI(name + 4, "width", 5)) return Css_Max_Width;
+        break;
+    case CS4('p','a','d','d'):
+        if (7 == len && CS3('i','n','g') == STR3i(name + 4)) return Css_Padding;
+        if (14 == len && str::EqNI(name + 4, "ing-bottom", 10)) return Css_Padding_Bottom;
+        if (12 == len && str::EqNI(name + 4, "ing-left", 8)) return Css_Padding_Left;
+        if (13 == len && str::EqNI(name + 4, "ing-right", 9)) return Css_Padding_Right;
+        if (11 == len && str::EqNI(name + 4, "ing-top", 7)) return Css_Padding_Top;
+        break;
+    case CS4('p','a','g','e'):
+        if (16 == len && str::EqNI(name + 4, "-break-after", 12)) return Css_Page_Break_After;
+        if (17 == len && str::EqNI(name + 4, "-break-before", 13)) return Css_Page_Break_Before;
+        break;
     case CS4('t','e','x','t'):
+        if (10 == len && str::EqNI(name + 4, "-align", 6)) return Css_Text_Align;
+        if (15 == len && str::EqNI(name + 4, "-decoration", 11)) return Css_Text_Decoration;
         if (11 == len && str::EqNI(name + 4, "-indent", 7)) return Css_Text_Indent;
+        if (14 == len && str::EqNI(name + 4, "-underline", 10)) return Css_Text_Underline;
+        break;
+    case CS4('w','h','i','t'):
+        if (11 == len && str::EqNI(name + 4, "e-space", 7)) return Css_White_Space;
+        break;
+    case CS4('w','o','r','d'):
+        if (9 == len && str::EqNI(name + 4, "-wrap", 5)) return Css_Word_Wrap;
         break;
     }
     return Css_Unknown;

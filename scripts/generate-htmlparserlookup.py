@@ -149,7 +149,7 @@ for (name, value) in List_MathML2_Entities:
 
 ########## CSS properties ##########
 
-List_CSS_Props = "color font font-family font-size font-weight text-indent"
+List_CSS_Props = "color display font font-family font-size font-style font-weight list-style margin margin-bottom margin-left margin-right margin-top max-width padding padding-bottom padding-left padding-right padding-top page-break-after page-break-before text-align text-decoration text-indent text-underline white-space word-wrap"
 
 ########## CSS colors ##########
 

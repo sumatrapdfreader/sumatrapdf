@@ -377,6 +377,16 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     return NULL;
 }
 
+char *EpubDoc::GetFileData(const char *relPath, const char *pagePath, size_t *lenOut)
+{
+    if (!pagePath)
+        return NULL;
+
+    ScopedMem<char> url(NormalizeURL(relPath, pagePath));
+    ScopedMem<WCHAR> zipPath(str::conv::FromUtf8(url));
+    return zip.GetFileData(zipPath, lenOut);
+}
+
 WCHAR *EpubDoc::GetProperty(DocumentProperty prop) const
 {
     for (size_t i = 0; i < props.Count(); i++) {
@@ -1102,6 +1112,15 @@ ImageData *HtmlDoc::GetImageData(const char *id)
     data.id = url.StealData();
     images.Append(data);
     return &images.Last().base;
+}
+
+char *HtmlDoc::GetFileData(const char *relPath, size_t *lenOut)
+{
+    ScopedMem<char> url(NormalizeURL(relPath, pagePath));
+    str::UrlDecodeInPlace(url);
+    ScopedMem<WCHAR> path(str::conv::FromUtf8(url));
+    str::TransChars(path, L"/", L"\\");
+    return file::ReadAll(path, lenOut);
 }
 
 WCHAR *HtmlDoc::GetProperty(DocumentProperty prop) const

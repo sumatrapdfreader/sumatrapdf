@@ -41,7 +41,7 @@ static void Test03()
     bool ok = parser.NextRule();
     assert(ok);
     sel = parser.NextSelector();
-    assert(sel && -1 == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "*"));
+    assert(sel && Tag_Any == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "*"));
     sel = parser.NextSelector();
     assert(!sel);
     prop = parser.NextProperty();
@@ -61,7 +61,7 @@ static void Test03()
     ok = parser.NextRule();
     assert(ok);
     sel = parser.NextSelector();
-    assert(sel && -1 == sel->tag && StrEqNIx(sel->clazz, sel->clazzLen, "green") && StrEqNIx(sel->s, sel->sLen, ".green"));
+    assert(sel && Tag_Any == sel->tag && StrEqNIx(sel->clazz, sel->clazzLen, "green") && StrEqNIx(sel->s, sel->sLen, ".green"));
     prop = parser.NextProperty();
     assert(prop && Css_Color == prop->type && StrEqNIx(prop->s, prop->sLen, "green"));
     prop = parser.NextProperty();
@@ -80,6 +80,39 @@ static void Test03()
     assert(!ok);
 }
 
+static void Test04()
+{
+    const char *simpleCss = " span\n{ color: red }\n\tp /* plain paragraph */ , p#id { }";
+    CssPullParser parser(simpleCss);
+    const CssSelector *sel;
+    const CssProperty *prop;
+
+    bool ok = parser.NextRule();
+    assert(ok);
+    prop = parser.NextProperty();
+    assert(prop && Css_Color == prop->type && StrEqNIx(prop->s, prop->sLen, "red"));
+    prop = parser.NextProperty();
+    assert(!prop);
+    sel = parser.NextSelector();
+    assert(sel && Tag_Span == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "span"));
+    sel = parser.NextSelector();
+    assert(!sel);
+
+    ok = parser.NextRule();
+    assert(ok);
+    prop = parser.NextProperty();
+    assert(!prop);
+    sel = parser.NextSelector();
+    assert(sel && Tag_P == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "p"));
+    sel = parser.NextSelector();
+    assert(sel && Tag_NotFound == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "p#id"));
+    sel = parser.NextSelector();
+    assert(!sel);
+
+    ok = parser.NextRule();
+    assert(!ok);
+}
+
 }
 
 void CssParser_UnitTests()
@@ -87,4 +120,5 @@ void CssParser_UnitTests()
     unittests::Test01();
     unittests::Test02();
     unittests::Test03();
+    unittests::Test04();
 }

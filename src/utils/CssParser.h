@@ -6,6 +6,8 @@
 
 #include "HtmlPullParser.h"
 
+#define Tag_Any ((HtmlTag)-1)
+
 struct CssSelector {
     const char *s;
     size_t      sLen;
