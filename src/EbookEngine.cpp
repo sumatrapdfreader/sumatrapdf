@@ -1252,12 +1252,19 @@ public:
         images.Append(data);
         return &images.Last().base;
     }
+
+    char *GetFileData(const char *relPath, const char *pagePath, size_t *lenOut) {
+        ScopedMem<char> url(NormalizeURL(relPath, pagePath));
+        str::UrlDecodeInPlace(url);
+        return (char *)doc->GetData(url, lenOut);
+    }
 };
 
 class ChmFormatter : public HtmlFormatter {
 protected:
     virtual void HandleTagImg(HtmlToken *t);
     virtual void HandleTagPagebreak(HtmlToken *t);
+    virtual void HandleTagLink(HtmlToken *t);
 
     ChmDataCache *chmDoc;
     ScopedMem<char> pagePath;
@@ -1290,7 +1297,31 @@ void ChmFormatter::HandleTagPagebreak(HtmlToken *t)
         RectF bbox(0, currY, pageDx, 0);
         currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
         pagePath.Set(str::DupN(attr->val, attr->valLen));
+        // reset CSS style rules for the new document
+        styleRules.Reset();
     }
+}
+
+void ChmFormatter::HandleTagLink(HtmlToken *t)
+{
+    CrashIf(!chmDoc);
+    if (t->IsEndTag())
+        return;
+    AttrInfo *attr = t->GetAttrByName("rel");
+    if (!attr || !attr->ValIs("stylesheet"))
+        return;
+    attr = t->GetAttrByName("type");
+    if (attr && !attr->ValIs("text/css"))
+        return;
+    attr = t->GetAttrByName("href");
+    if (!attr)
+        return;
+
+    size_t len;
+    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    ScopedMem<char> data(chmDoc->GetFileData(src, pagePath, &len));
+    if (data)
+        ParseStyleSheet(data, len);
 }
 
 /* BaseEngine for handling CHM documents */

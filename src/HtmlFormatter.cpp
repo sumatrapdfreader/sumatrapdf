@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "HtmlFormatter.h"
 
+#include "CssParser.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
@@ -115,6 +116,56 @@ DrawInstr DrawInstr::Anchor(const char *s, size_t len, RectF bbox)
     di.str.len = len;
     di.bbox = bbox;
     return di;
+}
+
+// parses size in the form "1em", "3pt" or "15px"
+static void ParseSizeWithUnit(const char *s, size_t len, float *size, StyleRule::Unit *unit)
+{
+    if (str::Parse(s, len, "%fem", size)) {
+        *unit = StyleRule::em;
+    } else if (str::Parse(s, len, "%fin", size)) {
+        *unit = StyleRule::pt;
+        *size *= 72; // 1 inch is 72 points
+    } else if (str::Parse(s, len, "%fpt", size)) {
+        *unit = StyleRule::pt;
+    } else if (str::Parse(s, len, "%fpx", size)) {
+        *unit = StyleRule::px;
+    } else {
+        *unit = StyleRule::inherit;
+    }
+}
+
+StyleRule StyleRule::Parse(CssPullParser *parser)
+{
+    StyleRule rule;
+    const CssProperty *prop;
+    while ((prop = parser->NextProperty())) {
+        switch (prop->type) {
+        case Css_Text_Align:
+            rule.textAlign = FindAlignAttr(prop->s, prop->sLen);
+            break;
+        // TODO: some documents use Css_Padding_Left for indentation
+        case Css_Text_Indent:
+            ParseSizeWithUnit(prop->s, prop->sLen, &rule.textIndent, &rule.textIndentUnit);
+            break;
+        }
+    }
+    return rule;
+}
+
+StyleRule StyleRule::Parse(const char *s, size_t len)
+{
+    return Parse(&CssPullParser(s, len));
+}
+
+void StyleRule::Merge(StyleRule& source)
+{
+    if (source.textAlign != Align_NotFound)
+        textAlign = source.textAlign;
+    if (source.textIndentUnit != StyleRule::inherit) {
+        textIndent = source.textIndent;
+        textIndentUnit = source.textIndentUnit;
+    }
 }
 
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
@@ -727,14 +778,26 @@ void HtmlFormatter::HandleTagP(HtmlToken *t)
 {
     if (!t->IsEndTag()) {
         AlignAttr align = CurrStyle()->align;
+        float indent = 0;
+
+        StyleRule rule = ComputeStyleRule(t);
+        if (rule.textAlign != Align_NotFound)
+            align = rule.textAlign;
+        if (rule.textIndentUnit != StyleRule::inherit && rule.textIndent > 0) {
+            float factor = rule.textIndentUnit == StyleRule::em ? CurrFont()->GetSize() :
+                           rule.textIndentUnit == StyleRule::pt ? 1 /* TODO: take DPI into account */ : 1;
+            indent = rule.textIndent * factor;
+        }
+        // prefer align attribute to CSS styling
         AttrInfo *attr = t->GetAttrByName("align");
         if (attr) {
             AlignAttr just = FindAlignAttr(attr->val, attr->valLen);
             if (just != Align_NotFound)
                 align = just;
         }
+
         SetAlignment(align);
-        EmitParagraph(0);
+        EmitParagraph(indent);
     } else {
         FlushCurrLine(true);
         RevertStyleChange();
@@ -848,6 +911,83 @@ void HtmlFormatter::HandleTagPre(HtmlToken *t)
     else if (t->IsEndTag()) {
         RevertStyleChange();
         preFormatted = false;
+    }
+}
+
+StyleRule *HtmlFormatter::FindStyleRule(HtmlTag tag, const char *clazz, size_t clazzLen)
+{
+    uint32_t classHash = clazz ? murmur_hash2(clazz, clazzLen) : 0;
+    for (size_t i = 0; i < styleRules.Count(); i++) {
+        StyleRule& rule = styleRules.At(i);
+        if (tag == rule.tag && classHash == rule.classHash)
+            return &rule;
+    }
+    return NULL;
+}
+
+StyleRule HtmlFormatter::ComputeStyleRule(HtmlToken *t)
+{
+    StyleRule rule;
+    // get style rules ordered by specificity
+    StyleRule *prevRule = FindStyleRule(Tag_Body, NULL, 0);
+    if (prevRule) rule.Merge(*prevRule);
+    prevRule = FindStyleRule(Tag_Any, NULL, 0);
+    if (prevRule) rule.Merge(*prevRule);
+    prevRule = FindStyleRule(t->tag, NULL, 0);
+    if (prevRule) rule.Merge(*prevRule);
+    // TODO: support multiple class names
+    AttrInfo *attr = t->GetAttrByName("class");
+    if (attr) {
+        prevRule = FindStyleRule(Tag_Any, attr->val, attr->valLen);
+        if (prevRule) rule.Merge(*prevRule);
+        prevRule = FindStyleRule(t->tag, attr->val, attr->valLen);
+        if (prevRule) rule.Merge(*prevRule);
+    }
+    attr = attr = t->GetAttrByName("style");
+    if (attr) {
+        StyleRule newRule = StyleRule::Parse(attr->val, attr->valLen);
+        rule.Merge(newRule);
+    }
+    return rule;
+}
+
+void HtmlFormatter::ParseStyleSheet(const char *data, size_t len)
+{
+    CssPullParser parser(data, len);
+    while (parser.NextRule()) {
+        StyleRule rule = StyleRule::Parse(&parser);
+        const CssSelector *sel;
+        while ((sel = parser.NextSelector())) {
+            if (Tag_NotFound == sel->tag)
+                continue;
+            StyleRule *prevRule = FindStyleRule(sel->tag, sel->clazz, sel->clazzLen);
+            if (prevRule) {
+                prevRule->Merge(rule);
+            }
+            else {
+                rule.tag = sel->tag;
+                rule.classHash = sel->clazz ? murmur_hash2(sel->clazz, sel->clazzLen) : 0;
+                styleRules.Append(rule);
+            }
+        }
+    }
+}
+
+void HtmlFormatter::HandleTagStyle(HtmlToken *t)
+{
+    if (!t->IsStartTag())
+        return;
+    AttrInfo *attr = t->GetAttrByName("type");
+    if (attr && !attr->ValIs("text/css"))
+        return;
+
+    const char *start = t->s + t->sLen + 2;
+    while (t && !t->IsError() && (!t->IsEndTag() || t->tag != Tag_Style)) {
+        t = htmlParser->Next();
+    }
+    if (t->IsEndTag() && Tag_Style == t->tag) {
+        const char *end = t->s - 2;
+        ParseStyleSheet(start, end - start);
     }
 }
 
@@ -1011,6 +1151,10 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
         // not really a HTML tag, but many ebook
         // formats use it
         HandleTagPagebreak(t);
+    } else if (Tag_Link == tag) {
+        HandleTagLink(t);
+    } else if (Tag_Style == tag) {
+        HandleTagStyle(t);
     } else {
         // TODO: temporary debugging
         //lf("unhandled tag: %d", tag);

@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "CssParser.h"
+// for SkipWs and SkipUntil
+#include "HtmlPullParser.h"
 
 // TODO: the following parser doesn't comply yet with
 // http://www.w3.org/TR/CSS21/syndata.html#syntax

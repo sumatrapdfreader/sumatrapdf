@@ -62,6 +62,26 @@ struct DrawInstr {
     static DrawInstr Anchor(const char *s, size_t len, RectF bbox);
 };
 
+class CssPullParser;
+
+struct StyleRule {
+    HtmlTag     tag;
+    uint32_t    classHash;
+
+    enum Unit { px, pt, em, inherit };
+
+    float       textIndent;
+    Unit        textIndentUnit;
+    AlignAttr   textAlign;
+
+    StyleRule() : tag(Tag_NotFound), textIndentUnit(inherit), textAlign(Align_NotFound) { }
+
+    void Merge(StyleRule& source);
+
+    static StyleRule Parse(CssPullParser *parser);
+    static StyleRule Parse(const char *s, size_t len);
+};
+
 struct DrawStyle {
     Font *font;
     AlignAttr align;
@@ -119,6 +139,7 @@ struct HtmlFormatterArgs {
 
 class HtmlPullParser;
 struct HtmlToken;
+struct CssSelector;
 
 class HtmlFormatter
 {
@@ -130,6 +151,7 @@ protected:
     void HandleTagHx(HtmlToken *t);
     void HandleTagList(HtmlToken *t);
     void HandleTagPre(HtmlToken *t);
+    void HandleTagStyle(HtmlToken *t);
 
     void HandleAnchorAttr(HtmlToken *t, bool idsOnly=false);
     void HandleDirAttr(HtmlToken *t);
@@ -141,6 +163,7 @@ protected:
     // blank convenience methods to override
     virtual void HandleTagImg(HtmlToken *t) { }
     virtual void HandleTagPagebreak(HtmlToken *t) { }
+    virtual void HandleTagLink(HtmlToken *t) { }
 
     float CurrLineDx();
     float CurrLineDy();
@@ -168,6 +191,10 @@ protected:
     void  ChangeFontStyle(FontStyle fs, bool isStart);
     void  SetAlignment(AlignAttr align);
     void  RevertStyleChange();
+
+    void  ParseStyleSheet(const char *data, size_t len);
+    StyleRule *FindStyleRule(HtmlTag tag, const char *clazz, size_t clazzLen);
+    StyleRule ComputeStyleRule(HtmlToken *t);
 
     void  AppendInstr(DrawInstr di);
     bool  IsCurrLineEmpty();
@@ -202,6 +229,8 @@ protected:
     // TODO: HtmlPullParser::tagNesting is updated too soon for our purposes
     Vec<HtmlTag>        tagNesting;
     bool                keepTagNesting;
+    // set from CSS and to be checked by the individual tag handlers
+    Vec<StyleRule>      styleRules;
 
     // isntructions for the current line
     Vec<DrawInstr>      currLineInstr;

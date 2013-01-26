@@ -4,7 +4,7 @@
 #ifndef CssParser_h
 #define CssParser_h
 
-#include "HtmlPullParser.h"
+#include "HtmlParserLookup.h"
 
 #define Tag_Any ((HtmlTag)-1)
 

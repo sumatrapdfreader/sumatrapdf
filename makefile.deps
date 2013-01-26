@@ -193,9 +193,9 @@ $(OS)\EbookEngine.obj: src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\EbookFormatter.obj: src\BaseEngine.h src\Doc.h src\EbookBase.h
 $(OS)\EbookFormatter.obj: src\EbookDoc.h src\EbookFormatter.h src\HtmlFormatter.h
 $(OS)\EbookFormatter.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\EbookFormatter.obj: src\utils\CssParser.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OS)\EbookFormatter.obj: src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h src\utils\Scoped.h
-$(OS)\EbookFormatter.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\ZipUtil.h
+$(OS)\EbookFormatter.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
+$(OS)\EbookFormatter.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\EbookFormatter.obj: src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\EbookWindow.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\EbookWindow.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\EbookWindow.obj: src\Doc.h src\EbookBase.h src\EbookController.h
@@ -242,10 +242,10 @@ $(OS)\HtmlFormatter.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
 $(OS)\HtmlFormatter.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
 $(OS)\HtmlFormatter.obj: src\mui\MuiGrid.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
 $(OS)\HtmlFormatter.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocator.h
-$(OS)\HtmlFormatter.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\GdiPlusUtil.h
-$(OS)\HtmlFormatter.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h
-$(OS)\HtmlFormatter.obj: src\utils\Scoped.h src\utils\Sigslot.h src\utils\StrUtil.h
-$(OS)\HtmlFormatter.obj: src\utils\Vec.h
+$(OS)\HtmlFormatter.obj: src\utils\BaseUtil.h src\utils\CssParser.h src\utils\DebugLog.h
+$(OS)\HtmlFormatter.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
+$(OS)\HtmlFormatter.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\Sigslot.h
+$(OS)\HtmlFormatter.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\ImagesEngine.obj: ext\unrar\dll.hpp src\BaseEngine.h src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\ImagesEngine.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h

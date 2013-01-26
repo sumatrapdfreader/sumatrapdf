@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "EbookFormatter.h"
 
-#include "CssParser.h"
 #include "EbookDoc.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -181,9 +180,31 @@ void EpubFormatter::HandleTagPagebreak(HtmlToken *t)
         RectF bbox(0, currY, pageDx, 0);
         currPage->instructions.Append(DrawInstr::Anchor(attr->val, attr->valLen, bbox));
         pagePath.Set(str::DupN(attr->val, attr->valLen));
-        // reset CSS styles for the new document
-        styles.Reset();
+        // reset CSS style rules for the new document
+        styleRules.Reset();
     }
+}
+
+void EpubFormatter::HandleTagLink(HtmlToken *t)
+{
+    CrashIf(!epubDoc);
+    if (t->IsEndTag())
+        return;
+    AttrInfo *attr = t->GetAttrByName("rel");
+    if (!attr || !attr->ValIs("stylesheet"))
+        return;
+    attr = t->GetAttrByName("type");
+    if (attr && !attr->ValIs("text/css"))
+        return;
+    attr = t->GetAttrByName("href");
+    if (!attr)
+        return;
+
+    size_t len;
+    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    ScopedMem<char> data(epubDoc->GetFileData(src, pagePath, &len));
+    if (data)
+        ParseStyleSheet(data, len);
 }
 
 void EpubFormatter::HandleTagSvgImage(HtmlToken *t)
@@ -202,156 +223,6 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken *t)
         EmitImage(img);
 }
 
-static StyleRule *FindStyleRule(Vec<StyleRule>& styles, HtmlTag tag, const char *clazz, size_t clazzLen)
-{
-    uint32_t classHash = clazz ? murmur_hash2(clazz, clazzLen) : 0;
-    for (size_t i = 0; i < styles.Count(); i++) {
-        StyleRule& rule = styles.At(i);
-        if (tag == rule.tag && classHash == rule.classHash)
-            return &rule;
-    }
-    return NULL;
-}
-
-// parses size in the form "1em", "3pt" or "15px"
-static void ParseSizeWithUnit(const char *s, size_t len, float *size, StyleRule::Unit *unit)
-{
-    if (str::Parse(s, len, "%fem", size)) {
-        *unit = StyleRule::em;
-    } else if (str::Parse(s, len, "%fin", size)) {
-        *size *= 72; // 1 inch is 72 points
-        *unit = StyleRule::pt;
-    } else if (str::Parse(s, len, "%fpt", size)) {
-        *unit = StyleRule::pt;
-    } else if (str::Parse(s, len, "%fpx", size)) {
-        *unit = StyleRule::px;
-    } else {
-        *unit = StyleRule::inherit;
-    }
-}
-
-static StyleRule ParseStyleRule(CssPullParser& parser)
-{
-    StyleRule rule;
-    const CssProperty *prop;
-    while ((prop = parser.NextProperty())) {
-        switch (prop->type) {
-        case Css_Text_Align:
-            rule.textAlign = FindAlignAttr(prop->s, prop->sLen);
-            break;
-        // TODO: some documents use Css_Padding_Left for indentation
-        case Css_Text_Indent:
-            ParseSizeWithUnit(prop->s, prop->sLen, &rule.textIndent, &rule.textIndentUnit);
-            break;
-        }
-    }
-    return rule;
-}
-
-static void UpdateStyleRule(StyleRule newRule, StyleRule *rule)
-{
-    if (newRule.textAlign != Align_NotFound)
-        rule->textAlign = newRule.textAlign;
-    if (newRule.textIndentUnit != StyleRule::inherit) {
-        rule->textIndent = newRule.textIndent;
-        rule->textIndentUnit = newRule.textIndentUnit;
-    }
-}
-
-static void ParseStyleSheet(Vec<StyleRule>& styles, const char *data, size_t len)
-{
-    CssPullParser parser(data, len);
-    while (parser.NextRule()) {
-        StyleRule rule = ParseStyleRule(parser);
-        const CssSelector *sel;
-        while ((sel = parser.NextSelector())) {
-            if (Tag_NotFound == sel->tag)
-                continue;
-            StyleRule *prevRule = FindStyleRule(styles, sel->tag, sel->clazz, sel->clazzLen);
-            if (prevRule) {
-                UpdateStyleRule(rule, prevRule);
-            }
-            else {
-                rule.tag = sel->tag;
-                rule.classHash = sel->clazz ? murmur_hash2(sel->clazz, sel->clazzLen) : 0;
-                styles.Append(rule);
-            }
-        }
-    }
-}
-
-void EpubFormatter::HandleTagStyle(HtmlToken *t)
-{
-    if (!t->IsStartTag())
-        return;
-    AttrInfo *attr = t->GetAttrByName("type");
-    if (attr && !attr->ValIs("text/css"))
-        return;
-
-    const char *start = t->s + t->sLen + 2;
-    while (t && !t->IsError() && (!t->IsEndTag() || t->tag != Tag_Style)) {
-        t = htmlParser->Next();
-    }
-    if (t->IsEndTag() && Tag_Style == t->tag)
-        ParseStyleSheet(styles, start, t->s - start - 2);
-}
-
-void EpubFormatter::HandleTagLink(HtmlToken *t)
-{
-    CrashIf(!epubDoc);
-    if (t->IsEndTag())
-        return;
-    AttrInfo *attr = t->GetAttrByName("rel");
-    if (!attr || !attr->ValIs("stylesheet"))
-        return;
-    attr = t->GetAttrByName("type");
-    if (attr && !attr->ValIs("text/css"))
-        return;
-    attr = t->GetAttrByName("href");
-    if (!attr)
-        return;
-
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
-    size_t len;
-    ScopedMem<char> data(epubDoc->GetFileData(src, pagePath, &len));
-    if (data)
-        ParseStyleSheet(styles, data, len);
-}
-
-void EpubFormatter::HandleBlockStyling(HtmlToken *t)
-{
-    if (!t->IsStartTag())
-        return;
-    AttrInfo *attr;
-    StyleRule rule;
-    // get style rules ordered by specificity
-    StyleRule *prevRule = FindStyleRule(styles, Tag_Any, NULL, 0);
-    if (prevRule) UpdateStyleRule(*prevRule, &rule);
-    prevRule = FindStyleRule(styles, Tag_Body, NULL, 0);
-    if (prevRule) UpdateStyleRule(*prevRule, &rule);
-    prevRule = FindStyleRule(styles, t->tag, NULL, 0);
-    if (prevRule) UpdateStyleRule(*prevRule, &rule);
-    if ((attr = t->GetAttrByName("class"))) {
-        // TODO: support multiple class names
-        prevRule = FindStyleRule(styles, Tag_Any, attr->val, attr->valLen);
-        if (prevRule) UpdateStyleRule(*prevRule, &rule);
-        prevRule = FindStyleRule(styles, t->tag, attr->val, attr->valLen);
-        if (prevRule) UpdateStyleRule(*prevRule, &rule);
-    }
-    if ((attr = t->GetAttrByName("style"))) {
-        StyleRule newRule = ParseStyleRule(CssPullParser(attr->val, attr->valLen));
-        UpdateStyleRule(newRule, &rule);
-    }
-    // apply styling to current block
-    if (rule.textAlign != Align_NotFound && 0)
-        CurrStyle()->align = rule.textAlign;
-    if (rule.textIndentUnit != StyleRule::inherit && rule.textIndent > 0) {
-        float factor = rule.textIndentUnit == StyleRule::em ? CurrFont()->GetSize() :
-                       rule.textIndentUnit == StyleRule::pt ? 1 /* TODO: take DPI into account */ : 1;
-        EmitParagraph(rule.textIndent * factor);
-    }
-}
-
 void EpubFormatter::HandleHtmlTag(HtmlToken *t)
 {
     CrashIf(!t->IsTag());
@@ -367,14 +238,6 @@ void EpubFormatter::HandleHtmlTag(HtmlToken *t)
         UpdateTagNesting(t);
     else if (Tag_Image == t->tag)
         HandleTagSvgImage(t);
-    else if (Tag_P == t->tag) {
-        HtmlFormatter::HandleHtmlTag(t);
-        HandleBlockStyling(t);
-    }
-    else if (Tag_Style == t->tag)
-        HandleTagStyle(t);
-    else if (Tag_Link == t->tag)
-        HandleTagLink(t);
     else
         HtmlFormatter::HandleHtmlTag(t);
 }
@@ -474,6 +337,8 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
         if (!t->IsEndTag())
             EmitParagraph(0);
     }
+    else if (t->NameIs("stylesheet"))
+        HandleTagAsHtml(t, "style");
 }
 
 /* standalone HTML-specific formatting methods */
@@ -492,36 +357,6 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken *t)
         EmitImage(img);
 }
 
-void HtmlFileFormatter::HandleHtmlTag(HtmlToken *t)
-{
-    if (Tag_P == t->tag) {
-        HtmlFormatter::HandleHtmlTag(t);
-        HandleBlockStyling(t);
-    }
-    else if (Tag_Style == t->tag)
-        HandleTagStyle(t);
-    else if (Tag_Link == t->tag)
-        HandleTagLink(t);
-    else
-        HtmlFormatter::HandleHtmlTag(t);
-}
-
-void HtmlFileFormatter::HandleTagStyle(HtmlToken *t)
-{
-    if (!t->IsStartTag())
-        return;
-    AttrInfo *attr = t->GetAttrByName("type");
-    if (attr && !attr->ValIs("text/css"))
-        return;
-
-    const char *start = t->s + t->sLen + 2;
-    while (t && !t->IsError() && (!t->IsEndTag() || t->tag != Tag_Style)) {
-        t = htmlParser->Next();
-    }
-    if (t->IsEndTag() && Tag_Style == t->tag)
-        ParseStyleSheet(styles, start, t->s - start - 2);
-}
-
 void HtmlFileFormatter::HandleTagLink(HtmlToken *t)
 {
     CrashIf(!htmlDoc);
@@ -537,29 +372,9 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken *t)
     if (!attr)
         return;
 
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
     size_t len;
+    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
     ScopedMem<char> data(htmlDoc->GetFileData(src, &len));
     if (data)
-        ParseStyleSheet(styles, data, len);
-}
-
-void HtmlFileFormatter::HandleBlockStyling(HtmlToken *t)
-{
-    if (!t->IsStartTag())
-        return;
-    AttrInfo *attr = t->GetAttrByName("style");
-    if (!attr)
-        return;
-
-    CssPullParser parser(attr->val, attr->valLen);
-    StyleRule rule = ParseStyleRule(parser);
-    // apply styling to current block
-    if (rule.textAlign != Align_NotFound && 0)
-        CurrStyle()->align = rule.textAlign;
-    if (rule.textIndentUnit != StyleRule::inherit && rule.textIndent > 0) {
-        float factor = rule.textIndentUnit == StyleRule::em ? CurrFont()->GetSize() :
-                       rule.textIndentUnit == StyleRule::pt ? 1 /* TODO: take DPI into account */ : 1;
-        EmitParagraph(rule.textIndent * factor);
-    }
+        ParseStyleSheet(data, len);
 }
