@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d6b6ee87e4f15d2b7e4ea03d5bdd525ef13f8e3f
+5014928f41adeed491c12d598d04457eef123496
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2532,7 +2532,7 @@ tl:Paliitin ang pahina sa printable na area (kung kinakailangan)
 tr:Sayfaları baskı alanına &indirgele (gerekirse)
 tw:如有需要，縮小頁面以符合可列印區域(&S)
 uk:Урізати сторінки до зони друку (при необхідності)
-uz:&Betlarni printerga moslab kichiktirish (zarur bo'lganda)
+uz:&Betlarni printerga moslab kichraytirish (zarur bo'lganda)
 vn:Nén vừa trang in (nếu cần thiết)
 :&Single Page\tCtrl+6
 am:&Մեկ էջով\tCtrl+6
@@ -13695,7 +13695,7 @@ tl:Palakihin
 tr:Yakınlaştır
 tw:放大
 uk:Збільшити
-uz:Kattartirish
+uz:Kattalashtirish
 vn:Phóng to
 :Zoom Out
 af:Zoem Uit
@@ -13763,7 +13763,7 @@ tl:Paliitin
 tr:Uzaklaştır
 tw:縮小
 uk:Зменшити
-uz:Kichiktirish
+uz:Kichraytirish
 vn:Thu nhỏ
 :Zoom factor
 am:Չափի գործակիցը
