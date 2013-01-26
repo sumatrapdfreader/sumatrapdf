@@ -774,24 +774,30 @@ void HtmlFormatter::HandleTagBr()
         FlushCurrLine(true);
 }
 
+static AlignAttr GetAlignAttr(HtmlToken *t, AlignAttr default)
+{
+    AttrInfo *attr = t->GetAttrByName("align");
+    if (!attr)
+        return default;
+    AlignAttr align = FindAlignAttr(attr->val, attr->valLen);
+    if (Align_NotFound == align)
+        return default;
+    return align;
+}
+
 void HtmlFormatter::HandleTagP(HtmlToken *t, bool isDiv)
 {
     if (!t->IsEndTag()) {
         AlignAttr align = CurrStyle()->align;
         float indent = 0;
 
-        if (!isDiv) {
-            // prefer CSS styling to align attribute
-            AttrInfo *attr = t->GetAttrByName("align");
-            if (attr) {
-                AlignAttr just = FindAlignAttr(attr->val, attr->valLen);
-                if (just != Align_NotFound)
-                    align = just;
-            }
-        }
         StyleRule rule = ComputeStyleRule(t);
         if (rule.textAlign != Align_NotFound)
             align = rule.textAlign;
+        else if (!isDiv) {
+            // prefer CSS styling to align attribute
+            align = GetAlignAttr(t, align);
+        }
         if (rule.textIndentUnit != StyleRule::inherit && rule.textIndent > 0) {
             float factor = rule.textIndentUnit == StyleRule::em ? CurrFont()->GetSize() :
                            rule.textIndentUnit == StyleRule::pt ? 1 /* TODO: take DPI into account */ : 1;
@@ -888,7 +894,11 @@ void HtmlFormatter::HandleTagHx(HtmlToken *t)
         if (currY > 0)
             currY += fontSize / 2;
         SetFont(CurrFont(), FontStyleBold, fontSize);
-        CurrStyle()->align = Align_Left;
+
+        StyleRule rule = ComputeStyleRule(t);
+        if (Align_NotFound == rule.textAlign)
+            rule.textAlign = GetAlignAttr(t, Align_Left);
+        CurrStyle()->align = rule.textAlign;
     }
 }
 

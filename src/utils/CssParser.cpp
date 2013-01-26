@@ -55,6 +55,11 @@ bool CssPullParser::NextRule()
             if (!SkipQuotedString(currPos, end))
                 break;
         }
+        else if (*currPos == ';') {
+            currPos++;
+            SkipWsAndComment(currPos, end);
+            currSel = currPos;
+        }
         else if (!SkipWsAndComment(currPos, end)) {
             currPos++;
         }
