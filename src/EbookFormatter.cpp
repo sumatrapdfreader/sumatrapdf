@@ -208,7 +208,7 @@ void EpubFormatter::HandleBlockStyling(HtmlToken *t)
 
     CssPullParser parser(attr->val, attr->valLen);
     const CssProperty *prop;
-    while ((prop = parser.NextProp())) {
+    while ((prop = parser.NextProperty())) {
         if (Css_Text_Indent == prop->type) {
             float lineIndent = ParseSizeAsPixels(prop->s, prop->sLen, CurrFont()->GetSize());
             if (lineIndent > 0)
@@ -371,7 +371,7 @@ void HtmlFileFormatter::HandleBlockStyling(HtmlToken *t)
 
     CssPullParser parser(attr->val, attr->valLen);
     const CssProperty *prop;
-    while ((prop = parser.NextProp())) {
+    while ((prop = parser.NextProperty())) {
         if (Css_Text_Indent == prop->type) {
             float lineIndent = ParseSizeAsPixels(prop->s, prop->sLen, CurrFont()->GetSize());
             if (lineIndent > 0)

@@ -38,15 +38,103 @@ static bool SkipQuotedString(const char*& s, const char *end)
     return true;
 }
 
-const CssProperty *CssPullParser::NextProp()
+bool CssPullParser::NextRule()
 {
-GetNextProp:
+    if (inProps || currPos == end)
+        return false;
+
     SkipWsAndComment(currPos, end);
-    if (currPos == end || *currPos == '}')
+    currSel = currPos;
+    // skip selectors
+    while (currPos < end && *currPos != '{') {
+        if (*currPos == '"' || *currPos == '\'') {
+            if (!SkipQuotedString(currPos, end))
+                break;
+        }
+        else if (!SkipWsAndComment(currPos, end)) {
+            currPos++;
+        }
+    }
+
+    if (currPos == end) {
+        currSel = NULL;
+        return false;
+    }
+    selEnd = currPos++;
+    inProps = true;
+    return true;
+}
+
+const CssSelector *CssPullParser::NextSelector()
+{
+    if (!currSel || currSel == selEnd)
         return NULL;
+    sel.s = currSel;
+    // skip single selector
+    const char *sEnd = currSel;
+    while (currSel < selEnd && *currSel != ',') {
+        if (*currSel == '"' || *currSel == '\'') {
+            bool ok = SkipQuotedString(currSel, selEnd);
+            CrashIf(!ok);
+            sEnd = currSel;
+        }
+        else if (*currSel == '\\' && currSel < selEnd - 1) {
+            currSel += 2;
+            sEnd = currSel;
+        }
+        else if (!SkipWsAndComment(currSel, selEnd)) {
+            sEnd = ++currSel;
+        }
+    }
+    if (currSel < selEnd)
+        currSel++;
+
+    sel.sLen = sEnd - sel.s;
+    sel.tag = Tag_NotFound;
+    sel.clazz = NULL;
+    sel.clazzLen = 0;
+
+    // parse "*", "el", ".class" and "el.class"
+    const char *c = sEnd;
+    for (; c > sel.s && isalnum((wint_t)*(c - 1)); c--);
+    if (c > sel.s && *(c - 1) == '.') {
+        sel.clazz = c;
+        sel.clazzLen = sEnd - c;
+        c--;
+    }
+    for (; c > sel.s && isalnum((wint_t)*(c - 1)); c--);
+    if (sel.clazz - 1 == sel.s) {
+        sel.tag = (HtmlTag)-1;
+    }
+    else if (c == (sel.clazz ? sel.clazz - 1 : sEnd) && c == sel.s + 1 && *sel.s == '*') {
+        sel.tag = (HtmlTag)-1;
+    }
+    else if (c == sel.s) {
+        sel.tag = FindHtmlTag(sel.s, sel.clazz ? sel.clazz - sel.s - 1 : sel.sLen);
+    }
+
+    return &sel;
+}
+
+const CssProperty *CssPullParser::NextProperty()
+{
+    if (currPos == s)
+        inProps = true;
+    else if (!inProps)
+        return NULL;
+
+GetNextProperty:
+    SkipWsAndComment(currPos, end);
+    if (currPos == end)
+        return NULL;
+    if (*currPos == '}') {
+        currPos++;
+        inProps = false;
+        return NULL;
+    }
     if (*currPos == ';') {
         currPos++;
-        goto GetNextProp;
+        goto GetNextProperty;
     }
     const char *name = currPos;
     // skip identifier
@@ -56,7 +144,7 @@ GetNextProp:
     }
     SkipWsAndComment(currPos, end);
     if (currPos == end || *currPos != ':')
-        goto GetNextProp;
+        goto GetNextProperty;
     prop.type = FindCssProp(name, currPos - name);
     currPos++;
     SkipWsAndComment(currPos, end);
@@ -69,7 +157,7 @@ GetNextProp:
                 return NULL;
             valEnd = currPos;
         }
-        else if (*currPos == '\\') {
+        else if (*currPos == '\\' && currPos < end - 1) {
             currPos += 2;
             valEnd = currPos;
         }
