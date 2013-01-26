@@ -444,7 +444,8 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_o
         RectI bbox = GetInstrBbox(i, pageBorder);
         switch (i->type) {
         case InstrString:
-            if (coords.Count() > 0 && bbox.x < coords.Last().BR().x) {
+            if (coords.Count() > 0 && (bbox.x < coords.Last().BR().x ||
+                                       bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                 content.Append(lineSep);
                 coords.AppendBlanks(str::Len(lineSep));
                 CrashIf(*lineSep && !coords.Last().IsEmpty());
@@ -467,7 +468,8 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_o
             }
             break;
         case InstrRtlString:
-            if (coords.Count() > 0 && bbox.BR().x > coords.Last().x) {
+            if (coords.Count() > 0 && (bbox.BR().x > coords.Last().x ||
+                                       bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                 content.Append(lineSep);
                 coords.AppendBlanks(str::Len(lineSep));
                 CrashIf(*lineSep && !coords.Last().IsEmpty());

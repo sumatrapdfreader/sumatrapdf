@@ -774,12 +774,21 @@ void HtmlFormatter::HandleTagBr()
         FlushCurrLine(true);
 }
 
-void HtmlFormatter::HandleTagP(HtmlToken *t)
+void HtmlFormatter::HandleTagP(HtmlToken *t, bool isDiv)
 {
     if (!t->IsEndTag()) {
         AlignAttr align = CurrStyle()->align;
         float indent = 0;
 
+        if (!isDiv) {
+            // prefer CSS styling to align attribute
+            AttrInfo *attr = t->GetAttrByName("align");
+            if (attr) {
+                AlignAttr just = FindAlignAttr(attr->val, attr->valLen);
+                if (just != Align_NotFound)
+                    align = just;
+            }
+        }
         StyleRule rule = ComputeStyleRule(t);
         if (rule.textAlign != Align_NotFound)
             align = rule.textAlign;
@@ -787,13 +796,6 @@ void HtmlFormatter::HandleTagP(HtmlToken *t)
             float factor = rule.textIndentUnit == StyleRule::em ? CurrFont()->GetSize() :
                            rule.textIndentUnit == StyleRule::pt ? 1 /* TODO: take DPI into account */ : 1;
             indent = rule.textIndent * factor;
-        }
-        // prefer align attribute to CSS styling
-        AttrInfo *attr = t->GetAttrByName("align");
-        if (attr) {
-            AlignAttr just = FindAlignAttr(attr->val, attr->valLen);
-            if (just != Align_NotFound)
-                align = just;
         }
 
         SetAlignment(align);
@@ -1102,7 +1104,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
         HandleTagList(t);
     } else if (Tag_Div == tag) {
         // TODO: implement me
-        FlushCurrLine(true);
+        HandleTagP(t, true);
     } else if (IsTagH(tag)) {
         HandleTagHx(t);
     } else if (Tag_Sup == tag) {
@@ -1112,7 +1114,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
     } else if (Tag_Span == tag) {
         // TODO: implement me
     } else if (Tag_Center == tag) {
-        HandleTagP(t);
+        HandleTagP(t, true);
         if (!t->IsEndTag())
             CurrStyle()->align = Align_Center;
     } else if ((Tag_Ul == tag) || (Tag_Ol == tag)) {

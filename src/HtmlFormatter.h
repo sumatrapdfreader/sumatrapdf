@@ -145,7 +145,7 @@ class HtmlFormatter
 {
 protected:
     void HandleTagBr();
-    void HandleTagP(HtmlToken *t);
+    void HandleTagP(HtmlToken *t, bool isDiv=false);
     void HandleTagFont(HtmlToken *t);
     bool HandleTagA(HtmlToken *t, const char *linkAttr="href", const char *attrNS=NULL);
     void HandleTagHx(HtmlToken *t);
