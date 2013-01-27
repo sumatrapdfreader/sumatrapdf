@@ -324,6 +324,8 @@
     <ClCompile Include="src\utils\ByteOrderDecoder.cpp" />
     <ClCompile Include="src\utils\ByteOrderDecoder_ut.cpp" />
     <ClCompile Include="src\utils\CmdLineParser.cpp" />
+    <ClCompile Include="src\utils\CssParser.cpp" />
+    <ClCompile Include="src\utils\CssParser_ut.cpp" />
     <ClCompile Include="src\utils\DbgHelpDyn.cpp" />
     <ClCompile Include="src\utils\DebugLog.cpp" />
     <ClCompile Include="src\utils\Dict.cpp" />
@@ -511,6 +513,7 @@
     <ClInclude Include="src\utils\BitReader.h" />
     <ClInclude Include="src\utils\ByteOrderDecoder.h" />
     <ClInclude Include="src\utils\ByteReader.h" />
+    <ClInclude Include="src\utils\CssParser.h" />
     <ClInclude Include="src\utils\DbgHelpDyn.h" />
     <ClInclude Include="src\utils\DebugLog.h" />
     <ClInclude Include="src\utils\Dict.h" />

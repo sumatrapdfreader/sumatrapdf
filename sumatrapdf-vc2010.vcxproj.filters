@@ -1013,6 +1013,12 @@
     <ClCompile Include="src\Tester.cpp">
       <Filter>tester</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\CssParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\CssParser_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1506,6 +1512,9 @@
     </ClInclude>
     <ClInclude Include="src\mui\MuiGrid.h">
       <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\CssParser.h">
+      <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
