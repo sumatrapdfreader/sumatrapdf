@@ -997,6 +997,8 @@ void HtmlFormatter::HandleTagStyle(HtmlToken *t)
     while (t && !t->IsError() && (!t->IsEndTag() || t->tag != Tag_Style)) {
         t = htmlParser->Next();
     }
+    if (!t)
+        return;
     if (t->IsEndTag() && Tag_Style == t->tag) {
         const char *end = t->s - 2;
         ParseStyleSheet(start, end - start);
