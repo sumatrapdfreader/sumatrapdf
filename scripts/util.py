@@ -113,11 +113,11 @@ def s3Delete(remote_path):
   log("s3 delete '%s'" % remote_path)
   s3PubBucket().new_key(remote_path).delete()
 
-def s3_exist(remote_path):
+def s3Exists(remote_path):
   return s3PubBucket().get_key(remote_path)
 
 def ensure_s3_doesnt_exist(remote_path):
-  if not s3_exist(remote_path):
+  if not s3Exists(remote_path):
     return
   print("'%s' already exists in s3" % remote_path)
   sys.exit(1)
@@ -286,6 +286,17 @@ def extract_sumatra_version(file_path):
   content = open(file_path).read()
   ver = re.findall(r'CURR_VERSION (\d+(?:\.\d+)*)', content)[0]
   return ver
+
+def file_remove_try_hard(path):
+  removeRetryCount = 0
+  while removeRetryCount < 3:
+    try:
+      os.remove(path)
+      return
+    except:
+      time.sleep(1) # try to sleep to make the time for the file not be used anymore
+      print "exception: n  %s, n  %s, n  %s n  when trying to remove file %s" % (sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], filePath)
+    removeRetryCount += 1
 
 def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
   mode = "w"

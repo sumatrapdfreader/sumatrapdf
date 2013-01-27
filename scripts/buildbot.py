@@ -235,21 +235,10 @@ def stats_for_ver(ver):
 	local_path = os.path.join(get_stats_cache_dir(), ver + ".txt")
 	if not os.path.exists(local_path):
 		s3_path = "sumatrapdf/buildbot/%s/stats.txt" % ver
-		if not s3_exist(s3_path): return None
+		if not s3Exists(s3_path): return None
 		s3DownloadToFile(s3_path, local_path)
 		assert(os.path.exists(local_path))
 	return Stats(local_path)
-
-def file_remove_try_hard(p):
-	removeRetryCount = 0
-	while removeRetryCount < 3:
-		try:
-			os.remove(filePath)
-			return
-		except:
-			time.sleep(1) # try to sleep to make the time for the file not be used anymore
-			print "exception: n  %s, n  %s, n  %s n  when trying to remove file %s" % (sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], filePath)
-		removeRetryCount += 1
 
 # We cache results of running svn log in a dict mapping
 # version to string returned by svn log
@@ -257,7 +246,7 @@ g_svn_log_per_ver = None
 
 def load_svn_log_data():
 	try:
-		p = os.path.join(get_cache_dir(), "snv_log.dat")
+		path = os.path.join(get_cache_dir(), "snv_log.dat")
 		fo = open(p, "rb")
 	except IOError:
 		# it's ok if doesn't exist
@@ -268,7 +257,7 @@ def load_svn_log_data():
 		return res
 	except:
 		fo.close()
-		file_remove_try_hard(p)
+		file_remove_try_hard(path)
 		return {}
 
 def save_svn_log_data(data):
@@ -296,11 +285,11 @@ def checkin_comment_for_ver(ver):
 # return true if we already have results for a given build number in s3
 def has_already_been_built(ver):
 	s3_dir = "sumatrapdf/buildbot/"
-	expected_name1 = s3_dir + ver + "/analyze.html"
-	expected_name2 = s3_dir + ver + "/release_build_log.txt"
+	n1 = s3_dir + ver + "/analyze.html"
+	n2 = s3_dir + ver + "/release_build_log.txt"
 	keys = s3List(s3_dir)
 	for k in keys:
-		if k.name in [expected_name1, expected_name2]:
+		if k.name in [n1, n2]:
 			return True
 	return False
 
