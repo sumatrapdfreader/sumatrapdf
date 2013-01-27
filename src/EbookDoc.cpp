@@ -348,10 +348,10 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
         // if we're reparsing, we might not have pagePath, which is needed to
         // build the exact url so try to find a partial match
         // TODO: the correct approach would be to extend reparseIdx into a
-        // struct ReparseData, which would include pagePath, and store it
-        // in every HtmlPage (same as styleStack, listDepth, preFormatted and
-        // later for FB2 section and titleCount), but this should work well
-        // enough for now. The worst that can happen is picking up the wrong image
+        // struct ReparseData, which would include pagePath and all other
+        // styling related state (such as nextPageStyle, listDepth, etc. including
+        // format specific state such as hiddenDepth and titleCount) and store it
+        // in every HtmlPage, but this should work well enough for now
         for (size_t i = 0; i < images.Count(); i++) {
             ImageData2 *img = &images.At(i);
             if (str::EndsWithI(img->id, id)) {

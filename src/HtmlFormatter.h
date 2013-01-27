@@ -90,20 +90,15 @@ struct DrawStyle {
 
 class HtmlPage {
 public:
-    HtmlPage() : reparseIdx(0), listDepth(0), preFormatted(false), dirRtl(false) { }
+    HtmlPage(int reparseIdx=0) : reparseIdx(reparseIdx) { }
 
     Vec<DrawInstr>  instructions;
     // if we start parsing html again from reparseIdx, we should
     // get the same instructions. reparseIdx is an offset within
     // html data
+    // TODO: reparsing from reparseIdx can lead to different styling
+    // due to internal state of HtmlFormatter not being properly set
     int             reparseIdx;
-    // a copy of the current style stack, so that styling
-    // doesn't change on a relayout from reparseIdx
-    Vec<DrawStyle>  styleStack;
-    // further information that is required for reliable relayouting
-    int listDepth;
-    bool preFormatted;
-    bool dirRtl;
 };
 
 // just to pack args to HtmlFormatter
@@ -184,7 +179,7 @@ protected:
     void  ForceNewPage();
     bool  EnsureDx(float dx);
 
-    DrawStyle *CurrStyle() { return &currLineStyleStack.Last(); }
+    DrawStyle *CurrStyle() { return &styleStack.Last(); }
     Font *CurrFont() { return CurrStyle()->font; }
     void  SetFont(const WCHAR *fontName, FontStyle fs, float fontSize=-1);
     void  SetFont(Font *origFont, FontStyle fs, float fontSize=-1);
@@ -211,10 +206,10 @@ protected:
     Allocator *         textAllocator;
     RectF            (* measureAlgo)(Graphics *g, Font *f, const WCHAR *s, size_t len);
 
-    Vec<DrawStyle>      styleStack;
     // style stack of the current line
-    // (might be pushed to the next page)
-    Vec<DrawStyle>      currLineStyleStack;
+    Vec<DrawStyle>      styleStack;
+    // style for the start of the next page
+    DrawStyle           nextPageStyle;
     // current position in a page
     float               currX, currY;
     // remembered when we start a new line, used when we actually

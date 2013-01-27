@@ -36,7 +36,7 @@ stage 1 calculates the sizes of elements.
 /*
 TODO: Instead of inserting explicit SetFont, StartLink, etc. instructions
 at the beginning of every page, DrawHtmlPage could always start with
-that page's styleStack.Last().font, etc.
+that page's nextPageStyle.font, etc.
 The information that we need to remember:
 * font name (if different from default font name, NULL otherwise)
 * font size scale i.e. 1.f means "default font size". This is to allow the user to change
@@ -46,8 +46,7 @@ The information that we need to remember:
 * text color (when/if we support changing text color)
 * more ?
 
-TODO: reuse styleStack, listDepth, preFormatted, dirRtl from HtmlPage when restarting
-layout from a reparseIdx
+TODO: fix http://code.google.com/p/sumatrapdf/issues/detail?id=2183
 
 TODO: HtmlFormatter could be split into DrawInstrBuilder which knows pageDx, pageDy
 and generates DrawInstr and splits them into pages and a better named class that
@@ -188,8 +187,8 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);
     style.align = Align_Justify;
     style.dirRtl = false;
-    currLineStyleStack.Append(style);
-    styleStack = currLineStyleStack;
+    styleStack.Append(style);
+    nextPageStyle = styleStack.Last();
 
     lineSpacing = CurrFont()->GetHeight(gfx);
     spaceDx = CurrFont()->GetSize() / 2.5f; // note: a heuristic
@@ -226,9 +225,9 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
     if (CurrFont() != newFont)
         AppendInstr(DrawInstr::SetFont(newFont));
 
-    DrawStyle style = currLineStyleStack.Last();
+    DrawStyle style = styleStack.Last();
     style.font = newFont;
-    currLineStyleStack.Append(style);
+    styleStack.Append(style);
 }
 
 void HtmlFormatter::SetFont(Font *font, FontStyle fs, float fontSize)
@@ -265,15 +264,15 @@ void HtmlFormatter::ChangeFontStyle(FontStyle fs, bool addStyle)
 
 void HtmlFormatter::SetAlignment(AlignAttr align)
 {
-    DrawStyle style = currLineStyleStack.Last();
+    DrawStyle style = styleStack.Last();
     style.align = align;
-    currLineStyleStack.Append(style);
+    styleStack.Append(style);
 }
 
 void HtmlFormatter::RevertStyleChange()
 {
-    if (currLineStyleStack.Count() > 1) {
-        DrawStyle style = currLineStyleStack.Pop();
+    if (styleStack.Count() > 1) {
+        DrawStyle style = styleStack.Pop();
         if (style.font != CurrFont())
             AppendInstr(DrawInstr::SetFont(CurrFont()));
         dirRtl = style.dirRtl;
@@ -543,19 +542,14 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         AppendInstr(DrawInstr::LinkStart(link.str.s, link.str.len));
         currLinkIdx = currLineInstr.Count();
     }
-    styleStack = currLineStyleStack;
+    nextPageStyle = styleStack.Last();
     return createdPage;
 }
 
 void HtmlFormatter::EmitNewPage()
 {
-    HtmlPage *prevPage = currPage;
-    currPage = new HtmlPage();
-    currPage->reparseIdx = currReparseIdx;
-    currPage->styleStack = styleStack;
-    currPage->listDepth = listDepth;
-    currPage->preFormatted = preFormatted;
-    currPage->instructions.Append(DrawInstr::SetFont(currPage->styleStack.Last().font));
+    currPage = new HtmlPage(currReparseIdx);
+    currPage->instructions.Append(DrawInstr::SetFont(nextPageStyle.font));
     currY = 0.f;
 }
 
