@@ -247,7 +247,7 @@ g_svn_log_per_ver = None
 def load_svn_log_data():
 	try:
 		path = os.path.join(get_cache_dir(), "snv_log.dat")
-		fo = open(p, "rb")
+		fo = open(path, "rb")
 	except IOError:
 		# it's ok if doesn't exist
 		return {}
