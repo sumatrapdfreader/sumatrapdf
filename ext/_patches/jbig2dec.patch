@@ -40,8 +40,25 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
            if (oob)
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Sun Aug 26 12:06:26 2012
-+++ jbig2dec\jbig2_symbol_dict.c	Sat Dec 15 16:40:37 2012
-@@ -147,11 +147,12 @@
++++ jbig2dec\jbig2_symbol_dict.c	Sun Jan 27 15:36:41 2013
+@@ -94,10 +94,16 @@
+ Jbig2SymbolDict *
+ jbig2_sd_new(Jbig2Ctx *ctx, int n_symbols)
+ {
+    Jbig2SymbolDict *new = NULL;
+ 
++   if (n_symbols < 0) {
++     jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
++         "Negative number of symbols in symbol dict: %d", n_symbols);
++     return NULL;
++   }
++
+    new = jbig2_new(ctx, Jbig2SymbolDict, 1);
+    if (new != NULL) {
+      new->glyphs = jbig2_new(ctx, Jbig2Image*, n_symbols);
+      new->n_symbols = n_symbols;
+    } else {
+@@ -147,11 +153,12 @@
      Jbig2Segment *rsegment;
      int n_dicts = 0;
  
@@ -55,7 +72,7 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
      return (n_dicts);
  }
  
-@@ -173,11 +174,12 @@
+@@ -173,11 +180,12 @@
          return NULL;
      }
  
@@ -69,7 +86,7 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
          }
      }
  
-@@ -289,11 +291,11 @@
+@@ -289,11 +297,11 @@
                "failed to allocate storage for symbol bitmap");
            goto cleanup1;
        }
@@ -82,7 +99,33 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
            IARDY = jbig2_arith_int_ctx_new(ctx);
            if ((IAID == NULL) || (IARDX == NULL) || (IARDY == NULL))
            {
-@@ -595,10 +597,17 @@
+@@ -353,11 +361,11 @@
+       HCHEIGHT = HCHEIGHT + HCDH;
+       SYMWIDTH = 0;
+       TOTWIDTH = 0;
+       HCFIRSTSYM = NSYMSDECODED;
+ 
+-      if (HCHEIGHT < 0) {
++      if ((int32_t)HCHEIGHT < 0) {
+           code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+               "Invalid HCHEIGHT value");
+           goto cleanup2;
+       }
+ #ifdef JBIG2_DEBUG
+@@ -391,11 +399,11 @@
+               goto cleanup4;
+           }
+ 
+ 	  SYMWIDTH = SYMWIDTH + DW;
+ 	  TOTWIDTH = TOTWIDTH + SYMWIDTH;
+-	  if (SYMWIDTH < 0) {
++	  if ((int32_t)SYMWIDTH < 0) {
+           code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
+               "Invalid SYMWIDTH value (%d) at symbol %d", SYMWIDTH, NSYMSDECODED+1);
+           goto cleanup4;
+       }
+ #ifdef JBIG2_DEBUG
+@@ -595,10 +603,17 @@
  		      /* Table 18 */
  		      rparams.GRTEMPLATE = params->SDRTEMPLATE;
  		      rparams.reference = (ID < ninsyms) ?
@@ -100,7 +143,7 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
  		      rparams.TPGRON = 0;
  		      memcpy(rparams.grat, params->sdrat, 4);
  		      jbig2_decode_refinement_region(ctx, segment,
-@@ -673,10 +682,17 @@
+@@ -673,10 +688,17 @@
  	  const byte *src = data + jbig2_huffman_offset(hs);
  	  const int stride = (image->width >> 3) +
  		((image->width & 7) ? 1 : 0);
@@ -118,7 +161,7 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
  	    "reading %dx%d uncompressed bitmap"
  	    " for %d symbols (%d bytes)",
  	    image->width, image->height, NSYMSDECODED - HCFIRSTSYM, BMSIZE);
-@@ -687,10 +703,17 @@
+@@ -687,10 +709,17 @@
  	    src += stride;
  	  }
  	} else {
@@ -136,7 +179,7 @@ diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
  	    image->width, image->height, NSYMSDECODED - HCFIRSTSYM, BMSIZE);
  
  	  rparams.MMR = 1;
-@@ -742,20 +765,28 @@
+@@ -742,20 +771,28 @@
      int j = 0;
      int k;
      int exflag = 0;

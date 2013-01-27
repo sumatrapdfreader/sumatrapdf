@@ -96,6 +96,12 @@ jbig2_sd_new(Jbig2Ctx *ctx, int n_symbols)
 {
    Jbig2SymbolDict *new = NULL;
 
+   if (n_symbols < 0) {
+     jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
+         "Negative number of symbols in symbol dict: %d", n_symbols);
+     return NULL;
+   }
+
    new = jbig2_new(ctx, Jbig2SymbolDict, 1);
    if (new != NULL) {
      new->glyphs = jbig2_new(ctx, Jbig2Image*, n_symbols);
@@ -357,7 +363,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
       TOTWIDTH = 0;
       HCFIRSTSYM = NSYMSDECODED;
 
-      if (HCHEIGHT < 0) {
+      if ((int32_t)HCHEIGHT < 0) {
           code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
               "Invalid HCHEIGHT value");
           goto cleanup2;
@@ -395,7 +401,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
 
 	  SYMWIDTH = SYMWIDTH + DW;
 	  TOTWIDTH = TOTWIDTH + SYMWIDTH;
-	  if (SYMWIDTH < 0) {
+	  if ((int32_t)SYMWIDTH < 0) {
           code = jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
               "Invalid SYMWIDTH value (%d) at symbol %d", SYMWIDTH, NSYMSDECODED+1);
           goto cleanup4;
