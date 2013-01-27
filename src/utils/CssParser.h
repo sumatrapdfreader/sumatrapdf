@@ -37,8 +37,6 @@ class CssPullParser {
     CssProperty prop;
 
 public:
-    CssPullParser(const char *s) :
-        s(s), currPos(s), end(s + str::Len(s)), inProps(false), currSel(NULL) { }
     CssPullParser(const char *s, size_t len) :
         s(s), currPos(s), end(s + len), inProps(false), currSel(NULL) { }
 

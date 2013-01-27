@@ -997,12 +997,10 @@ void HtmlFormatter::HandleTagStyle(HtmlToken *t)
     while (t && !t->IsError() && (!t->IsEndTag() || t->tag != Tag_Style)) {
         t = htmlParser->Next();
     }
-    if (!t)
+    if (!t || !t->IsEndTag() || Tag_Style != t->tag)
         return;
-    if (t->IsEndTag() && Tag_Style == t->tag) {
-        const char *end = t->s - 2;
-        ParseStyleSheet(start, end - start);
-    }
+    const char *end = t->s - 2;
+    ParseStyleSheet(start, end - start);
 }
 
 // returns true if prev can't contain curr and should thus be closed

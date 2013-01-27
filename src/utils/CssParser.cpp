@@ -3,15 +3,13 @@
 
 #include "BaseUtil.h"
 #include "CssParser.h"
-// for SkipWs and SkipUntil
-#include "HtmlPullParser.h"
 
 // TODO: the following parser doesn't comply yet with
 // http://www.w3.org/TR/CSS21/syndata.html#syntax
 
-inline bool StrEqNIx(const char *s, size_t len, const char *s2)
+static inline void SkipWs(const char*& s, const char *end)
 {
-    return str::Len(s2) == len && str::StartsWithI(s, s2);
+    for (; s < end && str::IsWs(*s); s++);
 }
 
 // return true if skipped
@@ -19,12 +17,14 @@ static bool SkipWsAndComment(const char*& s, const char *end)
 {
     const char *start = s;
     SkipWs(s, end);
-    while (s + 2 < end && str::StartsWith(s, "/*")) {
-        s += 2;
-        if (SkipUntil(s, end, "*/")) {
-            s += 2;
-            SkipWs(s, end);
+    while (s + 2 <= end && s[0] == '/' && s[1] == '*') {
+        for (s += 2; s < end; s++) {
+            if (s + 2 <= end && s[0] == '*' && s[1] == '/') {
+                s += 2;
+                break;
+            }
         }
+        SkipWs(s, end);
     }
     return start != s;
 }
@@ -46,6 +46,12 @@ bool CssPullParser::NextRule()
 {
     if (inProps || currPos == end)
         return false;
+
+    if (currPos == s) {
+        SkipWsAndComment(currPos, end);
+        if (currPos + 4 < end && str::StartsWith(currPos, "<!--"))
+            currPos += 4;
+    }
 
     SkipWsAndComment(currPos, end);
     currSel = currPos;

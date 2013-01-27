@@ -491,8 +491,7 @@ $(OU)\CmdLineParser.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUt
 $(OU)\CmdLineParser.obj: src\utils\Vec.h
 $(OU)\CssParser.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\CssParser.h
 $(OU)\CssParser.obj: src\utils\CssParser_ut.cpp src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
-$(OU)\CssParser.obj: src\utils\HtmlPullParser.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OU)\CssParser.obj: src\utils\Vec.h
+$(OU)\CssParser.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\DbgHelpDyn.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DbgHelpDyn.h
 $(OU)\DbgHelpDyn.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\DbgHelpDyn.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h

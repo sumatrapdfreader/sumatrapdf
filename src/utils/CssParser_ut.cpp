@@ -6,14 +6,24 @@
 
 namespace unittests {
 
+static inline bool StrEqNIx(const char *s, size_t len, const char *s2) {
+    return str::Len(s2) == len && str::StartsWithI(s, s2);
+}
+static inline bool IsPropVal(const CssProperty *prop, const char *val) {
+    return StrEqNIx(prop->s, prop->sLen, val);
+}
+static inline bool IsSelector(const CssSelector *sel, const char *val) {
+    return StrEqNIx(sel->s, sel->sLen, val);
+}
+
 static void Test01()
 {
     const char *inlineCss = "color: red; text-indent: 20px; /* comment */";
-    CssPullParser parser(inlineCss);
+    CssPullParser parser(inlineCss, str::Len(inlineCss));
     const CssProperty *prop = parser.NextProperty();
-    assert(prop && Css_Color == prop->type && StrEqNIx(prop->s, prop->sLen, "red"));
+    assert(prop && Css_Color == prop->type && IsPropVal(prop, "red"));
     prop = parser.NextProperty();
-    assert(prop && Css_Text_Indent == prop->type && StrEqNIx(prop->s, prop->sLen, "20px"));
+    assert(prop && Css_Text_Indent == prop->type && IsPropVal(prop, "20px"));
     prop = parser.NextProperty();
     assert(!prop);
 }
@@ -21,11 +31,11 @@ static void Test01()
 static void Test02()
 {
     const char *inlineCss = "font-family: 'Courier New', \"Times New Roman\", Arial ; font: 12pt Georgia bold";
-    CssPullParser parser(inlineCss);
+    CssPullParser parser(inlineCss, str::Len(inlineCss));
     const CssProperty *prop = parser.NextProperty();
-    assert(prop && Css_Font_Family == prop->type && StrEqNIx(prop->s, prop->sLen, "'Courier New', \"Times New Roman\", Arial"));
+    assert(prop && Css_Font_Family == prop->type && IsPropVal(prop, "'Courier New', \"Times New Roman\", Arial"));
     prop = parser.NextProperty();
-    assert(prop && Css_Font == prop->type && StrEqNIx(prop->s, prop->sLen, "12pt Georgia bold"));
+    assert(prop && Css_Font == prop->type && IsPropVal(prop, "12pt Georgia bold"));
     prop = parser.NextProperty();
     assert(!prop);
 }
@@ -33,7 +43,7 @@ static void Test02()
 static void Test03()
 {
     const char *simpleCss = "* { color: red }\np { color: blue }\n.green { color: green }\np.green { color: rgb(0,128,0) }\n";
-    CssPullParser parser(simpleCss);
+    CssPullParser parser(simpleCss, str::Len(simpleCss));
     const CssSelector *sel = parser.NextSelector();
     assert(!sel);
     const CssProperty *prop;
@@ -41,38 +51,38 @@ static void Test03()
     bool ok = parser.NextRule();
     assert(ok);
     sel = parser.NextSelector();
-    assert(sel && Tag_Any == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "*"));
+    assert(sel && Tag_Any == sel->tag && !sel->clazz && IsSelector(sel, "*"));
     sel = parser.NextSelector();
     assert(!sel);
     prop = parser.NextProperty();
-    assert(prop && Css_Color == prop->type && StrEqNIx(prop->s, prop->sLen, "red"));
+    assert(prop && Css_Color == prop->type && IsPropVal(prop, "red"));
     prop = parser.NextProperty();
     assert(!prop);
 
     ok = parser.NextRule();
     assert(ok);
     sel = parser.NextSelector();
-    assert(sel && Tag_P == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "p"));
+    assert(sel && Tag_P == sel->tag && !sel->clazz && IsSelector(sel, "p"));
     prop = parser.NextProperty();
-    assert(prop && Css_Color == prop->type && StrEqNIx(prop->s, prop->sLen, "blue"));
-    prop = parser.NextProperty();
-    assert(!prop);
-
-    ok = parser.NextRule();
-    assert(ok);
-    sel = parser.NextSelector();
-    assert(sel && Tag_Any == sel->tag && StrEqNIx(sel->clazz, sel->clazzLen, "green") && StrEqNIx(sel->s, sel->sLen, ".green"));
-    prop = parser.NextProperty();
-    assert(prop && Css_Color == prop->type && StrEqNIx(prop->s, prop->sLen, "green"));
+    assert(prop && Css_Color == prop->type && IsPropVal(prop, "blue"));
     prop = parser.NextProperty();
     assert(!prop);
 
     ok = parser.NextRule();
     assert(ok);
     sel = parser.NextSelector();
-    assert(sel && Tag_P == sel->tag && StrEqNIx(sel->clazz, sel->clazzLen, "green") && StrEqNIx(sel->s, sel->sLen, "p.green"));
+    assert(sel && Tag_Any == sel->tag && IsSelector(sel, ".green") && StrEqNIx(sel->clazz, sel->clazzLen, "green"));
     prop = parser.NextProperty();
-    assert(prop && Css_Color == prop->type && StrEqNIx(prop->s, prop->sLen, "rgb(0,128,0)"));
+    assert(prop && Css_Color == prop->type && IsPropVal(prop, "green"));
+    prop = parser.NextProperty();
+    assert(!prop);
+
+    ok = parser.NextRule();
+    assert(ok);
+    sel = parser.NextSelector();
+    assert(sel && Tag_P == sel->tag && IsSelector(sel, "p.green") && StrEqNIx(sel->clazz, sel->clazzLen, "green"));
+    prop = parser.NextProperty();
+    assert(prop && Css_Color == prop->type && IsPropVal(prop, "rgb(0,128,0)"));
     prop = parser.NextProperty();
     assert(!prop);
 
@@ -83,18 +93,18 @@ static void Test03()
 static void Test04()
 {
     const char *simpleCss = " span\n{ color: red }\n\tp /* plain paragraph */ , p#id { }";
-    CssPullParser parser(simpleCss);
+    CssPullParser parser(simpleCss, str::Len(simpleCss));
     const CssSelector *sel;
     const CssProperty *prop;
 
     bool ok = parser.NextRule();
     assert(ok);
     prop = parser.NextProperty();
-    assert(prop && Css_Color == prop->type && StrEqNIx(prop->s, prop->sLen, "red"));
+    assert(prop && Css_Color == prop->type && IsPropVal(prop, "red"));
     prop = parser.NextProperty();
     assert(!prop);
     sel = parser.NextSelector();
-    assert(sel && Tag_Span == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "span"));
+    assert(sel && Tag_Span == sel->tag && !sel->clazz && IsSelector(sel, "span"));
     sel = parser.NextSelector();
     assert(!sel);
 
@@ -103,11 +113,40 @@ static void Test04()
     prop = parser.NextProperty();
     assert(!prop);
     sel = parser.NextSelector();
-    assert(sel && Tag_P == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "p"));
+    assert(sel && Tag_P == sel->tag && !sel->clazz && IsSelector(sel, "p"));
     sel = parser.NextSelector();
-    assert(sel && Tag_NotFound == sel->tag && !sel->clazz && StrEqNIx(sel->s, sel->sLen, "p#id"));
+    assert(sel && Tag_NotFound == sel->tag && !sel->clazz && IsSelector(sel, "p#id"));
     sel = parser.NextSelector();
     assert(!sel);
+
+    ok = parser.NextRule();
+    assert(!ok);
+}
+
+static void Test05()
+{
+    const char *simpleCss = "<!-- html { ignore } @ignore this; p { } -->";
+    CssPullParser parser(simpleCss, str::Len(simpleCss));
+    const CssSelector *sel;
+    const CssProperty *prop;
+
+    bool ok = parser.NextRule();
+    assert(ok);
+    sel = parser.NextSelector();
+    assert(sel && Tag_Html == sel->tag && !sel->clazz && IsSelector(sel, "html"));
+    sel = parser.NextSelector();
+    assert(!sel);
+    prop = parser.NextProperty();
+    assert(!prop);
+
+    ok = parser.NextRule();
+    assert(ok);
+    sel = parser.NextSelector();
+    assert(sel && Tag_P == sel->tag && !sel->clazz && IsSelector(sel, "p"));
+    sel = parser.NextSelector();
+    assert(!sel);
+    prop = parser.NextProperty();
+    assert(!prop);
 
     ok = parser.NextRule();
     assert(!ok);
@@ -121,4 +160,5 @@ void CssParser_UnitTests()
     unittests::Test02();
     unittests::Test03();
     unittests::Test04();
+    unittests::Test05();
 }
