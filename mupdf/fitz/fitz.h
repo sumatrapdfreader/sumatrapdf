@@ -579,7 +579,7 @@ void *fz_resize_array_no_throw(fz_context *ctx, void *p, unsigned int count, uns
 	Returns a pointer to a duplicated string. Returns NULL on failure
 	to allocate.
 */
-char *fz_strdup_no_throw(fz_context *ctx, char *s);
+char *fz_strdup_no_throw(fz_context *ctx, const char *s);
 
 /*
 	Safe string functions

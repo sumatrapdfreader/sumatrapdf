@@ -197,7 +197,7 @@ fz_strdup(fz_context *ctx, const char *s)
 }
 
 char *
-fz_strdup_no_throw(fz_context *ctx, char *s)
+fz_strdup_no_throw(fz_context *ctx, const char *s)
 {
 	int len = strlen(s) + 1;
 	char *ns = fz_malloc_no_throw(ctx, len);

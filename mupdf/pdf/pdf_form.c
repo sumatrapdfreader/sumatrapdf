@@ -364,6 +364,9 @@ static void parse_da(fz_context *ctx, char *da, da_info *di)
 				name = NULL;
 				top = 0;
 				break;
+
+			default:
+				break;
 			}
 		}
 	}
@@ -1627,7 +1630,6 @@ static void reset_field(pdf_document *doc, pdf_obj *field)
 
 void pdf_field_reset(pdf_document *doc, pdf_obj *field)
 {
-	fz_context *ctx = doc->ctx;
 	pdf_obj *kids = pdf_dict_gets(field, "Kids");
 
 	reset_field(doc, field);
