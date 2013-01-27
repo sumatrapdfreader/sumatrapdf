@@ -476,28 +476,37 @@ static void GetSystemInfo(str::Str<char>& s)
     // * processor capabilities (mmx, sse, sse2 etc.)
 }
 
-static void GetModules(str::Str<char>& s)
+// returns true if running on wine (winex11.drv is present)
+// it's not a logical, but convenient place to do it
+static bool GetModules(str::Str<char>& s)
 {
+    bool isWine = false;
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (snap == INVALID_HANDLE_VALUE) return;
+    if (snap == INVALID_HANDLE_VALUE)
+        return true;
 
     MODULEENTRY32 mod;
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
         ScopedMem<char> nameA(str::conv::ToUtf8(mod.szModule));
+        if (str::EqI(nameA.Get(), "winex11.drv"))
+            isWine = true;
         ScopedMem<char> pathA(str::conv::ToUtf8(mod.szExePath));
         s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA, pathA);
         cont = Module32Next(snap, &mod);
     }
     CloseHandle(snap);
+    return isWine;
 }
 
-static void BuildModulesInfo()
+// returns true if running on wine
+static bool BuildModulesInfo()
 {
     str::Str<char> s(1024);
-    GetModules(s);
+    bool isWine = GetModules(s);
     gModulesInfo = s.StealData();
+    return isWine;
 }
 
 static void BuildSystemInfo()
@@ -638,10 +647,16 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
         return;
     if (!BuildSymbolPath())
         return;
+
+    // don't bother sending crash reports when running under Wine
+    // as they're not helpful
+    bool isWine= BuildModulesInfo();
+    if (isWine)
+        return;
+
     BuildSystemInfo();
     // at this point list of modules should be complete (except
     // dbghlp.dll which shouldn't be loaded yet)
-    BuildModulesInfo();
 
     gExeType = DetectExeType();
     // we pre-allocate as much as possible to minimize allocations

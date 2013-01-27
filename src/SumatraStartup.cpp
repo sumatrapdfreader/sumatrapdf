@@ -268,12 +268,6 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.ParseCommandLine(GetCommandLine());
 }
 
-static bool RunningUnderWine()
-{
-    return RegKeyExists(HKEY_LOCAL_MACHINE, L"Software\\Wine");
-}
-
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
@@ -312,18 +306,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     srand((unsigned int)time(NULL));
 
-    // don't bother sending crash reports when running under Wine
-    // as they're not helpful
-    if (!RunningUnderWine()) {
-        ScopedMem<WCHAR> symDir;
-        ScopedMem<WCHAR> tmpDir(path::GetTempPath());
-        if (tmpDir)
-            symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
-        else
-            symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
-        ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
-        InstallCrashHandler(crashDumpPath, symDir);
-    }
+    ScopedMem<WCHAR> symDir;
+    ScopedMem<WCHAR> tmpDir(path::GetTempPath());
+    if (tmpDir)
+        symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
+    else
+        symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
+    ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
+    InstallCrashHandler(crashDumpPath, symDir);
 
     ScopedOle ole;
     InitAllCommonControls();
