@@ -7,6 +7,7 @@ Next version:
 
 * add support for OpenXPS documents
 * "Go To Page" for ebook format
+* fixed paragraph indentation missing for EPUB documents
 
 2.2.1 (2013-01-12):
 

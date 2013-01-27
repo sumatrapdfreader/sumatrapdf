@@ -7,16 +7,11 @@
 // TODO: the following parser doesn't comply yet with
 // http://www.w3.org/TR/CSS21/syndata.html#syntax
 
-static inline void SkipWs(const char*& s, const char *end)
-{
-    for (; s < end && str::IsWs(*s); s++);
-}
-
 // return true if skipped
-static bool SkipWsAndComment(const char*& s, const char *end)
+static bool SkipWsAndComments(const char*& s, const char *end)
 {
     const char *start = s;
-    SkipWs(s, end);
+    for (; s < end && str::IsWs(*s); s++);
     while (s + 2 <= end && s[0] == '/' && s[1] == '*') {
         for (s += 2; s < end; s++) {
             if (s + 2 <= end && s[0] == '*' && s[1] == '/') {
@@ -24,11 +19,12 @@ static bool SkipWsAndComment(const char*& s, const char *end)
                 break;
             }
         }
-        SkipWs(s, end);
+        for (; s < end && str::IsWs(*s); s++);
     }
     return start != s;
 }
 
+// returns false if there was no closing quotation mark
 static bool SkipQuotedString(const char*& s, const char *end)
 {
     char quote = *s;
@@ -48,12 +44,12 @@ bool CssPullParser::NextRule()
         return false;
 
     if (currPos == s) {
-        SkipWsAndComment(currPos, end);
+        SkipWsAndComments(currPos, end);
         if (currPos + 4 < end && str::StartsWith(currPos, "<!--"))
             currPos += 4;
     }
 
-    SkipWsAndComment(currPos, end);
+    SkipWsAndComments(currPos, end);
     currSel = currPos;
     // skip selectors
     while (currPos < end && *currPos != '{') {
@@ -63,10 +59,10 @@ bool CssPullParser::NextRule()
         }
         else if (*currPos == ';') {
             currPos++;
-            SkipWsAndComment(currPos, end);
+            SkipWsAndComments(currPos, end);
             currSel = currPos;
         }
-        else if (!SkipWsAndComment(currPos, end)) {
+        else if (!SkipWsAndComments(currPos, end)) {
             currPos++;
         }
     }
@@ -84,7 +80,7 @@ const CssSelector *CssPullParser::NextSelector()
 {
     if (!currSel)
         return NULL;
-    SkipWs(currSel, selEnd);
+    SkipWsAndComments(currSel, selEnd);
     if (currSel == selEnd)
         return NULL;
 
@@ -101,7 +97,7 @@ const CssSelector *CssPullParser::NextSelector()
             currSel += 2;
             sEnd = currSel;
         }
-        else if (!SkipWsAndComment(currSel, selEnd)) {
+        else if (!SkipWsAndComments(currSel, selEnd)) {
             sEnd = ++currSel;
         }
     }
@@ -115,13 +111,13 @@ const CssSelector *CssPullParser::NextSelector()
 
     // parse "*", "el", ".class" and "el.class"
     const char *c = sEnd;
-    for (; c > sel.s && (isalnum((wint_t)*(c - 1)) || *(c - 1) == '-'); c--);
+    for (; c > sel.s && (isalnum((unsigned char)*(c - 1)) || *(c - 1) == '-'); c--);
     if (c > sel.s && *(c - 1) == '.') {
         sel.clazz = c;
         sel.clazzLen = sEnd - c;
         c--;
     }
-    for (; c > sel.s && (isalnum((wint_t)*(c - 1)) || *(c - 1) == '-'); c--);
+    for (; c > sel.s && (isalnum((unsigned char)*(c - 1)) || *(c - 1) == '-'); c--);
     if (sel.clazz - 1 == sel.s) {
         sel.tag = Tag_Any;
     }
@@ -143,7 +139,7 @@ const CssProperty *CssPullParser::NextProperty()
         return NULL;
 
 GetNextProperty:
-    SkipWsAndComment(currPos, end);
+    SkipWsAndComments(currPos, end);
     if (currPos == end)
         return NULL;
     if (*currPos == '}') {
@@ -161,12 +157,12 @@ GetNextProperty:
         *currPos != ';' && *currPos != '}' && *currPos != '/') {
         currPos++;
     }
-    SkipWsAndComment(currPos, end);
+    SkipWsAndComments(currPos, end);
     if (currPos == end || *currPos != ':')
         goto GetNextProperty;
     prop.type = FindCssProp(name, currPos - name);
     currPos++;
-    SkipWsAndComment(currPos, end);
+    SkipWsAndComments(currPos, end);
 
     prop.s = currPos;
     // skip value
@@ -181,7 +177,7 @@ GetNextProperty:
             currPos += 2;
             valEnd = currPos;
         }
-        else if (!SkipWsAndComment(currPos, end)) {
+        else if (!SkipWsAndComments(currPos, end)) {
             valEnd = ++currPos;
         }
     }
