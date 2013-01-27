@@ -1,4 +1,4 @@
-SumatraPDF is a multi-format (PDF, EPUB, MOBI, CHM, XPS, DjVu) reader
+SumatraPDF is a multi-format (PDF, EPUB, MOBI, FB2, CHM, XPS, DjVu) reader
 for Windows.
 
 The main source repository is at http://code.google.com/p/sumatrapdf/

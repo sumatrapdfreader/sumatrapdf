@@ -1,4 +1,4 @@
-/* Copyright 2012 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #ifndef WinUtil_h

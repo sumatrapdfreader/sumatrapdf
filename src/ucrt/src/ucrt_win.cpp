@@ -1,4 +1,4 @@
-/* Copyright 2011-2012 the ucrt project authors (see AUTHORS file).
+/* Copyright 2013 the ucrt project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #ifndef WIN32_LEAN_AND_MEAN
