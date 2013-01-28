@@ -323,21 +323,24 @@ reverse_characters(fz_text_span *span, int i, int j)
 }
 
 static int
-ornate_character(int ornate, int character)
+ornate_character(fz_text_char *ornate, fz_text_char *character)
 {
 	static wchar_t *ornates[] = {
 		L" \xA8\xB4\x60\x5E\u02DA",
 		L"a\xE4\xE1\xE0\xE2\xE5", L"A\xC4\xC1\xC0\xC2\0",
 		L"e\xEB\xE9\xE8\xEA\0", L"E\xCB\xC9\xC8\xCA\0",
 		L"i\xEF\xED\xEC\xEE\0", L"I\xCF\xCD\xCC\xCE\0",
+		L"\u0131\xEF\xED\xEC\xEE\0", L"\u0130\xCF\xCD\xCC\xCE\0",
 		L"o\xF6\xF3\xF2\xF4\0", L"O\xD6\xD3\xD2\xD4\0",
 		L"u\xFC\xFA\xF9\xFB\0", L"U\xDC\xDA\xD9\xDB\0",
 		NULL
 	};
 	int i = 1, j = 1;
-	while (ornates[0][i] && ornates[0][i] != (wchar_t)ornate)
+	if ((ornate->bbox.x0 + ornate->bbox.x1) / 2 < character->bbox.x0)
+		return 0;
+	while (ornates[0][i] && ornates[0][i] != (wchar_t)ornate->c)
 		i++;
-	while (ornates[j] && ornates[j][0] != (wchar_t)character)
+	while (ornates[j] && ornates[j][0] != (wchar_t)character->c)
 		j++;
 	if (!ornates[0][i] || !ornates[j])
 		return 0;
@@ -366,8 +369,8 @@ fixup_text_span(fz_text_span *span)
 			{
 				int newC = 0;
 				if (span->text[i + 1].c != 32 || i + 2 == span->len)
-					newC = ornate_character(span->text[i].c, span->text[i + 1].c);
-				else if ((newC = ornate_character(span->text[i].c, span->text[i + 2].c)))
+					newC = ornate_character(&span->text[i], &span->text[i + 1]);
+				else if ((newC = ornate_character(&span->text[i], &span->text[i + 2])))
 					delete_character(span, i + 1);
 				if (newC)
 				{
