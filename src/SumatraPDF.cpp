@@ -216,6 +216,20 @@ bool CurrLangNameSet(const char *langName)
 // the appropriate application (web browser, mail client, etc.)
 bool LaunchBrowser(const WCHAR *url)
 {
+    if (gPluginMode) {
+        // pass the URI back to the browser
+        CrashIf(gWindows.Count() == 0);
+        if (gWindows.Count() == 0)
+            return false;
+        HWND plugin = gWindows.At(0)->hwndFrame;
+        HWND parent = GetAncestor(plugin, GA_PARENT);
+        ScopedMem<char> urlUtf8(str::conv::ToUtf8(url));
+        if (!parent || !urlUtf8)
+            return false;
+        COPYDATASTRUCT cds = { 0x4C5255 /* URL */, str::Len(urlUtf8) + 1, urlUtf8.Get() };
+        return SendMessage(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
+    }
+
     if (!HasPermission(Perm_DiskAccess))
         return false;
 
@@ -234,7 +248,7 @@ bool LaunchBrowser(const WCHAR *url)
 // in the default application for opening such files
 bool OpenFileExternally(const WCHAR *path)
 {
-    if (!HasPermission(Perm_DiskAccess))
+    if (!HasPermission(Perm_DiskAccess) || gPluginMode)
         return false;
 
     // check if this file's perceived type is allowed

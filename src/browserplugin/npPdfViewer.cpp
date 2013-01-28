@@ -280,10 +280,12 @@ static WCHAR *FormatSizeSuccint(size_t size) {
 
 LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
-    InstanceData *data = (InstanceData *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    NPP instance = (NPP)GetWindowLongPtr(hWnd, GWLP_USERDATA);
     
     if (uiMsg == WM_PAINT)
     {
+        InstanceData *data = (InstanceData *)instance->pdata;
+        
         PAINTSTRUCT ps;
         HDC hDC = BeginPaint(hWnd, &ps);
         HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
@@ -351,6 +353,16 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             MoveWindow(hChild, rcClient.x, rcClient.y, rcClient.dx, rcClient.dy, FALSE);
         }
     }
+    else if (uiMsg == WM_COPYDATA)
+    {
+        COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lParam;
+        if (cds && 0x4C5255 /* URL */ == cds->dwData)
+        {
+            plogf("sp: NPN_GetURL %s", cds->dwData, (const char *)cds->lpData);
+            gNPNFuncs.geturl(instance, (const char *)cds->lpData, "_blank");
+            return TRUE;
+        }
+    }
     
     return DefWindowProc(hWnd, uiMsg, wParam, lParam);
 }
@@ -359,8 +371,6 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
 
 NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* argn[], char* argv[], NPSavedData* saved)
 {
-    InstanceData *data;
-
     plogf("sp: NPP_New() mode=%d ", mode);
 
     if (!instance)
@@ -381,9 +391,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
         return NPERR_OUT_OF_MEMORY_ERROR;
     }
 
-    data = (InstanceData *)instance->pdata;
     gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
     
+    InstanceData *data = (InstanceData *)instance->pdata;
     if (GetExePath(data->exepath, dimof(data->exepath)))
         data->message = L"Opening document in SumatraPDF...";
     else
@@ -394,8 +404,6 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 
 NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 {
-    InstanceData *data;
-
     if (!instance)
     {
         plogf("sp: NPP_SetWindow() errro: NPERR_INVALID_INSTANCE_ERROR");
@@ -404,7 +412,7 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
 
     plogf("sp: NPP_SetWindow()");
 
-    data = (InstanceData *)instance->pdata;
+    InstanceData *data = (InstanceData *)instance->pdata;
     if (!npwin)
     {
         data->npwin = NULL;
@@ -414,7 +422,7 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
         HWND hWnd = (HWND)npwin->window;
         
         data->npwin = npwin;
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)data);
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)instance);
         SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)PluginWndProc);
     }
     else
@@ -619,8 +627,6 @@ Exit:
 
 NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
 {
-    InstanceData *data;
-    
     if (!instance)
     {
         plogf("sp: NPP_Destroy() error: NPERR_INVALID_INSTANCE_ERROR");
@@ -628,7 +634,7 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
     }
 
     plogf("sp: NPP_Destroy()");
-    data = (InstanceData *)instance->pdata;
+    InstanceData *data = (InstanceData *)instance->pdata;
     if (data->hProcess)
     {
         plogf("sp: NPP_Destroy(): waiting for Sumatra to exit");
