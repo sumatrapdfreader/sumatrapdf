@@ -185,7 +185,7 @@ int jbig2_image_compose_unopt(Jbig2Ctx *ctx,
 	    for (j = 0; j < sh; j++) {
 		for (i = 0; i < sw; i++) {
 		    jbig2_image_set_pixel(dst, i+x, j+y,
-			~(jbig2_image_get_pixel(src, i+sx, j+sy) ^
+			(jbig2_image_get_pixel(src, i+sx, j+sy) ==
 			jbig2_image_get_pixel(dst, i+x, j+y)));
 		}
     	    }

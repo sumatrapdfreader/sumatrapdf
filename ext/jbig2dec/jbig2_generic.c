@@ -861,7 +861,7 @@ jbig2_immediate_generic_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
     }
 
   jbig2_page_add_result(ctx, &ctx->pages[ctx->current_page],
-			image, rsi.x, rsi.y, JBIG2_COMPOSE_OR);
+			image, rsi.x, rsi.y, rsi.op);
 
 cleanup:
   jbig2_free(ctx->allocator, as);

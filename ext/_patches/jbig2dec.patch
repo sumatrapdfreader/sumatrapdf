@@ -21,6 +21,22 @@ diff -rPu5 jbig2dec.orig\jbig2.h jbig2dec\jbig2.h
  /* warning levels */
  typedef enum {
    JBIG2_SEVERITY_DEBUG,
+diff -rPu5 jbig2dec.orig\jbig2_generic.c jbig2dec\jbig2_generic.c
+--- jbig2dec.orig\jbig2_generic.c	Sun Aug 26 12:06:26 2012
++++ jbig2dec\jbig2_generic.c	Mon Jan 28 22:28:05 2013
+@@ -859,11 +859,11 @@
+       code = jbig2_decode_generic_region(ctx, segment, &params,
+ 					 as, image, GB_stats);
+     }
+ 
+   jbig2_page_add_result(ctx, &ctx->pages[ctx->current_page],
+-			image, rsi.x, rsi.y, JBIG2_COMPOSE_OR);
++			image, rsi.x, rsi.y, rsi.op);
+ 
+ cleanup:
+   jbig2_free(ctx->allocator, as);
+   jbig2_word_stream_buf_free(ctx, ws);
+   jbig2_free(ctx->allocator, GB_stats);
 diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
 --- jbig2dec.orig\jbig2_huffman.c	Sun Aug 26 12:06:26 2012
 +++ jbig2dec\jbig2_huffman.c	Sat Aug 18 18:20:14 2012
@@ -38,6 +54,38 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
        if ((flags == (byte)-1) && (PREFLEN == (byte)-1) && (entry->u.RANGELOW == -1))
        {
            if (oob)
+diff -rPu5 jbig2dec.orig\jbig2_image.c jbig2dec\jbig2_image.c
+--- jbig2dec.orig\jbig2_image.c	Sun Aug 26 12:06:26 2012
++++ jbig2dec\jbig2_image.c	Mon Jan 28 22:26:45 2013
+@@ -183,11 +183,11 @@
+ 	    break;
+ 	case JBIG2_COMPOSE_XNOR:
+ 	    for (j = 0; j < sh; j++) {
+ 		for (i = 0; i < sw; i++) {
+ 		    jbig2_image_set_pixel(dst, i+x, j+y,
+-			~(jbig2_image_get_pixel(src, i+sx, j+sy) ^
++			(jbig2_image_get_pixel(src, i+sx, j+sy) ==
+ 			jbig2_image_get_pixel(dst, i+x, j+y)));
+ 		}
+     	    }
+ 	    break;
+ 	case JBIG2_COMPOSE_REPLACE:
+diff -rPu5 jbig2dec.orig\jbig2_page.c jbig2dec\jbig2_page.c
+--- jbig2dec.orig\jbig2_page.c	Sun Aug 26 12:06:26 2012
++++ jbig2dec\jbig2_page.c	Mon Jan 28 22:27:09 2013
+@@ -283,11 +283,11 @@
+ 		page->image->width, new_height);
+ 	}
+     }
+ 
+     jbig2_image_compose(ctx, page->image, image,
+-                        x, y + page->end_row, JBIG2_COMPOSE_OR);
++                        x, y + page->end_row, op);
+ 
+     return 0;
+ }
+ 
+ /**
 diff -rPu5 jbig2dec.orig\jbig2_symbol_dict.c jbig2dec\jbig2_symbol_dict.c
 --- jbig2dec.orig\jbig2_symbol_dict.c	Sun Aug 26 12:06:26 2012
 +++ jbig2dec\jbig2_symbol_dict.c	Sun Jan 27 15:36:41 2013

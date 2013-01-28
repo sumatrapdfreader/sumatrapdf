@@ -285,7 +285,7 @@ jbig2_page_add_result(Jbig2Ctx *ctx, Jbig2Page *page, Jbig2Image *image,
     }
 
     jbig2_image_compose(ctx, page->image, image,
-                        x, y + page->end_row, JBIG2_COMPOSE_OR);
+                        x, y + page->end_row, op);
 
     return 0;
 }
