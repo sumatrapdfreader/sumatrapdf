@@ -252,8 +252,7 @@ Bitmap *WICDecodeImageFromStream(IStream *stream)
 
 #define HR(hr) if (FAILED(hr)) return NULL;
     ScopedComPtr<IWICImagingFactory> pFactory;
-    HR(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_ALL,
-                        IID_IWICImagingFactory, (void **)&pFactory));
+    if (!pFactory.Create(CLSID_WICImagingFactory)) return NULL;
     ScopedComPtr<IWICBitmapDecoder> pDecoder;
     HR(pFactory->CreateDecoderFromStream(stream, NULL, WICDecodeMetadataCacheOnDemand,
                                          &pDecoder));

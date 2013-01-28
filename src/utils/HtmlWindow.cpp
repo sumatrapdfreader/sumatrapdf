@@ -1078,10 +1078,9 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
 
 bool HtmlWindow::CreateBrowser()
 {
+    HRESULT hr;
     ScopedComPtr<IUnknown> p;
-    HRESULT hr = CoCreateInstance(CLSID_WebBrowser, NULL,
-                                  CLSCTX_ALL, IID_IUnknown, (void**)&p);
-    if (FAILED(hr)) return false;
+    if (!p.Create(CLSID_WebBrowser)) return false;
     hr = p->QueryInterface(IID_IViewObject, (void**)&viewObject);
     if (FAILED(hr)) return false;
     hr = p->QueryInterface(IID_IOleObject, (void**)&oleObject);

@@ -303,16 +303,14 @@ WCHAR *ResolveLnk(const WCHAR * path)
         return NULL;
 
     ScopedComPtr<IShellLink> lnk;
-    HRESULT hRes = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                                    IID_IShellLink, (LPVOID *)&lnk);
-    if (FAILED(hRes))
+    if (!lnk.Create(CLSID_ShellLink))
         return NULL;
 
     ScopedComQIPtr<IPersistFile> file(lnk);
     if (!file)
         return NULL;
 
-    hRes = file->Load(olePath, STGM_READ);
+    HRESULT hRes = file->Load(olePath, STGM_READ);
     if (FAILED(hRes))
         return NULL;
 
@@ -332,18 +330,16 @@ bool CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath,
                     const WCHAR *args, const WCHAR *description, int iconIndex)
 {
     ScopedCom com;
-    ScopedComPtr<IShellLink> lnk;
 
-    HRESULT hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                                  IID_IShellLink, (LPVOID *)&lnk);
-    if (FAILED(hr))
+    ScopedComPtr<IShellLink> lnk;
+    if (!lnk.Create(CLSID_ShellLink))
         return false;
 
     ScopedComQIPtr<IPersistFile> file(lnk);
     if (!file)
         return false;
 
-    hr = lnk->SetPath(exePath);
+    HRESULT hr = lnk->SetPath(exePath);
     if (FAILED(hr))
         return false;
 
@@ -821,16 +817,14 @@ UINT GuessTextCodepage(const char *data, size_t len, UINT default)
 {
     // try to guess the codepage
     ScopedComPtr<IMultiLanguage2> pMLang;
-    HRESULT hr = CoCreateInstance(CLSID_CMultiLanguage, NULL, CLSCTX_ALL,
-                                  IID_IMultiLanguage2, (void **)&pMLang);
-    if (FAILED(hr))
+    if (!pMLang.Create(CLSID_CMultiLanguage))
         return default;
 
     int ilen = (int)min(len, INT_MAX);
     int count = 1;
     DetectEncodingInfo info = { 0 };
-    hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char *)data,
-                                     &ilen, &info, &count);
+    HRESULT hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char *)data,
+                                             &ilen, &info, &count);
     if (FAILED(hr) || count != 1)
         return default;
     return info.nCodePage;

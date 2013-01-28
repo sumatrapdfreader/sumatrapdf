@@ -56,6 +56,12 @@ public:
         if (ptr)
             ptr->Release();
     }
+    bool Create(const CLSID clsid) {
+        CrashIf(ptr);
+        if (ptr) return false;
+        HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, __uuidof(T), (void **)&ptr);
+        return SUCCEEDED(hr);
+    }
     operator T*() const { return ptr; }
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }

@@ -264,9 +264,7 @@ bool CanSendAsEmailAttachment(WindowInfo *win)
         return false;
 
     ScopedComPtr<IDropTarget> pDropTarget;
-    HRESULT hr = CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL,
-                                  IID_IDropTarget, (void **)&pDropTarget);
-    return SUCCEEDED(hr);
+    return pDropTarget.Create(CLSID_SendMail);
 }
 
 static bool SendAsEmailAttachment(WindowInfo *win)
@@ -282,15 +280,13 @@ static bool SendAsEmailAttachment(WindowInfo *win)
         return false;
 
     ScopedComPtr<IDropTarget> pDropTarget;
-    HRESULT hr = CoCreateInstance(CLSID_SendMail, NULL, CLSCTX_ALL,
-                                  IID_IDropTarget, (void **)&pDropTarget);
-    if (FAILED(hr))
+    if (!pDropTarget.Create(CLSID_SendMail))
         return false;
 
     POINTL pt = { 0, 0 };
     DWORD dwEffect = 0;
     pDropTarget->DragEnter(pDataObject, MK_LBUTTON, pt, &dwEffect);
-    hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
+    HRESULT hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
     return SUCCEEDED(hr);
 }
 
