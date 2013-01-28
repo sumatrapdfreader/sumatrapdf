@@ -73,8 +73,8 @@ struct PageInfo {
 /* coordinates are in user space units (per page) */
 struct ScrollState {
     ScrollState(int page=0, double x=0, double y=0) : page(page), x(x), y(y) { }
-    bool operator==(ScrollState& other) {
-        return this->page == other.page && this->x == other.x && this->y == other.y;
+    bool operator==(const ScrollState& other) const {
+        return page == other.page && x == other.x && y == other.y;
     }
 
     int page;

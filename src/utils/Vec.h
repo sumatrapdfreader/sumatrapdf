@@ -430,6 +430,8 @@ class WStrList {
     struct Item {
         WCHAR *string;
         uint32_t hash;
+
+        Item(WCHAR *string=NULL, uint32_t hash=0) : string(string), hash(hash) { }
     };
 
     Vec<Item> items;
@@ -473,8 +475,7 @@ public:
 
     // str must have been allocated by allocator and is owned by StrList
     void Append(WCHAR *str) {
-        Item item = { str, GetQuickHashI(str) };
-        items.Append(item);
+        items.Append(Item(str, GetQuickHashI(str)));
         count++;
     }
 

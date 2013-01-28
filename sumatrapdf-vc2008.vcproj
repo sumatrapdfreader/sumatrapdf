@@ -1554,10 +1554,6 @@
 			RelativePath=".\docs\releasenotes.txt"
 			>
 		</File>
-		<File
-			RelativePath=".\docs\releaseplan.txt"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

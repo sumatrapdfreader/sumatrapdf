@@ -397,10 +397,11 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
 
     Graphics g(hDC);
+    // cf. InitGraphicsMode in MuiBase.cpp
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
-    g.SetPageUnit(UnitPixel);
     g.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    g.SetPageUnit(UnitPixel);
 
     Color white(0xFF, 0xFF, 0xFF);
     Rect screenR(screenRect.ToGdipRect());
