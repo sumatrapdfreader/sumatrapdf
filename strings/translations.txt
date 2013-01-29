@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5014928f41adeed491c12d598d04457eef123496
+7f9d592e065342aacfbb54cafc12dd8fbf3918db
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1483,7 +1483,7 @@ uk:Ні
 uz:&Yo'q
 vn:Không
 :&No, thanks
-am:&Ոչ, շնորհակալություն
+am:&Ոչ
 ar:&كلا ، شكراً
 az:&Xeyr, təşəkkür!
 bg:&Не, благодаря
