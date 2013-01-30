@@ -1,9 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sumatrapdf-vc2010", "sumatrapdf-vc2010.vcxproj", "{9458F693-A9CC-4786-B79A-A2103EC71FA3}"
+# SharpDevelop 4.3
+Project("{0E96FCFA-9DAC-4534-AC18-01A90C368873}") = "sumatrapdf-vc2010", "sumatrapdf-vc2010.vcxproj", "{9458F693-A9CC-4786-B79A-A2103EC71FA3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Installer", "installer-vc2010.vcxproj", "{BC42DA91-3BE7-410E-8ACE-E5F42DEDF41B}"
+Project("{0E96FCFA-9DAC-4534-AC18-01A90C368873}") = "Installer", "installer-vc2010.vcxproj", "{BC42DA91-3BE7-410E-8ACE-E5F42DEDF41B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

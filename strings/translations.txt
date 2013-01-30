@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7f9d592e065342aacfbb54cafc12dd8fbf3918db
+9d0fbd88628cf18ac722c5000bce844ed7a37ae1
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3160,6 +3160,7 @@ fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s le na ceanáin
 gl:Engadir páxina %s aos favoritos
 he:למועדפים %s הוסף עמוד
+hi:पृष्ठ %s को अपने पसंदीदा सूचि में जोड़े
 hr:Dodaj stranicu %s u favorite
 hu:%s. oldal hozzáadása a kedvencekhez
 id:Tambah Halaman %s Ke Favorit
@@ -3323,6 +3324,7 @@ fy-nl:Avansearre
 ga:Ardroghanna
 gl:Avanzado
 he:מתקדם
+hi:उन्नत
 hr:Napredno
 hu:Haladó
 id:Lanjutan
@@ -3440,6 +3442,7 @@ fr:Tous les documents pris en charge
 ga:Gach cáipéis inléite
 gl:Todos os documentos admitidos
 he:כל המסמכים הנתמכים
+hi:सभी सहायक दस्तावेज़
 hr:Svi podržani dokumenti
 hu:Minden támogatott fájltípus
 id:Semua Dokumen Yang Didukung
@@ -3495,6 +3498,7 @@ fy-nl:Applikaasje:
 ga:Feidhmchlár:
 gl:Aplicación:
 he:יישום:
+hi:आवेदन
 hr:Aplikacija:
 hu:Alkalmazás:
 id:Aplikasi
@@ -3619,6 +3623,7 @@ fr:Fichier joint : %s
 ga:Ceangaltán: %s
 gl:Adxunto: %s
 he:נספח: %s
+hi:संलान्गित : %s
 hr:Prilog: %s
 hu:Csatolmány: %s
 id:Lampiran: %s
@@ -3979,6 +3984,7 @@ fr:Raccourcis des signets
 ga:Déan ceanáin d'aicearraí
 gl:Atallos de marcadores
 he:קיצורי דרך סימניה
+hi:चिन्हित अल्प तरीका
 hr:Prečaci oznaka
 hu:Könyvjelző parancsikonok
 id:Jalan Pintas Markah
@@ -4084,6 +4090,7 @@ fr:Signets
 ga:Ceanáin
 gl:Marcadores
 he:מועדפים
+hi:चिन्हित
 hr:Oznake
 hu:Könyvjelzők
 id:Markah
@@ -4672,6 +4679,7 @@ fi:Yhteensopivuus
 fr:Compatibilité
 ga:Comhoiriúnacht
 he:תאימות
+hi:अनुकूल
 hr:Kompatibilnost
 hu:Kompatibilitás
 id:Kompabilitas
@@ -5196,6 +5204,7 @@ fa:حقّ نشر
 fr:Copyright :
 ga:Cóipcheart:
 he:זכויות יוצרים
+hi:पाठाधिकार
 hr:Autorsko pravo
 hu:Szerzői jog:
 id:Hak Cipta
@@ -5418,6 +5427,7 @@ fy-nl:Makke:
 ga:Cruthaithe:
 gl:Creado:
 he:נוצר:
+hi:रचित
 hr:Stvoreno:
 hu:Készült:
 id:Dibuat:
@@ -5934,6 +5944,7 @@ fy-nl:Ynlade
 ga:Íosluchtaigh
 gl:Descargar
 he:הורדה
+hi:डाउनलोड
 hr:Preuzmi
 hu:Letöltés
 id:Unduh
@@ -7832,6 +7843,7 @@ fi:Fontit:
 fr:Polices :
 ga:Clófhoirne:
 he:גופנים
+hi:अक्षर का आकर
 hr:Fontovi:
 hu:Betűk:
 id:Huruf
@@ -8828,6 +8840,7 @@ fy-nl:Oanpast:
 ga:Mionathraithe:
 gl:Modificado:
 he:שונה:
+hi:संशोधित
 hr:Promijenjeno:
 hu:Módosítva:
 id:Dimodifikasi:
@@ -10277,6 +10290,7 @@ fy-nl:Sidegrutte:
 ga:Méid an leathanaigh:
 gl:Tamaño de páxina:
 he:גודל עמוד:
+hi:पृष्ठ आकर
 hr:Veličina stranice:
 hu:Oldalméret
 id:Ukuran Halaman:
@@ -10391,6 +10405,7 @@ fr:Mise à l'échelle
 ga:Scálú leathanaigh
 gl:Escalado de páxina
 he:מתיחת עמודים
+hi:पृष्ठ आकर मप्यांकन
 hr:Skaliranje stranice
 hu:Lapmérethez igazítás
 id:Mengukur halaman
@@ -10842,6 +10857,7 @@ fr:Plage d'impression
 ga:Raon clóbhuailte
 gl:Imprimir un rango
 he:הדפס טווח
+hi:छपाई सीमा
 hr:Ispiši raspon
 hu:Nyomtatási tartomány
 id:Kisaran cetakan
@@ -13354,6 +13370,7 @@ fy-nl:Warskôging
 ga:Rabhadh
 gl:Aviso
 he:אזהרה
+hi:चेतावनी
 hr:Upozorenje
 hu:Figyelmeztetés
 id:Peringatan
@@ -13904,6 +13921,7 @@ fr:copie de texte
 ga:ag macasamhlú an téacs
 gl:copiando texto
 he:מעתיק טקסט
+hi:पाठ छापना
 hr:kopiram tekst
 hu:Szöveg vágólapra
 id:menyalin teks
