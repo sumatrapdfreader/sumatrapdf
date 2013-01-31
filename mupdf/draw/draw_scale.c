@@ -1254,7 +1254,7 @@ fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float 
 	int max_row, temp_span, temp_rows, row;
 	int dst_w_int, dst_h_int, dst_x_int, dst_y_int;
 	int flip_x, flip_y;
-	fz_bbox patch;
+	fz_rect patch;
 
 	fz_var(contrib_cols);
 	fz_var(contrib_rows);

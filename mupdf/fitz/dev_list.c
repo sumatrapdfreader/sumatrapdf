@@ -268,7 +268,7 @@ fz_list_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_m
 }
 
 static void
-fz_list_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
+fz_list_clip_path(fz_device *dev, fz_path *path, fz_rect rect, int even_odd, fz_matrix ctm)
 {
 	fz_display_node *node;
 	fz_context *ctx = dev->ctx;
@@ -276,8 +276,7 @@ fz_list_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz
 	fz_try(ctx)
 	{
 		node->rect = fz_bound_path(dev->ctx, path, NULL, ctm);
-		if (rect)
-			node->rect = fz_intersect_rect(node->rect, *rect);
+		node->rect = fz_intersect_rect(node->rect, rect);
 		node->item.path = fz_clone_path(dev->ctx, path);
 		node->flag = even_odd;
 	}
@@ -290,7 +289,7 @@ fz_list_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz
 }
 
 static void
-fz_list_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
+fz_list_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	fz_display_node *node;
 	fz_context *ctx = dev->ctx;
@@ -298,8 +297,7 @@ fz_list_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke
 	fz_try(ctx)
 	{
 		node->rect = fz_bound_path(dev->ctx, path, stroke, ctm);
-		if (rect)
-			node->rect = fz_intersect_rect(node->rect, *rect);
+		node->rect = fz_intersect_rect(node->rect, rect);
 		node->item.path = fz_clone_path(dev->ctx, path);
 		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}
@@ -342,7 +340,7 @@ fz_list_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_m
 	fz_try(ctx)
 	{
 		node->rect = fz_bound_text(dev->ctx, text, ctm);
-		fz_adjust_rect_for_stroke(&node->rect, stroke, &ctm);
+		node->rect = fz_adjust_rect_for_stroke(node->rect, stroke, ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
 		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}
@@ -386,7 +384,7 @@ fz_list_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 	fz_try(ctx)
 	{
 		node->rect = fz_bound_text(dev->ctx, text, ctm);
-		fz_adjust_rect_for_stroke(&node->rect, stroke, &ctm);
+		node->rect = fz_adjust_rect_for_stroke(node->rect, stroke, ctm);
 		node->item.text = fz_clone_text(dev->ctx, text);
 		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}
@@ -458,13 +456,12 @@ fz_list_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 }
 
 static void
-fz_list_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
+fz_list_clip_image_mask(fz_device *dev, fz_image *image, fz_rect rect, fz_matrix ctm)
 {
 	fz_display_node *node;
 	node = fz_new_display_node(dev->ctx, FZ_CMD_CLIP_IMAGE_MASK, ctm, NULL, NULL, 0);
 	node->rect = fz_transform_rect(ctm, fz_unit_rect);
-	if (rect)
-		node->rect = fz_intersect_rect(node->rect, *rect);
+	node->rect = fz_intersect_rect(node->rect, rect);
 	node->item.image = fz_keep_image(dev->ctx, image);
 	fz_append_display_node(dev->user, node);
 }
@@ -609,12 +606,10 @@ fz_free_display_list(fz_context *ctx, fz_display_list *list)
 }
 
 void
-fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_bbox scissor, fz_cookie *cookie)
+fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz_rect scissor, fz_cookie *cookie)
 {
 	fz_display_node *node;
 	fz_matrix ctm;
-	fz_rect rect;
-	fz_bbox bbox;
 	int clipped = 0;
 	int tiled = 0;
 	int empty;
@@ -645,9 +640,7 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix top_ctm, fz
 		}
 		else
 		{
-			bbox = fz_bbox_covering_rect(fz_transform_rect(top_ctm, node->rect));
-			bbox = fz_intersect_bbox(bbox, scissor);
-			empty = fz_is_empty_bbox(bbox);
+			empty = fz_is_empty_rect(fz_intersect_rect(fz_transform_rect(top_ctm, node->rect), scissor));
 		}
 
 		if (clipped || empty)
@@ -700,13 +693,13 @@ visible:
 			case FZ_CMD_CLIP_PATH:
 			{
 				fz_rect trect = fz_transform_rect(top_ctm, node->rect);
-				fz_clip_path(dev, node->item.path, &trect, node->flag, ctm);
+				fz_clip_path(dev, node->item.path, trect, node->flag, ctm);
 				break;
 			}
 			case FZ_CMD_CLIP_STROKE_PATH:
 			{
 				fz_rect trect = fz_transform_rect(top_ctm, node->rect);
-				fz_clip_stroke_path(dev, node->item.path, &trect, node->stroke, ctm);
+				fz_clip_stroke_path(dev, node->item.path, trect, node->stroke, ctm);
 				break;
 			}
 			case FZ_CMD_FILL_TEXT:
@@ -739,37 +732,43 @@ visible:
 			case FZ_CMD_CLIP_IMAGE_MASK:
 			{
 				fz_rect trect = fz_transform_rect(top_ctm, node->rect);
-				fz_clip_image_mask(dev, node->item.image, &trect, ctm);
+				fz_clip_image_mask(dev, node->item.image, trect, ctm);
 				break;
 			}
 			case FZ_CMD_POP_CLIP:
 				fz_pop_clip(dev);
 				break;
 			case FZ_CMD_BEGIN_MASK:
-				rect = fz_transform_rect(top_ctm, node->rect);
-				fz_begin_mask(dev, rect, node->flag, node->colorspace, node->color);
+			{
+				fz_rect trect = fz_transform_rect(top_ctm, node->rect);
+				fz_begin_mask(dev, trect, node->flag, node->colorspace, node->color);
 				break;
+			}
 			case FZ_CMD_END_MASK:
 				fz_end_mask(dev);
 				break;
 			case FZ_CMD_BEGIN_GROUP:
-				rect = fz_transform_rect(top_ctm, node->rect);
-				fz_begin_group(dev, rect,
+			{
+				fz_rect trect = fz_transform_rect(top_ctm, node->rect);
+				fz_begin_group(dev, trect,
 					(node->flag & ISOLATED) != 0, (node->flag & KNOCKOUT) != 0,
 					node->item.blendmode, node->alpha);
 				break;
+			}
 			case FZ_CMD_END_GROUP:
 				fz_end_group(dev);
 				break;
 			case FZ_CMD_BEGIN_TILE:
+			{
+				fz_rect rect;
 				tiled++;
 				rect.x0 = node->color[2];
 				rect.y0 = node->color[3];
 				rect.x1 = node->color[4];
 				rect.y1 = node->color[5];
-				fz_begin_tile(dev, node->rect, rect,
-					node->color[0], node->color[1], ctm);
+				fz_begin_tile(dev, node->rect, rect, node->color[0], node->color[1], ctm);
 				break;
+			}
 			case FZ_CMD_END_TILE:
 				tiled--;
 				fz_end_tile(dev);

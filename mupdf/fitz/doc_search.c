@@ -42,9 +42,9 @@ static int charat(fz_text_page *page, int idx)
 	return textcharat(page, idx).c;
 }
 
-static fz_bbox bboxat(fz_text_page *page, int idx)
+static fz_rect bboxat(fz_text_page *page, int idx)
 {
-	return fz_round_rect(textcharat(page, idx).bbox);
+	return textcharat(page, idx).bbox;
 }
 
 static int textlen(fz_text_page *page)
@@ -88,7 +88,7 @@ static int match(fz_text_page *page, const char *s, int n)
 }
 
 int
-fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_bbox *hit_bbox, int hit_max)
+fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_rect *hit_bbox, int hit_max)
 {
 	int pos, len, i, n, hit_count;
 
@@ -102,25 +102,25 @@ fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_bbox *
 		n = match(text, needle, pos);
 		if (n)
 		{
-			fz_bbox linebox = fz_empty_bbox;
+			fz_rect linebox = fz_empty_rect;
 			for (i = 0; i < n; i++)
 			{
-				fz_bbox charbox = bboxat(text, pos + i);
-				if (!fz_is_empty_bbox(charbox))
+				fz_rect charbox = bboxat(text, pos + i);
+				if (!fz_is_empty_rect(charbox))
 				{
-					if (charbox.y0 != linebox.y0 || fz_absi(charbox.x0 - linebox.x1) > 5)
+					if (charbox.y0 != linebox.y0 || fz_abs(charbox.x0 - linebox.x1) > 5)
 					{
-						if (!fz_is_empty_bbox(linebox) && hit_count < hit_max)
+						if (!fz_is_empty_rect(linebox) && hit_count < hit_max)
 							hit_bbox[hit_count++] = linebox;
 						linebox = charbox;
 					}
 					else
 					{
-						linebox = fz_union_bbox(linebox, charbox);
+						linebox = fz_union_rect(linebox, charbox);
 					}
 				}
 			}
-			if (!fz_is_empty_bbox(linebox) && hit_count < hit_max)
+			if (!fz_is_empty_rect(linebox) && hit_count < hit_max)
 				hit_bbox[hit_count++] = linebox;
 		}
 	}
@@ -129,18 +129,18 @@ fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_bbox *
 }
 
 int
-fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_bbox rect, fz_bbox *hit_bbox, int hit_max)
+fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_rect rect, fz_rect *hit_bbox, int hit_max)
 {
-	fz_bbox linebox, charbox;
+	fz_rect linebox, charbox;
 	fz_text_block *block;
 	fz_text_line *line;
 	fz_text_span *span;
 	int i, hit_count;
 
-	int x0 = rect.x0;
-	int x1 = rect.x1;
-	int y0 = rect.y0;
-	int y1 = rect.y1;
+	float x0 = rect.x0;
+	float x1 = rect.x1;
+	float y0 = rect.y0;
+	float y1 = rect.y1;
 
 	hit_count = 0;
 
@@ -148,28 +148,28 @@ fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_bbox rect, fz_bbo
 	{
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			linebox = fz_empty_bbox;
+			linebox = fz_empty_rect;
 			for (span = line->spans; span < line->spans + line->len; span++)
 			{
 				for (i = 0; i < span->len; i++)
 				{
-					charbox = fz_bbox_covering_rect(span->text[i].bbox);
+					charbox = span->text[i].bbox;
 					if (charbox.x1 >= x0 && charbox.x0 <= x1 && charbox.y1 >= y0 && charbox.y0 <= y1)
 					{
-						if (charbox.y0 != linebox.y0 || fz_absi(charbox.x0 - linebox.x1) > 5)
+						if (charbox.y0 != linebox.y0 || fz_abs(charbox.x0 - linebox.x1) > 5)
 						{
-							if (!fz_is_empty_bbox(linebox) && hit_count < hit_max)
+							if (!fz_is_empty_rect(linebox) && hit_count < hit_max)
 								hit_bbox[hit_count++] = linebox;
 							linebox = charbox;
 						}
 						else
 						{
-							linebox = fz_union_bbox(linebox, charbox);
+							linebox = fz_union_rect(linebox, charbox);
 						}
 					}
 				}
 			}
-			if (!fz_is_empty_bbox(linebox) && hit_count < hit_max)
+			if (!fz_is_empty_rect(linebox) && hit_count < hit_max)
 				hit_bbox[hit_count++] = linebox;
 		}
 	}
@@ -178,20 +178,20 @@ fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_bbox rect, fz_bbo
 }
 
 char *
-fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_bbox rect)
+fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect)
 {
 	fz_buffer *buffer;
-	fz_bbox hitbox;
+	fz_rect hitbox;
 	fz_text_block *block;
 	fz_text_line *line;
 	fz_text_span *span;
 	int c, i, seen = 0;
 	char *s;
 
-	int x0 = rect.x0;
-	int x1 = rect.x1;
-	int y0 = rect.y0;
-	int y1 = rect.y1;
+	float x0 = rect.x0;
+	float x1 = rect.x1;
+	float y0 = rect.y0;
+	float y1 = rect.y1;
 
 	buffer = fz_new_buffer(ctx, 1024);
 
@@ -210,7 +210,7 @@ fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_bbox rect)
 
 				for (i = 0; i < span->len; i++)
 				{
-					hitbox = fz_bbox_covering_rect(span->text[i].bbox);
+					hitbox = span->text[i].bbox;
 					c = span->text[i].c;
 					if (c < 32)
 						c = '?';

@@ -112,7 +112,7 @@ fz_trace_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_
 }
 
 static void
-fz_trace_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
+fz_trace_clip_path(fz_device *dev, fz_path *path, fz_rect rect, int even_odd, fz_matrix ctm)
 {
 	printf("<clip_path");
 	if (even_odd)
@@ -120,17 +120,13 @@ fz_trace_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, f
 	else
 		printf(" winding=\"nonzero\"");
 	fz_trace_matrix(ctm);
-	/* SumatraPDF: prevent NULL-pointer dereference */
-	if (!rect)
-		printf(">\n");
-	else
-	printf(" contentbbox=\"%g %g %g %g\">\n", rect->x0, rect->y0, rect->x1, rect->y1);
+	printf(" contentbbox=\"%g %g %g %g\">\n", rect.x0, rect.y0, rect.x1, rect.y1);
 	fz_trace_path(path, 0);
 	printf("</clip_path>\n");
 }
 
 static void
-fz_trace_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
+fz_trace_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	printf("<clip_stroke_path");
 	fz_trace_matrix(ctm);
@@ -217,8 +213,7 @@ fz_trace_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha)
 }
 
 static void
-fz_trace_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
-fz_colorspace *colorspace, float *color, float alpha)
+fz_trace_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
 	printf("<fill_image_mask");
 	fz_trace_matrix(ctm);
@@ -228,7 +223,7 @@ fz_colorspace *colorspace, float *color, float alpha)
 }
 
 static void
-fz_trace_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
+fz_trace_clip_image_mask(fz_device *dev, fz_image *image, fz_rect rect, fz_matrix ctm)
 {
 	printf("<clip_image_mask");
 	fz_trace_matrix(ctm);

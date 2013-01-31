@@ -158,8 +158,8 @@ struct fz_edge_s
 
 struct fz_gel_s
 {
-	fz_bbox clip;
-	fz_bbox bbox;
+	fz_rect clip;
+	fz_rect bbox;
 	int cap, len;
 	fz_edge *edges;
 	int acap, alen;

@@ -23,7 +23,6 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -88,8 +87,8 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				Description="Generate CMap and Font source files"
-				CommandLine="generate.bat"
+				Description=""
+				CommandLine=""
 			/>
 			<Tool
 				Name="VCCustomBuildTool"

@@ -87,8 +87,7 @@ fz_new_pixmap(fz_context *ctx, fz_colorspace *colorspace, int w, int h)
 fz_pixmap *
 fz_new_pixmap_with_bbox(fz_context *ctx, fz_colorspace *colorspace, fz_bbox r)
 {
-	fz_pixmap *pixmap;
-	pixmap = fz_new_pixmap(ctx, colorspace, r.x1 - r.x0, r.y1 - r.y0);
+	fz_pixmap *pixmap = fz_new_pixmap(ctx, colorspace, r.x1 - r.x0, r.y1 - r.y0);
 	pixmap->x = r.x0;
 	pixmap->y = r.y0;
 	return pixmap;
@@ -97,8 +96,7 @@ fz_new_pixmap_with_bbox(fz_context *ctx, fz_colorspace *colorspace, fz_bbox r)
 fz_pixmap *
 fz_new_pixmap_with_bbox_and_data(fz_context *ctx, fz_colorspace *colorspace, fz_bbox r, unsigned char *samples)
 {
-	fz_pixmap *pixmap;
-	pixmap = fz_new_pixmap_with_data(ctx, colorspace, r.x1 - r.x0, r.y1 - r.y0, samples);
+	fz_pixmap *pixmap = fz_new_pixmap_with_data(ctx, colorspace, r.x1 - r.x0, r.y1 - r.y0, samples);
 	pixmap->x = r.x0;
 	pixmap->y = r.y0;
 	return pixmap;
@@ -384,15 +382,16 @@ fz_invert_pixmap(fz_context *ctx, fz_pixmap *pix)
 	}
 }
 
-void fz_invert_pixmap_rect(fz_pixmap *image, fz_bbox rect)
+void fz_invert_pixmap_rect(fz_pixmap *image, fz_bbox r)
 {
 	unsigned char *p;
+	int x0, x1, y0, y1;
 	int x, y, n;
 
-	int x0 = fz_clampi(rect.x0 - image->x, 0, image->w - 1);
-	int x1 = fz_clampi(rect.x1 - image->x, 0, image->w - 1);
-	int y0 = fz_clampi(rect.y0 - image->y, 0, image->h - 1);
-	int y1 = fz_clampi(rect.y1 - image->y, 0, image->h - 1);
+	x0 = fz_clampi(r.x0 - image->x, 0, image->w - 1);
+	x1 = fz_clampi(r.x1 - image->x, 0, image->w - 1);
+	y0 = fz_clampi(r.y0 - image->y, 0, image->h - 1);
+	y1 = fz_clampi(r.y1 - image->y, 0, image->h - 1);
 
 	for (y = y0; y < y1; y++)
 	{

@@ -6,7 +6,7 @@
 
 typedef struct fz_bbox_data_s
 {
-	fz_bbox *result;
+	fz_rect *result;
 	int top;
 	fz_rect stack[STACK_SIZE];
 	int ignore;
@@ -20,7 +20,7 @@ fz_bbox_add_rect(fz_device *dev, fz_rect rect, int clip)
 	if (0 < data->top && data->top <= STACK_SIZE)
 		rect = fz_intersect_rect(rect, data->stack[data->top-1]);
 	if (!clip && data->top <= STACK_SIZE && !data->ignore)
-		*data->result = fz_union_bbox(*data->result, fz_bbox_covering_rect(rect));
+		*data->result = fz_union_rect(*data->result, rect);
 	if (clip && ++data->top <= STACK_SIZE)
 		data->stack[data->top-1] = rect;
 }
@@ -69,17 +69,17 @@ static void
 fz_bbox_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
-	fz_bbox_fill_image(dev, image, ctm, alpha);
+	fz_bbox_add_rect(dev, fz_transform_rect(ctm, fz_unit_rect), 0);
 }
 
 static void
-fz_bbox_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
+fz_bbox_clip_path(fz_device *dev, fz_path *path, fz_rect rect, int even_odd, fz_matrix ctm)
 {
 	fz_bbox_add_rect(dev, fz_bound_path(dev->ctx, path, NULL, ctm), 1);
 }
 
 static void
-fz_bbox_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
+fz_bbox_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	fz_bbox_add_rect(dev, fz_bound_path(dev->ctx, path, stroke, ctm), 1);
 }
@@ -100,9 +100,9 @@ fz_bbox_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 }
 
 static void
-fz_bbox_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
+fz_bbox_clip_image_mask(fz_device *dev, fz_image *image, fz_rect rect, fz_matrix ctm)
 {
-	fz_bbox_add_rect(dev, rect ? fz_transform_rect(ctm, *rect) : fz_infinite_rect, 1);
+	fz_bbox_add_rect(dev, fz_transform_rect(ctm, rect), 1);
 }
 
 static void
@@ -169,7 +169,7 @@ fz_bbox_free_user(fz_device *dev)
 }
 
 fz_device *
-fz_new_bbox_device(fz_context *ctx, fz_bbox *result)
+fz_new_bbox_device(fz_context *ctx, fz_rect *result)
 {
 	fz_device *dev;
 
@@ -205,7 +205,7 @@ fz_new_bbox_device(fz_context *ctx, fz_bbox *result)
 	dev->begin_tile = fz_bbox_begin_tile;
 	dev->end_tile = fz_bbox_end_tile;
 
-	*result = fz_empty_bbox;
+	*result = fz_empty_rect;
 
 	return dev;
 }

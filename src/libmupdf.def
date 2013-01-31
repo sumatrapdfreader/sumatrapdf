@@ -53,18 +53,18 @@ EXPORTS
 	fz_invert_matrix
 	fz_is_rectilinear
 	fz_matrix_expansion
-	fz_bbox_covering_rect
-	fz_round_rect
 	fz_intersect_rect
 	fz_intersect_bbox
 	fz_union_rect
-	fz_union_bbox
-	fz_expand_bbox
+	fz_bbox_from_rect
+	fz_round_rect
+	fz_rect_from_bbox
+	fz_expand_rect
+	fz_translate_rect
 	fz_translate_bbox
 	fz_transform_point
 	fz_transform_vector
 	fz_transform_rect
-	fz_transform_bbox
 	fz_keep_buffer
 	fz_drop_buffer
 	fz_buffer_storage
@@ -406,7 +406,7 @@ EXPORTS
 	fz_paint_image_with_color
 	fz_paint_pixmap
 	fz_paint_pixmap_with_mask
-	fz_paint_pixmap_with_rect
+	fz_paint_pixmap_with_bbox
 	fz_blend_pixmap
 	fz_blend_pixel
 

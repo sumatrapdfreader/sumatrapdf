@@ -108,7 +108,7 @@ struct pdfapp_s
 	 * Used in pdfapp.c:pdfapp_onmouse.
 	 */
 	int beyondy;
-	fz_bbox selr;
+	fz_rect selr;
 
 	int nowaitcursor;
 
@@ -139,7 +139,7 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen);
 void pdfapp_onresize(pdfapp_t *app, int w, int h);
 void pdfapp_gotopage(pdfapp_t *app, int number);
 
-void pdfapp_invert(pdfapp_t *app, fz_bbox rect);
+void pdfapp_invert(pdfapp_t *app, fz_rect rect);
 void pdfapp_inverthit(pdfapp_t *app);
 
 void pdfapp_postblit(pdfapp_t *app);

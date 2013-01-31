@@ -309,30 +309,33 @@ fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix
 
 	if (stroke)
 	{
-		fz_adjust_rect_for_stroke(&r, stroke, &ctm);
+		r = fz_adjust_rect_for_stroke(r, stroke, ctm);
 	}
 
 	return r;
 }
 
-void
-fz_adjust_rect_for_stroke(fz_rect *r, fz_stroke_state *stroke, fz_matrix *ctm)
+fz_rect
+fz_adjust_rect_for_stroke(fz_rect r, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	float expand;
 
 	if (!stroke)
-		return;
+		return r;
+
 	expand = stroke->linewidth;
 	expand *= 0.5; /* SumatraPDF: expansion happens from the middle of the line */
 	if (expand == 0)
 		expand = 1.0f;
-	expand *= fz_matrix_max_expansion(*ctm);
+	expand *= fz_matrix_max_expansion(ctm);
 	if ((stroke->linejoin == FZ_LINEJOIN_MITER || stroke->linejoin == FZ_LINEJOIN_MITER_XPS) && stroke->miterlimit > 1)
 		expand *= stroke->miterlimit;
-	r->x0 -= expand;
-	r->y0 -= expand;
-	r->x1 += expand;
-	r->y1 += expand;
+
+	r.x0 -= expand;
+	r.y0 -= expand;
+	r.x1 += expand;
+	r.y1 += expand;
+	return r;
 }
 
 void

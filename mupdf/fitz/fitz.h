@@ -742,8 +742,7 @@ struct fz_point_s
 	defined to be infinite.
 
 	To check for empty or infinite rectangles use fz_is_empty_rect
-	and fz_is_infinite_rect. Compare to fz_bbox which has corners
-	at integer coordinates.
+	and fz_is_infinite_rect.
 
 	x0, y0: The top left corner.
 
@@ -757,14 +756,9 @@ struct fz_rect_s
 };
 
 /*
-	fz_bbox is a bounding box similar to a fz_rect, except that
-	all corner coordinates are rounded to integer coordinates.
-	To check for empty or infinite bounding boxes use
-	fz_is_empty_bbox and fz_is_infinite_bbox.
+	fz_bbox is a rectangle using integers instead of floats.
 
-	x0, y0: The top left corner.
-
-	x1, y1: The bottom right corner.
+	It's used in the draw device and for pixmap dimensions.
 */
 typedef struct fz_bbox_s fz_bbox;
 struct fz_bbox_s
@@ -782,20 +776,11 @@ struct fz_bbox_s
 extern const fz_rect fz_unit_rect;
 
 /*
-	A bounding box with sides of length one. See fz_unit_rect.
-*/
-extern const fz_bbox fz_unit_bbox;
-
-/*
 	An empty rectangle with an area equal to zero.
 
 	Both the top left and bottom right corner are at (0, 0).
 */
 extern const fz_rect fz_empty_rect;
-
-/*
-	An empty bounding box. See fz_empty_rect.
-*/
 extern const fz_bbox fz_empty_bbox;
 
 /*
@@ -805,10 +790,6 @@ extern const fz_bbox fz_empty_bbox;
 	at (-1, -1).
 */
 extern const fz_rect fz_infinite_rect;
-
-/*
-	An infinite bounding box. See fz_infinite_rect.
-*/
 extern const fz_bbox fz_infinite_bbox;
 
 /*
@@ -819,28 +800,12 @@ extern const fz_bbox fz_infinite_bbox;
 #define fz_is_empty_rect(r) ((r).x0 == (r).x1 || (r).y0 == (r).y1)
 
 /*
-	fz_is_empty_bbox: Check if bounding box is empty.
-
-	Same definition of empty bounding boxes as for empty
-	rectangles. See fz_is_empty_rect.
-*/
-#define fz_is_empty_bbox(b) ((b).x0 == (b).x1 || (b).y0 == (b).y1)
-
-/*
 	fz_is_infinite: Check if rectangle is infinite.
 
 	An infinite rectangle is defined as one where either of the
 	two relationships between corner coordinates are not true.
 */
 #define fz_is_infinite_rect(r) ((r).x0 > (r).x1 || (r).y0 > (r).y1)
-
-/*
-	fz_is_infinite_bbox: Check if bounding box is infinite.
-
-	Same definition of infinite bounding boxes as for infinite
-	rectangles. See fz_is_infinite_rect.
-*/
-#define fz_is_infinite_bbox(b) ((b).x0 > (b).x1 || (b).y0 > (b).y1)
 
 /*
 	fz_matrix is a a row-major 3x3 matrix used for representing
@@ -957,39 +922,6 @@ int fz_is_rectilinear(fz_matrix m);
 float fz_matrix_expansion(fz_matrix m); /* sumatrapdf */
 
 /*
-	fz_bbox_covering_rect: Convert a rect into the minimal bounding box
-	that covers the rectangle.
-
-	Coordinates in a bounding box are integers, so rounding of the
-	rects coordinates takes place. The top left corner is rounded
-	upwards and left while the bottom right corner is rounded
-	downwards and to the right. Overflows or underflowing
-	coordinates are clamped to INT_MIN/INT_MAX.
-
-	Does not throw exceptions.
-*/
-fz_bbox fz_bbox_covering_rect(fz_rect rect);
-
-/*
-	fz_round_rect: Convert a rect into a bounding box.
-
-	Coordinates in a bounding box are integers, so rounding of the
-	rects coordinates takes place. The top left corner is rounded
-	upwards and left while the bottom right corner is rounded
-	downwards and to the right. Overflows or underflowing
-	coordinates are clamped to INT_MIN/INT_MAX.
-
-	This differs from fz_bbox_covering_rect, in that fz_bbox_covering_rect
-	slavishly follows the numbers (i.e any slight over/under calculations
-	can cause whole extra pixels to be added). fz_round_rect
-	allows for a small amount of rounding error when calculating
-	the bbox.
-
-	Does not throw exceptions.
-*/
-fz_bbox fz_round_rect(fz_rect rect);
-
-/*
 	fz_intersect_rect: Compute intersection of two rectangles.
 
 	Compute the largest axis-aligned rectangle that covers the
@@ -1002,15 +934,6 @@ fz_bbox fz_round_rect(fz_rect rect);
 	Does not throw exceptions.
 */
 fz_rect fz_intersect_rect(fz_rect a, fz_rect b);
-
-/*
-	fz_intersect_bbox: Compute intersection of two bounding boxes.
-
-	Similar to fz_intersect_rect but operates on two bounding
-	boxes instead of two rectangles.
-
-	Does not throw exceptions.
-*/
 fz_bbox fz_intersect_bbox(fz_bbox a, fz_bbox b);
 
 /*
@@ -1027,29 +950,54 @@ fz_bbox fz_intersect_bbox(fz_bbox a, fz_bbox b);
 fz_rect fz_union_rect(fz_rect a, fz_rect b);
 
 /*
-	fz_union_bbox: Compute union of two bounding boxes.
+	fz_bbox_from_rect: Convert a rect into the minimal bounding box
+	that covers the rectangle.
 
-	Similar to fz_union_rect but operates on two bounding boxes
-	instead of two rectangles.
-
-	Does not throw exceptions.
-*/
-fz_bbox fz_union_bbox(fz_bbox a, fz_bbox b);
-
-/*
-	fz_expand_bbox: Expand a bbox by a given amount in all directions.
+	Coordinates in a bounding box are integers, so rounding of the
+	rects coordinates takes place. The top left corner is rounded
+	upwards and left while the bottom right corner is rounded
+	downwards and to the right.
 
 	Does not throw exceptions.
 */
-fz_bbox fz_expand_bbox(fz_bbox b, int expand);
+
+fz_bbox fz_bbox_from_rect(fz_rect rect);
 
 /*
-	fz_translate_bbox: Translate bounding box.
+	fz_round_rect: Round rectangle coordinates.
+
+	Coordinates in a bounding box are integers, so rounding of the
+	rects coordinates takes place. The top left corner is rounded
+	upwards and left while the bottom right corner is rounded
+	downwards and to the right.
+
+	This differs from fz_bbox_from_rect, in that fz_rect_covering_rect
+	slavishly follows the numbers (i.e any slight over/under calculations
+	can cause whole extra pixels to be added). fz_round_rect
+	allows for a small amount of rounding error when calculating
+	the bbox.
+
+	Does not throw exceptions.
+*/
+fz_bbox fz_round_rect(fz_rect rect);
+
+fz_rect fz_rect_from_bbox(fz_bbox rect);
+
+/*
+	fz_expand_rect: Expand a bbox by a given amount in all directions.
+
+	Does not throw exceptions.
+*/
+fz_rect fz_expand_rect(fz_rect b, float expand);
+
+/*
+	fz_translate_rect: Translate bounding box.
 
 	Translate a bbox by a given x and y offset. Allows for overflow.
 
 	Does not throw exceptions.
 */
+fz_rect fz_translate_rect(fz_rect a, float xoff, float yoff);
 fz_bbox fz_translate_bbox(fz_bbox a, int xoff, int yoff);
 
 /*
@@ -1092,16 +1040,6 @@ fz_point fz_transform_vector(fz_matrix transform, fz_point vector);
 	Does not throw exceptions.
 */
 fz_rect fz_transform_rect(fz_matrix transform, fz_rect rect);
-
-/*
-	fz_transform_bbox: Transform a given bounding box.
-
-	Similar to fz_transform_rect, but operates on a bounding box
-	instead of a rectangle.
-
-	Does not throw exceptions.
-*/
-fz_bbox fz_transform_bbox(fz_matrix matrix, fz_bbox bbox);
 
 /*
 	fz_buffer is a wrapper around a dynamically allocated array of bytes.
@@ -1337,9 +1275,7 @@ extern fz_colorspace *fz_device_cmyk;
 typedef struct fz_pixmap_s fz_pixmap;
 
 /*
-	fz_pixmap_bbox: Return a bounding box for a pixmap.
-
-	Returns an exact bounding box for the supplied pixmap.
+	fz_pixmap_bbox: Return the bounding box for a pixmap.
 */
 fz_bbox fz_pixmap_bbox(fz_context *ctx, fz_pixmap *pix);
 
@@ -1424,7 +1360,7 @@ fz_pixmap *fz_new_pixmap_with_data(fz_context *ctx, fz_colorspace *colorspace, i
 	Returns a pointer to the new pixmap. Throws exception on failure to
 	allocate.
 */
-fz_pixmap *fz_new_pixmap_with_bbox_and_data(fz_context *ctx, fz_colorspace *colorspace, fz_bbox bbox, unsigned char *samples);
+fz_pixmap *fz_new_pixmap_with_bbox_and_data(fz_context *ctx, fz_colorspace *colorspace, fz_bbox rect, unsigned char *samples);
 
 /*
 	fz_keep_pixmap: Take a reference to a pixmap.
@@ -1698,7 +1634,7 @@ fz_device *fz_new_trace_device(fz_context *ctx);
 	The returned bounding box will be the union of all bounding
 	boxes of all objects on a page.
 */
-fz_device *fz_new_bbox_device(fz_context *ctx, fz_bbox *bboxp);
+fz_device *fz_new_bbox_device(fz_context *ctx, fz_rect *rectp);
 
 /*
 	fz_new_draw_device: Create a device to draw on a pixmap.
@@ -1713,7 +1649,7 @@ fz_device *fz_new_draw_device(fz_context *ctx, fz_pixmap *dest);
 
 /* SumatraPDF: GDI+ draw device */
 #ifdef _WIN32
-fz_device *fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_bbox base_clip);
+fz_device *fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_rect base_clip);
 #endif
 
 /*
@@ -1897,21 +1833,21 @@ void fz_print_text_page(fz_context *ctx, FILE *out, fz_text_page *page);
 
 	NOTE: This is an experimental interface and subject to change without notice.
 */
-int fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_bbox *hit_bbox, int hit_max);
+int fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_rect *hit_bbox, int hit_max);
 
 /*
 	fz_highlight_selection: Return a list of rectangles to highlight given a selection rectangle.
 
 	NOTE: This is an experimental interface and subject to change without notice.
 */
-int fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_bbox rect, fz_bbox *hit_bbox, int hit_max);
+int fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_rect rect, fz_rect *hit_bbox, int hit_max);
 
 /*
 	fz_copy_selection: Return a newly allocated UTF-8 string with the text for a given selection rectangle.
 
 	NOTE: This is an experimental interface and subject to change without notice.
 */
-char *fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_bbox rect);
+char *fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect);
 
 /*
 	Cookie support - simple communication channel between app/library.
@@ -2028,7 +1964,7 @@ fz_device *fz_new_list_device(fz_context *ctx, fz_display_list *list);
 	progress information back to the caller. The fields inside
 	cookie are continually updated while the page is being run.
 */
-void fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, fz_bbox area, fz_cookie *cookie);
+void fz_run_display_list(fz_display_list *list, fz_device *dev, fz_matrix ctm, fz_rect area, fz_cookie *cookie);
 
 /*
 	fz_free_display_list: Frees a display list.
@@ -2751,7 +2687,7 @@ int fz_widget_get_type(fz_widget *widget);
 /*
 	fz_widget_bbox: get the bounding box of a widget.
 */
-fz_rect *fz_widget_bbox(fz_widget *widget);
+fz_rect fz_widget_bbox(fz_widget *widget);
 
 /*
 	fz_text_widget_text: Get the text currently displayed in

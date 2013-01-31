@@ -375,7 +375,7 @@ fz_paint_span(byte * restrict dp, byte * restrict sp, int n, int w, int alpha)
  */
 
 void
-fz_paint_pixmap_with_rect(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox)
+fz_paint_pixmap_with_bbox(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox)
 {
 	unsigned char *sp, *dp;
 	int x, y, w, h, n;

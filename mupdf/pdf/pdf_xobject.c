@@ -111,7 +111,7 @@ pdf_load_xobject(pdf_document *xref, pdf_obj *dict)
 }
 
 pdf_obj *
-pdf_new_xobject(pdf_document *xref, fz_rect *bbox, fz_matrix *mat)
+pdf_new_xobject(pdf_document *xref, fz_rect bbox, fz_matrix mat)
 {
 	int idict_num;
 	pdf_obj *idict = NULL;
@@ -185,9 +185,9 @@ pdf_new_xobject(pdf_document *xref, fz_rect *bbox, fz_matrix *mat)
 		form->me = NULL;
 		form->iteration = 0;
 
-		form->bbox = *bbox;
+		form->bbox = bbox;
 
-		form->matrix = *mat;
+		form->matrix = mat;
 
 		form->isolated = 0;
 		form->knockout = 0;

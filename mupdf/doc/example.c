@@ -41,9 +41,8 @@ render(char *filename, int pagenumber, int zoom, int rotation)
 	// Take the page bounds and transform them by the same matrix that
 	// we will use to render the page.
 
-	fz_rect rect = fz_bound_page(doc, page);
-	rect = fz_transform_rect(transform, rect);
-	fz_bbox bbox = fz_round_rect(rect);
+	fz_rect bounds = fz_bound_page(doc, page);
+	bounds = fz_transform_rect(transform, rect);
 
 	// Create a blank pixmap to hold the result of rendering. The
 	// pixmap bounds used here are the same as the transformed page
@@ -51,6 +50,7 @@ render(char *filename, int pagenumber, int zoom, int rotation)
 	// space has the origin at the top left corner and the x axis
 	// extends to the right and the y axis extends down.
 
+	fz_bbox bbox = fz_round_rect(bounds);
 	fz_pixmap *pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb, bbox);
 	fz_clear_pixmap_with_value(ctx, pix, 0xff);
 

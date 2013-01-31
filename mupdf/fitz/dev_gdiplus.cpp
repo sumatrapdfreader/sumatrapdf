@@ -309,14 +309,14 @@ public:
 	float *t3color;
 	bool transparency, started;
 
-	userData(fz_context *ctx, HDC hDC, fz_bbox clip) : stack(new userDataStackItem()),
+	userData(fz_context *ctx, HDC hDC, fz_rect clip) : stack(new userDataStackItem()),
 		ctx(ctx), outlines(NULL), fontCollections(NULL), tempFiles(NULL), t3color(NULL),
 		transparency(false), started(false)
 	{
 		assert(GetMapMode(hDC) == MM_TEXT);
 		graphics = _setup(new Graphics(hDC));
 		graphics->GetClip(&stack->clip);
-		graphics->SetClip(Rect(clip.x0, clip.y0, clip.x1 - clip.x0, clip.y1 - clip.y0));
+		graphics->SetClip(RectF(clip.x0, clip.y0, clip.x1 - clip.x0, clip.y1 - clip.y0));
 	}
 
 	~userData()
@@ -448,7 +448,7 @@ public:
 	{
 		pushClip(&Region());
 		
-		fz_bbox bbox = fz_bbox_covering_rect(fz_transform_rect(ctm, rect));
+		fz_bbox bbox = fz_bbox_from_rect(fz_transform_rect(ctm, rect));
 		stack->bounds.X = bbox.x0; stack->bounds.Width = bbox.x1 - bbox.x0;
 		stack->bounds.Y = bbox.y0; stack->bounds.Height = bbox.y1 - bbox.y0;
 		
@@ -629,7 +629,7 @@ public:
 			alpha = getAlpha(alpha);
 		}
 		
-		fz_gridfit_matrix(&ctm);
+		ctm = fz_gridfit_matrix(ctm);
 		
 		if (_hasSingleColor(image))
 		{
@@ -1183,7 +1183,7 @@ fz_gdiplus_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, f
 }
 
 extern "C" static void
-fz_gdiplus_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int evenodd, fz_matrix ctm)
+fz_gdiplus_clip_path(fz_device *dev, fz_path *path, fz_rect rect, int evenodd, fz_matrix ctm)
 {
 	GraphicsPath *gpath = gdiplus_get_path(path, ctm, false, evenodd);
 	
@@ -1194,7 +1194,7 @@ fz_gdiplus_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int evenodd, 
 }
 
 extern "C" static void
-fz_gdiplus_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
+fz_gdiplus_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	GraphicsPath *gpath = gdiplus_get_path(path, ctm, stroke->start_cap || stroke->end_cap);
 	
@@ -1543,9 +1543,9 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alph
 		bounds = fz_transform_rect(fz_concat(shade->matrix, ctm), shade->bbox);
 		clip = fz_intersect_rect(bounds, clip);
 	}
-	fz_bbox bbox = fz_bbox_covering_rect(clip);
+	fz_bbox bbox = fz_bbox_from_rect(clip);
 	
-	if (fz_is_empty_bbox(bbox))
+	if (fz_is_empty_rect(bbox))
 		return;
 	
 	fz_pixmap *dest = fz_new_pixmap_with_bbox(dev->ctx, fz_device_rgb, bbox);
@@ -1622,7 +1622,7 @@ fz_gdiplus_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 }
 
 extern "C" static void
-fz_gdiplus_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
+fz_gdiplus_clip_image_mask(fz_device *dev, fz_image *image, fz_rect rect, fz_matrix ctm)
 {
 	fz_pixmap *pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
 	((userData *)dev->user)->pushClipMask(pixmap, ctm);
@@ -1695,7 +1695,7 @@ fz_gdiplus_free_user(fz_device *dev)
 }
 
 fz_device *
-fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_bbox base_clip)
+fz_new_gdiplus_device(fz_context *ctx, void *dc, fz_rect base_clip)
 {
 	fz_synchronize_begin();
 	if (++g_gdiplusUsage == 1)

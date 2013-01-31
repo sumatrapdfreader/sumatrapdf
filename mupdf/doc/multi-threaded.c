@@ -58,7 +58,7 @@ struct data {
 
 	// The area of the page to render as obtained by the main
 	// thread and sent from main to rendering thread.
-	fz_bbox bbox;
+	fz_rect bbox;
 
 	// This is the result, a pixmap containing the rendered page.
 	// It is passed first from main thread to the rendering
@@ -79,7 +79,7 @@ renderer(void *data)
 	int pagenumber = ((struct data *) data)->pagenumber;
 	fz_context *ctx = ((struct data *) data)->ctx;
 	fz_display_list *list = ((struct data *) data)->list;
-	fz_bbox bbox = ((struct data *) data)->bbox;
+	fz_rect bbox = ((struct data *) data)->bbox;
 	fz_pixmap *pix = ((struct data *) data)->pix;
 
 	fprintf(stderr, "thread at page %d loading!\n", pagenumber);
@@ -180,8 +180,7 @@ int main(int argc, char **argv)
 
 		// Compute the bounding box for each page.
 
-		fz_rect rect = fz_bound_page(doc, page);
-		fz_bbox bbox = fz_round_rect(rect);
+		fz_rect bbox = fz_bound_page(doc, page);
 
 		// Create a display list that will hold the drawing
 		// commands for the page.
@@ -202,8 +201,7 @@ int main(int argc, char **argv)
 
 		// Create a white pixmap using the correct dimensions.
 
-		fz_pixmap *pix = fz_new_pixmap_with_bbox(ctx,
-			fz_device_rgb, bbox);
+		fz_pixmap *pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb, fz_round_rect(bbox));
 		fz_clear_pixmap_with_value(ctx, pix, 0xff);
 
 		// Populate the data structure to be sent to the

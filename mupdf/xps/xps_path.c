@@ -781,7 +781,7 @@ xps_clip(xps_document *doc, fz_matrix ctm, xps_resource *dict, char *clip_att, f
 		path = xps_parse_path_geometry(doc, dict, clip_tag, 0, &fill_rule);
 	else
 		path = fz_new_path(doc->ctx);
-	fz_clip_path(doc->dev, path, NULL, fill_rule == 0, ctm);
+	fz_clip_path(doc->dev, path, fz_infinite_rect, fill_rule == 0, ctm);
 	fz_free_path(doc->ctx, path);
 }
 
@@ -1020,7 +1020,7 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 
 	if (fill_tag)
 	{
-		fz_clip_path(doc->dev, path, NULL, fill_rule == 0, ctm);
+		fz_clip_path(doc->dev, path, fz_infinite_rect, fill_rule == 0, ctm);
 		xps_parse_brush(doc, ctm, area, fill_uri, dict, fill_tag);
 		fz_pop_clip(doc->dev);
 	}
@@ -1038,7 +1038,7 @@ xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *d
 
 	if (stroke_tag)
 	{
-		fz_clip_stroke_path(doc->dev, stroke_path, NULL, stroke, ctm);
+		fz_clip_stroke_path(doc->dev, stroke_path, fz_infinite_rect, stroke, ctm);
 		xps_parse_brush(doc, ctm, area, stroke_uri, dict, stroke_tag);
 		fz_pop_clip(doc->dev);
 	}

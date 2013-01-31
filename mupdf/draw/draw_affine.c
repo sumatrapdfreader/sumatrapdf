@@ -463,135 +463,136 @@ fz_paint_affine_color_near(byte *dp, byte *sp, int sw, int sh, int u, int v, int
  */
 #define MY_EPSILON 0.001
 
-void
-fz_gridfit_matrix(fz_matrix *m)
+fz_matrix
+fz_gridfit_matrix(fz_matrix m)
 {
-	if (fabsf(m->b) < FLT_EPSILON && fabsf(m->c) < FLT_EPSILON)
+	if (fabsf(m.b) < FLT_EPSILON && fabsf(m.c) < FLT_EPSILON)
 	{
-		if (m->a > 0)
+		if (m.a > 0)
 		{
 			float f;
 			/* Adjust left hand side onto pixel boundary */
-			f = (float)(int)(m->e);
-			if (f - m->e > MY_EPSILON)
+			f = (float)(int)(m.e);
+			if (f - m.e > MY_EPSILON)
 				f -= 1.0; /* Ensure it moves left */
-			m->a += m->e - f; /* width gets wider as f <= m->e */
-			m->e = f;
+			m.a += m.e - f; /* width gets wider as f <= m.e */
+			m.e = f;
 			/* Adjust right hand side onto pixel boundary */
-			f = (float)(int)(m->a);
-			if (m->a - f > MY_EPSILON)
+			f = (float)(int)(m.a);
+			if (m.a - f > MY_EPSILON)
 				f += 1.0; /* Ensure it moves right */
-			m->a = f;
+			m.a = f;
 		}
-		else if (m->a < 0)
+		else if (m.a < 0)
 		{
 			float f;
 			/* Adjust right hand side onto pixel boundary */
-			f = (float)(int)(m->e);
-			if (m->e - f > MY_EPSILON)
+			f = (float)(int)(m.e);
+			if (m.e - f > MY_EPSILON)
 				f += 1.0; /* Ensure it moves right */
-			m->a += m->e - f; /* width gets wider (more -ve) */
-			m->e = f;
+			m.a += m.e - f; /* width gets wider (more -ve) */
+			m.e = f;
 			/* Adjust left hand side onto pixel boundary */
-			f = (float)(int)(m->a);
-			if (f - m->a > MY_EPSILON)
+			f = (float)(int)(m.a);
+			if (f - m.a > MY_EPSILON)
 				f -= 1.0; /* Ensure it moves left */
-			m->a = f;
+			m.a = f;
 		}
-		if (m->d > 0)
+		if (m.d > 0)
 		{
 			float f;
 			/* Adjust top onto pixel boundary */
-			f = (float)(int)(m->f);
-			if (f - m->f > MY_EPSILON)
+			f = (float)(int)(m.f);
+			if (f - m.f > MY_EPSILON)
 				f -= 1.0; /* Ensure it moves upwards */
-			m->d += m->f - f; /* width gets wider as f <= m->f */
-			m->f = f;
+			m.d += m.f - f; /* width gets wider as f <= m.f */
+			m.f = f;
 			/* Adjust bottom onto pixel boundary */
-			f = (float)(int)(m->d);
-			if (m->d - f > MY_EPSILON)
+			f = (float)(int)(m.d);
+			if (m.d - f > MY_EPSILON)
 				f += 1.0; /* Ensure it moves down */
-			m->d = f;
+			m.d = f;
 		}
-		else if (m->d < 0)
+		else if (m.d < 0)
 		{
 			float f;
 			/* Adjust bottom onto pixel boundary */
-			f = (float)(int)(m->f);
-			if (m->f - f > MY_EPSILON)
+			f = (float)(int)(m.f);
+			if (m.f - f > MY_EPSILON)
 				f += 1.0; /* Ensure it moves down */
-			m->d += m->f - f; /* width gets wider (more -ve) */
-			m->f = f;
+			m.d += m.f - f; /* width gets wider (more -ve) */
+			m.f = f;
 			/* Adjust top onto pixel boundary */
-			f = (float)(int)(m->d);
-			if (f - m->d > MY_EPSILON)
+			f = (float)(int)(m.d);
+			if (f - m.d > MY_EPSILON)
 				f -= 1.0; /* Ensure it moves up */
-			m->d = f;
+			m.d = f;
 		}
 	}
-	else if (fabsf(m->a) < FLT_EPSILON && fabsf(m->d) < FLT_EPSILON)
+	else if (fabsf(m.a) < FLT_EPSILON && fabsf(m.d) < FLT_EPSILON)
 	{
-		if (m->b > 0)
+		if (m.b > 0)
 		{
 			float f;
 			/* Adjust left hand side onto pixel boundary */
-			f = (float)(int)(m->f);
-			if (f - m->f > MY_EPSILON)
+			f = (float)(int)(m.f);
+			if (f - m.f > MY_EPSILON)
 				f -= 1.0; /* Ensure it moves left */
-			m->b += m->f - f; /* width gets wider as f <= m->f */
-			m->f = f;
+			m.b += m.f - f; /* width gets wider as f <= m.f */
+			m.f = f;
 			/* Adjust right hand side onto pixel boundary */
-			f = (float)(int)(m->b);
-			if (m->b - f > MY_EPSILON)
+			f = (float)(int)(m.b);
+			if (m.b - f > MY_EPSILON)
 				f += 1.0; /* Ensure it moves right */
-			m->b = f;
+			m.b = f;
 		}
-		else if (m->b < 0)
+		else if (m.b < 0)
 		{
 			float f;
 			/* Adjust right hand side onto pixel boundary */
-			f = (float)(int)(m->f);
-			if (m->f - f > MY_EPSILON)
+			f = (float)(int)(m.f);
+			if (m.f - f > MY_EPSILON)
 				f += 1.0; /* Ensure it moves right */
-			m->b += m->f - f; /* width gets wider (more -ve) */
-			m->f = f;
+			m.b += m.f - f; /* width gets wider (more -ve) */
+			m.f = f;
 			/* Adjust left hand side onto pixel boundary */
-			f = (float)(int)(m->b);
-			if (f - m->b > MY_EPSILON)
+			f = (float)(int)(m.b);
+			if (f - m.b > MY_EPSILON)
 				f -= 1.0; /* Ensure it moves left */
-			m->b = f;
+			m.b = f;
 		}
-		if (m->c > 0)
+		if (m.c > 0)
 		{
 			float f;
 			/* Adjust top onto pixel boundary */
-			f = (float)(int)(m->e);
-			if (f - m->e > MY_EPSILON)
+			f = (float)(int)(m.e);
+			if (f - m.e > MY_EPSILON)
 				f -= 1.0; /* Ensure it moves upwards */
-			m->c += m->e - f; /* width gets wider as f <= m->e */
-			m->e = f;
+			m.c += m.e - f; /* width gets wider as f <= m.e */
+			m.e = f;
 			/* Adjust bottom onto pixel boundary */
-			f = (float)(int)(m->c);
-			if (m->c - f > MY_EPSILON)
+			f = (float)(int)(m.c);
+			if (m.c - f > MY_EPSILON)
 				f += 1.0; /* Ensure it moves down */
-			m->c = f;
+			m.c = f;
 		}
-		else if (m->c < 0)
+		else if (m.c < 0)
 		{
 			float f;
 			/* Adjust bottom onto pixel boundary */
-			f = (float)(int)(m->e);
-			if (m->e - f > MY_EPSILON)
+			f = (float)(int)(m.e);
+			if (m.e - f > MY_EPSILON)
 				f += 1.0; /* Ensure it moves down */
-			m->c += m->e - f; /* width gets wider (more -ve) */
-			m->e = f;
+			m.c += m.e - f; /* width gets wider (more -ve) */
+			m.e = f;
 			/* Adjust top onto pixel boundary */
-			f = (float)(int)(m->c);
-			if (f - m->c > MY_EPSILON)
+			f = (float)(int)(m.c);
+			if (f - m.c > MY_EPSILON)
 				f -= 1.0; /* Ensure it moves up */
-			m->c = f;
+			m.c = f;
 		}
 	}
+	return m;
 }
 
 /* Draw an image with an affine transform on destination */
@@ -609,7 +610,7 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 	void (*paintfn)(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha, byte *color, byte *hp);
 
 	/* grid fit the image */
-	fz_gridfit_matrix(&ctm);
+	ctm = fz_gridfit_matrix(ctm);
 
 	/* turn on interpolation for upscaled and non-rectilinear transforms */
 	dolerp = 0;
@@ -629,8 +630,9 @@ fz_paint_image_imp(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap 
 			dolerp = 0;
 	}
 
-	bbox = fz_bbox_covering_rect(fz_transform_rect(ctm, fz_unit_rect));
+	bbox = fz_bbox_from_rect(fz_transform_rect(ctm, fz_unit_rect));
 	bbox = fz_intersect_bbox(bbox, scissor);
+
 	x = bbox.x0;
 	if (shape && shape->x > x)
 		x = shape->x;

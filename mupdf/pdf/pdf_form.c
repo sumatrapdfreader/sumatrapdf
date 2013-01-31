@@ -1201,7 +1201,7 @@ static pdf_xobject *load_or_create_form(pdf_document *doc, pdf_obj *obj, fz_rect
 		formobj = pdf_dict_gets(ap, dn);
 		if (formobj == NULL)
 		{
-			tobj = pdf_new_xobject(doc, rect, &mat);
+			tobj = pdf_new_xobject(doc, *rect, mat);
 			pdf_dict_puts(ap, dn, tobj);
 			formobj = tobj;
 			pdf_drop_obj(tobj);
@@ -2617,11 +2617,11 @@ void pdf_field_set_text_color(pdf_document *doc, pdf_obj *field, pdf_obj *col)
 	}
 }
 
-fz_rect *fz_widget_bbox(fz_widget *widget)
+fz_rect fz_widget_bbox(fz_widget *widget)
 {
 	pdf_annot *annot = (pdf_annot *)widget;
 
-	return &annot->pagerect;
+	return annot->pagerect;
 }
 
 char *pdf_text_widget_text(pdf_document *doc, fz_widget *tw)

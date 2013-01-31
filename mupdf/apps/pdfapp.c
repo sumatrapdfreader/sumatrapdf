@@ -98,9 +98,9 @@ void pdfapp_init(fz_context *ctx, pdfapp_t *app)
 #endif
 }
 
-void pdfapp_invert(pdfapp_t *app, fz_bbox rect)
+void pdfapp_invert(pdfapp_t *app, fz_rect rect)
 {
-	fz_invert_pixmap_rect(app->image, rect);
+	fz_invert_pixmap_rect(app->image, fz_round_rect(rect));
 }
 
 static void event_cb(fz_doc_event *event, void *data)
@@ -567,14 +567,15 @@ static void pdfapp_updatepage(pdfapp_t *app)
 
 	while ((annot = fz_poll_changed_annot(idoc, app->page)) != NULL)
 	{
-		fz_bbox bbox = fz_round_rect(fz_transform_rect(ctm, fz_bound_annot(app->doc, annot)));
+		fz_rect bounds = fz_transform_rect(ctm, fz_bound_annot(app->doc, annot));
+		fz_bbox bbox = fz_round_rect(bounds);
 		fz_clear_pixmap_rect_with_value(app->ctx, app->image, 255, bbox);
 		idev = fz_new_draw_device_with_bbox(app->ctx, app->image, bbox);
 
 		if (app->page_list)
-			fz_run_display_list(app->page_list, idev, ctm, bbox, NULL);
+			fz_run_display_list(app->page_list, idev, ctm, bounds, NULL);
 		if (app->annotations_list)
-			fz_run_display_list(app->annotations_list, idev, ctm, bbox, NULL);
+			fz_run_display_list(app->annotations_list, idev, ctm, bounds, NULL);
 
 		fz_free_device(idev);
 	}
@@ -590,6 +591,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 	fz_device *tdev;
 	fz_colorspace *colorspace;
 	fz_matrix ctm;
+	fz_rect bounds;
 	fz_bbox bbox;
 	fz_cookie cookie = { 0 };
 
@@ -621,9 +623,9 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		{
 			tdev = fz_new_text_device(app->ctx, app->page_sheet, app->page_text);
 			if (app->page_list)
-				fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_bbox, &cookie);
+				fz_run_display_list(app->page_list, tdev, fz_identity, fz_infinite_rect, &cookie);
 			if (app->annotations_list)
-				fz_run_display_list(app->annotations_list, tdev, fz_identity, fz_infinite_bbox, &cookie);
+				fz_run_display_list(app->annotations_list, tdev, fz_identity, fz_infinite_rect, &cookie);
 			fz_free_device(tdev);
 		}
 	}
@@ -647,7 +649,8 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		wintitle(app, buf);
 
 		ctm = pdfapp_viewctm(app);
-		bbox = fz_round_rect(fz_transform_rect(ctm, app->page_bbox));
+		bounds = fz_transform_rect(ctm, app->page_bbox);
+		bbox = fz_round_rect(bounds);
 
 		/* Draw */
 		if (app->image)
@@ -663,9 +666,9 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		{
 			idev = fz_new_draw_device(app->ctx, app->image);
 			if (app->page_list)
-				fz_run_display_list(app->page_list, idev, ctm, bbox, &cookie);
+				fz_run_display_list(app->page_list, idev, ctm, bounds, &cookie);
 			if (app->annotations_list)
-				fz_run_display_list(app->annotations_list, idev, ctm, bbox, &cookie);
+				fz_run_display_list(app->annotations_list, idev, ctm, bounds, &cookie);
 			fz_free_device(idev);
 		}
 		if (app->invert)
@@ -808,21 +811,21 @@ static inline int charat(fz_text_page *page, int idx)
 	return textcharat(page, idx).c;
 }
 
-static inline fz_bbox bboxcharat(fz_text_page *page, int idx)
+static inline fz_rect bboxcharat(fz_text_page *page, int idx)
 {
-	return fz_bbox_covering_rect(textcharat(page, idx).bbox);
+	return textcharat(page, idx).bbox;
 }
 
 void pdfapp_inverthit(pdfapp_t *app)
 {
-	fz_bbox hitbox, bbox;
+	fz_rect hitbox, bbox;
 	fz_matrix ctm;
 	int i;
 
 	if (app->hit < 0)
 		return;
 
-	hitbox = fz_empty_bbox;
+	hitbox = fz_empty_rect;
 	ctm = pdfapp_viewctm(app);
 
 	for (i = app->hit; i < app->hit + app->hitlen; i++)
@@ -831,17 +834,17 @@ void pdfapp_inverthit(pdfapp_t *app)
 		if (fz_is_empty_rect(bbox))
 		{
 			if (!fz_is_empty_rect(hitbox))
-				pdfapp_invert(app, fz_transform_bbox(ctm, hitbox));
-			hitbox = fz_empty_bbox;
+				pdfapp_invert(app, fz_transform_rect(ctm, hitbox));
+			hitbox = fz_empty_rect;
 		}
 		else
 		{
-			hitbox = fz_union_bbox(hitbox, bbox);
+			hitbox = fz_union_rect(hitbox, bbox);
 		}
 	}
 
 	if (!fz_is_empty_rect(hitbox))
-		pdfapp_invert(app, fz_transform_bbox(ctm, hitbox));
+		pdfapp_invert(app, fz_transform_rect(ctm, hitbox));
 }
 
 static int match(char *s, fz_text_page *page, int n)
@@ -1609,7 +1612,7 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 
 void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 {
-	fz_bbox hitbox;
+	fz_rect hitbox;
 	fz_matrix ctm;
 	fz_text_page *page = app->page_text;
 	fz_text_block *block;
@@ -1647,8 +1650,8 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 
 				for (i = 0; i < span->len; i++)
 				{
-					hitbox = fz_bbox_covering_rect(span->text[i].bbox);
-					hitbox = fz_transform_bbox(ctm, hitbox);
+					hitbox = span->text[i].bbox;
+					hitbox = fz_transform_rect(ctm, hitbox);
 					c = span->text[i].c;
 					if (c < 32)
 						c = '?';

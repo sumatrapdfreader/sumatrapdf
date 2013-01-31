@@ -1072,20 +1072,21 @@ pdf_string_to_Tj(fz_context *ctx, fz_buffer *content, unsigned short *ucs2, unsi
 	fz_buffer_printf(ctx, content, ") Tj ");
 }
 
-static int
+static float
 pdf_get_string_width(pdf_document *xref, pdf_obj *res, fz_buffer *base, unsigned short *string, unsigned short *end)
 {
 	fz_context *ctx = xref->ctx;
-	fz_bbox bbox;
-	int width, old_len = base->len;
-	fz_device *dev = fz_new_bbox_device(ctx, &bbox);
+	fz_rect rect;
+	float width;
+	int old_len = base->len;
+	fz_device *dev = fz_new_bbox_device(ctx, &rect);
 
 	fz_try(ctx)
 	{
 		pdf_string_to_Tj(ctx, base, string, end);
 		fz_buffer_printf(ctx, base, "ET Q EMC");
 		pdf_run_glyph(xref, res, base, dev, fz_identity, NULL, 0);
-		width = bbox.x1 - bbox.x0;
+		width = rect.x1 - rect.x0;
 	}
 	fz_always(ctx)
 	{
@@ -1108,8 +1109,7 @@ pdf_append_line(pdf_document *xref, pdf_obj *res, fz_buffer *content, fz_buffer 
 {
 	fz_context *ctx = xref->ctx;
 	unsigned short *end, *keep;
-	float x1 = 0;
-	int w;
+	float w, x1 = 0;
 
 	if (is_multiline)
 	{

@@ -43,7 +43,7 @@ fz_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix
 }
 
 void
-fz_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matrix ctm)
+fz_clip_path(fz_device *dev, fz_path *path, fz_rect rect, int even_odd, fz_matrix ctm)
 {
 	fz_context *ctx = dev->ctx;
 
@@ -67,7 +67,7 @@ fz_clip_path(fz_device *dev, fz_path *path, fz_rect *rect, int even_odd, fz_matr
 }
 
 void
-fz_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect *rect, fz_stroke_state *stroke, fz_matrix ctm)
+fz_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect rect, fz_stroke_state *stroke, fz_matrix ctm)
 {
 	fz_context *ctx = dev->ctx;
 
@@ -213,7 +213,7 @@ fz_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm,
 }
 
 void
-fz_clip_image_mask(fz_device *dev, fz_image *image, fz_rect *rect, fz_matrix ctm)
+fz_clip_image_mask(fz_device *dev, fz_image *image, fz_rect rect, fz_matrix ctm)
 {
 	fz_context *ctx = dev->ctx;
 
