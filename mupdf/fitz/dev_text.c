@@ -326,13 +326,13 @@ static int
 ornate_character(fz_text_char *ornate, fz_text_char *character)
 {
 	static wchar_t *ornates[] = {
-		L" \xA8\xB4\x60\x5E\u02DA",
-		L"a\xE4\xE1\xE0\xE2\xE5", L"A\xC4\xC1\xC0\xC2\0",
-		L"e\xEB\xE9\xE8\xEA\0", L"E\xCB\xC9\xC8\xCA\0",
-		L"i\xEF\xED\xEC\xEE\0", L"I\xCF\xCD\xCC\xCE\0",
-		L"\u0131\xEF\xED\xEC\xEE\0", L"\u0130\xCF\xCD\xCC\xCE\0",
-		L"o\xF6\xF3\xF2\xF4\0", L"O\xD6\xD3\xD2\xD4\0",
-		L"u\xFC\xFA\xF9\xFB\0", L"U\xDC\xDA\xD9\xDB\0",
+		L" \xA8\xB4\x60\x5E\u02C6\u02DA",
+		L"a\xE4\xE1\xE0\xE2\xE2\xE5", L"A\xC4\xC1\xC0\xC2\xC2\0",
+		L"e\xEB\xE9\xE8\xEA\xEA\0", L"E\xCB\xC9\xC8\xCA\xCA\0",
+		L"i\xEF\xED\xEC\xEE\xEE\0", L"I\xCF\xCD\xCC\xCE\xCE\0",
+		L"\u0131\xEF\xED\xEC\xEE\xEE\0", L"\u0130\xCF\xCD\xCC\xCE\xCE\0",
+		L"o\xF6\xF3\xF2\xF4\xF4\0", L"O\xD6\xD3\xD2\xD4\xD4\0",
+		L"u\xFC\xFA\xF9\xFB\xFB\0", L"U\xDC\xDA\xD9\xDB\xDB\0",
 		NULL
 	};
 	int i = 1, j = 1;
@@ -363,7 +363,7 @@ fixup_text_span(fz_text_span *span)
 		case 0x00A8: /* diaeresis/umlaut */
 		case 0x00B4: /* accute accent */
 		case 0x0060: /* grave accent */
-		case 0x005E: /* circumflex accent */
+		case 0x005E: case 0x02C6: /* circumflex accent */
 		case 0x02DA: /* ring above */
 			if (i + 1 < span->len)
 			{
