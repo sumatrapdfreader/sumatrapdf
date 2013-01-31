@@ -2015,6 +2015,8 @@ bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, fz_mat
         fz_rect pageclip = fz_transform_rect(ctm2, fz_RectD_to_rect(*pageRect));
         cliprect = fz_intersect_rect(cliprect, pageclip);
     }
+    cliprect = fz_rect_from_bbox(fz_round_rect(cliprect));
+
     fz_device *dev = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
@@ -3758,6 +3760,8 @@ bool XpsEngineImpl::RenderPage(HDC hDC, xps_page *page, RectI screenRect, fz_mat
         fz_rect pageclip = fz_transform_rect(ctm2, fz_RectD_to_rect(*pageRect));
         cliprect = fz_intersect_rect(cliprect, pageclip);
     }
+    cliprect = fz_rect_from_bbox(fz_round_rect(cliprect));
+
     fz_device *dev = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
