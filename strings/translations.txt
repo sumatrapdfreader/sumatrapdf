@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9d0fbd88628cf18ac722c5000bce844ed7a37ae1
+05285336f253dfdcc5396df95243f7c5cc1ced40
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5455,7 +5455,7 @@ sv:Skapad:
 ta:உருவாக்கப்பட்டது
 th:สร้างแล้ว
 tl:Ginawa noong:
-tr:Yaratılış tarihi:
+tr:Oluşturma tarihi:
 tw:檔案建立日期：
 uk:Створено:
 uz:Yaratilgan:
@@ -6800,6 +6800,7 @@ uz:Tanlanganlar
 vn:Ưa thích
 :FictionBook documents
 am:FictionBook փաստաթղթեր
+ar:ملفات FictionBook
 az:FictionBook sənədləri
 bg:Документи FictionBook
 br:Documentos FictionBook
@@ -10942,6 +10943,7 @@ uz:Bunday printer mavjud emas
 vn:Máy in với tên được cho không tồn tại
 :Printing in progress.
 am:Տպվում է:
+ar:جاري الطباعة.
 az:Çap davam edir.
 bg:Печатане...
 br:Imprimindo...
@@ -10977,6 +10979,7 @@ uz:Bosib chiqarilmoqda.
 vn:Đang in.
 :Printing is still in progress. Abort and quit?
 am:Տպվում է: Ընդհատե՞լ և փակել:
+ar:الطباعة قيد التنفيذ. هل تريد التوقف والخروج؟
 az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
 bg:Печатането все още е на ход. Сигурни ли сте, че искате принудително да го откажете и да излезете?
 br:Ainda imprimindo... Interromper e sair?
@@ -11005,6 +11008,7 @@ sl:Tiskanje je še vedno v teku. Prekinem in končam?
 sq:Printimi vijon. Do e ndërprisni dhe e pezulloni?
 sv:Utskrift pågår fortfarande. Avbryt och avsluta?
 ta:அச்சடித்தல் செயலில் உள்ளது. நிறுத்தி ரத்து செய்?
+tr:Yazdırma sürüyor. İptal edip çıkmak istiyor musunuz?
 tw:正在列印，要中止並放棄嗎？
 uk:Друк ще не завершено. Перервати та вийти?
 uz:Bosib chiqarilmoqda. Bekor qilib chiqilsinmi?
@@ -12871,7 +12875,7 @@ sr-rs:SumatraPDF је ваш подразумевани PDF читач
 sv:SumatraPDF är din valda PDF-läsare
 ta:SumatraPDF உங்களின் முதன்மை PDF படிப்பி
 tl:SumatraPDF ang iyong default na pambasa ng mga PDF file
-tr:Varsayılan PDF okuyucunuz SumatraPDF'dir
+tr:SumatraPDF varsayılan PDF okuyucunuz.
 tw:SumatraPDF 已是你的預設 PDF 閱讀器
 uk:SumatraPDF ваш PDF переглядач по замовчуванню
 uz:SumatraPDF andoza PDF ko'rish vositasi
@@ -13519,7 +13523,7 @@ sv:Du har den senaste versionen.
 ta:உங்களிடம் புதிய பதிப்பு உள்ளது
 th:โปรแกรมของคุณเป็นเวอร์ชั่นล่าสุดอยู่แล้ว
 tl:Ito ang pinakabagong bersyon.
-tr:En güncel sürümü kullanmaktasınız.
+tr:Güncel sürümü kullanıyorsunuz.
 tw:您的版本已是最新版。
 uk:Ви вже маєте найновішу версію.
 uz:Sizda so'nggi versiya.
