@@ -2538,6 +2538,7 @@ fz_transition *fz_page_presentation(fz_document *doc, fz_page *page, float *dura
 /* Types of widget */
 enum
 {
+	FZ_WIDGET_TYPE_NOT_WIDGET = -1,
 	FZ_WIDGET_TYPE_PUSHBUTTON,
 	FZ_WIDGET_TYPE_CHECKBOX,
 	FZ_WIDGET_TYPE_RADIOBUTTON,

@@ -1297,7 +1297,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\mupdf\pdf\pdf_debug.c"
+					RelativePath=".\mupdf\pdf\pdf_device.c"
 					>
 				</File>
 				<File

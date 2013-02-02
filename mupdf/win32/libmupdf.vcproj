@@ -254,6 +254,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\pdf\pdf_device.c"
+				>
+			</File>
+			<File
 				RelativePath="..\pdf\pdf_encoding.c"
 				>
 			</File>

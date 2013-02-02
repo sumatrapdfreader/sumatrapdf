@@ -1210,6 +1210,24 @@ fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz
 void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate, int nestedDepth);
 void fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid, int nestedDepth);
 
+typedef enum
+{
+	FZ_ANNOT_STRIKEOUT
+} fz_annot_type;
+
+/*
+	fz_create_annot: create a new annotation of the specified type on the
+	specified page. The returned pdf_annot structure is owned by the page
+	and does not need to be freed.
+*/
+fz_annot *fz_create_annot(fz_interactive *idoc, fz_page *page, fz_annot_type type);
+
+/*
+	fz_set_annot_appearance: update the appearance of an annotation based
+	on a display list.
+*/
+void fz_set_annot_appearance(fz_interactive *idoc, fz_annot *annot, fz_display_list *disp_list);
+
 /*
  * Text buffer.
  *

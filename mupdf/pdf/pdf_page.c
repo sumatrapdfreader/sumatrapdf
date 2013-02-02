@@ -361,6 +361,7 @@ pdf_load_page(pdf_document *xref, int number)
 	page->transparency = 0;
 	page->links = NULL;
 	page->annots = NULL;
+	page->me = pdf_keep_obj(pageobj);
 
 	obj = pdf_dict_gets(pageobj, "UserUnit");
 	if (pdf_is_real(obj))
@@ -416,7 +417,7 @@ pdf_load_page(pdf_document *xref, int number)
 		fz_try(ctx)
 		{
 		page->links = pdf_load_link_annots(xref, obj, page->ctm);
-		page->annots = pdf_load_annots(xref, obj, page->ctm);
+		page->annots = pdf_load_annots(xref, obj, page);
 		}
 		fz_catch(ctx)
 		{
@@ -491,5 +492,6 @@ pdf_free_page(pdf_document *xref, pdf_page *page)
 	 * annotations are destroyed. xref->focus_obj
 	 * keeps track of the actual annotation object. */
 	xref->focus = NULL;
+	pdf_drop_obj(page->me);
 	fz_free(xref->ctx, page);
 }

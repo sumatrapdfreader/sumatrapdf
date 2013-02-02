@@ -914,8 +914,18 @@ fz_bound_t3_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm)
 
 	ctm = fz_concat(font->t3matrix, trm);
 	dev = fz_new_bbox_device(ctx, &bounds);
-	fz_run_display_list(list, dev, ctm, fz_infinite_rect, NULL);
-	fz_free_device(dev);
+	fz_try(ctx)
+	{
+		fz_run_display_list(list, dev, ctm, fz_infinite_rect, NULL);
+	}
+	fz_always(ctx)
+	{
+		fz_free_device(dev);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 
 	return bounds;
 }

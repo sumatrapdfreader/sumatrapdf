@@ -1056,6 +1056,25 @@ pdf_dict_putp(pdf_obj *obj, const char *keys, pdf_obj *val)
 }
 
 void
+pdf_dict_putp_drop(pdf_obj *obj, const char *keys, pdf_obj *val)
+{
+	fz_context *ctx = obj->ctx;
+
+	fz_try(ctx)
+	{
+		pdf_dict_putp(obj, keys, val);
+	}
+	fz_always(ctx)
+	{
+		pdf_drop_obj(val);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+void
 pdf_dict_dels(pdf_obj *obj, const char *key)
 {
 	RESOLVE(obj);

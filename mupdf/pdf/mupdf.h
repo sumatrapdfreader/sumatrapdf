@@ -81,6 +81,7 @@ void pdf_dict_put(pdf_obj *dict, pdf_obj *key, pdf_obj *val);
 void pdf_dict_puts(pdf_obj *dict, const char *key, pdf_obj *val);
 void pdf_dict_puts_drop(pdf_obj *dict, const char *key, pdf_obj *val);
 void pdf_dict_putp(pdf_obj *dict, const char *key, pdf_obj *val);
+void pdf_dict_putp_drop(pdf_obj *dict, const char *key, pdf_obj *val);
 void pdf_dict_del(pdf_obj *dict, pdf_obj *key);
 void pdf_dict_dels(pdf_obj *dict, const char *key);
 void pdf_sort_dict(pdf_obj *dict);
@@ -139,6 +140,13 @@ void pdf_update_object(pdf_document *xref, int num, pdf_obj *obj);
 	/Filter value to /FlateDecode.
 */
 void pdf_update_stream(pdf_document *xref, int num, fz_buffer *buf);
+
+/*
+	pdf_new_pdf_device: Create a pdf device. Rendering to the device creates
+	new pdf content. WARNING: this device is work in progress. It doesn't
+	currently support all rendering cases.
+*/
+fz_device *pdf_new_pdf_device(pdf_document *doc, pdf_obj *contents, pdf_obj *resources, fz_matrix ctm);
 
 /*
 	pdf_write_document: Write out the document to a file with all changes finalised.

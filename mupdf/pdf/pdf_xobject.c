@@ -226,30 +226,13 @@ pdf_new_xobject(pdf_document *xref, fz_rect bbox, fz_matrix mat)
 
 void pdf_update_xobject_contents(pdf_document *xref, pdf_xobject *form, fz_buffer *buffer)
 {
-	fz_context *ctx = xref->ctx;
-	pdf_obj *len = NULL;
-
-	fz_var(len);
-
-	fz_try(ctx)
-	{
-		len = pdf_new_int(ctx, buffer->len);
-		pdf_dict_dels(form->contents, "Filter");
-		pdf_dict_puts(form->contents, "Length", len);
-		pdf_update_stream(xref, pdf_to_num(form->contents), buffer);
-		form->iteration ++;
-	}
-	fz_always(ctx)
-	{
-		pdf_drop_obj(len);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
-	}
+	pdf_dict_dels(form->contents, "Filter");
+	pdf_dict_puts_drop(form->contents, "Length", pdf_new_int(xref->ctx, buffer->len));
+	pdf_update_stream(xref, pdf_to_num(form->contents), buffer);
+	form->iteration ++;
 }
 
-/* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot) */
+/* SumatraPDF: allow to synthesize XObjects (cf. pdf_create_annot_ex) */
 pdf_xobject *
 pdf_create_xobject(fz_context *ctx, pdf_obj *dict)
 {
