@@ -286,8 +286,8 @@ inline void DeleteVecMembers(Vec<T>& v)
 }
 
 namespace str {
-template <typename T>
 
+template <typename T>
 class Str : public Vec<T> {
 public:
     Str(size_t capHint=0, Allocator *allocator=NULL) : Vec(capHint, allocator) { }

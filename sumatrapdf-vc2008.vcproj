@@ -867,6 +867,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\FileModifications.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\FileModifications.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\FileWatch.cpp"
 					>
 				</File>

@@ -174,10 +174,9 @@ SUMATRA_OBJS = \
 	$(OS)\UnitTests.obj $(OS)\AppTools.obj $(OS)\TableOfContents.obj \
 	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
-	$(OS)\Selection.obj $(SUMATRA_RES) \
-	$(OS)\Tester.obj \
-	$(OS)\Regress.obj \
+	$(OS)\Selection.obj $(OS)\FileModifications.obj $(SUMATRA_RES) \
 	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) $(EBOOK_OBJS) $(MUI_OBJS) \
+	$(OS)\Tester.obj $(OS)\Regress.obj
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \

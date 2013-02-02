@@ -16,6 +16,7 @@
 #include "EbookWindow.h"
 #include "ExternalPdfViewer.h"
 #include "FileHistory.h"
+#include "FileModifications.h"
 #include "Favorites.h"
 #include "FileUtil.h"
 #include "FileWatch.h"
@@ -3716,13 +3717,17 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     case '$':
         ToggleGdiDebugging();
         break;
-    case 0xA7:
+    case 0xA7: case 0xB0:
         if (win.dm->engine->SupportsAnnotation()) {
+            Vec<PageAnnotation> annots;
+            // load previously saved annotations
+            Vec<PageAnnotation> *savedAnnots = LoadFileModifications(win.loadedFilePath);
+            if (savedAnnots) {
+                annots = *savedAnnots;
+                delete savedAnnots;
+            }
             // convert the current selection into a text highlighting annotation
-            if (!win.showSelection || !win.selectionOnPage)
-                win.dm->engine->UpdateUserAnnotations(NULL);
-            else {
-                Vec<PageAnnotation> annots;
+            if (win.showSelection && win.selectionOnPage) {
                 for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
                     SelectionOnPage& sel = win.selectionOnPage->At(i);
                     annots.Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, RGB(0xE2, 0xC4, 0xE2)));
@@ -3730,11 +3735,18 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
                     // annots.Append(PageAnnotation(Annot_StrikeOut, sel.pageNo, sel.rect, RGB(0x80, 0x80, 0x80)));
                     annots.Append(PageAnnotation(Annot_Squiggly, sel.pageNo, sel.rect, RGB(0xFF, 0x00, 0x00)));
                 }
+            }
+            if (annots.Count() > 0) {
                 win.dm->engine->UpdateUserAnnotations(&annots);
                 gRenderCache.CancelRendering(win.dm);
                 gRenderCache.KeepForDisplayModel(win.dm, win.dm);
                 ClearSearchResult(&win);
+                // optionally save the annotations to disk
+                if (!win.dm->engine->SupportsAnnotation(true) && IsShiftPressed())
+                    SaveFileModifictions(win.loadedFilePath, &annots);
             }
+            else
+                win.dm->engine->UpdateUserAnnotations(NULL);
         }
 #endif
     }

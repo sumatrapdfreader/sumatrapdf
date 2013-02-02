@@ -1289,6 +1289,9 @@ CssProp FindCssProp(const char *name, size_t len)
     case CS4('d','i','s','p'):
         if (7 == len && CS3('l','a','y') == STR3i(name + 4)) return Css_Display;
         break;
+    case CS4('f','i','l','e'):
+        if (8 == len && CS4('s','i','z','e') == STR4i(name + 4)) return Css_Filesize;
+        break;
     case CS4('f','o','n','t'):
         if (4 == len) return Css_Font;
         if (11 == len && str::EqNI(name + 4, "-family", 7)) return Css_Font_Family;
@@ -1317,14 +1320,22 @@ CssProp FindCssProp(const char *name, size_t len)
         if (11 == len && str::EqNI(name + 4, "ing-top", 7)) return Css_Padding_Top;
         break;
     case CS4('p','a','g','e'):
+        if (4 == len) return Css_Page;
         if (16 == len && str::EqNI(name + 4, "-break-after", 12)) return Css_Page_Break_After;
         if (17 == len && str::EqNI(name + 4, "-break-before", 13)) return Css_Page_Break_Before;
         break;
+    case CS4('r','e','c','t'):
+        if (4 == len) return Css_Rect;
+        break;
     case CS4('t','e','x','t'):
+        if (4 == len) return Css_Text;
         if (10 == len && str::EqNI(name + 4, "-align", 6)) return Css_Text_Align;
         if (15 == len && str::EqNI(name + 4, "-decoration", 11)) return Css_Text_Decoration;
         if (11 == len && str::EqNI(name + 4, "-indent", 7)) return Css_Text_Indent;
         if (14 == len && str::EqNI(name + 4, "-underline", 10)) return Css_Text_Underline;
+        break;
+    case CS4('v','e','r','s'):
+        if (7 == len && CS3('i','o','n') == STR3i(name + 4)) return Css_Version;
         break;
     case CS4('w','h','i','t'):
         if (11 == len && str::EqNI(name + 4, "e-space", 7)) return Css_White_Space;
