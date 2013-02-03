@@ -9,14 +9,14 @@
 #include "FileUtil.h"
 
 /*
-The following format (SumatraPDF Modifications Extensible) is used for
+The following format (SumatraPDF Modifications eXtensible) is used for
 storing file modifications for file formats which don't allow to save
 such modifications portably within the file structure (i.e. currently
 any format but PDF). The format uses CSS syntax for brevity:
 
 @meta { version: 2.3; filesize: 98765 }
-highlight { page: 1; rect: 10 10 100 100; color: #FF0000; text: "highlighted text" }
-annotType { page: no; rect: x y w h; color: #rrggbb; text: "..." }
+highlight { page: 1; rect: 10 10 100 100; color: #FF0000 }
+annotType { page: no; rect: x y w h; color: #rrggbb }
 ...
 
 (Currently, the only supported modifications are adding annotations.)
@@ -52,20 +52,20 @@ Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filepath)
         if (str::Parse(prop->s, prop->sLen, "%u%$", &filesize) && file::GetSize(filepath) != filesize)
             return NULL;
     }
-    while (parser.NextProperty());
 
     Vec<PageAnnotation> *list = new Vec<PageAnnotation>();
     while (parser.NextRule()) {
         sel = parser.NextSelector();
-        if (!sel) {
-            while (parser.NextProperty());
+        if (!sel)
             continue;
-        }
         PageAnnotType type = IsSelector(sel, "highlight") ? Annot_Highlight :
                              IsSelector(sel, "underline") ? Annot_Underline :
                              IsSelector(sel, "strikeout") ? Annot_StrikeOut :
                              IsSelector(sel, "squiggly")  ? Annot_Squiggly  :
                              Annot_None;
+        if (Annot_None == type || parser.NextSelector())
+            continue;
+
         int pageNo = 0;
         RectT<float> rect;
         COLORREF color = (COLORREF)-1;

@@ -152,6 +152,32 @@ static void Test05()
     assert(!ok);
 }
 
+static void Test06()
+{
+    const char *inlineCss = "block: {{ ignore this }} ; color: red } color: blue";
+    CssPullParser parser(inlineCss, str::Len(inlineCss));
+    const CssProperty *prop = parser.NextProperty();
+    assert(prop && Css_Unknown == prop->type && IsPropVal(prop, "{{ ignore this }}"));
+    prop = parser.NextProperty();
+    assert(prop && Css_Color == prop->type && IsPropVal(prop, "red"));
+    prop = parser.NextProperty();
+    assert(!prop);
+    bool ok = parser.NextRule();
+    assert(!ok);
+}
+
+static void Test07()
+{
+    const char *simpleCss = " span\n{ color: red }\n\tp /* plain paragraph */ , p#id { }";
+    CssPullParser parser(simpleCss, str::Len(simpleCss));
+    bool ok = parser.NextRule();
+    assert(ok);
+    ok = parser.NextRule();
+    assert(ok);
+    ok = parser.NextRule();
+    assert(!ok);
+}
+
 }
 
 void CssParser_UnitTests()
@@ -161,4 +187,6 @@ void CssParser_UnitTests()
     unittests::Test03();
     unittests::Test04();
     unittests::Test05();
+    unittests::Test06();
+    unittests::Test07();
 }

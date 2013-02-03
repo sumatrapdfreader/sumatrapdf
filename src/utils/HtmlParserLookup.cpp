@@ -1328,7 +1328,6 @@ CssProp FindCssProp(const char *name, size_t len)
         if (4 == len) return Css_Rect;
         break;
     case CS4('t','e','x','t'):
-        if (4 == len) return Css_Text;
         if (10 == len && str::EqNI(name + 4, "-align", 6)) return Css_Text_Align;
         if (15 == len && str::EqNI(name + 4, "-decoration", 11)) return Css_Text_Decoration;
         if (11 == len && str::EqNI(name + 4, "-indent", 7)) return Css_Text_Indent;

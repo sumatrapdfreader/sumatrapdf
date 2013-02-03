@@ -38,9 +38,36 @@ static bool SkipQuotedString(const char*& s, const char *end)
     return true;
 }
 
+static bool SkipBlock(const char*& s, const char *end)
+{
+    CrashIf(s >= end || *s != '{');
+    s++;
+    while (s < end && *s != '}') {
+        if (*s == '"' || *s == '\'') {
+            if (!SkipQuotedString(s, end))
+                return false;
+        }
+        else if (*s == '{') {
+            if (!SkipBlock(s, end))
+                return false;
+        }
+        else if (*s == '\\' && s < end - 1)
+            s += 2;
+        else if (!SkipWsAndComments(s, end))
+            s++;
+    }
+    if (s == end)
+        return false;
+    s++;
+    return true;
+}
+
 bool CssPullParser::NextRule()
 {
-    if (inProps || currPos == end)
+    if (inProps)
+        while (NextProperty());
+    CrashIf(inProps);
+    if (inlineStyle || currPos == end)
         return false;
 
     if (currPos == s) {
@@ -134,7 +161,7 @@ const CssSelector *CssPullParser::NextSelector()
 const CssProperty *CssPullParser::NextProperty()
 {
     if (currPos == s)
-        inProps = true;
+        inlineStyle = inProps = true;
     else if (!inProps)
         return NULL;
 
@@ -147,6 +174,11 @@ GetNextProperty:
         inProps = false;
         return NULL;
     }
+    if (*currPos == '{') {
+        if (!SkipBlock(currPos, end))
+            return NULL;
+        goto GetNextProperty;
+    }
     if (*currPos == ';') {
         currPos++;
         goto GetNextProperty;
@@ -154,7 +186,7 @@ GetNextProperty:
     const char *name = currPos;
     // skip identifier
     while (currPos < end && !str::IsWs(*currPos) && *currPos != ':' &&
-        *currPos != ';' && *currPos != '}' && *currPos != '/') {
+        *currPos != ';' && *currPos != '{' && *currPos != '}') {
         currPos++;
     }
     SkipWsAndComments(currPos, end);
@@ -170,6 +202,11 @@ GetNextProperty:
     while (currPos < end && *currPos != ';' && *currPos != '}') {
         if (*currPos == '"' || *currPos == '\'') {
             if (!SkipQuotedString(currPos, end))
+                return NULL;
+            valEnd = currPos;
+        }
+        else if (*currPos == '{') {
+            if (!SkipBlock(currPos, end))
                 return NULL;
             valEnd = currPos;
         }
