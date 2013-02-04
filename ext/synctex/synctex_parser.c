@@ -226,7 +226,8 @@ struct __synctex_class_t {
 	}
 
 void _synctex_free_node(synctex_node_t node);
-void _synctex_free_leaf(synctex_node_t node);
+/* SumatraPDF: prevent stack overflow */
+#	define _synctex_free_leaf _synctex_free_node
 
 /*  A node is meant to own its child and sibling.
  *  It is not owned by its parent, unless it is its first child.
@@ -249,6 +250,7 @@ void _synctex_free_node(synctex_node_t node) {
  *  It is not owned by its parent, unless it is its first child.
  *  This destructor is for nodes with no child.
  */
+/* SumatraPDF: prevent stack overflow * /
 void _synctex_free_leaf(synctex_node_t node) {
 	if (node) {
 		SYNCTEX_FREE(SYNCTEX_SIBLING(node));
@@ -256,6 +258,7 @@ void _synctex_free_leaf(synctex_node_t node) {
 	}
 	return;
 }
+*/
 #	ifdef	__SYNCTEX_WORK__
 #		include "/usr/include/zlib.h"
 #	else
