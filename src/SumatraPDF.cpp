@@ -1685,13 +1685,12 @@ static bool RegisterForPdfExtentions(HWND hwnd)
     return true;
 }
 
-void OnDropFiles(HDROP hDrop)
+void OnDropFiles(HDROP hDrop, bool dragFinish)
 {
     WCHAR       filePath[MAX_PATH];
     const int   count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
 
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++) {
         DragQueryFile(hDrop, i, filePath, dimof(filePath));
         if (str::EndsWithI(filePath, L".lnk")) {
             ScopedMem<WCHAR> resolved(ResolveLnk(filePath));
@@ -1702,7 +1701,8 @@ void OnDropFiles(HDROP hDrop)
         LoadArgs args(filePath);
         LoadDocument(args);
     }
-    DragFinish(hDrop);
+    if (dragFinish)
+        DragFinish(hDrop);
 }
 
 static void MessageBoxWarning(HWND hwnd, const WCHAR *msg, const WCHAR *title = NULL)
@@ -4440,7 +4440,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     // messages that don't require win
     switch (msg) {
         case WM_DROPFILES:
-            OnDropFiles((HDROP)wParam);
+            CrashIf(lParam != 0 && lParam != 1);
+            OnDropFiles((HDROP)wParam, !lParam);
             break;
 
         case WM_ERASEBKGND:

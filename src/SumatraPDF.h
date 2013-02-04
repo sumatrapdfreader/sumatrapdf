@@ -114,7 +114,7 @@ void  OnMenuSettings(HWND hwnd);
 void  OnMenuExit();
 void  AutoUpdateCheckAsync(HWND hwnd, bool autoCheck);
 void  OnMenuChangeLanguage(HWND hwnd);
-void  OnDropFiles(HDROP hDrop);
+void  OnDropFiles(HDROP hDrop, bool dragFinish=true);
 void  OnMenuOpen(SumatraWindow& win);
 size_t TotalWindowsCount();
 void  CloseDocumentInWindow(WindowInfo *win);

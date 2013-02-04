@@ -77,12 +77,7 @@ public:
     void CopySelection();
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
     void OnLButtonDown() const;
-
     HBITMAP TakeScreenshot(RectI area, SizeI finalSize);
-    bool    OnBeforeNavigate(const WCHAR *url, bool newWindow);
-    void    OnDocumentComplete(const WCHAR *url);
-    HRESULT OnDragEnter(IDataObject *dataObj);
-    HRESULT OnDragDrop(IDataObject *dataObj);
 
     bool canGoBack;
     bool canGoForward;
@@ -90,6 +85,11 @@ public:
     // TODO: not for public use
     WNDPROC wndProcBrowserPrev;
     HtmlWindowCallback *htmlWinCb;
+
+    bool    OnBeforeNavigate(const WCHAR *url, bool newWindow);
+    void    OnDocumentComplete(const WCHAR *url);
+    HRESULT OnDragEnter(IDataObject *dataObj);
+    HRESULT OnDragDrop(IDataObject *dataObj);
 
     static HtmlWindow *Create(HWND hwndParent, HtmlWindowCallback *cb);
 };

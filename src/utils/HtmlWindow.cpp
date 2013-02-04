@@ -843,6 +843,7 @@ public:
     }
     STDMETHODIMP DragLeave(void) { return S_OK; }
     STDMETHODIMP Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
+        *pdwEffect = DROPEFFECT_COPY;
         return fs->htmlWindow->OnDragDrop(pDataObj);
     }
 };
@@ -1432,7 +1433,7 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject *dataObj)
 
     HDROP hDrop = (HDROP)GlobalLock(stg.hGlobal);
     if (hDrop) {
-        SendMessage(hwndParent, WM_DROPFILES, (WPARAM)hDrop, 0);
+        SendMessage(hwndParent, WM_DROPFILES, (WPARAM)hDrop, 1);
         GlobalUnlock(stg.hGlobal);
     }
     ReleaseStgMedium(&stg);
