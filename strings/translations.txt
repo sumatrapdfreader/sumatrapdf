@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-05285336f253dfdcc5396df95243f7c5cc1ced40
+f94b23ab180f5827e3f13b47c9f968836156c7ac
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3638,7 +3638,7 @@ ne:संलग्नहरू: %s
 nl:Bijlage: %s
 no:Vedlegg: %s
 pl:Załącznik: %s
-pt:Anexos: %s
+pt:Anexo: %s
 ro:Fișier atașat: %s
 ru:Вложение: %s
 si:සම්බන්ධිතය: %s
@@ -8919,7 +8919,7 @@ nn:Ny versjon (ver. %s) tilgjengeleg. Laste ned?
 no:En ny versjon %s er tilgjenglig. Vil du laste den ned nå?
 pa:ਨਵਾ ਵਰਜਨ %s ਓੁਪਲਭਧ ਹੈ । ਡਾਓੂਨਲੋਡ ਕਰਾਂ ?
 pl:Nowa wersja %s jest dostępna. Pobrać nową wersję?
-pt:Uma nova versão %s está disponível. Transferir?
+pt:Está disponível a nova versão %s. Transferir?
 ro:O nouă versiune %s este disponibilă. Descărcați versiunea nouă?
 ru:Доступна новая версия: %s. Загрузить её?
 si:%s නව වෙලුමක්  ඇත. නව වෙළුම බාගතකරන්නද?
@@ -10959,6 +10959,7 @@ et:Printimine on pooleli.
 fa:در حال چاپ شدن.
 fr:Impression en cours
 he:נשלח להדפסה
+hr:Ispis u tijeku.
 hu:Nyomtatás folyamatban.
 id:Dalam proses mencetak
 it:Stampa in corso...
@@ -10966,7 +10967,7 @@ ja:印刷を実行中です。
 kr:프린트중입니다.
 ku:چاپکردن لە ئەنجامداندایە
 nl:Aan het printen.
-pt:Impressão em curso.
+pt:Impressão em curso
 ru:Идёт печать.
 sl:Tiskanje v teku.
 sq:Printimi vijon.
@@ -10995,6 +10996,7 @@ et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 fa:در حال چاپ شدن. انصراف و خروج؟
 fr:Impression toujours en cours. Annuler et quitter ?
 he:הדפסה עדיין לא הסתיימה. להפסיק פעולה ולצאת?
+hr:Ispis u tijeku. Prekinite i izađite?
 hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
 id:Sedang dalam proses mencetak. Batalkan dan keluar?
 it:La stampa è ancora in corso. Vuoi interromperla e uscire?
@@ -13998,7 +14000,7 @@ ne:कागजात छपाइ
 nl:document afdrukken
 no:skriver ut dokument
 pl:drukowanie dokumentu
-pt:impressão de documento
+pt:imprimir documento
 ro:se imprimă documentul
 ru:печатается документ
 si:ලේඛනය මුද්‍රණය
