@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f94b23ab180f5827e3f13b47c9f968836156c7ac
+c79cd6b95a47380ca8cc64a5ac4cb49e906add3d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -160,6 +160,7 @@ fr:&Toutes les pages sélectionnées
 ga:&Gach leathanach roghnaithe
 gl:&Todas as páxinas seleccionadas
 he:כל העמודים הנבחרים
+hi:&सभी चयनित पृष्ठों
 hr:Sve obilježene str&anice
 hu:Az összes kiválasztott oldal
 id:&Semua halaman yang dipilih
@@ -3384,7 +3385,7 @@ fy-nl:Alle bestannen
 ga:Gach comhad
 gl:Todos os arquivos
 he:כל הקבצים
-hi:समस्त फाइलें
+hi:सभी फाइलें
 hr:Sve datoteke
 hu:Minden fájl
 id:Semua Berkas
@@ -4207,6 +4208,7 @@ fy-nl:CHM-bestannen
 ga:Cáipéisí CHM
 gl:Documentos CHM
 he:CHM מסמכי
+hi:CHM दस्तावेजों
 hr:CHM dokumenti
 hu:CHM fájlok
 id:Dokumen CHM
@@ -4261,6 +4263,7 @@ fr:Impossible de se connecter à Internet (erreur %#x)
 ga:Ní féidir ceangailt leis an idirlíon (botún %#x).
 gl:Non se pode conectar a Internet (error %#x).
 he:לא יכול להתקשר לאינטרנט (error %#x).
+hi:इंटरनेट से जुड़​ नहीं पा रहा है ( ग़लती %#x )
 hr:Internet nedostupan (greška %#x)
 hu:Nem sikerült kapcsolódni az Internetre (hiba %#x).
 id:Tidak bisa menghubungi Internet (kesalahan %#x).
@@ -4628,6 +4631,7 @@ fr:Bandes dessinées
 ga:Greannáin
 gl:Albumes de cómic
 he:ספרי קומיקס
+hi:हास्य किताबें
 hr:Stripovi
 hu:Képregény fájlok
 id:Buku Komik
@@ -5151,6 +5155,7 @@ fr:La copie de texte est refusée (seule une capture d’écran est faite)
 ga:Níorbh fhéidir téacs a mhacasamhlú (macasamhlú mar íomhá amháin)
 gl:Copiar texto foi denegado (copiando só coma imaxe)
 he:העתקת טקסט נדחית (מועתק רק כתמונה)
+hi:टेक्स्ट कि प्रतियां बनाने से अस्वीकृत ( केवल छवि के रूप में प्रतिलिपिकरण )
 hr:Kopiranje teksta je nemoguće (kopirano kao slika)
 hu:Szöveg másolása tiltott (csak képként másolva)
 id:Menyalin teks ditolak (menyalin sebagai gambar saja)
@@ -5716,6 +5721,7 @@ fy-nl:Standert PDF-lêzer kin net oanpast wurde yn portable moadus
 ga:Ní féidir an léitheoir PDF réamhshocraithe a athrú sa mhodh soghluaiste
 gl:O lector de PDF por defecto non pode trocarse en modo portable
 he:PDF לא ניתן לשנות במצב נייד את קורא ה
+hi:डिफ़ॉल्ट पीडीएफ रीडर पोर्टेबल मोड में बदला नहीं जा सकता
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
 id:Pembaca PDF utama tidak dapat diubah dalam mode portabel
@@ -5774,6 +5780,7 @@ fr:Interdictions :
 ga:Ceadanna diúltaithe:
 gl:Permisos denegados:
 he:הרשאות חסרות:
+hi:अस्वीकृत अनुमतियाँ
 hr:Dozvole ograničenja:
 hu:Tiltott műveletek:
 id:Izin Ditolak:
@@ -5831,6 +5838,7 @@ fy-nl:DjVu-bestannen
 ga:Cáipéisí DjVu
 gl:Documentos DjVu
 he:DjVu הערות
+hi:DjVu दस्तावेजों
 hr:DjVu dokumenti
 hu:DjVu fájlok
 id:Dokumen DjVu
@@ -5886,6 +5894,7 @@ fy-nl:Dokuminteigenskippen
 ga:Airíonna na cáipéise
 gl:Propiedades do documento
 he:תכונות מסמך
+hi:दस्तावेज़ गुण
 hr:Svojstva dokumenta
 hu:A dokumentum tulajdonságai
 id:Properti Dokumen
@@ -6071,6 +6080,7 @@ fy-nl:EPUB-bestannen
 ga:Cáipéisí EPUB
 gl:Documentos EPUB
 he:EPUB מסמכי
+hi:EPUB ई - किताबें
 hr:EPUB dokumenti
 hu:EPUB fájlok
 id:Dokumen EPUB
@@ -6606,6 +6616,7 @@ fa:تغییر نام پرونده با شکست مواجه شد!
 fr:Impossible de renommer le fichier!
 ga:Theip ar athainmniú an chomhaid!
 he:פעולת שינוי שם הקובץ נכשלה!
+hi:फ़ाइल का नाम बदलने मे असफ़ल​ !
 hr:Neuspjeh u preimenovanju datoteke!
 hu:A fájl átnevezése sikertelen
 id:Gagal mengganti nama berkas!
@@ -6719,6 +6730,7 @@ fa:تماشای بی درنگ
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
 he:הצגת רשת מהירה
+hi:तीव्र वेब दर्शन
 hr:Brzi Web prikaz
 hu:Gyors web-nézet
 id:Tampilan Web Cepat
@@ -6970,6 +6982,7 @@ fy-nl:Bestân:
 ga:Comhad:
 gl:Ficheiro:
 he:קובץ:
+hi:फ़ाइल:
 hr:Datoteka:
 hu:Fájl:
 id:Berkas:
@@ -13124,6 +13137,7 @@ fy-nl:Titel:
 ga:Teideal:
 gl:Título:
 he:כותרת:
+hi:शीर्षक:
 hr:Naslov:
 hu:Cím:
 id:Judul:
