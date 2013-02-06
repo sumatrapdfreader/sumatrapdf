@@ -656,11 +656,11 @@ void fz_write_buffer_bits(fz_context *ctx, fz_buffer *buf, int val, int bits);
 void fz_write_buffer_pad(fz_context *ctx, fz_buffer *buf);
 
 /*
-	fz_buffer_printf: print formatted to a buffer. The buffer will
-	grow, but the caller must ensure that no more than 256 bytes are
-	added to the buffer per call.
+	fz_buffer_printf: print formatted to a buffer. The buffer will grow
+	as required.
 */
-void fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, const char *fmt, ...);
+int fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, const char *fmt, ...);
+int fz_buffer_vprintf(fz_context *ctx, fz_buffer *buffer, const char *fmt, va_list args);
 
 /*
 	fz_buffer_printf: print a string formatted as a pdf string to a buffer.

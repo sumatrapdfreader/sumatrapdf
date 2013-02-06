@@ -1806,25 +1806,50 @@ void fz_free_text_sheet(fz_context *ctx, fz_text_sheet *sheet);
 fz_text_page *fz_new_text_page(fz_context *ctx, fz_rect mediabox);
 void fz_free_text_page(fz_context *ctx, fz_text_page *page);
 
+typedef struct fz_output_s fz_output;
+
+struct fz_output_s
+{
+	fz_context *ctx;
+	void *opaque;
+	int (*printf)(fz_output *, const char *, va_list ap);
+	void (*close)(fz_output *);
+};
+
+fz_output *fz_new_output_file(fz_context *, FILE *);
+
+fz_output *fz_new_output_buffer(fz_context *, fz_buffer *);
+
+int fz_printf(fz_output *, const char *, ...);
+
+/*
+	fz_close_output: Close a previously opened fz_output stream.
+
+	Note: whether or not this closes the underlying output method is
+	method dependent. FILE * streams created by fz_new_output_file are
+	NOT closed.
+*/
+void fz_close_output(fz_output *);
+
 /*
 	fz_print_text_sheet: Output a text sheet to a file as CSS.
 */
-void fz_print_text_sheet(fz_context *ctx, FILE *out, fz_text_sheet *sheet);
+void fz_print_text_sheet(fz_context *ctx, fz_output *out, fz_text_sheet *sheet);
 
 /*
 	fz_print_text_page_html: Output a page to a file in HTML format.
 */
-void fz_print_text_page_html(fz_context *ctx, FILE *out, fz_text_page *page);
+void fz_print_text_page_html(fz_context *ctx, fz_output *out, fz_text_page *page);
 
 /*
 	fz_print_text_page_xml: Output a page to a file in XML format.
 */
-void fz_print_text_page_xml(fz_context *ctx, FILE *out, fz_text_page *page);
+void fz_print_text_page_xml(fz_context *ctx, fz_output *out, fz_text_page *page);
 
 /*
 	fz_print_text_page: Output a page to a file in UTF-8 format.
 */
-void fz_print_text_page(fz_context *ctx, FILE *out, fz_text_page *page);
+void fz_print_text_page(fz_context *ctx, fz_output *out, fz_text_page *page);
 
 /*
 	fz_search_text_page: Search for occurrence of 'needle' in text page.
@@ -2175,7 +2200,7 @@ struct fz_outline_s
 
 	outline: The outlines to output.
 */
-void fz_print_outline_xml(fz_context *ctx, FILE *out, fz_outline *outline);
+void fz_print_outline_xml(fz_context *ctx, fz_output *out, fz_outline *outline);
 
 /*
 	fz_print_outline: Dump the given outlines to as text.
@@ -2184,7 +2209,7 @@ void fz_print_outline_xml(fz_context *ctx, FILE *out, fz_outline *outline);
 
 	outline: The outlines to output.
 */
-void fz_print_outline(fz_context *ctx, FILE *out, fz_outline *outline);
+void fz_print_outline(fz_context *ctx, fz_output *out, fz_outline *outline);
 
 /*
 	fz_free_outline: Free hierarchical outline.

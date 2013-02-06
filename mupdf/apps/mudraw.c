@@ -89,6 +89,7 @@ static fz_text_sheet *sheet = NULL;
 static fz_colorspace *colorspace;
 static char *filename;
 static int files = 0;
+fz_output *out = NULL;
 
 static char *mujstest_filename = NULL;
 static FILE *mujstest_file = NULL;
@@ -505,12 +506,12 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		fz_try(ctx)
 		{
 			dev = fz_new_trace_device(ctx);
-			printf("<page number=\"%d\">\n", pagenum);
+			fz_printf(out, "<page number=\"%d\">\n", pagenum);
 			if (list)
 				fz_run_display_list(list, dev, fz_identity, fz_infinite_rect, &cookie);
 			else
 				fz_run_page(doc, page, dev, fz_identity, &cookie);
-			printf("</page>\n");
+			fz_printf(out, "</page>\n");
 		}
 		fz_always(ctx)
 		{
@@ -543,16 +544,16 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			dev = NULL;
 			if (showtext == TEXT_XML)
 			{
-				fz_print_text_page_xml(ctx, stdout, text);
+				fz_print_text_page_xml(ctx, out, text);
 			}
 			else if (showtext == TEXT_HTML)
 			{
-				fz_print_text_page_html(ctx, stdout, text);
+				fz_print_text_page_html(ctx, out, text);
 			}
 			else if (showtext == TEXT_PLAIN)
 			{
-				fz_print_text_page(ctx, stdout, text);
-				printf("\f\n");
+				fz_print_text_page(ctx, out, text);
+				fz_printf(out, "\f\n");
 			}
 		}
 		fz_always(ctx)
@@ -800,11 +801,26 @@ static void drawrange(fz_context *ctx, fz_document *doc, char *range)
 static void drawoutline(fz_context *ctx, fz_document *doc)
 {
 	fz_outline *outline = fz_load_outline(doc);
-	if (showoutline > 1)
-		fz_print_outline_xml(ctx, stdout, outline);
-	else
-		fz_print_outline(ctx, stdout, outline);
-	fz_free_outline(ctx, outline);
+	fz_output *out = NULL;
+
+	fz_var(out);
+	fz_try(ctx)
+	{
+		out = fz_new_output_file(ctx, stdout);
+		if (showoutline > 1)
+			fz_print_outline_xml(ctx, out, outline);
+		else
+			fz_print_outline(ctx, out, outline);
+	}
+	fz_always(ctx)
+	{
+		fz_close_output(out);
+		fz_free_outline(ctx, outline);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 }
 
 #ifdef MUPDF_COMBINED_EXE
@@ -894,21 +910,24 @@ int main(int argc, char **argv)
 	timing.minfilename = "";
 	timing.maxfilename = "";
 
-	if (showxml || showtext == TEXT_XML)
-		printf("<?xml version=\"1.0\"?>\n");
-
-	if (showtext)
+	if (showxml || showtext)
+	{
+		out = fz_new_output_file(ctx, stdout);
 		sheet = fz_new_text_sheet(ctx);
+	}
+
+	if (showxml || showtext == TEXT_XML)
+		fz_printf(out, "<?xml version=\"1.0\"?>\n");
 
 	if (showtext == TEXT_HTML)
 	{
-		printf("<style>\n");
-		printf("body{background-color:gray;margin:12tp;}\n");
-		printf("div.page{background-color:white;margin:6pt;padding:6pt;}\n");
-		printf("div.block{border:1px solid gray;margin:6pt;padding:6pt;}\n");
-		printf("p{margin:0;padding:0;}\n");
-		printf("</style>\n");
-		printf("<body>\n");
+		fz_printf(out, "<style>\n");
+		fz_printf(out, "body{background-color:gray;margin:12tp;}\n");
+		fz_printf(out, "div.page{background-color:white;margin:6pt;padding:6pt;}\n");
+		fz_printf(out, "div.block{border:1px solid gray;margin:6pt;padding:6pt;}\n");
+		fz_printf(out, "p{margin:0;padding:0;}\n");
+		fz_printf(out, "</style>\n");
+		fz_printf(out, "<body>\n");
 	}
 
 	fz_try(ctx)
@@ -943,7 +962,7 @@ int main(int argc, char **argv)
 				}
 
 				if (showxml || showtext == TEXT_XML)
-					printf("<document name=\"%s\">\n", filename);
+					fz_printf(out, "<document name=\"%s\">\n", filename);
 
 				if (showoutline)
 					drawoutline(ctx, doc);
@@ -957,7 +976,7 @@ int main(int argc, char **argv)
 				}
 
 				if (showxml || showtext == TEXT_XML)
-					printf("</document>\n");
+					fz_printf(out, "</document>\n");
 
 				fz_close_document(doc);
 				doc = NULL;
@@ -982,14 +1001,18 @@ int main(int argc, char **argv)
 
 	if (showtext == TEXT_HTML)
 	{
-		printf("</body>\n");
-		printf("<style>\n");
-		fz_print_text_sheet(ctx, stdout, sheet);
-		printf("</style>\n");
+		fz_printf(out, "</body>\n");
+		fz_printf(out, "<style>\n");
+		fz_print_text_sheet(ctx, out, sheet);
+		fz_printf(out, "</style>\n");
 	}
 
-	if (showtext)
+	if (showxml || showtext)
+	{
 		fz_free_text_sheet(ctx, sheet);
+		fz_close_output(out);
+		out = NULL;
+	}
 
 	if (showtime && timing.count > 0)
 	{

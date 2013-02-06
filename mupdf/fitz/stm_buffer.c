@@ -204,24 +204,43 @@ void fz_write_buffer_pad(fz_context *ctx, fz_buffer *buf)
 	buf->unused_bits = 0;
 }
 
-void
+int
 fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, const char *fmt, ...)
 {
-	/* SumatraPDF: remove the limit of 256 bytes just to be safe */
-	int count;
+	int ret;
 	va_list args;
 	va_start(args, fmt);
 
-retry_larger_buffer:
-	count = vsnprintf(buffer->data + buffer->len, buffer->cap - buffer->len, fmt, args);
-	if (count < 0 || count >= buffer->cap - buffer->len)
-	{
-		fz_grow_buffer(ctx, buffer);
-		goto retry_larger_buffer;
-	}
-	buffer->len += count;
+	ret = fz_buffer_vprintf(ctx, buffer, fmt, args);
 
 	va_end(args);
+
+	return ret;
+}
+
+int
+fz_buffer_vprintf(fz_context *ctx, fz_buffer *buffer, const char *fmt, va_list args)
+{
+	int len;
+
+	do
+	{
+		int slack = buffer->cap - buffer->len;
+
+		len = vsnprintf((char *)buffer->data + buffer->len, slack, fmt, args);
+		/* len = number of chars written, not including the terminating
+		 * NULL, so len+1 > slack means "truncated". MSVC differs here
+		 * and returns -1 for truncated. */
+		if (len >= 0 && len+1 <= slack)
+			break;
+		/* Grow the buffer and retry */
+		fz_grow_buffer(ctx, buffer);
+	}
+	while (1);
+
+	buffer->len += len;
+
+	return len;
 }
 
 void

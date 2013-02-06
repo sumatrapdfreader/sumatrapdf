@@ -125,6 +125,10 @@ EXPORTS
 	fz_free_text_sheet
 	fz_new_text_page
 	fz_free_text_page
+	fz_new_output_file
+	fz_new_output_buffer
+	fz_printf
+	fz_close_output
 	fz_print_text_sheet
 	fz_print_text_page_html
 	fz_print_text_page_xml
@@ -246,6 +250,7 @@ EXPORTS
 	fz_write_buffer_bits
 	fz_write_buffer_pad
 	fz_buffer_printf
+	fz_buffer_vprintf
 	fz_new_stream
 	fz_keep_stream
 	fz_fill_buffer
@@ -347,6 +352,8 @@ EXPORTS
 	fz_render_stroked_glyph
 	fz_render_t3_glyph_direct
 	fz_prepare_t3_glyph
+	fz_create_annot
+	fz_set_annot_appearance
 	fz_new_text
 	fz_add_text
 	fz_free_text
@@ -468,6 +475,7 @@ EXPORTS
 	pdf_dict_puts
 	pdf_dict_puts_drop
 	pdf_dict_putp
+	pdf_dict_putp_drop
 	pdf_dict_del
 	pdf_dict_dels
 	pdf_sort_dict
@@ -492,6 +500,7 @@ EXPORTS
 	pdf_delete_object
 	pdf_update_object
 	pdf_update_stream
+	pdf_new_pdf_device
 	pdf_write_document
 	pdf_open_document
 	pdf_open_document_with_stream
@@ -668,6 +677,8 @@ EXPORTS
 	pdf_choice_widget_is_multiselect
 	pdf_choice_widget_value
 	pdf_choice_widget_set_value
+	pdf_create_annot
+	pdf_set_annot_appearance
 	pdf_set_doc_event_callback
 	pdf_event_issue_alert
 	pdf_event_issue_print

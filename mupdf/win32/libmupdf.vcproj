@@ -23,7 +23,6 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 			<Tool
@@ -575,6 +574,10 @@
 			</File>
 			<File
 				RelativePath="..\fitz\stm_open.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\stm_output.c"
 				>
 			</File>
 			<File

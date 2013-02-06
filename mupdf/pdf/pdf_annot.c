@@ -1596,10 +1596,13 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 	fz_context *ctx = doc->ctx;
 	pdf_annot *annot = NULL;
 	pdf_obj *annot_obj = pdf_new_dict(ctx, 0);
+	pdf_obj *ind_obj = NULL;
 
 	fz_var(annot);
+	fz_var(ind_obj);
 	fz_try(ctx)
 	{
+		int ind_obj_num;
 		fz_rect rect = {0.0, 0.0, 0.0, 0.0};
 		char *type_str = "";
 		pdf_obj *annot_arr = pdf_dict_gets(page->me, "Annots");
@@ -1634,7 +1637,10 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 			Insert the object in the hierarchy and the structure in the
 			page's array.
 		*/
-		pdf_array_push(annot_arr, annot_obj);
+		ind_obj_num = pdf_create_object(doc);
+		pdf_update_object(doc, ind_obj_num, annot_obj);
+		ind_obj = pdf_new_indirect(ctx, ind_obj_num, 0, doc);
+		pdf_array_push(annot_arr, ind_obj);
 
 		/*
 			Linking must be done before any call that might throw because
@@ -1648,6 +1654,7 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 	fz_always(ctx)
 	{
 		pdf_drop_obj(annot_obj);
+		pdf_drop_obj(ind_obj);
 	}
 	fz_catch(ctx)
 	{

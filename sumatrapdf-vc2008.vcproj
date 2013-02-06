@@ -1209,6 +1209,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\fitz\stm_output.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\fitz\stm_read.c"
 					>
 				</File>
