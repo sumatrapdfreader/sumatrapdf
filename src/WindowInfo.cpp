@@ -37,8 +37,6 @@ WindowInfo::WindowInfo(HWND hwnd) :
     pdfsync(NULL), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL)
 {
-    ZeroMemory(&selectionRect, sizeof(selectionRect));
-
     dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
     touchState.panStarted = false;
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);

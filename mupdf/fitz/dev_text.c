@@ -650,7 +650,7 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, fz_matrix c
 			dot = ndelta.x * ndir.x + ndelta.y * ndir.y;
 
 			/* SumatraPDF: don't merge multiple lines into one */
-			if (dist > size * LINE_DIST && hypotf(delta.y * ndir.x, delta.x * ndir.y) > size * LINE_DIST)
+			if (dist > size * LINE_DIST && hypotf(delta.y * ndir.x, delta.x * ndir.y) > size * 0.5f)
 			{
 				fz_flush_text_line(ctx, dev, style);
 				dev->lastchar = ' ';

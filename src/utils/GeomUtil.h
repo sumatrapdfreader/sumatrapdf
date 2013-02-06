@@ -125,11 +125,11 @@ public:
 
     /* Returns an empty rectangle if there's no intersection (see IsEmpty). */
     RectT Intersect(RectT other) const {
-        /* The intersection starts with the larger of the start
-           coordinates and ends with the smaller of the end coordinates */
+        /* The intersection starts with the larger of the start coordinates
+           and ends with the smaller of the end coordinates */
         T x = max(this->x, other.x);
-        T dx = min(this->x + this->dx, other.x + other.dx) - x;
         T y = max(this->y, other.y);
+        T dx = min(this->x + this->dx, other.x + other.dx) - x;
         T dy = min(this->y + this->dy, other.y + other.dy) - y;
 
         /* return an empty rectangle if the dimensions aren't positive */
@@ -144,6 +144,8 @@ public:
         if (other.dx <= 0 && other.dy <= 0)
             return *this;
 
+        /* The union starts with the smaller of the start coordinates
+           and ends with the larger of the end coordinates */
         T x = min(this->x, other.x);
         T y = min(this->y, other.y);
         T dx = max(this->x + this->dx, other.x + other.dx) - x;

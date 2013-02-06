@@ -123,30 +123,30 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec *
     int len;
     RectI *coords;
     const WCHAR *text = textCache->GetData(pageNo, &len, &coords);
+    CrashIf(len < glyph + length);
     RectI mediabox = engine->PageMediabox(pageNo).Round();
     RectI *c = &coords[glyph], *end = c + length;
-    for (; c < end; c++) {
+    while (c < end) {
         // skip line breaks
-        if (!c->x && !c->dx)
-            continue;
+        for (; c < end && !c->x && !c->dx; c++);
 
-        RectI c0 = *c, *c0p = c;
-        for (; c < end && (c->x || c->dx); c++);
-        c--;
-        RectI c1 = *c;
-        RectI bbox = c0.Union(c1).Intersect(mediabox);
+        RectI bbox, *c0 = c;
+        for (; c < end && (c->x || c->dx); c++) {
+            bbox = bbox.Union(*c);
+        }
+        bbox = bbox.Intersect(mediabox);
         // skip text that's completely outside a page's mediabox
         if (bbox.IsEmpty())
             continue;
 
         if (lines) {
-            lines->Push(str::DupN(text + (c0p - coords), c - c0p + 1));
+            lines->Push(str::DupN(text + (c0 - coords), c - c0));
             continue;
         }
 
         // cut the right edge, if it overlaps the next character
-        if (c + 1 < coords + len && (c[1].x || c[1].dx) && bbox.x < c[1].x && bbox.x + bbox.dx > c[1].x)
-            bbox.dx = c[1].x - bbox.x;
+        if (c < coords + len && (c->x || c->dx) && bbox.x < c->x && bbox.x + bbox.dx > c->x)
+            bbox.dx = c->x - bbox.x;
 
         result.len++;
         int *newPages = (int *)realloc(result.pages, sizeof(int) * result.len);

@@ -274,8 +274,8 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
     for (fz_text_block *block = text->blocks; block < text->blocks + text->len; block++) {
         for (fz_text_line *line = block->lines; line < block->lines + block->len; line++) {
             for (fz_text_span *span = line->spans; span < line->spans + line->len; span++) {
-                for (int i = 0; i < span->len; i++) {
-                    *dest = span->text[i].c;
+                for (fz_text_char *c = span->text; c < span->text + span->len; c++) {
+                    *dest = c->c;
                     if (*dest <= 32) {
                         if (!str::IsWs(*dest))
                             *dest = '?';
@@ -287,21 +287,19 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
                     }
                     dest++;
                     if (destRect)
-                        *destRect++ = fz_rect_to_RectD(span->text[i].bbox).Round();
+                        *destRect++ = fz_rect_to_RectD(c->bbox).Round();
                 }
             }
             // remove trailing spaces
             if (lineSepLen > 0 && dest > content && str::IsWs(dest[-1])) {
-                dest--;
+                *--dest = '\0';
                 if (destRect)
-                    destRect--;
+                    *--destRect = RectI();
             }
             lstrcpy(dest, lineSep);
             dest += lineSepLen;
-            if (destRect) {
-                ZeroMemory(destRect, lineSepLen * sizeof(fz_bbox));
+            if (destRect)
                 destRect += lineSepLen;
-            }
         }
     }
 
@@ -916,7 +914,6 @@ fz_outline *pdf_loadattachments(pdf_document *xref)
             continue;
 
         node = node->next = (fz_outline *)fz_malloc_struct(xref->ctx, fz_outline);
-        ZeroMemory(node, sizeof(fz_outline));
         node->title = fz_strdup(xref->ctx, pdf_to_name(name));
         node->dest.kind = FZ_LINK_LAUNCH;
         node->dest.ld.launch.file_spec = pdf_file_spec_to_str(xref, dest);
