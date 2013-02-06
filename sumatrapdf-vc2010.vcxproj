@@ -333,6 +333,7 @@
     <ClCompile Include="src\utils\DirIter.cpp" />
     <ClCompile Include="src\utils\Experiments.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
+    <ClCompile Include="src\utils\FileWatcher.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\JsonParser.cpp" />
@@ -519,6 +520,7 @@
     <ClInclude Include="src\utils\Dict.h" />
     <ClInclude Include="src\utils\DirIter.h" />
     <ClInclude Include="src\utils\FileTransactions.h" />
+    <ClInclude Include="src\utils\FileWatcher.h" />
     <ClInclude Include="src\utils\GdiPlusUtil.h" />
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\JsonParser.h" />

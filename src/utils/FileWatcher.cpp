@@ -1,54 +1,64 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#define INVALID_TOKEN -1
+#include "BaseUtil.h"
+#include "FileWatcher.h"
 
-struct WatchedFile {
-    WatchedFile *       next;
-    const WCHAR *       filePath;
-    FileChangeObserver *observer;
-    FileWatcherToken    token;
-};
+#include "FileUtil.h"
+#include "WinUtil.h"
+
+#define INVALID_TOKEN -1
 
 struct WatchedDir {
     WatchedDir * next;
     const WCHAR *dirPath;
     HANDLE       hDir;
     OVERLAPPED   overlapped;
-    // a double buffer where the Windows API ReadDirectory will store the list
+    // a double buffer where the Windows API ReadDirectoryChanges will store the list
     // of files that have been modified.
     FILE_NOTIFY_INFORMATION buffer[2][512];
     int          currBuffer; // current buffer used (alternate between 0 and 1)
 };
 
-static int g_currentToken = 0;
-static HANDLE g_threadControlHandle = 0;
-static WatchedDir *firstDir = NULL;
-static WatchedFile *firstFile = NULL;
+struct WatchedFile {
+    WatchedFile *           next;
+    WatchedDir *            watchedDir;
+    const WCHAR *           filePath;
+    FileChangeObserver *    observer;
+    FileWatcherToken        token;
+};
 
-static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *observer)
-{
-    WatchedFile *wf = AllocStruct<WatchedFile>();
-    wf->filePath = str::Dup(filePath);
-    wf->observer = observer;
-    wf->token = g_currentToken++;
-    return wf;
-}
+static int              g_currentToken = 0;
+static HANDLE           g_threadControlHandle = 0;
+static WatchedDir *     g_firstDir = NULL;
+static WatchedFile *    g_firstFile = NULL;
 
 static WatchedDir *FindExistingWatchedDir(const WCHAR *dirPath)
 {
-    WatchedDir *curr = firstDir;
+    WatchedDir *curr = g_firstDir;
     while (curr) {
-        // TODO: str::EqI ?
-        if (str::Eq(dirPath, curr->dirPath))
+        // TODO: normalize dirPath?
+        if (str::EqI(dirPath, curr->dirPath))
             return curr;
         curr = curr->next;
     }
+    return NULL;
 }
 
-static void FreeWatchedDir(WatchedDir *wd)
+static WatchedFile *FindByToken(FileWatcherToken token)
 {
-    free(wd->dirPath);
+    WatchedFile *curr = g_firstFile;
+    while (curr) {
+        if (curr->token == token)
+            return curr;
+        curr = curr->next;
+    }
+    return NULL;
+}
+
+static void DeleteWatchedDir(WatchedDir *wd)
+{
+    free((void*)wd->dirPath);
     SafeCloseHandle(wd->hDir);
     free(wd);
 }
@@ -81,19 +91,37 @@ static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
          &wd->overlapped, /* overlapped buffer */
          NULL); /* completion routine */
 
+    wd->next = g_firstDir;
+    g_firstDir = wd;
+
     return wd;
 Failed:
-    FreeWatchedDir(wd);
+    DeleteWatchedDir(wd);
     return NULL;
 }
 
-static WatchedDir *GetOrFindDirForFile(const WCHAR *filePath)
+static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *observer)
 {
     ScopedMem<WCHAR> dirPath(path::GetDir(filePath));
     WatchedDir *wd = FindExistingWatchedDir(dirPath);
     if (!wd)
         wd = NewWatchedDir(dirPath);
-    return wd;
+
+    WatchedFile *wf = AllocStruct<WatchedFile>();
+    wf->filePath = str::Dup(filePath);
+    wf->watchedDir = wd;
+    wf->observer = observer;
+    wf->token = g_currentToken++;
+    wf->next = g_firstFile;
+    g_firstFile = wf;
+    return wf;
+}
+
+static void DeleteWatchedFile(WatchedFile *wf)
+{
+    free((void*)wf->filePath);
+    delete wf->observer;
+    free(wf);
 }
 
 /* Subscribe for notifications about file changes. When a file changes, we'll
@@ -112,14 +140,63 @@ FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *obs
     // it ourselves, because ReadDirectoryChangesW()
     // doesn't work in that case
     WatchedFile *wf = NewWatchedFile(path, observer);
-
     return wf->token;
+}
+
+static bool IsWatchedDirReferenced(WatchedDir *wd)
+{
+    for (WatchedFile *wf = g_firstFile; wf; wf->next) {
+        if (wf->watchedDir == wd)
+            return true;
+    }
+    return false;
+}
+
+static void RemoveWatchedDirIfNotReferenced(WatchedDir *wd)
+{
+    if (IsWatchedDirReferenced(wd))
+        return;
+    WatchedDir **currPtr = &g_firstDir;
+    WatchedDir *curr;
+    for (;;) {
+        curr = *currPtr;
+        CrashAlwaysIf(!curr);
+        if (curr == wd)
+            break;
+        currPtr = &(curr->next);
+    }
+    WatchedDir *toRemove = curr;
+    *currPtr = toRemove->next;
+    DeleteWatchedDir(toRemove);
+}
+
+static void RemoveWatchedFile(WatchedFile *wf)
+{
+    WatchedDir *wd = wf->watchedDir;
+
+    WatchedFile **currPtr = &g_firstFile;
+    WatchedFile *curr;
+    for (;;) {
+        curr = *currPtr;
+        CrashAlwaysIf(!curr);
+        if (curr == wf)
+            break;
+        currPtr = &(curr->next);
+    }
+    WatchedFile *toRemove = curr;
+    *currPtr = toRemove->next;
+    DeleteWatchedFile(toRemove);
+
+    RemoveWatchedDirIfNotReferenced(wd);
 }
 
 void FileWatcherUnsubscribe(FileWatcherToken token)
 {
     if (INVALID_TOKEN == token)
         return;
-    
+    WatchedFile *wf = FindByToken(token);
+    if (!wf)
+        return;
+    RemoveWatchedFile(wf);
 }
 

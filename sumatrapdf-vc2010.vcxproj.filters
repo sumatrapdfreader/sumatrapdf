@@ -1019,6 +1019,9 @@
     <ClCompile Include="src\utils\CssParser_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\FileWatcher.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1514,6 +1517,9 @@
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\CssParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils\FileWatcher.h">
       <Filter>utils</Filter>
     </ClInclude>
   </ItemGroup>
