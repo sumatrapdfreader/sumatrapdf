@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-17fdb2ea70e3fbc8af2821145806cabfdf0f7659
+8980179760b4c25787144c9d250e06e6b9ca2752
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -12638,7 +12638,7 @@ bg:Относно (тема):
 br:Assunto:
 bs:Tema:
 ca-xv:Assumpte:
-ca:Assumpte:
+ca:Subjecte:
 cn:主题:
 cy:Pwnc:
 cz:Předmět:
@@ -13695,7 +13695,7 @@ br:Aumentar zoom
 bs:Uvećaj
 by:Павялічыць
 ca-xv:Apropa't
-ca:Apropa't
+ca:Acosta't
 cn:放大
 cy:Chwyddo i Mewn
 cz:Zvětšit
