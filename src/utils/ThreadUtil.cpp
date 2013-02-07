@@ -60,21 +60,17 @@ DWORD WINAPI ThreadBase::ThreadProc(void *data)
     if (thread->threadName)
         SetThreadName(GetCurrentThreadId(), thread->threadName);
     thread->Run();
-    thread->Release();
     return 0;
 }
 
 void ThreadBase::Start()
 {
     CrashIf(hThread);
-    AddRef(); // will be Release()'d at the end of ThreadBase::ThreadProc
     hThread = CreateThread(NULL, 0, ThreadProc, this, 0, 0);
 }
 
-bool ThreadBase::RequestCancelAndWaitToStop(DWORD waitMs)
+bool ThreadBase::Join(DWORD waitMs)
 {
-    RequestCancel();
-
     DWORD res = WaitForSingleObject(hThread, waitMs);
     if (WAIT_OBJECT_0 == res) {
         CloseHandle(hThread);

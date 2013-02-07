@@ -98,7 +98,7 @@ public:
         return state;
     }
 
-    bool MarkFileInexistent(const WCHAR *filePath) {
+    bool MarkFileInexistent(const WCHAR *filePath, bool tryToHide=false) {
         assert(filePath);
         DisplayState *state = Find(filePath);
         if (!state)
@@ -108,7 +108,7 @@ public:
         // so that the user could still try opening it again
         // and so that we don't completely forget the settings,
         // should the file reappear later on
-        int newIdx = FILE_HISTORY_MAX_RECENT - 1;
+        int newIdx = tryToHide ? INT_MAX : FILE_HISTORY_MAX_RECENT - 1;
         int idx = states.Find(state);
         if (idx < newIdx && state != states.Last()) {
             states.Remove(state);
@@ -121,7 +121,7 @@ public:
         // back in the Frequently Read list
         delete state->thumbnail;
         state->thumbnail = NULL;
-        state->openCount >>= 2;
+        state->openCount = tryToHide ? 0 : state->openCount >> 2;
         return true;
     }
 

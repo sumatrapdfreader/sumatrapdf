@@ -274,7 +274,7 @@ static void OnMenuGoToPage(EbookWindow *win)
     int pageNo = win->ebookController->GetCurrentPageNo();
     int maxPage = (int)win->ebookController->GetMaxPageCount();
     ScopedMem<WCHAR> label(str::Format(L"%d", pageNo));
-    WCHAR *newPageStr = Dialog_GoToPage(win->hwndFrame, label, maxPage);
+    ScopedMem<WCHAR> newPageStr(Dialog_GoToPage(win->hwndFrame, label, maxPage));
     if (!newPageStr)
         return;
 

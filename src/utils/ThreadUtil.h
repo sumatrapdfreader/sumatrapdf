@@ -4,10 +4,8 @@
 #ifndef ThreadUtil_h
 #define ThreadUtil_h
 
-#include "RefCounted.h"
-
 /* A very simple thread class that allows stopping a thread */
-class ThreadBase : public RefCounted {
+class ThreadBase {
 private:
     LONG                threadNo;
     HANDLE              hThread;
@@ -36,9 +34,9 @@ public:
     // to call WasCancelRequested() and stop processing if it returns true.
     void RequestCancel() { cancelRequested = true; }
 
-    // ask the thread to stop with RequestCancel() and wait for it to end
+    // synchronously waits for the thread to end
     // returns true if thread stopped by itself and false if waiting timed out
-    bool RequestCancelAndWaitToStop(DWORD waitMs=INFINITE);
+    bool Join(DWORD waitMs=INFINITE);
 
     // get a unique number that identifies a thread and unlike an
     // address of the object, will not be reused

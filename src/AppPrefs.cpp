@@ -586,36 +586,27 @@ Exit:
 namespace Prefs {
 
 /* Load preferences from the preferences file. */
-void Load(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
+bool Load(const WCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
           FileHistory& fileHistory, Favorites *favs)
 {
+    CrashIf(!filepath);
+    if (!filepath) return false;
+
     size_t prefsFileLen;
     ScopedMem<char> prefsTxt(file::ReadAll(filepath, &prefsFileLen));
-    if (!str::IsEmpty(prefsTxt.Get())) {
-        DeserializePrefs(prefsTxt, globalPrefs, fileHistory, favs);
-        globalPrefs.lastPrefUpdate = file::GetModificationTime(filepath);
-    }
+    if (str::IsEmpty(prefsTxt.Get()))
+        return false;
 
-    // TODO: add a check if a file exists, to filter out deleted files
-    // but only if a file is on a non-network drive (because
-    // accessing network drives can be slow and unnecessarily spin
-    // the drives).
-#if 0
-    for (int index = 0; fileHistory.Get(index); index++) {
-        DisplayState *state = fileHistory.Get(index);
-        if (!file::Exists(state->filePath)) {
-            fileHistory.Remove(state);
-            delete state;
-        }
-    }
-#endif
+    DeserializePrefs(prefsTxt, globalPrefs, fileHistory, favs);
+    globalPrefs.lastPrefUpdate = file::GetModificationTime(filepath);
+    return true;
 }
 
-bool Save(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites* favs)
+bool Save(const WCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
+          FileHistory& fileHistory, Favorites* favs)
 {
-    assert(filepath);
-    if (!filepath)
-        return false;
+    CrashIf(!filepath);
+    if (!filepath) return false;
 
     size_t dataLen;
     ScopedMem<char> data(SerializePrefs(globalPrefs, fileHistory, favs, &dataLen));

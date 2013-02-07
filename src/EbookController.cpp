@@ -12,7 +12,7 @@
 #include "Translations.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
-#include "UiTask.h"
+#include "UITask.h"
 #include "DebugLog.h"
 
 /* TODO: when showing a page from pagesFromPage, its page number can be 1
@@ -27,32 +27,13 @@ void FormattingTemp::DeletePages()
 }
 
 ThreadLoadEbook::ThreadLoadEbook(const WCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
-    controller(controller)
-{
-    fileName = str::Dup(fn);
-    win = sumWin;
-}
-
-class FinishedEbookLoadingTask : public UITask {
-    SumatraWindow   win;
-    Doc             doc;
-
-public:
-    FinishedEbookLoadingTask(SumatraWindow win, Doc doc) :
-        win(win), doc(doc) {
-    }
-
-    virtual void Execute() {
-        // let OpenMobiInWindow handle the failure case as well
-        OpenMobiInWindow(doc, win);
-    }
-};
+    controller(controller), fileName(str::Dup(fn)), win(sumWin) { }
 
 void ThreadLoadEbook::Run()
 {
     //lf(L"ThreadLoadEbook::Run(%s)", fileName);
     Timer t(true);
-    Doc doc = Doc::CreateFromFile(fileName);
+    doc = Doc::CreateFromFile(fileName);
     // TODO: even under heavy load, Doc::CreateFromFile doesn't take more
     //       than 50ms - any reason not to synchronously load ebooks?
     double loadingTimeMs = t.GetTimeInMs();
@@ -62,7 +43,16 @@ void ThreadLoadEbook::Run()
     if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
         doc.Delete();
 
-    uitask::Post(new FinishedEbookLoadingTask(win, doc));
+    // let uitask clean up this thread
+    uitask::Post(this);
+}
+
+void ThreadLoadEbook::Execute()
+{
+    // let OpenMobiInWindow handle the failure case as well
+    OpenMobiInWindow(doc, win);
+    // the thread should already have terminated by now
+    Join();
 }
 
 class EbookFormattingTask : public UITask {
@@ -194,9 +184,8 @@ void EbookFormattingThread::Run()
     // if we have reparsePoint, layout from that point and then
     // layout from the beginning. Otherwise just from beginning
     bool cancelled = Format(reparseIdx);
-    if (cancelled || (0 == reparseIdx))
-        return;
-    Format(0);
+    if (!cancelled && reparseIdx > 0)
+        Format(0);
 }
 
 EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls),
@@ -237,9 +226,10 @@ void EbookController::StopFormattingThread()
 {
     if (!formattingThread)
         return;
-    bool ok = formattingThread->RequestCancelAndWaitToStop();
+    formattingThread->RequestCancel();
+    bool ok = formattingThread->Join();
     CrashIf(!ok);
-    formattingThread->Release();
+    delete formattingThread;
     formattingThread = NULL;
     formattingThreadNo = -1;
     formattingTemp.DeletePages();

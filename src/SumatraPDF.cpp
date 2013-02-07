@@ -171,6 +171,12 @@ static WStrVec                      gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static WStrVec                      gAllowedFileTypes;
 
+// gFileExistenceChecker is initialized at startup and should
+// terminate and delete itself asynchronously while the UI is
+// being set up
+class FileExistenceChecker;
+static FileExistenceChecker *       gFileExistenceChecker = NULL;
+
 static void UpdateUITextForLanguage();
 static void UpdateToolbarAndScrollbarState(WindowInfo& win);
 static void EnterFullscreen(WindowInfo& win, bool presentation=false);
@@ -1342,9 +1348,8 @@ static void RenameFileInHistory(const WCHAR *oldPath, const WCHAR *newPath)
 static void LoadEbookAsync(const WCHAR *fileName, SumatraWindow& win)
 {
     ThreadLoadEbook *loadThread = new ThreadLoadEbook(fileName, NULL, win);
+    // the thread will delete itself at the end of processing
     loadThread->Start();
-    // make the thread delete itself at the end of processing
-    loadThread->Release();
     // loadThread will replace win with an EbookWindow on successful loading
 
     // TODO: we should show a notification in the window user is looking at
@@ -1832,6 +1837,73 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
     free(gGlobalPrefs.lastUpdateTime);
     gGlobalPrefs.lastUpdateTime = _MemToHex(&ft);
 }
+
+class FileExistenceChecker : public ThreadBase, public UITask
+{
+    WStrVec paths;
+
+public:
+    FileExistenceChecker() {
+        DisplayState *state;
+        for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)); i++) {
+            paths.Append(str::Dup(state->filePath));
+        }
+        // add missing paths from the list of most frequently opened documents
+        Vec<DisplayState *> frequencyList;
+        gFileHistory.GetFrequencyOrder(frequencyList);
+        for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_FREQUENT && i < frequencyList.Count(); i++) {
+            state = frequencyList.At(i);
+            if (-1 == paths.Find(state->filePath))
+                paths.Append(str::Dup(state->filePath));
+        }
+    }
+
+    virtual void Run() {
+        // filters all file paths on network drives, removable drives and
+        // all paths which still exist from the list (remaining paths will
+        // be marked as inexistent in gFileHistory)
+        for (size_t i = 0; i < paths.Count() && !WasCancelRequested(); i++) {
+            WCHAR *path = paths.At(i);
+            bool check = false;
+            if (!PathIsNetworkPath(path)) {
+                UINT type;
+                WCHAR root[MAX_PATH];
+                if (GetVolumePathName(path, root, dimof(root)))
+                    type = GetDriveType(root);
+                else
+                    type = GetDriveType(path);
+                check = DRIVE_FIXED == type;
+            }
+            if (!check || file::Exists(path)) {
+                paths.RemoveAt(i--);
+                delete path;
+            }
+        }
+        if (!WasCancelRequested())
+            uitask::Post(this);
+    }
+
+    virtual void Execute() {
+        for (size_t i = 0; i < paths.Count(); i++) {
+            const WCHAR *path = paths.At(i);
+            DisplayState *state = NULL;
+            // completely remove a file if we don't remember anything of
+            // value about it - else just move it all the way to the back
+            if (gGlobalPrefs.globalPrefsOnly)
+                state = gFileHistory.Find(path);
+            if (state && !state->isPinned && !state->decryptionKey)
+                gFileHistory.Remove(state);
+            else
+                gFileHistory.MarkFileInexistent(path, true);
+        }
+        // update the Frequently Read page in case it's been displayed already
+        if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
+            gWindows.At(0)->RedrawAll(true);
+        // prepare for clean-up (Join() just to be safe)
+        gFileExistenceChecker = NULL;
+        Join();
+    }
+};
 
 #ifdef DRAW_PAGE_SHADOWS
 #define BORDER_SIZE   1

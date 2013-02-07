@@ -442,6 +442,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (i.stressTestPath)
         StartStressTest(&i, win, &gRenderCache);
 
+    if (gFileHistory.Get(0)) {
+        gFileExistenceChecker = new FileExistenceChecker();
+        gFileExistenceChecker->Start();
+    }
+
     retCode = RunMessageLoop();
 
     CleanUpThumbnailCache(gFileHistory);
@@ -459,6 +464,8 @@ Exit:
     // (as recommended for a quick exit)
     ExitProcess(retCode);
 #endif
+
+    CrashIf(gFileExistenceChecker);
 
     DeleteObject(gBrushNoDocBg);
     DeleteObject(gBrushLogoBg);
