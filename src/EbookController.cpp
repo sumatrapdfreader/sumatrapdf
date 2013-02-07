@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "EbookController.h"
 
+#include "DebugLog.h"
 #include "EbookControls.h"
 #include "MobiDoc.h"
 #include "EbookFormatter.h"
@@ -13,7 +14,6 @@
 #include "ThreadUtil.h"
 #include "Timer.h"
 #include "UITask.h"
-#include "DebugLog.h"
 
 /* TODO: when showing a page from pagesFromPage, its page number can be 1
    so that we can't go back even though we should. This will happen if we resize
@@ -26,33 +26,44 @@ void FormattingTemp::DeletePages()
     DeleteVecMembers(pagesFromPage);
 }
 
-ThreadLoadEbook::ThreadLoadEbook(const WCHAR *fn, EbookController *controller, const SumatraWindow& sumWin) :
-    controller(controller), fileName(str::Dup(fn)), win(sumWin) { }
+class ThreadLoadEbook : public ThreadBase, public UITask {
+    ScopedMem<WCHAR>    fileName;
+    SumatraWindow       win;
+    Doc                 doc;
 
-void ThreadLoadEbook::Run()
+public:
+    ThreadLoadEbook(const WCHAR *fileName, const SumatraWindow& sumWin) :
+        fileName(str::Dup(fileName)), win(sumWin) { }
+
+    virtual void Run() {
+        //lf(L"ThreadLoadEbook::Run(%s)", fileName);
+        Timer t(true);
+        doc = Doc::CreateFromFile(fileName);
+        // TODO: even under heavy load, Doc::CreateFromFile doesn't take more
+        //       than 50ms - any reason not to synchronously load ebooks?
+        double loadingTimeMs = t.GetTimeInMs();
+        lf(L"Loaded %s in %.2f ms", fileName, loadingTimeMs);
+        // don't load PalmDoc, etc. files as long as they're not correctly formatted
+        if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
+            doc.Delete();
+        // let uitask clean up this thread
+        uitask::Post(this);
+    }
+
+    virtual void Execute() {
+        // let OpenMobiInWindow handle the failure case as well
+        OpenMobiInWindow(doc, win);
+        // the thread should already have terminated by now
+        Join();
+    }
+};
+
+void LoadEbookAsync(const WCHAR *fileName, SumatraWindow &win)
 {
-    //lf(L"ThreadLoadEbook::Run(%s)", fileName);
-    Timer t(true);
-    doc = Doc::CreateFromFile(fileName);
-    // TODO: even under heavy load, Doc::CreateFromFile doesn't take more
-    //       than 50ms - any reason not to synchronously load ebooks?
-    double loadingTimeMs = t.GetTimeInMs();
-    lf(L"Loaded %s in %.2f ms", fileName, loadingTimeMs);
-
-    // don't load PalmDoc, etc. files as long as they're not correctly formatted
-    if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
-        doc.Delete();
-
-    // let uitask clean up this thread
-    uitask::Post(this);
-}
-
-void ThreadLoadEbook::Execute()
-{
-    // let OpenMobiInWindow handle the failure case as well
-    OpenMobiInWindow(doc, win);
-    // the thread should already have terminated by now
-    Join();
+    ThreadLoadEbook *loadThread = new ThreadLoadEbook(fileName, win);
+    // the thread will delete itself at the end of processing
+    loadThread->Start();
+    // loadThread will replace win with an EbookWindow on successful loading
 }
 
 class EbookFormattingTask : public UITask {
@@ -64,12 +75,19 @@ public:
     bool               finished;
     EbookController *  controller;
     LONG               threadNo;
-    EbookFormattingTask() { }
+
+    EbookFormattingTask(HtmlPage **pages, size_t pageCount, bool fromBeginning,
+                        bool finished, EbookController *controller, LONG threadNo) :
+        pageCount(pageCount), fromBeginning(fromBeginning), finished(finished),
+        controller(controller), threadNo(threadNo) {
+        CrashIf(pageCount > MAX_PAGES);
+        memcpy(this->pages, pages, pageCount * sizeof(*pages));
+    }
 
     virtual void Execute() {
         EbookWindow *win = FindEbookWindowByController(controller);
         if (win)
-            win->ebookController->HandleMobiLayoutDone(this);
+            controller->HandleMobiLayoutDone(this);
     }
 };
 
@@ -107,14 +125,6 @@ EbookFormattingThread::~EbookFormattingThread()
     delete formatterArgs;
 }
 
-static void DeletePages(Vec<HtmlPage*> *pages)
-{
-    if (!pages)
-        return;
-    DeleteVecMembers(*pages);
-    delete pages;
-}
-
 // send accumulated pages if we filled the buffer or the caller forces us
 void EbookFormattingThread::SendPagesIfNecessary(bool force, bool finished, bool fromBeginning)
 {
@@ -122,15 +132,9 @@ void EbookFormattingThread::SendPagesIfNecessary(bool force, bool finished, bool
         force = true;
     if (!force && (pageCount < dimof(pages)))
         return;
-    EbookFormattingTask *msg = new EbookFormattingTask();
-    msg->finished = finished;
-    msg->fromBeginning = fromBeginning;
-    if (pageCount > 0)
-        memcpy(msg->pages, pages, pageCount * sizeof(HtmlPage*));
+    EbookFormattingTask *msg = new EbookFormattingTask(pages, pageCount, fromBeginning,
+                                                       finished, controller, GetNo());
     //lf("ThreadLayoutEbook::SendPagesIfNecessary() sending %d pages, finished=%d", pageCount, (int)finished);
-    msg->pageCount = pageCount;
-    msg->threadNo = GetNo();
-    msg->controller = controller;
     pageCount = 0;
     memset(pages, 0, sizeof(pages));
     uitask::Post(msg);
@@ -255,7 +259,11 @@ void EbookController::DeletePages(Vec<HtmlPage*>** pages)
     if (pagesFromPage && (*pages == pagesFromPage))
         lf("Deleting pages from page");
 #endif
-    ::DeletePages(*pages);
+    if (!*pages)
+        return;
+
+    DeleteVecMembers(**pages);
+    delete *pages;
     *pages = NULL;
 }
 
@@ -407,17 +415,12 @@ void EbookController::HandleMobiLayoutDone(EbookFormattingTask *ld)
 
     if (ld->finished) {
         CrashIf(pagesFromBeginning || pagesFromPage);
-        pagesFromBeginning = new Vec<HtmlPage*>();
-        HtmlPage **pages = formattingTemp.pagesFromBeginning.LendData();
-        size_t pageCount =  formattingTemp.pagesFromBeginning.Count();
-        pagesFromBeginning->Append(pages, pageCount);
+        pagesFromBeginning = new Vec<HtmlPage *>(formattingTemp.pagesFromBeginning);
         formattingTemp.pagesFromBeginning.Reset();
 
-        pageCount =  formattingTemp.pagesFromPage.Count();
+        size_t pageCount = formattingTemp.pagesFromPage.Count();
         if (pageCount > 0) {
-            pages = formattingTemp.pagesFromPage.LendData();
-            pagesFromPage = new Vec<HtmlPage*>();
-            pagesFromPage->Append(pages, pageCount);
+            pagesFromPage = new Vec<HtmlPage *>(formattingTemp.pagesFromPage);
             formattingTemp.pagesFromPage.Reset();
         }
         StopFormattingThread();

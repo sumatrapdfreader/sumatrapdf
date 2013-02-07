@@ -2940,8 +2940,6 @@ pdf_run_contents_stream(pdf_csi *csi, pdf_obj *rdb, fz_stream *file)
 		pdf_grestore(csi);
 	csi->gbot = save_gbot;
 	csi->in_text = save_in_text;
-	/* SumatraPDF: ensure clip stack consistency */
-	csi->gbot = save_gbot;
 	pdf_lexbuf_fin(buf);
 	fz_free(ctx, buf);
 }

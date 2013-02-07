@@ -44,6 +44,7 @@ using namespace Gdiplus;
 #include "StressTesting.h"
 #include "TableOfContents.h"
 #include "Timer.h"
+#include "ThreadUtil.h"
 #include "Toolbar.h"
 #include "Touch.h"
 #include "Translations.h"
@@ -1298,7 +1299,7 @@ public:
     virtual void OnFileChanged() {
         // We cannot call win->Reload directly as it could cause race conditions
         // between the watching thread and the main thread (and only pass a copy of this
-        // callback to the UIThreadMarshaller, as the object will be deleted after use)
+        // callback to uitask::Post, as the object will be deleted after use)
         uitask::Post(new FileChangeCallback(win));
     }
 
@@ -1342,17 +1343,6 @@ static void RenameFileInHistory(const WCHAR *oldPath, const WCHAR *newPath)
         }
         gFavorites->RemoveAllForFile(oldPath);
     }
-}
-
-// Start loading a mobi file in the background
-static void LoadEbookAsync(const WCHAR *fileName, SumatraWindow& win)
-{
-    ThreadLoadEbook *loadThread = new ThreadLoadEbook(fileName, NULL, win);
-    // the thread will delete itself at the end of processing
-    loadThread->Start();
-    // loadThread will replace win with an EbookWindow on successful loading
-
-    // TODO: we should show a notification in the window user is looking at
 }
 
 // document path is either a file or a directory
@@ -1461,6 +1451,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
             win->loadedFilePath = str::Dup(fullPath);
         }
         LoadEbookAsync(fullPath, SumatraWindow::Make(win));
+        // TODO: we should show a notification in the window user is looking at
         return win;
     }
 

@@ -6,25 +6,10 @@
 
 #include "Doc.h"
 #include "SumatraWindow.h"
-#include "ThreadUtil.h"
-#include "UITask.h"
 #include "WindowInfo.h"
 
 struct EbookControls;
 class  EbookController;
-
-class ThreadLoadEbook : public ThreadBase, public UITask {
-    ScopedMem<WCHAR>    fileName;
-    EbookController *   controller;
-    SumatraWindow       win;
-    Doc                 doc;
-
-public:
-    ThreadLoadEbook(const WCHAR *fileName, EbookController *controller, const SumatraWindow& sumWin);
-
-    virtual void Run();
-    virtual void Execute();
-};
 
 namespace mui { class HwndWrapper; }
 

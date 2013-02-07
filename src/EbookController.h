@@ -9,18 +9,16 @@
 #include "SumatraWindow.h"
 
 struct  EbookControls;
-class   EbookController;
 class   HtmlPage;
-class   PoolAllocator;
 class   EbookFormattingThread;
 class   EbookFormattingTask;
-struct  HtmlFormatterArgs;
 namespace mui { class Control; }
 using namespace mui;
 
 // data used on the ui thread side when handling UiMsg::MobiLayout
 // it's in its own struct for clarity
-struct FormattingTemp {
+class FormattingTemp {
+public:
     // if we're doing layout that starts from the beginning, this is 0
     // otherwise it's the reparse point of the page we were showing when
     // we started the layout
@@ -114,5 +112,7 @@ public:
     Doc  GetDoc() const { return doc; }
     int  CurrPageReparseIdx() const;
 };
+
+void LoadEbookAsync(const WCHAR *fileName, SumatraWindow &win);
 
 #endif
