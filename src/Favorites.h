@@ -82,8 +82,8 @@ public:
 class Favorites {
 
    // filePathCache points to a string inside FileFavs, so doesn't need to free()d
-   WCHAR *  filePathCache;
-   size_t   idxCache;
+   const WCHAR *filePathCache;
+   size_t       idxCache;
 
    void RemoveFav(FileFavs *fav, size_t idx);
 

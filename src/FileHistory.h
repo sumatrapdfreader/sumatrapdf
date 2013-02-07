@@ -50,8 +50,9 @@ class FileHistory {
         if (dsA->isPinned != dsB->isPinned)
             return dsA->isPinned ? -1 : 1;
         // sort pinned documents alphabetically
-        if (dsA->isPinned && dsB->isPinned)
+        if (dsA->isPinned)
             return str::CmpNatural(path::GetBaseName(dsA->filePath), path::GetBaseName(dsB->filePath));
+        // sort often opened documents first
         if (dsA->openCount != dsB->openCount)
             return dsB->openCount - dsA->openCount;
         // use recency as the criterion in case of equal open counts
@@ -63,10 +64,8 @@ public:
     ~FileHistory() { Clear(); }
     void  Clear() { DeleteVecMembers(states); }
 
-    void  Prepend(DisplayState *state) { states.InsertAt(0, state); }
     void  Append(DisplayState *state) { states.Append(state); }
     void  Remove(DisplayState *state) { states.Remove(state); }
-    bool  IsEmpty() const { return states.Count() == 0; }
 
     DisplayState *Get(size_t index) const {
         if (index < states.Count())
@@ -93,8 +92,8 @@ public:
             state->filePath = str::Dup(filePath);
         }
         else
-            Remove(state);
-        Prepend(state);
+            states.Remove(state);
+        states.InsertAt(0, state);
         state->openCount++;
         return state;
     }
@@ -109,13 +108,14 @@ public:
         // so that the user could still try opening it again
         // and so that we don't completely forget the settings,
         // should the file reappear later on
-        int ix = states.Find(state);
-        if (ix < FILE_HISTORY_MAX_RECENT) {
+        int newIdx = FILE_HISTORY_MAX_RECENT - 1;
+        int idx = states.Find(state);
+        if (idx < newIdx && state != states.Last()) {
             states.Remove(state);
-            if (states.Count() < FILE_HISTORY_MAX_RECENT)
+            if (states.Count() <= (size_t)newIdx)
                 states.Append(state);
             else
-                states.InsertAt(FILE_HISTORY_MAX_RECENT - 1, state);
+                states.InsertAt(newIdx, state);
         }
         // also delete the thumbnail and move the link towards the
         // back in the Frequently Read list
@@ -123,15 +123,6 @@ public:
         state->thumbnail = NULL;
         state->openCount >>= 2;
         return true;
-    }
-
-    // appends history to this one, leaving the other history emptied
-    void ExtendWith(FileHistory& other) {
-        while (!other.IsEmpty()) {
-            DisplayState *state = other.Get(0);
-            Append(state);
-            other.Remove(state);
-        }
     }
 
     // returns a shallow copy of the file history list, sorted

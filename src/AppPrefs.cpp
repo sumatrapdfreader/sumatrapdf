@@ -486,7 +486,7 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
 }
 
 static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& globalPrefs,
-    FileHistory& fh, Favorites **favsOut)
+    FileHistory& fh, Favorites *favs)
 {
     BencObj *obj = BencObj::Decode(prefsTxt);
     if (!obj || obj->Type() != BT_DICT)
@@ -558,9 +558,6 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
         }
     }
 
-    Favorites *favs = new Favorites();
-    *favsOut = favs;
-
     BencArray *favsArr = prefs->GetArray(FAVS_STR);
     if (!favsArr)
         goto Exit;
@@ -590,7 +587,7 @@ namespace Prefs {
 
 /* Load preferences from the preferences file. */
 void Load(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
-          FileHistory& fileHistory, Favorites **favs)
+          FileHistory& fileHistory, Favorites *favs)
 {
     size_t prefsFileLen;
     ScopedMem<char> prefsTxt(file::ReadAll(filepath, &prefsFileLen));
@@ -598,9 +595,6 @@ void Load(WCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
         DeserializePrefs(prefsTxt, globalPrefs, fileHistory, favs);
         globalPrefs.lastPrefUpdate = file::GetModificationTime(filepath);
     }
-
-    if (!*favs)
-        *favs = new Favorites();
 
     // TODO: add a check if a file exists, to filter out deleted files
     // but only if a file is on a non-network drive (because
@@ -751,14 +745,11 @@ bool ReloadPrefs()
     bool toolbarVisible = gGlobalPrefs.toolbarVisible;
     bool useSysColors = gGlobalPrefs.useSysColors;
 
-    FileHistory fileHistory;
-    Favorites *favs = NULL;
-    Prefs::Load(path, gGlobalPrefs, fileHistory, &favs);
-
     gFileHistory.Clear();
-    gFileHistory.ExtendWith(fileHistory);
     delete gFavorites;
-    gFavorites = favs;
+    gFavorites = new Favorites();
+
+    Prefs::Load(path, gGlobalPrefs, gFileHistory, gFavorites);
 
     if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
         gWindows.At(0)->DeleteInfotip();
@@ -776,4 +767,3 @@ bool ReloadPrefs()
 
     return true;
 }
-
