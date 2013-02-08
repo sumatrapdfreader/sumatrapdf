@@ -55,20 +55,9 @@ static WatchedFile *    g_firstFile = NULL;
 
 static HANDLE g_fileWatcherHandles[MAXIMUM_WAIT_OBJECTS];
 
-static int CollectHandlesToWaitOn()
+static void WakeUpWatcherThread()
 {
-    ScopedCritSec cs(&g_threadCritSec);
-    g_fileWatcherHandles[0] = g_threadControlHandle;
-    int n = 1;
-    WatchedDir *curr = g_firstDir;
-    while (curr) {
-        g_fileWatcherHandles[n] = curr->overlapped.hEvent;
-        n++;
-        if (n >= MAXIMUM_WAIT_OBJECTS)
-            break;
-        curr = curr->next;
-    }
-    return n;
+    SetEvent(g_threadControlHandle);
 }
 
 static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
@@ -76,16 +65,15 @@ static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
     WatchedFile *curr = g_firstFile;
     while (curr) {
         if (curr->watchedDir == d) {
-            bool isWatched = str::EqI(fileName, path::GetBaseName(curr->filePath));
+            const WCHAR *fileName2 = path::GetBaseName(curr->filePath);
 
             // is it the file that is being watched?
-            if (isWatched) {
+            if (str::EqI(fileName, fileName2)) {
                 // NOTE: It is not recommended to check whether the timestamp has changed
                 // because the time granularity is so big that this can cause genuine
                 // file notifications to be ignored. (This happens for instance for
                 // PDF files produced by pdftex from small.tex document)
-                if (curr->observer)
-                    curr->observer->OnFileChanged();
+                curr->observer->OnFileChanged();
                 return;
             }
         }
@@ -133,6 +121,7 @@ static void NotifyAboutDirChanged(WatchedDir *d)
 static void NotifyAboutFileChanges(HANDLE h)
 {
     ScopedCritSec cs(&g_threadCritSec);
+
     WatchedDir *curr = g_firstDir;
     while (curr) {
         if (h == curr->overlapped.hEvent)
@@ -146,6 +135,22 @@ static void NotifyAboutFileChanges(HANDLE h)
         return;
     }
     NotifyAboutDirChanged(curr);
+}
+
+static int CollectHandlesToWaitOn()
+{
+    ScopedCritSec cs(&g_threadCritSec);
+    g_fileWatcherHandles[0] = g_threadControlHandle;
+    int n = 1;
+    WatchedDir *curr = g_firstDir;
+    while (curr) {
+        g_fileWatcherHandles[n] = curr->overlapped.hEvent;
+        n++;
+        if (n >= MAXIMUM_WAIT_OBJECTS)
+            break;
+        curr = curr->next;
+    }
+    return n;
 }
 
 static DWORD WINAPI FileWatcherThread(void *param)
@@ -270,13 +275,17 @@ static void DeleteWatchedFile(WatchedFile *wf)
 }
 
 /* Subscribe for notifications about file changes. When a file changes, we'll
-call observer->OnFileChanged(). We take ownership of observer object.
+call observer->OnFileChanged().
+
+We take ownership of observer object.
 
 Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
 way we can support multiple callers subscribing for the same file.
 */
 FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *observer)
 {
+    CrashIf(!observer);
+
     if (!file::Exists(path)) {
         delete observer;
         return INVALID_TOKEN;
@@ -284,10 +293,13 @@ FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *obs
 
     StartThreadIfNecessary();
 
+    ScopedCritSec cs(&g_threadCritSec);
+
     // TODO: if the file is on a network drive we should periodically check
     // it ourselves, because ReadDirectoryChangesW()
     // doesn't work in that case
     WatchedFile *wf = NewWatchedFile(path, observer);
+    WakeUpWatcherThread();
     return wf->token;
 }
 
@@ -336,6 +348,7 @@ static void RemoveWatchedFile(WatchedFile *wf)
     DeleteWatchedFile(toRemove);
 
     RemoveWatchedDirIfNotReferenced(wd);
+    WakeUpWatcherThread();
 }
 
 void FileWatcherUnsubscribe(FileWatcherToken token)
@@ -347,8 +360,7 @@ void FileWatcherUnsubscribe(FileWatcherToken token)
     ScopedCritSec cs(&g_threadCritSec);
 
     WatchedFile *wf = FindByToken(token);
-    if (!wf)
-        return;
+    CrashIf(!wf);
     RemoveWatchedFile(wf);
 }
 
