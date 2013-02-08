@@ -2398,6 +2398,8 @@ bool PdfEngineImpl::IsLinearizedFile()
     if (tok != PDF_TOK_INT)
         return false;
     int num = _doc->lexbuf.base.i;
+    if (num < 0 || num >= _doc->len)
+        return false;
     // check whether it's a linearization dictionary
     fz_try(_doc->ctx) {
         pdf_cache_object(_doc, num, 0);
@@ -2596,9 +2598,6 @@ WCHAR *PdfEngineImpl::GetProperty(DocumentProperty prop)
 bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const
 {
     if (forSaving) {
-        // TODO: updating some encrypted documents currently breaks them for Adobe Reader
-        if (_doc->crypt)
-            return false;
         // TODO: support updating of documents where pages aren't all numbered objects?
         for (int i = 0; i < PageCount(); i++) {
             if (pdf_to_num(_doc->page_refs[i]) == 0)
@@ -2719,6 +2718,7 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
                           Annot_Squiggly  == annot.type ? "Squiggly"  : NULL;
     CrashIf(!subtype);
     // convert the annotation's rectangle back to raw user space
+    // TODO: take page rotation into consideration
     fz_rect r = fz_transform_rect(fz_invert_matrix(page->ctm), fz_RectD_to_rect(annot.rect));
     double dx = r.x1 - r.x0, dy = r.y1 - r.y0;
     float rgb[3] = { GetRValue(annot.color) / 255.f, GetGValue(annot.color) / 255.f, GetBValue(annot.color) / 255.f };
@@ -2755,16 +2755,13 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
             buf = fz_new_buffer(ctx, (int)str::Len(annot_ap_stream));
             memcpy(buf->data, annot_ap_stream, (buf->len = (int)str::Len(annot_ap_stream)));
             pdf_file_update_append(list, obj, next_num++, 0, buf);
-            pdf_drop_obj(obj);
-            obj = NULL;
-            fz_drop_buffer(ctx, buf);
-            buf = NULL;
         }
         else {
+            // have the viewer create an appearance stream itself for encrypted documents
             pdf_dict_dels(annot_obj, "AP");
         }
         // append a reference to the annotation to the page's /Annots entry
-        pdf_array_push(annots, (obj = pdf_new_indirect(ctx, next_num, 0, NULL)));
+        pdf_array_push_drop(annots, pdf_new_indirect(ctx, next_num, 0, NULL));
         // append the annotation to the file
         pdf_file_update_append(list, annot_obj, next_num++, 0, NULL);
     }

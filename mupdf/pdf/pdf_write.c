@@ -2442,23 +2442,9 @@ pdf_file_update_end(pdf_file_update_list *list, pdf_obj *prev_trailer, int prev_
 		return;
 	}
 
-	startxref = ftell(list->file);
-	fprintf(list->file, "xref\n");
-	for (from = 0; from < list->max_num; from++)
-	{
-		if (!list->offset[from] && from > 0)
-			continue;
-		for (to = from + 1; to < list->max_num && list->offset[to]; to++);
-		fprintf(list->file, "%d %d\n", from, to - from);
-		for (; from < to; from++)
-			fprintf(list->file, "%010d %05d %c \n", list->offset[from], list->gen[from], from > 0 ? 'n' : 'f');
-	}
-
-	fprintf(list->file, "trailer\n");
 	fz_try(ctx)
 	{
-		trailer = pdf_new_dict(ctx, 5);
-		pdf_dict_puts_drop(trailer, "Size", pdf_new_int(ctx, to));
+		trailer = pdf_new_dict(ctx, 10);
 		pdf_dict_puts_drop(trailer, "Prev", pdf_new_int(ctx, prev_xref_offset));
 		if ((obj = pdf_dict_gets(prev_trailer, "Root")))
 			pdf_dict_puts(trailer, "Root", obj);
@@ -2469,6 +2455,84 @@ pdf_file_update_end(pdf_file_update_list *list, pdf_obj *prev_trailer, int prev_
 		// TODO: update the second entry in the optional /ID array
 		if ((obj = pdf_dict_gets(prev_trailer, "ID")))
 			pdf_dict_puts(trailer, "ID", obj);
+	}
+	fz_catch(ctx)
+	{
+		pdf_drop_obj(trailer);
+		fclose(list->file);
+		fz_free(ctx, list);
+		fz_rethrow(ctx);
+	}
+
+	startxref = ftell(list->file);
+
+	if (!strcmp(pdf_to_name(pdf_dict_gets(prev_trailer, "Type")), "XRef"))
+	{
+		fz_buffer *xref = NULL;
+		fz_var(xref);
+
+		fz_try(ctx)
+		{
+			pdf_dict_puts_drop(trailer, "Type", pdf_dict_gets(prev_trailer, "Type"));
+			pdf_dict_puts_drop(trailer, "W", pdf_new_obj_from_str(ctx, "[0 3 1]"));
+			pdf_dict_puts_drop(trailer, "Index", (obj = pdf_new_array(ctx, 0)));
+
+			xref = fz_new_buffer(ctx, 0);
+			for (from = 0; from <= list->max_num; from++)
+			{
+				if (!list->offset[from])
+					continue;
+				for (to = from + 1; to <= list->max_num && list->offset[to]; to++);
+
+				pdf_array_push_drop(obj, pdf_new_int(ctx, from));
+				pdf_array_push_drop(obj, pdf_new_int(ctx, to - from));
+				for (; from < to; from++)
+				{
+					fz_buffer_printf(ctx, xref, "%c%c%c%c",
+						(list->offset[from] >> 16) & 0xFF, (list->offset[from] >> 8) & 0xFF,
+						list->offset[from] & 0xFF, list->gen[from] & 0xFF);
+				}
+			}
+
+			pdf_dict_puts_drop(trailer, "Size", pdf_new_int(ctx, to));
+			pdf_dict_puts_drop(trailer, "Length", pdf_new_int(ctx, xref->len));
+
+			fprintf(list->file, "%d 0 obj\n", to);
+			pdf_fprint_obj(list->file, trailer, 1);
+			fprintf(list->file, "stream\n");
+			fwrite(xref->data, 1, xref->len, list->file);
+			fprintf(list->file, "\nendstream\nendobj\n");
+			fprintf(list->file, "startxref\n%d\n%%%%EOF\n", startxref);
+		}
+		fz_always(ctx)
+		{
+			pdf_drop_obj(trailer);
+			fz_drop_buffer(ctx, xref);
+			fclose(list->file);
+			fz_free(ctx, list);
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
+		}
+		return;
+	}
+
+	fz_try(ctx)
+	{
+		fprintf(list->file, "xref\n");
+		for (from = 0; from <= list->max_num; from++)
+		{
+			if (!list->offset[from] && from > 0)
+				continue;
+			for (to = from + 1; to <= list->max_num && list->offset[to]; to++);
+			fprintf(list->file, "%d %d\n", from, to - from);
+			for (; from < to; from++)
+				fprintf(list->file, "%010d %05d %c \n", list->offset[from], list->gen[from], from > 0 ? 'n' : 'f');
+		}
+
+		pdf_dict_puts_drop(trailer, "Size", pdf_new_int(ctx, to));
+		fprintf(list->file, "trailer\n");
 		pdf_fprint_obj(list->file, trailer, 1);
 		fprintf(list->file, "startxref\n%d\n%%%%EOF\n", startxref);
 	}

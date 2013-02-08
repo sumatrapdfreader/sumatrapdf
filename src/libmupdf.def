@@ -462,6 +462,7 @@ EXPORTS
 	pdf_array_get
 	pdf_array_put
 	pdf_array_push
+	pdf_array_push_drop
 	pdf_array_insert
 	pdf_array_contains
 	pdf_dict_len

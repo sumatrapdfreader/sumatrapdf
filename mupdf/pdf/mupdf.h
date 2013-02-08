@@ -67,6 +67,8 @@ int pdf_array_len(pdf_obj *array);
 pdf_obj *pdf_array_get(pdf_obj *array, int i);
 void pdf_array_put(pdf_obj *array, int i, pdf_obj *obj);
 void pdf_array_push(pdf_obj *array, pdf_obj *obj);
+/* SumatraPDF: convenience method similar to pdf_dict_puts_drop */
+void pdf_array_push_drop(pdf_obj *array, pdf_obj *obj);
 void pdf_array_insert(pdf_obj *array, pdf_obj *obj);
 int pdf_array_contains(pdf_obj *array, pdf_obj *obj);
 

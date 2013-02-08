@@ -340,8 +340,9 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 		if (size > xref->len)
 			pdf_resize_xref(xref, size);
 
+		/* SumatraPDF: xref stream objects don't need an xref entry themselves */
 		if (num < 0 || num >= xref->len)
-			fz_throw(ctx, "object id (%d %d R) out of range (0..%d)", num, gen, xref->len - 1);
+			fz_warn(ctx, "object id (%d %d R) out of range (0..%d)", num, gen, xref->len - 1);
 
 		obj = pdf_dict_gets(trailer, "W");
 		if (!obj)

@@ -464,7 +464,7 @@ pdf_create_annot_ex(pdf_document *xref, fz_rect rect, pdf_obj *base_obj, fz_buff
 
 	fz_try(ctx)
 	{
-		rotate = pdf_to_int(pdf_dict_gets(pdf_dict_gets(base_obj, "MK"), "R"));
+		rotate = pdf_to_int(pdf_dict_getp(base_obj, "MK/R"));
 
 		form = pdf_create_xobject(ctx, base_obj);
 		form->matrix = fz_rotate(rotate);
