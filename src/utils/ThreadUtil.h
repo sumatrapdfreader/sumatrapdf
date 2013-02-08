@@ -47,4 +47,6 @@ public:
     virtual void Run() = 0;
 };
 
+void SetThreadName(DWORD threadId, const char *threadName);
+
 #endif

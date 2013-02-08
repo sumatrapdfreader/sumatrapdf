@@ -20,12 +20,12 @@ typedef struct tagTHREADNAME_INFO
 #pragma warning(push)
 #pragma warning(disable: 6320) // silence /analyze: Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER. This might mask exceptions that were not intended to be handled
 #pragma warning(disable: 6322) // silence /analyze: Empty _except block
-static void SetThreadName(DWORD dwThreadID, char* threadName)
+void SetThreadName(DWORD threadId, const char *threadName)
 {
    THREADNAME_INFO info;
    info.dwType = 0x1000;
    info.szName = threadName;
-   info.dwThreadID = dwThreadID;
+   info.dwThreadID = threadId;
    info.dwFlags = 0;
 
    __try

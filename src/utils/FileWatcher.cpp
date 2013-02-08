@@ -5,7 +5,16 @@
 #include "FileWatcher.h"
 
 #include "FileUtil.h"
+#include "ThreadUtil.h"
 #include "WinUtil.h"
+
+// TODO: a hack for VS 2011 compilation. 1600 is VS 2010
+#if _MSC_VER > 1600
+extern "C" {
+WINBASEAPI BOOL WINAPI
+GetOverlappedResult(_In_ HANDLE hFile, _In_ LPOVERLAPPED lpOverlapped, _Out_ LPDWORD lpNumberOfBytesTransferred, _In_ BOOL bWait);
+}
+#endif
 
 #define INVALID_TOKEN -1
 
@@ -29,9 +38,145 @@ struct WatchedFile {
 };
 
 static int              g_currentToken = 0;
+static HANDLE           g_threadHandle = 0;
+// used to wake-up file wather thread to notify about
+// added/removed files to be watched
 static HANDLE           g_threadControlHandle = 0;
+
+// protects data structures shared between ui thread and file
+// watcher thread i.e. g_firstDir, g_firstFile
+static CRITICAL_SECTION g_threadCritSec;
+
+// 1 taken by g_threadControlHandle
+static int              g_maxFilesToWatch = MAXIMUM_WAIT_OBJECTS - 1;
+
 static WatchedDir *     g_firstDir = NULL;
 static WatchedFile *    g_firstFile = NULL;
+
+static HANDLE g_fileWatcherHandles[MAXIMUM_WAIT_OBJECTS];
+
+static int CollectHandlesToWaitOn()
+{
+    ScopedCritSec cs(&g_threadCritSec);
+    g_fileWatcherHandles[0] = g_threadControlHandle;
+    int n = 1;
+    WatchedDir *curr = g_firstDir;
+    while (curr) {
+        g_fileWatcherHandles[n] = curr->overlapped.hEvent;
+        n++;
+        if (n >= MAXIMUM_WAIT_OBJECTS)
+            break;
+        curr = curr->next;
+    }
+    return n;
+}
+
+static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
+{
+    WatchedFile *curr = g_firstFile;
+    while (curr) {
+        if (curr->watchedDir == d) {
+            bool isWatched = str::EqI(fileName, path::GetBaseName(curr->filePath));
+
+            // is it the file that is being watched?
+            if (isWatched) {
+                // NOTE: It is not recommended to check whether the timestamp has changed
+                // because the time granularity is so big that this can cause genuine
+                // file notifications to be ignored. (This happens for instance for
+                // PDF files produced by pdftex from small.tex document)
+                if (curr->observer)
+                    curr->observer->OnFileChanged();
+                return;
+            }
+        }
+        curr = curr->next;
+    }
+}
+
+static void NotifyAboutDirChanged(WatchedDir *d)
+{
+    // Read the asynchronous result of the previous call to ReadDirectory
+    DWORD dwNumberbytes;
+    GetOverlappedResult(d->hDir, &d->overlapped, &dwNumberbytes, FALSE);
+
+    FILE_NOTIFY_INFORMATION *notify = d->buffer[d->currBuffer];
+    // Switch the 2 buffers
+    d->currBuffer = (d->currBuffer + 1) % dimof(d->buffer);
+
+    // start a new asynchronous call to ReadDirectory in the alternate buffer
+    ReadDirectoryChangesW(
+         d->hDir, /* handle to directory */
+         &d->buffer[d->currBuffer], /* read results buffer */
+         sizeof(d->buffer[d->currBuffer]), /* length of buffer */
+         FALSE, /* monitoring option */
+         //FILE_NOTIFY_CHANGE_CREATION|
+         FILE_NOTIFY_CHANGE_LAST_WRITE, /* filter conditions */
+         NULL, /* bytes returned */
+         &d->overlapped, /* overlapped buffer */
+         NULL); /* completion routine */
+
+    // Note: the ReadDirectoryChangesW API fills the buffer with WCHAR strings.
+    for (;;) {
+        if (notify->Action == FILE_ACTION_MODIFIED) {
+            ScopedMem<WCHAR> fileName(str::DupN(notify->FileName, notify->FileNameLength / sizeof(WCHAR)));
+            NotifyAboutFile(d, fileName);
+        }
+
+        // step to the next entry if there is one
+        DWORD nextOff = notify->NextEntryOffset;
+        if (!nextOff)
+            break;
+        notify = (FILE_NOTIFY_INFORMATION *)((PBYTE)notify + nextOff);
+    }
+}
+
+static void NotifyAboutFileChanges(HANDLE h)
+{
+    ScopedCritSec cs(&g_threadCritSec);
+    WatchedDir *curr = g_firstDir;
+    while (curr) {
+        if (h == curr->overlapped.hEvent)
+            break;
+        curr = curr->next;
+    }
+    if (!curr) {
+        // I believe this can happen i.e. a dir can be
+        // removed from the list after we received a notification
+        // but before we got here
+        return;
+    }
+    NotifyAboutDirChanged(curr);
+}
+
+static DWORD WINAPI FileWatcherThread(void *param)
+{
+    for (;;) {
+        int nHandles = CollectHandlesToWaitOn();
+        DWORD obj = WaitForMultipleObjects(nHandles, g_fileWatcherHandles, FALSE, INFINITE);
+        int n = (int)(obj - WAIT_OBJECT_0);
+        CrashIf(n < 0 || n >= nHandles);
+        if (n > 0) {
+            NotifyAboutFileChanges(g_fileWatcherHandles[n]);
+        }
+        // otherwise this is g_threadControlHandle which means
+        // that dirs have been added/deleted and we need to
+        // rebuild g_fileWatcherHandles
+    }
+    return 0;
+}
+
+static void StartThreadIfNecessary()
+{
+    if (g_threadHandle)
+        return;
+
+    InitializeCriticalSection(&g_threadCritSec);
+    g_threadControlHandle = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    DWORD threadId;
+    g_threadHandle = CreateThread(NULL, 0, FileWatcherThread, 0, 0, &threadId);
+    SetThreadName(threadId, "FileWatcherThread");
+}
 
 static WatchedDir *FindExistingWatchedDir(const WCHAR *dirPath)
 {
@@ -136,6 +281,9 @@ FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *obs
         delete observer;
         return INVALID_TOKEN;
     }
+
+    StartThreadIfNecessary();
+
     // TODO: if the file is on a network drive we should periodically check
     // it ourselves, because ReadDirectoryChangesW()
     // doesn't work in that case
@@ -194,6 +342,10 @@ void FileWatcherUnsubscribe(FileWatcherToken token)
 {
     if (INVALID_TOKEN == token)
         return;
+    CrashIf(!g_threadHandle);
+
+    ScopedCritSec cs(&g_threadCritSec);
+
     WatchedFile *wf = FindByToken(token);
     if (!wf)
         return;
