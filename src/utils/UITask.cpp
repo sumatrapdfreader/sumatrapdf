@@ -8,6 +8,21 @@
 #define NOLOG 1
 #include "DebugLog.h"
 
+class UITaskFunc : public UITask {
+    UITaskFuncPtr func;
+    void *        arg;
+public:
+    UITaskFunc(UITaskFuncPtr func, void *arg) : func(func), arg(arg) {
+        name = "UITaskFunc";
+    }
+
+    virtual ~UITaskFunc() {}
+
+    virtual void Execute() {
+        func(arg);
+    }
+};
+
 namespace uitask {
 
 static HWND  gTaskDispatchHwnd;
@@ -55,6 +70,13 @@ void Post(UITask *task)
     CrashIf(!task);
     lf("posting %s", task->name);
     PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)task);
+}
+
+// arg can be NULL
+void Post(UITaskFuncPtr func, void *arg)
+{
+    CrashIf(!func);
+    Post(new UITaskFunc(func, arg));
 }
 
 }

@@ -18,6 +18,8 @@ public:
     virtual void Execute() = 0;
 };
 
+typedef void (*UITaskFuncPtr)(void *arg);
+
 namespace uitask {
 
 // Call Initialize() at program startup and Destroy() at the end
@@ -26,8 +28,9 @@ void    Destroy();
 
 // Can be called from any thread. Queues the task to be executed
 // as soon as possible on ui thread.
-void    Post(UITask *task);
+void    Post(UITask *);
 
+void    Post(UITaskFuncPtr, void *arg);
 }
 
 #endif
