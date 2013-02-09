@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8980179760b4c25787144c9d250e06e6b9ca2752
+8635056a6d0c2ca37ff623f1df73fc5b40fdf972
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -219,6 +219,7 @@ fy-nl:Tebek\tAlt+<-
 ga:&Siar\tAlt+Saighead Ar Clé
 gl:&Atrás\tAlt+Flecha esquerda
 he:חזור\tAlt+<-
+hi:&वापस\t Alt+बायाँ तीर
 hr:Natrag\tAlt+<-
 hu:Ugrás vissza\tAlt+<-
 id:Kembali\tAlt+<-
@@ -276,6 +277,7 @@ fr:Comme un livre\tCtrl+8
 ga:&Leabhar-amharc\tCtrl+8
 gl:Vista de &libro\tCtrl+8
 he:תצוגת ספר\tCtrl+8
+hi:&पुस्तक के रुप में देखें\tCtrl+8
 hr:&Knjiški pregled\tCtrl+8
 hu:&Könyv-mód (oldalpár címlappal)\tCtrl+8
 id:Tampilan &Buku\tCtrl+8
@@ -397,6 +399,7 @@ fr:&Copier la sélection
 ga:&Macasamhlaigh an Roghnúchán
 gl:&Copiar Selección
 he:העתק בחירה
+hi:च&यनित का नक़ल करें
 hr:&Kopiraj obilježeno
 hu:Kijelölés &másolása
 id:&Salin Seleksi
@@ -453,6 +456,7 @@ fy-nl:Kopiearje seleksje\tCtrl+C
 ga:&Macasamhlaigh an Roghnúchán\tCtrl+C
 gl:&Copiar Selección\tCtrl+C
 he:העתק בחירה\tCtrl+C
+hi:च&यनित का नक़ल करें\tCtrl+C
 hr:Kopiraj odabir\tCtrl+C
 hu:Kijelölés másolása\tCtrl+C
 id:Salin Hasil Seleksi\tCtrl+C
@@ -633,6 +637,7 @@ fr:Double page\tCtrl+7
 ga:&Dhá Leathanach\tCtrl+7
 gl:&Dúas páxinas\tCtrl+7
 he:עמוד ממול\tCtrl+7
+hi:&समतल करना\tCtrl+7
 hr:&Dvije stranice\tCtrl+7
 hu:&Oldalpár\tCtrl+7
 id:Meng&hadap\tCtrl+7
@@ -1203,6 +1208,7 @@ fy-nl:&Fergrutting:
 ga:For&mhéadú:
 gl:&Aumento:
 he:הגדלה
+hi:&बङा करना:
 hr:&Uvećanje:
 hu:Nagyítás:
 id:&Pembesaran
@@ -1748,6 +1754,7 @@ fy-nl:&Opsjes...
 ga:&Roghanna...
 gl:&Opcións...
 he:אפשרויות...
+hi:&विकल्पों...
 hr:Mogućnosti...
 hu:&Beállítások...
 id:&Pilihan...
@@ -1807,6 +1814,7 @@ fy-nl:&Wachtwurd:
 ga:&Focal faire:
 gl:&Contrasinal:
 he:סיסמה:
+hi:&पासवर्ड:
 hr:&Lozinka:
 hu:&Jelszó:
 id:&Kata kunci:
@@ -1983,6 +1991,7 @@ fr:Im&primer...
 ga:&Clóbhuail...
 gl:&Imprimir...
 he:הדפס
+hi:&छापें...
 hr:Is&pis...
 hu:&Nyomtatás
 id:&Cetak...
@@ -2037,6 +2046,7 @@ fr:&Imprimer... (Interdit)
 ga:&Clóbhualadh... (diúltaithe)
 gl:&Imprimir... (denegado)
 he:הדפס... (התקבל סירוב)
+hi:&छपाई...(अस्वीकृत)
 hr:&Ispis... (nije dopušteno)
 hu:Nyomtatás... (tiltott)
 id:&Cetak... (ditolak)
@@ -2275,6 +2285,7 @@ fr:&Retirer le document de la liste
 ga:&Bain cáipéis
 gl:&Borrar Documento
 he:שכח מסמך
+hi:दस्तावेज़ को &निकालें
 hr:&Ukloni dokument
 hu:&Eltávolítás a listából
 id:&Hapus Dokumen
@@ -2936,6 +2947,7 @@ fy-nl:(fan %d)
 ga:(as %d)
 gl:(de %d)
 he:(%d מ)
+hi:(का %d)
 hr:(od %d)
 hu:(a %d-ból)
 id:(atau %d)
@@ -2991,6 +3003,7 @@ fr:(page %s)
 ga:(leathanach a %s)
 gl:(páxina %s)
 he:(עמוד %s)
+hi:(पृष्ठ %s)
 hr:(stranica %s)
 hu:(%s. oldal)
 id:(halaman %s)
@@ -3219,6 +3232,7 @@ fr:Ajouter la page %s aux favoris avec un nom (optionnel):
 ga:Cuir leathanach a %s le na ceanáin le ainm (roghnach):
 gl:Engadir páxina %s aos favoritos  cun nome (opcional):
 he:למועדפים בשם %s הוסף עמוד:
+hi:बुकमार्क्स में पृष्ठ %s जोड़ें (वैकल्पिक) नाम के साथ:
 hr:Dodaj stranicu %s u favorite sa (opcijnalno) imenom:
 hu:%s. oldal hozzáadása a kedvencekhez, megnevezéssel (opcionális):
 id:Tambah Halaman %s Ke Favorit Dengan Nama:
@@ -3805,6 +3819,7 @@ fy-nl:Automatysk kontrolearje op &fernijings
 ga:Lorg nuashonruithe go huathoibríoch
 gl:Comprobar actualizacións automáticamente
 he:בדוק אוטומטית לעדכונים
+hi:स्वचालित रूप से &नवीनतम के लिए जाँच
 hr:Provjeravaj &nadogradnje automatski
 hu:&Frissítések automatikus keresése
 id:Periksa &pembaruan secara otomatis
@@ -5002,6 +5017,7 @@ fi:Kopioi &kuva
 fr:Copier l'&image
 ga:Macasamhlaigh &Íomhánna
 he:העתק תמונה
+hi:&छवि नक़ल करें
 hr:Kopiraj Sl&iku
 hu:&Kép másolása
 id:Salin &Gambar
@@ -5052,6 +5068,7 @@ fr:Copier l'adresse du &lien
 ga:Macasamhlaigh seoladh an naisc
 gl:Copar enderezo da ligazón
 he:העתק כתובת קישור
+hi:&लिंक पता नक़ल करें
 hr:Kopiraj adresu &linka
 hu:&Hivatkozás címének másolása
 id:Salin Alamat &Link
@@ -5106,6 +5123,7 @@ fr:Copier le co&mmentaire
 ga:Macasamhlaigh an nóta tráchta
 gl:Copiar Co&mentario
 he:העתק הערה
+hi:&टिप्पणी नक़ल करें
 hr:Kopiraj ko&mentar
 hu:Me&gjegyzés másolása
 id:Salin &Komentar
@@ -5670,6 +5688,7 @@ fy-nl:Standert &Zoom:
 ga:Formhéadú réamhshocraithe:
 gl:Aumento por defecto:
 he:זום ברירת ברירת מחדל:
+hi:डिफ़ॉल्ट पृष्ठ &आकार:
 hr:Pretpostavljeno &uvećanje:
 hu:Alap nagyítás:
 id:Pembesaran &Standar
@@ -6382,6 +6401,7 @@ fr:Fa&voris
 ga:Ce&anáin
 gl:F&avoritos
 he:מועדפים
+hi:&पसंदीदा
 hr:F&avoriti
 hu:&Kedvencek
 id:F&avorit
@@ -8027,6 +8047,7 @@ fr:Texte trouvé page %s (suivant)
 ga:Aimsíodh téacs ag lch a %s (arís)
 gl:Atopado texto na páxina %s (de novo)
 he:טקסט נמצא בעמוד %s (שוב)
+hi:पाठ पृष्ठ %s पर पाया गया ( फिर से )
 hr:Tekst pronađen na stranici %s (opet)
 hu:Találat a(z) %s. oldalon (ismét)
 id:Teks ditemukan pada halaman %s (lagi)
@@ -8079,6 +8100,7 @@ fr:Documents lus fréquemment
 ga:Léite Go Minic
 gl:Lido decote
 he:נקרא תכופות
+hi:अक्सर पढ़ें जाने वाले
 hr:Najčešće čitano
 hu:Leggyakrabban olvasott fájlok
 id:Yang Sering Dibaca
@@ -8377,6 +8399,7 @@ fr:Fichiers-images (*.%s)
 ga:Comhaid íomhánna (*.%s)
 gl:Ficheiros de imaxe (*.%s)
 he:קבצי תמונה (*.%s)
+hi:छवि फ़ाइलें (*.%s)
 hr:Slikovne datoteke (*.%s)
 hu:Képfájlok (*.%s)
 id:Berkas Gambar (*.%s)
@@ -8815,6 +8838,7 @@ fy-nl:Mobi-bestannen
 ga:Cáipéisí Mobi
 gl:Documentos Mobi
 he:Mobi מסמכי
+hi:Mobi दस्तावेज़
 hr:Mobi dokumenti
 hu:Mobi fájlok
 id:Dokumen Mobi
@@ -9060,6 +9084,7 @@ fy-nl:Gjin sykresultaat fûn
 ga:Níor aimsíodh comhionanna
 gl:Non se atoparon coincidencias
 he:לא נמצאו התאמות
+hi:कोई मिलान नहीं मिला
 hr:Pojam nije pronađen
 hu:Nem található a dokumentumban
 id:Tidak ditemukan kesamaan
@@ -9118,6 +9143,7 @@ fr:Aucun résultat trouvé autour de la ligne %u dans le fichier %s
 ga:Níor aimsíodh toradh idir líne %u sa chomhad %s
 gl:Non se atopou resultado arredor da liña %u no ficheiro %s
 he:לא נמצאה תוצאה בסביבות שורה %u בקובץ %s
+hi:रेखा %u के आसपास फ़ाइल %s में कोई परिणाम नहीं मिला
 hr:Nema rezultata oko %u. retka u datoteci %s
 hu:Nincs találat a %u. sor körül ebben a fájlban: %s
 id:Tidak ditemukan hasil pada baris %u di dalam berkas %s
@@ -9173,6 +9199,7 @@ fy-nl:Gjin syngronisaasjebestân fûn
 ga:Níor aimsíodh comhad comhaimseartha
 gl:Non se atopou ficheiro de sincronización
 he:לא נמצא קובץ סנכרון
+hi:कोई तुल्यकालन फाइल नहीं मिला
 hr:Datoteka usklađivanja nije pronađena
 hu:Nem található szinkronizációs fájl
 id:Tidak ada berkas sinkronisasi ditemukan
@@ -9231,6 +9258,7 @@ fy-nl:Gjin syngronisaasjeynformaasje beskikber
 ga:Níl faisnéis chomhaimseartha ag an suíomh seo
 gl:Non hai datos de sincronización nesta posición
 he:לא נמצא מידע סנכרון במקום זה
+hi:इस स्थिति में कोई तुल्यकालन जानकारी नहीं है
 hr:Nema podatka o usklađenosti na ovom mjestu
 hu:Nem található szinkronizálási információ az adott pozícióhoz
 id:Tidak ada informasi sinkronisasi pada lokasi ini
@@ -9475,6 +9503,7 @@ fy-nl:Iepenje mei PDF-XChange
 ga:Oscail &i PDF-XChange
 gl:Abrir no PDF-XChange
 he:PDF-XChange פתח בקורא
+hi:पीडीएफ &Xchange में खोलें
 hr:Otvori u programu PDF-XChange
 hu:Megnyitás PDF-XChangeben
 id:Buka di PDF-&XChange
@@ -9586,6 +9615,7 @@ fy-nl:Iepenje mei &Adobe Reader
 ga:Oscail in &Adobe Reader
 gl:Abrir no &Adobe Reader
 he:Adobe פתח בקורא
+hi:&एडोब रीडर में खोलें
 hr:Otvori u programu &Adobe Reader
 hu:Megnyitás &Adobe Acrobat-ban
 id:Buka di &Adobe Reader
@@ -9644,6 +9674,7 @@ fy-nl:Iepenje mei &Foxit Reader
 ga:Oscail i &Foxit Reader
 gl:Abrir no &Foxit Reader
 he:Foxit פתח בקורא
+hi:&Foxit रीडर में खोलें
 hr:Otvori u programu &Foxit Reader
 hu:Megnyitás &Foxit Readerben
 id:Buka di &Foxit Reader
@@ -9702,6 +9733,7 @@ fy-nl:Iepenje mei Microsoft HTML Help
 ga:Oscail i &Microsoft HTML Help
 gl:Abrir no Microsoft HTML Help
 he:Microsoft HTML Help פתח בקורא
+hi:Microsoft HTML मदद में खोलें
 hr:Otvori u programu Microsoft HTML Help
 hu:Megnyitás Microsoft HTML Helpben
 id:Buka dengan Microsoft HTML Help
@@ -9813,6 +9845,7 @@ fr:P&ropriétés
 ga:Ai&ríonna
 gl:P&ropiedades
 he:תכונות
+hi:&गुण
 hr:&Svojstva
 hu:&Tulajdonságok
 id:P&roperti
@@ -9868,6 +9901,7 @@ fy-nl:E&igenskippen...\tCtrl+D
 ga:Ai&ríonna\tCtrl+D
 gl:P&ropiedades\tCtrl+D
 he:תכונות...\tCtrl+D
+hi:&गुण\tCtrl+D
 hr:S&vojstva...\tCtrl+D
 hu:&Tulajdonságok\tCtrl+D
 id:P&roperti\tCtrl+D
@@ -9925,6 +9959,7 @@ fy-nl:PDF-bestân
 ga:Cáipéis PDF
 gl:Documento PDF
 he:PDF מסמך
+hi:पीडीएफ दस्तावेज़
 hr:PDF dokument
 hu:PDF dokumentum
 id:Dokumen PDF
@@ -9977,6 +10012,7 @@ fa:PDF بهینه سازی
 fr:Optimisations PDF
 ga:Optimisations PDF
 he:אופטימיזציות PDF:
+hi:पीडीएफ अनुकूलन:
 hr:PDF optimizacija:
 hu:PDF optimalizálás:
 id:Optimisasi PDF
@@ -10027,6 +10063,7 @@ fy-nl:PDF-makker:
 ga:Déantasóir PDF:
 gl:Productor do PDF:
 he:PDF מפיק:
+hi:पीडीएफ निर्माता:
 hr:Proizvođač PDF-a:
 hu:PDF-et létrehozta:
 id:Pembuat PDF:
@@ -10083,6 +10120,7 @@ fy-nl:PDF-ferzje:
 ga:Leagan PDF:
 gl:Versión PDF:
 he:PDF מהדורת:
+hi:पीडीएफ संस्करण:
 hr:Inačica PDF-a:
 hu:PDF verzió:
 id:Versi PDF:
@@ -10141,6 +10179,7 @@ fy-nl:PDF-bestannen
 ga:Cáipéisí PDF
 gl:Documentos PDF
 he:PDF מסמך
+hi:पीडीएफ दस्तावेजों
 hr:PDF dokumenti
 hu:PDF fájlok
 id:Dokumen PDF
@@ -10265,6 +10304,7 @@ fr:Page %s
 ga:Leathanach %s
 gl:Páxina %s
 he:עמוד %s
+hi:पृष्ठ %s
 hr:Stranica %s
 hu:%s. oldal
 id:Halaman %s
@@ -10557,6 +10597,7 @@ fy-nl:In amerijke asjobleaft - werjaan...
 ga:Fan le do thoil - tá sé á chóiriú...
 gl:Agarde por favor - compoñendo...
 he:אנא המתן – מבצע...
+hi:कृपया प्रतीक्षा करें - प्रतिपादन...
 hr:Molim pričekajte, iscrtavam...
 hu:Feldolgozás, kérem várjon
 id:Harap tunggu - sedang proses rendering...
@@ -10612,6 +10653,7 @@ fr:Documents Postscript
 ga:Cáipéisí Postscript
 gl:Documentos Postscript
 he:מסמכי פוסטקריפט
+hi:अनुलेख दस्तावेजों
 hr:Postscript dokumenti
 hu:Postscript fájlok
 id:Dokumen Postscript
@@ -10665,6 +10707,7 @@ fr:P&résentation\tCtrl+L
 ga:Cur i láthair\tCtrl+L
 gl:Pr&esentación\tCtrl+L
 he:הצגה\tCtrl+L
+hi:&प्रस्तुति\tCtrl+L
 hr:Pr&ezentacija\tCtrl+L
 hu:Bemutató\tCtrl+L
 id:Presentasi\tCtrl+L
@@ -10786,6 +10829,7 @@ fr:Imprimer
 ga:Clóbhuail
 gl:Imprimir
 he:הדפסה
+hi:छापें
 hr:Ispis
 hu:Nyomtatás
 id:Cetak
@@ -10987,6 +11031,7 @@ et:Printimine on pooleli.
 fa:در حال چاپ شدن.
 fr:Impression en cours
 he:נשלח להדפסה
+hi:छपाई में प्रगति.
 hr:Ispis u tijeku.
 hu:Nyomtatás folyamatban.
 id:Dalam proses mencetak
@@ -11236,6 +11281,7 @@ fa:تغییر  &نام...\tF2
 fr:Re&nommer...\tF2
 ga:Athainmnigh...\tF2
 he:שנה שם...\tF2
+hi:&नाम बदलें...\tF2
 hr:Preime&novati...\tF2
 hu:Átnevezés...\tF2
 id:&Ganti Nama...\tF2
@@ -13902,6 +13948,7 @@ fy-nl:[Bestân wizige; ferfarskje] %s
 ga:[Athruithe braite; ag athnuachan] %s
 gl:[Cambios detectados; actualizando] %s
 he:[מרענן ; נתגלו שינויים] %s
+hi:[परिवर्तन का पता चला; तरोताज़ा हो रहा है ]%s
 hr:[Dogodila se promjena - osvježavam] %s
 hu:[a file megváltozott; frissítés] %s
 id:[Perubahan terdeteksi; muat ulang] %s
