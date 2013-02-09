@@ -53,11 +53,6 @@ using namespace Gdiplus;
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-/* Define THREAD_BASED_FILEWATCH to use the thread-based implementation of file change detection. */
-#ifndef DISABLE_THREAD_BASED_FILEWATCH
-#define THREAD_BASED_FILEWATCH
-#endif
-
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
 #ifdef DEBUG
@@ -129,10 +124,6 @@ WCHAR *          gPluginURL = NULL; // owned by CommandLineInfo in WinMain
 
 #define AUTO_RELOAD_TIMER_ID        5
 #define AUTO_RELOAD_DELAY_IN_MS     100
-
-#ifndef THREAD_BASED_FILEWATCH
-#define FILEWATCH_DELAY_IN_MS       1000
-#endif
 
 HINSTANCE                    ghinst = NULL;
 
@@ -1495,11 +1486,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     }
 
     if (!win->watcher)
-        win->watcher = new FileWatcher(new FileChangeCallback(win));
-    win->watcher->Init(fullPath);
-#ifdef THREAD_BASED_FILEWATCH
-    win->watcher->StartWatchThread();
-#endif
+        win->watcher = FileWatcherSubscribe(fullPath, new FileChangeCallback(win));
 
     if (gGlobalPrefs.rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->loadedFilePath));
@@ -2512,8 +2499,7 @@ void CloseDocumentInWindow(WindowInfo *win)
     bool wasChm = win->IsChm();
     if (wasChm)
         UnsubclassCanvas(win->hwndCanvas);
-    delete win->watcher;
-    win->watcher = NULL;
+    FileWatcherUnsubscribe(&win->watcher);
     SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
     ClearTocBox(win);
     AbortFinding(win, true);
@@ -5199,32 +5185,12 @@ InitMouseWheelInfo:
     return 0;
 }
 
-#ifndef THREAD_BASED_FILEWATCH
-static void RefreshUpdatedFiles() {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
-        if (win->watcher)
-            win->watcher->CheckForChanges();
-    }
-}
-#endif
-
 static int RunMessageLoop()
 {
     HACCEL accTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
     MSG msg = { 0 };
 
-#ifndef THREAD_BASED_FILEWATCH
-    const UINT_PTR timerID = SetTimer(NULL, -1, FILEWATCH_DELAY_IN_MS, NULL);
-#endif
-
     while (GetMessage(&msg, NULL, 0, 0)) {
-#ifndef THREAD_BASED_FILEWATCH
-        if (NULL == msg.hwnd && WM_TIMER == msg.message && timerID == msg.wParam) {
-            RefreshUpdatedFiles();
-            continue;
-        }
-#endif
         // dispatch the accelerator to the correct window
         WindowInfo *win = FindWindowInfoByHwnd(msg.hwnd);
         HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
@@ -5234,10 +5200,6 @@ static int RunMessageLoop()
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-
-#ifndef THREAD_BASED_FILEWATCH
-    KillTimer(NULL, timerID);
-#endif
 
     return msg.wParam;
 }

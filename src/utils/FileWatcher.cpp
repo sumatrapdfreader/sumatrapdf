@@ -18,6 +18,8 @@ GetOverlappedResult(_In_ HANDLE hFile, _In_ LPOVERLAPPED lpOverlapped, _Out_ LPD
 
 #define INVALID_TOKEN -1
 
+#define FILEWATCH_DELAY_IN_MS       1000
+
 struct WatchedDir {
     WatchedDir * next;
     const WCHAR *dirPath;
@@ -351,16 +353,17 @@ static void RemoveWatchedFile(WatchedFile *wf)
     WakeUpWatcherThread();
 }
 
-void FileWatcherUnsubscribe(FileWatcherToken token)
+void FileWatcherUnsubscribe(FileWatcherToken *token)
 {
-    if (INVALID_TOKEN == token)
+    if (INVALID_TOKEN == *token)
         return;
     CrashIf(!g_threadHandle);
 
     ScopedCritSec cs(&g_threadCritSec);
 
-    WatchedFile *wf = FindByToken(token);
+    WatchedFile *wf = FindByToken(*token);
     CrashIf(!wf);
     RemoveWatchedFile(wf);
+    *token = INVALID_TOKEN;
 }
 

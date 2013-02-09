@@ -5,8 +5,8 @@
 #define WindowInfo_h
 
 #include "DisplayModel.h"
+#include "FileWatch.h"
 
-class FileWatcher;
 class Synchronizer;
 class DoubleBuffer;
 class SelectionOnPage;
@@ -143,7 +143,7 @@ public:
     Vec<StaticLinkInfo> staticLinks;
 
     // file change watcher
-    FileWatcher *   watcher;
+    FileWatcherToken watcher;
 
     bool            fullScreen;
     PresentationMode presentation;

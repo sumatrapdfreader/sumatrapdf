@@ -15,7 +15,7 @@ public:
 typedef int FileWatcherToken;
 
 FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *);
-void             FileWatcherUnsubscribe(FileWatcherToken);
+void             FileWatcherUnsubscribe(FileWatcherToken *);
 
 #endif
 
