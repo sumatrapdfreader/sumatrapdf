@@ -104,13 +104,13 @@ static void StartMonitoringDirForChanges(WatchedDir *wd)
 {
     ReadDirectoryChangesW(
          wd->hDir,
-         wd->buf,                       /* read results buffer */
-         sizeof(wd->buf),               /* length of buffer */
-         FALSE,                         /* monitoring option */
-         FILE_NOTIFY_CHANGE_LAST_WRITE, /* filter conditions */
-         NULL,                          /* bytes returned */
-         &wd->overlapped,               /* overlapped buffer */
-         NULL);                         /* completion routine */
+         wd->buf,                       // read results buffer
+         sizeof(wd->buf),               // length of buffer
+         FALSE,                         // bWatchSubtree
+         FILE_NOTIFY_CHANGE_LAST_WRITE, // filter conditions
+         NULL,                          // bytes returned
+         &wd->overlapped,               // overlapped buffer
+         NULL);                         // completion routine
 }
 
 static void NotifyAboutDirChanged(WatchedDir *wd)
