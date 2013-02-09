@@ -3571,8 +3571,14 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
     if (!win->IsDocLoaded())
         return false;
 
-    bool isPageUp = (VK_PRIOR == key);
-    isPageUp |= (isCtrl && (VK_UP == key));
+    // some of the chm key bindings are different than the rest and we
+    // need to make sure we don't break them
+    bool isChm = win->IsChm();
+
+    bool isPageUp = (isCtrl && (VK_UP == key));
+    if (!isChm)
+        isPageUp |= (VK_PRIOR == key);
+
     if (isPageUp) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         if (win->dm->ZoomVirtual() != ZOOM_FIT_CONTENT)
@@ -3582,8 +3588,9 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         return true;
     }
 
-    bool isPageDown = (VK_NEXT == key);
-    isPageDown |= (isCtrl && (VK_DOWN == key));
+    bool isPageDown = (isCtrl && (VK_DOWN == key));
+    if (!isChm)
+        isPageDown |= (VK_NEXT == key);
     if (isPageDown) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
         if (win->dm->ZoomVirtual() != ZOOM_FIT_CONTENT)
@@ -3593,7 +3600,7 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
         return true;
     }
 
-    if (win->IsChm()) {
+    if (isChm) {
         if (ChmForwardKey(key)) {
             win->dm->AsChmEngine()->PassUIMsg(WM_KEYDOWN, key, lparam);
             return true;
