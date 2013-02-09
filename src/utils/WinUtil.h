@@ -26,8 +26,7 @@
 
 HMODULE SafeLoadLibrary(const WCHAR *dllName);
 FARPROC LoadDllFunc(WCHAR *dllName, const char *funcName);
-BOOL    SafeCloseHandle(HANDLE h);
-BOOL    SafeDestroyWindow(HWND hwnd);
+BOOL    SafeCloseHandle(HANDLE *h);
 BOOL    SafeDestroyWindow(HWND *hwnd);
 void    FillWndClassEx(WNDCLASSEX& wcex, HINSTANCE hInstance, const WCHAR *clsName, WNDPROC wndproc);
 

@@ -160,8 +160,8 @@ static void UninstallCrashHandler()
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, 1000); // 1 sec
 
-    CloseHandle(gDumpThread);
-    SafeCloseHandle(gDumpEvent);
+    SafeCloseHandle(&gDumpThread);
+    SafeCloseHandle(&gDumpEvent);
 }
 
 #include "Regress00.cpp"

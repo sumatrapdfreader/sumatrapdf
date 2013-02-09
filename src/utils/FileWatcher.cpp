@@ -267,10 +267,8 @@ static void DeleteWatchedDir(WatchedDir *wd)
             LogLastError();
     }
 
-    SafeCloseHandle(wd->overlapped.hEvent);
-    wd->overlapped.hEvent = NULL;
-
-    SafeCloseHandle(wd->hDir);
+    SafeCloseHandle(&wd->overlapped.hEvent);
+    SafeCloseHandle(&wd->hDir);
 
     free((void*)wd->dirPath);
     free(wd);

@@ -1000,22 +1000,17 @@ double GetProcessRunningTime()
 
 // This is just to satisfy /analyze. CloseHandle(NULL) works perfectly fine
 // but /analyze complains anyway
-BOOL SafeCloseHandle(HANDLE h)
+BOOL SafeCloseHandle(HANDLE *h)
 {
-    if (!h)
+    if (!*h)
         return TRUE;
-    return CloseHandle(h);
+    BOOL ok = CloseHandle(*h);
+    *h = NULL;
+    return ok;
 }
 
 // This is just to satisfy /analyze. DestroyWindow(NULL) works perfectly fine
 // but /analyze complains anyway
-BOOL SafeDestroyWindow(HWND hwnd)
-{
-    if (!hwnd)
-        return TRUE;
-    return DestroyWindow(hwnd);
-}
-
 BOOL SafeDestroyWindow(HWND *hwnd)
 {
     if (!hwnd || !*hwnd)
@@ -1047,7 +1042,7 @@ void RunNonElevated(const WCHAR *exePath)
     cmd.Set(str::Format(L"\"%s\" \"%s\"", explorerPath.Get(), exePath));
 Run:
     HANDLE h = LaunchProcess(cmd ? cmd : exePath);
-    SafeCloseHandle(h);
+    SafeCloseHandle(&h);
 }
 
 // Note: MS_ENH_RSA_AES_PROV_XP isn't defined in the SDK shipping with VS2008
