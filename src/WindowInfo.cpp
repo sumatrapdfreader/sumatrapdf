@@ -5,7 +5,6 @@
 #include "WindowInfo.h"
 
 #include "FileUtil.h"
-#include "FileWatch.h"
 #include "Notifications.h"
 #include "PdfSync.h"
 #include "Print.h"
@@ -48,9 +47,9 @@ WindowInfo::WindowInfo(HWND hwnd) :
 WindowInfo::~WindowInfo()
 {
     FinishStressTest(this);
+    CrashIf(watcher);
 
     delete pdfsync;
-    delete watcher;
     delete linkHandler;
     delete buffer;
     delete selectionOnPage;

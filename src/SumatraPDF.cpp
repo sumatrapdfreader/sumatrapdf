@@ -1,6 +1,8 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// #define TEST_NEW_FILEWATCHER
+
 #include "BaseUtil.h"
 #include "SumatraPDF.h"
 #include <malloc.h>
@@ -19,7 +21,11 @@
 #include "FileModifications.h"
 #include "Favorites.h"
 #include "FileUtil.h"
+#ifndef TEST_NEW_FILEWATCHER
 #include "FileWatch.h"
+#else
+#include "FileWatcher.h"
+#endif
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HttpUtil.h"
@@ -1094,7 +1100,7 @@ Error:
         win->dm->SetPresentationMode(true);
 
     t.Stop();
-    dbglog::LogF("LoadDocIntoWindow() time: %.2f", t.GetTimeInMs());
+    lf("LoadDocIntoWindow() time: %.2f", t.GetTimeInMs());
 
     return true;
 }
@@ -1267,6 +1273,9 @@ WindowInfo *CreateAndShowWindowInfo()
 
 static void DeleteWindowInfo(WindowInfo *win)
 {
+    FileWatcherUnsubscribe(win->watcher);
+    win->watcher = NULL;
+
     DeletePropertiesWindow(win->hwndFrame);
     gWindows.Remove(win);
 
@@ -1284,8 +1293,6 @@ class FileChangeCallback : public UITask, public FileChangeObserver
     WindowInfo *win;
 public:
     FileChangeCallback(WindowInfo *win) : win(win) { }
-    virtual ~FileChangeCallback() {
-    }
 
     virtual void OnFileChanged() {
         // We cannot call win->Reload directly as it could cause race conditions
@@ -1387,6 +1394,7 @@ static WindowInfo* LoadDocumentNew(LoadArgs& args)
 // file (and showing progress/load failures in topmost window) and placing
 // the loaded document in the window (either by replacing document in existing
 // window or creating a new window for the document)
+// TODO: loading a document should never be slow enough to require async loading
 static WindowInfo* LoadDocumentOld(LoadArgs& args)
 {
     if (gCrashOnOpen)
@@ -1485,8 +1493,8 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return win;
     }
 
-    if (!win->watcher)
-        win->watcher = FileWatcherSubscribe(fullPath, new FileChangeCallback(win));
+    FileWatcherUnsubscribe(win->watcher);
+    win->watcher = FileWatcherSubscribe(fullPath, new FileChangeCallback(win));
 
     if (gGlobalPrefs.rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->loadedFilePath));
@@ -2499,7 +2507,8 @@ void CloseDocumentInWindow(WindowInfo *win)
     bool wasChm = win->IsChm();
     if (wasChm)
         UnsubclassCanvas(win->hwndCanvas);
-    FileWatcherUnsubscribe(&win->watcher);
+    FileWatcherUnsubscribe(win->watcher);
+    win->watcher = NULL;
     SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
     ClearTocBox(win);
     AbortFinding(win, true);
@@ -2524,7 +2533,7 @@ void CloseDocumentInWindow(WindowInfo *win)
     UpdateFindbox(win);
     SetFocus(win->hwndFrame);
     t.Stop();
-    dbglog::LogF("CloseDocumentInWindow() time: %.2f", t.GetTimeInMs());
+    lf("CloseDocumentInWindow() time: %.2f", t.GetTimeInMs());
 
 #ifdef DEBUG
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039

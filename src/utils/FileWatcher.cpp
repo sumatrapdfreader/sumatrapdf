@@ -16,13 +16,9 @@ GetOverlappedResult(_In_ HANDLE hFile, _In_ LPOVERLAPPED lpOverlapped, _Out_ LPD
 }
 #endif
 
-#define INVALID_TOKEN -1
-
-#define FILEWATCH_DELAY_IN_MS       1000
-
 struct WatchedDir {
     WatchedDir * next;
-    const WCHAR *dirPath;
+    WCHAR *      dirPath;
     HANDLE       hDir;
     OVERLAPPED   overlapped;
     // a double buffer where the Windows API ReadDirectoryChanges will store the list
@@ -34,12 +30,10 @@ struct WatchedDir {
 struct WatchedFile {
     WatchedFile *           next;
     WatchedDir *            watchedDir;
-    const WCHAR *           filePath;
+    WCHAR *                 filePath;
     FileChangeObserver *    observer;
-    FileWatcherToken        token;
 };
 
-static int              g_currentToken = 0;
 static HANDLE           g_threadHandle = 0;
 // used to wake-up file wather thread to notify about
 // added/removed files to be watched
@@ -197,20 +191,9 @@ static WatchedDir *FindExistingWatchedDir(const WCHAR *dirPath)
     return NULL;
 }
 
-static WatchedFile *FindByToken(FileWatcherToken token)
-{
-    WatchedFile *curr = g_firstFile;
-    while (curr) {
-        if (curr->token == token)
-            return curr;
-        curr = curr->next;
-    }
-    return NULL;
-}
-
 static void DeleteWatchedDir(WatchedDir *wd)
 {
-    free((void*)wd->dirPath);
+    free(wd->dirPath);
     SafeCloseHandle(wd->hDir);
     free(wd);
 }
@@ -263,7 +246,6 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
     wf->filePath = str::Dup(filePath);
     wf->watchedDir = wd;
     wf->observer = observer;
-    wf->token = g_currentToken++;
     wf->next = g_firstFile;
     g_firstFile = wf;
     return wf;
@@ -271,7 +253,7 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
 
 static void DeleteWatchedFile(WatchedFile *wf)
 {
-    free((void*)wf->filePath);
+    free(wf->filePath);
     delete wf->observer;
     free(wf);
 }
@@ -290,7 +272,7 @@ FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *obs
 
     if (!file::Exists(path)) {
         delete observer;
-        return INVALID_TOKEN;
+        return NULL;
     }
 
     StartThreadIfNecessary();
@@ -302,7 +284,7 @@ FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *obs
     // doesn't work in that case
     WatchedFile *wf = NewWatchedFile(path, observer);
     WakeUpWatcherThread();
-    return wf->token;
+    return wf;
 }
 
 static bool IsWatchedDirReferenced(WatchedDir *wd)
@@ -353,17 +335,13 @@ static void RemoveWatchedFile(WatchedFile *wf)
     WakeUpWatcherThread();
 }
 
-void FileWatcherUnsubscribe(FileWatcherToken *token)
+void FileWatcherUnsubscribe(FileWatcherToken token)
 {
-    if (INVALID_TOKEN == *token)
+    if (!token)
         return;
     CrashIf(!g_threadHandle);
 
     ScopedCritSec cs(&g_threadCritSec);
 
-    WatchedFile *wf = FindByToken(*token);
-    CrashIf(!wf);
-    RemoveWatchedFile(wf);
-    *token = INVALID_TOKEN;
+    RemoveWatchedFile(token);
 }
-

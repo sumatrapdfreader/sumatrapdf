@@ -12,10 +12,10 @@ public:
     virtual void OnFileChanged() = 0;
 };
 
-typedef int FileWatcherToken;
+struct WatchedFile;
+typedef WatchedFile* FileWatcherToken;
 
-FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *);
-void             FileWatcherUnsubscribe(FileWatcherToken *);
+FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *observer);
+void             FileWatcherUnsubscribe(FileWatcherToken token);
 
 #endif
-

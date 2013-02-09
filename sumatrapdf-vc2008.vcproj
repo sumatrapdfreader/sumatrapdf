@@ -229,6 +229,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\FileWatcher.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\FileWatcher.h"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\GdiPlusUtil.cpp"
 					>
 				</File>

@@ -244,16 +244,12 @@ FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *obs
     FileWatcher *watcher = new FileWatcher(observer);
     watcher->Init(path);
     watcher->StartWatchThread();
-    return (void*)watcher;
+    return (FileWatcherToken)watcher;
 }
 
-void FileWatcherUnsubscribe(FileWatcherToken *token)
+void FileWatcherUnsubscribe(FileWatcherToken token)
 {
-    if (!*token)
-        return;
-    FileWatcher *watcher = reinterpret_cast<FileWatcher*>(token);
-    delete watcher;
-    *token = NULL;
+    delete (FileWatcher *)token;
 }
 
 }

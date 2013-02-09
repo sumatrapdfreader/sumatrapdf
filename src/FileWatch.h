@@ -4,29 +4,20 @@
 #ifndef FileWatch_h
 #define FileWatch_h
 
-//#define USE_NEW_FW
-
-#ifndef USE_NEW_FW
 class FileChangeObserver {
 public:
     virtual ~FileChangeObserver() { }
     virtual void OnFileChanged() = 0;
 };
-#endif
 
-#ifdef USE_NEW_FW
-#include "FileWatcher.h"
-#else
+typedef struct WatchedFile* FileWatcherToken;
+
 namespace oldfw {
 
-typedef void *FileWatcherToken;
-
-FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *);
-void             FileWatcherUnsubscribe(FileWatcherToken *);
+FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *observer);
+void             FileWatcherUnsubscribe(FileWatcherToken token);
 }
 
 using namespace oldfw;
-
-#endif  // !USE_NEW_FW
 
 #endif
