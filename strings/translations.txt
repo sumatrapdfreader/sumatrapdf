@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8635056a6d0c2ca37ff623f1df73fc5b40fdf972
+d6b33c84919ac3766c139384e891a6f480ce7126
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1631,6 +1631,7 @@ fr:&Ouvrir le document
 ga:&Oscail Cáipéis
 gl:Abrir Documento
 he:פתח מסמך
+hi:दस्तावेज़ &खोलें
 hr:&Otvori dokument
 hu:&Fájl megnyitása
 id:Buka D&okumen
@@ -2171,6 +2172,7 @@ fr:&Se rappeler le mot de passe pour ce document
 ga:&Cuimhnigh ar an bhfocal faire don cháipéis seo
 gl:&Lembrar o contrasinal para este documento
 he:אנא זכור את הסיסמא למסמך זה
+hi:इस दस्तावेज़ के लिए पासवर्ड &याद रखें
 hr:&Zapamti lozinku za ovaj dokument
 hu:Jelszó megjegyzése a dokumentumhoz
 id:&Ingat kata sandi untuk dokumen ini
@@ -2229,6 +2231,7 @@ fy-nl:&Bewarje dizze ynstellingen foar elk dokumint
 ga:Cuimhnigh ar na socruithe seo do gach cáipéis
 gl:&Lembrar estes axustes para cada documento
 he:זכור הגדרות אלו לכל מסמך
+hi:प्रत्येक दस्तावेज़ के लिए इन सेटिंग्स को &याद रखें
 hr:&Upamti ove postavke za svaki pojedini dokument
 hu:Eltérő nézet-beállítások megjegyzése dokumentumonként
 id:&Ingat pengaturan ini untuk setiap dokumen
@@ -2338,6 +2341,7 @@ fr:&Enregistrer sous...
 ga:&Cuir i dtaisce mar...
 gl:&Gardar como...
 he:בשמור בשם
+hi:सहेजें &जैसे...
 hr:&Spremi kao...
 hu:&Mentés másként...
 id:Si&mpan Sebagai...
@@ -2462,6 +2466,7 @@ fy-nl:&Ynstellingen
 ga:&Socruithe
 gl:&Axustes
 he:הגדרות
+hi:&सेटिंग्स
 hr:&Postavke
 hu:&Beállítások
 id:&Pengaturan
@@ -2519,6 +2524,7 @@ fr:&Réduire les pages à la zone d'impression (si nécessaire)
 ga:&Crap na leathanaigh go limistéar inchlóbhuailte (más gá)
 gl:&Reducir páxinas á área imprimible (se for necesario)
 he:כווץ עמודים עד גודל אזור ההדפסה
+hi:पृष्ठों को छपाई योग्य क्षेत्र &में सिकोड़ें (यदि आवश्यक हो)
 hr:Smanji stranice do područja za ispis (ako je potrebno)
 hu:Oldalak széleinek levágása a nyomtatható méretre
 id:&Perkecil halaman ke area cetakan (jika dibutuhkan)
@@ -2573,6 +2579,7 @@ fr:Une &seule page\tCtrl+6
 ga:&Leathanach amháin\tCtrl+6
 gl:&Páxina única\tCtrl+6
 he:עמוד יחיד\tCtrl+6
+hi:&एकल पृष्ठ\tCtrl+6
 hr:&Jedna stranica\tCtrl+6
 hu:&Egyoldalas\tCtrl+6
 id:Halaman &Tunggal\tCtrl+6
@@ -4689,6 +4696,7 @@ ar:التوافق
 az:Uyğunluq
 bg:Съвместимост
 br:Compatibilidade
+bs:Kompatibilnost
 ca-xv:Compatibilitat
 ca:Compatibilitat
 cn:兼容性
@@ -6746,6 +6754,7 @@ ar:تهيئة الويب السريعة
 az:Sürətli veb-görüntü
 bg:Бърз Web изглед
 br:Visualização rápida na Web
+bs:Brzi web pregled
 ca-xv:Visualització ràpida de web
 ca:Visualització ràpida de web
 cn:快速WEB查看(线性PDF)
@@ -6845,6 +6854,7 @@ ar:ملفات FictionBook
 az:FictionBook sənədləri
 bg:Документи FictionBook
 br:Documentos FictionBook
+bs:FictionBook dokumenti
 ca-xv:Documents FictionBook
 ca:Documents FictionBook
 cn:小说文档
@@ -7938,6 +7948,7 @@ fi:Muotoillaan kirjaa... %d sivua
 fr:Mise en forme du livre... %d pages
 ga:Ag formáidiú an leabhair... %d leathanach
 he:מעצב את הספר... %d עמודים
+hi:किताब स्वरूपित हो रहा... %d पृष्ठ
 hr:Oblikovanje knjige... %d stranica
 hu:Könyv formázása... %d oldal
 id:Memformat buku... %d halaman
@@ -9791,6 +9802,7 @@ fy-nl:Iepenje mei Microsoft XPS-Viewer
 ga:Oscail i &Microsoft XPS-Viewer
 gl:Abrir no Microsoft XPS-Viewer
 he:Microsoft XPS-Viewer פתח בקורא
+hi:Microsoft XPS दर्शक में खोलें
 hr:Otvori u programu Microsoft XPS-Viewer
 hu:Megnyitás Microsoft XPS-Viewerben
 id:Buka dengan Microsoft XPS-Viewer
@@ -9999,6 +10011,7 @@ ar:تحسينات البي دي إف
 az:PDF optimallaşdırması:
 bg:PDF оптимизации:
 br:Otimizações PDF:
+bs:PDF optimizacije:
 ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
 cn:PDF 优化：
@@ -10418,6 +10431,7 @@ fy-nl:Sidenûmer %u bestiet net
 ga:Níl an uimhir leathanaigh %u ann
 gl:Non existe a páxina %u
 he:לא קיים %u עמוד מספר
+hi:%u पृष्ठ संख्या विद्यमान नहीं है
 hr:Stranica %u ne postoji
 hu:A(z) %u oldalszám nem létezik
 id:Halaman %u tidak tersedia
@@ -10865,6 +10879,7 @@ ar:اطبع كصورة (يحتاج إلى ذاكرة أكثر)
 az:&Şəkil kimi çap et (əlavə yaddaş tələb edir)
 bg:Отпечатай като изображение (изисква повече памет)
 br:Imprimir como &imagem (requer mais memória)
+bs:Štampaj kao &sliku (zahtjeva više memorije)
 ca-xv:Imprimeix com a &imatge (requereix més memòria)
 ca:Imprimeix com a &imatge (requereix més memòria)
 cn:打印为图像(需要更多的内存)(&I)
@@ -10880,6 +10895,7 @@ fi:Tulosta &kuvana (kuluttaa enemmän muistia)
 fr:Imprimer en tant qu'&image (demande plus de mémoire)
 ga:Priontáil mar &íomhá (Tá gá le níos mó cuimhne)
 he:הדפס כתמונה (צורך יותר זכרון)
+hi:छवि के रूप में छापें (अधिक स्मृति की आवश्यकता होगी)
 hr:Ispiši kao sl&iku (zahtijeva više memorija)
 hu:Nyomtatás képként (több memóriát igényel)
 id:Cetak Sebagai Gambar (butuh banyak memori)
@@ -10984,6 +11000,7 @@ fr:Il n'y a pas d'imprimante de ce nom
 ga:Níl clóire leis an ainm sin ann
 gl:A impresora co nome indicado non existe
 he:אין מדפסת בשם שניתן
+hi:दिए गए नाम का प्रिंटर मौजूद नहीं है
 hr:Ne postoji printer sa zadanim imenom
 hu:Nem található nyomtató a megadott néven
 id:Pencetak dengan nama tersebut tidak ada
@@ -11019,6 +11036,7 @@ ar:جاري الطباعة.
 az:Çap davam edir.
 bg:Печатане...
 br:Imprimindo...
+bs:Štampanje u napretku.
 ca-xv:La impresió és en procés.
 ca:La impressio és en procés.
 cn:正在打印
@@ -11057,6 +11075,7 @@ ar:الطباعة قيد التنفيذ. هل تريد التوقف والخرو
 az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
 bg:Печатането все още е на ход. Сигурни ли сте, че искате принудително да го откажете и да излезете?
 br:Ainda imprimindo... Interromper e sair?
+bs:Štampanje je još uvijek u toku. Prekini i izađi?
 ca-xv:La impressió encara és en procés. Voleu aturar i sortir?
 ca:La impressió encara està en procés. Voleu aturar i sortir?
 cn:仍然在打印。中断并放弃？
@@ -11069,6 +11088,7 @@ et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
 fa:در حال چاپ شدن. انصراف و خروج؟
 fr:Impression toujours en cours. Annuler et quitter ?
 he:הדפסה עדיין לא הסתיימה. להפסיק פעולה ולצאת?
+hi:छपाई अभी भी प्रगति पर है | रद्द किजिये और दें छोड़ दें ?
 hr:Ispis u tijeku. Prekinite i izađite?
 hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
 id:Sedang dalam proses mencetak. Batalkan dan keluar?
@@ -11111,6 +11131,7 @@ fr:Impression toujours en cours. Annuler et recommencer ?
 ga:Tá sé fós ag clóbhualadh. Tobscoir agus tosaigh arís?
 gl:A impresión está aínda en curso. Detela e recomezar?
 he:הדפסה בתהליך. לבטל ולהתחיל מחדש?
+hi:छपाई अभी भी प्रगति में है | बन्द करें और फिर से शुरू करें?
 hr:Ispis je još u tijeku. Prekini i započni ponovno?
 hu:A nyomtatás még folyamatban van. Megszakítás és újrakezdés?
 id:Proses pencetakan sedang dilaksanakan. Gagalkan dan ulangi lagi?
@@ -11163,6 +11184,7 @@ fr:Impression de la page %d sur %d...
 ga:Ag clóbhualadh leathanach a %d as %d...
 gl:Imprimir páxina %d de %d...
 he:מדפיס עמוד %d מתוך %d...
+hi:पृष्ठ %d %d का छप रही है...
 hr:Ispis stranice %d od %d...
 hu:%d. oldal nyomtatása a(z) %d-ből...
 id:Mencetak halaman %d dari %d...
@@ -11334,6 +11356,7 @@ fy-nl:Unthâld &iepene bestannen
 ga:Cuimhnigh ar chomhaid &oscailte
 gl:Lembrar ficheiros abertos
 he:זכור קבצים פתוחים
+hi:खोले गये फाइल &याद रखें
 hr:Upamti &otvorene datoteke
 hu:Korábban megnyitott fájlok listájának tárolása
 id:Ingat &berkas yang pernah dibuka
@@ -11389,6 +11412,7 @@ fr:Enlever des favoris
 ga:Bain ó na ceanáin
 gl:Eliminar de favoritos
 he:הסר ממועדפים
+hi:पसंदीदा से निकालें
 hr:Ukloni iz favorita
 hu:Eltávolítás a kedvencek közül
 id:Hapus Dari Favorit
@@ -11441,6 +11465,7 @@ fr:Enlever page %s des favoris
 ga:Bain leathanach a %s ó na ceanáin
 gl:Eliminar páxina %s de favoritos
 he:הסר עמוד %s ממועדפים
+hi:पसंदीदा से %s पृष्ठ को निकालें
 hr:Ukloni stranicu %s iz favorita
 hu:%s. oldal eltávolítása a kedvencek közül
 id:Hapus Halaman %s Dari Favorit
@@ -11491,6 +11516,7 @@ fa:تغییر نام به
 fr:Renommer En
 ga:Athainmnigh chuig
 he:שנה שם ל
+hi:नाम बदल कर​
 hr:Preimenuj u
 hu:Átnevezés
 id:Ganti Nama Menjadi
@@ -11539,6 +11565,7 @@ fa:جایگزینی &رنگ‌های سند با طرح رنگ ویندوز
 fr:Remplacer les &couleurs du document par le schéma de couleurs Windows
 ga:Ionadaigh dathanna na cáipéise le córas dathanna Windows
 he:החלף את צבעי המסמך עם ערכת צבעי חלונות
+hi:Windows रंग योजना के साथ दस्तावेज़ रंग बदलें
 hr:Zamijeni boje dokumenta s postavkama &Windows boja
 hu:Helyettesíti a dokumentum &színeket Windows színsémával
 id:Ganti &warna dokumen dengan skema warna Windows
@@ -11792,6 +11819,7 @@ fr:Enregistrer le raccourci... \tCtrl+Maj-S
 ga:Cuir an t-aicearra i dtaisce...\tCtrl+Shift+S
 gl:Gardar Atallo...\tCtrl+Shift+S
 he:קיצור שמירה...\tCtrl+Shift+S
+hi:शॉ&र्टकट सहेजें... \tCtrl+Shift+S
 hr:Spremi p&rečac...\tCtrl+Shift+S
 hu:Parancsikon készítése...\tCtrl+Shift+S
 id:Simpan &Jalan Pintas...\tCtrl+Shift+S
@@ -11846,6 +11874,7 @@ fy-nl:Sykje %d fan %d...
 ga:Ag cuardach %d as %d...
 gl:Procurando %d de %d...
 he:%d מ %d מחפש...
+hi:खोज रहा %d %d का...
 hr:Pretražujem %d. stranicu (od %d)...
 hu:Keresés a(z) %d./%d oldalon
 id:Sedang mencari %d dari %d
@@ -11901,6 +11930,7 @@ fr:&Tout sélectionner
 ga:Roghnaigh Uile
 gl:Seleccionar Todo
 he:בחר הכל
+hi:सब &चुनें
 hr:Obilježi &sve
 hu:&Összes kijelölése
 id:Pilih Semu&a
@@ -11955,6 +11985,7 @@ fr:&Tout sélectionner\tCtrl+A
 ga:Roghnaigh Uile\tCtrl+A
 gl:Seleccionar Todo\tCtrl+A
 he:בחר הכל\tCtrl+A
+hi:सब &चुनें\tCtrl+A
 hr:Obilježi &sve\tCtrl+A
 hu:Összes &kijelölése\tCtrl+A
 id:Pilih Semu&a\tCtrl+A
@@ -12067,6 +12098,7 @@ fy-nl:Ferstjoer per &e-mail...
 ga:Seol i ríomhphost...
 gl:Enviar por email...
 he:שלח אימייל
+hi:&ई - मेल द्वारा भेजें...
 hr:Pošalji &e-poštom...
 hu:Fájl küldése &e-mail-ben
 id:Kirim Via &Email...
@@ -12169,6 +12201,7 @@ ar:إظهار العلامات
 az:Ə&lfəcinləri göstər
 bg:Покажи отметките
 br:Mostrar Fa&voritos
+bs:Pokaži &oznake
 ca-xv:Mostra els &marcadors
 ca:Mostra els &marcadors
 cn:显示书签(&B)
@@ -12302,6 +12335,7 @@ fy-nl:Toan sides kontinue
 ga:Teaspáin na leathanaigh go leanúnach
 gl:Amosar páxinas seguidas
 he:הצג דפים ברציפות
+hi:पृष्ठों को लगातार दिखाएँ
 hr:Prikaži stranice slijedno
 hu:Folyamatos nézet
 id:Tampilkan Halaman Secara &Kontinu
@@ -12358,6 +12392,7 @@ fr:Voir Favoris
 ga:Taispeáin Ceanáin
 gl:Amosar Favoritos
 he:הצג מועדפים
+hi:पसंदीदा दिखाएँ
 hr:Prikaži favorite
 hu:Mutasd a kedvenceket
 id:Tampilkan Favorit
@@ -12410,6 +12445,7 @@ fr:Montrer les documents fréquemment lus
 ga:Taispeáin cinn léite go minic
 gl:Amosar lidos decote
 he:הצג נקרא תכופות
+hi:अक्सर पढ़े जाने वाले दिखाएँ
 hr:Prikaži najčešće čitano
 hu:Leggyakrabban olvasott fájlok mutatása
 id:Tampilkan Yang Sering Dibaca
@@ -12465,6 +12501,7 @@ fy-nl:Toan de &blêdwizerarkbalke as beskikber
 ga:Taispeáin taobh-bharra na gceanán nuair atá sé ar fáil
 gl:Amosar a barra de marcadores cando estea dispoñible
 he:הצג סרגל-צד סימניות כשזמין
+hi:जब बुकमार्क साइडबार उपलब्ध हो उसे दिखाएँ
 hr:Prikaži traku &oznaka kad je dostupna
 hu:Dokumentumba ágyazott könyvjelzők mutatása
 id:Tampilkan kolom &markah jika tersedia
@@ -12644,6 +12681,7 @@ fy-nl:Bestân %s hat gjin syngronisaasjepunt
 ga:Níl láthair comhaimsearatha ag an gcomhad foinse %s
 gl:O ficheiro de orixe %s non ten punto de sincronización
 he:%s אין נקודת סנכרון לקובץ מקור
+hi:स्रोत फ़ाइल %s का तुल्यकालन बिंदु नहीं है
 hr:Izvorna datoteka %s nema točke usklađivanja
 hu:A '%s' forrásfájlban nincs szinkronizációs hely
 id:Berkas asal %s tidak mempunyai titik sinkronisasi
@@ -12700,6 +12738,7 @@ fr:Objet :
 ga:Ábhar:
 gl:Asunto:
 he:נושא:
+hi:विषय:
 hr:Tema:
 hu:Tárgy:
 id:Perihal:
@@ -12758,6 +12797,7 @@ fy-nl:SumatraPDF Opsjes
 ga:Roghanna SumatraPDF
 gl:Opcións de SumatraPDF
 he:SumatraPDF אפשרויות
+hi:Sumatra पीडीएफ विकल्प
 hr:Mogućnosti programa
 hu:A SumatraPDF beállításai
 id:Pengaturan SumatraPDF
@@ -12815,6 +12855,7 @@ fr:Mise à jour de SumatraPDF
 ga:Nuashonrú do ShumatraPDF
 gl:Actualización de SumatraPDF
 he:SumatraPDF עדכון
+hi:Sumatra पीडीएफ अपडेट
 hr:SumatraPDF ažuriranje
 hu:SumatraPDF frissítés
 id:Pembaruan SumatraPDF
@@ -12869,6 +12910,7 @@ fr:SumatraPDF a planté
 ga:Chlis SumatraPDF
 gl:SumatraPDF fallou
 he:SumatraPDF נפלה
+hi:Sumatra पीडीएफ दुर्घटनाग्रस्त हो गया
 hr:SumatraPDF se srušio
 hu:SumatraPDF működése leállt
 id:SumatraPDF berhenti berfungsi
@@ -12925,6 +12967,7 @@ fy-nl:SumatraPDF is de standart PDF-lêzer
 ga:Is é SumatraPDF do léitheoir PDF réamhshocraithe
 gl:SumatraPDF é o seu lector de PDF por defecto
 he:SumatraPDF ראשי הינו PDF קורא
+hi:Sumatra पीडीएफ आपका डिफ़ॉल्ट पीडीएफ रीडर है
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 hu:A SumatraPDF az alapértelmezett PDF-olvasója
 id:SumatraPDF adalah pembaca berkas PDF utama Anda
@@ -12984,6 +13027,7 @@ fy-nl:SumatraPDF soe no de standert PDF-lêzer wêze moatte
 ga:Ba chóir go mbeadh SumatraPDF mar an léitheoir PDF réamhshocraithe agat
 gl:SumatraPDF será agora o seu lector de PDF por defecto
 he:SumatraPDF ראשי אמור להיות עכשיו PDF קורא
+hi:SumatraPDF अब आपका डिफ़ॉल्ट पीडीएफ रीडर होना चाहिए
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 hu:Mostantól a SumatraPDF az alapértelmezett PDF-olvasója
 id:SumatraPDF sekarang telah menjadi pembaca berkas PDF utama Anda
@@ -13042,6 +13086,7 @@ fy-nl:It syngronisaasjebestân kin net iepene wurde
 ga:Ní féidir an comhad comhaimseartha a oscailt
 gl:O ficheiro de sincronización non pode abrirse
 he:לא ניתן לפתוח קובץ סנכרון
+hi:तुल्यकालन फ़ाइल खोला नहीं जा सकता
 hr:Datoteka usklađenja se ne može otvoriti
 hu:Nem sikerült megnyitni a szinkronizációs fájlt
 id:Berkas sinkronisasi tidak dapat dibuka
@@ -13080,6 +13125,7 @@ ar:البي دي إف الموسومة
 az:Teqlənmiş PDF
 bg:Етикетирен .PDF файл (Tagged PDF)
 br:PDF com marcações (tags)
+bs:Označeni PDF
 ca-xv:PDF etiquetat
 ca:PDF etiquetat
 cn:已标记PDF
@@ -13093,6 +13139,7 @@ fa:نشان دار  PDF
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
 he:PDF מתוייג
+hi:टैग की गईं पीडीएफ
 hr:Strukturirani PDF
 hu:Címkézett PDF
 id:PDF Terlabeli
@@ -13143,6 +13190,7 @@ fy-nl:Tekstdokuminten
 ga:Cáipéisí téacs
 gl:Documentos de texto
 he:(מסמך מלל (טקסט
+hi:टेक्स्ट दस्तावेज़
 hr:Tekstualni dokumenti
 hu:Szöveges fájlok
 id:Dokumen Teks
@@ -13259,6 +13307,7 @@ fy-nl:Unbekend boarnebestân (%s)
 ga:Comhad foinse anaithnid (%s)
 gl:Ficheiros de orixe descoñecidos (%s)
 he:קובץ מקור לא ידוע (%s)
+hi:अज्ञात स्रोत फ़ाइल (%s)
 hr:Nepoznata izvorna datoteka (%s)
 hu:Ismeretlen forrásfájl (%s)
 id:Berkas asal (%s) tidak diketahui
@@ -13512,6 +13561,7 @@ fy-nl:XPS-bestannen
 ga:Cáipéisí XPS
 gl:Documentos XPS
 he:XPS מסמכי
+hi:XPS दस्तावेज़
 hr:XPS dokumenti
 hu:XPS fájlok
 id:Dokumen XPS
@@ -13891,6 +13941,7 @@ fy-nl:Zoomfaktor
 ga:Fachtóir formhéadaithe
 gl:Factor de aumento
 he:מקדם זום
+hi:ज़ूम गुणक
 hr:Faktor uvećanja
 hu:Nagyítás mértéke
 id:Faktor pembesaran
@@ -14064,6 +14115,7 @@ fr:impression du document
 ga:ag clóbhualadh an cháipéis
 gl:imprimindo documento
 he:מדפיס מסמך
+hi:छपाई दस्तावेज़
 hr:ispisujem dokument
 hu:Nyomtatás
 id:mencetak dokumen
