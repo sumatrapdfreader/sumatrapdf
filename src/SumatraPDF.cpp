@@ -1837,7 +1837,8 @@ public:
     FileExistenceChecker() {
         DisplayState *state;
         for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)); i++) {
-            paths.Append(str::Dup(state->filePath));
+            if (!state->isMissing)
+                paths.Append(str::Dup(state->filePath));
         }
         // add missing paths from the list of most frequently opened documents
         Vec<DisplayState *> frequencyList;
@@ -1876,19 +1877,10 @@ public:
 
     virtual void Execute() {
         for (size_t i = 0; i < paths.Count(); i++) {
-            const WCHAR *path = paths.At(i);
-            DisplayState *state = NULL;
-            // completely remove a file if we don't remember anything of
-            // value about it - else just move it all the way to the back
-            if (gGlobalPrefs.globalPrefsOnly)
-                state = gFileHistory.Find(path);
-            if (state && !state->isPinned && !state->decryptionKey)
-                gFileHistory.Remove(state);
-            else
-                gFileHistory.MarkFileInexistent(path, true);
+            gFileHistory.MarkFileInexistent(paths.At(i), true);
         }
         // update the Frequently Read page in case it's been displayed already
-        if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
+        if (paths.Count() > 0 && gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
             gWindows.At(0)->RedrawAll(true);
         // prepare for clean-up (Join() just to be safe)
         gFileExistenceChecker = NULL;

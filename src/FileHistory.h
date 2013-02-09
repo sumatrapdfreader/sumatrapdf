@@ -91,14 +91,16 @@ public:
             state = new DisplayState();
             state->filePath = str::Dup(filePath);
         }
-        else
+        else {
             states.Remove(state);
+            state->isMissing = false;
+        }
         states.InsertAt(0, state);
         state->openCount++;
         return state;
     }
 
-    bool MarkFileInexistent(const WCHAR *filePath, bool tryToHide=false) {
+    bool MarkFileInexistent(const WCHAR *filePath, bool hide=false) {
         assert(filePath);
         DisplayState *state = Find(filePath);
         if (!state)
@@ -108,7 +110,7 @@ public:
         // so that the user could still try opening it again
         // and so that we don't completely forget the settings,
         // should the file reappear later on
-        int newIdx = tryToHide ? INT_MAX : FILE_HISTORY_MAX_RECENT - 1;
+        int newIdx = hide ? INT_MAX : FILE_HISTORY_MAX_RECENT - 1;
         int idx = states.Find(state);
         if (idx < newIdx && state != states.Last()) {
             states.Remove(state);
@@ -121,19 +123,22 @@ public:
         // back in the Frequently Read list
         delete state->thumbnail;
         state->thumbnail = NULL;
-        state->openCount = tryToHide ? 0 : state->openCount >> 2;
+        state->openCount >>= 2;
+        state->isMissing = hide;
         return true;
     }
 
     // returns a shallow copy of the file history list, sorted
     // by open count (which has a pre-multiplied recency factor)
+    // and with all missing states filtered out
     // caller needs to delete the result (but not the contained states)
     void GetFrequencyOrder(Vec<DisplayState *>& list) {
         CrashIf(list.Count() > 0);
         size_t i = 0;
         for (DisplayState **ds = states.IterStart(); ds; ds = states.IterNext()) {
             (*ds)->index = i++;
-            list.Append(*ds);
+            if (!(*ds)->isMissing || (*ds)->isPinned)
+                list.Append(*ds);
         }
         list.Sort(cmpOpenCount);
     }

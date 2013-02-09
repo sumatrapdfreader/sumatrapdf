@@ -33,7 +33,7 @@ public:
         filePath(NULL), useGlobalValues(false), index(0), openCount(0),
         displayMode(DM_AUTOMATIC), pageNo(1), reparseIdx(0), zoomVirtual(100.0),
         rotation(0), windowState(0), thumbnail(NULL), isPinned(false),
-        decryptionKey(NULL), tocVisible(true),
+        decryptionKey(NULL), tocVisible(true), isMissing(false),
         sidebarDx(0), tocState(NULL) { }
 
     ~DisplayState() {
@@ -57,6 +57,9 @@ public:
     // a user can "pin" a preferred document to the Frequently Read list
     // so that the document isn't replaced by more frequently used ones
     bool                isPinned;
+    // if a document can no longer be found but we still remember valuable state,
+    // it's classified as missing so that it can be hidden instead of removed
+    bool                isMissing;
 
     bool                useGlobalValues;
 
