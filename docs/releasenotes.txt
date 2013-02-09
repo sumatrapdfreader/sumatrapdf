@@ -8,6 +8,9 @@ Next version:
 * add support for OpenXPS documents
 * "Go To Page" for ebook format
 * fixed paragraph indentation missing for EPUB documents
+* new key bindings:
+ * Ctrl-Up   : page up
+ * Ctrl-Down : page down
 
 2.2.1 (2013-01-12):
 
