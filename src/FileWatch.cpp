@@ -84,7 +84,6 @@ void FileWatcher::SynchronousAbort()
         LogLastError();
 
     DWORD numBytesTransferred;
-    // TODO: do I need this at all?
     ok = GetOverlappedResult(hDir, &overl, &numBytesTransferred, FALSE);
     if (!ok) {
         DWORD err = GetLastError();
@@ -252,4 +251,4 @@ void FileWatcherUnsubscribe(FileWatcherToken token)
     delete (FileWatcher *)token;
 }
 
-}
+} // namespace oldfw

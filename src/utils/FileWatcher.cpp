@@ -8,6 +8,28 @@
 #include "ThreadUtil.h"
 #include "WinUtil.h"
 
+#define NOLOG 0
+#include "DebugLog.h"
+
+/*
+TODO:
+
+  - I'm ocasionally getting the 'overlapped modified after being freed'
+
+  - handle files on non-fixed drives (network drives, usb) by using
+    a timeout in the thread
+
+  - should I end the thread when there are no files to watch?
+
+  - a single file copy can generate multiple notifications for the same
+    file. add some delay mechanism so that subsequent change notifications
+    cancel a previous, delayed one ? E.g. a copy f2.pdf f.pdf generates 3
+    notifications if f2.pdf is 2 MB.
+
+  - implement it the way http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
+    suggests?
+*/
+
 // TODO: a hack for VS 2011 compilation. 1600 is VS 2010
 #if _MSC_VER > 1600
 extern "C" {
@@ -16,24 +38,30 @@ GetOverlappedResult(_In_ HANDLE hFile, _In_ LPOVERLAPPED lpOverlapped, _Out_ LPD
 }
 #endif
 
+#define INVALID_TOKEN 0
+
+#define FILEWATCH_DELAY_IN_MS       1000
+
 struct WatchedDir {
-    WatchedDir * next;
-    WCHAR *      dirPath;
-    HANDLE       hDir;
-    OVERLAPPED   overlapped;
+    WatchedDir *    next;
+    const WCHAR *   dirPath;
+    HANDLE          hDir;
+    OVERLAPPED      overlapped;
     // a double buffer where the Windows API ReadDirectoryChanges will store the list
     // of files that have been modified.
-    FILE_NOTIFY_INFORMATION buffer[2][512];
-    int          currBuffer; // current buffer used (alternate between 0 and 1)
+    FILE_NOTIFY_INFORMATION     buf1[512];
+    FILE_NOTIFY_INFORMATION     buf2[512];
+    FILE_NOTIFY_INFORMATION *   currBuf;
 };
 
 struct WatchedFile {
     WatchedFile *           next;
     WatchedDir *            watchedDir;
-    WCHAR *                 filePath;
+    const WCHAR *           fileName;
     FileChangeObserver *    observer;
 };
 
+static int              g_currentToken = 1;
 static HANDLE           g_threadHandle = 0;
 // used to wake-up file wather thread to notify about
 // added/removed files to be watched
@@ -58,13 +86,12 @@ static void WakeUpWatcherThread()
 
 static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
 {
+    lf(L"NotifyAboutFile() %s", fileName);
+
     WatchedFile *curr = g_firstFile;
     while (curr) {
         if (curr->watchedDir == d) {
-            const WCHAR *fileName2 = path::GetBaseName(curr->filePath);
-
-            // is it the file that is being watched?
-            if (str::EqI(fileName, fileName2)) {
+            if (str::EqI(fileName, curr->fileName)) {
                 // NOTE: It is not recommended to check whether the timestamp has changed
                 // because the time granularity is so big that this can cause genuine
                 // file notifications to be ignored. (This happens for instance for
@@ -77,41 +104,65 @@ static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
     }
 }
 
-static void NotifyAboutDirChanged(WatchedDir *d)
+// start a new asynchronous call to ReadDirectory in the alternate buffer
+static void StartMonitoringDirForChanges(WatchedDir *wd)
 {
-    // Read the asynchronous result of the previous call to ReadDirectory
-    DWORD dwNumberbytes;
-    GetOverlappedResult(d->hDir, &d->overlapped, &dwNumberbytes, FALSE);
+    if (wd->currBuf == wd->buf1) {
+        wd->currBuf = wd->buf2;
+        lf(L"StartMonitoringDirForChanges() %s, buf2", wd->dirPath);
+    } else {
+        wd->currBuf = wd->buf1;
+        lf(L"StartMonitoringDirForChanges() %s, buf1", wd->dirPath);
+    }
 
-    FILE_NOTIFY_INFORMATION *notify = d->buffer[d->currBuffer];
-    // Switch the 2 buffers
-    d->currBuffer = (d->currBuffer + 1) % dimof(d->buffer);
-
-    // start a new asynchronous call to ReadDirectory in the alternate buffer
     ReadDirectoryChangesW(
-         d->hDir, /* handle to directory */
-         &d->buffer[d->currBuffer], /* read results buffer */
-         sizeof(d->buffer[d->currBuffer]), /* length of buffer */
+         wd->hDir,
+         wd->currBuf, /* read results buffer */
+         sizeof(wd->buf1), /* length of buffer */
          FALSE, /* monitoring option */
-         //FILE_NOTIFY_CHANGE_CREATION|
          FILE_NOTIFY_CHANGE_LAST_WRITE, /* filter conditions */
          NULL, /* bytes returned */
-         &d->overlapped, /* overlapped buffer */
+         &wd->overlapped, /* overlapped buffer */
          NULL); /* completion routine */
+}
 
-    // Note: the ReadDirectoryChangesW API fills the buffer with WCHAR strings.
+static void NotifyAboutDirChanged(WatchedDir *wd)
+{
+    // Read the asynchronous result of the previous call to ReadDirectory
+    DWORD numBytes;
+    BOOL ok = GetOverlappedResult(wd->hDir, &wd->overlapped, &numBytes, FALSE);
+    if (!ok)
+        LogLastError();
+
+    lf(L"NotifyAboutDirChanged() dir: %s, ok=%d, numBytes=%d", wd->dirPath, (int)ok, (int)numBytes);
+    FILE_NOTIFY_INFORMATION *notify = wd->currBuf;
+
+    // a single notification can have multiple notifications for the same file, so we filter duplicates
+    WStrVec seenFiles;
+
     for (;;) {
-        if (notify->Action == FILE_ACTION_MODIFIED) {
-            ScopedMem<WCHAR> fileName(str::DupN(notify->FileName, notify->FileNameLength / sizeof(WCHAR)));
-            NotifyAboutFile(d, fileName);
+        WCHAR *fileName = str::DupN(notify->FileName, notify->FileNameLength / sizeof(WCHAR));
+        if (seenFiles.Contains(fileName)) {
+            lf(L"NotifyAboutDirChanged() eliminating duplicate notification for '%s'", fileName);
+            free(fileName);
+        } else {
+            if (notify->Action == FILE_ACTION_MODIFIED) {
+                lf(L"NotifyAboutDirChanged() FILE_ACTION_MODIFIED, for '%s'", fileName);
+                NotifyAboutFile(wd, fileName);
+            } else {
+                lf(L"NotifyAboutDirChanged() action=%d, for '%s'", (int)notify->Action, fileName);
+            }
+            seenFiles.Append(fileName);
         }
 
         // step to the next entry if there is one
         DWORD nextOff = notify->NextEntryOffset;
         if (!nextOff)
             break;
-        notify = (FILE_NOTIFY_INFORMATION *)((PBYTE)notify + nextOff);
+        notify = (FILE_NOTIFY_INFORMATION *)((char*)notify + nextOff);
     }
+
+    StartMonitoringDirForChanges(wd);
 }
 
 static void NotifyAboutFileChanges(HANDLE h)
@@ -135,13 +186,12 @@ static void NotifyAboutFileChanges(HANDLE h)
 
 static int CollectHandlesToWaitOn()
 {
+    int n = 0;
     ScopedCritSec cs(&g_threadCritSec);
-    g_fileWatcherHandles[0] = g_threadControlHandle;
-    int n = 1;
+    g_fileWatcherHandles[n++] = g_threadControlHandle;
     WatchedDir *curr = g_firstDir;
     while (curr) {
-        g_fileWatcherHandles[n] = curr->overlapped.hEvent;
-        n++;
+        g_fileWatcherHandles[n++] = curr->overlapped.hEvent;
         if (n >= MAXIMUM_WAIT_OBJECTS)
             break;
         curr = curr->next;
@@ -158,10 +208,11 @@ static DWORD WINAPI FileWatcherThread(void *param)
         CrashIf(n < 0 || n >= nHandles);
         if (n > 0) {
             NotifyAboutFileChanges(g_fileWatcherHandles[n]);
+        } else {
+            // dirs have been added/deleted and we need to
+            // rebuild g_fileWatcherHandles
+            ResetEvent(g_threadControlHandle);
         }
-        // otherwise this is g_threadControlHandle which means
-        // that dirs have been added/deleted and we need to
-        // rebuild g_fileWatcherHandles
     }
     return 0;
 }
@@ -191,16 +242,44 @@ static WatchedDir *FindExistingWatchedDir(const WCHAR *dirPath)
     return NULL;
 }
 
+// TODO: this is not right
 static void DeleteWatchedDir(WatchedDir *wd)
 {
-    free(wd->dirPath);
+    lf("DeleteWatchedDir() wd=0x%p", wd);
+
+    // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039
+    // we must wait for all outstanding overlapped i/o on hDir has stopped.
+    // otherwise CloseHandle(hDir) might end up modyfing it's associated
+    // overlapped asynchronously, after we have already freed its memory, causing
+    // memory corruption
+    BOOL ok = CancelIo(wd->hDir);
+    if (!ok)
+        LogLastError();
+
+    // TODO: I get ERROR_IO_INCOMPLETE here
+    // http://stackoverflow.com/questions/4273594/overlapped-io-and-error-io-incomplete suggests
+    // to wait forever in GetOverlappedResult(), but that just blocks forever
+    DWORD numBytesTransferred;
+    ok = GetOverlappedResult(wd->hDir, &wd->overlapped, &numBytesTransferred, FALSE);
+    if (!ok) {
+        DWORD err = GetLastError();
+        if (ERROR_OPERATION_ABORTED != err)
+            LogLastError();
+    }
+
+    SafeCloseHandle(wd->overlapped.hEvent);
+    wd->overlapped.hEvent = NULL;
+
     SafeCloseHandle(wd->hDir);
+
+    free((void*)wd->dirPath);
     free(wd);
 }
 
 static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
 {
     WatchedDir *wd = AllocStruct<WatchedDir>();
+    wd->currBuf = wd->buf1;
     wd->dirPath = str::Dup(dirPath);
     wd->hDir = CreateFile(
         dirPath, FILE_LIST_DIRECTORY,
@@ -214,20 +293,10 @@ static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
     if (!wd->overlapped.hEvent)
         goto Failed;
 
-    // start watching the directory
-    wd->currBuffer = 0;
-    ReadDirectoryChangesW(
-         wd->hDir,
-         &wd->buffer[wd->currBuffer], /* read results buffer */
-         sizeof(wd->buffer[wd->currBuffer]), /* length of buffer */
-         FALSE, /* monitoring option */
-         FILE_NOTIFY_CHANGE_LAST_WRITE, /* filter conditions */
-         NULL, /* bytes returned */
-         &wd->overlapped, /* overlapped buffer */
-         NULL); /* completion routine */
-
     wd->next = g_firstDir;
     g_firstDir = wd;
+
+    StartMonitoringDirForChanges(wd);
 
     return wd;
 Failed:
@@ -243,7 +312,7 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
         wd = NewWatchedDir(dirPath);
 
     WatchedFile *wf = AllocStruct<WatchedFile>();
-    wf->filePath = str::Dup(filePath);
+    wf->fileName = str::Dup(path::GetBaseName(filePath));
     wf->watchedDir = wd;
     wf->observer = observer;
     wf->next = g_firstFile;
@@ -253,7 +322,7 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
 
 static void DeleteWatchedFile(WatchedFile *wf)
 {
-    free(wf->filePath);
+    free((void*)wf->fileName);
     delete wf->observer;
     free(wf);
 }

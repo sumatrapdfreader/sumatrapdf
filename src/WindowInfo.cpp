@@ -32,7 +32,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC),
     loadedFilePath(NULL), currPageNo(0),
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
-    delayedRepaintTimer(0), watcher(NULL),
+    delayedRepaintTimer(0), watcher(0),
     pdfsync(NULL), stressTest(NULL),
     hwndFavBox(NULL), hwndFavTree(NULL)
 {

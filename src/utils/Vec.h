@@ -374,19 +374,23 @@ public:
         return tmp.StealData();
     }
 
-    int Find(const WCHAR *string, size_t startAt=0) const {
+    int Find(const WCHAR *s, size_t startAt=0) const {
         for (size_t i = startAt; i < len; i++) {
             WCHAR *item = At(i);
-            if (str::Eq(string, item))
+            if (str::Eq(s, item))
                 return (int)i;
         }
         return -1;
     }
 
-    int FindI(const WCHAR *string, size_t startAt=0) const {
+    bool Contains(const WCHAR *s) const {
+        return -1 != Find(s);
+    }
+
+    int FindI(const WCHAR *s, size_t startAt=0) const {
         for (size_t i = startAt; i < len; i++) {
             WCHAR *item = At(i);
-            if (str::EqI(string, item))
+            if (str::EqI(s, item))
                 return (int)i;
         }
         return -1;
@@ -396,17 +400,17 @@ public:
        (optionally collapsing several consecutive separators into one);
        e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
        (resp. "a", "b", "c" if separators are collapsed) */
-    size_t Split(const WCHAR *string, const WCHAR *separator, bool collapse=false) {
+    size_t Split(const WCHAR *s, const WCHAR *separator, bool collapse=false) {
         size_t start = len;
         const WCHAR *next;
 
-        while ((next = str::Find(string, separator))) {
-            if (!collapse || next > string)
-                Append(str::DupN(string, next - string));
-            string = next + str::Len(separator);
+        while ((next = str::Find(s, separator))) {
+            if (!collapse || next > s)
+                Append(str::DupN(s, next - s));
+            s = next + str::Len(separator);
         }
-        if (!collapse || *string)
-            Append(str::Dup(string));
+        if (!collapse || *s)
+            Append(str::Dup(s));
 
         return len - start;
     }
