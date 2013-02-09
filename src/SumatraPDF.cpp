@@ -3002,21 +3002,21 @@ void OnMenuOpen(SumatraWindow& win)
         return;
 
     struct {
-        const WCHAR *name;
+        const WCHAR *name; /* NULL if only to include in "All supported documents" */
         WCHAR *filter;
         bool available;
     } fileFormats[] = {
-        { _TR("PDF documents"),         L"*.pdf",        true },
-        { _TR("XPS documents"),         L"*.xps;*.oxps", true },
-        { _TR("DjVu documents"),        L"*.djvu",       true },
-        { _TR("Postscript documents"),  L"*.ps;*.eps",   PsEngine::IsAvailable() },
-        { _TR("Comic books"),           L"*.cbz;*.cbr",  true },
-        { _TR("CHM documents"),         L"*.chm",        true },
-        { _TR("Mobi documents"),        L"*.mobi",       true },
-        { _TR("EPUB ebooks"),           L"*.epub",       true },
+        { _TR("PDF documents"),         L"*.pdf",       true },
+        { _TR("XPS documents"),         L"*.xps;*.oxps",true },
+        { _TR("DjVu documents"),        L"*.djvu",      true },
+        { _TR("Postscript documents"),  L"*.ps;*.eps",  PsEngine::IsAvailable() },
+        { _TR("Comic books"),           L"*.cbz;*.cbr", true },
+        { _TR("CHM documents"),         L"*.chm",       true },
+        { _TR("Mobi documents"),        L"*.mobi",      true },
+        { _TR("EPUB ebooks"),           L"*.epub",      true },
         { _TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2", true },
-        { L"PalmDOC",                   L"*.pdb",        !gUseEbookUI },
-        { L"TCR ebooks",                L"*.tcr",        !gUseEbookUI },
+        { NULL, /* multi-page images */ L"*.tif;*.tiff",true },
+        { NULL, /* further ebooks */    L"*.pdb;*.tcr", !gUseEbookUI },
         { _TR("Text documents"),        L"*.txt;*.log;*.nfo;file_id.diz;read.me", !gUseEbookUI },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -3035,7 +3035,7 @@ void OnMenuOpen(SumatraWindow& win)
     filters.Reset();
 
     for (int i = 0; i < dimof(fileFormats); i++) {
-        if (fileFormats[i].available) {
+        if (fileFormats[i].available && fileFormats[i].name) {
             const WCHAR *name = fileFormats[i].name;
             WCHAR *filter = fileFormats[i].filter;
             fileFilter.AppendAndFree(str::Format(L"%s\1%s\1", name, filter));
