@@ -274,34 +274,18 @@ int64 GetSize(const WCHAR *filePath)
     return size.QuadPart;
 }
 
-size_t GetSizeBroken(const WCHAR *filePath)
-{
-    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
-    if (h == INVALID_HANDLE_VALUE)
-        return INVALID_FILE_SIZE;
-
-    // Don't use GetFileAttributesEx to retrieve the file size, as
-    // that function doesn't interact well with symlinks, etc.
-    LARGE_INTEGER lsize;
-    BOOL ok = GetFileSizeEx(h, &lsize);
-    if (!ok)
-        return INVALID_FILE_SIZE;
-
-#ifdef _WIN64
-    return lsize.QuadPart;
-#else
-    if (lsize.HighPart > 0)
-        return INVALID_FILE_SIZE;
-    return lsize.LowPart;
-#endif
-}
-
 char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut)
 {
-    size_t size = GetSizeBroken(filePath);
-    if (INVALID_FILE_SIZE == size)
+    int64 size64 = GetSize(filePath);
+    if (size64 < 0)
         return NULL;
+    size_t size = (size_t)size64;
+#ifdef _WIN64
+    CrashIf(size != size64);
+#else
+    if (size != size64)
+        return NULL;
+#endif
 
     // overflow check
     if (size + sizeof(WCHAR) < sizeof(WCHAR))

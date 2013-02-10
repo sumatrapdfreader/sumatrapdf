@@ -172,10 +172,10 @@ ProducingPaletteDone:
 fz_stream *fz_open_file2(fz_context *ctx, const WCHAR *filePath)
 {
     fz_stream *file = NULL;
-    size_t fileSize = file::GetSizeBroken(filePath);
+    int64 fileSize = file::GetSize(filePath);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
-    if (fileSize < MAX_MEMORY_FILE_SIZE) {
+    if (0 <= fileSize && fileSize < MAX_MEMORY_FILE_SIZE) {
         fz_buffer *data = NULL;
         fz_var(data);
         fz_try(ctx) {

@@ -34,7 +34,6 @@ char *       ReadAll(const WCHAR *filePath, size_t *fileSizeOut);
 bool         ReadAll(const WCHAR *filePath, char *buffer, size_t bufferLen);
 bool         WriteAll(const WCHAR *filePath, const void *data, size_t dataLen);
 int64        GetSize(const WCHAR *filePath);
-size_t       GetSizeBroken(const WCHAR *filePath);
 bool         Delete(const WCHAR *filePath);
 FILETIME     GetModificationTime(const WCHAR *filePath);
 bool         SetModificationTime(const WCHAR *filePath, FILETIME lastMod);
