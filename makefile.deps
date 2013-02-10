@@ -518,10 +518,14 @@ $(OU)\FileTransactions.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUti
 $(OU)\FileUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OU)\FileUtil.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\FileUtil.obj: src\utils\Vec.h
-$(OU)\FileWatcher.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
-$(OU)\FileWatcher.obj: src\utils\FileWatcher.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OU)\FileWatcher.obj: src\utils\StrUtil.h src\utils\ThreadUtil.h src\utils\Vec.h
-$(OU)\FileWatcher.obj: src\utils\WinUtil.h
+$(OU)\FileWatcher.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
+$(OU)\FileWatcher.obj: src\utils\FileUtil.h src\utils\FileWatcher.h src\utils\GeomUtil.h
+$(OU)\FileWatcher.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
+$(OU)\FileWatcher.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(OU)\FileWatcher2.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\DebugLog.h
+$(OU)\FileWatcher2.obj: src\utils\FileUtil.h src\utils\FileWatcher.h src\utils\GeomUtil.h
+$(OU)\FileWatcher2.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\ThreadUtil.h
+$(OU)\FileWatcher2.obj: src\utils\Vec.h src\utils\WinUtil.h
 $(OU)\GdiPlusUtil.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\ByteReader.h
 $(OU)\GdiPlusUtil.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OU)\GdiPlusUtil.obj: src\utils\StrUtil.h src\utils\TgaReader.h src\utils\Vec.h
