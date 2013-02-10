@@ -236,9 +236,6 @@ $(OS)\FileModifications.obj: src\BaseEngine.h src\FileModifications.h src\utils\
 $(OS)\FileModifications.obj: src\utils\BaseUtil.h src\utils\CssParser.h src\utils\FileUtil.h
 $(OS)\FileModifications.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\Scoped.h
 $(OS)\FileModifications.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\FileWatch.obj: src\FileWatch.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\FileWatch.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\FileWatch.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(OS)\HtmlFormatter.obj: src\BaseEngine.h src\EbookBase.h src\HtmlFormatter.h
 $(OS)\HtmlFormatter.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
 $(OS)\HtmlFormatter.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h

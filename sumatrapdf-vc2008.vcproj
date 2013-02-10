@@ -883,14 +883,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\FileWatch.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\FileWatch.h"
-					>
-				</File>
-				<File
 					RelativePath=".\src\ParseCommandLine.cpp"
 					>
 				</File>
