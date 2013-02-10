@@ -23,7 +23,7 @@ ReadDirectoryChangesW() but only if it's in alertable state.
 Our ui thread isn't so we create our own thread and run code that
 calls ReadDirectoryChangesW() on that thread via QueueUserAPC().
 
-g_dirsList and g_filesList are shared between the main thread and
+g_watchedDirs and g_watchedFiles are shared between the main thread and
 worker thread so must be protected via g_threadCritSec.
 
 ReadDirectChangesW() doesn't always work for files on network drives,
@@ -44,7 +44,7 @@ TODO:
     but how to test it?
 
   - I could try to remove the need for g_threadCritSec by queing all code
-    that touches g_dirsList/g_filesList onto a thread via APC, but that's
+    that touches g_watchedDirs/g_watchedFiles onto a thread via APC, but that's
     probably an overkill
 */
 
@@ -95,11 +95,11 @@ static DWORD            g_threadId = 0;
 static HANDLE           g_threadControlHandle = 0;
 
 // protects data structures shared between ui thread and file
-// watcher thread i.e. g_dirsList, g_filesList
+// watcher thread i.e. g_watchedDirs, g_watchedFiles
 static CRITICAL_SECTION g_threadCritSec;
 
-static WatchedDir *     g_dirsList = NULL;
-static WatchedFile *    g_filesList = NULL;
+static WatchedDir *     g_watchedDirs = NULL;
+static WatchedFile *    g_watchedFiles = NULL;
 
 // ugly, but makes the intent clearer. Must be a macro because
 // operates on different structures, as long as they have next member
@@ -147,7 +147,7 @@ static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
 {
     lf(L"NotifyAboutFile(): %s", fileName);
 
-    for (WatchedFile *wf = g_filesList; wf; wf = wf->next) {
+    for (WatchedFile *wf = g_watchedFiles; wf; wf = wf->next) {
         if (wf->watchedDir != d)
             continue;
         if (!str::EqI(fileName, wf->fileName))
@@ -258,7 +258,7 @@ static void StartMonitoringDirForChanges(WatchedDir *wd)
 static DWORD GetTimeoutInMs()
 {
     ScopedCritSec cs(&g_threadCritSec);
-    for (WatchedFile *wf = g_filesList; wf; wf = wf->next) {
+    for (WatchedFile *wf = g_watchedFiles; wf; wf = wf->next) {
         if (wf->isManualCheck)
             return FILEWATCH_DELAY_IN_MS;
     }
@@ -270,7 +270,7 @@ static void RunManualCheck()
     ScopedCritSec cs(&g_threadCritSec);
     FileState fileState;
 
-    for (WatchedFile *wf = g_filesList; wf; wf = wf->next) {
+    for (WatchedFile *wf = g_watchedFiles; wf; wf = wf->next) {
         if (!wf->isManualCheck)
             continue;
         GetFileStateForFile(wf->filePath, &fileState);
@@ -332,7 +332,7 @@ static void StartThreadIfNecessary()
 
 static WatchedDir *FindExistingWatchedDir(const WCHAR *dirPath)
 {
-    for (WatchedDir *wd = g_dirsList; wd; wd = wd->next) {
+    for (WatchedDir *wd = g_watchedDirs; wd; wd = wd->next) {
         // TODO: normalize dirPath?
         if (str::EqI(dirPath, wd->dirPath))
             return wd;
@@ -370,7 +370,7 @@ static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
     if (!wd->hDir)
         goto Failed;
 
-    ListInsert(g_dirsList, wd);
+    ListInsert(g_watchedDirs, wd);
 
     return wd;
 Failed:
@@ -387,7 +387,7 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
     wf->watchedDir = NULL;
     wf->isManualCheck = !path::IsOnFixedDrive(filePath);
 
-    ListInsert(g_filesList, wf);
+    ListInsert(g_watchedFiles, wf);
 
     if (wf->isManualCheck) {
         GetFileStateForFile(filePath, &wf->fileState);
@@ -441,7 +441,7 @@ FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *obs
 
 static bool IsWatchedDirReferenced(WatchedDir *wd)
 {
-    for (WatchedFile *wf = g_filesList; wf; wf = wf->next) {
+    for (WatchedFile *wf = g_watchedFiles; wf; wf = wf->next) {
         if (wf->watchedDir == wd)
             return true;
     }
@@ -452,7 +452,7 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir *wd)
 {
     if (IsWatchedDirReferenced(wd))
         return;
-    WatchedDir **currPtr = &g_dirsList;
+    WatchedDir **currPtr = &g_watchedDirs;
     WatchedDir *curr;
     for (;;) {
         curr = *currPtr;
@@ -471,7 +471,7 @@ static void RemoveWatchedFile(WatchedFile *wf)
 {
     WatchedDir *wd = wf->watchedDir;
 
-    WatchedFile **currPtr = &g_filesList;
+    WatchedFile **currPtr = &g_watchedFiles;
     WatchedFile *curr;
     for (;;) {
         curr = *currPtr;
