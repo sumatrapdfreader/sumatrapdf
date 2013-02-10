@@ -12,12 +12,19 @@
 #include "DebugLog.h"
 
 /*
-This is APC-based version of file watcher, based on information in
+This code is tricky, so here's a high-level overview. More info at:
 http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
 
-Advantages over solution using GetOverlappedResult() and overlapped.hEvent handle:
- - no limit on the number of watched directories
- - no issues with overlapped.hEvent being modified at random times
+We use ReadDirectoryChangesW() with overlapped i/o and i/o completion
+callback function.
+
+Callback function is called in the context of the thread that called
+ReadDirectoryChangesW() but only if it's in alertable state.
+Our ui thread isn't so we create our own thread and run code that
+calls ReadDirectoryChangesW() on that thread via QueueUserAPC().
+
+g_dirsList and g_filesList are shared between the main thread and
+worker thread so must be protected via g_threadCritSec.
 */
 
 /*
@@ -32,6 +39,13 @@ TODO:
     file. add some delay mechanism so that subsequent change notifications
     cancel a previous, delayed one ? E.g. a copy f2.pdf f.pdf generates 3
     notifications if f2.pdf is 2 MB.
+
+  - try to handle short file names as well: http://blogs.msdn.com/b/ericgu/archive/2005/10/07/478396.aspx
+    but how to test it?
+
+  - I could try to remove the need for g_threadCritSec by queing all code
+    that touches g_dirsList/g_filesList onto a thread via APC, but that's
+    probably an overkill
 */
 
 #define INVALID_TOKEN 0
@@ -45,11 +59,16 @@ struct OverlappedEx {
 };
 
 struct WatchedDir {
-    WatchedDir *                next;
-    const WCHAR *               dirPath;
-    HANDLE                      hDir;
-    OverlappedEx                overlapped;
-    char                        buf[8*1024];
+    WatchedDir *    next;
+    const WCHAR *   dirPath;
+    HANDLE          hDir;
+    OverlappedEx    overlapped;
+    char            buf[8*1024];
+
+    // if true, the file is on a network drive and we have
+    // to check it manually, via timeout
+    // TODO: not used yet
+    bool            isManualCheck;
 };
 
 struct WatchedFile {
@@ -61,16 +80,16 @@ struct WatchedFile {
 
 static int              g_currentToken = 1;
 static HANDLE           g_threadHandle = 0;
-// used to wake-up file watcher thread to notify about
-// added/removed files to be watched
+static DWORD            g_threadId = 0;
+
 static HANDLE           g_threadControlHandle = 0;
 
 // protects data structures shared between ui thread and file
-// watcher thread i.e. g_firstDir, g_firstFile
+// watcher thread i.e. g_dirsList, g_filesList
 static CRITICAL_SECTION g_threadCritSec;
 
-static WatchedDir *     g_firstDir = NULL;
-static WatchedFile *    g_firstFile = NULL;
+static WatchedDir *     g_dirsList = NULL;
+static WatchedFile *    g_filesList = NULL;
 
 static void StartMonitoringDirForChanges(WatchedDir *wd);
 
@@ -81,11 +100,19 @@ static void WakeUpWatcherThread()
 }
 #endif
 
+// TODO: per internet, fileName could be short, 8.3 dos-style name
+// and we don't handle that. On the other hand, I've only seen references
+// to it wrt. to rename/delete operation, which we don't get notified about
+//
+// TODO: to collapse multiple notifications for the same file, could put it on a
+// queue, restart the thread with a timeout, restart the process if we
+// get notified again before timeout expires, call OnFileChanges() when
+// timeout expires
 static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
 {
     lf(L"NotifyAboutFile() %s", fileName);
 
-    WatchedFile *curr = g_firstFile;
+    WatchedFile *curr = g_filesList;
     while (curr) {
         if (curr->watchedDir == d) {
             if (str::EqI(fileName, curr->fileName)) {
@@ -107,15 +134,13 @@ static void DeleteWatchedDir(WatchedDir *wd)
     free(wd);
 }
 
-static void CALLBACK ReadDirectoryChangesNotification(
-        DWORD errCode,              // completion code
-        DWORD bytesTransfered,      // number of bytes transferred
-        LPOVERLAPPED overlapped)    // I/O information buffer
+static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, 
+    DWORD bytesTransfered, LPOVERLAPPED overlapped)
 {
     OverlappedEx *over = (OverlappedEx*)overlapped;
     WatchedDir* wd = (WatchedDir*)over->data;
 
-    lf(L"ReadDirectoryChangesNotification() dir: %s", wd->dirPath);
+    lf(L"ReadDirectoryChangesNotification() dir: %s, numBytes: %d", wd->dirPath, (int)bytesTransfered);
 
     CrashIf(wd != wd->overlapped.data);
 
@@ -125,8 +150,6 @@ static void CALLBACK ReadDirectoryChangesNotification(
         DeleteWatchedDir(wd);
         return;
     }
-
-    lf("  numBytes: %d", (int)bytesTransfered);
 
     // This might mean overflow? Not sure.
     if (!bytesTransfered)
@@ -176,6 +199,8 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg)
 
     lf(L"StartMonitoringDirForChangesAPC() %s", wd->dirPath);
 
+    CrashIf(g_threadId != GetCurrentThreadId());
+
     ReadDirectoryChangesW(
          wd->hDir,
          wd->buf,                           // read results buffer
@@ -187,9 +212,6 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg)
          ReadDirectoryChangesNotification); // completion routine
 }
 
-// the callback is executed in the context of calling thread, which
-// must be alertable in order to process notifications
-// to minimize dependencies on ui thread, we queue this to our file wather thread
 static void StartMonitoringDirForChanges(WatchedDir *wd)
 {
     QueueUserAPC(StartMonitoringDirForChangesAPC, g_threadHandle, (ULONG_PTR)wd);
@@ -229,14 +251,13 @@ static void StartThreadIfNecessary()
     InitializeCriticalSection(&g_threadCritSec);
     g_threadControlHandle = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-    DWORD threadId;
-    g_threadHandle = CreateThread(NULL, 0, FileWatcherThread, 0, 0, &threadId);
-    SetThreadName(threadId, "FileWatcherThread");
+    g_threadHandle = CreateThread(NULL, 0, FileWatcherThread, 0, 0, &g_threadId);
+    SetThreadName(g_threadId, "FileWatcherThread");
 }
 
 static WatchedDir *FindExistingWatchedDir(const WCHAR *dirPath)
 {
-    WatchedDir *curr = g_firstDir;
+    WatchedDir *curr = g_dirsList;
     while (curr) {
         // TODO: normalize dirPath?
         if (str::EqI(dirPath, curr->dirPath))
@@ -276,8 +297,8 @@ static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
     if (!wd->hDir)
         goto Failed;
 
-    wd->next = g_firstDir;
-    g_firstDir = wd;
+    wd->next = g_dirsList;
+    g_dirsList = wd;
 
     return wd;
 Failed:
@@ -299,8 +320,8 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
     wf->fileName = str::Dup(path::GetBaseName(filePath));
     wf->watchedDir = wd;
     wf->observer = observer;
-    wf->next = g_firstFile;
-    g_firstFile = wf;
+    wf->next = g_filesList;
+    g_filesList = wf;
 
     if (newDir)
         StartMonitoringDirForChanges(wd);
@@ -321,7 +342,7 @@ call observer->OnFileChanged().
 We take ownership of observer object.
 
 Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
-way we can support multiple callers subscribing for the same file.
+way we can support multiple callers subscribing to the same file.
 */
 FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *observer)
 {
@@ -348,7 +369,7 @@ FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *obs
 
 static bool IsWatchedDirReferenced(WatchedDir *wd)
 {
-    for (WatchedFile *wf = g_firstFile; wf; wf->next) {
+    for (WatchedFile *wf = g_filesList; wf; wf->next) {
         if (wf->watchedDir == wd)
             return true;
     }
@@ -359,7 +380,7 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir *wd)
 {
     if (IsWatchedDirReferenced(wd))
         return;
-    WatchedDir **currPtr = &g_firstDir;
+    WatchedDir **currPtr = &g_dirsList;
     WatchedDir *curr;
     for (;;) {
         curr = *currPtr;
@@ -378,7 +399,7 @@ static void RemoveWatchedFile(WatchedFile *wf)
 {
     WatchedDir *wd = wf->watchedDir;
 
-    WatchedFile **currPtr = &g_firstFile;
+    WatchedFile **currPtr = &g_filesList;
     WatchedFile *curr;
     for (;;) {
         curr = *currPtr;
