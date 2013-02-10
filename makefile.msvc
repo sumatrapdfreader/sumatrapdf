@@ -168,7 +168,7 @@ SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\Doc.obj \
 	$(OS)\Favorites.obj $(OS)\TextSearch.obj $(OS)\SumatraAbout.obj $(OS)\SumatraAbout2.obj \
 	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
-	$(OS)\SumatraPDF.obj $(OS)\translations.obj $(OS)\FileWatch.obj \
+	$(OS)\SumatraPDF.obj $(OS)\translations.obj \
 	$(OS)\PdfSync.obj $(OS)\RenderCache.obj $(OS)\TextSelection.obj \
 	$(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj $(OS)\StressTesting.obj \
 	$(OS)\UnitTests.obj $(OS)\AppTools.obj $(OS)\TableOfContents.obj \

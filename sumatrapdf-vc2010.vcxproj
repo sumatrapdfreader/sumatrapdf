@@ -266,7 +266,6 @@
     <ClCompile Include="src\EngineDump.cpp" />
     <ClCompile Include="src\ExternalPdfViewer.cpp" />
     <ClCompile Include="src\Favorites.cpp" />
-    <ClCompile Include="src\FileWatch.cpp" />
     <ClCompile Include="src\ifilter\CPdfFilter.cpp" />
     <ClCompile Include="src\ifilter\CTeXFilter.cpp" />
     <ClCompile Include="src\ifilter\PdfFilterDll.cpp" />
@@ -460,7 +459,6 @@
     <ClInclude Include="src\ExternalPdfViewer.h" />
     <ClInclude Include="src\Favorites.h" />
     <ClInclude Include="src\FileHistory.h" />
-    <ClInclude Include="src\FileWatch.h" />
     <ClInclude Include="src\ifilter\CPdfFilter.h" />
     <ClInclude Include="src\ifilter\CTeXFilter.h" />
     <ClInclude Include="src\ifilter\FilterBase.h" />

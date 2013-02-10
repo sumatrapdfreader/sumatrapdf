@@ -200,9 +200,6 @@
     <ClCompile Include="src\DisplayModel.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\FileWatch.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="src\LangMenuDef.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -1085,9 +1082,6 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\FileHistory.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\FileWatch.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\LangMenuDef.h">
