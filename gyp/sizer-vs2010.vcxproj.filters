@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\tools">
+      <UniqueIdentifier>{A0946190-5491-4D66-7E51-19400E36F078}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\tools\sizer">
+      <UniqueIdentifier>{AF64A9BC-9197-39AC-2E40-79DAA2A89E49}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="sizer.gyp"/>
+    <ClCompile Include="..\tools\sizer\debuginfo.cpp">
+      <Filter>..\tools\sizer</Filter>
+    </ClCompile>
+    <None Include="..\tools\sizer\debuginfo.hpp">
+      <Filter>..\tools\sizer</Filter>
+    </None>
+    <ClCompile Include="..\tools\sizer\main.cpp">
+      <Filter>..\tools\sizer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tools\sizer\pdbfile.cpp">
+      <Filter>..\tools\sizer</Filter>
+    </ClCompile>
+    <None Include="..\tools\sizer\pdbfile.hpp">
+      <Filter>..\tools\sizer</Filter>
+    </None>
+    <None Include="..\tools\sizer\types.hpp">
+      <Filter>..\tools\sizer</Filter>
+    </None>
+  </ItemGroup>
+</Project>
