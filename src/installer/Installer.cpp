@@ -918,9 +918,9 @@ static void ParseCommandLine(WCHAR *cmdLine)
             optlist.Split(opts, L",", true);
             if (optlist.Contains(L"plugin"))
                 gGlobalData.installBrowserPlugin = true;
-            if (optlist.contains(L"pdffilter"))
+            if (optlist.Contains(L"pdffilter"))
                 gGlobalData.installPdfFilter = true;
-            if (optlist.contains(L"pdfpreviewer"))
+            if (optlist.Contains(L"pdfpreviewer"))
                 gGlobalData.installPdfPreviewer = true;
         }
 #endif

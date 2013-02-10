@@ -113,6 +113,18 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\CssParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\CssParser.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\CssParser_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\HtmlParserLookup.cpp"
 					>
 				</File>
@@ -214,6 +226,14 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\FileTransactions.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\FileWatcher.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\FileWatcher.h"
 					>
 				</File>
 				<File
