@@ -257,7 +257,24 @@ bool Exists(const WCHAR *filePath)
     return true;
 }
 
-size_t GetSize(const WCHAR *filePath)
+// returns -1 on error (can't use INVALID_FILE_SIZE because it won't cast right)
+int64 GetSize(const WCHAR *filePath)
+{
+    ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
+                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
+    if (h == INVALID_HANDLE_VALUE)
+        return -1;
+
+    // Don't use GetFileAttributesEx to retrieve the file size, as
+    // that function doesn't interact well with symlinks, etc.
+    LARGE_INTEGER size;
+    BOOL ok = GetFileSizeEx(h, &size);
+    if (!ok)
+        return -1;
+    return size.QuadPart;
+}
+
+size_t GetSizeBroken(const WCHAR *filePath)
 {
     ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
@@ -282,7 +299,7 @@ size_t GetSize(const WCHAR *filePath)
 
 char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut)
 {
-    size_t size = GetSize(filePath);
+    size_t size = GetSizeBroken(filePath);
     if (INVALID_FILE_SIZE == size)
         return NULL;
 

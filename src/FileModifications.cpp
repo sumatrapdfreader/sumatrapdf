@@ -49,7 +49,7 @@ Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filepath)
     prop = parser.NextProperty();
     if (prop && Css_Filesize == prop->type) {
         UINT filesize;
-        if (str::Parse(prop->s, prop->sLen, "%u%$", &filesize) && file::GetSize(filepath) != filesize)
+        if (str::Parse(prop->s, prop->sLen, "%u%$", &filesize) && file::GetSizeBroken(filepath) != filesize)
             return NULL;
     }
 
@@ -103,7 +103,7 @@ bool SaveFileModifictions(const WCHAR *filepath, Vec<PageAnnotation> *list)
     str::Str<char> data;
     data.AppendFmt("/* SumatraPDF: modifications to \"%S\" */\r\n", path::GetBaseName(filepath));
     data.AppendFmt("@meta { version: %s", SMX_CURR_VERSION);
-    size_t size = file::GetSize(filepath);
+    size_t size = file::GetSizeBroken(filepath);
     if (size != INVALID_FILE_SIZE && size <= UINT_MAX)
         data.AppendFmt("; filesize: %u", (UINT)size);
     data.Append(" }\r\n\r\n");

@@ -388,7 +388,7 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
     str = FormatPdfFileStructure(doc);
     layoutData->AddProperty(_TR("PDF Optimizations:"), str);
 
-    size_t fileSize = file::GetSize(doc.GetFilePath());
+    size_t fileSize = file::GetSizeBroken(doc.GetFilePath());
     if (fileSize == INVALID_FILE_SIZE && doc.IsEngine())
         free(doc.AsEngine()->GetFileData(&fileSize));
     if (fileSize != INVALID_FILE_SIZE) {
