@@ -12,21 +12,18 @@
 #include "DebugLog.h"
 
 /*
-This is APC-based version of file watcher, based on information in: http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
+This is APC-based version of file watcher, based on information in
+http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
 
 Advantages over overlapped.hEvent handle based:
  - no limit on the number of watched directories
- - hopefully get rid of the problem with overlapped.hEvent being changed
-   after memory has been freed.
+ - no issues with overlapped.hEvent being modified at random times
 */
 
 /*
 TODO:
 
-  - it doesn't work at all (ReadDirectoryChangesNotification() is never called even though
-    files are being modified)
-
-  - handle files on non-fixed drives (network drives, usb) by using
+- handle files on non-fixed drives (network drives, usb) by using
     a timeout in the thread
 
   - should I end the thread when there are no files to watch?
@@ -35,15 +32,13 @@ TODO:
     file. add some delay mechanism so that subsequent change notifications
     cancel a previous, delayed one ? E.g. a copy f2.pdf f.pdf generates 3
     notifications if f2.pdf is 2 MB.
-
-  - implement it the way http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
-    suggests?
 */
 
 #define INVALID_TOKEN 0
 
 #define FILEWATCH_DELAY_IN_MS       1000
 
+// Some people use overlapped.hEvent to store data but I'm playing it safe.
 struct OverlappedEx {
     OVERLAPPED      overlapped;
     void *          data;
@@ -117,10 +112,12 @@ static void CALLBACK ReadDirectoryChangesNotification(
         DWORD bytesTransfered,      // number of bytes transferred
         LPOVERLAPPED overlapped)    // I/O information buffer
 {
-    WatchedDir* wd = (WatchedDir*)overlapped->hEvent;
+    OverlappedEx *over = (OverlappedEx*)overlapped;
+    WatchedDir* wd = (WatchedDir*)over->data;
+
     lf(L"ReadDirectoryChangesNotification() dir: %s", wd->dirPath);
 
-    ScopedCritSec cs(&g_threadCritSec);
+    CrashIf(wd != wd->overlapped.data);
 
     if (errCode == ERROR_OPERATION_ABORTED)
     {
@@ -137,20 +134,20 @@ static void CALLBACK ReadDirectoryChangesNotification(
 
     FILE_NOTIFY_INFORMATION *notify = (FILE_NOTIFY_INFORMATION*)wd->buf;
 
-    // a single notification can have multiple notifications for the same file, so we filter duplicates
-    WStrVec seenFiles;
+    // collect files that changed, removing duplicates
+    WStrVec changedFiles;
     for (;;) {
         WCHAR *fileName = str::DupN(notify->FileName, notify->FileNameLength / sizeof(WCHAR));
         if (notify->Action == FILE_ACTION_MODIFIED) {
-            if (!seenFiles.Contains(fileName)) {
-                seenFiles.Append(fileName);
-                lf(L"NotifyAboutDirChanged() FILE_ACTION_MODIFIED, for '%s'", fileName);
+            if (!changedFiles.Contains(fileName)) {
+                changedFiles.Append(fileName);
+                lf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s'", fileName);
             } else {
-                lf(L"NotifyAboutDirChanged() eliminating duplicate notification for '%s'", fileName);
+                lf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'", fileName);
                 free(fileName);
             }
         } else {
-            lf(L"NotifyAboutDirChanged() action=%d, for '%s'", (int)notify->Action, fileName);
+            lf(L"ReadDirectoryChangesNotification() action=%d, for '%s'", (int)notify->Action, fileName);
             free(fileName);
         }
 
@@ -162,17 +159,22 @@ static void CALLBACK ReadDirectoryChangesNotification(
     }
 
     StartMonitoringDirForChanges(wd);
-    for (WCHAR **f = seenFiles.IterStart(); f; f = seenFiles.IterNext()) {
+
+    ScopedCritSec cs(&g_threadCritSec);
+    for (WCHAR **f = changedFiles.IterStart(); f; f = changedFiles.IterNext()) {
         NotifyAboutFile(wd, *f);
     }
 }
 
-static void StartMonitoringDirForChanges(WatchedDir *wd)
+static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg)
 {
+    WatchedDir *wd = (WatchedDir*)arg;
     ZeroMemory(&wd->overlapped, sizeof(wd->overlapped));
 
     OVERLAPPED *overlapped = (OVERLAPPED*)&(wd->overlapped);
     wd->overlapped.data = (HANDLE)wd;
+
+    lf(L"StartMonitoringDirForChangesAPC() %s", wd->dirPath);
 
     ReadDirectoryChangesW(
          wd->hDir,
@@ -185,12 +187,20 @@ static void StartMonitoringDirForChanges(WatchedDir *wd)
          ReadDirectoryChangesNotification); // completion routine
 }
 
+// the callback is executed in the context of calling thread, which
+// must be alertable in order to process notifications
+// to minimize dependencies on ui thread, we queue this to our file wather thread
+static void StartMonitoringDirForChanges(WatchedDir *wd)
+{
+    QueueUserAPC(StartMonitoringDirForChangesAPC, g_threadHandle, (ULONG_PTR)wd);
+}
+
 static DWORD WINAPI FileWatcherThread(void *param)
 {
     HANDLE handles[1];
     for (;;) {
         handles[0] = g_threadControlHandle;
-        DWORD obj = WaitForMultipleObjectsEx(1, handles, FALSE, INFINITE, TRUE /* alertable */);
+        DWORD obj = WaitForMultipleObjectsEx(1, handles, FALSE, INFINITE, TRUE /* must be alertable */);
         if (obj == WAIT_IO_COMPLETION) {
             // APC complete. Nothing to do
             lf("FileWatcherThread(): APC complete");
@@ -236,9 +246,10 @@ static WatchedDir *FindExistingWatchedDir(const WCHAR *dirPath)
     return NULL;
 }
 
-static void StopMonitoringDir(WatchedDir *wd)
+static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg)
 {
-    lf("StopMonitoringDir() wd=0x%p", wd);
+    WatchedDir *wd = (WatchedDir*)arg;
+    lf("StopMonitoringDirAPC() wd=0x%p", wd);
 
     // this will cause ReadDirectoryChangesNotification() to be called
     // with errCode = ERROR_OPERATION_ABORTED
@@ -246,6 +257,11 @@ static void StopMonitoringDir(WatchedDir *wd)
     if (!ok)
         LogLastError();
     SafeCloseHandle(&wd->hDir);
+}
+
+static void StopMonitoringDir(WatchedDir *wd)
+{
+    QueueUserAPC(StopMonitoringDirAPC, g_threadHandle, (ULONG_PTR)wd);
 }
 
 static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
@@ -324,7 +340,8 @@ FileWatcherToken FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *obs
 
     // TODO: if the file is on a network drive we should periodically check
     // it ourselves, because ReadDirectoryChangesW()
-    // doesn't work in that case
+    // doesn't always work in that case (per http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw_19.html
+    // it depends on the server)
     WatchedFile *wf = NewWatchedFile(path, observer);
     return wf;
 }

@@ -1,7 +1,7 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// #define TEST_NEW_FILEWATCHER
+#define TEST_NEW_FILEWATCHER
 
 #include "BaseUtil.h"
 #include "SumatraPDF.h"
