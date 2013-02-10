@@ -15,7 +15,7 @@
 This is APC-based version of file watcher, based on information in
 http://qualapps.blogspot.com/2010/05/understanding-readdirectorychangesw.html
 
-Advantages over overlapped.hEvent handle based:
+Advantages over solution using GetOverlappedResult() and overlapped.hEvent handle:
  - no limit on the number of watched directories
  - no issues with overlapped.hEvent being modified at random times
 */
@@ -23,7 +23,7 @@ Advantages over overlapped.hEvent handle based:
 /*
 TODO:
 
-- handle files on non-fixed drives (network drives, usb) by using
+  - handle files on non-fixed drives (network drives, usb) by using
     a timeout in the thread
 
   - should I end the thread when there are no files to watch?
