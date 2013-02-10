@@ -334,7 +334,6 @@
     <ClCompile Include="src\utils\Experiments.cpp" />
     <ClCompile Include="src\utils\FileTransactions.cpp" />
     <ClCompile Include="src\utils\FileWatcher.cpp" />
-    <ClCompile Include="src\utils\FileWatcher2.cpp" />
     <ClCompile Include="src\utils\GdiPlusUtil.cpp" />
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\JsonParser.cpp" />
