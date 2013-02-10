@@ -19,6 +19,7 @@ WCHAR *      Normalize(const WCHAR *path);
 WCHAR *      ShortPath(const WCHAR *path);
 bool         IsSame(const WCHAR *path1, const WCHAR *path2);
 bool         HasVariableDriveLetter(const WCHAR *path);
+bool         IsOnFixedDrive(const WCHAR *path);
 bool         Match(const WCHAR *path, const WCHAR *filter);
 bool         IsAbsolute(const WCHAR *path);
 

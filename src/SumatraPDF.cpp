@@ -1,8 +1,6 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#define TEST_NEW_FILEWATCHER
-
 #include "BaseUtil.h"
 #include "SumatraPDF.h"
 #include <malloc.h>
@@ -21,11 +19,7 @@
 #include "FileModifications.h"
 #include "Favorites.h"
 #include "FileUtil.h"
-#ifndef TEST_NEW_FILEWATCHER
-#include "FileWatch.h"
-#else
 #include "FileWatcher.h"
-#endif
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HttpUtil.h"
@@ -1851,16 +1845,7 @@ public:
         // be marked as inexistent in gFileHistory)
         for (size_t i = 0; i < paths.Count() && !WasCancelRequested(); i++) {
             WCHAR *path = paths.At(i);
-            bool check = false;
-            if (!PathIsNetworkPath(path)) {
-                UINT type;
-                WCHAR root[MAX_PATH];
-                if (GetVolumePathName(path, root, dimof(root)))
-                    type = GetDriveType(root);
-                else
-                    type = GetDriveType(path);
-                check = DRIVE_FIXED == type;
-            }
+            bool check = path::IsOnFixedDrive(path);
             if (!check || file::Exists(path)) {
                 paths.RemoveAt(i--);
                 delete path;

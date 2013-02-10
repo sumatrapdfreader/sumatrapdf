@@ -167,6 +167,20 @@ bool HasVariableDriveLetter(const WCHAR *path)
            DRIVE_NO_ROOT_DIR == driveType;
 }
 
+bool IsOnFixedDrive(const WCHAR *path)
+{
+    if (PathIsNetworkPath(path))
+        return false;
+
+    UINT type;
+    WCHAR root[MAX_PATH];
+    if (GetVolumePathName(path, root, dimof(root)))
+        type = GetDriveType(root);
+    else
+        type = GetDriveType(path);
+    return DRIVE_FIXED == type;
+}
+
 static bool MatchWildcardsRec(const WCHAR *filename, const WCHAR *filter)
 {
 #define AtEndOf(str) (*(str) == '\0')
