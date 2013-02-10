@@ -258,7 +258,7 @@ bool EpubDoc::Load()
         return false;
     // EPUB 2 ToC
     ScopedMem<WCHAR> tocId(node->GetAttribute("toc"));
-    if (tocId && !tocPath && idList.Find(tocId) != -1) {
+    if (tocId && !tocPath && idList.Contains(tocId)) {
         tocPath.Set(str::Join(contentPath, pathList.At(idList.Find(tocId))));
         str::UrlDecodeInPlace(tocPath);
         isNcxToc = true;
@@ -271,7 +271,7 @@ bool EpubDoc::Load()
         if (!node->NameIsNS("itemref", EPUB_OPF_NS))
             continue;
         ScopedMem<WCHAR> idref(node->GetAttribute("idref"));
-        if (!idref || idList.Find(idref) == -1)
+        if (!idref || !idList.Contains(idref))
             continue;
 
         ScopedMem<WCHAR> fullPath(str::Join(contentPath, pathList.At(idList.Find(idref))));

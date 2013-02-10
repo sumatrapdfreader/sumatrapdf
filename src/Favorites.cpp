@@ -513,7 +513,7 @@ void PopulateFavTreeIfNeeded(WindowInfo *win)
     SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
     for (size_t i = 0; i < filePathsSorted.Count(); i++) {
         FileFavs *f = gFavorites->GetFavByFilePath(filePathsSorted.At(i));
-        bool isExpanded = (win->expandedFavorites.Find(f->filePath) != -1);
+        bool isExpanded = win->expandedFavorites.Contains(f->filePath);
         HTREEITEM node = InsertFavTopLevelNode(hwndTree, f, isExpanded);
         if (f->favNames.Count() > 1)
             InsertFavSecondLevelNodes(hwndTree, node, f);

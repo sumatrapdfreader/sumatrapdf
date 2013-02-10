@@ -234,7 +234,7 @@ bool HuffDicDecompressor::DecodeOne(uint32 code, str::Str<char>& dst)
     }
 
     if (!(symLen & 0x8000)) {
-        if (recursionGuard.Find(code) != -1) {
+        if (recursionGuard.Contains(code)) {
             lf("infinite recursion");
             return false;
         }

@@ -1031,7 +1031,7 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
             ScopedMem<WCHAR> unique;
             do {
                 unique.Set(str::Format(L"%s.%d", dups.At(i), ++counter));
-            } while (labels->Find(unique) != -1);
+            } while (labels->Contains(unique));
             str::ReplacePtr(&labels->At(ix), unique);
         }
         for (; i + 1 < dups.Count() && str::Eq(dups.At(i), dups.At(i + 1)); i++);
@@ -2433,7 +2433,7 @@ static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList)
     pdf_obj *fonts = pdf_dict_gets(res, "Font");
     for (int k = 0; k < pdf_dict_len(fonts); k++) {
         pdf_obj *font = pdf_resolve_indirect(pdf_dict_get_val(fonts, k));
-        if (font && fontList.Find(font) == -1)
+        if (font && !fontList.Contains(font))
             fontList.Append(font);
     }
     // also extract fonts for all XObjects (recursively)
@@ -2530,7 +2530,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
         }
 
         ScopedMem<WCHAR> fontInfo(str::conv::FromUtf8(info.LendData()));
-        if (fontInfo && fonts.Find(fontInfo) == -1)
+        if (fontInfo && !fonts.Contains(fontInfo))
             fonts.Append(fontInfo.StealData());
     }
     if (fonts.Count() == 0)

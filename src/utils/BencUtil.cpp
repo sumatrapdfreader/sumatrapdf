@@ -171,8 +171,8 @@ BencObj *BencDict::GetObj(const char *key) const
    proper hash table instead of two parallel arrays). */
 void BencDict::Add(const char *key, BencObj *obj)
 {
-    assert(key && obj && values.Find(obj) == -1);
-    if (!key || !obj || values.Find(obj) != -1) return;
+    CrashIf(!key || !obj || values.Contains(obj));
+    if (!key || !obj || values.Contains(obj)) return;
 
     // determine the ordered insertion index
     size_t oix = 0;

@@ -93,7 +93,7 @@ class Notifications : public NotificationWndCallback {
 public:
     ~Notifications() { DeleteVecMembers(wnds); }
 
-    bool Contains(NotificationWnd *wnd) { return wnds.Find(wnd) != -1; }
+    bool Contains(NotificationWnd *wnd) { return wnds.Contains(wnd); }
 
     void         Add(NotificationWnd *wnd, int groupId=0);
     NotificationWnd * GetFirstInGroup(int groupId);

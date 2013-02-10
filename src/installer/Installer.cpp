@@ -916,11 +916,11 @@ static void ParseCommandLine(WCHAR *cmdLine)
             str::TransChars(opts, L" ;", L",,");
             WStrVec optlist;
             optlist.Split(opts, L",", true);
-            if (optlist.Find(L"plugin") != -1)
+            if (optlist.Contains(L"plugin"))
                 gGlobalData.installBrowserPlugin = true;
-            if (optlist.Find(L"pdffilter") != -1)
+            if (optlist.contains(L"pdffilter"))
                 gGlobalData.installPdfFilter = true;
-            if (optlist.Find(L"pdfpreviewer") != -1)
+            if (optlist.contains(L"pdfpreviewer"))
                 gGlobalData.installPdfPreviewer = true;
         }
 #endif

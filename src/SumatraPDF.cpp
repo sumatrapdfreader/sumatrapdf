@@ -237,7 +237,7 @@ bool LaunchBrowser(const WCHAR *url)
     if (!str::Parse(url, L"%S:", &protocol))
         return false;
     str::ToLower(protocol);
-    if (gAllowedLinkProtocols.Find(protocol) == -1)
+    if (!gAllowedLinkProtocols.Contains(protocol))
         return false;
 
     return LaunchFile(url, NULL, L"open");
@@ -259,7 +259,7 @@ bool OpenFileExternally(const WCHAR *path)
     if (str::IsEmpty(perceivedType.Get()))
         return false;
     str::ToLower(perceivedType);
-    if (gAllowedFileTypes.Find(perceivedType) == -1 && gAllowedFileTypes.Find(L"*") == -1)
+    if (!gAllowedFileTypes.Contains(perceivedType) && !gAllowedFileTypes.Contains(L"*"))
         return false;
 
     // TODO: only do this for trusted files (cf. IsUntrustedFile)?
@@ -350,7 +350,7 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
 
 bool WindowInfoStillValid(WindowInfo *win)
 {
-    return gWindows.Find(win) != -1;
+    return gWindows.Contains(win);
 }
 
 // Find the first window showing a given PDF file
@@ -1834,7 +1834,7 @@ public:
         gFileHistory.GetFrequencyOrder(frequencyList);
         for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_FREQUENT && i < frequencyList.Count(); i++) {
             state = frequencyList.At(i);
-            if (-1 == paths.Find(state->filePath))
+            if (!paths.Contains(state->filePath))
                 paths.Append(str::Dup(state->filePath));
         }
     }
@@ -2597,7 +2597,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         assert(0 == gWindows.Count());
         PostQuitMessage(0);
     } else if (lastWindow && !quitIfLast) {
-        assert(gWindows.Find(win) != -1);
+        CrashIf(!gWindows.Contains(win));
         UpdateToolbarAndScrollbarState(*win);
     }
 }
@@ -3078,7 +3078,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     if (!CollectPathsFromDirectory(pattern, files))
         return;
 
-    if (-1 == files.Find(win.loadedFilePath))
+    if (!files.Contains(win.loadedFilePath))
         files.Append(str::Dup(win.loadedFilePath));
     files.SortNatural();
 

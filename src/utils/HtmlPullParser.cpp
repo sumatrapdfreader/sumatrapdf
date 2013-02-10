@@ -382,7 +382,7 @@ static void RecordEndTag(Vec<HtmlTag> *tagNesting, HtmlTag tag)
     // when closing a tag, if the top tag doesn't match but
     // there are only potentially self-closing tags on the
     // stack between the matching tag, we pop all of them
-    if (tagNesting->Find(tag) != -1) {
+    if (tagNesting->Contains(tag)) {
         while ((tagNesting->Count() > 0) && (tagNesting->Last() != tag))
             tagNesting->Pop();
     }

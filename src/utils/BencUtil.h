@@ -75,8 +75,8 @@ public:
     size_t Length() const { return value.Count(); }
 
     void Add(BencObj *obj) {
-        assert(obj && value.Find(obj) == -1);
-        if (!obj || value.Find(obj) != -1) return;
+        CrashIf(!obj || value.Contains(obj));
+        if (!obj || value.Contains(obj)) return;
         value.Append(obj);
     }
     void Add(const WCHAR *string) {

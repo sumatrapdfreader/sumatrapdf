@@ -212,7 +212,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken *t)
     CrashIf(!epubDoc);
     if (t->IsEndTag())
         return;
-    if (tagNesting.Find(Tag_Svg) == -1)
+    if (!tagNesting.Contains(Tag_Svg))
         return;
     AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (!attr)
@@ -314,7 +314,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
         HandleAnchorAttr(t);
     }
     else if (Tag_P == t->tag) {
-        if (htmlParser->tagNesting.Find(Tag_Title) == -1)
+        if (!htmlParser->tagNesting.Contains(Tag_Title))
             HtmlFormatter::HandleHtmlTag(t);
     }
     else if (Tag_Image == t->tag) {

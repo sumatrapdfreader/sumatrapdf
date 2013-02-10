@@ -292,7 +292,7 @@ bool IsExeAssociatedWithPdfExtension()
     WStrVec argList;
     ParseCmdLine(tmp, argList);
     ScopedMem<WCHAR> exePath(GetExePath());
-    if (!exePath || !argList.Find(L"%1") || !str::Find(tmp, L"\"%1\""))
+    if (!exePath || !argList.Contains(L"%1") || !str::Find(tmp, L"\"%1\""))
         return false;
 
     return path::IsSame(exePath, argList.At(0));

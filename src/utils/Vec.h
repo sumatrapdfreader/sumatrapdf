@@ -222,6 +222,10 @@ public:
         return -1;
     }
 
+    bool Contains(T el) const {
+        return -1 != Find(el);
+    }
+
     // returns true if removed
     bool Remove(T el) {
         int i = Find(el);
@@ -501,5 +505,9 @@ public:
                 return (int)i;
         }
         return -1;
+    }
+
+    bool Contains(const WCHAR *str) const {
+        return -1 != Find(str);
     }
 };

@@ -468,7 +468,7 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *pa
     // we now find the page and positions in the PDF corresponding to these found records
     UINT firstPage = UINT_MAX;
     for (size_t i = 0; i < points.Count(); i++) {
-        if (found_records.Find(points.At(i).record) == -1)
+        if (!found_records.Contains(points.At(i).record))
             continue;
         if (firstPage != UINT_MAX && firstPage != points.At(i).page)
             continue;

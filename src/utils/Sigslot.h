@@ -207,7 +207,7 @@ public:
     {
         lock_block lock;
         // ensure set semantics (i.e. no duplicates)
-        if (-1 == m_senders.Find(sender))
+        if (!m_senders.Contains(sender))
             m_senders.Append(sender);
     }
 

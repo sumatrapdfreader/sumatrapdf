@@ -921,7 +921,7 @@ bool CbxEngineImpl::Visit(const char *path, const char *value, json::DataType ty
             if (json::Type_String == type && str::Eq(prop, "person"))
                 propAuthorTmp.Set(str::conv::FromUtf8(value));
             else if (json::Type_Bool == type && str::Eq(prop, "primary") &&
-                propAuthorTmp && propAuthors.Find(propAuthorTmp) == -1) {
+                propAuthorTmp && !propAuthors.Contains(propAuthorTmp)) {
                 propAuthors.Append(propAuthorTmp.StealData());
             }
         }

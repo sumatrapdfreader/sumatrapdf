@@ -234,7 +234,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
 static void PopulateTocTreeView(HWND hwnd, DocTocItem *entry, Vec<int>& tocState, HTREEITEM parent = NULL)
 {
     for (; entry; entry = entry->next) {
-        bool toggle = tocState.Find(entry->id) != -1;
+        bool toggle = tocState.Contains(entry->id);
         HTREEITEM node = AddTocItemToView(hwnd, entry, parent, toggle);
         PopulateTocTreeView(hwnd, entry->child, tocState, node);
     }
