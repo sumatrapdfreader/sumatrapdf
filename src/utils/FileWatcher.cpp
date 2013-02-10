@@ -8,7 +8,7 @@
 #include "ThreadUtil.h"
 #include "WinUtil.h"
 
-#define NOLOG 0
+#define NOLOG 1
 #include "DebugLog.h"
 
 /*
