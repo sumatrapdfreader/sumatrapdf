@@ -85,7 +85,6 @@ struct WatchedFile {
     FileState               fileState;
 };
 
-static int              g_currentToken = 1;
 static HANDLE           g_threadHandle = 0;
 static DWORD            g_threadId = 0;
 
