@@ -225,16 +225,16 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode,
         WCHAR *fileName = str::DupN(notify->FileName, notify->FileNameLength / sizeof(WCHAR));
         if (notify->Action == FILE_ACTION_MODIFIED) {
             if (!changedFiles.Contains(fileName)) {
-                changedFiles.Append(fileName);
                 lf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s'", fileName);
+                changedFiles.Append(fileName);
+                fileName = NULL;
             } else {
                 lf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'", fileName);
-                free(fileName);
             }
         } else {
             lf(L"ReadDirectoryChangesNotification() action=%d, for '%s'", (int)notify->Action, fileName);
-            free(fileName);
         }
+        free(fileName);
 
         // step to the next entry if there is one
         DWORD nextOff = notify->NextEntryOffset;
