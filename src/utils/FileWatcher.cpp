@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "FileWatcher.h"
 
+#include "CrashHandler.h"
 #include "FileUtil.h"
 #include "ThreadUtil.h"
 #include "WinUtil.h"
@@ -75,7 +76,6 @@ struct WatchedFile {
     WatchedFile *           next;
     WatchedDir *            watchedDir;
     const WCHAR *           filePath;
-    const WCHAR *           fileName;
     FileChangeObserver *    observer;
 
     // if true, the file is on a network drive and we have
@@ -176,7 +176,9 @@ static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
     for (WatchedFile *wf = g_watchedFiles; wf; wf = wf->next) {
         if (wf->watchedDir != d)
             continue;
-        if (!str::EqI(fileName, wf->fileName))
+        const WCHAR *wfFileName = path::GetBaseName(wf->filePath);
+
+        if (!str::EqI(fileName, wfFileName))
             continue;
 
         // NOTE: It is not recommended to check whether the timestamp has changed
@@ -197,9 +199,6 @@ static void DeleteWatchedDir(WatchedDir *wd)
 static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode,
     DWORD bytesTransfered, LPOVERLAPPED overlapped)
 {
-    // Note: I guess there's a tiny race here, where WatchedDir can be deleted
-    // on the main thread while before this is called. I don't see how it can
-    // be fixed, though
     ScopedCritSec cs(&g_threadCritSec);
 
     OverlappedEx *over = (OverlappedEx*)overlapped;
@@ -209,8 +208,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode,
 
     CrashIf(wd != wd->overlapped.data);
 
-    if (errCode == ERROR_OPERATION_ABORTED)
-    {
+    if (errCode == ERROR_OPERATION_ABORTED) {
         lf("   ERROR_OPERATION_ABORTED");
         DeleteWatchedDir(wd);
         return;
@@ -327,14 +325,13 @@ static DWORD WINAPI FileWatcherThread(void *param)
         }
 
         int n = (int)(obj - WAIT_OBJECT_0);
-        CrashIf(n < 0 || n >= 1);
 
         if (n == 0) {
             // a thread was explicitly awaken
             ResetEvent(g_threadControlHandle);
             lf("FileWatcherThread(): g_threadControlHandle signalled");
         } else {
-            lf("FileWatcherThread(): n=%d", n);
+            CrashLogFmt("FileWatcherThread(): n=%d", n);
             CrashIf(true);
         }
     }
@@ -378,55 +375,53 @@ static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg)
 
 static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
 {
-    WatchedDir *wd = AllocStruct<WatchedDir>();
-    wd->dirPath = str::Dup(dirPath);
-    wd->hDir = CreateFile(
+    HANDLE hDir = CreateFile(
         dirPath, FILE_LIST_DIRECTORY,
         FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE,
         NULL, OPEN_EXISTING,
         FILE_FLAG_BACKUP_SEMANTICS  | FILE_FLAG_OVERLAPPED, NULL);
-    if (!wd->hDir)
-        goto Failed;
+    if (INVALID_HANDLE_VALUE == hDir)
+        return NULL;
+
+    WatchedDir *wd = AllocStruct<WatchedDir>();
+    wd->hDir = hDir;
+    wd->dirPath = str::Dup(dirPath);
 
     ListInsert(&g_watchedDirs, wd);
-
     return wd;
-Failed:
-    DeleteWatchedDir(wd);
-    return NULL;
 }
 
 static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *observer)
 {
+    bool isManualCheck = PathIsNetworkPath(filePath);
+    bool newDir = false;
+    ScopedMem<WCHAR> dirPath(path::GetDir(filePath));
+    WatchedDir *wd = FindExistingWatchedDir(dirPath);
+    if (!wd)
+        wd = NewWatchedDir(dirPath);
+    if (!wd)
+        return NULL;
+
     WatchedFile *wf = AllocStruct<WatchedFile>();
     wf->filePath = str::Dup(filePath);
-    wf->fileName = str::Dup(path::GetBaseName(filePath));
     wf->observer = observer;
-    wf->watchedDir = NULL;
-    wf->isManualCheck = PathIsNetworkPath(filePath);;
+    wf->watchedDir = wd;
+    wf->isManualCheck = isManualCheck;
 
     ListInsert(&g_watchedFiles, wf);
 
     if (wf->isManualCheck) {
         GetFileState(filePath, &wf->fileState);
         AwakeWatcherThread();
-        return wf;
+    } else {
+        StartMonitoringDirForChanges(wf->watchedDir);
     }
-
-    ScopedMem<WCHAR> dirPath(path::GetDir(filePath));
-    wf->watchedDir = FindExistingWatchedDir(dirPath);
-    if (wf->watchedDir)
-        return wf;
-
-    wf->watchedDir = NewWatchedDir(dirPath);
-    StartMonitoringDirForChanges(wf->watchedDir);
 
     return wf;
 }
 
 static void DeleteWatchedFile(WatchedFile *wf)
 {
-    free((void*)wf->fileName);
     free((void*)wf->filePath);
     delete wf->observer;
     free(wf);
