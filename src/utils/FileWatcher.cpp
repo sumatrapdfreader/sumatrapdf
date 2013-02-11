@@ -48,8 +48,6 @@ TODO:
     probably an overkill
 */
 
-#define INVALID_TOKEN 0
-
 // there's a balance between responsiveness to changes and efficiency
 #define FILEWATCH_DELAY_IN_MS       1000
 
@@ -114,7 +112,7 @@ static void AwakeWatcherThread()
     SetEvent(g_threadControlHandle);
 }
 
-void GetFileStateForFile(const WCHAR *filePath, FileState* fs)
+static void GetFileState(const WCHAR *filePath, FileState* fs)
 {
     // Note: in my testing on network drive that is mac volume mounted
     // via parallels, lastWriteTime is not updated. lastAccessTime is,
@@ -125,12 +123,24 @@ void GetFileStateForFile(const WCHAR *filePath, FileState* fs)
     fs->size = file::GetSize(filePath);
 }
 
-bool FileStateEq(FileState *fs1, FileState *fs2)
+static bool FileStateEq(FileState *fs1, FileState *fs2)
 {
     if (0 != CompareFileTime(&fs1->time, &fs2->time))
         return false;
     if (fs1->size != fs2->size)
         return false;
+    return true;
+}
+
+static bool FileStateChanged(const WCHAR *filePath, FileState *fs)
+{
+    FileState fsTmp;
+
+    GetFileState(filePath, &fsTmp);
+    if (FileStateEq(fs, &fsTmp))
+        return false;
+
+    memcpy(fs, &fsTmp, sizeof(*fs));
     return true;
 }
 
@@ -267,15 +277,12 @@ static DWORD GetTimeoutInMs()
 static void RunManualCheck()
 {
     ScopedCritSec cs(&g_threadCritSec);
-    FileState fileState;
 
     for (WatchedFile *wf = g_watchedFiles; wf; wf = wf->next) {
         if (!wf->isManualCheck)
             continue;
-        GetFileStateForFile(wf->filePath, &fileState);
-        if (!FileStateEq(&fileState, &wf->fileState)) {
+        if (FileStateChanged(wf->filePath, &wf->fileState)) {
             lf(L"RunManualCheck() %s changed", wf->filePath);
-            memcpy(&wf->fileState, &fileState, sizeof(fileState));
             wf->observer->OnFileChanged();
         }
     }
@@ -389,7 +396,7 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
     ListInsert(g_watchedFiles, wf);
 
     if (wf->isManualCheck) {
-        GetFileStateForFile(filePath, &wf->fileState);
+        GetFileState(filePath, &wf->fileState);
         AwakeWatcherThread();
         return wf;
     }
