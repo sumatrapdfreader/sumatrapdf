@@ -206,7 +206,7 @@ void TextSelection::SelectUpTo(int pageNo, int glyphIx)
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
     if (fromPage == toPage && fromGlyph > toGlyph)
-        swap(fromGlyph, toGlyph);
+        Swap(fromGlyph, toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
         int textLen;
@@ -251,7 +251,7 @@ WCHAR *TextSelection::ExtractText(WCHAR *lineSep)
     int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
     int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
     if (fromPage == toPage && fromGlyph > toGlyph)
-        swap(fromGlyph, toGlyph);
+        Swap(fromGlyph, toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
         int textLen;

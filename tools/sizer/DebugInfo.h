@@ -5,7 +5,6 @@
 #ifndef DebugInfo_h
 #define DebugInfo_h
 
-#include "Types.h"
 #include <map>
 
 using std::string;

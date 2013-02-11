@@ -241,7 +241,7 @@ public:
 
     void Reverse() {
         for (size_t i = 0; i < len / 2; i++) {
-            swap(els[i], els[len - i - 1]);
+            Swap(els[i], els[len - i - 1]);
         }
     }
 

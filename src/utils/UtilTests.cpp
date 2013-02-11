@@ -78,7 +78,7 @@ static void GeomTest()
         assert(urect.x + urect.dx == curr->u_xe && urect.y + urect.dy == curr->u_ye);
 
         /* if we swap rectangles, the results should be the same */
-        swap(rx1, rx2);
+        Swap(rx1, rx2);
         isect = rx1.Intersect(rx2);
         if (curr->intersect) {
             assert(!isect.IsEmpty());

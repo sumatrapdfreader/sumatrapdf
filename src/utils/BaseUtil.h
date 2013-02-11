@@ -126,7 +126,7 @@ inline void CrashMe()
 #define AssertCrash(exp) CrashIf(!(exp))
 
 template <typename T>
-inline void swap(T& one, T&two)
+inline void Swap(T& one, T&two)
 {
     T tmp = one; one = two; two = tmp;
 }

@@ -5,14 +5,9 @@
 #ifndef PdbFile_h
 #define PdbFile_h
 
-#include <Windows.h>
-#include "DebugInfo.h"
-
 class IDiaSession;
 
 #define logf(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)
-
-#define dimof(x) (sizeof(x) / sizeof(x[0]))
 
 void log(const char *s);
 bool LoadDia();
@@ -33,20 +28,5 @@ class PDBFileReader : public DebugInfoReader
 public:
   virtual bool ReadDebugInfo(char *fileName, DebugInfo &to);
 };
-
-struct ComInitializer
-{
-    ComInitializer() {
-        if(FAILED(CoInitialize(0)))
-        {
-            log("  failed to initialize COM\n");
-            exit(1);
-        }
-    };
-    ~ComInitializer() {
-        CoUninitialize();
-    }
-};
-
 
 #endif

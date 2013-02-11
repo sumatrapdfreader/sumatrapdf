@@ -556,9 +556,9 @@ static fz_link *FixupPageLinks(fz_link *root)
         // there are PDFs that have x,y positions in reverse order, so fix them up
         fz_link *link = new_root;
         if (link->rect.x0 > link->rect.x1)
-            swap(link->rect.x0, link->rect.x1);
+            Swap(link->rect.x0, link->rect.x1);
         if (link->rect.y0 > link->rect.y1)
-            swap(link->rect.y0, link->rect.y1);
+            Swap(link->rect.y0, link->rect.y1);
         assert(link->rect.x1 >= link->rect.x0);
         assert(link->rect.y1 >= link->rect.y0);
     }
