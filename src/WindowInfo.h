@@ -12,7 +12,7 @@ class SelectionOnPage;
 class LinkHandler;
 class Notifications;
 class StressTest;
-class WatchedFile;
+struct WatchedFile;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {

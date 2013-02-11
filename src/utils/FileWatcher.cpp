@@ -48,6 +48,8 @@ TODO:
     probably an overkill
 */
 
+#define INVALID_TOKEN 0
+
 // there's a balance between responsiveness to changes and efficiency
 #define FILEWATCH_DELAY_IN_MS       1000
 
@@ -61,51 +63,31 @@ struct OverlappedEx {
 struct FileState {
     FILETIME    time;
     int64       size;
-
-    bool operator==(const FileState& other) const {
-        if (0 != CompareFileTime(&time, &other.time))
-            return false;
-        return size == other.size;
-    }
-    bool operator!=(const FileState& other) const {
-        return !this->operator==(other);
-    }
 };
 
-class WatchedDir {
-public:
+struct WatchedDir {
     WatchedDir *    next;
-    ScopedMem<WCHAR>dirPath;
+    const WCHAR *   dirPath;
     HANDLE          hDir;
     OverlappedEx    overlapped;
     char            buf[8*1024];
-
-    WatchedDir(const WCHAR *dirPath, HANDLE hDir) :
-        dirPath(str::Dup(dirPath)), hDir(hDir), next(NULL) { }
 };
 
-class WatchedFile {
-public:
+struct WatchedFile {
     WatchedFile *           next;
     WatchedDir *            watchedDir;
-    ScopedMem<WCHAR>        filePath;
+    const WCHAR *           filePath;
     const WCHAR *           fileName;
-    FileChangeObserver *    observer; // owned by WatchedFile
+    FileChangeObserver *    observer;
 
     // if true, the file is on a network drive and we have
     // to check if it changed manually, by periodically checking
     // file state for changes
     bool                    isManualCheck;
     FileState               fileState;
-
-    WatchedFile(const WCHAR *filePath, FileChangeObserver *observer) :
-        filePath(str::Dup(filePath)), observer(observer),
-        watchedDir(NULL), next(NULL), isManualCheck(false) {
-        fileName = path::GetBaseName(this->filePath);
-    }
-    ~WatchedFile() { delete observer; }
 };
 
+static int              g_currentToken = 1;
 static HANDLE           g_threadHandle = 0;
 static DWORD            g_threadId = 0;
 
@@ -115,7 +97,6 @@ static HANDLE           g_threadControlHandle = 0;
 // watcher thread i.e. g_watchedDirs, g_watchedFiles
 static CRITICAL_SECTION g_threadCritSec;
 
-// TODO: use Vec instead of linked lists
 static WatchedDir *     g_watchedDirs = NULL;
 static WatchedFile *    g_watchedFiles = NULL;
 
@@ -142,6 +123,15 @@ void GetFileStateForFile(const WCHAR *filePath, FileState* fs)
     // So I'm sticking with lastWriteTime
     fs->time = file::GetModificationTime(filePath);
     fs->size = file::GetSize(filePath);
+}
+
+bool FileStateEq(FileState *fs1, FileState *fs2)
+{
+    if (0 != CompareFileTime(&fs1->time, &fs2->time))
+        return false;
+    if (fs1->size != fs2->size)
+        return false;
+    return true;
 }
 
 // TODO: per internet, fileName could be short, 8.3 dos-style name
@@ -171,9 +161,18 @@ static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
     }
 }
 
-static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, 
+static void DeleteWatchedDir(WatchedDir *wd)
+{
+    free((void*)wd->dirPath);
+    free(wd);
+}
+
+static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode,
     DWORD bytesTransfered, LPOVERLAPPED overlapped)
 {
+    // Note: I guess there's a tiny race here, where WatchedDir can be deleted
+    // on the main thread while before this is called. I don't see how it can
+    // be fixed, though
     ScopedCritSec cs(&g_threadCritSec);
 
     OverlappedEx *over = (OverlappedEx*)overlapped;
@@ -183,9 +182,10 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode,
 
     CrashIf(wd != wd->overlapped.data);
 
-    if (errCode == ERROR_OPERATION_ABORTED) {
+    if (errCode == ERROR_OPERATION_ABORTED)
+    {
         lf("   ERROR_OPERATION_ABORTED");
-        delete wd;
+        DeleteWatchedDir(wd);
         return;
     }
 
@@ -198,16 +198,18 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode,
     // collect files that changed, removing duplicates
     WStrVec changedFiles;
     for (;;) {
-        ScopedMem<WCHAR> fileName(str::DupN(notify->FileName, notify->FileNameLength / sizeof(WCHAR)));
+        WCHAR *fileName = str::DupN(notify->FileName, notify->FileNameLength / sizeof(WCHAR));
         if (notify->Action == FILE_ACTION_MODIFIED) {
             if (!changedFiles.Contains(fileName)) {
-                changedFiles.Append(fileName.StealData());
+                changedFiles.Append(fileName);
                 lf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s'", fileName);
             } else {
                 lf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'", fileName);
+                free(fileName);
             }
         } else {
             lf(L"ReadDirectoryChangesNotification() action=%d, for '%s'", (int)notify->Action, fileName);
+            free(fileName);
         }
 
         // step to the next entry if there is one
@@ -271,7 +273,7 @@ static void RunManualCheck()
         if (!wf->isManualCheck)
             continue;
         GetFileStateForFile(wf->filePath, &fileState);
-        if (fileState != wf->fileState) {
+        if (!FileStateEq(&fileState, &wf->fileState)) {
             lf(L"RunManualCheck() %s changed", wf->filePath);
             memcpy(&wf->fileState, &fileState, sizeof(fileState));
             wf->observer->OnFileChanged();
@@ -289,21 +291,26 @@ static DWORD WINAPI FileWatcherThread(void *param)
         handles[0] = g_threadControlHandle;
         DWORD timeout = GetTimeoutInMs();
         DWORD obj = WaitForMultipleObjectsEx(1, handles, FALSE, timeout, alertable);
-        switch (obj) {
-        case WAIT_TIMEOUT:
+        if (WAIT_TIMEOUT == obj) {
             RunManualCheck();
-            break;
-        case WAIT_IO_COMPLETION:
+            continue;
+        }
+
+        if (WAIT_IO_COMPLETION == obj) {
             // APC complete. Nothing to do
             lf("FileWatcherThread(): APC complete");
-            break;
-        case WAIT_OBJECT_0:
+            continue;
+        }
+
+        int n = (int)(obj - WAIT_OBJECT_0);
+        CrashIf(n < 0 || n >= 1);
+
+        if (n == 0) {
             // a thread was explicitly awaken
             ResetEvent(g_threadControlHandle);
             lf("FileWatcherThread(): g_threadControlHandle signalled");
-            break;
-        default:
-            lf("FileWatcherThread(): n=%u", obj);
+        } else {
+            lf("FileWatcherThread(): n=%d", n);
             CrashIf(true);
         }
     }
@@ -338,12 +345,11 @@ static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg)
     lf("StopMonitoringDirAPC() wd=0x%p", wd);
 
     // this will cause ReadDirectoryChangesNotification() to be called
-    // with errCode = ERROR_OPERATION_ABORTED which will delete wd
-    HANDLE dir = wd->hDir;
-    BOOL ok = CancelIo(dir);
+    // with errCode = ERROR_OPERATION_ABORTED
+    BOOL ok = CancelIo(wd->hDir);
     if (!ok)
         LogLastError();
-    SafeCloseHandle(&dir);
+    SafeCloseHandle(&wd->hDir);
 }
 
 static void StopMonitoringDir(WatchedDir *wd)
@@ -353,23 +359,32 @@ static void StopMonitoringDir(WatchedDir *wd)
 
 static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
 {
-    HANDLE dir = CreateFile(
+    WatchedDir *wd = AllocStruct<WatchedDir>();
+    wd->dirPath = str::Dup(dirPath);
+    wd->hDir = CreateFile(
         dirPath, FILE_LIST_DIRECTORY,
         FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE,
         NULL, OPEN_EXISTING,
         FILE_FLAG_BACKUP_SEMANTICS  | FILE_FLAG_OVERLAPPED, NULL);
-    if (!dir)
-        return NULL;
+    if (!wd->hDir)
+        goto Failed;
 
-    WatchedDir *wd = new WatchedDir(dirPath, dir);
     ListInsert(g_watchedDirs, wd);
+
     return wd;
+Failed:
+    DeleteWatchedDir(wd);
+    return NULL;
 }
 
 static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *observer)
 {
-    WatchedFile *wf = new WatchedFile(filePath, observer);
-    wf->isManualCheck = PathIsNetworkPath(filePath);
+    WatchedFile *wf = AllocStruct<WatchedFile>();
+    wf->filePath = str::Dup(filePath);
+    wf->fileName = str::Dup(path::GetBaseName(filePath));
+    wf->observer = observer;
+    wf->watchedDir = NULL;
+    wf->isManualCheck = PathIsNetworkPath(filePath);;
 
     ListInsert(g_watchedFiles, wf);
 
@@ -385,13 +400,17 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
         return wf;
 
     wf->watchedDir = NewWatchedDir(dirPath);
-    if (!wf->watchedDir) {
-        delete wf;
-        return NULL;
-    }
     StartMonitoringDirForChanges(wf->watchedDir);
 
     return wf;
+}
+
+static void DeleteWatchedFile(WatchedFile *wf)
+{
+    free((void*)wf->fileName);
+    free((void*)wf->filePath);
+    delete wf->observer;
+    free(wf);
 }
 
 /* Subscribe for notifications about file changes. When a file changes, we'll
@@ -464,7 +483,7 @@ static void RemoveWatchedFile(WatchedFile *wf)
     *currPtr = toRemove->next;
 
     bool needsAwakeThread = toRemove->isManualCheck;
-    delete toRemove;
+    DeleteWatchedFile(toRemove);
     if (needsAwakeThread)
         AwakeWatcherThread();
     else

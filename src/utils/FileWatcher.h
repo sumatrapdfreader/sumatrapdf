@@ -10,7 +10,7 @@ public:
     virtual void OnFileChanged() = 0;
 };
 
-class WatchedFile;
+struct WatchedFile;
 
 WatchedFile *FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *observer);
 void         FileWatcherUnsubscribe(WatchedFile *wf);
