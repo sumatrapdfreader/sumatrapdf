@@ -2,10 +2,10 @@
 // Aras Pranckevicius, http://aras-p.info/projSizer.html
 // Based on code by Fabian "ryg" Giesen, http://farbrausch.com/~fg/
 
-#ifndef __DEBUGINFO_HPP__
-#define __DEBUGINFO_HPP__
+#ifndef DebugInfo_h
+#define DebugInfo_h
 
-#include "types.hpp"
+#include "Types.h"
 #include <map>
 
 using std::string;

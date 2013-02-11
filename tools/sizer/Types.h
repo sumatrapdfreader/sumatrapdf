@@ -14,7 +14,3 @@
 
 typedef unsigned int u32;
 
-inline char* sCopyString( char* a, const char* b, int len )
-{
-    return strncpy( a, b, len );
-}
