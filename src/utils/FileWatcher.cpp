@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "FileWatcher.h"
 
-#include "CrashHandler.h"
 #include "FileUtil.h"
 #include "ThreadUtil.h"
 #include "WinUtil.h"
@@ -331,7 +330,7 @@ static DWORD WINAPI FileWatcherThread(void *param)
             ResetEvent(g_threadControlHandle);
             lf("FileWatcherThread(): g_threadControlHandle signalled");
         } else {
-            CrashLogFmt("FileWatcherThread(): n=%d", n);
+            dbglog::CrashLogF("FileWatcherThread(): n=%d", n);
             CrashIf(true);
         }
     }

@@ -44,11 +44,11 @@ $(OMUI)\MuiBase.obj: src\mui\MuiGrid.h src\mui\MuiHwndWrapper.h src\mui\MuiLayou
 $(OMUI)\MuiBase.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocator.h
 $(OMUI)\MuiBase.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
 $(OMUI)\MuiBase.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\Vec.h
-$(OMUI)\MuiButton.obj: src\CrashHandler.h src\mui\Mui.h src\mui\MuiBase.h
-$(OMUI)\MuiButton.obj: src\mui\MuiButton.h src\mui\MuiControl.h src\mui\MuiCss.h
-$(OMUI)\MuiButton.obj: src\mui\MuiEventMgr.h src\mui\MuiGrid.h src\mui\MuiHwndWrapper.h
-$(OMUI)\MuiButton.obj: src\mui\MuiLayout.h src\mui\MuiPainter.h src\mui\MuiScrollBar.h
-$(OMUI)\MuiButton.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GdiPlusUtil.h
+$(OMUI)\MuiButton.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
+$(OMUI)\MuiButton.obj: src\mui\MuiControl.h src\mui\MuiCss.h src\mui\MuiEventMgr.h
+$(OMUI)\MuiButton.obj: src\mui\MuiGrid.h src\mui\MuiHwndWrapper.h src\mui\MuiLayout.h
+$(OMUI)\MuiButton.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\utils\Allocator.h
+$(OMUI)\MuiButton.obj: src\utils\BaseUtil.h src\utils\DebugLog.h src\utils\GdiPlusUtil.h
 $(OMUI)\MuiButton.obj: src\utils\GeomUtil.h src\utils\HtmlParserLookup.h src\utils\Scoped.h
 $(OMUI)\MuiButton.obj: src\utils\Sigslot.h src\utils\StrUtil.h src\utils\Vec.h
 $(OMUI)\MuiControl.obj: src\mui\Mui.h src\mui\MuiBase.h src\mui\MuiButton.h
@@ -110,11 +110,11 @@ $(OMUI)\SvgPath.obj: src\utils\BaseUtil.h src\utils\GdiPlusUtil.h src\utils\Geom
 $(OMUI)\SvgPath.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OMUI)\SvgPath.obj: src\utils\VecSegmented.h
 $(OS)\AppPrefs.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
-$(OS)\AppPrefs.obj: src\ChmEngine.h src\CrashHandler.h src\DisplayModel.h
-$(OS)\AppPrefs.obj: src\DisplayState.h src\Doc.h src\Favorites.h
-$(OS)\AppPrefs.obj: src\FileHistory.h src\SumatraPDF.h src\SumatraWindow.h
-$(OS)\AppPrefs.obj: src\Translations.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\AppPrefs.obj: src\utils\BencUtil.h src\utils\FileTransactions.h src\utils\FileUtil.h
+$(OS)\AppPrefs.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
+$(OS)\AppPrefs.obj: src\Doc.h src\Favorites.h src\FileHistory.h
+$(OS)\AppPrefs.obj: src\SumatraPDF.h src\SumatraWindow.h src\Translations.h
+$(OS)\AppPrefs.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BencUtil.h
+$(OS)\AppPrefs.obj: src\utils\DebugLog.h src\utils\FileTransactions.h src\utils\FileUtil.h
 $(OS)\AppPrefs.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\AppPrefs.obj: src\utils\Vec.h src\WindowInfo.h
 $(OS)\AppTools.obj: src\AppTools.h src\Translations.h src\utils\Allocator.h
@@ -132,11 +132,11 @@ $(OS)\ChmEngine.obj: src\utils\GeomUtil.h src\utils\HtmlWindow.h src\utils\Scope
 $(OS)\ChmEngine.obj: src\utils\StrUtil.h src\utils\Timer.h src\utils\Vec.h
 $(OS)\CrashHandler.obj: src\AppTools.h src\BaseEngine.h src\CrashHandler.h
 $(OS)\CrashHandler.obj: src\DisplayState.h src\FileHistory.h src\SumatraPDF.h
-$(OS)\CrashHandler.obj: src\SumatraWindow.h src\Translations.h src\utils\Allocator.h
-$(OS)\CrashHandler.obj: src\utils\BaseUtil.h src\utils\DbgHelpDyn.h src\utils\DebugLog.h
-$(OS)\CrashHandler.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HttpUtil.h
-$(OS)\CrashHandler.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\CrashHandler.obj: src\utils\WinUtil.h src\utils\ZipUtil.h src\Version.h
+$(OS)\CrashHandler.obj: src\SumatraWindow.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\CrashHandler.obj: src\utils\DbgHelpDyn.h src\utils\DebugLog.h src\utils\FileUtil.h
+$(OS)\CrashHandler.obj: src\utils\GeomUtil.h src\utils\HttpUtil.h src\utils\Scoped.h
+$(OS)\CrashHandler.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
+$(OS)\CrashHandler.obj: src\utils\ZipUtil.h src\Version.h
 $(OS)\DisplayModel.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
 $(OS)\DisplayModel.obj: src\DisplayState.h src\Doc.h src\TextSearch.h
 $(OS)\DisplayModel.obj: src\TextSelection.h src\utils\Allocator.h src\utils\BaseUtil.h

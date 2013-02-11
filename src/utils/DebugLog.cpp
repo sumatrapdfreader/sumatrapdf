@@ -32,4 +32,27 @@ void LogF(const WCHAR *fmt, ...)
     va_end(args);
 }
 
+static str::Str<char> *gCrashLog = NULL;
+
+void CrashLogF(const char *fmt, ...)
+{
+    if (!gCrashLog) {
+        // this is never freed, so only call CrashLogF before a crash
+        gCrashLog = new str::Str<char>(4096);
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    gCrashLog->AppendAndFree(str::FmtV(fmt, args));
+    gCrashLog->Append("\r\n");
+    va_end(args);
+}
+
+const char *GetCrashLog()
+{
+    if (!gCrashLog)
+        return NULL;
+    return gCrashLog->LendData();
+}
+
 } // namespace dbglog

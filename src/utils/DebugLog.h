@@ -34,6 +34,12 @@ namespace dbglog {
 void LogF(const char *fmt, ...);
 void LogF(const WCHAR *fmt, ...);
 
+// call this in the event of an exception to add
+// more information to the crash log
+void CrashLogF(const char *fmt, ...);
+// returns a copy of the data recorded with CrashLogF
+const char *GetCrashLog();
+
 } // namespace dbglog
 
 // short names are important for this use case

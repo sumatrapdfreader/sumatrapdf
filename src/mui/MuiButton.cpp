@@ -3,10 +3,10 @@
 
 #include "Mui.h"
 
+#include "DebugLog.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlParserLookup.h"
-#include "CrashHandler.h"
 
 namespace mui {
 
@@ -70,10 +70,13 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
         if (bbox.Height > fontDy + maxDiff) {
             fontDy = bbox.Height;
             float diff = fontDy + maxDiff - bbox.Height;
-            char *fontName = str::conv::ToUtf8(s->fontName);
-            char *tmp = str::conv::ToUtf8(text);
-            CrashLogFmt("fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'\r\n", (float)fontDy, (float)bbox.Height, diff, fontName, tmp);
-            CrashIf(diff < 0);
+            if (diff < 0) {
+                char *fontName = str::conv::ToUtf8(s->fontName);
+                char *tmp = str::conv::ToUtf8(text);
+                dbglog::CrashLogF("fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'",
+                                  fontDy, bbox.Height, diff, fontName, tmp);
+                CrashIf(true);
+            }
         }
     }
     desiredSize.Width  += textDx;

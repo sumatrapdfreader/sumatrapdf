@@ -6,7 +6,7 @@
 
 #include "AppTools.h"
 #include "BencUtil.h"
-#include "CrashHandler.h"
+#include "DebugLog.h"
 #include "DisplayState.h"
 #include "Favorites.h"
 #include "FileHistory.h"
@@ -239,17 +239,17 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
 
     // BUG: 2140
     if (!IsValidZoom(ds->zoomVirtual)) {
-        CrashLogFmt("Invalid ds->zoomVirtual: %.4f\n", ds->zoomVirtual);
-        const WCHAR *ext = str::FindCharLast(ds->filePath, L'.');
-        if (ext) {
+        dbglog::CrashLogF("Invalid ds->zoomVirtual: %.4f", ds->zoomVirtual);
+        const WCHAR *ext = path::GetExt(ds->filePath);
+        if (!str::IsEmpty(ext)) {
             ScopedMem<char> extA(str::conv::ToUtf8(ext));
-            CrashLogFmt("File type: %s\n", extA.Get());
+            dbglog::CrashLogF("File type: %s", extA.Get());
         }
-        CrashLogFmt("DisplayMode: %d\n", ds->displayMode);
-        CrashLogFmt("PageNo: %d\n", ds->pageNo);
+        dbglog::CrashLogF("DisplayMode: %d", ds->displayMode);
+        dbglog::CrashLogF("PageNo: %d", ds->pageNo);
+        CrashIf(true);
     }
 
-    CrashIf(!IsValidZoom(ds->zoomVirtual));
     ScopedMem<char> zoom(str::Format("%.4f", ds->zoomVirtual));
     prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
 

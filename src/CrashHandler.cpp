@@ -6,14 +6,13 @@
 #include <exception>
 #include <tlhelp32.h>
 #include <signal.h>
+#include "CrashHandler.h"
 
 #include "AppTools.h"
-#include "CrashHandler.h"
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
 #include "HttpUtil.h"
 #include "SumatraPDF.h"
-#include "Translations.h"
 #include "Version.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
@@ -97,7 +96,6 @@ static WCHAR *  gSumatraPdfPdbPath = NULL;
 static WCHAR *  gInstallerPdbPath = NULL;
 static char *   gSystemInfo = NULL;
 static char *   gModulesInfo = NULL;
-static str::Str<char> *gAdditionalInfo = NULL;
 static HANDLE   gDumpEvent = NULL;
 static HANDLE   gDumpThread = NULL;
 static ExeType  gExeType = ExeSumatraStatic;
@@ -140,7 +138,7 @@ static char *BuildCrashInfoText()
     s.Append(gModulesInfo);
 
     s.Append("\r\n");
-    s.Append(gAdditionalInfo->LendData());
+    s.Append(dbglog::GetCrashLog());
 
     return s.StealData();
 }
@@ -607,15 +605,6 @@ static ExeType DetectExeType()
     return exeType;
 }
 
-void CrashLogFmt(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    char *s = str::FmtV(fmt, args);
-    gAdditionalInfo->AppendAndFree(s);
-    va_end(args);
-}
-
 void __cdecl onSignalAbort(int code) {
     // put the signal back because can be called many times
     // (from multiple threads) and raise() resets the handler
@@ -664,7 +653,6 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
     // allocation functions here.
     gCrashHandlerAllocator = new CrashHandlerAllocator();
     gCrashDumpPath = str::Dup(crashDumpPath);
-    gAdditionalInfo = new str::Str<char>(4096);
     gDumpEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
     if (!gDumpEvent)
         return;
@@ -699,7 +687,6 @@ void UninstallCrashHandler()
     free(gSumatraPdfPdbPath);
     free(gInstallerPdbPath);
 
-    delete gAdditionalInfo;
     free(gSymbolPathW);
     free(gSystemInfo);
     free(gModulesInfo);
