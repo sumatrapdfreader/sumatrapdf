@@ -14,8 +14,12 @@ if __name__ == '__main__':
     fp = os.path.join("gyp", "sizer.gyp")
     # TODO: I don't get why the generated files are put in
     # ${--generator-output}/gyp directory
-    #args = [fp, "--generator-output=vs/2010", "-G", "msvs-version=2010", "-Goutput_dir=.", "--depth=."]
-    args = [fp, "--generator-output=vs/2010", "-G", "msvs-version=2010"]
-    args = [fp, "--generator-output=vs/2008", "-G", "msvs-version=2008"]
+    #args = [fp, "--generator-output=vs/2010", "-G", "msvs-version=2010",
+    # "-Goutput_dir=.", "--depth=.", "--suffix=vs2010"]
+
+    args = [fp, "--generator-output=vs", "-G", "msvs-version=2010", "--suffix=-vs2010"]
     ret = gyp.main(args)
+
+    #args = [fp, "--generator-output=vs", "-G", "msvs-version=2008", "--suffix=-vs2008"]
+    #ret = gyp.main(args)
     sys.exit(ret)
