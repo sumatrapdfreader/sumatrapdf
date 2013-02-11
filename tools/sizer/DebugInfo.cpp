@@ -3,12 +3,14 @@
 // Based on code by Fabian "ryg" Giesen, http://farbrausch.com/~fg/
 
 #include "BaseUtil.h"
-#include "Types.h"
 
-#include "DebugInfo.h"
+#include <vector>
+#include <string>
 #include <stdarg.h>
 #include <algorithm>
 #include <map>
+
+#include "DebugInfo.h"
 
 u32 DebugInfo::CountSizeInClass(int type) const
 {

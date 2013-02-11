@@ -3,12 +3,14 @@
 // Based on code by Fabian "ryg" Giesen, http://farbrausch.com/~fg/
 
 #include "BaseUtil.h"
-#include "Types.h"
+
+#include <vector>
+#include <map>
+#include <cstdio>
+#include <ctime>
 
 #include "DebugInfo.h"
 #include "PdbFile.h"
-#include <cstdio>
-#include <ctime>
 
 int main( int argc, char** argv )
 {

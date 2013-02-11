@@ -12,7 +12,7 @@ class IDiaSession;
 void log(const char *s);
 bool LoadDia();
 
-class PDBFileReader : public DebugInfoReader
+class PDBFileReader
 {
   struct SectionContrib;
 
@@ -26,7 +26,7 @@ class PDBFileReader : public DebugInfoReader
   void ReadEverything(DebugInfo &to);
 
 public:
-  virtual bool ReadDebugInfo(char *fileName, DebugInfo &to);
+  bool ReadDebugInfo(char *fileName, DebugInfo &to);
 };
 
 #endif

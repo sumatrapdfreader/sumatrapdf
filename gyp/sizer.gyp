@@ -20,7 +20,6 @@
         '../tools/sizer/main.cpp',
         '../tools/sizer/PdbFile.cpp',
         '../tools/sizer/PdbFile.h',
-        '../tools/sizer/Types.h',
       ],
     },
   ],

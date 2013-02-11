@@ -5,7 +5,7 @@
 #ifndef DebugInfo_h
 #define DebugInfo_h
 
-#include <map>
+typedef unsigned int u32;
 
 using std::string;
 
@@ -85,12 +85,6 @@ public:
     bool FindSymbol(u32 VA,DISymbol **sym);
 
     std::string WriteReport();
-};
-
-class DebugInfoReader
-{
-public:
-    virtual bool ReadDebugInfo(char *fileName,DebugInfo &to) = 0;
 };
 
 
