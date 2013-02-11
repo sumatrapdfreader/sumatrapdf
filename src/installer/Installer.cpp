@@ -108,14 +108,14 @@ GlobalData gGlobalData = {
     false, /* bool success */
 };
 
-void NotifyFailed(WCHAR *msg)
+void NotifyFailed(const WCHAR *msg)
 {
     if (!gGlobalData.firstError)
         gGlobalData.firstError = str::Dup(msg);
     plogf(L"%s", msg);
 }
 
-void SetMsg(WCHAR *msg, Color color)
+void SetMsg(const WCHAR *msg, Color color)
 {
     gMsg.Set(str::Dup(msg));
     gMsgColor = color;
@@ -126,7 +126,7 @@ void SetMsg(WCHAR *msg, Color color)
 // Kill a process with given <processId> if it's loaded from <processPath>.
 // If <waitUntilTerminated> is TRUE, will wait until process is fully killed.
 // Returns TRUE if killed a process
-static BOOL KillProcIdWithName(DWORD processId, WCHAR *processPath, BOOL waitUntilTerminated)
+static BOOL KillProcIdWithName(DWORD processId, const WCHAR *processPath, BOOL waitUntilTerminated)
 {
     ScopedHandle hProcess(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE, FALSE, processId));
     ScopedHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
@@ -150,7 +150,7 @@ static BOOL KillProcIdWithName(DWORD processId, WCHAR *processPath, BOOL waitUnt
     return TRUE;
 }
 
-int KillProcess(WCHAR *processPath, BOOL waitUntilTerminated)
+int KillProcess(const WCHAR *processPath, BOOL waitUntilTerminated)
 {
     ScopedHandle hProcSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (INVALID_HANDLE_VALUE == hProcSnapshot)
@@ -291,7 +291,7 @@ bool CreateProcessHelper(const WCHAR *exe, const WCHAR *args)
 }
 
 // cf. http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
-bool RegisterServerDLL(WCHAR *dllPath, bool unregister=false)
+bool RegisterServerDLL(const WCHAR *dllPath, bool unregister=false)
 {
     if (FAILED(OleInitialize(NULL)))
         return false;
@@ -635,7 +635,7 @@ static void CalcLettersLayout(Graphics& g, Font *f, int dx)
     didLayout = TRUE;
 }
 
-static REAL DrawMessage(Graphics &g, WCHAR *msg, REAL y, REAL dx, Color color)
+static REAL DrawMessage(Graphics &g, const WCHAR *msg, REAL y, REAL dx, Color color)
 {
     ScopedMem<WCHAR> s(str::Dup(msg));
 

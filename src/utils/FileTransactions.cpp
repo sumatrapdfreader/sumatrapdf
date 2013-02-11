@@ -75,7 +75,7 @@ HANDLE FileTransaction::CreateFile(const WCHAR *filePath, DWORD dwDesiredAccess,
     return ::CreateFile(filePath, dwDesiredAccess, 0, NULL, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
-bool FileTransaction::WriteAll(const WCHAR *filePath, void *data, size_t dataLen)
+bool FileTransaction::WriteAll(const WCHAR *filePath, const void *data, size_t dataLen)
 {
     if (!hTrans)
         return file::WriteAll(filePath, data, dataLen);

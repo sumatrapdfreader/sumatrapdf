@@ -4,11 +4,11 @@
 #ifndef AppTools_h
 #define AppTools_h
 
-bool IsValidProgramVersion(char *txt);
-int CompareVersion(WCHAR *txt1, WCHAR *txt2);
+bool IsValidProgramVersion(const char *txt);
+int CompareVersion(const WCHAR *txt1, const WCHAR *txt2);
 
 bool IsRunningInPortableMode();
-WCHAR *AppGenDataFilename(WCHAR *pFilename);
+WCHAR *AppGenDataFilename(const WCHAR *pFilename);
 bool AdjustVariableDriveLetter(WCHAR *path);
 
 void DoAssociateExeWithPdfExtension(HKEY hkey);

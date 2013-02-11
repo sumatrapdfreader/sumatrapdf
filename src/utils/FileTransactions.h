@@ -22,7 +22,7 @@ public:
     // not supported by the file system (e.g. on FAT32 or a network drive)
     HANDLE CreateFile(const WCHAR *filePath, DWORD dwDesiredAccess, DWORD dwCreationDisposition);
     // same signatures as in FileUtil.h
-    bool WriteAll(const WCHAR *filePath, void *data, size_t dataLen);
+    bool WriteAll(const WCHAR *filePath, const void *data, size_t dataLen);
     bool Delete(const WCHAR *filePath);
     bool SetModificationTime(const WCHAR *filePath, FILETIME lastMod);
 };

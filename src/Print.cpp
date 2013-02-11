@@ -432,7 +432,7 @@ void AbortPrinting(WindowInfo *win)
     win->printCanceled = false;
 }
 
-static HGLOBAL GlobalMemDup(void *data, size_t len)
+static HGLOBAL GlobalMemDup(const void *data, size_t len)
 {
     HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, len);
     if (!hGlobal)

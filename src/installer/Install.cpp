@@ -133,7 +133,7 @@ bool IsPdfPreviewerInstalled()
 }
 
 // Note: doesn't handle (total) sizes above 4GB
-static DWORD GetDirSize(WCHAR *dir)
+static DWORD GetDirSize(const WCHAR *dir)
 {
     ScopedMem<WCHAR> dirPattern(path::Join(dir, L"*"));
     WIN32_FIND_DATA findData;

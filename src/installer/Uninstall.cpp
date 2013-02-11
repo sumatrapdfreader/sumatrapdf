@@ -131,7 +131,7 @@ static void RemoveOwnRegistryKeys()
     }
 }
 
-static BOOL RemoveEmptyDirectory(WCHAR *dir)
+static BOOL RemoveEmptyDirectory(const WCHAR *dir)
 {
     WIN32_FIND_DATA findData;
     BOOL success = TRUE;

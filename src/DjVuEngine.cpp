@@ -20,10 +20,10 @@
 
 class RenderedDjVuPixmap : public RenderedBitmap {
 public:
-    RenderedDjVuPixmap(char *data, SizeI size, bool grayscale);
+    RenderedDjVuPixmap(const char *data, SizeI size, bool grayscale);
 };
 
-RenderedDjVuPixmap::RenderedDjVuPixmap(char *data, SizeI size, bool grayscale) :
+RenderedDjVuPixmap::RenderedDjVuPixmap(const char *data, SizeI size, bool grayscale) :
     RenderedBitmap(NULL, size)
 {
     int bpc = grayscale ? 1 : 3;

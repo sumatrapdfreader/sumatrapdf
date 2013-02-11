@@ -642,7 +642,7 @@ WCHAR *FormatNumWithThousandSep(size_t num, LCID locale)
         return NULL;
     WCHAR *next = res;
     int i = 3 - (str::Len(buf) % 3);
-    for (WCHAR *src = buf.Get(); *src; ) {
+    for (const WCHAR *src = buf; *src; ) {
         *next++ = *src++;
         if (*src && i == 2)
             next += str::BufSet(next, resLen - (next - res), thousandSep);
@@ -771,7 +771,7 @@ static T *ExtractUntil(const T *pos, T c, const T **endOut)
 }
 
 static const char *ParseLimitedNumber(const char *str, const char *format,
-                                      char **endOut, void *valueOut)
+                                      const char **endOut, void *valueOut)
 {
     UINT width;
     char f2[] = "% ";
@@ -781,13 +781,13 @@ static const char *ParseLimitedNumber(const char *str, const char *format,
         str::BufSet(limited, min(width + 1, dimof(limited)), str);
         const char *end = Parse(limited, f2, valueOut);
         if (end && !*end)
-            *endOut = (char *)str + width;
+            *endOut = str + width;
     }
     return endF;
 }
 
 static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
-                                       WCHAR **endOut, void *valueOut)
+                                       const WCHAR **endOut, void *valueOut)
 {
     UINT width;
     WCHAR f2[] = L"% ";
@@ -797,7 +797,7 @@ static const WCHAR *ParseLimitedNumber(const WCHAR *str, const WCHAR *format,
         str::BufSet(limited, min(width + 1, dimof(limited)), str);
         const WCHAR *end = Parse(limited, f2, valueOut);
         if (end && !*end)
-            *endOut = (WCHAR *)str + width;
+            *endOut = str + width;
     }
     return endF;
 }
@@ -835,31 +835,31 @@ static const char *ParseV(const char *str, const char *format, va_list args)
         }
         f++;
 
-        char *end = NULL;
+        const char *end = NULL;
         if ('u' == *f)
-            *va_arg(args, unsigned int *) = strtoul(str, &end, 10);
+            *va_arg(args, unsigned int *) = strtoul(str, (char **)&end, 10);
         else if ('d' == *f)
-            *va_arg(args, int *) = strtol(str, &end, 10);
+            *va_arg(args, int *) = strtol(str, (char **)&end, 10);
         else if ('x' == *f)
-            *va_arg(args, unsigned int *) = strtoul(str, &end, 16);
+            *va_arg(args, unsigned int *) = strtoul(str, (char **)&end, 16);
         else if ('f' == *f)
-            *va_arg(args, float *) = (float)strtod(str, &end);
+            *va_arg(args, float *) = (float)strtod(str, (char **)&end);
         else if ('c' == *f)
-            *va_arg(args, char *) = *str, end = (char *)str + 1;
+            *va_arg(args, char *) = *str, end = str + 1;
         else if ('s' == *f)
-            *va_arg(args, char **) = ExtractUntil(str, *(f + 1), (const char **)&end);
+            *va_arg(args, char **) = ExtractUntil(str, *(f + 1), &end);
         else if ('S' == *f)
-            va_arg(args, ScopedMem<char> *)->Set(ExtractUntil(str, *(f + 1), (const char **)&end));
+            va_arg(args, ScopedMem<char> *)->Set(ExtractUntil(str, *(f + 1), &end));
         else if ('$' == *f && !*str)
             continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
-            end = (char *)str + 1;
+            end = str + 1;
         else if (' ' == *f && str::IsWs(*str))
-            end = (char *)str + 1;
+            end = str + 1;
         else if ('_' == *f) {
             if (!str::IsWs(*str))
                 continue; // don't fail, if there's no whitespace at all
-            for (end = (char *)str + 1; str::IsWs(*end); end++);
+            for (end = str + 1; str::IsWs(*end); end++);
         }
         else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
@@ -929,38 +929,38 @@ const WCHAR *Parse(const WCHAR *str, const WCHAR *format, ...)
         }
         f++;
 
-        WCHAR *end = NULL;
+        const WCHAR *end = NULL;
         if ('u' == *f)
-            *va_arg(args, unsigned int *) = wcstoul(str, &end, 10);
+            *va_arg(args, unsigned int *) = wcstoul(str, (WCHAR **)&end, 10);
         else if ('d' == *f)
-            *va_arg(args, int *) = wcstol(str, &end, 10);
+            *va_arg(args, int *) = wcstol(str, (WCHAR **)&end, 10);
         else if ('x' == *f)
-            *va_arg(args, unsigned int *) = wcstoul(str, &end, 16);
+            *va_arg(args, unsigned int *) = wcstoul(str, (WCHAR **)&end, 16);
         else if ('f' == *f)
-            *va_arg(args, float *) = (float)wcstod(str, &end);
+            *va_arg(args, float *) = (float)wcstod(str, (WCHAR **)&end);
         else if ('c' == *f)
-            *va_arg(args, WCHAR *) = *str, end = (WCHAR *)str + 1;
+            *va_arg(args, WCHAR *) = *str, end = str + 1;
         else if ('s' == *f)
-            *va_arg(args, WCHAR **) = ExtractUntil(str, *(f + 1), (const WCHAR **)&end);
+            *va_arg(args, WCHAR **) = ExtractUntil(str, *(f + 1), &end);
         else if ('S' == *f)
-            va_arg(args, ScopedMem<WCHAR> *)->Set(ExtractUntil(str, *(f + 1), (const WCHAR **)&end));
+            va_arg(args, ScopedMem<WCHAR> *)->Set(ExtractUntil(str, *(f + 1), &end));
         else if ('$' == *f && !*str)
             continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
-            end = (WCHAR *)str + 1;
+            end = str + 1;
         else if (' ' == *f && str::IsWs(*str))
-            end = (WCHAR *)str + 1;
+            end = str + 1;
         else if ('_' == *f) {
             if (!str::IsWs(*str))
                 continue; // don't fail, if there's no whitespace at all
-            for (end = (WCHAR *)str + 1; str::IsWs(*end); end++);
+            for (end = str + 1; str::IsWs(*end); end++);
         }
         else if ('?' == *f && *(f + 1)) {
             // skip the next format character, advance the string,
             // if it the optional character is the next character to parse
             if (*str != *++f)
                 continue;
-            end = (WCHAR *)str + 1;
+            end = str + 1;
         }
         else if (str::IsDigit(*f))
             f = ParseLimitedNumber(str, f, &end, va_arg(args, void *)) - 1;

@@ -116,7 +116,7 @@ WCHAR *ShortPath(const WCHAR *path)
     ScopedMem<WCHAR> normpath(Normalize(path));
     DWORD cch = GetShortPathName(normpath, NULL, 0);
     if (!cch)
-        return normpath;
+        return normpath.StealData();
     WCHAR *shortpath = AllocArray<WCHAR>(cch);
     GetShortPathName(normpath, shortpath, cch);
     return shortpath;

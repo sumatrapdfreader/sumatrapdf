@@ -13,7 +13,7 @@
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
 // Return false if it contains anything else.
-bool IsValidProgramVersion(char *txt)
+bool IsValidProgramVersion(const char *txt)
 {
     if (!str::IsDigit(*txt))
         return false;
@@ -34,11 +34,11 @@ bool IsValidProgramVersion(char *txt)
 }
 
 // extract the next (positive) number from the string *txt
-static unsigned int ExtractNextNumber(WCHAR **txt)
+static unsigned int ExtractNextNumber(const WCHAR **txt)
 {
     unsigned int val = 0;
     const WCHAR *next = str::Parse(*txt, L"%u%?.", &val);
-    *txt = next ? (WCHAR *)next : *txt + str::Len(*txt);
+    *txt = next ? next : *txt + str::Len(*txt);
     return val;
 }
 
@@ -48,7 +48,7 @@ static unsigned int ExtractNextNumber(WCHAR **txt)
 //   0.9.3.900 is greater than 0.9.3
 //   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
 //   1.2.0 is the same as 1.2
-int CompareVersion(WCHAR *txt1, WCHAR *txt2)
+int CompareVersion(const WCHAR *txt1, const WCHAR *txt2)
 {
     while (*txt1 || *txt2) {
         unsigned int v1 = ExtractNextNumber(&txt1);
@@ -110,7 +110,7 @@ bool IsRunningInPortableMode()
 
 /* Generate the full path for a filename used by the app in the userdata path. */
 /* Caller needs to free() the result. */
-WCHAR *AppGenDataFilename(WCHAR *fileName)
+WCHAR *AppGenDataFilename(const WCHAR *fileName)
 {
     ScopedMem<WCHAR> path;
     if (IsRunningInPortableMode()) {

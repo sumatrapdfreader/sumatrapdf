@@ -33,7 +33,7 @@ void DebugGdiPlusDevice(bool enable)
     gDebugGdiPlusDevice = enable;
 }
 
-void CalcMD5Digest(unsigned char *data, size_t byteCount, unsigned char digest[16])
+void CalcMD5Digest(const unsigned char *data, size_t byteCount, unsigned char digest[16])
 {
     fz_md5 md5;
     fz_md5_init(&md5);
@@ -392,7 +392,7 @@ struct LinkRectList {
     Vec<fz_rect> coords;
 };
 
-static bool LinkifyCheckMultiline(WCHAR *pageText, WCHAR *pos, RectI *coords)
+static bool LinkifyCheckMultiline(const WCHAR *pageText, const WCHAR *pos, RectI *coords)
 {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
@@ -406,9 +406,9 @@ static bool LinkifyCheckMultiline(WCHAR *pageText, WCHAR *pos, RectI *coords)
         !str::StartsWith(pos + 1, L"http");
 }
 
-static WCHAR *LinkifyFindEnd(WCHAR *start, bool atStart)
+static const WCHAR *LinkifyFindEnd(const WCHAR *start, bool atStart)
 {
-    WCHAR *end;
+    const WCHAR *end;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
     for (end = start; *end && !iswspace(*end); end++);
@@ -419,24 +419,24 @@ static WCHAR *LinkifyFindEnd(WCHAR *start, bool atStart)
         end--;
     // cut the link at the first double quote if it's also preceded by one
     if (!atStart && start[-1] == '"' && str::FindChar(start, '"') && str::FindChar(start, '"') < end)
-        end = (WCHAR *)str::FindChar(start, '"');
+        end = str::FindChar(start, '"');
 
     return end;
 }
 
-static WCHAR *LinkifyMultilineText(LinkRectList *list, WCHAR *pageText, WCHAR *start, RectI *coords)
+static const WCHAR *LinkifyMultilineText(LinkRectList *list, const WCHAR *pageText, const WCHAR *start, RectI *coords)
 {
     size_t lastIx = list->coords.Count() - 1;
     ScopedMem<WCHAR> uri(list->links.At(lastIx));
-    WCHAR *end = start;
+    const WCHAR *end = start;
     bool multiline = false;
 
     do {
         end = LinkifyFindEnd(start, start == pageText);
         multiline = LinkifyCheckMultiline(pageText, end, coords);
-        *end = 0;
 
-        uri.Set(str::Join(uri, start));
+        ScopedMem<WCHAR> part(str::DupN(start, end - start));
+        uri.Set(str::Join(uri, part));
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
 
@@ -463,16 +463,16 @@ inline bool IsEmailDomainChar(WCHAR c)
     return iswalnum(c) || '-' == c;
 }
 
-static WCHAR *LinkifyFindEmail(WCHAR *pageText, WCHAR *at)
+static const WCHAR *LinkifyFindEmail(const WCHAR *pageText, const WCHAR *at)
 {
-    WCHAR *start;
+    const WCHAR *start;
     for (start = at; start > pageText && IsEmailUsernameChar(*(start - 1)); start--);
     return start != at ? start : NULL;
 }
 
-static WCHAR *LinkifyEmailAddress(WCHAR *start)
+static const WCHAR *LinkifyEmailAddress(const WCHAR *start)
 {
-    WCHAR *end;
+    const WCHAR *end;
     for (end = start; IsEmailUsernameChar(*end); end++);
     if (end == start || *end != '@' || !IsEmailDomainChar(*(end + 1)))
         return NULL;
@@ -486,18 +486,18 @@ static WCHAR *LinkifyEmailAddress(WCHAR *start)
 }
 
 // caller needs to delete the result
-static LinkRectList *LinkifyText(WCHAR *pageText, RectI *coords)
+static LinkRectList *LinkifyText(const WCHAR *pageText, RectI *coords)
 {
     LinkRectList *list = new LinkRectList;
 
-    for (WCHAR *start = pageText; *start; start++) {
-        WCHAR *end = NULL;
+    for (const WCHAR *start = pageText; *start; start++) {
+        const WCHAR *end = NULL;
         bool multiline = false;
         const WCHAR *protocol = NULL;
 
         if ('@' == *start) {
             // potential email address without mailto:
-            WCHAR *email = LinkifyFindEmail(pageText, start);
+            const WCHAR *email = LinkifyFindEmail(pageText, start);
             end = email ? LinkifyEmailAddress(email) : NULL;
             protocol = L"mailto:";
             if (end != NULL)
@@ -525,8 +525,8 @@ static LinkRectList *LinkifyText(WCHAR *pageText, RectI *coords)
         if (!end)
             continue;
 
-        *end = 0;
-        WCHAR *uri = protocol ? str::Join(protocol, start) : str::Dup(start);
+        ScopedMem<WCHAR> part(str::DupN(start, end - start));
+        WCHAR *uri = protocol ? str::Join(protocol, part) : part.StealData();
         list->links.Append(uri);
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
@@ -1681,7 +1681,7 @@ PageDestination *PdfEngineImpl::GetNamedDest(const WCHAR *name)
     ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
     pdf_obj *dest = NULL;
     fz_try(ctx) {
-        pdf_obj *nameobj = pdf_new_string(ctx, (char *)name_utf8, (int)str::Len(name_utf8));
+        pdf_obj *nameobj = pdf_new_string(ctx, name_utf8, (int)str::Len(name_utf8));
         dest = pdf_lookup_dest(_doc, nameobj);
         pdf_drop_obj(nameobj);
     }
@@ -2211,10 +2211,9 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
     assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
-    WCHAR *pageText = ExtractPageText(page, L"\n", &coords, Target_View, true);
-    if (!pageText) {
+    ScopedMem<WCHAR> pageText(ExtractPageText(page, L"\n", &coords, Target_View, true));
+    if (!pageText)
         return;
-    }
 
     LinkRectList *list = LinkifyText(pageText, coords);
     for (size_t i = 0; i < list->links.Count(); i++) {
@@ -2235,7 +2234,6 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
 
     delete list;
     delete[] coords;
-    free(pageText);
 }
 
 pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
@@ -4022,7 +4020,7 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
     assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
-    WCHAR *pageText = ExtractPageText(page, L"\n", &coords, true);
+    ScopedMem<WCHAR> pageText(ExtractPageText(page, L"\n", &coords, true));
     if (!pageText)
         return;
 
@@ -4045,7 +4043,6 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
 
     delete list;
     delete[] coords;
-    free(pageText);
 }
 
 RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIx)

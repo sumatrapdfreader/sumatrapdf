@@ -381,7 +381,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     str::Str<char> tgaData;
     tgaData.Append((char *)&headerLE, sizeof(headerLE));
     for (int k = 0; k < h; k++) {
-        char *line = bmpData + k * stride;
+        const char *line = bmpData + k * stride;
         for (int i = 0, j = 1; i < w; i += j, j = 1) {
             // determine the length of a run of identical pixels
             while (i + j < w && j < 128 && memeq3(line + i * 3, line + (i + j) * 3)) {

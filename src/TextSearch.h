@@ -28,7 +28,7 @@ public:
     void SetSensitive(bool sensitive);
     void SetDirection(TextSearchDirection direction);
     void SetLastResult(TextSelection *sel);
-    TextSel *FindFirst(int page, WCHAR *text, ProgressUpdateUI *tracker=NULL);
+    TextSel *FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker=NULL);
     TextSel *FindNext(ProgressUpdateUI *tracker=NULL);
 
     // note: the result might not be a valid page number!
@@ -46,10 +46,10 @@ protected:
     bool matchWordStart;
     bool matchWordEnd;
 
-    void SetText(WCHAR *text);
+    void SetText(const WCHAR *text);
     bool FindTextInPage(int pageNo = 0);
     bool FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker);
-    int MatchLen(const WCHAR *start);
+    int MatchLen(const WCHAR *start) const;
 
     void Clear()
     {

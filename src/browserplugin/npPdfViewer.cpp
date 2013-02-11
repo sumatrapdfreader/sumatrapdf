@@ -384,7 +384,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     if (saved)
         plogf("sp:   SavedData: len=%d", saved->len);
 
-    instance->pdata = calloc(1, sizeof(InstanceData));
+    instance->pdata = AllocStruct<InstanceData>();
     if (!instance->pdata)
     {
         plogf("error: NPERR_OUT_OF_MEMORY_ERROR");

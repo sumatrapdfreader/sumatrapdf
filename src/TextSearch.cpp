@@ -33,7 +33,7 @@ void TextSearch::Reset()
     TextSelection::Reset();
 }
 
-void TextSearch::SetText(WCHAR *text)
+void TextSearch::SetText(const WCHAR *text)
 {
     // search text starting with a single space enables the 'Match word start'
     // and search text ending in a single space enables the 'Match word end' option
@@ -55,7 +55,7 @@ void TextSearch::SetText(WCHAR *text)
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (isnoncjkwordchar(*text)) {
-        WCHAR *end;
+        const WCHAR *end;
         for (end = text; isnoncjkwordchar(*end); end++)
             ;
         anchor = str::DupN(text, end - text);
@@ -109,7 +109,7 @@ void TextSearch::SetLastResult(TextSelection *sel)
 
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
-int TextSearch::MatchLen(const WCHAR *start)
+int TextSearch::MatchLen(const WCHAR *start) const
 {
     const WCHAR *match = findText, *end = start;
 
@@ -233,7 +233,7 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
     return false;
 }
 
-TextSel *TextSearch::FindFirst(int page, WCHAR *text, ProgressUpdateUI *tracker)
+TextSel *TextSearch::FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker)
 {
     SetText(text);
 

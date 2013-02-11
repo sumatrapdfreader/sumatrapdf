@@ -735,23 +735,24 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
 
         if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
             // Fill the combo with the list of possible inverse search commands
-            ScopedMem<WCHAR> inverseSearch(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
             // Try to select a correct default when first showing this dialog
-            if (!prefs->inverseSearchCmdLine)
-                prefs->inverseSearchCmdLine = inverseSearch;
+            const WCHAR *cmdLine = prefs->inverseSearchCmdLine;
+            ScopedMem<WCHAR> inverseSearch;
+            if (!cmdLine) {
+                inverseSearch.Set(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
+                cmdLine = inverseSearch;
+            }
             // Find the index of the active command line
-            LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) prefs->inverseSearchCmdLine);
+            LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) cmdLine);
             if (CB_ERR == ind) {
                 // if no existing command was selected then set the user custom command in the combo
-                ComboBox_AddItemData(GetDlgItem(hDlg, IDC_CMDLINE), prefs->inverseSearchCmdLine);
-                SetDlgItemText(hDlg, IDC_CMDLINE, prefs->inverseSearchCmdLine);
+                ComboBox_AddItemData(GetDlgItem(hDlg, IDC_CMDLINE), cmdLine);
+                SetDlgItemText(hDlg, IDC_CMDLINE, cmdLine);
             }
             else {
                 // select the active command
                 SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_SETCURSEL, (WPARAM) ind , 0);
             }
-            if (prefs->inverseSearchCmdLine == inverseSearch)
-                prefs->inverseSearchCmdLine = NULL;
         }
         else {
             RemoveDialogItem(hDlg, IDC_SECTION_INVERSESEARCH, IDC_SECTION_ADVANCED);

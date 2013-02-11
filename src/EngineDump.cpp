@@ -15,11 +15,9 @@
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
 // caller must free() the result
-char *Escape(WCHAR *string, bool keepString=false)
+char *Escape(WCHAR *string)
 {
-    ScopedMem<WCHAR> freeOnReturn;
-    if (!keepString)
-        freeOnReturn.Set(string);
+    ScopedMem<WCHAR> freeOnReturn(string);
 
     if (str::IsEmpty(string))
         return NULL;
@@ -28,7 +26,7 @@ char *Escape(WCHAR *string, bool keepString=false)
         return str::conv::ToUtf8(string);
 
     str::Str<WCHAR> escaped(256);
-    for (WCHAR *s = string; *s; s++) {
+    for (const WCHAR *s = string; *s; s++) {
         switch (*s) {
         case '&': escaped.Append(L"&amp;"); break;
         case '<': escaped.Append(L"&lt;"); break;
@@ -45,7 +43,7 @@ void DumpProperties(BaseEngine *engine, bool fullDump)
 {
     Out("\t<Properties\n");
     ScopedMem<char> str;
-    str.Set(Escape((WCHAR *)engine->FileName(), true));
+    str.Set(Escape(str::Dup(engine->FileName())));
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty(Prop_Title)));
     if (str)
@@ -128,7 +126,7 @@ char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
 void DumpTocItem(BaseEngine *engine, DocTocItem *item, int level, int& idCounter)
 {
     for (; item; item = item->next) {
-        ScopedMem<char> title(Escape(item->title, true));
+        ScopedMem<char> title(Escape(str::Dup(item->title)));
         for (int i = 0; i < level; i++) Out("\t");
         Out("<Item Title=\"%s\"", title.Get());
         if (item->pageNo)

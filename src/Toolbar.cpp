@@ -121,11 +121,11 @@ static TBBUTTON TbButtonFromButtonInfo(int i) {
                     TBSTYLE_TOOLTIPS | TBSTYLE_FLAT | \
                     TBSTYLE_LIST | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
-static void BuildTBBUTTONINFO(TBBUTTONINFO& info, WCHAR *txt)
+static void BuildTBBUTTONINFO(TBBUTTONINFO& info, const WCHAR *txt)
 {
     info.cbSize = sizeof(TBBUTTONINFO);
     info.dwMask = TBIF_TEXT | TBIF_BYINDEX;
-    info.pszText = txt;
+    info.pszText = (WCHAR *)txt;
 }
 
 // Set toolbar button tooltips taking current language into account.
@@ -140,7 +140,7 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo *win)
         if (NULL == txt)
             continue;
         const WCHAR *translation = trans::GetTranslation(txt);
-        BuildTBBUTTONINFO(buttonInfo, (WCHAR *)translation);
+        BuildTBBUTTONINFO(buttonInfo, translation);
         res = SendMessage(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)&buttonInfo);
         assert(0 != res);
     }

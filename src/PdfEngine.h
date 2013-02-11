@@ -26,7 +26,7 @@ public:
     static XpsEngine *CreateFromStream(IStream *stream);
 };
 
-void CalcMD5Digest(unsigned char *data, size_t byteCount, unsigned char digest[16]);
+void CalcMD5Digest(const unsigned char *data, size_t byteCount, unsigned char digest[16]);
 void DebugGdiPlusDevice(bool enable);
 
 #endif
