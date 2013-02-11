@@ -52,25 +52,24 @@ class DebugInfo
     typedef std::vector<string>     StringByIndexVector;
     typedef std::map<string,int>    IndexByStringMap;
 
-    StringByIndexVector     m_StringByIndex;
-    IndexByStringMap        m_IndexByString;
-    u32                     BaseAddress;
+    StringByIndexVector     stringByIndex;
+    IndexByStringMap        indexByString;
+    u32                     baseAddress;
 
     u32 CountSizeInClass(int type) const;
 
 public:
-    std::vector<DISymbol>           Symbols;
-    std::vector<TemplateSymbol>     Templates;
-    std::vector<DISymFile>          m_Files;
-    std::vector<DISymNameSp>        NameSps;
+    std::vector<DISymbol>           symbols;
+    std::vector<TemplateSymbol>     templates;
+    std::vector<DISymFile>          files;
+    std::vector<DISymNameSp>        namespaces;
 
     void Init();
     void Exit();
 
     // only use those before reading is finished!!
     int MakeString(char *s);
-    const char* GetStringPrep( int index ) const { return m_StringByIndex[index].c_str(); }
-    void SetBaseAddress(u32 base)            { BaseAddress = base; }
+    const char* GetStringPrep( int index ) const { return stringByIndex[index].c_str(); }
 
     void FinishedReading();
 

@@ -144,8 +144,8 @@ void PDBFileReader::ProcessSymbol(IDiaSymbol *symbol, DebugInfo &to)
     // fill out structure
     char *nameStr = BStrToString( name, "<noname>", true);
 
-    to.Symbols.push_back( DISymbol() );
-    DISymbol *outSym = &to.Symbols.back();
+    to.symbols.push_back( DISymbol() );
+    DISymbol *outSym = &to.symbols.back();
     outSym->name = outSym->mangledName = to.MakeString(nameStr);
     outSym->objFileNum = objFile;
     outSym->VA = rva;
