@@ -47,41 +47,47 @@ struct TemplateSymbol
     u32        count;
 };
 
-class DebugInfo
-{
+class StringInterner {
     typedef std::vector<string>     StringByIndexVector;
     typedef std::map<string,int>    IndexByStringMap;
 
     StringByIndexVector     stringByIndex;
     IndexByStringMap        indexByString;
+public:
+    int             Intern(const char *s);
+    const char *    GetByIndex(int n) const { return stringByIndex[n].c_str(); }
+};
+
+class DebugInfo
+{
     u32                     baseAddress;
 
-    u32 CountSizeInClass(int type) const;
+    StringInterner          strInterner;
+    u32                     CountSizeInClass(int type) const;
 
 public:
+    DebugInfo() : baseAddress(0) { }
+
     std::vector<DISymbol>           symbols;
     std::vector<TemplateSymbol>     templates;
     std::vector<DISymFile>          files;
     std::vector<DISymNameSp>        namespaces;
 
-    void Init();
-    void Exit();
-
     // only use those before reading is finished!!
-    int MakeString(char *s);
-    const char* GetStringPrep( int index ) const { return stringByIndex[index].c_str(); }
+    int InternString(const char *s) { return strInterner.Intern(s); }
+    const char* GetInternedString(int n) const { return strInterner.GetByIndex(n); }
 
     void FinishedReading();
 
-    int GetFile( int fileName );
-    int GetFileByName( char *objName );
+    int GetFile(int fileName);
+    int GetFileByName(char *objName);
 
     int GetNameSpace(int name);
     int GetNameSpaceByName(char *name);
 
     void StartAnalyze();
     void FinishAnalyze();
-    bool FindSymbol(u32 VA,DISymbol **sym);
+    bool FindSymbol(u32 va, DISymbol **sym);
 
     std::string WriteReport();
 };

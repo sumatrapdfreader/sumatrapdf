@@ -12,7 +12,7 @@
 #include "DebugInfo.h"
 #include "PdbFile.h"
 
-int main( int argc, char** argv )
+int main(int argc, char** argv)
 {
     ScopedCom comInitializer;
     if (!LoadDia()) {
@@ -28,7 +28,6 @@ int main( int argc, char** argv )
 
     clock_t time1 = clock();
 
-    info.Init();
     PDBFileReader pdb;
     fprintf( stderr, "Reading debug info file %s ...\n", argv[1] );
     bool pdbok = pdb.ReadDebugInfo( argv[1], info );

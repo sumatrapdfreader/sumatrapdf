@@ -12,26 +12,7 @@
 
 #include "DebugInfo.h"
 
-u32 DebugInfo::CountSizeInClass(int type) const
-{
-    u32 size = 0;
-    for (int i=0; i<symbols.size(); i++) {
-        if (symbols[i].Class == type)
-            size += symbols[i].Size;
-    }
-    return size;
-}
-
-void DebugInfo::Init()
-{
-    baseAddress = 0;
-}
-
-void DebugInfo::Exit()
-{
-}
-
-int DebugInfo::MakeString(char *s)
+int StringInterner::Intern(const char *s)
 {
     string str(s);
     IndexByStringMap::iterator it = indexByString.find(str);
@@ -42,6 +23,16 @@ int DebugInfo::MakeString(char *s)
     indexByString.insert(std::make_pair(str,index));
     stringByIndex.push_back(str);
     return index;
+}
+
+u32 DebugInfo::CountSizeInClass(int type) const
+{
+    u32 size = 0;
+    for (int i=0; i<symbols.size(); i++) {
+        if (symbols[i].Class == type)
+            size += symbols[i].Size;
+    }
+    return size;
 }
 
 bool virtAddressComp(const DISymbol &a,const DISymbol &b)
@@ -92,7 +83,7 @@ void DebugInfo::FinishedReading()
     {
         DISymbol *sym = &symbols[i];
 
-        std::string templateName = GetStringPrep(sym->name);
+        std::string templateName = GetInternedString(sym->name);
         bool isTemplate = StripTemplateParams(templateName);
         if (isTemplate)
         {
@@ -188,7 +179,7 @@ int DebugInfo::GetFileByName(char *objName)
     while ((p = (char *) strstr(objName,"/")))
         objName = p + 1;
 
-    return GetFile(MakeString(objName));
+    return GetFile(InternString(objName));
 }
 
 int DebugInfo::GetNameSpace(int name)
@@ -226,10 +217,10 @@ int DebugInfo::GetNameSpaceByName(char *name)
         if (pp - name < 2048)
             buffer[pp - name] = 0;
 
-        cname = MakeString(buffer);
+        cname = InternString(buffer);
     }
     else
-        cname = MakeString("<global>");
+        cname = InternString("<global>");
 
     return GetNameSpace(cname);
 }
@@ -352,7 +343,7 @@ std::string DebugInfo::WriteReport()
         if(symbols[i].Class == DIC_CODE)
             sAppendPrintF(Report,"%5d.%02d: %-50s %s\n",
             symbols[i].Size/1024,(symbols[i].Size%1024)*100/1024,
-            GetStringPrep(symbols[i].name), GetStringPrep(files[symbols[i].objFileNum].fileName));
+            GetInternedString(symbols[i].name), GetInternedString(files[symbols[i].objFileNum].fileName));
     }
 
     // templates
@@ -379,7 +370,7 @@ std::string DebugInfo::WriteReport()
         {
             sAppendPrintF(Report,"%5d.%02d: %-50s %s\n",
                 symbols[i].Size/1024,(symbols[i].Size%1024)*100/1024,
-                GetStringPrep(symbols[i].name), GetStringPrep(files[symbols[i].objFileNum].fileName));
+                GetInternedString(symbols[i].name), GetInternedString(files[symbols[i].objFileNum].fileName));
         }
     }
 
@@ -392,7 +383,7 @@ std::string DebugInfo::WriteReport()
         {
             sAppendPrintF(Report,"%5d.%02d: %-50s %s\n",
                 symbols[i].Size/1024,(symbols[i].Size%1024)*100/1024,
-                GetStringPrep(symbols[i].name), GetStringPrep(files[symbols[i].objFileNum].fileName));
+                GetInternedString(symbols[i].name), GetInternedString(files[symbols[i].objFileNum].fileName));
         }
     }
 
@@ -431,7 +422,7 @@ std::string DebugInfo::WriteReport()
         if( namespaces[i].codeSize < kMinClassSize )
             break;
         sAppendPrintF(Report,"%5d.%02d: %s\n",
-            namespaces[i].codeSize/1024,(namespaces[i].codeSize%1024)*100/1024, GetStringPrep(namespaces[i].name) );
+            namespaces[i].codeSize/1024,(namespaces[i].codeSize%1024)*100/1024, GetInternedString(namespaces[i].name) );
     }
 
     sAppendPrintF(Report,"\nObject files by code size (kilobytes):\n");
@@ -442,7 +433,7 @@ std::string DebugInfo::WriteReport()
         if( files[i].codeSize < kMinFileSize )
             break;
         sAppendPrintF(Report,"%5d.%02d: %s\n",files[i].codeSize/1024,
-            (files[i].codeSize%1024)*100/1024, GetStringPrep(files[i].fileName) );
+            (files[i].codeSize%1024)*100/1024, GetInternedString(files[i].fileName) );
     }
 
     size = CountSizeInClass(DIC_CODE);

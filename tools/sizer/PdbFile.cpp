@@ -89,7 +89,7 @@ static char *BStrToString(BSTR str, char *defString = "", bool stripWhitespace =
 static int GetBStr(BSTR str, char *defString, DebugInfo &to)
 {
     char *normalStr = BStrToString(str);
-    int result = to.MakeString(normalStr);
+    int result = to.InternString(normalStr);
     delete[] normalStr;
     return result;
 }
@@ -146,7 +146,7 @@ void PDBFileReader::ProcessSymbol(IDiaSymbol *symbol, DebugInfo &to)
 
     to.symbols.push_back( DISymbol() );
     DISymbol *outSym = &to.symbols.back();
-    outSym->name = outSym->mangledName = to.MakeString(nameStr);
+    outSym->name = outSym->mangledName = to.InternString(nameStr);
     outSym->objFileNum = objFile;
     outSym->VA = rva;
     outSym->Size = (u32) length;
