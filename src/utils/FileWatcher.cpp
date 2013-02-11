@@ -104,6 +104,24 @@ static WatchedFile *    g_watchedFiles = NULL;
     el->next = root; \
     root = el
 
+template <typename T>
+T* ListRemove(T** root, T* el)
+{
+    T **currPtr = root;
+    T *curr;
+    for (;;) {
+        curr = *currPtr;
+        if (!curr)
+            return NULL;
+        if (curr == el)
+            break;
+        currPtr = &(curr->next);
+    }
+    T *removed = curr;
+    *currPtr = removed->next;
+    return removed;
+}
+
 static void StartMonitoringDirForChanges(WatchedDir *wd);
 
 static void AwakeWatcherThread()
@@ -358,11 +376,6 @@ static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg)
     SafeCloseHandle(&wd->hDir);
 }
 
-static void StopMonitoringDir(WatchedDir *wd)
-{
-    QueueUserAPC(StopMonitoringDirAPC, g_threadHandle, (ULONG_PTR)wd);
-}
-
 static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
 {
     WatchedDir *wd = AllocStruct<WatchedDir>();
@@ -457,39 +470,19 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir *wd)
 {
     if (IsWatchedDirReferenced(wd))
         return;
-    WatchedDir **currPtr = &g_watchedDirs;
-    WatchedDir *curr;
-    for (;;) {
-        curr = *currPtr;
-        CrashAlwaysIf(!curr);
-        if (curr == wd)
-            break;
-        currPtr = &(curr->next);
-    }
-    WatchedDir *toRemove = curr;
-    *currPtr = toRemove->next;
 
-    StopMonitoringDir(toRemove);
+    WatchedDir *removed = ListRemove(&g_watchedDirs, wd);
+    // memory will be eventually freed in ReadDirectoryChangesNotification()
+    QueueUserAPC(StopMonitoringDirAPC, g_threadHandle, (ULONG_PTR)wd);
 }
 
 static void RemoveWatchedFile(WatchedFile *wf)
 {
     WatchedDir *wd = wf->watchedDir;
+    WatchedFile *removed = ListRemove(&g_watchedFiles, wf);
 
-    WatchedFile **currPtr = &g_watchedFiles;
-    WatchedFile *curr;
-    for (;;) {
-        curr = *currPtr;
-        CrashAlwaysIf(!curr);
-        if (curr == wf)
-            break;
-        currPtr = &(curr->next);
-    }
-    WatchedFile *toRemove = curr;
-    *currPtr = toRemove->next;
-
-    bool needsAwakeThread = toRemove->isManualCheck;
-    DeleteWatchedFile(toRemove);
+    bool needsAwakeThread = removed->isManualCheck;
+    DeleteWatchedFile(removed);
     if (needsAwakeThread)
         AwakeWatcherThread();
     else
