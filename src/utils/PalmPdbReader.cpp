@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "PdbReader.h"
+#include "PalmPdbReader.h"
 
 #include "ByteReader.h"
 #include "FileUtil.h"

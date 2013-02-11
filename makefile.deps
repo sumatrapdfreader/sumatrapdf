@@ -178,7 +178,7 @@ $(OS)\EbookControls.obj: src\utils\Vec.h
 $(OS)\EbookDoc.obj: src\BaseEngine.h src\EbookBase.h src\EbookDoc.h
 $(OS)\EbookDoc.obj: src\MobiDoc.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\EbookDoc.obj: src\utils\ByteReader.h src\utils\FileUtil.h src\utils\GeomUtil.h
-$(OS)\EbookDoc.obj: src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h src\utils\PdbReader.h
+$(OS)\EbookDoc.obj: src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h src\utils\PalmPdbReader.h
 $(OS)\EbookDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
 $(OS)\EbookDoc.obj: src\utils\Vec.h src\utils\WinUtil.h src\utils\ZipUtil.h
 $(OS)\EbookEngine.obj: src\BaseEngine.h src\ChmDoc.h src\Doc.h
@@ -186,7 +186,7 @@ $(OS)\EbookEngine.obj: src\EbookBase.h src\EbookDoc.h src\EbookEngine.h
 $(OS)\EbookEngine.obj: src\EbookFormatter.h src\HtmlFormatter.h src\MobiDoc.h
 $(OS)\EbookEngine.obj: src\mui\MiniMui.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\EbookEngine.obj: src\utils\FileUtil.h src\utils\GdiPlusUtil.h src\utils\GeomUtil.h
-$(OS)\EbookEngine.obj: src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h src\utils\PdbReader.h
+$(OS)\EbookEngine.obj: src\utils\HtmlParserLookup.h src\utils\HtmlPullParser.h src\utils\PalmPdbReader.h
 $(OS)\EbookEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
 $(OS)\EbookEngine.obj: src\utils\Vec.h src\utils\ZipUtil.h
 $(OS)\EbookFormatter.obj: src\BaseEngine.h src\Doc.h src\EbookBase.h
@@ -276,7 +276,7 @@ $(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
 $(OS)\MobiDoc.obj: src\BaseEngine.h src\EbookBase.h src\MobiDoc.h
 $(OS)\MobiDoc.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitReader.h
 $(OS)\MobiDoc.obj: src\utils\ByteOrderDecoder.h src\utils\DebugLog.h src\utils\FileUtil.h
-$(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\PdbReader.h
+$(OS)\MobiDoc.obj: src\utils\GdiPlusUtil.h src\utils\GeomUtil.h src\utils\PalmPdbReader.h
 $(OS)\MobiDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\MuPDF_Exports.obj: mupdf\fitz\fitz.h
 $(OS)\Notifications.obj: src\BaseEngine.h src\ChmEngine.h src\DisplayModel.h
@@ -546,9 +546,9 @@ $(OU)\JsonParser_ut.obj: src\utils\JsonParser.h
 $(OU)\NoFreeAllocator.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\NoFreeAllocator.obj: src\utils\NoFreeAllocator.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OU)\NoFreeAllocator.obj: src\utils\Vec.h
-$(OU)\PdbReader.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\ByteReader.h
-$(OU)\PdbReader.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\PdbReader.h
-$(OU)\PdbReader.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OU)\PalmPdbReader.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\ByteReader.h
+$(OU)\PalmPdbReader.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\PalmPdbReader.h
+$(OU)\PalmPdbReader.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OU)\Sigslot_ut.obj: src\utils\Sigslot.h
 $(OU)\StrFormat.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\StrFormat.obj: src\utils\Scoped.h src\utils\StrFormat.h src\utils\StrUtil.h

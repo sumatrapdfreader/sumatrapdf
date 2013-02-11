@@ -14,7 +14,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "MiniMui.h"
-#include "PdbReader.h"
+#include "PalmPdbReader.h"
 #include "TrivialHtmlParser.h"
 #include "ZipUtil.h"
 
@@ -1400,7 +1400,7 @@ static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
         }
         break;
     }
-    
+
     return 0;
 }
 

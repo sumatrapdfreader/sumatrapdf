@@ -9,7 +9,7 @@
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "PdbReader.h"
+#include "PalmPdbReader.h"
 #include "DebugLog.h"
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
@@ -706,7 +706,7 @@ void MobiDoc::LoadImages()
 }
 
 // imgRecIndex corresponds to recindex attribute of <img> tag
-// as far as I can tell, this means: it starts at 1 
+// as far as I can tell, this means: it starts at 1
 // returns NULL if there is no image (e.g. it's not a format we
 // recognize)
 ImageData *MobiDoc::GetImage(size_t imgRecIndex) const

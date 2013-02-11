@@ -8,7 +8,7 @@
 #include "FileUtil.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
-#include "PdbReader.h"
+#include "PalmPdbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
@@ -1329,7 +1329,7 @@ bool TxtDoc::Load()
     if (linkEnd)
         htmlData.Append("</a>");
     htmlData.Append("</pre>");
-    
+
     return true;
 }
 

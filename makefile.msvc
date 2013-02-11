@@ -161,7 +161,7 @@ ENGINE_OBJS = \
 	$(OS)\EbookEngine.obj $(OS)\EbookDoc.obj
 
 EBOOK_OBJS = \
-	$(OS)\MobiDoc.obj $(OU)\PdbReader.obj $(OS)\HtmlFormatter.obj $(OS)\EbookFormatter.obj \
+	$(OS)\MobiDoc.obj $(OU)\PalmPdbReader.obj $(OS)\HtmlFormatter.obj $(OS)\EbookFormatter.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj
 
 SUMATRA_OBJS = \
@@ -203,7 +203,7 @@ BROWSER_PLUGIN_OBJS = \
 ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) \
 	$(OS)\HtmlFormatter.obj $(OS)\EbookFormatter.obj $(OMUI)\MiniMui.obj \
-	$(OS)\MobiDoc.obj $(OS)\Doc.obj $(OU)\PdbReader.obj
+	$(OS)\MobiDoc.obj $(OS)\Doc.obj $(OU)\PalmPdbReader.obj
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
