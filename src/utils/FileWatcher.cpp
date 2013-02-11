@@ -97,12 +97,12 @@ static CRITICAL_SECTION g_threadCritSec;
 static WatchedDir *     g_watchedDirs = NULL;
 static WatchedFile *    g_watchedFiles = NULL;
 
-// ugly, but makes the intent clearer. Must be a macro because
-// operates on different structures, as long as they have next member
-// intentionally missing ';' at end so that it must be written like a function call
-#define ListInsert(root, el) \
-    el->next = root; \
-    root = el
+template <typename T>
+void ListInsert(T** root, T* el)
+{
+    el->next = *root;
+    *root = el;
+}
 
 template <typename T>
 T* ListRemove(T** root, T* el)
@@ -388,7 +388,7 @@ static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
     if (!wd->hDir)
         goto Failed;
 
-    ListInsert(g_watchedDirs, wd);
+    ListInsert(&g_watchedDirs, wd);
 
     return wd;
 Failed:
@@ -405,7 +405,7 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
     wf->watchedDir = NULL;
     wf->isManualCheck = PathIsNetworkPath(filePath);;
 
-    ListInsert(g_watchedFiles, wf);
+    ListInsert(&g_watchedFiles, wf);
 
     if (wf->isManualCheck) {
         GetFileState(filePath, &wf->fileState);
