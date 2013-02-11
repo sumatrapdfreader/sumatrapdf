@@ -60,14 +60,10 @@ public:
 
 class DebugInfo
 {
-    u32                     baseAddress;
-
     StringInterner          strInterner;
     u32                     CountSizeInClass(int type) const;
 
 public:
-    DebugInfo() : baseAddress(0) { }
-
     std::vector<DISymbol>           symbols;
     std::vector<TemplateSymbol>     templates;
     std::vector<DISymFile>          files;

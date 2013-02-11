@@ -4,8 +4,6 @@
 
 #include "BaseUtil.h"
 
-//#include <malloc.h>
-//#include <ole2.h>
 #include "Dia2Subset.h"
 
 #include <vector>
@@ -19,7 +17,7 @@ void log(const char *s)
     fprintf(stderr, s);
 }
 
-struct PDBFileReader::SectionContrib
+struct SectionContrib
 {
     DWORD Section;
     DWORD Offset;
@@ -29,7 +27,30 @@ struct PDBFileReader::SectionContrib
     int ObjFile;
 };
 
-const PDBFileReader::SectionContrib *PDBFileReader::ContribFromSectionOffset(u32 sec,u32 offs)
+class PdbReader
+{
+public:
+    PdbReader() : session(NULL), contribs(NULL), nContribs(0), di(NULL) { }
+    ~PdbReader() {
+        if (session)
+            session->Release();
+        delete [] contribs;
+    }
+
+    IDiaSession *           session;
+    struct SectionContrib * contribs;
+    int                     nContribs;
+    DebugInfo *             di;
+    ULONG                   celt;
+
+    const SectionContrib *ContribFromSectionOffset(u32 sec,u32 offs);
+    void ProcessSymbol(IDiaSymbol *symbol);
+    void ReadEverything();
+    void ReadSectionTable();
+    void EnumerateSymbols();
+};
+
+const SectionContrib *PdbReader::ContribFromSectionOffset(u32 sec,u32 offs)
 {
     int l,r,x;
 
@@ -54,7 +75,6 @@ const PDBFileReader::SectionContrib *PDBFileReader::ContribFromSectionOffset(u32
     // normally, this shouldn't happen!
     return 0;
 }
-
 
 static char *BStrToString(BSTR str, char *defString = "", bool stripWhitespace = false )
 {
@@ -86,15 +106,15 @@ static char *BStrToString(BSTR str, char *defString = "", bool stripWhitespace =
     }
 }
 
-static int GetBStr(BSTR str, char *defString, DebugInfo &to)
+static int GetBStr(BSTR str, char *defString, DebugInfo *di)
 {
     char *normalStr = BStrToString(str);
-    int result = to.InternString(normalStr);
+    int result = di->InternString(normalStr);
     delete[] normalStr;
     return result;
 }
 
-void PDBFileReader::ProcessSymbol(IDiaSymbol *symbol, DebugInfo &to)
+void PdbReader::ProcessSymbol(IDiaSymbol *symbol)
 {
     // print a dot for each 1000 symbols processed
     static int counter = 0;
@@ -141,134 +161,146 @@ void PDBFileReader::ProcessSymbol(IDiaSymbol *symbol, DebugInfo &to)
 
     symbol->get_name(&name);
 
-    // fill out structure
     char *nameStr = BStrToString( name, "<noname>", true);
 
-    to.symbols.push_back( DISymbol() );
-    DISymbol *outSym = &to.symbols.back();
-    outSym->name = outSym->mangledName = to.InternString(nameStr);
+    di->symbols.push_back( DISymbol() );
+    DISymbol *outSym = &di->symbols.back();
+    outSym->name = outSym->mangledName = di->InternString(nameStr);
     outSym->objFileNum = objFile;
     outSym->VA = rva;
     outSym->Size = (u32) length;
     outSym->Class = sectionType;
-    outSym->NameSpNum = to.GetNameSpaceByName(nameStr);
+    outSym->NameSpNum = di->GetNameSpaceByName(nameStr);
 
-    // clean up
     delete[] nameStr;
     if (name)
         SysFreeString(name);
 }
 
-void PDBFileReader::ReadEverything(DebugInfo &to)
+void PdbReader::ReadSectionTable()
 {
-    ULONG celt;
-
-    contribs = 0;
-    nContribs = 0;
-
-    // read section table
+    HRESULT hr;
     IDiaEnumTables *enumTables;
-    if (session->getEnumTables(&enumTables) == S_OK)
+    hr = session->getEnumTables(&enumTables);
+    if (S_OK != hr)
+        return;
+
+    VARIANT vIndex;
+    vIndex.vt = VT_BSTR;
+    vIndex.bstrVal = SysAllocString(L"Sections");
+
+    IDiaTable *secTable;
+    if (enumTables->Item(vIndex, &secTable) == S_OK)
     {
-        VARIANT vIndex;
-        vIndex.vt = VT_BSTR;
-        vIndex.bstrVal = SysAllocString(L"Sections");
+        LONG count;
 
-        IDiaTable *secTable;
-        if (enumTables->Item(vIndex, &secTable) == S_OK)
+        secTable->get_Count(&count);
+        contribs = new SectionContrib[count];
+        nContribs = 0;
+
+        IDiaSectionContrib *item;
+        while (SUCCEEDED(secTable->Next(1,(IUnknown **)&item,&celt)) && celt == 1)
         {
-            LONG count;
+            SectionContrib &contrib = contribs[nContribs++];
 
-            secTable->get_Count(&count);
-            contribs = new SectionContrib[count];
-            nContribs = 0;
+            item->get_addressOffset(&contrib.Offset);
+            item->get_addressSection(&contrib.Section);
+            item->get_length(&contrib.Length);
+            item->get_compilandId(&contrib.Compiland);
 
-            IDiaSectionContrib *item;
-            while (SUCCEEDED(secTable->Next(1,(IUnknown **)&item,&celt)) && celt == 1)
-            {
-                SectionContrib &contrib = contribs[nContribs++];
+            BOOL code=FALSE,initData=FALSE,uninitData=FALSE;
+            item->get_code(&code);
+            item->get_initializedData(&initData);
+            item->get_uninitializedData(&uninitData);
 
-                item->get_addressOffset(&contrib.Offset);
-                item->get_addressSection(&contrib.Section);
-                item->get_length(&contrib.Length);
-                item->get_compilandId(&contrib.Compiland);
-
-                BOOL code=FALSE,initData=FALSE,uninitData=FALSE;
-                item->get_code(&code);
-                item->get_initializedData(&initData);
-                item->get_uninitializedData(&uninitData);
-
-                if (code && !initData && !uninitData)
-                    contrib.Type = DIC_CODE;
-                else if (!code && initData && !uninitData)
-                    contrib.Type = DIC_DATA;
-                else if (!code && !initData && uninitData)
-                    contrib.Type = DIC_BSS;
-                else
-                    contrib.Type = DIC_UNKNOWN;
-
-                BSTR objFileName = 0;
-
-                IDiaSymbol *compiland = 0;
-                item->get_compiland(&compiland);
-                if(compiland)
-                {
-                    compiland->get_name(&objFileName);
-                    compiland->Release();
-                }
-
-                char *objFileStr = BStrToString(objFileName,"<noobjfile>");
-                contrib.ObjFile = to.GetFileByName(objFileStr);
-
-                delete[] objFileStr;
-                if (objFileName)
-                    SysFreeString(objFileName);
-
-                item->Release();
-            }
-
-            secTable->Release();
-        }
-
-        SysFreeString(vIndex.bstrVal);
-        enumTables->Release();
-    }
-
-    // enumerate symbols by (virtual) address
-    IDiaEnumSymbolsByAddr *enumByAddr;
-    if (SUCCEEDED(session->getSymbolsByAddr(&enumByAddr)))
-    {
-        IDiaSymbol *symbol;
-        // get first symbol to get first RVA (argh)
-        if (SUCCEEDED(enumByAddr->symbolByAddr(1,0,&symbol)))
-        {
-            DWORD rva;
-            if (symbol->get_relativeVirtualAddress(&rva) == S_OK)
-            {
-                symbol->Release();
-
-                // now, enumerate by rva.
-                if (SUCCEEDED(enumByAddr->symbolByRVA(rva,&symbol)))
-                {
-                    do
-                    {
-                        ProcessSymbol(symbol,to);
-                        symbol->Release();
-
-                        if (FAILED(enumByAddr->Next(1,&symbol,&celt)))
-                            break;
-                    }
-                    while(celt == 1);
-                }
-            }
+            if (code && !initData && !uninitData)
+                contrib.Type = DIC_CODE;
+            else if (!code && initData && !uninitData)
+                contrib.Type = DIC_DATA;
+            else if (!code && !initData && uninitData)
+                contrib.Type = DIC_BSS;
             else
-                symbol->Release();
+                contrib.Type = DIC_UNKNOWN;
+
+            BSTR objFileName = 0;
+
+            IDiaSymbol *compiland = 0;
+            item->get_compiland(&compiland);
+            if(compiland)
+            {
+                compiland->get_name(&objFileName);
+                compiland->Release();
+            }
+
+            char *objFileStr = BStrToString(objFileName,"<noobjfile>");
+            contrib.ObjFile = di->GetFileByName(objFileStr);
+
+            delete[] objFileStr;
+            if (objFileName)
+                SysFreeString(objFileName);
+
+            item->Release();
         }
 
-        enumByAddr->Release();
+        secTable->Release();
     }
 
-    delete[] contribs;
+    SysFreeString(vIndex.bstrVal);
+    enumTables->Release();
+}
+
+// enumerate symbols by (virtual) address
+void PdbReader::EnumerateSymbols()
+{
+    HRESULT                 hr;
+    IDiaEnumSymbolsByAddr * enumByAddr = NULL;
+    IDiaSymbol *            symbol = NULL;
+
+    hr = session->getSymbolsByAddr(&enumByAddr);
+    if (!SUCCEEDED(hr))
+        goto Exit;
+
+    // get first symbol to get first RVA (argh)
+    hr = enumByAddr->symbolByAddr(1, 0, &symbol);
+    if (!SUCCEEDED(hr))
+        goto Exit;
+
+    DWORD rva;
+    hr = symbol->get_relativeVirtualAddress(&rva);
+    if (S_OK != hr)
+        goto Exit;
+
+    symbol->Release();
+    symbol = NULL;
+
+    // enumerate by rva
+    hr = enumByAddr->symbolByRVA(rva, &symbol);
+    if (!SUCCEEDED(hr))
+        goto Exit;
+
+    do
+    {
+        ProcessSymbol(symbol);
+        symbol->Release();
+
+        hr = enumByAddr->Next(1, &symbol, &celt);
+        if (FAILED(hr))
+            break;
+    }
+    while (celt == 1);
+
+Exit:
+    if (symbol)
+        symbol->Release();
+    if (enumByAddr)
+        enumByAddr->Release();
+}
+
+void PdbReader::ReadEverything()
+{
+    // TODO: if ReadSectionTable() fails, we probably shouldn't proceed
+    ReadSectionTable();
+    EnumerateSymbols();
 }
 
 static const struct DLLDesc
@@ -288,8 +320,11 @@ static const struct DLLDesc
 // note: we leak g_dia_source but who cares
 IDiaDataSource *g_dia_source = 0;
 
-bool LoadDia()
+IDiaDataSource *LoadDia()
 {
+    if (g_dia_source)
+        return g_dia_source;
+
     HRESULT hr = E_FAIL;
 
     // Try creating things "the official way"
@@ -300,7 +335,7 @@ bool LoadDia()
 
         if (SUCCEEDED(hr)) {
             //logf("using registered dia %s\n", msdiaDlls[i].Filename);
-            return true;
+            return g_dia_source;
         }
     }
 
@@ -338,7 +373,7 @@ bool LoadDia()
                 hr = classFactory->CreateInstance(0,__uuidof(IDiaDataSource),(void**) &g_dia_source);
                 classFactory->Release();
                 logf("using loaded dia %s\n", dllName);
-                return true;
+                return g_dia_source;
             } else {
                 logf("DllGetClassObject() in %s failed", dllName);
             }
@@ -348,30 +383,34 @@ bool LoadDia()
         FreeLibrary(hDll);
     }
     log("  couldn't find (or properly initialize) any DIA dll, copying msdia*.dll to app dir might help.\n");
-    return false;
+    return NULL;
 }
 
-bool PDBFileReader::ReadDebugInfo(char *fileName, DebugInfo &to)
+DebugInfo *ReadPdbFile(const char *fileNameA)
 {
-    if (!g_dia_source) {
-        log("  must call LoadDia() before calling PDFFileReader::ReadDebugInfo()\n");
-        return false;
-    }
+    HRESULT             hr;
+    IDiaDataSource *    dia;
 
-    wchar_t wchFileName[MAX_PATH];
-    mbstowcs(wchFileName, fileName, dimof(wchFileName));
-    if (FAILED(g_dia_source->loadDataForExe(wchFileName,0,0))) {
+    dia = LoadDia();
+    if (!dia)
+        return NULL;
+
+    ScopedMem<WCHAR> fileName(str::conv::FromAnsi(fileNameA));
+    hr = dia->loadDataForExe(fileName, 0, 0);
+    if (FAILED(hr)) {
         log("  failed to load debug symbols (PDB not found)\n");
-        return false;
+        return NULL;
     }
 
-    if (FAILED(g_dia_source->openSession(&session))) {
+    PdbReader           reader;
+    hr = dia->openSession(&reader.session);
+    if (FAILED(hr)) {
         log("  failed to open DIA session\n");
-        return false;
+        return NULL;
     }
-    ReadEverything(to);
 
-    session->Release();
-    return true;
+    DebugInfo *di = new DebugInfo();
+    reader.di = di;
+    reader.ReadEverything();
+    return di;
 }
-

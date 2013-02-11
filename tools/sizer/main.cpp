@@ -14,16 +14,32 @@
 
 int main(int argc, char** argv)
 {
+    DebugInfo * di;
+
     ScopedCom comInitializer;
-    if (!LoadDia()) {
-        return 1;
-    }
 
     if (argc < 2) {
         log("Usage: sizer <exefile>\n");
         return 1;
     }
 
+    fprintf( stderr, "Reading debug info file %s ...\n", argv[1] );
+    di = ReadPdbFile(argv[1]);
+    if (!di) {
+        log("ERROR reading file via PDB\n");
+        return 1;
+    }
+    log("\nProcessing info...\n");
+    di->FinishedReading();
+    di->StartAnalyze();
+    di->FinishAnalyze();
+
+    log("Generating report...\n");
+    std::string report = di->WriteReport();
+    log("Printing...\n");
+    puts(report.c_str());
+
+#if 0
     DebugInfo info;
 
     clock_t time1 = clock();
@@ -49,6 +65,7 @@ int main(int argc, char** argv)
     log("Printing...\n");
     puts( report.c_str() );
     fprintf( stderr, "Done in %.2f seconds!\n", secs );
+#endif
 
     return 0;
 }
