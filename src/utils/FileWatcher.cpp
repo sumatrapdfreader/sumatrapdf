@@ -394,13 +394,18 @@ static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
 static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *observer)
 {
     bool isManualCheck = PathIsNetworkPath(filePath);
-    bool newDir = false;
     ScopedMem<WCHAR> dirPath(path::GetDir(filePath));
-    WatchedDir *wd = FindExistingWatchedDir(dirPath);
-    if (!wd)
-        wd = NewWatchedDir(dirPath);
-    if (!wd)
-        return NULL;
+    WatchedDir *wd = NULL;
+    bool newDir = false;
+    if (!isManualCheck) {
+        wd = FindExistingWatchedDir(dirPath);
+        if (!wd) {
+            wd = NewWatchedDir(dirPath);
+            if (!wd)
+                return NULL;
+            newDir = true;
+        }
+    }
 
     WatchedFile *wf = AllocStruct<WatchedFile>();
     wf->filePath = str::Dup(filePath);
@@ -414,7 +419,8 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
         GetFileState(filePath, &wf->fileState);
         AwakeWatcherThread();
     } else {
-        StartMonitoringDirForChanges(wf->watchedDir);
+        if (newDir)
+            StartMonitoringDirForChanges(wf->watchedDir);
     }
 
     return wf;
