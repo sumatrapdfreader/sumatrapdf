@@ -17,55 +17,58 @@ void log(const char *s)
     fprintf(stderr, s);
 }
 
-struct SectionContrib
-{
-    DWORD Section;
-    DWORD Offset;
-    DWORD Length;
-    DWORD Compiland;
-    int Type;
-    int ObjFile;
+struct Section {
+    DWORD       section;
+    DWORD       offset;
+    DWORD       length;
+    DWORD       compiland;
+    int         type;
+    int         objFile;
 };
 
 class PdbReader
 {
 public:
-    PdbReader() : session(NULL), contribs(NULL), nContribs(0), di(NULL) { }
+    PdbReader() : session(NULL), di(NULL), sections(NULL), 
+                  nSections(0), currSection(0) {
+    }
+
     ~PdbReader() {
         if (session)
             session->Release();
-        delete [] contribs;
     }
 
     IDiaSession *           session;
-    struct SectionContrib * contribs;
-    int                     nContribs;
     DebugInfo *             di;
+    int                     nSections;
+    int                     currSection;
+    Section *               sections;
 
-    const SectionContrib *ContribFromSectionOffset(u32 sec,u32 offs);
-    void ProcessSymbol(IDiaSymbol *symbol);
-    void ReadEverything();
-    void ReadSectionTable();
-    void EnumerateSymbols();
+    Section *   SectionFromOffset(u32 sec,u32 offs);
+    void        ProcessSymbol(IDiaSymbol *symbol);
+    void        AddSection(IDiaSectionContrib *item);
+    void        ReadEverything();
+    void        ReadSectionTable();
+    void        EnumerateSymbols();
 };
 
-const SectionContrib *PdbReader::ContribFromSectionOffset(u32 sec,u32 offs)
+Section *PdbReader::SectionFromOffset(u32 sec,u32 offs)
 {
     int l,r,x;
 
     l = 0;
-    r = nContribs;
+    r = nSections;
 
     while (l < r)
     {
         x = (l + r) / 2;
-        const SectionContrib &cur = contribs[x];
+        Section &cur = sections[x];
 
-        if (sec < cur.Section || sec == cur.Section && offs < cur.Offset)
+        if (sec < cur.section || sec == cur.section && offs < cur.offset)
             r = x;
-        else if (sec > cur.Section || sec == cur.Section && offs >= cur.Offset + cur.Length)
+        else if (sec > cur.section || sec == cur.section && offs >= cur.offset + cur.length)
             l = x+1;
-        else if (sec == cur.Section && offs >= cur.Offset && offs < cur.Offset + cur.Length) // we got a winner
+        else if (sec == cur.section && offs >= cur.offset && offs < cur.offset + cur.length) // we got a winner
             return &cur;
         else
             break; // there's nothing here!
@@ -139,14 +142,14 @@ void PdbReader::ProcessSymbol(IDiaSymbol *symbol)
             length = 0;
     }
 
-    const SectionContrib *contrib = ContribFromSectionOffset(section,offset);
+    Section *contrib = SectionFromOffset(section, offset);
     int objFile = 0;
     int sectionType = DIC_UNKNOWN;
 
     if (contrib)
     {
-        objFile = contrib->ObjFile;
-        sectionType = contrib->Type;
+        objFile = contrib->objFile;
+        sectionType = contrib->type;
     }
 
     symbol->get_name(&name);
@@ -165,6 +168,46 @@ void PdbReader::ProcessSymbol(IDiaSymbol *symbol)
     free(nameStr);
     if (name)
         SysFreeString(name);
+}
+
+void PdbReader::AddSection(IDiaSectionContrib *item)
+{
+    Section *s = &sections[currSection++];
+    item->get_addressOffset(&s->offset);
+    item->get_addressSection(&s->section);
+    item->get_length(&s->length);
+    item->get_compilandId(&s->compiland);
+
+    BOOL code=FALSE,initData=FALSE,uninitData=FALSE;
+    item->get_code(&code);
+    item->get_initializedData(&initData);
+    item->get_uninitializedData(&uninitData);
+
+    if (code && !initData && !uninitData)
+        s->type = DIC_CODE;
+    else if (!code && initData && !uninitData)
+        s->type = DIC_DATA;
+    else if (!code && !initData && uninitData)
+        s->type = DIC_BSS;
+    else
+        s->type = DIC_UNKNOWN;
+
+    BSTR objFileName = 0;
+
+    IDiaSymbol *compiland = 0;
+    item->get_compiland(&compiland);
+    if (compiland)
+    {
+        compiland->get_name(&objFileName);
+        compiland->Release();
+    }
+
+    char *objFileStr = BStrToString(objFileName, "<noobjfile>");
+    s->objFile = di->GetFileByName(objFileStr);
+    free(objFileStr);
+    if (objFileName)
+        SysFreeString(objFileName);
+
 }
 
 void PdbReader::ReadSectionTable()
@@ -188,53 +231,19 @@ void PdbReader::ReadSectionTable()
     LONG count;
 
     secTable->get_Count(&count);
-    contribs = new SectionContrib[count];
-    nContribs = 0;
+    sections = (Section*)malloc(sizeof(Section)*count);
+    nSections = count;
+    currSection = 0;
 
     IDiaSectionContrib *item;
-    ULONG celt;
+    ULONG numFetched;
     for (;;)
     {
-        hr = secTable->Next(1,(IUnknown **)&item, &celt);
-        if (FAILED(hr) || (celt != 1))
+        hr = secTable->Next(1,(IUnknown **)&item, &numFetched);
+        if (FAILED(hr) || (numFetched != 1))
             break;
 
-        SectionContrib &contrib = contribs[nContribs++];
-        item->get_addressOffset(&contrib.Offset);
-        item->get_addressSection(&contrib.Section);
-        item->get_length(&contrib.Length);
-        item->get_compilandId(&contrib.Compiland);
-
-        BOOL code=FALSE,initData=FALSE,uninitData=FALSE;
-        item->get_code(&code);
-        item->get_initializedData(&initData);
-        item->get_uninitializedData(&uninitData);
-
-        if (code && !initData && !uninitData)
-            contrib.Type = DIC_CODE;
-        else if (!code && initData && !uninitData)
-            contrib.Type = DIC_DATA;
-        else if (!code && !initData && uninitData)
-            contrib.Type = DIC_BSS;
-        else
-            contrib.Type = DIC_UNKNOWN;
-
-        BSTR objFileName = 0;
-
-        IDiaSymbol *compiland = 0;
-        item->get_compiland(&compiland);
-        if (compiland)
-        {
-            compiland->get_name(&objFileName);
-            compiland->Release();
-        }
-
-        char *objFileStr = BStrToString(objFileName,"<noobjfile>");
-        contrib.ObjFile = di->GetFileByName(objFileStr);
-        free(objFileStr);
-        if (objFileName)
-            SysFreeString(objFileName);
-
+        AddSection(item);
         item->Release();
     }
 
@@ -275,14 +284,14 @@ void PdbReader::EnumerateSymbols()
     if (!SUCCEEDED(hr))
         goto Exit;
 
-    ULONG celt;
+    ULONG numFetched;
     for (;;)
     {
         ProcessSymbol(symbol);
         symbol->Release();
 
-        hr = enumByAddr->Next(1, &symbol, &celt);
-        if (FAILED(hr) || (celt != 1))
+        hr = enumByAddr->Next(1, &symbol, &numFetched);
+        if (FAILED(hr) || (numFetched != 1))
             break;
     }
 
