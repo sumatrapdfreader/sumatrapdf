@@ -41,7 +41,6 @@ public:
     struct SectionContrib * contribs;
     int                     nContribs;
     DebugInfo *             di;
-    ULONG                   celt;
 
     const SectionContrib *ContribFromSectionOffset(u32 sec,u32 offs);
     void ProcessSymbol(IDiaSymbol *symbol);
@@ -79,38 +78,29 @@ const SectionContrib *PdbReader::ContribFromSectionOffset(u32 sec,u32 offs)
 static char *BStrToString(BSTR str, char *defString = "", bool stripWhitespace = false )
 {
     if (!str)
+        return str::Dup(defString);
+
+    int len = SysStringLen(str);
+    char *buffer = (char*)malloc(len+1);
+
+    int j = 0;
+    for (int i=0; i<len; i++)
     {
-        int len = strlen(defString);
-        char *buffer = new char[len+1];
-        strncpy(buffer,defString,len+1);
-
-        return buffer;
+        if (stripWhitespace && isspace(str[i]))
+            continue;
+        buffer[j] = (str[i] >= 32 && str[i] < 128) ? str[i] : '?';
+        ++j;
     }
-    else
-    {
-        int len = SysStringLen(str);
-        char *buffer = new char[len+1];
 
-        int j = 0;
-        for (int i=0;i<len;i++)
-        {
-            if (stripWhitespace && isspace(str[i]))
-                continue;
-            buffer[j] = (str[i] >= 32 && str[i] < 128) ? str[i] : '?';
-            ++j;
-        }
-
-        buffer[j] = 0;
-
-        return buffer;
-    }
+    buffer[j] = 0;
+    return buffer;
 }
 
 static int GetBStr(BSTR str, char *defString, DebugInfo *di)
 {
     char *normalStr = BStrToString(str);
     int result = di->InternString(normalStr);
-    delete[] normalStr;
+    free(normalStr);
     return result;
 }
 
@@ -161,7 +151,7 @@ void PdbReader::ProcessSymbol(IDiaSymbol *symbol)
 
     symbol->get_name(&name);
 
-    char *nameStr = BStrToString( name, "<noname>", true);
+    char *nameStr = BStrToString(name, "<noname>", true);
 
     di->symbols.push_back( DISymbol() );
     DISymbol *outSym = &di->symbols.back();
@@ -172,15 +162,17 @@ void PdbReader::ProcessSymbol(IDiaSymbol *symbol)
     outSym->Class = sectionType;
     outSym->NameSpNum = di->GetNameSpaceByName(nameStr);
 
-    delete[] nameStr;
+    free(nameStr);
     if (name)
         SysFreeString(name);
 }
 
 void PdbReader::ReadSectionTable()
 {
-    HRESULT hr;
-    IDiaEnumTables *enumTables;
+    HRESULT             hr;
+    IDiaEnumTables *    enumTables = NULL;
+    IDiaTable *         secTable = NULL;
+
     hr = session->getEnumTables(&enumTables);
     if (S_OK != hr)
         return;
@@ -189,64 +181,69 @@ void PdbReader::ReadSectionTable()
     vIndex.vt = VT_BSTR;
     vIndex.bstrVal = SysAllocString(L"Sections");
 
-    IDiaTable *secTable;
-    if (enumTables->Item(vIndex, &secTable) == S_OK)
+    hr = enumTables->Item(vIndex, &secTable);
+    if (S_OK != hr)
+        goto Exit;
+
+    LONG count;
+
+    secTable->get_Count(&count);
+    contribs = new SectionContrib[count];
+    nContribs = 0;
+
+    IDiaSectionContrib *item;
+    ULONG celt;
+    for (;;)
     {
-        LONG count;
+        hr = secTable->Next(1,(IUnknown **)&item, &celt);
+        if (FAILED(hr) || (celt != 1))
+            break;
 
-        secTable->get_Count(&count);
-        contribs = new SectionContrib[count];
-        nContribs = 0;
+        SectionContrib &contrib = contribs[nContribs++];
+        item->get_addressOffset(&contrib.Offset);
+        item->get_addressSection(&contrib.Section);
+        item->get_length(&contrib.Length);
+        item->get_compilandId(&contrib.Compiland);
 
-        IDiaSectionContrib *item;
-        while (SUCCEEDED(secTable->Next(1,(IUnknown **)&item,&celt)) && celt == 1)
+        BOOL code=FALSE,initData=FALSE,uninitData=FALSE;
+        item->get_code(&code);
+        item->get_initializedData(&initData);
+        item->get_uninitializedData(&uninitData);
+
+        if (code && !initData && !uninitData)
+            contrib.Type = DIC_CODE;
+        else if (!code && initData && !uninitData)
+            contrib.Type = DIC_DATA;
+        else if (!code && !initData && uninitData)
+            contrib.Type = DIC_BSS;
+        else
+            contrib.Type = DIC_UNKNOWN;
+
+        BSTR objFileName = 0;
+
+        IDiaSymbol *compiland = 0;
+        item->get_compiland(&compiland);
+        if (compiland)
         {
-            SectionContrib &contrib = contribs[nContribs++];
-
-            item->get_addressOffset(&contrib.Offset);
-            item->get_addressSection(&contrib.Section);
-            item->get_length(&contrib.Length);
-            item->get_compilandId(&contrib.Compiland);
-
-            BOOL code=FALSE,initData=FALSE,uninitData=FALSE;
-            item->get_code(&code);
-            item->get_initializedData(&initData);
-            item->get_uninitializedData(&uninitData);
-
-            if (code && !initData && !uninitData)
-                contrib.Type = DIC_CODE;
-            else if (!code && initData && !uninitData)
-                contrib.Type = DIC_DATA;
-            else if (!code && !initData && uninitData)
-                contrib.Type = DIC_BSS;
-            else
-                contrib.Type = DIC_UNKNOWN;
-
-            BSTR objFileName = 0;
-
-            IDiaSymbol *compiland = 0;
-            item->get_compiland(&compiland);
-            if(compiland)
-            {
-                compiland->get_name(&objFileName);
-                compiland->Release();
-            }
-
-            char *objFileStr = BStrToString(objFileName,"<noobjfile>");
-            contrib.ObjFile = di->GetFileByName(objFileStr);
-
-            delete[] objFileStr;
-            if (objFileName)
-                SysFreeString(objFileName);
-
-            item->Release();
+            compiland->get_name(&objFileName);
+            compiland->Release();
         }
 
-        secTable->Release();
+        char *objFileStr = BStrToString(objFileName,"<noobjfile>");
+        contrib.ObjFile = di->GetFileByName(objFileStr);
+        free(objFileStr);
+        if (objFileName)
+            SysFreeString(objFileName);
+
+        item->Release();
     }
 
+Exit:
+    if (secTable)
+        secTable->Release();
     SysFreeString(vIndex.bstrVal);
-    enumTables->Release();
+    if (enumTables)
+        enumTables->Release();
 }
 
 // enumerate symbols by (virtual) address
@@ -278,16 +275,16 @@ void PdbReader::EnumerateSymbols()
     if (!SUCCEEDED(hr))
         goto Exit;
 
-    do
+    ULONG celt;
+    for (;;)
     {
         ProcessSymbol(symbol);
         symbol->Release();
 
         hr = enumByAddr->Next(1, &symbol, &celt);
-        if (FAILED(hr))
+        if (FAILED(hr) || (celt != 1))
             break;
     }
-    while (celt == 1);
 
 Exit:
     if (symbol)
