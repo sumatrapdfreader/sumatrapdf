@@ -84,6 +84,11 @@
 #include "inftrees.h"
 #include "inflate.h"
 #include "inffast.h"
+/* SumatraPDF: support Deflate 64 */
+#include "inftree2.h"
+#if defined(MAKEFIXED) || defined(BUILDFIXED)
+#error Deflate64 support is incompatible with BUILDFIXED
+#endif
 
 #ifdef MAKEFIXED
 #  ifndef BUILDFIXED
@@ -94,9 +99,6 @@
 /* function prototypes */
 local void fixedtables OF((struct inflate_state FAR *state));
 local int updatewindow OF((z_streamp strm, unsigned out));
-extern int inflate_table9 OF((codetype type, unsigned short FAR *lens,
-                             unsigned codes, code FAR * FAR *table,
-                             unsigned FAR *bits, unsigned short FAR *work));
 #ifdef BUILDFIXED
    void makefixed OF((void));
 #endif
@@ -913,8 +915,7 @@ int flush;
             state->ncode = BITS(4) + 4;
             DROPBITS(4);
 #ifndef PKZIP_BUG_WORKAROUND
-            if (state->nlen > 286 ||
-                    (state->wbits < 16 && state->ndist > 30)) {
+            if (state->nlen > 286 || (state->wbits < 16 && state->ndist > 30)) {
                 strm->msg = (char *)"too many length or distance symbols";
                 state->mode = BAD;
                 break;
@@ -934,8 +935,7 @@ int flush;
             state->next = state->codes;
             state->lencode = (code const FAR *)(state->next);
             state->lenbits = 7;
-            ret = state->inflate_table(CODES, state->lens,
-                                19, &(state->next),
+            ret = state->inflate_table(CODES, state->lens, 19, &(state->next),
                                 &(state->lenbits), state->work);
             if (ret) {
                 strm->msg = (char *)"invalid code lengths set";
@@ -1010,8 +1010,7 @@ int flush;
             state->next = state->codes;
             state->lencode = (code const FAR *)(state->next);
             state->lenbits = 9;
-            ret = state->inflate_table(LENS, state->lens,
-                                state->nlen, &(state->next),
+            ret = state->inflate_table(LENS, state->lens, state->nlen, &(state->next),
                                 &(state->lenbits), state->work);
             if (ret) {
                 strm->msg = (char *)"invalid literal/lengths set";
@@ -1020,9 +1019,8 @@ int flush;
             }
             state->distcode = (code const FAR *)(state->next);
             state->distbits = 6;
-            ret = state->inflate_table(DISTS, state->lens + state->nlen,
-                            state->ndist, &(state->next),
-                            &(state->distbits), state->work);
+            ret = state->inflate_table(DISTS, state->lens + state->nlen, state->ndist,
+                            &(state->next), &(state->distbits), state->work);
             if (ret) {
                 strm->msg = (char *)"invalid distances set";
                 state->mode = BAD;

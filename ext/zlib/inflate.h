@@ -123,5 +123,5 @@ struct inflate_state {
     int sane;                   /* if false, allow invalid distance too far */
     int back;                   /* bits back of last unprocessed length/lit */
     unsigned was;               /* initial length of match */
-    inflate_table_func *inflate_table;
+    inflate_table_func *inflate_table; /* SumatraPDF: support Deflate64 */
 };

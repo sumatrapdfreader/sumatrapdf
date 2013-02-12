@@ -103,7 +103,7 @@ CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
 CFLAGSOPT = $(CFLAGSB) $(OPTLEVEL) /D "NDEBUG"
 !endif
 
-ZLIB_CFLAGS = $(CFLAGSOPT) /wd4996
+ZLIB_CFLAGS = $(CFLAGSOPT) /wd4996 /I$(ZLIB_DIR) /I$(ZLIB_DIR)/infback9
 
 FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
 	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2" /wd4996
@@ -399,6 +399,9 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
 {$(ZLIB_DIR)}.c{$(OZ)}.obj::
+	$(CC) $(ZLIB_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
+
+{$(ZLIB_DIR)\infback9}.c{$(OZ)}.obj::
 	$(CC) $(ZLIB_CFLAGS) /Fo$(OZ)\ /Fd$(O)\vc80.pdb $<
 
 {$(JPEG_TURBO_DIR)}.c{$(OT)}.obj::

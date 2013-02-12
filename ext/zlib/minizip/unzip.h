@@ -59,7 +59,8 @@ extern "C" {
 #include "bzlib.h"
 #endif
 
-#define Z_DEFLATE64D 9
+/* SumatraPDF: support Deflate64 */
+#define Z_DEFLATE64ED 9
 #define Z_BZIP2ED 12
 
 #if defined(STRICTUNZIP) || defined(STRICTZIPUNZIP)
