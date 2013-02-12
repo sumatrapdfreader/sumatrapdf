@@ -15,26 +15,26 @@ struct closure
 	xps_resource *dict;
 	fz_xml *root;
 	void *user;
-	void (*func)(xps_document*, fz_matrix, fz_rect, char*, xps_resource*, fz_xml*, void*);
+	void (*func)(xps_document*, const fz_matrix *, const fz_rect *, char*, xps_resource*, fz_xml*, void*);
 };
 
 static void
-xps_paint_tiling_brush_clipped(xps_document *doc, fz_matrix ctm, fz_rect viewbox, struct closure *c)
+xps_paint_tiling_brush_clipped(xps_document *doc, const fz_matrix *ctm, const fz_rect *viewbox, struct closure *c)
 {
 	fz_path *path = fz_new_path(doc->ctx);
-	fz_moveto(doc->ctx, path, viewbox.x0, viewbox.y0);
-	fz_lineto(doc->ctx, path, viewbox.x0, viewbox.y1);
-	fz_lineto(doc->ctx, path, viewbox.x1, viewbox.y1);
-	fz_lineto(doc->ctx, path, viewbox.x1, viewbox.y0);
+	fz_moveto(doc->ctx, path, viewbox->x0, viewbox->y0);
+	fz_lineto(doc->ctx, path, viewbox->x0, viewbox->y1);
+	fz_lineto(doc->ctx, path, viewbox->x1, viewbox->y1);
+	fz_lineto(doc->ctx, path, viewbox->x1, viewbox->y0);
 	fz_closepath(doc->ctx, path);
-	fz_clip_path(doc->dev, path, fz_infinite_rect, 0, ctm);
+	fz_clip_path(doc->dev, path, NULL, 0, ctm);
 	fz_free_path(doc->ctx, path);
 	c->func(doc, ctm, viewbox, c->base_uri, c->dict, c->root, c->user);
 	fz_pop_clip(doc->dev);
 }
 
 static void
-xps_paint_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect viewbox, int tile_mode, struct closure *c)
+xps_paint_tiling_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *viewbox, int tile_mode, struct closure *c)
 {
 	fz_matrix ttm;
 
@@ -42,30 +42,30 @@ xps_paint_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect viewbox, int ti
 
 	if (tile_mode == TILE_FLIP_X || tile_mode == TILE_FLIP_X_Y)
 	{
-		ttm = fz_concat(fz_translate(viewbox.x1 * 2, 0), ctm);
-		ttm = fz_concat(fz_scale(-1, 1), ttm);
-		xps_paint_tiling_brush_clipped(doc, ttm, viewbox, c);
+		ttm = *ctm;
+		fz_pre_scale(fz_pre_translate(&ttm, viewbox->x1 * 2, 0), -1, 1);
+		xps_paint_tiling_brush_clipped(doc, &ttm, viewbox, c);
 	}
 
 	if (tile_mode == TILE_FLIP_Y || tile_mode == TILE_FLIP_X_Y)
 	{
-		ttm = fz_concat(fz_translate(0, viewbox.y1 * 2), ctm);
-		ttm = fz_concat(fz_scale(1, -1), ttm);
-		xps_paint_tiling_brush_clipped(doc, ttm, viewbox, c);
+		ttm = *ctm;
+		fz_pre_scale(fz_pre_translate(&ttm, 0, viewbox->y1 * 2), 1, -1);
+		xps_paint_tiling_brush_clipped(doc, &ttm, viewbox, c);
 	}
 
 	if (tile_mode == TILE_FLIP_X_Y)
 	{
-		ttm = fz_concat(fz_translate(viewbox.x1 * 2, viewbox.y1 * 2), ctm);
-		ttm = fz_concat(fz_scale(-1, -1), ttm);
-		xps_paint_tiling_brush_clipped(doc, ttm, viewbox, c);
+		ttm = *ctm;
+		fz_pre_scale(fz_pre_translate(&ttm, viewbox->x1 * 2, viewbox->y1 * 2), -1, -1);
+		xps_paint_tiling_brush_clipped(doc, &ttm, viewbox, c);
 	}
 }
 
 void
-xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
+xps_parse_tiling_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area,
 	char *base_uri, xps_resource *dict, fz_xml *root,
-	void (*func)(xps_document*, fz_matrix, fz_rect, char*, xps_resource*, fz_xml*, void*), void *user)
+	void (*func)(xps_document*, const fz_matrix*, const fz_rect*, char*, xps_resource*, fz_xml*, void*), void *user)
 {
 	fz_xml *node;
 	struct closure c;
@@ -116,7 +116,7 @@ xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 		xps_parse_render_transform(doc, transform_att, &transform);
 	if (transform_tag)
 		xps_parse_matrix_transform(doc, transform_tag, &transform);
-	ctm = fz_concat(transform, ctm);
+	fz_concat(&transform, &transform, ctm);
 
 	viewbox = fz_unit_rect;
 	if (viewbox_att)
@@ -163,35 +163,36 @@ xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 	if (tile_mode == TILE_FLIP_Y || tile_mode == TILE_FLIP_X_Y)
 		ystep *= 2;
 
-	xps_begin_opacity(doc, ctm, area, base_uri, dict, opacity_att, NULL);
+	xps_begin_opacity(doc, &transform, area, base_uri, dict, opacity_att, NULL);
 
-	ctm = fz_concat(fz_translate(viewport.x0, viewport.y0), ctm);
-	ctm = fz_concat(fz_scale(xscale, yscale), ctm);
-	ctm = fz_concat(fz_translate(-viewbox.x0, -viewbox.y0), ctm);
+	fz_pre_translate(&transform, viewport.x0, viewport.y0);
+	fz_pre_scale(&transform, xscale, yscale);
+	fz_pre_translate(&transform, -viewbox.x0, -viewbox.y0);
 
 	if (tile_mode != TILE_NONE)
 	{
 		int x0, y0, x1, y1;
-		fz_matrix invctm = fz_invert_matrix(ctm);
-		area = fz_transform_rect(invctm, area);
+		fz_matrix invctm;
+		fz_rect local_area = *area;
+		area = fz_transform_rect(&local_area, fz_invert_matrix(&invctm, &transform));
 		/* SumatraPDF: make sure that the intended area is covered */
 		{
 			fz_point tl;
-			fz_bbox bbox;
+			fz_irect bbox;
 			fz_rect bigview = viewbox;
 			bigview.x1 = bigview.x0 + xstep;
 			bigview.y1 = bigview.y0 + ystep;
-			bbox = fz_bbox_from_rect(fz_transform_rect(ctm, bigview));
+			fz_irect_from_rect(&bbox, fz_transform_rect(&bigview, &transform));
 			tl.x = bbox.x0;
 			tl.y = bbox.y0;
-			tl = fz_transform_point(invctm, tl);
-			area.x0 -= fz_max(tl.x, 0); area.x1 += xstep - fz_max(tl.x, 0);
-			area.y0 -= fz_max(tl.y, 0); area.y1 += ystep - fz_max(tl.y, 0);
+			fz_transform_point(&tl, &invctm);
+			local_area.x0 -= fz_max(tl.x, 0); local_area.x1 += xstep - fz_max(tl.x, 0);
+			local_area.y0 -= fz_max(tl.y, 0); local_area.y1 += ystep - fz_max(tl.y, 0);
 		}
-		x0 = floorf(area.x0 / xstep);
-		y0 = floorf(area.y0 / ystep);
-		x1 = ceilf(area.x1 / xstep);
-		y1 = ceilf(area.y1 / ystep);
+		x0 = floorf(local_area.x0 / xstep);
+		y0 = floorf(local_area.y0 / ystep);
+		x1 = ceilf(local_area.x1 / xstep);
+		y1 = ceilf(local_area.y1 / ystep);
 
 #ifdef TILE
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693338 */
@@ -203,8 +204,8 @@ xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 			fz_rect bigview = viewbox;
 			bigview.x1 = bigview.x0 + xstep;
 			bigview.y1 = bigview.y0 + ystep;
-			fz_begin_tile(doc->dev, area, bigview, xstep, ystep, ctm);
-			xps_paint_tiling_brush(doc, ctm, viewbox, tile_mode, &c);
+			fz_begin_tile(doc->dev, &local_area, &bigview, xstep, ystep, &transform);
+			xps_paint_tiling_brush(doc, &transform, &viewbox, tile_mode, &c);
 			fz_end_tile(doc->dev);
 		}
 		else
@@ -214,29 +215,30 @@ xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 			{
 				for (x = x0; x < x1; x++)
 				{
-					fz_matrix ttm = fz_concat(fz_translate(xstep * x, ystep * y), ctm);
-					xps_paint_tiling_brush(doc, ttm, viewbox, tile_mode, &c);
+					fz_matrix ttm = transform;
+					fz_pre_translate(&ttm, xstep * x, ystep * y);
+					xps_paint_tiling_brush(doc, &ttm, &viewbox, tile_mode, &c);
 				}
 			}
 		}
 	}
 	else
 	{
-		xps_paint_tiling_brush(doc, ctm, viewbox, tile_mode, &c);
+		xps_paint_tiling_brush(doc, &transform, &viewbox, tile_mode, &c);
 	}
 
 	xps_end_opacity(doc, base_uri, dict, opacity_att, NULL);
 }
 
 static void
-xps_paint_visual_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
+xps_paint_visual_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area,
 	char *base_uri, xps_resource *dict, fz_xml *root, void *visual_tag)
 {
 	xps_parse_element(doc, ctm, area, base_uri, dict, (fz_xml *)visual_tag);
 }
 
 void
-xps_parse_visual_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
+xps_parse_visual_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area,
 	char *base_uri, xps_resource *dict, fz_xml *root)
 {
 	fz_xml *node;
@@ -264,7 +266,7 @@ xps_parse_visual_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
 }
 
 void
-xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *root)
+xps_parse_canvas(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *root)
 {
 	xps_resource *new_dict = NULL;
 	fz_xml *node;
@@ -325,23 +327,23 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 		xps_parse_render_transform(doc, transform_att, &transform);
 	if (transform_tag)
 		xps_parse_matrix_transform(doc, transform_tag, &transform);
-	ctm = fz_concat(transform, ctm);
+	fz_concat(&transform, &transform, ctm);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(doc, fz_empty_rect, navigate_uri_att, NULL, 1);
+	xps_extract_anchor_info(doc, &fz_empty_rect, navigate_uri_att, NULL, 1);
 	navigate_uri_att = NULL;
 
 	if (navigate_uri_att)
 		xps_add_link(doc, area, base_uri, navigate_uri_att);
 
 	if (clip_att || clip_tag)
-		xps_clip(doc, ctm, dict, clip_att, clip_tag);
+		xps_clip(doc, &transform, dict, clip_att, clip_tag);
 
-	xps_begin_opacity(doc, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
+	xps_begin_opacity(doc, &transform, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
 	for (node = fz_xml_down(root); node; node = fz_xml_next(node))
 	{
-		xps_parse_element(doc, ctm, area, base_uri, dict, node);
+		xps_parse_element(doc, &transform, area, base_uri, dict, node);
 	}
 
 	xps_end_opacity(doc, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
@@ -357,13 +359,14 @@ xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri,
 }
 
 void
-xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page)
+xps_parse_fixed_page(xps_document *doc, const fz_matrix *ctm, xps_page *page)
 {
 	fz_xml *node;
 	xps_resource *dict;
 	char base_uri[1024];
 	fz_rect area;
 	char *s;
+	fz_matrix scm;
 
 	fz_strlcpy(base_uri, page->name, sizeof base_uri);
 	s = strrchr(base_uri, '/');
@@ -378,7 +381,8 @@ xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page)
 	if (!page->root)
 		return;
 
-	area = fz_transform_rect(fz_scale(page->width, page->height), fz_unit_rect);
+	area = fz_unit_rect;
+	fz_transform_rect(&area, fz_scale(&scm, page->width, page->height));
 
 	for (node = fz_xml_down(page->root); node; node = fz_xml_next(node))
 	{
@@ -389,7 +393,7 @@ xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page)
 			else
 				dict = xps_parse_resource_dictionary(doc, base_uri, fz_xml_down(node));
 		}
-		xps_parse_element(doc, ctm, area, base_uri, dict, node);
+		xps_parse_element(doc, ctm, &area, base_uri, dict, node);
 	}
 
 	if (dict)
@@ -397,16 +401,15 @@ xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page)
 }
 
 void
-xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
+xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
 {
-	fz_matrix page_ctm;
+	fz_matrix page_ctm = *ctm;
 
-	page_ctm = fz_scale(72.0f / 96.0f, 72.0f / 96.0f);
-	ctm = fz_concat(page_ctm, ctm);
+	fz_pre_scale(&page_ctm, 72.0f / 96.0f, 72.0f / 96.0f);
 
 	doc->cookie = cookie;
 	doc->dev = dev;
-	xps_parse_fixed_page(doc, ctm, page);
+	xps_parse_fixed_page(doc, &page_ctm, page);
 	doc->cookie = NULL;
 	doc->dev = NULL;
 	page->links_resolved = 1;

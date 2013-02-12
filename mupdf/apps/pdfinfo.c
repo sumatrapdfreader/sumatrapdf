@@ -200,7 +200,7 @@ gatherdimensions(int page, pdf_obj *pageref, pdf_obj *pageobj)
 	if (!pdf_is_array(obj))
 		return;
 
-	bbox = pdf_to_rect(ctx, obj);
+	pdf_to_rect(ctx, obj, &bbox);
 
 	obj = pdf_dict_gets(pageobj, "UserUnit");
 	if (pdf_is_real(obj))

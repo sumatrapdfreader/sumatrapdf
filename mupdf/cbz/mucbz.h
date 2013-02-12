@@ -44,8 +44,8 @@ void cbz_close_document(cbz_document *doc);
 
 int cbz_count_pages(cbz_document *doc);
 cbz_page *cbz_load_page(cbz_document *doc, int number);
-fz_rect cbz_bound_page(cbz_document *doc, cbz_page *page);
+fz_rect *cbz_bound_page(cbz_document *doc, cbz_page *page, fz_rect *rect);
 void cbz_free_page(cbz_document *doc, cbz_page *page);
-void cbz_run_page(cbz_document *doc, cbz_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
+void cbz_run_page(cbz_document *doc, cbz_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie);
 
 #endif

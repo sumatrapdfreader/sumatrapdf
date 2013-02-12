@@ -2,7 +2,7 @@
 #include "mupdf-internal.h"
 
 static void
-pdf_run_glyph_func(void *doc, void *rdb, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate, int nested_depth)
+pdf_run_glyph_func(void *doc, void *rdb, fz_buffer *contents, fz_device *dev, const fz_matrix *ctm, void *gstate, int nested_depth)
 {
 	pdf_run_glyph(doc, (pdf_obj *)rdb, contents, dev, ctm, gstate, nested_depth);
 }
@@ -44,13 +44,12 @@ pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 		fontdesc = pdf_new_font_desc(ctx);
 
 		obj = pdf_dict_gets(dict, "FontMatrix");
-		matrix = pdf_to_matrix(ctx, obj);
+		pdf_to_matrix(ctx, obj, &matrix);
 
 		obj = pdf_dict_gets(dict, "FontBBox");
-		bbox = pdf_to_rect(ctx, obj);
-		bbox = fz_transform_rect(matrix, bbox);
+		fz_transform_rect(pdf_to_rect(ctx, obj, &bbox), &matrix);
 
-		fontdesc->font = fz_new_type3_font(ctx, buf, matrix);
+		fontdesc->font = fz_new_type3_font(ctx, buf, &matrix);
 		fontdesc->size += sizeof(fz_font) + 256 * (sizeof(fz_buffer*) + sizeof(float));
 
 		fz_set_font_bbox(ctx, fontdesc->font, bbox.x0, bbox.y0, bbox.x1, bbox.y1);

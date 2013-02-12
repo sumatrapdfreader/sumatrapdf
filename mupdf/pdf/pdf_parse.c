@@ -1,31 +1,29 @@
 #include "fitz-internal.h"
 #include "mupdf-internal.h"
 
-fz_rect
-pdf_to_rect(fz_context *ctx, pdf_obj *array)
+fz_rect *
+pdf_to_rect(fz_context *ctx, pdf_obj *array, fz_rect *r)
 {
-	fz_rect r;
 	float a = pdf_to_real(pdf_array_get(array, 0));
 	float b = pdf_to_real(pdf_array_get(array, 1));
 	float c = pdf_to_real(pdf_array_get(array, 2));
 	float d = pdf_to_real(pdf_array_get(array, 3));
-	r.x0 = fz_min(a, c);
-	r.y0 = fz_min(b, d);
-	r.x1 = fz_max(a, c);
-	r.y1 = fz_max(b, d);
+	r->x0 = fz_min(a, c);
+	r->y0 = fz_min(b, d);
+	r->x1 = fz_max(a, c);
+	r->y1 = fz_max(b, d);
 	return r;
 }
 
-fz_matrix
-pdf_to_matrix(fz_context *ctx, pdf_obj *array)
+fz_matrix *
+pdf_to_matrix(fz_context *ctx, pdf_obj *array, fz_matrix *m)
 {
-	fz_matrix m;
-	m.a = pdf_to_real(pdf_array_get(array, 0));
-	m.b = pdf_to_real(pdf_array_get(array, 1));
-	m.c = pdf_to_real(pdf_array_get(array, 2));
-	m.d = pdf_to_real(pdf_array_get(array, 3));
-	m.e = pdf_to_real(pdf_array_get(array, 4));
-	m.f = pdf_to_real(pdf_array_get(array, 5));
+	m->a = pdf_to_real(pdf_array_get(array, 0));
+	m->b = pdf_to_real(pdf_array_get(array, 1));
+	m->c = pdf_to_real(pdf_array_get(array, 2));
+	m->d = pdf_to_real(pdf_array_get(array, 3));
+	m->e = pdf_to_real(pdf_array_get(array, 4));
+	m->f = pdf_to_real(pdf_array_get(array, 5));
 	return m;
 }
 

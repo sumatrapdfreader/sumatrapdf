@@ -130,12 +130,14 @@ fz_load_links(fz_document *doc, fz_page *page)
 	return NULL;
 }
 
-fz_rect
-fz_bound_page(fz_document *doc, fz_page *page)
+fz_rect *
+fz_bound_page(fz_document *doc, fz_page *page, fz_rect *r)
 {
-	if (doc && doc->bound_page && page)
-		return doc->bound_page(doc, page);
-	return fz_empty_rect;
+	if (doc && doc->bound_page && page && r)
+		return doc->bound_page(doc, page, r);
+	if (r)
+		*r = fz_empty_rect;
+	return r;
 }
 
 fz_annot *
@@ -154,30 +156,32 @@ fz_next_annot(fz_document *doc, fz_annot *annot)
 	return NULL;
 }
 
-fz_rect
-fz_bound_annot(fz_document *doc, fz_annot *annot)
+fz_rect *
+fz_bound_annot(fz_document *doc, fz_annot *annot, fz_rect *rect)
 {
-	if (doc && doc->bound_annot && annot)
-		return doc->bound_annot(doc, annot);
-	return fz_empty_rect;
+	if (doc && doc->bound_annot && annot && rect)
+		return doc->bound_annot(doc, annot, rect);
+	if (rect)
+		*rect = fz_empty_rect;
+	return rect;
 }
 
 void
-fz_run_page_contents(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
+fz_run_page_contents(fz_document *doc, fz_page *page, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie)
 {
 	if (doc && doc->run_page_contents && page)
 		doc->run_page_contents(doc, page, dev, transform, cookie);
 }
 
 void
-fz_run_annot(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
+fz_run_annot(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie)
 {
 	if (doc && doc->run_annot && page && annot)
 		doc->run_annot(doc, page, annot, dev, transform, cookie);
 }
 
 void
-fz_run_page(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
+fz_run_page(fz_document *doc, fz_page *page, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie)
 {
 	fz_annot *annot;
 

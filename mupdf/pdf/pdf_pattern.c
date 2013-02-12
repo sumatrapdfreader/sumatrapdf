@@ -58,11 +58,11 @@ pdf_load_pattern(pdf_document *xref, pdf_obj *dict)
 	pat->ystep = pdf_to_real(pdf_dict_gets(dict, "YStep"));
 
 	obj = pdf_dict_gets(dict, "BBox");
-	pat->bbox = pdf_to_rect(ctx, obj);
+	pdf_to_rect(ctx, obj, &pat->bbox);
 
 	obj = pdf_dict_gets(dict, "Matrix");
 	if (obj)
-		pat->matrix = pdf_to_matrix(ctx, obj);
+		pdf_to_matrix(ctx, obj, &pat->matrix);
 	else
 		pat->matrix = fz_identity;
 

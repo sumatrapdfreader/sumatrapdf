@@ -114,15 +114,15 @@ static void account_for_rot(fz_rect *rect, fz_matrix *mat, int rot)
 		*mat = fz_identity;
 		break;
 	case 90:
-		*mat = fz_concat(fz_rotate(rot), fz_translate(width, 0));
+		fz_pre_rotate(fz_translate(mat, width, 0), rot);
 		rect->x1 = height;
 		rect->y1 = width;
 		break;
 	case 180:
-		*mat = fz_concat(fz_rotate(rot), fz_translate(width, height));
+		fz_pre_rotate(fz_translate(mat, width, height), rot);
 		break;
 	case 270:
-		*mat = fz_concat(fz_rotate(rot), fz_translate(0, height));
+		fz_pre_rotate(fz_translate(mat, 0, height), rot);
 		rect->x1 = height;
 		rect->y1 = width;
 		break;
@@ -442,14 +442,14 @@ static void fzbuf_print_da(fz_context *ctx, fz_buffer *fzbuf, da_info *di)
 	}
 }
 
-static fz_rect measure_text(pdf_document *doc, font_info *font_rec, const fz_matrix *tm, char *text)
+static fz_rect *measure_text(pdf_document *doc, font_info *font_rec, const fz_matrix *tm, char *text, fz_rect *bbox)
 {
-	fz_rect bbox = pdf_measure_text(doc->ctx, font_rec->font, (unsigned char *)text, strlen(text));
+	pdf_measure_text(doc->ctx, font_rec->font, (unsigned char *)text, strlen(text), bbox);
 
-	bbox.x0 *= font_rec->da_rec.font_size * tm->a;
-	bbox.y0 *= font_rec->da_rec.font_size * tm->d;
-	bbox.x1 *= font_rec->da_rec.font_size * tm->a;
-	bbox.y1 *= font_rec->da_rec.font_size * tm->d;
+	bbox->x0 *= font_rec->da_rec.font_size * tm->a;
+	bbox->y0 *= font_rec->da_rec.font_size * tm->d;
+	bbox->x1 *= font_rec->da_rec.font_size * tm->a;
+	bbox->y1 *= font_rec->da_rec.font_size * tm->d;
 
 	return bbox;
 }
@@ -478,7 +478,7 @@ static void fzbuf_print_color(fz_context *ctx, fz_buffer *fzbuf, pdf_obj *arr, i
 	}
 }
 
-static void fzbuf_print_text(fz_context *ctx, fz_buffer *fzbuf, fz_rect *clip, pdf_obj *col, font_info *font_rec, fz_matrix *tm, char *text)
+static void fzbuf_print_text(fz_context *ctx, fz_buffer *fzbuf, const fz_rect *clip, pdf_obj *col, font_info *font_rec, const fz_matrix *tm, char *text)
 {
 	fz_buffer_printf(ctx, fzbuf, fmt_q);
 	if (clip)
@@ -510,7 +510,7 @@ static void fzbuf_print_text(fz_context *ctx, fz_buffer *fzbuf, fz_rect *clip, p
 	fz_buffer_printf(ctx, fzbuf, fmt_Q);
 }
 
-static fz_buffer *create_text_buffer(fz_context *ctx, fz_rect *clip, text_widget_info *info, fz_matrix *tm, char *text)
+static fz_buffer *create_text_buffer(fz_context *ctx, const fz_rect *clip, text_widget_info *info, const fz_matrix *tm, char *text)
 {
 	fz_buffer *fzbuf = fz_new_buffer(ctx, 0);
 
@@ -529,15 +529,16 @@ static fz_buffer *create_text_buffer(fz_context *ctx, fz_rect *clip, text_widget
 	return fzbuf;
 }
 
-static fz_buffer *create_aligned_text_buffer(pdf_document *doc, fz_rect *clip, text_widget_info *info, fz_matrix *tm, char *text)
+static fz_buffer *create_aligned_text_buffer(pdf_document *doc, const fz_rect *clip, text_widget_info *info, const fz_matrix *tm, char *text)
 {
 	fz_context *ctx = doc->ctx;
 	fz_matrix atm = *tm;
 
 	if (info->q != Q_Left)
 	{
-		fz_rect rect = measure_text(doc, &info->font_rec, tm, text);
+		fz_rect rect;
 
+		measure_text(doc, &info->font_rec, tm, text, &rect);
 		atm.e -= info->q == Q_Right ? rect.x1 : (rect.x1 - rect.x0) / 2;
 	}
 
@@ -560,7 +561,7 @@ static void measure_ascent_descent(pdf_document *doc, font_info *finf, char *tex
 		strcpy(testtext, "My");
 		strcat(testtext, text);
 		tinf.da_rec.font_size = 1;
-		bbox = measure_text(doc, &tinf, &fz_identity, testtext);
+		measure_text(doc, &tinf, &fz_identity, testtext, &bbox);
 		*descent = -bbox.y0;
 		*ascent = bbox.y1;
 	}
@@ -740,7 +741,7 @@ static void text_splitter_retry(text_splitter *splitter)
 	}
 }
 
-static void fzbuf_print_text_start(fz_context *ctx, fz_buffer *fzbuf, fz_rect *clip, pdf_obj *col, font_info *font, fz_matrix *tm)
+static void fzbuf_print_text_start(fz_context *ctx, fz_buffer *fzbuf, const fz_rect *clip, pdf_obj *col, font_info *font, const fz_matrix *tm)
 {
 	fz_buffer_printf(ctx, fzbuf, fmt_Tx_BMC);
 	fz_buffer_printf(ctx, fzbuf, fmt_q);
@@ -788,7 +789,7 @@ static void fzbuf_print_text_word(fz_context *ctx, fz_buffer *fzbuf, float x, fl
 	fz_buffer_printf(ctx, fzbuf, ") Tj\n");
 }
 
-static fz_buffer *create_text_appearance(pdf_document *doc, fz_rect *bbox, fz_matrix *oldtm, text_widget_info *info, char *text)
+static fz_buffer *create_text_appearance(pdf_document *doc, const fz_rect *bbox, const fz_matrix *oldtm, text_widget_info *info, char *text)
 {
 	fz_context *ctx = doc->ctx;
 	int fontsize;
@@ -895,9 +896,7 @@ static fz_buffer *create_text_appearance(pdf_document *doc, fz_rect *bbox, fz_ma
 			float char_width = pdf_text_stride(ctx, info->font_rec.font, fontsize, (unsigned char *)"M", 1, FLT_MAX, NULL);
 			float init_skip = (comb_width - char_width)/2.0;
 
-			tm = fz_identity;
-			tm.e = rect.x0;
-			tm.f = rect.y1 - (height+(ascent-descent)*fontsize)/2.0;
+			fz_translate(&tm, rect.x0, rect.y1 - (height+(ascent-descent)*fontsize)/2.0);
 
 			fzbuf = fz_new_buffer(ctx, 0);
 
@@ -916,9 +915,7 @@ static fz_buffer *create_text_appearance(pdf_document *doc, fz_rect *bbox, fz_ma
 			}
 			else
 			{
-				tm = fz_identity;
-				tm.e = rect.x0;
-				tm.f = rect.y1 - (height+(ascent-descent)*fontsize)/2.0;
+				fz_translate(&tm, rect.x0, rect.y1 - (height+(ascent-descent)*fontsize)/2.0);
 
 				switch(info->q)
 				{
@@ -929,7 +926,7 @@ static fz_buffer *create_text_appearance(pdf_document *doc, fz_rect *bbox, fz_ma
 
 			if (variable)
 			{
-				tbox = measure_text(doc, &info->font_rec, &tm, text);
+				measure_text(doc, &info->font_rec, &tm, text, &tbox);
 
 				if (tbox.x1 - tbox.x0 > width)
 				{
@@ -1097,7 +1094,8 @@ static int get_matrix(pdf_document *doc, pdf_xobject *form, int q, fz_matrix *mt
 
 		if (found)
 		{
-			fz_rect bbox = pdf_to_rect(ctx, pdf_dict_gets(form->contents, "BBox"));
+			fz_rect bbox;
+			pdf_to_rect(ctx, pdf_dict_gets(form->contents, "BBox"), &bbox);
 
 			switch (q)
 			{
@@ -1178,7 +1176,7 @@ static pdf_xobject *load_or_create_form(pdf_document *doc, pdf_obj *obj, fz_rect
 	fz_try(ctx)
 	{
 		rot = pdf_to_int(pdf_dict_getp(obj, "MK/R"));
-		*rect = pdf_to_rect(ctx, pdf_dict_gets(obj, "Rect"));
+		pdf_to_rect(ctx, pdf_dict_gets(obj, "Rect"), rect);
 		rect->x1 -= rect->x0;
 		rect->y1 -= rect->y0;
 		rect->x0 = rect->y0 = 0;
@@ -1194,7 +1192,7 @@ static pdf_xobject *load_or_create_form(pdf_document *doc, pdf_obj *obj, fz_rect
 		formobj = pdf_dict_gets(ap, dn);
 		if (formobj == NULL)
 		{
-			formobj = pdf_new_xobject(doc, *rect, mat);
+			formobj = pdf_new_xobject(doc, rect, &mat);
 			pdf_dict_puts_drop(ap, dn, formobj);
 			create_form = 1;
 		}
@@ -1491,8 +1489,8 @@ static void update_pushbutton_appearance(pdf_document *doc, pdf_obj *obj)
 			clip.y1 -= btotal;
 
 			get_font_info(doc, form->resources, da, &font_rec);
-			bounds = measure_text(doc, &font_rec, &fz_identity, text);
-			mat = fz_translate((rect.x1 - bounds.x1)/2, (rect.y1 - bounds.y1)/2);
+			measure_text(doc, &font_rec, &fz_identity, text, &bounds);
+			fz_translate(&mat, (rect.x1 - bounds.x1)/2, (rect.y1 - bounds.y1)/2);
 			fzbuf_print_text(ctx, fzbuf, &clip, NULL, &font_rec, &mat, text);
 		}
 
@@ -2606,11 +2604,15 @@ void pdf_field_set_text_color(pdf_document *doc, pdf_obj *field, pdf_obj *col)
 	}
 }
 
-fz_rect fz_widget_bbox(fz_widget *widget)
+fz_rect *fz_bound_widget(fz_widget *widget, fz_rect *rect)
 {
 	pdf_annot *annot = (pdf_annot *)widget;
 
-	return annot->pagerect;
+	if (rect == NULL)
+		return NULL;
+	*rect = annot->pagerect; 
+
+	return rect;
 }
 
 char *pdf_text_widget_text(pdf_document *doc, fz_widget *tw)

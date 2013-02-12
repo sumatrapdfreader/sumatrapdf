@@ -60,11 +60,11 @@ pdf_load_xobject(pdf_document *xref, pdf_obj *dict)
 	fz_try(ctx)
 	{
 		obj = pdf_dict_gets(dict, "BBox");
-		form->bbox = pdf_to_rect(ctx, obj);
+		pdf_to_rect(ctx, obj, &form->bbox);
 
 		obj = pdf_dict_gets(dict, "Matrix");
 		if (obj)
-			form->matrix = pdf_to_matrix(ctx, obj);
+			pdf_to_matrix(ctx, obj, &form->matrix);
 		else
 			form->matrix = fz_identity;
 
@@ -111,7 +111,7 @@ pdf_load_xobject(pdf_document *xref, pdf_obj *dict)
 }
 
 pdf_obj *
-pdf_new_xobject(pdf_document *xref, fz_rect bbox, fz_matrix mat)
+pdf_new_xobject(pdf_document *xref, const fz_rect *bbox, const fz_matrix *mat)
 {
 	int idict_num;
 	pdf_obj *idict = NULL;
@@ -185,9 +185,9 @@ pdf_new_xobject(pdf_document *xref, fz_rect bbox, fz_matrix mat)
 		form->me = NULL;
 		form->iteration = 0;
 
-		form->bbox = bbox;
+		form->bbox = *bbox;
 
-		form->matrix = mat;
+		form->matrix = *mat;
 
 		form->isolated = 0;
 		form->knockout = 0;

@@ -3,7 +3,7 @@
 #define MAX_DEPTH 8
 
 static void
-line(fz_gel *gel, fz_matrix *ctm, float x0, float y0, float x1, float y1)
+line(fz_gel *gel, const fz_matrix *ctm, float x0, float y0, float x1, float y1)
 {
 	float tx0 = ctm->a * x0 + ctm->c * y0 + ctm->e;
 	float ty0 = ctm->b * x0 + ctm->d * y0 + ctm->f;
@@ -13,7 +13,7 @@ line(fz_gel *gel, fz_matrix *ctm, float x0, float y0, float x1, float y1)
 }
 
 static void
-bezier(fz_gel *gel, fz_matrix *ctm, float flatness,
+bezier(fz_gel *gel, const fz_matrix *ctm, float flatness,
 	float xa, float ya,
 	float xb, float yb,
 	float xc, float yc,
@@ -67,7 +67,7 @@ bezier(fz_gel *gel, fz_matrix *ctm, float flatness,
 }
 
 void
-fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness)
+fz_flatten_fill_path(fz_gel *gel, fz_path *path, const fz_matrix *ctm, float flatness)
 {
 	float x1, y1, x2, y2, x3, y3;
 	float cx = 0;
@@ -83,7 +83,7 @@ fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness)
 		case FZ_MOVETO:
 			/* implicit closepath before moveto */
 			if (cx != bx || cy != by)
-				line(gel, &ctm, cx, cy, bx, by);
+				line(gel, ctm, cx, cy, bx, by);
 			x1 = path->items[i++].v;
 			y1 = path->items[i++].v;
 			cx = bx = x1;
@@ -93,7 +93,7 @@ fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness)
 		case FZ_LINETO:
 			x1 = path->items[i++].v;
 			y1 = path->items[i++].v;
-			line(gel, &ctm, cx, cy, x1, y1);
+			line(gel, ctm, cx, cy, x1, y1);
 			cx = x1;
 			cy = y1;
 			break;
@@ -105,13 +105,13 @@ fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness)
 			y2 = path->items[i++].v;
 			x3 = path->items[i++].v;
 			y3 = path->items[i++].v;
-			bezier(gel, &ctm, flatness, cx, cy, x1, y1, x2, y2, x3, y3, 0);
+			bezier(gel, ctm, flatness, cx, cy, x1, y1, x2, y2, x3, y3, 0);
 			cx = x3;
 			cy = y3;
 			break;
 
 		case FZ_CLOSE_PATH:
-			line(gel, &ctm, cx, cy, bx, by);
+			line(gel, ctm, cx, cy, bx, by);
 			cx = bx;
 			cy = by;
 			break;
@@ -119,13 +119,13 @@ fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness)
 	}
 
 	if (cx != bx || cy != by)
-		line(gel, &ctm, cx, cy, bx, by);
+		line(gel, ctm, cx, cy, bx, by);
 }
 
 struct sctx
 {
 	fz_gel *gel;
-	fz_matrix *ctm;
+	const fz_matrix *ctm;
 	float flatness;
 
 	int linejoin;
@@ -541,14 +541,14 @@ fz_stroke_bezier(struct sctx *s,
 }
 
 void
-fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth)
+fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth)
 {
 	struct sctx s;
 	fz_point p0, p1, p2, p3;
 	int i;
 
 	s.gel = gel;
-	s.ctm = &ctm;
+	s.ctm = ctm;
 	s.flatness = flatness;
 
 	s.linejoin = stroke->linejoin;
@@ -747,7 +747,7 @@ fz_dash_bezier(struct sctx *s,
 }
 
 void
-fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth)
+fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth)
 {
 	struct sctx s;
 	fz_point p0, p1, p2, p3, beg;
@@ -755,7 +755,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 	int i;
 
 	s.gel = gel;
-	s.ctm = &ctm;
+	s.ctm = ctm;
 	s.flatness = flatness;
 
 	s.linejoin = stroke->linejoin;
@@ -780,8 +780,7 @@ fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_mat
 	phase_len = 0;
 	for (i = 0; i < stroke->dash_len; i++)
 		phase_len += stroke->dash_list[i];
-	max_expand = fz_max(fz_max(fz_abs(ctm.a),fz_abs(ctm.b)),fz_max(fz_abs(ctm.c),fz_abs(ctm.d)));
-	/* SumatraPDF: only flatten if quite short phases are in fact too short */
+	max_expand = fz_matrix_max_expansion(ctm);
 	if (phase_len < 1.0f && phase_len * max_expand < 0.5f)
 	{
 		fz_flatten_stroke_path(gel, path, stroke, ctm, flatness, linewidth);

@@ -42,9 +42,10 @@ static int charat(fz_text_page *page, int idx)
 	return textcharat(page, idx).c;
 }
 
-static fz_rect bboxat(fz_text_page *page, int idx)
+static fz_rect *bboxat(fz_text_page *page, int idx, fz_rect *bbox)
 {
-	return textcharat(page, idx).bbox;
+	*bbox = textcharat(page, idx).bbox;
+	return bbox;
 }
 
 static int textlen(fz_text_page *page)
@@ -105,22 +106,23 @@ fz_search_text_page(fz_context *ctx, fz_text_page *text, char *needle, fz_rect *
 			fz_rect linebox = fz_empty_rect;
 			for (i = 0; i < n; i++)
 			{
-				fz_rect charbox = bboxat(text, pos + i);
-				if (!fz_is_empty_rect(charbox))
+				fz_rect charbox;
+				bboxat(text, pos + i, &charbox);
+				if (!fz_is_empty_rect(&charbox))
 				{
 					if (charbox.y0 != linebox.y0 || fz_abs(charbox.x0 - linebox.x1) > 5)
 					{
-						if (!fz_is_empty_rect(linebox) && hit_count < hit_max)
+						if (!fz_is_empty_rect(&linebox) && hit_count < hit_max)
 							hit_bbox[hit_count++] = linebox;
 						linebox = charbox;
 					}
 					else
 					{
-						linebox = fz_union_rect(linebox, charbox);
+						fz_union_rect(&linebox, &charbox);
 					}
 				}
 			}
-			if (!fz_is_empty_rect(linebox) && hit_count < hit_max)
+			if (!fz_is_empty_rect(&linebox) && hit_count < hit_max)
 				hit_bbox[hit_count++] = linebox;
 		}
 	}
@@ -158,18 +160,18 @@ fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_rect rect, fz_rec
 					{
 						if (charbox.y0 != linebox.y0 || fz_abs(charbox.x0 - linebox.x1) > 5)
 						{
-							if (!fz_is_empty_rect(linebox) && hit_count < hit_max)
+							if (!fz_is_empty_rect(&linebox) && hit_count < hit_max)
 								hit_bbox[hit_count++] = linebox;
 							linebox = charbox;
 						}
 						else
 						{
-							linebox = fz_union_rect(linebox, charbox);
+							fz_union_rect(&linebox, &charbox);
 						}
 					}
 				}
 			}
-			if (!fz_is_empty_rect(linebox) && hit_count < hit_max)
+			if (!fz_is_empty_rect(&linebox) && hit_count < hit_max)
 				hit_bbox[hit_count++] = linebox;
 		}
 	}

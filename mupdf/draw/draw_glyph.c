@@ -95,7 +95,7 @@ fz_keep_glyph_cache(fz_context *ctx)
 }
 
 fz_pixmap *
-fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *stroke, fz_bbox scissor)
+fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *stroke, fz_irect scissor)
 {
 	if (font->ft_face)
 	{
@@ -116,17 +116,18 @@ fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, 
 		This must not be inserted into the cache.
  */
 fz_pixmap *
-fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_colorspace *model, fz_bbox scissor)
+fz_render_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm, fz_colorspace *model, fz_irect scissor)
 {
 	fz_glyph_cache *cache;
 	fz_glyph_key key;
 	fz_pixmap *val;
 	float size = fz_matrix_expansion(ctm);
 	int do_cache;
+	fz_matrix local_ctm = *ctm;
 
 	if (size <= MAX_GLYPH_SIZE)
 	{
-		scissor = fz_infinite_bbox;
+		scissor = fz_infinite_irect;
 		do_cache = 1;
 	}
 	else
@@ -142,16 +143,16 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 	memset(&key, 0, sizeof key);
 	key.font = font;
 	key.gid = gid;
-	key.a = ctm.a * 65536;
-	key.b = ctm.b * 65536;
-	key.c = ctm.c * 65536;
-	key.d = ctm.d * 65536;
-	key.e = (ctm.e - floorf(ctm.e)) * 256;
-	key.f = (ctm.f - floorf(ctm.f)) * 256;
+	key.a = local_ctm.a * 65536;
+	key.b = local_ctm.b * 65536;
+	key.c = local_ctm.c * 65536;
+	key.d = local_ctm.d * 65536;
+	key.e = (local_ctm.e - floorf(local_ctm.e)) * 256;
+	key.f = (local_ctm.f - floorf(local_ctm.f)) * 256;
 	key.aa = fz_aa_level(ctx);
 
-	ctm.e = floorf(ctm.e) + key.e / 256.0f;
-	ctm.f = floorf(ctm.f) + key.f / 256.0f;
+	local_ctm.e = floorf(local_ctm.e) + key.e / 256.0f;
+	local_ctm.f = floorf(local_ctm.f) + key.f / 256.0f;
 
 	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 	val = fz_hash_find(ctx, cache->hash, &key);
@@ -166,7 +167,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 	{
 		if (font->ft_face)
 		{
-			val = fz_render_ft_glyph(ctx, font, gid, ctm, key.aa);
+			val = fz_render_ft_glyph(ctx, font, gid, &local_ctm, key.aa);
 		}
 		else if (font->t3procs)
 		{
@@ -180,7 +181,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm, fz_color
 			 * abandon ours, and use the one there already.
 			 */
 			fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
-			val = fz_render_t3_glyph(ctx, font, gid, ctm, model, scissor);
+			val = fz_render_t3_glyph(ctx, font, gid, &local_ctm, model, scissor);
 			fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 		}
 		else

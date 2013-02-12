@@ -44,8 +44,8 @@ void xps_close_document(xps_document *doc);
 
 int xps_count_pages(xps_document *doc);
 xps_page *xps_load_page(xps_document *doc, int number);
-fz_rect xps_bound_page(xps_document *doc, xps_page *page);
-void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
+fz_rect *xps_bound_page(xps_document *doc, xps_page *page, fz_rect *rect);
+void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie);
 fz_link *xps_load_links(xps_document *doc, xps_page *page);
 void xps_free_page(xps_document *doc, xps_page *page);
 

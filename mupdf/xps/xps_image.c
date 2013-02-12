@@ -74,19 +74,21 @@ xps_load_image(fz_context *ctx, byte *buf, int len)
 	return &image->base;
 }
 
+/* FIXME: area unused! */
 static void
-xps_paint_image_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict,
+xps_paint_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict,
 	fz_xml *root, void *vimage)
 {
 	xps_image *image = vimage;
 	float xs, ys;
+	fz_matrix local_ctm = *ctm;
 
 	if (image->xres == 0 || image->yres == 0)
 		return;
 	xs = image->base.w * 96 / image->xres;
 	ys = image->base.h * 96 / image->yres;
-	ctm = fz_concat(fz_scale(xs, ys), ctm);
-	fz_fill_image(doc->dev, &image->base, ctm, doc->opacity[doc->opacity_top]);
+	fz_pre_scale(&local_ctm, xs, ys);
+	fz_fill_image(doc->dev, &image->base, &local_ctm, doc->opacity[doc->opacity_top]);
 }
 
 static xps_part *
@@ -187,7 +189,7 @@ static fz_store_type xps_image_store_type =
 };
 
 void
-xps_parse_image_brush(xps_document *doc, fz_matrix ctm, fz_rect area,
+xps_parse_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area,
 	char *base_uri, xps_resource *dict, fz_xml *root)
 {
 	xps_part *part;

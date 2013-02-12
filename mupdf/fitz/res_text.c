@@ -1,13 +1,13 @@
 #include "fitz-internal.h"
 
 fz_text *
-fz_new_text(fz_context *ctx, fz_font *font, fz_matrix trm, int wmode)
+fz_new_text(fz_context *ctx, fz_font *font, const fz_matrix *trm, int wmode)
 {
 	fz_text *text;
 
 	text = fz_malloc_struct(ctx, fz_text);
 	text->font = fz_keep_font(ctx, font);
-	text->trm = trm;
+	text->trm = *trm;
 	text->wmode = wmode;
 	text->len = 0;
 	text->cap = 0;
@@ -52,16 +52,18 @@ fz_clone_text(fz_context *ctx, fz_text *old)
 	return text;
 }
 
-fz_rect
-fz_bound_text(fz_context *ctx, fz_text *text, fz_matrix ctm)
+fz_rect *
+fz_bound_text(fz_context *ctx, fz_text *text, const fz_matrix *ctm, fz_rect *bbox)
 {
 	fz_matrix tm, trm;
-	fz_rect bbox;
 	fz_rect gbox;
 	int i;
 
 	if (text->len == 0)
-		return fz_empty_rect;
+	{
+		*bbox = fz_empty_rect;
+		return bbox;
+	}
 
 	// TODO: stroke state
 
@@ -69,8 +71,8 @@ fz_bound_text(fz_context *ctx, fz_text *text, fz_matrix ctm)
 
 	tm.e = text->items[0].x;
 	tm.f = text->items[0].y;
-	trm = fz_concat(tm, ctm);
-	bbox = fz_bound_glyph(ctx, text->font, text->items[0].gid, trm);
+	fz_concat(&trm, &tm, ctm);
+	fz_bound_glyph(ctx, text->font, text->items[0].gid, &trm, bbox);
 
 	for (i = 1; i < text->len; i++)
 	{
@@ -78,21 +80,21 @@ fz_bound_text(fz_context *ctx, fz_text *text, fz_matrix ctm)
 		{
 			tm.e = text->items[i].x;
 			tm.f = text->items[i].y;
-			trm = fz_concat(tm, ctm);
-			gbox = fz_bound_glyph(ctx, text->font, text->items[i].gid, trm);
+			fz_concat(&trm, &tm, ctm);
+			fz_bound_glyph(ctx, text->font, text->items[i].gid, &trm, &gbox);
 
-			bbox.x0 = fz_min(bbox.x0, gbox.x0);
-			bbox.y0 = fz_min(bbox.y0, gbox.y0);
-			bbox.x1 = fz_max(bbox.x1, gbox.x1);
-			bbox.y1 = fz_max(bbox.y1, gbox.y1);
+			bbox->x0 = fz_min(bbox->x0, gbox.x0);
+			bbox->y0 = fz_min(bbox->y0, gbox.y0);
+			bbox->x1 = fz_max(bbox->x1, gbox.x1);
+			bbox->y1 = fz_max(bbox->y1, gbox.y1);
 		}
 	}
 
 	/* Compensate for the glyph cache limited positioning precision */
-	bbox.x0 -= 1;
-	bbox.y0 -= 1;
-	bbox.x1 += 1;
-	bbox.y1 += 1;
+	bbox->x0 -= 1;
+	bbox->y0 -= 1;
+	bbox->x1 += 1;
+	bbox->y1 += 1;
 
 	return bbox;
 }

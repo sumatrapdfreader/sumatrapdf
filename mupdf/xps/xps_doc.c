@@ -84,7 +84,7 @@ xps_add_fixed_document(xps_document *doc, char *name)
 }
 
 void
-xps_add_link(xps_document *doc, fz_rect area, char *base_uri, char *target_uri)
+xps_add_link(xps_document *doc, const fz_rect *area, char *base_uri, char *target_uri)
 {
 	int len;
 	char *buffer = NULL;
@@ -523,13 +523,12 @@ xps_load_page(xps_document *doc, int number)
 	return NULL;
 }
 
-fz_rect
-xps_bound_page(xps_document *doc, xps_page *page)
+fz_rect *
+xps_bound_page(xps_document *doc, xps_page *page, fz_rect *bounds)
 {
-	fz_rect bounds;
-	bounds.x0 = bounds.y0 = 0;
-	bounds.x1 = page->width * 72.0f / 96.0f;
-	bounds.y1 = page->height * 72.0f / 96.0f;
+	bounds->x0 = bounds->y0 = 0;
+	bounds->x1 = page->width * 72.0f / 96.0f;
+	bounds->y1 = page->height * 72.0f / 96.0f;
 	return bounds;
 }
 

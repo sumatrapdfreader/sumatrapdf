@@ -213,14 +213,14 @@ static inline void step_edge(int *ael, int *del, int n)
 }
 
 static void
-fz_paint_triangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, fz_bbox bbox)
+fz_paint_triangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, const fz_irect *bbox)
 {
 	float poly[MAXV][MAXN];
 	float temp[MAXV][MAXN];
-	float cx0 = bbox.x0;
-	float cy0 = bbox.y0;
-	float cx1 = bbox.x1;
-	float cy1 = bbox.y1;
+	float cx0 = bbox->x0;
+	float cy0 = bbox->y0;
+	float cx1 = bbox->x1;
+	float cy1 = bbox->y1;
 
 	int gel[MAXV][MAXN];
 	int ael[2][MAXN];
@@ -307,7 +307,7 @@ struct paint_tri_data
 	fz_context *ctx;
 	fz_shade *shade;
 	fz_pixmap *dest;
-	fz_bbox bbox;
+	const fz_irect *bbox;
 };
 
 static void
@@ -349,7 +349,7 @@ do_paint_tri(void *arg, fz_vertex *av, fz_vertex *bv, fz_vertex *cv)
 }
 
 void
-fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox)
+fz_paint_shade(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_pixmap *dest, const fz_irect *bbox)
 {
 	unsigned char clut[256][FZ_MAX_COLORS];
 	fz_pixmap *temp = NULL;
@@ -357,13 +357,14 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest,
 	float color[FZ_MAX_COLORS];
 	struct paint_tri_data ptd;
 	int i, k;
+	fz_matrix local_ctm;
 
 	fz_var(temp);
 	fz_var(conv);
 
 	fz_try(ctx)
 	{
-		ctm = fz_concat(shade->matrix, ctm);
+		fz_concat(&local_ctm, &shade->matrix, ctm);
 
 		if (shade->use_function)
 		{
@@ -390,7 +391,7 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest,
 		ptd.shade = shade;
 		ptd.bbox = bbox;
 
-		fz_process_mesh(ctx, shade, ctm, &do_paint_tri, &ptd);
+		fz_process_mesh(ctx, shade, &local_ctm, &do_paint_tri, &ptd);
 
 		if (shade->use_function)
 		{

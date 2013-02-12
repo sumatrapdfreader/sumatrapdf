@@ -436,25 +436,25 @@ cbz_free_page(cbz_document *doc, cbz_page *page)
 	fz_free(doc->ctx, page);
 }
 
-fz_rect
-cbz_bound_page(cbz_document *doc, cbz_page *page)
+fz_rect *
+cbz_bound_page(cbz_document *doc, cbz_page *page, fz_rect *bbox)
 {
 	cbz_image *image = page->image;
-	fz_rect bbox;
-	bbox.x0 = bbox.y0 = 0;
-	bbox.x1 = image->base.w * DPI / image->xres;
-	bbox.y1 = image->base.h * DPI / image->yres;
+	bbox->x0 = bbox->y0 = 0;
+	bbox->x1 = image->base.w * DPI / image->xres;
+	bbox->y1 = image->base.h * DPI / image->yres;
 	return bbox;
 }
 
 void
-cbz_run_page(cbz_document *doc, cbz_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
+cbz_run_page(cbz_document *doc, cbz_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
 {
+	fz_matrix local_ctm = *ctm;
 	cbz_image *image = page->image;
 	float w = image->base.w * DPI / image->xres;
 	float h = image->base.h * DPI / image->yres;
-	ctm = fz_concat(fz_scale(w, h), ctm);
-	fz_fill_image(dev, &image->base, ctm, 1);
+	fz_pre_scale(&local_ctm, w, h);
+	fz_fill_image(dev, &image->base, &local_ctm, 1);
 }
 
 static int

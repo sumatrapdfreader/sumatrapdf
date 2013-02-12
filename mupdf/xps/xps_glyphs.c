@@ -252,7 +252,7 @@ xps_parse_glyph_metrics(char *s, float *advance, float *uofs, float *vofs)
  * Calculate metrics for positioning.
  */
 static fz_text *
-xps_parse_glyphs_imp(xps_document *doc, fz_matrix ctm,
+xps_parse_glyphs_imp(xps_document *doc, const fz_matrix *ctm,
 	fz_font *font, float size, float originx, float originy,
 	int is_sideways, int bidi_level,
 	char *indices, char *unicode)
@@ -278,11 +278,13 @@ xps_parse_glyphs_imp(xps_document *doc, fz_matrix ctm,
 	}
 
 	if (is_sideways)
-		tm = fz_concat(fz_scale(-size, size), fz_rotate(90));
+	{
+		fz_pre_scale(fz_rotate(&tm, 90), -size, size);
+	}
 	else
-		tm = fz_scale(size, -size);
+		fz_scale(&tm, size, -size);
 
-	text = fz_new_text(doc->ctx, font, tm, is_sideways);
+	text = fz_new_text(doc->ctx, font, &tm, is_sideways);
 
 	while ((us && un > 0) || (is && *is))
 	{
@@ -369,7 +371,7 @@ xps_parse_glyphs_imp(xps_document *doc, fz_matrix ctm,
 }
 
 void
-xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
+xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 		char *base_uri, xps_resource *dict, fz_xml *root)
 {
 	fz_xml *node;
@@ -415,6 +417,8 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 
 	fz_text *text;
 	fz_rect area;
+
+	fz_matrix local_ctm = *ctm;
 
 	/*
 	 * Extract attributes and extended attributes.
@@ -557,28 +561,28 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 			xps_parse_render_transform(doc, transform_att, &transform);
 		if (transform_tag)
 			xps_parse_matrix_transform(doc, transform_tag, &transform);
-		ctm = fz_concat(transform, ctm);
+		fz_concat(&local_ctm, &transform, &local_ctm);
 	}
 
 	if (clip_att || clip_tag)
-		xps_clip(doc, ctm, dict, clip_att, clip_tag);
+		xps_clip(doc, &local_ctm, dict, clip_att, clip_tag);
 
 	font_size = fz_atof(font_size_att);
 
-	text = xps_parse_glyphs_imp(doc, ctm, font, font_size,
+	text = xps_parse_glyphs_imp(doc, &local_ctm, font, font_size,
 			fz_atof(origin_x_att), fz_atof(origin_y_att),
 			is_sideways, bidi_level, indices_att, unicode_att);
 
-	area = fz_bound_text(doc->ctx, text, ctm);
+	fz_bound_text(doc->ctx, text, &local_ctm, &area);
 
 	/* SumatraPDF: extended link support */
-	xps_extract_anchor_info(doc, area, navigate_uri_att, fz_xml_att(root, "Name"), 0);
+	xps_extract_anchor_info(doc, &area, navigate_uri_att, fz_xml_att(root, "Name"), 0);
 	navigate_uri_att = NULL;
 
 	if (navigate_uri_att)
-		xps_add_link(doc, area, base_uri, navigate_uri_att);
+		xps_add_link(doc, &area, base_uri, navigate_uri_att);
 
-	xps_begin_opacity(doc, ctm, area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
+	xps_begin_opacity(doc, &local_ctm, &area, opacity_mask_uri, dict, opacity_att, opacity_mask_tag);
 
 	/* If it's a solid color brush fill/stroke do a simple fill */
 
@@ -599,7 +603,7 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 			samples[0] *= fz_atof(fill_opacity_att);
 		xps_set_color(doc, colorspace, samples);
 
-		fz_fill_text(doc->dev, text, ctm,
+		fz_fill_text(doc->dev, text, &local_ctm,
 			doc->colorspace, doc->color, doc->alpha);
 	}
 
@@ -607,8 +611,8 @@ xps_parse_glyphs(xps_document *doc, fz_matrix ctm,
 
 	if (fill_tag)
 	{
-		fz_clip_text(doc->dev, text, ctm, 0);
-		xps_parse_brush(doc, ctm, area, fill_uri, dict, fill_tag);
+		fz_clip_text(doc->dev, text, &local_ctm, 0);
+		xps_parse_brush(doc, &local_ctm, &area, fill_uri, dict, fill_tag);
 		fz_pop_clip(doc->dev);
 	}
 

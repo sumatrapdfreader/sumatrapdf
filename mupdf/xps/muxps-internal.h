@@ -75,7 +75,7 @@ void xps_free_page_list(xps_document *doc);
 int xps_count_pages(xps_document *doc);
 xps_page *xps_load_page(xps_document *doc, int number);
 fz_link *xps_load_links(xps_document *doc, xps_page *page);
-fz_rect xps_bound_page(xps_document *doc, xps_page *page);
+fz_rect *xps_bound_page(xps_document *doc, xps_page *page, fz_rect *rect);
 void xps_free_page(xps_document *doc, xps_page *page);
 /* SumatraPDF: extract page bounds without parsing the entire page content */
 fz_rect xps_bound_page_quick_and_dirty(xps_document *doc, int number);
@@ -83,7 +83,8 @@ fz_rect xps_bound_page_quick_and_dirty(xps_document *doc, int number);
 fz_outline *xps_load_outline(xps_document *doc);
 
 int xps_lookup_link_target(xps_document *doc, char *target_uri);
-void xps_add_link(xps_document *doc, fz_rect area, char *base_uri, char *target_uri);
+void xps_add_link(xps_document *doc, const fz_rect *area, char *base_uri, char *target_uri);
+
 /* SumatraPDF: extended link support */
 xps_target *xps_lookup_link_target_obj(xps_document *doc, char *target_uri);
 
@@ -145,31 +146,29 @@ void xps_print_resource_dictionary(xps_resource *dict);
  * Fixed page/graphics parsing.
  */
 
-void xps_run_page(xps_document *doc, xps_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
+void xps_parse_fixed_page(xps_document *doc, const fz_matrix *ctm, xps_page *page);
+void xps_parse_canvas(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *node);
+void xps_parse_path(xps_document *doc, const fz_matrix *ctm, char *base_uri, xps_resource *dict, fz_xml *node);
+void xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm, char *base_uri, xps_resource *dict, fz_xml *node);
+void xps_parse_solid_color_brush(xps_document *doc, const fz_matrix *ctm, char *base_uri, xps_resource *dict, fz_xml *node);
+void xps_parse_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *node);
+void xps_parse_visual_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *node);
+void xps_parse_linear_gradient_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *node);
+void xps_parse_radial_gradient_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *node);
 
-void xps_parse_fixed_page(xps_document *doc, fz_matrix ctm, xps_page *page);
-void xps_parse_canvas(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node);
-void xps_parse_path(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *dict, fz_xml *node);
-void xps_parse_glyphs(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *dict, fz_xml *node);
-void xps_parse_solid_color_brush(xps_document *doc, fz_matrix ctm, char *base_uri, xps_resource *dict, fz_xml *node);
-void xps_parse_image_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node);
-void xps_parse_visual_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node);
-void xps_parse_linear_gradient_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node);
-void xps_parse_radial_gradient_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node);
-
-void xps_parse_tiling_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *root, void(*func)(xps_document*, fz_matrix, fz_rect, char*, xps_resource*, fz_xml*, void*), void *user);
+void xps_parse_tiling_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *root, void(*func)(xps_document*, const fz_matrix *, const fz_rect *, char*, xps_resource*, fz_xml*, void*), void *user);
 
 void xps_parse_matrix_transform(xps_document *doc, fz_xml *root, fz_matrix *matrix);
 void xps_parse_render_transform(xps_document *doc, char *text, fz_matrix *matrix);
 void xps_parse_rectangle(xps_document *doc, char *text, fz_rect *rect);
 
-void xps_begin_opacity(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, char *opacity_att, fz_xml *opacity_mask_tag);
+void xps_begin_opacity(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, char *opacity_att, fz_xml *opacity_mask_tag);
 void xps_end_opacity(xps_document *doc, char *base_uri, xps_resource *dict, char *opacity_att, fz_xml *opacity_mask_tag);
 
-void xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node);
-void xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node);
+void xps_parse_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *node);
+void xps_parse_element(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *node);
 
-void xps_clip(xps_document *doc, fz_matrix ctm, xps_resource *dict, char *clip_att, fz_xml *clip_tag);
+void xps_clip(xps_document *doc, const fz_matrix *ctm, xps_resource *dict, char *clip_att, fz_xml *clip_tag);
 
 fz_xml *xps_lookup_alternate_content(fz_xml *node);
 
@@ -237,7 +236,7 @@ struct xps_document_s
 };
 
 /* SumatraPDF: extended link support */
-void xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char *anchor_name, int step);
+void xps_extract_anchor_info(xps_document *doc, const fz_rect *rect, char *target_uri, char *anchor_name, int step);
 
 /* SumatraPDF: extract document properties (hacky) */
 typedef struct xps_doc_props_s

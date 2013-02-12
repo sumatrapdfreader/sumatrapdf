@@ -9,12 +9,12 @@
 	resulting executables.
 */
 
-static void pdf_run_page_contents_shim(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
+static void pdf_run_page_contents_shim(fz_document *doc, fz_page *page, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie)
 {
 	pdf_run_page_contents((pdf_document*)doc, (pdf_page*)page, dev, transform, cookie);
 }
 
-static void pdf_run_annot_shim(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, fz_matrix transform, fz_cookie *cookie)
+static void pdf_run_annot_shim(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie)
 {
 	pdf_run_annot((pdf_document*)doc, (pdf_page*)page, (pdf_annot *)annot, dev, transform, cookie);
 }

@@ -219,7 +219,7 @@ fz_buffer_printf(fz_context *ctx, fz_buffer *buffer, const char *fmt, ...)
 }
 
 int
-fz_buffer_vprintf(fz_context *ctx, fz_buffer *buffer, const char *fmt, va_list args)
+fz_buffer_vprintf(fz_context *ctx, fz_buffer *buffer, const char *fmt, va_list old_args)
 {
 	int len;
 
@@ -227,12 +227,24 @@ fz_buffer_vprintf(fz_context *ctx, fz_buffer *buffer, const char *fmt, va_list a
 	{
 		int slack = buffer->cap - buffer->len;
 
-		len = vsnprintf((char *)buffer->data + buffer->len, slack, fmt, args);
-		/* len = number of chars written, not including the terminating
-		 * NULL, so len+1 > slack means "truncated". MSVC differs here
-		 * and returns -1 for truncated. */
-		if (len >= 0 && len+1 <= slack)
-			break;
+		if (slack > 0)
+		{
+			va_list args;
+#ifdef _MSC_VER /* Microsoft Visual C */
+			args = old_args;
+#else
+			va_copy(args, old_args);
+#endif
+			len = vsnprintf((char *)buffer->data + buffer->len, slack, fmt, args);
+#ifndef _MSC_VER
+			va_end(args);
+#endif
+			/* len = number of chars written, not including the terminating
+			 * NULL, so len+1 > slack means "truncated". MSVC differs here
+			 * and returns -1 for truncated. */
+			if (len >= 0 && len+1 <= slack)
+				break;
+		}
 		/* Grow the buffer and retry */
 		fz_grow_buffer(ctx, buffer);
 	}

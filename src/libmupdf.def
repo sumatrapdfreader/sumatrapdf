@@ -47,21 +47,25 @@ EXPORTS
 	fz_debug_xml
 	fz_concat
 	fz_scale
+	fz_pre_scale
 	fz_shear
+	fz_pre_shear
 	fz_rotate
+	fz_pre_rotate
 	fz_translate
+	fz_pre_translate
 	fz_invert_matrix
 	fz_is_rectilinear
 	fz_matrix_expansion
 	fz_intersect_rect
-	fz_intersect_bbox
+	fz_intersect_irect
 	fz_union_rect
-	fz_bbox_from_rect
+	fz_irect_from_rect
 	fz_round_rect
-	fz_rect_from_bbox
+	fz_rect_from_irect
 	fz_expand_rect
+	fz_translate_irect
 	fz_translate_rect
-	fz_translate_bbox
 	fz_transform_point
 	fz_transform_vector
 	fz_transform_rect
@@ -176,7 +180,7 @@ EXPORTS
 	fz_first_widget
 	fz_next_widget
 	fz_widget_get_type
-	fz_widget_bbox
+	fz_bound_widget
 	fz_text_widget_text
 	fz_text_widget_max_len
 	fz_text_widget_content_type
@@ -740,7 +744,6 @@ EXPORTS
 	xps_free_resource_dictionary
 	xps_resolve_resource_reference
 	xps_print_resource_dictionary
-	xps_run_page
 	xps_parse_fixed_page
 	xps_parse_canvas
 	xps_parse_path

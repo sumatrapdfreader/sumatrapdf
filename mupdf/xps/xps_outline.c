@@ -166,7 +166,7 @@ xps_load_outline(xps_document *doc)
 /* SumatraPDF: extended link support */
 
 void
-xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char *anchor_name, int step)
+xps_extract_anchor_info(xps_document *doc, const fz_rect *rect, char *target_uri, char *anchor_name, int step)
 {
 	fz_link *new_link = NULL;
 
@@ -203,13 +203,13 @@ xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char 
 	}
 	if (step == 2 && doc->_clinks_len-- <= nelem(doc->_clinks)) // canvas end
 	{
-		if (!fz_is_empty_rect(doc->_clinks[doc->_clinks_len].rect))
-			rect = doc->_clinks[doc->_clinks_len].rect;
+		if (!fz_is_empty_rect(&doc->_clinks[doc->_clinks_len].rect))
+			rect = &doc->_clinks[doc->_clinks_len].rect;
 		if (doc->_clinks[doc->_clinks_len].link)
-			doc->_clinks[doc->_clinks_len].link->rect = rect;
+			doc->_clinks[doc->_clinks_len].link->rect = *rect;
 	}
 	if (step != 1 && doc->_clinks_len > 0 && doc->_clinks_len <= nelem(doc->_clinks))
-		doc->_clinks[doc->_clinks_len-1].rect = fz_union_rect(doc->_clinks[doc->_clinks_len-1].rect, rect);
+		fz_union_rect(&doc->_clinks[doc->_clinks_len-1].rect, rect);
 
 	if (anchor_name)
 	{
@@ -218,7 +218,7 @@ xps_extract_anchor_info(xps_document *doc, fz_rect rect, char *target_uri, char 
 		sprintf(value_id, "#%s", anchor_name);
 		target = xps_lookup_link_target_obj(doc, value_id);
 		if (target)
-			target->rect = rect;
+			target->rect = *rect;
 		fz_free(doc->ctx, value_id);
 	}
 }

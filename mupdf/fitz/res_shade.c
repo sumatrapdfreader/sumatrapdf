@@ -16,7 +16,7 @@ paint_quad(fz_mesh_processor *painter, fz_vertex *v0, fz_vertex *v1, fz_vertex *
 }
 
 static void
-fz_mesh_type1_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_processor *painter)
+fz_mesh_type1_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_mesh_processor *painter)
 {
 	float *p = shade->u.f.fn_vals;
 	int xdivs = shade->u.f.xdivs;
@@ -31,8 +31,9 @@ fz_mesh_type1_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 	fz_vertex *v = vs[0];
 	fz_vertex *vn = vs[1];
 	int n = shade->colorspace->n;
+	fz_matrix local_ctm;
 
-	ctm = fz_concat(shade->u.f.matrix, ctm);
+	fz_concat(&local_ctm, &shade->u.f.matrix, ctm);
 
 	y = y0;
 	for (yy = 0; yy < ydivs; yy++)
@@ -41,22 +42,22 @@ fz_mesh_type1_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 
 		x = x0;
 		v[0].p.x = x; v[0].p.y = y;
-		v[0].p = fz_transform_point(ctm, v[0].p);
+		fz_transform_point(&v[0].p, &local_ctm);
 		memcpy(v[0].c, p, n*sizeof(float));
 		p += n;
 		v[1].p.x = x; v[1].p.y = yn;
-		v[1].p = fz_transform_point(ctm, v[1].p);
+		fz_transform_point(&v[1].p, &local_ctm);
 		memcpy(v[1].c, p + xdivs*n, n*sizeof(float));
 		for (xx = 0; xx < xdivs; xx++)
 		{
 			x = x0 + (x1 - x0) * (xx + 1) / xdivs;
 
 			vn[0].p.x = x; vn[0].p.y = y;
-			vn[0].p = fz_transform_point(ctm, vn[0].p);
+			fz_transform_point(&vn[0].p, &local_ctm);
 			memcpy(vn[0].c, p, n*sizeof(float));
 			p += n;
 			vn[1].p.x = x; vn[1].p.y = yn;
-			vn[1].p = fz_transform_point(ctm, vn[1].p);
+			fz_transform_point(&vn[1].p, &local_ctm);
 			memcpy(vn[1].c, p + xdivs*n, n*sizeof(float));
 
 			paint_quad(painter, &v[0], &vn[0], &vn[1], &v[1]);
@@ -79,7 +80,7 @@ fz_point_on_circle(fz_point p, float r, float theta)
 }
 
 static void
-fz_mesh_type2_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_processor *painter)
+fz_mesh_type2_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_mesh_processor *painter)
 {
 	fz_point p0, p1, dir;
 	fz_vertex v0, v1, v2, v3;
@@ -92,9 +93,9 @@ fz_mesh_type2_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 	p1.y = shade->u.l_or_r.coords[1][1];
 	dir.x = p0.y - p1.y;
 	dir.y = p1.x - p0.x;
-	p0 = fz_transform_point(ctm, p0);
-	p1 = fz_transform_point(ctm, p1);
-	dir = fz_transform_vector(ctm, dir);
+	fz_transform_point(&p0, ctm);
+	fz_transform_point(&p1, ctm);
+	fz_transform_vector(&dir, ctm);
 	theta = atan2f(dir.y, dir.x);
 
 	v0.p = fz_point_on_circle(p0, HUGENUM, theta);
@@ -146,7 +147,7 @@ fz_mesh_type2_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 #define RADSEGS 32 /* how many segments to generate for radial meshes */
 
 static void
-fz_paint_annulus(fz_matrix ctm,
+fz_paint_annulus(const fz_matrix *ctm,
 		fz_point p0, float r0, float c0,
 		fz_point p1, float r1, float c1,
 		fz_mesh_processor *painter)
@@ -169,14 +170,14 @@ fz_paint_annulus(fz_matrix ctm,
 		b2.p = fz_point_on_circle(p1, r1, theta - i * step);
 		b3.p = fz_point_on_circle(p1, r1, theta - i * step - step);
 
-		t0.p = fz_transform_point(ctm, t0.p);
-		t1.p = fz_transform_point(ctm, t1.p);
-		t2.p = fz_transform_point(ctm, t2.p);
-		t3.p = fz_transform_point(ctm, t3.p);
-		b0.p = fz_transform_point(ctm, b0.p);
-		b1.p = fz_transform_point(ctm, b1.p);
-		b2.p = fz_transform_point(ctm, b2.p);
-		b3.p = fz_transform_point(ctm, b3.p);
+		fz_transform_point(&t0.p, ctm);
+		fz_transform_point(&t1.p, ctm);
+		fz_transform_point(&t2.p, ctm);
+		fz_transform_point(&t3.p, ctm);
+		fz_transform_point(&b0.p, ctm);
+		fz_transform_point(&b1.p, ctm);
+		fz_transform_point(&b2.p, ctm);
+		fz_transform_point(&b3.p, ctm);
 
 		t0.c[0] = c0;
 		t1.c[0] = c0;
@@ -193,7 +194,7 @@ fz_paint_annulus(fz_matrix ctm,
 }
 
 static void
-fz_mesh_type3_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_processor *painter)
+fz_mesh_type3_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_mesh_processor *painter)
 {
 	fz_point p0, p1;
 	float r0, r1;
@@ -247,7 +248,7 @@ static inline float read_sample(fz_stream *stream, int bits, float min, float ma
 }
 
 static void
-fz_mesh_type4_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_processor *painter)
+fz_mesh_type4_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_mesh_processor *painter)
 {
 	fz_stream *stream = fz_open_compressed_buffer(ctx, shade->buffer);
 	fz_vertex v[4];
@@ -274,7 +275,7 @@ fz_mesh_type4_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 			flag = fz_read_bits(stream, bpflag);
 			vd->p.x = read_sample(stream, bpcoord, x0, x1);
 			vd->p.y = read_sample(stream, bpcoord, y0, y1);
-			vd->p = fz_transform_point(ctm, vd->p);
+			fz_transform_point(&vd->p, ctm);
 			for (i = 0; i < ncomp; i++)
 				vd->c[i] = read_sample(stream, bpcomp, c0[i], c1[i]);
 
@@ -286,14 +287,14 @@ fz_mesh_type4_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 				fz_read_bits(stream, bpflag);
 				vb->p.x = read_sample(stream, bpcoord, x0, x1);
 				vb->p.y = read_sample(stream, bpcoord, y0, y1);
-				vb->p = fz_transform_point(ctm, vb->p);
+				fz_transform_point(&vb->p, ctm);
 				for (i = 0; i < ncomp; i++)
 					vb->c[i] = read_sample(stream, bpcomp, c0[i], c1[i]);
 
 				fz_read_bits(stream, bpflag);
 				vc->p.x = read_sample(stream, bpcoord, x0, x1);
 				vc->p.y = read_sample(stream, bpcoord, y0, y1);
-				vc->p = fz_transform_point(ctm, vc->p);
+				fz_transform_point(&vc->p, ctm);
 				for (i = 0; i < ncomp; i++)
 					vc->c[i] = read_sample(stream, bpcomp, c0[i], c1[i]);
 
@@ -326,7 +327,7 @@ fz_mesh_type4_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 }
 
 static void
-fz_mesh_type5_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_processor *painter)
+fz_mesh_type5_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_mesh_processor *painter)
 {
 	fz_stream *stream = fz_open_compressed_buffer(ctx, shade->buffer);
 	fz_vertex *buf = NULL;
@@ -360,7 +361,7 @@ fz_mesh_type5_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 			{
 				buf[i].p.x = read_sample(stream, bpcoord, x0, x1);
 				buf[i].p.y = read_sample(stream, bpcoord, y0, y1);
-				buf[i].p = fz_transform_point(ctm, buf[i].p);
+				fz_transform_point(&buf[i].p, ctm);
 				for (k = 0; k < ncomp; k++)
 					buf[i].c[k] = read_sample(stream, bpcomp, c0[k], c1[k]);
 			}
@@ -643,7 +644,7 @@ make_tensor_patch(tensor_patch *p, int type, fz_point *pt)
 #define SUBDIV 3 /* how many levels to subdivide patches */
 
 static void
-fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_processor *painter)
+fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_mesh_processor *painter)
 {
 	fz_stream *stream = fz_open_compressed_buffer(ctx, shade->buffer);
 	int haspatch, hasprevpatch;
@@ -690,7 +691,7 @@ fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 			{
 				v[i].x = read_sample(stream, bpcoord, x0, x1);
 				v[i].y = read_sample(stream, bpcoord, y0, y1);
-				v[i] = fz_transform_point(ctm, v[i]);
+				fz_transform_point(&v[i], ctm);
 			}
 
 			for (i = startcolor; i < 4; i++)
@@ -771,7 +772,7 @@ fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 }
 
 static void
-fz_mesh_type7_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_processor *painter)
+fz_mesh_type7_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_mesh_processor *painter)
 {
 	fz_stream *stream = fz_open_compressed_buffer(ctx, shade->buffer);
 	int bpflag = shade->u.m.bpflag;
@@ -818,7 +819,7 @@ fz_mesh_type7_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 			{
 				v[i].x = read_sample(stream, bpcoord, x0, x1);
 				v[i].y = read_sample(stream, bpcoord, y0, y1);
-				v[i] = fz_transform_point(ctm, v[i]);
+				fz_transform_point(&v[i], ctm);
 			}
 
 			for (i = startcolor; i < 4; i++)
@@ -899,7 +900,7 @@ fz_mesh_type7_process(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_p
 }
 
 void
-fz_process_mesh(fz_context *ctx, fz_shade *shade, fz_matrix ctm,
+fz_process_mesh(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm,
 		fz_mesh_process_fn *process, void *process_arg)
 {
 	fz_mesh_processor painter;
@@ -988,24 +989,26 @@ bound_tri(void *arg, fz_vertex *v1, fz_vertex *v2, fz_vertex *v3)
 	if (v3->p.y > bmd->rect.y1) bmd->rect.y1 = v3->p.y;
 }
 
-fz_rect
-fz_bound_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm)
+fz_rect *
+fz_bound_shade(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_rect *s)
 {
-	fz_rect s;
+	fz_matrix local_ctm;
 	struct bound_mesh_data bmd;
 
-	ctm = fz_concat(shade->matrix, ctm);
-	s = fz_transform_rect(ctm, shade->bbox);
+	fz_concat(&local_ctm, &shade->matrix, ctm);
+	*s = shade->bbox;
+	fz_transform_rect(s, &local_ctm);
 	if (shade->type == FZ_LINEAR)
-		return fz_intersect_rect(s, fz_infinite_rect);
+		return s;
 	if (shade->type == FZ_RADIAL)
-		return fz_intersect_rect(s, fz_infinite_rect);
+		return s;
 
 	bmd.rect = fz_empty_rect;
 	bmd.first = 1;
-	fz_process_mesh(ctx, shade, ctm, &bound_tri, &bmd);
+	fz_process_mesh(ctx, shade, &local_ctm, &bound_tri, &bmd);
 
-	return fz_intersect_rect(s, bmd.rect);
+	fz_intersect_rect(s, &bmd.rect);
+	return s;
 }
 
 #ifndef NDEBUG

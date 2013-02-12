@@ -29,7 +29,7 @@ xps_lookup_alternate_content(fz_xml *node)
 }
 
 void
-xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node)
+xps_parse_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *node)
 {
 	if (doc->cookie && doc->cookie->abort)
 		return;
@@ -47,7 +47,7 @@ xps_parse_brush(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, 
 }
 
 void
-xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri, xps_resource *dict, fz_xml *node)
+xps_parse_element(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict, fz_xml *node)
 {
 	if (doc->cookie && doc->cookie->abort)
 		return;
@@ -67,7 +67,7 @@ xps_parse_element(xps_document *doc, fz_matrix ctm, fz_rect area, char *base_uri
 }
 
 void
-xps_begin_opacity(xps_document *doc, fz_matrix ctm, fz_rect area,
+xps_begin_opacity(xps_document *doc, const fz_matrix *ctm, const fz_rect *area,
 	char *base_uri, xps_resource *dict,
 	char *opacity_att, fz_xml *opacity_mask_tag)
 {

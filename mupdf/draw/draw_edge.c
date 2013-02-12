@@ -203,20 +203,20 @@ fz_new_gel(fz_context *ctx)
 }
 
 void
-fz_reset_gel(fz_gel *gel, fz_bbox clip)
+fz_reset_gel(fz_gel *gel, const fz_irect *clip)
 {
 	fz_aa_context *ctxaa = gel->ctx->aa;
 
-	if (fz_is_infinite_rect(clip))
+	if (fz_is_infinite_irect(clip))
 	{
 		gel->clip.x0 = gel->clip.y0 = BBOX_MAX;
 		gel->clip.x1 = gel->clip.y1 = BBOX_MIN;
 	}
 	else {
-		gel->clip.x0 = clip.x0 * fz_aa_hscale;
-		gel->clip.x1 = clip.x1 * fz_aa_hscale;
-		gel->clip.y0 = clip.y0 * fz_aa_vscale;
-		gel->clip.y1 = clip.y1 * fz_aa_vscale;
+		gel->clip.x0 = clip->x0 * fz_aa_hscale;
+		gel->clip.x1 = clip->x1 * fz_aa_hscale;
+		gel->clip.y0 = clip->y0 * fz_aa_vscale;
+		gel->clip.y1 = clip->y1 * fz_aa_vscale;
 	}
 
 	gel->bbox.x0 = gel->bbox.y0 = BBOX_MAX;
@@ -235,17 +235,21 @@ fz_free_gel(fz_gel *gel)
 	fz_free(gel->ctx, gel);
 }
 
-fz_bbox
-fz_bound_gel(fz_gel *gel)
+fz_irect *
+fz_bound_gel(const fz_gel *gel, fz_irect *bbox)
 {
-	fz_bbox bbox;
 	fz_aa_context *ctxaa = gel->ctx->aa;
 	if (gel->len == 0)
-		return fz_empty_bbox;
-	bbox.x0 = fz_idiv(gel->bbox.x0, fz_aa_hscale);
-	bbox.y0 = fz_idiv(gel->bbox.y0, fz_aa_vscale);
-	bbox.x1 = fz_idiv(gel->bbox.x1, fz_aa_hscale) + 1;
-	bbox.y1 = fz_idiv(gel->bbox.y1, fz_aa_vscale) + 1;
+	{
+		*bbox = fz_empty_irect;
+	}
+	else
+	{
+		bbox->x0 = fz_idiv(gel->bbox.x0, fz_aa_hscale);
+		bbox->y0 = fz_idiv(gel->bbox.y0, fz_aa_vscale);
+		bbox->x1 = fz_idiv(gel->bbox.x1, fz_aa_hscale) + 1;
+		bbox->y1 = fz_idiv(gel->bbox.y1, fz_aa_vscale) + 1;
+	}
 	return bbox;
 }
 
@@ -666,7 +670,7 @@ static inline void blit_aa(fz_pixmap *dst, int x, int y,
 }
 
 static void
-fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
+fz_scan_convert_aa(fz_gel *gel, int eofill, const fz_irect *clip,
 	fz_pixmap *dst, unsigned char *color)
 {
 	unsigned char *alphas;
@@ -682,14 +686,14 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 
 	int xofs = xmin * fz_aa_hscale;
 
-	int skipx = clip.x0 - xmin;
-	int clipn = clip.x1 - clip.x0;
+	int skipx = clip->x0 - xmin;
+	int clipn = clip->x1 - clip->x0;
 
 	if (gel->len == 0)
 		return;
 
-	assert(clip.x0 >= xmin);
-	assert(clip.x1 <= xmax);
+	assert(clip->x0 >= xmin);
+	assert(clip->x1 <= xmax);
 
 	alphas = fz_malloc_no_throw(ctx, xmax - xmin + 1);
 	deltas = fz_malloc_no_throw(ctx, (xmax - xmin + 1) * sizeof(int));
@@ -719,7 +723,7 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 	yd = fz_idiv(y, fz_aa_vscale);
 
 	/* Quickly skip to the start of the clip region */
-	while (yd < clip.y0 && (gel->alen > 0 || e < gel->len))
+	while (yd < clip->y0 && (gel->alen > 0 || e < gel->len))
 	{
 		/* rh = remaining height = number of subscanlines left to be
 		 * inserted into the current scanline, which will be plotted
@@ -738,14 +742,14 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 			yd++;
 		}
 		/* Skip any whole scanlines we can */
-		while (yd < clip.y0 && h0 >= fz_aa_vscale)
+		while (yd < clip->y0 && h0 >= fz_aa_vscale)
 		{
 			h0 -= fz_aa_vscale;
 			yd++;
 		}
 		/* If we haven't hit the start of the clip region, then we
 		 * have less than a scanline left. */
-		if (yd < clip.y0)
+		if (yd < clip->y0)
 		{
 			h0 = 0;
 		}
@@ -770,7 +774,7 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 			memset(deltas, 0, (skipx + clipn) * sizeof(int));
 		}
 		yd = yc;
-		if (yd >= clip.y1)
+		if (yd >= clip->y1)
 			break;
 
 		/* height = The number of subscanlines with identical edge
@@ -792,7 +796,7 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 				blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
 				memset(deltas, 0, (skipx + clipn) * sizeof(int));
 				yd++;
-				if (yd >= clip.y1)
+				if (yd >= clip->y1)
 					break;
 				h0 -= rh;
 			}
@@ -812,7 +816,7 @@ fz_scan_convert_aa(fz_gel *gel, int eofill, fz_bbox clip,
 					 * to recalculate deltas here. */
 					blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
 					yd++;
-					if (yd >= clip.y1)
+					if (yd >= clip->y1)
 						goto clip_ended;
 					h0 -= fz_aa_vscale;
 				}
@@ -836,7 +840,7 @@ advance:
 		y += height;
 	}
 
-	if (yd < clip.y1)
+	if (yd < clip->y1)
 	{
 		undelta_aa(ctxaa, alphas, deltas, skipx + clipn);
 		blit_aa(dst, xmin + skipx, yd, alphas + skipx, clipn, color);
@@ -851,7 +855,7 @@ clip_ended:
  */
 
 static inline void blit_sharp(int x0, int x1, int y,
-	fz_bbox clip, fz_pixmap *dst, unsigned char *color)
+	const fz_irect *clip, fz_pixmap *dst, unsigned char *color)
 {
 	unsigned char *dp;
 	x0 = fz_clampi(x0, dst->x, dst->x + dst->w);
@@ -867,7 +871,7 @@ static inline void blit_sharp(int x0, int x1, int y,
 }
 
 static inline void non_zero_winding_sharp(fz_gel *gel, int y,
-	fz_bbox clip, fz_pixmap *dst, unsigned char *color)
+	const fz_irect *clip, fz_pixmap *dst, unsigned char *color)
 {
 	int winding = 0;
 	int x = 0;
@@ -883,7 +887,7 @@ static inline void non_zero_winding_sharp(fz_gel *gel, int y,
 }
 
 static inline void even_odd_sharp(fz_gel *gel, int y,
-	fz_bbox clip, fz_pixmap *dst, unsigned char *color)
+	const fz_irect *clip, fz_pixmap *dst, unsigned char *color)
 {
 	int even = 0;
 	int x = 0;
@@ -899,7 +903,7 @@ static inline void even_odd_sharp(fz_gel *gel, int y,
 }
 
 static void
-fz_scan_convert_sharp(fz_gel *gel, int eofill, fz_bbox clip,
+fz_scan_convert_sharp(fz_gel *gel, int eofill, const fz_irect *clip,
 	fz_pixmap *dst, unsigned char *color)
 {
 	int e = 0;
@@ -909,16 +913,16 @@ fz_scan_convert_sharp(fz_gel *gel, int eofill, fz_bbox clip,
 	gel->alen = 0;
 
 	/* Skip any lines before the clip region */
-	if (y < clip.y0)
+	if (y < clip->y0)
 	{
 		while (gel->alen > 0 || e < gel->len)
 		{
 			height = insert_active(gel, y, &e);
 			y += height;
-			if (y >= clip.y0)
+			if (y >= clip->y0)
 			{
-				height -= y - clip.y0;
-				y = clip.y0;
+				height -= y - clip->y0;
+				y = clip->y0;
 				break;
 			}
 		}
@@ -934,8 +938,8 @@ fz_scan_convert_sharp(fz_gel *gel, int eofill, fz_bbox clip,
 		else
 		{
 			int h;
-			if (height >= clip.y1 - y)
-				height = clip.y1 - y;
+			if (height >= clip->y1 - y)
+				height = clip->y1 - y;
 
 			h = height;
 			while (h--)
@@ -947,7 +951,7 @@ fz_scan_convert_sharp(fz_gel *gel, int eofill, fz_bbox clip,
 				y++;
 			}
 		}
-		if (y >= clip.y1)
+		if (y >= clip->y1)
 			break;
 
 		advance_active(gel, height);
@@ -955,7 +959,7 @@ fz_scan_convert_sharp(fz_gel *gel, int eofill, fz_bbox clip,
 }
 
 void
-fz_scan_convert(fz_gel *gel, int eofill, fz_bbox clip,
+fz_scan_convert(fz_gel *gel, int eofill, const fz_irect *clip,
 	fz_pixmap *dst, unsigned char *color)
 {
 	fz_aa_context *ctxaa = gel->ctx->aa;

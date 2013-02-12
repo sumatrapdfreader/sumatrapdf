@@ -595,7 +595,7 @@ pdf_array_contains(pdf_obj *arr, pdf_obj *obj)
 	return 0;
 }
 
-pdf_obj *pdf_new_rect(fz_context *ctx, fz_rect rect)
+pdf_obj *pdf_new_rect(fz_context *ctx, const fz_rect *rect)
 {
 	pdf_obj *arr = NULL;
 	pdf_obj *item = NULL;
@@ -606,22 +606,22 @@ pdf_obj *pdf_new_rect(fz_context *ctx, fz_rect rect)
 	{
 		arr = pdf_new_array(ctx, 4);
 
-		item = pdf_new_real(ctx, rect.x0);
+		item = pdf_new_real(ctx, rect->x0);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, rect.y0);
+		item = pdf_new_real(ctx, rect->y0);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, rect.x1);
+		item = pdf_new_real(ctx, rect->x1);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, rect.y1);
+		item = pdf_new_real(ctx, rect->y1);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
@@ -636,7 +636,7 @@ pdf_obj *pdf_new_rect(fz_context *ctx, fz_rect rect)
 	return arr;
 }
 
-pdf_obj *pdf_new_matrix(fz_context *ctx, fz_matrix mtx)
+pdf_obj *pdf_new_matrix(fz_context *ctx, const fz_matrix *mtx)
 {
 	pdf_obj *arr = NULL;
 	pdf_obj *item = NULL;
@@ -647,32 +647,32 @@ pdf_obj *pdf_new_matrix(fz_context *ctx, fz_matrix mtx)
 	{
 		arr = pdf_new_array(ctx, 6);
 
-		item = pdf_new_real(ctx, mtx.a);
+		item = pdf_new_real(ctx, mtx->a);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, mtx.b);
+		item = pdf_new_real(ctx, mtx->b);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, mtx.c);
+		item = pdf_new_real(ctx, mtx->c);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, mtx.d);
+		item = pdf_new_real(ctx, mtx->d);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, mtx.e);
+		item = pdf_new_real(ctx, mtx->e);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;
 
-		item = pdf_new_real(ctx, mtx.f);
+		item = pdf_new_real(ctx, mtx->f);
 		pdf_array_push(arr, item);
 		pdf_drop_obj(item);
 		item = NULL;

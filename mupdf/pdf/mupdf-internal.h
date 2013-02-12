@@ -284,7 +284,7 @@ struct pdf_xobject_s
 };
 
 pdf_xobject *pdf_load_xobject(pdf_document *doc, pdf_obj *obj);
-pdf_obj *pdf_new_xobject(pdf_document *doc, fz_rect bbox, fz_matrix mat);
+pdf_obj *pdf_new_xobject(pdf_document *doc, const fz_rect *bbox, const fz_matrix *mat);
 pdf_xobject *pdf_keep_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_drop_xobject(fz_context *ctx, pdf_xobject *xobj);
 void pdf_update_xobject_contents(pdf_document *xref, pdf_xobject *form, fz_buffer *buffer);
@@ -498,7 +498,7 @@ void pdf_drop_font(fz_context *ctx, pdf_font_desc *font);
 void pdf_print_font(fz_context *ctx, pdf_font_desc *fontdesc);
 #endif
 
-fz_rect pdf_measure_text(fz_context *ctx, pdf_font_desc *fontdesc, unsigned char *buf, int len);
+fz_rect *pdf_measure_text(fz_context *ctx, pdf_font_desc *fontdesc, unsigned char *buf, int len, fz_rect *rect);
 float pdf_text_stride(fz_context *ctx, pdf_font_desc *fontdesc, float fontsize, unsigned char *buf, int len, float room, int *count);
 
 /*
@@ -528,7 +528,7 @@ pdf_obj *pdf_load_name_tree(pdf_document *doc, char *which);
 /* SumatraPDF: parse full file specifications */
 char *pdf_file_spec_to_str(pdf_document *doc, pdf_obj *file_spec);
 
-fz_link *pdf_load_link_annots(pdf_document *, pdf_obj *annots, fz_matrix page_ctm);
+fz_link *pdf_load_link_annots(pdf_document *, pdf_obj *annots, const fz_matrix *page_ctm);
 
 pdf_annot *pdf_load_annots(pdf_document *, pdf_obj *annots, pdf_page *page);
 void pdf_update_annot(pdf_document *, pdf_annot *annot);
@@ -573,7 +573,7 @@ struct pdf_page_s
  * Content stream parsing
  */
 
-void pdf_run_glyph(pdf_document *doc, pdf_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate, int nestedDepth);
+void pdf_run_glyph(pdf_document *doc, pdf_obj *resources, fz_buffer *contents, fz_device *dev, const fz_matrix *ctm, void *gstate, int nestedDepth);
 
 /*
  * PDF interface to store

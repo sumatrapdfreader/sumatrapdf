@@ -708,7 +708,7 @@ void winblit()
 	{
 		if (gapp.iscopying || justcopied)
 		{
-			pdfapp_invert(&gapp, gapp.selr);
+			pdfapp_invert(&gapp, &gapp.selr);
 			justcopied = 1;
 		}
 
@@ -748,7 +748,7 @@ void winblit()
 
 		if (gapp.iscopying || justcopied)
 		{
-			pdfapp_invert(&gapp, gapp.selr);
+			pdfapp_invert(&gapp, &gapp.selr);
 			justcopied = 1;
 		}
 	}

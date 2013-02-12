@@ -243,36 +243,41 @@ fz_closepath(fz_context *ctx, fz_path *path)
 	path->items[path->len++].k = FZ_CLOSE_PATH;
 }
 
-static inline fz_rect bound_expand(fz_rect r, fz_point p)
+static inline fz_rect *bound_expand(fz_rect *r, const fz_point *p)
 {
-	if (p.x < r.x0) r.x0 = p.x;
-	if (p.y < r.y0) r.y0 = p.y;
-	if (p.x > r.x1) r.x1 = p.x;
-	if (p.y > r.y1) r.y1 = p.y;
+	if (p->x < r->x0) r->x0 = p->x;
+	if (p->y < r->y0) r->y0 = p->y;
+	if (p->x > r->x1) r->x1 = p->x;
+	if (p->y > r->y1) r->y1 = p->y;
 	return r;
 }
 
-fz_rect
-fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm)
+fz_rect *
+fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r)
 {
 	fz_point p;
-	fz_rect r;
 	int i = 0;
 
 	/* If the path is empty, return the empty rectangle here - don't wait
 	 * for it to be expanded in the stroked case below. */
 	if (path->len == 0)
-		return fz_empty_rect;
+	{
+		*r = fz_empty_rect;
+		return r;
+	}
 	/* A path must start with a moveto - and if that's all there is
 	 * then the path is empty. */
 	if (path->len == 3)
-		return fz_empty_rect;
+	{
+		*r = fz_empty_rect;
+		return r;
+	}
 
 	p.x = path->items[1].v;
 	p.y = path->items[2].v;
-	p = fz_transform_point(ctm, p);
-	r.x0 = r.x1 = p.x;
-	r.y0 = r.y1 = p.y;
+	fz_transform_point(&p, ctm);
+	r->x0 = r->x1 = p.x;
+	r->y0 = r->y1 = p.y;
 
 	while (i < path->len)
 	{
@@ -281,13 +286,13 @@ fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix
 		case FZ_CURVETO:
 			p.x = path->items[i++].v;
 			p.y = path->items[i++].v;
-			r = bound_expand(r, fz_transform_point(ctm, p));
+			bound_expand(r, fz_transform_point(&p, ctm));
 			p.x = path->items[i++].v;
 			p.y = path->items[i++].v;
-			r = bound_expand(r, fz_transform_point(ctm, p));
+			bound_expand(r, fz_transform_point(&p, ctm));
 			p.x = path->items[i++].v;
 			p.y = path->items[i++].v;
-			r = bound_expand(r, fz_transform_point(ctm, p));
+			bound_expand(r, fz_transform_point(&p, ctm));
 			break;
 		case FZ_MOVETO:
 			if (i + 2 == path->len)
@@ -300,7 +305,7 @@ fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix
 		case FZ_LINETO:
 			p.x = path->items[i++].v;
 			p.y = path->items[i++].v;
-			r = bound_expand(r, fz_transform_point(ctm, p));
+			bound_expand(r, fz_transform_point(&p, ctm));
 			break;
 		case FZ_CLOSE_PATH:
 			break;
@@ -309,14 +314,14 @@ fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix
 
 	if (stroke)
 	{
-		r = fz_adjust_rect_for_stroke(r, stroke, ctm);
+		fz_adjust_rect_for_stroke(r, stroke, ctm);
 	}
 
 	return r;
 }
 
-fz_rect
-fz_adjust_rect_for_stroke(fz_rect r, fz_stroke_state *stroke, fz_matrix ctm)
+fz_rect *
+fz_adjust_rect_for_stroke(fz_rect *r, fz_stroke_state *stroke, const fz_matrix *ctm)
 {
 	float expand;
 
@@ -331,17 +336,16 @@ fz_adjust_rect_for_stroke(fz_rect r, fz_stroke_state *stroke, fz_matrix ctm)
 	if ((stroke->linejoin == FZ_LINEJOIN_MITER || stroke->linejoin == FZ_LINEJOIN_MITER_XPS) && stroke->miterlimit > 1)
 		expand *= stroke->miterlimit;
 
-	r.x0 -= expand;
-	r.y0 -= expand;
-	r.x1 += expand;
-	r.y1 += expand;
+	r->x0 -= expand;
+	r->y0 -= expand;
+	r->x1 += expand;
+	r->y1 += expand;
 	return r;
 }
 
 void
-fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix ctm)
+fz_transform_path(fz_context *ctx, fz_path *path, const fz_matrix *ctm)
 {
-	fz_point p;
 	int k, i = 0;
 
 	while (i < path->len)
@@ -351,21 +355,13 @@ fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix ctm)
 		case FZ_CURVETO:
 			for (k = 0; k < 3; k++)
 			{
-				p.x = path->items[i].v;
-				p.y = path->items[i+1].v;
-				p = fz_transform_point(ctm, p);
-				path->items[i].v = p.x;
-				path->items[i+1].v = p.y;
+				fz_transform_point((fz_point *)(void *)&path->items[i].v, ctm);
 				i += 2;
 			}
 			break;
 		case FZ_MOVETO:
 		case FZ_LINETO:
-			p.x = path->items[i].v;
-			p.y = path->items[i+1].v;
-			p = fz_transform_point(ctm, p);
-			path->items[i].v = p.x;
-			path->items[i+1].v = p.y;
+			fz_transform_point((fz_point *)(void *)&path->items[i].v, ctm);
 			i += 2;
 			break;
 		case FZ_CLOSE_PATH:

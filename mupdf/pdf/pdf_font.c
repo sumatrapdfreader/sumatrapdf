@@ -1353,23 +1353,23 @@ pdf_print_font(fz_context *ctx, pdf_font_desc *fontdesc)
 }
 #endif
 
-fz_rect pdf_measure_text(fz_context *ctx, pdf_font_desc *fontdesc, unsigned char *buf, int len)
+fz_rect *pdf_measure_text(fz_context *ctx, pdf_font_desc *fontdesc, unsigned char *buf, int len, fz_rect *acc)
 {
 	pdf_hmtx h;
 	int gid;
 	int i;
 	float x = 0.0;
-	fz_rect acc = fz_empty_rect;
 	fz_rect bbox;
 
+	*acc = fz_empty_rect;
 	for (i = 0; i < len; i++)
 	{
 		gid = pdf_font_cid_to_gid(ctx, fontdesc, buf[i]);
 		h = pdf_lookup_hmtx(ctx, fontdesc, buf[i]);
-		bbox = fz_bound_glyph(ctx, fontdesc->font, gid, fz_identity);
+		fz_bound_glyph(ctx, fontdesc->font, gid, &fz_identity, &bbox);
 		bbox.x0 += x;
 		bbox.x1 += x;
-		acc = fz_union_rect(acc, bbox);
+		fz_union_rect(acc, &bbox);
 		x += h.w / 1000.0;
 	}
 

@@ -345,8 +345,8 @@ pdf_load_page(pdf_document *xref, int number)
 	pdf_annot *annot;
 	pdf_obj *pageobj, *pageref, *obj;
 	fz_rect mediabox, cropbox, realbox;
-	fz_matrix ctm;
 	float userunit;
+	fz_matrix mat;
 
 	pdf_load_page_tree(xref);
 	if (number < 0 || number >= xref->page_len)
@@ -369,8 +369,8 @@ pdf_load_page(pdf_document *xref, int number)
 	else
 		userunit = 1;
 
-	mediabox = pdf_to_rect(ctx, pdf_dict_gets(pageobj, "MediaBox"));
-	if (fz_is_empty_rect(mediabox))
+	pdf_to_rect(ctx, pdf_dict_gets(pageobj, "MediaBox"), &mediabox);
+	if (fz_is_empty_rect(&mediabox))
 	{
 		fz_warn(ctx, "cannot find page size for page %d", number + 1);
 		mediabox.x0 = 0;
@@ -379,9 +379,9 @@ pdf_load_page(pdf_document *xref, int number)
 		mediabox.y1 = 792;
 	}
 
-	cropbox = pdf_to_rect(ctx, pdf_dict_gets(pageobj, "CropBox"));
-	if (!fz_is_empty_rect(cropbox))
-		mediabox = fz_intersect_rect(mediabox, cropbox);
+	pdf_to_rect(ctx, pdf_dict_gets(pageobj, "CropBox"), &cropbox);
+	if (!fz_is_empty_rect(&cropbox))
+		fz_intersect_rect(&mediabox, &cropbox);
 
 	page->mediabox.x0 = fz_min(mediabox.x0, mediabox.x1) * userunit;
 	page->mediabox.y0 = fz_min(mediabox.y0, mediabox.y1) * userunit;
@@ -404,11 +404,11 @@ pdf_load_page(pdf_document *xref, int number)
 	if (page->rotate > 360)
 		page->rotate = 0;
 
-	ctm = fz_concat(fz_rotate(-page->rotate), fz_scale(1, -1));
-	realbox = fz_transform_rect(ctm, page->mediabox);
-	ctm = fz_concat(ctm, fz_scale(userunit, userunit));
-	ctm = fz_concat(ctm, fz_translate(-realbox.x0, -realbox.y0));
-	page->ctm = ctm;
+	fz_pre_rotate(fz_scale(&page->ctm, 1, -1), -page->rotate);
+	realbox = page->mediabox;
+	fz_transform_rect(&realbox, &page->ctm);
+	fz_pre_scale(fz_translate(&mat, -realbox.x0, -realbox.y0), userunit, userunit);
+	fz_concat(&page->ctm, &page->ctm, &mat);
 
 	obj = pdf_dict_gets(pageobj, "Annots");
 	if (obj)
@@ -416,7 +416,7 @@ pdf_load_page(pdf_document *xref, int number)
 		/* SumatraPDF: ignore annotations in case of unexpected errors */
 		fz_try(ctx)
 		{
-		page->links = pdf_load_link_annots(xref, obj, page->ctm);
+		page->links = pdf_load_link_annots(xref, obj, &page->ctm);
 		page->annots = pdf_load_annots(xref, obj, page);
 		}
 		fz_catch(ctx)
@@ -462,13 +462,15 @@ pdf_load_page(pdf_document *xref, int number)
 	return page;
 }
 
-fz_rect
-pdf_bound_page(pdf_document *xref, pdf_page *page)
+fz_rect *
+pdf_bound_page(pdf_document *xref, pdf_page *page, fz_rect *bounds)
 {
-	fz_rect bounds, mediabox = fz_transform_rect(fz_rotate(page->rotate), page->mediabox);
-	bounds.x0 = bounds.y0 = 0;
-	bounds.x1 = mediabox.x1 - mediabox.x0;
-	bounds.y1 = mediabox.y1 - mediabox.y0;
+	fz_matrix mtx;
+	fz_rect mediabox = page->mediabox;
+	fz_transform_rect(&mediabox, fz_rotate(&mtx, page->rotate));
+	bounds->x0 = bounds->y0 = 0;
+	bounds->x1 = mediabox.x1 - mediabox.x0;
+	bounds->y1 = mediabox.y1 - mediabox.y0;
 	return bounds;
 }
 

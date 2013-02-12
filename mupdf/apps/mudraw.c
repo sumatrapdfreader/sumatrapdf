@@ -188,12 +188,12 @@ static void escape_string(FILE *out, int len, const char *string)
 }
 
 #ifdef GDI_PLUS_BMP_RENDERER
-static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display_list *list, int pagenum)
+static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display_list *list, int pagenum, fz_cookie *cookie)
 {
 	float zoom;
 	fz_matrix ctm;
-	fz_bbox bbox;
-	fz_rect bounds, bounds2;
+	fz_irect ibounds;
+	fz_rect bounds, tbounds;
 
 	int w, h;
 	fz_device *dev;
@@ -205,39 +205,42 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	int bmp_data_len;
 	char *bmp_data;
 
-	bounds = fz_bound_page(doc, page);
+	fz_bound_page(doc, page, &bounds);
 	zoom = resolution / 72;
-	ctm = fz_scale(zoom, zoom);
-	ctm = fz_concat(ctm, fz_rotate(rotation));
-	bounds2 = fz_transform_rect(ctm, bounds);
+	fz_pre_scale(fz_rotate(&ctm, rotation), zoom, zoom);
+	tbounds = bounds;
+	fz_round_rect(&ibounds, fz_transform_rect(&tbounds, &ctm));
 
 	w = width;
 	h = height;
 	if (res_specified)
 	{
-		bbox = fz_round_rect(bounds2);
-		if (w && bbox.x1 - bbox.x0 <= w)
+		fz_round_rect(&ibounds, &tbounds);
+		if (w && ibounds.x1 - ibounds.x0 <= w)
 			w = 0;
-		if (h && bbox.y1 - bbox.y0 <= h)
+		if (h && ibounds.y1 - ibounds.y0 <= h)
 			h = 0;
 	}
 	if (w || h)
 	{
-		float scalex = w / (bounds2.x1 - bounds2.x0);
-		float scaley = h / (bounds2.y1 - bounds2.y0);
+		float scalex = w / (tbounds.x1 - tbounds.x0);
+		float scaley = h / (tbounds.y1 - tbounds.y0);
+		fz_matrix scale_mat;
 		if (w == 0)
 			scalex = fit ? 1.0f : scaley;
 		if (h == 0)
 			scaley = fit ? 1.0f : scalex;
 		if (!fit)
 			scalex = scaley = min(scalex, scaley);
-		ctm = fz_concat(ctm, fz_scale(scalex, scaley));
-		bounds2 = fz_transform_rect(ctm, bounds);
+		fz_concat(&ctm, &ctm, fz_scale(&scale_mat, scalex, scaley));
+		tbounds = bounds;
+		fz_transform_rect(&tbounds, &ctm);
 	}
-	bbox = fz_round_rect(bounds2);
+	fz_round_rect(&ibounds, &tbounds);
+	fz_rect_from_irect(&tbounds, &ibounds);
 
-	w = bbox.x1 - bbox.x0;
-	h = bbox.y1 - bbox.y0;
+	w = ibounds.x1 - ibounds.x0;
+	h = ibounds.y1 - ibounds.y0;
 
 	dc_main = GetDC(NULL);
 	dc = CreateCompatibleDC(dc_main);
@@ -249,11 +252,11 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	FillRect(dc, &rc, bg_brush);
 	DeleteObject(bg_brush);
 
-	dev = fz_new_gdiplus_device(ctx, dc, fz_rect_from_bbox(bbox));
+	dev = fz_new_gdiplus_device(ctx, dc, &tbounds);
 	if (list)
-		fz_run_display_list(list, dev, ctm, fz_rect_from_bbox(bbox), NULL);
+		fz_run_display_list(list, dev, &ctm, &tbounds, cookie);
 	else
-		fz_run_page(doc, page, dev, ctm, NULL);
+		fz_run_page(doc, page, dev, &ctm, cookie);
 	fz_free_device(dev);
 
 	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
@@ -395,12 +398,13 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		}
 		for (;widget; widget = fz_next_widget(inter, widget))
 		{
-			fz_rect rect = fz_widget_bbox(widget);
-			int w = (rect.x1-rect.x0);
-			int h = (rect.y1-rect.y0);
-			int len;
+			fz_rect rect;
+			int w, h, len;
 			int type = fz_widget_get_type(widget);
 
+			fz_bound_widget(widget, &rect);
+			w = (rect.x1 - rect.x0);
+			h = (rect.y1 - rect.y0);
 			++mujstest_count;
 			switch (type)
 			{
@@ -486,7 +490,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		{
 			list = fz_new_display_list(ctx);
 			dev = fz_new_list_device(ctx, list);
-			fz_run_page(doc, page, dev, fz_identity, &cookie);
+			fz_run_page(doc, page, dev, &fz_identity, &cookie);
 		}
 		fz_always(ctx)
 		{
@@ -508,9 +512,9 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			dev = fz_new_trace_device(ctx);
 			fz_printf(out, "<page number=\"%d\">\n", pagenum);
 			if (list)
-				fz_run_display_list(list, dev, fz_identity, fz_infinite_rect, &cookie);
+				fz_run_display_list(list, dev, &fz_identity, &fz_infinite_rect, &cookie);
 			else
-				fz_run_page(doc, page, dev, fz_identity, &cookie);
+				fz_run_page(doc, page, dev, &fz_identity, &cookie);
 			fz_printf(out, "</page>\n");
 		}
 		fz_always(ctx)
@@ -534,12 +538,13 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 
 		fz_try(ctx)
 		{
-			text = fz_new_text_page(ctx, fz_bound_page(doc, page));
+			fz_rect bounds;
+			text = fz_new_text_page(ctx, fz_bound_page(doc, page, &bounds));
 			dev = fz_new_text_device(ctx, sheet, text);
 			if (list)
-				fz_run_display_list(list, dev, fz_identity, fz_infinite_rect, &cookie);
+				fz_run_display_list(list, dev, &fz_identity, &fz_infinite_rect, &cookie);
 			else
-				fz_run_page(doc, page, dev, fz_identity, &cookie);
+				fz_run_page(doc, page, dev, &fz_identity, &cookie);
 			fz_free_device(dev);
 			dev = NULL;
 			if (showtext == TEXT_XML)
@@ -576,7 +581,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 #ifdef GDI_PLUS_BMP_RENDERER
 	// hack: use -G0 to "enable GDI+" when saving as TGA
 	if (output && (strstr(output, ".bmp") || strstr(output, ".tga") && !gamma_value))
-		drawbmp(ctx, doc, page, list, pagenum);
+		drawbmp(ctx, doc, page, list, pagenum, &cookie);
 	else
 #endif
 	if (output || showmd5 || showtime)
@@ -584,18 +589,17 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		float zoom;
 		fz_matrix ctm;
 		fz_rect bounds, tbounds;
-		fz_bbox ibounds;
+		fz_irect ibounds;
 		fz_pixmap *pix = NULL;
 		int w, h;
 
 		fz_var(pix);
 
-		bounds = fz_bound_page(doc, page);
+		fz_bound_page(doc, page, &bounds);
 		zoom = resolution / 72;
-		ctm = fz_scale(zoom, zoom);
-		ctm = fz_concat(ctm, fz_rotate(rotation));
-		tbounds = fz_transform_rect(ctm, bounds);
-		ibounds = fz_round_rect(tbounds); /* convert to integers */
+		fz_pre_scale(fz_rotate(&ctm, rotation), zoom, zoom);
+		tbounds = bounds;
+		fz_round_rect(&ibounds, fz_transform_rect(&tbounds, &ctm));
 
 		/* Make local copies of our width/height */
 		w = width;
@@ -619,6 +623,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 		{
 			float scalex = w / (tbounds.x1 - tbounds.x0);
 			float scaley = h / (tbounds.y1 - tbounds.y0);
+			fz_matrix scale_mat;
 
 			if (fit)
 			{
@@ -641,16 +646,19 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 				else
 					scaley = scalex;
 			}
-			ctm = fz_concat(ctm, fz_scale(scalex, scaley));
-			tbounds = fz_transform_rect(ctm, bounds);
+			fz_scale(&scale_mat, scalex, scaley);
+			fz_concat(&ctm, &ctm, &scale_mat);
+			tbounds = bounds;
+			fz_transform_rect(&tbounds, &ctm);
 		}
-		ibounds = fz_round_rect(tbounds);
+		fz_round_rect(&ibounds, &tbounds);
+		fz_rect_from_irect(&tbounds, &ibounds);
 
 		/* TODO: banded rendering and multi-page ppm */
 
 		fz_try(ctx)
 		{
-			pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds);
+			pix = fz_new_pixmap_with_bbox(ctx, colorspace, &ibounds);
 
 			if (savealpha)
 				fz_clear_pixmap(ctx, pix);
@@ -659,9 +667,9 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 
 			dev = fz_new_draw_device(ctx, pix);
 			if (list)
-				fz_run_display_list(list, dev, ctm, tbounds, &cookie);
+				fz_run_display_list(list, dev, &ctm, &tbounds, &cookie);
 			else
-				fz_run_page(doc, page, dev, ctm, &cookie);
+				fz_run_page(doc, page, dev, &ctm, &cookie);
 			fz_free_device(dev);
 			dev = NULL;
 
@@ -911,13 +919,13 @@ int main(int argc, char **argv)
 	timing.maxfilename = "";
 
 	if (showxml || showtext)
-	{
 		out = fz_new_output_file(ctx, stdout);
-		sheet = fz_new_text_sheet(ctx);
-	}
 
 	if (showxml || showtext == TEXT_XML)
 		fz_printf(out, "<?xml version=\"1.0\"?>\n");
+
+	if (showtext)
+		sheet = fz_new_text_sheet(ctx);
 
 	if (showtext == TEXT_HTML)
 	{
@@ -1007,9 +1015,11 @@ int main(int argc, char **argv)
 		fz_printf(out, "</style>\n");
 	}
 
+	if (showtext)
+		fz_free_text_sheet(ctx, sheet);
+
 	if (showxml || showtext)
 	{
-		fz_free_text_sheet(ctx, sheet);
 		fz_close_output(out);
 		out = NULL;
 	}

@@ -305,8 +305,8 @@ static inline int fz_mul255(int a, int b)
  * AMOUNT (in the 0...256 range). */
 #define FZ_BLEND(SRC, DST, AMOUNT) ((((SRC)-(DST))*(AMOUNT) + ((DST)<<8))>>8)
 
-fz_matrix fz_gridfit_matrix(fz_matrix m);
-float fz_matrix_max_expansion(fz_matrix m);
+void fz_gridfit_matrix(fz_matrix *m);
+float fz_matrix_max_expansion(const fz_matrix *m);
 
 /*
  * Basic crypto functions.
@@ -886,22 +886,22 @@ struct fz_pixmap_s
 
 void fz_free_pixmap_imp(fz_context *ctx, fz_storable *pix);
 
-void fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, fz_bbox r);
+void fz_copy_pixmap_rect(fz_context *ctx, fz_pixmap *dest, fz_pixmap *src, const fz_irect *r);
 void fz_premultiply_pixmap(fz_context *ctx, fz_pixmap *pix);
 fz_pixmap *fz_alpha_from_gray(fz_context *ctx, fz_pixmap *gray, int luminosity);
 unsigned int fz_pixmap_size(fz_context *ctx, fz_pixmap *pix);
 
-fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_bbox *clip);
+fz_pixmap *fz_scale_pixmap(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_irect *clip);
 
 typedef struct fz_scale_cache_s fz_scale_cache;
 
 fz_scale_cache *fz_new_scale_cache(fz_context *ctx);
 void fz_free_scale_cache(fz_context *ctx, fz_scale_cache *cache);
-fz_pixmap *fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, fz_bbox *clip, fz_scale_cache *cache_x, fz_scale_cache *cache_y);
+fz_pixmap *fz_scale_pixmap_cached(fz_context *ctx, fz_pixmap *src, float x, float y, float w, float h, const fz_irect *clip, fz_scale_cache *cache_x, fz_scale_cache *cache_y);
 
 void fz_subsample_pixmap(fz_context *ctx, fz_pixmap *tile, int factor);
 
-fz_bbox fz_pixmap_bbox_no_ctx(fz_pixmap *src);
+fz_irect *fz_pixmap_bbox_no_ctx(fz_pixmap *src, fz_irect *bbox);
 
 typedef struct fz_compression_params_s fz_compression_params;
 
@@ -1065,7 +1065,7 @@ struct fz_font_s
 	float *t3widths; /* has 256 entries if used */
 	char *t3flags; /* has 256 entries if used */
 	void *t3doc; /* a pdf_document for the callback */
-	void (*t3run)(void *doc, void *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate, int nestedDepth);
+	void (*t3run)(void *doc, void *resources, fz_buffer *contents, fz_device *dev, const fz_matrix *ctm, void *gstate, int nestedDepth);
 	void (*t3freeres)(void *doc, void *resources);
 
 	fz_rect bbox;	/* font bbox is used only for t3 fonts */
@@ -1084,7 +1084,7 @@ void fz_new_font_context(fz_context *ctx);
 fz_font_context *fz_keep_font_context(fz_context *ctx);
 void fz_drop_font_context(fz_context *ctx);
 
-fz_font *fz_new_type3_font(fz_context *ctx, char *name, fz_matrix matrix);
+fz_font *fz_new_type3_font(fz_context *ctx, char *name, const fz_matrix *matrix);
 
 fz_font *fz_new_font_from_memory(fz_context *ctx, char *name, unsigned char *data, int len, int index, int use_glyph_bbox);
 fz_font *fz_new_font_from_file(fz_context *ctx, char *name, char *path, int index, int use_glyph_bbox);
@@ -1093,7 +1093,7 @@ fz_font *fz_keep_font(fz_context *ctx, fz_font *font);
 void fz_drop_font(fz_context *ctx, fz_font *font);
 
 void fz_set_font_bbox(fz_context *ctx, fz_font *font, float xmin, float ymin, float xmax, float ymax);
-fz_rect fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm);
+fz_rect *fz_bound_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, fz_rect *r);
 int fz_glyph_cacheable(fz_context *ctx, fz_font *font, int gid);
 
 #ifndef NDEBUG
@@ -1173,12 +1173,12 @@ void fz_curvetoy(fz_context*,fz_path*, float, float, float, float);
 void fz_closepath(fz_context*,fz_path*);
 void fz_free_path(fz_context *ctx, fz_path *path);
 
-void fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix transform);
+void fz_transform_path(fz_context *ctx, fz_path *path, const fz_matrix *transform);
 
 fz_path *fz_clone_path(fz_context *ctx, fz_path *old);
 
-fz_rect fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm);
-fz_rect fz_adjust_rect_for_stroke(fz_rect r, fz_stroke_state *stroke, fz_matrix ctm);
+fz_rect *fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r);
+fz_rect *fz_adjust_rect_for_stroke(fz_rect *r, fz_stroke_state *stroke, const fz_matrix *ctm);
 
 fz_stroke_state *fz_new_stroke_state(fz_context *ctx);
 fz_stroke_state *fz_new_stroke_state_with_len(fz_context *ctx, int len);
@@ -1200,14 +1200,14 @@ fz_glyph_cache *fz_keep_glyph_cache(fz_context *ctx);
 void fz_drop_glyph_cache_context(fz_context *ctx);
 void fz_purge_glyph_cache(fz_context *ctx);
 
-fz_path *fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm);
-fz_path *fz_outline_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix ctm);
-fz_pixmap *fz_render_ft_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm, int aa);
-fz_pixmap *fz_render_t3_glyph(fz_context *ctx, fz_font *font, int cid, fz_matrix trm, fz_colorspace *model, fz_bbox scissor);
-fz_pixmap *fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix trm, fz_matrix ctm, fz_stroke_state *state);
-fz_pixmap *fz_render_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_colorspace *model, fz_bbox scissor);
-fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_font*, int, fz_matrix, fz_matrix, fz_stroke_state *stroke, fz_bbox scissor);
-void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, fz_matrix trm, void *gstate, int nestedDepth);
+fz_path *fz_outline_ft_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm);
+fz_path *fz_outline_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *ctm);
+fz_pixmap *fz_render_ft_glyph(fz_context *ctx, fz_font *font, int cid, const fz_matrix *trm, int aa);
+fz_pixmap *fz_render_t3_glyph(fz_context *ctx, fz_font *font, int cid, const fz_matrix *trm, fz_colorspace *model, fz_irect scissor);
+fz_pixmap *fz_render_ft_stroked_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *state);
+fz_pixmap *fz_render_glyph(fz_context *ctx, fz_font*, int, const fz_matrix *, fz_colorspace *model, fz_irect scissor);
+fz_pixmap *fz_render_stroked_glyph(fz_context *ctx, fz_font*, int, const fz_matrix *, const fz_matrix *, fz_stroke_state *stroke, fz_irect scissor);
+void fz_render_t3_glyph_direct(fz_context *ctx, fz_device *dev, fz_font *font, int gid, const fz_matrix *trm, void *gstate, int nestedDepth);
 void fz_prepare_t3_glyph(fz_context *ctx, fz_font *font, int gid, int nestedDepth);
 
 typedef enum
@@ -1259,10 +1259,10 @@ struct fz_text_s
 	fz_text_item *items;
 };
 
-fz_text *fz_new_text(fz_context *ctx, fz_font *face, fz_matrix trm, int wmode);
+fz_text *fz_new_text(fz_context *ctx, fz_font *face, const fz_matrix *trm, int wmode);
 void fz_add_text(fz_context *ctx, fz_text *text, int gid, int ucs, float x, float y);
 void fz_free_text(fz_context *ctx, fz_text *text);
-fz_rect fz_bound_text(fz_context *ctx, fz_text *text, fz_matrix ctm);
+fz_rect *fz_bound_text(fz_context *ctx, fz_text *text, const fz_matrix *ctm, fz_rect *r);
 fz_text *fz_clone_text(fz_context *ctx, fz_text *old);
 void fz_print_text(fz_context *ctx, FILE *out, fz_text*);
 
@@ -1333,8 +1333,8 @@ fz_shade *fz_keep_shade(fz_context *ctx, fz_shade *shade);
 void fz_drop_shade(fz_context *ctx, fz_shade *shade);
 void fz_free_shade_imp(fz_context *ctx, fz_storable *shade);
 
-fz_rect fz_bound_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm);
-void fz_paint_shade(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_pixmap *dest, fz_bbox bbox);
+fz_rect *fz_bound_shade(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_rect *r);
+void fz_paint_shade(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_pixmap *dest, const fz_irect *bbox);
 
 /*
  *	Handy routine for processing mesh based shades
@@ -1358,7 +1358,7 @@ struct fz_mesh_processor_s {
 	void *process_arg;
 };
 
-void fz_process_mesh(fz_context *ctx, fz_shade *shade, fz_matrix ctm,
+void fz_process_mesh(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm,
 			fz_mesh_process_fn *process, void *process_arg);
 
 #ifndef NDEBUG
@@ -1373,17 +1373,17 @@ typedef struct fz_gel_s fz_gel;
 
 fz_gel *fz_new_gel(fz_context *ctx);
 void fz_insert_gel(fz_gel *gel, float x0, float y0, float x1, float y1);
-void fz_reset_gel(fz_gel *gel, fz_bbox clip);
+void fz_reset_gel(fz_gel *gel, const fz_irect *clip);
 void fz_sort_gel(fz_gel *gel);
-fz_bbox fz_bound_gel(fz_gel *gel);
+fz_irect *fz_bound_gel(const fz_gel *gel, fz_irect *bbox);
 void fz_free_gel(fz_gel *gel);
 int fz_is_rect_gel(fz_gel *gel);
 
-void fz_scan_convert(fz_gel *gel, int eofill, fz_bbox clip, fz_pixmap *pix, unsigned char *colorbv);
+void fz_scan_convert(fz_gel *gel, int eofill, const fz_irect *clip, fz_pixmap *pix, unsigned char *colorbv);
 
-void fz_flatten_fill_path(fz_gel *gel, fz_path *path, fz_matrix ctm, float flatness);
-void fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth);
-void fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth);
+void fz_flatten_fill_path(fz_gel *gel, fz_path *path, const fz_matrix *ctm, float flatness);
+void fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
+void fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
 
 /* SumatraPDF: support transfer functions */
 typedef struct fz_transfer_function_s fz_transfer_function;
@@ -1434,30 +1434,30 @@ struct fz_device_s
 	void (*free_user)(fz_device *);
 	fz_context *ctx;
 
-	void (*fill_path)(fz_device *, fz_path *, int even_odd, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*stroke_path)(fz_device *, fz_path *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*clip_path)(fz_device *, fz_path *, fz_rect rect, int even_odd, fz_matrix);
-	void (*clip_stroke_path)(fz_device *, fz_path *, fz_rect rect, fz_stroke_state *, fz_matrix);
+	void (*fill_path)(fz_device *, fz_path *, int even_odd, const fz_matrix *, fz_colorspace *, float *color, float alpha);
+	void (*stroke_path)(fz_device *, fz_path *, fz_stroke_state *, const fz_matrix *, fz_colorspace *, float *color, float alpha);
+	void (*clip_path)(fz_device *, fz_path *, const fz_rect *rect, int even_odd, const fz_matrix *);
+	void (*clip_stroke_path)(fz_device *, fz_path *, const fz_rect *rect, fz_stroke_state *, const fz_matrix *);
 
-	void (*fill_text)(fz_device *, fz_text *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*stroke_text)(fz_device *, fz_text *, fz_stroke_state *, fz_matrix, fz_colorspace *, float *color, float alpha);
-	void (*clip_text)(fz_device *, fz_text *, fz_matrix, int accumulate);
-	void (*clip_stroke_text)(fz_device *, fz_text *, fz_stroke_state *, fz_matrix);
-	void (*ignore_text)(fz_device *, fz_text *, fz_matrix);
+	void (*fill_text)(fz_device *, fz_text *, const fz_matrix *, fz_colorspace *, float *color, float alpha);
+	void (*stroke_text)(fz_device *, fz_text *, fz_stroke_state *, const fz_matrix *, fz_colorspace *, float *color, float alpha);
+	void (*clip_text)(fz_device *, fz_text *, const fz_matrix *, int accumulate);
+	void (*clip_stroke_text)(fz_device *, fz_text *, fz_stroke_state *, const fz_matrix *);
+	void (*ignore_text)(fz_device *, fz_text *, const fz_matrix *);
 
-	void (*fill_shade)(fz_device *, fz_shade *shd, fz_matrix ctm, float alpha);
-	void (*fill_image)(fz_device *, fz_image *img, fz_matrix ctm, float alpha);
-	void (*fill_image_mask)(fz_device *, fz_image *img, fz_matrix ctm, fz_colorspace *, float *color, float alpha);
-	void (*clip_image_mask)(fz_device *, fz_image *img, fz_rect rect, fz_matrix ctm);
+	void (*fill_shade)(fz_device *, fz_shade *shd, const fz_matrix *ctm, float alpha);
+	void (*fill_image)(fz_device *, fz_image *img, const fz_matrix *ctm, float alpha);
+	void (*fill_image_mask)(fz_device *, fz_image *img, const fz_matrix *ctm, fz_colorspace *, float *color, float alpha);
+	void (*clip_image_mask)(fz_device *, fz_image *img, const fz_rect *rect, const fz_matrix *ctm);
 
 	void (*pop_clip)(fz_device *);
 
-	void (*begin_mask)(fz_device *, fz_rect, int luminosity, fz_colorspace *, float *bc);
+	void (*begin_mask)(fz_device *, const fz_rect *, int luminosity, fz_colorspace *, float *bc);
 	void (*end_mask)(fz_device *);
-	void (*begin_group)(fz_device *, fz_rect, int isolated, int knockout, int blendmode, float alpha);
+	void (*begin_group)(fz_device *, const fz_rect *, int isolated, int knockout, int blendmode, float alpha);
 	void (*end_group)(fz_device *);
 
-	void (*begin_tile)(fz_device *, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
+	void (*begin_tile)(fz_device *, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm);
 	void (*end_tile)(fz_device *);
 
 	/* SumatraPDF: support transfer functions */
@@ -1467,25 +1467,25 @@ struct fz_device_s
 	char errmess[256];
 };
 
-void fz_fill_path(fz_device *dev, fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_clip_path(fz_device *dev, fz_path *path, fz_rect rect, int even_odd, fz_matrix ctm);
-void fz_clip_stroke_path(fz_device *dev, fz_path *path, fz_rect rect, fz_stroke_state *stroke, fz_matrix ctm);
-void fz_fill_text(fz_device *dev, fz_text *text, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_clip_text(fz_device *dev, fz_text *text, fz_matrix ctm, int accumulate);
-void fz_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, fz_matrix ctm);
-void fz_ignore_text(fz_device *dev, fz_text *text, fz_matrix ctm);
+void fz_fill_path(fz_device *dev, fz_path *path, int even_odd, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha);
+void fz_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha);
+void fz_clip_path(fz_device *dev, fz_path *path, const fz_rect *rect, int even_odd, const fz_matrix *ctm);
+void fz_clip_stroke_path(fz_device *dev, fz_path *path, const fz_rect *rect, fz_stroke_state *stroke, const fz_matrix *ctm);
+void fz_fill_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha);
+void fz_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha);
+void fz_clip_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, int accumulate);
+void fz_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, const fz_matrix *ctm);
+void fz_ignore_text(fz_device *dev, fz_text *text, const fz_matrix *ctm);
 void fz_pop_clip(fz_device *dev);
-void fz_fill_shade(fz_device *dev, fz_shade *shade, fz_matrix ctm, float alpha);
-void fz_fill_image(fz_device *dev, fz_image *image, fz_matrix ctm, float alpha);
-void fz_fill_image_mask(fz_device *dev, fz_image *image, fz_matrix ctm, fz_colorspace *colorspace, float *color, float alpha);
-void fz_clip_image_mask(fz_device *dev, fz_image *image, fz_rect rect, fz_matrix ctm);
-void fz_begin_mask(fz_device *dev, fz_rect area, int luminosity, fz_colorspace *colorspace, float *bc);
+void fz_fill_shade(fz_device *dev, fz_shade *shade, const fz_matrix *ctm, float alpha);
+void fz_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float alpha);
+void fz_fill_image_mask(fz_device *dev, fz_image *image, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha);
+void fz_clip_image_mask(fz_device *dev, fz_image *image, const fz_rect *rect, const fz_matrix *ctm);
+void fz_begin_mask(fz_device *dev, const fz_rect *area, int luminosity, fz_colorspace *colorspace, float *bc);
 void fz_end_mask(fz_device *dev);
-void fz_begin_group(fz_device *dev, fz_rect area, int isolated, int knockout, int blendmode, float alpha);
+void fz_begin_group(fz_device *dev, const fz_rect *area, int isolated, int knockout, int blendmode, float alpha);
 void fz_end_group(fz_device *dev);
-void fz_begin_tile(fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm);
+void fz_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm);
 void fz_end_tile(fz_device *dev);
 /* SumatraPDF: support transfer functions */
 void fz_apply_transfer_function(fz_device *dev, fz_transfer_function *tr, int for_mask);
@@ -1508,12 +1508,12 @@ void fz_paint_solid_color(unsigned char * restrict dp, int n, int w, unsigned ch
 void fz_paint_span(unsigned char * restrict dp, unsigned char * restrict sp, int n, int w, int alpha);
 void fz_paint_span_with_color(unsigned char * restrict dp, unsigned char * restrict mp, int n, int w, unsigned char *color);
 
-void fz_paint_image(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap *img, fz_matrix ctm, int alpha);
-void fz_paint_image_with_color(fz_pixmap *dst, fz_bbox scissor, fz_pixmap *shape, fz_pixmap *img, fz_matrix ctm, unsigned char *colorbv);
+void fz_paint_image(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz_pixmap *img, const fz_matrix *ctm, int alpha);
+void fz_paint_image_with_color(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz_pixmap *img, const fz_matrix *ctm, unsigned char *colorbv);
 
 void fz_paint_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha);
 void fz_paint_pixmap_with_mask(fz_pixmap *dst, fz_pixmap *src, fz_pixmap *msk);
-void fz_paint_pixmap_with_bbox(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_bbox bbox);
+void fz_paint_pixmap_with_bbox(fz_pixmap *dst, fz_pixmap *src, int alpha, fz_irect bbox);
 
 void fz_blend_pixmap(fz_pixmap *dst, fz_pixmap *src, int alpha, int blendmode, int isolated, fz_pixmap *shape);
 void fz_blend_pixel(unsigned char dp[3], unsigned char bp[3], unsigned char sp[3], int blendmode);
@@ -1555,9 +1555,9 @@ struct fz_document_s
 	int (*count_pages)(fz_document *doc);
 	fz_page *(*load_page)(fz_document *doc, int number);
 	fz_link *(*load_links)(fz_document *doc, fz_page *page);
-	fz_rect (*bound_page)(fz_document *doc, fz_page *page);
-	void (*run_page_contents)(fz_document *doc, fz_page *page, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
-	void (*run_annot)(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, fz_matrix transform, fz_cookie *cookie);
+	fz_rect *(*bound_page)(fz_document *doc, fz_page *page, fz_rect *);
+	void (*run_page_contents)(fz_document *doc, fz_page *page, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie);
+	void (*run_annot)(fz_document *doc, fz_page *page, fz_annot *annot, fz_device *dev, const fz_matrix *transform, fz_cookie *cookie);
 	void (*free_page)(fz_document *doc, fz_page *page);
 	int (*meta)(fz_document *doc, int key, void *ptr, int size);
 	fz_transition *(*page_presentation)(fz_document *doc, fz_page *page, float *duration);
@@ -1565,7 +1565,7 @@ struct fz_document_s
 	void (*write)(fz_document *doc, char *filename, fz_write_options *opts);
 	fz_annot *(*first_annot)(fz_document *doc, fz_page *page);
 	fz_annot *(*next_annot)(fz_document *doc, fz_annot *annot);
-	fz_rect (*bound_annot)(fz_document *doc, fz_annot *annot);
+	fz_rect *(*bound_annot)(fz_document *doc, fz_annot *annot, fz_rect *rect);
 };
 
 #endif
