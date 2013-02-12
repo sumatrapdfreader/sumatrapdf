@@ -77,6 +77,10 @@ typedef enum {
         CHECK -> LENGTH -> DONE
  */
 
+typedef int inflate_table_func OF((codetype type, unsigned short FAR *lens,
+                             unsigned codes, code FAR * FAR *table,
+                             unsigned FAR *bits, unsigned short FAR *work));
+
 /* state maintained between inflate() calls.  Approximately 10K bytes. */
 struct inflate_state {
     inflate_mode mode;          /* current inflate mode */
@@ -119,4 +123,5 @@ struct inflate_state {
     int sane;                   /* if false, allow invalid distance too far */
     int back;                   /* bits back of last unprocessed length/lit */
     unsigned was;               /* initial length of match */
+    inflate_table_func *inflate_table;
 };

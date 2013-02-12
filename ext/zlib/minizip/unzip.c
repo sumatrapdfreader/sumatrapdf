@@ -1440,6 +1440,7 @@ local int unz64local_CheckCurrentFileCoherencyHeader (unz64_s* s, uInt* piSizeVa
 /* #ifdef HAVE_BZIP2 */
                          (s->cur_file_info.compression_method!=Z_BZIP2ED) &&
 /* #endif */
+                         (s->cur_file_info.compression_method!=Z_DEFLATE64D) &&
                          (s->cur_file_info.compression_method!=Z_DEFLATED))
         err=UNZ_BADZIPFILE;
 
@@ -1547,6 +1548,7 @@ extern int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
 /* #ifdef HAVE_BZIP2 */
         (s->cur_file_info.compression_method!=Z_BZIP2ED) &&
 /* #endif */
+        (s->cur_file_info.compression_method!=Z_DEFLATE64D) &&
         (s->cur_file_info.compression_method!=Z_DEFLATED))
 
         err=UNZ_BADZIPFILE;
@@ -1589,7 +1591,8 @@ extern int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
       pfile_in_zip_read_info->raw=1;
 #endif
     }
-    else if ((s->cur_file_info.compression_method==Z_DEFLATED) && (!raw))
+    else if (((s->cur_file_info.compression_method==Z_DEFLATED) ||
+              (s->cur_file_info.compression_method==Z_DEFLATE64D)) && (!raw))
     {
       /* SumatraPDF: allow to include a custom allocator */
       pfile_in_zip_read_info->stream.zalloc = zlib_cust_alloc;
@@ -1598,7 +1601,8 @@ extern int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
       pfile_in_zip_read_info->stream.next_in = 0;
       pfile_in_zip_read_info->stream.avail_in = 0;
 
-      err=inflateInit2(&pfile_in_zip_read_info->stream, -MAX_WBITS);
+      err=inflateInit2(&pfile_in_zip_read_info->stream,
+          (s->cur_file_info.compression_method==Z_DEFLATED)?-MAX_WBITS:-16);
       if (err == Z_OK)
         pfile_in_zip_read_info->stream_initialised=Z_DEFLATED;
       else

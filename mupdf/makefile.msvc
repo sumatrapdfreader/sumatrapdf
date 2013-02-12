@@ -165,6 +165,7 @@ ZLIB_OBJS = \
 	$(OZ)\inffast.obj $(OZ)\inflate.obj $(OZ)\inftrees.obj $(OZ)\trees.obj \
 	$(OZ)\zutil.obj \
 	$(OZ)\gzlib.obj $(OZ)\gzread.obj $(OZ)\gzwrite.obj $(OZ)\gzclose.obj \
+	$(OZ)\inftree9.obj \
 	# MuPDF also compiles $(OZ)\uncompr.obj
 
 JPEG_TURBO_OBJS = \
