@@ -14,21 +14,22 @@
 
 int StringInterner::Intern(const char *s)
 {
-    string str(s);
-    IndexByStringMap::iterator it = indexByString.find(str);
+    nTotalStrings++;
+    IndexByStringMap::iterator it = indexByString.find(s);
     if (it != indexByString.end())
         return it->second;
 
+    const char *scopy = str::Dup(s);
     int index = indexByString.size();
-    indexByString.insert(std::make_pair(str,index));
-    stringByIndex.push_back(str);
+    indexByString.insert(std::make_pair(scopy,index));
+    stringByIndex.push_back(scopy);
     return index;
 }
 
 u32 DebugInfo::CountSizeInClass(int type) const
 {
     u32 size = 0;
-    for (int i=0; i<symbols.size(); i++) {
+    for (u32 i=0; i<symbols.size(); i++) {
         if (symbols[i].Class == type)
             size += symbols[i].Size;
     }
@@ -48,7 +49,7 @@ static bool StripTemplateParams(std::string& str)
     {
         isTemplate = true;
         // scan to matching closing '>'
-        int i = start + 1;
+        size_t i = start + 1;
         int depth = 1;
         while (i < str.size())
         {

@@ -3,6 +3,9 @@
     'msvs_configuration_attributes': {
       'CharacterSet': '1'
     },
+    # 4800 - forcing int to bool
+    # 4018 - signed/unsigned mismatch
+    'msvs_disabled_warnings': [4800, 4018],
     'msvs_settings': {
       'VCCLCompilerTool': {
         'WarningLevel': '3',              # /W3
@@ -27,7 +30,7 @@
           'VCCLCompilerTool': {
             'BufferSecurityCheck': 'true',
             'Optimization': '0', # /O0
-            'PreprocessorDefinitions': ['DEBUG', '_CRT_SECURE_NO_WARNINGS'],
+            'PreprocessorDefinitions': ['DEBUG', '_CRT_SECURE_NO_WARNINGS', '_HAS_EXCEPTIONS=0'],
             'RuntimeLibrary': '1',          # /MTd, static debug
           },
         },
@@ -37,7 +40,7 @@
           'VCCLCompilerTool': {
             'BufferSecurityCheck': 'true',
             'Optimization': '3',            # /Ox
-            'PreprocessorDefinitions': ['NDEBUG', '_CRT_SECURE_NO_WARNINGS'],
+            'PreprocessorDefinitions': ['NDEBUG', '_CRT_SECURE_NO_WARNINGS', '_HAS_EXCEPTIONS=0'],
             'RuntimeLibrary': '0',          # /MT, static
           },
         },

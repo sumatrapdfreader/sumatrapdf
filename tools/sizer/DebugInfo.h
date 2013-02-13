@@ -48,14 +48,18 @@ struct TemplateSymbol
 };
 
 class StringInterner {
-    typedef std::vector<string>     StringByIndexVector;
-    typedef std::map<string,int>    IndexByStringMap;
+    typedef std::vector<const char *>     StringByIndexVector;
+    typedef std::map<const char *,int>    IndexByStringMap;
 
     StringByIndexVector     stringByIndex;
     IndexByStringMap        indexByString;
+
+    int                     nTotalStrings;
+
 public:
+    StringInterner() : nTotalStrings(0) {}
     int             Intern(const char *s);
-    const char *    GetByIndex(int n) const { return stringByIndex[n].c_str(); }
+    const char *    GetByIndex(int n) const { return stringByIndex[n]; }
 };
 
 class DebugInfo
