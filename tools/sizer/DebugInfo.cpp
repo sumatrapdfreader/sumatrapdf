@@ -3,6 +3,7 @@
 // Based on code by Fabian "ryg" Giesen, http://farbrausch.com/~fg/
 
 #include "BaseUtil.h"
+#include "Dict.h"
 
 #include <vector>
 #include <string>
@@ -10,21 +11,9 @@
 #include <algorithm>
 #include <map>
 
+#include "Util.h"
+
 #include "DebugInfo.h"
-
-int StringInterner::Intern(const char *s)
-{
-    nTotalStrings++;
-    IndexByStringMap::iterator it = indexByString.find(s);
-    if (it != indexByString.end())
-        return it->second;
-
-    const char *scopy = str::Dup(s);
-    int index = indexByString.size();
-    indexByString.insert(std::make_pair(scopy,index));
-    stringByIndex.push_back(scopy);
-    return index;
-}
 
 u32 DebugInfo::CountSizeInClass(int type) const
 {

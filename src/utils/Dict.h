@@ -29,9 +29,8 @@ public:
 
     size_t Count() const;
 
-    // if a key doesn't exist, inserts a key with a given value and return true
-    // if a key exists, returns false and sets prevValOut to existing value
-    bool Insert(const char *key, int val, int *prevValOut);
+    bool Insert(const char *key, int val, int *existingValOut=NULL, const char **existingKeyOut=NULL);
+
     bool Remove(const char *key, int *removedValOut);
     bool Get(const char *key, int *valOut);
 };

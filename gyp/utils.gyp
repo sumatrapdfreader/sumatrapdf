@@ -12,6 +12,8 @@
         "../src/utils/Allocator.h",
         "../src/utils/BaseUtil.cpp",
         "../src/utils/BaseUtil.h",
+        "../src/utils/Dict.cpp",
+        "../src/utils/Dict.h",
         "../src/utils/StrUtil.cpp",
         "../src/utils/StrUtil.h",
         "../src/utils/Vec.h",

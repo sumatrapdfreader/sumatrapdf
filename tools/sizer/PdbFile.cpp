@@ -3,15 +3,17 @@
 // Based on code by Fabian "ryg" Giesen, http://farbrausch.com/~fg/
 
 #include "BaseUtil.h"
+#include "Dict.h"
 
 #include "Dia2Subset.h"
 
 #include <vector>
 #include <map>
 
+#include "Util.h"
+
 #include "DebugInfo.h"
 #include "PdbFile.h"
-#include "Util.h"
 
 struct Section {
     DWORD       section;

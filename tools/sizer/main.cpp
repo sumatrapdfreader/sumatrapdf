@@ -3,15 +3,17 @@
 // Based on code by Fabian "ryg" Giesen, http://farbrausch.com/~fg/
 
 #include "BaseUtil.h"
+#include "Dict.h"
 
 #include <vector>
 #include <map>
 #include <cstdio>
 #include <ctime>
 
+#include "Util.h"
+
 #include "DebugInfo.h"
 #include "PdbFile.h"
-#include "Util.h"
 
 int main(int argc, char** argv)
 {

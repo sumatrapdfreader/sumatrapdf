@@ -219,17 +219,30 @@ size_t MapStrToInt::Count() const
     return h->nUsed;
 }
 
-bool MapStrToInt::Insert(const char *key, int val, int *prevVal)
+// if a key exists:
+//   * returns false
+//   * sets existingValOut to existing value
+//   * sets existingKeyOut to (interned) existing key
+
+// if a key doesn't exist:
+//   * returns true
+//   * inserts a copy of the key allocated with allocator
+//   * sets existingKeyOut to (interned) key
+bool MapStrToInt::Insert(const char *key, int val, int *existingValOut, const char **existingKeyOut)
 {
     bool newEntry;
     HashTableEntry *e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
     if (!newEntry) {
-        if (prevVal)
-            *prevVal = e->val;
+        if (existingValOut)
+            *existingValOut = e->val;
+        if (existingKeyOut)
+            *existingKeyOut = (const char *)e->key;
         return false;
     }
     e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, str::Len(key) + 1);
     e->val = (intptr_t)val;
+    if (existingKeyOut)
+        *existingKeyOut = (const char *)e->key;
 
     HashTableResizeIfNeeded(h, &gStrKeyHasherComparator);
     return true;
