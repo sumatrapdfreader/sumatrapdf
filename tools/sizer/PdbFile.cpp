@@ -285,6 +285,7 @@ void PdbReader::EnumerateSymbols()
     {
         ProcessSymbol(symbol);
         symbol->Release();
+        symbol = NULL;
 
         hr = enumByAddr->Next(1, &symbol, &numFetched);
         if (FAILED(hr) || (numFetched != 1))
