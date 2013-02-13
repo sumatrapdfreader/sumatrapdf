@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d6b33c84919ac3766c139384e891a6f480ce7126
+7a4a70305eab5fa12de1d386cd2dc0c807e7c049
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -448,7 +448,7 @@ dk:&Kopier markering\tCtrl+C
 el:Αντιγραφή Επι&λεγμένων\tCtrl+C
 es:&Copiar Selección\tCtrl+C
 et:K&opeeri valik\tCtrl+C
-eu:Kopiatu Hautapena\tKtrl+C
+eu:&Kopiatu Hautapena\tKtrl+C
 fa:&رونوشت از انتخاب شده
 fi:Kopioi valinta\tCtrl+C
 fr:&Copier la sélection
@@ -1261,7 +1261,7 @@ dk:&Manual
 el:&Οδηγίες Χρήσης
 es:&Manual de Instrucciones
 et:K&asutusjuhend
-eu:&Eskuliburua
+eu:E&skuliburua
 fa:&کتابچه‌ی راهنمای آنلاین
 fi:&Käyttöohje
 fr:&Manuel
@@ -3818,7 +3818,7 @@ dk:Tjek automatisk for &opdateringer
 el:Αυτόματος έλεγχος για &ενημερώσεις
 es:Revisar &actualizaciones de forma automática
 et:Uuendusi k&ontrollitakse automaatselt
-eu:Berezgaitasunez egiaztatu e&guneraketak
+eu:&Berezgaitasunez egiaztatu eguneraketak
 fa:به صورت خودکار برای نسخه‌ی &جدید جستجو کن
 fi:Tarkista pä&ivitykset automaattisesti
 fr:Vérifier &automatiquement les mises à jour
@@ -4590,7 +4590,7 @@ dk:Tjek for ny &version
 el:Έ&λεγχος για νέα έκδοση
 es:&Buscar actualizaciones
 et:Vaata, kas on &uuendusi
-eu:E&giaztatu Eguneraketak
+eu:&Egiaztatu Eguneraketak
 fa:بررسی برای نسخه‌ی &جدیدتر
 fi:Tarkista, onko &päivityksiä saatavilla
 fr:&Vérifier les mises à jour
@@ -6516,7 +6516,7 @@ dk:F&uldskærmsvisning\tCtrl+Shift+L
 el:&Πλήρης Οθόνη\tCtrl+Shift+L
 es:Pantalla completa\tCtrl+Mayús+L
 et:&Täisekraanvaade\tCtrl+Shift+L
-eu:Ikusleiho-osoan\tKtrl+Shift+L
+eu:&Ikusleiho-osoan\tKtrl+Shift+L
 fa:&تمام‌صفحه\tCtrl+Shift+L
 fi:Koko &näyttö\tCtrl+Shift+L
 fr:&Plein écran\tCtrl+Shift+L
@@ -6764,6 +6764,7 @@ dk:Hurtig Internet Visning
 el:Γρήγορη Διαδικτυακή Προβολή
 es:Visualización Rápida en Web
 et:Kiire veebivaade
+eu:Web Ikuspen Azkarra
 fa:تماشای بی درنگ
 fr:Affichage Web rapide
 ga:Gréasáin dearcadh go tapa
@@ -6864,6 +6865,7 @@ dk:FictionBook-dokumenter
 el:Έγγραφα FictionBook
 es:Documentos FictionBook
 et:FictionBook-dokumendid
+eu:FikzioLiburu agiriak
 fa:اسناد کتاب تخیلی
 fr:Documents FictionBook
 he:מסמכי FictionBook
@@ -9905,7 +9907,7 @@ dk:E&genskaber\tCtrl+D
 el:&Ιδιότητες\tCtrl+D
 es:P&ropiedades...\tCtrl+D
 et:O&madused\tCtrl+D
-eu:Ezaugarriak\tKtrl+D
+eu:&Ezaugarriak\tKtrl+D
 fa:وی&ژگی‌ها\tCtrl+D
 fi:O&minaisuudet\tCtrl+D
 fr:&Propriétés\tCtrl+D
@@ -10021,6 +10023,7 @@ dk:PDF Optimeringer:
 el:Βελτιστοποίηση PDF
 es:Optimizaciones de PDF:
 et:PDF-i optimeerimised:
+eu:PDF Hobekuntzak:
 fa:PDF بهینه سازی
 fr:Optimisations PDF
 ga:Optimisations PDF
@@ -11046,6 +11049,7 @@ dk:Udskrift igang
 el:Εκτύπωση σε εξέλιξη
 es:Impresión en progreso.
 et:Printimine on pooleli.
+eu:Irarketa garatzen.
 fa:در حال چاپ شدن.
 fr:Impression en cours
 he:נשלח להדפסה
@@ -11085,6 +11089,7 @@ dk:Udskrift er stadig igang. Afbryd?
 el:Η εκτύπωση είναι ακόμα σε εξέλιξη. Ακύρωση και Έξοδος;
 es:Impresión aún en progreso. ¿Cancelar y salir?
 et:Printimine on pooleli. Kas katkestada ja alustada uuesti?
+eu:Irarketa oraindik garatzen ari da. Eten eta utzi?
 fa:در حال چاپ شدن. انصراف و خروج؟
 fr:Impression toujours en cours. Annuler et quitter ?
 he:הדפסה עדיין לא הסתיימה. להפסיק פעולה ולצאת?
@@ -11298,7 +11303,7 @@ dk:Om&døb... \tF2
 el:&Μετονομασία...\tF2
 es:Re&nombrar...\tF2
 et:&Nimeta ümber...\tF2
-eu:Be&rrizendatu...\tF2
+eu:&Berrizendatu...\tF2
 fa:تغییر  &نام...\tF2
 fr:Re&nommer...\tF2
 ga:Athainmnigh...\tF2
@@ -11348,7 +11353,7 @@ dk:Husk &åbnede filer
 el:Απο&μνημόνευση προσφάτων αρχείων
 es:Recordar archiv&os abiertos
 et:Jäta &avatud failid meelde
-eu:Gogoratu &irekitako agiriak
+eu:&Gogoratu irekitako agiriak
 fa:پرونده‌های &باز را به خاطر بسپار
 fi:Muista &avatut tiedostot
 fr:Se rappeler les fichiers &ouverts
@@ -12090,7 +12095,7 @@ dk:Send med &email...
 el:Α&ποστολή με E-mail...
 es:Enviar por correo electrónico
 et:Saada &e-postiga
-eu:Post@z bidali...
+eu:&Post@z bidali...
 fa:ارسال با پست ا&لکترونیکی...
 fi:Lä&hetä sähköpostilla
 fr:Envoyer par &courriel...
@@ -12327,7 +12332,7 @@ dk:Vis &sider fortløbende
 el:&Συνεχής εμφάνιση σελίδων
 es:Mostrar páginas de forma continua
 et:Näita &lehekülgi pidevana
-eu:Erakutsi Orrialdeak &Jarraian
+eu:&Erakutsi Orrialdeak Jarraian
 fa:نمایش &پیوسته‌ی صفحات
 fi:Näytä &sivut jatkuvasti
 fr:&Vue continue
@@ -12493,7 +12498,7 @@ dk:Vis &bogmærke sidepanelet når tilgængeligt
 el:Εμφάνιση &πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 es:Mostrar la barra de marcadores cuando esté disponible
 et:Näita &järjehoidjate külgriba kui võimalik
-eu:Erakutsi &lastermarka albobarra eskuragarri dagoenean
+eu:E&rakutsi lastermarka albobarra eskuragarri dagoenean
 fa:هنگامیکه نوار ن&شانه‌ها در دسترس است آن را نشان بده
 fi:Näytä &kirjanmerkit sivupalkissa, kun saatavilla
 fr:Voir la barre latérale des &signets lorsqu'elle est disponible
@@ -13135,6 +13140,7 @@ dk:Tagged PDF
 el:PDF με ετικέττα
 es:PDF Etiquetado
 et:Siltidega PDF
+eu:PDF etiketatua
 fa:نشان دار  PDF
 fr:PDF balisé
 ga:PDF formáid chlibeáilte
