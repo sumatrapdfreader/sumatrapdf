@@ -5,10 +5,6 @@
 #ifndef PdbFile_h
 #define PdbFile_h
 
-#define logf(fmt, ...) fprintf(stderr, fmt, __VA_ARGS__)
-
-void log(const char *s);
-
 DebugInfo* ReadPdbFile(const char *fileNameA);
 
 #endif

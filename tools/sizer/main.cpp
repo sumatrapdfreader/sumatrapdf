@@ -11,6 +11,7 @@
 
 #include "DebugInfo.h"
 #include "PdbFile.h"
+#include "Util.h"
 
 int main(int argc, char** argv)
 {
