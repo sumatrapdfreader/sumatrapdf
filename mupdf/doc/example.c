@@ -35,14 +35,16 @@ render(char *filename, int pagenumber, int zoom, int rotation)
 	// contains the scale and rotation. Convert zoom percentage to a
 	// scaling factor. Without scaling the resolution is 72 dpi.
 
-	fz_matrix transform = fz_scale(zoom / 100.0f, zoom / 100.0f);
-	transform = fz_concat(transform, fz_rotate(rotation));
+	fz_matrix transform;
+	fz_rotate(&transform, rotation);
+	fz_pre_scale(&transform, zoom / 100.0f, zoom / 100.0f);
 
 	// Take the page bounds and transform them by the same matrix that
 	// we will use to render the page.
 
-	fz_rect bounds = fz_bound_page(doc, page);
-	bounds = fz_transform_rect(transform, rect);
+	fz_rect bounds;
+	fz_bound_page(doc, page, &bounds);
+	fz_transform_rect(&bounds, &transform);
 
 	// Create a blank pixmap to hold the result of rendering. The
 	// pixmap bounds used here are the same as the transformed page
@@ -50,8 +52,9 @@ render(char *filename, int pagenumber, int zoom, int rotation)
 	// space has the origin at the top left corner and the x axis
 	// extends to the right and the y axis extends down.
 
-	fz_irect bbox = fz_round_rect(bounds);
-	fz_pixmap *pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb, bbox);
+	fz_irect bbox;
+	fz_round_rect(&bbox, &bounds);
+	fz_pixmap *pix = fz_new_pixmap_with_bbox(ctx, fz_device_rgb, &bbox);
 	fz_clear_pixmap_with_value(ctx, pix, 0xff);
 
 	// A page consists of a series of objects (text, line art, images,
@@ -73,7 +76,7 @@ render(char *filename, int pagenumber, int zoom, int rotation)
 	// Run the page with the transform.
 
 	fz_device *dev = fz_new_draw_device(ctx, pix);
-	fz_run_page(doc, page, dev, transform, NULL);
+	fz_run_page(doc, page, dev, &transform, NULL);
 	fz_free_device(dev);
 
 	// Save the pixmap to a file.

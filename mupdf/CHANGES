@@ -1,0 +1,49 @@
+List of changes on master since MuPDF 1.1
+
+ * Important API changes:
+    * fz_bbox is now fz_irect.
+    * APIs (including fz_device) now pass fz_rect/fz_matrix by reference.
+    * fz_device API is now more consistent with regards to use of
+      fz_rect rather than fz_bbox.
+ * Add support for Javascript and forms handling.
+ * Fix many SEGVs with out of spec files. Many thanks to Mateusz "j00ru"
+   Jurczyk and Gynvael Coldwind of the Google Security team, zeniko,
+   Sebastian Rasmussen and all other contributors.
+ * Add fz_open_document_with_stream to allow non-file based operation.
+ * Move to using git submodules for third party libraries.
+ * Much enhanced Android application. Now on Google Play!
+ * Oversized and stroke text clipping implemented.
+ * Change shadings to decompose at render times; massive memory savings.
+ * Renamed 'mubusy' to 'mutool'.
+ * PDF 1.7 Extension Level 8 encryption implemented.
+ * Added consts to various parts of the API to help C++ interworking.
+ * Prototype transition support.
+ * Text searching API moved to fitz.
+ * Highlight and copy text selections.
+ * Performance enhancements for color conversion and fax decompression.
+ * ARM optimisations for color conversion and bitmap scaling.
+ * Bitmap subsampling stage introduced, with ARM optimisations.
+ * Type 3 fonts; glyphs are now handled as display lists.
+ * Scan converter performance improvements.
+ * Various rendering fixes.
+
+
+List of changes on master since MuPDF 1.0
+
+ * Rendering bugs fixed (text clipping, stroked text etc).
+ * Better handling of 'large' (uncachable) glyphs.
+ * Added a delete button to the library view on the iOS port.
+ * Minor speed optimisations.
+ * Shading bug fixes.
+ * Move to using dynamically allocated parsing buffers (more resilient).
+ * Support for UserUnits.
+ * Fix bugs with image predictors (including with 16 bit images).
+ * More resilient to out of spec files.
+ * Extract pdf writing capability into the library from pdfclean, and
+   expand on it to allow for linearisation. Bug fixes in the garbage
+   collection of unused objects.
+ * Improve pdf writing recognition of images.
+ * Improved font matching.
+ * Start to move away from macros to inline functions (helpful for
+   applications requiring certification).
+ * Many bugs fixed.

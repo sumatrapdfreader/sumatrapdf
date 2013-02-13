@@ -21,9 +21,8 @@ supporting multi-threaded operation. In the absence of a thread library
 it will run single-threaded, but by adding one significant benefits in
 rendering speed on multi-core platforms can be obtained.
 
-We don't support interactive features such as form filling, javascript and
-transitions, but such features can be added on by integrators if they so
-desire.
+Interactive features such as form filling, javascript and transitions
+are in development and partially supported by the Android application.
 
 LICENSE
 
@@ -46,18 +45,19 @@ For commercial licensing please contact sales@artifex.com.
 COMPILING
 
 If you are compiling from source you will need several third party libraries:
-freetype2, jbig2dec, libjpeg, openjpeg, and zlib. We have prepared a package
-(mupdf-thirdparty.zip) that you can unzip in the mupdf source tree if you don't
-have them installed on your system.
-
-You must unpack mupdf-thirdparty.zip to build using the Visual Studio or Xcode
-projects, or the example android makefiles.
+freetype2, jbig2dec, libjpeg, openjpeg, and zlib. These libraries are contained
+in the source archive. If you are using git, they are included as git
+submodules.
 
 DOWNLOAD
 
 The latest development source is available directly from the git repository:
 
 	git clone http://mupdf.com/repos/mupdf.git
+
+In the mupdf directory, update the third party libraries:
+
+	git submodule update --init
 
 INSTALLING (UNIX)
 
