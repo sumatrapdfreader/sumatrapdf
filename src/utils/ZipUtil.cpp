@@ -12,7 +12,7 @@
 #include <iowin32s.h>
 #include <zip.h>
 
-ZipFile::ZipFile(const WCHAR *path, Allocator *allocator) :
+ZipFile::ZipFile(const WCHAR *path, ZipMethod method, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator), filepos(0, allocator),
     allocator(allocator), commentLen(0)
 {
@@ -20,10 +20,10 @@ ZipFile::ZipFile(const WCHAR *path, Allocator *allocator) :
     fill_win32_filefunc64(&ffunc);
     uf = unzOpen2_64(path, &ffunc);
     if (uf)
-        ExtractFilenames();
+        ExtractFilenames(method);
 }
 
-ZipFile::ZipFile(IStream *stream, Allocator *allocator) :
+ZipFile::ZipFile(IStream *stream, ZipMethod method, Allocator *allocator) :
     filenames(0, allocator), fileinfo(0, allocator), filepos(0, allocator),
     allocator(allocator), commentLen(0)
 {
@@ -31,7 +31,7 @@ ZipFile::ZipFile(IStream *stream, Allocator *allocator) :
     fill_win32s_filefunc64(&ffunc);
     uf = unzOpen2_64(stream, &ffunc);
     if (uf)
-        ExtractFilenames();
+        ExtractFilenames(method);
 }
 
 ZipFile::~ZipFile()
@@ -46,7 +46,7 @@ ZipFile::~ZipFile()
 
 #define INVALID_ZIP_FILE_POS ((ZPOS64_T)-1)
 
-void ZipFile::ExtractFilenames()
+void ZipFile::ExtractFilenames(ZipMethod method)
 {
     if (!uf)
         return;
@@ -61,7 +61,10 @@ void ZipFile::ExtractFilenames()
         unz_file_info64 finfo;
         char fileName[MAX_PATH];
         err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
-        if (err == UNZ_OK) {
+        // some file format specifications only allow Deflate as compression method (e.g. XPS and EPUB)
+        bool isSupported = Zip_Any == method || Zip_None == finfo.compression_method ||
+                                                method == finfo.compression_method;
+        if (err == UNZ_OK && isSupported) {
             WCHAR fileNameT[MAX_PATH];
             UINT cp = (finfo.flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
             str::conv::FromCodePageBuf(fileNameT, dimof(fileNameT), fileName, cp);

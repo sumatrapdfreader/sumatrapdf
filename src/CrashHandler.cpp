@@ -183,7 +183,7 @@ static bool DeleteSymbolsIfExist()
 static bool UnpackStaticSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
 {
     lf(L"UnpackStaticSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
+    ZipFile archive(pdbZipPath, Zip_Any, gCrashHandlerAllocator);
     if (!archive.UnzipFile(L"SumatraPDF.pdb", symDir)) {
         plog("Failed to unzip SumatraPDF.pdb");
         return false;
@@ -195,7 +195,7 @@ static bool UnpackStaticSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
 static bool UnpackLibSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
 {
     lf(L"UnpackLibSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
+    ZipFile archive(pdbZipPath, Zip_Any, gCrashHandlerAllocator);
     if (!archive.UnzipFile(L"libmupdf.pdb", symDir)) {
         plog("Failed to unzip libmupdf.pdb");
         return false;
@@ -211,7 +211,7 @@ static bool UnpackLibSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
 static bool UnpackInstallerSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
 {
     lf(L"UnpackInstallerSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    ZipFile archive(pdbZipPath, gCrashHandlerAllocator);
+    ZipFile archive(pdbZipPath, Zip_Any, gCrashHandlerAllocator);
     if (!archive.UnzipFile(L"Installer.pdb", symDir)) {
         plog("Failed to unzip Installer.pdb");
         return false;

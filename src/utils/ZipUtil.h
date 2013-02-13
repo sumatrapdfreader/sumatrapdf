@@ -6,6 +6,8 @@
 
 #include <unzip.h>
 
+enum ZipMethod { Zip_Any=-1, Zip_None=0, Zip_Deflate=8, Zip_Deflate64=9, Zip_Bzip=12 };
+
 class ZipFile {
     unzFile uf;
     Allocator *allocator;
@@ -14,9 +16,11 @@ class ZipFile {
     Vec<unz64_file_pos> filepos;
     uLong commentLen;
 
+    void ExtractFilenames(ZipMethod method=Zip_Any);
+
 public:
-    ZipFile(const WCHAR *path, Allocator *allocator=NULL);
-    ZipFile(IStream *stream, Allocator *allocator=NULL);
+    ZipFile(const WCHAR *path, ZipMethod method=Zip_Any, Allocator *allocator=NULL);
+    ZipFile(IStream *stream, ZipMethod method=Zip_Any, Allocator *allocator=NULL);
     ~ZipFile();
 
     size_t GetFileCount() const;
@@ -36,9 +40,6 @@ public:
     char *GetComment(size_t *len=NULL);
 
     bool UnzipFile(const WCHAR *filename, const WCHAR *dir, const WCHAR *unzippedName=NULL);
-
-protected:
-    void ExtractFilenames();
 };
 
 class ZipCreatorData;

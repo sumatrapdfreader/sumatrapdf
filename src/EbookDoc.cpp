@@ -165,10 +165,12 @@ const char *EPUB_OPF_NS = "http://www.idpf.org/2007/opf";
 const char *EPUB_NCX_NS = "http://www.daisy.org/z3986/2005/ncx/";
 
 EpubDoc::EpubDoc(const WCHAR *fileName) :
-    zip(fileName), fileName(str::Dup(fileName)), isNcxToc(false), isRtlDoc(false) { }
+    zip(fileName, Zip_Deflate), fileName(str::Dup(fileName)),
+    isNcxToc(false), isRtlDoc(false) { }
 
 EpubDoc::EpubDoc(IStream *stream) :
-    zip(stream), fileName(NULL), isNcxToc(false), isRtlDoc(false) { }
+    zip(stream, Zip_Deflate), fileName(NULL),
+    isNcxToc(false), isRtlDoc(false) { }
 
 EpubDoc::~EpubDoc()
 {
@@ -521,7 +523,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
 bool EpubDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        ZipFile zip(fileName);
+        ZipFile zip(fileName, Zip_Deflate);
         ScopedMem<char> mimetype(zip.GetFileData(L"mimetype"));
         if (!mimetype)
             return false;

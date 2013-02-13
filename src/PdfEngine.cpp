@@ -4216,7 +4216,7 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo)
 bool XpsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        ZipFile zip(fileName);
+        ZipFile zip(fileName, Zip_Deflate);
         return zip.GetFileIndex(L"_rels/.rels") != (size_t)-1 ||
                zip.GetFileIndex(L"_rels/.rels/[0].piece") != (size_t)-1 ||
                zip.GetFileIndex(L"_rels/.rels/[0].last.piece") != (size_t)-1;

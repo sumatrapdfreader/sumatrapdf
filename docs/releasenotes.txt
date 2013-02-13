@@ -9,9 +9,9 @@ Next version:
 * "Go To Page" for ebook format
 * fixed paragraph indentation missing for EPUB documents
 * new key bindings:
- * Ctrl-Up   : page up
- * Ctrl-Down : page down
-* support Deflate64 in zip files
+  * Ctrl-Up   : page up
+  * Ctrl-Down : page down
+* support Deflate64 in Comic Book (CBZ) files
 
 2.2.1 (2013-01-12):
 
