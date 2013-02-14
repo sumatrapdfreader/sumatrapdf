@@ -4,7 +4,12 @@ and optionally uploads it to s3.
 """
 
 import os, os.path, shutil, sys, time, re
-from util import *
+from util import test_for_flag, s3List, s3Delete, run_cmd_throw
+from util import verify_started_in_right_directory, parse_svninfo_out, log
+from util import extract_sumatra_version, verify_s3_doesnt_exist, zip_file
+from util import load_config, build_installer_data, verify_path_exists
+from util import s3UploadFilePublic, s3UploadDataPublic
+
 import apptransul, apptransdl
 
 g_new_translation_system = True
@@ -160,7 +165,7 @@ def main():
   cert_path = os.path.join("scripts", "cert.pfx")
   if upload:
     map(verify_s3_doesnt_exist, s3_files)
-    util.verify_path_exists(cert_path)
+    verify_path_exists(cert_path)
     conf = load_config()
     cert_pwd = conf.GetCertPwdMustExist()
 

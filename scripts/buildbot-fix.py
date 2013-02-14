@@ -6,7 +6,7 @@
 # they can be re-generated
 
 import sys, os, os.path
-from util import *
+from util import s3List, file_remove_try_hard, s3Delete, verify_path_exists, run_cmd_throw
 from buildbot import get_stats_cache_dir
 from buildbot import verify_started_in_right_directory
 

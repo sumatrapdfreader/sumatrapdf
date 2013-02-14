@@ -1,5 +1,5 @@
 import os.path, re, simplejson
-from util import *
+from util import load_config, s3UploadDataPublic, uniquify
 from extract_strings import load_strings_file, untranslated_count_for_lang
 from extract_strings import extract_strings_from_c_files, get_missing_for_language
 from extract_strings import dump_missing_per_language, write_out_strings_files
