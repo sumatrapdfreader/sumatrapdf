@@ -155,8 +155,10 @@ jbig2_sd_count_referred(Jbig2Ctx *ctx, Jbig2Segment *segment)
 
     for (index = 0; index < segment->referred_to_segment_count; index++) {
         rsegment = jbig2_find_segment(ctx, segment->referred_to_segments[index]);
-        /* SumatraPDF: don't include empty segments */
-        if (rsegment && ((rsegment->flags & 63) == 0) && rsegment->result) n_dicts++;
+        if (rsegment && ((rsegment->flags & 63) == 0) &&
+            rsegment->result &&
+            ((*((Jbig2SymbolDict *)rsegment->result)->glyphs) != NULL))
+            n_dicts++;
     }
 
     return (n_dicts);
@@ -182,8 +184,8 @@ jbig2_sd_list_referred(Jbig2Ctx *ctx, Jbig2Segment *segment)
 
     for (index = 0; index < segment->referred_to_segment_count; index++) {
         rsegment = jbig2_find_segment(ctx, segment->referred_to_segments[index]);
-        /* SumatraPDF: don't include empty segments */
-        if (rsegment && ((rsegment->flags & 63) == 0) && rsegment->result) {
+        if (rsegment && ((rsegment->flags & 63) == 0) && rsegment->result &&
+            ((*((Jbig2SymbolDict *)rsegment->result)->glyphs) != NULL)) {
             /* add this referred to symbol dictionary */
             dicts[dindex++] = (Jbig2SymbolDict *)rsegment->result;
         }
@@ -192,7 +194,7 @@ jbig2_sd_list_referred(Jbig2Ctx *ctx, Jbig2Segment *segment)
     if (dindex != n_dicts) {
         /* should never happen */
         jbig2_error(ctx, JBIG2_SEVERITY_FATAL, segment->number,
-            "counted %d symbol dictionaries but build a list with %d.\n",
+            "counted %d symbol dictionaries but built a list with %d.\n",
             n_dicts, dindex);
     }
 
@@ -299,7 +301,7 @@ jbig2_decode_symbol_dict(Jbig2Ctx *ctx,
       }
       if (params->SDREFAGG) {
           int64_t tmp = params->SDNUMINSYMS + params->SDNUMNEWSYMS;
-          for (SBSYMCODELEN = 0; (int64_t)(1 << SBSYMCODELEN) < tmp; SBSYMCODELEN++);
+          for (SBSYMCODELEN = 0; ((int64_t)1 << SBSYMCODELEN) < tmp; SBSYMCODELEN++);
           IAID = jbig2_arith_iaid_ctx_new(ctx, SBSYMCODELEN);
           IARDX = jbig2_arith_int_ctx_new(ctx);
           IARDY = jbig2_arith_int_ctx_new(ctx);
