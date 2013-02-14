@@ -5,6 +5,9 @@
 #ifndef PdbFile_h
 #define PdbFile_h
 
-DebugInfo* ReadPdbFile(const char *fileNameA);
+struct ProcessFlags {
+};
+
+void ProcessPdbFile(const char *fileNameA, ProcessFlags *flags);
 
 #endif

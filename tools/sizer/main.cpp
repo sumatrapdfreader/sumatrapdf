@@ -6,20 +6,12 @@
 #include "Dict.h"
 #include "Dia2Subset.h"
 
-#include <vector>
-#include <map>
-#include <cstdio>
-#include <ctime>
-
 #include "Util.h"
 
-#include "DebugInfo.h"
 #include "PdbFile.h"
 
 int main(int argc, char** argv)
 {
-    DebugInfo * di;
-
     ScopedCom comInitializer;
 
     if (argc < 2) {
@@ -27,54 +19,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    fprintf( stderr, "Reading debug info file %s ...\n", argv[1] );
-    di = ReadPdbFile(argv[1]);
-    if (!di) {
-        log("ERROR reading file via PDB\n");
-        return 1;
-    }
-    log("\nProcessing info...\n");
-    str::Str<char> report;
-    di->AddTypeSummary(report);
-
-#if 0
-    di->FinishedReading();
-    di->StartAnalyze();
-    di->FinishAnalyze();
-
-    log("Generating report...\n");
-    std::string report = di->WriteReport();
-    log("Printing...\n");
-#endif
-    puts(report.Get());
-
-#if 0
-    DebugInfo info;
-
-    clock_t time1 = clock();
-
-    PDBFileReader pdb;
-    fprintf( stderr, "Reading debug info file %s ...\n", argv[1] );
-    bool pdbok = pdb.ReadDebugInfo( argv[1], info );
-    if( !pdbok ) {
-        log("ERROR reading file via PDB\n");
-        return 1;
-    }
-    log("\nProcessing info...\n");
-    info.FinishedReading();
-    info.StartAnalyze();
-    info.FinishAnalyze();
-
-    log("Generating report...\n");
-    std::string report = info.WriteReport();
-
-    clock_t time2 = clock();
-    float secs = float(time2-time1) / CLOCKS_PER_SEC;
-
-    log("Printing...\n");
-    puts( report.c_str() );
-    fprintf( stderr, "Done in %.2f seconds!\n", secs );
-#endif
+    const char *fileName = argv[1];
+    fprintf( stderr, "Reading debug info file %s ...\n", fileName);
+    ProcessPdbFile(fileName, NULL);
 
     return 0;
 }
