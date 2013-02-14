@@ -36,11 +36,13 @@ public:
             session->Release();
     }
 
-    IDiaSession *           session;
-    DebugInfo *             di;
-    int                     nSections;
-    int                     currSection;
-    Section *               sections;
+    str::Str<char>  strTmp;
+
+    IDiaSession *   session;
+    DebugInfo *     di;
+    int             nSections;
+    int             currSection;
+    Section *       sections;
 
     Section *   SectionFromOffset(u32 sec,u32 offs);
     void        ProcessSymbol(IDiaSymbol *symbol);
@@ -95,6 +97,29 @@ static char *BStrToString(BSTR str, char *defString = "", bool stripWhitespace =
 
     buffer[j] = 0;
     return buffer;
+}
+
+static void BStrToString2(str::Str<char>& strInOut, BSTR str, char *defString = "", bool stripWhitespace = false)
+{
+    OLECHAR c;
+    int len;
+
+    strInOut.Reset();
+    if (!str) {
+        strInOut.Append(defString);
+        return;
+    }
+
+    len = SysStringLen(str);
+    for (int i=0; i<len; i++)
+    {
+        c = str[i];
+        if (stripWhitespace && isspace(c))
+            continue;
+        if (c < 32 || c >= 128)
+            c = '?';
+        strInOut.Append((char)c);
+    }
 }
 
 static int GetBStr(BSTR str, char *defString, DebugInfo *di)
@@ -152,7 +177,8 @@ void PdbReader::ProcessSymbol(IDiaSymbol *symbol)
 
     symbol->get_name(&name);
 
-    char *nameStr = BStrToString(name, "<noname>", true);
+    BStrToString2(strTmp, name, "<noname>", true);
+    const char *nameStr = strTmp.Get();
 
     di->symbols.push_back( DISymbol() );
     DISymbol *outSym = &di->symbols.back();
@@ -163,7 +189,6 @@ void PdbReader::ProcessSymbol(IDiaSymbol *symbol)
     outSym->Class = sectionType;
     outSym->NameSpNum = di->GetNameSpaceByName(nameStr);
 
-    free(nameStr);
     if (name)
         SysFreeString(name);
 }

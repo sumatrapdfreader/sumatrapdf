@@ -174,7 +174,7 @@ int DebugInfo::GetFileByName(char *objName)
 
 int DebugInfo::GetNameSpace(int name)
 {
-    for (int i=0;i<namespaces.size();i++) {
+    for (int i=0; i<namespaces.size(); i++) {
         if (namespaces[i].name == name)
             return i;
     }
@@ -187,16 +187,16 @@ int DebugInfo::GetNameSpace(int name)
     return namespaces.size() - 1;
 }
 
-int DebugInfo::GetNameSpaceByName(char *name)
+int DebugInfo::GetNameSpaceByName(const char *name)
 {
-    char *pp = name - 2;
-    char *p;
+    const char *pp = name - 2;
+    const char *p;
     int cname;
 
-    while ((p = (char *) strstr(pp+2,"::")))
+    while ((p = strstr(pp+2,"::")))
         pp = p;
 
-    while ((p = (char *) strstr(pp+1,".")))
+    while ((p = strstr(pp+1,".")))
         pp = p;
 
     if (pp != name - 2)

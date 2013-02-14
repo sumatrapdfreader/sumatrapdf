@@ -68,7 +68,7 @@ public:
     int GetFileByName(char *objName);
 
     int GetNameSpace(int name);
-    int GetNameSpaceByName(char *name);
+    int GetNameSpaceByName(const char *name);
 
     void StartAnalyze();
     void FinishAnalyze();

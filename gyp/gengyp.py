@@ -20,6 +20,9 @@ if __name__ == '__main__':
     args = [fp, "--generator-output=vs", "-G", "msvs-version=2010", "--suffix=-vs2010"]
     ret = gyp.main(args)
 
+    args = [fp, "--generator-output=vs", "-G", "msvs-version=2012", "--suffix=-vs2012"]
+    ret = gyp.main(args)
+
     #args = [fp, "--generator-output=vs", "-G", "msvs-version=2008", "--suffix=-vs2008"]
     #ret = gyp.main(args)
     sys.exit(ret)
