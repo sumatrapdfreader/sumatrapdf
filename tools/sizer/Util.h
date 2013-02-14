@@ -9,6 +9,8 @@ class IDiaDataSource;
 
 IDiaDataSource *LoadDia();
 
+const char* BStrToString(str::Str<char>& strInOut, BSTR str, char *defString = "", bool stripWhitespace = false);
+
 class StringInterner {
     dict::MapStrToInt   strToInt;
     Vec<const char *>   intToStr;

@@ -29,15 +29,15 @@ struct DISymNameSp // Namespace
     u32        dataSize;
 };
 
-struct DISymbol
+struct DiaSymbol
 {
-    int     name;
-    int     mangledName;
-    int     NameSpNum;
-    int     objFileNum;
-    u32     VA;
-    u32     Size;
-    int     Class;
+    int         name;
+    int         mangledName;
+    int         nameSpNum;
+    int         objFileNum;
+    u32         va;
+    u32         size;
+    int         klass;
 };
 
 struct TemplateSymbol
@@ -50,29 +50,41 @@ struct TemplateSymbol
 class DebugInfo
 {
     StringInterner          strInterner;
-    u32                     CountSizeInClass(int type) const;
+    PoolAllocator           allocator;
+
+    u32                     CountSizeInClass(int type);
 
 public:
-    std::vector<DISymbol>           symbols;
+    Vec<DiaSymbol*>                 symbols;
+
     std::vector<TemplateSymbol>     templates;
     std::vector<DISymFile>          files;
     std::vector<DISymNameSp>        namespaces;
+
+    int                             symCounts[SymTagMax];
+
+    DebugInfo();
 
     // only use those before reading is finished!!
     int InternString(const char *s) { return strInterner.Intern(s); }
     const char* GetInternedString(int n) const { return strInterner.GetByIndex(n); }
 
+    DiaSymbol * AllocDiaSymbol() { return allocator.AllocStruct<DiaSymbol>(); }
+
+    void AddTypeSummary(str::Str<char>& report);
+
     void FinishedReading();
 
     int GetFile(int fileName);
-    int GetFileByName(char *objName);
+    int GetFileByName(const char *objName);
 
     int GetNameSpace(int name);
     int GetNameSpaceByName(const char *name);
 
     void StartAnalyze();
+
     void FinishAnalyze();
-    bool FindSymbol(u32 va, DISymbol **sym);
+    bool FindSymbol(u32 va, DiaSymbol **sym);
 
     std::string WriteReport();
 };

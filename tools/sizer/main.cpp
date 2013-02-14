@@ -4,6 +4,7 @@
 
 #include "BaseUtil.h"
 #include "Dict.h"
+#include "Dia2Subset.h"
 
 #include <vector>
 #include <map>
@@ -33,6 +34,10 @@ int main(int argc, char** argv)
         return 1;
     }
     log("\nProcessing info...\n");
+    str::Str<char> report;
+    di->AddTypeSummary(report);
+
+#if 0
     di->FinishedReading();
     di->StartAnalyze();
     di->FinishAnalyze();
@@ -40,7 +45,8 @@ int main(int argc, char** argv)
     log("Generating report...\n");
     std::string report = di->WriteReport();
     log("Printing...\n");
-    puts(report.c_str());
+#endif
+    puts(report.Get());
 
 #if 0
     DebugInfo info;

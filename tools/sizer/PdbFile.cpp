@@ -40,6 +40,7 @@ public:
 
     IDiaSession *   session;
     DebugInfo *     di;
+
     int             nSections;
     int             currSection;
     Section *       sections;
@@ -78,74 +79,27 @@ Section *PdbReader::SectionFromOffset(u32 sec,u32 offs)
     return 0;
 }
 
-static char *BStrToString(BSTR str, char *defString = "", bool stripWhitespace = false )
-{
-    if (!str)
-        return str::Dup(defString);
-
-    int len = SysStringLen(str);
-    char *buffer = (char*)malloc(len+1);
-
-    int j = 0;
-    for (int i=0; i<len; i++)
-    {
-        if (stripWhitespace && isspace(str[i]))
-            continue;
-        buffer[j] = (str[i] >= 32 && str[i] < 128) ? str[i] : '?';
-        ++j;
-    }
-
-    buffer[j] = 0;
-    return buffer;
-}
-
-static void BStrToString2(str::Str<char>& strInOut, BSTR str, char *defString = "", bool stripWhitespace = false)
-{
-    OLECHAR c;
-    int len;
-
-    strInOut.Reset();
-    if (!str) {
-        strInOut.Append(defString);
-        return;
-    }
-
-    len = SysStringLen(str);
-    for (int i=0; i<len; i++)
-    {
-        c = str[i];
-        if (stripWhitespace && isspace(c))
-            continue;
-        if (c < 32 || c >= 128)
-            c = '?';
-        strInOut.Append((char)c);
-    }
-}
-
-static int GetBStr(BSTR str, char *defString, DebugInfo *di)
-{
-    char *normalStr = BStrToString(str);
-    int result = di->InternString(normalStr);
-    free(normalStr);
-    return result;
-}
-
 void PdbReader::ProcessSymbol(IDiaSymbol *symbol)
 {
     // print a dot for each 1000 symbols processed
     static int counter = 0;
     ++counter;
     if (counter == 1000) {
-        fputc( '.', stderr );
+        fputc('.', stderr);
         counter = 0;
     }
 
-    DWORD section,offset,rva;
+    DWORD section, offset, rva;
+    DWORD dwTag;
     enum SymTagEnum tag;
     ULONGLONG length = 0;
     BSTR name = 0, srcFileName = 0;
 
-    symbol->get_symTag((DWORD *) &tag);
+    symbol->get_symTag(&dwTag);
+    tag = (enum SymTagEnum)dwTag;
+    if (dwTag < SymTagMax)
+        di->symCounts[dwTag]++;
+
     symbol->get_relativeVirtualAddress(&rva);
     symbol->get_length(&length);
     symbol->get_addressSection(&section);
@@ -177,17 +131,16 @@ void PdbReader::ProcessSymbol(IDiaSymbol *symbol)
 
     symbol->get_name(&name);
 
-    BStrToString2(strTmp, name, "<noname>", true);
-    const char *nameStr = strTmp.Get();
+    const char *nameStr = BStrToString(strTmp, name, "<noname>", true);
 
-    di->symbols.push_back( DISymbol() );
-    DISymbol *outSym = &di->symbols.back();
-    outSym->name = outSym->mangledName = di->InternString(nameStr);
-    outSym->objFileNum = objFile;
-    outSym->VA = rva;
-    outSym->Size = (u32) length;
-    outSym->Class = sectionType;
-    outSym->NameSpNum = di->GetNameSpaceByName(nameStr);
+    DiaSymbol *sym = di->AllocDiaSymbol();
+    sym->name = sym->mangledName = di->InternString(nameStr);
+    sym->objFileNum = objFile;
+    sym->va = rva;
+    sym->size = (u32) length;
+    sym->klass = sectionType;
+    sym->nameSpNum = di->GetNameSpaceByName(nameStr);
+    di->symbols.Append(sym);
 
     if (name)
         SysFreeString(name);
@@ -225,12 +178,10 @@ void PdbReader::AddSection(IDiaSectionContrib *item)
         compiland->Release();
     }
 
-    char *objFileStr = BStrToString(objFileName, "<noobjfile>");
-    s->objFile = di->GetFileByName(objFileStr);
-    free(objFileStr);
+    const char *str = BStrToString(strTmp, objFileName, "<noobjfile>");
+    s->objFile = di->GetFileByName(str);
     if (objFileName)
         SysFreeString(objFileName);
-
 }
 
 void PdbReader::ReadSectionTable()

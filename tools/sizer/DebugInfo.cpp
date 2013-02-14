@@ -4,6 +4,7 @@
 
 #include "BaseUtil.h"
 #include "Dict.h"
+#include "Dia2Subset.h"
 
 #include <vector>
 #include <string>
@@ -15,19 +16,27 @@
 
 #include "DebugInfo.h"
 
-u32 DebugInfo::CountSizeInClass(int type) const
+DebugInfo::DebugInfo()
 {
+    ZeroMemory(symCounts, sizeof(symCounts));
+}
+
+u32 DebugInfo::CountSizeInClass(int type)
+{
+    DiaSymbol **symPtr;
+    DiaSymbol *sym;
     u32 size = 0;
-    for (u32 i=0; i<symbols.size(); i++) {
-        if (symbols[i].Class == type)
-            size += symbols[i].Size;
+    for (symPtr = symbols.IterStart(); symPtr; symPtr = symbols.IterNext()) {
+        sym = *symPtr;
+        if (sym->klass == type)
+            size += sym->size;
     }
     return size;
 }
 
-bool virtAddressComp(const DISymbol &a,const DISymbol &b)
+bool virtAddressComp(const DiaSymbol &a,const DiaSymbol &b)
 {
-    return a.VA < b.VA;
+    return a.va < b.va;
 }
 
 static bool StripTemplateParams(std::string& str)
@@ -63,15 +72,70 @@ static bool StripTemplateParams(std::string& str)
     return isTemplate;
 }
 
+// must match order of enum SymTagEnum in Dia2Subset.h
+const char *g_symTypeNames[SymTagMax] = {
+    "SymTagNull",
+    "SymTagExe",
+    "SymTagCompiland",
+    "SymTagCompilandDetails",
+    "SymTagCompilandEnv",
+    "SymTagFunction",
+    "SymTagBlock",
+    "SymTagData",
+    "SymTagAnnotation",
+    "SymTagLabel",
+    "SymTagPublicSymbol",
+    "SymTagUDT",
+    "SymTagEnum",
+    "SymTagFunctionType",
+    "SymTagPointerType",
+    "SymTagArrayType",
+    "SymTagBaseType",
+    "SymTagTypedef",
+    "SymTagBaseClass",
+    "SymTagFriend",
+    "SymTagFunctionArgType",
+    "SymTagFuncDebugStart",
+    "SymTagFuncDebugEnd",
+    "SymTagUsingNamespace",
+    "SymTagVTableShape",
+    "SymTagVTable",
+    "SymTagCustom",
+    "SymTagThunk",
+    "SymTagCustomType",
+    "SymTagManagedType",
+    "SymTagDimension"
+};
+
+const char *GetSymTypeName(int i)
+{
+    if (i >= SymTagMax)
+        return "<unknown type>";
+    return g_symTypeNames[i];
+}
+
+void DebugInfo::AddTypeSummary(str::Str<char>& report)
+{
+    report.Append("Symbol type summary:\n");
+    for (int i=0; i < SymTagMax; i++) {
+        int n = symCounts[i];
+        if (0 == n)
+            continue;
+        const char *symTypeName = GetSymTypeName(i);
+        report.AppendFmt("  %s: %d\n", symTypeName, n);
+    }
+}
+
 void DebugInfo::FinishedReading()
 {
+#if 0
     // fix strings and aggregate templates
     typedef std::map<std::string, int> StringIntMap;
     StringIntMap templateToIndex;
 
-    for (int i=0; i<symbols.size(); i++)
+    for (int i=0; i<symbols.Count(); i++)
     {
-        DISymbol *sym = &symbols[i];
+        DiaSymbol *sym = symbols.At(i);
 
         std::string templateName = GetInternedString(sym->name);
         bool isTemplate = StripTemplateParams(templateName);
@@ -82,7 +146,7 @@ void DebugInfo::FinishedReading()
             if (it != templateToIndex.end())
             {
                 index = it->second;
-                templates[index].size += sym->Size;
+                templates[index].size += sym->size;
                 templates[index].count++;
             }
             else
@@ -92,12 +156,14 @@ void DebugInfo::FinishedReading()
                 TemplateSymbol tsym;
                 tsym.name = templateName;
                 tsym.count = 1;
-                tsym.size = sym->Size;
+                tsym.size = sym->size;
                 templates.push_back(tsym);
             }
         }
     }
+#endif
 
+#if 0
     // sort symbols by virtual address
     std::sort(symbols.begin(), symbols.end(), virtAddressComp);
 
@@ -141,6 +207,7 @@ void DebugInfo::FinishedReading()
     }
 
     delete[] syms;
+#endif
 }
 
 int DebugInfo::GetFile(int fileName)
@@ -158,15 +225,15 @@ int DebugInfo::GetFile(int fileName)
     return files.size() - 1;
 }
 
-int DebugInfo::GetFileByName(char *objName)
+int DebugInfo::GetFileByName(const char *objName)
 {
-    char *p;
+    const char *p;
 
     // skip path seperators
-    while ((p = (char *) strstr(objName,"\\")))
+    while ((p = strstr(objName,"\\")))
         objName = p + 1;
 
-    while ((p = (char *) strstr(objName,"/")))
+    while ((p = strstr(objName,"/")))
         objName = p + 1;
 
     return GetFile(InternString(objName));
@@ -232,51 +299,53 @@ void DebugInfo::StartAnalyze()
 
 void DebugInfo::FinishAnalyze()
 {
-    int i;
-
-    for(i=0;i<symbols.size();i++)
+    for (size_t i=0; i<symbols.Count(); i++)
     {
-        if( symbols[i].Class == DIC_CODE )
-        {
-            files[symbols[i].objFileNum].codeSize += symbols[i].Size;
-            namespaces[symbols[i].NameSpNum].codeSize += symbols[i].Size;
-        }
-        else if( symbols[i].Class == DIC_DATA )
-        {
-            files[symbols[i].objFileNum].dataSize += symbols[i].Size;
-            namespaces[symbols[i].NameSpNum].dataSize += symbols[i].Size;
+        DiaSymbol *sym = symbols.At(i);
+        u32 symSize = sym->size;
+        if (sym->klass == DIC_CODE ) {
+            files[sym->objFileNum].codeSize += symSize;
+            namespaces[sym->nameSpNum].codeSize += symSize;
+        } else if (sym->klass == DIC_DATA ) {
+            files[sym->objFileNum].dataSize += symSize;
+            namespaces[sym->nameSpNum].dataSize += symSize;
         }
     }
 }
 
-bool DebugInfo::FindSymbol(u32 VA,DISymbol **sym)
+bool DebugInfo::FindSymbol(u32 va, DiaSymbol **symOut)
 {
+    DiaSymbol *sym;
     int l,r,x;
 
     l = 0;
-    r = symbols.size();
-    while(l<r)
+    r = (int)symbols.Count();
+    while (l<r)
     {
         x = (l + r) / 2;
-
-        if(VA < symbols[x].VA)
+        sym = symbols.At(x);
+        if (va < sym->va)
             r = x; // continue in left half
-        else if(VA >= symbols[x].VA + symbols[x].Size)
+        else if (va >= sym->va + sym->size)
             l = x + 1; // continue in left half
         else
         {
-            *sym = &symbols[x]; // we found a match
+            *symOut = sym; // we found a match
             return true;
         }
     }
 
-    *sym = (l + 1 < symbols.size()) ? &symbols[l+1] : 0;
+    if (l + 1 < symbols.Count())
+        *symOut = symbols.At(l+1);
+    else
+        *symOut = 0;
+
     return false;
 }
 
-static bool symSizeComp(const DISymbol &a,const DISymbol &b)
+static bool symSizeComp(const DiaSymbol &a,const DiaSymbol &b)
 {
-    return a.Size > b.Size;
+    return a.size > b.size;
 }
 
 static bool templateSizeComp(const TemplateSymbol& a, const TemplateSymbol& b)
@@ -310,6 +379,7 @@ static void sAppendPrintF(std::string &str,const char *format,...)
 
 std::string DebugInfo::WriteReport()
 {
+#if 0
     const int kMinSymbolSize = 512;
     const int kMinTemplateSize = 512;
     const int kMinDataSize = 1024;
@@ -439,4 +509,7 @@ std::string DebugInfo::WriteReport()
         (size%1024)*100/1024);
 
     return Report;
+#else
+    return string();
+#endif
 }
