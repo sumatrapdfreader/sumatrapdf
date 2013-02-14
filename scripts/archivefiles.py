@@ -56,7 +56,7 @@ def copy_file(srcDir, dstDir, moveFiles, fileName, dstDir2):
 # TODO: if there is a .jpg|.jpeg|.opf file with the same basename
 # as fileName, copy it using the sha name as for the .mobi file
 def copy_mobi_file(srcDir, dstDir, moveFiles, fileName):
-	copy_file(srcDir, dstDir, moveFiles, f, "mobi")
+	copy_file(srcDir, dstDir, moveFiles, fileName, "mobi")
 
 def copy_files(srcDir, dstDir, moveFiles):
 	print("Copy files from %s to %s, move: %s" % (srcDir, dstDir, moveFiles))

@@ -7,7 +7,7 @@
 
 import sys, os, os.path
 from util import *
-from buildbot import get_cache_dir, get_stats_cache_dir, get_logs_cache_dir, stats_for_ver
+from buildbot import get_stats_cache_dir
 from buildbot import verify_started_in_right_directory
 
 # if True, won't actually delete files (locally or in s3)
@@ -88,8 +88,6 @@ def delete_ver(ver):
 # delete all stats.txt files cached locally and all files from s3 for
 # a given version and later
 def fix_from_ver(ver, all_vers, all_vers_s3):
-	s3Dir = "sumatrapdf/buildbot/%d/" % ver
-	s3Key = s3Dir + "stats.txt"
 	to_delete = {}
 	for v in all_vers:
 		if v >= ver:
@@ -105,7 +103,7 @@ def fix_from_ver(ver, all_vers, all_vers_s3):
 	map(delete_ver, to_delete)
 
 	src_path = os.path.join("..", "sumatrapdf_buildbot")
-	ensure_path_exists(src_path)
+	verify_path_exists(src_path)
 	os.chdir(src_path)
 
 	run_cmd_throw("svn", "update", "-r", str(ver))
@@ -120,7 +118,7 @@ def fix():
 	all_vers = [stats_txt_name_to_svn_no(f) for f in files]
 	all_vers_s3 = get_s3_vers()
 
-	s3_files = get_s3_files()
+	get_s3_files()
 	for ver in all_vers_s3:
 		if not valid_s3_ver(ver):
 			fix_from_ver(ver, all_vers, all_vers_s3)

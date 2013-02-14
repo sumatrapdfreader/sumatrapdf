@@ -1,11 +1,10 @@
-import os.path, re, shutil, struct, subprocess, sys, bz2, tempfile, hashlib, string
+import os.path, re, subprocess, sys, tempfile, hashlib, string, time
 import zipfile2 as zipfile
 
 g_config = None
 def import_boto():
-  global Key, S3Connection, bucket_lister, g_config
+  global S3Connection, bucket_lister, g_config
   try:
-    from boto.s3.key import Key
     from boto.s3.connection import S3Connection
     from boto.s3.bucketlistresultset import bucket_lister
   except:
@@ -116,7 +115,7 @@ def s3Delete(remote_path):
 def s3Exists(remote_path):
   return s3PubBucket().get_key(remote_path)
 
-def ensure_s3_doesnt_exist(remote_path):
+def verify_s3_doesnt_exist(remote_path):
   if not s3Exists(remote_path):
     return
   print("'%s' already exists in s3" % remote_path)
@@ -128,7 +127,7 @@ def file_sha1(fp):
   m.update(data)
   return m.hexdigest()
 
-def ensure_path_exists(path):
+def verify_path_exists(path):
   if not os.path.exists(path):
     print("path '%s' doesn't exist" % path)
     sys.exit(1)
@@ -295,7 +294,7 @@ def file_remove_try_hard(path):
       return
     except:
       time.sleep(1) # try to sleep to make the time for the file not be used anymore
-      print "exception: n  %s, n  %s, n  %s n  when trying to remove file %s" % (sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], filePath)
+      print "exception: n  %s, n  %s, n  %s n  when trying to remove file %s" % (sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], path)
     removeRetryCount += 1
 
 def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):

@@ -13,8 +13,7 @@ if not config.HasAwsCreds():
     print("aws creds not present in config.py")
 else:
     try:
-        import boto.s3
-        from boto.s3.key import Key
+        import boto
         g_can_upload = True
     except:
         print("You need boto library (http://code.google.com/p/boto/)")

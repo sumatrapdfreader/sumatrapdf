@@ -99,7 +99,7 @@ def sign(file_path, cert_pwd):
   curr_dir = os.getcwd()
   os.chdir(file_dir)
   run_cmd_throw("signtool.exe", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
- "/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx", "/p", cert_pwd, file_name)  
+ "/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx", "/p", cert_pwd, file_name)
   os.chdir(curr_dir)
 
 def main():
@@ -159,10 +159,8 @@ def main():
   cert_pwd = None
   cert_path = os.path.join("scripts", "cert.pfx")
   if upload:
-    map(ensure_s3_doesnt_exist, s3_files)
-    if not os.path.exists(os.path.join("scripts", "cert.pfx")):
-      print("scripts/cert.pfx missing")
-      sys.exit(1)
+    map(verify_s3_doesnt_exist, s3_files)
+    util.verify_path_exists(cert_path)
     conf = load_config()
     cert_pwd = conf.GetCertPwdMustExist()
 
@@ -218,7 +216,7 @@ def main():
   if not build_prerelease:
     exe_zip = os.path.join(obj_dir, "%s.zip" % filename_base)
     zip_file(exe_zip, exe, "SumatraPDF.exe", compress=True)
-    ensure_path_exists(exe_zip)
+    verify_path_exists(exe_zip)
     copy_to_dst_dir(exe_zip, builds_dir)
 
   if not upload: return

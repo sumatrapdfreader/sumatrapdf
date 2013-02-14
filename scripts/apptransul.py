@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from extract_strings import extract_strings_from_c_files
-import os.path, sys, string, hashlib, httplib, urllib
+import os.path, sys, string, httplib, urllib
 from util import load_config
 import buildbot
 

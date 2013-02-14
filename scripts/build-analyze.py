@@ -1,7 +1,7 @@
-import os, os.path, shutil, sys, time, re, string, datetime, json
-from util import log, run_cmd_throw, run_cmd
+import os, os.path, shutil
+from util import run_cmd
 from util import verify_started_in_right_directory
-from buildbot import extract_analyze_errors, strip_empty_lines
+from buildbot import extract_analyze_errors
 
 def sort_errors(lines, rel_path_start):
 	if len(lines) == 0: return ([], [], [])

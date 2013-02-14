@@ -6,8 +6,7 @@
 
 from extract_strings import extract_strings_from_c_files, dump_missing_per_language, load_lang_index
 from update_translations import get_untranslated_as_list, remove_incomplete_translations, gen_c_code
-import os.path, sys, string, urllib2
-from util import load_config
+import os.path, urllib2
 
 g_my_dir = os.path.dirname(__file__)
 g_strings_dir = os.path.join(g_my_dir, "..", "strings")

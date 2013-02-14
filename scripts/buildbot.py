@@ -2,7 +2,7 @@
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
-import os, os.path, shutil, sys, time, re, string, datetime, json, cPickle, cgi, traceback
+import os, os.path, shutil, sys, time, string, datetime, json, cPickle, cgi, traceback
 from util import *
 
 """
@@ -489,8 +489,8 @@ def get_cert_pwd():
 	global g_cert_pwd
 	if g_cert_pwd == None:
 		cert_path = os.path.join("scripts", "cert.pfx")
-		if not os.path.exists(os.path.join("scripts", "cert.pfx")):
-			print("scripts/cert.pfx missing")
+		if not os.path.exists(cert_path):
+			print("%s missing" % cert_path)
 			sys.exit(1)
 		conf = load_config()
 		g_cert_pwd = conf.GetCertPwdMustExist()
@@ -700,7 +700,7 @@ def main():
 	verify_started_in_right_directory()
 	# to avoid problems, we build a separate source tree, just for the buildbot
 	src_path = os.path.join("..", "sumatrapdf_buildbot")
-	ensure_path_exists(src_path)
+	verify_path_exists(src_path)
 	copy_secrets(src_path)
 	os.chdir(src_path)
 	get_cert_pwd() # early exit if problems
