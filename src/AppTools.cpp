@@ -231,7 +231,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     WriteRegStr(hkey, REG_CLASSES_APP L"\\shell", NULL, L"open");
 
-    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\"", exePath)); // "${exePath}" "%1"
+    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath)); // "${exePath}" "%1" %*
     bool ok = WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\open\\command", NULL, cmdPath);
 
     // also register for printing

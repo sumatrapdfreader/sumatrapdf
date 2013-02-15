@@ -207,7 +207,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey)
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     ScopedMem<WCHAR> iconPath(str::Join(exePath, L",1"));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\DefaultIcon", NULL, iconPath);
-    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\"", exePath));
+    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Open\\Command", NULL, cmdPath);
     ScopedMem<WCHAR> printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath));
     success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", NULL, printPath);
