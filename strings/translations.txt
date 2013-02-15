@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-7a4a70305eab5fa12de1d386cd2dc0c807e7c049
+4d3dc40db4ae407a228b1a42c2b59cd4abc84f41
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -28,7 +28,7 @@ fy-nl:&Oer
 ga:Maidir le
 gl:Arred&or de
 he:אודות
-hi:Sumatra के बारे में(&A)
+hi:Sumatra के &बारे में
 hr:&O programu...
 hu:Név&jegy
 id:&Tentang
@@ -410,6 +410,7 @@ kr:선택한 부분 복사(&C)
 ku:لەبەرگرتنەوەی دیاریکراو&
 lt:&Kopijuoti pažymėtą sritį
 mk:&Копирај селекција
+my:&Salin Pilihan
 ne:चयनको प्रति&लिपि बनाउनुहोस्
 nl:Selectie kopiëren
 no:&Kopier valgt område
@@ -582,6 +583,7 @@ fr:Seulement les pages &paires
 ga:&Leathanaigh cothromacha amháin
 gl:&Páxinas pares só
 he:עמודים זוגיים בלבד
+hi:&सम पृष्ठ केवल​
 hr:Samo &parne stranice
 hu:Csak a páros oldalak
 id:Hanya halaman gena&p
@@ -887,6 +889,7 @@ fr:&Ajuster les pages à la zone d'impression
 ga:&Oiriúnaigh leathanaigh go limistéar inchlóbhuailte
 gl:&Axustar páxinas á área imprimible
 he:הגדל עמודים עד גודל אזור ההדפסה
+hi:पृष्ठों को &छापने योग्य क्षेत्र के लिए उपयुक्त करें
 hr:Namjesti stranice do područja za ispis
 hu:Oldalméret illesztése a nyomtatható területhez
 id:&Sesuaikan halaman ke area cetakan
@@ -1576,6 +1579,7 @@ fr:Seulement les pages &impaires
 ga:&Corr-leathanaigh amháin
 gl:&Só páxinas impares
 he:עמודים אי-זוגיים בלבד
+hi:केवल &विषम पृष्ठों
 hr:Samo &neparne stranice
 hu:Csak a páratlan oldalak
 id:Hanya halaman ganji&l
@@ -1872,6 +1876,7 @@ fr:Ajouter le document à la liste
 ga:&Greamaigh an cháipéis le biorrán
 gl:&Marcar Documento
 he:רתק מסמך
+hi:दस्तावेज़ &जड़ें
 hr:&Pričvrsti dokument
 hu:Lista elejére
 id:&Pin Dokumen
@@ -2003,6 +2008,7 @@ kr:인쇄(&P)...
 ku:چاپکردن...&
 lt:&Spausdinti...
 mk:&Печати...
+my:&Cetak...
 ne:&छाप्नुहोस् ...
 nl:Afdrukken...
 no:&Skriv ut...
@@ -2352,6 +2358,7 @@ kr:다른 이름으로 저장(&S)...
 ku:پاراستن وەکو...&
 lt:Į&rašyti kaip...
 mk:&Зачувај како...
+my:&Simpan Sebagai...
 ne:ब&चत गर्नुहोस्...
 nl:Op&slaan als...
 no:&Lagre som...
@@ -2888,7 +2895,7 @@ fy-nl:&Zoom
 ga:&Formhéadú
 gl:&Zoom
 he:זום
-hi:बडा करें(&Z)
+hi:&बडा करें
 hr:&Uvećaj
 hu:&Nagyítás
 id:&Ukuran
@@ -3142,6 +3149,7 @@ kr:즐겨찾기 추가
 ku:زیادکردنی بۆ لیستی پەسەندەکان
 lt:Sukurti žymą
 mk:Додади омилен
+my:Tambah pada Kegemaran
 ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg Favoriet toe
 no:Legg til i Favoritter
@@ -3196,6 +3204,7 @@ kr:%s 페이지를 즐겨찾기에 추가
 ku:بۆ پەسەندەکان %s زیادکردنی پەڕەی
 lt:Sukurti žymą į %s puslapį
 mk:Додади страница %s во омилени
+my:Tambahkan halaman %s pada kegemaran
 ne:पृष्ठ %s लाई मनपर्नेमा थप्नुहोस्
 nl:Voeg pagina %s toe aan favorieten
 no:Legg til side %s i favoritter
@@ -3250,6 +3259,7 @@ kr:%s 페이지의 즐겨찾기 이름을 입력하세요. (옵션) :
 ku:(بۆ پەسەندەکان بەناوی (ئارەزوومەندانە %s زیادکردنی پەڕەی :
 lt:Sukurti žymą į %s puslapį, suteikiant jai šį pavadinimą (neprivalomas):
 mk:Додади страница %s во омилени со име по избор:
+my:Tambah halaman %s pada kegemaran dengan nama (pilihan):
 ne:पृष्ठ %s लाई मनपर्नेमा (ऐच्छिक) नाम सहित थप्नुहोस्
 nl:Voeg pagina %s toe aan favorieten met (optionele) naam:
 no:Legg til side %s i favoritter med (valgfritt) navn:
@@ -3304,6 +3314,7 @@ kr:즐겨찾기에 추가
 ku:زیادکردن بۆ پەسەندەکان
 lt:Sukurti žymą
 mk:Додади во омилени
+my:Tambah pada kegemaran
 ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg toe aan favorieten
 no:Legg til i favoritter
@@ -3362,6 +3373,7 @@ ku:پەرەسەندوو
 kw:Avonsyes
 lt:Kitos
 mk:Напредни
+my:Lanjutan
 ne:उन्नत
 nl:Geavanceerd
 no:Avansert
@@ -3479,6 +3491,7 @@ kr:모든 지원되는 문서
 ku:هەموو بەڵگەنامە گونجاوەکان
 lt:Visų palaikomų tipų dokumentai
 mk:Сите поддражни документи
+my:Semua dokumen yang disokong
 ne:सबै समर्थनयोग्य कागजातहरू
 nl:Alle ondersteunde documenten
 no:Alle støttede dokumenter
@@ -3600,6 +3613,7 @@ lt:Susieti su PDF failais?
 mk:Да управувам со PDF-датотеки?
 ml:capture
 mm:PDF ဖိုင်များနှင့်ဆက်စပ်ရန်
+my:Kaitkan dengan fail PDF?
 ne:PDF फाइलहरु सँग सम्बन्धन गराउने?
 nl:Associëren met PDF-bestanden?
 nn:Tilknytte PDF-filer?
@@ -3660,6 +3674,7 @@ kr:첨부: %s
 ku:%s :پاشکۆ
 lt:Priedas: %s
 mk:Прилог: %s
+my:Lampiran: %s
 ne:संलग्नहरू: %s
 nl:Bijlage: %s
 no:Vedlegg: %s
@@ -3718,6 +3733,7 @@ kr:저자:
 ku:دانەر:
 lt:Autorius:
 mk:Автор:
+my:Pengarang
 ne:लेखक
 nl:Auteur:
 no:Forfatter:
@@ -4021,6 +4037,7 @@ ka:მალსახმობები
 kr:책갈피 바로가기
 ku:نیشانەکردنی کورتە ئایکۆنەکان
 mk:Кратенки од обележувачи
+my:Pintasan Penanda
 ne:पुस्तकचिनो सर्टकटहरु
 nl:Bladwijzer maken
 no:Bokmerk snarveier
@@ -4128,6 +4145,7 @@ kr:책갈피
 ku:نیشانەکراوەکان
 lt:Žymės
 mk:Обележувачи
+my:Penanda
 ne:पुस्तकचिनो
 nl:Bladwijzers
 no:Bokmerker
@@ -4245,6 +4263,7 @@ kr:CHM 문서
 ku:CHM بەڵگەنامەکانی جۆری
 lt:CHM dokumentai
 mk:CHM-документи
+my:Dokumen CHM
 ne:CHM कागजातहरु
 nl:CHM-documenten
 no:CHM-dokumenter
@@ -4300,6 +4319,7 @@ kr:인터넷에 접속할 수 없습니다. (오류 %#x)
 ku:.(%#x ناتوانرێت پەیوەندی بکرێت بە ئینتەرنێتەوە (هەڵەی
 lt:Ryšys su internetu nutrūko (klaida %#x).
 mk:Не можам да се поврзам на Интернет (грешка %#x).
+my:Gagal menyambung ke Internet (ralat %#x).
 ne:इन्टरनेट जडान गर्न सकिएन (त्रुटि %#x).
 nl:Kan geen verbinding maken met internet (fout %#x).
 no:Kan ikke koble til Internett (feilmelding %#x).
@@ -4481,6 +4501,7 @@ ku:ناتوانرێت فرمانی گەڕانی پێچەوانە ئەنجام ب
 kw:Ny yllir dalleth arhadow gorthhwilas.  Check an linen arhadow y'n settyansow mar pleg.
 lt:Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
 mk:Не можам да започнам со обратното пребарување. Провери ја командната линија во поставувањата.
+my:Tidak boleh memulakan arahan carian songsang. Sila periksa baris arahan dalam tetapan.
 ne:आदेश पङ्‌क्ति उल्टो खोजाई सुरु गर्न सकिएन | कृपया सेटिङमा आदेश पङ्‌क्ति हेर्नुहोस |
 nl:Kan de omgekeerde zoekopdracht niet starten. Controleer de opdrachtregel in de instellingen.
 no:Kan ikke starte invertert søke kommando. Vennligst sjekk kommandolinjen i innstillingene.
@@ -4611,6 +4632,7 @@ kw:&Checkya rag versyon nowyth
 lt:Tikrinti, ar yra &naujinimų
 mk:&Провери за надградби
 mm:အမျိုးအစား သစ်စုံစမ်းရန်
+my:Semak &Kemaskini
 ne:&अद्यावधिकहरु जाँच्नुहोस्
 nl:Controleren op &updates
 nn:&Sjå etter ny versjon
@@ -4670,6 +4692,7 @@ kr:만화 책
 ku:پەرتووکی کۆمیدی
 lt:Komiksų knygelės
 mk:Стрипови
+my:Buku komik
 ne:कमिक पुस्तिका
 nl:Stripboeken
 no:Tegneserier
@@ -4721,6 +4744,7 @@ ja:互換性
 kr:호환성
 ku:گونجاو
 mk:Компатибилност
+my:Kesesuaian
 ne:मिल्दोजुल्दो
 nl:Compatibiliteit
 no:Kompatibilitet
@@ -5034,6 +5058,7 @@ ja:画像をコピー(&I)
 kr:이미지 복사(&I)
 ku:لەبەرگرتنەوەی &وێنە
 mk:Копирај &слика
+my:Salin &Imej
 ne:&छवि प्रतिलिपि बनाउनुहोस्
 nl:Afbeelding kopiëren
 no:Kopier &Bilde
@@ -5087,6 +5112,7 @@ kr:링크 주소 복사(&L)
 ku:لەبەرگرتنەوەی &ناونیشانی بەستەر
 lt:Kopijuoti &saito adresą
 mk:Копирај ја адресата на &врската
+my:Salin &Alamat Pautan
 ne:&लिङ्क ठेगानाको प्रतिलिपि बनाउनुहोस्
 nl:&Verwijzing kopiëren
 no:Kopier &lenkeadresse
@@ -5142,6 +5168,7 @@ kr:주석(설명) 복사(&M)
 ku:لەبەرگرتنەوەی لێد&وانەکان
 lt:Kopijuoti ko&mentarą
 mk:Копирај коментар
+my:Salin Ko&men
 ne:&टिप्पणीको प्रतिलिपि बनाउनुहोस्
 nl:Notitie kopiëren
 no:Kopier ko&mmentar
@@ -5250,6 +5277,7 @@ ja:コピーライト:
 kr:저작권:
 ku:مافی لەبەرگرتنەوە:
 mk:Авторско право:
+my:Hakcipta
 ne:प्रतिलिपिअधिकार:
 nl:Auteursrecht
 no:Opphavsrett:
@@ -5302,6 +5330,7 @@ kr:프린터 속성을 가져올 수 없습니다.
 ku:ناتوانرێت تایبەتمەندییەکانی چاپکەر(پرێنتەر) وەربگیرێت
 lt:Spausdintuvo savybių sužinoti nepavyko
 mk:Не можам да дојдам до својствата на печатачот
+my:Gagal mendapatkan maklumat Pencetak
 ne:मुद्रक गुणहरु प्राप्त गर्न सकिएन
 nl:Kan geen printereigenschappen verkrijgen
 no:Kunne ikke innhente skriveregenskaper
@@ -5359,6 +5388,7 @@ ku:ناتوانرێت جاپکەر ڕێکبخرێت
 kw:Ny yllys darbari pryntyer
 lt:Nepavyko prisijungti prie spausdintuvo
 mk:Не можам да го подготвам печатачот
+my:Tidak dapat memulakan pencetak
 ne:मुद्रकलाई आरम्भ गर्न सकिएन
 nl:Kan de printer niet initialiseren
 no:Kunne ikke klargjøre skriveren
@@ -5418,6 +5448,7 @@ ku:ناتوانرێت پەڕە پوختە بکرێت
 kw:Ny yllys rendra folen
 lt:Nepavyko atvaizduoti puslapio
 mk:Не можам да ја прикажам страницата
+my:Tidak dapat memuatkan halaman
 ne:पृष्ठ रेन्डर गर्न सकिएन
 nl:Kan deze pagina niet weergegeven
 no:Kunne ikke vise siden
@@ -5476,6 +5507,7 @@ kr:만든 날짜:
 ku:دروستکراو:
 lt:Sukurtas:
 mk:Создадено на:
+my:Dicipta:
 ne:सिर्जना गरिएको:
 nl:Gemaakt:
 no:Opprettet:
@@ -5532,6 +5564,7 @@ kr:현재 파일
 ku:فایلی ئێستا
 lt:Esamasis failas
 mk:Активна датотека
+my:Fail semasa
 ne:हालको फाइल
 nl:Huidig bestand
 no:Gjeldende fil
@@ -5648,6 +5681,7 @@ ku:شێوازی &سەرەکی:
 kw:&Delinyans savonek:
 lt:Numatytasis iš&dėstymas:
 mk:&Основен поглед:
+my:Default &Susunatur:
 ne:पूर्वनिर्धारित स&जावट:
 nl:Standaard opmaak:
 no:Standard sideoppsett:
@@ -5708,6 +5742,7 @@ ku:هێنانەپێشەوەی  &سەرەکی:
 kw:&Zoum savonek:
 lt:Numatytasis &mastelis
 mk:Основно &зумирање:
+my:Default &Zum:
 ne:पूर्वनिर्धारित &आकार:
 nl:Standaard &zoom:
 no:Standard&zoom:
@@ -5826,6 +5861,7 @@ kr:거부된 사용 권한:
 ku:مۆڵەتپێدانە ڕەتکراوەکان:
 lt:Nesuteikti leidimai:
 mk:Одбиени привилегии:
+my:Kebenaran Dinafikan:
 ne:अस्वीकृत अनुमतिहरु:
 nl:Niet toegestaan:
 no:Manglende tillatelser:
@@ -5884,6 +5920,7 @@ kr:DjVu 문서
 ku:DjVu بەڵگەنامەکانی
 lt:DjVu dokumentai
 mk:DjVu-документи
+my:Dokumen DjVu
 ne:DjVu कागजातहरु
 nl:DjVu-documenten
 no:DjVu-dokumenter
@@ -5940,6 +5977,7 @@ kr:문서 속성
 ku:تایبەتمەندییەکانی بەڵگەنامە
 lt:Dokumento savybės
 mk:Својства на документ
+my:Maklumat Dokumen
 ne:कागजात गुणहरू
 nl:Documenteigenschappen
 no:Dokumentegenskaper
@@ -6367,6 +6405,7 @@ kr:%s 불러오는 중 오류 발생
 ku:%s هەڵە ڕوویدا لە کردنەوەی
 lt:Nepavyko įkelti %s
 mk:Грешка при вчитување %s
+my:Ralat memuatkan %s
 ne:%s लोड त्रुटि
 nl:Fout bij het laden van %s
 no:Feil under lasting %s
@@ -6464,6 +6503,7 @@ fy-nl:Fierder\tAlt+->
 ga:Ar aghaidh\tAlt+Saighead Ar Deis
 gl:Adiante\tAlt+Right Arrow
 he:קדימה\tAlt+ ?
+hi:अग&ला\tAlt+दायाँ तीर
 hr:Naprijed\tAlt+->
 hu:Ugrás előre\tAlt+->
 id:Berikutnya\tAlt+->
@@ -6662,6 +6702,7 @@ ja:ファイル名の変更に失敗しました！
 kr:파일 이름을 바꾸지 못했습니다!
 ku:گۆڕینی ناوی فایل سەرکەوتونەبوو!
 mk:Не успеав да ја преименувам датотеката!
+my:Gagal menamakan semula fail!
 ne:नाम फेराई असफल
 nl:Naam niet kunnen wijzigen!
 no:Kunne ikke endre navn på filen!
@@ -6778,6 +6819,7 @@ ja:高速ウェブ表示
 kr:빠른 웹 보기
 ku:شێوازی پیشاندانی خێرای ماڵپەر
 mk:Брз веб-преглед
+my:Paparan Web Cepat
 ne:द्रुत वेब दृश्य
 nl:Snelle browserweergave
 no:Rask Nettvisning
@@ -6830,6 +6872,7 @@ kr:즐겨찾기
 ku:پەسەندەکان
 lt:Parankiniai
 mk:Омилени
+my:Kegemaran
 ne:मनपर्नेहरु
 nl:Favorieten
 no:Favoritter
@@ -6924,6 +6967,7 @@ ka:%s ფაილი ვერ მოიძებნა
 kr:%s 파일을 찾을 수 없습니다.
 ku:نەدۆزرایەوە %s فایلی
 mk:Датотеката %s не е најдена
+my:Fail %s tidak dijumpai
 ne:फाइल %s भेटिएन
 nl:Bestand %s niet gevonden
 no:Filen %s finnes ikke
@@ -7601,6 +7645,7 @@ fr:Ajuster au contenu
 ga:Oiriúnaigh an t-inneachar
 gl:Axustar Contido
 he:התאם לתוכן
+hi:सामग्री को अटाना
 hr:Namjesti po sadržaju
 hu:Tartalom
 id:Sesuaikan Dengan Konten
@@ -7611,6 +7656,7 @@ kr:내용에 맞춤
 ku:گونجاندنی پێکهاتە
 lt:Visas puslapio turinys
 mk:Прилагоди на содржина
+my:Muatkan Kandungan
 ne:सामग्री अटाउनुहोस्
 nl:Passend maken
 no:Tilpass innhold
@@ -7792,6 +7838,7 @@ fr:Pleine largeur, vue continue
 ga:Oiriúnaigh don leithead & taispeáin leathanaigh go leanúnach
 gl:Axustar ancho e amosar páxinas seguidas
 he:התאם לרוחב והצג העמודים ברציפות
+hi:उपयुक्त चौड़ाई के साथ पृष्ठ लगातार दिखाएँ
 hr:Namjesti po širini i prikaži stranice slijedno
 hu:Oldalszélességhez igazítás + folyamatos nézet
 id:Sesuaikan Lebar Dan Tampilkan Halaman Secara Kontinu
@@ -7802,6 +7849,7 @@ kr:지속적인 너비 맞춤과 페이지 보기
 ku:گونجاندنی فراوانی و پیشاندانی پەڕەکان بە بەردەوامی
 lt:Visas puslapio plotis, nenutrūkstama peržiūra
 mk:Прилагоди на широчина и прикажи страници непрекинато
+my:Muatkan Lebar dan Paparkan Halaman Berterusan
 ne:चौडाई अटाउनुहोस् र पृष्ठहरु निरन्तर देखाउनुहोस्
 nl:Passend in breedte en pagina's doorlopend
 no:Tilpass bredde og vis sider kontinuerlig
@@ -7857,6 +7905,7 @@ kr:한 페이지 맞춤
 ku:گونجاندنی یەک پەڕە
 lt:Visas puslapis
 mk:Прилагоди на поединечна страница
+my:Muatkan Halaman Tunggal
 ne:एकल पृष्ठ अटाउनुहोस्
 nl:Hele pagina passend maken
 no:Tilpass til enkeltside
@@ -7909,6 +7958,7 @@ ja:フォント:
 kr:글꼴:
 ku:فۆنت:
 mk:Букви:
+my:Fon:
 ne:फन्टहरू:
 nl:Lettertypen:
 no:Skrifter:
@@ -8124,6 +8174,7 @@ kr:최근에 읽은 파일
 ku:زۆرترین خوێندراوە
 lt:Dažniausiai skaitomi
 mk:Често читани
+my:Kerap Dibaca
 ne:प्रायजसो पढिएको
 nl:Vaak gelezen
 no:Ofte leste
@@ -8312,6 +8363,7 @@ kr:최근에 읽은 파일 감추기
 ku:شاردنەوەی زۆر خوێندراوەکان
 lt:Nerodyti dažniausiai skaitomų
 mk:Сокриј често читани
+my:Sembunyikan Bacaan Kerap
 ne:प्रायजसो पढिएको लुकाउनुहोस्
 nl:'Vaak gelezen' verbergen
 no:Skjult ofte leste
@@ -8368,6 +8420,7 @@ ku:بەکاربهێنە بۆ دووبارە دۆزینەوە F3 فێرکاری: 
 kw:Hynt: Devnydhya alhwedhen F3 rag daskavos
 lt:Patarimas: ieškodami kito atitikmens naudokite klavišą F3
 mk:Совет: За повторно пребарување користете F3 од тастатурата
+my:Petunjuk: Gunakan kekunci F3 untuk mencari semula
 ne:सङ्केत: पुनः फेलापार्न F3 कुञ्जी प्रयोग गर्नुहोस्
 nl:Tip: Gebruik de functietoets F3 om verder te zoeken
 no:Tips: Bruk F3 tasten for søk etter neste
@@ -8541,6 +8594,7 @@ ja:%s を読込中…
 kr:%s 파일 불러오는 중...
 ku:%s کردنەوەی فایلی ...
 mk:Ја вчитувам датотеката %s...
+my:Memuatkan fail %s...
 ne:%s फाइल लोड हुँदैछ ...
 nl:Bestand %s laden...
 no:Laster fil %s...
@@ -8917,6 +8971,7 @@ kr:수정한 날짜:
 ku:دەستکاریکراو:
 lt:Keistas:
 mk:Изменето на:
+my:Diubah:
 ne:परिमार्जित:
 nl:Aangepast:
 no:Endret:
@@ -8978,6 +9033,7 @@ ku:ئامادەیە. داگرتنی وەشانی نوێ؟ %s وەشانی نوێ
 kw:Versyon nowyth %s yw parys. Iskarga versyon nowyth?
 lt:Yra nauja %s versija. Atsiųsti naują versiją?
 mk:Нова верзија %s е достапна. Сакате да ја преземам?
+my:Versi terbaru %s tersedia. Muat turun versi terbaru?
 ne:नया संस्करण %s उपलब्ध छ | डाउनलोड गर्ने?
 nl:Nieuwe versie %s is beschikbaar. Wilt u deze downloaden?
 nn:Ny versjon (ver. %s) tilgjengeleg. Laste ned?
@@ -10331,6 +10387,7 @@ kr:%s 페이지
 ku:پەڕەی %s
 lt:%s puslapis
 mk:страница %s
+my:Halaman %s
 ne:पृष्ठ %s
 nl:Pagina %s
 no:Side %s
@@ -10626,6 +10683,7 @@ ku:تکایە چاوەڕوانبە - پوختە ئەکرێت...
 kw:Gortos, mar pleg - ow rendra...
 lt:Prašome palaukti – atvaizduojama...
 mk:Ве молам почекајте - создавам приказ...
+my:Sila tunggu - memaparkan...
 ne:कृपया पर्खनुहोस - रेन्डरिङ हुदैछ ...
 nl:Een ogenblik - weergeven...
 no:Vennligst vent - arbeider...
@@ -10857,6 +10915,7 @@ kr:인쇄
 ku:چاپکردن
 lt:Spausdinti
 mk:Печати
+my:Cetak
 ne:छाप्नुहोस्
 nl:Afdrukken
 no:Skriv ut
@@ -11061,6 +11120,7 @@ it:Stampa in corso...
 ja:印刷を実行中です。
 kr:프린트중입니다.
 ku:چاپکردن لە ئەنجامداندایە
+my:Cetakan sedang dijalankan.
 nl:Aan het printen.
 pt:Impressão em curso
 ru:Идёт печать.
@@ -11101,6 +11161,7 @@ it:La stampa è ancora in corso. Vuoi interromperla e uscire?
 ja:印刷を実行中です。中止して終了しますか？
 kr:프린트중입니다. 취소후 종료하시겠습니까?
 ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان و دەرچوون؟
+my:Cetakan sedang dilakukan. Batal dan Henti?
 nl:Nog steeds aan het printen. Annuleren en stoppen?
 pt:Impressão ainda em curso. Abortar e sair?
 ru:Печать продолжается. Отменить и выйти?
@@ -11428,6 +11489,7 @@ kr:즐겨찾기에서 제거
 ku:لابردن لە پەسەندەکاندا
 lt:Pašalinti iš parankinių
 mk:Отстрани од омилени
+my:Keluarkan daripada kegemaran
 ne:मनपर्ने बाट हटाउनुहोस्
 nl:Verwijder uit favorieten
 no:Fjern fra favoritter
@@ -11530,6 +11592,7 @@ ja:名前の変更名
 kr:바꿀 이름
 ku:گۆڕینی ناو بۆ
 mk:Преименувај во
+my:Namakan sebagai
 ne:नाम फेर्नुहोस्
 nl:Naam wijzigen in
 no:Endre Navn Til
@@ -12046,6 +12109,7 @@ fy-nl:Selektearje ynhâld mei Ctrl+linker mûsknop
 ga:Roghnaigh inneachar le Ctrl+an cnaipe luchóige ar chlé
 gl:Seleccionar contido con Ctrl+botón esquerdo do rato
 he:וכפתור עכבר שמאל Ctrl בחר תוכן עם
+hi:सामग्री का चयन करने के लिये  Ctrl +  माउस का बायाँ बटन दबाएँ
 hr:Odaberi sadržaj pomoću Ctrl+lijeva tipka miša
 hu:Jelölje ki a másolandó részt Ctrl+Bal egérgombbal
 id:Pilih konten dengan tombol Ctrl+tombol kiri mouse
@@ -12115,6 +12179,7 @@ ku:ناردن بەهۆی &پۆستی ئەلکترۆنیەوە...
 kw:Danvon der &e-bost...
 lt:Siųsti el. &paštu...
 mk:Испрати по &е-пошта...
+my:Hantar melalui &Emel...
 ne:&ई-मेल द्वारा पठाउनुहोस्...
 nl:Verzend per &e-mail...
 no:Send med e-post...
@@ -12871,6 +12936,7 @@ kr:SumatraPDF 업데이트
 ku:نوێکردنەوەی SumatraPDF
 lt:„SumatraPDF“ naujinimas
 mk:Надградување на SumatraPDF
+my:Kemaskini SumatraPDF
 ne:SumatraPDF अद्यावधिक
 nl:SumatraPDF Update
 no:SumatraPDF Oppdatering
@@ -13154,6 +13220,7 @@ ja:タグ付き PDF
 kr:태그있는 PDF
 ku:ە دیاریکراوەکان PDF
 mk:Означен PDF
+my:PDF ditanda
 ne:ट्याग गरिएको PDF
 nl:Tagged PDF
 no:Merket PDF
@@ -13208,6 +13275,7 @@ ku:بەڵگەنامە دەقییەکان
 kw:Restrennow tekst
 lt:Tekstiniai dokumentai
 mk:Текстуални документи
+my:Dokumen teks
 ne:पाठ कागजातहरु
 nl:Tekstdocumenten
 no:Tekstdokumenter
@@ -13578,6 +13646,7 @@ kr:XPS 문서
 ku:XPS بەڵگەنامەکانی
 lt:XPS dokumentai
 mk:XPS-документи
+my:Dokumen XPS
 ne:XPS कागजातहरु
 nl:XPS-documenten
 no:XPS-dokumenter
@@ -13638,6 +13707,7 @@ kw:Yma'n versyon nowyttha genes.
 lt:Jūs naudojatės naujausia programos laida.
 mk:Ја имате најновата верзија.
 mm:သင့်ဟာသည် နောက်ဆုံးထုပ်ဖြစ်၏။
+my:Anda mempunyai versi terkini.
 ne:तपाई संग अद्यावधिक संस्करण छ |
 nl:U gebruikt de meest recente versie.
 nn:Du har den siste versjonen.
@@ -13704,6 +13774,7 @@ kw:Yma versyon %s genes
 lt:Jūsų naudojama laida: %s
 mk:Ја имате верзијата %s
 mm:သင့်အမျိုးအစားသည် %s
+my:Versi anda %s
 ne:तपाई संग संस्करण %s छ
 nl:U heeft versie %s
 nn:Du har versjon %s
@@ -13765,6 +13836,7 @@ ku:نزیک خستنەوە
 kw:Zoumya
 lt:Mastelis
 mk:Зумирање
+my:Zum
 ne:आकार परिवर्तन
 nl:Zoom
 no:Zoom
