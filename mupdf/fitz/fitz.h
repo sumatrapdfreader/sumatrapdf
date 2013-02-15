@@ -23,6 +23,7 @@
 
 /* SumatraPDF: memento's license header can be read as being non-GPLv3 */
 #ifndef MEMENTO
+#define MEMENTO_H
 #define Memento_label(ptr, label) (ptr)
 #else
 #include "memento.h"
