@@ -1674,7 +1674,6 @@ fz_draw_begin_tile(fz_device *devp, const fz_rect *area, const fz_rect *view, fl
 	{
 		emergency_pop_stack(dev, state);
 	}
-
 }
 
 static void
@@ -1726,8 +1725,6 @@ fz_draw_end_tile(fz_device *devp)
 		shapectm = ctm;
 		shapectm.e = state[1].shape->x;
 		shapectm.f = state[1].shape->y;
-		/* SumatraPDF: dest and shape have the same coordinates during tiling */
-		assert(ctm.e == shapectm.e && ctm.f == shapectm.f);
 	}
 
 #ifdef DUMP_GROUP_BLENDS
@@ -1755,10 +1752,10 @@ fz_draw_end_tile(fz_device *devp)
 			fz_paint_pixmap_with_bbox(state[0].dest, state[1].dest, 255, state[0].scissor);
 			if (state[1].shape)
 			{
-				ttm = shapectm;
-				fz_pre_translate(&ttm, x * xstep, y * ystep);
-				state[1].shape->x = ttm.e;
-				state[1].shape->y = ttm.f;
+				/* SumatraPDF: dest and shape have the same coordinates during tiling */
+				assert(ctm.e == shapectm.e && ctm.f == shapectm.f);
+				state[1].shape->x = state[1].dest->x;
+				state[1].shape->y = state[1].dest->y;
 				fz_paint_pixmap_with_bbox(state[0].shape, state[1].shape, 255, state[0].scissor);
 			}
 		}

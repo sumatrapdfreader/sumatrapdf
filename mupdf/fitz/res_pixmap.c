@@ -668,23 +668,19 @@ fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 }
 
 /* SumatraPDF: Write pixmap to TGA file (with or without alpha channel) */
-static inline void tga_put_pixel(char *data, int n, FILE *fp)
+static inline void tga_put_pixel(char *data, int n, int is_bgr, FILE *fp)
 {
-	if (n >= 3)
+	if (n >= 3 && !is_bgr)
 	{
-		char buf[4];
-		buf[0] = data[2];
-		buf[1] = data[1];
-		buf[2] = data[0];
-		if (n == 4)
-			buf[3] = data[3];
-		data = buf;
+		char buf[4] = { data[2], data[1], data[0], n == 4 ? data[3] : 0 };
+		fwrite(buf, 1, n, fp);
+		return;
 	}
-	else if (n == 2)
+	if (n == 2)
 	{
-		char buf[2];
-		buf[0] = buf[1] = data[0];
-		fwrite(buf, 1, 2, fp);
+		char buf[4] = { data[0], data[0], data[0], data[1] };
+		fwrite(buf, 1, 4, fp);
+		return;
 	}
 	fwrite(data, 1, n, fp);
 }
@@ -707,10 +703,14 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 	unsigned char head[18];
 	int n = pixmap->n;
 	int d = savealpha || n == 1 ? n : n - 1;
+	int is_bgr = pixmap->colorspace == fz_device_bgr;
 	int k;
 
-	if (n != 1 && n != 2 && n != 4)
+	if (pixmap->colorspace && pixmap->colorspace != fz_device_gray &&
+		pixmap->colorspace != fz_device_rgb && pixmap->colorspace != fz_device_bgr)
+	{
 		fz_throw(ctx, "pixmap must be grayscale or rgb to write as tga");
+	}
 
 	fp = fopen(filename, "wb");
 	if (!fp)
@@ -736,7 +736,7 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 			if (j > 1)
 			{
 				putc(j - 1 + 128, fp);
-				tga_put_pixel(line + i * n, d, fp);
+				tga_put_pixel(line + i * n, d, is_bgr, fp);
 			}
 			else
 			{
@@ -745,7 +745,7 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 					j--;
 				putc(j - 1, fp);
 				for (; j > 0; j--, i++)
-					tga_put_pixel(line + i * n, d, fp);
+					tga_put_pixel(line + i * n, d, is_bgr, fp);
 			}
 		}
 	}

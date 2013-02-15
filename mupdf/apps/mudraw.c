@@ -204,6 +204,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	BITMAPINFO bmi = { 0 };
 	int bmp_data_len;
 	char *bmp_data;
+	int as_tga = !strstr(output, ".bmp");
 
 	fz_bound_page(doc, page, &bounds);
 	zoom = resolution / 72;
@@ -261,13 +262,13 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
 	bmi.bmiHeader.biWidth = w;
-	bmi.bmiHeader.biHeight = h;
+	bmi.bmiHeader.biHeight = as_tga ? -h : h;
 	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = 24;
+	bmi.bmiHeader.biBitCount = as_tga ? 32 : 24;
 	bmi.bmiHeader.biCompression = BI_RGB;
 
-	bmp_data_len = ((w * 3 + 3) / 4) * 4 * h;
-	bmp_data = fz_malloc(ctx, bmp_data_len + 1);
+	bmp_data_len = as_tga ? w * h * 4 : ((w * 3 + 3) / 4) * 4 * h;
+	bmp_data = fz_malloc(ctx, bmp_data_len);
 	if (!GetDIBits(dc, hbmp, 0, h, bmp_data, &bmi, DIB_RGB_COLORS))
 		fz_throw(ctx, "cannot draw page %d in PDF file '%s'", pagenum, filename);
 
@@ -285,7 +286,13 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 		if (!f)
 			fz_throw(ctx, "could not create raster file '%s'", buf);
 
-		if (strstr(output, ".bmp"))
+		if (as_tga)
+		{
+			fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr, w, h, bmp_data);
+			fz_write_tga(ctx, pix, buf, 0);
+			fz_drop_pixmap(ctx, pix);
+		}
+		else
 		{
 			BITMAPFILEHEADER bmpfh = { 0 };
 			static const int one = 1;
@@ -300,48 +307,13 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 			fwrite(&bmi, sizeof(bmi), 1, f);
 			fwrite(bmp_data, 1, bmp_data_len, f);
 		}
-		else
-		{
-			unsigned short width = w, height = h, k;
-
-			fwrite("\0\0\x0A\0\0\0\0\0\0\0\0\0", 1, 12, f);
-			putc(width & 0xFF, f); putc((width >> 8) & 0xFF, f);
-			putc(height & 0xFF, f); putc((height >> 8) & 0xFF, f);
-			fwrite("\x18\0", 1, 2, f);
-
-			for (k = 0; k < height; k++)
-			{
-				int i, j;
-				char *line = bmp_data + bmp_data_len / h * k;
-				for (i = 0, j = 1; i < width; i += j, j = 1)
-				{
-#define memeq3(a, b) (*(WORD *)(a) == *(WORD *)(b) && (a)[2] == (b)[2])
-					for (; i + j < width && j < 128 && memeq3(line + i * 3, line + (i + j) * 3); j++);
-					if (j > 1)
-					{
-						putc(j - 1 + 128, f);
-						fwrite(line + i * 3, 1, 3, f);
-					}
-					else
-					{
-						for (; i + j < width && j <= 128 && !memeq3(line + (i + j - 1) * 3, line + (i + j) * 3) != 0; j++);
-						if (i + j < width || j > 128)
-							j--;
-						putc(j - 1, f);
-						fwrite(line + i * 3, 1, j * 3, f);
-					}
-#undef memeq3
-				}
-			}
-			fwrite("\0\0\0\0\0\0\0\0TRUEVISION-XFILE.\0", 1, 26, f);
-		}
 
 		fclose(f);
 	}
 
 	if (showmd5)
 	{
-		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_rgb, bmp_data_len / 4 / h, h, bmp_data);
+		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr, bmp_data_len / 4 / h, h, bmp_data);
 		unsigned char digest[16];
 		int i;
 
