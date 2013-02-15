@@ -74,10 +74,15 @@ bool SkipNonWs(const char* & s, const char *end)
     return start != s;
 }
 
-static int IsNameChar(char c)
+static bool IsNameChar(char c)
 {
     return c == '.' || c == '-' || c == '_' || c == ':' ||
            str::IsDigit(c) || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+}
+
+static bool IsValidTagStart(char c)
+{
+    return c == '/' || c == '!' || c == '?' || IsNameChar(c);
 }
 
 // skip all html tag or attribute characters
@@ -408,8 +413,8 @@ HtmlToken *HtmlPullParser::Next()
 
 Next:
     const char *start = currPos;
-    if (*currPos != '<') {
-        // this must text between tags
+    if (*currPos != '<' || currPos + 1 < end && !IsValidTagStart(*++currPos)) {
+        // this must be text between tags
         if (!SkipUntil(currPos, end, '<') && IsSpaceOnly(start, currPos)) {
             // ignore whitespace after the last tag
             return NULL;
@@ -422,7 +427,7 @@ Next:
     ++start;
 
     // skip <? and <! (processing instructions and comments)
-    if (('?' == *start) || ('!' == *start)) {
+    if (start < end && (('?' == *start) || ('!' == *start))) {
         if ('!' == *start && start + 2 < end && str::StartsWith(start, "!--")) {
             currPos = start + 2;
             if (!SkipUntil(currPos, end, "-->")) {
@@ -446,7 +451,7 @@ Next:
 
     CrashIf('>' != *currPos);
     if (currPos == start || currPos == start + 1 && *start == '/') {
-        // skip empty tags (<> and </>), because we're lenient
+        // skip empty tags (</>), because we're lenient
         ++currPos;
         goto Next;
     }

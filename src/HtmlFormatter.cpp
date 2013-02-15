@@ -1214,11 +1214,12 @@ void HtmlFormatter::HandleText(HtmlToken *t)
     }
 }
 
-// we ignore the content of <head>, <style> and <title> tags
+// we ignore the content of <head>, <script>, <style> and <title> tags
 bool HtmlFormatter::IgnoreText()
 {
     for (HtmlTag *tag = htmlParser->tagNesting.IterStart(); tag; tag = htmlParser->tagNesting.IterNext()) {
         if ((Tag_Head == *tag) ||
+            (Tag_Script == *tag) ||
             (Tag_Style == *tag) ||
             (Tag_Title == *tag)) {
                 return true;

@@ -115,6 +115,9 @@ HtmlTag FindHtmlTag(const char *name, size_t len)
         break;
     case CS3('p','r','e'): return Tag_Pre;
     case CS1('s'): return Tag_S;
+    case CS4('s','c','r','i'):
+        if (6 == len && CS2('p','t') == STR2i(name + 4)) return Tag_Script;
+        break;
     case CS4('s','e','c','t'):
         if (7 == len && CS3('i','o','n') == STR3i(name + 4)) return Tag_Section;
         break;

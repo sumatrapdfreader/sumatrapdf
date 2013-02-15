@@ -8,6 +8,10 @@
 
 namespace unittests {
 
+static inline bool StrEqNIx(const char *s, size_t len, const char *s2) {
+    return str::Len(s2) == len && str::StartsWithI(s, s2);
+}
+
 static void Test00(const char *s, HtmlToken::TokenType expectedType) {
     HtmlPullParser parser(s, str::Len(s));
     HtmlToken *t = parser.Next();
@@ -105,7 +109,23 @@ static void Test02()
     HtmlToken *t = parser.Next();
     assert(t && t->IsTag() && t->IsStartTag() && Tag_P == t->tag);
     t = parser.Next();
-    assert(t && t->IsText() && str::Eq(t->s, "Last paragraph"));
+    assert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "Last paragraph"));
+}
+
+static void Test03()
+{
+    const char *s = "a < b > c <> d <";
+    HtmlPullParser parser(s, str::Len(s));
+    HtmlToken *t = parser.Next();
+    assert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "a "));
+    t = parser.Next();
+    assert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "< b > c "));
+    t = parser.Next();
+    assert(t && t->IsText() && StrEqNIx(t->s, t->sLen, "<> d "));
+    t = parser.Next();
+    assert(t && t->IsError() && HtmlToken::UnclosedTag == t->error);
+    t = parser.Next();
+    assert(!t);
 }
 
 }
@@ -115,9 +135,10 @@ void HtmlPullParser_UnitTests()
     unittests::Test00("<p a1='>' foo=bar />", HtmlToken::EmptyElementTag);
     unittests::Test00("<p a1 ='>'     foo=\"bar\"/>", HtmlToken::EmptyElementTag);
     unittests::Test00("<p a1=  '>' foo=bar>", HtmlToken::StartTag);
-    unittests::Test00("<></><><!-- < skip > --><p a1=\">\" foo=bar>", HtmlToken::StartTag);
+    unittests::Test00("</><!-- < skip > --><p a1=\">\" foo=bar>", HtmlToken::StartTag);
     unittests::Test00("<P A1='>' FOO=bar />", HtmlToken::EmptyElementTag);
     unittests::HtmlEntities();
     unittests::Test01();
     unittests::Test02();
+    unittests::Test03();
 }
