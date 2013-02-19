@@ -12,6 +12,7 @@ Next version:
   * Ctrl-Up   : page up
   * Ctrl-Down : page down
 * support Deflate64 in Comic Book (CBZ) files
+* printing with "Use original page sizes" no longer centers pages on paper
 
 2.2.1 (2013-01-12):
 

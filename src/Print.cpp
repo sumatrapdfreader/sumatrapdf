@@ -192,10 +192,14 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 
                 RectD *clipRegion = &pd.sel.At(i).rect;
                 PointI offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
+                if (pd.advData.scale != PrintScaleNone) {
+                    // center the selection on the physical paper
+                    offset.x += (int)(printable.dx - bSize.dx * zoom) / 2;
+                    offset.y += (int)(printable.dy - bSize.dy * zoom) / 2;
+                }
+
                 if (!pd.advData.asImage) {
-                    RectI rc((int)(printable.dx - bSize.dx * zoom) / 2 + offset.x,
-                             (int)(printable.dy - bSize.dy * zoom) / 2 + offset.y,
-                             (int)(clipRegion->dx * zoom), (int)(clipRegion->dy * zoom));
+                    RectI rc(offset.x, offset.y, (int)(clipRegion->dx * zoom), (int)(clipRegion->dy * zoom));
                     engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
                     if (abortCookie)
                         abortCookie->Clear();
@@ -214,9 +218,7 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                         }
                     } while (!bmp && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
                     if (bmp) {
-                        RectI rc((int)(paperSize.dx - bSize.dx * zoom) / 2 + offset.x,
-                                 (int)(paperSize.dy - bSize.dy * zoom) / 2 + offset.y,
-                                 bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                        RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
                         bmp->StretchDIBits(hdc, rc);
                         delete bmp;
                     }
@@ -267,7 +269,9 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
             // (negative values move the page into the left/top margins, etc.);
             // offset adjustments are needed because the GDI coordinate system
             // starts at the corner of the printable area and we rather want to
-            // center the page on the physical paper (default behavior)
+            // center the page on the physical paper (except for PrintScaleNone
+            // where the page starts at the very top left of the physical paper so
+            // that printing forms/labels of varying size remains reliably possible)
             PointI offset(-printable.x, -printable.y);
 
             if (pd.advData.scale != PrintScaleNone) {
@@ -283,9 +287,12 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                 // and the user didn't ask for anything else (default setting)
                 if (PrintScaleShrink == pd.advData.scale && dpiFactor < zoom)
                     zoom = dpiFactor;
+                // center the page on the physical paper
+                offset.x += (int)(paperSize.dx - pSize.dx * zoom) / 2;
+                offset.y += (int)(paperSize.dy - pSize.dy * zoom) / 2;
                 // make sure that no content lies in the non-printable paper margins
-                RectT<float> onPaper((paperSize.dx - pSize.dx * zoom) / 2 + cbox.x * zoom,
-                                     (paperSize.dy - pSize.dy * zoom) / 2 + cbox.y * zoom,
+                RectT<float> onPaper(printable.x + offset.x + cbox.x * zoom,
+                                     printable.y + offset.y + cbox.y * zoom,
                                      cbox.dx * zoom, cbox.dy * zoom);
                 if (onPaper.x < printable.x)
                     offset.x += (int)(printable.x - onPaper.x);
@@ -298,9 +305,7 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
             }
 
             if (!pd.advData.asImage) {
-                RectI rc = RectI::FromXY((int)(paperSize.dx - pSize.dx * zoom) / 2 + offset.x,
-                                         (int)(paperSize.dy - pSize.dy * zoom) / 2 + offset.y,
-                                         paperSize.dx, paperSize.dy);
+                RectI rc = RectI::FromXY(offset.x, offset.y, paperSize.dx, paperSize.dy);
                 engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
                 if (abortCookie)
                     abortCookie->Clear();
@@ -319,9 +324,7 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                     }
                 } while (!bmp && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
                 if (bmp) {
-                    RectI rc((paperSize.dx - bmp->Size().dx * shrink) / 2 + offset.x,
-                             (paperSize.dy - bmp->Size().dy * shrink) / 2 + offset.y,
-                             bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                    RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
                     bmp->StretchDIBits(hdc, rc);
                     delete bmp;
                 }
