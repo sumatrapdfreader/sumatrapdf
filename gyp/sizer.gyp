@@ -14,8 +14,6 @@
         'utils.gyp:utils',
       ],
       'sources': [
-        '../tools/sizer/DebugInfo.cpp',
-        '../tools/sizer/DebugInfo.h',
         '../tools/sizer/Dia2Subset.h',
         '../tools/sizer/main.cpp',
         '../tools/sizer/PdbFile.cpp',

@@ -14,6 +14,9 @@ def get_include_attr(node):
     if not node.hasAttributes(): return None
     return node.attributes["Include"].value
 
+def set_include_attr(node, attr):
+    node.attributes["Include"].value = attr
+
 # Nodes like:
 # <Filter Include="..\..\tools\sizer">
 def get_filter_nodes(node):
@@ -38,6 +41,45 @@ def get_include_filter(node):
     #print(str(filter))
     return (include, filter)
 
+# given:
+#    <ClInclude Include="..\..\tools\sizer\PdbFile.h">
+#      <Filter>..\..\tools\sizer</Filter>
+#    </ClInclude>
+# sets the value of Filter node to val
+def set_filter(node, val):
+    node.getElementsByTagName('Filter')[0].firstChild.nodeValue = val
+
+def get_filter(node):
+    #print(str(node))
+    v = node.getElementsByTagName('Filter')[0].firstChild.nodeValue
+    #print(str(v))
+    return v
+
+def remove_node(node):
+    #print("removing %s" % str(node))
+    parent = node.parentNode
+    parent.removeChild(node)
+    #node.unlink()
+
+def fix_include_filters(filter_nodes, path):
+    for n in filter_nodes:
+        include_path = get_include_attr(n)
+        if include_path == None:
+            print(str(n))
+            print(n.toxml())
+        if path.startswith(include_path):
+            remove_node(n)
+        elif include_path.startswith(path):
+            include_path = include_path[len(path):]
+            set_include_attr(n, include_path)
+
+def fix_file_nodes(file_nodes, path):
+    for n in file_nodes:
+        include_path = get_filter(n)
+        if include_path.startswith(path):
+            include_path = include_path[len(path):]
+            set_filter(n, include_path)
+
 def fix_file(path):
     data = open(path).read()
     dom = parseString(data)
@@ -54,6 +96,22 @@ def fix_file(path):
     for (k, v) in filter_to_files.items():
         if len(v) == 0:
             print("filter %s has no files" % k)
+
+    # TODO: should figure out what to delete by analyzing
+    # include paths (and remove those that add nothing but nesting)
+    path_to_remove = "..\\..\\"
+    fix_include_filters(filter_nodes, path_to_remove)
+    fix_file_nodes(file_nodes, path_to_remove)
+
+    path_to_remove = "tools\\"
+    fix_include_filters(filter_nodes, path_to_remove)
+    fix_file_nodes(file_nodes, path_to_remove)
+
+    #s = dom.toprettyxml("  ", "\n")
+    s = dom.toxml()
+    #dst = path + ".copy.xml"
+    dst = path
+    open(dst, "w").write(s)
 
 def main():
     files = sys.argv[1:]
