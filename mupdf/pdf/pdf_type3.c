@@ -14,7 +14,6 @@ pdf_t3_free_resources(void *doc, void *rdb_)
 	pdf_drop_obj(rdb);
 }
 
-
 pdf_font_desc *
 pdf_load_type3_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict)
 {

@@ -277,17 +277,10 @@ const fz_irect fz_unit_bbox = { 0, 0, 1, 1 };
 fz_irect *
 fz_irect_from_rect(fz_irect *restrict b, const fz_rect *restrict r)
 {
-	float i;
-
-	i = floorf(r->x0);
-	b->x0 = fz_clamp(i, MIN_SAFE_INT, MAX_SAFE_INT);
-	i = floorf(r->y0);
-	b->y0 = fz_clamp(i, MIN_SAFE_INT, MAX_SAFE_INT);
-	i = ceilf(r->x1);
-	b->x1 = fz_clamp(i, MIN_SAFE_INT, MAX_SAFE_INT);
-	i = ceilf(r->y1);
-	b->y1 = fz_clamp(i, MIN_SAFE_INT, MAX_SAFE_INT);
-
+	b->x0 = fz_clamp(floorf(r->x0), MIN_SAFE_INT, MAX_SAFE_INT);
+	b->y0 = fz_clamp(floorf(r->y0), MIN_SAFE_INT, MAX_SAFE_INT);
+	b->x1 = fz_clamp(ceilf(r->x1), MIN_SAFE_INT, MAX_SAFE_INT);
+	b->y1 = fz_clamp(ceilf(r->y1), MIN_SAFE_INT, MAX_SAFE_INT);
 	return b;
 }
 
@@ -410,18 +403,6 @@ fz_translate_irect(fz_irect *a, int xoff, int yoff)
 	a->y0 = ADD_WITH_SAT(t, a->y0, yoff);
 	a->x1 = ADD_WITH_SAT(t, a->x1, xoff);
 	a->y1 = ADD_WITH_SAT(t, a->y1, yoff);
-	return a;
-}
-
-fz_rect *
-fz_translate_rect(fz_rect *a, int xoff, int yoff)
-{
-	if (fz_is_empty_rect(a)) return a;
-	if (fz_is_infinite_rect(a)) return a;
-	a->x0 += xoff;
-	a->y0 += yoff;
-	a->x1 += xoff;
-	a->y1 += yoff;
 	return a;
 }
 

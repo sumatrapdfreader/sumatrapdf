@@ -21,7 +21,8 @@
 
 Most code under src is licensed as GPL v3 (see COPYING) with the main
 exception of code in src/utils and src/mui which has a BSD license
-(see COPYING.BSD).
+(see COPYING.BSD). Due to mupdf/COPYING, section 13 of the AGPL v3
+applies to SumatraPDF as well.
 
 Icons by Zenon, Sonke Tesch, George Georgiou, Robert Hegner,
 FAMFAMFAM and Yusuke Kamiyamane.
@@ -36,7 +37,7 @@ External projects are by their various authors:
 
 Project        License                   Type Website
 --------------------------------------------------------------------------------------------------------------
-MuPDF          mupdf/COPYING             GPL  http://mupdf.com/
+MuPDF          mupdf/COPYING             AGPL http://mupdf.com/
 bzip2          ext/bzip2/LICENSE              http://bzip.org/
 CHMLIB         ext/CHMLib/COPYING        LGPL http://www.jedrea.com/chmlib/
 FreeType       ext/freetype2/FTL.txt          http://www.freetype.org/

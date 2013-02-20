@@ -147,7 +147,6 @@ static pdf_obj *load_color(fz_context *ctx, pdf_jsimp *imp, pdf_jsimp_obj *val)
 	int i;
 	int n;
 
-
 	n = pdf_jsimp_array_len(imp, val);
 
 	/* The only legitimate color expressed as an array of length 1

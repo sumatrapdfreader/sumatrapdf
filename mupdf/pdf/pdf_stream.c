@@ -300,15 +300,12 @@ pdf_open_filter(fz_stream *chain, pdf_document *xref, pdf_obj *stmobj, int num, 
 
 	chain = pdf_open_raw_filter(chain, xref, stmobj, num, num, gen, offset);
 
-	/* SumatraPDF: fix memory leak */
 	fz_try(xref->ctx)
 	{
-
-	if (pdf_is_name(filters))
-		chain = build_filter(chain, xref, filters, params, num, gen, imparams);
-	else if (pdf_array_len(filters) > 0)
-		chain = build_filter_chain(chain, xref, filters, params, num, gen, imparams);
-
+		if (pdf_is_name(filters))
+			chain = build_filter(chain, xref, filters, params, num, gen, imparams);
+		else if (pdf_array_len(filters) > 0)
+			chain = build_filter_chain(chain, xref, filters, params, num, gen, imparams);
 	}
 	fz_catch(xref->ctx)
 	{

@@ -27,7 +27,6 @@ pdf_obj *pdf_new_matrix(fz_context *ctx, const fz_matrix *mtx);
 pdf_obj *pdf_copy_array(fz_context *ctx, pdf_obj *array);
 pdf_obj *pdf_copy_dict(fz_context *ctx, pdf_obj *dict);
 
-/* SumatraPDF: convenience method to easily create nested objects */
 pdf_obj *pdf_new_obj_from_str(fz_context *ctx, const char *src);
 
 pdf_obj *pdf_keep_obj(pdf_obj *obj);
@@ -67,7 +66,6 @@ int pdf_array_len(pdf_obj *array);
 pdf_obj *pdf_array_get(pdf_obj *array, int i);
 void pdf_array_put(pdf_obj *array, int i, pdf_obj *obj);
 void pdf_array_push(pdf_obj *array, pdf_obj *obj);
-/* SumatraPDF: convenience method similar to pdf_dict_puts_drop */
 void pdf_array_push_drop(pdf_obj *array, pdf_obj *obj);
 void pdf_array_insert(pdf_obj *array, pdf_obj *obj);
 int pdf_array_contains(pdf_obj *array, pdf_obj *obj);
@@ -99,7 +97,6 @@ char *pdf_to_utf8(pdf_document *xref, pdf_obj *src);
 unsigned short *pdf_to_ucs2(pdf_document *xref, pdf_obj *src); /* sumatrapdf */
 pdf_obj *pdf_to_utf8_name(pdf_document *xref, pdf_obj *src);
 char *pdf_from_ucs2(pdf_document *xref, unsigned short *str);
-/* SumatraPDF: allow to convert to UCS-2 without the need for an fz_context */
 void pdf_to_ucs2_buf(unsigned short *buffer, pdf_obj *src);
 
 fz_rect *pdf_to_rect(fz_context *ctx, pdf_obj *array, fz_rect *rect);

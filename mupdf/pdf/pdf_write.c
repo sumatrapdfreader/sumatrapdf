@@ -5,7 +5,6 @@
 /* #define DEBUG_HEAP_SORT */
 /* #define DEBUG_WRITING */
 
-
 typedef struct pdf_write_options_s pdf_write_options;
 
 /*
@@ -1394,7 +1393,6 @@ update_linearization_params(pdf_document *xref, pdf_write_options *opts)
 	pdf_set_int(opts->hints_length, opts->hintstream_len);
 }
 
-
 /*
  * Make sure we have loaded objects from object streams.
  */
@@ -2191,7 +2189,6 @@ static void dump_object_details(pdf_document *xref, pdf_write_options *opts)
 	}
 }
 #endif
-
 
 void pdf_write_document(pdf_document *xref, char *filename, fz_write_options *fz_opts)
 {

@@ -150,7 +150,7 @@ pdf_to_ucs2(pdf_document *xref, pdf_obj *src)
 	return dst;
 }
 
-/* SumatraPDF: allow to convert to UCS-2 without the need for an fz_context */
+/* allow to convert to UCS-2 without the need for an fz_context */
 /* (buffer must be at least (fz_to_str_len(src) + 1) * 2 bytes in size) */
 void
 pdf_to_ucs2_buf(unsigned short *buffer, pdf_obj *src)

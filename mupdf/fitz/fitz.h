@@ -21,7 +21,7 @@
 
 #include <setjmp.h>
 
-/* SumatraPDF: memento's license header can be read as being non-GPLv3 */
+/* SumatraPDF: memento's license header can be read as being non-AGPLv3 */
 #ifndef MEMENTO
 #define MEMENTO_H
 #define Memento_label(ptr, label) (ptr)
@@ -241,7 +241,6 @@ struct fz_error_context_s
 
 void fz_var_imp(void *);
 #define fz_var(var) fz_var_imp((void *)&(var))
-
 
 /*
 	Exception macro definitions. Just treat these as a black box - pay no
@@ -863,7 +862,6 @@ struct fz_matrix_s
 	float a, b, c, d, e, f;
 };
 
-
 /*
 	fz_identity: Identity transform matrix.
 */
@@ -1157,15 +1155,6 @@ fz_rect *fz_expand_rect(fz_rect *b, float expand);
 	Does not throw exceptions.
 */
 fz_irect *fz_translate_irect(fz_irect *a, int xoff, int yoff);
-
-/*
-	fz_translate_rect: Translate rectangle.
-
-	Translate a rectangle by a given x and y offset. Allows for overflow.
-
-	Does not throw exceptions.
-*/
-fz_rect *fz_translate_rect(fz_rect *a, int xoff, int yoff);
 
 /*
 	fz_transform_point: Apply a transformation to a point.
@@ -2943,7 +2932,6 @@ int fz_choice_widget_value(fz_interactive *idoc, fz_widget *tw, char *opts[]);
 */
 void fz_choice_widget_set_value(fz_interactive *idoc, fz_widget *tw, int n, char *opts[]);
 
-
 /*
 	Document events: the objects via which MuPDF informs the calling app
 	of occurrences emanating from the document, possibly from user interaction
@@ -3134,7 +3122,7 @@ struct fz_write_options_s
 	int do_linear; /* If non-zero then write linearised. */
 	int continue_on_error; /* If non-zero, errors are (optionally)
 					counted and writing continues. */
-	int *errors;   /* Pointer to a place to store a count of errors */
+	int *errors; /* Pointer to a place to store a count of errors */
 };
 
 /*	An enumeration of bitflags to use in the above 'do_expand' field of

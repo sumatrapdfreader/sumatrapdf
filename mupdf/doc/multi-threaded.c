@@ -68,7 +68,6 @@ struct data {
 	fz_pixmap *pix;
 };
 
-
 // This is the function run by each rendering function. It takes
 // pointer to an instance of the data structure described above and
 // renders the display list into the pixmap before exiting.

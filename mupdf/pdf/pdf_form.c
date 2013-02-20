@@ -51,7 +51,6 @@ enum
 	Display_NoView
 };
 
-
 enum
 {
 	Q_Left = 0,
@@ -1072,8 +1071,7 @@ static int get_matrix(pdf_document *doc, pdf_xobject *form, int q, fz_matrix *mt
 					coef_i = MATRIX_COEFS-1;
 				}
 
-				coefs[coef_i++] = tok == PDF_TOK_INT ? lbuf.i
-													 : lbuf.f;
+				coefs[coef_i++] = tok == PDF_TOK_INT ? lbuf.i : lbuf.f;
 			}
 			else
 			{
@@ -1662,7 +1660,7 @@ static pdf_obj *specified_fields(pdf_document *doc, pdf_obj *fields, int exclude
 	pdf_obj *form = pdf_dict_getp(doc->trailer, "Root/AcroForm/Fields");
 	int i, n;
 	pdf_obj *result = pdf_new_array(ctx, 0);
-	pdf_obj *nil  = NULL;
+	pdf_obj *nil = NULL;
 
 	fz_var(nil);
 	fz_try(ctx)
@@ -2554,7 +2552,7 @@ void pdf_field_set_fill_color(pdf_document *doc, pdf_obj *field, pdf_obj *col)
 {
 	/* col == NULL mean transparent, but we can simply pass it on as with
 	 * non-NULL values because pdf_dict_putp interprets a NULL value as
-	 " delete */
+	 * delete */
 	pdf_dict_putp(field, "MK/BG", col);
 	pdf_field_mark_dirty(doc->ctx, field);
 }
@@ -2610,7 +2608,7 @@ fz_rect *fz_bound_widget(fz_widget *widget, fz_rect *rect)
 
 	if (rect == NULL)
 		return NULL;
-	*rect = annot->pagerect; 
+	*rect = annot->pagerect;
 
 	return rect;
 }

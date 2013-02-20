@@ -758,13 +758,11 @@ fz_decode_tiff_header(fz_context *ctx, struct tiff *tiff, unsigned char *buf, in
 
 	tiff->rp = tiff->bp + offset;
 
-	/* SumatraPDF: prevent integer overflow */
 	if (tiff->rp < tiff->bp || tiff->rp > tiff->ep)
 		fz_throw(tiff->ctx, "invalid IFD offset %u", offset);
 
 	count = readshort(tiff);
 
-	/* SumatraPDF: sanity check */
 	if (count * 12 > (unsigned)(tiff->ep - tiff->rp))
 		fz_throw(tiff->ctx, "overlarge IFD entry count %u", count);
 

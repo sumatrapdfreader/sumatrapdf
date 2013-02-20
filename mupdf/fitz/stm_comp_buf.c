@@ -13,7 +13,6 @@ fz_free_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buf)
 	fz_free(ctx, buf);
 }
 
-
 fz_stream *
 fz_open_image_decomp_stream(fz_context *ctx, fz_compressed_buffer *buffer, int *l2factor)
 {

@@ -1090,7 +1090,6 @@ copy_state(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
 		pdf_keep_xobject(ctx, gs->softmask);
 }
 
-
 static pdf_csi *
 pdf_new_csi(pdf_document *xref, fz_device *dev, const fz_matrix *ctm, char *event, fz_cookie *cookie, pdf_gstate *gstate, int nested)
 {
@@ -1536,6 +1535,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 				/* SumatraPDF: support transfer functions */
 				fz_transfer_function *tr = gstate->softmask_tr;
 				gstate->softmask_tr = NULL;
+
 				gstate->softmask = NULL;
 				popmask = 1;
 

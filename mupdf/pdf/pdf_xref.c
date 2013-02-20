@@ -1313,8 +1313,7 @@ pdf_meta(pdf_document *doc, int key, void *ptr, int size)
 		if (info && ptr && size)
 		{
 			char *utf8 = pdf_to_utf8(doc, info);
-			strncpy(ptr, utf8, size);
-			((char *)ptr)[size-1] = 0;
+			fz_strlcpy(ptr, utf8, size);
 			fz_free(doc->ctx, utf8);
 		}
 		return 1;
@@ -1332,7 +1331,6 @@ pdf_page_presentation(pdf_document *doc, pdf_page *page, float *duration)
 		return NULL;
 	return &page->transition;
 }
-
 
 static fz_interactive *
 pdf_interact(pdf_document *doc)

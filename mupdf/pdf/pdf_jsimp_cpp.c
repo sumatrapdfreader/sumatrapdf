@@ -6,7 +6,6 @@
 #include "mupdf-internal.h"
 #include "pdf_jsimp_cpp.h"
 
-
 pdf_jsimp *pdf_new_jsimp(fz_context *ctx, void *jsctx)
 {
 	pdf_jsimp *jsi = NULL;

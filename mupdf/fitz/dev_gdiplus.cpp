@@ -1,7 +1,7 @@
 ﻿// GDI+ rendering device for MuPDF
-// Copyright (C) 2010 - 2012  Simon Bünzli <zeniko@gmail.com>
+// Copyright (C) 2010 - 2013  Simon Bünzli <zeniko@gmail.com>
 
-// This file is licensed under GPLv3 (see ../COPYING)
+// This file is licensed under AGPLv3 (see ../COPYING)
 
 #include <windows.h>
 #include <gdiplus.h>
@@ -1699,7 +1699,7 @@ fz_gdiplus_end_tile(fz_device *dev)
 extern "C" static void
 fz_gdiplus_apply_transfer_function(fz_device *dev, fz_transfer_function *tr, int for_mask)
 {
-	((userData *)dev->user)->applyTransferFunction(tr, for_mask);
+	((userData *)dev->user)->applyTransferFunction(tr, for_mask != 0);
 }
 
 extern "C" static void

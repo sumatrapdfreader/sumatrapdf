@@ -290,7 +290,6 @@ static void unescape_string(char *d, const char *s)
 	*d = 0;
 }
 
-
 int
 main(int argc, char *argv[])
 {

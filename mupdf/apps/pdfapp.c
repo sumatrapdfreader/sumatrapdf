@@ -342,8 +342,7 @@ static int pdfapp_save(pdfapp_t *app)
 				if (written)
 				{
 					char buf2[PATH_MAX];
-					strncpy(buf2, app->docpath, PATH_MAX);
-					buf2[nelem(buf2)-1] = '\0'; /* SumatraPDF: prevent buffer overflow */
+					fz_strlcpy(buf2, app->docpath, PATH_MAX);
 					pdfapp_close(app);
 					winreplacefile(buf, buf2);
 					pdfapp_open(app, buf2, 1);
@@ -580,7 +579,6 @@ static void pdfapp_updatepage(pdfapp_t *app)
 
 		fz_free_device(idev);
 	}
-
 
 	pdfapp_showpage(app, 0, 0, 1, 0);
 }

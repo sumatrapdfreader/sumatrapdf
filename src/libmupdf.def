@@ -65,7 +65,6 @@ EXPORTS
 	fz_rect_from_irect
 	fz_expand_rect
 	fz_translate_irect
-	fz_translate_rect
 	fz_transform_point
 	fz_transform_vector
 	fz_transform_rect

@@ -75,4 +75,3 @@ pdf_remove_item(fz_context *ctx, fz_store_free_fn *free, pdf_obj *key)
 {
 	fz_remove_item(ctx, free, key, &pdf_obj_store_type);
 }
-

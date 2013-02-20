@@ -62,7 +62,6 @@ fz_open_document(fz_context *ctx, const char *filename)
 
 	if (ext)
 	{
-		/* SumatraPDF: support OpenXPS */
 		if (!fz_strcasecmp(ext, ".xps") || !fz_strcasecmp(ext, ".rels") || !fz_strcasecmp(ext, ".oxps"))
 			return (fz_document*) xps_open_document(ctx, filename);
 		if (!fz_strcasecmp(ext, ".cbz") || !fz_strcasecmp(ext, ".zip"))

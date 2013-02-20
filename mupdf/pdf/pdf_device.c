@@ -282,7 +282,6 @@ send_image(pdf_device *pdev, fz_image *image, int mask, int smask)
 		if (bpc)
 			pdf_dict_puts_drop(imobj, "BitsPerComponent", pdf_new_int(ctx, bpc));
 
-
 		imref = pdf_new_ref(pdev->xref, imobj);
 		pdf_update_stream(pdev->xref, pdf_to_num(imref), buffer);
 		pdf_dict_puts_drop(imobj, "Length", pdf_new_int(ctx, buffer->len));
@@ -597,7 +596,6 @@ pdf_dev_tm(pdf_device *pdev, const fz_matrix *tm)
 	fz_buffer_printf(pdev->ctx, gs->buf, "%f %f %f %f %f %f Tm\n", tm->a, tm->b, tm->c, tm->d, tm->e, tm->f);
 	gs->tm = *tm;
 }
-
 
 static void
 pdf_dev_push_new_buf(pdf_device *pdev, fz_buffer *buf, void (*on_pop)(pdf_device*,void *), void *on_pop_arg)

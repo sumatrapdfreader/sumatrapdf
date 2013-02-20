@@ -370,7 +370,6 @@ cbz_image_to_pixmap(fz_context *ctx, fz_image *image_, int x, int w)
 	return fz_keep_pixmap(ctx, image->pix);
 }
 
-
 cbz_page *
 cbz_load_page(cbz_document *doc, int number)
 {

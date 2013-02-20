@@ -9,7 +9,6 @@
 #define REL_REQUIRED_RESOURCE_RECURSIVE \
 	"http://schemas.microsoft.com/xps/2005/06/required-resource#recursive"
 
-/* SumatraPDF: support OpenXPS */
 #define REL_START_PART_OXPS \
 	"http://schemas.openxps.org/oxps/v1.0/fixedrepresentation"
 #define REL_DOC_STRUCTURE_OXPS \
@@ -299,7 +298,6 @@ xps_parse_metadata_imp(xps_document *doc, fz_xml *item, xps_fixdoc *fixdoc)
 			{
 				char tgtbuf[1024];
 				xps_resolve_url(tgtbuf, doc->base_uri, target, sizeof tgtbuf);
-				/* SumatraPDF: support OpenXPS */
 				if (!strcmp(type, REL_START_PART) || !strcmp(type, REL_START_PART_OXPS))
 					doc->start_part = fz_strdup(doc->ctx, tgtbuf);
 				if ((!strcmp(type, REL_DOC_STRUCTURE) || !strcmp(type, REL_DOC_STRUCTURE_OXPS)) && fixdoc)

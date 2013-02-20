@@ -470,7 +470,6 @@ fz_new_stroke_state(fz_context *ctx)
 	return fz_new_stroke_state_with_len(ctx, 0);
 }
 
-
 fz_stroke_state *
 fz_unshare_stroke_state_with_len(fz_context *ctx, fz_stroke_state *shared, int len)
 {

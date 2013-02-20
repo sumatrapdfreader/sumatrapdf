@@ -310,7 +310,6 @@ pdf_repair_xref(pdf_document *xref, pdf_lexbuf *buf)
 					break;
 				}
 
-				/* SumatraPDF: fix memory leak */
 				if (num <= 0)
 				{
 					fz_warn(ctx, "ignoring object with invalid object number (%d %d R)", num, gen);

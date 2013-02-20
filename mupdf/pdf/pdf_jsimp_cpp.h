@@ -1,7 +1,6 @@
 /* C++ version of the pdf_jsimp api. C++ cannot safely call fz_throw,
  * so C++ implementations return explicit errors in char * form. */
 
-
 fz_context *pdf_jsimp_ctx_cpp(pdf_jsimp *imp);
 const char *pdf_new_jsimp_cpp(fz_context *ctx, void *jsctx, pdf_jsimp **imp);
 const char *pdf_drop_jsimp_cpp(pdf_jsimp *imp);

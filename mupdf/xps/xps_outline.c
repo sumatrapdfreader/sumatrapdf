@@ -136,12 +136,13 @@ xps_load_outline(xps_document *doc)
 	xps_fixdoc *fixdoc;
 	fz_outline *head = NULL, *tail, *outline;
 
-	for (fixdoc = doc->first_fixdoc; fixdoc; fixdoc = fixdoc->next) {
-		if (fixdoc->outline) {
-			/* SumatraPDF: fix memory leak */
+	for (fixdoc = doc->first_fixdoc; fixdoc; fixdoc = fixdoc->next)
+	{
+		if (fixdoc->outline)
+		{
 			fz_try(doc->ctx)
 			{
-			outline = xps_load_document_structure(doc, fixdoc);
+				outline = xps_load_document_structure(doc, fixdoc);
 			}
 			fz_catch(doc->ctx)
 			{
@@ -149,6 +150,7 @@ xps_load_outline(xps_document *doc)
 			}
 			if (!outline)
 				continue;
+
 			if (!head)
 				head = outline;
 			else

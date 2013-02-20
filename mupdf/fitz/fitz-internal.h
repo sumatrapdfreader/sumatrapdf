@@ -1492,8 +1492,6 @@ void fz_apply_transfer_function(fz_device *dev, fz_transfer_function *tr, int fo
 
 fz_device *fz_new_device(fz_context *ctx, void *user);
 
-
-
 /*
  * Plotting functions.
  */

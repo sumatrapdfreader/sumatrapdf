@@ -622,7 +622,6 @@ fz_run_display_list(fz_display_list *list, fz_device *dev, const fz_matrix *top_
 	int progress = 0;
 	fz_context *ctx = dev->ctx;
 
-	/* SumatraPDF: accept NULL scissor */
 	if (!scissor)
 		scissor = &fz_infinite_rect;
 

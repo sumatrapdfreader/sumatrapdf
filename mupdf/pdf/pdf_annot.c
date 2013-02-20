@@ -380,13 +380,10 @@ pdf_load_link_annots(pdf_document *xref, pdf_obj *annots, const fz_matrix *page_
 	n = pdf_array_len(annots);
 	for (i = 0; i < n; i++)
 	{
-		/* SumatraPDF: fix memory leak */
 		fz_try(xref->ctx)
 		{
-
-		obj = pdf_array_get(annots, i);
-		link = pdf_load_link(xref, obj, page_ctm);
-
+			obj = pdf_array_get(annots, i);
+			link = pdf_load_link(xref, obj, page_ctm);
 		}
 		fz_catch(xref->ctx)
 		{
@@ -413,7 +410,7 @@ pdf_free_annot(fz_context *ctx, pdf_annot *annot)
 {
 	pdf_annot *next;
 
-	do
+	while (annot)
 	{
 		next = annot->next;
 		if (annot->ap)
@@ -422,7 +419,6 @@ pdf_free_annot(fz_context *ctx, pdf_annot *annot)
 		fz_free(ctx, annot);
 		annot = next;
 	}
-	while (annot);
 }
 
 static void
@@ -1415,37 +1411,36 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 	len = pdf_array_len(annots);
 	for (i = 0; i < len; i++)
 	{
-		/* SumatraPDF: fix memory leak */
 		fz_try(ctx)
 		{
+			obj = pdf_array_get(annots, i);
 
-		obj = pdf_array_get(annots, i);
-
-		/* SumatraPDF: synthesize appearance streams for a few more annotations */
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
-		if ((annot = pdf_update_tx_widget_annot(xref, obj)) ||
-			!pdf_is_dict(pdf_dict_getp(obj, "AP/N")) && (annot = pdf_create_annot_with_appearance(xref, obj)))
-		{
-			annot->page = page;
-			annot->pagerect = annot->rect;
-			fz_transform_rect(&annot->pagerect, &page->ctm);
-			if (!head)
-				head = tail = annot;
-			else
+			/* SumatraPDF: synthesize appearance streams for a few more annotations */
+			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
+			if ((annot = pdf_update_tx_widget_annot(xref, obj)) ||
+				!pdf_is_dict(pdf_dict_getp(obj, "AP/N")) && (annot = pdf_create_annot_with_appearance(xref, obj)))
 			{
-				tail->next = annot;
-				tail = annot;
+				annot->page = page;
+				annot->pagerect = annot->rect;
+				fz_transform_rect(&annot->pagerect, &page->ctm);
+				if (!head)
+					head = tail = annot;
+				else
+				{
+					tail->next = annot;
+					tail = annot;
+				}
+				obj = NULL;
 			}
-			obj = NULL;
-		}
 
-		/* SumatraPDF: prevent regressions */
-		/* pdf_update_appearance(xref, obj); */
+			/* SumatraPDF: prevent regressions */
+			/* pdf_update_appearance(xref, obj); */
 
-		rect = pdf_dict_gets(obj, "Rect");
-		ap = pdf_dict_gets(obj, "AP");
-		as = pdf_dict_gets(obj, "AS");
+			rect = pdf_dict_gets(obj, "Rect");
+			ap = pdf_dict_gets(obj, "AP");
+			as = pdf_dict_gets(obj, "AS");
 
+			/* SumatraPDF: fix memory leak */
 			pdf_is_dict(ap);
 		}
 		fz_catch(ctx)
@@ -1508,9 +1503,7 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 		}
 		fz_catch(ctx)
 		{
-			/* SumatraPDF: fix memory leak */
-			if (annot)
-				pdf_free_annot(ctx, annot);
+			pdf_free_annot(ctx, annot);
 			fz_warn(ctx, "ignoring broken annotation");
 		}
 	}

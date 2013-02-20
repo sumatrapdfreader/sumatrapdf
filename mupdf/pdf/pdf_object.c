@@ -543,7 +543,6 @@ pdf_array_push(pdf_obj *obj, pdf_obj *item)
 	}
 }
 
-/* SumatraPDF: convenience method similar to pdf_dict_puts_drop */
 void
 pdf_array_push_drop(pdf_obj *obj, pdf_obj *item)
 {
@@ -1211,7 +1210,6 @@ pdf_drop_obj(pdf_obj *obj)
 		fz_free(obj->ctx, obj);
 }
 
-/* SumatraPDF: convenience method to easily create nested objects */
 pdf_obj *pdf_new_obj_from_str(fz_context *ctx, const char *src)
 {
 	pdf_obj *result;
