@@ -56,8 +56,9 @@ NASM=nasm.exe
 !endif
 
 CC = cl.exe
+LD = link.exe
 
-# CFLGASB - CFLAGS base. 
+# CFLAGSB - CFLAGS base (use CFLAGS or CFLAGSOPT later on)
 
 CFLAGSB = $(CFLAGSB) /nologo /c
 # standard windows defines
@@ -82,12 +83,13 @@ CFLAGSB = $(CFLAGSB) /EHs-c-
 # /Ox  : maximum optimizations
 # /O2  : maximize speed
 # docs say /Ox better, my tests say /O2 better
-OPTLEVEL = /O2
+CFLAGSOPT = $(CFLAGSB) /O2 /D "NDEBUG"
+
+LDFLAGS = $(LDFLAGS) /nologo /DEBUG /RELEASE /opt:ref /opt:icf
 
 !if "$(CFG)"!="dbg"
 # /GL  : enable link-time code generation
-CFLAGS    = $(CFLAGSB) $(OPTLEVEL) /GL /D "NDEBUG"
-CFLAGSOPT = $(CFLAGSB) $(OPTLEVEL) /D "NDEBUG"
+CFLAGS  = $(CFLAGSOPT) /GL
 LDFLAGS = $(LDFLAGS) /LTCG
 # /DYNAMICBASE and /NXCOMPAT for better protection against stack overflows
 # http://blogs.msdn.com/vcblog/archive/2009/05/21/dynamicbase-and-nxcompat.aspx
@@ -100,10 +102,9 @@ CFLAGSB = $(CFLAGSB) /MTd
 # /RTCu : ununitialized local usage checks
 # /Od   : disable optimizations
 CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
-CFLAGSOPT = $(CFLAGSB) $(OPTLEVEL) /D "NDEBUG"
 !endif
 
-ZLIB_CFLAGS = $(CFLAGSOPT) /wd4996 /I$(ZLIB_DIR) /I$(ZLIB_DIR)/infback9
+ZLIB_CFLAGS = $(CFLAGSOPT) /TC /wd4996 /I$(ZLIB_DIR) /I$(ZLIB_DIR)/infback9
 
 FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
 	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2" /wd4996
@@ -112,7 +113,7 @@ JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /D "JBIG_NO_MEMENTO" /I$(JBIG2
 
 OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR) /wd4996
 
-JPEG_TURBO_CFLAGS = $(CFLAGS) /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
+JPEG_TURBO_CFLAGS = $(CFLAGS) /TC /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
 JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4101 /wd4018 /wd4996
 JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ 
 !if "$(PLATFORM)"=="X64"
@@ -121,13 +122,21 @@ JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win64 -D__x86_64__ -DWIN64 -
 JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win32
 !endif
 
-MUPDF_CFLAGS = $(CFLAGS) \
+MUPDF_CFLAGS = $(CFLAGS) /TC \
 	/I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/pdf /I$(MUPDF_DIR)/xps /I$(MUPDF_DIR)/cbz /I$(MUPDF_DIR)/apps \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /I$(OPENJPEG_DIR)
 
 !if "$(CFG)"=="dbg"
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "DEBUG"
+!endif
+
+# Make it easy to compile in a CJK fallback font and/or the Droid substitution fonts
+!if "$(WITHCJKFONT)"==""
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT"
+!endif
+!if "$(WITHDROIDFONT)"==""
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NODROIDFONT"
 !endif
 
 !if "$(PLATFORM)"=="X64"
@@ -141,9 +150,6 @@ MUPDF_CFLAGS  = $(MUPDF_CFLAGS) /wd4267
 !endif
 
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib ole32.lib WindowsCodecs.lib
-
-LD = link.exe
-LDFLAGS = $(LDFLAGS) /nologo /DEBUG /RELEASE /opt:ref /opt:icf
 
 FT_OBJS = \
 	$(OFT)\ftbase.obj $(OFT)\ftbbox.obj $(OFT)\ftbitmap.obj $(OFT)\ftgasp.obj \
@@ -247,14 +253,6 @@ MUXPS_OBJS = \
 MUCBZ_OBJS = \
 	$(OX)\mucbz.obj
 
-# Make it easy to compile in a CJK fallback font and/or the Droid substitution fonts
-!if "$(WITHCJKFONT)"==""
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NOCJKFONT"
-!endif
-!if "$(WITHDROIDFONT)"==""
-MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NODROIDFONT"
-!endif
-
 LIBS_OBJS = \
 	$(ZLIB_OBJS) \
 	$(FT_OBJS) \
@@ -290,9 +288,8 @@ all: $(O) $(MUDRAW_APP) $(MUTOOL_APP) $(PDFAPP_APP)
 clean: force
 	-rmdir /S /Q $(O) $(MUPDF_GEN_DIR)
 
-## Note: the following command does not work on Windows
 cleanall: force
-	-rmdir /S /Q obj-*-win $(MUPDF_GEN_DIR)
+	-rmdir /S /Q obj-dbg-win obj-rel-win $(MUPDF_GEN_DIR)
 
 $(O): force
 	@if not exist $(O) mkdir $(O)
@@ -322,12 +319,6 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 # freetype directories
-{$(FREETYPE_DIR)\builds\win32}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
-{$(FREETYPE_DIR)\builds\unix}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
 {$(FREETYPE_DIR)\src\autofit}.c{$(OFT)}.obj::
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
@@ -416,25 +407,25 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(CC) $(JBIG2_CFLAGS) /Fo$(OJB)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\apps}.c{$(OA)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OA)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OA)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\pdf}.c{$(OP)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OP)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OP)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\xps}.c{$(OX)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\cbz}.c{$(OX)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\draw}.c{$(OFZ)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\fitz}.c{$(OFZ)}.obj::
-	$(CC) /TC $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\fitz}.cpp{$(OFZ)}.obj::
-	$(CC) $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
+	$(CC) $(MUPDF_CFLAGS: /TC = ) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
 
 # files that might have to be generated first:
 
@@ -461,7 +452,7 @@ MUXPS_H = $(MUPDF_DIR)\xps\muxps.h
 MUCBZ_H = $(MUPDF_DIR)\cbz\mucbz.h
 
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(FITZ_H)
-$(MUPDF_OBJS) $(CMAP_OBJS): $(FITZ_H) $(MUPDF_H)
+$(MUPDF_OBJS): $(FITZ_H) $(MUPDF_H)
 $(MUXPS_OBJS): $(FITZ_H) $(MUXPS_H)
 $(MUCBZ_OBJS): $(FITZ_H) $(MUCBZ_H)
 $(MUAPPS_OBJS): $(FITZ_H) $(MUPDF_H) $(MUXPS_H) $(MUCBZ_H)

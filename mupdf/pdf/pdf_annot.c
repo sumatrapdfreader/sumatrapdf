@@ -1401,7 +1401,7 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 {
 	pdf_annot *annot, *head, *tail;
 	pdf_obj *obj, *ap, *as, *n, *rect;
-	int i, len;
+	int i, len, is_dict;
 	fz_context *ctx = xref->ctx;
 
 	fz_var(annot);
@@ -1439,16 +1439,15 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 			rect = pdf_dict_gets(obj, "Rect");
 			ap = pdf_dict_gets(obj, "AP");
 			as = pdf_dict_gets(obj, "AS");
-
-			/* SumatraPDF: fix memory leak */
-			pdf_is_dict(ap);
+			is_dict = pdf_is_dict(ap);
 		}
 		fz_catch(ctx)
 		{
 			ap = NULL;
+			is_dict = 0;
 		}
 
-		if (!pdf_is_dict(ap))
+		if (!is_dict)
 			continue;
 
 		annot = NULL;

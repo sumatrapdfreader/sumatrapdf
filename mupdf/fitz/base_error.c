@@ -105,7 +105,7 @@ int fz_push_try(fz_error_context *ex)
 	assert(ex->top == nelem(ex->stack)-1);
 	strcpy(ex->message, "exception stack overflow!");
 	ex->stack[ex->top].code = 2;
-	/* SumatraPDF: print error message */
+	/* SumatraPDF: add filename and line number to errors and warnings */
 	fprintf(stderr, "! %s:%d: %s\n", __FILE__, __LINE__, ex->message);
 	LOGE("error: %s\n", ex->message);
 	return 0;

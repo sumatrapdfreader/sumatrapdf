@@ -235,9 +235,8 @@ rebuild: clean SumatraPDF
 cleanmupdf: force
 	-del $(FITZ_DRAW_OBJS) $(FITZ_OBJS) $(MUPDF_OBJS) $(MUXPS_OBJS) $(MUCBZ_OBJS)
 
-## Note: the following command does not work on Windows
 cleanall: force
-	-rmdir /S /Q obj-*
+	-rmdir /S /Q obj-dbg obj-rel
 
 SumatraPDF:    $(OS) $(LIBMUPDF_DLL) $(SUMATRA_APP) $(SUMATRA_APP_NO_MUPDF)
 Installer:     $(OS) $(INSTALLER_APP)
@@ -249,9 +248,6 @@ EngineDump:    $(OS) $(ENGINEDUMP_APP)
 memtrace:      $(OS) $(MEMTRACE_DLL)
 mudraw:        $(O)  $(MUDRAW_APP)
 mutool:        $(O)  $(MUTOOL_APP)
-
-# build tool_objs instead of the tools themselves to speed up linking
-tool_objs:     $(OS) $(ENGINEDUMP_OBJS) $(MEMTRACE_OBJS) $(MUDRAW_OBJS) $(MUTOOL_OBJS)
 
 $(OS): $(O) $(OE)
 	@if not exist $(OS) mkdir $(OS)

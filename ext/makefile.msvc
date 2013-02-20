@@ -96,9 +96,6 @@ $(OE): force
 	@if not exist $(ODV) mkdir $(ODV)
 	@if not exist $(OC) mkdir $(OC)
 
-{baseutils}.cpp{$(OS)}.obj::
-	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
-
 {$(EXTDIR)\bzip2}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
 
