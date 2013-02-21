@@ -408,8 +408,11 @@ bool ImageEngineImpl::FinishLoading(Bitmap *bmp)
             Bitmap *frame = bmp->Clone(0, 0, bmp->GetWidth(), bmp->GetHeight(), PixelFormat32bppARGB);
             if (!frame)
                 continue;
-            frame->SelectActiveFrame(&FrameDimensionPage, i);
-            pages.Append(frame);
+            Status ok = frame->SelectActiveFrame(&FrameDimensionPage, i);
+            if (Ok == ok)
+                pages.Append(frame);
+            else
+                delete frame;
         }
     }
 
