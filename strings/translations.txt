@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4d3dc40db4ae407a228b1a42c2b59cd4abc84f41
+dd27f6cbb7ad167bf6bb041d248578f443c6db25
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4219,7 +4219,7 @@ sp-rs:bajtova
 sq:bajt
 sr-rs:бајтова
 sv:Byte
-ta:Bytes
+ta:பிட்டுகள்
 th:ไบต์
 tl:Bytes
 tr:Bayt
@@ -6929,6 +6929,7 @@ sp-rs:FictionBook dokumenti
 sq:Dokumente FictionBook
 sr-rs:FictionBook докуменат
 sv:FictionBook dokument
+ta:புனைவு புத்தக ஆவணம்
 tr:FictionBook belgeleri
 tw:FictionBook(fb2) 文件
 uk:Документи FictionBook
@@ -8254,7 +8255,7 @@ sp-rs:GB
 sq:GB
 sr-rs:GB
 sv:GB
-ta:GB
+ta:ஜிகா பைட்டு
 th:GB
 tl:GB
 tr:GB
