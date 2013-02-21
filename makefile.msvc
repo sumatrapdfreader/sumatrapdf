@@ -64,20 +64,19 @@ CFLAGS = $(CFLAGS) /wd6211
 !endif
 
 !if "$(CFG)"=="dbg"
-CFLAGS = $(CFLAGS)  /D "DEBUG" /D "_DEBUG"
+CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Isrc/utils /Isrc/utils/msvc /Isrc/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
-	/I$(MUPDF_DIR)\xps /Isrc /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
+	/Isrc /Isrc/utils /Isrc/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
+	/I$(MUPDF_DIR)\xps /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
 	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Isrc/utils /Isrc/utils/msvc /Isrc /Isrc/installer /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
+	/Isrc/utils /Isrc/installer /Isrc /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
 
 UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Isrc/utils /Isrc/utils/msvc /Isrc /Isrc/installer \
-	/D "BUILD_UNINSTALLER"
+	/Isrc/utils /Isrc/installer /Isrc /D "BUILD_UNINSTALLER"
 
 RC_FLAGS = $(EXTCFLAGS)
 !if "$(CFG)"=="dbg"
@@ -123,7 +122,7 @@ MEMTRACE_CFLAGS = $(SUMATRA_CFLAGS)
 
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(ODLL)\npPdfViewer.res
-BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils /Isrc/utils/msvc
+BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
@@ -137,7 +136,7 @@ UTILS_OBJS = \
 	$(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
 	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
-	$(OU)\CssParser.obj  $(OU)\FileWatcher.obj
+	$(OU)\CssParser.obj $(OU)\FileWatcher.obj
 
 !if "$(CFG)"=="dbg"
 UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj

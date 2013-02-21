@@ -280,9 +280,6 @@ MUTOOL_APP = $(O)\mutool.exe
 MUDRAW_OBJS = $(LIBS_OBJS) $(OA)\mudraw.obj
 MUDRAW_APP = $(O)\mudraw.exe
 
-FONTDUMP_OBJS = $(OP)\fontdump.obj
-FONTDUMP_APP = $(O)\fontdump.exe
-
 all: $(O) $(MUDRAW_APP) $(MUTOOL_APP) $(PDFAPP_APP)
 
 clean: force
@@ -306,9 +303,6 @@ $(O): force
 $(PDFAPP_RES): $(MUPDF_DIR)\apps\win_res.rc
 	rc /r /fo$@ $(MUPDF_DIR)\apps\win_res.rc
 
-$(FONTDUMP_APP): $(FONTDUMP_OBJS)
-	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
-
 $(MUTOOL_APP): $(MUTOOL_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
@@ -319,16 +313,7 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 # freetype directories
-{$(FREETYPE_DIR)\src\autofit}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
 {$(FREETYPE_DIR)\src\base}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
-{$(FREETYPE_DIR)\src\bdf}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
-{$(FREETYPE_DIR)\src\cache}.c{$(OFT)}.obj::
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\cff}.c{$(OFT)}.obj::
@@ -337,22 +322,7 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 {$(FREETYPE_DIR)\src\cid}.c{$(OFT)}.obj::
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
-{$(FREETYPE_DIR)\src\gxvalid}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
-{$(FREETYPE_DIR)\src\gzip}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
-{$(FREETYPE_DIR)\src\lzw}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
 {$(FREETYPE_DIR)\src\otvalid}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
-{$(FREETYPE_DIR)\src\pcf}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
-{$(FREETYPE_DIR)\src\pfr}.c{$(OFT)}.obj::
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\psaux}.c{$(OFT)}.obj::
@@ -377,12 +347,6 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
 {$(FREETYPE_DIR)\src\type1}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
-{$(FREETYPE_DIR)\src\type42}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
-{$(FREETYPE_DIR)\src\winfonts}.c{$(OFT)}.obj::
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
 {$(ZLIB_DIR)}.c{$(OZ)}.obj::
@@ -440,7 +404,7 @@ MUPDF_GENERATED =  $(MUPDF_CMAP_TABLES) $(MUPDF_FONT_FILES) $(MUPDF_GEN_DIR)\js_
 $(MUPDF_GENERATED):
 	cd $(MUPDF_DIR) && win32\generate.bat
 
-$(OP)\pdf_cmap_tables.obj: $(MUPDF_CMAP_TABLES)
+$(OP)\pdf_cmap_table.obj: $(MUPDF_CMAP_TABLES)
 $(OP)\pdf_fontfile.obj: $(MUPDF_FONT_FILES)
 $(OP)\pdf_js.obj: $(MUPDF_GEN_DIR)\js_util.h
 
