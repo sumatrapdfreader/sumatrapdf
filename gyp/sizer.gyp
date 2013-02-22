@@ -16,10 +16,9 @@
       'sources': [
         '../tools/sizer/Dia2Subset.h',
         '../tools/sizer/main.cpp',
-        '../tools/sizer/PdbFile.cpp',
-        '../tools/sizer/PdbFile.h',
         '../tools/sizer/Util.cpp',
         '../tools/sizer/Util.h',
+        '../tools/sizer/readme.txt',
       ],
     },
   ],

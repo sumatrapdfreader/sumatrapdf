@@ -92,12 +92,12 @@ IDiaDataSource *LoadDia()
     return NULL;
 }
 
-const char* BStrToString(str::Str<char>& strInOut, BSTR str, char *defString, bool stripWhitespace)
+void BStrToString(str::Str<char>& strInOut, BSTR str, char *defString, bool stripWhitespace)
 {
     strInOut.Reset();
     if (!str) {
         strInOut.Append(defString);
-        return strInOut.Get();
+        return;
     }
 
     OLECHAR c;
@@ -111,19 +111,4 @@ const char* BStrToString(str::Str<char>& strInOut, BSTR str, char *defString, bo
             c = '?';
         strInOut.Append((char)c);
     }
-    return strInOut.Get();
-}
-
-int StringInterner::Intern(const char *s)
-{
-    const char *internedString;
-
-    nTotalStrings++;
-    int idx = (int)intToStr.Count();
-    bool inserted = strToInt.Insert(s, idx, &idx, &internedString);
-    if (!inserted)
-        return idx;
-
-    intToStr.Append(internedString);
-    return idx;
 }
