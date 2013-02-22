@@ -21,7 +21,8 @@ int main(int argc, char** argv)
 
     const char *fileName = argv[1];
     fprintf( stderr, "Reading debug info file %s ...\n", fileName);
-    ProcessPdbFile(fileName, NULL);
+    PdbProcessingOptions options = (PdbProcessingOptions)(DUMP_SECTIONS | DUMP_FUNCTIONS);
+    ProcessPdbFile(fileName, options);
 
     return 0;
 }

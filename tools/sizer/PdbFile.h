@@ -5,9 +5,11 @@
 #ifndef PdbFile_h
 #define PdbFile_h
 
-struct ProcessFlags {
+enum PdbProcessingOptions {
+    DUMP_SECTIONS = 1 << 0,
+    DUMP_FUNCTIONS = 1 << 1,
 };
 
-void ProcessPdbFile(const char *fileNameA, ProcessFlags *flags);
+void ProcessPdbFile(const char *fileNameA, PdbProcessingOptions options);
 
 #endif

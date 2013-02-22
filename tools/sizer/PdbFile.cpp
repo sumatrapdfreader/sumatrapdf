@@ -3,6 +3,7 @@
 // Based on code by Fabian "ryg" Giesen, http://farbrausch.com/~fg/
 
 #include "BaseUtil.h"
+#include "BitManip.h"
 #include "Dict.h"
 
 #include "Dia2Subset.h"
@@ -633,6 +634,9 @@ public:
     void        ReadEverything();
     void        ReadSectionTable();
     void        EnumerateSymbols();
+
+    void        DumpSections(str::Str<char>& report);
+    void        DumpSection(IDiaSectionContrib *item, str::Str<char>& report);
 };
 
 Section *PdbReader::SectionFromOffset(u32 sec,u32 offs)
@@ -766,6 +770,57 @@ void PdbReader::AddSection(IDiaSectionContrib *item)
         SysFreeString(objFileName);
 }
 
+const char *SectionTypeName(int type)
+{
+    if (type == DIC_CODE) return "code";
+    if (type == DIC_DATA) return "data";
+    if (type == DIC_BSS) return "bss";
+    return "unknown";
+}
+
+void PdbReader::DumpSection(IDiaSectionContrib *item, str::Str<char>& report)
+{
+    Section s2 = { 0 };
+    Section *s = &s2;
+
+    item->get_addressOffset(&s->offset);
+    item->get_addressSection(&s->section);
+    item->get_length(&s->length);
+    item->get_compilandId(&s->compiland);
+
+    BOOL code=FALSE,initData=FALSE,uninitData=FALSE;
+    item->get_code(&code);
+    item->get_initializedData(&initData);
+    item->get_uninitializedData(&uninitData);
+
+    if (code && !initData && !uninitData)
+        s->type = DIC_CODE;
+    else if (!code && initData && !uninitData)
+        s->type = DIC_DATA;
+    else if (!code && !initData && uninitData)
+        s->type = DIC_BSS;
+    else
+        s->type = DIC_UNKNOWN;
+
+    BSTR objFileName = 0;
+
+    IDiaSymbol *compiland = 0;
+    item->get_compiland(&compiland);
+    if (compiland)
+    {
+        compiland->get_name(&objFileName);
+        compiland->Release();
+    }
+
+    const char *str = BStrToString(strTmp, objFileName, "<noobjfile>");
+
+    // section | offset | length | type | objFile
+    report.AppendFmt("%d|%d|%d|%s|%s\n", s->section, s->offset, s->length, SectionTypeName(s->type), str);
+
+    if (objFileName)
+        SysFreeString(objFileName);
+}
+
 void PdbReader::ReadSectionTable()
 {
     HRESULT             hr;
@@ -866,7 +921,55 @@ void PdbReader::ReadEverything()
     EnumerateSymbols();
 }
 
-void ProcessPdbFile(const char *fileNameA, ProcessFlags *flags)
+void PdbReader::DumpSections(str::Str<char>& report)
+{
+    HRESULT             hr;
+    IDiaEnumTables *    enumTables = NULL;
+    IDiaTable *         secTable = NULL;
+
+    hr = session->getEnumTables(&enumTables);
+    if (S_OK != hr)
+        return;
+
+    report.Append("Sections:\n");
+
+    VARIANT vIndex;
+    vIndex.vt = VT_BSTR;
+    vIndex.bstrVal = SysAllocString(L"Sections");
+
+    hr = enumTables->Item(vIndex, &secTable);
+    if (S_OK != hr)
+        goto Exit;
+
+    LONG count;
+
+    secTable->get_Count(&count);
+    sections = (Section*)malloc(sizeof(Section)*count);
+    nSections = count;
+    currSection = 0;
+
+    IDiaSectionContrib *item;
+    ULONG numFetched;
+    for (;;)
+    {
+        hr = secTable->Next(1,(IUnknown **)&item, &numFetched);
+        if (FAILED(hr) || (numFetched != 1))
+            break;
+
+        DumpSection(item, report);
+        item->Release();
+    }
+
+Exit:
+    report.Append("\n");
+    if (secTable)
+        secTable->Release();
+    SysFreeString(vIndex.bstrVal);
+    if (enumTables)
+        enumTables->Release();
+}
+
+void ProcessPdbFile(const char *fileNameA, PdbProcessingOptions options)
 {
     HRESULT             hr;
     IDiaDataSource *    dia;
@@ -889,6 +992,12 @@ void ProcessPdbFile(const char *fileNameA, ProcessFlags *flags)
         return;
     }
 
+    str::Str<char> report;
+    if (bit::IsMaskSet(options, DUMP_SECTIONS)) {
+        reader.DumpSections(report);
+    }
+
+    /*
     DebugInfo *di = new DebugInfo();
     reader.di = di;
     reader.ReadEverything();
@@ -898,9 +1007,8 @@ void ProcessPdbFile(const char *fileNameA, ProcessFlags *flags)
         return;
     }
     log("\nProcessing info...\n");
-    str::Str<char> report;
     di->AddTypeSummary(report);
-
+    */
 #if 0
     di->FinishedReading();
     di->StartAnalyze();

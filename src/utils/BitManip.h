@@ -45,6 +45,12 @@ bool IsSet(T v, int bitNo)
     return (v & mask) != 0;
 }
 
+template <typename T>
+bool IsMaskSet(T v, T mask)
+{
+    return (v & mask) != 0;
+}
+
 }
 
 #endif
