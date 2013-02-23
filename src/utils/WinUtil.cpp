@@ -200,6 +200,18 @@ WCHAR *ReadIniString(const WCHAR *iniPath, const WCHAR *section, const WCHAR *ke
     return value;
 }
 
+WCHAR *GetSpecialFolder(int csidl, bool createIfMissing)
+{
+    if (createIfMissing)
+        csidl = csidl | CSIDL_FLAG_CREATE;
+    WCHAR path[MAX_PATH];
+    path[0] = '\0';
+    HRESULT res = SHGetFolderPath(NULL, csidl, NULL, 0, path);
+    if (S_OK != res)
+        return NULL;
+    return str::Dup(path);
+}
+
 #define PROCESS_EXECUTE_FLAGS 0x22
 
 /* enable "NX" execution prevention for XP, 2003
@@ -1153,4 +1165,3 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR *s)
     urlVar.vt = VT_BSTR;
     urlVar.bstrVal = SysAllocString(s);
 }
-

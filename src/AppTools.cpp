@@ -62,7 +62,9 @@ int CompareVersion(const WCHAR *txt1, const WCHAR *txt2)
 
 /* Return false if this program has been started from "Program Files" directory
    (which is an indicator that it has been installed) or from the last known
-   location of a SumatraPDF installation (HKLM\Software\SumatraPDF\Install_Dir) */
+   location of a SumatraPDF installation: */
+#define REG_PATH_UNINST     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP_NAME_STR
+
 bool IsRunningInPortableMode()
 {
     // cache the result so that it will be consistent during the lifetime of the process
@@ -76,10 +78,11 @@ bool IsRunningInPortableMode()
         return true;
 
     // if we can't get a path, assume we're not running from "Program Files"
-    ScopedMem<WCHAR> installedPath(NULL);
-    installedPath.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\" APP_NAME_STR, L"Install_Dir"));
+    ScopedMem<WCHAR> installedPath;
+    // cf. GetInstallationDir() in installer\Installer.cpp
+    installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
     if (!installedPath)
-        installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, L"Software\\" APP_NAME_STR, L"Install_Dir"));
+        installedPath.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (installedPath) {
         if (!str::EndsWithI(installedPath.Get(), L".exe"))
             installedPath.Set(path::Join(installedPath.Get(), path::GetBaseName(exePath)));
@@ -89,9 +92,8 @@ bool IsRunningInPortableMode()
         }
     }
 
-    WCHAR programFilesDir[MAX_PATH] = { 0 };
-    BOOL ok = SHGetSpecialFolderPath(NULL, programFilesDir, CSIDL_PROGRAM_FILES, FALSE);
-    if (!ok)
+    ScopedMem<WCHAR> programFilesDir(GetSpecialFolder(CSIDL_PROGRAM_FILES));
+    if (!programFilesDir)
         return true;
 
     // check if one of the exePath's parent directories is "Program Files"
@@ -120,11 +122,9 @@ WCHAR *AppGenDataFilename(const WCHAR *fileName)
             path.Set(path::GetDir(exePath));
     } else {
         /* Use %APPDATA% */
-        WCHAR dir[MAX_PATH];
-        dir[0] = '\0';
-        BOOL ok = SHGetSpecialFolderPath(NULL, dir, CSIDL_APPDATA, TRUE);
-        if (ok) {
-            path.Set(path::Join(dir, APP_NAME_STR));
+        path.Set(GetSpecialFolder(CSIDL_APPDATA, true));
+        if (path) {
+            path.Set(path::Join(path, APP_NAME_STR));
             if (path && !dir::Create(path))
                 path.Set(NULL);
         }

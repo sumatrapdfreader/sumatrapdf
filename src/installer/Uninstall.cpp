@@ -14,19 +14,18 @@
 // Returns NULL if fails for any reason.
 static WCHAR *GetValidTempDir()
 {
-    WCHAR d[MAX_PATH];
-    DWORD res = GetTempPath(dimof(d), d);
-    if ((0 == res) || (res >= MAX_PATH)) {
+    ScopedMem<WCHAR> d(path::GetTempPath());
+    if (!d) {
         NotifyFailed(L"Couldn't obtain temporary directory");
         return NULL;
     }
-    BOOL success = CreateDirectory(d, NULL);
-    if (!success && (ERROR_ALREADY_EXISTS != GetLastError())) {
+    bool ok = dir::Create(d);
+    if (!ok) {
         LogLastError();
         NotifyFailed(L"Couldn't create temporary directory");
         return NULL;
     }
-    return str::Dup(d);
+    return d.StealData();
 }
 
 static WCHAR *GetTempUninstallerPath()

@@ -44,6 +44,7 @@ bool   WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DW
 bool   CreateRegKey(HKEY keySub, const WCHAR *keyName);
 bool   DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst=false);
 WCHAR *ReadIniString(const WCHAR *iniPath, const WCHAR *section, const WCHAR *key);
+WCHAR *GetSpecialFolder(int csidl, bool createIfMissing=false);
 
 void   DisableDataExecution();
 void   RedirectIOToConsole();

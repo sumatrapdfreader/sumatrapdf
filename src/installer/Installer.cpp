@@ -198,10 +198,9 @@ static WCHAR *GetInstallationDir()
 
 #ifndef BUILD_UNINSTALLER
     // fall back to %ProgramFiles%
-    WCHAR buf[MAX_PATH] = {0};
-    BOOL ok = SHGetSpecialFolderPath(NULL, buf, CSIDL_PROGRAM_FILES, FALSE);
-    if (ok)
-        return path::Join(buf, TAPP);
+    dir.Set(GetSpecialFolder(CSIDL_PROGRAM_FILES));
+    if (dir)
+        return path::Join(dir, TAPP);
     // fall back to C:\ as a last resort
     return str::Dup(L"C:\\" TAPP);
 #else
@@ -235,22 +234,13 @@ static WCHAR *GetPdfPreviewerPath()
     return path::Join(gGlobalData.installDir, L"PdfPreview.dll");
 }
 
-static WCHAR *GetStartMenuProgramsPath(bool allUsers)
-{
-    static WCHAR dir[MAX_PATH];
-    // CSIDL_COMMON_PROGRAMS => installing for all users
-    BOOL ok = SHGetSpecialFolderPath(NULL, dir, allUsers ? CSIDL_COMMON_PROGRAMS : CSIDL_PROGRAMS, FALSE);
-    if (!ok)
-        return NULL;
-    return dir;
-}
-
 WCHAR *GetShortcutPath(bool allUsers)
 {
-    WCHAR *path = GetStartMenuProgramsPath(allUsers);
-    if (!path)
+    // CSIDL_COMMON_PROGRAMS => installing for all users
+    ScopedMem<WCHAR> dir(GetSpecialFolder(allUsers ? CSIDL_COMMON_PROGRAMS : CSIDL_PROGRAMS));
+    if (!dir)
         return NULL;
-    return path::Join(path, TAPP L".lnk");
+    return path::Join(dir, TAPP L".lnk");
 }
 
 /* if the app is running, we have to kill it so that we can over-write the executable */
@@ -961,16 +951,14 @@ bool CrashHandlerCanUseNet()
 
 static void InstallInstallerCrashHandler()
 {
-    WCHAR tempDir[MAX_PATH] = { 0 };
-    DWORD res = GetTempPath(dimof(tempDir), tempDir);
-    if ((0 == res) || !dir::Exists(tempDir)) {
-        BOOL ok = SHGetSpecialFolderPath(NULL, tempDir, CSIDL_LOCAL_APPDATA, TRUE);
-        if (!ok)
-            return;
-    }
-
     // save symbols directly into %TEMP% (so that the installer doesn't
     // unnecessarily leave an empty directory behind if it doesn't have to)
+    ScopedMem<WCHAR> tempDir(path::GetTempPath());
+    if (!tempDir || !dir::Exists(tempDir))
+        tempDir.Set(GetSpecialFolder(CSIDL_LOCAL_APPDATA, true)); {
+        if (!tempDir || !dir::Exists(tempDir))
+            return;
+    }
     ScopedMem<WCHAR> crashDumpPath(path::Join(tempDir, CRASH_DUMP_FILE_NAME));
     InstallCrashHandler(crashDumpPath, tempDir);
 }
