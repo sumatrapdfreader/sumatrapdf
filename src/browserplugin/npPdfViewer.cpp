@@ -12,6 +12,10 @@
 
 #include "DebugLog.h"
 
+// TODO: https://code.google.com/p/sumatrapdf/issues/detail?id=1627
+//       extract the language to use from sumatrapdfprefs.dat (or guess from the UI language)
+#define _TR(x) TEXT(x)
+
 #undef NP_END_MACRO
 #define NP_END_MACRO } __pragma(warning(push)) __pragma(warning(disable:4127)) while (0) __pragma(warning(pop))
 
@@ -258,17 +262,17 @@ static WCHAR *FormatSizeSuccint(size_t size) {
     if (size > GB)
     {
         s /= GB;
-        unit = L"GB";
+        unit = _TR("GB");
     }
     else if (size > MB)
     {
         s /= MB;
-        unit = L"MB";
+        unit = _TR("MB");
     }
     else
     {
         s /= KB;
-        unit = L"KB";
+        unit = _TR("KB");
     }
     
     ScopedMem<WCHAR> sizestr(str::FormatFloatWithThousandSep(s));
@@ -301,7 +305,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         hFont = (HFONT)SelectObject(hDCBuffer, hFont);
         SetTextColor(hDCBuffer, RGB(0, 0, 0));
         SetBkMode(hDCBuffer, TRANSPARENT);
-        DrawCenteredText(hDCBuffer, rcClient, data->message);
+        DrawCenteredText(hDCBuffer, rcClient, data->message /*, isRtL */);
         
         // draw a progress bar, if a download is in progress
         if (0 < data->progress && data->progress <= 1)
@@ -323,13 +327,13 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             if (0 == data->totalSize || data->currSize > data->totalSize)
             {
                 // total size unknown or bogus => show just the current size
-                DrawCenteredText(hDCBuffer, rcProgressAll, currSize);
+                DrawCenteredText(hDCBuffer, rcProgressAll, currSize /*, isRtL */);
             }
             else
             {
                 ScopedMem<WCHAR> totalSize(FormatSizeSuccint(data->totalSize));
-                ScopedMem<WCHAR> s(str::Format(L"%s of %s", currSize, totalSize));
-                DrawCenteredText(hDCBuffer, rcProgressAll, s);
+                ScopedMem<WCHAR> s(str::Format(_TR("%s of %s"), currSize, totalSize));
+                DrawCenteredText(hDCBuffer, rcProgressAll, s /*, isRtL */);
             }
         }
         
@@ -395,9 +399,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     
     InstanceData *data = (InstanceData *)instance->pdata;
     if (GetExePath(data->exepath, dimof(data->exepath)))
-        data->message = L"Opening document in SumatraPDF...";
+        data->message = _TR("Opening document in SumatraPDF...");
     else
-        data->message = L"Error: SumatraPDF hasn't been found!";
+        data->message = _TR("Error: SumatraPDF hasn't been found!");
     
     return NPERR_NO_ERROR;
 }
@@ -546,7 +550,7 @@ static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
     if (!data->hProcess)
     {
         plogf("sp: NPP_StreamAsFile() error: couldn't run SumatraPDF!");
-        data->message = L"Error: Couldn't run SumatraPDF!";
+        data->message = _TR("Error: Couldn't run SumatraPDF!");
     }
 }
 
@@ -557,7 +561,7 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
     if (!fname)
     {
         plogf("sp: NPP_StreamAsFile() error: fname is NULL");
-        data->message = L"Error: The document couldn't be downloaded!";
+        data->message = _TR("Error: The document couldn't be downloaded!");
         goto Exit;
     }
 

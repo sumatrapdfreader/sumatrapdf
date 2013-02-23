@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-dd27f6cbb7ad167bf6bb041d248578f443c6db25
+aa1e9f4ab03837e050316951372cad179ba706b4
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -28,7 +28,7 @@ fy-nl:&Oer
 ga:Maidir le
 gl:Arred&or de
 he:אודות
-hi:Sumatra के &बारे में
+hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
 id:&Tentang
@@ -96,7 +96,7 @@ fy-nl:Wiere grutte\tCtrl+1
 ga:&Fíormhéid\tCtrl+1
 gl:&Tamaño real\tCtrl+1
 he:גודל מקור\tCtrl+1
-hi:सही आकार(&u)\tCtrl+1
+hi:वास्तविक आकार(&A)\tCtrl+1
 hr:Stvarna veličina\tCtrl+1
 hu:&Tényleges méret\tCtrl+1
 id:&Ukuran Sebenarnya\tCtrl+1
@@ -1335,6 +1335,7 @@ fy-nl:Haad-/lytse letters tapasse
 ga:&Comhoiriúnaigh an cás
 gl:&Coincidencia maiúsculas/minúsculas
 he:התאם אות גדולה/קטנה
+hi:केस मिलाएँ(&M)
 hr:Razlikuj velika i mala slova
 hu:Kis- és nagybetűk megkülönböztetése
 id:&Samakan ukuran
@@ -3075,7 +3076,7 @@ fy-nl:Oer SumatraPDF
 ga:Maidir le SumatraPDF
 gl:Arredor do SumatraPDF
 he:PDF אודות סומטרה
-hi:Sumatra के बारे में
+hi:Sumatra PDF के बारे में
 hr:O SumatriPDF
 hu:A SumatraPDF névjegye
 id:Tentang SumatraPDF
@@ -3138,7 +3139,7 @@ fr:Ajouter un favori
 ga:Cuir ceanán leis
 gl:Engadir Favorito
 he:הוסף מועדף
-hi:पसंदीदा करने के लिए जोड़
+hi:पसंदीदा सूचि जोड़ें
 hr:Dodaj favorita
 hu:Hozzáadás a kedvencekhez
 id:Tambah Favorit
@@ -3193,7 +3194,7 @@ fr:Ajouter la page %s aux favoris
 ga:Cuir leathanach a %s le na ceanáin
 gl:Engadir páxina %s aos favoritos
 he:למועדפים %s הוסף עמוד
-hi:पृष्ठ %s को अपने पसंदीदा सूचि में जोड़े
+hi:पृष्ठ %s को पसंदीदा सूचि में जोड़े
 hr:Dodaj stranicu %s u favorite
 hu:%s. oldal hozzáadása a kedvencekhez
 id:Tambah Halaman %s Ke Favorit
@@ -3248,7 +3249,7 @@ fr:Ajouter la page %s aux favoris avec un nom (optionnel):
 ga:Cuir leathanach a %s le na ceanáin le ainm (roghnach):
 gl:Engadir páxina %s aos favoritos  cun nome (opcional):
 he:למועדפים בשם %s הוסף עמוד:
-hi:बुकमार्क्स में पृष्ठ %s जोड़ें (वैकल्पिक) नाम के साथ:
+hi:पृष्ठ %s को पसंदीदा सूचि में नाम (वैकल्पिक) के साथ: जोड़ें:
 hr:Dodaj stranicu %s u favorite sa (opcijnalno) imenom:
 hu:%s. oldal hozzáadása a kedvencekhez, megnevezéssel (opcionális):
 id:Tambah Halaman %s Ke Favorit Dengan Nama:
@@ -3303,7 +3304,7 @@ fr:Ajouter aux favoris
 ga:Cuir le na ceanáin
 gl:Engadir a favoritos
 he:הוסף למועדפים
-hi:पसंदीदा करने के लिए जोड़
+hi:पसंदीदा सूचि में जोड़ें
 hr:Dodaj u favorite
 hu:Hozzáadás a kedvencekhez
 id:Tambah Ke Favorit
@@ -3480,7 +3481,7 @@ fr:Tous les documents pris en charge
 ga:Gach cáipéis inléite
 gl:Todos os documentos admitidos
 he:כל המסמכים הנתמכים
-hi:सभी सहायक दस्तावेज़
+hi:सभी समर्थित दस्तावेज़
 hr:Svi podržani dokumenti
 hu:Minden támogatott fájltípus
 id:Semua Dokumen Yang Didukung
@@ -3537,7 +3538,7 @@ fy-nl:Applikaasje:
 ga:Feidhmchlár:
 gl:Aplicación:
 he:יישום:
-hi:आवेदन
+hi:आवेदन:
 hr:Aplikacija:
 hu:Alkalmazás:
 id:Aplikasi
@@ -3722,7 +3723,7 @@ fy-nl:Auteur:
 ga:Údar:
 gl:Autor:
 he:עורך:
-hi:लेखक
+hi:लेखक:
 hr:Autor:
 hu:Készítő:
 id:Pencipta:
@@ -4081,6 +4082,7 @@ fr:Raccourci du signet de la page %s de %s
 ga:Cruthaigh aicearra chuig lch %s as %s
 gl:Atallo de marcador á páxina %s de %s
 he:קיצור דרך לסימנה %s מתוך %s
+hi:पृष्ठ %s पर बुकमार्क शॉर्टकट %s का करें
 hr:Prečac oznake do stranice %s of %s
 hu:Könyvjelző parancsikon a(z) %s/%s oldalhoz
 id:Jalan pintas markah ke halaman %s dari %s
@@ -5320,6 +5322,7 @@ fr:Impossible d'obtenir les propriétés de l'imprimante
 ga:Níorbh fhéidir airíonna an chlóire a fháil
 gl:Non se poden obter as propiedades da impresora
 he:לא ניתן להשיג מאפייני מדפסת
+hi:प्रिंटर के गुणों प्राप्त नहीं कर पा रहा
 hr:Nemoguće pribaviti svojstva printera
 hu:A nyomtató tulajdonságai nem érhetőek el
 id:Tidak bsa mendapatkan sifat Pencetak
@@ -5437,6 +5440,7 @@ fy-nl:Dizze side kin net werjûn wurde
 ga:Níorbh fhéidir an leathanach a chóiriú
 gl:Non se pode compoñer a páxina
 he:לא ניתן להציג הדף
+hi:पेज रेंडर नहीं कर सका
 hr:Nije moguće iscrtati stranicu
 hu:Oldalfeldolgozási hiba
 id:Tidak dapat menampilkan halaman
@@ -5610,6 +5614,7 @@ fy-nl:&Oanpaste Zoom...\tCtrl+Y
 ga:Formhéadú saincheaptha...\tCtrl+Y
 gl:&Aumento a medida...\tCtrl+Y
 he:זום משתמש...\tCtrl+Y
+hi:प्रचलन ज़ूम (&Z)...\tCtrl+Y
 hr:&Prilagođeno uvećanje...\tCtrl+Y
 hu:... Egyéni méret\tCtrl+Y
 id:&Pembesaran Buatan\tCtrl+Y
@@ -6340,6 +6345,7 @@ fr:Entrer la ligne de commande à exécuter lorsque vous double-cliquez sur le d
 ga:Cuir isteach líne na n-orduithe atá le gairm nuair a bhrúann tú faoi dhó ar cháipéis PDF:
 gl:Introduza a liña de comandos a invocar cando faga dobre-click sobre o documento PDF:
 he:הזן פקודה להפעלה בלחיצה כפולה על מסמך
+hi:पीडीएफ दस्तावेज़ पर डबल क्लिक से आह्वान करने के लिये कमांड लाइन में प्रवेश करें:
 hr:Unesite naredbenu liniju za pokretanje kod dvostrukog klika na PDF dokumentu:
 hu:Írja be a parancsot, ami a PDF dokumentumra való dupla kattintáskor fut le:
 id:Masukkan baris perintah untuk dijalankan ketika Anda mengklik dua kali pada dokumen PDF:
@@ -6912,6 +6918,7 @@ eu:FikzioLiburu agiriak
 fa:اسناد کتاب تخیلی
 fr:Documents FictionBook
 he:מסמכי FictionBook
+hi:गल्प बुक दस्तावेजों
 hr:FictionBook dokumenti
 hu:FictionBook fájlok
 id:Dokumen FictionBook
@@ -7455,6 +7462,7 @@ fr:&Ajuster au contenu\tCtrl+3
 ga:Oiriúnaigh an t-inneachar\tCtrl+3
 gl:Axustar &Contido\tCtrl+3
 he:התאם לתוכן\tCtrl+3
+hi:सामग्री को फ़िट करें \tCtrl+3
 hr:Namjesti po &sadržaju\tCtrl+3
 hu:&Tartalom\tCtrl+3
 id:Sesuaikan Dengan &Konten\tCtrl+3
@@ -7896,6 +7904,7 @@ fr:Page unique
 ga:Oiriúnaigh leathanach amháin
 gl:Axustar a páxina única
 he:התאם עמוד אחד
+hi:एकल पृष्ठ को फ़िट करें
 hr:Namjesti po jednoj stranici
 hu:Teljes oldalankénti nézet
 id:Sesuaikan Halaman Tunggal
