@@ -14,6 +14,7 @@ enum PdbProcessingOptions {
 str::Str<char> g_strTmp;
 
 // must match order of enum SymTagEnum in Dia2Subset.h
+#if 0
 const char *g_symTypeNames[SymTagMax] = {
     "SymTagNull",
     "SymTagExe",
@@ -46,6 +47,41 @@ const char *g_symTypeNames[SymTagMax] = {
     "SymTagCustomType",
     "SymTagManagedType",
     "SymTagDimension"
+};
+#endif
+
+const char *g_symTypeNames[SymTagMax] = {
+    "Null",
+    "Exe",
+    "Compiland",
+    "CompilandDetails",
+    "CompilandEnv",
+    "Function",
+    "Block",
+    "Data",
+    "Annotation",
+    "Label",
+    "PublicSymbol",
+    "UDT",
+    "Enum",
+    "FunctionType",
+    "PointerType",
+    "ArrayType",
+    "BaseType",
+    "Typedef",
+    "BaseClass",
+    "Friend",
+    "FunctionArgType",
+    "FuncDebugStart",
+    "FuncDebugEnd",
+    "UsingNamespace",
+    "VTableShape",
+    "VTable",
+    "Custom",
+    "Thunk",
+    "CustomType",
+    "ManagedType",
+    "Dimension"
 };
 
 static const char *GetSymTypeName(int i)
