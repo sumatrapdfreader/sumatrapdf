@@ -272,6 +272,11 @@ pdf_annot *pdf_next_annot(pdf_document *doc, pdf_annot *annot);
 fz_rect *pdf_bound_annot(pdf_document *doc, pdf_annot *annot, fz_rect *rect);
 
 /*
+	pdf_annot_type: Return the type of an annotation
+*/
+fz_annot_type pdf_annot_type(pdf_annot *annot);
+
+/*
 	pdf_run_page: Interpret a loaded page and render it on a device.
 
 	page: A page loaded by pdf_load_page.

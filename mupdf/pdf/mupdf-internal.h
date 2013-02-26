@@ -516,7 +516,8 @@ struct pdf_annot_s
 	fz_matrix matrix;
 	pdf_annot *next;
 	pdf_annot *next_changed;
-	int type;
+	int annot_type;
+	int widget_type;
 };
 
 fz_link_dest pdf_parse_link_dest(pdf_document *doc, pdf_obj *dest);
@@ -563,6 +564,8 @@ struct pdf_page_s
 	fz_link *links;
 	pdf_annot *annots;
 	pdf_annot *changed_annots;
+	pdf_annot *deleted_annots;
+	pdf_annot *tmp_annots;
 	pdf_obj *me;
 	float duration;
 	int transition_present;
@@ -610,7 +613,9 @@ int pdf_choice_widget_is_multiselect(pdf_document *doc, fz_widget *tw);
 int pdf_choice_widget_value(pdf_document *doc, fz_widget *tw, char *opts[]);
 void pdf_choice_widget_set_value(pdf_document *doc, fz_widget *tw, int n, char *opts[]);
 pdf_annot *pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type);
+void pdf_delete_annot(pdf_document *doc, pdf_page *page, pdf_annot *annot);
 void pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_display_list *disp_list);
+void pdf_set_markup_annot_quadpoints(pdf_document *doc, pdf_annot *annot, fz_point *qp, int n);
 void pdf_set_doc_event_callback(pdf_document *doc, fz_doc_event_cb *event_cb, void *data);
 
 void pdf_event_issue_alert(pdf_document *doc, fz_alert_event *event);

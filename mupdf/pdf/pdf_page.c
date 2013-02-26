@@ -361,6 +361,8 @@ pdf_load_page(pdf_document *xref, int number)
 	page->transparency = 0;
 	page->links = NULL;
 	page->annots = NULL;
+	page->deleted_annots = NULL;
+	page->tmp_annots = NULL;
 	page->me = pdf_keep_obj(pageobj);
 
 	obj = pdf_dict_gets(pageobj, "UserUnit");
@@ -489,6 +491,10 @@ pdf_free_page(pdf_document *xref, pdf_page *page)
 		fz_drop_link(xref->ctx, page->links);
 	if (page->annots)
 		pdf_free_annot(xref->ctx, page->annots);
+	if (page->deleted_annots)
+		pdf_free_annot(xref->ctx, page->deleted_annots);
+	if (page->tmp_annots)
+		pdf_free_annot(xref->ctx, page->tmp_annots);
 	/* xref->focus, when not NULL, refers to one of
 	 * the annotations and must be NULLed when the
 	 * annotations are destroyed. xref->focus_obj

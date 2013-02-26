@@ -220,21 +220,6 @@ int pdf_field_type(pdf_document *doc, pdf_obj *obj)
 		else
 			return FZ_WIDGET_TYPE_LISTBOX;
 	}
-	/* SumatraPDF: support more annotation types */
-	else if (!*(type = pdf_to_name(pdf_dict_gets(obj, "Subtype"))))
-		return FZ_WIDGET_TYPE_NOT_WIDGET;
-	else if (!strcmp(type, "Link"))
-		return FZ_WIDGET_TYPE_LINK;
-	else if (!strcmp(type, "Text"))
-		return FZ_WIDGET_TYPE_TEXT_ICON;
-	else if (!strcmp(type, "FileAttachment"))
-		return FZ_WIDGET_TYPE_FILE;
-	else if (!strcmp(type, "Highlight"))
-		return FZ_WIDGET_TYPE_TEXT_HIGHLIGHT;
-	else if (!strcmp(type, "Underline") || !strcmp(type, "StrikeOut") || !strcmp(type, "Squiggly"))
-		return FZ_WIDGET_TYPE_TEXT_MARKUP;
-	else if (!strcmp(type, "FreeText"))
-		return FZ_WIDGET_TYPE_FREETEXT;
 	else
 		return FZ_WIDGET_TYPE_NOT_WIDGET;
 }
@@ -2146,7 +2131,7 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
 
 				if (annot)
 				{
-					switch(annot->type)
+					switch(annot->widget_type)
 					{
 					case FZ_WIDGET_TYPE_RADIOBUTTON:
 					case FZ_WIDGET_TYPE_CHECKBOX:
@@ -2175,7 +2160,20 @@ void pdf_update_page(pdf_document *doc, pdf_page *page)
 	fz_context *ctx = doc->ctx;
 	pdf_annot *annot;
 
+	/* Reset changed_annots to empty */
 	page->changed_annots = NULL;
+
+	/*
+		Free all annots in tmp_annots, since these were
+		referenced only from changed_annots.
+	*/
+	if (page->tmp_annots)
+	{
+		pdf_free_annot(ctx, page->tmp_annots);
+		page->tmp_annots = NULL;
+	}
+
+	/* Add all changed annots to the list */
 	for (annot = page->annots; annot; annot = annot->next)
 	{
 		pdf_xobject *ap = pdf_keep_xobject(ctx, annot->ap);
@@ -2200,6 +2198,24 @@ void pdf_update_page(pdf_document *doc, pdf_page *page)
 			fz_rethrow(ctx);
 		}
 	}
+
+	/*
+		Add all deleted annots to the list, since these also
+		warrant a screen update
+	*/
+	for (annot = page->deleted_annots; annot; annot = annot->next)
+	{
+		annot->next_changed = page->changed_annots;
+		page->changed_annots = annot;
+	}
+
+	/*
+		Move deleted_annots to tmp_annots to keep them separate
+		from any future deleted ones. They cannot yet be freed
+		since they are linked into changed_annots
+	*/
+	page->tmp_annots = page->deleted_annots;
+	page->deleted_annots = NULL;
 }
 
 pdf_annot *pdf_poll_changed_annot(pdf_document *idoc, pdf_page *page)
@@ -2221,7 +2237,7 @@ fz_widget *pdf_first_widget(pdf_document *doc, pdf_page *page)
 {
 	pdf_annot *annot = page->annots;
 
-	while (annot && annot->type == FZ_WIDGET_TYPE_NOT_WIDGET)
+	while (annot && annot->widget_type == FZ_WIDGET_TYPE_NOT_WIDGET)
 		annot = annot->next;
 
 	return (fz_widget *)annot;
@@ -2234,7 +2250,7 @@ fz_widget *pdf_next_widget(fz_widget *previous)
 	if (annot)
 		annot = annot->next;
 
-	while (annot && annot->type == FZ_WIDGET_TYPE_NOT_WIDGET)
+	while (annot && annot->widget_type == FZ_WIDGET_TYPE_NOT_WIDGET)
 		annot = annot->next;
 
 	return (fz_widget *)annot;
@@ -2243,7 +2259,7 @@ fz_widget *pdf_next_widget(fz_widget *previous)
 int fz_widget_get_type(fz_widget *widget)
 {
 	pdf_annot *annot = (pdf_annot *)widget;
-	return annot->type;
+	return annot->widget_type;
 }
 
 char *pdf_field_value(pdf_document *doc, pdf_obj *field)

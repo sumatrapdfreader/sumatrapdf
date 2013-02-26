@@ -2264,7 +2264,7 @@ pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
     Vec<pdf_annot *> annots;
 
     for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
-        if (FZ_WIDGET_TYPE_FILE == annot->type) {
+        if (FZ_ANNOT_FILEATTACHMENT == annot->annot_type) {
             pdf_obj *file = pdf_dict_gets(annot->obj, "FS");
             pdf_obj *embedded = pdf_dict_getsa(pdf_dict_gets(file, "EF"), "DOS", "F");
             fz_rect rect;
@@ -2287,7 +2287,7 @@ pdf_annot **PdfEngineImpl::ProcessPageAnnotations(pdf_page *page)
                 annots.Append(annot);
             }
         }
-        else if (!str::IsEmpty(pdf_to_str_buf(pdf_dict_gets(annot->obj, "Contents"))) && annot->type != FZ_WIDGET_TYPE_FREETEXT) {
+        else if (!str::IsEmpty(pdf_to_str_buf(pdf_dict_gets(annot->obj, "Contents"))) && annot->annot_type != FZ_ANNOT_FREETEXT) {
             annots.Append(annot);
         }
     }

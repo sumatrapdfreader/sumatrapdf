@@ -443,11 +443,68 @@ pdf_transform_annot(pdf_annot *annot)
 	fz_pre_scale(fz_translate(&annot->matrix, x, y), w, h);
 }
 
+static int annot_type(pdf_obj *obj)
+{
+	char *subtype = pdf_to_name(pdf_dict_gets(obj, "Subtype"));
+	if (!strcmp(subtype, "Text"))
+		return FZ_ANNOT_TEXT;
+	else if (!strcmp(subtype, "Link"))
+		return FZ_ANNOT_LINK;
+	else if (!strcmp(subtype, "FreeText"))
+		return FZ_ANNOT_FREETEXT;
+	else if (!strcmp(subtype, "Line"))
+		return FZ_ANNOT_LINE;
+	else if (!strcmp(subtype, "Square"))
+		return FZ_ANNOT_SQUARE;
+	else if (!strcmp(subtype, "Circle"))
+		return FZ_ANNOT_CIRCLE;
+	else if (!strcmp(subtype, "Polygon"))
+		return FZ_ANNOT_POLYGON;
+	else if (!strcmp(subtype, "PolyLine"))
+		return FZ_ANNOT_POLYLINE;
+	else if (!strcmp(subtype, "Highlight"))
+		return FZ_ANNOT_HIGHLIGHT;
+	else if (!strcmp(subtype, "Underline"))
+		return FZ_ANNOT_UNDERLINE;
+	else if (!strcmp(subtype, "Squiggly"))
+		return FZ_ANNOT_SQUIGGLY;
+	else if (!strcmp(subtype, "StrikeOut"))
+		return FZ_ANNOT_STRIKEOUT;
+	else if (!strcmp(subtype, "Stamp"))
+		return FZ_ANNOT_STAMP;
+	else if (!strcmp(subtype, "Caret"))
+		return FZ_ANNOT_CARET;
+	else if (!strcmp(subtype, "Ink"))
+		return FZ_ANNOT_INK;
+	else if (!strcmp(subtype, "Popup"))
+		return FZ_ANNOT_POPUP;
+	else if (!strcmp(subtype, "FileAttachment"))
+		return FZ_ANNOT_FILEATTACHMENT;
+	else if (!strcmp(subtype, "Sound"))
+		return FZ_ANNOT_SOUND;
+	else if (!strcmp(subtype, "Movie"))
+		return FZ_ANNOT_MOVIE;
+	else if (!strcmp(subtype, "Widget"))
+		return FZ_ANNOT_WIDGET;
+	else if (!strcmp(subtype, "Screen"))
+		return FZ_ANNOT_SCREEN;
+	else if (!strcmp(subtype, "PrinterMark"))
+		return FZ_ANNOT_PRINTERMARK;
+	else if (!strcmp(subtype, "TrapNet"))
+		return FZ_ANNOT_TRAPNET;
+	else if (!strcmp(subtype, "Watermark"))
+		return FZ_ANNOT_WATERMARK;
+	else if (!strcmp(subtype, "3D"))
+		return FZ_ANNOT_3D;
+	else
+		return -1;
+}
+
 /* SumatraPDF: synthesize appearance streams for a few more annotations */
 /* TODO: reuse code from pdf_form.c where possible and reasonable */
 
 static pdf_annot *
-pdf_create_annot_ex(pdf_document *xref, const fz_rect *rect, pdf_obj *base_obj, fz_buffer *content, pdf_obj *resources, int transparency, int type)
+pdf_create_annot_ex(pdf_document *xref, const fz_rect *rect, pdf_obj *base_obj, fz_buffer *content, pdf_obj *resources, int transparency, fz_annot_type type)
 {
 	fz_context *ctx = xref->ctx;
 	pdf_xobject *form = NULL;
@@ -491,7 +548,8 @@ pdf_create_annot_ex(pdf_document *xref, const fz_rect *rect, pdf_obj *base_obj, 
 	annot->rect = *rect;
 	annot->ap = form;
 	annot->next = NULL;
-	annot->type = type;
+	annot->annot_type = type;
+	annot->widget_type = FZ_WIDGET_TYPE_NOT_WIDGET;;
 
 	pdf_transform_annot(annot);
 
@@ -576,7 +634,7 @@ pdf_create_link_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot_ex(xref, &rect, obj, content, NULL, 0, FZ_WIDGET_TYPE_LINK);
+	return pdf_create_annot_ex(xref, &rect, obj, content, NULL, 0, FZ_ANNOT_LINK);
 }
 
 // appearance streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
@@ -706,7 +764,7 @@ pdf_create_text_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot_ex(xref, &rect, obj, content, NULL, 0, FZ_WIDGET_TYPE_TEXT_ICON);
+	return pdf_create_annot_ex(xref, &rect, obj, content, NULL, 0, FZ_ANNOT_TEXT);
 }
 
 // appearance streams adapted from Poppler's Annot.cc, licensed under GPLv2 and later
@@ -790,7 +848,7 @@ pdf_create_file_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot_ex(xref, &rect, obj, content, NULL, 0, FZ_WIDGET_TYPE_FILE);
+	return pdf_create_annot_ex(xref, &rect, obj, content, NULL, 0, FZ_ANNOT_FILEATTACHMENT);
 }
 
 /* SumatraPDF: partial support for text markup annotations */
@@ -870,7 +928,7 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot_ex(xref, &rect, pdf_keep_obj(obj), content, resources, 1, FZ_WIDGET_TYPE_TEXT_HIGHLIGHT);
+	return pdf_create_annot_ex(xref, &rect, pdf_keep_obj(obj), content, resources, 1, FZ_ANNOT_HIGHLIGHT);
 }
 
 static pdf_annot *
@@ -878,6 +936,7 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 {
 	fz_context *ctx = xref->ctx;
 	fz_buffer *content = NULL;
+	fz_annot_type annot_type;
 	pdf_obj *quad_points;
 	fz_rect rect, a, b;
 	float rgb[3];
@@ -885,6 +944,7 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 
 	fz_var(content);
 
+	annot_type = !strcmp(type, "Underline") ? FZ_ANNOT_UNDERLINE : !strcmp(type, "StrikeOut") ? FZ_ANNOT_STRIKEOUT : FZ_ANNOT_SQUIGGLY;
 	pdf_to_rect(ctx, pdf_dict_gets(obj, "Rect"), &rect);
 	quad_points = pdf_dict_gets(obj, "QuadPoints");
 	for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
@@ -902,17 +962,17 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 
 		fz_buffer_printf(ctx, content, "q %.4f %.4f %.4f RG 1 0 0 1 -%.4f -%.4f cm 0.5 w ",
 			rgb[0], rgb[1], rgb[2], rect.x0, rect.y0);
-		if (!strcmp(type, "Squiggly"))
+		if (annot_type == FZ_ANNOT_SQUIGGLY)
 			fz_buffer_printf(ctx, content, "[1] 1.5 d ");
 		for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
 		{
 			pdf_get_quadrilaterals(quad_points, i, &a, &b);
-			if (!strcmp(type, "StrikeOut"))
+			if (annot_type == FZ_ANNOT_STRIKEOUT)
 				fz_buffer_printf(ctx, content, "%.4f %.4f m %.4f %.4f l ",
 					(a.x0 + b.x0) / 2, (a.y0 + b.y0) / 2, (a.x1 + b.x1) / 2, (a.y1 + b.y1) / 2);
 			else
 				fz_buffer_printf(ctx, content, "%.4f %.4f m %.4f %.4f l ", b.x0, b.y0, a.x1, a.y1);
-			if (!strcmp(type, "Squiggly"))
+			if (annot_type == FZ_ANNOT_SQUIGGLY)
 				fz_buffer_printf(ctx, content, "S [1] 0.5 d %.4f %.4f m %.4f %.4f l ", b.x0, b.y0 + 0.5f, a.x1, a.y1 + 0.5f);
 		}
 		fz_buffer_printf(ctx, content, "S Q");
@@ -923,7 +983,7 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot_ex(xref, &rect, pdf_keep_obj(obj), content, NULL, 0, FZ_WIDGET_TYPE_TEXT_MARKUP);
+	return pdf_create_annot_ex(xref, &rect, pdf_keep_obj(obj), content, NULL, 0, annot_type);
 }
 
 /* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
@@ -1173,6 +1233,7 @@ pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 	float font_size, x, y;
 	char *font_name = NULL;
 	unsigned short *ucs2 = NULL, *rest;
+	pdf_annot *annot;
 
 	fz_var(content);
 	fz_var(base_ap);
@@ -1285,7 +1346,9 @@ pdf_update_tx_widget_annot(pdf_document *xref, pdf_obj *obj)
 	}
 
 	fz_transform_rect(&rect, fz_rotate(&ctm, -rotate));
-	return pdf_create_annot_ex(xref, &rect, pdf_keep_obj(obj), content, res ? pdf_keep_obj(res) : NULL, 0, FZ_WIDGET_TYPE_TEXT);
+	annot = pdf_create_annot_ex(xref, &rect, pdf_keep_obj(obj), content, res ? pdf_keep_obj(res) : NULL, 0, FZ_ANNOT_WIDGET);
+	annot->widget_type = FZ_WIDGET_TYPE_TEXT;
+	return annot;
 }
 
 /* SumatraPDF: partial support for freetext annotations */
@@ -1371,7 +1434,7 @@ pdf_create_freetext_annot(pdf_document *xref, pdf_obj *obj)
 		fz_rethrow(ctx);
 	}
 
-	return pdf_create_annot_ex(xref, &rect, pdf_keep_obj(obj), content, res, 0, FZ_WIDGET_TYPE_FREETEXT);
+	return pdf_create_annot_ex(xref, &rect, pdf_keep_obj(obj), content, res, 0, FZ_ANNOT_FREETEXT);
 }
 
 static pdf_annot *
@@ -1478,7 +1541,8 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 			annot->pagerect = annot->rect;
 			fz_transform_rect(&annot->pagerect, &page->ctm);
 			annot->ap = NULL;
-			annot->type = pdf_field_type(xref, obj);
+			annot->annot_type = annot_type(obj);
+			annot->widget_type = annot->annot_type == FZ_ANNOT_WIDGET ? pdf_field_type(xref, obj) : FZ_WIDGET_TYPE_NOT_WIDGET;
 
 			if (pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
 			{
@@ -1590,6 +1654,12 @@ pdf_bound_annot(pdf_document *doc, pdf_annot *annot, fz_rect *rect)
 	return rect;
 }
 
+fz_annot_type
+pdf_annot_type(pdf_annot *annot)
+{
+	return annot->annot_type;
+}
+
 pdf_annot *
 pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 {
@@ -1619,6 +1689,8 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 		case FZ_ANNOT_STRIKEOUT:
 			type_str = "StrikeOut";
 			break;
+		default:
+			break;
 		}
 
 		pdf_dict_puts_drop(annot_obj, "Subtype", pdf_new_name(ctx, type_str));
@@ -1630,7 +1702,8 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 		annot->rect = rect;
 		annot->pagerect = rect;
 		annot->ap = NULL;
-		annot->type = FZ_WIDGET_TYPE_NOT_WIDGET;
+		annot->widget_type = FZ_WIDGET_TYPE_NOT_WIDGET;
+		annot->annot_type = type;
 
 		/*
 			Both annotation object and annotation structure are now created.
@@ -1663,6 +1736,101 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 	}
 
 	return annot;
+}
+
+void
+pdf_delete_annot(pdf_document *doc, pdf_page *page, pdf_annot *annot)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_annot **annotptr;
+	pdf_obj *old_annot_arr;
+	pdf_obj *annot_arr;
+
+	if (annot == NULL)
+		return;
+
+	/* Remove annot from page's list */
+	for (annotptr = &page->annots; *annotptr; annotptr = &(*annotptr)->next)
+	{
+		if (*annotptr == annot)
+			break;
+	}
+
+	/* Check the passed annotation was of this page */
+	if (*annotptr == NULL)
+		return;
+
+	*annotptr = annot->next;
+
+	/* Stick it in the deleted list */
+	annot->next = page->deleted_annots;
+	page->deleted_annots = annot;
+
+	pdf_drop_xobject(ctx, annot->ap);
+	annot->ap = NULL;
+
+	/* Recreate the "Annots" array with this annot removed */
+	old_annot_arr = pdf_dict_gets(page->me, "Annots");
+
+	if (old_annot_arr)
+	{
+		int i, n = pdf_array_len(old_annot_arr);
+		annot_arr = pdf_new_array(ctx, n?(n-1):0);
+
+		fz_try(ctx)
+		{
+			for (i = 0; i < n; i++)
+			{
+				pdf_obj *obj = pdf_array_get(old_annot_arr, i);
+
+				if (obj != annot->obj)
+					pdf_array_push(annot_arr, obj);
+			}
+
+			/*
+			Overwrite "Annots" in the page dictionary, which has the
+			side-effect of releasing the last reference to old_annot_arr
+			*/
+			pdf_dict_puts(page->me, "Annots", annot_arr);
+		}
+		fz_always(ctx)
+		{
+			pdf_drop_obj(annot_arr);
+		}
+		fz_catch(ctx)
+		{
+			fz_rethrow(ctx);
+		}
+	}
+
+	pdf_drop_obj(annot->obj);
+	annot->obj = NULL;
+	doc->dirty = 1;
+}
+
+void
+pdf_set_markup_annot_quadpoints(pdf_document *doc, pdf_annot *annot, fz_point *qp, int n)
+{
+	fz_context *ctx = doc->ctx;
+	fz_matrix ctm;
+	pdf_obj *arr = pdf_new_array(ctx, n*2);
+	int i;
+
+	fz_invert_matrix(&ctm, &annot->page->ctm);
+
+	pdf_dict_puts_drop(annot->obj, "QuadPoints", arr);
+
+	for (i = 0; i < n; i++)
+	{
+		fz_point pt = qp[i];
+		pdf_obj *r;
+
+		fz_transform_point(&pt, &ctm);
+		r = pdf_new_real(ctx, pt.x);
+		pdf_array_push_drop(arr, r);
+		r = pdf_new_real(ctx, pt.y);
+		pdf_array_push_drop(arr, r);
+	}
 }
 
 void

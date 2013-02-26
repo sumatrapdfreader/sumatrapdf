@@ -2541,6 +2541,40 @@ fz_rect *fz_bound_page(fz_document *doc, fz_page *page, fz_rect *rect);
 */
 typedef struct fz_annot_s fz_annot;
 
+typedef enum
+{
+	FZ_ANNOT_TEXT,
+	FZ_ANNOT_LINK,
+	FZ_ANNOT_FREETEXT,
+	FZ_ANNOT_LINE,
+	FZ_ANNOT_SQUARE,
+	FZ_ANNOT_CIRCLE,
+	FZ_ANNOT_POLYGON,
+	FZ_ANNOT_POLYLINE,
+	FZ_ANNOT_HIGHLIGHT,
+	FZ_ANNOT_UNDERLINE,
+	FZ_ANNOT_SQUIGGLY,
+	FZ_ANNOT_STRIKEOUT,
+	FZ_ANNOT_STAMP,
+	FZ_ANNOT_CARET,
+	FZ_ANNOT_INK,
+	FZ_ANNOT_POPUP,
+	FZ_ANNOT_FILEATTACHMENT,
+	FZ_ANNOT_SOUND,
+	FZ_ANNOT_MOVIE,
+	FZ_ANNOT_WIDGET,
+	FZ_ANNOT_SCREEN,
+	FZ_ANNOT_PRINTERMARK,
+	FZ_ANNOT_TRAPNET,
+	FZ_ANNOT_WATERMARK,
+	FZ_ANNOT_3D
+} fz_annot_type;
+
+/*
+	fz_get_annot_type: return the type of an annotation
+*/
+fz_annot_type fz_get_annot_type(fz_annot *annot);
+
 /*
 	fz_first_annot: Return a pointer to the first annotation on a page.
 
@@ -2732,13 +2766,6 @@ enum
 	FZ_WIDGET_TYPE_TEXT,
 	FZ_WIDGET_TYPE_LISTBOX,
 	FZ_WIDGET_TYPE_COMBOBOX
-	/* SumatraPDF: support more annotation types */,
-	FZ_WIDGET_TYPE_FILE,
-	FZ_WIDGET_TYPE_FREETEXT,
-	FZ_WIDGET_TYPE_LINK,
-	FZ_WIDGET_TYPE_TEXT_HIGHLIGHT,
-	FZ_WIDGET_TYPE_TEXT_ICON,
-	FZ_WIDGET_TYPE_TEXT_MARKUP,
 };
 
 /* Types of text widget content */

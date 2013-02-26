@@ -353,7 +353,7 @@ decode_platform_string(fz_context *ctx, int platform, int enctype, char *source,
 		}
 		fz_throw(ctx, "fonterror : unsupported encoding (%d/%d)", platform, enctype);
 	case TT_PLATFORM_MACINTOSH:
-		switch(enctype)
+		switch (enctype)
 		{
 		case TT_MAC_ID_ROMAN:
 			if (sourcelen + 1 > destlen)

@@ -671,7 +671,8 @@ fz_paint_image_imp(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz
 	/* RJW: The following is voodoo. No idea why it works, but it gives
 	 * the best match between scaled/unscaled/interpolated/non-interpolated
 	 * that we have found. */
-	if (dolerp && 0 /* SumatraPDF: this voodoo fails for several XPS documents */) {
+	if (dolerp && 0 /* SumatraPDF: this voodoo fails for several XPS documents */)
+	{
 		u -= 32768;
 		v -= 32768;
 	}

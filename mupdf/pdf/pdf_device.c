@@ -507,7 +507,7 @@ pdf_dev_alpha(pdf_device *pdev, float alpha, int stroke)
 		fz_try(ctx)
 		{
 			char text[32];
-			pdf_dict_puts_drop(o, (stroke ? "ca" : "CA"), pdf_new_real(ctx, alpha));
+			pdf_dict_puts_drop(o, (stroke ? "CA" : "ca"), pdf_new_real(ctx, alpha));
 			ref = pdf_new_ref(pdev->xref, o);
 			snprintf(text, sizeof(text), "ExtGState/Alp%d", i);
 			pdf_dict_putp(pdev->resources, text, ref);
