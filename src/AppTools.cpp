@@ -557,8 +557,8 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 selStart = selEnd = selStart - 1;
             }
             // remove the previous word (and any spacing after it)
-            for (; selStart > 0 && iswspace(text[selStart - 1]); selStart--);
-            for (; selStart > 0 && !iswspace(text[selStart - 1]); selStart--);
+            for (; selStart > 0 && str::IsWs(text[selStart - 1]); selStart--);
+            for (; selStart > 0 && !str::IsWs(text[selStart - 1]); selStart--);
             Edit_SetSel(hwnd, selStart, selEnd);
             SendMessage(hwnd, WM_CLEAR, 0, 0);
         }

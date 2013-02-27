@@ -399,7 +399,7 @@ static bool LinkifyCheckMultiline(const WCHAR *pageText, const WCHAR *pos, RectI
     // (and that doesn't start with http itself)
     return
         '\n' == *pos && pos > pageText && *(pos + 1) &&
-        !iswalnum(pos[-1]) && !iswspace(pos[1]) &&
+        !iswalnum(pos[-1]) && !str::IsWs(pos[1]) &&
         coords[pos - pageText + 1].BR().y > coords[pos - pageText - 1].y &&
         coords[pos - pageText + 1].y <= coords[pos - pageText - 1].BR().y &&
         coords[pos - pageText + 1].x < coords[pos - pageText - 1].BR().x &&
@@ -411,7 +411,7 @@ static const WCHAR *LinkifyFindEnd(const WCHAR *start, bool atStart)
     const WCHAR *end;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-    for (end = start; *end && !iswspace(*end); end++);
+    for (end = start; *end && !str::IsWs(*end); end++);
     if (',' == end[-1] || '.' == end[-1] || '?' == end[-1] || '!' == end[-1])
         end--;
     // also ignore a closing parenthesis, if the URL doesn't contain any opening one

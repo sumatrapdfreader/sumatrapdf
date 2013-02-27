@@ -33,7 +33,7 @@ HRESULT CTeXFilter::OnInit()
 }
 
 #define iscmdchar(c) (iswalnum(c) || (c) == '_')
-#define skipspace(pc) for (; iswspace(*(pc)) && *(pc) != '\n'; (pc)++)
+#define skipspace(pc) for (; str::IsWs(*(pc)) && *(pc) != '\n'; (pc)++)
 #define skipcomment(pc) while (*(pc) && *(pc)++ != '\n')
 
 // appends a new line, if the last character isn't one already
@@ -46,7 +46,7 @@ static inline void addsingleNL(WCHAR *base, WCHAR **cur)
 // appends a space, if the last character isn't one already
 static inline void addsinglespace(WCHAR *base, WCHAR **cur)
 {
-    if (*cur > base && !iswspace(*(*cur - 1)))
+    if (*cur > base && !str::IsWs(*(*cur - 1)))
         *(*cur)++ = ' ';
 }
 
@@ -145,7 +145,7 @@ WCHAR *CTeXFilter::ExtractBracedBlock()
             }
         default:
             m_pPtr--;
-            if (iswspace(*m_pPtr)) {
+            if (str::IsWs(*m_pPtr)) {
                 addsinglespace(result, &rptr);
                 m_pPtr++;
                 break;

@@ -45,8 +45,8 @@ bool EqIS(const WCHAR *s1, const WCHAR *s2)
 {
     while (*s1 && *s2) {
         // skip whitespace
-        for (; iswspace(*s1); s1++);
-        for (; iswspace(*s2); s2++);
+        for (; IsWs(*s1); s1++);
+        for (; IsWs(*s2); s2++);
 
         if (towlower(*s1) != towlower(*s2))
             return false;
@@ -391,13 +391,13 @@ size_t TrimWS(WCHAR *s, TrimOpt opt)
     WCHAR *e = s + sLen;
     WCHAR *ne = e;
     if ((TrimLeft == opt) || (TrimBoth == opt)) {
-        while (iswspace(*ns)) {
+        while (IsWs(*ns)) {
             ++ns;
         }
     }
 
     if ((TrimRight == opt) || (TrimBoth == opt)) {
-        while (((ne - 1) >= ns) && iswspace(ne[-1])) {
+        while (((ne - 1) >= ns) && IsWs(ne[-1])) {
             --ne;
         }
     }
@@ -484,7 +484,7 @@ size_t NormalizeWS(WCHAR *str)
     bool addedSpace = true;
 
     for (; *src; src++) {
-        if (!iswspace(*src)) {
+        if (!IsWs(*src)) {
             *dst++ = *src;
             addedSpace = false;
         }
@@ -494,7 +494,7 @@ size_t NormalizeWS(WCHAR *str)
         }
     }
 
-    if (dst > str && iswspace(*(dst - 1)))
+    if (dst > str && IsWs(*(dst - 1)))
         dst--;
     *dst = '\0';
 
@@ -718,9 +718,9 @@ int CmpNatural(const WCHAR *a, const WCHAR *b)
 
     for (; 0 == diff; a++, b++) {
         // ignore leading and trailing spaces, and differences in whitespace only
-        if (a == aStart || !*a || !*b || iswspace(*a) && iswspace(*b)) {
-            for (; iswspace(*a); a++);
-            for (; iswspace(*b); b++);
+        if (a == aStart || !*a || !*b || IsWs(*a) && IsWs(*b)) {
+            for (; IsWs(*a); a++);
+            for (; IsWs(*b); b++);
         }
         // if two strings are identical when ignoring case, leading zeroes and
         // whitespace, compare them traditionally for a stable sort order

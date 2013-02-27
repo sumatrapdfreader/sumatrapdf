@@ -394,5 +394,14 @@ static void StrTest()
         assert(str::Eq(L"12345", buf));
     }
 
+    {
+        for (int c = 0x00; c < 0x100; c++) {
+            assert(!!isspace((unsigned char)c) == str::IsWs((char)c));
+        }
+        for (int c = 0x00; c < 0x10000; c++) {
+            assert(!!iswspace((WCHAR)c) == str::IsWs((WCHAR)c));
+        }
+    }
+
     StrReplaceTest();
 }

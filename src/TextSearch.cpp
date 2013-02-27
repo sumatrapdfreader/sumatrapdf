@@ -6,7 +6,7 @@
 
 enum { SEARCH_PAGE, SKIP_PAGE };
 
-#define SkipWhitespace(c) for (; iswspace(*(c)); (c)++)
+#define SkipWhitespace(c) for (; str::IsWs(*(c)); (c)++)
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (iswordchar(c) && (unsigned short)(c) < 0x2E80)
@@ -124,7 +124,7 @@ int TextSearch::MatchLen(const WCHAR *start) const
             return -1;
         if (caseSensitive ? *match == *end : CharLower((LPWSTR)LOWORD(*match)) == CharLower((LPWSTR)LOWORD(*end)))
             /* characters are identical */;
-        else if (iswspace(*match) && iswspace(*end))
+        else if (str::IsWs(*match) && str::IsWs(*end))
             /* treat all whitespace as identical */;
         // TODO: Adobe Reader seems to have a more extensive list of
         //       normalizations - is there an easier way?
@@ -143,7 +143,7 @@ int TextSearch::MatchLen(const WCHAR *start) const
         // character that's just missing an encoding (and '?' is the replacement
         // character); cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1574
         if (*match && !isnoncjkwordchar(*(match - 1)) && (*(match - 1) != '?' || *match != '?') ||
-            iswspace(*(match - 1)) && iswspace(*(end - 1))) {
+            str::IsWs(*(match - 1)) && str::IsWs(*(end - 1))) {
             SkipWhitespace(match);
             SkipWhitespace(end);
         }
