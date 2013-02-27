@@ -450,8 +450,12 @@ class WStrList {
     // mostly ASCII and should be treated case independently
     static uint32_t GetQuickHashI(const WCHAR *str) {
         uint32_t crc = 0;
-        for (; *str; str++) {
-            uint32_t bits = (crc ^ ((towlower((wint_t)*str) & 0xFF) << 24)) & 0xFF000000L;
+        for (WCHAR c; (c = *str); str++) {
+            if ((c & 0xFF80))
+                c = '\x80';
+            else if ('A' <= c && c <= 'Z')
+                c += 'a' - 'A';
+            uint32_t bits = (crc ^ (c << 24)) & 0xFF000000L;
             for (int i = 0; i < 8; i++) {
                 if ((bits & 0x80000000L))
                     bits = (bits << 1) ^ 0x04C11DB7L;
