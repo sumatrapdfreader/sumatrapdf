@@ -16,13 +16,13 @@ static void HtmlParser00()
     HtmlElement *root = p.Parse("<a></A>");
     assert(p.ElementsCount() == 1);
     assert(root);
-    assert(str::Eq(root->name, "a"));
+    assert(Tag_A == root->tag && !root->name);
     assert(root->NameIs("a"));
 
     root = p.Parse("<b></B>");
     assert(p.ElementsCount() == 1);
     assert(root);
-    assert(str::Eq(root->name, "b"));
+    assert(Tag_B == root->tag && !root->name);
     assert(root->NameIs("b"));
 }
 
@@ -31,12 +31,13 @@ static void HtmlParser01()
     HtmlParser p;
     HtmlElement *root = p.Parse("<A><bAh></a>");
     assert(p.ElementsCount() == 2);
-    assert(str::Eq("a", root->name));
+    assert(Tag_A == root->tag && !root->name);
     assert(NULL == root->up);
     assert(NULL == root->next);
     HtmlElement *el = root->down;
     assert(NULL == el->firstAttr);
-    assert(str::Eq("bah", el->name));
+    assert(el->NameIs("bah") && el->NameIs("BAH"));
+    assert(Tag_NotFound == el->tag && str::Eq("bAh", el->name));
     assert(el->up == root);
     assert(NULL == el->down);
     assert(NULL == el->next);
@@ -48,25 +49,25 @@ static void HtmlParser05()
     HtmlElement *root = p.Parse("<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo val=bar></object><ul><li></ul></object></body></Html>");
     assert(8 == p.ElementsCount());
     assert(4 == p.TotalAttrCount());
-    assert(str::Eq("html", root->name));
+    assert(root->NameIs("html"));
     assert(NULL == root->up);
     assert(NULL == root->next);
     HtmlElement *el = root->down;
-    assert(str::Eq("head", el->name));
+    assert(el->NameIs("head"));
     HtmlElement *el2 = el->down;
-    assert(str::Eq("meta", el2->name));
+    assert(el2->NameIs("meta"));
     assert(NULL == el2->next);
     assert(NULL == el2->down);
     el2 = el->next;
-    assert(str::Eq("body", el2->name));
+    assert(el2->NameIs("body"));
     assert(NULL == el2->next);
     el2 = el2->down;
-    assert(str::Eq("object", el2->name));
+    assert(el2->NameIs("object"));
     el = p.FindElementByName("html");
     assert(el);
     el = p.FindElementByName("head", el);
     assert(el);
-    assert(str::Eq("head", el->name));
+    assert(el->NameIs("head"));
     el = p.FindElementByName("ul", el);
     assert(el);
 }
@@ -77,7 +78,7 @@ static void HtmlParser04()
     HtmlElement *root = p.Parse("<el att=  va&apos;l></ el >");
     assert(1 == p.ElementsCount());
     assert(1 == p.TotalAttrCount());
-    assert(str::Eq("el", root->name));
+    assert(root->NameIs("el"));
     assert(NULL == root->next);
     assert(NULL == root->up);
     assert(NULL == root->down);
@@ -92,7 +93,7 @@ static void HtmlParser03()
     HtmlElement *root = p.Parse("<el   att  =v&quot;al/>");
     assert(1 == p.ElementsCount());
     assert(1 == p.TotalAttrCount());
-    assert(str::Eq("el", root->name));
+    assert(root->NameIs("el"));
     assert(NULL == root->next);
     assert(NULL == root->up);
     assert(NULL == root->down);
@@ -107,16 +108,16 @@ static void HtmlParser02()
     HtmlElement *root = p.Parse("<a><b/><c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>");
     assert(4 == p.ElementsCount());
     assert(4 == p.TotalAttrCount());
-    assert(str::Eq("a", root->name));
+    assert(root->NameIs("a"));
     assert(NULL == root->next);
     HtmlElement *el = root->down;
-    assert(str::Eq("b", el->name));
+    assert(el->NameIs("b"));
     assert(root == el->up);
     el = el->next;
-    assert(str::Eq("c", el->name));
+    assert(el->NameIs("c"));
     assert(root == el->up);
     el = el->next;
-    assert(str::Eq("d", el->name));
+    assert(el->NameIs("d"));
     assert(NULL == el->next);
     assert(root == el->up);
     ScopedMem<WCHAR> val(el->GetAttribute("at1"));
@@ -135,19 +136,19 @@ static void HtmlParser06()
     HtmlElement *root = p.Parse("<ul><p>ignore<li><br><meta><li><ol><li></ul><dropme>");
     assert(9 == p.ElementsCount());
     assert(0 == p.TotalAttrCount());
-    assert(str::Eq("ul", root->name));
+    assert(root->NameIs("ul"));
     assert(!root->next);
-    HtmlElement *el = root->GetChildByName("li");
+    HtmlElement *el = root->GetChildByTag(Tag_Li);
     assert(el);
-    assert(str::Eq(el->down->name, "br"));
-    assert(str::Eq(el->down->next->name, "meta"));
+    assert(el->down->NameIs("br"));
+    assert(el->down->next->NameIs("meta"));
     assert(!el->down->next->next);
-    el = root->GetChildByName("li", 1);
+    el = root->GetChildByTag(Tag_Li, 1);
     assert(el);
     assert(!el->next);
-    el = el->GetChildByName("ol");
+    el = el->GetChildByTag(Tag_Ol);
     assert(!el->next);
-    assert(str::Eq(el->down->name, "li"));
+    assert(el->down->NameIs("li"));
     assert(!el->down->down);
 }
 
@@ -165,7 +166,7 @@ static void HtmlParser07()
 static void HtmlParser08()
 {
     ScopedMem<WCHAR> val(DecodeHtmlEntitites("&auml&test;&&ouml-", CP_ACP));
-    assert(str::Eq(val.Get(), L"\xE4&test;&\xF6-"));
+    assert(str::Eq(val, L"\xE4&test;&\xF6-"));
 }
 
 static void HtmlParser09()
@@ -174,14 +175,14 @@ static void HtmlParser09()
     HtmlElement *root = p.Parse("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />");
     assert(1 == p.ElementsCount());
     assert(1 == p.TotalAttrCount());
-    assert(str::Eq("root", root->name));
+    assert(root->NameIs("root"));
     ScopedMem<WCHAR> val(root->GetAttribute("attr"));
     assert(str::Eq(val, L"<!-- comment -->"));
 
     root = p.Parse("<!-- comment with \" and \' --><main />");
     assert(1 == p.ElementsCount());
     assert(0 == p.TotalAttrCount());
-    assert(str::Eq("main", root->name));
+    assert(root->NameIs("main"));
 }
 
 static void HtmlParser10()
@@ -220,25 +221,25 @@ static void HtmlParserFile()
     assert(root);
     assert(709 == p.ElementsCount());
     assert(955 == p.TotalAttrCount());
-    assert(str::Eq(root->name, "html"));
+    assert(root->NameIs("html"));
     HtmlElement *el = root->down;
-    assert(str::Eq(el->name, "head"));
+    assert(el->NameIs("head"));
     el = el->next;
-    assert(str::Eq(el->name, "body"));
+    assert(el->NameIs("body"));
     el = el->down;
-    assert(str::Eq(el->name, "object"));
+    assert(el->NameIs("object"));
     el = el->next;
-    assert(str::Eq(el->name, "ul"));
+    assert(el->NameIs("ul"));
     el = el->down;
-    assert(str::Eq(el->name, "li"));
+    assert(el->NameIs("li"));
     el = el->down;
-    assert(str::Eq(el->name, "object"));
+    assert(el->NameIs("object"));
     ScopedMem<WCHAR> val(el->GetAttribute("type"));
     assert(str::Eq(val, L"text/sitemap"));
     el = el->down;
-    assert(str::Eq(el->name, "param"));
+    assert(el->NameIs("param"));
     assert(!el->down);
-    assert(str::Eq(el->next->name, "param"));
+    assert(el->next->NameIs("param"));
     el = p.FindElementByName("body");
     assert(el);
     el = p.FindElementByName("ul", el);

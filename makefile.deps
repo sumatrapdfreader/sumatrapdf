@@ -123,8 +123,9 @@ $(OS)\AppTools.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\AppTools.obj: src\utils\Vec.h src\utils\WinUtil.h src\Version.h
 $(OS)\ChmDoc.obj: src\BaseEngine.h src\ChmDoc.h src\EbookBase.h
 $(OS)\ChmDoc.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\ByteReader.h
-$(OS)\ChmDoc.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\ChmDoc.obj: src\utils\StrUtil.h src\utils\TrivialHtmlParser.h src\utils\Vec.h
+$(OS)\ChmDoc.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\HtmlParserLookup.h
+$(OS)\ChmDoc.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\TrivialHtmlParser.h
+$(OS)\ChmDoc.obj: src\utils\Vec.h
 $(OS)\ChmEngine.obj: src\BaseEngine.h src\ChmDoc.h src\ChmEngine.h
 $(OS)\ChmEngine.obj: src\EbookBase.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(OS)\ChmEngine.obj: src\utils\DebugLog.h src\utils\Dict.h src\utils\FileUtil.h

@@ -4,6 +4,8 @@
 #ifndef TrivialHtmlParser_h
 #define TrivialHtmlParser_h
 
+#include "HtmlParserLookup.h"
+
 enum HtmlParseError {
     ErrParsingNoError,
     ErrParsingElement, // syntax error parsing element
@@ -16,9 +18,11 @@ enum HtmlParseError {
 };
 
 struct HtmlAttr;
+struct HtmlToken;
 
 struct HtmlElement {
-    char *name;
+    HtmlTag tag;
+    char *name; // name is NULL whenever tag != Tag_NotFound
     HtmlAttr *firstAttr;
     HtmlElement *up, *down, *next;
     UINT codepage;
@@ -27,7 +31,7 @@ struct HtmlElement {
     bool NameIsNS(const char *name, const char *ns) const;
 
     WCHAR *GetAttribute(const char *name) const;
-    HtmlElement *GetChildByName(const char *name, int idx=0) const;
+    HtmlElement *GetChildByTag(HtmlTag tag, int idx=0) const;
 };
 
 class HtmlParser {
@@ -47,14 +51,14 @@ class HtmlParser {
     HtmlElement *rootElement;
     HtmlElement *currElement;
 
-    HtmlElement *AllocElement(char *name, HtmlElement *parent);
+    HtmlElement *AllocElement(HtmlTag tag, char *name, HtmlElement *parent);
     HtmlAttr *AllocAttr(char *name, HtmlAttr *next);
 
-    void CloseTag(char *tagName);
-    void StartTag(char *tagName);
+    void CloseTag(HtmlToken *tok);
+    void StartTag(HtmlToken *tok);
     void AppendAttr(char *name, char *value);
 
-    HtmlElement *FindParent(char *tagName);
+    HtmlElement *FindParent(HtmlToken *tok);
     HtmlElement *ParseError(HtmlParseError err) {
         error = err;
         return NULL;
@@ -64,7 +68,7 @@ class HtmlParser {
 
 public:
     HtmlParseError error;  // parsing error, a static string
-    char *errorContext; // pointer within html showing which part we failed to parse
+    const char *errorContext; // pointer within html showing which part we failed to parse
 
     HtmlParser();
     ~HtmlParser();

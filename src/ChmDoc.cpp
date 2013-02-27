@@ -297,14 +297,14 @@ Vec<char *> *ChmDoc::GetAllPaths()
 */
 static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
 {
-    CrashIf(!el->NameIs("li"));
-    el = el->GetChildByName("object");
+    CrashIf(Tag_Li != el->tag);
+    el = el->GetChildByTag(Tag_Object);
     if (!el)
         return false;
 
     ScopedMem<WCHAR> name, local;
-    for (el = el->GetChildByName("param"); el; el = el->next) {
-        if (!el->NameIs("param"))
+    for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
+        if (Tag_Param != el->tag)
             continue;
         ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
         ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
@@ -345,15 +345,15 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
 */
 static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
 {
-    CrashIf(!el->NameIs("li"));
-    el = el->GetChildByName("object");
+    CrashIf(Tag_Li != el->tag);
+    el = el->GetChildByTag(Tag_Object);
     if (!el)
         return false;
 
     WStrVec references;
     ScopedMem<WCHAR> keyword, name;
-    for (el = el->GetChildByName("param"); el; el = el->next) {
-        if (!el->NameIs("param"))
+    for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
+        if (Tag_Param != el->tag)
             continue;
         ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
         ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
@@ -395,12 +395,12 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
 
 static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT cp, bool isIndex, int level=1)
 {
-    CrashIf(!list->NameIs("ul"));
+    CrashIf(Tag_Ul != list->tag);
 
     // some broken ToCs wrap every <li> into its own <ul>
-    for (; list && list->NameIs("ul"); list = list->next) {
+    for (; list && Tag_Ul == list->tag; list = list->next) {
         for (HtmlElement *el = list->down; el; el = el->next) {
-            if (!el->NameIs("li"))
+            if (Tag_Li != el->tag)
                 continue; // ignore unexpected elements
             bool valid;
             if (isIndex)
@@ -410,9 +410,9 @@ static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT 
             if (!valid)
                 continue; // skip incomplete elements and all their children
 
-            HtmlElement *nested = el->GetChildByName("ul");
+            HtmlElement *nested = el->GetChildByTag(Tag_Ul);
             // some broken ToCs have the <ul> follow right *after* a <li>
-            if (!nested && el->next && el->next->NameIs("ul"))
+            if (!nested && el->next && Tag_Ul == el->next->tag)
                 nested = el->next;
             if (nested)
                 WalkChmTocOrIndex(visitor, nested, cp, isIndex, level + 1);

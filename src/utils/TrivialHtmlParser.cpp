@@ -23,7 +23,12 @@ struct HtmlAttr {
 
 bool HtmlElement::NameIs(const char *name) const
 {
-    return str::Eq(this->name, name);
+    if (!this->name) {
+        CrashIf(Tag_NotFound == this->tag);
+        HtmlTag tag = FindHtmlTag(name, str::Len(name));
+        return tag == this->tag;
+    }
+    return str::EqI(this->name, name);
 }
 
 // for now just ignores any namespace qualifier
@@ -32,15 +37,21 @@ bool HtmlElement::NameIs(const char *name) const
 bool HtmlElement::NameIsNS(const char *name, const char *ns) const
 {
     CrashIf(!ns);
-    const char *nameStart = str::FindChar(this->name, ':');
+    const char *nameStart = NULL;
+    if (this->name) {
+        nameStart = str::FindChar(this->name, ':');
+    }
+    if (!nameStart) {
+        return NameIs(name);
+    }
     nameStart = nameStart ? nameStart + 1 : this->name;
-    return str::Eq(nameStart, name);
+    return str::EqI(nameStart, name);
 }
 
-HtmlElement *HtmlElement::GetChildByName(const char *name, int idx) const
+HtmlElement *HtmlElement::GetChildByTag(HtmlTag tag, int idx) const
 {
     for (HtmlElement *el = down; el; el = el->next) {
-        if (el->NameIs(name)) {
+        if (tag == el->tag) {
             if (0 == idx)
                 return el;
             idx--;
@@ -144,9 +155,10 @@ WCHAR *HtmlElement::GetAttribute(const char *name) const
     return NULL;
 }
 
-HtmlElement *HtmlParser::AllocElement(char *name, HtmlElement *parent)
+HtmlElement *HtmlParser::AllocElement(HtmlTag tag, char *name, HtmlElement *parent)
 {
     HtmlElement *el = allocator.AllocStruct<HtmlElement>();
+    el->tag = tag;
     el->name = name;
     el->up = parent;
     el->codepage = codepage;
@@ -154,12 +166,12 @@ HtmlElement *HtmlParser::AllocElement(char *name, HtmlElement *parent)
     return el;
 }
 
-HtmlElement *HtmlParser::FindParent(char *tagName)
+HtmlElement *HtmlParser::FindParent(HtmlToken *tok)
 {
-    if (str::Eq(tagName, "li")) {
+    if (Tag_Li == tok->tag) {
         // make a list item the child of the closest list
         for (HtmlElement *el = currElement; el; el = el->up) {
-            if (el->NameIs("ul") || el->NameIs("ol"))
+            if (Tag_Ul == el->tag || Tag_Ol == el->tag)
                 return el;
         }
     }
@@ -167,11 +179,17 @@ HtmlElement *HtmlParser::FindParent(char *tagName)
     return currElement;
 }
 
-void HtmlParser::StartTag(char *tagName)
+void HtmlParser::StartTag(HtmlToken *tok)
 {
-    str::ToLower(tagName);
-    HtmlElement *parent = FindParent(tagName);
-    currElement = AllocElement(tagName, parent);
+    char *tagName = NULL;
+    if (Tag_NotFound == tok->tag) {
+        tagName = (char *)tok->s;
+        char *tagEnd = tagName + tok->nLen;
+        *tagEnd = '\0';
+    }
+
+    HtmlElement *parent = FindParent(tok);
+    currElement = AllocElement(tok->tag, tagName, parent);
     if (NULL == rootElement)
         rootElement = currElement;
 
@@ -191,13 +209,19 @@ void HtmlParser::StartTag(char *tagName)
     }
 }
 
-void HtmlParser::CloseTag(char *tagName)
+void HtmlParser::CloseTag(HtmlToken *tok)
 {
-    str::ToLower(tagName);
+    char *tagName = NULL;
+    if (Tag_NotFound == tok->tag) {
+        tagName = (char *)tok->s;
+        char *tagEnd = tagName + tok->nLen;
+        *tagEnd = '\0';
+    }
+
     // to allow for lack of closing tags, e.g. in case like
     // <a><b><c></a>, we look for the first parent with matching name
     for (HtmlElement *el = currElement; el; el = el->up) {
-        if (el->NameIs(tagName)) {
+        if (tagName ? el->NameIs(tagName) : tok->tag == el->tag) {
             currElement = el->up;
             return;
         }
@@ -225,9 +249,8 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
     HtmlToken *tok;
 
     while ((tok = parser.Next())) {
-        char *tag = (char *)tok->s;
         if (tok->IsError()) {
-            errorContext = tag;
+            errorContext = tok->s;
             switch (tok->error) {
                 case HtmlToken::UnclosedTag: return ParseError(ErrParsingElementName);
                 case HtmlToken::InvalidTag:  return ParseError(ErrParsingClosingElement);
@@ -239,12 +262,10 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
             assert(tok->IsText());
             continue;
         }
-        char *tagEnd = tag + tok->nLen;
         if (!tok->IsEndTag()) {
             // note: call tok->NextAttr() before zero-terminating names and values
             AttrInfo *attr = tok->NextAttr();
-            *tagEnd = '\0';
-            StartTag(tag);
+            StartTag(tok);
 
             while (attr) {
                 char *name = (char *)attr->name;
@@ -258,8 +279,7 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
             }
         }
         if (!tok->IsStartTag() || IsTagSelfClosing(tok->tag)) {
-            *tagEnd = '\0';
-            CloseTag(tag);
+            CloseTag(tok);
         }
     }
 
