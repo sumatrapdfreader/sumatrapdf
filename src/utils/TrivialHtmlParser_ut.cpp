@@ -155,11 +155,11 @@ static void HtmlParser06()
 static void HtmlParser07()
 {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<test umls=&auml;\xC3\xB6&#xFC; zero=&#1;&#0;&#-1;>", CP_UTF8);
+    HtmlElement *root = p.Parse("<test umls=&auml;\xC3\xB6&#xFC; Zero=&#1;&#0;&#-1;>", CP_UTF8);
     assert(1 == p.ElementsCount());
     ScopedMem<WCHAR> val(root->GetAttribute("umls"));
     assert(str::Eq(val, L"\xE4\xF6\xFC"));
-    val.Set(root->GetAttribute("zero"));
+    val.Set(root->GetAttribute("zerO"));
     assert(str::Eq(val, L"\x01??"));
 }
 
@@ -200,6 +200,9 @@ static void HtmlParser10()
     assert(node->NameIs("x:b") && node->NameIsNS("b", "http://example.org/ns/x"));
     ScopedMem<WCHAR> val(node->GetAttribute("attr"));
     assert(str::Eq(val, L"val"));
+    // TODO: XML tags are case sensitive (HTML tags aren't)
+    node = p.FindElementByName("X:B");
+    assert(node && node->NameIs("X:B"));
 }
 
 static void HtmlParserFile()

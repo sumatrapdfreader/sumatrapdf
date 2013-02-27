@@ -231,7 +231,6 @@ void HtmlParser::CloseTag(HtmlToken *tok)
 
 void HtmlParser::AppendAttr(char *name, char *value)
 {
-    str::ToLower(name);
     currElement->firstAttr = AllocAttr(name, currElement->firstAttr);
     currElement->firstAttr->val = value;
 }
