@@ -28,10 +28,14 @@ static bool IsExternalUrl(const WCHAR *url)
 
 class ChmTocItem : public DocTocItem, public PageDestination {
 public:
-    ScopedMem<WCHAR> url;
+    const WCHAR *url; // owned by ChmEngineImpl::poolAllocator
 
-    ChmTocItem(WCHAR *title, int pageNo, WCHAR *url) :
+    ChmTocItem(WCHAR *title, int pageNo, const WCHAR *url) :
         DocTocItem(title, pageNo), url(url) { }
+    virtual ~ChmTocItem() {
+        // prevent title from being freed
+        title = NULL;
+    }
     ChmTocItem *Clone() const;
 
     virtual PageDestination *GetLink() { return this; }
@@ -53,7 +57,7 @@ public:
 
 ChmTocItem *ChmTocItem::Clone() const
 {
-    ChmTocItem *res = new ChmTocItem(str::Dup(title), pageNo, str::Dup(url));
+    ChmTocItem *res = new ChmTocItem(title, pageNo, url);
     res->open = open;
     res->id = id;
     if (child)
@@ -65,17 +69,12 @@ ChmTocItem *ChmTocItem::Clone() const
 
 class ChmCacheEntry {
 public:
-    WCHAR *url;
+    const WCHAR *url; // owned by ChmEngineImpl::poolAllocator
     char *data;
     size_t size;
 
-    ChmCacheEntry(const WCHAR *url) : data(NULL), size(0) {
-        this->url = str::Dup(url);
-    }
-    ~ChmCacheEntry() {
-        free(url);
-        free(data);
-    }
+    ChmCacheEntry(const WCHAR *url) : url(url), data(NULL), size(0) { }
+    ~ChmCacheEntry() { free(data); }
 };
 
 class ChmEngineImpl : public ChmEngine, public HtmlWindowCallback {
@@ -179,6 +178,9 @@ protected:
     ChmNavigationCallback *navCb;
 
     Vec<ChmCacheEntry*> urlDataCache;
+    // use a pool allocator for strings that aren't freed until this ChmEngineImpl
+    // is deleted (e.g. for titles and URLs for ChmTocItem and ChmCacheEntry)
+    PoolAllocator poolAlloc;
 
     bool Load(const WCHAR *fileName);
     void DisplayPage(const WCHAR *pageUrl);
@@ -330,6 +332,7 @@ class ChmTocBuilder : public EbookTocVisitor {
     ChmTocItem **root;
     int idCounter;
     Vec<DocTocItem *> lastItems;
+    Allocator *allocator;
 
 #ifndef USE_STR_INT_MAP
     // We fake page numbers by doing a depth-first traversal of
@@ -369,8 +372,8 @@ class ChmTocBuilder : public EbookTocVisitor {
 #endif
 
 public:
-    ChmTocBuilder(ChmDoc *doc, WStrList *pages, ChmTocItem **root) :
-        doc(doc), pages(pages), root(root), idCounter(0)
+    ChmTocBuilder(ChmDoc *doc, WStrList *pages, Allocator *allocator, ChmTocItem **root) :
+        doc(doc), pages(pages), allocator(allocator), root(root), idCounter(0)
         {
 #ifdef USE_STR_INT_MAP
             for (size_t i = 0; i < pages->Count(); i++) {
@@ -383,7 +386,7 @@ public:
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         int pageNo = CreatePageNoForURL(url);
-        ChmTocItem *item = new ChmTocItem(str::Dup(name), pageNo, str::Dup(url));
+        ChmTocItem *item = new ChmTocItem(Allocator::StrDup(allocator, name), pageNo, Allocator::StrDup(allocator, url));
         item->id = ++idCounter;
         item->open = level == 1;
 
@@ -415,7 +418,7 @@ bool ChmEngineImpl::Load(const WCHAR *fileName)
     pages.Append(str::conv::FromAnsi(doc->GetHomePath()));
     // parse the ToC here, since page numbering depends on it
     t.Start();
-    doc->ParseToc(&ChmTocBuilder(doc, &pages, &tocRoot));
+    doc->ParseToc(&ChmTocBuilder(doc, &pages, &poolAlloc, &tocRoot));
     dbglog::LogF("doc->ParseToc(): %.2f ms", t.GetTimeInMs());
     CrashIf(pages.Count() == 0);
     return pages.Count() > 0;
@@ -437,7 +440,7 @@ bool ChmEngineImpl::GetDataForUrl(const WCHAR *url, char **data, size_t *len)
     ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
     ChmCacheEntry *e = FindDataForUrl(plainUrl);
     if (!e) {
-        e = new ChmCacheEntry(plainUrl);
+        e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         e->data = (char *)doc->GetData(urlUtf8, &e->size);
         if (!e->data) {
@@ -456,7 +459,7 @@ PageDestination *ChmEngineImpl::GetNamedDest(const WCHAR *name)
     ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(name));
     int pageNo = pages.Find(plainUrl) + 1;
     if (pageNo > 0)
-        return new ChmTocItem(NULL, pageNo, str::Dup(name));
+        return new ChmTocItem(NULL, pageNo, Allocator::StrDup(&poolAlloc, name));
     return NULL;
 }
 

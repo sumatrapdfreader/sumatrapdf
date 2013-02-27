@@ -65,11 +65,10 @@ void ZipFile::ExtractFilenames(ZipMethod method)
         bool isSupported = Zip_Any == method || Zip_None == finfo.compression_method ||
                                                 method == finfo.compression_method;
         if (err == UNZ_OK && isSupported) {
-            WCHAR fileNameT[MAX_PATH];
+            WCHAR fileNameW[MAX_PATH];
             UINT cp = (finfo.flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;
-            str::conv::FromCodePageBuf(fileNameT, dimof(fileNameT), fileName, cp);
-            filenames.Append((WCHAR *)Allocator::Dup(allocator, fileNameT,
-                (str::Len(fileNameT) + 1) * sizeof(WCHAR)));
+            str::conv::FromCodePageBuf(fileNameW, dimof(fileNameW), fileName, cp);
+            filenames.Append(Allocator::StrDup(allocator, fileNameW));
             fileinfo.Append(finfo);
 
             unz64_file_pos fpos;

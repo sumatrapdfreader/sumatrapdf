@@ -42,11 +42,18 @@ public:
         return a->Realloc(mem, size);
     }
 
-    static void *Dup(Allocator *a, void *mem, size_t size, size_t padding=0) {
+    static void *Dup(Allocator *a, const void *mem, size_t size, size_t padding=0) {
         void *newMem = Alloc(a, size + padding);
         if (newMem)
             memcpy(newMem, mem, size);
         return newMem;
+    }
+
+    static char *StrDup(Allocator *a, const char *str) {
+        return str ? (char *)Dup(a, str, strlen(str) + 1) : NULL;
+    }
+    static WCHAR *StrDup(Allocator *a, const WCHAR *str) {
+        return str ? (WCHAR *)Dup(a, str, (wcslen(str) + 1) * sizeof(WCHAR)) : NULL;
     }
 };
 

@@ -40,8 +40,8 @@ void *memdup(const void *ptr, size_t size);
 
 namespace str {
 
-inline char *Dup(const char *s) { return (char *)nf::memdup(s, strlen(s) + 1); }
-inline WCHAR *Dup(const WCHAR *s) { return (WCHAR *)nf::memdup(s, (wcslen(s) + 1) * sizeof(WCHAR)); }
+inline char *Dup(const char *s) { return s ? (char *)nf::memdup(s, strlen(s) + 1) : NULL; }
+inline WCHAR *Dup(const WCHAR *s) { return s ? (WCHAR *)nf::memdup(s, (wcslen(s) + 1) * sizeof(WCHAR)) : NULL; }
 
 char *  ToMultiByte(const WCHAR *txt, UINT CodePage);
 char *  ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest);

@@ -239,7 +239,7 @@ bool MapStrToInt::Insert(const char *key, int val, int *existingValOut, const ch
             *existingKeyOut = (const char *)e->key;
         return false;
     }
-    e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, str::Len(key) + 1);
+    e->key = (intptr_t)Allocator::StrDup(allocator, key);
     e->val = (intptr_t)val;
     if (existingKeyOut)
         *existingKeyOut = (const char *)e->key;
@@ -297,8 +297,7 @@ bool MapWStrToInt::Insert(const WCHAR *key, int val, int *prevVal)
             *prevVal = e->val;
         return false;
     }
-    size_t keyCbLen = (str::Len(key) + 1) * sizeof(WCHAR);
-    e->key = (intptr_t)Allocator::Dup(allocator, (void*)key, keyCbLen);
+    e->key = (intptr_t)Allocator::StrDup(allocator, key);
     e->val = (intptr_t)val;
 
     HashTableResizeIfNeeded(h, &gWStrKeyHasherComparator);
