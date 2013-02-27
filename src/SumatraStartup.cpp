@@ -140,7 +140,7 @@ static void OpenUsingDde(const WCHAR *filePath, CommandLineInfo& i, bool isFirst
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
         cmd.Set(str::Format(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]",
-                                    filePath, sourcePath, i.forwardSearchLine));
+                                    fullpath, sourcePath, i.forwardSearchLine));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
     }
 }

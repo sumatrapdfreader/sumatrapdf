@@ -94,7 +94,7 @@ class HW_IDropTarget;
 inline void VariantSetBool(VARIANT *res, bool val)
 {
     res->vt = VT_BOOL;
-    res->boolVal = val ? VARIANT_TRUE : VARIANT_FALSE;;
+    res->boolVal = val ? VARIANT_TRUE : VARIANT_FALSE;
 }
 
 inline void VariantSetLong(VARIANT *res, long val)

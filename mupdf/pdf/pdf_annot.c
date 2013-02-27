@@ -549,7 +549,7 @@ pdf_create_annot_ex(pdf_document *xref, const fz_rect *rect, pdf_obj *base_obj, 
 	annot->ap = form;
 	annot->next = NULL;
 	annot->annot_type = type;
-	annot->widget_type = FZ_WIDGET_TYPE_NOT_WIDGET;;
+	annot->widget_type = FZ_WIDGET_TYPE_NOT_WIDGET;
 
 	pdf_transform_annot(annot);
 
