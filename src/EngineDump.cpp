@@ -370,7 +370,7 @@ Usage:
     WCHAR *password = NULL;
     WCHAR *renderPath = NULL;
     bool useAlternateHandlers = false;
-    bool loadOnly = false;
+    bool loadOnly = false, silent = false;
     int breakAlloc = 0;
 
     for (size_t i = 2; i < argList.Count(); i++) {
@@ -382,8 +382,11 @@ Usage:
             renderPath = argList.At(++i);
         else if (str::Eq(argList.At(i), L"-alt"))
             useAlternateHandlers = true;
+        // -loadonly and -silent are only meant for profiling
         else if (str::Eq(argList.At(i), L"-loadonly"))
             loadOnly = true;
+        else if (str::Eq(argList.At(i), L"-silent"))
+            silent = true;
 #ifdef DEBUG
         else if (str::Eq(argList.At(i), L"-breakalloc") && i + 1 < argList.Count())
             breakAlloc = _wtoi(argList.At(++i));
@@ -399,6 +402,11 @@ Usage:
             MessageBox(NULL, L"Keep your debugger ready for the allocation breakpoint...", L"EngineDump", MB_ICONINFORMATION);
     }
 #endif
+    if (silent) {
+        FILE *nul;
+        freopen_s(&nul, "NUL", "w", stdout);
+        freopen_s(&nul, "NUL", "w", stderr);
+    }
 
     // optionally use GDI+ rendering for PDF/XPS and the original ChmEngine for CHM
     DebugGdiPlusDevice(useAlternateHandlers);
