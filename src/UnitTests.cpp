@@ -13,22 +13,25 @@ static void hexstrTest()
 {
     unsigned char buf[6] = { 1, 2, 33, 255, 0, 18 };
     unsigned char buf2[6] = { 0 };
-    char *s = _MemToHex(&buf);
+    ScopedMem<char> s(_MemToHex(&buf));
     assert(str::Eq(s, "010221ff0012"));
     bool ok = _HexToMem(s, &buf2);
     assert(ok);
     assert(memeq(buf, buf2, sizeof(buf)));
-    free(s);
 
     FILETIME ft1, ft2;
     GetSystemTimeAsFileTime(&ft1);
-    s = _MemToHex(&ft1);
+    s.Set(_MemToHex(&ft1));
     _HexToMem(s, &ft2);
     DWORD diff = FileTimeDiffInSecs(ft1, ft2);
     assert(0 == diff);
     assert(ft1.dwLowDateTime == ft2.dwLowDateTime);
     assert(ft1.dwHighDateTime == ft2.dwHighDateTime);
-    free(s);
+
+    s.Set(str::MemToHex(NULL, 0));
+    assert(str::Eq(s, ""));
+    ok = str::HexToMem(s, NULL, 0);
+    assert(ok);
 }
 
 static void ParseCommandLineTest()
