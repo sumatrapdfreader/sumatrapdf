@@ -14,7 +14,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "MiniMui.h"
-#include "PalmPdbReader.h"
+#include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
 #include "ZipUtil.h"
 

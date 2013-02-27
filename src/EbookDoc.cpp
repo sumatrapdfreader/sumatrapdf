@@ -8,7 +8,7 @@
 #include "FileUtil.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
-#include "PalmPdbReader.h"
+#include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"

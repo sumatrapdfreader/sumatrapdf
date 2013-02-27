@@ -9,7 +9,7 @@
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
-#include "PalmPdbReader.h"
+#include "PalmDbReader.h"
 #include "DebugLog.h"
 
 // Parse mobi format http://wiki.mobileread.com/wiki/MOBI
