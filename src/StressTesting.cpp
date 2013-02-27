@@ -423,6 +423,7 @@ class StressTest {
     int               pageForSearchStart;
     int               filesCount; // number of files processed so far
     int               timerId;
+    bool              exitWhenDone;
 
     SYSTEMTIME        stressStartTime;
     int               cycles;
@@ -443,9 +444,10 @@ class StressTest {
     void Finished(bool success);
 
 public:
-    StressTest(WindowInfo *win, RenderCache *renderCache) :
+    StressTest(WindowInfo *win, RenderCache *renderCache, bool exitWhenDone) :
         win(win), renderCache(renderCache), currPage(0), pageForSearchStart(0),
-        filesCount(0), cycles(1), fileIndex(0), fileProvider(NULL)
+        filesCount(0), cycles(1), fileIndex(0), fileProvider(NULL),
+        exitWhenDone(exitWhenDone)
     {
         timerId = gCurrStressTimerId++;
     }
@@ -506,7 +508,7 @@ void StressTest::Finished(bool success)
         ShowNotification(win, s, false, false, NG_STRESS_TEST_SUMMARY);
     }
 
-    CloseWindow(win, false);
+    CloseWindow(win, exitWhenDone);
     delete this;
 }
 
@@ -837,7 +839,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
         for (int j=0; j<n; j++) {
             // dst will be deleted when the stress ends
             win = windows[j];
-            StressTest *dst = new StressTest(win, renderCache);
+            StressTest *dst = new StressTest(win, renderCache, i->exitWhenDone);
             win->stressTest = dst;
             // divide filesToTest among each window
             FilesProvider *filesProvider = new FilesProvider(filesToTest, n, j);
@@ -847,7 +849,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
         free(windows);
     } else {
         // dst will be deleted when the stress ends
-        StressTest *dst = new StressTest(win, renderCache);
+        StressTest *dst = new StressTest(win, renderCache, i->exitWhenDone);
         win->stressTest = dst;
         dst->Start(i->stressTestPath, i->stressTestFilter, i->stressTestRanges, i->stressTestCycles);
     }

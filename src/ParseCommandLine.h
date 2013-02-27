@@ -16,7 +16,7 @@ public:
     //   only benchmark loading of the catalog
     WStrVec     pathsToBenchmark;
     bool        makeDefault;
-    bool        exitOnPrint;
+    bool        exitWhenDone;
     bool        printDialog;
     WCHAR *     printerName;
     WCHAR *     printSettings;
@@ -59,7 +59,7 @@ public:
 
     bool        crashOnOpen;
 
-    CommandLineInfo() : makeDefault(false), exitOnPrint(false), printDialog(false),
+    CommandLineInfo() : makeDefault(false), exitWhenDone(false), printDialog(false),
         printerName(NULL), printSettings(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
         escToExit(false), reuseInstance(false), lang(NULL),
         destName(NULL), pageNumber(-1),

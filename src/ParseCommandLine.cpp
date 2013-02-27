@@ -115,9 +115,11 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
                 str::ReplacePtr(&printerName, name);
                 free(name);
             }
+            exitWhenDone = true;
         }
         else if (is_arg_with_param("-print-to")) {
             str::ReplacePtr(&printerName, argList.At(++n));
+            exitWhenDone = true;
         }
         else if (is_arg("-print-dialog")) {
             printDialog = true;
@@ -129,10 +131,10 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             str::ReplacePtr(&printSettings, argList.At(++n));
             str::RemoveChars(printSettings, L" ");
         }
-        else if (is_arg("-exit-on-print")) {
+        else if (is_arg("-exit-when-done") || is_arg("-exit-on-print")) {
             // only affects -print-dialog (-print-to and -print-to-default
-            // always exit on print)
-            exitOnPrint = true;
+            // always exit on print) and -stress-test (useful for profiling)
+            exitWhenDone = true;
         }
         else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)

@@ -147,7 +147,7 @@ static void OpenUsingDde(const WCHAR *filePath, CommandLineInfo& i, bool isFirst
 
 static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool isFirstWin)
 {
-    bool showWin = !(i.printDialog && i.exitOnPrint) && !gPluginMode;
+    bool showWin = !(i.printDialog && i.exitWhenDone) && !gPluginMode;
     LoadArgs args(filePath, NULL, showWin);
     WindowInfo *win = LoadDocument(args);
     if (!win)
@@ -199,7 +199,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
     while (i.fileNames.Count() > 1) {
         free(i.fileNames.Pop());
     }
-    i.reuseInstance = i.exitOnPrint = false;
+    i.reuseInstance = i.exitWhenDone = false;
     // always display the toolbar when embedded (as there's no menubar in that case)
     gGlobalPrefs.toolbarVisible = true;
     // never allow esc as a shortcut to quit
@@ -408,7 +408,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 continue;
             }
             if (i.printDialog)
-                OnMenuPrint(win, i.exitOnPrint);
+                OnMenuPrint(win, i.exitWhenDone);
         }
         isFirstWin = false;
     }
@@ -418,7 +418,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    if (i.reuseInstance && !i.printDialog || i.printDialog && i.exitOnPrint)
+    if (i.reuseInstance && !i.printDialog || i.printDialog && i.exitWhenDone)
         goto Exit;
 
     if (isFirstWin) {
