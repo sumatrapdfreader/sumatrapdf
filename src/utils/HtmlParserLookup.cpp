@@ -16,10 +16,12 @@
 #define STR3(s) (STR2(s) | ((s)[2] << 16))
 #define STR4(s) (STR3(s) | ((s)[3] << 24))
 
-#define STR1i(s) (tolower((s)[0]))
-#define STR2i(s) (STR1i(s) | (tolower((s)[1]) << 8))
-#define STR3i(s) (STR2i(s) | (tolower((s)[2]) << 16))
-#define STR4i(s) (STR3i(s) | (tolower((s)[3]) << 24))
+#define lower(c) ((c) < 'A' || (c) > 'Z' ? (c) : (c) - 'A' + 'a')
+
+#define STR1i(s) (lower((s)[0]))
+#define STR2i(s) (STR1i(s) | (lower((s)[1]) << 8))
+#define STR3i(s) (STR2i(s) | (lower((s)[2]) << 16))
+#define STR4i(s) (STR3i(s) | (lower((s)[3]) << 24))
 
 HtmlTag FindHtmlTag(const char *name, size_t len)
 {
