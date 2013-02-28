@@ -6,6 +6,8 @@
 #endif
 
 #include "Installer.h"
+#include "Translations.h"
+
 #define UNINSTALLER_WIN_DX  INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY  INSTALLER_WIN_DY
 
@@ -16,13 +18,13 @@ static WCHAR *GetValidTempDir()
 {
     ScopedMem<WCHAR> d(path::GetTempPath());
     if (!d) {
-        NotifyFailed(L"Couldn't obtain temporary directory");
+        NotifyFailed(_TR("Couldn't obtain temporary directory"));
         return NULL;
     }
     bool ok = dir::Create(d);
     if (!ok) {
         LogLastError();
-        NotifyFailed(L"Couldn't create temporary directory");
+        NotifyFailed(_TR("Couldn't create temporary directory"));
         return NULL;
     }
     return d.StealData();
@@ -207,7 +209,7 @@ bool ExecuteUninstallerFromTempDir()
         return false;
 
     if (!CopyFile(GetOwnPath(), tempPath, FALSE)) {
-        NotifyFailed(L"Failed to copy uninstaller to temp directory");
+        NotifyFailed(_TR("Failed to copy uninstaller to temp directory"));
         return false;
     }
 
@@ -244,11 +246,11 @@ DWORD WINAPI UninstallerThread(LPVOID data)
 
     if (!RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) &&
         !RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
-        NotifyFailed(L"Failed to delete uninstaller registry keys");
+        NotifyFailed(_TR("Failed to delete uninstaller registry keys"));
     }
 
     if (!RemoveShortcut(true) && !RemoveShortcut(false))
-        NotifyFailed(L"Couldn't remove the shortcut");
+        NotifyFailed(_TR("Couldn't remove the shortcut"));
 
     UninstallBrowserPlugin();
     UninstallPdfFilter();
@@ -256,7 +258,7 @@ DWORD WINAPI UninstallerThread(LPVOID data)
     RemoveOwnRegistryKeys();
 
     if (!RemoveInstalledFiles())
-        NotifyFailed(L"Couldn't remove installation directory");
+        NotifyFailed(_TR("Couldn't remove installation directory"));
 
     // always succeed, even for partial uninstallations
     gGlobalData.success = true;
@@ -275,7 +277,7 @@ static void OnButtonUninstall()
 
     // disable the button during uninstallation
     EnableWindow(gHwndButtonInstUninst, FALSE);
-    SetMsg(L"Uninstallation in progress...", COLOR_MSG_INSTALLATION);
+    SetMsg(_TR("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
     gGlobalData.hThread = CreateThread(NULL, 0, UninstallerThread, NULL, 0, 0);
@@ -286,7 +288,7 @@ void OnUninstallationFinished()
     DestroyWindow(gHwndButtonInstUninst);
     gHwndButtonInstUninst = NULL;
     CreateButtonExit(gHwndFrame);
-    SetMsg(TAPP L" has been uninstalled.", gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
+    SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gGlobalData.firstError;
     InvalidateFrame();
 
@@ -317,13 +319,14 @@ bool OnWmCommand(WPARAM wParam)
 
 void OnCreateWindow(HWND hwnd)
 {
-    gHwndButtonInstUninst = CreateDefaultButton(hwnd, L"Uninstall " TAPP, 150);
+    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Uninstall SumatraPDF"), 150);
 }
 
 void CreateMainWindow()
 {
+    ScopedMem<WCHAR> title(str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR));
     gHwndFrame = CreateWindow(
-        INSTALLER_FRAME_CLASS_NAME, TAPP L" " CURR_VERSION_STR L" Uninstaller",
+        INSTALLER_FRAME_CLASS_NAME, title.Get(),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
         CW_USEDEFAULT, CW_USEDEFAULT,
         dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),

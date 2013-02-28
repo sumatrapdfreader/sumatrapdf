@@ -26,6 +26,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "CrashHandler.h"
 #include "FrameTimeoutCalculator.h"
 #include "ParseCommandLine.h"
+#include "Translations.h"
 
 #include "DebugLog.h"
 
@@ -361,9 +362,9 @@ static void ProcessesUsingInstallation(WStrVec& names)
 static void SetDefaultMsg()
 {
 #ifdef BUILD_UNINSTALLER
-    SetMsg(L"Are you sure that you want to uninstall " TAPP L"?", COLOR_MSG_WELCOME);
+    SetMsg(_TR("Are you sure you want to uninstall SumatraPDF?"), COLOR_MSG_WELCOME);
 #else
-    SetMsg(L"Thank you for choosing " TAPP L"!", COLOR_MSG_WELCOME);
+    SetMsg(_TR("Thank you for choosing SumatraPDF!"), COLOR_MSG_WELCOME);
 #endif
 }
 
@@ -394,7 +395,7 @@ static void SetCloseProcessMsg()
         else
             procNames.Set(str::Join(procNames, L" and ", name));
     }
-    ScopedMem<WCHAR> s(str::Format(L"Please close %s to proceed!", procNames));
+    ScopedMem<WCHAR> s(str::Format(_TR("Please close %s to proceed!"), procNames));
     SetMsg(s, COLOR_MSG_FAILED);
 }
 
@@ -419,42 +420,42 @@ void InstallBrowserPlugin()
 {
     ScopedMem<WCHAR> dllPath(GetBrowserPluginPath());
     if (!RegisterServerDLL(dllPath))
-        NotifyFailed(L"Couldn't install browser plugin");
+        NotifyFailed(_TR("Couldn't install browser plugin"));
 }
 
 void UninstallBrowserPlugin()
 {
     ScopedMem<WCHAR> dllPath(GetBrowserPluginPath());
     if (!RegisterServerDLL(dllPath, true))
-        NotifyFailed(L"Couldn't uninstall browser plugin");
+        NotifyFailed(_TR("Couldn't uninstall browser plugin"));
 }
 
 void InstallPdfFilter()
 {
     ScopedMem<WCHAR> dllPath(GetPdfFilterPath());
     if (!RegisterServerDLL(dllPath))
-        NotifyFailed(L"Couldn't install PDF search filter");
+        NotifyFailed(_TR("Couldn't install PDF search filter"));
 }
 
 void UninstallPdfFilter()
 {
     ScopedMem<WCHAR> dllPath(GetPdfFilterPath());
     if (!RegisterServerDLL(dllPath, true))
-        NotifyFailed(L"Couldn't uninstall PDF search filter");
+        NotifyFailed(_TR("Couldn't uninstall PDF search filter"));
 }
 
 void InstallPdfPreviewer()
 {
     ScopedMem<WCHAR> dllPath(GetPdfPreviewerPath());
     if (!RegisterServerDLL(dllPath))
-        NotifyFailed(L"Couldn't install PDF previewer");
+        NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
 void UninstallPdfPreviewer()
 {
     ScopedMem<WCHAR> dllPath(GetPdfPreviewerPath());
     if (!RegisterServerDLL(dllPath, true))
-        NotifyFailed(L"Couldn't uninstall PDF previewer");
+        NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
 }
 
 HWND CreateDefaultButton(HWND hwndParent, const WCHAR *label, int width, int id)
@@ -477,7 +478,7 @@ HWND CreateDefaultButton(HWND hwndParent, const WCHAR *label, int width, int id)
 
 void CreateButtonExit(HWND hwndParent)
 {
-    gHwndButtonExit = CreateDefaultButton(hwndParent, L"Close", 80, ID_BUTTON_EXIT);
+    gHwndButtonExit = CreateDefaultButton(hwndParent, _TR("Close"), 80, ID_BUTTON_EXIT);
 }
 
 void OnButtonExit()
@@ -763,13 +764,13 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
         case WM_CREATE:
 #ifndef BUILD_UNINSTALLER
             if (!IsValidInstaller()) {
-                MessageBox(NULL, L"The installer has been corrupted. Please download it again.\nSorry for the inconvenience!", L"Installation failed",  MB_ICONEXCLAMATION | MB_OK);
+                MessageBox(NULL, _TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"), _TR("Installation failed"), MB_ICONEXCLAMATION | MB_OK);
                 PostQuitMessage(0);
                 return -1;
             }
 #else
             if (!IsUninstallerNeeded()) {
-                MessageBox(NULL, L"No installation has been found. Please install " TAPP L" first before uninstalling it...", L"Uninstallation failed",  MB_ICONEXCLAMATION | MB_OK);
+                MessageBox(NULL, _TR("SumatraPDF installation not found."), _TR("Uninstallation failed"),  MB_ICONEXCLAMATION | MB_OK);
                 PostQuitMessage(0);
                 return -1;
             }

@@ -20,8 +20,18 @@ def should_translate(file_name):
     return file_name not in C_FILES_TO_EXCLUDE
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
-C_FILES_TO_PROCESS = [os.path.join(SRC_DIR, f) for f in os.listdir(SRC_DIR) if should_translate(f)]
+C_FILES_TO_PROCESS = []
+
+def add_files_from_dir(d):
+    global C_FILES_TO_PROCESS
+    for f in os.listdir(d):
+        if should_translate(f):
+            C_FILES_TO_PROCESS.append(os.path.join(d, f))
+
+add_files_from_dir(SRC_DIR)
+add_files_from_dir(os.path.join(SRC_DIR, "installer"))
 C_FILES_TO_PROCESS.append(os.path.join(SRC_DIR, "browserplugin", "npPdfViewer.cpp"))
+
 STRINGS_PATH = os.path.join(os.path.dirname(__file__), "..", "strings")
 TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'
 

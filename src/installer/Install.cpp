@@ -6,6 +6,7 @@
 #endif
 
 #include "Installer.h"
+#include "Translations.h"
 #include "ZipUtil.h"
 
 #include "../ifilter/PdfFilter.h"
@@ -37,7 +38,7 @@ static int GetInstallationStepCount()
      * - One per file to be copied (count extracted from gPayloadData)
      * - Optional registration (default viewer, browser plugin),
      *   Shortcut and Registry keys
-     * 
+     *
      * Most time is taken by file extraction/copying, so we just add
      * one step before - so that we start with some initial progress
      * - and one step afterwards.
@@ -77,14 +78,14 @@ static bool InstallCopyFiles()
         size_t size;
         ScopedMem<char> data(archive.GetFileData(filepathT, &size));
         if (!data) {
-            NotifyFailed(L"Some files to be installed are damaged or missing");
+            NotifyFailed(_TR("Some files to be installed are damaged or missing"));
             return false;
         }
 
         ScopedMem<WCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepathT)));
         bool ok = trans.WriteAll(extpath, data, size);
         if (!ok) {
-            ScopedMem<WCHAR> msg(str::Format(L"Couldn't write %s to disk", filepathT));
+            ScopedMem<WCHAR> msg(str::Format(_TR("Couldn't write %s to disk"), filepathT));
             NotifyFailed(msg);
             return false;
         }
@@ -237,7 +238,7 @@ static bool CreateInstallationDirectory()
     bool ok = dir::CreateAll(gGlobalData.installDir);
     if (!ok) {
         LogLastError();
-        NotifyFailed(L"Couldn't create the installation directory");
+        NotifyFailed(_TR("Couldn't create the installation directory"));
     }
     return ok;
 }
@@ -290,7 +291,7 @@ DWORD WINAPI InstallerThread(LPVOID data)
         UninstallPdfPreviewer();
 
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
-        NotifyFailed(L"Failed to create a shortcut");
+        NotifyFailed(_TR("Failed to create a shortcut"));
         goto Error;
     }
 
@@ -300,11 +301,11 @@ DWORD WINAPI InstallerThread(LPVOID data)
 
     if (!WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) &&
         !WriteUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
-        NotifyFailed(L"Failed to write the uninstallation information to the registry");
+        NotifyFailed(_TR("Failed to write the uninstallation information to the registry"));
     }
     if (!WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE) &&
         !WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER)) {
-        NotifyFailed(L"Failed to write the extended file extension information to the registry");
+        NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
     ProgressStep();
 
@@ -375,7 +376,7 @@ static void OnButtonInstall()
 
     EnableWindow(gHwndButtonInstUninst, FALSE);
 
-    SetMsg(L"Installation in progress...", COLOR_MSG_INSTALLATION);
+    SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
     gGlobalData.hThread = CreateThread(NULL, 0, InstallerThread, NULL, 0, 0);
@@ -390,10 +391,10 @@ void OnInstallationFinished()
 
     if (gGlobalData.success) {
         CreateButtonRunSumatra(gHwndFrame);
-        SetMsg(L"Thank you! " TAPP L" has been installed.", COLOR_MSG_OK);
+        SetMsg(_TR("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     } else {
         CreateButtonExit(gHwndFrame);
-        SetMsg(L"Installation failed!", COLOR_MSG_FAILED);
+        SetMsg(_TR("Installation failed!"), COLOR_MSG_FAILED);
     }
     gMsgError = gGlobalData.firstError;
     InvalidateFrame();
@@ -426,7 +427,7 @@ static void OnButtonOptions()
     EnableAndShow(gHwndCheckboxRegisterPdfFilter, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
 
-    win::SetText(gHwndButtonOptions, gShowOptions ? L"Hide &Options" : L"&Options");
+    win::SetText(gHwndButtonOptions, gShowOptions ? _TR("Hide &Options") : _TR("&Options"));
 
     ClientRect rc(gHwndFrame);
     rc.dy -= BOTTOM_PART_DY;
@@ -496,7 +497,7 @@ static void OnButtonBrowse()
         installDir.Set(path::GetDir(installDir));
 
     WCHAR path[MAX_PATH];
-    if (BrowseForFolder(gHwndFrame, installDir, L"Select the folder into which " TAPP L" should be installed:", path, dimof(path))) {
+    if (BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"), path, dimof(path))) {
         WCHAR *installPath = path;
         // force paths that aren't entered manually to end in ...\SumatraPDF
         // to prevent unintended installations into e.g. %ProgramFiles% itself
@@ -552,13 +553,13 @@ bool OnWmCommand(WPARAM wParam)
 // not the top), we should layout controls starting at the bottom and go up
 void OnCreateWindow(HWND hwnd)
 {
-    gHwndButtonInstUninst = CreateDefaultButton(hwnd, L"Install " TAPP, 140);
+    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), 140);
 
     RectI rc(WINDOW_MARGIN, 0, dpiAdjust(96), PUSH_BUTTON_DY);
     ClientRect r(hwnd);
     rc.y = r.dy - rc.dy - WINDOW_MARGIN;
 
-    gHwndButtonOptions = CreateWindow(WC_BUTTON, L"&Options",
+    gHwndButtonOptions = CreateWindow(WC_BUTTON, _TR("&Options"),
                         BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         rc.x, rc.y, rc.dx, rc.dy, hwnd,
                         (HMENU)ID_BUTTON_OPTIONS, ghinst, NULL);
@@ -566,7 +567,7 @@ void OnCreateWindow(HWND hwnd)
 
     int staticDy = dpiAdjust(20);
     rc.y = TITLE_PART_DY + WINDOW_MARGIN;
-    gHwndStaticInstDir = CreateWindow(WC_STATIC, L"Install " TAPP L" into the following &folder:",
+    gHwndStaticInstDir = CreateWindow(WC_STATIC, _TR("Install SumatraPDF in &folder:"),
                                       WS_CHILD,
                                       rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
                                       hwnd, NULL, ghinst, NULL);
@@ -593,7 +594,7 @@ void OnCreateWindow(HWND hwnd)
     // the alternative (disabling the checkbox) is more confusing
     if (!isSumatraDefaultViewer) {
         gHwndCheckboxRegisterDefault = CreateWindow(
-            WC_BUTTON, L"Use " TAPP L" as the &default PDF reader",
+            WC_BUTTON, _TR("Use SumatraPDF as the &default PDF reader"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
             rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
             hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, ghinst, NULL);
@@ -605,7 +606,7 @@ void OnCreateWindow(HWND hwnd)
     }
 
     gHwndCheckboxRegisterBrowserPlugin = CreateWindow(
-        WC_BUTTON, L"Install PDF &browser plugin for Firefox, Chrome and Opera",
+        WC_BUTTON, _TR("Install PDF &browser plugin for Firefox, Chrome and Opera"),
         WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
         rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
         hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, ghinst, NULL);
@@ -620,7 +621,7 @@ void OnCreateWindow(HWND hwnd)
 #endif
     {
         gHwndCheckboxRegisterPdfFilter = CreateWindow(
-            WC_BUTTON, L"Let Windows Desktop Search &search PDF documents",
+            WC_BUTTON, _TR("Let Windows Desktop Search &search PDF documents"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
             rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
             hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, ghinst, NULL);
@@ -631,7 +632,7 @@ void OnCreateWindow(HWND hwnd)
 
     // for Windows XP, this means only basic thumbnail support
     gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
-        WC_BUTTON, L"Let Windows show &previews of PDF documents",
+        WC_BUTTON, _TR("Let Windows show &previews of PDF documents"),
         WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
         rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
         hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, ghinst, NULL);
@@ -647,8 +648,10 @@ void OnCreateWindow(HWND hwnd)
 
 void CreateMainWindow()
 {
+    ScopedMem<WCHAR> title(str::Format(_TR("SumatraPDF %s Instaler"), CURR_VERSION_STR));
+
     gHwndFrame = CreateWindow(
-        INSTALLER_FRAME_CLASS_NAME, TAPP L" " CURR_VERSION_STR L" Installer",
+        INSTALLER_FRAME_CLASS_NAME, title.Get(),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
         CW_USEDEFAULT, CW_USEDEFAULT,
         dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),

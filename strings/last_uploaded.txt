@@ -28,6 +28,7 @@ AppTranslator strings
 &Odd pages only
 &Open Document
 &Open...\tCtrl+O
+&Options
 &Options...
 &Password:
 &Pin Document
@@ -59,6 +60,7 @@ Advanced
 All files
 All supported documents
 Application:
+Are you sure you want to uninstall SumatraPDF?
 Associate with PDF files?
 Attachment: %s
 Author:
@@ -77,6 +79,7 @@ Cannot print this file
 Cannot start inverse search command. Please check the command line in the settings.
 Change Language
 Check for &Updates
+Close
 Comic books
 Compatibility
 Continuous
@@ -89,8 +92,20 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Copyright:
 Could not obtain Printer properties
+Couldn't create temporary directory
+Couldn't create the installation directory
 Couldn't initialize printer
+Couldn't install PDF previewer
+Couldn't install PDF search filter
+Couldn't install browser plugin
+Couldn't obtain temporary directory
+Couldn't remove installation directory
+Couldn't remove the shortcut
 Couldn't render the page
+Couldn't uninstall PDF previewer
+Couldn't uninstall PDF search filter
+Couldn't uninstall browser plugin
+Couldn't write %s to disk
 Created:
 Current file
 Custom &Zoom...\tCtrl+Y
@@ -114,8 +129,13 @@ F&avorites
 F&orward\tAlt+Right Arrow
 F&ullscreen\tCtrl+Shift+L
 Facing
+Failed to copy uninstaller to temp directory
+Failed to create a shortcut
+Failed to delete uninstaller registry keys
 Failed to rename the file!
 Failed to save a file
+Failed to write the extended file extension information to the registry
+Failed to write the uninstallation information to the registry
 Fast Web View
 Favorites
 FictionBook documents
@@ -142,10 +162,19 @@ Found text at page %s (again)
 Frequently Read
 GB
 Go to page
+Hide &Options
 Hide frequently read
 Hint: Use the F3 key for finding again
 Image files (*.%s)
+Install PDF &browser plugin for Firefox, Chrome and Opera
+Install SumatraPDF
+Install SumatraPDF in &folder:
+Installation failed
+Installation failed!
+Installation in progress...
 KB
+Let Windows Desktop Search &search PDF documents
+Let Windows show &previews of PDF documents
 Loading file %s...
 MB
 Make SumatraPDF default application for PDF files?
@@ -182,6 +211,7 @@ Page Size:
 Page number %u inexistant
 Page scaling
 Page:
+Please close %s to proceed!
 Please wait - rendering...
 Postscript documents
 Pr&esentation\tCtrl+L
@@ -209,6 +239,7 @@ Searching %d of %d...
 Select &All
 Select &All\tCtrl+A
 Select content with Ctrl+left mouse button
+Select the folder where SumatraPDF should be installed:
 Send by &E-mail...
 Set inverse search command-line
 Show &Bookmarks
@@ -218,19 +249,31 @@ Show Favorites
 Show frequently read
 Show the &bookmarks sidebar when available
 Single Page
+Some files to be installed are damaged or missing
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Source file %s has no synchronization point
 Subject:
+SumatraPDF %s Instaler
+SumatraPDF %s Uninstaller
 SumatraPDF Options
 SumatraPDF Update
 SumatraPDF crashed
+SumatraPDF has been uninstalled.
+SumatraPDF installation not found.
 SumatraPDF is your default PDF reader
 SumatraPDF should now be your default PDF reader
 Synchronization file cannot be opened
 Tagged PDF
 Text documents
+Thank you for choosing SumatraPDF!
+Thank you! SumatraPDF has been installed.
+The installer has been corrupted. Please download it again.\nSorry for the inconvenience!
 Title:
+Uninstall SumatraPDF
+Uninstallation failed
+Uninstallation in progress...
 Unknown source file (%s)
+Use SumatraPDF as the &default PDF reader
 View
 Visit &Website
 Warning
