@@ -5,53 +5,10 @@
 #include "Dia2Subset.h"
 #include "Util.h"
 
-enum PdbProcessingOptions {
-    DUMP_SECTIONS = 1 << 0,
-    DUMP_SYMBOLS  = 1 << 1,
-    DUMP_TYPES    = 1 << 2,
-    // when set, we intern the strings
-    DUMP_COMPACT  = 1 << 3,
-
-    DUMP_ALL = DUMP_SECTIONS | DUMP_SYMBOLS | DUMP_TYPES | DUMP_COMPACT,
-};
-
+// Add SymTag to get the DIA name (i.e. Null => SymTagNull). You can then google
+// that name to figure out what it means
+//
 // must match order of enum SymTagEnum in Dia2Subset.h
-#if 0
-const char *g_symTypeNames[SymTagMax] = {
-    "SymTagNull",
-    "SymTagExe",
-    "SymTagCompiland",
-    "SymTagCompilandDetails",
-    "SymTagCompilandEnv",
-    "SymTagFunction",
-    "SymTagBlock",
-    "SymTagData",
-    "SymTagAnnotation",
-    "SymTagLabel",
-    "SymTagPublicSymbol",
-    "SymTagUDT",
-    "SymTagEnum",
-    "SymTagFunctionType",
-    "SymTagPointerType",
-    "SymTagArrayType",
-    "SymTagBaseType",
-    "SymTagTypedef",
-    "SymTagBaseClass",
-    "SymTagFriend",
-    "SymTagFunctionArgType",
-    "SymTagFuncDebugStart",
-    "SymTagFuncDebugEnd",
-    "SymTagUsingNamespace",
-    "SymTagVTableShape",
-    "SymTagVTable",
-    "SymTagCustom",
-    "SymTagThunk",
-    "SymTagCustomType",
-    "SymTagManagedType",
-    "SymTagDimension"
-};
-#endif
-
 const char *g_symTypeNames[SymTagMax] = {
     "Null",
     "Exe",
@@ -86,6 +43,39 @@ const char *g_symTypeNames[SymTagMax] = {
     "Dimension"
 };
 
+const char *g_symTypeNamesCompact[SymTagMax] = {
+    "N",        // Null
+    "Exe",      // Exe
+    "C",        // Compiland
+    "CD",       // CompilandDetails
+    "CE",       // CompilandEnv
+    "F",        // Function
+    "B",        // Block
+    "D",        // Data
+    "A",        // Annotation
+    "L",        // Label
+    "P",        // PublicSymbol
+    "U",        // UDT
+    "E",        // Enum
+    "FT",       // FunctionType
+    "PT",       // PointerType
+    "AT",       // ArrayType
+    "BT",       // BaseType
+    "T",        // Typedef
+    "BC",       // BaseClass
+    "Friend",   // Friend
+    "FAT",      // FunctionArgType
+    "FDS",      // FuncDebugStart
+    "FDE",      // FuncDebugEnd
+    "UN",       // UsingNamespace
+    "VTS",      // VTableShape
+    "VT",       // VTable
+    "Custom",   // Custom
+    "Thunk",    // Thunk
+    "CT",       // CustomType
+    "MT",       // ManagedType
+    "Dim"       // Dimension
+};
 static str::Str<char> g_strTmp;
 
 static str::Str<char> g_report;
@@ -104,12 +94,10 @@ static int InternString(const char *s)
 static void GetInternedStringsReport(str::Str<char>& resOut)
 {
     resOut.Append("Strings:\n");
-
     int n = g_strInterner.StringsCount();
     for (int i = 0; i < n; i++) {
         resOut.AppendFmt("%d|%s\n", i, g_strInterner.GetByIndex(i));
     }
-
     resOut.Append("\n");
 }
 
@@ -117,7 +105,10 @@ static const char *GetSymTypeName(int i)
 {
     if (i >= SymTagMax)
         return "<unknown type>";
-    return g_symTypeNames[i];
+    if (g_compact)
+        return g_symTypeNamesCompact[i];
+    else
+        return g_symTypeNames[i];
 }
 
 static const char *GetSectionType(IDiaSectionContrib *item)
@@ -128,12 +119,12 @@ static const char *GetSectionType(IDiaSectionContrib *item)
     item->get_uninitializedData(&uninitData);
 
     if (code && !initData && !uninitData)
-        return "code";
+        return "C";
     if (!code && initData && !uninitData)
-        return "data";
+        return "D";
     if (!code && !initData && uninitData)
-        return "bss";
-    return "unknown";
+        return "B";
+    return "U";
 }
 
 static void DumpSection(IDiaSectionContrib *item)
@@ -164,12 +155,12 @@ static void DumpSection(IDiaSectionContrib *item)
     BStrToString(g_strTmp, objFileName, "<noobjfile>");
 
     if (g_compact) {
-        // sectionNo | offset | length | type | objFileId
+        // type | sectionNo | length | offset | objFileId
         objFileId = InternString(g_strTmp.Get());
-        g_report.AppendFmt("%d|%d|%d|%s|%d\n", sectionNo, offset, length, sectionType, objFileId);
+        g_report.AppendFmt("%s|%d|%d|%d|%d\n", sectionType, sectionNo, length, offset, objFileId);
     } else {
-        // sectionNo | offset | length | type | objFile
-        g_report.AppendFmt("%d|%d|%d|%s|%s\n", sectionNo, offset, length, sectionType, g_strTmp.Get());
+        // type | sectionNo | length | offset | objFile
+        g_report.AppendFmt("%s|%d|%d|%d|%s\n", sectionType, sectionNo, length, offset, g_strTmp.Get());
     }
     if (objFileName)
         SysFreeString(objFileName);
@@ -212,11 +203,17 @@ static void DumpSymbol(IDiaSymbol *symbol)
     BStrToString(g_strTmp, name, "<noname>", true);
     const char *nameStr = g_strTmp.Get();
 
-    // name | section | offset | length | rva | type
-    g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", nameStr, (int)section, (int)offset, (int)length, (int)rva, typeName);
+    // type | section | length | offset | rva | name
+    g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr);
 
     if (name)
         SysFreeString(name);
+}
+
+static void AddReportSepLine()
+{
+    if (g_report.Count() > 0)
+        g_report.Append("\n");
 }
 
 static void DumpSymbols(IDiaSession *session)
@@ -247,6 +244,7 @@ static void DumpSymbols(IDiaSession *session)
     if (!SUCCEEDED(hr))
         goto Exit;
 
+    AddReportSepLine();
     g_report.Append("Symbols:\n");
 
     ULONG numFetched;
@@ -260,7 +258,6 @@ static void DumpSymbols(IDiaSession *session)
         if (FAILED(hr) || (numFetched != 1))
             break;
     }
-    g_report.Append("\n");
 
 Exit:
     if (symbol)
@@ -279,6 +276,7 @@ static void DumpSections(IDiaSession *session)
     if (S_OK != hr)
         return;
 
+    AddReportSepLine();
     g_report.Append("Sections:\n");
 
     VARIANT vIndex;
@@ -306,7 +304,6 @@ static void DumpSections(IDiaSession *session)
     }
 
 Exit:
-    g_report.Append("\n");
     if (secTable)
         secTable->Release();
     SysFreeString(vIndex.bstrVal);
@@ -349,30 +346,58 @@ static void ProcessPdbFile(const char *fileNameA)
     if (g_compact) {
         str::Str<char> res;
         GetInternedStringsReport(res);
-        puts(res.Get());
+        fputs(res.Get(), stdout);
     }
-    puts(g_report.Get());
+    fputs(g_report.Get(), stdout);
 
 Exit:
     if (session)
         session->Release();
 }
 
+static char *g_fileName = NULL;
+
+static void ParseCommandLine(int argc, char **argv)
+{
+    char *s;
+    for (int i=0; i<argc; i++) {
+        s = argv[i];
+        if (str::EqI(s, "-compact"))
+            g_compact = true;
+        else if (str::EqI(s, "-sections"))
+            g_dumpSections = true;
+        else if (str::EqI(s, "-symbols"))
+            g_dumpSymbols = true;
+        else if (str::EqI(s, "-types"))
+            g_dumpTypes = true;
+        else {
+            if (g_fileName != NULL)
+                goto InvalidCmdLine;
+            g_fileName = s;
+        }
+    }
+    if (!g_fileName)
+        goto InvalidCmdLine;
+
+    if (!g_dumpSections && !g_dumpSymbols && !g_dumpTypes) {
+        // no options specified so use default settings:
+        // dump all information in non-compact way
+        g_dumpSections = true;
+        g_dumpSymbols = true;
+        g_dumpTypes = true;
+    }
+
+    return;
+
+InvalidCmdLine:
+    log("Usage: sizer [-compact] [-sections] [-symbols] [-types] <exefile>\n");
+    exit(1);
+}
+
 int main(int argc, char** argv)
 {
     ScopedCom comInitializer;
-
-    if (argc < 2) {
-        log("Usage: sizer <exefile>\n");
-        return 1;
-    }
-
-    const char *fileName = argv[1];
-    //fprintf(stderr, "Reading debug info file %s ...\n", fileName);
-
-    g_dumpSymbols = true;
-    g_compact = true;
-    ProcessPdbFile(fileName);
-
+    ParseCommandLine(argc-1, &argv[1]);
+    ProcessPdbFile(g_fileName);
     return 0;
 }
