@@ -328,7 +328,7 @@ bool MapWStrToInt::Get(const WCHAR *key, int* valOut)
 
 int StringInterner::Intern(const char *s)
 {
-    nTotalStrings++;
+    nInternCalls++;
     int idx = (int)intToStr.Count();
     const char *internedString;
     bool inserted = strToInt.Insert(s, idx, &idx, &internedString);

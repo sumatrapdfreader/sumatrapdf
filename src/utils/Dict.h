@@ -57,12 +57,15 @@ public:
 class StringInterner {
     dict::MapStrToInt   strToInt;
     Vec<const char *>   intToStr;
-    int                 nTotalStrings; // just so we know how effective interning is
 
 public:
-    StringInterner() : nTotalStrings(0) {}
+    StringInterner() : nInternCalls(0) {}
+
     int             Intern(const char *s);
+    int             StringsCount() const { return intToStr.Count(); }
     const char *    GetByIndex(int n) const { return intToStr.At(n); }
+
+    int             nInternCalls; // so we know how effective interning is
 };
 
 #endif

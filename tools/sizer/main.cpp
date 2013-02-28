@@ -1,5 +1,7 @@
 #include "BaseUtil.h"
 #include "BitManip.h"
+#include "Dict.h"
+
 #include "Dia2Subset.h"
 #include "Util.h"
 
@@ -7,11 +9,11 @@ enum PdbProcessingOptions {
     DUMP_SECTIONS = 1 << 0,
     DUMP_SYMBOLS  = 1 << 1,
     DUMP_TYPES    = 1 << 2,
+    // when set, we intern the strings
+    DUMP_COMPACT  = 1 << 3,
 
-    DUMP_ALL = DUMP_SECTIONS | DUMP_SYMBOLS | DUMP_TYPES,
+    DUMP_ALL = DUMP_SECTIONS | DUMP_SYMBOLS | DUMP_TYPES | DUMP_COMPACT,
 };
-
-str::Str<char> g_strTmp;
 
 // must match order of enum SymTagEnum in Dia2Subset.h
 #if 0
@@ -84,6 +86,33 @@ const char *g_symTypeNames[SymTagMax] = {
     "Dimension"
 };
 
+static str::Str<char> g_strTmp;
+
+static str::Str<char> g_report;
+static StringInterner g_strInterner;
+
+static bool           g_dumpSections = false;
+static bool           g_dumpSymbols = false;
+static bool           g_dumpTypes = false;
+static bool           g_compact = false;
+
+static int InternString(const char *s)
+{
+    return g_strInterner.Intern(s);
+}
+
+static void GetInternedStringsReport(str::Str<char>& resOut)
+{
+    resOut.Append("Strings:\n");
+
+    int n = g_strInterner.StringsCount();
+    for (int i = 0; i < n; i++) {
+        resOut.AppendFmt("%d|%s\n", i, g_strInterner.GetByIndex(i));
+    }
+
+    resOut.Append("\n");
+}
+
 static const char *GetSymTypeName(int i)
 {
     if (i >= SymTagMax)
@@ -107,12 +136,13 @@ static const char *GetSectionType(IDiaSectionContrib *item)
     return "unknown";
 }
 
-static void DumpSection(IDiaSectionContrib *item, str::Str<char>& report)
+static void DumpSection(IDiaSectionContrib *item)
 {
     DWORD           sectionNo;
     DWORD           offset;
     DWORD           length;
     BSTR            objFileName = 0;
+    int             objFileId;
     IDiaSymbol *    compiland = 0;
 
     item->get_addressSection(&sectionNo);
@@ -133,14 +163,19 @@ static void DumpSection(IDiaSectionContrib *item, str::Str<char>& report)
 
     BStrToString(g_strTmp, objFileName, "<noobjfile>");
 
-    // sectionNo | offset | length | type | objFile
-    report.AppendFmt("%d|%d|%d|%s|%s\n", sectionNo, offset, length, sectionType, g_strTmp.Get());
-
+    if (g_compact) {
+        // sectionNo | offset | length | type | objFileId
+        objFileId = InternString(g_strTmp.Get());
+        g_report.AppendFmt("%d|%d|%d|%s|%d\n", sectionNo, offset, length, sectionType, objFileId);
+    } else {
+        // sectionNo | offset | length | type | objFile
+        g_report.AppendFmt("%d|%d|%d|%s|%s\n", sectionNo, offset, length, sectionType, g_strTmp.Get());
+    }
     if (objFileName)
         SysFreeString(objFileName);
 }
 
-static void DumpSymbol(IDiaSymbol *symbol, str::Str<char>& report)
+static void DumpSymbol(IDiaSymbol *symbol)
 {
     DWORD               section, offset, rva;
     DWORD               dwTag;
@@ -178,13 +213,13 @@ static void DumpSymbol(IDiaSymbol *symbol, str::Str<char>& report)
     const char *nameStr = g_strTmp.Get();
 
     // name | section | offset | length | rva | type
-    report.AppendFmt("%s|%d|%d|%d|%d|%s\n", nameStr, (int)section, (int)offset, (int)length, (int)rva, typeName);
+    g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", nameStr, (int)section, (int)offset, (int)length, (int)rva, typeName);
 
     if (name)
         SysFreeString(name);
 }
 
-static void DumpSymbols(IDiaSession *session, str::Str<char>& report)
+static void DumpSymbols(IDiaSession *session)
 {
     HRESULT                 hr;
     IDiaEnumSymbolsByAddr * enumByAddr = NULL;
@@ -212,12 +247,12 @@ static void DumpSymbols(IDiaSession *session, str::Str<char>& report)
     if (!SUCCEEDED(hr))
         goto Exit;
 
-    report.Append("Symbols:\n");
+    g_report.Append("Symbols:\n");
 
     ULONG numFetched;
     for (;;)
     {
-        DumpSymbol(symbol, report);
+        DumpSymbol(symbol);
         symbol->Release();
         symbol = NULL;
 
@@ -225,7 +260,7 @@ static void DumpSymbols(IDiaSession *session, str::Str<char>& report)
         if (FAILED(hr) || (numFetched != 1))
             break;
     }
-    report.Append("\n");
+    g_report.Append("\n");
 
 Exit:
     if (symbol)
@@ -234,7 +269,7 @@ Exit:
         enumByAddr->Release();
 }
 
-static void DumpSections(IDiaSession *session, str::Str<char>& report)
+static void DumpSections(IDiaSession *session)
 {
     HRESULT             hr;
     IDiaEnumTables *    enumTables = NULL;
@@ -244,7 +279,7 @@ static void DumpSections(IDiaSession *session, str::Str<char>& report)
     if (S_OK != hr)
         return;
 
-    report.Append("Sections:\n");
+    g_report.Append("Sections:\n");
 
     VARIANT vIndex;
     vIndex.vt = VT_BSTR;
@@ -266,12 +301,12 @@ static void DumpSections(IDiaSession *session, str::Str<char>& report)
         if (FAILED(hr) || (numFetched != 1))
             break;
 
-        DumpSection(item, report);
+        DumpSection(item);
         item->Release();
     }
 
 Exit:
-    report.Append("\n");
+    g_report.Append("\n");
     if (secTable)
         secTable->Release();
     SysFreeString(vIndex.bstrVal);
@@ -279,7 +314,7 @@ Exit:
         enumTables->Release();
 }
 
-static void ProcessPdbFile(const char *fileNameA, PdbProcessingOptions options)
+static void ProcessPdbFile(const char *fileNameA)
 {
     HRESULT             hr;
     IDiaDataSource *    dia = NULL;
@@ -303,15 +338,20 @@ static void ProcessPdbFile(const char *fileNameA, PdbProcessingOptions options)
         goto Exit;
     }
 
-    if (bit::IsMaskSet(options, DUMP_SECTIONS)) {
-        DumpSections(session, report);
+    if (g_dumpSections) {
+        DumpSections(session);
     }
 
-    if (bit::IsMaskSet(options, DUMP_SYMBOLS)) {
-        DumpSymbols(session, report);
+    if (g_dumpSymbols) {
+        DumpSymbols(session);
     }
 
-    puts(report.Get());
+    if (g_compact) {
+        str::Str<char> res;
+        GetInternedStringsReport(res);
+        puts(res.Get());
+    }
+    puts(g_report.Get());
 
 Exit:
     if (session)
@@ -330,8 +370,9 @@ int main(int argc, char** argv)
     const char *fileName = argv[1];
     //fprintf(stderr, "Reading debug info file %s ...\n", fileName);
 
-    PdbProcessingOptions options = (PdbProcessingOptions)(DUMP_SYMBOLS);
-    ProcessPdbFile(fileName, options);
+    g_dumpSymbols = true;
+    g_compact = true;
+    ProcessPdbFile(fileName);
 
     return 0;
 }
