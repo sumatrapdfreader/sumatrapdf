@@ -445,7 +445,13 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 			{
 				fz_pixmap *mask_pixmap;
 				if (image->n != 2)
-					fz_throw(ctx, "soft mask must be grayscale");
+				{
+					/* SumatraPDF: ignore invalid JPX softmasks */
+					fz_warn(ctx, "soft mask must be grayscale");
+					mask_pixmap = fz_new_pixmap(ctx, NULL, image->tile->w, image->tile->h);
+					fz_clear_pixmap_with_value(ctx, mask_pixmap, 255);
+				}
+				else
 				mask_pixmap = fz_alpha_from_gray(ctx, image->tile, 1);
 				fz_drop_pixmap(ctx, image->tile);
 				image->tile = mask_pixmap;

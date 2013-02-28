@@ -806,7 +806,11 @@ static void drawoutline(fz_context *ctx, fz_document *doc)
 #ifdef MUPDF_COMBINED_EXE
 int draw_main(int argc, char **argv)
 #else
+#ifdef _WIN32_UTF8
+static int main_utf8(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 #endif
 {
 	char *password = "";
@@ -1020,3 +1024,63 @@ int main(int argc, char **argv)
 	fz_free_context(ctx);
 	return (errored != 0);
 }
+
+#ifdef _WIN32_UTF8
+static char *
+wchar_to_utf8(wchar_t *s)
+{
+	wchar_t *src = s;
+	char *d;
+	char *dst;
+	int len = 1;
+
+	while (*src)
+	{
+		len += fz_runelen(*src++);
+	}
+
+	d = malloc(len);
+	if (d != NULL)
+	{
+		dst = d;
+		src = s;
+		while (*src)
+		{
+			dst += fz_runetochar(dst, *src++);
+		}
+		*dst = 0;
+	}
+	return d;
+}
+
+int wmain(int argc, wchar_t *wargv[])
+{
+	int i, ret;
+	char **argv = calloc(argc, sizeof(char *));
+	if (argv == NULL)
+		goto oom;
+
+	for (i = 0; i < argc; i++)
+	{
+		argv[i] = wchar_to_utf8(wargv[i]);
+		if (argv[i] == NULL)
+			goto oom;
+	}
+
+	ret = main_utf8(argc, argv);
+
+	if (0)
+	{
+oom:
+		ret = 1;
+		fprintf(stderr, "Out of memory while processing command line args\n");
+	}
+	for (i = 0; i < argc; i++)
+	{
+		free(argv[i]);
+	}
+	free(argv);
+
+	return ret;
+}
+#endif

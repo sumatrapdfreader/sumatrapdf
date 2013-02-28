@@ -1270,9 +1270,6 @@ fz_stream *fz_open_file(fz_context *ctx, const char *filename);
 */
 fz_stream *fz_open_file_w(fz_context *ctx, const wchar_t *filename);
 
-/* SumatraPDF: allow to open ANSI-encoded paths */
-fz_stream *fz_open_file_a(fz_context *ctx, const char *filename);
-
 /*
 	fz_open_fd: Wrap an open file descriptor in a stream.
 

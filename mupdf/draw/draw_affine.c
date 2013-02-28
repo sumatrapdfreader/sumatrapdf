@@ -674,7 +674,11 @@ fz_paint_image_imp(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz
 	if (dolerp && 0 /* SumatraPDF: this voodoo fails for several XPS documents */)
 	{
 		u -= 32768;
+		if (u < 0)
+			u = 0;
 		v -= 32768;
+		if (v < 0)
+			v = 0;
 	}
 
 	dp = dst->samples + (unsigned int)(((y - dst->y) * dst->w + (x - dst->x)) * dst->n);

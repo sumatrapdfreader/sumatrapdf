@@ -73,7 +73,6 @@ EXPORTS
 	fz_buffer_storage
 	fz_open_file
 	fz_open_file_w
-	fz_open_file_a
 	fz_open_fd
 	fz_open_memory
 	fz_open_buffer
@@ -161,6 +160,7 @@ EXPORTS
 	fz_load_page
 	fz_load_links
 	fz_bound_page
+	fz_get_annot_type
 	fz_first_annot
 	fz_next_annot
 	fz_bound_annot
@@ -356,7 +356,9 @@ EXPORTS
 	fz_render_t3_glyph_direct
 	fz_prepare_t3_glyph
 	fz_create_annot
+	fz_delete_annot
 	fz_set_annot_appearance
+	fz_set_markup_annot_quadpoints
 	fz_new_text
 	fz_add_text
 	fz_free_text
@@ -521,6 +523,7 @@ EXPORTS
 	pdf_first_annot
 	pdf_next_annot
 	pdf_bound_annot
+	pdf_annot_type
 	pdf_run_page
 	pdf_run_page_with_usage
 	pdf_run_page_contents
@@ -682,7 +685,9 @@ EXPORTS
 	pdf_choice_widget_value
 	pdf_choice_widget_set_value
 	pdf_create_annot
+	pdf_delete_annot
 	pdf_set_annot_appearance
+	pdf_set_markup_annot_quadpoints
 	pdf_set_doc_event_callback
 	pdf_event_issue_alert
 	pdf_event_issue_print
