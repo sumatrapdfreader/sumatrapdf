@@ -90,16 +90,16 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
     int textLen;
     RectI *coords;
     const WCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
-    double maxDist = -1;
+    unsigned int maxDist = UINT_MAX;
     int result = -1;
 
     for (int i = 0; i < textLen; i++) {
         if (!coords[i].x && !coords[i].dx)
             continue;
 
-        double dist = _hypot(x - coords[i].x - 0.5 * coords[i].dx,
-                             y - coords[i].y - 0.5 * coords[i].dy);
-        if (maxDist < 0 || dist < maxDist) {
+        unsigned int dist = distSq((int)x - coords[i].x - coords[i].dx / 2,
+                                   (int)y - coords[i].y - coords[i].dy / 2);
+        if (dist < maxDist) {
             result = i;
             maxDist = dist;
         }

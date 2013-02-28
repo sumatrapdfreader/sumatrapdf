@@ -782,7 +782,7 @@ int DisplayModel::GetPageNextToPoint(PointI pt)
     if (zoomReal <= 0)
         return startPage;
 
-    double maxDist = -1;
+    unsigned int maxDist = UINT_MAX;
     int closest = startPage;
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
@@ -794,9 +794,9 @@ int DisplayModel::GetPageNextToPoint(PointI pt)
         if (pageInfo->pageOnScreen.Contains(pt))
             return pageNo;
 
-        double dist = _hypot(pt.x - pageInfo->pageOnScreen.x - 0.5 * pageInfo->pageOnScreen.dx,
-                             pt.y - pageInfo->pageOnScreen.y - 0.5 * pageInfo->pageOnScreen.dy);
-        if (maxDist < 0 || dist < maxDist) {
+        unsigned int dist = distSq(pt.x - pageInfo->pageOnScreen.x - pageInfo->pageOnScreen.dx / 2,
+                                   pt.y - pageInfo->pageOnScreen.y - pageInfo->pageOnScreen.dy / 2);
+        if (dist < maxDist) {
             closest = pageNo;
             maxDist = dist;
         }

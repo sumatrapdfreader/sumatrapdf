@@ -10,6 +10,8 @@ class WStrVec;
 
 #define iswordchar(c) IsCharAlphaNumeric(c)
 
+inline unsigned int distSq(int x, int y) { return x * x + y * y; }
+
 class PageTextCache {
     BaseEngine* engine;
     RectI    ** coords;
