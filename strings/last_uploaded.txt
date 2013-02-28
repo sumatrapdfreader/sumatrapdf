@@ -169,7 +169,6 @@ Image files (*.%s)
 Install PDF &browser plugin for Firefox, Chrome and Opera
 Install SumatraPDF
 Install SumatraPDF in &folder:
-Installation failed
 Installation failed!
 Installation in progress...
 KB

@@ -764,7 +764,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
         case WM_CREATE:
 #ifndef BUILD_UNINSTALLER
             if (!IsValidInstaller()) {
-                MessageBox(NULL, _TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"), _TR("Installation failed"), MB_ICONEXCLAMATION | MB_OK);
+                MessageBox(NULL, _TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"), _TR("Installation failed!"), MB_ICONEXCLAMATION | MB_OK);
                 PostQuitMessage(0);
                 return -1;
             }
