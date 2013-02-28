@@ -1267,6 +1267,8 @@ WindowInfo *CreateAndShowWindowInfo()
 
 static void DeleteWindowInfo(WindowInfo *win)
 {
+    Timer t(true);
+
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
 
@@ -1280,6 +1282,9 @@ static void DeleteWindowInfo(WindowInfo *win)
     AbortPrinting(win);
 
     delete win;
+
+    t.Stop();
+    lf("DeleteWindowInfo() time: %.2f", t.GetTimeInMs());
 }
 
 class FileChangeCallback : public UITask, public FileChangeObserver

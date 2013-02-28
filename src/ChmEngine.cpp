@@ -26,17 +26,26 @@ static bool IsExternalUrl(const WCHAR *url)
            str::StartsWithI(url, L"mailto:");
 }
 
+struct ChmTocTraceItem {
+    const WCHAR *title; // owned by ChmEngineImpl::poolAllocator
+    const WCHAR *url;   // owned by ChmEngineImpl::poolAllocator
+    int level;
+    int pageNo;
+
+    ChmTocTraceItem(const WCHAR *title=NULL, const WCHAR *url=NULL, int level=0, int pageNo=0) :
+        title(title), url(url), level(level), pageNo(pageNo) { }
+};
+
 class ChmTocItem : public DocTocItem, public PageDestination {
 public:
-    const WCHAR *url; // owned by ChmEngineImpl::poolAllocator
+    const WCHAR *url; // owned by ChmEngineImpl::poolAllocator or ChmNamedDest::myUrl
 
-    ChmTocItem(WCHAR *title, int pageNo, const WCHAR *url) :
-        DocTocItem(title, pageNo), url(url) { }
+    ChmTocItem(const WCHAR *title, int pageNo, const WCHAR *url) :
+        DocTocItem((WCHAR *)title, pageNo), url(url) { }
     virtual ~ChmTocItem() {
         // prevent title from being freed
         title = NULL;
     }
-    ChmTocItem *Clone() const;
 
     virtual PageDestination *GetLink() { return this; }
     virtual PageDestType GetDestType() const {
@@ -55,17 +64,15 @@ public:
     }
 };
 
-ChmTocItem *ChmTocItem::Clone() const
-{
-    ChmTocItem *res = new ChmTocItem(title, pageNo, url);
-    res->open = open;
-    res->id = id;
-    if (child)
-        res->child = static_cast<ChmTocItem *>(child)->Clone();
-    if (next)
-        res->next = static_cast<ChmTocItem *>(next)->Clone();
-    return res;
-}
+class ChmNamedDest : public ChmTocItem {
+    ScopedMem<WCHAR> myUrl;
+
+public:
+    ChmNamedDest(const WCHAR *url, int pageNo) :
+        ChmTocItem(NULL, pageNo, NULL), myUrl(str::Dup(url)) {
+        this->url = myUrl;
+    }
+};
 
 class ChmCacheEntry {
 public:
@@ -137,10 +144,8 @@ public:
     virtual bool BenchLoadPage(int pageNo) { return true; }
 
     virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const { return tocRoot != NULL; }
-    // Callers delete the ToC tree, so we return a copy
-    // (probably faster than re-creating it from html every time)
-    virtual DocTocItem *GetTocTree() { return tocRoot ? tocRoot->Clone() : NULL; }
+    virtual bool HasTocTree() const { return tocTrace.Count() > 0; }
+    virtual DocTocItem *GetTocTree();
 
     virtual bool SetParentHwnd(HWND hwnd);
     virtual void DisplayPage(int pageNo) { DisplayPage(pages.At(pageNo - 1)); }
@@ -170,7 +175,7 @@ public:
 protected:
     WCHAR *fileName;
     ChmDoc *doc;
-    ChmTocItem *tocRoot;
+    Vec<ChmTocTraceItem> tocTrace;
 
     WStrList pages;
     int currentPageNo;
@@ -188,8 +193,7 @@ protected:
     ChmCacheEntry *FindDataForUrl(const WCHAR *url);
 };
 
-ChmEngineImpl::ChmEngineImpl() :
-    fileName(NULL), doc(NULL), tocRoot(NULL),
+ChmEngineImpl::ChmEngineImpl() : fileName(NULL), doc(NULL),
     htmlWindow(NULL), navCb(NULL), currentPageNo(1)
 {
 }
@@ -200,7 +204,6 @@ ChmEngineImpl::~ChmEngineImpl()
     //       can lead to WM_PAINT being dispatched for the parent
     //       hwnd and then crashing in SumatraPDF.cpp's DrawDocument
     delete htmlWindow;
-    delete tocRoot;
     delete doc;
     free(fileName);
     DeleteVecMembers(urlDataCache);
@@ -323,37 +326,18 @@ void ChmEngineImpl::ZoomTo(float zoomLevel)
         htmlWindow->SetZoomPercent((int)zoomLevel);
 }
 
-#define USE_STR_INT_MAP
-
 class ChmTocBuilder : public EbookTocVisitor {
     ChmDoc *doc;
 
     WStrList *pages;
-    ChmTocItem **root;
-    int idCounter;
-    Vec<DocTocItem *> lastItems;
+    Vec<ChmTocTraceItem> *tocTrace;
     Allocator *allocator;
+    // TODO: could use dict::MapWStrToInt instead of StrList in the caller as well
+    dict::MapWStrToInt urlsSet;
 
-#ifndef USE_STR_INT_MAP
     // We fake page numbers by doing a depth-first traversal of
     // toc tree and considering each unique html page in toc tree
     // as a page
-    int CreatePageNoForURL(const WCHAR *url) {
-        if (!url || IsExternalUrl(url))
-            return 0;
-
-        ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
-        int pageNo = pages->Find(plainUrl) + 1;
-        if (pageNo > 0)
-            return pageNo;
-        pages->Append(plainUrl.StealData());
-        return pages->Count();
-    }
-#else
-    // TODO: could use dict::MapWStrToInt instead of StrList in the caller
-    // as well
-    dict::MapWStrToInt urlsSet;
-
     int CreatePageNoForURL(const WCHAR *url) {
         if (!url || IsExternalUrl(url))
             return 0;
@@ -369,39 +353,23 @@ class ChmTocBuilder : public EbookTocVisitor {
         }
         return pageNo;
     }
-#endif
 
 public:
-    ChmTocBuilder(ChmDoc *doc, WStrList *pages, Allocator *allocator, ChmTocItem **root) :
-        doc(doc), pages(pages), allocator(allocator), root(root), idCounter(0)
+    ChmTocBuilder(ChmDoc *doc, WStrList *pages, Vec<ChmTocTraceItem> *tocTrace, Allocator *allocator) :
+        doc(doc), pages(pages), tocTrace(tocTrace), allocator(allocator)
         {
-#ifdef USE_STR_INT_MAP
             for (size_t i = 0; i < pages->Count(); i++) {
                 const WCHAR *url = pages->At(i);
                 bool inserted = urlsSet.Insert(url, i + 1, NULL);
                 CrashIf(!inserted);
             }
-#endif
         }
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         int pageNo = CreatePageNoForURL(url);
-        ChmTocItem *item = new ChmTocItem(Allocator::StrDup(allocator, name), pageNo, Allocator::StrDup(allocator, url));
-        item->id = ++idCounter;
-        item->open = level == 1;
-
-        // append the item at the correct level
-        CrashIf(level < 1);
-        if (!*root) {
-            *root = item;
-            lastItems.Append(*root);
-        } else if ((size_t)level <= lastItems.Count()) {
-            lastItems.RemoveAt(level, lastItems.Count() - level);
-            lastItems.Last() = lastItems.Last()->next = item;
-        } else {
-            lastItems.Last()->child = item;
-            lastItems.Append(item);
-        }
+        name = Allocator::StrDup(allocator, name);
+        url = Allocator::StrDup(allocator, url);
+        tocTrace->Append(ChmTocTraceItem(name, url, level, pageNo));
     }
 };
 
@@ -418,7 +386,7 @@ bool ChmEngineImpl::Load(const WCHAR *fileName)
     pages.Append(str::conv::FromAnsi(doc->GetHomePath()));
     // parse the ToC here, since page numbering depends on it
     t.Start();
-    doc->ParseToc(&ChmTocBuilder(doc, &pages, &poolAlloc, &tocRoot));
+    doc->ParseToc(&ChmTocBuilder(doc, &pages, &tocTrace, &poolAlloc));
     dbglog::LogF("doc->ParseToc(): %.2f ms", t.GetTimeInMs());
     CrashIf(pages.Count() == 0);
     return pages.Count() > 0;
@@ -459,8 +427,36 @@ PageDestination *ChmEngineImpl::GetNamedDest(const WCHAR *name)
     ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(name));
     int pageNo = pages.Find(plainUrl) + 1;
     if (pageNo > 0)
-        return new ChmTocItem(NULL, pageNo, Allocator::StrDup(&poolAlloc, name));
+        return new ChmNamedDest(name, pageNo);
     return NULL;
+}
+
+// Callers delete the ToC tree, so we re-create it from prerecorded
+// values (which is faster than re-creating it from html every time)
+DocTocItem *ChmEngineImpl::GetTocTree()
+{
+    DocTocItem *root = NULL, **nextChild = &root;
+    Vec<DocTocItem *> levels;
+    int idCounter = 0;
+
+    for (ChmTocTraceItem *ti = tocTrace.IterStart(); ti; ti = tocTrace.IterNext()) {
+        ChmTocItem *item = new ChmTocItem(ti->title, ti->pageNo, ti->url);
+        item->id = ++idCounter;
+        item->open = ti->level == 1;
+        // append the item at the correct level
+        CrashIf(ti->level < 1);
+        if ((size_t)ti->level <= levels.Count()) {
+            levels.RemoveAt(ti->level, levels.Count() - ti->level);
+            levels.Last()->AddSibling(item);
+        }
+        else {
+            (*nextChild) = item;
+            levels.Append(item);
+        }
+        nextChild = &item->child;
+    }
+
+    return root;
 }
 
 bool ChmEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
