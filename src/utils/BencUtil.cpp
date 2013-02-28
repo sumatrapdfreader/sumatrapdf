@@ -110,7 +110,8 @@ BencInt *BencInt::Decode(const char *bytes, size_t *lenOut)
     return new BencInt(value);
 }
 
-BencDict *BencArray::GetDict(size_t index) const {
+BencDict *BencArray::GetDict(size_t index) const
+{
     if (index < Length() && value.At(index)->Type() == BT_DICT)
         return static_cast<BencDict *>(value.At(index));
     return NULL;
@@ -121,8 +122,9 @@ char *BencArray::Encode() const
     str::Str<char> bytes(256);
     bytes.Append('l');
     for (size_t i = 0; i < Length(); i++) {
-        ScopedMem<char> objBytes(value.At(i)->Encode());
-        bytes.Append(objBytes.Get());
+        BencObj *val = value.At(i);
+        if (val)
+            bytes.AppendAndFree(val->Encode());
     }
     bytes.Append('e');
     return bytes.StealData();

@@ -305,7 +305,7 @@ public:
     {
         if ((size_t)-1 == size)
             size = Len(src);
-        Vec::Append((T *)src, size);
+        Vec::Append(src, size);
     }
 
     void AppendFmt(const T* fmt, ...)
@@ -320,7 +320,7 @@ public:
     void AppendAndFree(T* s)
     {
         if (s)
-            Append(s, Len(s));
+            Append(s);
         free(s);
     }
 
