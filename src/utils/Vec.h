@@ -446,25 +446,16 @@ class WStrList {
     size_t count;
     Allocator *allocator;
 
-    // variation of CRC-32 which deals with strings that are
+    // variation of murmur_hash2 which deals with strings that are
     // mostly ASCII and should be treated case independently
     static uint32_t GetQuickHashI(const WCHAR *str) {
-        uint32_t crc = 0;
-        for (WCHAR c; (c = *str); str++) {
-            if ((c & 0xFF80))
-                c = '\x80';
-            else if ('A' <= c && c <= 'Z')
-                c += 'a' - 'A';
-            uint32_t bits = (crc ^ (c << 24)) & 0xFF000000L;
-            for (int i = 0; i < 8; i++) {
-                if ((bits & 0x80000000L))
-                    bits = (bits << 1) ^ 0x04C11DB7L;
-                else
-                    bits <<= 1;
-            }
-            crc = (crc << 8) ^ bits;
+        size_t len = str::Len(str);
+        ScopedMem<char> data(AllocArray<char>(len));
+        WCHAR c;
+        for (char *dst = data; (c = *str++); dst++) {
+            *dst = (c & 0xFF80) ? 0x80 : 'A' <= c && c <= 'Z' ? c + 'a' - 'A' : c;
         }
-        return crc;
+        return murmur_hash2(data, len);
     }
 
 public:

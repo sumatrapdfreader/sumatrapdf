@@ -30,12 +30,11 @@ uint32_t murmur_hash2(const void *key, size_t len)
 {
     /* 'm' and 'r' are mixing constants generated offline.
      They're not really 'magic', they just happen to work well.  */
-    uint32_t seed = hash_function_seed;
     const uint32_t m = 0x5bd1e995;
     const int r = 24;
 
     /* Initialize the hash to a 'random' value */
-    uint32_t h = seed ^ len;
+    uint32_t h = hash_function_seed ^ len;
 
     /* Mix 4 bytes at a time into the hash */
     const uint8_t *data = (const uint8_t *)key;
@@ -59,7 +58,7 @@ uint32_t murmur_hash2(const void *key, size_t len)
     case 3: h ^= data[2] << 16;
     case 2: h ^= data[1] << 8;
     case 1: h ^= data[0]; h *= m;
-    };
+    }
 
     /* Do a few final mixes of the hash to ensure the last few
      * bytes are well-incorporated. */
