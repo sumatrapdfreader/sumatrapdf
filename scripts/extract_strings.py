@@ -21,6 +21,7 @@ def should_translate(file_name):
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
 C_FILES_TO_PROCESS = [os.path.join(SRC_DIR, f) for f in os.listdir(SRC_DIR) if should_translate(f)]
+C_FILES_TO_PROCESS.append(os.path.join(SRC_DIR, "browserplugin", "npPdfViewer.cpp"))
 STRINGS_PATH = os.path.join(os.path.dirname(__file__), "..", "strings")
 TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'
 

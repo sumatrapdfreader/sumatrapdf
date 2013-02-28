@@ -222,7 +222,7 @@ static const char *spaces(int deep)
 
 static const char *GetUdtType(IDiaSymbol *symbol)
 {
-    DWORD kind;
+    DWORD kind = -1;
     if (FAILED(symbol->get_udtKind(&kind)))
         return "<unknown udt kind>";
     if (UdtStruct == kind)
@@ -275,6 +275,7 @@ static void DumpType(IDiaSymbol *symbol, int deep)
             g_report.AppendFmt("%s%s|%d\n", spaces(deep), nameStr, (int)offset);
         }
     } else if (SymTagUDT == symtag) {
+        // TODO: why is it always "struct" even for classes?
         type = GetUdtType(symbol);
         g_report.AppendFmt("%s%s|%s|%d\n", spaces(deep), type, nameStr, (int)length);
         hr = symbol->findChildren(SymTagNull, NULL, nsNone, &enumChilds);
