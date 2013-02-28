@@ -76,7 +76,9 @@ const char *g_symTypeNamesCompact[SymTagMax] = {
     "MT",       // ManagedType
     "Dim"       // Dimension
 };
+
 static str::Str<char> g_strTmp;
+static str::Str<char> g_strTmp2;
 
 static str::Str<char> g_report;
 static StringInterner g_strInterner;
@@ -85,6 +87,18 @@ static bool           g_dumpSections = false;
 static bool           g_dumpSymbols = false;
 static bool           g_dumpTypes = false;
 static bool           g_compact = false;
+
+static void SysFreeStringSafe(BSTR s)
+{
+    if (s)
+        SysFreeString(s);
+}
+
+static void UnkReleaseSafe(IUnknown *i)
+{
+    if (i)
+        i->Release();
+}
 
 static int InternString(const char *s)
 {
@@ -162,8 +176,21 @@ static void DumpSection(IDiaSectionContrib *item)
         // type | sectionNo | length | offset | objFile
         g_report.AppendFmt("%s|%d|%d|%d|%s\n", sectionType, sectionNo, length, offset, g_strTmp.Get());
     }
-    if (objFileName)
-        SysFreeString(objFileName);
+
+    SysFreeStringSafe(objFileName);
+}
+
+#define MY_UNDNAME_COMPLETE 0 // http://msdn.microsoft.com/en-us/library/kszfk0fs(v=vs.80).aspx
+
+static bool ShouldLogUndecorated(const char *s, const char *undecorated)
+{
+    // don't log empty
+    if (!undecorated || !*undecorated)
+        return false;
+    // don't log is it's C symbol (i.e. same as s but with "_" prefix
+    if (*undecorated == '_' && str::Eq(s, undecorated + 1))
+        return false;
+    return true;
 }
 
 static void DumpSymbol(IDiaSymbol *symbol)
@@ -172,9 +199,12 @@ static void DumpSymbol(IDiaSymbol *symbol)
     DWORD               dwTag;
     enum SymTagEnum     tag;
     ULONGLONG           length = 0;
-    BSTR                name = 0;
-    BSTR                srcFileName = 0;
-    const char *        typeName;
+    BSTR                name = NULL;
+    BSTR                undecoratedName = NULL;
+    BSTR                srcFileName = NULL;
+    const char *        typeName = NULL;
+    const char *        nameStr = NULL;
+    const char *        undecoratedNameStr = NULL;
 
     symbol->get_symTag(&dwTag);
     tag = (enum SymTagEnum)dwTag;
@@ -199,15 +229,26 @@ static void DumpSymbol(IDiaSymbol *symbol)
             length = 0;
     }
 
+    //symbol->get_undecoratedNameEx(MY_UNDNAME_COMPLETE, &undecoratedName);
+    if (S_OK == symbol->get_undecoratedName(&undecoratedName)) {
+        BStrToString(g_strTmp2, undecoratedName, "", true);
+        undecoratedNameStr = g_strTmp2.Get();
+    }
+
     symbol->get_name(&name);
     BStrToString(g_strTmp, name, "<noname>", true);
-    const char *nameStr = g_strTmp.Get();
+    nameStr = g_strTmp.Get();
 
-    // type | section | length | offset | rva | name
-    g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr);
+    if (ShouldLogUndecorated(nameStr, undecoratedNameStr)) {
+        // type | section | length | offset | name | undecoratedName
+        g_report.AppendFmt("%s|%d|%d|%d|%d|%s|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr, undecoratedNameStr);
+    } else {
+        // type | section | length | offset | name
+        g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr);
+    }
 
-    if (name)
-        SysFreeString(name);
+    SysFreeStringSafe(name);
+    SysFreeStringSafe(undecoratedName);
 }
 
 static void AddReportSepLine()
@@ -260,10 +301,8 @@ static void DumpSymbols(IDiaSession *session)
     }
 
 Exit:
-    if (symbol)
-        symbol->Release();
-    if (enumByAddr)
-        enumByAddr->Release();
+    UnkReleaseSafe(symbol);
+    UnkReleaseSafe(enumByAddr);
 }
 
 static void DumpSections(IDiaSession *session)
@@ -304,11 +343,9 @@ static void DumpSections(IDiaSession *session)
     }
 
 Exit:
-    if (secTable)
-        secTable->Release();
-    SysFreeString(vIndex.bstrVal);
-    if (enumTables)
-        enumTables->Release();
+    UnkReleaseSafe(secTable);
+    SysFreeStringSafe(vIndex.bstrVal);
+    UnkReleaseSafe(enumTables);
 }
 
 static void ProcessPdbFile(const char *fileNameA)
@@ -343,6 +380,7 @@ static void ProcessPdbFile(const char *fileNameA)
         DumpSymbols(session);
     }
 
+    fputs("Format: 1\n", stdout);
     if (g_compact) {
         str::Str<char> res;
         GetInternedStringsReport(res);
@@ -351,8 +389,7 @@ static void ProcessPdbFile(const char *fileNameA)
     fputs(g_report.Get(), stdout);
 
 Exit:
-    if (session)
-        session->Release();
+    UnkReleaseSafe(session);
 }
 
 static char *g_fileName = NULL;
