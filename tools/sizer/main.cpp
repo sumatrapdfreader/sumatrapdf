@@ -193,6 +193,140 @@ static bool ShouldLogUndecorated(const char *s, const char *undecorated)
     return true;
 }
 
+static void AddReportSepLine()
+{
+    if (g_report.Count() > 0)
+        g_report.Append("\n");
+}
+
+static char g_spacesBuf[256];
+static const char *spaces(int deep)
+{
+    if (0 == deep)
+        return "";
+    if (1 == deep)
+        return "  ";
+    if (2 == deep)
+        return "    ";
+    if (3 == deep)
+        return "      ";
+    if (4 == deep)
+        return "        ";
+    deep = deep * 2;
+    for (int i = 0; i < deep; i++) {
+        g_spacesBuf[i] = ' ';
+    }
+    g_spacesBuf[deep] = 0;
+    return (const char*)g_spacesBuf;
+}
+
+static const char *GetUdtType(IDiaSymbol *symbol)
+{
+    DWORD kind;
+    if (FAILED(symbol->get_udtKind(&kind)))
+        return "<unknown udt kind>";
+    if (UdtStruct == kind)
+        return "struct";
+    if (UdtClass == kind)
+        return "class";
+    if (UdtUnion == kind)
+        return "union";
+    return "<unknown udt kind>";
+}
+
+static void DumpType(IDiaSymbol *symbol, int deep)
+{
+    IDiaEnumSymbols *   enumChilds = NULL;
+    HRESULT             hr;
+    BSTR                name = NULL;
+    const char *        nameStr = NULL;
+    const char *        type;
+    LONG                offset;
+    ULONGLONG           length;
+    ULONG               celt = 0;
+    ULONG               symtag;
+    DWORD               locType;
+
+#if 0
+    if (deep > 2)
+        return;
+#endif
+
+    if (symbol->get_symTag(&symtag) != S_OK)
+        return;
+
+    symbol->get_name(&name);
+    BStrToString(g_strTmp, name, "<noname>", true);
+    nameStr = g_strTmp.Get();
+
+    // TODO: avoid duplicate symbols (use hash tables to see if we've seen nameStr already)
+
+    symbol->get_length(&length);
+    symbol->get_offset(&offset);
+
+    if (SymTagData == symtag) {
+        if (symbol->get_locationType(&locType) != S_OK)
+            return; // must be a symbol in optimized code
+
+        // TODO: use get_offsetInUdt (http://msdn.microsoft.com/en-us/library/dd997149.aspx) ?
+        // TODO: use get_type (http://msdn.microsoft.com/en-US/library/cwx3656b(v=vs.80).aspx) ?
+        // TODO: see what else we can get http://msdn.microsoft.com/en-US/library/w8ae4k32(v=vs.80).aspx
+        if (LocIsThisRel == locType) {
+            g_report.AppendFmt("%s%s|%d\n", spaces(deep), nameStr, (int)offset);
+        }
+    } else if (SymTagUDT == symtag) {
+        type = GetUdtType(symbol);
+        g_report.AppendFmt("%s%s|%s|%d\n", spaces(deep), type, nameStr, (int)length);
+        hr = symbol->findChildren(SymTagNull, NULL, nsNone, &enumChilds);
+        if (!SUCCEEDED(hr))
+            return;
+        IDiaSymbol* child;
+        while (SUCCEEDED(enumChilds->Next(1, &child, &celt)) && (celt == 1))
+        {
+            DumpType(child, deep+1);
+            child->Release();
+        }
+        enumChilds->Release();
+    } else {
+        if (symbol->get_locationType(&locType) != S_OK)
+            return; // must be a symbol in optimized code
+        // TODO: assert?
+    }
+}
+
+static void DumpTypes(IDiaSession *session)
+{
+    IDiaSymbol *        globalScope = NULL;
+    IDiaEnumSymbols *   enumSymbols = NULL;
+    IDiaSymbol *        symbol = NULL;
+
+    HRESULT hr = session->get_globalScope(&globalScope);
+    if (FAILED(hr))
+        return;
+
+    AddReportSepLine();
+    g_report.Append("Types:\n");
+
+    DWORD flags = nsfCaseInsensitive|nsfUndecoratedName; // nsNone ?
+    hr = globalScope->findChildren(SymTagUDT, 0, flags, &enumSymbols);
+    if (FAILED(hr))
+        goto Exit;
+
+    ULONG celt = 0;
+    for (;;)
+    {
+        hr = enumSymbols->Next(1, &symbol, &celt);
+        if (FAILED(hr) || (celt != 1))
+            break;
+        DumpType(symbol, 0);
+        symbol->Release();
+    }
+
+Exit:
+    UnkReleaseSafe(enumSymbols);
+    UnkReleaseSafe(globalScope);
+}
+
 static void DumpSymbol(IDiaSymbol *symbol)
 {
     DWORD               section, offset, rva;
@@ -249,12 +383,6 @@ static void DumpSymbol(IDiaSymbol *symbol)
 
     SysFreeStringSafe(name);
     SysFreeStringSafe(undecoratedName);
-}
-
-static void AddReportSepLine()
-{
-    if (g_report.Count() > 0)
-        g_report.Append("\n");
 }
 
 static void DumpSymbols(IDiaSession *session)
@@ -370,6 +498,10 @@ static void ProcessPdbFile(const char *fileNameA)
     if (FAILED(hr)) {
         log("  failed to open DIA session\n");
         goto Exit;
+    }
+
+    if (g_dumpTypes) {
+        DumpTypes(session);
     }
 
     if (g_dumpSections) {

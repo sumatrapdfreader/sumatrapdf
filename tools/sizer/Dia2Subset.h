@@ -40,6 +40,43 @@ enum SymTagEnum
     SymTagMax
 };
 
+enum NameSearchOptions { 
+    nsNone,
+    nsfCaseSensitive     = 0x1,
+    nsfCaseInsensitive   = 0x2,
+    nsfFNameExt          = 0x4,
+    nsfRegularExpression = 0x8,
+    nsfUndecoratedName   = 0x10,
+
+    // For backward compatibility:
+    nsCaseSensitive           = nsfCaseSensitive,
+    nsCaseInsensitive         = nsfCaseInsensitive,
+    nsFNameExt                = nsfCaseInsensitive | nsfFNameExt,
+    nsRegularExpression       = nsfRegularExpression | nsfCaseSensitive,
+    nsCaseInRegularExpression = nsfRegularExpression | nsfCaseInsensitive
+};
+
+enum LocationType { 
+   LocIsNull,
+   LocIsStatic,
+   LocIsTLS,
+   LocIsRegRel,
+   LocIsThisRel,
+   LocIsEnregistered,
+   LocIsBitField,
+   LocIsSlot,
+   LocIsIlRel,
+   LocInMetaData,
+   LocIsConstant,
+   LocTypeMax
+};
+
+enum UdtKind { 
+   UdtStruct,
+   UdtClass,
+   UdtUnion
+};
+
 class IDiaEnumSymbols;
 class IDiaEnumSymbolsByAddr;
 class IDiaEnumTables;
@@ -119,7 +156,7 @@ class IDiaSession : public IUnknown
 public:
     virtual HRESULT __stdcall get_loadAddress(ULONGLONG *ret) = 0;
     virtual HRESULT __stdcall put_loadAddress(ULONGLONG val) = 0;
-    virtual HRESULT __stdcall get_globalScape(IDiaSymbol **sym) = 0;
+    virtual HRESULT __stdcall get_globalScope(IDiaSymbol **sym) = 0;
 
     virtual HRESULT __stdcall getEnumTables(IDiaEnumTables** ppEnumTables) = 0;
     virtual HRESULT __stdcall getSymbolsByAddr(IDiaEnumSymbolsByAddr** ppEnumbyAddr) = 0;
