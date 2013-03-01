@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c74040570db1f7e9ee471a45ef3e2749d7d579b4
+0a71ccb6a7e633066d9dd5589e532ddad94adbd0
 :%s of %s
 cn:%s of %s
 de:%s von %s
@@ -13677,6 +13677,7 @@ vn:Tựa đề
 cn:卸载SumatraPDF
 de:SumatraPDF deinstallieren
 fr:Désinstaller SumatraPDF
+ku:سڕینەوەی SumatraPDF
 pt:Desinstalar SumatraPDF
 ru:Удалить SumatraPDF
 uk:Видалити SumatraPDF
