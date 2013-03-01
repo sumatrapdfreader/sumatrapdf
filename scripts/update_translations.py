@@ -1,18 +1,12 @@
-import os.path, re, simplejson, s3
-from util import load_config, uniquify
+import os.path, re
+from util import uniquify
 from extract_strings import load_strings_file, untranslated_count_for_lang
 from extract_strings import extract_strings_from_c_files, get_missing_for_language
 from extract_strings import dump_missing_per_language, write_out_strings_files
 from extract_strings import key_sort_func, load_lang_index
 
-g_can_upload = False
 g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
 
-config = load_config()
-if config.HasAwsCreds():
-    g_can_upload = True
-
-S3_JS_NAME = "blog/sumatrapdf-langs.js"
 # number of missing translations for a language to be considered
 # incomplete (will be excluded from Translations_txt.cpp)
 INCOMPLETE_MISSING_THRESHOLD = 40
@@ -151,19 +145,6 @@ def gen_js_data(strings_dict, langs, contributors):
         res.append([lang_iso, lang_name, count, svnurl, c])
     return sorted(res, lambda x, y: cmp(y[2], x[2]) or cmp(x[1], y[1]))
 
-# Generate json data as array of arrays in the format:
-# [langname, lang-iso-code, untranslated_strings_count, svn_url, [contributors]]
-# sorted by untranslated string count (biggest at the top)
-def gen_and_upload_js(strings_dict, langs, contributors):
-    if not g_can_upload:
-        print("Can't upload javascript to s3")
-        return
-    data = gen_js_data(strings_dict, langs, contributors)
-    js = simplejson.dumps(data)
-    js = "var g_langsData = " + js + ";\n"
-    #print(js)
-    s3.upload_data_public-(js, S3_JS_NAME)
-
 def get_untranslated_as_list(untranslated_dict):
     return uniquify(sum(untranslated_dict.values(), []))
 
@@ -198,7 +179,6 @@ def main_obsolete():
             assert len(lang1) == 1 and len(lang2) == 1 and lang1[0][1] == lang2[0][1]
 
     c_file_name = os.path.join(g_src_dir, "Translations_txt.cpp")
-    #gen_and_upload_js(strings_dict, langs_idx, contributors)
     remove_incomplete_translations(langs_idx, strings, strings_dict)
     gen_c_code(langs_idx, strings_dict, c_file_name, encode_to_utf=True)
 
