@@ -18,6 +18,12 @@ def strip_empty_lines(s):
   lines = [l.strip() for l in s.split("\n") if len(l.strip()) > 0]
   return string.join(lines, "\n")
 
+def trim_str(s):
+  if len(s) < 75: return (s, False)
+  # we don't want to trim if adding "..." would make it bigger than original
+  if len(s) < 78: return (s, False)
+  return (s[:75], True)
+
 def test_for_flag(args, arg, has_data=False):
   if arg not in args:
     if not has_data:

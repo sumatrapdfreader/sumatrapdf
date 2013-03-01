@@ -392,12 +392,6 @@ def build_sizes_json():
 	s = "var g_sumatra_sizes = %s;\nvar g_installer_sizes = %s;\n" % (sumatra_json, installer_json)
 	s3.upload_data_public_with_content_type(s, "sumatrapdf/buildbot/sizes.js", silent=True)
 
-def trim_checkin_comment(s):
-	if len(s) < 75: return (s, False)
-	# we don't want to trim if adding "..." would make it bigger than original
-	if len(s) < 78: return (s, False)
-	return (s[:75], True)
-
 # build sumatrapdf/buildbot/index.html summary page that links to each
 # sumatrapdf/buildbot/${ver}/analyze.html
 def build_index_html():
@@ -477,7 +471,7 @@ def build_index_html():
 				html += td(s, 4) + "\n"
 
 		# checkin comment
-		(comment, trimmed) = trim_checkin_comment(checkin_comment_for_ver(ver))
+		(comment, trimmed) = util.trim_str(checkin_comment_for_ver(ver))
 		comment = comment.decode('utf-8')
 		comment = cgi.escape(comment)
 		if trimmed: comment += a(src_url, "...")
