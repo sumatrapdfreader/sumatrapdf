@@ -3,8 +3,9 @@ Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
 import os, os.path, shutil, sys, time, string, datetime, json, cPickle, cgi, traceback
-from util import s3Exists, s3DownloadToFile, file_remove_try_hard, run_cmd_throw
-from util import parse_svnlog_out, s3List, s3UploadDataPublicWithContentType, formatInt
+import s3
+from util import file_remove_try_hard, run_cmd_throw
+from util import parse_svnlog_out, formatInt
 from util import load_config, run_cmd, strip_empty_lines, build_installer_data
 from util import verify_path_exists, verify_started_in_right_directory
 from util import parse_svninfo_out
@@ -239,8 +240,8 @@ def stats_for_ver(ver):
 	local_path = os.path.join(get_stats_cache_dir(), ver + ".txt")
 	if not os.path.exists(local_path):
 		s3_path = "sumatrapdf/buildbot/%s/stats.txt" % ver
-		if not s3Exists(s3_path): return None
-		s3DownloadToFile(s3_path, local_path)
+		if not s3.exists(s3_path): return None
+		s3.download_to_file(s3_path, local_path)
 		assert(os.path.exists(local_path))
 	return Stats(local_path)
 
@@ -291,7 +292,7 @@ def has_already_been_built(ver):
 	s3_dir = "sumatrapdf/buildbot/"
 	n1 = s3_dir + ver + "/analyze.html"
 	n2 = s3_dir + ver + "/release_build_log.txt"
-	keys = s3List(s3_dir)
+	keys = s3.list(s3_dir)
 	for k in keys:
 		if k.name in [n1, n2]:
 			return True
@@ -390,7 +391,7 @@ def build_sizes_json():
 	sumatra_json = json.dumps(sumatra_sizes)
 	installer_json = json.dumps(installer_sizes)
 	s = "var g_sumatra_sizes = %s;\nvar g_installer_sizes = %s;\n" % (sumatra_json, installer_json)
-	s3UploadDataPublicWithContentType(s, "sumatrapdf/buildbot/sizes.js", silent=True)
+	s3.upload_data_public_with_content_type(s, "sumatrapdf/buildbot/sizes.js", silent=True)
 
 def trim_checkin_comment(s):
 	if len(s) < 75: return (s, False)
@@ -404,7 +405,7 @@ def build_index_html():
 	s3_dir = "sumatrapdf/buildbot/"
 	html = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>%s</head><body>\n' % g_index_html_css
 	html += "<p>SumatraPDF buildbot results:</p>\n"
-	names = [n.name for n in s3List(s3_dir)]
+	names = [n.name for n in s3.list(s3_dir)]
 	# filter out top-level files like index.html and sizes.js
 	names = [n[len(s3_dir):] for n in names if len(n.split("/")) == 4]
 	names.sort(reverse=True, key=lambda name: int(name.split("/")[0]))
@@ -486,7 +487,7 @@ def build_index_html():
 	html += "</table>"
 	html += "</body></html>\n"
 	#print(html)
-	s3UploadDataPublicWithContentType(html, "sumatrapdf/buildbot/index.html", silent=True)
+	s3.upload_data_public_with_content_type(html, "sumatrapdf/buildbot/index.html", silent=True)
 
 g_cert_pwd = None
 def get_cert_pwd():
@@ -619,7 +620,7 @@ def build_version(ver, skip_release=False):
 		print("%s for release build" % str(dur))
 		if stats.rel_failed:
 			run_analyze = False # don't bother running analyze if release failed
-			s3UploadDataPublicWithContentType(stats.rel_build_log, s3dir + "release_build_log.txt", silent=True)
+			s3.upload_data_public_with_content_type(stats.rel_build_log, s3dir + "release_build_log.txt", silent=True)
 
 	if run_analyze:
 		start_time = datetime.datetime.now()
@@ -629,13 +630,13 @@ def build_version(ver, skip_release=False):
 		html = gen_analyze_html(stats, ver)
 		p = os.path.join(get_logs_cache_dir(), "%s_analyze.html" % str(ver))
 		open(p, "w").write(html)
-		s3UploadDataPublicWithContentType(html, s3dir + "analyze.html", silent=True)
+		s3.upload_data_public_with_content_type(html, s3dir + "analyze.html", silent=True)
 
 	# TODO: it appears we might throw an exception after uploading analyze.html but
 	# before/dufing uploading stats.txt. Would have to implement transactional
 	# multi-upload to be robust aginst that, so will just let it be
 	stats_txt = stats.to_s()
-	s3UploadDataPublicWithContentType(stats_txt, s3dir + "stats.txt", silent=True)
+	s3.upload_data_public_with_content_type(stats_txt, s3dir + "stats.txt", silent=True)
 	build_sizes_json()
 	build_index_html()
 

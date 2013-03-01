@@ -1,5 +1,5 @@
-import os.path, re, simplejson
-from util import load_config, s3UploadDataPublic, uniquify
+import os.path, re, simplejson, s3
+from util import load_config, uniquify
 from extract_strings import load_strings_file, untranslated_count_for_lang
 from extract_strings import extract_strings_from_c_files, get_missing_for_language
 from extract_strings import dump_missing_per_language, write_out_strings_files
@@ -9,16 +9,8 @@ g_can_upload = False
 g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
 
 config = load_config()
-if not config.HasAwsCreds():
-    print("aws creds not present in config.py")
-else:
-    try:
-        import boto
-        g_can_upload = True
-    except:
-        print("You need boto library (http://code.google.com/p/boto/)")
-        print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
-        print("cd boto; python setup.py install")
+if config.HasAwsCreds():
+    g_can_upload = True
 
 S3_JS_NAME = "blog/sumatrapdf-langs.js"
 # number of missing translations for a language to be considered
@@ -170,7 +162,7 @@ def gen_and_upload_js(strings_dict, langs, contributors):
     js = simplejson.dumps(data)
     js = "var g_langsData = " + js + ";\n"
     #print(js)
-    s3UploadDataPublic(js, S3_JS_NAME)
+    s3.upload_data_public-(js, S3_JS_NAME)
 
 def get_untranslated_as_list(untranslated_dict):
     return uniquify(sum(untranslated_dict.values(), []))

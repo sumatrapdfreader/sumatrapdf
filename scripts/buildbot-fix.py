@@ -5,8 +5,8 @@
 # This tool fixes such problems by deleting files from s3 and cache, so that
 # they can be re-generated
 
-import sys, os, os.path
-from util import s3List, file_remove_try_hard, s3Delete, verify_path_exists, run_cmd_throw
+import sys, os, s3
+from util import file_remove_try_hard, verify_path_exists, run_cmd_throw
 from buildbot import get_stats_cache_dir
 from buildbot import verify_started_in_right_directory
 
@@ -22,7 +22,7 @@ g_s3_files = None
 def get_s3_files():
 	global g_s3_files
 	if g_s3_files == None:
-		files = s3List("sumatrapdf/buildbot/")
+		files = s3.list("sumatrapdf/buildbot/")
 		g_s3_files = [f.name for f in files]
 	return g_s3_files
 
@@ -83,7 +83,7 @@ def delete_ver(ver):
 	for f in s3_files:
 		print("  deleting s3 %s" % f)
 		if not g_dry_run:
-			s3Delete(f)
+			s3.delete(f)
 
 # delete all stats.txt files cached locally and all files from s3 for
 # a given version and later

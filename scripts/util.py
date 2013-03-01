@@ -1,22 +1,4 @@
-import os.path, re, subprocess, sys, tempfile, hashlib, string, time
-import zipfile2 as zipfile
-
-g_config = None
-def import_boto():
-  global S3Connection, bucket_lister, g_config
-  try:
-    from boto.s3.connection import S3Connection
-    from boto.s3.bucketlistresultset import bucket_lister
-  except:
-    print("You need boto library (http://code.google.com/p/boto/)")
-    print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
-    print("cd boto; python setup.py install")
-    raise
-
-  g_config =  load_config()
-  if  not g_config.HasAwsCreds():
-    print "config.py doesn't have aws creds"
-    sys.exit(1)
+import os, re, subprocess, sys, hashlib, string, time, zipfile
 
 def log(s):
   print(s)
@@ -57,69 +39,6 @@ def test_for_flag(args, arg, has_data=False):
   args.pop(ix + 1)
   args.pop(ix)
   return data
-
-S3_BUCKET = "kjkpub"
-g_s3conn = None
-
-def s3connection():
-  global g_s3conn
-  if g_s3conn is None:
-    import_boto()
-    g_s3conn = S3Connection(g_config.aws_access, g_config.aws_secret, True)
-  return g_s3conn
-
-def s3PubBucket():
-  return s3connection().get_bucket(S3_BUCKET)
-
-def ul_cb(sofar, total):
-  print("So far: %d, total: %d" % (sofar , total))
-
-def s3UploadFilePublic(local_path, remote_path, silent=False):
-  size = os.path.getsize(local_path)
-  log("s3 upload %d bytes of '%s' as '%s'" % (size, local_path, remote_path))
-  k = s3PubBucket().new_key(remote_path)
-  if silent:
-    k.set_contents_from_filename(local_path)
-  else:
-    k.set_contents_from_filename(local_path, cb=ul_cb)
-  k.make_public()
-
-def s3UploadDataPublic(data, remote_path):
-  log("s3 upload %d bytes of data as '%s'" % (len(data), remote_path))
-  k = s3PubBucket().new_key(remote_path)
-  k.set_contents_from_string(data)
-  k.make_public()
-
-def s3UploadDataPublicWithContentType(data, remote_path, silent=False):
-  # writing to a file to force boto to set Content-Type based on file extension.
-  # TODO: there must be a simpler way
-  tmp_name = os.path.basename(remote_path)
-  tmp_path = os.path.join(tempfile.gettempdir(), tmp_name)
-  open(tmp_path, "w").write(data.encode("utf-8"))
-  s3UploadFilePublic(tmp_path, remote_path, silent)
-  os.remove(tmp_path)
-
-def s3DownloadToFile(remote_path, local_path):
-  log("s3 download '%s' as '%s'" % (remote_path, local_path))
-  k = s3PubBucket().new_key(remote_path)
-  k.get_contents_to_filename(local_path)
-
-def s3List(s3dir):
-  b = s3PubBucket()
-  return bucket_lister(b, s3dir)
-
-def s3Delete(remote_path):
-  log("s3 delete '%s'" % remote_path)
-  s3PubBucket().new_key(remote_path).delete()
-
-def s3Exists(remote_path):
-  return s3PubBucket().get_key(remote_path)
-
-def verify_s3_doesnt_exist(remote_path):
-  if not s3Exists(remote_path):
-    return
-  print("'%s' already exists in s3" % remote_path)
-  sys.exit(1)
 
 def file_sha1(fp):
   data = open(fp, "rb").read()

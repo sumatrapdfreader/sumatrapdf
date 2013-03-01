@@ -4,11 +4,11 @@ and optionally uploads it to s3.
 """
 
 import os, os.path, shutil, sys, time, re
-from util import test_for_flag, s3List, s3Delete, run_cmd_throw
+import s3
+from util import test_for_flag, run_cmd_throw
 from util import verify_started_in_right_directory, parse_svninfo_out, log
-from util import extract_sumatra_version, verify_s3_doesnt_exist, zip_file
+from util import extract_sumatra_version, zip_file
 from util import load_config, build_installer_data, verify_path_exists
-from util import s3UploadFilePublic, s3UploadDataPublic
 
 import apptransul, apptransdl
 
@@ -70,7 +70,7 @@ def copy_to_dst_dir(src_path, dst_dir):
 # delete all but the last 3 pre-release builds in order to use less s3 storage
 def deleteOldPreReleaseBuilds():
   s3Dir = "sumatrapdf/prerel/"
-  keys = s3List(s3Dir)
+  keys = s3.list(s3Dir)
   files_by_ver = {}
   for k in keys:
     #print(k.name)
@@ -91,7 +91,7 @@ def deleteOldPreReleaseBuilds():
   for vertodelete in todelete:
     for f in files_by_ver[vertodelete]:
       #print("Deleting %s" % f)
-      s3Delete(f)
+      s3.delete(f)
 
 def sign(file_path, cert_pwd):
   # the sign tool is finicky, so copy it and cert to the same dir as
@@ -164,7 +164,7 @@ def main():
   cert_pwd = None
   cert_path = os.path.join("scripts", "cert.pfx")
   if upload:
-    map(verify_s3_doesnt_exist, s3_files)
+    map(s3.verify_doesnt_exist, s3_files)
     verify_path_exists(cert_path)
     conf = load_config()
     cert_pwd = conf.GetCertPwdMustExist()
@@ -234,17 +234,17 @@ def main():
     jstxt += 'var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_pdb_zip
     jstxt += 'var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_installer
 
-  s3UploadFilePublic(installer, s3_installer)
-  s3UploadFilePublic(pdb_zip, s3_pdb_zip)
-  s3UploadFilePublic(exe, s3_exe)
+  s3.upload_file_public(installer, s3_installer)
+  s3.upload_file_public(pdb_zip, s3_pdb_zip)
+  s3.upload_file_public(exe, s3_exe)
 
   if build_prerelease:
-    s3UploadDataPublic(jstxt, "sumatrapdf/sumatralatest.js")
+    s3.upload_data_public(jstxt, "sumatrapdf/sumatralatest.js")
     txt = "%s\n" % ver
-    s3UploadDataPublic(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
+    s3.upload_data_public(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
     deleteOldPreReleaseBuilds()
   else:
-    s3UploadFilePublic(exe_zip, s3_exe_zip)
+    s3.upload_file_public(exe_zip, s3_exe_zip)
 
   # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
   # manually to: "%s\n" % ver
