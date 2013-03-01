@@ -6,7 +6,6 @@
 #endif
 
 #include "Installer.h"
-#include "Translations.h"
 #include "ZipUtil.h"
 
 #include "../ifilter/PdfFilter.h"

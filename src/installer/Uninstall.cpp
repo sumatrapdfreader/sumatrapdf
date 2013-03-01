@@ -6,7 +6,6 @@
 #endif
 
 #include "Installer.h"
-#include "Translations.h"
 
 #define UNINSTALLER_WIN_DX  INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY  INSTALLER_WIN_DY

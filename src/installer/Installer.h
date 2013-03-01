@@ -16,6 +16,8 @@
 #include "Version.h"
 #include "WinUtil.h"
 
+#define _TR(x) TEXT(x)
+
 #define TAPP                L"SumatraPDF"
 #define EXENAME             TAPP L".exe"
 

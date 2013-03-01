@@ -26,7 +26,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "CrashHandler.h"
 #include "FrameTimeoutCalculator.h"
 #include "ParseCommandLine.h"
-#include "Translations.h"
 
 #include "DebugLog.h"
 
