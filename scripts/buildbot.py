@@ -527,6 +527,9 @@ def sign_try_hard(obj_dir):
 		tries -= 1
 	assert(False)
 
+def file_size_in_obj(file_name):
+	return file_size(os.path.join("obj-rel", file_name))
+
 def build_release(stats, ver):
 	config = "CFG=rel"
 	obj_dir = "obj-rel"
@@ -549,18 +552,12 @@ def build_release(stats, ver):
 		stats.rel_failed = True
 		return
 
-	p = os.path.join(obj_dir, "SumatraPDF.exe")
-	stats.rel_sumatrapdf_exe_size = file_size(p)
-	p = os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe")
-	stats.rel_sumatrapdf_no_mupdf_exe_size = file_size(p)
-	p = os.path.join(obj_dir, "libmupdf.dll")
-	stats.rel_libmupdf_dll_size = file_size(p)
-	p = os.path.join(obj_dir, "npPdfViewer.dll")
-	stats.rel_nppdfviewer_dll_size = file_size(p)
-	p = os.path.join(obj_dir, "PdfFilter.dll")
-	stats.rel_pdffilter_dll_size = file_size(p)
-	p = os.path.join(obj_dir, "PdfPreview.dll")
-	stats.rel_pdfpreview_dll_size = file_size(p)
+	stats.rel_sumatrapdf_exe_size = file_size_in_obj("SumatraPDF.exe")
+	stats.rel_sumatrapdf_no_mupdf_exe_size = file_size_in_obj("SumatraPDF-no-MuPDF.exe")
+	stats.rel_libmupdf_dll_size = file_size_in_obj("libmupdf.dll")
+	stats.rel_nppdfviewer_dll_size = file_size_in_obj("npPdfViewer.dll")
+	stats.rel_pdffilter_dll_size = file_size_in_obj("PdfFilter.dll")
+	stats.rel_pdfpreview_dll_size = file_size_in_obj("PdfPreview.dll")
 
 	build_installer_data(obj_dir)
 	run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
