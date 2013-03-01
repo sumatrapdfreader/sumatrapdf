@@ -26,7 +26,7 @@ def prependPath(files, basefile=None):
 	result = []
 	include_dirs = INCLUDE_DIRS
 	if basefile:
-		include_dirs = [os.path.split(basefile)[0]] + include_dirs
+		include_dirs = [os.path.dirname(basefile)] + include_dirs
 	
 	for file in files:
 		for dir in include_dirs:

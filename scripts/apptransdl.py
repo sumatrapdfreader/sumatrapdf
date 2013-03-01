@@ -75,7 +75,7 @@ def parseTranslations(s):
         strings[curr_str] = curr_translations
     return strings
 
-g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
+g_src_dir = os.path.join(os.path.dirname(__file__), "..", "src")
 
 def load_lang_index():
     import langs_def

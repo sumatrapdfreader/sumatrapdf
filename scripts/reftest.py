@@ -156,7 +156,7 @@ def main(args):
 	if len(args) > 1 and args[1].lower().endswith(".exe"):
 		EngineDumpExe = args.pop(1)
 	else:
-		EngineDumpExe = pjoin(os.path.split(__file__)[0], "..", "obj-dbg", "EngineDump.exe")
+		EngineDumpExe = pjoin(os.path.dirname(__file__), "..", "obj-dbg", "EngineDump.exe")
 	
 	# minimal sanity check of arguments
 	if not args[1:] or not os.path.isdir(args[1]):

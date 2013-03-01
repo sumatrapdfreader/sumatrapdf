@@ -70,7 +70,7 @@ def main():
 	if sys.argv[1].lower().endswith(".exe"):
 		SumatraPDFExe = sys.argv.pop(1)
 	else:
-		SumatraPDFExe = os.path.join(os.path.split(__file__)[0], "..", "obj-rel", "SumatraPDF.exe")
+		SumatraPDFExe = os.path.join(os.path.dirname(__file__), "..", "obj-rel", "SumatraPDF.exe")
 		if not os.path.exists(SumatraPDFExe):
 			SumatraPDFExe = "SumatraPDF.exe"
 	
