@@ -423,6 +423,10 @@ local ZPOS64_T unz64local_SearchCentralDir(const zlib_filefunc64_32_def* pzlib_f
     ZPOS64_T uMaxBack=0xffff; /* maximum size of global comment */
     ZPOS64_T uPosFound=0;
 
+    /* SumatraPDF: allow for some "garbage" after the end of the ZIP file */
+    /* (required for embedding a ZIP file inside an executable's resources) */
+    uMaxBack += 0x10000;
+
     if (ZSEEK64(*pzlib_filefunc_def,filestream,0,ZLIB_FILEFUNC_SEEK_END) != 0)
         return 0;
 

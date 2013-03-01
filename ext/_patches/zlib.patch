@@ -375,7 +375,7 @@ diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 +#endif
 diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
 --- zlib.orig\minizip\unzip.c	Sat Jan 21 20:49:31 2012
-+++ zlib\minizip\unzip.c	Tue Feb 12 08:40:51 2013
++++ zlib\minizip\unzip.c	Fri Mar 01 13:45:35 2013
 @@ -106,10 +106,15 @@
  
  #ifndef UNZ_MAXFILENAMEINZIP
@@ -392,7 +392,22 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
  #endif
  #ifndef TRYFREE
  # define TRYFREE(p) {if (p) free(p);}
-@@ -712,10 +717,14 @@
+@@ -416,10 +421,14 @@
+     ZPOS64_T uSizeFile;
+     ZPOS64_T uBackRead;
+     ZPOS64_T uMaxBack=0xffff; /* maximum size of global comment */
+     ZPOS64_T uPosFound=0;
+ 
++    /* SumatraPDF: allow for some "garbage" after the end of the ZIP file */
++    /* (required for embedding a ZIP file inside an executable's resources) */
++    uMaxBack += 0x10000;
++
+     if (ZSEEK64(*pzlib_filefunc_def,filestream,0,ZLIB_FILEFUNC_SEEK_END) != 0)
+         return 0;
+ 
+ 
+     uSizeFile = ZTELL64(*pzlib_filefunc_def,filestream);
+@@ -712,10 +721,14 @@
          /* total number of entries in the central dir */
          if (unz64local_getShort(&us.z_filefunc, us.filestream,&uL)!=UNZ_OK)
              err=UNZ_ERRNO;
@@ -407,7 +422,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
              (number_disk!=0))
              err=UNZ_BADZIPFILE;
  
-@@ -1373,10 +1382,15 @@
+@@ -1373,10 +1386,15 @@
  /*
  // Unzip Helper Functions - should be here?
  ///////////////////////////////////////////
@@ -423,7 +438,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
    Check the coherency of the local header and info in the end of central
          directory about this file
    store in *piSizeVar the size of extra info in local header
-@@ -1424,10 +1438,11 @@
+@@ -1424,10 +1442,11 @@
  
      if ((err==UNZ_OK) && (s->cur_file_info.compression_method!=0) &&
  /* #ifdef HAVE_BZIP2 */
@@ -435,7 +450,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
  
      if (unz64local_getLong(&s->z_filefunc, s->filestream,&uData) != UNZ_OK) /* date/time */
          err=UNZ_ERRNO;
-@@ -1531,10 +1546,11 @@
+@@ -1531,10 +1550,11 @@
  
      if ((s->cur_file_info.compression_method!=0) &&
  /* #ifdef HAVE_BZIP2 */
@@ -447,7 +462,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
          err=UNZ_BADZIPFILE;
  
      pfile_in_zip_read_info->crc32_wait=s->cur_file_info.crc;
-@@ -1548,17 +1564,19 @@
+@@ -1548,17 +1568,19 @@
      pfile_in_zip_read_info->stream.total_out = 0;
  
      if ((s->cur_file_info.compression_method==Z_BZIP2ED) && (!raw))
@@ -471,7 +486,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
        pfile_in_zip_read_info->stream.avail_in = 0;
  
        err=BZ2_bzDecompressInit(&pfile_in_zip_read_info->bstream, 0, 0);
-@@ -1571,19 +1589,25 @@
+@@ -1571,19 +1593,25 @@
        }
  #else
        pfile_in_zip_read_info->raw=1;

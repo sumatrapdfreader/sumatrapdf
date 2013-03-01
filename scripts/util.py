@@ -1,4 +1,6 @@
 import os, re, subprocess, sys, hashlib, string, time, zipfile
+# zipfile doesn't support ZIP_BZIP2 compression in Python 2.*
+import zipfile2 as zipfile
 
 def log(s):
   print(s)
