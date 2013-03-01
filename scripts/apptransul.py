@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-from extract_strings import extract_strings_from_c_files
 import os.path, sys, string, httplib, urllib
 from util import load_config
+from update_translations import extract_strings_from_c_files
 import buildbot
 
 # Extracts english strings from the source code and uploads them

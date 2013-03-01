@@ -5,8 +5,7 @@
 # re-generates src/Translations_txt.cpp
 
 import os.path, urllib2, util
-from extract_strings import extract_strings_from_c_files
-from update_translations import gen_c_code
+from update_translations import gen_c_code, extract_strings_from_c_files
 
 # number of missing translations for a language to be considered
 # incomplete (will be excluded from Translations_txt.cpp)
