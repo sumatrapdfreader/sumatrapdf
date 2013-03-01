@@ -2,14 +2,10 @@
 
 # Downloads latest translations from apptranslator.org.
 # If changed, saves them as strings/translations.txt and
-# re-generates src/Translations_txt.cpp
+# re-generates src/Translations_txt.cpp etc.
 
 import os.path, urllib2, util
 from update_translations import gen_c_code, extract_strings_from_c_files
-
-# number of missing translations for a language to be considered
-# incomplete (will be excluded from Translations_txt.cpp)
-INCOMPLETE_MISSING_THRESHOLD = 40
 
 g_my_dir = os.path.dirname(__file__)
 g_strings_dir = os.path.join(g_my_dir, "..", "strings")
@@ -127,30 +123,21 @@ def dump_missing_per_language(strings, strings_dict, dump_strings=False):
 def get_untranslated_as_list(untranslated_dict):
     return util.uniquify(sum(untranslated_dict.values(), []))
 
-def remove_incomplete_translations(langs, strings, strings_dict, threshold=INCOMPLETE_MISSING_THRESHOLD):
-    for lang in langs[:]:
-        missing = get_missing_for_language(strings, strings_dict, lang[0])
-        if len(missing) >= threshold and lang[0] != "en":
-            langs.remove(lang)
-
-# Generate Translations_txt.cpp based on translations in s that we downloaded
-# from the server
+# Generate the various Translations_txt.cpp files based on translations
+# in s that we downloaded from the server
 def generate_code(s):
     strings_dict = parseTranslations(s)
-    strings = extract_strings_from_c_files()
+    strings = extract_strings_from_c_files(True)
+    strings_list = [s[0] for s in strings]
     for s in strings_dict.keys():
-        if s not in strings:
+        if s not in strings_list:
             del strings_dict[s]
-    untranslated_dict = dump_missing_per_language(strings, strings_dict)
+    untranslated_dict = dump_missing_per_language(strings_list, strings_dict)
     untranslated = get_untranslated_as_list(untranslated_dict)
     for s in untranslated:
         if s not in strings_dict:
             strings_dict[s] = []
-
-    langs_idx = load_lang_index()
-    c_file_name = os.path.join(g_src_dir, "Translations_txt.cpp")
-    remove_incomplete_translations(langs_idx, strings, strings_dict)
-    gen_c_code(langs_idx, strings_dict, c_file_name)
+    gen_c_code(load_lang_index(), strings_dict, strings)
 
 # returns True if translation files have been re-generated and
 # need to be commited
@@ -184,7 +171,7 @@ def downloadAndUpdateTranslationsIfChanged():
 
 def regenerateLangs():
     s = open(lastDownloadFilePath(), "rb").read()
-    generate_code   (s)
+    generate_code(s)
 
 if __name__ == "__main__":
     #regenerateLangs()

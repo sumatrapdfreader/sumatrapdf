@@ -4495,7 +4495,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "(de %d)",
   NULL,
   "\303\200 propos de SumatraPDF",
-  "Ajouter un favori",
+  "Ajouter aux favoris",
   "Ajouter la page %s aux favoris",
   "Ajouter la page %s aux favoris avec un nom (optionnel):",
   "Ajouter aux favoris",

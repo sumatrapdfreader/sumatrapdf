@@ -1,34 +1,39 @@
 import os, re, util
 
+# number of missing translations for a language to be considered
+# incomplete (will be excluded from Translations_txt.cpp) as a
+# percentage of total string count of that specific file
+INCOMPLETE_MISSING_THRESHOLD = 0.2
+
+SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
+C_TRANS_FILENAME = "Translations_txt.cpp"
+
+C_DIRS_TO_PROCESS = [".", "installer", "browserplugin"]
 # whitelist some files as an optimization
-C_FILES_TO_EXCLUDE = ["Translations_txt.cpp"]
+C_FILES_TO_EXCLUDE = [C_TRANS_FILENAME.lower()]
+
 def should_translate(file_name):
     file_name = file_name.lower()
     if not file_name.endswith(".cpp"):
         return False
     return file_name not in C_FILES_TO_EXCLUDE
 
-SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
 C_FILES_TO_PROCESS = []
+for dir in C_DIRS_TO_PROCESS:
+    d = os.path.join(SRC_DIR, dir)
+    C_FILES_TO_PROCESS += [os.path.join(d, f) for f in os.listdir(d) if should_translate(f)]
 
-def add_files_from_dir(d):
-    global C_FILES_TO_PROCESS
-    for f in os.listdir(d):
-        if should_translate(f):
-            C_FILES_TO_PROCESS.append(os.path.join(d, f))
-
-add_files_from_dir(SRC_DIR)
-add_files_from_dir(os.path.join(SRC_DIR, "installer"))
-C_FILES_TO_PROCESS.append(os.path.join(SRC_DIR, "browserplugin", "npPdfViewer.cpp"))
-
-STRINGS_PATH = os.path.join(os.path.dirname(__file__), "..", "strings")
 TRANSLATION_PATTERN = r'\b_TRN?\("(.*?)"\)'
 
-def extract_strings_from_c_files():
+def extract_strings_from_c_files(with_paths=False):
     strings = []
     for f in C_FILES_TO_PROCESS:
         file_content = open(f, "r").read()
-        strings += re.findall(TRANSLATION_PATTERN, file_content)
+        file_strings = re.findall(TRANSLATION_PATTERN, file_content)
+        if with_paths:
+            strings += [(s, os.path.basename(os.path.dirname(f))) for s in file_strings]
+        else:
+            strings += file_strings
     return util.uniquify(strings)
 
 TRANSLATIONS_TXT_C = """\
@@ -78,12 +83,9 @@ def c_oct(c):
     o = "00" + oct(ord(c))
     return "\\" + o[-3:]
 
-def c_escape(txt, encode_to_utf=False):
+def c_escape(txt):
     if txt is None:
         return "NULL"
-    # the old, pre-apptranslator translation system required encoding to utf8
-    if encode_to_utf:
-        txt = txt.encode("utf-8")
     # escape all quotes
     txt = txt.replace('"', r'\"')
     # and all non-7-bit characters of the UTF-8 encoded string
@@ -91,16 +93,20 @@ def c_escape(txt, encode_to_utf=False):
     return '"%s"' % txt
 
 def get_trans_for_lang(strings_dict, keys, lang_arg):
-    trans = []
+    trans, untrans = [], []
     for k in keys:
-        txt = None
-        for (lang, tr) in strings_dict[k]:
-            if lang_arg == lang:
-                # don't include a translation, if it's the same as the default
-                if tr != k:
-                    txt = tr
-                break
-        trans.append(txt)
+        found = [tr for (lang, tr) in strings_dict[k] if lang == lang_arg]
+        if found:
+            assert len(found) == 1
+            # don't include a translation, if it's the same as the default
+            if found[0] == k:
+                found[0] = None
+            trans.append(found[0])
+        else:
+            trans.append(None)
+            untrans.append(k)
+    if len(untrans) > INCOMPLETE_MISSING_THRESHOLD * len(keys):
+        return None
     return trans
 
 def lang_sort_func(x,y):
@@ -128,36 +134,50 @@ def is_rtl_lang(lang):
 def key_sort_func(a, b):
     return cmp(a.replace(r"\t", "\t"), b.replace(r"\t", "\t"))
 
-def gen_c_code(langs_idx, strings_dict, file_name, encode_to_utf=False):
+def gen_c_code_for_dir(langs_idx, strings_dict, keys, dir_name):
     langs_idx = sorted(langs_idx, cmp=lang_sort_func)
     assert "en" == langs_idx[0][0]
-    langs_count = len(langs_idx)
-    translations_count = len(strings_dict)
+    translations_count = len(keys)
 
-    keys = strings_dict.keys()
-    keys.sort(cmp=key_sort_func)
     lines = []
+    incomplete_langs = []
     for lang in langs_idx:
         if "en" == lang[0]:
             trans = keys
         else:
             trans = get_trans_for_lang(strings_dict, keys, lang[0])
+            if not trans:
+                incomplete_langs.append(lang)
+                continue
         lines.append("")
         lines.append("  /* Translations for language %s */" % lang[0])
-        lines += ["  %s," % c_escape(t, encode_to_utf) for t in trans]
+        lines += ["  %s," % c_escape(t) for t in trans]
+    for lang in incomplete_langs:
+        langs_idx.remove(lang)
+
     translations = "\n".join(lines)
     #print [l[1] for l in langs_idx]
     lang_data = ['{ "%s", %s, %s, %d },' % (lang[0], c_escape(lang[1]), make_lang_id(lang), 1 if is_rtl_lang(lang) else 0) for lang in langs_idx]
     lang_data = "\n    ".join(lang_data)
+    langs_count = len(langs_idx)
 
     file_content = TRANSLATIONS_TXT_C % locals()
+    file_name = os.path.join(SRC_DIR, dir_name, C_TRANS_FILENAME)
     file(file_name, "wb").write(file_content)
+
+def gen_c_code(langs_idx, strings_dict, strings):
+    for dir in C_DIRS_TO_PROCESS:
+        keys = [s[0] for s in strings if s[1] == dir and s[0] in strings_dict]
+        keys.sort(cmp=key_sort_func)
+        gen_c_code_for_dir(langs_idx, strings_dict, keys, dir)
 
 def main():
     import apptransdl
     changed = apptransdl.downloadAndUpdateTranslationsIfChanged()
     if changed:
-        print("\nNew translations received from the server, checkin Translations_txt.cpp and translations.txt")
+        print("\nNew translations received from the server, checkin %s and translations.txt" % C_TRANS_FILENAME)
+    else:
+        apptransdl.regenerateLangs()
 
 if __name__ == "__main__":
     main()

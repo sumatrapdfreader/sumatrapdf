@@ -648,7 +648,7 @@ void OnCreateWindow(HWND hwnd)
 
 void CreateMainWindow()
 {
-    ScopedMem<WCHAR> title(str::Format(_TR("SumatraPDF %s Instaler"), CURR_VERSION_STR));
+    ScopedMem<WCHAR> title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
 
     gHwndFrame = CreateWindow(
         INSTALLER_FRAME_CLASS_NAME, title.Get(),
