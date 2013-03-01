@@ -1,8 +1,6 @@
 #!/usr/bin/env python
-import os.path, sys, string, httplib, urllib
-from util import load_config
+import os.path, sys, string, httplib, urllib, util
 from update_translations import extract_strings_from_c_files
-import buildbot
 
 # Extracts english strings from the source code and uploads them
 # to apptranslator.org
@@ -43,7 +41,7 @@ def uploadStringsToServer(strings, secret):
 
 def uploadStringsIfChanged(skip_svn_check=False):
     # needs to have upload secret to protect apptranslator.org server from abuse
-    config = load_config()
+    config = util.load_config()
     uploadsecret = config.trans_ul_secret
     if None is uploadsecret:
         print("Skipping string upload because don't have upload secret")
@@ -60,7 +58,7 @@ def uploadStringsIfChanged(skip_svn_check=False):
         # svn update is called in build-release.py, so it's not a problem if it's run
         # from  ./scripts/build-release.bat or ./scripts/build-pre-release.bat
         try:
-            (local_ver, latest_ver) = buildbot.get_svn_versions()
+            (local_ver, latest_ver) = util.get_svn_versions()
         except:
             print("Skipping string upload because SVN isn't available to check for up-to-date-ness")
             return

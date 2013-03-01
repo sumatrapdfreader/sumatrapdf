@@ -3,12 +3,11 @@ Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
 import os, os.path, shutil, sys, time, string, datetime, json, cPickle, cgi, traceback
-import s3
+import s3, util
 from util import file_remove_try_hard, run_cmd_throw
 from util import parse_svnlog_out, formatInt
 from util import load_config, run_cmd, strip_empty_lines, build_installer_data
 from util import verify_path_exists, verify_started_in_right_directory
-from util import parse_svninfo_out
 
 """
 TODO:
@@ -589,14 +588,6 @@ def build_analyze(stats, ver):
 	s = out + "\n====STDERR:\n" + err
 	open(log_path, "w").write(strip_empty_lines(s))
 
-# returns local and latest (on the server) svn versions
-def get_svn_versions():
-	(out, err) = run_cmd_throw("svn", "info")
-	ver_local = str(parse_svninfo_out(out))
-	(out, err) = run_cmd_throw("svn", "info", "https://sumatrapdf.googlecode.com/svn/trunk")
-	ver_latest = str(parse_svninfo_out(out))
-	return ver_local, ver_latest
-
 def svn_update_to_ver(ver):
 	run_cmd_throw("svn", "update", "-r" + ver)
 	rebuild_trans_src_path_cache()
@@ -642,7 +633,7 @@ def build_version(ver, skip_release=False):
 
 # for testing
 def build_curr(force=False):
-	(local_ver, latest_ver) = get_svn_versions()
+	(local_ver, latest_ver) = util.get_svn_versions()
 	print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
 	if not has_already_been_built(local_ver) or force:
 			build_version(local_ver)
@@ -675,10 +666,10 @@ def build_version_try(ver, try_count = 2):
 
 def buildbot_loop():
 	while True:
-		# get_svn_versions() might throw an exception due to
+		# util.get_svn_versions() might throw an exception due to
 		# temporary network problems, so retry
 		try:
-			(local_ver, latest_ver) = get_svn_versions()
+			(local_ver, latest_ver) = util.get_svn_versions()
 		except:
 			print("get_svn_versions() threw an exception")
 			time.sleep(120)

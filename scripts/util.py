@@ -112,6 +112,14 @@ def parse_svninfo_out(txt):
   if ver: return ver[0]
   raise Exception("parse_svn_info_out() failed to parse '%s'" % txt)
 
+# returns local and latest (on the server) svn versions
+def get_svn_versions():
+  (out, err) = run_cmd_throw("svn", "info")
+  ver_local = str(parse_svninfo_out(out))
+  (out, err) = run_cmd_throw("svn", "info", "https://sumatrapdf.googlecode.com/svn/trunk")
+  ver_latest = str(parse_svninfo_out(out))
+  return ver_local, ver_latest
+
 # Parse output of "svn log -r${rev} -v", which looks sth. like this:
 #------------------------------------------------------------------------
 #r6667 | kkowalczyk | 2012-09-25 22:52:34 -0700 (Tue, 25 Sep 2012) | 1 line
