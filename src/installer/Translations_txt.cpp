@@ -205,7 +205,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "Bitte schliessen Sie %s vor der Installation!",
   "In welches Verzeichnis soll SumatraPDF installiert werden?",
   "Einige Dateien konnten nicht korrekt installiert werden",
-  NULL,
+  "SumatraPDF %s installieren",
   "SumatraPDF %s deinstallieren",
   "SumatraPDF wurde deinstalliert.",
   "Keine SumatraPDF-Installation zum Deinstallieren gefunden.",

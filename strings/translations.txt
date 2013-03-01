@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-0a71ccb6a7e633066d9dd5589e532ddad94adbd0
+9550a4b720da415d27501435340ec5ad65bf58ce
 :%s of %s
 cn:%s of %s
 de:%s von %s
@@ -13109,13 +13109,8 @@ tw:題目：
 uk:Тема:
 uz:Mavzu:
 vn:Chủ đề:
-:SumatraPDF %s Instaler
-cn:SumatraPDF %s 安装程序
+:SumatraPDF %s Installer
 de:SumatraPDF %s installieren
-fr:%s Installeur de SumatraPDF
-pt:Instalador do SumatraPDF %s
-ru:Инсталлятор SumatraPDF %s
-uk:Інсталятор SumatraPDF %s
 :SumatraPDF %s Uninstaller
 cn:SumatraPDF %s 卸载程序
 de:SumatraPDF %s deinstallieren
