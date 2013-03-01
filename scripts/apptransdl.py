@@ -4,9 +4,13 @@
 # If changed, saves them as strings/translations.txt and
 # re-generates src/Translations_txt.cpp
 
-from extract_strings import extract_strings_from_c_files, dump_missing_per_language, load_lang_index
-from update_translations import get_untranslated_as_list, remove_incomplete_translations, gen_c_code
-import os.path, urllib2
+import os.path, urllib2, util
+from extract_strings import extract_strings_from_c_files
+from update_translations import gen_c_code
+
+# number of missing translations for a language to be considered
+# incomplete (will be excluded from Translations_txt.cpp)
+INCOMPLETE_MISSING_THRESHOLD = 40
 
 g_my_dir = os.path.dirname(__file__)
 g_strings_dir = os.path.join(g_my_dir, "..", "strings")
@@ -74,9 +78,65 @@ def parseTranslations(s):
 
 g_src_dir = os.path.join(os.path.split(__file__)[0], "..", "src")
 
+def load_lang_index():
+    import langs_def
+    return langs_def.LangIndex
+
+def get_lang_list(strings_dict):
+    langs = []
+    for translations in strings_dict.values():
+        for t in translations:
+            lang = t[0]
+            if lang not in langs:
+                langs.append(lang)
+    return langs
+
+def get_missing_for_language(strings, strings_dict, lang):
+    untranslated = []
+    for s in strings:
+        if not s in strings_dict:
+            untranslated.append(s)
+            continue
+        translations = strings_dict[s]
+        found = filter(lambda tr: tr[0] == lang, translations)
+        if not found and s not in untranslated:
+            untranslated.append(s)
+    return untranslated
+
+def langs_sort_func(x, y):
+    return cmp(len(y[1]), len(x[1])) or cmp(x[0], y[0])
+
+# strings_dict maps a string to a list of [lang, translations...] list
+def dump_missing_per_language(strings, strings_dict, dump_strings=False):
+    untranslated_dict = {}
+    for lang in get_lang_list(strings_dict):
+        untranslated_dict[lang] = get_missing_for_language(strings, strings_dict, lang)
+    items = untranslated_dict.items()
+    items.sort(langs_sort_func)
+
+    print("\nMissing translations:")
+    strs = []
+    for (lang, untranslated) in items:
+        strs.append("%5s: %3d" % (lang, len(untranslated)))
+    per_line = 5
+    while len(strs) > 0:
+        line_strs = strs[:per_line]
+        strs = strs[per_line:]
+        print("  ".join(line_strs))
+    return untranslated_dict
+
+def get_untranslated_as_list(untranslated_dict):
+    return util.uniquify(sum(untranslated_dict.values(), []))
+
+def remove_incomplete_translations(langs, strings, strings_dict, threshold=INCOMPLETE_MISSING_THRESHOLD):
+    for lang in langs[:]:
+        missing = get_missing_for_language(strings, strings_dict, lang[0])
+        if len(missing) >= threshold and lang[0] != "en":
+            langs.remove(lang)
+
 # Generate Translations_txt.cpp based on translations in s that we downloaded
 # from the server
-def generateCode(s):
+def generate_code(s):
     strings_dict = parseTranslations(s)
     strings = extract_strings_from_c_files()
     for s in strings_dict.keys():
@@ -119,13 +179,13 @@ def downloadAndUpdateTranslationsIfChanged():
         return False
     print("Translation data size: %d" % len(s))
     #print(s)
-    generateCode(s)
+    generate_code(s)
     saveLastDownload(s)
     return True
 
 def regenerateLangs():
     s = open(lastDownloadFilePath(), "rb").read()
-    generateCode(s)
+    generate_code   (s)
 
 if __name__ == "__main__":
     #regenerateLangs()
