@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Calculates the size (in lines of code) of Sumatra source code
 (excluding dependencies i.e. code not written by us).
