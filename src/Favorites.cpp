@@ -513,7 +513,7 @@ void PopulateFavTreeIfNeeded(WindowInfo *win)
     SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
     for (size_t i = 0; i < filePathsSorted.Count(); i++) {
         FileFavs *f = gFavorites->GetFavByFilePath(filePathsSorted.At(i));
-        bool isExpanded = win->expandedFavorites.Contains(f->filePath);
+        bool isExpanded = win->expandedFavorites.Contains(f);
         HTREEITEM node = InsertFavTopLevelNode(hwndTree, f, isExpanded);
         if (f->favNames.Count() > 1)
             InsertFavSecondLevelNodes(hwndTree, node, f);
@@ -590,6 +590,11 @@ void AddFavorite(WindowInfo *win)
 
     RememberFavTreeExpansionStateForAllWindows();
     gFavorites->AddOrReplace(win->loadedFilePath, pageNo, name);
+    // expand newly added favorites by default
+    FileFavs *fav = gFavorites->GetFavByFilePath(win->loadedFilePath);
+    CrashIf(!fav || win->expandedFavorites.Contains(fav));
+    if (fav && fav->favNames.Count() == 2)
+        win->expandedFavorites.Append(fav);
     UpdateFavoritesTreeForAllWindows();
     SavePrefs();
 }
@@ -606,7 +611,7 @@ void DelFavorite(WindowInfo *win)
 
 void RememberFavTreeExpansionState(WindowInfo *win)
 {
-    FreeVecMembers(win->expandedFavorites);
+    win->expandedFavorites.Reset();
     HTREEITEM treeItem = TreeView_GetRoot(win->hwndFavTree);
     while (treeItem) {
         TVITEM item;
@@ -620,7 +625,7 @@ void RememberFavTreeExpansionState(WindowInfo *win)
             TreeView_GetItem(win->hwndFavTree, &item);
             FavName *fn = (FavName*)item.lParam;
             FileFavs *f = gFavorites->GetByFavName(fn);
-            win->expandedFavorites.Append(str::Dup(f->filePath));
+            win->expandedFavorites.Append(f);
         }
 
         treeItem = TreeView_GetNextSibling(win->hwndFavTree, treeItem);
