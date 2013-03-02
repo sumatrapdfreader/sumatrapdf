@@ -275,7 +275,9 @@ $(OS)\Menu.obj: src\SumatraPDF.h src\SumatraWindow.h src\Translations.h
 $(OS)\Menu.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\Menu.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\Menu.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\MiniTrans.obj: src\installer\Translations_txt.cpp
+$(OS)\MiniTrans.obj: src\installer\Translations_txt.cpp src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\MiniTrans.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\MiniTrans.obj: src\utils\Vec.h
 $(OS)\MobiDoc.obj: src\BaseEngine.h src\EbookBase.h src\MobiDoc.h
 $(OS)\MobiDoc.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\BitReader.h
 $(OS)\MobiDoc.obj: src\utils\ByteOrderDecoder.h src\utils\DebugLog.h src\utils\FileUtil.h
