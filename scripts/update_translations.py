@@ -10,7 +10,7 @@ C_TRANS_FILENAME = "Translations_txt.cpp"
 
 C_DIRS_TO_PROCESS = [".", "installer", "browserplugin"]
 # produce a simpler format for these dirs
-C_SIMPLE_FORMAT_DIRS = ["browserplugin"]
+C_SIMPLE_FORMAT_DIRS = ["installer", "browserplugin"]
 # whitelist some files as an optimization
 C_FILES_TO_EXCLUDE = [C_TRANS_FILENAME.lower()]
 

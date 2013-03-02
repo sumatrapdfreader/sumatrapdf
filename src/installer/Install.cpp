@@ -175,12 +175,12 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     ScopedMem<WCHAR> installDir(path::GetDir(installedExePath));
 
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, TAPP);
+    success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsVistaOrGreater())
-        success &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, TAPP L" " CURR_VERSION_STR);
+        success &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR L" " CURR_VERSION_STR);
     DWORD size = GetDirSize(gGlobalData.installDir) / 1024;
     success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, size);
     success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
@@ -221,7 +221,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey)
         ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
         success &= CreateRegKey(hkey, keyname);
         // TODO: stop removing this after version 1.8 (was wrongly created for version 1.6)
-        keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" TAPP));
+        keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" APP_NAME_STR));
         DeleteRegKey(hkey, keyname);
     }
 
@@ -244,7 +244,8 @@ static bool CreateInstallationDirectory()
 
 static void CreateButtonRunSumatra(HWND hwndParent)
 {
-    gHwndButtonRunSumatra = CreateDefaultButton(hwndParent, L"Start " TAPP, 120, ID_BUTTON_START_SUMATRA);
+    // TODO: this button might be too narrow for some translations
+    gHwndButtonRunSumatra = CreateDefaultButton(hwndParent, _TR("Start SumatraPDF"), 140, ID_BUTTON_START_SUMATRA);
 }
 
 static bool CreateAppShortcut(bool allUsers)
@@ -433,6 +434,8 @@ static void OnButtonOptions()
     InvalidateRect(gHwndFrame, &rc.ToRECT(), FALSE);
 
     SetFocus(gHwndButtonOptions);
+
+    CreateButtonRunSumatra(gHwndFrame);
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData)
@@ -500,8 +503,8 @@ static void OnButtonBrowse()
         WCHAR *installPath = path;
         // force paths that aren't entered manually to end in ...\SumatraPDF
         // to prevent unintended installations into e.g. %ProgramFiles% itself
-        if (!str::EndsWithI(path, L"\\" TAPP))
-            installPath = path::Join(path, TAPP);
+        if (!str::EndsWithI(path, L"\\" APP_NAME_STR))
+            installPath = path::Join(path, APP_NAME_STR);
         win::SetText(gHwndTextboxInstDir, installPath);
         Edit_SetSel(gHwndTextboxInstDir, 0, -1);
         SetFocus(gHwndTextboxInstDir);
@@ -552,6 +555,7 @@ bool OnWmCommand(WPARAM wParam)
 // not the top), we should layout controls starting at the bottom and go up
 void OnCreateWindow(HWND hwnd)
 {
+    // TODO: this button might be too narrow for some translations
     gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), 140);
 
     RectI rc(WINDOW_MARGIN, 0, dpiAdjust(96), PUSH_BUTTON_DY);
@@ -586,7 +590,7 @@ void OnCreateWindow(HWND hwnd)
     rc.y += 2 * staticDy;
 
     ScopedMem<WCHAR> defaultViewer(GetDefaultPdfViewer());
-    BOOL hasOtherViewer = !str::EqI(defaultViewer, TAPP);
+    BOOL hasOtherViewer = !str::EqI(defaultViewer, APP_NAME_STR);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
     // only show the checbox if Sumatra is not already a default viewer.
@@ -660,10 +664,11 @@ void CreateMainWindow()
 
 void ShowUsage()
 {
-    MessageBox(NULL, TAPP L"-install.exe [/s][/d <path>][/register][/opt plugin,...]\n\
+    // Note: translation services aren't initialized at this point, so English only
+    MessageBox(NULL, APP_NAME_STR L"-install.exe [/s][/d <path>][/register][/opt plugin,...]\n\
     \n\
-    /s\tinstalls " TAPP L" silently (without user interaction).\n\
-    /d\tchanges the directory where " TAPP L" will be installed.\n\
-    /register\tregisters " TAPP L" as the default PDF viewer.\n\
-    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer).", TAPP L" Installer Usage", MB_OK | MB_ICONINFORMATION);
+    /s\tinstalls " APP_NAME_STR L" silently (without user interaction).\n\
+    /d\tchanges the directory where " APP_NAME_STR L" will be installed.\n\
+    /register\tregisters " APP_NAME_STR L" as the default PDF viewer.\n\
+    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer).", APP_NAME_STR L" Installer Usage", MB_OK | MB_ICONINFORMATION);
 }

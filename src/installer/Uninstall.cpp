@@ -58,7 +58,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
 {
     ScopedMem<WCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, NULL));
     ScopedMem<WCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf"));
-    if (!curr || !str::Eq(curr, TAPP)) {
+    if (!curr || !str::Eq(curr, APP_NAME_STR)) {
         // not the default, do nothing
     } else if (prev) {
         WriteRegStr(hkey, REG_CLASSES_PDF, NULL, prev);
@@ -68,7 +68,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
     ScopedMem<WCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
-    if (str::Eq(buf, TAPP)) {
+    if (str::Eq(buf, APP_NAME_STR)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
         if (res != ERROR_SUCCESS)
             LogLastError(res);
@@ -80,7 +80,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
             LogLastError(res);
     }
     buf.Set(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
-    if (str::Eq(buf, TAPP))
+    if (str::Eq(buf, APP_NAME_STR))
         DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", true);
 }
 
@@ -111,11 +111,11 @@ static void RemoveOwnRegistryKeys()
         UnregisterFromBeingDefaultViewer(keys[i]);
         DeleteRegKey(keys[i], REG_CLASSES_APP);
         DeleteRegKey(keys[i], REG_CLASSES_APPS);
-        SHDeleteValue(keys[i], REG_CLASSES_PDF L"\\OpenWithProgids", TAPP);
+        SHDeleteValue(keys[i], REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR);
 
         for (int j = 0; NULL != gSupportedExts[j]; j++) {
             ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
-            SHDeleteValue(keys[i], keyname, TAPP);
+            SHDeleteValue(keys[i], keyname, APP_NAME_STR);
             DeleteEmptyRegKey(keys[i], keyname);
 
             keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithList\\" EXENAME));
@@ -318,6 +318,7 @@ bool OnWmCommand(WPARAM wParam)
 
 void OnCreateWindow(HWND hwnd)
 {
+    // TODO: this button might be too narrow for some translations
     gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Uninstall SumatraPDF"), 150);
 }
 
@@ -335,8 +336,10 @@ void CreateMainWindow()
 
 void ShowUsage()
 {
+    // Note: translation services aren't initialized at this point, so English only
     MessageBox(NULL, L"uninstall.exe [/s][/d <path>]\n\
     \n\
-    /s\tuninstalls " TAPP L" silently (without user interaction).\n\
-    /d\tchanges the directory from where " TAPP L" will be uninstalled.", TAPP L" Uninstaller Usage", MB_OK | MB_ICONINFORMATION);
+    /s\tuninstalls " APP_NAME_STR L" silently (without user interaction).\n\
+    /d\tchanges the directory from where " APP_NAME_STR L" will be uninstalled.",
+    APP_NAME_STR L" Uninstaller Usage", MB_OK | MB_ICONINFORMATION);
 }

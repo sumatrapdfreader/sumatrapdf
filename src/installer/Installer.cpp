@@ -200,9 +200,9 @@ static WCHAR *GetInstallationDir()
     // fall back to %ProgramFiles%
     dir.Set(GetSpecialFolder(CSIDL_PROGRAM_FILES));
     if (dir)
-        return path::Join(dir, TAPP);
+        return path::Join(dir, APP_NAME_STR);
     // fall back to C:\ as a last resort
-    return str::Dup(L"C:\\" TAPP);
+    return str::Dup(L"C:\\" APP_NAME_STR);
 #else
     // fall back to the uninstaller's path
     return path::GetDir(GetOwnPath());
@@ -240,7 +240,7 @@ WCHAR *GetShortcutPath(bool allUsers)
     ScopedMem<WCHAR> dir(GetSpecialFolder(allUsers ? CSIDL_COMMON_PROGRAMS : CSIDL_PROGRAMS));
     if (!dir)
         return NULL;
-    return path::Join(dir, TAPP L".lnk");
+    return path::Join(dir, APP_NAME_STR L".lnk");
 }
 
 /* if the app is running, we have to kill it so that we can over-write the executable */
@@ -370,7 +370,7 @@ static void SetDefaultMsg()
 static const WCHAR *ReadableProcName(const WCHAR *procPath)
 {
     const WCHAR *nameList[] = {
-        EXENAME, TAPP,
+        EXENAME, APP_NAME_STR,
         L"plugin-container.exe", L"Mozilla Firefox",
         L"chrome.exe", L"Google Chrome",
         L"prevhost.exe", L"Windows Explorer",
@@ -829,6 +829,7 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
     ghinst = hInstance;
     gFontDefault = CreateDefaultGuiFont();
     win::GetHwndDpi(NULL, &gUiDPIFactor);
+    SelectTranslation();
 
     CreateMainWindow();
     if (!gHwndFrame)

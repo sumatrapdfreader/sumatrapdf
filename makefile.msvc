@@ -179,10 +179,10 @@ SUMATRA_OBJS = \
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
-	$(UTILS_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS) \
+	$(UTILS_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS) $(OS)\MiniTrans.obj
 
 UNINSTALLER_OBJS = \
-	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_OBJS) \
+	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_OBJS) $(OS)\MiniTrans.obj
 
 PDFFILTER_OBJS = \
 	$(ODLL)\PdfFilterDll.obj $(ODLL)\CPdfFilter.obj $(PDFFILTER_RES) \

@@ -452,7 +452,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\installer\MiniTrans.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\installer\MiniTrans.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\installer\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\installer\Translations_txt.cpp"
 				>
 			</File>
 			<File

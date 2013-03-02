@@ -10,16 +10,13 @@
 
 #include "FileTransactions.h"
 #include "FileUtil.h"
-
+#include "MiniTrans.h"
 #include "Resource.h"
 #include "Timer.h"
 #include "Version.h"
 #include "WinUtil.h"
 
-#define _TR(x) TEXT(x)
-
-#define TAPP                L"SumatraPDF"
-#define EXENAME             TAPP L".exe"
+#define EXENAME             APP_NAME_STR L".exe"
 
 #define INSTALLER_FRAME_CLASS_NAME    L"SUMATRA_PDF_INSTALLER_FRAME"
 
@@ -41,11 +38,11 @@
 // This is in HKLM. Note that on 64bit windows, if installing 32bit app
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
-#define REG_PATH_UNINST     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" TAPP
+#define REG_PATH_UNINST     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP_NAME_STR
 // Legacy key, only read during an update and removed at uninstallation
-#define REG_PATH_SOFTWARE   L"Software\\" TAPP
+#define REG_PATH_SOFTWARE   L"Software\\" APP_NAME_STR
 
-#define REG_CLASSES_APP     L"Software\\Classes\\" TAPP
+#define REG_CLASSES_APP     L"Software\\Classes\\" APP_NAME_STR
 #define REG_CLASSES_PDF     L"Software\\Classes\\.pdf"
 #define REG_CLASSES_APPS    L"Software\\Classes\\Applications\\" EXENAME
 
@@ -60,7 +57,7 @@
 
 // REG_SZ, a path to installed executable (or "$path,0" to force the first icon)
 #define DISPLAY_ICON L"DisplayIcon"
-// REG_SZ, e.g "SumatraPDF" (TAPP)
+// REG_SZ, e.g "SumatraPDF" (APP_NAME_STR)
 #define DISPLAY_NAME L"DisplayName"
 // REG_SZ, e.g. "1.2" (CURR_VERSION_STR)
 #define DISPLAY_VERSION L"DisplayVersion"

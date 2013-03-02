@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fcb31d81c026e499cc3a26db2a79721b7c6183e6
+5a5c898c20acd8171910ee51684cd6fe2a147e7b
 :%s of %s
 br:%s de %s
 cn:%s of %s
@@ -5618,6 +5618,7 @@ br:Não foi possível gravar %s no disco
 cn:无法将%s写进硬盘
 de:Konnte %s nicht kopieren
 fr:Impossible d'écrire %s sur le disque
+hu:%s lemezre írása sikertelen
 pt:Não foi possível escrever %s no disco
 ru:Не удалось записать %s на диск
 uk:Не вдалося записати %s на диск
@@ -8556,7 +8557,7 @@ vn:Nhảy đến trang
 :Hide &Options
 br:Ocultar &Opções
 cn:隐藏选项菜单
-de:&Optionen verstecken
+de:&Optionen
 fr:Masque les &options
 hu:Beállítások elrejtése
 ku:هەڵبژاردنەکانی &شاردنەوە
@@ -8740,7 +8741,7 @@ uk:Встановити розширення для перегляду PDF у Fi
 :Install SumatraPDF
 br:Instalar SumatraPDF
 cn:安装SumatraPDF
-de:SumatraPDF installieren
+de:Installieren
 fr:Installer SumatraPDF
 hu:SumatraPDF telepítése
 pt:Instalar SumatraPDF
@@ -13108,6 +13109,9 @@ tw:參考檔案 %s 沒有同步點
 uk:Файл-джерело %s немає точки синхронізації
 uz:%s manba faylida sinxronlanish nuqtasi yo'q
 vn:Tập tin nguồn %s không có điểm đồng bộ
+:Start SumatraPDF
+de:SumatraPDF starten
+hu:SumatraPDF indítása
 :Subject:
 am:Ֆայլը.
 ar:الموضوع
@@ -13730,7 +13734,7 @@ uz:Sarlavha:
 vn:Tựa đề
 :Uninstall SumatraPDF
 cn:卸载SumatraPDF
-de:SumatraPDF deinstallieren
+de:Deinstallieren
 fr:Désinstaller SumatraPDF
 ku:سڕینەوەی SumatraPDF
 pt:Desinstalar SumatraPDF

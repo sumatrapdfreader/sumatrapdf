@@ -289,7 +289,7 @@ int cmpWcharPtrs(const void *a, const void *b)
 
 const WCHAR *Translate(const WCHAR *s)
 {
-    const WCHAR **res = (const WCHAR **)bsearch(&s, gTranslations + 1, gTranslationsCount, sizeof(s), cmpWcharPtrs);
+    const WCHAR **res = (const WCHAR **)bsearch(&s, gTranslations, gTranslationsCount, sizeof(s), cmpWcharPtrs);
     int idx = gTranslationIdx + res - gTranslations;
     return res && gTranslations[idx] ? gTranslations[idx] : s;
 }
