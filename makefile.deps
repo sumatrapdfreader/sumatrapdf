@@ -9,10 +9,10 @@ $(ODLL)\CTeXFilter.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\Geo
 $(ODLL)\CTeXFilter.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(ODLL)\CTeXFilter.obj: src\utils\WinUtil.h
 $(ODLL)\npPdfViewer.obj: src\browserplugin\npapi\npapi.h src\browserplugin\npapi\npfunctions.h src\browserplugin\npapi\npruntime.h
-$(ODLL)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(ODLL)\npPdfViewer.obj: src\utils\CmdLineParser.h src\utils\DebugLog.h src\utils\FileUtil.h
-$(ODLL)\npPdfViewer.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(ODLL)\npPdfViewer.obj: src\utils\Vec.h src\utils\WinUtil.h
+$(ODLL)\npPdfViewer.obj: src\browserplugin\npapi\nptypes.h src\browserplugin\Translations_txt.cpp src\utils\Allocator.h
+$(ODLL)\npPdfViewer.obj: src\utils\BaseUtil.h src\utils\CmdLineParser.h src\utils\DebugLog.h
+$(ODLL)\npPdfViewer.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(ODLL)\npPdfViewer.obj: src\utils\StrUtil.h src\utils\Vec.h src\utils\WinUtil.h
 $(ODLL)\PdfFilterDll.obj: src\ifilter\CPdfFilter.h src\ifilter\CTeXFilter.h src\ifilter\FilterBase.h
 $(ODLL)\PdfFilterDll.obj: src\ifilter\PdfFilter.h src\utils\Allocator.h src\utils\BaseUtil.h
 $(ODLL)\PdfFilterDll.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h

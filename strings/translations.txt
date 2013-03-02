@@ -1,9 +1,12 @@
 AppTranslator: SumatraPDF
-9550a4b720da415d27501435340ec5ad65bf58ce
+c4b30e5d1a113cc48964b7598ce0cb9df3ba1631
 :%s of %s
+br:%s de %s
 cn:%s of %s
 de:%s von %s
 fr:%s de %s
+ku:%s لە %s
+pl:%s z %s
 pt:%s de %s
 ru:%s из %s
 uk:%s із %s
@@ -3588,9 +3591,12 @@ uk:Прикладна програма:
 uz:Dastur:
 vn:Ứng dụng:
 :Are you sure you want to uninstall SumatraPDF?
+br:Tem certeza de que quer desinstalar o SumatraPDF?
 cn:确定要卸载SumatraPDF吗？
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
+ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
+pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza que quer desinstalar o SumatraPDF?
 ru:Вы уверены, что хотите удалить SumatraPDF?
 uk:Ви впевнені, що хочете видалити SumatraPDF?
@@ -4683,6 +4689,7 @@ uk:Перевірити, чи є нова версія
 uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Close
+br:Fechar
 cn:关闭
 de:Schließen
 fr:Fermer
@@ -5386,13 +5393,16 @@ uk:Неможливо отримати налаштування друкарки
 uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
 :Couldn't create temporary directory
+br:Não foi possível criar pasta temporária
 cn:无法创建临时目录
 de:Konnte das Temporärverzeichnis nicht erstellen
 fr:Impossible de créer un répertoire temporaire
+ku:ناتوانرێت فۆڵدەری کاتی دروستبکرێت
 pt:Não foi possível criar a pasta temporária
 ru:Не удалось создать временную директорию
 uk:Не вдалося створити тимчасову папку
 :Couldn't create the installation directory
+br:Não foi possível criar a pasta de instalação.
 cn:无法创建指定的安装目录
 de:Konnte das Installationsverzeichnis nicht erstellen
 fr:Impossible de créer le répertoire d'installation
@@ -5460,6 +5470,7 @@ uk:Неможливо знайти друкарку
 uz:Printerni ishga tushirib bo'lmadi
 vn:Không khởi động được máy in
 :Couldn't install PDF previewer
+br:Não foi possível instalar o pré-visualizador para PDF
 cn:无法安装PDF文件预临览
 de:Konnte die PDF Vorschau nicht installieren
 fr:Impossible d'installer l'aperçu PDF
@@ -5467,6 +5478,7 @@ pt:Não foi possível instalar o antevisão de PDF
 ru:Не удалось установить просмотрщик PDF
 uk:Не вдалося встановити програму для попереднього перегляду PDF
 :Couldn't install PDF search filter
+br:Não foi possível instalar o filtro de pesquisa para PDF
 cn:无法安装PDF搜索过滤器
 de:Konnte den PDF Suchfilter nicht installieren
 fr:Impossible d'installer le filtre de recherche PDF
@@ -5474,6 +5486,7 @@ pt:Não foi possível instalar o filtro de procuras
 ru:Не удалось установить фильтр поиска PDF
 uk:Не вдалося встановити фільтр пошуку для PDF
 :Couldn't install browser plugin
+br:Não foi possível instalar o plugin do navegador
 cn:无法安装浏览器插件
 de:Konnte das Browser-Plugin nicht installieren
 fr:Impossible d'installer le plug-in du navigateur
@@ -5481,6 +5494,7 @@ pt:Não foi possível instalar o plugin do navegador
 ru:Не удалось установить плагин браузера
 uk:Не вдалося встановити розширення для браузера
 :Couldn't obtain temporary directory
+br:Não foi possível obter a pasta temporária
 cn:无法得到暂存目录
 de:Konnte das temporäre Verzeichnis nicht finden
 fr:Impossible d'obtenir un répertoire temporaire
@@ -5488,6 +5502,7 @@ pt:Não foi possível obter a pasta temporária
 ru:Не удалось определить временную директорию
 uk:Не вдалося отримати розташування тимчасової папки
 :Couldn't remove installation directory
+br:Não foi possível remover a pasta de instalação
 cn:无法移除安装目录
 de:Konnte das Installationsverzeichnis nicht löschen
 fr:Impossible de supprimer le répertoire d'installation
@@ -5495,6 +5510,7 @@ pt:Não foi possível remover a pasta de instalação
 ru:Не удалось удалить директорию установки
 uk:Не вдалося видалити папку, де було встановлено програму
 :Couldn't remove the shortcut
+br:Não foi possível remover o atalho
 cn:无法移除快捷方式
 de:Konnte die Verknüpfung nicht löschen
 fr:Impossible de supprimer le raccourci
@@ -5563,6 +5579,7 @@ uk:Неможливо згенерувати(відобразити) сторі�
 uz:Betni render qilib bo'lmadi
 vn:Không hiện được trang
 :Couldn't uninstall PDF previewer
+br:Não foi possível desinstalar o pré-visualizador para PDF
 cn:无法卸载PDF预览
 de:Konnte die PDF Vorschau nicht deinstallieren
 fr:Impossible de désinstaller l'aperçu PDF
@@ -5570,6 +5587,7 @@ pt:Não foi possível desinstalar a antevisão de PDF
 ru:Не удалось удалить просмотрщик PDF
 uk:Не вдалося видалити програму для попереднього перегляду PDF
 :Couldn't uninstall PDF search filter
+br:Não foi possível desinstalar o filtro de pesquisa para PDF
 cn:无法卸载PDF搜索过滤器
 de:Konnte den PDF Suchfilter nicht deinstallieren
 fr:Impossible de désinstaller le filtre de recherche PDF
@@ -5577,6 +5595,7 @@ pt:Não foi possível desinstalar o filtro de procura
 ru:Не удалось удалить фильтр поиска PDF
 uk:Не вдалося видалити фільтр пошуку для PDF
 :Couldn't uninstall browser plugin
+br:Não foi possível desinstalar o plugin do navegador
 cn:无法卸载浏览器插件
 de:Konnte das Browser-Plugin nicht deinstallieren
 fr:Impossible de désinstalle le plug-in du navigateur
@@ -5584,6 +5603,7 @@ pt:Não foi possível desinstalar o plugin do navegador
 ru:Не удалось удалить плагин браузера
 uk:Не вдалося видалити розширення для браузера
 :Couldn't write %s to disk
+br:Não foi possível gravar %s no disco
 cn:无法将%s写进硬盘
 de:Konnte %s nicht kopieren
 fr:Impossible d'écrire %s sur le disque
@@ -6547,6 +6567,7 @@ uk:Помилка завантаження %s
 uz:%s yuklab olish xatosi
 vn:Không mở %s được
 :Error: Couldn't run SumatraPDF!
+br:Não foi possível rodar o SumatraPDF!
 cn:错误：无法运行SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
 fr:Erreur : impossible de lancer SumatraPDF !
@@ -6554,6 +6575,7 @@ pt:Erro: não foi possível iniciar o SumatraPDF!
 ru:Ошибка: не удалось запустить SumatraPDF!
 uk:Помилка: не вдалося запустити SumatraPDF
 :Error: SumatraPDF hasn't been found!
+br:O SumatraPDF não foi encontrado!
 cn:失败: 找不到SumatraPDF
 de:Fehler: SumatraPDF ist unaufindbar!
 fr:Erreur : SumatraPDF non trouvé !
@@ -6561,6 +6583,7 @@ pt:Erro: o SumatraPDF não foi encontrado!
 ru:Ошибка: SumatraPDF не найдена!
 uk:Помилка: SumatraPDF не було знайдено
 :Error: The document couldn't be downloaded!
+br:Erro: o documento não pôde ser baixado!
 cn:错误： 文档无法下载!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
 fr:Erreur : le document n'a pu être téléchargé !
@@ -6815,6 +6838,7 @@ uk:Дві сторінки
 uz:Ikkita betdan
 vn:Trang kép
 :Failed to copy uninstaller to temp directory
+br:Falha na cópia do desinstalador para a pasta temporária
 cn:无法将安装程序复制到暂存目录
 de:Konnte das Deinstallationsprogramm nicht kopieren
 fr:La copie du désinstalleur dans un répertoire temporaire a échoué
@@ -6822,6 +6846,7 @@ pt:Falha ao copiar o desinstalador para a pasta temporária
 ru:Не удалось скопировать деинсталлятор во временную директорию
 uk:Не вдалося скопіювати деінсталятор у тимчасову папку
 :Failed to create a shortcut
+br:Falha na criação do atalho
 cn:无法创建快捷方式
 de:Konnte keine Verknüpfung erstellen
 fr:Impossible de créer un raccourci
@@ -6829,6 +6854,7 @@ pt:Erro ao criar atalho
 ru:Не удалось создать ярлык
 uk:Не вдалося створити ярлик
 :Failed to delete uninstaller registry keys
+br:Falha na remoção das entradas de registro do desinstalador
 cn:删除卸载程序的注册表项失败
 de:Konnte nicht alle Registry-Einträge löschen
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
@@ -6953,6 +6979,7 @@ uk:Не можна зберегти файл.
 uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Failed to write the extended file extension information to the registry
+br:Falha na gravação da extensão de arquivo no registro
 cn:无法将文件扩展名的扩展信息写进注册表
 de:Konnte die Dateiformats-Verknüpfungen nicht vollständig in die Registry schreiben
 fr:L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
@@ -6960,6 +6987,7 @@ pt:Falha ao escrever as informações do tipo de ficheiro nas chaves de registo
 ru:Не удалось записать полную информацию о расширении файла в регистр
 uk:Не вдалося записати інформацію про розширення файлу до реєстру
 :Failed to write the uninstallation information to the registry
+br:Falha na gravação dos dados de desinstalação no registro
 cn:将卸载所需信息写进注册表时失败了
 de:Konnte keine Deinstallations-Informationen in die Registry schreiben
 fr:L'écriture des informations de désinstallation dans la base de registre a échoué
@@ -8511,6 +8539,7 @@ uk:Перейти на сторінку
 uz:Betga o'tish
 vn:Nhảy đến trang
 :Hide &Options
+br:Ocultar &Opções
 cn:隐藏选项菜单
 de:&Optionen verstecken
 fr:Masque les &options
@@ -8685,6 +8714,7 @@ uk:Файли зображень (*.%s)
 uz:Rasm fayllari (*.%s)
 vn:Tập tin ảnh (*.%s)
 :Install PDF &browser plugin for Firefox, Chrome and Opera
+br:Instalar plugin PDF para Firefox, Chrome e Opera
 cn:安装PDF浏览器插件到火狐, Chrome和Opera
 de:PDF Browser-Plugin für Firefox, Chrome und Opera installieren
 fr:Installer le plug-in PDF pour Firefox, Chrome and Opera
@@ -8692,6 +8722,7 @@ pt:Instalar o pl&ugin de navegador para o Chrome, Firefox e Opera
 ru:Установить плагин PDF для &браузеров Firefox, Chrome и Opera
 uk:Встановити розширення для перегляду PDF у Firefox, Chrome та Opera
 :Install SumatraPDF
+br:Instalar SumatraPDF
 cn:安装SumatraPDF
 de:SumatraPDF installieren
 fr:Installer SumatraPDF
@@ -8699,6 +8730,7 @@ pt:Instalar SumatraPDF
 ru:Установить SumatraPDF
 uk:Встановити SumatraPDF
 :Install SumatraPDF in &folder:
+br:Instalar SumatraPDF na &pasta:
 cn:安装SumatraPDF到目录: &folder
 de:&Installationsverzeichnis:
 fr:Installer SumatraPDF dans le répertoire :
@@ -8706,6 +8738,7 @@ pt:Instalar SumatraPD&F na pasta:
 ru:Установить SumatraPDF в &папку:
 uk:Встановити SumatraPDF у папку
 :Installation failed!
+br:Falha na instalação!
 cn:安装失败!
 de:Die Installation ist fehlgeschlagen!
 fr:Échec de l'installation !
@@ -13111,6 +13144,10 @@ uz:Mavzu:
 vn:Chủ đề:
 :SumatraPDF %s Installer
 de:SumatraPDF %s installieren
+fr:Installeur de SumatraPDF %s
+pt:Instalador do SumatraPDF %s
+ru:Инсталлятор SumatraPDF %s
+uk:Інсталятор SumatraPDF %s
 :SumatraPDF %s Uninstaller
 cn:SumatraPDF %s 卸载程序
 de:SumatraPDF %s deinstallieren

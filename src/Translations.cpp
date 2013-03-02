@@ -117,13 +117,13 @@ bool SetCurrentLanguage(const char *code)
 
 static int cmpCharPtrs(const void *a, const void *b)
 {
-    return strcmp(*(char **)a, *(char **)b);
+    return strcmp(*(const char **)a, *(const char **)b);
 }
 
 static int GetTranslationIndex(const char* txt)
 {
     assert(gCurrLangIdx < LANGS_COUNT);
-    const char **res = (const char **)bsearch(&txt, &gTranslations, STRINGS_COUNT, sizeof(gTranslations[0]), cmpCharPtrs);
+    const char **res = (const char **)bsearch(&txt, gTranslations, STRINGS_COUNT, sizeof(txt), cmpCharPtrs);
     if (!res) {
         // didn't find a translation
         return -1;

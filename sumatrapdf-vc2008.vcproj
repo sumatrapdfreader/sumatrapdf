@@ -1548,6 +1548,10 @@
 					RelativePath=".\src\browserplugin\npPdfViewer.rc"
 					>
 				</File>
+				<File
+					RelativePath=".\src\browserplugin\Translations_txt.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<File

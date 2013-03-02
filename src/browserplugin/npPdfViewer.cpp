@@ -12,10 +12,6 @@
 
 #include "DebugLog.h"
 
-// TODO: https://code.google.com/p/sumatrapdf/issues/detail?id=1627
-//       extract the language to use from sumatrapdfprefs.dat (or guess from the UI language)
-#define _TR(x) TEXT(x)
-
 #undef NP_END_MACRO
 #define NP_END_MACRO } __pragma(warning(push)) __pragma(warning(disable:4127)) while (0) __pragma(warning(pop))
 
@@ -35,17 +31,17 @@
 #endif
 
 #if NOLOG == 0
-const WCHAR *DllMainReason(DWORD reason)
+const char *DllMainReason(DWORD reason)
 {
     if (DLL_PROCESS_ATTACH == reason)
-        return L"DLL_PROCESS_ATTACH";
+        return "DLL_PROCESS_ATTACH";
     if (DLL_PROCESS_DETACH == reason)
-        return L"DLL_PROCESS_DETACH";
+        return "DLL_PROCESS_DETACH";
     if (DLL_THREAD_ATTACH == reason)
-        return L"DLL_THREAD_ATTACH";
+        return "DLL_THREAD_ATTACH";
     if (DLL_THREAD_DETACH == reason)
-        return L"DLL_THREAD_DETACH";
-    return L"UNKNOWN";
+        return "DLL_THREAD_DETACH";
+    return "UNKNOWN";
 }
 #endif
 
@@ -56,6 +52,7 @@ const WCHAR *g_lpRegKey = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/Sumatra
 #else
 const WCHAR *g_lpRegKey = L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64";
 #endif
+int gTranslationIdx = 0;
 
 /* ::::: DLL Exports ::::: */
 
@@ -235,6 +232,39 @@ HANDLE CreateTempFile(WCHAR *filePathBufOut, size_t bufSize)
     return hFile;
 }
 
+#include "Translations_txt.cpp"
+
+// TODO: extract the language to use from sumatrapdfprefs.dat
+void SelectTranslation(const WCHAR *exePath=NULL)
+{
+    LANGID langId = GetUserDefaultUILanguage();
+    const WCHAR *code = GetLanguageCode(langId);
+    if (!code) {
+        LANGID langIdNoSublang = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
+        code = GetLanguageCode(langIdNoSublang);
+    }
+    for (int idx = 0; gTranslations[idx]; idx += gTranslationsCount + 1) {
+        if (str::Eq(gTranslations[idx], code)) {
+            gTranslationIdx = idx;
+            break;
+        }
+    }
+}
+
+int cmpWcharPtrs(const void *a, const void *b)
+{
+    return wcscmp(*(const WCHAR **)a, *(const WCHAR **)b);
+}
+
+const WCHAR *Translate(const WCHAR *s)
+{
+    const WCHAR **res = (const WCHAR **)bsearch(&s, gTranslations + 1, gTranslationsCount, sizeof(s), cmpWcharPtrs);
+    int idx = gTranslationIdx + res - gTranslations;
+    return res && gTranslations[idx] ? gTranslations[idx] : s;
+}
+
+#define _TR(x) Translate(TEXT(x))
+
 /* ::::: Plugin Window Procedure ::::: */
 
 struct InstanceData {
@@ -255,7 +285,7 @@ enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
-static WCHAR *FormatSizeSuccint(size_t size) {
+WCHAR *FormatSizeSuccint(size_t size) {
     const WCHAR *unit = NULL;
     double s = (double)size;
 
@@ -294,6 +324,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         HDC hDC = BeginPaint(hWnd, &ps);
         HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
         HFONT hFont = GetSimpleFont(hDC, L"MS Shell Dlg", 14);
+        bool isRtL = IsLanguageRtL(gTranslations[gTranslationIdx]);
         
         // set up double buffering
         RectI rcClient = ClientRect(hWnd);
@@ -305,7 +336,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         hFont = (HFONT)SelectObject(hDCBuffer, hFont);
         SetTextColor(hDCBuffer, RGB(0, 0, 0));
         SetBkMode(hDCBuffer, TRANSPARENT);
-        DrawCenteredText(hDCBuffer, rcClient, data->message /*, isRtL */);
+        DrawCenteredText(hDCBuffer, rcClient, data->message, isRtL);
         
         // draw a progress bar, if a download is in progress
         if (0 < data->progress && data->progress <= 1)
@@ -327,13 +358,13 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             if (0 == data->totalSize || data->currSize > data->totalSize)
             {
                 // total size unknown or bogus => show just the current size
-                DrawCenteredText(hDCBuffer, rcProgressAll, currSize /*, isRtL */);
+                DrawCenteredText(hDCBuffer, rcProgressAll, currSize, isRtL);
             }
             else
             {
                 ScopedMem<WCHAR> totalSize(FormatSizeSuccint(data->totalSize));
                 ScopedMem<WCHAR> s(str::Format(_TR("%s of %s"), currSize, totalSize));
-                DrawCenteredText(hDCBuffer, rcProgressAll, s /*, isRtL */);
+                DrawCenteredText(hDCBuffer, rcProgressAll, s, isRtL);
             }
         }
         
@@ -384,7 +415,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     }
 
     if (pluginType)
-        plogf("sp:   pluginType: %s ", ScopedMem<WCHAR>(str::conv::FromAnsi(pluginType)));
+        plogf("sp:   pluginType: %s ", pluginType);
     if (saved)
         plogf("sp:   SavedData: len=%d", saved->len);
 
@@ -398,7 +429,9 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     gNPNFuncs.setvalue(instance, NPPVpluginWindowBool, (void *)true);
     
     InstanceData *data = (InstanceData *)instance->pdata;
-    if (GetExePath(data->exepath, dimof(data->exepath)))
+    bool ok = GetExePath(data->exepath, dimof(data->exepath));
+    SelectTranslation(ok ? data->exepath : NULL);
+    if (ok)
         data->message = _TR("Opening document in SumatraPDF...");
     else
         data->message = _TR("Error: SumatraPDF hasn't been found!");
@@ -445,7 +478,7 @@ NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow *npwin)
     return NPERR_NO_ERROR;
 }
 
-static void TriggerRepaintOnProgressChange(InstanceData *data)
+void TriggerRepaintOnProgressChange(InstanceData *data)
 {
     if (!data || !data->npwin || !data->npwin->window)
         return;
@@ -481,7 +514,7 @@ NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type, NPStream* stream,
     data->hFile = CreateTempFile(data->filepath, dimof(data->filepath));
     if (data->hFile)
     {
-        plogf("sp: using temporary file: %s", data->filepath);
+        plogf("sp: using temporary file: %S", data->filepath);
         *stype = NP_NORMAL;
     }
 
@@ -527,7 +560,7 @@ int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset, int3
     return bytesWritten;
 }
 
-static void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
+void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
 {
     if (!file::Exists(data->filepath))
         plogf("sp: NPP_StreamAsFile() error: file doesn't exist");
@@ -565,7 +598,7 @@ void NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream, const char* fnam
         goto Exit;
     }
 
-    plogf("sp: NPP_StreamAsFile() fname=%s", ScopedMem<WCHAR>(str::conv::FromAnsi(fname)));
+    plogf("sp: NPP_StreamAsFile() fname=%s", fname);
 
     if (data->hFile)
         plogf("sp: NPP_StreamAsFile() error: data->hFile is != NULL (should be NULL)");
@@ -595,7 +628,7 @@ NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream, NPReason rea
     if (stream)
     {
         if (stream->url)
-            plogf("sp:   url: %s", ScopedMem<WCHAR>(str::conv::FromUtf8(stream->url)));
+            plogf("sp:   url: %s", stream->url);
         plogf("sp:   end: %d", stream->end);
     }
 
@@ -648,7 +681,7 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
     }
     if (data->hFile)
     {
-        plogf("sp: NPP_Destroy(): deleting internal temporary file %s", data->filepath);
+        plogf("sp: NPP_Destroy(): deleting internal temporary file %S", data->filepath);
         DeleteFile(data->filepath);
         *data->filepath = '\0';
     }
@@ -659,7 +692,7 @@ NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save)
         DWORD len = GetTempPath(MAX_PATH, tempDir);
         if (0 < len && len < MAX_PATH && str::StartsWithI(data->filepath, tempDir))
         {
-            plogf("sp: NPP_Destroy(): deleting browser temporary file %s", data->filepath);
+            plogf("sp: NPP_Destroy(): deleting browser temporary file %S", data->filepath);
             DeleteFile(data->filepath);
         }
     }
