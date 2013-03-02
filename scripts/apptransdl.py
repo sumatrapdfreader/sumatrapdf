@@ -73,10 +73,6 @@ def parseTranslations(s):
 
 g_src_dir = os.path.join(os.path.dirname(__file__), "..", "src")
 
-def load_lang_index():
-    import langs_def
-    return langs_def.LangIndex
-
 def get_lang_list(strings_dict):
     langs = []
     for translations in strings_dict.values():
@@ -128,7 +124,7 @@ def get_untranslated_as_list(untranslated_dict):
 def generate_code(s):
     strings_dict = parseTranslations(s)
     strings = extract_strings_from_c_files(True)
-    strings_list = [s[0] for s in strings]
+    strings_list = [tmp[0] for tmp in strings]
     for s in strings_dict.keys():
         if s not in strings_list:
             del strings_dict[s]
@@ -137,7 +133,7 @@ def generate_code(s):
     for s in untranslated:
         if s not in strings_dict:
             strings_dict[s] = []
-    gen_c_code(load_lang_index(), strings_dict, strings)
+    gen_c_code(strings_dict, strings)
 
 # returns True if translation files have been re-generated and
 # need to be commited

@@ -6,7 +6,7 @@
 
 # See http://msdn.microsoft.com/en-us/library/dd318693.aspx for the full list.
 
-LangIndex = [
+g_langs = [
 	# code,	UI name,	Language and Sublanguage/Variant/Dialect (nothing if neutral),	Layout (RTL or nothing),
 	('af',	'Afrikaans',	('Afrikaans',)),
 	('am',	'Armenian (Հայերեն)',	('Armenian',)),

@@ -1,4 +1,4 @@
-import os, re, util
+import os, re, util, langs_def
 
 # number of missing translations for a language to be considered
 # incomplete (will be excluded from Translations_txt.cpp) as a
@@ -176,8 +176,8 @@ def is_rtl_lang(lang):
 def key_sort_func(a, b):
     return cmp(a.replace(r"\t", "\t"), b.replace(r"\t", "\t"))
 
-def gen_c_code_for_dir(langs_idx, strings_dict, keys, dir_name):
-    langs_idx = sorted(langs_idx, cmp=lang_sort_func)
+def gen_c_code_for_dir(strings_dict, keys, dir_name):
+    langs_idx = sorted(langs_def.g_langs, cmp=lang_sort_func)
     assert "en" == langs_idx[0][0]
     translations_count = len(keys)
 
@@ -204,8 +204,8 @@ def gen_c_code_for_dir(langs_idx, strings_dict, keys, dir_name):
     file_name = os.path.join(SRC_DIR, dir_name, C_TRANS_FILENAME)
     file(file_name, "wb").write(file_content)
 
-def gen_c_code_simple(langs_idx, strings_dict, keys, dir_name):
-    langs_idx = sorted(langs_idx, cmp=lang_sort_func)
+def gen_c_code_simple(strings_dict, keys, dir_name):
+    langs_idx = sorted(langs_def.g_langs, cmp=lang_sort_func)
     assert "en" == langs_idx[0][0]
     translations_count = len(keys)
 
@@ -226,20 +226,20 @@ def gen_c_code_simple(langs_idx, strings_dict, keys, dir_name):
 
     lang_id_to_code = "\n    ".join(['case %s: return L"%s";' % (make_lang_id(lang), lang[0]) for lang in langs_idx])
     rtl_lang_cmp = " || ".join(['!wcscmp(code, L"%s")' % lang[0] for lang in langs_idx if is_rtl_lang(lang) == "true"]) or "false"
-    
+
     import codecs
     file_content = codecs.BOM_UTF8 + TRANSLATIONS_TXT_SIMPLE % locals()
     file_name = os.path.join(SRC_DIR, dir_name, C_TRANS_FILENAME)
     file(file_name, "wb").write(file_content)
 
-def gen_c_code(langs_idx, strings_dict, strings):
+def gen_c_code(strings_dict, strings):
     for dir in C_DIRS_TO_PROCESS:
         keys = [s[0] for s in strings if s[1] == dir and s[0] in strings_dict]
         keys.sort(cmp=key_sort_func)
         if dir not in C_SIMPLE_FORMAT_DIRS:
-            gen_c_code_for_dir(langs_idx, strings_dict, keys, dir)
+            gen_c_code_for_dir(strings_dict, keys, dir)
         else:
-            gen_c_code_simple(langs_idx, strings_dict, keys, dir)
+            gen_c_code_simple(strings_dict, keys, dir)
 
 def main():
     import apptransdl

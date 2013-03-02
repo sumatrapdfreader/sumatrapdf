@@ -400,7 +400,6 @@ class ZipInfo (object):
                     idx += 1
 
                 if self.header_offset == 0xffffffffL:
-                    old = self.header_offset
                     self.header_offset = counts[idx]
                     idx+=1
 
@@ -1277,6 +1276,7 @@ class ZipFile:
                 if self.debug > 0:
                     msg = 'Archive comment is too long; truncating to %d bytes' \
                           % ZIP_MAX_COMMENT
+                    print(msg)
                 self.comment = self.comment[:ZIP_MAX_COMMENT]
 
             endrec = struct.pack(structEndArchive, stringEndArchive,
