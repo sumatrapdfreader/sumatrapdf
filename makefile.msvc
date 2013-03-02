@@ -197,7 +197,7 @@ PDFPREVIEW_OBJS = \
 BROWSER_PLUGIN_OBJS = \
 	$(ODLL)\npPdfViewer.obj $(BROWSER_PLUGIN_RES) \
 	$(OU)\BaseUtil.obj $(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj \
-	$(OU)\CmdLineParser.obj \
+	$(OU)\CmdLineParser.obj $(OU)\BencUtil.obj
 
 ENGINEDUMP_OBJS = \
 	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) \

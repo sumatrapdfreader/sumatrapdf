@@ -2,6 +2,7 @@
 
 #include "BaseUtil.h"
 
+#include "BencUtil.h"
 #include "CmdLineParser.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
@@ -234,20 +235,50 @@ HANDLE CreateTempFile(WCHAR *filePathBufOut, size_t bufSize)
 
 #include "Translations_txt.cpp"
 
-// TODO: extract the language to use from sumatrapdfprefs.dat
 void SelectTranslation(const WCHAR *exePath=NULL)
 {
     LANGID langId = GetUserDefaultUILanguage();
-    const WCHAR *code = GetLanguageCode(langId);
-    if (!code) {
-        LANGID langIdNoSublang = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
-        code = GetLanguageCode(langIdNoSublang);
+    int idx = GetLanguageIndex(langId);
+    if (-1 == idx) {
+        // try a neutral language if the specific sublanguage isn't available
+        langId = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
+        idx = GetLanguageIndex(langId);
     }
-    for (int idx = 0; gTranslations[idx]; idx += gTranslationsCount + 1) {
-        if (str::Eq(gTranslations[idx], code)) {
-            gTranslationIdx = idx;
-            break;
+    if (-1 != idx) {
+        gTranslationIdx = idx;
+        plogf("sp: Detected language %s (%d)", gLanguages[idx / gTranslationsCount], idx);
+    }
+
+    // try to extract the language used by SumatraPDF
+    ScopedMem<WCHAR> path;
+    if (exePath) {
+        path.Set(path::GetDir(exePath));
+        path.Set(path::Join(path, L"sumatrapdfprefs.dat"));
+    }
+    if (!file::Exists(path)) {
+        path.Set(GetSpecialFolder(CSIDL_APPDATA));
+        path.Set(path::Join(path, L"SumatraPDF\\sumatrapdfprefs.dat"));
+    }
+    if (!file::Exists(path))
+        return;
+    plogf("sp: Found preferences at %S", path);
+    ScopedMem<char> data(file::ReadAll(path, NULL));
+    if (data) {
+        BencObj *root = BencObj::Decode(data);
+        if (root && root->Type() == BT_DICT) {
+            BencDict *global = static_cast<BencDict *>(root)->GetDict("gp");
+            BencString *string = global ? global->GetString("UILanguage") : NULL;
+            if (string) {
+                plogf("sp: UILanguage from preferences: %s", string->RawValue());
+                for (int i = 0; gLanguages[i]; i++) {
+                    if (str::Eq(gLanguages[i], string->RawValue())) {
+                        gTranslationIdx = i * gTranslationsCount;
+                        break;
+                    }
+                }
+            }
         }
+        delete root;
     }
 }
 
@@ -324,7 +355,7 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         HDC hDC = BeginPaint(hWnd, &ps);
         HBRUSH brushBg = CreateSolidBrush(COL_WINDOW_BG);
         HFONT hFont = GetSimpleFont(hDC, L"MS Shell Dlg", 14);
-        bool isRtL = IsLanguageRtL(gTranslations[gTranslationIdx]);
+        bool isRtL = IsLanguageRtL(gTranslationIdx);
         
         // set up double buffering
         RectI rcClient = ClientRect(hWnd);
@@ -410,7 +441,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
 
     if (!instance)
     {
-        plogf("error: NPERR_INVALID_INSTANCE_ERROR");
+        plogf("sp: error: NPERR_INVALID_INSTANCE_ERROR");
         return NPERR_INVALID_INSTANCE_ERROR;
     }
 
@@ -422,7 +453,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, in
     instance->pdata = AllocStruct<InstanceData>();
     if (!instance->pdata)
     {
-        plogf("error: NPERR_OUT_OF_MEMORY_ERROR");
+        plogf("sp: error: NPERR_OUT_OF_MEMORY_ERROR");
         return NPERR_OUT_OF_MEMORY_ERROR;
     }
 

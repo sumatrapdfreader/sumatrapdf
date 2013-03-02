@@ -91,6 +91,8 @@ const WCHAR *gTranslations[] = {
 %(translations)s
 };
 
+const char *gLanguages[] = { %(langs_list)s };
+
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
 #ifndef LANG_CENTRAL_KURDISH
@@ -101,17 +103,18 @@ const WCHAR *gTranslations[] = {
 #define SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ 0x01
 #endif
 
-const WCHAR *GetLanguageCode(LANGID id)
+// note: this index isn't guaranteed to remain stable over restarts, so
+// persist gLanguages[index/gTranslationsCount] instead
+int GetLanguageIndex(LANGID id)
 {
     switch (id) {
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
-    %(lang_id_to_code)s
+    %(lang_id_to_index)s
 #undef _LANGID
-    default: return NULL;
     }
 }
 
-bool IsLanguageRtL(const WCHAR *code)
+bool IsLanguageRtL(int index)
 {
     return %(rtl_lang_cmp)s;
 }
@@ -216,16 +219,17 @@ def gen_c_code_simple(strings_dict, keys, dir_name):
         if not trans:
             incomplete_langs.append(lang)
             continue
-        lines.append('  /* Translations for language */ L"%s",' % lang[0])
+        lines.append('  /* Translations for language %s */' % lang[0])
         lines += ['  L"%s",' % t.replace('"', '\\"') if t else '  NULL,' for t in trans]
         lines.append("")
-    lines.append("  NULL")
+    lines.pop()
     for lang in incomplete_langs:
         langs_idx.remove(lang)
     translations = "\n".join(lines)
 
-    lang_id_to_code = "\n    ".join(['case %s: return L"%s";' % (make_lang_id(lang), lang[0]) for lang in langs_idx])
-    rtl_lang_cmp = " || ".join(['!wcscmp(code, L"%s")' % lang[0] for lang in langs_idx if is_rtl_lang(lang) == "true"]) or "false"
+    langs_list = ", ".join(['"%s"' % lang[0] for lang in langs_idx] + ["NULL"])
+    lang_id_to_index = "\n    ".join(["case %s: return %d;" % (make_lang_id(lang), langs_idx.index(lang) * len(keys)) for lang in langs_idx] + ["default: return -1;"])
+    rtl_lang_cmp = " || ".join(["%d == index" % langs_idx.index(lang) * len(keys) for lang in langs_idx if is_rtl_lang(lang) == "true"]) or "false"
 
     import codecs
     file_content = codecs.BOM_UTF8 + TRANSLATIONS_TXT_SIMPLE % locals()

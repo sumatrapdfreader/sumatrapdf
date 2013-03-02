@@ -161,7 +161,7 @@ const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "S\303\251lectionner le r\303\251pertoire d'installation de SumatraPDF :",
   "Des fichiers pr\303\251vus pour l'installation sont endommag\303\251s ou manquants",
   "Installeur de SumatraPDF %s",
-  "%s D\303\251sinstalleur de SumatraPDF",
+  "D\303\251sinstalleur de SumatraPDF %s",
   "SumatraPDF a \303\251t\303\251 d\303\251sinstall\303\251.",
   "Installation de SumatraPDF non trouv\303\251e",
   "Merci d'avoir choisi SumatraPDF !",

@@ -7,7 +7,7 @@
 int gTranslationsCount = 8;
 
 const WCHAR *gTranslations[] = {
-  /* Translations for language */ L"en",
+  /* Translations for language en */
   L"%s of %s",
   L"Error: Couldn't run SumatraPDF!",
   L"Error: SumatraPDF hasn't been found!",
@@ -17,7 +17,7 @@ const WCHAR *gTranslations[] = {
   L"MB",
   L"Opening document in SumatraPDF...",
 
-  /* Translations for language */ L"cn",
+  /* Translations for language cn */
   NULL,
   L"错误：无法运行SumatraPDF!",
   L"失败: 找不到SumatraPDF",
@@ -27,7 +27,7 @@ const WCHAR *gTranslations[] = {
   NULL,
   L"正在用SumatraPDF打开文件...",
 
-  /* Translations for language */ L"fr",
+  /* Translations for language fr */
   L"%s de %s",
   L"Erreur : impossible de lancer SumatraPDF !",
   L"Erreur : SumatraPDF non trouvé !",
@@ -37,7 +37,7 @@ const WCHAR *gTranslations[] = {
   L"Mo",
   L"Ouverture du document dans SumatraPDF…",
 
-  /* Translations for language */ L"de",
+  /* Translations for language de */
   L"%s von %s",
   L"Fehler: Konnte SumatraPDF nicht ausführen!",
   L"Fehler: SumatraPDF ist unaufindbar!",
@@ -47,7 +47,17 @@ const WCHAR *gTranslations[] = {
   NULL,
   L"Das Dokument wird in SumatraPDF geöffnet...",
 
-  /* Translations for language */ L"br",
+  /* Translations for language hu */
+  L"%s/%s",
+  L"Hiba: SumatraPDF futtatása sikertelen!",
+  L"Hiba: SumatraPDF nem található!",
+  L"Hiba: a dokumentum letöltése sikertelen!",
+  L"Gb",
+  L"Kb",
+  L"Mb",
+  L"Dokumentum megnyitása SumatraPDF-ben...",
+
+  /* Translations for language br */
   L"%s de %s",
   L"Não foi possível rodar o SumatraPDF!",
   L"O SumatraPDF não foi encontrado!",
@@ -57,7 +67,7 @@ const WCHAR *gTranslations[] = {
   NULL,
   NULL,
 
-  /* Translations for language */ L"pt",
+  /* Translations for language pt */
   L"%s de %s",
   L"Erro: não foi possível iniciar o SumatraPDF!",
   L"Erro: o SumatraPDF não foi encontrado!",
@@ -67,7 +77,7 @@ const WCHAR *gTranslations[] = {
   NULL,
   L"Abrir documento no SumatraPDF",
 
-  /* Translations for language */ L"ru",
+  /* Translations for language ru */
   L"%s из %s",
   L"Ошибка: не удалось запустить SumatraPDF!",
   L"Ошибка: SumatraPDF не найдена!",
@@ -77,7 +87,7 @@ const WCHAR *gTranslations[] = {
   L"Мб",
   L"Открытие документа в SumatraPDF...",
 
-  /* Translations for language */ L"uk",
+  /* Translations for language uk */
   L"%s із %s",
   L"Помилка: не вдалося запустити SumatraPDF",
   L"Помилка: SumatraPDF не було знайдено",
@@ -86,9 +96,9 @@ const WCHAR *gTranslations[] = {
   NULL,
   NULL,
   L"Триває відкриття документа у SumatraPDF...",
-
-  NULL
 };
+
+const char *gLanguages[] = { "en", "cn", "fr", "de", "hu", "br", "pt", "ru", "uk", NULL };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
@@ -100,24 +110,27 @@ const WCHAR *gTranslations[] = {
 #define SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ 0x01
 #endif
 
-const WCHAR *GetLanguageCode(LANGID id)
+// note: this index isn't guaranteed to remain stable over restarts, so
+// persist gLanguages[index/gTranslationsCount] instead
+int GetLanguageIndex(LANGID id)
 {
     switch (id) {
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
-    case _LANGID(LANG_ENGLISH): return L"en";
-    case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return L"cn";
-    case _LANGID(LANG_FRENCH): return L"fr";
-    case _LANGID(LANG_GERMAN): return L"de";
-    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return L"br";
-    case _LANGID(LANG_PORTUGUESE): return L"pt";
-    case _LANGID(LANG_RUSSIAN): return L"ru";
-    case _LANGID(LANG_UKRAINIAN): return L"uk";
+    case _LANGID(LANG_ENGLISH): return 0;
+    case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return 8;
+    case _LANGID(LANG_FRENCH): return 16;
+    case _LANGID(LANG_GERMAN): return 24;
+    case _LANGID(LANG_HUNGARIAN): return 32;
+    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 40;
+    case _LANGID(LANG_PORTUGUESE): return 48;
+    case _LANGID(LANG_RUSSIAN): return 56;
+    case _LANGID(LANG_UKRAINIAN): return 64;
+    default: return -1;
 #undef _LANGID
-    default: return NULL;
     }
 }
 
-bool IsLanguageRtL(const WCHAR *code)
+bool IsLanguageRtL(int index)
 {
     return false;
 }

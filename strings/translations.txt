@@ -1,10 +1,11 @@
 AppTranslator: SumatraPDF
-c4b30e5d1a113cc48964b7598ce0cb9df3ba1631
+fcb31d81c026e499cc3a26db2a79721b7c6183e6
 :%s of %s
 br:%s de %s
 cn:%s of %s
 de:%s von %s
 fr:%s de %s
+hu:%s/%s
 ku:%s لە %s
 pl:%s z %s
 pt:%s de %s
@@ -1748,6 +1749,7 @@ vn:Mở tập tin...\tCtrl+O
 cn:&选项
 de:&Optionen
 fr:&Options
+hu:&Beállítások
 ku:هەڵبژاردنەکان&
 pt:&Opções
 ru:&Параметры
@@ -3595,6 +3597,7 @@ br:Tem certeza de que quer desinstalar o SumatraPDF?
 cn:确定要卸载SumatraPDF吗？
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
+hu:Biztosan el szeretné távolítani a SumatraPDF-et?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza que quer desinstalar o SumatraPDF?
@@ -4693,6 +4696,7 @@ br:Fechar
 cn:关闭
 de:Schließen
 fr:Fermer
+hu:Bezár
 ku:داخستن
 pl:Zamknij
 pt:Fechar
@@ -5397,6 +5401,7 @@ br:Não foi possível criar pasta temporária
 cn:无法创建临时目录
 de:Konnte das Temporärverzeichnis nicht erstellen
 fr:Impossible de créer un répertoire temporaire
+hu:Ideiglenes könyvtár létrehozása sikertelen
 ku:ناتوانرێت فۆڵدەری کاتی دروستبکرێت
 pt:Não foi possível criar a pasta temporária
 ru:Не удалось создать временную директорию
@@ -5406,6 +5411,7 @@ br:Não foi possível criar a pasta de instalação.
 cn:无法创建指定的安装目录
 de:Konnte das Installationsverzeichnis nicht erstellen
 fr:Impossible de créer le répertoire d'installation
+hu:Telepítési könyvtár létrehozása sikertelen
 pt:Não foi possível criar a pasta de instalação
 ru:Не удалось создать директорию для установки
 uk:Не вдалося створити папку для встановлення
@@ -5490,6 +5496,7 @@ br:Não foi possível instalar o plugin do navegador
 cn:无法安装浏览器插件
 de:Konnte das Browser-Plugin nicht installieren
 fr:Impossible d'installer le plug-in du navigateur
+hu:Böngésző beépülő telepítése sikertelen
 pt:Não foi possível instalar o plugin do navegador
 ru:Не удалось установить плагин браузера
 uk:Не вдалося встановити розширення для браузера
@@ -5498,6 +5505,7 @@ br:Não foi possível obter a pasta temporária
 cn:无法得到暂存目录
 de:Konnte das temporäre Verzeichnis nicht finden
 fr:Impossible d'obtenir un répertoire temporaire
+hu:Ideiglenes könyvtár nem elérhető
 pt:Não foi possível obter a pasta temporária
 ru:Не удалось определить временную директорию
 uk:Не вдалося отримати розташування тимчасової папки
@@ -5506,6 +5514,7 @@ br:Não foi possível remover a pasta de instalação
 cn:无法移除安装目录
 de:Konnte das Installationsverzeichnis nicht löschen
 fr:Impossible de supprimer le répertoire d'installation
+hu:Telepítési könyvtár eltávolítása sikertelen
 pt:Não foi possível remover a pasta de instalação
 ru:Не удалось удалить директорию установки
 uk:Не вдалося видалити папку, де було встановлено програму
@@ -5514,6 +5523,7 @@ br:Não foi possível remover o atalho
 cn:无法移除快捷方式
 de:Konnte die Verknüpfung nicht löschen
 fr:Impossible de supprimer le raccourci
+hu:Parancsikon eltávolítása sikertelen
 pt:Não foi possível remover o atalho
 ru:Не удалось удалить ярлык
 uk:Не вдалося видалити ярлик
@@ -5599,6 +5609,7 @@ br:Não foi possível desinstalar o plugin do navegador
 cn:无法卸载浏览器插件
 de:Konnte das Browser-Plugin nicht deinstallieren
 fr:Impossible de désinstalle le plug-in du navigateur
+hu:Böngésző beépülő eltávolítása sikertelen
 pt:Não foi possível desinstalar o plugin do navegador
 ru:Не удалось удалить плагин браузера
 uk:Не вдалося видалити розширення для браузера
@@ -6571,6 +6582,7 @@ br:Não foi possível rodar o SumatraPDF!
 cn:错误：无法运行SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
 fr:Erreur : impossible de lancer SumatraPDF !
+hu:Hiba: SumatraPDF futtatása sikertelen!
 pt:Erro: não foi possível iniciar o SumatraPDF!
 ru:Ошибка: не удалось запустить SumatraPDF!
 uk:Помилка: не вдалося запустити SumatraPDF
@@ -6579,6 +6591,7 @@ br:O SumatraPDF não foi encontrado!
 cn:失败: 找不到SumatraPDF
 de:Fehler: SumatraPDF ist unaufindbar!
 fr:Erreur : SumatraPDF non trouvé !
+hu:Hiba: SumatraPDF nem található!
 pt:Erro: o SumatraPDF não foi encontrado!
 ru:Ошибка: SumatraPDF не найдена!
 uk:Помилка: SumatraPDF не було знайдено
@@ -6587,6 +6600,7 @@ br:Erro: o documento não pôde ser baixado!
 cn:错误： 文档无法下载!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
 fr:Erreur : le document n'a pu être téléchargé !
+hu:Hiba: a dokumentum letöltése sikertelen!
 pt:Erro: não foi possível transferir o documento!
 ru:Ошибка: не удалось загрузить документ!
 uk:Помилка: Неможливо завантажити документ!
@@ -6850,6 +6864,7 @@ br:Falha na criação do atalho
 cn:无法创建快捷方式
 de:Konnte keine Verknüpfung erstellen
 fr:Impossible de créer un raccourci
+hu:Nem sikerült létrehozni a parancsikont
 pt:Erro ao criar atalho
 ru:Не удалось создать ярлык
 uk:Не вдалося створити ярлик
@@ -8543,6 +8558,7 @@ br:Ocultar &Opções
 cn:隐藏选项菜单
 de:&Optionen verstecken
 fr:Masque les &options
+hu:Beállítások elrejtése
 ku:هەڵبژاردنەکانی &شاردنەوە
 pt:&Ocultar opções
 ru:Скрыть &Параметры
@@ -8726,6 +8742,7 @@ br:Instalar SumatraPDF
 cn:安装SumatraPDF
 de:SumatraPDF installieren
 fr:Installer SumatraPDF
+hu:SumatraPDF telepítése
 pt:Instalar SumatraPDF
 ru:Установить SumatraPDF
 uk:Встановити SumatraPDF
@@ -8734,6 +8751,7 @@ br:Instalar SumatraPDF na &pasta:
 cn:安装SumatraPDF到目录: &folder
 de:&Installationsverzeichnis:
 fr:Installer SumatraPDF dans le répertoire :
+hu:SumatraPDF telepítése a következő &könyvtárba:
 pt:Instalar SumatraPD&F na pasta:
 ru:Установить SumatraPDF в &папку:
 uk:Встановити SumatraPDF у папку
@@ -8742,14 +8760,17 @@ br:Falha na instalação!
 cn:安装失败!
 de:Die Installation ist fehlgeschlagen!
 fr:Échec de l'installation !
+hu:Telepítés sikertelen!
 ku:دابەزاندن سەرکەوتو نەبوو!
 pt:A instalação falhou!
 ru:Установка не удалась!
 uk:Встановлення не було успішним!
 :Installation in progress...
+br:Instalação em progresso...
 cn:安装正在进行中...
 de:Die Installation wird ausgeführt...
 fr:Installation en cours…
+hu:Telepítés folyamatban...
 ku:دابەزاندن لە ئەنجامداندایە...
 pt:A instalar...
 ru:Происходит установка...
@@ -10169,6 +10190,7 @@ vn:Mở bằng Microsoft XPS-Viewer
 cn:正在用SumatraPDF打开文件...
 de:Das Dokument wird in SumatraPDF geöffnet...
 fr:Ouverture du document dans SumatraPDF…
+hu:Dokumentum megnyitása SumatraPDF-ben...
 pt:Abrir documento no SumatraPDF
 ru:Открытие документа в SumatraPDF...
 uk:Триває відкриття документа у SumatraPDF...
@@ -12433,6 +12455,7 @@ vn:Đánh dấu nội dung bằng Ctrl+phím chuột trái
 cn:将SumatraPDF安装到指定目录
 de:In welches Verzeichnis soll SumatraPDF installiert werden?
 fr:Sélectionner le répertoire d'installation de SumatraPDF :
+hu:Válassza ki a SumatraPDF telepítési könyvtárát:
 pt:Escolha a pasta de instalação do SumatraPDF:
 ru:Укажите папку установки SumatraPDF:
 uk:Виберіть папку, в яку буде встановлено SumatraPDF
@@ -13151,7 +13174,7 @@ uk:Інсталятор SumatraPDF %s
 :SumatraPDF %s Uninstaller
 cn:SumatraPDF %s 卸载程序
 de:SumatraPDF %s deinstallieren
-fr:%s Désinstalleur de SumatraPDF
+fr:Désinstalleur de SumatraPDF %s
 pt:Desinstalador do SumatraPDF %s
 ru:Деинсталлятор SumatraPDF %s
 uk:Деінсталятор SumatraPDF %s
