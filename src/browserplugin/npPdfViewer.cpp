@@ -1,8 +1,14 @@
 ﻿/* (Minimal) SumatraPDF Browser Plugin - Copyright © 2013  Simon Bünzli */
 
+// define for a slight decrease in binary size at the
+// cost of wrong behavior in some unlikely edge cases
+#define HACKY_BENC_DECODE
+
 #include "BaseUtil.h"
 
+#ifndef HACKY_BENC_DECODE
 #include "BencUtil.h"
+#endif
 #include "CmdLineParser.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
@@ -264,6 +270,21 @@ void SelectTranslation(const WCHAR *exePath=NULL)
     plogf("sp: Found preferences at %S", path);
     ScopedMem<char> data(file::ReadAll(path, NULL));
     if (data) {
+#ifdef HACKY_BENC_DECODE
+        const char *prop = str::Find(data, "10:UILanguage");
+        unsigned int codeLen;
+        const char *code = prop ? str::Parse(prop + 13, "%u:", &codeLen) : NULL;
+        if (code && codeLen < str::Len(code)) {
+            ScopedMem<char> val(str::DupN(code, codeLen));
+            plogf("sp: UILanguage from preferences: %s", val);
+            for (int i = 0; gLanguages[i]; i++) {
+                if (str::Eq(gLanguages[i], val)) {
+                    gTranslationIdx = i * gTranslationsCount;
+                    break;
+                }
+            }
+        }
+#else
         BencObj *root = BencObj::Decode(data);
         if (root && root->Type() == BT_DICT) {
             BencDict *global = static_cast<BencDict *>(root)->GetDict("gp");
@@ -279,6 +300,7 @@ void SelectTranslation(const WCHAR *exePath=NULL)
             }
         }
         delete root;
+#endif
     }
 }
 
