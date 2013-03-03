@@ -26,7 +26,4 @@ public:
     static CbxEngine *CreateFromStream(IStream *stream);
 };
 
-RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath);
-bool SaveRenderedBitmap(RenderedBitmap *bmp, const WCHAR *filePath);
-
 #endif

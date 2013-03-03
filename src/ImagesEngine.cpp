@@ -9,7 +9,6 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HtmlPullParser.h"
 #include "JsonParser.h"
-#include "TgaReader.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
@@ -18,100 +17,6 @@ using namespace Gdiplus;
 // disable warning C4250 which is wrongly issued due to a compiler bug; cf.
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
 #pragma warning(disable: 4250) /* 'class1' : inherits 'class2::member' via dominance */
-
-///// Helper methods for handling image files of the most common types /////
-
-RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
-{
-    if (str::EndsWithI(filePath, L".bmp")) {
-        HBITMAP hbmp = (HBITMAP)LoadImage(NULL, filePath, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-        if (!hbmp)
-            return NULL;
-        return new RenderedBitmap(hbmp, GetBitmapSize(hbmp));
-    }
-
-    size_t len;
-    ScopedMem<char> data(file::ReadAll(filePath, &len));
-    if (!data)
-        return NULL;
-    Bitmap *bmp = BitmapFromData(data, len);
-    if (!bmp)
-        return NULL;
-
-    HBITMAP hbmp;
-    RenderedBitmap *rendered = NULL;
-    if (bmp->GetHBITMAP(Color::White, &hbmp) == Ok)
-        rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
-    delete bmp;
-
-    return rendered;
-}
-
-static bool GetEncoderClsid(const WCHAR *format, CLSID& clsid)
-{
-    UINT numEncoders, size;
-    GetImageEncodersSize(&numEncoders, &size);
-    if (0 == size)
-        return false;
-
-    ScopedMem<ImageCodecInfo> codecInfo((ImageCodecInfo *)malloc(size));
-    if (!codecInfo)
-        return false;
-
-    GetImageEncoders(numEncoders, size, codecInfo);
-    for (UINT j = 0; j < numEncoders; j++) {
-        if (str::Eq(codecInfo[j].MimeType, format)) {
-            clsid = codecInfo[j].Clsid;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool SaveRenderedBitmap(RenderedBitmap *bmp, const WCHAR *filePath)
-{
-    const WCHAR *fileExt = path::GetExt(filePath);
-    if (str::EqI(fileExt, L".tga")) {
-        size_t tgaDataLen;
-        ScopedMem<unsigned char> tgaData(tga::SerializeBitmap(bmp->GetBitmap(), &tgaDataLen));
-        if (!tgaData)
-            return false;
-        return file::WriteAll(filePath, tgaData.Get(), tgaDataLen);
-    }
-
-    size_t bmpDataLen;
-    ScopedMem<char> bmpData((char *)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
-    if (!bmpData)
-        return false;
-    if (str::EqI(fileExt, L".bmp"))
-        return file::WriteAll(filePath, bmpData.Get(), bmpDataLen);
-
-    const WCHAR *encoders[] = {
-        L".png",  L"image/png",
-        L".jpg",  L"image/jpeg",
-        L".jpeg", L"image/jpeg",
-        L".gif",  L"image/gif",
-        L".tif",  L"image/tiff",
-        L".tiff", L"image/tiff",
-    };
-    const WCHAR *encoder = NULL;
-    for (int i = 0; i < dimof(encoders) && !encoder; i += 2) {
-        if (str::EqI(fileExt, encoders[i]))
-            encoder = encoders[i+1];
-    }
-    CLSID encClsid;
-    if (!encoder || !GetEncoderClsid(encoder, encClsid))
-        return false;
-
-    Bitmap *gbmp = BitmapFromData(bmpData, bmpDataLen);
-    if (!gbmp)
-        return false;
-    Status status = gbmp->Save(filePath, &encClsid);
-    delete gbmp;
-
-    return status == Ok;
-}
 
 ///// ImagesEngine methods apply to all types of engines handling full-page images /////
 

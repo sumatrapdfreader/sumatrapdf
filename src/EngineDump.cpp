@@ -7,7 +7,8 @@
 #include "CmdLineParser.h"
 #include "Doc.h"
 #include "FileUtil.h"
-#include "ImagesEngine.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 #include "PdfEngine.h"
 #include "TgaReader.h"
 #include "WinUtil.h"
@@ -309,18 +310,30 @@ void DumpData(BaseEngine *engine, bool fullDump)
     Out("</EngineDump>\n");
 }
 
-void RenderDocument(BaseEngine *engine, const WCHAR *renderPath)
+void RenderDocument(BaseEngine *engine, const WCHAR *renderPath, bool silent=false)
 {
     for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
         RenderedBitmap *bmp = engine->RenderBitmap(pageNo, 1.0, 0);
-        if (!bmp)
+        if (!bmp || silent) {
+            delete bmp;
             continue;
+        }
         ScopedMem<WCHAR> pageBmpPath(str::Format(renderPath, pageNo));
-        if (!SaveRenderedBitmap(bmp, pageBmpPath)) {
+        if (str::EndsWithI(pageBmpPath, L".png")) {
+            Bitmap bmp(bmp->GetBitmap(), NULL);
+            bmp.Save(pageBmpPath, &GetEncoderClsid(L"image/png"));
+        }
+        else if (str::EndsWithI(pageBmpPath, L".bmp")) {
+            size_t bmpDataLen;
+            ScopedMem<char> bmpData((char *)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
+            if (bmpData)
+                file::WriteAll(pageBmpPath, bmpData, bmpDataLen);
+        }
+        else { // render as TGA for all other file extensions
             size_t tgaDataLen;
             ScopedMem<unsigned char> tgaData(tga::SerializeBitmap(bmp->GetBitmap(), &tgaDataLen));
             if (tgaData)
-                file::WriteAll(pageBmpPath, tgaData.Get(), tgaDataLen);
+                file::WriteAll(pageBmpPath, tgaData, tgaDataLen);
         }
         delete bmp;
     }
@@ -423,7 +436,7 @@ Usage:
     if (!loadOnly)
         DumpData(engine, fullDump);
     if (renderPath)
-        RenderDocument(engine, renderPath);
+        RenderDocument(engine, renderPath, silent);
     delete engine;
 
 #ifdef DEBUG

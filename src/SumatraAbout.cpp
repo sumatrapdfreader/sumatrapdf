@@ -8,7 +8,8 @@
 #include "AppTools.h"
 #include "FileHistory.h"
 #include "FileUtil.h"
-#include "ImagesEngine.h"
+using namespace Gdiplus;
+#include "GdiPlusUtil.h"
 #include "PdfEngine.h"
 #include "resource.h"
 #include "SumatraPDF.h"
@@ -760,6 +761,25 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     }
 }
 
+static RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
+{
+    size_t len;
+    ScopedMem<char> data(file::ReadAll(filePath, &len));
+    if (!data)
+        return NULL;
+    Bitmap *bmp = BitmapFromData(data, len);
+    if (!bmp)
+        return NULL;
+
+    HBITMAP hbmp;
+    RenderedBitmap *rendered = NULL;
+    if (bmp->GetHBITMAP(Color::White, &hbmp) == Ok)
+        rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
+    delete bmp;
+
+    return rendered;
+}
+
 static bool LoadThumbnail(DisplayState& ds)
 {
     if (ds.thumbnail)
@@ -802,8 +822,11 @@ void SaveThumbnail(DisplayState& ds)
     if (!bmpPath)
         return;
     ScopedMem<WCHAR> thumbsPath(path::GetDir(bmpPath));
-    if (dir::Create(thumbsPath))
-        SaveRenderedBitmap(ds.thumbnail, bmpPath);
+    if (dir::Create(thumbsPath)) {
+        CrashIf(!str::EndsWithI(bmpPath, L".png"));
+        Bitmap bmp(ds.thumbnail->GetBitmap(), NULL);
+        bmp.Save(bmpPath, &GetEncoderClsid(L"image/png"));
+    }
 }
 
 void RemoveThumbnail(DisplayState& ds)
