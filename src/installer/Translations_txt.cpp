@@ -6,7 +6,7 @@
 
 int gTranslationsCount = 43;
 
-const WCHAR *gTranslations[] = {
+const WCHAR * const gTranslations[] = {
   /* Translations for language en */
   L"&Options",
   L"Are you sure you want to uninstall SumatraPDF?",
@@ -458,7 +458,7 @@ const WCHAR *gTranslations[] = {
   L"Використовувати SumatraPDF як переглядач по замовчуванню для PDF",
 };
 
-const char *gLanguages[] = { "en", "cn", "fr", "de", "hu", "it", "br", "pt", "ru", "uk", NULL };
+const char * const gLanguages[] = { "en", "cn", "fr", "de", "hu", "it", "br", "pt", "ru", "uk", NULL };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses

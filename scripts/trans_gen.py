@@ -59,10 +59,10 @@ TRANSLATIONS_TXT_C = """\
 #define STRINGS_COUNT %(translations_count)d
 
 typedef struct {
-    const char *code;
-    const char *fullName;
-    LANGID id;
-    bool isRTL;
+    const char * code;
+    const char * fullName;
+    LANGID       langId;
+    bool         isRTL;
 } LangDef;
 
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
@@ -73,7 +73,7 @@ LangDef gLangData[LANGS_COUNT] = {
 
 #undef _LANGID
 
-const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
+const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
 %(translations)s
 };
 """
@@ -87,11 +87,11 @@ TRANSLATIONS_TXT_SIMPLE = """\
 
 int gTranslationsCount = %(translations_count)d;
 
-const WCHAR *gTranslations[] = {
+const WCHAR * const gTranslations[] = {
 %(translations)s
 };
 
-const char *gLanguages[] = { %(langs_list)s };
+const char * const gLanguages[] = { %(langs_list)s };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
@@ -236,6 +236,41 @@ def gen_c_code_simple(strings_dict, keys, dir_name):
     file_name = os.path.join(SRC_DIR, dir_name, C_TRANS_FILENAME)
     file(file_name, "wb").write(file_content)
 
+"""
+A format for the compact storage of strings:
+
+Generated C code:
+
+uint8_t g_compressedLangData[] = {
+};
+
+typedef struct {
+    const char *  code;
+    const char *  fullName;
+    LANGID        langId;
+    bool          isRTL;
+    uint32_t      langDataOffset;           // within g_compressedLangData
+    uint32_t      langDataCompressedSize;
+    uint32_t      langDataUncompressedSize;
+    const void *  uncompressedData;
+} LangDef;
+
+LangDef *g_currLang = NULL; // English if NULL
+
+Format of compressed data (after it's de-compressed)
+  u16[strings_count]       translation_offset : for string n, where the translation is
+                           (offset from the start of strings data), -1 means translation
+                           for this string doesn't exist
+  string[strings_count]    strings, sequentially laid
+
+Note: english strings are not included, they are stored as before, as an
+array of char *, so that the compiler can merge those string constants
+with strings in code (inside _TR() macros). TODO: verify that the strings
+are actually collapsed
+"""
+def gen_c_compact(strings_dict, strings):
+    pass
+
 def gen_c_code(strings_dict, strings):
     for dir in C_DIRS_TO_PROCESS:
         keys = [s[0] for s in strings if s[1] == dir and s[0] in strings_dict]
@@ -244,3 +279,10 @@ def gen_c_code(strings_dict, strings):
             gen_c_code_for_dir(strings_dict, keys, dir)
         else:
             gen_c_code_simple(strings_dict, keys, dir)
+
+def main():
+    import trans_download
+    trans_download.regenerateLangs()
+
+if __name__ == "__main__":
+    main()

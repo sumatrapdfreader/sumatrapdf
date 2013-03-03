@@ -18,10 +18,10 @@
 #define STRINGS_COUNT 240
 
 typedef struct {
-    const char *code;
-    const char *fullName;
-    LANGID id;
-    bool isRTL;
+    const char * code;
+    const char * fullName;
+    LANGID       langId;
+    bool         isRTL;
 } LangDef;
 
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
@@ -84,7 +84,7 @@ LangDef gLangData[LANGS_COUNT] = {
 
 #undef _LANGID
 
-const char *gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
+const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
 
   /* Translations for language en */
   "&About",

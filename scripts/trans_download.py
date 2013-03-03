@@ -171,7 +171,6 @@ def regenerateLangs():
     sys.exit(1)
 
 def main():
-    #regenerateLangs()
     changed = downloadAndUpdateTranslationsIfChanged()
     if changed:
         print("\nNew translations downloaded from the server! Check them in!")

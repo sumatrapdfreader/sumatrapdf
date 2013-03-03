@@ -9,7 +9,7 @@ namespace trans {
 /*
 This code relies on the following variables that must be defined in
 a separate file Translations_txt.cpp which is automatically generated
-from translation files by scripts\update_translations.py.
+from translation files by scripts\trans_gen.py.
 
 // array of UTF-8 encoded translated strings.
 // it has LANGS_COUNT * STRINGS_COUNT elements
@@ -72,10 +72,10 @@ const char *GuessLanguage()
     // Either find the exact primary/sub lang id match, or a neutral sublang if it exists
     // (don't return any sublang for a given language, it might be too different)
     for (int i = 0; i < LANGS_COUNT; i++) {
-        if (langId == gLangData[i].id)
+        if (langId == gLangData[i].langId)
             return gLangData[i].code;
 
-        if (langIdNoSublang == gLangData[i].id)
+        if (langIdNoSublang == gLangData[i].langId)
             langCode = gLangData[i].code;
         // continue searching after finding a match with a neutral sublanguage
     }
