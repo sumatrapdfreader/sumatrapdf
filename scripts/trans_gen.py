@@ -244,14 +244,3 @@ def gen_c_code(strings_dict, strings):
             gen_c_code_for_dir(strings_dict, keys, dir)
         else:
             gen_c_code_simple(strings_dict, keys, dir)
-
-def main():
-    import apptransdl
-    changed = apptransdl.downloadAndUpdateTranslationsIfChanged()
-    if changed:
-        print("\nNew translations received from the server, checkin %s and translations.txt" % C_TRANS_FILENAME)
-    else:
-        apptransdl.regenerateLangs()
-
-if __name__ == "__main__":
-    main()

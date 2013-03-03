@@ -1,4 +1,4 @@
-import os, os.path, sys, tempfile
+import os, sys, tempfile
 from util import log
 
 g_aws_access = None

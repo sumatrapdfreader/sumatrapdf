@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import os.path, sys, string, httplib, urllib, util
-from update_translations import extract_strings_from_c_files
+import os, sys, string, httplib, urllib, util
+from trans_gen import extract_strings_from_c_files
 
 # Extracts english strings from the source code and uploads them
 # to apptranslator.org

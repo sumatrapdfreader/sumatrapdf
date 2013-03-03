@@ -4,8 +4,8 @@
 # If changed, saves them as strings/translations.txt and
 # re-generates src/Translations_txt.cpp etc.
 
-import os.path, urllib2, util
-from update_translations import gen_c_code, extract_strings_from_c_files
+import os, sys, urllib2, util
+from trans_gen import gen_c_code, extract_strings_from_c_files
 
 g_my_dir = os.path.dirname(__file__)
 g_strings_dir = os.path.join(g_my_dir, "..", "strings")
@@ -168,7 +168,13 @@ def downloadAndUpdateTranslationsIfChanged():
 def regenerateLangs():
     s = open(lastDownloadFilePath(), "rb").read()
     generate_code(s)
+    sys.exit(1)
+
+def main():
+    #regenerateLangs()
+    changed = downloadAndUpdateTranslationsIfChanged()
+    if changed:
+        print("\nNew translations downloaded from the server! Check them in!")
 
 if __name__ == "__main__":
-    #regenerateLangs()
-    downloadAndUpdateTranslationsIfChanged()
+    main()

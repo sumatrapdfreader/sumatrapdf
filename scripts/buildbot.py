@@ -2,7 +2,7 @@
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
-import os, os.path, shutil, sys, time, string, datetime, json, cPickle, cgi, traceback
+import os, shutil, sys, time, string, datetime, json, cPickle, cgi, traceback
 import s3, util
 from util import file_remove_try_hard, run_cmd_throw
 from util import parse_svnlog_out, formatInt

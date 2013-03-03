@@ -5,10 +5,10 @@ Calculates the size (in lines of code) of Sumatra source code
 (excluding dependencies i.e. code not written by us).
 """
 
-import os, os.path
+import os
 pj = os.path.join
 
-DIRS = ["src", 
+DIRS = ["src",
 		pj("src", "utils"),
 		pj("src", "mui"),
 		pj("src", "installer"),
