@@ -25,7 +25,7 @@ extern const char *     gLangCodes;
 extern const char *     gTranslations_en;
 const LANGID *          GetLangIds();
 bool                    IsLangRtl(int langIdx);
-const char **           GetTranslations();
+const char *            GetTranslationsForLang(int langIdx);
 
 static const char *     gCurrLangCode = NULL;
 static int              gCurrLangIdx = 0;
@@ -133,8 +133,7 @@ void SetCurrentLangByCode(const char *langCode)
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = langCode;
-    const char **translations = GetTranslations();
-    BuildStringsIndex(translations[gCurrLangIdx]);
+    BuildStringsIndex(GetTranslationsForLang(gCurrLangIdx));
 }
 
 const char *ValidateLangCode(const char *langCode)

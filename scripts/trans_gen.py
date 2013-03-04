@@ -210,32 +210,16 @@ static const char *gTranslations[LANGS_COUNT] = {
 %(translations_refs)s
 };
 
-const char **GetTranslations() { return &gTranslations[0]; }
+const char *GetTranslationsForLang(int langIdx) { return gTranslations[langIdx]; }
 
-#define RTL_LANGS_COUNT %(rtl_langs_count)d
-static const int gRtlLangs[RTL_LANGS_COUNT] = { %(rtl_langs)s };
-
-/* TODO: could be optimized further to be something like:
-  if (langIdx < 32)
-    return bit::IsSet($bitmask_for_first_32_langs, langIdx);
-  if (langIdx < 64)
-    rturn bit::IsSet($bitmask_for_33_to_64_langs, langIdx-32)
-  return false;
-*/
-bool IsLangRtl(int langIdx)
+bool IsLangRtl(int idx)
 {
-    for (int i = 0; i < RTL_LANGS_COUNT; i++) {
-        if (gRtlLangs[i] == langIdx)
-            return true;
-    }
-    return false;
+%(islangrtl)s
 }
 
 int gLangsCount = LANGS_COUNT;
 int gStringsCount = STRINGS_COUNT;
 
-// Note: don't know how to expose gLangIds as a symbol.
-// Seems C++ is a bit too strict about T* vs. T[n]
 const LANGID *GetLangIds() { return &gLangIds[0]; }
 
 } // namespace trans
@@ -256,12 +240,11 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
     langnames = " \\\n".join(["  %s" % c_escape_for_compact(lang.name) for lang in langs])
     langids = ",\n".join(["  %s" % lang.ms_lang_id_string for lang in langs])
 
-    rtl_langs = []
+    rtl_info = []
     for idx in range(len(langs)):
         if langs[idx].isRtl:
-            rtl_langs.append(str(idx))
-    rtl_langs_count = len(rtl_langs)
-    rtl_langs = ", ".join(rtl_langs)
+            rtl_info.append("(%d == idx)" % idx)
+    islangrtl = "  return %s;" % " || ".join(rtl_info)
 
     total_size = 0
     lines = []
