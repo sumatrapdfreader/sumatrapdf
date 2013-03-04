@@ -303,7 +303,7 @@ $(OS)\PdfEngine.obj: mupdf\pdf\mupdf.h mupdf\xps\muxps-internal.h mupdf\xps\muxp
 $(OS)\PdfEngine.obj: src\BaseEngine.h src\PdfEngine.h src\utils\Allocator.h
 $(OS)\PdfEngine.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\PdfEngine.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\PdfEngine.obj: src\utils\ZipUtil.h
+$(OS)\PdfEngine.obj: src\utils\WinUtil.h src\utils\ZipUtil.h
 $(OS)\PdfSync.obj: src\BaseEngine.h src\PdfEngine.h src\PdfSync.h
 $(OS)\PdfSync.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\PdfSync.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h

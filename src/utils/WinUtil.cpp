@@ -842,6 +842,25 @@ UINT GuessTextCodepage(const char *data, size_t len, UINT default)
     return info.nCodePage;
 }
 
+WCHAR *NormalizeString(const WCHAR *str, int /* NORM_FORM */ form)
+{
+    typedef int (WINAPI *NormalizeStringProc)(int /* NORM_FORM */, LPCWSTR, int, LPWSTR, int);
+    NormalizeStringProc _NormalizeString = (NormalizeStringProc)LoadDllFunc(L"Normaliz.dll", "NormalizeString");
+    if (!_NormalizeString)
+        return NULL;
+    int sizeEst = _NormalizeString(form, str, -1, NULL, 0);
+    if (sizeEst <= 0)
+        return NULL;
+    // according to MSDN the estimate may be off somewhat:
+    // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
+    sizeEst = sizeEst * 3 / 2 + 1;
+    ScopedMem<WCHAR> res(AllocArray<WCHAR>(sizeEst));
+    sizeEst = _NormalizeString(form, str, -1, res, sizeEst);
+    if (sizeEst <= 0)
+        return NULL;
+    return res.StealData();
+}
+
 namespace win {
 
 WCHAR *GetText(HWND hwnd)

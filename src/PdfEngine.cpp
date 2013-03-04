@@ -9,6 +9,7 @@ extern "C" {
 #include "PdfEngine.h"
 
 #include "FileUtil.h"
+#include "WinUtil.h"
 #include "ZipUtil.h"
 
 // maximum size of a file that's entirely loaded into memory before parsed
@@ -1526,9 +1527,14 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
             break;
         }
 
-        ScopedMem<WCHAR> wstr(str::Dup(pwd));
+        // according to the spec (1.7 ExtensionLevel 3), the password is in
+        // PdfDocEncoding for crypt revisions up to 4 and in UTF-8 with
+        // SASLprep normalization for crypt revisions 5 and above;
+        // to get the best results, we try various additional variations...
+        bool normalized = false;
+RetryWithNormalizedPwd:
         fz_try(ctx) {
-            char *pwd_doc = pdf_from_ucs2(_doc, (unsigned short *)wstr.Get());
+            char *pwd_doc = pdf_from_ucs2(_doc, (unsigned short *)pwd.Get());
             ok = pwd_doc && pdf_authenticate_password(_doc, pwd_doc);
             fz_free(ctx, pwd_doc);
         }
@@ -1542,6 +1548,14 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         if (!ok) {
             ScopedMem<char> pwd_ansi(str::conv::ToAnsi(pwd));
             ok = pwd_ansi && pdf_authenticate_password(_doc, pwd_ansi);
+        }
+        if (!normalized) {
+            // TODO: this is only part of SASLprep
+            pwd.Set(NormalizeString(pwd, 5 /* NormalizationKC */));
+            if (pwd) {
+                normalized = true;
+                goto RetryWithNormalizedPwd;
+            }
         }
     }
 

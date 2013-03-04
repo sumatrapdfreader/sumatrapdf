@@ -93,6 +93,7 @@ IStream*CreateStreamFromData(const void *data, size_t len);
 void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=NULL);
 bool    ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset=0);
 UINT    GuessTextCodepage(const char *data, size_t len, UINT default=CP_ACP);
+WCHAR * NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
 
 void CalcMD5DigestWin(const void *data, size_t byteCount, unsigned char digest[16]);
 void CalcSha1DigestWin(const void *data, size_t byteCount, unsigned char digest[32]);
