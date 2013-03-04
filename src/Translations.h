@@ -1,5 +1,5 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
-   License: BSD */
+   License: GPLv3 */
 
 #ifndef Translations_h
 #define Translations_h
