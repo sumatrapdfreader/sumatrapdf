@@ -235,16 +235,18 @@ static void AppendRecentFilesToMenu(HMENU m)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
 
-    for (int index = 0; index < FILE_HISTORY_MAX_RECENT; index++) {
-        DisplayState *state = gFileHistory.Get(index);
+    int i;
+    for (i = 0; i < FILE_HISTORY_MAX_RECENT; i++) {
+        DisplayState *state = gFileHistory.Get(i);
         if (!state || state->isMissing)
             break;
         assert(state->filePath);
         if (state->filePath)
-            AddFileMenuItem(m, state->filePath, index);
+            AddFileMenuItem(m, state->filePath, i);
     }
 
-    InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
+    if (i > 0)
+        InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
 static struct {
