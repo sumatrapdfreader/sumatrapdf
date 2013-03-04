@@ -47,7 +47,7 @@ using namespace Gdiplus;
 #include "ThreadUtil.h"
 #include "Toolbar.h"
 #include "Touch.h"
-#include "Translations.h"
+#include "Translations2.h"
 #include "UITask.h"
 #include "Version.h"
 #include "WindowInfo.h"
@@ -180,17 +180,17 @@ bool HasPermission(int permission)
     return (permission & gPolicyRestrictions) == permission;
 }
 
-static void SetCurrentLang(LangDef *lang)
+static void SetCurrentLang(const char *langCode)
 {
-    if (lang) {
-        gGlobalPrefs.currLangCode = lang->code;
-        trans::SetCurrentLang(lang);
+    if (langCode) {
+        gGlobalPrefs.currLangCode = langCode;
+        trans::SetCurrentLangByCode(langCode);
     }
 }
 
 static void SetCurrentLangByCode(const char *langCode)
 {
-    SetCurrentLang(trans::GetLangByCode(langCode));
+    SetCurrentLang(langCode);
 }
 
 #ifndef SUMATRA_UPDATE_INFO_URL
@@ -557,8 +557,7 @@ void UpdateCurrentFileDisplayStateForWin(SumatraWindow& win)
 
 bool IsUIRightToLeft()
 {
-    LangDef *lang = trans::GetCurrentLang();
-    return lang->isRTL;
+    return trans::IsLangRtlByCode(trans::GetCurrentLangCode());
 }
 
 // updates the layout for a window to either left-to-right or right-to-left
@@ -3218,11 +3217,11 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
     }
 }
 
-void SetCurrentLanguageAndRefreshUi(LangDef *lang)
+void SetCurrentLanguageAndRefreshUi(const char *langCode)
 {
-    if (!lang || (lang == trans::GetCurrentLang()))
+    if (!langCode || (str::Eq(langCode, trans::GetCurrentLangCode())))
         return;
-    SetCurrentLang(lang);
+    SetCurrentLang(langCode);
     UpdateRtlLayoutForAllWindows();
     RebuildMenuBarForAllWindows();
     UpdateUITextForLanguage();
@@ -3233,8 +3232,8 @@ void SetCurrentLanguageAndRefreshUi(LangDef *lang)
 
 void OnMenuChangeLanguage(HWND hwnd)
 {
-    LangDef * newLang = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLang());
-    SetCurrentLanguageAndRefreshUi(newLang);
+    const char *newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
+    SetCurrentLanguageAndRefreshUi(newLangCode);
 }
 
 static void OnMenuViewShowHideToolbar()

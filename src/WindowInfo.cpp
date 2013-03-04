@@ -12,7 +12,7 @@
 #include "Selection.h"
 #include "StressTesting.h"
 #include "SumatraPDF.h"
-#include "Translations.h"
+#include "Translations2.h"
 #include "WinUtil.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :

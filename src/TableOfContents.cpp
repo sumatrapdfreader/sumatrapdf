@@ -10,7 +10,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"
-#include "Translations.h"
+#include "Translations2.h"
 #include "UITask.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"

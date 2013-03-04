@@ -10,7 +10,7 @@
 #include "EbookFormatter.h"
 #include "EbookWindow.h"
 #include "SumatraWindow.h"
-#include "Translations.h"
+#include "Translations2.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
 #include "UITask.h"

@@ -797,9 +797,6 @@
     <ClCompile Include="src\SumatraStartup.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\Translations.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="src\utils\ThreadUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1227,9 +1224,6 @@
     </ClInclude>
     <ClInclude Include="src\UiMsgSumatra.h">
       <Filter>sumatra\ebook</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Translations.h">
-      <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\ThreadUtil.h">
       <Filter>utils</Filter>

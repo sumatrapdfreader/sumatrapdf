@@ -325,7 +325,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedMem<WCHAR> prefsFilename(GetPrefsFileName());
     if (!file::Exists(prefsFilename)) {
         // guess the ui language on first start
-        SetCurrentLang(trans::GuessLang());
+        SetCurrentLang(trans::DetectUserLang());
     } else {
         Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, gFavorites);
         SetCurrentLangByCode(gGlobalPrefs.currLangCode);

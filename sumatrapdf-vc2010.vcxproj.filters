@@ -1025,6 +1025,9 @@
     <ClCompile Include="src\browserplugin\Translations_txt.cpp">
       <Filter>browserplugin</Filter>
     </ClCompile>
+    <ClCompile Include="src\Translations2.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1521,6 +1524,9 @@
     </ClInclude>
     <ClInclude Include="src\utils\FileWatcher.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Translations2.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -143,9 +143,16 @@ size_t FromCodePageBuf(char *buf, size_t cchBufSize, const char *s, UINT cp);
 size_t ToCodePageBuf(char *buf, size_t cbBufSize, const WCHAR *s, UINT cp);
 size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp);
 
-}
+} // namespace str::conv
 
-}
+}  // namespace str
+
+namespace seqstrings {
+
+int          GetStrIdx(const char *strings, const char *toFind, int max);
+const char * GetByIdx(const char *strings, int idx);
+
+} // namespace seqstrings
 
 #define _MemToHex(ptr) str::MemToHex((const unsigned char *)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (unsigned char *)(ptr), sizeof(*ptr))

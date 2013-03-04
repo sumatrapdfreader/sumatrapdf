@@ -6,7 +6,7 @@
 
 #include "CmdLineParser.h"
 #include "FileUtil.h"
-#include "Translations.h"
+#include "Translations2.h"
 #include "Version.h"
 #include "WinUtil.h"
 

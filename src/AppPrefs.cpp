@@ -13,7 +13,7 @@
 #include "FileTransactions.h"
 #include "FileUtil.h"
 #include "SumatraPDF.h"
-#include "Translations.h"
+#include "Translations2.h"
 #include "WindowInfo.h"
 
 #define PREFS_FILE_NAME         L"sumatrapdfprefs.dat"
@@ -534,9 +534,9 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
 
     // ensure language code is valid
     const char *langCode = GetRawString(global, UI_LANGUAGE_STR);
-    LangDef *lang = trans::GetLangByCode(langCode);
-    if (lang)
-        globalPrefs.currLangCode = lang->code;
+    langCode = trans::ValidateLangCode(langCode);
+    if (langCode)
+        globalPrefs.currLangCode = langCode;
     else
         globalPrefs.currLangCode = DEFAULT_LANGUAGE;
 
@@ -757,8 +757,7 @@ bool ReloadPrefs()
     }
 
     if (!str::Eq(currLangCode, gGlobalPrefs.currLangCode)) {
-        LangDef * lang = trans::GetLangByCode(gGlobalPrefs.currLangCode);
-        SetCurrentLanguageAndRefreshUi(lang);
+        SetCurrentLanguageAndRefreshUi(gGlobalPrefs.currLangCode);
     }
 
     if (gGlobalPrefs.toolbarVisible != toolbarVisible)

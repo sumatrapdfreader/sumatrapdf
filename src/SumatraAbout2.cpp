@@ -9,7 +9,7 @@ using namespace Gdiplus;
 #include "Mui.h"
 #include "resource.h"
 #include "SumatraPDF.h"
-#include "Translations.h"
+#include "Translations2.h"
 #include "Version.h"
 #include "WinUtil.h"
 
