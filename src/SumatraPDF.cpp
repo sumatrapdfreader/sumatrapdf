@@ -1743,15 +1743,16 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
         str::ReplacePtr(&gGlobalPrefs.versionToSkip, verTxt);
     if (IDYES == res) {
 #ifdef SUPPORTS_AUTO_UPDATE
-        bool ok = false;
         if (str::EndsWith(SVN_UPDATE_LINK, L".exe")) {
             ScopedMem<WCHAR> updater(GetExePath());
             updater.Set(str::Join(updater, L"-updater.exe"));
-            ok = HttpGetToFile(SVN_UPDATE_LINK, updater);
+            bool ok = HttpGetToFile(SVN_UPDATE_LINK, updater);
             if (ok) {
                 ok = LaunchFile(updater, L"-autoupdate replace");
-                if (ok)
+                if (ok) {
                     OnMenuExit();
+                    return 0;
+                }
             }
         }
 #endif

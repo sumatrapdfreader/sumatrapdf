@@ -96,10 +96,15 @@ static void FreeTransCache()
         WCHAR **transCache = gLangsTransCache[langIdx];
         for (int i = 0; transCache && i < gStringsCount; i++) {
             free(transCache[i]);
-            transCache[i] = 0;
         }
-        gLangsTransCache[langIdx] = 0;
+        free(transCache);
     }
+    free(gLangsTransCache);
+    gLangsTransCache = NULL;
+    // also free gCurrLangStrings here so that an accidental call to
+    // SetCurrentLangByCode after FreeTransCache doesn't crash
+    free(gCurrLangStrings);
+    gCurrLangStrings = NULL;
 }
 
 static void BuildStringsIndex(const char *s)
@@ -202,7 +207,6 @@ const WCHAR *GetTranslation(const char *s)
 
 void Destroy()
 {
-    free(gCurrLangStrings);
     FreeTransCache();
     FreeMissingTranslations();
 }

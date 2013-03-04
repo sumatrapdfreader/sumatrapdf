@@ -484,7 +484,6 @@ Exit:
 
     mui::Destroy();
     uitask::Destroy();
-
     trans::Destroy();
 
     // it's still possible to crash after this (destructors of static classes,
