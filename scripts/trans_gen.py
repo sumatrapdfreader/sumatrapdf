@@ -280,9 +280,11 @@ const LANGID gLangIds[LANGS_COUNT] = {
 };
 #undef _LANGID
 
-const char *gTranslations[LANGS_COUNT] = {
+static const char *gTranslations[LANGS_COUNT] = {
 %(translations_refs)s
 };
+
+const char **GetTranslations() { return &gTranslations[0]; }
 
 #define RTL_LANGS_COUNT %(rtl_langs_count)d
 static const int gRtlLangs[RTL_LANGS_COUNT] = { %(rtl_langs)s };
@@ -305,8 +307,6 @@ bool IsLangRtl(int langIdx)
 
 int gLangsCount = LANGS_COUNT;
 int gStringsCount = STRINGS_COUNT;
-const char *    gCurrLangStrings[STRINGS_COUNT] = { 0 };
-WCHAR **        gLangsTransCache[LANGS_COUNT] = { 0 };
 
 // Note: don't know how to expose gLangIds as a symbol.
 // Seems C++ is a bit too strict about T* vs. T[n]

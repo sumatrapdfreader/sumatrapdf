@@ -22,15 +22,16 @@ extern int              gLangsCount;
 extern int              gStringsCount;
 extern const char *     gLangNames;
 extern const char *     gLangCodes;
-extern const char **    gTranslations;
 extern const char *     gTranslations_en;
-extern const char **    gCurrLangStrings;
-extern WCHAR ***        gLangsTransCache;
 const LANGID *          GetLangIds();
 bool                    IsLangRtl(int langIdx);
+const char **           GetTranslations();
 
 static const char *     gCurrLangCode = NULL;
 static int              gCurrLangIdx = 0;
+
+const char **           gCurrLangStrings = NULL;
+WCHAR ***               gLangsTransCache = NULL;
 
 /* In general, after adding new _TR() strings, one has to re-generate Translations_txt.cpp, but
 that also requires uploading new strings to the server, for which one needs accesss.
@@ -115,6 +116,11 @@ static void BuildStringsIndex(const char *s)
 
 void SetCurrentLangByCode(const char *langCode)
 {
+    if (!gCurrLangStrings) {
+        gCurrLangStrings = AllocArray<const char *>(gStringsCount);
+        gLangsTransCache = AllocArray<WCHAR **>(gLangsCount);
+    }
+
     if (str::Eq(langCode, gCurrLangCode))
         return;
 
@@ -122,7 +128,8 @@ void SetCurrentLangByCode(const char *langCode)
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = langCode;
-    BuildStringsIndex(gTranslations[gCurrLangIdx]);
+    const char **translations = GetTranslations();
+    BuildStringsIndex(translations[gCurrLangIdx]);
 }
 
 const char *ValidateLangCode(const char *langCode)
@@ -196,6 +203,7 @@ const WCHAR *GetTranslation(const char *s)
 
 void Destroy()
 {
+    free(gCurrLangStrings);
     FreeTransCache();
     FreeMissingTranslations();
 }
