@@ -305,8 +305,8 @@ bool IsLangRtl(int langIdx)
 
 int gLangsCount = LANGS_COUNT;
 int gStringsCount = STRINGS_COUNT;
-const char *  gCurrLangStrings[STRINGS_COUNT] = { 0 };
-const WCHAR * gCurrLangTransCache[STRINGS_COUNT] = { 0 };
+const char *    gCurrLangStrings[STRINGS_COUNT] = { 0 };
+WCHAR **        gLangsTransCache[LANGS_COUNT] = { 0 };
 
 // Note: don't know how to expose gLangIds as a symbol.
 // Seems C++ is a bit too strict about T* vs. T[n]

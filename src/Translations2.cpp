@@ -25,7 +25,7 @@ extern const char *     gLangCodes;
 extern const char **    gTranslations;
 extern const char *     gTranslations_en;
 extern const char **    gCurrLangStrings;
-extern const WCHAR **   gCurrLangTransCache;
+extern WCHAR ***        gLangsTransCache;
 const LANGID *          GetLangIds();
 bool                    IsLangRtl(int langIdx);
 
@@ -82,11 +82,22 @@ const char *GetCurrentLangCode()
     return gCurrLangCode;
 }
 
+static WCHAR **GetTransCacheForLang(int langIdx)
+{
+    if (!gLangsTransCache[langIdx])
+        gLangsTransCache[langIdx] = AllocArray<WCHAR *>(gStringsCount);
+    return gLangsTransCache[langIdx];
+}
+
 static void FreeTransCache()
 {
-    for (int i = 0; i < gStringsCount; i++) {
-        free((void*)gCurrLangTransCache[i]);
-        gCurrLangTransCache[i] = 0;
+    for (int langIdx = 0; langIdx < gLangsCount; langIdx++) {
+        WCHAR **transCache = gLangsTransCache[langIdx];
+        for (int i = 0; transCache && i < gStringsCount; i++) {
+            free(transCache[i]);
+            transCache[i] = 0;
+        }
+        gLangsTransCache[langIdx] = 0;
     }
 }
 
@@ -111,7 +122,6 @@ void SetCurrentLangByCode(const char *langCode)
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = langCode;
-    FreeTransCache();
     BuildStringsIndex(gTranslations[gCurrLangIdx]);
 }
 
@@ -178,9 +188,10 @@ const WCHAR *GetTranslation(const char *s)
     if (!trans)
         trans = s;
 
-    if (!gCurrLangTransCache[idx])
-        gCurrLangTransCache[idx] = str::conv::FromUtf8(trans);
-    return gCurrLangTransCache[idx];
+    WCHAR **transCache = GetTransCacheForLang(gCurrLangIdx);
+    if (!transCache[idx])
+        transCache[idx] = str::conv::FromUtf8(trans);
+    return transCache[idx];
 }
 
 void Destroy()
