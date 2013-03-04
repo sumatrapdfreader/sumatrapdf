@@ -22,14 +22,12 @@ extern int              gLangsCount;
 extern int              gStringsCount;
 extern const char *     gLangNames;
 extern const char *     gLangCodes;
-extern const LANGID *   gLangIds;
-extern int              gRtlLangsCount;
 extern const char **    gTranslations;
 extern const char *     gTranslations_en;
 extern const char **    gCurrLangStrings;
 extern const WCHAR **   gCurrLangTransCache;
-const int *             GetRtlLangs();
 const LANGID *          GetLangIds();
+bool                    IsLangRtl(int langIdx);
 
 static const char *     gCurrLangCode = NULL;
 static int              gCurrLangIdx = 0;
@@ -135,15 +133,9 @@ const char *GetLangNameByIdx(int idx)
     return seqstrings::GetByIdx(gLangNames, idx);
 }
 
-bool IsLangRtlByCode(const char *langCode)
+bool IsCurrLangRtl()
 {
-    const int *rtlLangs = GetRtlLangs();
-    int idx = seqstrings::GetStrIdx(gLangCodes, langCode, gLangsCount);
-    for (int i = 0; i < gRtlLangsCount; i++) {
-        if (rtlLangs[i] == idx)
-            return true;
-    }
-    return false;
+    return IsLangRtl(gCurrLangIdx);
 }
 
 const char *DetectUserLang()
@@ -194,6 +186,7 @@ const WCHAR *GetTranslation(const char *s)
 void Destroy()
 {
     FreeTransCache();
+    FreeMissingTranslations();
 }
 
 } // namespace trans

@@ -13120,17 +13120,31 @@ const char *gTranslations[LANGS_COUNT] = {
 };
 
 #define RTL_LANGS_COUNT 4
-int gRtlLangsCount = RTL_LANGS_COUNT;
-const int gRtlLangs[RTL_LANGS_COUNT] = { 2, 23, 31, 36 };
+static const int gRtlLangs[RTL_LANGS_COUNT] = { 2, 23, 31, 36 };
+
+/* TODO: could be optimized further to be something like:
+  if (langIdx < 32)
+    return bit::IsSet($bitmask_for_first_32_langs, langIdx);
+  if (langIdx < 64)
+    rturn bit::IsSet($bitmask_for_33_to_64_langs, langIdx-32)
+  return false;
+*/
+bool IsLangRtl(int langIdx)
+{
+    for (int i = 0; i < RTL_LANGS_COUNT; i++) {
+        if (gRtlLangs[i] == langIdx)
+            return true;
+    }
+    return false;
+}
 
 int gLangsCount = LANGS_COUNT;
 int gStringsCount = STRINGS_COUNT;
 const char *  gCurrLangStrings[STRINGS_COUNT] = { 0 };
 const WCHAR * gCurrLangTransCache[STRINGS_COUNT] = { 0 };
 
-// Note: don't know how to expose gRtlLangs and gLangIds as a symbol.
+// Note: don't know how to expose gLangIds as a symbol.
 // Seems C++ is a bit too strict about T* vs. T[n]
-const int *GetRtlLangs() { return &gRtlLangs[0]; }
 const LANGID *GetLangIds() { return &gLangIds[0]; }
 
 } // namespace trans

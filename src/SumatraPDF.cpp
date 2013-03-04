@@ -557,7 +557,7 @@ void UpdateCurrentFileDisplayStateForWin(SumatraWindow& win)
 
 bool IsUIRightToLeft()
 {
-    return trans::IsLangRtlByCode(trans::GetCurrentLangCode());
+    return trans::IsCurrLangRtl();
 }
 
 // updates the layout for a window to either left-to-right or right-to-left

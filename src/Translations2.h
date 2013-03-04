@@ -10,15 +10,15 @@ int GetLangsCount();
 
 const char *GetCurrentLangCode();
 
-void SetCurrentLangByCode(const char *langCode);
-const char *ValidateLangCode(const char *langCode);
+void            SetCurrentLangByCode(const char *langCode);
+const char *    ValidateLangCode(const char *langCode);
 
-const WCHAR *GetTranslation(const char *s);
-const char *GetLangCodeByIdx(int idx);
-const char *GetLangNameByIdx(int idx);
-bool IsLangRtlByCode(const char *langCode);
-const char *DetectUserLang();
-void Destroy();
+const WCHAR *   GetTranslation(const char *s);
+const char *    GetLangCodeByIdx(int idx);
+const char *    GetLangNameByIdx(int idx);
+bool            IsCurrLangRtl();
+const char *    DetectUserLang();
+void            Destroy();
 
 } // namespace trans
 
