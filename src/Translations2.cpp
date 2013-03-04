@@ -161,8 +161,7 @@ const char *DetectUserLang()
     LANGID langId = GetUserDefaultUILanguage();
     // try the exact match
     for (int i = 0; i < gLangsCount; i++) {
-        LANGID tmp = langIds[i];
-        if (tmp == langId)
+        if (langId = langIds[i])
             return GetLangCodeByIdx(i);
     }
 
@@ -170,8 +169,7 @@ const char *DetectUserLang()
     // primary id as user's language and neutral sublang
     LANGID userLangIdNeutral = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
     for (int i = 0; i < gLangsCount; i++) {
-        LANGID tmp = PRIMARYLANGID(langIds[i]);
-        if (tmp == userLangIdNeutral)
+        if (userLangIdNeutral == langIds[i])
             return GetLangCodeByIdx(i);
     }
     return "en";
