@@ -278,6 +278,11 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             WCHAR *s = argList.At(++n);
             cbxR2L = str::EqI(L"true", s) || str::Eq(L"1", s);
         }
+#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
+        else if (is_arg_with_param("-autoupdate")) {
+            n++; // this should have been handled already by AutoUpdateMain
+        }
+#endif
 #ifdef DEBUG
         else if (is_arg("-enum-printers")) {
             EnumeratePrinters();

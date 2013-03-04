@@ -301,6 +301,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         return RegressMain();
     }
 #endif
+#ifdef SUPPORTS_AUTO_UPDATE
+    if (str::StartsWith(lpCmdLine, "-autoupdate")) {
+        bool quit = AutoUpdateMain();
+        if (quit)
+            return 0;
+    }
+#endif
 
     RunUnitTests();
 

@@ -1741,12 +1741,70 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     INT_PTR res = Dialog_NewVersionAvailable(hParent, UPDATE_CHECK_VER, verTxt, &skipThisVersion);
     if (skipThisVersion)
         str::ReplacePtr(&gGlobalPrefs.versionToSkip, verTxt);
-    if (IDYES == res)
+    if (IDYES == res) {
+#ifdef SUPPORTS_AUTO_UPDATE
+        bool ok = false;
+        if (str::EndsWith(SVN_UPDATE_LINK, L".exe")) {
+            ScopedMem<WCHAR> updater(GetExePath());
+            updater.Set(str::Join(updater, L"-updater.exe"));
+            ok = HttpGetToFile(SVN_UPDATE_LINK, updater);
+            if (ok) {
+                ok = LaunchFile(updater, L"-autoupdate replace");
+                if (ok)
+                    OnMenuExit();
+            }
+        }
+#endif
         LaunchBrowser(SVN_UPDATE_LINK);
+    }
     SavePrefs();
 
     return 0;
 }
+
+#ifdef SUPPORTS_AUTO_UPDATE
+#include "CmdLineParser.h"
+
+static bool AutoUpdateMain()
+{
+    WStrVec argList;
+    ParseCmdLine(GetCommandLine(), argList);
+    if (argList.Count() != 3 || !str::Eq(argList.At(1), L"-autoupdate")) {
+        // the argument was misinterpreted, let SumatraPDF start as usual
+        return false;
+    }
+    ScopedMem<WCHAR> thisExe(GetExePath());
+    ScopedMem<WCHAR> otherExe;
+    bool beforeUpdate = str::Eq(argList.At(2), L"replace");
+    if (beforeUpdate) {
+        CrashIf(!str::EndsWith(thisExe, L".exe-updater.exe"));
+        otherExe.Set(str::DupN(thisExe, str::Len(thisExe) - 12));
+    }
+    else {
+        CrashIf(!str::Eq(argList.At(2), L"cleanup"));
+        otherExe.Set(str::Join(thisExe, L"-updater.exe"));
+    }
+    for (int tries = 10; tries > 0; tries--) {
+        if (file::Delete(otherExe))
+            break;
+        Sleep(200);
+    }
+    if (!beforeUpdate) {
+        // continue startup
+        // TODO: restore previous session?
+        return false;
+    }
+    bool ok = CopyFile(thisExe, otherExe, FALSE);
+    // TODO: somehow indicate success or failure
+    for (int tries = 10; tries > 0; tries--) {
+        ok = LaunchFile(otherExe, L"-autoupdate cleanup");
+        if (ok)
+            break;
+        Sleep(200);
+    }
+    return true;
+}
+#endif
 
 static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpReq *req, bool autoCheck)
 {

@@ -823,15 +823,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\Trans_sumatra_txt.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\Translations2.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\src\Translations2.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\Translations_txt.cpp"
 					>
 				</File>
 				<File
