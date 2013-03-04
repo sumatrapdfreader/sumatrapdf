@@ -166,11 +166,12 @@ const char *DetectUserLang()
             return GetLangCodeByIdx(i);
     }
 
-    LANGID primaryLangId = PRIMARYLANGID(langId);
-    // the first match with the same primary lang id
+    // see if we have a translation in a language that has the same
+    // primary id as user's language and neutral sublang
+    LANGID userLangIdNeutral = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
     for (int i = 0; i < gLangsCount; i++) {
         LANGID tmp = PRIMARYLANGID(langIds[i]);
-        if (tmp == primaryLangId)
+        if (tmp == userLangIdNeutral)
             return GetLangCodeByIdx(i);
     }
     return "en";
