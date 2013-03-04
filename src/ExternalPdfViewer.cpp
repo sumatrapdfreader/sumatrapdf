@@ -30,6 +30,12 @@ static WCHAR *GetFoxitPath()
     path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader_is1", L"DisplayIcon"));
     if (path && file::Exists(path))
         return path.StealData();
+    // Registry value for Foxit 5.5 MSI installer
+    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Foxit Software\\Foxit Reader", L"InstallPath"));
+    if (path)
+        path.Set(path::Join(path, L"Foxit Reader.exe"));
+    if (path && file::Exists(path))
+        return path.StealData();
     return NULL;
 }
 

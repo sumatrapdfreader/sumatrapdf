@@ -823,11 +823,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\src\Translations.cpp"
+					RelativePath=".\src\Translations2.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\Translations.h"
+					RelativePath=".\src\Translations2.h"
 					>
 				</File>
 				<File
