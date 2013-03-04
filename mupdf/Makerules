@@ -24,21 +24,21 @@ $(error unknown build setting: '$(build)')
 endif
 
 ifeq "$(OS)" "Linux"
-SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
-SYS_OPENJPEG_INC := `pkg-config --cflags libopenjpeg`
-X11_LIBS := -lX11 -lXext
+SYS_FREETYPE_INC := $(shell pkg-config --cflags freetype2)
+SYS_OPENJPEG_INC := $(shell pkg-config --cflags libopenjpeg)
+X11_LIBS := $(shell pkg-config --libs x11 xext)
 endif
 
 ifeq "$(OS)" "FreeBSD"
-SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
+SYS_FREETYPE_INC := $(shell pkg-config --cflags freetype2)
 LDFLAGS += -L/usr/local/lib
-X11_LIBS := -lX11 -lXext
+X11_LIBS := $(shell pkg-config --libs x11 xext)
 endif
 
 ifeq "$(OS)" "SunOS"
-SYS_FREETYPE_INC := `pkg-config --cflags freetype2`
+SYS_FREETYPE_INC := $(shell pkg-config --cflags freetype2)
 LDFLAGS += -L/usr/local/lib
-X11_LIBS := -lX11 -lXext
+X11_LIBS := $(shell pkg-config --libs x11 xext)
 endif
 
 # Mac OS X build depends on some thirdparty libs
@@ -47,7 +47,7 @@ SYS_FREETYPE_INC := -I/usr/X11R6/include/freetype2
 CFLAGS += -I/usr/X11R6/include
 LDFLAGS += -L/usr/X11R6/lib
 RANLIB_CMD = ranlib $@
-X11_LIBS := -lX11 -lXext
+X11_LIBS := $(shell pkg-config --libs x11 xext)
 ifeq "$(arch)" "amd64"
 CFLAGS += -m64
 LDFLAGS += -m64

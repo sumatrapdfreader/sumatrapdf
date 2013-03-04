@@ -89,6 +89,7 @@ struct pdf_write_options_s
  * If use_list[num] & PAGE1, then object num is used by page 1.
  * If use_list[num] & SHARED, then object num is shared between pages.
  * If use_list[num] & PAGE_OBJECT then this must be the first object in a page.
+ * If use_list[num] & OTHER_OBJECTS then this must should appear in section 9.
  * Otherwise object num is used by page (use_list[num]>>USE_PAGE_SHIFT).
  */
 enum
@@ -99,8 +100,9 @@ enum
 	USE_PARAMS = 16,
 	USE_HINTS = 32,
 	USE_PAGE_OBJECT = 64,
-	USE_PAGE_MASK = ~127,
-	USE_PAGE_SHIFT = 7
+	USE_OTHER_OBJECTS = 128,
+	USE_PAGE_MASK = ~255,
+	USE_PAGE_SHIFT = 8
 };
 
 /*
@@ -255,19 +257,22 @@ order_ge(int ui, int uj)
 	/*
 	For linearization, we need to order the sections as follows:
 
-		Remaining pages
-		Shared objects
-		Objects not associated with any page
-		(Linearization params)
-		Catalogue (and other document level objects)
-		First page
-		(Primary Hint stream) (*)
+		Remaining pages					(Part 7)
+		Shared objects					(Part 8)
+		Objects not associated with any page		(Part 9)
+		Any "other" objects
+							(Header)(Part 1)
+		(Linearization params)				(Part 2)
+					(1st page Xref/Trailer)	(Part 3)
+		Catalogue (and other document level objects)	(Part 4)
+		First page					(Part 6)
+		(Primary Hint stream)			(*)	(Part 5)
 		Any free objects
 
 	Note, this is NOT the same order they appear in
 	the final file!
 
-	The PDF reference gives us the option of putting the hint stream
+	(*) The PDF reference gives us the option of putting the hint stream
 	after the first page, and we take it, for simplicity.
 	*/
 
@@ -289,7 +294,7 @@ order_ge(int ui, int uj)
 		return 1;
 	else if (uj & USE_PAGE1)
 		return 0;
-	/* Put the calagoue before that... */
+	/* Put the catalogue before that... */
 	else if (ui & USE_CATALOGUE)
 		return 1;
 	else if (uj & USE_CATALOGUE)
@@ -298,6 +303,11 @@ order_ge(int ui, int uj)
 	else if (ui & USE_PARAMS)
 		return 1;
 	else if (uj & USE_PARAMS)
+		return 0;
+	/* Put other objects before that */
+	else if (ui & USE_OTHER_OBJECTS)
+		return 1;
+	else if (uj & USE_OTHER_OBJECTS)
 		return 0;
 	/* Put objects not associated with any page (anything
 	 * not touched by the catalogue) before that... */
@@ -838,7 +848,7 @@ mark_all(pdf_document *xref, pdf_write_options *opts, pdf_obj *val, int flag, in
 		if (pdf_is_indirect(val))
 		{
 			int num = pdf_to_num(val);
-			if (flag >= 16 && (opts->use_list[num] & USE_PAGE_MASK))
+			if (opts->use_list[num] & USE_PAGE_MASK)
 				/* Already used */
 				opts->use_list[num] |= USE_SHARED;
 			else
@@ -969,12 +979,20 @@ mark_root(pdf_document *xref, pdf_write_options *opts, pdf_obj *dict)
 
 			if (!strcmp("Pages", key))
 				opts->page_count = mark_pages(xref, opts, val, 0);
+			else if (!strcmp("Names", key))
+				mark_all(xref, opts, val, USE_OTHER_OBJECTS, -1);
+			else if (!strcmp("Dests", key))
+				mark_all(xref, opts, val, USE_OTHER_OBJECTS, -1);
 			else if (!strcmp("Outlines", key))
 			{
-				/* FIXME: Look at PageMode to decide whether to
-				 * USE_OTHERPAGES or USE_PAGE1 here. */
-				if (0 /* PageMode == "Outlines" */)
-					mark_all(xref, opts, val, USE_PAGE1, -1);
+				int section;
+				/* Look at PageMode to decide whether to
+				 * USE_OTHER_OBJECTS or USE_PAGE1 here. */
+				if (strcmp(pdf_to_name(pdf_dict_gets(dict, "PageMode")), "UseOutlines") == 0)
+					section = USE_PAGE1;
+				else
+					section = USE_OTHER_OBJECTS;
+				mark_all(xref, opts, val, section, -1);
 			}
 			else
 				mark_all(xref, opts, val, USE_CATALOGUE, -1);

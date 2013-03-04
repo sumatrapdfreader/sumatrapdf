@@ -212,7 +212,7 @@ install: $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUTOOL)
 	install -d $(DESTDIR)$(bindir) $(DESTDIR)$(libdir) $(DESTDIR)$(incdir) $(DESTDIR)$(mandir)/man1
 	install $(FITZ_LIB) $(DESTDIR)$(libdir)
 	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h $(DESTDIR)$(incdir)
-	install $(MUVIEW) $(MUDRAW) $(MUBUSY) $(DESTDIR)$(bindir)
+	install $(MUVIEW) $(MUDRAW) $(MUTOOL) $(DESTDIR)$(bindir)
 	install $(wildcard apps/man/*.1) $(DESTDIR)$(mandir)/man1
 
 # --- Clean and Default ---

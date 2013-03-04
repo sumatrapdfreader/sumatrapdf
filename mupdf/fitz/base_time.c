@@ -5,6 +5,7 @@
 #include <winsock2.h>
 #endif
 #include <windows.h>
+#include "fitz.h"
 
 #if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000Ui64
@@ -35,6 +36,40 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 	}
 
 	return 0;
+}
+
+FILE *fopen_utf8(const char *name, const char *mode)
+{
+	wchar_t *wname, *wmode, *d;
+	const char *s;
+	int c;
+	FILE *file;
+
+	d = wname = malloc((strlen(name)+1) * sizeof(wchar_t));
+	if (d == NULL)
+		return NULL;
+	s = name;
+	while (*s) {
+		s += fz_chartorune(&c, s);
+		*d++ = c;
+	}
+	*d = 0;
+	d = wmode = malloc((strlen(mode)+1) * sizeof(wchar_t));
+	if (d == NULL)
+	{
+		free(wname);
+		return NULL;
+	}
+	s = mode;
+	while (*s) {
+		s += fz_chartorune(&c, s);
+		*d++ = c;
+	}
+	*d = 0;
+	file = _wfopen(wname, wmode);
+	free(wname);
+	free(wmode);
+	return file;
 }
 
 #else

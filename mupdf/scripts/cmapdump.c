@@ -56,6 +56,7 @@ main(int argc, char **argv)
 		return 1;
 	}
 
+#undef fopen
 	fo = fopen(argv[1], "wb");
 	if (!fo)
 	{

@@ -402,7 +402,7 @@ pdf_dev_ctm(pdf_device *pdev, const fz_matrix *ctm)
 	fz_matrix inverse;
 	gstate *gs = CURRENT_GSTATE(pdev);
 
-	if (memcmp(&gs->ctm, ctm, sizeof(ctm)) == 0)
+	if (memcmp(&gs->ctm, ctm, sizeof(*ctm)) == 0)
 		return;
 	fz_invert_matrix(&inverse, &gs->ctm);
 	fz_concat(&inverse, ctm, &inverse);

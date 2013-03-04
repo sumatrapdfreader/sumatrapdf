@@ -1226,7 +1226,7 @@ void fz_delete_annot(fz_interactive *idoc, fz_page *page, fz_annot *annot);
 	fz_set_annot_appearance: update the appearance of an annotation based
 	on a display list.
 */
-void fz_set_annot_appearance(fz_interactive *idoc, fz_annot *annot, fz_display_list *disp_list);
+void fz_set_annot_appearance(fz_interactive *idoc, fz_annot *annot, fz_rect *rect, fz_display_list *disp_list);
 
 /*
 	fz_set_markup_annot_quadpoints: set the quadpoints for a text-markup annotation.

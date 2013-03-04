@@ -265,6 +265,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\pdf\pdf_field.c"
+				>
+			</File>
+			<File
 				RelativePath="..\pdf\pdf_font.c"
 				>
 			</File>

@@ -101,7 +101,7 @@ enum
 };
 
 int
-fz_chartorune(int *rune, char *str)
+fz_chartorune(int *rune, const char *str)
 {
 	int c, c1, c2, c3;
 	long l;
@@ -110,7 +110,7 @@ fz_chartorune(int *rune, char *str)
 	 * one character sequence
 	 *	00000-0007F => T1
 	 */
-	c = *(unsigned char*)str;
+	c = *(const unsigned char*)str;
 	if(c < Tx) {
 		*rune = c;
 		return 1;
@@ -120,7 +120,7 @@ fz_chartorune(int *rune, char *str)
 	 * two character sequence
 	 *	0080-07FF => T2 Tx
 	 */
-	c1 = *(unsigned char*)(str+1) ^ Tx;
+	c1 = *(const unsigned char*)(str+1) ^ Tx;
 	if(c1 & Testx)
 		goto bad;
 	if(c < T3) {
@@ -137,7 +137,7 @@ fz_chartorune(int *rune, char *str)
 	 * three character sequence
 	 *	0800-FFFF => T3 Tx Tx
 	 */
-	c2 = *(unsigned char*)(str+2) ^ Tx;
+	c2 = *(const unsigned char*)(str+2) ^ Tx;
 	if(c2 & Testx)
 		goto bad;
 	if(c < T4) {
@@ -152,7 +152,7 @@ fz_chartorune(int *rune, char *str)
 	 * four character sequence (21-bit value)
 	 *	10000-1FFFFF => T4 Tx Tx Tx
 	 */
-	c3 = *(unsigned char*)(str+3) ^ Tx;
+	c3 = *(const unsigned char*)(str+3) ^ Tx;
 	if (c3 & Testx)
 		goto bad;
 	if (c < T5) {

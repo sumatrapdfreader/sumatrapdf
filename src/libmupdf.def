@@ -6,6 +6,7 @@ EXPORTS
 ; Fitz exports
 
 	gettimeofday
+	fopen_utf8
 	fz_var_imp
 	fz_push_try
 	fz_throw_imp
@@ -64,6 +65,7 @@ EXPORTS
 	fz_round_rect
 	fz_rect_from_irect
 	fz_expand_rect
+	fz_include_point_in_rect
 	fz_translate_irect
 	fz_transform_point
 	fz_transform_vector
@@ -648,6 +650,8 @@ EXPORTS
 	pdf_load_annots
 	pdf_update_annot
 	pdf_free_annot
+	pdf_get_inheritable
+	pdf_get_field_flags
 	pdf_field_type
 	pdf_field_value
 	pdf_field_set_value

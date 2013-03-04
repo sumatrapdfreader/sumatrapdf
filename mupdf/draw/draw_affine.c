@@ -608,13 +608,15 @@ fz_paint_image_imp(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz
 	void (*paintfn)(byte *dp, byte *sp, int sw, int sh, int u, int v, int fa, int fb, int w, int n, int alpha, byte *color, byte *hp);
 	fz_matrix local_ctm = *ctm;
 	fz_rect rect;
+	int is_rectilinear;
 
 	/* grid fit the image */
 	fz_gridfit_matrix(&local_ctm);
 
 	/* turn on interpolation for upscaled and non-rectilinear transforms */
 	dolerp = 0;
-	if (!fz_is_rectilinear(&local_ctm))
+	is_rectilinear = fz_is_rectilinear(&local_ctm);
+	if (!is_rectilinear)
 		dolerp = 1;
 	if (sqrtf(local_ctm.a * local_ctm.a + local_ctm.b * local_ctm.b) > img->w)
 		dolerp = 1;
@@ -674,11 +676,14 @@ fz_paint_image_imp(fz_pixmap *dst, const fz_irect *scissor, fz_pixmap *shape, fz
 	if (dolerp && 0 /* SumatraPDF: this voodoo fails for several XPS documents */)
 	{
 		u -= 32768;
-		if (u < 0)
-			u = 0;
 		v -= 32768;
-		if (v < 0)
-			v = 0;
+		if (is_rectilinear)
+		{
+			if (u < 0)
+				u = 0;
+			if (v < 0)
+				v = 0;
+		}
 	}
 
 	dp = dst->samples + (unsigned int)(((y - dst->y) * dst->w + (x - dst->x)) * dst->n);

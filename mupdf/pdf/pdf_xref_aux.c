@@ -25,6 +25,7 @@ pdf_open_document_with_stream(fz_context *ctx, fz_stream *file)
 	pdf_document *doc = pdf_open_document_no_run_with_stream(ctx, file);
 	doc->super.run_page_contents = pdf_run_page_contents_shim;
 	doc->super.run_annot = pdf_run_annot_shim;
+	doc->update_appearance = pdf_update_appearance;
 	return doc;
 }
 
@@ -34,5 +35,6 @@ pdf_open_document(fz_context *ctx, const char *filename)
 	pdf_document *doc = pdf_open_document_no_run(ctx, filename);
 	doc->super.run_page_contents = pdf_run_page_contents_shim;
 	doc->super.run_annot = pdf_run_annot_shim;
+	doc->update_appearance = pdf_update_appearance;
 	return doc;
 }

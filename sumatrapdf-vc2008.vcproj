@@ -1317,6 +1317,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\mupdf\pdf\pdf_field.c"
+					>
+				</File>
+				<File
 					RelativePath=".\mupdf\pdf\pdf_font.c"
 					>
 				</File>

@@ -500,6 +500,39 @@ static int annot_type(pdf_obj *obj)
 		return -1;
 }
 
+static const char *annot_type_str(fz_annot_type type)
+{
+	switch (type)
+	{
+	case FZ_ANNOT_TEXT: return "Text";
+	case FZ_ANNOT_LINK: return "Link";
+	case FZ_ANNOT_FREETEXT: return "FreeText";
+	case FZ_ANNOT_LINE: return "Line";
+	case FZ_ANNOT_SQUARE: return "Square";
+	case FZ_ANNOT_CIRCLE: return "Circle";
+	case FZ_ANNOT_POLYGON: return "Polygon";
+	case FZ_ANNOT_POLYLINE: return "PolyLine";
+	case FZ_ANNOT_HIGHLIGHT: return "Highlight";
+	case FZ_ANNOT_UNDERLINE: return "Underline";
+	case FZ_ANNOT_SQUIGGLY: return "Squiggly";
+	case FZ_ANNOT_STRIKEOUT: return "StrikeOut";
+	case FZ_ANNOT_STAMP: return "Stamp";
+	case FZ_ANNOT_CARET: return "Caret";
+	case FZ_ANNOT_INK: return "Ink";
+	case FZ_ANNOT_POPUP: return "Popup";
+	case FZ_ANNOT_FILEATTACHMENT: return "FileAttachment";
+	case FZ_ANNOT_SOUND: return "Sound";
+	case FZ_ANNOT_MOVIE: return "Movie";
+	case FZ_ANNOT_WIDGET: return "Widget";
+	case FZ_ANNOT_SCREEN: return "Screen";
+	case FZ_ANNOT_PRINTERMARK: return "PrinterMark";
+	case FZ_ANNOT_TRAPNET: return "TrapNet";
+	case FZ_ANNOT_WATERMARK: return "Watermark";
+	case FZ_ANNOT_3D: return "3D";
+	default: return "";
+	}
+}
+
 /* SumatraPDF: synthesize appearance streams for a few more annotations */
 /* TODO: reuse code from pdf_form.c where possible and reasonable */
 
@@ -1497,7 +1530,8 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 			}
 
 			/* SumatraPDF: prevent regressions */
-			/* pdf_update_appearance(xref, obj); */
+			if (xref->update_appearance && 0)
+				xref->update_appearance(xref, obj);
 
 			rect = pdf_dict_gets(obj, "Rect");
 			ap = pdf_dict_gets(obj, "AP");
@@ -1585,7 +1619,8 @@ pdf_update_annot(pdf_document *xref, pdf_annot *annot)
 
 	obj = annot->obj;
 
-	pdf_update_appearance(xref, obj);
+	if (xref->update_appearance)
+		xref->update_appearance(xref, obj);
 
 	ap = pdf_dict_gets(obj, "AP");
 	as = pdf_dict_gets(obj, "AS");
@@ -1674,7 +1709,7 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 	{
 		int ind_obj_num;
 		fz_rect rect = {0.0, 0.0, 0.0, 0.0};
-		char *type_str = "";
+		const char *type_str = annot_type_str(type);
 		pdf_obj *annot_arr = pdf_dict_gets(page->me, "Annots");
 		if (annot_arr == NULL)
 		{
@@ -1683,15 +1718,6 @@ pdf_create_annot(pdf_document *doc, pdf_page *page, fz_annot_type type)
 		}
 
 		pdf_dict_puts_drop(annot_obj, "Type", pdf_new_name(ctx, "Annot"));
-
-		switch(type)
-		{
-		case FZ_ANNOT_STRIKEOUT:
-			type_str = "StrikeOut";
-			break;
-		default:
-			break;
-		}
 
 		pdf_dict_puts_drop(annot_obj, "Subtype", pdf_new_name(ctx, type_str));
 		pdf_dict_puts_drop(annot_obj, "Rect", pdf_new_rect(ctx, &rect));
@@ -1834,24 +1860,22 @@ pdf_set_markup_annot_quadpoints(pdf_document *doc, pdf_annot *annot, fz_point *q
 }
 
 void
-pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_display_list *disp_list)
+pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect, fz_display_list *disp_list)
 {
 	fz_context *ctx = doc->ctx;
 	fz_matrix ctm;
-	fz_rect rect;
 	fz_matrix mat = fz_identity;
-	fz_device *dev = fz_new_bbox_device(ctx, &rect);
+	fz_device *dev = NULL;
 
 	fz_invert_matrix(&ctm, &annot->page->ctm);
 	fz_try(ctx)
 	{
 		pdf_obj *ap_obj;
+		fz_rect trect = *rect;
 
-		fz_run_display_list(disp_list, dev, &ctm, &fz_infinite_rect, NULL);
-		fz_free_device(dev);
-		dev = NULL;
+		fz_transform_rect(&trect, &ctm);
 
-		pdf_dict_puts_drop(annot->obj, "Rect", pdf_new_rect(ctx, &rect));
+		pdf_dict_puts_drop(annot->obj, "Rect", pdf_new_rect(ctx, &trect));
 
 		/* See if there is a current normal appearance */
 		ap_obj = pdf_dict_getp(annot->obj, "AP/N");
@@ -1860,12 +1884,12 @@ pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_display_list *d
 
 		if (ap_obj == NULL)
 		{
-			ap_obj = pdf_new_xobject(doc, &rect, &mat);
+			ap_obj = pdf_new_xobject(doc, &trect, &mat);
 			pdf_dict_putp_drop(annot->obj, "AP/N", ap_obj);
 		}
 		else
 		{
-			pdf_dict_puts_drop(ap_obj, "Rect", pdf_new_rect(ctx, &rect));
+			pdf_dict_puts_drop(ap_obj, "Rect", pdf_new_rect(ctx, &trect));
 			pdf_dict_puts_drop(ap_obj, "Matrix", pdf_new_matrix(ctx, &mat));
 		}
 
@@ -1874,9 +1898,8 @@ pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_display_list *d
 		pdf_drop_xobject(ctx, annot->ap);
 		annot->ap = NULL;
 
-		annot->rect = rect;
-		annot->pagerect = rect;
-		fz_transform_rect(&annot->pagerect, &annot->page->ctm);
+		annot->rect = trect;
+		annot->pagerect = *rect;
 
 		dev = pdf_new_pdf_device(doc, ap_obj, pdf_dict_gets(ap_obj, "Resources"), &mat);
 		fz_run_display_list(disp_list, dev, &ctm, &fz_infinite_rect, NULL);
