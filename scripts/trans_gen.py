@@ -88,7 +88,7 @@ TRANSLATIONS_TXT_C = """\
 
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
 
-%(translation_arrays)s
+%(translations)s
 
 static LangDef gLanguages[LANGS_COUNT] = {
     %(lang_data)s
@@ -155,6 +155,15 @@ def c_escape(txt):
     txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt)
     return '"%s"' % txt
 
+def c_escape_for_compact(txt):
+    if txt is None:
+        return '"\\0"'
+    # escape all quotes
+    txt = txt.replace('"', r'\"')
+    # and all non-7-bit characters of the UTF-8 encoded string
+    txt = re.sub(r"[\x80-\xFF]", lambda m: c_oct(m.group(0)[0]), txt)
+    return '"%s\\0"' % txt
+
 def get_trans_for_lang(strings_dict, keys, lang_arg):
     if lang_arg == "en":
         return keys
@@ -215,7 +224,10 @@ typedef struct {
     const char *            fullName;
     LANGID                  langId;
     bool                    isRTL;
-    const char * const *    translations;
+    const char *            translations;
+
+    // used by C code
+    const uint16_t *        translationsOffsets;
     const WCHAR **          translationsCache;
 } LangDef;
 """
@@ -225,7 +237,7 @@ def format_lang_def(lang):
     langId = lang.ms_lang_id_string
     isRtl = lang.isRtl
     translations = lang.c_translations_array_name
-    return '{ "%s", %s, %s, %s, %s, NULL },' % (code, name, langId, isRtl, translations)
+    return '{ "%s", %s, %s, %s, %s, NULL, NULL },' % (code, name, langId, isRtl, translations)
 
 def gen_c_code_for_dir(strings_dict, keys, dir_name):
     langs = get_lang_objects(sorted(langs_def.g_langs, cmp=lang_sort_func))
@@ -234,11 +246,10 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
 
     lines = []
     for lang in langs:
-        lines.append("static const char * const %s[STRINGS_COUNT] = {" % lang.c_translations_array_name)
-        lines += ["  %s," % c_escape(t) for t in lang.translations]
-        lines.append("};\n")
-
-    translation_arrays = "\n".join(lines)
+        lines.append("static const char * %s = " % lang.c_translations_array_name)
+        lines += ["  %s \\" % c_escape_for_compact(t) for t in lang.translations]
+        lines.append(";\n")
+    translations = "\n".join(lines)
 
     lang_data = [format_lang_def(lang) for lang in langs]
     lang_data = "\n    ".join(lang_data)
@@ -281,35 +292,30 @@ A format for the compact storage of strings:
 
 Generated C code:
 
-uint8_t g_compressedLangData[] = {
-};
-
 typedef struct {
-    const char *  code;
-    const char *  fullName;
-    LANGID        langId;
-    bool          isRTL;
-    uint32_t      langDataOffset;           // within g_compressedLangData
-    uint32_t      langDataCompressedSize;
-    uint32_t      langDataUncompressedSize;
-    const void *  uncompressedData;
+    const char *    code;
+    const char *    fullName;
+    LANGID          langId;
+    bool            isRTL;
+
+    uint32_t        langDataCompressedSize;
+    uint32_t        langDataUncompressedSize;
+    const uint8_t * compressedData;
+    const void *    uncompressedData;
 } LangDef;
 
 LangDef *g_currLang = NULL; // English if NULL
 
 Format of compressed data (after it's de-compressed)
-  u16[strings_count]       translation_offset : for string n, where the translation is
-                           (offset from the start of strings data), -1 means translation
-                           for this string doesn't exist
   string[strings_count]    strings, sequentially laid
 
 Note: english strings are not included, they are stored as before, as an
 array of char *, so that the compiler can merge those string constants
 with strings in code (inside _TR() macros). TODO: verify that the strings
-are actually collapsed
+are actually de-duped by the compiler.
 """
 def gen_c_compact(strings_dict, strings):
-    pass
+    pass # TODO: write me
 
 def gen_c_code(strings_dict, strings):
     for dir in C_DIRS_TO_PROCESS:

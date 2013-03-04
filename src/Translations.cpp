@@ -4,6 +4,14 @@
 #include "BaseUtil.h"
 #include "Translations.h"
 
+/*
+TODO:
+ - special-case english strings. Store them as before in const char * gEnglishStrings[STRINGS_COUNT] = { ... }
+   array. That way the compiler should be able to de-duplicate those strings with strings that are in the
+   source code inside _TR() macor
+ - compress the translations and de-compress them on demand
+*/
+
 namespace trans {
 
 // This code relies on data defined in Translations_txt.cpp, which is
@@ -11,8 +19,10 @@ namespace trans {
 
 #include "Translations_txt.cpp"
 
+#define INVALID_OFFSET 0xFFFF
+
 static LangDef *gDefaultLang = &gLanguages[0];
-static LangDef *gCurrLang = &gLanguages[0];
+static LangDef *gCurrLang = NULL;
 
 /* In general, after adding new _TR() strings, one has to re-generate Translations_txt.cpp, but
 that also requires uploading new strings to the server, for which one needs accesss.
@@ -54,13 +64,34 @@ static const WCHAR *FindOrAddMissingTranslation(const char *s)
     return res;
 }
 
+static void CalcOffsets(LangDef *lang)
+{
+    if (lang->translationsOffsets)
+        return;
+    const char *s = lang->translations;
+    uint16_t *offsets = AllocArray<uint16_t>(STRINGS_COUNT);
+    uint16_t curr = 0;
+    for (int i = 0; i < STRINGS_COUNT; i++) {
+        size_t len = str::Len(s);
+        if (0 == len)
+            offsets[i] = INVALID_OFFSET;
+        else
+            offsets[i] = curr;
+        curr = curr + len + 1;
+        s = s + len + 1;
+    }
+    CrashAlwaysIf(curr > 65535); // time to change translationsOffsets to use uint32_t
+    lang->translationsOffsets = offsets;
+}
+
 void SetCurrentLang(LangDef *lang)
 {
     if (gCurrLang == lang)
         return;
 
-    gCurrLang = lang;
     FreeMissingTranslations();
+    gCurrLang = lang;
+    CalcOffsets(gCurrLang);
 }
 
 LangDef *GetCurrentLang()
@@ -115,22 +146,44 @@ static int cmpCharPtrs(const void *a, const void *b)
 }
 
 // find the index of this string in the english (i.e. untranslated) strings
+// Note: could be sped up with binary search but seems to be fast enough even now
 static int GetEnglishStringIndex(const char* txt)
 {
-    const char * const *translations = gLanguages[0].translations;
-    const char **res = (const char **)bsearch(&txt, translations, STRINGS_COUNT, sizeof(txt), cmpCharPtrs);
+    LangDef *lang = gDefaultLang;
+    if (!lang->translationsOffsets)
+        CalcOffsets(lang);
+
+    const char *s = lang->translations;
+    int res;
+    for (int i = 0; i < STRINGS_COUNT; i++) {
+        res = strcmp(txt, s);
+        if (0 == res)
+            return i;
+        s = s + str::Len(s) + 1;
+    }
+    CrashIf(1);
+    return -1;
+
+#if 0
+    uint16_t * offsets = gLanguages[0].translationsOffsets;
+    const char * translations = gLanguages[0].translations;
+    const char **res = (const char **)bsearch(&txt, offsets, STRINGS_COUNT, sizeof(txt), cmpCharPtrs);
     if (!res) {
         // didn't find a translation
         return -1;
     }
 
     return (int)(res - translations);
+    return -1;
+#endif
 }
 
 // Call at program exit to free all memory related to translations functionality.
 void Destroy()
 {
     for (int i = 0; i < dimof(gLanguages); i++) {
+        free(gLanguages[i].translationsOffsets);
+        gLanguages[i].translationsOffsets = NULL;
         const WCHAR **cache = gLanguages[i].translationsCache;
         if (!cache)
             continue;
@@ -154,14 +207,15 @@ const WCHAR *GetTranslation(const char *txt)
         return FindOrAddMissingTranslation(txt);
 
     LangDef *lang = gCurrLang;
-    const char *trans = lang->translations[idx];
+    uint16_t offset = (int)lang->translationsOffsets[idx];
     // fall back to English if the language doesn't have a translations for this string
-    if (!trans) {
+    if (INVALID_OFFSET == offset) {
         lang = gDefaultLang;
-        trans = lang->translations[idx];
-        CrashIf(!trans);
+        offset = lang->translationsOffsets[idx];
+        CrashIf(INVALID_OFFSET == offset);
     }
 
+    const char *trans = lang->translations + offset;
     const WCHAR **cache = lang->translationsCache;
     if (!cache) {
         lang->translationsCache = AllocArray<const WCHAR *>(STRINGS_COUNT);

@@ -9,7 +9,9 @@ typedef struct {
     const char *            fullName;
     LANGID                  langId;
     bool                    isRTL;
-    const char * const *    translations;
+    const char *            translations;
+
+    uint16_t *              translationsOffsets;
     const WCHAR **          translationsCache;
 } LangDef;
 
