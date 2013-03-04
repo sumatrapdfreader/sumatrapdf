@@ -356,7 +356,7 @@ INT_PTR Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut)
 
 /* For passing data to/from ChangeLanguage dialog */
 struct Dialog_ChangeLanguage_Data {
-    int langId;
+    LangDef *lang;
 };
 
 static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -381,13 +381,12 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         win::SetText(hDlg, _TR("Change Language"));
         langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
         int itemToSelect = 0;
-        for (int langIdx = 0; trans::GetLanguageCode(langIdx) != NULL; langIdx++) {
-            ScopedMem<WCHAR> langName(trans::GetLanguageName(langIdx));
+        for (int i = 0; i < trans::GetLangsCount(); i++) {
+            LangDef *lang = trans::GetLang(i);
+            ScopedMem<WCHAR> langName(str::conv::FromUtf8(lang->fullName));
             ListBox_AppendString_NoSort(langList, langName);
-            int elIdx = ListBox_GetCount(langList) - 1;
-            ListBox_SetItemData(langList, elIdx, (LPARAM)langIdx);
-            if (langIdx == data->langId)
-                itemToSelect = elIdx;
+            if (lang == data->lang)
+                itemToSelect = i;
         }
         ListBox_SetCurSel(langList, itemToSelect);
         // the language list is meant to be laid out left-to-right
@@ -409,16 +408,20 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
                 assert(IDC_CHANGE_LANG_LANG_LIST == LOWORD(wParam));
                 langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
                 assert(langList == (HWND)lParam);
-                data->langId = (int)ListBox_GetItemData(langList, ListBox_GetCurSel(langList));
+                int langIdx = (int)ListBox_GetCurSel(langList);
+                data->lang = trans::GetLang(langIdx);
                 EndDialog(hDlg, IDOK);
                 return FALSE;
             }
             switch (LOWORD(wParam))
             {
                 case IDOK:
+                    {
                     langList = GetDlgItem(hDlg, IDC_CHANGE_LANG_LANG_LIST);
-                    data->langId = ListBox_GetCurSel(langList);
+                    int langIdx = ListBox_GetCurSel(langList);
+                    data->lang = trans::GetLang(langIdx);
                     EndDialog(hDlg, IDOK);
+                    }
                     return TRUE;
 
                 case IDCANCEL:
@@ -431,19 +434,17 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
     return FALSE;
 }
 
-/* Show "Change Language" dialog.
-   Returns language id (an index into gLangData) or -1 if the user
-   choses 'cancel' */
-int Dialog_ChangeLanguge(HWND hwnd, int currLangId)
+/* Returns NULL  -1 if user choses 'cancel' */
+LangDef *Dialog_ChangeLanguge(HWND hwnd, LangDef *currLang)
 {
     Dialog_ChangeLanguage_Data data;
-    data.langId = currLangId;
+    data.lang = currLang;
 
     INT_PTR res = CreateDialogBox(IDD_DIALOG_CHANGE_LANGUAGE, hwnd,
                                   Dialog_ChangeLanguage_Proc, (LPARAM)&data);
     if (IDCANCEL == res)
-        return -1;
-    return data.langId;
+        return NULL;
+    return data.lang;
 }
 
 /* For passing data to/from 'new version available' dialog */

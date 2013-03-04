@@ -81,6 +81,9 @@
     <Filter Include="tester">
       <UniqueIdentifier>{55c58e95-d6b6-47b8-8433-4010c683a5f3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="browserplugin">
+      <UniqueIdentifier>{b1b93410-5990-49dc-bc3f-d40cfea39fd6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ext\jbig2dec\jbig2.c">
@@ -1019,6 +1022,9 @@
     <ClCompile Include="src\utils\FileWatcher.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\browserplugin\Translations_txt.cpp">
+      <Filter>browserplugin</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1742,6 +1748,9 @@
     </ResourceCompile>
     <ResourceCompile Include="src\previewer\PdfPreview.rc">
       <Filter>dlls\preview</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="src\browserplugin\npPdfViewer.rc">
+      <Filter>browserplugin</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>

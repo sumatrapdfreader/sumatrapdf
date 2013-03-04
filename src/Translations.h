@@ -1,20 +1,31 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
-   License: GPLv3 */
+   License: BSD */
 
 #ifndef Translations_h
 #define Translations_h
 
+typedef struct {
+    const char *            code;
+    const char *            fullName;
+    LANGID                  langId;
+    bool                    isRTL;
+    const char * const *    translations;
+    const WCHAR **          translationsCache;
+} LangDef;
+
 namespace trans {
 
-const char *  GuessLanguage();
-const char *  ValidateLanguageCode(const char *code);
-bool          SetCurrentLanguage(const char *code);
-const WCHAR * GetTranslation(const char *txt);
+LangDef *     GetCurrentLang();
+void          SetCurrentLang(LangDef *lang);
 
-int           GetLanguageIndex(const char *code);
-const char *  GetLanguageCode(int langIdx);
-WCHAR *       GetLanguageName(int langIdx);
-bool          IsLanguageRtL(int langIdx);
+int           GetLangsCount();
+LangDef *     GetLang(int i);
+
+LangDef *     GetLangByCode(const char *code);
+
+LangDef *     GuessLang();
+
+const WCHAR * GetTranslation(const char *txt);
 
 void          Destroy();
 }

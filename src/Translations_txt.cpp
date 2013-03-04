@@ -14,79 +14,14 @@
 #define SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ 0x01
 #endif
 
+#include "Translations.h"
+
 #define LANGS_COUNT   53
 #define STRINGS_COUNT 240
 
-typedef struct {
-    const char * code;
-    const char * fullName;
-    LANGID       langId;
-    bool         isRTL;
-} LangDef;
-
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
 
-LangDef gLangData[LANGS_COUNT] = {
-    { "en", "English", _LANGID(LANG_ENGLISH), false },
-    { "sq", "Albanian (Shqip)", _LANGID(LANG_ALBANIAN), false },
-    { "ar", "Arabic (\330\247\331\204\331\222\330\271\331\216\330\261\331\216\330\250\331\212\331\221\330\251)", _LANGID(LANG_ARABIC), true },
-    { "am", "Armenian (\325\200\325\241\325\265\325\245\326\200\325\245\325\266)", _LANGID(LANG_ARMENIAN), false },
-    { "az", "Azerbaijani (\330\242\330\260\330\261\330\250\330\247\333\214\330\254\330\247\331\206 \330\257\333\214\331\204\333\214)", _LANGID(LANG_AZERI), false },
-    { "eu", "Basque (Euskara)", _LANGID(LANG_BASQUE), false },
-    { "bs", "Bosnian (Bosanski)", MAKELANGID(LANG_BOSNIAN, SUBLANG_BOSNIAN_BOSNIA_HERZEGOVINA_LATIN), false },
-    { "bg", "Bulgarian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)", _LANGID(LANG_BULGARIAN), false },
-    { "ca", "Catalan (Catal\303\240)", _LANGID(LANG_CATALAN), false },
-    { "ca-xv", "Catalan-Valencian (Catal\303\240-Valenci\303\240)", -1, false },
-    { "cn", "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED), false },
-    { "tw", "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL), false },
-    { "hr", "Croatian (Hrvatski)", _LANGID(LANG_CROATIAN), false },
-    { "cz", "Czech (\304\214e\305\241tina)", _LANGID(LANG_CZECH), false },
-    { "dk", "Danish (Dansk)", _LANGID(LANG_DANISH), false },
-    { "nl", "Dutch (Nederlands)", _LANGID(LANG_DUTCH), false },
-    { "et", "Estonian (Eesti)", _LANGID(LANG_ESTONIAN), false },
-    { "fi", "Finnish (Suomi)", _LANGID(LANG_FINNISH), false },
-    { "fr", "French (Fran\303\247ais)", _LANGID(LANG_FRENCH), false },
-    { "gl", "Galician (Galego)", _LANGID(LANG_GALICIAN), false },
-    { "ka", "Georgian (\341\203\245\341\203\220\341\203\240\341\203\227\341\203\243\341\203\232\341\203\230)", _LANGID(LANG_GEORGIAN), false },
-    { "de", "German (Deutsch)", _LANGID(LANG_GERMAN), false },
-    { "el", "Greek (\316\225\316\273\316\273\316\267\316\275\316\271\316\272\316\254)", _LANGID(LANG_GREEK), false },
-    { "he", "Hebrew (\327\242\327\221\327\250\327\231\327\252)", _LANGID(LANG_HEBREW), true },
-    { "hi", "Hindi (\340\244\271\340\244\277\340\244\202\340\244\246\340\245\200)", _LANGID(LANG_HINDI), false },
-    { "hu", "Hungarian (Magyar)", _LANGID(LANG_HUNGARIAN), false },
-    { "id", "Indonesian (Bahasa Indonesia)", _LANGID(LANG_INDONESIAN), false },
-    { "ga", "Irish (Gaeilge)", _LANGID(LANG_IRISH), false },
-    { "it", "Italian (Italiano)", _LANGID(LANG_ITALIAN), false },
-    { "ja", "Japanese (\346\227\245\346\234\254\350\252\236)", _LANGID(LANG_JAPANESE), false },
-    { "kr", "Korean (\355\225\234\352\265\255\354\226\264)", _LANGID(LANG_KOREAN), false },
-    { "ku", "Kurdish (\331\203\331\210\330\261\330\257\333\214)", MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ), true },
-    { "lt", "Lithuanian (Lietuvi\305\263)", _LANGID(LANG_LITHUANIAN), false },
-    { "mk", "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)", _LANGID(LANG_MACEDONIAN), false },
-    { "ne", "Nepali (\340\244\250\340\245\207\340\244\252\340\244\276\340\244\262\340\245\200)", _LANGID(LANG_NEPALI), false },
-    { "no", "Norwegian (Norsk)", MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL), false },
-    { "fa", "Persian (\331\201\330\247\330\261\330\263\333\214)", _LANGID(LANG_FARSI), true },
-    { "pl", "Polish (Polski)", _LANGID(LANG_POLISH), false },
-    { "br", "Portuguese - Brazil (Portugu\303\252s)", MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN), false },
-    { "pt", "Portuguese - Portugal (Portugu\303\252s)", _LANGID(LANG_PORTUGUESE), false },
-    { "ro", "Romanian (Rom\303\242n\304\203)", _LANGID(LANG_ROMANIAN), false },
-    { "ru", "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)", _LANGID(LANG_RUSSIAN), false },
-    { "sr-rs", "Serbian (Cyrillic)", MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC), false },
-    { "sp-rs", "Serbian (Latin)", MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_LATIN), false },
-    { "sk", "Slovak (Sloven\304\215ina)", _LANGID(LANG_SLOVAK), false },
-    { "sl", "Slovenian (Sloven\305\241\304\215ina)", _LANGID(LANG_SLOVENIAN), false },
-    { "es", "Spanish (Espa\303\261ol)", _LANGID(LANG_SPANISH), false },
-    { "sv", "Swedish (Svenska)", _LANGID(LANG_SWEDISH), false },
-    { "ta", "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264\340\257\215)", _LANGID(LANG_TAMIL), false },
-    { "tr", "Turkish (T\303\274rk\303\247e)", _LANGID(LANG_TURKISH), false },
-    { "uk", "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)", _LANGID(LANG_UKRAINIAN), false },
-    { "uz", "Uzbek (O'zbek)", _LANGID(LANG_UZBEK), false },
-    { "vn", "Vietnamese (Vi\341\273\207t Nam)", _LANGID(LANG_VIETNAMESE), false },
-};
-
-#undef _LANGID
-
-const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
-
-  /* Translations for language en */
+static const char * const gTranslations_en[STRINGS_COUNT] = {
   "&About",
   "&Actual Size\tCtrl+1",
   "&All selected pages",
@@ -327,8 +262,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Changes detected; refreshing] %s",
   "copying text",
   "printing document",
+};
 
-  /* Translations for language sq */
+static const char * const gTranslations_sq[STRINGS_COUNT] = {
   "&P\303\253r",
   "P\303\253rmasa &reale\tCtrl+1",
   "&Gjith\303\253 faqet e seleksionuara",
@@ -569,8 +505,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Dikton ndryshimet; freskon] %s",
   "kopjimi i tekstit",
   "printimi i dokumentit",
+};
 
-  /* Translations for language ar */
+static const char * const gTranslations_ar[STRINGS_COUNT] = {
   "\330\255\331\210\331\204 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254",
   "\330\247\331\204\330\255\330\254\331\205 \330\247\331\204\330\255\331\202\331\212\331\202\331\212\tCtrl+1",
   "&\331\203\331\204 \330\247\331\204\330\265\331\201\330\255\330\247\330\252 \330\247\331\204\331\205\330\255\330\257\330\257\330\251",
@@ -811,8 +748,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "\330\254\330\247\330\261\331\212 \330\247\331\204\330\252\330\255\330\257\331\212\330\253 \330\250\330\271\330\257 \330\247\331\204\330\252\330\272\331\212\331\212\330\261\330\247\330\252 %s",
   "\331\212\330\252\331\205 \330\255\330\247\331\204\331\212\330\247\331\213 \331\206\330\263\330\256 \330\247\331\204\331\206\330\265",
   "\330\252\330\252\331\205 \330\255\330\247\331\204\331\212\330\247\331\213 \330\247\331\204\330\267\330\250\330\247\330\271\330\251",
+};
 
-  /* Translations for language am */
+static const char * const gTranslations_am[STRINGS_COUNT] = {
   "&\324\276\326\200\325\241\325\243\326\200\325\253 \325\264\325\241\325\275\325\253\325\266",
   "\324\273\326\200\325\241\325\257\325\241\325\266 &\325\271\325\241\326\203\325\250\tCtrl+1",
   "&\324\270\325\266\325\277\326\200\325\276\325\241\325\256 \325\242\325\270\325\254\325\270\326\200 \325\247\325\273\325\245\326\200\325\250",
@@ -1053,8 +991,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\325\200\325\241\325\265\325\277\325\266\325\241\325\242\325\245\326\200\325\276\325\245\325\254 \325\245\325\266 \326\203\325\270\326\203\325\270\325\255\325\270\326\202\325\251\325\265\325\270\326\202\325\266\325\266\325\245\326\200, \325\250\325\266\325\251\325\241\325\266\325\270\326\202\325\264 \325\247 \325\251\325\241\326\200\325\264\325\241\326\201\325\270\326\202\325\264] %s",
   "\325\217\325\245\326\204\325\275\325\277\325\250 \325\272\325\241\325\277\325\263\325\245\325\266\325\276\325\270\326\202\325\264 \325\247",
   "\325\226\325\241\325\265\325\254\325\250 \325\277\325\272\325\276\325\270\326\202\325\264 \325\247",
+};
 
-  /* Translations for language az */
+static const char * const gTranslations_az[STRINGS_COUNT] = {
   "Proqram &haqq\304\261nda",
   "&H\311\231qiqi \303\266l\303\247\303\274\tCtrl+1",
   "&B\303\274t\303\274n se\303\247ilmi\305\237 s\311\231hif\311\231l\311\231r",
@@ -1295,8 +1234,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[D\311\231yi\305\237iklikl\311\231r m\303\274\311\231yy\311\231n edildi; yenil\311\231nm\311\231] %s",
   "m\311\231tn kopyalan\304\261r",
   "s\311\231n\311\231d \303\247ap olunur",
+};
 
-  /* Translations for language eu */
+static const char * const gTranslations_eu[STRINGS_COUNT] = {
   "&Honi buruz...",
   "&Oraingo Neurria\tKtrl+1",
   "&Hautatutako orrialde guztiak",
@@ -1537,8 +1477,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Aldaketak atzeman dira, berritzen] %s",
   "idazkia kopiatzen",
   "agiria irarkitzen",
+};
 
-  /* Translations for language bs */
+static const char * const gTranslations_bs[STRINGS_COUNT] = {
   "&O programu...",
   "Stvarna veli\304\215ina\tCtrl+1",
   "Sve ozna\304\215ene str&anice",
@@ -1779,8 +1720,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Uo\304\215ena promjena; osvje\305\276avam] %s",
   "kopiram tekst",
   "\305\241tampam dokument",
+};
 
-  /* Translations for language bg */
+static const char * const gTranslations_bg[STRINGS_COUNT] = {
   "\320\227\320\260 &\320\277\321\200\320\276\320\263\321\200\320\260\320\274\320\260\321\202\320\260",
   "&\320\236\321\200\320\270\320\263\320\270\320\275\320\260\320\273\320\265\320\275 (\321\200\320\265\320\260\320\273\320\265\320\275) \321\200\320\260\320\267\320\274\320\265\321\200\tCtrl+1",
   "&\320\222\321\201\320\270\321\207\320\272\320\270 \320\270\320\267\320\261\321\200\320\260\320\275\320\270 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\320\270",
@@ -2021,8 +1963,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\320\235\320\260\320\274\320\265\321\200\320\265\320\275\320\270 \321\201\320\260 \320\277\321\200\320\276\320\274\320\265\320\275\320\270; \320\276\320\261\320\275\320\276\320\262\321\217\320\262\320\260\320\274] %s",
   "\320\272\320\276\320\277\320\270\321\200\320\260\320\275\320\265 \320\275\320\260 \321\202\320\265\320\272\321\201\321\202",
   "\320\276\321\202\320\277\320\265\321\207\320\260\321\202\320\262\320\260\320\275\320\265 \320\275\320\260 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202",
+};
 
-  /* Translations for language ca */
+static const char * const gTranslations_ca[STRINGS_COUNT] = {
   "&Quant a...",
   "Mida &real\tCtrl+1",
   "&Totes les p\303\240gines seleccionades",
@@ -2263,8 +2206,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[S'han detectat canvis; s'est\303\240 actualitzant] %s",
   "s'est\303\240 copiant text",
   "s'est\303\240 imprimint el document",
+};
 
-  /* Translations for language ca-xv */
+static const char * const gTranslations_ca_xv[STRINGS_COUNT] = {
   "&Quant a...",
   "Mida &real\tCtrl+1",
   "&Totes les p\303\240gines seleccionades",
@@ -2505,8 +2449,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[S'han detectat canvis; s'est\303\240 actualitzant] %s",
   "s'est\303\240 copiant text",
   "s'est\303\240 imprimint el document",
+};
 
-  /* Translations for language cn */
+static const char * const gTranslations_cn[STRINGS_COUNT] = {
   "\345\205\263\344\272\216(&A)",
   "\345\256\236\351\231\205\345\244\247\345\260\217(&A)\tCtrl+1",
   "\346\211\200\346\234\211\351\200\211\346\213\251\347\232\204\351\241\265\351\235\242(&A)",
@@ -2747,8 +2692,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\346\243\200\346\265\213\345\210\260\346\224\271\345\212\250\357\274\233\345\210\267\346\226\260\344\270\255] %s",
   "\346\255\243\345\234\250\345\244\215\345\210\266\346\226\207\346\234\254",
   "\346\255\243\345\234\250\346\211\223\345\215\260\346\226\207\346\241\243",
+};
 
-  /* Translations for language tw */
+static const char * const gTranslations_tw[STRINGS_COUNT] = {
   "\351\227\234\346\226\274(&A)",
   "\345\257\246\351\232\233\345\244\247\345\260\217(&U)\tCtrl+1",
   "\346\211\200\346\234\211\345\267\262\351\201\270\345\217\226\347\232\204\351\240\201\351\235\242(&A)",
@@ -2989,8 +2935,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\346\211\276\345\210\260\346\233\264\346\226\260\357\274\214\345\220\214\346\255\245\344\270\255] %s",
   "\350\244\207\350\243\275\346\226\207\345\255\227\344\270\255",
   "\346\226\207\344\273\266\345\210\227\345\215\260\344\270\255",
+};
 
-  /* Translations for language hr */
+static const char * const gTranslations_hr[STRINGS_COUNT] = {
   "&O programu...",
   "Stvarna veli\304\215ina\tCtrl+1",
   "Sve obilje\305\276ene str&anice",
@@ -3231,8 +3178,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Dogodila se promjena - osvje\305\276avam] %s",
   "kopiram tekst",
   "ispisujem dokument",
+};
 
-  /* Translations for language cz */
+static const char * const gTranslations_cz[STRINGS_COUNT] = {
   "&O programu",
   "Skute\304\215n\303\241 &velikost\tCtrl+1",
   "V\305\241e&chny vybran\303\251 str\303\241nky",
@@ -3473,8 +3421,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Zji\305\241t\304\233na zm\304\233na; prob\303\255h\303\241 aktualizace] %s",
   "kop\303\255rov\303\241n\303\255 textu",
   "tisk dokumentu",
+};
 
-  /* Translations for language dk */
+static const char * const gTranslations_dk[STRINGS_COUNT] = {
   "&Om",
   "&Faktisk st\303\270rrelse\tCtrl+1",
   "&Alle valgte sider",
@@ -3715,8 +3664,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\303\206ndringer konstateret; opdaterer] %s",
   "kopierer tekst",
   "udskriver dokument",
+};
 
-  /* Translations for language nl */
+static const char * const gTranslations_nl[STRINGS_COUNT] = {
   "&Over",
   "W&are grootte\tCtrl+1",
   "&Alle geselecteerde pagina's",
@@ -3957,8 +3907,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Bestand gewijzigd; verversen] %s",
   "tekst kopi\303\253ren",
   "document afdrukken",
+};
 
-  /* Translations for language et */
+static const char * const gTranslations_et[STRINGS_COUNT] = {
   "&Programmi teave",
   "&Tegelik suurus\tCtrl+1",
   "K\303\265ik v&alitud lehed",
@@ -4199,8 +4150,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Leiti muutuseid; v\303\244rskendamine] %s",
   "teksti kopeerimine",
   "dokumendi printimine",
+};
 
-  /* Translations for language fi */
+static const char * const gTranslations_fi[STRINGS_COUNT] = {
   "&Tietoja",
   "&Todellinen koko\tCtrl+1",
   "K&aikki valitut sivut",
@@ -4441,8 +4393,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Muutoksia tunnistettiin; p\303\244ivitet\303\244\303\244n] %s",
   "Kopioidaan teksti\303\244",
   "tulostetaan asiakirjaa",
+};
 
-  /* Translations for language fr */
+static const char * const gTranslations_fr[STRINGS_COUNT] = {
   "&\303\200 propos",
   "&Taille r\303\251elle\tCtrl+1",
   "&Toutes les pages s\303\251lectionn\303\251es",
@@ -4683,8 +4636,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Modifications d\303\251tect\303\251es\302\240; actualisation] %s",
   "copie de texte",
   "impression du document",
+};
 
-  /* Translations for language gl */
+static const char * const gTranslations_gl[STRINGS_COUNT] = {
   "Arred&or de",
   "&Tama\303\261o real\tCtrl+1",
   "&Todas as p\303\241xinas seleccionadas",
@@ -4925,8 +4879,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Cambios detectados; actualizando] %s",
   "copiando texto",
   "imprimindo documento",
+};
 
-  /* Translations for language ka */
+static const char * const gTranslations_ka[STRINGS_COUNT] = {
   "&\341\203\236\341\203\240\341\203\235\341\203\222\341\203\240\341\203\220\341\203\233\341\203\230\341\203\241 \341\203\250\341\203\224\341\203\241\341\203\220\341\203\256\341\203\224\341\203\221...",
   "&\341\203\227\341\203\220\341\203\225\341\203\223\341\203\220\341\203\236\341\203\230\341\203\240\341\203\225\341\203\224\341\203\232\341\203\230 \341\203\226\341\203\235\341\203\233\341\203\220\tCtrl+1",
   "&\341\203\247\341\203\225\341\203\224\341\203\232\341\203\220 \341\203\233\341\203\235\341\203\234\341\203\230\341\203\250\341\203\234\341\203\243\341\203\232\341\203\230 \341\203\222\341\203\225\341\203\224\341\203\240\341\203\223\341\203\230",
@@ -5167,8 +5122,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\341\203\220\341\203\246\341\203\233\341\203\235\341\203\251\341\203\224\341\203\234\341\203\230\341\203\232\341\203\230\341\203\220 \341\203\252\341\203\225\341\203\232\341\203\230\341\203\232\341\203\224\341\203\221\341\203\224\341\203\221\341\203\230; \341\203\233\341\203\230\341\203\233\341\203\223\341\203\230\341\203\234\341\203\220\341\203\240\341\203\224\341\203\235\341\203\221\341\203\241 \341\203\222\341\203\220\341\203\234\341\203\220\341\203\256\341\203\232\341\203\224\341\203\221\341\203\220...] %s",
   "\341\203\242\341\203\224\341\203\245\341\203\241\341\203\242\341\203\230 \341\203\231\341\203\235\341\203\236\341\203\230\341\203\240\341\203\223\341\203\224\341\203\221\341\203\220",
   "\341\203\223\341\203\235\341\203\231\341\203\243\341\203\233\341\203\224\341\203\234\341\203\242\341\203\230 \341\203\230\341\203\221\341\203\224\341\203\255\341\203\223\341\203\224\341\203\221\341\203\220",
+};
 
-  /* Translations for language de */
+static const char * const gTranslations_de[STRINGS_COUNT] = {
   "&\303\234ber SumatraPDF",
   "&Tats\303\244chliche Gr\303\266\303\237e\tStrg+1",
   "&Alle angegebenen Seiten",
@@ -5409,8 +5365,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Datei wurde ge\303\244ndert; aktualisiere\342\200\246] %s",
   "Text kopieren verweigert",
   "Dokument drucken verweigert",
+};
 
-  /* Translations for language el */
+static const char * const gTranslations_el[STRINGS_COUNT] = {
   "&\316\243\317\207\316\265\317\204\316\271\316\272\316\254",
   "\316\240\317\201\316\261\316\263\316\274\316\261\317\204\316\271\316\272\317\214 &\316\234\316\255\316\263\316\265\316\270\316\277\317\202\tCtrl+1",
   "\316\214&\316\273\316\265\317\202 \316\277\316\271 \316\265\317\200\316\271\316\273\316\265\316\263\316\274\316\255\316\275\316\265\317\202",
@@ -5651,8 +5608,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\316\221\316\275\316\271\317\207\316\275\316\265\317\215\317\204\316\267\316\272\316\261\316\275 \316\261\316\273\316\273\316\261\316\263\316\255\317\202, \316\261\316\275\316\261\316\275\316\255\317\211\317\203\316\267] %s",
   "\316\261\316\275\317\204\316\271\316\263\317\201\316\261\317\206\316\256 \316\272\316\265\316\271\316\274\316\255\316\275\316\277\317\205",
   "\316\265\316\272\317\204\317\215\317\200\317\211\317\203\316\267 \316\265\316\263\316\263\317\201\316\254\317\206\316\277\317\205",
+};
 
-  /* Translations for language he */
+static const char * const gTranslations_he[STRINGS_COUNT] = {
   "\327\220\327\225\327\223\327\225\327\252",
   "\327\222\327\225\327\223\327\234 \327\236\327\247\327\225\327\250\tCtrl+1",
   "\327\233\327\234 \327\224\327\242\327\236\327\225\327\223\327\231\327\235 \327\224\327\240\327\221\327\227\327\250\327\231\327\235",
@@ -5893,8 +5851,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\327\236\327\250\327\242\327\240\327\237 ; \327\240\327\252\327\222\327\234\327\225 \327\251\327\231\327\240\327\225\327\231\327\231\327\235] %s",
   "\327\236\327\242\327\252\327\231\327\247 \327\230\327\247\327\241\327\230",
   "\327\236\327\223\327\244\327\231\327\241 \327\236\327\241\327\236\327\232",
+};
 
-  /* Translations for language hi */
+static const char * const gTranslations_hi[STRINGS_COUNT] = {
   "\340\244\254\340\244\276\340\244\260\340\245\207 \340\244\256\340\245\207\340\244\202(&A)",
   "\340\244\265\340\244\276\340\244\270\340\245\215\340\244\244\340\244\265\340\244\277\340\244\225 \340\244\206\340\244\225\340\244\276\340\244\260(&A)\tCtrl+1",
   "&\340\244\270\340\244\255\340\245\200 \340\244\232\340\244\257\340\244\250\340\244\277\340\244\244 \340\244\252\340\245\203\340\244\267\340\245\215\340\244\240\340\245\213\340\244\202",
@@ -6135,8 +6094,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\340\244\252\340\244\260\340\244\277\340\244\265\340\244\260\340\245\215\340\244\244\340\244\250 \340\244\225\340\244\276 \340\244\252\340\244\244\340\244\276 \340\244\232\340\244\262\340\244\276; \340\244\244\340\244\260\340\245\213\340\244\244\340\244\276\340\244\234\340\244\274\340\244\276 \340\244\271\340\245\213 \340\244\260\340\244\271\340\244\276 \340\244\271\340\245\210 ]%s",
   "\340\244\252\340\244\276\340\244\240 \340\244\233\340\244\276\340\244\252\340\244\250\340\244\276",
   "\340\244\233\340\244\252\340\244\276\340\244\210 \340\244\246\340\244\270\340\245\215\340\244\244\340\244\276\340\244\265\340\245\207\340\244\234\340\244\274",
+};
 
-  /* Translations for language hu */
+static const char * const gTranslations_hu[STRINGS_COUNT] = {
   "N\303\251v&jegy",
   "&T\303\251nyleges m\303\251ret\tCtrl+1",
   "Az \303\266sszes kiv\303\241lasztott oldal",
@@ -6377,8 +6337,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[a file megv\303\241ltozott; friss\303\255t\303\251s] %s",
   "Sz\303\266veg v\303\241g\303\263lapra",
   "Nyomtat\303\241s",
+};
 
-  /* Translations for language id */
+static const char * const gTranslations_id[STRINGS_COUNT] = {
   "&Tentang",
   "&Ukuran Sebenarnya\tCtrl+1",
   "&Semua halaman yang dipilih",
@@ -6619,8 +6580,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Perubahan terdeteksi; muat ulang] %s",
   "menyalin teks",
   "mencetak dokumen",
+};
 
-  /* Translations for language ga */
+static const char * const gTranslations_ga[STRINGS_COUNT] = {
   "Maidir le",
   "&F\303\255ormh\303\251id\tCtrl+1",
   "&Gach leathanach roghnaithe",
@@ -6861,8 +6823,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Athruithe braite; ag athnuachan] %s",
   "ag macasamhl\303\272 an t\303\251acs",
   "ag cl\303\263bhualadh an ch\303\241ip\303\251is",
+};
 
-  /* Translations for language it */
+static const char * const gTranslations_it[STRINGS_COUNT] = {
   "&Informazioni su...",
   "Dimensioni re&ali\t<Ctrl>+1",
   "Tutte le p&agine selezionate",
@@ -7103,8 +7066,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Individuati cambiamenti; aggiornmento] %s",
   "Copia del testo...",
   "Stampa documento...",
+};
 
-  /* Translations for language ja */
+static const char * const gTranslations_ja[STRINGS_COUNT] = {
   "\343\203\220\343\203\274\343\202\270\343\203\247\343\203\263\346\203\205\345\240\261(&A)",
   "\345\256\237\351\232\233\343\201\256\343\202\265\343\202\244\343\202\272(&A)\tCtrl+1",
   "\343\201\231\343\201\271\343\201\246\343\201\256\351\201\270\346\212\236\343\201\225\343\202\214\343\201\237\343\203\232\343\203\274\343\202\270(&A)",
@@ -7345,8 +7309,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\345\244\211\346\233\264\343\202\222\346\244\234\345\207\272: \346\233\264\346\226\260\344\270\255] %s",
   "\343\202\263\343\203\224\343\203\274\343\201\231\343\202\213\343\203\206\343\202\255\343\202\271\343\203\210",
   "\345\215\260\345\210\267\343\201\231\343\202\213\343\203\211\343\202\255\343\203\245\343\203\241\343\203\263\343\203\210",
+};
 
-  /* Translations for language kr */
+static const char * const gTranslations_kr[STRINGS_COUNT] = {
   "\354\240\225\353\263\264(&A)",
   "\354\213\244\354\240\234 \355\201\254\352\270\260(&A)\tCtrl+1",
   "\354\204\240\355\203\235\355\225\234 \353\252\250\353\223\240 \355\216\230\354\235\264\354\247\200(&A)",
@@ -7587,8 +7552,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\353\263\200\352\262\275 \352\260\220\354\247\200\353\220\250. \354\203\210\353\241\234 \352\263\240\354\271\230\353\212\224 \354\244\221...] %s",
   "\353\254\270\354\236\220\354\227\264 \353\263\265\354\202\254\355\225\230\353\212\224 \354\244\221",
   "\353\254\270\354\204\234 \354\235\270\354\207\204\355\225\230\353\212\224 \354\244\221",
+};
 
-  /* Translations for language ku */
+static const char * const gTranslations_ku[STRINGS_COUNT] = {
   "\330\257\333\225\330\261\330\250\330\247\330\261\333\225\333\214&",
   "\331\202\333\225\330\250\330\247\330\261\333\225\333\214 \332\225\330\247\330\263\330\252\333\225\331\202\333\214\331\206\333\225 &\tCtrl+1",
   "\331\207\333\225\331\205\331\210\331\210 \331\276\333\225\332\225\333\225 \330\257\333\214\330\247\330\261\333\214\332\251\330\261\330\247\331\210\333\225\332\251\330\247\331\206&",
@@ -7829,8 +7795,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "%s [\332\257\333\206\332\225\330\247\331\206\332\251\330\247\330\261\333\214 \330\252\333\216\330\257\330\247\332\251\330\261\330\247\330\233 \331\206\331\210\333\216\332\251\330\261\330\257\331\206\333\225\331\210\333\225 ]",
   "\331\204\333\225\330\250\333\225\330\261\332\257\330\261\330\252\331\206\333\225\331\210\333\225\333\214 \330\257\333\225\331\202",
   "\332\206\330\247\331\276\332\251\330\261\330\257\331\206\333\214 \330\250\333\225\332\265\332\257\333\225\331\206\330\247\331\205\333\225",
+};
 
-  /* Translations for language lt */
+static const char * const gTranslations_lt[STRINGS_COUNT] = {
   "Apie",
   "&Originalus\tCtrl+1",
   "&Visi pa\305\276ym\304\227ti puslapiai",
@@ -8071,8 +8038,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Aptikta pakitim\305\263; atnaujinama] %s",
   "kopijuojamas tekstas",
   "spausdinamas dokumentas",
+};
 
-  /* Translations for language mk */
+static const char * const gTranslations_mk[STRINGS_COUNT] = {
   "&\320\227\320\260 SumatraPDF...",
   "&\320\240\320\265\320\260\320\273\320\275\320\260 \320\263\320\276\320\273\320\265\320\274\320\270\320\275\320\260\tCtrl+1",
   "&\320\241\320\270\321\202\320\265 \320\276\320\267\320\275\320\260\321\207\320\265\320\275\320\270 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\320\270",
@@ -8313,8 +8281,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\320\227\320\260\320\261\320\265\320\273\320\265\320\266\320\260\320\262 \320\277\321\200\320\276\320\274\320\265\320\275\320\270; \320\276\321\201\320\262\320\265\320\266\321\203\320\262\320\260\320\274...] %s",
   "\320\272\320\276\320\277\320\270\321\200\320\260\320\274 \321\202\320\265\320\272\321\201\321\202",
   "\320\277\320\265\321\207\320\260\321\202\320\260\320\274 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202",
+};
 
-  /* Translations for language ne */
+static const char * const gTranslations_ne[STRINGS_COUNT] = {
   "SumatraPDF &\340\244\254\340\244\276\340\244\260\340\245\207\340\244\256\340\244\276",
   "&\340\244\270\340\244\271\340\245\200 \340\244\206\340\244\225\340\244\276\340\244\260\tCtrl+1",
   "\340\244\232\340\244\257\340\244\250 \340\244\227\340\244\260\340\244\277\340\244\217\340\244\225\340\244\276 &\340\244\270\340\244\254\340\245\210 \340\244\252\340\245\203\340\244\267\340\245\215\340\244\240\340\244\271\340\244\260\340\245\201",
@@ -8555,8 +8524,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\340\244\252\340\244\260\340\244\277\340\244\265\340\244\260\340\245\215\340\244\244\340\244\250 \340\244\252\340\244\244\340\245\215\340\244\244\340\244\276 \340\244\262\340\244\276\340\244\227\340\245\215\340\244\257\340\245\213; \340\244\244\340\244\276\340\244\234\340\244\276 \340\244\227\340\244\260\340\244\277\340\244\201\340\244\246\340\245\210\340\244\233] %s",
   "\340\244\252\340\244\276\340\244\240 \340\244\252\340\245\215\340\244\260\340\244\244\340\244\277\340\244\262\340\244\277\340\244\252\340\244\277 \340\244\254\340\244\250\340\244\276\340\244\210\340\244\246\340\245\210\340\244\233",
   "\340\244\225\340\244\276\340\244\227\340\244\234\340\244\276\340\244\244 \340\244\233\340\244\252\340\244\276\340\244\207",
+};
 
-  /* Translations for language no */
+static const char * const gTranslations_no[STRINGS_COUNT] = {
   "&Om",
   "Fak&tisk st\303\270rrelse\tCtrl+1",
   "&Alle valgte sider",
@@ -8797,8 +8767,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Endringer oppdaget; oppdaterer] %s",
   "kopierer tekst",
   "skriver ut dokument",
+};
 
-  /* Translations for language fa */
+static const char * const gTranslations_fa[STRINGS_COUNT] = {
   "&\330\257\330\261\330\250\330\247\330\261\331\207",
   "&\330\247\330\250\330\271\330\247\330\257 \330\247\330\265\331\204\333\214\342\200\214\tCtrl+1",
   "&\331\207\331\205\331\207\342\200\214\333\214 \330\265\331\201\330\255\330\247\330\252 \330\247\331\206\330\252\330\256\330\247\330\250 \342\200\214\330\264\330\257\331\207",
@@ -9039,8 +9010,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "%s [\330\252\330\272\333\214\333\214\330\261\330\247\330\252 \330\264\331\206\330\247\330\263\330\247\333\214\333\214 \330\264\330\257\330\233 \330\252\330\247\330\262\331\207\342\200\214\330\263\330\247\330\262\333\214]",
   "\330\257\330\261 \330\255\330\247\331\204 \330\261\331\210\331\206\331\210\330\264\330\252 \331\205\330\252\331\206",
   "\330\257\330\261 \330\255\330\247\331\204 \332\206\330\247\331\276 \330\263\331\206\330\257",
+};
 
-  /* Translations for language pl */
+static const char * const gTranslations_pl[STRINGS_COUNT] = {
   "&O SumatraPDF",
   "Rozmiar &rzeczywisty\tCtrl+1",
   "&Zaznaczone strony",
@@ -9281,8 +9253,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[wykryto zmiany; od\305\233wie\305\274anie] %s",
   "kopiowanie tekstu",
   "drukowanie dokumentu",
+};
 
-  /* Translations for language br */
+static const char * const gTranslations_br[STRINGS_COUNT] = {
   "S&obre",
   "&Tamanho real\tCtrl+1",
   "Tod&as as p\303\241ginas selecionadas",
@@ -9523,8 +9496,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Mudan\303\247as detectadas; atualizando] %s",
   "copiando texto",
   "imprimindo documento",
+};
 
-  /* Translations for language pt */
+static const char * const gTranslations_pt[STRINGS_COUNT] = {
   "&Sobre",
   "&Tamanho real\tCtrl+1",
   "&Todas as p\303\241ginas selecionadas",
@@ -9765,8 +9739,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Mudan\303\247as detetadas; a atualizar] %s",
   "c\303\263pia de texto",
   "imprimir documento",
+};
 
-  /* Translations for language ro */
+static const char * const gTranslations_ro[STRINGS_COUNT] = {
   "&Despre",
   "M\304\203rime &efectiv\304\203\tCtrl+1",
   "Toate paginile selectate",
@@ -10007,8 +9982,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Schimb\304\203ri detectate; actualizare] %s",
   "se copiaz\304\203 textul",
   "se imprim\304\203 documentul",
+};
 
-  /* Translations for language ru */
+static const char * const gTranslations_ru[STRINGS_COUNT] = {
   "&\320\236 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\320\274\320\265...",
   "&\320\235\320\260\321\201\321\202\320\276\321\217\321\211\320\270\320\271 \321\200\320\260\320\267\320\274\320\265\321\200\tCtrl+1",
   "&\320\222\321\201\320\265 \320\262\321\213\320\261\321\200\320\260\320\275\320\275\321\213\320\265 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\321\213",
@@ -10249,8 +10225,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\320\236\320\261\320\275\320\260\321\200\321\203\320\266\320\265\320\275\321\213 \320\270\320\267\320\274\320\265\320\275\320\265\320\275\320\270\321\217; \320\276\320\261\320\275\320\276\320\262\320\273\320\265\320\275\320\270\320\265...] %s",
   "\320\272\320\276\320\277\320\270\321\200\321\203\320\265\321\202\321\201\321\217 \321\202\320\265\320\272\321\201\321\202",
   "\320\277\320\265\321\207\320\260\321\202\320\260\320\265\321\202\321\201\321\217 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202",
+};
 
-  /* Translations for language sr-rs */
+static const char * const gTranslations_sr_rs[STRINGS_COUNT] = {
   "\320\236 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\321\203",
   "\320\241\321\202\320\262\320\260\321\200\320\275\320\260 \320\262\320\265\320\273\320\270\321\207\320\270\320\275\320\260\tCtrl+1",
   "\320\241\320\262\320\265 \320\270\320\267\320\260\320\261\321\200\320\260\320\275\320\265 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\320\265",
@@ -10491,8 +10468,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\320\237\321\200\320\276\320\274\320\265\320\275\320\265 \321\201\321\203 \320\277\321\200\320\270\320\274\320\265\321\233\320\265\320\275\320\265; \320\276\321\201\320\262\320\265\320\266\320\260\320\262\320\260\321\232\320\265] %s",
   "\320\272\320\276\320\277\320\270\321\200\320\260\321\232\320\265 \321\202\320\265\320\272\321\201\321\202\320\260",
   "\321\210\321\202\320\260\320\274\320\277\320\260\321\232\320\265 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260",
+};
 
-  /* Translations for language sp-rs */
+static const char * const gTranslations_sp_rs[STRINGS_COUNT] = {
   "O programu",
   "Stvarna veli\304\215ina\tCtrl+1",
   "Sve izabrane stranice",
@@ -10733,8 +10711,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Promene su prime\304\207ene; osve\305\276avanje] %s",
   "kopiranje teksta",
   "\305\241tampanje dokumenta",
+};
 
-  /* Translations for language sk */
+static const char * const gTranslations_sk[STRINGS_COUNT] = {
   "&O programe...",
   "&Skuto\304\215n\303\241 ve\304\276kos\305\245\tCtrl+1",
   "&Tla\304\215i\305\245 v\305\241etky strany",
@@ -10975,8 +10954,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Boli zisten\303\251 zmeny, znovu sa na\304\215\303\255tava] %s",
   "prebieha kop\303\255rovanie textu",
   "prebieha tla\304\215 dokumentu",
+};
 
-  /* Translations for language sl */
+static const char * const gTranslations_sl[STRINGS_COUNT] = {
   "&O programu",
   "&Dejanska velikost\tCtrl+1",
   "&Vse izbrane strani",
@@ -11217,8 +11197,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Spremembe zaznane; osve\305\276itev poteka] %s",
   "kopiranje besedila",
   "tiskanje dokumenta",
+};
 
-  /* Translations for language es */
+static const char * const gTranslations_es[STRINGS_COUNT] = {
   "&Acerca de...",
   "Tama\303\261o Real\tCtrl+1",
   "&Todas las p\303\241ginas seleccionadas",
@@ -11459,8 +11440,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[Modificaciones detectadas; actualizando] %s",
   "copiado de texto",
   "imprimiendo documento",
+};
 
-  /* Translations for language sv */
+static const char * const gTranslations_sv[STRINGS_COUNT] = {
   "&Om",
   "&Verklig storlek\tCtrl+1",
   "&Alla valda sidor",
@@ -11701,8 +11683,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\303\204ndringar detekterade; uppdaterar] %s",
   "kopierar text",
   "skriver ut dokumentet",
+};
 
-  /* Translations for language ta */
+static const char * const gTranslations_ta[STRINGS_COUNT] = {
   "\340\256\252\340\256\261\340\257\215\340\256\261\340\256\277",
   "\340\256\256\340\257\206\340\256\257\340\257\215 \340\256\205\340\256\263\340\256\265\340\257\201\tCtrl+1",
   "\340\256\216\340\256\262\340\257\215\340\256\262\340\256\276 \340\256\244\340\257\207\340\256\260\340\257\215\340\256\250\340\257\215\340\256\244\340\257\206\340\256\237\340\257\201\340\256\244\340\257\215\340\256\244 \340\256\252\340\256\225\340\257\215\340\256\225\340\256\231\340\257\215\340\256\225\340\256\263\340\257\201\340\256\256\340\257\215",
@@ -11943,8 +11926,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\340\256\256\340\256\276\340\256\261\340\257\215\340\256\261\340\256\231\340\257\215\340\256\225\340\256\263\340\257\215 \340\256\225\340\256\243\340\257\215\340\256\237\340\257\201\340\256\252\340\256\277\340\256\237\340\256\277\340\256\225\340\257\215\340\256\225 \340\256\252\340\256\237\340\257\215\340\256\237\340\257\201\340\256\263\340\257\215\340\256\263\340\256\244\340\257\201; \340\256\252\340\257\201\340\256\244\340\257\201\340\256\252\340\256\277\340\256\225\340\257\215\340\256\225\340\256\252\340\256\237\340\257\215\340\256\237\340\257\201 \340\256\265\340\256\260\340\257\201\340\256\225\340\256\277\340\256\261\340\256\244\340\257\201]%s",
   "\340\256\250\340\256\225\340\256\262\340\257\215 \340\256\216\340\256\237\340\257\201\340\256\225\340\257\215\340\256\225\340\256\252\340\257\215\340\256\252\340\256\237\340\257\201\340\256\225\340\256\277\340\256\261\340\256\244\340\257\201",
   "\340\256\225\340\257\213\340\256\252\340\257\215\340\256\252\340\257\201 \340\256\205\340\256\225\340\257\215\340\256\232\340\256\277\340\256\237\340\256\252\340\257\215\340\256\252\340\256\237\340\257\201\340\256\225\340\256\277\340\256\261\340\256\244\340\257\201",
+};
 
-  /* Translations for language tr */
+static const char * const gTranslations_tr[STRINGS_COUNT] = {
   "&Hakk\304\261nda",
   "Ger\303\247ek &Boyut\tCtrl+1",
   "T\303\274m se\303\247ilen &sayfalar",
@@ -12185,8 +12169,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[De\304\237i\305\237iklik tespit edildi; g\303\274ncelleniyor] %s",
   "metin kopyalan\304\261yor",
   "belge yazd\304\261r\304\261l\304\261yor",
+};
 
-  /* Translations for language uk */
+static const char * const gTranslations_uk[STRINGS_COUNT] = {
   "\320\237&\321\200\320\276 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\321\203...",
   "\320\241\320\277\321\200\320\260\320\262\320\266\320\275\321\226\320\271 \321\200\320\276\320\267\320\274\321\226\321\200\tCtrl+1",
   "\320\236\320\261\321\200\320\260\320\275\320\276 \320\262\321\201\321\226 \321\201\321\202\320\276\321\200\321\226\320\275\320\272\320\270",
@@ -12427,8 +12412,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[\320\227\320\275\320\260\320\271\320\264\320\265\320\275\320\276 \320\267\320\274\321\226\320\275\320\270; \320\276\320\275\320\276\320\262\320\273\320\265\320\275\320\275\321\217] %s",
   "\320\272\320\276\320\277\321\226\321\216\320\262\320\260\320\275\320\275\321\217 \321\202\320\265\320\272\321\201\321\202\321\203",
   "\320\264\321\200\321\203\320\272 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202\320\260",
+};
 
-  /* Translations for language uz */
+static const char * const gTranslations_uz[STRINGS_COUNT] = {
   "&Dastur haqida",
   "&Haqiqiy o'lchami\tCtrl+1",
   "&Hamma tanlangan betlar",
@@ -12669,8 +12655,9 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "[O'zgarishlar aniqlangan; yangilanmoqda] %s",
   "matnni nusxa olish",
   "hujjatni bosib chiqarish",
+};
 
-  /* Translations for language vn */
+static const char * const gTranslations_vn[STRINGS_COUNT] = {
   "Gi\341\273\233i thi\341\273\207u",
   "K\303\255ch th\306\260\341\273\233&c th\341\272\255t\tCtrl+1",
   "T\341\272\245t c\341\272\243 c\303\241c tr&ang \304\221\306\260\341\273\243c ch\341\273\215n",
@@ -12912,3 +12899,63 @@ const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
   "\304\221ang ch\303\251p v\304\203n b\341\272\243n",
   "\304\221ang in t\341\272\255p tin",
 };
+
+
+static LangDef gLanguages[LANGS_COUNT] = {
+    { "en", "English", _LANGID(LANG_ENGLISH), false, gTranslations_en, NULL },
+    { "sq", "Albanian (Shqip)", _LANGID(LANG_ALBANIAN), false, gTranslations_sq, NULL },
+    { "ar", "Arabic (\330\247\331\204\331\222\330\271\331\216\330\261\331\216\330\250\331\212\331\221\330\251)", _LANGID(LANG_ARABIC), true, gTranslations_ar, NULL },
+    { "am", "Armenian (\325\200\325\241\325\265\325\245\326\200\325\245\325\266)", _LANGID(LANG_ARMENIAN), false, gTranslations_am, NULL },
+    { "az", "Azerbaijani (\330\242\330\260\330\261\330\250\330\247\333\214\330\254\330\247\331\206 \330\257\333\214\331\204\333\214)", _LANGID(LANG_AZERI), false, gTranslations_az, NULL },
+    { "eu", "Basque (Euskara)", _LANGID(LANG_BASQUE), false, gTranslations_eu, NULL },
+    { "bs", "Bosnian (Bosanski)", MAKELANGID(LANG_BOSNIAN, SUBLANG_BOSNIAN_BOSNIA_HERZEGOVINA_LATIN), false, gTranslations_bs, NULL },
+    { "bg", "Bulgarian (\320\221\321\212\320\273\320\263\320\260\321\200\321\201\320\272\320\270)", _LANGID(LANG_BULGARIAN), false, gTranslations_bg, NULL },
+    { "ca", "Catalan (Catal\303\240)", _LANGID(LANG_CATALAN), false, gTranslations_ca, NULL },
+    { "ca-xv", "Catalan-Valencian (Catal\303\240-Valenci\303\240)", -1, false, gTranslations_ca_xv, NULL },
+    { "cn", "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED), false, gTranslations_cn, NULL },
+    { "tw", "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)", MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL), false, gTranslations_tw, NULL },
+    { "hr", "Croatian (Hrvatski)", _LANGID(LANG_CROATIAN), false, gTranslations_hr, NULL },
+    { "cz", "Czech (\304\214e\305\241tina)", _LANGID(LANG_CZECH), false, gTranslations_cz, NULL },
+    { "dk", "Danish (Dansk)", _LANGID(LANG_DANISH), false, gTranslations_dk, NULL },
+    { "nl", "Dutch (Nederlands)", _LANGID(LANG_DUTCH), false, gTranslations_nl, NULL },
+    { "et", "Estonian (Eesti)", _LANGID(LANG_ESTONIAN), false, gTranslations_et, NULL },
+    { "fi", "Finnish (Suomi)", _LANGID(LANG_FINNISH), false, gTranslations_fi, NULL },
+    { "fr", "French (Fran\303\247ais)", _LANGID(LANG_FRENCH), false, gTranslations_fr, NULL },
+    { "gl", "Galician (Galego)", _LANGID(LANG_GALICIAN), false, gTranslations_gl, NULL },
+    { "ka", "Georgian (\341\203\245\341\203\220\341\203\240\341\203\227\341\203\243\341\203\232\341\203\230)", _LANGID(LANG_GEORGIAN), false, gTranslations_ka, NULL },
+    { "de", "German (Deutsch)", _LANGID(LANG_GERMAN), false, gTranslations_de, NULL },
+    { "el", "Greek (\316\225\316\273\316\273\316\267\316\275\316\271\316\272\316\254)", _LANGID(LANG_GREEK), false, gTranslations_el, NULL },
+    { "he", "Hebrew (\327\242\327\221\327\250\327\231\327\252)", _LANGID(LANG_HEBREW), true, gTranslations_he, NULL },
+    { "hi", "Hindi (\340\244\271\340\244\277\340\244\202\340\244\246\340\245\200)", _LANGID(LANG_HINDI), false, gTranslations_hi, NULL },
+    { "hu", "Hungarian (Magyar)", _LANGID(LANG_HUNGARIAN), false, gTranslations_hu, NULL },
+    { "id", "Indonesian (Bahasa Indonesia)", _LANGID(LANG_INDONESIAN), false, gTranslations_id, NULL },
+    { "ga", "Irish (Gaeilge)", _LANGID(LANG_IRISH), false, gTranslations_ga, NULL },
+    { "it", "Italian (Italiano)", _LANGID(LANG_ITALIAN), false, gTranslations_it, NULL },
+    { "ja", "Japanese (\346\227\245\346\234\254\350\252\236)", _LANGID(LANG_JAPANESE), false, gTranslations_ja, NULL },
+    { "kr", "Korean (\355\225\234\352\265\255\354\226\264)", _LANGID(LANG_KOREAN), false, gTranslations_kr, NULL },
+    { "ku", "Kurdish (\331\203\331\210\330\261\330\257\333\214)", MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ), true, gTranslations_ku, NULL },
+    { "lt", "Lithuanian (Lietuvi\305\263)", _LANGID(LANG_LITHUANIAN), false, gTranslations_lt, NULL },
+    { "mk", "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)", _LANGID(LANG_MACEDONIAN), false, gTranslations_mk, NULL },
+    { "ne", "Nepali (\340\244\250\340\245\207\340\244\252\340\244\276\340\244\262\340\245\200)", _LANGID(LANG_NEPALI), false, gTranslations_ne, NULL },
+    { "no", "Norwegian (Norsk)", MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL), false, gTranslations_no, NULL },
+    { "fa", "Persian (\331\201\330\247\330\261\330\263\333\214)", _LANGID(LANG_FARSI), true, gTranslations_fa, NULL },
+    { "pl", "Polish (Polski)", _LANGID(LANG_POLISH), false, gTranslations_pl, NULL },
+    { "br", "Portuguese - Brazil (Portugu\303\252s)", MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN), false, gTranslations_br, NULL },
+    { "pt", "Portuguese - Portugal (Portugu\303\252s)", _LANGID(LANG_PORTUGUESE), false, gTranslations_pt, NULL },
+    { "ro", "Romanian (Rom\303\242n\304\203)", _LANGID(LANG_ROMANIAN), false, gTranslations_ro, NULL },
+    { "ru", "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)", _LANGID(LANG_RUSSIAN), false, gTranslations_ru, NULL },
+    { "sr-rs", "Serbian (Cyrillic)", MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_CYRILLIC), false, gTranslations_sr_rs, NULL },
+    { "sp-rs", "Serbian (Latin)", MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_LATIN), false, gTranslations_sp_rs, NULL },
+    { "sk", "Slovak (Sloven\304\215ina)", _LANGID(LANG_SLOVAK), false, gTranslations_sk, NULL },
+    { "sl", "Slovenian (Sloven\305\241\304\215ina)", _LANGID(LANG_SLOVENIAN), false, gTranslations_sl, NULL },
+    { "es", "Spanish (Espa\303\261ol)", _LANGID(LANG_SPANISH), false, gTranslations_es, NULL },
+    { "sv", "Swedish (Svenska)", _LANGID(LANG_SWEDISH), false, gTranslations_sv, NULL },
+    { "ta", "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264\340\257\215)", _LANGID(LANG_TAMIL), false, gTranslations_ta, NULL },
+    { "tr", "Turkish (T\303\274rk\303\247e)", _LANGID(LANG_TURKISH), false, gTranslations_tr, NULL },
+    { "uk", "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)", _LANGID(LANG_UKRAINIAN), false, gTranslations_uk, NULL },
+    { "uz", "Uzbek (O'zbek)", _LANGID(LANG_UZBEK), false, gTranslations_uz, NULL },
+    { "vn", "Vietnamese (Vi\341\273\207t Nam)", _LANGID(LANG_VIETNAMESE), false, gTranslations_vn, NULL },
+};
+
+#undef _LANGID
+

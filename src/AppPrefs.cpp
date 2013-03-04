@@ -92,7 +92,7 @@
 
 SerializableGlobalPrefs gGlobalPrefs = {
     false, // bool globalPrefsOnly
-    DEFAULT_LANGUAGE, // const char *currentLanguage
+    DEFAULT_LANGUAGE, // const char *currLangCode
     true, // bool toolbarVisible
     false, // bool favVisible
     false, // bool pdfAssociateDontAskAgain
@@ -180,7 +180,7 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
         prefs->Add(VERSION_TO_SKIP_STR, globalPrefs.versionToSkip);
     if (globalPrefs.lastUpdateTime)
         prefs->AddRaw(LAST_UPDATE_STR, globalPrefs.lastUpdateTime);
-    prefs->AddRaw(UI_LANGUAGE_STR, globalPrefs.currentLanguage);
+    prefs->AddRaw(UI_LANGUAGE_STR, globalPrefs.currLangCode);
 
     if (!globalPrefs.openCountWeek)
         globalPrefs.openCountWeek = GetWeekCount();
@@ -532,10 +532,13 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
     Retrieve(global, VERSION_TO_SKIP_STR, globalPrefs.versionToSkip);
     RetrieveRaw(global, LAST_UPDATE_STR, globalPrefs.lastUpdateTime);
 
-    const char *lang = GetRawString(global, UI_LANGUAGE_STR);
-    const char *langCode = trans::ValidateLanguageCode(lang);
-    if (langCode)
-        globalPrefs.currentLanguage = langCode;
+    // ensure language code is valid
+    const char *langCode = GetRawString(global, UI_LANGUAGE_STR);
+    LangDef *lang = trans::GetLangByCode(langCode);
+    if (lang)
+        globalPrefs.currLangCode = lang->code;
+    else
+        globalPrefs.currLangCode = DEFAULT_LANGUAGE;
 
     Retrieve(global, FWDSEARCH_OFFSET, globalPrefs.fwdSearch.offset);
     Retrieve(global, FWDSEARCH_COLOR, globalPrefs.fwdSearch.color);
@@ -738,7 +741,7 @@ bool ReloadPrefs()
         return true;
     }
 
-    const char *currLang = gGlobalPrefs.currentLanguage;
+    const char *currLangCode = gGlobalPrefs.currLangCode;
     bool toolbarVisible = gGlobalPrefs.toolbarVisible;
     bool useSysColors = gGlobalPrefs.useSysColors;
 
@@ -753,8 +756,10 @@ bool ReloadPrefs()
         gWindows.At(0)->RedrawAll(true);
     }
 
-    if (!str::Eq(currLang, gGlobalPrefs.currentLanguage))
-        ChangeLanguage(gGlobalPrefs.currentLanguage);
+    if (!str::Eq(currLangCode, gGlobalPrefs.currLangCode)) {
+        LangDef * lang = trans::GetLangByCode(gGlobalPrefs.currLangCode);
+        SetCurrentLanguageAndRefreshUi(lang);
+    }
 
     if (gGlobalPrefs.toolbarVisible != toolbarVisible)
         ShowOrHideToolbarGlobally();

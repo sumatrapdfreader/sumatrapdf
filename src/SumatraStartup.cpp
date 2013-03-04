@@ -325,10 +325,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedMem<WCHAR> prefsFilename(GetPrefsFileName());
     if (!file::Exists(prefsFilename)) {
         // guess the ui language on first start
-        CurrLangNameSet(trans::GuessLanguage());
+        SetCurrentLang(trans::GuessLang());
     } else {
         Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, gFavorites);
-        CurrLangNameSet(gGlobalPrefs.currentLanguage);
+        SetCurrentLangByCode(gGlobalPrefs.currLangCode);
     }
     prefsFilename.Set(NULL);
 
@@ -365,7 +365,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         str::ReplacePtr(&gGlobalPrefs.inverseSearchCmdLine, i.inverseSearchCmdLine);
         gGlobalPrefs.enableTeXEnhancements = true;
     }
-    CurrLangNameSet(i.lang);
+    SetCurrentLangByCode(i.lang);
 
     if (!RegisterWinClass(hInstance))
         goto Exit;

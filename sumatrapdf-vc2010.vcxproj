@@ -253,6 +253,7 @@
     <ClCompile Include="src\AppPrefs.cpp" />
     <ClCompile Include="src\AppTools.cpp" />
     <ClCompile Include="src\browserplugin\npPdfViewer.cpp" />
+    <ClCompile Include="src\browserplugin\Translations_txt.cpp" />
     <ClCompile Include="src\ChmDoc.cpp" />
     <ClCompile Include="src\ChmEngine.cpp" />
     <ClCompile Include="src\CrashHandler.cpp" />
@@ -640,6 +641,7 @@
     <Manifest Include="src\SumatraPDF.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="src\browserplugin\npPdfViewer.rc" />
     <ResourceCompile Include="src\ifilter\PdfFilter.rc" />
     <ResourceCompile Include="src\installer\Installer.manifest.rc" />
     <ResourceCompile Include="src\installer\Installer.rc" />

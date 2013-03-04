@@ -1,4 +1,30 @@
-import os, re, util, langs_def
+#!/usr/bin/env python
+import os, re, util, codecs, langs_def
+
+class Lang(object):
+    def __init__(self, desc):
+        assert len(desc) <= 4
+        self.desc = desc
+        self.code = desc[0] # "af"
+        self.name = desc[1] # "Afrikaans"
+        self.ms_lang_id_info = desc[2]
+        self.isRtl = "false"
+        if len(desc) > 3:
+            assert desc[3] == 'RTL'
+            self.isRtl = "true"
+
+        # code that can be used as part of C identifier i.e.:
+        # "ca-xv" => "ca_xv"
+        self.code_safe = self.code.replace("-", "_")
+        self.c_translations_array_name = "gTranslations_" + self.code_safe
+        self.ms_lang_id_string = make_lang_id(self.desc)
+        self.translations = []
+
+def get_lang_objects(langs_defs):
+    langs = []
+    for desc in langs_defs:
+        langs.append(Lang(desc))
+    return langs
 
 # number of missing translations for a language to be considered
 # incomplete (will be excluded from Translations_txt.cpp) as a
@@ -55,27 +81,21 @@ TRANSLATIONS_TXT_C = """\
 #define SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ 0x01
 #endif
 
+#include "Translations.h"
+
 #define LANGS_COUNT   %(langs_count)d
 #define STRINGS_COUNT %(translations_count)d
 
-typedef struct {
-    const char * code;
-    const char * fullName;
-    LANGID       langId;
-    bool         isRTL;
-} LangDef;
-
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
 
-LangDef gLangData[LANGS_COUNT] = {
+%(translation_arrays)s
+
+static LangDef gLanguages[LANGS_COUNT] = {
     %(lang_data)s
 };
 
 #undef _LANGID
 
-const char * const gTranslations[LANGS_COUNT * STRINGS_COUNT] = {
-%(translations)s
-};
 """
 
 TRANSLATIONS_TXT_SIMPLE = """\
@@ -179,38 +199,58 @@ def is_rtl_lang(lang):
 def key_sort_func(a, b):
     return cmp(a.replace(r"\t", "\t"), b.replace(r"\t", "\t"))
 
+def build_trans_for_langs(langs, strings_dict, keys):
+    incomplete = []
+    for lang in langs:
+        lang.translations = get_trans_for_lang(strings_dict, keys, lang.code)
+        if not lang.translations:
+            incomplete.append(lang)
+    for lang in incomplete:
+        langs.remove(lang)
+    return langs
+
+"""For:
+typedef struct {
+    const char *            code;
+    const char *            fullName;
+    LANGID                  langId;
+    bool                    isRTL;
+    const char * const *    translations;
+    const WCHAR **          translationsCache;
+} LangDef;
+"""
+def format_lang_def(lang):
+    code = lang.code
+    name = c_escape(lang.name)
+    langId = lang.ms_lang_id_string
+    isRtl = lang.isRtl
+    translations = lang.c_translations_array_name
+    return '{ "%s", %s, %s, %s, %s, NULL },' % (code, name, langId, isRtl, translations)
+
 def gen_c_code_for_dir(strings_dict, keys, dir_name):
-    langs_idx = sorted(langs_def.g_langs, cmp=lang_sort_func)
-    assert "en" == langs_idx[0][0]
-    translations_count = len(keys)
+    langs = get_lang_objects(sorted(langs_def.g_langs, cmp=lang_sort_func))
+    assert "en" == langs[0].code
+    langs = build_trans_for_langs(langs, strings_dict, keys)
 
     lines = []
-    incomplete_langs = []
-    for lang in langs_idx:
-        trans = get_trans_for_lang(strings_dict, keys, lang[0])
-        if not trans:
-            incomplete_langs.append(lang)
-            continue
-        lines.append("")
-        lines.append("  /* Translations for language %s */" % lang[0])
-        lines += ["  %s," % c_escape(t) for t in trans]
-    for lang in incomplete_langs:
-        langs_idx.remove(lang)
-    translations = "\n".join(lines)
+    for lang in langs:
+        lines.append("static const char * const %s[STRINGS_COUNT] = {" % lang.c_translations_array_name)
+        lines += ["  %s," % c_escape(t) for t in lang.translations]
+        lines.append("};\n")
 
-    #print [l[1] for l in langs_idx]
-    lang_data = ['{ "%s", %s, %s, %s },' % (lang[0], c_escape(lang[1]), make_lang_id(lang), is_rtl_lang(lang)) for lang in langs_idx]
+    translation_arrays = "\n".join(lines)
+
+    lang_data = [format_lang_def(lang) for lang in langs]
     lang_data = "\n    ".join(lang_data)
-    langs_count = len(langs_idx)
-
+    langs_count = len(langs)
+    translations_count = len(keys)
     file_content = TRANSLATIONS_TXT_C % locals()
-    file_name = os.path.join(SRC_DIR, dir_name, C_TRANS_FILENAME)
-    file(file_name, "wb").write(file_content)
+    file_path = os.path.join(SRC_DIR, dir_name, C_TRANS_FILENAME)
+    file(file_path, "wb").write(file_content)
 
 def gen_c_code_simple(strings_dict, keys, dir_name):
     langs_idx = sorted(langs_def.g_langs, cmp=lang_sort_func)
     assert "en" == langs_idx[0][0]
-    translations_count = len(keys)
 
     lines = []
     incomplete_langs = []
@@ -231,7 +271,7 @@ def gen_c_code_simple(strings_dict, keys, dir_name):
     lang_id_to_index = "\n    ".join(["case %s: return %d;" % (make_lang_id(lang), langs_idx.index(lang) * len(keys)) for lang in langs_idx] + ["default: return -1;"])
     rtl_lang_cmp = " || ".join(["%d == index" % langs_idx.index(lang) * len(keys) for lang in langs_idx if is_rtl_lang(lang) == "true"]) or "false"
 
-    import codecs
+    translations_count = len(keys)
     file_content = codecs.BOM_UTF8 + TRANSLATIONS_TXT_SIMPLE % locals()
     file_name = os.path.join(SRC_DIR, dir_name, C_TRANS_FILENAME)
     file(file_name, "wb").write(file_content)

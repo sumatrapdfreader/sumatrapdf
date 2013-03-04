@@ -6,6 +6,7 @@
 
 #include "FileHistory.h"
 #include "SumatraWindow.h"
+#include "Translations.h"
 
 #define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
 
@@ -101,7 +102,7 @@ void  RememberFavTreeExpansionState(WindowInfo *win);
 void  LayoutTreeContainer(HWND hwndContainer, int id);
 void  AdvanceFocus(WindowInfo* win);
 bool  WindowInfoStillValid(WindowInfo *win);
-void  ChangeLanguage(const char *langName);
+void  SetCurrentLanguageAndRefreshUi(LangDef *lang);
 void  ShowOrHideToolbarGlobally();
 void  UpdateDocumentColors();
 void  UpdateCurrentFileDisplayStateForWin(SumatraWindow& win);

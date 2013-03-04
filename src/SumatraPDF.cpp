@@ -180,17 +180,17 @@ bool HasPermission(int permission)
     return (permission & gPolicyRestrictions) == permission;
 }
 
-bool CurrLangNameSet(const char *langName)
+static void SetCurrentLang(LangDef *lang)
 {
-    const char *langCode = trans::ValidateLanguageCode(langName);
-    if (!langCode)
-        return false;
+    if (lang) {
+        gGlobalPrefs.currLangCode = lang->code;
+        trans::SetCurrentLang(lang);
+    }
+}
 
-    gGlobalPrefs.currentLanguage = langCode;
-
-    bool ok = trans::SetCurrentLanguage(langCode);
-    assert(ok);
-    return ok;
+static void SetCurrentLangByCode(const char *langCode)
+{
+    SetCurrentLang(trans::GetLangByCode(langCode));
 }
 
 #ifndef SUMATRA_UPDATE_INFO_URL
@@ -557,8 +557,8 @@ void UpdateCurrentFileDisplayStateForWin(SumatraWindow& win)
 
 bool IsUIRightToLeft()
 {
-    int langIx = trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
-    return trans::IsLanguageRtL(langIx);
+    LangDef *lang = trans::GetCurrentLang();
+    return lang->isRTL;
 }
 
 // updates the layout for a window to either left-to-right or right-to-left
@@ -3218,31 +3218,23 @@ static void FrameOnSize(WindowInfo* win, int dx, int dy)
     }
 }
 
-void ChangeLanguage(const char *langName)
+void SetCurrentLanguageAndRefreshUi(LangDef *lang)
 {
-    CurrLangNameSet(langName);
+    if (!lang || (lang == trans::GetCurrentLang()))
+        return;
+    SetCurrentLang(lang);
     UpdateRtlLayoutForAllWindows();
     RebuildMenuBarForAllWindows();
     UpdateUITextForLanguage();
+    if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
+        gWindows.At(0)->RedrawAll(true);
+    SavePrefs();
 }
 
 void OnMenuChangeLanguage(HWND hwnd)
 {
-    int langId = trans::GetLanguageIndex(gGlobalPrefs.currentLanguage);
-    int newLangId = Dialog_ChangeLanguge(hwnd, langId);
-
-    if (newLangId != -1 && langId != newLangId) {
-        const char *langName = trans::GetLanguageCode(newLangId);
-        assert(langName);
-        if (!langName)
-            return;
-
-        ChangeLanguage(langName);
-
-        if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
-            gWindows.At(0)->RedrawAll(true);
-        SavePrefs();
-    }
+    LangDef * newLang = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLang());
+    SetCurrentLanguageAndRefreshUi(newLang);
 }
 
 static void OnMenuViewShowHideToolbar()
