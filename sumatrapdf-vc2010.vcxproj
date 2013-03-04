@@ -319,6 +319,8 @@
     <ClCompile Include="src\TextSearch.cpp" />
     <ClCompile Include="src\TextSelection.cpp" />
     <ClCompile Include="src\Toolbar.cpp" />
+    <ClCompile Include="src\Translations2.cpp" />
+    <ClCompile Include="src\Trans_sumatra_txt.cpp" />
     <ClCompile Include="src\utils\BaseUtil.cpp" />
     <ClCompile Include="src\utils\BitReader.cpp" />
     <ClCompile Include="src\utils\ByteOrderDecoder.cpp" />
@@ -344,8 +346,6 @@
     <ClCompile Include="src\utils\StrUtil_ut.cpp" />
     <ClCompile Include="src\utils\ThreadUtil.cpp" />
     <ClCompile Include="src\utils\Touch.cpp" />
-    <ClCompile Include="src\Translations.cpp" />
-    <ClCompile Include="src\Translations_txt.cpp" />
     <ClCompile Include="mupdf\fitz\base_error.c" />
     <ClCompile Include="mupdf\fitz\base_hash.c" />
     <ClCompile Include="mupdf\fitz\base_memory.c" />
@@ -508,6 +508,7 @@
     <ClInclude Include="src\TextSearch.h" />
     <ClInclude Include="src\TextSelection.h" />
     <ClInclude Include="src\Toolbar.h" />
+    <ClInclude Include="src\Translations2.h" />
     <ClInclude Include="src\utils\Allocator.h" />
     <ClInclude Include="src\utils\BitManip.h" />
     <ClInclude Include="src\utils\BitReader.h" />
@@ -528,7 +529,6 @@
     <ClInclude Include="src\utils\StrFormat.h" />
     <ClInclude Include="src\utils\ThreadUtil.h" />
     <ClInclude Include="src\utils\Touch.h" />
-    <ClInclude Include="src\Translations.h" />
     <ClInclude Include="src\utils\BaseUtil.h" />
     <ClInclude Include="src\utils\BencUtil.h" />
     <ClInclude Include="src\utils\CmdLineParser.h" />

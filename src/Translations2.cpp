@@ -15,25 +15,24 @@ TODO:
 // Note: this code is optimized for (small) size, not speed
 // Let's keep it this way
 
-// from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
-// those definition are not present in 7.0A SDK my VS 2010 uses
-#ifndef LANG_CENTRAL_KURDISH
-#define LANG_CENTRAL_KURDISH 0x92
-#endif
-
-#ifndef SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ
-#define SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ 0x01
-#endif
-
 namespace trans {
 
-#include "Translations_txt.cpp"
+// defined in Trans*_txt.cpp
+extern int              gLangsCount;
+extern int              gStringsCount;
+extern const char *     gLangNames;
+extern const char *     gLangCodes;
+extern const LANGID *   gLangIds;
+extern int              gRtlLangsCount;
+extern const char **    gTranslations;
+extern const char *     gTranslations_en;
+extern const char **    gCurrLangStrings;
+extern const WCHAR **   gCurrLangTransCache;
+const int *             GetRtlLangs();
+const LANGID *          GetLangIds();
 
-static const char *  gCurrLangCode = NULL;
-static int           gCurrLangIdx = 0;
-
-static const char *  gCurrLangStrings[STRINGS_COUNT] = { 0 };
-static const WCHAR * gCurrLangTransCache[STRINGS_COUNT] = { 0 };
+static const char *     gCurrLangCode = NULL;
+static int              gCurrLangIdx = 0;
 
 /* In general, after adding new _TR() strings, one has to re-generate Translations_txt.cpp, but
 that also requires uploading new strings to the server, for which one needs accesss.
@@ -77,7 +76,7 @@ static const WCHAR *FindOrAddMissingTranslation(const char *s)
 
 int GetLangsCount()
 {
-    return LANGS_COUNT;
+    return gLangsCount;
 }
 
 const char *GetCurrentLangCode()
@@ -87,7 +86,7 @@ const char *GetCurrentLangCode()
 
 static void FreeTransCache()
 {
-    for (int i = 0; i < STRINGS_COUNT; i++) {
+    for (int i = 0; i < gStringsCount; i++) {
         free((void*)gCurrLangTransCache[i]);
         gCurrLangTransCache[i] = 0;
     }
@@ -95,7 +94,7 @@ static void FreeTransCache()
 
 static void BuildStringsIndex(const char *s)
 {
-    for (int i = 0; i < STRINGS_COUNT; i++) {
+    for (int i = 0; i < gStringsCount; i++) {
         size_t len = str::Len(s);
         if (0 == len)
             gCurrLangStrings[i] = NULL;
@@ -110,7 +109,7 @@ void SetCurrentLangByCode(const char *langCode)
     if (str::Eq(langCode, gCurrLangCode))
         return;
 
-    int idx = seqstrings::GetStrIdx(gLangCodes, langCode, LANGS_COUNT);
+    int idx = seqstrings::GetStrIdx(gLangCodes, langCode, gLangsCount);
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = langCode;
@@ -120,7 +119,7 @@ void SetCurrentLangByCode(const char *langCode)
 
 const char *ValidateLangCode(const char *langCode)
 {
-    int idx = seqstrings::GetStrIdx(gLangCodes, langCode, LANGS_COUNT);
+    int idx = seqstrings::GetStrIdx(gLangCodes, langCode, gLangsCount);
     if (-1 == idx)
         return NULL;
     return GetLangCodeByIdx(idx);
@@ -138,9 +137,10 @@ const char *GetLangNameByIdx(int idx)
 
 bool IsLangRtlByCode(const char *langCode)
 {
-    int idx = seqstrings::GetStrIdx(gLangCodes, langCode, LANGS_COUNT);
-    for (int i = 0; i < RTL_LANGS_COUNT; i++) {
-        if (gRtlLangs[i] == idx)
+    const int *rtlLangs = GetRtlLangs();
+    int idx = seqstrings::GetStrIdx(gLangCodes, langCode, gLangsCount);
+    for (int i = 0; i < gRtlLangsCount; i++) {
+        if (rtlLangs[i] == idx)
             return true;
     }
     return false;
@@ -148,18 +148,19 @@ bool IsLangRtlByCode(const char *langCode)
 
 const char *DetectUserLang()
 {
+    const LANGID *langIds = GetLangIds();
     LANGID langId = GetUserDefaultUILanguage();
     // try the exact match
-    for (int i = 0; i < LANGS_COUNT; i++) {
-        LANGID tmp = gLangIds[i];
+    for (int i = 0; i < gLangsCount; i++) {
+        LANGID tmp = langIds[i];
         if (tmp == langId)
             return GetLangCodeByIdx(i);
     }
 
     LANGID primaryLangId = PRIMARYLANGID(langId);
     // the first match with the same primary lang id
-    for (int i = 0; i < LANGS_COUNT; i++) {
-        LANGID tmp = PRIMARYLANGID(gLangIds[i]);
+    for (int i = 0; i < gLangsCount; i++) {
+        LANGID tmp = PRIMARYLANGID(langIds[i]);
         if (tmp == primaryLangId)
             return GetLangCodeByIdx(i);
     }
@@ -168,7 +169,7 @@ const char *DetectUserLang()
 
 static int GetEnglishStringIndex(const char* txt)
 {
-    return seqstrings::GetStrIdx(gTranslations_en, txt, STRINGS_COUNT);
+    return seqstrings::GetStrIdx(gTranslations_en, txt, gStringsCount);
 }
 
 const WCHAR *GetTranslation(const char *s)

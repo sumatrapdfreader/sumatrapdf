@@ -457,9 +457,9 @@ $(OS)\Toolbar.obj: src\Toolbar.h src\Translations2.h src\utils\Allocator.h
 $(OS)\Toolbar.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Toolbar.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Toolbar.obj: src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\Translations2.obj: src\Translations2.h src\Translations_txt.cpp src\utils\Allocator.h
-$(OS)\Translations2.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\Translations2.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\Translations2.obj: src\Translations2.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\Translations2.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\Translations2.obj: src\utils\Vec.h
 $(OS)\Uninstall.obj: src\installer\Installer.h src\installer\MiniTrans.h src\installer\Resource.h
 $(OS)\Uninstall.obj: src\utils\FileTransactions.h src\utils\FileUtil.h src\utils\Timer.h
 $(OS)\Uninstall.obj: src\utils\WinUtil.h src\Version.h

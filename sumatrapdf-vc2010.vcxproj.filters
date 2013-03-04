@@ -215,12 +215,6 @@
     <ClCompile Include="src\SumatraPDF.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\Translations.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Translations_txt.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="src\SumatraAbout.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -1028,6 +1022,9 @@
     <ClCompile Include="src\Translations2.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="src\Trans_sumatra_txt.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1103,9 +1100,6 @@
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\SumatraPDF.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Translations.h">
       <Filter>sumatra</Filter>
     </ClInclude>
     <ClInclude Include="src\Version.h">
