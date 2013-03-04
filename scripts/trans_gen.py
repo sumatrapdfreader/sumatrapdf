@@ -325,9 +325,14 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
     rtl_langs_count = len(rtl_langs)
     rtl_langs = ", ".join(rtl_langs)
 
+    total_size = 0
     lines = []
     for lang in langs:
         lines.append("const char * %s = " % lang.c_translations_array_name)
+        for t in lang.translations:
+            total_size += 1 # terminating zero
+            if t != None:
+                total_size = total_size + len(t)
         lines += ["  %s \\" % c_escape_for_compact(t) for t in lang.translations]
         lines.append(";\n")
     translations = "\n".join(lines)
@@ -339,6 +344,8 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
     file_content = TRANSLATIONS_TXT_C % locals()
     file_path = os.path.join(SRC_DIR, dir_name, file_name_from_dir_name(dir_name))
     file(file_path, "wb").write(file_content)
+
+    print("\nTotal size of translations: %d" % total_size)
 
 def gen_c_code_simple(strings_dict, keys, dir_name):
     langs_idx = sorted(g_langs, cmp=lang_sort_func)

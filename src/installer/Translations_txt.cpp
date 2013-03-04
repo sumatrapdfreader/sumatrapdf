@@ -196,7 +196,7 @@ const WCHAR * const gTranslations[] = {
   L"PDF előnézet-megjelenítő telepítése sikertelen",
   L"PDF keresési szűrő telepítése sikertelen",
   L"Böngésző beépülő telepítése sikertelen",
-  L"Ideiglenes könyvtár nem elérhető",
+  L"Ideiglenes könyvtár nem érhető el",
   L"Telepítési könyvtár eltávolítása sikertelen",
   L"Parancsikon eltávolítása sikertelen",
   L"PDF előnézet-megjelenítő eltávolítása sikertelen",

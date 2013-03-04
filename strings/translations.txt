@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-11374a69119cb1e48ddfbdc3e1a337150227fca2
+f00665326ff3295b8791b9f7c1fe2a707ce67433
 :%s of %s
 af:%s uit %s
 br:%s de %s
@@ -5535,7 +5535,7 @@ br:Não foi possível obter a pasta temporária
 cn:无法得到暂存目录
 de:Konnte das temporäre Verzeichnis nicht finden
 fr:Impossible d'obtenir un répertoire temporaire
-hu:Ideiglenes könyvtár nem elérhető
+hu:Ideiglenes könyvtár nem érhető el
 it:Impossibile ottenere la cartella temporanea
 pt:Não foi possível obter a pasta temporária
 ru:Не удалось определить временную директорию
