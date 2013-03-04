@@ -476,7 +476,7 @@ int GetLanguageIndex(LANGID id)
 {
     switch (id) {
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
-    case MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US): return 0;
+    case _LANGID(LANG_ENGLISH): return 0;
     case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return 43;
     case _LANGID(LANG_FRENCH): return 86;
     case _LANGID(LANG_GERMAN): return 129;

@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+﻿#!/usr/bin/env python
 
 import os, re, util, codecs
 
@@ -24,7 +23,7 @@ g_langs = [
     ('de'    , 'German (Deutsch)',                        '_LANGID(LANG_GERMAN)'),
     ('dk'    , 'Danish (Dansk)',                          '_LANGID(LANG_DANISH)'),
     ('el'    , 'Greek (Ελληνικά)',                        '_LANGID(LANG_GREEK)'),
-    ('en'    , 'English',                                 'MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)'),
+    ('en'    , 'English',                                 '_LANGID(LANG_ENGLISH)'),
     ('es'    , 'Spanish (Español)',                       '_LANGID(LANG_SPANISH)'),
     ('et'    , 'Estonian (Eesti)',                        '_LANGID(LANG_ESTONIAN)'),
     ('eu'    , 'Basque (Euskara)',                        '_LANGID(LANG_BASQUE)'),
@@ -54,7 +53,7 @@ g_langs = [
     ('nl'    , 'Dutch (Nederlands)',                      '_LANGID(LANG_DUTCH)'),
     ('nn'    , 'Norwegian Neo-Norwegian (Norsk nynorsk)', 'MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_NYNORSK)'),
     ('no'    , 'Norwegian (Norsk)',                       'MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL)'),
-    ('pa'    , 'Punjabi (ਪੰਜਾਬੀ)',                         '_LANGID(LANG_PUNJABI)'),
+    ('pa'    , 'Punjabi (ਪੰਜਾਬੀ)',                             '_LANGID(LANG_PUNJABI)'),
     ('pl'    , 'Polish (Polski)',                         '_LANGID(LANG_POLISH)'),
     ('pt'    , 'Portuguese - Portugal (Português)',       '_LANGID(LANG_PORTUGUESE)'),
     ('ro'    , 'Romanian (Română)',                       '_LANGID(LANG_ROMANIAN)'),
@@ -300,7 +299,6 @@ const int *GetRtlLangs() { return &gRtlLangs[0]; }
 const LANGID *GetLangIds() { return &gLangIds[0]; }
 
 } // namespace trans
-
 """
 
 # generate unique names for translations files for each binary, to simplify build

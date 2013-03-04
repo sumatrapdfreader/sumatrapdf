@@ -13007,7 +13007,7 @@ const char *gLangNames =   "English\0" \
 
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
 const LANGID gLangIds[LANGS_COUNT] = {
-  MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+  _LANGID(LANG_ENGLISH),
   _LANGID(LANG_ALBANIAN),
   _LANGID(LANG_ARABIC),
   _LANGID(LANG_ARMENIAN),
@@ -13134,4 +13134,3 @@ const int *GetRtlLangs() { return &gRtlLangs[0]; }
 const LANGID *GetLangIds() { return &gLangIds[0]; }
 
 } // namespace trans
-
