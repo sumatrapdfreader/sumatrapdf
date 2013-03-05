@@ -150,6 +150,9 @@ def main():
 
   if upload:
     log("Will upload to s3 at %s" % s3_dir)
+    conf = load_config()
+    s3.set_secrets(conf.aws_access, conf.aws_secret)
+    s3.set_bucket("kjkpub")
 
   s3_prefix = "%s/%s" % (s3_dir, filename_base)
   s3_exe           = s3_prefix + ".exe"
