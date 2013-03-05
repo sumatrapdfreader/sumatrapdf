@@ -1018,6 +1018,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ret = RunApp();
 
 Exit:
+    trans::Destroy();
     free(gGlobalData.installDir);
     free(gGlobalData.firstError);
 

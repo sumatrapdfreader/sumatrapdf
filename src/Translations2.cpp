@@ -1,5 +1,5 @@
-/* Copyright 2013 Krzysztof Kowalczyk.
-   License: BSD */
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
 #include "Translations2.h"
@@ -174,7 +174,7 @@ const char *DetectUserLang()
     LANGID langId = GetUserDefaultUILanguage();
     // try the exact match
     for (int i = 0; i < gLangsCount; i++) {
-        if (langId = langIds[i])
+        if (langId == langIds[i])
             return GetLangCodeByIdx(i);
     }
 
@@ -185,6 +185,7 @@ const char *DetectUserLang()
         if (userLangIdNeutral == langIds[i])
             return GetLangCodeByIdx(i);
     }
+
     return "en";
 }
 
