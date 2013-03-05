@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   10
+#define LANGS_COUNT   11
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -57,6 +57,52 @@ const char *gOriginalStrings[STRINGS_COUNT] = {
 };
 
 const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
+
+const char * gTranslations_eu = 
+  "A&ukerak\0" \
+  "Zihur zaude SumatraPDF kentzea nahi duzula?\0" \
+  "Itxi\0" \
+  "Ezinezkoa aldibaterako zuzenbidea sortzea\0" \
+  "Ezinezkoa ezarpen zuzenbidea sortzea\0" \
+  "Ezinezkoa PDF aurreikustatzailea ezartzea\0" \
+  "Ezinezkoa PDF bilaketa iragazkia ezartzea\0" \
+  "Ezinezkoa nabigatzaile plugina ezartzea\0" \
+  "Ezinezkoa aldibaterako zuzenbidea lortzea\0" \
+  "Ezinezkoa ezarpen zuzenbidea kentzea\0" \
+  "Ezinezkoa lastertekla kentzea\0" \
+  "Ezinezkoa PDF aurreikustatzailea kentzea\0" \
+  "Ezinezkoa PDF bilaketa iragazkia kentzea\0" \
+  "Ezinezkoa nabigatzaile plugina kentzea\0" \
+  "Ezinezkoa %s diskara idaztea\0" \
+  "Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan\0" \
+  "Hutsegitea lasterbidea sortzerakoan\0" \
+  "Hutsegitea kentzaile erregistro giltzak ezabatzerakoan\0" \
+  "Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan\0" \
+  "Hutsegitea kentze argibideak erregistroan idazterakoan\0" \
+  "Ezkutatu A&ukerak\0" \
+  "Ezarri PDF &nabigatzile plugina Firefox, Chrome eta Opera-rentzat\0" \
+  "Ezarri SumatraPDF\0" \
+  "Ezarri Su&matraPDF agiritegi honetan:\0" \
+  "Ezarpen hutsegitea!\0" \
+  "Ezarpena garatzen...\0" \
+  "&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen\0" \
+  "Utzi &Windowsi PDF agirien aurreikuspenak erakusten\0" \
+  "Mesedez itxi %s jarraitzeko!\0" \
+  "Hautatu SumatraPDF ezarri behar den agiritegia:\0" \
+  "Ezarritako zenbait agiri hondatuta edo galduta daude\0" \
+  "Abiarazi SumatraPDF\0" \
+  "SumatraPDF %s Ezartzailea\0" \
+  "SumatraPDF %s Kentzailea\0" \
+  "SumatraPDF kendu da.\0" \
+  "SumatraPDF ezarpena ez da aurkitu.\0" \
+  "Mila esker SumatraPDF hautatzeagaitik!\0" \
+  "Mila esker! SumatraPDF ezarri da.\0" \
+  "Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik!\0" \
+  "Kendu SumatraPDF\0" \
+  "Kentze hutsegitea\0" \
+  "Kentzea garatzen...\0" \
+  "Erabili SumatraP&DF berezko PDF irakurtzaile bezala\0" \
+;
 
 const char * gTranslations_cn = 
   "&\351\200\211\351\241\271\0" \
@@ -474,6 +520,7 @@ const char * gTranslations_uk =
 
 
 const char *gLangCodes =   "en\0" \
+  "eu\0" \
   "cn\0" \
   "fr\0" \
   "de\0" \
@@ -485,6 +532,7 @@ const char *gLangCodes =   "en\0" \
   "uk\0";
 
 const char *gLangNames =   "English\0" \
+  "Basque (Euskara)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "French (Fran\303\247ais)\0" \
   "German (Deutsch)\0" \
@@ -508,6 +556,7 @@ const char *gLangNames =   "English\0" \
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
 const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_ENGLISH),
+  _LANGID(LANG_BASQUE),
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
   _LANGID(LANG_FRENCH),
   _LANGID(LANG_GERMAN),
@@ -522,6 +571,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 static const char *gTranslations[LANGS_COUNT] = {
   NULL,
+  gTranslations_eu, 
   gTranslations_cn, 
   gTranslations_fr, 
   gTranslations_de, 

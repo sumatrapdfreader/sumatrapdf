@@ -1281,7 +1281,7 @@ const char * gTranslations_eu =
   "SumatraPDF-ri buruz\0" \
   "Gehitu Gogokoena\0" \
   "Gehitu %s Orrialdea Gogokoenetara\0" \
-  "Gehitu %s Gogokoenetara Izenarekin (aukerazkoa):\0" \
+  "Gehitu %s Gogokoenetara (aukerazkoa) Izenarekin:\0" \
   "Gehitu Gogokoenetara\0" \
   "Aurreratua\0" \
   "Agiri guztiak\0" \
@@ -1302,7 +1302,7 @@ const char * gTranslations_eu =
   "Ezinezkoa Internetera elkarketatzea (%#x akatsa).\0" \
   "Ezeztatu\0" \
   "Ezinezkoa agiri hau irarkitzea\0" \
-  "Ezinezkoa alderantzizko bilaketa komandoa hasi. Mesedez, egiaztatu komando lerroa ezarpenetan.\0" \
+  "Ezinezkoa alderantzizko bilaketa komandoa hastea. Mesedez, egiaztatu komando lerroa ezarpenetan.\0" \
   "Aldatu Hizkuntza\0" \
   "&Egiaztatu Eguneraketak\0" \
   "Komiki liburuak\0" \
@@ -1324,7 +1324,7 @@ const char * gTranslations_eu =
   "Egile Zoo&ma...\tKtrl+Y\0" \
   "Berezko &Egitura:\0" \
   "Berezko &Zooma:\0" \
-  "Berezko PDF irakurtzailea ezin da eramangarri modura aldatu\0" \
+  "Berezko PDF irakurtzailea ezin da eramangarri moduan aldatu\0" \
   "Baimen Ukatuak:\0" \
   "DjVu agiriak\0" \
   "Agiriaren Ezaugarriak\0" \
@@ -1375,7 +1375,7 @@ const char * gTranslations_eu =
   "\0" \
   "Egin SumatraPFD berezko aplikazioa PDF agirientzat?\0" \
   "Egin SumatraPDF nire berezko PDF irakurlea\0" \
-  "Hizki Larriak edo Xeheak Bereizi\0" \
+  "Hizki Larriak-xeheak Bereizi\0" \
   "Mobi agiriak\0" \
   "Aldatuta:\0" \
   "%s bertsio berria eskuragarri dago. Bertsio berria jeitsi?\0" \

@@ -20,6 +20,16 @@ const WCHAR * const gTranslations[] = {
   L"MB",
   L"Opening document in SumatraPDF...",
 
+  /* Translations for language eu */
+  L"%s -> %s-tik",
+  L"Akatsa: Ezinezkoa SumatraPDF abiaraztea!",
+  L"Akatsa: SumatraPDF ez da aurkitu!",
+  L"Akatsa: Agiria ezin da jeitsi!",
+  NULL,
+  NULL,
+  NULL,
+  L"Agiria irekitzen SumatraPDF-an...",
+
   /* Translations for language cn */
   NULL,
   L"错误：无法运行SumatraPDF!",
@@ -111,7 +121,7 @@ const WCHAR * const gTranslations[] = {
   L"Триває відкриття документа у SumatraPDF...",
 };
 
-const char * const gLanguages[] = { "en", "cn", "fr", "de", "hu", "it", "br", "pt", "ru", "uk", NULL };
+const char * const gLanguages[] = { "en", "eu", "cn", "fr", "de", "hu", "it", "br", "pt", "ru", "uk", NULL };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
@@ -130,15 +140,16 @@ int GetLanguageIndex(LANGID id)
     switch (id) {
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
     case _LANGID(LANG_ENGLISH): return 0;
-    case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return 8;
-    case _LANGID(LANG_FRENCH): return 16;
-    case _LANGID(LANG_GERMAN): return 24;
-    case _LANGID(LANG_HUNGARIAN): return 32;
-    case _LANGID(LANG_ITALIAN): return 40;
-    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 48;
-    case _LANGID(LANG_PORTUGUESE): return 56;
-    case _LANGID(LANG_RUSSIAN): return 64;
-    case _LANGID(LANG_UKRAINIAN): return 72;
+    case _LANGID(LANG_BASQUE): return 8;
+    case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return 16;
+    case _LANGID(LANG_FRENCH): return 24;
+    case _LANGID(LANG_GERMAN): return 32;
+    case _LANGID(LANG_HUNGARIAN): return 40;
+    case _LANGID(LANG_ITALIAN): return 48;
+    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 56;
+    case _LANGID(LANG_PORTUGUESE): return 64;
+    case _LANGID(LANG_RUSSIAN): return 72;
+    case _LANGID(LANG_UKRAINIAN): return 80;
     default: return -1;
 #undef _LANGID
     }
