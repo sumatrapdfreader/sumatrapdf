@@ -37,6 +37,14 @@ const char **           gLangsStringsUncompressed = NULL;
 // WCHAR ** gLangsTransCache[LANGS_COUNT];
 WCHAR ***               gLangsTransCache = NULL;
 
+// optimization trick: the lifetime of gCurrLangStrings, gLangsStringsUncompressed and
+// gLangsTransCache is the same and all elements are pointer values, so we allocate
+// their memory in one go
+#define CURR_LANG_STRINGS_ELS           gStringsCount
+#define LANGS_STRINGS_UNCOMPRESSED_ELS  gLangsCount
+#define LANGS_TRANS_CACHE_ELS           gLangsCount
+void **gCombinedMem = NULL;
+
 /* In general, after adding new _TR() strings, one has to re-generate Translations_txt.cpp, but
 that also requires uploading new strings to the server, for which one needs accesss.
 
@@ -105,11 +113,11 @@ static void FreeTransCache()
         if (gLangsStringsUncompressed[langIdx])
             free((void*)gLangsStringsUncompressed[langIdx]);
     }
-    free(gLangsTransCache);
-    // also free gCurrLangStrings here so that an accidental call to
-    // SetCurrentLangByCode after FreeTransCache doesn't crash
-    free(gCurrLangStrings);
-    free(gLangsStringsUncompressed);
+    free(gCombinedMem);
+    gCombinedMem = NULL;
+    gLangsTransCache = NULL;
+    gCurrLangStrings = NULL;
+    gLangsStringsUncompressed = NULL;
 }
 
 static void BuildStringsIndexForLang(int langIdx)
@@ -148,10 +156,12 @@ static void BuildStringsIndexForLang(int langIdx)
 
 void SetCurrentLangByCode(const char *langCode)
 {
-    if (!gCurrLangStrings) {
-        gCurrLangStrings = AllocArray<const char *>(gStringsCount);
-        gLangsStringsUncompressed = AllocArray<const char *>(gLangsCount);
-        gLangsTransCache = AllocArray<WCHAR **>(gLangsCount);
+    if (!gCombinedMem) {
+        int totalEls = CURR_LANG_STRINGS_ELS + LANGS_STRINGS_UNCOMPRESSED_ELS + LANGS_TRANS_CACHE_ELS;
+        gCombinedMem = AllocArray<void*>(totalEls);
+        gCurrLangStrings = (const char**)(gCombinedMem);
+        gLangsStringsUncompressed = (const char**)(gCombinedMem + CURR_LANG_STRINGS_ELS);
+        gLangsTransCache = (WCHAR ***)(gCombinedMem + CURR_LANG_STRINGS_ELS + LANGS_STRINGS_UNCOMPRESSED_ELS);
     }
 
     if (str::Eq(langCode, gCurrLangCode))
