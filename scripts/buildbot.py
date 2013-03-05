@@ -541,14 +541,14 @@ def build_release(stats, ver):
 	(out, err, errcode) = run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
 
 	log_path = os.path.join(get_logs_cache_dir(), ver + "_rel_log.txt")
-	s = out + "\n====STDERR:\n" + err
-	open(log_path, "w").write(strip_empty_lines(s))
-	out = strip_empty_lines(out)
+	build_log = out + "\n====STDERR:\n" + err
+	build_log = strip_empty_lines(build_log)
+	open(log_path, "w").write(build_log)
 
 	stats.rel_build_log = None
 	stats.rel_failed = False
 	if errcode != 0:
-		stats.rel_build_log = out
+		stats.rel_build_log = build_log
 		stats.rel_failed = True
 		return
 
