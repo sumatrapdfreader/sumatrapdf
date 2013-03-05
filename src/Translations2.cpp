@@ -3,16 +3,14 @@
 
 #include "BaseUtil.h"
 #include "Translations2.h"
+#include <zlib.h>
 
 /*
 TODO:
- - compress the translations and de-compress them on demand
- - speed up GetEnglishStringIndex() with binary search
- - verify that MissingTranslations still work
+ - could use bzip2 for compression for additional ~7k savings
 */
 
-// Note: this code is optimized for (small) size, not speed
-// Let's keep it this way
+// Note: this code is intentionally optimized for (small) size, not speed
 
 namespace trans {
 
@@ -23,13 +21,20 @@ extern const char *     gLangNames;
 extern const char *     gLangCodes;
 const LANGID *          GetLangIds();
 bool                    IsLangRtl(int langIdx);
-const char *            GetTranslationsForLang(int langIdx);
+const unsigned char *   GetTranslationsForLang(int langIdx, uint32_t *uncompressedSizeOut, uint32_t *compressedSizeOut);
 const char **           GetOriginalStrings();
 
+// used locally
 static const char *     gCurrLangCode = NULL;
 static int              gCurrLangIdx = 0;
 
+// Note: we don't have access to STRINGS_COUNT and LANGS_COUNT
+// hence foo[] => *foo here
+// const char *gCurrLangStrings[STRINGS_COUNT];
 const char **           gCurrLangStrings = NULL;
+// const char *gLangsStringsUncompressed[LANGS_COUNT];
+const char **           gLangsStringsUncompressed = NULL;
+// WCHAR ** gLangsTransCache[LANGS_COUNT];
 WCHAR ***               gLangsTransCache = NULL;
 
 /* In general, after adding new _TR() strings, one has to re-generate Translations_txt.cpp, but
@@ -97,13 +102,14 @@ static void FreeTransCache()
             free(transCache[i]);
         }
         free(transCache);
+        if (gLangsStringsUncompressed[langIdx])
+            free((void*)gLangsStringsUncompressed[langIdx]);
     }
     free(gLangsTransCache);
-    gLangsTransCache = NULL;
     // also free gCurrLangStrings here so that an accidental call to
     // SetCurrentLangByCode after FreeTransCache doesn't crash
     free(gCurrLangStrings);
-    gCurrLangStrings = NULL;
+    free(gLangsStringsUncompressed);
 }
 
 static void BuildStringsIndexForLang(int langIdx)
@@ -117,7 +123,19 @@ static void BuildStringsIndexForLang(int langIdx)
         return;
     }
 
-    const char *s = GetTranslationsForLang(langIdx);
+    const char *s =  gLangsStringsUncompressed[langIdx];
+    if (NULL == s) {
+        uint32_t uncompressedSize, compressedSize;
+        const unsigned char *compressed = GetTranslationsForLang(langIdx, &uncompressedSize, &compressedSize);
+        void *uncompressed = malloc(uncompressedSize);
+        uLongf uncompressedSizeReal;
+        int res = uncompress((Bytef*)uncompressed, &uncompressedSizeReal, compressed, compressedSize);
+        CrashAlwaysIf(Z_OK != res);
+        CrashAlwaysIf(uncompressedSize != uncompressedSizeReal);
+        gLangsStringsUncompressed[langIdx] = (const char *)uncompressed;
+        s = gLangsStringsUncompressed[langIdx];
+    }
+
     for (int i = 0; i < gStringsCount; i++) {
         size_t len = str::Len(s);
         if (0 == len)
@@ -132,6 +150,7 @@ void SetCurrentLangByCode(const char *langCode)
 {
     if (!gCurrLangStrings) {
         gCurrLangStrings = AllocArray<const char *>(gStringsCount);
+        gLangsStringsUncompressed = AllocArray<const char *>(gLangsCount);
         gLangsTransCache = AllocArray<WCHAR **>(gLangsCount);
     }
 

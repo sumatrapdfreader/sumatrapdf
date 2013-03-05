@@ -816,4 +816,5 @@ EXPORTS
 	deflateEnd
 	compress
 	compressBound
+	uncompress
 	crc32

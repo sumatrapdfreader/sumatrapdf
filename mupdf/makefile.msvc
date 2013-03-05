@@ -165,10 +165,9 @@ FT_OBJS = $(FT_OBJS) $(OFT)\ftdebug.obj
 ZLIB_OBJS = \
 	$(OZ)\adler32.obj $(OZ)\compress.obj $(OZ)\crc32.obj $(OZ)\deflate.obj \
 	$(OZ)\inffast.obj $(OZ)\inflate.obj $(OZ)\inftrees.obj $(OZ)\trees.obj \
-	$(OZ)\zutil.obj \
+	$(OZ)\zutil.obj $(OZ)\uncompr.obj \
 	$(OZ)\gzlib.obj $(OZ)\gzread.obj $(OZ)\gzwrite.obj $(OZ)\gzclose.obj \
-	$(OZ)\inftree9.obj \
-	# MuPDF also compiles $(OZ)\uncompr.obj
+	$(OZ)\inftree9.obj
 
 JPEG_TURBO_OBJS = \
 	$(OT)\jcomapi.obj $(OT)\jdapimin.obj $(OT)\jdapistd.obj \

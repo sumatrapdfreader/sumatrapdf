@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Generates a list of all exports from libmupdf.dll from the function lists
 contained in the mupdf/*/*.h headers.
@@ -67,6 +69,7 @@ EXPORTS
 	deflateEnd
 	compress
 	compressBound
+	uncompress
 	crc32
 """
 
