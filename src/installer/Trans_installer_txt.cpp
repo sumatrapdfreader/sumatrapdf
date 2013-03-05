@@ -537,7 +537,7 @@ const char *GetTranslationsForLang(int langIdx) { return gTranslations[langIdx];
 
 bool IsLangRtl(int idx)
 {
-return false;
+  return false;
 }
 
 int gLangsCount = LANGS_COUNT;

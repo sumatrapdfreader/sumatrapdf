@@ -8,7 +8,7 @@ class Lang(object):
         self.desc = desc
         self.code = desc[0] # "af"
         self.name = desc[1] # "Afrikaans"
-        self.ms_lang_id_info = desc[2]
+        self.ms_lang_id = desc[2]
         self.isRtl = False
         if len(desc) > 3:
             assert desc[3] == 'RTL'
@@ -18,7 +18,6 @@ class Lang(object):
         # "ca-xv" => "ca_xv"
         self.code_safe = self.code.replace("-", "_")
         self.c_translations_array_name = "gTranslations_" + self.code_safe
-        self.ms_lang_id_string = make_lang_id(self.desc)
         self.translations = []
 
 def get_lang_objects(langs_defs):
@@ -30,19 +29,14 @@ def get_lang_objects(langs_defs):
 INCOMPLETE_MISSING_THRESHOLD = 0.2
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "..", "src")
-C_TRANS_FILENAME = "Translations_txt.cpp"
 
 C_DIRS_TO_PROCESS = [".", "installer", "browserplugin"]
 # produce a simpler format for these dirs
 C_SIMPLE_FORMAT_DIRS = ["browserplugin"]
-# whitelist some files as an optimization
-C_FILES_TO_EXCLUDE = [C_TRANS_FILENAME.lower()]
 
 def should_translate(file_name):
     file_name = file_name.lower()
-    if not file_name.endswith(".cpp"):
-        return False
-    return file_name not in C_FILES_TO_EXCLUDE
+    return file_name.endswith(".cpp")
 
 C_FILES_TO_PROCESS = []
 for dir in C_DIRS_TO_PROCESS:
@@ -156,11 +150,6 @@ def lang_sort_func(x,y):
     if y[0] == "en": return 1
     return cmp(x[1], y[1])
 
-def make_lang_id(lang): return lang[2]
-
-def is_rtl_lang(lang):
-    return "true" if len(lang) > 3 and lang[3] == "RTL" else "false"
-
 # correctly sorts strings containing escaped tabulators
 def key_sort_func(a, b):
     return cmp(a.replace(r"\t", "\t"), b.replace(r"\t", "\t"))
@@ -226,7 +215,7 @@ const char *GetTranslationsForLang(int langIdx) { return gTranslations[langIdx];
 
 bool IsLangRtl(int idx)
 {
-%(islangrtl)s
+  %(islangrtl)s
 }
 
 int gLangsCount = LANGS_COUNT;
@@ -250,16 +239,10 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
 
     langcodes = " \\\n".join(["  %s" % c_escape_for_compact(lang.code) for lang in langs])
     langnames = " \\\n".join(["  %s" % c_escape_for_compact(lang.name) for lang in langs])
-    langids = ",\n".join(["  %s" % lang.ms_lang_id_string for lang in langs])
+    langids = ",\n".join(["  %s" % lang.ms_lang_id for lang in langs])
 
-    rtl_info = []
-    for idx in range(len(langs)):
-        if langs[idx].isRtl:
-            rtl_info.append("(%d == idx)" % idx)
-    if len(rtl_info) == 0:
-        islangrtl = "return false;"
-    else:
-        islangrtl = "  return %s;" % " || ".join(rtl_info)
+    rtl_info = ["(%d == idx)" % langs.index(lang) for lang in langs if lang.isRtl]
+    islangrtl = "return %s;" % (" || ".join(rtl_info) or "false")
 
     total_size = 0
     lines = []
@@ -287,31 +270,25 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
     print("\nTotal size of translations: %d" % total_size)
 
 def gen_c_code_simple(strings_dict, keys, dir_name):
-    langs_idx = sorted(trans_langs.g_langs, cmp=lang_sort_func)
-    assert "en" == langs_idx[0][0]
+    langs = get_lang_objects(sorted(trans_langs.g_langs, cmp=lang_sort_func))
+    assert "en" == langs[0].code
+    langs = build_trans_for_langs(langs, strings_dict, keys)
 
     lines = []
-    incomplete_langs = []
-    for lang in langs_idx:
-        trans = get_trans_for_lang(strings_dict, keys, lang[0])
-        if not trans:
-            incomplete_langs.append(lang)
-            continue
-        lines.append('  /* Translations for language %s */' % lang[0])
-        lines += ['  L"%s",' % t.replace('"', '\\"') if t else '  NULL,' for t in trans]
+    for lang in langs:
+        lines.append('  /* Translations for language %s */' % lang.code)
+        lines += ['  L"%s",' % t.replace('"', '\\"') if t else '  NULL,' for t in lang.translations]
         lines.append("")
     lines.pop()
-    for lang in incomplete_langs:
-        langs_idx.remove(lang)
     translations = "\n".join(lines)
 
-    langs_list = ", ".join(['"%s"' % lang[0] for lang in langs_idx] + ["NULL"])
-    lang_id_to_index = "\n    ".join(["case %s: return %d;" % (make_lang_id(lang), langs_idx.index(lang) * len(keys)) for lang in langs_idx] + ["default: return -1;"])
-    rtl_lang_cmp = " || ".join(["%d == index" % langs_idx.index(lang) * len(keys) for lang in langs_idx if is_rtl_lang(lang) == "true"]) or "false"
+    langs_list = ", ".join(['"%s"' % lang.code for lang in langs] + ["NULL"])
+    lang_id_to_index = "\n    ".join(["case %s: return %d;" % (lang.ms_lang_id, langs.index(lang) * len(keys)) for lang in langs] + ["default: return -1;"])
+    rtl_lang_cmp = " || ".join(["%d == index" % langs.index(lang) * len(keys) for lang in langs if lang.isRtl]) or "false"
 
     translations_count = len(keys)
     file_content = codecs.BOM_UTF8 + TRANSLATIONS_TXT_SIMPLE % locals()
-    file_name = os.path.join(SRC_DIR, dir_name, C_TRANS_FILENAME)
+    file_name = os.path.join(SRC_DIR, dir_name, file_name_from_dir_name(dir_name))
     file(file_name, "wb").write(file_content)
 
 """

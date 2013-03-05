@@ -239,7 +239,7 @@ HANDLE CreateTempFile(WCHAR *filePathBufOut, size_t bufSize)
     return hFile;
 }
 
-#include "Translations_txt.cpp"
+#include "Trans_browserplugin_txt.cpp"
 
 void SelectTranslation(const WCHAR *exePath=NULL)
 {
