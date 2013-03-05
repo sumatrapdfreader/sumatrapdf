@@ -24,6 +24,25 @@ static void StrReplaceTest()
     }
 }
 
+static void StrSeqTest()
+{
+    const char *s = "foo\0a\0bar\0";
+    static const int max = 3;
+    assert(0 == seqstrings::GetStrIdx(s, "foo", max));
+    assert(1 == seqstrings::GetStrIdx(s, "a", max));
+    assert(2 == seqstrings::GetStrIdx(s, "bar", max));
+
+    assert(str::Eq("foo", seqstrings::GetByIdx(s, 0)));
+    assert(str::Eq("a", seqstrings::GetByIdx(s, 1)));
+    assert(str::Eq("bar", seqstrings::GetByIdx(s, 2)));
+
+    assert(-1 == seqstrings::GetStrIdx(s, "fo", max));
+    assert(-1 == seqstrings::GetStrIdx(s, "", max));
+    assert(-1 == seqstrings::GetStrIdx(s, "ab", max));
+    assert(-1 == seqstrings::GetStrIdx(s, "baro", max));
+    assert(-1 == seqstrings::GetStrIdx(s, "ba", max));
+}
+
 static void StrTest()
 {
     WCHAR buf[32];
@@ -404,4 +423,5 @@ static void StrTest()
     }
 
     StrReplaceTest();
+    StrSeqTest();
 }

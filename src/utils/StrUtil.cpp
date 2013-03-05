@@ -1053,6 +1053,13 @@ size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp)
 
 } // namespace str
 
+// seqstrings is for size-efficient implementation of:
+// string -> int and int->string.
+// it's even more efficient than using char *[] array
+// it comes at the cost of speed, so it's not good for places
+// that are critial for performance. On the other hand, it's
+// not that bad: linear scanning of memory is fast due to the magic
+// of L1 cache
 namespace seqstrings {
 
 // Returns NULL if s is the same as toFind
@@ -1081,7 +1088,6 @@ static inline const char *StrEqWeird(const char *s, const char *toFind)
 // out sequentially in memory
 // Returns index of toFind string in sttings array of size max
 // Returns -1 if string doesn't exist
-// TODO: unit test
 int GetStrIdx(const char *strings, const char *toFind, int max)
 {
     const char *s = strings;
@@ -1095,7 +1101,6 @@ int GetStrIdx(const char *strings, const char *toFind, int max)
 
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
-// TODO: unit tests
 const char *GetByIdx(const char *strings, int idx)
 {
     const char *s = strings;

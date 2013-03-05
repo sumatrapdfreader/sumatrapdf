@@ -106,8 +106,18 @@ static void FreeTransCache()
     gCurrLangStrings = NULL;
 }
 
-static void BuildStringsIndex(const char *s)
+static void BuildStringsIndexForLang(int langIdx)
 {
+    if (0 == gCurrLangIdx) {
+        const char **origStrings = GetOriginalStrings();
+        for (int idx = 0; idx < gStringsCount; idx++) {
+            gCurrLangStrings[idx] = origStrings[idx];
+            CrashIf(!gCurrLangStrings[idx]);
+        }
+        return;
+    }
+
+    const char *s = GetTranslationsForLang(langIdx);
     for (int i = 0; i < gStringsCount; i++) {
         size_t len = str::Len(s);
         if (0 == len)
@@ -132,7 +142,7 @@ void SetCurrentLangByCode(const char *langCode)
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = langCode;
-    BuildStringsIndex(GetTranslationsForLang(gCurrLangIdx));
+    BuildStringsIndexForLang(gCurrLangIdx);
 }
 
 const char *ValidateLangCode(const char *langCode)
