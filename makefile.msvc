@@ -166,8 +166,7 @@ EBOOK_OBJS = \
 SUMATRA_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\Doc.obj \
 	$(OS)\Favorites.obj $(OS)\TextSearch.obj $(OS)\SumatraAbout.obj $(OS)\SumatraAbout2.obj \
-	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
-	$(OS)\SumatraPDF.obj $(OS)\Translations2.obj \
+	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj $(OS)\SumatraPDF.obj \
 	$(OS)\PdfSync.obj $(OS)\RenderCache.obj $(OS)\TextSelection.obj \
 	$(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj $(OS)\StressTesting.obj \
 	$(OS)\UnitTests.obj $(OS)\AppTools.obj $(OS)\TableOfContents.obj \
@@ -175,14 +174,17 @@ SUMATRA_OBJS = \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(OS)\FileModifications.obj $(SUMATRA_RES) \
 	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) $(EBOOK_OBJS) $(MUI_OBJS) \
-	$(OS)\Tester.obj $(OS)\Regress.obj $(OS)\Trans_sumatra_txt.obj
+	$(OS)\Tester.obj $(OS)\Regress.obj \
+	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
-	$(UTILS_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS) $(OS)\MiniTrans.obj
+	$(UTILS_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS) \
+	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
 
 UNINSTALLER_OBJS = \
-	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_OBJS) $(OS)\MiniTrans.obj
+	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_OBJS) \
+	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
 
 PDFFILTER_OBJS = \
 	$(ODLL)\PdfFilterDll.obj $(ODLL)\CPdfFilter.obj $(PDFFILTER_RES) \
