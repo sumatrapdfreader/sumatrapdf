@@ -1,4 +1,5 @@
-﻿/* (Minimal) SumatraPDF Browser Plugin - Copyright © 2013  Simon Bünzli */
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
 
 // define for a slight decrease in binary size at the
 // cost of wrong behavior in some unlikely edge cases
