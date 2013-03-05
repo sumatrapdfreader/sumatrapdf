@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-import os, re, util, codecs, trans_langs
+import os, re, util, codecs, trans_langs, bz2, zlib
 
 class Lang(object):
     def __init__(self, desc):
         assert len(desc) <= 4
         self.desc = desc
-        self.code = desc[0] # "af"
+        self.code = desc[0] # "af"  
         self.name = desc[1] # "Afrikaans"
         self.ms_lang_id = desc[2]
         self.isRtl = False
@@ -232,6 +232,46 @@ def file_name_from_dir_name(dir_name):
         return "Trans_sumatra_txt.cpp"
     return "Trans_%s_txt.cpp" % dir_name
 
+def gen_translations(langs):
+    lines = []
+    total_size = 0
+    for lang in langs[1:]:
+        lines.append("const char * %s = " % lang.c_translations_array_name)
+        for t in lang.translations:
+            total_size += 1 # terminating zero
+            if t != None:
+                total_size = total_size + len(t)
+        lines += ["  %s \\" % c_escape_for_compact(t) for t in lang.translations]
+        lines.append(";\n")
+    return "\n".join(lines)
+
+def gen_trans_compressed_for_lang(lang):
+    s = ""
+    for t in lang.translations:
+        if t != None:
+            s  += t
+        s += "\0"
+    compressed = zlib.compress(s)
+    lines = []
+    per_line = 128
+    rest = compressed
+    while len(rest) > 0:
+        s = rest[:per_line]
+        s = [str(ord(c)) for c in s]
+        rest = rest[per_line:]
+        s = ", ".join(s)
+        lines.append(s)
+    s = "static unsigned char %s[] = {\n" % lang.c_translations_array_name
+    s += "  ,\n".join(lines)
+    s += "};\n"
+    return s
+
+def gen_translations_compressed(langs):
+    lines = []
+    for lang in langs[1:]:
+        lines.append(gen_trans_compressed_for_lang(lang))
+    return "\n".join(lines)
+
 def gen_c_code_for_dir(strings_dict, keys, dir_name):
     langs = get_lang_objects(sorted(trans_langs.g_langs, cmp=lang_sort_func))
     assert "en" == langs[0].code
@@ -244,17 +284,8 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
     rtl_info = ["(%d == idx)" % langs.index(lang) for lang in langs if lang.isRtl]
     islangrtl = "return %s;" % (" || ".join(rtl_info) or "false")
 
-    total_size = 0
-    lines = []
-    for lang in langs[1:]:
-        lines.append("const char * %s = " % lang.c_translations_array_name)
-        for t in lang.translations:
-            total_size += 1 # terminating zero
-            if t != None:
-                total_size = total_size + len(t)
-        lines += ["  %s \\" % c_escape_for_compact(t) for t in lang.translations]
-        lines.append(";\n")
-    translations = "\n".join(lines)
+    #translations = gen_translations_compressed(langs)
+    translations = gen_translations(langs)
 
     lines = ["  %s" % c_escape(t) for t in langs[0].translations]
     orignal_strings = ",\n".join(lines)
@@ -267,7 +298,13 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
     file_path = os.path.join(SRC_DIR, dir_name, file_name_from_dir_name(dir_name))
     file(file_path, "wb").write(file_content)
 
-    print("\nTotal size of translations: %d" % total_size)
+    #compressed = bz2.compress(uncompressed, 9)
+    #x = (len(compressed) * 100.0) / len(uncompressed)
+
+    #compressed2 = zlib.compress(uncompressed, 9)
+    #x2 = (len(compressed2) * 100.0) / len(uncompressed)
+    #print("\nTotal size of translations: %d" % (len(translations)))
+    #print("Total size of translations: %d %d %.2f" % (total_size, len(compressed2), x2))
 
 def gen_c_code_simple(strings_dict, keys, dir_name):
     langs = get_lang_objects(sorted(trans_langs.g_langs, cmp=lang_sort_func))
