@@ -182,6 +182,12 @@ namespace trans {
 #define LANGS_COUNT   %(langs_count)d
 #define STRINGS_COUNT %(translations_count)d
 
+const char *gOriginalStrings[STRINGS_COUNT] = {
+%(orignal_strings)s    
+};
+
+const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
+
 %(translations)s
 
 const char *gLangCodes = \
@@ -248,7 +254,7 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
 
     total_size = 0
     lines = []
-    for lang in langs:
+    for lang in langs[1:]:
         lines.append("const char * %s = " % lang.c_translations_array_name)
         for t in lang.translations:
             total_size += 1 # terminating zero
@@ -258,7 +264,10 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name):
         lines.append(";\n")
     translations = "\n".join(lines)
 
-    translations_refs = ", \n".join(["  %s" % lang.c_translations_array_name for lang in langs])
+    lines = ["  %s" % c_escape(t) for t in langs[0].translations]
+    orignal_strings = ",\n".join(lines)
+
+    translations_refs = "  NULL,\n" + ", \n".join(["  %s" % lang.c_translations_array_name for lang in langs[1:]])
 
     langs_count = len(langs)
     translations_count = len(keys)

@@ -7,248 +7,250 @@ namespace trans {
 #define LANGS_COUNT   53
 #define STRINGS_COUNT 240
 
-const char * gTranslations_en = 
-  "&About\0" \
-  "&Actual Size\tCtrl+1\0" \
-  "&All selected pages\0" \
-  "&Back\tAlt+Left Arrow\0" \
-  "&Book View\tCtrl+8\0" \
-  "&Close\tCtrl+W\0" \
-  "&Copy Selection\0" \
-  "&Copy Selection\tCtrl+C\0" \
-  "&Don't ask me again\0" \
-  "&Even pages only\0" \
-  "&Facing\tCtrl+7\0" \
-  "&File\0" \
-  "&Find what:\0" \
-  "&First Page\tHome\0" \
-  "&Fit pages to printable area\0" \
-  "&Go To\0" \
-  "&Go to page:\0" \
-  "&Help\0" \
-  "&Last Page\tEnd\0" \
-  "&Magnification:\0" \
-  "&Manual\0" \
-  "&Match case\0" \
-  "&Next Page\tRight Arrow\0" \
-  "&No\0" \
-  "&No, thanks\0" \
-  "&Odd pages only\0" \
-  "&Open Document\0" \
-  "&Open...\tCtrl+O\0" \
-  "&Options...\0" \
-  "&Password:\0" \
-  "&Pin Document\0" \
-  "&Previous Page\tLeft Arrow\0" \
-  "&Print...\0" \
-  "&Print...\tCtrl+P\0" \
-  "&Print... (denied)\0" \
-  "&Remember the password for this document\0" \
-  "&Remember these settings for each document\0" \
-  "&Remove Document\0" \
-  "&Save As...\0" \
-  "&Save As...\tCtrl+S\0" \
-  "&Settings\0" \
-  "&Shrink pages to printable area (if necessary)\0" \
-  "&Single Page\tCtrl+6\0" \
-  "&Skip this version\0" \
-  "&Use original page sizes\0" \
-  "&View\0" \
-  "&Yes\0" \
-  "&Zoom\0" \
-  "(of %d)\0" \
-  "(page %s)\0" \
-  "About SumatraPDF\0" \
-  "Add Favorite\0" \
-  "Add page %s to favorites\0" \
-  "Add page %s to favorites with (optional) name:\0" \
-  "Add to favorites\0" \
-  "Advanced\0" \
-  "All files\0" \
-  "All supported documents\0" \
-  "Application:\0" \
-  "Associate with PDF files?\0" \
-  "Attachment: %s\0" \
-  "Author:\0" \
-  "Automatic\0" \
-  "Automatically check for &updates\0" \
-  "Book View\0" \
-  "Book&marks\tF12\0" \
-  "Bookmark Shortcuts\0" \
-  "Bookmark shortcut to page %s of %s\0" \
-  "Bookmarks\0" \
-  "Bytes\0" \
-  "CHM documents\0" \
-  "Can't connect to the Internet (error %#x).\0" \
-  "Cancel\0" \
-  "Cannot print this file\0" \
-  "Cannot start inverse search command. Please check the command line in the settings.\0" \
-  "Change Language\0" \
-  "Check for &Updates\0" \
-  "Comic books\0" \
-  "Compatibility\0" \
-  "Continuous\0" \
-  "Continuous Book View\0" \
-  "Continuous Facing\0" \
-  "Contribute Translation\0" \
-  "Copy &Image\0" \
-  "Copy &Link Address\0" \
-  "Copy Co&mment\0" \
-  "Copying text was denied (copying as image only)\0" \
-  "Copyright:\0" \
-  "Could not obtain Printer properties\0" \
-  "Couldn't initialize printer\0" \
-  "Couldn't render the page\0" \
-  "Created:\0" \
-  "Current file\0" \
-  "Custom &Zoom...\tCtrl+Y\0" \
-  "Default &Layout:\0" \
-  "Default &Zoom:\0" \
-  "Default PDF reader can't be changed in portable mode\0" \
-  "Denied Permissions:\0" \
-  "DjVu documents\0" \
-  "Document Properties\0" \
-  "Download\0" \
-  "E&xit\tCtrl+Q\0" \
-  "EPUB ebooks\0" \
-  "Enter password\0" \
-  "Enter password for %s\0" \
-  "Enter the command-line to invoke when you double-click on the PDF document:\0" \
-  "Error loading %s\0" \
-  "F&avorites\0" \
-  "F&orward\tAlt+Right Arrow\0" \
-  "F&ullscreen\tCtrl+Shift+L\0" \
-  "Facing\0" \
-  "Failed to rename the file!\0" \
-  "Failed to save a file\0" \
-  "Fast Web View\0" \
-  "Favorites\0" \
-  "FictionBook documents\0" \
-  "File %s not found\0" \
-  "File Size:\0" \
-  "File:\0" \
-  "Fin&d...\tCtrl+F\0" \
-  "Find\0" \
-  "Find Next\0" \
-  "Find Previous\0" \
-  "Find:\0" \
-  "Fit &Content\tCtrl+3\0" \
-  "Fit &Page\tCtrl+0\0" \
-  "Fit &Width\tCtrl+2\0" \
-  "Fit Content\0" \
-  "Fit Page\0" \
-  "Fit Width\0" \
-  "Fit Width and Show Pages Continuously\0" \
-  "Fit a Single Page\0" \
-  "Fonts:\0" \
-  "Formatting the book... %d pages\0" \
-  "Found text at page %s\0" \
-  "Found text at page %s (again)\0" \
-  "Frequently Read\0" \
-  "GB\0" \
-  "Go to page\0" \
-  "Hide frequently read\0" \
-  "Hint: Use the F3 key for finding again\0" \
-  "Image files (*.%s)\0" \
-  "KB\0" \
-  "Loading file %s...\0" \
-  "MB\0" \
-  "Make SumatraPDF default application for PDF files?\0" \
-  "Make SumatraPDF my default PDF reader\0" \
-  "Match Case\0" \
-  "Mobi documents\0" \
-  "Modified:\0" \
-  "New version %s is available. Download new version?\0" \
-  "Next Page\0" \
-  "No matches were found\0" \
-  "No result found around line %u in file %s\0" \
-  "No synchronization file found\0" \
-  "No synchronization info at this position\0" \
-  "Number of Pages:\0" \
-  "OK\0" \
-  "Open\0" \
-  "Open &in PDF-XChange\0" \
-  "Open a document...\0" \
-  "Open in &Adobe Reader\0" \
-  "Open in &Foxit Reader\0" \
-  "Open in &Microsoft HTML Help\0" \
-  "Open in &Microsoft XPS-Viewer\0" \
-  "P&roperties\0" \
-  "P&roperties\tCtrl+D\0" \
-  "PDF Document\0" \
-  "PDF Optimizations:\0" \
-  "PDF Producer:\0" \
-  "PDF Version:\0" \
-  "PDF documents\0" \
-  "Pa&ge...\tCtrl+G\0" \
-  "Page %s\0" \
-  "Page Size:\0" \
-  "Page number %u inexistant\0" \
-  "Page scaling\0" \
-  "Page:\0" \
-  "Please wait - rendering...\0" \
-  "Postscript documents\0" \
-  "Pr&esentation\tCtrl+L\0" \
-  "Previous Page\0" \
-  "Print\0" \
-  "Print as &image (requires more memory)\0" \
-  "Print range\0" \
-  "Printer with given name doesn't exist\0" \
-  "Printing in progress.\0" \
-  "Printing is still in progress. Abort and quit?\0" \
-  "Printing is still in progress. Abort and start over?\0" \
-  "Printing page %d of %d...\0" \
-  "Printing problem.\0" \
-  "Re&name...\tF2\0" \
-  "Remember &opened files\0" \
-  "Remove from favorites\0" \
-  "Remove page %s from favorites\0" \
-  "Rename To\0" \
-  "Replace document &colors with Windows color scheme\0" \
-  "Rotate &Left\tCtrl+Shift+-\0" \
-  "Rotate &Right\tCtrl+Shift++\0" \
-  "Save As\0" \
-  "Save S&hortcut...\tCtrl+Shift+S\0" \
-  "Searching %d of %d...\0" \
-  "Select &All\0" \
-  "Select &All\tCtrl+A\0" \
-  "Select content with Ctrl+left mouse button\0" \
-  "Send by &E-mail...\0" \
-  "Set inverse search command-line\0" \
-  "Show &Bookmarks\0" \
-  "Show &Toolbar\0" \
-  "Show &pages continuously\0" \
-  "Show Favorites\0" \
-  "Show frequently read\0" \
-  "Show the &bookmarks sidebar when available\0" \
-  "Single Page\0" \
-  "Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.\0" \
-  "Source file %s has no synchronization point\0" \
-  "Subject:\0" \
-  "SumatraPDF Options\0" \
-  "SumatraPDF Update\0" \
-  "SumatraPDF crashed\0" \
-  "SumatraPDF is your default PDF reader\0" \
-  "SumatraPDF should now be your default PDF reader\0" \
-  "Synchronization file cannot be opened\0" \
-  "Tagged PDF\0" \
-  "Text documents\0" \
-  "Title:\0" \
-  "Unknown source file (%s)\0" \
-  "View\0" \
-  "Visit &Website\0" \
-  "Warning\0" \
-  "XPS documents\0" \
-  "You have the latest version.\0" \
-  "You have version %s\0" \
-  "Zoom\0" \
-  "Zoom In\0" \
-  "Zoom Out\0" \
-  "Zoom factor\0" \
-  "[Changes detected; refreshing] %s\0" \
-  "copying text\0" \
-  "printing document\0" \
-;
+const char *gOriginalStrings[STRINGS_COUNT] = {
+  "&About",
+  "&Actual Size\tCtrl+1",
+  "&All selected pages",
+  "&Back\tAlt+Left Arrow",
+  "&Book View\tCtrl+8",
+  "&Close\tCtrl+W",
+  "&Copy Selection",
+  "&Copy Selection\tCtrl+C",
+  "&Don't ask me again",
+  "&Even pages only",
+  "&Facing\tCtrl+7",
+  "&File",
+  "&Find what:",
+  "&First Page\tHome",
+  "&Fit pages to printable area",
+  "&Go To",
+  "&Go to page:",
+  "&Help",
+  "&Last Page\tEnd",
+  "&Magnification:",
+  "&Manual",
+  "&Match case",
+  "&Next Page\tRight Arrow",
+  "&No",
+  "&No, thanks",
+  "&Odd pages only",
+  "&Open Document",
+  "&Open...\tCtrl+O",
+  "&Options...",
+  "&Password:",
+  "&Pin Document",
+  "&Previous Page\tLeft Arrow",
+  "&Print...",
+  "&Print...\tCtrl+P",
+  "&Print... (denied)",
+  "&Remember the password for this document",
+  "&Remember these settings for each document",
+  "&Remove Document",
+  "&Save As...",
+  "&Save As...\tCtrl+S",
+  "&Settings",
+  "&Shrink pages to printable area (if necessary)",
+  "&Single Page\tCtrl+6",
+  "&Skip this version",
+  "&Use original page sizes",
+  "&View",
+  "&Yes",
+  "&Zoom",
+  "(of %d)",
+  "(page %s)",
+  "About SumatraPDF",
+  "Add Favorite",
+  "Add page %s to favorites",
+  "Add page %s to favorites with (optional) name:",
+  "Add to favorites",
+  "Advanced",
+  "All files",
+  "All supported documents",
+  "Application:",
+  "Associate with PDF files?",
+  "Attachment: %s",
+  "Author:",
+  "Automatic",
+  "Automatically check for &updates",
+  "Book View",
+  "Book&marks\tF12",
+  "Bookmark Shortcuts",
+  "Bookmark shortcut to page %s of %s",
+  "Bookmarks",
+  "Bytes",
+  "CHM documents",
+  "Can't connect to the Internet (error %#x).",
+  "Cancel",
+  "Cannot print this file",
+  "Cannot start inverse search command. Please check the command line in the settings.",
+  "Change Language",
+  "Check for &Updates",
+  "Comic books",
+  "Compatibility",
+  "Continuous",
+  "Continuous Book View",
+  "Continuous Facing",
+  "Contribute Translation",
+  "Copy &Image",
+  "Copy &Link Address",
+  "Copy Co&mment",
+  "Copying text was denied (copying as image only)",
+  "Copyright:",
+  "Could not obtain Printer properties",
+  "Couldn't initialize printer",
+  "Couldn't render the page",
+  "Created:",
+  "Current file",
+  "Custom &Zoom...\tCtrl+Y",
+  "Default &Layout:",
+  "Default &Zoom:",
+  "Default PDF reader can't be changed in portable mode",
+  "Denied Permissions:",
+  "DjVu documents",
+  "Document Properties",
+  "Download",
+  "E&xit\tCtrl+Q",
+  "EPUB ebooks",
+  "Enter password",
+  "Enter password for %s",
+  "Enter the command-line to invoke when you double-click on the PDF document:",
+  "Error loading %s",
+  "F&avorites",
+  "F&orward\tAlt+Right Arrow",
+  "F&ullscreen\tCtrl+Shift+L",
+  "Facing",
+  "Failed to rename the file!",
+  "Failed to save a file",
+  "Fast Web View",
+  "Favorites",
+  "FictionBook documents",
+  "File %s not found",
+  "File Size:",
+  "File:",
+  "Fin&d...\tCtrl+F",
+  "Find",
+  "Find Next",
+  "Find Previous",
+  "Find:",
+  "Fit &Content\tCtrl+3",
+  "Fit &Page\tCtrl+0",
+  "Fit &Width\tCtrl+2",
+  "Fit Content",
+  "Fit Page",
+  "Fit Width",
+  "Fit Width and Show Pages Continuously",
+  "Fit a Single Page",
+  "Fonts:",
+  "Formatting the book... %d pages",
+  "Found text at page %s",
+  "Found text at page %s (again)",
+  "Frequently Read",
+  "GB",
+  "Go to page",
+  "Hide frequently read",
+  "Hint: Use the F3 key for finding again",
+  "Image files (*.%s)",
+  "KB",
+  "Loading file %s...",
+  "MB",
+  "Make SumatraPDF default application for PDF files?",
+  "Make SumatraPDF my default PDF reader",
+  "Match Case",
+  "Mobi documents",
+  "Modified:",
+  "New version %s is available. Download new version?",
+  "Next Page",
+  "No matches were found",
+  "No result found around line %u in file %s",
+  "No synchronization file found",
+  "No synchronization info at this position",
+  "Number of Pages:",
+  "OK",
+  "Open",
+  "Open &in PDF-XChange",
+  "Open a document...",
+  "Open in &Adobe Reader",
+  "Open in &Foxit Reader",
+  "Open in &Microsoft HTML Help",
+  "Open in &Microsoft XPS-Viewer",
+  "P&roperties",
+  "P&roperties\tCtrl+D",
+  "PDF Document",
+  "PDF Optimizations:",
+  "PDF Producer:",
+  "PDF Version:",
+  "PDF documents",
+  "Pa&ge...\tCtrl+G",
+  "Page %s",
+  "Page Size:",
+  "Page number %u inexistant",
+  "Page scaling",
+  "Page:",
+  "Please wait - rendering...",
+  "Postscript documents",
+  "Pr&esentation\tCtrl+L",
+  "Previous Page",
+  "Print",
+  "Print as &image (requires more memory)",
+  "Print range",
+  "Printer with given name doesn't exist",
+  "Printing in progress.",
+  "Printing is still in progress. Abort and quit?",
+  "Printing is still in progress. Abort and start over?",
+  "Printing page %d of %d...",
+  "Printing problem.",
+  "Re&name...\tF2",
+  "Remember &opened files",
+  "Remove from favorites",
+  "Remove page %s from favorites",
+  "Rename To",
+  "Replace document &colors with Windows color scheme",
+  "Rotate &Left\tCtrl+Shift+-",
+  "Rotate &Right\tCtrl+Shift++",
+  "Save As",
+  "Save S&hortcut...\tCtrl+Shift+S",
+  "Searching %d of %d...",
+  "Select &All",
+  "Select &All\tCtrl+A",
+  "Select content with Ctrl+left mouse button",
+  "Send by &E-mail...",
+  "Set inverse search command-line",
+  "Show &Bookmarks",
+  "Show &Toolbar",
+  "Show &pages continuously",
+  "Show Favorites",
+  "Show frequently read",
+  "Show the &bookmarks sidebar when available",
+  "Single Page",
+  "Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.",
+  "Source file %s has no synchronization point",
+  "Subject:",
+  "SumatraPDF Options",
+  "SumatraPDF Update",
+  "SumatraPDF crashed",
+  "SumatraPDF is your default PDF reader",
+  "SumatraPDF should now be your default PDF reader",
+  "Synchronization file cannot be opened",
+  "Tagged PDF",
+  "Text documents",
+  "Title:",
+  "Unknown source file (%s)",
+  "View",
+  "Visit &Website",
+  "Warning",
+  "XPS documents",
+  "You have the latest version.",
+  "You have version %s",
+  "Zoom",
+  "Zoom In",
+  "Zoom Out",
+  "Zoom factor",
+  "[Changes detected; refreshing] %s",
+  "copying text",
+  "printing document"    
+};
+
+const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
 
 const char * gTranslations_sq = 
   "&P\303\253r\0" \
@@ -13064,7 +13066,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 #undef _LANGID
 
 static const char *gTranslations[LANGS_COUNT] = {
-  gTranslations_en, 
+  NULL,
   gTranslations_sq, 
   gTranslations_ar, 
   gTranslations_am, 

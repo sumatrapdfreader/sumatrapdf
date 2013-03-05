@@ -6,10 +6,9 @@
 
 /*
 TODO:
- - special-case english strings. Store them as before in const char * gEnglishStrings[STRINGS_COUNT] = { ... }
-   array. That way the compiler should be able to de-duplicate those strings with strings that are in the
-   source code inside _TR() macor
  - compress the translations and de-compress them on demand
+ - speed up GetEnglishStringIndex() with binary search
+ - verify that MissingTranslations still work
 */
 
 // Note: this code is optimized for (small) size, not speed
@@ -22,10 +21,10 @@ extern int              gLangsCount;
 extern int              gStringsCount;
 extern const char *     gLangNames;
 extern const char *     gLangCodes;
-extern const char *     gTranslations_en;
 const LANGID *          GetLangIds();
 bool                    IsLangRtl(int langIdx);
 const char *            GetTranslationsForLang(int langIdx);
+const char **           GetOriginalStrings();
 
 static const char *     gCurrLangCode = NULL;
 static int              gCurrLangIdx = 0;
@@ -181,7 +180,13 @@ const char *DetectUserLang()
 
 static int GetEnglishStringIndex(const char* txt)
 {
-    return seqstrings::GetStrIdx(gTranslations_en, txt, gStringsCount);
+    const char **origStrings = GetOriginalStrings();
+    for (int idx = 0; idx < gStringsCount; idx++) {
+        const char *s = origStrings[idx];
+        if (str::Eq(s, txt))
+            return idx;
+    }
+    return -1;
 }
 
 const WCHAR *GetTranslation(const char *s)
