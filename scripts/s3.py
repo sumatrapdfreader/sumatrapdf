@@ -6,17 +6,6 @@ g_aws_secret = None
 g_bucket = None
 g_conn = None
 
-def import_boto():
-  global S3Connection, bucket_lister
-  try:
-    from boto.s3.connection import S3Connection
-    from boto.s3.bucketlistresultset import bucket_lister
-  except:
-    print("You need boto library (http://code.google.com/p/boto/)")
-    print("svn checkout http://boto.googlecode.com/svn/trunk/ boto")
-    print("cd boto; python setup.py install")
-    raise
-
 def set_secrets(access, secret):
   global g_aws_access, g_aws_secret
   g_aws_access = access
@@ -28,8 +17,8 @@ def set_bucket(bucket):
 
 def get_conn():
   global g_conn
+  from boto.s3.connection import S3Connection
   if g_conn is None:
-    import_boto()
     g_conn = S3Connection(g_aws_access, g_aws_secret, True)
   return g_conn
 
@@ -70,7 +59,7 @@ def download_to_file(remote_path, local_path):
   k.get_contents_to_filename(local_path)
 
 def list(s3dir):
-  import_boto()
+  from boto.s3.bucketlistresultset import bucket_lister
   b = get_bucket()
   return bucket_lister(b, s3dir)
 

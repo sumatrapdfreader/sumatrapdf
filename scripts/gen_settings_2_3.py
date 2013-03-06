@@ -1,4 +1,4 @@
-from gen_settings_types import *
+from gen_settings_types import Struct, Field
 
 # Settings for 2.3 version of Sumatra
 

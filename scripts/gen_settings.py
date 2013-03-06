@@ -34,7 +34,6 @@ TODO:
    are correct
 """
 
-from gen_settings_types import *
 import gen_settings_2_3
 
 c_hdr = """
@@ -63,7 +62,7 @@ def gen_c_for_struct(struct, res = None, top_level=True):
 	for field in struct.fields:
 		s = "    %-24s %s;" % (field.c_type(), field.name)
 		lines.append(s)
-		if is_struct_type(field.typ):
+		if field.is_struct():
 			gen_c_for_struct(field.typ, res, top_level=False)
 	lines.append("};\n")
 	res.append("\n".join(lines))

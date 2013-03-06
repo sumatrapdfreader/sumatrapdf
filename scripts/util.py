@@ -1,4 +1,4 @@
-import os, re, subprocess, sys, hashlib, string, time
+import os, re, subprocess, sys, hashlib, string, time, types
 # zipfile doesn't support ZIP_BZIP2 compression in Python 2.*
 import zipfile2 as zipfile
 
@@ -40,12 +40,12 @@ def test_for_flag(args, arg, has_data=False):
     args.remove(arg)
     return True
 
-  ix = args.index(arg)
-  if ix == len(args) - 1:
+  idx = args.index(arg)
+  if idx == len(args) - 1:
     return None
-  data = args[ix + 1]
-  args.pop(ix + 1)
-  args.pop(ix)
+  data = args[idx + 1]
+  args.pop(idx + 1)
+  args.pop(idx)
   return data
 
 def file_sha1(fp):
@@ -65,9 +65,7 @@ def verify_started_in_right_directory():
   print("This script must be run from top of the source tree")
   sys.exit(1)
 
-def run_cmd(*args):
-  cmd = " ".join(args)
-  print("run_cmd_throw: '%s'" % cmd)
+def subprocess_flags():
   # this magic disables the modal dialog that windows shows if the process crashes
   # TODO: it doesn't seem to work, maybe because it was actually a crash in a process
   # sub-launched from the process I'm launching. I had to manually disable this in
@@ -79,10 +77,19 @@ def run_cmd(*args):
     import ctypes
     SEM_NOGPFAULTERRORBOX = 0x0002 # From MSDN
     ctypes.windll.kernel32.SetErrorMode(SEM_NOGPFAULTERRORBOX);
-    subprocess_flags = 0x8000000 #win32con.CREATE_NO_WINDOW?
-  else:
-    subprocess_flags = 0
-  cmdproc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=subprocess_flags)
+    return 0x8000000 #win32con.CREATE_NO_WINDOW?
+  return 0
+
+# Apparently shell argument to Popen it must be False on unix/mac and True on windows
+def shell_arg():
+  if os.name == "nt":
+    return True
+  return False
+
+def run_cmd(*args):
+  cmd = " ".join(args)
+  print("run_cmd_throw: '%s'" % cmd)
+  cmdproc = subprocess.Popen(args, shell=shell_arg(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=subprocess_flags())
   res = cmdproc.communicate()
   return (res[0], res[1], cmdproc.returncode)
 
@@ -91,15 +98,7 @@ def run_cmd_throw(*args):
   cmd = " ".join(args)
   print("run_cmd_throw: '%s'" % cmd)
 
-  # see comment in run_cmd()
-  if sys.platform.startswith("win"):
-    import ctypes
-    SEM_NOGPFAULTERRORBOX = 0x0002 # From MSDN
-    ctypes.windll.kernel32.SetErrorMode(SEM_NOGPFAULTERRORBOX);
-    subprocess_flags = 0x8000000 #win32con.CREATE_NO_WINDOW?
-  else:
-    subprocess_flags = 0
-  cmdproc = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=subprocess_flags)
+  cmdproc = subprocess.Popen(args, shell=shell_arg(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=subprocess_flags())
   res = cmdproc.communicate()
   errcode = cmdproc.returncode
   if 0 != errcode:
@@ -110,6 +109,15 @@ def run_cmd_throw(*args):
     print(res[1])
     raise Exception("'%s' failed with error code %d" % (cmd, errcode))
   return (res[0], res[1])
+
+# work-around a problem with running devenv from command-line:
+# http://social.msdn.microsoft.com/Forums/en-US/msbuild/thread/9d8b9d4a-c453-4f17-8dc6-838681af90f4
+def kill_msbuild():
+  (stdout, stderr, err) = run_cmd("taskkill", "/F", "/IM", "msbuild.exe")
+  if err not in (0, 128): # 0 is no error, 128 is 'process not found'
+    print("err: %d\n%s%s" % (err, stdout, stderr))
+    print("exiting")
+    sys.exit(1)
 
 # Parse output of svn info and return revision number indicated by
 # "Last Changed Rev" field or, if that doesn't exist, by "Revision" field
@@ -252,6 +260,96 @@ def formatInt(x):
         x, r = divmod(x, 1000)
         result = ".%03d%s" % (r, result)
     return "%d%s" % (x, result)
+
+def str2bool(s):
+  if s.lower() in ("true", "1"): return True
+  if s.lower() in ("false", "0"): return False
+  assert(False)
+
+class Serializable(object):
+  def __init__(self, fields, fields_no_serialize, read_from_file=None):
+    self.fields = fields
+    self.fields_no_serialize = fields_no_serialize
+    self.vals = {}
+
+    if read_from_file != None:
+      self.from_s(open(read_from_file, "r").read())
+
+  def type_of_field(self, name):
+    return type(self.fields[name])
+
+  def from_s(self, s):
+    #print(s)
+    lines = s.split("\n")
+    for l in lines:
+      (name, val) = l.split(": ", 1)
+      tp = self.type_of_field(name)
+      if tp == types.IntType:
+        self.vals[name] = int(val)
+      elif tp == types.LongType:
+        self.vals[name] = long(val)
+      elif tp == types.BooleanType:
+        self.vals[name] = str2bool(val)
+      elif tp in (types.StringType, types.UnicodeType):
+        self.vals[name] = val
+      else: print(name); assert(False)
+
+  def to_s(self):
+    res = []
+    for k, v in self.vals.items():
+      if k in self.fields_no_serialize:
+        continue
+      res.append("%s: %s" % (k, str(v)))
+    return string.join(res, "\n")
+
+  def write_to_file(self, filename):
+    open(filename, "w").write(self.to_s())
+
+  def compat_types(self, tp1, tp2):
+    if tp1 == tp2: return True
+    num_types = (types.IntType, types.LongType)
+    if tp1 in num_types and tp2 in num_types: return True
+    return False
+
+  def __setattr__(self, k, v):
+    if k in self.fields:
+      if not self.compat_types(type(v), type(self.fields[k])):
+        print("k='%s', %s != %s (type(v) != type(self.fields[k]))" % (k, type(v), type(self.fields[k])))
+        assert type(v) == type(self.fields[k])
+      self.vals[k] = v
+    else:
+      super(Serializable, self).__setattr__(k, v)
+
+  def __getattr__(self, k):
+    if k in self.vals:
+      return self.vals[k]
+    if k in self.fields:
+      return self.fields[k]
+    return super(Serializable, self).__getattribute__(k)
+
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
+
+def sendmail(sender, senderpwd, to, subject, body):
+    #print("sendmail is disabled"); return
+    mail = MIMEMultipart()
+    mail['From'] = sender
+    toHdr = to
+    if isinstance(toHdr, list):
+      toHdr = ", ".join(toHdr)
+    mail['To'] = toHdr
+    mail['Subject'] = subject
+    mail.attach(MIMEText(body))
+    msg = mail.as_string()
+    #print(msg)
+    mailServer = smtplib.SMTP("smtp.gmail.com", 587)
+    mailServer.ehlo()
+    mailServer.starttls()
+    mailServer.ehlo()
+    mailServer.login(sender, senderpwd)
+    mailServer.sendmail(sender, to, msg)
+    mailServer.close()
 
 # build the .zip with with installer data, will be included as part of
 # Installer.exe resources

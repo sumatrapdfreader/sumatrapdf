@@ -5,7 +5,7 @@ http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 import os, shutil, sys, time, string, datetime, json, cPickle, cgi, traceback
 import s3, util
 from util import file_remove_try_hard, run_cmd_throw
-from util import parse_svnlog_out, formatInt
+from util import parse_svnlog_out, formatInt, Serializable
 from util import load_config, run_cmd, strip_empty_lines, build_installer_data
 from util import verify_path_exists, verify_started_in_right_directory
 
@@ -19,6 +19,27 @@ TODO:
 """
 
 g_first_analyze_build = 6000
+
+class Stats(Serializable):
+	fields = {
+		"analyze_sumatra_warnings_count" : 0,
+		"analyze_mupdf_warnings_count" : 0,
+		"analyze_ext_warnings_count" : 0,
+		"rel_sumatrapdf_exe_size" : 0,
+		"rel_sumatrapdf_no_mupdf_exe_size" : 0,
+		"rel_installer_exe_size" : 0,
+		"rel_libmupdf_dll_size" : 0,
+		"rel_nppdfviewer_dll_size" : 0,
+		"rel_pdffilter_dll_size" : 0,
+		"rel_pdfpreview_dll_size" : 0,
+		"rel_failed" : False,
+		"rel_build_log": "",
+		"analyze_out" : "",
+	}
+	fields_no_serialize = ["rel_build_log", "analyze_out"]
+
+	def __init__(self, read_from_file=None):
+		Serializable.__init__(self, Stats.fields, Stats.fields_no_serialize, read_from_file)
 
 def file_size(p):
   return os.path.getsize(p)
@@ -137,76 +158,6 @@ def str2bool(s):
 def test_ser():
 	stats = Stats()
 	print stats.to_s()
-
-class Stats(object):
-	int_fields = ("analyze_sumatra_warnings_count", "analyze_mupdf_warnings_count", "analyze_ext_warnings_count",
-		"rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
-		"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
-		"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size")
-	bool_fields = ("rel_failed")
-	str_fields = ()
-
-	def __init__(self, serialized_file=None):
-		# serialized to stats.txt
-		self.analyze_sumatra_warnings_count = 0
-		self.analyze_mupdf_warnings_count = 0
-		self.analyze_ext_warnings_count = 0
-
-		self.rel_failed = False
-		self.rel_sumatrapdf_exe_size = 0
-		self.rel_sumatrapdf_no_mupdf_exe_size = 0
-		self.rel_installer_exe_size = 0
-		self.rel_libmupdf_dll_size = 0
-		self.rel_nppdfviewer_dll_size = 0
-		self.rel_pdffilter_dll_size = 0
-		self.rel_pdfpreview_dll_size = 0
-
-		# just for passing data aroun
-		self.analyze_out = None
-		self.rel_build_log = None
-
-		if serialized_file != None:
-			self.from_s(open(serialized_file, "r").read())
-
-	def add_field(self, name):
-		val = self.__getattribute__ (name)
-		self.fields.append("%s: %s" % (name, str(val)))
-
-	def add_rel_fields(self):
-		for f in ("rel_sumatrapdf_exe_size", "rel_sumatrapdf_no_mupdf_exe_size",
-			"rel_installer_exe_size", "rel_libmupdf_dll_size", "rel_nppdfviewer_dll_size",
-			"rel_pdffilter_dll_size", "rel_pdfpreview_dll_size"):
-			self.add_field(f)
-
-	def to_s(self):
-		self.fields = []
-		self.add_field("analyze_sumatra_warnings_count")
-		self.add_field("analyze_mupdf_warnings_count")
-		self.add_field("analyze_ext_warnings_count")
-		self.add_field("rel_failed")
-		if not self.rel_failed:
-			self.add_rel_fields()
-		return string.join(self.fields, "\n")
-
-	def set_field(self, name, val, tp):
-		if tp in ("str", "string"):
-			self.__setattr__(name, val)
-		elif tp == "bool":
-			self.__setattr__(name, str2bool(val))
-		elif tp in ("int", "num"):
-			self.__setattr__(name, int(val))
-		else:
-			assert(False)
-
-	def from_s(self, s):
-		lines = s.split("\n")
-		for l in lines:
-			(name, val) = l.split(": ", 1)
-			name = name.replace("release_", "rel_")
-			if name in self.int_fields: self.set_field(name, val, "int")
-			elif name in self.bool_fields: self.set_field(name, val, "bool")
-			elif name in self.str_fields: self.set_field(name, val, "str")
-			else: print(name); assert(False)
 
 def create_dir(d):
 	if not os.path.exists(d): os.makedirs(d)
