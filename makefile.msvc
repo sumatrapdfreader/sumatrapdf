@@ -175,7 +175,8 @@ SUMATRA_OBJS = \
 	$(OS)\Selection.obj $(OS)\FileModifications.obj $(SUMATRA_RES) \
 	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) $(EBOOK_OBJS) $(MUI_OBJS) \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
-	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj
+	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj \
+	$(OS)\Settings.obj
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \

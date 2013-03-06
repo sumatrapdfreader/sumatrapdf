@@ -62,6 +62,7 @@ def verify_path_exists(path):
   if not os.path.exists(path):
     print("path '%s' doesn't exist" % path)
     sys.exit(1)
+  return path
 
 def verify_started_in_right_directory():
   if os.path.exists(os.path.join("scripts", "build-release.py")): return
