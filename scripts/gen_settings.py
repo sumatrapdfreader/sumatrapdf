@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+#import struct
 import util, gen_settings_2_3
 
 """
@@ -82,6 +83,8 @@ struct StructPointerInfo {
     StructDef *def;
 };
 
+%(cpp_body)s
+
 static void unserialize_struct_r(char *data, StructDef *def, char *base)
 {
     for (int i=0; i < def->pointersCount; i++) {
@@ -103,30 +106,39 @@ void unserialize_struct(char *data, StructDef *def)
 {
     unserialize_struct_r(data, def, data);
 }
-
-%(cpp_body)s
 """
 
-def gen_cpp_for_struct_r(struct, res = None, top_level=False):
+def gen_cpp_for_struct_r(stru, res = None, top_level=False):
     return ""
+
+def build_struct_def(stru):
+    field_off = 0
+    for field in stru.fields:
+        field.offset = field_off
+        field_off += field.c_size()
+        stru.append_pack_format(field.pack_format())
+        typ = field.c_type()
+        if len(typ)  > stru.max_type_len:
+            stru.max_type_len = len(typ)
+    stru.size = field_off
 
 # works recursively. res is used to return a result, which is an array of
 # strings corresponding to
-def gen_h_for_struct_r(struct, res = None, top_level=False):
-    #print("gen_h_for_struct_r: %s" % struct.name)
+def gen_h_for_struct_r(stru, res = None, top_level=False, base_offset=0):
+    #print("gen_h_for_struct_r: %s" % stru.name)
     if top_level:
-        first = struct.fields[0]
-        #print("name: %s, type: %s" % (first_field.name, first_field.typ))
+        # first field of the top-level stru must be a version
+        first = stru.fields[0]
         assert "version" == first.name and "u32" == first.typ
+        assert base_offset == 0
 
-    lines = ["struct %s {" % struct.name]
-    max_type_len = 0
-    for field in struct.fields:
-        typ = field.c_type()
-        if len(typ) + 1 > max_type_len:
-            max_type_len = len(typ) + 1
-    format_str = "    %%-%ds %%s;" % max_type_len
-    for field in struct.fields:
+    build_struct_def(stru)
+    stru.base_offset = base_offset
+    base_offset += stru.size
+
+    lines = ["struct %s {" % stru.name]
+    format_str = "    %%-%ds %%s;" % stru.max_type_len
+    for field in stru.fields:
         s = format_str % (field.c_type(), field.name)
         lines.append(s)
         if field.is_struct():
@@ -134,14 +146,14 @@ def gen_h_for_struct_r(struct, res = None, top_level=False):
     lines.append("};\n")
     res.append("\n".join(lines))
 
-def gen_h_for_struct(struct):
+def gen_h_for_struct(stru):
     res = []
-    gen_h_for_struct_r(struct, res, top_level=True)
+    gen_h_for_struct_r(stru, res, top_level=True)
     return "\n".join(res)
 
-def gen_cpp_for_struct(struct):
+def gen_cpp_for_struct(stru):
     res = []
-    gen_cpp_for_struct_r(struct, res, top_level=True)
+    gen_cpp_for_struct_r(stru, res, top_level=True)
     return "\n".join(res)
 
 def src_dir():

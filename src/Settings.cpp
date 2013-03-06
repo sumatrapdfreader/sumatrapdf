@@ -23,6 +23,8 @@ struct StructPointerInfo {
     StructDef *def;
 };
 
+
+
 static void unserialize_struct_r(char *data, StructDef *def, char *base)
 {
     for (int i=0; i < def->pointersCount; i++) {
@@ -44,5 +46,3 @@ void unserialize_struct(char *data, StructDef *def)
 {
     unserialize_struct_r(data, def, data);
 }
-
-
