@@ -93,13 +93,19 @@ public:
 
 // an user annotation on page
 struct PageAnnotation {
+    struct Color {
+        uint8_t r, g, b, a;
+        Color() : r(0), g(0), b(0), a(0) { }
+        Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a=255) : r(r), g(g), b(b), a(a) { }
+    };
+
     PageAnnotType type;
     int pageNo;
     RectD rect;
-    COLORREF color;
+    Color color;
 
-    PageAnnotation() : type(Annot_None), pageNo(-1), color(-1) { }
-    PageAnnotation(PageAnnotType type, int pageNo, RectD rect, COLORREF color) :
+    PageAnnotation() : type(Annot_None), pageNo(-1) { }
+    PageAnnotation(PageAnnotType type, int pageNo, RectD rect, Color color) :
         type(type), pageNo(pageNo), rect(rect), color(color) { }
 };
 

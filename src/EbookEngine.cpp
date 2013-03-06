@@ -337,18 +337,18 @@ void EbookEngine::FixFontSizeForResolution(HDC hDC)
 }
 
 // TODO: use AdjustLightness instead to compensate for the alpha?
-static Color Unblend(COLORREF c, BYTE alpha)
+static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha)
 {
-    BYTE R = GetRValue(c), G = GetGValue(c), B = GetBValue(c);
-    R = (BYTE)floorf(max(R - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    G = (BYTE)floorf(max(G - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    B = (BYTE)floorf(max(B - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    return Color(alpha, R, G, B);
+    alpha = (BYTE)(alpha * c.a / 255.f);
+    BYTE R = (BYTE)floorf(max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE G = (BYTE)floorf(max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE B = (BYTE)floorf(max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    return Gdiplus::Color(alpha, R, G, B);
 }
 
-static Color FromColorRef(COLORREF c)
+static inline Gdiplus::Color FromColor(PageAnnotation::Color c)
 {
-    return Color(GetRValue(c), GetGValue(c), GetBValue(c));
+    return Gdiplus::Color(c.a, c.r, c.g, c.b);
 }
 
 static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pageNo)
@@ -360,21 +360,21 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
         PointF p1, p2;
         switch (annot.type) {
         case Annot_Highlight:
-            g.FillRectangle(&SolidBrush(Unblend(annot.color, 95)), annot.rect.ToGdipRectF());
+            g.FillRectangle(&SolidBrush(Unblend(annot.color, 119)), annot.rect.ToGdipRectF());
             break;
         case Annot_Underline:
             p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y);
             p2 = PointF((float)annot.rect.BR().x, p1.Y);
-            g.DrawLine(&Pen(FromColorRef(annot.color)), p1, p2);
+            g.DrawLine(&Pen(FromColor(annot.color)), p1, p2);
             break;
         case Annot_StrikeOut:
             p1 = PointF((float)annot.rect.x, (float)annot.rect.y + (float)annot.rect.dy / 2);
             p2 = PointF((float)annot.rect.BR().x, p1.Y);
-            g.DrawLine(&Pen(FromColorRef(annot.color)), p1, p2);
+            g.DrawLine(&Pen(FromColor(annot.color)), p1, p2);
             break;
         case Annot_Squiggly:
             {
-                Pen p(FromColorRef(annot.color), 0.5f);
+                Pen p(FromColor(annot.color), 0.5f);
                 REAL dash[2] = { 2, 2 };
                 p.SetDashPattern(dash, dimof(dash));
                 p.SetDashOffset(1);

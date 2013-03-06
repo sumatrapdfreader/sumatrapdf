@@ -831,11 +831,11 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device *
             CrashIf(true);
         }
         fz_colorspace *cs = fz_find_device_colorspace(dev->ctx, "DeviceRGB");
-        float color[3] = { GetRValue(annot.color) / 255.f, GetGValue(annot.color) / 255.f, GetBValue(annot.color) / 255.f };
+        float color[3] = { annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f };
         if (Annot_Highlight == annot.type) {
             // render path with transparency effect
             fz_begin_group(dev, &rect, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
-            fz_fill_path(dev, path, 0, ctm, cs, color, 0.8f);
+            fz_fill_path(dev, path, 0, ctm, cs, color, annot.color.a / 255.f);
             fz_end_group(dev);
         }
         else {
@@ -1238,7 +1238,8 @@ class PdfComment : public PageElement {
 
 public:
     PdfComment(const WCHAR *content, RectD rect, int pageNo) :
-        annot(Annot_None, pageNo, rect, (COLORREF)0), content(str::Dup(content)) { }
+        annot(Annot_None, pageNo, rect, PageAnnotation::Color()),
+        content(str::Dup(content)) { }
 
     virtual PageElementType GetType() const { return Element_Comment; }
     virtual int GetPageNo() const { return annot.pageNo; }
@@ -2735,7 +2736,7 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
     /P %d %d R\
     /AP << /N %d 0 R >>\
 >>";
-    static const char *ap_dict = "<< /Type /XObject /Subtype /Form /BBox [0 0 %f %f] /Resources << /ExtGState << /GS << /Type /ExtGState /ca 0.8 /AIS false /BM /Multiply >> >> /ProcSet [/PDF] >> >>";
+    static const char *ap_dict = "<< /Type /XObject /Subtype /Form /BBox [0 0 %f %f] /Resources << /ExtGState << /GS << /Type /ExtGState /ca %.f /AIS false /BM /Multiply >> >> /ProcSet [/PDF] >> >>";
     static const char *ap_highlight = "q /DeviceRGB cs /GS gs %f %f %f rg 0 0 %f %f re f Q";
     static const char *ap_underline = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 0.5 m %f 0.5 l S Q";
     static const char *ap_strikeout = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 %f m %f %f l S Q";
@@ -2760,14 +2761,14 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
     fz_matrix invctm;
     fz_transform_rect(&r, fz_invert_matrix(&invctm, &page->ctm));
     double dx = r.x1 - r.x0, dy = r.y1 - r.y0;
-    float rgb[3] = { GetRValue(annot.color) / 255.f, GetGValue(annot.color) / 255.f, GetBValue(annot.color) / 255.f };
+    float rgb[3] = { annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f };
     ScopedMem<char> annot_tpl(str::Format(obj_dict, subtype,
         r.x0, r.y0, r.x1, r.y1, //Rect
         r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0, //QuadPoints (must lie within /Rect)
         rgb[0], rgb[1], rgb[2], //C
         pdf_to_num(doc->page_refs[annot.pageNo-1]), pdf_to_gen(doc->page_refs[annot.pageNo-1]), //P
         next_num));
-    ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy));
+    ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
     ScopedMem<char> annot_ap_stream;
 
     fz_try(ctx) {

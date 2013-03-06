@@ -432,18 +432,18 @@ bool DjVuEngineImpl::Load(const WCHAR *fileName)
 }
 
 // TODO: use AdjustLightness instead to compensate for the alpha?
-static Gdiplus::Color Unblend(COLORREF c, BYTE alpha)
+static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha)
 {
-    BYTE R = GetRValue(c), G = GetGValue(c), B = GetBValue(c);
-    R = (BYTE)floorf(max(R - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    G = (BYTE)floorf(max(G - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    B = (BYTE)floorf(max(B - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    alpha = (BYTE)(alpha * c.a / 255.f);
+    BYTE R = (BYTE)floorf(max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE G = (BYTE)floorf(max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE B = (BYTE)floorf(max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
     return Gdiplus::Color(alpha, R, G, B);
 }
 
-static Gdiplus::Color FromColorRef(COLORREF c)
+static inline Gdiplus::Color FromColor(PageAnnotation::Color c)
 {
-    return Gdiplus::Color(GetRValue(c), GetGValue(c), GetBValue(c));
+    return Gdiplus::Color(c.a, c.r, c.g, c.b);
 }
 
 void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, int rotation, RectI screen)
@@ -468,7 +468,7 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
             case Annot_Highlight:
                 arect = Transform(annot.rect, pageNo, zoom, rotation);
                 arect.Offset(-screen.x, -screen.y);
-                g.FillRectangle(&SolidBrush(Unblend(annot.color, 95)), arect.ToGdipRectF());
+                g.FillRectangle(&SolidBrush(Unblend(annot.color, 119)), arect.ToGdipRectF());
                 break;
             case Annot_Underline:
             case Annot_StrikeOut:
@@ -477,12 +477,12 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
                     arect.y -= annot.rect.dy / 2;
                 arect = Transform(arect, pageNo, zoom, rotation);
                 arect.Offset(-screen.x, -screen.y);
-                g.DrawLine(&Pen(FromColorRef(annot.color), zoom), (float)arect.x,
+                g.DrawLine(&Pen(FromColor(annot.color), zoom), (float)arect.x,
                            (float)arect.y, (float)arect.BR().x, (float)arect.BR().y);
                 break;
             case Annot_Squiggly:
                 {
-                    Pen p(FromColorRef(annot.color), 0.5f * zoom);
+                    Pen p(FromColor(annot.color), 0.5f * zoom);
                     REAL dash[2] = { 2, 2 };
                     p.SetDashPattern(dash, dimof(dash));
                     p.SetDashOffset(1);

@@ -15,8 +15,8 @@ such modifications portably within the file structure (i.e. currently
 any format but PDF). The format uses CSS syntax for brevity:
 
 @meta { version: 2.3; filesize: 98765 }
-highlight { page: 1; rect: 10 10 100 100; color: #FF0000 }
-annotType { page: no; rect: x y w h; color: #rrggbb }
+highlight { page: 1; rect: 10 10 100 100; color: #FFFF0000 }
+annotType { page: no; rect: x y w h; color: #aarrggbb }
 ...
 
 (Currently, the only supported modifications are adding annotations.)
@@ -62,7 +62,7 @@ Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filepath)
 
         int pageNo = 0;
         RectT<float> rect;
-        COLORREF color = (COLORREF)-1;
+        PageAnnotation::Color color;
         while ((prop = parser.NextProperty())) {
             switch (prop->type) {
             case Css_Page:
@@ -75,9 +75,11 @@ Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filepath)
                     rect = RectT<float>();
                 break;
             case Css_Color:
-                int r, g, b;
-                if (str::Parse(prop->s, prop->sLen, "#%2x%2x%2x%$", &r, &g, &b))
-                    color = RGB(r, g, b);
+                int r, g, b, a;
+                if (str::Parse(prop->s, prop->sLen, "#%2x%2x%2x%2x%$", &a, &r, &g, &b))
+                    color = PageAnnotation::Color(r, g, b, a);
+                else if (str::Parse(prop->s, prop->sLen, "#%2x%2x%2x%$", &r, &g, &b))
+                    color = PageAnnotation::Color(r, g, b);
                 break;
             }
         }
@@ -111,10 +113,10 @@ bool SaveFileModifictions(const WCHAR *filepath, Vec<PageAnnotation> *list)
         case Annot_Squiggly:  data.Append("squiggly "); break;
         default: continue;
         }
-        data.AppendFmt(" { page: %d; rect: %.2f %.2f %.2f %.2f; color: #%02X%02X%02X }\r\n",
+        data.AppendFmt(" { page: %d; rect: %.2f %.2f %.2f %.2f; color: #%02X%02X%02X%02X }\r\n",
                        annot.pageNo, annot.rect.x, annot.rect.y,
-                       annot.rect.dx, annot.rect.dy, GetRValue(annot.color),
-                       GetGValue(annot.color), GetBValue(annot.color));
+                       annot.rect.dx, annot.rect.dy, annot.color.a,
+                       annot.color.r, annot.color.g, annot.color.b);
     }
 
     ScopedMem<WCHAR> modificationsPath(str::Join(filepath, SMX_FILE_EXT));
