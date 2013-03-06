@@ -20,7 +20,7 @@ forwardSearch = Struct("ForwardSearchSettings", [
 ])
 
 advancedSettings = Struct("AdvancedSettings", [
-	Field("version", "u32", 0x00000203),
+	Field("version", "u32", 0x02030000),
 	Field("traditionalEbookUI", "bool", False),
 	Field("escToExit", "bool", False),
 	Field("logoColor", "color", 0xFFF200),

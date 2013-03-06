@@ -67,12 +67,6 @@ def gen_c_for_struct(struct, res = None, top_level=True):
 	lines.append("};\n")
 	res.append("\n".join(lines))
 
-def test_arr(n, arr):
-	arr.append(n)
-	if n == 0:
-		return
-	test_arr(n-1, arr)
-
 def gen_c():
 	all_structs = []
 	gen_c_for_struct(gen_settings_2_3.advancedSettings, all_structs)

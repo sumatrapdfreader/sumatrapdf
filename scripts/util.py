@@ -54,6 +54,10 @@ def file_sha1(fp):
   m.update(data)
   return m.hexdigest()
 
+def create_dir(d):
+  if not os.path.exists(d): os.makedirs(d)
+  return d
+
 def verify_path_exists(path):
   if not os.path.exists(path):
     print("path '%s' doesn't exist" % path)
