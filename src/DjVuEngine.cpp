@@ -699,6 +699,16 @@ bool DjVuEngineImpl::SaveFileAs(const WCHAR *copyFileName)
     return CopyFile(fileName, copyFileName, FALSE);
 }
 
+static void AppendNewline(str::Str<WCHAR>& extracted, Vec<RectI>& coords, const WCHAR *lineSep)
+{
+    if (extracted.Count() > 0 && ' ' == extracted.Last()) {
+        extracted.Pop();
+        coords.Pop();
+    }
+    extracted.Append(lineSep);
+    coords.AppendBlanks(str::Len(lineSep));
+}
+
 bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR *lineSep, str::Str<WCHAR>& extracted, Vec<RectI>& coords)
 {
     miniexp_t type = miniexp_car(item);
@@ -718,6 +728,10 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR *lineSep, str::
 
     miniexp_t str = miniexp_car(item);
     if (miniexp_stringp(str) && !miniexp_cdr(item)) {
+        if (type != miniexp_symbol("char") && type != miniexp_symbol("word") ||
+            coords.Count() > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
+            AppendNewline(extracted, coords, lineSep);
+        }
         const char *content = miniexp_to_str(str);
         WCHAR *value = str::conv::FromUtf8(content);
         if (value) {
@@ -730,11 +744,6 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR *lineSep, str::
         if (miniexp_symbol("word") == type) {
             extracted.Append(' ');
             coords.Append(RectI(rect.x + rect.dx, rect.y, 2, rect.dy));
-        }
-        else if (miniexp_symbol("char") != type) {
-            extracted.Append(lineSep);
-            for (size_t i = 0; i < str::Len(lineSep); i++)
-                coords.Append(RectI());
         }
         item = miniexp_cdr(item);
     }
@@ -762,6 +771,8 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coord
     ddjvu_miniexp_release(doc, pagetext);
     if (!success)
         return NULL;
+    if (extracted.Count() > 0 && !str::EndsWith(extracted.Get(), lineSep))
+        AppendNewline(extracted, coords, lineSep);
 
     assert(str::Len(extracted.Get()) == coords.Count());
     if (coords_out) {
@@ -776,7 +787,7 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coord
         // TODO: the coordinates aren't completely correct yet
         RectI page = PageMediabox(pageNo).Round();
         for (size_t i = 0; i < coords.Count(); i++) {
-            if (!coords.At(i).IsEmpty()) {
+            if (coords.At(i) != RectI()) {
                 if (dpiFactor != 1.0) {
                     RectT<float> pageF = coords.At(i).Convert<float>();
                     pageF.x *= dpiFactor; pageF.dx *= dpiFactor;

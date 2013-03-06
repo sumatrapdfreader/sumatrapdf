@@ -112,8 +112,13 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
     // the result indexes the first glyph to be selected in a forward selection
     RectD bbox = engine->Transform(coords[result].Convert<double>(), pageNo, 1.0, 0);
     PointD pt = engine->Transform(PointD(x, y), pageNo, 1.0, 0);
-    if (pt.x > bbox.x + 0.5 * bbox.dx)
+    if (pt.x > bbox.x + 0.5 * bbox.dx) {
         result++;
+        // for some (DjVu) documents, all glyphs of a word share the same bbox
+        while (result < textLen && coords[result - 1] == coords[result])
+            result++;
+    }
+    CrashIf(result > 0 && result < textLen && coords[result] == coords[result - 1]);
 
     return result;
 }

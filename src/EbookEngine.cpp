@@ -498,6 +498,10 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_o
             break;
         }
     }
+    if (content.Count() > 0 && !str::EndsWith(content.Get(), lineSep)) {
+        content.Append(lineSep);
+        coords.AppendBlanks(str::Len(lineSep));
+    }
 
     if (coords_out) {
         CrashIf(coords.Count() != content.Count());
