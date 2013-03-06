@@ -109,7 +109,7 @@ bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, st
     if (!hConn)
         goto Exit;
 
-    DWORD flags = INTERNET_FLAG_KEEP_CONNECTION;
+    DWORD flags = 0;
     hReq = HttpOpenRequest(hConn, L"POST", url, NULL, NULL, NULL, flags, NULL);
     if (!hReq)
         goto Exit;
