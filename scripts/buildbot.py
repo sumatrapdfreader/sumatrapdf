@@ -231,6 +231,25 @@ def build_version(ver, skip_release=False):
 	s3.upload_data_public_with_content_type(stats_txt, s3dir + "stats.txt", silent=True)
 	s3.upload_data_public_with_content_type(json_s, "sumatrapdf/buildbot/sizes.js", silent=True)
 	s3.upload_data_public_with_content_type(html, "sumatrapdf/buildbot/index.html", silent=True)
+	if stats.rel_failed:
+		email_build_failed(ver)
+
+g_email_to = ["kkowalczyk@gmail.com"]
+
+def email_build_failed(ver):
+	s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
+	c = load_config()
+	if not c.HasNotifierEmail():
+		return
+	sender, senderpwd = c.GetNotifierEmailAndPwdMustExist()
+	subject = "SumatraPDF build %s failed" % str(ver)
+	checkin_url = "https://code.google.com/p/sumatrapdf/source/detail?r=%s" + str(ver)
+	body = "Checkin: %s\n\n" % checkin_url
+	build_log_url = s3_url_start + str(ver) + "/rel_build_log.txt"
+	body += "Build log: %s\n\n" % build_log_url
+	buildbot_index_url = s3_url_start + "index.html"
+	body += "Buildbot: %s\n\n" % buildbot_index_url
+	util.sendmail(sender, senderpwd, g_email_to, subject, body)
 
 # for testing
 def build_curr(force=False):

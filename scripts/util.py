@@ -378,6 +378,15 @@ class Config(object):
     self.aws_secret = None
     self.cert_pwd = None
     self.trans_ul_secret = None
+    self.notifier_email = None
+    self.notifier_email_pwd = None
+
+  def GetNotifierEmailAndPwdMustExist(self):
+    assert(None != self.notifier_email and None != self.notifier_email_pwd)
+    return (self.notifier_email, self.notifier_email_pwd)
+
+  def HasNotifierEmail(self):
+    return self.notifier_email != None and self.notifier_email_pwd != None
 
   def GetCertPwdMustExist(self):
     assert(None != self.cert_pwd)
