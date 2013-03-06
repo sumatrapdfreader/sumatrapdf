@@ -496,7 +496,7 @@ def build_release(stats, ver):
 	build_log = strip_empty_lines(build_log)
 	open(log_path, "w").write(build_log)
 
-	stats.rel_build_log = None
+	stats.rel_build_log = ""
 	stats.rel_failed = False
 	if errcode != 0:
 		stats.rel_build_log = build_log
