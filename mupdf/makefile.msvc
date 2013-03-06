@@ -78,7 +78,7 @@ CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
 CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy /GF
 
 # /EHs-c- : disable C++ exceptions (generates smaller binaries)
-CFLAGSB = $(CFLAGSB) /EHs-c- 
+CFLAGSB = $(CFLAGSB) /EHs-c-
 
 # /Ox  : maximum optimizations
 # /O2  : maximize speed
@@ -115,7 +115,7 @@ OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DI
 
 JPEG_TURBO_CFLAGS = $(CFLAGS) /TC /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
 JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4101 /wd4018 /wd4996
-JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ 
+JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\
 !if "$(PLATFORM)"=="X64"
 JPEG_TURBO_NASM_FLAGS = $(JPEG_TURBO_NASM_FLAGS) -f win64 -D__x86_64__ -DWIN64 -DMSVC
 !else
@@ -165,7 +165,7 @@ FT_OBJS = $(FT_OBJS) $(OFT)\ftdebug.obj
 ZLIB_OBJS = \
 	$(OZ)\adler32.obj $(OZ)\compress.obj $(OZ)\crc32.obj $(OZ)\deflate.obj \
 	$(OZ)\inffast.obj $(OZ)\inflate.obj $(OZ)\inftrees.obj $(OZ)\trees.obj \
-	$(OZ)\zutil.obj $(OZ)\uncompr.obj \
+	$(OZ)\zutil.obj \
 	$(OZ)\gzlib.obj $(OZ)\gzread.obj $(OZ)\gzwrite.obj $(OZ)\gzclose.obj \
 	$(OZ)\inftree9.obj
 
@@ -361,7 +361,7 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(CC) $(JPEG_TURBO_CFLAGS) /Fo$(OT)\ /Fd$(O)\vc80.pdb $<
 
 {$(JPEG_TURBO_DIR)\simd}.asm{$(OT)}.obj:
-	$(NASM) $(JPEG_TURBO_NASM_FLAGS) -o $@ $< 
+	$(NASM) $(JPEG_TURBO_NASM_FLAGS) -o $@ $<
 
 {$(OPENJPEG_DIR)}.c{$(OOJ)}.obj::
 	$(CC) $(OPENJPEG_CFLAGS) /Fo$(OOJ)\ /Fd$(O)\vc80.pdb $<
@@ -396,7 +396,7 @@ MUPDF_CMAP_TABLES = $(MUPDF_GEN_DIR)\cmap_cns.h $(MUPDF_GEN_DIR)\cmap_gb.h \
 	$(MUPDF_GEN_DIR)\cmap_japan.h $(MUPDF_GEN_DIR)\cmap_korea.h
 
 MUPDF_FONT_FILES = $(MUPDF_GEN_DIR)\font_base14.h $(MUPDF_GEN_DIR)\font_droid.h \
-	$(MUPDF_GEN_DIR)\font_cjk.h $(MUPDF_GEN_DIR)\font_cjk_full.h	
+	$(MUPDF_GEN_DIR)\font_cjk.h $(MUPDF_GEN_DIR)\font_cjk_full.h
 
 MUPDF_GENERATED =  $(MUPDF_CMAP_TABLES) $(MUPDF_FONT_FILES) $(MUPDF_GEN_DIR)\js_util.h
 

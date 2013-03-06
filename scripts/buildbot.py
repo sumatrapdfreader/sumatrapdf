@@ -688,6 +688,9 @@ def main():
 	# to avoid problems, we build a separate source tree, just for the buildbot
 	src_path = os.path.join("..", "sumatrapdf_buildbot")
 	verify_path_exists(src_path)
+	conf = load_config()
+	s3.set_secrets(conf.aws_access, conf.aws_secret)
+	s3.set_bucket("kjkpub")
 	copy_secrets(src_path)
 	os.chdir(src_path)
 	get_cert_pwd() # early exit if problems

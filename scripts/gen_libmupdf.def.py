@@ -69,7 +69,6 @@ EXPORTS
 	deflateEnd
 	compress
 	compressBound
-	uncompress
 	crc32
 """
 
@@ -78,7 +77,7 @@ def main():
 	mupdf_exports = generateExports("pdf/mupdf.h") + "\n\n" + generateExports("pdf/mupdf-internal.h", ["pdf_crypt_buffer", "pdf_open_compressed_stream"])
 	muxps_exports = generateExports("xps/muxps.h") + "\n\n" + generateExports("xps/muxps-internal.h", ["xps_parse_solid_color_brush", "xps_print_path"])
 	mucbz_exports = generateExports("cbz/mucbz.h")
-	
+
 	list = LIBMUPDF_DEF % locals()
 	open("../src/libmupdf.def", "wb").write(list.replace("\n", "\r\n"))
 
@@ -86,6 +85,6 @@ if __name__ == "__main__":
 	if os.path.exists("gen_libmupdf.def.py"):
 		os.chdir("..")
 	verify_started_in_right_directory()
-	
+
 	os.chdir("mupdf")
 	main()

@@ -3,7 +3,52 @@
 
 #include "BaseUtil.h"
 #include "Translations2.h"
-#include <zlib.h>
+
+// set to 0 for not compressed. Must match trans_gen.py (gen_c_code_for_dir).
+// Also, in Sumatra, when using compressed, UNINSTALLER_OBJS need to include $(ZLIB_OBJS)
+// in makefile.msvc
+#define COMPRESSED 0
+// set to 0 for not compressed.
+
+#if COMPRESSED == 1
+
+// local copy of uncompr.c
+//#define ZLIB_INTERNAL
+#include "zlib.h"
+
+int uncompress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen)
+{
+    z_stream stream;
+    int err;
+
+    stream.next_in = (Bytef*)source;
+    stream.avail_in = (uInt)sourceLen;
+    /* Check for source > 64K on 16-bit machine: */
+    if ((uLong)stream.avail_in != sourceLen) return Z_BUF_ERROR;
+
+    stream.next_out = dest;
+    stream.avail_out = (uInt)*destLen;
+    if ((uLong)stream.avail_out != *destLen) return Z_BUF_ERROR;
+
+    stream.zalloc = (alloc_func)0;
+    stream.zfree = (free_func)0;
+
+    err = inflateInit(&stream);
+    if (err != Z_OK) return err;
+
+    err = inflate(&stream, Z_FINISH);
+    if (err != Z_STREAM_END) {
+        inflateEnd(&stream);
+        if (err == Z_NEED_DICT || (err == Z_BUF_ERROR && stream.avail_in == 0))
+            return Z_DATA_ERROR;
+        return err;
+    }
+    *destLen = stream.total_out;
+
+    err = inflateEnd(&stream);
+    return err;
+}
+#endif // COMPRESSED == 1
 
 /*
 TODO:
@@ -21,7 +66,6 @@ extern const char *     gLangNames;
 extern const char *     gLangCodes;
 const LANGID *          GetLangIds();
 bool                    IsLangRtl(int langIdx);
-const unsigned char *   GetTranslationsForLang(int langIdx, uint32_t *uncompressedSizeOut, uint32_t *compressedSizeOut);
 const char **           GetOriginalStrings();
 
 // used locally
@@ -32,18 +76,16 @@ static int              gCurrLangIdx = 0;
 // hence foo[] => *foo here
 // const char *gCurrLangStrings[STRINGS_COUNT];
 const char **           gCurrLangStrings = NULL;
-// const char *gLangsStringsUncompressed[LANGS_COUNT];
-const char **           gLangsStringsUncompressed = NULL;
 // WCHAR ** gLangsTransCache[LANGS_COUNT];
 WCHAR ***               gLangsTransCache = NULL;
 
-// optimization trick: the lifetime of gCurrLangStrings, gLangsStringsUncompressed and
-// gLangsTransCache is the same and all elements are pointer values, so we allocate
-// their memory in one go
-#define CURR_LANG_STRINGS_ELS           gStringsCount
-#define LANGS_STRINGS_UNCOMPRESSED_ELS  gLangsCount
-#define LANGS_TRANS_CACHE_ELS           gLangsCount
-void **gCombinedMem = NULL;
+#if COMPRESSED == 1
+// const char *gLangsStringsUncompressed[LANGS_COUNT];
+const unsigned char *   GetTranslationsForLang(int langIdx, uint32_t *uncompressedSizeOut, uint32_t *compressedSizeOut);
+const char **           gLangsStringsUncompressed = NULL;
+#else
+const char *   GetTranslationsForLang(int langIdx);
+#endif
 
 /* In general, after adding new _TR() strings, one has to re-generate Translations_txt.cpp, but
 that also requires uploading new strings to the server, for which one needs accesss.
@@ -110,14 +152,16 @@ static void FreeTransCache()
             free(transCache[i]);
         }
         free(transCache);
+#if COMPRESSED == 1
         if (gLangsStringsUncompressed[langIdx])
             free((void*)gLangsStringsUncompressed[langIdx]);
+#endif
     }
-    free(gCombinedMem);
-    gCombinedMem = NULL;
-    gLangsTransCache = NULL;
-    gCurrLangStrings = NULL;
-    gLangsStringsUncompressed = NULL;
+    free(gLangsTransCache);
+    free(gCurrLangStrings);
+#if COMPRESSED == 1
+    free(gLangsStringsUncompressed);
+#endif
 }
 
 static void BuildStringsIndexForLang(int langIdx)
@@ -131,6 +175,7 @@ static void BuildStringsIndexForLang(int langIdx)
         return;
     }
 
+#if COMPRESSED == 1
     const char *s =  gLangsStringsUncompressed[langIdx];
     if (NULL == s) {
         uint32_t uncompressedSize, compressedSize;
@@ -143,7 +188,9 @@ static void BuildStringsIndexForLang(int langIdx)
         gLangsStringsUncompressed[langIdx] = (const char *)uncompressed;
         s = gLangsStringsUncompressed[langIdx];
     }
-
+#else
+    const char *s = GetTranslationsForLang(langIdx);
+#endif
     for (int i = 0; i < gStringsCount; i++) {
         size_t len = str::Len(s);
         if (0 == len)
@@ -156,12 +203,12 @@ static void BuildStringsIndexForLang(int langIdx)
 
 void SetCurrentLangByCode(const char *langCode)
 {
-    if (!gCombinedMem) {
-        int totalEls = CURR_LANG_STRINGS_ELS + LANGS_STRINGS_UNCOMPRESSED_ELS + LANGS_TRANS_CACHE_ELS;
-        gCombinedMem = AllocArray<void*>(totalEls);
-        gCurrLangStrings = (const char**)(gCombinedMem);
-        gLangsStringsUncompressed = (const char**)(gCombinedMem + CURR_LANG_STRINGS_ELS);
-        gLangsTransCache = (WCHAR ***)(gCombinedMem + CURR_LANG_STRINGS_ELS + LANGS_STRINGS_UNCOMPRESSED_ELS);
+    if (!gCurrLangStrings) {
+        gCurrLangStrings = AllocArray<const char*>(gStringsCount);
+        gLangsTransCache = AllocArray<WCHAR **>(gLangsCount);
+#if COMPRESSED == 1
+        gLangsStringsUncompressed = AllocArray<const char*>(gLangsCount);
+#endif
     }
 
     if (str::Eq(langCode, gCurrLangCode))
