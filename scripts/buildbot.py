@@ -225,12 +225,11 @@ def build_version(ver, skip_release=False):
 	# before/dufing uploading stats.txt. Would have to implement transactional
 	# multi-upload to be robust aginst that, so will just let it be
 	stats_txt = stats.to_s()
-	html = build_index_html(stats_for_ver, checkin_comment_for_ver)
-	json_s = build_sizes_json(get_stats_cache_dir, stats_for_ver)
-
 	s3.upload_data_public_with_content_type(stats_txt, s3dir + "stats.txt", silent=True)
-	s3.upload_data_public_with_content_type(json_s, "sumatrapdf/buildbot/sizes.js", silent=True)
+	html = build_index_html(stats_for_ver, checkin_comment_for_ver)
 	s3.upload_data_public_with_content_type(html, "sumatrapdf/buildbot/index.html", silent=True)
+	json_s = build_sizes_json(get_stats_cache_dir, stats_for_ver)
+	s3.upload_data_public_with_content_type(json_s, "sumatrapdf/buildbot/sizes.js", silent=True)
 	if stats.rel_failed:
 		email_build_failed(ver)
 
