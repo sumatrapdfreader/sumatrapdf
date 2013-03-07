@@ -6,7 +6,7 @@
 # they can be re-generated
 
 import sys, os, s3
-from util import file_remove_try_hard, verify_path_exists, run_cmd_throw
+from util import file_remove_try_hard, verify_path_exists, run_cmd_throw, load_config
 from buildbot import get_stats_cache_dir
 from buildbot import verify_started_in_right_directory
 
@@ -112,6 +112,9 @@ def fix_from_ver(ver, all_vers, all_vers_s3):
 
 def fix():
 	verify_started_in_right_directory()
+	conf = load_config()
+	s3.set_secrets(conf.aws_access, conf.aws_secret)
+	s3.set_bucket("kjkpub")
 
 	d = get_stats_cache_dir()
 	files = os.listdir(d)
