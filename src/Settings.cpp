@@ -7,7 +7,10 @@
 
 struct StructPointerInfo;
 
+#define POINTER_SIZE 8
+
 typedef struct {
+    int                  size;
     int                  pointersCount;
     StructPointerInfo *  pointersInfo;
 } StructDef;
@@ -23,7 +26,16 @@ struct StructPointerInfo {
     StructDef *def;
 };
 
+StructDef gForwardSearchSettingsStructDef = { 16, 0, NULL};
 
+StructDef gPaddingSettingsStructDef = { 12, 0, NULL};
+
+StructPointerInfo gAdvancedSettingsPointers[] = {
+    { 16, &gPaddingSettingsStructDef },
+    { 24, &gForwardSearchSettingsStructDef },
+};
+
+StructDef gAdvancedSettingsStructDef = { 32, 2, &gAdvancedSettingsPointers[0]};
 
 static void unserialize_struct_r(char *data, StructDef *def, char *base)
 {
@@ -42,7 +54,12 @@ static void unserialize_struct_r(char *data, StructDef *def, char *base)
 // replaced with offsets from the beginning of the memory.
 // to unserialize, we need to fix them up i.e. convert offsets
 // to pointers
-void unserialize_struct(char *data, StructDef *def)
+// TODO: add bool makeCopy option that will make deep copy of data
+// (using malloc()), so that it can be easily modified before being
+// serialized for storage. We'll also need free_struct(char *data, StructDef *def)
+// for freeing this copy
+char* unserialize_struct(char *data, StructDef *def)
 {
     unserialize_struct_r(data, def, data);
+    return data;
 }

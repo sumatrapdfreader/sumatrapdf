@@ -9,6 +9,10 @@ class Struct(object):
         self.base_offset = None  # offset from the beginning of top-level struct
         self.pack_format = "<"   # little endian
         self.max_type_len = 0    # for better formatting, lenght of longest field type name
+        self.struct_fields = None
+
+    def get_struct_fields(self):
+        return [f for f in self.fields if f.is_struct()]
 
     def append_pack_format(self, fmt):
         self.pack_format += fmt
@@ -66,3 +70,6 @@ class Field(object):
     def c_type(self):      return get_typ_c_name(self.typ)
     def c_size(self):      return get_typ_c_size(self.typ)
     def pack_format(self): return get_pack_format(self.typ)
+    def get_struct_def(self):
+        assert self.is_struct()
+        return self.typ

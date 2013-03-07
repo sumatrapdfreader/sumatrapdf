@@ -37,6 +37,10 @@ TODO:
  - generate default data as serialized block
  - generate asserts that our assumptions about offsets of fields in the structs
    are correct
+ - add a notion of value to allow multiple values in the settings chain
+   that have the same struct type
+ - introduce a concept of array i.e. a count + pointer to values (requires
+   notion of value first)
 """
 
 h_tmpl = """
@@ -67,7 +71,10 @@ cpp_tmpl = """
 
 struct StructPointerInfo;
 
+#define POINTER_SIZE 8
+
 typedef struct {
+    int                  size;
     int                  pointersCount;
     StructPointerInfo *  pointersInfo;
 } StructDef;
@@ -84,7 +91,6 @@ struct StructPointerInfo {
 };
 
 %(cpp_body)s
-
 static void unserialize_struct_r(char *data, StructDef *def, char *base)
 {
     for (int i=0; i < def->pointersCount; i++) {
@@ -102,14 +108,16 @@ static void unserialize_struct_r(char *data, StructDef *def, char *base)
 // replaced with offsets from the beginning of the memory.
 // to unserialize, we need to fix them up i.e. convert offsets
 // to pointers
-void unserialize_struct(char *data, StructDef *def)
+// TODO: add bool makeCopy option that will make deep copy of data
+// (using malloc()), so that it can be easily modified before being
+// serialized for storage. We'll also need free_struct(char *data, StructDef *def)
+// for freeing this copy
+char* unserialize_struct(char *data, StructDef *def)
 {
     unserialize_struct_r(data, def, data);
+    return data;
 }
 """
-
-def gen_cpp_for_struct(stru):
-    return ""
 
 def build_struct_def(stru):
     field_off = 0
@@ -122,16 +130,8 @@ def build_struct_def(stru):
             stru.max_type_len = len(typ)
     stru.size = field_off
 
-def c_struct_def(stru):
-    lines = ["struct %s {" % stru.name]
-    format_str = "    %%-%ds %%s;" % stru.max_type_len
-    for field in stru.fields:
-        s = format_str % (field.c_type(), field.name)
-        lines.append(s)
-    lines.append("};\n")
-    return "\n".join(lines)
-
-def gen_h_for_struct(stru):
+# must be called before calling gen_* functions
+def build_structs(stru):
     # first field of the top-level struct must be a version
     assert "version" == stru.fields[0].name and "u32" == stru.fields[0].typ
     structs_remaining = [stru]
@@ -148,27 +148,76 @@ def gen_h_for_struct(stru):
     for stru in reversed(structs_done):
         stru.base_offset = offset
         offset += stru.size
+    return structs_done
 
-    return "\n".join([c_struct_def(stru) for stru in reversed(structs_done)])
+"""
+StructPointerInfo gFooPointers[] = {
+    { $offset, &gFooStructDef },
+};
+"""
+def gen_struct_pointer_infos_one(stru):
+    name = stru.name
+    lines = ["StructPointerInfo g%(name)sPointers[] = {" % locals()]
+    for field in stru.get_struct_fields():
+        offset = field.offset
+        name = field.typ.name
+        lines += ["    { %(offset)d, &g%(name)sStructDef }," % locals()]
+    lines += ["};\n"]
+    return lines
+
+def gen_struct_pointer_infos(fields):
+    lines = []
+    for field in  fields:
+        lines += gen_struct_pointer_infos_one(field.typ)
+    return lines
+
+"""StructDef gFooStructDef = { $x, $n, &g${Foo}Pointers[0] };"""
+def gen_c_struct_metadata(stru):
+    name = stru.name
+    size = stru.size
+    fields = stru.get_struct_fields()
+    pointer_infos_count = len(fields)
+    pointer_infos = "NULL"
+    lines = []
+    if len(fields) > 0:
+        pointer_infos = "&g%sPointers[0]" % name
+        lines += gen_struct_pointer_infos_one(stru)
+    lines += ["StructDef g%(name)sStructDef = { %(size)d, %(pointer_infos_count)d, %(pointer_infos)s};\n" % locals()]
+    return "\n".join(lines)
+
+def gen_cpp_for_structs(structs):
+    return "\n".join([gen_c_struct_metadata(stru) for stru in reversed(structs)])
+
+def gen_h_struct_def(stru):
+    lines = ["struct %s {" % stru.name]
+    format_str = "    %%-%ds %%s;" % stru.max_type_len
+    for field in stru.fields:
+        s = format_str % (field.c_type(), field.name)
+        lines.append(s)
+    lines.append("};\n")
+    return "\n".join(lines)
+
+def gen_h_for_structs(structs):
+    return "\n".join([gen_h_struct_def(stru) for stru in reversed(structs)])
 
 def src_dir():
     d = os.path.dirname(__file__)
     p = os.path.join(d, "..", "src")
     return util.verify_path_exists(p)
 
+def write_to_file(file_path, s): file(file_path, "w").write(s)
+
 def main():
     dst_dir = src_dir()
-    advancedSettings = gen_settings_2_3.advancedSettings
 
-    h_body = gen_h_for_struct(advancedSettings)
-    h_path = os.path.join(dst_dir, "Settings.h")
+    structs = build_structs(gen_settings_2_3.advancedSettings)
+    h_body = gen_h_for_structs(structs)
     h_txt = h_tmpl % locals()
-    file(h_path, "w").write(h_txt)
+    write_to_file(os.path.join(dst_dir, "Settings.h"), h_txt)
 
-    cpp_body = gen_cpp_for_struct(advancedSettings)
+    cpp_body = gen_cpp_for_structs(structs)
     cpp_txt = cpp_tmpl % locals()
-    cpp_path = os.path.join(dst_dir, "Settings.cpp")
-    file(cpp_path, "w").write(cpp_txt)  
+    write_to_file(os.path.join(dst_dir, "Settings.cpp"), cpp_txt)
 
 if __name__ == "__main__":
     main()
