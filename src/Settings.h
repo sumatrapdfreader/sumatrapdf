@@ -13,6 +13,13 @@ union Ptr {
 
 STATIC_ASSERT(8 == sizeof(Ptr<int>), ptr_is_8_bytes);
 
+struct ForwardSearchSettings {
+    int32_t  highlightOffset;
+    int32_t  highlightWidth;
+    int32_t  highlightPermanent;
+    uint32_t highlightColor;
+};
+
 struct PaddingSettings {
     uint16_t top;
     uint16_t bottom;
@@ -20,13 +27,6 @@ struct PaddingSettings {
     uint16_t right;
     uint16_t spaceX;
     uint16_t spaceY;
-};
-
-struct ForwardSearchSettings {
-    int32_t  highlightOffset;
-    int32_t  highlightWidth;
-    int32_t  highlightPermanent;
-    uint32_t highlightColor;
 };
 
 struct AdvancedSettings {

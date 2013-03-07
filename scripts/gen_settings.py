@@ -108,7 +108,7 @@ void unserialize_struct(char *data, StructDef *def)
 }
 """
 
-def gen_cpp_for_struct_r(stru, res = None, top_level=False):
+def gen_cpp_for_struct(stru):
     return ""
 
 def build_struct_def(stru):
@@ -122,39 +122,34 @@ def build_struct_def(stru):
             stru.max_type_len = len(typ)
     stru.size = field_off
 
-# works recursively. res is used to return a result, which is an array of
-# strings corresponding to
-def gen_h_for_struct_r(stru, res = None, top_level=False, base_offset=0):
-    #print("gen_h_for_struct_r: %s" % stru.name)
-    if top_level:
-        # first field of the top-level stru must be a version
-        first = stru.fields[0]
-        assert "version" == first.name and "u32" == first.typ
-        assert base_offset == 0
-
-    build_struct_def(stru)
-    stru.base_offset = base_offset
-    base_offset += stru.size
-
+def c_struct_def(stru):
     lines = ["struct %s {" % stru.name]
     format_str = "    %%-%ds %%s;" % stru.max_type_len
     for field in stru.fields:
         s = format_str % (field.c_type(), field.name)
         lines.append(s)
-        if field.is_struct():
-            gen_h_for_struct_r(field.typ, res, top_level=False)
     lines.append("};\n")
-    res.append("\n".join(lines))
+    return "\n".join(lines)
 
 def gen_h_for_struct(stru):
-    res = []
-    gen_h_for_struct_r(stru, res, top_level=True)
-    return "\n".join(res)
+    # first field of the top-level struct must be a version
+    assert "version" == stru.fields[0].name and "u32" == stru.fields[0].typ
+    structs_remaining = [stru]
+    structs_done = []
+    while len(structs_remaining) > 0:
+        stru = structs_remaining.pop(0)
+        structs_done.append(stru)
+        build_struct_def(stru)
+        for field in stru.fields:
+            if field.is_struct():
+                structs_remaining.append(field.typ)
 
-def gen_cpp_for_struct(stru):
-    res = []
-    gen_cpp_for_struct_r(stru, res, top_level=True)
-    return "\n".join(res)
+    offset = 0
+    for stru in reversed(structs_done):
+        stru.base_offset = offset
+        offset += stru.size
+
+    return "\n".join([c_struct_def(stru) for stru in reversed(structs_done)])
 
 def src_dir():
     d = os.path.dirname(__file__)
