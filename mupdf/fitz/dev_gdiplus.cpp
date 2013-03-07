@@ -1117,16 +1117,15 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 		collection = new PrivateFontCollection();
 		assert(collection->GetFamilyCount() == 0);
 		
-		/* TODO: this seems to make print-outs larger rather than smaller * /
 		if (font->ft_data)
 		{
+			// TODO: memory fonts seem to get substituted in release builds
+			// collection->AddMemoryFont(font->ft_data, font->ft_size);
 			user->tempFiles = new TempFile(font->ft_data, font->ft_size, user->tempFiles);
 			if (*user->tempFiles->path)
 				collection->AddFontFile(user->tempFiles->path);
-			// TODO: memory fonts seem to get substituted in release builds
-			// collection->AddMemoryFont(font->ft_data, font->ft_size);
 		}
-		else */ if (font->ft_file)
+		else if (font->ft_file)
 		{
 			WCHAR fontPath[MAX_PATH];
 			MultiByteToWideChar(CP_ACP, 0, font->ft_file, -1, fontPath, nelem(fontPath));
