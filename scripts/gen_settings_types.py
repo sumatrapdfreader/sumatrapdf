@@ -28,7 +28,7 @@ class TypeDef(object):
         self.pack_format = pack_format
 
 g_types_map = {
-    "bool"   : TypeDef("bool", 4, "i"),
+    "bool"   : TypeDef("bool", 2, "h"),
     "u16"    : TypeDef("uint16_t", 2, "H"),
     "i32"    : TypeDef("int32_t", 4, "i"),
     "u32"    : TypeDef("uint32_t", 4, "I"),

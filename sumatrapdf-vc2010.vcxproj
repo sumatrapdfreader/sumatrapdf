@@ -307,6 +307,7 @@
     <ClCompile Include="src\RenderCache.cpp" />
     <ClCompile Include="src\Search.cpp" />
     <ClCompile Include="src\Selection.cpp" />
+    <ClCompile Include="src\Settings.cpp" />
     <ClCompile Include="src\StressTesting.cpp" />
     <ClCompile Include="src\SumatraAbout.cpp" />
     <ClCompile Include="src\SumatraAbout2.cpp" />
@@ -497,6 +498,7 @@
     <ClInclude Include="src\Resource.h" />
     <ClInclude Include="src\Search.h" />
     <ClInclude Include="src\Selection.h" />
+    <ClInclude Include="src\Settings.h" />
     <ClInclude Include="src\StressTesting.h" />
     <ClInclude Include="src\SumatraAbout.h" />
     <ClInclude Include="src\SumatraAbout2.h" />

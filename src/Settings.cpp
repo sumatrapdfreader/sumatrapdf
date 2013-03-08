@@ -26,16 +26,21 @@ struct StructPointerInfo {
     StructDef *def;
 };
 
+STATIC_ASSERT(sizeof(ForwardSearchSettings) == 16, ForwardSearchSettings_is_16_bytes);
 StructDef gForwardSearchSettingsStructDef = { 16, 0, NULL};
 
+STATIC_ASSERT(sizeof(PaddingSettings) == 12, PaddingSettings_is_12_bytes);
 StructDef gPaddingSettingsStructDef = { 12, 0, NULL};
 
+STATIC_ASSERT(offsetof(AdvancedSettings, pagePadding) == 12, pagePadding_is_12_bytes_in_AdvancedSettings);
+STATIC_ASSERT(offsetof(AdvancedSettings, forwardSearch) == 20, forwardSearch_is_20_bytes_in_AdvancedSettings);
 StructPointerInfo gAdvancedSettingsPointers[] = {
-    { 16, &gPaddingSettingsStructDef },
-    { 24, &gForwardSearchSettingsStructDef },
+    { 12, &gPaddingSettingsStructDef },
+    { 20, &gForwardSearchSettingsStructDef },
 };
 
-StructDef gAdvancedSettingsStructDef = { 32, 2, &gAdvancedSettingsPointers[0]};
+STATIC_ASSERT(sizeof(AdvancedSettings) == 28, AdvancedSettings_is_28_bytes);
+StructDef gAdvancedSettingsStructDef = { 28, 2, &gAdvancedSettingsPointers[0]};
 
 static void unserialize_struct_r(char *data, StructDef *def, char *base)
 {

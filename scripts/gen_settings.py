@@ -35,8 +35,6 @@ TODO:
  - add a notion of Struct inheritance to make it easy to support forward/backward
    compatibility
  - generate default data as serialized block
- - generate asserts that our assumptions about offsets of fields in the structs
-   are correct
  - add a notion of value to allow multiple values in the settings chain
    that have the same struct type
  - introduce a concept of array i.e. a count + pointer to values (requires
@@ -151,13 +149,21 @@ def build_structs(stru):
     return structs_done
 
 """
+STATIC_ASSERT(offsetof($struct_name, $field_name) == $offset, $field_name_is_$offset_bytes_in_$struct_name);
 StructPointerInfo gFooPointers[] = {
     { $offset, &gFooStructDef },
 };
 """
 def gen_struct_pointer_infos_one(stru):
     name = stru.name
-    lines = ["StructPointerInfo g%(name)sPointers[] = {" % locals()]
+    lines = []
+    for field in stru.get_struct_fields():
+        struct_name = name
+        field_name = field.name
+        offset = field.offset
+        lines += ["STATIC_ASSERT(offsetof(%(struct_name)s, %(field_name)s) == %(offset)d, %(field_name)s_is_%(offset)d_bytes_in_%(struct_name)s);" % locals()]
+
+    lines += ["StructPointerInfo g%(name)sPointers[] = {" % locals()]
     for field in stru.get_struct_fields():
         offset = field.offset
         name = field.typ.name
@@ -171,7 +177,9 @@ def gen_struct_pointer_infos(fields):
         lines += gen_struct_pointer_infos_one(field.typ)
     return lines
 
-"""StructDef gFooStructDef = { $x, $n, &g${Foo}Pointers[0] };"""
+"""
+STATIC_ASSERT(sizeof(gForwardSearchSettingsStructDef) == 16, gForwardSearchSettingsStructDef_is_16_bytes);
+StructDef gFooStructDef = { $size, $pointersCount, &g${Foo}Pointers[0] };"""
 def gen_c_struct_metadata(stru):
     name = stru.name
     size = stru.size
@@ -182,6 +190,7 @@ def gen_c_struct_metadata(stru):
     if len(fields) > 0:
         pointer_infos = "&g%sPointers[0]" % name
         lines += gen_struct_pointer_infos_one(stru)
+    lines += ["STATIC_ASSERT(sizeof(%(name)s) == %(size)d, %(name)s_is_%(size)d_bytes);" % locals()]
     lines += ["StructDef g%(name)sStructDef = { %(size)d, %(pointer_infos_count)d, %(pointer_infos)s};\n" % locals()]
     return "\n".join(lines)
 

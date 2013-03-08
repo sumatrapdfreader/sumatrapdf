@@ -1025,6 +1025,9 @@
     <ClCompile Include="src\Trans_sumatra_txt.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="src\Settings.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1520,6 +1523,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\Translations2.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Settings.h">
       <Filter>sumatra</Filter>
     </ClInclude>
   </ItemGroup>
