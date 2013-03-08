@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-import os
-#import struct
+import os, struct, types
 import util, gen_settings_2_3
 
 """
@@ -34,12 +33,12 @@ We rely on an exact layout of data in the struct, so:
    with the same definition
 
 TODO:
- - add a notion of Struct inheritance to make it easy to support forward/backward
-   compatibility
- - generate default data as serialized block
- - const char *serialize_struct(char *data, StructDef *def);
+ - calculate the pointer offset in structs
  - add a notion of value to allow multiple values in the settings chain
    that have the same struct type
+ - add a notion of Struct inheritance to make it easy to support forward/backward
+   compatibility
+ - const char *serialize_struct(char *data, StructDef *def);
  - introduce a concept of array i.e. a count + type of values + pointer to 
    values (requires adding a notion of value first)
  - add size as the first field of each struct, for forward-compatibilty
@@ -97,6 +96,9 @@ struct StructPointerInfo {
 };
 
 %(cpp_body)s
+
+%(global_data)s
+
 // a serialized format is a linear chunk of memory with pointers
 // replaced with offsets from the beginning of the memory (base)
 // to deserialize, we malloc() each struct and replace offsets
@@ -145,6 +147,14 @@ void free_struct(char *data, StructDef *def)
     }
     free(data);
 }
+
+// TODO: write me
+const char *serialize_struct(char *data, StructDef *def, uint32_t *sizeOut)
+{
+    *sizeOut = 0;
+    return NULL;
+}
+
 """
 
 def build_struct_def(stru):
@@ -152,7 +162,6 @@ def build_struct_def(stru):
     for field in stru.fields:
         field.offset = field_off
         field_off += field.c_size()
-        stru.append_pack_format(field.pack_format())
         typ = field.c_type()
         if len(typ)  > stru.max_type_len:
             stru.max_type_len = len(typ)
@@ -224,6 +233,52 @@ def gen_c_struct_metadata(stru):
     lines += ["StructDef g%(name)sStructDef = { %(size)d, %(pointer_infos_count)d, %(pointer_infos)s};\n" % locals()]
     return "\n".join(lines)
 
+def data_to_hex(data):
+    els = ["0x%02x" % ord(c) for c in data]
+    return ", ".join(els)
+
+def is_of_num_type(val):
+    tp = type(val)
+    return tp == types.IntType or tp == types.LongType
+
+"""
+  // $StructName
+  0x00, 0x01, // $type $name = $val
+  ...
+"""
+def get_cpp_data_one(stru):
+    name = stru.name
+    lines = ["", "  // %s" % name]
+    for field in stru.fields:
+        val = field.def_val
+        if val == None:
+            val = 0
+        fmt = field.pack_format()
+        data = struct.pack(fmt, val)
+        data_hex = data_to_hex(data)
+        var_type = field.c_type()
+        var_name = field.name
+        if is_of_num_type(val):
+            val_str = hex(val)
+        else:
+            val_str = str(val)
+        s = "  %(data_hex)s, // %(var_type)s %(var_name)s = %(val_str)s" % locals()
+        lines += [s]
+    return lines
+
+"""
+static uint8_t g$(StructName)Default[] = {
+   ... data    
+};
+"""
+def gen_cpp_data(structs):
+    name = structs[0].name
+    lines = ["static uint8_t g%sDefault[] = {" % name]
+    for stru in structs:
+        lines += get_cpp_data_one(stru)
+    lines += ["};"]
+    return "\n".join(lines)
+
 def gen_cpp_for_structs(structs):
     return "\n".join([gen_c_struct_metadata(stru) for stru in reversed(structs)])
 
@@ -255,6 +310,7 @@ def main():
     write_to_file(os.path.join(dst_dir, "Settings.h"), h_txt)
 
     cpp_body = gen_cpp_for_structs(structs)
+    global_data = gen_cpp_data(structs)
     cpp_txt = cpp_tmpl % locals()
     write_to_file(os.path.join(dst_dir, "Settings.cpp"), cpp_txt)
 

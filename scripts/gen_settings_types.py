@@ -7,15 +7,11 @@ class Struct(object):
         # calculated
         self.size = None         # size of the structure (size of all fields)
         self.base_offset = None  # offset from the beginning of top-level struct
-        self.pack_format = "<"   # little endian
         self.max_type_len = 0    # for better formatting, lenght of longest field type name
         self.struct_fields = None
 
     def get_struct_fields(self):
         return [f for f in self.fields if f.is_struct()]
-
-    def append_pack_format(self, fmt):
-        self.pack_format += fmt
 
 def is_struct_type(typ): return type(typ) == type(Struct(None, None))
 
@@ -28,11 +24,11 @@ class TypeDef(object):
         self.pack_format = pack_format
 
 g_types_map = {
-    "bool"   : TypeDef("bool", 2, "h"),
-    "u16"    : TypeDef("uint16_t", 2, "H"),
-    "i32"    : TypeDef("int32_t", 4, "i"),
-    "u32"    : TypeDef("uint32_t", 4, "I"),
-    "color"  : TypeDef("uint32_t", 4, "I"),
+    "bool"   : TypeDef("bool", 2, "<h"),
+    "u16"    : TypeDef("uint16_t", 2, "<H"),
+    "i32"    : TypeDef("int32_t", 4, "<i"),
+    "u32"    : TypeDef("uint32_t", 4, "<I"),
+    "color"  : TypeDef("uint32_t", 4, "<I"),
 }
 
 def verify_type(typ):
@@ -54,7 +50,7 @@ def get_pack_format(typ):
     verify_type(typ)
     if typ in g_types_map:
         return g_types_map[typ].pack_format
-    if is_struct_type(typ): return "Ixxxx" # 4 bytes offset + 4 padding bytes
+    if is_struct_type(typ): return "<Ixxxx" # 4 bytes offset + 4 padding bytes
 
 class Field(object):
     def __init__(self, name, typ, def_val):

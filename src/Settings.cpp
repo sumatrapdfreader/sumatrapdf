@@ -42,6 +42,32 @@ StructPointerInfo gAdvancedSettingsPointers[] = {
 STATIC_ASSERT(sizeof(AdvancedSettings) == 28, AdvancedSettings_is_28_bytes);
 StructDef gAdvancedSettingsStructDef = { 28, 2, &gAdvancedSettingsPointers[0]};
 
+
+static uint8_t gAdvancedSettingsDefault[] = {
+
+  // AdvancedSettings
+  0x00, 0x00, 0x03, 0x02, // uint32_t version = 0x2030000
+  0x00, 0x00, // bool traditionalEbookUI = False
+  0x00, 0x00, // bool escToExit = False
+  0x00, 0xf2, 0xff, 0x00, // uint32_t logoColor = 0xfff200
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Ptr<PaddingSettings> pagePadding = 0x0
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Ptr<ForwardSearchSettings> forwardSearch = 0x0
+
+  // PaddingSettings
+  0x02, 0x00, // uint16_t top = 0x2
+  0x02, 0x00, // uint16_t bottom = 0x2
+  0x04, 0x00, // uint16_t left = 0x4
+  0x04, 0x00, // uint16_t right = 0x4
+  0x04, 0x00, // uint16_t spaceX = 0x4
+  0x04, 0x00, // uint16_t spaceY = 0x4
+
+  // ForwardSearchSettings
+  0x00, 0x00, 0x00, 0x00, // int32_t highlightOffset = 0x0
+  0x0f, 0x00, 0x00, 0x00, // int32_t highlightWidth = 0xf
+  0x00, 0x00, 0x00, 0x00, // int32_t highlightPermanent = 0x0
+  0xff, 0x81, 0x65, 0x00, // uint32_t highlightColor = 0x6581ff
+};
+
 // a serialized format is a linear chunk of memory with pointers
 // replaced with offsets from the beginning of the memory (base)
 // to deserialize, we malloc() each struct and replace offsets
@@ -90,3 +116,11 @@ void free_struct(char *data, StructDef *def)
     }
     free(data);
 }
+
+// TODO: write me
+const char *serialize_struct(char *data, StructDef *def, uint32_t *sizeOut)
+{
+    *sizeOut = 0;
+    return NULL;
+}
+
