@@ -25,28 +25,9 @@ struct StructPointerInfo {
     StructDef *def;
 };
 
-StructDef gPaddingSettingsStructDef = { 12, 0, NULL };
+%(structs_metadata)s
 
-StructDef gForwardSearchSettingsStructDef = { 16, 0, NULL };
-
-StructPointerInfo gAdvancedSettingsPointers[] = {
-    { 16, &gPaddingSettingsStructDef },
-    { 24, &gForwardSearchSettingsStructDef },
-};
-
-StructDef gAdvancedSettingsStructDef = { 32, 2, &gAdvancedSettingsPointers[0] };
-
-
-static uint8_t gAdvancedSettingsDefault[] = {
-
-  // AdvancedSettings
-  0x00, 0x00, 0x03, 0x02, // uint32_t version = 0x2030000
-  0x00, 0x00, 0x00, 0x00, // int32_t traditionalEbookUI = False
-  0x00, 0x00, 0x00, 0x00, // int32_t escToExit = False
-  0x00, 0xf2, 0xff, 0x00, // uint32_t logoColor = 0xfff200
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Ptr<PaddingSettings> pagePadding = 0x0
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Ptr<ForwardSearchSettings> forwardSearch = 0x0
-};
+%(values_global_data)s
 
 // a serialized format is a linear chunk of memory with pointers
 // replaced with offsets from the beginning of the memory (base)
