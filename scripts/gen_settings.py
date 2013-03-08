@@ -2,7 +2,7 @@
 
 import os, struct, types
 import util, gen_settings_2_3
-from gen_settings_types import gen_h_struct_defs
+from gen_settings_types import gen_struct_defs, gen_structs_metadata
 
 """
 Script that generates C code for compact storage of settings.
@@ -47,9 +47,6 @@ TODO:
    corruption of the values (crash if that happens)
  - maybe: add a compare function. That way we could optimize saving
    (only save if the values have changed)
- - maybe: change "bool" to be int32_t, to avoid potential problems
-   with other compilers. I thought that bool is int32_t but it seems
-   in Visual C it's int16_t
 """
 
 h_tmpl = """
@@ -99,9 +96,9 @@ struct StructPointerInfo {
     StructDef *def;
 };
 
-%(cpp_body)s
+%(structs_metadata)s
 
-%(global_data)s
+%(values_global_data)s
 
 // a serialized format is a linear chunk of memory with pointers
 // replaced with offsets from the beginning of the memory (base)
@@ -161,70 +158,27 @@ const char *serialize_struct(char *data, StructDef *def, uint32_t *sizeOut)
 
 """
 
-# must be called before calling gen_* functions
-def build_structs(stru):
+# val is a top-level struct value with primitive types and
+# references to other struct types (forming a tree of values).
+# we flatten the values into a list and calculate base_offset
+# on each value
+def flatten_values_tree(top_level_val):
     # first field of the top-level struct must be a version
-    assert "version" == stru.fields[0].name and "u32" == stru.fields[0].typ
-    structs_remaining = [stru]
-    structs_done = []
-    while len(structs_remaining) > 0:
-        stru = structs_remaining.pop(0)
-        structs_done.append(stru)
-        for field in stru.fields:
+    assert "version" == top_level_val.fields[0].name and "u32" == top_level_val.fields[0].typ
+    vals = []
+    left = [top_level_val]
+    base_offset = 0
+    while len(left) > 0:
+        val = left.pop(0)
+        val.base_offset = base_offset
+        for field in val.fields:
             if field.is_struct():
-                structs_remaining.append(field.typ)
+                if field.val != None:
+                    left += [field.val]
+        base_offset += val.c_size()
+        vals += [val]
+    return vals
 
-    offset = 0
-    for stru in reversed(structs_done):
-        stru.base_offset = offset
-        offset += stru.size
-    return structs_done
-
-"""
-STATIC_ASSERT(offsetof($struct_name, $field_name) == $offset, $field_name_is_$offset_bytes_in_$struct_name);
-StructPointerInfo gFooPointers[] = {
-    { $offset, &gFooStructDef },
-};
-"""
-def gen_struct_pointer_infos_one(stru):
-    name = stru.name
-    lines = []
-    for field in stru.get_struct_fields():
-        struct_name = name
-        field_name = field.name
-        offset = field.offset
-        lines += ["STATIC_ASSERT(offsetof(%(struct_name)s, %(field_name)s) == %(offset)d, %(field_name)s_is_%(offset)d_bytes_in_%(struct_name)s);" % locals()]
-
-    lines += ["StructPointerInfo g%(name)sPointers[] = {" % locals()]
-    for field in stru.get_struct_fields():
-        offset = field.offset
-        name = field.typ.name
-        lines += ["    { %(offset)d, &g%(name)sStructDef }," % locals()]
-    lines += ["};\n"]
-    return lines
-
-def gen_struct_pointer_infos(fields):
-    lines = []
-    for field in  fields:
-        lines += gen_struct_pointer_infos_one(field.typ)
-    return lines
-
-"""
-STATIC_ASSERT(sizeof(gForwardSearchSettingsStructDef) == 16, gForwardSearchSettingsStructDef_is_16_bytes);
-StructDef gFooStructDef = { $size, $pointersCount, &g${Foo}Pointers[0] };"""
-def gen_c_struct_metadata(stru):
-    name = stru.name
-    size = stru.size
-    fields = stru.get_struct_fields()
-    pointer_infos_count = len(fields)
-    pointer_infos = "NULL"
-    lines = []
-    if len(fields) > 0:
-        pointer_infos = "&g%sPointers[0]" % name
-        lines += gen_struct_pointer_infos_one(stru)
-    lines += ["STATIC_ASSERT(sizeof(%(name)s) == %(size)d, %(name)s_is_%(size)d_bytes);" % locals()]
-    lines += ["StructDef g%(name)sStructDef = { %(size)d, %(pointer_infos_count)d, %(pointer_infos)s };\n" % locals()]
-    return "\n".join(lines)
 
 def data_to_hex(data):
     els = ["0x%02x" % ord(c) for c in data]
@@ -239,13 +193,18 @@ def is_of_num_type(val):
   0x00, 0x01, // $type $name = $val
   ...
 """
-def get_cpp_data_one(stru):
-    name = stru.name
+def get_cpp_data_for_struct_val(struct_val):
+    name = struct_val.name
     lines = ["", "  // %s" % name]
-    for field in stru.fields:
-        val = field.def_val
-        if val == None:
-            val = 0
+    for field in struct_val.fields:
+        if field.is_struct():
+            if field.val == None:
+                val = 0
+            else:
+                val = field.val.base_offset
+        else:
+            val = field.val
+            assert val != None
         fmt = field.pack_format()
         data = struct.pack(fmt, val)
         data_hex = data_to_hex(data)
@@ -264,16 +223,13 @@ static uint8_t g$(StructName)Default[] = {
    ... data    
 };
 """
-def gen_cpp_data(structs):
-    name = structs[0].name
+def gen_cpp_data_for_struct_values(vals):
+    name = vals[0].name
     lines = ["static uint8_t g%sDefault[] = {" % name]
-    for stru in structs:
-        lines += get_cpp_data_one(stru)
+    for val in vals:
+        lines += get_cpp_data_for_struct_val(val)
     lines += ["};"]
     return "\n".join(lines)
-
-def gen_cpp_for_structs(structs):
-    return "\n".join([gen_c_struct_metadata(stru) for stru in reversed(structs)])
 
 def src_dir():
     d = os.path.dirname(__file__)
@@ -285,16 +241,14 @@ def write_to_file(file_path, s): file(file_path, "w").write(s)
 def main():
     dst_dir = src_dir()
 
-    h_struct_defs = gen_h_struct_defs()
-    h_txt = h_tmpl % locals()
-    write_to_file(os.path.join(dst_dir, "Settings.h"), h_txt)
+    h_struct_defs = gen_struct_defs()
+    write_to_file(os.path.join(dst_dir, "Settings.h"),  h_tmpl % locals())
 
-    #structs = build_structs(gen_settings_2_3.advancedSettings)
+    vals = flatten_values_tree(gen_settings_2_3.advancedSettings)
 
-    #cpp_body = gen_cpp_for_structs(structs)
-    #global_data = gen_cpp_data(structs)
-    #cpp_txt = cpp_tmpl % locals()
-    #write_to_file(os.path.join(dst_dir, "Settings.cpp"), cpp_txt)
+    structs_metadata = gen_structs_metadata()
+    values_global_data = gen_cpp_data_for_struct_values(vals)
+    write_to_file(os.path.join(dst_dir, "Settings.cpp"), cpp_tmpl % locals())
 
 if __name__ == "__main__":
     main()

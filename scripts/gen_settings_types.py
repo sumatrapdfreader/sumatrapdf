@@ -41,10 +41,13 @@ class StructDef(object):
 def DefineStruct(name, fields):
     return StructDef(name, fields)
 
+# for struct types, we have a separate class for values
+# of the struct
 class StructValue(object):
     def __init__(self, name):
         assert name in g_structs_map
         self.struct = g_structs_map[name]
+        self.val = None
 
         # forward some values to corresponding StructDef
         self.fields = self.struct.fields
@@ -54,6 +57,9 @@ class StructValue(object):
 
         # calculated
         self.base_offset = None  # offset from the beginning of top-level struct
+
+    def c_size(self):
+        return get_typ_c_size(self.struct)
 
     def is_ref(self):
         return True
@@ -76,46 +82,48 @@ class TypeDef(object):
         return False
 
 g_types_map = {
-    "bool"   : TypeDef("bool", 2, "<h"),
+    "bool"   : TypeDef("int32_t",  4, "<i"),
     "u16"    : TypeDef("uint16_t", 2, "<H"),
-    "i32"    : TypeDef("int32_t", 4, "<i"),
+    "i32"    : TypeDef("int32_t",  4, "<i"),
     "u32"    : TypeDef("uint32_t", 4, "<I"),
     "color"  : TypeDef("uint32_t", 4, "<I"),
 }
 
-def verify_type(typ):
-    assert is_struct_type(typ) or typ in g_types_map, "Unknown type %s" % str(typ)
+def verify_type(typ, def_val):
+    if is_struct_type(typ):
+        assert def_val == None, "struct type must have default value be None"
+    else:
+        assert typ in g_types_map, "Unknown type %s" % str(typ)
+        assert def_val != None, "primitive type must have default value"
 
 def get_typ_c_name(typ):
-    verify_type(typ)
     if typ in g_types_map:
         return g_types_map[typ].c_name
     if is_struct_type(typ): return "Ptr<%s>" % typ.name
 
 def get_typ_c_size(typ):
-    verify_type(typ)
     if typ in g_types_map:
         return g_types_map[typ].c_size
     if is_struct_type(typ): return 8
 
 def get_pack_format(typ):
-    verify_type(typ)
     if typ in g_types_map:
         return g_types_map[typ].pack_format
     if is_struct_type(typ): return "<Ixxxx" # 4 bytes offset + 4 padding bytes
 
+# for primitive types a single class represents both a definition
+# of the field as well as the value
 class Field(object):
     def __init__(self, name, typ, def_val = None):
-        verify_type(typ)
+        verify_type(typ, def_val)
         self.name = name
         self.typ = typ
 
-        self.def_val = def_val
-        if is_struct_type(typ):
-            assert def_val == None, "struct type must have default value be None"
+        self.val = def_val
 
         # calculated
-        self.offset = None
+        self.offset = None        # offset of field within the struct
+        self.base_offset = None   # offset of value within 
 
     def is_struct(self):   return is_struct_type(self.typ)
     def c_type(self):      return get_typ_c_name(self.typ)
@@ -155,5 +163,45 @@ def gen_h_struct_def(stru):
     return "\n".join(lines)
 
 
-def gen_h_struct_defs():
+def gen_struct_defs():
     return "\n".join([gen_h_struct_def(stru) for stru in GetAllStructs()])
+
+"""
+StructPointerInfo gFooPointers[] = {
+    { $offset, &gFooStructDef },
+};
+"""
+def gen_struct_pointer_infos_one(stru):
+    name = stru.name
+    lines = []
+    lines += ["StructPointerInfo g%(name)sPointers[] = {" % locals()]
+    for field in stru.get_struct_fields():
+        offset = field.offset
+        name = field.typ.name
+        lines += ["    { %(offset)d, &g%(name)sStructDef }," % locals()]
+    lines += ["};\n"]
+    return lines
+
+def gen_struct_pointer_infos(fields):
+    lines = []
+    for field in  fields:
+        lines += gen_struct_pointer_infos_one(field.typ)
+    return lines
+
+"""
+StructDef gFooStructDef = { $size, $pointersCount, &g${Foo}Pointers[0] };"""
+def gen_struct_metadata(stru):
+    name = stru.name
+    size = stru.size
+    fields = stru.get_struct_fields()
+    pointer_infos_count = len(fields)
+    pointer_infos = "NULL"
+    lines = []
+    if len(fields) > 0:
+        pointer_infos = "&g%sPointers[0]" % name
+        lines += gen_struct_pointer_infos_one(stru)
+    lines += ["StructDef g%(name)sStructDef = { %(size)d, %(pointer_infos_count)d, %(pointer_infos)s };\n" % locals()]
+    return "\n".join(lines)
+
+def gen_structs_metadata():
+    return "\n".join([gen_struct_metadata(stru) for stru in GetAllStructs()])

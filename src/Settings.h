@@ -47,20 +47,20 @@ STATIC_ASSERT(offsetof(ForwardSearchSettings, highlightColor) == 12, highlightCo
 
 struct AdvancedSettings {
     uint32_t                   version;
-    bool                       traditionalEbookUI;
-    bool                       escToExit;
+    int32_t                    traditionalEbookUI;
+    int32_t                    escToExit;
     uint32_t                   logoColor;
     Ptr<PaddingSettings>       pagePadding;
     Ptr<ForwardSearchSettings> forwardSearch;
 };
 
-STATIC_ASSERT(sizeof(AdvancedSettings)==28, AdvancedSettings_is_28_bytes);
+STATIC_ASSERT(sizeof(AdvancedSettings)==32, AdvancedSettings_is_32_bytes);
 
 STATIC_ASSERT(offsetof(AdvancedSettings, version) == 0, version_is_0_bytes_in_AdvancedSettings);
 STATIC_ASSERT(offsetof(AdvancedSettings, traditionalEbookUI) == 4, traditionalEbookUI_is_4_bytes_in_AdvancedSettings);
-STATIC_ASSERT(offsetof(AdvancedSettings, escToExit) == 6, escToExit_is_6_bytes_in_AdvancedSettings);
-STATIC_ASSERT(offsetof(AdvancedSettings, logoColor) == 8, logoColor_is_8_bytes_in_AdvancedSettings);
-STATIC_ASSERT(offsetof(AdvancedSettings, pagePadding) == 12, pagePadding_is_12_bytes_in_AdvancedSettings);
-STATIC_ASSERT(offsetof(AdvancedSettings, forwardSearch) == 20, forwardSearch_is_20_bytes_in_AdvancedSettings);
+STATIC_ASSERT(offsetof(AdvancedSettings, escToExit) == 8, escToExit_is_8_bytes_in_AdvancedSettings);
+STATIC_ASSERT(offsetof(AdvancedSettings, logoColor) == 12, logoColor_is_12_bytes_in_AdvancedSettings);
+STATIC_ASSERT(offsetof(AdvancedSettings, pagePadding) == 16, pagePadding_is_16_bytes_in_AdvancedSettings);
+STATIC_ASSERT(offsetof(AdvancedSettings, forwardSearch) == 24, forwardSearch_is_24_bytes_in_AdvancedSettings);
 
 #endif
