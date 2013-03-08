@@ -23,10 +23,11 @@ advancedSettingsStruct = DefineStruct("AdvancedSettings", [
 	Field("traditionalEbookUI", "bool", False),
 	Field("escToExit", "bool", False),
 	Field("logoColor", "color", 0xFFF200),
-	Field("pagePadding", paddingStruct),
-	Field("forwardSearch", forwardSearchStruct),
+	Field("pagePadding", paddingStruct, MakeStruct(paddingStruct)),
+	# TODO: fooPading is just for testing, remove
+	Field("fooPadding", paddingStruct, MakeStruct(paddingStruct)),
+	Field("foo2Padding", paddingStruct, None),
+	Field("forwardSearch", forwardSearchStruct, MakeStruct(forwardSearchStruct)),
 ])
 
 advancedSettings = MakeStruct(advancedSettingsStruct)
-advancedSettings.pagePadding = MakeStruct(paddingStruct)
-advancedSettings.forwardSearch = MakeStruct(forwardSearchStruct)

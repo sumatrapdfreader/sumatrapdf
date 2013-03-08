@@ -34,11 +34,9 @@ We rely on an exact layout of data in the struct, so:
    with the same definition
 
 TODO:
- - add a notion of value to allow multiple values in the settings chain
-   that have the same struct type
  - add a notion of Struct inheritance to make it easy to support forward/backward
    compatibility
- - const char *serialize_struct(char *data, StructDef *def);
+ - write const char *serialize_struct(char *data, StructDef *def);
  - introduce a concept of array i.e. a count + type of values + pointer to 
    values (requires adding a notion of value first)
  - add size as the first field of each struct, for forward-compatibilty
@@ -77,9 +75,10 @@ def flatten_values_tree(top_level_val):
     base_offset = 0
     while len(left) > 0:
         val = left.pop(0)
-        val.base_offset = base_offset
+        val.base_offset = base_offset + val.size
         for field in val.fields:
             if field.is_struct():
+                #print("%s %s" % (field.name, field.val))
                 if field.val != None:
                     left += [field.val]
         base_offset += val.c_size()

@@ -89,12 +89,8 @@ g_types_map = {
     "color"  : TypeDef("uint32_t", 4, "<I"),
 }
 
-def verify_type(typ, def_val):
-    if is_struct_type(typ):
-        assert def_val == None, "struct type must have default value be None"
-    else:
-        assert typ in g_types_map, "Unknown type %s" % str(typ)
-        assert def_val != None, "primitive type must have default value"
+def verify_type(typ):
+    assert is_struct_type(typ) or typ in g_types_map, "Unknown type %s" % str(typ)
 
 def get_typ_c_name(typ):
     if typ in g_types_map:
@@ -115,7 +111,7 @@ def get_pack_format(typ):
 # of the field as well as the value
 class Field(object):
     def __init__(self, name, typ, def_val = None):
-        verify_type(typ, def_val)
+        verify_type(typ)
         self.name = name
         self.typ = typ
 

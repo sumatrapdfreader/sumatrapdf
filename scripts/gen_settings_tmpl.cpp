@@ -26,7 +26,6 @@ struct StructPointerInfo {
 };
 
 %(structs_metadata)s
-
 %(values_global_data)s
 
 // a serialized format is a linear chunk of memory with pointers
