@@ -1128,7 +1128,7 @@ gdiplus_get_font(fz_device *dev, fz_font *font, float height, float *out_ascent)
 		else if (font->ft_file)
 		{
 			WCHAR fontPath[MAX_PATH];
-			MultiByteToWideChar(CP_ACP, 0, font->ft_file, -1, fontPath, nelem(fontPath));
+			MultiByteToWideChar(CP_UTF8, 0, font->ft_file, -1, fontPath, nelem(fontPath));
 			collection->AddFontFile(fontPath);
 		}
 		

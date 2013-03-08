@@ -1,3 +1,36 @@
+diff -rPu5 freetype2.orig\include\freetype\config\ftstdlib.h freetype2\include\freetype\config\ftstdlib.h
+--- freetype2.orig\include\freetype\config\ftstdlib.h	Sat Sep 29 08:42:15 2012
++++ freetype2\include\freetype\config\ftstdlib.h	Fri Mar 08 18:17:33 2013
+@@ -106,10 +106,15 @@
+ #define ft_fread    fread
+ #define ft_fseek    fseek
+ #define ft_ftell    ftell
+ #define ft_sprintf  sprintf
+ 
++/* cf. http://lists.gnu.org/archive/html/freetype/2006-09/msg00036.html */
++#ifdef _WIN32
++#undef ft_fopen
++#define ft_fopen    ft_fopen_win32
++#endif
+ 
+   /**********************************************************************/
+   /*                                                                    */
+   /*                             sorting                                */
+   /*                                                                    */
+diff -rPu5 freetype2.orig\include\freetype\ftsystem.h freetype2\include\freetype\ftsystem.h
+--- freetype2.orig\include\freetype\ftsystem.h	Sat Jun 26 08:18:37 2010
++++ freetype2\include\freetype\ftsystem.h	Fri Mar 08 18:32:51 2013
+@@ -343,5 +343,10 @@
+ 
+ #endif /* __FTSYSTEM_H__ */
+ 
+ 
+ /* END */
++
++/* cf. http://lists.gnu.org/archive/html/freetype/2006-09/msg00036.html */
++#ifdef _WIN32
++FT_FILE* ft_fopen_win32(const char *fname, const char *mode);
++#endif
 diff -rPu5 freetype2.orig\src\base\ftoutln.c freetype2\src\base\ftoutln.c
 --- freetype2.orig\src\base\ftoutln.c	Sat Nov 17 11:35:48 2012
 +++ freetype2\src\base\ftoutln.c	Tue Dec 25 15:30:07 2012
@@ -19,3 +52,34 @@ diff -rPu5 freetype2.orig\src\base\ftoutln.c freetype2\src\base\ftoutln.c
           FT_NEW_ARRAY( anoutline->contours, numContours ) )
        goto Fail;
  
+diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
+--- freetype2.orig\src\base\ftsystem.c	Wed Jul 20 05:46:44 2011
++++ freetype2\src\base\ftsystem.c	Fri Mar 08 18:33:49 2013
+@@ -316,5 +316,27 @@
+     ft_sfree( memory );
+   }
+ 
+ 
+ /* END */
++
++/* cf. http://lists.gnu.org/archive/html/freetype/2006-09/msg00036.html */
++#ifdef _WIN32
++#include <windows.h>
++
++  FT_FILE* ft_fopen_win32(const char *fname, const char *mode)
++  {
++    // First try fopen, assuming nothing about character encodings.
++    FT_FILE *file = fopen(fname, mode);
++    if (!file)
++    {
++      // fopen failed. Assume the filename is UTF-8, convert to UTF-16, and try _wfopen.
++      WCHAR fnameW[MAX_PATH], modeW[8];
++      if (MultiByteToWideChar(CP_UTF8, 0, fname, -1, fnameW, _countof(fnameW)) &&
++          MultiByteToWideChar(CP_UTF8, 0, mode, -1, modeW, _countof(modeW)))
++      {
++        file = _wfopen(fnameW, modeW);
++      }
++    }
++    return file;
++  }
++#endif

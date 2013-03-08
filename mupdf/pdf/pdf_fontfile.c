@@ -180,8 +180,8 @@ pdf_lookup_substitute_cjk_font(int ros, int serif, unsigned int *len)
 //       can be treated like a simple string for searching
 typedef struct pdf_fontmapMS_s
 {
-	char fontface[MAX_FACENAME]; // UTF-8 encoded
-	char fontpath[MAX_PATH];     // ANSI encoded
+	char fontface[MAX_FACENAME];
+	char fontpath[MAX_PATH];
 	int index;
 } pdf_fontmapMS;
 
@@ -303,7 +303,7 @@ remove_spaces(char *srcDest)
 }
 
 static int
-strendswith(const char *str, const char *end)
+str_ends_with(const char *str, const char *end)
 {
 	size_t len1 = strlen(str);
 	size_t len2 = strlen(end);
@@ -402,7 +402,7 @@ grow_system_font_list(fz_context *ctx, pdf_fontlistMS *fl)
 }
 
 static void
-insert_mapping(fz_context *ctx, pdf_fontlistMS *fl, char *facename, char *path, int index)
+insert_mapping(fz_context *ctx, pdf_fontlistMS *fl, const char *facename, const char *path, int index)
 {
 	if (fl->len == fl->cap)
 		grow_system_font_list(ctx, fl);
@@ -454,7 +454,7 @@ makeFakePSName(char szName[MAX_FACENAME], const char *szStyle)
 }
 
 static void
-parseTTF(fz_stream *file, int offset, int index, char *path)
+parseTTF(fz_stream *file, int offset, int index, const char *path)
 {
 	TT_OFFSET_TABLE ttOffsetTableBE;
 	TT_TABLE_DIRECTORY tblDirBE;
@@ -553,7 +553,7 @@ parseTTF(fz_stream *file, int offset, int index, char *path)
 }
 
 static void
-parseTTFs(fz_context *ctx, char *path)
+parseTTFs(fz_context *ctx, const char *path)
 {
 	fz_stream *file = fz_open_file(ctx, path);
 	/* "fonterror : %s not found", path */
@@ -572,7 +572,7 @@ parseTTFs(fz_context *ctx, char *path)
 }
 
 static void
-parseTTCs(fz_context *ctx, char *path)
+parseTTCs(fz_context *ctx, const char *path)
 {
 	FONT_COLLECTION fontcollectionBE;
 	ULONG i, numFonts, *offsettableBE = NULL;
@@ -632,20 +632,22 @@ extend_system_font_list(fz_context *ctx, const WCHAR *path)
 	{
 		if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			char szPathAnsi[MAX_PATH], *fileExt;
-			BOOL isNonAnsiPath = FALSE;
+			char szPathUtf8[MAX_PATH], *fileExt;
+			int res;
 			lstrcpyn(lpFileName, FileData.cFileName, szPath + MAX_PATH - lpFileName);
-			// FreeType uses fopen and thus requires the path to be in the ANSI code page
-			WideCharToMultiByte(CP_ACP, 0, szPath, -1, szPathAnsi, sizeof(szPathAnsi), NULL, &isNonAnsiPath);
-			fileExt = szPathAnsi + strlen(szPathAnsi) - 4;
+			res = WideCharToMultiByte(CP_UTF8, 0, szPath, -1, szPathUtf8, sizeof(szPathUtf8), NULL, NULL);
+			if (!res)
+			{
+				fz_warn(ctx, "WideCharToMultiByte failed for %S", szPath);
+				continue;
+			}
+			fileExt = szPathUtf8 + strlen(szPathUtf8) - 4;
 			fz_try(ctx)
 			{
-				if (isNonAnsiPath)
-					fz_warn(ctx, "ignoring font with non-ANSI filename: %s", szPathAnsi);
-				else if (!_stricmp(fileExt, ".ttc"))
-					parseTTCs(ctx, szPathAnsi);
+				if (!_stricmp(fileExt, ".ttc"))
+					parseTTCs(ctx, szPathUtf8);
 				else if (!_stricmp(fileExt, ".ttf") || !_stricmp(fileExt, ".otf"))
-					parseTTFs(ctx, szPathAnsi);
+					parseTTFs(ctx, szPathUtf8);
 			}
 			fz_catch(ctx)
 			{
@@ -752,9 +754,9 @@ pdf_load_windows_font(fz_context *ctx, pdf_font_desc *font, char *fontname)
 	if (!found)
 		found = pdf_find_windows_font_path(fontname);
 	// fourth, try to separate style from basename for prestyled fonts (e.g. "ArialBold")
-	if (!found && !comma && (strendswith(fontname, "Bold") || strendswith(fontname, "Italic")))
+	if (!found && !comma && (str_ends_with(fontname, "Bold") || str_ends_with(fontname, "Italic")))
 	{
-		int styleLen = strendswith(fontname, "Bold") ? 4 : strendswith(fontname, "BoldItalic") ? 10 : 6;
+		int styleLen = str_ends_with(fontname, "Bold") ? 4 : str_ends_with(fontname, "BoldItalic") ? 10 : 6;
 		fontname = fz_resize_array(ctx, fontname, strlen(fontname) + 2, sizeof(char));
 		comma = fontname + strlen(fontname) - styleLen;
 		memmove(comma + 1, comma, styleLen + 1);

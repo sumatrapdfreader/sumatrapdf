@@ -318,3 +318,25 @@
 
 
 /* END */
+
+/* cf. http://lists.gnu.org/archive/html/freetype/2006-09/msg00036.html */
+#ifdef _WIN32
+#include <windows.h>
+
+  FT_FILE* ft_fopen_win32(const char *fname, const char *mode)
+  {
+    // First try fopen, assuming nothing about character encodings.
+    FT_FILE *file = fopen(fname, mode);
+    if (!file)
+    {
+      // fopen failed. Assume the filename is UTF-8, convert to UTF-16, and try _wfopen.
+      WCHAR fnameW[MAX_PATH], modeW[8];
+      if (MultiByteToWideChar(CP_UTF8, 0, fname, -1, fnameW, _countof(fnameW)) &&
+          MultiByteToWideChar(CP_UTF8, 0, mode, -1, modeW, _countof(modeW)))
+      {
+        file = _wfopen(fnameW, modeW);
+      }
+    }
+    return file;
+  }
+#endif
