@@ -2,6 +2,7 @@
 
 import os, struct, types
 import util, gen_settings_2_3
+from gen_settings_types import gen_h_struct_defs
 
 """
 Script that generates C code for compact storage of settings.
@@ -28,7 +29,7 @@ That way we can inherit settings for version N from settings for version N-1.
 
 We rely on an exact layout of data in the struct, so:
  - we don't use C types whose size is not fixed (e.g. int)
- - we use a fixed struct packing
+ - we use a fixed struct packing (that's TODO)
  - our pointers are always 8 bytes, to support both 64-bit and 32-bit archs
    with the same definition
 
@@ -46,6 +47,9 @@ TODO:
    corruption of the values (crash if that happens)
  - maybe: add a compare function. That way we could optimize saving
    (only save if the values have changed)
+ - maybe: change "bool" to be int32_t, to avoid potential problems
+   with other compilers. I thought that bool is int32_t but it seems
+   in Visual C it's int16_t
 """
 
 h_tmpl = """
@@ -63,7 +67,7 @@ union Ptr {
 
 STATIC_ASSERT(8 == sizeof(Ptr<int>), ptr_is_8_bytes);
 
-%(h_body)s
+%(h_struct_defs)s
 #endif
 """
 
@@ -157,16 +161,6 @@ const char *serialize_struct(char *data, StructDef *def, uint32_t *sizeOut)
 
 """
 
-def build_struct_def(stru):
-    field_off = 0
-    for field in stru.fields:
-        field.offset = field_off
-        field_off += field.c_size()
-        typ = field.c_type()
-        if len(typ)  > stru.max_type_len:
-            stru.max_type_len = len(typ)
-    stru.size = field_off
-
 # must be called before calling gen_* functions
 def build_structs(stru):
     # first field of the top-level struct must be a version
@@ -176,7 +170,6 @@ def build_structs(stru):
     while len(structs_remaining) > 0:
         stru = structs_remaining.pop(0)
         structs_done.append(stru)
-        build_struct_def(stru)
         for field in stru.fields:
             if field.is_struct():
                 structs_remaining.append(field.typ)
@@ -230,7 +223,7 @@ def gen_c_struct_metadata(stru):
         pointer_infos = "&g%sPointers[0]" % name
         lines += gen_struct_pointer_infos_one(stru)
     lines += ["STATIC_ASSERT(sizeof(%(name)s) == %(size)d, %(name)s_is_%(size)d_bytes);" % locals()]
-    lines += ["StructDef g%(name)sStructDef = { %(size)d, %(pointer_infos_count)d, %(pointer_infos)s};\n" % locals()]
+    lines += ["StructDef g%(name)sStructDef = { %(size)d, %(pointer_infos_count)d, %(pointer_infos)s };\n" % locals()]
     return "\n".join(lines)
 
 def data_to_hex(data):
@@ -282,18 +275,6 @@ def gen_cpp_data(structs):
 def gen_cpp_for_structs(structs):
     return "\n".join([gen_c_struct_metadata(stru) for stru in reversed(structs)])
 
-def gen_h_struct_def(stru):
-    lines = ["struct %s {" % stru.name]
-    format_str = "    %%-%ds %%s;" % stru.max_type_len
-    for field in stru.fields:
-        s = format_str % (field.c_type(), field.name)
-        lines.append(s)
-    lines.append("};\n")
-    return "\n".join(lines)
-
-def gen_h_for_structs(structs):
-    return "\n".join([gen_h_struct_def(stru) for stru in reversed(structs)])
-
 def src_dir():
     d = os.path.dirname(__file__)
     p = os.path.join(d, "..", "src")
@@ -304,15 +285,16 @@ def write_to_file(file_path, s): file(file_path, "w").write(s)
 def main():
     dst_dir = src_dir()
 
-    structs = build_structs(gen_settings_2_3.advancedSettings)
-    h_body = gen_h_for_structs(structs)
+    h_struct_defs = gen_h_struct_defs()
     h_txt = h_tmpl % locals()
     write_to_file(os.path.join(dst_dir, "Settings.h"), h_txt)
 
-    cpp_body = gen_cpp_for_structs(structs)
-    global_data = gen_cpp_data(structs)
-    cpp_txt = cpp_tmpl % locals()
-    write_to_file(os.path.join(dst_dir, "Settings.cpp"), cpp_txt)
+    #structs = build_structs(gen_settings_2_3.advancedSettings)
+
+    #cpp_body = gen_cpp_for_structs(structs)
+    #global_data = gen_cpp_data(structs)
+    #cpp_txt = cpp_tmpl % locals()
+    #write_to_file(os.path.join(dst_dir, "Settings.cpp"), cpp_txt)
 
 if __name__ == "__main__":
     main()
