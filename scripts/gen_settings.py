@@ -7,13 +7,15 @@ import util, gen_settings_2_3
 """
 Script that generates C code for compact storage of settings.
 
-In C settigns are represented as a top-level struct (which can then refer to
+In C settings are represented as a top-level struct (which can then refer to
 other structs). The first field of top-level struct must be a u32 version
-field. A version support up to 4 components, each component in range <0,255>.
-For example version "2.1.3" is encoded as: u32 version = (2 << 16) | (1 << 8) | 3.
-This way version numbers can be compared with ">".
+field. A version supports up to 4 components, each component in range <0,255>.
+For example version "2.1.3" is encoded as: u32 version = (2 << 24) | (1 << 16) | (3 << 8) | 0.
+This way versions can be compared with ">" in C code with the right semantics
+(e.g. 2.2.1 > 2.1).
 
-We support generating multiple top-level such structs.
+We support generating multiple top-level structs (which can be used for multiple
+different purposes).
 
 In order to support forward and backward compatibility, struct for a given
 version must be a strict superset of struct for a previous version. We can
@@ -35,10 +37,16 @@ TODO:
  - add a notion of Struct inheritance to make it easy to support forward/backward
    compatibility
  - generate default data as serialized block
+ - const char *serialize_struct(char *data, StructDef *def);
  - add a notion of value to allow multiple values in the settings chain
    that have the same struct type
- - introduce a concept of array i.e. a count + pointer to values (requires
-   notion of value first)
+ - introduce a concept of array i.e. a count + type of values + pointer to 
+   values (requires adding a notion of value first)
+ - add size as the first field of each struct, for forward-compatibilty
+ - maybe: add a signature at the beginning of each struct to detect
+   corruption of the values (crash if that happens)
+ - maybe: add a compare function. That way we could optimize saving
+   (only save if the values have changed)
 """
 
 h_tmpl = """
@@ -89,31 +97,53 @@ struct StructPointerInfo {
 };
 
 %(cpp_body)s
-static void unserialize_struct_r(char *data, StructDef *def, char *base)
+// a serialized format is a linear chunk of memory with pointers
+// replaced with offsets from the beginning of the memory (base)
+// to deserialize, we malloc() each struct and replace offsets
+// with pointers to those newly allocated structs
+char* deserialize_struct(const char *data, StructDef *def, const char *base, const int totalSize)
 {
+    int size = def->size;
+    char *dataCopy = AllocArray<char>(size);
+    // TODO: when we add size to each struct, we only copy up to that size
+    memcpy(dataCopy, data, size);
+
+    // this struct doesn't have pointer members to fix up
+    if (!def)
+        return dataCopy;
+
     for (int i=0; i < def->pointersCount; i++) {
-        int off = def->pointersInfo[i].offset;
+        int memberOffset = def->pointersInfo[i].offset;
         StructDef *memberDef = def->pointersInfo[i].def;
-        char *pval = base + off;
-        Ptr<char> *ptrToPtr = (Ptr<char>*)(data + off);
-        ptrToPtr->ptr = pval;
-        if (memberDef)
-            unserialize_struct_r(pval, memberDef, base);
+        Ptr<char> *ptrToMemberPtr = (Ptr<char>*)(dataCopy + memberOffset);
+        int memberDataOffset = (int)ptrToMemberPtr->ptr;
+        ZeroMemory(ptrToMemberPtr, 8);
+        if (memberDataOffset != 0) {
+            CrashIf(memberDataOffset + memberDef->size > totalSize);
+            char *memberDataNew = deserialize_struct(base + memberDataOffset, memberDef, base, totalSize);
+            ptrToMemberPtr->ptr = memberDataNew;
+        }
     }
+
+    return dataCopy;
 }
 
-// a serialized format is a linear chunk of memory with pointers
-// replaced with offsets from the beginning of the memory.
-// to unserialize, we need to fix them up i.e. convert offsets
-// to pointers
-// TODO: add bool makeCopy option that will make deep copy of data
-// (using malloc()), so that it can be easily modified before being
-// serialized for storage. We'll also need free_struct(char *data, StructDef *def)
-// for freeing this copy
-char* unserialize_struct(char *data, StructDef *def)
+// the assumption here is that the data was either build by deserialize_struct
+// or was set by application code in a way that observes our rule: each
+// object was separately allocated with malloc()
+void free_struct(char *data, StructDef *def)
 {
-    unserialize_struct_r(data, def, data);
-    return data;
+    // recursively free all structs reachable from this struct
+    for (int i=0; i < def->pointersCount; i++) {
+        int memberOffset = def->pointersInfo[i].offset;
+        Ptr<char> *ptrToPtr = (Ptr<char>*)(data + memberOffset);
+        char *memberData = ptrToPtr->ptr;
+        StructDef *memberDef = def->pointersInfo[i].def;
+        if (memberData && memberDef)
+            free_struct(memberData, memberDef);
+        free(memberData);
+    }
+    free(data);
 }
 """
 

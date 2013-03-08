@@ -268,14 +268,9 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.ParseCommandLine(GetCommandLine());
 }
 
-#include "Settings.h"
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
-
-    int n = sizeof(AdvancedSettings);
-    printf("n = %d", n);
 
 #ifdef DEBUG
     // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for

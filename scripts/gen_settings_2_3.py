@@ -2,7 +2,6 @@ from gen_settings_types import Struct, Field
 
 # Settings for 2.3 version of Sumatra
 
-# TODO: will we need ability to over-ride defaults?
 padding = Struct("PaddingSettings", [
 	Field("top", 	"u16", 2),
 	Field("bottom", "u16", 2),
@@ -20,7 +19,7 @@ forwardSearch = Struct("ForwardSearchSettings", [
 ])
 
 advancedSettings = Struct("AdvancedSettings", [
-	Field("version", "u32", 0x02030000),
+	Field("version", "u32", 0x02030000), # 2.3
 	Field("traditionalEbookUI", "bool", False),
 	Field("escToExit", "bool", False),
 	Field("logoColor", "color", 0xFFF200),
