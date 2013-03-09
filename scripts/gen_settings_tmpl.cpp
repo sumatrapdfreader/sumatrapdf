@@ -4,25 +4,27 @@
 #include "BaseUtil.h"
 #include "Settings.h"
 
-struct StructPointerInfo;
+static const uint16_t TYPE_BOOL         = 0;
+static const uint16_t TYPE_I16          = 1;
+static const uint16_t TYPE_U16          = 2;
+static const uint16_t TYPE_I32          = 3;
+static const uint16_t TYPE_U32          = 4;
+static const uint16_t TYPE_STRUCT_PTR   = 5;
 
-#define POINTER_SIZE 8
+struct FieldMetadata;
 
 typedef struct {
-    int                  size;
-    int                  pointersCount;
-    StructPointerInfo *  pointersInfo;
-} StructDef;
+    int nFields;
+    FieldMetadata *fields;
+} StructMetadata;
 
 // information about a single field
-struct StructPointerInfo {
+struct FieldMetadata {
+    uint16_t type; // TYPE_*
     // from the beginning of the struct
-    int offset;
-    // what kind of structure it points to, needed
-    // for recursive application of the algorithm
-    // NULL if that structure doesn't need fixup
-    // (has no pointers)
-    StructDef *def;
+    uint16_t offset;
+    // type is TYPE_STRUCT_PTR, otherwise NULL
+    StructMetadata *def;
 };
 
 %(structs_metadata)s
@@ -32,8 +34,9 @@ struct StructPointerInfo {
 // replaced with offsets from the beginning of the memory (base)
 // to deserialize, we malloc() each struct and replace offsets
 // with pointers to those newly allocated structs
-char* deserialize_struct(const char *data, StructDef *def, const char *base, const int totalSize)
+char* deserialize_struct(const char *data, StructMetadata *def, const char *base, const int totalSize)
 {
+#if 0
     int size = def->size;
     char *dataCopy = AllocArray<char>(size);
     // TODO: when we add size to each struct, we only copy up to that size
@@ -57,13 +60,16 @@ char* deserialize_struct(const char *data, StructDef *def, const char *base, con
     }
 
     return dataCopy;
+#endif
+    return NULL;
 }
 
 // the assumption here is that the data was either build by deserialize_struct
 // or was set by application code in a way that observes our rule: each
 // object was separately allocated with malloc()
-void free_struct(char *data, StructDef *def)
+void free_struct(char *data, StructMetadata *def)
 {
+#if 0
     // recursively free all structs reachable from this struct
     for (int i=0; i < def->pointersCount; i++) {
         int memberOffset = def->pointersInfo[i].offset;
@@ -74,11 +80,12 @@ void free_struct(char *data, StructDef *def)
             free_struct(memberData, memberDef);
         free(memberData);
     }
+#endif
     free(data);
 }
 
 // TODO: write me
-const char *serialize_struct(char *data, StructDef *def, uint32_t *sizeOut)
+const char *serialize_struct(char *data, StructMetadata *def, uint32_t *sizeOut)
 {
     *sizeOut = 0;
     return NULL;

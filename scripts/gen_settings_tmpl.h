@@ -4,13 +4,5 @@
 #ifndef Settings_h
 #define Settings_h
 
-template <typename T>
-union Ptr {
-    T *       ptr;
-    char      b[8];
-};
-
-STATIC_ASSERT(8 == sizeof(Ptr<int>), ptr_is_8_bytes);
-
 %(h_struct_defs)s
 #endif

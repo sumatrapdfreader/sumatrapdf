@@ -93,7 +93,7 @@ def flatten_values_tree(val):
             if field.is_struct and field.val != None:
                 assert isinstance(field, StructVal)
                 left += [field]
-        offset += val.struct_def.c_size
+        offset += 4
     #for val in vals: dump_val(val)
     return vals
 
@@ -121,7 +121,7 @@ def get_cpp_data_for_struct_val(struct_val, offset):
         return (lines, 0)
     size = 0
     for field in struct_val.val:
-        fmt = field.typ.pack_format        
+        fmt = "<I"
         if field.is_struct:
             val = field.offset
             if None == val:

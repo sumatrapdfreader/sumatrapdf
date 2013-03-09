@@ -4,82 +4,115 @@
 #include "BaseUtil.h"
 #include "Settings.h"
 
-struct StructPointerInfo;
+static const uint16_t TYPE_BOOL         = 0;
+static const uint16_t TYPE_I16          = 1;
+static const uint16_t TYPE_U16          = 2;
+static const uint16_t TYPE_I32          = 3;
+static const uint16_t TYPE_U32          = 4;
+static const uint16_t TYPE_STRUCT_PTR   = 5;
 
-#define POINTER_SIZE 8
+struct FieldMetadata;
 
 typedef struct {
-    int                  size;
-    int                  pointersCount;
-    StructPointerInfo *  pointersInfo;
-} StructDef;
+    int nFields;
+    FieldMetadata *fields;
+} StructMetadata;
 
 // information about a single field
-struct StructPointerInfo {
+struct FieldMetadata {
+    uint16_t type; // TYPE_*
     // from the beginning of the struct
-    int offset;
-    // what kind of structure it points to, needed
-    // for recursive application of the algorithm
-    // NULL if that structure doesn't need fixup
-    // (has no pointers)
-    StructDef *def;
+    uint16_t offset;
+    // type is TYPE_STRUCT_PTR, otherwise NULL
+    StructMetadata *def;
 };
 
-StructDef gPaddingSettings1StructDef = { 8, 0, NULL };
-
-StructDef gPaddingSettingsStructDef = { 12, 0, NULL };
-
-StructDef gForwardSearchSettingsStructDef = { 16, 0, NULL };
-
-StructPointerInfo gAdvancedSettingsPointers[] = {
-    { 16, &gPaddingSettingsStructDef },
-    { 24, &gPaddingSettingsStructDef },
-    { 32, &gPaddingSettingsStructDef },
-    { 40, &gForwardSearchSettingsStructDef },
+FieldMetadata gPaddingSettings1FieldMetadata[] = {
+    { TYPE_U16, offsetof(PaddingSettings1, top), NULL },
+    { TYPE_U16, offsetof(PaddingSettings1, bottom), NULL },
+    { TYPE_U16, offsetof(PaddingSettings1, left), NULL },
+    { TYPE_U16, offsetof(PaddingSettings1, right), NULL },
 };
 
-StructDef gAdvancedSettingsStructDef = { 48, 4, &gAdvancedSettingsPointers[0] };
+StructMetadata gPaddingSettings1StructMetadata = { 4, &gPaddingSettings1FieldMetadata[0] };
 
-StructPointerInfo gAdvancedSettings2Pointers[] = {
-    { 16, &gPaddingSettingsStructDef },
-    { 24, &gPaddingSettingsStructDef },
-    { 32, &gPaddingSettingsStructDef },
-    { 40, &gForwardSearchSettingsStructDef },
-    { 48, &gPaddingSettingsStructDef },
+FieldMetadata gPaddingSettingsFieldMetadata[] = {
+    { TYPE_U16, offsetof(PaddingSettings, top), NULL },
+    { TYPE_U16, offsetof(PaddingSettings, bottom), NULL },
+    { TYPE_U16, offsetof(PaddingSettings, left), NULL },
+    { TYPE_U16, offsetof(PaddingSettings, right), NULL },
+    { TYPE_U16, offsetof(PaddingSettings, spaceX), NULL },
+    { TYPE_U16, offsetof(PaddingSettings, spaceY), NULL },
 };
 
-StructDef gAdvancedSettings2StructDef = { 56, 5, &gAdvancedSettings2Pointers[0] };
+StructMetadata gPaddingSettingsStructMetadata = { 6, &gPaddingSettingsFieldMetadata[0] };
+
+FieldMetadata gForwardSearchSettingsFieldMetadata[] = {
+    { TYPE_I32, offsetof(ForwardSearchSettings, highlightOffset), NULL },
+    { TYPE_I32, offsetof(ForwardSearchSettings, highlightWidth), NULL },
+    { TYPE_I32, offsetof(ForwardSearchSettings, highlightPermanent), NULL },
+    { TYPE_U32, offsetof(ForwardSearchSettings, highlightColor), NULL },
+};
+
+StructMetadata gForwardSearchSettingsStructMetadata = { 4, &gForwardSearchSettingsFieldMetadata[0] };
+
+FieldMetadata gAdvancedSettingsFieldMetadata[] = {
+    { TYPE_U32, offsetof(AdvancedSettings, version), NULL },
+    { TYPE_BOOL, offsetof(AdvancedSettings, traditionalEbookUI), NULL },
+    { TYPE_BOOL, offsetof(AdvancedSettings, escToExit), NULL },
+    { TYPE_U32, offsetof(AdvancedSettings, logoColor), NULL },
+    { TYPE_STRUCT_PTR, offsetof(AdvancedSettings, pagePadding), &gPaddingSettingsStructMetadata },
+    { TYPE_STRUCT_PTR, offsetof(AdvancedSettings, fooPadding), &gPaddingSettingsStructMetadata },
+    { TYPE_STRUCT_PTR, offsetof(AdvancedSettings, foo2Padding), &gPaddingSettingsStructMetadata },
+    { TYPE_STRUCT_PTR, offsetof(AdvancedSettings, forwardSearch), &gForwardSearchSettingsStructMetadata },
+};
+
+StructMetadata gAdvancedSettingsStructMetadata = { 8, &gAdvancedSettingsFieldMetadata[0] };
+
+FieldMetadata gAdvancedSettings2FieldMetadata[] = {
+    { TYPE_U32, offsetof(AdvancedSettings2, version), NULL },
+    { TYPE_BOOL, offsetof(AdvancedSettings2, traditionalEbookUI), NULL },
+    { TYPE_BOOL, offsetof(AdvancedSettings2, escToExit), NULL },
+    { TYPE_U32, offsetof(AdvancedSettings2, logoColor), NULL },
+    { TYPE_STRUCT_PTR, offsetof(AdvancedSettings2, pagePadding), &gPaddingSettingsStructMetadata },
+    { TYPE_STRUCT_PTR, offsetof(AdvancedSettings2, fooPadding), &gPaddingSettingsStructMetadata },
+    { TYPE_STRUCT_PTR, offsetof(AdvancedSettings2, foo2Padding), &gPaddingSettingsStructMetadata },
+    { TYPE_STRUCT_PTR, offsetof(AdvancedSettings2, forwardSearch), &gForwardSearchSettingsStructMetadata },
+    { TYPE_STRUCT_PTR, offsetof(AdvancedSettings2, foo3Padding), &gPaddingSettingsStructMetadata },
+};
+
+StructMetadata gAdvancedSettings2StructMetadata = { 9, &gAdvancedSettings2FieldMetadata[0] };
 
 static uint8_t gAdvancedSettings2Default[] = {
 
   // AdvancedSettings2 offset: 0x0
   0x00, 0x00, 0x04, 0x02, // uint32_t version = 0x2040000
-  0x00, 0x00, 0x00, 0x00, // int32_t traditionalEbookUI = False
-  0x00, 0x00, 0x00, 0x00, // int32_t escToExit = False
+  0x00, 0x00, 0x00, 0x00, // bool traditionalEbookUI = False
+  0x00, 0x00, 0x00, 0x00, // bool escToExit = False
   0x00, 0xf2, 0xff, 0x00, // uint32_t logoColor = 0xfff200
-  0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Ptr<PaddingSettings> pagePadding = 0x38
-  0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Ptr<PaddingSettings> fooPadding = 0x44
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Ptr<PaddingSettings> foo2Padding = 0x0
-  0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Ptr<ForwardSearchSettings> forwardSearch = 0x50
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Ptr<PaddingSettings> foo3Padding = 0x0
+  0x04, 0x00, 0x00, 0x00, // PaddingSettings * pagePadding = 0x4
+  0x08, 0x00, 0x00, 0x00, // PaddingSettings * fooPadding = 0x8
+  0x00, 0x00, 0x00, 0x00, // PaddingSettings * foo2Padding = 0x0
+  0x0c, 0x00, 0x00, 0x00, // ForwardSearchSettings * forwardSearch = 0xc
+  0x00, 0x00, 0x00, 0x00, // PaddingSettings * foo3Padding = 0x0
 
-  // PaddingSettings offset: 0x38
-  0x02, 0x00, // uint16_t top = 0x2
-  0x02, 0x00, // uint16_t bottom = 0x2
-  0x04, 0x00, // uint16_t left = 0x4
-  0x04, 0x00, // uint16_t right = 0x4
-  0x04, 0x00, // uint16_t spaceX = 0x4
-  0x04, 0x00, // uint16_t spaceY = 0x4
+  // PaddingSettings offset: 0x24
+  0x02, 0x00, 0x00, 0x00, // uint16_t top = 0x2
+  0x02, 0x00, 0x00, 0x00, // uint16_t bottom = 0x2
+  0x04, 0x00, 0x00, 0x00, // uint16_t left = 0x4
+  0x04, 0x00, 0x00, 0x00, // uint16_t right = 0x4
+  0x04, 0x00, 0x00, 0x00, // uint16_t spaceX = 0x4
+  0x04, 0x00, 0x00, 0x00, // uint16_t spaceY = 0x4
 
-  // PaddingSettings offset: 0x44
-  0x02, 0x00, // uint16_t top = 0x2
-  0x02, 0x00, // uint16_t bottom = 0x2
-  0x04, 0x00, // uint16_t left = 0x4
-  0x04, 0x00, // uint16_t right = 0x4
-  0x04, 0x00, // uint16_t spaceX = 0x4
-  0x04, 0x00, // uint16_t spaceY = 0x4
+  // PaddingSettings offset: 0x3c
+  0x02, 0x00, 0x00, 0x00, // uint16_t top = 0x2
+  0x02, 0x00, 0x00, 0x00, // uint16_t bottom = 0x2
+  0x04, 0x00, 0x00, 0x00, // uint16_t left = 0x4
+  0x04, 0x00, 0x00, 0x00, // uint16_t right = 0x4
+  0x04, 0x00, 0x00, 0x00, // uint16_t spaceX = 0x4
+  0x04, 0x00, 0x00, 0x00, // uint16_t spaceY = 0x4
 
-  // ForwardSearchSettings offset: 0x50
+  // ForwardSearchSettings offset: 0x54
   0x00, 0x00, 0x00, 0x00, // int32_t highlightOffset = 0x0
   0x0f, 0x00, 0x00, 0x00, // int32_t highlightWidth = 0xf
   0x00, 0x00, 0x00, 0x00, // int32_t highlightPermanent = 0x0
@@ -90,8 +123,9 @@ static uint8_t gAdvancedSettings2Default[] = {
 // replaced with offsets from the beginning of the memory (base)
 // to deserialize, we malloc() each struct and replace offsets
 // with pointers to those newly allocated structs
-char* deserialize_struct(const char *data, StructDef *def, const char *base, const int totalSize)
+char* deserialize_struct(const char *data, StructMetadata *def, const char *base, const int totalSize)
 {
+#if 0
     int size = def->size;
     char *dataCopy = AllocArray<char>(size);
     // TODO: when we add size to each struct, we only copy up to that size
@@ -115,13 +149,16 @@ char* deserialize_struct(const char *data, StructDef *def, const char *base, con
     }
 
     return dataCopy;
+#endif
+    return NULL;
 }
 
 // the assumption here is that the data was either build by deserialize_struct
 // or was set by application code in a way that observes our rule: each
 // object was separately allocated with malloc()
-void free_struct(char *data, StructDef *def)
+void free_struct(char *data, StructMetadata *def)
 {
+#if 0
     // recursively free all structs reachable from this struct
     for (int i=0; i < def->pointersCount; i++) {
         int memberOffset = def->pointersInfo[i].offset;
@@ -132,11 +169,12 @@ void free_struct(char *data, StructDef *def)
             free_struct(memberData, memberDef);
         free(memberData);
     }
+#endif
     free(data);
 }
 
 // TODO: write me
-const char *serialize_struct(char *data, StructDef *def, uint32_t *sizeOut)
+const char *serialize_struct(char *data, StructMetadata *def, uint32_t *sizeOut)
 {
     *sizeOut = 0;
     return NULL;

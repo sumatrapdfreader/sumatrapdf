@@ -1,12 +1,11 @@
 # Represents a variable: its type and default value
 class Var(object):
-    def __init__(self, name, c_type, c_size, pack_format, def_val = None):
+    def __init__(self, name, c_type, typ_enum, def_val = None):
         self.name = name
         self.def_val = def_val
 
         self.c_type = c_type
-        self.c_size = c_size
-        self.pack_format = pack_format
+        self.typ_enum = typ_enum
 
         self.struct_def = None
         self.offset = None        # offset of variable within the struct
@@ -15,23 +14,23 @@ class Var(object):
 
 class Bool(Var):
     def __init__(self, name, def_val = False):
-        super(Bool, self).__init__(name, "int32_t", 4, "<i", def_val)
+        super(Bool, self).__init__(name, "bool", "TYPE_BOOL", def_val)
 
 class U16(Var):
     def __init__(self, name, def_val = 0):
-        super(U16, self).__init__(name, "uint16_t", 2, "<H", def_val)
+        super(U16, self).__init__(name, "uint16_t", "TYPE_U16", def_val)
 
 class I32(Var):
     def __init__(self, name, def_val = 0):
-        super(I32, self).__init__(name, "int32_t", 4, "<i", def_val)
+        super(I32, self).__init__(name, "int32_t", "TYPE_I32", def_val)
 
 class U32(Var):
     def __init__(self, name, def_val = 0):
-        super(U32, self).__init__(name, "uint32_t", 4, "<I", def_val)
+        super(U32, self).__init__(name, "uint32_t", "TYPE_U32", def_val)
 
 class Color(Var):
     def __init__(self, name, def_val = 0):
-        super(Color, self).__init__(name, "uint32_t", 4, "<I", def_val)
+        super(Color, self).__init__(name, "uint32_t", "TYPE_U32", def_val)
 
 def ver_from_string(ver_str):
     parts = ver_str.split(".")
@@ -55,10 +54,9 @@ class StructPtr(Var):
         if def_val != None:
             assert isinstance(def_val, StructVal)
             assert isinstance(def_val.struct_def, StructDef)
-        c_type = "Ptr<%s>" % struct_def.name
-        c_size = 8
-        pack_format = "<Ixxxx" # 4 bytes offset + 4 padding bytes
-        super(StructPtr, self).__init__(name, c_type, c_size, pack_format, def_val)
+        c_type = "%s *" % struct_def.name
+        typ_enum = "TYPE_STRUCT_PTR"
+        super(StructPtr, self).__init__(name, c_type, typ_enum, def_val)
         self.struct_def = struct_def
 
 # When generating C struct definitions we need the structs
@@ -90,16 +88,9 @@ class StructDef(object):
     #   self.c_size (StructPtr needs to know that)
     #   self.max_type_len (for better formatting of generated C code)
     def build_def(self):
-        var_off = 0
         self.max_type_len = 0
         for var in self.vars:
-            var.offset = var_off
-            var_off += var.c_size
             self.max_type_len = max(self.max_type_len, len(var.c_type))
-        self.c_size = var_off
-
-    def get_struct_vars(self):
-        return [var for var in self.vars if var.is_struct()]
 
 def GetAllStructs(): return g_all_structs
 
@@ -187,72 +178,53 @@ struct $name {
    $type $field_name;
    ... 
 };
-STATIC_ASSERT(sizeof($name)==$size, $name_is_$size_bytes);
-
-STATIC_ASSERT(offsetof($field_name), $name) == $offset, $field_name_is_$offset_bytes_in_$name);
 ...
 """
 def gen_h_struct_def(struct_def):
     assert isinstance(struct_def, StructDef)
     name = struct_def.name
-    c_size = struct_def.c_size
     vars = struct_def.vars
     lines = ["struct %s {" % name]
     fmt = "    %%-%ds %%s;" % struct_def.max_type_len
     for var in struct_def.vars:
         lines += [fmt % (var.c_type, var.name)]
     lines += ["};\n"]
-
-    lines += ["STATIC_ASSERT(sizeof(%(name)s)==%(c_size)d, %(name)s_is_%(c_size)d_bytes);\n" % locals()]
-
-    fmt = "STATIC_ASSERT(offsetof(%(name)s, %(field_name)s) == %(offset)d, %(field_name)s_is_%(offset)d_bytes_in_%(name)s);"
-    for var in vars:
-        field_name = var.name
-        offset = var.offset
-        lines += [fmt % locals()]
-    lines += [""]
     return "\n".join(lines)
-
 
 def gen_struct_defs():
     return "\n".join([gen_h_struct_def(stru) for stru in GetAllStructs()])
 
 """
-StructPointerInfo gFooPointers[] = {
-    { $offset, &gFooStructDef },
+FieldMetadata g${name}FieldMetadata[] = {
+    { $type, $offset, &g${name}StructMetadata },
 };
 """
-def gen_struct_pointer_infos_one(struct_def):
+def gen_struct_fields(struct_def):
     assert isinstance(struct_def, StructDef)
-    name = struct_def.name
-    lines = []
-    lines += ["StructPointerInfo g%(name)sPointers[] = {" % locals()]
-    for var in struct_def.get_struct_vars():
-        offset = var.offset
-        name = var.struct_def.name
-        lines += ["    { %(offset)d, &g%(name)sStructDef }," % locals()]
+    struct_name = struct_def.name
+    lines = ["FieldMetadata g%(struct_name)sFieldMetadata[] = {" % locals()]
+    for field in struct_def.vars:
+        assert isinstance(field, Var)
+        typ_enum = field.typ_enum
+        field_name = field.name
+        offset = "offsetof(%(struct_name)s, %(field_name)s)" % locals()
+        if field.is_struct():
+            field_type = field.struct_def.name
+            lines += ["    { %(typ_enum)s, %(offset)s, &g%(field_type)sStructMetadata }," % locals()]
+        else:
+            lines += ["    { %(typ_enum)s, %(offset)s, NULL }," % locals()]            
     lines += ["};\n"]
     return lines
 
-def gen_struct_pointer_infos(fields):
-    lines = []
-    for field in  fields:
-        lines += gen_struct_pointer_infos_one(field.typ)
-    return lines
-
 """
-StructDef gFooStructDef = { $size, $pointersCount, &g${Foo}Pointers[0] };"""
+StructMetadata g${name}StructMetadata = { $nFields, $fields };
+"""
 def gen_struct_metadata(struct_def):
-    name = struct_def.name
-    size = struct_def.c_size
-    vars = struct_def.get_struct_vars()
-    pointer_infos_count = len(vars)
-    pointer_infos = "NULL"
-    lines = []
-    if len(vars) > 0:
-        pointer_infos = "&g%sPointers[0]" % name
-        lines += gen_struct_pointer_infos_one(struct_def)
-    lines += ["StructDef g%(name)sStructDef = { %(size)d, %(pointer_infos_count)d, %(pointer_infos)s };\n" % locals()]
+    struct_name = struct_def.name
+    nFields = len(struct_def.vars)
+    fields = "&g%sFieldMetadata[0]" % struct_name
+    lines = gen_struct_fields(struct_def)
+    lines += ["StructMetadata g%(struct_name)sStructMetadata = { %(nFields)d, %(fields)s };\n" % locals()]
     return "\n".join(lines)
 
 def gen_structs_metadata():
