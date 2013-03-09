@@ -31,4 +31,3 @@ advancedSettingsStruct = DefineStruct("AdvancedSettings", [
 ])
 
 advancedSettings = MakeStruct(advancedSettingsStruct)
-

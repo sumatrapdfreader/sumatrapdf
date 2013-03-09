@@ -3,13 +3,11 @@
 # This is a list of all structs in the right order
 g_all_structs = []
 
-def GetAllStructs(): return g_all_structs
-
 # Represents a variable: its type and default value
 class Var(object):
     def __init__(self, name, c_type, c_size, pack_format, def_val = None):
         self.name = name
-        self.val = def_val
+        self.def_val = def_val
 
         self.c_type = c_type
         self.c_size = c_size
@@ -47,7 +45,7 @@ class StructPtr(Var):
             assert isinstance(def_val, StructVal)
             assert isinstance(def_val.struct_def, StructDef)
         c_type = "Ptr<%s>" % struct_def.name
-        c_size = struct_def.c_size
+        c_size = 8
         pack_format = "<Ixxxx" # 4 bytes offset + 4 padding bytes
         super(StructPtr, self).__init__(name, c_type, c_size, pack_format, def_val)
         self.struct_def = struct_def
@@ -78,10 +76,17 @@ class StructDef(object):
     def get_struct_vars(self):
         return [var for var in self.vars if var.is_struct()]
 
+def GetAllStructs(): return g_all_structs
+
 def DefineStruct(name, vars):
     return StructDef(name, vars)
 
-# defines a member variable of the struct: its type and its value
+# defines a member variable of the struct: its type (Var), value and offset
+# a value can be:
+#  - a simple value, where the type is a subclass of Var other than StructPtr
+#    and the value is is a value of the corresponding type
+#  - a struct value, where the type is StructPtr and the value is a list of Val
+#    object, one for each var of the corresponding StructDef
 class Val(object):
     def __init__(self, typ, val):
         assert isinstance(typ, Var)
@@ -89,35 +94,66 @@ class Val(object):
         self.val = val
 
         # calculated
-        self.base_offset = None   # offset of value within serialized data of top-level struct
+        self.offset = None   # offset of value within serialized data of top-level struct
 
         self.is_struct = False
-        if isinstance(typ, StructDef):
-            self.is_struct = True
-            self.val = [Val(typ) for typ in typ.vars]
-        elif isinstance(typ, StructPtr):
-            self.is_struct = True
-            self.val = [Val(typ) for typ in typ]
-        else:
-            assert isinstance(typ, Field) and not isinstance(typ, StructPtr)
-            self.val = 
 
-        self.val = typ.def_val
+class StructVal(Val):
+    def __init__(self, typ, val):
+        assert isinstance(typ, StructPtr)
+        assert len(val) >= 0 # TODO: hacky way to check that val is a list. check the type instead
+        #assert isinstance(val, types.List) ???
+        self.typ = typ
+        self.val = val
 
-        self.struct_def = None
-        self.vals = None
+        self.struct_def = typ.struct_def
+        self.offset = None
+        self.is_struct = True
 
-def MakeVal(val):
-    if isinstance(val, Var):
-        if isinstance(val, StructPtr):
-            assert False, "what to do?"
-        else:
-            return Val(val.typ)
+# primitive value is uses default value of types
+def MakeValFromPrimitiveVar(var):
+    assert isinstance(var, Var) and not isinstance(var, StructPtr)
+    return Val(var, var.def_val)
+
+# primitive value is a copy
+def MakeValFromPrimitiveVal(val):
+    assert isinstance(val, Val) and not isinstance(val, StructVal)
+    return Val(val.typ, val.val)
+
+def MakeVal(src):
+    if isinstance(src, StructDef):
+        return MakeValFromStructDef(src)
+    if isinstance(src, StructPtr):
+        return MakeValFromStructPtr(src)
+    if isinstance(src, Var):
+        return MakeValFromPrimitiveVar(src)
+    if isinstance(src, StructVal):
+        assert False, "MakeVal doesn't handle StructVal yet"
+    if isinstance(src, Val):
+        return MakeValFromPrimitiveVal(src)
+    print(src)
+    assert False, "src not supported by MakeVal()"
+
+# for struct ptr, the type is struct_ptr and the value is a list of
+# values
+def MakeValFromStructPtr(struct_ptr):
+    assert isinstance(struct_ptr, StructPtr)
+    if struct_ptr.def_val == None:
+        val = [MakeVal(v) for v in struct_ptr.struct_def.vars]
+        return StructVal(struct_ptr, val)
+    else:
+        def_val = struct_ptr.def_val
+        assert isinstance(def_val, StructVal)
+        val = [MakeVal(v) for v in def_val.val]
+        return StructVal(struct_ptr, val)
+
+def MakeValFromStructDef(struct_def):
+    assert isinstance(struct_def, StructDef)
+    struct_ptr = StructPtr("dummyStructPtr", struct_def, None)
+    return MakeValFromStructPtr(struct_ptr)
 
 def MakeStruct(struct_def):
-
-    return MakeVal(struct_def)
-
+    return MakeValFromStructDef(struct_def)
 
 """
 struct $name {
@@ -130,21 +166,22 @@ STATIC_ASSERT(offsetof($field_name), $name) == $offset, $field_name_is_$offset_b
 ...
 """
 def gen_h_struct_def(struct_def):
+    assert isinstance(struct_def, StructDef)
     name = struct_def.name
     c_size = struct_def.c_size
-    fields = struct_def.fields
+    vars = struct_def.vars
     lines = ["struct %s {" % name]
     fmt = "    %%-%ds %%s;" % struct_def.max_type_len
-    for field in struct_def.fields:
-        lines += [fmt % (field.c_type, field.name)]
+    for var in struct_def.vars:
+        lines += [fmt % (var.c_type, var.name)]
     lines += ["};\n"]
 
     lines += ["STATIC_ASSERT(sizeof(%(name)s)==%(c_size)d, %(name)s_is_%(c_size)d_bytes);\n" % locals()]
 
     fmt = "STATIC_ASSERT(offsetof(%(name)s, %(field_name)s) == %(offset)d, %(field_name)s_is_%(offset)d_bytes_in_%(name)s);"
-    for field in fields:
-        field_name = field.name
-        offset = field.offset
+    for var in vars:
+        field_name = var.name
+        offset = var.offset
         lines += [fmt % locals()]
     lines += [""]
     return "\n".join(lines)
@@ -159,12 +196,13 @@ StructPointerInfo gFooPointers[] = {
 };
 """
 def gen_struct_pointer_infos_one(struct_def):
+    assert isinstance(struct_def, StructDef)
     name = struct_def.name
     lines = []
     lines += ["StructPointerInfo g%(name)sPointers[] = {" % locals()]
-    for field in struct_def.get_struct_fields():
-        offset = field.offset
-        name = field.name
+    for var in struct_def.get_struct_vars():
+        offset = var.offset
+        name = var.struct_def.name
         lines += ["    { %(offset)d, &g%(name)sStructDef }," % locals()]
     lines += ["};\n"]
     return lines
@@ -180,11 +218,11 @@ StructDef gFooStructDef = { $size, $pointersCount, &g${Foo}Pointers[0] };"""
 def gen_struct_metadata(struct_def):
     name = struct_def.name
     size = struct_def.c_size
-    fields = struct_def.get_struct_fields()
-    pointer_infos_count = len(fields)
+    vars = struct_def.get_struct_vars()
+    pointer_infos_count = len(vars)
     pointer_infos = "NULL"
     lines = []
-    if len(fields) > 0:
+    if len(vars) > 0:
         pointer_infos = "&g%sPointers[0]" % name
         lines += gen_struct_pointer_infos_one(struct_def)
     lines += ["StructDef g%(name)sStructDef = { %(size)d, %(pointer_infos_count)d, %(pointer_infos)s };\n" % locals()]
