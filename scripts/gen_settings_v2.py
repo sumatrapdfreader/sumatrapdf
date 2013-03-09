@@ -35,7 +35,6 @@ We rely on an exact layout of data in the struct, so:
 
 TODO:
  - support strings
- - add explicit Version subclass of Var, to encapsulate version logic
  - solve compiler compatibility issues by changing serialization scheme. The serialized
    format for each struct would be:
        varint number_of_vals

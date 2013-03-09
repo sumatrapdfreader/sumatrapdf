@@ -33,6 +33,22 @@ class Color(Var):
     def __init__(self, name, def_val = 0):
         super(Color, self).__init__(name, "uint32_t", 4, "<I", def_val)
 
+def ver_from_string(ver_str):
+    parts = ver_str.split(".")
+    assert len(parts) <= 4
+    parts = [int(p) for p in parts]
+    for n in parts:
+        assert n > 0 and n < 255
+    n = 4 - len(parts)
+    if n > 0:
+        parts = parts + [0]*n
+    return parts[0] << 24 | parts[1] << 16 | parts[2] << 8 | parts[3]
+
+def Version(ver_str):
+    ver = ver_from_string(ver_str)
+    if ver_str == "2.3": assert ver == 0x02030000
+    return U32("version", ver)
+
 class StructPtr(Var):
     def __init__(self, name, struct_def, def_val=None):
         assert isinstance(struct_def, StructDef)
@@ -59,7 +75,14 @@ class StructDef(object):
         self.name = name
         self.vars = vars
         if parent != None:
-            self.vars = parent.vars + vars
+            # special case: if this and parent both have version at the beginning
+            # replace version of the parent with version of this
+            if parent.vars[0].name == "version":
+                assert vars[0].name == "version"
+                self.vars = [vars[0]] + parent.vars[1:] + vars[1:]
+            else:
+                assert vars[0].name != "version"
+                self.vars = parent.vars + vars
 
         self.build_def()
 

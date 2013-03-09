@@ -80,4 +80,28 @@ STATIC_ASSERT(offsetof(AdvancedSettings, fooPadding) == 24, fooPadding_is_24_byt
 STATIC_ASSERT(offsetof(AdvancedSettings, foo2Padding) == 32, foo2Padding_is_32_bytes_in_AdvancedSettings);
 STATIC_ASSERT(offsetof(AdvancedSettings, forwardSearch) == 40, forwardSearch_is_40_bytes_in_AdvancedSettings);
 
+struct AdvancedSettings2 {
+    uint32_t                   version;
+    int32_t                    traditionalEbookUI;
+    int32_t                    escToExit;
+    uint32_t                   logoColor;
+    Ptr<PaddingSettings>       pagePadding;
+    Ptr<PaddingSettings>       fooPadding;
+    Ptr<PaddingSettings>       foo2Padding;
+    Ptr<ForwardSearchSettings> forwardSearch;
+    Ptr<PaddingSettings>       foo3Padding;
+};
+
+STATIC_ASSERT(sizeof(AdvancedSettings2)==56, AdvancedSettings2_is_56_bytes);
+
+STATIC_ASSERT(offsetof(AdvancedSettings2, version) == 0, version_is_0_bytes_in_AdvancedSettings2);
+STATIC_ASSERT(offsetof(AdvancedSettings2, traditionalEbookUI) == 4, traditionalEbookUI_is_4_bytes_in_AdvancedSettings2);
+STATIC_ASSERT(offsetof(AdvancedSettings2, escToExit) == 8, escToExit_is_8_bytes_in_AdvancedSettings2);
+STATIC_ASSERT(offsetof(AdvancedSettings2, logoColor) == 12, logoColor_is_12_bytes_in_AdvancedSettings2);
+STATIC_ASSERT(offsetof(AdvancedSettings2, pagePadding) == 16, pagePadding_is_16_bytes_in_AdvancedSettings2);
+STATIC_ASSERT(offsetof(AdvancedSettings2, fooPadding) == 24, fooPadding_is_24_bytes_in_AdvancedSettings2);
+STATIC_ASSERT(offsetof(AdvancedSettings2, foo2Padding) == 32, foo2Padding_is_32_bytes_in_AdvancedSettings2);
+STATIC_ASSERT(offsetof(AdvancedSettings2, forwardSearch) == 40, forwardSearch_is_40_bytes_in_AdvancedSettings2);
+STATIC_ASSERT(offsetof(AdvancedSettings2, foo3Padding) == 48, foo3Padding_is_48_bytes_in_AdvancedSettings2);
+
 #endif
