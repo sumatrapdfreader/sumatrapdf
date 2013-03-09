@@ -1,33 +1,43 @@
-from gen_settings_types import DefineStruct, MakeStruct, Field
+from gen_settings_types import DefineStruct, MakeStruct, U16, I32, U32, Color, Bool, StructPtr, Version
 
 # Settings for 2.3 version of Sumatra
 
-paddingStruct = DefineStruct("PaddingSettings", [
-	Field("top", 	"u16", 2),
-	Field("bottom", "u16", 2),
-	Field("left", 	"u16", 4),
-	Field("right", 	"u16", 4),
-	Field("spaceX", "u16", 4),
-	Field("spaceY", "u16", 4),
+paddingStruct1 = DefineStruct("PaddingSettings1", None, [
+	U16("top",     2),
+	U16("bottom",  2),
+	U16("left",    4),
+	U16("right",   4),
 ])
 
-forwardSearchStruct = DefineStruct("ForwardSearchSettings", [
-	Field("highlightOffset", "i32", 0),
-	Field("highlightWidth", "i32", 15),
-	Field("highlightPermanent", "i32", 0),
-	Field("highlightColor", "color", 0x6581FF),
+# this is artificial, just to test inheritance
+paddingStruct = DefineStruct("PaddingSettings", paddingStruct1, [
+	U16("spaceX",  4),
+	U16("spaceY",  4),
 ])
 
-advancedSettingsStruct = DefineStruct("AdvancedSettings", [
-	Field("version", "u32", 0x02030000), # 2.3
-	Field("traditionalEbookUI", "bool", False),
-	Field("escToExit", "bool", False),
-	Field("logoColor", "color", 0xFFF200),
-	Field("pagePadding", paddingStruct, MakeStruct(paddingStruct)),
+forwardSearchStruct = DefineStruct("ForwardSearchSettings", None, [
+	I32("highlightOffset",    0),
+	I32("highlightWidth",     15),
+	I32("highlightPermanent", 0),
+	Color("highlightColor",   0x6581FF),
+])
+
+advancedSettingsStruct = DefineStruct("AdvancedSettings", None, [
+	Version("2.3"),
+	Bool("traditionalEbookUI", False),
+	Bool("escToExit", False),
+	Color("logoColor", 0xFFF200),
+	StructPtr("pagePadding", paddingStruct, MakeStruct(paddingStruct)),
 	# TODO: fooPading is just for testing, remove
-	Field("fooPadding", paddingStruct, MakeStruct(paddingStruct)),
-	Field("foo2Padding", paddingStruct, None),
-	Field("forwardSearch", forwardSearchStruct, MakeStruct(forwardSearchStruct)),
+	StructPtr("fooPadding", paddingStruct, MakeStruct(paddingStruct)),
+	StructPtr("foo2Padding", paddingStruct, None),
+	StructPtr("forwardSearch", forwardSearchStruct, MakeStruct(forwardSearchStruct)),
 ])
 
-advancedSettings = MakeStruct(advancedSettingsStruct)
+# test that Version over-rides the parent's version
+advancedSettingsStruct2 = DefineStruct("AdvancedSettings2", advancedSettingsStruct, [
+	Version("2.4"),
+	StructPtr("foo3Padding", paddingStruct, None),
+])
+
+advancedSettings = MakeStruct(advancedSettingsStruct2)

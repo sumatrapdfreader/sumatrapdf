@@ -2,7 +2,7 @@
 
 import os, struct, types
 import util, gen_settings_2_3
-from gen_settings_types import gen_struct_defs, gen_structs_metadata
+from gen_settings_types import gen_struct_defs, gen_structs_metadata, Val, StructVal
 
 """
 Script that generates C code for compact storage of settings.
@@ -34,16 +34,26 @@ We rely on an exact layout of data in the struct, so:
    with the same definition
 
 TODO:
- - add a notion of Struct inheritance to make it easy to support forward/backward
-   compatibility
+ - support strings
+ - solve compiler compatibility issues by changing serialization scheme. The serialized
+   format for each struct would be:
+       varint number_of_vals
+       for val in vals:
+          if val is string:
+            varint len(string)
+            char[len(string)] string data
+          if val is StructVal:
+            varint offset to struct data
+          if val is a numeric:
+            varing val
  - write const char *serialize_struct(char *data, StructDef *def);
  - introduce a concept of array i.e. a count + type of values + pointer to 
-   values (requires adding a notion of value first)
- - add size as the first field of each struct, for forward-compatibilty
+   values
  - maybe: add a signature at the beginning of each struct to detect
    corruption of the values (crash if that happens)
  - maybe: add a compare function. That way we could optimize saving
-   (only save if the values have changed)
+   (only save if the values have changed). It's really simple:
+   call serialize_struct() on both and memcmp() on result
 """
 
 def script_dir(): return os.path.dirname(__file__)
@@ -63,28 +73,29 @@ def read_file(file_path): return file(file_path, "r").read()
 h_tmpl   = read_file(os.path.join(script_dir(), "gen_settings_tmpl.h"))
 cpp_tmpl = read_file(os.path.join(script_dir(), "gen_settings_tmpl.cpp"))
 
-# val is a top-level struct value with primitive types and
+# val is a top-level StructVal with primitive types and
 # references to other struct types (forming a tree of values).
 # we flatten the values into a list and calculate base_offset
 # on each value
-def flatten_values_tree(top_level_val):
+def flatten_values_tree(val):
+    assert isinstance(val, StructVal)
+    
     # first field of the top-level struct must be a version
-    assert "version" == top_level_val.fields[0].name and "u32" == top_level_val.fields[0].typ
+    assert "version" == val.struct_def.vars[0].name
     vals = []
-    left = [top_level_val]
-    base_offset = 0
+    left = [val]
+    offset = 0
     while len(left) > 0:
         val = left.pop(0)
-        val.base_offset = base_offset + val.size
-        for field in val.fields:
-            if field.is_struct():
-                #print("%s %s" % (field.name, field.val))
-                if field.val != None:
-                    left += [field.val]
-        base_offset += val.c_size()
+        val.offset = offset
         vals += [val]
+        for field in val.val:
+            if field.is_struct and field.val != None:
+                assert isinstance(field, StructVal)
+                left += [field]
+        offset += val.struct_def.c_size
+    #for val in vals: dump_val(val)
     return vals
-
 
 def data_to_hex(data):
     els = ["0x%02x" % ord(c) for c in data]
@@ -94,35 +105,48 @@ def is_of_num_type(val):
     tp = type(val)
     return tp == types.IntType or tp == types.LongType
 
+def dump_val(val):
+    print("%s name: %s val: %s offset: %s\n" % (str(val), "", str(val.val), str(val.offset)))
+
 """
   // $StructName
   0x00, 0x01, // $type $name = $val
   ...
 """
-def get_cpp_data_for_struct_val(struct_val):
-    name = struct_val.name
-    lines = ["", "  // %s" % name]
-    for field in struct_val.fields:
-        if field.is_struct():
-            if field.val == None:
+def get_cpp_data_for_struct_val(struct_val, offset):
+    assert isinstance(struct_val, StructVal)
+    name = struct_val.struct_def.name
+    lines = ["", "  // %s offset: %s" % (name, hex(offset))]
+    if struct_val.val == None:
+        return (lines, 0)
+    size = 0
+    for field in struct_val.val:
+        fmt = field.typ.pack_format        
+        if field.is_struct:
+            val = field.offset
+            if None == val:
+                #assert False, "converter None offset to 0"
                 val = 0
-            else:
-                val = field.val.base_offset
         else:
             val = field.val
-            assert val != None
-        fmt = field.pack_format()
-        data = struct.pack(fmt, val)
+
+        try:
+            data = struct.pack(fmt, val)
+        except:
+            print(struct_val)
+            print(val)
+            raise
+        size += len(data)
         data_hex = data_to_hex(data)
-        var_type = field.c_type()
-        var_name = field.name
+        var_type = field.typ.c_type
+        var_name = field.typ.name
         if is_of_num_type(val):
             val_str = hex(val)
         else:
             val_str = str(val)
         s = "  %(data_hex)s, // %(var_type)s %(var_name)s = %(val_str)s" % locals()
         lines += [s]
-    return lines
+    return (lines, size)
 
 """
 static uint8_t g$(StructName)Default[] = {
@@ -130,22 +154,30 @@ static uint8_t g$(StructName)Default[] = {
 };
 """
 def gen_cpp_data_for_struct_values(vals):
-    name = vals[0].name
+    val = vals[0]
+    assert isinstance(val, StructVal)
+    name = val.struct_def.name
     lines = ["static uint8_t g%sDefault[] = {" % name]
+    offset = 0
     for val in vals:
-        lines += get_cpp_data_for_struct_val(val)
+        (struct_lines, size) = get_cpp_data_for_struct_val(val, offset)
+        lines += struct_lines
+        offset += size
     lines += ["};"]
     return "\n".join(lines)
 
 def main():
     dst_dir = src_dir()
 
+    val = gen_settings_2_3.advancedSettings;
+
     h_struct_defs = gen_struct_defs()
     write_to_file(os.path.join(dst_dir, "Settings.h"),  h_tmpl % locals())
 
-    vals = flatten_values_tree(gen_settings_2_3.advancedSettings)
+    vals = flatten_values_tree(val)
 
     structs_metadata = gen_structs_metadata()
+
     values_global_data = gen_cpp_data_for_struct_values(vals)
     write_to_file(os.path.join(dst_dir, "Settings.cpp"), cpp_tmpl % locals())
 
