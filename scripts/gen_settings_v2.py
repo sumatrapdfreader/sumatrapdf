@@ -34,13 +34,13 @@ We rely on an exact layout of data in the struct, so:
    with the same definition
 
 TODO:
- - None default value in StructPtr() doesn't work as expected (foo2Padding is not NULL)
  - add a notion of Struct inheritance to make it easy to support forward/backward
    compatibility
  - support strings
+ - add explicit Version subclass of Var, to encapsulate version logic
  - solve compiler compatibility issues by changing serialization scheme. The serialized
    format for each struct would be:
-       varint size
+       varint number_of_vals
        for val in vals:
           if val is string:
             varint len(string)
@@ -51,7 +51,7 @@ TODO:
             varing val
  - write const char *serialize_struct(char *data, StructDef *def);
  - introduce a concept of array i.e. a count + type of values + pointer to 
-   values (requires adding a notion of value first)
+   values
  - maybe: add a signature at the beginning of each struct to detect
    corruption of the values (crash if that happens)
  - maybe: add a compare function. That way we could optimize saving
@@ -91,14 +91,13 @@ def flatten_values_tree(val):
     while len(left) > 0:
         val = left.pop(0)
         val.offset = offset
+        vals += [val]
         for field in val.val:
             if field.is_struct and field.val != None:
                 assert isinstance(field, StructVal)
                 left += [field]
         offset += val.struct_def.c_size
-        vals += [val]
-    #for val in vals:
-    #    dump_val(val)
+    #for val in vals: dump_val(val)
     return vals
 
 def data_to_hex(data):
@@ -121,13 +120,15 @@ def get_cpp_data_for_struct_val(struct_val, offset):
     assert isinstance(struct_val, StructVal)
     name = struct_val.struct_def.name
     lines = ["", "  // %s offset: %s" % (name, hex(offset))]
+    if struct_val.val == None:
+        return (lines, 0)
     size = 0
     for field in struct_val.val:
         fmt = field.typ.pack_format        
         if field.is_struct:
             val = field.offset
             if None == val:
-                assert False, "converter None offset to 0"
+                #assert False, "converter None offset to 0"
                 val = 0
         else:
             val = field.val

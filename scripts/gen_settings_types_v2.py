@@ -1,8 +1,3 @@
-# When generating C struct definitions we need the structs
-# in the right order (if Bar refers to Foo, Foo must be defined first).
-# This is a list of all structs in the right order
-g_all_structs = []
-
 # Represents a variable: its type and default value
 class Var(object):
     def __init__(self, name, c_type, c_size, pack_format, def_val = None):
@@ -49,6 +44,11 @@ class StructPtr(Var):
         pack_format = "<Ixxxx" # 4 bytes offset + 4 padding bytes
         super(StructPtr, self).__init__(name, c_type, c_size, pack_format, def_val)
         self.struct_def = struct_def
+
+# When generating C struct definitions we need the structs
+# in the right order (if Bar refers to Foo, Foo must be defined first).
+# This is a list of all structs in the right order
+g_all_structs = []
 
 # defines a struct i.e. all its variables
 class StructDef(object):
@@ -101,7 +101,7 @@ class Val(object):
 class StructVal(Val):
     def __init__(self, typ, val):
         assert isinstance(typ, StructPtr)
-        assert len(val) >= 0 # TODO: hacky way to check that val is a list. check the type instead
+        assert val is None or len(val) >= 0 # TODO: hacky way to check that val is a list. check the type instead
         #assert isinstance(val, types.List) ???
         self.typ = typ
         self.val = val
@@ -139,7 +139,7 @@ def MakeVal(src):
 def MakeValFromStructPtr(struct_ptr):
     assert isinstance(struct_ptr, StructPtr)
     if struct_ptr.def_val == None:
-        val = [MakeVal(v) for v in struct_ptr.struct_def.vars]
+        val = None
         return StructVal(struct_ptr, val)
     else:
         def_val = struct_ptr.def_val
@@ -153,7 +153,9 @@ def MakeValFromStructDef(struct_def):
     return MakeValFromStructPtr(struct_ptr)
 
 def MakeStruct(struct_def):
-    return MakeValFromStructDef(struct_def)
+    val = [MakeVal(v) for v in struct_def.vars]
+    struct_ptr = StructPtr("dummyStructPtr", struct_def, None)
+    return StructVal(struct_ptr, val)
 
 """
 struct $name {
