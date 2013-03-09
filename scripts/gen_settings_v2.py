@@ -34,8 +34,6 @@ We rely on an exact layout of data in the struct, so:
    with the same definition
 
 TODO:
- - add a notion of Struct inheritance to make it easy to support forward/backward
-   compatibility
  - support strings
  - add explicit Version subclass of Var, to encapsulate version logic
  - solve compiler compatibility issues by changing serialization scheme. The serialized

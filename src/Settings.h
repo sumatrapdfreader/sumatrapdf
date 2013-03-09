@@ -12,6 +12,20 @@ union Ptr {
 
 STATIC_ASSERT(8 == sizeof(Ptr<int>), ptr_is_8_bytes);
 
+struct PaddingSettings1 {
+    uint16_t top;
+    uint16_t bottom;
+    uint16_t left;
+    uint16_t right;
+};
+
+STATIC_ASSERT(sizeof(PaddingSettings1)==8, PaddingSettings1_is_8_bytes);
+
+STATIC_ASSERT(offsetof(PaddingSettings1, top) == 0, top_is_0_bytes_in_PaddingSettings1);
+STATIC_ASSERT(offsetof(PaddingSettings1, bottom) == 2, bottom_is_2_bytes_in_PaddingSettings1);
+STATIC_ASSERT(offsetof(PaddingSettings1, left) == 4, left_is_4_bytes_in_PaddingSettings1);
+STATIC_ASSERT(offsetof(PaddingSettings1, right) == 6, right_is_6_bytes_in_PaddingSettings1);
+
 struct PaddingSettings {
     uint16_t top;
     uint16_t bottom;

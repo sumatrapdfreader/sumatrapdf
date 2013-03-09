@@ -52,12 +52,14 @@ g_all_structs = []
 
 # defines a struct i.e. all its variables
 class StructDef(object):
-    def __init__(self, name, vars):
+    def __init__(self, name, parent, vars):
         global g_all_structs
         g_all_structs.append(self)
 
         self.name = name
         self.vars = vars
+        if parent != None:
+            self.vars = parent.vars + vars
 
         self.build_def()
 
@@ -78,8 +80,8 @@ class StructDef(object):
 
 def GetAllStructs(): return g_all_structs
 
-def DefineStruct(name, vars):
-    return StructDef(name, vars)
+def DefineStruct(name, parent, vars):
+    return StructDef(name, parent, vars)
 
 # defines a member variable of the struct: its type (Var), value and offset
 # a value can be:

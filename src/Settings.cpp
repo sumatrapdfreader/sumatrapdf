@@ -25,6 +25,8 @@ struct StructPointerInfo {
     StructDef *def;
 };
 
+StructDef gPaddingSettings1StructDef = { 8, 0, NULL };
+
 StructDef gPaddingSettingsStructDef = { 12, 0, NULL };
 
 StructDef gForwardSearchSettingsStructDef = { 16, 0, NULL };
