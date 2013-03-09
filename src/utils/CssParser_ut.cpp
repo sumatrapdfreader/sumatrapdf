@@ -154,7 +154,7 @@ static void Test05()
 
 static void Test06()
 {
-    const char *inlineCss = "block: {{ ignore this }} ; color: red } color: blue";
+    const char *inlineCss = "block: {{ ignore this }} ; color: red; } color: blue";
     CssPullParser parser(inlineCss, str::Len(inlineCss));
     const CssProperty *prop = parser.NextProperty();
     assert(prop && Css_Unknown == prop->type && IsPropVal(prop, "{{ ignore this }}"));
@@ -178,6 +178,20 @@ static void Test07()
     assert(!ok);
 }
 
+static void Test08()
+{
+    const char *simpleCss = "broken { brace: \"doesn't close\"; { ignore { color: red; }";
+    CssPullParser parser(simpleCss, str::Len(simpleCss));
+    bool ok = parser.NextRule();
+    assert(ok);
+    const CssProperty *prop = parser.NextProperty();
+    assert(Css_Unknown == prop->type && IsPropVal(prop, "\"doesn't close\""));
+    prop = parser.NextProperty();
+    assert(!prop);
+    ok = parser.NextRule();
+    assert(!ok);
+}
+
 }
 
 void CssParser_UnitTests()
@@ -189,4 +203,5 @@ void CssParser_UnitTests()
     unittests::Test05();
     unittests::Test06();
     unittests::Test07();
+    unittests::Test08();
 }
