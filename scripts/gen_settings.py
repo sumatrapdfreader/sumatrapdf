@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import os, struct, types
+import os, types
 import util, gen_settings_2_3
-from gen_settings_types import gen_struct_defs, gen_structs_metadata, Val, StructVal
+from gen_settings_types import gen_struct_defs, gen_structs_metadata, StructVal
+from util import varint
 
 """
 Script that generates C code for compact storage of settings.
@@ -26,12 +27,6 @@ By convention, settings for each version of Sumatra are in gen_settings_$ver.py
 file. For example, settings for version 2.3 are in gen_settings_2_3.py.
 
 That way we can inherit settings for version N from settings for version N-1.
-
-We rely on an exact layout of data in the struct, so:
- - we don't use C types whose size is not fixed (e.g. int)
- - we use a fixed struct packing (that's TODO)
- - our pointers are always 8 bytes, to support both 64-bit and 32-bit archs
-   with the same definition
 
 TODO:
  - support strings
@@ -121,21 +116,15 @@ def get_cpp_data_for_struct_val(struct_val, offset):
         return (lines, 0)
     size = 0
     for field in struct_val.val:
-        fmt = "<I"
         if field.is_struct:
             val = field.offset
             if None == val:
-                #assert False, "converter None offset to 0"
                 val = 0
         else:
             val = field.val
+        # TODO: if val is string, encode len as varint with string bytes following
+        data = varint(val)
 
-        try:
-            data = struct.pack(fmt, val)
-        except:
-            print(struct_val)
-            print(val)
-            raise
         size += len(data)
         data_hex = data_to_hex(data)
         var_type = field.typ.c_type

@@ -153,8 +153,11 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
     return 0 == memcmp(s1, s2, len);
 }
 
-size_t roundToPowerOf2(size_t size);
-uint32_t murmur_hash2(const void *key, size_t len);
+size_t      RoundToPowerOf2(size_t size);
+uint32_t    MurmurHash2(const void *key, size_t len);
+
+int         PutVarint64(unsigned char *z, uint64_t x);
+int         GetVarint64(const unsigned char *z, int n, uint64_t *pResult);
 
 #include "Allocator.h"
 #include "GeomUtil.h"

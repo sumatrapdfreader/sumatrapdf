@@ -12,16 +12,16 @@
 
 static void BaseUtilTest()
 {
-    assert(roundToPowerOf2(0) == 1);
-    assert(roundToPowerOf2(1) == 1);
-    assert(roundToPowerOf2(2) == 2);
-    assert(roundToPowerOf2(3) == 4);
-    assert(roundToPowerOf2(15) == 16);
-    assert(roundToPowerOf2((1 << 13) + 1) == (1 << 14));
-    assert(roundToPowerOf2(MAX_SIZE_T) == MAX_SIZE_T);
+    assert(RoundToPowerOf2(0) == 1);
+    assert(RoundToPowerOf2(1) == 1);
+    assert(RoundToPowerOf2(2) == 2);
+    assert(RoundToPowerOf2(3) == 4);
+    assert(RoundToPowerOf2(15) == 16);
+    assert(RoundToPowerOf2((1 << 13) + 1) == (1 << 14));
+    assert(RoundToPowerOf2(MAX_SIZE_T) == MAX_SIZE_T);
 
-    assert(murmur_hash2(NULL, 0) == 0x342CE6C);
-    assert(murmur_hash2("test", 4) != murmur_hash2("Test", 4));
+    assert(MurmurHash2(NULL, 0) == 0x342CE6C);
+    assert(MurmurHash2("test", 4) != MurmurHash2("Test", 4));
 }
 
 static void GeomTest()

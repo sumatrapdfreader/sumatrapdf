@@ -183,7 +183,6 @@ struct $name {
 def gen_h_struct_def(struct_def):
     assert isinstance(struct_def, StructDef)
     name = struct_def.name
-    vars = struct_def.vars
     lines = ["struct %s {" % name]
     fmt = "    %%-%ds %%s;" % struct_def.max_type_len
     for var in struct_def.vars:

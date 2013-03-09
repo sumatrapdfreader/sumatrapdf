@@ -39,7 +39,7 @@ public:
 };
 
 class StrKeyHasherComparator : public HasherComparator {
-    virtual size_t Hash(uintptr_t key) { return murmur_hash2((const void*)key, str::Len((const char*)key)); }
+    virtual size_t Hash(uintptr_t key) { return MurmurHash2((const void*)key, str::Len((const char*)key)); }
     virtual bool Equal(uintptr_t k1, uintptr_t k2) {
         const char *s1 = (const char *)k1;
         const char *s2 = (const char *)k2;
@@ -50,7 +50,7 @@ class StrKeyHasherComparator : public HasherComparator {
 class WStrKeyHasherComparator : public HasherComparator {
     virtual size_t Hash(uintptr_t key) {
         size_t cbLen = str::Len((const WCHAR*)key) * sizeof(WCHAR);
-        return murmur_hash2((const void*)key, cbLen);
+        return MurmurHash2((const void*)key, cbLen);
     }
     virtual bool Equal(uintptr_t k1, uintptr_t k2) {
         const WCHAR *s1 = (const WCHAR *)k1;
@@ -86,7 +86,7 @@ static HashTable *NewHashTable(size_t size, Allocator *allocator)
     CrashIf(!allocator); // we'll leak otherwise
     HashTable *h = (HashTable*)Allocator::AllocZero(allocator, sizeof(HashTable));
     // number of hash table entries should be power of 2
-    size = roundToPowerOf2(size);
+    size = RoundToPowerOf2(size);
     // entries are not allocated with allocator since those are large blocks
     // and we don't want to waste their memory after 
     h->entries = AllocArray<HashTableEntry*>(size);
@@ -102,7 +102,7 @@ static void DeleteHashTable(HashTable *h)
 
 static void HashTableResize(HashTable *h, HasherComparator *hc)
 {
-    size_t newSize = roundToPowerOf2(h->nEntries + 1);
+    size_t newSize = RoundToPowerOf2(h->nEntries + 1);
     CrashIf(newSize <= h->nEntries);
     HashTableEntry **newEntries = AllocArray<HashTableEntry*>(newSize);
     HashTableEntry *e, *next;

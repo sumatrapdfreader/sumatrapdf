@@ -922,7 +922,7 @@ void HtmlFormatter::HandleTagPre(HtmlToken *t)
 
 StyleRule *HtmlFormatter::FindStyleRule(HtmlTag tag, const char *clazz, size_t clazzLen)
 {
-    uint32_t classHash = clazz ? murmur_hash2(clazz, clazzLen) : 0;
+    uint32_t classHash = clazz ? MurmurHash2(clazz, clazzLen) : 0;
     for (size_t i = 0; i < styleRules.Count(); i++) {
         StyleRule& rule = styleRules.At(i);
         if (tag == rule.tag && classHash == rule.classHash)
@@ -972,7 +972,7 @@ void HtmlFormatter::ParseStyleSheet(const char *data, size_t len)
             }
             else {
                 rule.tag = sel->tag;
-                rule.classHash = sel->clazz ? murmur_hash2(sel->clazz, sel->clazzLen) : 0;
+                rule.classHash = sel->clazz ? MurmurHash2(sel->clazz, sel->clazzLen) : 0;
                 styleRules.Append(rule);
             }
         }

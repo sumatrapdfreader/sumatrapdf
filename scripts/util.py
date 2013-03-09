@@ -26,6 +26,15 @@ def trim_str(s):
   if len(s) < 78: return (s, False)
   return (s[:75], True)
 
+# encode an integer value as varint
+def varint(i):
+    s = ""
+    while (i & ~0x7F) != 0:
+        s += chr((i & 0x7F) | 0x80)
+        i = i >> 7
+    s += chr(i)
+    return s
+
 def test_for_flag(args, arg, has_data=False):
   if arg not in args:
     if not has_data:

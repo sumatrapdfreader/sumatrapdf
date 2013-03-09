@@ -1,4 +1,4 @@
-from gen_settings_types import DefineStruct, MakeStruct, U16, I32, U32, Color, Bool, StructPtr, Version
+from gen_settings_types import DefineStruct, MakeStruct, U16, I32, Color, Bool, StructPtr, Version
 
 # Settings for 2.3 version of Sumatra
 
