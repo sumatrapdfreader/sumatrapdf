@@ -260,7 +260,7 @@ def gen_analyze_html(stats, ver):
 	return s
 
 def build_sizes_json(stats_cache_dir, stats_for_ver):
-	files = os.listdir(stats_cache_dir)
+	files = os.listdir(stats_cache_dir())
 	versions = [int(f.split(".")[0]) for f in files]
 	versions.sort()
 	#print(versions)
