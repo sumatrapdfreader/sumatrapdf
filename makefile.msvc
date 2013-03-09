@@ -83,6 +83,12 @@ RC_FLAGS = $(EXTCFLAGS)
 RC_FLAGS = $(RC_FLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
+LIB_FLAGS = /nologo
+!if "$(CFG)"!="dbg"
+# match LDFLAGS in mupdf\makefile.msvc
+LIB_FLAGS = $(LIB_FLAGS) /LTCG
+!endif
+
 LIBS = $(LIBS) \
 	comctl32.lib Msimg32.lib Winspool.lib wininet.lib \
 	ole32.lib OleAut32.lib shlwapi.lib version.lib \
@@ -126,6 +132,12 @@ BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
+MUPDF_LIB   = $(O)\libmupdfs.lib
+UTILS_LIB   = $(O)\utils.lib
+MUI_LIB     = $(O)\mui.lib
+ENGINES_LIB = $(O)\engines.lib
+MAIN_UI_LIB = $(O)\sumatra.lib
+
 UTILS_OBJS = \
 	$(OU)\BencUtil.obj $(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
 	$(OU)\StrUtil.obj $(OU)\UtilTests.obj $(OU)\WinUtil.obj \
@@ -163,51 +175,50 @@ ENGINE_OBJS = \
 	$(OS)\ChmEngine.obj $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
 	$(OS)\EbookEngine.obj $(EBOOK_OBJS)
 
-SUMATRA_OBJS = \
+MAIN_UI_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \
 	$(OS)\Favorites.obj $(OS)\TextSearch.obj $(OS)\SumatraAbout.obj $(OS)\SumatraAbout2.obj \
-	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj $(OS)\SumatraPDF.obj \
+	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj \
 	$(OS)\PdfSync.obj $(OS)\RenderCache.obj $(OS)\TextSelection.obj \
 	$(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj $(OS)\StressTesting.obj \
 	$(OS)\UnitTests.obj $(OS)\AppTools.obj $(OS)\TableOfContents.obj \
 	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
-	$(OS)\Selection.obj $(OS)\FileModifications.obj $(SUMATRA_RES) \
+	$(OS)\Selection.obj $(OS)\FileModifications.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
-	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) $(MUI_OBJS) \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj \
 	$(OS)\Settings.obj
 
+SUMATRA_OBJS = \
+	$(OS)\SumatraPDF.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \
+	$(ENGINES_LIB) $(UTILS_LIB) $(MUI_LIB) $(SYNCTEX_OBJS)
+
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
-	$(UTILS_OBJS) $(ZIP_OBJS) $(ZLIB_OBJS) \
+	$(UTILS_LIB) $(ZIP_OBJS) $(ZLIB_OBJS) \
 	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
 
 UNINSTALLER_OBJS = \
-	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_OBJS) \
+	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_LIB) \
 	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
 
 PDFFILTER_OBJS = \
 	$(ODLL)\PdfFilterDll.obj $(ODLL)\CPdfFilter.obj $(PDFFILTER_RES) \
-	$(OU)\BaseUtil.obj $(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj \
-	$(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj $(ZIP_OBJS)
+	$(UTILS_LIB) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj $(ZIP_OBJS)
 
 PDFPREVIEW_OBJS = \
 	$(ODLL)\PdfPreviewDll.obj $(ODLL)\PdfPreview.obj $(PDFPREVIEW_RES) \
-	$(OU)\BaseUtil.obj $(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj \
-	$(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj $(ZIP_OBJS)
+	$(UTILS_LIB) $(LIBMUPDF_LIB) $(OS)\MuPDF_Exports.obj $(OS)\PdfEngine.obj $(ZIP_OBJS)
 
 BROWSER_PLUGIN_OBJS = \
-	$(ODLL)\npPdfViewer.obj $(BROWSER_PLUGIN_RES) \
-	$(OU)\BaseUtil.obj $(OU)\StrUtil.obj $(OU)\FileUtil.obj $(OU)\WinUtil.obj $(OU)\DebugLog.obj \
-	$(OU)\CmdLineParser.obj $(OU)\BencUtil.obj
+	$(ODLL)\npPdfViewer.obj $(BROWSER_PLUGIN_RES) $(UTILS_LIB)
 
 ENGINEDUMP_OBJS = \
-	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) $(OMUI)\MiniMui.obj
+	$(OS)\EngineDump.obj $(ENGINES_LIB) $(MUPDF_LIB) $(UTILS_LIB) $(OMUI)\MiniMui.obj
 
 MEMTRACE_OBJS = \
-	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
+	$(OM)\MemTraceDll.obj $(UTILS_LIB)
 
 !if "$(BUILD_TEX_IFILTER)"!=""
 PDFFILTER_OBJS = $(PDFFILTER_OBJS) $(ODLL)\CTeXFilter.obj
@@ -260,7 +271,7 @@ $(OS): $(O) $(OE)
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(RC_FLAGS) src\SumatraPDF.rc
 
-$(SUMATRA_APP): $(LIBS_OBJS) $(SUMATRA_OBJS)
+$(SUMATRA_APP): $(SUMATRA_OBJS) $(MUPDF_LIB)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
 $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(OS)\MuPDF_Exports.obj
@@ -269,8 +280,8 @@ $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(OS)\MuPDF_Exports.obj
 $(LIBMUPDF_RES): src\libmupdf.rc src\Version.h
 	rc /r /fo$@ $(RC_FLAGS) src\libmupdf.rc
 
-$(LIBMUPDF_DLL): $(LIBS_OBJS) $(LIBMUPDF_DEF) $(LIBMUPDF_RES)
-	$(LD) /DLL $(LDFLAGS) $(LIBS_OBJS) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
+$(LIBMUPDF_DLL): $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBMUPDF_DEF)
+	$(LD) /DLL $(LDFLAGS) $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData.zip" src\installer\Installer.rc
@@ -339,6 +350,21 @@ $(OS)\Uninstaller.obj: $(OS)\Installer.obj
 
 {src\memtrace}.cpp{$(OM)}.obj::
 	$(CC) $(MEMTRACE_CFLAGS) /Fo$(OM)\ /Fd$(O)\vc80.pdb $<
+
+$(MUPDF_LIB): $(LIBS_OBJS)
+	lib $(LIB_FLAGS) /OUT:$@ $**
+
+$(UTILS_LIB): $(UTILS_OBJS)
+	lib $(LIB_FLAGS) /OUT:$@ $**
+
+$(MUI_LIB): $(MUI_OBJS)
+	lib $(LIB_FLAGS) /OUT:$@ $**
+
+$(ENGINES_LIB): $(ENGINE_OBJS)
+	lib $(LIB_FLAGS) /OUT:$@ $**
+
+$(MAIN_UI_LIB): $(MAIN_UI_OBJS)
+	lib $(LIB_FLAGS) /OUT:$@ $**
 
 ## Header-dependencies for src\* and src\*\*
 !INCLUDE makefile.deps
