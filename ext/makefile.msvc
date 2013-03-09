@@ -58,9 +58,9 @@ UNRAR_OBJS = \
 	$(OR)\errhnd.obj $(OR)\extinfo.obj $(OR)\extract.obj $(OR)\filcreat.obj \
 	$(OR)\file.obj $(OR)\filefn.obj $(OR)\filestr.obj $(OR)\find.obj $(OR)\getbits.obj \
 	$(OR)\global.obj $(OR)\isnt.obj  $(OR)\list.obj $(OR)\match.obj \
-	$(OR)\pathfn.obj $(OR)\options.obj $(OR)\rar.obj $(OR)\rarvm.obj \
+	$(OR)\pathfn.obj $(OR)\options.obj $(OR)\rarvm.obj \
 	$(OR)\rawread.obj $(OR)\rdwrfn.obj $(OR)\recvol.obj \
-	$(OR)\resource.obj $(OR)\rijndael.obj $(OR)\rs.obj $(OR)\savepos.obj \
+	$(OR)\rijndael.obj $(OR)\rs.obj $(OR)\savepos.obj \
 	$(OR)\scantree.obj $(OR)\sha1.obj $(OR)\smallfn.obj $(OR)\strfn.obj \
 	$(OR)\strlist.obj $(OR)\system.obj $(OR)\timefn.obj \
 	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
