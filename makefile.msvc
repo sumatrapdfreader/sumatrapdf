@@ -152,19 +152,19 @@ MUI_OBJS = \
 	$(OMUI)\MuiScrollBar.obj $(OMUI)\MuiEventMgr.obj $(OMUI)\MuiHwndWrapper.obj \
 	$(OMUI)\MuiGrid.obj $(OMUI)\SvgPath.obj
 
+EBOOK_OBJS = \
+	$(OS)\Doc.obj $(OS)\EbookDoc.obj $(OS)\MobiDoc.obj $(OU)\PalmDbReader.obj \
+	$(OS)\HtmlFormatter.obj $(OS)\EbookFormatter.obj 
+
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj \
 	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
 	$(OS)\ChmEngine.obj $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
-	$(OS)\EbookEngine.obj $(OS)\EbookDoc.obj
-
-EBOOK_OBJS = \
-	$(OS)\MobiDoc.obj $(OU)\PalmDbReader.obj $(OS)\HtmlFormatter.obj $(OS)\EbookFormatter.obj \
-	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj
+	$(OS)\EbookEngine.obj $(EBOOK_OBJS)
 
 SUMATRA_OBJS = \
-	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj $(OS)\Doc.obj \
+	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \
 	$(OS)\Favorites.obj $(OS)\TextSearch.obj $(OS)\SumatraAbout.obj $(OS)\SumatraAbout2.obj \
 	$(OS)\SumatraDialogs.obj $(OS)\SumatraProperties.obj $(OS)\SumatraPDF.obj \
 	$(OS)\PdfSync.obj $(OS)\RenderCache.obj $(OS)\TextSelection.obj \
@@ -173,7 +173,8 @@ SUMATRA_OBJS = \
 	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(OS)\FileModifications.obj $(SUMATRA_RES) \
-	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) $(EBOOK_OBJS) $(MUI_OBJS) \
+	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
+	$(UTILS_OBJS) $(ENGINE_OBJS) $(SYNCTEX_OBJS) $(MUI_OBJS) \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj \
 	$(OS)\Settings.obj
@@ -203,9 +204,7 @@ BROWSER_PLUGIN_OBJS = \
 	$(OU)\CmdLineParser.obj $(OU)\BencUtil.obj
 
 ENGINEDUMP_OBJS = \
-	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) \
-	$(OS)\HtmlFormatter.obj $(OS)\EbookFormatter.obj $(OMUI)\MiniMui.obj \
-	$(OS)\MobiDoc.obj $(OS)\Doc.obj $(OU)\PalmDbReader.obj
+	$(OS)\EngineDump.obj $(ENGINE_OBJS) $(LIBS_OBJS) $(UTILS_OBJS) $(OMUI)\MiniMui.obj
 
 MEMTRACE_OBJS = \
 	$(OM)\MemTraceDll.obj $(UTILS_OBJS)
