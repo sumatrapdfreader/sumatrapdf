@@ -21,7 +21,8 @@ static const uint16_t TYPE_I16          = 1;
 static const uint16_t TYPE_U16          = 2;
 static const uint16_t TYPE_I32          = 3;
 static const uint16_t TYPE_U32          = 4;
-static const uint16_t TYPE_STRUCT_PTR   = 5;
+static const uint16_t TYPE_STR          = 5;
+static const uint16_t TYPE_STRUCT_PTR   = 6;
 
 struct FieldMetadata;
 
@@ -63,26 +64,28 @@ StructMetadata gPaddingSettingsMetadata = { sizeof(PaddingSettings), 6, &gPaddin
 FieldMetadata gAdvancedSettingsFieldMetadata[] = {
     { TYPE_BOOL, offsetof(AdvancedSettings, traditionalEbookUI), NULL },
     { TYPE_BOOL, offsetof(AdvancedSettings, escToExit), NULL },
+    { TYPE_STR, offsetof(AdvancedSettings, emptyString), NULL },
     { TYPE_U32, offsetof(AdvancedSettings, logoColor), NULL },
     { TYPE_STRUCT_PTR, offsetof(AdvancedSettings, pagePadding), &gPaddingSettingsMetadata },
     { TYPE_STRUCT_PTR, offsetof(AdvancedSettings, foo2Padding), &gPaddingSettingsMetadata },
+    { TYPE_STR, offsetof(AdvancedSettings, notEmptyString), NULL },
     { TYPE_STRUCT_PTR, offsetof(AdvancedSettings, forwardSearch), &gForwardSearchSettingsMetadata },
 };
 
-StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 6, &gAdvancedSettingsFieldMetadata[0] };
+StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 8, &gAdvancedSettingsFieldMetadata[0] };
 
 static const uint8_t gAdvancedSettingsDefault[] = {
     0x53, 0x6d, 0x75, 0x53, // magic id 'SumS'
     0x00, 0x00, 0x03, 0x02, // version 2.3
     0x19, 0x00, 0x00, 0x00, // top-level struct offset 0x19
 
-    // offset: 0xc StructVal@0x7fddfbcc ForwardSearchSettings
+    // offset: 0xc StructVal@0x7fde0dcc ForwardSearchSettings
     0x00, // int32_t highlightOffset = 0x0
     0x0f, // int32_t highlightWidth = 0xf
     0x00, // int32_t highlightPermanent = 0x0
     0xff, 0x83, 0x96, 0x03, // uint32_t highlightColor = 0x6581ff
 
-    // offset: 0x13 StructVal@0x7fddfaac PaddingSettings
+    // offset: 0x13 StructVal@0x7fde0c8c PaddingSettings
     0x02, // uint16_t top = 0x2
     0x02, // uint16_t bottom = 0x2
     0x04, // uint16_t left = 0x4
@@ -90,13 +93,15 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0x04, // uint16_t spaceX = 0x4
     0x04, // uint16_t spaceY = 0x4
 
-    // offset: 0x19 StructVal@0x7fddfc6c AdvancedSettings
+    // offset: 0x19 StructVal@0x7fde0e6c AdvancedSettings
     0x00, // bool traditionalEbookUI = 0x0
     0x00, // bool escToExit = 0x0
+    0x00, // const char * emptyString = ""
     0x80, 0xe4, 0xff, 0x07, // uint32_t logoColor = 0xfff200
-    0x13, // PaddingSettings * pagePadding = StructVal@0x7fddfaac
+    0x13, // PaddingSettings * pagePadding = StructVal@0x7fde0c8c
     0x00, // PaddingSettings * foo2Padding = NULL
-    0x0c, // ForwardSearchSettings * forwardSearch = StructVal@0x7fddfbcc
+    0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f, // const char * notEmptyString = "Hello"
+    0x0c, // ForwardSearchSettings * forwardSearch = StructVal@0x7fde0dcc
 };
 
 static uint32_t VersionFromStr(const char *v)

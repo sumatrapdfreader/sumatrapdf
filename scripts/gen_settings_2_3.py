@@ -1,4 +1,4 @@
-from gen_settings_types import DefineStruct, MakeStruct, U16, I32, Color, Bool, StructPtr
+from gen_settings_types import DefineStruct, MakeStruct, U16, I32, Color, Bool, StructPtr, String
 
 # Settings for 2.3 version of Sumatra
 
@@ -25,11 +25,13 @@ forwardSearchStruct = DefineStruct("ForwardSearchSettings", None, [
 advancedSettingsStruct = DefineStruct("AdvancedSettings", None, [
 	Bool("traditionalEbookUI", False),
 	Bool("escToExit", False),
+	String("emptyString", None),
 	Color("logoColor", 0xFFF200),
 	StructPtr("pagePadding", paddingStruct, MakeStruct(paddingStruct)),
 	# TODO: fooPading and foo2Padding is just for testing, remove after testing
 	#StructPtr("fooPadding", paddingStruct, MakeStruct(paddingStruct)),
 	StructPtr("foo2Padding", paddingStruct, None),
+	String("notEmptyString", "Hello"),
 	StructPtr("forwardSearch", forwardSearchStruct, MakeStruct(forwardSearchStruct)),
 ])
 

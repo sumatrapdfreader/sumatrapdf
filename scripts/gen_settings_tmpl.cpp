@@ -21,7 +21,8 @@ static const uint16_t TYPE_I16          = 1;
 static const uint16_t TYPE_U16          = 2;
 static const uint16_t TYPE_I32          = 3;
 static const uint16_t TYPE_U32          = 4;
-static const uint16_t TYPE_STRUCT_PTR   = 5;
+static const uint16_t TYPE_STR          = 5;
+static const uint16_t TYPE_STRUCT_PTR   = 6;
 
 struct FieldMetadata;
 

@@ -23,9 +23,11 @@ struct PaddingSettings {
 struct AdvancedSettings {
     bool                    traditionalEbookUI;
     bool                    escToExit;
+    const char *            emptyString;
     uint32_t                logoColor;
     PaddingSettings *       pagePadding;
     PaddingSettings *       foo2Padding;
+    const char *            notEmptyString;
     ForwardSearchSettings * forwardSearch;
 };
 

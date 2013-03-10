@@ -32,6 +32,13 @@ class Color(Var):
     def __init__(self, name, def_val = 0):
         super(Color, self).__init__(name, "uint32_t", "TYPE_U32", def_val)
 
+class String(Var):
+    def __init__(self, name, def_val = ""):
+        # we don't support None values for strings, we use ""
+        # for empty strings
+        if def_val == None: def_val = ""
+        super(String, self).__init__(name, "const char *", "TYPE_STR", def_val)
+
 class StructPtr(Var):
     def __init__(self, name, struct_def, def_val=None):
         assert isinstance(struct_def, StructDef)

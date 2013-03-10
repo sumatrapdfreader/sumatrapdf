@@ -2,15 +2,22 @@
 
 import os, types, struct
 import util, gen_settings_2_3
-from gen_settings_types import gen_struct_defs, gen_structs_metadata, gen_top_level_funcs, StructVal
+from gen_settings_types import gen_struct_defs, gen_structs_metadata, gen_top_level_funcs, StructVal, Val
 from util import varint
 
 """
 Script that generates C code for compact storage of settings.
 
 In C settings are represented as a top-level struct (which can then refer to
-other structs). The first field of top-level struct must be a u32 version
-field. A version supports up to 4 components, each component in range <0,255>.
+other structs). 
+
+A serialized form is:
+  u32 magic id
+  u32 version
+  u32 offfset of top-level struct
+  ... serialized values follow, with integers serialized as varint
+
+A version supports up to 4 components, each component in range <0,255>.
 For example version "2.1.3" is encoded as: u32 version = (2 << 24) | (1 << 16) | (3 << 8) | 0.
 This way versions can be compared with ">" in C code with the right semantics
 (e.g. 2.2.1 > 2.1).
@@ -18,28 +25,35 @@ This way versions can be compared with ">" in C code with the right semantics
 We support generating multiple top-level structs (which can be used for multiple
 different purposes).
 
-In order to support forward and backward compatibility, struct for a given
-version must be a strict superset of struct for a previous version. We can
-only add, we can't remove fields or change their types (we can change the names
-of fields).
+In order to support forward compatibility, we can make the following struct
+changes in version n + 1 (compared to same struct in version n):
+ - add new fields at the end
+ - we can change the name of existing fields (they are not serialized)
+ - technically changing a type to a compatible one (e.g. u16 => u32)
+   is possible, but strongly discouraged
+What we cannot do:
+ - remove fields
+ - change the type to an incompatible one
 
 By convention, settings for each version of Sumatra are in gen_settings_$ver.py
 file. For example, settings for version 2.3 are in gen_settings_2_3.py.
-
-That way we can inherit settings for version N from settings for version N-1.
+That way we can easily inherit settings for version N from settings for version N-1.
 
 TODO:
- - support strings
  - write Deserialize()
  - write Serialize()
- - introduce a concept of array i.e. a count + type of values + pointer to 
-   values
+ - support arrays i.e. a count + type of values + pointer to values
  - maybe: for additional safety, add a number of fields in a given struct
  - maybe: add a signature (magic value) at the beginning of each struct to
    detect corruption of the values (crash if that happens)
+ - maybe: when encoding values, also encode the type, so that decoding is
+   possible even if we don't have struct metadata to guide the process
+   type could be encoded in 2 low bits of integer value, values shifted
+   int type would have tag 0, string would have tag 1 and we would have 2
+   tags for future expansion
  - maybe: add a compare function. That way we could optimize saving
    (only save if the values have changed). It's really simple:
-   call serialize_struct() on both and memcmp() on result
+   call Serialize() on both and memcmp() on result
 """
 
 g_magic_id = 0x53756d53  # 'SumS' as 'Sumatra Settings'
@@ -92,6 +106,21 @@ def flatten_values_tree(val):
     vals.reverse()
     return vals
 
+def is_num(val):
+    tp = type(val)
+    return tp == types.IntType or tp == types.LongType or tp == types.BooleanType
+
+def is_str(val): return type(val) == types.StringType
+
+def serialize_val(val):
+    if is_num(val):
+        val = long(val)
+        return varint(val)
+    if is_str(val):
+        data = varint(len(val))
+        return data + val
+    assert False, "%s is of unkown type" % val
+
 # serialize values in vals and calculate offset of each
 # val in encoded data.
 # values are serialized in reverse order because 
@@ -108,18 +137,16 @@ def serialize_top_level_struct(top_level_struct):
     for val in vals:
         val.offset = offset
         for field in val.val:
-            data = varint(0)
+            val = field.val
             if field.is_struct:
                 assert isinstance(field, StructVal)
+                val = 0
                 if field.val != None:
                     # must have been serialized
                     assert field.offset not in (None, 0)
                     assert offset > field.offset
-                    data = varint(field.offset)
-            else:
-                # TODO: support strings
-                val = long(field.val)
-                data = varint(val)
+                    val = field.offset
+            data = serialize_val(val)
             field.serialized = data
             offset += len(data)
     return vals
@@ -127,10 +154,6 @@ def serialize_top_level_struct(top_level_struct):
 def data_to_hex(data):
     els = ["0x%02x" % ord(c) for c in data]
     return ", ".join(els)
-
-def is_of_num_type(val):
-    tp = type(val)
-    return tp == types.IntType or tp == types.LongType or tp == types.BooleanType
 
 def dump_val(val):
     print("%s name: %s val: %s offset: %s\n" % (str(val), "", str(val.val), str(val.offset)))
@@ -144,10 +167,14 @@ def data_with_comment_as_c(data, comment):
 # =>
 #   StructVal@0x7fddfc4c
 def short_object_id(obj):
-    assert isinstance(obj, StructVal)
-    s = str(obj)[1:-1]
-    s = s.replace("gen_settings_types.", "")
-    return s.replace(" object at ", "@")
+    if isinstance(obj, StructVal):
+        s = str(obj)[1:-1]
+        s = s.replace("gen_settings_types.", "")
+        return s.replace(" object at ", "@")
+    if isinstance(obj, Val):
+        assert is_str(obj.val)
+        return '"' + obj.val + '"'
+    assert False, "%s is object of unkown type" % obj
 
 """
   // $StructName
@@ -169,7 +196,7 @@ def get_cpp_data_for_struct_val(struct_val):
         var_type = field.typ.c_type
         var_name = field.typ.name
         val = field.val
-        if is_of_num_type(val):
+        if is_num(val):
             val_str = hex(val)
         else:
             if field.val == None:
