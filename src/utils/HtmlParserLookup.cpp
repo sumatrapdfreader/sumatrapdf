@@ -1317,6 +1317,9 @@ CssProp FindCssProp(const char *name, size_t len)
     case CS4('m','a','x','-'):
         if (9 == len && str::EqNI(name + 4, "width", 5)) return Css_Max_Width;
         break;
+    case CS4('o','p','a','c'):
+        if (7 == len && CS3('i','t','y') == STR3i(name + 4)) return Css_Opacity;
+        break;
     case CS4('p','a','d','d'):
         if (7 == len && CS3('i','n','g') == STR3i(name + 4)) return Css_Padding;
         if (14 == len && str::EqNI(name + 4, "ing-bottom", 10)) return Css_Padding_Bottom;
@@ -1337,6 +1340,9 @@ CssProp FindCssProp(const char *name, size_t len)
         if (15 == len && str::EqNI(name + 4, "-decoration", 11)) return Css_Text_Decoration;
         if (11 == len && str::EqNI(name + 4, "-indent", 7)) return Css_Text_Indent;
         if (14 == len && str::EqNI(name + 4, "-underline", 10)) return Css_Text_Underline;
+        break;
+    case CS4('t','i','m','e'):
+        if (9 == len && str::EqNI(name + 4, "stamp", 5)) return Css_Timestamp;
         break;
     case CS4('v','e','r','s'):
         if (7 == len && CS3('i','o','n') == STR3i(name + 4)) return Css_Version;

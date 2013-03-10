@@ -97,6 +97,9 @@ struct PageAnnotation {
         uint8_t r, g, b, a;
         Color() : r(0), g(0), b(0), a(0) { }
         Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a=255) : r(r), g(g), b(b), a(a) { }
+        bool operator==(const Color& other) const {
+            return other.r == r && other.g == g && other.b == b && other.a == a;
+        }
     };
 
     PageAnnotType type;
@@ -107,6 +110,10 @@ struct PageAnnotation {
     PageAnnotation() : type(Annot_None), pageNo(-1) { }
     PageAnnotation(PageAnnotType type, int pageNo, RectD rect, Color color) :
         type(type), pageNo(pageNo), rect(rect), color(color) { }
+    bool operator==(const PageAnnotation& other) const {
+        return other.type == type && other.pageNo == pageNo &&
+               other.rect == rect && other.color == color;
+    }
 };
 
 // use in PageDestination::GetDestRect for values that don't matter
