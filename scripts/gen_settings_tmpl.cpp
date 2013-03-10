@@ -92,18 +92,125 @@ Exit:
     return ver;
 }
 
+// the assumption here is that the data was either build by Deserialize()
+// or was set by application code in a way that observes our rule: each
+// object was separately allocated with malloc()
+void FreeStruct(uint8_t *data, StructMetadata *def)
+{
+    if (!data)
+        return;
+    FieldMetadata *fieldDef = NULL;
+    for (int i = 0; i < def->nFields; i++) {
+        fieldDef = def->fields + i;
+        if (TYPE_STRUCT_PTR ==  fieldDef->type) {
+            uint8_t **p = (uint8_t**)(data + fieldDef->offset);
+            FreeStruct(*p, fieldDef->def);
+        } else if (TYPE_STR == fieldDef->type) {
+            char **s = (char**)(data + fieldDef->offset);
+            free(*s);
+        }
+    }
+    free(data);
+}
+
+static bool WriteStructVal(uint16_t type, uint64_t val, uint8_t *p)
+{
+    if (TYPE_BOOL == type) {
+        if (val > 1)
+            return false;
+        bool b = (bool)val;
+        bool *bp = (bool*)p;
+        *bp = b;
+        return true;
+    } else if (TYPE_I16 == type) {
+        if (val > 0xffff)
+            return false;
+        int16_t v = (int16_t)val;
+        int16_t *vp = (int16_t*)p;
+        *vp = v;
+        return true;
+    } else if (TYPE_U16 == type) {
+        if (val > 0xffff)
+            return false;
+        uint16_t v = (uint16_t)val;
+        uint16_t *vp = (uint16_t*)p;
+        *vp = v;
+        return true;
+    } else if (TYPE_I32 == type) {
+        if (val > 0xffffffff)
+            return false;
+        int32_t v = (int32_t)val;
+        int32_t *vp = (int32_t*)p;
+        *vp = v;
+        return true;
+    } else if (TYPE_U32 == type) {
+        if (val > 0xffffffff)
+            return false;
+        uint32_t v = (uint32_t)val;
+        uint32_t *vp = (uint32_t*)p;
+        *vp = v;
+        return true;
+    }
+    CrashIf(false);
+    return false;
+}
+
+static void WriteStructPtrVal(void *val, uint8_t *p)
+{
+    void **pp = (void**)p;
+    *pp = val;
+}
+
 static uint8_t* DeserializeRec(const uint8_t *data, int dataSize, int dataOff, StructMetadata *def)
 {
-#if 0
     uint8_t *res = AllocArray<uint8_t>(def->size);
     FieldMetadata *fieldDef = NULL;
     uint64_t decodedVal;
+    int n;
+    bool ok;
     for (int i = 0; i < def->nFields; i++) {
+        if (dataOff >= dataSize)
+            goto Error;
         fieldDef = def->fields + i;
         uint16_t offset = fieldDef->offset;
         uint16_t type = fieldDef->type;
+        if (TYPE_STR == type) {
+            n = GetVarint64(data + dataOff, dataSize - dataOff, &decodedVal);
+            if (0 == n)
+                goto Error;
+            dataOff += n;
+            if (decodedVal > 128*1024) // set a reasonable limit to avoid overflow issues
+                goto Error;
+            n = (int)decodedVal;
+            if (n >= dataSize - dataOff)
+                goto Error;
+            char *s = str::DupN((char*)data + dataOff, n);
+            dataOff += n;
+        } else if (TYPE_STRUCT_PTR == type) {
+            n = GetVarint64(data + dataOff, dataSize - dataOff, &decodedVal);
+            if (0 == n)
+                goto Error;
+            dataOff += n;
+            if (decodedVal > 512*1024*1024) // avoid overflow issues
+                goto Error;
+            n = (int)decodedVal;
+            uint8_t *d = DeserializeRec(data, dataSize, n, fieldDef->def);
+            if (!d)
+                goto Error;
+            WriteStructPtrVal(d, res + offset);
+        } else {
+            n = GetVarint64(data + dataOff, dataSize - dataOff, &decodedVal);
+            if (0 == n)
+                goto Error;
+            dataOff += n;
+            ok = WriteStructVal(type, decodedVal, res + offset);
+            if (!ok)
+                goto Error;
+        }
     }
-#endif
+    return res;
+Error:
+    FreeStruct(res, def);
     return NULL;
 }
 
@@ -127,24 +234,6 @@ static uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *versi
         return NULL;
     //uint32_t ver = VersionFromStr(version);
     return DeserializeRec(data, dataSize, SERIALIZED_HEADER_LEN, def);
-}
-
-// the assumption here is that the data was either build by deserialize_struct
-// or was set by application code in a way that observes our rule: each
-// object was separately allocated with malloc()
-void FreeStruct(uint8_t *data, StructMetadata *def)
-{
-    if (!data)
-        return;
-    FieldMetadata *fieldDef = NULL;
-    for (int i = 0; i < def->nFields; i++) {
-        fieldDef = def->fields + i;
-        if (TYPE_STRUCT_PTR ==  fieldDef->type) {
-            uint8_t **p = (uint8_t**)(data + fieldDef->offset);
-            FreeStruct(*p, fieldDef->def);
-        }
-    }
-    free(data);
 }
 
 // TODO: write me

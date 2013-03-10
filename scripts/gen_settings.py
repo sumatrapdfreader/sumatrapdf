@@ -9,7 +9,7 @@ from util import varint
 Script that generates C code for compact storage of settings.
 
 In C settings are represented as a top-level struct (which can then refer to
-other structs). 
+other structs).
 
 A serialized form is:
   u32 magic id
@@ -40,8 +40,8 @@ file. For example, settings for version 2.3 are in gen_settings_2_3.py.
 That way we can easily inherit settings for version N from settings for version N-1.
 
 TODO:
- - write Deserialize()
  - write Serialize()
+ - test that negative numbers are properly varint-serialized
  - support arrays i.e. a count + type of values + pointer to values
  - maybe: for additional safety, add a number of fields in a given struct
  - maybe: add a signature (magic value) at the beginning of each struct to
@@ -123,7 +123,7 @@ def serialize_val(val):
 
 # serialize values in vals and calculate offset of each
 # val in encoded data.
-# values are serialized in reverse order because 
+# values are serialized in reverse order because
 # it would be very complicated to serialize forward
 # offsets in variable-length encoding
 def serialize_top_level_struct(top_level_struct):
@@ -209,7 +209,7 @@ def get_cpp_data_for_struct_val(struct_val):
 
 """
 static uint8_t g$(StructName)Default[] = {
-   ... data    
+   ... data
 };
 """
 def gen_cpp_data_for_struct_values(vals, version_str):
