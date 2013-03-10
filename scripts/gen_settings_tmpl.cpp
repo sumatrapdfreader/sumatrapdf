@@ -95,7 +95,7 @@ Exit:
 // the assumption here is that the data was either build by Deserialize()
 // or was set by application code in a way that observes our rule: each
 // object was separately allocated with malloc()
-void FreeStruct(uint8_t *data, StructMetadata *def)
+static void FreeStruct(uint8_t *data, StructMetadata *def)
 {
     if (!data)
         return;
@@ -184,8 +184,10 @@ static uint8_t* DeserializeRec(const uint8_t *data, int dataSize, int dataOff, S
             n = (int)decodedVal;
             if (n >= dataSize - dataOff)
                 goto Error;
-            char *s = str::DupN((char*)data + dataOff, n);
-            dataOff += n;
+            if (n > 0) {
+                char *s = str::DupN((char*)data + dataOff, n);
+                dataOff += n;
+            }
         } else if (TYPE_STRUCT_PTR == type) {
             n = GetVarint64(data + dataOff, dataSize - dataOff, &decodedVal);
             if (0 == n)
@@ -233,7 +235,7 @@ static uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *versi
     if (hdr->magicId != MAGIC_ID)
         return NULL;
     //uint32_t ver = VersionFromStr(version);
-    return DeserializeRec(data, dataSize, SERIALIZED_HEADER_LEN, def);
+    return DeserializeRec(data, dataSize, hdr->topLevelStructOffset, def);
 }
 
 // TODO: write me

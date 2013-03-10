@@ -40,6 +40,7 @@ file. For example, settings for version 2.3 are in gen_settings_2_3.py.
 That way we can easily inherit settings for version N from settings for version N-1.
 
 TODO:
+ - synchronize C and Python varint implementation
  - write Serialize()
  - test that negative numbers are properly varint-serialized
  - support arrays i.e. a count + type of values + pointer to values

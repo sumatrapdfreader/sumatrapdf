@@ -268,6 +268,8 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.ParseCommandLine(GetCommandLine());
 }
 
+#include "Settings.h"
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
@@ -289,6 +291,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // that are not mounted (e.g. a: drive without floppy or cd rom drive
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+
+#if 0
+    bool usedDefault = false;
+    AdvancedSettings *data = DeserializeAdvancedSettings(NULL, 0, &usedDefault);
+    CrashIf(!usedDefault);
+    FreeAdvancedSettings(data);
+#endif
 
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     if (str::StartsWith(lpCmdLine, "/tester")) {

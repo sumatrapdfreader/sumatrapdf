@@ -79,13 +79,13 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0x00, 0x00, 0x03, 0x02, // version 2.3
     0x19, 0x00, 0x00, 0x00, // top-level struct offset 0x19
 
-    // offset: 0xc StructVal@0xffd3f30c ForwardSearchSettings
+    // offset: 0xc StructVal@0xffde21ac ForwardSearchSettings
     0x00, // int32_t highlightOffset = 0x0
     0x0f, // int32_t highlightWidth = 0xf
     0x00, // int32_t highlightPermanent = 0x0
     0xff, 0x83, 0x96, 0x03, // uint32_t highlightColor = 0x6581ff
 
-    // offset: 0x13 StructVal@0xffd3f1ec PaddingSettings
+    // offset: 0x13 StructVal@0xffde206c PaddingSettings
     0x02, // uint16_t top = 0x2
     0x02, // uint16_t bottom = 0x2
     0x04, // uint16_t left = 0x4
@@ -93,15 +93,15 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0x04, // uint16_t spaceX = 0x4
     0x04, // uint16_t spaceY = 0x4
 
-    // offset: 0x19 StructVal@0xffd3f3ac AdvancedSettings
+    // offset: 0x19 StructVal@0xffde224c AdvancedSettings
     0x00, // bool traditionalEbookUI = 0x0
     0x00, // bool escToExit = 0x0
     0x00, // const char * emptyString = ""
     0x80, 0xe4, 0xff, 0x07, // uint32_t logoColor = 0xfff200
-    0x13, // PaddingSettings * pagePadding = StructVal@0xffd3f1ec
+    0x13, // PaddingSettings * pagePadding = StructVal@0xffde206c
     0x00, // PaddingSettings * foo2Padding = NULL
     0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f, // const char * notEmptyString = "Hello"
-    0x0c, // ForwardSearchSettings * forwardSearch = StructVal@0xffd3f30c
+    0x0c, // ForwardSearchSettings * forwardSearch = StructVal@0xffde21ac
 };
 
 // returns -1 on error
@@ -155,7 +155,7 @@ Exit:
 // the assumption here is that the data was either build by Deserialize()
 // or was set by application code in a way that observes our rule: each
 // object was separately allocated with malloc()
-void FreeStruct(uint8_t *data, StructMetadata *def)
+static void FreeStruct(uint8_t *data, StructMetadata *def)
 {
     if (!data)
         return;
@@ -244,8 +244,10 @@ static uint8_t* DeserializeRec(const uint8_t *data, int dataSize, int dataOff, S
             n = (int)decodedVal;
             if (n >= dataSize - dataOff)
                 goto Error;
-            char *s = str::DupN((char*)data + dataOff, n);
-            dataOff += n;
+            if (n > 0) {
+                char *s = str::DupN((char*)data + dataOff, n);
+                dataOff += n;
+            }
         } else if (TYPE_STRUCT_PTR == type) {
             n = GetVarint64(data + dataOff, dataSize - dataOff, &decodedVal);
             if (0 == n)
@@ -293,7 +295,7 @@ static uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *versi
     if (hdr->magicId != MAGIC_ID)
         return NULL;
     //uint32_t ver = VersionFromStr(version);
-    return DeserializeRec(data, dataSize, SERIALIZED_HEADER_LEN, def);
+    return DeserializeRec(data, dataSize, hdr->topLevelStructOffset, def);
 }
 
 // TODO: write me
@@ -323,4 +325,10 @@ uint8_t *SerializeAdvancedSettings(AdvancedSettings *val, int *dataLenOut)
 {
     return Serialize((const uint8_t*)val, AdvancedSettingsVersion, &gAdvancedSettingsMetadata, dataLenOut);
 }
+
+void FreeAdvancedSettings(AdvancedSettings *val)
+{
+    FreeStruct((uint8_t*)val, &gAdvancedSettingsMetadata);
+}
+
 

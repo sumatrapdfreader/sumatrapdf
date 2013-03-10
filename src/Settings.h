@@ -35,5 +35,6 @@ struct AdvancedSettings {
 
 AdvancedSettings *DeserializeAdvancedSettings(const uint8_t *data, int dataLen, bool *usedDefaultOut);
 uint8_t *SerializeAdvancedSettings(AdvancedSettings *, int *dataLenOut);
+void FreeAdvancedSettings(AdvancedSettings *);
 
 #endif

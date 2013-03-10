@@ -169,7 +169,7 @@ def MakeStruct(struct_def):
 """
 struct $name {
    $type $field_name;
-   ... 
+   ...
 };
 ...
 """
@@ -192,6 +192,7 @@ prototypes_tmpl = """#define %(name)sVersion "%(version_str)s"
 
 %(name)s *Deserialize%(name)s(const uint8_t *data, int dataLen, bool *usedDefaultOut);
 uint8_t *Serialize%(name)s(%(name)s *, int *dataLenOut);
+void Free%(name)s(%(name)s *);
 """
 def gen_struct_defs(vals, version_str):
     top_level = vals[-1]
@@ -220,7 +221,7 @@ def gen_struct_fields(struct_def):
             field_type = field.struct_def.name
             lines += ["    { %(typ_enum)s, %(offset)s, &g%(field_type)sMetadata }," % locals()]
         else:
-            lines += ["    { %(typ_enum)s, %(offset)s, NULL }," % locals()]            
+            lines += ["    { %(typ_enum)s, %(offset)s, NULL }," % locals()]
     lines += ["};\n"]
     return lines
 
@@ -259,6 +260,12 @@ uint8_t *Serialize%(name)s(%(name)s *val, int *dataLenOut)
 {
     return Serialize((const uint8_t*)val, %(name)sVersion, &g%(name)sMetadata, dataLenOut);
 }
+
+void Free%(name)s(%(name)s *val)
+{
+    FreeStruct((uint8_t*)val, &g%(name)sMetadata);
+}
+
 """
 
 def gen_top_level_funcs(vals):
