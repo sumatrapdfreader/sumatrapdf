@@ -44,10 +44,52 @@ struct FieldMetadata {
 %(structs_metadata)s
 %(values_global_data)s
 
-static uint32_t VersionFromStr(const char *v)
+// returns -1 on error
+static int NextIntVal(const char **sInOut)
 {
-    // TODO: write me
-    return 0;
+    const char *s = *sInOut;
+    char c;
+    int val = 0;
+    int n;
+    for (;;) {
+        c = *s++;
+        if (0 == c) {
+            s--; // position at ending 0
+            goto Exit;
+        }
+        if ('.' == c)
+            goto Exit;
+        n = c - '0';
+        if ((c < 0) || (c > 9))
+            return -1;
+        val *= 10;
+        val += n;
+    }
+Exit:
+    if (val > 255)
+        return -1;
+    *sInOut = s;
+    return val;
+}
+
+// parses a vrsion string in the format "x.y.z", of up to 4 parts
+// return 0 on parsing error
+static uint32_t VersionFromStr(const char *s)
+{
+    uint32_t ver = 0;
+    int left = 4;
+    int n;
+    while (left > 0) {
+        if (0 == *s)
+            goto Exit;
+        n = NextIntVal(&s);
+        if (-1 == n)
+            return 0;
+        --left;
+    }
+Exit:
+    ver = ver << (left * 8);
+    return ver;
 }
 
 static uint8_t* DeserializeRec(const uint8_t *data, int dataSize, int dataOff, StructMetadata *def)
