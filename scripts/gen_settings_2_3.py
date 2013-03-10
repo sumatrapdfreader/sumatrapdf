@@ -1,4 +1,4 @@
-from gen_settings_types import DefineStruct, MakeStruct, U16, I32, Color, Bool, StructPtr, Version
+from gen_settings_types import DefineStruct, MakeStruct, U16, I32, Color, Bool, StructPtr
 
 # Settings for 2.3 version of Sumatra
 
@@ -23,21 +23,15 @@ forwardSearchStruct = DefineStruct("ForwardSearchSettings", None, [
 ])
 
 advancedSettingsStruct = DefineStruct("AdvancedSettings", None, [
-	Version("2.3"),
 	Bool("traditionalEbookUI", False),
 	Bool("escToExit", False),
 	Color("logoColor", 0xFFF200),
 	StructPtr("pagePadding", paddingStruct, MakeStruct(paddingStruct)),
-	# TODO: fooPading is just for testing, remove
-	StructPtr("fooPadding", paddingStruct, MakeStruct(paddingStruct)),
+	# TODO: fooPading and foo2Padding is just for testing, remove after testing
+	#StructPtr("fooPadding", paddingStruct, MakeStruct(paddingStruct)),
 	StructPtr("foo2Padding", paddingStruct, None),
 	StructPtr("forwardSearch", forwardSearchStruct, MakeStruct(forwardSearchStruct)),
 ])
 
-# test that Version over-rides the parent's version
-advancedSettingsStruct2 = DefineStruct("AdvancedSettings2", advancedSettingsStruct, [
-	Version("2.4"),
-	StructPtr("foo3Padding", paddingStruct, None),
-])
-
-advancedSettings = MakeStruct(advancedSettingsStruct2)
+advancedSettings = MakeStruct(advancedSettingsStruct)
+version = "2.3"

@@ -32,22 +32,6 @@ class Color(Var):
     def __init__(self, name, def_val = 0):
         super(Color, self).__init__(name, "uint32_t", "TYPE_U32", def_val)
 
-def ver_from_string(ver_str):
-    parts = ver_str.split(".")
-    assert len(parts) <= 4
-    parts = [int(p) for p in parts]
-    for n in parts:
-        assert n > 0 and n < 255
-    n = 4 - len(parts)
-    if n > 0:
-        parts = parts + [0]*n
-    return parts[0] << 24 | parts[1] << 16 | parts[2] << 8 | parts[3]
-
-def Version(ver_str):
-    ver = ver_from_string(ver_str)
-    if ver_str == "2.3": assert ver == 0x02030000
-    return U32("version", ver)
-
 class StructPtr(Var):
     def __init__(self, name, struct_def, def_val=None):
         assert isinstance(struct_def, StructDef)
@@ -64,6 +48,9 @@ class StructPtr(Var):
 # This is a list of all structs in the right order
 g_all_structs = []
 
+# Structs for which we have already generated definition for .h file
+g_structs_h_def_generated = []
+
 # defines a struct i.e. all its variables
 class StructDef(object):
     def __init__(self, name, parent, vars):
@@ -73,14 +60,7 @@ class StructDef(object):
         self.name = name
         self.vars = vars
         if parent != None:
-            # special case: if this and parent both have version at the beginning
-            # replace version of the parent with version of this
-            if parent.vars[0].name == "version":
-                assert vars[0].name == "version"
-                self.vars = [vars[0]] + parent.vars[1:] + vars[1:]
-            else:
-                assert vars[0].name != "version"
-                self.vars = parent.vars + vars
+            self.vars = parent.vars + vars
 
         self.build_def()
 
@@ -110,8 +90,8 @@ class Val(object):
         self.val = val
 
         # calculated
-        self.offset = None   # offset of value within serialized data of top-level struct
-
+        self.offset = None     # offset of value within serialized data of top-level struct
+        self.serialized = None # this value serialized as bytes
         self.is_struct = False
 
 class StructVal(Val):
@@ -123,8 +103,13 @@ class StructVal(Val):
         self.val = val
 
         self.struct_def = typ.struct_def
-        self.offset = None
+
+        # calculated
+        self.offset = None     # offset of value within serialized data of top-level struct
+        self.serialized = None # this value serialized as bytes
         self.is_struct = True
+
+        self.referenced = None
 
 # primitive value is uses default value of types
 def MakeValFromPrimitiveVar(var):
@@ -155,9 +140,10 @@ def MakeVal(src):
 def MakeValFromStructPtr(struct_ptr):
     assert isinstance(struct_ptr, StructPtr)
     if struct_ptr.def_val == None:
-        val = None
-        return StructVal(struct_ptr, val)
+        return StructVal(struct_ptr, None)
     else:
+        # TODO: this is suspect, should probably make a deep copy
+        # of def_val and store that as a val
         def_val = struct_ptr.def_val
         assert isinstance(def_val, StructVal)
         val = [MakeVal(v) for v in def_val.val]
@@ -181,7 +167,12 @@ struct $name {
 ...
 """
 def gen_h_struct_def(struct_def):
+    global g_structs_h_def_generated
+
     assert isinstance(struct_def, StructDef)
+    if struct_def in g_structs_h_def_generated:
+        return []
+    assert struct_def in GetAllStructs()
     name = struct_def.name
     lines = ["struct %s {" % name]
     fmt = "    %%-%ds %%s;" % struct_def.max_type_len
@@ -190,8 +181,19 @@ def gen_h_struct_def(struct_def):
     lines += ["};\n"]
     return "\n".join(lines)
 
-def gen_struct_defs():
-    return "\n".join([gen_h_struct_def(stru) for stru in GetAllStructs()])
+prototypes_tmpl = """#define %(name)sVersion "%(version_str)s"
+
+%(name)s *Deserialize%(name)s(const uint8_t *data, int dataLen, bool *usedDefaultOut);
+uint8_t *Serialize%(name)s(%(name)s *, int *dataLenOut);
+"""
+def gen_struct_defs(vals, version_str):
+    top_level = vals[-1]
+    assert isinstance(top_level, StructVal)
+    name = top_level.struct_def.name
+    struct_defs = [val.struct_def for val in vals]
+    lines = [gen_h_struct_def(stru) for stru in struct_defs]
+    lines += [prototypes_tmpl % locals()]
+    return "\n".join(lines)
 
 """
 FieldMetadata g${name}FieldMetadata[] = {
@@ -209,22 +211,51 @@ def gen_struct_fields(struct_def):
         offset = "offsetof(%(struct_name)s, %(field_name)s)" % locals()
         if field.is_struct():
             field_type = field.struct_def.name
-            lines += ["    { %(typ_enum)s, %(offset)s, &g%(field_type)sStructMetadata }," % locals()]
+            lines += ["    { %(typ_enum)s, %(offset)s, &g%(field_type)sMetadata }," % locals()]
         else:
             lines += ["    { %(typ_enum)s, %(offset)s, NULL }," % locals()]            
     lines += ["};\n"]
     return lines
 
 """
-StructMetadata g${name}StructMetadata = { $nFields, $fields };
+StructMetadata g${name}StructMetadata = { $size, $nFields, $fields };
 """
-def gen_struct_metadata(struct_def):
-    struct_name = struct_def.name
-    nFields = len(struct_def.vars)
-    fields = "&g%sFieldMetadata[0]" % struct_name
-    lines = gen_struct_fields(struct_def)
-    lines += ["StructMetadata g%(struct_name)sStructMetadata = { %(nFields)d, %(fields)s };\n" % locals()]
+def gen_structs_metadata(vals):
+    lines = []
+    for val in vals:
+        struct_def = val.struct_def
+        struct_name = struct_def.name
+        nFields = len(struct_def.vars)
+        fields = "&g%sFieldMetadata[0]" % struct_name
+        lines += gen_struct_fields(struct_def)
+        lines += ["StructMetadata g%(struct_name)sMetadata = { sizeof(%(struct_name)s), %(nFields)d, %(fields)s };\n" % locals()]
     return "\n".join(lines)
 
-def gen_structs_metadata():
-    return "\n".join([gen_struct_metadata(stru) for stru in GetAllStructs()])
+top_level_funcs_tmpl = """
+%(name)s *Deserialize%(name)s(const uint8_t *data, int dataLen, bool *usedDefaultOut)
+{
+    void *res = NULL;
+    res = Deserialize(data, dataLen, %(name)sVersion, &g%(name)sMetadata);
+    if (res) {
+        if (usedDefaultOut)
+            *usedDefaultOut = false;
+        return (%(name)s*)res;
+    }
+    res = Deserialize(&g%(name)sDefault[0], sizeof(g%(name)sDefault), %(name)sVersion, &g%(name)sMetadata);
+    CrashAlwaysIf(!res);
+    if (usedDefaultOut)
+        *usedDefaultOut = true;
+    return (%(name)s*)res;
+}
+
+uint8_t *Serialize%(name)s(%(name)s *val, int *dataLenOut)
+{
+    return Serialize((const uint8_t*)val, %(name)sVersion, &g%(name)sMetadata, dataLenOut);
+}
+"""
+
+def gen_top_level_funcs(vals):
+    top_level = vals[-1]
+    assert isinstance(top_level, StructVal)
+    name = top_level.struct_def.name
+    return top_level_funcs_tmpl % locals()

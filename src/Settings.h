@@ -4,11 +4,11 @@
 #ifndef Settings_h
 #define Settings_h
 
-struct PaddingSettings1 {
-    uint16_t top;
-    uint16_t bottom;
-    uint16_t left;
-    uint16_t right;
+struct ForwardSearchSettings {
+    int32_t  highlightOffset;
+    int32_t  highlightWidth;
+    int32_t  highlightPermanent;
+    uint32_t highlightColor;
 };
 
 struct PaddingSettings {
@@ -20,34 +20,18 @@ struct PaddingSettings {
     uint16_t spaceY;
 };
 
-struct ForwardSearchSettings {
-    int32_t  highlightOffset;
-    int32_t  highlightWidth;
-    int32_t  highlightPermanent;
-    uint32_t highlightColor;
-};
-
 struct AdvancedSettings {
-    uint32_t                version;
     bool                    traditionalEbookUI;
     bool                    escToExit;
     uint32_t                logoColor;
     PaddingSettings *       pagePadding;
-    PaddingSettings *       fooPadding;
     PaddingSettings *       foo2Padding;
     ForwardSearchSettings * forwardSearch;
 };
 
-struct AdvancedSettings2 {
-    uint32_t                version;
-    bool                    traditionalEbookUI;
-    bool                    escToExit;
-    uint32_t                logoColor;
-    PaddingSettings *       pagePadding;
-    PaddingSettings *       fooPadding;
-    PaddingSettings *       foo2Padding;
-    ForwardSearchSettings * forwardSearch;
-    PaddingSettings *       foo3Padding;
-};
+#define AdvancedSettingsVersion "2.3"
+
+AdvancedSettings *DeserializeAdvancedSettings(const uint8_t *data, int dataLen, bool *usedDefaultOut);
+uint8_t *SerializeAdvancedSettings(AdvancedSettings *, int *dataLenOut);
 
 #endif

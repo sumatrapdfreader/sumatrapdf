@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import os, types
+import os, types, struct
 import util, gen_settings_2_3
-from gen_settings_types import gen_struct_defs, gen_structs_metadata, StructVal
+from gen_settings_types import gen_struct_defs, gen_structs_metadata, gen_top_level_funcs, StructVal
 from util import varint
 
 """
@@ -30,26 +30,19 @@ That way we can inherit settings for version N from settings for version N-1.
 
 TODO:
  - support strings
- - solve compiler compatibility issues by changing serialization scheme. The serialized
-   format for each struct would be:
-       varint number_of_vals
-       for val in vals:
-          if val is string:
-            varint len(string)
-            char[len(string)] string data
-          if val is StructVal:
-            varint offset to struct data
-          if val is a numeric:
-            varing val
- - write const char *serialize_struct(char *data, StructDef *def);
+ - write Deserialize()
+ - write Serialize()
  - introduce a concept of array i.e. a count + type of values + pointer to 
    values
- - maybe: add a signature at the beginning of each struct to detect
-   corruption of the values (crash if that happens)
+ - maybe: for additional safety, add a number of fields in a given struct
+ - maybe: add a signature (magic value) at the beginning of each struct to
+   detect corruption of the values (crash if that happens)
  - maybe: add a compare function. That way we could optimize saving
    (only save if the values have changed). It's really simple:
    call serialize_struct() on both and memcmp() on result
 """
+
+g_magic_id = 0x53756d53  # 'SumS' as 'Sumatra Settings'
 
 def script_dir(): return os.path.dirname(__file__)
 def src_dir():
@@ -68,28 +61,67 @@ def read_file(file_path): return file(file_path, "r").read()
 h_tmpl   = read_file(os.path.join(script_dir(), "gen_settings_tmpl.h"))
 cpp_tmpl = read_file(os.path.join(script_dir(), "gen_settings_tmpl.cpp"))
 
+def ver_from_string(ver_str):
+    parts = ver_str.split(".")
+    assert len(parts) <= 4
+    parts = [int(p) for p in parts]
+    for n in parts:
+        assert n > 0 and n < 255
+    n = 4 - len(parts)
+    if n > 0:
+        parts = parts + [0]*n
+    return parts[0] << 24 | parts[1] << 16 | parts[2] << 8 | parts[3]
+
 # val is a top-level StructVal with primitive types and
 # references to other struct types (forming a tree of values).
-# we flatten the values into a list and calculate base_offset
-# on each value
+# we flatten the values into a list, in the reverse order of
+# tree traversal
 def flatten_values_tree(val):
     assert isinstance(val, StructVal)
-    
-    # first field of the top-level struct must be a version
-    assert "version" == val.struct_def.vars[0].name
     vals = []
     left = [val]
-    offset = 0
     while len(left) > 0:
         val = left.pop(0)
-        val.offset = offset
+        assert isinstance(val, StructVal)
         vals += [val]
         for field in val.val:
-            if field.is_struct and field.val != None:
+            if field.is_struct:
+                if field.val != None:
+                    assert isinstance(field, StructVal)
+                    left += [field]
+    vals.reverse()
+    return vals
+
+# serialize values in vals and calculate offset of each
+# val in encoded data.
+# values are serialized in reverse order because 
+# it would be very complicated to serialize forward
+# offsets in variable-length encoding
+def serialize_top_level_struct(top_level_struct):
+    vals = flatten_values_tree(top_level_struct)
+    # the first 12 bytes are:
+    #  - 4 bytes magic constant (for robustness)
+    #  - 4 bytes for version
+    #  - 4 bytes offset pointing to a top-level structure
+    #      within the data
+    offset = 12
+    for val in vals:
+        val.offset = offset
+        for field in val.val:
+            data = varint(0)
+            if field.is_struct:
                 assert isinstance(field, StructVal)
-                left += [field]
-        offset += 4
-    #for val in vals: dump_val(val)
+                if field.val != None:
+                    # must have been serialized
+                    assert field.offset not in (None, 0)
+                    assert offset > field.offset
+                    data = varint(field.offset)
+            else:
+                # TODO: support strings
+                val = long(field.val)
+                data = varint(val)
+            field.serialized = data
+            offset += len(data)
     return vals
 
 def data_to_hex(data):
@@ -98,76 +130,99 @@ def data_to_hex(data):
 
 def is_of_num_type(val):
     tp = type(val)
-    return tp == types.IntType or tp == types.LongType
+    return tp == types.IntType or tp == types.LongType or tp == types.BooleanType
 
 def dump_val(val):
     print("%s name: %s val: %s offset: %s\n" % (str(val), "", str(val.val), str(val.offset)))
+
+def data_with_comment_as_c(data, comment):
+    data_hex = data_to_hex(data)
+    return "    %(data_hex)s, // %(comment)s" % locals()
+
+# change:
+#   <gen_settings_types.StructVal object at 0x7fddfc4c>
+# =>
+#   StructVal@0x7fddfc4c
+def short_object_id(obj):
+    assert isinstance(obj, StructVal)
+    s = str(obj)[1:-1]
+    s = s.replace("gen_settings_types.", "")
+    return s.replace(" object at ", "@")
 
 """
   // $StructName
   0x00, 0x01, // $type $name = $val
   ...
 """
-def get_cpp_data_for_struct_val(struct_val, offset):
+def get_cpp_data_for_struct_val(struct_val):
     assert isinstance(struct_val, StructVal)
     name = struct_val.struct_def.name
-    lines = ["", "  // %s offset: %s" % (name, hex(offset))]
+    offset = struct_val.offset
+    lines = ["", "    // offset: %s %s %s" % (hex(offset), short_object_id(struct_val), name)]
+    assert struct_val.val != None
     if struct_val.val == None:
-        return (lines, 0)
-    size = 0
+        assert False, "it happened"
+        return lines
     for field in struct_val.val:
-        if field.is_struct:
-            val = field.offset
-            if None == val:
-                val = 0
-        else:
-            val = field.val
-        # TODO: if val is string, encode len as varint with string bytes following
-        data = varint(val)
-
-        size += len(data)
+        data = field.serialized
         data_hex = data_to_hex(data)
         var_type = field.typ.c_type
         var_name = field.typ.name
+        val = field.val
         if is_of_num_type(val):
             val_str = hex(val)
         else:
-            val_str = str(val)
-        s = "  %(data_hex)s, // %(var_type)s %(var_name)s = %(val_str)s" % locals()
+            if field.val == None:
+                val_str = "NULL"
+            else:
+                val_str = short_object_id(field)
+        s = "    %(data_hex)s, // %(var_type)s %(var_name)s = %(val_str)s" % locals()
         lines += [s]
-    return (lines, size)
+    return lines
 
 """
 static uint8_t g$(StructName)Default[] = {
    ... data    
 };
 """
-def gen_cpp_data_for_struct_values(vals):
-    val = vals[0]
-    assert isinstance(val, StructVal)
-    name = val.struct_def.name
-    lines = ["static uint8_t g%sDefault[] = {" % name]
-    offset = 0
+def gen_cpp_data_for_struct_values(vals, version_str):
+    top_level = vals[-1]
+    assert isinstance(top_level, StructVal)
+    name = top_level.struct_def.name
+    lines = ["static const uint8_t g%sDefault[] = {" % name]
+    # magic id
+    data = struct.pack("<I", g_magic_id)
+    comment = "magic id 'SumS'"
+    lines += [data_with_comment_as_c(data, comment)]
+    # version
+    data = struct.pack("<I", ver_from_string(version_str))
+    comment = "version %s" % version_str
+    lines += [data_with_comment_as_c(data, comment)]
+    # offset of top-level struct
+    data = struct.pack("<I", top_level.offset)
+    comment = "top-level struct offset %s" % hex(top_level.offset)
+    lines += [data_with_comment_as_c(data, comment)]
+
     for val in vals:
-        (struct_lines, size) = get_cpp_data_for_struct_val(val, offset)
+        struct_lines = get_cpp_data_for_struct_val(val)
         lines += struct_lines
-        offset += size
     lines += ["};"]
     return "\n".join(lines)
 
 def main():
     dst_dir = src_dir()
 
-    val = gen_settings_2_3.advancedSettings;
+    val = gen_settings_2_3.advancedSettings
+    version_str = gen_settings_2_3.version
+    vals = serialize_top_level_struct(val)
 
-    h_struct_defs = gen_struct_defs()
+    h_struct_defs = gen_struct_defs(vals, version_str)
     write_to_file(os.path.join(dst_dir, "Settings.h"),  h_tmpl % locals())
 
-    vals = flatten_values_tree(val)
+    structs_metadata = gen_structs_metadata(vals)
 
-    structs_metadata = gen_structs_metadata()
-
-    values_global_data = gen_cpp_data_for_struct_values(vals)
+    values_global_data = gen_cpp_data_for_struct_values(vals, version_str)
+    top_level_funcs = gen_top_level_funcs(vals)
     write_to_file(os.path.join(dst_dir, "Settings.cpp"), cpp_tmpl % locals())
 
 if __name__ == "__main__":
