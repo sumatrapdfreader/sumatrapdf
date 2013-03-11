@@ -110,6 +110,16 @@ const WCHAR * const gTranslations[] = {
   L"Мб",
   L"Открытие документа в SumatraPDF...",
 
+  /* Translations for language ta */
+  L"%s ல் %s",
+  L"சுமத்ரா PDFஐ இயங்கவில்லை",
+  L"சுமத்ராPDF காணவில்லை",
+  L"பிழை: கோப்பை பதிவிறக்கம் செய்ய முடியவில்லை",
+  L"ஜிகா பைட்டு",
+  NULL,
+  NULL,
+  L"கோப்பு சுமத்ரா PDFல் திறக்கப்படுகிறது..",
+
   /* Translations for language uk */
   L"%s із %s",
   L"Помилка: не вдалося запустити SumatraPDF",
@@ -121,7 +131,7 @@ const WCHAR * const gTranslations[] = {
   L"Триває відкриття документа у SumatraPDF...",
 };
 
-const char * const gLanguages[] = { "en", "eu", "cn", "fr", "de", "hu", "it", "br", "pt", "ru", "uk", NULL };
+const char * const gLanguages[] = { "en", "eu", "cn", "fr", "de", "hu", "it", "br", "pt", "ru", "ta", "uk", NULL };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
@@ -149,7 +159,8 @@ int GetLanguageIndex(LANGID id)
     case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 56;
     case _LANGID(LANG_PORTUGUESE): return 64;
     case _LANGID(LANG_RUSSIAN): return 72;
-    case _LANGID(LANG_UKRAINIAN): return 80;
+    case _LANGID(LANG_TAMIL): return 80;
+    case _LANGID(LANG_UKRAINIAN): return 88;
     default: return -1;
 #undef _LANGID
     }
