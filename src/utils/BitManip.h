@@ -1,8 +1,7 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef BitManip_h
-#define BitManip_h
+// include BaseUtil.h
 
 /* Simple functions to make it easier to set/clear/test for bits in integers */
 
@@ -53,4 +52,3 @@ bool IsMaskSet(T v, T mask)
 
 }
 
-#endif

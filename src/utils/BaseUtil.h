@@ -166,5 +166,6 @@ int         GobUVarintDecode(const uint8_t *d, int dLen, uint64_t *resOut);
 #include "Scoped.h"
 #include "StrUtil.h"
 #include "Vec.h"
+#include "BitManip.h"
 
 #endif

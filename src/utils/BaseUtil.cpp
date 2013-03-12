@@ -123,8 +123,7 @@ int GobVarintDecode(const uint8_t *d, int dLen, int64_t *resOut)
     if (n == 0)
         return 0;
 
-    // TODO: use bit::IsSet() ? Would require #include "BitManip.h" in BaseUtil.h
-    bool negative = ((val & 1) != 0);
+    bool negative = bit::IsSet(val, 0);
     val = val >> 1;
     int64_t res = (int64_t)val;
     if (negative)
