@@ -695,9 +695,6 @@
     <ClCompile Include="src\utils\DebugLog.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\SumatraStartup.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="src\mui\Mui.cpp">
       <Filter>mui</Filter>
     </ClCompile>
@@ -1025,10 +1022,10 @@
     <ClCompile Include="src\Trans_sumatra_txt.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\Settings.cpp">
-      <Filter>sumatra</Filter>
+    <ClCompile Include="src\utils\Settings.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\SettingsSupport.cpp">
+    <ClCompile Include="src\SettingsSumatra.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1528,7 +1525,10 @@
     <ClInclude Include="src\Translations2.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\Settings.h">
+    <ClInclude Include="src\utils\Settings.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\SettingsSumatra.h">
       <Filter>sumatra</Filter>
     </ClInclude>
   </ItemGroup>

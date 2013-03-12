@@ -1,7 +1,12 @@
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #include "BaseUtil.h"
 #include "Settings.h"
 
-#define MAGIC_ID 0x53756d53  // 'SumS' as 'Sumatra Settings'
+namespace settings {
+
+#define MAGIC_ID 0x53657454  // 'SetT' as 'Settings'
 
 #define SERIALIZED_HEADER_LEN 12
 
@@ -12,34 +17,6 @@ typedef struct {
 } SerializedHeader;
 
 STATIC_ASSERT(sizeof(SerializedHeader) == SERIALIZED_HEADER_LEN, SerializedHeader_is_12_bytes);
-
-typedef enum : uint16_t {
-    TYPE_BOOL         = 0,
-    TYPE_I16          = 1,
-    TYPE_U16          = 2,
-    TYPE_I32          = 3,
-    TYPE_U32          = 4,
-    TYPE_U64          = 5,
-    TYPE_STR          = 6,
-    TYPE_STRUCT_PTR   = 7,
-} Typ;
-
-struct FieldMetadata;
-
-typedef struct {
-    uint16_t        size;
-    uint16_t        nFields;
-    FieldMetadata * fields;
-} StructMetadata;
-
-// information about a single field
-struct FieldMetadata {
-    Typ              type; // TYPE_*
-    // from the beginning of the struct
-    uint16_t         offset;
-    // type is TYPE_STRUCT_PTR, otherwise NULL
-    StructMetadata * def;
-};
 
 STATIC_ASSERT(sizeof(FieldMetadata) == 4 + sizeof(StructMetadata*), valid_FieldMetadata_size);
 
@@ -94,7 +71,7 @@ Exit:
 // the assumption here is that the data was either build by Deserialize()
 // or was set by application code in a way that observes our rule: each
 // object was separately allocated with malloc()
-static void FreeStruct(uint8_t *data, StructMetadata *def)
+void FreeStruct(uint8_t *data, StructMetadata *def)
 {
     if (!data)
         return;
@@ -275,7 +252,7 @@ Error:
 // having more data), we should decode the default values and
 // then over-write them with whatever values we decoded.
 // alternatively, we could keep a default value in struct metadata
-static uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, StructMetadata *def)
+uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, StructMetadata *def)
 {
     if (!data)
         return NULL;
@@ -294,3 +271,6 @@ uint8_t *Serialize(const uint8_t *data, const char *version, StructMetadata *def
     *sizeOut = 0;
     return NULL;
 }
+
+} // namespace Settings
+

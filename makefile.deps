@@ -351,12 +351,9 @@ $(OS)\Selection.obj: src\Toolbar.h src\Translations2.h src\utils\Allocator.h
 $(OS)\Selection.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Selection.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Selection.obj: src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\Settings.obj: src\Settings.h src\SettingsSupport.cpp src\utils\Allocator.h
-$(OS)\Settings.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
-$(OS)\Settings.obj: src\utils\StrUtil.h src\utils\Vec.h
-$(OS)\SettingsSupport.obj: src\Settings.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\SettingsSupport.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\SettingsSupport.obj: src\utils\Vec.h
+$(OS)\SettingsSumatra.obj: src\SettingsSumatra.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\SettingsSumatra.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\Settings.h
+$(OS)\SettingsSumatra.obj: src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\StressTesting.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\StressTesting.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\StressTesting.obj: src\Doc.h src\FileHistory.h src\Notifications.h
@@ -406,7 +403,7 @@ $(OS)\SumatraPDF.obj: src\mui\MuiPainter.h src\mui\MuiScrollBar.h src\Notificati
 $(OS)\SumatraPDF.obj: src\ParseCommandLine.h src\PdfEngine.h src\PdfSync.h
 $(OS)\SumatraPDF.obj: src\Print.h src\PsEngine.h src\RenderCache.h
 $(OS)\SumatraPDF.obj: src\resource.h src\Resource.h src\Search.h
-$(OS)\SumatraPDF.obj: src\Selection.h src\Settings.h src\StressTesting.h
+$(OS)\SumatraPDF.obj: src\Selection.h src\SettingsSumatra.h src\StressTesting.h
 $(OS)\SumatraPDF.obj: src\SumatraAbout.h src\SumatraAbout2.h src\SumatraDialogs.h
 $(OS)\SumatraPDF.obj: src\SumatraPDF.h src\SumatraProperties.h src\SumatraStartup.cpp
 $(OS)\SumatraPDF.obj: src\SumatraWindow.h src\TableOfContents.h src\TextSearch.h
@@ -426,7 +423,7 @@ $(OS)\SumatraProperties.obj: src\SumatraProperties.h src\SumatraWindow.h src\Tra
 $(OS)\SumatraProperties.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\FileUtil.h
 $(OS)\SumatraProperties.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
 $(OS)\SumatraProperties.obj: src\utils\Vec.h src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\SumatraStartup.obj: src\Settings.h
+$(OS)\SumatraStartup.obj: src\SettingsSumatra.h
 $(OS)\TableOfContents.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\TableOfContents.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\TableOfContents.obj: src\Doc.h src\FileHistory.h src\resource.h
@@ -565,6 +562,9 @@ $(OU)\NoFreeAllocator.obj: src\utils\Vec.h
 $(OU)\PalmDbReader.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\ByteReader.h
 $(OU)\PalmDbReader.obj: src\utils\FileUtil.h src\utils\GeomUtil.h src\utils\PalmDbReader.h
 $(OU)\PalmDbReader.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
+$(OU)\Settings.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
+$(OU)\Settings.obj: src\utils\Scoped.h src\utils\Settings.h src\utils\StrUtil.h
+$(OU)\Settings.obj: src\utils\Vec.h
 $(OU)\Sigslot_ut.obj: src\utils\Sigslot.h
 $(OU)\StrFormat.obj: src\utils\Allocator.h src\utils\BaseUtil.h src\utils\GeomUtil.h
 $(OU)\StrFormat.obj: src\utils\Scoped.h src\utils\StrFormat.h src\utils\StrUtil.h

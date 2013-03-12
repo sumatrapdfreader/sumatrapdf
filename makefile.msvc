@@ -148,7 +148,7 @@ UTILS_OBJS = \
 	$(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
 	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
-	$(OU)\CssParser.obj $(OU)\FileWatcher.obj
+	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\Settings.obj
 
 !if "$(CFG)"=="dbg"
 UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
@@ -188,7 +188,7 @@ MAIN_UI_OBJS = \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj \
-	$(OS)\Settings.obj
+	$(OS)\SettingsSumatra.obj
 
 SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \

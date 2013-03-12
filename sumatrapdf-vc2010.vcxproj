@@ -307,15 +307,13 @@
     <ClCompile Include="src\RenderCache.cpp" />
     <ClCompile Include="src\Search.cpp" />
     <ClCompile Include="src\Selection.cpp" />
-    <ClCompile Include="src\Settings.cpp" />
-    <ClCompile Include="src\SettingsSupport.cpp" />
+    <ClCompile Include="src\SettingsSumatra.cpp" />
     <ClCompile Include="src\StressTesting.cpp" />
     <ClCompile Include="src\SumatraAbout.cpp" />
     <ClCompile Include="src\SumatraAbout2.cpp" />
     <ClCompile Include="src\SumatraDialogs.cpp" />
     <ClCompile Include="src\SumatraPDF.cpp" />
     <ClCompile Include="src\SumatraProperties.cpp" />
-    <ClCompile Include="src\SumatraStartup.cpp" />
     <ClCompile Include="src\TableOfContents.cpp" />
     <ClCompile Include="src\Tester.cpp" />
     <ClCompile Include="src\TextSearch.cpp" />
@@ -342,6 +340,7 @@
     <ClCompile Include="src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="src\utils\JsonParser.cpp" />
     <ClCompile Include="src\utils\JsonParser_ut.cpp" />
+    <ClCompile Include="src\utils\Settings.cpp" />
     <ClCompile Include="src\utils\Sigslot_ut.cpp" />
     <ClCompile Include="src\utils\StrFormat.cpp" />
     <ClCompile Include="src\utils\StrFormat_ut.cpp" />
@@ -499,7 +498,7 @@
     <ClInclude Include="src\Resource.h" />
     <ClInclude Include="src\Search.h" />
     <ClInclude Include="src\Selection.h" />
-    <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\SettingsSumatra.h" />
     <ClInclude Include="src\StressTesting.h" />
     <ClInclude Include="src\SumatraAbout.h" />
     <ClInclude Include="src\SumatraAbout2.h" />
@@ -528,6 +527,7 @@
     <ClInclude Include="src\utils\HtmlPullParser.h" />
     <ClInclude Include="src\utils\JsonParser.h" />
     <ClInclude Include="src\utils\RefCounted.h" />
+    <ClInclude Include="src\utils\Settings.h" />
     <ClInclude Include="src\utils\Sigslot.h" />
     <ClInclude Include="src\utils\StrFormat.h" />
     <ClInclude Include="src\utils\ThreadUtil.h" />
