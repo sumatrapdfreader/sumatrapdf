@@ -69,139 +69,117 @@ uint32_t MurmurHash2(const void *key, size_t len)
     return h;
 }
 
-// from varint.c in sqlite4 (http://www.sqlite.org/src4/artifact/4cf09171ba7a3bbb2a5ede38b0e041a9a9aa3490)
-// Note: it's probably over-optimized for speed for our purposes
-/*
-** Decode the varint in the first n bytes z[].  Write the integer value
-** into *pResult and return the number of bytes in the varint.
-**
-** If the decode fails because there are not enough bytes in z[] then
-** return 0;
-*/
-int GetVarint64(const unsigned char *z, int n, uint64_t *pResult)
+// Varint decoding/encoding is the same as the scheme used by GOB in Go.
+// For unsinged 64-bit integer
+// - if the value is <= 0x7f, it's written as a single byte
+// - other values are written as:
+//  - count of bytes, negated
+//  - bytes of the number follow
+// Signed 64-bit integer is turned into unsigned by:
+//  - negative value has first bit set to 1 and other bits
+//    are negated and shifted by one to the left
+//  - positive value has first bit set to 0 and other bits
+//    shifted by one to the left
+// Smmaller values are cast to uint64 or int64, according to their signed-ness
+//
+// The downside of this scheme is that it's impossible to tell
+// if the value is signed or unsigned from the value itself.
+// The client needs to know the sign-edness to properly interpret the data
+
+// decodes unsigned 64-bit int from data d of dLen size
+// returns 0 on error
+// returns the number of consumed bytes from d on success
+int GobUVarintDecode(const uint8_t *d, int dLen, uint64_t *resOut)
 {
-    unsigned int x;
-    if (n < 1)
+    if (dLen < 1)
         return 0;
-    if (z[0] <= 240) {
-        *pResult = z[0];
+    uint8_t b = *d++;
+    if (b <= 0x7f) {
+        *resOut = b;
         return 1;
     }
-    if (z[0] <= 248 ) {
-        if (n<2)
-            return 0;
-        *pResult = (z[0]-241)*256 + z[1] + 240;
-        return 2;
+    --dLen;
+    if (dLen < 1)
+        return 0;
+    char numLenEncoded = (char)b;
+    int numLen = -numLenEncoded;
+    CrashIf(numLen < 1);
+    CrashIf(numLen > 8);
+    if (numLen > dLen)
+        return 0;
+    uint64_t res = 0;
+    for (int i=0; i < numLen; i++) {
+        b = *d++;
+        res = (res << 8) | b;
     }
-    if (n < z[0]-246)
+    *resOut = res;
+    return 1 + numLen;
+}
+
+int GobVarintDecode(const uint8_t *d, int dLen, int64_t *resOut)
+{
+    uint64_t val;
+    int n = GobUVarintDecode(d, dLen, &val);
+    if (n == 0)
         return 0;
 
-    if (z[0]==249) {
-        *pResult = 2288 + 256*z[1] + z[2];
-        return 3;
-    }
-
-    if (z[0] == 250) {
-        *pResult = (z[1]<<16) + (z[2]<<8) + z[3];
-        return 4;
-    }
-    x = (z[1]<<24) + (z[2]<<16) + (z[3]<<8) + z[4];
-    if (z[0] == 251) {
-        *pResult = x;
-        return 5;
-    }
-    if (z[0]==252) {
-        *pResult = (((uint64_t)x)<<8) + z[5];
-        return 6;
-    }
-    if (z[0] == 253) {
-        *pResult = (((uint64_t)x)<<16) + (z[5]<<8) + z[6];
-        return 7;
-    }
-    if (z[0] == 254) {
-        *pResult = (((uint64_t)x)<<24) + (z[5]<<16) + (z[6]<<8) + z[7];
-        return 8;
-    }
-    *pResult = (((uint64_t)x)<<32) +
-                (0xffffffff & ((z[5]<<24) + (z[6]<<16) + (z[7]<<8) + z[8]));
-    return 9;
+    // TODO: use bit::IsSet() ? Would require #include "BitManip.h" in BaseUtil.h
+    bool negative = ((val & 1) != 0);
+    val = val >> 1;
+    int64_t res = (int64_t)val;
+    if (negative)
+        res = ~res;
+    *resOut = res;
+    return n;
 }
 
-/*
-** Write a 32-bit unsigned integer as 4 big-endian bytes.
-*/
-static void varintWrite32(unsigned char *z, unsigned int y)
-{
-  z[0] = (unsigned char)(y>>24);
-  z[1] = (unsigned char)(y>>16);
-  z[2] = (unsigned char)(y>>8);
-  z[3] = (unsigned char)(y);
-}
+// max 8 bytes plus 1 to encode size
+static const int MinGobEncodeBufferSize = 9;
+static const int UInt64SizeOf = 8;
 
-/*
-** Write a varint into z[].  The buffer z[] must be at least 9 characters
-** long to accommodate the largest possible varint.  Return the number of
-** bytes of z[] used.
-*/
-int PutVarint64(unsigned char *z, uint64_t x)
+// encodes unsigned integer val into a buffer d of dLen size (must be at least 9 bytes)
+// returns number of bytes used
+int GobUVarintEncode(uint64_t val, uint8_t *d, int dLen)
 {
-    unsigned int w, y;
-    if (x <= 240) {
-        z[0] = (unsigned char)x;
+    uint8_t b;
+    CrashIf(dLen < MinGobEncodeBufferSize);
+    if (val <= 0x7f) {
+        *d = (int8_t)val;
         return 1;
     }
-    if (x <= 2287) {
-        y = (unsigned int)(x - 240);
-        z[0] = (unsigned char)(y/256 + 241);
-        z[1] = (unsigned char)(y%256);
-        return 2;
-    }
-    if (x <= 67823) {
-        y = (unsigned int)(x - 2288);
-        z[0] = 249;
-        z[1] = (unsigned char)(y/256);
-        z[2] = (unsigned char)(y%256);
-        return 3;
-    }
 
-    y = (unsigned int)x;
-    w = (unsigned int)(x>>32);
+    uint8_t buf[UInt64SizeOf];
+    uint8_t *bufPtr = buf + UInt64SizeOf;
+    int len8Minus = UInt64SizeOf;
+    while (val > 0) {
+        b = (uint8_t)(val & 0xff);
+        val = val >> 8;
+        --bufPtr;
+        *bufPtr = b;
+        --len8Minus;
+    }
+    CrashIf(len8Minus < 1);
+    int realLen = 8-len8Minus;
+    CrashIf(realLen > 8);
+    int lenEncoded = (len8Minus - UInt64SizeOf);
+    uint8_t lenEncodedU = (uint8_t)lenEncoded;
+    *d++ = lenEncodedU;
+    memcpy(d, bufPtr, realLen);
+    return (int)realLen+1; // +1 for the length byte
+}
 
-    if (w==0) {
-        if (y <= 16777215) {
-            z[0] = 250;
-            z[1] = (unsigned char)(y>>16);
-            z[2] = (unsigned char)(y>>8);
-            z[3] = (unsigned char)(y);
-            return 4;
-        }
-        z[0] = 251;
-        varintWrite32(z+1, y);
-        return 5;
+// encodes signed integer val into a buffer d of dLen size (must be at least 9 bytes)
+// returns number of bytes used
+int GobVarintEncode(int64_t val, uint8_t *d, int dLen)
+{
+    uint64_t uVal;
+    if (val < 0) {
+        val = ~val;
+        uVal = (uint64_t)val;
+        uVal = (uVal << 1) | 1;
+    } else {
+        uVal = (uint64_t)val;
+        uVal = uVal << 1;
     }
-    if (w <= 255) {
-        z[0] = 252;
-        z[1] = (unsigned char)w;
-        varintWrite32(z+2, y);
-        return 6;
-    }
-    if (w <= 32767) {
-        z[0] = 253;
-        z[1] = (unsigned char)(w>>8);
-        z[2] = (unsigned char)w;
-        varintWrite32(z+3, y);
-        return 7;
-    }
-    if (w <= 16777215) {
-        z[0] = 254;
-        z[1] = (unsigned char)(w>>16);
-        z[2] = (unsigned char)(w>>8);
-        z[3] = (unsigned char)w;
-        varintWrite32(z+4, y);
-        return 8;
-    }
-    z[0] = 255;
-    varintWrite32(z+1, w);
-    varintWrite32(z+5, y);
-    return 9;
+    return GobUVarintEncode(uVal, d, dLen);
 }

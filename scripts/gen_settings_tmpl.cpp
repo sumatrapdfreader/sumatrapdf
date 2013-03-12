@@ -113,37 +113,61 @@ static void FreeStruct(uint8_t *data, StructMetadata *def)
     free(data);
 }
 
-static bool WriteStructVal(uint16_t type, uint64_t val, uint8_t *p)
+static bool IsSignedIntType(uint16_t type)
 {
-    if (TYPE_BOOL == type) {
-        if (val > 1)
-            return false;
-        bool b = (bool)val;
-        bool *bp = (bool*)p;
-        *bp = b;
-        return true;
-    } else if (TYPE_I16 == type) {
+    return ((TYPE_I16 == type) ||
+            (TYPE_I32 == type));
+}
+
+static bool WriteStructInt(uint16_t type, int64_t val, uint8_t *p)
+{
+    if (TYPE_I16 == type) {
         if (val > 0xffff)
             return false;
         int16_t v = (int16_t)val;
         int16_t *vp = (int16_t*)p;
         *vp = v;
         return true;
-    } else if (TYPE_U16 == type) {
-        if (val > 0xffff)
-            return false;
-        uint16_t v = (uint16_t)val;
-        uint16_t *vp = (uint16_t*)p;
-        *vp = v;
-        return true;
-    } else if (TYPE_I32 == type) {
+    }
+
+    if (TYPE_I32 == type) {
         if (val > 0xffffffff)
             return false;
         int32_t v = (int32_t)val;
         int32_t *vp = (int32_t*)p;
         *vp = v;
         return true;
-    } else if (TYPE_U32 == type) {
+    }
+    CrashIf(true);
+    return false;
+}
+
+
+static bool WriteStructUInt(uint16_t type, uint64_t val, uint8_t *p)
+{
+    if (TYPE_BOOL == type) {
+        bool *bp = (bool*)p;
+        if (1 == val) {
+            *bp = true;
+            return true;
+        }
+        if (0 == val) {
+            *bp = true;
+            return true;
+        }
+        return false;
+    }
+
+    if (TYPE_U16 == type) {
+        if (val > 0xffff)
+            return false;
+        uint16_t v = (uint16_t)val;
+        uint16_t *vp = (uint16_t*)p;
+        *vp = v;
+        return true;
+    }
+
+    if (TYPE_U32 == type) {
         if (val > 0xffffffff)
             return false;
         uint32_t v = (uint32_t)val;
@@ -151,7 +175,8 @@ static bool WriteStructVal(uint16_t type, uint64_t val, uint8_t *p)
         *vp = v;
         return true;
     }
-    CrashIf(false);
+
+    CrashIf(true);
     return false;
 }
 
@@ -165,7 +190,8 @@ static uint8_t* DeserializeRec(const uint8_t *data, int dataSize, int dataOff, S
 {
     uint8_t *res = AllocArray<uint8_t>(def->size);
     FieldMetadata *fieldDef = NULL;
-    uint64_t decodedVal;
+    uint64_t decodedUInt;
+    int64_t decodedInt;
     int n;
     bool ok;
     for (int i = 0; i < def->nFields; i++) {
@@ -175,13 +201,13 @@ static uint8_t* DeserializeRec(const uint8_t *data, int dataSize, int dataOff, S
         uint16_t offset = fieldDef->offset;
         uint16_t type = fieldDef->type;
         if (TYPE_STR == type) {
-            n = GetVarint64(data + dataOff, dataSize - dataOff, &decodedVal);
+            n = GobUVarintDecode(data + dataOff, dataSize - dataOff, &decodedUInt);
             if (0 == n)
                 goto Error;
             dataOff += n;
-            if (decodedVal > 128*1024) // set a reasonable limit to avoid overflow issues
+            if (decodedUInt > 128*1024) // set a reasonable limit to avoid overflow issues
                 goto Error;
-            n = (int)decodedVal;
+            n = (int)decodedUInt;
             if (n >= dataSize - dataOff)
                 goto Error;
             if (n > 0) {
@@ -189,25 +215,35 @@ static uint8_t* DeserializeRec(const uint8_t *data, int dataSize, int dataOff, S
                 dataOff += n;
             }
         } else if (TYPE_STRUCT_PTR == type) {
-            n = GetVarint64(data + dataOff, dataSize - dataOff, &decodedVal);
+            n = GobUVarintDecode(data + dataOff, dataSize - dataOff, &decodedUInt);
             if (0 == n)
                 goto Error;
             dataOff += n;
-            if (decodedVal > 512*1024*1024) // avoid overflow issues
+            if (decodedUInt > 512*1024*1024) // avoid overflow issues
                 goto Error;
-            n = (int)decodedVal;
+            n = (int)decodedUInt;
             uint8_t *d = DeserializeRec(data, dataSize, n, fieldDef->def);
             if (!d)
                 goto Error;
             WriteStructPtrVal(d, res + offset);
         } else {
-            n = GetVarint64(data + dataOff, dataSize - dataOff, &decodedVal);
-            if (0 == n)
-                goto Error;
-            dataOff += n;
-            ok = WriteStructVal(type, decodedVal, res + offset);
-            if (!ok)
-                goto Error;
+            if (IsSignedIntType(type)) {
+                n = GobVarintDecode(data + dataOff, dataSize - dataOff, &decodedInt);
+                if (0 == n)
+                    goto Error;
+                dataOff += n;
+                ok = WriteStructInt(type, decodedInt, res + offset);
+                if (!ok)
+                    goto Error;
+            } else {
+                n = GobUVarintDecode(data + dataOff, dataSize - dataOff, &decodedUInt);
+                if (0 == n)
+                    goto Error;
+                dataOff += n;
+                ok = WriteStructUInt(type, decodedUInt, res + offset);
+                if (!ok)
+                    goto Error;
+            }
         }
     }
     return res;

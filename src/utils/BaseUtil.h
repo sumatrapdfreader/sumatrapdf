@@ -156,8 +156,10 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
 size_t      RoundToPowerOf2(size_t size);
 uint32_t    MurmurHash2(const void *key, size_t len);
 
-int         PutVarint64(unsigned char *z, uint64_t x);
-int         GetVarint64(const unsigned char *z, int n, uint64_t *pResult);
+int         GobVarintEncode(int64_t val, uint8_t *d, int dLen);
+int         GobUVarintEncode(uint64_t val, uint8_t *d, int dLen);
+int         GobVarintDecode(const uint8_t *d, int dLen, int64_t *resOut);
+int         GobUVarintDecode(const uint8_t *d, int dLen, uint64_t *resOut);
 
 #include "Allocator.h"
 #include "GeomUtil.h"
