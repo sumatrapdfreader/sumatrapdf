@@ -1053,8 +1053,9 @@ BOOL SafeDestroyWindow(HWND *hwnd)
 
 // based on http://mdb-blog.blogspot.com/2013/01/nsis-lunch-program-as-user-from-uac.html
 // uses $WINDIR\explorer.exe to launch cmd
-// Another primising approach is documented at:
-// http://brandonlive.com/2008/04/27/getting-the-shell-to-run-an-application-for-you-part-2-how/
+// Other primising approaches:
+// - http://brandonlive.com/2008/04/27/getting-the-shell-to-run-an-application-for-you-part-2-how/
+// - http://www.codeproject.com/Articles/23090/Creating-a-process-with-Medium-Integration-Level-f
 // Approaches tried but didn't work:
 // - http://stackoverflow.com/questions/3298611/run-my-program-asuser
 // - using CreateProcessAsUser() with hand-crafted token
