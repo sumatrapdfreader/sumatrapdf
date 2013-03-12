@@ -3,7 +3,7 @@
 import os, types, struct
 import util, gen_settings_2_3
 from gen_settings_types import gen_struct_defs, gen_structs_metadata, gen_top_level_funcs, StructVal, Val
-from util import varint
+from util import gob_varint_encode, gob_uvarint_encode
 
 """
 Script that generates C code for compact storage of settings.
@@ -15,7 +15,7 @@ A serialized form is:
   u32 magic id
   u32 version
   u32 offfset of top-level struct
-  ... serialized values follow, with integers serialized as varint
+  ... serialized values follow, with integers serialized in variable-length encoding
 
 A version supports up to 4 components, each component in range <0,255>.
 For example version "2.1.3" is encoded as: u32 version = (2 << 24) | (1 << 16) | (3 << 8) | 0.
@@ -40,9 +40,7 @@ file. For example, settings for version 2.3 are in gen_settings_2_3.py.
 That way we can easily inherit settings for version N from settings for version N-1.
 
 TODO:
- - synchronize C and Python varint implementation
  - write Serialize()
- - test that negative numbers are properly varint-serialized
  - support arrays i.e. a count + type of values + pointer to values
  - maybe: for additional safety, add a number of fields in a given struct
  - maybe: add a signature (magic value) at the beginning of each struct to
@@ -113,12 +111,15 @@ def is_num(val):
 
 def is_str(val): return type(val) == types.StringType
 
-def serialize_val(val):
+def serialize_val(val, is_signed):
     if is_num(val):
-        val = long(val)
-        return varint(val)
+        n = long(val)
+        if is_signed:
+            return gob_varint_encode(val)
+        else:
+            return gob_uvarint_encode(val)
     if is_str(val):
-        data = varint(len(val))
+        data = gob_uvarint_encode(len(val))
         return data + val
     assert False, "%s is of unkown type" % val
 
@@ -139,6 +140,7 @@ def serialize_top_level_struct(top_level_struct):
         val.offset = offset
         for field in val.val:
             val = field.val
+            is_signed = False # default value for the struct offset
             if field.is_struct:
                 assert isinstance(field, StructVal)
                 val = 0
@@ -147,7 +149,9 @@ def serialize_top_level_struct(top_level_struct):
                     assert field.offset not in (None, 0)
                     assert offset > field.offset
                     val = field.offset
-            data = serialize_val(val)
+            else:
+                is_signed = field.typ.is_signed
+            data = serialize_val(val, is_signed)
             field.serialized = data
             offset += len(data)
     return vals
@@ -167,7 +171,7 @@ g_addr_to_int_map = {}
 # change:
 #   <gen_settings_types.StructVal object at 0x7fddfc4c>
 # =>
-#   StructVal@$n where $n maps 0x7fddfc4c => unique integer
+#   StructVal_$n where $n maps 0x7fddfc4c => unique integer
 def short_object_id(obj):
     global g_addr_to_int_map
     if isinstance(obj, StructVal):
@@ -177,7 +181,7 @@ def short_object_id(obj):
         (name, addr) = s.split("@")
         if addr not in g_addr_to_int_map:
             g_addr_to_int_map[addr] = str(len(g_addr_to_int_map))
-        return name + "@" + g_addr_to_int_map[addr]
+        return name + "_" + g_addr_to_int_map[addr]
     if isinstance(obj, Val):
         assert is_str(obj.val)
         return '"' + obj.val + '"'

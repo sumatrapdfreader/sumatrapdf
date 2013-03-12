@@ -9,6 +9,7 @@ class Var(object):
 
         self.struct_def = None
         self.offset = None        # offset of variable within the struct
+        self.is_signed = False    # when an integer, is it signed or unsigned
 
     def is_struct(self):   return self.struct_def != None
 
@@ -23,6 +24,7 @@ class U16(Var):
 class I32(Var):
     def __init__(self, name, def_val = 0):
         super(I32, self).__init__(name, "int32_t", "TYPE_I32", def_val)
+        self.is_signed = True
 
 class U32(Var):
     def __init__(self, name, def_val = 0):

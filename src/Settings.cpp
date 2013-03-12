@@ -79,13 +79,13 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0x00, 0x00, 0x03, 0x02, // version 2.3
     0x19, 0x00, 0x00, 0x00, // top-level struct offset 0x19
 
-    // offset: 0xc StructVal@0 ForwardSearchSettings
+    // offset: 0xc StructVal_0 ForwardSearchSettings
     0x00, // int32_t highlightOffset = 0x0
-    0x0f, // int32_t highlightWidth = 0xf
+    0x1e, // int32_t highlightWidth = 0xf
     0x00, // int32_t highlightPermanent = 0x0
-    0xff, 0x83, 0x96, 0x03, // uint32_t highlightColor = 0x6581ff
+    0xfd, 0x65, 0x81, 0xff, // uint32_t highlightColor = 0x6581ff
 
-    // offset: 0x13 StructVal@1 PaddingSettings
+    // offset: 0x13 StructVal_1 PaddingSettings
     0x02, // uint16_t top = 0x2
     0x02, // uint16_t bottom = 0x2
     0x04, // uint16_t left = 0x4
@@ -93,15 +93,15 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0x04, // uint16_t spaceX = 0x4
     0x04, // uint16_t spaceY = 0x4
 
-    // offset: 0x19 StructVal@2 AdvancedSettings
+    // offset: 0x19 StructVal_2 AdvancedSettings
     0x00, // bool traditionalEbookUI = 0x0
     0x00, // bool escToExit = 0x0
     0x00, // const char * emptyString = ""
-    0x80, 0xe4, 0xff, 0x07, // uint32_t logoColor = 0xfff200
-    0x13, // PaddingSettings * pagePadding = StructVal@1
+    0xfd, 0xff, 0xf2, 0x00, // uint32_t logoColor = 0xfff200
+    0x13, // PaddingSettings * pagePadding = StructVal_1
     0x00, // PaddingSettings * foo2Padding = NULL
     0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f, // const char * notEmptyString = "Hello"
-    0x0c, // ForwardSearchSettings * forwardSearch = StructVal@0
+    0x0c, // ForwardSearchSettings * forwardSearch = StructVal_0
 };
 
 // returns -1 on error

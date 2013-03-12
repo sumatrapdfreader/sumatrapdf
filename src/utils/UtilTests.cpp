@@ -10,6 +10,43 @@
 
 #include "DebugLog.h"
 
+// if set to 1, dumps on to the debugger code that can be copied
+// to util.py (test_gob()), to verify C and python generate
+// the same encoded data
+#define GEN_PYTHON_TESTS 0
+
+static void GenPythonIntTest(int64_t val, uint8_t *d, int dLen)
+{
+#if GEN_PYTHON_TESTS == 1
+    str::Str<char> s;
+    s.AppendFmt("  assert gob_varint_encode(%I64d) == ", val);
+    int n;
+    for (int i = 0; i < dLen; i++) {
+        n = (int)d[i];
+        s.AppendFmt("chr(%d)", n);
+        if (i < dLen - 1)
+            s.Append(" + ");
+    }
+    plogf("%s", s.Get());
+#endif
+}
+
+static void GenPythonUIntTest(uint64_t val, uint8_t *d, int dLen)
+{
+#if GEN_PYTHON_TESTS == 1
+    str::Str<char> s;
+    s.AppendFmt("  assert gob_uvarint_encode(%I64u) == ", val);
+    int n;
+    for (int i = 0; i < dLen; i++) {
+        n = (int)d[i];
+        s.AppendFmt("chr(%d)", n);
+        if (i < dLen - 1)
+            s.Append(" + ");
+    }
+    plogf("%s", s.Get());
+#endif
+}
+
 static void BaseUtilGobEncodingTest()
 {
     uint8_t buf[2048];
@@ -33,6 +70,7 @@ static void BaseUtilGobEncodingTest()
         val = intVals[i];
         n = GobVarintEncode(val, d, dLen);
         assert(n >= 1);
+        GenPythonIntTest(val, d, n);
         n2 = GobVarintDecode(d, n, &expVal);
         assert(n == n2);
         assert(val == expVal);
@@ -57,6 +95,7 @@ static void BaseUtilGobEncodingTest()
         uval = uintVals[i];
         n = GobUVarintEncode(uval, d, dLen);
         assert(n >= 1);
+        GenPythonUIntTest(uval, d, n);
         n2 = GobUVarintDecode(d, n, &expUval);
         assert(n == n2);
         assert(uval == expUval);

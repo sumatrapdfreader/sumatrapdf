@@ -26,15 +26,6 @@ def trim_str(s):
   if len(s) < 78: return (s, False)
   return (s[:75], True)
 
-# encode an integer value as varint
-def varint(i):
-    s = ""
-    while (i & ~0x7F) != 0:
-        s += chr((i & 0x7F) | 0x80)
-        i = i >> 7
-    s += chr(i)
-    return s
-
 def test_for_flag(args, arg, has_data=False):
   if arg not in args:
     if not has_data:
@@ -435,7 +426,73 @@ def test_load_config():
   vals = (c.aws_access, c.aws_secret, c.cert_pwd, c.trans_ul_secret)
   print("aws_secret: %s\naws_secret: %s\ncert_pwd: %s\ntrans_ul_secret: %s" % vals)
 
+def gob_uvarint_encode(i):
+  assert i >= 0
+  if i <= 0x7f:
+    return chr(i)
+  res = ""
+  while i > 0:
+    b = i & 0xff
+    res += chr(b)
+    i = i >> 8
+  l = 256 - len(res)
+  res = res[::-1] # reverse string
+  return chr(l) + res
+
+def gob_varint_encode(i):
+  if i < 0:
+    i = (~i << 1) | 1
+  else:
+    i = i << 1
+  return gob_uvarint_encode(i)
+
+# data generated with UtilTests.cpp (define GEN_PYTHON_TESTS to 1)
+def test_gob():
+  assert gob_varint_encode(0) == chr(0)
+  assert gob_varint_encode(1) == chr(2)
+  assert gob_varint_encode(127) == chr(255) + chr(254)
+  assert gob_varint_encode(128) == chr(254) + chr(1) + chr(0)
+  assert gob_varint_encode(129) == chr(254) + chr(1) + chr(2)
+  assert gob_varint_encode(254) == chr(254) + chr(1) + chr(252)
+  assert gob_varint_encode(255) == chr(254) + chr(1) + chr(254)
+  assert gob_varint_encode(256) == chr(254) + chr(2) + chr(0)
+  assert gob_varint_encode(4660) == chr(254) + chr(36) + chr(104)
+  assert gob_varint_encode(74565) == chr(253) + chr(2) + chr(70) + chr(138)
+  assert gob_varint_encode(1193046) == chr(253) + chr(36) + chr(104) + chr(172)
+  assert gob_varint_encode(19088743) == chr(252) + chr(2) + chr(70) + chr(138) + chr(206)
+  assert gob_varint_encode(305419896) == chr(252) + chr(36) + chr(104) + chr(172) + chr(240)
+  assert gob_varint_encode(2147483647) == chr(252) + chr(255) + chr(255) + chr(255) + chr(254)
+  assert gob_varint_encode(-1) == chr(1)
+  assert gob_varint_encode(-2) == chr(3)
+  assert gob_varint_encode(-255) == chr(254) + chr(1) + chr(253)
+  assert gob_varint_encode(-256) == chr(254) + chr(1) + chr(255)
+  assert gob_varint_encode(-257) == chr(254) + chr(2) + chr(1)
+  assert gob_varint_encode(-4660) == chr(254) + chr(36) + chr(103)
+  assert gob_varint_encode(-74565) == chr(253) + chr(2) + chr(70) + chr(137)
+  assert gob_varint_encode(-1193046) == chr(253) + chr(36) + chr(104) + chr(171)
+  assert gob_varint_encode(-1197415) == chr(253) + chr(36) + chr(138) + chr(205)
+  assert gob_varint_encode(-19158648) == chr(252) + chr(2) + chr(72) + chr(172) + chr(239)
+  assert gob_uvarint_encode(0) == chr(0)
+  assert gob_uvarint_encode(1) == chr(1)
+  assert gob_uvarint_encode(127) == chr(127)
+  assert gob_uvarint_encode(128) == chr(255) + chr(128)
+  assert gob_uvarint_encode(129) == chr(255) + chr(129)
+  assert gob_uvarint_encode(254) == chr(255) + chr(254)
+  assert gob_uvarint_encode(255) == chr(255) + chr(255)
+  assert gob_uvarint_encode(256) == chr(254) + chr(1) + chr(0)
+  assert gob_uvarint_encode(4660) == chr(254) + chr(18) + chr(52)
+  assert gob_uvarint_encode(74565) == chr(253) + chr(1) + chr(35) + chr(69)
+  assert gob_uvarint_encode(1193046) == chr(253) + chr(18) + chr(52) + chr(86)
+  assert gob_uvarint_encode(19088743) == chr(252) + chr(1) + chr(35) + chr(69) + chr(103)
+  assert gob_uvarint_encode(305419896) == chr(252) + chr(18) + chr(52) + chr(86) + chr(120)
+  assert gob_uvarint_encode(2147483647) == chr(252) + chr(127) + chr(255) + chr(255) + chr(255)
+  assert gob_uvarint_encode(2147483648) == chr(252) + chr(128) + chr(0) + chr(0) + chr(0)
+  assert gob_uvarint_encode(2147483649) == chr(252) + chr(128) + chr(0) + chr(0) + chr(1)
+  assert gob_uvarint_encode(4294967294) == chr(252) + chr(255) + chr(255) + chr(255) + chr(254)
+  assert gob_uvarint_encode(4294967295) == chr(252) + chr(255) + chr(255) + chr(255) + chr(255)
+
 if __name__ == "__main__":
   #parse_svnlog_out_test2()
   #test_load_config()
+  test_gob()
   pass
