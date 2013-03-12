@@ -6,7 +6,7 @@
 
 namespace settings {
 
-#define MAGIC_ID 0x53657454  // 'SetT' as 'Settings'
+#define MAGIC_ID 0x53657454  // 'SetT' for 'Settings'
 
 #define SERIALIZED_HEADER_LEN 12
 
@@ -68,9 +68,9 @@ Exit:
     return ver;
 }
 
-// the assumption here is that the data was either build by Deserialize()
-// or was set by application code in a way that observes our rule: each
-// object was separately allocated with malloc()
+// the assumption here is that the data was either built by Deserialize()
+// or was created by application code in a way that observes our rule: each
+// struct and string was separately allocated with malloc()
 void FreeStruct(uint8_t *data, StructMetadata *def)
 {
     if (!data)
@@ -344,7 +344,7 @@ Error:
 // TODO: do parallel decoding from default data and data from the client
 // if no data from client - return the result from default data
 // if data from client doesn't have enough fields, use fields from default data
-// if data from client is corrupted, return default data decoded
+// if data from client is corrupted, decode default data
 static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def)
 {
     uint8_t *res = AllocArray<uint8_t>(def->size);
@@ -370,11 +370,6 @@ Error:
 // replaced with offsets from the beginning of the memory (base)
 // to deserialize, we malloc() each struct and replace offsets
 // with pointers to those newly allocated structs
-// TODO: when version of the data doesn't match our version,
-// especially in the case of our version being higher (and hence
-// having more data), we should decode the default values and
-// then over-write them with whatever values we decoded.
-// alternatively, we could keep a default value in struct metadata
 uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, StructMetadata *def)
 {
     if (!data)

@@ -36,9 +36,9 @@ struct FieldMetadata {
     StructMetadata * def;
 };
 
-void FreeStruct(uint8_t *data, StructMetadata *def);
-uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, StructMetadata *def);
-uint8_t *Serialize(const uint8_t *data, const char *version, StructMetadata *def, int *sizeOut);
+void        FreeStruct(uint8_t *data, StructMetadata *def);
+uint8_t*    Deserialize(const uint8_t *data, int dataSize, const char *version, StructMetadata *def);
+uint8_t *   Serialize(const uint8_t *data, const char *version, StructMetadata *def, int *sizeOut);
 
 } // namespace Settings
 

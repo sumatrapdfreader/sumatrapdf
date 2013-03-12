@@ -40,7 +40,7 @@ void Clear(T& v, int bitNo)
 template <typename T>
 bool IsSet(T v, int bitNo)
 {
-    T mask = 1 << bitNo;
+    T mask = (T)1 << bitNo;
     return (v & mask) != 0;
 }
 
