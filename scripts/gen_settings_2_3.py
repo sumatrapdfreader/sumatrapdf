@@ -1,5 +1,5 @@
 from gen_settings_types import DefineStruct, MakeStruct
-from gen_settings_types import Bool, U16, I32, U64, Color, String, StructPtr
+from gen_settings_types import Bool, U16, I32, U64, Float, Color, String, StructPtr
 
 # Settings for 2.3 version of Sumatra
 
@@ -46,8 +46,7 @@ basicSettingsStruct = DefineStruct("BasicSettings", None, [
 	String("lastUpdateTime", None),
 	U16("defaultDisplayMode", 0),  # DM_AUTOMATIC
 	# -1 == Fit Page
-	# TODO: could use scaled integer instead of float i.e. float value * 100
-	String("defaultZoom", "-1"),
+	Float("defaultZoom", -1),
 	I32("windowState", 1), # WIN_STATE_NORMAL
 	StructPtr("windowPos", rectStruct, MakeStruct(rectStruct)),
 	Bool("tocVisible", True),
@@ -69,6 +68,10 @@ advancedSettingsStruct = DefineStruct("AdvancedSettings", None, [
 	Color("mainWindowBackground", 0xFFF200),
 	StructPtr("pagePadding", paddingStruct, MakeStruct(paddingStruct)),
 	StructPtr("forwardSearch", forwardSearchStruct, MakeStruct(forwardSearchStruct)),
+
+	# TODO: just for testing
+	String("s", "Hello"),
+	Float("defaultZoom", -1),
 ])
 
 # TODO: merge basic/advanced into one?

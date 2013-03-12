@@ -45,6 +45,11 @@ class String(Var):
         if def_val == None: def_val = ""
         super(String, self).__init__(name, "const char *", "TYPE_STR", def_val)
 
+class Float(Var):
+    def __init__(self, name, def_val = 0):
+        def_val = str(def_val)
+        super(Float, self).__init__(name, "float", "TYPE_FLOAT", def_val)
+
 class StructPtr(Var):
     def __init__(self, name, struct_def, def_val=None):
         assert isinstance(struct_def, StructDef)

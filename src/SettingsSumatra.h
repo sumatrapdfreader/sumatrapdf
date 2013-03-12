@@ -29,6 +29,8 @@ struct AdvancedSettings {
     uint32_t                mainWindowBackground;
     PaddingSettings *       pagePadding;
     ForwardSearchSettings * forwardSearch;
+    const char *            s;
+    float                   defaultZoom;
 };
 
 #define AdvancedSettingsVersion "2.3"

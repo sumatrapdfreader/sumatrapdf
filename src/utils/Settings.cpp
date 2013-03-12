@@ -96,7 +96,7 @@ static bool IsSignedIntType(uint16_t type)
             (TYPE_I32 == type));
 }
 
-static bool WriteStructInt(uint16_t type, int64_t val, uint8_t *p)
+static bool WriteStructInt(uint8_t *p, uint16_t type, int64_t val)
 {
     if (TYPE_I16 == type) {
         if (val > 0xffff)
@@ -119,7 +119,7 @@ static bool WriteStructInt(uint16_t type, int64_t val, uint8_t *p)
     return false;
 }
 
-static bool WriteStructUInt(Typ type, uint64_t val, uint8_t *p)
+static bool WriteStructUInt(uint8_t *p, Typ type, uint64_t val)
 {
     if (TYPE_BOOL == type) {
         bool *bp = (bool*)p;
@@ -162,78 +162,139 @@ static bool WriteStructUInt(Typ type, uint64_t val, uint8_t *p)
     return false;
 }
 
-static void WriteStructPtrVal(void *val, uint8_t *p)
+static void WriteStructPtrVal(uint8_t *p, void *val)
 {
     void **pp = (void**)p;
     *pp = val;
 }
 
-static void WriteStructStr(char *val, uint8_t *p)
+static void WriteStructStr(uint8_t *p, char *s)
 {
-    char **pp = (char **)p;
-    *pp = val;
+    char **sp = (char **)p;
+    *sp = s;
 }
 
-static uint8_t* DeserializeRec(const uint8_t *data, int dataSize, int dataOff, StructMetadata *def)
+static void WriteStructFloat(uint8_t *p, float f)
+{
+    float *fp = (float*)p;
+    *fp = f;
+}
+
+typedef struct {
+    // data being decoded
+    const uint8_t *   data;
+    int               dataSize;
+
+    // current offset within the data
+    int               off;
+
+    // last decoded value
+    uint64_t          u;
+    int64_t           i;
+    int               decodedOffset;
+    float             f;
+    char *            s;
+    int               sLen;
+} DecodeState;
+
+static bool DecodeInt(DecodeState *ds)
+{
+    int n = GobVarintDecode(ds->data + ds->off, ds->dataSize - ds->off, &ds->i);
+    ds->off += n;
+    return 0 != n;
+}
+
+static bool DecodeUInt(DecodeState *ds)
+{
+    int n = GobUVarintDecode(ds->data + ds->off, ds->dataSize - ds->off, &ds->u);
+    ds->off += n;
+    return 0 != n;
+}
+
+static bool DecodeOffset(DecodeState *ds)
+{
+    bool ok = DecodeUInt(ds);
+    if (!ok)
+        return false;
+    ds->decodedOffset = (int)ds->u;
+    // validate the offset
+    if (ds->decodedOffset < SERIALIZED_HEADER_LEN || ds->decodedOffset >= ds->dataSize)
+        return false;
+    return true;
+}
+
+static bool DecodeString(DecodeState *ds)
+{
+    bool ok = DecodeUInt(ds);
+    if (!ok)
+        return false;
+    int strLen = (int)ds->u; // including terminating 0
+    // sanity check to avoid integer overflow issues
+    if (strLen < 0)
+        return false;
+    if (ds->off + strLen > ds->dataSize)
+        return false;
+    ds->s = (char*)(ds->data + ds->off);
+    ds->off += strLen;
+    ds->sLen = strLen;
+    // validate that non-empty strings end with 0
+    if (strLen > 0 && (0 != ds->s[strLen-1]))
+        return false;
+    return true;
+}
+
+static bool DecodeFloat(DecodeState *ds)
+{
+    bool ok = DecodeString(ds);
+    if (!ok)
+        return false;
+    char *end;
+    ds->f = (float)strtod(ds->s, &end);
+    return true;
+}
+
+static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def)
 {
     uint8_t *res = AllocArray<uint8_t>(def->size);
-    FieldMetadata *fieldDef = NULL;
-    uint64_t decodedUInt;
-    int64_t decodedInt;
-    int n;
-    bool ok;
+    FieldMetadata *fieldDef;
     Typ type;
-    uint16_t offset;
+    uint8_t *structDataPtr;
+    bool ok = true;
     for (int i = 0; i < def->nFields; i++) {
-        if (dataOff >= dataSize)
+        // previous decode failed
+        if (!ok)
             goto Error;
         fieldDef = def->fields + i;
-        offset = fieldDef->offset;
+        structDataPtr = res + fieldDef->offset;
         type = fieldDef->type;
         if (TYPE_STR == type) {
-            n = GobUVarintDecode(data + dataOff, dataSize - dataOff, &decodedUInt);
-            if (0 == n)
-                goto Error;
-            dataOff += n;
-            if (decodedUInt > 128*1024) // set a reasonable limit to avoid overflow issues
-                goto Error;
-            n = (int)decodedUInt;
-            if (n >= dataSize - dataOff)
-                goto Error;
-            if (n > 0) {
-                char *s = str::DupN((char*)data + dataOff, n);
-                dataOff += n;
-                WriteStructStr(s, res + offset);
+            ok = DecodeString(ds);
+            if (ok && (ds->sLen > 0)) {
+                char *s = str::DupN(ds->s, ds->sLen - 1);
+                WriteStructStr(structDataPtr, s);
             }
         } else if (TYPE_STRUCT_PTR == type) {
-            n = GobUVarintDecode(data + dataOff, dataSize - dataOff, &decodedUInt);
-            if (0 == n)
+            ok = DecodeOffset(ds);
+            if (!ok)
                 goto Error;
-            dataOff += n;
-            if (decodedUInt > 512*1024*1024) // avoid overflow issues
-                goto Error;
-            n = (int)decodedUInt;
-            uint8_t *d = DeserializeRec(data, dataSize, n, fieldDef->def);
+            DecodeState ds2 = { ds->data, ds->dataSize, ds->decodedOffset, 0, 0, 0, 0, 0, 0 };
+            uint8_t *d = DeserializeRec(&ds2, fieldDef->def);
             if (!d)
                 goto Error;
-            WriteStructPtrVal(d, res + offset);
+            WriteStructPtrVal(structDataPtr, d);
+        } else if (TYPE_FLOAT == type) {
+            ok = DecodeFloat(ds);
+            if (ok)
+                WriteStructFloat(structDataPtr, ds->f);
         } else {
             if (IsSignedIntType(type)) {
-                n = GobVarintDecode(data + dataOff, dataSize - dataOff, &decodedInt);
-                if (0 == n)
-                    goto Error;
-                dataOff += n;
-                ok = WriteStructInt(type, decodedInt, res + offset);
-                if (!ok)
-                    goto Error;
+                ok = DecodeInt(ds);
+                if (ok)
+                    ok = WriteStructInt(structDataPtr, type, ds->i);
             } else {
-                n = GobUVarintDecode(data + dataOff, dataSize - dataOff, &decodedUInt);
-                if (0 == n)
-                    goto Error;
-                dataOff += n;
-                ok = WriteStructUInt(type, decodedUInt, res + offset);
-                if (!ok)
-                    goto Error;
+                ok = DecodeUInt(ds);
+                if (ok)
+                    ok = WriteStructUInt(structDataPtr, type, ds->u);
             }
         }
     }
@@ -262,7 +323,8 @@ uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, Str
     if (hdr->magicId != MAGIC_ID)
         return NULL;
     //uint32_t ver = VersionFromStr(version);
-    return DeserializeRec(data, dataSize, hdr->topLevelStructOffset, def);
+    DecodeState ds = { data, dataSize, hdr->topLevelStructOffset, 0, 0, 0, 0, 0, 0 };
+    return DeserializeRec(&ds, def);
 }
 
 // TODO: write me

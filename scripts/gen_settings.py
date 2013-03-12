@@ -139,9 +139,16 @@ def serialize_val(val, is_signed):
             return gob_varint_encode(n)
         else:
             return gob_uvarint_encode(n)
+    # empty strings are encoded as 0 (0 length)
+    # non-empty strings are encoded as uvariant(len(s)+1)
+    # (+1 for terminating 0), followed by string data (including terminating 0)
     if is_str(val):
-        data = gob_uvarint_encode(len(val))
-        return data + val
+        if val == "":
+            data = gob_uvarint_encode(0)
+        else:
+            data = gob_uvarint_encode(len(val)+1)
+            data = data + val + chr(0)
+        return data
     assert False, "%s is of unkown type" % val
 
 # serialize values in vals and calculate offset of each

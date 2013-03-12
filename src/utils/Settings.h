@@ -15,14 +15,15 @@ typedef struct {
 } StructMetadata;
 
 typedef enum : uint16_t {
-    TYPE_BOOL         = 0,
-    TYPE_I16          = 1,
-    TYPE_U16          = 2,
-    TYPE_I32          = 3,
-    TYPE_U32          = 4,
-    TYPE_U64          = 5,
-    TYPE_STR          = 6,
-    TYPE_STRUCT_PTR   = 7,
+    TYPE_BOOL,
+    TYPE_I16,
+    TYPE_U16,
+    TYPE_I32,
+    TYPE_U32,
+    TYPE_U64,
+    TYPE_FLOAT,
+    TYPE_STR,
+    TYPE_STRUCT_PTR,
 } Typ;
 
 // information about a single field

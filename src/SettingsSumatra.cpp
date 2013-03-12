@@ -36,9 +36,11 @@ FieldMetadata gAdvancedSettingsFieldMetadata[] = {
     { TYPE_U32, offsetof(AdvancedSettings, mainWindowBackground), NULL },
     { TYPE_STRUCT_PTR, offsetof(AdvancedSettings, pagePadding), &gPaddingSettingsMetadata },
     { TYPE_STRUCT_PTR, offsetof(AdvancedSettings, forwardSearch), &gForwardSearchSettingsMetadata },
+    { TYPE_STR, offsetof(AdvancedSettings, s), NULL },
+    { TYPE_FLOAT, offsetof(AdvancedSettings, defaultZoom), NULL },
 };
 
-StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 7, &gAdvancedSettingsFieldMetadata[0] };
+StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 9, &gAdvancedSettingsFieldMetadata[0] };
 
 static const uint8_t gAdvancedSettingsDefault[] = {
     0x54, 0x74, 0x65, 0x53, // magic id 'SumS'
@@ -68,6 +70,8 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0xfd, 0xff, 0xf2, 0x00, // uint32_t mainWindowBackground = 0xfff200
     0x14, // PaddingSettings * pagePadding = StructVal_1
     0x0c, // ForwardSearchSettings * forwardSearch = StructVal_0
+    0x06, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x00, // const char * s = "Hello"
+    0x03, 0x2d, 0x31, 0x00, // float defaultZoom = "-1"
 };
 
 AdvancedSettings *DeserializeAdvancedSettings(const uint8_t *data, int dataLen, bool *usedDefaultOut)
