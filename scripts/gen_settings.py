@@ -163,15 +163,21 @@ def data_with_comment_as_c(data, comment):
     data_hex = data_to_hex(data)
     return "    %(data_hex)s, // %(comment)s" % locals()
 
+g_addr_to_int_map = {}
 # change:
 #   <gen_settings_types.StructVal object at 0x7fddfc4c>
 # =>
-#   StructVal@0x7fddfc4c
+#   StructVal@$n where $n maps 0x7fddfc4c => unique integer
 def short_object_id(obj):
+    global g_addr_to_int_map
     if isinstance(obj, StructVal):
         s = str(obj)[1:-1]
         s = s.replace("gen_settings_types.", "")
-        return s.replace(" object at ", "@")
+        s = s.replace(" object at ", "@")
+        (name, addr) = s.split("@")
+        if addr not in g_addr_to_int_map:
+            g_addr_to_int_map[addr] = str(len(g_addr_to_int_map))
+        return name + "@" + g_addr_to_int_map[addr]
     if isinstance(obj, Val):
         assert is_str(obj.val)
         return '"' + obj.val + '"'
