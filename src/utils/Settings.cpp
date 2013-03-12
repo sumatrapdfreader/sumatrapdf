@@ -92,10 +92,18 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
     free(data);
 }
 
-static bool IsSignedIntType(uint16_t type)
+static bool IsSignedIntType(Typ type)
 {
     return ((TYPE_I16 == type) ||
             (TYPE_I32 == type));
+}
+
+static bool IsUnsignedIntType(Typ type)
+{
+    return ((TYPE_BOOL == type) ||
+            (TYPE_U16 == type) ||
+            (TYPE_U32 == type) ||
+            (TYPE_U64 == type));
 }
 
 static bool WriteStructInt(uint8_t *p, uint16_t type, int64_t val)
@@ -285,12 +293,61 @@ static bool DecodeStructHeader(DecodeState *ds)
     return true;
 }
 
+static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def);
+
+static bool DecodeField(DecodeState *ds, FieldMetadata *fieldDef, uint8_t *structDataStart)
+{
+    bool ok;
+    Typ type = fieldDef->type;
+    uint8_t *structDataPtr = structDataStart + fieldDef->offset;
+    if (TYPE_STR == type) {
+        ok = DecodeString(ds);
+        if (ok && (ds->sLen > 0)) {
+            char *s = str::DupN(ds->s, ds->sLen - 1);
+            WriteStructStr(structDataPtr, s);
+        }
+    } else if (TYPE_WSTR == type) {
+        ok = DecodeString(ds);
+        if (ok && (ds->sLen > 0)) {
+            WCHAR *ws = str::conv::FromUtf8(ds->s);
+            WriteStructWStr(structDataPtr, ws);
+        }
+    } else if (TYPE_STRUCT_PTR == type) {
+        ok = DecodeOffset(ds);
+        if (!ok)
+            goto Error;
+        DecodeState ds2 = { ds->data, ds->dataSize, ds->decodedOffset, 0, 0, 0, 0, 0, 0, 0 };
+        uint8_t *d = DeserializeRec(&ds2, fieldDef->def);
+        if (!d)
+            goto Error;
+        WriteStructPtrVal(structDataPtr, d);
+    } else if (TYPE_FLOAT == type) {
+        ok = DecodeFloat(ds);
+        if (ok)
+            WriteStructFloat(structDataPtr, ds->f);
+    } else if (IsSignedIntType(type)) {
+        ok = DecodeInt(ds);
+        if (ok)
+            ok = WriteStructInt(structDataPtr, type, ds->i);
+    } else if (IsUnsignedIntType(type)) {
+        ok = DecodeUInt(ds);
+        if (ok)
+            ok = WriteStructUInt(structDataPtr, type, ds->u);
+    } else {
+        CrashIf(true);
+    }
+    return ok;
+Error:
+    return false;
+}
+
+// TODO: do parallel decoding from default data and data from the client
+// if no data from client - return the result from default data
+// if data from client doesn't have enough fields, use fields from default data
+// if data from client is corrupted, return default data decoded
 static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def)
 {
     uint8_t *res = AllocArray<uint8_t>(def->size);
-    FieldMetadata *fieldDef;
-    Typ type;
-    uint8_t *structDataPtr;
     bool ok = DecodeStructHeader(ds);
     for (int i = 0; i < def->nFields; i++) {
         // previous decode failed
@@ -301,45 +358,7 @@ static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def)
         // in the struct, so we stop when there's no more data to decode
         if (i + 1 > ds->nFields)
             return res;
-        fieldDef = def->fields + i;
-        structDataPtr = res + fieldDef->offset;
-        type = fieldDef->type;
-        if (TYPE_STR == type) {
-            ok = DecodeString(ds);
-            if (ok && (ds->sLen > 0)) {
-                char *s = str::DupN(ds->s, ds->sLen - 1);
-                WriteStructStr(structDataPtr, s);
-            }
-        } else if (TYPE_WSTR == type) {
-            ok = DecodeString(ds);
-            if (ok && (ds->sLen > 0)) {
-                WCHAR *ws = str::conv::FromUtf8(ds->s);
-                WriteStructWStr(structDataPtr, ws);
-            }
-        } else if (TYPE_STRUCT_PTR == type) {
-            ok = DecodeOffset(ds);
-            if (!ok)
-                goto Error;
-            DecodeState ds2 = { ds->data, ds->dataSize, ds->decodedOffset, 0, 0, 0, 0, 0, 0, 0 };
-            uint8_t *d = DeserializeRec(&ds2, fieldDef->def);
-            if (!d)
-                goto Error;
-            WriteStructPtrVal(structDataPtr, d);
-        } else if (TYPE_FLOAT == type) {
-            ok = DecodeFloat(ds);
-            if (ok)
-                WriteStructFloat(structDataPtr, ds->f);
-        } else {
-            if (IsSignedIntType(type)) {
-                ok = DecodeInt(ds);
-                if (ok)
-                    ok = WriteStructInt(structDataPtr, type, ds->i);
-            } else {
-                ok = DecodeUInt(ds);
-                if (ok)
-                    ok = WriteStructUInt(structDataPtr, type, ds->u);
-            }
-        }
+        ok = DecodeField(ds, def->fields + i, res);
     }
     return res;
 Error:
