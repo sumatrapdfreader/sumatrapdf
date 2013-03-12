@@ -641,7 +641,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
         return false;
 
     ScopedMem<WCHAR> fileName2(path::Normalize(fileName));
-    BaseEngine *engine = EngineManager::CreateEngine(!gUseEbookUI, fileName2);
+    BaseEngine *engine = EngineManager::CreateEngine(fileName2);
     if (!engine || !engine->AllowsPrinting()) {
         if (displayErrors)
             MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));

@@ -123,8 +123,8 @@ public:
 
 namespace EngineManager {
 
-bool IsSupportedFile(bool enableEbookEngines, const WCHAR *filePath, bool sniff=false);
-BaseEngine *CreateEngine(bool enableEbookEngines, const WCHAR *filePath, PasswordUI *pwdUI=NULL, DocType *typeOut=NULL);
+bool IsSupportedFile(const WCHAR *filePath, bool sniff=false, bool disableEbookEngines=false);
+BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI=NULL, DocType *typeOut=NULL, bool disableEbookEngines=false);
 
 }
 

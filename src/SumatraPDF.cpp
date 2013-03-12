@@ -908,7 +908,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
 
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
     DocType engineType;
-    BaseEngine *engine = EngineManager::CreateEngine(!gUseEbookUI, args.fileName, pwdUI, &engineType);
+    BaseEngine *engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType, gUseEbookUI);
 
     if (engine && Engine_Chm == engineType) {
         // make sure that MSHTML can't be used as a potential exploit
@@ -924,7 +924,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         else if (!static_cast<ChmEngine *>(engine)->SetParentHwnd(win->hwndCanvas)) {
             delete engine;
             DebugAlternateChmEngine(true);
-            engine = EngineManager::CreateEngine(true, args.fileName, pwdUI, &engineType);
+            engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType);
             DebugAlternateChmEngine(false);
             CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
         }

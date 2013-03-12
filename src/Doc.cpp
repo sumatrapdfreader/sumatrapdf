@@ -297,7 +297,7 @@ Doc Doc::CreateFromFile(const WCHAR *filePath)
 
 namespace EngineManager {
 
-bool IsSupportedFile(bool enableEbookEngines, const WCHAR *filePath, bool sniff)
+bool IsSupportedFile(const WCHAR *filePath, bool sniff, bool disableEbookEngines)
 {
     return PdfEngine::IsSupportedFile(filePath, sniff)  ||
            XpsEngine::IsSupportedFile(filePath, sniff)  ||
@@ -307,7 +307,7 @@ bool IsSupportedFile(bool enableEbookEngines, const WCHAR *filePath, bool sniff)
            CbxEngine::IsSupportedFile(filePath, sniff)  ||
            PsEngine::IsSupportedFile(filePath, sniff)   ||
            ChmEngine::IsSupportedFile(filePath, sniff)  ||
-           enableEbookEngines && (
+           !disableEbookEngines && (
                EpubEngine::IsSupportedFile(filePath, sniff) ||
                Fb2Engine::IsSupportedFile(filePath, sniff)  ||
                MobiEngine::IsSupportedFile(filePath, sniff) ||
@@ -319,7 +319,7 @@ bool IsSupportedFile(bool enableEbookEngines, const WCHAR *filePath, bool sniff)
            );
 }
 
-BaseEngine *CreateEngine(bool enableEbookEngines, const WCHAR *filePath, PasswordUI *pwdUI, DocType *typeOut)
+BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI, DocType *typeOut, bool disableEbookEngines)
 {
     CrashIf(!filePath);
 
@@ -351,7 +351,7 @@ RetrySniffing:
     } else if (ChmEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Chm) {
         engine = ChmEngine::CreateFromFile(filePath);
         engineType = Engine_Chm;
-    } else if (!enableEbookEngines) {
+    } else if (disableEbookEngines) {
         // don't try to create any of the below ebook engines
     } else if (EpubEngine::IsSupportedFile(filePath, sniff) && engineType != Engine_Epub) {
         engine = EpubEngine::CreateFromFile(filePath);
@@ -384,7 +384,7 @@ RetrySniffing:
         sniff = true;
         goto RetrySniffing;
     }
-    CrashIf(engine && !IsSupportedFile(enableEbookEngines, filePath, sniff));
+    CrashIf(engine && !IsSupportedFile(filePath, sniff, disableEbookEngines));
 
     if (typeOut)
         *typeOut = engine ? engineType : Engine_None;

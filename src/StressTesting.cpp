@@ -129,7 +129,7 @@ static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
     logbench("Starting: %s", filePath);
 
     Timer t(true);
-    BaseEngine *engine = EngineManager::CreateEngine(!gUseEbookUI, filePath);
+    BaseEngine *engine = EngineManager::CreateEngine(filePath);
     t.Stop();
 
     if (!engine) {
@@ -202,7 +202,7 @@ static bool IsStressTestSupportedFile(const WCHAR *fileName, const WCHAR *filter
 {
     if (filter && !path::Match(fileName, filter))
         return false;
-    return EngineManager::IsSupportedFile(!gUseEbookUI, fileName);
+    return EngineManager::IsSupportedFile(fileName);
 }
 
 static bool CollectStressTestSupportedFilesFromDirectory(const WCHAR *dirPath, const WCHAR *filter, WStrVec& paths)
