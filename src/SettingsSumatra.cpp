@@ -79,14 +79,12 @@ AdvancedSettings *DeserializeAdvancedSettings(const uint8_t *data, int dataLen, 
     void *res = NULL;
     res = Deserialize(data, dataLen, AdvancedSettingsVersion, &gAdvancedSettingsMetadata);
     if (res) {
-        if (usedDefaultOut)
-            *usedDefaultOut = false;
+        *usedDefaultOut = false;
         return (AdvancedSettings*)res;
     }
     res = Deserialize(&gAdvancedSettingsDefault[0], sizeof(gAdvancedSettingsDefault), AdvancedSettingsVersion, &gAdvancedSettingsMetadata);
     CrashAlwaysIf(!res);
-    if (usedDefaultOut)
-        *usedDefaultOut = true;
+    *usedDefaultOut = true;
     return (AdvancedSettings*)res;
 }
 

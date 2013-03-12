@@ -256,14 +256,12 @@ top_level_funcs_tmpl = """
     void *res = NULL;
     res = Deserialize(data, dataLen, %(name)sVersion, &g%(name)sMetadata);
     if (res) {
-        if (usedDefaultOut)
-            *usedDefaultOut = false;
+        *usedDefaultOut = false;
         return (%(name)s*)res;
     }
     res = Deserialize(&g%(name)sDefault[0], sizeof(g%(name)sDefault), %(name)sVersion, &g%(name)sMetadata);
     CrashAlwaysIf(!res);
-    if (usedDefaultOut)
-        *usedDefaultOut = true;
+    *usedDefaultOut = true;
     return (%(name)s*)res;
 }
 
