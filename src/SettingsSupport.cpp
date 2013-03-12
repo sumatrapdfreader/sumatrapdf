@@ -19,8 +19,9 @@ typedef enum : uint16_t {
     TYPE_U16          = 2,
     TYPE_I32          = 3,
     TYPE_U32          = 4,
-    TYPE_STR          = 5,
-    TYPE_STRUCT_PTR   = 6,
+    TYPE_U64          = 5,
+    TYPE_STR          = 6,
+    TYPE_STRUCT_PTR   = 7,
 } Typ;
 
 struct FieldMetadata;
@@ -171,6 +172,12 @@ static bool WriteStructUInt(Typ type, uint64_t val, uint8_t *p)
         uint32_t v = (uint32_t)val;
         uint32_t *vp = (uint32_t*)p;
         *vp = v;
+        return true;
+    }
+
+    if (TYPE_U64 == type) {
+        uint64_t *vp = (uint64_t*)p;
+        *vp = val;
         return true;
     }
 

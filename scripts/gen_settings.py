@@ -267,7 +267,7 @@ def gen_cpp_data_for_struct_values(vals, version_str):
 def main():
     dst_dir = src_dir()
 
-    val = gen_settings_2_3.advancedSettings
+    val = gen_settings_2_3.settings
     version_str = gen_settings_2_3.version
     vals = serialize_top_level_struct(val)
 

@@ -9,6 +9,7 @@ struct ForwardSearchSettings {
     int32_t  highlightWidth;
     int32_t  highlightPermanent;
     uint32_t highlightColor;
+    bool     enableTeXEnhancements;
 };
 
 struct PaddingSettings {
@@ -23,11 +24,10 @@ struct PaddingSettings {
 struct AdvancedSettings {
     bool                    traditionalEbookUI;
     bool                    escToExit;
-    const char *            emptyString;
-    uint32_t                logoColor;
+    uint32_t                textColor;
+    uint32_t                pageColor;
+    uint32_t                mainWindowBackground;
     PaddingSettings *       pagePadding;
-    PaddingSettings *       foo2Padding;
-    const char *            notEmptyString;
     ForwardSearchSettings * forwardSearch;
 };
 

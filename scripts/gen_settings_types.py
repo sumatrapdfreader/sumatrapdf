@@ -30,6 +30,10 @@ class U32(Var):
     def __init__(self, name, def_val = 0):
         super(U32, self).__init__(name, "uint32_t", "TYPE_U32", def_val)
 
+class U64(Var):
+    def __init__(self, name, def_val = 0):
+        super(U64, self).__init__(name, "uint64_t", "TYPE_U64", def_val)
+
 class Color(Var):
     def __init__(self, name, def_val = 0):
         super(Color, self).__init__(name, "uint32_t", "TYPE_U32", def_val)
