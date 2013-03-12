@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "EbookControls.h"
 
+#include "BitManip.h"
 #include "HtmlFormatter.h"
 #include "SvgPath.h"
 
@@ -24,6 +25,11 @@ static HCURSOR   gCursorHand = NULL;
 static Rect RectForCircle(int x, int y, int r)
 {
     return Rect(x - r, y - r, r * 2, r * 2);
+}
+
+PageControl::PageControl() : page(NULL), cursorX(-1), cursorY(-1)
+{
+    bit::Set(wantedInputBits, WantsMouseMoveBit);
 }
 
 void PageControl::SetPage(HtmlPage *newPage)

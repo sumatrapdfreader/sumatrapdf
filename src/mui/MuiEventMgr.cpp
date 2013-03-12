@@ -3,6 +3,7 @@
 
 #include "Mui.h"
 #include <windowsx.h>
+#include "BitManip.h"
 #include "DebugLog.h"
 
 namespace mui {

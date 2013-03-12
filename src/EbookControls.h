@@ -35,10 +35,7 @@ class PageControl : public Control
     int         cursorX, cursorY;
 
 public:
-    PageControl() : page(NULL), cursorX(-1), cursorY(-1) {
-        bit::Set(wantedInputBits, WantsMouseMoveBit);
-    }
-    virtual ~PageControl() { }
+    PageControl();
 
     void      SetPage(HtmlPage *newPage);
     HtmlPage* GetPage() const { return page; }
