@@ -17,7 +17,7 @@ Favorites are accurate to a page - it's simple and should be good enough
 for the user.
 
 A favorite is identified by a (mandatory) page number and (optional) name
-(provided by the user).
+(provided by the user) and page label (from BaseEngine::GetPageLabel).
 
 Favorites do not remember presentation settings like zoom or viewing mode -
 they are for navigation only. Presentation settings are remembered on a
@@ -26,85 +26,75 @@ per-file basis in FileHistory.
 
 class FavName {
 public:
-   FavName(int pageNo, const WCHAR *name) : pageNo(pageNo), name(NULL)
-   {
-       SetName(name);
-   }
+    ScopedMem<WCHAR>    name;
+    int                 pageNo;
+    // TODO: persist pageLabel
+    ScopedMem<WCHAR>    pageLabel;
+    int                 menuId; // assigned in AppendFavMenuItems()
 
-   ~FavName()
-   {
-       free(name);
-   }
+    FavName(int pageNo, const WCHAR *name, const WCHAR *pageLabel) :
+        pageNo(pageNo), name(str::Dup(name)), pageLabel(str::Dup(pageLabel)) { }
 
-   void SetName(const WCHAR *name)
-   {
-       str::ReplacePtr(&this->name, name);
-   }
-
-   int     pageNo;
-   WCHAR * name;
-   int     menuId; // assigned in AppendFavMenuItems()
+    void ChangeName(const WCHAR *newName) {
+        name.Set(str::Dup(newName));
+    }
 };
 
 // list of favorites for one file
 class FileFavs {
 
-   int FindByPage(int pageNo) const;
+    int FindByPage(int pageNo, const WCHAR *pageLabel=NULL) const;
 
-   static int SortByPageNo(const void *a, const void *b);
+    static int SortByPageNo(const void *a, const void *b);
 
-public:
-   WCHAR *         filePath;
-   Vec<FavName *>  favNames;
+    public:
+    ScopedMem<WCHAR>filePath;
+    Vec<FavName *>  favNames;
 
-   FileFavs(const WCHAR *fp) : filePath(str::Dup(fp)) { }
+    FileFavs(const WCHAR *fp) : filePath(str::Dup(fp)) { }
+    ~FileFavs() { DeleteVecMembers(favNames); }
 
-   ~FileFavs() {
-       DeleteVecMembers(favNames);
-       free(filePath);
-   }
+    bool IsEmpty() const {
+        return favNames.Count() == 0;
+    }
 
-   bool IsEmpty() const {
-       return favNames.Count() == 0;
-   }
+    bool Exists(int pageNo) const {
+        return FindByPage(pageNo) != -1;
+    }
 
-   bool Exists(int pageNo) const {
-       return FindByPage(pageNo) != -1;
-   }
-
-   void ResetMenuIds();
-   bool GetByMenuId(int menuId, size_t& idx);
-   bool HasFavName(FavName *fn);
-   bool Remove(int pageNo);
-   void AddOrReplace(int pageNo, const WCHAR *name);
+    void ResetMenuIds();
+    bool GetByMenuId(int menuId, size_t& idx);
+    bool HasFavName(FavName *fn);
+    bool Remove(int pageNo);
+    void AddOrReplace(int pageNo, const WCHAR *name, const WCHAR *pageLabel);
 };
 
 class Favorites {
 
-   // filePathCache points to a string inside FileFavs, so doesn't need to free()d
-   const WCHAR *filePathCache;
-   size_t       idxCache;
+    // filePathCache points to a string inside FileFavs, so doesn't need to free()d
+    const WCHAR *filePathCache;
+    size_t       idxCache;
 
-   void RemoveFav(FileFavs *fav, size_t idx);
+    void RemoveFav(FileFavs *fav, size_t idx);
 
 public:
-   Vec<FileFavs*> favs;
+    Vec<FileFavs*> favs;
 
-   Favorites() : filePathCache(NULL), idxCache((size_t)-1) { }
-   ~Favorites() { DeleteVecMembers(favs); }
+    Favorites() : filePathCache(NULL), idxCache((size_t)-1) { }
+    ~Favorites() { DeleteVecMembers(favs); }
 
-   size_t Count() const {
+    size_t Count() const {
        return favs.Count();
-   }
+    }
 
-   FileFavs *GetByMenuId(int menuId, size_t& idx);
-   FileFavs *GetByFavName(FavName *fn);
-   void ResetMenuIds();
-   FileFavs *GetFavByFilePath(const WCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL);
-   bool IsPageInFavorites(const WCHAR *filePath, int pageNo);
-   void AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name);
-   void Remove(const WCHAR *filePath, int pageNo);
-   void RemoveAllForFile(const WCHAR *filePath);
+    FileFavs *GetByMenuId(int menuId, size_t& idx);
+    FileFavs *GetByFavName(FavName *fn);
+    void ResetMenuIds();
+    FileFavs *GetFavByFilePath(const WCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL);
+    bool IsPageInFavorites(const WCHAR *filePath, int pageNo);
+    void AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name, const WCHAR *pageLabel=NULL);
+    void Remove(const WCHAR *filePath, int pageNo);
+    void RemoveAllForFile(const WCHAR *filePath);
 };
 
 void AddFavorite(WindowInfo *win);
