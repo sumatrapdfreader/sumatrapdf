@@ -23,7 +23,7 @@ forwardSearchStruct = DefineStruct("ForwardSearchSettings", None, [
 ])
 
 advancedSettingsStruct = DefineStruct("AdvancedSettings", None, [
-	Bool("traditionalEbookUI", False),
+	Bool("traditionalEbookUI", True),
 	Bool("escToExit", False),
 	String("emptyString", None),
 	Color("logoColor", 0xFFF200),

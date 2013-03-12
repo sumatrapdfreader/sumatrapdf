@@ -351,9 +351,12 @@ $(OS)\Selection.obj: src\Toolbar.h src\Translations2.h src\utils\Allocator.h
 $(OS)\Selection.obj: src\utils\BaseUtil.h src\utils\FileUtil.h src\utils\GeomUtil.h
 $(OS)\Selection.obj: src\utils\Scoped.h src\utils\StrUtil.h src\utils\Vec.h
 $(OS)\Selection.obj: src\utils\WinUtil.h src\WindowInfo.h
-$(OS)\Settings.obj: src\Settings.h src\utils\Allocator.h src\utils\BaseUtil.h
-$(OS)\Settings.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
-$(OS)\Settings.obj: src\utils\Vec.h
+$(OS)\Settings.obj: src\Settings.h src\SettingsSupport.cpp src\utils\Allocator.h
+$(OS)\Settings.obj: src\utils\BaseUtil.h src\utils\GeomUtil.h src\utils\Scoped.h
+$(OS)\Settings.obj: src\utils\StrUtil.h src\utils\Vec.h
+$(OS)\SettingsSupport.obj: src\Settings.h src\utils\Allocator.h src\utils\BaseUtil.h
+$(OS)\SettingsSupport.obj: src\utils\GeomUtil.h src\utils\Scoped.h src\utils\StrUtil.h
+$(OS)\SettingsSupport.obj: src\utils\Vec.h
 $(OS)\StressTesting.obj: src\AppPrefs.h src\AppTools.h src\BaseEngine.h
 $(OS)\StressTesting.obj: src\ChmEngine.h src\DisplayModel.h src\DisplayState.h
 $(OS)\StressTesting.obj: src\Doc.h src\FileHistory.h src\Notifications.h

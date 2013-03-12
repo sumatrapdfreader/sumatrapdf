@@ -292,7 +292,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
-#if 0
+#if 1
     bool usedDefault = false;
     AdvancedSettings *data = DeserializeAdvancedSettings(NULL, 0, &usedDefault);
     CrashIf(!usedDefault);

@@ -1028,6 +1028,9 @@
     <ClCompile Include="src\Settings.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="src\SettingsSupport.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
