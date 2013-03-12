@@ -921,7 +921,8 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 	fz_buffer *content = NULL;
 	pdf_obj *quad_points, *resources;
 	fz_rect rect, a, b;
-	float rgb[3], skew;
+	fz_point skew;
+	float rgb[3];
 	int i, n;
 
 	fz_var(content);
@@ -931,8 +932,10 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 	for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
-		skew = 0.15 * fabs(a.y0 - b.y0);
-		b.x0 -= skew; b.x1 += skew;
+		skew.x = 0.15 * fabs(a.y0 - b.y0);
+		skew.y = 0.15 * fabs(a.x0 - b.x0);
+		b.x0 -= skew.x; b.x1 += skew.x;
+		b.y0 -= skew.y; b.y1 += skew.y;
 		a = fz_straighten_rect(a); b = fz_straighten_rect(b);
 		fz_union_rect(fz_union_rect(&rect, &a), &b);
 	}
@@ -947,9 +950,10 @@ pdf_create_highlight_annot(pdf_document *xref, pdf_obj *obj)
 		for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
 		{
 			pdf_get_quadrilaterals(quad_points, i, &a, &b);
-			skew = 0.15 * fabs(a.y0 - b.y0);
+			skew.x = 0.15 * fabs(a.y0 - b.y0);
+			skew.y = 0.15 * fabs(a.x0 - b.x0);
 			fz_buffer_printf(ctx, content, "%.4f %.4f m %.4f %.4f l %.4f %.4f l %.4f %.4f l h ",
-				a.x0, a.y0, b.x1 + skew, b.y1, a.x1, a.y1, b.x0 - skew, b.y0);
+				a.x0, a.y0, b.x1 + skew.x, b.y1 + skew.y, a.x1, a.y1, b.x0 - skew.x, b.y0 - skew.y);
 		}
 		fz_buffer_printf(ctx, content, "f Q");
 
@@ -972,7 +976,8 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 	fz_annot_type annot_type;
 	pdf_obj *quad_points;
 	fz_rect rect, a, b;
-	float rgb[3];
+	float rgb[3], dot;
+	fz_point offs;
 	int i, n;
 
 	fz_var(content);
@@ -983,7 +988,11 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 	for (i = 0, n = pdf_array_len(quad_points) / 8; i < n; i++)
 	{
 		pdf_get_quadrilaterals(quad_points, i, &a, &b);
-		b.y0 -= 0.25; a.y1 += 0.25;
+		offs.x = a.x0 - b.x0; offs.y = a.y0 - b.y0;
+		dot = offs.x == 0 ? fabs(offs.y) : offs.y == 0 ? fabs(offs.x) : hypotf(offs.x, offs.y);
+		offs.x = offs.x / dot / 4; offs.y = offs.y / dot / 4;
+		b.x0 -= offs.x; a.x1 -= offs.x;
+		b.y0 -= offs.y; a.y1 -= offs.y;
 		a = fz_straighten_rect(a); b = fz_straighten_rect(b);
 		fz_union_rect(fz_union_rect(&rect, &a), &b);
 	}
@@ -1006,7 +1015,12 @@ pdf_create_markup_annot(pdf_document *xref, pdf_obj *obj, char *type)
 			else
 				fz_buffer_printf(ctx, content, "%.4f %.4f m %.4f %.4f l ", b.x0, b.y0, a.x1, a.y1);
 			if (annot_type == FZ_ANNOT_SQUIGGLY)
-				fz_buffer_printf(ctx, content, "S [1] 0.5 d %.4f %.4f m %.4f %.4f l ", b.x0, b.y0 + 0.5f, a.x1, a.y1 + 0.5f);
+			{
+				offs.x = a.x0 - b.x0; offs.y = a.y0 - b.y0;
+				dot = offs.x == 0 ? fabs(offs.y) : offs.y == 0 ? fabs(offs.x) : hypotf(offs.x, offs.y);
+				offs.x = offs.x / dot / 2; offs.y = offs.y / dot / 2;
+				fz_buffer_printf(ctx, content, "S [1] 0.5 d %.4f %.4f m %.4f %.4f l ", b.x0 + offs.x, b.y0 + offs.y, a.x1 + offs.x, a.y1 + offs.y);
+			}
 		}
 		fz_buffer_printf(ctx, content, "S Q");
 	}

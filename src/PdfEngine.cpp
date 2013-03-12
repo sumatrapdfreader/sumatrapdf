@@ -2731,11 +2731,11 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
     static const char *obj_dict = "<<\
     /Type /Annot /Subtype /%s\
     /Rect [%f %f %f %f]\
-    /QuadPoints [%f %f %f %f %f %f %f %f]\
     /C [%f %f %f]\
     /P %d %d R\
     /AP << /N %d 0 R >>\
 >>";
+    static const char *obj_quad_tpl = "[%f %f %f %f %f %f %f %f]";
     static const char *ap_dict = "<< /Type /XObject /Subtype /Form /BBox [0 0 %f %f] /Resources << /ExtGState << /GS << /Type /ExtGState /ca %.f /AIS false /BM /Multiply >> >> /ProcSet [/PDF] >> >>";
     static const char *ap_highlight = "q /DeviceRGB cs /GS gs %f %f %f rg 0 0 %f %f re f Q";
     static const char *ap_underline = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 0.5 m %f 0.5 l S Q";
@@ -2755,24 +2755,36 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
                           Annot_StrikeOut == annot.type ? "StrikeOut" :
                           Annot_Squiggly  == annot.type ? "Squiggly"  : NULL;
     CrashIf(!subtype);
+    int rotation = (page->rotate + 360) % 360;
+    CrashIf((rotation % 90) != 0);
     // convert the annotation's rectangle back to raw user space
-    // TODO: take page rotation into consideration
     fz_rect r = fz_RectD_to_rect(annot.rect);
     fz_matrix invctm;
     fz_transform_rect(&r, fz_invert_matrix(&invctm, &page->ctm));
     double dx = r.x1 - r.x0, dy = r.y1 - r.y0;
+    if ((rotation % 180) == 90)
+        Swap(dx, dy);
     float rgb[3] = { annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f };
     ScopedMem<char> annot_tpl(str::Format(obj_dict, subtype,
-        r.x0, r.y0, r.x1, r.y1, //Rect
-        r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0, //QuadPoints (must lie within /Rect)
-        rgb[0], rgb[1], rgb[2], //C
+        r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1], rgb[2], //Rect and Color
         pdf_to_num(doc->page_refs[annot.pageNo-1]), pdf_to_gen(doc->page_refs[annot.pageNo-1]), //P
         next_num));
     ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
     ScopedMem<char> annot_ap_stream;
+    // rotate the QuadPoints to match the page
+    ScopedMem<char> quad_tpl;
+    if (0 == rotation)
+        quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0));
+    else if (90 == rotation)
+        quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y0, r.x0, r.y1, r.x1, r.y0, r.x1, r.y1));
+    else if (180 == rotation)
+        quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y0, r.x0, r.y0, r.x1, r.y1, r.x0, r.y1));
+    else // if (270 == rotation)
+        quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
 
     fz_try(ctx) {
         annot_obj = pdf_new_obj_from_str(ctx, annot_tpl);
+        pdf_dict_puts_drop(annot_obj, "QuadPoints", pdf_new_obj_from_str(ctx, quad_tpl));
         if (!doc->crypt) {
             // create the appearance stream (unencrypted) and append it to the file
             obj = pdf_new_obj_from_str(ctx, annot_ap_dict);
@@ -2792,6 +2804,10 @@ static int pdf_file_update_add_annotation(pdf_document *doc, pdf_file_update_lis
             }
             if (annot.type != Annot_Highlight)
                 pdf_dict_dels(pdf_dict_gets(obj, "Resources"), "ExtGState");
+            if (rotation) {
+                fz_matrix rot;
+                pdf_dict_puts_drop(obj, "Matrix", pdf_new_matrix(ctx, fz_rotate(&rot, rotation)));
+            }
             buf = fz_new_buffer(ctx, (int)str::Len(annot_ap_stream));
             memcpy(buf->data, annot_ap_stream, (buf->len = (int)str::Len(annot_ap_stream)));
             pdf_file_update_append(list, obj, next_num++, 0, buf);
