@@ -31,6 +31,7 @@ struct AdvancedSettings {
     ForwardSearchSettings * forwardSearch;
     const char *            s;
     float                   defaultZoom;
+    const WCHAR *           ws;
 };
 
 #define AdvancedSettingsVersion "2.3"

@@ -76,12 +76,14 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
     if (!data)
         return;
     FieldMetadata *fieldDef = NULL;
+    Typ type;
     for (int i = 0; i < def->nFields; i++) {
         fieldDef = def->fields + i;
-        if (TYPE_STRUCT_PTR ==  fieldDef->type) {
+        type = fieldDef->type;
+        if (TYPE_STRUCT_PTR ==  type) {
             uint8_t **p = (uint8_t**)(data + fieldDef->offset);
             FreeStruct(*p, fieldDef->def);
-        } else if (TYPE_STR == fieldDef->type) {
+        } else if ((TYPE_STR == type) || (TYPE_WSTR == type)) {
             char **sp = (char**)(data + fieldDef->offset);
             char *s = *sp;
             free(s);
@@ -171,6 +173,12 @@ static void WriteStructPtrVal(uint8_t *p, void *val)
 static void WriteStructStr(uint8_t *p, char *s)
 {
     char **sp = (char **)p;
+    *sp = s;
+}
+
+static void WriteStructWStr(uint8_t *p, WCHAR *s)
+{
+    WCHAR **sp = (WCHAR **)p;
     *sp = s;
 }
 
@@ -301,6 +309,12 @@ static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def)
             if (ok && (ds->sLen > 0)) {
                 char *s = str::DupN(ds->s, ds->sLen - 1);
                 WriteStructStr(structDataPtr, s);
+            }
+        } else if (TYPE_WSTR == type) {
+            ok = DecodeString(ds);
+            if (ok && (ds->sLen > 0)) {
+                WCHAR *ws = str::conv::FromUtf8(ds->s);
+                WriteStructWStr(structDataPtr, ws);
             }
         } else if (TYPE_STRUCT_PTR == type) {
             ok = DecodeOffset(ds);

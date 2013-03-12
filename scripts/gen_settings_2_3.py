@@ -1,5 +1,6 @@
 from gen_settings_types import DefineStruct, MakeStruct
-from gen_settings_types import Bool, U16, I32, U64, Float, Color, String, StructPtr
+from gen_settings_types import Bool, U16, I32, U64, Float, Color
+from gen_settings_types import String, WString, StructPtr
 
 # Settings for 2.3 version of Sumatra
 
@@ -72,6 +73,7 @@ advancedSettingsStruct = DefineStruct("AdvancedSettings", None, [
 	# TODO: just for testing
 	String("s", "Hello"),
 	Float("defaultZoom", -1),
+	WString("ws", "A wide string"),
 ])
 
 # TODO: merge basic/advanced into one?
