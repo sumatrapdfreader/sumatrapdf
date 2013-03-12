@@ -43,18 +43,22 @@ FieldMetadata gAdvancedSettingsFieldMetadata[] = {
 StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 9, &gAdvancedSettingsFieldMetadata[0] };
 
 static const uint8_t gAdvancedSettingsDefault[] = {
-    0x54, 0x74, 0x65, 0x53, // magic id 'SumS'
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
     0x00, 0x00, 0x03, 0x02, // version 2.3
-    0x1a, 0x00, 0x00, 0x00, // top-level struct offset 0x1a
+    0x24, 0x00, 0x00, 0x00, // top-level struct offset 0x24
 
     // offset: 0xc StructVal_0 ForwardSearchSettings
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
+    0x05, // 5 fields
     0x00, // int32_t highlightOffset = 0x0
     0x1e, // int32_t highlightWidth = 0xf
     0x00, // int32_t highlightPermanent = 0x0
     0xfd, 0x65, 0x81, 0xff, // uint32_t highlightColor = 0x6581ff
     0x00, // bool enableTeXEnhancements = 0x0
 
-    // offset: 0x14 StructVal_1 PaddingSettings
+    // offset: 0x19 StructVal_1 PaddingSettings
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
+    0x06, // 6 fields
     0x02, // uint16_t top = 0x2
     0x02, // uint16_t bottom = 0x2
     0x04, // uint16_t left = 0x4
@@ -62,13 +66,15 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0x04, // uint16_t spaceX = 0x4
     0x04, // uint16_t spaceY = 0x4
 
-    // offset: 0x1a StructVal_2 AdvancedSettings
+    // offset: 0x24 StructVal_2 AdvancedSettings
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
+    0x09, // 9 fields
     0x01, // bool traditionalEbookUI = 0x1
     0x00, // bool escToExit = 0x0
     0x00, // uint32_t textColor = 0x0
     0xfd, 0xff, 0xff, 0xff, // uint32_t pageColor = 0xffffff
     0xfd, 0xff, 0xf2, 0x00, // uint32_t mainWindowBackground = 0xfff200
-    0x14, // PaddingSettings * pagePadding = StructVal_1
+    0x19, // PaddingSettings * pagePadding = StructVal_1
     0x0c, // ForwardSearchSettings * forwardSearch = StructVal_0
     0x06, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x00, // const char * s = "Hello"
     0x03, 0x2d, 0x31, 0x00, // float defaultZoom = "-1"

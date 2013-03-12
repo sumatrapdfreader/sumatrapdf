@@ -188,6 +188,9 @@ typedef struct {
     // current offset within the data
     int               off;
 
+    // number of fields
+    int               nFields;
+
     // last decoded value
     uint64_t          u;
     int64_t           i;
@@ -253,17 +256,43 @@ static bool DecodeFloat(DecodeState *ds)
     return true;
 }
 
+// Struct in encoded form starts with:
+// - 4 bytes, magic id constant, for detecting corrupt data
+// - uvarint, number of fields in the struct
+static bool DecodeStructHeader(DecodeState *ds)
+{
+    if (ds->off + 5 > ds->dataSize)
+        return false;
+    // TODO: could be an issue with non-aligned access, but not on x86
+    uint32_t *magicIdPtr = (uint32_t*)(ds->data + ds->off);
+    if (MAGIC_ID != *magicIdPtr)
+        return false;
+    ds->off += 4;
+    if (!DecodeUInt(ds))
+        return false;
+    // sanity check to prevent overflow problems
+    if (ds->u > 1024)
+        return false;
+    ds->nFields = (int)ds->u;
+    return true;
+}
+
 static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def)
 {
     uint8_t *res = AllocArray<uint8_t>(def->size);
     FieldMetadata *fieldDef;
     Typ type;
     uint8_t *structDataPtr;
-    bool ok = true;
+    bool ok = DecodeStructHeader(ds);
     for (int i = 0; i < def->nFields; i++) {
         // previous decode failed
         if (!ok)
             goto Error;
+        // if verion N decodes data from version N - 1, the number
+        // of fields in the data might be less than number of fields
+        // in the struct, so we stop when there's no more data to decode
+        if (i + 1 > ds->nFields)
+            return res;
         fieldDef = def->fields + i;
         structDataPtr = res + fieldDef->offset;
         type = fieldDef->type;
@@ -277,7 +306,7 @@ static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def)
             ok = DecodeOffset(ds);
             if (!ok)
                 goto Error;
-            DecodeState ds2 = { ds->data, ds->dataSize, ds->decodedOffset, 0, 0, 0, 0, 0, 0 };
+            DecodeState ds2 = { ds->data, ds->dataSize, ds->decodedOffset, 0, 0, 0, 0, 0, 0, 0 };
             uint8_t *d = DeserializeRec(&ds2, fieldDef->def);
             if (!d)
                 goto Error;
@@ -323,7 +352,7 @@ uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, Str
     if (hdr->magicId != MAGIC_ID)
         return NULL;
     //uint32_t ver = VersionFromStr(version);
-    DecodeState ds = { data, dataSize, hdr->topLevelStructOffset, 0, 0, 0, 0, 0, 0 };
+    DecodeState ds = { data, dataSize, hdr->topLevelStructOffset, 0, 0, 0, 0, 0, 0, 0 };
     return DeserializeRec(&ds, def);
 }
 

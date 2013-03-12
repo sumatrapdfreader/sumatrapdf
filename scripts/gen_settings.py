@@ -42,14 +42,8 @@ That way we can easily inherit settings for version N from settings for version 
 TODO:
  - write Serialize()
  - support arrays i.e. a count + type of values + pointer to values
- - maybe: for additional safety, add a number of fields in a given struct
- - maybe: add a signature (magic value) at the beginning of each struct to
-   detect corruption of the values (crash if that happens)
- - maybe: when encoding values, also encode the type, so that decoding is
-   possible even if we don't have struct metadata to guide the process
-   type could be encoded in 2 low bits of integer value, values shifted
-   int type would have tag 0, string would have tag 1 and we would have 2
-   tags for future expansion
+ - maybe: when N decodes data from version N - 1, missing data is
+   set to 0. Add some way to set different default values?
  - maybe: add a compare function. That way we could optimize saving
    (only save if the values have changed). It's really simple:
    call Serialize() on both and memcmp() on result
@@ -162,9 +156,9 @@ def serialize_top_level_struct(top_level_struct):
     #  - 4 bytes offset pointing to a top-level structure
     #      within the data
     offset = 12
-    for val in vals:
-        val.offset = offset
-        for field in val.val:
+    for obj in vals:
+        obj.offset = offset
+        for field in obj.val:
             val = field.val
             is_signed = False # default value for the struct offset
             if field.is_struct:
@@ -180,6 +174,8 @@ def serialize_top_level_struct(top_level_struct):
             data = serialize_val(val, is_signed)
             field.serialized = data
             offset += len(data)
+        fields_count = len(obj.val)
+        offset = offset + 4 + len(gob_uvarint_encode(fields_count))
     return vals
 
 def data_to_hex(data):
@@ -227,6 +223,17 @@ def get_cpp_data_for_struct_val(struct_val):
     if struct_val.val == None:
         assert False, "it happened"
         return lines
+
+    # magic id
+    data = struct.pack("<I", g_magic_id)
+    comment = "magic id '%s'" % g_magic_id
+    lines += [data_with_comment_as_c(data, comment)]
+
+    # number of fields as uvarint
+    fields_count = len(struct_val.val)
+    data = gob_uvarint_encode(fields_count)
+    lines += [data_with_comment_as_c(data, "%d fields" % fields_count)]    
+
     for field in struct_val.val:
         data = field.serialized
         data_hex = data_to_hex(data)
@@ -256,7 +263,7 @@ def gen_cpp_data_for_struct_values(vals, version_str):
     lines = ["static const uint8_t g%sDefault[] = {" % name]
     # magic id
     data = struct.pack("<I", g_magic_id)
-    comment = "magic id 'SumS'"
+    comment = "magic id '%s'" % g_magic_id
     lines += [data_with_comment_as_c(data, comment)]
     # version
     data = struct.pack("<I", ver_from_string(version_str))
