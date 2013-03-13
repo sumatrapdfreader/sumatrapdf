@@ -36,16 +36,11 @@ class BencArray;
 class BencDict;
 
 class BencString : public BencObj {
-    friend BencArray;
-    friend BencDict;
-
     char *value;
 
-protected:
+public:
     BencString(const WCHAR *value);
     BencString(const char *rawValue, size_t len);
-
-public:
     virtual ~BencString() { free(value); }
 
     WCHAR *Value() const;

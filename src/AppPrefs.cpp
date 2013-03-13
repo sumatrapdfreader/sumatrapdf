@@ -20,6 +20,99 @@
 
 #define MAX_REMEMBERED_FILES 1000
 
+/* default UI settings */
+#define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
+#define DEFAULT_ZOOM            ZOOM_FIT_PAGE
+#define DEFAULT_LANGUAGE        "en"
+#define COL_FWDSEARCH_BG        RGB(0x65, 0x81, 0xff)
+
+enum PrefType { Pref_Bool, Pref_Int, Pref_Str, Pref_WStr, Pref_Custom };
+
+struct PrefInfo {
+    const char *name;
+    PrefType type;
+    size_t offset;
+    bool (*FromBenc)(BencString *obj, void *valOut);
+    BencString *(*ToBenc)(void *valIn);
+};
+
+/* converters for custom types */
+static bool DisplayModeFromBenc(BencString *obj, void *valOut)
+{
+    ScopedMem<WCHAR> mode(obj->Value());
+    return mode && DisplayModeConv::EnumFromName(mode, (DisplayMode *)valOut);
+}
+static BencString *DisplayModeToBenc(void *valIn)
+{
+    return new BencString(DisplayModeConv::NameFromEnum(*(DisplayMode *)valIn));
+}
+
+static bool UILangFromBenc(BencString *obj, void *valOut)
+{
+    // ensure language code is valid
+    const char *langCode = trans::ValidateLangCode(obj->RawValue());
+    *(const char **)valOut = langCode ? langCode : DEFAULT_LANGUAGE;
+    return true;
+}
+static BencString *UILangToBenc(void *valIn)
+{
+    return new BencString(*(const char **)valIn, (size_t)-1);
+}
+
+static bool FloatFromBenc(BencString *obj, void *valOut)
+{
+    return str::Parse(obj->RawValue(), "%f%$", (float *)valOut) != NULL;
+}
+static BencString *FloatToBenc(void *valIn)
+{
+    ScopedMem<char> zoom(str::Format("%.4f", *(float *)valIn));
+    return new BencString(zoom, (size_t)-1);
+}
+
+// this list is in alphabetical order as Benc expects it
+PrefInfo gGlobalPrefInfo[] = {
+#define sgpOffset(x) offsetof(SerializableGlobalPrefs, x)
+    { "BgColor", Pref_Int, sgpOffset(bgColor) },
+    { "CBX_Right2Left", Pref_Bool, sgpOffset(cbxR2L) },
+    { "Display Mode", Pref_Custom, sgpOffset(defaultDisplayMode), &DisplayModeFromBenc, &DisplayModeToBenc },
+    { "EnableAutoUpdate", Pref_Bool, sgpOffset(enableAutoUpdate) },
+    { "EscToExit", Pref_Bool, sgpOffset(escToExit) },
+    { "ExposeInverseSearch", Pref_Bool, sgpOffset(enableTeXEnhancements) },
+    { "FavVisible", Pref_Bool, sgpOffset(favVisible) },
+    { "ForwardSearch_HighlightColor", Pref_Int, sgpOffset(fwdSearch.color) },
+    { "ForwardSearch_HighlightOffset", Pref_Int, sgpOffset(fwdSearch.offset) },
+    { "ForwardSearch_HighlightPermanent", Pref_Bool, sgpOffset(fwdSearch.permanent) },
+    { "ForwardSearch_HighlightWidth", Pref_Int, sgpOffset(fwdSearch.width) },
+    { "GlobalPrefsOnly", Pref_Bool, sgpOffset(globalPrefsOnly) },
+    { "InverseSearchCommandLine", Pref_WStr, sgpOffset(inverseSearchCmdLine) },
+    { "LastUpdate", Pref_Str, sgpOffset(lastUpdateTime) },
+    { "OpenCountWeek", Pref_Int, sgpOffset(openCountWeek) },
+    { "PdfAssociateDontAskAgain", Pref_Bool, sgpOffset(pdfAssociateDontAskAgain) },
+    { "PdfAssociateShouldAssociate", Pref_Bool, sgpOffset(pdfAssociateShouldAssociate) },
+    { "RememberOpenedFiles", Pref_Bool, sgpOffset(rememberOpenedFiles) },
+    { "ShowStartPage", Pref_Bool, sgpOffset(showStartPage) },
+// for backwards compatibility the string is "ShowToc" and not
+// (more appropriate now) "TocVisible"
+    { "ShowToc", Pref_Bool, sgpOffset(tocVisible) },
+// for backwards compatibility the string is "ShowToolbar" and not
+// (more appropriate now) "ToolbarVisible"
+    { "ShowToolbar", Pref_Bool, sgpOffset(toolbarVisible) },
+// for backwards compatibility, the serialized name is "Toc DX" and not
+// (more apropriate now) "Sidebar DX".
+    { "Toc DX", Pref_Int, sgpOffset(sidebarDx) },
+    { "Toc Dy", Pref_Int, sgpOffset(tocDy) },
+    { "UILanguage", Pref_Custom, sgpOffset(currLangCode), &UILangFromBenc, &UILangToBenc },
+    { "UseSysColors", Pref_Bool, sgpOffset(useSysColors) },
+    { "VersionToSkip", Pref_WStr, sgpOffset(versionToSkip) },
+    { "Window DX", Pref_Int, sgpOffset(windowPos.dx) },
+    { "Window DY", Pref_Int, sgpOffset(windowPos.dy) },
+    { "Window State", Pref_Int, sgpOffset(windowState) },
+    { "Window X", Pref_Int, sgpOffset(windowPos.x) },
+    { "Window Y", Pref_Int, sgpOffset(windowPos.y) },
+    { "ZoomVirtual", Pref_Custom, sgpOffset(defaultZoom), &FloatFromBenc, &FloatToBenc },
+#undef sgpOffset
+};
+
 #define GLOBAL_PREFS_STR            "gp"
 #define FILE_HISTORY_STR            "File History"
 #define FAVS_STR                    "Favorites"
@@ -37,58 +130,18 @@
 #define WINDOW_Y_STR                "Window Y"
 #define WINDOW_DX_STR               "Window DX"
 #define WINDOW_DY_STR               "Window DY"
-// for backwards compatibility the string si "ShowToolbar" and not
-// (more appropriate now) "ToolbarVisible"
-#define TOOLBAR_VISIBLE_STR         "ShowToolbar"
-#define PDF_ASSOCIATE_DONT_ASK_STR  "PdfAssociateDontAskAgain"
-#define PDF_ASSOCIATE_ASSOCIATE_STR "PdfAssociateShouldAssociate"
-#define UI_LANGUAGE_STR             "UILanguage"
-#define FAV_VISIBLE_STR             "FavVisible"
 // for backwards compatibility the string is "ShowToc" and not
 // (more appropriate now) "TocVisible"
 #define TOC_VISIBLE_STR             "ShowToc"
 // for backwards compatibility, the serialized name is "Toc DX" and not
 // (more apropriate now) "Sidebar DX".
 #define SIDEBAR_DX_STR              "Toc DX"
-#define TOC_DY_STR                  "Toc Dy"
 #define TOC_STATE_STR               "TocToggles"
-#define BG_COLOR_STR                "BgColor"
-#define ESC_TO_EXIT_STR             "EscToExit"
-#define USE_SYS_COLORS_STR          "UseSysColors"
-#define INVERSE_SEARCH_COMMANDLINE  "InverseSearchCommandLine"
-#define ENABLE_TEX_ENHANCEMENTS_STR "ExposeInverseSearch"
-#define VERSION_TO_SKIP_STR         "VersionToSkip"
-#define LAST_UPDATE_STR             "LastUpdate"
-#define ENABLE_AUTO_UPDATE_STR      "EnableAutoUpdate"
-#define REMEMBER_OPENED_FILES_STR   "RememberOpenedFiles"
-#define PRINT_COMMANDLINE           "PrintCommandLine"
-#define GLOBAL_PREFS_ONLY_STR       "GlobalPrefsOnly"
 #define USE_GLOBAL_VALUES_STR       "UseGlobalValues"
 #define DECRYPTION_KEY_STR          "Decryption Key"
-#define SHOW_RECENT_FILES_STR       "ShowStartPage"
 #define OPEN_COUNT_STR              "OpenCount"
 #define IS_PINNED_STR               "Pinned"
 #define IS_MISSING_STR              "Missing"
-#define OPEN_COUNT_WEEK_STR         "OpenCountWeek"
-#define FWDSEARCH_OFFSET            "ForwardSearch_HighlightOffset"
-#define FWDSEARCH_COLOR             "ForwardSearch_HighlightColor"
-#define FWDSEARCH_WIDTH             "ForwardSearch_HighlightWidth"
-#define FWDSEARCH_PERMANENT         "ForwardSearch_HighlightPermanent"
-#define CBX_RIGHT2LEFT              "CBX_Right2Left"
-
-#define DM_AUTOMATIC_STR            "automatic"
-#define DM_SINGLE_PAGE_STR          "single page"
-#define DM_FACING_STR               "facing"
-#define DM_BOOK_VIEW_STR            "book view"
-#define DM_CONTINUOUS_STR           "continuous"
-#define DM_CONTINUOUS_FACING_STR    "continuous facing"
-#define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
-
-/* default UI settings */
-#define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
-#define DEFAULT_ZOOM            ZOOM_FIT_PAGE
-#define DEFAULT_LANGUAGE        "en"
-#define COL_FWDSEARCH_BG        RGB(0x65, 0x81, 0xff)
 
 SerializableGlobalPrefs gGlobalPrefs = {
     false, // bool globalPrefsOnly
@@ -139,60 +192,34 @@ static int GetWeekCount()
 
 static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
 {
-    BencDict *prefs = new BencDict();
-    if (!prefs)
-        return NULL;
-
-    prefs->Add(TOOLBAR_VISIBLE_STR, globalPrefs.toolbarVisible);
-    prefs->Add(TOC_VISIBLE_STR, globalPrefs.tocVisible);
-    prefs->Add(FAV_VISIBLE_STR, globalPrefs.favVisible);
-
-    prefs->Add(SIDEBAR_DX_STR, globalPrefs.sidebarDx);
-    prefs->Add(TOC_DY_STR, globalPrefs.tocDy);
-    prefs->Add(PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.pdfAssociateDontAskAgain);
-    prefs->Add(PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.pdfAssociateShouldAssociate);
-
-    prefs->Add(BG_COLOR_STR, globalPrefs.bgColor);
-    prefs->Add(ESC_TO_EXIT_STR, globalPrefs.escToExit);
-    prefs->Add(USE_SYS_COLORS_STR, globalPrefs.useSysColors);
-    prefs->Add(ENABLE_AUTO_UPDATE_STR, globalPrefs.enableAutoUpdate);
-    prefs->Add(REMEMBER_OPENED_FILES_STR, globalPrefs.rememberOpenedFiles);
-    prefs->Add(GLOBAL_PREFS_ONLY_STR, globalPrefs.globalPrefsOnly);
-    prefs->Add(SHOW_RECENT_FILES_STR, globalPrefs.showStartPage);
-
-    const WCHAR *mode = DisplayModeConv::NameFromEnum(globalPrefs.defaultDisplayMode);
-    prefs->Add(DISPLAY_MODE_STR, mode);
-
     CrashIf(!IsValidZoom(globalPrefs.defaultZoom));
-
-    ScopedMem<char> zoom(str::Format("%.4f", globalPrefs.defaultZoom));
-    prefs->AddRaw(ZOOM_VIRTUAL_STR, zoom);
-    prefs->Add(WINDOW_STATE_STR, globalPrefs.windowState);
-    prefs->Add(WINDOW_X_STR, globalPrefs.windowPos.x);
-    prefs->Add(WINDOW_Y_STR, globalPrefs.windowPos.y);
-    prefs->Add(WINDOW_DX_STR, globalPrefs.windowPos.dx);
-    prefs->Add(WINDOW_DY_STR, globalPrefs.windowPos.dy);
-
-    if (globalPrefs.inverseSearchCmdLine)
-        prefs->Add(INVERSE_SEARCH_COMMANDLINE, globalPrefs.inverseSearchCmdLine);
-    prefs->Add(ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs.enableTeXEnhancements);
-    if (globalPrefs.versionToSkip)
-        prefs->Add(VERSION_TO_SKIP_STR, globalPrefs.versionToSkip);
-    if (globalPrefs.lastUpdateTime)
-        prefs->AddRaw(LAST_UPDATE_STR, globalPrefs.lastUpdateTime);
-    prefs->AddRaw(UI_LANGUAGE_STR, globalPrefs.currLangCode);
-
     if (!globalPrefs.openCountWeek)
         globalPrefs.openCountWeek = GetWeekCount();
-    prefs->Add(OPEN_COUNT_WEEK_STR, globalPrefs.openCountWeek);
 
-    prefs->Add(FWDSEARCH_OFFSET, globalPrefs.fwdSearch.offset);
-    prefs->Add(FWDSEARCH_COLOR, globalPrefs.fwdSearch.color);
-    prefs->Add(FWDSEARCH_WIDTH, globalPrefs.fwdSearch.width);
-    prefs->Add(FWDSEARCH_PERMANENT, globalPrefs.fwdSearch.permanent);
-
-    prefs->Add(CBX_RIGHT2LEFT, globalPrefs.cbxR2L);
-
+    BencDict *prefs = new BencDict();
+    char *structBase = (char *)&globalPrefs;
+    for (size_t i = 0; i < dimof(gGlobalPrefInfo); i++) {
+        PrefInfo& meta = gGlobalPrefInfo[i];
+        switch (meta.type) {
+        case Pref_Bool:
+            prefs->Add(meta.name, (int64_t)*(bool *)(structBase + meta.offset));
+            break;
+        case Pref_Int:
+            prefs->Add(meta.name, (int64_t)*(int *)(structBase + meta.offset));
+            break;
+        case Pref_Str:
+            if (*(const char **)(structBase + meta.offset))
+                prefs->AddRaw(meta.name, *(const char **)(structBase + meta.offset));
+            break;
+        case Pref_WStr:
+            if (*(const WCHAR **)(structBase + meta.offset))
+                prefs->Add(meta.name, *(const WCHAR **)(structBase + meta.offset));
+            break;
+        case Pref_Custom:
+            prefs->Add(meta.name, meta.ToBenc(structBase + meta.offset));
+            break;
+        }
+    }
     return prefs;
 }
 
@@ -385,13 +412,10 @@ static const char *GetRawString(BencDict *dict, const char *key)
 
 static void RetrieveRaw(BencDict *dict, const char *key, char *& value)
 {
-    const char *string = GetRawString(dict, key);
-    if (string) {
-        char *str = str::Dup(string);
-        if (str) {
-            free(value);
-            value = str;
-        }
+    char *str = str::Dup(GetRawString(dict, key));
+    if (str) {
+        free(value);
+        value = str;
     }
 }
 
@@ -502,52 +526,41 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
     if (!global)
         goto Exit;
 
-    Retrieve(global, TOOLBAR_VISIBLE_STR, globalPrefs.toolbarVisible);
-    Retrieve(global, TOC_VISIBLE_STR, globalPrefs.tocVisible);
-    Retrieve(global, FAV_VISIBLE_STR, globalPrefs.favVisible);
+    char *structBase = (char *)&globalPrefs;
+    BencInt *intObj;
+    BencString *strObj;
+    for (size_t i = 0; i < dimof(gGlobalPrefInfo); i++) {
+        PrefInfo& meta = gGlobalPrefInfo[i];
+        switch (meta.type) {
+        case Pref_Bool:
+            if ((intObj = global->GetInt(meta.name)))
+                *(bool *)(structBase + meta.offset) = intObj->Value() != 0;
+            break;
+        case Pref_Int:
+            if ((intObj = global->GetInt(meta.name)))
+                *(int *)(structBase + meta.offset) = (int)intObj->Value();
+            break;
+        case Pref_Str:
+            if ((strObj = global->GetString(meta.name))) {
+                const char *str = strObj->RawValue();
+                if (str)
+                    str::ReplacePtr((char **)(structBase + meta.offset), str);
+            }
+            break;
+        case Pref_WStr:
+            if ((strObj = global->GetString(meta.name))) {
+                ScopedMem<WCHAR> str(strObj->Value());
+                if (str)
+                    str::ReplacePtr((WCHAR **)(structBase + meta.offset), str);
+            }
+            break;
+        case Pref_Custom:
+            if ((strObj = global->GetString(meta.name)))
+                meta.FromBenc(strObj, structBase + meta.offset);
+            break;
+        }
+    }
 
-    Retrieve(global, SIDEBAR_DX_STR, globalPrefs.sidebarDx);
-    Retrieve(global, TOC_DY_STR, globalPrefs.tocDy);
-    Retrieve(global, PDF_ASSOCIATE_DONT_ASK_STR, globalPrefs.pdfAssociateDontAskAgain);
-    Retrieve(global, PDF_ASSOCIATE_ASSOCIATE_STR, globalPrefs.pdfAssociateShouldAssociate);
-    Retrieve(global, ESC_TO_EXIT_STR, globalPrefs.escToExit);
-    Retrieve(global, USE_SYS_COLORS_STR, globalPrefs.useSysColors);
-    Retrieve(global, BG_COLOR_STR, globalPrefs.bgColor);
-    Retrieve(global, ENABLE_AUTO_UPDATE_STR, globalPrefs.enableAutoUpdate);
-    Retrieve(global, REMEMBER_OPENED_FILES_STR, globalPrefs.rememberOpenedFiles);
-    Retrieve(global, GLOBAL_PREFS_ONLY_STR, globalPrefs.globalPrefsOnly);
-    Retrieve(global, SHOW_RECENT_FILES_STR, globalPrefs.showStartPage);
-
-    Retrieve(global, DISPLAY_MODE_STR, globalPrefs.defaultDisplayMode);
-    Retrieve(global, ZOOM_VIRTUAL_STR, globalPrefs.defaultZoom);
-    Retrieve(global, WINDOW_STATE_STR, globalPrefs.windowState);
-
-    Retrieve(global, WINDOW_X_STR, globalPrefs.windowPos.x);
-    Retrieve(global, WINDOW_Y_STR, globalPrefs.windowPos.y);
-    Retrieve(global, WINDOW_DX_STR, globalPrefs.windowPos.dx);
-    Retrieve(global, WINDOW_DY_STR, globalPrefs.windowPos.dy);
-
-    Retrieve(global, INVERSE_SEARCH_COMMANDLINE, globalPrefs.inverseSearchCmdLine);
-    Retrieve(global, ENABLE_TEX_ENHANCEMENTS_STR, globalPrefs.enableTeXEnhancements);
-    Retrieve(global, VERSION_TO_SKIP_STR, globalPrefs.versionToSkip);
-    RetrieveRaw(global, LAST_UPDATE_STR, globalPrefs.lastUpdateTime);
-
-    // ensure language code is valid
-    const char *langCode = GetRawString(global, UI_LANGUAGE_STR);
-    langCode = trans::ValidateLangCode(langCode);
-    if (langCode)
-        globalPrefs.currLangCode = langCode;
-    else
-        globalPrefs.currLangCode = DEFAULT_LANGUAGE;
-
-    Retrieve(global, FWDSEARCH_OFFSET, globalPrefs.fwdSearch.offset);
-    Retrieve(global, FWDSEARCH_COLOR, globalPrefs.fwdSearch.color);
-    Retrieve(global, FWDSEARCH_WIDTH, globalPrefs.fwdSearch.width);
-    Retrieve(global, FWDSEARCH_PERMANENT, globalPrefs.fwdSearch.permanent);
-
-    Retrieve(global, CBX_RIGHT2LEFT, globalPrefs.cbxR2L);
-
-    Retrieve(global, OPEN_COUNT_WEEK_STR, globalPrefs.openCountWeek);
     int weekDiff = GetWeekCount() - globalPrefs.openCountWeek;
     globalPrefs.openCountWeek = GetWeekCount();
 
@@ -631,6 +644,14 @@ bool Save(const WCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
 }
 
 }
+
+#define DM_AUTOMATIC_STR            "automatic"
+#define DM_SINGLE_PAGE_STR          "single page"
+#define DM_FACING_STR               "facing"
+#define DM_BOOK_VIEW_STR            "book view"
+#define DM_CONTINUOUS_STR           "continuous"
+#define DM_CONTINUOUS_FACING_STR    "continuous facing"
+#define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
 
 #define IS_STR_ENUM(enumName) \
     if (str::EqIS(txt, TEXT(enumName##_STR))) { \

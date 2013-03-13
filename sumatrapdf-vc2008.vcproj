@@ -173,6 +173,18 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\utils\Settings.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\Settings.h"
+					>
+				</File>
+				<File
+					RelativePath=".\src\utils\Settings_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\src\utils\TgaReader.cpp"
 					>
 				</File>
@@ -386,18 +398,6 @@
 				</File>
 				<File
 					RelativePath=".\src\utils\NoFreeAllocator.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\utils\Settings.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\src\utils\Settings.h"
-					>
-				</File>
-				<File
-					RelativePath=".\src\utils\Settings_ut.cpp"
 					>
 				</File>
 				<File

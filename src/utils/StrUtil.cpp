@@ -146,17 +146,13 @@ bool EndsWithI(const WCHAR *txt, const WCHAR *end)
 void ReplacePtr(char **s, const char *snew)
 {
     free(*s);
-    *s = NULL;
-    if (snew)
-        *s = str::Dup(snew);
+    *s = str::Dup(snew);
 }
 
 void ReplacePtr(WCHAR **s, const WCHAR *snew)
 {
     free(*s);
-    *s = NULL;
-    if (snew)
-        *s = str::Dup(snew);
+    *s = str::Dup(snew);
 }
 
 /* Concatenate 2 strings. Any string can be NULL.
