@@ -221,7 +221,6 @@ PrefInfo gFilePrefInfo[] = {
     { "Pinned", Pref_Bool, dsOffset(isPinned), Ds_IsPinned },
     { "ReparseIdx", Pref_Int, dsOffset(reparseIdx), Ds_NotGlobal },
     { "Rotation", Pref_Int, dsOffset(rotation), Ds_NotGlobal },
-    { "Rotation", Pref_Int, dsOffset(rotation), Ds_NotGlobal },
     { "Scroll X2", Pref_Int, dsOffset(scrollPos.x), Ds_NotGlobal },
     { "Scroll Y2", Pref_Int, dsOffset(scrollPos.y), Ds_NotGlobal },
 // for backwards compatibility the string is "ShowToc" and not
@@ -608,7 +607,7 @@ bool EnumFromName(const WCHAR *txt, DisplayMode *mode)
 }
 
 /* Caller needs to free() the result. */
-static WCHAR *GetPrefsFileName()
+static inline WCHAR *GetPrefsFileName()
 {
     return AppGenDataFilename(PREFS_FILE_NAME);
 }
