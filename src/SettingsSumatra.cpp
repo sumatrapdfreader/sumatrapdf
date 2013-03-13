@@ -86,7 +86,7 @@ FieldMetadata gSettingsFieldMetadata[] = {
 
 StructMetadata gSettingsMetadata = { sizeof(Settings), 2, &gSettingsFieldMetadata[0] };
 
-static const uint8_t gSettingsDefault[] = {
+static const uint8_t gSettingsDefault[126] = {
     0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
     0x00, 0x00, 0x03, 0x02, // version 2.3
     0x77, 0x00, 0x00, 0x00, // top-level struct offset 0x77

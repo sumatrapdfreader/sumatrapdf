@@ -223,7 +223,7 @@ def get_cpp_data_for_struct_val(struct_val):
     assert struct_val.val != None
     if struct_val.val == None:
         assert False, "it happened"
-        return lines
+        return (lines, 0)
 
     # magic id
     data = struct.pack("<I", g_magic_id)
@@ -234,9 +234,11 @@ def get_cpp_data_for_struct_val(struct_val):
     fields_count = len(struct_val.val)
     data = gob_uvarint_encode(fields_count)
     lines += [data_with_comment_as_c(data, "%d fields" % fields_count)]
+    size = 4 + len(data)
 
     for field in struct_val.val:
         data = field.serialized
+        size += len(data)
         data_hex = data_to_hex(data)
         var_type = field.typ.c_type
         var_name = field.typ.name
@@ -250,7 +252,7 @@ def get_cpp_data_for_struct_val(struct_val):
                 val_str = short_object_id(field)
         s = "    %(data_hex)s, // %(var_type)s %(var_name)s = %(val_str)s" % locals()
         lines += [s]
-    return lines
+    return (lines, size)
 
 """
 static uint8_t g$(StructName)Default[] = {
@@ -261,8 +263,8 @@ def gen_cpp_data_for_struct_values(vals, version_str):
     top_level = vals[-1]
     assert isinstance(top_level, StructVal)
     name = top_level.struct_def.name
-    lines = ["static const uint8_t g%sDefault[] = {" % name]
-    # magic id
+    lines = [""] # will be replaced by: "static const uint8_t g%sDefault[%(total_size)d] = {" at the end
+
     data = struct.pack("<I", g_magic_id)
     comment = "magic id '%s'" % g_magic_id_str
     lines += [data_with_comment_as_c(data, comment)]
@@ -275,10 +277,14 @@ def gen_cpp_data_for_struct_values(vals, version_str):
     comment = "top-level struct offset %s" % hex(top_level.offset)
     lines += [data_with_comment_as_c(data, comment)]
 
+    total_size = 12
     for val in vals:
-        struct_lines = get_cpp_data_for_struct_val(val)
+        (struct_lines, size) = get_cpp_data_for_struct_val(val)
         lines += struct_lines
+        total_size += size
     lines += ["};"]
+    lines[0] = "static const uint8_t g%sDefault[%d] = {" % (name, total_size)
+
     return "\n".join(lines)
 
 def main():
