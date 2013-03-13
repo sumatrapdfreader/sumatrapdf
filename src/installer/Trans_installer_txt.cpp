@@ -406,7 +406,7 @@ const char * gTranslations_pt =
   "Para continuar, feche o %s!\0"\
   "Escolha a pasta de instala\303\247\303\243o do SumatraPDF:\0"\
   "Alguns ficheiros do instalador est\303\243o danificados\0"\
-  "\0"\
+  "Iniciar SumatraPDF\0"\
   "Instalador do SumatraPDF %s\0"\
   "Desinstalador do SumatraPDF %s\0"\
   "O SumatraPDF foi desinstalado.\0"\

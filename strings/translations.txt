@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-39a892cf881e202d029240dad9f00d4fabc8603f
+b5270c1f917cfcdee6e3b2e03e3f35e9c1898786
 :%s of %s
 af:%s uit %s
 br:%s de %s
@@ -159,6 +159,7 @@ am:&Ընտրված բոլոր էջերը
 ar:&كل الصفحات المحددة
 az:&Bütün seçilmiş səhifələr
 bg:&Всички избрани страници
+bn:&নির্বাচিত পৃষ্ঠাসমূহ
 br:Tod&as as páginas selecionadas
 bs:Sve označene str&anice
 ca-xv:&Totes les pàgines seleccionades
@@ -399,6 +400,7 @@ am:&Պատճենել ընտրվածը
 ar:&نسخ المحدد
 az:Seçilmiş sahəni &kopyala
 bg:&Копирай избраното
+bn:&নির্বাচিত অংশ কপি করুন
 br:&Copiar Seleção
 bs:&Kopiraj označeno
 ca-xv:&Copia la selecció
@@ -516,7 +518,7 @@ am:&Այլևս չհարցնել
 ar:&لا تسألني مرةً أخرى
 az:Bir daha &soruşma
 bg:&Не питай отново
-bn:আমাকে পুনরায় জিজ্ঞাসা করা হবে না
+bn:&আমাকে আর জিজ্ঞেস করবেন না
 br:Não perguntar novamente
 bs:Nemoj me ponovo pitati
 by:Больш не пытаць
@@ -3154,6 +3156,7 @@ am:Ավելացնել ընտրյալներին
 ar:أضف للمفضلة
 az:Seçilmişlərə əlavə et
 bg:Добавяне към любимите
+bn:প্রিয় যোগ করুন
 br:Adicionar Favorito
 bs:Dodaj favorit
 ca-xv:Afig un preferit
@@ -3319,6 +3322,7 @@ am:Ավելացնել ընտրյալներին
 ar:أضف للمفضلة
 az:Seçilmişlərə əlavə et
 bg:Добавяне към любимите
+bn:পছন্দের মধ্যে অন্তর্ভুক্ত করুন
 br:Adicionar aos Favoritos
 bs:Dodaj u favorite
 ca-xv:Afig als preferits
@@ -3374,6 +3378,7 @@ am:Ընդլայնված
 ar:متقدم
 az:Əlavə
 bg:Разширени (Допълнителни)
+bn:উন্নমিত
 br:Avançado
 bs:Napredno
 by:Дадаткова
@@ -3435,6 +3440,7 @@ am:Բոլոր ֆայլերը
 ar:كل الملفات
 az:Bütün fayllar
 bg:Всички файлове
+bn:সকল ফাইল
 br:Todos os arquivos
 bs:Svi fajlovi
 by:Усе файлы
@@ -3552,6 +3558,7 @@ am:Ծրագիրը.
 ar:التطبيق
 az:Proqram:
 bg:Приложение:
+bn:অ্যাপ্লিকেশানঃ
 br:Aplicativo:
 bs:Aplikacija:
 ca-xv:Programa:
@@ -3609,6 +3616,7 @@ vn:Ứng dụng:
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
 az:Əminsiniz ki, SumatraPDF-i silmək istəyirsiniz?
+bn:আপনি কি নিশ্চিত যে আপনি সুমাত্রা-পিডিএফ আন-ইন্সটল করতে চান?
 br:Tem certeza de que quer desinstalar o SumatraPDF?
 cn:确定要卸载SumatraPDF吗？
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
@@ -3696,6 +3704,7 @@ am:Կցորդ. %s
 ar:المرفقات: %s
 az:Qoşma: %s
 bg:Прикрепен: %s
+bn:সংযুক্তিঃ %s
 br:Anexo: %s
 bs:Prilog: %s
 ca-xv:Adjunt: %s
@@ -3754,6 +3763,7 @@ am:Հեղինակը.
 ar:المؤلف
 az:Müəllif:
 bg:Автор:
+bn:লেখকঃ
 br:Autor:
 bs:Autor:
 ca-xv:Autor:
@@ -3813,6 +3823,7 @@ am:Ինքնաշխատ
 ar:آلي
 az:Avtomatik
 bg:Автоматично
+bn:স্বয়ংক্রিয়
 br:Automático
 bs:Automatsko
 ca-xv:Automàtic
@@ -3934,6 +3945,7 @@ am:Գրքի նման
 ar:عرض الكتاب
 az:Kitab formatı
 bg:Изглед като книга
+bn:বইরূপ প্রদর্শন
 br:Ver como livro
 bs:Knjiški pregled
 ca-xv:Visualització de llibre
@@ -4061,6 +4073,7 @@ am:Էջանշել պիտակները
 ar:اختصارات مرجعية
 az:Əlfəcin yarlıkları
 bg:Кратък път към отметки
+bn:পুস্তক-চিহ্ন শর্টকাট
 br:Atalhos de Favoritos
 bs:Kratice zabilješki
 ca-xv:Dreceres de marcadors
@@ -4168,6 +4181,7 @@ am:Էջեր
 ar:العلامات
 az:Əlfəcinlər
 bg:Отметки
+bn:পুস্তক-চিহ্নসমূহ
 br:Marcadores
 bs:Zabilješke
 ca-xv:Marcadors
@@ -4226,6 +4240,7 @@ am:Բայթ
 ar:بايت
 az:Bayt
 bg:Байтове
+bn:বাইটসমূহ
 br:Bytes
 bs:Bajta
 ca-xv:Bytes
@@ -4402,6 +4417,7 @@ am:Մերժել
 ar:إلغاء
 az:İmtina
 bg:Отказ
+bn:বাতিল করুন
 br:Cancelar
 bs:Otkaži
 by:Адмена
@@ -4463,6 +4479,7 @@ am:Հնարավոր չէ տպել այս ֆայլը
 ar:لايمكن طباعة هذا الملف
 az:Bu faylı çap etmək mümkün deyil
 bg:Файлът не може да бъде отпечатан
+bn:এই ফাইলটি মুদ্রণ করা যাচ্ছে না
 br:Não foi possível imprimir este arquivo
 bs:Ne mogu odštampati ovaj fajl
 by:Не атрымалася раздрукаваць гэты файл
@@ -4715,6 +4732,7 @@ uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Close
 az:Bağla
+bn:বন্ধ করুন
 br:Fechar
 cn:关闭
 de:Schließen
@@ -4736,6 +4754,7 @@ am:Հումորիստական գրքեր
 ar:كتب قصص مصورة
 az:CBR, CBZ sənədləri
 bg:CBR, CBZ документи (комикси)
+bn:কমিক বই
 br:Quadrinhos
 bs:Stripovi
 ca-xv:Llibres de còmic
@@ -4791,6 +4810,7 @@ am:Համատեղելիությունը
 ar:التوافق
 az:Uyğunluq
 bg:Съвместимост
+bn:সামঞ্জস্য
 br:Compatibilidade
 bs:Kompatibilnost
 ca-xv:Compatibilitat
@@ -5105,6 +5125,7 @@ am:Պատճենել &Նկարը
 ar:نسخ الصورة
 az:&Şəkli kopyala
 bg:Копирай &изображението
+bn:&ছবি কপি করুন
 br:Copiar &Imagem
 bs:Kopiraj &sliku
 ca-xv:Copia la &imatge
@@ -5268,6 +5289,7 @@ am:Տեքստի պատճենումը թույլատրված չէ (պատճենո
 ar:تعذر نسخ النص (النسخ كصورة فقط)
 az:Mətni kopyalamaq mümkün olmadı (şəkil kimi kopyalanır)
 bg:Текстът не може да бъде копиран (копиране само като картинка)
+bn:লেখা কপি করতে দেয়া হয়নি (ছবি-মাত্র কপি করা হচ্ছিল)
 br:Cópia de texto negada (copiando somente como imagem)
 bs:Kopiranje teksta je nemoguće (kopirano kao slika)
 ca-xv:No es pot copiar el text (només es copia com a imatge)
@@ -5326,6 +5348,7 @@ am:Հեղ. իրավունքը.
 ar:حقوق الطبع محفوظة:
 az:Müəlliflik hüququ:
 bg:Авторско право:
+bn:কপিরাইটঃ
 br:Direito autoral:
 bs:Prava pridržana:
 ca-xv:Copyright:
@@ -5376,6 +5399,7 @@ am:Տպիչի հատկությունները հասանելի չեն
 ar:لم يمكن الحصول على خصائص الطابعة
 az:Printer xüsusiyyətlərini müəyyən etmək mümkün olmadı
 bg:Настройките на принтера не са намерени
+bn:মুদ্রণ যন্ত্রের প্রোপারটিজ অর্জন করা সম্ভব হয়নি
 br:Não foi possível obter as propriedades da Impressora
 bs:Ne mogu dobaviti postavke štampača
 ca-xv:No es poden obtindre les propietats de la impressora
@@ -5427,6 +5451,7 @@ uk:Неможливо отримати налаштування друкарки
 uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
 :Couldn't create temporary directory
+bn:অস্থায়ী ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
 br:Não foi possível criar pasta temporária
 cn:无法创建临时目录
 de:Konnte das Temporärverzeichnis nicht erstellen
@@ -5441,6 +5466,7 @@ ta:தற்காலிக கோப்புறையினை உருவ
 uk:Не вдалося створити тимчасову папку
 vn:Không tạo được thư mục tạm
 :Couldn't create the installation directory
+bn:ইন্সটলএসন ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
 br:Não foi possível criar a pasta de instalação.
 cn:无法创建指定的安装目录
 de:Konnte das Installationsverzeichnis nicht erstellen
@@ -5458,6 +5484,7 @@ am:Հնարավոր չէ գտնել տպիչ
 ar:لا يمكن تشغيل الطابعة
 az:Printeri işə salmaq mümkün olmadı
 bg:Принтерът не може да бъде инициализиран
+bn:মুদ্রণ যন্ত্র আরম্ভ করা সম্ভব হয়নি
 br:Não foi possível acionar a impressora
 bs:Ne mogu inicijalizirati štampač
 ca-xv:No es pot inicialitzar la impressora
@@ -5514,6 +5541,7 @@ uk:Неможливо знайти друкарку
 uz:Printerni ishga tushirib bo'lmadi
 vn:Không khởi động được máy in
 :Couldn't install PDF previewer
+bn:পিডিএফ প্রিভিউয়ার ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o pré-visualizador para PDF
 cn:无法安装PDF文件预临览
 de:Konnte die PDF Vorschau nicht installieren
@@ -5527,6 +5555,7 @@ ta:PDF முன்னோட்டம் நிறுவ இயலவில்�
 uk:Не вдалося встановити програму для попереднього перегляду PDF
 vn:Không thể cài đặt phần hiển thị trước PDF
 :Couldn't install PDF search filter
+bn:পিডিএফ খোঁজ ফিল্টার ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o filtro de pesquisa para PDF
 cn:无法安装PDF搜索过滤器
 de:Konnte den PDF Suchfilter nicht installieren
@@ -5539,6 +5568,7 @@ ru:Не удалось установить фильтр поиска PDF
 ta:PDF தேடலை நிறுவ இயலவில்லை
 uk:Не вдалося встановити фільтр пошуку для PDF
 :Couldn't install browser plugin
+bn:ব্রাউজার প্লাগ-ইন ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o plugin do navegador
 cn:无法安装浏览器插件
 de:Konnte das Browser-Plugin nicht installieren
@@ -5577,6 +5607,7 @@ ta:நிறுவிய கோப்புறையை நீக்க மு�
 uk:Не вдалося видалити папку, де було встановлено програму
 vn:Không thể gỡ bỏ thư mục cài đặt
 :Couldn't remove the shortcut
+bn:শর্টকাট বাতিল করা সম্ভব হয়নি
 br:Não foi possível remover o atalho
 cn:无法移除快捷方式
 de:Konnte die Verknüpfung nicht löschen
@@ -5703,6 +5734,7 @@ am:Ստեղծված է.
 ar:الإنشاء
 az:Hazırlanma tarixi:
 bg:Създаден:
+bn:নির্মিতঃ
 br:Criado:
 bs:Kreirano:
 ca-xv:Creat:
@@ -5762,6 +5794,7 @@ am:Ընթացիկ ֆայլը
 ar:الملف الحالي
 az:Hazırkı fayl
 bg:Сегашен файл
+bn:বর্তমান ফাইল
 br:Arquivo atual
 bs:Trenutni fajl
 ca-xv:Fitxer actual
@@ -8531,7 +8564,7 @@ am:ԳԲ
 ar:ج.ب
 az:GB
 bg:GB
-bn:GB
+bn:জিবি
 br:GB
 bs:GB
 by:GB
@@ -9056,7 +9089,7 @@ am:ՄԲ
 ar:م.ب
 az:MB
 bg:MB
-bn:MB
+bn:এমবি
 br:MB
 bs:MB
 by:MB
@@ -13283,6 +13316,7 @@ eu:Abiarazi SumatraPDF
 fr:Lancer SumatraPDF
 hu:SumatraPDF indítása
 it:Avvia SumatraPDF
+pt:Iniciar SumatraPDF
 ru:Пуск SumatraPDF
 ta:சுமத்ராPDF தொடரவும்
 uk:Запустити SumatraPDF
@@ -14139,7 +14173,7 @@ am:Ծրագրի &կայքը
 ar:&زيارة موقع البرنامج
 az:Proqramın &vebsaytına keç
 bg:Посетете &уебсайта
-bn:&আমাদের অন্তর্জালস্থান দর্শন করুন
+bn:&আমাদের ওয়েবসাইট ভ্রমণ করুন
 br:&Visitar a página do SumatraPDF
 bs:&Posjeti web stranicu
 by:Наведаць сайт
@@ -14515,7 +14549,7 @@ am:Մեծացնել
 ar:تكبير
 az:Böyüt
 bg:Увеличаване
-bn:বৃহৎ বিবর্ধন
+bn:বড় করুন
 br:Aumentar zoom
 bs:Uvećaj
 by:Павялічыць
@@ -14583,7 +14617,7 @@ am:Փոքրացնել
 ar:تصغير
 az:Kiçilt
 bg:Намаляне
-bn:ক্ষুদ্র বিবর্ধন
+bn:ছোট করুন
 br:Diminuir zoom
 bs:Umanji
 by:Паменьшыць
@@ -14708,6 +14742,7 @@ am:[Հայտնաբերվել են փոփոխություններ, ընթանու
 ar:جاري التحديث بعد التغييرات %s
 az:[Dəyişikliklər müəyyən edildi; yenilənmə] %s
 bg:[Намерени са промени; обновявам] %s
+bn:[পরিবর্তন সনাক্ত হয়েছে; রিফ্রেশ করা হচ্ছে] %s
 br:[Mudanças detectadas; atualizando] %s
 bs:[Uočena promjena; osvježavam] %s
 by:[Выяўлены змены; адбываецца абнаўленне] %s
@@ -14767,6 +14802,7 @@ am:Տեքստը պատճենվում է
 ar:يتم حالياً نسخ النص
 az:mətn kopyalanır
 bg:копиране на текст
+bn:লেখা কপি করা হচ্ছে
 br:copiando texto
 bs:kopiram tekst
 ca-xv:s'està copiant text
