@@ -18,9 +18,9 @@ typedef struct {
     uint32_t   topLevelStructOffset;
 } SerializedHeader;
 
-STATIC_ASSERT(sizeof(SerializedHeader) == SERIALIZED_HEADER_LEN, SerializedHeader_is_12_bytes);
-
-STATIC_ASSERT(sizeof(FieldMetadata) == 4 + sizeof(StructMetadata*), valid_FieldMetadata_size);
+// these assertions don't always hold without #pragma pack
+// STATIC_ASSERT(sizeof(SerializedHeader) == SERIALIZED_HEADER_LEN, SerializedHeader_is_12_bytes);
+// STATIC_ASSERT(sizeof(FieldMetadata) == 4 + sizeof(StructMetadata*), valid_FieldMetadata_size);
 
 // returns -1 on error
 static int NextIntVal(const char **sInOut)

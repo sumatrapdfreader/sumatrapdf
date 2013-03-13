@@ -1024,23 +1024,11 @@ WCHAR *ToPlainUrl(const WCHAR *url)
 
 namespace conv {
 
-// not exactly a conversion, if it's ANSI, we just copy it verbatim
-size_t ToCodePageBuf(char *buf, size_t cbBufSize, const char *s, UINT cp)
-{
-    BufSet(buf, cbBufSize, s);
-    return Len(buf);
-}
-size_t FromCodePageBuf(char *buf, size_t cchBufSize, const char *s, UINT cp)
-{
-    BufSet(buf, cchBufSize, s);
-    return Len(buf);
-}
-
-size_t ToCodePageBuf(char *buf, size_t cbBufSize, const WCHAR *s, UINT cp)
+size_t ToCodePageBuf(char *buf, int cbBufSize, const WCHAR *s, UINT cp)
 {
     return WideCharToMultiByte(cp, 0, s, -1, buf, cbBufSize, NULL, NULL);
 }
-size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp)
+size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp)
 {
     return MultiByteToWideChar(cp, 0, s, -1, buf, cchBufSize);
 }

@@ -184,7 +184,7 @@ static void SetImageProperty(Bitmap *bmp, PROPID id, const char *asciiValue)
     item.id = id;
     item.type = PropertyTagTypeASCII;
     item.value = (void *)asciiValue;
-    item.length = str::Len(asciiValue) + 1;
+    item.length = (ULONG)(str::Len(asciiValue) + 1);
     Status ok = bmp->SetPropertyItem(&item);
     CrashIf(ok != Ok);
 }

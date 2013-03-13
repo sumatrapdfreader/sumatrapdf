@@ -138,10 +138,8 @@ inline char *   ToUtf8(const WCHAR *src) { return ToCodePage(src, CP_UTF8); }
 inline WCHAR *  FromAnsi(const char *src) { return FromCodePage(src, CP_ACP); }
 inline char *   ToAnsi(const WCHAR *src) { return ToCodePage(src, CP_ACP); }
 
-size_t ToCodePageBuf(char *buf, size_t cbBufSize, const char *s, UINT cp);
-size_t FromCodePageBuf(char *buf, size_t cchBufSize, const char *s, UINT cp);
-size_t ToCodePageBuf(char *buf, size_t cbBufSize, const WCHAR *s, UINT cp);
-size_t FromCodePageBuf(WCHAR *buf, size_t cchBufSize, const char *s, UINT cp);
+size_t ToCodePageBuf(char *buf, int cbBufSize, const WCHAR *s, UINT cp);
+size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp);
 
 } // namespace str::conv
 

@@ -1101,7 +1101,8 @@ void CalcMD5DigestWin(const void *data, size_t byteCount, unsigned char digest[1
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash);
     CrashAlwaysIf(!ok);
-    ok = CryptHashData(hHash, (const BYTE*)data, byteCount, 0);
+    CrashAlwaysIf(byteCount > UINT_MAX);
+    ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)byteCount, 0);
     CrashAlwaysIf(!ok);
 
     DWORD hashLen;
@@ -1133,7 +1134,8 @@ void CalcSha1DigestWin(void *data, size_t byteCount, unsigned char digest[32])
     CrashAlwaysIf(!ok);
     ok = CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash);
     CrashAlwaysIf(!ok);
-    ok = CryptHashData(hHash, (const BYTE*)data, byteCount, 0);
+    CrashAlwaysIf(byteCount > UINT_MAX);
+    ok = CryptHashData(hHash, (const BYTE*)data, (DWORD)byteCount, 0);
     CrashAlwaysIf(!ok);
 
     DWORD hashLen;
