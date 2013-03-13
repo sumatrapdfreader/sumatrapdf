@@ -494,7 +494,23 @@ pdf_lex(fz_stream *f, pdf_lexbuf *buf)
 		case '}':
 			return PDF_TOK_CLOSE_BRACE;
 		case IS_NUMBER:
-			return lex_number(f, buf, c);
+			/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2231 */
+			{
+				int tok = lex_number(f, buf, c);
+				while (1)
+				{
+					c = fz_peek_byte(f);
+					switch (c)
+					{
+					case IS_NUMBER:
+						fz_warn(f->ctx, "ignoring invalid character after number: '%c'", c);
+						fz_read_byte(f);
+						continue;
+					default:
+						return tok;
+					}
+				}
+			}
 		default: /* isregular: !isdelim && !iswhite && c != EOF */
 			fz_unread_byte(f);
 			lex_name(f, buf);
