@@ -21,6 +21,13 @@ struct PaddingSettings {
     uint16_t spaceY;
 };
 
+struct RectInt {
+    int32_t x;
+    int32_t y;
+    int32_t dx;
+    int32_t dy;
+};
+
 struct AdvancedSettings {
     bool                    traditionalEbookUI;
     bool                    escToExit;
@@ -34,10 +41,40 @@ struct AdvancedSettings {
     const WCHAR *           ws;
 };
 
-#define AdvancedSettingsVersion "2.3"
+struct BasicSettings {
+    bool         globalPrefsOnly;
+    const char * currLanguage;
+    bool         toolbarVisible;
+    bool         pdfAssociateDontAsk;
+    bool         pdfAssociateDoIt;
+    bool         checkForUpdates;
+    bool         rememberMRUFiles;
+    bool         useSystemColorScheme;
+    const char * inverseSearchCmdLine;
+    const char * versionToSkip;
+    const char * lastUpdateTime;
+    uint16_t     defaultDisplayMode;
+    float        defaultZoom;
+    int32_t      windowState;
+    RectInt *    windowPos;
+    bool         tocVisible;
+    bool         favVisible;
+    int32_t      sidebarDx;
+    int32_t      tocDy;
+    bool         showStartPage;
+    int32_t      openCountWeek;
+    uint64_t     lastPrefUpdate;
+};
 
-AdvancedSettings *DeserializeAdvancedSettings(const uint8_t *data, int dataLen, bool *usedDefaultOut);
-uint8_t *SerializeAdvancedSettings(AdvancedSettings *, int *dataLenOut);
-void FreeAdvancedSettings(AdvancedSettings *);
+struct Settings {
+    BasicSettings *    basic;
+    AdvancedSettings * advanced;
+};
+
+#define SettingsVersion "2.3"
+
+Settings *DeserializeSettings(const uint8_t *data, int dataLen, bool *usedDefaultOut);
+uint8_t *SerializeSettings(Settings *, int *dataLenOut);
+void FreeSettings(Settings *);
 
 #endif

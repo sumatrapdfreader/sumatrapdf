@@ -154,7 +154,7 @@ def MakeVal(src):
     if isinstance(src, Var):
         return MakeValFromPrimitiveVar(src)
     if isinstance(src, StructVal):
-        assert False, "MakeVal doesn't handle StructVal yet"
+        return src
     if isinstance(src, Val):
         return MakeValFromPrimitiveVal(src)
     print(src)

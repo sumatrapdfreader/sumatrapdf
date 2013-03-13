@@ -50,6 +50,7 @@ TODO:
 """
 
 g_magic_id = 0x53657454  # 'SetT' as 'Settings''
+g_magic_id_str = "SetT"
 
 def script_dir(): return os.path.dirname(__file__)
 def src_dir():
@@ -226,13 +227,13 @@ def get_cpp_data_for_struct_val(struct_val):
 
     # magic id
     data = struct.pack("<I", g_magic_id)
-    comment = "magic id '%s'" % g_magic_id
+    comment = "magic id '%s'" % g_magic_id_str
     lines += [data_with_comment_as_c(data, comment)]
 
     # number of fields as uvarint
     fields_count = len(struct_val.val)
     data = gob_uvarint_encode(fields_count)
-    lines += [data_with_comment_as_c(data, "%d fields" % fields_count)]    
+    lines += [data_with_comment_as_c(data, "%d fields" % fields_count)]
 
     for field in struct_val.val:
         data = field.serialized
@@ -263,7 +264,7 @@ def gen_cpp_data_for_struct_values(vals, version_str):
     lines = ["static const uint8_t g%sDefault[] = {" % name]
     # magic id
     data = struct.pack("<I", g_magic_id)
-    comment = "magic id '%s'" % g_magic_id
+    comment = "magic id '%s'" % g_magic_id_str
     lines += [data_with_comment_as_c(data, comment)]
     # version
     data = struct.pack("<I", ver_from_string(version_str))

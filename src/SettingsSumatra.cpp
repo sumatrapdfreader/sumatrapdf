@@ -28,6 +28,15 @@ FieldMetadata gPaddingSettingsFieldMetadata[] = {
 
 StructMetadata gPaddingSettingsMetadata = { sizeof(PaddingSettings), 6, &gPaddingSettingsFieldMetadata[0] };
 
+FieldMetadata gRectIntFieldMetadata[] = {
+    { TYPE_I32, offsetof(RectInt, x), NULL },
+    { TYPE_I32, offsetof(RectInt, y), NULL },
+    { TYPE_I32, offsetof(RectInt, dx), NULL },
+    { TYPE_I32, offsetof(RectInt, dy), NULL },
+};
+
+StructMetadata gRectIntMetadata = { sizeof(RectInt), 4, &gRectIntFieldMetadata[0] };
+
 FieldMetadata gAdvancedSettingsFieldMetadata[] = {
     { TYPE_BOOL, offsetof(AdvancedSettings, traditionalEbookUI), NULL },
     { TYPE_BOOL, offsetof(AdvancedSettings, escToExit), NULL },
@@ -43,13 +52,47 @@ FieldMetadata gAdvancedSettingsFieldMetadata[] = {
 
 StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 10, &gAdvancedSettingsFieldMetadata[0] };
 
-static const uint8_t gAdvancedSettingsDefault[] = {
-    0x54, 0x74, 0x65, 0x53, // magic id '1399157844'
+FieldMetadata gBasicSettingsFieldMetadata[] = {
+    { TYPE_BOOL, offsetof(BasicSettings, globalPrefsOnly), NULL },
+    { TYPE_STR, offsetof(BasicSettings, currLanguage), NULL },
+    { TYPE_BOOL, offsetof(BasicSettings, toolbarVisible), NULL },
+    { TYPE_BOOL, offsetof(BasicSettings, pdfAssociateDontAsk), NULL },
+    { TYPE_BOOL, offsetof(BasicSettings, pdfAssociateDoIt), NULL },
+    { TYPE_BOOL, offsetof(BasicSettings, checkForUpdates), NULL },
+    { TYPE_BOOL, offsetof(BasicSettings, rememberMRUFiles), NULL },
+    { TYPE_BOOL, offsetof(BasicSettings, useSystemColorScheme), NULL },
+    { TYPE_STR, offsetof(BasicSettings, inverseSearchCmdLine), NULL },
+    { TYPE_STR, offsetof(BasicSettings, versionToSkip), NULL },
+    { TYPE_STR, offsetof(BasicSettings, lastUpdateTime), NULL },
+    { TYPE_U16, offsetof(BasicSettings, defaultDisplayMode), NULL },
+    { TYPE_FLOAT, offsetof(BasicSettings, defaultZoom), NULL },
+    { TYPE_I32, offsetof(BasicSettings, windowState), NULL },
+    { TYPE_STRUCT_PTR, offsetof(BasicSettings, windowPos), &gRectIntMetadata },
+    { TYPE_BOOL, offsetof(BasicSettings, tocVisible), NULL },
+    { TYPE_BOOL, offsetof(BasicSettings, favVisible), NULL },
+    { TYPE_I32, offsetof(BasicSettings, sidebarDx), NULL },
+    { TYPE_I32, offsetof(BasicSettings, tocDy), NULL },
+    { TYPE_BOOL, offsetof(BasicSettings, showStartPage), NULL },
+    { TYPE_I32, offsetof(BasicSettings, openCountWeek), NULL },
+    { TYPE_U64, offsetof(BasicSettings, lastPrefUpdate), NULL },
+};
+
+StructMetadata gBasicSettingsMetadata = { sizeof(BasicSettings), 22, &gBasicSettingsFieldMetadata[0] };
+
+FieldMetadata gSettingsFieldMetadata[] = {
+    { TYPE_STRUCT_PTR, offsetof(Settings, basic), &gBasicSettingsMetadata },
+    { TYPE_STRUCT_PTR, offsetof(Settings, advanced), &gAdvancedSettingsMetadata },
+};
+
+StructMetadata gSettingsMetadata = { sizeof(Settings), 2, &gSettingsFieldMetadata[0] };
+
+static const uint8_t gSettingsDefault[] = {
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
     0x00, 0x00, 0x03, 0x02, // version 2.3
-    0x24, 0x00, 0x00, 0x00, // top-level struct offset 0x24
+    0x77, 0x00, 0x00, 0x00, // top-level struct offset 0x77
 
     // offset: 0xc StructVal_0 ForwardSearchSettings
-    0x54, 0x74, 0x65, 0x53, // magic id '1399157844'
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
     0x05, // 5 fields
     0x00, // int32_t highlightOffset = 0x0
     0x1e, // int32_t highlightWidth = 0xf
@@ -58,7 +101,7 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0x00, // bool enableTeXEnhancements = 0x0
 
     // offset: 0x19 StructVal_1 PaddingSettings
-    0x54, 0x74, 0x65, 0x53, // magic id '1399157844'
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
     0x06, // 6 fields
     0x02, // uint16_t top = 0x2
     0x02, // uint16_t bottom = 0x2
@@ -67,8 +110,16 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0x04, // uint16_t spaceX = 0x4
     0x04, // uint16_t spaceY = 0x4
 
-    // offset: 0x24 StructVal_2 AdvancedSettings
-    0x54, 0x74, 0x65, 0x53, // magic id '1399157844'
+    // offset: 0x24 StructVal_2 RectInt
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
+    0x04, // 4 fields
+    0x00, // int32_t x = 0x0
+    0x00, // int32_t y = 0x0
+    0x00, // int32_t dx = 0x0
+    0x00, // int32_t dy = 0x0
+
+    // offset: 0x2d StructVal_3 AdvancedSettings
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
     0x0a, // 10 fields
     0x01, // bool traditionalEbookUI = 0x1
     0x00, // bool escToExit = 0x0
@@ -80,30 +131,62 @@ static const uint8_t gAdvancedSettingsDefault[] = {
     0x06, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x00, // const char * s = "Hello"
     0x03, 0x2d, 0x31, 0x00, // float defaultZoom = "-1"
     0x0e, 0x41, 0x20, 0x77, 0x69, 0x64, 0x65, 0x20, 0x73, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x00, // const WCHAR * ws = "A wide string"
+
+    // offset: 0x59 StructVal_4 BasicSettings
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
+    0x16, // 22 fields
+    0x00, // bool globalPrefsOnly = 0x0
+    0x00, // const char * currLanguage = ""
+    0x01, // bool toolbarVisible = 0x1
+    0x00, // bool pdfAssociateDontAsk = 0x0
+    0x00, // bool pdfAssociateDoIt = 0x0
+    0x01, // bool checkForUpdates = 0x1
+    0x01, // bool rememberMRUFiles = 0x1
+    0x00, // bool useSystemColorScheme = 0x0
+    0x00, // const char * inverseSearchCmdLine = ""
+    0x00, // const char * versionToSkip = ""
+    0x00, // const char * lastUpdateTime = ""
+    0x00, // uint16_t defaultDisplayMode = 0x0
+    0x03, 0x2d, 0x31, 0x00, // float defaultZoom = "-1"
+    0x02, // int32_t windowState = 0x1
+    0x24, // RectInt * windowPos = StructVal_2
+    0x01, // bool tocVisible = 0x1
+    0x00, // bool favVisible = 0x0
+    0x00, // int32_t sidebarDx = 0x0
+    0x00, // int32_t tocDy = 0x0
+    0x01, // bool showStartPage = 0x1
+    0x00, // int32_t openCountWeek = 0x0
+    0x00, // uint64_t lastPrefUpdate = 0x0
+
+    // offset: 0x77 StructVal_5 Settings
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
+    0x02, // 2 fields
+    0x59, // BasicSettings * basic = StructVal_4
+    0x2d, // AdvancedSettings * advanced = StructVal_3
 };
 
-AdvancedSettings *DeserializeAdvancedSettings(const uint8_t *data, int dataLen, bool *usedDefaultOut)
+Settings *DeserializeSettings(const uint8_t *data, int dataLen, bool *usedDefaultOut)
 {
     void *res = NULL;
-    res = Deserialize(data, dataLen, AdvancedSettingsVersion, &gAdvancedSettingsMetadata);
+    res = Deserialize(data, dataLen, SettingsVersion, &gSettingsMetadata);
     if (res) {
         *usedDefaultOut = false;
-        return (AdvancedSettings*)res;
+        return (Settings*)res;
     }
-    res = Deserialize(&gAdvancedSettingsDefault[0], sizeof(gAdvancedSettingsDefault), AdvancedSettingsVersion, &gAdvancedSettingsMetadata);
+    res = Deserialize(&gSettingsDefault[0], sizeof(gSettingsDefault), SettingsVersion, &gSettingsMetadata);
     CrashAlwaysIf(!res);
     *usedDefaultOut = true;
-    return (AdvancedSettings*)res;
+    return (Settings*)res;
 }
 
-uint8_t *SerializeAdvancedSettings(AdvancedSettings *val, int *dataLenOut)
+uint8_t *SerializeSettings(Settings *val, int *dataLenOut)
 {
-    return Serialize((const uint8_t*)val, AdvancedSettingsVersion, &gAdvancedSettingsMetadata, dataLenOut);
+    return Serialize((const uint8_t*)val, SettingsVersion, &gSettingsMetadata, dataLenOut);
 }
 
-void FreeAdvancedSettings(AdvancedSettings *val)
+void FreeSettings(Settings *val)
 {
-    FreeStruct((uint8_t*)val, &gAdvancedSettingsMetadata);
+    FreeStruct((uint8_t*)val, &gSettingsMetadata);
 }
 
 

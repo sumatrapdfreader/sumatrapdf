@@ -294,9 +294,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 #if 1
     bool usedDefault = false;
-    AdvancedSettings *data = DeserializeAdvancedSettings(NULL, 0, &usedDefault);
+    Settings *data = DeserializeSettings(NULL, 0, &usedDefault);
     CrashIf(!usedDefault);
-    FreeAdvancedSettings(data);
+    FreeSettings(data);
 #endif
 
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)

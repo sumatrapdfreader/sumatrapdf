@@ -83,5 +83,5 @@ settingsStruct = DefineStruct("Settings", None, [
 ])
 
 # TODO: should be settingsStruct, but MakeVal complains
-settings = MakeStruct(advancedSettingsStruct)
+settings = MakeStruct(settingsStruct)
 version = "2.3"
