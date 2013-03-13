@@ -25,6 +25,7 @@ typedef enum : uint16_t {
     TYPE_STR,
     TYPE_WSTR,
     TYPE_STRUCT_PTR,
+    TYP_ARRAY,
 } Typ;
 
 // information about a single field

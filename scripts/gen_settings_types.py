@@ -1,3 +1,5 @@
+import types
+
 # Represents a variable: its type and default value
 class Var(object):
     def __init__(self, name, c_type, typ_enum, def_val = None):
@@ -56,6 +58,22 @@ class Float(Var):
     def __init__(self, name, def_val = 0):
         def_val = str(def_val)
         super(Float, self).__init__(name, "float", "TYPE_FLOAT", def_val)
+
+class Array(Var):
+    def __init__(self, name, typ, def_val = []):
+        # def_val is an array of values that are subclasses of Var
+        # all values have to be of the same type
+        assert isinstance(typ, type(types.ClassType))
+        assert issubclass(typ, Var)
+        assert is_valid_array(typ, def_val)
+        super(Array, self).__init__(name, "int32_t", "TYPE_ARRAY", def_val)
+
+# return True if all elements in the array are of the same typ
+def is_valid_array(typ, arr):
+    for el in arr:
+        if not isinstance(el, typ):
+            return False
+    return True
 
 class StructPtr(Var):
     def __init__(self, name, struct_def, def_val=None):

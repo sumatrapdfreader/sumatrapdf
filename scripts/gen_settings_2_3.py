@@ -1,8 +1,22 @@
 from gen_settings_types import DefineStruct, MakeStruct
 from gen_settings_types import Bool, U16, I32, U64, Float, Color
-from gen_settings_types import String, WString, StructPtr
+from gen_settings_types import String, WString, StructPtr, Array
 
 # Settings for 2.3 version of Sumatra
+
+# TODO: should I use python class syntax i.e. instead of DefineStruct,
+# structs would inherit from StructPtr (renamed to Struct?) i.e.:
+"""
+class PaddingSettings(Struct):
+	# some magic to define fields and types as class metadata,
+	# probably using @decorators
+	# I could the use regular object instantiation instead of MakeStruct()
+"""
+
+# TODO: conflating name and type of the value was a mistake. Instead of saying:
+# U16("top", 2)
+#   we should be saying:
+# Field("top", U16, 2)
 
 paddingStruct1 = DefineStruct("PaddingSettings1", None, [
 	U16("top",     2),
@@ -79,7 +93,10 @@ advancedSettingsStruct = DefineStruct("AdvancedSettings", None, [
 # TODO: merge basic/advanced into one?
 settingsStruct = DefineStruct("Settings", None, [
 	StructPtr("basic", basicSettingsStruct, MakeStruct(basicSettingsStruct)),
-	StructPtr("advanced", advancedSettingsStruct, MakeStruct(advancedSettingsStruct))
+	StructPtr("advanced", advancedSettingsStruct, MakeStruct(advancedSettingsStruct)),
+
+	# TODO: just for testing
+	#Array("intArray", I32, [I32("", 1), I32("", 3)]),
 ])
 
 # TODO: should be settingsStruct, but MakeVal complains
