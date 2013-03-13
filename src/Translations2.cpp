@@ -298,6 +298,11 @@ const WCHAR *GetTranslation(const char *s)
 
 void Destroy()
 {
+    if (!gCurrLangCode) {
+        // no need for clean-up if translations were never initialized
+        return;
+    }
+
     FreeTransCache();
     FreeMissingTranslations();
 }

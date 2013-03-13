@@ -434,8 +434,6 @@ static void OnButtonOptions()
     InvalidateRect(gHwndFrame, &rc.ToRECT(), FALSE);
 
     SetFocus(gHwndButtonOptions);
-
-    CreateButtonRunSumatra(gHwndFrame);
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData)
