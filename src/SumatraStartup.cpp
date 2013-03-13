@@ -268,8 +268,6 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.ParseCommandLine(GetCommandLine());
 }
 
-#include "SettingsSumatra.h"
-
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
@@ -291,13 +289,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // that are not mounted (e.g. a: drive without floppy or cd rom drive
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
-
-#if 1
-    bool usedDefault = false;
-    Settings *data = DeserializeSettings(NULL, 0, &usedDefault);
-    CrashIf(!usedDefault);
-    FreeSettings(data);
-#endif
 
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     if (str::StartsWith(lpCmdLine, "/tester")) {

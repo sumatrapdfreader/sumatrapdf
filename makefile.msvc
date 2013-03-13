@@ -187,8 +187,7 @@ MAIN_UI_OBJS = \
 	$(OS)\Selection.obj $(OS)\FileModifications.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
-	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj \
-	$(OS)\SettingsSumatra.obj
+	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj
 
 SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \
