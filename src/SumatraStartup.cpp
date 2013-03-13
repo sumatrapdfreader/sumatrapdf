@@ -313,14 +313,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     srand((unsigned int)time(NULL));
 
-    ScopedMem<WCHAR> symDir;
-    ScopedMem<WCHAR> tmpDir(path::GetTempPath());
-    if (tmpDir)
-        symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
-    else
-        symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
-    ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
-    InstallCrashHandler(crashDumpPath, symDir);
+    {
+        ScopedMem<WCHAR> symDir;
+        ScopedMem<WCHAR> tmpDir(path::GetTempPath());
+        if (tmpDir)
+            symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
+        else
+            symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
+        ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
+        InstallCrashHandler(crashDumpPath, symDir);
+    }
 
     ScopedOle ole;
     InitAllCommonControls();
@@ -328,19 +330,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     mui::Initialize();
     uitask::Initialize();
 
-    gFavorites = new Favorites();
-    ScopedMem<WCHAR> prefsFilename(GetPrefsFileName());
-    if (!file::Exists(prefsFilename)) {
-        // guess the ui language on first start
-        SetCurrentLang(trans::DetectUserLang());
-    } else {
-        Prefs::Load(prefsFilename, gGlobalPrefs, gFileHistory, gFavorites);
-        SetCurrentLangByCode(gGlobalPrefs.currLangCode);
-    }
-    prefsFilename.Set(NULL);
+    LoadPrefs();
 
     CommandLineInfo i;
     GetCommandLineInfo(i);
+
+    SetCurrentLang(i.lang ? i.lang : gGlobalPrefs.currLangCode);
 
     if (i.showConsole)
         RedirectIOToConsole();
@@ -372,7 +367,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         str::ReplacePtr(&gGlobalPrefs.inverseSearchCmdLine, i.inverseSearchCmdLine);
         gGlobalPrefs.enableTeXEnhancements = true;
     }
-    SetCurrentLangByCode(i.lang);
 
     if (!RegisterWinClass(hInstance))
         goto Exit;

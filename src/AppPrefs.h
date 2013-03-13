@@ -96,16 +96,6 @@ struct SerializableGlobalPrefs {
 
 extern SerializableGlobalPrefs gGlobalPrefs;
 
-class FileHistory;
-class Favorites;
-
-namespace Prefs {
-
-bool    Load(const WCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites *favs);
-bool    Save(const WCHAR *filepath, SerializableGlobalPrefs& globalPrefs, FileHistory& fileHistory, Favorites *favs);
-
-}
-
 namespace DisplayModeConv {
 
 const WCHAR *   NameFromEnum(DisplayMode var);
@@ -113,7 +103,7 @@ bool            EnumFromName(const WCHAR *txt, DisplayMode *resOut);
 
 }
 
-WCHAR *GetPrefsFileName();
+bool LoadPrefs();
 bool SavePrefs();
 bool ReloadPrefs();
 

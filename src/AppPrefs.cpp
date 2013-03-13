@@ -73,8 +73,8 @@ static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *struc
             BencArray *array = new BencArray();
             Vec<int> *intVec = *(Vec<int> **)(base + meta.offset);
             if (intVec) {
-                for (size_t i = 0; i < intVec->Count(); i++) {
-                    array->Add(intVec->At(i));
+                for (size_t idx = 0; idx < intVec->Count(); i++) {
+                    array->Add(intVec->At(idx));
                 }
                 prefs->Add(meta.name, array);
             }
@@ -137,8 +137,8 @@ static void DeserializeStruct(PrefInfo *info, size_t count, void *structBase, Be
                 size_t len = arrObj->Length();
                 CrashIf(*intVec);
                 if ((*intVec = new Vec<int>(len))) {
-                    for (size_t i = 0; i < len; i++) {
-                        if ((intObj = arrObj->GetInt(i)))
+                    for (size_t idx = 0; idx < len; i++) {
+                        if ((intObj = arrObj->GetInt(idx)))
                             (*intVec)->Append((int)intObj->Value());
                     }
                 }
@@ -383,6 +383,7 @@ static BencArray *SerializeFavData(FileFavs *fav)
 // for simplicity, favorites are serialized as an array. Element 2*i is
 // a name of the file, for favorite i, element 2*i+1 is an array of
 // page number integer/name string pairs
+// TODO: rework this serialization so that FavName::pageLabel can also be persisted
 static BencArray *SerializeFavorites(Favorites *favs)
 {
     BencArray *res = new BencArray();
@@ -607,9 +608,23 @@ bool EnumFromName(const WCHAR *txt, DisplayMode *mode)
 }
 
 /* Caller needs to free() the result. */
-WCHAR *GetPrefsFileName()
+static WCHAR *GetPrefsFileName()
 {
     return AppGenDataFilename(PREFS_FILE_NAME);
+}
+
+bool LoadPrefs()
+{
+    delete gFavorites;
+    gFavorites = new Favorites();
+
+    ScopedMem<WCHAR> path(GetPrefsFileName());
+    if (!file::Exists(path)) {
+        // guess the ui language on first start
+        gGlobalPrefs.currLangCode = trans::DetectUserLang();
+        return true;
+    }
+    return Prefs::Load(path, gGlobalPrefs, gFileHistory, gFavorites);
 }
 
 // called whenever global preferences change or a file is
@@ -666,7 +681,9 @@ bool ReloadPrefs()
     delete gFavorites;
     gFavorites = new Favorites();
 
-    Prefs::Load(path, gGlobalPrefs, gFileHistory, gFavorites);
+    bool ok = Prefs::Load(path, gGlobalPrefs, gFileHistory, gFavorites);
+    if (!ok)
+        return false;
 
     if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
         gWindows.At(0)->DeleteInfotip();

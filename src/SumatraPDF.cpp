@@ -188,11 +188,6 @@ static void SetCurrentLang(const char *langCode)
     }
 }
 
-static void SetCurrentLangByCode(const char *langCode)
-{
-    SetCurrentLang(langCode);
-}
-
 #ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
 #define SUMATRA_UPDATE_INFO_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-latest.txt"
