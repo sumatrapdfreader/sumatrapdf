@@ -101,7 +101,7 @@ void Favorites::RemoveFav(FileFavs *fav, size_t idx)
     favs.RemoveAt(idx);
     delete fav;
     filePathCache = NULL;
-    idxCache = MAX_SIZE_T;
+    idxCache = (size_t)-1;
 }
 
 FileFavs *Favorites::GetByMenuId(int menuId, size_t& idx)

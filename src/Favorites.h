@@ -80,7 +80,7 @@ class Favorites {
 public:
     Vec<FileFavs*> favs;
 
-    Favorites() : filePathCache(NULL), idxCache(MAX_SIZE_T) { }
+    Favorites() : filePathCache(NULL), idxCache((size_t)-1) { }
     ~Favorites() { DeleteVecMembers(favs); }
 
     size_t Count() const {

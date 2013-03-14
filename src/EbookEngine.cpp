@@ -660,7 +660,7 @@ WCHAR *EbookEngine::ExtractFontList()
                 continue;
             WCHAR fontName[LF_FACESIZE];
             ok = family.GetFamilyName(fontName);
-            if (ok != Ok || fonts.FindI(fontName) != MAX_SIZE_T)
+            if (ok != Ok || fonts.FindI(fontName) != -1)
                 continue;
             fonts.Append(str::Dup(fontName));
         }
@@ -1446,7 +1446,7 @@ public:
         if (!url || IsExternalUrl(url))
             return;
         ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));
-        if (added.FindI(plainUrl) != MAX_SIZE_T)
+        if (added.FindI(plainUrl) != -1)
             return;
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         size_t pageHtmlLen;

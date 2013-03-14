@@ -746,9 +746,9 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
         ScopedMem<WCHAR> bmpPath(GetThumbnailPath(list.At(i)->filePath));
         if (!bmpPath)
             continue;
-        size_t idx = files.Find(path::GetBaseName(bmpPath));
-        if (idx != MAX_SIZE_T) {
-            CrashIf(files.Count() <= idx);
+        int idx = files.Find(path::GetBaseName(bmpPath));
+        if (idx != -1) {
+            CrashIf(idx < 0 || files.Count() <= (size_t)idx);
             WCHAR *fileName = files.At(idx);
             files.RemoveAt(idx);
             free(fileName);

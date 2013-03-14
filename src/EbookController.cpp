@@ -310,7 +310,7 @@ void EbookController::UpdateCurrPageNoForPage(HtmlPage *pd)
     // pages can have have the same reparse point, so finding them by
     // reparse point is not reliable. try first to find by page object
     if (GetPagesFromBeginning()) {
-        size_t n = GetPagesFromBeginning()->Find(pd) + 1;
+        int n = GetPagesFromBeginning()->Find(pd) + 1;
         if (n > 0) {
             currPageNo = n;
             return;
@@ -617,11 +617,11 @@ bool EbookController::GoOnePageForward(Vec<HtmlPage*> *pages)
     if (!pageShown || !pages)
         return false;
 
-    size_t newPageIdx = pages->Find(pageShown) + 1;
+    int newPageIdx = pages->Find(pageShown) + 1;
     if (0 == newPageIdx)
         return false;
 
-    if (newPageIdx >= pages->Count())
+    if ((size_t)newPageIdx >= pages->Count())
         return false;
 
     ShowPage(pages->At(newPageIdx), false);

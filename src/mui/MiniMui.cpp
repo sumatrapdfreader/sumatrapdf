@@ -35,8 +35,8 @@ public:
     }
 
     Font *GetFont(const WCHAR *name, float size, FontStyle style) {
-        size_t idx = cache.Find(Entry((WCHAR *)name, size, style));
-        if (idx != MAX_SIZE_T)
+        int idx = cache.Find(Entry((WCHAR *)name, size, style));
+        if (idx != -1)
             return cache.At(idx).font;
 
         Font *font = ::new Font(name, size, style);
