@@ -1,22 +1,19 @@
 Major user-visible changes in each release:
-2.2 - fb2 in ebook ui
 2.3 - text support (in it's own ui)
 2.4 - hex display (can show any file in hex/text view; it's own ui)
 
-More detailed list for 2.2:
+More detailed list for 2.3:
 - refactor LoadDocument() so that more code is shared between
   engine/ebook UIs and so that it loads documents in the
   background thread
 - a smoother transition betwen different window types which
   doesn't involve closing the window
-- mobi: closing mobi document when initial formatting is going on,
-  we loose the position in the file (it gets reset to 0)
 - closing last ebook window via 'x' if it has opened document
   leaks memory
 - ???
 
 It's best to make the most risky (most likely to introduce breakage) changes
-first so that there is time to stabilize the code. E.g. in 2.2, LoadDocument() 
+first so that there is time to stabilize the code. E.g. in 2.2, LoadDocument()
 refactoring is such a change.
 
 A random list of things to implement sooner or later:
