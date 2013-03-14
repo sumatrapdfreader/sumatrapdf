@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "AppPrefs.h"
+#define INCLUDE_APPPREFS2_METADATA
+#include "AppPrefs2.h"
 
 #include "AppTools.h"
 #include "BencUtil.h"
