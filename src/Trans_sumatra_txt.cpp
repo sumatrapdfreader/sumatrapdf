@@ -9778,11 +9778,11 @@ const char * gTranslations_ro =
   "Vedere \303\256n format carte, continuu\0"\
   "Pagin\304\203 dubl\304\203 continuu\0"\
   "Contribuie la traducere\0"\
-  "\0"\
+  "Copiere &Imagine\0"\
   "Copiaz\304\203 adresa &leg\304\203turii\0"\
   "Copiaz\304\203 co&mentariul\0"\
   "Copierea textului interzis\304\203 (s-a copiat ca imagine)\0"\
-  "\0"\
+  "Drept de autor\0"\
   "Nu s-au putut ob\310\233ine propriet\304\203\310\233ile imprimantei\0"\
   "Nu s-a putut ini\310\233ializa imprimanta\0"\
   "Nu s-a putut afi\310\231a pagina\0"\
@@ -9806,12 +9806,12 @@ const char * gTranslations_ro =
   "\303\216nainte\tAlt+->\0"\
   "Tot ecranul\tCtrl+Shift+L\0"\
   "Dou\304\203 pagini\0"\
-  "\0"\
+  "Eroare la redenumirea fisierului!\0"\
   "Eroare la salvarea unui fi\310\231ier\0"\
   "Vizualizare rapid\304\203 web\0"\
   "Favorite\0"\
-  "\0"\
-  "\0"\
+  "Documente SF (Carti de fictiune)\0"\
+  "Fisierul %s nu a fost gasit\0"\
   "M\304\203rime fi\310\231ier:\0"\
   "Fi\310\231ier:\0"\
   "Caut\304\203...\tCtrl+F\0"\
@@ -9838,7 +9838,7 @@ const char * gTranslations_ro =
   "Sugestie: Utiliza\310\233i tasta F3 pentru a c\304\203uta mai departe\0"\
   "Fi\310\231iere-imagine (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Incarcare fisier %s...\0"\
   "\0"\
   "Seta\310\233i SumatraPDF ca program implicit pentru fi\310\231ierele PDF?\0"\
   "Seta\310\233i SumatraPDF ca cititor implicit de PDF\0"\
@@ -9863,7 +9863,7 @@ const char * gTranslations_ro =
   "P&ropriet\304\203\310\233i\0"\
   "P&ropriet\304\203\310\233i\tCtrl+D\0"\
   "Document PDF\0"\
-  "\0"\
+  "Optimizari PDF:\0"\
   "Produc\304\203tor PDF:\0"\
   "Versiune PDF:\0"\
   "Documente PDF\0"\
@@ -9881,12 +9881,12 @@ const char * gTranslations_ro =
   "Printeaz\304\203 ca &image (ocup\304\203 mai mult\304\203 memorie)\0"\
   "Interval imprimare\0"\
   "Imprimanta cu numele respectiv nu exist\304\203\0"\
-  "\0"\
-  "\0"\
+  "Tiparire in curs.\0"\
+  "In prezent se tipareste ceva. Anulati si renuntati?\0"\
   "Tip\304\203rirea este \303\256nc\304\203 \303\256n curs. Opresc \310\231i reiau ?\0"\
   "Tip\304\203re\310\231te pagina %d din %d...\0"\
   "Problem\304\203 la imprimare.\0"\
-  "\0"\
+  "Rede&numire...\tF2\0"\
   "\310\232ine minte fi\310\231ierele deschise\0"\
   "Scoate de la favorite\0"\
   "Scoate pagina %s de la favorite\0"\
@@ -9902,7 +9902,7 @@ const char * gTranslations_ro =
   "Selecta\310\233i con\310\233inut cu Ctrl+buton st\303\242nga maus\0"\
   "Trimite pe &E-mail...\0"\
   "Seta\310\233i comand\304\203 pentru c\304\203utare invers\304\203\0"\
-  "\0"\
+  "Arata Se&bnele de Carte\0"\
   "Arat\304\203 bara de instrumente\0"\
   "Arat\304\203 &paginile continuu\0"\
   "Arat\304\203 favoritele\0"\

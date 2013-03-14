@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   12
+#define LANGS_COUNT   13
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -419,6 +419,51 @@ const char * gTranslations_pt =
   "A desinstalar...\0"\
   "Utilizar o SumatraPDF como leitor pa&dr\303\243o de PDF\0";
 
+const char * gTranslations_ro = 
+  "&Optiuni\0"\
+  "Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?\0"\
+  "Inchidere\0"\
+  "Nu s-a putut crea un director temporar\0"\
+  "Nu s-a putut crea directorul de instalare\0"\
+  "Nu s-a putut instala previzualizatorul PDF\0"\
+  "Nu s-a putut instala filtrul de cautare PDF\0"\
+  "Nu s-a putut instala plugin-ul pentru browser\0"\
+  "Nu s-a putut obtine directorul temporar\0"\
+  "Nu s-a putut sterge directorul de instalare\0"\
+  "Nu s-au putut sterge scurtatura\0"\
+  "Nu s-a putut dezinstala previzualizatorul PDF\0"\
+  "Nu s-a putut dezinstala filtrul de cautare PDF\0"\
+  "Nu s-a putut dezinstala plugin-ul de browser\0"\
+  "Nu s-a putut scrie %s pe disc\0"\
+  "Eroare la copierea dezinstalatorului in directorul temporar\0"\
+  "Eroare la crearea unei scurtaturi\0"\
+  "Eroare la stergerea inregistrarilor de dezinstalare din registri\0"\
+  "Eroare la scrierea informatiei extinse despre extensia fisierului in registri\0"\
+  "Eroare la scrierea informatiilor de dezinstalare in registri\0"\
+  "Ascundere &Optiuni\0"\
+  "Instaleaza plugin-ul PDF pentru browser-ul Firefox, Chrome si Opera\0"\
+  "Instalare SumatraPDF\0"\
+  "Instalare SumatraPDF in &folderul:\0"\
+  "Instalare esuata!\0"\
+  "Se instaleaza...\0"\
+  "Permite Windows Desktop &Search sa caute in documente PDF\0"\
+  "Permite Windows-ului sa arate &previzualizari ale documentelor PDF\0"\
+  "Rugam inchideti %s pentru a putea continua!\0"\
+  "Alegeti folderul in care sa se instaleze SumatraPDF:\0"\
+  "Niste fisiere ce trebuiesc instalate lipsesc sau sunt pleznite\0"\
+  "Pornire SumatraPDF\0"\
+  "Programul de instalare %s SumatraPDF\0"\
+  "Programul de dezinstalare a %s SumatraPDF\0"\
+  "SumatraPDF a fost dezinstalat.\0"\
+  "Nu s-a gasit instalarea SumatraPDF.\0"\
+  "Va multumim pentru ca ati ales SumatraPDF!\0"\
+  "Multumim! SumatraPDF a fost dezinstalat.\0"\
+  "Programul de instalare este pleznit :(. Rugam descarcati-l din nou. \n Scuze pentru deranj!\0"\
+  "Dezinstalare SumatraPDF\0"\
+  "Dezinstalarea a esuat\0"\
+  "Dezinstalare in curs...\0"\
+  "Folositi SumatraPDF ca cititor implicit pentru fisiere P&DF\0";
+
 const char * gTranslations_ru = 
   "&\320\236\320\277\321\206\320\270\320\270\0"\
   "\320\222\321\213 \321\203\320\262\320\265\321\200\320\265\320\275\321\213, \321\207\321\202\320\276 \321\205\320\276\321\202\320\270\321\202\320\265 \321\203\320\264\320\260\320\273\320\270\321\202\321\214 SumatraPDF?\0"\
@@ -565,6 +610,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_it, 
   gTranslations_br, 
   gTranslations_pt, 
+  gTranslations_ro, 
   gTranslations_ru, 
   gTranslations_ta, 
   gTranslations_uk
@@ -582,6 +628,7 @@ const char *gLangCodes =   "en\0" \
   "it\0" \
   "br\0" \
   "pt\0" \
+  "ro\0" \
   "ru\0" \
   "ta\0" \
   "uk\0";
@@ -595,6 +642,7 @@ const char *gLangNames =   "English\0" \
   "Italian (Italiano)\0" \
   "Portuguese - Brazil (Portugu\303\252s)\0" \
   "Portuguese - Portugal (Portugu\303\252s)\0" \
+  "Romanian (Rom\303\242n\304\203)\0" \
   "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)\0" \
   "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264\340\257\215)\0" \
   "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)\0";
@@ -620,6 +668,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_ITALIAN),
   MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN),
   _LANGID(LANG_PORTUGUESE),
+  _LANGID(LANG_ROMANIAN),
   _LANGID(LANG_RUSSIAN),
   _LANGID(LANG_TAMIL),
   _LANGID(LANG_UKRAINIAN)
