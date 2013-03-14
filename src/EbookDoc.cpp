@@ -185,7 +185,7 @@ EpubDoc::~EpubDoc()
 
 bool EpubDoc::Load()
 {
-    ScopedMem<char> container(zip.GetFileData(L"META-INF/container.xml"));
+    ScopedMem<char> container(zip.GetFileDataByName(L"META-INF/container.xml"));
     if (!container)
         return false;
     HtmlParser parser;
@@ -202,7 +202,7 @@ bool EpubDoc::Load()
 
     ScopedMem<WCHAR> contentPathDec(str::Dup(contentPath));
     str::UrlDecodeInPlace(contentPathDec);
-    ScopedMem<char> content(zip.GetFileData(contentPathDec));
+    ScopedMem<char> content(zip.GetFileDataByName(contentPathDec));
     if (!content)
         return false;
     ParseMetadata(content);
@@ -279,7 +279,7 @@ bool EpubDoc::Load()
         ScopedMem<WCHAR> fullPath(str::Join(contentPath, pathList.At(idList.Find(idref))));
         ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
         str::UrlDecodeInPlace(fullPath);
-        ScopedMem<char> html(zip.GetFileData(fullPath));
+        ScopedMem<char> html(zip.GetFileDataByName(fullPath));
         if (!html)
             continue;
         // insert explicit page-breaks between sections including
@@ -358,7 +358,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
             ImageData2 *img = &images.At(i);
             if (str::EndsWithI(img->id, id)) {
                 if (!img->base.data)
-                    img->base.data = zip.GetFileData(img->idx, &img->base.len);
+                    img->base.data = zip.GetFileDataByIdx(img->idx, &img->base.len);
                 if (img->base.data)
                     return &img->base;
             }
@@ -371,7 +371,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
         ImageData2 *img = &images.At(i);
         if (str::Eq(img->id, url)) {
             if (!img->base.data)
-                img->base.data = zip.GetFileData(img->idx, &img->base.len);
+                img->base.data = zip.GetFileDataByIdx(img->idx, &img->base.len);
             if (img->base.data)
                 return &img->base;
         }
@@ -386,7 +386,7 @@ char *EpubDoc::GetFileData(const char *relPath, const char *pagePath, size_t *le
 
     ScopedMem<char> url(NormalizeURL(relPath, pagePath));
     ScopedMem<WCHAR> zipPath(str::conv::FromUtf8(url));
-    return zip.GetFileData(zipPath, lenOut);
+    return zip.GetFileDataByName(zipPath, lenOut);
 }
 
 WCHAR *EpubDoc::GetProperty(DocumentProperty prop) const
@@ -510,7 +510,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
     if (!tocPath)
         return false;
     size_t tocDataLen;
-    ScopedMem<char> tocData(zip.GetFileData(tocPath, &tocDataLen));
+    ScopedMem<char> tocData(zip.GetFileDataByName(tocPath, &tocDataLen));
     if (!tocData)
         return false;
 
@@ -524,7 +524,7 @@ bool EpubDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         ZipFile zip(fileName, Zip_Deflate);
-        ScopedMem<char> mimetype(zip.GetFileData(L"mimetype"));
+        ScopedMem<char> mimetype(zip.GetFileDataByName(L"mimetype"));
         if (!mimetype)
             return false;
         // trailing whitespace is allowed for the mimetype file
@@ -596,7 +596,7 @@ bool Fb2Doc::Load()
         str::EndsWithI(fileName, L".fb2z") ||
         str::EndsWithI(fileName, L".zfb2")) {
         ZipFile archive(fileName);
-        data.Set(archive.GetFileData((size_t)0, &len));
+        data.Set(archive.GetFileDataByIdx(0, &len));
         isZipped = true;
     }
     else

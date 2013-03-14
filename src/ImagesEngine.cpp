@@ -726,7 +726,7 @@ bool CbxEngineImpl::FinishLoadingCbz()
     }
     assert(allFileNames.Count() == cbzFile->GetFileCount());
 
-    ScopedMem<char> metadata(cbzFile->GetFileData(L"ComicInfo.xml"));
+    ScopedMem<char> metadata(cbzFile->GetFileDataByName(L"ComicInfo.xml"));
     if (metadata)
         ParseComicInfoXml(metadata);
     metadata.Set(cbzFile->GetComment());
@@ -1001,7 +1001,7 @@ char *CbxEngineImpl::GetImageData(int pageNo, size_t& len)
 {
     if (cbzFile) {
         ScopedCritSec scope(&fileAccess);
-        return cbzFile->GetFileData(fileIdxs.At(pageNo - 1), &len);
+        return cbzFile->GetFileDataByIdx(fileIdxs.At(pageNo - 1), &len);
     }
     return NULL;
 }

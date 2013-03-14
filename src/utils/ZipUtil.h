@@ -30,8 +30,8 @@ public:
     size_t GetFileIndex(const WCHAR *filename);
 
     // caller must free() the result (or rather Allocator::Free it)
-    char *GetFileData(const WCHAR *filename, size_t *len=NULL);
-    char *GetFileData(size_t fileindex, size_t *len=NULL);
+    char *GetFileDataByName(const WCHAR *filename, size_t *len=NULL);
+    char *GetFileDataByIdx(size_t fileindex, size_t *len=NULL);
 
     FILETIME GetFileTime(const WCHAR *filename);
     FILETIME GetFileTime(size_t fileindex);
