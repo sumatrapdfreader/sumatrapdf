@@ -1,309 +1,317 @@
 import types
+from util import gob_varint_encode, gob_uvarint_encode
 
-# Represents a variable: its type and default value
-class Var(object):
-    def __init__(self, name, c_type, typ_enum, def_val = None):
-        self.name = name
-        self.def_val = def_val
-
-        self.c_type = c_type
-        self.typ_enum = typ_enum
-
-        self.struct_def = None
-        self.offset = None        # offset of variable within the struct
-        self.is_signed = False    # when an integer, is it signed or unsigned
-
-    def is_struct(self):   return self.struct_def != None
-
-class Bool(Var):
-    def __init__(self, name, def_val = False):
-        super(Bool, self).__init__(name, "bool", "TYPE_BOOL", def_val)
-
-class U16(Var):
-    def __init__(self, name, def_val = 0):
-        super(U16, self).__init__(name, "uint16_t", "TYPE_U16", def_val)
-
-class I32(Var):
-    def __init__(self, name, def_val = 0):
-        super(I32, self).__init__(name, "int32_t", "TYPE_I32", def_val)
-        self.is_signed = True
-
-class U32(Var):
-    def __init__(self, name, def_val = 0):
-        super(U32, self).__init__(name, "uint32_t", "TYPE_U32", def_val)
-
-class U64(Var):
-    def __init__(self, name, def_val = 0):
-        super(U64, self).__init__(name, "uint64_t", "TYPE_U64", def_val)
-
-class Color(Var):
-    def __init__(self, name, def_val = 0):
-        super(Color, self).__init__(name, "uint32_t", "TYPE_U32", def_val)
-
-class String(Var):
-    def __init__(self, name, def_val = ""):
-        # we don't support None values for strings, we use ""
-        # for empty strings
-        if def_val == None: def_val = ""
-        super(String, self).__init__(name, "const char *", "TYPE_STR", def_val)
-
-class WString(Var):
-    def __init__(self, name, def_val = ""):
-        # we don't support None values for strings, we use ""
-        # for empty strings
-        if def_val == None: def_val = ""
-        super(WString, self).__init__(name, "const WCHAR *", "TYPE_WSTR", def_val)
-
-class Float(Var):
-    def __init__(self, name, def_val = 0):
-        def_val = str(def_val)
-        super(Float, self).__init__(name, "float", "TYPE_FLOAT", def_val)
-
-class Array(Var):
-    def __init__(self, name, typ, def_val = []):
-        # def_val is an array of values that are subclasses of Var
-        # all values have to be of the same type
-        assert isinstance(typ, type(types.ClassType))
-        assert issubclass(typ, Var)
-        assert is_valid_array(typ, def_val)
-        super(Array, self).__init__(name, "int32_t", "TYPE_ARRAY", def_val)
-
-# return True if all elements in the array are of the same typ
-def is_valid_array(typ, arr):
-    for el in arr:
-        if not isinstance(el, typ):
-            return False
+def is_valid_signed(bits, val):
+    if type(val) not in (types.IntType, types.LongType): return False
+    e = bits - 1
+    min_val = -(2**e)
+    if val < min_val: return False
+    max_val = (2**e)-1
+    if val > max_val: return False
     return True
 
-class StructPtr(Var):
-    def __init__(self, name, struct_def, def_val=None):
-        assert isinstance(struct_def, StructDef)
-        if def_val != None:
-            assert isinstance(def_val, StructVal)
-            assert isinstance(def_val.struct_def, StructDef)
-        c_type = "%s *" % struct_def.name
-        typ_enum = "TYPE_STRUCT_PTR"
-        super(StructPtr, self).__init__(name, c_type, typ_enum, def_val)
-        self.struct_def = struct_def
+def is_valid_unsigned(bits, val):
+    if type(val) not in (types.IntType, types.LongType): return False
+    if val < 0: return False
+    if val > 2**bits: return False
+    return True
+
+def is_valid_string(val):
+    if val == None: return True
+    return type(val) in (types.StringType, types.UnicodeType)
+
+class Type(object):
+    def __init__(self, def_val):
+        self.c_type_override = None
+        self.val = def_val
+        assert self.is_valid_val(def_val), "%s is not a valid value of %s" % (str(val), str(self))
+
+    def c_type(self):
+        if self.c_type_override != None:
+            return self.c_type_override
+        return self.c_type_class
+
+    def get_typ_enum(self):
+        return self.type_enum
+
+    def is_struct(self):
+        return isinstance(self, Struct)
+
+class Bool(Type):
+    c_type_class = "bool"
+    type_enum = "TYPE_BOOL"
+
+    def __init__(self, def_val):
+        super(Bool, self).__init__(def_val)
+
+    def is_valid_val(self, val):
+        return val in (True, False)
+
+class U16(Type):
+    c_type_class = "uint16_t"
+    type_enum = "TYPE_U16"
+
+    def is_valid_val(self, val):
+        return is_valid_unsigned(16, val)
+
+class I32(Type):
+    c_type_class = "int32_t"
+    type_enum = "TYPE_I32"
+
+    def is_valid_val(self, val):
+        return is_valid_signed(32, val)
+
+class U32(Type):
+    c_type_class = "uint32_t"
+    type_enum = "TYPE_U32"
+
+    def is_valid_val(self, val):
+        return is_valid_unsigned(32, val)
+
+class U64(Type):
+    c_type_class = "uint64_t"
+    type_enum = "TYPE_U64"
+
+    def is_valid_val(self, val):
+        return is_valid_unsigned(64, val)
+
+# behaves like uint32_t, using unique name to signal intent
+class Color(U32):
+    pass
+
+class String(Type):
+    c_type_class = "const char *"
+    type_enum = "TYPE_STR"
+
+    def is_valid_val(self, val):
+        return is_valid_string(val)
+
+class WString(Type):
+    c_type_class = "const WCHAR *"
+    type_enum = "TYPE_WSTR"
+
+    def is_valid_val(self, val):
+        return is_valid_string(val)
+
+class Float(Type):
+    c_type_class = "float"
+    type_enum = "TYPE_FLOAT"
+
+    def is_valid_val(self, val):
+        return type(val) in (types.IntType, types.LongType, types.FloatType)
 
 # When generating C struct definitions we need the structs
 # in the right order (if Bar refers to Foo, Foo must be defined first).
 # This is a list of all structs in the right order
 g_all_structs = []
 
-# Structs for which we have already generated definition for .h file
-g_structs_h_def_generated = []
+def serialize_string(val):
+    # empty strings are encoded as 0 (0 length)
+    # non-empty strings are encoded as uvariant(len(s)+1)
+    # (+1 for terminating 0), followed by string data (including terminating 0)
+    if val == None:
+        data = gob_uvarint_encode(0)
+    else:
+        data = gob_uvarint_encode(len(val)+1)
+        data = data + val + chr(0)
+    return data
 
-# defines a struct i.e. all its variables
-class StructDef(object):
-    def __init__(self, name, parent, vars):
-        global g_all_structs
-        g_all_structs.append(self)
-
+class Field(object):
+    def __init__(self, name, typ_val):
         self.name = name
-        self.vars = vars
-        if parent != None:
-            self.vars = parent.vars + vars
+        self.typ = typ_val
+        if typ_val.is_struct():
+            # TODO: support NULL values for the struct, represented by using
+            # class for typ_val
+            self.val = typ_val
+        else:
+            self.val = typ_val.val
+        self._serialized = None
 
-        self.build_def()
+    def c_type(self):
+        return self.typ.c_type()
 
-    # calculate:
-    #   self.c_size (StructPtr needs to know that)
-    #   self.max_type_len (for better formatting of generated C code)
-    def build_def(self):
-        self.max_type_len = 0
-        for var in self.vars:
-            self.max_type_len = max(self.max_type_len, len(var.c_type))
+    def is_struct(self):
+        return self.typ.is_struct()
+
+    def is_signed(self):
+        return type(self.typ) == I32
+
+    def is_unsigned(self):
+        return type(self.typ) in (Bool, U16, U32, U64, Color)
+
+    def is_string(self):
+        return type(self.typ) in (String, WString)
+
+    def is_float(self):
+        return type(self.typ) == Float
+
+    def _serialize(self):
+        if self.is_signed():
+            return gob_varint_encode(long(self.val))
+        if self.is_unsigned():
+            return gob_uvarint_encode(long(self.val))
+        if self.is_string():
+            return serialize_string(self.val)
+        # floats are serialied as strings
+        if self.is_float():
+            return serialize_string(str(self.val))
+        if self.is_struct():
+            off = self.val.offset
+            assert type(off) in (types.IntType, types.LongType)
+            return gob_uvarint_encode(off)
+        assert False, "don't know how to serialize %s" % str(self.typ)
+
+    def serialized(self):
+        if self._serialized == None:
+            self._serialized = self._serialize()
+        return self._serialized
+
+# struct is just a base class
+# subclasses should have class instance fields which is a list of tuples:
+# defining name and type of the struct members:
+# fields = [ ("boolField", Bool(True), ("u32Field", U32(32))]
+#
+# TODO: implement struct inheritance i.e. a subclass should inherit all
+# fields from its parent
+class Struct(Type):
+    c_type_class = ""
+    type_enum = "TYPE_STRUCT_PTR"
+    fields = []
+
+    def __init__(self):
+        global g_all_structs
+
+        self.values = []
+        # fields must be a class variable in Struct's subclass
+        for field in self.fields:
+            (name, typ_val) = field
+
+            assert isinstance(name, type(""))
+            assert isinstance(typ_val, Type)
+            self.values.append(Field(name, typ_val))
+
+        cls = self.__class__
+        if cls not in g_all_structs:
+            g_all_structs.append(cls)
+        self.c_type_override = "%s *" % cls.__name__
+
+        self.offset = None
+
+    def get_max_field_type_len(self):
+        max_len = 0
+        for v in self.values:
+            if len(v.c_type()) > max_len:
+                max_len = len(v.c_type())
+        return max_len + 3
+
+    def is_valid_val(self, val):
+        return issubclass(val, Struct)
+
+    def name(self):
+        return self.__class__.__name__
+
+# TODO: need to supprt more than one C struct field from a single
+# python Type
+class Array(Type):
+    c_type_class = "int32_t"
+    type_enum = "TYPE_ARRAY"
+
+    def __init__(self, typ):
+        assert isinstance(typ, Type)
+        assert issubclass(typ, Var)
+        self.typ = typ
+
+def serialize(typ, val):
+    assert isinstance(typ, Type)
+    if isinstance(typ, Bool):
+        # TODO: actually serialize the values
+        return ""
+    assert False, "Unkown typ: %s" % str(typ)
 
 def GetAllStructs(): return g_all_structs
 
-def DefineStruct(name, parent, vars):
-    return StructDef(name, parent, vars)
+class PaddingSettings(Struct):
+    fields =[
+        ("top", U16(2)),
+        ("bottom", U16(2)),
+        ("left", U16(4)),
+        ("right", U16(4)),
+        ("spaceX", U16(4)),
+        ("spaceY", U16(4))
+    ]
 
-# defines a member variable of the struct: its type (Var), value and offset
-# a value can be:
-#  - a simple value, where the type is a subclass of Var other than StructPtr
-#    and the value is is a value of the corresponding type
-#  - a struct value, where the type is StructPtr and the value is a list of Val
-#    object, one for each var of the corresponding StructDef
-class Val(object):
-    def __init__(self, typ, val):
-        assert isinstance(typ, Var)
-        self.typ = typ
-        self.val = val
+class ForwardSearch(Struct):
+    fields = [
+        ("highlightOffset", I32(0)),
+        ("highlightWidth", I32(15)),
+        ("highlightPermanent", I32(0)),
+        ("highlightColor", Color(0x6581FF)),
+        ("enableTeXEnhancements", Bool(False)),
+]
 
-        # calculated
-        self.offset = None     # offset of value within serialized data of top-level struct
-        self.serialized = None # this value serialized as bytes
-        self.is_struct = False
+class RectInt(Struct):
+    fields = [
+        ("x", I32(0)),
+        ("y", I32(0)),
+        ("dx", I32(0)),
+        ("dy", I32(0)),
+    ]
 
-class StructVal(Val):
-    def __init__(self, typ, val):
-        assert isinstance(typ, StructPtr)
-        assert val is None or len(val) >= 0 # TODO: hacky way to check that val is a list. check the type instead
-        #assert isinstance(val, types.List) ???
-        self.typ = typ
-        self.val = val
+class BasicSettings(Struct):
+    fields = [
+        ("globalPrefsOnly", Bool(False)),
+        ("currLanguage", String(None)), # auto-detect
+        ("toolbarVisible", Bool(True)),
+        ("pdfAssociateDontAsk", Bool(False)),
+        ("pdfAssociateDoIt", Bool(False)),
+        ("checkForUpdates", Bool(True)),
+        ("rememberMRUFiles", Bool(True)),
+        # TODO: useSystemColorScheme obsolete by textColor/pageColor ?
+        ("useSystemColorScheme", Bool(False)),
+        ("inverseSearchCmdLine", String(None)),
+        ("versionToSkip", String(None)),
+        ("lastUpdateTime", String(None)),
+        ("defaultDisplayMode", U16(0)),  # DM_AUTOMATIC
+        # -1 == Fit Page
+        ("defaultZoom", Float(-1)),
+        ("windowState", I32(1)), # WIN_STATE_NORMAL
+        ("windowPos", RectInt()),
+        ("tocVisible", Bool(True)),
+        ("favVisible", Bool(False)),
+        ("sidebarDx", I32(0)),
+        ("tocDy", I32(0)),
+        ("showStartPage", Bool(True)),
+        ("openCountWeek", I32(0)),
+        ("lastPrefUpdate", U64(0)),
+    ]
 
-        self.struct_def = typ.struct_def
+class AdvancedSettings(Struct):
+    fields = [
+        ("traditionalEbookUI", Bool(True)),
+        ("escToExit", Bool(False)),
+        # TODO: different for different document types? For example, ebook
+        # really needs one just for itself
+        ("textColor", Color(0x0)),      # black
+        ("pageColor", Color(0xffffff)), # white
+        ("mainWindowBackground", Color(0xFFF200)),
+        ("pagePadding", PaddingSettings()),
+        ("forwardSearch", ForwardSearch()),
 
-        # calculated
-        self.offset = None     # offset of value within serialized data of top-level struct
-        self.serialized = None # this value serialized as bytes
-        self.is_struct = True
+        # TODO: just for testing
+        ("s", String("Hello")),
+        ("defaultZoom", Float(-1)),
+        ("ws", WString("A wide string")),
+    ]
 
-        self.referenced = None
+# TODO: merge basic/advanced into one?
+class Settings(Struct):
+    fields = [
+        ("basic", BasicSettings()),
+        ("advanced", AdvancedSettings()),
+        # TODO: just for testing
+        #Array("intArray", I32, [I32("", 1), I32("", 3)]),
+    ]
 
-# primitive value is uses default value of types
-def MakeValFromPrimitiveVar(var):
-    assert isinstance(var, Var) and not isinstance(var, StructPtr)
-    return Val(var, var.def_val)
-
-# primitive value is a copy
-def MakeValFromPrimitiveVal(val):
-    assert isinstance(val, Val) and not isinstance(val, StructVal)
-    return Val(val.typ, val.val)
-
-def MakeVal(src):
-    if isinstance(src, StructDef):
-        return MakeValFromStructDef(src)
-    if isinstance(src, StructPtr):
-        return MakeValFromStructPtr(src)
-    if isinstance(src, Var):
-        return MakeValFromPrimitiveVar(src)
-    if isinstance(src, StructVal):
-        return src
-    if isinstance(src, Val):
-        return MakeValFromPrimitiveVal(src)
-    print(src)
-    assert False, "src not supported by MakeVal()"
-
-# for struct ptr, the type is struct_ptr and the value is a list of
-# values
-def MakeValFromStructPtr(struct_ptr):
-    assert isinstance(struct_ptr, StructPtr)
-    if struct_ptr.def_val == None:
-        return StructVal(struct_ptr, None)
-    else:
-        # TODO: this is suspect, should probably make a deep copy
-        # of def_val and store that as a val
-        def_val = struct_ptr.def_val
-        assert isinstance(def_val, StructVal)
-        val = [MakeVal(v) for v in def_val.val]
-        return StructVal(struct_ptr, val)
-
-def MakeValFromStructDef(struct_def):
-    assert isinstance(struct_def, StructDef)
-    struct_ptr = StructPtr("dummyStructPtr", struct_def, None)
-    return MakeValFromStructPtr(struct_ptr)
-
-def MakeStruct(struct_def):
-    val = [MakeVal(v) for v in struct_def.vars]
-    struct_ptr = StructPtr("dummyStructPtr", struct_def, None)
-    return StructVal(struct_ptr, val)
-
-"""
-struct $name {
-   $type $field_name;
-   ...
-};
-...
-"""
-def gen_h_struct_def(struct_def):
-    global g_structs_h_def_generated
-
-    assert isinstance(struct_def, StructDef)
-    if struct_def in g_structs_h_def_generated:
-        return []
-    assert struct_def in GetAllStructs()
-    name = struct_def.name
-    lines = ["struct %s {" % name]
-    fmt = "    %%-%ds %%s;" % struct_def.max_type_len
-    for var in struct_def.vars:
-        lines += [fmt % (var.c_type, var.name)]
-    lines += ["};\n"]
-    return "\n".join(lines)
-
-prototypes_tmpl = """#define %(name)sVersion "%(version_str)s"
-
-%(name)s *Deserialize%(name)s(const uint8_t *data, int dataLen, bool *usedDefaultOut);
-uint8_t *Serialize%(name)s(%(name)s *, int *dataLenOut);
-void Free%(name)s(%(name)s *);
-"""
-def gen_struct_defs(vals, version_str):
-    top_level = vals[-1]
-    assert isinstance(top_level, StructVal)
-    name = top_level.struct_def.name
-    struct_defs = [val.struct_def for val in vals]
-    lines = [gen_h_struct_def(stru) for stru in struct_defs]
-    lines += [prototypes_tmpl % locals()]
-    return "\n".join(lines)
-
-"""
-FieldMetadata g${name}FieldMetadata[] = {
-    { $type, $offset, &g${name}StructMetadata },
-};
-"""
-def gen_struct_fields(struct_def):
-    assert isinstance(struct_def, StructDef)
-    struct_name = struct_def.name
-    lines = ["FieldMetadata g%(struct_name)sFieldMetadata[] = {" % locals()]
-    for field in struct_def.vars:
-        assert isinstance(field, Var)
-        typ_enum = field.typ_enum
-        field_name = field.name
-        offset = "offsetof(%(struct_name)s, %(field_name)s)" % locals()
-        if field.is_struct():
-            field_type = field.struct_def.name
-            lines += ["    { %(typ_enum)s, %(offset)s, &g%(field_type)sMetadata }," % locals()]
-        else:
-            lines += ["    { %(typ_enum)s, %(offset)s, NULL }," % locals()]
-    lines += ["};\n"]
-    return lines
-
-"""
-StructMetadata g${name}StructMetadata = { $size, $nFields, $fields };
-"""
-def gen_structs_metadata(vals):
-    lines = []
-    for val in vals:
-        struct_def = val.struct_def
-        struct_name = struct_def.name
-        nFields = len(struct_def.vars)
-        fields = "&g%sFieldMetadata[0]" % struct_name
-        lines += gen_struct_fields(struct_def)
-        lines += ["StructMetadata g%(struct_name)sMetadata = { sizeof(%(struct_name)s), %(nFields)d, %(fields)s };\n" % locals()]
-    return "\n".join(lines)
-
-top_level_funcs_tmpl = """
-%(name)s *Deserialize%(name)s(const uint8_t *data, int dataLen, bool *usedDefaultOut)
-{
-    void *res = NULL;
-    res = Deserialize(data, dataLen, %(name)sVersion, &g%(name)sMetadata);
-    if (res) {
-        *usedDefaultOut = false;
-        return (%(name)s*)res;
-    }
-    res = Deserialize(&g%(name)sDefault[0], sizeof(g%(name)sDefault), %(name)sVersion, &g%(name)sMetadata);
-    CrashAlwaysIf(!res);
-    *usedDefaultOut = true;
-    return (%(name)s*)res;
-}
-
-uint8_t *Serialize%(name)s(%(name)s *val, int *dataLenOut)
-{
-    return Serialize((const uint8_t*)val, %(name)sVersion, &g%(name)sMetadata, dataLenOut);
-}
-
-void Free%(name)s(%(name)s *val)
-{
-    FreeStruct((uint8_t*)val, &g%(name)sMetadata);
-}
-
-"""
-
-def gen_top_level_funcs(vals):
-    top_level = vals[-1]
-    assert isinstance(top_level, StructVal)
-    name = top_level.struct_def.name
-    return top_level_funcs_tmpl % locals()
+settings = Settings()
+version = "2.3"

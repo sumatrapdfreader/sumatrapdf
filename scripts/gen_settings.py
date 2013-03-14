@@ -1,53 +1,8 @@
 #!/usr/bin/env python
 
-import os, types, struct
-import util, gen_settings_2_3
-from gen_settings_types import gen_struct_defs, gen_structs_metadata, gen_top_level_funcs, StructVal, Val
-from util import gob_varint_encode, gob_uvarint_encode
-
-"""
-Script that generates C code for compact storage of settings.
-
-In C settings are represented as a top-level struct (which can then refer to
-other structs).
-
-A serialized form is:
-  u32 magic id
-  u32 version
-  u32 offfset of top-level struct
-  ... serialized values follow, with integers serialized in variable-length encoding
-
-A version supports up to 4 components, each component in range <0,255>.
-For example version "2.1.3" is encoded as: u32 version = (2 << 24) | (1 << 16) | (3 << 8) | 0.
-This way versions can be compared with ">" in C code with the right semantics
-(e.g. 2.2.1 > 2.1).
-
-We support generating multiple top-level structs (which can be used for multiple
-different purposes).
-
-In order to support forward compatibility, we can make the following struct
-changes in version n + 1 (compared to same struct in version n):
- - add new fields at the end
- - we can change the name of existing fields (they are not serialized)
- - technically changing a type to a compatible one (e.g. u16 => u32)
-   is possible, but strongly discouraged
-What we cannot do:
- - remove fields
- - change the type to an incompatible one
-
-By convention, settings for each version of Sumatra are in gen_settings_$ver.py
-file. For example, settings for version 2.3 are in gen_settings_2_3.py.
-That way we can easily inherit settings for version N from settings for version N-1.
-
-TODO:
- - write Serialize()
- - support arrays i.e. a count + type of values + pointer to values
- - maybe: when N decodes data from version N - 1, missing data is
-   set to 0. Add some way to set different default values?
- - maybe: add a compare function. That way we could optimize saving
-   (only save if the values have changed). It's really simple:
-   call Serialize() on both and memcmp() on result
-"""
+import os, util, struct
+from gen_settings_types import Struct, settings, version, Field, String
+from util import gob_uvarint_encode
 
 g_magic_id = 0x53657454  # 'SetT' as 'Settings''
 g_magic_id_str = "SetT"
@@ -70,7 +25,7 @@ h_tmpl   ="""// DON'T EDIT MANUALLY !!!!
 #ifndef SettingsSumatra_h
 #define SettingsSumatra_h
 
-%(h_struct_defs)s
+%(struct_defs)s
 #endif
 """
 
@@ -103,79 +58,42 @@ def ver_from_string(ver_str):
 # references to other struct types (forming a tree of values).
 # we flatten the values into a list, in the reverse order of
 # tree traversal
-def flatten_values_tree(val):
-    assert isinstance(val, StructVal)
+def flatten_struct(stru):
+    assert isinstance(stru, Struct)
     vals = []
-    left = [val]
+    left = [stru]
     while len(left) > 0:
-        val = left.pop(0)
-        assert isinstance(val, StructVal)
-        vals += [val]
-        for field in val.val:
-            if field.is_struct:
+        stru = left.pop(0)
+        assert isinstance(stru, Struct)
+        vals += [stru]
+        for field in stru.values:
+            if field.is_struct():
                 if field.val != None:
-                    assert isinstance(field, StructVal)
-                    left += [field]
+                    assert isinstance(field.val, Struct)
+                    left += [field.val]
     vals.reverse()
     return vals
 
-def is_num(val):
-    tp = type(val)
-    return tp == types.IntType or tp == types.LongType or tp == types.BooleanType
-
-def is_str(val): return type(val) == types.StringType
-
-def serialize_val(val, is_signed):
-    if is_num(val):
-        n = long(val)
-        if is_signed:
-            return gob_varint_encode(n)
-        else:
-            return gob_uvarint_encode(n)
-    # empty strings are encoded as 0 (0 length)
-    # non-empty strings are encoded as uvariant(len(s)+1)
-    # (+1 for terminating 0), followed by string data (including terminating 0)
-    if is_str(val):
-        if val == "":
-            data = gob_uvarint_encode(0)
-        else:
-            data = gob_uvarint_encode(len(val)+1)
-            data = data + val + chr(0)
-        return data
-    assert False, "%s is of unkown type" % val
-
-# serialize values in vals and calculate offset of each
+# serialize values in vals to binary and calculate offset of each
 # val in encoded data.
 # values are serialized in reverse order because
 # it would be very complicated to serialize forward
 # offsets in variable-length encoding
 def serialize_top_level_struct(top_level_struct):
-    vals = flatten_values_tree(top_level_struct)
+    vals = flatten_struct(top_level_struct)
+
     # the first 12 bytes are:
     #  - 4 bytes magic constant (for robustness)
     #  - 4 bytes for version
     #  - 4 bytes offset pointing to a top-level structure
     #      within the data
     offset = 12
-    for obj in vals:
-        obj.offset = offset
-        for field in obj.val:
-            val = field.val
-            is_signed = False # default value for the struct offset
-            if field.is_struct:
-                assert isinstance(field, StructVal)
-                val = 0
-                if field.val != None:
-                    # must have been serialized
-                    assert field.offset not in (None, 0)
-                    assert offset > field.offset
-                    val = field.offset
-            else:
-                is_signed = field.typ.is_signed
-            data = serialize_val(val, is_signed)
-            field.serialized = data
+    for stru in vals:
+        stru.offset = offset
+        for field in stru.values:
+            data = field.serialized()
             offset += len(data)
-        fields_count = len(obj.val)
+        fields_count = len(stru.values)
         offset = offset + 4 + len(gob_uvarint_encode(fields_count))
     return vals
 
@@ -192,22 +110,22 @@ def data_with_comment_as_c(data, comment):
 
 g_addr_to_int_map = {}
 # change:
-#   <gen_settings_types.StructVal object at 0x7fddfc4c>
+#   <$module.Struct object at 0x7fddfc4c>
 # =>
-#   StructVal_$n where $n maps 0x7fddfc4c => unique integer
+#   Struct_$n where $n maps 0x7fddfc4c => unique integer
 def short_object_id(obj):
     global g_addr_to_int_map
-    if isinstance(obj, StructVal):
+    if isinstance(obj, Struct):
         s = str(obj)[1:-1]
-        s = s.replace("gen_settings_types.", "")
+        s = ".".join(s.split(".")[1:])
         s = s.replace(" object at ", "@")
         (name, addr) = s.split("@")
         if addr not in g_addr_to_int_map:
             g_addr_to_int_map[addr] = str(len(g_addr_to_int_map))
         return name + "_" + g_addr_to_int_map[addr]
-    if isinstance(obj, Val):
-        assert is_str(obj.val)
-        return '"' + obj.val + '"'
+    #if isinstance(obj, Field):
+    #    #ssert is_str(obj.val)
+    #    return '"' + obj.val + '"'
     assert False, "%s is object of unkown type" % obj
 
 """
@@ -215,41 +133,56 @@ def short_object_id(obj):
   0x00, 0x01, // $type $name = $val
   ...
 """
-def get_cpp_data_for_struct_val(struct_val):
-    assert isinstance(struct_val, StructVal)
-    name = struct_val.struct_def.name
-    offset = struct_val.offset
-    lines = ["", "    // offset: %s %s %s" % (hex(offset), short_object_id(struct_val), name)]
-    assert struct_val.val != None
-    if struct_val.val == None:
-        assert False, "it happened"
-        return (lines, 0)
-
+def get_cpp_data_for_struct(stru):
+    assert isinstance(stru, Struct)
+    name = stru.name()
+    offset = stru.offset
+    lines = ["", "    // offset: %s %s" % (hex(offset), short_object_id(stru))]
+    assert stru.values not in (None, [])
+ 
     # magic id
     data = struct.pack("<I", g_magic_id)
     comment = "magic id '%s'" % g_magic_id_str
     lines += [data_with_comment_as_c(data, comment)]
 
     # number of fields as uvarint
-    fields_count = len(struct_val.val)
+    fields_count = len(stru.values)
     data = gob_uvarint_encode(fields_count)
     lines += [data_with_comment_as_c(data, "%d fields" % fields_count)]
     size = 4 + len(data)
 
-    for field in struct_val.val:
-        data = field.serialized
+    for val in stru.values:
+        data = val.serialized()
         size += len(data)
         data_hex = data_to_hex(data)
-        var_type = field.typ.c_type
-        var_name = field.typ.name
-        val = field.val
-        if is_num(val):
-            val_str = hex(val)
+        var_type = val.c_type()
+        var_name = val.name
+        if val.is_struct():
+            val_str = "NULL"
+            if val.val.offset != 0:
+                val_str = short_object_id(val.val)
         else:
-            if field.val == None:
-                val_str = "NULL"
+            if val.val == None:
+                try:
+                    assert isinstance(val.typ, String)
+                except:
+                    print(val)
+                    print(val.name)
+                    print(val.typ)
+                    print(val.val)
+                    raise
+                val_str = ""
+            elif type(val.val) == type(""):
+                val_str = val.val
             else:
-                val_str = short_object_id(field)
+                try:
+                    val_str = hex(val.val)
+                except:
+                    print(val)
+                    print(val.name)
+                    print(val.typ)
+                    print(val.val)
+                    raise
         s = "    %(data_hex)s, // %(var_type)s %(var_name)s = %(val_str)s" % locals()
         lines += [s]
     return (lines, size)
@@ -261,8 +194,8 @@ static uint8_t g$(StructName)Default[] = {
 """
 def gen_cpp_data_for_struct_values(vals, version_str):
     top_level = vals[-1]
-    assert isinstance(top_level, StructVal)
-    name = top_level.struct_def.name
+    assert isinstance(top_level, Struct)
+    name = top_level.name()
     lines = [""] # will be replaced by: "static const uint8_t g%sDefault[%(total_size)d] = {" at the end
 
     data = struct.pack("<I", g_magic_id)
@@ -278,8 +211,8 @@ def gen_cpp_data_for_struct_values(vals, version_str):
     lines += [data_with_comment_as_c(data, comment)]
 
     total_size = 12
-    for val in vals:
-        (struct_lines, size) = get_cpp_data_for_struct_val(val)
+    for stru in vals:
+        (struct_lines, size) = get_cpp_data_for_struct(stru)
         lines += struct_lines
         total_size += size
     lines += ["};"]
@@ -287,19 +220,128 @@ def gen_cpp_data_for_struct_values(vals, version_str):
 
     return "\n".join(lines)
 
+
+# TODO: could replace by a filed on Struct
+g_struct_defs_generated = []
+
+"""
+struct $name {
+   $type $field_name;
+   ...
+};
+...
+"""
+def gen_struct_def(stru):
+    global g_struct_defs_generated
+
+    assert isinstance(stru, Struct)
+    if stru in g_struct_defs_generated:
+        return []
+    #assert stru in GetAllStructs()
+    name = stru.name()
+    lines = ["struct %s {" % name]
+    max_len = stru.get_max_field_type_len()
+    fmt = "    %%-%ds %%s;" % max_len
+    for val in stru.values:
+        lines += [fmt % (val.c_type(), val.name)]
+    lines += ["};\n"]
+    return "\n".join(lines)
+
+prototypes_tmpl = """#define %(name)sVersion "%(version_str)s"
+
+%(name)s *Deserialize%(name)s(const uint8_t *data, int dataLen, bool *usedDefaultOut);
+uint8_t *Serialize%(name)s(%(name)s *, int *dataLenOut);
+void Free%(name)s(%(name)s *);
+"""
+def gen_struct_defs(vals, version_str):
+    top_level = vals[-1]
+    assert isinstance(top_level, Struct)
+    name = top_level.__class__.__name__
+    lines = [gen_struct_def(stru) for stru in vals]
+    lines += [prototypes_tmpl % locals()]
+    return "\n".join(lines)
+
+
+"""
+FieldMetadata g${name}FieldMetadata[] = {
+    { $type, $offset, &g${name}StructMetadata },
+};
+"""
+def gen_struct_fields(stru):
+    assert isinstance(stru, Struct)
+    struct_name = stru.name()
+    lines = ["FieldMetadata g%(struct_name)sFieldMetadata[] = {" % locals()]
+    for field in stru.values:
+        assert isinstance(field, Field)
+        typ_enum = field.typ.get_typ_enum()
+        field_name = field.name
+        offset = "offsetof(%(struct_name)s, %(field_name)s)" % locals()
+        if field.is_struct():
+            field_type = field.typ.name()
+            lines += ["    { %(typ_enum)s, %(offset)s, &g%(field_type)sMetadata }," % locals()]
+        else:
+            lines += ["    { %(typ_enum)s, %(offset)s, NULL }," % locals()]
+    lines += ["};\n"]
+    return lines
+
+"""
+StructMetadata g${name}StructMetadata = { $size, $nFields, $fields };
+"""
+def gen_structs_metadata(structs):
+    lines = []
+    for stru in structs:
+        struct_name = stru.name()
+        nFields = len(stru.values)
+        fields = "&g%sFieldMetadata[0]" % struct_name
+        lines += gen_struct_fields(stru)
+        lines += ["StructMetadata g%(struct_name)sMetadata = { sizeof(%(struct_name)s), %(nFields)d, %(fields)s };\n" % locals()]
+    return "\n".join(lines)
+
+top_level_funcs_tmpl = """
+%(name)s *Deserialize%(name)s(const uint8_t *data, int dataLen, bool *usedDefaultOut)
+{
+    void *res = NULL;
+    res = Deserialize(data, dataLen, %(name)sVersion, &g%(name)sMetadata);
+    if (res) {
+        *usedDefaultOut = false;
+        return (%(name)s*)res;
+    }
+    res = Deserialize(&g%(name)sDefault[0], sizeof(g%(name)sDefault), %(name)sVersion, &g%(name)sMetadata);
+    CrashAlwaysIf(!res);
+    *usedDefaultOut = true;
+    return (%(name)s*)res;
+}
+
+uint8_t *Serialize%(name)s(%(name)s *val, int *dataLenOut)
+{
+    return Serialize((const uint8_t*)val, %(name)sVersion, &g%(name)sMetadata, dataLenOut);
+}
+
+void Free%(name)s(%(name)s *val)
+{
+    FreeStruct((uint8_t*)val, &g%(name)sMetadata);
+}
+
+"""
+
+def gen_top_level_funcs(vals):
+    top_level = vals[-1]
+    assert isinstance(top_level, Struct)
+    name = top_level.name()
+    return top_level_funcs_tmpl % locals()
+
 def main():
     dst_dir = src_dir()
 
-    val = gen_settings_2_3.settings
-    version_str = gen_settings_2_3.version
+    val = settings
     vals = serialize_top_level_struct(val)
 
-    h_struct_defs = gen_struct_defs(vals, version_str)
+    struct_defs = gen_struct_defs(vals, version)
     write_to_file(os.path.join(dst_dir, "SettingsSumatra.h"),  h_tmpl % locals())
 
     structs_metadata = gen_structs_metadata(vals)
 
-    values_global_data = gen_cpp_data_for_struct_values(vals, version_str)
+    values_global_data = gen_cpp_data_for_struct_values(vals, version)
     top_level_funcs = gen_top_level_funcs(vals)
     write_to_file(os.path.join(dst_dir, "SettingsSumatra.cpp"), cpp_tmpl % locals())
 
