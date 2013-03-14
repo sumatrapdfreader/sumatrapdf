@@ -730,12 +730,12 @@ ImageData *MobiDoc::GetCoverImage()
 }
 
 // each record can have extra data at the end, which we must discard
-// returns MAX_SIZE_T on error
+// returns (size_t)-1 on error
 static size_t GetRealRecordSize(uint8 *recData, size_t recLen, size_t trailersCount, bool multibyte)
 {
     for (size_t i = 0; i < trailersCount; i++) {
         if (recLen < 4)
-            return MAX_SIZE_T;
+            return (size_t)-1;
         uint32 n = 0;
         for (size_t j = 0; j < 4; j++) {
             uint8 v = recData[recLen - 4 + j];
@@ -744,16 +744,16 @@ static size_t GetRealRecordSize(uint8 *recData, size_t recLen, size_t trailersCo
             n = (n << 7) | (v & 0x7f);
         }
         if (n > recLen)
-            return MAX_SIZE_T;
+            return (size_t)-1;
         recLen -= n;
     }
 
     if (multibyte) {
         if (0 == recLen)
-            return MAX_SIZE_T;
+            return (size_t)-1;
         uint8 n = (recData[recLen-1] & 3) + 1;
         if (n > recLen)
-            return MAX_SIZE_T;
+            return (size_t)-1;
         recLen -= n;
     }
 
@@ -769,7 +769,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
     if (NULL == recData)
         return false;
     recSize = GetRealRecordSize((uint8*)recData, recSize, trailersCount, multibyte);
-    if (MAX_SIZE_T == recSize)
+    if ((size_t)-1 == recSize)
         return false;
 
     if (COMPRESSION_NONE == compressionType) {

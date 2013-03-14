@@ -52,7 +52,7 @@ static bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange>& result)
     rangeList.Split(ranges, L",", true);
     rangeList.SortNatural();
 
-    for (size_t i = 0; i < rangeList.Count(); i++) {
+    for (int i = 0; i < rangeList.Count(); i++) {
         int start, end;
         if (str::Parse(rangeList.At(i), L"%d-%d%$", &start, &end) && 0 < start && start <= end)
             result.Append(PageRange(start, end));
@@ -78,7 +78,7 @@ bool IsValidPageRange(const WCHAR *ranges)
 
 inline bool IsInRange(Vec<PageRange>& ranges, int pageNo)
 {
-    for (size_t i = 0; i < ranges.Count(); i++) {
+    for (int i = 0; i < ranges.Count(); i++) {
         if (ranges.At(i).start <= pageNo && pageNo <= ranges.At(i).end)
             return true;
     }
@@ -151,7 +151,7 @@ static void BenchFile(WCHAR *filePath, const WCHAR *pagesSpec)
     assert(!pagesSpec || IsBenchPagesInfo(pagesSpec));
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
-        for (size_t i = 0; i < ranges.Count(); i++) {
+        for (int i = 0; i < ranges.Count(); i++) {
             for (int j = ranges.At(i).start; j <= ranges.At(i).end; j++) {
                 if (1 <= j && j <= pages)
                     BenchLoadRender(engine, j);
@@ -170,7 +170,7 @@ static void BenchDir(WCHAR *dir)
     WStrVec files;
     ScopedMem<WCHAR> pattern(str::Format(L"%s\\*.pdf", dir));
     CollectPathsFromDirectory(pattern, files);
-    for (size_t i = 0; i < files.Count(); i++) {
+    for (int i = 0; i < files.Count(); i++) {
         BenchFile(files.At(i), NULL);
     }
 }
@@ -180,7 +180,7 @@ void BenchFileOrDir(WStrVec& pathsToBench)
     gLog = new slog::StderrLogger();
 
     size_t n = pathsToBench.Count() / 2;
-    for (size_t i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
         WCHAR *path = pathsToBench.At(2 * i);
         if (file::Exists(path))
             BenchFile(path, pathsToBench.At(2 * i + 1));
@@ -297,7 +297,7 @@ public:
 
 class FilesProvider : public TestFileProvider {
     WStrVec files;
-    size_t provided;
+    int provided;
 public:
     FilesProvider(const WCHAR *path) {
         files.Append(str::Dup(path));
@@ -305,7 +305,7 @@ public:
     }
     FilesProvider(WStrVec& newFiles, int n, int offset) {
         // get every n-th file starting at offset
-        for (size_t i = offset; i < newFiles.Count(); i += n) {
+        for (int i = offset; i < newFiles.Count(); i += n) {
             WCHAR *f = newFiles[i];
             files.Append(str::Dup(f));
         }
@@ -707,7 +707,7 @@ void GetStressTestInfo(str::Str<char>* s)
     if (!IsStressTesting())
         return;
 
-    for (size_t i = 0; i < gWindows.Count(); i++) {
+    for (int i = 0; i < gWindows.Count(); i++) {
         WindowInfo *w = gWindows.At(i);
         if (!w || !w->dm || !w->loadedFilePath)
             continue;
@@ -738,7 +738,7 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
     int nTypes = 0;
     FilesPerType filesPerType[MaxTypes];
 
-    for (size_t i=0; i < files.Count(); i++) {
+    for (int i=0; i < files.Count(); i++) {
         WCHAR *file = files.At(i);
         const WCHAR *ext = str::FindCharLast(file, L'.');
         CrashAlwaysIf(!ext);

@@ -380,7 +380,7 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
         return NULL;
 
     PointI pt(x, y);
-    for (size_t i = 0; i < linkInfo.Count(); i++) {
+    for (int i = 0; i < linkInfo.Count(); i++) {
         if (linkInfo.At(i).rect.Contains(pt)) {
             if (info)
                 *info = linkInfo.At(i);
@@ -742,20 +742,20 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
 
     Vec<DisplayState *> list;
     fileHistory.GetFrequencyOrder(list);
-    for (size_t i = 0; i < list.Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
+    for (int i = 0; i < list.Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
         ScopedMem<WCHAR> bmpPath(GetThumbnailPath(list.At(i)->filePath));
         if (!bmpPath)
             continue;
-        size_t idx = files.Find(path::GetBaseName(bmpPath));
-        if (idx != MAX_SIZE_T) {
-            CrashIf(files.Count() <= idx);
+        int idx = files.Find(path::GetBaseName(bmpPath));
+        if (idx != -1) {
+            CrashIf(idx < 0 || files.Count() <= idx);
             WCHAR *fileName = files.At(idx);
             files.RemoveAt(idx);
             free(fileName);
         }
     }
 
-    for (size_t i = 0; i < files.Count(); i++) {
+    for (int i = 0; i < files.Count(); i++) {
         ScopedMem<WCHAR> bmpPath(path::Join(thumbsPath, files.At(i)));
         file::Delete(bmpPath);
     }

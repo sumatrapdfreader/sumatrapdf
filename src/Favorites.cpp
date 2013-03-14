@@ -22,14 +22,14 @@ using namespace Gdiplus;
 int FileFavs::FindByPage(int pageNo, const WCHAR *pageLabel) const
 {
     if (pageLabel) {
-        for (size_t i = 0; i < favNames.Count(); i++) {
+        for (int i = 0; i < favNames.Count(); i++) {
             if (str::Eq(favNames.At(i)->pageLabel, pageLabel))
-                return (int)i;
+                return i;
         }
     }
-    for (size_t i = 0; i < favNames.Count(); i++) {
+    for (int i = 0; i < favNames.Count(); i++) {
         if (favNames.At(i)->pageNo == pageNo)
-            return (int)i;
+            return i;
     }
     return -1;
 }
@@ -44,15 +44,15 @@ int FileFavs::SortByPageNo(const void *a, const void *b)
 
 void FileFavs::ResetMenuIds()
 {
-    for (size_t i =0; i < favNames.Count(); i++) {
+    for (int i =0; i < favNames.Count(); i++) {
         FavName *fn = favNames.At(i);
         fn->menuId = 0;
     }
 }
 
-bool FileFavs::GetByMenuId(int menuId, size_t& idx)
+bool FileFavs::GetByMenuId(int menuId, int& idx)
 {
-    for (size_t i = 0; i < favNames.Count(); i++) {
+    for (int i = 0; i < favNames.Count(); i++) {
         FavName *fn = favNames.At(i);
         if (fn->menuId == menuId) {
             idx = i;
@@ -64,7 +64,7 @@ bool FileFavs::GetByMenuId(int menuId, size_t& idx)
 
 bool FileFavs::HasFavName(FavName *fn)
 {
-    for (size_t i = 0; i < favNames.Count(); i++)
+    for (int i = 0; i < favNames.Count(); i++)
         if (fn == favNames.At(i))
             return true;
     return false;
@@ -96,17 +96,17 @@ void FileFavs::AddOrReplace(int pageNo, const WCHAR *name, const WCHAR *pageLabe
     favNames.Sort(SortByPageNo);
 }
 
-void Favorites::RemoveFav(FileFavs *fav, size_t idx)
+void Favorites::RemoveFav(FileFavs *fav, int idx)
 {
     favs.RemoveAt(idx);
     delete fav;
     filePathCache = NULL;
-    idxCache = MAX_SIZE_T;
+    idxCache = (size_t)-1;
 }
 
-FileFavs *Favorites::GetByMenuId(int menuId, size_t& idx)
+FileFavs *Favorites::GetByMenuId(int menuId, int& idx)
 {
-    for (size_t i = 0; i < favs.Count(); i++) {
+    for (int i = 0; i < favs.Count(); i++) {
         FileFavs *fav = favs.At(i);
         if (fav->GetByMenuId(menuId, idx))
             return fav;
@@ -116,7 +116,7 @@ FileFavs *Favorites::GetByMenuId(int menuId, size_t& idx)
 
 FileFavs *Favorites::GetByFavName(FavName *fn)
 {
-    for (size_t i = 0; i < favs.Count(); i++) {
+    for (int i = 0; i < favs.Count(); i++) {
         FileFavs *fav = favs.At(i);
         if (fav->HasFavName(fn))
             return fav;
@@ -126,13 +126,13 @@ FileFavs *Favorites::GetByFavName(FavName *fn)
 
 void Favorites::ResetMenuIds()
 {
-    for (size_t i = 0; i < favs.Count(); i++) {
+    for (int i = 0; i < favs.Count(); i++) {
         FileFavs *fav = favs.At(i);
         fav->ResetMenuIds();
     }
 }
 
-FileFavs *Favorites::GetFavByFilePath(const WCHAR *filePath, bool createIfNotExist, size_t *idx)
+FileFavs *Favorites::GetFavByFilePath(const WCHAR *filePath, bool createIfNotExist, int *idx)
 {
     // it's likely that we'll ask about the info for the same
     // file as in previous call, so use one element cache
@@ -142,7 +142,7 @@ FileFavs *Favorites::GetFavByFilePath(const WCHAR *filePath, bool createIfNotExi
         fav = favs.At(idxCache);
         found = true;
     } else {
-        for (size_t i = 0; i < favs.Count(); i++) {
+        for (int i = 0; i < favs.Count(); i++) {
             fav = favs.At(i);
             if (str::Eq(filePath, fav->filePath)) {
                 idxCache = i;
@@ -182,7 +182,7 @@ void Favorites::AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *nam
 
 void Favorites::Remove(const WCHAR *filePath, int pageNo)
 {
-    size_t idx;
+    int idx;
     FileFavs *fav = GetFavByFilePath(filePath, false, &idx);
     if (!fav)
         return;
@@ -193,7 +193,7 @@ void Favorites::Remove(const WCHAR *filePath, int pageNo)
 
 void Favorites::RemoveAllForFile(const WCHAR *filePath)
 {
-    size_t idx;
+    int idx;
     FileFavs *fav = GetFavByFilePath(filePath, false, &idx);
     if (fav)
         RemoveFav(fav, idx);
@@ -240,11 +240,11 @@ static WCHAR *FavCompactReadableName(FileFavs *fav, FavName *fn, bool isCurrent=
 
 static void AppendFavMenuItems(HMENU m, FileFavs *f, UINT& idx, bool combined, bool isCurrent)
 {
-    size_t items = f->favNames.Count();
+    int items = f->favNames.Count();
     if (items > MAX_FAV_MENUS) {
         items = MAX_FAV_MENUS;
     }
-    for (size_t i = 0; i < items; i++) {
+    for (int i = 0; i < items; i++) {
         FavName *fn = f->favNames.At(i);
         fn->menuId = idx++;
         ScopedMem<WCHAR> s;
@@ -266,7 +266,7 @@ static int SortByBaseFileName(const void *a, const void *b)
 
 static void GetSortedFilePaths(Favorites *favorites, Vec<WCHAR*>& filePathsSortedOut, FileFavs *toIgnore)
 {
-    for (size_t i = 0; i < favorites->favs.Count(); i++) {
+    for (int i = 0; i < favorites->favs.Count(); i++) {
         FileFavs *f = favorites->favs.At(i);
         if (f != toIgnore)
             filePathsSortedOut.Append(f->filePath);
@@ -434,7 +434,7 @@ static void GoToFavorite(WindowInfo *win, FileFavs *f, FavName *fn)
 
 void GoToFavoriteByMenuId(WindowInfo *win, int wmId)
 {
-    size_t idx;
+    int idx;
     FileFavs *f = gFavorites->GetByMenuId(wmId, idx);
     if (!f)
         return;
@@ -478,7 +478,7 @@ static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, FavName *
 
 static void InsertFavSecondLevelNodes(HWND hwnd, HTREEITEM parent, FileFavs *f)
 {
-    for (size_t i = 0; i < f->favNames.Count(); i++)
+    for (int i = 0; i < f->favNames.Count(); i++)
     {
         InsertFavSecondLevelNode(hwnd, parent, f->favNames.At(i));
     }
@@ -520,7 +520,7 @@ void PopulateFavTreeIfNeeded(WindowInfo *win)
     GetSortedFilePaths(gFavorites, filePathsSorted, NULL);
 
     SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
-    for (size_t i = 0; i < filePathsSorted.Count(); i++) {
+    for (int i = 0; i < filePathsSorted.Count(); i++) {
         FileFavs *f = gFavorites->GetFavByFilePath(filePathsSorted.At(i));
         bool isExpanded = win->expandedFavorites.Contains(f);
         HTREEITEM node = InsertFavTopLevelNode(hwndTree, f, isExpanded);
@@ -546,14 +546,14 @@ static void UpdateFavoritesTreeIfNecessary(WindowInfo *win)
 
 void UpdateFavoritesTreeForAllWindows()
 {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
+    for (int i = 0; i < gWindows.Count(); i++) {
         UpdateFavoritesTreeIfNecessary(gWindows.At(i));
     }
 
     // hide the favorites tree if we removed the last favorite
     if (!HasFavorites()) {
         gGlobalPrefs.favVisible = false;
-        for (size_t i = 0; i < gWindows.Count(); i++) {
+        for (int i = 0; i < gWindows.Count(); i++) {
             WindowInfo *win = gWindows.At(i);
             SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
         }
@@ -646,7 +646,7 @@ void RememberFavTreeExpansionState(WindowInfo *win)
 
 void RememberFavTreeExpansionStateForAllWindows()
 {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
+    for (int i = 0; i < gWindows.Count(); i++) {
         RememberFavTreeExpansionState(gWindows.At(i));
     }
 }

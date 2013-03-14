@@ -270,11 +270,11 @@ void EbookController::DeletePages(Vec<HtmlPage*>** pages)
 // returns page whose content contains reparseIdx
 // page is in 1..$pageCount range to match currPageNo
 // returns 0 if not found
-static size_t PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
+static int PageForReparsePoint(Vec<HtmlPage*> *pages, int reparseIdx)
 {
     if (!pages)
         return 0;
-    for (size_t i = 0; i < pages->Count(); i++) {
+    for (int i = 0; i < pages->Count(); i++) {
         HtmlPage *pd = pages->At(i);
         if (pd->reparseIdx == reparseIdx)
             return i + 1;
@@ -310,7 +310,7 @@ void EbookController::UpdateCurrPageNoForPage(HtmlPage *pd)
     // pages can have have the same reparse point, so finding them by
     // reparse point is not reliable. try first to find by page object
     if (GetPagesFromBeginning()) {
-        size_t n = GetPagesFromBeginning()->Find(pd) + 1;
+        int n = GetPagesFromBeginning()->Find(pd) + 1;
         if (n > 0) {
             currPageNo = n;
             return;
@@ -546,7 +546,7 @@ void EbookController::ClickedProgress(Control *c, int x, int y)
     GoToPage(newPageNo);
 }
 
-size_t EbookController::GetMaxPageCount()
+int EbookController::GetMaxPageCount()
 {
     Vec<HtmlPage *> *pages1 = pagesFromBeginning;
     Vec<HtmlPage *> *pages2 = pagesFromPage;
@@ -555,7 +555,7 @@ size_t EbookController::GetMaxPageCount()
         pages1 = &formattingTemp.pagesFromBeginning;
         pages2 = &formattingTemp.pagesFromPage;
     }
-    size_t n = 0;
+    int n = 0;
     if (pages1 && pages1->Count() > n)
         n = pages1->Count();
     if (pages2 && pages2->Count() > n)
@@ -567,7 +567,7 @@ size_t EbookController::GetMaxPageCount()
 void EbookController::UpdateStatus()
 {
     UpdateCurrPageNoForPage(pageShown);
-    size_t pageCount = GetMaxPageCount();
+    int pageCount = GetMaxPageCount();
 
     if (fileBeingLoaded) {
         ScopedMem<WCHAR> s(str::Format(_TR("Loading file %s..."), fileBeingLoaded));
@@ -617,11 +617,11 @@ bool EbookController::GoOnePageForward(Vec<HtmlPage*> *pages)
     if (!pageShown || !pages)
         return false;
 
-    size_t newPageIdx = pages->Find(pageShown) + 1;
+    int newPageIdx = pages->Find(pageShown) + 1;
     if (0 == newPageIdx)
         return false;
 
-    if (newPageIdx >= pages->Count())
+    if ((size_t)newPageIdx >= pages->Count())
         return false;
 
     ShowPage(pages->At(newPageIdx), false);

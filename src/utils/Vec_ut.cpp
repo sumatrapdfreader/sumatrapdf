@@ -42,8 +42,8 @@ static void WStrVecTest()
         WStrVec v2;
         size_t count = v2.Split(L"a,b,,c,", L",");
         assert(count == 5 && v2.Find(L"c") == 3);
-        assert(v2.Find(L"") == 2 && v2.Find(L"", 3) == 4 && v2.Find(L"", 5) == MAX_SIZE_T);
-        assert(v2.Find(L"B") == MAX_SIZE_T && v2.FindI(L"B") == 1);
+        assert(v2.Find(L"") == 2 && v2.Find(L"", 3) == 4 && v2.Find(L"", 5) == -1);
+        assert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
         ScopedMem<WCHAR> joined(v2.Join(L";"));
         assert(str::Eq(joined, L"a;b;;c;"));
     }
@@ -71,7 +71,7 @@ static void StrListTest()
     assert(str::EqI(l.At(2), L"one"));
     assert(l.Find(L"One") == 2);
     assert(l.FindI(L"One") == 0);
-    assert(l.Find(L"Two") == MAX_SIZE_T);
+    assert(l.Find(L"Two") == -1);
 }
 
 static size_t VecTestAppendFmt()

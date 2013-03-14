@@ -1559,7 +1559,7 @@ bool DisplayModel::CanNavigate(int dir) const
         return AsChmEngine()->CanNavigate(dir);
     assert(navHistoryIx <= navHistory.Count());
     if (dir < 0)
-        return navHistoryIx >= (size_t)-dir;
+        return navHistoryIx >= -dir;
     return navHistoryIx + dir < navHistory.Count();
 }
 
@@ -1585,7 +1585,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig)
     navHistory = orig.navHistory;
     navHistoryIx = orig.navHistoryIx;
     // remove navigation history entries for all no longer valid pages
-    for (size_t i = navHistory.Count(); i > 0; i--) {
+    for (int i = navHistory.Count(); i > 0; i--) {
         if (!ValidPageNo(navHistory.At(i - 1).page)) {
             navHistory.RemoveAt(i - 1);
             if (i - 1 < navHistoryIx)

@@ -88,8 +88,8 @@ RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, size_t len)
 
     RectF bbox;
     g->MeasureString(s, len, f, PointF(0, 0), &bbox);
-    size_t idx = fontCache.Find(f);
-    if (MAX_SIZE_T == idx) {
+    int idx = fontCache.Find(f);
+    if (-1 == idx) {
         LOGFONTW lfw;
         Status ok = f->GetLogFontW(g, &lfw);
         bool isItalicOrMonospace = Ok != ok || lfw.lfItalic ||
@@ -99,7 +99,7 @@ RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, size_t len)
                                    str::EndsWith(lfw.lfFaceName, L"Typewriter");
         fontCache.Append(f);
         fixCache.Append(isItalicOrMonospace);
-        idx = fontCache.Count() - 1;
+        idx = (int)fontCache.Count() - 1;
     }
     // most documents look good enough with these adjustments
     if (!fixCache.At(idx)) {

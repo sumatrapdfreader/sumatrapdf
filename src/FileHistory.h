@@ -67,14 +67,14 @@ public:
     void  Append(DisplayState *state) { states.Append(state); }
     void  Remove(DisplayState *state) { states.Remove(state); }
 
-    DisplayState *Get(size_t index) const {
+    DisplayState *Get(int index) const {
         if (index < states.Count())
             return states.At(index);
         return NULL;
     }
 
     DisplayState *Find(const WCHAR *filePath) const {
-        for (size_t i = 0; i < states.Count(); i++) {
+        for (int i = 0; i < states.Count(); i++) {
             if (str::EqI(states.At(i)->filePath, filePath))
                 return states.At(i);
         }
@@ -110,8 +110,8 @@ public:
         // so that the user could still try opening it again
         // and so that we don't completely forget the settings,
         // should the file reappear later on
-        size_t newIdx = hide ? INT_MAX : FILE_HISTORY_MAX_RECENT - 1;
-        size_t idx = states.Find(state);
+        int newIdx = hide ? INT_MAX : FILE_HISTORY_MAX_RECENT - 1;
+        int idx = states.Find(state);
         if (idx < newIdx && state != states.Last()) {
             states.Remove(state);
             if (states.Count() <= newIdx)

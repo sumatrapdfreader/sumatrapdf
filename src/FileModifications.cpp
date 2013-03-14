@@ -114,7 +114,7 @@ bool SaveFileModifictions(const WCHAR *filepath, Vec<PageAnnotation> *list)
 
     ScopedMem<WCHAR> modificationsPath(str::Join(filepath, SMX_FILE_EXT));
     str::Str<char> data;
-    size_t offset = 0;
+    int offset = 0;
 
     size_t len;
     ScopedMem<char> prevData(file::ReadAll(modificationsPath, &len));
@@ -143,7 +143,7 @@ bool SaveFileModifictions(const WCHAR *filepath, Vec<PageAnnotation> *list)
         time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
     data.Append(" }\r\n\r\n");
 
-    for (size_t i = offset; i < list->Count(); i++) {
+    for (int i = offset; i < list->Count(); i++) {
         PageAnnotation& annot = list->At(i);
         switch (annot.type) {
         case Annot_Highlight: data.Append("highlight"); break;

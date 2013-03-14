@@ -92,7 +92,7 @@ public:
 static RectD BoundSelectionOnPage(Vec<SelectionOnPage>& sel, int pageNo)
 {
     RectD bounds;
-    for (size_t i = 0; i < sel.Count(); i++) {
+    for (int i = 0; i < sel.Count(); i++) {
         if (sel.At(i).pageNo == pageNo)
             bounds = bounds.Union(sel.At(i).rect);
     }
@@ -123,7 +123,7 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 
     int current = 1, total = 0;
     if (pd.sel.Count() == 0) {
-        for (size_t i = 0; i < pd.ranges.Count(); i++) {
+        for (int i = 0; i < pd.ranges.Count(); i++) {
             if (pd.ranges.At(i).nToPage < pd.ranges.At(i).nFromPage)
                 total += pd.ranges.At(i).nFromPage - pd.ranges.At(i).nToPage + 1;
             else
@@ -186,7 +186,7 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
             else if (PrintScaleNone == pd.advData.scale)
                 zoom = dpiFactor;
 
-            for (size_t i = 0; i < pd.sel.Count(); i++) {
+            for (int i = 0; i < pd.sel.Count(); i++) {
                 if (pd.sel.At(i).pageNo != pageNo)
                     continue;
 
@@ -237,7 +237,7 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
     }
 
     // print all the pages the user requested
-    for (size_t i = 0; i < pd.ranges.Count(); i++) {
+    for (int i = 0; i < pd.ranges.Count(); i++) {
         int dir = pd.ranges.At(i).nFromPage > pd.ranges.At(i).nToPage ? -1 : 1;
         for (DWORD pageNo = pd.ranges.At(i).nFromPage; pageNo != pd.ranges.At(i).nToPage + dir; pageNo += dir) {
             if ((PrintRangeEven == pd.advData.range && pageNo % 2 != 0) ||
@@ -604,7 +604,7 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
     if (settings)
         rangeList.Split(settings, L",", true);
 
-    for (size_t i = 0; i < rangeList.Count(); i++) {
+    for (int i = 0; i < rangeList.Count(); i++) {
         PRINTPAGERANGE pr;
         if (str::Parse(rangeList.At(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);

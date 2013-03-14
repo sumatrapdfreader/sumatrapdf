@@ -204,17 +204,17 @@ void Notifications::MoveBelow(NotificationWnd *fix, NotificationWnd *move)
 
 void Notifications::Remove(NotificationWnd *wnd)
 {
-    size_t ix = wnds.Find(wnd);
-    if (MAX_SIZE_T == ix)
+    int ix = wnds.Find(wnd);
+    if (ix == -1)
         return;
     wnds.Remove(wnd);
-    if (0 == ix && wnds.Count() > 0) {
+    if (ix == 0 && wnds.Count() > 0) {
         SetWindowPos(wnds.At(0)->hwnd(), NULL,
                      GetWndX(wnds.At(0)), NotificationWnd::TL_MARGIN,
                      0, 0, SWP_NOSIZE | SWP_NOZORDER);
         ix = 1;
     }
-    for (size_t i = ix; i < wnds.Count(); i++) {
+    for (int i = ix; i < wnds.Count(); i++) {
         MoveBelow(wnds.At(i - 1), wnds.At(i));
     }
 }
@@ -234,7 +234,7 @@ void Notifications::Add(NotificationWnd *wnd, int groupId)
 
 NotificationWnd *Notifications::GetFirstInGroup(int groupId)
 {
-    for (size_t i = 0; i < wnds.Count(); i++) {
+    for (int i = 0; i < wnds.Count(); i++) {
         if (wnds.At(i)->groupId == groupId)
             return wnds.At(i);
     }
@@ -264,7 +264,7 @@ void Notifications::Relayout()
 
     HWND hwndCanvas = GetParent(wnds.At(0)->hwnd());
     ClientRect frame(hwndCanvas);
-    for (size_t i = 0; i < wnds.Count(); i++) {
+    for (int i = 0; i < wnds.Count(); i++) {
         RectI rect = WindowRect(wnds.At(i)->hwnd());
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft())

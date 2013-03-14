@@ -266,7 +266,7 @@ protected:
     Vec<ScrollState>navHistory;
     /* index of the "current" history entry (to be updated on navigation),
        resp. number of Back history entries */
-    size_t          navHistoryIx;
+    int             navHistoryIx;
 
 public:
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */

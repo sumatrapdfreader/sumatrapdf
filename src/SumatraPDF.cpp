@@ -779,8 +779,8 @@ bool ShouldSaveThumbnail(DisplayState& ds)
     // don't create thumbnails for files that won't need them anytime soon
     Vec<DisplayState *> list;
     gFileHistory.GetFrequencyOrder(list);
-    size_t idx = list.Find(&ds);
-    if (MAX_SIZE_T == idx || FILE_HISTORY_MAX_FREQUENT * 2 <= idx)
+    int idx = list.Find(&ds);
+    if (idx < 0 || FILE_HISTORY_MAX_FREQUENT * 2 <= idx)
         return false;
 
     if (HasThumbnail(ds))
@@ -3141,11 +3141,11 @@ static void BrowseFolder(WindowInfo& win, bool forward)
         files.Append(str::Dup(win.loadedFilePath));
     files.SortNatural();
 
-    size_t index = files.Find(win.loadedFilePath);
+    int index = files.Find(win.loadedFilePath);
     if (forward)
         index = (index + 1) % files.Count();
     else
-        index = (index + files.Count() - 1) % files.Count();
+        index = (int)(index + files.Count() - 1) % files.Count();
 
     UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(&win));
     LoadArgs args(files.At(index), &win, true, true);
