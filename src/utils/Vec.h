@@ -53,14 +53,15 @@ protected:
     }
 
     T* MakeSpaceAt(size_t idx, size_t count) {
-        EnsureCap(len + count);
+        size_t newLen = max(len, idx) + count;
+        EnsureCap(newLen);
         T* res = &(els[idx]);
         if (len > idx) {
             T* src = els + idx;
             T* dst = els + idx + count;
             memmove(dst, src, (len - idx) * sizeof(T));
         }
-        len += count;
+        len = newLen;
         return res;
     }
 

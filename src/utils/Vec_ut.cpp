@@ -233,4 +233,10 @@ static void VecTest()
         v.Reverse();
         assert(v.Count() == 500 && v.At(0) == 2 && v.At(249) == v.At(251) && v.At(250) == 5 && v.At(499) == 4);
     }
+
+    {
+        Vec<int> v;
+        v.InsertAt(2, 2);
+        assert(v.Count() == 3 && v.At(0) == 0 && v.At(2) == 2);
+    }
 }

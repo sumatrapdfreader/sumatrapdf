@@ -4,6 +4,10 @@
 // TODO: for the moment it needs to be included from SumatraPDF.cpp
 // and not compiled as stand-alone
 
+#ifdef DEBUG
+#include "AppPrefs2.h"
+#endif
+
 static bool TryLoadMemTrace()
 {
     ScopedMem<WCHAR> exePath(GetExePath());
@@ -331,6 +335,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     uitask::Initialize();
 
     LoadPrefs();
+#ifdef DEBUG
+    {
+        // TODO: add advanced settings as a pointer to SerializableGlobalPrefs ?
+        AdvancedSettings adv;
+        LoadAdvancedPrefs(&adv);
+    }
+#endif
 
     CommandLineInfo i;
     GetCommandLineInfo(i);

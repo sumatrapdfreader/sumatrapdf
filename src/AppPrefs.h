@@ -110,4 +110,7 @@ bool LoadPrefs();
 bool SavePrefs();
 bool ReloadPrefs();
 
+class AdvancedSettings;
+bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs);
+
 #endif

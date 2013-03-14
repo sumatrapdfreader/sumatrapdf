@@ -124,7 +124,7 @@ def BuildStruct(sections, name):
 	lines = ["class %s {" % name, "public:"]
 	defaults = []
 	for section in sections:
-		lines.append("\t/* ***** fields for section %s ***** */" % section.name)
+		lines += ["", "\t/* ***** fields for section %s ***** */" % section.name, ""]
 		for field in section.fields:
 			lines += FormatComment(field.comment)
 			lines.append("\t" + field.cdecl())

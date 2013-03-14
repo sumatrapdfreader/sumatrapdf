@@ -8,7 +8,9 @@
 
 class AdvancedSettings {
 public:
+
 	/* ***** fields for section AdvancedOptions ***** */
+
 	// whether the UI used for PDF documents will be used for ebooks as
 	// well (enables printing and searching, disables automatic reflow)
 	bool traditionalEbookUI;
@@ -24,7 +26,9 @@ public:
 	COLORREF textColor;
 	// color value with which white (background) will be substituted
 	COLORREF pageColor;
+
 	/* ***** fields for section PagePadding ***** */
+
 	// size of the left/right margin between window and document
 	int outerX;
 	// size of the top/bottom margin between window and document
@@ -33,7 +37,9 @@ public:
 	int innerX;
 	// size of the vertical margin between two pages
 	int innerY;
+
 	/* ***** fields for section ForwardSearch ***** */
+
 	// whether the inverse search command line setting is visible in the
 	// Settings dialog
 	bool enableTeXEnhancements;
@@ -48,7 +54,9 @@ public:
 	// whether the forward search highlight will remain visible until the
 	// next mouse click instead of fading away instantly
 	bool highlightPermanent;
+
 	/* ***** fields for section ExternalViewers ***** */
+
 	// command line with which to call the external viewer, may contain %p
 	// for page numer and %1 for the file name
 	WStrVec commandLine;

@@ -577,7 +577,11 @@ static void DeserializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info
                     }
                     else {
                         strValue.Set(ReadIniString(filepath, section, name));
-                        ((WStrVec *)(base + meta.offset))->InsertAt(idx, strValue.StealData());
+                        WStrVec *strVec = (WStrVec *)(base + meta.offset);
+                        // TODO: shouldn't InsertAt free the previous string?
+                        if (idx < strVec->Count())
+                            free(strVec->At(idx));
+                        strVec->InsertAt(idx, strValue.StealData());
                     }
                 }
             }
@@ -784,5 +788,19 @@ bool ReloadPrefs()
         UpdateDocumentColors();
     UpdateFavoritesTreeForAllWindows();
 
+    return true;
+}
+
+bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs)
+{
+    ScopedMem<WCHAR> path(AppGenDataFilename(ADV_PREFS_FILE_NAME));
+    if (!file::Exists(path) && !IsRunningInPortableMode()) {
+        path.Set(GetExePath());
+        path.Set(path::GetDir(path));
+        path.Set(path::Join(path, ADV_PREFS_FILE_NAME));
+        if (!file::Exists(path))
+            return false;
+    }
+    DeserializeAdvancedSettings(path, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
     return true;
 }
