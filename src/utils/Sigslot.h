@@ -196,7 +196,7 @@ public:
     has_slots(const has_slots& hs)
     {
         lock_block lock;
-        for (int i = 0; i < hs.m_senders.Count(); i++) {
+        for (size_t i = 0; i < hs.m_senders.Count(); i++) {
             _signal_base *s = hs.m_senders.At(i);
             s->slot_duplicate(&hs, this);
             m_senders.Append(s);
@@ -228,7 +228,7 @@ public:
     void disconnect_all()
     {
         lock_block lock;
-        for (int i = 0; i < m_senders.Count(); i++) {
+        for (size_t i = 0; i < m_senders.Count(); i++) {
             _signal_base *s = m_senders.At(i);
             s->slot_disconnect(this);
         }
@@ -578,7 +578,7 @@ public:
     void slot_disconnect(has_slots* pslot)
     {
         lock_block lock;
-        int i = 0;
+        size_t i = 0;
         while (i < m_connections.Count()) {
             if (m_connections.At(i)->getdest() == pslot)
                 m_connections.RemoveAtFast(i);

@@ -171,7 +171,7 @@ void ToolbarUpdateStateForWindow(WindowInfo *win, bool showHide)
 
 void ShowOrHideToolbarGlobally()
 {
-    for (int i = 0; i < gWindows.Count(); i++) {
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
         if (gGlobalPrefs.toolbarVisible) {
             ShowWindow(win->hwndReBar, SW_SHOW);

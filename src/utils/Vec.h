@@ -15,12 +15,12 @@ not useful for other types, the code is simpler if we always do it
 template <typename T>
 class Vec {
 protected:
-    static const int INTERNAL_BUF_SIZE = 16;
-    static const int PADDING = 1;
+    static const size_t INTERNAL_BUF_SIZE = 16;
+    static const size_t PADDING = 1;
 
-    int      len;
-    int      cap;
-    int      capacityHint;
+    size_t      len;
+    size_t      cap;
+    size_t      capacityHint;
     T *         els;
     T           buf[INTERNAL_BUF_SIZE];
     Allocator * allocator;
@@ -28,21 +28,21 @@ protected:
     // state of the IterStart()/IterNext() iterator
     T *         iterCurr;
 
-    void EnsureCap(int needed) {
+    void EnsureCap(size_t needed) {
         if (cap >= needed)
             return;
 
-        int newCap = cap * 2;
+        size_t newCap = cap * 2;
         if (needed > newCap)
             newCap = needed;
         if (newCap < capacityHint)
             newCap = capacityHint;
 
-        int newElCount = newCap + PADDING;
-        CrashAlwaysIf(newElCount < 0);
+        size_t newElCount = newCap + PADDING;
+        CrashAlwaysIf(newElCount >= SIZE_MAX / sizeof(T));
 
-        int allocSize = newElCount * sizeof(T);
-        int newPadding = allocSize - len * sizeof(T);
+        size_t allocSize = newElCount * sizeof(T);
+        size_t newPadding = allocSize - len * sizeof(T);
         if (buf == els)
             els = (T *)Allocator::Dup(allocator, buf, len * sizeof(T), newPadding);
         else
@@ -52,7 +52,7 @@ protected:
         cap = newCap;
     }
 
-    T* MakeSpaceAt(int idx, int count) {
+    T* MakeSpaceAt(size_t idx, size_t count) {
         EnsureCap(len + count);
         T* res = &(els[idx]);
         if (len > idx) {
@@ -71,7 +71,7 @@ protected:
 
 public:
     // allocator is not owned by Vec and must outlive it
-    Vec(int capHint=0, Allocator *allocator=NULL) :
+    Vec(size_t capHint=0, Allocator *allocator=NULL) :
         capacityHint(capHint), allocator(allocator), iterCurr(NULL)
     {
         els = buf;
@@ -102,7 +102,7 @@ public:
         return *this;
     }
 
-    T& operator[](int idx) {
+    T& operator[](size_t idx) {
         CrashIf(idx >= len);
         return els[idx];
     }
@@ -116,26 +116,26 @@ public:
     }
 
     // use &At() if you need a pointer to the element (e.g. if T is a struct)
-    T& At(int idx) const {
-        CrashIf(idx >= len || idx < 0);
+    T& At(size_t idx) const {
+        CrashIf(idx >= len);
         return els[idx];
     }
 
-    T *AtPtr(int idx) const {
-        CrashIf(idx >= len || idx < 0);
+    T *AtPtr(size_t idx) const {
+        CrashIf(idx >= len);
         CrashIf(&els[idx] != &At(idx));
         return &els[idx];
     }
 
-    int Count() const {
+    size_t Count() const {
         return len;
     }
 
-    int Size() const {
+    size_t Size() const {
         return len;
     }
 
-    void InsertAt(int idx, const T& el) {
+    void InsertAt(size_t idx, const T& el) {
         MakeSpaceAt(idx, 1)[0] = el;
     }
 
@@ -151,11 +151,11 @@ public:
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
-    T* AppendBlanks(int count) {
+    T* AppendBlanks(size_t count) {
         return MakeSpaceAt(len, count);
     }
 
-    void RemoveAt(int idx, int count=1) {
+    void RemoveAt(size_t idx, size_t count=1) {
         if (len > idx + count) {
             T *dst = els + idx;
             T *src = els + idx + count;
@@ -170,7 +170,7 @@ public:
     // It can only be used if order of elements doesn't matter and elements
     // can be copied via memcpy()
     // TODO: could be extend to take number of elements to remove
-    void RemoveAtFast(int idx) {
+    void RemoveAtFast(size_t idx) {
         CrashIf(idx >= len);
         if (idx >= len) return;
         T *toRemove = els + idx;
@@ -214,22 +214,22 @@ public:
         return els;
     }
 
-    int Find(T el, int startAt=0) const {
-        for (int i = startAt; i < len; i++) {
+    size_t Find(T el, size_t startAt=0) const {
+        for (size_t i = startAt; i < len; i++) {
             if (els[i] == el)
-                return (int)i;
+                return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
     bool Contains(T el) const {
-        return -1 != Find(el);
+        return MAX_SIZE_T != Find(el);
     }
 
     // returns true if removed
     bool Remove(T el) {
-        int i = Find(el);
-        if (-1 == i)
+        size_t i = Find(el);
+        if (MAX_SIZE_T == i)
             return false;
         RemoveAt(i);
         return true;
@@ -240,7 +240,7 @@ public:
     }
 
     void Reverse() {
-        for (int i = 0; i < len / 2; i++) {
+        for (size_t i = 0; i < len / 2; i++) {
             Swap(els[i], els[len - i - 1]);
         }
     }
@@ -262,8 +262,8 @@ public:
     }
 
     // return the index of the item returned by last IterStart()/IterNext()
-    int IterIdx() {
-        int idx = iterCurr - els;
+    size_t IterIdx() {
+        size_t idx = iterCurr - els;
         CrashIf(0 == idx);
         return idx - 1;
     }
@@ -294,16 +294,16 @@ namespace str {
 template <typename T>
 class Str : public Vec<T> {
 public:
-    Str(int capHint=0, Allocator *allocator=NULL) : Vec(capHint, allocator) { }
+    Str(size_t capHint=0, Allocator *allocator=NULL) : Vec(capHint, allocator) { }
 
     void Append(T c)
     {
         InsertAt(len, c);
     }
 
-    void Append(const T* src, int size=-1)
+    void Append(const T* src, size_t size=-1)
     {
-        if ((size_t)-1 == size)
+        if (MAX_SIZE_T == size)
             size = Len(src);
         Vec::Append(src, size);
     }
@@ -345,7 +345,7 @@ public:
     WStrVec() : Vec() { }
     WStrVec(const WStrVec& orig) : Vec(orig) {
         // make sure not to share string pointers between StrVecs
-        for (int i = 0; i < len; i++) {
+        for (size_t i = 0; i < len; i++) {
             if (At(i))
                 At(i) = str::Dup(At(i));
         }
@@ -358,7 +358,7 @@ public:
         if (this != &that) {
             FreeVecMembers(*this);
             Vec::operator=(that);
-            for (int i = 0; i < that.len; i++) {
+            for (size_t i = 0; i < that.len; i++) {
                 if (At(i))
                     At(i) = str::Dup(At(i));
             }
@@ -368,8 +368,8 @@ public:
 
     WCHAR *Join(const WCHAR *joint=NULL) {
         str::Str<WCHAR> tmp(256);
-        int jointLen = joint ? str::Len(joint) : 0;
-        for (int i = 0; i < len; i++) {
+        size_t jointLen = joint ? str::Len(joint) : 0;
+        for (size_t i = 0; i < len; i++) {
             WCHAR *s = At(i);
             if (i > 0 && jointLen > 0)
                 tmp.Append(joint, jointLen);
@@ -378,34 +378,34 @@ public:
         return tmp.StealData();
     }
 
-    int Find(const WCHAR *s, int startAt=0) const {
-        for (int i = startAt; i < len; i++) {
+    size_t Find(const WCHAR *s, size_t startAt=0) const {
+        for (size_t i = startAt; i < len; i++) {
             WCHAR *item = At(i);
             if (str::Eq(s, item))
-                return (int)i;
+                return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
     bool Contains(const WCHAR *s) const {
-        return -1 != Find(s);
+        return MAX_SIZE_T != Find(s);
     }
 
-    int FindI(const WCHAR *s, int startAt=0) const {
-        for (int i = startAt; i < len; i++) {
+    size_t FindI(const WCHAR *s, size_t startAt=0) const {
+        for (size_t i = startAt; i < len; i++) {
             WCHAR *item = At(i);
             if (str::EqI(s, item))
                 return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
     /* splits a string into several substrings, separated by the separator
        (optionally collapsing several consecutive separators into one);
        e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
        (resp. "a", "b", "c" if separators are collapsed) */
-    int Split(const WCHAR *s, const WCHAR *separator, bool collapse=false) {
-        int start = len;
+    size_t Split(const WCHAR *s, const WCHAR *separator, bool collapse=false) {
+        size_t start = len;
         const WCHAR *next;
 
         while ((next = str::Find(s, separator))) {
@@ -443,7 +443,7 @@ class WStrList {
     };
 
     Vec<Item> items;
-    int count;
+    size_t count;
     Allocator *allocator;
 
     // variation of MurmurHash2 which deals with strings that are
@@ -461,7 +461,7 @@ class WStrList {
     }
 
 public:
-    WStrList(int capHint=0, Allocator *allocator=NULL) :
+    WStrList(size_t capHint=0, Allocator *allocator=NULL) :
         items(capHint, allocator), count(0), allocator(allocator) { }
 
     ~WStrList() {
@@ -470,11 +470,11 @@ public:
         }
     }
 
-    const WCHAR *At(int idx) const {
+    const WCHAR *At(size_t idx) const {
         return items.At(idx).string;
     }
 
-    int Count() const {
+    size_t Count() const {
         return count;
     }
 
@@ -484,27 +484,27 @@ public:
         count++;
     }
 
-    int Find(const WCHAR *str, int startAt=0) const {
+    size_t Find(const WCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
         Item *item = items.LendData();
-        for (int i = startAt; i < count; i++) {
+        for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::Eq(item[i].string, str))
-                return (int)i;
+                return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
-    int FindI(const WCHAR *str, int startAt=0) const {
+    size_t FindI(const WCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
         Item *item = items.LendData();
-        for (int i = startAt; i < count; i++) {
+        for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::EqI(item[i].string, str))
-                return (int)i;
+                return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
     bool Contains(const WCHAR *str) const {
-        return -1 != Find(str);
+        return MAX_SIZE_T != Find(str);
     }
 };

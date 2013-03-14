@@ -63,7 +63,7 @@ class FileFavs {
     }
 
     void ResetMenuIds();
-    bool GetByMenuId(int menuId, int& idx);
+    bool GetByMenuId(int menuId, size_t& idx);
     bool HasFavName(FavName *fn);
     bool Remove(int pageNo);
     void AddOrReplace(int pageNo, const WCHAR *name, const WCHAR *pageLabel);
@@ -73,24 +73,24 @@ class Favorites {
 
     // filePathCache points to a string inside FileFavs, so doesn't need to free()d
     const WCHAR *filePathCache;
-    int          idxCache;
+    size_t       idxCache;
 
-    void RemoveFav(FileFavs *fav, int idx);
+    void RemoveFav(FileFavs *fav, size_t idx);
 
 public:
     Vec<FileFavs*> favs;
 
-    Favorites() : filePathCache(NULL), idxCache(-1) { }
+    Favorites() : filePathCache(NULL), idxCache(MAX_SIZE_T) { }
     ~Favorites() { DeleteVecMembers(favs); }
 
     size_t Count() const {
        return favs.Count();
     }
 
-    FileFavs *GetByMenuId(int menuId, int& idx);
+    FileFavs *GetByMenuId(int menuId, size_t& idx);
     FileFavs *GetByFavName(FavName *fn);
     void ResetMenuIds();
-    FileFavs *GetFavByFilePath(const WCHAR *filePath, bool createIfNotExist=false, int *idx=NULL);
+    FileFavs *GetFavByFilePath(const WCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL);
     bool IsPageInFavorites(const WCHAR *filePath, int pageNo);
     void AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name, const WCHAR *pageLabel=NULL);
     void Remove(const WCHAR *filePath, int pageNo);

@@ -334,7 +334,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UIN
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // find the entry in the index corresponding to this page
-    if (pageNo <= 0 || pageNo >= (UINT)sheetIndex.Count() || pageNo > (UINT)engine->PageCount())
+    if (pageNo <= 0 || pageNo >= sheetIndex.Count() || pageNo > (UINT)engine->PageCount())
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
 
     // PdfSync coordinates are y-inversed
@@ -352,7 +352,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UIN
     UINT closest_ydist_record = UINT_MAX; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
-    for (int i = sheetIndex.At(pageNo); i < points.Count() && points.At(i).page == pageNo; i++) {
+    for (size_t i = sheetIndex.At(pageNo); i < points.Count() && points.At(i).page == pageNo; i++) {
         // check whether it is closer than the closest point found so far
         UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points.At(i).x));
         UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points.At(i).y));
@@ -413,7 +413,7 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<
         return PDFSYNCERR_OUTOFMEMORY;
 
     // find the source file entry
-    int isrc;
+    size_t isrc;
     for (isrc = 0; isrc < srcfiles.Count(); isrc++)
         if (path::IsSame(srcfilepath, srcfiles.At(isrc)))
             break;
@@ -426,7 +426,7 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<
     // look for sections belonging to the specified file
     // starting with the first section that is declared within the scope of the file.
     UINT min_distance = EPSILON_LINE; // distance to the closest record
-    size_t lineIx = (size_t)-1; // closest record-line index
+    size_t lineIx = MAX_SIZE_T; // closest record-line index
 
     for (size_t isec = fileIndex.At(isrc).start; isec < fileIndex.At(isrc).end; isec++) {
         // does this section belong to the desired file?
@@ -441,11 +441,11 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<
                 break; // We have found a record for the requested line!
         }
     }
-    if (lineIx == (size_t)-1)
+    if (MAX_SIZE_T == lineIx)
         return PDFSYNCERR_NORECORD_FOR_THATLINE;
 
     // we read all the consecutive records until we reach a record belonging to another line
-    for (int i = lineIx; i < lines.Count() && lines.At(i).line == lines.At(lineIx).line; i++)
+    for (size_t i = lineIx; i < lines.Count() && lines.At(i).line == lines.At(lineIx).line; i++)
         records.Push(lines.At(i).record);
 
     return PDFSYNCERR_SUCCESS;
@@ -467,7 +467,7 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *pa
     // records have been found for the desired source position:
     // we now find the page and positions in the PDF corresponding to these found records
     UINT firstPage = UINT_MAX;
-    for (int i = 0; i < points.Count(); i++) {
+    for (size_t i = 0; i < points.Count(); i++) {
         if (!found_records.Contains(points.At(i).record))
             continue;
         if (firstPage != UINT_MAX && firstPage != points.At(i).page)

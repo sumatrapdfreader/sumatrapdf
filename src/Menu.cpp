@@ -337,7 +337,7 @@ static bool IsFileCloseMenuEnabled()
 {
     if (gEbookWindows.Count() > 0)
         return true;
-    for (int i = 0; i < gWindows.Count(); i++) {
+    for (size_t i = 0; i < gWindows.Count(); i++) {
         if (!gWindows.At(i)->IsAboutWindow())
             return true;
     }

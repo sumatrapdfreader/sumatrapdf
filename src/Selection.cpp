@@ -84,7 +84,7 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
     // create path from rectangles
     GraphicsPath path(FillModeWinding);
     screenRc.Inflate(margin, margin);
-    for (int i = 0; i < rects.Count(); i++) {
+    for (size_t i = 0; i < rects.Count(); i++) {
         RectI rc = rects.At(i).Intersect(screenRc);
         if (!rc.IsEmpty())
             path.AddRectangle(rc.ToGdipRect());
@@ -134,7 +134,7 @@ void PaintSelection(WindowInfo *win, HDC hdc)
         if (!win->selectionOnPage)
             return;
 
-        for (int i = 0; i < win->selectionOnPage->Count(); i++)
+        for (size_t i = 0; i < win->selectionOnPage->Count(); i++)
             rects.Append(win->selectionOnPage->At(i).GetRect(win->dm));
     }
 
@@ -170,7 +170,7 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
     // either scroll towards the center of the current selection
     if (zoomToPt) {
         RectI selRect;
-        for (int i = 0; i < win->selectionOnPage->Count(); i++) {
+        for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
             selRect = selRect.Union(win->selectionOnPage->At(i).GetRect(win->dm));
         }
 
@@ -231,7 +231,7 @@ void CopySelectionToClipboard(WindowInfo *win)
         }
         else {
             WStrVec selections;
-            for (int i = 0; i < win->selectionOnPage->Count(); i++) {
+            for (size_t i = 0; i < win->selectionOnPage->Count(); i++) {
                 SelectionOnPage *selOnPage = &win->selectionOnPage->At(i);
                 WCHAR *text = win->dm->GetTextInRegion(selOnPage->pageNo, selOnPage->rect);
                 if (text)
