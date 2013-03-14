@@ -214,22 +214,22 @@ public:
         return els;
     }
 
-    int Find(T el, size_t startAt=0) const {
+    size_t Find(T el, size_t startAt=0) const {
         for (size_t i = startAt; i < len; i++) {
             if (els[i] == el)
-                return (int)i;
+                return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
     bool Contains(T el) const {
-        return -1 != Find(el);
+        return MAX_SIZE_T != Find(el);
     }
 
     // returns true if removed
     bool Remove(T el) {
-        int i = Find(el);
-        if (-1 == i)
+        size_t i = Find(el);
+        if (MAX_SIZE_T == i)
             return false;
         RemoveAt(i);
         return true;
@@ -303,7 +303,7 @@ public:
 
     void Append(const T* src, size_t size=-1)
     {
-        if ((size_t)-1 == size)
+        if (MAX_SIZE_T == size)
             size = Len(src);
         Vec::Append(src, size);
     }
@@ -378,26 +378,26 @@ public:
         return tmp.StealData();
     }
 
-    int Find(const WCHAR *s, size_t startAt=0) const {
+    size_t Find(const WCHAR *s, size_t startAt=0) const {
         for (size_t i = startAt; i < len; i++) {
             WCHAR *item = At(i);
             if (str::Eq(s, item))
-                return (int)i;
+                return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
     bool Contains(const WCHAR *s) const {
-        return -1 != Find(s);
+        return MAX_SIZE_T != Find(s);
     }
 
-    int FindI(const WCHAR *s, size_t startAt=0) const {
+    size_t FindI(const WCHAR *s, size_t startAt=0) const {
         for (size_t i = startAt; i < len; i++) {
             WCHAR *item = At(i);
             if (str::EqI(s, item))
-                return (int)i;
+                return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
     /* splits a string into several substrings, separated by the separator
@@ -484,27 +484,27 @@ public:
         count++;
     }
 
-    int Find(const WCHAR *str, size_t startAt=0) const {
+    size_t Find(const WCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
         Item *item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::Eq(item[i].string, str))
-                return (int)i;
+                return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
-    int FindI(const WCHAR *str, size_t startAt=0) const {
+    size_t FindI(const WCHAR *str, size_t startAt=0) const {
         uint32_t hash = GetQuickHashI(str);
         Item *item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::EqI(item[i].string, str))
-                return (int)i;
+                return i;
         }
-        return -1;
+        return MAX_SIZE_T;
     }
 
     bool Contains(const WCHAR *str) const {
-        return -1 != Find(str);
+        return MAX_SIZE_T != Find(str);
     }
 };

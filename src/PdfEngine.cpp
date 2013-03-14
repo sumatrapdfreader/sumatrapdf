@@ -1020,7 +1020,7 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
         }
     }
 
-    for (int ix = 0; (ix = labels->Find(NULL, ix)) != -1; ix++)
+    for (size_t ix = 0; (ix = labels->Find(NULL, ix)) != MAX_SIZE_T; ix++)
         labels->At(ix) = str::Dup(L"");
 
     // ensure that all page labels are unique (by appending a number to duplicates)
@@ -1029,8 +1029,8 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
     for (size_t i = 1; i < dups.Count(); i++) {
         if (!str::Eq(dups.At(i), dups.At(i - 1)))
             continue;
-        int ix = labels->Find(dups.At(i)), counter = 0;
-        while ((ix = labels->Find(dups.At(i), ix + 1)) != -1) {
+        size_t ix = labels->Find(dups.At(i)), counter = 0;
+        while ((ix = labels->Find(dups.At(i), ix + 1)) != MAX_SIZE_T) {
             ScopedMem<WCHAR> unique;
             do {
                 unique.Set(str::Format(L"%s.%d", dups.At(i), ++counter));
@@ -2948,7 +2948,7 @@ WCHAR *PdfEngineImpl::GetPageLabel(int pageNo) const
 
 int PdfEngineImpl::GetPageByLabel(const WCHAR *label) const
 {
-    int pageNo = _pagelabels ? _pagelabels->Find(label) + 1 : 0;
+    int pageNo = _pagelabels ? (int)_pagelabels->Find(label) + 1 : 0;
     if (!pageNo)
         return BaseEngine::GetPageByLabel(label);
 
@@ -4248,9 +4248,9 @@ bool XpsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         ZipFile zip(fileName, Zip_Deflate);
-        return zip.GetFileIndex(L"_rels/.rels") != (size_t)-1 ||
-               zip.GetFileIndex(L"_rels/.rels/[0].piece") != (size_t)-1 ||
-               zip.GetFileIndex(L"_rels/.rels/[0].last.piece") != (size_t)-1;
+        return zip.GetFileIndex(L"_rels/.rels") != MAX_SIZE_T ||
+               zip.GetFileIndex(L"_rels/.rels/[0].piece") != MAX_SIZE_T ||
+               zip.GetFileIndex(L"_rels/.rels/[0].last.piece") != MAX_SIZE_T;
     }
 
     return str::EndsWithI(fileName, L".xps") || str::EndsWithI(fileName, L".oxps");

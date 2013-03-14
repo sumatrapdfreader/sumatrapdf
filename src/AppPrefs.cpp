@@ -20,12 +20,6 @@
 
 #define MAX_REMEMBERED_FILES 1000
 
-/* default UI settings */
-#define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
-#define DEFAULT_ZOOM            ZOOM_FIT_PAGE
-#define DEFAULT_LANGUAGE        "en"
-#define COL_FWDSEARCH_BG        RGB(0x65, 0x81, 0xff)
-
 enum PrefType {
     Pref_Bool, Pref_Int, Pref_Str, Pref_WStr,
     // custom types which could be implemented through callbacks if need be
@@ -45,7 +39,7 @@ static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *struc
     const char *base = (const char *)structBase;
     for (size_t i = 0; i < count; i++) {
         PrefInfo& meta = info[i];
-        if (meta.bitfield && (meta.bitfield & bitmask) != meta.bitfield)
+        if ((meta.bitfield & bitmask) != meta.bitfield)
             continue;
         switch (meta.type) {
         case Pref_Bool:
@@ -70,10 +64,10 @@ static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *struc
             prefs->AddRaw(meta.name, ScopedMem<char>(str::Format("%.4f", *(float *)(base + meta.offset))));
             break;
         case Pref_IntVec:
-            BencArray *array = new BencArray();
             Vec<int> *intVec = *(Vec<int> **)(base + meta.offset);
             if (intVec) {
-                for (size_t idx = 0; idx < intVec->Count(); i++) {
+                BencArray *array = new BencArray();
+                for (size_t idx = 0; idx < intVec->Count(); idx++) {
                     array->Add(intVec->At(idx));
                 }
                 prefs->Add(meta.name, array);
@@ -103,11 +97,8 @@ static void DeserializeStruct(PrefInfo *info, size_t count, void *structBase, Be
                 *(int *)(base + meta.offset) = (int)intObj->Value();
             break;
         case Pref_Str:
-            if ((strObj = prefs->GetString(meta.name))) {
-                const char *str = strObj->RawValue();
-                if (str)
-                    str::ReplacePtr((char **)(base + meta.offset), str);
-            }
+            if ((strObj = prefs->GetString(meta.name)))
+                str::ReplacePtr((char **)(base + meta.offset), strObj->RawValue());
             break;
         case Pref_WStr:
             if ((strObj = prefs->GetString(meta.name))) {
@@ -133,14 +124,15 @@ static void DeserializeStruct(PrefInfo *info, size_t count, void *structBase, Be
             break;
         case Pref_IntVec:
             if ((arrObj = prefs->GetArray(meta.name))) {
-                Vec<int> **intVec = (Vec<int> **)(base + meta.offset);
                 size_t len = arrObj->Length();
-                CrashIf(*intVec);
-                if ((*intVec = new Vec<int>(len))) {
-                    for (size_t idx = 0; idx < len; i++) {
+                Vec<int> *intVec = new Vec<int>(len);
+                if (intVec) {
+                    for (size_t idx = 0; idx < len; idx++) {
                         if ((intObj = arrObj->GetInt(idx)))
-                            (*intVec)->Append((int)intObj->Value());
+                            intVec->Append((int)intObj->Value());
                     }
+                    delete *(Vec<int> **)(base + meta.offset);
+                    *(Vec<int> **)(base + meta.offset) = intVec;
                 }
             }
             break;
@@ -148,7 +140,8 @@ static void DeserializeStruct(PrefInfo *info, size_t count, void *structBase, Be
             if ((strObj = prefs->GetString(meta.name))) {
                 // ensure language code is valid
                 const char *langCode = trans::ValidateLangCode(strObj->RawValue());
-                *(const char **)(base + meta.offset) = langCode ? langCode : DEFAULT_LANGUAGE;
+                if (langCode)
+                    *(const char **)(base + meta.offset) = langCode;
             }
             break;
         }
@@ -243,6 +236,12 @@ PrefInfo gFilePrefInfo[] = {
 #define GLOBAL_PREFS_STR            "gp"
 #define FILE_HISTORY_STR            "File History"
 #define FAVS_STR                    "Favorites"
+
+/* default UI settings */
+#define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
+#define DEFAULT_ZOOM            ZOOM_FIT_PAGE
+#define DEFAULT_LANGUAGE        "en"
+#define COL_FWDSEARCH_BG        RGB(0x65, 0x81, 0xff)
 
 SerializableGlobalPrefs gGlobalPrefs = {
     false, // bool globalPrefsOnly

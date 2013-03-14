@@ -218,7 +218,7 @@ void ChmEngineImpl::OnDocumentComplete(const WCHAR *url)
         return;
     if (*url == '/')
         ++url;
-    int pageNo = pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(url))) + 1;
+    int pageNo = (int)pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(url))) + 1;
     if (pageNo) {
         currentPageNo = pageNo;
         if (navCb)
@@ -262,7 +262,7 @@ void ChmEngineImpl::DisplayPage(const WCHAR *pageUrl)
         return;
     }
 
-    int pageNo = pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(pageUrl))) + 1;
+    int pageNo = (int)pages.Find(ScopedMem<WCHAR>(str::ToPlainUrl(pageUrl))) + 1;
     if (pageNo)
         currentPageNo = pageNo;
 
@@ -425,7 +425,7 @@ bool ChmEngineImpl::GetDataForUrl(const WCHAR *url, char **data, size_t *len)
 PageDestination *ChmEngineImpl::GetNamedDest(const WCHAR *name)
 {
     ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(name));
-    int pageNo = pages.Find(plainUrl) + 1;
+    int pageNo = (int)pages.Find(plainUrl) + 1;
     if (pageNo > 0)
         return new ChmNamedDest(name, pageNo);
     return NULL;

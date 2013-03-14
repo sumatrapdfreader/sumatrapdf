@@ -431,7 +431,7 @@ WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
         else // if (editor_rules[i].Type == BinaryPath)
             exePath.Set(path.StealData());
         // don't show duplicate entries
-        if (foundExes.FindI(exePath) != -1)
+        if (foundExes.FindI(exePath) != MAX_SIZE_T)
             continue;
         // don't show inexistent paths (and don't try again for them)
         if (!file::Exists(exePath)) {

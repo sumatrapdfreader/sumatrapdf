@@ -204,11 +204,11 @@ void Notifications::MoveBelow(NotificationWnd *fix, NotificationWnd *move)
 
 void Notifications::Remove(NotificationWnd *wnd)
 {
-    int ix = wnds.Find(wnd);
-    if (ix == -1)
+    size_t ix = wnds.Find(wnd);
+    if (MAX_SIZE_T == ix)
         return;
     wnds.Remove(wnd);
-    if (ix == 0 && wnds.Count() > 0) {
+    if (0 == ix && wnds.Count() > 0) {
         SetWindowPos(wnds.At(0)->hwnd(), NULL,
                      GetWndX(wnds.At(0)), NotificationWnd::TL_MARGIN,
                      0, 0, SWP_NOSIZE | SWP_NOZORDER);

@@ -110,11 +110,11 @@ public:
         // so that the user could still try opening it again
         // and so that we don't completely forget the settings,
         // should the file reappear later on
-        int newIdx = hide ? INT_MAX : FILE_HISTORY_MAX_RECENT - 1;
-        int idx = states.Find(state);
+        size_t newIdx = hide ? INT_MAX : FILE_HISTORY_MAX_RECENT - 1;
+        size_t idx = states.Find(state);
         if (idx < newIdx && state != states.Last()) {
             states.Remove(state);
-            if (states.Count() <= (size_t)newIdx)
+            if (states.Count() <= newIdx)
                 states.Append(state);
             else
                 states.InsertAt(newIdx, state);

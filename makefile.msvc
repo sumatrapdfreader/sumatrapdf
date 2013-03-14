@@ -148,10 +148,10 @@ UTILS_OBJS = \
 	$(OU)\DbgHelpDyn.obj $(OU)\JsonParser.obj $(OU)\TgaReader.obj \
 	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
-	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\Settings.obj
+	$(OU)\CssParser.obj $(OU)\FileWatcher.obj
 
 !if "$(CFG)"=="dbg"
-UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
+UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj $(OU)\Settings.obj
 !endif
 
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)

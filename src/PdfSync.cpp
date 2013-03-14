@@ -426,7 +426,7 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<
     // look for sections belonging to the specified file
     // starting with the first section that is declared within the scope of the file.
     UINT min_distance = EPSILON_LINE; // distance to the closest record
-    size_t lineIx = (size_t)-1; // closest record-line index
+    size_t lineIx = MAX_SIZE_T; // closest record-line index
 
     for (size_t isec = fileIndex.At(isrc).start; isec < fileIndex.At(isrc).end; isec++) {
         // does this section belong to the desired file?
@@ -441,7 +441,7 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<
                 break; // We have found a record for the requested line!
         }
     }
-    if (lineIx == (size_t)-1)
+    if (MAX_SIZE_T == lineIx)
         return PDFSYNCERR_NORECORD_FOR_THATLINE;
 
     // we read all the consecutive records until we reach a record belonging to another line
