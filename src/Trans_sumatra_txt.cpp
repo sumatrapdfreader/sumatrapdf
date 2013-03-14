@@ -12952,7 +12952,7 @@ const char *gLangCodes =   "en\0" \
   "tr\0" \
   "uk\0" \
   "uz\0" \
-  "vn\0";
+  "vn\0" "\0";
 
 const char *gLangNames =   "English\0" \
   "Albanian (Shqip)\0" \
@@ -13006,7 +13006,7 @@ const char *gLangNames =   "English\0" \
   "Turkish (T\303\274rk\303\247e)\0" \
   "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)\0" \
   "Uzbek (O'zbek)\0" \
-  "Vietnamese (Vi\341\273\207t Nam)\0";
+  "Vietnamese (Vi\341\273\207t Nam)\0" "\0";
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses

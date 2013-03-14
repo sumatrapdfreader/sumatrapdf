@@ -189,10 +189,10 @@ const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
 %(translations)s
 
 const char *gLangCodes = \
-%(langcodes)s;
+%(langcodes)s "\\0";
 
 const char *gLangNames = \
-%(langnames)s;
+%(langnames)s "\\0";
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
@@ -331,6 +331,7 @@ def gen_c_code_for_dir(strings_dict, keys, dir_name, compressed=False):
     langs = build_trans_for_langs(langs, strings_dict, keys)
 
     langcodes = " \\\n".join(["  %s" % c_escape_for_compact(lang.code) for lang in langs])
+
     langnames = " \\\n".join(["  %s" % c_escape_for_compact(lang.name) for lang in langs])
     langids = ",\n".join(["  %s" % lang.ms_lang_id for lang in langs])
 

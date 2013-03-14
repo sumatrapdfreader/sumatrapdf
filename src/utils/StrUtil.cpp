@@ -1068,17 +1068,62 @@ static inline const char *StrEqWeird(const char *s, const char *toFind)
     }
 }
 
-// conceptually strings is an array of strings where strings are laid
-// out sequentially in memory
-// Returns index of toFind string in sttings array of size max
+// Returns NULL if s is the same as toFind
+// If they are not equal, returns end of s + 1
+static inline const char *StrEqWeird(const char *s, const WCHAR *toFind)
+{
+    WCHAR wc;
+    char c, c2;
+    for (;;) {
+        c = *s++;
+        if (0 == c) {
+            if (0 == *toFind)
+                return NULL;
+            return s;
+        }
+        wc = *toFind++;
+        if (wc > 255)
+            return NULL;
+        c2 = (char)wc;
+        if (c != c2) {
+            while (*s) {
+                s++;
+            }
+            return s + 1;
+        }
+        // were equal, check another char
+    }
+}
+
+// conceptually strings is an array of 0-terminated strings where,  laid
+// out sequentially in memory, terminated with a 0-length string
+// Returns index of toFind string in strings 
 // Returns -1 if string doesn't exist
-int StrToIdx(const char *strings, const char *toFind, int max)
+int StrToIdx(const char *strings, const char *toFind)
 {
     const char *s = strings;
-    for (int idx = 0; idx < max; idx++) {
+    int idx = 0;
+    while (*s) {
         s = StrEqWeird(s, toFind);
         if (NULL == s)
             return idx;
+        ++idx;
+    }
+    return -1;
+}
+
+// optimization: allows finding WCHAR strings in char * strings array
+// without the need to convert first
+// returns -1 if toFind doesn't exist in strings, or its index if exists
+int StrToIdx(const char *strings, const WCHAR *toFind)
+{
+    const char *s = strings;
+    int idx = 0;
+    while (*s) {
+        s = StrEqWeird(s, toFind);
+        if (NULL == s)
+            return idx;
+        ++idx;
     }
     return -1;
 }

@@ -26,21 +26,36 @@ static void StrReplaceTest()
 
 static void StrSeqTest()
 {
-    const char *s = "foo\0a\0bar\0";
-    static const int max = 3;
-    assert(0 == seqstrings::StrToIdx(s, "foo", max));
-    assert(1 == seqstrings::StrToIdx(s, "a", max));
-    assert(2 == seqstrings::StrToIdx(s, "bar", max));
+    const char *s = "foo\0a\0bar\0\0";
+    assert(0 == seqstrings::StrToIdx(s, "foo"));
+    assert(1 == seqstrings::StrToIdx(s, "a"));
+    assert(2 == seqstrings::StrToIdx(s, "bar"));
+
+    assert(0 == seqstrings::StrToIdx(s, L"foo"));
+    assert(1 == seqstrings::StrToIdx(s, L"a"));
+    assert(2 == seqstrings::StrToIdx(s, L"bar"));
 
     assert(str::Eq("foo", seqstrings::IdxToStr(s, 0)));
     assert(str::Eq("a", seqstrings::IdxToStr(s, 1)));
     assert(str::Eq("bar", seqstrings::IdxToStr(s, 2)));
 
-    assert(-1 == seqstrings::StrToIdx(s, "fo", max));
-    assert(-1 == seqstrings::StrToIdx(s, "", max));
-    assert(-1 == seqstrings::StrToIdx(s, "ab", max));
-    assert(-1 == seqstrings::StrToIdx(s, "baro", max));
-    assert(-1 == seqstrings::StrToIdx(s, "ba", max));
+    assert(0 == seqstrings::StrToIdx(s, "foo"));
+    assert(1 == seqstrings::StrToIdx(s, "a"));
+    assert(2 == seqstrings::StrToIdx(s, "bar"));
+    assert(-1 == seqstrings::StrToIdx(s, "fo"));
+    assert(-1 == seqstrings::StrToIdx(s, ""));
+    assert(-1 == seqstrings::StrToIdx(s, "ab"));
+    assert(-1 == seqstrings::StrToIdx(s, "baro"));
+    assert(-1 == seqstrings::StrToIdx(s, "ba"));
+
+    assert(0 == seqstrings::StrToIdx(s, L"foo"));
+    assert(1 == seqstrings::StrToIdx(s, L"a"));
+    assert(2 == seqstrings::StrToIdx(s, L"bar"));
+    assert(-1 == seqstrings::StrToIdx(s, L"fo"));
+    assert(-1 == seqstrings::StrToIdx(s, L""));
+    assert(-1 == seqstrings::StrToIdx(s, L"ab"));
+    assert(-1 == seqstrings::StrToIdx(s, L"baro"));
+    assert(-1 == seqstrings::StrToIdx(s, L"ba"));
 }
 
 static void StrTest()

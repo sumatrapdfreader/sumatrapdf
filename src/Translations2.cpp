@@ -192,12 +192,15 @@ static void BuildStringsIndexForLang(int langIdx)
     const char *s = GetTranslationsForLang(langIdx);
 #endif
     for (int i = 0; i < gStringsCount; i++) {
-        size_t len = str::Len(s);
-        if (0 == len)
+        if (0 == *s)
             gCurrLangStrings[i] = NULL;
         else
             gCurrLangStrings[i] = s;
-        s = s + len + 1;
+        // advance to the next string
+        while (*s) {
+            ++s;
+        }
+        ++s;
     }
 }
 
@@ -214,7 +217,7 @@ void SetCurrentLangByCode(const char *langCode)
     if (str::Eq(langCode, gCurrLangCode))
         return;
 
-    int idx = seqstrings::StrToIdx(gLangCodes, langCode, gLangsCount);
+    int idx = seqstrings::StrToIdx(gLangCodes, langCode);
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = langCode;
@@ -223,7 +226,7 @@ void SetCurrentLangByCode(const char *langCode)
 
 const char *ValidateLangCode(const char *langCode)
 {
-    int idx = seqstrings::StrToIdx(gLangCodes, langCode, gLangsCount);
+    int idx = seqstrings::StrToIdx(gLangCodes, langCode);
     if (-1 == idx)
         return NULL;
     return GetLangCodeByIdx(idx);

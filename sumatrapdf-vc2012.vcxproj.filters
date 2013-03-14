@@ -896,6 +896,12 @@
     <ClCompile Include="src\utils\CssParser_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\Translations2.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\StrUtil_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ext\jbig2dec\config_win32.h">
@@ -1320,6 +1326,9 @@
     </ClInclude>
     <ClInclude Include="src\utils\CssParser.h">
       <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Translations2.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
