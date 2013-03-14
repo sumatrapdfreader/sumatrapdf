@@ -220,6 +220,13 @@ static void BencTestArrayAppend()
     assert(!array->GetInt(ITERATION_COUNT));
     assert(array->GetDict(ITERATION_COUNT));
     BencTestRoundtrip(array);
+    delete array->Remove(ITERATION_COUNT);
+    delete array->Remove(0);
+    delete array->Remove(ITERATION_COUNT + 13);
+    assert(array->Length() == ITERATION_COUNT - 1);
+    assert(array->GetInt(0)->Value() == 2);
+    assert(array->GetInt(ITERATION_COUNT - 2)->Value() == ITERATION_COUNT);
+    BencTestRoundtrip(array);
     delete array;
 }
 
@@ -264,6 +271,10 @@ static void BencTestDictAppend()
     dict->Add("YZ", 4);
     dict->Add("ab", 5);
     BencTestSerialization(dict, "d2:KLi2e2:YZi4e2:abi5e2:ghi3ee");
+    delete dict->Remove("gh");
+    delete dict->Remove("YZ");
+    delete dict->Remove("missing");
+    BencTestSerialization(dict, "d2:KLi2e2:abi5ee");
     delete dict;
 }
 

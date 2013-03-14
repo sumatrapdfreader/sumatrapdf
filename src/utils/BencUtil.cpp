@@ -110,6 +110,15 @@ BencInt *BencInt::Decode(const char *bytes, size_t *lenOut)
     return new BencInt(value);
 }
 
+BencObj *BencArray::Remove(size_t index)
+{
+    if (index >= Length())
+        return NULL;
+    BencObj *removed = value.At(index);
+    value.RemoveAt(index);
+    return removed;
+}
+
 BencDict *BencArray::GetDict(size_t index) const
 {
     if (index < Length() && value.At(index)->Type() == BT_DICT)
@@ -178,8 +187,8 @@ void BencDict::Add(const char *key, BencObj *obj)
 
     // determine the ordered insertion index
     size_t oix = 0;
-    if (keys.Count() > 0 && strcmp(keys.Last(), key) < 0)
-        oix = keys.Count();
+    if (keys.Count() > lastIdx && strcmp(keys.At(lastIdx), key) < 0)
+        oix = lastIdx + 1;
     for (; oix < keys.Count(); oix++) {
         if (strcmp(keys.At(oix), key) >= 0)
             break;
@@ -194,6 +203,22 @@ void BencDict::Add(const char *key, BencObj *obj)
         keys.InsertAt(oix, str::Dup(key));
         values.InsertAt(oix, obj);
     }
+    lastIdx = oix;
+}
+
+BencObj *BencDict::Remove(const char *key)
+{
+    char **found = (char **)bsearch(&key, keys.LendData(), keys.Count(), sizeof(key), keycmp);
+    if (!found)
+        return NULL;
+    size_t idx = found - keys.LendData();
+    free(keys.At(idx));
+    keys.RemoveAt(idx);
+    BencObj *removed = values.At(idx);
+    values.RemoveAt(idx);
+    if (idx <= lastIdx)
+        lastIdx--;
+    return removed;
 }
 
 char *BencDict::Encode() const

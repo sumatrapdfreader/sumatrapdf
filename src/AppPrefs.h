@@ -22,6 +22,7 @@ struct SerializableGlobalPrefs {
         free(versionToSkip);
         free(inverseSearchCmdLine);
         free(lastUpdateTime);
+        free(prevSerialization);
     }
 
     bool globalPrefsOnly;
@@ -92,6 +93,8 @@ struct SerializableGlobalPrefs {
     FILETIME lastPrefUpdate; /* modification time of the preferences file when it was last read */
 
     bool cbxR2L; /* display CBX double pages from right to left */
+
+    char *prevSerialization; /* serialization of what was loaded (needed to prevent discarding unknown options) */
 };
 
 extern SerializableGlobalPrefs gGlobalPrefs;

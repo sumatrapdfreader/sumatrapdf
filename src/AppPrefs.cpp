@@ -33,9 +33,10 @@ struct PrefInfo {
     uint32_t bitfield;
 };
 
-static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *structBase, uint32_t bitmask=-1)
+static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *structBase, BencDict *prefs=NULL, uint32_t bitmask=-1)
 {
-    BencDict *prefs = new BencDict();
+    if (!prefs)
+        prefs = new BencDict();
     const char *base = (const char *)structBase;
     for (size_t i = 0; i < count; i++) {
         PrefInfo& meta = info[i];
@@ -52,10 +53,14 @@ static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *struc
         case Pref_UILang:
             if (*(const char **)(base + meta.offset))
                 prefs->AddRaw(meta.name, *(const char **)(base + meta.offset));
+            else
+                delete prefs->Remove(meta.name);
             break;
         case Pref_WStr:
             if (*(const WCHAR **)(base + meta.offset))
                 prefs->Add(meta.name, *(const WCHAR **)(base + meta.offset));
+            else
+                delete prefs->Remove(meta.name);
             break;
         case Pref_DisplayMode:
             prefs->Add(meta.name, DisplayModeConv::NameFromEnum(*(DisplayMode *)(base + meta.offset)));
@@ -72,6 +77,8 @@ static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *struc
                 }
                 prefs->Add(meta.name, array);
             }
+            else
+                delete prefs->Remove(meta.name);
             break;
         }
     }
@@ -276,6 +283,7 @@ SerializableGlobalPrefs gGlobalPrefs = {
     0, // int openCountWeek
     { 0, 0 }, // FILETIME lastPrefUpdate
     false, // bool cbxR2L
+    NULL, // char *prevSerialization
 };
 
 // number of weeks past since 2011-01-01
@@ -295,7 +303,10 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
     CrashIf(!IsValidZoom(globalPrefs.defaultZoom));
     if (!globalPrefs.openCountWeek)
         globalPrefs.openCountWeek = GetWeekCount();
-    return SerializeStruct(gGlobalPrefInfo, dimof(gGlobalPrefInfo), &globalPrefs);
+    BencDict *prevDict = NULL;
+    if (globalPrefs.prevSerialization)
+        prevDict = BencDict::Decode(globalPrefs.prevSerialization, NULL);
+    return SerializeStruct(gGlobalPrefInfo, dimof(gGlobalPrefInfo), &globalPrefs, prevDict);
 }
 
 static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
@@ -325,7 +336,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
                        (ds->isPinned ? Ds_IsPinned : 0) |
                        (ds->isMissing ? Ds_IsMissing : 0) |
                        (ds->tocState && ds->tocState->Count() > 0 ? Ds_HasTocState : 0);
-    return SerializeStruct(gFilePrefInfo, dimof(gFilePrefInfo), ds, bitmask);
+    return SerializeStruct(gFilePrefInfo, dimof(gFilePrefInfo), ds, NULL, bitmask);
 }
 
 static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPrefsOnly)
@@ -455,6 +466,9 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
         goto Exit;
 
     DeserializeStruct(gGlobalPrefInfo, dimof(gGlobalPrefInfo), &globalPrefs, global);
+
+    free(globalPrefs.prevSerialization);
+    globalPrefs.prevSerialization = global->Encode();
 
     int weekDiff = GetWeekCount() - globalPrefs.openCountWeek;
     globalPrefs.openCountWeek = GetWeekCount();
