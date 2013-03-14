@@ -17,8 +17,10 @@
 #include "SumatraPDF.h"
 #include "Translations2.h"
 #include "WindowInfo.h"
+#include "WinUtil.h"
 
 #define PREFS_FILE_NAME         L"sumatrapdfprefs.dat"
+#define ADV_PREFS_FILE_NAME     L"sumatrapdfconfig.ini"
 
 #define MAX_REMEMBERED_FILES 1000
 
@@ -514,6 +516,74 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
 
 Exit:
     delete obj;
+}
+
+static void DeserializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info, size_t count, void *structBase)
+{
+    char *base = (char *)structBase;
+    const WCHAR *section = NULL;
+    INT intValue, intValueDef;
+    ScopedMem<WCHAR> strValue;
+
+    for (size_t i = 0; i < count; i++) {
+        SettingInfo& meta = info[i];
+        CrashIf(meta.type != SType_Section && !section);
+        switch (meta.type) {
+        case SType_Section:
+            section = meta.name;
+            break;
+        case SType_Bool:
+            intValueDef = *(bool *)(base + meta.offset) ? 1 : 0;
+            intValue = GetPrivateProfileInt(section, meta.name, intValueDef, filepath);
+            *(bool *)(base + meta.offset) = intValue != 0;
+            break;
+        case SType_Color:
+            strValue.Set(ReadIniString(filepath, section, meta.name));
+            if (str::Parse(strValue, L"#%6x", &intValue))
+                *(COLORREF *)(base + meta.offset) = (COLORREF)intValue;
+            break;
+        case SType_Int:
+            intValueDef = *(int *)(base + meta.offset);
+            intValue = GetPrivateProfileInt(section, meta.name, intValueDef, filepath);
+            *(int *)(base + meta.offset) = intValue;
+            break;
+        case SType_String:
+            strValue.Set(ReadIniString(filepath, section, meta.name, L"\n"));
+            if (!str::Eq(strValue, L"\n"))
+                ((ScopedMem<WCHAR> *)(base + meta.offset))->Set(strValue.StealData());
+            break;
+        case SType_BoolVec:
+        case SType_ColorVec:
+        case SType_IntVec:
+        case SType_StringVec:
+            ScopedMem<WCHAR> sections(ReadIniString(filepath, section, NULL));
+            for (const WCHAR *name = sections; *name; name += str::Len(name) + 1) {
+                UINT idx;
+                if (str::Eq(str::Parse(name, L"%u.", &idx), meta.name)) {
+                    if (SType_BoolVec == meta.type) {
+                        bool value = GetPrivateProfileInt(section, name, 0, filepath) != 0;
+                        ((Vec<bool> *)(base + meta.offset))->InsertAt(idx, value);
+                    }
+                    else if (SType_ColorVec == meta.type) {
+                        strValue.Set(ReadIniString(filepath, section, name));
+                        if (str::Parse(strValue, L"#%6x", &intValue)) {
+                            COLORREF value = (COLORREF)intValue;
+                            ((Vec<COLORREF> *)(base + meta.offset))->InsertAt(idx, value);
+                        }
+                    }
+                    else if (SType_IntVec == meta.type) {
+                        intValue = GetPrivateProfileInt(section, name, 0, filepath);
+                        ((Vec<int> *)(base + meta.offset))->InsertAt(idx, intValue);
+                    }
+                    else {
+                        strValue.Set(ReadIniString(filepath, section, name));
+                        ((WStrVec *)(base + meta.offset))->InsertAt(idx, strValue.StealData());
+                    }
+                }
+            }
+            break;
+        }
+    }
 }
 
 namespace Prefs {

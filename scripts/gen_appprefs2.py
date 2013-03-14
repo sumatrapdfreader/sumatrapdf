@@ -1,4 +1,7 @@
 """
+This script generates a struct and enough metadata for reading
+a variety of preference values from a user provided settings file.
+See further below for the definition of all currently supported options.
 """
 
 import os
@@ -48,6 +51,8 @@ class FieldArray(Field):
 class Section(object):
 	def __init__(self, name, fields, persist=False):
 		self.name = name; self.fields = fields; self.persist = persist
+
+# TODO: move these settings into a different file for convenience?
 
 AdvancedOptions = [
 	Field("TraditionalEbookUI", Bool, False,
@@ -135,8 +140,9 @@ def BuildMetaData(sections, name):
 	lines = ["static SettingInfo g%sInfo[] = {" % name, "#define myoff(x) offsetof(%s, x)" % name]
 	for section in sections:
 		lines.append("\t/* ***** fields for section %s ***** */" % section.name)
+		lines.append("\t{ L\"%s\", SType_Section, %s }," % (section.name, "/* persist */ -1" if section.persist else "0"))
 		for field in section.fields:
-			lines.append("\t{ \"%s\", %s, myoff(%s), %s }," % (field.name, field.stype(), field.cname(), "true" if section.persist else "false"))
+			lines.append("\t{ L\"%s\", %s, myoff(%s) }," % (field.name, field.stype(), field.cname()))
 	lines.append("#undef myoff")
 	lines.append("};")
 	return "\n".join(lines)	
@@ -154,15 +160,15 @@ AppPrefs2_Header = """\
 
 #ifdef INCLUDE_APPPREFS2_METADATA
 enum SettingType {
+	SType_Section,
 	SType_Bool, SType_Color, SType_Int, SType_String,
 	SType_BoolVec, SType_ColorVec, SType_IntVec, SType_StringVec,
 };
 
 struct SettingInfo {
-	const char *name;
+	const WCHAR *name;
 	SettingType type;
 	size_t offset;
-	bool persist;
 };
 
 %(structMetadata)s

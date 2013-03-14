@@ -64,41 +64,45 @@ public:
 
 #ifdef INCLUDE_APPPREFS2_METADATA
 enum SettingType {
+	SType_Section,
 	SType_Bool, SType_Color, SType_Int, SType_String,
 	SType_BoolVec, SType_ColorVec, SType_IntVec, SType_StringVec,
 };
 
 struct SettingInfo {
-	const char *name;
+	const WCHAR *name;
 	SettingType type;
 	size_t offset;
-	bool persist;
 };
 
 static SettingInfo gAdvancedSettingsInfo[] = {
 #define myoff(x) offsetof(AdvancedSettings, x)
 	/* ***** fields for section AdvancedOptions ***** */
-	{ "TraditionalEbookUI", SType_Bool, myoff(traditionalEbookUI), true },
-	{ "ReuseInstance", SType_Bool, myoff(reuseInstance), true },
-	{ "MainWindowBackground", SType_Color, myoff(mainWindowBackground), true },
-	{ "EscToExit", SType_Bool, myoff(escToExit), true },
-	{ "TextColor", SType_Color, myoff(textColor), true },
-	{ "PageColor", SType_Color, myoff(pageColor), true },
+	{ L"AdvancedOptions", SType_Section, /* persist */ -1 },
+	{ L"TraditionalEbookUI", SType_Bool, myoff(traditionalEbookUI) },
+	{ L"ReuseInstance", SType_Bool, myoff(reuseInstance) },
+	{ L"MainWindowBackground", SType_Color, myoff(mainWindowBackground) },
+	{ L"EscToExit", SType_Bool, myoff(escToExit) },
+	{ L"TextColor", SType_Color, myoff(textColor) },
+	{ L"PageColor", SType_Color, myoff(pageColor) },
 	/* ***** fields for section PagePadding ***** */
-	{ "OuterX", SType_Int, myoff(outerX), false },
-	{ "OuterY", SType_Int, myoff(outerY), false },
-	{ "InnerX", SType_Int, myoff(innerX), false },
-	{ "InnerY", SType_Int, myoff(innerY), false },
+	{ L"PagePadding", SType_Section, 0 },
+	{ L"OuterX", SType_Int, myoff(outerX) },
+	{ L"OuterY", SType_Int, myoff(outerY) },
+	{ L"InnerX", SType_Int, myoff(innerX) },
+	{ L"InnerY", SType_Int, myoff(innerY) },
 	/* ***** fields for section ForwardSearch ***** */
-	{ "EnableTeXEnhancements", SType_Bool, myoff(enableTeXEnhancements), false },
-	{ "HighlightOffset", SType_Int, myoff(highlightOffset), false },
-	{ "HighlightWidth", SType_Int, myoff(highlightWidth), false },
-	{ "HighlightColor", SType_Color, myoff(highlightColor), false },
-	{ "HighlightPermanent", SType_Bool, myoff(highlightPermanent), false },
+	{ L"ForwardSearch", SType_Section, 0 },
+	{ L"EnableTeXEnhancements", SType_Bool, myoff(enableTeXEnhancements) },
+	{ L"HighlightOffset", SType_Int, myoff(highlightOffset) },
+	{ L"HighlightWidth", SType_Int, myoff(highlightWidth) },
+	{ L"HighlightColor", SType_Color, myoff(highlightColor) },
+	{ L"HighlightPermanent", SType_Bool, myoff(highlightPermanent) },
 	/* ***** fields for section ExternalViewers ***** */
-	{ "CommandLine", SType_StringVec, myoff(commandLine), false },
-	{ "Name", SType_StringVec, myoff(name), false },
-	{ "Filter", SType_StringVec, myoff(filter), false },
+	{ L"ExternalViewers", SType_Section, 0 },
+	{ L"CommandLine", SType_StringVec, myoff(commandLine) },
+	{ L"Name", SType_StringVec, myoff(name) },
+	{ L"Filter", SType_StringVec, myoff(filter) },
 #undef myoff
 };
 
