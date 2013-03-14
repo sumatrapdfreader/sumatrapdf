@@ -101,7 +101,7 @@ ExternalViewer = [
 	FieldArray("Name", String,
 		"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
 	FieldArray("Filter", String,
-		"filter for which file types the menu item is to be shown (e.g. *.pdf;*.xps)"),
+		"filter for which file types the menu item is to be shown (e.g. \"*.pdf;*.xps\"; \"*\" if missing)"),
 ]
 
 IniSettings = [
@@ -172,7 +172,6 @@ struct SettingInfo {
 };
 
 %(structMetadata)s
-
 #endif
 
 #endif

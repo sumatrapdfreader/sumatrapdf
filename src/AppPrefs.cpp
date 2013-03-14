@@ -590,6 +590,81 @@ static void DeserializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info
     }
 }
 
+static void SerializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info, size_t count, void *structBase)
+{
+    char *base = (char *)structBase;
+    const WCHAR *section = NULL;
+    bool skipSection = false;
+    ScopedMem<WCHAR> strValue;
+
+    for (size_t i = 0; i < count; i++) {
+        SettingInfo& meta = info[i];
+        CrashIf(meta.type != SType_Section && !section);
+        if (meta.type != SType_Section && skipSection)
+            continue;
+        switch (meta.type) {
+        case SType_Section:
+            section = meta.name;
+            skipSection = !meta.offset;
+            break;
+        case SType_Bool:
+            strValue.Set(str::Format(L"%d", *(bool *)(base + meta.offset) ? 1 : 0));
+            WritePrivateProfileString(section, meta.name, strValue, filepath);
+            break;
+        case SType_Color:
+            strValue.Set(str::Format(L"#%06X", (int)*(COLORREF *)(base + meta.offset)));
+            WritePrivateProfileString(section, meta.name, strValue, filepath);
+            break;
+        case SType_Int:
+            strValue.Set(str::Format(L"%d", *(int *)(base + meta.offset)));
+            WritePrivateProfileString(section, meta.name, strValue, filepath);
+            break;
+        case SType_String:
+            WritePrivateProfileString(section, meta.name, ((ScopedMem<WCHAR> *)(base + meta.offset))->Get(), filepath);
+            break;
+        case SType_BoolVec:
+            {
+                Vec<bool> *vec = (Vec<bool> *)(base + meta.offset);
+                for (size_t i = 1; i < vec->Count(); i++) {
+                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", i, meta.name));
+                    strValue.Set(str::Format(L"%d", vec->At(i) ? 1 : 0));
+                    WritePrivateProfileString(section, key, strValue, filepath);
+                }
+            }
+            break;
+        case SType_ColorVec:
+            {
+                Vec<COLORREF> *vec = (Vec<COLORREF> *)(base + meta.offset);
+                for (size_t i = 1; i < vec->Count(); i++) {
+                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", i, meta.name));
+                    strValue.Set(str::Format(L"#%06X", (int)vec->At(i)));
+                    WritePrivateProfileString(section, key, strValue, filepath);
+                }
+            }
+            break;
+        case SType_IntVec:
+            {
+                Vec<int> *vec = (Vec<int> *)(base + meta.offset);
+                for (size_t i = 1; i < vec->Count(); i++) {
+                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", i, meta.name));
+                    strValue.Set(str::Format(L"%d", vec->At(i)));
+                    WritePrivateProfileString(section, key, strValue, filepath);
+                }
+            }
+            break;
+        case SType_StringVec:
+            {
+                WStrVec *vec = (WStrVec *)(base + meta.offset);
+                for (size_t i = 1; i < vec->Count(); i++) {
+                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", i, meta.name));
+                    WritePrivateProfileString(section, key, vec->At(i), filepath);
+                }
+            }
+            break;
+        }
+    }
+}
+
 namespace Prefs {
 
 /* Load preferences from the preferences file. */
@@ -791,16 +866,39 @@ bool ReloadPrefs()
     return true;
 }
 
-bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs)
+static WCHAR *GetAdvancedPrefsPath(bool createMissing=false)
 {
     ScopedMem<WCHAR> path(AppGenDataFilename(ADV_PREFS_FILE_NAME));
-    if (!file::Exists(path) && !IsRunningInPortableMode()) {
+    if (file::Exists(path))
+        return path.StealData();
+    if (!IsRunningInPortableMode()) {
         path.Set(GetExePath());
         path.Set(path::GetDir(path));
         path.Set(path::Join(path, ADV_PREFS_FILE_NAME));
-        if (!file::Exists(path))
-            return false;
+        if (file::Exists(path))
+            return path.StealData();
     }
+    if (createMissing) {
+        // TODO: create from template with link to documentation?
+        return AppGenDataFilename(ADV_PREFS_FILE_NAME);
+    }
+    return NULL;
+}
+
+bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs)
+{
+    ScopedMem<WCHAR> path(GetAdvancedPrefsPath());
+    if (!path)
+        return false;
     DeserializeAdvancedSettings(path, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
+    return true;
+}
+
+bool SaveAdvancedPrefs(AdvancedSettings *advancedPrefs)
+{
+    ScopedMem<WCHAR> path(GetAdvancedPrefsPath(true));
+    if (!path)
+        return false;
+    SerializeAdvancedSettings(path, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
     return true;
 }

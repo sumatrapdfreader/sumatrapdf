@@ -64,7 +64,7 @@ public:
     // CommandLine if missing)
     WStrVec name;
     // filter for which file types the menu item is to be shown (e.g.
-    // *.pdf;*.xps)
+    // "*.pdf;*.xps"; "*" if missing)
     WStrVec filter;
 
     AdvancedSettings() : traditionalEbookUI(false), reuseInstance(false), mainWindowBackground(0xFFF200), escToExit(false), textColor(0x000000), pageColor(0xFFFFFF), outerX(4), outerY(2), innerX(4), innerY(4), enableTeXEnhancements(false), highlightOffset(0), highlightWidth(15), highlightColor(0x6581FF), highlightPermanent(false) { }
@@ -113,7 +113,6 @@ static SettingInfo gAdvancedSettingsInfo[] = {
     { L"Filter", SType_StringVec, myoff(filter) },
 #undef myoff
 };
-
 #endif
 
 #endif
