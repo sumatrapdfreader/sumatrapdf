@@ -214,7 +214,7 @@ void SetCurrentLangByCode(const char *langCode)
     if (str::Eq(langCode, gCurrLangCode))
         return;
 
-    int idx = seqstrings::GetStrIdx(gLangCodes, langCode, gLangsCount);
+    int idx = seqstrings::StrToIdx(gLangCodes, langCode, gLangsCount);
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = langCode;
@@ -223,7 +223,7 @@ void SetCurrentLangByCode(const char *langCode)
 
 const char *ValidateLangCode(const char *langCode)
 {
-    int idx = seqstrings::GetStrIdx(gLangCodes, langCode, gLangsCount);
+    int idx = seqstrings::StrToIdx(gLangCodes, langCode, gLangsCount);
     if (-1 == idx)
         return NULL;
     return GetLangCodeByIdx(idx);
@@ -231,12 +231,12 @@ const char *ValidateLangCode(const char *langCode)
 
 const char *GetLangCodeByIdx(int idx)
 {
-    return seqstrings::GetByIdx(gLangCodes, idx);
+    return seqstrings::IdxToStr(gLangCodes, idx);
 }
 
 const char *GetLangNameByIdx(int idx)
 {
-    return seqstrings::GetByIdx(gLangNames, idx);
+    return seqstrings::IdxToStr(gLangNames, idx);
 }
 
 bool IsCurrLangRtl()

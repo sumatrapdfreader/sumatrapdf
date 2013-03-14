@@ -28,19 +28,19 @@ static void StrSeqTest()
 {
     const char *s = "foo\0a\0bar\0";
     static const int max = 3;
-    assert(0 == seqstrings::GetStrIdx(s, "foo", max));
-    assert(1 == seqstrings::GetStrIdx(s, "a", max));
-    assert(2 == seqstrings::GetStrIdx(s, "bar", max));
+    assert(0 == seqstrings::StrToIdx(s, "foo", max));
+    assert(1 == seqstrings::StrToIdx(s, "a", max));
+    assert(2 == seqstrings::StrToIdx(s, "bar", max));
 
-    assert(str::Eq("foo", seqstrings::GetByIdx(s, 0)));
-    assert(str::Eq("a", seqstrings::GetByIdx(s, 1)));
-    assert(str::Eq("bar", seqstrings::GetByIdx(s, 2)));
+    assert(str::Eq("foo", seqstrings::IdxToStr(s, 0)));
+    assert(str::Eq("a", seqstrings::IdxToStr(s, 1)));
+    assert(str::Eq("bar", seqstrings::IdxToStr(s, 2)));
 
-    assert(-1 == seqstrings::GetStrIdx(s, "fo", max));
-    assert(-1 == seqstrings::GetStrIdx(s, "", max));
-    assert(-1 == seqstrings::GetStrIdx(s, "ab", max));
-    assert(-1 == seqstrings::GetStrIdx(s, "baro", max));
-    assert(-1 == seqstrings::GetStrIdx(s, "ba", max));
+    assert(-1 == seqstrings::StrToIdx(s, "fo", max));
+    assert(-1 == seqstrings::StrToIdx(s, "", max));
+    assert(-1 == seqstrings::StrToIdx(s, "ab", max));
+    assert(-1 == seqstrings::StrToIdx(s, "baro", max));
+    assert(-1 == seqstrings::StrToIdx(s, "ba", max));
 }
 
 static void StrTest()

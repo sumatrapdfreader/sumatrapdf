@@ -1072,7 +1072,7 @@ static inline const char *StrEqWeird(const char *s, const char *toFind)
 // out sequentially in memory
 // Returns index of toFind string in sttings array of size max
 // Returns -1 if string doesn't exist
-int GetStrIdx(const char *strings, const char *toFind, int max)
+int StrToIdx(const char *strings, const char *toFind, int max)
 {
     const char *s = strings;
     for (int idx = 0; idx < max; idx++) {
@@ -1085,7 +1085,7 @@ int GetStrIdx(const char *strings, const char *toFind, int max)
 
 // Given an index in the "array" of sequentially laid out strings,
 // returns a strings at that index.
-const char *GetByIdx(const char *strings, int idx)
+const char *IdxToStr(const char *strings, int idx)
 {
     const char *s = strings;
     while (idx > 0) {

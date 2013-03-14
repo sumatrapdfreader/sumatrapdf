@@ -147,8 +147,8 @@ size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp);
 
 namespace seqstrings {
 
-int          GetStrIdx(const char *strings, const char *toFind, int max);
-const char * GetByIdx(const char *strings, int idx);
+int          StrToIdx(const char *strings, const char *toFind, int max);
+const char * IdxToStr(const char *strings, int idx);
 
 } // namespace seqstrings
 
