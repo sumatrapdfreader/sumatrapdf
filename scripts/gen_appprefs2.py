@@ -182,7 +182,7 @@ def main():
 	structDef = BuildStruct(IniSettings, "AdvancedSettings")
 	structMetadata = BuildMetaData(IniSettings, "AdvancedSettings")
 	content = AppPrefs2_Header % locals()
-	open("src/AppPrefs2.h", "wb").write(content.replace("\n", "\r\n"))
+	open("src/AppPrefs2.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
 
 if __name__ == "__main__":
 	if os.path.exists("gen_appprefs2.py"):
