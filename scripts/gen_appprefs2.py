@@ -5,7 +5,7 @@ See further below for the definition of all currently supported options.
 """
 
 import os
-from util import group, verify_started_in_right_directory
+from util import verify_started_in_right_directory
 
 Bool, Color, Int, String = "bool", "COLORREF", "int", "WCHAR *"
 
@@ -145,7 +145,7 @@ def BuildMetaData(sections, name):
 			lines.append("\t{ L\"%s\", %s, myoff(%s) }," % (field.name, field.stype(), field.cname()))
 	lines.append("#undef myoff")
 	lines.append("};")
-	return "\n".join(lines)	
+	return "\n".join(lines)
 
 AppPrefs2_Header = """\
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).

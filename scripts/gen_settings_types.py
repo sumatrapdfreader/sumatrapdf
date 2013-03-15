@@ -24,7 +24,7 @@ class Type(object):
     def __init__(self, def_val):
         self.c_type_override = None
         self.val = def_val
-        assert self.is_valid_val(def_val), "%s is not a valid value of %s" % (str(val), str(self))
+        assert self.is_valid_val(def_val), "%s is not a valid value of %s" % (str(self.val), str(self))
 
     def c_type(self):
         if self.c_type_override != None:
@@ -219,7 +219,7 @@ class Array(Type):
 
     def __init__(self, typ):
         assert isinstance(typ, Type)
-        assert issubclass(typ, Var)
+        #assert issubclass(typ, Val)
         self.typ = typ
 
 def serialize(typ, val):
