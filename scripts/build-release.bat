@@ -10,7 +10,7 @@ REM SET PATH=C:\Python;%PATH%
 CALL scripts\vc.bat
 IF ERRORLEVEL 1 EXIT /B 1
 
-REM add our nasm.exe, mpress.exe and StripReloc.exe to the path
+REM add our nasm.exe to the path
 SET PATH=%CD%\bin;%PATH%
 
-python -u -B scripts\build-release.py %1 %2 %3 %4 %5
+python -u -B scripts\build.py %1 %2 %3 %4 %5

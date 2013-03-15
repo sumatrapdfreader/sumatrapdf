@@ -65,8 +65,8 @@ def verify_path_exists(path):
   return path
 
 def verify_started_in_right_directory():
-  if os.path.exists(os.path.join("scripts", "build-release.py")): return
-  if os.path.exists(os.path.join(os.getcwd(), "scripts", "build-release.py")): return
+  if os.path.exists(os.path.join("scripts", "build.py")): return
+  if os.path.exists(os.path.join(os.getcwd(), "scripts", "build.py")): return
   print("This script must be run from top of the source tree")
   sys.exit(1)
 

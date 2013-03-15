@@ -55,7 +55,7 @@ def uploadStringsIfChanged(skip_svn_check=False):
         # You need to do "svn update" to update local version number
         # Unfortunately I can't do it automatically here since it would be dangerous
         # (i.e. it would update code locally).
-        # svn update is called in build-release.py, so it's not a problem if it's run
+        # svn update is called in build.py, so it's not a problem if it's run
         # from  ./scripts/build-release.bat or ./scripts/build-pre-release.bat
         try:
             (local_ver, latest_ver) = util.get_svn_versions()

@@ -25,6 +25,8 @@ skip_transl_update   = test_for_flag(args, "-noapptrans")
 svn_revision         = test_for_flag(args, "-svn-revision", True)
 target_platform      = test_for_flag(args, "-platform", True)
 
+g_lzma_exe_url = "http://dl.dropbox.com/u/3064436/lzma.exe"
+
 def usage():
   print("build-release.py [-upload][-uploadtmp][-test][-test-installer][-prerelease][-platform=X64]")
   sys.exit(1)
