@@ -1,0 +1,152 @@
+7-Zip method IDs (9.18)
+-----------------------
+
+Each compression or crypto method in 7z has unique binary value (ID).
+The length of ID in bytes is arbitrary but it can not exceed 63 bits (8 bytes).
+
+If you want to add some new ID, you have two ways:
+1) Write request for allocating IDs to 7-zip developers.
+2) Generate 8-bytes ID:
+
+    3F ZZ ZZ ZZ ZZ ZZ MM MM 
+
+    3F              - Prefix for random IDs (1 byte)
+    ZZ ZZ ZZ ZZ ZZ  - Developer ID (5 bytes). Use real random bytes. 
+                      
+    MM MM           - Method ID (2 bytes)
+
+    You can notify 7-Zip developers about your Developer ID / Method ID.
+
+    Note: Use new ID only if old codec can not decode data encoded with new version.
+
+
+List of defined IDs
+-------------------
+      
+00 - Copy
+
+03 - Delta
+04 - x86 (BCJ)
+05 - PPC (Big Endian)
+06 - IA64
+07 - ARM (little endian)
+08 - ARM Thumb (little endian)
+09 - SPARC
+21 - LZMA2
+          
+02.. - Common
+   03 Swap
+      - 2 Swap2
+      - 4 Swap4
+
+03.. - 7z
+   01 - LZMA
+      01 - Version
+  
+   03 - Branch
+      01 - x86
+         03  - BCJ
+         1B  - BCJ2
+      02 - PPC
+         05 - PPC (Big Endian)
+      03 - Alpha
+         01 - Alpha
+      04 - IA64
+         01 - IA64
+      05 - ARM
+         01 - ARM
+      06 - M68
+         05 - M68 (Big Endian)
+      07 - ARM Thumb
+         01 - ARMT
+      08 - SPARC
+         05 - SPARC
+
+   04 - PPMD
+      01 - Version
+
+   7F -
+      01 - experimental methods.
+
+
+04.. - Misc
+   00 - Reserved
+   01 - Zip
+      00 - Copy (not used). Use {00} instead
+      01 - Shrink
+      06 - Implode
+      08 - Deflate
+      09 - Deflate64
+      10 - Imploding
+      12 - BZip2 (not used). Use {04 02 02} instead
+      14 - LZMA
+      60 - Jpeg
+      61 - WavPack
+      62 - PPMd
+      63 - wzAES
+   02 - BZip
+      02 - BZip2
+   03 - Rar
+      01 - Rar15
+      02 - Rar20
+      03 - Rar29
+   04 - Arj
+      01 - Arj (1,2,3)
+      02 - Arj 4
+   05 - Z
+   06 - Lzh
+   07 - Reserved for 7z
+   08 - Cab
+   09 - NSIS
+      01 - DeflateNSIS
+      02 - BZip2NSIS
+
+
+06.. - Crypto 
+   00 - 
+   01 - AES
+      0x - AES-128
+      4x - AES-192
+      8x - AES-256
+      Cx - AES
+
+      x0 - ECB
+      x1 - CBC
+      x2 - CFB
+      x3 - OFB
+
+   07 - Reserved
+   0F - Reserved
+
+   F0 - Misc Ciphers (Real Ciphers without hashing algo)
+
+   F1 - Misc Ciphers (Combine)
+      01 - Zip
+         01 - Main Zip crypto algo
+      03 - RAR
+         02 - 
+         03 - Rar29 AES-128 + (modified SHA-1)
+      07 - 7z
+         01 - AES-256 + SHA-256
+
+07.. - Hash (subject to change)
+   00 - 
+   01 - CRC
+   02 - SHA-1
+   03 - SHA-256
+   04 - SHA-384
+   05 - SHA-512
+
+   F0 - Misc Hash
+
+   F1 - Misc
+      03 - RAR
+         03 - Rar29 Password Hashing (modified SHA1)
+      07 - 7z 
+         01 - SHA-256 Password Hashing
+    
+   
+
+
+---
+End of document
