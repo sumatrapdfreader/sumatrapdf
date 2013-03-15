@@ -271,16 +271,23 @@ def gen_struct_fields(stru):
     assert isinstance(stru, Struct)
     struct_name = stru.name()
     lines = ["FieldMetadata g%(struct_name)sFieldMetadata[] = {" % locals()]
+    max_type_len = 0
+    for field in stru.values:
+        max_type_len = max(max_type_len, len(field.typ.get_typ_enum()))
+    max_type_len += 1
+
+    typ_fmt = "%%-%ds " % max_type_len
     for field in stru.values:
         assert isinstance(field, Field)
-        typ_enum = field.typ.get_typ_enum()
+        typ_enum = field.typ.get_typ_enum() + ","
+        typ_enum = typ_fmt % typ_enum
         field_name = field.name
         offset = "offsetof(%(struct_name)s, %(field_name)s)" % locals()
         if field.is_struct():
             field_type = field.typ.name()
-            lines += ["    { %(typ_enum)s, %(offset)s, &g%(field_type)sMetadata }," % locals()]
+            lines += ["    { %(typ_enum)s %(offset)s, &g%(field_type)sMetadata }," % locals()]
         else:
-            lines += ["    { %(typ_enum)s, %(offset)s, NULL }," % locals()]
+            lines += ["    { %(typ_enum)s %(offset)s, NULL }," % locals()]
     lines += ["};\n"]
     return lines
 
