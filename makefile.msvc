@@ -203,7 +203,7 @@ SUMATRA_OBJS = \
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
-	$(UTILS_LIB) $(LZMA_OBJS) \
+	$(UTILS_LIB) $(ZIP_OBJS) $(ZLIB_OBJS) $(LZMA_OBJS) \
 	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
 
 UNINSTALLER_OBJS = \
