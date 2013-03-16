@@ -97,6 +97,8 @@ def fix_from_ver(ver, all_vers, all_vers_s3):
 			to_delete[v] = True
 	to_delete = to_delete.keys()
 	if len(to_delete) > 10: # safety check
+		to_delete.sort()
+		to_delete.reverse()
 		print(to_delete)
 		print("won't delete because too many version: %d" % len(to_delete))
 		return

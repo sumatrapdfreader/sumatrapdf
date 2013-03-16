@@ -3,14 +3,12 @@ Builds a (pre)release build of SumatraPDF, including the installer,
 and optionally uploads it to s3.
 """
 
-import os, shutil, sys, time, re, urllib2, struct, s3
+import os, shutil, sys, time, re, struct, s3
 from util import test_for_flag, run_cmd_throw
 from util import verify_started_in_right_directory, parse_svninfo_out, log
 from util import extract_sumatra_version, zip_file
 from util import load_config, verify_path_exists
 import trans_upload, trans_download
-# zipfile doesn't support ZIP_BZIP2 compression in Python 2.*
-import zipfile2 as zipfile
 
 def usage():
   print("build-release.py [-upload][-uploadtmp][-test][-test-installer][-prerelease][-platform=X64]")
@@ -59,18 +57,6 @@ def copy_to_dst_dir(src_path, dst_dir):
   dst_path = os.path.join(dst_dir, name_in_obj_rel)
   shutil.copy(src_path, dst_path)
 
-# build the .zip with with installer data, will be included as part of
-# Installer.exe resources
-def build_installer_data(dir):
-  zf = zipfile.ZipFile(os.path.join(dir, "InstallerData.zip"), "w", zipfile.ZIP_BZIP2)
-  exe = os.path.join(dir, "SumatraPDF-no-MuPDF.exe")
-  zf.write(exe, "SumatraPDF.exe")
-  for f in ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll", "uninstall.exe"]:
-    zf.write(os.path.join(dir, f), f)
-  font_path = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
-  zf.write(font_path, "DroidSansFallback.ttf")
-  zf.close()
-
 # build installer data, will be included as part of Installer.exe resources
 # The format is:
 #   int32 number of files
@@ -80,7 +66,7 @@ def build_installer_data(dir):
 #   string file name, 0-terminated
 # for each file:
 #   file data
-def build_installer_data2(dir):
+def build_installer_data(dir):
   src = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
   copy_to_dst_dir(src, dir)
 
@@ -97,23 +83,13 @@ def build_installer_data2(dir):
     if f == "SumatraPDF-no-MuPDF.exe": f = "SumatraPDF.exe"
     d += f + "\0"
 
-  dst = os.path.join(dir, "InstallerData2.zip")
+  dst = os.path.join(dir, "InstallerData.zip")
   with open(dst, "wb") as fo:
     fo.write(d)
     for f in files:
       path = os.path.join(dir, f) + ".lzma"
       d = open(path, "rb").read()
       fo.write(d)
-
-def compare_installers():
-  dir = "obj-rel"
-  build_installer_data(dir)
-  build_installer_data2(dir)
-  s1 = os.path.getsize(os.path.join(dir, "InstallerData.zip"))
-  s2 = os.path.getsize(os.path.join(dir, "InstallerData2.zip"))
-  delta = s1 - s2
-  print("lzma saves %d bytes of zip (%d - %d)" % (delta, s1, s2))
-  sys.exit(1)
 
 # delete all but the last 3 pre-release builds in order to use less s3 storage
 def delete_old_pre_release_builds():
@@ -253,8 +229,7 @@ def main():
     sign(exe, cert_pwd)
     sign(os.path.join(obj_dir, "uninstall.exe"), cert_pwd)
 
-  #build_installer_data(obj_dir)
-  build_installer_data2(obj_dir)
+  build_installer_data(obj_dir)
   run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
 
   if build_test_installer or build_rel_installer:
@@ -312,5 +287,4 @@ def main():
   # manually to: "%s\n" % ver
 
 if __name__ == "__main__":
-  #compare_installers()
   main()
