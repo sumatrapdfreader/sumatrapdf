@@ -291,7 +291,7 @@ $(LIBMUPDF_DLL): $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBMUPDF_DEF)
 	$(LD) /DLL $(LDFLAGS) $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
 $(INSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h
-	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData.zip" $(SRCDIR)\installer\Installer.rc
+	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData.dat" $(SRCDIR)\installer\Installer.rc
 
 $(UNINSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h
 	rc /r /fo$@ $(RC_FLAGS) /D "BUILD_UNINSTALLER" $(SRCDIR)\installer\Installer.rc

@@ -80,10 +80,11 @@ def build_installer_data(dir):
     path = os.path.join(dir, f)
     d += struct.pack("<i", os.path.getsize(path))
     d += struct.pack("<i", os.path.getsize(path + ".lzma"))
+    # TODO: add last modified date
     if f == "SumatraPDF-no-MuPDF.exe": f = "SumatraPDF.exe"
     d += f + "\0"
 
-  dst = os.path.join(dir, "InstallerData.zip")
+  dst = os.path.join(dir, "InstallerData.dat")
   with open(dst, "wb") as fo:
     fo.write(d)
     for f in files:
