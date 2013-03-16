@@ -49,19 +49,9 @@ def usage():
 #       sumatrapdf/sumatralatest.js
 #       sumatrapdf/sumpdf-prerelease-latest.txt
 
-g_lzma_exe_url = "http://dl.dropbox.com/u/3064436/lzma.exe"
-def lzma_path():
-  d = os.path.dirname(__file__)
-  lzma_path = os.path.realpath(os.path.join(d, "..", "bin", "lzma.exe"))
-  if os.path.exists(lzma_path): return lzma_path
-  lzma_data = urllib2.urlopen(g_lzma_exe_url).read()
-  with open(lzma_path, "wb") as fo:
-    fo.write(lzma_data)
-  print("downloaded lzma into %s" % lzma_path)
-  return lzma_path
-
 def lzma_compress(src, dst):
-  lzma = lzma_path()
+  d = os.path.dirname(__file__)
+  lzma = os.path.realpath(os.path.join(d, "..", "bin", "lzma.exe"))
   run_cmd_throw(lzma, "e", src, dst, "-eos")
 
 def copy_to_dst_dir(src_path, dst_dir):
@@ -183,7 +173,6 @@ def main():
   if len(args) != 0:
     usage()
   verify_started_in_right_directory()
-  lzma_path() # early check
 
   if build_prerelease:
     if svn_revision is None:

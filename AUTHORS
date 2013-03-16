@@ -48,6 +48,7 @@ OpenJPEG       ext/openjpeg/LICENSE      BSD  http://www.openjpeg.org/
 SyncTeX        ext/.../synctex_parser.c       http://itexmac.sourceforge.net/SyncTeX.html
 UnRAR          ext/unrar/license.txt          http://www.rarlab.com/
 zlib           ext/zlib/zlib.h                http://www.zlib.net/
+lzma           ext/lzma/lzma.txt              http://www.7-zip.org/sdk.html
 NPAPI          src/browserplugin/npapi   MPL  http://code.google.com/p/npapi-sdk/
 ucrt           src/ucrt/AUTHORS          BSD  http://code.google.com/p/sumatrapdf/source/browse/trunk/src/ucrt
 msinttypes     src/utils/inttypes.h      BSD  http://code.google.com/p/msinttypes/
