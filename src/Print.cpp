@@ -585,10 +585,22 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     if (devMode)
         GlobalUnlock(pd.hDevMode);
 
-    if (!waitForCompletion)
+    // if a file is missing and the engine can't thus be cloned,
+    // we print using the original engine on the main thread
+    // so that the document can't be closed and the original engine
+    // unexpectedly deleted
+    // TODO: instead prevent closing the document so that printing
+    // can still happen on a separate thread and be interruptible
+    bool failedEngineClone = dm->engine && !data->engine;
+    if (failedEngineClone)
+        data->engine = dm->engine;
+
+    if (!waitForCompletion && !failedEngineClone)
         PrintToDeviceOnThread(win, data);
     else {
         PrintToDevice(*data);
+        if (failedEngineClone)
+            data->engine = NULL;
         delete data;
     }
 
