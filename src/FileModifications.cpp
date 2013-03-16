@@ -64,7 +64,7 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data, size_t len)
             continue;
 
         int pageNo = 0;
-        RectT<float> rect;
+        geomutil::RectT<float> rect;
         PageAnnotation::Color color;
         float opacity = 1.0f;
         while ((prop = parser.NextProperty())) {
@@ -76,7 +76,7 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data, size_t len)
             case Css_Rect:
                 if (!str::Parse(prop->s, prop->sLen, "%f %f %f %f%$",
                                 &rect.x, &rect.y, &rect.dx, &rect.dy))
-                    rect = RectT<float>();
+                    rect = geomutil::RectT<float>();
                 break;
             case Css_Color:
                 int r, g, b;

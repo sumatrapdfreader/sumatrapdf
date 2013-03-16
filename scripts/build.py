@@ -81,9 +81,6 @@ def build_installer_data(dir):
 # for each file:
 #   file data
 def build_installer_data2(dir):
-  src = os.path.join(dir, "SumatraPDF-no-MuPDF.exe")
-  dst = os.path.join(dir, "SumatraPDF.exe")
-  shutil.copy(src, dst)
   src = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
   copy_to_dst_dir(src, dir)
 

@@ -25,9 +25,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="cd .. &amp; nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe SumatraPDF Installer Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump mudraw mutool EXTCFLAGS=/DDISABLE_EBOOK_UI"
-				ReBuildCommandLine="nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe rebuild"
-				CleanCommandLine="cd .. &amp; nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe clean"
+				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg NASM=bin\nasm.exe SumatraPDF Installer Uninstaller PDFFilter PdfPreview BrowserPlugin EngineDump mudraw mutool EXTCFLAGS=/DDISABLE_EBOOK_UI"
+				ReBuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg NASM=bin\nasm.exe rebuild"
+				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;_DEBUG;DEBUG;DISABLE_EBOOK_UI"
 				IncludeSearchPath="..\src;..\src\utils;..\src\mui;..\mupdf\fitz;..\mupdf\draw;..\mupdf\pdf;..\mupdf\xps;..\mupdf\cbz"
@@ -46,9 +46,9 @@
 			>
 			<Tool
 				Name="VCNMakeTool"
-				BuildCommandLine="cd .. &amp; nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe all_sumatrapdf all"
-				ReBuildCommandLine="cd .. &amp; nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe rebuild"
-				CleanCommandLine="cd .. &amp; nmake -f makefile.msvc CFG=rel NASM=bin\nasm.exe clean"
+				BuildCommandLine="nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel NASM=bin\nasm.exe all_sumatrapdf all"
+				ReBuildCommandLine="nmake -f makefile.msvc BASEDIR=.. CFG=rel NASM=bin\nasm.exe rebuild"
+				CleanCommandLine="del /s ..\obj-rel\*.obj"
 				Output="..\obj-rel\sumatrapdf.exe"
 				PreprocessorDefinitions="WIN32;UNICODE;_UNICODE;NDEBUG"
 				IncludeSearchPath="..\src;..\src\utils;..\src\mui;..\mupdf\fitz;..\mupdf\draw;..\mupdf\pdf;..\mupdf\xps;..\mupdf\cbz"
@@ -69,7 +69,7 @@
 				Name="VCNMakeTool"
 				BuildCommandLine="cd .. &amp; scripts\build-release.bat -testinst"
 				ReBuildCommandLine="cd .. &amp; scripts\build-release.bat -testinst"
-				CleanCommandLine="del /s ..\obj-dbg"
+				CleanCommandLine="del /s ..\obj-dbg\*.obj"
 				Output="..\obj-dbg\Installer.exe"
 				PreprocessorDefinitions="WIN32;DEBUG;_DEBUG;UNICODE;_UNICODE"
 				IncludeSearchPath="..\src\installer;..\src\utils"
@@ -90,7 +90,7 @@
 				Name="VCNMakeTool"
 				BuildCommandLine="cd .. &amp; scripts\build-release.bat -testinst -prerelease -svn-revision 9999"
 				ReBuildCommandLine="cd .. &amp; scripts\build-release.bat -testinst -prerelease -svn-revision 9999"
-				CleanCommandLine="del /s ..\obj-rel"
+				CleanCommandLine="del /s ..\obj-rel\*.obj"
 				Output="..\obj-rel\Installer.exe"
 				PreprocessorDefinitions="WIN32;NDEBUG;UNICODE;_UNICODE"
 				IncludeSearchPath="..\src\installer;..\src\utils"

@@ -276,7 +276,7 @@ PointD EbookEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, b
 
 RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
 {
-    RectT<REAL> rcF = rect.Convert<REAL>();
+    geomutil::RectT<REAL> rcF = rect.Convert<REAL>();
     PointF pts[2] = { PointF(rcF.x, rcF.y), PointF(rcF.x + rcF.dx, rcF.y + rcF.dy) };
     Matrix m;
     GetTransform(m, zoom, rotation);
@@ -427,7 +427,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
 static RectI GetInstrBbox(DrawInstr *instr, float pageBorder)
 {
-    RectT<float> bbox(instr->bbox.X, instr->bbox.Y, instr->bbox.Width, instr->bbox.Height);
+    geomutil::RectT<float> bbox(instr->bbox.X, instr->bbox.Y, instr->bbox.Width, instr->bbox.Height);
     bbox.Offset(pageBorder, pageBorder);
     return bbox.Round();
 }

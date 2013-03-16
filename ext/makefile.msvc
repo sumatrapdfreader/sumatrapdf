@@ -9,6 +9,7 @@ OBZ= $(O)\bzip2
 OR = $(O)\unrar
 ODV= $(O)\djvu
 OC = $(O)\chmlib
+OLZ= $(O)\lzma
 
 SYNCTEX_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/synctex /I$(ZLIB_DIR) /wd4244 /wd4996
 !if "$(PLATFORM)"=="X64"
@@ -40,6 +41,8 @@ DJVU_CFLAGS = $(DJVU_CFLAGS) /wd4244 /wd4267
 CHMLIB_CFLAGS = $(CFLAGS) /TC /D "CHM_MT" /wd4244 /wd4018 /wd4996
 # ChmLib also needs PPC_BSTR defined for UNICODE builds
 CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /D "UNICODE" /D "_UNICODE" /D "PPC_BSTR"
+
+LZMA_CFLAGS = $(CFLAGSOPT) /TC /I$(EXTDIR)/lzma/C
 
 SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
@@ -90,12 +93,16 @@ DJVU_OBJS = \
 CHMLIB_OBJS = \
 	$(OC)\chm_lib.obj $(OC)\lzx.obj
 
+LZMA_OBJS = \
+	$(OLZ)\LzmaDec.obj
+
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
 	@if not exist $(OBZ) mkdir $(OBZ)
 	@if not exist $(OR) mkdir $(OR)
 	@if not exist $(ODV) mkdir $(ODV)
 	@if not exist $(OC) mkdir $(OC)
+	@if not exist $(OLZ) mkdir $(OLZ)
 
 {$(EXTDIR)\bzip2}.c{$(OBZ)}.obj::
 	$(CC) $(BZIP2_CFLAGS) /Fo$(OBZ)\ /Fd$(O)\vc80.pdb $<
@@ -114,3 +121,7 @@ $(OE): force
 
 {$(EXTDIR)\CHMLib\src}.c{$(OC)}.obj::
 	$(CC) $(CHMLIB_CFLAGS) /Fo$(OC)\ /Fd$(O)\vc80.pdb $<
+
+{$(EXTDIR)\lzma\C}.c{$(OLZ)}.obj::
+	$(CC) $(LZMA_CFLAGS) /Fo$(OLZ)\ /Fd$(O)\vc80.pdb $<
+

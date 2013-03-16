@@ -789,7 +789,7 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coord
         for (size_t i = 0; i < coords.Count(); i++) {
             if (coords.At(i) != RectI()) {
                 if (dpiFactor != 1.0) {
-                    RectT<float> pageF = coords.At(i).Convert<float>();
+                    geomutil::RectT<float> pageF = coords.At(i).Convert<float>();
                     pageF.x *= dpiFactor; pageF.dx *= dpiFactor;
                     pageF.y *= dpiFactor; pageF.dy *= dpiFactor;
                     coords.At(i) = pageF.Round();

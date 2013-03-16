@@ -1,6 +1,7 @@
 # nmake -f makefile.msvc
 # Arguments:
 # CFG=dbg|rel (default: dbg)
+# BASEDIR=.
 # EXTDIR=<directory where zlib/freetype/jpeg lib live> (default: ext)
 #  e.g. ..\sumatrapdf\ext
 # EXTCFLAGS=$CFLAGS
@@ -8,7 +9,7 @@
 # PLATFORM=X86
 #   the PLATFORM var is usually set in the x64 and x64 cross tools Visual Studio command prompt
 #   note: building on X64 isn't officially supported and might unintentionally be broken
-#WITH_ANALYZE=yes
+# WITH_ANALYZE=yes
 #   use /analyze for all code
 
 # Set default configuration
@@ -16,20 +17,24 @@
 CFG=dbg
 !endif
 
+!if "$(BASEDIR)"==""
+BASEDIR=.
+!endif
+
 # O is directory where object and binary files go
-O = obj-$(CFG)
+O = $(BASEDIR)\obj-$(CFG)
 
 # for x86 : obj-dbg and obj-rel ; for x64 : obj-dbg64 and obj-rel64
 !if "$(PLATFORM)"=="X64"
-O = $(O)64
+O = $(BASEDIR)\$(O)64
 !endif
 
 !if "$(MUPDF_DIR)"==""
-MUPDF_DIR=mupdf
+MUPDF_DIR=$(BASEDIR)\mupdf
 !endif
 
 !if "$(EXTDIR)"==""
-EXTDIR=ext
+EXTDIR=$(BASEDIR)\ext
 !endif
 
 # default target
@@ -41,9 +46,11 @@ all_sumatrapdf: SumatraPDF Uninstaller PDFFilter PdfPreview BrowserPlugin Engine
 
 ##### add configuration changes that should NOT affect MuPDF after this line #####
 
+SRCDIR = $(BASEDIR)\src
+
 # some libraries require stdint.h
-CFLAGS = $(CFLAGS) /Isrc/utils/msvc
-CFLAGSOPT = $(CFLAGSOPT) /Isrc/utils/msvc
+CFLAGS = $(CFLAGS) /I$(SRCDIR)/utils/msvc
+CFLAGSOPT = $(CFLAGSOPT) /I$(SRCDIR)/utils/msvc
 
 # include build data for the remaining third-party libraries
 !INCLUDE $(EXTDIR)\makefile.msvc
@@ -68,19 +75,16 @@ CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Isrc /Isrc/utils /Isrc/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
+	/I$(SRCDIR) /I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
 	/I$(MUPDF_DIR)\xps /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
 	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src
 
-LZMA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Iext/lzma/C
-
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Isrc/utils /Isrc/installer /Isrc /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
-	/Iext/lzma/C
+	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
+	/I$(EXTDIR)/lzma/C
 
 UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Isrc/utils /Isrc/installer /Isrc /D "BUILD_UNINSTALLER"
+	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /D "BUILD_UNINSTALLER"
 
 RC_FLAGS = $(EXTCFLAGS)
 !if "$(CFG)"=="dbg"
@@ -103,7 +107,6 @@ OU   = $(O)\utils
 ODLL = $(O)\applibs
 OMUI = $(O)\mui
 OM   = $(O)\memtrace
-OLZ  = $(O)\lzma
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
@@ -119,7 +122,7 @@ PDFFILTER_RES = $(ODLL)\PdfFilter.res
 PDFFILTER_CFLAGS = $(SUMATRA_CFLAGS)
 
 LIBMUPDF_LIB = $(O)\libmupdf.lib
-LIBMUPDF_DEF = src\libmupdf.def
+LIBMUPDF_DEF = $(SRCDIR)\libmupdf.def
 LIBMUPDF_DLL = $(O)\libmupdf.dll
 LIBMUPDF_RES = $(O)\libmupdf.res
 
@@ -133,7 +136,7 @@ MEMTRACE_CFLAGS = $(SUMATRA_CFLAGS)
 
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(ODLL)\npPdfViewer.res
-BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /Isrc/utils
+BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /I$(SRCDIR)/utils
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 
@@ -162,9 +165,6 @@ UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj $(OU)\Settings.obj
 # requires either MuPDF/libmupdf or $(ZLIB_OBJS)
 ZIP_OBJS = \
 	$(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(BZIP2_OBJS)
-
-LZMA_OBJS = \
-	$(OLZ)\LzmaDec.obj
 
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \
@@ -274,10 +274,9 @@ $(OS): $(O) $(OE)
 	@if not exist $(ODLL) mkdir $(ODLL)
 	@if not exist $(OMUI) mkdir $(OMUI)
 	@if not exist $(OM) mkdir $(OM)
-	@if not exist $(OLZ) mkdir $(OLZ)
 
-$(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
-	rc /r /fo$@ $(RC_FLAGS) src\SumatraPDF.rc
+$(SUMATRA_RES): $(SRCDIR)\SumatraPDF.rc $(SRCDIR)\Resource.h $(SRCDIR)\Version.h
+	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\SumatraPDF.rc
 
 $(SUMATRA_APP): $(SUMATRA_OBJS) $(MUPDF_LIB)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
@@ -285,17 +284,17 @@ $(SUMATRA_APP): $(SUMATRA_OBJS) $(MUPDF_LIB)
 $(SUMATRA_APP_NO_MUPDF): $(SUMATRA_OBJS) $(OS)\MuPDF_Exports.obj
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ $(LIBMUPDF_LIB)
 
-$(LIBMUPDF_RES): src\libmupdf.rc src\Version.h
-	rc /r /fo$@ $(RC_FLAGS) src\libmupdf.rc
+$(LIBMUPDF_RES): $(SRCDIR)\libmupdf.rc $(SRCDIR)\Version.h
+	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\libmupdf.rc
 
 $(LIBMUPDF_DLL): $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBMUPDF_DEF)
 	$(LD) /DLL $(LDFLAGS) $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
-$(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
-	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData2.zip" src\installer\Installer.rc
+$(INSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h
+	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData2.zip" $(SRCDIR)\installer\Installer.rc
 
-$(UNINSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
-	rc /r /fo$@ $(RC_FLAGS) /D "BUILD_UNINSTALLER" src\installer\Installer.rc
+$(UNINSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h
+	rc /r /fo$@ $(RC_FLAGS) /D "BUILD_UNINSTALLER" $(SRCDIR)\installer\Installer.rc
 
 $(INSTALLER_APP): $(INSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
@@ -303,26 +302,26 @@ $(INSTALLER_APP): $(INSTALLER_OBJS)
 $(UNINSTALLER_APP): $(UNINSTALLER_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
-$(PDFFILTER_RES): src\ifilter\PdfFilter.rc src\Version.h
-	rc /r /fo$@ $(RC_FLAGS) src\ifilter\PdfFilter.rc
+$(PDFFILTER_RES): $(SRCDIR)\ifilter\PdfFilter.rc $(SRCDIR)\Version.h
+	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\ifilter\PdfFilter.rc
 
 $(PDFFILTER_DLL): $(PDFFILTER_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
-$(PDFPREVIEW_RES): src\previewer\PdfPreview.rc src\Version.h
-	rc /r /fo$@ $(RC_FLAGS) src\previewer\PdfPreview.rc
+$(PDFPREVIEW_RES): $(SRCDIR)\previewer\PdfPreview.rc $(SRCDIR)\Version.h
+	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\previewer\PdfPreview.rc
 
 $(PDFPREVIEW_DLL): $(PDFPREVIEW_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
-$(MEMTRACE_RES): src\memtrace\MemTrace.rc
-	rc /r /fo$@ $(RC_FLAGS) src\memtrace\MemTrace.rc
+$(MEMTRACE_RES): $(SRCDIR)\memtrace\MemTrace.rc
+	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\memtrace\MemTrace.rc
 
 $(MEMTRACE_DLL): $(MEMTRACE_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
 
-$(BROWSER_PLUGIN_RES): src\browserplugin\npPdfViewer.rc src\Version.h
-	rc /r /fo$@ $(RC_FLAGS) src\browserplugin\npPdfViewer.rc
+$(BROWSER_PLUGIN_RES): $(SRCDIR)\browserplugin\npPdfViewer.rc $(SRCDIR)\Version.h
+	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\browserplugin\npPdfViewer.rc
 
 $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 	$(LD) /DLL $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@
@@ -330,36 +329,33 @@ $(BROWSER_PLUGIN): $(BROWSER_PLUGIN_OBJS)
 $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
-{src\utils}.cpp{$(OU)}.obj::
+{$(SRCDIR)\utils}.cpp{$(OU)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OU)\ /Fd$(O)\vc80.pdb $<
 
-{ext\lzma\C}.c{$(OLZ)}.obj::
-	$(CC) $(LZMA_CFLAGS) /Fo$(OLZ)\ /Fd$(O)\vc80.pdb $<
-
-{src\mui}.cpp{$(OMUI)}.obj::
+{$(SRCDIR)\mui}.cpp{$(OMUI)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OMUI)\ /Fd$(O)\vc80.pdb $<
 
-{src}.cpp{$(OS)}.obj::
+{$(SRCDIR)}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
-{src\browserplugin}.cpp{$(ODLL)}.obj::
+{$(SRCDIR)\browserplugin}.cpp{$(ODLL)}.obj::
 	$(CC) $(BROWSER_PLUGIN_CFLAGS) /Fo$(ODLL)\ /Fd$(O)\vc80.pdb $<
 
-{src\ifilter}.cpp{$(ODLL)}.obj::
+{$(SRCDIR)\ifilter}.cpp{$(ODLL)}.obj::
 	$(CC) $(PDFFILTER_CFLAGS) /Fo$(ODLL)\ /Fd$(O)\vc80.pdb $<
 
-{src\previewer}.cpp{$(ODLL)}.obj::
+{$(SRCDIR)\previewer}.cpp{$(ODLL)}.obj::
 	$(CC) $(PDFPREVIEW_CFLAGS) /Fo$(ODLL)\ /Fd$(O)\vc80.pdb $<
 
-{src\regress}.cpp{$(OS)}.obj::
+{$(SRCDIR)\regress}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 
-{src\installer}.cpp{$(OS)}.obj::
+{$(SRCDIR)\installer}.cpp{$(OS)}.obj::
 	$(CC) $(INSTALLER_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<
 $(OS)\Uninstaller.obj: $(OS)\Installer.obj
-	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\Uninstaller.obj /Fd$(O)\vc80.pdb src\installer\Installer.cpp
+	$(CC) $(UNINSTALLER_CFLAGS) /Fo$(OS)\Uninstaller.obj /Fd$(O)\vc80.pdb $(SRCDIR)\installer\Installer.cpp
 
-{src\memtrace}.cpp{$(OM)}.obj::
+{$(SRCDIR)\memtrace}.cpp{$(OM)}.obj::
 	$(CC) $(MEMTRACE_CFLAGS) /Fo$(OM)\ /Fd$(O)\vc80.pdb $<
 
 $(MUPDF_LIB): $(LIBS_OBJS)
@@ -377,5 +373,5 @@ $(ENGINES_LIB): $(ENGINE_OBJS)
 $(MAIN_UI_LIB): $(MAIN_UI_OBJS)
 	lib $(LIB_FLAGS) /OUT:$@ $**
 
-## Header-dependencies for src\* and src\*\*
+## Header-dependencies for $(SRCDIR)\* and $(SRCDIR)\*\*
 !INCLUDE makefile.deps
