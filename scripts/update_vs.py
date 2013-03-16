@@ -344,15 +344,19 @@ def replace_item_group(src_file, dst_file, s):
     write_file_utf8(dst_file, d)
 
 def main():
-    files = build_files(g_filters, top_dir())
+    files = build_files(g_filters, pj(top_dir(), "vs"))
 
     vcxproj_part = gen_vcxproj_part(files)
-    replace_item_group("sumatrapdf-vc2010.vcxproj", "sumatrapdf-vc2010.vcxproj", vcxproj_part)
-    #replace_item_group("sumatrapdf-vc2012.vcxproj", "sumatrapdf-vc2012.vcxproj", vcxproj_part)
+    file_path = os.path.join("vs", "sumatrapdf-vc2010.vcxproj")
+    replace_item_group(file_path, file_path, vcxproj_part)
+    #file_path = os.path.join("vs", "sumatrapdf-vc2012.vcxproj")
+    #replace_item_group(file_path, file_path, vcxproj_part)
 
     filters_part = gen_vcxproj_filters_part(g_filters, files)
-    replace_item_group("sumatrapdf-vc2010.vcxproj.filters", "sumatrapdf-vc2010.vcxproj.filters", filters_part)
-    #replace_item_group("sumatrapdf-vc2012.vcxproj.filters", "sumatrapdf-vc2012.vcxproj.filters", filters_part)
+    file_path = os.path.join("vs", "sumatrapdf-vc2010.vcxproj.filters")
+    replace_item_group(file_path, file_path, filters_part)
+    #file_path = os.path.join("vs", "sumatrapdf-vc2012.vcxproj.filters")
+    #replace_item_group(file_path, file_path, filters_part)
 
 if __name__ == "__main__":
     main()

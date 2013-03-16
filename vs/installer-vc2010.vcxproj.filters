@@ -15,55 +15,55 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\installer\Installer.cpp">
+    <ClCompile Include="..\src\installer\Installer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\FileUtil.cpp">
+    <ClCompile Include="..\src\utils\FileUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\installer\Install.cpp">
+    <ClCompile Include="..\src\installer\Install.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\installer\Uninstall.cpp">
+    <ClCompile Include="..\src\installer\Uninstall.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\CrashHandler.cpp">
+    <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\DebugLog.cpp">
+    <ClCompile Include="..\src\utils\DebugLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\installer\Resource.h">
+    <ClInclude Include="..\src\installer\Resource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\installer\Version.h">
+    <ClInclude Include="..\src\installer\Version.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\FileUtil.h">
+    <ClInclude Include="..\src\utils\FileUtil.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\installer\Installer.h">
+    <ClInclude Include="..\src\installer\Installer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\FrameTimeoutCalculator.h">
+    <ClInclude Include="..\src\utils\FrameTimeoutCalculator.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\CrashHandler.h">
+    <ClInclude Include="..\src\CrashHandler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\DebugLog.h">
+    <ClInclude Include="..\src\utils\DebugLog.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="src\installer\Installer.exe.manifest">
+    <Manifest Include="..\src\installer\Installer.exe.manifest">
       <Filter>Resource Files</Filter>
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="src\installer\Installer.rc">
+    <ResourceCompile Include="..\src\installer\Installer.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

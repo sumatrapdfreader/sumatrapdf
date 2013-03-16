@@ -38,23 +38,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30128.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\</IntDir>
     <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">obj-dbg\sumatrapdf.exe</NMakeOutput>
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\sumatrapdf.exe</NMakeOutput>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;DEBUG;UNICODE;SYNCTEX_FEATURE;HAVE_BZIP2;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\src;$(ProjectDir)\src\utils;$(ProjectDir)\src\utils\msvc;$(ProjectDir)\src\mui;$(ProjectDir)\src\ebooktest;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\mupdf\xps;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip;$(ProjectDir)\ext\CHMLib\src</NMakeIncludeSearchPath>
     <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
     <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">obj-rel\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">obj-rel\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\</IntDir>
     <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe</NMakeBuildCommandLine>
     <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">obj-rel\sumatrapdf.exe</NMakeOutput>
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\sumatrapdf.exe</NMakeOutput>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;UNICODE;HAVE_BZIP2;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\src;$(ProjectDir)\src\utils;$(ProjectDir)\src\utils\msvc;$(ProjectDir)\src\mui;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\mupdf\xps;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip;$(ProjectDir)\ext\CHMLib\src</NMakeIncludeSearchPath>
     <NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>

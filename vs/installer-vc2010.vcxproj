@@ -86,36 +86,36 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog>
-      <Path>obj-rel\BuildLog.htm</Path>
+      <Path>..\obj-rel\BuildLog.htm</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">
     <BuildLog>
-      <Path>obj-rel\BuildLog.htm</Path>
+      <Path>..\obj-rel\BuildLog.htm</Path>
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\CrashHandler.cpp" />
-    <ClCompile Include="src\installer\Install.cpp" />
-    <ClCompile Include="src\installer\Installer.cpp" />
-    <ClCompile Include="src\installer\Uninstall.cpp" />
-    <ClCompile Include="src\utils\DebugLog.cpp" />
-    <ClCompile Include="src\utils\FileUtil.cpp" />
+    <ClCompile Include="..\src\CrashHandler.cpp" />
+    <ClCompile Include="..\src\installer\Install.cpp" />
+    <ClCompile Include="..\src\installer\Installer.cpp" />
+    <ClCompile Include="..\src\installer\Uninstall.cpp" />
+    <ClCompile Include="..\src\utils\DebugLog.cpp" />
+    <ClCompile Include="..\src\utils\FileUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\CrashHandler.h" />
-    <ClInclude Include="src\installer\Installer.h" />
-    <ClInclude Include="src\installer\Resource.h" />
-    <ClInclude Include="src\installer\Version.h" />
-    <ClInclude Include="src\utils\DebugLog.h" />
-    <ClInclude Include="src\utils\FileUtil.h" />
-    <ClInclude Include="src\utils\FrameTimeoutCalculator.h" />
+    <ClInclude Include="..\src\CrashHandler.h" />
+    <ClInclude Include="..\src\installer\Installer.h" />
+    <ClInclude Include="..\src\installer\Resource.h" />
+    <ClInclude Include="..\src\installer\Version.h" />
+    <ClInclude Include="..\src\utils\DebugLog.h" />
+    <ClInclude Include="..\src\utils\FileUtil.h" />
+    <ClInclude Include="..\src\utils\FrameTimeoutCalculator.h" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="src\installer\Installer.exe.manifest" />
+    <Manifest Include="..\src\installer\Installer.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="src\installer\Installer.rc" />
+    <ResourceCompile Include="..\src\installer\Installer.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
