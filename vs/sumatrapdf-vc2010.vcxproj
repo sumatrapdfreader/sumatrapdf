@@ -47,9 +47,9 @@
     <_ProjectFileVersion>10.0.30128.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe SumatraPDF</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe SumatraPDF</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\sumatrapdf.exe</NMakeOutput>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;DEBUG;UNICODE;SYNCTEX_FEATURE;HAVE_BZIP2;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\src;$(ProjectDir)\src\utils;$(ProjectDir)\src\utils\msvc;$(ProjectDir)\src\mui;$(ProjectDir)\mupdf\fitz;$(ProjectDir)\mupdf\pdf;$(ProjectDir)\mupdf\xps;$(ProjectDir)\ext\libjpeg-turbo;$(ProjectDir)\ext\zlib-1.2.5;$(ProjectDir)\ext\zlib-1.2.5\minizip;$(ProjectDir)\ext\CHMLib\src</NMakeIncludeSearchPath>
@@ -60,12 +60,12 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">..\obj-rel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">..\obj-rel\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe</NMakeBuildCommandLine>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe WITH_ANALYZE=yes</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe  WITH_ANALYZE=yes rebuild</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe  WITH_ANALYZE=yes clean</NMakeCleanCommandLine>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe WITH_ANALYZE=yes</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe  WITH_ANALYZE=yes rebuild</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe  WITH_ANALYZE=yes clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\sumatrapdf.exe</NMakeOutput>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">..\obj-rel\sumatrapdf.exe</NMakeOutput>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;UNICODE;HAVE_BZIP2;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
@@ -103,6 +103,7 @@
     <ClCompile Include="../src/RenderCache.cpp" />
     <ClCompile Include="../src/Search.cpp" />
     <ClCompile Include="../src/Selection.cpp" />
+    <ClCompile Include="../src/SettingsSumatra.cpp" />
     <ClCompile Include="../src/StressTesting.cpp" />
     <ClCompile Include="../src/SumatraAbout.cpp" />
     <ClCompile Include="../src/SumatraAbout2.cpp" />
@@ -357,6 +358,7 @@
     <ClInclude Include="../src/resource.h" />
     <ClInclude Include="../src/Search.h" />
     <ClInclude Include="../src/Selection.h" />
+    <ClInclude Include="../src/SettingsSumatra.h" />
     <ClInclude Include="../src/StressTesting.h" />
     <ClInclude Include="../src/SumatraAbout.h" />
     <ClInclude Include="../src/SumatraAbout2.h" />

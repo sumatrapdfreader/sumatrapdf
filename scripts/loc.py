@@ -18,9 +18,10 @@ DIRS = ["src",
 		]
 
 def is_blacklisted(name):
-	if name in ["Translations_txt.cpp", "DialogSizer.cpp", "DialogSizer.h",
+	if name in ["DialogSizer.cpp", "DialogSizer.h",
 		"UtilTests.cpp", "UnitTests.cpp"]: return True
 	if name.endswith("_ut.cpp"): return True
+	if name.endswith("_txt.cpp"): return True # translation files
 	return False
 
 def count_file(name):
