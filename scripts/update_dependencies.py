@@ -78,7 +78,7 @@ def flattenDependencyList(dependencies):
 			# TODO: normalizing paths already in prependPath makes getObjectPath fail under cygwin
 			deplist = sorted(dependencies[file], key=lambda s: str.lower(s.replace("/", "\\")))
 			for depgroup in group(deplist, DEPENDENCIES_PER_LINE):
-				flatlist.append("%s\\%s.obj: $(B)\\%s" % (opath, filename, " $(B)\\".join(depgroup)))
+				flatlist.append("%s\\%s.obj: $B\\%s" % (opath, filename, " $B\\".join(depgroup)))
 	return flatlist
 
 def normalizePaths(paths):
