@@ -490,6 +490,11 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     if (!dm->engine || !dm->engine->AllowsPrinting())
         return;
 
+	if (!file::Exists(dm->engine->FileName())) {
+		MessageBox(win->hwndFrame, _TR("This file has been moved or deleted."), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+		return;
+	}
+
     if (win->IsChm()) {
         win->dm->AsChmEngine()->PrintCurrentPage();
         return;
