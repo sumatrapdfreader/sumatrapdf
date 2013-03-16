@@ -4,6 +4,9 @@ import os, codecs
 
 """
 This script keeps Visual Studio project files up-to-date with the source files.
+
+TODO:
+ - also support installer-* files
 """
 
 pj = os.path.join
@@ -15,6 +18,7 @@ def top_dir():
 def ext(path):
     return os.path.splitext(path)[1].lower()
 
+# Those are filter to assign Visual Studio type to a file
 def is_clcompile_file(path):
     return ext(path) in [".cpp", ".c"]
 
@@ -23,6 +27,9 @@ def is_clinclude_file(path):
 
 def is_c_src_file(path):
     return is_clcompile_file(path) or is_clinclude_file(path)
+
+def is_any_file(path):
+    return True
 
 def is_none_file(path):
     return ext(path) in [".txt", ".ini", ".asm", ".msvc", ".bmp", ".cur", ".ico"]
@@ -33,8 +40,24 @@ def is_manifest_file(path):
 def is_resource_file(path):
     return ext(path) in [".rc"]
 
+# Those are filters for determining which files belong to a given filter
+# in Visual Studio (i.e. arbitrary grouping identified by a name)
+def is_resources_group_file(path):
+    return ext(path) in [".rc", ".bmp", ".cur", ".ico"]
+
 def is_docs_file(path):
     return ext(path) in [".txt", ".ini"]
+
+# files that we don't want to be added
+g_global_blacklist = [
+    "chm_http.c", "enum_chmLib.c", "enumdir_chmLib.c", "extract_chmLib.c", "test_chmLib.c",
+]
+
+def is_file_blacklisted(path):
+    file_name = os.path.basename(path)
+    if file_name in g_global_blacklist: return True
+    if ext(path) in [".aps"]: return True
+    return False
 
 # returns full paths of files in a given directory, potentially recursively,
 # potentially filtering file names by filter_func (which takes file path as
@@ -60,6 +83,11 @@ def list_files_g(d, filter_func=None, recur=False):
 def list_files(d, filter_func=None, recur=False):
     return [path for path in list_files_g(d, filter_func, recur)]
 
+def first_el_same(list1, list2):
+    if len(list1) == 0 or len(list2) == 0:
+        return False
+    return list1[0] == list2[0]
+
 # TODO: this doesn't handle if the case:
 # path         = "foo/bar/x.c"
 # relative_dir = "foo/bar/me"
@@ -68,10 +96,19 @@ def list_files(d, filter_func=None, recur=False):
 # instead returns:
 #   "x.c"
 def path_relative_to(path, relative_dir):
-    common = os.path.commonprefix([path, relative_dir])
-    path = path[len(common)+1:]
-    relative_dir = relative_dir[len(common)+1:]
-    return path
+    path_parts = [p for p in path.split(os.path.sep)]
+    #print(path_parts)
+    relative_dir_parts = [p for p in relative_dir.split(os.path.sep)]
+    #print(relative_dir_parts)
+    while first_el_same(path_parts, relative_dir_parts):
+        path_parts.pop(0)
+        relative_dir_parts.pop(0)
+    while len(relative_dir_parts) > 0:
+        path_parts = [".."] + path_parts
+        relative_dir_parts.pop(0)
+    path_rel = os.path.sep.join(path_parts)
+    #print("\n  %s\n  %s\n=>\n  %s" % (path, relative_dir, path_rel))
+    return path_rel
 
 # models concept of a filter in .vcxproj.filters file:
 #    <Filter Include="jpeg">
@@ -84,30 +121,15 @@ class Filter(object):
         self.files = files
 
 def list_top_dir_files(d, filter_func, recur=False):
-    return list_files(pj(top_dir(), d), filter_func, recur)
+    return [path for path in list_files(pj(top_dir(), d), filter_func, recur) if not is_file_blacklisted(path)]
 
+# TODO: maybe add those too:
 """
     <Filter Include="jbig2dec">
       <UniqueIdentifier>{215eb158-b04c-4cd9-8fb8-7a3a6c770934}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mupdf">
-      <UniqueIdentifier>{078d86a8-74f1-49fa-af7f-8d12c180a485}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mupdf\fitz">
-      <UniqueIdentifier>{8a33d4a4-1f54-4fe9-98c5-a0dfd57a601e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
-    </Filter>
     <Filter Include="jpeg">
       <UniqueIdentifier>{066558ef-98f1-4e63-b5d4-b5aaebd0d65e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mupdf\pdf">
-      <UniqueIdentifier>{a35cfdd9-b833-4410-afd7-a4771ef8887b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mupdf\\xps">
-      <UniqueIdentifier>{29dc662e-3fee-4c3b-8186-205cf82221c0}</UniqueIdentifier>
     </Filter>
     <Filter Include="zlib">
       <UniqueIdentifier>{310fe4d2-d0c3-429d-a84b-43e01d893c84}</UniqueIdentifier>
@@ -118,9 +140,6 @@ def list_top_dir_files(d, filter_func, recur=False):
     <Filter Include="zlib\minizip">
       <UniqueIdentifier>{6cc62844-e2e6-47cd-bdbf-4724dc28da51}</UniqueIdentifier>
     </Filter>
-    <Filter Include="mupdf\draw">
-      <UniqueIdentifier>{bdd43343-e63b-467d-b5e5-ba10a0e94337}</UniqueIdentifier>
-    </Filter>
     <Filter Include="sumatra">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
@@ -128,50 +147,73 @@ def list_top_dir_files(d, filter_func, recur=False):
     <Filter Include="memtrace">
       <UniqueIdentifier>{fd8ec5df-2865-47af-8513-c20645a2e26c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="installer">
-      <UniqueIdentifier>{b0cee761-6a1e-4847-955e-f0eb80c32cd6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dlls">
-      <UniqueIdentifier>{8d1ef194-ad72-4aeb-93e7-628a89158c73}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dlls\ifilter">
-      <UniqueIdentifier>{f3b78d8d-cb6d-4728-9f92-10059ca368a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dlls\browser">
-      <UniqueIdentifier>{b04f4d08-164c-4b30-ba0c-26ec812e2c88}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dlls\preview">
-      <UniqueIdentifier>{b4798144-bcb4-46dd-b39d-a5e4bbdb93ae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sumatra\documents">
-      <UniqueIdentifier>{2fe13b22-1504-45f2-95a0-8e2d5978dd9f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sumatra\ebook">
-      <UniqueIdentifier>{232267dd-50d1-4b01-83e1-89ab2c6dde73}</UniqueIdentifier>
-    </Filter>
     <Filter Include="sumatra\regress">
       <UniqueIdentifier>{c705e6c9-81a5-41c1-9b39-902909c11ec9}</UniqueIdentifier>
     </Filter>
     <Filter Include="tester">
       <UniqueIdentifier>{55c58e95-d6b6-47b8-8433-4010c683a5f3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="browserplugin">
-      <UniqueIdentifier>{b1b93410-5990-49dc-bc3f-d40cfea39fd6}</UniqueIdentifier>
-    </Filter>
 """
 
-g_sumatra_files = list_top_dir_files("src", is_c_src_file)
+def is_sumatra_ebook_src_file(path):
+    if not is_c_src_file(path): return False
+    file_name = os.path.basename(path)
+    if "Ebook" in file_name: return True
+    if "MobiDoc" in file_name: return True
+    return False
+
+def is_sumatra_engine_src_file(path):
+    if not is_c_src_file(path): return False
+    if is_sumatra_ebook_src_file(path): return False
+    file_name = os.path.basename(path)
+    if "ChmDoc" in file_name: return True
+    return "Engine" in file_name
+
+def is_sumatra_src_file(path):
+    if not is_c_src_file(path): return False
+    if is_sumatra_engine_src_file(path): return False
+    if is_sumatra_ebook_src_file(path): return False
+    return True
+
+g_sumatra_files = list_top_dir_files("src", is_sumatra_src_file)
+g_sumatra_engine_files = list_top_dir_files("src", is_sumatra_engine_src_file)
+g_sumatra_ebook_files = list_top_dir_files("src", is_sumatra_ebook_src_file)
 g_mui_files = list_top_dir_files(pj("src", "mui"), is_c_src_file)
 g_utils_files = list_top_dir_files(pj("src", "utils"), is_c_src_file)
 g_docs_files = list_top_dir_files("docs", is_docs_file)
 g_chm_files = list_top_dir_files(pj("ext", "CHMLib", "src"), is_c_src_file)
+g_browser_plugin_files = list_top_dir_files(pj("src", "browserplugin"), is_any_file, recur=True)
+g_resource_files = list_top_dir_files("src", is_resources_group_file)
+g_ifilter_files = list_top_dir_files(pj("src", "ifilter"), is_any_file)
+g_previewer_files = list_top_dir_files(pj("src", "previewer"), is_any_file)
+g_installer_files = list_top_dir_files(pj("src", "installer"), is_any_file)
+g_mupdf_fitz_files = list_top_dir_files(pj("mupdf", "fitz"), is_c_src_file)
+g_mupdf_draw_files = list_top_dir_files(pj("mupdf", "draw"), is_c_src_file)
+g_mupdf_pdf_files = list_top_dir_files(pj("mupdf", "pdf"), is_c_src_file)
+g_mupdf_xps_files = list_top_dir_files(pj("mupdf", "xps"), is_c_src_file)
+g_mupdf_apps_files = list_top_dir_files(pj("mupdf", "apps"), is_c_src_file)
 
 g_filters = [
     Filter("sumatra", "{4FC737F1-C7A5-4376-A066-2A32D752A2FF}", g_sumatra_files),
+    Filter("sumatra\\engine", "{2fe13b22-1504-45f2-95a0-8e2d5978dd9f}", g_sumatra_engine_files),
+    Filter("sumatra\\ebook", "{232267dd-50d1-4b01-83e1-89ab2c6dde73}", g_sumatra_ebook_files),
     Filter("mui", "{0cbc9131-0370-46a1-a361-d8c441d9f9c5}", g_mui_files),
     Filter("utils", "{88c95b88-1f3f-4262-835b-91b32349401b}", g_utils_files),
     Filter("docs", "{367a3cbe-0f88-4739-8890-c93e3b756c3f}", g_docs_files),
-    Filter("chm", "{87c09434-b151-4582-b0b3-eab39e5a51ef}", g_chm_files),
+    Filter("browser_plugin", "{b04f4d08-164c-4b30-ba0c-26ec812e2c88}", g_browser_plugin_files),
+    Filter("Resource Files", "{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}", g_resource_files),
+    Filter("ifilter", "{f3b78d8d-cb6d-4728-9f92-10059ca368a7}", g_ifilter_files),
+    Filter("previewer", "{b4798144-bcb4-46dd-b39d-a5e4bbdb93ae}", g_previewer_files),
+    Filter("installer", "{b0cee761-6a1e-4847-955e-f0eb80c32cd6}", g_installer_files),
+    # node with no files, just to create a chierarchy
+    Filter("ext", "{8d1ef194-ad72-4aeb-93e7-628a89158c73}", []),
+    Filter("ext\\chm", "{87c09434-b151-4582-b0b3-eab39e5a51ef}", g_chm_files),
+    Filter("ext\\mupdf", "{078d86a8-74f1-49fa-af7f-8d12c180a485}", []),
+    Filter("ext\\mupdf\\fitz", "{8a33d4a4-1f54-4fe9-98c5-a0dfd57a601e}", g_mupdf_fitz_files),
+    Filter("ext\\mupdf\\draw", "{bdd43343-e63b-467d-b5e5-ba10a0e94337}", g_mupdf_draw_files),
+    Filter("ext\\mupdf\\pdf", "{a35cfdd9-b833-4410-afd7-a4771ef8887b}", g_mupdf_pdf_files),
+    Filter("ext\\mupdf\\xps", "{29dc662e-3fee-4c3b-8186-205cf82221c0}", g_mupdf_xps_files),
+    Filter("ext\\mupdf\\xps", "{29dc662e-3fee-b3c4-8186-205cf82221c0}", g_mupdf_apps_files),
 ]
 
 class FileType(object):
@@ -253,7 +295,7 @@ def gen_vcxproj_filters_1(filters):
         lines.append(s)
         s = """    </Filter>"""
         lines.append(s)
-    lines += ["  <ItemGroup>"]
+    lines += ["  </ItemGroup>"]
     return lines
 
 #  <ItemGroup>
@@ -305,10 +347,12 @@ def main():
     files = build_files(g_filters, top_dir())
 
     vcxproj_part = gen_vcxproj_part(files)
-    replace_item_group("sumatrapdf-vc2010.vcxproj", "sumatrapdf-vc2010-2.vcxproj", vcxproj_part)
+    replace_item_group("sumatrapdf-vc2010.vcxproj", "sumatrapdf-vc2010.vcxproj", vcxproj_part)
+    #replace_item_group("sumatrapdf-vc2012.vcxproj", "sumatrapdf-vc2012.vcxproj", vcxproj_part)
 
     filters_part = gen_vcxproj_filters_part(g_filters, files)
-    replace_item_group("sumatrapdf-vc2010.vcxproj.filters", "sumatrapdf-vc2010-2.vcxproj.filters", filters_part)
+    replace_item_group("sumatrapdf-vc2010.vcxproj.filters", "sumatrapdf-vc2010.vcxproj.filters", filters_part)
+    #replace_item_group("sumatrapdf-vc2012.vcxproj.filters", "sumatrapdf-vc2012.vcxproj.filters", filters_part)
 
 if __name__ == "__main__":
     main()

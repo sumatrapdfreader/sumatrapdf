@@ -1,1767 +1,1275 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="jbig2dec">
-      <UniqueIdentifier>{215eb158-b04c-4cd9-8fb8-7a3a6c770934}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mupdf">
-      <UniqueIdentifier>{078d86a8-74f1-49fa-af7f-8d12c180a485}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mupdf\fitz">
-      <UniqueIdentifier>{8a33d4a4-1f54-4fe9-98c5-a0dfd57a601e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
-    </Filter>
-    <Filter Include="jpeg">
-      <UniqueIdentifier>{066558ef-98f1-4e63-b5d4-b5aaebd0d65e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mupdf\pdf">
-      <UniqueIdentifier>{a35cfdd9-b833-4410-afd7-a4771ef8887b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mupdf\xps">
-      <UniqueIdentifier>{29dc662e-3fee-4c3b-8186-205cf82221c0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="chm">
-      <UniqueIdentifier>{87c09434-b151-4582-b0b3-eab39e5a51ef}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zlib">
-      <UniqueIdentifier>{310fe4d2-d0c3-429d-a84b-43e01d893c84}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="bzip2">
-      <UniqueIdentifier>{3af8a3ab-791c-4c29-b28f-43adfe940d8c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="zlib\minizip">
-      <UniqueIdentifier>{6cc62844-e2e6-47cd-bdbf-4724dc28da51}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mupdf\draw">
-      <UniqueIdentifier>{bdd43343-e63b-467d-b5e5-ba10a0e94337}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="mui">
-      <UniqueIdentifier>{0cbc9131-0370-46a1-a361-d8c441d9f9c5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="sumatra">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="memtrace">
-      <UniqueIdentifier>{fd8ec5df-2865-47af-8513-c20645a2e26c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="installer">
-      <UniqueIdentifier>{b0cee761-6a1e-4847-955e-f0eb80c32cd6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="utils">
-      <UniqueIdentifier>{88c95b88-1f3f-4262-835b-91b32349401b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dlls">
-      <UniqueIdentifier>{8d1ef194-ad72-4aeb-93e7-628a89158c73}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dlls\ifilter">
-      <UniqueIdentifier>{f3b78d8d-cb6d-4728-9f92-10059ca368a7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dlls\browser">
-      <UniqueIdentifier>{b04f4d08-164c-4b30-ba0c-26ec812e2c88}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="dlls\preview">
-      <UniqueIdentifier>{b4798144-bcb4-46dd-b39d-a5e4bbdb93ae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sumatra\documents">
+    <Filter Include="sumatra\engine">
       <UniqueIdentifier>{2fe13b22-1504-45f2-95a0-8e2d5978dd9f}</UniqueIdentifier>
     </Filter>
     <Filter Include="sumatra\ebook">
       <UniqueIdentifier>{232267dd-50d1-4b01-83e1-89ab2c6dde73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mui">
+      <UniqueIdentifier>{0cbc9131-0370-46a1-a361-d8c441d9f9c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{88c95b88-1f3f-4262-835b-91b32349401b}</UniqueIdentifier>
+    </Filter>
     <Filter Include="docs">
       <UniqueIdentifier>{367a3cbe-0f88-4739-8890-c93e3b756c3f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sumatra\regress">
-      <UniqueIdentifier>{c705e6c9-81a5-41c1-9b39-902909c11ec9}</UniqueIdentifier>
+    <Filter Include="browser_plugin">
+      <UniqueIdentifier>{b04f4d08-164c-4b30-ba0c-26ec812e2c88}</UniqueIdentifier>
     </Filter>
-    <Filter Include="tester">
-      <UniqueIdentifier>{55c58e95-d6b6-47b8-8433-4010c683a5f3}</UniqueIdentifier>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
     </Filter>
-    <Filter Include="browserplugin">
-      <UniqueIdentifier>{b1b93410-5990-49dc-bc3f-d40cfea39fd6}</UniqueIdentifier>
+    <Filter Include="ifilter">
+      <UniqueIdentifier>{f3b78d8d-cb6d-4728-9f92-10059ca368a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="previewer">
+      <UniqueIdentifier>{b4798144-bcb4-46dd-b39d-a5e4bbdb93ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="installer">
+      <UniqueIdentifier>{b0cee761-6a1e-4847-955e-f0eb80c32cd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext">
+      <UniqueIdentifier>{8d1ef194-ad72-4aeb-93e7-628a89158c73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\chm">
+      <UniqueIdentifier>{87c09434-b151-4582-b0b3-eab39e5a51ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\mupdf">
+      <UniqueIdentifier>{078d86a8-74f1-49fa-af7f-8d12c180a485}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\mupdf\fitz">
+      <UniqueIdentifier>{8a33d4a4-1f54-4fe9-98c5-a0dfd57a601e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\mupdf\draw">
+      <UniqueIdentifier>{bdd43343-e63b-467d-b5e5-ba10a0e94337}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\mupdf\pdf">
+      <UniqueIdentifier>{a35cfdd9-b833-4410-afd7-a4771ef8887b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\mupdf\xps">
+      <UniqueIdentifier>{29dc662e-3fee-4c3b-8186-205cf82221c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\mupdf\xps">
+      <UniqueIdentifier>{29dc662e-3fee-b3c4-8186-205cf82221c0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ext\jbig2dec\jbig2.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_arith.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_arith_iaid.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_arith_int.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_generic.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_halftone.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_huffman.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_image.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_image_pbm.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_image_png.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_metadata.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_mmr.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_page.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_refinement.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_segment.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_symbol_dict.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\jbig2dec\jbig2_text.c">
-      <Filter>jbig2dec</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_error.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_hash.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_memory.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_string.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\crypt_aes.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\crypt_arc4.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\crypt_md5.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\filt_dctd.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\filt_faxd.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\filt_flate.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\filt_jbig2d.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\filt_lzwd.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\filt_predict.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\res_colorspace.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\res_font.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\res_shade.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\stm_buffer.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\stm_open.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\stm_read.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AppPrefs.cpp">
+    <ClCompile Include="src/AppPrefs.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\CrashHandler.cpp">
+    <ClCompile Include="src/AppTools.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\DisplayModel.cpp">
+    <ClCompile Include="src/CrashHandler.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\LangMenuDef.cpp">
+    <ClCompile Include="src/DisplayModel.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\PdfSync.cpp">
+    <ClCompile Include="src/Doc.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\SumatraDialogs.cpp">
+    <ClCompile Include="src/ExternalPdfViewer.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\SumatraPDF.cpp">
+    <ClCompile Include="src/Favorites.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\SumatraAbout.cpp">
+    <ClCompile Include="src/FileModifications.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\SumatraProperties.cpp">
+    <ClCompile Include="src/HtmlFormatter.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\CrashHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jaricom.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jutils.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcapimin.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcapistd.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcarith.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jccoefct.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jccolor.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcdctmgr.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jchuff.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcinit.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcmainct.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcmarker.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcmaster.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcomapi.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcparam.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcphuff.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcprepct.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jcsample.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jctrans.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdapimin.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdapistd.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdarith.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdatadst.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdatasrc.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdcoefct.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdcolor.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jddctmgr.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdhuff.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdinput.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdmainct.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdmarker.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdmaster.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdmerge.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdphuff.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdpostct.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdsample.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jdtrans.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jerror.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jfdctflt.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jfdctfst.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jfdctint.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jidctflt.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jidctfst.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jidctint.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jidctred.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jmemmgr.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jmemnobs.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jquant1.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jquant2.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\simd\jsimd_i386.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\libjpeg-turbo\jsimd_none.c">
-      <Filter>jpeg</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\filt_basic.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\res_pixmap.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_geometry.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_getopt.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_time.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\dev_bbox.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\dev_gdiplus.cpp">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\dev_list.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\dev_null.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\dev_text.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\dev_trace.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\res_path.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\fitz\res_text.c">
-      <Filter>mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="src\WindowInfo.cpp">
+    <ClCompile Include="src/Menu.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\UnitTests.cpp">
+    <ClCompile Include="src/MuPDF_Exports.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="baseutils\UtilTests.cpp">
+    <ClCompile Include="src/Notifications.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\AppTools.cpp">
+    <ClCompile Include="src/ParseCommandLine.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\RenderCache.cpp">
+    <ClCompile Include="src/PdfSync.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\TextSearch.cpp">
+    <ClCompile Include="src/Print.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\TextSelection.cpp">
+    <ClCompile Include="src/RenderCache.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\BencUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\DialogSizer.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\FileUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\HttpUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\StrUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\UtilTests.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\WinUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\ZipUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_zip.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_common.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_doc.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_glyphs.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_gradient.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_image.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_jpeg.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_outline.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_path.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_png.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_resource.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_tiff.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_tile.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_util.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\xps\xps_xml.c">
-      <Filter>mupdf\xps</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ParseCommandLine.cpp">
+    <ClCompile Include="src/Search.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\StressTesting.cpp">
+    <ClCompile Include="src/Selection.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\Favorites.cpp">
+    <ClCompile Include="src/StressTesting.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\TableOfContents.cpp">
+    <ClCompile Include="src/SumatraAbout.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\Print.cpp">
+    <ClCompile Include="src/SumatraAbout2.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\Search.cpp">
+    <ClCompile Include="src/SumatraDialogs.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\ExternalPdfViewer.cpp">
+    <ClCompile Include="src/SumatraPDF.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\Selection.cpp">
+    <ClCompile Include="src/SumatraProperties.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="ext\CHMLib\src\chm_lib.c">
-      <Filter>chm</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\CHMLib\src\lzx.c">
-      <Filter>chm</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\TrivialHtmlParser.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\HtmlWindow.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Menu.cpp">
+    <ClCompile Include="src/SumatraStartup.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\Touch.cpp">
+    <ClCompile Include="src/TableOfContents.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="src\Toolbar.cpp">
+    <ClCompile Include="src/Tester.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="ext\bzip2\blocksort.c">
-      <Filter>bzip2</Filter>
+    <ClCompile Include="src/TextSearch.cpp">
+      <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="ext\bzip2\bzlib.c">
-      <Filter>bzip2</Filter>
+    <ClCompile Include="src/TextSelection.cpp">
+      <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="ext\bzip2\compress.c">
-      <Filter>bzip2</Filter>
+    <ClCompile Include="src/Toolbar.cpp">
+      <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="ext\bzip2\crctable.c">
-      <Filter>bzip2</Filter>
+    <ClCompile Include="src/Translations2.cpp">
+      <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="ext\bzip2\decompress.c">
-      <Filter>bzip2</Filter>
+    <ClCompile Include="src/Trans_sumatra_txt.cpp">
+      <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="ext\bzip2\huffman.c">
-      <Filter>bzip2</Filter>
+    <ClCompile Include="src/UnitTests.cpp">
+      <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="ext\bzip2\randtable.c">
-      <Filter>bzip2</Filter>
+    <ClCompile Include="src/WindowInfo.cpp">
+      <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\base_context.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="src/ChmDoc.cpp">
+      <Filter>sumatra\engine</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\crypt_sha2.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="src/ChmEngine.cpp">
+      <Filter>sumatra\engine</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\doc_outline.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="src/DjVuEngine.cpp">
+      <Filter>sumatra\engine</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\res_bitmap.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="src/EngineDump.cpp">
+      <Filter>sumatra\engine</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\res_halftone.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="src/ImagesEngine.cpp">
+      <Filter>sumatra\engine</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\res_store.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="src/PdfEngine.cpp">
+      <Filter>sumatra\engine</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_affine.c">
-      <Filter>mupdf\draw</Filter>
+    <ClCompile Include="src/PsEngine.cpp">
+      <Filter>sumatra\engine</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_blend.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_device.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_edge.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_glyph.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_mesh.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_paint.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_path.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_scale.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_simple_scale.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="mupdf\draw\draw_unpack.c">
-      <Filter>mupdf\draw</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\FileTransactions.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\HtmlPullParser.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\minizip\ioapi.c">
-      <Filter>zlib\minizip</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\minizip\iowin32.c">
-      <Filter>zlib\minizip</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\minizip\iowin32s.c">
-      <Filter>zlib\minizip</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\minizip\unzalloc.c">
-      <Filter>zlib\minizip</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\minizip\unzip.c">
-      <Filter>zlib\minizip</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\adler32.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\compress.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\crc32.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\deflate.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\gzclose.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\gzlib.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\gzread.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\gzwopen.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\gzwrite.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\infback.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\inffast.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\inflate.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\inftrees.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\trees.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\uncompr.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="ext\zlib\zutil.c">
-      <Filter>zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="src\utils\DebugLog.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\Mui.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\MuiBase.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\MuiButton.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\MuiControl.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\MuiCss.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\MuiEventMgr.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\MuiHwndWrapper.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\MuiLayout.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\MuiPainter.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\MuiScrollBar.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\SvgPath.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mui\SvgPath_ut.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\EngineDump.cpp">
-      <Filter>sumatra\documents</Filter>
-    </ClCompile>
-    <ClCompile Include="src\EbookEngine.cpp">
-      <Filter>sumatra\documents</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ChmEngine.cpp">
-      <Filter>sumatra\documents</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ImagesEngine.cpp">
-      <Filter>sumatra\documents</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PsEngine.cpp">
-      <Filter>sumatra\documents</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PdfEngine.cpp">
-      <Filter>sumatra\documents</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MobiDoc.cpp">
+    <ClCompile Include="src/EbookController.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="src\EbookWindow.cpp">
+    <ClCompile Include="src/EbookControls.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="src\HtmlFormatter.cpp">
+    <ClCompile Include="src/EbookDoc.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="src\DjVuEngine.cpp">
-      <Filter>sumatra\documents</Filter>
-    </ClCompile>
-    <ClCompile Include="src\EbookControls.cpp">
+    <ClCompile Include="src/EbookEngine.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="src\EbookController.cpp">
+    <ClCompile Include="src/EbookFormatter.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\BitReader.cpp">
+    <ClCompile Include="src/EbookWindow.cpp">
+      <Filter>sumatra\ebook</Filter>
+    </ClCompile>
+    <ClCompile Include="src/MobiDoc.cpp">
+      <Filter>sumatra\ebook</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MiniMui.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/Mui.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiBase.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiButton.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiControl.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiCss.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiEventMgr.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiGrid.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiHwndWrapper.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiLayout.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiPainter.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/MuiScrollBar.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/SvgPath.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/mui/SvgPath_ut.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/BaseUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\DirIter.cpp">
+    <ClCompile Include="src/utils/BencUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\ThreadUtil.cpp">
+    <ClCompile Include="src/utils/BencUtil_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\GdiPlusUtil.cpp">
+    <ClCompile Include="src/utils/BitReader.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\memtrace\MemTraceDll.cpp">
-      <Filter>memtrace</Filter>
+    <ClCompile Include="src/utils/ByteOrderDecoder.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\installer\Install.cpp">
+    <ClCompile Include="src/utils/ByteOrderDecoder_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/CmdLineParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/CssParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/CssParser_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/DbgHelpDyn.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/DebugLog.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/DialogSizer.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/Dict.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/Dict_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/DirIter.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/Experiments.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/FileTransactions.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/FileUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/FileWatcher.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/GdiPlusUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/HtmlParserLookup.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/HtmlPrettyPrint.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/HtmlPullParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/HtmlPullParser_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/HtmlWindow.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/HttpUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/JsonParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/JsonParser_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/NoFreeAllocator.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/PalmDbReader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/Settings.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/Settings_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/Sigslot_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/StrFormat.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/StrFormat_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/StrUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/StrUtil_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/TgaReader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/ThreadUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/Touch.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/TrivialHtmlParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/TrivialHtmlParser_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/UITask.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/UtilTests.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/Vec_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/WinUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/utils/ZipUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src/browserplugin/npPdfViewer.cpp">
+      <Filter>browser_plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="src/browserplugin/Trans_browserplugin_txt.cpp">
+      <Filter>browser_plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="src/ifilter/CPdfFilter.cpp">
+      <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="src/ifilter/CTeXFilter.cpp">
+      <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="src/ifilter/PdfFilterDll.cpp">
+      <Filter>ifilter</Filter>
+    </ClCompile>
+    <ClCompile Include="src/previewer/PdfPreview.cpp">
+      <Filter>previewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src/previewer/PdfPreviewDll.cpp">
+      <Filter>previewer</Filter>
+    </ClCompile>
+    <ClCompile Include="src/installer/Install.cpp">
       <Filter>installer</Filter>
     </ClCompile>
-    <ClCompile Include="src\installer\Installer.cpp">
+    <ClCompile Include="src/installer/Installer.cpp">
       <Filter>installer</Filter>
     </ClCompile>
-    <ClCompile Include="src\installer\Uninstall.cpp">
+    <ClCompile Include="src/installer/Trans_installer_txt.cpp">
       <Filter>installer</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\doc_document.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="src/installer/Uninstall.cpp">
+      <Filter>installer</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\doc_link.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="ext/CHMLib/src/chm_lib.c">
+      <Filter>ext\chm</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\image_jpeg.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="ext/CHMLib/src/lzx.c">
+      <Filter>ext\chm</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\image_jpx.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="mupdf/fitz/base_context.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\image_md5.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="mupdf/fitz/base_error.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\image_png.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="mupdf/fitz/base_geometry.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\image_save.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="mupdf/fitz/base_getopt.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\fitz\image_tiff.c">
-      <Filter>mupdf\fitz</Filter>
+    <ClCompile Include="mupdf/fitz/base_hash.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_xref.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/base_memory.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\base_object.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/base_string.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_annot.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/base_time.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_cmap.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/base_trans.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_cmap_load.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/base_xml.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_cmap_parse.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/crypt_aes.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_cmap_table.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/crypt_arc4.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_colorspace.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/crypt_md5.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_crypt.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/crypt_sha2.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_encoding.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/dev_bbox.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_font.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/dev_gdiplus.cpp">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_fontfile.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/dev_list.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_ft_tools.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/dev_null.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_function.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/dev_text.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_image.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/dev_trace.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_interpret.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/doc_document.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_lex.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/doc_interactive.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_metrics.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/doc_link.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_nametree.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/doc_outline.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_outline.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/doc_search.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_page.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/filt_basic.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_parse.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/filt_dctd.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_pattern.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/filt_faxd.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_repair.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/filt_flate.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_shade.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/filt_jbig2d.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_store.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/filt_lzwd.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_stream.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/filt_predict.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_type3.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/image_jpeg.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_unicode.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/image_jpx.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="mupdf\pdf\pdf_xobject.c">
-      <Filter>mupdf\pdf</Filter>
+    <ClCompile Include="mupdf/fitz/image_jxr.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\DbgHelpDyn.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/fitz/image_md5.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\Sigslot_ut.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/fitz/image_png.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\Vec_ut.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/fitz/image_save.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\ifilter\CPdfFilter.cpp">
-      <Filter>dlls\ifilter</Filter>
+    <ClCompile Include="mupdf/fitz/image_tiff.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\ifilter\CTeXFilter.cpp">
-      <Filter>dlls\ifilter</Filter>
+    <ClCompile Include="mupdf/fitz/res_bitmap.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\ifilter\PdfFilterDll.cpp">
-      <Filter>dlls\ifilter</Filter>
+    <ClCompile Include="mupdf/fitz/res_colorspace.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\browserplugin\npPdfViewer.cpp">
-      <Filter>dlls\browser</Filter>
+    <ClCompile Include="mupdf/fitz/res_font.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\previewer\PdfPreview.cpp">
-      <Filter>dlls\preview</Filter>
+    <ClCompile Include="mupdf/fitz/res_halftone.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\previewer\PdfPreviewDll.cpp">
-      <Filter>dlls\preview</Filter>
+    <ClCompile Include="mupdf/fitz/res_path.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\StrUtil_ut.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/fitz/res_pixmap.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\Doc.cpp">
-      <Filter>sumatra\documents</Filter>
+    <ClCompile Include="mupdf/fitz/res_shade.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\EbookDoc.cpp">
-      <Filter>sumatra\ebook</Filter>
+    <ClCompile Include="mupdf/fitz/res_store.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\Notifications.cpp">
-      <Filter>sumatra</Filter>
+    <ClCompile Include="mupdf/fitz/res_text.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\ChmDoc.cpp">
-      <Filter>sumatra\documents</Filter>
+    <ClCompile Include="mupdf/fitz/stm_buffer.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\JsonParser.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/fitz/stm_comp_buf.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\JsonParser_ut.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/fitz/stm_open.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\mui\MiniMui.cpp">
-      <Filter>mui</Filter>
+    <ClCompile Include="mupdf/fitz/stm_output.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\ByteOrderDecoder.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/fitz/stm_read.c">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\ByteOrderDecoder_ut.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/draw/draw_affine.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\regress\Regress00.cpp">
-      <Filter>sumatra\regress</Filter>
+    <ClCompile Include="mupdf/draw/draw_blend.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\regress\Regress.cpp">
-      <Filter>sumatra\regress</Filter>
+    <ClCompile Include="mupdf/draw/draw_device.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\CmdLineParser.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/draw/draw_edge.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="ext\zlib\minizip\zip.c">
-      <Filter>zlib\minizip</Filter>
+    <ClCompile Include="mupdf/draw/draw_glyph.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\Experiments.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/draw/draw_mesh.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\UITask.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/draw/draw_paint.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\StrFormat.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/draw/draw_path.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\StrFormat_ut.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/draw/draw_scale.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\Dict.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/draw/draw_simple_scale.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\Dict_ut.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/draw/draw_unpack.c">
+      <Filter>ext\mupdf\draw</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\BaseUtil.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_annot.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\SumatraAbout2.cpp">
-      <Filter>sumatra</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_cmap.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\mui\MuiGrid.cpp">
-      <Filter>mui</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_cmap_load.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tester.cpp">
-      <Filter>tester</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_cmap_parse.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\CssParser.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_cmap_table.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\CssParser_ut.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_colorspace.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\FileWatcher.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_crypt.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\browserplugin\Translations_txt.cpp">
-      <Filter>browserplugin</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_device.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\Translations2.cpp">
-      <Filter>sumatra</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_encoding.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\Trans_sumatra_txt.cpp">
-      <Filter>sumatra</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_event.c">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClCompile>
-    <ClCompile Include="src\utils\Settings.cpp">
-      <Filter>utils</Filter>
+    <ClCompile Include="mupdf/pdf/pdf_field.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_font.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_fontfile.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_form.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_ft_tools.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_function.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_image.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_interpret.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_js.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_jsimp_cpp.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_jsimp_v8.cpp">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_js_none.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_lex.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_metrics.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_nametree.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_object.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_outline.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_page.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_parse.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_pattern.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_repair.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_shade.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_store.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_stream.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_type3.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_unicode.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_write.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_xobject.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_xref.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/pdf/pdf_xref_aux.c">
+      <Filter>ext\mupdf\pdf</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_common.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_doc.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_glyphs.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_gradient.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_image.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_outline.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_path.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_resource.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_tile.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_util.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/xps/xps_zip.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/jstest_main.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/mudraw.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/mutool.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/pdfapp.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/pdfclean.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/pdfextract.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/pdfinfo.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/pdfposter.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/pdfshow.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/win_main.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/x11_image.c">
+      <Filter>ext\mupdf\xps</Filter>
+    </ClCompile>
+    <ClCompile Include="mupdf/apps/x11_main.c">
+      <Filter>ext\mupdf\xps</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ext\jbig2dec\config_win32.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_arith.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_arith_iaid.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_arith_int.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_generic.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_huffman.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_hufftab.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_image.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_metadata.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_mmr.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_priv.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_symbol_dict.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\jbig2_text.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\jbig2dec\os_types.h">
-      <Filter>jbig2dec</Filter>
-    </ClInclude>
-    <ClInclude Include="mupdf\fitz\fitz.h">
-      <Filter>mupdf\fitz</Filter>
-    </ClInclude>
-    <ClInclude Include="src\AppPrefs.h">
+    <ClInclude Include="src/AppPrefs.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\CrashHandler.h">
+    <ClInclude Include="src/AppPrefs2.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\DisplayModel.h">
+    <ClInclude Include="src/AppTools.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\DisplayState.h">
+    <ClInclude Include="src/CrashHandler.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\FileHistory.h">
+    <ClInclude Include="src/DisplayModel.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\LangMenuDef.h">
+    <ClInclude Include="src/DisplayState.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\PdfSync.h">
+    <ClInclude Include="src/Doc.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\SumatraDialogs.h">
+    <ClInclude Include="src/ExternalPdfViewer.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\SumatraPDF.h">
+    <ClInclude Include="src/Favorites.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\Version.h">
+    <ClInclude Include="src/FileHistory.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jchuff.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jversion.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jconfig.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jdct.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jdhuff.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jerror.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jinclude.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jmemsys.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jmorecfg.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jpegcomp.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jpegint.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jpeglib.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jsimd.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\simd\jsimd.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\libjpeg-turbo\jsimddct.h">
-      <Filter>jpeg</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CrashHandler.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\WindowInfo.h">
+    <ClInclude Include="src/FileModifications.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\AppTools.h">
+    <ClInclude Include="src/HtmlFormatter.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\RenderCache.h">
+    <ClInclude Include="src/Menu.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\TextSearch.h">
+    <ClInclude Include="src/Notifications.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\TextSelection.h">
+    <ClInclude Include="src/ParseCommandLine.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\ZipUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\BaseUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\BencUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\CmdLineParser.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\DialogSizer.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\FileUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\GeomUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\SimpleLog.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\StrUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\Vec.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\WinUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="mupdf\xps\muxps.h">
-      <Filter>mupdf\xps</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Notifications.h">
+    <ClInclude Include="src/PdfSync.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\ParseCommandLine.h">
+    <ClInclude Include="src/Print.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\StressTesting.h">
+    <ClInclude Include="src/RenderCache.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\Favorites.h">
+    <ClInclude Include="src/resource.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\TableOfContents.h">
+    <ClInclude Include="src/Search.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\Print.h">
+    <ClInclude Include="src/Selection.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\Search.h">
+    <ClInclude Include="src/StressTesting.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\ExternalPdfViewer.h">
+    <ClInclude Include="src/SumatraAbout.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\Selection.h">
+    <ClInclude Include="src/SumatraAbout2.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="ext\CHMLib\src\chm_lib.h">
-      <Filter>chm</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\CHMLib\src\lzx.h">
-      <Filter>chm</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\TrivialHtmlParser.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\HtmlWindow.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Menu.h">
+    <ClInclude Include="src/SumatraDialogs.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\Scoped.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\Touch.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Toolbar.h">
+    <ClInclude Include="src/SumatraPDF.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="ext\bzip2\bzlib.h">
-      <Filter>bzip2</Filter>
+    <ClInclude Include="src/SumatraProperties.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="ext\bzip2\bzlib_private.h">
-      <Filter>bzip2</Filter>
+    <ClInclude Include="src/SumatraWindow.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\FileTransactions.h">
-      <Filter>utils</Filter>
+    <ClInclude Include="src/TableOfContents.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\Allocator.h">
-      <Filter>utils</Filter>
+    <ClInclude Include="src/TextSearch.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\HtmlPullParser.h">
-      <Filter>utils</Filter>
+    <ClInclude Include="src/TextSelection.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\minizip\ioapi.h">
-      <Filter>zlib\minizip</Filter>
+    <ClInclude Include="src/Toolbar.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\minizip\iowin32.h">
-      <Filter>zlib\minizip</Filter>
+    <ClInclude Include="src/Translations2.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\minizip\iowin32s.h">
-      <Filter>zlib\minizip</Filter>
+    <ClInclude Include="src/Version.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\minizip\unzalloc.h">
-      <Filter>zlib\minizip</Filter>
+    <ClInclude Include="src/WindowInfo.h">
+      <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\minizip\unzip.h">
-      <Filter>zlib\minizip</Filter>
+    <ClInclude Include="src/BaseEngine.h">
+      <Filter>sumatra\engine</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\crc32.h">
-      <Filter>zlib</Filter>
+    <ClInclude Include="src/ChmDoc.h">
+      <Filter>sumatra\engine</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\deflate.h">
-      <Filter>zlib</Filter>
+    <ClInclude Include="src/ChmEngine.h">
+      <Filter>sumatra\engine</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\gzguts.h">
-      <Filter>zlib</Filter>
+    <ClInclude Include="src/DjVuEngine.h">
+      <Filter>sumatra\engine</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\inffast.h">
-      <Filter>zlib</Filter>
+    <ClInclude Include="src/ImagesEngine.h">
+      <Filter>sumatra\engine</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\inffixed.h">
-      <Filter>zlib</Filter>
+    <ClInclude Include="src/PdfEngine.h">
+      <Filter>sumatra\engine</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\inflate.h">
-      <Filter>zlib</Filter>
+    <ClInclude Include="src/PsEngine.h">
+      <Filter>sumatra\engine</Filter>
     </ClInclude>
-    <ClInclude Include="ext\zlib\inftrees.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib\trees.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib\zconf.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib\zlib.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib\zutil.h">
-      <Filter>zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\DebugLog.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\Mui.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiBase.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiButton.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiControl.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiCss.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiEventMgr.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiHwndWrapper.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiLayout.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiPainter.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiScrollBar.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\SvgPath.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\EbookEngine.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\BaseEngine.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ChmEngine.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ImagesEngine.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PsEngine.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\PdfEngine.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\HtmlFormatter.h">
+    <ClInclude Include="src/EbookBase.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
-    <ClInclude Include="src\MobiDoc.h">
+    <ClInclude Include="src/EbookController.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
-    <ClInclude Include="src\EbookWindow.h">
+    <ClInclude Include="src/EbookControls.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
-    <ClInclude Include="src\EngineManager.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\DjVuEngine.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\EbookController.h">
+    <ClInclude Include="src/EbookDoc.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
-    <ClInclude Include="src\EbookControls.h">
+    <ClInclude Include="src/EbookEngine.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\BitManip.h">
+    <ClInclude Include="src/EbookFormatter.h">
+      <Filter>sumatra\ebook</Filter>
+    </ClInclude>
+    <ClInclude Include="src/EbookWindow.h">
+      <Filter>sumatra\ebook</Filter>
+    </ClInclude>
+    <ClInclude Include="src/MobiDoc.h">
+      <Filter>sumatra\ebook</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MiniMui.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/Mui.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiBase.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiButton.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiControl.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiCss.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiEventMgr.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiGrid.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiHwndWrapper.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiLayout.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiPainter.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/MuiScrollBar.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/mui/SvgPath.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/Allocator.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\BitReader.h">
+    <ClInclude Include="src/utils/BaseUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\DirIter.h">
+    <ClInclude Include="src/utils/BencUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\ThreadUtil.h">
+    <ClInclude Include="src/utils/BitManip.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\SumatraProperties.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\GdiPlusUtil.h">
+    <ClInclude Include="src/utils/BitReader.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\memtrace\MemTraceDll.h">
-      <Filter>memtrace</Filter>
+    <ClInclude Include="src/utils/ByteOrderDecoder.h">
+      <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\memtrace\nsWindowsDllInterceptor.h">
-      <Filter>memtrace</Filter>
+    <ClInclude Include="src/utils/ByteReader.h">
+      <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\installer\Installer.h">
+    <ClInclude Include="src/utils/CmdLineParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/CssParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/DbgHelpDyn.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/DebugLog.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/DialogSizer.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/Dict.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/DirIter.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/FileTransactions.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/FileUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/FileWatcher.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/FrameTimeoutCalculator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/GdiPlusUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/GeomUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/HtmlParserLookup.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/HtmlPrettyPrint.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/HtmlPullParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/HtmlWindow.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/HttpUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/JsonParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/NoFreeAllocator.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/PalmDbReader.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/RefCounted.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/Scoped.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/Settings.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/Sigslot.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/SimpleLog.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/StrFormat.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/StrHash.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/StrUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/TgaReader.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/ThreadUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/Timer.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/Touch.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/TrivialHtmlParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/UITask.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/Vec.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/VecSegmented.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/WinUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/utils/ZipUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src/browserplugin/npapi/npapi.h">
+      <Filter>browser_plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="src/browserplugin/npapi/npfunctions.h">
+      <Filter>browser_plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="src/browserplugin/npapi/npruntime.h">
+      <Filter>browser_plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="src/browserplugin/npapi/nptypes.h">
+      <Filter>browser_plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="src/ifilter/CPdfFilter.h">
+      <Filter>ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="src/ifilter/CTeXFilter.h">
+      <Filter>ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="src/ifilter/FilterBase.h">
+      <Filter>ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="src/ifilter/PdfFilter.h">
+      <Filter>ifilter</Filter>
+    </ClInclude>
+    <ClInclude Include="src/previewer/PdfPreview.h">
+      <Filter>previewer</Filter>
+    </ClInclude>
+    <ClInclude Include="src/installer/Installer.h">
       <Filter>installer</Filter>
     </ClInclude>
-    <ClInclude Include="mupdf\fitz\fitz-internal.h">
-      <Filter>mupdf\fitz</Filter>
+    <ClInclude Include="src/installer/Resource.h">
+      <Filter>installer</Filter>
     </ClInclude>
-    <ClInclude Include="mupdf\pdf\data_encodings.h">
-      <Filter>mupdf\pdf</Filter>
+    <ClInclude Include="ext/CHMLib/src/chm_lib.h">
+      <Filter>ext\chm</Filter>
     </ClInclude>
-    <ClInclude Include="mupdf\pdf\data_glyphlist.h">
-      <Filter>mupdf\pdf</Filter>
+    <ClInclude Include="ext/CHMLib/src/lzx.h">
+      <Filter>ext\chm</Filter>
     </ClInclude>
-    <ClInclude Include="mupdf\pdf\mupdf.h">
-      <Filter>mupdf\pdf</Filter>
+    <ClInclude Include="mupdf/fitz/fitz-internal.h">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClInclude>
-    <ClInclude Include="mupdf\pdf\mupdf-internal.h">
-      <Filter>mupdf\pdf</Filter>
+    <ClInclude Include="mupdf/fitz/fitz.h">
+      <Filter>ext\mupdf\fitz</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\DbgHelpDyn.h">
-      <Filter>utils</Filter>
+    <ClInclude Include="mupdf/pdf/data_encodings.h">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClInclude>
-    <ClInclude Include="src\utils\Sigslot.h">
-      <Filter>utils</Filter>
+    <ClInclude Include="mupdf/pdf/data_glyphlist.h">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClInclude>
-    <ClInclude Include="src\ifilter\FilterBase.h">
-      <Filter>dlls\ifilter</Filter>
+    <ClInclude Include="mupdf/pdf/mupdf-internal.h">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClInclude>
-    <ClInclude Include="src\ifilter\CPdfFilter.h">
-      <Filter>dlls\ifilter</Filter>
+    <ClInclude Include="mupdf/pdf/mupdf.h">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClInclude>
-    <ClInclude Include="src\ifilter\CTeXFilter.h">
-      <Filter>dlls\ifilter</Filter>
+    <ClInclude Include="mupdf/pdf/pdf_jsimp_cpp.h">
+      <Filter>ext\mupdf\pdf</Filter>
     </ClInclude>
-    <ClInclude Include="src\ifilter\PdfFilter.h">
-      <Filter>dlls\ifilter</Filter>
+    <ClInclude Include="mupdf/xps/muxps-internal.h">
+      <Filter>ext\mupdf\xps</Filter>
     </ClInclude>
-    <ClInclude Include="src\previewer\PdfPreview.h">
-      <Filter>dlls\preview</Filter>
+    <ClInclude Include="mupdf/xps/muxps.h">
+      <Filter>ext\mupdf\xps</Filter>
     </ClInclude>
-    <ClInclude Include="src\Doc.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\RefCounted.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\EbookDoc.h">
-      <Filter>sumatra\ebook</Filter>
-    </ClInclude>
-    <ClInclude Include="src\ChmDoc.h">
-      <Filter>sumatra\documents</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\JsonParser.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\VecSegmented.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MiniMui.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Resource.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\ByteOrderDecoder.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\ByteReader.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\EbookBase.h">
-      <Filter>sumatra\ebook</Filter>
-    </ClInclude>
-    <ClInclude Include="ext\zlib\minizip\zip.h">
-      <Filter>zlib\minizip</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\UITask.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\StrFormat.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\Dict.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SumatraAbout.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SumatraAbout2.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\SumatraWindow.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mui\MuiGrid.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\CssParser.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\FileWatcher.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Translations2.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
-    <ClInclude Include="src\utils\Settings.h">
-      <Filter>utils</Filter>
+    <ClInclude Include="mupdf/apps/pdfapp.h">
+      <Filter>ext\mupdf\xps</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\closetoc.bmp">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="src\dragcursor.cur">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="src\PdfDoc.ico">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="src\SumatraPDF.ico">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcolsamp.inc">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdct.inc">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcclrmmx.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcclrss2-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcclrss2.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jccolmmx.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jccolss2-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jccolss2.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcqnt3dn.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcqntmmx.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcqnts2f-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcqnts2f.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcqnts2i-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcqnts2i.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcqntsse.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcsammmx.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcsamss2-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jcsamss2.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdclrmmx.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdclrss2-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdclrss2.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdcolmmx.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdcolss2-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdcolss2.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdmermmx.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdmerss2-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdmerss2.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdmrgmmx.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdmrgss2-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdmrgss2.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdsammmx.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdsamss2-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jdsamss2.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jf3dnflt.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jfmmxfst.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jfmmxint.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jfss2fst-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jfss2fst.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jfss2int-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jfss2int.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jfsseflt-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jfsseflt.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\ji3dnflt.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jimmxfst.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jimmxint.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jimmxred.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jiss2flt-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jiss2flt.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jiss2fst-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jiss2fst.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jiss2int-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jiss2int.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jiss2red-64.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jiss2red.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jisseflt.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="ext\libjpeg-turbo\simd\jsimdcpu.asm">
-      <Filter>jpeg</Filter>
-    </None>
-    <None Include="src\SumatraPDF-smaller.ico">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="src\toolbar_11.bmp">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="src\reloading.bmp">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="makefile.msvc" />
-    <None Include="src\sample_mobi.html">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="docs\wishlist.txt">
-      <Filter>docs</Filter>
-    </None>
-    <None Include="docs\releasenotes.txt">
-      <Filter>docs</Filter>
-    </None>
-    <None Include="docs\codingstyle.txt">
-      <Filter>docs</Filter>
-    </None>
-    <None Include="docs\releaseplan.txt">
-      <Filter>docs</Filter>
-    </None>
-    <None Include="src\mui\mui-todo.txt">
-      <Filter>mui</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="src\SumatraPDF.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="src\installer\Installer.manifest.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="src\installer\Installer.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="src\ifilter\PdfFilter.rc">
-      <Filter>dlls\ifilter</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="src\previewer\PdfPreview.rc">
-      <Filter>dlls\preview</Filter>
-    </ResourceCompile>
-    <ResourceCompile Include="src\browserplugin\npPdfViewer.rc">
-      <Filter>browserplugin</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="src\SumatraPDF.exe.manifest">
-      <Filter>sumatra</Filter>
-    </Manifest>
-    <Manifest Include="src\installer\Installer.exe.manifest">
+    <Manifest Include="src/installer/Installer.exe.manifest">
       <Filter>installer</Filter>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="docs/codingstyle.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs/mui-html-fusion.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs/releasenotes.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs/releaseplan.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs/sumatrapdfconfig.ini">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs/sumatrapdfrestrict.ini">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="docs/wishlist.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="src/dragcursor.cur">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src/PdfDoc.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src/reloading.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src/SumatraPDF-smaller.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src/SumatraPDF.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src/toolbar_11.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src/browserplugin/npPdfViewer.rc">
+      <Filter>browser_plugin</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="src/libmupdf.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="src/SumatraPDF.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="src/ifilter/PdfFilter.rc">
+      <Filter>ifilter</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="src/previewer/PdfPreview.rc">
+      <Filter>previewer</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="src/installer/Installer.rc">
+      <Filter>installer</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

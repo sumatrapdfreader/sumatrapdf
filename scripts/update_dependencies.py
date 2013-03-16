@@ -93,12 +93,17 @@ def injectDependencyList(flatlist):
 
 	open(MAKEFILE, "wb").write(content.replace("\n", "\r\n"))
 
+def update_vs():
+	import update_vs
+	update_vs.main()
+
 def main():
 	if os.path.exists("update_dependencies.py"):
 		os.chdir("..")
 	verify_started_in_right_directory()
 
 	injectDependencyList(flattenDependencyList(createDependencyList()))
+	update_vs()
 
 if __name__ == "__main__":
 	main()
