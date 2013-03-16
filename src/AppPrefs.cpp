@@ -625,9 +625,9 @@ static void SerializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info, 
         case SType_BoolVec:
             {
                 Vec<bool> *vec = (Vec<bool> *)(base + meta.offset);
-                for (size_t i = 1; i < vec->Count(); i++) {
-                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", i, meta.name));
-                    strValue.Set(str::Format(L"%d", vec->At(i) ? 1 : 0));
+                for (size_t n = 1; n < vec->Count(); n++) {
+                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", n, meta.name));
+                    strValue.Set(str::Format(L"%d", vec->At(n) ? 1 : 0));
                     WritePrivateProfileString(section, key, strValue, filepath);
                 }
             }
@@ -635,9 +635,9 @@ static void SerializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info, 
         case SType_ColorVec:
             {
                 Vec<COLORREF> *vec = (Vec<COLORREF> *)(base + meta.offset);
-                for (size_t i = 1; i < vec->Count(); i++) {
-                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", i, meta.name));
-                    strValue.Set(str::Format(L"#%06X", (int)vec->At(i)));
+                for (size_t n = 1; n < vec->Count(); n++) {
+                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", n, meta.name));
+                    strValue.Set(str::Format(L"#%06X", (int)vec->At(n)));
                     WritePrivateProfileString(section, key, strValue, filepath);
                 }
             }
@@ -645,9 +645,9 @@ static void SerializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info, 
         case SType_IntVec:
             {
                 Vec<int> *vec = (Vec<int> *)(base + meta.offset);
-                for (size_t i = 1; i < vec->Count(); i++) {
-                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", i, meta.name));
-                    strValue.Set(str::Format(L"%d", vec->At(i)));
+                for (size_t n = 1; n < vec->Count(); n++) {
+                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", n, meta.name));
+                    strValue.Set(str::Format(L"%d", vec->At(n)));
                     WritePrivateProfileString(section, key, strValue, filepath);
                 }
             }
@@ -655,9 +655,9 @@ static void SerializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info, 
         case SType_StringVec:
             {
                 WStrVec *vec = (WStrVec *)(base + meta.offset);
-                for (size_t i = 1; i < vec->Count(); i++) {
-                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", i, meta.name));
-                    WritePrivateProfileString(section, key, vec->At(i), filepath);
+                for (size_t n = 1; n < vec->Count(); n++) {
+                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", n, meta.name));
+                    WritePrivateProfileString(section, key, vec->At(n), filepath);
                 }
             }
             break;
