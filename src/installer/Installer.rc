@@ -36,5 +36,5 @@ IDI_SUMATRAPDF          ICON                    "..\SumatraPDF-smaller.ico"
 1                       RT_MANIFEST             "Installer.exe.manifest"
 
 #ifdef INSTALL_PAYLOAD_ZIP
-1                       RT_RCDATA               QM(INSTALL_PAYLOAD_ZIP)
+1                       RCDATA               QM(INSTALL_PAYLOAD_ZIP)
 #endif

@@ -176,7 +176,7 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 
             StartPage(hdc);
 
-            SizeT<float> bSize = bounds.Size().Convert<float>();
+            SizeTmpl<float> bSize = bounds.Size().Convert<float>();
             float zoom = min((float)printable.dx / bSize.dx,
                              (float)printable.dy / bSize.dy);
             // use the correct zoom values, if the page fits otherwise
@@ -248,7 +248,7 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
 
             StartPage(hdc);
 
-            SizeT<float> pSize = engine.PageMediabox(pageNo).Size().Convert<float>();
+            SizeTmpl<float> pSize = engine.PageMediabox(pageNo).Size().Convert<float>();
             int rotation = 0;
             // Turn the document by 90 deg if it isn't in portrait mode
             if (pSize.dx > pSize.dy) {

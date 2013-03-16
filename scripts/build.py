@@ -60,6 +60,15 @@ def lzma_path():
   print("downloaded lzma into %s" % lzma_path)
   return lzma_path
 
+def lzma_compress(src, dst):
+  lzma = lzma_path()
+  run_cmd_throw(lzma, "e", src, dst, "-eos")
+
+def copy_to_dst_dir(src_path, dst_dir):
+  name_in_obj_rel = os.path.basename(src_path)
+  dst_path = os.path.join(dst_dir, name_in_obj_rel)
+  shutil.copy(src_path, dst_path)
+
 # build the .zip with with installer data, will be included as part of
 # Installer.exe resources
 def build_installer_data(dir):
@@ -72,37 +81,35 @@ def build_installer_data(dir):
   zf.write(font_path, "DroidSansFallback.ttf")
   zf.close()
 
-def lzma_compress(src, dst):
-  lzma = lzma_path()
-  run_cmd_throw(lzma, "e", src, dst)
-
-
 # build installer data, will be included as part of Installer.exe resources
 # The format is:
 #   int32 number of files
 # for each file:
-#   int32 file size
+#   int32 file size uncompressed
+#   int32 file size compressed
 #   string file name, 0-terminated
 # for each file:
 #   file data
 def build_installer_data2(dir):
   src = os.path.join(dir, "SumatraPDF-no-MuPDF.exe")
-  dst = os.path.join(dir, "SumatraPDF.exe.lzma")
-  lzma_compress(src, dst)
+  dst = os.path.join(dir, "SumatraPDF.exe")
+  shutil.copy(src, dst)
   src = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
-  dst = os.path.join(dir, "DroidSansFallback.ttf.lzma")
-  lzma_compress(src, dst)
-  files = ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll", "uninstall.exe"]
+  copy_to_dst_dir(src, dir)
+
+  files = ["SumatraPDF-no-MuPDF.exe", "DroidSansFallback.ttf", "libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll", "uninstall.exe"]
   for src in files:
     src = os.path.join(dir, src)
     dst = src + ".lzma"
     lzma_compress(src, dst)
-  files = ["SumatraPDF.exe", "DroidSansFallback.ttf"] + files
   d = struct.pack("<i", len(files))
   for f in files:
-    path = os.path.join(dir, f) + ".lzma"
+    path = os.path.join(dir, f)
     d += struct.pack("<i", os.path.getsize(path))
+    d += struct.pack("<i", os.path.getsize(path + ".lzma"))
+    if f == "SumatraPDF-no-MuPDF.exe": f = "SumatraPDF.exe"
     d += f + "\0"
+
   dst = os.path.join(dir, "InstallerData2.zip")
   with open(dst, "wb") as fo:
     fo.write(d)
@@ -121,13 +128,8 @@ def compare_installers():
   print("lzma saves %d bytes of zip (%d - %d)" % (delta, s1, s2))
   sys.exit(1)
 
-def copy_to_dst_dir(src_path, dst_dir):
-  name_in_obj_rel = os.path.basename(src_path)
-  dst_path = os.path.join(dst_dir, name_in_obj_rel)
-  shutil.copy(src_path, dst_path)
-
 # delete all but the last 3 pre-release builds in order to use less s3 storage
-def deleteOldPreReleaseBuilds():
+def delete_old_pre_release_builds():
   s3Dir = "sumatrapdf/prerel/"
   keys = s3.list(s3Dir)
   files_by_ver = {}
@@ -265,7 +267,8 @@ def main():
     sign(exe, cert_pwd)
     sign(os.path.join(obj_dir, "uninstall.exe"), cert_pwd)
 
-  build_installer_data(obj_dir)
+  #build_installer_data(obj_dir)
+  build_installer_data2(obj_dir)
   run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
 
   if build_test_installer or build_rel_installer:
@@ -315,7 +318,7 @@ def main():
     s3.upload_data_public(jstxt, "sumatrapdf/sumatralatest.js")
     txt = "%s\n" % ver
     s3.upload_data_public(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
-    deleteOldPreReleaseBuilds()
+    delete_old_pre_release_builds()
   else:
     s3.upload_file_public(exe_zip, s3_exe_zip)
 

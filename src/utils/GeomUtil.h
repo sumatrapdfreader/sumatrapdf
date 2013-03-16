@@ -33,37 +33,37 @@ typedef PointT<int> PointI;
 typedef PointT<double> PointD;
 
 template <typename T>
-class SizeT
+class SizeTmpl
 {
 public :
     T dx, dy;
 
-    SizeT() : dx(0), dy(0) { }
-    SizeT(T dx, T dy) : dx(dx), dy(dy) { }
+    SizeTmpl() : dx(0), dy(0) { }
+    SizeTmpl(T dx, T dy) : dx(dx), dy(dy) { }
 
     template <typename S>
-    SizeT<S> Convert() const {
-        return SizeT<S>((S)dx, (S)dy);
+    SizeTmpl<S> Convert() const {
+        return SizeTmpl<S>((S)dx, (S)dy);
     }
     template <>
-    SizeT<int> Convert() const {
-        return SizeT<int>((int)floor(dx + 0.5), (int)floor(dy + 0.5));
+    SizeTmpl<int> Convert() const {
+        return SizeTmpl<int>((int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
 
     bool IsEmpty() const {
         return dx == 0 || dy == 0;
     }
 
-    bool operator==(const SizeT<T>& other) const {
+    bool operator==(const SizeTmpl<T>& other) const {
         return this->dx == other.dx && this->dy == other.dy;
     }
-    bool operator!=(const SizeT<T>& other) const {
+    bool operator!=(const SizeTmpl<T>& other) const {
         return !this->operator==(other);
     }
 };
 
-typedef SizeT<int> SizeI;
-typedef SizeT<double> SizeD;
+typedef SizeTmpl<int> SizeI;
+typedef SizeTmpl<double> SizeD;
 
 template <typename T>
 class RectT
@@ -74,7 +74,7 @@ public:
 
     RectT() : x(0), y(0), dx(0), dy(0) { }
     RectT(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) { }
-    RectT(PointT<T> pt, SizeT<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) { }
+    RectT(PointT<T> pt, SizeTmpl<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) { }
 
     static RectT FromXY(T xs, T ys, T xe, T ye) {
         if (xs > xe)
@@ -166,7 +166,7 @@ public:
 
     PointT<T> TL() const { return PointT<T>(x, y); }
     PointT<T> BR() const { return PointT<T>(x + dx, y + dy); }
-    SizeT<T> Size() const { return SizeT<T>(dx, dy); }
+    SizeTmpl<T> Size() const { return SizeTmpl<T>(dx, dy); }
 
 #ifdef _WIN32
     RECT ToRECT() const {

@@ -72,8 +72,12 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(MUPDF_DIR)\xps /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
 	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src
 
+LZMA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
+	/Iext/lzma/C
+
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/Isrc/utils /Isrc/installer /Isrc /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip
+	/Isrc/utils /Isrc/installer /Isrc /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
+	/Iext/lzma/C
 
 UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/Isrc/utils /Isrc/installer /Isrc /D "BUILD_UNINSTALLER"
@@ -99,6 +103,7 @@ OU   = $(O)\utils
 ODLL = $(O)\applibs
 OMUI = $(O)\mui
 OM   = $(O)\memtrace
+OLZ  = $(O)\lzma
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
@@ -158,6 +163,9 @@ UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj $(OU)\Settings.obj
 ZIP_OBJS = \
 	$(OU)\ZipUtil.obj $(MINIZIP_OBJS) $(BZIP2_OBJS)
 
+LZMA_OBJS = \
+	$(OLZ)\LzmaDec.obj
+
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \
 	$(OMUI)\MuiPainter.obj $(OMUI)\MuiControl.obj $(OMUI)\MuiButton.obj \
@@ -166,7 +174,7 @@ MUI_OBJS = \
 
 EBOOK_OBJS = \
 	$(OS)\Doc.obj $(OS)\EbookDoc.obj $(OS)\MobiDoc.obj $(OU)\PalmDbReader.obj \
-	$(OS)\HtmlFormatter.obj $(OS)\EbookFormatter.obj 
+	$(OS)\HtmlFormatter.obj $(OS)\EbookFormatter.obj
 
 ENGINE_OBJS = \
 	$(OS)\PdfEngine.obj $(OS)\PsEngine.obj \
@@ -195,7 +203,7 @@ SUMATRA_OBJS = \
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
-	$(UTILS_LIB) $(ZIP_OBJS) $(ZLIB_OBJS) \
+	$(UTILS_LIB) $(LZMA_OBJS) \
 	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
 
 UNINSTALLER_OBJS = \
@@ -266,6 +274,7 @@ $(OS): $(O) $(OE)
 	@if not exist $(ODLL) mkdir $(ODLL)
 	@if not exist $(OMUI) mkdir $(OMUI)
 	@if not exist $(OM) mkdir $(OM)
+	@if not exist $(OLZ) mkdir $(OLZ)
 
 $(SUMATRA_RES): src\SumatraPDF.rc src\Resource.h src\Version.h
 	rc /r /fo$@ $(RC_FLAGS) src\SumatraPDF.rc
@@ -283,7 +292,7 @@ $(LIBMUPDF_DLL): $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBMUPDF_DEF)
 	$(LD) /DLL $(LDFLAGS) $(MUPDF_LIB) $(LIBMUPDF_RES) $(LIBS) /DEF:$(LIBMUPDF_DEF) /IMPLIB:$(LIBMUPDF_LIB) /PDB:$*.pdb /OUT:$@
 
 $(INSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
-	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData.zip" src\installer\Installer.rc
+	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(O)\InstallerData2.zip" src\installer\Installer.rc
 
 $(UNINSTALLER_RES): src\installer\Installer.rc src\installer\Resource.h src\Version.h
 	rc /r /fo$@ $(RC_FLAGS) /D "BUILD_UNINSTALLER" src\installer\Installer.rc
@@ -323,6 +332,9 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 
 {src\utils}.cpp{$(OU)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OU)\ /Fd$(O)\vc80.pdb $<
+
+{ext\lzma\C}.c{$(OLZ)}.obj::
+	$(CC) $(LZMA_CFLAGS) /Fo$(OLZ)\ /Fd$(O)\vc80.pdb $<
 
 {src\mui}.cpp{$(OMUI)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OMUI)\ /Fd$(O)\vc80.pdb $<

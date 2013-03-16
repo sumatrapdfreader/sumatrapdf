@@ -6,7 +6,9 @@
 #endif
 
 #include "Installer.h"
-#include "ZipUtil.h"
+#include "FileUtil.h"
+#include "FileTransactions.h"
+#include "LzmaDec.h"
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
@@ -58,45 +60,113 @@ static inline void ProgressStep()
 
 bool IsValidInstaller()
 {
-    ZipFile archive(GetOwnPath());
-    return archive.GetFileCount() > 0;
+    // TODO: write me
+    return true;
+}
+
+struct FileInfo {
+    int32_t         sizeUncompressed;
+    int32_t         sizeCompressed;
+    int32_t         off;
+    const char *    name;
+};
+
+static void *SzAlloc(void *p, size_t size) { p = p; return malloc(size); }
+static void SzFree(void *p, void *address) { p = p; free(address); }
+static ISzAlloc g_Alloc = { SzAlloc, SzFree };
+
+int32_t
+read4(const uint8_t* in)
+{
+  return (static_cast<int32_t>(in[3]) << 24)
+    |    (static_cast<int32_t>(in[2]) << 16)
+    |    (static_cast<int32_t>(in[1]) <<  8)
+    |    (static_cast<int32_t>(in[0])      );
+}
+
+uint8_t* decodeLZMA(uint8_t* in, unsigned inSize, unsigned* uncompressedSizeOut)
+{
+  const unsigned PropHeaderSize = 5;
+  const unsigned HeaderSize = 13;
+
+  int32_t outSize = read4(in + PropHeaderSize);
+  SizeT outSizeT = outSize;
+
+  uint8_t* out = static_cast<uint8_t*>(malloc(outSize));
+
+  SizeT inSizeT = inSize;
+
+  ELzmaStatus status;
+  int result = LzmaDecode(out, &outSizeT, in + HeaderSize, &inSizeT, in, PropHeaderSize,
+     LZMA_FINISH_END, &status, &g_Alloc);
+
+  //expect(s, status == LZMA_STATUS_FINISHED_WITH_MARK);
+  *uncompressedSizeOut = outSize;
+  return out;
 }
 
 static bool InstallCopyFiles()
 {
+    FileInfo fileInfos[32];
+
+    HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(1), RT_RCDATA);
+    CrashIf(!resSrc);
+    HGLOBAL res = LoadResource(NULL, resSrc);
+    CrashIf(!res);
+    const uint8_t *data = (const uint8_t*)LockResource(res);
+    DWORD dataSize = SizeofResource(NULL, resSrc);
+
     // extract all payload files one by one (transacted, if possible)
-    ZipFile archive(GetOwnPath());
     FileTransaction trans;
 
-    for (int i = 0; gPayloadData[i].filepath; i++) {
-        // skip files that are only uninstalled
-        if (!gPayloadData[i].install)
-            continue;
-        ScopedMem<WCHAR> filepathT(str::conv::FromUtf8(gPayloadData[i].filepath));
-
-        size_t size;
-        ScopedMem<char> data(archive.GetFileDataByName(filepathT, &size));
-        if (!data) {
-            NotifyFailed(_TR("Some files to be installed are damaged or missing"));
-            return false;
+    const int32_t *idata = (const int32_t*)data;
+    int32_t fileCount = *idata++;
+    CrashIf(fileCount >= dimof(fileInfos));
+    int32_t off = 0;
+    for (int32_t i = 0; i < fileCount; i++) {
+        fileInfos[i].off = off;
+        fileInfos[i].sizeUncompressed = *idata++;
+        fileInfos[i].sizeCompressed = *idata++;
+        off += fileInfos[i].sizeCompressed;
+        data = (const uint8_t*)idata;
+        fileInfos[i].name = (const char*)data;
+        while (*data) {
+            ++data;
         }
+        ++data;
+        idata = (const int32_t*)data;
+    }
 
+    uint8_t *dst;
+    for (int32_t i = 0; i < fileCount; i++) {
+        ScopedMem<WCHAR> filepathT(str::conv::FromUtf8(fileInfos[i].name));
+        int32_t srcLen = fileInfos[i].sizeCompressed;
+        off = fileInfos[i].off;
+        const uint8_t *src = data + off;
+        unsigned dstLen;
+        dst = decodeLZMA((uint8_t*)src, (unsigned)srcLen, &dstLen);
+        CrashIf(dstLen != (unsigned)fileInfos[i].sizeUncompressed);
         ScopedMem<WCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepathT)));
-        bool ok = trans.WriteAll(extpath, data, size);
+        bool ok = trans.WriteAll(extpath, dst, dstLen);
         if (!ok) {
             ScopedMem<WCHAR> msg(str::Format(_TR("Couldn't write %s to disk"), filepathT));
             NotifyFailed(msg);
-            return false;
+            goto Error;
         }
+        free(dst);
 
         // set modification time to original value
-        FILETIME ftModified = archive.GetFileTime(filepathT);
-        trans.SetModificationTime(extpath, ftModified);
+        //FILETIME ftModified = archive.GetFileTime(filepathT);
+        //trans.SetModificationTime(extpath, ftModified);
 
         ProgressStep();
     }
 
+    UnlockResource(res);
     return trans.Commit();
+Error:
+    UnlockResource(res);
+    return false;
 }
 
 /* Caller needs to free() the result. */
