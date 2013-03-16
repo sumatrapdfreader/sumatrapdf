@@ -6,8 +6,9 @@ import os, shutil, time, datetime, cPickle, traceback
 import s3, util
 from util import file_remove_try_hard, run_cmd_throw
 from util import parse_svnlog_out, Serializable, create_dir
-from util import load_config, run_cmd, strip_empty_lines, build_installer_data
+from util import load_config, run_cmd, strip_empty_lines
 from util import verify_path_exists, verify_started_in_right_directory
+from build import build_installer_data
 from buildbot_html import gen_analyze_html, build_index_html, rebuild_trans_src_path_cache
 from buildbot_html import build_sizes_json, g_first_analyze_build
 

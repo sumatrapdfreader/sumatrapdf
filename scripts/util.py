@@ -356,18 +356,6 @@ def sendmail(sender, senderpwd, to, subject, body):
     mailServer.sendmail(sender, to, msg)
     mailServer.close()
 
-# build the .zip with with installer data, will be included as part of
-# Installer.exe resources
-def build_installer_data(dir):
-  zf = zipfile.ZipFile(os.path.join(dir, "InstallerData.zip"), "w", zipfile.ZIP_BZIP2)
-  exe = os.path.join(dir, "SumatraPDF-no-MuPDF.exe")
-  zf.write(exe, "SumatraPDF.exe")
-  for f in ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll", "uninstall.exe"]:
-    zf.write(os.path.join(dir, f), f)
-  font_path = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
-  zf.write(font_path, "DroidSansFallback.ttf")
-  zf.close()
-
 # Some operations, like uploading to s3, require knowing s3 credential
 # We store all such information that cannot be publicly known in a file
 # config.py. This object is just a wrapper to documents the fields

@@ -3,29 +3,14 @@ Builds a (pre)release build of SumatraPDF, including the installer,
 and optionally uploads it to s3.
 """
 
-import os, shutil, sys, time, re
-import s3
+import os, shutil, sys, time, re, urllib2, struct, s3
 from util import test_for_flag, run_cmd_throw
 from util import verify_started_in_right_directory, parse_svninfo_out, log
 from util import extract_sumatra_version, zip_file
-from util import load_config, build_installer_data, verify_path_exists
-
+from util import load_config, verify_path_exists
 import trans_upload, trans_download
-
-g_new_translation_system = True
-
-args = sys.argv[1:]
-upload               = test_for_flag(args, "-upload")
-upload_tmp           = test_for_flag(args, "-uploadtmp")
-testing              = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
-build_test_installer = test_for_flag(args, "-test-installer") or test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
-build_rel_installer  = test_for_flag(args, "-testrelinst")
-build_prerelease     = test_for_flag(args, "-prerelease")
-skip_transl_update   = test_for_flag(args, "-noapptrans")
-svn_revision         = test_for_flag(args, "-svn-revision", True)
-target_platform      = test_for_flag(args, "-platform", True)
-
-g_lzma_exe_url = "http://dl.dropbox.com/u/3064436/lzma.exe"
+# zipfile doesn't support ZIP_BZIP2 compression in Python 2.*
+import zipfile2 as zipfile
 
 def usage():
   print("build-release.py [-upload][-uploadtmp][-test][-test-installer][-prerelease][-platform=X64]")
@@ -63,6 +48,78 @@ def usage():
 #          installer for library build
 #       sumatrapdf/sumatralatest.js
 #       sumatrapdf/sumpdf-prerelease-latest.txt
+
+g_lzma_exe_url = "http://dl.dropbox.com/u/3064436/lzma.exe"
+def lzma_path():
+  d = os.path.dirname(__file__)
+  lzma_path = os.path.realpath(os.path.join(d, "..", "bin", "lzma.exe"))
+  if os.path.exists(lzma_path): return lzma_path
+  lzma_data = urllib2.urlopen(g_lzma_exe_url).read()
+  with open(lzma_path, "wb") as fo:
+    fo.write(lzma_data)
+  print("downloaded lzma into %s" % lzma_path)
+  return lzma_path
+
+# build the .zip with with installer data, will be included as part of
+# Installer.exe resources
+def build_installer_data(dir):
+  zf = zipfile.ZipFile(os.path.join(dir, "InstallerData.zip"), "w", zipfile.ZIP_BZIP2)
+  exe = os.path.join(dir, "SumatraPDF-no-MuPDF.exe")
+  zf.write(exe, "SumatraPDF.exe")
+  for f in ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll", "uninstall.exe"]:
+    zf.write(os.path.join(dir, f), f)
+  font_path = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
+  zf.write(font_path, "DroidSansFallback.ttf")
+  zf.close()
+
+def lzma_compress(src, dst):
+  lzma = lzma_path()
+  run_cmd_throw(lzma, "e", src, dst)
+
+
+# build installer data, will be included as part of Installer.exe resources
+# The format is:
+#   int32 number of files
+# for each file:
+#   int32 file size
+#   string file name, 0-terminated
+# for each file:
+#   file data
+def build_installer_data2(dir):
+  src = os.path.join(dir, "SumatraPDF-no-MuPDF.exe")
+  dst = os.path.join(dir, "SumatraPDF.exe.lzma")
+  lzma_compress(src, dst)
+  src = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
+  dst = os.path.join(dir, "DroidSansFallback.ttf.lzma")
+  lzma_compress(src, dst)
+  files = ["libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll", "uninstall.exe"]
+  for src in files:
+    src = os.path.join(dir, src)
+    dst = src + ".lzma"
+    lzma_compress(src, dst)
+  files = ["SumatraPDF.exe", "DroidSansFallback.ttf"] + files
+  d = struct.pack("<i", len(files))
+  for f in files:
+    path = os.path.join(dir, f) + ".lzma"
+    d += struct.pack("<i", os.path.getsize(path))
+    d += f + "\0"
+  dst = os.path.join(dir, "InstallerData2.zip")
+  with open(dst, "wb") as fo:
+    fo.write(d)
+    for f in files:
+      path = os.path.join(dir, f) + ".lzma"
+      d = open(path, "rb").read()
+      fo.write(d)
+
+def compare_installers():
+  dir = "obj-rel"
+  build_installer_data(dir)
+  build_installer_data2(dir)
+  s1 = os.path.getsize(os.path.join(dir, "InstallerData.zip"))
+  s2 = os.path.getsize(os.path.join(dir, "InstallerData2.zip"))
+  delta = s1 - s2
+  print("lzma saves %d bytes of zip (%d - %d)" % (delta, s1, s2))
+  sys.exit(1)
 
 def copy_to_dst_dir(src_path, dst_dir):
   name_in_obj_rel = os.path.basename(src_path)
@@ -110,10 +167,21 @@ def sign(file_path, cert_pwd):
   os.chdir(curr_dir)
 
 def main():
-  global upload
+  args = sys.argv[1:]
+  upload               = test_for_flag(args, "-upload")
+  upload_tmp           = test_for_flag(args, "-uploadtmp")
+  testing              = test_for_flag(args, "-test") or test_for_flag(args, "-testing")
+  build_test_installer = test_for_flag(args, "-test-installer") or test_for_flag(args, "-testinst") or test_for_flag(args, "-testinstaller")
+  build_rel_installer  = test_for_flag(args, "-testrelinst")
+  build_prerelease     = test_for_flag(args, "-prerelease")
+  skip_transl_update   = test_for_flag(args, "-noapptrans")
+  svn_revision         = test_for_flag(args, "-svn-revision", True)
+  target_platform      = test_for_flag(args, "-platform", True)
+
   if len(args) != 0:
     usage()
   verify_started_in_right_directory()
+  lzma_path() # early check
 
   if build_prerelease:
     if svn_revision is None:
@@ -129,7 +197,7 @@ def main():
 
   # don't update translations for release versions to prevent Trunk changes
   # from messing up the compilation of a point release on a branch
-  if g_new_translation_system and build_prerelease and not skip_transl_update:
+  if build_prerelease and not skip_transl_update:
     trans_upload.uploadStringsIfChanged()
     changed = trans_download.downloadAndUpdateTranslationsIfChanged()
     # Note: this is not a perfect check since re-running the script will
@@ -255,4 +323,5 @@ def main():
   # manually to: "%s\n" % ver
 
 if __name__ == "__main__":
+  #compare_installers()
   main()
