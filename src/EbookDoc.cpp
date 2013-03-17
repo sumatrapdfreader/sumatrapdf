@@ -1092,7 +1092,7 @@ bool HtmlDoc::Load()
 
 const char *HtmlDoc::GetTextData(size_t *lenOut)
 {
-    *lenOut = htmlData ? str::Len(htmlData) : 0;
+    *lenOut = str::Len(htmlData);
     return htmlData;
 }
 

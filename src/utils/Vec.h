@@ -40,6 +40,7 @@ protected:
 
         size_t newElCount = newCap + PADDING;
         CrashAlwaysIf(newElCount >= SIZE_MAX / sizeof(T));
+        CrashAlwaysIf(newElCount > INT_MAX); // limitation of Vec::Find
 
         size_t allocSize = newElCount * sizeof(T);
         size_t newPadding = allocSize - len * sizeof(T);
@@ -369,7 +370,7 @@ public:
 
     WCHAR *Join(const WCHAR *joint=NULL) {
         str::Str<WCHAR> tmp(256);
-        size_t jointLen = joint ? str::Len(joint) : 0;
+        size_t jointLen = str::Len(joint);
         for (size_t i = 0; i < len; i++) {
             WCHAR *s = At(i);
             if (i > 0 && jointLen > 0)

@@ -1239,7 +1239,7 @@ public:
     }
 
     const char *GetTextData(size_t *lenOut) {
-        *lenOut = html ? str::Len(html) : 0;
+        *lenOut = str::Len(html);
         return html;
     }
 

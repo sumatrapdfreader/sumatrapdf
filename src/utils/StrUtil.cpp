@@ -6,20 +6,6 @@
 
 namespace str {
 
-size_t Len(const char *s)
-{
-    if (!s)
-        return 0;
-    return strlen(s);
-}
-
-size_t Len(const WCHAR *s)
-{
-    if (!s)
-        return 0;
-    return wcslen(s);
-}
-
 #define EntryCheck(arg1, arg2) \
     if (arg1 == arg2) \
         return true; \
