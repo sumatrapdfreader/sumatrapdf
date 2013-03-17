@@ -56,6 +56,7 @@ g_global_blacklist = [
 def is_file_blacklisted(path):
     file_name = os.path.basename(path)
     if file_name in g_global_blacklist: return True
+    if file_name.startswith("SettingsSumatra."): return True
     if ext(path) in [".aps"]: return True
     return False
 
@@ -87,6 +88,9 @@ def first_el_same(list1, list2):
     if len(list1) == 0 or len(list2) == 0:
         return False
     return list1[0] == list2[0]
+
+def path_to_win(path):
+    return path.replace("/", "\\")
 
 # TODO: this doesn't handle if the case:
 # path         = "foo/bar/x.c"
@@ -247,7 +251,7 @@ def build_files(filters, relative_dir):
     for filter in filters:
         for path in filter.files:
             file_type = file_type_from_file(path)
-            path = path_relative_to(path, relative_dir)
+            path = path_to_win(path_relative_to(path, relative_dir))
             f = File(path, file_type, filter)
             res.append(f)
     return res
@@ -268,7 +272,6 @@ def gen_vcxproj_part_item_group(name, files):
     lines = []
     for f in files:
         path = f.path
-        path.replace("/", "\\") # potential unix => win path separator
         s = """    <%s Include="%s" />""" % (name, path)
         lines.append(s)
     return ["  <ItemGroup>"] + lines + ["  </ItemGroup>"]
