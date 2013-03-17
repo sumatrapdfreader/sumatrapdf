@@ -6,6 +6,24 @@
 
 namespace str {
 
+size_t Len(const char *s)
+{
+    return s ? strlen(s) : 0;
+}
+size_t Len(const WCHAR *s)
+{
+    return s ? wcslen(s) : 0;
+}
+
+char *Dup(const char *s)
+{
+    return s ? _strdup(s) : NULL;
+}
+WCHAR *Dup(const WCHAR *s)
+{
+    return s ? _wcsdup(s) : NULL;
+}
+
 #define EntryCheck(arg1, arg2) \
     if (arg1 == arg2) \
         return true; \

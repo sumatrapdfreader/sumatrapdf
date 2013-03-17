@@ -11,11 +11,11 @@ enum TrimOpt {
     TrimBoth
 };
 
-inline size_t Len(const char *s) { return s ? strlen(s) : 0; }
-inline size_t Len(const WCHAR *s) { return s ? wcslen(s) : 0; }
+size_t Len(const char *s);
+size_t Len(const WCHAR *s);
 
-inline char *  Dup(const char *s) { return s ? _strdup(s) : NULL; }
-inline WCHAR * Dup(const WCHAR *s) { return s ? _wcsdup(s) : NULL; }
+char *  Dup(const char *s);
+WCHAR * Dup(const WCHAR *s);
 
 void ReplacePtr(char **s, const char *snew);
 void ReplacePtr(WCHAR **s, const WCHAR *snew);
