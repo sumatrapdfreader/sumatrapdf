@@ -51,7 +51,7 @@ def usage():
 def lzma_compress(src, dst):
   d = os.path.dirname(__file__)
   lzma = os.path.realpath(os.path.join(d, "..", "bin", "lzma.exe"))
-  run_cmd_throw(lzma, "e", src, dst, "-eos")
+  run_cmd_throw(lzma, "e", src, dst, "-f86")
 
 def copy_to_dst_dir(src_path, dst_dir):
   name_in_obj_rel = os.path.basename(src_path)
