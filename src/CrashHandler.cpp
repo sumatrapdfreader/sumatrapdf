@@ -12,11 +12,10 @@
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
 #include "HttpUtil.h"
+#include "LzmaDecUtil.h"
 #include "SumatraPDF.h"
 #include "Version.h"
 #include "WinUtil.h"
-#include "ZipUtil.h"
-#include <unzalloc.h>
 
 #define NOLOG 0 // 0 for more detailed debugging, 1 to disable lf()
 #include "DebugLog.h"
@@ -104,23 +103,6 @@ static bool     gCrashed = false;
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
 
-// alloc/free functions to be passed to unzip.c
-static void *zip_alloc(void *opaque, size_t items, size_t size)
-{
-    void *v = gCrashHandlerAllocator->Alloc(items * size);
-    return v;
-}
-
-static void zip_free(void *opaque, void *addr)
-{
-    gCrashHandlerAllocator->Free(addr);
-}
-
-static UnzipAllocFuncs gUnzipAllocFuncs = {
-    &zip_alloc,
-    &zip_free
-};
-
 static char *BuildCrashInfoText()
 {
     lf("BuildCrashInfoText(): start");
@@ -180,40 +162,39 @@ static bool DeleteSymbolsIfExist()
 }
 
 // static (single .exe) build
-static bool UnpackStaticSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
+static bool UnpackStaticSymbols(const char *pdbZipPath, const char *symDir)
 {
-    lf(L"UnpackStaticSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    ZipFile archive(pdbZipPath, Zip_Any, gCrashHandlerAllocator);
-    if (!archive.UnzipFile(L"SumatraPDF.pdb", symDir)) {
-        plog("Failed to unzip SumatraPDF.pdb");
+    lf("UnpackStaticSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
+    const char *files[2] = { "SumatraPDF.pdb", NULL };
+    bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
+    if (!ok) {
+        plog("Failed to unpack SumatraPDF.pdb");
         return false;
     }
     return true;
 }
 
 // lib (.exe + libmupdf.dll) release and pre-release builds
-static bool UnpackLibSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
+static bool UnpackLibSymbols(const char *pdbZipPath, const char *symDir)
 {
-    lf(L"UnpackLibSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    ZipFile archive(pdbZipPath, Zip_Any, gCrashHandlerAllocator);
-    if (!archive.UnzipFile(L"libmupdf.pdb", symDir)) {
-        plog("Failed to unzip libmupdf.pdb");
-        return false;
-    }
-    if (!archive.UnzipFile(L"SumatraPDF-no-MuPDF.pdb", symDir)) {
-        plog("Failed to unzip SumatraPDF-no-MuPDF.pdb");
+    lf("UnpackLibSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
+    const char *files[3] = { "libmupdf.pdb", "SumatraPDF-no-MuPDF.pdb", NULL };
+    bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
+    if (!ok) {
+        plog("Failed to unpack libmupdf.pdb or SumatraPDF-no-MuPDF.pdb");
         return false;
     }
     return true;
 }
 
 // an installer
-static bool UnpackInstallerSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
+static bool UnpackInstallerSymbols(const char *pdbZipPath, const char *symDir)
 {
-    lf(L"UnpackInstallerSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    ZipFile archive(pdbZipPath, Zip_Any, gCrashHandlerAllocator);
-    if (!archive.UnzipFile(L"Installer.pdb", symDir)) {
-        plog("Failed to unzip Installer.pdb");
+    lf("UnpackInstallerSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
+    const char *files[2] = { "Installer.pdb", NULL };
+    bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
+    if (!ok) {
+        plog("Failed to unpack Installer.pdb");
         return false;
     }
     return true;
@@ -253,15 +234,19 @@ static bool DownloadAndUnzipSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir
         return false;
     }
 
-    unzSetAllocFuncs(&gUnzipAllocFuncs);
+    char pdbZipPathUtf[512];
+    char symDirUtf[512];
+
+    str::WcharToUtf8Buf(pdbZipPath, pdbZipPathUtf, sizeof(pdbZipPathUtf));
+    str::WcharToUtf8Buf(symDir, symDirUtf, sizeof(symDirUtf));
 
     bool ok = false;
     if (ExeSumatraStatic == gExeType) {
-        ok = UnpackStaticSymbols(pdbZipPath, symDir);
+        ok = UnpackStaticSymbols(pdbZipPathUtf, symDirUtf);
     } else if (ExeSumatraLib == gExeType) {
-        ok = UnpackLibSymbols(pdbZipPath, symDir);
+        ok = UnpackLibSymbols(pdbZipPathUtf, symDirUtf);
     } else if (ExeInstaller == gExeType) {
-        ok = UnpackInstallerSymbols(pdbZipPath, symDir);
+        ok = UnpackInstallerSymbols(pdbZipPathUtf, symDirUtf);
     } else {
         plog("DownloadAndUnzipSymbols(): unknown exe type");
     }

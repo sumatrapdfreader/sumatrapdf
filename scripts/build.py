@@ -149,13 +149,8 @@ def build_installer_data(dir):
   util.delete_file(installer_res)
 
 def create_pdb_archive(dir, archive_name):
-  archive_path = os.path.join(dir, archive_name)
-
-  zip_file(archive_path, os.path.join(dir, "libmupdf.pdb"))
-  zip_file(archive_path, os.path.join(dir, "Installer.pdb"), append=True)
-  zip_file(archive_path, os.path.join(dir, "SumatraPDF-no-MuPDF.pdb"), append=True)
-  zip_file(archive_path, os.path.join(dir, "SumatraPDF.pdb"), append=True)
-  return archive_path
+  files = ["libmupdf.pdb", "Installer.pdb", "SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"]
+  return create_lzma_archive(dir, archive_name, files)
 
 # delete all but the last 3 pre-release builds in order to use less s3 storage
 def delete_old_pre_release_builds():
@@ -305,7 +300,7 @@ def main():
   if upload:
     sign(installer, cert_pwd)
 
-  pdb_archive = create_pdb_archive(obj_dir, "%s.pdb.zip" % filename_base)
+  pdb_archive = create_pdb_archive(obj_dir, "%s.pdb.lzma" % filename_base)
 
   builds_dir = os.path.join("builds", ver)
   if os.path.exists(builds_dir):
@@ -314,7 +309,7 @@ def main():
 
   copy_to_dst_dir(exe, builds_dir)
   copy_to_dst_dir(installer, builds_dir)
-  copy_to_dst_dir(pdb_zip, builds_dir)
+  copy_to_dst_dir(pdb_archive, builds_dir)
 
   if not build_prerelease:
     exe_zip = os.path.join(obj_dir, "%s.zip" % filename_base)
@@ -333,7 +328,7 @@ def main():
     jstxt += 'var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_installer
 
   s3.upload_file_public(installer, s3_installer)
-  s3.upload_file_public(pdb_zip, s3_pdb_zip)
+  s3.upload_file_public(pdb_archive, s3_pdb_zip)
   s3.upload_file_public(exe, s3_exe)
 
   if build_prerelease:

@@ -19,6 +19,12 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
+// TODO: temporarily show debug menus in pre-release builds to make it
+// possible to crash to test changed crash handler
+#if defined(SVN_PRE_RELEASE_VER)
+#define SHOW_DEBUG_MENU_ITEMS
+#endif
+
 void MenuUpdateDisplayMode(WindowInfo* win)
 {
     bool enabled = win->IsDocLoaded();
@@ -152,8 +158,8 @@ static MenuDef menuDefDebug[] = {
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
-//    { SEP_ITEM,                             0,                          0 },
-//    { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
+    { SEP_ITEM,                             0,                          0 },
+    { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
 };
 
 static MenuDef menuDefDebugEbooks[] = {
