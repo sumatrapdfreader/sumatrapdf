@@ -66,6 +66,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\AppPrefs.cpp" />
     <ClCompile Include="..\src\AppTools.cpp" />
+    <ClCompile Include="..\src\CrashHandler-mine.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\Doc.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="..\src\utils\HttpUtil.cpp" />
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
     <ClCompile Include="..\src\utils\JsonParser_ut.cpp" />
+    <ClCompile Include="..\src\utils\LzmaDecUtil.cpp" />
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
     <ClCompile Include="..\src\utils\Settings.cpp" />
@@ -180,6 +182,7 @@
     <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
+    <ClCompile Include="..\src\installer\Install-mine.cpp" />
     <ClCompile Include="..\src\installer\Install.cpp" />
     <ClCompile Include="..\src\installer\Installer.cpp" />
     <ClCompile Include="..\src\installer\Trans_installer_txt.cpp" />
@@ -404,6 +407,7 @@
     <ClInclude Include="..\src\utils\HtmlWindow.h" />
     <ClInclude Include="..\src\utils\HttpUtil.h" />
     <ClInclude Include="..\src\utils\JsonParser.h" />
+    <ClInclude Include="..\src\utils\LzmaDecUtil.h" />
     <ClInclude Include="..\src\utils\NoFreeAllocator.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
     <ClInclude Include="..\src\utils\RefCounted.h" />

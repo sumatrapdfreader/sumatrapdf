@@ -64,14 +64,24 @@ WCHAR *GetDir(const WCHAR *path)
     return str::DupN(path, baseName - path - 1);
 }
 
-WCHAR *Join(const WCHAR *path, const WCHAR *filename)
+WCHAR *Join(const WCHAR *path, const WCHAR *fileName)
 {
-    if (IsSep(*filename))
-        filename++;
-    WCHAR *sep = NULL;
+    if (IsSep(*fileName))
+        fileName++;
+    WCHAR *sepStr = NULL;
     if (!IsSep(path[str::Len(path) - 1]))
-        sep = L"\\";
-    return str::Join(path, sep, filename);
+        sepStr = L"\\";
+    return str::Join(path, sepStr, fileName);
+}
+
+char *JoinUtf(const char *path, const char *fileName, Allocator *allocator)
+{
+    if (IsSep(*fileName))
+        fileName++;
+    char *sepStr = NULL;
+    if (!IsSep(path[str::Len(path) - 1]))
+        sepStr = "\\";
+    return str::Join(path, sepStr, fileName, allocator);
 }
 
 // Normalize a file path.
@@ -274,7 +284,7 @@ int64 GetSize(const WCHAR *filePath)
     return size.QuadPart;
 }
 
-char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut)
+char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut, Allocator *allocator)
 {
     int64 size64 = GetSize(filePath);
     if (size64 < 0)
@@ -293,12 +303,12 @@ char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut)
     /* allocate one character more and zero-terminate just in case it's a
        text file we'll want to treat as C string. Doesn't hurt for binary
        files (note: two byte terminator for UTF-16 files) */
-    char *data = (char *)malloc(size + sizeof(WCHAR));
+    char *data = (char *)Allocator::Alloc(allocator, size + sizeof(WCHAR));
     if (!data)
         return NULL;
 
     if (!ReadAll(filePath, data, size)) {
-        free(data);
+        Allocator::Free(allocator, data);
         return NULL;
     }
 
@@ -308,6 +318,13 @@ char *ReadAll(const WCHAR *filePath, size_t *fileSizeOut)
     if (fileSizeOut)
         *fileSizeOut = size;
     return data;
+}
+
+char *ReadAllUtf(const char *filePath, size_t *fileSizeOut, Allocator *allocator)
+{
+    WCHAR buf[512];
+    str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
+    return ReadAll(buf, fileSizeOut, allocator);
 }
 
 bool ReadAll(const WCHAR *filePath, char *buffer, size_t bufferLen)
@@ -333,6 +350,13 @@ bool WriteAll(const WCHAR *filePath, const void *data, size_t dataLen)
     BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, NULL);
     assert(!ok || (dataLen == (size_t)size));
     return ok && dataLen == (size_t)size;
+}
+
+bool WriteAllUtf(const char *filePath, const void *data, size_t dataLen)
+{
+    WCHAR buf[512];
+    str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
+    return WriteAll(buf, data, dataLen);
 }
 
 // Return true if the file wasn't there or was successfully deleted

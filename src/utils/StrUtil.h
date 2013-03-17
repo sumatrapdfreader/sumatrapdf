@@ -11,8 +11,8 @@ enum TrimOpt {
     TrimBoth
 };
 
-inline size_t Len(const char *s) { return strlen(s); }
-inline size_t Len(const WCHAR *s) { return wcslen(s); }
+size_t Len(const char *s);
+size_t Len(const WCHAR *s);
 
 inline char *  Dup(const char *s) { return s ? _strdup(s) : NULL; }
 inline WCHAR * Dup(const WCHAR *s) { return s ? _wcsdup(s) : NULL; }
@@ -21,6 +21,7 @@ void ReplacePtr(char **s, const char *snew);
 void ReplacePtr(WCHAR **s, const WCHAR *snew);
 
 char *  Join(const char *s1, const char *s2, const char *s3=NULL);
+char *  Join(const char *s1, const char *s2, const char *s3, Allocator *allocator);
 WCHAR * Join(const WCHAR *s1, const WCHAR *s2, const WCHAR *s3=NULL);
 
 bool Eq(const char *s1, const char *s2);
@@ -121,7 +122,8 @@ const char  *   Parse(const char *str, const char *format, ...);
 const char  *   Parse(const char *str, size_t len, const char *format, ...);
 const WCHAR *   Parse(const WCHAR *str, const WCHAR *format, ...);
 
-size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax);
+size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t cchBufOutSize);
+size_t WcharToUtf8Buf(const WCHAR *s, char *bufOut, size_t cbBufOutSize);
 
 void UrlDecodeInPlace(char *url);
 void UrlDecodeInPlace(WCHAR *url);

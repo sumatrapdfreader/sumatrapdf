@@ -47,9 +47,9 @@
     <_ProjectFileVersion>10.0.30128.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=dbg NASM=bin\nasm.exe SumatraPDF</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=dbg  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=dbg NASM=..\bin\nasm.exe SumatraPDF</NMakeBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f ..\makefile.msvc BASEDIR=..  CFG=dbg  NASM=..\bin\nasm.exe rebuild</NMakeReBuildCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nmake -f ..\makefile.msvc BASEDIR=..  CFG=dbg  NASM=..\bin\nasm.exe clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\obj-dbg\sumatrapdf.exe</NMakeOutput>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">WIN32;_DEBUG;DEBUG;UNICODE;SYNCTEX_FEATURE;HAVE_BZIP2;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(NMakeIncludeSearchPath);$(ProjectDir)\..\src;$(ProjectDir)\..\src\utils;$(ProjectDir)\..\src\utils\msvc;$(ProjectDir)\..\src\mui;$(ProjectDir)\..\mupdf\fitz;$(ProjectDir)\..\mupdf\pdf;$(ProjectDir)\..\mupdf\xps;$(ProjectDir)\..\ext\libjpeg-turbo;$(ProjectDir)\..\ext\zlib-1.2.5;$(ProjectDir)\..\ext\zlib-1.2.5\minizip;$(ProjectDir)\..\ext\CHMLib\src</NMakeIncludeSearchPath>
@@ -60,11 +60,11 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">..\obj-rel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">..\obj-rel\</IntDir>
-    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe</NMakeBuildCommandLine>
+    <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel  NASM=..\bin\nasm.exe</NMakeBuildCommandLine>
     <NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe WITH_ANALYZE=yes</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe rebuild</NMakeReBuildCommandLine>
+    <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc BASEDIR=.. CFG=rel  NASM=..\bin\nasm.exe rebuild</NMakeReBuildCommandLine>
     <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe  WITH_ANALYZE=yes rebuild</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe clean</NMakeCleanCommandLine>
+    <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nmake -f ..\makefile.msvc  BASEDIR=.. CFG=rel  NASM=..\bin\nasm.exe clean</NMakeCleanCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">cd .. &amp;&amp; nmake -f makefile.msvc CFG=rel  NASM=bin\nasm.exe  WITH_ANALYZE=yes clean</NMakeCleanCommandLine>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\sumatrapdf.exe</NMakeOutput>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">..\obj-rel\sumatrapdf.exe</NMakeOutput>
@@ -78,8 +78,8 @@
     <NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
     <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
     <NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)ext\zlib;$(ProjectDir)ext\zlib\minizip;$(ProjectDir)src\mui;$(IncludePath)</IncludePath>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)ext\zlib;$(ProjectDir)ext\zlib\minizip;$(ProjectDir)src\mui;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\ext\zlib;$(ProjectDir)..\ext\zlib\minizip;$(ProjectDir)..\src\mui;$(IncludePath)</IncludePath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\ext\zlib;$(ProjectDir)..\ext\zlib\minizip;$(ProjectDir)..\src\mui;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">$(ProjectDir)ext\zlib;$(ProjectDir)ext\zlib\minizip;$(ProjectDir)src\mui;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -87,6 +87,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\AppPrefs.cpp" />
     <ClCompile Include="..\src\AppTools.cpp" />
+    <ClCompile Include="..\src\CrashHandler-mine.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\Doc.cpp" />
@@ -175,6 +176,7 @@
     <ClCompile Include="..\src\utils\HttpUtil.cpp" />
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
     <ClCompile Include="..\src\utils\JsonParser_ut.cpp" />
+    <ClCompile Include="..\src\utils\LzmaDecUtil.cpp" />
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
     <ClCompile Include="..\src\utils\Settings.cpp" />
@@ -201,6 +203,7 @@
     <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
+    <ClCompile Include="..\src\installer\Install-mine.cpp" />
     <ClCompile Include="..\src\installer\Install.cpp" />
     <ClCompile Include="..\src\installer\Installer.cpp" />
     <ClCompile Include="..\src\installer\Trans_installer_txt.cpp" />
@@ -425,6 +428,7 @@
     <ClInclude Include="..\src\utils\HtmlWindow.h" />
     <ClInclude Include="..\src\utils\HttpUtil.h" />
     <ClInclude Include="..\src\utils\JsonParser.h" />
+    <ClInclude Include="..\src\utils\LzmaDecUtil.h" />
     <ClInclude Include="..\src\utils\NoFreeAllocator.h" />
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
     <ClInclude Include="..\src\utils\RefCounted.h" />

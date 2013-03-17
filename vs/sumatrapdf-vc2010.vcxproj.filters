@@ -66,6 +66,9 @@
     <ClCompile Include="..\src\AppTools.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\CrashHandler-mine.cpp">
+      <Filter>sumatra</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -330,6 +333,9 @@
     <ClCompile Include="..\src\utils\JsonParser_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\LzmaDecUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -407,6 +413,9 @@
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp">
       <Filter>previewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\installer\Install-mine.cpp">
+      <Filter>installer</Filter>
     </ClCompile>
     <ClCompile Include="..\src\installer\Install.cpp">
       <Filter>installer</Filter>
@@ -1074,6 +1083,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\JsonParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\LzmaDecUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\NoFreeAllocator.h">

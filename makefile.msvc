@@ -77,7 +77,8 @@ CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR) /I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
 	/I$(MUPDF_DIR)\xps /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
-	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src
+	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src \
+	/I$(EXTDIR)/lzma/C
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
@@ -198,12 +199,15 @@ MAIN_UI_OBJS = \
 	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj
 
 SUMATRA_OBJS = \
-	$(OS)\SumatraPDF.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \
+	$(OS)\SumatraPDF.obj \
+	$(OU)\LzmaDecUtil.obj $(LZMA_OBJS) \
+	$(SUMATRA_RES) $(MAIN_UI_LIB) \
 	$(ENGINES_LIB) $(UTILS_LIB) $(MUI_LIB) $(SYNCTEX_OBJS)
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
-	$(UTILS_LIB) $(ZIP_OBJS) $(ZLIB_OBJS) $(LZMA_OBJS) \
+	$(UTILS_LIB) \
+	$(OU)\LzmaDecUtil.obj $(LZMA_OBJS) \
 	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
 
 UNINSTALLER_OBJS = \

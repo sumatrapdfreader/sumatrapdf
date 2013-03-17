@@ -6,6 +6,20 @@
 
 namespace str {
 
+size_t Len(const char *s)
+{
+    if (!s)
+        return 0;
+    return strlen(s);
+}
+
+size_t Len(const WCHAR *s)
+{
+    if (!s)
+        return 0;
+    return wcslen(s);
+}
+
 #define EntryCheck(arg1, arg2) \
     if (arg1 == arg2) \
         return true; \
@@ -165,6 +179,32 @@ char *Join(const char *s1, const char *s2, const char *s3)
 
     return Format("%s%s%s", s1, s2, s3);
 }
+
+char *Join(const char *s1, const char *s2)
+{
+    return Join(s1, s2, "");
+}
+
+char *Join(const char *s1, const char *s2, const char *s3, Allocator *allocator)
+{
+    size_t s1Len = str::Len(s1);
+    size_t s2Len = str::Len(s2);
+    size_t s3Len = str::Len(s3);
+    size_t len = s1Len + s2Len + s3Len + 1;
+    char *res = (char*)Allocator::Alloc(allocator, len);
+
+    char *s = res;
+    memcpy(s, s1, s1Len);
+    s += s1Len;
+    memcpy(s, s2, s2Len);
+    s += s2Len;
+    memcpy(s, s3, s3Len);
+    s += s3Len;
+    *s = 0;
+
+    return res;
+}
+
 
 /* Concatenate 2 strings. Any string can be NULL.
    Caller needs to free() memory. */
@@ -974,16 +1014,26 @@ Failure:
     return NULL;
 }
 
-size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t bufOutMax)
+size_t Utf8ToWcharBuf(const char *s, size_t sLen, WCHAR *bufOut, size_t cchBufOutSize)
 {
-    if (0 == bufOutMax)
-        return 0;
-    int sLenConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, NULL, 0);
-    if ((size_t)sLenConverted >= bufOutMax)
-        sLenConverted = (int)bufOutMax - 1;
-    MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, bufOut, sLenConverted);
-    bufOut[sLenConverted] = '\0';
-    return sLenConverted;
+    CrashIf(0 == cchBufOutSize);
+    int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, NULL, 0);
+    if ((size_t)cchConverted >= cchBufOutSize)
+        cchConverted = (int)cchBufOutSize - 1;
+    MultiByteToWideChar(CP_UTF8, 0, s, (int)sLen, bufOut, cchConverted);
+    bufOut[cchConverted] = '\0';
+    return cchConverted;
+}
+
+size_t WcharToUtf8Buf(const WCHAR *s, char *bufOut, size_t cbBufOutSize)
+{
+    CrashIf(!bufOut || (0 == cbBufOutSize));
+    int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, -1, NULL, 0, NULL, NULL);
+    if ((size_t)cbConverted >= cbBufOutSize)
+        cbConverted = (int)cbBufOutSize - 1;
+    WideCharToMultiByte(CP_UTF8, 0, s, -1, bufOut, cbConverted, NULL, NULL);
+    bufOut[cbConverted] = '\0';
+    return cbConverted;
 }
 
 void UrlDecodeInPlace(char *url)
