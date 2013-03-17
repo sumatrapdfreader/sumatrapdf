@@ -7,7 +7,7 @@
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "Toolbar.h"
-#include "Translations2.h"
+#include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 

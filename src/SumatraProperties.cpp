@@ -8,7 +8,7 @@
 #include "FileUtil.h"
 #include "resource.h"
 #include "SumatraPDF.h"
-#include "Translations2.h"
+#include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
@@ -182,7 +182,7 @@ static WCHAR *FormatPdfFileStructure(Doc doc)
         return NULL;
     WStrVec parts;
     parts.Split(fstruct, L",", true);
-    
+
     WStrVec props;
 
     if (parts.Contains(L"linearized"))

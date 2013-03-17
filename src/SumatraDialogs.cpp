@@ -9,7 +9,7 @@
 #include "DialogSizer.h"
 #include "Resource.h"
 #include "SumatraPDF.h"
-#include "Translations2.h"
+#include "Translations.h"
 #include "WinUtil.h"
 
 // cf. http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx

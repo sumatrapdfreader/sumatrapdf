@@ -1,6 +1,38 @@
 """
 Builds a (pre)release build of SumatraPDF, including the installer,
 and optionally uploads it to s3.
+
+Terms:
+ static build  - SumatraPDF.exe single executable with mupdf code statically
+                 linked in
+ library build - SumatraPDF.exe executable that uses libmupdf.dll
+
+Building release version:
+  * extract version from Version.h
+  * build with nmake, sending version as argument
+  * build an installer
+  * upload to s3 kjkpub bucket. Uploaded files:
+      sumatrapdf/rel/SumatraPDF-<ver>.exe
+         uncompressed portable executable, for archival
+      sumatrapdf/rel/SumatraPDF-<ver>.pdb.zip
+         pdb symbols for libmupdf.dll, and Sumatra's static and library builds
+      sumatrapdf/rel/SumatraPDF-<ver>-install.exe
+         installer for library build
+  * file sumatrapdf/sumpdf-latest.txt must be manually updated
+
+Building pre-release version:
+  * get svn version
+  * build with nmake, sending svn version as argument
+  * build an installer
+  * upload to s3 kjkpub bucket. Uploaded files:
+      sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>.exe
+        static, portable executable
+      sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>.pdb.zip
+         pdb symbols for libmupdf.dll and Sumatra's static and library builds
+      sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>-install.exe
+         installer for library build
+      sumatrapdf/sumatralatest.js
+      sumatrapdf/sumpdf-prerelease-latest.txt
 """
 
 import os, shutil, sys, time, re, struct, types, s3, util
@@ -12,41 +44,8 @@ import trans_upload, trans_download
 from binascii import crc32
 
 def usage():
-  print("build-release.py [-upload][-uploadtmp][-test][-test-installer][-prerelease][-platform=X64]")
+  print("build.py [-upload][-uploadtmp][-test][-test-installer][-prerelease][-platform=X64]")
   sys.exit(1)
-
-# Terms:
-#  static build  - SumatraPDF.exe single executable with mupdf code statically
-#                  linked in
-#  library build - SumatraPDF.exe executable that uses libmupdf.dll
-
-# Building release version:
-#   * extract version from Version.h
-#   * build with nmake, sending version as argument
-#   * build an installer
-#   * upload to s3 kjkpub bucket. Uploaded files:
-#       sumatrapdf/rel/SumatraPDF-<ver>.exe
-#          uncompressed portable executable, for archival
-#       sumatrapdf/rel/SumatraPDF-<ver>.pdb.zip
-#          pdb symbols for libmupdf.dll, and Sumatra's static and library builds
-#       sumatrapdf/rel/SumatraPDF-<ver>-install.exe
-#          installer for library build
-#
-#   * file sumatrapdf/sumpdf-latest.txt must be manually updated
-
-# Building pre-release version:
-#   * get svn version
-#   * build with nmake, sending svn version as argument
-#   * build an installer
-#   * upload to s3 kjkpub bucket. Uploaded files:
-#       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>.exe
-#          static, portable executable
-#       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>.pdb.zip
-#          pdb symbols for libmupdf.dll and Sumatra's static and library builds
-#       sumatrapdf/prerel/SumatraPDF-prerelease-<svnrev>-install.exe
-#          installer for library build
-#       sumatrapdf/sumatralatest.js
-#       sumatrapdf/sumpdf-prerelease-latest.txt
 
 def lzma_compress(src, dst):
   d = os.path.dirname(__file__)
@@ -148,6 +147,15 @@ def build_installer_data(dir):
   create_lzma_archive(dir, "InstallerData.dat", files)
   installer_res = os.path.join(dir, "sumatrapdf", "Installer.res")
   util.delete_file(installer_res)
+
+def create_pdb_archive(dir, archive_name):
+  archive_path = os.path.join(dir, archive_name)
+
+  zip_file(archive_path, os.path.join(dir, "libmupdf.pdb"))
+  zip_file(archive_path, os.path.join(dir, "Installer.pdb"), append=True)
+  zip_file(archive_path, os.path.join(dir, "SumatraPDF-no-MuPDF.pdb"), append=True)
+  zip_file(archive_path, os.path.join(dir, "SumatraPDF.pdb"), append=True)
+  return archive_path
 
 # delete all but the last 3 pre-release builds in order to use less s3 storage
 def delete_old_pre_release_builds():
@@ -297,12 +305,7 @@ def main():
   if upload:
     sign(installer, cert_pwd)
 
-  pdb_zip = os.path.join(obj_dir, "%s.pdb.zip" % filename_base)
-
-  zip_file(pdb_zip, os.path.join(obj_dir, "libmupdf.pdb"))
-  zip_file(pdb_zip, os.path.join(obj_dir, "Installer.pdb"), append=True)
-  zip_file(pdb_zip, os.path.join(obj_dir, "SumatraPDF-no-MuPDF.pdb"), append=True)
-  zip_file(pdb_zip, os.path.join(obj_dir, "SumatraPDF.pdb"), append=True)
+  pdb_archive = create_pdb_archive(obj_dir, "%s.pdb.zip" % filename_base)
 
   builds_dir = os.path.join("builds", ver)
   if os.path.exists(builds_dir):

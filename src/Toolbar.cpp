@@ -10,7 +10,7 @@
 #include "resource.h"
 #include "Search.h"
 #include "SumatraPDF.h"
-#include "Translations2.h"
+#include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
 

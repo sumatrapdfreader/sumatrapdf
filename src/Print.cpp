@@ -11,7 +11,7 @@
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "SumatraPDF.h"
-#include "Translations2.h"
+#include "Translations.h"
 #include "UITask.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
@@ -678,7 +678,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
 
     LONG structSize = DocumentProperties(NULL,
         printer,                /* Handle to our printer. */
-        (WCHAR *)printerName,   /* Name of the printer. */ 
+        (WCHAR *)printerName,   /* Name of the printer. */
         NULL,                   /* Asking for size, so */
         NULL,                   /* these are not used. */
         0);                     /* Zero returns buffer size. */

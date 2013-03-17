@@ -95,7 +95,7 @@
     <ClCompile Include="..\src\TextSearch.cpp" />
     <ClCompile Include="..\src\TextSelection.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
-    <ClCompile Include="..\src\Translations2.cpp" />
+    <ClCompile Include="..\src\Translations.cpp" />
     <ClCompile Include="..\src\Trans_sumatra_txt.cpp" />
     <ClCompile Include="..\src\UnitTests.cpp" />
     <ClCompile Include="..\src\WindowInfo.cpp" />
@@ -350,7 +350,7 @@
     <ClInclude Include="..\src\TextSearch.h" />
     <ClInclude Include="..\src\TextSelection.h" />
     <ClInclude Include="..\src\Toolbar.h" />
-    <ClInclude Include="..\src\Translations2.h" />
+    <ClInclude Include="..\src\Translations.h" />
     <ClInclude Include="..\src\Version.h" />
     <ClInclude Include="..\src\WindowInfo.h" />
     <ClInclude Include="..\src\BaseEngine.h" />

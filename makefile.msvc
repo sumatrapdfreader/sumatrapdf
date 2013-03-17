@@ -195,7 +195,7 @@ MAIN_UI_OBJS = \
 	$(OS)\Selection.obj $(OS)\FileModifications.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
-	$(OS)\Translations2.obj $(OS)\Trans_sumatra_txt.obj
+	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj
 
 SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj \
@@ -207,11 +207,11 @@ INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
 	$(UTILS_LIB) $(ZIP_OBJS) $(ZLIB_OBJS) \
 	$(OU)\LzmaDecUtil.obj $(LZMA_OBJS) \
-	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
+	$(OS)\Translations.obj $(OS)\Trans_installer_txt.obj
 
 UNINSTALLER_OBJS = \
 	$(OS)\Uninstaller.obj $(UNINSTALLER_RES) $(UTILS_LIB) \
-	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
+	$(OS)\Translations.obj $(OS)\Trans_installer_txt.obj
 
 PDFFILTER_OBJS = \
 	$(ODLL)\PdfFilterDll.obj $(ODLL)\CPdfFilter.obj $(PDFFILTER_RES) \

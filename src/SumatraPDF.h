@@ -6,7 +6,7 @@
 
 #include "FileHistory.h"
 #include "SumatraWindow.h"
-#include "Translations2.h"
+#include "Translations.h"
 
 #define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
 

@@ -13,7 +13,7 @@ using namespace Gdiplus;
 #include "PdfEngine.h"
 #include "resource.h"
 #include "SumatraPDF.h"
-#include "Translations2.h"
+#include "Translations.h"
 #include "Version.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"

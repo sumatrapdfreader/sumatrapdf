@@ -10,7 +10,7 @@
 
 #include "FileTransactions.h"
 #include "FileUtil.h"
-#include "Translations2.h"
+#include "Translations.h"
 #include "Resource.h"
 #include "Timer.h"
 #include "Version.h"

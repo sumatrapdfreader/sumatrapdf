@@ -1,8 +1,8 @@
 /* Copyright 2013 Krzysztof Kowalczyk.
    License: BSD */
 
-#ifndef Translations2_h
-#define Translations2_h
+#ifndef Translations_h
+#define Translations_h
 
 namespace trans {
 

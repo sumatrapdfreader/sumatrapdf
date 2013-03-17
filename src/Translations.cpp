@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "Translations2.h"
+#include "Translations.h"
 
 // set to 0 for not compressed. Must match trans_gen.py (gen_c_code_for_dir).
 // Also, in Sumatra, when using compressed, UNINSTALLER_OBJS need to include $(ZLIB_OBJS)

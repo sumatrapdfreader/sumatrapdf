@@ -10,7 +10,7 @@
 #include "EbookFormatter.h"
 #include "EbookWindow.h"
 #include "SumatraWindow.h"
-#include "Translations2.h"
+#include "Translations.h"
 #include "ThreadUtil.h"
 #include "Timer.h"
 #include "UITask.h"
@@ -253,7 +253,7 @@ void EbookController::CloseCurrentDocument()
 
 void EbookController::DeletePages(Vec<HtmlPage*>** pages)
 {
-    CrashIf((pagesFromBeginning != *pages) && 
+    CrashIf((pagesFromBeginning != *pages) &&
             (pagesFromPage != *pages));
 #if 0
     if (pagesFromPage && (*pages == pagesFromPage))
@@ -480,7 +480,7 @@ void EbookController::TriggerBookFormatting()
     pageSize = size; // set it early to prevent re-doing layout at the same size
     HtmlPage *newPage = PreserveTempPageShown();
     if (newPage) {
-        CrashIf((formattingTemp.reparseIdx != 0) && 
+        CrashIf((formattingTemp.reparseIdx != 0) &&
                 (formattingTemp.reparseIdx != newPage->reparseIdx));
     } else {
         CrashIf(formattingTemp.reparseIdx != 0);
