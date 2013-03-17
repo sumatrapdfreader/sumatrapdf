@@ -121,7 +121,6 @@ struct FileInfo {
     uint32_t        sizeUncompressed;
     uint32_t        sizeCompressed;
     FILETIME        ftModified;
-    uint32_t        off;
     const char *    name;
 };
 
@@ -147,7 +146,11 @@ uint8_t* decodeLZMA(const uint8_t* in, SizeT inSize, SizeT *uncompressedSizeOut)
                             in + 1, LZMA_PROPS_SIZE, LZMA_FINISH_END,
                             &status, &g_Alloc);
 
-    //expect(s, status == LZMA_STATUS_FINISHED_WITH_MARK);
+    if (result != SZ_OK /* || status != LZMA_STATUS_FINISHED_WITH_MARK */) {
+        free(out);
+        *uncompressedSizeOut = 0;
+        return NULL;
+    }
     *uncompressedSizeOut = outSize;
     return out;
 }
@@ -167,31 +170,27 @@ static bool InstallCopyFiles()
     uint32_t fileCount = r.UInt32();
     ScopedMem<FileInfo> fileInfos(AllocArray<FileInfo>(fileCount));
 
-    uint32_t off = 0;
     for (uint32_t i = 0; i < fileCount; i++) {
-        fileInfos[i].off = off;
         fileInfos[i].sizeUncompressed = r.UInt32();
         fileInfos[i].sizeCompressed = r.UInt32();
         fileInfos[i].ftModified.dwLowDateTime = r.UInt32();
         fileInfos[i].ftModified.dwHighDateTime = r.UInt32();
         fileInfos[i].name = (const char *)(data + r.Offset());
         for (char c = r.Char(); c != '\0'; c = r.Char());
-        off += fileInfos[i].sizeCompressed;
     }
 
     // extract all payload files one by one (transacted, if possible)
     FileTransaction trans;
 
     for (uint32_t i = 0; i < fileCount; i++) {
-        ScopedMem<WCHAR> filepath(str::conv::FromUtf8(fileInfos[i].name));
         uint32_t srcLen = fileInfos[i].sizeCompressed;
-        r.Skip(fileInfos[i].off);
         const uint8_t *src = data + r.Offset();
-        CrashIf(dataSize - r.Offset() < srcLen);
+        r.Skip(srcLen);
         SizeT dstLen;
         ScopedMem<uint8_t> dst(decodeLZMA(src, srcLen, &dstLen));
         CrashIf(dstLen != fileInfos[i].sizeUncompressed);
-        ScopedMem<WCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepath)));
+        ScopedMem<WCHAR> filepath(str::conv::FromUtf8(fileInfos[i].name));
+        ScopedMem<WCHAR> extpath(path::Join(gGlobalData.installDir, filepath));
         bool ok = trans.WriteAll(extpath, dst, dstLen);
         if (!ok) {
             ScopedMem<WCHAR> msg(str::Format(_TR("Couldn't write %s to disk"), filepath));

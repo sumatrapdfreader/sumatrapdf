@@ -123,7 +123,7 @@ fz_trace_clip_path(fz_device *dev, fz_path *path, const fz_rect *rect, int even_
 	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693708 */
 	if (!rect)
 		printf(">\n");
-    else
+	else
 	printf(" contentbbox=\"%g %g %g %g\">\n", rect->x0, rect->y0, rect->x1, rect->y1);
 	fz_trace_path(path, 0);
 	printf("</clip_path>\n");
