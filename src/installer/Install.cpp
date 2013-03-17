@@ -69,7 +69,7 @@ static bool ExtractFiles(lzma::ArchiveInfo *archive)
         fi = &archive->files[i];
         uncompressed = lzma::GetFileDataByIdx(archive, i, NULL);
         if (!uncompressed) {
-            NotifyFailed(_TR("Installer is corrupted!"));
+            NotifyFailed(_TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
         }
         ScopedMem<WCHAR> filePath(str::conv::FromUtf8(fi->name));
@@ -127,7 +127,7 @@ Exit:
     UnlockResource(res);
     return ok;
 Corrupted:
-    NotifyFailed(_TR("Installer is corrupted!"));
+    NotifyFailed(_TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
     ok = false;
     goto Exit;
 }
