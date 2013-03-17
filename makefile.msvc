@@ -81,8 +81,7 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(EXTDIR)/lzma/C
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip \
-	/I$(EXTDIR)/lzma/C
+	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(EXTDIR)/lzma/C
 
 UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /D "BUILD_UNINSTALLER"
@@ -206,7 +205,7 @@ SUMATRA_OBJS = \
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
-	$(UTILS_LIB) \
+	$(UTILS_LIB) $(ZLIB_OBJS) \
 	$(OU)\LzmaDecUtil.obj $(LZMA_OBJS) \
 	$(OS)\Translations2.obj $(OS)\Trans_installer_txt.obj
 
