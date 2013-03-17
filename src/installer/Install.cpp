@@ -9,9 +9,7 @@
 #include "ByteOrderDecoder.h"
 #include "FileUtil.h"
 #include "FileTransactions.h"
-#include <LzmaDec.h>
-#include <Lzma86.h>
-#include <zlib.h>
+#include <zlib.h> // for crc32
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
@@ -124,11 +122,15 @@ struct FileInfo {
     const char *    name;
 };
 
+// adapted from ext/lzma/C/Lzma86Dec.c
+#include <Lzma86.h>
+#include <Bra.h>
+#include <LzmaDec.h>
+
 static void *SzAlloc(void *p, size_t size) { return malloc(size); }
 static void SzFree(void *p, void *address) { free(address); }
 static ISzAlloc g_Alloc = { SzAlloc, SzFree };
 
-// adapted from ext/lzma/C/Lzma86Dec.c
 uint8_t* decodeLZMA(const uint8_t* in, SizeT inSize, SizeT *uncompressedSizeOut)
 {
     if (inSize < LZMA86_HEADER_SIZE || in[0] > 1) {
@@ -150,6 +152,12 @@ uint8_t* decodeLZMA(const uint8_t* in, SizeT inSize, SizeT *uncompressedSizeOut)
         free(out);
         *uncompressedSizeOut = 0;
         return NULL;
+    }
+
+    if (in[0]) {
+        UInt32 x86State;
+        x86_Convert_Init(x86State);
+        x86_Convert(out, outSize, 0, &x86State, 0);
     }
     *uncompressedSizeOut = outSize;
     return out;

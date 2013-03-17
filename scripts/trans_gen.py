@@ -72,7 +72,9 @@ const WCHAR * const gTranslations[] = {
 %(translations)s
 };
 
-const char * const gLanguages[] = { %(langs_list)s };
+const char * const gLanguages[] = {
+    %(langs_list)s
+};
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
@@ -373,9 +375,10 @@ def gen_c_code_simple(strings_dict, keys, dir_name):
     lines.pop()
     translations = "\n".join(lines)
 
-    langs_list = ", ".join(['"%s"' % lang.code for lang in langs] + ["NULL"])
+    langs_grp = ['"%s"' % lang.code for lang in langs] + ["NULL"]
+    langs_list = ",\n    ".join([", ".join(grp) for grp in util.group(langs_grp, 10)])
     lang_id_to_index = "\n    ".join(["case %s: return %d;" % (lang.ms_lang_id, langs.index(lang) * len(keys)) for lang in langs] + ["default: return -1;"])
-    rtl_lang_cmp = " || ".join(["%d == index" % langs.index(lang) * len(keys) for lang in langs if lang.isRtl]) or "false"
+    rtl_lang_cmp = " || ".join(["%d == index" % (langs.index(lang) * len(keys)) for lang in langs if lang.isRtl]) or "false"
 
     translations_count = len(keys)
     file_content = codecs.BOM_UTF8 + TRANSLATIONS_TXT_SIMPLE % locals()

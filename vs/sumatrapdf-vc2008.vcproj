@@ -1599,7 +1599,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\browserplugin\Translations_txt.cpp"
+					RelativePath="..\src\browserplugin\Trans_browserplugin_txt.cpp"
 					>
 				</File>
 			</Filter>

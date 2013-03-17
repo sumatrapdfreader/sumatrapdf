@@ -94,7 +94,7 @@ CHMLIB_OBJS = \
 	$(OC)\chm_lib.obj $(OC)\lzx.obj
 
 LZMA_OBJS = \
-	$(OLZ)\LzmaDec.obj
+	$(OLZ)\LzmaDec.obj $(OLZ)\Bra86.obj
 
 $(OE): force
 	@if not exist $(OE) mkdir $(OE)
