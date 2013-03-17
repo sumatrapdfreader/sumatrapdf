@@ -9,7 +9,7 @@
 #include "ByteOrderDecoder.h"
 #include "FileUtil.h"
 #include "FileTransactions.h"
-#include <zlib.h> // for crc32
+#include "LzmaDecUtil.h"
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
@@ -59,37 +59,56 @@ static inline void ProgressStep()
         PostMessage(gHwndProgressBar, PBM_STEPIT, 0, 0);
 }
 
-bool IsValidInstaller()
+static bool ExtractFiles(lzma::ArchiveInfo *archive)
 {
+    lzma::FileInfo *fi;
+    char *uncompressed;
+
+    FileTransaction trans;
+    for (int i = 0; i < archive->filesCount; i++) {
+        fi = &archive->files[i];
+        uncompressed = lzma::GetFileDataByIdx(archive, i, NULL);
+        if (!uncompressed) {
+            NotifyFailed(_TR("Installer is corrupted!"));
+            return false;
+        }
+        ScopedMem<WCHAR> filePath(str::conv::FromUtf8(fi->name));
+        ScopedMem<WCHAR> extPath(path::Join(gGlobalData.installDir, filePath));
+        bool ok = trans.WriteAll(extPath, uncompressed, fi->uncompressedSize);
+        free(uncompressed);
+        if (!ok) {
+            ScopedMem<WCHAR> msg(str::Format(_TR("Couldn't write %s to disk"), filePath));
+            NotifyFailed(msg);
+            return false;
+        }
+        trans.SetModificationTime(extPath, fi->ftModified);
+
+        ProgressStep();
+    }
+    return trans.Commit();
+}
+
+static bool InstallCopyFiles()
+{
+    bool ok;
+    HGLOBAL res = 0;
     HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(1), RT_RCDATA);
-    CrashIf(!resSrc);
     if (!resSrc)
-        return false;
-    HGLOBAL res = LoadResource(NULL, resSrc);
-    CrashIf(!res);
-    const void *data = LockResource(res);
+        goto Corrupted;
+    res = LoadResource(NULL, resSrc);
+    if (!res)
+        goto Corrupted;
+
+    const char *data = (const char*)LockResource(res);
     DWORD dataSize = SizeofResource(NULL, resSrc);
 
-    ByteOrderDecoder r((const uint8_t *)data, dataSize, ByteOrderDecoder::LittleEndian);
-    Vec<const char *> filenames;
+    lzma::ArchiveInfo archive;
+    ok = lzma::GetArchiveInfo(data, dataSize, &archive);
+    if (!ok)
+        goto Corrupted;
 
-    if (dataSize < 8)
-        goto IsInvalidInstaller;
-
-    uint32_t fileCount = r.UInt32();
-    uint32_t sizeFiles = 0;
-    for (uint32_t i = 0; i < fileCount; i++) {
-        if (r.Offset() + sizeFiles + 17 + 4 > dataSize)
-            goto IsInvalidInstaller;
-        r.Skip(4); // sizeUncompressed
-        sizeFiles += r.UInt32(); // sizeCompressed
-        r.Skip(8); // ftModified
-        filenames.Append((const char *)data + r.Offset());
-        for (char c = r.Char(); c != '\0' && r.Offset() < dataSize; c = r.Char());
-    }
-    if (r.Offset() + sizeFiles != dataSize - 4)
-        goto IsInvalidInstaller;
-
+    // TODO: verify we have all the files
+#if 0
     // verify that all files to be installed are included
     for (int i = 0; gPayloadData[i].filepath; i++) {
         if (gPayloadData[i].install) {
@@ -102,120 +121,15 @@ bool IsValidInstaller()
                 goto IsInvalidInstaller;
         }
     }
-
-    r.Skip(sizeFiles);
-    uint32_t crcVerify = r.UInt32();
-    uint32_t crcData = crc32(0, (const Bytef *)data, dataSize - 4);
+#endif
+    ok = ExtractFiles(&archive);
+Exit:
     UnlockResource(res);
-
-    return crcVerify == crcData;
-
-IsInvalidInstaller:
-    UnlockResource(res);
-    return false;
-}
-
-struct FileInfo {
-    uint32_t        sizeUncompressed;
-    uint32_t        sizeCompressed;
-    FILETIME        ftModified;
-    const char *    name;
-};
-
-// adapted from ext/lzma/C/Lzma86Dec.c
-#include <Lzma86.h>
-#include <Bra.h>
-#include <LzmaDec.h>
-
-static void *SzAlloc(void *p, size_t size) { return malloc(size); }
-static void SzFree(void *p, void *address) { free(address); }
-static ISzAlloc g_Alloc = { SzAlloc, SzFree };
-
-uint8_t* decodeLZMA(const uint8_t* in, SizeT inSize, SizeT *uncompressedSizeOut)
-{
-    if (inSize < LZMA86_HEADER_SIZE || in[0] > 1) {
-        *uncompressedSizeOut = 0;
-        return NULL;
-    }
-    ByteOrderDecoder r(in, inSize, ByteOrderDecoder::LittleEndian);
-    r.Skip(LZMA86_SIZE_OFFSET);
-    uint32_t outSize = r.UInt32();
-    uint8_t *out = AllocArray<uint8_t>(outSize);
-
-    ELzmaStatus status;
-    SizeT inSizeT = inSize - LZMA86_HEADER_SIZE, outSizeT = outSize;
-    int result = LzmaDecode(out, &outSizeT, in + LZMA86_HEADER_SIZE, &inSizeT,
-                            in + 1, LZMA_PROPS_SIZE, LZMA_FINISH_END,
-                            &status, &g_Alloc);
-
-    if (result != SZ_OK /* || status != LZMA_STATUS_FINISHED_WITH_MARK */) {
-        free(out);
-        *uncompressedSizeOut = 0;
-        return NULL;
-    }
-
-    if (in[0]) {
-        UInt32 x86State;
-        x86_Convert_Init(x86State);
-        x86_Convert(out, outSize, 0, &x86State, 0);
-    }
-    *uncompressedSizeOut = outSize;
-    return out;
-}
-
-static bool InstallCopyFiles()
-{
-    CrashIf(!IsValidInstaller());
-
-    HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(1), RT_RCDATA);
-    CrashIf(!resSrc);
-    HGLOBAL res = LoadResource(NULL, resSrc);
-    CrashIf(!res);
-    const uint8_t *data = (const uint8_t*)LockResource(res);
-    DWORD dataSize = SizeofResource(NULL, resSrc);
-
-    ByteOrderDecoder r(data, dataSize, ByteOrderDecoder::LittleEndian);
-    uint32_t fileCount = r.UInt32();
-    ScopedMem<FileInfo> fileInfos(AllocArray<FileInfo>(fileCount));
-
-    for (uint32_t i = 0; i < fileCount; i++) {
-        fileInfos[i].sizeUncompressed = r.UInt32();
-        fileInfos[i].sizeCompressed = r.UInt32();
-        fileInfos[i].ftModified.dwLowDateTime = r.UInt32();
-        fileInfos[i].ftModified.dwHighDateTime = r.UInt32();
-        fileInfos[i].name = (const char *)(data + r.Offset());
-        for (char c = r.Char(); c != '\0'; c = r.Char());
-    }
-
-    // extract all payload files one by one (transacted, if possible)
-    FileTransaction trans;
-
-    for (uint32_t i = 0; i < fileCount; i++) {
-        uint32_t srcLen = fileInfos[i].sizeCompressed;
-        const uint8_t *src = data + r.Offset();
-        r.Skip(srcLen);
-        SizeT dstLen;
-        ScopedMem<uint8_t> dst(decodeLZMA(src, srcLen, &dstLen));
-        CrashIf(dstLen != fileInfos[i].sizeUncompressed);
-        ScopedMem<WCHAR> filepath(str::conv::FromUtf8(fileInfos[i].name));
-        ScopedMem<WCHAR> extpath(path::Join(gGlobalData.installDir, filepath));
-        bool ok = trans.WriteAll(extpath, dst, dstLen);
-        if (!ok) {
-            ScopedMem<WCHAR> msg(str::Format(_TR("Couldn't write %s to disk"), filepath));
-            NotifyFailed(msg);
-            goto Error;
-        }
-        // set modification time to original value
-        trans.SetModificationTime(extpath, fileInfos[i].ftModified);
-
-        ProgressStep();
-    }
-
-    UnlockResource(res);
-    return trans.Commit();
-Error:
-    UnlockResource(res);
-    return false;
+    return ok;
+Corrupted:
+    NotifyFailed(_TR("Installer is corrupted!"));
+    ok = false;
+    goto Exit;
 }
 
 /* Caller needs to free() the result. */

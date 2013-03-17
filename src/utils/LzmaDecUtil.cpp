@@ -6,6 +6,9 @@
 
 #include "FileUtil.h"
 #include <LzmaDec.h>
+#include <Lzma86.h>
+#include <Bra.h>
+#include <zlib.h> // for crc32
 
 // 'LzSA' for "Lzma Simple Archive"
 #define LZMA_MAGIC_ID 0x4c7a5341
@@ -29,7 +32,6 @@ static uint32_t Read4Skip(const char **in)
     return res;
 }
 
-
 struct ISzAllocatorAlloc : ISzAlloc {
     Allocator *allocator;
 };
@@ -46,9 +48,6 @@ static void LzmaAllocatorFree(void *p, void *address)
     Allocator::Free(a->allocator, address);
 }
 
-#define PROP_HEADER_SiZE 5
-#define HEADER_SIZE 13
-
 char* Decompress(const char *compressed, size_t compressedSize, size_t* uncompressedSizeOut, Allocator *allocator)
 {
     ISzAllocatorAlloc lzmaAlloc;
@@ -56,39 +55,61 @@ char* Decompress(const char *compressed, size_t compressedSize, size_t* uncompre
     lzmaAlloc.Free = LzmaAllocatorFree;
     lzmaAlloc.allocator = allocator;
 
+    if (compressedSize < LZMA86_HEADER_SIZE)
+        return NULL;
+
+    uint8_t usesX86Filter = (uint8_t)compressed[0];
+    if (usesX86Filter > 1)
+        return NULL;
+
     const uint8_t* compressed2 = (const uint8_t*)compressed;
-    SizeT uncompressedSize = Read4(compressed2 + PROP_HEADER_SiZE);
-
+    SizeT uncompressedSize = Read4(compressed2 + LZMA86_SIZE_OFFSET);
     uint8_t* uncompressed = (uint8_t*)Allocator::Alloc(allocator, uncompressedSize);
+    if (!uncompressed)
+        return NULL;
 
-    SizeT compressedSizeTmp = compressedSize;
+    SizeT compressedSizeTmp = compressedSize - LZMA86_HEADER_SIZE;
     SizeT uncompressedSizeTmp = uncompressedSize;
 
     ELzmaStatus status;
     // Note: would be nice to understand why status returns LZMA_STATUS_MAYBE_FINISHED_WITHOUT_MARK and
     // not LZMA_STATUS_FINISHED_WITH_MARK. It seems to work, though.
-    int result = LzmaDecode(uncompressed, &uncompressedSizeTmp, compressed2 + HEADER_SIZE, &compressedSizeTmp,
-        compressed2, PROP_HEADER_SiZE,
-        LZMA_FINISH_END, &status, &lzmaAlloc);
+    int res = LzmaDecode(uncompressed, &uncompressedSizeTmp,
+        compressed2 + LZMA86_HEADER_SIZE, &compressedSizeTmp,
+        compressed2 + 1, LZMA_PROPS_SIZE, LZMA_FINISH_END, &status,
+        &lzmaAlloc);
 
+    if (SZ_OK != res) {
+        Allocator::Free(allocator, uncompressed);
+        return NULL;
+    }
+
+    if (usesX86Filter) {
+        UInt32 x86State;
+        x86_Convert_Init(x86State);
+        x86_Convert(uncompressed, uncompressedSizeTmp, 0, &x86State, 0);
+    }
     *uncompressedSizeOut = uncompressedSize;
     return (char*)uncompressed;
 }
 
 /* archiveData points to the beginning of archive, which has a following format:
 
-  uint32 magic id 'LzSA' 0x4c7a5341
-  uint32 number of files
-    for each file:
-      uint32 file size uncompressed
-      uint32 file size compressed
-      string file name, 0-terminated
-  for each file:
-    file data
+u32   magic_id 0x4c7a5341 ("LzSA' for "Lzma Simple Archive")
+u32   number of files
+for each file:
+  u32        file size uncompressed
+  u32        file size compressed
+  u32        crc32 checksum of compressed data
+  FILETIME   last modification time in Windows's FILETIME format
+  char[...]  file name, 0-terminated
+u32   crc32 checksum of the header (i.e. data so far)
+for each file:
+  compressed file data
 
-   Numbers are little-endian.
+Integers are little-endian.
 */
-bool GetArchiveInfo(const char *archiveData, ArchiveInfo* archiveInfoOut)
+bool GetArchiveInfo(const char *archiveData, size_t dataLen, ArchiveInfo* archiveInfoOut)
 {
     const char *data = archiveData;
 
@@ -101,50 +122,73 @@ bool GetArchiveInfo(const char *archiveData, ArchiveInfo* archiveInfoOut)
     if (filesCount > MAX_LZMA_ARCHIVE_FILES)
         return false;
 
-    int off = 0;
+    size_t off = 0;
+    FileInfo *fi;
     for (int i = 0; i < filesCount; i++) {
-        archiveInfoOut->files[i].off = off;
-        archiveInfoOut->files[i].sizeUncompressed = Read4Skip(&data);
-        archiveInfoOut->files[i].sizeCompressed = Read4Skip(&data);
-        off += archiveInfoOut->files[i].sizeCompressed;
-        archiveInfoOut->files[i].name = data;
+        fi = &archiveInfoOut->files[i];
+        fi->off = off;
+        fi->uncompressedSize = Read4Skip(&data);
+        fi->compressedSize = Read4Skip(&data);
+
+        fi->compressedCrc32 = Read4Skip(&data);
+        fi->ftModified.dwLowDateTime = Read4Skip(&data);
+        fi->ftModified.dwHighDateTime = Read4Skip(&data);
+        fi->name = data;
         while (*data) {
             ++data;
         }
         ++data;
+
+        off += fi->compressedSize;
+        if (off > dataLen)
+            return false;
     }
 
+    // TODO: verify crc
+    //uint32_t headerCrc32 = Read4Skip(&data);
+    //uint32_t crcData = crc32(0, (const Bytef *)data, dataSize - 4);
+    Read4Skip(&data);
+
     for (int i = 0; i < filesCount; i++) {
-      archiveInfoOut->files[i].data = data + archiveInfoOut->files[i].off;
+        fi = &archiveInfoOut->files[i];
+        fi->compressedData = data + fi->off;
     }
 
     return true;
 }
 
+char *GetFileDataByIdx(ArchiveInfo *archive, int idx, Allocator *allocator)
+{
+    size_t uncompressedSize;
+
+    FileInfo *fi = &archive->files[idx];
+    char *uncompressed = Decompress(fi->compressedData, fi->compressedSize, &uncompressedSize, allocator);
+    if (!uncompressed)
+        return NULL;
+
+    if (uncompressedSize != fi->uncompressedSize) {
+        Allocator::Free(allocator, uncompressed);
+        return NULL;
+    }
+    return uncompressed;
+}
+
 bool ExtractFileByIdx(ArchiveInfo *archive, int idx, const char *dstDir, Allocator *allocator)
 {
-    char *uncompressed = NULL;
-    char *filePath = NULL;
     bool ok;
+    const char *filePath = NULL;
+    FileInfo *fi = &archive->files[idx];
 
-    const char *compressed = archive->files[idx].data;
-    size_t sizeCompressed = archive->files[idx].sizeCompressed;
-    size_t sizeUncompressedExpected = archive->files[idx].sizeUncompressed;
-    size_t sizeUncompressed;
-
-    uncompressed = Decompress(compressed, sizeCompressed, &sizeUncompressed, allocator);
+    char *uncompressed = GetFileDataByIdx(archive, idx, allocator);
     if (!uncompressed)
         goto Error;
 
-    if (sizeUncompressed != sizeUncompressedExpected)
-        goto Error;
-
-    const char *fileName = archive->files[idx].name;
+    const char *fileName = fi->name;
     filePath = path::JoinUtf(dstDir, fileName, allocator);
 
-    ok = file::WriteAllUtf(filePath, uncompressed, sizeUncompressed);
+    ok = file::WriteAllUtf(filePath, uncompressed, fi->uncompressedSize);
 Exit:
-    Allocator::Free(allocator, filePath);
+    Allocator::Free(allocator, (void*)filePath);
     Allocator::Free(allocator, uncompressed);
     return ok;
 Error:
@@ -173,7 +217,7 @@ bool ExtractFiles(const char *archivePath, const char *dstDir, const char **file
         return false;
 
     ArchiveInfo archive;
-    bool ok = GetArchiveInfo(archiveData, &archive);
+    bool ok = GetArchiveInfo(archiveData, archiveDataSize, &archive);
     if (!ok)
         return false;
     int i = 0;

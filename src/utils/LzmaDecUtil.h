@@ -8,10 +8,12 @@ namespace lzma {
 
 struct FileInfo {
     // public data
-    size_t          sizeUncompressed;
-    size_t          sizeCompressed;
+    size_t          uncompressedSize;
+    size_t          compressedSize;
+    uint32_t        compressedCrc32;
+    FILETIME        ftModified;
     const char *    name;
-    const char *    data;
+    const char *    compressedData;
 
     // for internal use
     size_t          off;
@@ -25,9 +27,9 @@ struct ArchiveInfo {
     FileInfo        files[MAX_LZMA_ARCHIVE_FILES];
 };
 
-bool   GetArchiveInfo(const char *archiveData, ArchiveInfo *archiveInfoOut);
+bool   GetArchiveInfo(const char *archiveData, size_t dataLen, ArchiveInfo *archiveInfoOut);
 char*  Decompress(const char *in, size_t inSize, size_t *uncompressedSizeOut, Allocator *allocator);
-
+char * GetFileDataByIdx(ArchiveInfo *archive, int idx, Allocator *allocator);
 bool   ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator=NULL);
 
 }

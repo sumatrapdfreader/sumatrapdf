@@ -66,7 +66,7 @@
     <NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">.\scripts\build-release.bat -testrelinst</NMakeReBuildCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">del /s obj-dbg</NMakeCleanCommandLine>
     <NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">del /s obj-dbg</NMakeCleanCommandLine>
-    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\SumatraPDF-install.exe</NMakeOutput>
+    <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\obj-rel\Installer.exe</NMakeOutput>
     <NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">obj-rel\SumatraPDF-install.exe</NMakeOutput>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
     <NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release analyze|Win32'">WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>

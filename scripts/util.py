@@ -54,6 +54,10 @@ def file_sha1(fp):
   m.update(data)
   return m.hexdigest()
 
+def delete_file(path):
+  if os.path.exists(path):
+    os.remove(path)
+
 def create_dir(d):
   if not os.path.exists(d): os.makedirs(d)
   return d
