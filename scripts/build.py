@@ -75,12 +75,12 @@ def build_installer_data(dir):
     src = os.path.join(dir, src)
     dst = src + ".lzma"
     lzma_compress(src, dst)
-  d = struct.pack("<i", len(files))
+  d = struct.pack("<I", len(files))
   for f in files:
     path = os.path.join(dir, f)
-    d += struct.pack("<i", os.path.getsize(path))
-    d += struct.pack("<i", os.path.getsize(path + ".lzma"))
-    # TODO: add last modified date
+    d += struct.pack("<I", os.path.getsize(path))
+    d += struct.pack("<I", os.path.getsize(path + ".lzma"))
+    d += struct.pack("<Q", int((os.path.getmtime(path) + 11644473600L) * 10000000))
     if f == "SumatraPDF-no-MuPDF.exe": f = "SumatraPDF.exe"
     d += f + "\0"
 

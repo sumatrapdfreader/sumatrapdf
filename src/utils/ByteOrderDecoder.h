@@ -15,6 +15,8 @@ public:
 
     void ChangeOrder(ByteOrder newOrder) { CrashIf(byteOrder == newOrder); byteOrder = newOrder; }
 
+    uint8  UInt8();
+    char   Char() { return (char)UInt8(); }
     uint16 UInt16();
     int16  Int16() { return (int16)UInt16(); }
     uint32 UInt32();

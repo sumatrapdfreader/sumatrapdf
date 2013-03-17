@@ -30,6 +30,14 @@ ByteOrderDecoder::ByteOrderDecoder(const char *d, size_t len, ByteOrder order)
 ByteOrderDecoder::ByteOrderDecoder(const uint8 *d, size_t len, ByteOrder order)
     : data(d), left(len), byteOrder(order), curr(data) { }
 
+uint8 ByteOrderDecoder::UInt8()
+{
+    CrashIf(left < 1);
+
+    left--;
+    return *curr++;
+}
+
 uint16 ByteOrderDecoder::UInt16()
 {
     uint16 v;

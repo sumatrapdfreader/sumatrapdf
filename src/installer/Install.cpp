@@ -6,9 +6,10 @@
 #endif
 
 #include "Installer.h"
+#include "ByteOrderDecoder.h"
 #include "FileUtil.h"
 #include "FileTransactions.h"
-#include "LzmaDec.h"
+#include <LzmaDec.h>
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
@@ -65,9 +66,10 @@ bool IsValidInstaller()
 }
 
 struct FileInfo {
-    int32_t         sizeUncompressed;
-    int32_t         sizeCompressed;
-    int32_t         off;
+    uint32_t        sizeUncompressed;
+    uint32_t        sizeCompressed;
+    FILETIME        ftModified;
+    uint32_t        off;
     const char *    name;
 };
 
@@ -75,40 +77,29 @@ static void *SzAlloc(void *p, size_t size) { p = p; return malloc(size); }
 static void SzFree(void *p, void *address) { p = p; free(address); }
 static ISzAlloc g_Alloc = { SzAlloc, SzFree };
 
-int32_t
-read4(const uint8_t* in)
-{
-  return (static_cast<int32_t>(in[3]) << 24)
-    |    (static_cast<int32_t>(in[2]) << 16)
-    |    (static_cast<int32_t>(in[1]) <<  8)
-    |    (static_cast<int32_t>(in[0])      );
-}
-
 uint8_t* decodeLZMA(uint8_t* in, unsigned inSize, unsigned* uncompressedSizeOut)
 {
-  const unsigned PropHeaderSize = 5;
-  const unsigned HeaderSize = 13;
+    const unsigned PropHeaderSize = 5;
+    const unsigned HeaderSize = 13;
 
-  int32_t outSize = read4(in + PropHeaderSize);
-  SizeT outSizeT = outSize;
+    ByteOrderDecoder r(in, inSize, ByteOrderDecoder::LittleEndian);
+    r.Skip(PropHeaderSize);
+    // TODO: why is outSize (uint32_t)-1 ?
+    uint32_t outSize = r.UInt32();
+    uint8_t *out = AllocArray<uint8_t>(outSize);
 
-  uint8_t* out = static_cast<uint8_t*>(malloc(outSize));
+    ELzmaStatus status;
+    SizeT inSizeT = inSize - HeaderSize, outSizeT = outSize;
+    int result = LzmaDecode(out, &outSizeT, in + HeaderSize, &inSizeT, in, PropHeaderSize,
+                            LZMA_FINISH_END, &status, &g_Alloc);
 
-  SizeT inSizeT = inSize;
-
-  ELzmaStatus status;
-  int result = LzmaDecode(out, &outSizeT, in + HeaderSize, &inSizeT, in, PropHeaderSize,
-     LZMA_FINISH_END, &status, &g_Alloc);
-
-  //expect(s, status == LZMA_STATUS_FINISHED_WITH_MARK);
-  *uncompressedSizeOut = outSize;
-  return out;
+    //expect(s, status == LZMA_STATUS_FINISHED_WITH_MARK);
+    *uncompressedSizeOut = outSize;
+    return out;
 }
 
 static bool InstallCopyFiles()
 {
-    FileInfo fileInfos[32];
-
     HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(1), RT_RCDATA);
     CrashIf(!resSrc);
     HGLOBAL res = LoadResource(NULL, resSrc);
@@ -119,45 +110,43 @@ static bool InstallCopyFiles()
     // extract all payload files one by one (transacted, if possible)
     FileTransaction trans;
 
-    const int32_t *idata = (const int32_t*)data;
-    int32_t fileCount = *idata++;
-    CrashIf(fileCount >= dimof(fileInfos));
-    int32_t off = 0;
-    for (int32_t i = 0; i < fileCount; i++) {
+    ByteOrderDecoder r(data, dataSize, ByteOrderDecoder::LittleEndian);
+    uint32_t fileCount = r.UInt32();
+    ScopedMem<FileInfo> fileInfos(AllocArray<FileInfo>(fileCount));
+
+    uint32_t off = 0;
+    for (uint32_t i = 0; i < fileCount; i++) {
         fileInfos[i].off = off;
-        fileInfos[i].sizeUncompressed = *idata++;
-        fileInfos[i].sizeCompressed = *idata++;
+        fileInfos[i].sizeUncompressed = r.UInt32();
+        fileInfos[i].sizeCompressed = r.UInt32();
+        fileInfos[i].ftModified.dwLowDateTime = r.UInt32();
+        fileInfos[i].ftModified.dwHighDateTime = r.UInt32();
+        fileInfos[i].name = (const char *)(data + r.Offset());
+        for (char c = (char)r.UInt8(); c != '\0'; c = (char)r.UInt8());
         off += fileInfos[i].sizeCompressed;
-        data = (const uint8_t*)idata;
-        fileInfos[i].name = (const char*)data;
-        while (*data) {
-            ++data;
-        }
-        ++data;
-        idata = (const int32_t*)data;
     }
 
     uint8_t *dst;
-    for (int32_t i = 0; i < fileCount; i++) {
-        ScopedMem<WCHAR> filepathT(str::conv::FromUtf8(fileInfos[i].name));
-        int32_t srcLen = fileInfos[i].sizeCompressed;
-        off = fileInfos[i].off;
-        const uint8_t *src = data + off;
+    for (uint32_t i = 0; i < fileCount; i++) {
+        ScopedMem<WCHAR> filepath(str::conv::FromUtf8(fileInfos[i].name));
+        uint32_t srcLen = fileInfos[i].sizeCompressed;
+        r.Skip(fileInfos[i].off);
+        const uint8_t *src = data + r.Offset();
+        CrashIf(dataSize - r.Offset() < srcLen);
         unsigned dstLen;
-        dst = decodeLZMA((uint8_t*)src, (unsigned)srcLen, &dstLen);
-        CrashIf(dstLen != (unsigned)fileInfos[i].sizeUncompressed);
-        ScopedMem<WCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepathT)));
+        dst = decodeLZMA((uint8_t*)src, srcLen, &dstLen);
+        CrashIf(dstLen != fileInfos[i].sizeUncompressed);
+        ScopedMem<WCHAR> extpath(path::Join(gGlobalData.installDir, path::GetBaseName(filepath)));
         bool ok = trans.WriteAll(extpath, dst, dstLen);
+        free(dst);
         if (!ok) {
-            ScopedMem<WCHAR> msg(str::Format(_TR("Couldn't write %s to disk"), filepathT));
+            ScopedMem<WCHAR> msg(str::Format(_TR("Couldn't write %s to disk"), filepath));
             NotifyFailed(msg);
             goto Error;
         }
-        free(dst);
 
         // set modification time to original value
-        //FILETIME ftModified = archive.GetFileTime(filepathT);
-        //trans.SetModificationTime(extpath, ftModified);
+        trans.SetModificationTime(extpath, fileInfos[i].ftModified);
 
         ProgressStep();
     }
