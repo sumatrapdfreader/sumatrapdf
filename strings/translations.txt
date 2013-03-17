@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-da98038c138439e9b63172d9d1a6ab6c69435eab
+e55e3ea1143fa37beffb58aa64d7bcf823614869
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -13308,6 +13308,21 @@ tw:單頁模式
 uk:Одна сторінка
 uz:Bitta bet
 vn:Trang đơn
+:Some files to be installed are damaged or missing
+ar:بعض ملفات التنصيب مفقودة أو معطوبة
+br:Alguns arquivos de instalação estão danificados ou ausentes
+cn:某些安装所需的文件损坏或丢失
+de:Einige Dateien konnten nicht korrekt installiert werden
+eu:Ezarritako zenbait agiri hondatuta edo galduta daude
+fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
+hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
+it:Alcuni file che dovevano essere installati erano corrotti o mancanti
+kr:설치해야 할 일부 파일이 손상 또는 누락됐습니다.
+pt:Alguns ficheiros do instalador estão danificados
+ro:Niste fisiere ce trebuiesc instalate lipsesc sau sunt pleznite
+ru:Некоторые файлы установки повреждены или отсутствуют
+ta:நிறுவப்பட்ட சில கோப்புகள் சேதமடைந்துள்ளன/காணவில்லை
+uk:Деякі файли необхідні для встановлення відсутні або пошкоджені
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Մերժել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 ar:عذرا, لا يجدر أن يحدث ما حدث!\n\n الرجاء الضغط على 'إلغاء', إذا كنت تريد مساعدتنا في حل هذه المشكلة

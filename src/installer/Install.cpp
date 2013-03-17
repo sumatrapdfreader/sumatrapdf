@@ -46,7 +46,7 @@ static int GetInstallationStepCount()
      * - and one step afterwards.
      */
     int count = 2;
-    for (int i = 0; NULL != gPayloadData[i].filepath; i++) {
+    for (int i = 0; NULL != gPayloadData[i].fileName; i++) {
         if (gPayloadData[i].install)
             count++;
     }
@@ -107,21 +107,19 @@ static bool InstallCopyFiles()
     if (!ok)
         goto Corrupted;
 
-    // TODO: verify we have all the files
-#if 0
     // verify that all files to be installed are included
-    for (int i = 0; gPayloadData[i].filepath; i++) {
-        if (gPayloadData[i].install) {
-            bool found = false;
-            for (size_t j = 0; j < filenames.Count() && !found; j++) {
-                if (str::Eq(filenames.At(j), gPayloadData[i].filepath))
-                    found = true;
-            }
-            if (!found)
-                goto IsInvalidInstaller;
+    for (int i = 0; gPayloadData[i].fileName; i++) {
+        if (!gPayloadData[i].install)
+            continue;
+
+        bool found = false;
+        for (int j = 0; j < archive.filesCount && !found; j++) {
+            if (str::Eq(archive.files[j].name, gPayloadData[i].fileName))
+                found = true;
         }
+        if (!found)
+            goto FilesMissing;
     }
-#endif
     ok = ExtractFiles(&archive);
 Exit:
     UnlockResource(res);
@@ -130,7 +128,12 @@ Corrupted:
     NotifyFailed(_TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
     ok = false;
     goto Exit;
+FilesMissing:
+    NotifyFailed(_TR("Some files to be installed are damaged or missing"));
+    ok = false;
+    goto Exit;
 }
+
 
 /* Caller needs to free() the result. */
 static WCHAR *GetDefaultPdfViewer()

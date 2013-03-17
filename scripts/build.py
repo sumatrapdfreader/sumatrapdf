@@ -192,6 +192,10 @@ def sign(file_path, cert_pwd):
  "/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx", "/p", cert_pwd, file_name)
   os.chdir(curr_dir)
 
+def print_run_resp(out, err):
+  if len(out) > 0: print(out)
+  if len(err) > 0: print(err)
+
 def main():
   args = sys.argv[1:]
   upload               = test_for_flag(args, "-upload")
@@ -284,14 +288,17 @@ def main():
     extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
   platform = "PLATFORM=%s" % (target_platform or "X86")
 
-  run_cmd_throw("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
+  (out, err) = run_cmd_throw("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
+  if build_test_installer: print_run_resp(out, err)
+
   exe = os.path.join(obj_dir, "SumatraPDF.exe")
   if upload:
     sign(exe, cert_pwd)
     sign(os.path.join(obj_dir, "uninstall.exe"), cert_pwd)
 
   build_installer_data(obj_dir)
-  run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
+  (out, err) = run_cmd_throw("nmake", "-f", "makefile.msvc", "Installer", config, platform, extcflags)
+  if build_test_installer: print_run_resp(out, err)
 
   if build_test_installer or build_rel_installer:
     sys.exit(0)

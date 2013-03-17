@@ -105,7 +105,7 @@ struct GlobalData {
 };
 
 struct PayloadInfo {
-    const char *filepath;
+    const char *fileName;
     bool install;
 };
 

@@ -169,8 +169,8 @@ static BOOL RemoveInstalledFiles()
 {
     BOOL success = TRUE;
 
-    for (int i = 0; NULL != gPayloadData[i].filepath; i++) {
-        ScopedMem<WCHAR> relPath(str::conv::FromUtf8(gPayloadData[i].filepath));
+    for (int i = 0; NULL != gPayloadData[i].fileName; i++) {
+        ScopedMem<WCHAR> relPath(str::conv::FromUtf8(gPayloadData[i].fileName));
         ScopedMem<WCHAR> path(path::Join(gGlobalData.installDir, relPath));
 
         if (file::Exists(path))

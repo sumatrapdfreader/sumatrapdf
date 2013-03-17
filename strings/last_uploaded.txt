@@ -248,6 +248,7 @@ Show Favorites
 Show frequently read
 Show the &bookmarks sidebar when available
 Single Page
+Some files to be installed are damaged or missing
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Source file %s has no synchronization point
 Start SumatraPDF
