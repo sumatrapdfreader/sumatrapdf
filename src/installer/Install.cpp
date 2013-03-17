@@ -10,6 +10,7 @@
 #include "FileUtil.h"
 #include "FileTransactions.h"
 #include <LzmaDec.h>
+#include <zlib.h>
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
@@ -61,8 +62,43 @@ static inline void ProgressStep()
 
 bool IsValidInstaller()
 {
-    // TODO: write me
-    return true;
+    HRSRC resSrc = FindResource(ghinst, MAKEINTRESOURCE(1), RT_RCDATA);
+    CrashIf(!resSrc);
+    if (!resSrc)
+        return false;
+    HGLOBAL res = LoadResource(NULL, resSrc);
+    CrashIf(!res);
+    const void *data = LockResource(res);
+    DWORD dataSize = SizeofResource(NULL, resSrc);
+
+    ByteOrderDecoder r((const uint8_t *)data, dataSize, ByteOrderDecoder::LittleEndian);
+    if (dataSize < 8)
+        goto IsInvalidInstaller;
+
+    uint32_t fileCount = r.UInt32();
+    uint32_t sizeFiles = 0;
+    for (uint32_t i = 0; i < fileCount; i++) {
+        if (r.Offset() + sizeFiles + 17 + 4 > dataSize)
+            goto IsInvalidInstaller;
+        r.Skip(4); // sizeUncompressed
+        sizeFiles += r.UInt32(); // sizeCompressed
+        r.Skip(8); // ftModified
+        for (char c = r.Char(); c != '\0' && r.Offset() < dataSize; c = r.Char());
+    }
+
+    if (sizeFiles + r.Offset() != dataSize - 4)
+        goto IsInvalidInstaller;
+
+    r.Skip(sizeFiles);
+    uint32_t crcVerify = r.UInt32();
+    uint32_t crcData = crc32(0, (const Bytef *)data, dataSize - 4);
+    UnlockResource(res);
+
+    return crcVerify == crcData;
+
+IsInvalidInstaller:
+    UnlockResource(res);
+    return false;
 }
 
 struct FileInfo {
@@ -122,7 +158,7 @@ static bool InstallCopyFiles()
         fileInfos[i].ftModified.dwLowDateTime = r.UInt32();
         fileInfos[i].ftModified.dwHighDateTime = r.UInt32();
         fileInfos[i].name = (const char *)(data + r.Offset());
-        for (char c = (char)r.UInt8(); c != '\0'; c = (char)r.UInt8());
+        for (char c = r.Char(); c != '\0'; c = r.Char());
         off += fileInfos[i].sizeCompressed;
     }
 

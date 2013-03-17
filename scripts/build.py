@@ -9,6 +9,7 @@ from util import verify_started_in_right_directory, parse_svninfo_out, log
 from util import extract_sumatra_version, zip_file
 from util import load_config, verify_path_exists
 import trans_upload, trans_download
+from binascii import crc32
 
 def usage():
   print("build-release.py [-upload][-uploadtmp][-test][-test-installer][-prerelease][-platform=X64]")
@@ -57,6 +58,9 @@ def copy_to_dst_dir(src_path, dst_dir):
   dst_path = os.path.join(dst_dir, name_in_obj_rel)
   shutil.copy(src_path, dst_path)
 
+def is_more_recent(src_path, dst_path):
+  return os.path.getmtime(src_path) > os.path.getmtime(dst_path)
+
 # build installer data, will be included as part of Installer.exe resources
 # The format is:
 #   int32 number of files
@@ -68,13 +72,16 @@ def copy_to_dst_dir(src_path, dst_dir):
 #   file data
 def build_installer_data(dir):
   src = os.path.join("mupdf", "fonts", "droid", "DroidSansFallback.ttf")
-  copy_to_dst_dir(src, dir)
+  dst = os.path.join(dir, "DroidSansFallback.ttf")
+  if not os.path.exists(dst) or is_more_recent(src, dst):
+    copy_to_dst_dir(src, dir)
 
   files = ["SumatraPDF-no-MuPDF.exe", "DroidSansFallback.ttf", "libmupdf.dll", "npPdfViewer.dll", "PdfFilter.dll", "PdfPreview.dll", "uninstall.exe"]
   for src in files:
     src = os.path.join(dir, src)
     dst = src + ".lzma"
-    lzma_compress(src, dst)
+    if not os.path.exists(dst) or is_more_recent(src, dst):
+      lzma_compress(src, dst)
   d = struct.pack("<I", len(files))
   for f in files:
     path = os.path.join(dir, f)
@@ -86,11 +93,14 @@ def build_installer_data(dir):
 
   dst = os.path.join(dir, "InstallerData.dat")
   with open(dst, "wb") as fo:
+    checksum = crc32(d, 0)
     fo.write(d)
     for f in files:
       path = os.path.join(dir, f) + ".lzma"
       d = open(path, "rb").read()
+      checksum = crc32(d, checksum & 0xFFFFFFFF)
       fo.write(d)
+    fo.write(struct.pack("<I", checksum & 0xFFFFFFFF))
 
 # delete all but the last 3 pre-release builds in order to use less s3 storage
 def delete_old_pre_release_builds():
