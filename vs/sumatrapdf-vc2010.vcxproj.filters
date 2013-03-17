@@ -66,9 +66,6 @@
     <ClCompile Include="..\src\AppTools.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CrashHandler-mine.cpp">
-      <Filter>sumatra</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>sumatra</Filter>
     </ClCompile>
@@ -413,9 +410,6 @@
     </ClCompile>
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp">
       <Filter>previewer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\installer\Install-mine.cpp">
-      <Filter>installer</Filter>
     </ClCompile>
     <ClCompile Include="..\src\installer\Install.cpp">
       <Filter>installer</Filter>

@@ -207,6 +207,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\LzmaDecUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\LzmaDecUtil.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\PalmDbReader.cpp"
 					>
 				</File>
@@ -869,11 +877,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\Translations2.cpp"
+					RelativePath="..\src\Translations.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\Translations2.h"
+					RelativePath="..\src\Translations.h"
 					>
 				</File>
 				<File

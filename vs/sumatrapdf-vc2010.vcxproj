@@ -87,7 +87,6 @@
   <ItemGroup>
     <ClCompile Include="..\src\AppPrefs.cpp" />
     <ClCompile Include="..\src\AppTools.cpp" />
-    <ClCompile Include="..\src\CrashHandler-mine.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\Doc.cpp" />
@@ -203,7 +202,6 @@
     <ClCompile Include="..\src\ifilter\PdfFilterDll.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreviewDll.cpp" />
-    <ClCompile Include="..\src\installer\Install-mine.cpp" />
     <ClCompile Include="..\src\installer\Install.cpp" />
     <ClCompile Include="..\src\installer\Installer.cpp" />
     <ClCompile Include="..\src\installer\Trans_installer_txt.cpp" />

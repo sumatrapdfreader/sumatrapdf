@@ -134,13 +134,6 @@ $(OS)\ChmEngine.obj: $B\src\EbookBase.h $B\src\utils\Allocator.h $B\src\utils\Ba
 $(OS)\ChmEngine.obj: $B\src\utils\DebugLog.h $B\src\utils\Dict.h $B\src\utils\FileUtil.h
 $(OS)\ChmEngine.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlWindow.h $B\src\utils\Scoped.h
 $(OS)\ChmEngine.obj: $B\src\utils\StrUtil.h $B\src\utils\Timer.h $B\src\utils\Vec.h
-$(OS)\CrashHandler-mine.obj: $B\src\AppTools.h $B\src\BaseEngine.h $B\src\CrashHandler.h
-$(OS)\CrashHandler-mine.obj: $B\src\DisplayState.h $B\src\FileHistory.h $B\src\SumatraPDF.h
-$(OS)\CrashHandler-mine.obj: $B\src\SumatraWindow.h $B\src\Translations.h $B\src\utils\Allocator.h
-$(OS)\CrashHandler-mine.obj: $B\src\utils\BaseUtil.h $B\src\utils\DbgHelpDyn.h $B\src\utils\DebugLog.h
-$(OS)\CrashHandler-mine.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HttpUtil.h
-$(OS)\CrashHandler-mine.obj: $B\src\utils\LzmaDecUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\CrashHandler-mine.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\Version.h
 $(OS)\CrashHandler.obj: $B\src\AppTools.h $B\src\BaseEngine.h $B\src\CrashHandler.h
 $(OS)\CrashHandler.obj: $B\src\DisplayState.h $B\src\FileHistory.h $B\src\SumatraPDF.h
 $(OS)\CrashHandler.obj: $B\src\SumatraWindow.h $B\src\Translations.h $B\src\utils\Allocator.h
@@ -263,10 +256,6 @@ $(OS)\ImagesEngine.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\sr
 $(OS)\ImagesEngine.obj: $B\src\utils\HtmlPullParser.h $B\src\utils\JsonParser.h $B\src\utils\Scoped.h
 $(OS)\ImagesEngine.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\ImagesEngine.obj: $B\src\utils\ZipUtil.h
-$(OS)\Install-mine.obj: $B\src\BaseEngine.h $B\src\ifilter\PdfFilter.h $B\src\previewer\PdfPreview.h
-$(OS)\Install-mine.obj: $B\src\installer\Installer.h $B\src\installer\Resource.h $B\src\Translations.h
-$(OS)\Install-mine.obj: $B\src\utils\ByteOrderDecoder.h $B\src\utils\FileTransactions.h $B\src\utils\FileUtil.h
-$(OS)\Install-mine.obj: $B\src\utils\Timer.h $B\src\utils\WinUtil.h $B\src\Version.h
 $(OS)\Install.obj: $B\src\BaseEngine.h $B\src\ifilter\PdfFilter.h $B\src\previewer\PdfPreview.h
 $(OS)\Install.obj: $B\src\installer\Installer.h $B\src\installer\Resource.h $B\src\Translations.h
 $(OS)\Install.obj: $B\src\utils\ByteOrderDecoder.h $B\src\utils\FileTransactions.h $B\src\utils\FileUtil.h
