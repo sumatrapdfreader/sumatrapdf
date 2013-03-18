@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Builds a (pre)release build of SumatraPDF, including the installer,
 and optionally uploads it to s3.
@@ -196,34 +198,31 @@ def print_run_resp(out, err):
   if len(out) > 0: print(out)
   if len(err) > 0: print(err)
 
-def zip_one_file(src_path, file_name, dst_zip):
-  zip_file(dst_zip, src_path, file_name, compress=True)
-  verify_path_exists(dst_zip)
-
-#def zip_one_file2(src_path, file_name, dst_zip):
 def zip_one_file(dir, to_pack, zip_name):
   verify_path_exists(dir)
-  curr_dir = os.getcwc()
+  # for the benefit of pigz, we have to cd to the directory, because
+  # we don't control the name of the file inside created zip file - it's
+  # the same as name as path of the file we're compressing
+  curr_dir = os.getcwd()
   os.chdir(dir)
+  verify_path_exists(to_pack)
+  util.delete_file(zip_name) # ensure destination doesn't exist
   try:
-    # TODO: must cd to a dir, because the name inside .zip file created by
-    # pigz would otherwise contain the dir as well
-    #
     # -11 for zopfil compression
     # --keep to not delete the source file
     # --zip to create a single-file zip archive
-    run_cmd_throw("pigz", "-11", "--keep", "--zip", src_path)
+    pigz_dst = to_pack + ".zip"     # we don't control the name of the file pigz will create
+    util.delete_file(pigz_dst)
+    run_cmd_throw("pigz", "-11", "--keep", "--zip", to_pack)
     print("Compressed using pigz.exe")
-    # we don't control the name pigz will create
-    pigz_dst = src_path + ".zip"
-    if pigz_dst != dst_zip:
-      print("moving %s => %s" % (pigz_dst, dst_zip))
-      shutil.move(pigz_dst, dst_zip)
+    if pigz_dst != zip_name:
+      print("moving %s => %s" % (pigz_dst, zip_name))
+      shutil.move(pigz_dst, zip_name)
   except:
     # if pigz.exe is not in path, use regular zip compression
-    zip_file(dst_zip, src_path, file_name, compress=True)
+    zip_file(zip_name, to_pack, to_pack, compress=True)
     print("Compressed using regular zip")
-  verify_path_exists(dst_zip)
+  verify_path_exists(zip_name)
   os.chdir(curr_dir)
 
 def main():
@@ -350,9 +349,10 @@ def main():
 
   # package portable version in a .zip file
   if not build_prerelease:
-    exe_zip = os.path.join(obj_dir, "%s.zip" % filename_base)
-    zip_one_file(exe, "SumatraPDF.exe", exe_zip)
-    copy_to_dst_dir(exe_zip, builds_dir)
+    exe_zip_name = "%s.zip" % filename_base
+    zip_one_file(obj_dir, "SumatraPDF.exe", exe_zip_name)
+    exe_zip_path = os.path.join(obj_dir, exe_zip_name)
+    copy_to_dst_dir(exe_zip_path, builds_dir)
 
   if not upload: return
 
@@ -374,7 +374,7 @@ def main():
     s3.upload_data_public(txt, "sumatrapdf/sumpdf-prerelease-latest.txt")
     delete_old_pre_release_builds()
   else:
-    s3.upload_file_public(exe_zip, s3_exe_zip)
+    s3.upload_file_public(exe_zip_path, s3_exe_zip)
 
   # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
   # manually to: "%s\n" % ver
@@ -387,5 +387,4 @@ def test_zip():
   sys.exit(0)
 
 if __name__ == "__main__":
-  test_zip()
   main()
