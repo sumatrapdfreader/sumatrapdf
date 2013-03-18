@@ -17,7 +17,7 @@
 #include "Version.h"
 #include "WinUtil.h"
 
-#define NOLOG 0 // 0 for more detailed debugging, 1 to disable lf()
+#define NOLOG 1 // 0 for more detailed debugging, 1 to disable lf()
 #include "DebugLog.h"
 
 #ifndef SYMBOL_DOWNLOAD_URL
@@ -145,6 +145,7 @@ static void SendCrashInfo(char *s)
     data.AppendFmt("\r\n--%s--\r\n", boundary);
 
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_URL, &headers, &data);
+    plogf("SendCrashInfo() finished");
 }
 
 // We might have symbol files for older builds. If we're here, then we

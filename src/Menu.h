@@ -40,9 +40,7 @@ void  UpdateMenu(WindowInfo *win, HMENU m);
 void  UpdateMenu(EbookWindow *win, HMENU m);
 
 /* Define if you want to display an additional debug menu */
-// TODO: temporarily show debug menus in pre-release builds to make it
-// possible to crash to test changed crash handler
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
+#if defined(DEBUG)
 #define SHOW_DEBUG_MENU_ITEMS
 #endif
 
