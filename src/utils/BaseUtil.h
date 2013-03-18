@@ -82,10 +82,14 @@ STATIC_ASSERT(8 == sizeof(uint64),  uint64_is_8_bytes);
 
 #pragma warning(push)
 #pragma warning(disable: 6011) // silence /analyze: de-referencing a NULL pointer
-// Note: trying doing this via RaiseException(0x40000015, EXCEPTION_NONCONTINUABLE, 0, 0);
+// Note: it's inlined to make it easier on crash reports analyzer (if wasn't inlined
+// CrashMe() would show up as the cause of several different crash sites)
+//
+// Note: I tried doing this via RaiseException(0x40000015, EXCEPTION_NONCONTINUABLE, 0, 0);
 // but it seemed to confuse callstack walking
 inline void CrashMe()
 {
+    OutputDebugStringA("CrashMe() called");
     char *p = NULL;
     *p = 0;
 }
