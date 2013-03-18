@@ -27,7 +27,7 @@ struct ArchiveInfo {
     FileInfo        files[MAX_LZMA_ARCHIVE_FILES];
 };
 
-bool   GetArchiveInfo(const char *archiveData, size_t dataLen, ArchiveInfo *archiveInfoOut);
+bool   GetArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo *archiveInfoOut);
 char*  Decompress(const char *in, size_t inSize, size_t *uncompressedSizeOut, Allocator *allocator);
 char * GetFileDataByIdx(ArchiveInfo *archive, int idx, Allocator *allocator);
 bool   ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator=NULL);

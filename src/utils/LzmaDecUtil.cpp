@@ -93,7 +93,7 @@ char* Decompress(const char *compressed, size_t compressedSize, size_t* uncompre
     return (char*)uncompressed;
 }
 
-/* archiveData points to the beginning of archive, which has a following format:
+/* archiveHeader points to the beginning of archive, which has a following format:
 
 u32   magic_id 0x4c7a5341 ("LzSA' for "Lzma Simple Archive")
 u32   number of files
@@ -109,9 +109,20 @@ for each file:
 
 Integers are little-endian.
 */
-bool GetArchiveInfo(const char *archiveData, size_t dataLen, ArchiveInfo* archiveInfoOut)
+
+// magic_id + number of files
+#define HEADER_START_SIZE (4 + 4)
+
+// u32 + u3 + u32 + FILETIME + name
+#define FILE_ENTRY_MIN_SIZE (4 + 4 + 4 + 8 + 1)
+
+bool GetArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo* archiveInfoOut)
 {
-    const char *data = archiveData;
+    const char *data = archiveHeader;
+    const char *dataEnd = data + dataLen;
+
+    if (dataLen < HEADER_START_SIZE)
+        return false;
 
     uint32_t magic_id = Read4Skip(&data);
     if (magic_id != LZMA_MAGIC_ID)
@@ -127,27 +138,33 @@ bool GetArchiveInfo(const char *archiveData, size_t dataLen, ArchiveInfo* archiv
     for (int i = 0; i < filesCount; i++) {
         fi = &archiveInfoOut->files[i];
         fi->off = off;
+
+        if (data + FILE_ENTRY_MIN_SIZE >= dataEnd)
+            return false;
+
         fi->uncompressedSize = Read4Skip(&data);
         fi->compressedSize = Read4Skip(&data);
-
         fi->compressedCrc32 = Read4Skip(&data);
         fi->ftModified.dwLowDateTime = Read4Skip(&data);
         fi->ftModified.dwHighDateTime = Read4Skip(&data);
         fi->name = data;
-        while (*data) {
+        while ((data < dataEnd) && *data) {
             ++data;
         }
         ++data;
+        if (data >= dataEnd)
+            return false;
 
         off += fi->compressedSize;
         if (off > dataLen)
             return false;
     }
 
-    // TODO: verify crc
-    //uint32_t headerCrc32 = Read4Skip(&data);
-    //uint32_t crcData = crc32(0, (const Bytef *)data, dataSize - 4);
-    Read4Skip(&data);
+    size_t headerSize = data - archiveHeader;
+    uint32_t headerCrc32 = Read4Skip(&data);
+    uint32_t realCrc = crc32(0, (const uint8_t *)archiveHeader, headerSize);
+    if (headerCrc32 != realCrc)
+        return false;
 
     for (int i = 0; i < filesCount; i++) {
         fi = &archiveInfoOut->files[i];
@@ -157,11 +174,20 @@ bool GetArchiveInfo(const char *archiveData, size_t dataLen, ArchiveInfo* archiv
     return true;
 }
 
+static bool IsFileCrcValid(FileInfo *fi)
+{
+    uint32_t realCrc = crc32(0, (const uint8_t *)fi->compressedData, fi->compressedSize);
+    return fi->compressedCrc32 == realCrc;
+}
+
 char *GetFileDataByIdx(ArchiveInfo *archive, int idx, Allocator *allocator)
 {
     size_t uncompressedSize;
 
     FileInfo *fi = &archive->files[idx];
+    if (!IsFileCrcValid(fi))
+        return NULL;
+
     char *uncompressed = Decompress(fi->compressedData, fi->compressedSize, &uncompressedSize, allocator);
     if (!uncompressed)
         return NULL;
@@ -204,11 +230,10 @@ bool ExtractFileByName(ArchiveInfo *archive, const char *fileName, const char *d
             return ExtractFileByIdx(archive, i, dstDir, allocator);
         }
     }
-    // didn't find a file with this name
     return false;
 }
 
-// files array must be NULL-terminated
+// files is an array of char * entries, last element must be NULL
 bool ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator)
 {
     size_t archiveDataSize;
