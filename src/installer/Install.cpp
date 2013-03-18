@@ -102,7 +102,7 @@ static bool InstallCopyFiles()
     const char *data = (const char*)LockResource(res);
     DWORD dataSize = SizeofResource(NULL, resSrc);
 
-    lzma::ArchiveInfo archive;
+    lzma::SimpleArchive archive;
     ok = lzma::ParseSimpleArchive(data, dataSize, &archive);
     if (!ok)
         goto Corrupted;
