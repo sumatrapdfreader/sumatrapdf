@@ -296,13 +296,19 @@ def buildbot_loop():
 			continue
 
 		print("local ver: %s, latest ver: %s" % (local_ver, latest_ver))
+		revs_built = 0
 		while int(local_ver) <= int(latest_ver):
 			if not has_already_been_built(local_ver):
 				build_version_try(local_ver)
+				revs_built += 1
 			else:
 				print("We have already built revision %s" % local_ver)
 			local_ver = str(int(local_ver)+1)
 		delete_old_logs()
+		# don't sleep if we built something in this cycle. a new checkin might
+		# have happened while we were working
+		if revs_built > 0:
+			continue
 		print("Sleeping for 15 minutes")
 		time.sleep(60*15) # 15 mins
 
