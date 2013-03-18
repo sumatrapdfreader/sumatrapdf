@@ -200,7 +200,11 @@ def zip_one_file(src_path, file_name, dst_zip):
   zip_file(dst_zip, src_path, file_name, compress=True)
   verify_path_exists(dst_zip)
 
-def zip_one_file2(src_path, file_name, dst_zip):
+#def zip_one_file2(src_path, file_name, dst_zip):
+def zip_one_file(dir, to_pack, zip_name):
+  verify_path_exists(dir)
+  curr_dir = os.getcwc()
+  os.chdir(dir)
   try:
     # TODO: must cd to a dir, because the name inside .zip file created by
     # pigz would otherwise contain the dir as well
@@ -220,6 +224,7 @@ def zip_one_file2(src_path, file_name, dst_zip):
     zip_file(dst_zip, src_path, file_name, compress=True)
     print("Compressed using regular zip")
   verify_path_exists(dst_zip)
+  os.chdir(curr_dir)
 
 def main():
   args = sys.argv[1:]
@@ -343,6 +348,7 @@ def main():
   copy_to_dst_dir(installer, builds_dir)
   copy_to_dst_dir(pdb_archive, builds_dir)
 
+  # package portable version in a .zip file
   if not build_prerelease:
     exe_zip = os.path.join(obj_dir, "%s.zip" % filename_base)
     zip_one_file(exe, "SumatraPDF.exe", exe_zip)
@@ -373,5 +379,13 @@ def main():
   # Note: for release builds, must update sumatrapdf/sumpdf-latest.txt in s3
   # manually to: "%s\n" % ver
 
+def test_zip():
+  dir = "obj-rel"
+  to_pack = "SumatraPDF.exe"
+  zip_name = "SumatraPDF-2.3.zip"
+  zip_one_file(dir, to_pack, zip_name)
+  sys.exit(0)
+
 if __name__ == "__main__":
+  test_zip()
   main()

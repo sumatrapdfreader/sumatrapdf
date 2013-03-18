@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e55e3ea1143fa37beffb58aa64d7bcf823614869
+aba25b677894c53c2d9f2d9bb10ec349d1d46578
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -9004,7 +9004,7 @@ eu:Ezarri Su&matraPDF agiritegi honetan:
 fr:Installer SumatraPDF dans le répertoire :
 hu:SumatraPDF telepítése a következő &könyvtárba:
 it:Installa SumatraPD&F nella cartella:
-kr:다음 폴더에 SumatraPDF 설치(&F):
+kr:SumatraPDF 설치 폴더(&F):
 pt:Instalar SumatraPD&F na pasta:
 ro:Instalare SumatraPDF in &folderul:
 ru:Установить SumatraPDF в &папку:
@@ -9136,7 +9136,7 @@ eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
 fr:Permettre à Windows de montrer des a&perçus des documents PDF
 hu:Hagyja a Windows-ra a PDF dokumentumok előnézetének megjelenítését
 it:Assegna a Windows la visualizzazione & anteprima dei documenti PDF
-kr:Windows 상에서 PDF 문서를 미리볼 수 있습니다.
+kr:PDF 문서의 미리보기를 Windows에서 보기(&P)
 pt:&Permitir que o WIndows mostre uma antevisão dos PDF
 ro:Permite Windows-ului sa arate &previzualizari ale documentelor PDF
 ru:&Просмотр документов PDF средствами Windows
@@ -14036,7 +14036,7 @@ eu:Mila esker SumatraPDF hautatzeagaitik!
 fr:Merci d'avoir choisi SumatraPDF !
 hu:Köszönjük, hogy a SumatraPDF-et választotta!
 it:Grazie per aver scelto SumatraPDF!
-kr:SumatraPDF를 선택해 주셔서 고맙습니다!
+kr:SumatraPDF를 선택해 주셔서 고마워요!
 ku:سوپاس بۆ هەڵبژاردنی !SumatraPDF
 pt:Obrigado por ter escolhido o SumatraPDF!
 ro:Va multumim pentru ca ati ales SumatraPDF!
