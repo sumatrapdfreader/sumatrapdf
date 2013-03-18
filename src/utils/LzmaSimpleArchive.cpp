@@ -13,7 +13,7 @@
 /*
 Implements extracting data from a simple archive format, made up by me.
 Raw data is compressed with lzma.exe from LZMA SDK.
-For the description of the format, see comment below, above ParseArchiveInfo().
+For the description of the format, see comment below, above ParseSimpleArchive().
 Archives are simple to create (in Sumatra, we use a python script).
 */
 
@@ -123,7 +123,7 @@ Integers are little-endian.
 // u32 + u3 + u32 + FILETIME + name
 #define FILE_ENTRY_MIN_SIZE (4 + 4 + 4 + 8 + 1)
 
-bool ParseArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo* archiveInfoOut)
+bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive* archiveOut)
 {
     const char *data = archiveHeader;
     const char *dataEnd = data + dataLen;
@@ -136,14 +136,14 @@ bool ParseArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo* ar
         return false;
 
     int filesCount = (int)Read4Skip(&data);
-    archiveInfoOut->filesCount = filesCount;
+    archiveOut->filesCount = filesCount;
     if (filesCount > MAX_LZMA_ARCHIVE_FILES)
         return false;
 
     size_t off = 0;
     FileInfo *fi;
     for (int i = 0; i < filesCount; i++) {
-        fi = &archiveInfoOut->files[i];
+        fi = &archiveOut->files[i];
         fi->off = off;
 
         if (data + FILE_ENTRY_MIN_SIZE >= dataEnd)
@@ -174,7 +174,7 @@ bool ParseArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo* ar
         return false;
 
     for (int i = 0; i < filesCount; i++) {
-        fi = &archiveInfoOut->files[i];
+        fi = &archiveOut->files[i];
         fi->compressedData = data + fi->off;
     }
 
@@ -187,7 +187,7 @@ static bool IsFileCrcValid(FileInfo *fi)
     return fi->compressedCrc32 == realCrc;
 }
 
-char *GetFileDataByIdx(ArchiveInfo *archive, int idx, Allocator *allocator)
+char *GetFileDataByIdx(SimpleArchive *archive, int idx, Allocator *allocator)
 {
     size_t uncompressedSize;
 
@@ -206,7 +206,7 @@ char *GetFileDataByIdx(ArchiveInfo *archive, int idx, Allocator *allocator)
     return uncompressed;
 }
 
-bool ExtractFileByIdx(ArchiveInfo *archive, int idx, const char *dstDir, Allocator *allocator)
+bool ExtractFileByIdx(SimpleArchive *archive, int idx, const char *dstDir, Allocator *allocator)
 {
     bool ok;
     const char *filePath = NULL;
@@ -229,7 +229,7 @@ Error:
     goto Exit;
 }
 
-bool ExtractFileByName(ArchiveInfo *archive, const char *fileName, const char *dstDir, Allocator *allocator)
+bool ExtractFileByName(SimpleArchive *archive, const char *fileName, const char *dstDir, Allocator *allocator)
 {
     for (int i = 0; i < archive->filesCount; i++) {
         const char *file = archive->files[i].name;
@@ -248,8 +248,8 @@ bool ExtractFiles(const char *archivePath, const char *dstDir, const char **file
     if (!archiveData)
         return false;
 
-    ArchiveInfo archive;
-    bool ok = ParseArchiveInfo(archiveData, archiveDataSize, &archive);
+    SimpleArchive archive;
+    bool ok = ParseSimpleArchive(archiveData, archiveDataSize, &archive);
     if (!ok)
         return false;
     int i = 0;

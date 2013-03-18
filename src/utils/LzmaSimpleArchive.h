@@ -22,14 +22,14 @@ struct FileInfo {
 // Note: good enough for our purposes, can be expanded when needed
 #define MAX_LZMA_ARCHIVE_FILES 128
 
-struct ArchiveInfo {
+struct SimpleArchive {
     int             filesCount;
     FileInfo        files[MAX_LZMA_ARCHIVE_FILES];
 };
 
-bool   ParseArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo *archiveInfoOut);
+bool   ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive *archiveOut);
 char*  Decompress(const char *in, size_t inSize, size_t *uncompressedSizeOut, Allocator *allocator);
-char * GetFileDataByIdx(ArchiveInfo *archive, int idx, Allocator *allocator);
+char * GetFileDataByIdx(SimpleArchive *archive, int idx, Allocator *allocator);
 bool   ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator=NULL);
 
 }

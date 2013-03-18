@@ -59,7 +59,7 @@ static inline void ProgressStep()
         PostMessage(gHwndProgressBar, PBM_STEPIT, 0, 0);
 }
 
-static bool ExtractFiles(lzma::ArchiveInfo *archive)
+static bool ExtractFiles(lzma::SimpleArchive *archive)
 {
     lzma::FileInfo *fi;
     char *uncompressed;
@@ -103,7 +103,7 @@ static bool InstallCopyFiles()
     DWORD dataSize = SizeofResource(NULL, resSrc);
 
     lzma::ArchiveInfo archive;
-    ok = lzma::ParseArchiveInfo(data, dataSize, &archive);
+    ok = lzma::ParseSimpleArchive(data, dataSize, &archive);
     if (!ok)
         goto Corrupted;
 
