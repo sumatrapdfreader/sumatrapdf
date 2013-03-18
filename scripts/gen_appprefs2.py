@@ -178,13 +178,12 @@ struct SettingInfo {
 """
 
 def main():
+	verify_started_in_right_directory(True)
+	
 	structDef = BuildStruct(IniSettings, "AdvancedSettings")
 	structMetadata = BuildMetaData(IniSettings, "AdvancedSettings")
 	content = AppPrefs2_Header % locals()
 	open("src/AppPrefs2.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
 
 if __name__ == "__main__":
-	if os.path.exists("gen_appprefs2.py"):
-		os.chdir("..")
-	verify_started_in_right_directory()
 	main()

@@ -38,7 +38,7 @@ EXPORTS
 
 %(mucbz_exports)s
 
-; jpeg exports
+; jpeg exports (required for libdjvu)
 
 	jpeg_resync_to_restart
 	jpeg_finish_decompress
@@ -49,7 +49,7 @@ EXPORTS
 	jpeg_destroy_decompress
 	jpeg_std_error
 
-; zlib exports
+; zlib exports (required for ZipUtil, PsEngine, LzmaSimpleArchive)
 
 	gzerror
 	gzprintf
@@ -73,6 +73,9 @@ EXPORTS
 """
 
 def main():
+	verify_started_in_right_directory(True)
+	os.chdir("mupdf")
+	
 	fitz_exports = generateExports("fitz/fitz.h", ["fz_init_ui_pointer_event", "fz_access_submit_event"]) + "\n\n" + generateExports("fitz/fitz-internal.h", ["fz_assert_lock_held", "fz_assert_lock_not_held", "fz_lock_debug_lock", "fz_lock_debug_unlock", "fz_purge_glyph_cache"])
 	mupdf_exports = generateExports("pdf/mupdf.h") + "\n\n" + generateExports("pdf/mupdf-internal.h", ["pdf_crypt_buffer", "pdf_open_compressed_stream"])
 	muxps_exports = generateExports("xps/muxps.h") + "\n\n" + generateExports("xps/muxps-internal.h", ["xps_parse_solid_color_brush", "xps_print_path"])
@@ -82,9 +85,4 @@ def main():
 	open("../src/libmupdf.def", "wb").write(list.replace("\n", "\r\n"))
 
 if __name__ == "__main__":
-	if os.path.exists("gen_libmupdf.def.py"):
-		os.chdir("..")
-	verify_started_in_right_directory()
-
-	os.chdir("mupdf")
 	main()

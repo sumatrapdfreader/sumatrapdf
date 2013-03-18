@@ -66,9 +66,13 @@ def verify_path_exists(path):
     sys.exit(1)
   return path
 
-def verify_started_in_right_directory():
-  if os.path.exists(os.path.join("scripts", "build.py")): return
-  if os.path.exists(os.path.join(os.getcwd(), "scripts", "build.py")): return
+def verify_started_in_right_directory(allow_chdir=False):
+  checkname = "build.py"
+  # optionally change directory if the script was started from
+  # os.path.dirname(__file__) , e.g. because it was double-clicked, etc.
+  if allow_chdir and os.path.exists(checkname): os.chdir("..")
+  if os.path.exists(os.path.join("scripts", checkname)): return
+  if os.path.exists(os.path.join(os.getcwd(), "scripts", checkname)): return
   print("This script must be run from top of the source tree")
   sys.exit(1)
 

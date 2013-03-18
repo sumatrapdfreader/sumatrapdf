@@ -785,7 +785,7 @@ EXPORTS
 	cbz_free_page
 	cbz_run_page
 
-; jpeg exports
+; jpeg exports (required for libdjvu)
 
 	jpeg_resync_to_restart
 	jpeg_finish_decompress
@@ -796,7 +796,7 @@ EXPORTS
 	jpeg_destroy_decompress
 	jpeg_std_error
 
-; zlib exports
+; zlib exports (required for ZipUtil, PsEngine, LzmaSimpleArchive)
 
 	gzerror
 	gzprintf

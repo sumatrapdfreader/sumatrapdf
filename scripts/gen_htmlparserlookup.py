@@ -219,6 +219,8 @@ Template_Lookup_Code = """\
 """
 
 def main():
+	verify_started_in_right_directory(True)
+	
 	tags = [(name, getEnumName(name, "Tag")) for name in sorted(List_HTML_Tags.split() + List_Other_Tags.split())]
 	attrs = [(name, getEnumName(name, "Attr")) for name in sorted(List_HTML_Attrs.split() + List_Other_Attrs.split())]
 	aligns = [(name, getEnumName(name, "Align")) for name in sorted(List_Align_Values.split())]
@@ -246,7 +248,4 @@ def main():
 	open("src/utils/HtmlParserLookup.cpp", "wb").write(content.replace("\n", "\r\n"))
 
 if __name__ == "__main__":
-	if os.path.exists("gen_htmlparserlookup.py"):
-		os.chdir("..")
-	verify_started_in_right_directory()
 	main()
