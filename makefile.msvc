@@ -199,14 +199,14 @@ MAIN_UI_OBJS = \
 
 SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj \
-	$(OU)\LzmaDecUtil.obj $(LZMA_OBJS) \
+	$(OU)\LzmaSimpleArchive.obj $(LZMA_OBJS) \
 	$(SUMATRA_RES) $(MAIN_UI_LIB) \
 	$(ENGINES_LIB) $(UTILS_LIB) $(MUI_LIB) $(SYNCTEX_OBJS)
 
 INSTALLER_OBJS = \
 	$(OS)\Installer.obj $(INSTALLER_RES) $(OS)\CrashHandler.obj \
 	$(UTILS_LIB) $(ZIP_OBJS) $(ZLIB_OBJS) \
-	$(OU)\LzmaDecUtil.obj $(LZMA_OBJS) \
+	$(OU)\LzmaSimpleArchive.obj $(LZMA_OBJS) \
 	$(OS)\Translations.obj $(OS)\Trans_installer_txt.obj
 
 UNINSTALLER_OBJS = \

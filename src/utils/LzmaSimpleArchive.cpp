@@ -2,13 +2,20 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "LzmaDecUtil.h"
+#include "LzmaSimpleArchive.h"
 
 #include "FileUtil.h"
 #include <LzmaDec.h>
 #include <Lzma86.h>
 #include <Bra.h>
 #include <zlib.h> // for crc32
+
+/*
+Implements extracting data from a simple archive format, made up by me.
+Raw data is compressed with lzma.exe from LZMA SDK.
+For the description of the format, see comment below, above ParseArchiveInfo().
+Archives are simple to create (in Sumatra, we use a python script).
+*/
 
 // 'LzSA' for "Lzma Simple Archive"
 #define LZMA_MAGIC_ID 0x4c7a5341
@@ -101,7 +108,7 @@ for each file:
   u32        file size uncompressed
   u32        file size compressed
   u32        crc32 checksum of compressed data
-  FILETIME   last modification time in Windows's FILETIME format
+  FILETIME   last modification time in Windows's FILETIME format (8 bytes)
   char[...]  file name, 0-terminated
 u32   crc32 checksum of the header (i.e. data so far)
 for each file:
@@ -116,7 +123,7 @@ Integers are little-endian.
 // u32 + u3 + u32 + FILETIME + name
 #define FILE_ENTRY_MIN_SIZE (4 + 4 + 4 + 8 + 1)
 
-bool GetArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo* archiveInfoOut)
+bool ParseArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo* archiveInfoOut)
 {
     const char *data = archiveHeader;
     const char *dataEnd = data + dataLen;
@@ -242,7 +249,7 @@ bool ExtractFiles(const char *archivePath, const char *dstDir, const char **file
         return false;
 
     ArchiveInfo archive;
-    bool ok = GetArchiveInfo(archiveData, archiveDataSize, &archive);
+    bool ok = ParseArchiveInfo(archiveData, archiveDataSize, &archive);
     if (!ok)
         return false;
     int i = 0;

@@ -1,8 +1,8 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef LzmaDecUtil_h
-#define LzmaDecUtil_h
+#ifndef LzmaSimpleArchive_h
+#define LzmaSimpleArchive_h
 
 namespace lzma {
 
@@ -27,7 +27,7 @@ struct ArchiveInfo {
     FileInfo        files[MAX_LZMA_ARCHIVE_FILES];
 };
 
-bool   GetArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo *archiveInfoOut);
+bool   ParseArchiveInfo(const char *archiveHeader, size_t dataLen, ArchiveInfo *archiveInfoOut);
 char*  Decompress(const char *in, size_t inSize, size_t *uncompressedSizeOut, Allocator *allocator);
 char * GetFileDataByIdx(ArchiveInfo *archive, int idx, Allocator *allocator);
 bool   ExtractFiles(const char *archivePath, const char *dstDir, const char **files, Allocator *allocator=NULL);

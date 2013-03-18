@@ -12,7 +12,7 @@
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
 #include "HttpUtil.h"
-#include "LzmaDecUtil.h"
+#include "LzmaSimpleArchive.h"
 #include "SumatraPDF.h"
 #include "Version.h"
 #include "WinUtil.h"

@@ -9,7 +9,7 @@
 #include "ByteOrderDecoder.h"
 #include "FileUtil.h"
 #include "FileTransactions.h"
-#include "LzmaDecUtil.h"
+#include "LzmaSimpleArchive.h"
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
@@ -103,7 +103,7 @@ static bool InstallCopyFiles()
     DWORD dataSize = SizeofResource(NULL, resSrc);
 
     lzma::ArchiveInfo archive;
-    ok = lzma::GetArchiveInfo(data, dataSize, &archive);
+    ok = lzma::ParseArchiveInfo(data, dataSize, &archive);
     if (!ok)
         goto Corrupted;
 

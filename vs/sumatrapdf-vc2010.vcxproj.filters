@@ -330,7 +330,7 @@
     <ClCompile Include="..\src\utils\JsonParser_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\LzmaDecUtil.cpp">
+    <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp">
@@ -1079,7 +1079,7 @@
     <ClInclude Include="..\src\utils\JsonParser.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\LzmaDecUtil.h">
+    <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\NoFreeAllocator.h">
