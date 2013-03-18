@@ -191,22 +191,22 @@ bool IsOnFixedDrive(const WCHAR *path)
     return DRIVE_FIXED == type;
 }
 
-static bool MatchWildcardsRec(const WCHAR *filename, const WCHAR *filter)
+static bool MatchWildcardsRec(const WCHAR *fileName, const WCHAR *filter)
 {
 #define AtEndOf(str) (*(str) == '\0')
     switch (*filter) {
     case '\0': case ';':
-        return AtEndOf(filename);
+        return AtEndOf(fileName);
     case '*':
         filter++;
-        while (!AtEndOf(filename) && !MatchWildcardsRec(filename, filter))
-            filename++;
-        return !AtEndOf(filename) || AtEndOf(filter) || *filter == ';';
+        while (!AtEndOf(fileName) && !MatchWildcardsRec(fileName, filter))
+            fileName++;
+        return !AtEndOf(fileName) || AtEndOf(filter) || *filter == ';';
     case '?':
-        return !AtEndOf(filename) && MatchWildcardsRec(filename + 1, filter + 1);
+        return !AtEndOf(fileName) && MatchWildcardsRec(fileName + 1, filter + 1);
     default:
-        return towlower(*filename) == towlower(*filter) &&
-               MatchWildcardsRec(filename + 1, filter + 1);
+        return towlower(*fileName) == towlower(*filter) &&
+               MatchWildcardsRec(fileName + 1, filter + 1);
     }
 #undef AtEndOf
 }

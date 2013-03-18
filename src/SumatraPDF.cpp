@@ -2960,9 +2960,9 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     if (!GetSaveFileName(&ofn))
         return;
 
-    ScopedMem<WCHAR> filename(str::Dup(dstFileName));
+    ScopedMem<WCHAR> fileName(str::Dup(dstFileName));
     if (!str::EndsWithI(dstFileName, L".lnk"))
-        filename.Set(str::Join(dstFileName, L".lnk"));
+        fileName.Set(str::Join(dstFileName, L".lnk"));
 
     ScrollState ss = win.dm->GetScrollState();
     const WCHAR *viewMode = DisplayModeConv::NameFromEnum(win.dm->GetDisplayMode());
@@ -2981,7 +2981,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     ScopedMem<WCHAR> desc(str::Format(_TR("Bookmark shortcut to page %s of %s"),
                           label, path::GetBaseName(win.dm->FilePath())));
 
-    CreateShortcut(filename, exePath, args, desc, 1);
+    CreateShortcut(fileName, exePath, args, desc, 1);
 }
 
 #if 0

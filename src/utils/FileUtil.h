@@ -14,7 +14,7 @@ const char * GetBaseName(const char *path);
 const WCHAR *GetExt(const WCHAR *path);
 
 WCHAR *      GetDir(const WCHAR *path);
-WCHAR *      Join(const WCHAR *path, const WCHAR *filename);
+WCHAR *      Join(const WCHAR *path, const WCHAR *fileName);
 char *       JoinUtf(const char *path, const char *fileName, Allocator *allocator);
 WCHAR *      Normalize(const WCHAR *path);
 WCHAR *      ShortPath(const WCHAR *path);

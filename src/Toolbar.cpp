@@ -203,9 +203,9 @@ void UpdateFindbox(WindowInfo* win)
     }
 }
 
-static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR * filename, INT resourceId)
+static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR * fileName, INT resourceId)
 {
-    ScopedMem<WCHAR> path(AppGenDataFilename(filename));
+    ScopedMem<WCHAR> path(AppGenDataFilename(fileName));
 
     if (path) {
         HBITMAP hBmp = (HBITMAP)LoadImage(NULL, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);

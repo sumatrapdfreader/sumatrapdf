@@ -99,20 +99,20 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data, size_t len)
     return list;
 }
 
-Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filepath)
+Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filePath)
 {
-    ScopedMem<WCHAR> modificationsPath(str::Join(filepath, SMX_FILE_EXT));
+    ScopedMem<WCHAR> modificationsPath(str::Join(filePath, SMX_FILE_EXT));
     size_t len;
     ScopedMem<char> data(file::ReadAll(modificationsPath, &len));
     return ParseFileModifications(data, len);
 }
 
-bool SaveFileModifictions(const WCHAR *filepath, Vec<PageAnnotation> *list)
+bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
 {
     if (!list)
         return false;
 
-    ScopedMem<WCHAR> modificationsPath(str::Join(filepath, SMX_FILE_EXT));
+    ScopedMem<WCHAR> modificationsPath(str::Join(filePath, SMX_FILE_EXT));
     str::Str<char> data;
     size_t offset = 0;
 
@@ -130,11 +130,11 @@ bool SaveFileModifictions(const WCHAR *filepath, Vec<PageAnnotation> *list)
         delete prevList;
     }
     else {
-        data.AppendFmt("/* SumatraPDF: modifications to \"%S\" */\r\n", path::GetBaseName(filepath));
+        data.AppendFmt("/* SumatraPDF: modifications to \"%S\" */\r\n", path::GetBaseName(filePath));
     }
 
     data.AppendFmt("@%s { version: %s", prevList ? "update" : "meta", SMX_CURR_VERSION);
-    int64 size = file::GetSize(filepath);
+    int64 size = file::GetSize(filePath);
     if (0 <= size && size <= UINT_MAX)
         data.AppendFmt("; filesize: %u", (UINT)size);
     SYSTEMTIME time;

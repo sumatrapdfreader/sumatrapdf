@@ -82,9 +82,9 @@ void ZipFile::ExtractFilenames(ZipMethod method)
     commentLen = ginfo.size_comment;
 }
 
-size_t ZipFile::GetFileIndex(const WCHAR *filename)
+size_t ZipFile::GetFileIndex(const WCHAR *fileName)
 {
-    return filenames.FindI(filename);
+    return filenames.FindI(fileName);
 }
 
 size_t ZipFile::GetFileCount() const
@@ -100,9 +100,9 @@ const WCHAR *ZipFile::GetFileName(size_t fileindex)
     return filenames.At(fileindex);
 }
 
-char *ZipFile::GetFileDataByName(const WCHAR *filename, size_t *len)
+char *ZipFile::GetFileDataByName(const WCHAR *fileName, size_t *len)
 {
-    return GetFileDataByIdx(GetFileIndex(filename), len);
+    return GetFileDataByIdx(GetFileIndex(fileName), len);
 }
 
 char *ZipFile::GetFileDataByIdx(size_t fileindex, size_t *len)
@@ -159,9 +159,9 @@ char *ZipFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     return result;
 }
 
-FILETIME ZipFile::GetFileTime(const WCHAR *filename)
+FILETIME ZipFile::GetFileTime(const WCHAR *fileName)
 {
-    return GetFileTime(GetFileIndex(filename));
+    return GetFileTime(GetFileIndex(fileName));
 }
 
 FILETIME ZipFile::GetFileTime(size_t fileindex)
@@ -194,10 +194,10 @@ char *ZipFile::GetComment(size_t *len)
     return comment;
 }
 
-bool ZipFile::UnzipFile(const WCHAR *filename, const WCHAR *dir, const WCHAR *unzippedName)
+bool ZipFile::UnzipFile(const WCHAR *fileName, const WCHAR *dir, const WCHAR *unzippedName)
 {
     size_t len;
-    char *data = GetFileDataByName(filename, &len);
+    char *data = GetFileDataByName(fileName, &len);
     if (!data)
         return false;
 
@@ -208,7 +208,7 @@ bool ZipFile::UnzipFile(const WCHAR *filename, const WCHAR *dir, const WCHAR *un
     if (unzippedName) {
         filePath.Append(unzippedName);
     } else {
-        filePath.Append(filename);
+        filePath.Append(fileName);
         str::TransChars(filePath.Get(), L"/", L"\\");
     }
 
@@ -233,7 +233,7 @@ ZipCreator::~ZipCreator()
     delete d;
 }
 
-// add a given file under (optional) nameInZip 
+// add a given file under (optional) nameInZip
 // it's not a good idea to save absolute windows-style
 // in the zip file, so we try to pick an intelligent
 // name if filePath is absolute and nameInZip is NULL

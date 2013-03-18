@@ -6,7 +6,7 @@
 
 struct PageAnnotation;
 
-Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filepath);
-bool SaveFileModifictions(const WCHAR *filepath, Vec<PageAnnotation> *list);
+Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filePath);
+bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list);
 
 #endif

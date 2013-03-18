@@ -173,16 +173,16 @@ static void UrlExtractTest()
     assert(!ExtractFilenameFromURL(L""));
     assert(!ExtractFilenameFromURL(L"#hash_only"));
     assert(!ExtractFilenameFromURL(L"?query=only"));
-    ScopedMem<WCHAR> filename(ExtractFilenameFromURL(L"http://example.net/filename.ext"));
-    assert(str::Eq(filename, L"filename.ext"));
-    filename.Set(ExtractFilenameFromURL(L"http://example.net/filename.ext#with_hash"));
-    assert(str::Eq(filename, L"filename.ext"));
-    filename.Set(ExtractFilenameFromURL(L"http://example.net/path/to/filename.ext?more=data"));
-    assert(str::Eq(filename, L"filename.ext"));
-    filename.Set(ExtractFilenameFromURL(L"http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
-    assert(str::Eq(filename, L"na/me.ext"));
-    filename.Set(ExtractFilenameFromURL(L"http://example.net/%E2%82%AC"));
-    assert(str::Eq((char *)filename.Get(), "\xAC\x20"));
+    ScopedMem<WCHAR> fileName(ExtractFilenameFromURL(L"http://example.net/filename.ext"));
+    assert(str::Eq(fileName, L"filename.ext"));
+    fileName.Set(ExtractFilenameFromURL(L"http://example.net/filename.ext#with_hash"));
+    assert(str::Eq(fileName, L"filename.ext"));
+    fileName.Set(ExtractFilenameFromURL(L"http://example.net/path/to/filename.ext?more=data"));
+    assert(str::Eq(fileName, L"filename.ext"));
+    fileName.Set(ExtractFilenameFromURL(L"http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
+    assert(str::Eq(fileName, L"na/me.ext"));
+    fileName.Set(ExtractFilenameFromURL(L"http://example.net/%E2%82%AC"));
+    assert(str::Eq((char *)fileName.Get(), "\xAC\x20"));
 }
 
 void SumatraPDF_UnitTests()

@@ -293,12 +293,12 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
 #endif
         else {
             // Remember this argument as a filename to open
-            WCHAR *filepath = NULL;
+            WCHAR *filePath = NULL;
             if (str::EndsWithI(argList.At(n), L".lnk"))
-                filepath = ResolveLnk(argList.At(n));
-            if (!filepath)
-                filepath = str::Dup(argList.At(n));
-            fileNames.Push(filepath);
+                filePath = ResolveLnk(argList.At(n));
+            if (!filePath)
+                filePath = str::Dup(argList.At(n));
+            fileNames.Push(filePath);
         }
     }
 #undef is_arg
