@@ -14,9 +14,6 @@ struct FileInfo {
     FILETIME        ftModified;
     const char *    name;
     const char *    compressedData;
-
-    // for internal use
-    size_t          off;
 };
 
 // Note: good enough for our purposes, can be expanded when needed

@@ -123,38 +123,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\BitReader.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\BitReader.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\ByteOrderDecoder.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\ByteOrderDecoder.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\ByteOrderDecoder_ut.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\ByteReader.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\CmdLineParser.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\CmdLineParser.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\CssParser.cpp"
 					>
 				</File>
@@ -207,11 +175,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\LzmaDecUtil.cpp"
+					RelativePath="..\src\utils\LzmaSimpleArchive.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\LzmaDecUtil.h"
+					RelativePath="..\src\utils\LzmaSimpleArchive.h"
 					>
 				</File>
 				<File
@@ -279,6 +247,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\FileUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\FileUtil.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\FileWatcher.cpp"
 					>
 				</File>
@@ -311,11 +287,27 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\ThreadUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\ThreadUtil.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\Touch.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\src\utils\Touch.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\UITask.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\UITask.h"
 					>
 				</File>
 				<File
@@ -328,22 +320,14 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="headers"
+				Name="unclassified"
 				>
 				<File
-					RelativePath="..\src\utils\Allocator.h"
+					RelativePath="..\src\utils\NoFreeAllocator.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\BitManip.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\FrameTimeoutCalculator.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\GeomUtil.h"
+					RelativePath="..\src\utils\NoFreeAllocator.h"
 					>
 				</File>
 				<File
@@ -351,35 +335,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\Scoped.h"
+					RelativePath="..\src\utils\StrFormat.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\Sigslot.h"
+					RelativePath="..\src\utils\StrFormat.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\Sigslot_ut.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\SimpleLog.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\Timer.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\Vec.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\Vec_ut.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\VecSegmented.h"
+					RelativePath="..\src\utils\StrFormat_ut.cpp"
 					>
 				</File>
 			</Filter>
@@ -387,11 +351,39 @@
 				Name="tools"
 				>
 				<File
-					RelativePath="..\src\utils\BaseUtil.cpp"
+					RelativePath="..\src\utils\BitManip.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\BaseUtil.h"
+					RelativePath="..\src\utils\BitReader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\BitReader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\ByteOrderDecoder.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\ByteOrderDecoder.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\ByteOrderDecoder_ut.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\ByteReader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\CmdLineParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\CmdLineParser.h"
 					>
 				</File>
 				<File
@@ -423,63 +415,27 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\FileUtil.cpp"
+					RelativePath="..\src\utils\FrameTimeoutCalculator.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\FileUtil.h"
+					RelativePath="..\src\utils\Sigslot.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\NoFreeAllocator.cpp"
+					RelativePath="..\src\utils\Sigslot_ut.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\NoFreeAllocator.h"
+					RelativePath="..\src\utils\SimpleLog.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\StrFormat.cpp"
+					RelativePath="..\src\utils\Timer.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\StrFormat.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\StrFormat_ut.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\StrUtil.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\StrUtil.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\StrUtil_ut.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\ThreadUtil.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\ThreadUtil.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\UITask.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\UITask.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\UtilTests.cpp"
+					RelativePath="..\src\utils\VecSegmented.h"
 					>
 				</File>
 			</Filter>
@@ -592,6 +548,54 @@
 				</File>
 				<File
 					RelativePath="..\src\mui\SvgPath_ut.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="base"
+				>
+				<File
+					RelativePath="..\src\utils\Allocator.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\BaseUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\BaseUtil.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\GeomUtil.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\Scoped.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\StrUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\StrUtil.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\StrUtil_ut.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\UtilTests.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\Vec.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\Vec_ut.cpp"
 					>
 				</File>
 			</Filter>

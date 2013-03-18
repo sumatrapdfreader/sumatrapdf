@@ -140,15 +140,12 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
     if (filesCount > MAX_LZMA_ARCHIVE_FILES)
         return false;
 
-    size_t off = 0;
     FileInfo *fi;
     for (int i = 0; i < filesCount; i++) {
-        fi = &archiveOut->files[i];
-        fi->off = off;
-
         if (data + FILE_ENTRY_MIN_SIZE > dataEnd)
             return false;
 
+        fi = &archiveOut->files[i];
         fi->uncompressedSize = Read4Skip(&data);
         fi->compressedSize = Read4Skip(&data);
         fi->compressedCrc32 = Read4Skip(&data);
@@ -161,8 +158,6 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
         ++data;
         if (data >= dataEnd)
             return false;
-
-        off += fi->compressedSize;
     }
 
     if (data + 4 > dataEnd)
@@ -174,15 +169,13 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
     if (headerCrc32 != realCrc)
         return false;
 
-    if (data + off != dataEnd)
-        return false;
-
     for (int i = 0; i < filesCount; i++) {
         fi = &archiveOut->files[i];
-        fi->compressedData = data + fi->off;
+        fi->compressedData = data;
+        data += fi->compressedSize;
     }
 
-    return true;
+    return data == dataEnd;
 }
 
 static bool IsFileCrcValid(FileInfo *fi)
