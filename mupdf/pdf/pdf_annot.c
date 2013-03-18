@@ -274,11 +274,10 @@ pdf_parse_action(pdf_document *xref, pdf_obj *action)
 		ld.ld.launch.file_spec = pdf_file_spec_to_str(xref, dest);
 		ld.ld.launch.new_window = pdf_to_int(pdf_dict_gets(action, "NewWindow"));
 		/* SumatraPDF: support launching embedded files */
-		obj = pdf_dict_gets(dest, "EF");
 #ifdef _WIN32
-		obj = pdf_dict_getsa(obj, "DOS", "F");
+		obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "DOS", "F");
 #else
-		obj = pdf_dict_getsa(obj, "Unix", "F");
+		obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "Unix", "F");
 #endif
 		ld.ld.launch.embedded_num = pdf_to_num(obj);
 		ld.ld.launch.embedded_gen = pdf_to_gen(obj);
@@ -361,6 +360,25 @@ pdf_load_link(pdf_document *xref, pdf_obj *dict, const fz_matrix *page_ctm)
 			action = pdf_dict_getsa(pdf_dict_gets(dict, "AA"), "U", "D");
 
 		ld = pdf_parse_action(xref, action);
+	}
+	/* support clicking on embedded Flash movies, etc. (PDF 1.7 ExtensionLevel 3) */
+	if (!obj && !action && (obj = pdf_dict_getp(dict, "RichMediaContent/Configurations")))
+	{
+		obj = pdf_dict_gets(pdf_array_get(obj, 0), "Instances");
+		dest = pdf_dict_gets(pdf_array_get(obj, 0), "Asset");
+#ifdef _WIN32
+		obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "DOS", "F");
+#else
+		obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "Unix", "F");
+#endif
+		if (obj)
+		{
+			ld.kind = FZ_LINK_LAUNCH;
+			ld.ld.launch.file_spec = pdf_file_spec_to_str(xref, dest);
+			ld.ld.launch.new_window = 1;
+			ld.ld.launch.embedded_num = pdf_to_num(obj);
+			ld.ld.launch.embedded_gen = pdf_to_gen(obj);
+		}
 	}
 	if (ld.kind == FZ_LINK_NONE)
 		return NULL;
