@@ -110,10 +110,8 @@ def run_cmd_throw(*args):
   errcode = cmdproc.returncode
   if 0 != errcode:
     print("Failed with error code %d" % errcode)
-    print("Stdout:")
-    print(res[0])
-    print("Stderr:")
-    print(res[1])
+    if len(res[0]) > 0: print("Stdout:\n%s" % res[0])
+    if len(res[1]) > 0: print("Stderr:\n%s" % res[1])
     raise Exception("'%s' failed with error code %d" % (cmd, errcode))
   return (res[0], res[1])
 

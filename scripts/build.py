@@ -196,6 +196,31 @@ def print_run_resp(out, err):
   if len(out) > 0: print(out)
   if len(err) > 0: print(err)
 
+def zip_one_file(src_path, file_name, dst_zip):
+  zip_file(dst_zip, src_path, file_name, compress=True)
+  verify_path_exists(dst_zip)
+
+def zip_one_file2(src_path, file_name, dst_zip):
+  try:
+    # TODO: must cd to a dir, because the name inside .zip file created by
+    # pigz would otherwise contain the dir as well
+    #
+    # -11 for zopfil compression
+    # --keep to not delete the source file
+    # --zip to create a single-file zip archive
+    run_cmd_throw("pigz", "-11", "--keep", "--zip", src_path)
+    print("Compressed using pigz.exe")
+    # we don't control the name pigz will create
+    pigz_dst = src_path + ".zip"
+    if pigz_dst != dst_zip:
+      print("moving %s => %s" % (pigz_dst, dst_zip))
+      shutil.move(pigz_dst, dst_zip)
+  except:
+    # if pigz.exe is not in path, use regular zip compression
+    zip_file(dst_zip, src_path, file_name, compress=True)
+    print("Compressed using regular zip")
+  verify_path_exists(dst_zip)
+
 def main():
   args = sys.argv[1:]
   upload               = test_for_flag(args, "-upload")
@@ -320,8 +345,7 @@ def main():
 
   if not build_prerelease:
     exe_zip = os.path.join(obj_dir, "%s.zip" % filename_base)
-    zip_file(exe_zip, exe, "SumatraPDF.exe", compress=True)
-    verify_path_exists(exe_zip)
+    zip_one_file(exe, "SumatraPDF.exe", exe_zip)
     copy_to_dst_dir(exe_zip, builds_dir)
 
   if not upload: return
