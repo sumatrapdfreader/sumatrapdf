@@ -19,12 +19,6 @@
 #include "WindowInfo.h"
 #include "WinUtil.h"
 
-// TODO: temporarily show debug menus in pre-release builds to make it
-// possible to crash to test changed crash handler
-#if defined(SVN_PRE_RELEASE_VER)
-#define SHOW_DEBUG_MENU_ITEMS
-#endif
-
 void MenuUpdateDisplayMode(WindowInfo* win)
 {
     bool enabled = win->IsDocLoaded();

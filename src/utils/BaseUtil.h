@@ -89,7 +89,6 @@ STATIC_ASSERT(8 == sizeof(uint64),  uint64_is_8_bytes);
 // but it seemed to confuse callstack walking
 inline void CrashMe()
 {
-    OutputDebugStringA("CrashMe() called");
     char *p = NULL;
     *p = 0;
 }
