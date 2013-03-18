@@ -146,7 +146,7 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
         fi = &archiveOut->files[i];
         fi->off = off;
 
-        if (data + FILE_ENTRY_MIN_SIZE >= dataEnd)
+        if (data + FILE_ENTRY_MIN_SIZE > dataEnd)
             return false;
 
         fi->uncompressedSize = Read4Skip(&data);
@@ -163,14 +163,18 @@ bool ParseSimpleArchive(const char *archiveHeader, size_t dataLen, SimpleArchive
             return false;
 
         off += fi->compressedSize;
-        if (off > dataLen)
-            return false;
     }
+
+    if (data + 4 > dataEnd)
+        return false;
 
     size_t headerSize = data - archiveHeader;
     uint32_t headerCrc32 = Read4Skip(&data);
     uint32_t realCrc = crc32(0, (const uint8_t *)archiveHeader, headerSize);
     if (headerCrc32 != realCrc)
+        return false;
+
+    if (data + off != dataEnd)
         return false;
 
     for (int i = 0; i < filesCount; i++) {
