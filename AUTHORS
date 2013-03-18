@@ -7,7 +7,7 @@
 * Jarkko Pöyry
 * Krzysztof J. Kowalczyk  (http://blog.kowalczyk.info)
 * Ludo Brands
-* Matthew Wilcoxson (matthew.wilcoxson at gmail.com, http://william.famille-blum.org/)
+* Matthew Wilcoxson (matthew.wilcoxson at gmail.com)
 * Nathan Jhaveri
 * Peter Astrand
 * Robert Liu
@@ -17,7 +17,7 @@
 * vadmium at gmail.com
 * Vasily Fomin (vasili.fomin at gmail.com)
 * Victor Kozyakin
-* William Blum (william.blum at gmail.com)
+* William Blum (william.blum at gmail.com, http://william.famille-blum.org/)
 
 Most code under src is licensed as GPL v3 (see COPYING) with the main
 exception of code in src/utils and src/mui which has a BSD license
