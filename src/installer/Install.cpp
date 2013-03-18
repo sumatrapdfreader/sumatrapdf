@@ -65,9 +65,17 @@ static bool ExtractFiles(lzma::SimpleArchive *archive)
     char *uncompressed;
 
     FileTransaction trans;
-    for (int i = 0; i < archive->filesCount; i++) {
-        fi = &archive->files[i];
-        uncompressed = lzma::GetFileDataByIdx(archive, i, NULL);
+    for (int i = 0; gPayloadData[i].fileName; i++) {
+        if (!gPayloadData[i].install)
+            continue;
+        int idx = lzma::GetIdxFromName(archive, gPayloadData[i].fileName);
+        if (-1 == idx) {
+            NotifyFailed(_TR("Some files to be installed are damaged or missing"));
+            return false;
+        }
+
+        fi = &archive->files[idx];
+        uncompressed = lzma::GetFileDataByIdx(archive, idx, NULL);
         if (!uncompressed) {
             NotifyFailed(_TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
@@ -85,6 +93,7 @@ static bool ExtractFiles(lzma::SimpleArchive *archive)
 
         ProgressStep();
     }
+
     return trans.Commit();
 }
 
@@ -107,29 +116,13 @@ static bool InstallCopyFiles()
     if (!ok)
         goto Corrupted;
 
-    // verify that all files to be installed are included
-    for (int i = 0; gPayloadData[i].fileName; i++) {
-        if (!gPayloadData[i].install)
-            continue;
-
-        bool found = false;
-        for (int j = 0; j < archive.filesCount && !found; j++) {
-            if (str::Eq(archive.files[j].name, gPayloadData[i].fileName))
-                found = true;
-        }
-        if (!found)
-            goto FilesMissing;
-    }
+    // on error, ExtractFiles() shows error message itself
     ok = ExtractFiles(&archive);
 Exit:
     UnlockResource(res);
     return ok;
 Corrupted:
     NotifyFailed(_TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
-    ok = false;
-    goto Exit;
-FilesMissing:
-    NotifyFailed(_TR("Some files to be installed are damaged or missing"));
     ok = false;
     goto Exit;
 }

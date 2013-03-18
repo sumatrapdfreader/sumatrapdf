@@ -191,6 +191,16 @@ static bool IsFileCrcValid(FileInfo *fi)
     return fi->compressedCrc32 == realCrc;
 }
 
+int GetIdxFromName(SimpleArchive *archive, const char *fileName)
+{
+    for (int i = 0; i < archive->filesCount; i++) {
+        const char *file = archive->files[i].name;
+        if (str::Eq(file, fileName))
+            return i;
+    }
+    return -1;
+}
+
 char *GetFileDataByIdx(SimpleArchive *archive, int idx, Allocator *allocator)
 {
     size_t uncompressedSize;
@@ -208,6 +218,14 @@ char *GetFileDataByIdx(SimpleArchive *archive, int idx, Allocator *allocator)
         return NULL;
     }
     return uncompressed;
+}
+
+char *GetFileDataByName(SimpleArchive *archive, const char *fileName, Allocator *allocator)
+{
+    int idx = GetIdxFromName(archive, fileName);
+    if (-1 != idx)
+        return GetFileDataByIdx(archive, idx, allocator);
+    return NULL;
 }
 
 bool ExtractFileByIdx(SimpleArchive *archive, int idx, const char *dstDir, Allocator *allocator)
@@ -235,12 +253,9 @@ Error:
 
 bool ExtractFileByName(SimpleArchive *archive, const char *fileName, const char *dstDir, Allocator *allocator)
 {
-    for (int i = 0; i < archive->filesCount; i++) {
-        const char *file = archive->files[i].name;
-        if (str::Eq(file, fileName)) {
-            return ExtractFileByIdx(archive, i, dstDir, allocator);
-        }
-    }
+    int idx = GetIdxFromName(archive, fileName);
+    if (-1 != idx)
+        return ExtractFileByIdx(archive, idx, dstDir, allocator);
     return false;
 }
 
