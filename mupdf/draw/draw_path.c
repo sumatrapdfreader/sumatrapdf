@@ -465,9 +465,13 @@ fz_stroke_closepath(struct sctx *s)
 {
 	if (s->sn == 2)
 	{
+		/* SumatraPDF: prevent rendering artifacts from line joins */
+		float dx = s->beg[0].x - s->seg[1].x, dy = s->beg[0].y - s->seg[1].y;
 		fz_stroke_lineto(s, s->beg[0], 0);
 		if (s->seg[1].x == s->beg[0].x && s->seg[1].y == s->beg[0].y)
 			fz_add_line_join(s, s->seg[0], s->beg[0], s->beg[1], 0);
+		else if (dx * dx + dy * dy < FLT_EPSILON)
+			fz_stroke_flush(s, FZ_LINECAP_BUTT, FZ_LINECAP_BUTT);
 		else
 			fz_add_line_join(s, s->seg[1], s->beg[0], s->beg[1], 0);
 	}
