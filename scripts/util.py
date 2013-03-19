@@ -4,15 +4,6 @@ def log(s):
   print(s)
   sys.stdout.flush()
 
-def group(list, size):
-  i = 0
-  while list[i:]:
-    yield list[i:i + size]
-    i += size
-
-def uniquify(array):
-  return list(set(array))
-
 def strip_empty_lines(s):
   s = s.replace("\r\n", "\n")
   lines = [l.strip() for l in s.split("\n") if len(l.strip()) > 0]

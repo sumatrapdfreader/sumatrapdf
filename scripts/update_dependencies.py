@@ -15,14 +15,6 @@ OBJECT_DIRS = { "src\\utils": "$(OU)", "src\\browserplugin": "$(ODLL)", "src\\if
 MAKEFILE = "makefile.deps"
 DEPENDENCIES_PER_LINE = 3
 
-def memoize(func):
-	memory = {}
-	def __decorated(*args):
-		if args not in memory:
-			memory[args] = func(*args)
-		return memory[args]
-	return __decorated
-
 def prependPath(files, basefile=None):
 	result = []
 	include_dirs = INCLUDE_DIRS
@@ -44,7 +36,7 @@ def getObjectPath(file):
 			return odir
 	return "$(OS)"
 
-@memoize
+@util2.memoize
 def extractIncludes(file):
 	content = open(file, "r").read()
 	content = content.replace("\r\n", "\n")

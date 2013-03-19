@@ -17,5 +17,13 @@ def group(list, size):
 def uniquify(array):
 	return list(set(array))
 
+def memoize(func):
+	memory = {}
+	def __decorated(*args):
+		if args not in memory:
+			memory[args] = func(*args)
+		return memory[args]
+	return __decorated
+
 if __name__ == "__main__":
 	pass

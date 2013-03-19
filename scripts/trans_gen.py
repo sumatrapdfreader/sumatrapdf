@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, re, util, codecs, trans_langs, bz2, zlib
+import os, re, util2, codecs, trans_langs, bz2, zlib
 
 class Lang(object):
     def __init__(self, desc):
@@ -54,7 +54,7 @@ def extract_strings_from_c_files(with_paths=False):
             strings += [(s, os.path.basename(os.path.dirname(f))) for s in file_strings]
         else:
             strings += file_strings
-    return util.uniquify(strings)
+    return util2.uniquify(strings)
 
 TRANSLATIONS_TXT_SIMPLE = """\
 /*
@@ -376,7 +376,7 @@ def gen_c_code_simple(strings_dict, keys, dir_name):
     translations = "\n".join(lines)
 
     langs_grp = ['"%s"' % lang.code for lang in langs] + ["NULL"]
-    langs_list = ",\n    ".join([", ".join(grp) for grp in util.group(langs_grp, 10)])
+    langs_list = ",\n    ".join([", ".join(grp) for grp in util2.group(langs_grp, 10)])
     lang_id_to_index = "\n    ".join(["case %s: return %d;" % (lang.ms_lang_id, langs.index(lang) * len(keys)) for lang in langs] + ["default: return -1;"])
     rtl_lang_cmp = " || ".join(["%d == index" % (langs.index(lang) * len(keys)) for lang in langs if lang.isRtl]) or "false"
 

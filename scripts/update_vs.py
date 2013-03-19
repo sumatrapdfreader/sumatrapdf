@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, codecs
+import os, codecs, util2
 
 """
 This script keeps Visual Studio project files up-to-date with the source files.
@@ -15,6 +15,7 @@ def top_dir():
     d = os.path.join(os.path.dirname(__file__), "..")
     return os.path.realpath(d)
 
+@util2.memoize
 def ext(path):
     return os.path.splitext(path)[1].lower()
 
@@ -201,7 +202,7 @@ g_filters = [
     Filter("ifilter", "{f3b78d8d-cb6d-4728-9f92-10059ca368a7}", g_ifilter_files),
     Filter("previewer", "{b4798144-bcb4-46dd-b39d-a5e4bbdb93ae}", g_previewer_files),
     Filter("installer", "{b0cee761-6a1e-4847-955e-f0eb80c32cd6}", g_installer_files),
-    # node with no files, just to create a chierarchy
+    # node with no files, just to create a hierarchy
     Filter("ext", "{8d1ef194-ad72-4aeb-93e7-628a89158c73}", []),
     Filter("ext\\chm", "{87c09434-b151-4582-b0b3-eab39e5a51ef}", g_chm_files),
     Filter("ext\\mupdf", "{078d86a8-74f1-49fa-af7f-8d12c180a485}", []),
@@ -335,8 +336,9 @@ def replace_item_group_in_string(s, replacement):
 
 def replace_item_group(src_file, dst_file, s):
     d = read_file_utf8(src_file)
-    d = replace_item_group_in_string(d, s)
-    write_file_utf8(dst_file, d)
+    d2 = replace_item_group_in_string(d, s)
+    if d2 != d:
+        write_file_utf8(dst_file, d)
 
 def main():
     files = build_files(g_filters, pj(top_dir(), "vs"))
