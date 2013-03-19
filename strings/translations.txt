@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-aba25b677894c53c2d9f2d9bb10ec349d1d46578
+81650c74ccbe4563375d7e5651c3e82908b341b1
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -3010,7 +3010,7 @@ id:(atau %d)
 it:(di %d)
 ja:(%d 中)
 ka:(დან %d)
-kr:(총 %d 중)
+kr:(/ %d)
 ku:(لە %d)
 kw:(a %d)
 lt:(iš %d)
@@ -3298,7 +3298,7 @@ id:Tambah Halaman %s Ke Favorit Dengan Nama:
 it:Aggiungi la pagina %s ai Preferiti con nome (opzionale):
 ja:ページ %s に名前を付けて追加
 ka:%s გვერდის დამატება რჩეულებში (არასავალდებულო) სახელწოდებით:
-kr:%s 페이지의 즐겨찾기 이름을 입력하세요. (옵션) :
+kr:%s 페이지의 즐겨찾기 이름을 입력하세요. (선택 사항) :
 ku:(بۆ پەسەندەکان بەناوی (ئارەزوومەندانە %s زیادکردنی پەڕەی :
 lt:Sukurti žymą į %s puslapį, suteikiant jai šį pavadinimą (neprivalomas):
 mk:Додади страница %s во омилени со име по избор:
@@ -4749,6 +4749,7 @@ cn:关闭
 de:Schließen
 eu:Itxi
 fr:Fermer
+hi:Close
 hu:Bezár
 id:Tutup
 it:Chiudi
@@ -5331,7 +5332,7 @@ id:Menyalin teks ditolak (menyalin sebagai gambar saja)
 it:Impossibile copiare il testo (copio solo come immagine)
 ja:テキストのコピーは拒否されました (イメージとしてのコピーのみ)
 ka:ტექსტის კოპირება აკრძალულია (კოპირდება როგორც სურათი)
-kr:문자열 복사가 거부되었습니다. (이미지만 복사됩니다.)
+kr:문자열 복사가 거부됐습니다. (이미지만 복사합니다.)
 ku:(لەبەرگرتنەوەی دەق ڕەتکرایەوە (تەنها لەبەرگرتنەوەی وێنە
 lt:Teksto kopijavimas uždraustas (kopijuojamas tik ekrano vaizdas)
 mk:Копирањето на текстот беше одбиено (копирање само во вид на слика)
@@ -6117,7 +6118,7 @@ id:Pembaca PDF utama tidak dapat diubah dalam mode portabel
 it:Il lettore PDF predefinito non è modificabile in modalità "portable"
 ja:ポータブル モードでは変更できません
 ka:პორტატულ რეჟიმში, PDF-ის წამკითხველად დაყენება შეუძლებელია
-kr:기본 PDF 리더는 휴대용 방식에서는 바꿀 수 없습니다.
+kr:포터블 방식에서는 기본 PDF 리더로 바꿀 수 없습니다.
 ku:(ناتوانرێت بگۆڕدرێت لە شێوازی هەڵگرتندا (پۆرتەیبڵ  PDF پیشاندەری سەرەکی
 kw:Ny yll an pennredyer PDF bos chanjyes yn modh porthadow
 lt:Naudojant programą kaip portatyvią, numatytosios PDF žiūryklės keisti negalima
@@ -11097,7 +11098,7 @@ id:Halaman %u tidak tersedia
 it:Pagina numero %u inesistente
 ja:ページ番号 %u が存在しません
 ka:%u გვერდი არ არსებობს
-kr:%u 페이지가 존재하지 않습니다.
+kr:%u 페이지가 없습니다.
 ku:بوونی نیە %u پەڕەی ژمارە
 kw:Nyns eus folen %u
 lt:Puslapio numerio %u nėra
@@ -11684,7 +11685,7 @@ id:Pencetak dengan nama tersebut tidak ada
 it:La stampante con quel nome non esiste
 ja:指定されたプリンタが見つかりません
 ka:მოცემული სახელის მქონე პრინეტრი არ არსებობს
-kr:지정된 이름의 프린터가 존재하지 않습니다.
+kr:지정된 이름의 프린터가 없습니다.
 ku:هیچ چاپکەرێک بەو ناوە بوونی نیە
 lt:Spausdintuvo tokiu vardu nėra
 mk:Не постои печатач со зададеното име
@@ -11733,7 +11734,7 @@ hu:Nyomtatás folyamatban.
 id:Dalam proses mencetak
 it:Stampa in corso...
 ja:印刷を実行中です。
-kr:프린트중입니다.
+kr:인쇄 작업 중입니다.
 ku:چاپکردن لە ئەنجامداندایە
 my:Cetakan sedang dijalankan.
 nl:Aan het printen.
@@ -11775,7 +11776,7 @@ hu:A nyomtatás még folyamatban van. Megszakítás és kilépés?
 id:Sedang dalam proses mencetak. Batalkan dan keluar?
 it:La stampa è ancora in corso. Vuoi interromperla e uscire?
 ja:印刷を実行中です。中止して終了しますか？
-kr:프린트중입니다. 취소후 종료하시겠습니까?
+kr:인쇄가 아직 진행 중입니다. 중지하고 끝낼까요?
 ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان و دەرچوون؟
 my:Cetakan sedang dilakukan. Batal dan Henti?
 nl:Nog steeds aan het printen. Annuleren en stoppen?
@@ -12047,7 +12048,7 @@ id:Ingat &berkas yang pernah dibuka
 it:Ric&orda file aperti
 ja:開かれたファイルを記憶する(&O)
 ka:&ფაილის პოზიციის დამახსოვრება
-kr:열었던 파일들 기억(&O)
+kr:열었던 파일(들) 기억(&O)
 ku:بیرخستنەوەی فایلە &کراوەکان
 kw:Kovhe restrennow ygerys
 lt:Įsiminti &atvertus failus
@@ -14054,7 +14055,7 @@ eu:Mila esker! SumatraPDF ezarri da.
 fr:Merci ! SumatraPDF a été installé.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
 it:Grazie! SumatraPDF installato correttamente.
-kr:고맙습니다! SumatraPDF가 설치됐습니다.
+kr:야호! SumatraPDF가 설치됐습니다.
 pt:O SumatraPDF foi instalado.
 ro:Multumim! SumatraPDF a fost dezinstalat.
 ru:Благодарим Вас! SumatraPDF успешно установлена.
