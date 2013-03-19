@@ -71,32 +71,37 @@ UNRAR_OBJS = \
 	$(OR)\ulinks.obj $(OR)\unicode.obj $(OR)\unpack.obj \
 	$(OR)\volume.obj $(OR)\dll.obj $(OR)\secpassword.obj
 
+# Note: in theory using compiling all djvu files as one should generate smaller
+# code, but it does just the opposite. Why?
+!if "$(COMPACT_DJVU)" == "yes"
 DJVU_OBJS = \
 	$(ODV)\djvu_all.obj $(ODV)\DjVuDocEditor.obj $(ODV)\DjVuDocument.obj \
 	$(ODV)\DjVuMessageLite.obj $(ODV)\DjVuToPS.obj $(ODV)\GMapAreas.obj \
 	$(ODV)\GPixmap.obj $(ODV)\GScaler.obj $(ODV)\GURL.obj $(ODV)\IW44EncodeCodec.obj \
 	$(ODV)\IW44Image.obj $(ODV)\JB2Image.obj $(ODV)\JPEGDecoder.obj \
 	$(ODV)\XMLParser.obj $(ODV)\miniexp.obj
-
-#	$(ODV)\Arrays.obj $(ODV)\atomic.obj $(ODV)\BSByteStream.obj \
-#	$(ODV)\BSEncodeByteStream.obj $(ODV)\ByteStream.obj $(ODV)\DataPool.obj \
-#	$(ODV)\DjVmDir0.obj $(ODV)\DjVmDoc.obj $(ODV)\DjVmNav.obj \
-#	$(ODV)\DjVuAnno.obj $(ODV)\DjVuDocEditor.obj $(ODV)\DjVuDocument.obj \
-#	$(ODV)\DjVuDumpHelper.obj $(ODV)\DjVuErrorList.obj $(ODV)\DjVuFile.obj \
-#	$(ODV)\DjVuFileCache.obj $(ODV)\DjVuGlobal.obj $(ODV)\DjVuGlobalMemory.obj \
-#	$(ODV)\DjVuImage.obj $(ODV)\DjVuInfo.obj $(ODV)\DjVuMessage.obj \
-#	$(ODV)\DjVuMessageLite.obj $(ODV)\DjVuNavDir.obj $(ODV)\DjVuPalette.obj \
-#	$(ODV)\DjVuPort.obj $(ODV)\DjVuText.obj $(ODV)\DjVuToPS.obj \
-#	$(ODV)\GBitmap.obj $(ODV)\GContainer.obj $(ODV)\GException.obj \
-#	$(ODV)\GIFFManager.obj $(ODV)\GMapAreas.obj $(ODV)\GOS.obj \
-#	$(ODV)\GPixmap.obj $(ODV)\GRect.obj $(ODV)\GScaler.obj \
-#	$(ODV)\GSmartPointer.obj $(ODV)\GString.obj $(ODV)\GThreads.obj \
-#	$(ODV)\GUnicode.obj $(ODV)\GURL.obj $(ODV)\IFFByteStream.obj \
-#	$(ODV)\IW44EncodeCodec.obj $(ODV)\IW44Image.obj $(ODV)\JB2EncodeCodec.obj \
-#	$(ODV)\DjVmDir.obj $(ODV)\JB2Image.obj $(ODV)\JPEGDecoder.obj \
-#	$(ODV)\MMRDecoder.obj $(ODV)\MMX.obj $(ODV)\UnicodeByteStream.obj \
-#	$(ODV)\XMLParser.obj $(ODV)\XMLTags.obj $(ODV)\ZPCodec.obj \
-#	$(ODV)\ddjvuapi.obj $(ODV)\debug.obj $(ODV)\miniexp.obj
+!else
+DJVU_OBJS = \
+	$(ODV)\Arrays.obj $(ODV)\atomic.obj $(ODV)\BSByteStream.obj \
+	$(ODV)\BSEncodeByteStream.obj $(ODV)\ByteStream.obj $(ODV)\DataPool.obj \
+	$(ODV)\DjVmDir0.obj $(ODV)\DjVmDoc.obj $(ODV)\DjVmNav.obj \
+	$(ODV)\DjVuAnno.obj $(ODV)\DjVuDocEditor.obj $(ODV)\DjVuDocument.obj \
+	$(ODV)\DjVuDumpHelper.obj $(ODV)\DjVuErrorList.obj $(ODV)\DjVuFile.obj \
+	$(ODV)\DjVuFileCache.obj $(ODV)\DjVuGlobal.obj $(ODV)\DjVuGlobalMemory.obj \
+	$(ODV)\DjVuImage.obj $(ODV)\DjVuInfo.obj $(ODV)\DjVuMessage.obj \
+	$(ODV)\DjVuMessageLite.obj $(ODV)\DjVuNavDir.obj $(ODV)\DjVuPalette.obj \
+	$(ODV)\DjVuPort.obj $(ODV)\DjVuText.obj $(ODV)\DjVuToPS.obj \
+	$(ODV)\GBitmap.obj $(ODV)\GContainer.obj $(ODV)\GException.obj \
+	$(ODV)\GIFFManager.obj $(ODV)\GMapAreas.obj $(ODV)\GOS.obj \
+	$(ODV)\GPixmap.obj $(ODV)\GRect.obj $(ODV)\GScaler.obj \
+	$(ODV)\GSmartPointer.obj $(ODV)\GString.obj $(ODV)\GThreads.obj \
+	$(ODV)\GUnicode.obj $(ODV)\GURL.obj $(ODV)\IFFByteStream.obj \
+	$(ODV)\IW44EncodeCodec.obj $(ODV)\IW44Image.obj $(ODV)\JB2EncodeCodec.obj \
+	$(ODV)\DjVmDir.obj $(ODV)\JB2Image.obj $(ODV)\JPEGDecoder.obj \
+	$(ODV)\MMRDecoder.obj $(ODV)\MMX.obj $(ODV)\UnicodeByteStream.obj \
+	$(ODV)\XMLParser.obj $(ODV)\XMLTags.obj $(ODV)\ZPCodec.obj \
+	$(ODV)\ddjvuapi.obj $(ODV)\debug.obj $(ODV)\miniexp.obj
+!endif
 
 CHMLIB_OBJS = \
 	$(OC)\chm_lib.obj $(OC)\lzx.obj
