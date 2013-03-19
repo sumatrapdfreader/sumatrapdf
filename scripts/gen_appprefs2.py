@@ -4,8 +4,7 @@ a variety of preference values from a user provided settings file.
 See further below for the definition of all currently supported options.
 """
 
-import os
-from util import verify_started_in_right_directory
+import os, util2
 
 Bool, Color, Int, String = "bool", "COLORREF", "int", "WCHAR *"
 
@@ -178,7 +177,7 @@ struct SettingInfo {
 """
 
 def main():
-	verify_started_in_right_directory(True)
+	util2.chdir_top()
 	
 	structDef = BuildStruct(IniSettings, "AdvancedSettings")
 	structMetadata = BuildMetaData(IniSettings, "AdvancedSettings")

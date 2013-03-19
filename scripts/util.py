@@ -66,13 +66,9 @@ def verify_path_exists(path):
     sys.exit(1)
   return path
 
-def verify_started_in_right_directory(allow_chdir=False):
-  checkname = "build.py"
-  # optionally change directory if the script was started from
-  # os.path.dirname(__file__) , e.g. because it was double-clicked, etc.
-  if allow_chdir and os.path.exists(checkname): os.chdir("..")
-  if os.path.exists(os.path.join("scripts", checkname)): return
-  if os.path.exists(os.path.join(os.getcwd(), "scripts", checkname)): return
+def verify_started_in_right_directory():
+  if os.path.exists(os.path.join("scripts", "build.py")): return
+  if os.path.exists(os.path.join(os.getcwd(), "scripts", "build.py")): return
   print("This script must be run from top of the source tree")
   sys.exit(1)
 
@@ -248,30 +244,6 @@ def file_remove_try_hard(path):
       time.sleep(1) # try to sleep to make the time for the file not be used anymore
       print "exception: n  %s, n  %s, n  %s n  when trying to remove file %s" % (sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], path)
     removeRetryCount += 1
-
-# returns full paths of files in a given directory, potentially recursively,
-# potentially filtering file names by filter_func (which takes file path as
-# an argument)
-def list_files_g(d, filter_func=None, recur=False):
-    to_visit = [d]
-    while len(to_visit) > 0:
-        d = to_visit.pop(0)
-        for f in os.listdir(d):
-            path = os.path.join(d, f)
-            isdir = os.path.isdir(path)
-            if isdir:
-                if recur:
-                    to_visit.append(path)
-            else:
-                if filter_func != None:
-                    if filter_func(path):
-                        yield path
-                else:
-                    yield path
-
-# generator => array
-def list_files(d, filter_func=None, recur=False):
-    return [path for path in list_files_g(d, filter_func, recur)]
 
 def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
   mode = "w"

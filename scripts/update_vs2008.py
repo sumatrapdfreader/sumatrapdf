@@ -2,8 +2,7 @@
 Updates the vc2008 project, trying to preserve its internal structure.
 """
 
-import os, re
-from util import verify_started_in_right_directory
+import os, re, util2
 pjoin = os.path.join
 
 VC2008_PROJ = pjoin("vs", "sumatrapdf-vc2008.vcproj")
@@ -27,7 +26,6 @@ EXCLUDE = [
 	pjoin("mupdf", "pdf", "pdf_jsimp_cpp.c"),
 	pjoin("mupdf", "pdf", "pdf_jsimp_cpp.h"),
 	pjoin("mupdf", "pdf", "pdf_jsimp_v8.cpp"),
-	pjoin("src", "utils", "Experiments.cpp"),
 ]
 
 class XmlNode:
@@ -88,7 +86,7 @@ def updateProj(vcproj, nodes, addedPaths):
 	return vcproj
 
 def main():
-	verify_started_in_right_directory(True)
+	util2.chdir_top()
 	
 	vcproj = open(VC2008_PROJ, "r").read()
 	fileNodes = parseNodes(getFilesNode(vcproj))

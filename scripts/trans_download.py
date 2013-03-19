@@ -4,7 +4,7 @@
 # If changed, saves them as strings/translations.txt and
 # re-generates src/Translations_txt.cpp etc.
 
-import os, sys, urllib2, util
+import os, sys, urllib2, util2
 from trans_gen import gen_c_code, extract_strings_from_c_files
 
 g_my_dir = os.path.dirname(__file__)
@@ -117,7 +117,7 @@ def dump_missing_per_language(strings, strings_dict, dump_strings=False):
     return untranslated_dict
 
 def get_untranslated_as_list(untranslated_dict):
-    return util.uniquify(sum(untranslated_dict.values(), []))
+    return util2.uniquify(sum(untranslated_dict.values(), []))
 
 # Generate the various Translations_txt.cpp files based on translations
 # in s that we downloaded from the server
