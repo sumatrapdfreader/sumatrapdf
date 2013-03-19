@@ -9,7 +9,7 @@ pjoin = os.path.join
 VC2008_PROJ = pjoin("vs", "sumatrapdf-vc2008.vcproj")
 DIR_STRUCT = [
 	("src", ("Source Files",)),
-	(pjoin("src", "utils"), ("baseutils", "unclassified")),
+	(pjoin("src", "utils"), ("baseutils",)),
 	(pjoin("src", "installer"), ("Installer",)),
 	(pjoin("src", "ifilter"), ("Integration DLLs", "IFilter")),
 	(pjoin("src", "browserplugin"), ("Integration DLLs", "Browser Plugin")),

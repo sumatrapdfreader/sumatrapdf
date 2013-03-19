@@ -320,7 +320,7 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="unclassified"
+				Name="unused"
 				>
 				<File
 					RelativePath="..\src\utils\NoFreeAllocator.cpp"
@@ -622,10 +622,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\resource.h"
-				>
-			</File>
-			<File
 				RelativePath="..\src\SumatraPDF.cpp"
 				>
 			</File>
@@ -638,7 +634,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\UnitTests.cpp"
+				RelativePath="..\src\Version.h"
 				>
 			</File>
 			<Filter
@@ -976,6 +972,10 @@
 					RelativePath="..\src\Tester.cpp"
 					>
 				</File>
+				<File
+					RelativePath="..\src\UnitTests.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Windows"
@@ -1025,10 +1025,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\Version.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -1049,6 +1045,10 @@
 			</File>
 			<File
 				RelativePath="..\src\reloading.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\resource.h"
 				>
 			</File>
 			<File
