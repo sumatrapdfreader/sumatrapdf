@@ -48,8 +48,10 @@ SYNCTEX_OBJS = \
 	$(OE)\synctex_parser.obj $(OE)\synctex_parser_utils.obj
 
 BZIP2_OBJS = \
-	$(OBZ)\blocksort.obj $(OBZ)\bzlib.obj $(OBZ)\compress.obj $(OBZ)\crctable.obj \
-	$(OBZ)\decompress.obj $(OBZ)\huffman.obj $(OBZ)\randtable.obj $(OBZ)\bz_internal_error.obj
+	$(OBZ)\bzip_all.obj
+
+#	$(OBZ)\blocksort.obj $(OBZ)\bzlib.obj $(OBZ)\compress.obj $(OBZ)\crctable.obj \
+#	$(OBZ)\decompress.obj $(OBZ)\huffman.obj $(OBZ)\randtable.obj $(OBZ)\bz_internal_error.obj
 
 MINIZIP_OBJS = \
 	$(OZ)\unzip.obj $(OZ)\unzalloc.obj $(OZ)\ioapi.obj $(OZ)\iowin32.obj \

@@ -1,0 +1,8 @@
+#include "blocksort.c"
+#include "bzlib.c"
+#include "compress.c"
+#include "crctable.c"
+#include "decompress.c"
+#include "huffman.c"
+#include "randtable.c"
+#include "bz_internal_error.c"
