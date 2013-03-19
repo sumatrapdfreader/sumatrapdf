@@ -249,6 +249,30 @@ def file_remove_try_hard(path):
       print "exception: n  %s, n  %s, n  %s n  when trying to remove file %s" % (sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], path)
     removeRetryCount += 1
 
+# returns full paths of files in a given directory, potentially recursively,
+# potentially filtering file names by filter_func (which takes file path as
+# an argument)
+def list_files_g(d, filter_func=None, recur=False):
+    to_visit = [d]
+    while len(to_visit) > 0:
+        d = to_visit.pop(0)
+        for f in os.listdir(d):
+            path = os.path.join(d, f)
+            isdir = os.path.isdir(path)
+            if isdir:
+                if recur:
+                    to_visit.append(path)
+            else:
+                if filter_func != None:
+                    if filter_func(path):
+                        yield path
+                else:
+                    yield path
+
+# generator => array
+def list_files(d, filter_func=None, recur=False):
+    return [path for path in list_files_g(d, filter_func, recur)]
+
 def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
   mode = "w"
   if append: mode = "a"

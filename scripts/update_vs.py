@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, codecs
+import os, codecs, util
 
 """
 This script keeps Visual Studio project files up-to-date with the source files.
@@ -60,30 +60,6 @@ def is_file_blacklisted(path):
     if ext(path) in [".aps"]: return True
     return False
 
-# returns full paths of files in a given directory, potentially recursively,
-# potentially filtering file names by filter_func (which takes file path as
-# an argument)
-def list_files_g(d, filter_func=None, recur=False):
-    to_visit = [d]
-    while len(to_visit) > 0:
-        d = to_visit.pop(0)
-        for f in os.listdir(d):
-            path = os.path.join(d, f)
-            isdir = os.path.isdir(path)
-            if isdir:
-                if recur:
-                    to_visit.append(path)
-            else:
-                if filter_func != None:
-                    if filter_func(path):
-                        yield path
-                else:
-                    yield path
-
-# generator => array
-def list_files(d, filter_func=None, recur=False):
-    return [path for path in list_files_g(d, filter_func, recur)]
-
 def first_el_same(list1, list2):
     if len(list1) == 0 or len(list2) == 0:
         return False
@@ -92,13 +68,8 @@ def first_el_same(list1, list2):
 def path_to_win(path):
     return path.replace("/", "\\")
 
-# TODO: this doesn't handle if the case:
-# path         = "foo/bar/x.c"
-# relative_dir = "foo/bar/me"
-# should return:
-#   "../x.c"
-# instead returns:
-#   "x.c"
+# Given "/foo/bar/c.txt" and "/foo/bar/moo" returns "../c.txt", i.e.
+# a path relative to a given direct
 def path_relative_to(path, relative_dir):
     path_parts = [p for p in path.split(os.path.sep)]
     #print(path_parts)
@@ -125,7 +96,7 @@ class Filter(object):
         self.files = files
 
 def list_top_dir_files(d, filter_func, recur=False):
-    return [path for path in list_files(pj(top_dir(), d), filter_func, recur) if not is_file_blacklisted(path)]
+    return [path for path in util.list_files(pj(top_dir(), d), filter_func, recur) if not is_file_blacklisted(path)]
 
 # TODO: maybe add those too:
 """
