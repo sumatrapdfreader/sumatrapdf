@@ -95,8 +95,9 @@ def injectDependencyList(flatlist):
 	open(MAKEFILE, "wb").write(content.replace("\n", "\r\n"))
 
 def update_vs():
-	import update_vs
+	import update_vs, update_vs2008
 	update_vs.main()
+	update_vs2008.main()
 
 def main():
 	verify_started_in_right_directory(True)

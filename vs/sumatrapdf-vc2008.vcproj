@@ -335,6 +335,18 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\Settings.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\Settings.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\Settings_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\StrFormat.cpp"
 					>
 				</File>
@@ -344,6 +356,10 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\StrFormat_ut.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\StrHash.h"
 					>
 				</File>
 			</Filter>
@@ -625,10 +641,6 @@
 				RelativePath="..\src\UnitTests.cpp"
 				>
 			</File>
-			<File
-				RelativePath="..\src\Version.h"
-				>
-			</File>
 			<Filter
 				Name="Engines"
 				>
@@ -861,6 +873,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\SumatraAbout2.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\SumatraAbout2.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\TableOfContents.cpp"
 					>
 				</File>
@@ -886,10 +906,6 @@
 				</File>
 				<File
 					RelativePath="..\src\Translations.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\UiMsgSumatra.h"
 					>
 				</File>
 			</Filter>
@@ -956,6 +972,10 @@
 					RelativePath="..\src\StressTesting.h"
 					>
 				</File>
+				<File
+					RelativePath="..\src\Tester.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Windows"
@@ -1005,6 +1025,10 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\Version.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -1013,6 +1037,10 @@
 			>
 			<File
 				RelativePath="..\src\dragcursor.cur"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libmupdf.rc"
 				>
 			</File>
 			<File
@@ -1080,6 +1108,10 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\fitz\base_time.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\fitz\base_trans.c"
 					>
 				</File>
 				<File
@@ -1171,10 +1203,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\mupdf\fitz\filt_pipeline.c"
-					>
-				</File>
-				<File
 					RelativePath="..\mupdf\fitz\filt_predict.c"
 					>
 				</File>
@@ -1256,10 +1284,6 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\fitz\stm_comp_buf.c"
-					>
-				</File>
-				<File
-					RelativePath="..\mupdf\fitz\stm_filter.c"
 					>
 				</File>
 				<File
@@ -1372,6 +1396,10 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\pdf\pdf_encoding.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\pdf\pdf_event.c"
 					>
 				</File>
 				<File
