@@ -191,15 +191,6 @@ bool DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst)
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
-WCHAR *ReadIniString(const WCHAR *iniPath, const WCHAR *section, const WCHAR *key, const WCHAR *defValue)
-{
-    DWORD bufCch = 64*512; // so max memory use is 64k
-    WCHAR *value = AllocArray<WCHAR>(bufCch);
-    if (value)
-        GetPrivateProfileString(section, key, defValue, value, bufCch-1, iniPath);
-    return value;
-}
-
 WCHAR *GetSpecialFolder(int csidl, bool createIfMissing)
 {
     if (createIfMissing)

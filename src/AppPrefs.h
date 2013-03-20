@@ -112,6 +112,5 @@ bool ReloadPrefs();
 
 class AdvancedSettings;
 bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs);
-bool SaveAdvancedPrefs(AdvancedSettings *advancedPrefs);
 
 #endif

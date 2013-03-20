@@ -243,6 +243,7 @@ static void LogTest()
 #include "StrFormat_ut.cpp"
 #include "Dict_ut.cpp"
 #include "Settings_ut.cpp"
+#include "IniParser_ut.cpp"
 
 void BaseUtils_UnitTests()
 {
@@ -263,6 +264,7 @@ void BaseUtils_UnitTests()
     StrFormatTest();
     DictTest();
     SettingsTest();
+    IniTest();
 }
 
 #endif

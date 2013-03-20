@@ -24,6 +24,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HttpUtil.h"
 #include "HtmlWindow.h"
+#include "IniParser.h"
 #include "Menu.h"
 #include "Mui.h"
 #include "Notifications.h"
@@ -611,16 +612,16 @@ void UpdateRtlLayoutForAllWindows()
 static int GetPolicies(bool isRestricted)
 {
     static struct {
-        const WCHAR *name;
+        const char *name;
         int perm;
     } policies[] = {
-        { L"InternetAccess", Perm_InternetAccess },
-        { L"DiskAccess",     Perm_DiskAccess },
-        { L"SavePreferences",Perm_SavePreferences },
-        { L"RegistryAccess", Perm_RegistryAccess },
-        { L"PrinterAccess",  Perm_PrinterAccess },
-        { L"CopySelection",  Perm_CopySelection },
-        { L"FullscreenAccess",Perm_FullscreenAccess },
+        { "InternetAccess", Perm_InternetAccess },
+        { "DiskAccess",     Perm_DiskAccess },
+        { "SavePreferences",Perm_SavePreferences },
+        { "RegistryAccess", Perm_RegistryAccess },
+        { "PrinterAccess",  Perm_PrinterAccess },
+        { "CopySelection",  Perm_CopySelection },
+        { "FullscreenAccess",Perm_FullscreenAccess },
     };
 
     // allow to restrict SumatraPDF's functionality from an INI file in the
@@ -634,35 +635,42 @@ static int GetPolicies(bool isRestricted)
     gAllowedFileTypes.Reset();
     if (file::Exists(restrictPath)) {
         int policy = Perm_RestrictedUse;
-        for (size_t i = 0; i < dimof(policies); i++) {
-            int check = GetPrivateProfileInt(L"Policies", policies[i].name, 0, restrictPath);
-            if (check)
-                policy = policy | policies[i].perm;
+
+        IniFile ini(restrictPath);
+        IniSection *polsec = ini.FindSection("Policies");
+        IniLine *line;
+        if (polsec) {
+            for (size_t i = 0; i < dimof(policies); i++) {
+                line = polsec->FindLine(policies[i].name);
+                if (line && atoi(line->value) != 0)
+                    policy = policy | policies[i].perm;
+            }
         }
-
         // determine the list of allowed link protocols and perceived file types
-        if ((policy & Perm_DiskAccess)) {
-            ScopedMem<WCHAR> protocols(ReadIniString(restrictPath, L"Policies", L"LinkProtocols"));
-            str::ToLower(protocols);
-            str::TransChars(protocols, L":; ", L",,,");
-            gAllowedLinkProtocols.Split(protocols, L",", true);
-
-            ScopedMem<WCHAR> types(ReadIniString(restrictPath, L"Policies", L"SafeFileTypes"));
-            str::ToLower(types);
-            str::TransChars(types, L":; ", L",,,");
-            gAllowedFileTypes.Split(types, L",", true);
+        if ((policy & Perm_DiskAccess) && polsec) {
+            if ((line = polsec->FindLine("LinkProtocols"))) {
+                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(line->value));
+                str::ToLower(protocols);
+                str::TransChars(protocols, L":; ", L",,,");
+                gAllowedLinkProtocols.Split(protocols, L",", true);
+            }
+            if ((line = polsec->FindLine("SafeFileTypes"))) {
+                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(line->value));
+                str::ToLower(protocols);
+                str::TransChars(protocols, L":; ", L",,,");
+                gAllowedFileTypes.Split(protocols, L",", true);
+            }
         }
 
         return policy;
     }
 
-    if (!isRestricted) {
-        gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
-        gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
-        return Perm_All;
-    }
+    if (isRestricted)
+        return Perm_RestrictedUse;
 
-    return Perm_RestrictedUse;
+    gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
+    gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
+    return Perm_All;
 }
 
 void SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp)

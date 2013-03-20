@@ -163,6 +163,18 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\IniParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\IniParser.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\IniParser_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\JsonParser.cpp"
 					>
 				</File>

@@ -14,6 +14,7 @@
 #include "FileHistory.h"
 #include "FileTransactions.h"
 #include "FileUtil.h"
+#include "IniParser.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "WindowInfo.h"
@@ -520,146 +521,78 @@ Exit:
 
 static void DeserializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info, size_t count, void *structBase)
 {
+    IniFile ini(filepath);
     char *base = (char *)structBase;
-    const WCHAR *section = NULL;
-    INT intValue, intValueDef;
-    ScopedMem<WCHAR> strValue;
+    IniSection *section = NULL;
+    IniLine *line;
 
     for (size_t i = 0; i < count; i++) {
         SettingInfo& meta = info[i];
-        CrashIf(meta.type != SType_Section && !section);
-        switch (meta.type) {
-        case SType_Section:
-            section = meta.name;
-            break;
-        case SType_Bool:
-            intValueDef = *(bool *)(base + meta.offset) ? 1 : 0;
-            intValue = GetPrivateProfileInt(section, meta.name, intValueDef, filepath);
-            *(bool *)(base + meta.offset) = intValue != 0;
-            break;
-        case SType_Color:
-            strValue.Set(ReadIniString(filepath, section, meta.name));
-            if (str::Parse(strValue, L"#%6x", &intValue))
-                *(COLORREF *)(base + meta.offset) = (COLORREF)intValue;
-            break;
-        case SType_Int:
-            intValueDef = *(int *)(base + meta.offset);
-            intValue = GetPrivateProfileInt(section, meta.name, intValueDef, filepath);
-            *(int *)(base + meta.offset) = intValue;
-            break;
-        case SType_String:
-            strValue.Set(ReadIniString(filepath, section, meta.name, L"\n"));
-            if (!str::Eq(strValue, L"\n"))
-                ((ScopedMem<WCHAR> *)(base + meta.offset))->Set(strValue.StealData());
-            break;
-        case SType_BoolVec:
-        case SType_ColorVec:
-        case SType_IntVec:
-        case SType_StringVec:
-            ScopedMem<WCHAR> sections(ReadIniString(filepath, section, NULL));
-            for (const WCHAR *name = sections; *name; name += str::Len(name) + 1) {
-                UINT idx;
-                if (str::Eq(str::Parse(name, L"%u.", &idx), meta.name)) {
-                    if (SType_BoolVec == meta.type) {
-                        bool value = GetPrivateProfileInt(section, name, 0, filepath) != 0;
-                        ((Vec<bool> *)(base + meta.offset))->InsertAt(idx, value);
-                    }
-                    else if (SType_ColorVec == meta.type) {
-                        strValue.Set(ReadIniString(filepath, section, name));
-                        if (str::Parse(strValue, L"#%6x", &intValue)) {
-                            COLORREF value = (COLORREF)intValue;
-                            ((Vec<COLORREF> *)(base + meta.offset))->InsertAt(idx, value);
-                        }
-                    }
-                    else if (SType_IntVec == meta.type) {
-                        intValue = GetPrivateProfileInt(section, name, 0, filepath);
-                        ((Vec<int> *)(base + meta.offset))->InsertAt(idx, intValue);
-                    }
-                    else {
-                        strValue.Set(ReadIniString(filepath, section, name));
-                        WStrVec *strVec = (WStrVec *)(base + meta.offset);
-                        // TODO: shouldn't InsertAt free the previous string?
-                        if (idx < strVec->Count())
-                            free(strVec->At(idx));
-                        strVec->InsertAt(idx, strValue.StealData());
-                    }
-                }
-            }
-            break;
-        }
-    }
-}
-
-static void SerializeAdvancedSettings(const WCHAR *filepath, SettingInfo *info, size_t count, void *structBase)
-{
-    char *base = (char *)structBase;
-    const WCHAR *section = NULL;
-    bool skipSection = false;
-    ScopedMem<WCHAR> strValue;
-
-    for (size_t i = 0; i < count; i++) {
-        SettingInfo& meta = info[i];
-        CrashIf(meta.type != SType_Section && !section);
-        if (meta.type != SType_Section && skipSection)
+        if (!section && meta.type != SType_Section && meta.type != SType_SectionVec) {
+            // skip missing section
+            while (++i < count && info[i].type != SType_Section && info[i].type != SType_SectionVec);
+            i--;
             continue;
+        }
         switch (meta.type) {
         case SType_Section:
-            section = meta.name;
-            skipSection = !meta.offset;
+            section = ini.FindSection(meta.name);
             break;
         case SType_Bool:
-            strValue.Set(str::Format(L"%d", *(bool *)(base + meta.offset) ? 1 : 0));
-            WritePrivateProfileString(section, meta.name, strValue, filepath);
+            if ((line = section->FindLine(meta.name)))
+                *(bool *)(base + meta.offset) = atoi(line->value) != 0;
             break;
         case SType_Color:
-            strValue.Set(str::Format(L"#%06X", (int)*(COLORREF *)(base + meta.offset)));
-            WritePrivateProfileString(section, meta.name, strValue, filepath);
+            if ((line = section->FindLine(meta.name))) {
+                int color;
+                if (str::Parse(line->value, "#%6x", &color))
+                    *(COLORREF *)(base + meta.offset) = (COLORREF)color;
+            }
             break;
         case SType_Int:
-            strValue.Set(str::Format(L"%d", *(int *)(base + meta.offset)));
-            WritePrivateProfileString(section, meta.name, strValue, filepath);
+            if ((line = section->FindLine(meta.name)))
+                *(int *)(base + meta.offset) = atoi(line->value);
             break;
         case SType_String:
-            WritePrivateProfileString(section, meta.name, ((ScopedMem<WCHAR> *)(base + meta.offset))->Get(), filepath);
+            if ((line = section->FindLine(meta.name)))
+                ((ScopedMem<WCHAR> *)(base + meta.offset))->Set(str::conv::FromUtf8(line->value));
             break;
-        case SType_BoolVec:
-            {
-                Vec<bool> *vec = (Vec<bool> *)(base + meta.offset);
-                for (size_t n = 1; n < vec->Count(); n++) {
-                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", n, meta.name));
-                    strValue.Set(str::Format(L"%d", vec->At(n) ? 1 : 0));
-                    WritePrivateProfileString(section, key, strValue, filepath);
+        case SType_SectionVec:
+            size_t i2 = i;
+            while (++i < count && info[i].type != SType_Section && info[i].type != SType_SectionVec);
+            for (size_t ix = 0; (section = ini.FindSection(meta.name, ix)); ix++) {
+                for (size_t j = i2 + 1; j < i; j++) {
+                    SettingInfo& meta2 = info[j];
+                    switch (meta2.type) {
+                    case SType_Bool:
+                        ((Vec<bool> *)(base + meta2.offset))->AppendBlanks(1);
+                        if ((line = section->FindLine(meta2.name)))
+                            ((Vec<bool> *)(base + meta2.offset))->Last() = atoi(line->value) != 0;
+                        break;
+                    case SType_Color:
+                        ((Vec<COLORREF> *)(base + meta2.offset))->AppendBlanks(1);
+                        if ((line = section->FindLine(meta2.name))) {
+                            int color;
+                            if (str::Parse(line->value, "#%6x", &color))
+                                ((Vec<COLORREF> *)(base + meta2.offset))->Last() = (COLORREF)color;
+                        }
+                        break;
+                    case SType_Int:
+                        ((Vec<int> *)(base + meta2.offset))->AppendBlanks(1);
+                        if ((line = section->FindLine(meta2.name)))
+                            ((Vec<int> *)(base + meta2.offset))->Last() = atoi(line->value);
+                        break;
+                    case SType_String:
+                        ((WStrVec *)(base + meta2.offset))->AppendBlanks(1);
+                        if ((line = section->FindLine(meta2.name)))
+                            ((WStrVec *)(base + meta2.offset))->Last() = str::conv::FromUtf8(line->value);
+                        break;
+                    default:
+                        CrashIf(true);
+                    }
                 }
             }
-            break;
-        case SType_ColorVec:
-            {
-                Vec<COLORREF> *vec = (Vec<COLORREF> *)(base + meta.offset);
-                for (size_t n = 1; n < vec->Count(); n++) {
-                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", n, meta.name));
-                    strValue.Set(str::Format(L"#%06X", (int)vec->At(n)));
-                    WritePrivateProfileString(section, key, strValue, filepath);
-                }
-            }
-            break;
-        case SType_IntVec:
-            {
-                Vec<int> *vec = (Vec<int> *)(base + meta.offset);
-                for (size_t n = 1; n < vec->Count(); n++) {
-                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", n, meta.name));
-                    strValue.Set(str::Format(L"%d", vec->At(n)));
-                    WritePrivateProfileString(section, key, strValue, filepath);
-                }
-            }
-            break;
-        case SType_StringVec:
-            {
-                WStrVec *vec = (WStrVec *)(base + meta.offset);
-                for (size_t n = 1; n < vec->Count(); n++) {
-                    ScopedMem<WCHAR> key(str::Format(L"%u.%s", n, meta.name));
-                    WritePrivateProfileString(section, key, vec->At(n), filepath);
-                }
-            }
+            i--;
             break;
         }
     }
@@ -891,14 +824,5 @@ bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs)
     if (!path)
         return false;
     DeserializeAdvancedSettings(path, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
-    return true;
-}
-
-bool SaveAdvancedPrefs(AdvancedSettings *advancedPrefs)
-{
-    ScopedMem<WCHAR> path(GetAdvancedPrefsPath(true));
-    if (!path)
-        return false;
-    SerializeAdvancedSettings(path, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
     return true;
 }

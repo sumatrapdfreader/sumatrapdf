@@ -337,7 +337,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     LoadPrefs();
 #ifdef DEBUG
     {
-        // TODO: add advanced settings as a pointer to SerializableGlobalPrefs ?
         AdvancedSettings adv;
         LoadAdvancedPrefs(&adv);
     }

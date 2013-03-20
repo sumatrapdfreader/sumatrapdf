@@ -27,6 +27,13 @@ public:
     // color value with which white (background) will be substituted
     COLORREF pageColor;
 
+    /* ***** fields for section PrinterDefaults ***** */
+
+    // default value for scaling (shrink, fit, none or NULL)
+    ScopedMem<WCHAR> printScale;
+    // default value for the compatibility option
+    bool printAsImage;
+
     /* ***** fields for section PagePadding ***** */
 
     // size of the left/right margin between window and document
@@ -55,63 +62,61 @@ public:
     // next mouse click instead of fading away instantly
     bool highlightPermanent;
 
-    /* ***** fields for section ExternalViewers ***** */
+    /* ***** fields for array section ExternalViewer ***** */
 
     // command line with which to call the external viewer, may contain %p
     // for page numer and %1 for the file name
-    WStrVec commandLine;
+    WStrVec vecCommandLine;
     // name of the external viewer to be shown in the menu (implied by
     // CommandLine if missing)
-    WStrVec name;
+    WStrVec vecName;
     // filter for which file types the menu item is to be shown (e.g.
     // "*.pdf;*.xps"; "*" if missing)
-    WStrVec filter;
+    WStrVec vecFilter;
 
-    AdvancedSettings() : traditionalEbookUI(false), reuseInstance(false), mainWindowBackground(0xFFF200), escToExit(false), textColor(0x000000), pageColor(0xFFFFFF), outerX(4), outerY(2), innerX(4), innerY(4), enableTeXEnhancements(false), highlightOffset(0), highlightWidth(15), highlightColor(0x6581FF), highlightPermanent(false) { }
+    AdvancedSettings() : traditionalEbookUI(false), reuseInstance(false), mainWindowBackground(0xFFF200), escToExit(false), textColor(0x000000), pageColor(0xFFFFFF), printAsImage(false), outerX(4), outerY(2), innerX(4), innerY(4), enableTeXEnhancements(false), highlightOffset(0), highlightWidth(15), highlightColor(0x6581FF), highlightPermanent(false) { }
 };
 
 #ifdef INCLUDE_APPPREFS2_METADATA
-enum SettingType {
-    SType_Section,
-    SType_Bool, SType_Color, SType_Int, SType_String,
-    SType_BoolVec, SType_ColorVec, SType_IntVec, SType_StringVec,
-};
+enum SettingType { SType_Section, SType_SectionVec, SType_Bool, SType_Color, SType_Int, SType_String };
 
 struct SettingInfo {
-    const WCHAR *name;
+    const char *name;
     SettingType type;
     size_t offset;
 };
 
 static SettingInfo gAdvancedSettingsInfo[] = {
-#define myoff(x) offsetof(AdvancedSettings, x)
     /* ***** fields for section AdvancedOptions ***** */
-    { L"AdvancedOptions", SType_Section, /* persist */ -1 },
-    { L"TraditionalEbookUI", SType_Bool, myoff(traditionalEbookUI) },
-    { L"ReuseInstance", SType_Bool, myoff(reuseInstance) },
-    { L"MainWindowBackground", SType_Color, myoff(mainWindowBackground) },
-    { L"EscToExit", SType_Bool, myoff(escToExit) },
-    { L"TextColor", SType_Color, myoff(textColor) },
-    { L"PageColor", SType_Color, myoff(pageColor) },
+    { "AdvancedOptions", SType_Section },
+    { "TraditionalEbookUI", SType_Bool, offsetof(AdvancedSettings, traditionalEbookUI) },
+    { "ReuseInstance", SType_Bool, offsetof(AdvancedSettings, reuseInstance) },
+    { "MainWindowBackground", SType_Color, offsetof(AdvancedSettings, mainWindowBackground) },
+    { "EscToExit", SType_Bool, offsetof(AdvancedSettings, escToExit) },
+    { "TextColor", SType_Color, offsetof(AdvancedSettings, textColor) },
+    { "PageColor", SType_Color, offsetof(AdvancedSettings, pageColor) },
+    /* ***** fields for section PrinterDefaults ***** */
+    { "PrinterDefaults", SType_Section },
+    { "PrintScale", SType_String, offsetof(AdvancedSettings, printScale) },
+    { "PrintAsImage", SType_Bool, offsetof(AdvancedSettings, printAsImage) },
     /* ***** fields for section PagePadding ***** */
-    { L"PagePadding", SType_Section, 0 },
-    { L"OuterX", SType_Int, myoff(outerX) },
-    { L"OuterY", SType_Int, myoff(outerY) },
-    { L"InnerX", SType_Int, myoff(innerX) },
-    { L"InnerY", SType_Int, myoff(innerY) },
+    { "PagePadding", SType_Section },
+    { "OuterX", SType_Int, offsetof(AdvancedSettings, outerX) },
+    { "OuterY", SType_Int, offsetof(AdvancedSettings, outerY) },
+    { "InnerX", SType_Int, offsetof(AdvancedSettings, innerX) },
+    { "InnerY", SType_Int, offsetof(AdvancedSettings, innerY) },
     /* ***** fields for section ForwardSearch ***** */
-    { L"ForwardSearch", SType_Section, 0 },
-    { L"EnableTeXEnhancements", SType_Bool, myoff(enableTeXEnhancements) },
-    { L"HighlightOffset", SType_Int, myoff(highlightOffset) },
-    { L"HighlightWidth", SType_Int, myoff(highlightWidth) },
-    { L"HighlightColor", SType_Color, myoff(highlightColor) },
-    { L"HighlightPermanent", SType_Bool, myoff(highlightPermanent) },
-    /* ***** fields for section ExternalViewers ***** */
-    { L"ExternalViewers", SType_Section, 0 },
-    { L"CommandLine", SType_StringVec, myoff(commandLine) },
-    { L"Name", SType_StringVec, myoff(name) },
-    { L"Filter", SType_StringVec, myoff(filter) },
-#undef myoff
+    { "ForwardSearch", SType_Section },
+    { "EnableTeXEnhancements", SType_Bool, offsetof(AdvancedSettings, enableTeXEnhancements) },
+    { "HighlightOffset", SType_Int, offsetof(AdvancedSettings, highlightOffset) },
+    { "HighlightWidth", SType_Int, offsetof(AdvancedSettings, highlightWidth) },
+    { "HighlightColor", SType_Color, offsetof(AdvancedSettings, highlightColor) },
+    { "HighlightPermanent", SType_Bool, offsetof(AdvancedSettings, highlightPermanent) },
+    /* ***** fields for array section ExternalViewer ***** */
+    { "ExternalViewer", SType_SectionVec },
+    { "CommandLine", SType_String, offsetof(AdvancedSettings, vecCommandLine) },
+    { "Name", SType_String, offsetof(AdvancedSettings, vecName) },
+    { "Filter", SType_String, offsetof(AdvancedSettings, vecFilter) },
 };
 #endif
 

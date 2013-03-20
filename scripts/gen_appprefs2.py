@@ -17,8 +17,13 @@ class Field(object):
 
 	def cdecl(self):
 		if self.type == String:
-			return "ScopedMem<WCHAR> %s;" % (self.cname())
+			return "ScopedMem<WCHAR> %s;" % self.cname()
 		return "%s %s;" % (self.type, self.cname())
+
+	def cdecl2(self):
+		if self.type == String:
+			return "WStrVec vec%s;" % self.name
+		return "Vec<%s> vec%s;" % (self.type, self.name)
 
 	def cdefault(self):
 		if self.type == Bool:
@@ -32,24 +37,13 @@ class Field(object):
 	def stype(self):
 		return "SType_%s" % ("Bool" if self.type == Bool else "Color" if self.type == Color else "Int" if self.type == Int else "String")
 
-class FieldArray(Field):
-	def __init__(self, name, type, comment):
-		super(FieldArray, self).__init__(name, type, None, comment)
-
-	def cdecl(self):
-		if self.type == String:
-			return "WStrVec %s;" % (self.cname())
-		return "Vec<%s> %s;" % (self.type, self.cname())
-
-	def cdefault(self):
-		return None
-
-	def stype(self):
-		return super(FieldArray, self).stype() + "Vec"
-
 class Section(object):
-	def __init__(self, name, fields, persist=False):
-		self.name = name; self.fields = fields; self.persist = persist
+	def __init__(self, name, fields):
+		self.name = name; self.fields = fields
+
+class SectionArray(object):
+	def __init__(self, name, fields):
+		self.name = name; self.fields = fields
 
 # TODO: move these settings into a different file for convenience?
 
@@ -77,6 +71,11 @@ PagePadding = [
 	Field("InnerY", Int, 4, "size of the vertical margin between two pages"),
 ]
 
+PrinterDefaults = [
+	Field("PrintScale", String, None, "default value for scaling (shrink, fit, none or NULL)"),
+	Field("PrintAsImage", Bool, False, "default value for the compatibility option"),
+]
+
 ForwardSearch = [
 	Field("EnableTeXEnhancements", Bool, False,
 		"whether the inverse search command line setting is visible in the Settings dialog"),
@@ -94,20 +93,21 @@ ForwardSearch = [
 ]
 
 ExternalViewer = [
-	FieldArray("CommandLine", String,
+	Field("CommandLine", String, None,
 		"command line with which to call the external viewer, may contain " +
 		"%p for page numer and %1 for the file name"),
-	FieldArray("Name", String,
+	Field("Name", String, None,
 		"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
-	FieldArray("Filter", String,
+	Field("Filter", String, None,
 		"filter for which file types the menu item is to be shown (e.g. \"*.pdf;*.xps\"; \"*\" if missing)"),
 ]
 
 IniSettings = [
-	Section("AdvancedOptions", AdvancedOptions, True),
+	Section("AdvancedOptions", AdvancedOptions),
+	Section("PrinterDefaults", PrinterDefaults),
 	Section("PagePadding", PagePadding),
 	Section("ForwardSearch", ForwardSearch),
-	Section("ExternalViewers", ExternalViewer),
+	SectionArray("ExternalViewer", ExternalViewer),
 ]
 
 def FormatComment(comment):
@@ -123,12 +123,18 @@ def BuildStruct(sections, name):
 	lines = ["class %s {" % name, "public:"]
 	defaults = []
 	for section in sections:
-		lines += ["", "\t/* ***** fields for section %s ***** */" % section.name, ""]
-		for field in section.fields:
-			lines += FormatComment(field.comment)
-			lines.append("\t" + field.cdecl())
-			if field.cdefault():
-				defaults.append(field.cdefault())
+		if type(section) == SectionArray:
+			lines += ["", "\t/* ***** fields for array section %s ***** */" % section.name, ""]
+			for field in section.fields:
+				lines += FormatComment(field.comment)
+				lines.append("\t" + field.cdecl2())
+		else:
+			lines += ["", "\t/* ***** fields for section %s ***** */" % section.name, ""]
+			for field in section.fields:
+				lines += FormatComment(field.comment)
+				lines.append("\t" + field.cdecl())
+				if field.cdefault():
+					defaults.append(field.cdefault())
 	if defaults:
 		lines.append("")
 		lines.append("\t%s() : %s { }" % (name, ", ".join(defaults)))
@@ -136,13 +142,18 @@ def BuildStruct(sections, name):
 	return "\n".join(lines)
 
 def BuildMetaData(sections, name):
-	lines = ["static SettingInfo g%sInfo[] = {" % name, "#define myoff(x) offsetof(%s, x)" % name]
+	lines = ["static SettingInfo g%sInfo[] = {" % name]
 	for section in sections:
-		lines.append("\t/* ***** fields for section %s ***** */" % section.name)
-		lines.append("\t{ L\"%s\", SType_Section, %s }," % (section.name, "/* persist */ -1" if section.persist else "0"))
-		for field in section.fields:
-			lines.append("\t{ L\"%s\", %s, myoff(%s) }," % (field.name, field.stype(), field.cname()))
-	lines.append("#undef myoff")
+		if type(section) == SectionArray:
+			lines.append("\t/* ***** fields for array section %s ***** */" % section.name)
+			lines.append("\t{ \"%s\", SType_SectionVec }," % section.name)
+			for field in section.fields:
+				lines.append("\t{ \"%s\", %s, offsetof(%s, vec%s) }," % (field.name, field.stype(), name, field.name))
+		else:
+			lines.append("\t/* ***** fields for section %s ***** */" % section.name)
+			lines.append("\t{ \"%s\", SType_Section }," % section.name)
+			for field in section.fields:
+				lines.append("\t{ \"%s\", %s, offsetof(%s, %s) }," % (field.name, field.stype(), name, field.cname()))
 	lines.append("};")
 	return "\n".join(lines)
 
@@ -158,14 +169,10 @@ AppPrefs2_Header = """\
 %(structDef)s
 
 #ifdef INCLUDE_APPPREFS2_METADATA
-enum SettingType {
-	SType_Section,
-	SType_Bool, SType_Color, SType_Int, SType_String,
-	SType_BoolVec, SType_ColorVec, SType_IntVec, SType_StringVec,
-};
+enum SettingType { SType_Section, SType_SectionVec, SType_Bool, SType_Color, SType_Int, SType_String };
 
 struct SettingInfo {
-	const WCHAR *name;
+	const char *name;
 	SettingType type;
 	size_t offset;
 };

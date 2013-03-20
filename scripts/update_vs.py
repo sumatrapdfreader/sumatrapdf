@@ -338,7 +338,7 @@ def replace_item_group(src_file, dst_file, s):
     d = read_file_utf8(src_file)
     d2 = replace_item_group_in_string(d, s)
     if d2 != d:
-        write_file_utf8(dst_file, d)
+        write_file_utf8(dst_file, d2)
 
 def main():
     files = build_files(g_filters, pj(top_dir(), "vs"))
