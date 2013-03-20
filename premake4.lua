@@ -1,6 +1,6 @@
 -- to generate Visual Studio files in vs directory, run:
 -- premake4 vs2010 or premake4 vs2008
-solution "everything"
+solution "sizer"
   configurations { "Debug", "Release" }
   location "vs" -- this is where generated solution/project files go
 
@@ -42,9 +42,8 @@ solution "everything"
     links { }
 
     configuration {"vs*"}
-      buildoptions {"/wd4996", "/wd4244", "/wd4305" }
       -- Note: don't understand why this is needed
-      linkoptions {"/NODEFAULTLIB:\"msvcrt.lib\""}
+      --linkoptions {"/NODEFAULTLIB:\"msvcrt.lib\""}
 
 --[[
   project "utils"
