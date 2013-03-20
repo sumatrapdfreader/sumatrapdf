@@ -111,6 +111,80 @@ public:
     }
 };
 
+class DisplayState {
+public:
+
+    /* ***** fields for section DisplayState ***** */
+
+    // absolute path to a document that's been loaded successfully
+    ScopedMem<WCHAR> filePath;
+    // in order to prevent documents that haven't been opened for a while
+    // but used to be opened very frequently constantly remain in top
+    // positions, the openCount will be cut in half after every week, so
+    // that the Frequently Read list hopefully better reflects the
+    // currently relevant documents
+    int openCount;
+    // a user can "pin" a preferred document to the Frequently Read list so
+    // that the document isn't replaced by more frequently used ones
+    bool isPinned;
+    // if a document can no longer be found but we still remember valuable
+    // state, it's classified as missing so that it can be hidden instead
+    // of removed
+    bool isMissing;
+    // whether global defaults should be used when reloading this file
+    // instead of the values listed below
+    bool useGlobalValues;
+    // how pages should be layed out for this document
+    DisplayMode displayMode;
+    // the scrollPos values are relative to the top-left corner of this
+    // page
+    int pageNo;
+    // for bookmarking ebook files: offset of the current page reparse
+    // point within html
+    int reparseIdx;
+    // the current zoom factor in % (negative values indicate virtual
+    // settings)
+    float zoomVirtual;
+    // how far pages have been rotated as a multiple of 90 degrees
+    int rotation;
+    // default state of new SumatraPDF windows (same as the last closed)
+    int windowState;
+    // hex encoded MD5 fingerprint of file content (32 chars) followed by
+    // crypt key (64 chars) - only applies for PDF documents
+    ScopedMem<char> decryptionKey;
+    // whether the table of contents (Bookmarks) sidebar is shown for this
+    // document
+    bool tocVisible;
+    // the width of the left sidebar panel containing the table of contents
+    int sidebarDx;
+    // tocState is an array of ids for ToC items that have been toggled by
+    // the user (i.e. aren't in their default expansion state). - Note: We
+    // intentionally track toggle state as opposed to expansion state so
+    // that we only have to save a diff instead of all states for the whole
+    // tree (which can be quite large) - and also due to backwards
+    // compatibility
+    ScopedPtr<Vec<int>> tocState;
+
+    /* ***** fields for section FileInternals ***** */
+
+    // temporary value needed for FileHistory::cmpOpenCount
+    size_t index;
+    // the thumbnail is persisted separately as a PNG in sumatrapdfcache
+    ScopedPtr<RenderedBitmap> thumbnail;
+    // how far this document has been scrolled
+    PointI scrollPos;
+    // position of the window containing this document (can be on any
+    // monitor)
+    RectI windowPos;
+
+    DisplayState() : openCount(0), isPinned(false), isMissing(false),
+        useGlobalValues(false), displayMode(DM_AUTOMATIC), pageNo(1),
+        reparseIdx(0), zoomVirtual(100.000000), rotation(0),
+        windowState(0), tocVisible(true), sidebarDx(0),
+        index(0) {
+    }
+};
+
 class AdvancedSettings {
 public:
 
@@ -194,81 +268,109 @@ enum SettingType {
     Type_Bool, Type_Color, Type_FileTime, Type_Float, Type_Int, Type_String, Type_Utf8String,
 };
 
+enum SettingFlag { Flag_None, Flag_NonGlobal, Flag_OnlyNonDefault };
+
 struct SettingInfo {
     const char *name;
     SettingType type;
     size_t offset;
-    uint32_t bitfield;
+    int flags;
 };
 
 static SettingInfo gSerializableGlobalPrefsInfo[] = {
     /* ***** fields for section SerializableGlobalPrefs ***** */
-    { "BgColor", Type_Color, offsetof(SerializableGlobalPrefs, bgColor) },
-    { "CBX_Right2Left", Type_Bool, offsetof(SerializableGlobalPrefs, cbxR2L) },
-    { "Display Mode", Type_Custom, offsetof(SerializableGlobalPrefs, defaultDisplayMode) },
-    { "EnableAutoUpdate", Type_Bool, offsetof(SerializableGlobalPrefs, enableAutoUpdate) },
-    { "EscToExit", Type_Bool, offsetof(SerializableGlobalPrefs, escToExit) },
-    { "ExposeInverseSearch", Type_Bool, offsetof(SerializableGlobalPrefs, enableTeXEnhancements) },
-    { "FavVisible", Type_Bool, offsetof(SerializableGlobalPrefs, favVisible) },
-    { "ForwardSearch_HighlightColor", Type_Color, offsetof(SerializableGlobalPrefs, fwdSearchColor) },
-    { "ForwardSearch_HighlightOffset", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchOffset) },
-    { "ForwardSearch_HighlightPermanent", Type_Bool, offsetof(SerializableGlobalPrefs, fwdSearchPermanent) },
-    { "ForwardSearch_HighlightWidth", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchWidth) },
-    { "GlobalPrefsOnly", Type_Bool, offsetof(SerializableGlobalPrefs, globalPrefsOnly) },
-    { "InverseSearchCommandLine", Type_String, offsetof(SerializableGlobalPrefs, inverseSearchCmdLine) },
-    { "LastUpdate", Type_FileTime, offsetof(SerializableGlobalPrefs, lastUpdateTime) },
-    { "OpenCountWeek", Type_Int, offsetof(SerializableGlobalPrefs, openCountWeek) },
-    { "PdfAssociateDontAskAgain", Type_Bool, offsetof(SerializableGlobalPrefs, pdfAssociateDontAskAgain) },
-    { "PdfAssociateShouldAssociate", Type_Bool, offsetof(SerializableGlobalPrefs, pdfAssociateShouldAssociate) },
-    { "RememberOpenedFiles", Type_Bool, offsetof(SerializableGlobalPrefs, rememberOpenedFiles) },
-    { "ShowStartPage", Type_Bool, offsetof(SerializableGlobalPrefs, showStartPage) },
-    { "ShowToc", Type_Bool, offsetof(SerializableGlobalPrefs, tocVisible) },
-    { "ShowToolbar", Type_Bool, offsetof(SerializableGlobalPrefs, toolbarVisible) },
-    { "Toc DX", Type_Int, offsetof(SerializableGlobalPrefs, sidebarDx) },
-    { "Toc Dy", Type_Int, offsetof(SerializableGlobalPrefs, tocDy) },
-    { "UILanguage", Type_Custom, offsetof(SerializableGlobalPrefs, currLangCode) },
-    { "UseSysColors", Type_Bool, offsetof(SerializableGlobalPrefs, useSysColors) },
-    { "VersionToSkip", Type_String, offsetof(SerializableGlobalPrefs, versionToSkip) },
-    { "Window DX", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.dx) },
-    { "Window DY", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.dy) },
-    { "Window State", Type_Int, offsetof(SerializableGlobalPrefs, windowState) },
-    { "Window X", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.x) },
-    { "Window Y", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.y) },
-    { "ZoomVirtual", Type_Float, offsetof(SerializableGlobalPrefs, defaultZoom) },
+    { "BgColor", Type_Color, offsetof(SerializableGlobalPrefs, bgColor), 0 },
+    { "CBX_Right2Left", Type_Bool, offsetof(SerializableGlobalPrefs, cbxR2L), 0 },
+    { "Display Mode", Type_Custom, offsetof(SerializableGlobalPrefs, defaultDisplayMode), 0 },
+    { "EnableAutoUpdate", Type_Bool, offsetof(SerializableGlobalPrefs, enableAutoUpdate), 0 },
+    { "EscToExit", Type_Bool, offsetof(SerializableGlobalPrefs, escToExit), 0 },
+    { "ExposeInverseSearch", Type_Bool, offsetof(SerializableGlobalPrefs, enableTeXEnhancements), 0 },
+    { "FavVisible", Type_Bool, offsetof(SerializableGlobalPrefs, favVisible), 0 },
+    { "ForwardSearch_HighlightColor", Type_Color, offsetof(SerializableGlobalPrefs, fwdSearchColor), 0 },
+    { "ForwardSearch_HighlightOffset", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchOffset), 0 },
+    { "ForwardSearch_HighlightPermanent", Type_Bool, offsetof(SerializableGlobalPrefs, fwdSearchPermanent), 0 },
+    { "ForwardSearch_HighlightWidth", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchWidth), 0 },
+    { "GlobalPrefsOnly", Type_Bool, offsetof(SerializableGlobalPrefs, globalPrefsOnly), 0 },
+    { "InverseSearchCommandLine", Type_String, offsetof(SerializableGlobalPrefs, inverseSearchCmdLine), 0 },
+    { "LastUpdate", Type_FileTime, offsetof(SerializableGlobalPrefs, lastUpdateTime), 0 },
+    { "OpenCountWeek", Type_Int, offsetof(SerializableGlobalPrefs, openCountWeek), 0 },
+    { "PdfAssociateDontAskAgain", Type_Bool, offsetof(SerializableGlobalPrefs, pdfAssociateDontAskAgain), 0 },
+    { "PdfAssociateShouldAssociate", Type_Bool, offsetof(SerializableGlobalPrefs, pdfAssociateShouldAssociate), 0 },
+    { "RememberOpenedFiles", Type_Bool, offsetof(SerializableGlobalPrefs, rememberOpenedFiles), 0 },
+    { "ShowStartPage", Type_Bool, offsetof(SerializableGlobalPrefs, showStartPage), 0 },
+    { "ShowToc", Type_Bool, offsetof(SerializableGlobalPrefs, tocVisible), 0 },
+    { "ShowToolbar", Type_Bool, offsetof(SerializableGlobalPrefs, toolbarVisible), 0 },
+    { "Toc DX", Type_Int, offsetof(SerializableGlobalPrefs, sidebarDx), 0 },
+    { "Toc Dy", Type_Int, offsetof(SerializableGlobalPrefs, tocDy), 0 },
+    { "UILanguage", Type_Custom, offsetof(SerializableGlobalPrefs, currLangCode), 0 },
+    { "UseSysColors", Type_Bool, offsetof(SerializableGlobalPrefs, useSysColors), 0 },
+    { "VersionToSkip", Type_String, offsetof(SerializableGlobalPrefs, versionToSkip), 0 },
+    { "Window DX", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.dx), 0 },
+    { "Window DY", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.dy), 0 },
+    { "Window State", Type_Int, offsetof(SerializableGlobalPrefs, windowState), 0 },
+    { "Window X", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.x), 0 },
+    { "Window Y", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.y), 0 },
+    { "ZoomVirtual", Type_Float, offsetof(SerializableGlobalPrefs, defaultZoom), 0 },
     /* ***** skipping internal section InternalPrefs ***** */
+};
+
+static SettingInfo gDisplayStateInfo[] = {
+    /* ***** fields for section DisplayState ***** */
+    { "Decryption Key", Type_Utf8String, offsetof(DisplayState, decryptionKey), 0 },
+    { "Display Mode", Type_Custom, offsetof(DisplayState, displayMode), 2 },
+    { "File", Type_String, offsetof(DisplayState, filePath), 0 },
+    { "Missing", Type_Bool, offsetof(DisplayState, isMissing), 1 },
+    { "OpenCount", Type_Int, offsetof(DisplayState, openCount), 0 },
+    { "Page", Type_Int, offsetof(DisplayState, pageNo), 2 },
+    { "Pinned", Type_Bool, offsetof(DisplayState, isPinned), 1 },
+    { "ReparseIdx", Type_Int, offsetof(DisplayState, reparseIdx), 2 },
+    { "Rotation", Type_Int, offsetof(DisplayState, rotation), 2 },
+    { "Scroll X2", Type_Int, offsetof(DisplayState, scrollPos.x), 2 },
+    { "Scroll Y2", Type_Int, offsetof(DisplayState, scrollPos.y), 2 },
+    { "ShowToc", Type_Bool, offsetof(DisplayState, tocVisible), 2 },
+    { "Toc DX", Type_Int, offsetof(DisplayState, sidebarDx), 2 },
+    { "TocToggles", Type_Custom, offsetof(DisplayState, tocState), 2 },
+    { "UseGlobalValues", Type_Bool, offsetof(DisplayState, useGlobalValues), 1 },
+    { "Window DX", Type_Int, offsetof(DisplayState, windowPos.dx), 2 },
+    { "Window DY", Type_Int, offsetof(DisplayState, windowPos.dy), 2 },
+    { "Window State", Type_Int, offsetof(DisplayState, windowState), 2 },
+    { "Window X", Type_Int, offsetof(DisplayState, windowPos.x), 2 },
+    { "Window Y", Type_Int, offsetof(DisplayState, windowPos.y), 2 },
+    { "ZoomVirtual", Type_Float, offsetof(DisplayState, zoomVirtual), 2 },
+    /* ***** skipping internal section FileInternals ***** */
 };
 
 static SettingInfo gAdvancedSettingsInfo[] = {
     /* ***** fields for section AdvancedOptions ***** */
     { "AdvancedOptions", Type_Section },
-    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedSettings, traditionalEbookUI) },
-    { "ReuseInstance", Type_Bool, offsetof(AdvancedSettings, reuseInstance) },
-    { "MainWindowBackground", Type_Color, offsetof(AdvancedSettings, mainWindowBackground) },
-    { "EscToExit", Type_Bool, offsetof(AdvancedSettings, escToExit) },
-    { "TextColor", Type_Color, offsetof(AdvancedSettings, textColor) },
-    { "PageColor", Type_Color, offsetof(AdvancedSettings, pageColor) },
+    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedSettings, traditionalEbookUI), 0 },
+    { "ReuseInstance", Type_Bool, offsetof(AdvancedSettings, reuseInstance), 0 },
+    { "MainWindowBackground", Type_Color, offsetof(AdvancedSettings, mainWindowBackground), 0 },
+    { "EscToExit", Type_Bool, offsetof(AdvancedSettings, escToExit), 0 },
+    { "TextColor", Type_Color, offsetof(AdvancedSettings, textColor), 0 },
+    { "PageColor", Type_Color, offsetof(AdvancedSettings, pageColor), 0 },
     /* ***** fields for section PrinterDefaults ***** */
     { "PrinterDefaults", Type_Section },
-    { "PrintScale", Type_String, offsetof(AdvancedSettings, printScale) },
-    { "PrintAsImage", Type_Bool, offsetof(AdvancedSettings, printAsImage) },
+    { "PrintScale", Type_String, offsetof(AdvancedSettings, printScale), 0 },
+    { "PrintAsImage", Type_Bool, offsetof(AdvancedSettings, printAsImage), 0 },
     /* ***** fields for section PagePadding ***** */
     { "PagePadding", Type_Section },
-    { "OuterX", Type_Int, offsetof(AdvancedSettings, outerX) },
-    { "OuterY", Type_Int, offsetof(AdvancedSettings, outerY) },
-    { "InnerX", Type_Int, offsetof(AdvancedSettings, innerX) },
-    { "InnerY", Type_Int, offsetof(AdvancedSettings, innerY) },
+    { "OuterX", Type_Int, offsetof(AdvancedSettings, outerX), 0 },
+    { "OuterY", Type_Int, offsetof(AdvancedSettings, outerY), 0 },
+    { "InnerX", Type_Int, offsetof(AdvancedSettings, innerX), 0 },
+    { "InnerY", Type_Int, offsetof(AdvancedSettings, innerY), 0 },
     /* ***** fields for section ForwardSearch ***** */
     { "ForwardSearch", Type_Section },
-    { "EnableTeXEnhancements", Type_Bool, offsetof(AdvancedSettings, enableTeXEnhancements) },
-    { "HighlightOffset", Type_Int, offsetof(AdvancedSettings, highlightOffset) },
-    { "HighlightWidth", Type_Int, offsetof(AdvancedSettings, highlightWidth) },
-    { "HighlightColor", Type_Color, offsetof(AdvancedSettings, highlightColor) },
-    { "HighlightPermanent", Type_Bool, offsetof(AdvancedSettings, highlightPermanent) },
+    { "EnableTeXEnhancements", Type_Bool, offsetof(AdvancedSettings, enableTeXEnhancements), 0 },
+    { "HighlightOffset", Type_Int, offsetof(AdvancedSettings, highlightOffset), 0 },
+    { "HighlightWidth", Type_Int, offsetof(AdvancedSettings, highlightWidth), 0 },
+    { "HighlightColor", Type_Color, offsetof(AdvancedSettings, highlightColor), 0 },
+    { "HighlightPermanent", Type_Bool, offsetof(AdvancedSettings, highlightPermanent), 0 },
     /* ***** fields for array section ExternalViewer ***** */
     { "ExternalViewer", Type_SectionVec },
-    { "CommandLine", Type_String, offsetof(AdvancedSettings, vecCommandLine) },
-    { "Name", Type_String, offsetof(AdvancedSettings, vecName) },
-    { "Filter", Type_String, offsetof(AdvancedSettings, vecFilter) },
+    { "CommandLine", Type_String, offsetof(AdvancedSettings, vecCommandLine), 0 },
+    { "Name", Type_String, offsetof(AdvancedSettings, vecName), 0 },
+    { "Filter", Type_String, offsetof(AdvancedSettings, vecFilter), 0 },
 };
 #endif
 

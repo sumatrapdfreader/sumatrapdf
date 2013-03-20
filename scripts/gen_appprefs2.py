@@ -18,10 +18,12 @@ Int = Type("Int", "int")
 String = Type("String", "ScopedMem<WCHAR>", "WStrVec")
 Utf8String = Type("Utf8String", "ScopedMem<char>", "StrVec")
 
+Flag_None, Flag_OnlyNonDefault, Flag_NonGlobal = [0, 1, 2]
+
 class Field(object):
-	def __init__(self, name, type, default, comment, alias=None, internalName=None):
-		self.name = name; self.type = type; self.default = default
-		self.comment = comment; self.alias = alias or name; self.internalName = internalName
+	def __init__(self, name, type, default, comment, alias=None, internalName=None, flags=0):
+		self.name = name; self.type = type; self.default = default; self.comment = comment
+		self.alias = alias or name; self.internalName = internalName; self.flags = flags
 		self.cname = name[0].lower() + name[1:] if name else None
 
 	def cdefault(self):
@@ -189,12 +191,91 @@ InternalSettings = [
 		"modification time of the preferences file when it was last read"),
 	Field("PrevSerialization", Utf8String, None,
 		"serialization of what was loaded (needed to prevent discarding unknown options)"),
-	Field("WindowPos", Type(None, "RectI"), None, "default position (can be on any monitor)"),
+	Field("WindowPos", Type(None, "RectI"), None,
+		"default position (can be on any monitor)"),
 ]
 
 GlobalPrefs = [
 	Section(None, LegacyPrefs), # section without header
 	Section("InternalPrefs", InternalSettings, True),
+]
+
+FileSettings = [
+	Field("FilePath", String, None,
+		"absolute path to a document that's been loaded successfully", alias="File"),
+	Field("OpenCount", Int, 0,
+		"in order to prevent documents that haven't been opened for a while " +
+		"but used to be opened very frequently constantly remain in top positions, " +
+		"the openCount will be cut in half after every week, so that the " +
+		"Frequently Read list hopefully better reflects the currently relevant documents"),
+	Field("IsPinned", Bool, False,
+		"a user can \"pin\" a preferred document to the Frequently Read list " +
+		"so that the document isn't replaced by more frequently used ones", alias="Pinned",
+		flags=Flag_OnlyNonDefault),
+	Field("IsMissing", Bool, False,
+		"if a document can no longer be found but we still remember valuable state, " +
+		"it's classified as missing so that it can be hidden instead of removed", alias="Missing",
+		flags=Flag_OnlyNonDefault),
+	Field("UseGlobalValues", Bool, False,
+		"whether global defaults should be used when reloading this file instead of " +
+		"the values listed below",
+		flags=Flag_OnlyNonDefault),
+	Field("DisplayMode", Type("Custom", "DisplayMode"), "DM_AUTOMATIC",
+		"how pages should be layed out for this document", alias="Display Mode",
+		flags=Flag_NonGlobal),
+	Field(None, Int, 0, None, alias="Scroll X2", internalName="scrollPos.x", flags=Flag_NonGlobal),
+	Field(None, Int, 0, None, alias="Scroll Y2", internalName="scrollPos.y", flags=Flag_NonGlobal),
+	Field("PageNo", Int, 1,
+		"the scrollPos values are relative to the top-left corner of this page", alias="Page",
+		flags=Flag_NonGlobal),
+	Field("ReparseIdx", Int, 0,
+		"for bookmarking ebook files: offset of the current page reparse point within html",
+		flags=Flag_NonGlobal),
+	Field("ZoomVirtual", Float, 100.0,
+		"the current zoom factor in % (negative values indicate virtual settings)",
+		flags=Flag_NonGlobal),
+	Field("Rotation", Int, 0,
+		"how far pages have been rotated as a multiple of 90 degrees",
+		flags=Flag_NonGlobal),
+	Field("WindowState", Int, 0,
+		"default state of new SumatraPDF windows (same as the last closed)", alias="Window State",
+		flags=Flag_NonGlobal),
+	Field(None, Int, 0, None, alias="Window X", internalName="windowPos.x", flags=Flag_NonGlobal),
+	Field(None, Int, 0, None, alias="Window Y", internalName="windowPos.y", flags=Flag_NonGlobal),
+	Field(None, Int, 0, None, alias="Window DX", internalName="windowPos.dx", flags=Flag_NonGlobal),
+	Field(None, Int, 0, None, alias="Window DY", internalName="windowPos.dy", flags=Flag_NonGlobal),
+	Field("DecryptionKey", Utf8String, None,
+		"hex encoded MD5 fingerprint of file content (32 chars) followed by " +
+		"crypt key (64 chars) - only applies for PDF documents", alias="Decryption Key"),
+	Field("TocVisible", Bool, True,
+		"whether the table of contents (Bookmarks) sidebar is shown for this document", alias="ShowToc",
+		flags=Flag_NonGlobal),
+	Field("SidebarDx", Int, 0,
+		"the width of the left sidebar panel containing the table of contents", alias="Toc DX",
+		flags=Flag_NonGlobal),
+	Field("TocState", Type("Custom", "ScopedPtr<Vec<int>>", "?"), None,
+		"tocState is an array of ids for ToC items that have been toggled by " +
+		"the user (i.e. aren't in their default expansion state). - " +
+		"Note: We intentionally track toggle state as opposed to expansion state " +
+		"so that we only have to save a diff instead of all states for the whole " +
+		"tree (which can be quite large) - and also due to backwards compatibility", alias="TocToggles",
+		flags=Flag_NonGlobal),
+]
+
+FileInternals = [
+	Field("Index", Type("Custom", "size_t"), "0",
+		"temporary value needed for FileHistory::cmpOpenCount"),
+	Field("Thumbnail", Type("Custom", "ScopedPtr<RenderedBitmap>", "?"), None,
+		"the thumbnail is persisted separately as a PNG in sumatrapdfcache"),
+	Field("ScrollPos", Type(None, "PointI"), None,
+		"how far this document has been scrolled"),
+	Field("WindowPos", Type(None, "RectI"), None,
+		"position of the window containing this document (can be on any monitor)"),
+]
+
+FileState = [
+	Section(None, FileSettings), # section without header
+	Section("FileInternals", FileInternals, True),
 ]
 
 # ##### end of setting definitions for SumatraPDF #####
@@ -255,7 +336,7 @@ def BuildMetaData(sections, name, sort=False):
 			lines.append("\t/* ***** fields for array section %s ***** */" % section.name)
 			lines.append("\t{ \"%s\", Type_SectionVec }," % section.name)
 			for field in fields:
-				lines.append("\t{ \"%s\", Type_%s, offsetof(%s, vec%s) }," % (field.alias, field.type.name, name, field.name))
+				lines.append("\t{ \"%s\", Type_%s, offsetof(%s, vec%s), %d }," % (field.alias, field.type.name, name, field.name, field.flags))
 		else:
 			lines.append("\t/* ***** fields for section %s ***** */" % (section.name or name))
 			if section.name:
@@ -263,7 +344,7 @@ def BuildMetaData(sections, name, sort=False):
 			else:
 				assert sections[0] == section
 			for field in fields:
-				lines.append("\t{ \"%s\", Type_%s, offsetof(%s, %s) }," % (field.alias, field.type.name, name, field.internalName or field.cname))
+				lines.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), %d }," % (field.alias, field.type.name, name, field.internalName or field.cname, field.flags))
 	lines.append("};")
 	return "\n".join(lines)
 
@@ -278,6 +359,8 @@ AppPrefs2_Header = """\
 
 %(mainStructDef)s
 
+%(fileStructDef)s
+
 %(advStructDef)s
 
 #ifdef INCLUDE_APPPREFS2_METADATA
@@ -286,14 +369,18 @@ enum SettingType {
 	Type_Bool, Type_Color, Type_FileTime, Type_Float, Type_Int, Type_String, Type_Utf8String,
 };
 
+enum SettingFlag { Flag_None, Flag_NonGlobal, Flag_OnlyNonDefault };
+
 struct SettingInfo {
 	const char *name;
 	SettingType type;
 	size_t offset;
-	uint32_t bitfield;
+	int flags;
 };
 
 %(mainStructMetadata)s
+
+%(fileStructMetadata)s
 
 %(advStructMetadata)s
 #endif
@@ -306,6 +393,8 @@ def main():
 	
 	mainStructDef = BuildStruct(GlobalPrefs, "SerializableGlobalPrefs")
 	mainStructMetadata = BuildMetaData(GlobalPrefs, "SerializableGlobalPrefs", True)
+	fileStructDef = BuildStruct(FileState, "DisplayState")
+	fileStructMetadata = BuildMetaData(FileState, "DisplayState", True)
 	advStructDef = BuildStruct(IniSettings, "AdvancedSettings")
 	advStructMetadata = BuildMetaData(IniSettings, "AdvancedSettings")
 	content = AppPrefs2_Header % locals()

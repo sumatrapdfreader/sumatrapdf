@@ -45,6 +45,28 @@ public:
     operator HANDLE() const { return handle; }
 };
 
+// deletes any object at the end of the scope
+template <class T>
+class ScopedPtr
+{
+    T *obj;
+public:
+    ScopedPtr() : obj(NULL) {}
+    explicit ScopedPtr(T* obj) : obj(obj) {}
+    ~ScopedPtr() { delete obj; }
+    T *Detach() {
+        T *tmp = obj;
+        obj = NULL;
+        return tmp;
+    }
+    operator T*() const { return obj; }
+    T* operator->() const { return obj; }
+    T* operator=(T* newObj) {
+        delete obj;
+        return (obj = newObj);
+    }
+};
+
 template <class T>
 class ScopedComPtr {
 protected:
@@ -136,4 +158,3 @@ public:
         Gdiplus::GdiplusShutdown(token);
     }
 };
-

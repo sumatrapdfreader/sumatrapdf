@@ -4,11 +4,11 @@
 #include "BaseUtil.h"
 #define INCLUDE_APPPREFS2_METADATA
 #include "AppPrefs.h"
+#include "DisplayState.h"
 
 #include "AppTools.h"
 #include "BencUtil.h"
 #include "DebugLog.h"
-#include "DisplayState.h"
 #include "Favorites.h"
 #include "FileHistory.h"
 #include "FileTransactions.h"
@@ -28,47 +28,6 @@
 SerializableGlobalPrefs gGlobalPrefs;
 AdvancedSettings gUserPrefs;
 
-enum DsIncludeRestrictions {
-    Ds_Always = 0,
-    Ds_NotGlobal = (1 << 0),
-    Ds_OnlyGlobal = (1 << 1),
-    Ds_IsRecent = (1 << 2),
-    Ds_IsPinned = (1 << 3),
-    Ds_IsMissing = (1 << 4),
-    Ds_HasTocState = (1 << 5),
-};
-
-// this list is in alphabetical order as Benc expects it
-SettingInfo gFilePrefInfo[] = {
-#define dsOffset(x) offsetof(DisplayState, x)
-    { "Decryption Key", Type_Utf8String, dsOffset(decryptionKey), Ds_Always },
-    { "Display Mode", Type_Custom, dsOffset(displayMode), Ds_NotGlobal },
-    { "File", Type_String, dsOffset(filePath), Ds_Always },
-    { "Missing", Type_Bool, dsOffset(isMissing), Ds_IsMissing },
-    { "OpenCount", Type_Int, dsOffset(openCount), Ds_IsRecent },
-    { "Page", Type_Int, dsOffset(pageNo), Ds_NotGlobal },
-    { "Pinned", Type_Bool, dsOffset(isPinned), Ds_IsPinned },
-    { "ReparseIdx", Type_Int, dsOffset(reparseIdx), Ds_NotGlobal },
-    { "Rotation", Type_Int, dsOffset(rotation), Ds_NotGlobal },
-    { "Scroll X2", Type_Int, dsOffset(scrollPos.x), Ds_NotGlobal },
-    { "Scroll Y2", Type_Int, dsOffset(scrollPos.y), Ds_NotGlobal },
-// for backwards compatibility the string is "ShowToc" and not
-// (more appropriate now) "TocVisible"
-    { "ShowToc", Type_Bool, dsOffset(tocVisible), Ds_NotGlobal },
-// for backwards compatibility, the serialized name is "Toc DX" and not
-// (more apropriate now) "Sidebar DX".
-    { "Toc DX", Type_Int, dsOffset(sidebarDx), Ds_NotGlobal },
-    { "TocToggles", Type_Custom, dsOffset(tocState), Ds_NotGlobal | Ds_HasTocState },
-    { "UseGlobalValues", Type_Bool, dsOffset(useGlobalValues), Ds_OnlyGlobal },
-    { "Window DX", Type_Int, dsOffset(windowPos.dx), Ds_NotGlobal },
-    { "Window DY", Type_Int, dsOffset(windowPos.dy), Ds_NotGlobal },
-    { "Window State", Type_Int, dsOffset(windowState), Ds_NotGlobal },
-    { "Window X", Type_Int, dsOffset(windowPos.x), Ds_NotGlobal },
-    { "Window Y", Type_Int, dsOffset(windowPos.y), Ds_NotGlobal },
-    { "ZoomVirtual", Type_Float, dsOffset(zoomVirtual), Ds_NotGlobal },
-#undef dsOffset
-};
-
 static BencDict *SerializeStructBenc(SettingInfo *info, size_t count, const void *structBase, BencDict *prefs=NULL, uint32_t bitmask=-1)
 {
     if (!prefs)
@@ -76,11 +35,15 @@ static BencDict *SerializeStructBenc(SettingInfo *info, size_t count, const void
     const char *base = (const char *)structBase;
     for (size_t i = 0; i < count; i++) {
         SettingInfo& meta = info[i];
-        if ((meta.bitfield & bitmask) != meta.bitfield)
+        if ((meta.flags & bitmask) != meta.flags)
             continue;
         switch (meta.type) {
         case Type_Bool:
-            prefs->Add(meta.name, (int64_t)*(bool *)(base + meta.offset));
+            // TODO: always persist all values?
+            if (!(meta.flags & 1) || *(bool *)(base + meta.offset))
+                prefs->Add(meta.name, (int64_t)*(bool *)(base + meta.offset));
+            else
+                delete prefs->Remove(meta.name);
             break;
         case Type_Color:
             prefs->Add(meta.name, (int64_t)*(COLORREF *)(base + meta.offset));
@@ -260,12 +223,8 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     }
 
     // don't include common values in order to keep the preference file size down
-    uint32_t bitmask = (globalPrefsOnly || ds->useGlobalValues ? Ds_OnlyGlobal : Ds_NotGlobal) |
-                       (ds->openCount > 0 ? Ds_IsRecent : 0) |
-                       (ds->isPinned ? Ds_IsPinned : 0) |
-                       (ds->isMissing ? Ds_IsMissing : 0) |
-                       (ds->tocState && ds->tocState->Count() > 0 ? Ds_HasTocState : 0);
-    return SerializeStructBenc(gFilePrefInfo, dimof(gFilePrefInfo), ds, NULL, bitmask);
+    uint32_t bitmask = globalPrefsOnly || ds->useGlobalValues ? 1 : 3;
+    return SerializeStructBenc(gDisplayStateInfo, dimof(gDisplayStateInfo), ds, NULL, bitmask);
 }
 
 static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPrefsOnly)
@@ -370,7 +329,7 @@ static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOn
     if (!ds)
         return NULL;
 
-    DeserializeStructBenc(gFilePrefInfo, dimof(gFilePrefInfo), ds, dict);
+    DeserializeStructBenc(gDisplayStateInfo, dimof(gDisplayStateInfo), ds, dict);
     if (!ds->filePath) {
         delete ds;
         return NULL;

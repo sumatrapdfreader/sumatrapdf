@@ -88,7 +88,8 @@ public:
         // the file moves to the front of the list
         DisplayState *state = Find(filePath);
         if (!state) {
-            state = new DisplayState(filePath);
+            state = new DisplayState();
+            state->filePath.Set(str::Dup(filePath));
         }
         else {
             states.Remove(state);
