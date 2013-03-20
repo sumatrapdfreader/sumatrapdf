@@ -1,3 +1,6 @@
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #include "BaseUtil.h"
 #include "BitManip.h"
 #include "Dict.h"

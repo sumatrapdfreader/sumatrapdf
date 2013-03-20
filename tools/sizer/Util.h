@@ -1,3 +1,6 @@
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #ifndef Util_h
 #define Util_h
 
