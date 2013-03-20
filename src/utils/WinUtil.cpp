@@ -700,12 +700,7 @@ void SetText(HMENU m, UINT id, WCHAR *s)
    Caller needs to free() the result. */
 WCHAR *ToSafeString(const WCHAR *str)
 {
-    if (!str::FindChar(str, '&'))
-        return str::Dup(str);
-
-    WStrVec ampSplitter;
-    ampSplitter.Split(str, L"&");
-    return ampSplitter.Join(L"&&");
+    return str::Replace(str, L"&", L"&&");
 }
 
     }

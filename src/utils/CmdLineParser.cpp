@@ -53,9 +53,9 @@ static const WCHAR *ParseUnquoted(const WCHAR *arg, WStrVec *out)
    each '"' that is part of the name is escaped with '\\'
  - unescaped, in which case it start with != '"' and ends with ' ' or '\0'
 */
-void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out)
+void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out, int maxParts)
 {
-    while (cmdLine) {
+    while (cmdLine && --maxParts != 0) {
         while (str::IsWs(*cmdLine))
             cmdLine++;
         if ('"' == *cmdLine)
@@ -64,5 +64,10 @@ void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out)
             cmdLine = ParseUnquoted(cmdLine, &out);
         else
             cmdLine = NULL;
+    }
+    if (cmdLine) {
+        while (str::IsWs(*cmdLine))
+            cmdLine++;
+        out.Append(str::Dup(cmdLine));
     }
 }

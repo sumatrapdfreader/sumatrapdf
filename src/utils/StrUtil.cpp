@@ -515,6 +515,16 @@ Exit:
     return res.StealData();
 }
 
+WCHAR *Replace(const WCHAR *s, const WCHAR *toReplace, const WCHAR *replaceWith)
+{
+    if (!str::Find(s, toReplace))
+        return str::Dup(s);
+
+    WStrVec splitter;
+    splitter.Split(s, toReplace);
+    return splitter.Join(replaceWith);
+}
+
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters

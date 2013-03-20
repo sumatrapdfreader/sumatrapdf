@@ -1765,7 +1765,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 static bool AutoUpdateMain()
 {
     WStrVec argList;
-    ParseCmdLine(GetCommandLine(), argList);
+    ParseCmdLine(GetCommandLine(), argList, 4);
     if (argList.Count() != 3 || !str::Eq(argList.At(1), L"-autoupdate")) {
         // the argument was misinterpreted, let SumatraPDF start as usual
         return false;
@@ -4738,6 +4738,12 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             LoadArgs args(state->filePath, win);
             LoadDocument(args);
         }
+        return 0;
+    }
+
+    if (win && IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST)
+    {
+        ViewWithExternalViewer(wmId - IDM_OPEN_WITH_EXTERNAL_FIRST, win->loadedFilePath, win->dm ? win->dm->CurrentPageNo() : 0);
         return 0;
     }
 

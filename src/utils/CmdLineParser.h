@@ -4,6 +4,6 @@
 #ifndef CmdLineParser_h
 #define CmdLineParser_h
 
-void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out);
+void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out, int maxParts=-1);
 
 #endif

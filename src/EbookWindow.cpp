@@ -11,6 +11,7 @@
 #include "EbookControls.h"
 #include "EbookDoc.h"
 #include "EbookFormatter.h"
+#include "ExternalPdfViewer.h"
 #include "FileHistory.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -295,6 +296,12 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
         DisplayState *state = gFileHistory.Get(wmId - IDM_FILE_HISTORY_FIRST);
         if (state && HasPermission(Perm_DiskAccess))
             LoadDocument2(state->filePath, SumatraWindow::Make(win));
+        return 0;
+    }
+
+    if (win && IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST)
+    {
+        ViewWithExternalViewer(wmId - IDM_OPEN_WITH_EXTERNAL_FIRST, win->LoadedFilePath());
         return 0;
     }
 

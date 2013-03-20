@@ -21,4 +21,6 @@ bool ViewWithXPSViewer(WindowInfo *win, WCHAR *args=NULL);
 bool CanViewWithHtmlHelp(WindowInfo *win);
 bool ViewWithHtmlHelp(WindowInfo *win, WCHAR *args=NULL);
 
+bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo=0);
+
 #endif

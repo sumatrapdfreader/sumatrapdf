@@ -5,6 +5,7 @@
 #include "Menu.h"
 
 #include "AppPrefs.h"
+#include "CmdLineParser.h"
 #include "DisplayModel.h"
 #include "EbookWindow.h"
 #include "ExternalPdfViewer.h"
@@ -58,6 +59,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("Open &in PDF-XChange"),         IDM_VIEW_WITH_PDF_XCHANGE,  MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Open in &Microsoft XPS-Viewer"),IDM_VIEW_WITH_XPS_VIEWER,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Open in &Microsoft HTML Help"), IDM_VIEW_WITH_HTML_HELP,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
+    // further entries are added if specified in gUserPrefs.vecCommandLine
     { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
@@ -185,17 +187,6 @@ static MenuDef menuDefContextStart[] = {
     { _TRN("&Remove Document"),             IDM_FORGET_SELECTED_DOCUMENT, MF_REQ_DISK_ACCESS | MF_REQ_PREF_ACCESS },
 };
 
-static void AddFileMenuItem(HMENU menuFile, const WCHAR *filePath, UINT index)
-{
-    assert(filePath && menuFile);
-    if (!filePath || !menuFile) return;
-
-    ScopedMem<WCHAR> fileName(win::menu::ToSafeString(path::GetBaseName(filePath)));
-    ScopedMem<WCHAR> menuString(str::Format(L"&%d) %s", (index + 1) % 10, fileName));
-    UINT menuId = IDM_FILE_HISTORY_FIRST + index;
-    InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
-}
-
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter)
 {
     assert(menu);
@@ -231,6 +222,17 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flag
     return menu;
 }
 
+static void AddFileMenuItem(HMENU menuFile, const WCHAR *filePath, UINT index)
+{
+    assert(filePath && menuFile);
+    if (!filePath || !menuFile) return;
+
+    ScopedMem<WCHAR> fileName(win::menu::ToSafeString(path::GetBaseName(filePath)));
+    ScopedMem<WCHAR> menuString(str::Format(L"&%d) %s", (index + 1) % 10, fileName));
+    UINT menuId = IDM_FILE_HISTORY_FIRST + index;
+    InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
+}
+
 static void AppendRecentFilesToMenu(HMENU m)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
@@ -247,6 +249,41 @@ static void AppendRecentFilesToMenu(HMENU m)
 
     if (i > 0)
         InsertMenu(m, IDM_EXIT, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
+}
+
+static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath, bool forEbookUI)
+{
+    if (!HasPermission(Perm_DiskAccess)) return;
+
+    const int maxEntries = IDM_OPEN_WITH_EXTERNAL_LAST - IDM_OPEN_WITH_EXTERNAL_FIRST + 1;
+    int count = 0;
+    for (size_t i = 0; i < gUserPrefs.vecCommandLine.Count() && count < maxEntries; i++) {
+        const WCHAR *filter = gUserPrefs.vecFilter.At(i);
+        if (filter && !str::Eq(filter, L"*") && !(filePath && path::Match(filePath, filter)))
+            continue;
+
+        ScopedMem<WCHAR> appName;
+        const WCHAR *name = gUserPrefs.vecName.At(i);
+        if (str::IsEmpty(name)) {
+            WStrVec args;
+            ParseCmdLine(gUserPrefs.vecCommandLine.At(i), args, 2);
+            if (args.Count() == 0)
+                continue;
+            appName.Set(str::Dup(path::GetBaseName(args.At(0))));
+            *(WCHAR *)path::GetExt(appName) = '\0';
+        }
+
+        ScopedMem<WCHAR> menuString(str::Format(_TR("Open in %s"), appName ? appName : name));
+        UINT menuId = IDM_OPEN_WITH_EXTERNAL_FIRST + count;
+        InsertMenu(menuFile, forEbookUI ? IDM_PROPERTIES : IDM_SEND_BY_EMAIL,
+                   MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
+        if (!filePath)
+            win::menu::SetEnabled(menuFile, menuId, false);
+        count++;
+    }
+
+    if (forEbookUI && count > 0)
+        InsertMenu(menuFile, IDM_PROPERTIES, MF_BYCOMMAND | MF_SEPARATOR, 0, NULL);
 }
 
 static struct {
@@ -550,6 +587,7 @@ static void RebuildFileMenu(WindowInfo *win, HMENU menu)
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, win->IsChm() ? MF_NOT_FOR_CHM : 0);
     AppendRecentFilesToMenu(menu);
+    AppendExternalViewersToMenu(menu, win->loadedFilePath, false);
 
     // Suppress menu items that depend on specific software being installed:
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
@@ -604,11 +642,12 @@ HMENU BuildMenu(WindowInfo *win)
     return mainMenu;
 }
 
-static void RebuildFileMenuForEbookUI(HMENU menu)
+static void RebuildFileMenuForEbookUI(HMENU menu, EbookWindow *win)
 {
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, MF_NOT_FOR_EBOOK_UI);
     AppendRecentFilesToMenu(menu);
+    AppendExternalViewersToMenu(menu, win->LoadedFilePath(), true);
 }
 
 HMENU BuildMenu(EbookWindow *win)
@@ -616,7 +655,7 @@ HMENU BuildMenu(EbookWindow *win)
     HMENU mainMenu = CreateMenu();
     int filter = MF_NOT_FOR_EBOOK_UI;
     HMENU m = CreateMenu();
-    RebuildFileMenuForEbookUI(m);
+    RebuildFileMenuForEbookUI(m, win);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&File"));
     m = BuildMenuFromMenuDef(menuDefGoTo, dimof(menuDefGoTo), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Go To"));
@@ -649,5 +688,5 @@ void UpdateMenu(EbookWindow *win, HMENU m)
 {
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id)
-        RebuildFileMenuForEbookUI(m);
+        RebuildFileMenuForEbookUI(m, win);
 }

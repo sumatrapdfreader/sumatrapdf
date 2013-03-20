@@ -206,7 +206,7 @@ bool GetExePath(WCHAR *lpPath, size_t len)
         return false;
 
     WStrVec args;
-    ParseCmdLine(path, args);
+    ParseCmdLine(path, args, 2);
     if (!file::Exists(args.At(0)))
         return false;
 
