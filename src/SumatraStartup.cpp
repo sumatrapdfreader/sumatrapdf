@@ -4,10 +4,6 @@
 // TODO: for the moment it needs to be included from SumatraPDF.cpp
 // and not compiled as stand-alone
 
-#ifdef DEBUG
-#include "AppPrefs2.h"
-#endif
-
 static bool TryLoadMemTrace()
 {
     ScopedMem<WCHAR> exePath(GetExePath());
@@ -335,14 +331,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     uitask::Initialize();
 
     LoadPrefs();
-#ifdef DEBUG
-    {
-        AdvancedSettings adv;
-        LoadAdvancedPrefs(&adv);
-    }
-#endif
 
     CommandLineInfo i;
+    // update defaults from SumatraPDF-user.ini
+    i.escToExit = gUserPrefs.escToExit;
+    i.colorRange[0] = gUserPrefs.textColor;
+    i.colorRange[1] = gUserPrefs.pageColor;
+    i.fwdSearch.offset = gUserPrefs.highlightOffset;
+    i.fwdSearch.width = gUserPrefs.highlightWidth;
+    i.fwdSearch.color = gUserPrefs.highlightColor;
+    i.fwdSearch.permanent = gUserPrefs.highlightPermanent;
     GetCommandLineInfo(i);
 
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs.currLangCode);
@@ -367,11 +365,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gGlobalPrefs.fwdSearch.permanent = i.fwdSearch.permanent;
     gGlobalPrefs.escToExit = i.escToExit;
     gGlobalPrefs.cbxR2L = i.cbxR2L;
+    gGlobalPrefs.enableTeXEnhancements |= gUserPrefs.enableTeXEnhancements;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
     gRenderCache.colorRange[0] = i.colorRange[0];
     gRenderCache.colorRange[1] = i.colorRange[1];
     DebugGdiPlusDevice(gUseGdiRenderer);
-    DebugAlternateChmEngine(!gUseEbookUI);
+    DebugAlternateChmEngine(gUserPrefs.traditionalEbookUI);
 
     if (i.inverseSearchCmdLine) {
         str::ReplacePtr(&gGlobalPrefs.inverseSearchCmdLine, i.inverseSearchCmdLine);
@@ -405,6 +404,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         SHFILEINFO sfi;
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
+
+    if (!i.reuseInstance && gUserPrefs.reuseInstance && FindWindow(FRAME_CLASS_NAME, 0))
+        i.reuseInstance = true;
 
     WindowInfo *win = NULL;
     bool isFirstWin = true;

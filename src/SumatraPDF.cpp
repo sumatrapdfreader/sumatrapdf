@@ -67,13 +67,6 @@ bool             gDebugShowLinks = false;
    In Debug builds, you can switch between the two through the Debug menu */
 bool             gUseGdiRenderer = false;
 
-/* if true, ebooks are rendered flowed instead of in fixed-sized pages */
-#ifndef DISABLE_EBOOK_UI
-bool             gUseEbookUI = true;
-#else
-bool             gUseEbookUI = false;
-#endif
-
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
@@ -911,7 +904,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
 
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
     DocType engineType;
-    BaseEngine *engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType, gUseEbookUI);
+    BaseEngine *engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType, !gUserPrefs.traditionalEbookUI);
 
     if (engine && Engine_Chm == engineType) {
         // make sure that MSHTML can't be used as a potential exploit
@@ -1429,7 +1422,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return NULL;
     }
 
-    if (gUseEbookUI && IsEbookFile(fullPath)) {
+    if (!gUserPrefs.traditionalEbookUI && IsEbookFile(fullPath)) {
         if (!win) {
             if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
                 win = gWindows.At(0);
@@ -3055,8 +3048,8 @@ void OnMenuOpen(SumatraWindow& win)
         { _TR("EPUB ebooks"),           L"*.epub",      true },
         { _TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2", true },
         { NULL, /* multi-page images */ L"*.tif;*.tiff",true },
-        { NULL, /* further ebooks */    L"*.pdb;*.tcr", !gUseEbookUI },
-        { _TR("Text documents"),        L"*.txt;*.log;*.nfo;file_id.diz;read.me", !gUseEbookUI },
+        { NULL, /* further ebooks */    L"*.pdb;*.tcr", gUserPrefs.traditionalEbookUI },
+        { _TR("Text documents"),        L"*.txt;*.log;*.nfo;file_id.diz;read.me", gUserPrefs.traditionalEbookUI },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -5041,8 +5034,8 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_DEBUG_EBOOK_UI:
-            gUseEbookUI = !gUseEbookUI;
-            DebugAlternateChmEngine(!gUseEbookUI);
+            gUserPrefs.traditionalEbookUI = !gUserPrefs.traditionalEbookUI;
+            DebugAlternateChmEngine(gUserPrefs.traditionalEbookUI);
             break;
 
         case IDM_DEBUG_MUI:

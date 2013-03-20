@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "Print.h"
 
+#include "AppPrefs.h"
 #include "AppTools.h"
 #include "Doc.h"
 #include "FileUtil.h"
@@ -476,6 +477,16 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     static ScopedMem<DEVMODE> defaultDevMode;
     static PrintScaleAdv defaultScaleAdv = PrintScaleShrink;
     static bool defaultAsImage = false;
+
+    static bool hasDefaults = false;
+    if (!hasDefaults) {
+        hasDefaults = true;
+        defaultAsImage = gUserPrefs.printAsImage;
+        if (str::EqI(gUserPrefs.printScale, L"fit"))
+            defaultScaleAdv = PrintScaleFit;
+        else if (str::EqI(gUserPrefs.printScale, L"none"))
+            defaultScaleAdv = PrintScaleNone;
+    }
 
     bool printSelection = false;
     Vec<PRINTPAGERANGE> ranges;

@@ -1239,7 +1239,7 @@
     <None Include="..\docs\releaseplan.txt">
       <Filter>docs</Filter>
     </None>
-    <None Include="..\docs\sumatrapdfconfig.ini">
+    <None Include="..\docs\SumatraPDF-user.ini">
       <Filter>docs</Filter>
     </None>
     <None Include="..\docs\sumatrapdfrestrict.ini">

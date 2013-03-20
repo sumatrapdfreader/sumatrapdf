@@ -97,7 +97,10 @@ struct SerializableGlobalPrefs {
     char *prevSerialization; /* serialization of what was loaded (needed to prevent discarding unknown options) */
 };
 
+#include "AppPrefs2.h"
+
 extern SerializableGlobalPrefs gGlobalPrefs;
+extern AdvancedSettings gUserPrefs;
 
 namespace DisplayModeConv {
 
@@ -109,8 +112,5 @@ bool            EnumFromName(const WCHAR *txt, DisplayMode *resOut);
 bool LoadPrefs();
 bool SavePrefs();
 bool ReloadPrefs();
-
-class AdvancedSettings;
-bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs);
 
 #endif

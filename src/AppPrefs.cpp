@@ -2,9 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "AppPrefs.h"
 #define INCLUDE_APPPREFS2_METADATA
-#include "AppPrefs2.h"
+#include "AppPrefs.h"
 
 #include "AppTools.h"
 #include "BencUtil.h"
@@ -21,9 +20,11 @@
 #include "WinUtil.h"
 
 #define PREFS_FILE_NAME         L"sumatrapdfprefs.dat"
-#define ADV_PREFS_FILE_NAME     L"sumatrapdfconfig.ini"
+#define ADV_PREFS_FILE_NAME     L"SumatraPDF-user.ini"
 
 #define MAX_REMEMBERED_FILES 1000
+
+AdvancedSettings gUserPrefs;
 
 enum PrefType {
     Pref_Bool, Pref_Int, Pref_Str, Pref_WStr,
@@ -704,6 +705,38 @@ bool EnumFromName(const WCHAR *txt, DisplayMode *mode)
 }
 
 /* Caller needs to free() the result. */
+static WCHAR *GetAdvancedPrefsPath(bool createMissing=false)
+{
+    ScopedMem<WCHAR> path(AppGenDataFilename(ADV_PREFS_FILE_NAME));
+    if (file::Exists(path))
+        return path.StealData();
+    if (!IsRunningInPortableMode()) {
+        path.Set(GetExePath());
+        path.Set(path::GetDir(path));
+        path.Set(path::Join(path, ADV_PREFS_FILE_NAME));
+        if (file::Exists(path))
+            return path.StealData();
+    }
+    if (createMissing) {
+        // TODO: create from template with link to documentation?
+        return AppGenDataFilename(ADV_PREFS_FILE_NAME);
+    }
+    return NULL;
+}
+
+static bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs)
+{
+#ifdef DISABLE_EBOOK_UI
+    advancedPrefs->traditionalEbookUI = true;
+#endif
+    ScopedMem<WCHAR> path(GetAdvancedPrefsPath());
+    if (!path)
+        return false;
+    DeserializeAdvancedSettings(path, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
+    return true;
+}
+
+/* Caller needs to free() the result. */
 static inline WCHAR *GetPrefsFileName()
 {
     return AppGenDataFilename(PREFS_FILE_NAME);
@@ -713,6 +746,8 @@ bool LoadPrefs()
 {
     delete gFavorites;
     gFavorites = new Favorites();
+
+    LoadAdvancedPrefs(&gUserPrefs);
 
     ScopedMem<WCHAR> path(GetPrefsFileName());
     if (!file::Exists(path)) {
@@ -796,33 +831,5 @@ bool ReloadPrefs()
         UpdateDocumentColors();
     UpdateFavoritesTreeForAllWindows();
 
-    return true;
-}
-
-static WCHAR *GetAdvancedPrefsPath(bool createMissing=false)
-{
-    ScopedMem<WCHAR> path(AppGenDataFilename(ADV_PREFS_FILE_NAME));
-    if (file::Exists(path))
-        return path.StealData();
-    if (!IsRunningInPortableMode()) {
-        path.Set(GetExePath());
-        path.Set(path::GetDir(path));
-        path.Set(path::Join(path, ADV_PREFS_FILE_NAME));
-        if (file::Exists(path))
-            return path.StealData();
-    }
-    if (createMissing) {
-        // TODO: create from template with link to documentation?
-        return AppGenDataFilename(ADV_PREFS_FILE_NAME);
-    }
-    return NULL;
-}
-
-bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs)
-{
-    ScopedMem<WCHAR> path(GetAdvancedPrefsPath());
-    if (!path)
-        return false;
-    DeserializeAdvancedSettings(path, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
     return true;
 }

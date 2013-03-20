@@ -69,7 +69,7 @@ void IniFile::ParseData()
             if (sep2 && (!sep || sep2 < sep))
                 sep = sep2;
             else if (!sep)
-                for (sep = key; *sep && !str::IsWs(*sep); *sep++);
+                for (sep = key; *sep && !str::IsWs(*sep); sep++);
             char *value = SkipWs(sep + 1);
             // trim trailing whitespace
             *SkipWsRev(key, sep) = '\0';

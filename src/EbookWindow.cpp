@@ -362,9 +362,9 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             break;
 
         case IDM_DEBUG_EBOOK_UI:
-            gUseEbookUI = !gUseEbookUI;
-            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, !gUseEbookUI);
-            DebugAlternateChmEngine(!gUseEbookUI);
+            gUserPrefs.traditionalEbookUI = !gUserPrefs.traditionalEbookUI;
+            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, gUserPrefs.traditionalEbookUI);
+            DebugAlternateChmEngine(gUserPrefs.traditionalEbookUI);
             break;
 
         case IDM_DEBUG_MUI:

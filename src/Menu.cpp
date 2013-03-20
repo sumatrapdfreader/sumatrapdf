@@ -415,7 +415,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
 #ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
     win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
-    win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, !gUseEbookUI);
+    win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gUserPrefs.traditionalEbookUI);
 #endif
 }
 

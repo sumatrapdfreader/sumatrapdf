@@ -800,7 +800,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
     // gPredictiveRender = false;
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
-    gUseEbookUI = false;
+    gUserPrefs.traditionalEbookUI = true;
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     srand((unsigned int)time(NULL));
