@@ -255,16 +255,26 @@ static void RunUnitTests()
 static void GetCommandLineInfo(CommandLineInfo& i)
 {
     i.bgColor = gGlobalPrefs.bgColor;
-    i.fwdSearch.offset = gGlobalPrefs.fwdSearch.offset;
-    i.fwdSearch.width = gGlobalPrefs.fwdSearch.width;
-    i.fwdSearch.color = gGlobalPrefs.fwdSearch.color;
-    i.fwdSearch.permanent = gGlobalPrefs.fwdSearch.permanent;
+    i.fwdSearch.offset = gGlobalPrefs.fwdSearchOffset;
+    i.fwdSearch.width = gGlobalPrefs.fwdSearchWidth;
+    i.fwdSearch.color = gGlobalPrefs.fwdSearchColor;
+    i.fwdSearch.permanent = gGlobalPrefs.fwdSearchPermanent;
     i.escToExit = gGlobalPrefs.escToExit;
     i.cbxR2L = gGlobalPrefs.cbxR2L;
     if (gGlobalPrefs.useSysColors) {
         i.colorRange[0] = GetSysColor(COLOR_WINDOWTEXT);
         i.colorRange[1] = GetSysColor(COLOR_WINDOW);
     }
+
+    // update defaults from SumatraPDF-user.ini
+    i.escToExit = gUserPrefs.escToExit;
+    i.colorRange[0] = gUserPrefs.textColor;
+    i.colorRange[1] = gUserPrefs.pageColor;
+    i.fwdSearch.offset = gUserPrefs.highlightOffset;
+    i.fwdSearch.width = gUserPrefs.highlightWidth;
+    i.fwdSearch.color = gUserPrefs.highlightColor;
+    i.fwdSearch.permanent = gUserPrefs.highlightPermanent;
+
     i.ParseCommandLine(GetCommandLine());
 }
 
@@ -333,14 +343,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     LoadPrefs();
 
     CommandLineInfo i;
-    // update defaults from SumatraPDF-user.ini
-    i.escToExit = gUserPrefs.escToExit;
-    i.colorRange[0] = gUserPrefs.textColor;
-    i.colorRange[1] = gUserPrefs.pageColor;
-    i.fwdSearch.offset = gUserPrefs.highlightOffset;
-    i.fwdSearch.width = gUserPrefs.highlightWidth;
-    i.fwdSearch.color = gUserPrefs.highlightColor;
-    i.fwdSearch.permanent = gUserPrefs.highlightPermanent;
     GetCommandLineInfo(i);
 
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs.currLangCode);
@@ -359,10 +361,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gCrashOnOpen = i.crashOnOpen;
 
     gGlobalPrefs.bgColor = i.bgColor;
-    gGlobalPrefs.fwdSearch.offset = i.fwdSearch.offset;
-    gGlobalPrefs.fwdSearch.width = i.fwdSearch.width;
-    gGlobalPrefs.fwdSearch.color = i.fwdSearch.color;
-    gGlobalPrefs.fwdSearch.permanent = i.fwdSearch.permanent;
+    gGlobalPrefs.fwdSearchOffset = i.fwdSearch.offset;
+    gGlobalPrefs.fwdSearchWidth = i.fwdSearch.width;
+    gGlobalPrefs.fwdSearchColor = i.fwdSearch.color;
+    gGlobalPrefs.fwdSearchPermanent = i.fwdSearch.permanent;
     gGlobalPrefs.escToExit = i.escToExit;
     gGlobalPrefs.cbxR2L = i.cbxR2L;
     gGlobalPrefs.enableTeXEnhancements |= gUserPrefs.enableTeXEnhancements;
@@ -373,7 +375,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     DebugAlternateChmEngine(gUserPrefs.traditionalEbookUI);
 
     if (i.inverseSearchCmdLine) {
-        str::ReplacePtr(&gGlobalPrefs.inverseSearchCmdLine, i.inverseSearchCmdLine);
+        gGlobalPrefs.inverseSearchCmdLine.Set(str::Dup(i.inverseSearchCmdLine));
         gGlobalPrefs.enableTeXEnhancements = true;
     }
 

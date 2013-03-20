@@ -29,21 +29,19 @@ enum DisplayMode {
 
 class DisplayState {
 public:
-    DisplayState() :
-        filePath(NULL), useGlobalValues(false), index(0), openCount(0),
+    DisplayState(const WCHAR *filePath=NULL) :
+        filePath(str::Dup(filePath)), useGlobalValues(false), index(0), openCount(0),
         displayMode(DM_AUTOMATIC), pageNo(1), reparseIdx(0), zoomVirtual(100.0),
         rotation(0), windowState(0), thumbnail(NULL), isPinned(false),
         decryptionKey(NULL), tocVisible(true), isMissing(false),
         sidebarDx(0), tocState(NULL) { }
 
     ~DisplayState() {
-        free(filePath);
-        free(decryptionKey);
         delete tocState;
         delete thumbnail;
     }
 
-    WCHAR *             filePath;
+    ScopedMem<WCHAR>    filePath;
 
     // in order to prevent documents that haven't been opened
     // for a while but used to be opened very frequently
@@ -76,7 +74,7 @@ public:
 
     // hex encoded MD5 fingerprint of file content (32 chars)
     // followed by crypt key (64 chars) - only applies for PDF documents
-    char *              decryptionKey;
+    ScopedMem<char>     decryptionKey;
 
     bool                tocVisible;
     int                 sidebarDx;

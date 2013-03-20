@@ -4,8 +4,7 @@
 #ifndef SumatraDialogs_h
 #define SumatraDialogs_h
 
-struct SerializableGlobalPrefs;
-
+class SerializableGlobalPrefs;
 
 WCHAR *   Dialog_GoToPage(HWND hwnd, const WCHAR *currentPageLabel, int pageCount, bool onlyNumeric=true);
 WCHAR *   Dialog_Find(HWND hwnd, const WCHAR *previousSearch, bool *matchCase);

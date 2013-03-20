@@ -390,8 +390,8 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
     DisplayState *fileFromHistory = gFileHistory.Find(fileName);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
         ScopedMem<char> fingerprint(str::MemToHex(fileDigest, 16));
-        *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
-        if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32))
+        *saveKey = str::StartsWith(fileFromHistory->decryptionKey.Get(), fingerprint.Get());
+        if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey.Get() + 32, decryptionKeyOut, 32))
             return NULL;
     }
 
@@ -498,7 +498,7 @@ static void UpdateSidebarDisplayState(EbookWindow *win, DisplayState *ds)
 static void DisplayStateFromEbookWindow(EbookWindow* win, DisplayState* ds)
 {
     if (!ds->filePath || !str::EqI(ds->filePath, win->LoadedFilePath()))
-        str::ReplacePtr(&ds->filePath, win->LoadedFilePath());
+        ds->filePath.Set(str::Dup(win->LoadedFilePath()));
 
     // don't modify any of the other DisplayState values
     // as long as they're not used, so that the same
@@ -1138,7 +1138,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     if (decryptionKey) {
         DisplayState *state = gFileHistory.Find(ds.filePath);
         if (state && !str::Eq(state->decryptionKey, decryptionKey))
-            str::ReplacePtr(&state->decryptionKey, decryptionKey);
+            state->decryptionKey.Set(decryptionKey.StealData());
     }
 }
 
@@ -1312,7 +1312,7 @@ static void RenameFileInHistory(const WCHAR *oldPath, const WCHAR *newPath)
     }
     ds = gFileHistory.Find(oldPath);
     if (ds) {
-        str::ReplacePtr(&ds->filePath, newPath);
+        ds->filePath.Set(str::Dup(newPath));
         // merge Frequently Read data, so that a file
         // doesn't accidentally vanish from there
         ds->isPinned = ds->isPinned || oldIsPinned;
@@ -1736,7 +1736,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
     bool skipThisVersion = false;
     INT_PTR res = Dialog_NewVersionAvailable(hParent, UPDATE_CHECK_VER, verTxt, &skipThisVersion);
     if (skipThisVersion)
-        str::ReplacePtr(&gGlobalPrefs.versionToSkip, verTxt);
+        gGlobalPrefs.versionToSkip.Set(verTxt.StealData());
     if (IDYES == res) {
 #ifdef SUPPORTS_AUTO_UPDATE
         if (str::EndsWith(SVN_UPDATE_LINK, L".exe")) {
@@ -1851,18 +1851,17 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
 
     // don't check for updates at the first start, so that privacy
     // sensitive users can disable the update check in time
-    if (autoCheck && !gGlobalPrefs.lastUpdateTime) {
-        FILETIME lastUpdateTimeFt = { 0 };
-        gGlobalPrefs.lastUpdateTime =_MemToHex(&lastUpdateTimeFt);
+    if (autoCheck && 0 == gGlobalPrefs.lastUpdateTime.dwLowDateTime &&
+                     0 == gGlobalPrefs.lastUpdateTime.dwHighDateTime) {
         return;
     }
 
     /* For auto-check, only check if at least a day passed since last check */
-    if (autoCheck && gGlobalPrefs.lastUpdateTime) {
-        FILETIME lastUpdateTimeFt, currentTimeFt;
-        _HexToMem(gGlobalPrefs.lastUpdateTime, &lastUpdateTimeFt);
+    if (autoCheck && (gGlobalPrefs.lastUpdateTime.dwLowDateTime != 0 ||
+                      gGlobalPrefs.lastUpdateTime.dwHighDateTime != 0)) {
+        FILETIME currentTimeFt;
         GetSystemTimeAsFileTime(&currentTimeFt);
-        int secs = FileTimeDiffInSecs(currentTimeFt, lastUpdateTimeFt);
+        int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs.lastUpdateTime);
         assert(secs >= 0);
         // if secs < 0 => somethings wrong, so ignore that case
         if ((secs > 0) && (secs < SECS_IN_DAY))
@@ -1872,10 +1871,7 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
     const WCHAR *url = SUMATRA_UPDATE_INFO_URL L"?v=" UPDATE_CHECK_VER;
     new HttpReq(url, new UpdateDownloadTask(hwnd, autoCheck));
 
-    FILETIME ft;
-    GetSystemTimeAsFileTime(&ft);
-    free(gGlobalPrefs.lastUpdateTime);
-    gGlobalPrefs.lastUpdateTime = _MemToHex(&ft);
+    GetSystemTimeAsFileTime(&gGlobalPrefs.lastUpdateTime);
 }
 
 class FileExistenceChecker : public ThreadBase, public UITask

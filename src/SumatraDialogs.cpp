@@ -777,10 +777,8 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             prefs->useSysColors = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_USE_SYS_COLORS));
             prefs->enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
             prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
-            if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
-                free(prefs->inverseSearchCmdLine);
-                prefs->inverseSearchCmdLine = win::GetText(GetDlgItem(hDlg, IDC_CMDLINE));
-            }
+            if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess))
+                prefs->inverseSearchCmdLine.Set(win::GetText(GetDlgItem(hDlg, IDC_CMDLINE)));
             EndDialog(hDlg, IDOK);
             return TRUE;
 

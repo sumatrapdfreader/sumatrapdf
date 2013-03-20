@@ -6,6 +6,111 @@
 #ifndef AppPrefs2_h
 #define AppPrefs2_h
 
+class SerializableGlobalPrefs {
+public:
+
+    /* ***** fields for section SerializableGlobalPrefs ***** */
+
+    // whether not to store display settings for individual documents
+    bool globalPrefsOnly;
+    // pointer to a static string that is part of LangDef, don't free
+    const char * currLangCode;
+    // whether the toolbar should be visible by default in the main window
+    bool toolbarVisible;
+    // whether the Favorites sidebar should be visible by default in the
+    // main window
+    bool favVisible;
+    // if false, we won't ask the user if he wants Sumatra to handle PDF
+    // files
+    bool pdfAssociateDontAskAgain;
+    // if pdfAssociateDontAskAgain is true, says whether we should silently
+    // associate or not
+    bool pdfAssociateShouldAssociate;
+    // whether SumatraPDF should check once a day whether updates are
+    // available
+    bool enableAutoUpdate;
+    // if true, we remember which files we opened and their settings
+    bool rememberOpenedFiles;
+    // used for the Start page, About page and Properties dialog (negative
+    // values indicate that the default color will be used)
+    COLORREF bgColor;
+    // whether the Esc key will exit SumatraPDF same as 'q'
+    bool escToExit;
+    // whether to display documents black-on-white or in system colors
+    bool useSysColors;
+    // pattern used to launch the editor when doing inverse search
+    ScopedMem<WCHAR> inverseSearchCmdLine;
+    // whether to expose the SyncTeX enhancements to the user
+    bool enableTeXEnhancements;
+    // When we show 'new version available', user has an option to check
+    // 'skip this version'. This remembers which version is to be skipped.
+    // If NULL - don't skip
+    ScopedMem<WCHAR> versionToSkip;
+    // the time SumatraPDF has last checked for updates (cf.
+    // EnableAutoUpdate)
+    FILETIME lastUpdateTime;
+    // how pages should be layed out by default
+    DisplayMode defaultDisplayMode;
+    // the default zoom factor in % (negative values indicate virtual
+    // settings)
+    float defaultZoom;
+    // default state of new SumatraPDF windows (same as the last closed)
+    int windowState;
+    // whether the table of contents (Bookmarks) sidebar should be shown by
+    // default when its available for a document
+    bool tocVisible;
+    // if sidebar (favorites and/or bookmarks) is visible, this is the
+    // width of the left sidebar panel containing them
+    int sidebarDx;
+    // if both favorites and bookmarks parts of sidebar are visible, this
+    // is the height of bookmarks (table of contents) part
+    int tocDy;
+    // if <=0 then use the standard (inline) highlighting style, otherwise
+    // use the margin highlight (i.e. coloured block on the left side of
+    // the page)
+    int fwdSearchOffset;
+    // highlight color of the forward-search for both the standard and
+    // margin style
+    COLORREF fwdSearchColor;
+    // width of the coloured blocks for the margin style
+    int fwdSearchWidth;
+    // if false then highlights are hidden automatically after a short
+    // period of time, if true then highlights remain until the next
+    // forward search
+    bool fwdSearchPermanent;
+    // whether to display Frequently Read documents or the About page in an
+    // empty window
+    bool showStartPage;
+    // week count since 2011-01-01 needed to "age" openCount values in file
+    // history
+    int openCountWeek;
+    // display CBX double pages from right to left
+    bool cbxR2L;
+
+    /* ***** fields for section InternalPrefs ***** */
+
+    // modification time of the preferences file when it was last read
+    FILETIME lastPrefUpdate;
+    // serialization of what was loaded (needed to prevent discarding
+    // unknown options)
+    ScopedMem<char> prevSerialization;
+    // default position (can be on any monitor)
+    RectI windowPos;
+
+    SerializableGlobalPrefs() : globalPrefsOnly(false), currLangCode("en"), toolbarVisible(true),
+        favVisible(false), pdfAssociateDontAskAgain(false), pdfAssociateShouldAssociate(false),
+        enableAutoUpdate(true), rememberOpenedFiles(true), bgColor(-0x7fff0d01),
+        escToExit(false), useSysColors(false), enableTeXEnhancements(false),
+        defaultDisplayMode(DM_AUTOMATIC), defaultZoom(-1.000000), windowState(1),
+        tocVisible(true), sidebarDx(0), tocDy(0),
+        fwdSearchOffset(0), fwdSearchColor(0x6581ff), fwdSearchWidth(15),
+        fwdSearchPermanent(false), showStartPage(true), openCountWeek(0),
+        cbxR2L(false) {
+        ZeroMemory(&lastUpdateTime, sizeof(lastUpdateTime));
+        ZeroMemory(&lastPrefUpdate, sizeof(lastPrefUpdate));
+    }
+};
+
 class AdvancedSettings {
 public:
 
@@ -74,49 +179,96 @@ public:
     // "*.pdf;*.xps"; "*" if missing)
     WStrVec vecFilter;
 
-    AdvancedSettings() : traditionalEbookUI(false), reuseInstance(false), mainWindowBackground(0xFFF200), escToExit(false), textColor(0x000000), pageColor(0xFFFFFF), printAsImage(false), outerX(4), outerY(2), innerX(4), innerY(4), enableTeXEnhancements(false), highlightOffset(0), highlightWidth(15), highlightColor(0x6581FF), highlightPermanent(false) { }
+    AdvancedSettings() : traditionalEbookUI(false), reuseInstance(false), mainWindowBackground(0xfff200),
+        escToExit(false), textColor(0x0000), pageColor(0xffffff),
+        printAsImage(false), outerX(4), outerY(2),
+        innerX(4), innerY(4), enableTeXEnhancements(false),
+        highlightOffset(0), highlightWidth(15), highlightColor(0x6581ff),
+        highlightPermanent(false) {
+    }
 };
 
 #ifdef INCLUDE_APPPREFS2_METADATA
-enum SettingType { SType_Section, SType_SectionVec, SType_Bool, SType_Color, SType_Int, SType_String };
+enum SettingType {
+    Type_Section, Type_SectionVec, Type_Custom,
+    Type_Bool, Type_Color, Type_FileTime, Type_Float, Type_Int, Type_String, Type_Utf8String,
+};
 
 struct SettingInfo {
     const char *name;
     SettingType type;
     size_t offset;
+    uint32_t bitfield;
+};
+
+static SettingInfo gSerializableGlobalPrefsInfo[] = {
+    /* ***** fields for section SerializableGlobalPrefs ***** */
+    { "BgColor", Type_Color, offsetof(SerializableGlobalPrefs, bgColor) },
+    { "CBX_Right2Left", Type_Bool, offsetof(SerializableGlobalPrefs, cbxR2L) },
+    { "Display Mode", Type_Custom, offsetof(SerializableGlobalPrefs, defaultDisplayMode) },
+    { "EnableAutoUpdate", Type_Bool, offsetof(SerializableGlobalPrefs, enableAutoUpdate) },
+    { "EscToExit", Type_Bool, offsetof(SerializableGlobalPrefs, escToExit) },
+    { "ExposeInverseSearch", Type_Bool, offsetof(SerializableGlobalPrefs, enableTeXEnhancements) },
+    { "FavVisible", Type_Bool, offsetof(SerializableGlobalPrefs, favVisible) },
+    { "ForwardSearch_HighlightColor", Type_Color, offsetof(SerializableGlobalPrefs, fwdSearchColor) },
+    { "ForwardSearch_HighlightOffset", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchOffset) },
+    { "ForwardSearch_HighlightPermanent", Type_Bool, offsetof(SerializableGlobalPrefs, fwdSearchPermanent) },
+    { "ForwardSearch_HighlightWidth", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchWidth) },
+    { "GlobalPrefsOnly", Type_Bool, offsetof(SerializableGlobalPrefs, globalPrefsOnly) },
+    { "InverseSearchCommandLine", Type_String, offsetof(SerializableGlobalPrefs, inverseSearchCmdLine) },
+    { "LastUpdate", Type_FileTime, offsetof(SerializableGlobalPrefs, lastUpdateTime) },
+    { "OpenCountWeek", Type_Int, offsetof(SerializableGlobalPrefs, openCountWeek) },
+    { "PdfAssociateDontAskAgain", Type_Bool, offsetof(SerializableGlobalPrefs, pdfAssociateDontAskAgain) },
+    { "PdfAssociateShouldAssociate", Type_Bool, offsetof(SerializableGlobalPrefs, pdfAssociateShouldAssociate) },
+    { "RememberOpenedFiles", Type_Bool, offsetof(SerializableGlobalPrefs, rememberOpenedFiles) },
+    { "ShowStartPage", Type_Bool, offsetof(SerializableGlobalPrefs, showStartPage) },
+    { "ShowToc", Type_Bool, offsetof(SerializableGlobalPrefs, tocVisible) },
+    { "ShowToolbar", Type_Bool, offsetof(SerializableGlobalPrefs, toolbarVisible) },
+    { "Toc DX", Type_Int, offsetof(SerializableGlobalPrefs, sidebarDx) },
+    { "Toc Dy", Type_Int, offsetof(SerializableGlobalPrefs, tocDy) },
+    { "UILanguage", Type_Custom, offsetof(SerializableGlobalPrefs, currLangCode) },
+    { "UseSysColors", Type_Bool, offsetof(SerializableGlobalPrefs, useSysColors) },
+    { "VersionToSkip", Type_String, offsetof(SerializableGlobalPrefs, versionToSkip) },
+    { "Window DX", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.dx) },
+    { "Window DY", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.dy) },
+    { "Window State", Type_Int, offsetof(SerializableGlobalPrefs, windowState) },
+    { "Window X", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.x) },
+    { "Window Y", Type_Int, offsetof(SerializableGlobalPrefs, windowPos.y) },
+    { "ZoomVirtual", Type_Float, offsetof(SerializableGlobalPrefs, defaultZoom) },
+    /* ***** skipping internal section InternalPrefs ***** */
 };
 
 static SettingInfo gAdvancedSettingsInfo[] = {
     /* ***** fields for section AdvancedOptions ***** */
-    { "AdvancedOptions", SType_Section },
-    { "TraditionalEbookUI", SType_Bool, offsetof(AdvancedSettings, traditionalEbookUI) },
-    { "ReuseInstance", SType_Bool, offsetof(AdvancedSettings, reuseInstance) },
-    { "MainWindowBackground", SType_Color, offsetof(AdvancedSettings, mainWindowBackground) },
-    { "EscToExit", SType_Bool, offsetof(AdvancedSettings, escToExit) },
-    { "TextColor", SType_Color, offsetof(AdvancedSettings, textColor) },
-    { "PageColor", SType_Color, offsetof(AdvancedSettings, pageColor) },
+    { "AdvancedOptions", Type_Section },
+    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedSettings, traditionalEbookUI) },
+    { "ReuseInstance", Type_Bool, offsetof(AdvancedSettings, reuseInstance) },
+    { "MainWindowBackground", Type_Color, offsetof(AdvancedSettings, mainWindowBackground) },
+    { "EscToExit", Type_Bool, offsetof(AdvancedSettings, escToExit) },
+    { "TextColor", Type_Color, offsetof(AdvancedSettings, textColor) },
+    { "PageColor", Type_Color, offsetof(AdvancedSettings, pageColor) },
     /* ***** fields for section PrinterDefaults ***** */
-    { "PrinterDefaults", SType_Section },
-    { "PrintScale", SType_String, offsetof(AdvancedSettings, printScale) },
-    { "PrintAsImage", SType_Bool, offsetof(AdvancedSettings, printAsImage) },
+    { "PrinterDefaults", Type_Section },
+    { "PrintScale", Type_String, offsetof(AdvancedSettings, printScale) },
+    { "PrintAsImage", Type_Bool, offsetof(AdvancedSettings, printAsImage) },
     /* ***** fields for section PagePadding ***** */
-    { "PagePadding", SType_Section },
-    { "OuterX", SType_Int, offsetof(AdvancedSettings, outerX) },
-    { "OuterY", SType_Int, offsetof(AdvancedSettings, outerY) },
-    { "InnerX", SType_Int, offsetof(AdvancedSettings, innerX) },
-    { "InnerY", SType_Int, offsetof(AdvancedSettings, innerY) },
+    { "PagePadding", Type_Section },
+    { "OuterX", Type_Int, offsetof(AdvancedSettings, outerX) },
+    { "OuterY", Type_Int, offsetof(AdvancedSettings, outerY) },
+    { "InnerX", Type_Int, offsetof(AdvancedSettings, innerX) },
+    { "InnerY", Type_Int, offsetof(AdvancedSettings, innerY) },
     /* ***** fields for section ForwardSearch ***** */
-    { "ForwardSearch", SType_Section },
-    { "EnableTeXEnhancements", SType_Bool, offsetof(AdvancedSettings, enableTeXEnhancements) },
-    { "HighlightOffset", SType_Int, offsetof(AdvancedSettings, highlightOffset) },
-    { "HighlightWidth", SType_Int, offsetof(AdvancedSettings, highlightWidth) },
-    { "HighlightColor", SType_Color, offsetof(AdvancedSettings, highlightColor) },
-    { "HighlightPermanent", SType_Bool, offsetof(AdvancedSettings, highlightPermanent) },
+    { "ForwardSearch", Type_Section },
+    { "EnableTeXEnhancements", Type_Bool, offsetof(AdvancedSettings, enableTeXEnhancements) },
+    { "HighlightOffset", Type_Int, offsetof(AdvancedSettings, highlightOffset) },
+    { "HighlightWidth", Type_Int, offsetof(AdvancedSettings, highlightWidth) },
+    { "HighlightColor", Type_Color, offsetof(AdvancedSettings, highlightColor) },
+    { "HighlightPermanent", Type_Bool, offsetof(AdvancedSettings, highlightPermanent) },
     /* ***** fields for array section ExternalViewer ***** */
-    { "ExternalViewer", SType_SectionVec },
-    { "CommandLine", SType_String, offsetof(AdvancedSettings, vecCommandLine) },
-    { "Name", SType_String, offsetof(AdvancedSettings, vecName) },
-    { "Filter", SType_String, offsetof(AdvancedSettings, vecFilter) },
+    { "ExternalViewer", Type_SectionVec },
+    { "CommandLine", Type_String, offsetof(AdvancedSettings, vecCommandLine) },
+    { "Name", Type_String, offsetof(AdvancedSettings, vecName) },
+    { "Filter", Type_String, offsetof(AdvancedSettings, vecFilter) },
 };
 #endif
 
