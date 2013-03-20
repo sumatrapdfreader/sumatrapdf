@@ -326,15 +326,20 @@ bool MapWStrToInt::Get(const WCHAR *key, int* valOut)
 
 }
 
-int StringInterner::Intern(const char *s)
+int StringInterner::Intern(const char *s, bool *alreadyPresent)
 {
     nInternCalls++;
     int idx = (int)intToStr.Count();
     const char *internedString;
     bool inserted = strToInt.Insert(s, idx, &idx, &internedString);
-    if (!inserted)
+    if (!inserted) {
+        if (alreadyPresent)
+            *alreadyPresent = true;
         return idx;
+    }
 
     intToStr.Append(internedString);
+    if (alreadyPresent)
+        *alreadyPresent = false;
     return idx;
 }

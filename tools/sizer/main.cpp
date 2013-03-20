@@ -82,6 +82,7 @@ static str::Str<char> g_strTmp2;
 
 static str::Str<char> g_report;
 static StringInterner g_strInterner;
+static StringInterner g_typesSeen;
 
 static bool           g_dumpSections = false;
 static bool           g_dumpSymbols = false;
@@ -234,6 +235,7 @@ static const char *GetUdtType(IDiaSymbol *symbol)
     return "<unknown udt kind>";
 }
 
+
 static void DumpType(IDiaSymbol *symbol, int deep)
 {
     IDiaEnumSymbols *   enumChilds = NULL;
@@ -246,6 +248,7 @@ static void DumpType(IDiaSymbol *symbol, int deep)
     ULONG               celt = 0;
     ULONG               symtag;
     DWORD               locType;
+    bool                typeSeen;
 
 #if 0
     if (deep > 2)
@@ -259,7 +262,9 @@ static void DumpType(IDiaSymbol *symbol, int deep)
     BStrToString(g_strTmp, name, "<noname>", true);
     nameStr = g_strTmp.Get();
 
-    // TODO: avoid duplicate symbols (use hash tables to see if we've seen nameStr already)
+    g_typesSeen.Intern(nameStr, &typeSeen);
+    if (typeSeen)
+        return;
 
     symbol->get_length(&length);
     symbol->get_offset(&offset);
@@ -491,7 +496,7 @@ static void ProcessPdbFile(const char *fileNameA)
     ScopedMem<WCHAR> fileName(str::conv::FromAnsi(fileNameA));
     hr = dia->loadDataForExe(fileName, 0, 0);
     if (FAILED(hr)) {
-        log("  failed to load debug symbols (PDB not found)\n");
+        logf("  failed to load %s or its debug symbols from .pdb file\n", fileNameA);
         goto Exit;
     }
 
