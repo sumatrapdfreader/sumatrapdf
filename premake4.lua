@@ -25,20 +25,33 @@ solution "everything"
   project "sizer"
     kind "ConsoleApp"
     language "C++"
-    files { "tools/sizer/*.h", "tools/sizer/*.cpp"}
+    files {
+      "tools/sizer/*.h",
+      "tools/sizer/*.cpp",
+      "src/utils/BaseUtil*",
+      "src/utils/BitManip.h",
+      "src/utils/Dict*",
+      "src/utils/StrUtil*",
+      "src/utils/"
+    }
+    excludes
+    {
+      "src/utils/*_ut.cpp",
+    }
     includedirs { "src/utils" }
-    links { "utils" }
+    links { }
 
     configuration {"vs*"}
       buildoptions {"/wd4996", "/wd4244", "/wd4305" }
       -- Note: don't understand why this is needed
       linkoptions {"/NODEFAULTLIB:\"msvcrt.lib\""}
 
+--[[
   project "utils"
     kind "StaticLib"
     language "C++"
     files { "src/utils/*.cpp", "src/utils/*.h" }
-    excludes 
+    excludes
     {
       "src/utils/*_ut.cpp",
       "src/utils/Zip*",
@@ -49,3 +62,4 @@ solution "everything"
       "src/utils/Touch*",
     }
     includedirs { "src/utils", "src/utils/msvc" }
+--]]
