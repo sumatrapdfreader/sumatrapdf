@@ -4,7 +4,14 @@ solution "sizer"
   configurations { "Debug", "Release" }
   location "vs" -- this is where generated solution/project files go
 
-  flags { "Symbols", "StaticRuntime" }
+  -- Symbols - generate .pdb files
+  -- StaticRuntime - statically link crt
+  -- ExtraWarnings - set max compiler warnings level
+  -- FatalWarnings - compiler warnigs are errors'
+  flags {
+   "Symbols", "StaticRuntime", "ExtraWarnings", "FatalWarnings",
+   "NoRTTI", "Unicode", "NoExceptions"
+  }
 
   -- those are inherited by projects that follow
   configuration "Debug"
@@ -20,7 +27,10 @@ solution "sizer"
     -- defines { "_WIN32", "WIN32", "WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
     defines { "_WIN32", "WIN32", "WINDOWS" }
     -- 4800 - int -> bool coversion
-    buildoptions { "/wd4800"}
+    -- 4127 - conditional expression is constant
+    -- 4100 - unreferenced formal parameter
+    -- 4244 - possible loss of data due to conversion
+    buildoptions { "/wd4800", "/wd4127", "/wd4100", "/wd4244"}
 
   project "sizer"
     kind "ConsoleApp"

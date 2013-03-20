@@ -131,7 +131,7 @@ public:
     }
 
     PoolAllocator(size_t rounding=8) : minBlockSize(4096),
-        allocRounding(rounding), currIter(NULL), iterPos(-1) {
+        allocRounding(rounding), currIter(NULL), iterPos((size_t)-1) {
         Init();
     }
 
