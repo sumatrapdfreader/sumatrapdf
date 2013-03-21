@@ -28,10 +28,14 @@
 SerializableGlobalPrefs gGlobalPrefs;
 AdvancedSettings gUserPrefs;
 
+enum { Flag_OnlyNonDefault = 1, Flag_NonGlobal = 2, Flag_LegacyOnly = 4 };
+
 static BencDict *SerializeStructBenc(SettingInfo *info, size_t count, const void *structBase, BencDict *prefs=NULL, uint32_t bitmask=-1)
 {
     if (!prefs)
         prefs = new BencDict();
+    bitmask |= Flag_OnlyNonDefault;
+
     const char *base = (const char *)structBase;
     for (size_t i = 0; i < count; i++) {
         SettingInfo& meta = info[i];
@@ -40,7 +44,7 @@ static BencDict *SerializeStructBenc(SettingInfo *info, size_t count, const void
         switch (meta.type) {
         case Type_Bool:
             // TODO: always persist all values?
-            if (!(meta.flags & 1) || *(bool *)(base + meta.offset))
+            if (!(meta.flags & Flag_OnlyNonDefault) || *(bool *)(base + meta.offset))
                 prefs->Add(meta.name, (int64_t)*(bool *)(base + meta.offset));
             else
                 delete prefs->Remove(meta.name);
@@ -223,7 +227,7 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
     }
 
     // don't include common values in order to keep the preference file size down
-    uint32_t bitmask = globalPrefsOnly || ds->useGlobalValues ? 1 : 3;
+    uint32_t bitmask = (globalPrefsOnly || ds->useGlobalValues ? 0 : Flag_NonGlobal) | Flag_LegacyOnly;
     return SerializeStructBenc(gDisplayStateInfo, dimof(gDisplayStateInfo), ds, NULL, bitmask);
 }
 
@@ -404,6 +408,7 @@ Exit:
 static void SerializeStructIni(SettingInfo *info, size_t count, void *structBase, str::Str<char>& out, uint32_t bitmask=-1)
 {
     char *base = (char *)structBase;
+    bitmask |= Flag_OnlyNonDefault;
 
     for (size_t i = 0; i < count; i++) {
         SettingInfo& meta = info[i];
@@ -411,39 +416,56 @@ static void SerializeStructIni(SettingInfo *info, size_t count, void *structBase
             continue;
         switch (meta.type) {
         case Type_Section:
-            out.AppendFmt("[%s]\n", meta.name);
+            out.AppendFmt("[%s]\r\n", meta.name);
             break;
         case Type_Bool:
-            // TODO: always persist all values?
-            if (!(meta.flags & 1) || *(bool *)(base + meta.offset))
-                out.AppendFmt("%s = %d\n", meta.name, *(bool *)(base + meta.offset) ? 1 : 0);
+            // TODO: never persist false?
+            if (!(meta.flags & Flag_OnlyNonDefault) || *(bool *)(base + meta.offset))
+                out.AppendFmt("%s = %d\r\n", meta.name, *(bool *)(base + meta.offset) ? 1 : 0);
             break;
         case Type_Color:
-            out.AppendFmt("%s = #%06x\n", meta.name, *(COLORREF *)(base + meta.offset));
+            out.AppendFmt("%s = #%06x\r\n", meta.name, *(COLORREF *)(base + meta.offset));
             break;
         case Type_FileTime:
             out.AppendFmt("%s = ", meta.name);
             out.AppendAndFree(_MemToHex((FILETIME *)(base + meta.offset)));
-            out.Append("\n");
+            out.Append("\r\n");
             break;
         case Type_Float:
-            out.AppendFmt("%s = %.4f\n", meta.name, *(float *)(base + meta.offset));
+            out.AppendFmt("%s = %.4f\r\n", meta.name, *(float *)(base + meta.offset));
             break;
         case Type_Int:
-            out.AppendFmt("%s = %d\n", meta.name, *(int *)(base + meta.offset));
+            // TODO: don't persist 0?
+            out.AppendFmt("%s = %d\r\n", meta.name, *(int *)(base + meta.offset));
             break;
         case Type_String:
             if (((ScopedMem<WCHAR> *)(base + meta.offset))->Get()) {
                 ScopedMem<char> value(str::conv::ToUtf8(((ScopedMem<WCHAR> *)(base + meta.offset))->Get()));
-                out.AppendFmt("%s = %s\n", meta.name, value);
+                out.AppendFmt("%s = %s\r\n", meta.name, value);
             }
             break;
         case Type_Utf8String:
             if (((ScopedMem<char> *)(base + meta.offset))->Get())
-                out.AppendFmt("%s = %s\n", meta.name, ((ScopedMem<char> *)(base + meta.offset))->Get());
+                out.AppendFmt("%s = %s\r\n", meta.name, ((ScopedMem<char> *)(base + meta.offset))->Get());
             break;
         case Type_Custom:
-            CrashIf(true);
+            if (str::Eq(meta.name, "Display Mode")) {
+                const WCHAR *modeStr = DisplayModeConv::NameFromEnum(*(DisplayMode *)(base + meta.offset));
+                ScopedMem<char> value(str::conv::ToUtf8(modeStr));
+                out.AppendFmt("%s = %s\r\n", meta.name, value);
+            }
+            else if (str::Eq(meta.name, "UILanguage"))
+                out.AppendFmt("%s = %s\r\n", meta.name, *(const char **)(base + meta.offset));
+            else if (str::Eq(meta.name, "TocToggles")) {
+                Vec<int> *intVec = *(Vec<int> **)(base + meta.offset);
+                if (intVec && intVec->Count() > 0) {
+                    out.AppendFmt("%s =", meta.name);
+                    for (size_t idx = 0; idx < intVec->Count(); idx++) {
+                        out.AppendFmt(" %d", intVec->At(idx));
+                    }
+                    out.Append("\r\n");
+                }
+            }
             break;
         default:
             CrashIf(true);
@@ -452,15 +474,15 @@ static void SerializeStructIni(SettingInfo *info, size_t count, void *structBase
             while (++i < count && info[i].type != Type_Section && info[i].type != Type_SectionVec);
             // currently only Strings are used in array sections
             CrashIf(i2 + 1 == i || info[i2 + 1].type != Type_String);
-            size_t count = ((WStrVec *)(base + info[i2 + 1].offset))->Count();
-            for (size_t ix = 0; ix < count; ix++) {
-                out.AppendFmt("[%s]\n", meta.name);
+            size_t len = ((WStrVec *)(base + info[i2 + 1].offset))->Count();
+            for (size_t ix = 0; ix < len; ix++) {
+                out.AppendFmt("[%s]\r\n", meta.name);
                 for (size_t j = i2 + 1; j < i; j++) {
                     SettingInfo& meta2 = info[j];
                     CrashIf(meta2.type != Type_String);
                     if (((WStrVec *)(base + meta2.offset))->At(ix)) {
                         ScopedMem<char> value(str::conv::ToUtf8(((WStrVec *)(base + meta2.offset))->At(ix)));
-                        out.AppendFmt("%s = %s\n", meta2.name, value);
+                        out.AppendFmt("%s = %s\r\n", meta2.name, value);
                     }
                 }
             }
@@ -559,6 +581,69 @@ static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, 
             break;
         }
     }
+}
+
+static bool SerializePrefs2(const WCHAR *filePath, SerializableGlobalPrefs& globalPrefs,
+    FileHistory& fileHistory, Favorites *favs)
+{
+    CrashIf(!filePath);
+    if (!filePath) return false;
+
+    str::Str<char> data;
+    data.Append(UTF8_BOM "; this file will be overwritten by SumatraPDF - modify at your own risk\r\n");
+
+    // serialize globalPrefs
+    CrashIf(!IsValidZoom(globalPrefs.defaultZoom));
+    if (!globalPrefs.openCountWeek)
+        globalPrefs.openCountWeek = GetWeekCount();
+    // TODO: use different key names than for sumatrapdfprefs.dat?
+    SerializeStructIni(gSerializableGlobalPrefsInfo, dimof(gSerializableGlobalPrefsInfo), &globalPrefs, data, 0);
+    data.Append(globalPrefs.unknownSettings);
+
+    // serialize fileHistory
+    int minOpenCount = 0;
+    if (globalPrefs.globalPrefsOnly) {
+        // don't save more file entries than will be useful
+        Vec<DisplayState *> frequencyList;
+        fileHistory.GetFrequencyOrder(frequencyList);
+        if (frequencyList.Count() > FILE_HISTORY_MAX_RECENT)
+            minOpenCount = frequencyList.At(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
+    }
+    DisplayState *state;
+    for (size_t i = 0; (state = fileHistory.Get(i)); i++) {
+        bool useGlobalValues = globalPrefs.globalPrefsOnly || state->useGlobalValues;
+        if (!state->isPinned && !state->decryptionKey &&
+            (i >= MAX_REMEMBERED_FILES || state->isMissing && useGlobalValues ||
+             state->openCount < minOpenCount && i > FILE_HISTORY_MAX_RECENT)) {
+            // forget about missing files without valuable state and files that have
+            // not been used in quite a while, unless they're pinned or we've remembered
+            // a password for them
+            continue;
+        }
+        // TODO: does issue 2140 still occur?
+        CrashIf(!IsValidZoom(state->zoomVirtual));
+        // don't include common values in order to keep the preference file size down
+        uint32_t bitmask = useGlobalValues ? 0 : Flag_NonGlobal;
+        data.AppendFmt("[File %s]\r\n", ScopedMem<char>(str::conv::ToUtf8(state->filePath)));
+        SerializeStructIni(gDisplayStateInfo, dimof(gDisplayStateInfo), state, data, bitmask);
+    }
+
+    // serialize favs
+    for (size_t i = 0; i < favs->favs.Count(); i++) {
+        FileFavs *fav = favs->favs.At(i);
+        ScopedMem<char> filePath(str::conv::ToUtf8(fav->filePath));
+        for (size_t j = 0; j < fav->favNames.Count(); j++) {
+            FavName *fn = fav->favNames.At(j);
+            data.AppendFmt("[Favorite %s]\r\n", filePath);
+            SerializeStructIni(gFavNameInfo, dimof(gFavNameInfo), fn, data, 0);
+        }
+    }
+
+    FileTransaction trans;
+    bool ok = trans.WriteAll(filePath, data.Get(), data.Size()) && trans.Commit();
+    if (ok && 0)
+        globalPrefs.lastPrefUpdate = file::GetModificationTime(filePath);
+    return ok;
 }
 
 namespace Prefs {
@@ -667,7 +752,7 @@ bool EnumFromName(const WCHAR *txt, DisplayMode *mode)
 }
 
 /* Caller needs to free() the result. */
-static WCHAR *GetAdvancedPrefsPath(bool createMissing=false)
+static WCHAR *GetUserPrefsPath(bool createMissing=false)
 {
     ScopedMem<WCHAR> path(AppGenDataFilename(USER_PREFS_FILE_NAME));
     if (file::Exists(path))
@@ -686,17 +771,32 @@ static WCHAR *GetAdvancedPrefsPath(bool createMissing=false)
     return NULL;
 }
 
-static bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs)
+static bool LoadUserPrefs(AdvancedSettings *advancedPrefs)
 {
 #ifdef DISABLE_EBOOK_UI
     advancedPrefs->traditionalEbookUI = true;
 #endif
-    ScopedMem<WCHAR> path(GetAdvancedPrefsPath());
+    ScopedMem<WCHAR> path(GetUserPrefsPath());
     if (!path)
         return false;
     DeserializeStructIni(IniFile(path), gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
     return true;
 }
+
+#if 0
+bool ModifyUserPrefs()
+{
+    ScopedMem<WCHAR> path(GetUserPrefsPath(true));
+    WCHAR buffer[MAX_PATH];
+    UINT res = GetWindowsDirectory(buffer, dimof(buffer));
+    if (!res || res >= dimof(buffer))
+        return NULL;
+    ScopedMem<WCHAR> notepadPath(path::Join(buffer, L"notepad.exe"));
+    if (!file::Exists(notepadPath))
+        return false;
+    return LaunchFile(notepadPath, path);
+}
+#endif
 
 /* Caller needs to free() the result. */
 static inline WCHAR *GetPrefsFileName()
@@ -709,7 +809,7 @@ bool LoadPrefs()
     delete gFavorites;
     gFavorites = new Favorites();
 
-    LoadAdvancedPrefs(&gUserPrefs);
+    LoadUserPrefs(&gUserPrefs);
 
     ScopedMem<WCHAR> path(GetPrefsFileName());
     if (!file::Exists(path)) {
@@ -747,12 +847,10 @@ bool SavePrefs()
     if (!ok)
         return false;
 
-#if 0
-    ScopedMem<WCHAR> testPath(AppGenDataFilename(USER_PREFS_FILE_NAME L".test"));
-    str::Str<char> iniData;
-    iniData.Append(UTF8_BOM "; see https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini\n");
-    SerializeStructIni(gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), &gUserPrefs, iniData);
-    file::WriteAll(testPath, iniData.LendData(), iniData.Size());
+#ifdef DEBUG
+    ScopedMem<WCHAR> testPath(AppGenDataFilename(NEW_PREFS_FILE_NAME));
+    ok = SerializePrefs2(testPath, gGlobalPrefs, gFileHistory, gFavorites);
+    CrashIf(!ok);
 #endif
 
     // notify all SumatraPDF instances about the updated prefs file

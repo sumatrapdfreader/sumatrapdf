@@ -6,6 +6,8 @@
 #ifndef AppPrefs2_h
 #define AppPrefs2_h
 
+// Most values on this structure can be updated through the UI and are
+// persisted in SumatraPDF.ini (previously in sumatrapdfprefs.dat)
 class SerializableGlobalPrefs {
 public:
 
@@ -94,6 +96,10 @@ public:
     // serialization of what was loaded (needed to prevent discarding
     // unknown options)
     ScopedMem<char> prevSerialization;
+    // a list of settings which this version of SumatraPDF didn't know how
+    // to handle (this field is for INI (de)serialization while
+    // prevSerialization is for Benc)
+    ScopedMem<char> unknownSettings;
     // default position (can be on any monitor)
     RectI windowPos;
 
@@ -111,6 +117,8 @@ public:
     }
 };
 
+// Most values in this structure are remembered individually for every
+// file and are by default also persisted so that reading can be resumed
 class DisplayState {
 public:
 
@@ -185,6 +193,7 @@ public:
     }
 };
 
+// Values which are persisted for bookmarks/favorites
 class FavName {
 public:
 
@@ -207,6 +216,8 @@ public:
     }
 };
 
+// All values in this structure are read from SumatraPDF-user.ini and
+// can't be changed from within the UI
 class AdvancedSettings {
 public:
 
@@ -295,17 +306,17 @@ struct SettingInfo {
 
 static SettingInfo gSerializableGlobalPrefsInfo[] = {
     /* ***** fields for section SerializableGlobalPrefs ***** */
-    { "BgColor", Type_Color, offsetof(SerializableGlobalPrefs, bgColor), 0 },
+    { "BgColor", Type_Color, offsetof(SerializableGlobalPrefs, bgColor), 4 },
     { "CBX_Right2Left", Type_Bool, offsetof(SerializableGlobalPrefs, cbxR2L), 0 },
     { "Display Mode", Type_Custom, offsetof(SerializableGlobalPrefs, defaultDisplayMode), 0 },
     { "EnableAutoUpdate", Type_Bool, offsetof(SerializableGlobalPrefs, enableAutoUpdate), 0 },
-    { "EscToExit", Type_Bool, offsetof(SerializableGlobalPrefs, escToExit), 0 },
+    { "EscToExit", Type_Bool, offsetof(SerializableGlobalPrefs, escToExit), 4 },
     { "ExposeInverseSearch", Type_Bool, offsetof(SerializableGlobalPrefs, enableTeXEnhancements), 0 },
     { "FavVisible", Type_Bool, offsetof(SerializableGlobalPrefs, favVisible), 0 },
-    { "ForwardSearch_HighlightColor", Type_Color, offsetof(SerializableGlobalPrefs, fwdSearchColor), 0 },
-    { "ForwardSearch_HighlightOffset", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchOffset), 0 },
-    { "ForwardSearch_HighlightPermanent", Type_Bool, offsetof(SerializableGlobalPrefs, fwdSearchPermanent), 0 },
-    { "ForwardSearch_HighlightWidth", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchWidth), 0 },
+    { "ForwardSearch_HighlightColor", Type_Color, offsetof(SerializableGlobalPrefs, fwdSearchColor), 4 },
+    { "ForwardSearch_HighlightOffset", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchOffset), 4 },
+    { "ForwardSearch_HighlightPermanent", Type_Bool, offsetof(SerializableGlobalPrefs, fwdSearchPermanent), 4 },
+    { "ForwardSearch_HighlightWidth", Type_Int, offsetof(SerializableGlobalPrefs, fwdSearchWidth), 4 },
     { "GlobalPrefsOnly", Type_Bool, offsetof(SerializableGlobalPrefs, globalPrefsOnly), 0 },
     { "InverseSearchCommandLine", Type_String, offsetof(SerializableGlobalPrefs, inverseSearchCmdLine), 0 },
     { "LastUpdate", Type_FileTime, offsetof(SerializableGlobalPrefs, lastUpdateTime), 0 },
@@ -334,7 +345,7 @@ static SettingInfo gDisplayStateInfo[] = {
     /* ***** fields for section DisplayState ***** */
     { "Decryption Key", Type_Utf8String, offsetof(DisplayState, decryptionKey), 0 },
     { "Display Mode", Type_Custom, offsetof(DisplayState, displayMode), 2 },
-    { "File", Type_String, offsetof(DisplayState, filePath), 0 },
+    { "File", Type_String, offsetof(DisplayState, filePath), 4 },
     { "Missing", Type_Bool, offsetof(DisplayState, isMissing), 1 },
     { "OpenCount", Type_Int, offsetof(DisplayState, openCount), 0 },
     { "Page", Type_Int, offsetof(DisplayState, pageNo), 2 },
