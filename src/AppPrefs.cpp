@@ -472,9 +472,9 @@ static void DeserializeStructIni(const WCHAR *filepath, SettingInfo *info, size_
 #if 0
                     // currently only Strings are used in array sections
                     case Type_Int:
-                        ((Vec<int> *)(base + meta2.offset))->AppendBlanks(1);
+                        ((Vec<int,1> *)(base + meta2.offset))->AppendBlanks(1);
                         if ((line = section->FindLine(meta2.name)))
-                            ((Vec<int> *)(base + meta2.offset))->Last() = atoi(line->value);
+                            ((Vec<int,1> *)(base + meta2.offset))->Last() = atoi(line->value);
                         break;
                     // etc.
 #endif

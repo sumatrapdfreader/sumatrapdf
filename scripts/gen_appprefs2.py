@@ -8,7 +8,7 @@ import os, util2
 
 class Type(object):
 	def __init__(self, name, ctype, vectype=None):
-		self.name = name; self.ctype = ctype; self.vectype = vectype or "Vec<%s>" % ctype
+		self.name = name; self.ctype = ctype; self.vectype = vectype or "Vec<%s,1>" % ctype
 
 Bool = Type("Bool", "bool")
 Color = Type("Color", "COLORREF")
@@ -83,8 +83,6 @@ PrinterDefaults = [
 ]
 
 ForwardSearch = [
-	Field("EnableTeXEnhancements", Bool, False,
-		"whether the inverse search command line setting is visible in the Settings dialog"),
 	Field("HighlightOffset", Int, 0,
 		"when set to a positive value, the forward search highlight style will " +
 		"be changed to a rectangle at the left of the page (with the indicated " +
@@ -278,6 +276,17 @@ FileState = [
 	Section("FileInternals", FileInternals, True),
 ]
 
+FavName = [
+	Section(None, [
+		Field("Name", String, None, "name of this favorite as shown in the menu"),
+		Field("PageNo", Int, 0, "which page this favorite is about"),
+		Field("PageLabel", String, None, "optional label for this page (if logical and physical numers disagree)"),
+	]), # section without header
+	Section("FavInternals", [
+		Field("MenuId", Int, 0, "assigned in AppendFavMenuItems()"),
+	], True)
+]
+
 # ##### end of setting definitions for SumatraPDF #####
 
 def FormatComment(comment):
@@ -323,15 +332,13 @@ def BuildStruct(sections, name):
 	lines.append("};")
 	return "\n".join(lines)
 
-def BuildMetaData(sections, name, sort=False):
+def BuildMetaData(sections, name):
 	lines = ["static SettingInfo g%sInfo[] = {" % name]
 	for section in sections:
 		if section.internal:
 			lines.append("\t/* ***** skipping internal section %s ***** */" % section.name)
 			continue
-		fields = section.fields
-		if sort:
-			fields = sorted(fields, key=lambda field: field.alias)
+		fields = sorted(section.fields, key=lambda field: field.alias)
 		if type(section) == SectionArray:
 			lines.append("\t/* ***** fields for array section %s ***** */" % section.name)
 			lines.append("\t{ \"%s\", Type_SectionVec }," % section.name)
@@ -361,6 +368,8 @@ AppPrefs2_Header = """\
 
 %(fileStructDef)s
 
+%(favStructDef)s
+
 %(advStructDef)s
 
 #ifdef INCLUDE_APPPREFS2_METADATA
@@ -382,6 +391,8 @@ struct SettingInfo {
 
 %(fileStructMetadata)s
 
+%(favStructMetadata)s
+
 %(advStructMetadata)s
 #endif
 
@@ -392,11 +403,14 @@ def main():
 	util2.chdir_top()
 	
 	mainStructDef = BuildStruct(GlobalPrefs, "SerializableGlobalPrefs")
-	mainStructMetadata = BuildMetaData(GlobalPrefs, "SerializableGlobalPrefs", True)
+	mainStructMetadata = BuildMetaData(GlobalPrefs, "SerializableGlobalPrefs")
 	fileStructDef = BuildStruct(FileState, "DisplayState")
-	fileStructMetadata = BuildMetaData(FileState, "DisplayState", True)
+	fileStructMetadata = BuildMetaData(FileState, "DisplayState")
+	favStructDef = BuildStruct(FavName, "FavName")
+	favStructMetadata = BuildMetaData(FavName, "FavName")
 	advStructDef = BuildStruct(IniSettings, "AdvancedSettings")
 	advStructMetadata = BuildMetaData(IniSettings, "AdvancedSettings")
+	
 	content = AppPrefs2_Header % locals()
 	open("src/AppPrefs2.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
 

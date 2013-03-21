@@ -185,6 +185,28 @@ public:
     }
 };
 
+class FavName {
+public:
+
+    /* ***** fields for section FavName ***** */
+
+    // name of this favorite as shown in the menu
+    ScopedMem<WCHAR> name;
+    // which page this favorite is about
+    int pageNo;
+    // optional label for this page (if logical and physical numers
+    // disagree)
+    ScopedMem<WCHAR> pageLabel;
+
+    /* ***** fields for section FavInternals ***** */
+
+    // assigned in AppendFavMenuItems()
+    int menuId;
+
+    FavName() : pageNo(0), menuId(0) {
+    }
+};
+
 class AdvancedSettings {
 public:
 
@@ -226,9 +248,6 @@ public:
 
     /* ***** fields for section ForwardSearch ***** */
 
-    // whether the inverse search command line setting is visible in the
-    // Settings dialog
-    bool enableTeXEnhancements;
     // when set to a positive value, the forward search highlight style
     // will be changed to a rectangle at the left of the page (with the
     // indicated amount of margin from the page margin)
@@ -256,9 +275,8 @@ public:
     AdvancedSettings() : traditionalEbookUI(false), reuseInstance(false), mainWindowBackground(0xfff200),
         escToExit(false), textColor(0x0000), pageColor(0xffffff),
         printAsImage(false), outerX(4), outerY(2),
-        innerX(4), innerY(4), enableTeXEnhancements(false),
-        highlightOffset(0), highlightWidth(15), highlightColor(0x6581ff),
-        highlightPermanent(false) {
+        innerX(4), innerY(4), highlightOffset(0),
+        highlightWidth(15), highlightColor(0x6581ff), highlightPermanent(false) {
     }
 };
 
@@ -340,37 +358,44 @@ static SettingInfo gDisplayStateInfo[] = {
     /* ***** skipping internal section FileInternals ***** */
 };
 
+static SettingInfo gFavNameInfo[] = {
+    /* ***** fields for section FavName ***** */
+    { "Name", Type_String, offsetof(FavName, name), 0 },
+    { "PageLabel", Type_String, offsetof(FavName, pageLabel), 0 },
+    { "PageNo", Type_Int, offsetof(FavName, pageNo), 0 },
+    /* ***** skipping internal section FavInternals ***** */
+};
+
 static SettingInfo gAdvancedSettingsInfo[] = {
     /* ***** fields for section AdvancedOptions ***** */
     { "AdvancedOptions", Type_Section },
-    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedSettings, traditionalEbookUI), 0 },
-    { "ReuseInstance", Type_Bool, offsetof(AdvancedSettings, reuseInstance), 0 },
-    { "MainWindowBackground", Type_Color, offsetof(AdvancedSettings, mainWindowBackground), 0 },
     { "EscToExit", Type_Bool, offsetof(AdvancedSettings, escToExit), 0 },
-    { "TextColor", Type_Color, offsetof(AdvancedSettings, textColor), 0 },
+    { "MainWindowBackground", Type_Color, offsetof(AdvancedSettings, mainWindowBackground), 0 },
     { "PageColor", Type_Color, offsetof(AdvancedSettings, pageColor), 0 },
+    { "ReuseInstance", Type_Bool, offsetof(AdvancedSettings, reuseInstance), 0 },
+    { "TextColor", Type_Color, offsetof(AdvancedSettings, textColor), 0 },
+    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedSettings, traditionalEbookUI), 0 },
     /* ***** fields for section PrinterDefaults ***** */
     { "PrinterDefaults", Type_Section },
-    { "PrintScale", Type_String, offsetof(AdvancedSettings, printScale), 0 },
     { "PrintAsImage", Type_Bool, offsetof(AdvancedSettings, printAsImage), 0 },
+    { "PrintScale", Type_String, offsetof(AdvancedSettings, printScale), 0 },
     /* ***** fields for section PagePadding ***** */
     { "PagePadding", Type_Section },
-    { "OuterX", Type_Int, offsetof(AdvancedSettings, outerX), 0 },
-    { "OuterY", Type_Int, offsetof(AdvancedSettings, outerY), 0 },
     { "InnerX", Type_Int, offsetof(AdvancedSettings, innerX), 0 },
     { "InnerY", Type_Int, offsetof(AdvancedSettings, innerY), 0 },
+    { "OuterX", Type_Int, offsetof(AdvancedSettings, outerX), 0 },
+    { "OuterY", Type_Int, offsetof(AdvancedSettings, outerY), 0 },
     /* ***** fields for section ForwardSearch ***** */
     { "ForwardSearch", Type_Section },
-    { "EnableTeXEnhancements", Type_Bool, offsetof(AdvancedSettings, enableTeXEnhancements), 0 },
-    { "HighlightOffset", Type_Int, offsetof(AdvancedSettings, highlightOffset), 0 },
-    { "HighlightWidth", Type_Int, offsetof(AdvancedSettings, highlightWidth), 0 },
     { "HighlightColor", Type_Color, offsetof(AdvancedSettings, highlightColor), 0 },
+    { "HighlightOffset", Type_Int, offsetof(AdvancedSettings, highlightOffset), 0 },
     { "HighlightPermanent", Type_Bool, offsetof(AdvancedSettings, highlightPermanent), 0 },
+    { "HighlightWidth", Type_Int, offsetof(AdvancedSettings, highlightWidth), 0 },
     /* ***** fields for array section ExternalViewer ***** */
     { "ExternalViewer", Type_SectionVec },
     { "CommandLine", Type_String, offsetof(AdvancedSettings, vecCommandLine), 0 },
-    { "Name", Type_String, offsetof(AdvancedSettings, vecName), 0 },
     { "Filter", Type_String, offsetof(AdvancedSettings, vecFilter), 0 },
+    { "Name", Type_String, offsetof(AdvancedSettings, vecName), 0 },
 };
 #endif
 

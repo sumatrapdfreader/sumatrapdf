@@ -87,11 +87,16 @@ void FileFavs::AddOrReplace(int pageNo, const WCHAR *name, const WCHAR *pageLabe
     int idx = FindByPage(pageNo, pageLabel);
     if (idx != -1) {
         FavName *fav = favNames.At(idx);
-        fav->ChangeName(name);
+        fav->name.Set(str::Dup(name));
         CrashIf(fav->pageLabel && !str::Eq(fav->pageLabel, pageLabel));
         return;
     }
-    FavName *fn = new FavName(pageNo, name, pageLabel);
+
+    FavName *fn = new FavName();
+    fn->name.Set(str::Dup(name));
+    fn->pageNo = pageNo;
+    fn->pageLabel.Set(str::Dup(pageLabel));
+
     favNames.Append(fn);
     favNames.Sort(SortByPageNo);
 }
