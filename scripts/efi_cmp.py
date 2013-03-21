@@ -58,6 +58,7 @@ def build_ver(ver):
 
 	if already_built(ver):
 		print("Version %d already built!" % ver)
+		return
 	os.chdir(sum_efi_dir())
 	util.run_cmd_throw("svn", "update", "-r%d" % ver)
 
@@ -65,7 +66,7 @@ def build_ver(ver):
 	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
 	(out, err, errcode) = util.run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
 	for f in g_build_artifacts:
-		src = os.path.join(f, obj_dir)
+		src = os.path.join(obj_dir, f)
 		dst = os.path.join(sum_efi_cache_dir(ver), f)
 		shutil.copyfile(src, dst)
 
