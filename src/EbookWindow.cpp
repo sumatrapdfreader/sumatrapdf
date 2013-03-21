@@ -287,6 +287,7 @@ static void OnMenuGoToPage(EbookWindow *win)
 
 static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    CrashIf(!win);
     int wmId = LOWORD(wParam);
 
     // check if the menuId belongs to an entry in the list of
@@ -299,7 +300,7 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
         return 0;
     }
 
-    if (win && IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST)
+    if (IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST)
     {
         ViewWithExternalViewer(wmId - IDM_OPEN_WITH_EXTERNAL_FIRST, win->LoadedFilePath());
         return 0;
