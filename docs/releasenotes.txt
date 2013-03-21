@@ -13,6 +13,7 @@ Next version:
   * Ctrl-Down : page down
 * support Deflate64 in Comic Book (CBZ) files
 * printing with "Use original page sizes" no longer centers pages on paper
+* reduced size. Installer is ~1MB smaller
 
 2.2.1 (2013-01-12):
 

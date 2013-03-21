@@ -1,6 +1,6 @@
 -- to generate Visual Studio files in vs directory, run:
 -- premake4 vs2010 or premake4 vs2008
-solution "sizer"
+solution "efi"
   configurations { "Debug", "Release" }
   location "vs" -- this is where generated solution/project files go
 
@@ -22,6 +22,9 @@ solution "sizer"
      targetdir "rel"
      flags { "Optimize" }
      defines { "NDEBUG" }
+     -- 4189 - variable not used, happens with CrashIf() macros that are no-op
+     --        in release builds
+     buildoptions { "/wd4189"}
 
   configuration {"vs*"}
     -- defines { "_WIN32", "WIN32", "WINDOWS", "_CRT_SECURE_NO_WARNINGS" }
@@ -32,12 +35,12 @@ solution "sizer"
     -- 4244 - possible loss of data due to conversion
     buildoptions { "/wd4800", "/wd4127", "/wd4100", "/wd4244"}
 
-  project "sizer"
+  project "efi"
     kind "ConsoleApp"
     language "C++"
     files {
-      "tools/sizer/*.h",
-      "tools/sizer/*.cpp",
+      "tools/efi/*.h",
+      "tools/efi/*.cpp",
       "src/utils/BaseUtil*",
       "src/utils/BitManip.h",
       "src/utils/Dict*",
