@@ -383,10 +383,10 @@ static void DumpSymbol(IDiaSymbol *symbol)
     nameStr = g_strTmp.Get();
 
     if (ShouldLogUndecorated(nameStr, undecoratedNameStr)) {
-        // type | section | length | offset | name | undecoratedName
+        // type | section | length | offset | rva | name | undecoratedName
         g_report.AppendFmt("%s|%d|%d|%d|%d|%s|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr, undecoratedNameStr);
     } else {
-        // type | section | length | offset | name
+        // type | section | length | offset | rva | name
         g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr);
     }
 
