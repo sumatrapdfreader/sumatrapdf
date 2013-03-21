@@ -631,10 +631,10 @@ static bool SerializePrefs2(const WCHAR *filePath, SerializableGlobalPrefs& glob
     // serialize favs
     for (size_t i = 0; i < favs->favs.Count(); i++) {
         FileFavs *fav = favs->favs.At(i);
-        ScopedMem<char> filePath(str::conv::ToUtf8(fav->filePath));
+        ScopedMem<char> utf8Path(str::conv::ToUtf8(fav->filePath));
         for (size_t j = 0; j < fav->favNames.Count(); j++) {
             FavName *fn = fav->favNames.At(j);
-            data.AppendFmt("[Favorite %s]\r\n", filePath);
+            data.AppendFmt("[Favorite %s]\r\n", utf8Path);
             SerializeStructIni(gFavNameInfo, dimof(gFavNameInfo), fn, data, 0);
         }
     }
