@@ -378,8 +378,6 @@ enum SettingType {
 	Type_Bool, Type_Color, Type_FileTime, Type_Float, Type_Int, Type_String, Type_Utf8String,
 };
 
-enum SettingFlag { Flag_None, Flag_NonGlobal, Flag_OnlyNonDefault };
-
 struct SettingInfo {
 	const char *name;
 	SettingType type;

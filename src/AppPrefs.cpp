@@ -401,11 +401,78 @@ Exit:
     delete obj;
 }
 
-static void DeserializeStructIni(const WCHAR *filepath, SettingInfo *info, size_t count, void *structBase)
+static void SerializeStructIni(SettingInfo *info, size_t count, void *structBase, str::Str<char>& out, uint32_t bitmask=-1)
 {
-    IniFile ini(filepath);
     char *base = (char *)structBase;
-    IniSection *section = NULL;
+
+    for (size_t i = 0; i < count; i++) {
+        SettingInfo& meta = info[i];
+        if ((meta.flags & bitmask) != meta.flags)
+            continue;
+        switch (meta.type) {
+        case Type_Section:
+            out.AppendFmt("[%s]\n", meta.name);
+            break;
+        case Type_Bool:
+            // TODO: always persist all values?
+            if (!(meta.flags & 1) || *(bool *)(base + meta.offset))
+                out.AppendFmt("%s = %d\n", meta.name, *(bool *)(base + meta.offset) ? 1 : 0);
+            break;
+        case Type_Color:
+            out.AppendFmt("%s = #%06x\n", meta.name, *(COLORREF *)(base + meta.offset));
+            break;
+        case Type_FileTime:
+            out.AppendFmt("%s = ", meta.name);
+            out.AppendAndFree(_MemToHex((FILETIME *)(base + meta.offset)));
+            out.Append("\n");
+            break;
+        case Type_Float:
+            out.AppendFmt("%s = %.4f\n", meta.name, *(float *)(base + meta.offset));
+            break;
+        case Type_Int:
+            out.AppendFmt("%s = %d\n", meta.name, *(int *)(base + meta.offset));
+            break;
+        case Type_String:
+            if (((ScopedMem<WCHAR> *)(base + meta.offset))->Get()) {
+                ScopedMem<char> value(str::conv::ToUtf8(((ScopedMem<WCHAR> *)(base + meta.offset))->Get()));
+                out.AppendFmt("%s = %s\n", meta.name, value);
+            }
+            break;
+        case Type_Utf8String:
+            if (((ScopedMem<char> *)(base + meta.offset))->Get())
+                out.AppendFmt("%s = %s\n", meta.name, ((ScopedMem<char> *)(base + meta.offset))->Get());
+            break;
+        case Type_Custom:
+            CrashIf(true);
+            break;
+        default:
+            CrashIf(true);
+        case Type_SectionVec:
+            size_t i2 = i;
+            while (++i < count && info[i].type != Type_Section && info[i].type != Type_SectionVec);
+            // currently only Strings are used in array sections
+            CrashIf(i2 + 1 == i || info[i2 + 1].type != Type_String);
+            size_t count = ((WStrVec *)(base + info[i2 + 1].offset))->Count();
+            for (size_t ix = 0; ix < count; ix++) {
+                out.AppendFmt("[%s]\n", meta.name);
+                for (size_t j = i2 + 1; j < i; j++) {
+                    SettingInfo& meta2 = info[j];
+                    CrashIf(meta2.type != Type_String);
+                    if (((WStrVec *)(base + meta2.offset))->At(ix)) {
+                        ScopedMem<char> value(str::conv::ToUtf8(((WStrVec *)(base + meta2.offset))->At(ix)));
+                        out.AppendFmt("%s = %s\n", meta2.name, value);
+                    }
+                }
+            }
+            i--;
+            break;
+        }
+    }
+}
+
+static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, void *structBase, IniSection *section=NULL)
+{
+    char *base = (char *)structBase;
     IniLine *line;
 
     for (size_t i = 0; i < count; i++) {
@@ -627,7 +694,7 @@ static bool LoadAdvancedPrefs(AdvancedSettings *advancedPrefs)
     ScopedMem<WCHAR> path(GetAdvancedPrefsPath());
     if (!path)
         return false;
-    DeserializeStructIni(path, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
+    DeserializeStructIni(IniFile(path), gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
     return true;
 }
 
@@ -679,6 +746,14 @@ bool SavePrefs()
     bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory, gFavorites);
     if (!ok)
         return false;
+
+#if 0
+    ScopedMem<WCHAR> testPath(AppGenDataFilename(USER_PREFS_FILE_NAME L".test"));
+    str::Str<char> iniData;
+    iniData.Append(UTF8_BOM "; see https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini\n");
+    SerializeStructIni(gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), &gUserPrefs, iniData);
+    file::WriteAll(testPath, iniData.LendData(), iniData.Size());
+#endif
 
     // notify all SumatraPDF instances about the updated prefs file
     HWND hwnd = NULL;
