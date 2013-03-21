@@ -4,7 +4,7 @@ a variety of preference values from a user provided settings file.
 See further below for the definition of all currently supported options.
 """
 
-import os, util2
+import util2
 
 class Type(object):
 	def __init__(self, name, ctype, vectype=None):
@@ -340,7 +340,7 @@ def BuildStruct(sections, name):
 					defaults.append(field.cdefault())
 				elif field.type == FileTime:
 					structs.append(field.cname)
-	
+
 	if defaults or structs:
 		lines.append("")
 		lines.append("\t%s()" % name)
@@ -425,12 +425,12 @@ struct SettingInfo {
 
 def main():
 	util2.chdir_top()
-	
+
 	mainStructDef, mainStructMetadata = BuildStructAndMetaData(GlobalPrefs, "SerializableGlobalPrefs")
 	fileStructDef, fileStructMetadata = BuildStructAndMetaData(FileState, "DisplayState")
 	favStructDef, favStructMetadata = BuildStructAndMetaData(FavName, "FavName")
 	advStructDef, advStructMetadata = BuildStructAndMetaData(IniSettings, "AdvancedSettings")
-	
+
 	content = AppPrefs2_Header % locals()
 	open("src/AppPrefs2.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
 

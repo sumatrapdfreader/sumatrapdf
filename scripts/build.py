@@ -202,7 +202,7 @@ def zip_one_file(dir, to_pack, zip_name):
   verify_path_exists(dir)
   # for the benefit of pigz, we have to cd to the directory, because
   # we don't control the name of the file inside created zip file - it's
-  # the same as name as path of the file we're compressing
+  # the same as path of the file we're compressing
   curr_dir = os.getcwd()
   os.chdir(dir)
   verify_path_exists(to_pack)

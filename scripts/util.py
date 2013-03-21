@@ -84,14 +84,17 @@ def shell_arg():
     return True
   return False
 
+# will throw an exception if a command doesn't exist
+# otherwise returns a tuple:
+# (stdout, stderr, errcode)
 def run_cmd(*args):
   cmd = " ".join(args)
-  print("run_cmd_throw: '%s'" % cmd)
+  print("run_cmd: '%s'" % cmd)
   cmdproc = subprocess.Popen(args, shell=shell_arg(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=subprocess_flags())
   res = cmdproc.communicate()
   return (res[0], res[1], cmdproc.returncode)
 
-# like run_cmd() but throws an exception on failure
+# like run_cmd() but throws an exception if command returns non-0 error code
 def run_cmd_throw(*args):
   cmd = " ".join(args)
   print("run_cmd_throw: '%s'" % cmd)
@@ -474,4 +477,3 @@ if __name__ == "__main__":
   #parse_svnlog_out_test2()
   #test_load_config()
   test_gob()
-  pass

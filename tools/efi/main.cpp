@@ -568,8 +568,8 @@ static void ParseCommandLine(int argc, char **argv)
     return;
 
 InvalidCmdLine:
-    log("Usage: sizer [-compact] [-sections] [-symbols] [-types] <exefile>\n");
-    exit(1);
+    printf("%s", "Usage: efi [-compact] [-sections] [-symbols] [-types] <exefile>\n");
+    exit(0);
 }
 
 int main(int argc, char** argv)

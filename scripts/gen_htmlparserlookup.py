@@ -4,7 +4,7 @@ Given a string, see if it belongs to a known set of strings. If it does,
 return a value corresponding to that string.
 """
 
-import os, util2
+import util2
 
 Template_Defines = """\
 #define CS1(c1)             (c1)
@@ -97,7 +97,7 @@ def createFastFinder(list, type, default, caseInsensitive, funcName=None):
 					break
 				name, value = list.pop(0)
 			output.append('	break;')
-	
+
 	output = Template_Find_Function % (type, funcName or type, "\n	".join(output), default)
 	if not caseInsensitive:
 		output = output.replace("STR1i(", "STR1(").replace("STR2i(", "STR2(")
@@ -219,18 +219,18 @@ Template_Lookup_Code = """\
 
 def main():
 	util2.chdir_top()
-	
+
 	tags = [(name, getEnumName(name, "Tag")) for name in sorted(List_HTML_Tags.split() + List_Other_Tags.split())]
 	attrs = [(name, getEnumName(name, "Attr")) for name in sorted(List_HTML_Attrs.split() + List_Other_Attrs.split())]
 	aligns = [(name, getEnumName(name, "Align")) for name in sorted(List_Align_Values.split())]
 	cssProps = [(name, getEnumName(name, "Css")) for name in sorted(List_CSS_Props.split() + List_SMX_Props.split())]
 	cssColors = [(name, "MKRGB(%s)" % value) for (name, value) in sorted(List_CSS_Colors)]
-	
+
 	enum_htmltag = createTypeEnum(tags, "HtmlTag", "Tag_NotFound")
 	enum_htmlattr = createTypeEnum(attrs, "HtmlAttr", "Attr_NotFound")
 	enum_alignattr = createTypeEnum(aligns, "AlignAttr", "Align_NotFound")
 	enum_cssprop = createTypeEnum(cssProps, "CssProp", "Css_Unknown")
-	
+
 	code_defines = Template_Defines
 	code_htmltag = createFastFinder(tags, "HtmlTag", "Tag_NotFound", True)
 	code_htmlattr = createFastFinder(attrs, "HtmlAttr", "Attr_NotFound", True)
@@ -240,7 +240,7 @@ def main():
 	code_htmlentity = Template_Entities_Comment + "\n" + createFastFinder(List_HTML_Entities, "uint32_t", "-1", False, "HtmlEntityRune")
 	code_cssprop = createFastFinder(cssProps, "CssProp", "Css_Unknown", True)
 	code_csscolor = createFastFinder(cssColors, "ARGB", "MKRGBA(0,0,0,0)", True, "CssColor")
-	
+
 	content = Template_Lookup_Header % locals()
 	open("src/utils/HtmlParserLookup.h", "wb").write(content.replace("\n", "\r\n"))
 	content = Template_Lookup_Code[:-1] % locals()
