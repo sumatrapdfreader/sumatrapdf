@@ -351,15 +351,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\Settings.cpp"
+					RelativePath="..\src\utils\SerializeBin.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\Settings.h"
+					RelativePath="..\src\utils\SerializeBin.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\Settings_ut.cpp"
+					RelativePath="..\src\utils\SerializeBin_ut.cpp"
 					>
 				</File>
 				<File

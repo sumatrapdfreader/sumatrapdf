@@ -92,16 +92,4 @@ def main():
 if __name__ == "__main__":
 	main()
 	update_vs.main()
-
-	# TODO: disabled because throws an exception on my machine:
-	#$ ./scripts/update_dependencies.py
-	#Traceback (most recent call last):
-	#  File "./scripts/update_dependencies.py", line 95, in <module>
-	#    update_vs2008.main()
-	#  File "/cygdrive/c/kjk/src/sumatrapdf/scripts/update_vs2008.py", line 92, in main
-	#    fileNodes = parseNodes(getFilesNode(vcproj))
-	#  File "/cygdrive/c/kjk/src/sumatrapdf/scripts/update_vs2008.py", line 43, in getFilesNode
-	#    assert len(root) == 1 and root[0].name == "VisualStudioProject"
-	#AssertionError
-
-	#update_vs2008.main()
+	update_vs2008.main()

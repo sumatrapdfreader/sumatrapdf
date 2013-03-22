@@ -88,7 +88,7 @@ def updateProj(vcproj, nodes, addedPaths):
 def main():
 	util2.chdir_top()
 	
-	vcproj = open(VC2008_PROJ, "r").read()
+	vcproj = open(VC2008_PROJ, "rb").read().replace("\r\n", "\n")
 	fileNodes = parseNodes(getFilesNode(vcproj))
 	addedPaths = findAddedFiles(extractPaths(fileNodes))
 	vcprojNew = updateProj(vcproj, fileNodes, addedPaths)
