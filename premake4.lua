@@ -91,6 +91,7 @@ solution "everything"
       "src/utils/BaseUtil*",
       "src/utils/BitManip.h",
       "src/utils/Dict*",
+      "src/utils/FileUtil*",
       "src/utils/StrUtil*",
     }
     excludes
@@ -98,4 +99,4 @@ solution "everything"
       "src/utils/*_ut.cpp",
     }
     includedirs { "src/utils" }
-    links { }
+    links { "Shlwapi" }
