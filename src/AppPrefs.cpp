@@ -424,7 +424,10 @@ static void SerializeStructIni(SettingInfo *info, size_t count, void *structBase
                 out.AppendFmt("%s = %d\r\n", meta.name, *(bool *)(base + meta.offset) ? 1 : 0);
             break;
         case Type_Color:
-            out.AppendFmt("%s = #%06x\r\n", meta.name, *(COLORREF *)(base + meta.offset));
+            if (!(*(COLORREF *)(base + meta.offset) & 0xFF000000)) {
+                COLORREF c = *(COLORREF *)(base + meta.offset);
+                out.AppendFmt("%s = #%02x%02x%02x\r\n", meta.name, GetRValue(c), GetGValue(c), GetBValue(c));
+            }
             break;
         case Type_FileTime:
             out.AppendFmt("%s = ", meta.name);
@@ -515,9 +518,9 @@ static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, 
             break;
         case Type_Color:
             if ((line = section->FindLine(meta.name))) {
-                int color;
-                if (str::Parse(line->value, "#%6x", &color))
-                    *(COLORREF *)(base + meta.offset) = (COLORREF)color;
+                int r, g, b;
+                if (str::Parse(line->value, "#%2x%2x%2x", &r, &g, &b))
+                    *(COLORREF *)(base + meta.offset) = RGB(r, g, b);
             }
             break;
         case Type_FileTime:

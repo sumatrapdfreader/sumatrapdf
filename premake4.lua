@@ -108,14 +108,10 @@ solution "everything"
       "tools/serini_test/*",
       "tools/sertxt_test/*.h",
       "tools/sertxt_test/SettingsSumatra.cpp",
-      "src/utils/BaseUtil*",
-      "src/utils/FileUtil*",
-      "src/utils/StrUtil*",
-      "src/utils/IniParser*",
-    }
-    excludes
-    {
-      "src/utils/*_ut.cpp",
+      "src/utils/BaseUtil.*",
+      "src/utils/FileUtil.*",
+      "src/utils/StrUtil.*",
+      "src/utils/IniParser.*",
     }
     includedirs { "src/utils", "src/utils/msvc" }
     links { "Shlwapi" }

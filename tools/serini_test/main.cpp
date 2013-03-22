@@ -38,7 +38,7 @@ void *DeserializeRec(IniFile& p, StructMetadata *def, const char *sectionName=NU
             continue;
         }
         if (!section || !(line = section->FindLine(field.name))) {
-            printf("couldn't find line for %s (%s)\n", field.name, sectionName);
+            // printf("couldn't find line for %s (%s)\n", field.name, sectionName);
             continue;
         }
         switch (field.type) {
@@ -188,18 +188,14 @@ int main(int argc, char **argv)
     const WCHAR *path = L"..\\tools\\serini_test\\data.ini";
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
-    if (!data) {
-        printf("failed to read '%S'\n", path);
-        system("pause");
-        return 1;
-    }
+    CrashIf(!data); // failed to read file
+    if (!data)
+        return 2;
     bool usedDefault;
     Settings *s = DeserializeSettings((const uint8_t *)data.Get(), str::Len(data), &usedDefault);
-    if (!s) {
-        printf("failed to parse '%S'\n", path);
-        system("pause");
+    CrashIf(!s); // failed to parse file
+    if (!s) 
         return 1;
-    }
     CrashIf(usedDefault);
 
     int len;
@@ -208,6 +204,5 @@ int main(int argc, char **argv)
     CrashIf(!str::Eq(data, ser));
     FreeSettings(s);
 
-    system("pause");
     return 0;
 }
