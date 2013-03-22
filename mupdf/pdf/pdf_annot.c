@@ -227,6 +227,8 @@ pdf_file_spec_to_str(pdf_document *xref, pdf_obj *file_spec)
 
 	path = pdf_to_utf8(xref, obj);
 #ifdef _WIN32
+	if (!strcmp(pdf_to_name(pdf_dict_gets(file_spec, "FS")), "URL"))
+		return path;
 	/* move the file name into the expected place and use the expected path separator */
 	if (path[0] == '/' && ('A' <= toupper(path[1]) && toupper(path[1]) <= 'Z') && path[2] == '/')
 	{
@@ -281,6 +283,8 @@ pdf_parse_action(pdf_document *xref, pdf_obj *action)
 #endif
 		ld.ld.launch.embedded_num = pdf_to_num(obj);
 		ld.ld.launch.embedded_gen = pdf_to_gen(obj);
+		/* SumatraPDF: support URL /Filespec */
+		ld.ld.launch.is_url = !obj && !strcmp(pdf_to_name(pdf_dict_gets(dest, "FS")), "URL");
 	}
 	else if (!strcmp(pdf_to_name(obj), "Named"))
 	{
@@ -366,18 +370,19 @@ pdf_load_link(pdf_document *xref, pdf_obj *dict, const fz_matrix *page_ctm)
 	{
 		obj = pdf_dict_gets(pdf_array_get(obj, 0), "Instances");
 		dest = pdf_dict_gets(pdf_array_get(obj, 0), "Asset");
-#ifdef _WIN32
-		obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "DOS", "F");
-#else
-		obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "Unix", "F");
-#endif
-		if (obj)
+		if (dest)
 		{
 			ld.kind = FZ_LINK_LAUNCH;
 			ld.ld.launch.file_spec = pdf_file_spec_to_str(xref, dest);
 			ld.ld.launch.new_window = 1;
+#ifdef _WIN32
+			obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "DOS", "F");
+#else
+			obj = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "Unix", "F");
+#endif
 			ld.ld.launch.embedded_num = pdf_to_num(obj);
 			ld.ld.launch.embedded_gen = pdf_to_gen(obj);
+			ld.ld.launch.is_url = !obj && !strcmp(pdf_to_name(pdf_dict_gets(dest, "FS")), "URL");
 		}
 	}
 	if (ld.kind == FZ_LINK_NONE)

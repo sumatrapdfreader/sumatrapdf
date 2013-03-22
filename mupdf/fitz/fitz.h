@@ -2286,6 +2286,8 @@ struct fz_link_dest_s
 			int new_window;
 			/* SumatraPDF: support launching embedded files */
 			int embedded_num, embedded_gen;
+			/* SumatraPDF: support URL /Filespec */
+			int is_url;
 		}
 		launch;
 		struct
