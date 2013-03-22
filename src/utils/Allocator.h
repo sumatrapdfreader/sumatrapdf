@@ -22,6 +22,12 @@ public:
         return a->Alloc(size);
     }
 
+    template <typename T>
+    static T *Alloc(Allocator *a, size_t n=1) {
+        size_t size = n * sizeof(T);
+        return (T*)Allocator::AllocZero(a, size);
+    }
+
     static void *AllocZero(Allocator *a, size_t size) {
         void *m = Alloc(a, size);
         if (m)

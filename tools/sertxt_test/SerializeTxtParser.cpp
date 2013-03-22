@@ -1,20 +1,24 @@
 #include "BaseUtil.h"
 #include "SerializeTxtParser.h"
 
-namespace str {
+/*
+This is a parser for a tree-like text format:
 
-// returns number of characters skipped
-int Slice::SkipWsUntilNewline()
-{
-    char c;
-    char *start = curr;
-    while (!Finished()) {
-        c = *curr++;
-        if (!IsWs(c))
-            break;
-    }
-    return curr - start;
-}
+foo [
+  key: val
+  k2 [
+    val
+    another val
+  ]
+]
+
+This is not a very strict format. On purpose it doesn't try to break
+things into key/values, just to decode tree structure and *help* to interpret
+a given line either as a simple string or key/value pair. It's
+up to the caller to interpret the data.
+*/
+
+namespace str {
 
 inline bool IsWsOrNewline(char c)
 {
@@ -24,14 +28,30 @@ inline bool IsWsOrNewline(char c)
            ('\n' == c);
 }
 
+inline bool IsWsNoNewline(char c)
+{
+    return ( ' ' == c) ||
+           ('\r' == c) ||
+           ('\t' == c);
+}
+
+// returns number of characters skipped
+int Slice::SkipWsUntilNewline()
+{
+    char *start = curr;
+    for (; !Finished(); ++curr) {
+        if (!IsWsNoNewline(*curr))
+            break;
+    }
+    return curr - start;
+}
+
 // returns number of characters skipped
 int Slice::SkipNonWs()
 {
-    char c;
     char *start = curr;
-    while (!Finished()) {
-        c = *curr++;
-        if (IsWsOrNewline(c))
+    for (; !Finished(); ++curr) {
+        if (IsWsOrNewline(*curr))
             break;
     }
     return curr - start;
@@ -40,11 +60,9 @@ int Slice::SkipNonWs()
 // advances to a given character or end
 int Slice::SkipUntil(char toFind)
 {
-    char c;
     char *start = curr;
-    while (!Finished()) {
-        c = *curr++;
-        if (c == toFind)
+    for (; !Finished(); ++curr) {
+        if (*curr == toFind)
             break;
     }
     return curr - start;
@@ -94,81 +112,159 @@ enum Token {
 
 struct TokenVal {
     Token   type;
+
+    // TokenString, TokenKeyVal
     char *  lineStart;
+    char *  valStart;
+    char *  valEnd;
+
+    // TokenKeyVal
     char *  keyStart;
-    // TODO: more data for other tokens ?
+    char *  keyEnd;
 };
 
+// TODO: maybe also allow things like:
+// foo: [1 3 4]
+// i.e. a child on a single line
 static void ParseNextToken(TxtParser& parser, TokenVal& tok)
 {
-    int n;
+    ZeroMemory(&tok, sizeof(TokenVal));
     tok.type = TokenError;
-    str::Slice& slice = parser.s;
+
+    str::Slice& slice = parser.toParse;
     if (slice.Finished())
         return;
+
+    // "  foo:  bar  "
+    //  ^
 
     tok.lineStart = slice.curr;
 
     slice.SkipWsUntilNewline();
+    // "  foo:  bar  "
+    //    ^
+
     if (slice.Finished())
         return;
 
-    if ('[' == slice.CurrChar()) {
+    char c = slice.CurrChar();
+    if ('[' == c || ']' == c) {
+        tok.type = ('[' == c) ? TokenOpen : TokenClose;
         slice.ZeroCurr();
         slice.Skip(1);
-        tok.type = TokenOpen;
+        slice.SkipWsUntilNewline();
+        if (slice.CurrChar() == '\n') {
+            slice.ZeroCurr();
+            slice.Skip(1);
+        }
         return;
     }
 
-    if (']' == slice.CurrChar()) {
-        slice.ZeroCurr();
-        slice.Skip(1);
-        tok.type = TokenClose;
-        return;
-    }
-
-    // TODO: maybe also allow things like:
-    // foo: [1 3 4]
-    // i.e. a child on a single line
-
-    // TODO: must be a line
-    // TODO: handle:
-    // "foo ["
-    // on a single line
     tok.type = TokenString;
-    n = slice.SkipUntil('\n');
+    tok.valStart = slice.curr;
+    slice.SkipNonWs();
+    // "  foo:  bar  "
+    //        ^
+
+    bool isKeyVal = (slice.PrevChar() == ':');
+    if (isKeyVal) {
+        tok.keyStart = tok.valStart;
+        tok.keyEnd = slice.curr - 1;
+        CrashIf(*tok.keyEnd != ':');
+    }
+
+    slice.SkipWsUntilNewline();
+    // "  foo:  bar  "
+    //          ^
+
+    // this is "foo [", '[' will be returned in subsequent call
+    // it'll also be zero'ed, properly terminating this token's valStart
+    if ('[' == slice.CurrChar()) {
+        tok.valEnd = slice.curr;
+        // interpret "foo: [" as "foo ["
+        if (tok.keyEnd) {
+            *tok.keyEnd = 0;
+            tok.valEnd = tok.keyEnd;
+        }
+        tok.keyStart = NULL;
+        tok.keyEnd = NULL;
+        CrashIf(TokenString != tok.type);
+        return;
+    }
+
+    // "  foo:  bar  "
+    //          ^
+    if (isKeyVal) {
+        tok.type = TokenKeyVal;
+        tok.valStart = slice.curr;
+    } else {
+        CrashIf(tok.keyStart || tok.keyEnd);
+    }
+    slice.SkipUntil('\n');
+    // "  foo:  bar  "
+    //               ^
+
+    tok.valEnd = slice.curr;
     slice.ZeroCurr();
+    slice.Skip(1);
+}
+
+static TxtNode *TxtNodeFromToken(Allocator *allocator, TokenVal& tok)
+{
+    TxtNode *node = Allocator::Alloc<TxtNode>(allocator);
+    node->lineStart = tok.lineStart;
+    node->valStart = tok.valStart;
+    node->valEnd = tok.valEnd;
+    node->keyStart = tok.keyStart;
+    node->keyEnd = tok.keyEnd;
+    return node;
 }
 
 static TxtNode *ParseNextNode(TxtParser& parser)
 {
     TokenVal tok;
-    //TxtNode *firstNode = NULL;
-    //TxtNode *currNode = NULL;
+    TxtNode *firstNode = NULL;
+    TxtNode *currNode = NULL;
     for (;;) {
         ParseNextToken(parser, tok);
         if (TokenError == tok.type)
             return NULL;
+        if (TokenString == tok.type || TokenKeyVal == tok.type) {
+            TxtNode *tmp = TxtNodeFromToken(parser.allocator, tok);
+            if (firstNode == NULL) {
+                firstNode = tmp;
+                CrashIf(currNode);
+                currNode = tmp;
+            } else {
+                currNode->next = tmp;
+                currNode = tmp;
+            }
+        } else if (TokenOpen == tok.type) {
+            parser.bracketNesting += 1;
+            currNode->child = ParseNextNode(parser);
+            // propagate errors
+            if (!currNode->child)
+                return NULL;
+            if (0 == parser.bracketNesting && parser.toParse.Finished())
+                return firstNode;
+        } else {
+            CrashIf(TokenClose != tok.type);
+            if (0 == parser.bracketNesting) {
+                // bad input!
+                return NULL;
+            }
+            --parser.bracketNesting;
+            return firstNode;
+        }
     }
 }
 
-/*
-This is a parser for a tree-like text format:
-
-foo [
-  key: val
-  k2 [
-    another val
-    and another
-  ]
-]
-
-On purpose it doesn't try to always break things into key/values, just
-to decode tree structure.
-*/
 bool ParseTxt(TxtParser& parser)
 {
+    CrashIf(!parser.allocator);
     // TODO: first, normalize newlines and remove empty lines
     parser.firstNode = ParseNextNode(parser);
-    return false;
+    if (parser.firstNode == NULL)
+        return false;
+    return true;
 }

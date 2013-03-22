@@ -41,17 +41,20 @@ struct Slice {
 } // namespace str
 
 struct TxtNode {
-    const char *    lineStart;
-    const char *    keyStart;
+    char *      lineStart;
+    char *      valStart;
+    char *      valEnd;
+    char *      keyStart;
+    char *      keyEnd;
 
-    TxtNode *       next;
-    TxtNode *       child;
+    TxtNode *   next;
+    TxtNode *   child;
 };
 
 struct TxtParser {
     Allocator *     allocator;
     TxtNode *       firstNode;
-    str::Slice      s;
+    str::Slice      toParse;
     int             bracketNesting; // nesting level of '[', ']'
 
     TxtParser() {
