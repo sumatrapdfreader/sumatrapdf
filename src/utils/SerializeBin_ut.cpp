@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "Settings.h"
+#include "SerializeBin.h"
 
 // if set to 1, dumps on to the debugger code that can be copied
 // to util.py (test_gob()), to verify C and python generate
@@ -110,7 +110,7 @@ static void GobEncodingTest()
     assert(0 == dLen);
 }
 
-static void SettingsTest()
+static void SerializeBinTest()
 {
     GobEncodingTest();
 }

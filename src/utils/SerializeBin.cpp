@@ -2,11 +2,11 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "Settings.h"
+#include "SerializeBin.h"
 
 #include "BitManip.h"
 
-namespace settings {
+namespace serbin {
 
 #define MAGIC_ID 0x53657454  // 'SetT' for 'Settings'
 
@@ -378,7 +378,7 @@ uint8_t *Serialize(const uint8_t *data, const char *version, StructMetadata *def
     return NULL;
 }
 
-} // namespace Settings
+} // namespace serbin
 
 // Varint decoding/encoding is the same as the scheme used by GOB in Go.
 // For unsinged 64-bit integer

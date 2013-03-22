@@ -1,10 +1,10 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef Settings_h
-#define Settings_h
+#ifndef SerializeBin_h
+#define SerializeBin_h
 
-namespace settings {
+namespace serbin {
 
 struct FieldMetadata;
 
@@ -41,7 +41,7 @@ void        FreeStruct(uint8_t *data, StructMetadata *def);
 uint8_t*    Deserialize(const uint8_t *data, int dataSize, const char *version, StructMetadata *def);
 uint8_t *   Serialize(const uint8_t *data, const char *version, StructMetadata *def, int *sizeOut);
 
-} // namespace Settings
+} // namespace serbin
 
 int         GobVarintEncode(int64_t val, uint8_t *d, int dLen);
 int         GobUVarintEncode(uint64_t val, uint8_t *d, int dLen);
