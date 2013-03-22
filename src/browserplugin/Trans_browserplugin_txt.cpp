@@ -30,6 +30,16 @@ const WCHAR * const gTranslations[] = {
   L"م.ب",
   L"فتح الملف في SumatraPDF...",
 
+  /* Translations for language az */
+  L"%s/%s",
+  L"Xəta: SumatraPDF işə salına bilmədi!",
+  L"Xəta: SumatraPDF tapılmadı!",
+  L"Xəta: Sənədi endirmək mümkün olmadı!",
+  NULL,
+  NULL,
+  NULL,
+  L"Sənəd SumatraPDF-də açılır...",
+
   /* Translations for language eu */
   L"%s -> %s-tik",
   L"Akatsa: Ezinezkoa SumatraPDF abiaraztea!",
@@ -162,8 +172,8 @@ const WCHAR * const gTranslations[] = {
 };
 
 const char * const gLanguages[] = {
-    "en", "ar", "eu", "cn", "fr", "de", "hu", "it", "kr", "br",
-    "pt", "ro", "ru", "ta", "uk", NULL
+    "en", "ar", "az", "eu", "cn", "fr", "de", "hu", "it", "kr",
+    "br", "pt", "ro", "ru", "ta", "uk", NULL
 };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
@@ -184,19 +194,20 @@ int GetLanguageIndex(LANGID id)
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
     case _LANGID(LANG_ENGLISH): return 0;
     case _LANGID(LANG_ARABIC): return 8;
-    case _LANGID(LANG_BASQUE): return 16;
-    case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return 24;
-    case _LANGID(LANG_FRENCH): return 32;
-    case _LANGID(LANG_GERMAN): return 40;
-    case _LANGID(LANG_HUNGARIAN): return 48;
-    case _LANGID(LANG_ITALIAN): return 56;
-    case _LANGID(LANG_KOREAN): return 64;
-    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 72;
-    case _LANGID(LANG_PORTUGUESE): return 80;
-    case _LANGID(LANG_ROMANIAN): return 88;
-    case _LANGID(LANG_RUSSIAN): return 96;
-    case _LANGID(LANG_TAMIL): return 104;
-    case _LANGID(LANG_UKRAINIAN): return 112;
+    case _LANGID(LANG_AZERI): return 16;
+    case _LANGID(LANG_BASQUE): return 24;
+    case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return 32;
+    case _LANGID(LANG_FRENCH): return 40;
+    case _LANGID(LANG_GERMAN): return 48;
+    case _LANGID(LANG_HUNGARIAN): return 56;
+    case _LANGID(LANG_ITALIAN): return 64;
+    case _LANGID(LANG_KOREAN): return 72;
+    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 80;
+    case _LANGID(LANG_PORTUGUESE): return 88;
+    case _LANGID(LANG_ROMANIAN): return 96;
+    case _LANGID(LANG_RUSSIAN): return 104;
+    case _LANGID(LANG_TAMIL): return 112;
+    case _LANGID(LANG_UKRAINIAN): return 120;
     default: return -1;
 #undef _LANGID
     }

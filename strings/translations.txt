@@ -1,8 +1,9 @@
 AppTranslator: SumatraPDF
-81650c74ccbe4563375d7e5651c3e82908b341b1
+84cbc8529661378e533a7a293e70145e5c80b38c
 :%s of %s
 af:%s uit %s
 ar:%s من %s
+az:%s/%s
 br:%s de %s
 cn:%s of %s
 de:%s von %s
@@ -1302,7 +1303,7 @@ id:&Manual
 it:&Manuale in linea (in inglese)
 ja:マニュアル(&M)
 ka:&სახელმძღვანელო
-kr:설명서(&M)
+kr:온라인 설명서(&M)
 ku:فێرکاری&
 kw:&Kowethlyver
 lt:Naudotojo &vadovas
@@ -1759,6 +1760,7 @@ uz:&Ochish...\tCtrl+O
 vn:Mở tập tin...\tCtrl+O
 :&Options
 ar:&الخيارات
+az:&Seçimlər
 br:&Opções
 cn:&选项
 de:&Optionen
@@ -3640,6 +3642,7 @@ ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
 ru:Вы уверены, что хотите удалить SumatraPDF?
 ta:சுமத்ரா PDF நிறுவலை நீக்கவா?
 uk:Ви впевнені, що хочете видалити SumatraPDF?
+uz:SumatraPDF'ni o'chirishga ishonchingiz komilmi?
 vn:Bạn có chắc muốn gỡ bỏ SumatraPDF không?
 :Associate with PDF files?
 af:Assosieer Met PDF lêers?
@@ -5469,6 +5472,7 @@ uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
 :Couldn't create temporary directory
 ar:لم أتمكن من إنشاء مجلد مؤقت
+az:Müvəqqəti qovluq yaratmaq mümkün olmadı
 bn:অস্থায়ী ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
 br:Não foi possível criar pasta temporária
 cn:无法创建临时目录
@@ -5488,6 +5492,7 @@ uk:Не вдалося створити тимчасову папку
 vn:Không tạo được thư mục tạm
 :Couldn't create the installation directory
 ar:لم أتمكن من إنشاء مجلد البرنامج
+az:Quraşdırma qovluğunu yaratmaq mümkün olmadı
 bn:ইন্সটলএসন ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
 br:Não foi possível criar a pasta de instalação.
 cn:无法创建指定的安装目录
@@ -5585,6 +5590,7 @@ uk:Не вдалося встановити програму для попере
 vn:Không thể cài đặt phần hiển thị trước PDF
 :Couldn't install PDF search filter
 ar:لم أتمكن من تنصيب فلتر البحث لـPDF
+az:PDF axtarış filtrini quraşdırmaq mümkün olmadı
 bn:পিডিএফ খোঁজ ফিল্টার ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o filtro de pesquisa para PDF
 cn:无法安装PDF搜索过滤器
@@ -5602,6 +5608,7 @@ ta:PDF தேடலை நிறுவ இயலவில்லை
 uk:Не вдалося встановити фільтр пошуку для PDF
 :Couldn't install browser plugin
 ar:لم أتمكن من تنصيب ملحق المستعرض
+az:Brauzer plaginini quraşdırmaq mümkün olmadı
 bn:ব্রাউজার প্লাগ-ইন ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o plugin do navegador
 cn:无法安装浏览器插件
@@ -5620,6 +5627,7 @@ uk:Не вдалося встановити розширення для брау
 vn:Không cài được trình cắm vào trình duyệt
 :Couldn't obtain temporary directory
 ar:لم أتمكن من الحصول على المجلد المؤقت
+az:Müvəqqəti qovluğu təyin etmək mümkün olmadı
 br:Não foi possível obter a pasta temporária
 cn:无法得到暂存目录
 de:Konnte das temporäre Verzeichnis nicht finden
@@ -5636,6 +5644,7 @@ ta:தற்காலிக கோப்புறையை அடைய ம�
 uk:Не вдалося отримати розташування тимчасової папки
 :Couldn't remove installation directory
 ar:لم أتمكن من إزالة مجلد البرنامج
+az:Quraşdırma qovluğunu silmək mümkün olmadı
 br:Não foi possível remover a pasta de instalação
 cn:无法移除安装目录
 de:Konnte das Installationsverzeichnis nicht löschen
@@ -5652,6 +5661,7 @@ uk:Не вдалося видалити папку, де було встанов
 vn:Không thể gỡ bỏ thư mục cài đặt
 :Couldn't remove the shortcut
 ar:لم أتمكن من حذف رابط البرنامج
+az:Yarlığı silmək mümkün olmadı
 bn:শর্টকাট বাতিল করা সম্ভব হয়নি
 br:Não foi possível remover o atalho
 cn:无法移除快捷方式
@@ -5745,6 +5755,7 @@ ta:PDF முன்னோட்டத்தை நீக்க முடிய�
 uk:Не вдалося видалити програму для попереднього перегляду PDF
 :Couldn't uninstall PDF search filter
 ar:لم أتمكن من إزالة فلتر البحث لـPDF
+az:PDF axtarış filtrini silmək mümkün olmadı
 br:Não foi possível desinstalar o filtro de pesquisa para PDF
 cn:无法卸载PDF搜索过滤器
 de:Konnte den PDF Suchfilter nicht deinstallieren
@@ -5760,6 +5771,7 @@ ta:PDF தேடலை நீக்க முடியவில்லை
 uk:Не вдалося видалити фільтр пошуку для PDF
 :Couldn't uninstall browser plugin
 ar:لم أتمكن من إزالة ملحق المستعرض
+az:Brauzer plaginini silmək mümkün olmadı
 br:Não foi possível desinstalar o plugin do navegador
 cn:无法卸载浏览器插件
 de:Konnte das Browser-Plugin nicht deinstallieren
@@ -5775,6 +5787,7 @@ ta:உலாவி உள்இடுக்கைளை நீக்க மு�
 uk:Не вдалося видалити розширення для браузера
 :Couldn't write %s to disk
 ar:لم أتمكن من كتابة %s للقرص الصلب
+az:%s diskə yazıla bilmədi
 br:Não foi possível gravar %s no disco
 cn:无法将%s写进硬盘
 de:Konnte %s nicht kopieren
@@ -6749,6 +6762,7 @@ uz:%s yuklab olish xatosi
 vn:Không mở %s được
 :Error: Couldn't run SumatraPDF!
 ar:خطأ: لم أتمكن من تشغيل البرنامج
+az:Xəta: SumatraPDF işə salına bilmədi!
 br:Não foi possível rodar o SumatraPDF!
 cn:错误：无法运行SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
@@ -6765,6 +6779,7 @@ uk:Помилка: не вдалося запустити SumatraPDF
 vn:Lỗi: Không thể chạy SumatraPDF!
 :Error: SumatraPDF hasn't been found!
 ar:خطأ: البرنامج غير موجود
+az:Xəta: SumatraPDF tapılmadı!
 br:O SumatraPDF não foi encontrado!
 cn:失败: 找不到SumatraPDF
 de:Fehler: SumatraPDF ist unaufindbar!
@@ -6781,6 +6796,7 @@ uk:Помилка: SumatraPDF не було знайдено
 vn:Lỗi: Không tìm thấy SumatraPDF!
 :Error: The document couldn't be downloaded!
 ar:خطأ: لم أتمكن من تحميل الملف
+az:Xəta: Sənədi endirmək mümkün olmadı!
 br:Erro: o documento não pôde ser baixado!
 cn:错误： 文档无法下载!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
@@ -7043,6 +7059,7 @@ uz:Ikkita betdan
 vn:Trang kép
 :Failed to copy uninstaller to temp directory
 ar:فشل في نسخ مزيل البرنامج إلى المجلد المؤت
+az:Deinstalyatoru müvəqqəti qovluğa köçürmək mümkün olmadı
 br:Falha na cópia do desinstalador para a pasta temporária
 cn:无法将安装程序复制到暂存目录
 de:Konnte das Deinstallationsprogramm nicht kopieren
@@ -7058,6 +7075,7 @@ ta:நிறுவி நீக்கலை தற்காலிக கோப�
 uk:Не вдалося скопіювати деінсталятор у тимчасову папку
 :Failed to create a shortcut
 ar:فشل في إنشاء رابط اختصار للبرنامج
+az:Yarlık yaratmaq mümkün olmadı
 br:Falha na criação do atalho
 cn:无法创建快捷方式
 de:Konnte keine Verknüpfung erstellen
@@ -7073,6 +7091,7 @@ ta:சுருக்கு வழி அமைதல் தோல்வி
 uk:Не вдалося створити ярлик
 :Failed to delete uninstaller registry keys
 ar:فشل في حذف مزيل البرنامج من registry
+az:Deinstalyatorun reyestr açarlarını silmək mümkün olmadı
 br:Falha na remoção das entradas de registro do desinstalador
 cn:删除卸载程序的注册表项失败
 de:Konnte nicht alle Registry-Einträge löschen
@@ -8781,6 +8800,7 @@ uz:Betga o'tish
 vn:Nhảy đến trang
 :Hide &Options
 ar:إخفاء &الخيارات
+az:&Seçimləri gizlət
 br:Ocultar &Opções
 cn:隐藏选项菜单
 de:&Optionen
@@ -8983,6 +9003,7 @@ vn:Cài đặt trình cắm PDF trình duyệt vào Firefox, Chrome và Opera
 :Install SumatraPDF
 af:Installeer SumatraPDF
 ar:تنصيب SumatraPDF
+az:SumatraPDF-i quraşdır
 br:Instalar SumatraPDF
 cn:安装SumatraPDF
 de:Installieren
@@ -8998,6 +9019,7 @@ ta:சுமத்ராPDFஐ நிறுவு
 uk:Встановити SumatraPDF
 :Install SumatraPDF in &folder:
 ar:تنصيب SumatraPDF في المجلد:
+az:SumatraPDF-i bu qovluqda quraşdır:
 br:Instalar SumatraPDF na &pasta:
 cn:安装SumatraPDF到目录: &folder
 de:&Installationsverzeichnis:
@@ -9013,6 +9035,7 @@ ta:சுமத்ராPDFஐ &கோப்புறையில் நிற�
 uk:Встановити SumatraPDF у папку
 :Installation failed!
 ar:فشل في تنصيب البرنامج
+az:Quraşdırma baş tutmadı!
 br:Falha na instalação!
 cn:安装失败!
 de:Die Installation ist fehlgeschlagen!
@@ -9030,6 +9053,7 @@ uk:Встановлення не було успішним!
 vn:Cài đặt thất bại!
 :Installation in progress...
 ar:قيد تنصيب البرنامج ...
+az:Quraşdırma davam edir...
 br:Instalação em progresso...
 cn:安装正在进行中...
 de:Die Installation wird ausgeführt...
@@ -10477,6 +10501,7 @@ uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
 :Opening document in SumatraPDF...
 ar:فتح الملف في SumatraPDF...
+az:Sənəd SumatraPDF-də açılır...
 br:Abrindo documento no SumatraPDF...
 cn:正在用SumatraPDF打开文件...
 de:Das Dokument wird in SumatraPDF geöffnet...
@@ -12765,6 +12790,7 @@ uz:Ctrl va sichqonchaning chap tugmasini bosib tarkibini tanlang
 vn:Đánh dấu nội dung bằng Ctrl+phím chuột trái
 :Select the folder where SumatraPDF should be installed:
 ar:اختر مجلد تنصيب البرنامج:
+az:SumatraPDF-in quraşdırılacağı qovluğu seçin:
 br:Selecione a pasta onde o SumatraPDF deverá ser instalado:
 cn:将SumatraPDF安装到指定目录
 de:In welches Verzeichnis soll SumatraPDF installiert werden?
@@ -13311,6 +13337,7 @@ uz:Bitta bet
 vn:Trang đơn
 :Some files to be installed are damaged or missing
 ar:بعض ملفات التنصيب مفقودة أو معطوبة
+az:Bəzi quraşdırma faylları zədələnmişdir və ya yoxdur
 br:Alguns arquivos de instalação estão danificados ou ausentes
 cn:某些安装所需的文件损坏或丢失
 de:Einige Dateien konnten nicht korrekt installiert werden
@@ -13438,6 +13465,7 @@ uz:%s manba faylida sinxronlanish nuqtasi yo'q
 vn:Tập tin nguồn %s không có điểm đồng bộ
 :Start SumatraPDF
 ar:بدء SumatraPDF
+az:SumatraPDF-i başlat
 br:Iniciar SumatraPDF
 cn:启动SumatraPDF
 de:SumatraPDF starten
@@ -13513,6 +13541,7 @@ vn:Chủ đề:
 :SumatraPDF %s Installer
 af:SumatraPDF %s Installeerder
 ar:SumatraPDF %s منصب
+az:SumatraPDF %s quraşdırıcısı
 br:SumatraPDF %s instalador
 cn:SumatraPDF %s 安装程序
 de:SumatraPDF %s installieren
@@ -13528,6 +13557,7 @@ ta:சுமத்ராPDF %s நிறுவி
 uk:Інсталятор SumatraPDF %s
 :SumatraPDF %s Uninstaller
 ar:SumatraPDF %s مزيل التنصيب
+az:SumatraPDF %s deinstalyatoru
 br:SumatraPDF %s desinstalador
 cn:SumatraPDF %s 卸载程序
 de:SumatraPDF %s deinstallieren
@@ -13714,6 +13744,7 @@ uz:SumatraPDFda nosozlik ro'y berdi
 vn:SumatraPDF đã ngưng hoạt đọng
 :SumatraPDF has been uninstalled.
 ar:تمت إزالة SumatraPDF
+az:SumatraPDF silindi.
 br:SumatraPDF foi desinstalado.
 cn:成功卸载SumatraPDF.
 de:SumatraPDF wurde deinstalliert.
@@ -14139,6 +14170,7 @@ uz:Sarlavha:
 vn:Tựa đề
 :Uninstall SumatraPDF
 ar:إزالة SumatraPDF
+az:SumatraPDF-i sil
 br:Desinstalar SumatraPDF
 cn:卸载SumatraPDF
 de:Deinstallieren
@@ -14156,6 +14188,7 @@ uk:Видалити SumatraPDF
 vn:Gỡ bỏ SumatraPDF
 :Uninstallation failed
 ar:فشل إزالة البرنامج
+az:Deinstalyasiya baş tutmadı
 br:A desinstalação falhou
 cn:卸载失败
 de:Die Deinstallation ist fehlgeschlagen
@@ -14173,6 +14206,7 @@ uk:Видалення не було успішним
 vn:Không gỡ bỏ được
 :Uninstallation in progress...
 ar:إزالة البرنامج قيد العمل...
+az:Deinstalyasiya davam edir...
 br:Desinstalação em progresso...
 cn:卸载正在进行中...
 de:Die Deinstallation wird ausgeführt...
@@ -14249,6 +14283,7 @@ uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Use SumatraPDF as the &default PDF reader
 ar:تعيين SumatraPDF البرنامج الافتراضي لفتح ملفات PDF
+az:SumatraPDF &standart PDF oxuyucusu kimi istifadə olunsun
 br:Usar o SumatraPDF como o leitor PDF pa&drão
 cn:将SumatraPDF设为&缺省PDF阅读器
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
