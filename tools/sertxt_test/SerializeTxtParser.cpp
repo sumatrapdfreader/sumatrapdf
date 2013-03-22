@@ -2,6 +2,12 @@
 #include "SerializeTxtParser.h"
 
 /*
+TODO:
+ - comments (; and/or #)
+ - allow "foo = bar" in addition to "foo: bar"
+*/
+
+/*
 This is a parser for a tree-like text format:
 
 foo [
@@ -267,4 +273,59 @@ bool ParseTxt(TxtParser& parser)
     if (parser.firstNode == NULL)
         return false;
     return true;
+}
+
+static void TrimWsEnd(char *s, char *&e)
+{
+    while (e > s) {
+        --e;
+        if (!str::IsWs(*e)) {
+            ++e;
+            return;
+        }
+    }
+}
+
+static void AppendNest(str::Str<char>& s, int nest)
+{
+    while (nest > 0) {
+        s.Append("  ");
+        --nest;
+    }
+}
+
+static void AppendWsTrimEnd(str::Str<char>& res, char *s, char *e)
+{
+    TrimWsEnd(s, e);
+    res.Append(s, e - s);
+}
+
+static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
+{
+    while (curr) {
+        if (curr->child) {
+            AppendNest(res, nest);
+            AppendWsTrimEnd(res, curr->valStart, curr->valEnd);
+            res.Append(" [\n");
+            PrettyPrintNode(curr->child, nest + 1, res);
+            AppendNest(res, nest);
+            res.Append("]\n");
+        } else {
+            AppendNest(res, nest);
+            if (curr->keyStart) {
+                AppendWsTrimEnd(res, curr->keyStart, curr->keyEnd);
+                res.Append(" = ");
+            }
+            AppendWsTrimEnd(res, curr->valStart, curr->valEnd);
+            res.Append("\n");
+        }
+        curr = curr->next;
+    }
+}
+
+char *PrettyPrintTxt(TxtParser& parser)
+{
+    str::Str<char> res;
+    PrettyPrintNode(parser.firstNode, 0, res);
+    return res.StealData();
 }

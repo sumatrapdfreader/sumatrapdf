@@ -68,5 +68,6 @@ struct TxtParser {
 };
 
 bool ParseTxt(TxtParser& parser);
+char *PrettyPrintTxt(TxtParser& parser);
 
 #endif

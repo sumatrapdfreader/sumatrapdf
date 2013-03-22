@@ -551,6 +551,46 @@ size_t NormalizeWS(WCHAR *str)
     return src - dst;
 }
 
+static bool isNl(char c)
+{
+    return '\r' == c || '\n' == c;
+}
+
+// replaces '\r\n' and 'r\' with just '\n' and removes empty lines
+size_t NormalizeNewlinesInPlace(char *s, char *e)
+{
+    char *start = s;
+    char *dst = s;
+    // remove newlines at the beginning
+    while (s < e && isNl(*s)) {
+        ++s;
+    }
+
+    bool inNewline = false;
+    while (s < e) {
+        if (isNl(*s)) {
+            if (!inNewline)
+                *dst++ = '\n';
+            inNewline = true;
+            ++s;
+        } else {
+            *dst++ = *s++;
+            inNewline = false;
+        }
+    }
+    // remove newlines from the end
+    while (dst > start && dst[-1] == '\n') {
+        --dst;
+        *dst = 0;
+    }
+    return dst - start;
+}
+
+size_t NormalizeNewlinesInPlace(char *s)
+{
+    return NormalizeNewlinesInPlace(s, s + str::Len(s));
+}
+
 // Remove all characters in "toRemove" from "str", in place.
 // Returns number of removed characters.
 size_t RemoveChars(char *str, const char *toRemove)
@@ -613,7 +653,7 @@ size_t BufSet(WCHAR *dst, size_t dstCchSize, const WCHAR *src)
 }
 
 // append as much of s at the end of dst (which must be properly null-terminated)
-// as will fit. 
+// as will fit.
 size_t BufAppend(char *dst, size_t dstCchSize, const char *s)
 {
     CrashAlwaysIf(0 == dstCchSize);
@@ -1161,7 +1201,7 @@ static inline const char *StrEqWeird(const char *s, const WCHAR *toFind)
 
 // conceptually strings is an array of 0-terminated strings where,  laid
 // out sequentially in memory, terminated with a 0-length string
-// Returns index of toFind string in strings 
+// Returns index of toFind string in strings
 // Returns -1 if string doesn't exist
 int StrToIdx(const char *strings, const char *toFind)
 {

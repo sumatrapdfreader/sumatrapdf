@@ -3,50 +3,86 @@
 #include "SerializeTxtParser.h"
 #include "SettingsSumatra.h"
 
-static void testFile()
+static void testParseSumatraSettings()
 {
     size_t fileSize;
     TxtParser parser;
-
-    char *p1 = path::JoinUtf("..", "tools", NULL);
-    char *p2 = path::JoinUtf(p1, "sertxt_test", NULL);
-    char *p3 = path::JoinUtf(p2, "data.txt", NULL);
-    char *s = file::ReadAllUtf(p3, &fileSize);
+    
+    const char *path = "..\\tools\\sertxt_test\\data.txt";
+    char *s = file::ReadAllUtf(path, &fileSize);
     if (!s) {
-        printf("failed to load '%s'", p3);
-        goto Exit;
+        printf("failed to load '%s'", path);
+        return;
     }
 
     parser.toParse.Init(s, fileSize);
     bool ok = ParseTxt(parser);
     if (!ok)
         printf("%s", "failed to parse");
-Exit:
-    free(p3);
-    free(p2);
-    free(p1);
 }
 
-const char *gTests[] = {
-    "les:\n[\n foo: bar\n [\n val \n] go\n]",
-    "foo [\n  bar\n]",
-    NULL
-};
-
-static void testString(const char *s)
+static bool testString(const char *s, char *expected)
 {
     TxtParser parser;
+
+    size_t n = str::NormalizeNewlinesInPlace(expected);
+    expected[n] = '\n';
+    expected[n+1] = 0;
+
     char *sCopy = str::Dup(s);
     parser.toParse.Init(sCopy, str::Len(sCopy));
     bool ok = ParseTxt(parser);
-    CrashIf(!ok);
+    if (!ok) {
+        printf("Failed to parse:'\n%s'\n", s);
+        return false;
+    }
+    const char *res = PrettyPrintTxt(parser);
+    ok = str::Eq(res, expected);
+    if (!ok) {
+        printf("'%s'\npretty printed as\n'%s'\nand we expected\n'%s'\n", s, res, expected);
+    }
+    free((void*)res);
     free(sCopy);
+    return ok;
+}
+
+static void testFromFile()
+{
+    size_t fileSize;
+    const char *path = "..\\tools\\sertxt_test\\tests.txt";
+    char *s = file::ReadAllUtf(path, &fileSize);
+    if (!s) {
+        printf("failed to load '%s'", path);
+        return;
+    }
+    Vec<char*> tests;
+    for (;;) {
+        tests.Append(s);
+        s = (char*)str::Find(s, "---");
+        if (NULL == s)
+            break;
+        *s = 0;
+        s = s + 3; // skip "---"
+        for (char c = *s; c = *s; s++) {
+            if (!(c == '\r' || c == '\n'))
+                break;
+        }
+    }
+    int n = tests.Count();
+    if (n % 2 != 0) {
+        printf("Number of tests cases must be even and is %d\n", (int)tests.Count());
+        return;
+    }
+    n = n / 2;
+    for (int i=0; i < n; i++) {
+        bool ok = testString(tests.At(i*2), tests.At(i*2+1));
+        if (!ok)
+            return;
+    }
 }
 
 int main(int argc, char **argv)
 {
-    for (int i=0; gTests[i]; i++) {
-        testString(gTests[i]);
-    }
-    testFile();
+    //testFromFile();
+    testParseSumatraSettings();
 }

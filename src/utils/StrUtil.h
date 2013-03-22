@@ -102,6 +102,8 @@ char *  Replace(const char *s, const char *toReplace, const char *replaceWith);
 WCHAR * Replace(const WCHAR *s, const WCHAR *toReplace, const WCHAR *replaceWith);
 
 size_t  NormalizeWS(WCHAR *str);
+size_t  NormalizeNewlinesInPlace(char *s, char *e);
+size_t  NormalizeNewlinesInPlace(char *s);
 size_t  RemoveChars(char *str, const char *toRemove);
 size_t  RemoveChars(WCHAR *str, const WCHAR *toRemove);
 

@@ -88,6 +88,7 @@ solution "everything"
     files {
       "tools/sertxt_test/*.h",
       "tools/sertxt_test/*.cpp",
+      "tools/sertxt_test/*.txt",
       "src/utils/BaseUtil*",
       "src/utils/BitManip.h",
       "src/utils/Dict*",
