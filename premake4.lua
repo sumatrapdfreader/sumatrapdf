@@ -100,3 +100,22 @@ solution "everything"
     }
     includedirs { "src/utils" }
     links { "Shlwapi" }
+
+  project "serini_test"
+    kind "ConsoleApp"
+    language "C++"
+    files {
+      "tools/serini_test/*",
+      "tools/sertxt_test/*.h",
+      "tools/sertxt_test/SettingsSumatra.cpp",
+      "src/utils/BaseUtil*",
+      "src/utils/FileUtil*",
+      "src/utils/StrUtil*",
+      "src/utils/IniParser*",
+    }
+    excludes
+    {
+      "src/utils/*_ut.cpp",
+    }
+    includedirs { "src/utils", "src/utils/msvc" }
+    links { "Shlwapi" }
