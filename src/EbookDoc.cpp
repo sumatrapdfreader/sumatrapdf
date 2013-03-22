@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include "EbookDoc.h"
 
-#include "ByteReader.h"
 #include "FileUtil.h"
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"

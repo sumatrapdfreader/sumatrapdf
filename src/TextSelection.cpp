@@ -90,16 +90,28 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
     int textLen;
     RectI *coords;
     const WCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
+    PointD pt = PointD(x, y);
+
     unsigned int maxDist = UINT_MAX;
+    PointI pti = pt.Convert<int>();
+    bool overGlyph = false;
     int result = -1;
 
     for (int i = 0; i < textLen; i++) {
         if (!coords[i].x && !coords[i].dx)
             continue;
+        if (overGlyph && !coords[i].Contains(pti))
+            continue;
 
         unsigned int dist = distSq((int)x - coords[i].x - coords[i].dx / 2,
                                    (int)y - coords[i].y - coords[i].dy / 2);
         if (dist < maxDist) {
+            result = i;
+            maxDist = dist;
+        }
+        // prefer glyphs the cursor is actually over
+        if (!overGlyph && coords[i].Contains(pti)) {
+            overGlyph = true;
             result = i;
             maxDist = dist;
         }
@@ -111,7 +123,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
 
     // the result indexes the first glyph to be selected in a forward selection
     RectD bbox = engine->Transform(coords[result].Convert<double>(), pageNo, 1.0, 0);
-    PointD pt = engine->Transform(PointD(x, y), pageNo, 1.0, 0);
+    pt = engine->Transform(pt, pageNo, 1.0, 0);
     if (pt.x > bbox.x + 0.5 * bbox.dx) {
         result++;
         // for some (DjVu) documents, all glyphs of a word share the same bbox

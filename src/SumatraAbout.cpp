@@ -782,8 +782,6 @@ static RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
 
 static bool LoadThumbnail(DisplayState& ds)
 {
-    if (ds.thumbnail)
-        delete ds.thumbnail;
     ds.thumbnail = NULL;
 
     ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
@@ -805,10 +803,8 @@ bool HasThumbnail(DisplayState& ds)
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
     FILETIME fileTime = file::GetModificationTime(ds.filePath);
     // delete the thumbnail if the file is newer than the thumbnail
-    if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
-        delete ds.thumbnail;
+    if (FileTimeDiffInSecs(fileTime, bmpTime) > 0)
         ds.thumbnail = NULL;
-    }
 
     return ds.thumbnail != NULL;
 }
@@ -837,6 +833,5 @@ void RemoveThumbnail(DisplayState& ds)
     ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (bmpPath)
         file::Delete(bmpPath);
-    delete ds.thumbnail;
     ds.thumbnail = NULL;
 }

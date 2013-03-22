@@ -121,7 +121,6 @@ public:
         }
         // also delete the thumbnail and move the link towards the
         // back in the Frequently Read list
-        delete state->thumbnail;
         state->thumbnail = NULL;
         state->openCount >>= 2;
         state->isMissing = hide;
