@@ -394,8 +394,9 @@ def gen_struct_fields_txt(stru):
     max_type_len = 0
     max_name_len = 0
     for field in stru.values:
+        field_name = name2name(field.name)
         max_type_len = max(max_type_len, len(field.typ.get_typ_enum()))
-        max_name_len = max(max_name_len, len(field.name))
+        max_name_len = max(max_name_len, len(field_name))
     max_type_len += 1
     max_name_len += 2
 
@@ -406,7 +407,7 @@ def gen_struct_fields_txt(stru):
         typ_enum = field.typ.get_typ_enum() + ","
         typ_enum = typ_fmt % typ_enum
         field_name = field.name
-        name_in_quotes = '"' + field_name + '"'
+        name_in_quotes = '"' +  name2name(field_name) + '"'
         field_name_c = name_fmt % name_in_quotes
         offset = "offsetof(%(struct_name)s, %(field_name)s)" % locals()
         if field.is_struct():
@@ -463,6 +464,61 @@ def gen_top_level_funcs_txt(vals):
     name = top_level.name()
     return top_level_funcs_txt_tmpl % locals()
 
+# fooBar => foo_bar
+def name2name(s):
+    if s == None:
+        return None
+    res = ""
+    n_upper = 0
+    for c in s:
+        if c.isupper():
+            if n_upper == 0:
+                res += "_"
+            n_upper += 1
+            res += c.lower()
+        else:
+            if n_upper > 1:
+                res += "_"
+            res += c
+            n_upper = 0
+    return res
+
+# TODO: support compact serialization of some structs e.g.
+"""
+  window_pos [
+    x: 0
+    y: 0
+    dx: 0
+    dy: 0
+  ]
+=>
+  window_pos: 0 0 0 0
+"""
+# would need additional info in the data model
+def gen_data_txt_rec(root_val, name, lines, indent):
+    assert isinstance(root_val, Struct)
+    if indent >= 0:
+        prefix = " " * (indent*2)
+    if name != None:
+        name = name2name(name)
+        lines += ["%s%s [" % (prefix, name)]
+    for val in root_val.values:
+        var_name = val.name
+        var_name = name2name(var_name)
+        if not val.is_struct():
+            s = val.serialized_as_text()
+            # omit serializing empty strings
+            if s != None:
+                lines += ["%s%s: %s" % (prefix + "  ", var_name, s)]
+        else:
+            if val.val.offset == 0:
+                if False:
+                    lines += ["%s%s: null" % (prefix + "  ", var_name)] # TODO: just omit the values?
+            else:
+                gen_data_txt_rec(val.val, var_name, lines, indent + 1)
+    if name != None:
+        lines += ["%s]" % prefix]
+
 # TODO: convert setting names from fooBar => foo_bar, for better editability
 def gen_txt():
     dst_dir = settings_src_dir()
@@ -476,6 +532,11 @@ def gen_txt():
     values_global_data = ""
     top_level_funcs = gen_top_level_funcs_txt(vals)
     write_to_file(os.path.join(dst_dir, "SettingsSumatra.cpp"), cpp_txt_tmpl % locals())
+
+    lines = []
+    gen_data_txt_rec(vals[-1], None, lines, -1)
+    s = "\n".join(lines)
+    write_to_file(os.path.join(dst_dir, "data.txt"), s)
 
 def main():
     gen_txt()

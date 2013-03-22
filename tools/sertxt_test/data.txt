@@ -1,0 +1,50 @@
+basic [
+  global_prefs_only: false
+  toolbar_visible: true
+  pdf_associate_dont_ask: false
+  pdf_associate_do_it: false
+  check_for_updates: true
+  remember_mru_files: true
+  use_system_color_scheme: false
+  default_display_mode: 0
+  default_zoom: -1
+  window_state: 1
+  window_pos [
+    x: 0
+    y: 0
+    dx: 0
+    dy: 0
+  ]
+  toc_visible: true
+  fav_visible: false
+  sidebar_dx: 0
+  toc_dy: 0
+  show_start_page: true
+  open_count_week: 0
+  last_pref_update: 0
+]
+advanced [
+  traditional_ebook_ui: true
+  esc_to_exit: false
+  text_color: #0
+  page_color: #ffffff
+  main_window_background: #fff200
+  page_padding [
+    top: 2
+    bottom: 2
+    left: 4
+    right: 4
+    space_x: 4
+    space_y: 4
+  ]
+  forward_search [
+    highlight_offset: 0
+    highlight_width: 15
+    highlight_permanent: 0
+    highlight_color: #6581ff
+    enable_tex_enhancements: false
+  ]
+  s: Hello
+  default_zoom: -1
+  ws: A wide string
+]

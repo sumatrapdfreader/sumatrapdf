@@ -77,7 +77,7 @@ class U64(Type):
 
 # behaves like uint32_t, using unique name to signal intent
 class Color(U32):
-    pass
+    type_enum = "TYPE_COLOR"
 
 class String(Type):
     c_type_class = "const char *"
@@ -140,6 +140,12 @@ class Field(object):
     def is_unsigned(self):
         return type(self.typ) in (Bool, U16, U32, U64, Color)
 
+    def is_bool(self):
+        return type(self.typ) == Bool
+
+    def is_color(self):
+        return type(self.typ) == Color
+
     def is_string(self):
         return type(self.typ) in (String, WString)
 
@@ -166,6 +172,20 @@ class Field(object):
         if self._serialized == None:
             self._serialized = self._serialize()
         return self._serialized
+
+    def serialized_as_text(self):
+        if self.is_bool():
+            if self.val:
+                return "true"
+            else:
+                return "false"
+        if self.is_color():
+            return "#" + hex(self.val)[2:]
+        if self.is_signed() or self.is_unsigned() or self.is_float():
+            return str(self.val)
+        if self.is_string():
+            return self.val
+        assert False, "don't know how to serialize %s" % str(self.typ)
 
 # struct is just a base class
 # subclasses should have class instance fields which is a list of tuples:
@@ -247,7 +267,7 @@ class ForwardSearch(Struct):
         ("highlightWidth", I32(15)),
         ("highlightPermanent", I32(0)),
         ("highlightColor", Color(0x6581FF)),
-        ("enableTeXEnhancements", Bool(False)),
+        ("enableTexEnhancements", Bool(False)),
 ]
 
 class RectInt(Struct):
@@ -266,7 +286,7 @@ class BasicSettings(Struct):
         ("pdfAssociateDontAsk", Bool(False)),
         ("pdfAssociateDoIt", Bool(False)),
         ("checkForUpdates", Bool(True)),
-        ("rememberMRUFiles", Bool(True)),
+        ("rememberMruFiles", Bool(True)),
         # TODO: useSystemColorScheme obsolete by textColor/pageColor ?
         ("useSystemColorScheme", Bool(False)),
         ("inverseSearchCmdLine", String(None)),

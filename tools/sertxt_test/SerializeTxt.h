@@ -22,6 +22,7 @@ typedef enum : uint16_t {
     TYPE_U32,
     TYPE_U64,
     TYPE_FLOAT,
+    TYPE_COLOR,
     TYPE_STR,
     TYPE_WSTR,
     TYPE_STRUCT_PTR,

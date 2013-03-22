@@ -9,7 +9,7 @@ struct ForwardSearch {
     int32_t     highlightWidth;
     int32_t     highlightPermanent;
     uint32_t    highlightColor;
-    bool        enableTeXEnhancements;
+    bool        enableTexEnhancements;
 };
 
 struct PaddingSettings {
@@ -48,7 +48,7 @@ struct BasicSettings {
     bool            pdfAssociateDontAsk;
     bool            pdfAssociateDoIt;
     bool            checkForUpdates;
-    bool            rememberMRUFiles;
+    bool            rememberMruFiles;
     bool            useSystemColorScheme;
     const char *    inverseSearchCmdLine;
     const char *    versionToSkip;

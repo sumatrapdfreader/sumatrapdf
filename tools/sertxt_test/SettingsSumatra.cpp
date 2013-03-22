@@ -8,22 +8,22 @@
 using namespace sertxt;
 
 FieldMetadata gForwardSearchFieldMetadata[] = {
-    { "highlightOffset"      , TYPE_I32,  offsetof(ForwardSearch, highlightOffset), NULL },
-    { "highlightWidth"       , TYPE_I32,  offsetof(ForwardSearch, highlightWidth), NULL },
-    { "highlightPermanent"   , TYPE_I32,  offsetof(ForwardSearch, highlightPermanent), NULL },
-    { "highlightColor"       , TYPE_U32,  offsetof(ForwardSearch, highlightColor), NULL },
-    { "enableTeXEnhancements", TYPE_BOOL, offsetof(ForwardSearch, enableTeXEnhancements), NULL },
+    { "highlight_offset"       , TYPE_I32,   offsetof(ForwardSearch, highlightOffset), NULL },
+    { "highlight_width"        , TYPE_I32,   offsetof(ForwardSearch, highlightWidth), NULL },
+    { "highlight_permanent"    , TYPE_I32,   offsetof(ForwardSearch, highlightPermanent), NULL },
+    { "highlight_color"        , TYPE_COLOR, offsetof(ForwardSearch, highlightColor), NULL },
+    { "enable_tex_enhancements", TYPE_BOOL,  offsetof(ForwardSearch, enableTexEnhancements), NULL },
 };
 
 StructMetadata gForwardSearchMetadata = { sizeof(ForwardSearch), 5, &gForwardSearchFieldMetadata[0] };
 
 FieldMetadata gPaddingSettingsFieldMetadata[] = {
-    { "top"   , TYPE_U16, offsetof(PaddingSettings, top), NULL },
-    { "bottom", TYPE_U16, offsetof(PaddingSettings, bottom), NULL },
-    { "left"  , TYPE_U16, offsetof(PaddingSettings, left), NULL },
-    { "right" , TYPE_U16, offsetof(PaddingSettings, right), NULL },
-    { "spaceX", TYPE_U16, offsetof(PaddingSettings, spaceX), NULL },
-    { "spaceY", TYPE_U16, offsetof(PaddingSettings, spaceY), NULL },
+    { "top"    , TYPE_U16, offsetof(PaddingSettings, top), NULL },
+    { "bottom" , TYPE_U16, offsetof(PaddingSettings, bottom), NULL },
+    { "left"   , TYPE_U16, offsetof(PaddingSettings, left), NULL },
+    { "right"  , TYPE_U16, offsetof(PaddingSettings, right), NULL },
+    { "space_x", TYPE_U16, offsetof(PaddingSettings, spaceX), NULL },
+    { "space_y", TYPE_U16, offsetof(PaddingSettings, spaceY), NULL },
 };
 
 StructMetadata gPaddingSettingsMetadata = { sizeof(PaddingSettings), 6, &gPaddingSettingsFieldMetadata[0] };
@@ -38,43 +38,43 @@ FieldMetadata gRectIntFieldMetadata[] = {
 StructMetadata gRectIntMetadata = { sizeof(RectInt), 4, &gRectIntFieldMetadata[0] };
 
 FieldMetadata gAdvancedSettingsFieldMetadata[] = {
-    { "traditionalEbookUI"  , TYPE_BOOL,       offsetof(AdvancedSettings, traditionalEbookUI), NULL },
-    { "escToExit"           , TYPE_BOOL,       offsetof(AdvancedSettings, escToExit), NULL },
-    { "textColor"           , TYPE_U32,        offsetof(AdvancedSettings, textColor), NULL },
-    { "pageColor"           , TYPE_U32,        offsetof(AdvancedSettings, pageColor), NULL },
-    { "mainWindowBackground", TYPE_U32,        offsetof(AdvancedSettings, mainWindowBackground), NULL },
-    { "pagePadding"         , TYPE_STRUCT_PTR, offsetof(AdvancedSettings, pagePadding), &gPaddingSettingsMetadata },
-    { "forwardSearch"       , TYPE_STRUCT_PTR, offsetof(AdvancedSettings, forwardSearch), &gForwardSearchMetadata },
-    { "s"                   , TYPE_STR,        offsetof(AdvancedSettings, s), NULL },
-    { "defaultZoom"         , TYPE_FLOAT,      offsetof(AdvancedSettings, defaultZoom), NULL },
-    { "ws"                  , TYPE_WSTR,       offsetof(AdvancedSettings, ws), NULL },
+    { "traditional_ebook_ui"  , TYPE_BOOL,       offsetof(AdvancedSettings, traditionalEbookUI), NULL },
+    { "esc_to_exit"           , TYPE_BOOL,       offsetof(AdvancedSettings, escToExit), NULL },
+    { "text_color"            , TYPE_COLOR,      offsetof(AdvancedSettings, textColor), NULL },
+    { "page_color"            , TYPE_COLOR,      offsetof(AdvancedSettings, pageColor), NULL },
+    { "main_window_background", TYPE_COLOR,      offsetof(AdvancedSettings, mainWindowBackground), NULL },
+    { "page_padding"          , TYPE_STRUCT_PTR, offsetof(AdvancedSettings, pagePadding), &gPaddingSettingsMetadata },
+    { "forward_search"        , TYPE_STRUCT_PTR, offsetof(AdvancedSettings, forwardSearch), &gForwardSearchMetadata },
+    { "s"                     , TYPE_STR,        offsetof(AdvancedSettings, s), NULL },
+    { "default_zoom"          , TYPE_FLOAT,      offsetof(AdvancedSettings, defaultZoom), NULL },
+    { "ws"                    , TYPE_WSTR,       offsetof(AdvancedSettings, ws), NULL },
 };
 
 StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 10, &gAdvancedSettingsFieldMetadata[0] };
 
 FieldMetadata gBasicSettingsFieldMetadata[] = {
-    { "globalPrefsOnly"     , TYPE_BOOL,       offsetof(BasicSettings, globalPrefsOnly), NULL },
-    { "currLanguage"        , TYPE_STR,        offsetof(BasicSettings, currLanguage), NULL },
-    { "toolbarVisible"      , TYPE_BOOL,       offsetof(BasicSettings, toolbarVisible), NULL },
-    { "pdfAssociateDontAsk" , TYPE_BOOL,       offsetof(BasicSettings, pdfAssociateDontAsk), NULL },
-    { "pdfAssociateDoIt"    , TYPE_BOOL,       offsetof(BasicSettings, pdfAssociateDoIt), NULL },
-    { "checkForUpdates"     , TYPE_BOOL,       offsetof(BasicSettings, checkForUpdates), NULL },
-    { "rememberMRUFiles"    , TYPE_BOOL,       offsetof(BasicSettings, rememberMRUFiles), NULL },
-    { "useSystemColorScheme", TYPE_BOOL,       offsetof(BasicSettings, useSystemColorScheme), NULL },
-    { "inverseSearchCmdLine", TYPE_STR,        offsetof(BasicSettings, inverseSearchCmdLine), NULL },
-    { "versionToSkip"       , TYPE_STR,        offsetof(BasicSettings, versionToSkip), NULL },
-    { "lastUpdateTime"      , TYPE_STR,        offsetof(BasicSettings, lastUpdateTime), NULL },
-    { "defaultDisplayMode"  , TYPE_U16,        offsetof(BasicSettings, defaultDisplayMode), NULL },
-    { "defaultZoom"         , TYPE_FLOAT,      offsetof(BasicSettings, defaultZoom), NULL },
-    { "windowState"         , TYPE_I32,        offsetof(BasicSettings, windowState), NULL },
-    { "windowPos"           , TYPE_STRUCT_PTR, offsetof(BasicSettings, windowPos), &gRectIntMetadata },
-    { "tocVisible"          , TYPE_BOOL,       offsetof(BasicSettings, tocVisible), NULL },
-    { "favVisible"          , TYPE_BOOL,       offsetof(BasicSettings, favVisible), NULL },
-    { "sidebarDx"           , TYPE_I32,        offsetof(BasicSettings, sidebarDx), NULL },
-    { "tocDy"               , TYPE_I32,        offsetof(BasicSettings, tocDy), NULL },
-    { "showStartPage"       , TYPE_BOOL,       offsetof(BasicSettings, showStartPage), NULL },
-    { "openCountWeek"       , TYPE_I32,        offsetof(BasicSettings, openCountWeek), NULL },
-    { "lastPrefUpdate"      , TYPE_U64,        offsetof(BasicSettings, lastPrefUpdate), NULL },
+    { "global_prefs_only"      , TYPE_BOOL,       offsetof(BasicSettings, globalPrefsOnly), NULL },
+    { "curr_language"          , TYPE_STR,        offsetof(BasicSettings, currLanguage), NULL },
+    { "toolbar_visible"        , TYPE_BOOL,       offsetof(BasicSettings, toolbarVisible), NULL },
+    { "pdf_associate_dont_ask" , TYPE_BOOL,       offsetof(BasicSettings, pdfAssociateDontAsk), NULL },
+    { "pdf_associate_do_it"    , TYPE_BOOL,       offsetof(BasicSettings, pdfAssociateDoIt), NULL },
+    { "check_for_updates"      , TYPE_BOOL,       offsetof(BasicSettings, checkForUpdates), NULL },
+    { "remember_mru_files"     , TYPE_BOOL,       offsetof(BasicSettings, rememberMruFiles), NULL },
+    { "use_system_color_scheme", TYPE_BOOL,       offsetof(BasicSettings, useSystemColorScheme), NULL },
+    { "inverse_search_cmd_line", TYPE_STR,        offsetof(BasicSettings, inverseSearchCmdLine), NULL },
+    { "version_to_skip"        , TYPE_STR,        offsetof(BasicSettings, versionToSkip), NULL },
+    { "last_update_time"       , TYPE_STR,        offsetof(BasicSettings, lastUpdateTime), NULL },
+    { "default_display_mode"   , TYPE_U16,        offsetof(BasicSettings, defaultDisplayMode), NULL },
+    { "default_zoom"           , TYPE_FLOAT,      offsetof(BasicSettings, defaultZoom), NULL },
+    { "window_state"           , TYPE_I32,        offsetof(BasicSettings, windowState), NULL },
+    { "window_pos"             , TYPE_STRUCT_PTR, offsetof(BasicSettings, windowPos), &gRectIntMetadata },
+    { "toc_visible"            , TYPE_BOOL,       offsetof(BasicSettings, tocVisible), NULL },
+    { "fav_visible"            , TYPE_BOOL,       offsetof(BasicSettings, favVisible), NULL },
+    { "sidebar_dx"             , TYPE_I32,        offsetof(BasicSettings, sidebarDx), NULL },
+    { "toc_dy"                 , TYPE_I32,        offsetof(BasicSettings, tocDy), NULL },
+    { "show_start_page"        , TYPE_BOOL,       offsetof(BasicSettings, showStartPage), NULL },
+    { "open_count_week"        , TYPE_I32,        offsetof(BasicSettings, openCountWeek), NULL },
+    { "last_pref_update"       , TYPE_U64,        offsetof(BasicSettings, lastPrefUpdate), NULL },
 };
 
 StructMetadata gBasicSettingsMetadata = { sizeof(BasicSettings), 22, &gBasicSettingsFieldMetadata[0] };
