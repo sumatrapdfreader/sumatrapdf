@@ -106,6 +106,11 @@ void fz_set_markup_annot_quadpoints(fz_interactive *idoc, fz_annot *annot, fz_po
 	pdf_set_markup_annot_quadpoints((pdf_document *)idoc, (pdf_annot *)annot, qp, n);
 }
 
+void fz_set_markup_appearance(fz_interactive *idoc, fz_annot *annot, float color[3], float alpha, float line_thickness, float line_height)
+{
+	pdf_set_markup_appearance((pdf_document *)idoc, (pdf_annot *)annot, color, alpha, line_thickness, line_height);
+}
+
 void fz_set_doc_event_callback(fz_interactive *idoc, fz_doc_event_cb *event_cb, void *data)
 {
 	pdf_set_doc_event_callback((pdf_document *)idoc, event_cb, data);

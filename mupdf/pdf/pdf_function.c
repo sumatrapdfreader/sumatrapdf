@@ -1120,7 +1120,7 @@ eval_sample_func(fz_context *ctx, pdf_function *func, float *in, float *out)
 
 		else
 		{
-			float x = interpolate_sample(func, scale, e0, e1, efrac, func->m - 1, i);
+			x = interpolate_sample(func, scale, e0, e1, efrac, func->m - 1, i);
 			out[i] = lerp(x, 0, 1, func->u.sa.decode[i][0], func->u.sa.decode[i][1]);
 			out[i] = fz_clamp(out[i], func->range[i][0], func->range[i][1]);
 		}

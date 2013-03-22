@@ -1340,15 +1340,15 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int state)
 {
 	fz_context *ctx = app->ctx;
-	fz_irect rect;
+	fz_irect irect;
 	fz_link *link;
 	fz_matrix ctm;
 	fz_point p;
 	int processed = 0;
 
-	fz_pixmap_bbox(app->ctx, app->image, &rect);
-	p.x = x - app->panx + rect.x0;
-	p.y = y - app->pany + rect.y0;
+	fz_pixmap_bbox(app->ctx, app->image, &irect);
+	p.x = x - app->panx + irect.x0;
+	p.y = y - app->pany + irect.y0;
 
 	pdfapp_viewctm(&ctm, app);
 	fz_invert_matrix(&ctm, &ctm);
@@ -1533,10 +1533,10 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 		if (app->iscopying)
 		{
 			app->iscopying = 0;
-			app->selr.x0 = fz_mini(app->selx, x) - app->panx + rect.x0;
-			app->selr.x1 = fz_maxi(app->selx, x) - app->panx + rect.x0;
-			app->selr.y0 = fz_mini(app->sely, y) - app->pany + rect.y0;
-			app->selr.y1 = fz_maxi(app->sely, y) - app->pany + rect.y0;
+			app->selr.x0 = fz_mini(app->selx, x) - app->panx + irect.x0;
+			app->selr.x1 = fz_maxi(app->selx, x) - app->panx + irect.x0;
+			app->selr.y0 = fz_mini(app->sely, y) - app->pany + irect.y0;
+			app->selr.y1 = fz_maxi(app->sely, y) - app->pany + irect.y0;
 			winrepaint(app);
 			if (app->selr.x0 < app->selr.x1 && app->selr.y0 < app->selr.y1)
 				windocopy(app);
@@ -1603,10 +1603,10 @@ void pdfapp_onmouse(pdfapp_t *app, int x, int y, int btn, int modifiers, int sta
 
 	else if (app->iscopying)
 	{
-		app->selr.x0 = fz_mini(app->selx, x) - app->panx + rect.x0;
-		app->selr.x1 = fz_maxi(app->selx, x) - app->panx + rect.x0;
-		app->selr.y0 = fz_mini(app->sely, y) - app->pany + rect.y0;
-		app->selr.y1 = fz_maxi(app->sely, y) - app->pany + rect.y0;
+		app->selr.x0 = fz_mini(app->selx, x) - app->panx + irect.x0;
+		app->selr.x1 = fz_maxi(app->selx, x) - app->panx + irect.x0;
+		app->selr.y0 = fz_mini(app->sely, y) - app->pany + irect.y0;
+		app->selr.y1 = fz_maxi(app->sely, y) - app->pany + irect.y0;
 		winrepaint(app);
 	}
 

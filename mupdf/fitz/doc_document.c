@@ -243,7 +243,7 @@ fz_interactive *fz_interact(fz_document *doc)
 	return NULL;
 }
 
-int fz_javascript_supported()
+int fz_javascript_supported(void)
 {
 	return pdf_js_supported();
 }

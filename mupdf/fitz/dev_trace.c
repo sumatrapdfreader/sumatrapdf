@@ -120,11 +120,10 @@ fz_trace_clip_path(fz_device *dev, fz_path *path, const fz_rect *rect, int even_
 	else
 		printf(" winding=\"nonzero\"");
 	fz_trace_matrix(ctm);
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693708 */
-	if (!rect)
-		printf(">\n");
+	if (rect)
+		printf(" contentbbox=\"%g %g %g %g\">\n", rect->x0, rect->y0, rect->x1, rect->y1);
 	else
-	printf(" contentbbox=\"%g %g %g %g\">\n", rect->x0, rect->y0, rect->x1, rect->y1);
+		printf(">\n");
 	fz_trace_path(path, 0);
 	printf("</clip_path>\n");
 }
@@ -271,8 +270,8 @@ fz_trace_end_group(fz_device *dev)
 	printf("</group>\n");
 }
 
-static void
-fz_trace_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm)
+static int
+fz_trace_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm, int id)
 {
 	printf("<tile");
 	printf(" area=\"%g %g %g %g\"", area->x0, area->y0, area->x1, area->y1);
@@ -280,6 +279,7 @@ fz_trace_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, fl
 	printf(" xstep=\"%g\" ystep=\"%g\"", xstep, ystep);
 	fz_trace_matrix(ctm);
 	printf(">\n");
+	return 0;
 }
 
 static void

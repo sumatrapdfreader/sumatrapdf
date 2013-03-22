@@ -479,6 +479,11 @@ struct fz_store_hash_s
 			void *ptr;
 			int i;
 		} pi;
+		struct
+		{
+			int id;
+			float m[4];
+		} im;
 	} u;
 };
 
@@ -491,7 +496,7 @@ struct fz_store_type_s
 	void (*drop_key)(fz_context *,void *);
 	int (*cmp_key)(void *, void *);
 #ifndef NDEBUG
-	void (*debug)(void *);
+	void (*debug)(FILE *, void *);
 #endif
 };
 
@@ -1234,6 +1239,12 @@ void fz_set_annot_appearance(fz_interactive *idoc, fz_annot *annot, fz_rect *rec
 void fz_set_markup_annot_quadpoints(fz_interactive *idoc, fz_annot *annot, fz_point *qp, int n);
 
 /*
+	fz_set_markup_appearance: set the appearance stream of a text markup annotations, basing it on
+	its QuadPoints array
+*/
+void fz_set_markup_appearance(fz_interactive *idoc, fz_annot *annot, float color[3], float alpha, float line_thickness, float line_height);
+
+/*
  * Text buffer.
  *
  * The trm field contains the a, b, c and d coefficients.
@@ -1462,7 +1473,7 @@ struct fz_device_s
 	void (*begin_group)(fz_device *, const fz_rect *, int isolated, int knockout, int blendmode, float alpha);
 	void (*end_group)(fz_device *);
 
-	void (*begin_tile)(fz_device *, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm);
+	int (*begin_tile)(fz_device *, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm, int id);
 	void (*end_tile)(fz_device *);
 
 	/* SumatraPDF: support transfer functions */
@@ -1491,6 +1502,7 @@ void fz_end_mask(fz_device *dev);
 void fz_begin_group(fz_device *dev, const fz_rect *area, int isolated, int knockout, int blendmode, float alpha);
 void fz_end_group(fz_device *dev);
 void fz_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm);
+int fz_begin_tile_id(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm, int id);
 void fz_end_tile(fz_device *dev);
 /* SumatraPDF: support transfer functions */
 void fz_apply_transfer_function(fz_device *dev, fz_transfer_function *tr, int for_mask);

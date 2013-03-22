@@ -1,6 +1,8 @@
 #include "fitz-internal.h"
 #include "mupdf-internal.h"
 
+#define SMALL_FLOAT (0.00001)
+
 static pdf_obj *
 resolve_dest_rec(pdf_document *xref, pdf_obj *dest, int depth)
 {
@@ -466,7 +468,7 @@ pdf_transform_annot(pdf_annot *annot)
 	fz_pre_scale(fz_translate(&annot->matrix, x, y), w, h);
 }
 
-static int annot_type(pdf_obj *obj)
+fz_annot_type pdf_annot_obj_type(pdf_obj *obj)
 {
 	char *subtype = pdf_to_name(pdf_dict_gets(obj, "Subtype"));
 	if (!strcmp(subtype, "Text"))
@@ -1612,7 +1614,7 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 			annot->pagerect = annot->rect;
 			fz_transform_rect(&annot->pagerect, &page->ctm);
 			annot->ap = NULL;
-			annot->annot_type = annot_type(obj);
+			annot->annot_type = pdf_annot_obj_type(obj);
 			annot->widget_type = annot->annot_type == FZ_ANNOT_WIDGET ? pdf_field_type(xref, obj) : FZ_WIDGET_TYPE_NOT_WIDGET;
 
 			if (pdf_is_stream(xref, pdf_to_num(n), pdf_to_gen(n)))
@@ -1871,6 +1873,44 @@ pdf_delete_annot(pdf_document *doc, pdf_page *page, pdf_annot *annot)
 	doc->dirty = 1;
 }
 
+static fz_point *
+quadpoints(pdf_document *doc, pdf_obj *annot, int *nout)
+{
+	fz_context *ctx = doc->ctx;
+	pdf_obj *quad = pdf_dict_gets(annot, "QuadPoints");
+	fz_point *qp = NULL;
+	int i, n;
+
+	if (!quad)
+		return NULL;
+
+	n = pdf_array_len(quad);
+
+	if (n%8 != 0)
+		return NULL;
+
+	fz_var(qp);
+	fz_try(ctx)
+	{
+		qp = fz_malloc_array(ctx, n/2, sizeof(fz_point));
+
+		for (i = 0; i < n; i += 2)
+		{
+			qp[i/2].x = pdf_to_real(pdf_array_get(quad, i));
+			qp[i/2].y = pdf_to_real(pdf_array_get(quad, i+1));
+		}
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, qp);
+		fz_rethrow(ctx);
+	}
+
+	*nout = n/2;
+
+	return qp;
+}
+
 void
 pdf_set_markup_annot_quadpoints(pdf_document *doc, pdf_annot *annot, fz_point *qp, int n)
 {
@@ -1897,14 +1937,17 @@ pdf_set_markup_annot_quadpoints(pdf_document *doc, pdf_annot *annot, fz_point *q
 }
 
 void
-pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect, fz_display_list *disp_list)
+pdf_set_annot_obj_appearance(pdf_document *doc, pdf_obj *obj, const fz_matrix *page_ctm, fz_rect *rect, fz_display_list *disp_list)
 {
 	fz_context *ctx = doc->ctx;
 	fz_matrix ctm;
 	fz_matrix mat = fz_identity;
 	fz_device *dev = NULL;
+	pdf_xobject *xobj = NULL;
 
-	fz_invert_matrix(&ctm, &annot->page->ctm);
+	fz_invert_matrix(&ctm, page_ctm);
+
+	fz_var(dev);
 	fz_try(ctx)
 	{
 		pdf_obj *ap_obj;
@@ -1912,17 +1955,17 @@ pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect, fz_
 
 		fz_transform_rect(&trect, &ctm);
 
-		pdf_dict_puts_drop(annot->obj, "Rect", pdf_new_rect(ctx, &trect));
+		pdf_dict_puts_drop(obj, "Rect", pdf_new_rect(ctx, &trect));
 
 		/* See if there is a current normal appearance */
-		ap_obj = pdf_dict_getp(annot->obj, "AP/N");
-		if (!pdf_is_stream(doc, pdf_to_num(annot->obj), pdf_to_gen(annot->obj)))
+		ap_obj = pdf_dict_getp(obj, "AP/N");
+		if (!pdf_is_stream(doc, pdf_to_num(obj), pdf_to_gen(obj)))
 			ap_obj = NULL;
 
 		if (ap_obj == NULL)
 		{
 			ap_obj = pdf_new_xobject(doc, &trect, &mat);
-			pdf_dict_putp_drop(annot->obj, "AP/N", ap_obj);
+			pdf_dict_putp_drop(obj, "AP/N", ap_obj);
 		}
 		else
 		{
@@ -1930,17 +1973,17 @@ pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect, fz_
 			pdf_dict_puts_drop(ap_obj, "Matrix", pdf_new_matrix(ctx, &mat));
 		}
 
-		/* Remove annot reference to the xobject and don't recreate it
-		so that pdf_update_page counts it as dirty */
-		pdf_drop_xobject(ctx, annot->ap);
-		annot->ap = NULL;
-
-		annot->rect = trect;
-		annot->pagerect = *rect;
-
 		dev = pdf_new_pdf_device(doc, ap_obj, pdf_dict_gets(ap_obj, "Resources"), &mat);
 		fz_run_display_list(disp_list, dev, &ctm, &fz_infinite_rect, NULL);
 		fz_free_device(dev);
+
+		/* Mark the appearance as changed - required for partial update */
+		xobj = pdf_load_xobject(doc, ap_obj);
+		if (xobj)
+		{
+			xobj->iteration++;
+			pdf_drop_xobject(ctx, xobj);
+		}
 
 		doc->dirty = 1;
 	}
@@ -1949,4 +1992,114 @@ pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect, fz_
 		fz_free_device(dev);
 		fz_rethrow(ctx);
 	}
+}
+
+static void update_rect(fz_context *ctx, pdf_annot *annot)
+{
+	pdf_to_rect(ctx, pdf_dict_gets(annot->obj, "Rect"), &annot->rect);
+	annot->pagerect = annot->rect;
+	fz_transform_rect(&annot->pagerect, &annot->page->ctm);
+}
+
+void
+pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect, fz_display_list *disp_list)
+{
+	pdf_set_annot_obj_appearance(doc, annot->obj, &annot->page->ctm, rect, disp_list);
+	update_rect(doc->ctx, annot);
+}
+
+void
+pdf_set_markup_obj_appearance(pdf_document *doc, pdf_obj *annot, float color[3], float alpha, float line_thickness, float line_height)
+{
+	fz_context *ctx = doc->ctx;
+	fz_path *path = NULL;
+	fz_stroke_state *stroke = NULL;
+	fz_device *dev = NULL;
+	fz_display_list *strike_list = NULL;
+	int i, n;
+	fz_point *qp = quadpoints(doc, annot, &n);
+
+	if (!qp || n <= 0)
+		return;
+
+	fz_var(path);
+	fz_var(stroke);
+	fz_var(dev);
+	fz_var(strike_list);
+	fz_try(ctx)
+	{
+		fz_rect rect = fz_empty_rect;
+
+		rect.x0 = rect.x1 = qp[0].x;
+		rect.y0 = rect.y1 = qp[0].y;
+		for (i = 0; i < n; i++)
+			fz_include_point_in_rect(&rect, &qp[i]);
+
+		strike_list = fz_new_display_list(ctx);
+		dev = fz_new_list_device(ctx, strike_list);
+
+		for (i = 0; i < n; i += 4)
+		{
+			fz_point pt0 = qp[i];
+			fz_point pt1 = qp[i+1];
+			fz_point up;
+			float thickness;
+
+			up.x = qp[i+2].x - qp[i+1].x;
+			up.y = qp[i+2].y - qp[i+1].y;
+
+			pt0.x += line_height * up.x;
+			pt0.y += line_height * up.y;
+			pt1.x += line_height * up.x;
+			pt1.y += line_height * up.y;
+
+			thickness = sqrtf(up.x * up.x + up.y * up.y) * line_thickness;
+
+			if (!stroke || fz_abs(stroke->linewidth - thickness) < SMALL_FLOAT)
+			{
+				if (stroke)
+				{
+					// assert(path)
+					fz_stroke_path(dev, path, stroke, &fz_identity, fz_device_rgb, color, alpha);
+					fz_drop_stroke_state(ctx, stroke);
+					stroke = NULL;
+					fz_free_path(ctx, path);
+					path = NULL;
+				}
+
+				stroke = fz_new_stroke_state(ctx);
+				stroke->linewidth = thickness;
+				path = fz_new_path(ctx);
+			}
+
+			fz_moveto(ctx, path, pt0.x, pt0.y);
+			fz_lineto(ctx, path, pt1.x, pt1.y);
+		}
+
+		if (stroke)
+		{
+			fz_stroke_path(dev, path, stroke, &fz_identity, fz_device_rgb, color, alpha);
+		}
+
+		pdf_set_annot_obj_appearance(doc, annot, &fz_identity, &rect, strike_list);
+	}
+	fz_always(ctx)
+	{
+		fz_free(ctx, qp);
+		fz_free_device(dev);
+		fz_drop_stroke_state(ctx, stroke);
+		fz_free_path(ctx, path);
+		fz_free_display_list(ctx, strike_list);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+void
+pdf_set_markup_appearance(pdf_document *doc, pdf_annot *annot, float color[3], float alpha, float line_thickness, float line_height)
+{
+	pdf_set_markup_obj_appearance(doc, annot->obj, color, alpha, line_thickness, line_height);
+	update_rect(doc->ctx, annot);
 }

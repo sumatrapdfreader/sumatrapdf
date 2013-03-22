@@ -3,6 +3,11 @@
 
 #define MATRIX_COEFS (6)
 
+#define STRIKE_HEIGHT (0.375f)
+#define UNDERLINE_HEIGHT (0.075f)
+#define LINE_THICKNESS (0.07f)
+#define SMALL_FLOAT (0.00001)
+
 enum
 {
 	F_Invisible = 1 << (1-1),
@@ -1713,12 +1718,54 @@ static void execute_action(pdf_document *doc, pdf_obj *obj, pdf_obj *a)
 	}
 }
 
+static void update_text_markup_appearance(pdf_document *doc, pdf_obj *annot, fz_annot_type type)
+{
+	float color[3];
+	float alpha;
+	float line_height;
+	float line_thickness;
+
+	switch (type)
+	{
+		case FZ_ANNOT_HIGHLIGHT:
+			color[0] = 1.0;
+			color[1] = 1.0;
+			color[2] = 0.0;
+			alpha = 0.5;
+			line_thickness = 1.0;
+			line_height = 0.5;
+			break;
+		case FZ_ANNOT_UNDERLINE:
+			color[0] = 0.0;
+			color[1] = 0.0;
+			color[2] = 1.0;
+			alpha = 1.0;
+			line_thickness = LINE_THICKNESS;
+			line_height = UNDERLINE_HEIGHT;
+			break;
+		case FZ_ANNOT_STRIKEOUT:
+			color[0] = 1.0;
+			color[1] = 0.0;
+			color[2] = 0.0;
+			alpha = 1.0;
+			line_thickness = LINE_THICKNESS;
+			line_height = STRIKE_HEIGHT;
+			break;
+		default:
+			return;
+	}
+
+	pdf_set_markup_obj_appearance(doc, annot, color, alpha, line_thickness, line_height);
+}
+
 void pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
 {
 	if (!pdf_dict_gets(obj, "AP") || pdf_dict_gets(obj, "Dirty"))
 	{
-		if (!strcmp(pdf_to_name(pdf_dict_gets(obj, "Subtype")), "Widget"))
+		fz_annot_type type = pdf_annot_obj_type(obj);
+		switch (type)
 		{
+		case FZ_ANNOT_WIDGET:
 			switch(pdf_field_type(doc, obj))
 			{
 			case FZ_WIDGET_TYPE_TEXT:
@@ -1753,6 +1800,14 @@ void pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
 				update_combobox_appearance(doc, obj);
 				break;
 			}
+			break;
+		case FZ_ANNOT_STRIKEOUT:
+		case FZ_ANNOT_UNDERLINE:
+		case FZ_ANNOT_HIGHLIGHT:
+			update_text_markup_appearance(doc, obj, type);
+			break;
+		default:
+			break;
 		}
 
 		pdf_dict_dels(obj, "Dirty");
@@ -1951,9 +2006,9 @@ static void toggle_check_box(pdf_document *doc, pdf_obj *obj)
 			/* For radio buttons, first turn off all buttons in the group and
 			 * then set the one that was clicked */
 			pdf_obj *kids = pdf_dict_gets(grp, "Kids");
-			int i, n = pdf_array_len(kids);
 
-			for (i = 0; i < n; i++)
+			len = pdf_array_len(kids);
+			for (i = 0; i < len; i++)
 				check_off(ctx, pdf_array_get(kids, i));
 
 			pdf_dict_puts(obj, "AS", key);

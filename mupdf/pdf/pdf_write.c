@@ -1994,7 +1994,6 @@ make_page_offset_hints(pdf_document *xref, pdf_write_options *opts, fz_buffer *b
 	for (i=0; i < opts->page_count; i++)
 	{
 		int count = 0;
-		int j;
 		page_objects *po = opts->page_object_lists->page[i];
 		for (j = 0; j < po->len; j++)
 		{

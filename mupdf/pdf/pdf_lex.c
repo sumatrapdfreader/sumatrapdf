@@ -88,7 +88,7 @@ lex_number(fz_stream *f, pdf_lexbuf *buf, int c)
 
 	while (1)
 	{
-		int c = fz_read_byte(f);
+		c = fz_read_byte(f);
 		switch (c)
 		{
 		case '.':
@@ -114,7 +114,7 @@ loop_after_dot:
 	d = 1;
 	while (1)
 	{
-		int c = fz_read_byte(f);
+		c = fz_read_byte(f);
 		switch (c)
 		{
 		case RANGE_0_9:
@@ -139,7 +139,7 @@ underflow:
 	/* Ignore any digits after here, because they are too small */
 	while (1)
 	{
-		int c = fz_read_byte(f);
+		c = fz_read_byte(f);
 		switch (c)
 		{
 		case RANGE_0_9:

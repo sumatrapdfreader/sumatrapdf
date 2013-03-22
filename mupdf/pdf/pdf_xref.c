@@ -124,7 +124,17 @@ pdf_read_new_trailer(pdf_document *xref, pdf_lexbuf *buf)
 {
 	fz_try(xref->ctx)
 	{
-		xref->trailer = pdf_parse_ind_obj(xref, xref->file, buf, NULL, NULL, NULL);
+		int num, gen, stm_ofs, ofs;
+		ofs = fz_tell(xref->file);
+		xref->trailer = pdf_parse_ind_obj(xref, xref->file, buf, &num, &gen, &stm_ofs);
+		if (num > xref->len)
+			pdf_resize_xref(xref, num+1);
+		xref->table[num].ofs = ofs;
+		xref->table[num].gen = gen;
+		xref->table[num].stm_ofs = stm_ofs;
+		pdf_drop_obj(xref->table[num].obj);
+		xref->table[num].obj = pdf_keep_obj(xref->trailer);
+		xref->table[num].type = 'n';
 	}
 	fz_catch(xref->ctx)
 	{
@@ -323,7 +333,16 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 
 	fz_try(ctx)
 	{
+		int ofs = fz_tell(xref->file);
 		trailer = pdf_parse_ind_obj(xref, xref->file, buf, &num, &gen, &stm_ofs);
+		if (num > xref->len)
+			pdf_resize_xref(xref, num+1);
+		xref->table[num].ofs = ofs;
+		xref->table[num].gen = gen;
+		xref->table[num].stm_ofs = stm_ofs;
+		pdf_drop_obj(xref->table[num].obj);
+		xref->table[num].obj = pdf_keep_obj(trailer);
+		xref->table[num].type = 'n';
 	}
 	fz_catch(ctx)
 	{

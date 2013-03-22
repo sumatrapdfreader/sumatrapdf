@@ -271,6 +271,7 @@ fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_
 				existing->val->refs++;
 			fz_unlock(ctx, FZ_LOCK_ALLOC);
 			fz_free(ctx, item);
+			type->drop_key(ctx, key);
 			return existing->val;
 		}
 	}
@@ -362,7 +363,7 @@ fz_remove_item(fz_context *ctx, fz_store_free_fn *free, void *key, fz_store_type
 	fz_item *item;
 	fz_store *store = ctx->store;
 	int drop;
-	fz_store_hash hash;
+	fz_store_hash hash = { NULL };
 	int use_hash = 0;
 
 	if (type->make_hash_key)
@@ -470,7 +471,7 @@ fz_print_store(fz_context *ctx, FILE *out)
 			next->val->refs++;
 		fprintf(out, "store[*][refs=%d][size=%d] ", item->val->refs, item->size);
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
-		item->type->debug(item->key);
+		item->type->debug(out, item->key);
 		fprintf(out, " = %p\n", item->val);
 		fz_lock(ctx, FZ_LOCK_ALLOC);
 		if (next)

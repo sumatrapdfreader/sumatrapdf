@@ -80,6 +80,8 @@ inline void fz_crash_abort()
 	*p = 0;
 }
 
+static void throw(fz_error_context *ex) FZ_NORETURN;
+
 static void throw(fz_error_context *ex)
 {
 	if (ex->top >= 0) {

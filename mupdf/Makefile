@@ -122,25 +122,25 @@ FONT_CJK_FULL_SRC := fonts/droid/DroidSansFallbackFull.ttf
 JAVASCRIPT_SRC := pdf/pdf_util.js
 
 $(GEN)/cmap_cns.h : $(CMAP_CNS_SRC)
-	$(QUIET_GEN) ./$(CMAPDUMP) $@ $(CMAP_CNS_SRC)
+	$(QUIET_GEN) $(CMAPDUMP) $@ $(CMAP_CNS_SRC)
 $(GEN)/cmap_gb.h : $(CMAP_GB_SRC)
-	$(QUIET_GEN) ./$(CMAPDUMP) $@ $(CMAP_GB_SRC)
+	$(QUIET_GEN) $(CMAPDUMP) $@ $(CMAP_GB_SRC)
 $(GEN)/cmap_japan.h : $(CMAP_JAPAN_SRC)
-	$(QUIET_GEN) ./$(CMAPDUMP) $@ $(CMAP_JAPAN_SRC)
+	$(QUIET_GEN) $(CMAPDUMP) $@ $(CMAP_JAPAN_SRC)
 $(GEN)/cmap_korea.h : $(CMAP_KOREA_SRC)
-	$(QUIET_GEN) ./$(CMAPDUMP) $@ $(CMAP_KOREA_SRC)
+	$(QUIET_GEN) $(CMAPDUMP) $@ $(CMAP_KOREA_SRC)
 
 $(GEN)/font_base14.h : $(FONT_BASE14_SRC)
-	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_BASE14_SRC)
+	$(QUIET_GEN) $(FONTDUMP) $@ $(FONT_BASE14_SRC)
 $(GEN)/font_droid.h : $(FONT_DROID_SRC)
-	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_DROID_SRC)
+	$(QUIET_GEN) $(FONTDUMP) $@ $(FONT_DROID_SRC)
 $(GEN)/font_cjk.h : $(FONT_CJK_SRC)
-	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_CJK_SRC)
+	$(QUIET_GEN) $(FONTDUMP) $@ $(FONT_CJK_SRC)
 $(GEN)/font_cjk_full.h : $(FONT_CJK_FULL_SRC)
-	$(QUIET_GEN) ./$(FONTDUMP) $@ $(FONT_CJK_FULL_SRC)
+	$(QUIET_GEN) $(FONTDUMP) $@ $(FONT_CJK_FULL_SRC)
 
 $(GEN)/js_util.h : $(JAVASCRIPT_SRC)
-	$(QUIET_GEN) ./$(CQUOTE) $@ $(JAVASCRIPT_SRC)
+	$(QUIET_GEN) $(CQUOTE) $@ $(JAVASCRIPT_SRC)
 
 CMAP_HDR := $(addprefix $(GEN)/, cmap_cns.h cmap_gb.h cmap_japan.h cmap_korea.h)
 FONT_HDR := $(GEN)/font_base14.h $(GEN)/font_droid.h $(GEN)/font_cjk.h $(GEN)/font_cjk_full.h

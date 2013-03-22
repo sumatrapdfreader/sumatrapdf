@@ -1379,7 +1379,6 @@ fz_rect *pdf_measure_text(fz_context *ctx, pdf_font_desc *fontdesc, unsigned cha
 float pdf_text_stride(fz_context *ctx, pdf_font_desc *fontdesc, float fontsize, unsigned char *buf, int len, float room, int *count)
 {
 	pdf_hmtx h;
-	int gid;
 	int i = 0;
 	float x = 0.0;
 
@@ -1387,7 +1386,6 @@ float pdf_text_stride(fz_context *ctx, pdf_font_desc *fontdesc, float fontsize, 
 	{
 		float span;
 
-		gid = pdf_font_cid_to_gid(ctx, fontdesc, buf[i]);
 		h = pdf_lookup_hmtx(ctx, fontdesc, buf[i]);
 
 		span = h.w * fontsize / 1000.0;

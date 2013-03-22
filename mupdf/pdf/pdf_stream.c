@@ -85,7 +85,8 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 	char *s = pdf_to_name(f);
 
 	int predictor = pdf_to_int(pdf_dict_gets(p, "Predictor"));
-	int columns = pdf_to_int(pdf_dict_gets(p, "Columns"));
+	pdf_obj *columns_obj = pdf_dict_gets(p, "Columns");
+	int columns = pdf_to_int(columns_obj);
 	int colors = pdf_to_int(pdf_dict_gets(p, "Colors"));
 	int bpc = pdf_to_int(pdf_dict_gets(p, "BitsPerComponent"));
 
@@ -100,7 +101,6 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 		pdf_obj *k = pdf_dict_gets(p, "K");
 		pdf_obj *eol = pdf_dict_gets(p, "EndOfLine");
 		pdf_obj *eba = pdf_dict_gets(p, "EncodedByteAlign");
-		pdf_obj *columns = pdf_dict_gets(p, "Columns");
 		pdf_obj *rows = pdf_dict_gets(p, "Rows");
 		pdf_obj *eob = pdf_dict_gets(p, "EndOfBlock");
 		pdf_obj *bi1 = pdf_dict_gets(p, "BlackIs1");
@@ -111,7 +111,7 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 			params->u.fax.k = (k ? pdf_to_int(k) : 0);
 			params->u.fax.end_of_line = (eol ? pdf_to_bool(eol) : 0);
 			params->u.fax.encoded_byte_align = (eba ? pdf_to_bool(eba) : 0);
-			params->u.fax.columns = (columns ? pdf_to_int(columns) : 1728);
+			params->u.fax.columns = (columns_obj ? columns : 1728);
 			params->u.fax.rows = (rows ? pdf_to_int(rows) : 0);
 			params->u.fax.end_of_block = (eob ? pdf_to_bool(eob) : 1);
 			params->u.fax.black_is_1 = (bi1 ? pdf_to_bool(bi1) : 0);
@@ -121,7 +121,7 @@ build_filter(fz_stream *chain, pdf_document * xref, pdf_obj * f, pdf_obj * p, in
 				k ? pdf_to_int(k) : 0,
 				eol ? pdf_to_bool(eol) : 0,
 				eba ? pdf_to_bool(eba) : 0,
-				columns ? pdf_to_int(columns) : 1728,
+				columns_obj ? columns : 1728,
 				rows ? pdf_to_int(rows) : 0,
 				eob ? pdf_to_bool(eob) : 1,
 				bi1 ? pdf_to_bool(bi1) : 0);

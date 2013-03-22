@@ -112,11 +112,11 @@ pdf_cmp_image_key(void *k0_, void *k1_)
 
 #ifndef NDEBUG
 static void
-pdf_debug_image(void *key_)
+pdf_debug_image(FILE *out, void *key_)
 {
 	pdf_image_key *key = (pdf_image_key *)key_;
 
-	printf("(image %d x %d sf=%d) ", key->image->w, key->image->h, key->l2factor);
+	fprintf(out, "(image %d x %d sf=%d) ", key->image->w, key->image->h, key->l2factor);
 }
 #endif
 

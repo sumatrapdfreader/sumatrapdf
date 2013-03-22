@@ -828,7 +828,7 @@ xps_parse_path(xps_document *doc, const fz_matrix *ctm, char *base_uri, xps_reso
 	fz_matrix transform;
 	float samples[32];
 	fz_colorspace *colorspace;
-	fz_path *path;
+	fz_path *path = NULL;
 	fz_path *stroke_path = NULL;
 	fz_rect area;
 	int fill_rule;

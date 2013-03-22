@@ -1683,10 +1683,11 @@ fz_gdiplus_end_group(fz_device *dev)
 	((userData *)dev->user)->popClip();
 }
 
-extern "C" static void
-fz_gdiplus_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm)
+extern "C" static int
+fz_gdiplus_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm, int id)
 {
 	((userData *)dev->user)->recordTile(view, area, ctm, xstep, ystep);
+	return 0;
 }
 
 extern "C" static void

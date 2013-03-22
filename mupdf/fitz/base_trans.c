@@ -25,12 +25,11 @@ static int
 blind_horiz(fz_pixmap *tpix, fz_pixmap *opix, fz_pixmap *npix, int time)
 {
 	unsigned char *t, *o, *n;
-	int blind_height, size, span, position, y;
+	int blind_height, span, position, y;
 
 	if (!tpix || !opix || !npix || tpix->w != opix->w || opix->w != npix->w || tpix->h != opix->h || opix->h != npix->h || tpix->n != opix->n || opix->n != npix->n)
 		return 0;
 	span = tpix->w * tpix->n;
-	size = tpix->h * span;
 	blind_height = (tpix->h+7) / 8;
 	position = blind_height * time / 256;
 	t = tpix->samples;
@@ -50,12 +49,11 @@ static int
 blind_vertical(fz_pixmap *tpix, fz_pixmap *opix, fz_pixmap *npix, int time)
 {
 	unsigned char *t, *o, *n;
-	int blind_width, size, span, position, y;
+	int blind_width, span, position, y;
 
 	if (!tpix || !opix || !npix || tpix->w != opix->w || opix->w != npix->w || tpix->h != opix->h || opix->h != npix->h || tpix->n != opix->n || opix->n != npix->n)
 		return 0;
 	span = tpix->w * tpix->n;
-	size = tpix->h * span;
 	blind_width = (tpix->w+7) / 8;
 	position = blind_width * time / 256;
 	blind_width *= tpix->n;

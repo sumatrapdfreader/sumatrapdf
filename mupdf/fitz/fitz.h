@@ -120,6 +120,13 @@ FILE *fopen_utf8(const char *name, const char *mode);
 #define restrict
 #endif
 
+/* noreturn is a GCC extension */
+#ifdef __GNUC__
+#define FZ_NORETURN __attribute__((noreturn))
+#else
+#define FZ_NORETURN
+#endif
+
 /*
 	GCC can do type checking of printf strings
 */
@@ -201,6 +208,7 @@ static inline void *fz_clampp(void *p, void *min, void *max)
 
 typedef struct fz_alloc_context_s fz_alloc_context;
 typedef struct fz_error_context_s fz_error_context;
+typedef struct fz_id_context_s fz_id_context;
 typedef struct fz_warn_context_s fz_warn_context;
 typedef struct fz_font_context_s fz_font_context;
 typedef struct fz_aa_context_s fz_aa_context;
@@ -274,8 +282,8 @@ void fz_var_imp(void *);
 int fz_push_try(fz_error_context *ex);
 /* SumatraPDF: add filename and line number to errors and warnings */
 #define fz_throw(CTX, MSG, ...) fz_throw_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
-void fz_throw_imp(fz_context *ctx, char *file, int line, const char *fmt, ...) __printflike(4, 5);
-void fz_rethrow(fz_context *);
+void fz_throw_imp(fz_context *ctx, char *file, int line, const char *fmt, ...) __printflike(4, 5) FZ_NORETURN;
+void fz_rethrow(fz_context *) FZ_NORETURN;
 /* SumatraPDF: add filename and line number to errors and warnings */
 #define fz_warn(CTX, MSG, ...) fz_warn_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
 void fz_warn_imp(fz_context *ctx, char *file, int line, const char *fmt, ...) __printflike(4, 5);
@@ -298,6 +306,7 @@ struct fz_context_s
 {
 	fz_alloc_context *alloc;
 	fz_locks_context *locks;
+	fz_id_context *id;
 	fz_error_context *error;
 	fz_warn_context *warn;
 	fz_font_context *font;
@@ -666,6 +675,12 @@ int fz_runetochar(char *str, int rune);
 	Returns the number of bytes required to represent this run in UTF8.
 */
 int fz_runelen(int rune);
+
+/*
+	fz_gen_id: Generate an id (guaranteed unique within this family of
+	contexts).
+*/
+int fz_gen_id(fz_context *ctx);
 
 /*
 	getopt: Simple functions/variables for use in tools.
@@ -3141,7 +3156,7 @@ fz_mail_doc_event *fz_access_mail_doc_event(fz_doc_event *event);
 	fz_javascript_supported: test whether a version of mupdf with
 	a javascript engine is in use.
 */
-int fz_javascript_supported();
+int fz_javascript_supported(void);
 
 typedef struct fz_write_options_s fz_write_options;
 

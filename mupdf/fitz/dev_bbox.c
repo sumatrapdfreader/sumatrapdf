@@ -156,13 +156,14 @@ fz_bbox_end_group(fz_device *dev)
 	fz_bbox_pop_clip(dev);
 }
 
-static void
-fz_bbox_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm)
+static int
+fz_bbox_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm, int id)
 {
 	fz_bbox_data *data = dev->user;
 	fz_rect r = *area;
 	fz_bbox_add_rect(dev, fz_transform_rect(&r, ctm), 0);
 	data->ignore++;
+	return 0;
 }
 
 static void

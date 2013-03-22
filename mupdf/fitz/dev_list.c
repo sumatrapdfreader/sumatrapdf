@@ -79,7 +79,7 @@ fz_new_display_node(fz_context *ctx, fz_display_command cmd, const fz_matrix *ct
 	node->rect = fz_empty_rect;
 	node->item.path = NULL;
 	node->stroke = NULL;
-	node->flag = 0;
+	node->flag = (cmd == FZ_CMD_BEGIN_TILE ? fz_gen_id(ctx) : 0);
 	node->ctm = *ctm;
 	if (colorspace)
 	{
@@ -510,9 +510,10 @@ fz_list_end_group(fz_device *dev)
 	fz_append_display_node(dev->user, node);
 }
 
-static void
-fz_list_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm)
+static int
+fz_list_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm, int id)
 {
+	/* We ignore id here, as we will pass on our own id */
 	fz_display_node *node;
 	node = fz_new_display_node(dev->ctx, FZ_CMD_BEGIN_TILE, ctm, NULL, NULL, 0);
 	node->rect = *area;
@@ -523,6 +524,7 @@ fz_list_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, flo
 	node->color[4] = view->x1;
 	node->color[5] = view->y1;
 	fz_append_display_node(dev->user, node);
+	return 0;
 }
 
 static void
@@ -609,6 +611,36 @@ fz_free_display_list(fz_context *ctx, fz_display_list *list)
 		node = next;
 	}
 	fz_free(ctx, list);
+}
+
+static fz_display_node *
+skip_to_end_tile(fz_display_node *node, int *progress)
+{
+	fz_display_node *next;
+	int depth = 1;
+
+	/* Skip through until we find the matching end_tile. Note that
+	 * (somewhat nastily) we return the PREVIOUS node to this to help
+	 * the calling routine. */
+	do
+	{
+		next = node->next;
+		if (next == NULL)
+			break;
+		if (next->cmd == FZ_CMD_BEGIN_TILE)
+			depth++;
+		else if (next->cmd == FZ_CMD_END_TILE)
+		{
+			depth--;
+			if (depth == 0)
+				return node;
+		}
+		(*progress)++;
+		node = next;
+	}
+	while (1);
+
+	return NULL;
 }
 
 void
@@ -776,13 +808,18 @@ visible:
 				break;
 			case FZ_CMD_BEGIN_TILE:
 			{
+				int cached;
 				fz_rect rect;
 				tiled++;
 				rect.x0 = node->color[2];
 				rect.y0 = node->color[3];
 				rect.x1 = node->color[4];
 				rect.y1 = node->color[5];
-				fz_begin_tile(dev, &node->rect, &rect, node->color[0], node->color[1], &ctm);
+				cached = fz_begin_tile_id(dev, &node->rect, &rect, node->color[0], node->color[1], &ctm, node->flag);
+				if (cached)
+				{
+					node = skip_to_end_tile(node, &progress);
+				}
 				break;
 			}
 			case FZ_CMD_END_TILE:

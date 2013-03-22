@@ -5,6 +5,12 @@
 
 #include "fitz-internal.h"
 
+/* Enable FITZ_DEBUG_LOCKING_TIMES below if you want to check the times
+ * for which locks are held too. */
+#ifdef FITZ_DEBUG_LOCKING
+#undef FITZ_DEBUG_LOCKING_TIMES
+#endif
+
 static void *
 do_scavenging_malloc(fz_context *ctx, unsigned int size)
 {
@@ -263,6 +269,43 @@ enum
 
 fz_context *fz_lock_debug_contexts[FZ_LOCK_DEBUG_CONTEXT_MAX];
 int fz_locks_debug[FZ_LOCK_DEBUG_CONTEXT_MAX][FZ_LOCK_MAX];
+#ifdef FITZ_DEBUG_LOCKING_TIMES
+int fz_debug_locking_inited = 0;
+int fz_lock_program_start;
+int fz_lock_time[FZ_LOCK_DEBUG_CONTEXT_MAX][FZ_LOCK_MAX] = { { 0 } };
+int fz_lock_taken[FZ_LOCK_DEBUG_CONTEXT_MAX][FZ_LOCK_MAX] = { { 0 } };
+
+/* We implement our own millisecond clock, as clock() cannot be trusted
+ * when threads are involved. */
+static int ms_clock(void)
+{
+#ifdef _WIN32
+	return (int)GetTickCount();
+#else
+	struct timeval tp;
+	gettimeofday(&tp, NULL);
+	return (tp.tv_sec*1000) + (tp.tv_usec/1000);
+#endif
+}
+
+static void dump_lock_times(void)
+{
+	int i, j;
+	int prog_time = ms_clock() - fz_lock_program_start;
+
+	for (j = 0; j < FZ_LOCK_MAX; j++)
+	{
+		int total = 0;
+		for (i = 0; i < FZ_LOCK_DEBUG_CONTEXT_MAX; i++)
+		{
+			total += fz_lock_time[i][j];
+		}
+		printf("Lock %d held for %g seconds (%g%%)\n", j, ((double)total)/1000, 100.0*total/prog_time);
+	}
+	printf("Total program time %g seconds\n", ((double)prog_time)/1000);
+}
+
+#endif
 
 static int find_context(fz_context *ctx)
 {
@@ -287,6 +330,14 @@ static int find_context(fz_context *ctx)
 			{
 				gottit = 1;
 				fz_lock_debug_contexts[i] = ctx;
+#ifdef FITZ_DEBUG_LOCKING_TIMES
+				if (fz_debug_locking_inited == 0)
+				{
+					fz_debug_locking_inited = 1;
+					fz_lock_program_start = ms_clock();
+					atexit(dump_lock_times);
+				}
+#endif
 			}
 			ctx->locks->unlock(ctx->locks->user, FZ_LOCK_ALLOC);
 			if (gottit)
@@ -337,6 +388,9 @@ void fz_lock_debug_lock(fz_context *ctx, int lock)
 		}
 	}
 	fz_locks_debug[idx][lock] = 1;
+#ifdef FITZ_DEBUG_LOCKING_TIMES
+	fz_lock_taken[idx][lock] = clock();
+#endif
 }
 
 void fz_lock_debug_unlock(fz_context *ctx, int lock)
@@ -350,6 +404,9 @@ void fz_lock_debug_unlock(fz_context *ctx, int lock)
 		fprintf(stderr, "Attempt to release lock %d when not held!\n", lock);
 	}
 	fz_locks_debug[idx][lock] = 0;
+#ifdef FITZ_DEBUG_LOCKING_TIMES
+	fz_lock_time[idx][lock] += clock() - fz_lock_taken[idx][lock];
+#endif
 }
 
 #endif

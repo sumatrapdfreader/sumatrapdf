@@ -28,6 +28,7 @@ struct fz_draw_state_s {
 	fz_pixmap *shape;
 	int blendmode;
 	int luminosity;
+	int id;
 	float alpha;
 	fz_matrix ctm;
 	float xstep, ystep;
@@ -526,7 +527,7 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 	int i, x, y, gid;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
-	fz_irect scissor = state->scissor;
+	fz_irect scissor;
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
 		state = fz_knockout_begin(dev);
@@ -555,8 +556,10 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 		trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 		trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-		scissor.x0 -= x; scissor.x1 -= x;
-		scissor.y0 -= y; scissor.y1 -= y;
+		scissor.x0 = state->scissor.x0 - x;
+		scissor.y0 = state->scissor.y0 - y;
+		scissor.x1 = state->scissor.x1 - x;
+		scissor.y1 = state->scissor.y1 - y;
 
 		glyph = fz_render_glyph(dev->ctx, text->font, gid, &trunc_trm, model, scissor);
 		if (glyph)
@@ -569,8 +572,8 @@ fz_draw_fill_text(fz_device *devp, fz_text *text, const fz_matrix *ctm,
 			}
 			else
 			{
-				fz_matrix tm = {glyph->w, 0.0, 0.0, glyph->h, x + glyph->x, y + glyph->y};
-				fz_paint_image(state->dest, &state->scissor, state->shape, glyph, &tm, alpha * 255);
+				fz_matrix mat = {glyph->w, 0.0, 0.0, glyph->h, x + glyph->x, y + glyph->y};
+				fz_paint_image(state->dest, &state->scissor, state->shape, glyph, &mat, alpha * 255);
 			}
 			fz_drop_pixmap(dev->ctx, glyph);
 		}
@@ -606,7 +609,7 @@ fz_draw_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke,
 	int i, x, y, gid;
 	fz_draw_state *state = &dev->stack[dev->top];
 	fz_colorspace *model = state->dest->colorspace;
-	fz_irect scissor = state->scissor;
+	fz_irect scissor;
 
 	if (state->blendmode & FZ_BLEND_KNOCKOUT)
 		state = fz_knockout_begin(dev);
@@ -634,8 +637,10 @@ fz_draw_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke,
 		trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 		trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-		scissor.x0 -= x; scissor.x1 -= x;
-		scissor.y0 -= y; scissor.y1 -= y;
+		scissor.x0 = state->scissor.x0 - x;
+		scissor.y0 = state->scissor.y0 - y;
+		scissor.x1 = state->scissor.x1 - x;
+		scissor.y1 = state->scissor.y1 - y;
 
 		glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, &trunc_trm, ctm, stroke, scissor);
 		if (glyph)
@@ -735,6 +740,8 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, const fz_matrix *ctm, int accu
 
 			for (i = 0; i < text->len; i++)
 			{
+				fz_irect scissor;
+
 				gid = text->items[i].gid;
 				if (gid < 0)
 					continue;
@@ -748,8 +755,12 @@ fz_draw_clip_text(fz_device *devp, fz_text *text, const fz_matrix *ctm, int accu
 				trunc_trm = trm;
 				trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 				trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
+				scissor.x0 = bbox.x0 - x;
+				scissor.y0 = bbox.y0 - y;
+				scissor.x1 = bbox.x1 - x;
+				scissor.y1 = bbox.y1 - y;
 
-				glyph = fz_render_glyph(dev->ctx, text->font, gid, &trunc_trm, model, bbox);
+				glyph = fz_render_glyph(dev->ctx, text->font, gid, &trunc_trm, model, scissor);
 				if (glyph)
 				{
 					draw_glyph(NULL, mask, glyph, x, y, &bbox);
@@ -844,6 +855,7 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 
 			for (i = 0; i < text->len; i++)
 			{
+				fz_irect scissor;
 				gid = text->items[i].gid;
 				if (gid < 0)
 					continue;
@@ -858,7 +870,12 @@ fz_draw_clip_stroke_text(fz_device *devp, fz_text *text, fz_stroke_state *stroke
 				trunc_trm.e = QUANT(trm.e - floorf(trm.e), HSUBPIX);
 				trunc_trm.f = QUANT(trm.f - floorf(trm.f), VSUBPIX);
 
-				glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, &trunc_trm, ctm, stroke, bbox);
+				scissor.x0 = bbox.x0 - x;
+				scissor.y0 = bbox.y0 - y;
+				scissor.x1 = bbox.x1 - x;
+				scissor.y1 = bbox.y1 - y;
+
+				glyph = fz_render_stroked_glyph(dev->ctx, text->font, gid, &trunc_trm, ctm, stroke, scissor);
 				if (glyph)
 				{
 					draw_glyph(NULL, mask, glyph, x, y, &bbox);
@@ -1622,8 +1639,128 @@ fz_draw_end_group(fz_device *devp)
 		fz_knockout_end(dev);
 }
 
+typedef struct
+{
+	int refs;
+	float ctm[4];
+	int id;
+} tile_key;
+
+typedef struct
+{
+	fz_storable storable;
+	fz_pixmap *dest;
+	fz_pixmap *shape;
+} tile_record;
+
+static int
+fz_make_hash_tile_key(fz_store_hash *hash, void *key_)
+{
+	tile_key *key = (tile_key *)key_;
+
+	hash->u.im.id = key->id;
+	hash->u.im.m[0] = key->ctm[0];
+	hash->u.im.m[1] = key->ctm[1];
+	hash->u.im.m[2] = key->ctm[2];
+	hash->u.im.m[3] = key->ctm[3];
+	return 1;
+}
+
+static void *
+fz_keep_tile_key(fz_context *ctx, void *key_)
+{
+	tile_key *key = (tile_key *)key_;
+
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	key->refs++;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+
+	return (void *)key;
+}
+
 static void
-fz_draw_begin_tile(fz_device *devp, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm)
+fz_drop_tile_key(fz_context *ctx, void *key_)
+{
+	tile_key *key = (tile_key *)key_;
+	int drop;
+
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	drop = --key->refs;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	if (drop == 0)
+	{
+		fz_free(ctx, key);
+	}
+}
+
+static int
+fz_cmp_tile_key(void *k0_, void *k1_)
+{
+	tile_key *k0 = (tile_key *)k0_;
+	tile_key *k1 = (tile_key *)k1_;
+
+	return k0->id == k1->id && k0->ctm[0] == k1->ctm[0] && k0->ctm[1] == k1->ctm[1] && k0->ctm[2] == k1->ctm[2] && k0->ctm[3] == k1->ctm[3];
+}
+
+#ifndef NDEBUG
+static void
+fz_debug_tile(FILE *out, void *key_)
+{
+	tile_key *key = (tile_key *)key_;
+
+	fprintf(out, "(tile id=%x, ctm=%g %g %g %g) ", key->id, key->ctm[0], key->ctm[1], key->ctm[2], key->ctm[3]);
+}
+#endif
+
+static fz_store_type fz_tile_store_type =
+{
+	fz_make_hash_tile_key,
+	fz_keep_tile_key,
+	fz_drop_tile_key,
+	fz_cmp_tile_key,
+#ifndef NDEBUG
+	fz_debug_tile
+#endif
+};
+
+static void
+fz_free_tile_record_imp(fz_context *ctx, fz_storable *storable)
+{
+	tile_record *tr = (tile_record *)(void *)storable;
+
+	if (tr == NULL)
+		return;
+	fz_drop_pixmap(ctx, tr->dest);
+	fz_drop_pixmap(ctx, tr->shape);
+	fz_free(ctx, tr);
+}
+
+static void
+fz_drop_tile_record(fz_context *ctx, tile_record *tile)
+{
+	fz_drop_storable(ctx, &tile->storable);
+}
+
+static tile_record *
+fz_new_tile_record(fz_context *ctx, fz_pixmap *dest, fz_pixmap *shape)
+{
+	tile_record *tile = fz_malloc_struct(ctx, tile_record);
+	FZ_INIT_STORABLE(tile, 1, fz_free_tile_record_imp);
+	tile->dest = fz_keep_pixmap(ctx, dest);
+	tile->shape = fz_keep_pixmap(ctx, shape);
+	return tile;
+}
+
+unsigned int
+fz_tile_size(fz_context *ctx, tile_record *tile)
+{
+	if (!tile)
+		return 0;
+	return sizeof(*tile) + fz_pixmap_size(ctx, tile->dest) + fz_pixmap_size(ctx, tile->shape);
+}
+
+static int
+fz_draw_begin_tile(fz_device *devp, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm, int id)
 {
 	fz_draw_device *dev = devp->user;
 	fz_pixmap *dest = NULL;
@@ -1649,6 +1786,39 @@ fz_draw_begin_tile(fz_device *devp, const fz_rect *area, const fz_rect *view, fl
 	 * assert(bbox.x0 > state->dest->x || bbox.x1 < state->dest->x + state->dest->w ||
 	 *	bbox.y0 > state->dest->y || bbox.y1 < state->dest->y + state->dest->h);
 	 */
+
+	/* Check to see if we have one cached */
+	if (id)
+	{
+		tile_key tk;
+		tile_record *tile;
+		tk.ctm[0] = ctm->a;
+		tk.ctm[1] = ctm->b;
+		tk.ctm[2] = ctm->c;
+		tk.ctm[3] = ctm->d;
+		tk.id = id;
+
+		tile = fz_find_item(ctx, fz_free_tile_record_imp, &tk, &fz_tile_store_type);
+		if (tile)
+		{
+			state[1].dest = fz_keep_pixmap(ctx, tile->dest);
+			state[1].shape = fz_keep_pixmap(ctx, tile->shape);
+			state[1].blendmode |= FZ_BLEND_ISOLATED;
+			state[1].xstep = xstep;
+			state[1].ystep = ystep;
+			state[1].id = id;
+			fz_irect_from_rect(&state[1].area, area);
+			state[1].ctm = *ctm;
+#ifdef DUMP_GROUP_BLENDS
+			dump_spaces(dev->top-1, "Tile begin (cached)\n");
+#endif
+
+			state[1].scissor = bbox;
+			fz_drop_tile_record(ctx, tile);
+			return 1;
+		}
+	}
+
 	fz_try(ctx)
 	{
 		state[1].dest = dest = fz_new_pixmap_with_bbox(dev->ctx, model, &bbox);
@@ -1662,6 +1832,7 @@ fz_draw_begin_tile(fz_device *devp, const fz_rect *area, const fz_rect *view, fl
 		state[1].blendmode |= FZ_BLEND_ISOLATED;
 		state[1].xstep = xstep;
 		state[1].ystep = ystep;
+		state[1].id = id;
 		fz_irect_from_rect(&state[1].area, area);
 		state[1].ctm = *ctm;
 #ifdef DUMP_GROUP_BLENDS
@@ -1674,6 +1845,8 @@ fz_draw_begin_tile(fz_device *devp, const fz_rect *area, const fz_rect *view, fl
 	{
 		emergency_pop_stack(dev, state);
 	}
+
+	return 0;
 }
 
 static void
@@ -1687,6 +1860,9 @@ fz_draw_end_tile(fz_device *devp)
 	int x0, y0, x1, y1, x, y;
 	fz_context *ctx = dev->ctx;
 	fz_draw_state *state;
+	tile_record *tile;
+	tile_key *key;
+
 
 	if (dev->top == 0)
 	{
@@ -1759,6 +1935,53 @@ fz_draw_end_tile(fz_device *devp)
 				fz_paint_pixmap_with_bbox(state[0].shape, state[1].shape, 255, state[0].scissor);
 			}
 		}
+	}
+
+	state[1].dest->x = ctm.e;
+	state[1].dest->y = ctm.f;
+	if (state[1].shape)
+	{
+		state[1].shape->x = shapectm.e;
+		state[1].shape->y = shapectm.f;
+	}
+
+	/* Now we try to cache the tiles. Any failure here will just result
+	 * in us not caching. */
+	tile = NULL;
+	key = NULL;
+	fz_var(tile);
+	fz_var(key);
+	fz_try(ctx)
+	{
+		tile_record *existing_tile;
+
+		tile = fz_new_tile_record(ctx, state[1].dest, state[1].shape);
+
+		key = fz_malloc_struct(ctx, tile_key);
+		key->refs = 1;
+		key->id = state[1].id;
+		key->ctm[0] = ctm.a;
+		key->ctm[1] = ctm.b;
+		key->ctm[2] = ctm.c;
+		key->ctm[3] = ctm.d;
+		existing_tile = fz_store_item(ctx, key, tile, fz_tile_size(ctx, tile), &fz_tile_store_type);
+		if (existing_tile)
+		{
+			/* We already have a tile. This will either have been
+			 * produced by a racing thread, or there is already
+			 * an entry for this one in the store. */
+			fz_drop_tile_record(ctx, tile);
+			tile = existing_tile;
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_tile_key(ctx, key);
+		fz_drop_tile_record(ctx, tile);
+	}
+	fz_catch(ctx)
+	{
+		/* Do nothing */
 	}
 
 	fz_drop_pixmap(dev->ctx, state[1].dest);

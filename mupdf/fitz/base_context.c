@@ -1,5 +1,47 @@
 #include "fitz-internal.h"
 
+struct fz_id_context_s
+{
+	int refs;
+	int id;
+};
+
+static void
+fz_drop_id_context(fz_context *ctx)
+{
+	int refs;
+	fz_id_context *id = ctx->id;
+
+	if (id == NULL)
+		return;
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	refs = --id->refs;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	if (refs == 0)
+		fz_free(ctx, id);
+}
+
+static void
+fz_new_id_context(fz_context *ctx)
+{
+	ctx->id = fz_malloc_struct(ctx, fz_id_context);
+	ctx->id->refs = 1;
+	ctx->id->id = 0;
+}
+
+static fz_id_context *
+fz_keep_id_context(fz_context *ctx)
+{
+	fz_id_context *id = ctx->id;
+
+	if (id == NULL)
+		return NULL;
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	++id->refs;
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	return id;
+}
+
 void
 fz_free_context(fz_context *ctx)
 {
@@ -11,6 +53,7 @@ fz_free_context(fz_context *ctx)
 	fz_drop_store_context(ctx);
 	fz_free_aa_context(ctx);
 	fz_drop_font_context(ctx);
+	fz_drop_id_context(ctx);
 
 	if (ctx->warn)
 	{
@@ -96,6 +139,7 @@ fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int ma
 		fz_new_store_context(ctx, max_store);
 		fz_new_glyph_cache_context(ctx);
 		fz_new_font_context(ctx);
+		fz_new_id_context(ctx);
 	}
 	fz_catch(ctx)
 	{
@@ -138,6 +182,24 @@ fz_clone_context_internal(fz_context *ctx)
 	new_ctx->glyph_cache = fz_keep_glyph_cache(new_ctx);
 	new_ctx->font = ctx->font;
 	new_ctx->font = fz_keep_font_context(new_ctx);
+	new_ctx->id = ctx->id;
+	new_ctx->id = fz_keep_id_context(new_ctx);
 
 	return new_ctx;
+}
+
+int
+fz_gen_id(fz_context *ctx)
+{
+	int id;
+	fz_lock(ctx, FZ_LOCK_ALLOC);
+	/* We'll never wrap around in normal use, but if we *do*, then avoid
+	 * 0. */
+	do
+	{
+		id = ++ctx->id->id;
+	}
+	while (id == 0);
+	fz_unlock(ctx, FZ_LOCK_ALLOC);
+	return id;
 }

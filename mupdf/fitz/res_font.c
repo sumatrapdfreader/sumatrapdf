@@ -131,10 +131,22 @@ fz_drop_font(fz_context *ctx, fz_font *font)
 void
 fz_set_font_bbox(fz_context *ctx, fz_font *font, float xmin, float ymin, float xmax, float ymax)
 {
-	font->bbox.x0 = xmin;
-	font->bbox.y0 = ymin;
-	font->bbox.x1 = xmax;
-	font->bbox.y1 = ymax;
+	if (xmin >= xmax || ymin >= ymax)
+	{
+		/* Invalid bbox supplied. It would be prohibitively slow to
+		 * measure the true one, so make one up. */
+		font->bbox.x0 = -1;
+		font->bbox.y0 = -1;
+		font->bbox.x1 = 2;
+		font->bbox.y1 = 2;
+	}
+	else
+	{
+		font->bbox.x0 = xmin;
+		font->bbox.y0 = ymin;
+		font->bbox.x1 = xmax;
+		font->bbox.y1 = ymax;
+	}
 	/* SumatraPDF: some fonts seem to use oversized bboxes (Ghostscript issue?) */
 	if (xmax - xmin == 1000 && ymax - ymin == 1000)
 	{
@@ -318,10 +330,11 @@ fz_new_font_from_file(fz_context *ctx, char *name, char *path, int index, int us
 
 	font = fz_new_font(ctx, name, use_glyph_bbox, face->num_glyphs);
 	font->ft_face = face;
-	font->bbox.x0 = (float) face->bbox.xMin / face->units_per_EM;
-	font->bbox.y0 = (float) face->bbox.yMin / face->units_per_EM;
-	font->bbox.x1 = (float) face->bbox.xMax / face->units_per_EM;
-	font->bbox.y1 = (float) face->bbox.yMax / face->units_per_EM;
+	fz_set_font_bbox(ctx, font,
+		(float) face->bbox.xMin / face->units_per_EM,
+		(float) face->bbox.yMin / face->units_per_EM,
+		(float) face->bbox.xMax / face->units_per_EM,
+		(float) face->bbox.yMax / face->units_per_EM);
 
 	return font;
 }
@@ -350,10 +363,11 @@ fz_new_font_from_memory(fz_context *ctx, char *name, unsigned char *data, int le
 
 	font = fz_new_font(ctx, name, use_glyph_bbox, face->num_glyphs);
 	font->ft_face = face;
-	font->bbox.x0 = (float) face->bbox.xMin / face->units_per_EM;
-	font->bbox.y0 = (float) face->bbox.yMin / face->units_per_EM;
-	font->bbox.x1 = (float) face->bbox.xMax / face->units_per_EM;
-	font->bbox.y1 = (float) face->bbox.yMax / face->units_per_EM;
+	fz_set_font_bbox(ctx, font,
+		(float) face->bbox.xMin / face->units_per_EM,
+		(float) face->bbox.yMin / face->units_per_EM,
+		(float) face->bbox.xMax / face->units_per_EM,
+		(float) face->bbox.yMax / face->units_per_EM);
 
 	return font;
 }

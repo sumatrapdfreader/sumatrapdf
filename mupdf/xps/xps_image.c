@@ -171,9 +171,9 @@ xps_cmp_image_key(void *k1, void *k2)
 
 #ifndef NDEBUG
 static void
-xps_debug_image(void *key)
+xps_debug_image(FILE *out, void *key)
 {
-	printf("(image part=%s) ", ((xps_image_key *)key)->part_name);
+	fprintf(out, "(image part=%s) ", ((xps_image_key *)key)->part_name);
 }
 #endif
 

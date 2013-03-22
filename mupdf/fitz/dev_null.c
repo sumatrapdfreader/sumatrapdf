@@ -313,18 +313,25 @@ fz_end_group(fz_device *dev)
 void
 fz_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm)
 {
+	(void)fz_begin_tile_id(dev, area, view, xstep, ystep, ctm, 0);
+}
+
+int
+fz_begin_tile_id(fz_device *dev, const fz_rect *area, const fz_rect *view, float xstep, float ystep, const fz_matrix *ctm, int id)
+{
 	fz_context *ctx = dev->ctx;
+	int ret = 0;
 
 	if (dev->error_depth)
 	{
 		dev->error_depth++;
-		return;
+		return 0;
 	}
 
 	fz_try(ctx)
 	{
 		if (dev->begin_tile)
-			dev->begin_tile(dev, area, view, xstep, ystep, ctm);
+			ret = dev->begin_tile(dev, area, view, xstep, ystep, ctm, id);
 	}
 	fz_catch(ctx)
 	{
@@ -332,6 +339,7 @@ fz_begin_tile(fz_device *dev, const fz_rect *area, const fz_rect *view, float xs
 		strcpy(dev->errmess, fz_caught(ctx));
 		/* Error swallowed */
 	}
+	return ret;
 }
 
 void

@@ -33,15 +33,15 @@ pdf_cmp_key(void *k0, void *k1)
 
 #ifndef NDEBUG
 static void
-pdf_debug_key(void *key_)
+pdf_debug_key(FILE *out, void *key_)
 {
 	pdf_obj *key = (pdf_obj *)key_;
 
 	if (pdf_is_indirect(key))
 	{
-		printf("(%d %d R) ", pdf_to_num(key), pdf_to_gen(key));
+		fprintf(out, "(%d %d R) ", pdf_to_num(key), pdf_to_gen(key));
 	} else
-		pdf_print_obj(key);
+		pdf_fprint_obj(out, key, 0);
 }
 #endif
 
