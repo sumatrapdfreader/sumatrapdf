@@ -39,6 +39,7 @@ key without separator\n\
         idxLine++;
     }
     assert(p.sections.Count() == idxSec + 1);
-    assert(!p.FindSection("missing") && !p.FindSection("Section 1", 1));
+    assert(p.FindSection("Section 1", 1) && p.FindSection("Section 2", 2));
+    assert(!p.FindSection("missing") && !p.FindSection("Section 1", 2));
     assert(!p.FindSection("Section 1")->FindLine("missing"));
 }

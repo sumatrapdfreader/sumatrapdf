@@ -43,7 +43,7 @@ struct FileHistory {
     // how pages should be layed out for this document
     int displayMode;
     // how far this document has been scrolled
-    PointI scrollPos;
+    PointI * scrollPos;
     // the scrollPos values are relative to the top-left corner of this
     // page
     int pageNo;
@@ -58,7 +58,7 @@ struct FileHistory {
     // default state of new SumatraPDF windows (same as the last closed)
     int windowState;
     // default position (can be on any monitor)
-    RectI windowPos;
+    RectI * windowPos;
     // hex encoded MD5 fingerprint of file content (32 chars) followed by
     // crypt key (64 chars) - only applies for PDF documents
     char * decryptionKey;
@@ -124,7 +124,7 @@ struct GlobalPrefs {
     // default state of new SumatraPDF windows (same as the last closed)
     int windowState;
     // default position (can be on any monitor)
-    RectI windowPos;
+    RectI * windowPos;
     // whether the table of contents (Bookmarks) sidebar should be shown by
     // default when its available for a document
     bool tocVisible;
@@ -145,11 +145,11 @@ struct GlobalPrefs {
     // Most values in this structure are remembered individually for every
     // file and are by default also persisted so that reading can be
     // resumed
-    size_t fileHistoryCount;
     FileHistory ** fileHistory;
+    size_t fileHistoryCount;
     // Values which are persisted for bookmarks/favorites
-    size_t favoritesCount;
     Favorites ** favorites;
+    size_t favoritesCount;
     // modification time of the preferences file when it was last read
     int64_t lastPrefUpdate;
     // a list of settings which this version of SumatraPDF didn't know how
@@ -242,8 +242,8 @@ struct UserPrefs {
     ForwardSearch3 * forwardSearch3;
     // this list contains a list of additional external viewers for various
     // file types
-    size_t externalViewersCount;
     ExternalViewers ** externalViewers;
+    size_t externalViewersCount;
 };
 
 enum SettingType {
@@ -267,14 +267,14 @@ static SettingInfo gFavoritesInfo[] = {
     { "PageNo", Type_Int, offsetof(Favorites, pageNo), NULL },
 };
 
-static SettingInfo gScrollPosInfo[] = {
+static SettingInfo gPointIInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)2, sizeof(PointI), NULL },
     { "X", Type_Int, offsetof(PointI, x), NULL },
     { "Y", Type_Int, offsetof(PointI, y), NULL },
 };
 
-static SettingInfo gWindowPosInfo[] = {
+static SettingInfo gRectIInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(RectI), NULL },
     { "Dx", Type_Int, offsetof(RectI, dx), NULL },
@@ -295,12 +295,12 @@ static SettingInfo gFileHistoryInfo[] = {
     { "PageNo", Type_Int, offsetof(FileHistory, pageNo), NULL },
     { "ReparseIdx", Type_Int, offsetof(FileHistory, reparseIdx), NULL },
     { "Rotation", Type_Int, offsetof(FileHistory, rotation), NULL },
-    { "ScrollPos", Type_Struct, offsetof(FileHistory, scrollPos), gScrollPosInfo },
+    { "ScrollPos", Type_Struct, offsetof(FileHistory, scrollPos), gPointIInfo },
     { "SidebarDx", Type_Int, offsetof(FileHistory, sidebarDx), NULL },
     { "TocState", Type_Utf8String, offsetof(FileHistory, tocState), NULL },
     { "TocVisible", Type_Bool, offsetof(FileHistory, tocVisible), NULL },
     { "UseGlobalValues", Type_Bool, offsetof(FileHistory, useGlobalValues), NULL },
-    { "WindowPos", Type_Struct, offsetof(FileHistory, windowPos), gWindowPosInfo },
+    { "WindowPos", Type_Struct, offsetof(FileHistory, windowPos), gRectIInfo },
     { "WindowState", Type_Int, offsetof(FileHistory, windowState), NULL },
     { "ZoomVirtual", Type_Float, offsetof(FileHistory, zoomVirtual), NULL },
 };
@@ -333,7 +333,7 @@ static SettingInfo gGlobalPrefsInfo[] = {
     { "ToolbarVisible", Type_Bool, offsetof(GlobalPrefs, toolbarVisible), NULL },
     { "UseSysColors", Type_Bool, offsetof(GlobalPrefs, useSysColors), NULL },
     { "VersionToSkip", Type_String, offsetof(GlobalPrefs, versionToSkip), NULL },
-    { "WindowPos", Type_Struct, offsetof(GlobalPrefs, windowPos), gWindowPosInfo },
+    { "WindowPos", Type_Struct, offsetof(GlobalPrefs, windowPos), gRectIInfo },
     { "WindowState", Type_Int, offsetof(GlobalPrefs, windowState), NULL },
 };
 

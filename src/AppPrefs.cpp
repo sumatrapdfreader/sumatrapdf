@@ -557,7 +557,7 @@ static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, 
         case Type_SectionVec:
             size_t i2 = i;
             while (++i < count && info[i].type != Type_Section && info[i].type != Type_SectionVec);
-            for (size_t ix = 0; (section = ini.FindSection(meta.name, ix)); ix++) {
+            for (size_t ix = 0; (section = ini.FindSection(meta.name, ix)); ix = ini.sections.Find(section) + 1) {
                 for (size_t j = i2 + 1; j < i; j++) {
                     SettingInfo& meta2 = info[j];
                     switch (meta2.type) {

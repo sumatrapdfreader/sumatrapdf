@@ -82,8 +82,8 @@ void IniFile::ParseData()
 
 IniSection *IniFile::FindSection(const char *name, size_t idx)
 {
-    for (size_t i = 0; i < sections.Count(); i++) {
-        if (str::EqI(sections.At(i)->name, name) && 0 == idx--)
+    for (size_t i = idx; i < sections.Count(); i++) {
+        if (str::EqI(sections.At(i)->name, name))
             return sections.At(i);
     }
     return NULL;

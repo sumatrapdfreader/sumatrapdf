@@ -44,29 +44,50 @@ static char *UnescapeStr(const char *s)
     return ret.StealData();
 }
 
-static void *DeserializeRec(IniFile& ini, SettingInfo *meta, const char *sectionName=NULL, size_t idx=0)
+static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_t endIdx, size_t *foundIdx)
 {
-    IniSection *section = ini.FindSection(sectionName, idx);
+    for (size_t i = idx; i < endIdx; i++) {
+        if (str::EqI(ini.sections.At(i)->name, name)) {
+            *foundIdx = i;
+            return ini.sections.At(i);
+        }
+    }
+    return NULL;
+}
+
+static void *DeserializeRec(IniFile& ini, SettingInfo *meta, const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
+{
+    size_t secIdx = startIdx;
+    IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
     IniLine *line = NULL;
     int r, g, b, a;
 
-    if (idx > 0 && !(section = ini.FindSection(sectionName, idx - 1)))
-        return NULL;
+    if ((size_t)-1 == endIdx)
+        endIdx = ini.sections.Count();
 
+    // TODO: initialize with default values
     uint8_t *base = (uint8_t *)calloc(1, meta[0].offset);
+    if (secIdx >= endIdx)
+        return base;
+
     for (size_t i = 1; i <= (size_t)meta[0].type; i++) {
         if (Type_Struct == meta[i].type) {
             ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", meta[i].name) : str::Dup(meta[i].name));
-            // TODO: reconstruct this index for nested arrays
-            *(void **)(base + meta[i].offset) = DeserializeRec(ini, meta[i].substruct, name, idx);
+            *(void **)(base + meta[i].offset) = DeserializeRec(ini, meta[i].substruct, name, secIdx + 1, endIdx);
             continue;
         }
         if (Type_Array == meta[i].type) {
             ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", meta[i].name) : str::Dup(meta[i].name));
             Vec<void *> array;
-            void *item;
-            for (size_t j = 1; (item = DeserializeRec(ini, meta[i].substruct, name, j)); j++) {
-                array.Append(item);
+            size_t nextSecIdx = endIdx;
+            FindSection(ini, sectionName, secIdx + 1, endIdx, &nextSecIdx);
+            size_t subSecIdx = nextSecIdx;
+            IniSection *subSection = FindSection(ini, name, secIdx + 1, nextSecIdx, &subSecIdx);
+            while (subSection && subSecIdx < nextSecIdx) {
+                size_t nextSubSecIdx = nextSecIdx;
+                IniSection *nextSubSec = FindSection(ini, name, subSecIdx + 1, nextSecIdx, &nextSubSecIdx);
+                array.Append(DeserializeRec(ini, meta[i].substruct, name, subSecIdx, nextSubSecIdx));
+                subSection = nextSubSec; subSecIdx = nextSubSecIdx;
             }
             *(size_t *)(base + meta[i+1].offset) = array.Size();
             *(void ***)(base + meta[i].offset) = array.StealData();

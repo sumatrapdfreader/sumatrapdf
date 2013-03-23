@@ -43,14 +43,14 @@ class Field(object):
 		return None
 
 class Struct(Field):
-	def __init__(self, name, fields, comment, predefined=None):
-		super(Struct, self).__init__(name, Type("Struct", "%s *" % name), fields, comment)
-		self.predefined = predefined
+	def __init__(self, name, fields, comment, structName=None):
+		self.structName = structName or name
+		super(Struct, self).__init__(name, Type("Struct", "%s *" % self.structName), fields, comment)
 
 class Array(Field):
-	def __init__(self, name, fields, comment, predefined=None):
-		super(Array, self).__init__(name, Type("Array", "%s *" % name), fields, comment)
-		self.predefined = predefined
+	def __init__(self, name, fields, comment, structName=None):
+		self.structName = structName or name
+		super(Array, self).__init__(name, Type("Array", "%s **" % self.structName), fields, comment)
 
 # ##### setting definitions for SumatraPDF #####
 
@@ -152,7 +152,7 @@ FileSettings = [
 	Field("DisplayMode", Int, 1, # TODO: Type_Custom, DM_AUTOMATIC
 		"how pages should be layed out for this document"),
 	Struct("ScrollPos", PointI,
-		"how far this document has been scrolled", predefined="PointI"),
+		"how far this document has been scrolled", structName="PointI"),
 	Field("PageNo", Int, 1,
 		"the scrollPos values are relative to the top-left corner of this page"),
 	Field("ReparseIdx", Int, 0,
@@ -164,7 +164,7 @@ FileSettings = [
 	Field("WindowState", Int, 0,
 		"default state of new SumatraPDF windows (same as the last closed)"),
 	Struct("WindowPos", RectI,
-		"default position (can be on any monitor)", predefined="RectI"),
+		"default position (can be on any monitor)", structName="RectI"),
 	Field("DecryptionKey", Utf8String, None,
 		"hex encoded MD5 fingerprint of file content (32 chars) followed by " +
 		"crypt key (64 chars) - only applies for PDF documents"),
@@ -221,7 +221,7 @@ AppPrefs = [
 	Field("WindowState", Int, 1,
 		"default state of new SumatraPDF windows (same as the last closed)"),
 	Struct("WindowPos", RectI,
-		"default position (can be on any monitor)", predefined="RectI"),
+		"default position (can be on any monitor)", structName="RectI"),
 	Field("TocVisible", Bool, True,
 		"whether the table of contents (Bookmarks) sidebar should be shown by " +
 		"default when its available for a document"),
@@ -280,48 +280,35 @@ def BuildStruct(struct, built=[]):
 	if struct.comment:
 		lines = FormatComment(struct.comment, "") + lines
 	for field in struct.default:
-		if type(field) == Struct:
-			lines += FormatComment(field.comment)
-			lines.append("\t%s %s;" % (field.predefined or field.type.ctype, field.cname))
-			if not field.predefined and field.name not in built:
-				lines = [BuildStruct(field), ""] + lines
-				built.append(field.name)
-		elif type(field) == Array:
-			lines += FormatComment(field.comment)
+		lines += FormatComment(field.comment)
+		lines.append("\t%s %s;" % (field.type.ctype, field.cname))
+		if type(field) == Array:
 			lines.append("\tsize_t %sCount;" % field.cname)
-			lines.append("\t%s* %s;" % (field.predefined or field.type.ctype, field.cname))
-			if not field.predefined and field.name not in built:
-				lines = [BuildStruct(field), ""] + lines
-				built.append(field.name)
-		else:
-			lines += FormatComment(field.comment)
-			lines.append("\t%s %s;" % (field.type.ctype, field.cname))
+		if type(field) in [Struct, Array] and field.name == field.structName and field.name not in built:
+			lines = [BuildStruct(field), ""] + lines
+			built.append(field.name)
 	lines.append("};")
 	return "\n".join(lines)
 
 def BuildMetaData(struct, built=[]):
 	fieldInfo, metadata = [], []
-	structName = struct.predefined or struct.name
 	for field in sorted(struct.default, key=lambda field: field.name):
 		if field.internal:
 			continue
 		if type(field) == Struct:
-			fieldInfo.append("\t{ \"%s\", Type_Struct, offsetof(%s, %s), g%sInfo }," % (field.name, structName, field.cname, field.name))
-			if field.name not in built:
-				metadata.append(BuildMetaData(field))
-				built.append(field.name)
+			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
 		elif type(field) == Array:
-			fieldInfo.append("\t{ \"%s\", Type_Array, offsetof(%s, %s), g%sInfo }," % (field.name, structName, field.cname, field.name))
-			fieldInfo.append("\t{ NULL, Type_Array, offsetof(%s, %sCount), g%sInfo }," % (structName, field.cname, field.name))
-			if field.name not in built:
-				metadata.append(BuildMetaData(field))
-				built.append(field.name)
+			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
+			fieldInfo.append("\t{ NULL, Type_Array, offsetof(%s, %sCount), g%sInfo }," % (struct.structName, field.cname, field.name))
 		else:
-			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), NULL }," % (field.name, field.type.name, structName, field.cname))
+			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), NULL }," % (field.name, field.type.name, struct.structName, field.cname))
+		if type(field) in [Struct, Array] and field.structName not in built:
+			metadata.append(BuildMetaData(field))
+			built.append(field.structName)
 	metadata.append("\n".join([
-		"static SettingInfo g%sInfo[] = {" % struct.name,
+		"static SettingInfo g%sInfo[] = {" % struct.structName,
 		"\t/* TODO: replace this hack with a second meta-struct? */",
-		"\t{ NULL, (SettingType)%d, sizeof(%s), NULL }," % (len(fieldInfo), structName),
+		"\t{ NULL, (SettingType)%d, sizeof(%s), NULL }," % (len(fieldInfo), struct.structName),
 	] + fieldInfo + [
 		"};"
 	]))
