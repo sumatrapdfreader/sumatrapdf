@@ -78,7 +78,8 @@ CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
 # /GS  : enable security checks
 # /Gy  : separate functions for linker
 # /GF  : enable read-only string pooling
-CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy /GF
+# /MP  : use muliple processors to speed up compilation
+CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy /GF /MP
 
 # /EHs-c- : disable C++ exceptions (generates smaller binaries)
 CFLAGSB = $(CFLAGSB) /EHs-c-
