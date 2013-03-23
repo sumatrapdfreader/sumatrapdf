@@ -66,6 +66,23 @@ PointI = [
 	Field("Y", Int, 0, "y coordinate"),
 ]
 
+AdvancedPrefs = [
+	Field("TraditionalEbookUI", Bool, False,
+		"whether the UI used for PDF documents will be used for ebooks as well " +
+		"(enables printing and searching, disables automatic reflow)"),
+	Field("ReuseInstance", Bool, False,
+		"whether opening a new document should happen in an already running SumatraPDF " +
+		"instance so that there's only one process and documents aren't opend twice"),
+	Field("MainWindowBackground", Color, 0xFFF200,
+		"background color of the non-document windows, traditionally yellow"),
+	Field("EscToExit", Bool, False,
+		"whether the Esc key will exit SumatraPDF same as 'q'"),
+	Field("TextColor", Color, 0x000000,
+		"color value with which black (text) will be substituted"),
+	Field("PageColor", Color, 0xFFFFFF,
+		"color value with which white (background) will be substituted"),
+]
+
 PagePadding = [
 	Field("OuterX", Int, 4, "size of the left/right margin between window and document"),
 	Field("OuterY", Int, 2, "size of the top/bottom margin between window and document"),
@@ -103,20 +120,8 @@ ExternalViewer = [
 ]
 
 UserPrefs = [
-	Field("TraditionalEbookUI", Bool, False,
-		"whether the UI used for PDF documents will be used for ebooks as well " +
-		"(enables printing and searching, disables automatic reflow)"),
-	Field("ReuseInstance", Bool, False,
-		"whether opening a new document should happen in an already running SumatraPDF " +
-		"instance so that there's only one process and documents aren't opend twice"),
-	Field("MainWindowBackground", Color, 0xFFF200,
-		"background color of the non-document windows, traditionally yellow"),
-	Field("EscToExit", Bool, False,
-		"whether the Esc key will exit SumatraPDF same as 'q'"),
-	Field("TextColor", Color, 0x000000,
-		"color value with which black (text) will be substituted"),
-	Field("PageColor", Color, 0xFFFFFF,
-		"color value with which white (background) will be substituted"),
+	Struct("AdvancedPrefs", AdvancedPrefs,
+		"these values allow to tweak various bits and pieces of SumatraPDF"),
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these values allow to override the default settings in the Print dialog"),
 	Struct("PagePadding", PagePadding,
@@ -284,7 +289,7 @@ def BuildStruct(struct, built=[]):
 		elif type(field) == Array:
 			lines += FormatComment(field.comment)
 			lines.append("\tsize_t %sCount;" % field.cname)
-			lines.append("\t%s %s;" % (field.predefined or field.type.ctype, field.cname))
+			lines.append("\t%s* %s;" % (field.predefined or field.type.ctype, field.cname))
 			if not field.predefined and field.name not in built:
 				lines = [BuildStruct(field), ""] + lines
 				built.append(field.name)
@@ -315,7 +320,7 @@ def BuildMetaData(struct, built=[]):
 			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), NULL }," % (field.name, field.type.name, structName, field.cname))
 	metadata.append("\n".join([
 		"static SettingInfo g%sInfo[] = {" % struct.name,
-		"\t/* TODO: replace this hack with two different structs? */",
+		"\t/* TODO: replace this hack with a second meta-struct? */",
 		"\t{ NULL, (SettingType)%d, sizeof(%s), NULL }," % (len(fieldInfo), structName),
 	] + fieldInfo + [
 		"};"

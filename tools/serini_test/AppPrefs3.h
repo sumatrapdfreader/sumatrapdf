@@ -146,10 +146,10 @@ struct GlobalPrefs {
     // file and are by default also persisted so that reading can be
     // resumed
     size_t fileHistoryCount;
-    FileHistory * fileHistory;
+    FileHistory ** fileHistory;
     // Values which are persisted for bookmarks/favorites
     size_t favoritesCount;
-    Favorites * favorites;
+    Favorites ** favorites;
     // modification time of the preferences file when it was last read
     int64_t lastPrefUpdate;
     // a list of settings which this version of SumatraPDF didn't know how
@@ -208,9 +208,8 @@ struct PrinterDefaults {
     bool printAsImage;
 };
 
-// All values in this structure are read from SumatraPDF-user.ini and
-// can't be changed from within the UI
-struct UserPrefs {
+// these values allow to tweak various bits and pieces of SumatraPDF
+struct AdvancedPrefs {
     // whether the UI used for PDF documents will be used for ebooks as
     // well (enables printing and searching, disables automatic reflow)
     bool traditionalEbookUI;
@@ -226,6 +225,13 @@ struct UserPrefs {
     COLORREF textColor;
     // color value with which white (background) will be substituted
     COLORREF pageColor;
+};
+
+// All values in this structure are read from SumatraPDF-user.ini and
+// can't be changed from within the UI
+struct UserPrefs {
+    // these values allow to tweak various bits and pieces of SumatraPDF
+    AdvancedPrefs * advancedPrefs;
     // these values allow to override the default settings in the Print
     // dialog
     PrinterDefaults * printerDefaults;
@@ -237,7 +243,7 @@ struct UserPrefs {
     // this list contains a list of additional external viewers for various
     // file types
     size_t externalViewersCount;
-    ExternalViewers * externalViewers;
+    ExternalViewers ** externalViewers;
 };
 
 enum SettingType {
@@ -254,7 +260,7 @@ struct SettingInfo {
 
 #ifdef INCLUDE_APPPREFS3_METADATA
 static SettingInfo gFavoritesInfo[] = {
-    /* TODO: replace this hack with two different structs? */
+    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)3, sizeof(Favorites), NULL },
     { "Name", Type_String, offsetof(Favorites, name), NULL },
     { "PageLabel", Type_String, offsetof(Favorites, pageLabel), NULL },
@@ -262,14 +268,14 @@ static SettingInfo gFavoritesInfo[] = {
 };
 
 static SettingInfo gScrollPosInfo[] = {
-    /* TODO: replace this hack with two different structs? */
+    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)2, sizeof(PointI), NULL },
     { "X", Type_Int, offsetof(PointI, x), NULL },
     { "Y", Type_Int, offsetof(PointI, y), NULL },
 };
 
 static SettingInfo gWindowPosInfo[] = {
-    /* TODO: replace this hack with two different structs? */
+    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(RectI), NULL },
     { "Dx", Type_Int, offsetof(RectI, dx), NULL },
     { "Dy", Type_Int, offsetof(RectI, dy), NULL },
@@ -278,7 +284,7 @@ static SettingInfo gWindowPosInfo[] = {
 };
 
 static SettingInfo gFileHistoryInfo[] = {
-    /* TODO: replace this hack with two different structs? */
+    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)17, sizeof(FileHistory), NULL },
     { "DecryptionKey", Type_Utf8String, offsetof(FileHistory, decryptionKey), NULL },
     { "DisplayMode", Type_Int, offsetof(FileHistory, displayMode), NULL },
@@ -300,7 +306,7 @@ static SettingInfo gFileHistoryInfo[] = {
 };
 
 static SettingInfo gGlobalPrefsInfo[] = {
-    /* TODO: replace this hack with two different structs? */
+    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)27, sizeof(GlobalPrefs), NULL },
     { "CbxR2L", Type_Bool, offsetof(GlobalPrefs, cbxR2L), NULL },
     { "CurrLangCode", Type_String, offsetof(GlobalPrefs, currLangCode), NULL },
@@ -331,8 +337,19 @@ static SettingInfo gGlobalPrefsInfo[] = {
     { "WindowState", Type_Int, offsetof(GlobalPrefs, windowState), NULL },
 };
 
+static SettingInfo gAdvancedPrefsInfo[] = {
+    /* TODO: replace this hack with a second meta-struct? */
+    { NULL, (SettingType)6, sizeof(AdvancedPrefs), NULL },
+    { "EscToExit", Type_Bool, offsetof(AdvancedPrefs, escToExit), NULL },
+    { "MainWindowBackground", Type_Color, offsetof(AdvancedPrefs, mainWindowBackground), NULL },
+    { "PageColor", Type_Color, offsetof(AdvancedPrefs, pageColor), NULL },
+    { "ReuseInstance", Type_Bool, offsetof(AdvancedPrefs, reuseInstance), NULL },
+    { "TextColor", Type_Color, offsetof(AdvancedPrefs, textColor), NULL },
+    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedPrefs, traditionalEbookUI), NULL },
+};
+
 static SettingInfo gExternalViewersInfo[] = {
-    /* TODO: replace this hack with two different structs? */
+    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)3, sizeof(ExternalViewers), NULL },
     { "CommandLine", Type_String, offsetof(ExternalViewers, commandLine), NULL },
     { "Filter", Type_String, offsetof(ExternalViewers, filter), NULL },
@@ -340,7 +357,7 @@ static SettingInfo gExternalViewersInfo[] = {
 };
 
 static SettingInfo gForwardSearch3Info[] = {
-    /* TODO: replace this hack with two different structs? */
+    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(ForwardSearch3), NULL },
     { "HighlightColor", Type_Color, offsetof(ForwardSearch3, highlightColor), NULL },
     { "HighlightOffset", Type_Int, offsetof(ForwardSearch3, highlightOffset), NULL },
@@ -349,7 +366,7 @@ static SettingInfo gForwardSearch3Info[] = {
 };
 
 static SettingInfo gPagePaddingInfo[] = {
-    /* TODO: replace this hack with two different structs? */
+    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(PagePadding), NULL },
     { "InnerX", Type_Int, offsetof(PagePadding, innerX), NULL },
     { "InnerY", Type_Int, offsetof(PagePadding, innerY), NULL },
@@ -358,26 +375,21 @@ static SettingInfo gPagePaddingInfo[] = {
 };
 
 static SettingInfo gPrinterDefaultsInfo[] = {
-    /* TODO: replace this hack with two different structs? */
+    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)2, sizeof(PrinterDefaults), NULL },
     { "PrintAsImage", Type_Bool, offsetof(PrinterDefaults, printAsImage), NULL },
     { "PrintScale", Type_String, offsetof(PrinterDefaults, printScale), NULL },
 };
 
 static SettingInfo gUserPrefsInfo[] = {
-    /* TODO: replace this hack with two different structs? */
-    { NULL, (SettingType)11, sizeof(UserPrefs), NULL },
-    { "EscToExit", Type_Bool, offsetof(UserPrefs, escToExit), NULL },
+    /* TODO: replace this hack with a second meta-struct? */
+    { NULL, (SettingType)6, sizeof(UserPrefs), NULL },
+    { "AdvancedPrefs", Type_Struct, offsetof(UserPrefs, advancedPrefs), gAdvancedPrefsInfo },
     { "ExternalViewers", Type_Array, offsetof(UserPrefs, externalViewers), gExternalViewersInfo },
     { NULL, Type_Array, offsetof(UserPrefs, externalViewersCount), gExternalViewersInfo },
     { "ForwardSearch3", Type_Struct, offsetof(UserPrefs, forwardSearch3), gForwardSearch3Info },
-    { "MainWindowBackground", Type_Color, offsetof(UserPrefs, mainWindowBackground), NULL },
-    { "PageColor", Type_Color, offsetof(UserPrefs, pageColor), NULL },
     { "PagePadding", Type_Struct, offsetof(UserPrefs, pagePadding), gPagePaddingInfo },
     { "PrinterDefaults", Type_Struct, offsetof(UserPrefs, printerDefaults), gPrinterDefaultsInfo },
-    { "ReuseInstance", Type_Bool, offsetof(UserPrefs, reuseInstance), NULL },
-    { "TextColor", Type_Color, offsetof(UserPrefs, textColor), NULL },
-    { "TraditionalEbookUI", Type_Bool, offsetof(UserPrefs, traditionalEbookUI), NULL },
 };
 #endif
 

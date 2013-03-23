@@ -221,10 +221,13 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
     }
 }
 
-char *Serialize(const void *data, SettingInfo *def, size_t *sizeOut)
+char *Serialize(const void *data, SettingInfo *def, size_t *sizeOut, const char *comment)
 {
     str::Str<char> out;
-    out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
+    if (comment)
+        out.AppendFmt(UTF8_BOM "; %s\r\n", comment);
+    else
+        out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
     SerializeRec(out, data, def);
     if (sizeOut)
         *sizeOut = out.Size();

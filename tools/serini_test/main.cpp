@@ -45,6 +45,7 @@ static bool TestSerializeIni3()
     CrashIf(!s); // failed to parse file
     if (!s) 
         return false;
+    CrashIf(!str::Find(s->inverseSearchCmdLine, L"\r\n"));
 
     size_t len;
     ScopedMem<char> ser(serini3::Serialize(s, gGlobalPrefsInfo, &len));
@@ -55,14 +56,36 @@ static bool TestSerializeIni3()
     return true;
 }
 
+static bool TestSerializeUserIni3()
+{
+    const WCHAR *path = L"..\\tools\\serini_test\\data3-user.ini";
+
+    ScopedMem<char> data(file::ReadAll(path, NULL));
+    CrashIf(!data); // failed to read file
+    if (!data)
+        return false;
+    UserPrefs *s = (UserPrefs *)serini3::Deserialize(data, str::Len(data), gUserPrefsInfo);
+    CrashIf(!s); // failed to parse file
+    if (!s) 
+        return false;
+
+    ScopedMem<char> ser(serini3::Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini"));
+    serini3::FreeStruct(s, gUserPrefsInfo);
+    CrashIf(!str::Eq(data, ser));
+
+    return true;
+}
+
 int main(int argc, char **argv)
 {
 #ifdef DEBUG
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
     if (!TestSerializeIni())
-        return 2;
-    if (!TestSerializeIni3())
         return 1;
+    if (!TestSerializeIni3())
+        return 2;
+    if (!TestSerializeUserIni3())
+        return 3;
     return 0;
 }
