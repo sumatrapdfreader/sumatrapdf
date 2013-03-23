@@ -1,8 +1,12 @@
+; comment
 les: [
    foo: bar  
+   # this is  comment too
    [  
    val  
-   ]
+	]
+
+
 go
 ]
 ---

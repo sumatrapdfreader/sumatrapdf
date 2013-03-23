@@ -129,6 +129,11 @@ struct TokenVal {
     char *  keyEnd;
 };
 
+static bool IsCommentChar(char c)
+{
+    return (';' == c ) || ('#' == c);
+}
+
 // TODO: maybe also allow things like:
 // foo: [1 3 4]
 // i.e. a child on a single line
@@ -138,6 +143,8 @@ static void ParseNextToken(TxtParser& parser, TokenVal& tok)
     tok.type = TokenError;
 
     str::Slice& slice = parser.toParse;
+
+Again:
     if (slice.Finished())
         return;
 
@@ -154,6 +161,12 @@ static void ParseNextToken(TxtParser& parser, TokenVal& tok)
         return;
 
     char c = slice.CurrChar();
+    if (IsCommentChar(c)) {
+        slice.SkipUntil('\n');
+        slice.Skip(1);
+        goto Again;
+    }
+
     if ('[' == c || ']' == c) {
         tok.type = ('[' == c) ? TokenOpen : TokenClose;
         slice.ZeroCurr();
@@ -268,7 +281,9 @@ static TxtNode *ParseNextNode(TxtParser& parser)
 bool ParseTxt(TxtParser& parser)
 {
     CrashIf(!parser.allocator);
-    // TODO: first, normalize newlines and remove empty lines
+    str::Slice& slice = parser.toParse;
+    size_t n = str::NormalizeNewlinesInPlace(slice.begin, slice.end);
+    slice.end = slice.begin + n;
     parser.firstNode = ParseNextNode(parser);
     if (parser.firstNode == NULL)
         return false;
