@@ -1,0 +1,22 @@
+les: [
+   foo: bar
+   [
+   val
+   ]
+go
+]
+---
+les [
+  foo = bar
+  [
+    val
+  ]
+]
+---
+foo   [
+x: value of me
+]
+---
+foo [
+  x = value of me
+]
