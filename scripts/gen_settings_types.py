@@ -180,7 +180,8 @@ class Field(object):
             else:
                 return "false"
         if self.is_color():
-            return "#" + hex(self.val)[2:]
+            #return "#" + hex(self.val)[2:]
+            return "#%08x" % self.val
         if self.is_signed() or self.is_unsigned() or self.is_float():
             return str(self.val)
         if self.is_string():

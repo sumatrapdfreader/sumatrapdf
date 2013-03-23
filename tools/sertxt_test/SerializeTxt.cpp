@@ -76,7 +76,6 @@ static bool IsUnsignedIntType(Typ type)
 {
     return ((TYPE_U16 == type) ||
             (TYPE_U32 == type) ||
-            (TYPE_COLOR == type) ||
             (TYPE_U64 == type));
 }
 
@@ -257,6 +256,19 @@ static bool ParseInt(char *s, char *e, int64_t *iOut)
     return true;
 }
 
+static bool ParseColor(char *s, char *e, COLORREF *colOut)
+{
+    int a, r, g, b;
+    if (!str::Parse(s, "#%2x%2x%2x%2x", &a, &r, &g, &b))
+        return false;
+    COLORREF col =  RGB(r, g, b);
+    COLORREF alpha = (COLORREF)a;
+    alpha = alpha << 24;
+    col = col | alpha;
+    *colOut = col;
+    return true;
+}
+
 static bool ParseBool(char *s, char *e, bool *bOut)
 {
     str::TrimWsEnd(s, e);
@@ -382,6 +394,11 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         if (!ok)
             return false;
         WriteStructBool(structDataPtr, bVal);
+    } else if (TYPE_COLOR == type) {
+        COLORREF val;
+        ok = ParseColor(node->valStart, node->valEnd, &val);
+        if (ok)
+            WriteStructUInt(structDataPtr, TYPE_U32, val);
     } else if (IsUnsignedIntType(type)) {
         ok = DecodeUInt(ds, node);
         if (ok)
@@ -496,6 +513,19 @@ static void FixFloatStr(char *s)
     *dot = 0;
 }
 
+#define HEX_CHARS "0123456789abcdef"
+
+static void AppendHex(uint8_t b, str::Str<char>& res)
+{
+    char c;
+    uint8_t n = (b & 0xf0) >> 4;
+    c = HEX_CHARS[n];
+    res.Append(c);
+    n = b & 0xf;
+    c = HEX_CHARS[n];
+    res.Append(HEX_CHARS[n]);
+}
+
 static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, int nest, str::Str<char>& res)
 {
     str::Str<char> val;
@@ -507,8 +537,15 @@ static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, 
     } else if (TYPE_COLOR == type) {
         uint64_t u = ReadStructUInt(data, type);
         COLORREF c = (COLORREF)u;
-        DWORD alpha = c >> 24;
-        val.AppendFmt("#%02x%02x%02x%02x", (int)alpha, GetRValue(c), GetGValue(c), GetBValue(c));
+        uint8_t r = (uint8_t)(c & 0xff);
+        uint8_t g = (uint8_t)((c >> 8) & 0xff);
+        uint8_t b = (uint8_t)((c >> 16) & 0xff);
+        uint8_t a = (uint8_t)((c >> 24) & 0xff);
+        val.Append("#");
+        AppendHex(a, val);
+        AppendHex(r, val);
+        AppendHex(g, val);
+        AppendHex(b, val);
         AppendKeyVal(fieldDef->name, val.Get(), nest, res);
     } else if (IsUnsignedIntType(type)) {
         uint64_t u = ReadStructUInt(data, type);

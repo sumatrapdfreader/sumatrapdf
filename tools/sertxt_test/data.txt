@@ -26,9 +26,9 @@ basic [
 advanced [
   traditional_ebook_ui: true
   esc_to_exit: false
-  text_color: #0
-  page_color: #ffffff
-  main_window_background: #fff200
+  text_color: #00000000
+  page_color: #00ffffff
+  main_window_background: #00fff200
   page_padding [
     top: 2
     bottom: 2
@@ -41,7 +41,7 @@ advanced [
     highlight_offset: 0
     highlight_width: 15
     highlight_permanent: 0
-    highlight_color: #6581ff
+    highlight_color: #006581ff
     enable_tex_enhancements: false
   ]
   s: Hello

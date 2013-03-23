@@ -590,6 +590,9 @@ size_t NormalizeNewlinesInPlace(char *s, char *e)
             inNewline = false;
         }
     }
+    if (dst < e) {
+        *dst = 0;
+    }
     // remove newlines from the end
     while (dst > start && dst[-1] == '\n') {
         --dst;
