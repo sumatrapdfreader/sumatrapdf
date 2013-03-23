@@ -300,23 +300,27 @@ static void AppendWsTrimEnd(str::Str<char>& res, char *s, char *e)
     res.Append(s, e - s);
 }
 
+static void PrettyPrintVal(TxtNode *curr, int nest, str::Str<char>& res)
+{
+    AppendNest(res, nest);
+    if (curr->keyStart) {
+        AppendWsTrimEnd(res, curr->keyStart, curr->keyEnd);
+        res.Append(" = ");
+    }
+    AppendWsTrimEnd(res, curr->valStart, curr->valEnd);
+}
+
 static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
 {
     while (curr) {
         if (curr->child) {
-            AppendNest(res, nest);
-            AppendWsTrimEnd(res, curr->valStart, curr->valEnd);
+            PrettyPrintVal(curr, nest, res);
             res.Append(" [\n");
             PrettyPrintNode(curr->child, nest + 1, res);
             AppendNest(res, nest);
             res.Append("]\n");
         } else {
-            AppendNest(res, nest);
-            if (curr->keyStart) {
-                AppendWsTrimEnd(res, curr->keyStart, curr->keyEnd);
-                res.Append(" = ");
-            }
-            AppendWsTrimEnd(res, curr->valStart, curr->valEnd);
+            PrettyPrintVal(curr, nest, res);
             res.Append("\n");
         }
         curr = curr->next;

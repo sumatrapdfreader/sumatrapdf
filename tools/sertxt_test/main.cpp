@@ -83,6 +83,6 @@ static void testFromFile()
 
 int main(int argc, char **argv)
 {
-    //testFromFile();
+    testFromFile();
     testParseSumatraSettings();
 }

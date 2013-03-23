@@ -1,16 +1,16 @@
 les: [
-   foo: bar
-   [
-   val
+   foo: bar  
+   [  
+   val  
    ]
 go
 ]
 ---
 les [
-  foo = bar
-  [
+  foo = bar [
     val
   ]
+  go
 ]
 ---
 foo   [
