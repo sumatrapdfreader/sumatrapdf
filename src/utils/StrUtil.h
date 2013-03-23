@@ -94,7 +94,9 @@ inline bool IsWs(char c) { return ' ' == c || '\t' <= c && c <= '\r'; }
 inline bool IsWs(WCHAR c) { return iswspace(c); }
 inline bool IsDigit(char c) { return '0' <= c && c <= '9'; }
 inline bool IsDigit(WCHAR c) { return '0' <= c && c <= '9'; }
+
 size_t  TrimWS(WCHAR *s, TrimOpt opt=TrimBoth);
+void    TrimWsEnd(char *s, char *&e);
 
 size_t  TransChars(char *str, const char *oldChars, const char *newChars);
 size_t  TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars);

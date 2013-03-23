@@ -483,6 +483,18 @@ size_t TransChars(WCHAR *str, const WCHAR *oldChars, const WCHAR *newChars)
     return findCount;
 }
 
+// potentially moves e backwards, skipping over whitespace
+void TrimWsEnd(char *s, char *&e)
+{
+    while (e > s) {
+        --e;
+        if (!str::IsWs(*e)) {
+            ++e;
+            return;
+        }
+    }
+}
+
 char *Replace(const char *s, const char *toReplace, const char *replaceWith)
 {
     Vec<char> res;

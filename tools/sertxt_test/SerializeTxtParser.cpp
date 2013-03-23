@@ -199,6 +199,7 @@ Again:
     // this is "foo [", '[' will be returned in subsequent call
     // it'll also be zero'ed, properly terminating this token's valStart
     if ('[' == slice.CurrChar()) {
+        // TODO: should this be returned as key instead?
         tok.valEnd = slice.curr;
         // interpret "foo: [" as "foo ["
         if (tok.keyEnd) {
@@ -290,17 +291,6 @@ bool ParseTxt(TxtParser& parser)
     return true;
 }
 
-static void TrimWsEnd(char *s, char *&e)
-{
-    while (e > s) {
-        --e;
-        if (!str::IsWs(*e)) {
-            ++e;
-            return;
-        }
-    }
-}
-
 static void AppendNest(str::Str<char>& s, int nest)
 {
     while (nest > 0) {
@@ -311,7 +301,7 @@ static void AppendNest(str::Str<char>& s, int nest)
 
 static void AppendWsTrimEnd(str::Str<char>& res, char *s, char *e)
 {
-    TrimWsEnd(s, e);
+    str::TrimWsEnd(s, e);
     res.Append(s, e - s);
 }
 

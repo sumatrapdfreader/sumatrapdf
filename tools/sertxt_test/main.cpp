@@ -1,13 +1,12 @@
 #include "BaseUtil.h"
 #include "FileUtil.h"
+#include "SerializeTxt.h"
 #include "SerializeTxtParser.h"
 #include "SettingsSumatra.h"
 
-static void testParseSumatraSettings()
+static void TestParseSumatraSettings()
 {
     size_t fileSize;
-    TxtParser parser;
-    
     const char *path = "..\\tools\\sertxt_test\\data.txt";
     char *s = file::ReadAllUtf(path, &fileSize);
     if (!s) {
@@ -15,13 +14,14 @@ static void testParseSumatraSettings()
         return;
     }
 
+    TxtParser parser;
     parser.toParse.Init(s, fileSize);
     bool ok = ParseTxt(parser);
     if (!ok)
         printf("%s", "failed to parse");
 }
 
-static bool testString(const char *s, char *expected)
+static bool TestString(const char *s, char *expected)
 {
     TxtParser parser;
 
@@ -46,7 +46,7 @@ static bool testString(const char *s, char *expected)
     return ok;
 }
 
-static void testFromFile()
+static void TestFromFile()
 {
     size_t fileSize;
     const char *path = "..\\tools\\sertxt_test\\tests.txt";
@@ -75,14 +75,40 @@ static void testFromFile()
     }
     n = n / 2;
     for (int i=0; i < n; i++) {
-        bool ok = testString(tests.At(i*2), tests.At(i*2+1));
+        bool ok = TestString(tests.At(i*2), tests.At(i*2+1));
         if (!ok)
             return;
     }
 }
 
+static void TestSettingsDeserialize()
+{
+    size_t fileSize;
+    const char *path = "..\\tools\\sertxt_test\\data.txt";
+    char *s = file::ReadAllUtf(path, &fileSize);
+    if (!s) {
+        printf("failed to load '%s'", path);
+        return;
+    }
+    char *sCopy = str::Dup(s);
+    bool usedDefault;
+    Settings *settings = DeserializeSettings((const uint8_t *)s, (int)fileSize, &usedDefault);
+    int serializedLen;
+    char *s2 = (char*)SerializeSettings(settings, &serializedLen);
+    if (!str::Eq(sCopy, s2)) {
+        printf("'%s'\n != \n'%s'\n", sCopy, s2);
+    }
+    free(sCopy);
+    FreeSettings(settings);
+}
+
 int main(int argc, char **argv)
 {
-    testFromFile();
-    testParseSumatraSettings();
+#ifdef DEBUG
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
+    TestSettingsDeserialize();
+    TestFromFile();
+    TestParseSumatraSettings();
 }
