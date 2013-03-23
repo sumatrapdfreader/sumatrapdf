@@ -150,6 +150,16 @@ const WCHAR * const gTranslations[] = {
   L"Мб",
   L"Открытие документа в SumatraPDF...",
 
+  /* Translations for language es */
+  L"%s de %s",
+  L"Error: No se puede ejecutar SumatraPDF!",
+  L"Error: SumatraPDF no ha sido encontrado!",
+  L"Error: ¡El documento no puede ser descargado!",
+  NULL,
+  NULL,
+  NULL,
+  L"Abriendo documento en SumatraPDF",
+
   /* Translations for language ta */
   L"%s ல் %s",
   L"சுமத்ரா PDFஐ இயங்கவில்லை",
@@ -169,11 +179,21 @@ const WCHAR * const gTranslations[] = {
   NULL,
   NULL,
   L"Триває відкриття документа у SumatraPDF...",
+
+  /* Translations for language uz */
+  L"%s %s'dan",
+  L"Xato: SumatraPDF ishga tushirib bo'lmadi!",
+  L"Xato: SumatraPDF topilmadi!",
+  L"Xato: hujjatni yuklab bo'lmadi!",
+  NULL,
+  NULL,
+  NULL,
+  L"Hujjat SumatraPDFda ochilmoqda...",
 };
 
 const char * const gLanguages[] = {
     "en", "ar", "az", "eu", "cn", "fr", "de", "hu", "it", "kr",
-    "br", "pt", "ro", "ru", "ta", "uk", NULL
+    "br", "pt", "ro", "ru", "es", "ta", "uk", "uz", NULL
 };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
@@ -206,8 +226,10 @@ int GetLanguageIndex(LANGID id)
     case _LANGID(LANG_PORTUGUESE): return 88;
     case _LANGID(LANG_ROMANIAN): return 96;
     case _LANGID(LANG_RUSSIAN): return 104;
-    case _LANGID(LANG_TAMIL): return 112;
-    case _LANGID(LANG_UKRAINIAN): return 120;
+    case _LANGID(LANG_SPANISH): return 112;
+    case _LANGID(LANG_TAMIL): return 120;
+    case _LANGID(LANG_UKRAINIAN): return 128;
+    case _LANGID(LANG_UZBEK): return 136;
     default: return -1;
 #undef _LANGID
     }

@@ -662,7 +662,7 @@ const char * gTranslations_ar =
   "\331\201\330\252\330\255\0"\
   "\331\201\330\252\330\255 \330\247\331\204\331\205\331\204\331\201 \330\250\331\200 PDF-XChange\0"\
   "\331\201\330\252\330\255 \331\205\330\263\330\252\331\206\330\257...\0"\
-  "\0"\
+  "\331\201\330\252\330\255 \331\201\331\212  %s\0"\
   "\331\201\330\252\330\255 \330\247\331\204\331\205\331\204\331\201 \330\250\331\200 Adobe Reader\0"\
   "\331\201\330\252\330\255 \330\247\331\204\331\205\331\204\331\201 \330\250\331\200 Foxit Reader\0"\
   "\331\201\330\252\330\255 \330\247\331\204\331\205\331\204\331\201 \330\250\331\200 Microsoft HTML Help\0"\
@@ -1391,7 +1391,7 @@ const char * gTranslations_eu =
   "Ireki\0"\
   "Ireki PDF-XChangen\0"\
   "Ireki agiri bat...\0"\
-  "\0"\
+  "Irekitzea %s\0"\
   "Ireki &Adobe Readerren\0"\
   "Ireki &Foxit Readerren\0"\
   "Ireki Microsoft HTML Laguntzan\0"\
@@ -2606,7 +2606,7 @@ const char * gTranslations_cn =
   "\346\211\223\345\274\200\0"\
   "\345\234\250 PDF-XChange \344\270\255\346\211\223\345\274\200(&I)\0"\
   "\346\211\223\345\274\200\344\270\200\344\270\252\346\226\207\344\273\266...\0"\
-  "\0"\
+  "\345\274\200\346\224\276\347\232\204 %s\0"\
   "\345\234\250 &Adobe Reader \344\270\255\346\211\223\345\274\200\0"\
   "\345\234\250 &Foxit Reader \344\270\255\346\211\223\345\274\200\0"\
   "\345\234\250 &Microsoft HTML Help \344\270\255\346\211\223\345\274\200\0"\
@@ -4550,7 +4550,7 @@ const char * gTranslations_fr =
   "Ouvrir\0"\
   "Ouvrir dans PDF-XChange\0"\
   "Ouvrir un document...\0"\
-  "\0"\
+  "Ouvrir dans %s\0"\
   "Ouvrir dans &Adobe Reader\0"\
   "Ouvrir dans Fo&xit Reader\0"\
   "Ouvrir dans Microsoft HTML Help\0"\
@@ -5279,7 +5279,7 @@ const char * gTranslations_de =
   "\303\226ffnen\342\200\246\0"\
   "Mit PDF-&XChange \303\266ffnen\0"\
   "Dokument \303\266ffnen\342\200\246\0"\
-  "\0"\
+  "Mit %s \303\266ffnen\0"\
   "Mit &Adobe Reader \303\266ffnen\0"\
   "Mit F&oxit Reader \303\266ffnen\0"\
   "Mit &Microsoft HTML Hilfe \303\266ffnen\0"\
@@ -6251,7 +6251,7 @@ const char * gTranslations_hu =
   "Megny&it\303\241s\0"\
   "Megnyit\303\241s PDF-XChangeben\0"\
   "F\303\241jl megnyit\303\241sa...\0"\
-  "\0"\
+  "Megnyit\303\241s %s\0"\
   "Megnyit\303\241s &Adobe Acrobat-ban\0"\
   "Megnyit\303\241s &Foxit Readerben\0"\
   "Megnyit\303\241s Microsoft HTML Helpben\0"\
@@ -6980,7 +6980,7 @@ const char * gTranslations_it =
   "Apri\0"\
   "Apri con PDF-XChange\0"\
   "Apri documento...\0"\
-  "\0"\
+  "Apri in %s\0"\
   "Apri con &Adobe Reader\0"\
   "Apri con &Foxit Reader\0"\
   "Apri con Microsoft HTML Help\0"\
@@ -7466,7 +7466,7 @@ const char * gTranslations_kr =
   "\354\227\264\352\270\260\0"\
   "PDF-XChange\353\241\234 \354\227\264\352\270\260(&I)\0"\
   "\353\254\270\354\204\234 \354\227\264\352\270\260...\0"\
-  "\0"\
+  "\354\227\220\354\204\234 \354\227\264\352\270\260 %s\0"\
   "Adobe Reader\353\241\234 \354\227\264\352\270\260(&A)\0"\
   "Foxit Reader\353\241\234 \354\227\264\352\270\260(&F)\0"\
   "Microsoft HTML Help\353\241\234 \354\227\264\352\270\260(&M)\0"\
@@ -9410,7 +9410,7 @@ const char * gTranslations_br =
   "Abrir\0"\
   "Abrir no PDF-XChange\0"\
   "Abrir um documento...\0"\
-  "\0"\
+  "Abrir em %s\0"\
   "Abrir no &Adobe Reader\0"\
   "Abrir no &Foxit Reader\0"\
   "Abrir no Microsoft HTML Help\0"\
@@ -9653,7 +9653,7 @@ const char * gTranslations_pt =
   "Abrir\0"\
   "Abrir no PDF-&XChange\0"\
   "Abrir documento...\0"\
-  "\0"\
+  "Abrir em %s\0"\
   "Abrir no Adobe &Reader\0"\
   "Abrir &no &Foxit Reader\0"\
   "Abrir no &Microsoft HTML Help\0"\
@@ -9896,7 +9896,7 @@ const char * gTranslations_ro =
   "Deschide\0"\
   "Deschide \303\256n PDF-XChange\0"\
   "Deschide un document...\0"\
-  "\0"\
+  "deschide \303\256n %s\0"\
   "Deschide \303\256n &Adobe Reader\0"\
   "Deschide \303\256n &Foxit Reader\0"\
   "Deschide \303\256n Microsoft HTML Help\0"\
@@ -10139,7 +10139,7 @@ const char * gTranslations_ru =
   "\320\236\321\202\320\272\321\200\321\213\321\202\321\214\0"\
   "\320\236\321\202\320\272\321\200\321\213\321\202\321\214 \320\262 PDF-XChange\0"\
   "\320\236\321\202\320\272\321\200\321\213\321\202\321\214 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202...\0"\
-  "\0"\
+  "\320\236\321\202\320\272\321\200\321\213\321\202\321\214 \320\262 %s\0"\
   "\320\236&\321\202\320\272\321\200\321\213\321\202\321\214 \320\262 Adobe Reader\0"\
   "\320\236\321\202\320\272&\321\200\321\213\321\202\321\214 \320\262 Foxit Reader\0"\
   "\320\236\321\202\320\272\321\200\321\213\321\202\321\214 \320\262 Microsoft HTML Help\0"\
@@ -11354,7 +11354,7 @@ const char * gTranslations_es =
   "Abrir\0"\
   "Abrir en PDF-XChange\0"\
   "Abrir un documento ...\0"\
-  "\0"\
+  "Abrir en %s\0"\
   "Abrir en &Adobe Reader\0"\
   "Abrir en &Foxit Reader\0"\
   "Abrir en Microsoft HTML Help\0"\
@@ -11840,7 +11840,7 @@ const char * gTranslations_ta =
   "\340\256\244\340\256\277\340\256\261\0"\
   "PDF-XChange \340\256\207\340\256\262\340\257\215 \340\256\244\340\256\277\340\256\261\0"\
   "\340\256\206\340\256\265\340\256\243\340\256\244\340\257\215\340\256\244\340\257\210 \340\256\244\340\256\277\340\256\261\340\256\225\340\257\215\340\256\225...\0"\
-  "\0"\
+  "\340\256\244\340\256\277\340\256\261 %s\0"\
   "&Adobe Reader \340\256\207\340\256\262\340\257\215 \340\256\244\340\256\277\340\256\261\0"\
   "&Foxit Reader \340\256\207\340\256\262\340\257\215 \340\256\244\340\256\277\340\256\261\0"\
   "Microsoft HTML Help \340\256\207\340\256\262\340\257\215 \340\256\244\340\256\277\340\256\261\0"\
@@ -12326,7 +12326,7 @@ const char * gTranslations_uk =
   "\320\222\321\226\320\264\320\272\321\200\320\270\321\202\320\270\0"\
   "\320\222\321\226\320\264\320\272\321\200\320\270\321\202\320\270 \321\203 PDF-XChange\0"\
   "\320\222\321\226\320\264\320\272\321\200\320\270\321\202\320\270 \320\264\320\276\320\272\321\203\320\274\320\265\320\275\321\202...\0"\
-  "\0"\
+  "\320\262\321\226\320\264\320\272\321\200\320\270\321\202\320\270 \320\262 %s\0"\
   "\320\222\321\226\320\264\320\272\321\200\320\270\321\202\320\270 \321\203 Adobe Reader\0"\
   "\320\222\321\226\320\264\320\272\321\200\320\270\321\202\320\270 \321\203 Foxit Reader\0"\
   "\320\222\321\226\320\264\320\272\321\200\320\270\321\202\320\270 \321\203 Microsoft HTML Help\0"\
@@ -12569,7 +12569,7 @@ const char * gTranslations_uz =
   "Ochish\0"\
   "PDF-XChangeda ochish\0"\
   "Hujjatni ochish...\0"\
-  "\0"\
+  "%s'da ochish\0"\
   "&Adobe Readerda ochish\0"\
   "&Foxit Readerda ochish\0"\
   "Microsoft HTML Helpda ochish\0"\

@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   15
+#define LANGS_COUNT   16
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -303,7 +303,7 @@ const char * gTranslations_hu =
   "Az uninstaller ideiglenes k\303\266nyvt\303\241rba val\303\263 m\303\241sol\303\241sa nem siker\303\274lt\0"\
   "Nem siker\303\274lt l\303\251trehozni a parancsikont\0"\
   "Az elt\303\241vol\303\255t\303\263 registry kulcsainak t\303\266rl\303\251se sikertelen\0"\
-  "\0"\
+  "Nem siker\303\274lt \303\255rni a kiterjesztett f\303\241jlkiterjeszt\303\251st inform\303\241ci\303\263kat a rendszerle\303\255r\303\263 adatb\303\241zisban\0"\
   "Elt\303\241vol\303\255t\303\241ssal kapcsolatos inform\303\241ci\303\263k registry-be \303\255r\303\241sa sikertelen\0"\
   "Be\303\241ll\303\255t\303\241sok elrejt\303\251se\0"\
   "PDF be\303\251p\303\274l\305\221 telep\303\255t\303\251se Firefox, Chrome \303\251s Opera b\303\266ng\303\251sz\305\221kre\0"\
@@ -599,6 +599,51 @@ const char * gTranslations_ru =
   "\320\237\321\200\320\276\320\270\321\201\321\205\320\276\320\264\320\270\321\202 \321\203\320\264\320\260\320\273\320\265\320\275\320\270\320\265...\0"\
   "\320\230\321\201\320\277\320\276\320\273\321\214\320\267\320\276\320\262\320\260\321\202\321\214 SumatraPDF \320\264\320\273\321\217 \320\277\321\200\320\276\321\201\320\274\320\276\321\202\321\200\320\260 PDF\0";
 
+const char * gTranslations_es = 
+  "&Opciones\0"\
+  "\302\277Est\303\241 seguro de querer desinstalar SumatraPDF?\0"\
+  "Cerrar\0"\
+  "No es posiblre crear la carpeta temporal\0"\
+  "No se puede crear el directorio de instalaci\303\263n\0"\
+  "No se puede instalar previsualizador PDF\0"\
+  "No se puede instalar el filtro buscador PDF\0"\
+  "No es posible instalar el plugin de navegaci\303\263n\0"\
+  "No se puede acceder al directorio temporal\0"\
+  "No se puede eliminar el directorio de instalaci\303\263n\0"\
+  "No se puede eliminar el acceso directo\0"\
+  "No se puede desinstalar el previsualizador PDF\0"\
+  "No se puede desinstalar el filtro buscador PDF\0"\
+  "No se puede desinstalar el plugin de navegaci\303\263n\0"\
+  "No se puede escribir %s al disco\0"\
+  "Fallo al copiar el desinstalador al directorio temporal\0"\
+  "Error al crear un acceso directo\0"\
+  "Fallo al eliminar las llaves de registro del desinstalador\0"\
+  "Fallo al escribir informaci\303\263n de la extensi\303\263n de archivo al registro\0"\
+  "Fallo al escribir informaci\303\263n de desinstalaci\303\263n al registro\0"\
+  "Ocultar &Opciones\0"\
+  "Instalar el plugin PDF del &navegador para Firefox, Chrome y Opera\0"\
+  "Instalar SumatraPDF\0"\
+  "Instalar SumatraPDF en &directorio:\0"\
+  "Fall\303\263 la instalaci\303\263n\0"\
+  "Instalaci\303\263n en progreso...\0"\
+  "Permitir al escritorio Windows buscar &buscar documentos PDF\0"\
+  "Permitir mostrar a Windows &vistaprevia de documentos PDF\0"\
+  "Por favor cerrar %s para continuar!\0"\
+  "Seleccione la carpeta donde SumatraPDF deber\303\255a ser instalado:\0"\
+  "Algunos de los archivos que van a ser instalados estan da\303\261ados o no se encuentran\0"\
+  "Iniciar SumatraPDF\0"\
+  "Instalador %s SumatraPDF\0"\
+  "Desinstalador %s SumatraPDF\0"\
+  "SumatraPDF ha sido desinstalado.\0"\
+  "Instalaci\303\263n de SumatraPDF no encontrada.\0"\
+  "Gracias por seleccionar SumatraPDF\0"\
+  "\302\241Gracias! SumatraPDF ha sido instalado\0"\
+  "El instalador est\303\241 da\303\261ado. Por favor desc\303\241rguelo de nuevo. \nDisculpas por el inconveniente!\0"\
+  "Desinstalar SumatraPDF\0"\
+  "Fall\303\263 la desinstalaci\303\263n\0"\
+  "Desinstalaci\303\263n en progreso...\0"\
+  "Usar SumatraPDF como el lector PDF por &defecto\0";
+
 const char * gTranslations_ta = 
   "&\340\256\265\340\256\277\340\256\260\340\257\201\340\256\252\340\257\215\340\256\252\340\256\256\340\257\215\0"\
   "\340\256\232\340\257\201\340\256\256\340\256\244\340\257\215\340\256\260\340\256\276 PDF \340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\262\340\257\210 \340\256\250\340\257\200\340\256\225\340\257\215\340\256\225\340\256\265\340\256\276?\0"\
@@ -704,6 +749,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_pt, 
   gTranslations_ro, 
   gTranslations_ru, 
+  gTranslations_es, 
   gTranslations_ta, 
   gTranslations_uk
 };
@@ -724,6 +770,7 @@ const char *gLangCodes =   "en\0" \
   "pt\0" \
   "ro\0" \
   "ru\0" \
+  "es\0" \
   "ta\0" \
   "uk\0" "\0";
 
@@ -740,6 +787,7 @@ const char *gLangNames =   "English\0" \
   "Portuguese - Portugal (Portugu\303\252s)\0" \
   "Romanian (Rom\303\242n\304\203)\0" \
   "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)\0" \
+  "Spanish (Espa\303\261ol)\0" \
   "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264\340\257\215)\0" \
   "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)\0" "\0";
 
@@ -768,6 +816,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_PORTUGUESE),
   _LANGID(LANG_ROMANIAN),
   _LANGID(LANG_RUSSIAN),
+  _LANGID(LANG_SPANISH),
   _LANGID(LANG_TAMIL),
   _LANGID(LANG_UKRAINIAN)
 };

@@ -192,6 +192,7 @@ OK
 Open
 Open &in PDF-XChange
 Open a document...
+Open in %s
 Open in &Adobe Reader
 Open in &Foxit Reader
 Open in &Microsoft HTML Help
