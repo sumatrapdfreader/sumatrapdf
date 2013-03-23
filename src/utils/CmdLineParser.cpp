@@ -68,6 +68,7 @@ void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out, int maxParts)
     if (cmdLine) {
         while (str::IsWs(*cmdLine))
             cmdLine++;
-        out.Append(str::Dup(cmdLine));
+        if (*cmdLine)
+            out.Append(str::Dup(cmdLine));
     }
 }
