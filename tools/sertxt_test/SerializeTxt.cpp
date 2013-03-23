@@ -166,6 +166,56 @@ static void WriteStructFloat(uint8_t *p, float f)
     *fp = f;
 }
 
+static bool ReadStructBool(const uint8_t *p)
+{
+    bool *bp = (bool*)p;
+    return *bp;
+}
+
+static int64_t ReadStructInt(const uint8_t *p, Typ type)
+{
+    if (TYPE_I16 == type) {
+        int16_t *vp = (int16_t*)p;
+        return (int64_t)*vp;
+    }
+    if (TYPE_I32 == type) {
+        int32_t *vp = (int32_t*)p;
+        return (int64_t)*vp;
+    }
+    CrashIf(true);
+    return 0;
+}
+
+static uint64_t ReadStructUInt(const uint8_t *p, Typ type)
+{
+    if (TYPE_U16 == type) {
+        uint16_t *vp = (uint16_t*)p;
+        return (uint64_t)*vp;
+    }
+    if ((TYPE_U32 == type) || (TYPE_COLOR == type)) {
+        uint32_t *vp = (uint32_t*)p;
+        return (uint64_t)*vp;
+    }
+    if (TYPE_U64 == type) {
+        uint64_t *vp = (uint64_t*)p;
+        return *vp;
+    }
+    CrashIf(true);
+    return 0;
+}
+
+static float ReadStructFloat(const uint8_t *p)
+{
+    float *fp = (float*)p;
+    return *fp;
+}
+
+static void *ReadStructPtr(const uint8_t *p)
+{
+    void **pp = (void**)p;
+    return *pp;
+}
+
 class DecodeState {
 public:
     // data being decoded
@@ -411,11 +461,109 @@ uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, Str
     return DeserializeRec(ds, ds.parser.firstNode, def);
 }
 
-// TODO: write me
+static void AppendNest(str::Str<char>& s, int nest)
+{
+    while (nest > 0) {
+        s.Append("  ");
+        --nest;
+    }
+}
+
+// TODO: if val contains newline, we must escape it. We also need to un-escape it.
+static void AppendKeyVal(const char *key, const char *val, int nest, str::Str<char>& res)
+{
+    AppendNest(res, nest);
+    res.Append(key);
+    res.Append(": ");
+    res.Append(val);
+    res.Append("\n");
+}
+
+void SerializeRec(const uint8_t *data, StructMetadata *def, int nest, str::Str<char>& res);
+
+// converts "1.00" => "1" i.e. strips unnecessary trailing zeros
+static void FixFloatStr(char *s)
+{
+    char *dot = (char*)str::FindCharLast(s, '.');
+    if (!dot)
+        return;
+    char *tmp = dot + 1;
+    while (*tmp) {
+        if (*tmp != '0')
+            return;
+        ++tmp;
+    }
+    *dot = 0;
+}
+
+static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, int nest, str::Str<char>& res)
+{
+    str::Str<char> val;
+    Typ type = fieldDef->type;
+    const uint8_t *data = structStart + fieldDef->offset;
+    if (TYPE_BOOL == type) {
+        bool b = ReadStructBool(data);
+        AppendKeyVal(fieldDef->name, b ? "true" : "false", nest, res);
+    } else if (TYPE_COLOR == type) {
+        uint64_t u = ReadStructUInt(data, type);
+        COLORREF c = (COLORREF)u;
+        DWORD alpha = c >> 24;
+        val.AppendFmt("#%02x%02x%02x%02x", (int)alpha, GetRValue(c), GetGValue(c), GetBValue(c));
+        AppendKeyVal(fieldDef->name, val.Get(), nest, res);
+    } else if (IsUnsignedIntType(type)) {
+        uint64_t u = ReadStructUInt(data, type);
+        //val.AppendFmt("%" PRIu64, u);
+        val.AppendFmt("%I64u", u);
+        AppendKeyVal(fieldDef->name, val.Get(), nest, res);
+    } else if (IsSignedIntType(type)) {
+        int64_t i = ReadStructInt(data, type);
+        //val.AppendFmt("%" PRIi64, u);
+        val.AppendFmt("%I64d", i);
+        AppendKeyVal(fieldDef->name, val.Get(), nest, res);
+    } else if (TYPE_FLOAT == type) {
+        float f = ReadStructFloat(data);
+        val.AppendFmt("%f", f);
+        char *floatStr = val.Get();
+        FixFloatStr(floatStr);
+        AppendKeyVal(fieldDef->name, floatStr, nest, res);
+    } else if (TYPE_STR == type) {
+        char *s = (char*)ReadStructPtr(data);
+        if (s)
+            AppendKeyVal(fieldDef->name, s, nest, res);
+    } else if (TYPE_WSTR == type) {
+        WCHAR *s = (WCHAR*)ReadStructPtr(data);
+        if (s) {
+            ScopedMem<char> val(str::conv::ToUtf8(s));
+            AppendKeyVal(fieldDef->name, val, nest, res);
+        }
+    } else if (TYPE_STRUCT_PTR == type) {
+        AppendNest(res, nest);
+        res.Append(fieldDef->name);
+        res.Append(" [\n");
+        const uint8_t *structStart2 = (const uint8_t *)ReadStructPtr(data);
+        SerializeRec(structStart2, fieldDef->def, nest + 1, res);
+        AppendNest(res, nest);
+        res.Append("]\n");
+    } else {
+        CrashIf(true);
+    }
+}
+
+void SerializeRec(const uint8_t *data, StructMetadata *def, int nest, str::Str<char>& res)
+{
+    for (size_t i = 0; i < def->nFields; i++) {
+        FieldMetadata *field = &def->fields[i];
+        SerializeField(field, data, nest, res);
+    }
+}
+
 uint8_t *Serialize(const uint8_t *data, const char *version, StructMetadata *def, int *sizeOut)
 {
-    *sizeOut = 0;
-    return NULL;
+    str::Str<char> res;
+    SerializeRec(data, def, 0, res);
+    if (sizeOut)
+        *sizeOut = (int)res.Size();
+    return (uint8_t *)res.StealData();
 }
 
 } // namespace sertxt

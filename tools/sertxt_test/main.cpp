@@ -95,6 +95,8 @@ static void TestSettingsDeserialize()
     Settings *settings = DeserializeSettings((const uint8_t *)s, (int)fileSize, &usedDefault);
     int serializedLen;
     char *s2 = (char*)SerializeSettings(settings, &serializedLen);
+    str::NormalizeNewlinesInPlace(s2);
+    str::NormalizeNewlinesInPlace(sCopy);
     if (!str::Eq(sCopy, s2)) {
         printf("'%s'\n != \n'%s'\n", sCopy, s2);
     }
