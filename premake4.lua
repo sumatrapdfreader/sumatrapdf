@@ -56,7 +56,7 @@ solution "everything"
     {
       "src/utils/*_ut.cpp",
     }
-    includedirs { "src/utils" }
+    includedirs { "src/utils", "src/utils/msvc" }
     links { }
 
     --configuration {"vs*"}
@@ -99,7 +99,7 @@ solution "everything"
     {
       "src/utils/*_ut.cpp",
     }
-    includedirs { "src/utils" }
+    includedirs { "src/utils", "src/utils/msvc" }
     links { "Shlwapi" }
 
   project "serini_test"
