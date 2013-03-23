@@ -238,7 +238,7 @@ static bool ParseInt(char *s, char *e, int64_t *iOut)
     if (s >= e)
         return false;
 
-    if (*s = '-') {
+    if ('-' == *s) {
         neg = true;
         s++;
     }
