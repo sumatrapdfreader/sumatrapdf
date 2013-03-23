@@ -1,3 +1,6 @@
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
 #include "BaseUtil.h"
 #include "IniParser.h"
 #include "../sertxt_test/SerializeTxt.h"
