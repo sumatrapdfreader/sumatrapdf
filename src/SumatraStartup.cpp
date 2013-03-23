@@ -259,22 +259,17 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.fwdSearch.width = gGlobalPrefs.fwdSearchWidth;
     i.fwdSearch.color = gGlobalPrefs.fwdSearchColor;
     i.fwdSearch.permanent = gGlobalPrefs.fwdSearchPermanent;
-    i.escToExit = gGlobalPrefs.escToExit;
+    i.escToExit = gGlobalPrefs.escToExit || gUserPrefs.escToExit;
     i.cbxR2L = gGlobalPrefs.cbxR2L;
     if (gGlobalPrefs.useSysColors) {
         i.colorRange[0] = GetSysColor(COLOR_WINDOWTEXT);
         i.colorRange[1] = GetSysColor(COLOR_WINDOW);
     }
-
-    // update defaults from SumatraPDF-user.ini
-    i.escToExit = gUserPrefs.escToExit;
-    i.colorRange[0] = gUserPrefs.textColor;
-    i.colorRange[1] = gUserPrefs.pageColor;
-    i.fwdSearch.offset = gUserPrefs.highlightOffset;
-    i.fwdSearch.width = gUserPrefs.highlightWidth;
-    i.fwdSearch.color = gUserPrefs.highlightColor;
-    i.fwdSearch.permanent = gUserPrefs.highlightPermanent;
-
+    else {
+        i.colorRange[0] = gUserPrefs.textColor;
+        i.colorRange[1] = gUserPrefs.pageColor;
+    }
+    // TODO: update with values from SumatraPDF-user.ini
     i.ParseCommandLine(GetCommandLine());
 }
 
