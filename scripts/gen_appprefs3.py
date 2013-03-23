@@ -23,24 +23,24 @@ class Field(object):
 		self.name = name; self.type = type; self.default = default; self.comment = comment
 		self.internal = internal; self.cname = name[0].lower() + name[1:] if name else None
 
-	def cdefault(self):
+	def inidefault(self):
 		if self.type == Bool:
-			return "%s(%s)" % (self.cname, "true" if self.default else "false")
+			return "%s = %s" % (self.name, "true" if self.default else "false")
 		if self.type == Color:
-			return "%s(%#06x)" % (self.cname, self.default)
+			return "%s = #%02x%02x%02x" % (self.name, self.default & 0xFF, (self.default >> 8) & 0xFF, (self.default >> 16) & 0xFF)
 		if self.type == Float:
-			return "%s(%f)" % (self.cname, self.default)
+			return "%s = %g" % (self.name, self.default)
 		if self.type == Int:
-			return "%s(%d)" % (self.cname, self.default)
-		if self.type == String and self.default is not None:
-			return "%s(str::Dup(L\"%s\"))" % (self.cname, self.default)
-		if self.type == Utf8String and self.default is not None:
-			return "%s(str::Dup(\"%s\"))" % (self.cname, self.default)
-		if self.type.name == "Struct" or self.type.name == "Array":
-			return "%s(NULL)" % self.cname
-		if self.type.name == "Custom" and self.default is not None:
-			return "%s(%s)" % (self.cname, self.default)
-		return None
+			return "%s = %d" % (self.name, self.default)
+		if self.type == String:
+			if self.default is not None:
+				return "%s = %s" % (self.name, self.default.encode("UTF-8"))
+			return "; %s =" % self.name
+		if self.type == Utf8String:
+			if self.default is not None:
+				return "%s = %s" % (self.name, self.default)
+			return "; %s =" % self.name
+		return "; %s = ???" % self.name
 
 class Struct(Field):
 	def __init__(self, name, fields, comment, structName=None):
@@ -126,6 +126,7 @@ UserPrefs = [
 		"these values allow to override the default settings in the Print dialog"),
 	Struct("PagePadding", PagePadding,
 		"these values allow to change how far apart pages are layed out"),
+	# renamed from ForwardSearch for interoperability with gen_settings.py
 	Struct("ForwardSearch3", ForwardSearch,
 		"these values allow to customize how the forward search highlight appears"),
 	Array("ExternalViewers", ExternalViewer,
@@ -266,19 +267,19 @@ UserPrefs = Struct("UserPrefs", UserPrefs,
 
 # ##### end of setting definitions for SumatraPDF #####
 
-def FormatComment(comment, indent="\t"):
-	result, parts, line = [], comment.split(), indent + "//"
+def FormatComment(comment, start="\t//"):
+	result, parts, line = [], comment.split(), start
 	while parts:
 		while parts and len(line + parts[0]) < 72:
 			line += " " + parts.pop(0)
 		result.append(line)
-		line = indent + "//"
+		line = start
 	return result
 
 def BuildStruct(struct, built=[]):
 	lines = ["struct %s {" % struct.name]
 	if struct.comment:
-		lines = FormatComment(struct.comment, "") + lines
+		lines = FormatComment(struct.comment, "//") + lines
 	for field in struct.default:
 		lines += FormatComment(field.comment)
 		lines.append("\t%s %s;" % (field.type.ctype, field.cname))
@@ -313,6 +314,19 @@ def BuildMetaData(struct, built=[]):
 		"};"
 	]))
 	return "\n\n".join(metadata)
+
+def AssembleDefaults(struct):
+	lines, more = [], []
+	for field in struct.default:
+		if field.internal:
+			continue
+		if type(field) in [Struct, Array]:
+			more.append("\n".join(FormatComment(field.comment, ";") + ["[%s]" % field.name, AssembleDefaults(field)]))
+		else:
+			if field.comment:
+				lines += FormatComment(field.comment, ";")
+			lines.append(field.inidefault())
+	return "\n".join(lines) + "\n".join(more) + "\n"
 
 AppPrefs3_Header = """\
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
@@ -358,6 +372,9 @@ def main():
 
 	content = AppPrefs3_Header % locals()
 	open("tools/serini_test/AppPrefs3.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
+	
+	content = AssembleDefaults(UserPrefs)
+	open("tools/serini_test/SumatraPDF-user.ini", "wb").write(content.replace("\n", "\r\n"))
 
 if __name__ == "__main__":
 	main()
