@@ -23,6 +23,23 @@ class Field(object):
 		self.name = name; self.type = type; self.default = default; self.comment = comment
 		self.internal = internal; self.cname = name[0].lower() + name[1:] if name else None
 
+	def cdefault(self):
+		if self.type == Bool:
+			return "true" if self.default else "false"
+		if self.type == Color:
+			return "0x%06x" % self.default
+		if self.type == Float:
+			return "%g" % self.default
+		if self.type == Int or self.type == Int64:
+			return "%d" % self.default
+		if self.type == String:
+			return '(int64_t)L"%s"' % self.default if self.default is not None else "NULL"
+		if self.type == Utf8String:
+			return '(int64_t)"%s"' % self.default if self.default is not None else "NULL"
+		if self.type.name == "Custom":
+			return self.default
+		return None
+
 	def inidefault(self):
 		if self.type == Bool:
 			return "%s = %s" % (self.name, "true" if self.default else "false")
@@ -30,7 +47,7 @@ class Field(object):
 			return "%s = #%02x%02x%02x" % (self.name, self.default & 0xFF, (self.default >> 8) & 0xFF, (self.default >> 16) & 0xFF)
 		if self.type == Float:
 			return "%s = %g" % (self.name, self.default)
-		if self.type == Int:
+		if self.type == Int or self.type == Int64:
 			return "%s = %d" % (self.name, self.default)
 		if self.type == String:
 			if self.default is not None:
@@ -40,6 +57,8 @@ class Field(object):
 			if self.default is not None:
 				return "%s = %s" % (self.name, self.default)
 			return "; %s =" % self.name
+		if self.type.name == "Custom":
+			return self.default
 		return "; %s = ???" % self.name
 
 class Struct(Field):
@@ -91,7 +110,7 @@ PagePadding = [
 ]
 
 PrinterDefaults = [
-	Field("PrintScale", String, None, "default value for scaling (shrink, fit, none or NULL)"),
+	Field("PrintScale", Utf8String, "shrink", "default value for scaling (shrink, fit, none)"),
 	Field("PrintAsImage", Bool, False, "default value for the compatibility option"),
 ]
 
@@ -150,7 +169,7 @@ FileSettings = [
 	Field("UseGlobalValues", Bool, False,
 		"whether global defaults should be used when reloading this file instead of " +
 		"the values listed below"),
-	Field("DisplayMode", Int, 1, # TODO: Type_Custom, DM_AUTOMATIC
+	Field("DisplayMode", String, "automatic", # TODO: Type_Custom, DM_AUTOMATIC
 		"how pages should be layed out for this document"),
 	Struct("ScrollPos", PointI,
 		"how far this document has been scrolled", structName="PointI"),
@@ -173,7 +192,7 @@ FileSettings = [
 		"whether the table of contents (Bookmarks) sidebar is shown for this document"),
 	Field("SidebarDx", Int, 0,
 		"the width of the left sidebar panel containing the table of contents"),
-	Field("TocState", Utf8String, None,
+	Field("TocState", Utf8String, None, # TODO: inline int array?
 		"tocState is an array of ids for ToC items that have been toggled by " +
 		"the user (i.e. aren't in their default expansion state). - " +
 		"Note: We intentionally track toggle state as opposed to expansion state " +
@@ -190,7 +209,7 @@ FileSettings = [
 AppPrefs = [
 	Field("GlobalPrefsOnly", Bool, False,
 		"whether not to store display settings for individual documents"),
-	Field("CurrLangCode", String, None, # TODO: Type_Custom, "en"
+	Field("CurrLangCode", String, "en", # TODO: Type_Custom
 		"pointer to a static string that is part of LangDef, don't free"),
 	Field("ToolbarVisible", Bool, True,
 		"whether the toolbar should be visible by default in the main window"),
@@ -215,7 +234,7 @@ AppPrefs = [
 		"This remembers which version is to be skipped. If NULL - don't skip"),
 	Field("LastUpdateTime", Int64, 0,
 		"the time SumatraPDF has last checked for updates (cf. EnableAutoUpdate)"),
-	Field("DefaultDisplayMode", Int, 1, # TODO: Type_Custom, DM_AUTOMATIC
+	Field("DefaultDisplayMode", String, "automatic", # TODO: Type_Custom, DM_AUTOMATIC
 		"how pages should be layed out by default"),
 	Field("DefaultZoom", Float, -1,
 		"the default zoom factor in % (negative values indicate virtual settings)"),
@@ -297,12 +316,12 @@ def BuildMetaData(struct, built=[]):
 		if field.internal:
 			continue
 		if type(field) == Struct:
-			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
+			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo, NULL }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
 		elif type(field) == Array:
-			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
-			fieldInfo.append("\t{ NULL, Type_Array, offsetof(%s, %sCount), g%sInfo }," % (struct.structName, field.cname, field.name))
+			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo, NULL }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
+			fieldInfo.append("\t{ NULL, Type_Array, offsetof(%s, %sCount), g%sInfo, NULL }," % (struct.structName, field.cname, field.name))
 		else:
-			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), NULL }," % (field.name, field.type.name, struct.structName, field.cname))
+			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), NULL, %s }," % (field.name, field.type.name, struct.structName, field.cname, field.cdefault()))
 		if type(field) in [Struct, Array] and field.structName not in built:
 			metadata.append(BuildMetaData(field))
 			built.append(field.structName)
@@ -351,7 +370,9 @@ struct SettingInfo {
 	SettingType type;
 	size_t offset;
 	SettingInfo *substruct;
+	int64_t def;
 };
+STATIC_ASSERT(sizeof(int64_t) >= sizeof(void *), ptr_is_max_64_bit);
 
 #ifdef INCLUDE_APPPREFS3_METADATA
 %(appStructMetadata)s

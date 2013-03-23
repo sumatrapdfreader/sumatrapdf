@@ -113,6 +113,19 @@ CommandLine = serini_test.exe\n\
     return true;
 }
 
+static bool TestDefaultValues()
+{
+    UserPrefs *p = (UserPrefs *)serini3::Deserialize("", 0, gUserPrefsInfo);
+    Check(!p->advancedPrefs->escToExit && !p->advancedPrefs->traditionalEbookUI);
+    Check(0xffffff == p->advancedPrefs->pageColor && 0x000000 == p->advancedPrefs->textColor);
+    Check(0x6581ff == p->forwardSearch3->highlightColor && 15 == p->forwardSearch3->highlightWidth);
+    Check(4 == p->pagePadding->innerX && 2 == p->pagePadding->outerY);
+    Check(str::Eq(p->printerDefaults->printScale, "shrink"));
+    serini3::FreeStruct(p, gUserPrefsInfo);
+
+    return true;
+}
+
 int main(int argc, char **argv)
 {
 #ifdef DEBUG
@@ -127,6 +140,7 @@ int main(int argc, char **argv)
         errors++;
     if (!TestSerializeRecursiveArray())
         errors++;
-    CrashIf(errors);
+    if (!TestDefaultValues())
+        errors++;
     return errors;
 }

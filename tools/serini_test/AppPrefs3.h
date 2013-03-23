@@ -41,7 +41,7 @@ struct FileHistory {
     // instead of the values listed below
     bool useGlobalValues;
     // how pages should be layed out for this document
-    int displayMode;
+    WCHAR * displayMode;
     // how far this document has been scrolled
     PointI * scrollPos;
     // the scrollPos values are relative to the top-left corner of this
@@ -117,7 +117,7 @@ struct GlobalPrefs {
     // EnableAutoUpdate)
     int64_t lastUpdateTime;
     // how pages should be layed out by default
-    int defaultDisplayMode;
+    WCHAR * defaultDisplayMode;
     // the default zoom factor in % (negative values indicate virtual
     // settings)
     float defaultZoom;
@@ -202,8 +202,8 @@ struct PagePadding {
 // these values allow to override the default settings in the Print
 // dialog
 struct PrinterDefaults {
-    // default value for scaling (shrink, fit, none or NULL)
-    WCHAR * printScale;
+    // default value for scaling (shrink, fit, none)
+    char * printScale;
     // default value for the compatibility option
     bool printAsImage;
 };
@@ -256,140 +256,142 @@ struct SettingInfo {
     SettingType type;
     size_t offset;
     SettingInfo *substruct;
+    int64_t def;
 };
+STATIC_ASSERT(sizeof(int64_t) >= sizeof(void *), ptr_is_max_64_bit);
 
 #ifdef INCLUDE_APPPREFS3_METADATA
 static SettingInfo gFavoritesInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)3, sizeof(Favorites), NULL },
-    { "Name", Type_String, offsetof(Favorites, name), NULL },
-    { "PageLabel", Type_String, offsetof(Favorites, pageLabel), NULL },
-    { "PageNo", Type_Int, offsetof(Favorites, pageNo), NULL },
+    { "Name", Type_String, offsetof(Favorites, name), NULL, NULL },
+    { "PageLabel", Type_String, offsetof(Favorites, pageLabel), NULL, NULL },
+    { "PageNo", Type_Int, offsetof(Favorites, pageNo), NULL, 0 },
 };
 
 static SettingInfo gPointIInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)2, sizeof(PointI), NULL },
-    { "X", Type_Int, offsetof(PointI, x), NULL },
-    { "Y", Type_Int, offsetof(PointI, y), NULL },
+    { "X", Type_Int, offsetof(PointI, x), NULL, 0 },
+    { "Y", Type_Int, offsetof(PointI, y), NULL, 0 },
 };
 
 static SettingInfo gRectIInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(RectI), NULL },
-    { "Dx", Type_Int, offsetof(RectI, dx), NULL },
-    { "Dy", Type_Int, offsetof(RectI, dy), NULL },
-    { "X", Type_Int, offsetof(RectI, x), NULL },
-    { "Y", Type_Int, offsetof(RectI, y), NULL },
+    { "Dx", Type_Int, offsetof(RectI, dx), NULL, 0 },
+    { "Dy", Type_Int, offsetof(RectI, dy), NULL, 0 },
+    { "X", Type_Int, offsetof(RectI, x), NULL, 0 },
+    { "Y", Type_Int, offsetof(RectI, y), NULL, 0 },
 };
 
 static SettingInfo gFileHistoryInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)17, sizeof(FileHistory), NULL },
-    { "DecryptionKey", Type_Utf8String, offsetof(FileHistory, decryptionKey), NULL },
-    { "DisplayMode", Type_Int, offsetof(FileHistory, displayMode), NULL },
-    { "FilePath", Type_String, offsetof(FileHistory, filePath), NULL },
-    { "IsMissing", Type_Bool, offsetof(FileHistory, isMissing), NULL },
-    { "IsPinned", Type_Bool, offsetof(FileHistory, isPinned), NULL },
-    { "OpenCount", Type_Int, offsetof(FileHistory, openCount), NULL },
-    { "PageNo", Type_Int, offsetof(FileHistory, pageNo), NULL },
-    { "ReparseIdx", Type_Int, offsetof(FileHistory, reparseIdx), NULL },
-    { "Rotation", Type_Int, offsetof(FileHistory, rotation), NULL },
-    { "ScrollPos", Type_Struct, offsetof(FileHistory, scrollPos), gPointIInfo },
-    { "SidebarDx", Type_Int, offsetof(FileHistory, sidebarDx), NULL },
-    { "TocState", Type_Utf8String, offsetof(FileHistory, tocState), NULL },
-    { "TocVisible", Type_Bool, offsetof(FileHistory, tocVisible), NULL },
-    { "UseGlobalValues", Type_Bool, offsetof(FileHistory, useGlobalValues), NULL },
-    { "WindowPos", Type_Struct, offsetof(FileHistory, windowPos), gRectIInfo },
-    { "WindowState", Type_Int, offsetof(FileHistory, windowState), NULL },
-    { "ZoomVirtual", Type_Float, offsetof(FileHistory, zoomVirtual), NULL },
+    { "DecryptionKey", Type_Utf8String, offsetof(FileHistory, decryptionKey), NULL, NULL },
+    { "DisplayMode", Type_String, offsetof(FileHistory, displayMode), NULL, (int64_t)L"automatic" },
+    { "FilePath", Type_String, offsetof(FileHistory, filePath), NULL, NULL },
+    { "IsMissing", Type_Bool, offsetof(FileHistory, isMissing), NULL, false },
+    { "IsPinned", Type_Bool, offsetof(FileHistory, isPinned), NULL, false },
+    { "OpenCount", Type_Int, offsetof(FileHistory, openCount), NULL, 0 },
+    { "PageNo", Type_Int, offsetof(FileHistory, pageNo), NULL, 1 },
+    { "ReparseIdx", Type_Int, offsetof(FileHistory, reparseIdx), NULL, 0 },
+    { "Rotation", Type_Int, offsetof(FileHistory, rotation), NULL, 0 },
+    { "ScrollPos", Type_Struct, offsetof(FileHistory, scrollPos), gPointIInfo, NULL },
+    { "SidebarDx", Type_Int, offsetof(FileHistory, sidebarDx), NULL, 0 },
+    { "TocState", Type_Utf8String, offsetof(FileHistory, tocState), NULL, NULL },
+    { "TocVisible", Type_Bool, offsetof(FileHistory, tocVisible), NULL, true },
+    { "UseGlobalValues", Type_Bool, offsetof(FileHistory, useGlobalValues), NULL, false },
+    { "WindowPos", Type_Struct, offsetof(FileHistory, windowPos), gRectIInfo, NULL },
+    { "WindowState", Type_Int, offsetof(FileHistory, windowState), NULL, 0 },
+    { "ZoomVirtual", Type_Float, offsetof(FileHistory, zoomVirtual), NULL, 100 },
 };
 
 static SettingInfo gGlobalPrefsInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)27, sizeof(GlobalPrefs), NULL },
-    { "CbxR2L", Type_Bool, offsetof(GlobalPrefs, cbxR2L), NULL },
-    { "CurrLangCode", Type_String, offsetof(GlobalPrefs, currLangCode), NULL },
-    { "DefaultDisplayMode", Type_Int, offsetof(GlobalPrefs, defaultDisplayMode), NULL },
-    { "DefaultZoom", Type_Float, offsetof(GlobalPrefs, defaultZoom), NULL },
-    { "EnableAutoUpdate", Type_Bool, offsetof(GlobalPrefs, enableAutoUpdate), NULL },
-    { "EnableTeXEnhancements", Type_Bool, offsetof(GlobalPrefs, enableTeXEnhancements), NULL },
-    { "FavVisible", Type_Bool, offsetof(GlobalPrefs, favVisible), NULL },
-    { "Favorites", Type_Array, offsetof(GlobalPrefs, favorites), gFavoritesInfo },
-    { NULL, Type_Array, offsetof(GlobalPrefs, favoritesCount), gFavoritesInfo },
-    { "FileHistory", Type_Array, offsetof(GlobalPrefs, fileHistory), gFileHistoryInfo },
-    { NULL, Type_Array, offsetof(GlobalPrefs, fileHistoryCount), gFileHistoryInfo },
-    { "GlobalPrefsOnly", Type_Bool, offsetof(GlobalPrefs, globalPrefsOnly), NULL },
-    { "InverseSearchCmdLine", Type_String, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL },
-    { "LastUpdateTime", Type_Int64, offsetof(GlobalPrefs, lastUpdateTime), NULL },
-    { "OpenCountWeek", Type_Int, offsetof(GlobalPrefs, openCountWeek), NULL },
-    { "PdfAssociateDontAskAgain", Type_Bool, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), NULL },
-    { "PdfAssociateShouldAssociate", Type_Bool, offsetof(GlobalPrefs, pdfAssociateShouldAssociate), NULL },
-    { "RememberOpenedFiles", Type_Bool, offsetof(GlobalPrefs, rememberOpenedFiles), NULL },
-    { "ShowStartPage", Type_Bool, offsetof(GlobalPrefs, showStartPage), NULL },
-    { "SidebarDx", Type_Int, offsetof(GlobalPrefs, sidebarDx), NULL },
-    { "TocDy", Type_Int, offsetof(GlobalPrefs, tocDy), NULL },
-    { "TocVisible", Type_Bool, offsetof(GlobalPrefs, tocVisible), NULL },
-    { "ToolbarVisible", Type_Bool, offsetof(GlobalPrefs, toolbarVisible), NULL },
-    { "UseSysColors", Type_Bool, offsetof(GlobalPrefs, useSysColors), NULL },
-    { "VersionToSkip", Type_String, offsetof(GlobalPrefs, versionToSkip), NULL },
-    { "WindowPos", Type_Struct, offsetof(GlobalPrefs, windowPos), gRectIInfo },
-    { "WindowState", Type_Int, offsetof(GlobalPrefs, windowState), NULL },
+    { "CbxR2L", Type_Bool, offsetof(GlobalPrefs, cbxR2L), NULL, false },
+    { "CurrLangCode", Type_String, offsetof(GlobalPrefs, currLangCode), NULL, (int64_t)L"en" },
+    { "DefaultDisplayMode", Type_String, offsetof(GlobalPrefs, defaultDisplayMode), NULL, (int64_t)L"automatic" },
+    { "DefaultZoom", Type_Float, offsetof(GlobalPrefs, defaultZoom), NULL, -1 },
+    { "EnableAutoUpdate", Type_Bool, offsetof(GlobalPrefs, enableAutoUpdate), NULL, true },
+    { "EnableTeXEnhancements", Type_Bool, offsetof(GlobalPrefs, enableTeXEnhancements), NULL, false },
+    { "FavVisible", Type_Bool, offsetof(GlobalPrefs, favVisible), NULL, false },
+    { "Favorites", Type_Array, offsetof(GlobalPrefs, favorites), gFavoritesInfo, NULL },
+    { NULL, Type_Array, offsetof(GlobalPrefs, favoritesCount), gFavoritesInfo, NULL },
+    { "FileHistory", Type_Array, offsetof(GlobalPrefs, fileHistory), gFileHistoryInfo, NULL },
+    { NULL, Type_Array, offsetof(GlobalPrefs, fileHistoryCount), gFileHistoryInfo, NULL },
+    { "GlobalPrefsOnly", Type_Bool, offsetof(GlobalPrefs, globalPrefsOnly), NULL, false },
+    { "InverseSearchCmdLine", Type_String, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL, NULL },
+    { "LastUpdateTime", Type_Int64, offsetof(GlobalPrefs, lastUpdateTime), NULL, 0 },
+    { "OpenCountWeek", Type_Int, offsetof(GlobalPrefs, openCountWeek), NULL, 0 },
+    { "PdfAssociateDontAskAgain", Type_Bool, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), NULL, false },
+    { "PdfAssociateShouldAssociate", Type_Bool, offsetof(GlobalPrefs, pdfAssociateShouldAssociate), NULL, false },
+    { "RememberOpenedFiles", Type_Bool, offsetof(GlobalPrefs, rememberOpenedFiles), NULL, true },
+    { "ShowStartPage", Type_Bool, offsetof(GlobalPrefs, showStartPage), NULL, true },
+    { "SidebarDx", Type_Int, offsetof(GlobalPrefs, sidebarDx), NULL, 0 },
+    { "TocDy", Type_Int, offsetof(GlobalPrefs, tocDy), NULL, 0 },
+    { "TocVisible", Type_Bool, offsetof(GlobalPrefs, tocVisible), NULL, true },
+    { "ToolbarVisible", Type_Bool, offsetof(GlobalPrefs, toolbarVisible), NULL, true },
+    { "UseSysColors", Type_Bool, offsetof(GlobalPrefs, useSysColors), NULL, false },
+    { "VersionToSkip", Type_String, offsetof(GlobalPrefs, versionToSkip), NULL, NULL },
+    { "WindowPos", Type_Struct, offsetof(GlobalPrefs, windowPos), gRectIInfo, NULL },
+    { "WindowState", Type_Int, offsetof(GlobalPrefs, windowState), NULL, 1 },
 };
 
 static SettingInfo gAdvancedPrefsInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)6, sizeof(AdvancedPrefs), NULL },
-    { "EscToExit", Type_Bool, offsetof(AdvancedPrefs, escToExit), NULL },
-    { "MainWindowBackground", Type_Color, offsetof(AdvancedPrefs, mainWindowBackground), NULL },
-    { "PageColor", Type_Color, offsetof(AdvancedPrefs, pageColor), NULL },
-    { "ReuseInstance", Type_Bool, offsetof(AdvancedPrefs, reuseInstance), NULL },
-    { "TextColor", Type_Color, offsetof(AdvancedPrefs, textColor), NULL },
-    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedPrefs, traditionalEbookUI), NULL },
+    { "EscToExit", Type_Bool, offsetof(AdvancedPrefs, escToExit), NULL, false },
+    { "MainWindowBackground", Type_Color, offsetof(AdvancedPrefs, mainWindowBackground), NULL, 0xfff200 },
+    { "PageColor", Type_Color, offsetof(AdvancedPrefs, pageColor), NULL, 0xffffff },
+    { "ReuseInstance", Type_Bool, offsetof(AdvancedPrefs, reuseInstance), NULL, false },
+    { "TextColor", Type_Color, offsetof(AdvancedPrefs, textColor), NULL, 0x000000 },
+    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedPrefs, traditionalEbookUI), NULL, false },
 };
 
 static SettingInfo gExternalViewersInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)3, sizeof(ExternalViewers), NULL },
-    { "CommandLine", Type_String, offsetof(ExternalViewers, commandLine), NULL },
-    { "Filter", Type_String, offsetof(ExternalViewers, filter), NULL },
-    { "Name", Type_String, offsetof(ExternalViewers, name), NULL },
+    { "CommandLine", Type_String, offsetof(ExternalViewers, commandLine), NULL, NULL },
+    { "Filter", Type_String, offsetof(ExternalViewers, filter), NULL, NULL },
+    { "Name", Type_String, offsetof(ExternalViewers, name), NULL, NULL },
 };
 
 static SettingInfo gForwardSearch3Info[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(ForwardSearch3), NULL },
-    { "HighlightColor", Type_Color, offsetof(ForwardSearch3, highlightColor), NULL },
-    { "HighlightOffset", Type_Int, offsetof(ForwardSearch3, highlightOffset), NULL },
-    { "HighlightPermanent", Type_Bool, offsetof(ForwardSearch3, highlightPermanent), NULL },
-    { "HighlightWidth", Type_Int, offsetof(ForwardSearch3, highlightWidth), NULL },
+    { "HighlightColor", Type_Color, offsetof(ForwardSearch3, highlightColor), NULL, 0x6581ff },
+    { "HighlightOffset", Type_Int, offsetof(ForwardSearch3, highlightOffset), NULL, 0 },
+    { "HighlightPermanent", Type_Bool, offsetof(ForwardSearch3, highlightPermanent), NULL, false },
+    { "HighlightWidth", Type_Int, offsetof(ForwardSearch3, highlightWidth), NULL, 15 },
 };
 
 static SettingInfo gPagePaddingInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(PagePadding), NULL },
-    { "InnerX", Type_Int, offsetof(PagePadding, innerX), NULL },
-    { "InnerY", Type_Int, offsetof(PagePadding, innerY), NULL },
-    { "OuterX", Type_Int, offsetof(PagePadding, outerX), NULL },
-    { "OuterY", Type_Int, offsetof(PagePadding, outerY), NULL },
+    { "InnerX", Type_Int, offsetof(PagePadding, innerX), NULL, 4 },
+    { "InnerY", Type_Int, offsetof(PagePadding, innerY), NULL, 4 },
+    { "OuterX", Type_Int, offsetof(PagePadding, outerX), NULL, 4 },
+    { "OuterY", Type_Int, offsetof(PagePadding, outerY), NULL, 2 },
 };
 
 static SettingInfo gPrinterDefaultsInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)2, sizeof(PrinterDefaults), NULL },
-    { "PrintAsImage", Type_Bool, offsetof(PrinterDefaults, printAsImage), NULL },
-    { "PrintScale", Type_String, offsetof(PrinterDefaults, printScale), NULL },
+    { "PrintAsImage", Type_Bool, offsetof(PrinterDefaults, printAsImage), NULL, false },
+    { "PrintScale", Type_Utf8String, offsetof(PrinterDefaults, printScale), NULL, (int64_t)"shrink" },
 };
 
 static SettingInfo gUserPrefsInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)6, sizeof(UserPrefs), NULL },
-    { "AdvancedPrefs", Type_Struct, offsetof(UserPrefs, advancedPrefs), gAdvancedPrefsInfo },
-    { "ExternalViewers", Type_Array, offsetof(UserPrefs, externalViewers), gExternalViewersInfo },
-    { NULL, Type_Array, offsetof(UserPrefs, externalViewersCount), gExternalViewersInfo },
-    { "ForwardSearch3", Type_Struct, offsetof(UserPrefs, forwardSearch3), gForwardSearch3Info },
-    { "PagePadding", Type_Struct, offsetof(UserPrefs, pagePadding), gPagePaddingInfo },
-    { "PrinterDefaults", Type_Struct, offsetof(UserPrefs, printerDefaults), gPrinterDefaultsInfo },
+    { "AdvancedPrefs", Type_Struct, offsetof(UserPrefs, advancedPrefs), gAdvancedPrefsInfo, NULL },
+    { "ExternalViewers", Type_Array, offsetof(UserPrefs, externalViewers), gExternalViewersInfo, NULL },
+    { NULL, Type_Array, offsetof(UserPrefs, externalViewersCount), gExternalViewersInfo, NULL },
+    { "ForwardSearch3", Type_Struct, offsetof(UserPrefs, forwardSearch3), gForwardSearch3Info, NULL },
+    { "PagePadding", Type_Struct, offsetof(UserPrefs, pagePadding), gPagePaddingInfo, NULL },
+    { "PrinterDefaults", Type_Struct, offsetof(UserPrefs, printerDefaults), gPrinterDefaultsInfo, NULL },
 };
 #endif
 
