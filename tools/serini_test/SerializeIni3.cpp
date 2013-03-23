@@ -57,12 +57,12 @@ static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_
 
 static void *DeserializeRec(IniFile& ini, SettingInfo *meta, const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
 {
+    if ((size_t)-1 == endIdx)
+        endIdx = ini.sections.Count();
+
     size_t secIdx = startIdx;
     IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
     int r, g, b, a;
-
-    if ((size_t)-1 == endIdx)
-        endIdx = ini.sections.Count();
 
     uint8_t *base = (uint8_t *)calloc(1, meta[0].offset);
     if (secIdx >= endIdx) {
@@ -138,7 +138,7 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, const char *section
 
 void *Deserialize(const char *data, size_t dataLen, SettingInfo *def)
 {
-    CrashIf(!data || str::Len(data) != dataLen);
+    CrashIf(str::Len(data) != dataLen);
     IniFile ini(data);
     return DeserializeRec(ini, def);
 }

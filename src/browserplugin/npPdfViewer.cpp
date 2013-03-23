@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 
-#include "BencUtil.h"
 #include "CmdLineParser.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
@@ -11,6 +10,14 @@
 #define _WINDOWS
 #endif
 #include "npapi/npfunctions.h"
+
+#ifndef USE_INI_SETTINGS
+#include "BencUtil.h"
+#define PREFS_FILE_NAME L"sumatrapdfprefs.dat"
+#else
+#include "IniParser.h"
+#define PREFS_FILE_NAME L"SumatraPDF.ini"
+#endif
 
 #include "DebugLog.h"
 
@@ -254,15 +261,16 @@ void SelectTranslation(const WCHAR *exePath=NULL)
     ScopedMem<WCHAR> path;
     if (exePath) {
         path.Set(path::GetDir(exePath));
-        path.Set(path::Join(path, L"sumatrapdfprefs.dat"));
+        path.Set(path::Join(path, PREFS_FILE_NAME));
     }
     if (!file::Exists(path)) {
         path.Set(GetSpecialFolder(CSIDL_APPDATA));
-        path.Set(path::Join(path, L"SumatraPDF\\sumatrapdfprefs.dat"));
+        path.Set(path::Join(path, L"SumatraPDF\\" PREFS_FILE_NAME));
     }
     if (!file::Exists(path))
         return;
     plogf("sp: Found preferences at %S", path);
+#ifndef USE_INI_SETTINGS
     ScopedMem<char> data(file::ReadAll(path, NULL));
     if (data) {
         BencObj *root = BencObj::Decode(data);
@@ -281,6 +289,20 @@ void SelectTranslation(const WCHAR *exePath=NULL)
         }
         delete root;
     }
+#else
+    IniFile ini(path);
+    IniSection *section = ini.FindSection(NULL);
+    IniLine *line = section ? section->FindLine("CurrLangCode") : NULL;
+    if (line) {
+        plogf("sp: UILanguage from preferences: %s", line->value);
+        for (int i = 0; gLanguages[i]; i++) {
+            if (str::Eq(gLanguages[i], line->value)) {
+                gTranslationIdx = i * gTranslationsCount;
+                break;
+            }
+        }
+    }
+#endif
 }
 
 int cmpWcharPtrs(const void *a, const void *b)

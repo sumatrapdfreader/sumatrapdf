@@ -32,9 +32,6 @@ public:
     static BencObj *Decode(const char *bytes, size_t *lenOut=NULL);
 };
 
-class BencArray;
-class BencDict;
-
 class BencString : public BencObj {
     char *value;
 
@@ -60,6 +57,8 @@ public:
     virtual char *Encode() const;
     static BencInt *Decode(const char *bytes, size_t *lenOut);
 };
+
+class BencDict;
 
 class BencArray : public BencObj {
     Vec<BencObj *> value;
