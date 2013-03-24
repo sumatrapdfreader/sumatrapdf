@@ -46,7 +46,7 @@ FieldMetadata gRectIntFieldMetadata[] = {
 StructMetadata gRectIntMetadata = { sizeof(RectInt), 4, &gRectIntFieldMetadata[0] };
 
 FieldMetadata gAppStateFieldMetadata[] = {
-    { "favorites", TYPE_ARRAY, offsetof(AppState, favorites), NULL },
+    { "favorites", TYPE_ARRAY, offsetof(AppState, favorites), &gFavMetadata },
 };
 
 StructMetadata gAppStateMetadata = { sizeof(AppState), 1, &gAppStateFieldMetadata[0] };

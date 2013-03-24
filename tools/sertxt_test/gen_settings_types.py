@@ -152,7 +152,8 @@ class Array(Type):
     type_enum = "TYPE_ARRAY"
 
     def __init__(self, typ, values):
-        assert issubclass(typ, Type)
+        # TODO: we don't support arrays of primitve values, just structs
+        assert issubclass(typ, Struct)
         self.typ = typ
         self.values = values
         for v in values:
@@ -172,6 +173,13 @@ class Array(Type):
 
     def is_valid_val(self, val):
         return isinstance(val, self.typ)
+
+    def name(self):
+        try:
+            return self.typ.__name__
+        except:
+            print(self.typ)
+            raise
 
 # When generating C struct definitions we need the structs
 # in the right order (if Bar refers to Foo, Foo must be defined first).

@@ -408,6 +408,8 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         if (ok)
             ok = WriteStructInt(structDataPtr, type, ds.i);
     } else if (TYPE_STRUCT_PTR == type) {
+        // we have a node but it's not the right shape for struct
+        // i.e. we expected "foo [" and it's just "foo" or "foo: bar"
         if (!node->child)
             return false;
         uint8_t *d = DeserializeRec(ds, node->child, fieldDef->def);
@@ -430,6 +432,26 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         ok = DecodeFloat(ds, node);
         if (ok)
             WriteStructFloat(structDataPtr, ds.f);
+    } else if (TYPE_ARRAY == type) {
+        // we have a node but it's not the right shape for arrays
+        // i.e. we expected "[" and it just "foo" or "foo: bar"
+        if (!node->child)
+            return false;
+        ListNode<void> *root = NULL;
+        TxtNode *curr = node->child;
+        CrashIf(!fieldDef->def); // must be a struct
+        while (curr && curr->child) {
+            uint8_t *d = DeserializeRec(ds, curr->child, fieldDef->def);
+            if (!d)
+                goto Error; // TODO: free root
+            ListNode<void> *node = AllocArray<ListNode<void>>(1);
+            node->next = root;
+            root = node;
+            node->val = (void*)d;
+            curr = curr->next;
+        }
+        // TODO: reverse root
+        WriteStructPtrVal(structDataPtr, (void*)root);
     } else {
         CrashIf(true);
         return false;
@@ -581,6 +603,9 @@ static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, 
         SerializeRec(structStart2, fieldDef->def, nest + 1, res);
         AppendNest(res, nest);
         res.Append("]\n");
+    } else if (TYPE_ARRAY == type) {
+        // TODO: serialize array
+        CrashIf(true);
     } else {
         CrashIf(true);
     }

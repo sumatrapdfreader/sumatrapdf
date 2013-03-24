@@ -55,5 +55,10 @@ app_state [
       page_no: 0
       page_label: favorite label
     ]
+    [
+      name: favorite name two
+      page_no: 18
+      page_label: favorite label of mine
+    ]
   ]
 ]

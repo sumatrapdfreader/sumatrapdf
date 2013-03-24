@@ -11,7 +11,7 @@ struct FieldMetadata;
 template <typename T>
 struct ListNode {
     ListNode<T> *   next;
-    T               val;
+    T *             val;
 };
 
 typedef struct {

@@ -160,7 +160,7 @@ def gen_struct_fields_txt(stru):
         name_in_quotes = '"' +  name2name(field_name) + '"'
         field_name_c = name_fmt % name_in_quotes
         offset = "offsetof(%(struct_name)s, %(field_name)s)" % locals()
-        if field.is_struct():
+        if field.is_struct() or field.is_array():
             field_type = field.typ.name()
             lines += ["    { %(field_name_c)s, %(typ_enum)s %(offset)s, &g%(field_type)sMetadata }," % locals()]
         else:
