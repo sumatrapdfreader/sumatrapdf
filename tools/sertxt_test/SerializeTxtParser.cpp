@@ -3,7 +3,6 @@
 
 /*
 TODO:
- - comments (; and/or #)
  - allow "foo = bar" in addition to "foo: bar"
 */
 
@@ -14,11 +13,13 @@ foo [
   key: val
   k2 [
     val
-    another val
+    mulit-line\
+values are possible
   ]
 ]
 
-This is not a very strict format. On purpose it doesn't try to break
+
+This is not a very strict format. On purpose it doesn't try to strictly break
 things into key/values, just to decode tree structure and *help* to interpret
 a given line either as a simple string or key/value pair. It's
 up to the caller to interpret the data.
@@ -200,11 +201,32 @@ Again:
     } else {
         CrashIf(tok.keyStart || tok.keyEnd);
     }
+    bool wasUnescaped = false;
+NextLine:
     slice.SkipUntil('\n');
     // "  foo:  bar  "
     //               ^
-
-    tok.valEnd = slice.curr;
+    if ('\\' == slice.PrevChar()) {
+        wasUnescaped = true;
+        slice.curr[-1] = 0;
+        slice.Skip(1);
+        goto NextLine;
+    }
+    if (wasUnescaped) {
+        // we replaced '\' with 0, we need to remove those zeroes
+        char *s = tok.valStart;
+        char *end = slice.curr;
+        char *dst = s;
+        while (s < end) {
+            if (*s)
+                *dst++ = *s;
+            s++;
+        }
+        *dst = 0;
+        tok.valEnd = dst;
+    } else {
+        tok.valEnd = slice.curr;
+    }
     slice.ZeroCurr();
     slice.Skip(1);
 }

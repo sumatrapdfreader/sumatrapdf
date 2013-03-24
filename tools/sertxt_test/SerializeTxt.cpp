@@ -528,14 +528,34 @@ static void AppendNest(str::Str<char>& s, int nest)
     }
 }
 
-// TODO: if val contains newline, we must escape it. We also need to un-escape it.
+static void AppendVal(const char *val, str::Str<char>& res)
+{
+    // escape "\n" inside the string with "\" and newline
+    const char *start = val;
+    const char *s = start;
+    while (*s) {
+        // TODO: do I need to handle '\r' and "\r\n" as well?
+        if (*s == '\n') {
+            size_t len = s - start;
+            res.Append(start, len);
+            res.Append("\\" NL);
+            start = s + 1;
+        }
+        ++s;
+    }
+    // appends either everything, if wasn't escaped, or
+    // the part since last newline if was escaped
+    size_t len = s - start;
+    res.Append(start, len);
+    res.Append(NL);
+}
+
 static void AppendKeyVal(const char *key, const char *val, int nest, str::Str<char>& res)
 {
     AppendNest(res, nest);
     res.Append(key);
     res.Append(": ");
-    res.Append(val);
-    res.Append("\n");
+    AppendVal(val, res);
 }
 
 void SerializeRec(const uint8_t *data, StructMetadata *def, int nest, str::Str<char>& res);

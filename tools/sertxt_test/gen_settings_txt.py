@@ -5,6 +5,11 @@ sys.path.append("scripts") # assumes is being run as ./tools/sertxt_test/gen_set
 import os, util, codecs
 from gen_settings_types import Struct, settings, version, Field
 
+"""
+TODO:
+ - escape values with '\n' in them
+"""
+
 g_script_dir = os.path.realpath(os.path.dirname(__file__))
 
 def settings_src_dir():

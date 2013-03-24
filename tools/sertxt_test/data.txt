@@ -53,7 +53,8 @@ app_state [
     [
       name: favorite name
       page_no: 0
-      page_label: favorite label
+      page_label: favorite multi-line \
+label
     ]
     [
       name: favorite name two
