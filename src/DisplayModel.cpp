@@ -1143,7 +1143,7 @@ bool DisplayModel::GoToPrevPage(int scrollY)
         return true;
     }
     int firstPageInNewRow = FirstPageInARowNo(currPageNo - columns, columns, DisplayModeShowCover(GetDisplayMode()));
-    if (firstPageInNewRow < 1) {
+    if (firstPageInNewRow < 1 || 1 == currPageNo) {
         /* we're on a first page, can't go back */
         return false;
     }
