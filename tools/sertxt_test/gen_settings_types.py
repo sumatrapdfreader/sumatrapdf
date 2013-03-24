@@ -310,9 +310,9 @@ class RectInt(Struct):
 # TODO: support internal (non-serializable) fields
 class Fav(Struct):
     fields = [
-        ("name", String(None)),
+        ("name", String("favorite name")),
         ("pageNo", I32(0)),
-        ("pageLabel", String(None))
+        ("pageLabel", String("favorite label"))
         #("menuId", I32(0))
     ]
 

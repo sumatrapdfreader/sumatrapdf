@@ -14,7 +14,7 @@ basic [
     y: 0
     dx: 0
     dy: 0
-  ]
+    ]
   toc_visible: true
   fav_visible: false
   sidebar_dx: 0
@@ -22,7 +22,7 @@ basic [
   show_start_page: true
   open_count_week: 0
   last_pref_update: 0
-]
+  ]
 advanced [
   traditional_ebook_ui: true
   esc_to_exit: false
@@ -36,20 +36,24 @@ advanced [
     right: 4
     space_x: 4
     space_y: 4
-  ]
+    ]
   forward_search [
     highlight_offset: 0
     highlight_width: 15
     highlight_permanent: 0
     highlight_color: #006581ff
     enable_tex_enhancements: false
-  ]
+    ]
   s: Hello
   default_zoom: -1
   ws: A wide string
-]
+  ]
 app_state [
   favorites [
-TODO: ARRAY!!!    
-]
-]
+    [
+      name: favorite name
+      page_no: 0
+      page_label: favorite label
+    ]
+  ]
+  ]

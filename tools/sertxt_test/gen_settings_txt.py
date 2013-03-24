@@ -248,19 +248,21 @@ def name2name(s):
 # would need additional info in the data model
 def gen_data_txt_rec(root_val, name, lines, indent):
     assert isinstance(root_val, Struct)
+    prefix = ""
     if indent >= 0:
         prefix = " " * (indent*2)
     if name != None:
         name = name2name(name)
         lines += ["%s%s [" % (prefix, name)]
 
+    prefix += "  "
     for field in root_val.values:
         var_name = field.name
         var_name = name2name(var_name)
         if  field.is_struct():
             if field.val.offset == 0:
                 if False:
-                    lines += ["%s%s: null" % (prefix + "  ", var_name)] # TODO: just omit the values?
+                    lines += ["%s%s: null" % (prefix, var_name)] # TODO: just omit the values?
             else:
                 gen_data_txt_rec(field.val, var_name, lines, indent + 1)
         elif field.is_array():
@@ -271,15 +273,19 @@ def gen_data_txt_rec(root_val, name, lines, indent):
                 print(field.val)
                 raise
             if n > 0:
-                lines += ["%s%s [" % (prefix + "  ", var_name)]
-                # TODO: serialize values inside
-                lines += ["%sTODO: ARRAY!!!" % prefix + "    "]
+                lines += ["%s%s [" % (prefix, var_name)]
+                prefix += "  "
+                for val in field.val.values:
+                    lines += [prefix + "["]
+                    gen_data_txt_rec(val, None, lines, indent+2)
+                    lines += [prefix + "]"]
+                prefix = prefix[:-2]
                 lines += ["%s]" % prefix]
         else:
             s = field.serialized_as_text()
             # omit serializing empty strings
             if s != None:
-                lines += ["%s%s: %s" % (prefix + "  ", var_name, s)]
+                lines += ["%s%s: %s" % (prefix, var_name, s)]
     if name != None:
         lines += ["%s]" % prefix]
 
