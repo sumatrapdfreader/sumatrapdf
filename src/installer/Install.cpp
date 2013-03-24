@@ -296,6 +296,9 @@ DWORD WINAPI InstallerThread(LPVOID data)
 
     if (!InstallCopyFiles())
         goto Error;
+    // all files have been extracted at this point
+    if (gGlobalData.justExtractFiles)
+        return 0;
 
     if (gGlobalData.registerAsDefault) {
         // need to sublaunch SumatraPDF.exe instead of replicating the code
@@ -692,10 +695,11 @@ void CreateMainWindow()
 void ShowUsage()
 {
     // Note: translation services aren't initialized at this point, so English only
-    MessageBox(NULL, APP_NAME_STR L"-install.exe [/s][/d <path>][/register][/opt plugin,...]\n\
+    MessageBox(NULL, APP_NAME_STR L"-install.exe [/s][/d <path>][/register][/opt plugin,...][/x]\n\
     \n\
     /s\tinstalls " APP_NAME_STR L" silently (without user interaction).\n\
     /d\tchanges the directory where " APP_NAME_STR L" will be installed.\n\
     /register\tregisters " APP_NAME_STR L" as the default PDF viewer.\n\
-    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer).", APP_NAME_STR L" Installer Usage", MB_OK | MB_ICONINFORMATION);
+    /opt\tenables optional components (currently: plugin, pdffilter, pdfpreviewer).\n\
+    /x\tjust extracts the files contained within the installer", APP_NAME_STR L" Installer Usage", MB_OK | MB_ICONINFORMATION);
 }

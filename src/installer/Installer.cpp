@@ -101,6 +101,7 @@ GlobalData gGlobalData = {
     false, /* bool installBrowserPlugin */
     false, /* bool installPdfFilter */
     false, /* bool installPdfPreviewer */
+    false, /* bool extractFiles */
 #endif
 
     NULL,  /* WCHAR *firstError */
@@ -907,6 +908,13 @@ static void ParseCommandLine(WCHAR *cmdLine)
                 gGlobalData.installPdfFilter = true;
             if (optlist.Contains(L"pdfpreviewer"))
                 gGlobalData.installPdfPreviewer = true;
+        }
+        else if (is_arg("x")) {
+            gGlobalData.justExtractFiles = true;
+            // silently extract files to the current directory (if /d isn't used)
+            gGlobalData.silent = true;
+            if (!gGlobalData.installDir)
+                str::ReplacePtr(&gGlobalData.installDir, L".");
         }
 #endif
         else if (is_arg("h") || is_arg("help") || is_arg("?"))
