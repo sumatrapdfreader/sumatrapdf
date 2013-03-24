@@ -287,7 +287,7 @@ def gen_data_txt_rec(root_val, name, lines, indent):
             if s != None:
                 lines += ["%s%s: %s" % (prefix, var_name, s)]
     if name != None:
-        lines += ["%s]" % prefix]
+        lines += ["%s]" % prefix[:-2]]
 
 # TODO: convert setting names from fooBar => foo_bar, for better editability
 def gen_txt():

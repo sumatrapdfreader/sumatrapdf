@@ -63,6 +63,9 @@ static void TestFromFile()
             break;
         *s = 0;
         s = s + 3; // skip "---"
+        // also skip --->
+        if (*s == '>')
+            ++s;
         for (char c = *s; c = *s; s++) {
             if (!(c == '\r' || c == '\n'))
                 break;
@@ -110,7 +113,7 @@ int main(int argc, char **argv)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    TestSettingsDeserialize();
     TestFromFile();
+    TestSettingsDeserialize();
     TestParseSumatraSettings();
 }

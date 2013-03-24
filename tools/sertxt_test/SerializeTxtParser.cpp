@@ -261,6 +261,13 @@ static TxtNode *ParseNextNode(TxtParser& parser)
             }
         } else if (TokenOpen == tok.type) {
             parser.bracketNesting += 1;
+            if (NULL == currNode) {
+                CrashIf(firstNode);
+                // '[' that starts an array
+                TxtNode *tmp = TxtNodeFromToken(parser.allocator, tok);
+                firstNode = tmp;
+                currNode = tmp;
+            }
             currNode->child = ParseNextNode(parser);
             // propagate errors
             if (!currNode->child)
@@ -320,7 +327,10 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
     while (curr) {
         if (curr->child) {
             PrettyPrintVal(curr, nest, res);
-            res.Append(" [\n");
+            if (curr->valStart != NULL)
+                res.Append(" [\n"); // start of dict
+            else
+                res.Append("[\n"); // start of array
             PrettyPrintNode(curr->child, nest + 1, res);
             AppendNest(res, nest);
             res.Append("]\n");

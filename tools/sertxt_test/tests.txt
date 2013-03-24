@@ -1,3 +1,23 @@
+app_state [
+favorites [
+      [
+   name: favorite name
+      page_no: 0
+      page_label: favorite label
+  ]
+    ]
+]
+--->
+app_state [
+  favorites [
+    [
+      name = favorite name
+      page_no = 0
+      page_label = favorite label
+    ]
+  ]
+]
+---
 ; comment
 les: [
    foo: bar  
@@ -9,7 +29,7 @@ les: [
 
 go
 ]
----
+--->
 les [
   foo = bar [
     val
@@ -20,7 +40,7 @@ les [
 foo   [
 x: value of me
 ]
----
+--->
 foo [
   x = value of me
 ]

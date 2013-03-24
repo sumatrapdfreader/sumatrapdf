@@ -6,6 +6,7 @@
 #include "AppPrefs3.h"
 #include "FileUtil.h"
 #include "SerializeIni3.h"
+#include "../sertxt_test/SerializeTxt.h"
 #include "../sertxt_test/SettingsSumatra.h"
 
 #define Check(x) CrashIf(!(x)); if (!(x)) return false; else NoOp()
