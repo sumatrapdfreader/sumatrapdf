@@ -4,6 +4,12 @@
 #ifndef SettingsSumatra_h
 #define SettingsSumatra_h
 
+struct Fav {
+    const char *    name;
+    int32_t         pageNo;
+    const char *    pageLabel;
+};
+
 struct ForwardSearch {
     int32_t     highlightOffset;
     int32_t     highlightWidth;
@@ -26,6 +32,10 @@ struct RectInt {
     int32_t    y;
     int32_t    dx;
     int32_t    dy;
+};
+
+struct AppState {
+    sertxt::ListNode<Fav> *    favorites;
 };
 
 struct AdvancedSettings {
@@ -69,6 +79,7 @@ struct BasicSettings {
 struct Settings {
     BasicSettings *       basic;
     AdvancedSettings *    advanced;
+    AppState *            appState;
 };
 
 #define SettingsVersion "2.3"

@@ -7,6 +7,14 @@
 
 using namespace sertxt;
 
+FieldMetadata gFavFieldMetadata[] = {
+    { "name"      , TYPE_STR, offsetof(Fav, name), NULL },
+    { "page_no"   , TYPE_I32, offsetof(Fav, pageNo), NULL },
+    { "page_label", TYPE_STR, offsetof(Fav, pageLabel), NULL },
+};
+
+StructMetadata gFavMetadata = { sizeof(Fav), 3, &gFavFieldMetadata[0] };
+
 FieldMetadata gForwardSearchFieldMetadata[] = {
     { "highlight_offset"       , TYPE_I32,   offsetof(ForwardSearch, highlightOffset), NULL },
     { "highlight_width"        , TYPE_I32,   offsetof(ForwardSearch, highlightWidth), NULL },
@@ -36,6 +44,12 @@ FieldMetadata gRectIntFieldMetadata[] = {
 };
 
 StructMetadata gRectIntMetadata = { sizeof(RectInt), 4, &gRectIntFieldMetadata[0] };
+
+FieldMetadata gAppStateFieldMetadata[] = {
+    { "favorites", TYPE_ARRAY, offsetof(AppState, favorites), NULL },
+};
+
+StructMetadata gAppStateMetadata = { sizeof(AppState), 1, &gAppStateFieldMetadata[0] };
 
 FieldMetadata gAdvancedSettingsFieldMetadata[] = {
     { "traditional_ebook_ui"  , TYPE_BOOL,       offsetof(AdvancedSettings, traditionalEbookUI), NULL },
@@ -80,11 +94,12 @@ FieldMetadata gBasicSettingsFieldMetadata[] = {
 StructMetadata gBasicSettingsMetadata = { sizeof(BasicSettings), 22, &gBasicSettingsFieldMetadata[0] };
 
 FieldMetadata gSettingsFieldMetadata[] = {
-    { "basic"   , TYPE_STRUCT_PTR, offsetof(Settings, basic), &gBasicSettingsMetadata },
-    { "advanced", TYPE_STRUCT_PTR, offsetof(Settings, advanced), &gAdvancedSettingsMetadata },
+    { "basic"    , TYPE_STRUCT_PTR, offsetof(Settings, basic), &gBasicSettingsMetadata },
+    { "advanced" , TYPE_STRUCT_PTR, offsetof(Settings, advanced), &gAdvancedSettingsMetadata },
+    { "app_state", TYPE_STRUCT_PTR, offsetof(Settings, appState), &gAppStateMetadata },
 };
 
-StructMetadata gSettingsMetadata = { sizeof(Settings), 2, &gSettingsFieldMetadata[0] };
+StructMetadata gSettingsMetadata = { sizeof(Settings), 3, &gSettingsFieldMetadata[0] };
 
 
 

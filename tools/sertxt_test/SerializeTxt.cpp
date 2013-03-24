@@ -50,7 +50,7 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
     if (!data)
         return;
     FieldMetadata *fieldDef = NULL;
-    Typ type;
+    Type type;
     for (int i = 0; i < def->nFields; i++) {
         fieldDef = def->fields + i;
         type = fieldDef->type;
@@ -66,13 +66,13 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
     free(data);
 }
 
-static bool IsSignedIntType(Typ type)
+static bool IsSignedIntType(Type type)
 {
     return ((TYPE_I16 == type) ||
             (TYPE_I32 == type));
 }
 
-static bool IsUnsignedIntType(Typ type)
+static bool IsUnsignedIntType(Type type)
 {
     return ((TYPE_U16 == type) ||
             (TYPE_U32 == type) ||
@@ -111,7 +111,7 @@ static void WriteStructBool(uint8_t *p, bool val)
         *bp = false;
 }
 
-static bool WriteStructUInt(uint8_t *p, Typ type, uint64_t val)
+static bool WriteStructUInt(uint8_t *p, Type type, uint64_t val)
 {
     if (TYPE_U16 == type) {
         if (val > 0xffff)
@@ -171,7 +171,7 @@ static bool ReadStructBool(const uint8_t *p)
     return *bp;
 }
 
-static int64_t ReadStructInt(const uint8_t *p, Typ type)
+static int64_t ReadStructInt(const uint8_t *p, Type type)
 {
     if (TYPE_I16 == type) {
         int16_t *vp = (int16_t*)p;
@@ -185,7 +185,7 @@ static int64_t ReadStructInt(const uint8_t *p, Typ type)
     return 0;
 }
 
-static uint64_t ReadStructUInt(const uint8_t *p, Typ type)
+static uint64_t ReadStructUInt(const uint8_t *p, Type type)
 {
     if (TYPE_U16 == type) {
         uint16_t *vp = (uint16_t*)p;
@@ -368,7 +368,7 @@ static TxtNode *FindTxtNode(TxtNode *curr, char *name)
     return NULL;
 }
 
-static void WriteDefaultValue(uint8_t *structDataPtr, Typ type)
+static void WriteDefaultValue(uint8_t *structDataPtr, Type type)
 {
     // all other types have default value of 0, which is already 
     if (TYPE_FLOAT == type) {
@@ -378,7 +378,7 @@ static void WriteDefaultValue(uint8_t *structDataPtr, Typ type)
 
 static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fieldDef, uint8_t *structDataStart)
 {
-    Typ type = fieldDef->type;
+    Type type = fieldDef->type;
     uint8_t *structDataPtr = structDataStart + fieldDef->offset;
     TxtNode *node = FindTxtNode(firstNode, (char*)fieldDef->name);
 
@@ -529,7 +529,7 @@ static void AppendHex(uint8_t b, str::Str<char>& res)
 static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, int nest, str::Str<char>& res)
 {
     str::Str<char> val;
-    Typ type = fieldDef->type;
+    Type type = fieldDef->type;
     const uint8_t *data = structStart + fieldDef->offset;
     if (TYPE_BOOL == type) {
         bool b = ReadStructBool(data);

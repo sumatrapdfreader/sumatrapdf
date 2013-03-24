@@ -48,3 +48,8 @@ advanced [
   default_zoom: -1
   ws: A wide string
 ]
+app_state [
+  favorites [
+TODO: ARRAY!!!    
+]
+]

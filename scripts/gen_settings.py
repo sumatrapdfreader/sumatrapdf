@@ -63,6 +63,9 @@ def ver_from_string(ver_str):
 # references to other struct types (forming a tree of values).
 # we flatten the values into a list, in the reverse order of
 # tree traversal
+# TODO: this is really not necessary for txt serialization, only binary
+# for txt we only use it to make sure we get type definition in the right
+# order, which doesn't work for arrays with no elements
 def flatten_struct(stru):
     assert isinstance(stru, Struct)
     vals = []
@@ -76,6 +79,10 @@ def flatten_struct(stru):
                 if field.val != None:
                     assert isinstance(field.val, Struct)
                     left += [field.val]
+            elif field.is_array():
+                for v in field.val.values:
+                    left += [v]
+
     vals.reverse()
     return vals
 
@@ -483,6 +490,7 @@ def name2name(s):
             n_upper = 0
     return res
 
+
 # TODO: support compact serialization of some structs e.g.
 """
   window_pos [
@@ -502,20 +510,33 @@ def gen_data_txt_rec(root_val, name, lines, indent):
     if name != None:
         name = name2name(name)
         lines += ["%s%s [" % (prefix, name)]
-    for val in root_val.values:
-        var_name = val.name
+
+    for field in root_val.values:
+        var_name = field.name
         var_name = name2name(var_name)
-        if not val.is_struct():
-            s = val.serialized_as_text()
-            # omit serializing empty strings
-            if s != None:
-                lines += ["%s%s: %s" % (prefix + "  ", var_name, s)]
-        else:
-            if val.val.offset == 0:
+        if  field.is_struct():
+            if field.val.offset == 0:
                 if False:
                     lines += ["%s%s: null" % (prefix + "  ", var_name)] # TODO: just omit the values?
             else:
-                gen_data_txt_rec(val.val, var_name, lines, indent + 1)
+                gen_data_txt_rec(field.val, var_name, lines, indent + 1)
+        elif field.is_array():
+            try:
+                n = len(field.val.values)
+            except:
+                print(field)
+                print(field.val)
+                raise
+            if n > 0:
+                lines += ["%s%s [" % (prefix + "  ", var_name)]
+                # TODO: serialize values inside
+                lines += ["%sTODO: ARRAY!!!" % prefix + "    "]
+                lines += ["%s]" % prefix]
+        else:
+            s = field.serialized_as_text()
+            # omit serializing empty strings
+            if s != None:
+                lines += ["%s%s: %s" % (prefix + "  ", var_name, s)]
     if name != None:
         lines += ["%s]" % prefix]
 
@@ -523,7 +544,8 @@ def gen_data_txt_rec(root_val, name, lines, indent):
 def gen_txt():
     dst_dir = settings_src_dir()
     val = settings
-    vals = serialize_top_level_struct(val)
+    vals = flatten_struct(val)
+
     struct_defs = gen_struct_defs(vals, version)
     write_to_file(os.path.join(dst_dir, "SettingsSumatra.h"),  h_txt_tmpl % locals())
 

@@ -37,6 +37,9 @@ class Type(object):
     def is_struct(self):
         return isinstance(self, Struct)
 
+    def is_array(self):
+        return isinstance(self, Array)
+
 class Bool(Type):
     c_type_class = "bool"
     type_enum = "TYPE_BOOL"
@@ -100,94 +103,6 @@ class Float(Type):
     def is_valid_val(self, val):
         return type(val) in (types.IntType, types.LongType, types.FloatType)
 
-# When generating C struct definitions we need the structs
-# in the right order (if Bar refers to Foo, Foo must be defined first).
-# This is a list of all structs in the right order
-g_all_structs = []
-
-def serialize_string(val):
-    # empty strings are encoded as 0 (0 length)
-    # non-empty strings are encoded as uvariant(len(s)+1)
-    # (+1 for terminating 0), followed by string data (including terminating 0)
-    if val == None:
-        data = gob_uvarint_encode(0)
-    else:
-        data = gob_uvarint_encode(len(val)+1)
-        data = data + val + chr(0)
-    return data
-
-class Field(object):
-    def __init__(self, name, typ_val):
-        self.name = name
-        self.typ = typ_val
-        if typ_val.is_struct():
-            # TODO: support NULL values for the struct, represented by using
-            # class for typ_val
-            self.val = typ_val
-        else:
-            self.val = typ_val.val
-        self._serialized = None
-
-    def c_type(self):
-        return self.typ.c_type()
-
-    def is_struct(self):
-        return self.typ.is_struct()
-
-    def is_signed(self):
-        return type(self.typ) == I32
-
-    def is_unsigned(self):
-        return type(self.typ) in (Bool, U16, U32, U64, Color)
-
-    def is_bool(self):
-        return type(self.typ) == Bool
-
-    def is_color(self):
-        return type(self.typ) == Color
-
-    def is_string(self):
-        return type(self.typ) in (String, WString)
-
-    def is_float(self):
-        return type(self.typ) == Float
-
-    def _serialize(self):
-        if self.is_signed():
-            return gob_varint_encode(long(self.val))
-        if self.is_unsigned():
-            return gob_uvarint_encode(long(self.val))
-        if self.is_string():
-            return serialize_string(self.val)
-        # floats are serialied as strings
-        if self.is_float():
-            return serialize_string(str(self.val))
-        if self.is_struct():
-            off = self.val.offset
-            assert type(off) in (types.IntType, types.LongType)
-            return gob_uvarint_encode(off)
-        assert False, "don't know how to serialize %s" % str(self.typ)
-
-    def serialized(self):
-        if self._serialized == None:
-            self._serialized = self._serialize()
-        return self._serialized
-
-    def serialized_as_text(self):
-        if self.is_bool():
-            if self.val:
-                return "true"
-            else:
-                return "false"
-        if self.is_color():
-            #return "#" + hex(self.val)[2:]
-            return "#%08x" % self.val
-        if self.is_signed() or self.is_unsigned() or self.is_float():
-            return str(self.val)
-        if self.is_string():
-            return self.val
-        assert False, "don't know how to serialize %s" % str(self.typ)
-
 # struct is just a base class
 # subclasses should have class instance fields which is a list of tuples:
 # defining name and type of the struct members:
@@ -232,16 +147,129 @@ class Struct(Type):
     def name(self):
         return self.__class__.__name__
 
-# TODO: need to supprt more than one C struct field from a single
-# python Type
 class Array(Type):
-    c_type_class = "int32_t"
+    c_type_class = ""
     type_enum = "TYPE_ARRAY"
 
-    def __init__(self, typ):
-        assert isinstance(typ, Type)
-        #assert issubclass(typ, Val)
+    def __init__(self, typ, values):
+        assert issubclass(typ, Type)
         self.typ = typ
+        self.values = values
+        for v in values:
+            try:
+                assert self.is_valid_val(v)
+            except:
+                print(v)
+                print(self.typ)
+                raise
+
+        cls = typ
+        if cls not in g_all_structs:
+            g_all_structs.append(cls)
+        self.c_type_override = "sertxt::ListNode<%s> *" % cls.__name__
+
+        self.offset = None
+
+    def is_valid_val(self, val):
+        return isinstance(val, self.typ)
+
+# When generating C struct definitions we need the structs
+# in the right order (if Bar refers to Foo, Foo must be defined first).
+# This is a list of all structs in the right order
+g_all_structs = []
+
+def serialize_string(val):
+    # empty strings are encoded as 0 (0 length)
+    # non-empty strings are encoded as uvariant(len(s)+1)
+    # (+1 for terminating 0), followed by string data (including terminating 0)
+    if val == None:
+        data = gob_uvarint_encode(0)
+    else:
+        data = gob_uvarint_encode(len(val)+1)
+        data = data + val + chr(0)
+    return data
+
+class Field(object):
+    def __init__(self, name, typ_val):
+        self.name = name
+        self.typ = typ_val
+        if typ_val.is_struct():
+            # TODO: support NULL values for the struct, represented by using
+            # class for typ_val
+            self.val = typ_val
+        elif typ_val.is_array():
+            self.val = typ_val
+        else:
+            self.val = typ_val.val
+        self._serialized = None
+
+    def c_type(self):
+        return self.typ.c_type()
+
+    def is_struct(self):
+        return self.typ.is_struct()
+
+    def is_signed(self):
+        return type(self.typ) == I32
+
+    def is_unsigned(self):
+        return type(self.typ) in (Bool, U16, U32, U64, Color)
+
+    def is_bool(self):
+        return type(self.typ) == Bool
+
+    def is_color(self):
+        return type(self.typ) == Color
+
+    def is_string(self):
+        return type(self.typ) in (String, WString)
+
+    def is_float(self):
+        return type(self.typ) == Float
+
+    def is_array(self):
+        return type(self.typ) == Array
+
+    def _serialize(self):
+        if self.is_signed():
+            return gob_varint_encode(long(self.val))
+        if self.is_unsigned():
+            return gob_uvarint_encode(long(self.val))
+        if self.is_string():
+            return serialize_string(self.val)
+        # floats are serialied as strings
+        if self.is_float():
+            return serialize_string(str(self.val))
+        if self.is_struct():
+            off = self.val.offset
+            assert type(off) in (types.IntType, types.LongType)
+            return gob_uvarint_encode(off)
+        # Note: this is probably busted but we don't care
+        if self.is_array():
+            off = self.val.offset
+            assert type(off) in (types.IntType, types.LongType)
+            return gob_uvarint_encode(off)
+        assert False, "don't know how to serialize %s" % str(self.typ)
+
+    def serialized(self):
+        if self._serialized == None:
+            self._serialized = self._serialize()
+        return self._serialized
+
+    def serialized_as_text(self):
+        if self.is_bool():
+            if self.val:
+                return "true"
+            else:
+                return "false"
+        if self.is_color():
+            #return "#" + hex(self.val)[2:]
+            return "#%08x" % self.val
+        if self.is_signed() or self.is_unsigned() or self.is_float():
+            return str(self.val)
+        if self.is_string():
+            return self.val
+        assert False, "don't know how to serialize %s" % str(self.typ)
 
 def serialize(typ, val):
     assert isinstance(typ, Type)
@@ -277,6 +305,15 @@ class RectInt(Struct):
         ("y", I32(0)),
         ("dx", I32(0)),
         ("dy", I32(0)),
+    ]
+
+# TODO: support internal (non-serializable) fields
+class Fav(Struct):
+    fields = [
+        ("name", String(None)),
+        ("pageNo", I32(0)),
+        ("pageLabel", String(None))
+        #("menuId", I32(0))
     ]
 
 class BasicSettings(Struct):
@@ -325,11 +362,17 @@ class AdvancedSettings(Struct):
         ("ws", WString("A wide string")),
     ]
 
+class AppState(Struct):
+    fields = [
+        ("favorites", Array(Fav, [Fav()]))
+    ]
+
 # TODO: merge basic/advanced into one?
 class Settings(Struct):
     fields = [
         ("basic", BasicSettings()),
         ("advanced", AdvancedSettings()),
+        ("appState", AppState()),
         # TODO: just for testing
         #Array("intArray", I32, [I32("", 1), I32("", 3)]),
     ]

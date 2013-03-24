@@ -8,6 +8,12 @@ namespace sertxt {
 
 struct FieldMetadata;
 
+template <typename T>
+struct ListNode {
+    ListNode<T> *   next;
+    T               val;
+};
+
 typedef struct {
     uint16_t        size;
     uint16_t        nFields;
@@ -26,16 +32,16 @@ typedef enum : uint16_t {
     TYPE_STR,
     TYPE_WSTR,
     TYPE_STRUCT_PTR,
-    TYP_ARRAY,
-} Typ;
+    TYPE_ARRAY,
+} Type;
 
 // information about a single field
 struct FieldMetadata {
     const char *     name;
-    Typ              type; // TYPE_*
+    Type             type;
     // from the beginning of the struct
     uint16_t         offset;
-    // type is TYPE_STRUCT_PTR, otherwise NULL
+    // for TYP_ARRAY and TYPE_STRUCT_PTR, otherwise NULL
     StructMetadata * def;
 };
 
