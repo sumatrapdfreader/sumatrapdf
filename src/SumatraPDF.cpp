@@ -615,30 +615,29 @@ static int GetPolicies(bool isRestricted)
         { "FullscreenAccess",Perm_FullscreenAccess },
     };
 
+    gAllowedLinkProtocols.Reset();
+    gAllowedFileTypes.Reset();
+
     // allow to restrict SumatraPDF's functionality from an INI file in the
     // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
     ScopedMem<WCHAR> restrictPath(GetExePath());
-    if (restrictPath) {
-        restrictPath.Set(path::GetDir(restrictPath));
-        restrictPath.Set(path::Join(restrictPath, RESTRICTIONS_FILE_NAME));
-    }
-    gAllowedLinkProtocols.Reset();
-    gAllowedFileTypes.Reset();
+    restrictPath.Set(path::GetDir(restrictPath));
+    restrictPath.Set(path::Join(restrictPath, RESTRICTIONS_FILE_NAME));
     if (file::Exists(restrictPath)) {
-        int policy = Perm_RestrictedUse;
-
         IniFile ini(restrictPath);
         IniSection *polsec = ini.FindSection("Policies");
-        IniLine *line;
-        if (polsec) {
-            for (size_t i = 0; i < dimof(policies); i++) {
-                line = polsec->FindLine(policies[i].name);
-                if (line && atoi(line->value) != 0)
-                    policy = policy | policies[i].perm;
-            }
+        if (!polsec)
+            return Perm_RestrictedUse;
+
+        int policy = Perm_RestrictedUse;
+        for (size_t i = 0; i < dimof(policies); i++) {
+            IniLine *line = polsec->FindLine(policies[i].name);
+            if (line && atoi(line->value) != 0)
+                policy = policy | policies[i].perm;
         }
         // determine the list of allowed link protocols and perceived file types
-        if ((policy & Perm_DiskAccess) && polsec) {
+        if ((policy & Perm_DiskAccess)) {
+            IniLine *line;
             if ((line = polsec->FindLine("LinkProtocols"))) {
                 ScopedMem<WCHAR> protocols(str::conv::FromUtf8(line->value));
                 str::ToLower(protocols);
