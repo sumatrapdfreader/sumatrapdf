@@ -7,6 +7,10 @@ from gen_settings_types import Struct, settings, version, Field
 
 """
 TODO:
+ - compact storage of field names in C FieldMetadata
+ - default values
+ - add comment at the top directing to documentation web page
+ - remove flatten_struct code
  - escape values with '\n' in them
 """
 
@@ -270,7 +274,7 @@ def gen_data_txt_rec(root_val, name, lines, indent):
         if  field.is_struct():
             if field.val.offset == 0:
                 if False:
-                    lines += ["%s%s: null" % (prefix, var_name)] # TODO: just omit the values?
+                    lines += ["%s%s: " % (prefix, var_name)] # TODO: just omit the values?
             else:
                 gen_data_txt_rec(field.val, var_name, lines, indent + 1)
         elif field.is_array():
@@ -297,7 +301,6 @@ def gen_data_txt_rec(root_val, name, lines, indent):
     if name != None:
         lines += ["%s]" % prefix[:-2]]
 
-# TODO: convert setting names from fooBar => foo_bar, for better editability
 def gen_txt():
     dst_dir = settings_src_dir()
     val = settings
