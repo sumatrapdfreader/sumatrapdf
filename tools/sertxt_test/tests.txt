@@ -2,28 +2,32 @@ app_state [
 favorites [
       [
    name: favorite name
-      page_no: 0
-      page_label: favorite label
+      page_no: 88
   ]
-    ]
+      [
+      name: second
+  ]
+      ]
 ]
 --->
 app_state [
   favorites [
     [
       name = favorite name
-      page_no = 0
-      page_label = favorite label
+      page_no = 88
+    ]
+    [
+      name = second
     ]
   ]
 ]
 ---
 ; comment
 les: [
-   foo: bar  
+   foo: bar
    # this is  comment too
-   [  
-   val  
+   [
+   val
 	]
 
 

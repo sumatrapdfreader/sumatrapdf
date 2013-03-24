@@ -245,7 +245,11 @@ static TxtNode *ParseNextNode(TxtParser& parser)
     TokenVal tok;
     TxtNode *firstNode = NULL;
     TxtNode *currNode = NULL;
+    int arrayNest = 0;
     for (;;) {
+        if (0 == parser.bracketNesting && parser.toParse.Finished())
+            return firstNode;
+
         ParseNextToken(parser, tok);
         if (TokenError == tok.type)
             return NULL;
@@ -260,28 +264,41 @@ static TxtNode *ParseNextNode(TxtParser& parser)
                 currNode = tmp;
             }
         } else if (TokenOpen == tok.type) {
-            parser.bracketNesting += 1;
             if (NULL == currNode) {
                 CrashIf(firstNode);
                 // '[' that starts an array
-                TxtNode *tmp = TxtNodeFromToken(parser.allocator, tok);
-                firstNode = tmp;
+                CrashIf(arrayNest != 0);
+                arrayNest = 1;
+                firstNode = TxtNodeFromToken(parser.allocator, tok);
+                currNode = firstNode;
+                currNode->child = ParseNextNode(parser);
+                if (!currNode->child) // propagate errors
+                    return NULL;
+            } else if (arrayNest > 0) {
+                ++arrayNest;
+                TxtNode *tmp = ParseNextNode(parser);
+                if (!tmp) // propagate errors
+                    return NULL;
+                currNode->next = tmp;
                 currNode = tmp;
+            } else {
+                ++parser.bracketNesting;
+                currNode->child = ParseNextNode(parser);
+                if (!currNode->child) // propagate errors
+                    return NULL;
             }
-            currNode->child = ParseNextNode(parser);
-            // propagate errors
-            if (!currNode->child)
-                return NULL;
-            if (0 == parser.bracketNesting && parser.toParse.Finished())
-                return firstNode;
         } else {
             CrashIf(TokenClose != tok.type);
-            if (0 == parser.bracketNesting) {
-                // bad input!
-                return NULL;
+            if (arrayNest > 0) {
+                --arrayNest;
+                if (0 == arrayNest)
+                    return firstNode;
+            } else {
+                --parser.bracketNesting;
+                if (parser.bracketNesting < 0) // bad input!
+                    return NULL;
+                return firstNode;
             }
-            --parser.bracketNesting;
-            return firstNode;
         }
     }
 }
@@ -326,14 +343,32 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
 {
     while (curr) {
         if (curr->child) {
-            PrettyPrintVal(curr, nest, res);
-            if (curr->valStart != NULL)
-                res.Append(" [\n"); // start of dict
-            else
-                res.Append("[\n"); // start of array
-            PrettyPrintNode(curr->child, nest + 1, res);
-            AppendNest(res, nest);
-            res.Append("]\n");
+            if (curr->valStart != NULL) {
+                // dict
+                PrettyPrintVal(curr, nest, res);
+                res.Append(" [\n");
+                PrettyPrintNode(curr->child, nest + 1, res);
+                AppendNest(res, nest);
+                res.Append("]\n");
+            } else {
+                // array
+                TxtNode *arrEl = curr;
+                AppendNest(res, nest);
+                res.Append("[\n");
+                PrettyPrintNode(arrEl->child, nest + 1, res);
+                AppendNest(res, nest);
+                res.Append("]\n");
+                arrEl = arrEl->next;
+                while (arrEl) {
+                    AppendNest(res, nest);
+                    res.Append("[\n");
+                    PrettyPrintNode(arrEl, nest + 1, res);
+                    AppendNest(res, nest);
+                    res.Append("]\n");
+                    arrEl = arrEl->next;
+                }
+                return;
+            }
         } else {
             PrettyPrintVal(curr, nest, res);
             res.Append("\n");
