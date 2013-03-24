@@ -2024,7 +2024,6 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX *tv)
     tv->Red = (COLOR16)((GetRValue(a) + perc * (GetRValue(b) - GetRValue(a))) * 256);
     tv->Green = (COLOR16)((GetGValue(a) + perc * (GetGValue(b) - GetGValue(a))) * 256);
     tv->Blue = (COLOR16)((GetBValue(a) + perc * (GetBValue(b) - GetBValue(a))) * 256);
-    tv->Alpha = 0xFF00;
 }
 #endif
 
@@ -2049,25 +2048,32 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         float percTop = 1.0f * win.dm->viewPort.y / size.dy;
         float percBot = 1.0f * win.dm->viewPort.BR().y / size.dy;
         if (!IsContinuous(win.dm->GetDisplayMode())) {
-            percTop += win.dm->CurrentPageNo(); percTop /= win.dm->PageCount();
-            percBot += win.dm->CurrentPageNo(); percBot /= win.dm->PageCount();
+            percTop += win.dm->CurrentPageNo() - 1; percTop /= win.dm->PageCount();
+            percBot += win.dm->CurrentPageNo() - 1; percBot /= win.dm->PageCount();
         }
         SizeI vp = win.dm->viewPort.Size();
-        TRIVERTEX tv[2] = {
-            { 0, 0, 40 << 8, 40 << 8, 170 << 8, 255 << 8 },
-            { vp.dx, vp.dy, 40 << 8, 170 << 8, 40 << 8, 255 << 8 },
-        };
-        GRADIENT_RECT gr[2] = { 0, 1 };
+        TRIVERTEX tv[4] = { { 0, 0 }, { vp.dx, vp.dy / 2 }, { 0, vp.dy / 2 }, { vp.dx, vp.dy } };
+        GRADIENT_RECT gr[2] = { { 0, 1 }, { 2, 3 } };
         // TODO: make enabling this and selecting the colors user configurable
-        if (percTop > 0.5f)
-            GetGradientColor(RGB(40, 170, 40), RGB(170, 40, 40), 2 * (percTop - 0.5f), &tv[0]);
+        COLORREF colors[3] = { RGB(40, 40, 170), RGB(40, 170, 40), RGB(170, 40, 40) };
+        if (percTop < 0.5f)
+            GetGradientColor(colors[0], colors[1], 2 * percTop, &tv[0]);
         else
-            GetGradientColor(RGB(40, 40, 170), RGB(40, 170, 40), 2 * percTop, &tv[0]);
-        if (percBot > 0.5f)
-            GetGradientColor(RGB(40, 170, 40), RGB(170, 40, 40), 2 * (percBot - 0.5f), &tv[1]);
+            GetGradientColor(colors[1], colors[2], 2 * (percTop - 0.5f), &tv[0]);
+        if (percBot < 0.5f)
+            GetGradientColor(colors[0], colors[1], 2 * percBot, &tv[3]);
         else
-            GetGradientColor(RGB(40, 40, 170), RGB(40, 170, 40), 2 * percBot, &tv[1]);
-        GradientFill(hdc, tv, 2, gr, 2, GRADIENT_FILL_RECT_V);
+            GetGradientColor(colors[1], colors[2], 2 * (percBot - 0.5f), &tv[3]);
+        bool needCenter = percTop < 0.5f && percBot > 0.5f;
+        if (needCenter) {
+            GetGradientColor(colors[1], colors[1], 0, &tv[1]);
+            GetGradientColor(colors[1], colors[1], 0, &tv[2]);
+            tv[1].y = tv[2].y = (LONG)((0.5f - percTop) / (percBot - percTop) * vp.dy);
+        }
+        else
+            gr[0].LowerRight = 3;
+        // TODO: disable for less than about two screen heights?
+        GradientFill(hdc, tv, dimof(tv), gr, needCenter ? 2 : 1, GRADIENT_FILL_RECT_V);
 #endif
     }
 
