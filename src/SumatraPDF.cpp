@@ -2016,6 +2016,18 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc)
     }
 }
 
+// cf. http://forums.fofou.org/sumatrapdf/topic?id=3183580
+// #define DRAW_GRADIENT_BACKGROUND
+#ifdef DRAW_GRADIENT_BACKGROUND
+static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX *tv)
+{
+    tv->Red = (COLOR16)((GetRValue(a) + perc * (GetRValue(b) - GetRValue(a))) * 256);
+    tv->Green = (COLOR16)((GetGValue(a) + perc * (GetGValue(b) - GetGValue(a))) * 256);
+    tv->Blue = (COLOR16)((GetBValue(a) + perc * (GetBValue(b) - GetBValue(a))) * 256);
+    tv->Alpha = 0xFF00;
+}
+#endif
+
 static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
 {
     DisplayModel* dm = win.dm;
@@ -2028,8 +2040,36 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
     if (paintOnBlackWithoutShadow) {
         ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.colorRange[0]));
         FillRect(hdc, rcArea, brush);
-    } else
+    }
+    else {
+#ifndef DRAW_GRADIENT_BACKGROUND
         FillRect(hdc, rcArea, gBrushNoDocBg);
+#else
+        SizeI size = win.dm->GetCanvasSize();
+        float percTop = 1.0f * win.dm->viewPort.y / size.dy;
+        float percBot = 1.0f * win.dm->viewPort.BR().y / size.dy;
+        if (!IsContinuous(win.dm->GetDisplayMode())) {
+            percTop += win.dm->CurrentPageNo(); percTop /= win.dm->PageCount();
+            percBot += win.dm->CurrentPageNo(); percBot /= win.dm->PageCount();
+        }
+        SizeI vp = win.dm->viewPort.Size();
+        TRIVERTEX tv[2] = {
+            { 0, 0, 40 << 8, 40 << 8, 170 << 8, 255 << 8 },
+            { vp.dx, vp.dy, 40 << 8, 170 << 8, 40 << 8, 255 << 8 },
+        };
+        GRADIENT_RECT gr[2] = { 0, 1 };
+        // TODO: make enabling this and selecting the colors user configurable
+        if (percTop > 0.5f)
+            GetGradientColor(RGB(40, 170, 40), RGB(170, 40, 40), 2 * (percTop - 0.5f), &tv[0]);
+        else
+            GetGradientColor(RGB(40, 40, 170), RGB(40, 170, 40), 2 * percTop, &tv[0]);
+        if (percBot > 0.5f)
+            GetGradientColor(RGB(40, 170, 40), RGB(170, 40, 40), 2 * (percBot - 0.5f), &tv[1]);
+        else
+            GetGradientColor(RGB(40, 40, 170), RGB(40, 170, 40), 2 * percBot, &tv[1]);
+        GradientFill(hdc, tv, 2, gr, 2, GRADIENT_FILL_RECT_V);
+#endif
+    }
 
     bool rendering = false;
     RectI screen(PointI(), dm->viewPort.Size());

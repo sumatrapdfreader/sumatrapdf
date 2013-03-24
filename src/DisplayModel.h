@@ -154,6 +154,7 @@ protected:
 public:
     bool            NeedHScroll() const { return viewPort.dy < totalViewPortSize.dy; }
     bool            NeedVScroll() const { return viewPort.dx < totalViewPortSize.dx; }
+    SizeI           GetCanvasSize() const { return canvasSize; }
 
     void            ChangeViewPortSize(SizeI newViewPortSize);
 
