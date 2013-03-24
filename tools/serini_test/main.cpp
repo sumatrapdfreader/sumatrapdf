@@ -17,10 +17,8 @@ static bool TestSerializeIni()
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    bool usedDefault;
-    Settings *s = DeserializeSettings((const uint8_t *)data.Get(), str::Len(data), &usedDefault);
+    Settings *s = DeserializeSettings((const uint8_t *)data.Get(), str::Len(data));
     Check(s); // failed to parse file
-    Check(!usedDefault);
     Check(str::Find(s->advanced->ws, L"\r\n"));
 
     int len;

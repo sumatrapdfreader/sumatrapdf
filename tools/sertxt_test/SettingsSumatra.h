@@ -82,9 +82,7 @@ struct Settings {
     AppState *            appState;
 };
 
-#define SettingsVersion "2.3"
-
-Settings *DeserializeSettings(const uint8_t *data, int dataLen, bool *usedDefaultOut);
+Settings *DeserializeSettings(const uint8_t *data, int dataLen);
 uint8_t *SerializeSettings(Settings *, int *dataLenOut);
 void FreeSettings(Settings *);
 

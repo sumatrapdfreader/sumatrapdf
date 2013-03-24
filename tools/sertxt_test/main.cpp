@@ -94,17 +94,19 @@ static void TestSettingsDeserialize()
         return;
     }
     char *sCopy = str::Dup(s);
-    bool usedDefault;
-    Settings *settings = DeserializeSettings((const uint8_t *)s, (int)fileSize, &usedDefault);
+    Settings *settings = DeserializeSettings((const uint8_t *)s, (int)fileSize);
     int serializedLen;
     char *s2 = (char*)SerializeSettings(settings, &serializedLen);
     s2 += 3; // skip utf8 bom
+    char *toFree = sCopy;
+    if (str::EqN(sCopy, UTF8_BOM, 3))
+        sCopy += 3;
     str::NormalizeNewlinesInPlace(s2);
     str::NormalizeNewlinesInPlace(sCopy);
     if (!str::Eq(sCopy, s2)) {
         printf("'%s'\n != \n'%s'\n", sCopy, s2);
     }
-    free(sCopy);
+    free(toFree);
     FreeSettings(settings);
 }
 

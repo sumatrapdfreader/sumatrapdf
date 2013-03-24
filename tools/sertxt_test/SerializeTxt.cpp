@@ -354,9 +354,9 @@ static bool DecodeFloat(DecodeState& ds, TxtNode *n)
     return true;
 }
 
-static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def);
+static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def, const char* fieldNamesSeq);
 
-static TxtNode *FindTxtNode(TxtNode *curr, char *name)
+static TxtNode *FindTxtNode(TxtNode *curr, const char *name)
 {
     // TODO: optimize by passing len, which can be stored in FieldMetadata
     size_t nameLen = str::Len(name);
@@ -392,11 +392,12 @@ static void WriteDefaultValue(uint8_t *structDataPtr, Type type)
     }
 }
 
-static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fieldDef, uint8_t *structDataStart)
+static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fieldDef, const char *fieldNamesSeq, uint8_t *structDataStart)
 {
     Type type = fieldDef->type;
     uint8_t *structDataPtr = structDataStart + fieldDef->offset;
-    TxtNode *node = FindTxtNode(firstNode, (char*)fieldDef->name);
+    const char *fieldName = fieldNamesSeq + fieldDef->nameOffset;
+    TxtNode *node = FindTxtNode(firstNode, fieldName);
 
     if (!node) {
         // TODO: a real default value must be taken from somewhere else
@@ -428,7 +429,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         // i.e. we expected "foo [" and it's just "foo" or "foo: bar"
         if (!node->child)
             return false;
-        uint8_t *d = DeserializeRec(ds, node->child, fieldDef->def);
+        uint8_t *d = DeserializeRec(ds, node->child, fieldDef->def, fieldNamesSeq);
         if (!d)
             goto Error;
         WriteStructPtrVal(structDataPtr, d);
@@ -453,7 +454,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         CrashIf(!fieldDef->def); // must be a struct
         ListNode<void> *last = NULL;
         while (node) {
-            uint8_t *d = DeserializeRec(ds, node->child, fieldDef->def);
+            uint8_t *d = DeserializeRec(ds, node->child, fieldDef->def, fieldNamesSeq);
             if (!d)
                 goto Error; // TODO: free root
             ListNode<void> *tmp = AllocArray<ListNode<void>>(1);
@@ -482,7 +483,7 @@ Error:
 // if no data from client - return the result from default data
 // if data from client doesn't have enough fields, use fields from default data
 // if data from client is corrupted, decode default data
-static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def)
+static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def, const char* fieldNamesSeq)
 {
     bool ok = true;
     if (!firstNode)
@@ -490,7 +491,7 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetada
 
     uint8_t *res = AllocArray<uint8_t>(def->size);
     for (int i = 0; i < def->nFields; i++) {
-        ok = DecodeField(ds, firstNode, def->fields + i, res);
+        ok = DecodeField(ds, firstNode, def->fields + i, fieldNamesSeq, res);
         if (!ok)
             goto Error;
     }
@@ -504,7 +505,7 @@ Error:
 // replaced with offsets from the beginning of the memory (base)
 // to deserialize, we malloc() each struct and replace offsets
 // with pointers to those newly allocated structs
-uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, StructMetadata *def)
+uint8_t* Deserialize(const uint8_t *data, int dataSize, StructMetadata *def, const char *fieldNamesSeq)
 {
     if (!data)
         return NULL;
@@ -517,7 +518,7 @@ uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, Str
     bool ok = ParseTxt(ds.parser);
     if (!ok)
         return NULL;
-    return DeserializeRec(ds, ds.parser.firstNode, def);
+    return DeserializeRec(ds, ds.parser.firstNode, def, fieldNamesSeq);
 }
 
 static void AppendNest(str::Str<char>& s, int nest)
@@ -558,7 +559,7 @@ static void AppendKeyVal(const char *key, const char *val, int nest, str::Str<ch
     AppendVal(val, res);
 }
 
-void SerializeRec(const uint8_t *data, StructMetadata *def, int nest, str::Str<char>& res);
+void SerializeRec(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int nest, str::Str<char>& res);
 
 // converts "1.00" => "1" i.e. strips unnecessary trailing zeros
 static void FixFloatStr(char *s)
@@ -575,14 +576,15 @@ static void FixFloatStr(char *s)
     *dot = 0;
 }
 
-static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, int nest, str::Str<char>& res)
+static void SerializeField(FieldMetadata *fieldDef, const char *fieldNamesSeq, const uint8_t *structStart, int nest, str::Str<char>& res)
 {
     str::Str<char> val;
     Type type = fieldDef->type;
+    const char *fieldName = fieldNamesSeq + fieldDef->nameOffset;
     const uint8_t *data = structStart + fieldDef->offset;
     if (TYPE_BOOL == type) {
         bool b = ReadStructBool(data);
-        AppendKeyVal(fieldDef->name, b ? "true" : "false", nest, res);
+        AppendKeyVal(fieldName, b ? "true" : "false", nest, res);
     } else if (TYPE_COLOR == type) {
         uint64_t u = ReadStructUInt(data, type);
         COLORREF c = (COLORREF)u;
@@ -594,45 +596,45 @@ static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, 
             val.AppendFmt("#%02x%02x%02x%02x", a, r, g, b);
         else
             val.AppendFmt("#%02x%02x%02x", r, g, b);
-        AppendKeyVal(fieldDef->name, val.Get(), nest, res);
+        AppendKeyVal(fieldName, val.Get(), nest, res);
     } else if (IsUnsignedIntType(type)) {
         uint64_t u = ReadStructUInt(data, type);
         //val.AppendFmt("%" PRIu64, u);
         val.AppendFmt("%I64u", u);
-        AppendKeyVal(fieldDef->name, val.Get(), nest, res);
+        AppendKeyVal(fieldName, val.Get(), nest, res);
     } else if (IsSignedIntType(type)) {
         int64_t i = ReadStructInt(data, type);
         //val.AppendFmt("%" PRIi64, u);
         val.AppendFmt("%I64d", i);
-        AppendKeyVal(fieldDef->name, val.Get(), nest, res);
+        AppendKeyVal(fieldName, val.Get(), nest, res);
     } else if (TYPE_FLOAT == type) {
         float f = ReadStructFloat(data);
         val.AppendFmt("%f", f);
         char *floatStr = val.Get();
         FixFloatStr(floatStr);
-        AppendKeyVal(fieldDef->name, floatStr, nest, res);
+        AppendKeyVal(fieldName, floatStr, nest, res);
     } else if (TYPE_STR == type) {
         char *s = (char*)ReadStructPtr(data);
         if (s)
-            AppendKeyVal(fieldDef->name, s, nest, res);
+            AppendKeyVal(fieldName, s, nest, res);
     } else if (TYPE_WSTR == type) {
         WCHAR *s = (WCHAR*)ReadStructPtr(data);
         if (s) {
             ScopedMem<char> val(str::conv::ToUtf8(s));
-            AppendKeyVal(fieldDef->name, val, nest, res);
+            AppendKeyVal(fieldName, val, nest, res);
         }
     } else if (TYPE_STRUCT_PTR == type) {
         AppendNest(res, nest);
-        res.Append(fieldDef->name);
+        res.Append(fieldName);
         res.Append(" [" NL);
         const uint8_t *structStart2 = (const uint8_t *)ReadStructPtr(data);
-        SerializeRec(structStart2, fieldDef->def, nest + 1, res);
+        SerializeRec(structStart2, fieldDef->def, fieldNamesSeq, nest + 1, res);
         AppendNest(res, nest);
         res.Append("]" NL);
     } else if (TYPE_ARRAY == type) {
         CrashIf(!fieldDef->def);
         AppendNest(res, nest);
-        res.Append(fieldDef->name);
+        res.Append(fieldName);
         res.Append(" [" NL);
         ListNode<void> *el = (ListNode<void>*)ReadStructPtr(data);
         ++nest;
@@ -640,7 +642,7 @@ static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, 
             AppendNest(res, nest);
             res.Append("[" NL);
             const uint8_t *elData = (const uint8_t*)el->val;
-            SerializeRec(elData, fieldDef->def, nest + 1, res);
+            SerializeRec(elData, fieldDef->def, fieldNamesSeq, nest + 1, res);
             AppendNest(res, nest);
             res.Append("]" NL);
             el = el->next;
@@ -653,19 +655,19 @@ static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, 
     }
 }
 
-void SerializeRec(const uint8_t *data, StructMetadata *def, int nest, str::Str<char>& res)
+void SerializeRec(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int nest, str::Str<char>& res)
 {
     for (size_t i = 0; i < def->nFields; i++) {
-        FieldMetadata *field = &def->fields[i];
-        SerializeField(field, data, nest, res);
+        FieldMetadata *fieldDef = &def->fields[i];
+        SerializeField(fieldDef, fieldNamesSeq, data, nest, res);
     }
 }
 
-uint8_t *Serialize(const uint8_t *data, const char *version, StructMetadata *def, int *sizeOut)
+uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int *sizeOut)
 {
     str::Str<char> res;
     res.Append(UTF8_BOM);
-    SerializeRec(data, def, 0, res);
+    SerializeRec(data, def, fieldNamesSeq, 0, res);
     if (sizeOut)
         *sizeOut = (int)res.Size();
     return (uint8_t *)res.StealData();

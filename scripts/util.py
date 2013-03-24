@@ -473,6 +473,27 @@ def test_gob():
   assert gob_uvarint_encode(4294967294) == chr(252) + chr(255) + chr(255) + chr(255) + chr(254)
   assert gob_uvarint_encode(4294967295) == chr(252) + chr(255) + chr(255) + chr(255) + chr(255)
 
+# for easy generation of the compact form of storing strings in C
+class SeqStrings(object):
+  def __init__(self):
+    self.strings = {}
+    self.strings_seq = ""
+
+  def get_all(self):
+    return self.strings_seq + chr(0)
+
+  # Note: this only works if strings are ascii, which is the case for us so far
+  def get_all_c_escaped(self):
+    s = self.get_all()
+    s = s.replace(chr(0), "\\0")
+    return '"' + s + '"'
+
+  def get_offset(self, s):
+    if s not in self.strings:
+      self.strings[s] = len(self.strings_seq)
+      self.strings_seq = self.strings_seq + s + chr(0)
+    return self.strings[s]
+
 if __name__ == "__main__":
   #parse_svnlog_out_test2()
   #test_load_config()

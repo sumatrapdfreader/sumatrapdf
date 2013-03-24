@@ -1,4 +1,4 @@
-basic [
+﻿basic [
   global_prefs_only: false
   toolbar_visible: true
   pdf_associate_dont_ask: false
@@ -28,7 +28,7 @@ advanced [
   esc_to_exit: false
   text_color: #000000
   page_color: #ffffff
-  main_window_background: #abfff200
+  main_window_background: #fff200
   page_padding [
     top: 2
     bottom: 2
@@ -53,13 +53,7 @@ app_state [
     [
       name: favorite name
       page_no: 0
-      page_label: favorite multi-line \
-label
-    ]
-    [
-      name: favorite name two
-      page_no: 18
-      page_label: favorite label of mine
+      page_label: favorite label
     ]
   ]
 ]

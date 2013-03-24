@@ -110,6 +110,8 @@ solution "everything"
       "tools/serini_test/*",
       "tools/sertxt_test/*.h",
       "tools/sertxt_test/SettingsSumatra.cpp",
+      "tools/sertxt_test/SerializeTxtParser.cpp",
+      "tools/sertxt_test/SerializeTxt.cpp",
       "src/utils/BaseUtil.*",
       "src/utils/FileUtil.*",
       "src/utils/StrUtil.*",
