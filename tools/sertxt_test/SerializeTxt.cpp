@@ -269,8 +269,12 @@ static bool ParseInt(char *s, char *e, int64_t *iOut)
 static bool ParseColor(char *s, char *e, COLORREF *colOut)
 {
     int a, r, g, b;
-    if (!str::Parse(s, "#%2x%2x%2x%2x", &a, &r, &g, &b))
-        return false;
+    if (!str::Parse(s, "#%2x%2x%2x%2x", &a, &r, &g, &b)) {
+        a = 0;
+        if (!str::Parse(s, "#%2x%2x%2x", &r, &g, &b)) {
+            return false;
+        }
+    }
     COLORREF col =  RGB(r, g, b);
     COLORREF alpha = (COLORREF)a;
     alpha = alpha << 24;
@@ -546,19 +550,6 @@ static void FixFloatStr(char *s)
     *dot = 0;
 }
 
-#define HEX_CHARS "0123456789abcdef"
-
-static void AppendHex(uint8_t b, str::Str<char>& res)
-{
-    char c;
-    uint8_t n = (b & 0xf0) >> 4;
-    c = HEX_CHARS[n];
-    res.Append(c);
-    n = b & 0xf;
-    c = HEX_CHARS[n];
-    res.Append(HEX_CHARS[n]);
-}
-
 static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, int nest, str::Str<char>& res)
 {
     str::Str<char> val;
@@ -570,15 +561,14 @@ static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, 
     } else if (TYPE_COLOR == type) {
         uint64_t u = ReadStructUInt(data, type);
         COLORREF c = (COLORREF)u;
-        uint8_t r = (uint8_t)(c & 0xff);
-        uint8_t g = (uint8_t)((c >> 8) & 0xff);
-        uint8_t b = (uint8_t)((c >> 16) & 0xff);
-        uint8_t a = (uint8_t)((c >> 24) & 0xff);
-        val.Append("#");
-        AppendHex(a, val);
-        AppendHex(r, val);
-        AppendHex(g, val);
-        AppendHex(b, val);
+        int r = (int)((uint8_t)(c & 0xff));
+        int g = (int)((uint8_t)((c >> 8) & 0xff));
+        int b = (int)((uint8_t)((c >> 16) & 0xff));
+        int a = (int)((uint8_t)((c >> 24) & 0xff));
+        if (a > 0)
+            val.AppendFmt("#%02x%02x%02x%02x", a, r, g, b);
+        else
+            val.AppendFmt("#%02x%02x%02x", r, g, b);
         AppendKeyVal(fieldDef->name, val.Get(), nest, res);
     } else if (IsUnsignedIntType(type)) {
         uint64_t u = ReadStructUInt(data, type);
