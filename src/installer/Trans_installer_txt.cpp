@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   16
+#define LANGS_COUNT   17
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -103,6 +103,51 @@ const char * gTranslations_ar =
   "\331\201\330\264\331\204 \330\245\330\262\330\247\331\204\330\251 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254\0"\
   "\330\245\330\262\330\247\331\204\330\251 \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254 \331\202\331\212\330\257 \330\247\331\204\330\271\331\205\331\204...\0"\
   "\330\252\330\271\331\212\331\212\331\206 SumatraPDF \330\247\331\204\330\250\330\261\331\206\330\247\331\205\330\254 \330\247\331\204\330\247\331\201\330\252\330\261\330\247\330\266\331\212 \331\204\331\201\330\252\330\255 \331\205\331\204\331\201\330\247\330\252 PDF\0";
+
+const char * gTranslations_az = 
+  "&Se\303\247iml\311\231r\0"\
+  "\306\217minsiniz ki, SumatraPDF-i silm\311\231k ist\311\231yirsiniz?\0"\
+  "Ba\304\237la\0"\
+  "M\303\274v\311\231qq\311\231ti qovlu\304\237u yaratmaq m\303\274mk\303\274n olmad\304\261\0"\
+  "Qura\305\237d\304\261rma qovlu\304\237unu yaratmaq m\303\274mk\303\274n olmad\304\261\0"\
+  "PDF \303\266nbax\304\261\305\237 al\311\231tini qura\305\237d\304\261rmaq m\303\274mk\303\274n olmad\304\261\0"\
+  "PDF axtar\304\261\305\237 filtrini qura\305\237d\304\261rmaq m\303\274mk\303\274n olmad\304\261\0"\
+  "Brauzer plaginini qura\305\237d\304\261rmaq m\303\274mk\303\274n olmad\304\261\0"\
+  "M\303\274v\311\231qq\311\231ti qovlu\304\237u t\311\231yin etm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
+  "Qura\305\237d\304\261rma qovlu\304\237unu silm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
+  "Yarl\304\261\304\237\304\261 silm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
+  "PDF \303\266nbax\304\261\305\237 al\311\231tini silm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
+  "PDF axtar\304\261\305\237 filtrini silm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
+  "Brauzer plaginini silm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
+  "%s disk\311\231 yaz\304\261la bilm\311\231di\0"\
+  "Deinstalyatoru m\303\274v\311\231qq\311\231ti qovlu\304\237a kopyalamaq m\303\274mk\303\274n olmad\304\261\0"\
+  "Yarl\304\261k yaratmaq m\303\274mk\303\274n olmad\304\261\0"\
+  "Deinstalyatorun reyestr a\303\247arlar\304\261n\304\261 silm\311\231k m\303\274mk\303\274n olmad\304\261\0"\
+  "Fayl\304\261n geni\305\237liyi haqq\304\261nda \311\231trafl\304\261 m\311\231lumat\304\261 reyestr\311\231 yazmaq m\303\274mk\303\274n olmad\304\261\0"\
+  "Deinstalyasiya m\311\231lumat\304\261n\304\261 reyestr\311\231 yazmaq m\303\274mk\303\274n olmad\304\261\0"\
+  "&Se\303\247iml\311\231ri gizl\311\231t\0"\
+  "PDF &brauzer plaginini Firefox, Chrome v\311\231 Opera \303\274\303\247\303\274n qura\305\237d\304\261r\0"\
+  "SumatraPDF-i qura\305\237d\304\261r\0"\
+  "SumatraPDF-i bu &qovluqda qura\305\237d\304\261r:\0"\
+  "Qura\305\237d\304\261rma ba\305\237 tutmad\304\261!\0"\
+  "Qura\305\237d\304\261rma davam edir...\0"\
+  "PDF s\311\231n\311\231dl\311\231rinin Windows Desktop Search vasit\311\231sil\311\231 a&xtar\304\261lmas\304\261\0"\
+  "PDF s\311\231n\311\231dl\311\231rinin Windows al\311\231tl\311\231ri vasit\311\231sil\311\231 &g\303\266r\303\274nt\303\274l\311\231nm\311\231si\0"\
+  "Davam etm\311\231k \303\274\303\247\303\274n %s ba\304\237lay\304\261n!\0"\
+  "SumatraPDF-in qura\305\237d\304\261r\304\261laca\304\237\304\261 qovlu\304\237u se\303\247in:\0"\
+  "B\311\231zi qura\305\237d\304\261r\304\261lacaq fayllar z\311\231d\311\231l\311\231nmi\305\237dir v\311\231 ya yoxdur\0"\
+  "SumatraPDF-i i\305\237\311\231 sal\0"\
+  "SumatraPDF qura\305\237d\304\261r\304\261c\304\261s\304\261 %s\0"\
+  "SumatraPDF deinstalyatoru %s\0"\
+  "SumatraPDF silindi.\0"\
+  "SumatraPDF qura\305\237d\304\261rmas\304\261 tap\304\261lmad\304\261.\0"\
+  "SumatraPDF-i se\303\247diyiniz \303\274\303\247\303\274n t\311\231\305\237\311\231kk\303\274r edirik!\0"\
+  "T\311\231\305\237\311\231kk\303\274rl\311\231r! SumatraPDF qura\305\237d\304\261r\304\261ld\304\261.\0"\
+  "Qura\305\237d\304\261r\304\261c\304\261 z\311\231d\311\231l\311\231nmi\305\237dir. L\303\274tf\311\231n onu t\311\231krar endirin.\nNarahat\303\247\304\261l\304\261\304\237a g\303\266r\311\231 \303\274zr ist\311\231yirik!\0"\
+  "SumatraPDF-i sil\0"\
+  "Deinstalyasiya ba\305\237 tutmad\304\261\0"\
+  "Deinstalyasiya davam edir...\0"\
+  "SumatraPDF &standart PDF oxuyucusu kimi istifad\311\231 olunsun\0";
 
 const char * gTranslations_eu = 
   "A&ukerak\0"\
@@ -738,6 +783,7 @@ const char * gTranslations_uk =
 static const char *gTranslations[LANGS_COUNT] = {
   NULL,
   gTranslations_ar, 
+  gTranslations_az, 
   gTranslations_eu, 
   gTranslations_cn, 
   gTranslations_fr, 
@@ -759,6 +805,7 @@ const char *GetTranslationsForLang(int langIdx) { return gTranslations[langIdx];
 
 const char *gLangCodes =   "en\0" \
   "ar\0" \
+  "az\0" \
   "eu\0" \
   "cn\0" \
   "fr\0" \
@@ -776,6 +823,7 @@ const char *gLangCodes =   "en\0" \
 
 const char *gLangNames =   "English\0" \
   "Arabic (\330\247\331\204\331\222\330\271\331\216\330\261\331\216\330\250\331\212\331\221\330\251)\0" \
+  "Azerbaijani (Az\311\231rbaycanca)\0" \
   "Basque (Euskara)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "French (Fran\303\247ais)\0" \
@@ -805,6 +853,7 @@ const char *gLangNames =   "English\0" \
 const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_ENGLISH),
   _LANGID(LANG_ARABIC),
+  _LANGID(LANG_AZERI),
   _LANGID(LANG_BASQUE),
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
   _LANGID(LANG_FRENCH),

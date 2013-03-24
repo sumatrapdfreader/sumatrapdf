@@ -1035,7 +1035,7 @@ const char * gTranslations_az =
   "&G\303\266r\303\274nt\303\274\0"\
   "&B\311\231li\0"\
   "&Miqyas\0"\
-  "(%d-dan(-d\311\231n)\0"\
+  "(c\311\231mi %d)\0"\
   "(s\311\231h. %s)\0"\
   "SumatraPDF haqq\304\261nda\0"\
   "Se\303\247ilmi\305\237l\311\231r\311\231 \311\231lav\311\231 et\0"\
@@ -1148,7 +1148,7 @@ const char * gTranslations_az =
   "A\303\247\0"\
   "PD&F-XChange-d\311\231 a\303\247\0"\
   "S\311\231n\311\231di a\303\247...\0"\
-  "\0"\
+  "%s il\311\231 a\303\247\0"\
   "&Adobe Reader-d\311\231 a\303\247\0"\
   "&Foxit Reader-d\311\231 a\303\247\0"\
   "Microsoft &HTML Help-d\311\231 a\303\247\0"\
@@ -1177,7 +1177,7 @@ const char * gTranslations_az =
   "\303\207ap davam edir.\0"\
   "\303\207ap davam edir. Dayand\304\261rmaq v\311\231 proqramdan \303\247\304\261xmaq?\0"\
   "\303\207ap davam edir. Dayand\304\261rmaq v\311\231 yenid\311\231n ba\305\237lamaq?\0"\
-  "%d. s\311\231hif\311\231 (%d) \303\247ap olunur...\0"\
+  "%d/%d s\311\231hif\311\231 \303\247ap olunur...\0"\
   "\303\207ap x\311\231tas\304\261.\0"\
   "A&d\304\261n\304\261 d\311\231yi\305\237dir...\tF2\0"\
   "&A\303\247\304\261lm\304\261\305\237 fayllar\304\261 yadda saxla\0"\
@@ -1189,7 +1189,7 @@ const char * gTranslations_az =
   "Sa&\304\237a d\303\266nd\311\231r\tCtrl+Shift++\0"\
   "F\311\231rqli adla yadda saxla\0"\
   "Yarl\304\261&\304\237\304\261 yadda saxla...\tCtrl+Shift+S\0"\
-  "%d. (%d) axtar\304\261l\304\261r...\0"\
+  "%d/%d axtar\304\261l\304\261r...\0"\
   "&Ham\304\261s\304\261n\304\261 se\303\247\0"\
   "&Ham\304\261s\304\261n\304\261 se\303\247\tCtrl+A\0"\
   "M\311\231zmunu Ctrl+sol si\303\247an d\303\274ym\311\231si il\311\231 se\303\247\0"\
@@ -1197,7 +1197,7 @@ const char * gTranslations_az =
   "T\311\231rs axtar\304\261\305\237 komandas\304\261n\304\261 t\311\231yin etm\311\231k\0"\
   "\306\217&lf\311\231cinl\311\231ri g\303\266st\311\231r\0"\
   "Al\311\231tl\311\231r &panelini g\303\266st\311\231r\0"\
-  "S\311\231hif\311\231l\311\231ri ard\304\261&c\304\261l g\303\266st\311\231r\0"\
+  "S\311\231hif\311\231l\311\231ri ard\304\261c\304\261&l g\303\266st\311\231r\0"\
   "Se\303\247ilmi\305\237l\311\231ri g\303\266st\311\231r\0"\
   "\306\217n \303\247ox oxunanlar\304\261 g\303\266st\311\231r\0"\
   "M\303\274mk\303\274nd\303\274rs\311\231, \311\231&lf\311\231cinl\311\231r panelini g\303\266st\311\231r\0"\
