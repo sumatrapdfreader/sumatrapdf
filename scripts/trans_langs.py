@@ -5,7 +5,7 @@ g_langs = [
     ('af'    , 'Afrikaans',                              '_LANGID(LANG_AFRIKAANS)'),
     ('am'    , 'Armenian (Հայերեն)',                     '_LANGID(LANG_ARMENIAN)'),
     ('ar'    , 'Arabic (الْعَرَبيّة)',                         '_LANGID(LANG_ARABIC)', 'RTL'),
-    ('az'    , 'Azerbaijani (آذربایجان دیلی)',              '_LANGID(LANG_AZERI)'),
+    ('az'    , 'Azerbaijani (Azərbaycanca)',              '_LANGID(LANG_AZERI)'),
     ('bg'    , 'Bulgarian (Български)',                  '_LANGID(LANG_BULGARIAN)'),
     ('bn'    , 'Bengali (বাংলা)',                      '_LANGID(LANG_BENGALI)'),
     ('br'    , 'Portuguese - Brazil (Português)',         'MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN)'),
