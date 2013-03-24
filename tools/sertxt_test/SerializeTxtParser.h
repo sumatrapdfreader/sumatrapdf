@@ -40,6 +40,14 @@ struct Slice {
 
 } // namespace str
 
+enum Token {
+    TokenOpen, // '['
+    TokenClose, // ']'
+    TokenString,
+    TokenKeyVal, // foo: bar
+    TokenError,
+};
+
 struct TxtNode {
     char *      lineStart;
     char *      valStart;
@@ -51,16 +59,39 @@ struct TxtNode {
     TxtNode *   child;
 };
 
+struct TokenVal {
+    Token   type;
+
+    // TokenString, TokenKeyVal
+    char *  lineStart;
+    char *  valStart;
+    char *  valEnd;
+
+    // TokenKeyVal
+    char *  keyStart;
+    char *  keyEnd;
+};
+
+inline void ClearToken(TokenVal& tok)
+{
+    ZeroMemory(&tok, sizeof(TokenVal));
+    tok.type = TokenError;
+}
+
 struct TxtParser {
     Allocator *     allocator;
     TxtNode *       firstNode;
     str::Slice      toParse;
     int             bracketNesting; // nesting level of '[', ']'
+    Token           prevToken;
+    TokenVal        tok;
 
     TxtParser() {
         allocator = new PoolAllocator();
         firstNode = NULL;
         bracketNesting = 0;
+        prevToken = TokenError;
+        ClearToken(tok);
     }
     ~TxtParser() {
         delete allocator;

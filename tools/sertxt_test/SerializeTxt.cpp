@@ -57,6 +57,16 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
         if (TYPE_STRUCT_PTR ==  type) {
             uint8_t **p = (uint8_t**)(data + fieldDef->offset);
             FreeStruct(*p, fieldDef->def);
+        } else if (TYPE_ARRAY == type) {
+            ListNode<void> **nodePtr = (ListNode<void>**)(data + fieldDef->offset);
+            ListNode<void> *node = *nodePtr;
+            ListNode<void> *next;
+            while (node) {
+                next = node->next;
+                FreeStruct((uint8_t*)node->val, fieldDef->def);
+                free(node);
+                node = next;
+            }
         } else if ((TYPE_STR == type) || (TYPE_WSTR == type)) {
             char **sp = (char**)(data + fieldDef->offset);
             char *s = *sp;
@@ -433,25 +443,26 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         if (ok)
             WriteStructFloat(structDataPtr, ds.f);
     } else if (TYPE_ARRAY == type) {
-        // we have a node but it's not the right shape for arrays
-        // i.e. we expected "[" and it just "foo" or "foo: bar"
-        if (!node->child)
-            return false;
-        ListNode<void> *root = NULL;
-        TxtNode *curr = node->child;
+        node = node->child;
         CrashIf(!fieldDef->def); // must be a struct
-        while (curr && curr->child) {
-            uint8_t *d = DeserializeRec(ds, curr->child, fieldDef->def);
+        ListNode<void> *last = NULL;
+        while (node) {
+            uint8_t *d = DeserializeRec(ds, node->child, fieldDef->def);
             if (!d)
                 goto Error; // TODO: free root
-            ListNode<void> *node = AllocArray<ListNode<void>>(1);
-            node->next = root;
-            root = node;
-            node->val = (void*)d;
-            curr = curr->next;
+            ListNode<void> *tmp = AllocArray<ListNode<void>>(1);
+            tmp->val = (void*)d;
+            if (!last) {
+                // this is root
+                last = tmp;
+                // we remember it so that it gets freed in case of error
+                WriteStructPtrVal(structDataPtr, (void*)last);
+            } else {
+                last->next = tmp;
+                last = tmp;
+            }
+            node = node->next;
         }
-        // TODO: reverse root
-        WriteStructPtrVal(structDataPtr, (void*)root);
     } else {
         CrashIf(true);
         return false;
@@ -604,8 +615,24 @@ static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, 
         AppendNest(res, nest);
         res.Append("]\n");
     } else if (TYPE_ARRAY == type) {
-        // TODO: serialize array
-        CrashIf(true);
+        CrashIf(!fieldDef->def);
+        AppendNest(res, nest);
+        res.Append(fieldDef->name);
+        res.Append(" [\n");
+        ListNode<void> *el = (ListNode<void>*)ReadStructPtr(data);
+        ++nest;
+        while (el) {
+            AppendNest(res, nest);
+            res.Append("[\n");
+            const uint8_t *elData = (const uint8_t*)el->val;
+            SerializeRec(elData, fieldDef->def, nest + 1, res);
+            AppendNest(res, nest);
+            res.Append("]\n");
+            el = el->next;
+        }
+        --nest;
+        AppendNest(res, nest);
+        res.Append("]\n");
     } else {
         CrashIf(true);
     }

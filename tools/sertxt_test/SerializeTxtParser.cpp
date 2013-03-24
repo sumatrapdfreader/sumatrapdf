@@ -108,27 +108,6 @@ void Slice::ZeroCurr()
 
 } // namespace str
 
-enum Token {
-    TokenOpen, // '['
-    TokenClose, // ']'
-    TokenString,
-    TokenKeyVal, // foo: bar
-    TokenError
-};
-
-struct TokenVal {
-    Token   type;
-
-    // TokenString, TokenKeyVal
-    char *  lineStart;
-    char *  valStart;
-    char *  valEnd;
-
-    // TokenKeyVal
-    char *  keyStart;
-    char *  keyEnd;
-};
-
 static bool IsCommentChar(char c)
 {
     return (';' == c ) || ('#' == c);
@@ -137,10 +116,11 @@ static bool IsCommentChar(char c)
 // TODO: maybe also allow things like:
 // foo: [1 3 4]
 // i.e. a child on a single line
-static void ParseNextToken(TxtParser& parser, TokenVal& tok)
+static void ParseNextToken(TxtParser& parser)
 {
-    ZeroMemory(&tok, sizeof(TokenVal));
-    tok.type = TokenError;
+    TokenVal& tok = parser.tok;
+    parser.prevToken = tok.type;
+    ClearToken(parser.tok);
 
     str::Slice& slice = parser.toParse;
 
@@ -242,7 +222,6 @@ static TxtNode *TxtNodeFromToken(Allocator *allocator, TokenVal& tok)
 
 static TxtNode *ParseNextNode(TxtParser& parser)
 {
-    TokenVal tok;
     TxtNode *firstNode = NULL;
     TxtNode *currNode = NULL;
     int arrayNest = 0;
@@ -250,12 +229,14 @@ static TxtNode *ParseNextNode(TxtParser& parser)
         if (0 == parser.bracketNesting && parser.toParse.Finished())
             return firstNode;
 
-        ParseNextToken(parser, tok);
+        ParseNextToken(parser);
+        TokenVal& tok = parser.tok;
+
         if (TokenError == tok.type)
             return NULL;
         if (TokenString == tok.type || TokenKeyVal == tok.type) {
             TxtNode *tmp = TxtNodeFromToken(parser.allocator, tok);
-            if (firstNode == NULL) {
+            if (NULL == firstNode) {
                 firstNode = tmp;
                 CrashIf(currNode);
                 currNode = tmp;
@@ -264,23 +245,20 @@ static TxtNode *ParseNextNode(TxtParser& parser)
                 currNode = tmp;
             }
         } else if (TokenOpen == tok.type) {
-            if (NULL == currNode) {
-                CrashIf(firstNode);
-                // '[' that starts an array
-                CrashIf(arrayNest != 0);
-                arrayNest = 1;
-                firstNode = TxtNodeFromToken(parser.allocator, tok);
-                currNode = firstNode;
-                currNode->child = ParseNextNode(parser);
-                if (!currNode->child) // propagate errors
-                    return NULL;
-            } else if (arrayNest > 0) {
+            if ((TokenOpen == parser.prevToken) || (TokenClose == parser.prevToken)) {
+                // array element
                 ++arrayNest;
-                TxtNode *tmp = ParseNextNode(parser);
-                if (!tmp) // propagate errors
+                TxtNode *tmp = TxtNodeFromToken(parser.allocator, tok);
+                tmp->child = ParseNextNode(parser);
+                if (!tmp->child) // propagate errors
                     return NULL;
-                currNode->next = tmp;
-                currNode = tmp;
+                if (NULL == firstNode) {
+                    firstNode = tmp;
+                    currNode = tmp;
+                } else {
+                    currNode->next = tmp;
+                    currNode = tmp;
+                }
             } else {
                 ++parser.bracketNesting;
                 currNode->child = ParseNextNode(parser);
@@ -352,20 +330,13 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
                 res.Append("]\n");
             } else {
                 // array
-                TxtNode *arrEl = curr;
-                AppendNest(res, nest);
-                res.Append("[\n");
-                PrettyPrintNode(arrEl->child, nest + 1, res);
-                AppendNest(res, nest);
-                res.Append("]\n");
-                arrEl = arrEl->next;
-                while (arrEl) {
+                while (curr) {
                     AppendNest(res, nest);
                     res.Append("[\n");
-                    PrettyPrintNode(arrEl, nest + 1, res);
+                    PrettyPrintNode(curr->child, nest + 1, res);
                     AppendNest(res, nest);
                     res.Append("]\n");
-                    arrEl = arrEl->next;
+                    curr = curr->next;
                 }
                 return;
             }
