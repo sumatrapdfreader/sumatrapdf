@@ -1,8 +1,10 @@
--- to generate Visual Studio files in vs directory, run:
+-- to generate Visual Studio files in vs-premake directory, run:
 -- premake4 vs2010 or premake4 vs2008
 solution "everything"
   configurations { "Debug", "Release" }
-  location "vs" -- this is where generated solution/project files go
+
+  -- those settings are inherited by projects that follow
+  location "vs-premake" -- this is where generated solution/project files go
 
   -- Symbols - generate .pdb files
   -- StaticRuntime - statically link crt
@@ -13,13 +15,12 @@ solution "everything"
    "NoRTTI", "Unicode", "NoExceptions"
   }
 
-  -- those are inherited by projects that follow
   configuration "Debug"
-    targetdir "dbg" -- this is where the .exe/.lib etc. files wil end up
+    targetdir "obj-dbg" -- this is where the .exe/.lib etc. files wil end up
     defines { "_DEBUG", "DEBUG" }
 
   configuration "Release"
-     targetdir "rel"
+     targetdir "obj-rel"
      flags { "Optimize" }
      defines { "NDEBUG" }
      -- 4189 - variable not used, happens with CrashIf() macros that are no-op
