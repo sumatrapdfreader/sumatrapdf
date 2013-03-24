@@ -2,8 +2,9 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "IniParser.h"
 #include "../sertxt_test/SerializeTxt.h"
+
+#include "IniParser.h"
 
 namespace sertxt {
 
@@ -42,18 +43,56 @@ static char *UnescapeStr(const char *s)
     return ret.StealData();
 }
 
-static void *DeserializeRec(IniFile& p, StructMetadata *def, const char *sectionName=NULL)
+static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_t endIdx, size_t *foundIdx)
 {
-    IniSection *section = p.FindSection(sectionName);
-    IniLine *line = NULL;
+    for (size_t i = idx; i < endIdx; i++) {
+        if (str::EqI(ini.sections.At(i)->name, name)) {
+            *foundIdx = i;
+            return ini.sections.At(i);
+        }
+    }
+    return NULL;
+}
+
+static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
+{
+    if ((size_t)-1 == endIdx)
+        endIdx = ini.sections.Count();
+
+    size_t secIdx = startIdx;
+    IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
+    IniLine *line;
     int r, g, b, a;
 
     uint8_t *data = (uint8_t *)calloc(1, def->size);
+    if (secIdx >= endIdx) {
+        section = NULL;
+        secIdx = startIdx - 1;
+    }
+
     for (size_t i = 0; i < def->nFields; i++) {
         FieldMetadata& field = def->fields[i];
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", field.name) : str::Dup(field.name));
-            *(void **)(data + field.offset) = DeserializeRec(p, field.def, name);
+            *(void **)(data + field.offset) = DeserializeRec(ini, field.def, name, secIdx + 1, endIdx);
+            continue;
+        }
+        if (TYPE_ARRAY == field.type) {
+            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", field.name) : str::Dup(field.name));
+            ListNode<void> *root = NULL, **next = &root;
+            size_t nextSecIdx = endIdx;
+            FindSection(ini, sectionName, secIdx + 1, endIdx, &nextSecIdx);
+            size_t subSecIdx = nextSecIdx;
+            IniSection *subSection = FindSection(ini, name, secIdx + 1, nextSecIdx, &subSecIdx);
+            while (subSection && subSecIdx < nextSecIdx) {
+                size_t nextSubSecIdx = nextSecIdx;
+                IniSection *nextSubSec = FindSection(ini, name, subSecIdx + 1, nextSecIdx, &nextSubSecIdx);
+                *next = AllocStruct<ListNode<void>>();
+                (*next)->val = DeserializeRec(ini, field.def, name, subSecIdx, nextSubSecIdx);
+                next = &(*next)->next;
+                subSection = nextSubSec; subSecIdx = nextSubSecIdx;
+            }
+            *(ListNode<void> **)(data + field.offset) = root;
             continue;
         }
         if (!section || !(line = section->FindLine(field.name))) {
@@ -109,8 +148,8 @@ uint8_t *Deserialize(const uint8_t *data, int dataSize, const char *version, Str
 {
     CrashIf(!data); // TODO: where to get defaults from?
     CrashIf(str::Len((const char *)data) != (size_t)dataSize);
-    IniFile p((const char *)data);
-    return (uint8_t *)DeserializeRec(p, def);
+    IniFile ini((const char *)data);
+    return (uint8_t *)DeserializeRec(ini, def);
 }
 
 // only escape characters which are significant to IniParser:
@@ -197,6 +236,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
             }
             break;
         case TYPE_STRUCT_PTR:
+        case TYPE_ARRAY:
             // nested structs are serialized after all other values
             break;
         default:
@@ -206,10 +246,16 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
 
     for (size_t i = 0; i < def->nFields; i++) {
         FieldMetadata& field = def->fields[i];
-        if (TYPE_STRUCT_PTR != field.type)
-            continue;
-        ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", field.name) : str::Dup(field.name));
-        SerializeRec(out, *(const uint8_t **)(data + field.offset), field.def, name);
+        if (TYPE_STRUCT_PTR == field.type) {
+            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", field.name) : str::Dup(field.name));
+            SerializeRec(out, *(const uint8_t **)(data + field.offset), field.def, name);
+        }
+        else if (TYPE_ARRAY == field.type) {
+            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", field.name) : str::Dup(field.name));
+            for (ListNode<void> *node = *(ListNode<void> **)(data + field.offset); node; node = node->next) {
+                SerializeRec(out, (const uint8_t *)node->val, field.def, name);
+            }
+        }
     }
 }
 
@@ -231,6 +277,15 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
         FieldMetadata& field = def->fields[i];
         if (TYPE_STRUCT_PTR == field.type)
             FreeStruct(*(uint8_t **)(data + field.offset), field.def);
+        else if (TYPE_ARRAY == field.type) {
+            ListNode<void> *node = *(ListNode<void> **)(data + field.offset);
+            while (node) {
+                ListNode<void> *next = node->next;
+                FreeStruct((uint8_t *)node->val, field.def);
+                free(node);
+                node = next;
+            }
+        }
         else if (TYPE_WSTR == field.type || TYPE_STR == field.type)
             free(*(void **)(data + field.offset));
     }
