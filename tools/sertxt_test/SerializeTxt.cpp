@@ -9,6 +9,8 @@
 
 namespace sertxt {
 
+#define NL "\r\n"
+
 // returns -1 on error
 static int NextIntVal(const char **sInOut)
 {
@@ -506,8 +508,11 @@ uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, Str
 {
     if (!data)
         return NULL;
-    //uint32_t ver = VersionFromStr(version);
     DecodeState ds;
+    if (dataSize >= 3 && str::EqN((const char*)data, UTF8_BOM, 3)) {
+        data += 3;
+        dataSize -= 3;
+    }
     ds.parser.toParse.Init((char*)data, (size_t)dataSize);
     bool ok = ParseTxt(ds.parser);
     if (!ok)
@@ -599,30 +604,30 @@ static void SerializeField(FieldMetadata *fieldDef, const uint8_t *structStart, 
     } else if (TYPE_STRUCT_PTR == type) {
         AppendNest(res, nest);
         res.Append(fieldDef->name);
-        res.Append(" [\n");
+        res.Append(" [" NL);
         const uint8_t *structStart2 = (const uint8_t *)ReadStructPtr(data);
         SerializeRec(structStart2, fieldDef->def, nest + 1, res);
         AppendNest(res, nest);
-        res.Append("]\n");
+        res.Append("]" NL);
     } else if (TYPE_ARRAY == type) {
         CrashIf(!fieldDef->def);
         AppendNest(res, nest);
         res.Append(fieldDef->name);
-        res.Append(" [\n");
+        res.Append(" [" NL);
         ListNode<void> *el = (ListNode<void>*)ReadStructPtr(data);
         ++nest;
         while (el) {
             AppendNest(res, nest);
-            res.Append("[\n");
+            res.Append("[" NL);
             const uint8_t *elData = (const uint8_t*)el->val;
             SerializeRec(elData, fieldDef->def, nest + 1, res);
             AppendNest(res, nest);
-            res.Append("]\n");
+            res.Append("]" NL);
             el = el->next;
         }
         --nest;
         AppendNest(res, nest);
-        res.Append("]\n");
+        res.Append("]" NL);
     } else {
         CrashIf(true);
     }
@@ -639,6 +644,7 @@ void SerializeRec(const uint8_t *data, StructMetadata *def, int nest, str::Str<c
 uint8_t *Serialize(const uint8_t *data, const char *version, StructMetadata *def, int *sizeOut)
 {
     str::Str<char> res;
+    res.Append(UTF8_BOM);
     SerializeRec(data, def, 0, res);
     if (sizeOut)
         *sizeOut = (int)res.Size();
