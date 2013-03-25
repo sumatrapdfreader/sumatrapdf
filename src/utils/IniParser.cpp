@@ -38,18 +38,16 @@ void IniFile::ParseData()
     if (!data)
         return;
 
-    char *end = data + str::Len(data);
-    // replace all line endings with NULL-terminators
-    for (char *c = data; c < end; c++) {
-        if ('\n' == *c)
-            *c = '\0';
-    }
-
     IniSection *section = new IniSection(NULL);
     char *next = data;
-    while (next < end) {
+    while (*next) {
         char *key = SkipWs(next);
-        next = key + str::Len(key) + 1;
+        for (next = key; *next; next++) {
+            if ('\n' == *next) {
+                *next++ = '\0';
+                break;
+            }
+        }
         if ('[' == *key || ']' == *key) {
             // section header
             char *lineEnd = SkipWsRev(key + 1, next - 1);
@@ -64,16 +62,14 @@ void IniFile::ParseData()
         }
         else {
             // key-value pair, separated by '=', ':' or whitepace
-            char *sep = (char *)str::FindChar(key, '=');
-            char *sep2 = (char *)str::FindChar(key, ':');
-            if (sep2 && (!sep || sep2 < sep))
-                sep = sep2;
-            else if (!sep)
-                for (sep = key; *sep && !str::IsWs(*sep); sep++);
-            char *value = SkipWs(sep + 1);
+            char *sep;
+            for (sep = key; *sep && *sep != '=' && *sep != ':'; sep++);
+            if (!*sep)
+                for (sep = key; !str::IsWs(*sep); sep++);
+            char *value = SkipWs(sep + (*sep ? 1 : 0));
             // trim trailing whitespace
             *SkipWsRev(key, sep) = '\0';
-            *SkipWsRev(value, value + str::Len(value)) = '\0';
+            *SkipWsRev(value, next - 1) = '\0';
             section->lines.Append(IniLine(key, value));
         }
     }

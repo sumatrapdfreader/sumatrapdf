@@ -72,12 +72,12 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, const char *section
 
     for (size_t i = 1; i <= (size_t)meta[0].type; i++) {
         if (Type_Struct == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", meta[i].name) : str::Dup(meta[i].name));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
             *(void **)(base + meta[i].offset) = DeserializeRec(ini, meta[i].substruct, name, secIdx + 1, endIdx);
             continue;
         }
         if (Type_Array == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", meta[i].name) : str::Dup(meta[i].name));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
             Vec<void *> array;
             size_t nextSecIdx = endIdx;
             FindSection(ini, sectionName, secIdx + 1, endIdx, &nextSecIdx);
@@ -172,50 +172,52 @@ static char *EscapeStr(const char *s)
 
 static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *meta, const char *sectionName=NULL)
 {
-    if (sectionName)
-        out.AppendFmt("[%s]\r\n", sectionName);
+    if (sectionName) {
+        out.Append("[");
+        out.Append(sectionName);
+        out.Append("]\r\n");
+    }
 
     COLORREF c;
     uint8_t *base = (uint8_t *)data;
     for (size_t i = 1; i <= (size_t)meta[0].type; i++) {
         CrashIf(str::FindChar(meta[i].name, '=') || NeedsEscaping(meta[i].name));
+        ScopedMem<char> value;
         switch (meta[i].type) {
         case Type_Bool:
-            out.AppendFmt("%s = %s\r\n", meta[i].name, *(bool *)(base + meta[i].offset) ? "true" : "false");
+            value.Set(str::Dup(*(bool *)(base + meta[i].offset) ? "true" : "false"));
             break;
         case Type_Int:
-            out.AppendFmt("%s = %d\r\n", meta[i].name, *(int *)(base + meta[i].offset));
+            value.Set(str::Format("%d", *(int *)(base + meta[i].offset)));
             break;
         case Type_Int64:
-            out.AppendFmt("%s = %I64d\r\n", meta[i].name, *(int64_t *)(base + meta[i].offset));
+            value.Set(str::Format("%I64d", *(int64_t *)(base + meta[i].offset)));
             break;
         case Type_Float:
-            out.AppendFmt("%s = %g\r\n", meta[i].name, *(float *)(base + meta[i].offset));
+            value.Set(str::Format("%g", *(float *)(base + meta[i].offset)));
             break;
         case Type_Color:
             c = *(COLORREF *)(base + meta[i].offset);
             // TODO: COLORREF doesn't really have an alpha value
             if (((c >> 24) & 0xff))
-                out.AppendFmt("%s = #%02x%02x%02x%02x\r\n", meta[i].name, (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c));
+                value.Set(str::Format("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c)));
             else
-                out.AppendFmt("%s = #%02x%02x%02x\r\n", meta[i].name, GetRValue(c), GetGValue(c), GetBValue(c));
+                value.Set(str::Format("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c)));
             break;
         case Type_String:
             if (*(const WCHAR **)(base + meta[i].offset)) {
-                ScopedMem<char> value(str::conv::ToUtf8(*(const WCHAR **)(base + meta[i].offset)));
-                if (!NeedsEscaping(value))
-                    out.AppendFmt("%s = %s\r\n", meta[i].name, value);
-                else
-                    out.AppendFmt("%s = %s\r\n", meta[i].name, ScopedMem<char>(EscapeStr(value)));
+                value.Set(str::conv::ToUtf8(*(const WCHAR **)(base + meta[i].offset)));
+                if (NeedsEscaping(value))
+                    value.Set(EscapeStr(value));
             }
             break;
         case Type_Utf8String:
             if (!*(const char **)(base + meta[i].offset))
                 /* skip empty string */;
             else if (!NeedsEscaping(*(const char **)(base + meta[i].offset)))
-                out.AppendFmt("%s = %s\r\n", meta[i].name, *(const char **)(base + meta[i].offset));
+                value.Set(str::Dup(*(const char **)(base + meta[i].offset)));
             else
-                out.AppendFmt("%s = %s\r\n", meta[i].name, ScopedMem<char>(EscapeStr(*(const char **)(base + meta[i].offset))));
+                value.Set(EscapeStr(*(const char **)(base + meta[i].offset)));
             break;
         case Type_Struct:
             // nested structs are serialized after all other values
@@ -227,15 +229,21 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
         default:
             CrashIf(true);
         }
+        if (value) {
+            out.Append(meta[i].name);
+            out.Append(" = ");
+            out.Append(value);
+            out.Append("\r\n");
+        }
     }
 
     for (size_t i = 1; i <= (size_t)meta[0].type; i++) {
         if (Type_Struct == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", meta[i].name) : str::Dup(meta[i].name));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
             SerializeRec(out, *(const void **)(base + meta[i].offset), meta[i].substruct, name);
         }
         else if (Type_Array == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", meta[i].name) : str::Dup(meta[i].name));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
             size_t count = *(size_t *)(base + meta[i+1].offset);
             for (size_t j = 0; j < count; j++) {
                 SerializeRec(out, (*(void ***)(base + meta[i].offset))[j], meta[i].substruct, name);
@@ -248,10 +256,14 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
 char *Serialize(const void *data, SettingInfo *def, size_t *sizeOut, const char *comment)
 {
     str::Str<char> out;
-    if (comment)
-        out.AppendFmt(UTF8_BOM "; %s\r\n", comment);
-    else
+    if (comment) {
+        out.Append(UTF8_BOM "; ");
+        out.Append(comment);
+        out.Append("\r\n");
+    }
+    else {
         out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
+    }
     SerializeRec(out, data, def);
     if (sizeOut)
         *sizeOut = out.Size();

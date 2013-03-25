@@ -74,12 +74,12 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
         FieldMetadata& field = def->fields[i];
         const char *fieldName = fieldNamesSeq + field.nameOffset;
         if (TYPE_STRUCT_PTR == field.type) {
-            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", fieldName) : str::Dup(fieldName));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             *(void **)(data + field.offset) = DeserializeRec(ini, field.def, fieldNamesSeq, name, secIdx + 1, endIdx);
             continue;
         }
         if (TYPE_ARRAY == field.type) {
-            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", fieldName) : str::Dup(fieldName));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             ListNode<void> *root = NULL, **next = &root;
             size_t nextSecIdx = endIdx;
             FindSection(ini, sectionName, secIdx + 1, endIdx, &nextSecIdx);
@@ -182,59 +182,61 @@ static char *EscapeStr(const char *s)
 
 static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, const char *sectionName=NULL)
 {
-    if (sectionName)
-        out.AppendFmt("[%s]\r\n", sectionName);
+    if (sectionName) {
+        out.Append("[");
+        out.Append(sectionName);
+        out.Append("]\r\n");
+    }
 
     COLORREF c;
     for (size_t i = 0; i < def->nFields; i++) {
         FieldMetadata& field = def->fields[i];
         const char *fieldName = fieldNamesSeq + field.nameOffset;
         CrashIf(str::FindChar(fieldName, '=') || NeedsEscaping(fieldName));
+        ScopedMem<char> value;
         switch (field.type) {
         case TYPE_BOOL:
-            out.AppendFmt("%s = %s\r\n", fieldName, *(bool *)(data + field.offset) ? "true" : "false");
+            value.Set(str::Dup(*(bool *)(data + field.offset) ? "true" : "false"));
             break;
         case TYPE_I16:
-            out.AppendFmt("%s = %d\r\n", fieldName, (int32_t)*(int16_t *)(data + field.offset));
+            value.Set(str::Format("%d", (int32_t)*(int16_t *)(data + field.offset)));
             break;
         case TYPE_U16:
-            out.AppendFmt("%s = %u\r\n", fieldName, (uint32_t)*(int16_t *)(data + field.offset));
+            value.Set(str::Format("%u", (uint32_t)*(uint16_t *)(data + field.offset)));
             break;
         case TYPE_I32:
-            out.AppendFmt("%s = %d\r\n", fieldName, *(int32_t *)(data + field.offset));
+            value.Set(str::Format("%d", *(int32_t *)(data + field.offset)));
             break;
         case TYPE_U32:
-            out.AppendFmt("%s = %u\r\n", fieldName, *(uint32_t *)(data + field.offset));
+            value.Set(str::Format("%u", *(uint32_t *)(data + field.offset)));
             break;
         case TYPE_U64:
-            out.AppendFmt("%s = %I64u\r\n", fieldName, *(uint64_t *)(data + field.offset));
+            value.Set(str::Format("%I64u", *(uint64_t *)(data + field.offset)));
             break;
         case TYPE_FLOAT:
-            out.AppendFmt("%s = %g\r\n", fieldName, *(float *)(data + field.offset));
+            value.Set(str::Format("%g", *(float *)(data + field.offset)));
             break;
         case TYPE_COLOR:
             c = *(COLORREF *)(data + field.offset);
             // TODO: COLORREF doesn't really have an alpha value
             if (((c >> 24) & 0xff))
-                out.AppendFmt("%s = #%02x%02x%02x%02x\r\n", fieldName, (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c));
+                value.Set(str::Format("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c)));
             else
-                out.AppendFmt("%s = #%02x%02x%02x\r\n", fieldName, GetRValue(c), GetGValue(c), GetBValue(c));
+                value.Set(str::Format("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c)));
             break;
         case TYPE_STR:
             if (!*(const char **)(data + field.offset))
                 /* skip empty string */;
             else if (!NeedsEscaping(*(const char **)(data + field.offset)))
-                out.AppendFmt("%s = %s\r\n", fieldName, *(const char **)(data + field.offset));
+                value.Set(str::Dup(*(const char **)(data + field.offset)));
             else
-                out.AppendFmt("%s = %s\r\n", fieldName, ScopedMem<char>(EscapeStr(*(const char **)(data + field.offset))));
+                value.Set(EscapeStr(*(const char **)(data + field.offset)));
             break;
         case TYPE_WSTR:
             if (*(const WCHAR **)(data + field.offset)) {
-                ScopedMem<char> value(str::conv::ToUtf8(*(const WCHAR **)(data + field.offset)));
-                if (!NeedsEscaping(value))
-                    out.AppendFmt("%s = %s\r\n", fieldName, value);
-                else
-                    out.AppendFmt("%s = %s\r\n", fieldName, ScopedMem<char>(EscapeStr(value)));
+                value.Set(str::conv::ToUtf8(*(const WCHAR **)(data + field.offset)));
+                if (NeedsEscaping(value))
+                    value.Set(EscapeStr(value));
             }
             break;
         case TYPE_STRUCT_PTR:
@@ -244,17 +246,23 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
         default:
             CrashIf(!(field.type & TYPE_NO_STORE_MASK));
         }
+        if (value) {
+            out.Append(fieldName);
+            out.Append(" = ");
+            out.Append(value);
+            out.Append("\r\n");
+        }
     }
 
     for (size_t i = 0; i < def->nFields; i++) {
         FieldMetadata& field = def->fields[i];
         const char *fieldName = fieldNamesSeq + field.nameOffset;
         if (TYPE_STRUCT_PTR == field.type) {
-            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", fieldName) : str::Dup(fieldName));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             SerializeRec(out, *(const uint8_t **)(data + field.offset), field.def, fieldNamesSeq, name);
         }
         else if (TYPE_ARRAY == field.type) {
-            ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", fieldName) : str::Dup(fieldName));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             for (ListNode<void> *node = *(ListNode<void> **)(data + field.offset); node; node = node->next) {
                 SerializeRec(out, (const uint8_t *)node->val, field.def, fieldNamesSeq, name);
             }

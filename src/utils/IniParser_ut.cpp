@@ -22,7 +22,7 @@ key without separator\n\
     };
 
     IniFile p(iniData);
-    size_t idxSec = -1, idxLine = -1;
+    size_t idxSec = (size_t)-1, idxLine = (size_t)-1;
     for (int i = 0; i < dimof(verify); i++) {
         if (!verify[i].value) {
             if (idxSec != (size_t)-1) {
