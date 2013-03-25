@@ -54,10 +54,7 @@ static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_
     return NULL;
 }
 
-// TODO: this must be passed in
-const char* fieldNamesSeq = "";
-
-static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
+static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *fieldNamesSeq, const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
 {
     if ((size_t)-1 == endIdx)
         endIdx = ini.sections.Count();
@@ -78,7 +75,7 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *secti
         const char *fieldName = fieldNamesSeq + field.nameOffset;
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", fieldName) : str::Dup(fieldName));
-            *(void **)(data + field.offset) = DeserializeRec(ini, field.def, name, secIdx + 1, endIdx);
+            *(void **)(data + field.offset) = DeserializeRec(ini, field.def, fieldNamesSeq, name, secIdx + 1, endIdx);
             continue;
         }
         if (TYPE_ARRAY == field.type) {
@@ -92,7 +89,7 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *secti
                 size_t nextSubSecIdx = nextSecIdx;
                 IniSection *nextSubSec = FindSection(ini, name, subSecIdx + 1, nextSecIdx, &nextSubSecIdx);
                 *next = AllocStruct<ListNode<void>>();
-                (*next)->val = DeserializeRec(ini, field.def, name, subSecIdx, nextSubSecIdx);
+                (*next)->val = DeserializeRec(ini, field.def, fieldNamesSeq, name, subSecIdx, nextSubSecIdx);
                 next = &(*next)->next;
                 subSection = nextSubSec; subSecIdx = nextSubSecIdx;
             }
@@ -148,12 +145,12 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *secti
     return data;
 }
 
-uint8_t *Deserialize(const uint8_t *data, int dataSize, const char *version, StructMetadata *def)
+uint8_t *Deserialize(const uint8_t *data, int dataSize, StructMetadata *def, const char *fieldNamesSeq)
 {
     CrashIf(!data); // TODO: where to get defaults from?
     CrashIf(str::Len((const char *)data) != (size_t)dataSize);
     IniFile ini((const char *)data);
-    return (uint8_t *)DeserializeRec(ini, def);
+    return (uint8_t *)DeserializeRec(ini, def, fieldNamesSeq);
 }
 
 // only escape characters which are significant to IniParser:
@@ -183,7 +180,7 @@ static char *EscapeStr(const char *s)
     return ret.StealData();
 }
 
-static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadata *def, const char *sectionName=NULL)
+static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, const char *sectionName=NULL)
 {
     if (sectionName)
         out.AppendFmt("[%s]\r\n", sectionName);
@@ -245,7 +242,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
             // nested structs are serialized after all other values
             break;
         default:
-            CrashIf(true);
+            CrashIf(!(field.type & TYPE_NO_STORE_MASK));
         }
     }
 
@@ -254,28 +251,27 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
         const char *fieldName = fieldNamesSeq + field.nameOffset;
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", fieldName) : str::Dup(fieldName));
-            SerializeRec(out, *(const uint8_t **)(data + field.offset), field.def, name);
+            SerializeRec(out, *(const uint8_t **)(data + field.offset), field.def, fieldNamesSeq, name);
         }
         else if (TYPE_ARRAY == field.type) {
             ScopedMem<char> name(sectionName ? str::Join(sectionName, ".", fieldName) : str::Dup(fieldName));
             for (ListNode<void> *node = *(ListNode<void> **)(data + field.offset); node; node = node->next) {
-                SerializeRec(out, (const uint8_t *)node->val, field.def, name);
+                SerializeRec(out, (const uint8_t *)node->val, field.def, fieldNamesSeq, name);
             }
         }
     }
 }
 
-uint8_t *Serialize(const uint8_t *data, const char *version, StructMetadata *def, int *sizeOut)
+uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int *sizeOut)
 {
     str::Str<char> out;
     out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
-    SerializeRec(out, data, def);
+    SerializeRec(out, data, def, fieldNamesSeq);
     if (sizeOut)
         *sizeOut = (int)out.Size();
     return (uint8_t *)out.StealData();
 }
 
-#if 0 // TODO: conflicts with the one in SerializeTxt.cpp
 void FreeStruct(uint8_t *data, StructMetadata *def)
 {
     if (!data)
@@ -298,6 +294,5 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
     }
     free(data);
 }
-#endif
 
 };
