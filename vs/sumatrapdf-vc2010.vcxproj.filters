@@ -821,9 +821,6 @@
     <ClInclude Include="..\src\AppPrefs.h">
       <Filter>sumatra</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\AppPrefs2.h">
-      <Filter>sumatra</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\AppTools.h">
       <Filter>sumatra</Filter>
     </ClInclude>

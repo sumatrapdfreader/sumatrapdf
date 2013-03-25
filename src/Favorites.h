@@ -24,7 +24,21 @@ they are for navigation only. Presentation settings are remembered on a
 per-file basis in FileHistory.
 */
 
-class FavName; // defined in AppPrefs2.h
+class FavName {
+public:
+    ScopedMem<WCHAR>    name;
+    int                 pageNo;
+    // TODO: persist pageLabel
+    ScopedMem<WCHAR>    pageLabel;
+    int                 menuId; // assigned in AppendFavMenuItems()
+
+    FavName(int pageNo, const WCHAR *name, const WCHAR *pageLabel) :
+        pageNo(pageNo), name(str::Dup(name)), pageLabel(str::Dup(pageLabel)) { }
+
+    void ChangeName(const WCHAR *newName) {
+        name.Set(str::Dup(newName));
+    }
+};
 
 // list of favorites for one file
 class FileFavs {
@@ -50,7 +64,6 @@ class FileFavs {
 
     void ResetMenuIds();
     bool GetByMenuId(int menuId, size_t& idx);
-    bool HasFavName(FavName *fn);
     bool Remove(int pageNo);
     void AddOrReplace(int pageNo, const WCHAR *name, const WCHAR *pageLabel);
 };

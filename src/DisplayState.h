@@ -27,6 +27,59 @@ enum DisplayMode {
 #define ZOOM_MIN            8.33f  /* min zoom in % */
 #define INVALID_ZOOM        -99.0f
 
-#include "AppPrefs2.h"
+class DisplayState {
+public:
+    DisplayState() :
+        filePath(NULL), useGlobalValues(false), index(0), openCount(0),
+        displayMode(DM_AUTOMATIC), pageNo(1), reparseIdx(0), zoomVirtual(100.0),
+        rotation(0), windowState(0), thumbnail(NULL), isPinned(false),
+        decryptionKey(NULL), tocVisible(true), isMissing(false),
+        sidebarDx(0), tocState(NULL) { }
+
+    ScopedMem<WCHAR>    filePath;
+
+    // in order to prevent documents that haven't been opened
+    // for a while but used to be opened very frequently
+    // constantly remain in top positions, the openCount
+    // will be cut in half after every week, so that the
+    // Frequently Read list hopefully better reflects the
+    // currently relevant documents
+    int                 openCount;
+    size_t              index;     // temporary value needed for FileHistory::cmpOpenCount
+    ScopedPtr<RenderedBitmap> thumbnail; // persisted separately
+    // a user can "pin" a preferred document to the Frequently Read list
+    // so that the document isn't replaced by more frequently used ones
+    bool                isPinned;
+    // if a document can no longer be found but we still remember valuable state,
+    // it's classified as missing so that it can be hidden instead of removed
+    bool                isMissing;
+
+    bool                useGlobalValues;
+
+    enum DisplayMode    displayMode;
+    PointI              scrollPos;
+    int                 pageNo;
+    // for bookmarking ebook files: offset of the current page reparse
+    // point within html
+    int                 reparseIdx;
+    float               zoomVirtual;
+    int                 rotation;
+    int                 windowState;
+    RectI               windowPos;
+
+    // hex encoded MD5 fingerprint of file content (32 chars)
+    // followed by crypt key (64 chars) - only applies for PDF documents
+    ScopedMem<char>     decryptionKey;
+
+    bool                tocVisible;
+    int                 sidebarDx;
+
+    // tocState is an array of ids for ToC items that have been
+    // toggled by the user (i.e. aren't in their default expansion state)
+    // Note: We intentionally track toggle state as opposed to expansion state
+    //       so that we only have to save a diff instead of all states for the whole
+    //       tree (which can be quite large) - and also due to backwards compatibility
+    ScopedPtr<Vec<int>> tocState;
+};
 
 #endif

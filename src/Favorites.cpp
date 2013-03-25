@@ -62,15 +62,6 @@ bool FileFavs::GetByMenuId(int menuId, size_t& idx)
     return false;
 }
 
-bool FileFavs::HasFavName(FavName *fn)
-{
-    for (size_t i = 0; i < favNames.Count(); i++)
-        if (fn == favNames.At(i))
-            return true;
-    return false;
-
-}
-
 bool FileFavs::Remove(int pageNo)
 {
     int idx = FindByPage(pageNo);
@@ -87,16 +78,12 @@ void FileFavs::AddOrReplace(int pageNo, const WCHAR *name, const WCHAR *pageLabe
     int idx = FindByPage(pageNo, pageLabel);
     if (idx != -1) {
         FavName *fav = favNames.At(idx);
-        fav->name.Set(str::Dup(name));
+        fav->ChangeName(name);
         CrashIf(fav->pageLabel && !str::Eq(fav->pageLabel, pageLabel));
         return;
     }
 
-    FavName *fn = new FavName();
-    fn->name.Set(str::Dup(name));
-    fn->pageNo = pageNo;
-    fn->pageLabel.Set(str::Dup(pageLabel));
-
+    FavName *fn = new FavName(pageNo, name, pageLabel);
     favNames.Append(fn);
     favNames.Sort(SortByPageNo);
 }
@@ -123,7 +110,7 @@ FileFavs *Favorites::GetByFavName(FavName *fn)
 {
     for (size_t i = 0; i < favs.Count(); i++) {
         FileFavs *fav = favs.At(i);
-        if (fav->HasFavName(fn))
+        if (fav->favNames.Contains(fn))
             return fav;
     }
     return NULL;

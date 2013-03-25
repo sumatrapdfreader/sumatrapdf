@@ -362,9 +362,9 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
     for (size_t i = 0; i < win->fwdSearchMark.rects.Count(); i++) {
         RectI rect = win->fwdSearchMark.rects.At(i);
         rect = win->dm->CvtToScreen(win->fwdSearchMark.page, rect.Convert<double>());
-        if (gGlobalPrefs.fwdSearchOffset > 0) {
-            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.fwdSearchOffset * win->dm->ZoomReal());
-            rect.dx = (int)((gGlobalPrefs.fwdSearchWidth > 0 ? gGlobalPrefs.fwdSearchWidth : 15.0) * win->dm->ZoomReal());
+        if (gGlobalPrefs.fwdSearch.offset > 0) {
+            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.fwdSearch.offset * win->dm->ZoomReal());
+            rect.dx = (int)((gGlobalPrefs.fwdSearch.width > 0 ? gGlobalPrefs.fwdSearch.width : 15.0) * win->dm->ZoomReal());
             rect.y -= 4;
             rect.dy += 8;
         }
@@ -372,7 +372,7 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
     }
 
     BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs.fwdSearchColor, alpha, 0);
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs.fwdSearch.color, alpha, 0);
 }
 
 // returns true if the double-click was handled and false if it wasn't
@@ -455,7 +455,7 @@ void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, 
         win->fwdSearchMark.page = page;
         win->fwdSearchMark.show = true;
         win->fwdSearchMark.hideStep = 0;
-        if (!gGlobalPrefs.fwdSearchPermanent)
+        if (!gGlobalPrefs.fwdSearch.permanent)
             SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
 
         // Scroll to show the overall highlighted zone

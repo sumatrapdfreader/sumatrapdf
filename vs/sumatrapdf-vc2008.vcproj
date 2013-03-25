@@ -941,10 +941,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\AppPrefs2.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\AppTools.cpp"
 					>
 				</File>

@@ -255,10 +255,10 @@ static void RunUnitTests()
 static void GetCommandLineInfo(CommandLineInfo& i)
 {
     i.bgColor = gGlobalPrefs.bgColor;
-    i.fwdSearch.offset = gGlobalPrefs.fwdSearchOffset;
-    i.fwdSearch.width = gGlobalPrefs.fwdSearchWidth;
-    i.fwdSearch.color = gGlobalPrefs.fwdSearchColor;
-    i.fwdSearch.permanent = gGlobalPrefs.fwdSearchPermanent;
+    i.fwdSearch.offset = gGlobalPrefs.fwdSearch.offset;
+    i.fwdSearch.width = gGlobalPrefs.fwdSearch.width;
+    i.fwdSearch.color = gGlobalPrefs.fwdSearch.color;
+    i.fwdSearch.permanent = gGlobalPrefs.fwdSearch.permanent;
     i.escToExit = gGlobalPrefs.escToExit || gUserPrefs.escToExit;
     i.cbxR2L = gGlobalPrefs.cbxR2L;
     if (gGlobalPrefs.useSysColors) {
@@ -357,10 +357,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     gGlobalPrefs.bgColor = i.bgColor;
     // TODO: set enableTeXEnhancements if any of these is non-default
-    gGlobalPrefs.fwdSearchOffset = i.fwdSearch.offset;
-    gGlobalPrefs.fwdSearchWidth = i.fwdSearch.width;
-    gGlobalPrefs.fwdSearchColor = i.fwdSearch.color;
-    gGlobalPrefs.fwdSearchPermanent = i.fwdSearch.permanent;
+    gGlobalPrefs.fwdSearch.offset = i.fwdSearch.offset;
+    gGlobalPrefs.fwdSearch.width = i.fwdSearch.width;
+    gGlobalPrefs.fwdSearch.color = i.fwdSearch.color;
+    gGlobalPrefs.fwdSearch.permanent = i.fwdSearch.permanent;
     gGlobalPrefs.escToExit = i.escToExit;
     gGlobalPrefs.cbxR2L = i.cbxR2L;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
