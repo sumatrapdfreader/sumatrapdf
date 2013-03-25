@@ -114,8 +114,10 @@ solution "everything"
       "tools/sertxt_test/SettingsSumatra.cpp",
       "src/utils/BaseUtil.*",
       "src/utils/FileUtil.*",
-      "src/utils/StrUtil.*",
       "src/utils/IniParser.*",
+      "src/utils/Scoped.*",
+      "src/utils/StrUtil.*",
+      "src/utils/Vec.*",
     }
     includedirs { "src/utils", "src/utils/msvc" }
     links { "Shlwapi" }

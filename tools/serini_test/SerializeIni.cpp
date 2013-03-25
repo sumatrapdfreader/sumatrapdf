@@ -64,7 +64,7 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
     IniLine *line;
     int r, g, b, a;
 
-    uint8_t *data = (uint8_t *)calloc(1, def->size);
+    uint8_t *data = AllocArray<uint8_t>(def->size);
     if (secIdx >= endIdx) {
         section = NULL;
         secIdx = startIdx - 1;
@@ -96,7 +96,7 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
             *(ListNode<void> **)(data + field.offset) = root;
             continue;
         }
-        if (!section || !(line = section->FindLine(fieldName))) {
+        if (!section || (line = section->FindLine(fieldName)) == NULL) {
             // printf("couldn't find line for %s (%s)\n", field.name, sectionName);
             continue;
         }

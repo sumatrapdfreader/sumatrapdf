@@ -64,7 +64,7 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, const char *section
     IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
     int r, g, b, a;
 
-    uint8_t *base = (uint8_t *)calloc(1, meta[0].offset);
+    uint8_t *base = AllocArray<uint8_t>(meta[0].offset);
     if (secIdx >= endIdx) {
         section = NULL;
         secIdx = startIdx - 1;
