@@ -95,6 +95,9 @@ static void TestSettingsDeserialize()
     }
     char *sCopy = str::Dup(s);
     Settings *settings = DeserializeSettings((const uint8_t *)s, (int)fileSize);
+    if (!str::Eq(sCopy, s)) {
+        printf("DeserializeSettings modified const argument!\n");
+    }
     int serializedLen;
     char *s2 = (char*)SerializeSettings(settings, &serializedLen);
     s2 += 3; // skip utf8 bom
