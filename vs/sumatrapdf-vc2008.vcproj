@@ -631,6 +631,14 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\utils\StrSlice.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\utils\StrSlice.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

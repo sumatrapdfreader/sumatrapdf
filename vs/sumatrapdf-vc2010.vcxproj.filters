@@ -357,6 +357,9 @@
     <ClCompile Include="..\src\utils\StrFormat_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\StrSlice.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1110,6 +1113,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\StrHash.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrSlice.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\StrUtil.h">

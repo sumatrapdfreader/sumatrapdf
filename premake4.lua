@@ -94,6 +94,7 @@ solution "everything"
       "src/utils/BitManip.h",
       "src/utils/Dict*",
       "src/utils/FileUtil*",
+      "src/utils/StrSlice*",
       "src/utils/StrUtil*",
     }
     excludes

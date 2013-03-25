@@ -593,6 +593,9 @@ $(OU)\StrFormat.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\uti
 $(OU)\StrFormat.obj: $B\src\utils\Scoped.h $B\src\utils\StrFormat.h $B\src\utils\StrUtil.h
 $(OU)\StrFormat.obj: $B\src\utils\Vec.h
 $(OU)\StrFormat_ut.obj: $B\src\utils\StrFormat.h
+$(OU)\StrSlice.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
+$(OU)\StrSlice.obj: $B\src\utils\Scoped.h $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h
+$(OU)\StrSlice.obj: $B\src\utils\Vec.h
 $(OU)\StrUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OU)\StrUtil.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\StrUtil_ut.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
