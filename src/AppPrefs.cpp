@@ -62,15 +62,14 @@ static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *struc
             prefs->Add(meta.name, (int64_t)*(int *)(base + meta.offset));
             break;
         case Pref_Str:
-        case Pref_UILang:
-            if (*(const char **)(base + meta.offset))
-                prefs->AddRaw(meta.name, *(const char **)(base + meta.offset));
+            if (((ScopedMem<char> *)(base + meta.offset))->Get())
+                prefs->AddRaw(meta.name, ((ScopedMem<char> *)(base + meta.offset))->Get());
             else
                 delete prefs->Remove(meta.name);
             break;
         case Pref_WStr:
-            if (*(const WCHAR **)(base + meta.offset))
-                prefs->Add(meta.name, *(const WCHAR **)(base + meta.offset));
+            if (((ScopedMem<WCHAR> *)(base + meta.offset))->Get())
+                prefs->Add(meta.name, ((ScopedMem<WCHAR> *)(base + meta.offset))->Get());
             else
                 delete prefs->Remove(meta.name);
             break;
@@ -83,11 +82,17 @@ static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *struc
         case Pref_Float:
             prefs->AddRaw(meta.name, ScopedMem<char>(str::Format("%.4f", *(float *)(base + meta.offset))));
             break;
+        case Pref_UILang:
+            if (*(const char **)(base + meta.offset))
+                prefs->AddRaw(meta.name, *(const char **)(base + meta.offset));
+            else
+                delete prefs->Remove(meta.name);
+            break;
         case Pref_IntVec:
             BencArray *array = new BencArray();
-            Vec<int> *intVec = *(Vec<int> **)(base + meta.offset);
+            ScopedPtr<Vec<int>>& intVec = *(ScopedPtr<Vec<int>> *)(base + meta.offset);
             if (intVec) {
-                for (size_t idx = 0; idx < intVec->Count(); i++) {
+                for (size_t idx = 0; idx < intVec->Count(); idx++) {
                     array->Add(intVec->At(idx));
                 }
                 prefs->Add(meta.name, array);
@@ -119,25 +124,16 @@ static void DeserializeStruct(PrefInfo *info, size_t count, void *structBase, Be
                 *(int *)(base + meta.offset) = (int)intObj->Value();
             break;
         case Pref_Str:
-            if ((strObj = prefs->GetString(meta.name)) != NULL) {
-                const char *str = strObj->RawValue();
-                if (str)
-                    str::ReplacePtr((char **)(base + meta.offset), str);
-            }
+            if ((strObj = prefs->GetString(meta.name)) != NULL)
+                ((ScopedMem<char> *)(base + meta.offset))->Set(str::Dup(strObj->RawValue()));
             break;
         case Pref_WStr:
-            if ((strObj = prefs->GetString(meta.name)) != NULL) {
-                ScopedMem<WCHAR> str(strObj->Value());
-                if (str)
-                    str::ReplacePtr((WCHAR **)(base + meta.offset), str);
-            }
+            if ((strObj = prefs->GetString(meta.name)) != NULL)
+                ((ScopedMem<WCHAR> *)(base + meta.offset))->Set(strObj->Value());
             break;
         case Pref_DisplayMode:
-            if ((strObj = prefs->GetString(meta.name)) != NULL) {
-                ScopedMem<WCHAR> mode(strObj->Value());
-                if (mode)
-                    DisplayModeConv::EnumFromName(mode, (DisplayMode *)(base + meta.offset));
-            }
+            if ((strObj = prefs->GetString(meta.name)) != NULL)
+                DisplayModeConv::EnumFromName(ScopedMem<WCHAR>(strObj->Value()), (DisplayMode *)(base + meta.offset));
             break;
         case Pref_FileTime:
             if ((strObj = prefs->GetString(meta.name)) != NULL)
@@ -153,13 +149,13 @@ static void DeserializeStruct(PrefInfo *info, size_t count, void *structBase, Be
             break;
         case Pref_IntVec:
             if ((arrObj = prefs->GetArray(meta.name)) != NULL) {
-                Vec<int> **intVec = (Vec<int> **)(base + meta.offset);
+                ScopedPtr<Vec<int>>& intVec = *(ScopedPtr<Vec<int>> *)(base + meta.offset);
                 size_t len = arrObj->Length();
-                CrashIf(*intVec);
-                if ((*intVec = new Vec<int>(len))) {
-                    for (size_t idx = 0; idx < len; i++) {
+                CrashIf(intVec);
+                if ((intVec = new Vec<int>(len)) != NULL) {
+                    for (size_t idx = 0; idx < len; idx++) {
                         if ((intObj = arrObj->GetInt(idx)) != NULL)
-                            (*intVec)->Append((int)intObj->Value());
+                            intVec->Append((int)intObj->Value());
                     }
                 }
             }
