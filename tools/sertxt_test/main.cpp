@@ -66,7 +66,7 @@ static void TestFromFile()
         // also skip --->
         if (*s == '>')
             ++s;
-        for (char c = *s; c = *s; s++) {
+        for (char c = *s; (c = *s) != '\0'; s++) {
             if (!(c == '\r' || c == '\n'))
                 break;
         }

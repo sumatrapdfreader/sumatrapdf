@@ -34,12 +34,8 @@ solution "everything"
     -- 4127 - conditional expression is constant
     -- 4100 - unreferenced formal parameter
     -- 4244 - possible loss of data due to conversion
-    -- 4480 - non-standard (deriving enum from u16)
-    -- 4706 - assignment within conditional expression TODO: code should be fixed instead
-    -- 4505 - unused function
     buildoptions {
-        "/wd4800", "/wd4127", "/wd4100", "/wd4244", "/wd4480", "/wd4706",
-        "/wd4505"
+        "/wd4800", "/wd4127", "/wd4100", "/wd4244"
     }
 
   project "efi"
