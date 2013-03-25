@@ -857,6 +857,9 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     ScopedMem<WCHAR> title;
     WindowInfo *win = args.win;
 
+    float zoomVirtual = gGlobalPrefs.defaultZoom;
+    int rotation = 0;
+
     // TODO: remove time logging before release
     Timer t(true);
     // Never load settings from a preexisting state if the user doesn't wish to
@@ -965,9 +968,6 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         // then fallback to the previous state
         win->dm = prevModel;
     }
-
-    float zoomVirtual = gGlobalPrefs.defaultZoom;
-    int rotation = 0;
 
     if (state) {
         if (win->dm->ValidPageNo(startPage)) {

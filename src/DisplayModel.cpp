@@ -1287,7 +1287,7 @@ void DisplayModel::ZoomTo(float zoomLevel, PointI *fixPt)
 
     ScrollState ss = GetScrollState();
 
-    int centerPage;
+    int centerPage = -1;
     PointD centerPt;
     if (fixPt) {
         centerPage = GetPageNoByPoint(*fixPt);

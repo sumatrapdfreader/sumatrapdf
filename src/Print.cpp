@@ -679,6 +679,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
         return false;
     }
 
+    LPDEVMODE devMode = NULL;
     // get printer driver information
     DWORD needed = 0;
     GetPrinter(printer, 2, NULL, 0, &needed);
@@ -699,7 +700,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
             MessageBox(NULL, _TR("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
         goto Exit;
     }
-    LPDEVMODE devMode = (LPDEVMODE)malloc(structSize);
+    devMode = (LPDEVMODE)malloc(structSize);
     if (!devMode) goto Exit;
 
     // Get the default DevMode for the printer and modify it for your needs.

@@ -225,7 +225,7 @@ unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
 
 void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
 {
-    int fileLen;
+    int fileLen = -1;
     fz_buffer *buffer = NULL;
 
     fz_try(file->ctx) {
@@ -1413,7 +1413,7 @@ bool PdfEngineImpl::Load(const WCHAR *fileName, PasswordUI *pwdUI)
     if (!_fileName || !ctx)
         return false;
 
-    fz_stream *file;
+    fz_stream *file = NULL;
     // File names ending in :<digits>:<digits> are interpreted as containing
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
     WCHAR *embedMarks = (WCHAR *)findEmbedMarks(_fileName);
@@ -3448,7 +3448,7 @@ bool XpsEngineImpl::Load(const WCHAR *fileName)
     if (!_fileName || !ctx)
         return false;
 
-    fz_stream *stm;
+    fz_stream *stm = NULL;
     fz_try(ctx) {
         stm = fz_open_file2(ctx, _fileName);
     }
