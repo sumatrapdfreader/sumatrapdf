@@ -8,6 +8,7 @@ struct Fav {
     const char *    name;
     int32_t         pageNo;
     const char *    pageLabel;
+    int32_t         menuId;
 };
 
 struct ForwardSearch {

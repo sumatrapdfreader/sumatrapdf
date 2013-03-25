@@ -396,6 +396,12 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
 {
     Type type = fieldDef->type;
     uint8_t *structDataPtr = structDataStart + fieldDef->offset;
+
+    if ((type & TYPE_NO_STORE_MASK) != 0) {
+        WriteDefaultValue(structDataPtr, type);
+        return true;
+    }
+
     const char *fieldName = fieldNamesSeq + fieldDef->nameOffset;
     TxtNode *node = FindTxtNode(firstNode, fieldName);
 
@@ -580,6 +586,9 @@ static void SerializeField(FieldMetadata *fieldDef, const char *fieldNamesSeq, c
 {
     str::Str<char> val;
     Type type = fieldDef->type;
+    if ((type & TYPE_NO_STORE_MASK) != 0)
+        return;
+
     const char *fieldName = fieldNamesSeq + fieldDef->nameOffset;
     const uint8_t *data = structStart + fieldDef->offset;
     if (TYPE_BOOL == type) {

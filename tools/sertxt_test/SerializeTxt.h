@@ -50,6 +50,8 @@ typedef enum {
     TYPE_WSTR,
     TYPE_STRUCT_PTR,
     TYPE_ARRAY,
+    // a flag, if set, the value is not to be serialized
+    TYPE_NO_STORE_MASK = 0x4000
 } Type;
 
 // information about a single field

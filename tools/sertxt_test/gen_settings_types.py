@@ -31,7 +31,7 @@ class Type(object):
             return self.c_type_override
         return self.c_type_class
 
-    def get_typ_enum(self):
+    def get_type_typ_enum(self):
         return self.type_enum
 
     def is_struct(self):
@@ -120,12 +120,17 @@ class Struct(Type):
 
         self.values = []
         # fields must be a class variable in Struct's subclass
-        for field in self.fields:
-            (name, typ_val) = field
+        for field_def in self.fields:
+            flags = 0
+            assert len(field_def) >= 2 and len(field_def) <= 3
+            if len(field_def) > 2:
+                (name, typ_val, flags) = field_def
+            else:
+                (name, typ_val) = field_def
 
             assert isinstance(name, type(""))
             assert isinstance(typ_val, Type)
-            self.values.append(Field(name, typ_val))
+            self.values.append(Field(name, typ_val, flags))
 
         cls = self.__class__
         if cls not in g_all_structs:
@@ -197,10 +202,15 @@ def serialize_string(val):
         data = data + val + chr(0)
     return data
 
+# those are bit flags
+NoStore = 1
+
 class Field(object):
-    def __init__(self, name, typ_val):
+    def __init__(self, name, typ_val, flags):
         self.name = name
         self.typ = typ_val
+        self.flags = flags
+
         if typ_val.is_struct():
             # TODO: support NULL values for the struct, represented by using
             # class for typ_val
@@ -235,8 +245,17 @@ class Field(object):
     def is_float(self):
         return type(self.typ) == Float
 
+    def is_no_store(self):
+        return self.flags & NoStore == NoStore
+
     def is_array(self):
         return type(self.typ) == Array
+
+    def get_typ_enum(self):
+        type_enum = self.typ.get_type_typ_enum()
+        if self.is_no_store():
+            return "(Type)(%s | TYPE_NO_STORE_MASK)" % type_enum
+        return type_enum
 
     def _serialize(self):
         if self.is_signed():
@@ -282,13 +301,6 @@ class Field(object):
             return self.val
         assert False, "don't know how to serialize %s" % str(self.typ)
 
-def serialize(typ, val):
-    assert isinstance(typ, Type)
-    if isinstance(typ, Bool):
-        # TODO: actually serialize the values
-        return ""
-    assert False, "Unkown typ: %s" % str(typ)
-
 def GetAllStructs(): return g_all_structs
 
 class PaddingSettings(Struct):
@@ -318,13 +330,12 @@ class RectInt(Struct):
         ("dy", I32(0)),
     ]
 
-# TODO: support internal (non-serializable) fields
 class Fav(Struct):
     fields = [
         ("name", String("favorite name")),
         ("pageNo", I32(0)),
-        ("pageLabel", String("favorite label"))
-        #("menuId", I32(0))
+        ("pageLabel", String("favorite label")),
+        ("menuId", I32(0), NoStore),
     ]
 
 class BasicSettings(Struct):

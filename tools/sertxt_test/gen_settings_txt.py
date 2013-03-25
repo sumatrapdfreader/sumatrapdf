@@ -8,7 +8,6 @@ from gen_settings_types import Struct, settings, version, Field
 """
 TODO:
  - default values
- - notion of internal (non-serializable) fields
  - add comment at the top directing to documentation web page
  - allow changing values in struct instances, so that all fields with a given
    struct type don't have to have the same default value
@@ -158,13 +157,13 @@ def gen_struct_fields_txt(stru):
     max_type_len = 0
     max_name_len = 0
     for field in stru.values:
-        max_type_len = max(max_type_len, len(field.typ.get_typ_enum()))
+        max_type_len = max(max_type_len, len(field.get_typ_enum()))
     max_type_len += 1
 
     typ_fmt = "%%-%ds" % max_type_len
     for field in stru.values:
         assert isinstance(field, Field)
-        typ_enum = field.typ.get_typ_enum() + ","
+        typ_enum = field.get_typ_enum() + ","
         typ_enum = typ_fmt % typ_enum
         field_name = field.name
         settings_name = name2name(field.name)
@@ -261,7 +260,9 @@ def gen_data_txt_rec(root_val, name, lines, indent):
     for field in root_val.values:
         var_name = field.name
         var_name = name2name(var_name)
-        if  field.is_struct():
+        if field.is_no_store():
+            continue
+        if field.is_struct():
             if field.val.offset == 0:
                 if False:
                     lines += ["%s%s: " % (prefix, var_name)] # TODO: just omit the values?
