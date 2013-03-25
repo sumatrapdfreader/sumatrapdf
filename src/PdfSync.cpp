@@ -167,7 +167,10 @@ WCHAR * Synchronizer::PrepareCommandline(const WCHAR* pattern, const WCHAR* file
     const WCHAR* perc;
     str::Str<WCHAR> cmdline(256);
 
-    while ((perc = str::FindChar(pattern, '%'))) {
+    while (true) {
+        perc = str::FindChar(pattern, '%');
+        if (!perc)
+            break;
         cmdline.Append(pattern, perc - pattern);
         pattern = perc + 2;
         perc++;
@@ -246,7 +249,10 @@ int Pdfsync::RebuildIndex()
 
     // parse data
     UINT maxPageNo = engine->PageCount();
-    while ((line = Advance0Line(line, dataEnd))) {
+    while (true) {
+        line = Advance0Line(line, dataEnd);
+        if (!line)
+            break;
         switch (*line) {
         case 'l':
             psline.file = filestack.Last();
@@ -587,7 +593,10 @@ TryAgainAnsi:
     int firstpage = -1;
     rects.Reset();
 
-    while (node = synctex_next_result(this->scanner)) {
+    while (true) {
+        node = synctex_next_result(this->scanner);
+        if (!node)
+            break;
         if (firstpage == -1) {
             firstpage = synctex_node_page(node);
             if (firstpage <= 0 || firstpage > engine->PageCount())

@@ -92,6 +92,11 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 # 4100 : unreferenced param
 #SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /wd4131 /wd4127 /wd4244 /wd4100
 
+# Addittional warnings that we make part of /W3 set:
+# 4706 : assignement in conditional
+# TODO: fix them all and enable the warning
+#SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34706
+
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(EXTDIR)/lzma/C
 

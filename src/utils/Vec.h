@@ -409,7 +409,10 @@ public:
         size_t start = len;
         const WCHAR *next;
 
-        while ((next = str::Find(s, separator))) {
+        while (true) {
+            next = str::Find(s, separator);
+            if (!next)
+                break;
             if (!collapse || next > s)
                 Append(str::DupN(s, next - s));
             s = next + str::Len(separator);
