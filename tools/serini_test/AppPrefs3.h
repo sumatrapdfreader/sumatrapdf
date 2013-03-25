@@ -311,7 +311,7 @@ static SettingInfo gGlobalPrefsInfo[] = {
     /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)27, sizeof(GlobalPrefs), NULL },
     { "CbxR2L", Type_Bool, offsetof(GlobalPrefs, cbxR2L), NULL, false },
-    { "CurrLangCode", Type_String, offsetof(GlobalPrefs, currLangCode), NULL, (int64_t)L"en" },
+    { "CurrLangCode", Type_String, offsetof(GlobalPrefs, currLangCode), NULL, NULL },
     { "DefaultDisplayMode", Type_String, offsetof(GlobalPrefs, defaultDisplayMode), NULL, (int64_t)L"automatic" },
     { "DefaultZoom", Type_Float, offsetof(GlobalPrefs, defaultZoom), NULL, -1 },
     { "EnableAutoUpdate", Type_Bool, offsetof(GlobalPrefs, enableAutoUpdate), NULL, true },
