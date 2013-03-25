@@ -766,7 +766,7 @@ void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
 {
     HtmlPullParser parser(xmlData, str::Len(xmlData));
     HtmlToken *tok;
-    while ((tok = parser.Next()) && !tok->IsError()) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (!tok->IsStartTag())
             continue;
         if (tok->NameIs("Title")) {

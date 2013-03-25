@@ -911,7 +911,7 @@ DocTocItem *Fb2EngineImpl::GetTocTree()
     const char *xmlData = doc->GetTextData(&xmlLen);
     HtmlPullParser parser(xmlData, xmlLen);
     HtmlToken *tok;
-    while ((tok = parser.Next()) && !tok->IsError()) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (tok->IsStartTag() && Tag_Section == tok->tag)
             level++;
         else if (tok->IsEndTag() && Tag_Section == tok->tag && level > 0)
@@ -1015,7 +1015,7 @@ bool MobiEngineImpl::Load(const WCHAR *fileName)
     HtmlParser parser;
     if (parser.Parse(args.htmlStr)) {
         HtmlElement *ref = NULL;
-        while ((ref = parser.FindElementByName("reference", ref))) {
+        while ((ref = parser.FindElementByName("reference", ref)) != NULL) {
             ScopedMem<WCHAR> type(ref->GetAttribute("type"));
             ScopedMem<WCHAR> filepos(ref->GetAttribute("filepos"));
             if (str::EqI(type, L"toc") && filepos) {
@@ -1081,7 +1081,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
     // determine the author's intentions by looking at commonly used tags
     HtmlPullParser parser(tocReparsePoint, str::Len(tocReparsePoint));
     HtmlToken *tok;
-    while ((tok = parser.Next()) && !tok->IsError()) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (itemLink && tok->IsText()) {
             ScopedMem<WCHAR> linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
             if (itemText)
@@ -1376,7 +1376,7 @@ static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
 
     HtmlPullParser parser(html, min(htmlLen, 1024));
     HtmlToken *tok;
-    while ((tok = parser.Next()) && !tok->IsError()) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (tok->tag != Tag_Meta)
             continue;
         AttrInfo *attr = tok->GetAttrByName("http-equiv");

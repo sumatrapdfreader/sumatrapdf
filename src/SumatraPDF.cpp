@@ -638,13 +638,13 @@ static int GetPolicies(bool isRestricted)
         // determine the list of allowed link protocols and perceived file types
         if ((policy & Perm_DiskAccess)) {
             IniLine *line;
-            if ((line = polsec->FindLine("LinkProtocols"))) {
+            if ((line = polsec->FindLine("LinkProtocols")) != NULL) {
                 ScopedMem<WCHAR> protocols(str::conv::FromUtf8(line->value));
                 str::ToLower(protocols);
                 str::TransChars(protocols, L":; ", L",,,");
                 gAllowedLinkProtocols.Split(protocols, L",", true);
             }
-            if ((line = polsec->FindLine("SafeFileTypes"))) {
+            if ((line = polsec->FindLine("SafeFileTypes")) != NULL) {
                 ScopedMem<WCHAR> protocols(str::conv::FromUtf8(line->value));
                 str::ToLower(protocols);
                 str::TransChars(protocols, L":; ", L",,,");
@@ -1876,7 +1876,7 @@ class FileExistenceChecker : public ThreadBase, public UITask
 public:
     FileExistenceChecker() {
         DisplayState *state;
-        for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)); i++) {
+        for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_RECENT && (state = gFileHistory.Get(i)) != NULL; i++) {
             if (!state->isMissing)
                 paths.Append(str::Dup(state->filePath));
         }

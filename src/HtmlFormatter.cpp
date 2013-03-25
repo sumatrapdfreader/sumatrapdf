@@ -138,7 +138,7 @@ StyleRule StyleRule::Parse(CssPullParser *parser)
 {
     StyleRule rule;
     const CssProperty *prop;
-    while ((prop = parser->NextProperty())) {
+    while ((prop = parser->NextProperty()) != NULL) {
         switch (prop->type) {
         case Css_Text_Align:
             rule.textAlign = FindAlignAttr(prop->s, prop->sLen);
@@ -963,7 +963,7 @@ void HtmlFormatter::ParseStyleSheet(const char *data, size_t len)
     while (parser.NextRule()) {
         StyleRule rule = StyleRule::Parse(&parser);
         const CssSelector *sel;
-        while ((sel = parser.NextSelector())) {
+        while ((sel = parser.NextSelector()) != NULL) {
             if (Tag_NotFound == sel->tag)
                 continue;
             StyleRule *prevRule = FindStyleRule(sel->tag, sel->clazz, sel->clazzLen);

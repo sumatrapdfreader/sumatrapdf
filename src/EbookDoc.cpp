@@ -305,7 +305,7 @@ void EpubDoc::ParseMetadata(const char *content)
     int insideMetadata = 0;
     HtmlToken *tok;
 
-    while ((tok = pullParser.Next())) {
+    while ((tok = pullParser.Next()) != NULL) {
         if (tok->IsStartTag() && tok->NameIsNS("metadata", EPUB_OPF_NS))
             insideMetadata++;
         else if (tok->IsEndTag() && tok->NameIsNS("metadata", EPUB_OPF_NS))
@@ -417,7 +417,7 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
     HtmlPullParser parser(data, dataLen);
     HtmlToken *tok;
     // skip to the start of the <nav epub:type="toc">
-    while ((tok = parser.Next()) && !tok->IsError()) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (tok->IsStartTag() && Tag_Nav == tok->tag) {
             AttrInfo *attr = tok->GetAttrByName("epub:type");
             if (attr && attr->ValIs("toc"))
@@ -428,7 +428,8 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
         return false;
 
     int level = 0;
-    while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || Tag_Nav != tok->tag)) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError() &&
+           (!tok->IsEndTag() || Tag_Nav != tok->tag)) {
         if (tok->IsStartTag() && Tag_Ol == tok->tag)
             level++;
         else if (tok->IsEndTag() && Tag_Ol == tok->tag && level > 0)
@@ -439,7 +440,8 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
                 continue;
             ScopedMem<char> href(str::DupN(attrInfo->val, attrInfo->valLen));
             ScopedMem<char> text;
-            while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || Tag_A != tok->tag)) {
+            while ((tok = parser.Next()) != NULL && !tok->IsError() &&
+                   (!tok->IsEndTag() || Tag_A != tok->tag)) {
                 if (tok->IsText()) {
                     ScopedMem<char> part(str::DupN(tok->s, tok->sLen));
                     if (!text)
@@ -464,7 +466,7 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
     HtmlPullParser parser(data, dataLen);
     HtmlToken *tok;
     // skip to the start of the navMap
-    while ((tok = parser.Next()) && !tok->IsError()) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (tok->IsStartTag() && tok->NameIsNS("navMap", EPUB_NCX_NS))
             break;
     }
@@ -473,7 +475,8 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
 
     ScopedMem<WCHAR> itemText, itemSrc;
     int level = 0;
-    while ((tok = parser.Next()) && !tok->IsError() && (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS))) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError() &&
+           (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS))) {
         if (tok->IsTag() && tok->NameIsNS("navPoint", EPUB_NCX_NS)) {
             if (itemText) {
                 visitor->Visit(itemText, itemSrc, level);
@@ -486,7 +489,7 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
                 level--;
         }
         else if (tok->IsStartTag() && tok->NameIsNS("text", EPUB_NCX_NS)) {
-            if (!(tok = parser.Next()) || tok->IsError())
+            if ((tok = parser.Next()) == NULL || tok->IsError())
                 break;
             if (tok->IsText())
                 itemText.Set(FromHtmlUtf8(tok->s, tok->sLen));
@@ -616,7 +619,7 @@ bool Fb2Doc::Load()
     HtmlToken *tok;
     int inBody = 0, inTitleInfo = 0;
     const char *bodyStart = NULL;
-    while ((tok = parser.Next()) && !tok->IsError()) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError()) {
         if (!inTitleInfo && tok->IsStartTag() && Tag_Body == tok->tag) {
             if (!inBody++)
                 bodyStart = tok->s;
@@ -635,7 +638,7 @@ bool Fb2Doc::Load()
         else if (inTitleInfo && tok->IsEndTag() && tok->NameIs("title-info"))
             inTitleInfo--;
         else if (inTitleInfo && tok->IsStartTag() && tok->NameIs("book-title")) {
-            if (!(tok = parser.Next()) || tok->IsError())
+            if ((tok = parser.Next()) == NULL || tok->IsError())
                 break;
             if (tok->IsText()) {
                 ScopedMem<char> tmp(str::DupN(tok->s, tok->sLen));
@@ -643,7 +646,7 @@ bool Fb2Doc::Load()
             }
         }
         else if (inTitleInfo && tok->IsStartTag() && tok->NameIs("author")) {
-            while ((tok = parser.Next()) && !tok->IsError() &&
+            while ((tok = parser.Next()) != NULL && !tok->IsError() &&
                 !(tok->IsEndTag() && tok->NameIs("author"))) {
                 if (tok->IsText()) {
                     ScopedMem<char> tmp(str::DupN(tok->s, tok->sLen));
@@ -1065,8 +1068,8 @@ bool HtmlDoc::Load()
 
     HtmlPullParser parser(htmlData, str::Len(htmlData));
     HtmlToken *tok;
-    while ((tok = parser.Next()) && !tok->IsError() &&
-        (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {
+    while ((tok = parser.Next()) != NULL && !tok->IsError() &&
+           (!tok->IsTag() || Tag_Body != tok->tag && Tag_P != tok->tag)) {
         if (tok->IsStartTag() && Tag_Title == tok->tag) {
             tok = parser.Next();
             if (tok && tok->IsText())
@@ -1368,13 +1371,13 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
     HtmlParser parser;
     parser.Parse(htmlData.Get(), CP_UTF8);
     HtmlElement *el = NULL;
-    while ((el = parser.FindElementByName("b", el))) {
+    while ((el = parser.FindElementByName("b", el)) != NULL) {
         ScopedMem<WCHAR> title(el->GetAttribute("title"));
         ScopedMem<WCHAR> id(el->GetAttribute("id"));
         int level = 1;
         if (str::IsDigit(*title)) {
             const WCHAR *dot = str::FindChar(title, '.');
-            while ((dot = str::FindChar(dot + 1, '.'))) {
+            while ((dot = str::FindChar(dot + 1, '.')) != NULL) {
                 level++;
             }
         }

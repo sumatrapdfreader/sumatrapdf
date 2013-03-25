@@ -396,7 +396,7 @@ static bool MatchFuzzy(const WCHAR *s1, const WCHAR *s2, bool partially=false)
         return str::Eq(s1, s2);
 
     // only match at the start of a word (at the beginning and after a space)
-    for (const WCHAR *last = s1; (last = str::Find(last, s2)); last++) {
+    for (const WCHAR *last = s1; (last = str::Find(last, s2)) != NULL; last++) {
         if (last == s1 || *(last - 1) == ' ')
             return true;
     }

@@ -409,10 +409,7 @@ public:
         size_t start = len;
         const WCHAR *next;
 
-        while (true) {
-            next = str::Find(s, separator);
-            if (!next)
-                break;
+        while ((next = str::Find(s, separator)) != NULL) {
             if (!collapse || next > s)
                 Append(str::DupN(s, next - s));
             s = next + str::Len(separator);
@@ -458,7 +455,7 @@ class WStrList {
         size_t len = str::Len(str);
         ScopedMem<char> data(AllocArray<char>(len));
         WCHAR c;
-        for (char *dst = data; (c = *str++); dst++) {
+        for (char *dst = data; (c = *str++) != NULL; dst++) {
             *dst = (c & 0xFF80) ? 0x80 : 'A' <= c && c <= 'Z' ? c + 'a' - 'A' : c;
         }
         return MurmurHash2(data, len);

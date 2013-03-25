@@ -111,40 +111,40 @@ static void DeserializeStruct(PrefInfo *info, size_t count, void *structBase, Be
         PrefInfo& meta = info[i];
         switch (meta.type) {
         case Pref_Bool:
-            if ((intObj = prefs->GetInt(meta.name)))
+            if ((intObj = prefs->GetInt(meta.name)) != NULL)
                 *(bool *)(base + meta.offset) = intObj->Value() != 0;
             break;
         case Pref_Int:
-            if ((intObj = prefs->GetInt(meta.name)))
+            if ((intObj = prefs->GetInt(meta.name)) != NULL)
                 *(int *)(base + meta.offset) = (int)intObj->Value();
             break;
         case Pref_Str:
-            if ((strObj = prefs->GetString(meta.name))) {
+            if ((strObj = prefs->GetString(meta.name)) != NULL) {
                 const char *str = strObj->RawValue();
                 if (str)
                     str::ReplacePtr((char **)(base + meta.offset), str);
             }
             break;
         case Pref_WStr:
-            if ((strObj = prefs->GetString(meta.name))) {
+            if ((strObj = prefs->GetString(meta.name)) != NULL) {
                 ScopedMem<WCHAR> str(strObj->Value());
                 if (str)
                     str::ReplacePtr((WCHAR **)(base + meta.offset), str);
             }
             break;
         case Pref_DisplayMode:
-            if ((strObj = prefs->GetString(meta.name))) {
+            if ((strObj = prefs->GetString(meta.name)) != NULL) {
                 ScopedMem<WCHAR> mode(strObj->Value());
                 if (mode)
                     DisplayModeConv::EnumFromName(mode, (DisplayMode *)(base + meta.offset));
             }
             break;
         case Pref_FileTime:
-            if ((strObj = prefs->GetString(meta.name)))
+            if ((strObj = prefs->GetString(meta.name)) != NULL)
                 _HexToMem(strObj->RawValue(), (FILETIME *)(base + meta.offset));
             break;
         case Pref_Float:
-            if ((strObj = prefs->GetString(meta.name))) {
+            if ((strObj = prefs->GetString(meta.name)) != NULL) {
                 // note: this might round the value for files produced with versions
                 //       prior to 1.6 and on a system where the decimal mark isn't a '.'
                 //       (the difference should be hardly notable, though)
@@ -152,20 +152,20 @@ static void DeserializeStruct(PrefInfo *info, size_t count, void *structBase, Be
             }
             break;
         case Pref_IntVec:
-            if ((arrObj = prefs->GetArray(meta.name))) {
+            if ((arrObj = prefs->GetArray(meta.name)) != NULL) {
                 Vec<int> **intVec = (Vec<int> **)(base + meta.offset);
                 size_t len = arrObj->Length();
                 CrashIf(*intVec);
                 if ((*intVec = new Vec<int>(len))) {
                     for (size_t idx = 0; idx < len; i++) {
-                        if ((intObj = arrObj->GetInt(idx)))
+                        if ((intObj = arrObj->GetInt(idx)) != NULL)
                             (*intVec)->Append((int)intObj->Value());
                     }
                 }
             }
             break;
         case Pref_UILang:
-            if ((strObj = prefs->GetString(meta.name))) {
+            if ((strObj = prefs->GetString(meta.name)) != NULL) {
                 // ensure language code is valid
                 const char *langCode = trans::ValidateLangCode(strObj->RawValue());
                 *(const char **)(base + meta.offset) = langCode ? langCode : DEFAULT_LANGUAGE;
@@ -367,7 +367,7 @@ static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPref
     }
 
     DisplayState *state;
-    for (int index = 0; (state = fileHistory.Get(index)); index++) {
+    for (int index = 0; (state = fileHistory.Get(index)) != NULL; index++) {
         // never forget pinned documents and documents we've remembered a password for
         bool forceSave = state->isPinned || state->decryptionKey != NULL;
         if (index >= MAX_REMEMBERED_FILES && !forceSave)
@@ -588,40 +588,40 @@ static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, 
             section = ini.FindSection(meta.name);
             break;
         case Type_Bool:
-            if ((line = section->FindLine(meta.name)))
+            if ((line = section->FindLine(meta.name)) != NULL)
                 *(bool *)(base + meta.offset) = atoi(line->value) != 0;
             break;
         case Type_Color:
-            if ((line = section->FindLine(meta.name))) {
+            if ((line = section->FindLine(meta.name)) != NULL) {
                 int r, g, b;
                 if (str::Parse(line->value, "#%2x%2x%2x", &r, &g, &b))
                     *(COLORREF *)(base + meta.offset) = RGB(r, g, b);
             }
             break;
         case Type_FileTime:
-            if ((line = section->FindLine(meta.name))) {
+            if ((line = section->FindLine(meta.name)) != NULL) {
                 FILETIME ft;
                 if (_HexToMem(line->value, &ft))
                     *(FILETIME *)(base + meta.offset) = ft;
             }
             break;
         case Type_Float:
-            if ((line = section->FindLine(meta.name))) {
+            if ((line = section->FindLine(meta.name)) != NULL) {
                 float value;
                 if (str::Parse(line->value, "%f", &value))
                     *(float *)(base + meta.offset) = value;
             }
             break;
         case Type_Int:
-            if ((line = section->FindLine(meta.name)))
+            if ((line = section->FindLine(meta.name)) != NULL)
                 *(int *)(base + meta.offset) = atoi(line->value);
             break;
         case Type_String:
-            if ((line = section->FindLine(meta.name)))
+            if ((line = section->FindLine(meta.name)) != NULL)
                 ((ScopedMem<WCHAR> *)(base + meta.offset))->Set(str::conv::FromUtf8(line->value));
             break;
         case Type_Utf8String:
-            if ((line = section->FindLine(meta.name)))
+            if ((line = section->FindLine(meta.name)) != NULL)
                 ((ScopedMem<char> *)(base + meta.offset))->Set(str::Dup(line->value));
             break;
         case Type_Custom:
@@ -632,7 +632,7 @@ static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, 
         case Type_SectionVec:
             size_t i2 = i;
             while (++i < count && info[i].type != Type_Section && info[i].type != Type_SectionVec);
-            for (size_t ix = 0; (section = ini.FindSection(meta.name, ix)); ix = ini.sections.Find(section) + 1) {
+            for (size_t ix = 0; (section = ini.FindSection(meta.name, ix)) != NULL; ix = ini.sections.Find(section) + 1) {
                 for (size_t j = i2 + 1; j < i; j++) {
                     SettingInfo& meta2 = info[j];
                     switch (meta2.type) {
@@ -647,7 +647,7 @@ static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, 
 #endif
                     case Type_String:
                         ((WStrVec *)(base + meta2.offset))->AppendBlanks(1);
-                        if ((line = section->FindLine(meta2.name)))
+                        if ((line = section->FindLine(meta2.name)) != NULL)
                             ((WStrVec *)(base + meta2.offset))->Last() = str::conv::FromUtf8(line->value);
                         break;
                     default:
@@ -929,7 +929,7 @@ bool SavePrefs()
 
     // notify all SumatraPDF instances about the updated prefs file
     HWND hwnd = NULL;
-    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL))) {
+    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL)) != NULL) {
         PostMessage(hwnd, UWM_PREFS_FILE_UPDATED, 0, 0);
     }
     return true;

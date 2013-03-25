@@ -247,7 +247,7 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
     HtmlPullParser parser(s, strlen(s));
     HtmlToken *tok;
 
-    while ((tok = parser.Next())) {
+    while ((tok = parser.Next()) != NULL) {
         if (tok->IsError()) {
             errorContext = tok->s;
             switch (tok->error) {
