@@ -97,7 +97,7 @@ public:
 			return;
 		}
 		// color pixmaps (24-bit or 32-bit)
-		fz_pixmap *pix;
+		fz_pixmap *pix = NULL;
 		if (pixmap->colorspace != fz_device_bgr)
 		{
 			fz_try(ctx)
