@@ -1,5 +1,4 @@
 import types
-from util import gob_varint_encode, gob_uvarint_encode
 
 def is_valid_signed(bits, val):
     if type(val) not in (types.IntType, types.LongType): return False
@@ -191,17 +190,6 @@ class Array(Type):
 # This is a list of all structs in the right order
 g_all_structs = []
 
-def serialize_string(val):
-    # empty strings are encoded as 0 (0 length)
-    # non-empty strings are encoded as uvariant(len(s)+1)
-    # (+1 for terminating 0), followed by string data (including terminating 0)
-    if val == None:
-        data = gob_uvarint_encode(0)
-    else:
-        data = gob_uvarint_encode(len(val)+1)
-        data = data + val + chr(0)
-    return data
-
 # those are bit flags
 NoStore = 1
 
@@ -256,50 +244,6 @@ class Field(object):
         if self.is_no_store():
             return "(Type)(%s | TYPE_NO_STORE_MASK)" % type_enum
         return type_enum
-
-    def _serialize(self):
-        if self.is_signed():
-            return gob_varint_encode(long(self.val))
-        if self.is_unsigned():
-            return gob_uvarint_encode(long(self.val))
-        if self.is_string():
-            return serialize_string(self.val)
-        # floats are serialied as strings
-        if self.is_float():
-            return serialize_string(str(self.val))
-        if self.is_struct():
-            off = self.val.offset
-            assert type(off) in (types.IntType, types.LongType)
-            return gob_uvarint_encode(off)
-        # Note: this is probably busted but we don't care
-        if self.is_array():
-            off = self.val.offset
-            assert type(off) in (types.IntType, types.LongType)
-            return gob_uvarint_encode(off)
-        assert False, "don't know how to serialize %s" % str(self.typ)
-
-    def serialized(self):
-        if self._serialized == None:
-            self._serialized = self._serialize()
-        return self._serialized
-
-    def serialized_as_text(self):
-        if self.is_bool():
-            if self.val:
-                return "true"
-            else:
-                return "false"
-        if self.is_color():
-            #return "#" + hex(self.val)[2:]
-            if self.val > 0xffffff:
-                return "#%08x" % self.val
-            else:
-                return "#%06x" % self.val
-        if self.is_signed() or self.is_unsigned() or self.is_float():
-            return str(self.val)
-        if self.is_string():
-            return self.val
-        assert False, "don't know how to serialize %s" % str(self.typ)
 
 def GetAllStructs(): return g_all_structs
 

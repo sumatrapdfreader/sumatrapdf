@@ -11,39 +11,6 @@ namespace sertxt {
 
 #define NL "\r\n"
 
-// returns -1 on error
-static int NextIntVal(const char **sInOut)
-{
-    // cf. ExtractNextNumber in AppTools.cpp
-    int val = 0;
-    const char *end = str::Parse(*sInOut, "%d%?.", &val);
-    if (!end || val < 0 || val > 255)
-        return -1;
-    *sInOut = end;
-    return val;
-}
-
-// parses a vrsion string in the format "x.y.z", of up to 4 parts
-// return 0 on parsing error
-static uint32_t VersionFromStr(const char *s)
-{
-    uint32_t ver = 0;
-    int left = 4;
-    int n;
-    while (left > 0) {
-        if (0 == *s)
-            goto Exit;
-        n = NextIntVal(&s);
-        if (-1 == n)
-            return 0;
-        --left;
-        ver = (ver << 8) + n;
-    }
-Exit:
-    ver = ver << (left * 8);
-    return ver;
-}
-
 // the assumption here is that the data was either built by Deserialize()
 // or was created by application code in a way that observes our rule: each
 // struct and string was separately allocated with malloc()
