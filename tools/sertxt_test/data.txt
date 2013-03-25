@@ -1,4 +1,5 @@
-﻿basic [
+﻿; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation
+basic [
   global_prefs_only: false
   toolbar_visible: true
   pdf_associate_dont_ask: false

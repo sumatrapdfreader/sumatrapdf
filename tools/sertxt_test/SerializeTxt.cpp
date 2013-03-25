@@ -675,7 +675,7 @@ void SerializeRec(const uint8_t *data, StructMetadata *def, const char *fieldNam
 uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int *sizeOut)
 {
     str::Str<char> res;
-    res.Append(UTF8_BOM);
+    res.Append(UTF8_BOM "; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation" NL);
     SerializeRec(data, def, fieldNamesSeq, 0, res);
     if (sizeOut)
         *sizeOut = (int)res.Size();

@@ -8,7 +8,6 @@ from gen_settings_types import Struct, settings, version, Field
 """
 TODO:
  - default values
- - add comment at the top directing to documentation web page
  - allow changing values in struct instances, so that all fields with a given
    struct type don't have to have the same default value
  - remove flatten_struct code
@@ -307,7 +306,7 @@ def gen_txt():
     write_to_file(os.path.join(dst_dir, "SettingsSumatra.h"),  h_txt_tmpl % locals())
     write_to_file(os.path.join(dst_dir, "SettingsSumatra.cpp"), cpp_txt_tmpl % locals())
 
-    lines = []
+    lines = ["; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation"]
     gen_data_txt_rec(vals[-1], None, lines, -1)
     s = "\n".join(lines)
     write_to_file_utf8_bom(os.path.join(dst_dir, "data.txt"), s)
