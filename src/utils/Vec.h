@@ -456,7 +456,7 @@ class WStrList {
         ScopedMem<char> data(AllocArray<char>(len));
         WCHAR c;
         for (char *dst = data; (c = *str++) != NULL; dst++) {
-            *dst = (c & 0xFF80) ? 0x80 : 'A' <= c && c <= 'Z' ? c + 'a' - 'A' : c;
+            *dst = (c & 0xFF80) ? 0x80 : 'A' <= c && c <= 'Z' ? (char)(c + 'a' - 'A') : (char)c;
         }
         return MurmurHash2(data, len);
     }

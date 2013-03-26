@@ -245,7 +245,7 @@ void ToLower(char *s)
 {
     if (!s) return;
     for (; *s; s++)
-        *s = tolower(*s);
+        *s = (char)tolower(*s);
 }
 
 void ToLower(WCHAR *s)

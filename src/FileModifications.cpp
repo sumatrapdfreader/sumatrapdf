@@ -81,7 +81,7 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data, size_t len)
             case Css_Color:
                 int r, g, b;
                 if (str::Parse(prop->s, prop->sLen, "#%2x%2x%2x%$", &r, &g, &b))
-                    color = PageAnnotation::Color(r, g, b);
+                    color = PageAnnotation::Color((uint8_t)r, (uint8_t)g, (uint8_t)b);
                 break;
             case Css_Opacity:
                 if (!str::Parse(prop->s, prop->sLen, "%f%$", &opacity))

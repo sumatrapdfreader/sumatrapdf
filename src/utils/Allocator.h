@@ -184,7 +184,7 @@ public:
     // Allocator methods
     virtual void *Realloc(void *mem, size_t size) {
         // TODO: we can't do that because we don't know the original
-        // size of memory piece pointed by mem. We can remember it
+        // size of memory piece pointed by mem. We could remember it
         // within the block that we allocate
         CrashAlwaysIf(true);
         return NULL;

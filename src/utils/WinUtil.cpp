@@ -920,7 +920,7 @@ void UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2])
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         for (int i = 0; i < bmpBytes; i++) {
             int k = i % 4;
-            bmpData[i] = base[k] + mul255(bmpData[i], diff[k]);
+            bmpData[i] = (uint8_t)(base[k] + mul255(bmpData[i], diff[k]));
         }
         SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
     }

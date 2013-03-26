@@ -214,7 +214,7 @@ HuffDicDecompressor::HuffDicDecompressor() : codeLength(0), dictsCount(0) { }
 
 bool HuffDicDecompressor::DecodeOne(uint32 code, str::Str<char>& dst)
 {
-    uint16 dict = code >> codeLength;
+    uint16 dict = (uint16)(code >> codeLength);
     if (dict >= dictsCount) {
         lf("invalid dict value");
         return false;

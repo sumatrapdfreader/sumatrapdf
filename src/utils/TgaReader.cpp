@@ -388,7 +388,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
                 j++;
             }
             if (j > 1) {
-                tgaData.Append(j - 1 + 128);
+                tgaData.Append((char)(j - 1 + 128));
                 tgaData.Append(line + i * 3, 3);
             } else {
                 // determine the length of a run of different pixels
@@ -397,7 +397,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
                 }
                 if (i + j < w || j > 128)
                     j--;
-                tgaData.Append(j - 1);
+                tgaData.Append((char)(j - 1));
                 tgaData.Append(line + i * 3, j * 3);
             }
         }

@@ -34,7 +34,7 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(const char *data, SizeI size, bool graysc
     if (!bmi)
         return;
     for (int i = 0; i < colors; i++) {
-        bmi->bmiColors[i].rgbRed = bmi->bmiColors[i].rgbGreen = bmi->bmiColors[i].rgbBlue = i;
+        bmi->bmiColors[i].rgbRed = bmi->bmiColors[i].rgbGreen = bmi->bmiColors[i].rgbBlue = (BYTE)i;
     }
 
     bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -42,7 +42,7 @@ RenderedDjVuPixmap::RenderedDjVuPixmap(const char *data, SizeI size, bool graysc
     bmi->bmiHeader.biHeight = -size.dy;
     bmi->bmiHeader.biPlanes = 1;
     bmi->bmiHeader.biCompression = BI_RGB;
-    bmi->bmiHeader.biBitCount = bpc * 8;
+    bmi->bmiHeader.biBitCount = (WORD)(bpc * 8);
     bmi->bmiHeader.biSizeImage = size.dy * stride;
     bmi->bmiHeader.biClrUsed = colors;
 
