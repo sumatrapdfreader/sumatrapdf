@@ -353,7 +353,8 @@ static TxtNode *FindTxtNode(TxtNode *curr, const char *name, size_t nameLen)
 
 static void WriteDefaultValue(uint8_t *structDataPtr, Type type)
 {
-    // all other types have default value of 0, which is already 
+    // all other types have default value of 0, which we get for
+    // free because the memory for struct is zero-allocated
     if (TYPE_FLOAT == type) {
         WriteStructFloat(structDataPtr, 0);
     }
@@ -535,7 +536,17 @@ static void AppendKeyVal(const char *key, const char *val, int nest, str::Str<ch
     AppendVal(val, res);
 }
 
-void SerializeRec(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int nest, str::Str<char>& res);
+struct EncodeState {
+    str::Str<char>  res;
+    const char *    fieldNamesSeq;
+    char            escapeChar;
+    EncodeState() {
+        fieldNamesSeq = NULL;
+        escapeChar = 0;
+    }
+};
+
+void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def, int nest);
 
 // converts "1.00" => "1" i.e. strips unnecessary trailing zeros
 static void FixFloatStr(char *s)
@@ -552,9 +563,11 @@ static void FixFloatStr(char *s)
     *dot = 0;
 }
 
-static void SerializeField(FieldMetadata *fieldDef, const char *fieldNamesSeq, const uint8_t *structStart, int nest, str::Str<char>& res)
+static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8_t *structStart, int nest)
 {
     str::Str<char> val;
+    str::Str<char>& res = es.res;
+
     Type type = fieldDef->type;
     if ((type & TYPE_NO_STORE_MASK) != 0)
         return;
@@ -562,7 +575,7 @@ static void SerializeField(FieldMetadata *fieldDef, const char *fieldNamesSeq, c
     if (!structStart)
         return;
 
-    const char *fieldName = fieldNamesSeq + fieldDef->nameOffset;
+    const char *fieldName = es.fieldNamesSeq + fieldDef->nameOffset;
     const uint8_t *data = structStart + fieldDef->offset;
     if (TYPE_BOOL == type) {
         bool b = ReadStructBool(data);
@@ -610,7 +623,7 @@ static void SerializeField(FieldMetadata *fieldDef, const char *fieldNamesSeq, c
         res.Append(fieldName);
         res.Append(" [" NL);
         const uint8_t *structStart2 = (const uint8_t *)ReadStructPtr(data);
-        SerializeRec(structStart2, fieldDef->def, fieldNamesSeq, nest + 1, res);
+        SerializeRec(es, structStart2, fieldDef->def, nest + 1);
         AppendNest(res, nest);
         res.Append("]" NL);
     } else if (TYPE_ARRAY == type) {
@@ -624,7 +637,7 @@ static void SerializeField(FieldMetadata *fieldDef, const char *fieldNamesSeq, c
             AppendNest(res, nest);
             res.Append("[" NL);
             const uint8_t *elData = (const uint8_t*)el->val;
-            SerializeRec(elData, fieldDef->def, fieldNamesSeq, nest + 1, res);
+            SerializeRec(es, elData, fieldDef->def, nest + 1);
             AppendNest(res, nest);
             res.Append("]" NL);
             el = el->next;
@@ -637,22 +650,23 @@ static void SerializeField(FieldMetadata *fieldDef, const char *fieldNamesSeq, c
     }
 }
 
-void SerializeRec(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int nest, str::Str<char>& res)
+void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def, int nest)
 {
     for (size_t i = 0; i < def->nFields; i++) {
         FieldMetadata *fieldDef = &def->fields[i];
-        SerializeField(fieldDef, fieldNamesSeq, data, nest, res);
+        SerializeField(es, fieldDef, data, nest);
     }
 }
 
 uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, size_t *sizeOut)
 {
-    str::Str<char> res;
-    res.Append(UTF8_BOM "; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation" NL);
-    SerializeRec(data, def, fieldNamesSeq, 0, res);
+    EncodeState es;
+    es.res.Append(UTF8_BOM "; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation" NL);
+    es.fieldNamesSeq = fieldNamesSeq;
+    SerializeRec(es, data, def, 0);
     if (sizeOut)
-        *sizeOut = res.Size();
-    return (uint8_t *)res.StealData();
+        *sizeOut = es.res.Size();
+    return (uint8_t *)es.res.StealData();
 }
 
 } // namespace sertxt
