@@ -10,9 +10,10 @@ solution "everything"
   -- StaticRuntime - statically link crt
   -- ExtraWarnings - set max compiler warnings level
   -- FatalWarnings - compiler warnigs are errors'
+  -- NoMinimalRebuild - disable /Gm because it clashes with /MP
   flags {
    "Symbols", "StaticRuntime", "ExtraWarnings", "FatalWarnings",
-   "NoRTTI", "Unicode", "NoExceptions"
+   "NoRTTI", "Unicode", "NoExceptions", "NoMinimalRebuild"
   }
 
   configuration "Debug"
@@ -34,8 +35,9 @@ solution "everything"
     -- 4127 - conditional expression is constant
     -- 4100 - unreferenced formal parameter
     -- 4244 - possible loss of data due to conversion
+    -- /MP  - use multi-cores for compilation
     buildoptions {
-        "/wd4800", "/wd4127", "/wd4100", "/wd4244"
+        "/wd4800", "/wd4127", "/wd4100", "/wd4244", "/MP"
     }
 
   project "efi"
