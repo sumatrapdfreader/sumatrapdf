@@ -11,46 +11,46 @@ using namespace sertxt;
 
 #define of offsetof
 FieldMetadata gRectIntFieldMetadata[] = {
-    {   0, of(RectInt, x), TYPE_I32, NULL },
-    {   2, of(RectInt, y), TYPE_I32, NULL },
-    {   4, of(RectInt, dx), TYPE_I32, NULL },
-    {   7, of(RectInt, dy), TYPE_I32, NULL },
+    { 0, of(RectInt, x),  TYPE_I32, NULL },
+    { 2, of(RectInt, y),  TYPE_I32, NULL },
+    { 4, of(RectInt, dx), TYPE_I32, NULL },
+    { 7, of(RectInt, dy), TYPE_I32, NULL },
 };
 
 StructMetadata gRectIntMetadata = { sizeof(RectInt), 4, &gRectIntFieldMetadata[0] };
 
 FieldMetadata gBasicSettingsFieldMetadata[] = {
-    {  10, of(BasicSettings, globalPrefsOnly), TYPE_BOOL, NULL },
-    {  28, of(BasicSettings, currLanguage), TYPE_STR, NULL },
-    {  42, of(BasicSettings, toolbarVisible), TYPE_BOOL, NULL },
-    {  58, of(BasicSettings, pdfAssociateDontAsk), TYPE_BOOL, NULL },
-    {  81, of(BasicSettings, pdfAssociateDoIt), TYPE_BOOL, NULL },
-    { 101, of(BasicSettings, checkForUpdates), TYPE_BOOL, NULL },
-    { 119, of(BasicSettings, rememberMruFiles), TYPE_BOOL, NULL },
-    { 138, of(BasicSettings, useSystemColorScheme), TYPE_BOOL, NULL },
-    { 162, of(BasicSettings, inverseSearchCmdLine), TYPE_STR, NULL },
-    { 186, of(BasicSettings, versionToSkip), TYPE_STR, NULL },
-    { 202, of(BasicSettings, lastUpdateTime), TYPE_STR, NULL },
-    { 219, of(BasicSettings, defaultDisplayMode), TYPE_U16, NULL },
-    { 240, of(BasicSettings, defaultZoom), TYPE_FLOAT, NULL },
-    { 253, of(BasicSettings, windowState), TYPE_I32, NULL },
-    { 266, of(BasicSettings, windowPos), TYPE_STRUCT_PTR, &gRectIntMetadata },
-    { 277, of(BasicSettings, tocVisible), TYPE_BOOL, NULL },
-    { 289, of(BasicSettings, favVisible), TYPE_BOOL, NULL },
-    { 301, of(BasicSettings, sidebarDx), TYPE_I32, NULL },
-    { 312, of(BasicSettings, tocDy), TYPE_I32, NULL },
-    { 319, of(BasicSettings, showStartPage), TYPE_BOOL, NULL },
-    { 335, of(BasicSettings, openCountWeek), TYPE_I32, NULL },
-    { 351, of(BasicSettings, lastPrefUpdate), TYPE_U64, NULL },
+    {  10, of(BasicSettings, globalPrefsOnly),      TYPE_BOOL,       NULL              },
+    {  28, of(BasicSettings, currLanguage),         TYPE_STR,        NULL              },
+    {  42, of(BasicSettings, toolbarVisible),       TYPE_BOOL,       NULL              },
+    {  58, of(BasicSettings, pdfAssociateDontAsk),  TYPE_BOOL,       NULL              },
+    {  81, of(BasicSettings, pdfAssociateDoIt),     TYPE_BOOL,       NULL              },
+    { 101, of(BasicSettings, checkForUpdates),      TYPE_BOOL,       NULL              },
+    { 119, of(BasicSettings, rememberMruFiles),     TYPE_BOOL,       NULL              },
+    { 138, of(BasicSettings, useSystemColorScheme), TYPE_BOOL,       NULL              },
+    { 162, of(BasicSettings, inverseSearchCmdLine), TYPE_STR,        NULL              },
+    { 186, of(BasicSettings, versionToSkip),        TYPE_STR,        NULL              },
+    { 202, of(BasicSettings, lastUpdateTime),       TYPE_STR,        NULL              },
+    { 219, of(BasicSettings, defaultDisplayMode),   TYPE_U16,        NULL              },
+    { 240, of(BasicSettings, defaultZoom),          TYPE_FLOAT,      NULL              },
+    { 253, of(BasicSettings, windowState),          TYPE_I32,        NULL              },
+    { 266, of(BasicSettings, windowPos),            TYPE_STRUCT_PTR, &gRectIntMetadata },
+    { 277, of(BasicSettings, tocVisible),           TYPE_BOOL,       NULL              },
+    { 289, of(BasicSettings, favVisible),           TYPE_BOOL,       NULL              },
+    { 301, of(BasicSettings, sidebarDx),            TYPE_I32,        NULL              },
+    { 312, of(BasicSettings, tocDy),                TYPE_I32,        NULL              },
+    { 319, of(BasicSettings, showStartPage),        TYPE_BOOL,       NULL              },
+    { 335, of(BasicSettings, openCountWeek),        TYPE_I32,        NULL              },
+    { 351, of(BasicSettings, lastPrefUpdate),       TYPE_U64,        NULL              },
 };
 
 StructMetadata gBasicSettingsMetadata = { sizeof(BasicSettings), 22, &gBasicSettingsFieldMetadata[0] };
 
 FieldMetadata gPaddingSettingsFieldMetadata[] = {
-    { 368, of(PaddingSettings, top), TYPE_U16, NULL },
+    { 368, of(PaddingSettings, top),    TYPE_U16, NULL },
     { 372, of(PaddingSettings, bottom), TYPE_U16, NULL },
-    { 379, of(PaddingSettings, left), TYPE_U16, NULL },
-    { 384, of(PaddingSettings, right), TYPE_U16, NULL },
+    { 379, of(PaddingSettings, left),   TYPE_U16, NULL },
+    { 384, of(PaddingSettings, right),  TYPE_U16, NULL },
     { 390, of(PaddingSettings, spaceX), TYPE_U16, NULL },
     { 398, of(PaddingSettings, spaceY), TYPE_U16, NULL },
 };
@@ -58,33 +58,33 @@ FieldMetadata gPaddingSettingsFieldMetadata[] = {
 StructMetadata gPaddingSettingsMetadata = { sizeof(PaddingSettings), 6, &gPaddingSettingsFieldMetadata[0] };
 
 FieldMetadata gForwardSearchFieldMetadata[] = {
-    { 406, of(ForwardSearch, highlightOffset), TYPE_I32, NULL },
-    { 423, of(ForwardSearch, highlightWidth), TYPE_I32, NULL },
-    { 439, of(ForwardSearch, highlightPermanent), TYPE_I32, NULL },
-    { 459, of(ForwardSearch, highlightColor), TYPE_COLOR, NULL },
-    { 475, of(ForwardSearch, enableTexEnhancements), TYPE_BOOL, NULL },
+    { 406, of(ForwardSearch, highlightOffset),       TYPE_I32,   NULL },
+    { 423, of(ForwardSearch, highlightWidth),        TYPE_I32,   NULL },
+    { 439, of(ForwardSearch, highlightPermanent),    TYPE_I32,   NULL },
+    { 459, of(ForwardSearch, highlightColor),        TYPE_COLOR, NULL },
+    { 475, of(ForwardSearch, enableTexEnhancements), TYPE_BOOL,  NULL },
 };
 
 StructMetadata gForwardSearchMetadata = { sizeof(ForwardSearch), 5, &gForwardSearchFieldMetadata[0] };
 
 FieldMetadata gAdvancedSettingsFieldMetadata[] = {
-    { 499, of(AdvancedSettings, traditionalEbookUI), TYPE_BOOL, NULL },
-    { 520, of(AdvancedSettings, escToExit), TYPE_BOOL, NULL },
-    { 532, of(AdvancedSettings, textColor), TYPE_COLOR, NULL },
-    { 543, of(AdvancedSettings, pageColor), TYPE_COLOR, NULL },
-    { 554, of(AdvancedSettings, mainWindowBackground), TYPE_COLOR, NULL },
-    { 577, of(AdvancedSettings, pagePadding), TYPE_STRUCT_PTR, &gPaddingSettingsMetadata },
-    { 590, of(AdvancedSettings, forwardSearch), TYPE_STRUCT_PTR, &gForwardSearchMetadata },
-    { 605, of(AdvancedSettings, ws), TYPE_WSTR, NULL },
+    { 499, of(AdvancedSettings, traditionalEbookUI),   TYPE_BOOL,       NULL                      },
+    { 520, of(AdvancedSettings, escToExit),            TYPE_BOOL,       NULL                      },
+    { 532, of(AdvancedSettings, textColor),            TYPE_COLOR,      NULL                      },
+    { 543, of(AdvancedSettings, pageColor),            TYPE_COLOR,      NULL                      },
+    { 554, of(AdvancedSettings, mainWindowBackground), TYPE_COLOR,      NULL                      },
+    { 577, of(AdvancedSettings, pagePadding),          TYPE_STRUCT_PTR, &gPaddingSettingsMetadata },
+    { 590, of(AdvancedSettings, forwardSearch),        TYPE_STRUCT_PTR, &gForwardSearchMetadata   },
+    { 605, of(AdvancedSettings, ws),                   TYPE_WSTR,       NULL                      },
 };
 
 StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 8, &gAdvancedSettingsFieldMetadata[0] };
 
 FieldMetadata gFavFieldMetadata[] = {
-    { 608, of(Fav, name), TYPE_STR, NULL },
-    { 613, of(Fav, pageNo), TYPE_I32, NULL },
-    { 621, of(Fav, pageLabel), TYPE_STR, NULL },
-    { 632, of(Fav, menuId), (Type)(TYPE_I32 | TYPE_NO_STORE_MASK), NULL },
+    { 608, of(Fav, name),      TYPE_STR,                              NULL },
+    { 613, of(Fav, pageNo),    TYPE_I32,                              NULL },
+    { 621, of(Fav, pageLabel), TYPE_STR,                              NULL },
+    { 632, of(Fav, menuId),    (Type)(TYPE_I32 | TYPE_NO_STORE_MASK), NULL },
 };
 
 StructMetadata gFavMetadata = { sizeof(Fav), 4, &gFavFieldMetadata[0] };
@@ -96,9 +96,9 @@ FieldMetadata gAppStateFieldMetadata[] = {
 StructMetadata gAppStateMetadata = { sizeof(AppState), 1, &gAppStateFieldMetadata[0] };
 
 FieldMetadata gSettingsFieldMetadata[] = {
-    { 650, of(Settings, basic), TYPE_STRUCT_PTR, &gBasicSettingsMetadata },
+    { 650, of(Settings, basic),    TYPE_STRUCT_PTR, &gBasicSettingsMetadata    },
     { 656, of(Settings, advanced), TYPE_STRUCT_PTR, &gAdvancedSettingsMetadata },
-    { 665, of(Settings, appState), TYPE_STRUCT_PTR, &gAppStateMetadata },
+    { 665, of(Settings, appState), TYPE_STRUCT_PTR, &gAppStateMetadata         },
 };
 
 StructMetadata gSettingsMetadata = { sizeof(Settings), 3, &gSettingsFieldMetadata[0] };

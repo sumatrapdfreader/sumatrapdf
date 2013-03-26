@@ -5,80 +5,80 @@
 #define SettingsSumatra_h
 
 struct RectInt {
-    int32_t    x;
-    int32_t    y;
-    int32_t    dx;
-    int32_t    dy;
+    int32_t  x;
+    int32_t  y;
+    int32_t  dx;
+    int32_t  dy;
 };
 
 struct BasicSettings {
-    bool            globalPrefsOnly;
-    const char *    currLanguage;
-    bool            toolbarVisible;
-    bool            pdfAssociateDontAsk;
-    bool            pdfAssociateDoIt;
-    bool            checkForUpdates;
-    bool            rememberMruFiles;
-    bool            useSystemColorScheme;
-    const char *    inverseSearchCmdLine;
-    const char *    versionToSkip;
-    const char *    lastUpdateTime;
-    uint16_t        defaultDisplayMode;
-    float           defaultZoom;
-    int32_t         windowState;
-    RectInt *       windowPos;
-    bool            tocVisible;
-    bool            favVisible;
-    int32_t         sidebarDx;
-    int32_t         tocDy;
-    bool            showStartPage;
-    int32_t         openCountWeek;
-    uint64_t        lastPrefUpdate;
+    bool          globalPrefsOnly;
+    const char *  currLanguage;
+    bool          toolbarVisible;
+    bool          pdfAssociateDontAsk;
+    bool          pdfAssociateDoIt;
+    bool          checkForUpdates;
+    bool          rememberMruFiles;
+    bool          useSystemColorScheme;
+    const char *  inverseSearchCmdLine;
+    const char *  versionToSkip;
+    const char *  lastUpdateTime;
+    uint16_t      defaultDisplayMode;
+    float         defaultZoom;
+    int32_t       windowState;
+    RectInt *     windowPos;
+    bool          tocVisible;
+    bool          favVisible;
+    int32_t       sidebarDx;
+    int32_t       tocDy;
+    bool          showStartPage;
+    int32_t       openCountWeek;
+    uint64_t      lastPrefUpdate;
 };
 
 struct PaddingSettings {
-    uint16_t    top;
-    uint16_t    bottom;
-    uint16_t    left;
-    uint16_t    right;
-    uint16_t    spaceX;
-    uint16_t    spaceY;
+    uint16_t  top;
+    uint16_t  bottom;
+    uint16_t  left;
+    uint16_t  right;
+    uint16_t  spaceX;
+    uint16_t  spaceY;
 };
 
 struct ForwardSearch {
-    int32_t     highlightOffset;
-    int32_t     highlightWidth;
-    int32_t     highlightPermanent;
-    uint32_t    highlightColor;
-    bool        enableTexEnhancements;
+    int32_t   highlightOffset;
+    int32_t   highlightWidth;
+    int32_t   highlightPermanent;
+    uint32_t  highlightColor;
+    bool      enableTexEnhancements;
 };
 
 struct AdvancedSettings {
-    bool                 traditionalEbookUI;
-    bool                 escToExit;
-    uint32_t             textColor;
-    uint32_t             pageColor;
-    uint32_t             mainWindowBackground;
-    PaddingSettings *    pagePadding;
-    ForwardSearch *      forwardSearch;
-    const WCHAR *        ws;
+    bool               traditionalEbookUI;
+    bool               escToExit;
+    uint32_t           textColor;
+    uint32_t           pageColor;
+    uint32_t           mainWindowBackground;
+    PaddingSettings *  pagePadding;
+    ForwardSearch *    forwardSearch;
+    const WCHAR *      ws;
 };
 
 struct Fav {
-    const char *    name;
-    int32_t         pageNo;
-    const char *    pageLabel;
-    int32_t         menuId;
+    const char *  name;
+    int32_t       pageNo;
+    const char *  pageLabel;
+    int32_t       menuId;
 };
 
 struct AppState {
-    sertxt::ListNode<Fav> *    favorites;
+    sertxt::ListNode<Fav> *  favorites;
 };
 
 struct Settings {
-    BasicSettings *       basic;
-    AdvancedSettings *    advanced;
-    AppState *            appState;
+    BasicSettings *     basic;
+    AdvancedSettings *  advanced;
+    AppState *          appState;
 };
 
 Settings *DeserializeSettings(const char *data, size_t dataLen);

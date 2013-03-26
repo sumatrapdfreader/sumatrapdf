@@ -132,31 +132,8 @@ class Struct(Type):
     def __init__(self):
         # fields must be a class variable in Struct's subclass
         self.values = [field_from_def(fd) for fd in self.fields]
-
-        cls = self.__class__
-        self.c_type_override = "%s *" % cls.__name__
-
+        self.c_type_override = "%s *" % self.name()
         self.offset = None
-
-    @classmethod
-    def get_max_field_type_len(cls):
-        max_len = 0
-        for field_def in cls.fields:
-            def_val = field_def[1]
-            c_type = def_val.c_type()
-            if len(c_type) > max_len:
-                max_len = len(c_type)
-        return max_len + 3
-
-    """
-    @classmethod
-    def get_max_field_enum_len(cls):
-        max_len = 0
-        for field_def in cls.fields:
-            def_val = field_def[1]
-            max_len = max(max_len, len(def_val.get_typ_enum()))
-        return max_len + 1
-"""
 
     def is_valid_val(self, val):
         return issubclass(val, Struct)

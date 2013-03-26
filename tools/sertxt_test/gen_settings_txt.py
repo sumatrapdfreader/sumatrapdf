@@ -141,16 +141,55 @@ def ser_struct(struct, name, lines, indent):
     if name != None:
         lines += ["%s]" % prefix]
 
+(FMT_NONE, FMT_LEFT, FMT_RIGHT) = (0, 1, 2)
+
+def get_col_fmt(col_fmt, col):
+    if col >= len(col_fmt):
+        return FMT_NONE
+    return col_fmt[col]
+
+def fmt_str(s, max, fmt):
+    add = max - len(s)
+    if fmt == FMT_LEFT:
+        return " " * add + s
+    elif fmt == FMT_RIGHT:
+        return s + " " * add
+    return s
+
+"""
+[
+  ["a",  "bc",   "def"],
+  ["ab", "fabo", "d"]
+]
+=>
+[
+  ["a ", "bc  ", "def"],
+  ["ab", "fabo", "d  "]
+]
+"""
+def fmt_rows(rows, col_fmt = []):
+    col_max_len = {}
+    for row in rows:
+        for col in range(len(row)):
+            el_len = len(row[col])
+            curr_max = col_max_len.get(col, 0)
+            if el_len > curr_max:
+                col_max_len[col] = el_len
+    res = []
+    for row in rows:
+        res_row = []
+        for col in range(len(row)):
+            s = fmt_str(row[col], col_max_len[col], get_col_fmt(col_fmt, col))
+            res_row.append(s)
+        res.append(res_row)
+    return res
+
 def gen_struct_def(stru_cls):
     #assert isinstance(stru, Struct)
-    #assert stru in GetAllStructs()
     name = stru_cls.__name__
     lines = ["struct %s {" % name]
-    max_len = stru_cls.get_max_field_type_len()
-    fmt = "    %%-%ds %%s;" % max_len
-    for field_def in stru_cls.fields:
-        (name, def_val) = field_def[:2]
-        lines += [fmt % (def_val.c_type(), name)]
+    rows = [[tup[1].c_type(), tup[0]] for tup in stru_cls.fields]
+    lines += ["    %s  %s;" % (e1, e2) for (e1, e2) in fmt_rows(rows, [FMT_RIGHT])]
     lines += ["};\n"]
     return "\n".join(lines)
 
@@ -201,30 +240,22 @@ FieldMetadata g${name}FieldMetadata[] = {
 def gen_struct_fields_txt(stru_cls, field_names):
     #assert isinstance(stru, Struct)
     struct_name = stru_cls.__name__
-    lines = ["FieldMetadata g%(struct_name)sFieldMetadata[] = {" % locals()]
-
-    #TODO: bring this back?
-    #max_enum_len = stru_cls.get_max_field_enum_len()
-    #typ_fmt = "%%-%ds" % max_enum_len
-    typ_fmt = "%s"
-
+    lines = ["FieldMetadata g%sFieldMetadata[] = {" % struct_name]
+    rows = []
     for field_def in stru_cls.fields:
         #assert isinstance(field, Field)
         field_name = field_def[0]
-        def_val = field_def[1]
-
         field = field_from_def(field_def)
-
-        typ_enum = field.get_typ_enum() + ","
-        typ_enum = typ_fmt % typ_enum
-        settings_name = name2name(field_name)
-        name_off = field_names.get_offset(settings_name)
-        offset = "of(%(struct_name)s, %(field_name)s)" % locals()
+        typ_enum = field.get_typ_enum()
+        name_off = field_names.get_offset(name2name(field_name))
+        offset = "of(%s, %s)" % (struct_name, field_name)
+        val = "NULL"
         if field.is_struct() or field.is_array():
-            field_type = field.typ.name()
-            lines += ["    { %(name_off)3d, %(offset)s, %(typ_enum)s &g%(field_type)sMetadata }," % locals()]
-        else:
-            lines += ["    { %(name_off)3d, %(offset)s, %(typ_enum)s NULL }," % locals()]
+            val = "&g%sMetadata" % field.typ.name()
+        col = [str(name_off) + ",", offset + ",", typ_enum + ",", val]
+        rows.append(col)
+    rows = fmt_rows(rows, [FMT_LEFT, FMT_RIGHT, FMT_RIGHT, FMT_RIGHT])
+    lines += ["    { %s %s %s %s }," % (e1, e2, e3, e4) for (e1, e2, e3, e4) in rows]
     lines += ["};\n"]
     return lines
 
