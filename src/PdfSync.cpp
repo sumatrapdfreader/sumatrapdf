@@ -400,7 +400,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UIN
 // (within a range of EPSILON_LINE)
 //
 // The function returns PDFSYNCERR_SUCCESS if a matching record was found.
-UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<size_t> &records)
+UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT, Vec<size_t> &records)
 {
     if (!srcfilename)
         return PDFSYNCERR_INVALID_ARGUMENT;

@@ -445,7 +445,8 @@ Error:
     return data;
 }
 
-static DisplayState * DeserializeDisplayState(BencDict *dict, bool globalPrefsOnly)
+// TODO: what happened to globalPrefsOnly?
+static DisplayState * DeserializeDisplayState(BencDict *dict, bool)
 {
     DisplayState *ds = new DisplayState();
     if (!ds)

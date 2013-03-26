@@ -94,7 +94,7 @@ public:
     DirectionalLayout& Add(DirectionalLayoutData& ld, bool ownsElement=false);
 
     virtual Size Measure(const Size availableSize);
-    virtual void Arrange(const Rect finalRect) { CrashIf(true); }
+    virtual void Arrange(const Rect) { CrashIf(true); }
 };
 
 class HorizontalLayout : public DirectionalLayout

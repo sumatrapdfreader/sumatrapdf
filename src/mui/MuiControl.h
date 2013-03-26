@@ -60,7 +60,7 @@ public:
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 
-    virtual void NotifyMouseMove(int x, int y) {}
+    virtual void NotifyMouseMove(int, int ) {}
 
     bool WantsMouseClick() const;
     bool WantsMouseMove() const;

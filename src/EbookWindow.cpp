@@ -125,7 +125,7 @@ static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
     }
 }
 
-static LRESULT OnMouseWheel(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT OnMouseWheel(EbookWindow *win, UINT, WPARAM wParam, LPARAM)
 {
     short delta = GET_WHEEL_DELTA_WPARAM(wParam);
     if (delta > 0)

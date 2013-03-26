@@ -461,8 +461,8 @@ WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
     return firstEditor;
 }
 
-static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1,
-    HSZ hsz2, HDDEDATA hdata, ULONG_PTR dwData1, ULONG_PTR dwData2)
+static HDDEDATA CALLBACK DdeCallback(UINT, UINT, HCONV, HSZ,
+    HSZ, HDDEDATA, ULONG_PTR, ULONG_PTR)
 {
     return 0;
 }
@@ -513,7 +513,7 @@ Exit:
 // selects all text in an edit box if it's selected either
 // through a keyboard shortcut or a non-selecting mouse click
 // (or responds to Ctrl+Backspace as nowadays expected)
-bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM)
 {
     static bool delayFocus = false;
 

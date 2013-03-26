@@ -182,6 +182,8 @@ public:
 #if THREADMODEL!=NOTHREADS
         if (wait)
             ddjvu_message_wait(ctx);
+#else
+        (void)wait;
 #endif
         while (ddjvu_message_peek(ctx))
             ddjvu_message_pop(ctx);
@@ -230,10 +232,10 @@ public:
     virtual bool SaveFileAs(const WCHAR *copyFileName);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
-    virtual bool HasClipOptimizations(int pageNo) { return false; }
+    virtual bool HasClipOptimizations(int) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty) { return NULL; }
 
     virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);

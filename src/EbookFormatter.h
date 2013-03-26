@@ -103,7 +103,7 @@ public:
 
 class TxtFormatter : public HtmlFormatter {
 protected:
-    virtual void HandleTagPagebreak(HtmlToken *t) { ForceNewPage(); }
+    virtual void HandleTagPagebreak(HtmlToken *) { ForceNewPage(); }
 
 public:
     TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }

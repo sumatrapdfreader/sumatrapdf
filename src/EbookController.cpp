@@ -512,7 +512,7 @@ void EbookController::OnLayoutTimer()
     TriggerBookFormatting();
 }
 
-void EbookController::SizeChangedPage(Control *c, int dx, int dy)
+void EbookController::SizeChangedPage(Control *c, int, int)
 {
     CrashIf(c != ctrls->page);
     // delay re-layout so that we don't unnecessarily do the
@@ -520,20 +520,20 @@ void EbookController::SizeChangedPage(Control *c, int dx, int dy)
     RestartLayoutTimer(this);
 }
 
-void EbookController::ClickedNext(Control *c, int x, int y)
+void EbookController::ClickedNext(Control *c, int, int)
 {
     CrashIf(c != ctrls->next);
     AdvancePage(1);
 }
 
-void EbookController::ClickedPrev(Control *c, int x, int y)
+void EbookController::ClickedPrev(Control *c, int, int)
 {
     CrashIf(c != ctrls->prev);
     AdvancePage(-1);
 }
 
 // (x, y) is in the coordinates of w
-void EbookController::ClickedProgress(Control *c, int x, int y)
+void EbookController::ClickedProgress(Control *c, int x, int)
 {
     CrashIf(c != ctrls->progress);
     float perc = ctrls->progress->GetPercAt(x);

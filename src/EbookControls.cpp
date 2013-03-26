@@ -39,7 +39,7 @@ void PageControl::SetPage(HtmlPage *newPage)
 }
 
 // This is just to test mouse move handling
-void PageControl::NotifyMouseMove(int x, int y)
+void PageControl::NotifyMouseMove(int, int)
 {
 #if 0
     Rect r1 = RectForCircle(cursorX, cursorY, 10);
