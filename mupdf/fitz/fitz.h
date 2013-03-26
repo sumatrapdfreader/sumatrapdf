@@ -1891,6 +1891,8 @@ struct fz_text_style_s
 	float size;
 	int wmode;
 	int script;
+	float ascender;
+	float descender;
 	/* etc... */
 };
 
@@ -1919,42 +1921,85 @@ struct fz_text_block_s
 
 /*
 	fz_text_line: A text line is a list of text spans, with the same
-	(or very similar) baseline. In typical cases this should correspond
-	(as expected) to complete lines of text. A collection of lines makes
-	up a block.
+	baseline. In typical cases this should correspond (as expected) to
+	complete lines of text. A collection of lines makes up a block.
 */
 struct fz_text_line_s
 {
-	fz_rect bbox;
 	int len, cap;
-	fz_text_span *spans;
+	fz_text_span **spans;
+
+	/* Cached information */
+	float distance; /* Perpendicular distance from previous line */
+	fz_rect bbox;
+	void *region; /* Opaque value for matching line masks */
 };
 
 /*
-	fz_text_span: A text span is a list of characters in the same style
-	that share a common (or very similar) baseline. In typical cases
-	(where only one font style is used in a line), a single span may be
-	enough to represent a complete line. In cases where multiple
-	font styles are used (for example italics), then a line will be
-	broken down into a series of spans.
+	fz_text_span: A text span is a list of characters that share a common
+	baseline/transformation. In typical cases a single span may be enough
+	to represent a complete line. In cases where the text has big gaps in
+	it (perhaps as it crosses columns or tables), a line may be represented
+	by multiple spans.
 */
 struct fz_text_span_s
 {
-	fz_rect bbox;
 	int len, cap;
 	fz_text_char *text;
-	fz_text_style *style;
+	fz_point min; /* Device space */
+	fz_point max; /* Device space */
+	int wmode; /* 0 for horizontal, 1 for vertical */
+	fz_matrix transform; /* e and f are always 0 here */
+	float ascender_max; /* Document space */
+	float descender_min; /* Document space */
+	fz_rect bbox; /* Device space */
+
+	/* Cached information */
+	float base_offset; /* Perpendicular distance from baseline of line */
+	float spacing; /* Distance along baseline from previous span in this line (or 0 if first) */
+	int column; /* If non zero, the column that it's in */
+	float column_width; /* Percentage */
+	int align; /* 0 = left, 1 = centre, 2 = right */
+	float indent; /* The indent position for this column. */
 };
 
 /*
-	fz_text_char: A text char is a unicode character and the bounding
-	box with which it appears on the page.
+	fz_text_char: A text char is a unicode character, the style in which
+	is appears, and the point at which it is positioned. Transform
+	(and hence bbox) information is given by the enclosing span.
 */
 struct fz_text_char_s
 {
-	fz_rect bbox;
+	fz_point p; /* Device space */
 	int c;
+	fz_text_style *style;
 };
+
+typedef struct fz_char_and_box_s fz_char_and_box;
+
+struct fz_char_and_box_s
+{
+	int c;
+	fz_rect bbox;
+};
+
+fz_char_and_box *fz_text_char_at(fz_char_and_box *cab, fz_text_page *page, int idx);
+
+/*
+	fz_text_char_bbox: Return the bbox of a text char. Calculated from
+	the supplied enclosing span.
+
+	bbox: A place to store the bbox
+
+	span: The enclosing span
+
+	idx: The index of the char within the span
+
+	Returns bbox (updated)
+
+	Does not throw exceptions
+*/
+fz_rect *fz_text_char_bbox(fz_rect *bbox, fz_text_span *span, int idx);
 
 /*
 	fz_new_text_device: Create a device to extract the text on a page.
@@ -1993,6 +2038,8 @@ void fz_free_text_sheet(fz_context *ctx, fz_text_sheet *sheet);
 */
 fz_text_page *fz_new_text_page(fz_context *ctx, const fz_rect *mediabox);
 void fz_free_text_page(fz_context *ctx, fz_text_page *page);
+
+void fz_text_analysis(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page);
 
 typedef struct fz_output_s fz_output;
 

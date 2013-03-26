@@ -253,10 +253,10 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
     size_t textLen = 0;
     for (fz_text_block *block = text->blocks; block < text->blocks + text->len; block++) {
         for (fz_text_line *line = block->lines; line < block->lines + block->len; line++) {
-            for (fz_text_span *span = line->spans; span < line->spans + line->len; span++) {
-                textLen += span->len;
+            for (int span_num = 0; span_num < line->len; span_num++) {
+                textLen += line->spans[span_num]->len;
             }
-            textLen += lineSepLen;
+            textLen += lineSepLen + line->len - 1;
         }
     }
 
@@ -276,7 +276,8 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
     WCHAR *dest = content;
     for (fz_text_block *block = text->blocks; block < text->blocks + text->len; block++) {
         for (fz_text_line *line = block->lines; line < block->lines + block->len; line++) {
-            for (fz_text_span *span = line->spans; span < line->spans + line->len; span++) {
+            for (int span_num = 0; span_num < line->len; span_num++) {
+                fz_text_span *span = line->spans[span_num];
                 for (fz_text_char *c = span->text; c < span->text + span->len; c++) {
                     *dest = c->c;
                     if (*dest <= 32) {
@@ -289,8 +290,21 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
                             continue;
                     }
                     dest++;
-                    if (destRect)
-                        *destRect++ = fz_rect_to_RectD(c->bbox).Round();
+                    if (destRect) {
+                        fz_rect bbox;
+                        fz_text_char_bbox(&bbox, span, c - span->text);
+                        *destRect++ = fz_rect_to_RectD(bbox).Round();
+                    }
+                }
+                if (span_num < line->len - 1) {
+                    // TODO: use a Tab instead? (this might be a table)
+                    *dest++ = ' ';
+                    if (destRect) {
+                        RectI prev = destRect[-1];
+                        prev.x += prev.dx;
+                        prev.dx /= 2;
+                        *destRect++ = prev;
+                    }
                 }
             }
             // remove trailing spaces

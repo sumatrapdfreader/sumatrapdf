@@ -346,7 +346,7 @@ pdf_load_transfer_function(pdf_document *doc, pdf_obj *obj, int is_tr2)
 
 	fz_try(doc->ctx)
 	{
-		pdf_function *func;
+		fz_function *func;
 		float in, out;
 		int i, n;
 
@@ -359,10 +359,10 @@ pdf_load_transfer_function(pdf_document *doc, pdf_obj *obj, int is_tr2)
 				for (i = 0; i < 256; i++)
 				{
 					in = i / 255.0f;
-					pdf_eval_function(doc->ctx, func, &in, 1, &out, 1);
+					fz_eval_function(doc->ctx, func, &in, 1, &out, 1);
 					tr->function[n][i] = (int)(out * 255 + 0.5f);
 				}
-				pdf_drop_function(doc->ctx, func);
+				fz_drop_function(doc->ctx, func);
 			}
 		}
 		else
@@ -371,11 +371,11 @@ pdf_load_transfer_function(pdf_document *doc, pdf_obj *obj, int is_tr2)
 			for (i = 0; i < 256; i++)
 			{
 				in = i / 255.0f;
-				pdf_eval_function(doc->ctx, func, &in, 1, &out, 1);
+				fz_eval_function(doc->ctx, func, &in, 1, &out, 1);
 				for (n = 0; n < 4; n++)
 					tr->function[n][i] = (int)(out * 255 + 0.5f);
 			}
-			pdf_drop_function(doc->ctx, func);
+			fz_drop_function(doc->ctx, func);
 		}
 	}
 	fz_catch(doc->ctx)

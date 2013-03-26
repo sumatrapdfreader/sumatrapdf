@@ -1806,6 +1806,9 @@ void pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
 		case FZ_ANNOT_HIGHLIGHT:
 			update_text_markup_appearance(doc, obj, type);
 			break;
+		case FZ_ANNOT_INK:
+			pdf_set_ink_obj_appearance(doc, obj);
+			break;
 		default:
 			break;
 		}

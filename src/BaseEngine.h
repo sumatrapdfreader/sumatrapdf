@@ -213,8 +213,8 @@ public:
     // the box inside PageMediabox that actually contains any relevant content
     // (used for auto-cropping in Fit Content mode, can be PageMediabox)
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
-        (void)target;
         return PageMediabox(pageNo);
+        UNREFERENCED_PARAMETER(target);
     }
 
     // renders a page into a cacheable RenderedBitmap

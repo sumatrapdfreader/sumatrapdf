@@ -545,6 +545,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\res_func.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\res_halftone.c"
 				>
 			</File>

@@ -396,9 +396,9 @@ cbz_load_page(cbz_document *doc, int number)
 
 		data = cbz_read_zip_entry(doc, doc->entry[number].offset, &size);
 
-		if (data[0] == 0xff && data[1] == 0xd8)
+		if (size > 2 && data[0] == 0xff && data[1] == 0xd8)
 			pixmap = fz_load_jpeg(ctx, data, size);
-		else if (memcmp(data, "\211PNG\r\n\032\n", 8) == 0)
+		else if (size > 8 && memcmp(data, "\211PNG\r\n\032\n", 8) == 0)
 			pixmap = fz_load_png(ctx, data, size);
 		else
 			fz_throw(ctx, "unknown image format");

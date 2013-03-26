@@ -267,7 +267,9 @@ void fz_free_hash(fz_context *ctx, fz_hash_table *table);
 
 void *fz_hash_find(fz_context *ctx, fz_hash_table *table, void *key);
 void *fz_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val);
+void *fz_hash_insert_with_pos(fz_context *ctx, fz_hash_table *table, void *key, void *val, unsigned *pos);
 void fz_hash_remove(fz_context *ctx, fz_hash_table *table, void *key);
+void fz_hash_remove_fast(fz_context *ctx, fz_hash_table *table, void *key, unsigned pos);
 
 int fz_hash_len(fz_context *ctx, fz_hash_table *table);
 void *fz_hash_get_key(fz_context *ctx, fz_hash_table *table, int idx);
@@ -1245,6 +1247,12 @@ void fz_set_markup_annot_quadpoints(fz_interactive *idoc, fz_annot *annot, fz_po
 void fz_set_markup_appearance(fz_interactive *idoc, fz_annot *annot, float color[3], float alpha, float line_thickness, float line_height);
 
 /*
+	fz_set_ink_annot_list: set the details of an ink annotation. All the points of the multiple arcs
+	are carried in a single array, with the counts for each arc held in a secondary array.
+*/
+void fz_set_ink_annot_list(fz_interactive *idoc, fz_annot *annot, fz_point *pts, int *counts, int ncount, float color[3], float thickness);
+
+/*
  * Text buffer.
  *
  * The trm field contains the a, b, c and d coefficients.
@@ -1281,6 +1289,38 @@ void fz_free_text(fz_context *ctx, fz_text *text);
 fz_rect *fz_bound_text(fz_context *ctx, fz_text *text, const fz_matrix *ctm, fz_rect *r);
 fz_text *fz_clone_text(fz_context *ctx, fz_text *old);
 void fz_print_text(fz_context *ctx, FILE *out, fz_text*);
+
+/*
+ * The generic function support.
+ */
+
+typedef struct fz_function_s fz_function;
+
+void fz_eval_function(fz_context *ctx, fz_function *func, float *in, int inlen, float *out, int outlen);
+fz_function *fz_keep_function(fz_context *ctx, fz_function *func);
+void fz_drop_function(fz_context *ctx, fz_function *func);
+unsigned int fz_function_size(fz_function *func);
+#ifndef DEBUG
+void pdf_debug_function(fz_function *func);
+#endif
+
+enum
+{
+	FZ_FN_MAXN = FZ_MAX_COLORS,
+	FZ_FN_MAXM = FZ_MAX_COLORS
+};
+
+struct fz_function_s
+{
+	fz_storable storable;
+	unsigned int size;
+	int m;					/* number of input values */
+	int n;					/* number of output values */
+	void (*evaluate)(fz_context *ctx, fz_function *func, float *in, float *out);
+#ifndef NDEBUG
+	void (*debug)(fz_function *func);
+#endif
+};
 
 /*
  * The shading code uses gouraud shaded triangle meshes.

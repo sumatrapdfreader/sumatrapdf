@@ -36,6 +36,7 @@ EXPORTS
 	fz_chartorune
 	fz_runetochar
 	fz_runelen
+	fz_gen_id
 	fz_getopt
 	fz_parse_xml
 	fz_xml_next
@@ -124,11 +125,14 @@ EXPORTS
 	fz_new_draw_device
 	fz_new_gdiplus_device
 	fz_new_draw_device_with_bbox
+	fz_text_char_at
+	fz_text_char_bbox
 	fz_new_text_device
 	fz_new_text_sheet
 	fz_free_text_sheet
 	fz_new_text_page
 	fz_free_text_page
+	fz_text_analysis
 	fz_new_output_file
 	fz_new_output_buffer
 	fz_printf
@@ -211,7 +215,9 @@ EXPORTS
 	fz_free_hash
 	fz_hash_find
 	fz_hash_insert
+	fz_hash_insert_with_pos
 	fz_hash_remove
+	fz_hash_remove_fast
 	fz_hash_len
 	fz_hash_get_key
 	fz_hash_get_val
@@ -361,12 +367,19 @@ EXPORTS
 	fz_delete_annot
 	fz_set_annot_appearance
 	fz_set_markup_annot_quadpoints
+	fz_set_markup_appearance
+	fz_set_ink_annot_list
 	fz_new_text
 	fz_add_text
 	fz_free_text
 	fz_bound_text
 	fz_clone_text
 	fz_print_text
+	fz_eval_function
+	fz_keep_function
+	fz_drop_function
+	fz_function_size
+	pdf_debug_function
 	fz_keep_shade
 	fz_drop_shade
 	fz_free_shade_imp
@@ -406,6 +419,7 @@ EXPORTS
 	fz_begin_group
 	fz_end_group
 	fz_begin_tile
+	fz_begin_tile_id
 	fz_end_tile
 	fz_apply_transfer_function
 	fz_new_device
@@ -572,10 +586,6 @@ EXPORTS
 	pdf_crypt_length
 	pdf_crypt_key
 	pdf_load_function
-	pdf_eval_function
-	pdf_keep_function
-	pdf_drop_function
-	pdf_function_size
 	pdf_load_colorspace
 	pdf_expand_indexed_pixmap
 	pdf_load_shading
@@ -676,6 +686,7 @@ EXPORTS
 	pdf_has_unsaved_changes
 	pdf_pass_event
 	pdf_update_page
+	pdf_annot_obj_type
 	pdf_poll_changed_annot
 	pdf_focused_widget
 	pdf_first_widget
@@ -692,6 +703,10 @@ EXPORTS
 	pdf_delete_annot
 	pdf_set_annot_appearance
 	pdf_set_markup_annot_quadpoints
+	pdf_set_markup_obj_appearance
+	pdf_set_markup_appearance
+	pdf_set_ink_annot_list
+	pdf_set_ink_obj_appearance
 	pdf_set_doc_event_callback
 	pdf_event_issue_alert
 	pdf_event_issue_print

@@ -759,47 +759,21 @@ void pdfapp_gotopage(pdfapp_t *app, int number)
 	pdfapp_showpage(app, 1, 1, 1, 0);
 }
 
-static fz_text_char textcharat(fz_text_page *page, int idx)
-{
-	static fz_text_char emptychar = { {0,0,0,0}, ' ' };
-	fz_text_block *block;
-	fz_text_line *line;
-	fz_text_span *span;
-	int ofs = 0;
-	for (block = page->blocks; block < page->blocks + page->len; block++)
-	{
-		for (line = block->lines; line < block->lines + block->len; line++)
-		{
-			for (span = line->spans; span < line->spans + line->len; span++)
-			{
-				if (idx < ofs + span->len)
-					return span->text[idx - ofs];
-				/* pseudo-newline */
-				if (span + 1 == line->spans + line->len)
-				{
-					if (idx == ofs + span->len)
-						return emptychar;
-					ofs++;
-				}
-				ofs += span->len;
-			}
-		}
-	}
-	return emptychar;
-}
-
 static int textlen(fz_text_page *page)
 {
 	fz_text_block *block;
 	fz_text_line *line;
-	fz_text_span *span;
 	int len = 0;
 	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			for (span = line->spans; span < line->spans + line->len; span++)
+			int span_num;
+			for (span_num = 0; span_num < line->len; span_num++)
+			{
+				fz_text_span *span = line->spans[span_num];
 				len += span->len;
+			}
 			len++; /* pseudo-newline */
 		}
 	}
@@ -808,12 +782,14 @@ static int textlen(fz_text_page *page)
 
 static inline int charat(fz_text_page *page, int idx)
 {
-	return textcharat(page, idx).c;
+	fz_char_and_box cab;
+	return fz_text_char_at(&cab, page, idx)->c;
 }
 
 static inline fz_rect bboxcharat(fz_text_page *page, int idx)
 {
-	return textcharat(page, idx).bbox;
+	fz_char_and_box cab;
+	return fz_text_char_at(&cab, page, idx)->bbox;
 }
 
 void pdfapp_inverthit(pdfapp_t *app)
@@ -1619,7 +1595,6 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	fz_text_page *page = app->page_text;
 	fz_text_block *block;
 	fz_text_line *line;
-	fz_text_span *span;
 	int c, i, p;
 	int seen = 0;
 
@@ -1636,8 +1611,10 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	{
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			for (span = line->spans; span < line->spans + line->len; span++)
+			int span_num;
+			for (span_num = 0; span_num < line->len; span_num++)
 			{
+				fz_text_span *span = line->spans[span_num];
 				if (seen)
 				{
 #ifdef _WIN32
@@ -1652,7 +1629,7 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 
 				for (i = 0; i < span->len; i++)
 				{
-					hitbox = span->text[i].bbox;
+					fz_text_char_bbox(&hitbox, span, i);
 					fz_transform_rect(&hitbox, &ctm);
 					c = span->text[i].c;
 					if (c < 32)
@@ -1665,7 +1642,7 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 					}
 				}
 
-				seen = (seen && span + 1 == line->spans + line->len);
+				seen = (seen && span_num + 1 == line->len);
 			}
 		}
 	}

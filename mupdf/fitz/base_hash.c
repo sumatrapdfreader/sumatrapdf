@@ -101,7 +101,7 @@ fz_free_hash(fz_context *ctx, fz_hash_table *table)
 }
 
 static void *
-do_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val)
+do_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val, unsigned *pos_ptr)
 {
 	fz_hash_entry *ents;
 	unsigned size;
@@ -121,12 +121,19 @@ do_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val)
 			memcpy(ents[pos].key, key, table->keylen);
 			ents[pos].val = val;
 			table->load ++;
+			if (pos_ptr)
+				*pos_ptr = pos;
 			return NULL;
 		}
 
 		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 		{
-			fz_warn(ctx, "assert: overwrite hash slot");
+			/* This is legal, but should happen rarely in the non
+			 * pos_ptr case. */
+			if (pos_ptr)
+				*pos_ptr = pos;
+			else
+				fz_warn(ctx, "assert: overwrite hash slot");
 			return ents[pos].val;
 		}
 
@@ -173,7 +180,7 @@ fz_resize_hash(fz_context *ctx, fz_hash_table *table, int newsize)
 	{
 		if (oldents[i].val)
 		{
-			do_hash_insert(ctx, table, oldents[i].key, oldents[i].val);
+			do_hash_insert(ctx, table, oldents[i].key, oldents[i].val, NULL);
 		}
 	}
 
@@ -214,7 +221,54 @@ fz_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val)
 		fz_resize_hash(ctx, table, table->size * 2);
 	}
 
-	return do_hash_insert(ctx, table, key, val);
+	return do_hash_insert(ctx, table, key, val, NULL);
+}
+
+void *
+fz_hash_insert_with_pos(fz_context *ctx, fz_hash_table *table, void *key, void *val, unsigned *pos)
+{
+	if (table->load > table->size * 8 / 10)
+	{
+		fz_resize_hash(ctx, table, table->size * 2);
+	}
+
+	return do_hash_insert(ctx, table, key, val, pos);
+}
+
+static void
+do_removal(fz_context *ctx, fz_hash_table *table, void *key, unsigned hole)
+{
+	fz_hash_entry *ents = table->ents;
+	unsigned size = table->size;
+	unsigned look, code;
+
+	if (table->lock >= 0)
+		fz_assert_lock_held(ctx, table->lock);
+
+	ents[hole].val = NULL;
+
+	look = hole + 1;
+	if (look == size)
+		look = 0;
+
+	while (ents[look].val)
+	{
+		code = hash(ents[look].key, table->keylen) % size;
+		if ((code <= hole && hole < look) ||
+			(look < code && code <= hole) ||
+			(hole < look && look < code))
+		{
+			ents[hole] = ents[look];
+			ents[look].val = NULL;
+			hole = look;
+		}
+
+		look++;
+		if (look == size)
+			look = 0;
+	}
+
+	table->load --;
 }
 
 void
@@ -223,7 +277,6 @@ fz_hash_remove(fz_context *ctx, fz_hash_table *table, void *key)
 	fz_hash_entry *ents = table->ents;
 	unsigned size = table->size;
 	unsigned pos = hash(key, table->keylen) % size;
-	unsigned hole, look, code;
 
 	if (table->lock >= 0)
 		fz_assert_lock_held(ctx, table->lock);
@@ -238,33 +291,30 @@ fz_hash_remove(fz_context *ctx, fz_hash_table *table, void *key)
 
 		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 		{
-			ents[pos].val = NULL;
-
-			hole = pos;
-			look = (hole + 1) % size;
-
-			while (ents[look].val)
-			{
-				code = hash(ents[look].key, table->keylen) % size;
-				if ((code <= hole && hole < look) ||
-					(look < code && code <= hole) ||
-					(hole < look && look < code))
-				{
-					ents[hole] = ents[look];
-					ents[look].val = NULL;
-					hole = look;
-				}
-
-				look = (look + 1) % size;
-			}
-
-			table->load --;
-
+			do_removal(ctx, table, key, pos);
 			return;
 		}
 
-		pos = (pos + 1) % size;
+		pos++;
+		if (pos == size)
+			pos = 0;
 	}
+}
+
+void
+fz_hash_remove_fast(fz_context *ctx, fz_hash_table *table, void *key, unsigned pos)
+{
+	fz_hash_entry *ents = table->ents;
+
+	if (memcmp(key, ents[pos].key, table->keylen) != 0)
+	{
+		/* The key didn't match! The table must have been rebuilt
+		 * (or the contents moved) in the meantime. Do the removal
+		 * the slow way. */
+		fz_hash_remove(ctx, table, key);
+	}
+	else
+		do_removal(ctx, table, key, pos);
 }
 
 #ifndef NDEBUG

@@ -252,6 +252,7 @@
     <ClCompile Include="..\mupdf\fitz\res_bitmap.c" />
     <ClCompile Include="..\mupdf\fitz\res_colorspace.c" />
     <ClCompile Include="..\mupdf\fitz\res_font.c" />
+    <ClCompile Include="..\mupdf\fitz\res_func.c" />
     <ClCompile Include="..\mupdf\fitz\res_halftone.c" />
     <ClCompile Include="..\mupdf\fitz\res_path.c" />
     <ClCompile Include="..\mupdf\fitz\res_pixmap.c" />

@@ -11,6 +11,7 @@ def generateExports(header, exclude=[]):
 	data = open(header, "r").read()
 	data = re.sub(r"(?sm)^#ifndef NDEBUG\s.*?^#endif", "", data, 0)
 	data = re.sub(r"(?sm)^#ifdef ARCH_ARM\s.*?^#endif", "", data, 0)
+	data = data.replace(" FZ_NORETURN;", ";")
 	functions = re.findall(r"(?sm)^\w+ (?:\w+ )?\*?(\w+)\(.*?\);", data)
 	exports = "\n".join(["\t" + name for name in functions if name not in exclude])
 	return exports

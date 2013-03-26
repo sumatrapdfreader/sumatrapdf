@@ -197,11 +197,19 @@ fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_
 	fz_store *store = ctx->store;
 	fz_store_hash hash = { NULL };
 	int use_hash = 0;
+	unsigned pos;
 
 	if (!store)
 		return NULL;
 
 	fz_var(item);
+
+	if (store->max != FZ_STORE_UNLIMITED && store->max < itemsize)
+	{
+		/* Our item would take up more room than we can ever
+		 * possibly have in the store. Just give up now. */
+		return NULL;
+	}
 
 	/* If we fail for any reason, we swallow the exception and continue.
 	 * All that the above program will see is that we failed to store
@@ -223,6 +231,40 @@ fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_
 
 	type->keep_key(ctx, key);
 	fz_lock(ctx, FZ_LOCK_ALLOC);
+	/* If we can index it fast, put it into the hash table. This serves
+	 * to check whether we have one there already. */
+	if (use_hash)
+	{
+		fz_item *existing;
+
+		fz_try(ctx)
+		{
+			/* May drop and retake the lock */
+			existing = fz_hash_insert_with_pos(ctx, store->hash, &hash, item, &pos);
+		}
+		fz_catch(ctx)
+		{
+			fz_unlock(ctx, FZ_LOCK_ALLOC);
+			fz_free(ctx, item);
+			type->drop_key(ctx, key);
+			return NULL;
+		}
+		if (existing)
+		{
+			/* There was one there already! Take a new reference
+			 * to the existing one, and drop our current one. */
+			if (existing->val->refs > 0)
+				existing->val->refs++;
+			fz_unlock(ctx, FZ_LOCK_ALLOC);
+			fz_free(ctx, item);
+			type->drop_key(ctx, key);
+			return existing->val;
+		}
+	}
+	/* Now bump the ref */
+	if (val->refs > 0)
+		val->refs++;
+	/* If we haven't got an infinite store, check for space within it */
 	if (store->max != FZ_STORE_UNLIMITED)
 	{
 		size = store->size + itemsize;
@@ -231,10 +273,16 @@ fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_
 			/* ensure_space may drop, then retake the lock */
 			if (ensure_space(ctx, size - store->max) == 0)
 			{
-				/* Failed to free any space */
+				/* Failed to free any space. */
+				if (use_hash)
+				{
+					fz_hash_remove_fast(ctx, store->hash, &hash, pos);
+				}
 				fz_unlock(ctx, FZ_LOCK_ALLOC);
 				fz_free(ctx, item);
 				type->drop_key(ctx, key);
+				if (val->refs > 0)
+					val->refs--;
 				return NULL;
 			}
 		}
@@ -247,37 +295,6 @@ fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_
 	item->next = NULL;
 	item->type = type;
 
-	/* If we can index it fast, put it into the hash table */
-	if (use_hash)
-	{
-		fz_item *existing;
-
-		fz_try(ctx)
-		{
-			/* May drop and retake the lock */
-			existing = fz_hash_insert(ctx, store->hash, &hash, item);
-		}
-		fz_catch(ctx)
-		{
-			store->size -= itemsize;
-			fz_unlock(ctx, FZ_LOCK_ALLOC);
-			fz_free(ctx, item);
-			return NULL;
-		}
-		if (existing)
-		{
-			/* Take a new reference */
-			if (existing->val->refs > 0)
-				existing->val->refs++;
-			fz_unlock(ctx, FZ_LOCK_ALLOC);
-			fz_free(ctx, item);
-			type->drop_key(ctx, key);
-			return existing->val;
-		}
-	}
-	/* Now we can never fail, bump the ref */
-	if (val->refs > 0)
-		val->refs++;
 	/* Regardless of whether it's indexed, it goes into the linked list */
 	item->next = store->head;
 	if (item->next)

@@ -111,6 +111,11 @@ void fz_set_markup_appearance(fz_interactive *idoc, fz_annot *annot, float color
 	pdf_set_markup_appearance((pdf_document *)idoc, (pdf_annot *)annot, color, alpha, line_thickness, line_height);
 }
 
+void fz_set_ink_annot_list(fz_interactive *idoc, fz_annot *annot, fz_point *pts, int *counts, int ncount, float color[3], float thickness)
+{
+	pdf_set_ink_annot_list((pdf_document *)idoc, (pdf_annot *)annot, pts, counts, ncount, color, thickness);
+}
+
 void fz_set_doc_event_callback(fz_interactive *idoc, fz_doc_event_cb *event_cb, void *data)
 {
 	pdf_set_doc_event_callback((pdf_document *)idoc, event_cb, data);

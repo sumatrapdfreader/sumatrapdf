@@ -81,7 +81,7 @@ static fz_colorspace *fz_device_lab = &k_device_lab;
 struct separation
 {
 	fz_colorspace *base;
-	pdf_function *tint;
+	fz_function *tint;
 };
 
 static void
@@ -89,7 +89,7 @@ separation_to_rgb(fz_context *ctx, fz_colorspace *cs, float *color, float *rgb)
 {
 	struct separation *sep = cs->data;
 	float alt[FZ_MAX_COLORS];
-	pdf_eval_function(ctx, sep->tint, color, cs->n, alt, sep->base->n);
+	fz_eval_function(ctx, sep->tint, color, cs->n, alt, sep->base->n);
 	sep->base->to_rgb(ctx, sep->base, alt, rgb);
 }
 
@@ -98,7 +98,7 @@ free_separation(fz_context *ctx, fz_colorspace *cs)
 {
 	struct separation *sep = cs->data;
 	fz_drop_colorspace(ctx, sep->base);
-	pdf_drop_function(ctx, sep->tint);
+	fz_drop_function(ctx, sep->tint);
 	fz_free(ctx, sep);
 }
 
@@ -112,7 +112,7 @@ load_separation(pdf_document *xref, pdf_obj *array)
 	pdf_obj *baseobj = pdf_array_get(array, 2);
 	pdf_obj *tintobj = pdf_array_get(array, 3);
 	fz_colorspace *base;
-	pdf_function *tint = NULL;
+	fz_function *tint = NULL;
 	int n;
 
 	fz_var(tint);
@@ -142,12 +142,12 @@ load_separation(pdf_document *xref, pdf_obj *array)
 		cs->to_rgb = separation_to_rgb;
 		cs->free_data = free_separation;
 		cs->data = sep;
-		cs->size += sizeof(struct separation) + (base ? base->size : 0) + pdf_function_size(tint);
+		cs->size += sizeof(struct separation) + (base ? base->size : 0) + fz_function_size(tint);
 	}
 	fz_catch(ctx)
 	{
 		fz_drop_colorspace(ctx, base);
-		pdf_drop_function(ctx, tint);
+		fz_drop_function(ctx, tint);
 		fz_free(ctx, sep);
 		fz_rethrow(ctx);
 	}

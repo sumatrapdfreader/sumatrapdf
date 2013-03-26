@@ -561,6 +561,9 @@
     <ClCompile Include="..\mupdf\fitz\res_font.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\fitz\res_func.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\fitz\res_halftone.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

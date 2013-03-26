@@ -8,43 +8,53 @@ static inline int fz_tolower(int c)
 	return c;
 }
 
-static fz_text_char textcharat(fz_text_page *page, int idx)
+fz_char_and_box *fz_text_char_at(fz_char_and_box *cab, fz_text_page *page, int idx)
 {
-	static fz_text_char emptychar = { {0,0,0,0}, ' ' };
 	fz_text_block *block;
 	fz_text_line *line;
-	fz_text_span *span;
 	int ofs = 0;
 	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			for (span = line->spans; span < line->spans + line->len; span++)
+			int span_num;
+			for (span_num = 0; span_num < line->len; span_num++)
 			{
+				fz_text_span *span = line->spans[span_num];
 				if (idx < ofs + span->len)
-					return span->text[idx - ofs];
-				/* pseudo-newline */
-				if (span + 1 == line->spans + line->len)
 				{
-					if (idx == ofs + span->len)
-						return emptychar;
-					ofs++;
+					cab->c = span->text[idx - ofs].c;
+					fz_text_char_bbox(&cab->bbox, span, idx - ofs);
+					return cab;
 				}
 				ofs += span->len;
 			}
+			/* pseudo-newline */
+			if (idx == 0)
+			{
+				cab->bbox = fz_empty_rect;
+				cab->c = 0;
+				return cab;
+			}
+			ofs++;
 		}
 	}
-	return emptychar;
+	cab->bbox = fz_empty_rect;
+	cab->c = 0;
+	return cab;
 }
 
 static int charat(fz_text_page *page, int idx)
 {
-	return textcharat(page, idx).c;
+	fz_char_and_box cab;
+	return fz_text_char_at(&cab, page, idx)->c;
 }
 
 static fz_rect *bboxat(fz_text_page *page, int idx, fz_rect *bbox)
 {
-	*bbox = textcharat(page, idx).bbox;
+	fz_char_and_box cab;
+	/* FIXME: Nasty extra copy */
+	*bbox = fz_text_char_at(&cab, page, idx)->bbox;
 	return bbox;
 }
 
@@ -52,14 +62,17 @@ static int textlen(fz_text_page *page)
 {
 	fz_text_block *block;
 	fz_text_line *line;
-	fz_text_span *span;
 	int len = 0;
 	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			for (span = line->spans; span < line->spans + line->len; span++)
+			int span_num;
+			for (span_num = 0; span_num < line->len; span_num++)
+			{
+				fz_text_span *span = line->spans[span_num];
 				len += span->len;
+			}
 			len++; /* pseudo-newline */
 		}
 	}
@@ -136,7 +149,6 @@ fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_rect rect, fz_rec
 	fz_rect linebox, charbox;
 	fz_text_block *block;
 	fz_text_line *line;
-	fz_text_span *span;
 	int i, hit_count;
 
 	float x0 = rect.x0;
@@ -150,12 +162,14 @@ fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_rect rect, fz_rec
 	{
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
+			int span_num;
 			linebox = fz_empty_rect;
-			for (span = line->spans; span < line->spans + line->len; span++)
+			for (span_num = 0; span_num < line->len; span_num++)
 			{
+				fz_text_span *span = line->spans[span_num];
 				for (i = 0; i < span->len; i++)
 				{
-					charbox = span->text[i].bbox;
+					fz_text_char_bbox(&charbox, span, i);
 					if (charbox.x1 >= x0 && charbox.x0 <= x1 && charbox.y1 >= y0 && charbox.y0 <= y1)
 					{
 						if (charbox.y0 != linebox.y0 || fz_abs(charbox.x0 - linebox.x1) > 5)
@@ -186,7 +200,6 @@ fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect)
 	fz_rect hitbox;
 	fz_text_block *block;
 	fz_text_line *line;
-	fz_text_span *span;
 	int c, i, seen = 0;
 	char *s;
 
@@ -201,8 +214,10 @@ fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect)
 	{
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			for (span = line->spans; span < line->spans + line->len; span++)
+			int span_num;
+			for (span_num = 0; span_num < line->len; span_num++)
 			{
+				fz_text_span *span = line->spans[span_num];
 				if (seen)
 				{
 					fz_write_buffer_byte(ctx, buffer, '\n');
@@ -212,7 +227,7 @@ fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect)
 
 				for (i = 0; i < span->len; i++)
 				{
-					hitbox = span->text[i].bbox;
+					fz_text_char_bbox(&hitbox, span, i);
 					c = span->text[i].c;
 					if (c < 32)
 						c = '?';
@@ -223,7 +238,7 @@ fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect)
 					}
 				}
 
-				seen = (seen && span + 1 == line->spans + line->len);
+				seen = (seen && span_num + 1 == line->len);
 			}
 		}
 	}

@@ -225,13 +225,7 @@ void pdf_print_crypt(pdf_crypt *crypt);
  * Functions, Colorspaces, Shadings and Images
  */
 
-typedef struct pdf_function_s pdf_function;
-
-pdf_function *pdf_load_function(pdf_document *doc, pdf_obj *ref, int in, int out);
-void pdf_eval_function(fz_context *ctx, pdf_function *func, float *in, int inlen, float *out, int outlen);
-pdf_function *pdf_keep_function(fz_context *ctx, pdf_function *func);
-void pdf_drop_function(fz_context *ctx, pdf_function *func);
-unsigned int pdf_function_size(pdf_function *func);
+fz_function *pdf_load_function(pdf_document *doc, pdf_obj *ref, int in, int out);
 
 fz_colorspace *pdf_load_colorspace(pdf_document *doc, pdf_obj *obj);
 fz_pixmap *pdf_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src);
@@ -639,6 +633,8 @@ void pdf_set_annot_appearance(pdf_document *doc, pdf_annot *annot, fz_rect *rect
 void pdf_set_markup_annot_quadpoints(pdf_document *doc, pdf_annot *annot, fz_point *qp, int n);
 void pdf_set_markup_obj_appearance(pdf_document *doc, pdf_obj *annot, float color[3], float alpha, float line_thickness, float line_height);
 void pdf_set_markup_appearance(pdf_document *doc, pdf_annot *annot, float color[3], float alpha, float line_thickness, float line_height);
+void pdf_set_ink_annot_list(pdf_document *doc, pdf_annot *annot, fz_point *pts, int *counts, int ncount, float color[3], float thickness);
+void pdf_set_ink_obj_appearance(pdf_document *doc, pdf_obj *annot);
 void pdf_set_doc_event_callback(pdf_document *doc, fz_doc_event_cb *event_cb, void *data);
 
 void pdf_event_issue_alert(pdf_document *doc, fz_alert_event *event);
