@@ -163,14 +163,20 @@ static TxtNode *ParseNextNode(TxtParser& parser)
     TxtNode *currNode = NULL;
     int arrayNest = 0;
     for (;;) {
+        if (parser.encounteredError)
+            return NULL;
+
         if (0 == parser.bracketNesting && parser.toParse.Finished())
             return firstNode;
 
         ParseNextToken(parser);
         TokenVal& tok = parser.tok;
 
-        if (TokenError == tok.type)
+        if (TokenError == tok.type) {
+            parser.encounteredError = true;
             return NULL;
+        }
+
         if (TokenString == tok.type || TokenKeyVal == tok.type) {
             TxtNode *tmp = TxtNodeFromToken(parser.allocator, tok);
             if (NULL == firstNode) {
@@ -187,7 +193,11 @@ static TxtNode *ParseNextNode(TxtParser& parser)
                 ++arrayNest;
                 TxtNode *tmp = TxtNodeFromToken(parser.allocator, tok);
                 tmp->child = ParseNextNode(parser);
-                if (!tmp->child) // propagate errors
+                if (tmp->child == NULL) {
+                    // TODO: is it valid?
+                    parser.encounteredError = true;
+                }
+                if (parser.encounteredError)
                     return NULL;
                 if (NULL == firstNode) {
                     firstNode = tmp;
@@ -199,7 +209,11 @@ static TxtNode *ParseNextNode(TxtParser& parser)
             } else {
                 ++parser.bracketNesting;
                 currNode->child = ParseNextNode(parser);
-                if (!currNode->child) // propagate errors
+                // note: it's valid for currNode->child to be NULL. It
+                // corresponds to an empty structure i.e.:
+                // foo [
+                // ]
+                if (parser.encounteredError)
                     return NULL;
             }
         } else {
@@ -210,8 +224,10 @@ static TxtNode *ParseNextNode(TxtParser& parser)
                     return firstNode;
             } else {
                 --parser.bracketNesting;
-                if (parser.bracketNesting < 0) // bad input!
-                    return NULL;
+                if (parser.bracketNesting < 0) {
+                    // bad input!
+                    parser.encounteredError = true;
+                }
                 return firstNode;
             }
         }

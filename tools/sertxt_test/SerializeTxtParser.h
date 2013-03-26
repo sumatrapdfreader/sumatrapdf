@@ -49,6 +49,7 @@ struct TxtParser {
     Token           prevToken;
     TokenVal        tok;
     char            escapeChar;
+    bool            encounteredError;
 
     TxtParser() {
         allocator = new PoolAllocator();
@@ -56,6 +57,7 @@ struct TxtParser {
         bracketNesting = 0;
         escapeChar = 0;
         prevToken = TokenError;
+        encounteredError = false;
         ClearToken(tok);
     }
     ~TxtParser() {

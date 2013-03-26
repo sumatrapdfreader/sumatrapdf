@@ -1,3 +1,41 @@
+nested [
+  [
+    depth = 1.1
+    nested [
+        [
+      depth = 2.1
+         nested [
+        ]
+   ]
+     [
+          depth = 2.2
+  ]
+   ]
+  ]
+     [
+    depth = 1.2
+  ]
+]
+--->
+nested [
+  [
+    depth = 1.1
+    nested [
+      [
+        depth = 2.1
+        nested [
+        ]
+      ]
+      [
+        depth = 2.2
+      ]
+    ]
+  ]
+  [
+    depth = 1.2
+  ]
+]
+---
 app_state [
 favorites [
       [
@@ -49,40 +87,7 @@ foo [
   x = value of me
 ]
 ---
-# why does this fail to parse?
-nested [
-  [
-    depth: 1.1
-    nested = [
-      [
-        depth = 2.1
-        nested [
-        ]
-      ]
-      [
-        depth 2.2
-      ]
-    ]
-  ] [
-    depth : 1.2
-  ]
+foo [
 ]
 --->
-nested [
-  [
-    depth = 1.1
-    nested [
-      [
-        depth = 2.1
-        nested [
-        ]
-      ]
-      [
-        depth = 2.2
-      ]
-    ]
-  ]
-  [
-    depth = 1.2
-  ]
-]
+foo
