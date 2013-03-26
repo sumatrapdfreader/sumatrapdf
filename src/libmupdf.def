@@ -379,7 +379,6 @@ EXPORTS
 	fz_keep_function
 	fz_drop_function
 	fz_function_size
-	pdf_debug_function
 	fz_keep_shade
 	fz_drop_shade
 	fz_free_shade_imp

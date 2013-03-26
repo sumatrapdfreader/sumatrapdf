@@ -296,7 +296,7 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
                         *destRect++ = fz_rect_to_RectD(bbox).Round();
                     }
                 }
-                if (span_num < line->len - 1) {
+                if (span->len > 0 && span_num < line->len - 1 && *dest != ' ') {
                     // TODO: use a Tab instead? (this might be a table)
                     *dest++ = ' ';
                     if (destRect) {

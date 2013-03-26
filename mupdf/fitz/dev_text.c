@@ -833,7 +833,7 @@ do_glyphs_overlap(fz_text_span *span, int i, fz_text_span *span2, int j, int sta
 	return
 		is_same_c(span, i, span2, j) &&
 		// calc_bbox_overlap is too imprecise for small glyphs
-		span->text[i].style->size >= 5 && span2->text[j].style->size >= 5 &&
+		(!start || span->text[i].style->size >= 5 && span2->text[j].style->size >= 5) &&
 		(calc_bbox_overlap(span, i, span2, j) >
 		 // if only a single glyph overlaps, require slightly more overlapping
 		 (start && !is_same_c(span, i + 1, span2, j + 1) ? 0.8f : 0.7f) ||
@@ -1437,7 +1437,7 @@ fz_print_text_page(fz_context *ctx, fz_output *out, fz_text_page *page)
 						fz_printf(out, "%c", utf[i]);
 				}
 				/* SumatraPDF: separate spans with spaces */
-				if (span_num < line->len - 1 && span->text[span->len - 1].c != ' ')
+				if (span_num < line->len - 1 && span->len > 0 && span->text[span->len - 1].c != ' ')
 					fz_printf(out, " ");
 			}
 			fz_printf(out, "\n");

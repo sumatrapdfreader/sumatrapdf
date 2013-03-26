@@ -19,11 +19,11 @@ static bool TestSerializeIni()
     Check(data); // failed to read file
     Settings *s = DeserializeSettings(data, str::Len(data));
     Check(s); // failed to parse file
-    //Check(str::Find(s->advanced->ws, L"\r\n"));
+    Check(str::Find(s->basic->inverseSearchCmdLine, L"\r\n"));
 
     size_t len;
     ScopedMem<char> ser((char *)SerializeSettings(s, &len));
-    Check(str::Len(ser) ==len);
+    Check(str::Len(ser) == len);
     Check(str::Eq(data, ser));
     FreeSettings(s);
 

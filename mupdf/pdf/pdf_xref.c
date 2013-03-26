@@ -341,11 +341,12 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 		xref->table[num].gen = gen;
 		xref->table[num].stm_ofs = stm_ofs;
 		pdf_drop_obj(xref->table[num].obj);
-		xref->table[num].obj = pdf_keep_obj(trailer);
+		xref->table[num].obj = trailer;
 		xref->table[num].type = 'n';
 	}
 	fz_catch(ctx)
 	{
+		pdf_drop_obj(trailer);
 		fz_throw(ctx, "cannot parse compressed xref stream object");
 	}
 
@@ -406,7 +407,6 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 	}
 	fz_catch(ctx)
 	{
-		pdf_drop_obj(trailer);
 		fz_rethrow(ctx);
 	}
 

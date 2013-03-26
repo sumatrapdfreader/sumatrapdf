@@ -1300,7 +1300,7 @@ void fz_eval_function(fz_context *ctx, fz_function *func, float *in, int inlen, 
 fz_function *fz_keep_function(fz_context *ctx, fz_function *func);
 void fz_drop_function(fz_context *ctx, fz_function *func);
 unsigned int fz_function_size(fz_function *func);
-#ifndef DEBUG
+#ifndef NDEBUG
 void pdf_debug_function(fz_function *func);
 #endif
 
