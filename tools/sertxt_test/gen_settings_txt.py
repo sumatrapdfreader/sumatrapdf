@@ -3,7 +3,7 @@ import sys
 sys.path.append("scripts") # assumes is being run as ./tools/sertxt_test/gen_settings_txt.py
 
 import os, util, codecs
-from gen_settings_types import Struct, settings, Field, get_all_structs, field_from_def
+from gen_settings_types import Struct, settings, Field, field_from_def
 
 """
 TODO:
@@ -260,37 +260,57 @@ void Free%(name)s(%(name)s *val)
     FreeStruct((uint8_t*)val, &g%(name)sMetadata);
 }"""
 
+def add_cls(cls, structs):
+    if cls not in structs:
+        structs.append(cls)
+
+# return a list of Struct subclasses that are needed to define val
+def structs_from_top_level_value_rec(struct, structs):
+    assert isinstance(struct, Struct)
+    for field in struct.values:
+        if field.is_array():
+            add_cls(field.val.typ, structs)
+        elif field.is_struct():
+            structs_from_top_level_value_rec(field.val, structs)
+    add_cls(struct.__class__, structs)
+
+def structs_from_top_level_value(val):
+    structs = []
+    structs_from_top_level_value_rec(val, structs)
+    return structs
+
 def gen_top_level_funcs_txt(top_level):
     assert isinstance(top_level, Struct)
     name = top_level.name()
     return top_level_funcs_txt_tmpl % locals()
 
-def gen_txt():
-    dst_dir = settings_src_dir()
-    top_level_val = settings
-
-    structs = get_all_structs()
-
+def gen_for_top_level_val(top_level_val, file_path):
+    structs = structs_from_top_level_value(top_level_val)
     prototypes = gen_prototypes(top_level_val.__class__)
     struct_defs = gen_struct_defs(structs)
-
     structs_metadata = gen_structs_metadata_txt(structs)
-
     top_level_funcs = gen_top_level_funcs_txt(top_level_val)
     filed_names_seq_strings = "#define FIELD_NAMES_SEQ %s\n" % g_field_names.get_all_c_escaped()
+    write_to_file(file_path + ".h",  h_txt_tmpl % locals())
+    write_to_file(file_path + ".cpp", cpp_txt_tmpl % locals())
 
-    write_to_file(os.path.join(dst_dir, "SettingsSumatra.h"),  h_txt_tmpl % locals())
-    write_to_file(os.path.join(dst_dir, "SettingsSumatra.cpp"), cpp_txt_tmpl % locals())
-
+def gen_txt_for_top_level_val(top_level_val, file_path):
     lines = ["; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation"]
     # -1 is a bit hackish, because we elide the name of the top-level struct
     # to make it more readable
     ser_struct(top_level_val, None, lines, -1)
     s = "\n".join(lines)
-    write_to_file_utf8_bom(os.path.join(dst_dir, "data.txt"), s)
+    write_to_file_utf8_bom(file_path, s)
+
+def gen_sumatra_settings():
+    dst_dir = settings_src_dir()
+    top_level_val = settings
+    file_path = os.path.join(dst_dir, "SettingsSumatra")
+    gen_for_top_level_val(top_level_val, file_path)
+    gen_txt_for_top_level_val(top_level_val, os.path.join(dst_dir, "data.txt"))
 
 def main():
-    gen_txt()
+    gen_sumatra_settings()
 
 if __name__ == "__main__":
     main()

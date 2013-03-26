@@ -128,18 +128,12 @@ class Struct(Type):
     c_type_class = ""
     type_enum = "TYPE_STRUCT_PTR"
     fields = []
-    # When generating C struct definitions we need the structs
-    # in the right order (if Bar refers to Foo, Foo must be defined first).
-    # This is a list of all structs in the right order
-    all_structs = []
 
     def __init__(self):
         # fields must be a class variable in Struct's subclass
         self.values = [field_from_def(fd) for fd in self.fields]
 
         cls = self.__class__
-        if cls not in Struct.all_structs:
-            Struct.all_structs.append(cls)
         self.c_type_override = "%s *" % cls.__name__
 
         self.offset = None
@@ -283,8 +277,6 @@ class Field(object):
         if self.is_no_store():
             return "(Type)(%s | TYPE_NO_STORE_MASK)" % type_enum
         return type_enum
-
-def get_all_structs(): return Struct.all_structs
 
 class PaddingSettings(Struct):
     fields =[

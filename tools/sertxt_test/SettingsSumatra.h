@@ -11,30 +11,6 @@ struct RectInt {
     int32_t    dy;
 };
 
-struct PaddingSettings {
-    uint16_t    top;
-    uint16_t    bottom;
-    uint16_t    left;
-    uint16_t    right;
-    uint16_t    spaceX;
-    uint16_t    spaceY;
-};
-
-struct ForwardSearch {
-    int32_t     highlightOffset;
-    int32_t     highlightWidth;
-    int32_t     highlightPermanent;
-    uint32_t    highlightColor;
-    bool        enableTexEnhancements;
-};
-
-struct Fav {
-    const char *    name;
-    int32_t         pageNo;
-    const char *    pageLabel;
-    int32_t         menuId;
-};
-
 struct BasicSettings {
     bool            globalPrefsOnly;
     const char *    currLanguage;
@@ -60,6 +36,23 @@ struct BasicSettings {
     uint64_t        lastPrefUpdate;
 };
 
+struct PaddingSettings {
+    uint16_t    top;
+    uint16_t    bottom;
+    uint16_t    left;
+    uint16_t    right;
+    uint16_t    spaceX;
+    uint16_t    spaceY;
+};
+
+struct ForwardSearch {
+    int32_t     highlightOffset;
+    int32_t     highlightWidth;
+    int32_t     highlightPermanent;
+    uint32_t    highlightColor;
+    bool        enableTexEnhancements;
+};
+
 struct AdvancedSettings {
     bool                 traditionalEbookUI;
     bool                 escToExit;
@@ -69,6 +62,13 @@ struct AdvancedSettings {
     PaddingSettings *    pagePadding;
     ForwardSearch *      forwardSearch;
     const WCHAR *        ws;
+};
+
+struct Fav {
+    const char *    name;
+    int32_t         pageNo;
+    const char *    pageLabel;
+    int32_t         menuId;
 };
 
 struct AppState {
