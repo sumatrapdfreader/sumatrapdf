@@ -145,7 +145,7 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
     return data;
 }
 
-uint8_t *Deserialize(const uint8_t *data, int dataSize, StructMetadata *def, const char *fieldNamesSeq)
+uint8_t *Deserialize(char *data, int dataSize, StructMetadata *def, const char *fieldNamesSeq)
 {
     CrashIf(!data); // TODO: where to get defaults from?
     CrashIf(str::Len((const char *)data) != (size_t)dataSize);

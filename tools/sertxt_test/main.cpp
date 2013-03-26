@@ -18,7 +18,8 @@ static void TestParseSumatraSettings()
     parser.toParse.Init(s, fileSize);
     bool ok = ParseTxt(parser);
     if (!ok)
-        printf("%s", "failed to parse");
+        printf("failed to parse \n'%s'\n", s);
+    free(s);
 }
 
 static bool TestString(const char *s, char *expected)
