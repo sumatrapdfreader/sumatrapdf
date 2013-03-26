@@ -93,21 +93,21 @@ static void TestSettingsDeserialize()
         printf("failed to load '%s'", path);
         return;
     }
-    char *sCopy = str::Dup(s);
-    Settings *settings = DeserializeSettings((const uint8_t *)s, (int)fileSize);
-    if (!str::Eq(sCopy, s)) {
-        printf("DeserializeSettings modified const argument!\n");
+    Settings *settings = DeserializeSettings(s, (int)fileSize);
+    if (!settings) {
+        printf("failed to parse\n'%s'\n", s);
+        return;
     }
     int serializedLen;
     char *s2 = (char*)SerializeSettings(settings, &serializedLen);
     s2 += 3; // skip utf8 bom
-    char *toFree = sCopy;
-    if (str::EqN(sCopy, UTF8_BOM, 3))
-        sCopy += 3;
+    char *toFree = s;
+    if (str::EqN(s, UTF8_BOM, 3))
+        s += 3;
     str::NormalizeNewlinesInPlace(s2);
-    str::NormalizeNewlinesInPlace(sCopy);
-    if (!str::Eq(sCopy, s2)) {
-        printf("'%s'\n != \n'%s'\n", sCopy, s2);
+    str::NormalizeNewlinesInPlace(s);
+    if (!str::Eq(s, s2)) {
+        printf("'%s'\n != \n'%s'\n", s, s2);
     }
     free(toFree);
     FreeSettings(settings);

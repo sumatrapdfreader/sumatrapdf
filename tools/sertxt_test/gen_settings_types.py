@@ -22,8 +22,11 @@ def is_valid_string(val):
 class Type(object):
     def __init__(self, def_val):
         self.c_type_override = None
-        self.val = def_val
-        assert self.is_valid_val(def_val), "%s is not a valid value of %s" % (str(self.val), str(self))
+        self.set_val(def_val)
+
+    def set_val(self, val):
+        assert self.is_valid_val(val), "%s is not a valid value of %s" % (str(self.val), str(self))
+        self.val = val
 
     def c_type(self):
         if self.c_type_override != None:
@@ -102,6 +105,18 @@ class Float(Type):
     def is_valid_val(self, val):
         return type(val) in (types.IntType, types.LongType, types.FloatType)
 
+def field_from_def(field_def):
+    flags = 0
+    assert len(field_def) >= 2 and len(field_def) <= 3
+    if len(field_def) > 2:
+        (name, typ_val, flags) = field_def
+    else:
+        (name, typ_val) = field_def
+
+    assert isinstance(name, type(""))
+    assert isinstance(typ_val, Type)
+    return Field(name, typ_val, flags)
+
 # struct is just a base class
 # subclasses should have class instance fields which is a list of tuples:
 # defining name and type of the struct members:
@@ -113,43 +128,70 @@ class Struct(Type):
     c_type_class = ""
     type_enum = "TYPE_STRUCT_PTR"
     fields = []
+    # When generating C struct definitions we need the structs
+    # in the right order (if Bar refers to Foo, Foo must be defined first).
+    # This is a list of all structs in the right order
+    all_structs = []
 
     def __init__(self):
-        global g_all_structs
-
-        self.values = []
         # fields must be a class variable in Struct's subclass
-        for field_def in self.fields:
-            flags = 0
-            assert len(field_def) >= 2 and len(field_def) <= 3
-            if len(field_def) > 2:
-                (name, typ_val, flags) = field_def
-            else:
-                (name, typ_val) = field_def
-
-            assert isinstance(name, type(""))
-            assert isinstance(typ_val, Type)
-            self.values.append(Field(name, typ_val, flags))
+        self.values = [field_from_def(fd) for fd in self.fields]
 
         cls = self.__class__
-        if cls not in g_all_structs:
-            g_all_structs.append(cls)
+        if cls not in Struct.all_structs:
+            Struct.all_structs.append(cls)
         self.c_type_override = "%s *" % cls.__name__
 
         self.offset = None
 
-    def get_max_field_type_len(self):
+    @classmethod
+    def get_max_field_type_len(cls):
         max_len = 0
-        for v in self.values:
-            if len(v.c_type()) > max_len:
-                max_len = len(v.c_type())
+        for field_def in cls.fields:
+            def_val = field_def[1]
+            c_type = def_val.c_type()
+            if len(c_type) > max_len:
+                max_len = len(c_type)
         return max_len + 3
+
+    """
+    @classmethod
+    def get_max_field_enum_len(cls):
+        max_len = 0
+        for field_def in cls.fields:
+            def_val = field_def[1]
+            max_len = max(max_len, len(def_val.get_typ_enum()))
+        return max_len + 1
+"""
 
     def is_valid_val(self, val):
         return issubclass(val, Struct)
 
     def name(self):
         return self.__class__.__name__
+
+    def as_str(self):
+        s = str(self) + "\n"
+        for v in self.values:
+            if isinstance(v, Field):
+                s += "%s: %s\n" % (v.name, str(v.val))
+        return s
+
+    def __setattr__(self, name, value):
+        # special-case self.values, which we refer to
+        if name == "values":
+            object.__setattr__(self, name, value)
+            return
+
+        for field in self.values:
+            if field.name == name:
+                obj = str(self)
+                obj = obj.replace("<gen_settings_types.", "")
+                obj = obj.replace("object at" , "@")
+                #print("on %s setting '%s' to '%s'" % (obj, name, value))
+                field.set_val(value)
+                return
+        object.__setattr__(self, name, value)
 
 class Array(Type):
     c_type_class = ""
@@ -168,10 +210,7 @@ class Array(Type):
                 print(self.typ)
                 raise
 
-        cls = typ
-        if cls not in g_all_structs:
-            g_all_structs.append(cls)
-        self.c_type_override = "sertxt::ListNode<%s> *" % cls.__name__
+        self.c_type_override = "sertxt::ListNode<%s> *" % typ.__name__
 
         self.offset = None
 
@@ -184,11 +223,6 @@ class Array(Type):
         except:
             print(self.typ)
             raise
-
-# When generating C struct definitions we need the structs
-# in the right order (if Bar refers to Foo, Foo must be defined first).
-# This is a list of all structs in the right order
-g_all_structs = []
 
 # those are bit flags
 NoStore = 1
@@ -207,7 +241,6 @@ class Field(object):
             self.val = typ_val
         else:
             self.val = typ_val.val
-        self._serialized = None
 
     def c_type(self):
         return self.typ.c_type()
@@ -239,13 +272,19 @@ class Field(object):
     def is_array(self):
         return type(self.typ) == Array
 
+    def set_val(self, val):
+        # Note: we don't support this for struct or arrays
+        assert not (self.is_struct() or self.is_array())
+        assert self.typ.is_valid_val(val)
+        self.val = val
+
     def get_typ_enum(self):
         type_enum = self.typ.get_type_typ_enum()
         if self.is_no_store():
             return "(Type)(%s | TYPE_NO_STORE_MASK)" % type_enum
         return type_enum
 
-def GetAllStructs(): return g_all_structs
+def get_all_structs(): return Struct.all_structs
 
 class PaddingSettings(Struct):
     fields =[
@@ -276,9 +315,9 @@ class RectInt(Struct):
 
 class Fav(Struct):
     fields = [
-        ("name", String("favorite name")),
+        ("name", String(None)),
         ("pageNo", I32(0)),
-        ("pageLabel", String("favorite label")),
+        ("pageLabel", String(None)),
         ("menuId", I32(0), NoStore),
     ]
 
@@ -323,14 +362,27 @@ class AdvancedSettings(Struct):
         ("forwardSearch", ForwardSearch()),
 
         # TODO: just for testing
-        ("s", String("Hello")),
-        ("defaultZoom", Float(-1)),
         ("ws", WString("A wide string")),
     ]
 
+fav1 = Fav()
+fav1.name = "my first fav"
+fav1.pageNo = 22
+fav1.pageLabel = "my label for first fav"
+
+fav2 = Fav()
+fav2.name = "my second fav"
+fav2.pageNo = 13
+fav2.pageLabel = "my label for second fav"
+
+fav3 = Fav()
+fav3.name = "third fav"
+fav3.pageNo = 3
+fav3.pageLabel = "my label for third fav"
+
 class AppState(Struct):
     fields = [
-        ("favorites", Array(Fav, [Fav()]))
+        ("favorites", Array(Fav, [fav1, fav2, fav3]))
     ]
 
 # TODO: merge basic/advanced into one?
@@ -339,9 +391,6 @@ class Settings(Struct):
         ("basic", BasicSettings()),
         ("advanced", AdvancedSettings()),
         ("appState", AppState()),
-        # TODO: just for testing
-        #Array("intArray", I32, [I32("", 1), I32("", 3)]),
     ]
 
 settings = Settings()
-version = "2.3"

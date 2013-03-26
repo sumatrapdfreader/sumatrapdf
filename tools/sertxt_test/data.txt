@@ -45,16 +45,24 @@ advanced [
     highlight_color: #6581ff
     enable_tex_enhancements: false
   ]
-  s: Hello
-  default_zoom: -1
   ws: A wide string
 ]
 app_state [
   favorites [
     [
-      name: favorite name
-      page_no: 0
-      page_label: favorite label
+        name: my first fav
+        page_no: 22
+        page_label: my label for first fav
+    ]
+    [
+        name: my second fav
+        page_no: 13
+        page_label: my label for second fav
+    ]
+    [
+        name: third fav
+        page_no: 3
+        page_label: my label for third fav
     ]
   ]
 ]

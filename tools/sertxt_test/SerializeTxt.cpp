@@ -3,8 +3,6 @@
 
 #include "BaseUtil.h"
 #include "SerializeTxt.h"
-
-#include "BitManip.h"
 #include "SerializeTxtParser.h"
 
 namespace sertxt {
@@ -474,20 +472,17 @@ Error:
     return NULL;
 }
 
-// a serialized format is a linear chunk of memory with pointers
-// replaced with offsets from the beginning of the memory (base)
-// to deserialize, we malloc() each struct and replace offsets
-// with pointers to those newly allocated structs
-uint8_t* Deserialize(const uint8_t *data, int dataSize, StructMetadata *def, const char *fieldNamesSeq)
+// data is in text format. we might modify it in place
+uint8_t* Deserialize(char *data, int dataSize, StructMetadata *def, const char *fieldNamesSeq)
 {
     if (!data)
         return NULL;
     DecodeState ds;
-    if (dataSize >= 3 && str::EqN((const char*)data, UTF8_BOM, 3)) {
+    if (dataSize >= 3 && str::EqN(data, UTF8_BOM, 3)) {
         data += 3;
         dataSize -= 3;
     }
-    ds.parser.toParse.Init((char*)data, (size_t)dataSize);
+    ds.parser.toParse.Init(data, (size_t)dataSize);
     bool ok = ParseTxt(ds.parser);
     if (!ok)
         return NULL;

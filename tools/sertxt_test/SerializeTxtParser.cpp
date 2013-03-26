@@ -13,8 +13,7 @@ foo [
   key: val
   k2 [
     val
-    mulit-line\
-values are possible
+    mulit-line values are possible
   ]
 ]
 

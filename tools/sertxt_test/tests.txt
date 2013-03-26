@@ -52,11 +52,11 @@ foo [
 # why does this fail to parse?
 nested [
   [
-    depth : 1.1
+    depth: 1.1
     nested = [
       [
         depth = 2.1
-        nested: [
+        nested [
         ]
       ]
       [

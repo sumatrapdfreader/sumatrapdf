@@ -48,11 +48,13 @@ struct TxtParser {
     int             bracketNesting; // nesting level of '[', ']'
     Token           prevToken;
     TokenVal        tok;
+    char            escapeChar;
 
     TxtParser() {
         allocator = new PoolAllocator();
         firstNode = NULL;
         bracketNesting = 0;
+        escapeChar = 0;
         prevToken = TokenError;
         ClearToken(tok);
     }

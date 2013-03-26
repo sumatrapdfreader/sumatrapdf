@@ -4,19 +4,11 @@
 #ifndef SettingsSumatra_h
 #define SettingsSumatra_h
 
-struct Fav {
-    const char *    name;
-    int32_t         pageNo;
-    const char *    pageLabel;
-    int32_t         menuId;
-};
-
-struct ForwardSearch {
-    int32_t     highlightOffset;
-    int32_t     highlightWidth;
-    int32_t     highlightPermanent;
-    uint32_t    highlightColor;
-    bool        enableTexEnhancements;
+struct RectInt {
+    int32_t    x;
+    int32_t    y;
+    int32_t    dx;
+    int32_t    dy;
 };
 
 struct PaddingSettings {
@@ -28,28 +20,19 @@ struct PaddingSettings {
     uint16_t    spaceY;
 };
 
-struct RectInt {
-    int32_t    x;
-    int32_t    y;
-    int32_t    dx;
-    int32_t    dy;
+struct ForwardSearch {
+    int32_t     highlightOffset;
+    int32_t     highlightWidth;
+    int32_t     highlightPermanent;
+    uint32_t    highlightColor;
+    bool        enableTexEnhancements;
 };
 
-struct AppState {
-    sertxt::ListNode<Fav> *    favorites;
-};
-
-struct AdvancedSettings {
-    bool                 traditionalEbookUI;
-    bool                 escToExit;
-    uint32_t             textColor;
-    uint32_t             pageColor;
-    uint32_t             mainWindowBackground;
-    PaddingSettings *    pagePadding;
-    ForwardSearch *      forwardSearch;
-    const char *         s;
-    float                defaultZoom;
-    const WCHAR *        ws;
+struct Fav {
+    const char *    name;
+    int32_t         pageNo;
+    const char *    pageLabel;
+    int32_t         menuId;
 };
 
 struct BasicSettings {
@@ -77,13 +60,28 @@ struct BasicSettings {
     uint64_t        lastPrefUpdate;
 };
 
+struct AdvancedSettings {
+    bool                 traditionalEbookUI;
+    bool                 escToExit;
+    uint32_t             textColor;
+    uint32_t             pageColor;
+    uint32_t             mainWindowBackground;
+    PaddingSettings *    pagePadding;
+    ForwardSearch *      forwardSearch;
+    const WCHAR *        ws;
+};
+
+struct AppState {
+    sertxt::ListNode<Fav> *    favorites;
+};
+
 struct Settings {
     BasicSettings *       basic;
     AdvancedSettings *    advanced;
     AppState *            appState;
 };
 
-Settings *DeserializeSettings(const uint8_t *data, int dataLen);
+Settings *DeserializeSettings(const char *data, int dataLen);
 uint8_t *SerializeSettings(Settings *, int *dataLenOut);
 void FreeSettings(Settings *);
 

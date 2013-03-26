@@ -87,8 +87,6 @@ solution "everything"
       "tools/sertxt_test/*.cpp",
       "tools/sertxt_test/*.txt",
       "src/utils/BaseUtil*",
-      "src/utils/BitManip.h",
-      "src/utils/Dict*",
       "src/utils/FileUtil*",
       "src/utils/StrSlice*",
       "src/utils/StrUtil*",
