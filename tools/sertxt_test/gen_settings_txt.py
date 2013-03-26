@@ -29,8 +29,6 @@ via a Compact flag (like NoStore flag)
 
 g_script_dir = os.path.realpath(os.path.dirname(__file__))
 
-g_field_names = util.SeqStrings()
-
 def settings_src_dir():
     return util.verify_path_exists(g_script_dir)
 
@@ -62,6 +60,9 @@ def name2name(s):
             res += c
             n_upper = 0
     return res
+
+# kind of ugly
+g_escape_char = chr(0)
 
 def prefix_str(indent): return "  " * indent
 
@@ -197,8 +198,7 @@ FieldMetadata g${name}FieldMetadata[] = {
     { $name_off, $offset, $type, &g${name}StructMetadata },
 };
 """
-def gen_struct_fields_txt(stru_cls):
-    global g_field_names
+def gen_struct_fields_txt(stru_cls, field_names):
     #assert isinstance(stru, Struct)
     struct_name = stru_cls.__name__
     lines = ["FieldMetadata g%(struct_name)sFieldMetadata[] = {" % locals()]
@@ -218,7 +218,7 @@ def gen_struct_fields_txt(stru_cls):
         typ_enum = field.get_typ_enum() + ","
         typ_enum = typ_fmt % typ_enum
         settings_name = name2name(field_name)
-        name_off = g_field_names.get_offset(settings_name)
+        name_off = field_names.get_offset(settings_name)
         offset = "of(%(struct_name)s, %(field_name)s)" % locals()
         if field.is_struct() or field.is_array():
             field_type = field.typ.name()
@@ -231,13 +231,13 @@ def gen_struct_fields_txt(stru_cls):
 """
 StructMetadata g${name}StructMetadata = { $size, $nFields, $fields };
 """
-def gen_structs_metadata_txt(structs):
+def gen_structs_metadata_txt(structs, field_names):
     lines = []
     for stru_cls in structs:
         struct_name = stru_cls.__name__
         nFields = len(stru_cls.fields)
         fields = "&g%sFieldMetadata[0]" % struct_name
-        lines += gen_struct_fields_txt(stru_cls)
+        lines += gen_struct_fields_txt(stru_cls, field_names)
         lines += ["StructMetadata g%(struct_name)sMetadata = { sizeof(%(struct_name)s), %(nFields)d, %(fields)s };\n" % locals()]
     return "\n".join(lines)
 
@@ -288,9 +288,10 @@ def gen_for_top_level_val(top_level_val, file_path):
     structs = structs_from_top_level_value(top_level_val)
     prototypes = gen_prototypes(top_level_val.__class__)
     struct_defs = gen_struct_defs(structs)
-    structs_metadata = gen_structs_metadata_txt(structs)
+    field_names = util.SeqStrings()
+    structs_metadata = gen_structs_metadata_txt(structs, field_names)
     top_level_funcs = gen_top_level_funcs_txt(top_level_val)
-    filed_names_seq_strings = "#define FIELD_NAMES_SEQ %s\n" % g_field_names.get_all_c_escaped()
+    filed_names_seq_strings = "#define FIELD_NAMES_SEQ %s\n" % field_names.get_all_c_escaped()
     write_to_file(file_path + ".h",  h_txt_tmpl % locals())
     write_to_file(file_path + ".cpp", cpp_txt_tmpl % locals())
 
