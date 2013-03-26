@@ -45,7 +45,6 @@ advanced [
     highlight_color: #6581ff
     enable_tex_enhancements: false
   ]
-  ws: A wide string
 ]
 app_state [
   favorites [

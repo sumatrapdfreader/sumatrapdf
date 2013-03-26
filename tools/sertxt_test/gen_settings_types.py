@@ -105,18 +105,6 @@ class Float(Type):
     def is_valid_val(self, val):
         return type(val) in (types.IntType, types.LongType, types.FloatType)
 
-def field_from_def(field_def):
-    flags = 0
-    assert len(field_def) >= 2 and len(field_def) <= 3
-    if len(field_def) > 2:
-        (name, typ_val, flags) = field_def
-    else:
-        (name, typ_val) = field_def
-
-    assert isinstance(name, type(""))
-    assert isinstance(typ_val, Type)
-    return Field(name, typ_val, flags)
-
 # struct is just a base class
 # subclasses should have class instance fields which is a list of tuples:
 # defining name and type of the struct members:
@@ -131,7 +119,7 @@ class Struct(Type):
 
     def __init__(self):
         # fields must be a class variable in Struct's subclass
-        self.values = [field_from_def(fd) for fd in self.fields]
+        self.values = [Field(f.name, f.typ, f.flags) for f in self.fields]
         self.c_type_override = "%s *" % self.name()
         self.offset = None
 
@@ -174,15 +162,8 @@ class Array(Type):
         self.typ = typ
         self.values = values
         for v in values:
-            try:
-                assert self.is_valid_val(v)
-            except:
-                print(v)
-                print(self.typ)
-                raise
-
+            assert self.is_valid_val(v)
         self.c_type_override = "sertxt::ListNode<%s> *" % typ.__name__
-
         self.offset = None
 
     def is_valid_val(self, val):
@@ -199,7 +180,7 @@ class Array(Type):
 NoStore = 1
 
 class Field(object):
-    def __init__(self, name, typ_val, flags):
+    def __init__(self, name, typ_val, flags=0):
         self.name = name
         self.typ = typ_val
         self.flags = flags
@@ -257,81 +238,78 @@ class Field(object):
 
 class PaddingSettings(Struct):
     fields =[
-        ("top", U16(2)),
-        ("bottom", U16(2)),
-        ("left", U16(4)),
-        ("right", U16(4)),
-        ("spaceX", U16(4)),
-        ("spaceY", U16(4))
+        Field("top", U16(2)),
+        Field("bottom", U16(2)),
+        Field("left", U16(4)),
+        Field("right", U16(4)),
+        Field("spaceX", U16(4)),
+        Field("spaceY", U16(4))
     ]
 
 class ForwardSearch(Struct):
     fields = [
-        ("highlightOffset", I32(0)),
-        ("highlightWidth", I32(15)),
-        ("highlightPermanent", I32(0)),
-        ("highlightColor", Color(0x6581FF)),
-        ("enableTexEnhancements", Bool(False)),
+        Field("highlightOffset", I32(0)),
+        Field("highlightWidth", I32(15)),
+        Field("highlightPermanent", I32(0)),
+        Field("highlightColor", Color(0x6581FF)),
+        Field("enableTexEnhancements", Bool(False)),
 ]
 
 class RectInt(Struct):
     fields = [
-        ("x", I32(0)),
-        ("y", I32(0)),
-        ("dx", I32(0)),
-        ("dy", I32(0)),
+        Field("x", I32(0)),
+        Field("y", I32(0)),
+        Field("dx", I32(0)),
+        Field("dy", I32(0)),
     ]
 
 class Fav(Struct):
     fields = [
-        ("name", String(None)),
-        ("pageNo", I32(0)),
-        ("pageLabel", String(None)),
-        ("menuId", I32(0), NoStore),
+        Field("name", String(None)),
+        Field("pageNo", I32(0)),
+        Field("pageLabel", String(None)),
+        Field("menuId", I32(0), NoStore),
     ]
 
 class BasicSettings(Struct):
     fields = [
-        ("globalPrefsOnly", Bool(False)),
-        ("currLanguage", String(None)), # auto-detect
-        ("toolbarVisible", Bool(True)),
-        ("pdfAssociateDontAsk", Bool(False)),
-        ("pdfAssociateDoIt", Bool(False)),
-        ("checkForUpdates", Bool(True)),
-        ("rememberMruFiles", Bool(True)),
+        Field("globalPrefsOnly", Bool(False)),
+        Field("currLanguage", String(None)), # auto-detect
+        Field("toolbarVisible", Bool(True)),
+        Field("pdfAssociateDontAsk", Bool(False)),
+        Field("pdfAssociateDoIt", Bool(False)),
+        Field("checkForUpdates", Bool(True)),
+        Field("rememberMruFiles", Bool(True)),
         # TODO: useSystemColorScheme obsolete by textColor/pageColor ?
-        ("useSystemColorScheme", Bool(False)),
-        ("inverseSearchCmdLine", String(None)),
-        ("versionToSkip", String(None)),
-        ("lastUpdateTime", String(None)),
-        ("defaultDisplayMode", U16(0)),  # DM_AUTOMATIC
+        Field("useSystemColorScheme", Bool(False)),
+        Field("inverseSearchCmdLine", WString(None)),
+        Field("versionToSkip", String(None)),
+        Field("lastUpdateTime", String(None)),
+        Field("defaultDisplayMode", U16(0)),  # DM_AUTOMATIC
         # -1 == Fit Page
-        ("defaultZoom", Float(-1)),
-        ("windowState", I32(1)), # WIN_STATE_NORMAL
-        ("windowPos", RectInt()),
-        ("tocVisible", Bool(True)),
-        ("favVisible", Bool(False)),
-        ("sidebarDx", I32(0)),
-        ("tocDy", I32(0)),
-        ("showStartPage", Bool(True)),
-        ("openCountWeek", I32(0)),
-        ("lastPrefUpdate", U64(0)),
+        Field("defaultZoom", Float(-1)),
+        Field("windowState", I32(1)), # WIN_STATE_NORMAL
+        Field("windowPos", RectInt()),
+        Field("tocVisible", Bool(True)),
+        Field("favVisible", Bool(False)),
+        Field("sidebarDx", I32(0)),
+        Field("tocDy", I32(0)),
+        Field("showStartPage", Bool(True)),
+        Field("openCountWeek", I32(0)),
+        Field("lastPrefUpdate", U64(0)),
     ]
 
 class AdvancedSettings(Struct):
     fields = [
-        ("traditionalEbookUI", Bool(True)),
-        ("escToExit", Bool(False)),
+        Field("traditionalEbookUI", Bool(True)),
+        Field("escToExit", Bool(False)),
         # TODO: different for different document types? For example, ebook
         # really needs one just for itself
-        ("textColor", Color(0x0)),      # black
-        ("pageColor", Color(0xffffff)), # white
-        ("mainWindowBackground", Color(0xFFF200)),
-        ("pagePadding", PaddingSettings()),
-        ("forwardSearch", ForwardSearch()),
-
-        # TODO: just for testing
-        ("ws", WString("A wide string")),
+        Field("textColor", Color(0x0)),      # black
+        Field("pageColor", Color(0xffffff)), # white
+        Field("mainWindowBackground", Color(0xFFF200)),
+        Field("pagePadding", PaddingSettings()),
+        Field("forwardSearch", ForwardSearch()),
     ]
 
 fav1 = Fav()
@@ -351,15 +329,15 @@ fav3.pageLabel = "my label for third fav"
 
 class AppState(Struct):
     fields = [
-        ("favorites", Array(Fav, [fav1, fav2, fav3]))
+        Field("favorites", Array(Fav, [fav1, fav2, fav3]))
     ]
 
 # TODO: merge basic/advanced into one?
 class Settings(Struct):
     fields = [
-        ("basic", BasicSettings()),
-        ("advanced", AdvancedSettings()),
-        ("appState", AppState()),
+        Field("basic", BasicSettings()),
+        Field("advanced", AdvancedSettings()),
+        Field("appState", AppState()),
     ]
 
 settings = Settings()

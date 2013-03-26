@@ -12,28 +12,28 @@ struct RectInt {
 };
 
 struct BasicSettings {
-    bool          globalPrefsOnly;
-    const char *  currLanguage;
-    bool          toolbarVisible;
-    bool          pdfAssociateDontAsk;
-    bool          pdfAssociateDoIt;
-    bool          checkForUpdates;
-    bool          rememberMruFiles;
-    bool          useSystemColorScheme;
-    const char *  inverseSearchCmdLine;
-    const char *  versionToSkip;
-    const char *  lastUpdateTime;
-    uint16_t      defaultDisplayMode;
-    float         defaultZoom;
-    int32_t       windowState;
-    RectInt *     windowPos;
-    bool          tocVisible;
-    bool          favVisible;
-    int32_t       sidebarDx;
-    int32_t       tocDy;
-    bool          showStartPage;
-    int32_t       openCountWeek;
-    uint64_t      lastPrefUpdate;
+    bool           globalPrefsOnly;
+    const char *   currLanguage;
+    bool           toolbarVisible;
+    bool           pdfAssociateDontAsk;
+    bool           pdfAssociateDoIt;
+    bool           checkForUpdates;
+    bool           rememberMruFiles;
+    bool           useSystemColorScheme;
+    const WCHAR *  inverseSearchCmdLine;
+    const char *   versionToSkip;
+    const char *   lastUpdateTime;
+    uint16_t       defaultDisplayMode;
+    float          defaultZoom;
+    int32_t        windowState;
+    RectInt *      windowPos;
+    bool           tocVisible;
+    bool           favVisible;
+    int32_t        sidebarDx;
+    int32_t        tocDy;
+    bool           showStartPage;
+    int32_t        openCountWeek;
+    uint64_t       lastPrefUpdate;
 };
 
 struct PaddingSettings {
@@ -61,7 +61,6 @@ struct AdvancedSettings {
     uint32_t           mainWindowBackground;
     PaddingSettings *  pagePadding;
     ForwardSearch *    forwardSearch;
-    const WCHAR *      ws;
 };
 
 struct Fav {

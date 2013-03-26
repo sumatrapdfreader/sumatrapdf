@@ -7,7 +7,7 @@
 
 using namespace sertxt;
 
-#define FIELD_NAMES_SEQ "x\0y\0dx\0dy\0global_prefs_only\0curr_language\0toolbar_visible\0pdf_associate_dont_ask\0pdf_associate_do_it\0check_for_updates\0remember_mru_files\0use_system_color_scheme\0inverse_search_cmd_line\0version_to_skip\0last_update_time\0default_display_mode\0default_zoom\0window_state\0window_pos\0toc_visible\0fav_visible\0sidebar_dx\0toc_dy\0show_start_page\0open_count_week\0last_pref_update\0top\0bottom\0left\0right\0space_x\0space_y\0highlight_offset\0highlight_width\0highlight_permanent\0highlight_color\0enable_tex_enhancements\0traditional_ebook_ui\0esc_to_exit\0text_color\0page_color\0main_window_background\0page_padding\0forward_search\0ws\0name\0page_no\0page_label\0menu_id\0favorites\0basic\0advanced\0app_state\0\0"
+#define FIELD_NAMES_SEQ "x\0y\0dx\0dy\0global_prefs_only\0curr_language\0toolbar_visible\0pdf_associate_dont_ask\0pdf_associate_do_it\0check_for_updates\0remember_mru_files\0use_system_color_scheme\0inverse_search_cmd_line\0version_to_skip\0last_update_time\0default_display_mode\0default_zoom\0window_state\0window_pos\0toc_visible\0fav_visible\0sidebar_dx\0toc_dy\0show_start_page\0open_count_week\0last_pref_update\0top\0bottom\0left\0right\0space_x\0space_y\0highlight_offset\0highlight_width\0highlight_permanent\0highlight_color\0enable_tex_enhancements\0traditional_ebook_ui\0esc_to_exit\0text_color\0page_color\0main_window_background\0page_padding\0forward_search\0name\0page_no\0page_label\0menu_id\0favorites\0basic\0advanced\0app_state\0\0"
 
 #define of offsetof
 FieldMetadata gRectIntFieldMetadata[] = {
@@ -28,7 +28,7 @@ FieldMetadata gBasicSettingsFieldMetadata[] = {
     { 101, of(BasicSettings, checkForUpdates),      TYPE_BOOL,       NULL              },
     { 119, of(BasicSettings, rememberMruFiles),     TYPE_BOOL,       NULL              },
     { 138, of(BasicSettings, useSystemColorScheme), TYPE_BOOL,       NULL              },
-    { 162, of(BasicSettings, inverseSearchCmdLine), TYPE_STR,        NULL              },
+    { 162, of(BasicSettings, inverseSearchCmdLine), TYPE_WSTR,       NULL              },
     { 186, of(BasicSettings, versionToSkip),        TYPE_STR,        NULL              },
     { 202, of(BasicSettings, lastUpdateTime),       TYPE_STR,        NULL              },
     { 219, of(BasicSettings, defaultDisplayMode),   TYPE_U16,        NULL              },
@@ -75,30 +75,29 @@ FieldMetadata gAdvancedSettingsFieldMetadata[] = {
     { 554, of(AdvancedSettings, mainWindowBackground), TYPE_COLOR,      NULL                      },
     { 577, of(AdvancedSettings, pagePadding),          TYPE_STRUCT_PTR, &gPaddingSettingsMetadata },
     { 590, of(AdvancedSettings, forwardSearch),        TYPE_STRUCT_PTR, &gForwardSearchMetadata   },
-    { 605, of(AdvancedSettings, ws),                   TYPE_WSTR,       NULL                      },
 };
 
-StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 8, &gAdvancedSettingsFieldMetadata[0] };
+StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 7, &gAdvancedSettingsFieldMetadata[0] };
 
 FieldMetadata gFavFieldMetadata[] = {
-    { 608, of(Fav, name),      TYPE_STR,                              NULL },
-    { 613, of(Fav, pageNo),    TYPE_I32,                              NULL },
-    { 621, of(Fav, pageLabel), TYPE_STR,                              NULL },
-    { 632, of(Fav, menuId),    (Type)(TYPE_I32 | TYPE_NO_STORE_MASK), NULL },
+    { 605, of(Fav, name),      TYPE_STR,                              NULL },
+    { 610, of(Fav, pageNo),    TYPE_I32,                              NULL },
+    { 618, of(Fav, pageLabel), TYPE_STR,                              NULL },
+    { 629, of(Fav, menuId),    (Type)(TYPE_I32 | TYPE_NO_STORE_MASK), NULL },
 };
 
 StructMetadata gFavMetadata = { sizeof(Fav), 4, &gFavFieldMetadata[0] };
 
 FieldMetadata gAppStateFieldMetadata[] = {
-    { 640, of(AppState, favorites), TYPE_ARRAY, &gFavMetadata },
+    { 637, of(AppState, favorites), TYPE_ARRAY, &gFavMetadata },
 };
 
 StructMetadata gAppStateMetadata = { sizeof(AppState), 1, &gAppStateFieldMetadata[0] };
 
 FieldMetadata gSettingsFieldMetadata[] = {
-    { 650, of(Settings, basic),    TYPE_STRUCT_PTR, &gBasicSettingsMetadata    },
-    { 656, of(Settings, advanced), TYPE_STRUCT_PTR, &gAdvancedSettingsMetadata },
-    { 665, of(Settings, appState), TYPE_STRUCT_PTR, &gAppStateMetadata         },
+    { 647, of(Settings, basic),    TYPE_STRUCT_PTR, &gBasicSettingsMetadata    },
+    { 653, of(Settings, advanced), TYPE_STRUCT_PTR, &gAdvancedSettingsMetadata },
+    { 662, of(Settings, appState), TYPE_STRUCT_PTR, &gAppStateMetadata         },
 };
 
 StructMetadata gSettingsMetadata = { sizeof(Settings), 3, &gSettingsFieldMetadata[0] };

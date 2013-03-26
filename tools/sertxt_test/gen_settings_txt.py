@@ -3,7 +3,7 @@ import sys
 sys.path.append("scripts") # assumes is being run as ./tools/sertxt_test/gen_settings_txt.py
 
 import os, util, codecs
-from gen_settings_types import Struct, settings, Field, field_from_def
+from gen_settings_types import Struct, settings, Field
 
 """
 TODO:
@@ -188,7 +188,7 @@ def gen_struct_def(stru_cls):
     #assert isinstance(stru, Struct)
     name = stru_cls.__name__
     lines = ["struct %s {" % name]
-    rows = [[tup[1].c_type(), tup[0]] for tup in stru_cls.fields]
+    rows = [[field.c_type(), field.name] for field in stru_cls.fields]
     lines += ["    %s  %s;" % (e1, e2) for (e1, e2) in fmt_rows(rows, [FMT_RIGHT])]
     lines += ["};\n"]
     return "\n".join(lines)
@@ -242,13 +242,11 @@ def gen_struct_fields_txt(stru_cls, field_names):
     struct_name = stru_cls.__name__
     lines = ["FieldMetadata g%sFieldMetadata[] = {" % struct_name]
     rows = []
-    for field_def in stru_cls.fields:
-        #assert isinstance(field, Field)
-        field_name = field_def[0]
-        field = field_from_def(field_def)
+    for field in stru_cls.fields:
+        assert isinstance(field, Field)
         typ_enum = field.get_typ_enum()
-        name_off = field_names.get_offset(name2name(field_name))
-        offset = "of(%s, %s)" % (struct_name, field_name)
+        name_off = field_names.get_offset(name2name(field.name))
+        offset = "of(%s, %s)" % (struct_name, field.name)
         val = "NULL"
         if field.is_struct() or field.is_array():
             val = "&g%sMetadata" % field.typ.name()
