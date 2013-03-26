@@ -4,12 +4,12 @@
 #include "StrSlice.h"
 
 enum Token {
+    TokenFinished = 0,  
     TokenArrayStart,   // [
     TokenStructStart,  // foo [
     TokenClose,        // ]
     TokenKeyVal,       // foo: bar
     TokenString,       // foo
-    TokenFinished,
 };
 
 enum TxtNodeType {
@@ -50,7 +50,6 @@ struct TokenVal {
 struct TxtParser {
     Allocator *     allocator;
     str::Slice      toParse;
-    Token           prevToken;
     TokenVal        tok;
     char            escapeChar;
     bool            failed;
@@ -59,12 +58,12 @@ struct TxtParser {
     TxtParser() {
         allocator = new PoolAllocator();
         escapeChar = 0;
-        prevToken = TokenFinished;
         failed = false;
     }
     ~TxtParser() {
         delete allocator;
     }
+    void SetToParse(char *s, size_t sLen);
 };
 
 bool ParseTxt(TxtParser& parser);

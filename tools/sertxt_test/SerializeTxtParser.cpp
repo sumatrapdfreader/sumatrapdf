@@ -53,12 +53,6 @@ static TxtNode *TxtNodeFromToken(Allocator *allocator, TokenVal& tok, TxtNodeTyp
     return node;
 }
 
-inline void ClearToken(TokenVal& tok)
-{
-    ZeroMemory(&tok, sizeof(TokenVal));
-    tok.type = TokenFinished;
-}
-
 static bool IsCommentStartChar(char c)
 {
     return (';' == c ) || ('#' == c);
@@ -70,8 +64,7 @@ static bool IsCommentStartChar(char c)
 static void ParseNextToken(TxtParser& parser)
 {
     TokenVal& tok = parser.tok;
-    parser.prevToken = tok.type;
-    ClearToken(parser.tok);
+    ZeroMemory(&tok, sizeof(TokenVal));
 
     str::Slice& slice = parser.toParse;
 
@@ -232,21 +225,19 @@ Failed:
     parser.failed = true;
 }
 
-bool ParseTxt(TxtParser& parser)
+void TxtParser::SetToParse(char *s, size_t sLen)
 {
-    CrashIf(!parser.allocator);
-    str::Slice& slice = parser.toParse;
-    size_t n = str::NormalizeNewlinesInPlace(slice.begin, slice.end);
-    slice.end = slice.begin + n;
-
-    ClearToken(parser.tok);
-
-    CrashIf(0 != parser.nodes.Count());
+    size_t n = str::NormalizeNewlinesInPlace(s, s + sLen);
+    toParse.Init(s, n);
 
     // we create an implicit array node to hold the nodes we'll parse
-    parser.nodes.Append(AllocTxtNode(parser.allocator, ArrayNode));
-    ParseNodes(parser);
+    CrashIf(0 != nodes.Count());
+    nodes.Append(AllocTxtNode(allocator, ArrayNode));
+}
 
+bool ParseTxt(TxtParser& parser)
+{
+    ParseNodes(parser);
     if (parser.failed)
         return false;
     return true;

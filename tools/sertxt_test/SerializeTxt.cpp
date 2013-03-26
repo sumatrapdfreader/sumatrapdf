@@ -195,16 +195,16 @@ static void *ReadStructPtr(const uint8_t *p)
 class DecodeState {
 public:
     // data being decoded
-    TxtParser parser;
+    TxtParser       parser;
 
-    const char *fieldNamesSeq;
+    const char *    fieldNamesSeq;
 
     // last decoded value
-    uint64_t          u;
-    int64_t           i;
-    float             f;
-    char *            s;
-    int               sLen;
+    uint64_t        u;
+    int64_t         i;
+    float           f;
+    char *          s;
+    int             sLen;
 
     DecodeState() {}
 };
@@ -212,6 +212,7 @@ public:
 // TODO: over-flow detection?
 static bool ParseInt(char *s, char *e, int64_t *iOut)
 {
+    str::TrimWsEnd(s, e);
     int d;
     bool neg = false;
     if (s >= e)
@@ -237,6 +238,8 @@ static bool ParseInt(char *s, char *e, int64_t *iOut)
 
 static bool ParseColor(char *s, char *e, COLORREF *colOut)
 {
+    str::TrimWsEnd(s, e);
+    *e = 0;
     int a, r, g, b;
     if (!str::Parse(s, "#%2x%2x%2x%2x", &a, &r, &g, &b)) {
         a = 0;
@@ -281,6 +284,7 @@ static bool ParseBool(char *s, char *e, bool *bOut)
 // TODO: over-flow detection?
 static bool ParseUInt(char *s, char *e, uint64_t *iOut)
 {
+    str::TrimWsEnd(s, e);
     int d;
     uint64_t i = 0;
     while (s < e) {
@@ -328,7 +332,6 @@ static TxtNode *FindTxtNode(TxtNode *curr, const char *name, size_t nameLen)
     char *nodeName;
     size_t nodeNameLen;
 
-    CrashIf(TextNode == curr->type);
     TxtNode *child;
     TxtNode *found = NULL;
     for (size_t i = 0; i < curr->children->Count(); i++) {
@@ -421,7 +424,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         if (ok)
             WriteStructFloat(structDataPtr, ds.f);
     } else if (TYPE_ARRAY == type) {
-        CrashIf(!fieldDef->def); // array element must be a struct
+        CrashIf(!fieldDef->def); // array elements must be a struct
         if (StructNode != node->type)
             return false;
         TxtNode *child;
@@ -487,7 +490,7 @@ uint8_t* Deserialize(char *data, int dataSize, StructMetadata *def, const char *
         data += 3;
         dataSize -= 3;
     }
-    ds.parser.toParse.Init(data, (size_t)dataSize);
+    ds.parser.SetToParse(data, (size_t)dataSize);
     bool ok = ParseTxt(ds.parser);
     if (!ok)
         return NULL;
