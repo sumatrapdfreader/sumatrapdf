@@ -189,7 +189,7 @@ public:
     T Pop() {
         CrashIf(0 == len);
         T el = At(len - 1);
-        RemoveAt(len - 1);
+        RemoveAtFast(len - 1);
         return el;
     }
 

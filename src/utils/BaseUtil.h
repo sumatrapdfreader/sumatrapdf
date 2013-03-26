@@ -23,6 +23,8 @@
 #endif
 
 #include <stdlib.h>
+
+// TODO: this breaks placement new
 #ifdef DEBUG
 #include <crtdbg.h>
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)

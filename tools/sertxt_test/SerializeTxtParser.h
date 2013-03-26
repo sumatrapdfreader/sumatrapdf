@@ -4,22 +4,34 @@
 #include "StrSlice.h"
 
 enum Token {
-    TokenOpen, // '['
-    TokenClose, // ']'
-    TokenString,
-    TokenKeyVal, // foo: bar
-    TokenError,
+    TokenArrayStart,   // [
+    TokenStructStart,  // foo [
+    TokenClose,        // ]
+    TokenKeyVal,       // foo: bar
+    TokenString,       // foo
+    TokenFinished,
+};
+
+enum TxtNodeType {
+    StructNode,
+    ArrayNode,
+    TextNode,
 };
 
 struct TxtNode {
-    char *      lineStart;
-    char *      valStart;
-    char *      valEnd;
-    char *      keyStart;
-    char *      keyEnd;
+    TxtNodeType     type;
+    Vec<TxtNode*>*  children;
 
-    TxtNode *   next;
-    TxtNode *   child;
+    char *          lineStart;
+    char *          valStart;
+    char *          valEnd;
+    char *          keyStart;
+    char *          keyEnd;
+
+    TxtNode(TxtNodeType tp) {
+        type = tp;
+    }
+    ~TxtNode() { }
 };
 
 struct TokenVal {
@@ -35,30 +47,20 @@ struct TokenVal {
     char *  keyEnd;
 };
 
-inline void ClearToken(TokenVal& tok)
-{
-    ZeroMemory(&tok, sizeof(TokenVal));
-    tok.type = TokenError;
-}
-
 struct TxtParser {
     Allocator *     allocator;
-    TxtNode *       firstNode;
     str::Slice      toParse;
-    int             bracketNesting; // nesting level of '[', ']'
     Token           prevToken;
     TokenVal        tok;
     char            escapeChar;
-    bool            encounteredError;
+    bool            failed;
+    Vec<TxtNode*>   nodes;
 
     TxtParser() {
         allocator = new PoolAllocator();
-        firstNode = NULL;
-        bracketNesting = 0;
         escapeChar = 0;
-        prevToken = TokenError;
-        encounteredError = false;
-        ClearToken(tok);
+        prevToken = TokenFinished;
+        failed = false;
     }
     ~TxtParser() {
         delete allocator;

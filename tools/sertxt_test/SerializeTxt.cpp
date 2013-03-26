@@ -321,30 +321,27 @@ static bool DecodeFloat(DecodeState& ds, TxtNode *n)
 
 static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def, const char* fieldNamesSeq);
 
-static TxtNode *FindTxtNode(TxtNode *curr, const char *name)
+static TxtNode *FindTxtNode(TxtNode *curr, const char *name, size_t nameLen)
 {
-    // TODO: optimize by passing len, which can be stored in FieldMetadata
-    size_t nameLen = str::Len(name);
     char *nodeName;
     size_t nodeNameLen;
-    while (curr) {
-        nodeName = curr->keyStart;
-        if (nodeName) {
-            nodeNameLen = curr->keyEnd - nodeName;
+
+    CrashIf(TextNode == curr->type);
+    TxtNode *child;
+    for (size_t i = 0; i < curr->children->Count(); i++) {
+        child = curr->children->At(i);
+        if (TextNode == child->type)
+            continue;
+        if (StructNode == child->type) {
+            CrashIf(child->valStart);
+            CrashIf(!child->keyStart);
+            nodeName = child->keyStart;
+            nodeNameLen = child->keyEnd - nodeName;
             if (nameLen == nodeNameLen && str::EqNI(name, nodeName, nameLen))
-                return curr;
+                return child;
         }
-        // TODO: could only check curr->keyStart if decoder always puts such values in key
-        // and trims key value there
-        nodeName = curr->valStart;
-        if (nodeName) {
-            char *e = curr->valEnd;
-            str::TrimWsEnd(nodeName, e);
-            nodeNameLen = e - nodeName;
-            if (nameLen == nodeNameLen && str::EqNI(name, nodeName, nameLen))
-                return curr;
-        }
-        curr = curr->next;
+
+        return FindTxtNode(child, name, nameLen);
     }
     return NULL;
 }
@@ -368,7 +365,8 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
     }
 
     const char *fieldName = fieldNamesSeq + fieldDef->nameOffset;
-    TxtNode *node = FindTxtNode(firstNode, fieldName);
+    size_t fieldNameLen = str::Len(fieldName);
+    TxtNode *node = FindTxtNode(firstNode, fieldName, fieldNameLen);
 
     if (!node) {
         // TODO: a real default value must be taken from somewhere else
@@ -398,9 +396,9 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
     } else if (TYPE_STRUCT_PTR == type) {
         // we have a node but it's not the right shape for struct
         // i.e. we expected "foo [" and it's just "foo" or "foo: bar"
-        if (!node->child)
+        if (StructNode != node->type)
             return false;
-        uint8_t *d = DeserializeRec(ds, node->child, fieldDef->def, fieldNamesSeq);
+        uint8_t *d = DeserializeRec(ds, node, fieldDef->def, fieldNamesSeq);
         if (!d)
             goto Error;
         WriteStructPtrVal(structDataPtr, d);
@@ -421,11 +419,14 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         if (ok)
             WriteStructFloat(structDataPtr, ds.f);
     } else if (TYPE_ARRAY == type) {
-        node = node->child;
-        CrashIf(!fieldDef->def); // must be a struct
+        CrashIf(!fieldDef->def); // array element must be a struct
+        if (ArrayNode != node->type)
+            return false;
+        TxtNode *child;
         ListNode<void> *last = NULL;
-        while (node) {
-            uint8_t *d = DeserializeRec(ds, node->child, fieldDef->def, fieldNamesSeq);
+        for (size_t i = 0; i < node->children->Count(); i++) {
+            child = node->children->At(i);
+            uint8_t *d = DeserializeRec(ds, child, fieldDef->def, fieldNamesSeq);
             if (!d)
                 goto Error; // TODO: free root
             ListNode<void> *tmp = AllocArray<ListNode<void>>(1);
@@ -439,7 +440,6 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
                 last->next = tmp;
                 last = tmp;
             }
-            node = node->next;
         }
     } else {
         CrashIf(true);
@@ -486,7 +486,7 @@ uint8_t* Deserialize(char *data, int dataSize, StructMetadata *def, const char *
     bool ok = ParseTxt(ds.parser);
     if (!ok)
         return NULL;
-    return DeserializeRec(ds, ds.parser.firstNode, def, fieldNamesSeq);
+    return DeserializeRec(ds, ds.parser.nodes.At(0), def, fieldNamesSeq);
 }
 
 static void AppendNest(str::Str<char>& s, int nest)
@@ -549,6 +549,9 @@ static void SerializeField(FieldMetadata *fieldDef, const char *fieldNamesSeq, c
     str::Str<char> val;
     Type type = fieldDef->type;
     if ((type & TYPE_NO_STORE_MASK) != 0)
+        return;
+
+    if (!structStart)
         return;
 
     const char *fieldName = fieldNamesSeq + fieldDef->nameOffset;

@@ -1,5 +1,11 @@
 #include "BaseUtil.h"
 #include "SerializeTxtParser.h"
+#include <new>
+
+// unbreak placement new introduced by defining new as DEBUG_NEW
+#ifdef new
+#undef new
+#endif
 
 /*
 TODO:
@@ -24,7 +30,36 @@ a given line either as a simple string or key/value pair. It's
 up to the caller to interpret the data.
 */
 
-static bool IsCommentChar(char c)
+static TxtNode *AllocTxtNode(Allocator *allocator, TxtNodeType nodeType)
+{
+    void *p = Allocator::AllocZero(allocator, sizeof(TxtNode));
+    TxtNode *node = new (p) TxtNode(nodeType);
+    if (TextNode != nodeType) {
+        p = allocator->Alloc(sizeof(Vec<TxtNode*>));
+        node->children = new (p) Vec<TxtNode*>(0, allocator);
+    }
+    return node;
+}
+
+static TxtNode *TxtNodeFromToken(Allocator *allocator, TokenVal& tok, TxtNodeType nodeType)
+{
+    AssertCrash((TextNode == nodeType) || (StructNode == nodeType));
+    TxtNode *node = AllocTxtNode(allocator, nodeType);
+    node->lineStart = tok.lineStart;
+    node->valStart = tok.valStart;
+    node->valEnd = tok.valEnd;
+    node->keyStart = tok.keyStart;
+    node->keyEnd = tok.keyEnd;
+    return node;
+}
+
+inline void ClearToken(TokenVal& tok)
+{
+    ZeroMemory(&tok, sizeof(TokenVal));
+    tok.type = TokenFinished;
+}
+
+static bool IsCommentStartChar(char c)
 {
     return (';' == c ) || ('#' == c);
 }
@@ -42,7 +77,7 @@ static void ParseNextToken(TxtParser& parser)
 
 Again:
     if (slice.Finished())
-        return;
+        goto Finished;
 
     // "  foo:  bar  "
     //  ^
@@ -54,17 +89,17 @@ Again:
     //    ^
 
     if (slice.Finished())
-        return;
+        goto Finished;
 
     char c = slice.CurrChar();
-    if (IsCommentChar(c)) {
+    if (IsCommentStartChar(c)) {
         slice.SkipUntil('\n');
         slice.Skip(1);
         goto Again;
     }
 
     if ('[' == c || ']' == c) {
-        tok.type = ('[' == c) ? TokenOpen : TokenClose;
+        tok.type = ('[' == c) ? TokenArrayStart : TokenClose;
         slice.ZeroCurr();
         slice.Skip(1);
         slice.SkipWsUntilNewline();
@@ -86,25 +121,35 @@ Again:
         tok.keyStart = tok.valStart;
         tok.keyEnd = slice.curr - 1;
         CrashIf(*tok.keyEnd != ':');
+        tok.valStart = NULL;
+        tok.valEnd = NULL;
     }
 
     slice.SkipWsUntilNewline();
     // "  foo:  bar  "
     //          ^
 
-    // this is "foo [", '[' will be returned in subsequent call
-    // it'll also be zero'ed, properly terminating this token's valStart
+    // this is "foo ["
     if ('[' == slice.CurrChar()) {
-        // TODO: should this be returned as key instead?
-        tok.valEnd = slice.curr;
-        // interpret "foo: [" as "foo ["
-        if (tok.keyEnd) {
+        tok.type = TokenStructStart;
+        if (isKeyVal)
             *tok.keyEnd = 0;
-            tok.valEnd = tok.keyEnd;
+        else {
+            CrashIf(NULL == tok.valStart);
+            tok.keyStart = tok.valStart;
+            tok.keyEnd = slice.curr - 1;
+            str::TrimWsEnd(tok.keyStart, tok.keyEnd);
+            *tok.keyEnd = 0;
+            tok.valStart = NULL;
+            tok.valEnd = NULL;
         }
-        tok.keyStart = NULL;
-        tok.keyEnd = NULL;
-        CrashIf(TokenString != tok.type);
+        slice.ZeroCurr();
+        slice.Skip(1);
+        slice.SkipWsUntilNewline();
+        if ('\n' == slice.CurrChar()) {
+            slice.ZeroCurr();
+            slice.Skip(1);
+        }
         return;
     }
 
@@ -144,94 +189,47 @@ NextLine:
     }
     slice.ZeroCurr();
     slice.Skip(1);
+    return;
+Finished:
+    tok.type = TokenFinished;
 }
 
-static TxtNode *TxtNodeFromToken(Allocator *allocator, TokenVal& tok)
+static void ParseNodes(TxtParser& parser)
 {
-    TxtNode *node = Allocator::Alloc<TxtNode>(allocator);
-    node->lineStart = tok.lineStart;
-    node->valStart = tok.valStart;
-    node->valEnd = tok.valEnd;
-    node->keyStart = tok.keyStart;
-    node->keyEnd = tok.keyEnd;
-    return node;
-}
-
-static TxtNode *ParseNextNode(TxtParser& parser)
-{
-    TxtNode *firstNode = NULL;
     TxtNode *currNode = NULL;
-    int arrayNest = 0;
     for (;;) {
-        if (parser.encounteredError)
-            return NULL;
-
-        if (0 == parser.bracketNesting && parser.toParse.Finished())
-            return firstNode;
-
         ParseNextToken(parser);
         TokenVal& tok = parser.tok;
 
-        if (TokenError == tok.type) {
-            parser.encounteredError = true;
-            return NULL;
+        if (TokenFinished == tok.type) {
+            // we expect to end up with the implicit array node we created at start
+            if (parser.nodes.Count() != 1)
+                goto Failed;
+            return;
         }
 
         if (TokenString == tok.type || TokenKeyVal == tok.type) {
-            TxtNode *tmp = TxtNodeFromToken(parser.allocator, tok);
-            if (NULL == firstNode) {
-                firstNode = tmp;
-                CrashIf(currNode);
-                currNode = tmp;
-            } else {
-                currNode->next = tmp;
-                currNode = tmp;
-            }
-        } else if (TokenOpen == tok.type) {
-            if ((TokenOpen == parser.prevToken) || (TokenClose == parser.prevToken)) {
-                // array element
-                ++arrayNest;
-                TxtNode *tmp = TxtNodeFromToken(parser.allocator, tok);
-                tmp->child = ParseNextNode(parser);
-                if (tmp->child == NULL) {
-                    // TODO: is it valid?
-                    parser.encounteredError = true;
-                }
-                if (parser.encounteredError)
-                    return NULL;
-                if (NULL == firstNode) {
-                    firstNode = tmp;
-                    currNode = tmp;
-                } else {
-                    currNode->next = tmp;
-                    currNode = tmp;
-                }
-            } else {
-                ++parser.bracketNesting;
-                currNode->child = ParseNextNode(parser);
-                // note: it's valid for currNode->child to be NULL. It
-                // corresponds to an empty structure i.e.:
-                // foo [
-                // ]
-                if (parser.encounteredError)
-                    return NULL;
-            }
+            currNode = TxtNodeFromToken(parser.allocator, tok, TextNode);
+        } else if (TokenArrayStart == tok.type) {
+            currNode = AllocTxtNode(parser.allocator, ArrayNode);
+        } else if (TokenStructStart == tok.type) {
+            currNode = TxtNodeFromToken(parser.allocator, tok, StructNode);
         } else {
             CrashIf(TokenClose != tok.type);
-            if (arrayNest > 0) {
-                --arrayNest;
-                if (0 == arrayNest)
-                    return firstNode;
-            } else {
-                --parser.bracketNesting;
-                if (parser.bracketNesting < 0) {
-                    // bad input!
-                    parser.encounteredError = true;
-                }
-                return firstNode;
-            }
+            // if the only node left is the implict array node we created,
+            // this is an error
+            if (1 == parser.nodes.Count())
+                goto Failed;
+            parser.nodes.Pop();
+            continue;
         }
+        TxtNode *currParent = parser.nodes.At(parser.nodes.Count() - 1);
+        currParent->children->Append(currNode);
+        if (TextNode != currNode->type)
+            parser.nodes.Append(currNode);
     }
+Failed:
+    parser.failed = true;
 }
 
 bool ParseTxt(TxtParser& parser)
@@ -240,8 +238,16 @@ bool ParseTxt(TxtParser& parser)
     str::Slice& slice = parser.toParse;
     size_t n = str::NormalizeNewlinesInPlace(slice.begin, slice.end);
     slice.end = slice.begin + n;
-    parser.firstNode = ParseNextNode(parser);
-    if (parser.firstNode == NULL)
+
+    ClearToken(parser.tok);
+
+    CrashIf(0 != parser.nodes.Count());
+
+    // we create an implicit array node to hold the nodes we'll parse
+    parser.nodes.Append(AllocTxtNode(parser.allocator, ArrayNode));
+    ParseNodes(parser);
+
+    if (parser.failed)
         return false;
     return true;
 }
@@ -260,50 +266,50 @@ static void AppendWsTrimEnd(str::Str<char>& res, char *s, char *e)
     res.Append(s, e - s);
 }
 
-static void PrettyPrintVal(TxtNode *curr, int nest, str::Str<char>& res)
+static void PrettyPrintKeyVal(TxtNode *curr, int nest, str::Str<char>& res)
 {
     AppendNest(res, nest);
     if (curr->keyStart) {
         AppendWsTrimEnd(res, curr->keyStart, curr->keyEnd);
-        res.Append(" = ");
+        if (StructNode != curr->type)
+            res.Append(" = ");
     }
     AppendWsTrimEnd(res, curr->valStart, curr->valEnd);
+    if (StructNode != curr->type)
+        res.Append("\n");
 }
 
 static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
 {
-    while (curr) {
-        if (curr->child) {
-            if (curr->valStart != NULL) {
-                // dict
-                PrettyPrintVal(curr, nest, res);
-                res.Append(" [\n");
-                PrettyPrintNode(curr->child, nest + 1, res);
-                AppendNest(res, nest);
-                res.Append("]\n");
-            } else {
-                // array
-                while (curr) {
-                    AppendNest(res, nest);
-                    res.Append("[\n");
-                    PrettyPrintNode(curr->child, nest + 1, res);
-                    AppendNest(res, nest);
-                    res.Append("]\n");
-                    curr = curr->next;
-                }
-                return;
-            }
-        } else {
-            PrettyPrintVal(curr, nest, res);
-            res.Append("\n");
-        }
-        curr = curr->next;
+    if (TextNode == curr->type) {
+        PrettyPrintKeyVal(curr, nest, res);
+        return;
+    }
+
+    if (StructNode == curr->type) {
+        PrettyPrintKeyVal(curr, nest, res);
+        res.Append(" [\n");
+    } else if (nest >= 0) {
+        CrashIf(ArrayNode != curr->type);
+        AppendNest(res, nest);
+        res.Append("[\n");
+    }
+
+    TxtNode *child;
+    for (size_t i = 0; i < curr->children->Count(); i++) {
+        child = curr->children->At(i);
+        PrettyPrintNode(child, nest + 1, res);
+    }
+
+    if (nest >= 0) {
+        AppendNest(res, nest);
+        res.Append("]\n");
     }
 }
 
 char *PrettyPrintTxt(TxtParser& parser)
 {
     str::Str<char> res;
-    PrettyPrintNode(parser.firstNode, 0, res);
+    PrettyPrintNode(parser.nodes.At(0), -1, res);
     return res.StealData();
 }

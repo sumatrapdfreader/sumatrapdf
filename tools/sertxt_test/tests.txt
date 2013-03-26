@@ -73,7 +73,8 @@ go
 ]
 --->
 les [
-  foo = bar [
+  foo = bar
+  [
     val
   ]
   go
@@ -90,4 +91,5 @@ foo [
 foo [
 ]
 --->
-foo
+foo [
+]
