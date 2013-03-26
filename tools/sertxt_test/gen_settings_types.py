@@ -117,11 +117,13 @@ class Struct(Type):
     type_enum = "TYPE_STRUCT_PTR"
     fields = []
 
-    def __init__(self):
+    def __init__(self, *vals):
         # fields must be a class variable in Struct's subclass
         self.values = [Field(f.name, f.typ, f.flags) for f in self.fields]
         self.c_type_override = "%s *" % self.name()
         self.offset = None
+        for i in range(len(vals)):
+            self.values[i].set_val(vals[i])
 
     def is_valid_val(self, val):
         return issubclass(val, Struct)
@@ -144,10 +146,6 @@ class Struct(Type):
 
         for field in self.values:
             if field.name == name:
-                obj = str(self)
-                obj = obj.replace("<gen_settings_types.", "")
-                obj = obj.replace("object at" , "@")
-                #print("on %s setting '%s' to '%s'" % (obj, name, value))
                 field.set_val(value)
                 return
         object.__setattr__(self, name, value)
@@ -312,20 +310,9 @@ class AdvancedSettings(Struct):
         Field("forwardSearch", ForwardSearch()),
     ]
 
-fav1 = Fav()
-fav1.name = "my first fav"
-fav1.pageNo = 22
-fav1.pageLabel = "my label for first fav"
-
-fav2 = Fav()
-fav2.name = "my second fav"
-fav2.pageNo = 13
-fav2.pageLabel = "my label for second fav"
-
-fav3 = Fav()
-fav3.name = "third fav"
-fav3.pageNo = 3
-fav3.pageLabel = "my label for third fav"
+fav1 = Fav("my first fav", 22,  "my label for first fav")
+fav2 = Fav("my second fav", 13, "my label for second fav")
+fav3 = Fav("third fav", 3, "my label for third fav")
 
 class AppState(Struct):
     fields = [
