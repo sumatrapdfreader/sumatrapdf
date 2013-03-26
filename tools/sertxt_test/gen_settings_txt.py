@@ -9,6 +9,8 @@ from gen_settings_types import Struct, settings, Field, get_all_structs, field_f
 TODO:
  - default values
  - escape values with '\n' in them
+ - test that we're robust against whitespace after values when parsing
+   key/value
 
 Maybe: support arrays of basic types
 
@@ -103,7 +105,7 @@ def ser_array(field, lines, indent):
         #print(str(val))
         #print(val.as_str())
         lines += [prefix + "["]
-        ser_struct(val, None, lines, indent+2)
+        ser_struct(val, None, lines, indent+1)
         lines += [prefix + "]"]
     prefix = prefix[:-2]
     lines += ["%s]" % prefix]

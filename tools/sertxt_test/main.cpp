@@ -96,7 +96,7 @@ static void TestSettingsDeserialize()
     }
     Settings *settings = DeserializeSettings(s, (int)fileSize);
     if (!settings) {
-        printf("failed to parse\n'%s'\n", s);
+        printf("failed to deserialize\n'%s'\n", s);
         return;
     }
     int serializedLen;

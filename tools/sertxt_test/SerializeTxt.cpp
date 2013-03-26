@@ -197,6 +197,8 @@ public:
     // data being decoded
     TxtParser parser;
 
+    const char *fieldNamesSeq;
+
     // last decoded value
     uint64_t          u;
     int64_t           i;
@@ -319,7 +321,7 @@ static bool DecodeFloat(DecodeState& ds, TxtNode *n)
     return true;
 }
 
-static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def, const char* fieldNamesSeq);
+static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def);
 
 static TxtNode *FindTxtNode(TxtNode *curr, const char *name, size_t nameLen)
 {
@@ -328,20 +330,20 @@ static TxtNode *FindTxtNode(TxtNode *curr, const char *name, size_t nameLen)
 
     CrashIf(TextNode == curr->type);
     TxtNode *child;
+    TxtNode *found = NULL;
     for (size_t i = 0; i < curr->children->Count(); i++) {
         child = curr->children->At(i);
-        if (TextNode == child->type)
-            continue;
-        if (StructNode == child->type) {
-            CrashIf(child->valStart);
-            CrashIf(!child->keyStart);
+        if (TextNode == child->type || StructNode == child->type) {
             nodeName = child->keyStart;
             nodeNameLen = child->keyEnd - nodeName;
             if (nameLen == nodeNameLen && str::EqNI(name, nodeName, nameLen))
                 return child;
         }
-
-        return FindTxtNode(child, name, nameLen);
+        if (TextNode == child->type)
+            continue;
+        found = FindTxtNode(child, name, nameLen);
+        if (found)
+            return found;
     }
     return NULL;
 }
@@ -354,7 +356,7 @@ static void WriteDefaultValue(uint8_t *structDataPtr, Type type)
     }
 }
 
-static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fieldDef, const char *fieldNamesSeq, uint8_t *structDataStart)
+static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fieldDef, uint8_t *structDataStart)
 {
     Type type = fieldDef->type;
     uint8_t *structDataPtr = structDataStart + fieldDef->offset;
@@ -364,7 +366,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         return true;
     }
 
-    const char *fieldName = fieldNamesSeq + fieldDef->nameOffset;
+    const char *fieldName = ds.fieldNamesSeq + fieldDef->nameOffset;
     size_t fieldNameLen = str::Len(fieldName);
     TxtNode *node = FindTxtNode(firstNode, fieldName, fieldNameLen);
 
@@ -398,7 +400,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         // i.e. we expected "foo [" and it's just "foo" or "foo: bar"
         if (StructNode != node->type)
             return false;
-        uint8_t *d = DeserializeRec(ds, node, fieldDef->def, fieldNamesSeq);
+        uint8_t *d = DeserializeRec(ds, node, fieldDef->def);
         if (!d)
             goto Error;
         WriteStructPtrVal(structDataPtr, d);
@@ -420,13 +422,15 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
             WriteStructFloat(structDataPtr, ds.f);
     } else if (TYPE_ARRAY == type) {
         CrashIf(!fieldDef->def); // array element must be a struct
-        if (ArrayNode != node->type)
+        if (StructNode != node->type)
             return false;
         TxtNode *child;
         ListNode<void> *last = NULL;
         for (size_t i = 0; i < node->children->Count(); i++) {
             child = node->children->At(i);
-            uint8_t *d = DeserializeRec(ds, child, fieldDef->def, fieldNamesSeq);
+            if (ArrayNode != child->type)
+                return false;
+            uint8_t *d = DeserializeRec(ds, child, fieldDef->def);
             if (!d)
                 goto Error; // TODO: free root
             ListNode<void> *tmp = AllocArray<ListNode<void>>(1);
@@ -454,7 +458,7 @@ Error:
 // if no data from client - return the result from default data
 // if data from client doesn't have enough fields, use fields from default data
 // if data from client is corrupted, decode default data
-static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def, const char* fieldNamesSeq)
+static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def)
 {
     bool ok = true;
     if (!firstNode)
@@ -462,7 +466,7 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetada
 
     uint8_t *res = AllocArray<uint8_t>(def->size);
     for (int i = 0; i < def->nFields; i++) {
-        ok = DecodeField(ds, firstNode, def->fields + i, fieldNamesSeq, res);
+        ok = DecodeField(ds, firstNode, def->fields + i, res);
         if (!ok)
             goto Error;
     }
@@ -478,6 +482,7 @@ uint8_t* Deserialize(char *data, int dataSize, StructMetadata *def, const char *
     if (!data)
         return NULL;
     DecodeState ds;
+    ds.fieldNamesSeq = fieldNamesSeq;
     if (dataSize >= 3 && str::EqN(data, UTF8_BOM, 3)) {
         data += 3;
         dataSize -= 3;
@@ -486,7 +491,7 @@ uint8_t* Deserialize(char *data, int dataSize, StructMetadata *def, const char *
     bool ok = ParseTxt(ds.parser);
     if (!ok)
         return NULL;
-    return DeserializeRec(ds, ds.parser.nodes.At(0), def, fieldNamesSeq);
+    return DeserializeRec(ds, ds.parser.nodes.At(0), def);
 }
 
 static void AppendNest(str::Str<char>& s, int nest)
