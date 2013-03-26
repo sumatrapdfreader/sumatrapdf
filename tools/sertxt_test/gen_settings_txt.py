@@ -156,8 +156,8 @@ def gen_struct_def(stru_cls):
 def gen_struct_defs(structs):
     return "\n".join([gen_struct_def(stru) for stru in structs])
 
-prototypes_tmpl = """%(name)s *Deserialize%(name)s(const char *data, int dataLen);
-uint8_t *Serialize%(name)s(%(name)s *, int *dataLenOut);
+prototypes_tmpl = """%(name)s *Deserialize%(name)s(const char *data, size_t dataLen);
+uint8_t *Serialize%(name)s(%(name)s *, size_t *dataLenOut);
 void Free%(name)s(%(name)s *);
 """
 
@@ -242,7 +242,7 @@ def gen_structs_metadata_txt(structs):
     return "\n".join(lines)
 
 top_level_funcs_txt_tmpl = """
-%(name)s *Deserialize%(name)s(const char *data, int dataLen)
+%(name)s *Deserialize%(name)s(const char *data, size_t dataLen)
 {
     char *dataCopy = str::DupN(data, dataLen);
     void *res = Deserialize(dataCopy, dataLen, &g%(name)sMetadata, FIELD_NAMES_SEQ);
@@ -250,7 +250,7 @@ top_level_funcs_txt_tmpl = """
     return (%(name)s*)res;
 }
 
-uint8_t *Serialize%(name)s(%(name)s *val, int *dataLenOut)
+uint8_t *Serialize%(name)s(%(name)s *val, size_t *dataLenOut)
 {
     return Serialize((const uint8_t*)val, &g%(name)sMetadata, FIELD_NAMES_SEQ, dataLenOut);
 }

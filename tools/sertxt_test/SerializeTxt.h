@@ -65,8 +65,8 @@ struct FieldMetadata {
 };
 
 void        FreeStruct(uint8_t *data, StructMetadata *def);
-uint8_t*    Deserialize(char *data, int dataSize, StructMetadata *def, const char *fieldNamesSeq);
-uint8_t *   Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int *sizeOut);
+uint8_t*    Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq);
+uint8_t *   Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, size_t *sizeOut);
 
 } // namespace sertxt
 

@@ -21,9 +21,9 @@ static bool TestSerializeIni()
     Check(s); // failed to parse file
     Check(str::Find(s->advanced->ws, L"\r\n"));
 
-    int len;
+    size_t len;
     ScopedMem<char> ser((char *)SerializeSettings(s, &len));
-    Check(str::Len(ser) == (size_t)len);
+    Check(str::Len(ser) ==len);
     Check(str::Eq(data, ser));
     FreeSettings(s);
 

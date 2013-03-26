@@ -145,10 +145,10 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
     return data;
 }
 
-uint8_t *Deserialize(char *data, int dataSize, StructMetadata *def, const char *fieldNamesSeq)
+uint8_t *Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq)
 {
     CrashIf(!data); // TODO: where to get defaults from?
-    CrashIf(str::Len((const char *)data) != (size_t)dataSize);
+    CrashIf(str::Len((const char *)data) != dataSize);
     IniFile ini((const char *)data);
     return (uint8_t *)DeserializeRec(ini, def, fieldNamesSeq);
 }
@@ -270,13 +270,13 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
     }
 }
 
-uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int *sizeOut)
+uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, size_t *sizeOut)
 {
     str::Str<char> out;
     out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
     SerializeRec(out, data, def, fieldNamesSeq);
     if (sizeOut)
-        *sizeOut = (int)out.Size();
+        *sizeOut = out.Size();
     return (uint8_t *)out.StealData();
 }
 

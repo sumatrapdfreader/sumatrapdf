@@ -105,7 +105,7 @@ StructMetadata gSettingsMetadata = { sizeof(Settings), 3, &gSettingsFieldMetadat
 
 #undef of
 
-Settings *DeserializeSettings(const char *data, int dataLen)
+Settings *DeserializeSettings(const char *data, size_t dataLen)
 {
     char *dataCopy = str::DupN(data, dataLen);
     void *res = Deserialize(dataCopy, dataLen, &gSettingsMetadata, FIELD_NAMES_SEQ);
@@ -113,7 +113,7 @@ Settings *DeserializeSettings(const char *data, int dataLen)
     return (Settings*)res;
 }
 
-uint8_t *SerializeSettings(Settings *val, int *dataLenOut)
+uint8_t *SerializeSettings(Settings *val, size_t *dataLenOut)
 {
     return Serialize((const uint8_t*)val, &gSettingsMetadata, FIELD_NAMES_SEQ, dataLenOut);
 }

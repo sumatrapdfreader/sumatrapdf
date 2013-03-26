@@ -81,8 +81,8 @@ struct Settings {
     AppState *            appState;
 };
 
-Settings *DeserializeSettings(const char *data, int dataLen);
-uint8_t *SerializeSettings(Settings *, int *dataLenOut);
+Settings *DeserializeSettings(const char *data, size_t dataLen);
+uint8_t *SerializeSettings(Settings *, size_t *dataLenOut);
 void FreeSettings(Settings *);
 
 #endif

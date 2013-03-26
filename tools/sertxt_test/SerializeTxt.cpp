@@ -480,7 +480,7 @@ Error:
 }
 
 // data is in text format. we might modify it in place
-uint8_t* Deserialize(char *data, int dataSize, StructMetadata *def, const char *fieldNamesSeq)
+uint8_t* Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq)
 {
     if (!data)
         return NULL;
@@ -490,7 +490,7 @@ uint8_t* Deserialize(char *data, int dataSize, StructMetadata *def, const char *
         data += 3;
         dataSize -= 3;
     }
-    ds.parser.SetToParse(data, (size_t)dataSize);
+    ds.parser.SetToParse(data, dataSize);
     bool ok = ParseTxt(ds.parser);
     if (!ok)
         return NULL;
@@ -645,13 +645,13 @@ void SerializeRec(const uint8_t *data, StructMetadata *def, const char *fieldNam
     }
 }
 
-uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int *sizeOut)
+uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, size_t *sizeOut)
 {
     str::Str<char> res;
     res.Append(UTF8_BOM "; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation" NL);
     SerializeRec(data, def, fieldNamesSeq, 0, res);
     if (sizeOut)
-        *sizeOut = (int)res.Size();
+        *sizeOut = res.Size();
     return (uint8_t *)res.StealData();
 }
 
