@@ -132,6 +132,17 @@ public:
     // size of the vertical margin between two pages
     int innerY;
 
+    /* ***** fields for section BackgroundGradient ***** */
+
+    // whether to draw a gradient behind the pages
+    bool enabled; // TODO: issue with combining structs
+    // color at the top of the document (first page)
+    COLORREF colorTop;
+    // color at the center of the document (middlest page)
+    COLORREF colorMiddle;
+    // color at the bottom of the document (last page)
+    COLORREF colorBottom;
+
     /* ***** fields for section ForwardSearch ***** */
 
     // when set to a positive value, the forward search highlight style
@@ -159,10 +170,12 @@ public:
     WStrVec vecFilter;
 
     AdvancedSettings() : traditionalEbookUI(false), reuseInstance(false), mainWindowBackground(0xfff200),
-        escToExit(false), textColor(0x0000), pageColor(0xffffff),
+        escToExit(false), textColor(0x000000), pageColor(0xffffff),
         printAsImage(false), outerX(4), outerY(2),
-        innerX(4), innerY(4), highlightOffset(0),
-        highlightWidth(15), highlightColor(0x6581ff), highlightPermanent(false) {
+        innerX(4), innerY(4), enabled(false),
+        colorTop(0xaa2828), colorMiddle(0x28aa28), colorBottom(0x2828aa),
+        highlightOffset(0), highlightWidth(15), highlightColor(0x6581ff),
+        highlightPermanent(false) {
     }
 };
 

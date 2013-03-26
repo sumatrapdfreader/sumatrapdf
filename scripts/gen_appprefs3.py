@@ -109,6 +109,13 @@ PagePadding = [
 	Field("InnerY", Int, 4, "size of the vertical margin between two pages"),
 ]
 
+BackgroundGradient = [
+	Field("Enabled", Bool, False, "whether to draw a gradient behind the pages"),
+	Field("ColorTop", Color, 0xAA2828, "color at the top of the document (first page)"),
+	Field("ColorMiddle", Color, 0x28AA28, "color at the center of the document (middlest page)"),
+	Field("ColorBottom", Color, 0x2828AA, "color at the bottom of the document (last page)"),
+]
+
 PrinterDefaults = [
 	Field("PrintScale", Utf8String, "shrink", "default value for scaling (shrink, fit, none)"),
 	Field("PrintAsImage", Bool, False, "default value for the compatibility option"),
@@ -145,10 +152,13 @@ UserPrefs = [
 		"these values allow to override the default settings in the Print dialog"),
 	Struct("PagePadding", PagePadding,
 		"these values allow to change how far apart pages are layed out"),
+	Struct("BackgroundGradient", BackgroundGradient,
+		"these values allow to tweak the experimental feature for using a color " +
+		"gradient to subconsciously determine reading progress"),
 	# renamed from ForwardSearch for interoperability with gen_settings.py
 	Struct("ForwardSearch3", ForwardSearch,
 		"these values allow to customize how the forward search highlight appears"),
-	Array("ExternalViewers", ExternalViewer,
+	Array("ExternalViewer", ExternalViewer,
 		"this list contains a list of additional external viewers for various file types"),
 ]
 
@@ -198,6 +208,12 @@ FileSettings = [
 		"Note: We intentionally track toggle state as opposed to expansion state " +
 		"so that we only have to save a diff instead of all states for the whole " +
 		"tree (which can be quite large) - and also due to backwards compatibility"),
+	Array("Favorite", [
+		Field("Name", String, None, "name of this favorite as shown in the menu"),
+		Field("PageNo", Int, 0, "which page this favorite is about"),
+		Field("PageLabel", String, None, "optional label for this page (if logical and physical numers disagree)"),
+		Field("MenuId", Int, 0, "assigned in AppendFavMenuItems()", internal=True),
+	], "Values which are persisted for bookmarks/favorites"),
 	Field("Index", Type("Custom", "size_t"), "0",
 		"temporary value needed for FileHistory::cmpOpenCount",
 		internal=True),
@@ -258,15 +274,9 @@ AppPrefs = [
 	Field("CbxR2L", Bool, False,
 		"display CBX double pages from right to left"),
 	# file history and favorites
-	Array("FileHistory", FileSettings,
+	Array("File", FileSettings,
 		"Most values in this structure are remembered individually for every file and " +
 		"are by default also persisted so that reading can be resumed"),
-	Array("Favorites", [
-		Field("Name", String, None, "name of this favorite as shown in the menu"),
-		Field("PageNo", Int, 0, "which page this favorite is about"),
-		Field("PageLabel", String, None, "optional label for this page (if logical and physical numers disagree)"),
-		Field("MenuId", Int, 0, "assigned in AppendFavMenuItems()", internal=True),
-	], "Values which are persisted for bookmarks/favorites"),
 	# non-serialized fields
 	Field("LastPrefUpdate", Int64, 0,
 		"modification time of the preferences file when it was last read",

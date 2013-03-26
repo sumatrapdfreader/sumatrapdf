@@ -17,7 +17,7 @@ static bool TestSerializeIni()
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    Settings *s = DeserializeSettings(data.Get(), str::Len(data));
+    Settings *s = DeserializeSettings(data, str::Len(data));
     Check(s); // failed to parse file
     Check(str::Find(s->advanced->ws, L"\r\n"));
 
@@ -91,7 +91,7 @@ static bool TestSerializeRecursiveArray()
 [Rec]\n\
 [Rec.Rec]\n\
 # [Rec.Up] may be omitted\n\
-[Rec.Up.ExternalViewers]\n\
+[Rec.Up.ExternalViewer]\n\
 CommandLine = serini_test.exe\n\
 ";
     Rec *r = (Rec *)serini3::Deserialize(data, str::Len(data), gRecInfo);
@@ -99,7 +99,7 @@ CommandLine = serini_test.exe\n\
     Check(0 == r->rec[0]->rec[0]->rec[0]->recCount && 0 == r->rec[0]->rec[0]->rec[1]->recCount);
     Check(1 == r->rec[0]->rec[1]->recCount && 0 == r->rec[0]->rec[1]->rec[0]->recCount);
     Check(1 == r->rec[1]->recCount && 0 == r->rec[1]->rec[0]->recCount);
-    Check(1 == r->rec[1]->up->externalViewersCount && str::Eq(r->rec[1]->up->externalViewers[0]->commandLine, L"serini_test.exe"));
+    Check(1 == r->rec[1]->up->externalViewerCount && str::Eq(r->rec[1]->up->externalViewer[0]->commandLine, L"serini_test.exe"));
     serini3::FreeStruct(r, gRecInfo);
 
     // TODO: recurse even if array parents are missing?

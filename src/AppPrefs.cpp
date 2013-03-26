@@ -523,6 +523,8 @@ Exit:
     delete obj;
 }
 
+// TODO: replace with AppPrefs3.h or SettingsSumatra.*
+
 enum SettingType {
     Type_Section, Type_SectionVec, Type_Custom,
     Type_Bool, Type_Color, Type_FileTime, Type_Float, Type_Int, Type_String, Type_Utf8String,
@@ -554,6 +556,12 @@ static SettingInfo gAdvancedSettingsInfo[] = {
     { "InnerY", Type_Int, offsetof(AdvancedSettings, innerY), 0 },
     { "OuterX", Type_Int, offsetof(AdvancedSettings, outerX), 0 },
     { "OuterY", Type_Int, offsetof(AdvancedSettings, outerY), 0 },
+    /* ***** fields for section BackgroundGradient ***** */
+    { "BackgroundGradient", Type_Section },
+    { "Enabled", Type_Bool, offsetof(AdvancedSettings, enabled), 0 },
+    { "ColorTop", Type_Color, offsetof(AdvancedSettings, colorTop), 0 },
+    { "ColorMiddle", Type_Color, offsetof(AdvancedSettings, colorMiddle), 0 },
+    { "ColorBottom", Type_Color, offsetof(AdvancedSettings, colorBottom), 0 },
     /* ***** fields for section ForwardSearch ***** */
     { "ForwardSearch", Type_Section },
     { "HighlightColor", Type_Color, offsetof(AdvancedSettings, highlightColor), 0 },
@@ -586,7 +594,7 @@ static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, 
             break;
         case Type_Bool:
             if ((line = section->FindLine(meta.name)) != NULL)
-                *(bool *)(base + meta.offset) = atoi(line->value) != 0;
+                *(bool *)(base + meta.offset) = str::EqI(line->value, "true") || atoi(line->value) != 0;
             break;
         case Type_Color:
             if ((line = section->FindLine(meta.name)) != NULL) {
