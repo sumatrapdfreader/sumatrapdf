@@ -64,12 +64,12 @@ class Field(object):
 class Struct(Field):
 	def __init__(self, name, fields, comment, structName=None):
 		self.structName = structName or name
-		super(Struct, self).__init__(name, Type("Struct", "%s *" % self.structName), fields, comment)
+		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment)
 
 class Array(Field):
 	def __init__(self, name, fields, comment, structName=None):
 		self.structName = structName or name
-		super(Array, self).__init__(name, Type("Array", "%s **" % self.structName), fields, comment)
+		super(Array, self).__init__(name, Type("Array", "%s *" % self.structName), fields, comment)
 
 # ##### setting definitions for SumatraPDF #####
 
@@ -337,7 +337,7 @@ def BuildMetaData(struct, built=[]):
 			built.append(field.structName)
 	metadata.append("\n".join([
 		"static SettingInfo g%sInfo[] = {" % struct.structName,
-		"\t/* TODO: replace this hack with a second meta-struct? */",
+		# include size information in the first line instead of a second structure
 		"\t{ NULL, (SettingType)%d, sizeof(%s), NULL }," % (len(fieldInfo), struct.structName),
 	] + fieldInfo + [
 		"};"
@@ -383,6 +383,9 @@ struct SettingInfo {
 	int64_t def;
 };
 STATIC_ASSERT(sizeof(int64_t) >= sizeof(void *), ptr_is_max_64_bit);
+
+static inline size_t GetFieldCount(SettingInfo *meta) { return (size_t)meta[0].type; }
+static inline size_t GetStructSize(SettingInfo *meta) { return meta[0].offset; }
 
 #ifdef INCLUDE_APPPREFS3_METADATA
 %(appStructMetadata)s

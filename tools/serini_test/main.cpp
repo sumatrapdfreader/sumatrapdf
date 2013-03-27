@@ -67,8 +67,8 @@ static bool TestSerializeUserIni3()
 
 struct Rec {
     size_t recCount;
-    Rec ** rec;
-    UserPrefs *up;
+    Rec * rec;
+    UserPrefs up;
 };
 
 static SettingInfo gRecInfo[] = {
@@ -95,11 +95,12 @@ static bool TestSerializeRecursiveArray()
 CommandLine = serini_test.exe\n\
 ";
     Rec *r = (Rec *)serini3::Deserialize(data, str::Len(data), gRecInfo);
-    Check(2 == r->recCount && 2 == r->rec[0]->recCount && 2 == r->rec[0]->rec[0]->recCount);
-    Check(0 == r->rec[0]->rec[0]->rec[0]->recCount && 0 == r->rec[0]->rec[0]->rec[1]->recCount);
-    Check(1 == r->rec[0]->rec[1]->recCount && 0 == r->rec[0]->rec[1]->rec[0]->recCount);
-    Check(1 == r->rec[1]->recCount && 0 == r->rec[1]->rec[0]->recCount);
-    Check(1 == r->rec[1]->up->externalViewerCount && str::Eq(r->rec[1]->up->externalViewer[0]->commandLine, L"serini_test.exe"));
+    Check(2 == r->recCount && 2 == r->rec[0].recCount && 2 == r->rec[0].rec[0].recCount);
+    Check(0 == r->rec[0].rec[0].rec[0].recCount && 0 == r->rec[0].rec[0].rec[1].recCount);
+    Check(1 == r->rec[0].rec[1].recCount && 0 == r->rec[0].rec[1].rec[0].recCount);
+    Check(1 == r->rec[1].recCount && 0 == r->rec[1].rec[0].recCount);
+    Check(1 == r->rec[1].up.externalViewerCount && str::Eq(r->rec[1].up.externalViewer[0].commandLine, L"serini_test.exe"));
+    Check(str::Eq(r->rec[0].rec[1].up.printerDefaults.printScale, "shrink"));
     serini3::FreeStruct(r, gRecInfo);
 
     // TODO: recurse even if array parents are missing?
@@ -115,11 +116,11 @@ CommandLine = serini_test.exe\n\
 static bool TestDefaultValues()
 {
     UserPrefs *p = (UserPrefs *)serini3::Deserialize(NULL, 0, gUserPrefsInfo);
-    Check(!p->advancedPrefs->escToExit && !p->advancedPrefs->traditionalEbookUI);
-    Check(0xffffff == p->advancedPrefs->pageColor && 0x000000 == p->advancedPrefs->textColor);
-    Check(0x6581ff == p->forwardSearch3->highlightColor && 15 == p->forwardSearch3->highlightWidth);
-    Check(4 == p->pagePadding->innerX && 2 == p->pagePadding->outerY);
-    Check(str::Eq(p->printerDefaults->printScale, "shrink"));
+    Check(!p->advancedPrefs.escToExit && !p->advancedPrefs.traditionalEbookUI);
+    Check(0xffffff == p->advancedPrefs.pageColor && 0x000000 == p->advancedPrefs.textColor);
+    Check(0x6581ff == p->forwardSearch3.highlightColor && 15 == p->forwardSearch3.highlightWidth);
+    Check(4 == p->pagePadding.innerX && 2 == p->pagePadding.outerY);
+    Check(str::Eq(p->printerDefaults.printScale, "shrink"));
     serini3::FreeStruct(p, gUserPrefsInfo);
 
     return true;

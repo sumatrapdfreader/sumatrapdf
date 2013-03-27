@@ -43,7 +43,7 @@ struct File {
     // how pages should be layed out for this document
     WCHAR * displayMode;
     // how far this document has been scrolled
-    PointI * scrollPos;
+    PointI scrollPos;
     // the scrollPos values are relative to the top-left corner of this
     // page
     int pageNo;
@@ -58,7 +58,7 @@ struct File {
     // default state of new SumatraPDF windows (same as the last closed)
     int windowState;
     // default position (can be on any monitor)
-    RectI * windowPos;
+    RectI windowPos;
     // hex encoded MD5 fingerprint of file content (32 chars) followed by
     // crypt key (64 chars) - only applies for PDF documents
     char * decryptionKey;
@@ -75,7 +75,7 @@ struct File {
     // compatibility
     char * tocState;
     // Values which are persisted for bookmarks/favorites
-    Favorite ** favorite;
+    Favorite * favorite;
     size_t favoriteCount;
     // temporary value needed for FileHistory::cmpOpenCount
     size_t index;
@@ -127,7 +127,7 @@ struct GlobalPrefs {
     // default state of new SumatraPDF windows (same as the last closed)
     int windowState;
     // default position (can be on any monitor)
-    RectI * windowPos;
+    RectI windowPos;
     // whether the table of contents (Bookmarks) sidebar should be shown by
     // default when its available for a document
     bool tocVisible;
@@ -148,7 +148,7 @@ struct GlobalPrefs {
     // Most values in this structure are remembered individually for every
     // file and are by default also persisted so that reading can be
     // resumed
-    File ** file;
+    File * file;
     size_t fileCount;
     // modification time of the preferences file when it was last read
     int64_t lastPrefUpdate;
@@ -244,21 +244,21 @@ struct AdvancedPrefs {
 // can't be changed from within the UI
 struct UserPrefs {
     // these values allow to tweak various bits and pieces of SumatraPDF
-    AdvancedPrefs * advancedPrefs;
+    AdvancedPrefs advancedPrefs;
     // these values allow to override the default settings in the Print
     // dialog
-    PrinterDefaults * printerDefaults;
+    PrinterDefaults printerDefaults;
     // these values allow to change how far apart pages are layed out
-    PagePadding * pagePadding;
+    PagePadding pagePadding;
     // these values allow to tweak the experimental feature for using a
     // color gradient to subconsciously determine reading progress
-    BackgroundGradient * backgroundGradient;
+    BackgroundGradient backgroundGradient;
     // these values allow to customize how the forward search highlight
     // appears
-    ForwardSearch3 * forwardSearch3;
+    ForwardSearch3 forwardSearch3;
     // this list contains a list of additional external viewers for various
     // file types
-    ExternalViewer ** externalViewer;
+    ExternalViewer * externalViewer;
     size_t externalViewerCount;
 };
 
@@ -276,9 +276,11 @@ struct SettingInfo {
 };
 STATIC_ASSERT(sizeof(int64_t) >= sizeof(void *), ptr_is_max_64_bit);
 
+static inline size_t GetFieldCount(SettingInfo *meta) { return (size_t)meta[0].type; }
+static inline size_t GetStructSize(SettingInfo *meta) { return meta[0].offset; }
+
 #ifdef INCLUDE_APPPREFS3_METADATA
 static SettingInfo gFavoriteInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)3, sizeof(Favorite), NULL },
     { "Name", Type_String, offsetof(Favorite, name), NULL, NULL },
     { "PageLabel", Type_String, offsetof(Favorite, pageLabel), NULL, NULL },
@@ -286,14 +288,12 @@ static SettingInfo gFavoriteInfo[] = {
 };
 
 static SettingInfo gPointIInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)2, sizeof(PointI), NULL },
     { "X", Type_Int, offsetof(PointI, x), NULL, 0 },
     { "Y", Type_Int, offsetof(PointI, y), NULL, 0 },
 };
 
 static SettingInfo gRectIInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(RectI), NULL },
     { "Dx", Type_Int, offsetof(RectI, dx), NULL, 0 },
     { "Dy", Type_Int, offsetof(RectI, dy), NULL, 0 },
@@ -302,7 +302,6 @@ static SettingInfo gRectIInfo[] = {
 };
 
 static SettingInfo gFileInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)19, sizeof(File), NULL },
     { "DecryptionKey", Type_Utf8String, offsetof(File, decryptionKey), NULL, NULL },
     { "DisplayMode", Type_String, offsetof(File, displayMode), NULL, (int64_t)L"automatic" },
@@ -326,7 +325,6 @@ static SettingInfo gFileInfo[] = {
 };
 
 static SettingInfo gGlobalPrefsInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)25, sizeof(GlobalPrefs), NULL },
     { "CbxR2L", Type_Bool, offsetof(GlobalPrefs, cbxR2L), NULL, false },
     { "CurrLangCode", Type_String, offsetof(GlobalPrefs, currLangCode), NULL, NULL },
@@ -356,7 +354,6 @@ static SettingInfo gGlobalPrefsInfo[] = {
 };
 
 static SettingInfo gAdvancedPrefsInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)6, sizeof(AdvancedPrefs), NULL },
     { "EscToExit", Type_Bool, offsetof(AdvancedPrefs, escToExit), NULL, false },
     { "MainWindowBackground", Type_Color, offsetof(AdvancedPrefs, mainWindowBackground), NULL, 0xfff200 },
@@ -367,7 +364,6 @@ static SettingInfo gAdvancedPrefsInfo[] = {
 };
 
 static SettingInfo gBackgroundGradientInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(BackgroundGradient), NULL },
     { "ColorBottom", Type_Color, offsetof(BackgroundGradient, colorBottom), NULL, 0x2828aa },
     { "ColorMiddle", Type_Color, offsetof(BackgroundGradient, colorMiddle), NULL, 0x28aa28 },
@@ -376,7 +372,6 @@ static SettingInfo gBackgroundGradientInfo[] = {
 };
 
 static SettingInfo gExternalViewerInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)3, sizeof(ExternalViewer), NULL },
     { "CommandLine", Type_String, offsetof(ExternalViewer, commandLine), NULL, NULL },
     { "Filter", Type_String, offsetof(ExternalViewer, filter), NULL, NULL },
@@ -384,7 +379,6 @@ static SettingInfo gExternalViewerInfo[] = {
 };
 
 static SettingInfo gForwardSearch3Info[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(ForwardSearch3), NULL },
     { "HighlightColor", Type_Color, offsetof(ForwardSearch3, highlightColor), NULL, 0x6581ff },
     { "HighlightOffset", Type_Int, offsetof(ForwardSearch3, highlightOffset), NULL, 0 },
@@ -393,7 +387,6 @@ static SettingInfo gForwardSearch3Info[] = {
 };
 
 static SettingInfo gPagePaddingInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)4, sizeof(PagePadding), NULL },
     { "InnerX", Type_Int, offsetof(PagePadding, innerX), NULL, 4 },
     { "InnerY", Type_Int, offsetof(PagePadding, innerY), NULL, 4 },
@@ -402,14 +395,12 @@ static SettingInfo gPagePaddingInfo[] = {
 };
 
 static SettingInfo gPrinterDefaultsInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)2, sizeof(PrinterDefaults), NULL },
     { "PrintAsImage", Type_Bool, offsetof(PrinterDefaults, printAsImage), NULL, false },
     { "PrintScale", Type_Utf8String, offsetof(PrinterDefaults, printScale), NULL, (int64_t)"shrink" },
 };
 
 static SettingInfo gUserPrefsInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
     { NULL, (SettingType)7, sizeof(UserPrefs), NULL },
     { "AdvancedPrefs", Type_Struct, offsetof(UserPrefs, advancedPrefs), gAdvancedPrefsInfo, NULL },
     { "BackgroundGradient", Type_Struct, offsetof(UserPrefs, backgroundGradient), gBackgroundGradientInfo, NULL },

@@ -55,7 +55,8 @@ static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_
     return NULL;
 }
 
-static void *DeserializeRec(IniFile& ini, SettingInfo *meta, const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
+static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
+                            const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
 {
     if ((size_t)-1 == endIdx)
         endIdx = ini.sections.Count();
@@ -64,21 +65,22 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, const char *section
     IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
     int r, g, b, a;
 
-    uint8_t *base = AllocArray<uint8_t>(meta[0].offset);
+    if (!base)
+        base = AllocArray<uint8_t>(GetStructSize(meta));
     if (secIdx >= endIdx) {
         section = NULL;
         secIdx = startIdx - 1;
     }
 
-    for (size_t i = 1; i <= (size_t)meta[0].type; i++) {
+    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
         if (Type_Struct == meta[i].type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
-            *(void **)(base + meta[i].offset) = DeserializeRec(ini, meta[i].substruct, name, secIdx + 1, endIdx);
+            DeserializeRec(ini, meta[i].substruct, base + meta[i].offset, name, secIdx + 1, endIdx);
             continue;
         }
         if (Type_Array == meta[i].type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
-            Vec<void *> array;
+            str::Str<uint8_t> array;
             size_t nextSecIdx = endIdx;
             FindSection(ini, sectionName, secIdx + 1, endIdx, &nextSecIdx);
             size_t subSecIdx = nextSecIdx;
@@ -86,11 +88,12 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, const char *section
             while (subSection && subSecIdx < nextSecIdx) {
                 size_t nextSubSecIdx = nextSecIdx;
                 IniSection *nextSubSec = FindSection(ini, name, subSecIdx + 1, nextSecIdx, &nextSubSecIdx);
-                array.Append(DeserializeRec(ini, meta[i].substruct, name, subSecIdx, nextSubSecIdx));
+                uint8_t *subbase = array.AppendBlanks(GetStructSize(meta[i].substruct));
+                DeserializeRec(ini, meta[i].substruct, subbase, name, subSecIdx, nextSubSecIdx);
                 subSection = nextSubSec; subSecIdx = nextSubSecIdx;
             }
-            *(size_t *)(base + meta[i+1].offset) = array.Size();
-            *(void ***)(base + meta[i].offset) = array.StealData();
+            *(size_t *)(base + meta[i+1].offset) = array.Size() / GetStructSize(meta[i].substruct);
+            *(uint8_t **)(base + meta[i].offset) = array.StealData();
             i++; // skip implicit array count field
             continue;
         }
@@ -180,7 +183,7 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
 
     COLORREF c;
     uint8_t *base = (uint8_t *)data;
-    for (size_t i = 1; i <= (size_t)meta[0].type; i++) {
+    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
         CrashIf(str::FindChar(meta[i].name, '=') || NeedsEscaping(meta[i].name));
         ScopedMem<char> value;
         switch (meta[i].type) {
@@ -237,16 +240,17 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
         }
     }
 
-    for (size_t i = 1; i <= (size_t)meta[0].type; i++) {
+    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
         if (Type_Struct == meta[i].type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
-            SerializeRec(out, *(const void **)(base + meta[i].offset), meta[i].substruct, name);
+            SerializeRec(out, base + meta[i].offset, meta[i].substruct, name);
         }
         else if (Type_Array == meta[i].type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
             size_t count = *(size_t *)(base + meta[i+1].offset);
+            uint8_t *subbase = *(uint8_t **)(base + meta[i].offset);
             for (size_t j = 0; j < count; j++) {
-                SerializeRec(out, (*(void ***)(base + meta[i].offset))[j], meta[i].substruct, name);
+                SerializeRec(out, subbase + j * GetStructSize(meta[i].substruct), meta[i].substruct, name);
             }
             i++; // skip implicit array count field
         }
@@ -270,25 +274,29 @@ char *Serialize(const void *data, SettingInfo *def, size_t *sizeOut, const char 
     return out.StealData();
 }
 
-void FreeStruct(void *data, SettingInfo *meta)
+static void FreeStructData(uint8_t *base, SettingInfo *meta)
 {
-    if (!data)
-        return;
-    uint8_t *base = (uint8_t *)data;
-    for (size_t i = 1; i <= (size_t)meta[0].type; i++) {
+    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
         if (Type_Struct == meta[i].type)
-            FreeStruct(*(void **)(base + meta[i].offset), meta[i].substruct);
+            FreeStructData(base + meta[i].offset, meta[i].substruct);
         else if (Type_Array == meta[i].type) {
             size_t count = *(size_t *)(base + meta[i+1].offset);
+            uint8_t *subbase = *(uint8_t **)(base + meta[i].offset);
             for (size_t j = 0; j < count; j++) {
-                FreeStruct((*(void ***)(base + meta[i].offset))[j], meta[i].substruct);
+                FreeStructData(subbase + j * GetStructSize(meta[i].substruct), meta[i].substruct);
             }
-            free(*(void **)(base + meta[i].offset));
+            free(subbase);
             i++;
         }
         else if (Type_String == meta[i].type || Type_Utf8String == meta[i].type)
             free(*(void **)(base + meta[i].offset));
     }
+}
+
+void FreeStruct(void *data, SettingInfo *meta)
+{
+    if (data)
+        FreeStructData((uint8_t *)data, meta);
     free(data);
 }
 
