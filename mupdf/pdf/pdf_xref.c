@@ -341,7 +341,7 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 		xref->table[num].gen = gen;
 		xref->table[num].stm_ofs = stm_ofs;
 		pdf_drop_obj(xref->table[num].obj);
-		xref->table[num].obj = trailer;
+		xref->table[num].obj = pdf_keep_obj(trailer);
 		xref->table[num].type = 'n';
 	}
 	fz_catch(ctx)
@@ -407,6 +407,7 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 	}
 	fz_catch(ctx)
 	{
+		pdf_drop_obj(trailer);
 		fz_rethrow(ctx);
 	}
 
@@ -777,6 +778,12 @@ pdf_init_document(pdf_document *xref)
 	{
 		if (xref->table)
 		{
+			/* SumatraPDF: fix memory leak */
+			for (i = 0; i < xref->len; i++)
+			{
+				pdf_drop_obj(xref->table[i].obj);
+				fz_drop_buffer(ctx, xref->table[i].stm_buf);
+			}
 			fz_free(xref->ctx, xref->table);
 			xref->table = NULL;
 			xref->len = 0;

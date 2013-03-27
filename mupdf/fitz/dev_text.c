@@ -775,34 +775,6 @@ fixup_text_span(fz_text_span *span)
 	}
 }
 
-static inline int
-is_one_number(fz_text_span *span)
-{
-	int i;
-	for (i = 0; i < span->len; i++)
-		if (span->text[i].c < '0' || '9' < span->text[i].c)
-			return 0;
-	return span->len > 0;
-}
-
-static void
-fixup_text_line(fz_context *ctx, fz_text_line *line)
-{
-	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2160 */
-	if (line->len > 1 && line->spans[0]->len > 0 && line->spans[1]->len > 0 &&
-		line->spans[0]->text[0].style != line->spans[1]->text[0].style &&
-		line->spans[0]->text[0].style->size < line->spans[1]->text[0].style->size &&
-		is_one_number(line->spans[0]) && line->spans[1]->text[0].c != ' ')
-	{
-		// insert space between footnote number and footnote text
-		fz_rect a, b;
-		fz_text_char_bbox(&a, line->spans[0], line->spans[0]->len - 1);
-		fz_text_char_bbox(&b, line->spans[1], 0);
-		if (a.x1 <= b.x0 && a.y1 < b.y1 && 3 * (a.y0 - b.y0) < b.y1 - a.y1)
-			add_char_to_span(ctx, line->spans[0], ' ', &line->spans[0]->max, &line->spans[1]->min, line->spans[0]->text[line->spans[0]->len - 1].style);
-	}
-}
-
 static float
 calc_bbox_overlap(fz_text_span *span, int i, fz_text_span *span2, int j)
 {
@@ -939,7 +911,6 @@ fixup_text_page(fz_context *ctx, fz_text_page *page)
 		{
 			for (span_num = 0; span_num < line->len; span_num++)
 				fixup_text_span(line->spans[span_num]);
-			fixup_text_line(ctx, line);
 		}
 		fixup_text_block(ctx, block);
 	}
