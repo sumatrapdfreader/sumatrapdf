@@ -297,10 +297,10 @@ UserPrefs = Struct("UserPrefs", UserPrefs,
 
 # ##### end of setting definitions for SumatraPDF #####
 
-def FormatComment(comment, start="\t//"):
+def FormatComment(comment, start):
 	result, parts, line = [], comment.split(), start
 	while parts:
-		while parts and len(line + parts[0]) < 72:
+		while parts and (line == start or len(line + parts[0]) < 72):
 			line += " " + parts.pop(0)
 		result.append(line)
 		line = start
@@ -311,7 +311,7 @@ def BuildStruct(struct, built=[]):
 	if struct.comment:
 		lines = FormatComment(struct.comment, "//") + lines
 	for field in struct.default:
-		lines += FormatComment(field.comment)
+		lines += FormatComment(field.comment, "\t//")
 		lines.append("\t%s %s;" % (field.type.ctype, field.cname))
 		if type(field) == Array:
 			lines.append("\tsize_t %sCount;" % field.cname)
@@ -330,7 +330,7 @@ def BuildMetaData(struct, built=[]):
 			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo, NULL }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
 		elif type(field) == Array:
 			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo, NULL }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
-			fieldInfo.append("\t{ NULL, Type_Array, offsetof(%s, %sCount), g%sInfo, NULL }," % (struct.structName, field.cname, field.name))
+			fieldInfo.append("\t{ NULL, Type_Meta, offsetof(%s, %sCount), g%sInfo, NULL }," % (struct.structName, field.cname, field.name))
 		else:
 			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), NULL, %s }," % (field.name, field.type.name, struct.structName, field.cname, field.cdefault()))
 		if type(field) in [Struct, Array] and field.structName not in built:
@@ -339,7 +339,7 @@ def BuildMetaData(struct, built=[]):
 	metadata.append("\n".join([
 		"static SettingInfo g%sInfo[] = {" % struct.structName,
 		# include size information in the first line instead of a second structure
-		"\t{ NULL, (SettingType)%d, sizeof(%s), NULL }," % (len(fieldInfo), struct.structName),
+		"\t{ NULL, Type_Meta, sizeof(%s), NULL, %d }," % (struct.structName, len(fieldInfo)),
 	] + fieldInfo + [
 		"};"
 	]))
@@ -372,7 +372,7 @@ AppPrefs3_Header = """\
 %(userStructDef)s
 
 enum SettingType {
-	Type_Struct, Type_Array, Type_Compact,
+	Type_Meta, Type_Struct, Type_Array, Type_Compact,
 	Type_Bool, Type_Color, Type_Float, Type_Int, Type_Int64, Type_String, Type_Utf8String,
 };
 
@@ -385,7 +385,7 @@ struct SettingInfo {
 };
 STATIC_ASSERT(sizeof(int64_t) >= sizeof(void *), ptr_is_max_64_bit);
 
-static inline size_t GetFieldCount(SettingInfo *meta) { return (size_t)meta[0].type; }
+static inline size_t GetFieldCount(SettingInfo *meta) { return (size_t)meta[0].def; }
 static inline size_t GetStructSize(SettingInfo *meta) { return meta[0].offset; }
 
 #ifdef INCLUDE_APPPREFS3_METADATA

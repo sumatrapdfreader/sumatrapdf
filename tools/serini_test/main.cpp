@@ -72,11 +72,10 @@ struct Rec {
 };
 
 static SettingInfo gRecInfo[] = {
-    /* TODO: replace this hack with a second meta-struct? */
-    { NULL, (SettingType)3, sizeof(Rec), NULL },
-    { "Rec", Type_Array, offsetof(Rec, rec), gRecInfo },
-    { NULL, Type_Array, offsetof(Rec, recCount), gRecInfo },
-    { "Up", Type_Struct, offsetof(Rec, up), gUserPrefsInfo },
+    { NULL, Type_Meta, sizeof(Rec), NULL, 3 },
+    { "Rec", Type_Array, offsetof(Rec, rec), gRecInfo, NULL },
+    { NULL, Type_Meta, offsetof(Rec, recCount), gRecInfo, NULL },
+    { "Up", Type_Struct, offsetof(Rec, up), gUserPrefsInfo, NULL },
 };
 
 static bool TestSerializeRecursiveArray()
