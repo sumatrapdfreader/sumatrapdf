@@ -232,20 +232,20 @@ public:
     ULONG STDMETHODCALLTYPE Release();
 
     // IInternetProtocolInfo
-    STDMETHODIMP ParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD dwParseFlags,
-        LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult, DWORD dwReserved)
+    STDMETHODIMP ParseUrl(LPCWSTR, PARSEACTION, DWORD,
+        LPWSTR, DWORD, DWORD *, DWORD)
     { return INET_E_DEFAULT_ACTION; }
 
-    STDMETHODIMP CombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
-        DWORD dwCombineFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult,
-        DWORD dwReserved)
+    STDMETHODIMP CombineUrl(LPCWSTR, LPCWSTR,
+        DWORD, LPWSTR, DWORD, DWORD *,
+        DWORD)
     { return INET_E_DEFAULT_ACTION; }
 
-    STDMETHODIMP CompareUrl(LPCWSTR pwzUrl1, LPCWSTR pwzUrl2, DWORD dwCompareFlags)
+    STDMETHODIMP CompareUrl(LPCWSTR, LPCWSTR, DWORD)
     { return INET_E_DEFAULT_ACTION; }
 
-    STDMETHODIMP QueryInfo(LPCWSTR pwzUrl, QUERYOPTION queryOption, DWORD dwQueryFlags,
-        LPVOID pBuffer, DWORD cbBuffer, DWORD *pcbBuf, DWORD dwReserved)
+    STDMETHODIMP QueryInfo(LPCWSTR, QUERYOPTION, DWORD,
+        LPVOID, DWORD, DWORD *, DWORD)
     { return INET_E_DEFAULT_ACTION; }
 
 protected:
@@ -296,14 +296,14 @@ public:
             IInternetBindInfo *pIBindInfo,
             DWORD grfSTI,
             HANDLE_PTR dwReserved);
-    STDMETHODIMP Continue(PROTOCOLDATA *pStateInfo) { return S_OK; }
-    STDMETHODIMP Abort(HRESULT hrReason,DWORD dwOptions) { return S_OK; }
-    STDMETHODIMP Terminate(DWORD dwOptions) { return S_OK; }
+    STDMETHODIMP Continue(PROTOCOLDATA *) { return S_OK; }
+    STDMETHODIMP Abort(HRESULT, DWORD) { return S_OK; }
+    STDMETHODIMP Terminate(DWORD) { return S_OK; }
     STDMETHODIMP Suspend() { return E_NOTIMPL; }
     STDMETHODIMP Resume() { return E_NOTIMPL; }
     STDMETHODIMP Read(void *pv,ULONG cb,ULONG *pcbRead);
     STDMETHODIMP Seek(LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition);
-    STDMETHODIMP LockRequest(DWORD dwOptions) { return S_OK; }
+    STDMETHODIMP LockRequest(DWORD) { return S_OK; }
     STDMETHODIMP UnlockRequest() { return S_OK; }
 protected:
     LONG refCount;
@@ -403,8 +403,8 @@ static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=NULL)
 STDMETHODIMP HW_IInternetProtocol::Start(
     LPCWSTR szUrl,
     IInternetProtocolSink *pIProtSink,
-    IInternetBindInfo *pIBindInfo,
-    DWORD grfSTI,
+    IInternetBindInfo *,
+    DWORD,
     HANDLE_PTR /*dwReserved*/)
 {
     // TODO: others seem to return S_OK even if there is no content
@@ -484,7 +484,7 @@ public:
 
     // IClassFactory
     STDMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject);
-    STDMETHODIMP LockServer(BOOL fLock) { return S_OK; }
+    STDMETHODIMP LockServer(BOOL) { return S_OK; }
 
 protected:
     LONG refCount;
@@ -802,21 +802,21 @@ public:
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IDocHostUIHandler
-    STDMETHODIMP ShowContextMenu(DWORD dwID, POINT *ppt, IUnknown *pcmdtReserved, IDispatch *pdispReserved) { return S_FALSE; }
-    STDMETHODIMP GetHostInfo(DOCHOSTUIINFO *pInfo) { return E_NOTIMPL; }
-    STDMETHODIMP ShowUI(DWORD dwID, IOleInPlaceActiveObject *pActiveObject, IOleCommandTarget *pCommandTarget, IOleInPlaceFrame *pFrame, IOleInPlaceUIWindow *pDoc) { return S_FALSE; }
+    STDMETHODIMP ShowContextMenu(DWORD, POINT *, IUnknown *, IDispatch *) { return S_FALSE; }
+    STDMETHODIMP GetHostInfo(DOCHOSTUIINFO *) { return E_NOTIMPL; }
+    STDMETHODIMP ShowUI(DWORD, IOleInPlaceActiveObject *, IOleCommandTarget *, IOleInPlaceFrame *, IOleInPlaceUIWindow *) { return S_FALSE; }
     STDMETHODIMP HideUI(void) { return E_NOTIMPL; }
     STDMETHODIMP UpdateUI(void) { return E_NOTIMPL; }
-    STDMETHODIMP EnableModeless(BOOL fEnable) { return E_NOTIMPL; }
-    STDMETHODIMP OnDocWindowActivate(BOOL fActivate) { return E_NOTIMPL; }
-    STDMETHODIMP OnFrameWindowActivate(BOOL fActivate) { return E_NOTIMPL; }
-    STDMETHODIMP ResizeBorder(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow, BOOL fRameWindow) { return E_NOTIMPL; }
-    STDMETHODIMP TranslateAccelerator(LPMSG lpMsg, const GUID *pguidCmdGroup, DWORD nCmdID) { return S_FALSE; }
-    STDMETHODIMP GetOptionKeyPath(LPOLESTR *pchKey, DWORD dw) { return S_FALSE; }
-    STDMETHODIMP GetDropTarget(IDropTarget *pDropTarget, IDropTarget **ppDropTarget) { return fs->QueryInterface(IID_PPV_ARGS(ppDropTarget)); }
+    STDMETHODIMP EnableModeless(BOOL) { return E_NOTIMPL; }
+    STDMETHODIMP OnDocWindowActivate(BOOL) { return E_NOTIMPL; }
+    STDMETHODIMP OnFrameWindowActivate(BOOL) { return E_NOTIMPL; }
+    STDMETHODIMP ResizeBorder(LPCRECT, IOleInPlaceUIWindow *, BOOL) { return E_NOTIMPL; }
+    STDMETHODIMP TranslateAccelerator(LPMSG, const GUID *, DWORD) { return S_FALSE; }
+    STDMETHODIMP GetOptionKeyPath(LPOLESTR *, DWORD) { return S_FALSE; }
+    STDMETHODIMP GetDropTarget(IDropTarget *, IDropTarget **ppDropTarget) { return fs->QueryInterface(IID_PPV_ARGS(ppDropTarget)); }
     STDMETHODIMP GetExternal(IDispatch **ppDispatch) { if (ppDispatch) *ppDispatch = NULL; return S_FALSE; }
-    STDMETHODIMP TranslateUrl(DWORD dwTranslate, OLECHAR *pchURLIn, OLECHAR **ppchURLOut) { return S_FALSE; }
-    STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet) { if (ppDORet) *ppDORet = NULL; return S_FALSE; }
+    STDMETHODIMP TranslateUrl(DWORD, OLECHAR *, OLECHAR **) { return S_FALSE; }
+    STDMETHODIMP FilterDataObject(IDataObject *, IDataObject **ppDORet) { if (ppDORet) *ppDORet = NULL; return S_FALSE; }
 };
 
 class HW_IDropTarget : public IDropTarget
@@ -831,18 +831,18 @@ public:
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
-    STDMETHODIMP DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
+    STDMETHODIMP DragEnter(IDataObject *pDataObj, DWORD, POINTL, DWORD *pdwEffect) {
         HRESULT hr = fs->htmlWindow->OnDragEnter(pDataObj);
         if (SUCCEEDED(hr))
             *pdwEffect = DROPEFFECT_COPY;
         return hr;
     }
-    STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
+    STDMETHODIMP DragOver(DWORD, POINTL, DWORD *pdwEffect) {
         *pdwEffect = DROPEFFECT_COPY;
         return S_OK;
     }
     STDMETHODIMP DragLeave(void) { return S_OK; }
-    STDMETHODIMP Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
+    STDMETHODIMP Drop(IDataObject *pDataObj, DWORD, POINTL, DWORD *pdwEffect) {
         *pdwEffect = DROPEFFECT_COPY;
         return fs->htmlWindow->OnDragDrop(pDataObj);
     }
@@ -866,17 +866,17 @@ public:
     // IMoniker
     STDMETHODIMP BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj);
     STDMETHODIMP GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName);
-    STDMETHODIMP BindToObject(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riidResult, void **ppvResult) { return E_NOTIMPL; }
-    STDMETHODIMP Reduce(IBindCtx *pbc, DWORD dwReduceHowFar, IMoniker **ppmkToLeft, IMoniker **ppmkReduced) { return E_NOTIMPL; }
-    STDMETHODIMP ComposeWith(IMoniker *pmkRight, BOOL fOnlyIfNotGeneric, IMoniker **ppmkComposite) { return E_NOTIMPL; }
-    STDMETHODIMP Enum(BOOL fForward, IEnumMoniker **ppenumMoniker) { return E_NOTIMPL; }
-    STDMETHODIMP IsEqual(IMoniker *pmkOtherMoniker) { return E_NOTIMPL; }
-    STDMETHODIMP Hash(DWORD *pdwHash) { return E_NOTIMPL; }
-    STDMETHODIMP IsRunning(IBindCtx *pbc, IMoniker *pmkToLeft, IMoniker *pmkNewlyRunning) { return E_NOTIMPL; }
-    STDMETHODIMP GetTimeOfLastChange(IBindCtx *pbc, IMoniker *pmkToLeft, FILETIME *pFileTime) { return E_NOTIMPL; }
-    STDMETHODIMP Inverse(IMoniker **ppmk) { return E_NOTIMPL; }
-    STDMETHODIMP CommonPrefixWith(IMoniker *pmkOther, IMoniker **ppmkPrefix) { return E_NOTIMPL; }
-    STDMETHODIMP RelativePathTo(IMoniker *pmkOther, IMoniker **ppmkRelPath) { return E_NOTIMPL; }
+    STDMETHODIMP BindToObject(IBindCtx *, IMoniker *, REFIID, void **) { return E_NOTIMPL; }
+    STDMETHODIMP Reduce(IBindCtx *, DWORD, IMoniker **, IMoniker **) { return E_NOTIMPL; }
+    STDMETHODIMP ComposeWith(IMoniker *, BOOL, IMoniker **) { return E_NOTIMPL; }
+    STDMETHODIMP Enum(BOOL, IEnumMoniker **) { return E_NOTIMPL; }
+    STDMETHODIMP IsEqual(IMoniker *) { return E_NOTIMPL; }
+    STDMETHODIMP Hash(DWORD *) { return E_NOTIMPL; }
+    STDMETHODIMP IsRunning(IBindCtx *, IMoniker *, IMoniker *) { return E_NOTIMPL; }
+    STDMETHODIMP GetTimeOfLastChange(IBindCtx *, IMoniker *, FILETIME *) { return E_NOTIMPL; }
+    STDMETHODIMP Inverse(IMoniker **) { return E_NOTIMPL; }
+    STDMETHODIMP CommonPrefixWith(IMoniker *, IMoniker **) { return E_NOTIMPL; }
+    STDMETHODIMP RelativePathTo(IMoniker *, IMoniker **) { return E_NOTIMPL; }
     STDMETHODIMP ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,LPOLESTR pszDisplayName,
         ULONG *pchEaten, IMoniker **ppmkOut);
     STDMETHODIMP IsSystemMoniker(DWORD *pdwMksys) {
@@ -887,13 +887,13 @@ public:
     }
 
     // IPersistStream methods
-    STDMETHODIMP Save(IStream *pStm, BOOL fClearDirty)  { return E_NOTIMPL; }
+    STDMETHODIMP Save(IStream *, BOOL )  { return E_NOTIMPL; }
     STDMETHODIMP IsDirty() { return E_NOTIMPL; }
-    STDMETHODIMP Load(IStream *pStm) { return E_NOTIMPL; }
-    STDMETHODIMP GetSizeMax(ULARGE_INTEGER *pcbSize) { return E_NOTIMPL; }
+    STDMETHODIMP Load(IStream *) { return E_NOTIMPL; }
+    STDMETHODIMP GetSizeMax(ULARGE_INTEGER *) { return E_NOTIMPL; }
 
     // IPersist
-    STDMETHODIMP GetClassID(CLSID *pClassID) { return E_NOTIMPL; }
+    STDMETHODIMP GetClassID(CLSID *) { return E_NOTIMPL; }
 
 private:
     LONG        refCount;
@@ -939,7 +939,7 @@ HRESULT HtmlMoniker::SetBaseUrl(const WCHAR *newBaseUrl)
     return S_OK;
 }
 
-STDMETHODIMP HtmlMoniker::BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj)
+STDMETHODIMP HtmlMoniker::BindToStorage(IBindCtx *, IMoniker *, REFIID riid, void **ppvObj)
 {
     LARGE_INTEGER seek = {0};
     htmlStream->Seek(seek, STREAM_SEEK_SET, NULL);
@@ -954,7 +954,7 @@ static LPOLESTR OleStrDup(WCHAR *s)
     return ret;
 }
 
-STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
+STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *, IMoniker *,
     LPOLESTR *ppszDisplayName)
 {
     if (!ppszDisplayName)
@@ -966,9 +966,9 @@ STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
     return S_OK;
 }
 
-STDMETHODIMP HtmlMoniker::ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
-    LPOLESTR pszDisplayName,
-        ULONG *pchEaten, IMoniker **ppmkOut)
+STDMETHODIMP HtmlMoniker::ParseDisplayName(IBindCtx *, IMoniker *,
+    LPOLESTR ,
+        ULONG *, IMoniker **)
 {
     return E_NOTIMPL;
 }
@@ -1599,9 +1599,9 @@ static BSTR BstrFromVariant(VARIANT *vurl)
         return vurl->bstrVal;
 }
 
-HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
+HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID, LCID,
     WORD flags, DISPPARAMS * pDispParams, VARIANT * pVarResult,
-    EXCEPINFO * pExcepInfo, unsigned int * puArgErr)
+    EXCEPINFO *, unsigned int *)
 {
     if (flags & DISPATCH_PROPERTYGET)
         return DispatchPropGet(dispIdMember, pVarResult);
@@ -1736,7 +1736,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetWindowContext(
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::OnUIDeactivate(BOOL fUndoable)
+HRESULT HW_IOleInPlaceSiteWindowless::OnUIDeactivate(BOOL)
 {
     fs->uiActive = false;
     return S_OK;
@@ -1749,7 +1749,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceDeactivate()
 }
 
 // IOleInPlaceSiteEx
-HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL * pfNoRedraw, DWORD dwFlags)
+HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL * pfNoRedraw, DWORD)
 {
     if (pfNoRedraw)
         *pfNoRedraw = FALSE;
@@ -1762,7 +1762,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::CanWindowlessActivate()
     return fs->supportsWindowlessActivation ? S_OK : S_FALSE;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* phDC)
+HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT, DWORD /*grfFlags*/, HDC* phDC)
 {
     if (phDC == NULL)
         return E_INVALIDARG;
@@ -1780,7 +1780,7 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* 
     return E_NOTIMPL;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT pRect, BOOL fErase)
+HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT, BOOL fErase)
 {
 
     ::InvalidateRect(fs->hwndParent, NULL, fErase);
@@ -1797,7 +1797,7 @@ HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER * ppContainer)
 
 // IOleItemContainer
 HRESULT HW_IOleItemContainer::GetObject(LPOLESTR pszItem,
-    DWORD dwSpeedNeeded, IBindCtx * pbc, REFIID riid, void ** ppvObject)
+    DWORD, IBindCtx *, REFIID, void ** ppvObject)
 {
     if (pszItem == NULL)
         return E_INVALIDARG;
@@ -1808,7 +1808,7 @@ HRESULT HW_IOleItemContainer::GetObject(LPOLESTR pszItem,
 }
 
 HRESULT HW_IOleItemContainer::GetObjectStorage(LPOLESTR pszItem,
-    IBindCtx * pbc, REFIID riid, void ** ppvStorage)
+    IBindCtx *, REFIID, void ** ppvStorage)
 {
     if (pszItem == NULL)
         return E_INVALIDARG;
@@ -1833,7 +1833,7 @@ HRESULT HW_IOleControlSite::LockInPlaceActive(BOOL fLock)
 }
 
 HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
-    POINTF *pPtfContainer, DWORD dwFlags)
+    POINTF *pPtfContainer, DWORD)
 {
     HRESULT hr = S_OK;
     if (pPtlHimetric == NULL)
@@ -1844,8 +1844,8 @@ HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
 }
 
 // IOleCommandTarget
-HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *pguidCmdGroup,
-    ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdTet)
+HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *,
+    ULONG , OLECMD *prgCmds, OLECMDTEXT *)
 {
     if (prgCmds == NULL)
         return E_INVALIDARG;

@@ -427,7 +427,10 @@ static void GetProps(Doc doc, PropertiesLayout *layoutData, DisplayModel *dm, bo
         }
         layoutData->AddProperty(_TR("Fonts:"), str);
     }
+#else
+    (void)extended;
 #endif
+
 }
 
 static void ShowProperties(HWND parent, Doc doc, DisplayModel *dm, bool extended=false)

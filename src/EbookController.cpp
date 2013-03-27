@@ -514,6 +514,7 @@ void EbookController::OnLayoutTimer()
 
 void EbookController::SizeChangedPage(Control *c, int, int)
 {
+    (void)c;
     CrashIf(c != ctrls->page);
     // delay re-layout so that we don't unnecessarily do the
     // work as long as the user is still resizing the window
@@ -522,12 +523,14 @@ void EbookController::SizeChangedPage(Control *c, int, int)
 
 void EbookController::ClickedNext(Control *c, int, int)
 {
+    (void)c;
     CrashIf(c != ctrls->next);
     AdvancePage(1);
 }
 
 void EbookController::ClickedPrev(Control *c, int, int)
 {
+    (void)c;
     CrashIf(c != ctrls->prev);
     AdvancePage(-1);
 }
@@ -535,6 +538,7 @@ void EbookController::ClickedPrev(Control *c, int, int)
 // (x, y) is in the coordinates of w
 void EbookController::ClickedProgress(Control *c, int x, int)
 {
+    (void)c;
     CrashIf(c != ctrls->progress);
     float perc = ctrls->progress->GetPercAt(x);
     // TODO: shouldn't be active if we don't have pages from

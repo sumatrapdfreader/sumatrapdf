@@ -747,7 +747,7 @@ bool Fb2Doc::IsZipped() const
     return isZipped;
 }
 
-bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool sniff)
+bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool)
 {
     return str::EndsWithI(fileName, L".fb2")  ||
            str::EndsWithI(fileName, L".fb2z") ||
@@ -790,7 +790,7 @@ PalmDoc::~PalmDoc()
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // cf. http://wiki.mobileread.com/wiki/TealDoc
-static const char *HandleTealDocTag(str::Str<char>& builder, WStrVec& tocEntries, const char *text, size_t len, UINT codePage)
+static const char *HandleTealDocTag(str::Str<char>& builder, WStrVec& tocEntries, const char *text, size_t len, UINT)
 {
     if (len < 9) {
 Fallback:
@@ -910,7 +910,7 @@ const char *PalmDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-WCHAR *PalmDoc::GetProperty(DocumentProperty prop) const
+WCHAR *PalmDoc::GetProperty(DocumentProperty) const
 {
     return NULL;
 }
@@ -1008,7 +1008,7 @@ const char *TcrDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-WCHAR *TcrDoc::GetProperty(DocumentProperty prop) const
+WCHAR *TcrDoc::GetProperty(DocumentProperty) const
 {
     return NULL;
 }
@@ -1148,7 +1148,7 @@ const WCHAR *HtmlDoc::GetFileName() const
     return fileName;
 }
 
-bool HtmlDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
+bool HtmlDoc::IsSupportedFile(const WCHAR *fileName, bool)
 {
     return str::EndsWithI(fileName, L".html") ||
            str::EndsWithI(fileName, L".htm") ||
@@ -1343,7 +1343,7 @@ const char *TxtDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-WCHAR *TxtDoc::GetProperty(DocumentProperty prop) const
+WCHAR *TxtDoc::GetProperty(DocumentProperty) const
 {
     return NULL;
 }
@@ -1387,7 +1387,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
     return true;
 }
 
-bool TxtDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
+bool TxtDoc::IsSupportedFile(const WCHAR *fileName, bool)
 {
     return str::EndsWithI(fileName, L".txt") ||
            str::EndsWithI(fileName, L".log") ||

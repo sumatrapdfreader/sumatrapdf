@@ -477,7 +477,7 @@ RectI GetFullscreenRect(HWND hwnd)
     return RectI(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
 
-static BOOL CALLBACK GetMonitorRectProc(HMONITOR hMonitor, HDC hdc, LPRECT rcMonitor, LPARAM data)
+static BOOL CALLBACK GetMonitorRectProc(HMONITOR, HDC, LPRECT rcMonitor, LPARAM data)
 {
     RectI *rcAll = (RectI *)data;
     *rcAll = rcAll->Union(RectI::FromRECT(*rcMonitor));

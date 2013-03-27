@@ -70,6 +70,7 @@ void RestartLayoutTimer(EbookController *controller)
 
 static void OnTimer(EbookWindow *win, WPARAM timerId)
 {
+    (void)timerId;
     CrashIf(timerId != LAYOUT_TIMER_ID);
     KillTimer(win->hwndFrame, LAYOUT_TIMER_ID);
     win->ebookController->OnLayoutTimer();

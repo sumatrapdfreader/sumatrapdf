@@ -829,7 +829,7 @@ WCHAR *MobiDoc::GetProperty(DocumentProperty prop)
     return NULL;
 }
 
-bool MobiDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
+bool MobiDoc::IsSupportedFile(const WCHAR *fileName, bool)
 {
     // TODO: also accept .prc as MobiEngine::IsSupportedFile ?
     return str::EndsWithI(fileName, L".mobi");

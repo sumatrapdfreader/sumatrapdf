@@ -209,6 +209,7 @@ bool AttrInfo::NameIs(const char *s) const
 // TODO: add proper namespace support
 bool AttrInfo::NameIsNS(const char *s, const char *ns) const
 {
+    (void)ns;
     CrashIf(!ns);
     const char *nameStart = (const char *)memchr(name, ':', nameLen);
     nameStart = nameStart ? nameStart + 1 : name;
@@ -255,6 +256,7 @@ bool HtmlToken::NameIs(const char *name) const
 // TODO: add proper namespace support
 bool HtmlToken::NameIsNS(const char *name, const char *ns) const
 {
+    (void)ns;
     CrashIf(!ns);
     const char *nameStart = (const char *)memchr(s, ':', nLen);
     nameStart = nameStart ? nameStart + 1 : s;

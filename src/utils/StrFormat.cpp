@@ -137,6 +137,7 @@ static int FmtArgsCount(FmtInfo *fmtParts, int n)
 
 int ParseFormatString(const char *fmt, FmtInfo *fmtParts, int maxArgsCount)
 {
+    (void)maxArgsCount;
     int n;
     int currPartNo = 0;
     const char *start = fmt;
@@ -211,7 +212,7 @@ char *Fmt(const char *fmt, const Arg& a0, const Arg& a1, const Arg& a2, const Ar
     return res.StealData();
 }
 
-WCHAR *Fmt(const WCHAR *fmt, const Arg& a0, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5)
+WCHAR *Fmt(const WCHAR *, const Arg& a0, const Arg& a1, const Arg& a2, const Arg& a3, const Arg& a4, const Arg& a5)
 {
     const Arg* args[MAX_FMT_ARGS];
     args[0] = &a0; args[1] = &a1; args[2] = &a2;

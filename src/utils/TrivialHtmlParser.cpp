@@ -36,6 +36,7 @@ bool HtmlElement::NameIs(const char *name) const
 // TODO: add proper namespace support
 bool HtmlElement::NameIsNS(const char *name, const char *ns) const
 {
+    (void)ns;
     CrashIf(!ns);
     const char *nameStart = NULL;
     if (this->name) {

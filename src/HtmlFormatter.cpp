@@ -230,7 +230,7 @@ void HtmlFormatter::SetFont(const WCHAR *fontName, FontStyle fs, float fontSize)
     styleStack.Append(style);
 }
 
-void HtmlFormatter::SetFont(Font *font, FontStyle fs, float fontSize)
+void HtmlFormatter::SetFont(Font *, FontStyle fs, float fontSize)
 {
     LOGFONTW lfw;
     Status ok = CurrFont()->GetLogFontW(gfx, &lfw);

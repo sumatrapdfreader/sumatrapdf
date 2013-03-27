@@ -71,7 +71,7 @@ static bool RegisterWinClass(HINSTANCE hinst)
     return true;
 }
 
-static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
+static bool InstanceInit(HINSTANCE hInstance, int)
 {
     ghinst = hInstance;
 
@@ -273,8 +273,9 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.ParseCommandLine(GetCommandLine());
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nCmdShow)
 {
+    (void)lpCmdLine;
     int retCode = 1;    // by default it's error
 
 #ifdef DEBUG
