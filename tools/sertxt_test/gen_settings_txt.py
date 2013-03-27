@@ -3,7 +3,7 @@ import sys
 sys.path.append("scripts") # assumes is being run as ./tools/sertxt_test/gen_settings_txt.py
 
 import os, util, codecs
-from gen_settings_types import Struct, settings, Field
+from gen_settings_types import  Field, Settings, Simple
 
 """
 TODO:
@@ -185,7 +185,6 @@ def fmt_rows(rows, col_fmt = []):
     return res
 
 def gen_struct_def(stru_cls):
-    #assert isinstance(stru, Struct)
     name = stru_cls.__name__
     lines = ["struct %s {" % name]
     rows = [[field.c_type(), field.name] for field in stru_cls.fields]
@@ -238,7 +237,6 @@ FieldMetadata g${name}FieldMetadata[] = {
 };
 """
 def gen_struct_fields_txt(stru_cls, field_names):
-    #assert isinstance(stru, Struct)
     struct_name = stru_cls.__name__
     lines = ["FieldMetadata g%sFieldMetadata[] = {" % struct_name]
     rows = []
@@ -295,7 +293,7 @@ def add_cls(cls, structs):
 
 # return a list of Struct subclasses that are needed to define val
 def structs_from_top_level_value_rec(struct, structs):
-    assert isinstance(struct, Struct)
+    assert struct.is_struct()
     for field in struct.values:
         if field.is_array():
             add_cls(field.val.typ, structs)
@@ -309,7 +307,7 @@ def structs_from_top_level_value(val):
     return structs
 
 def gen_top_level_funcs_txt(top_level):
-    assert isinstance(top_level, Struct)
+    assert top_level.is_struct()
     name = top_level.name()
     return top_level_funcs_txt_tmpl % locals()
 
@@ -334,13 +332,21 @@ def gen_txt_for_top_level_val(top_level_val, file_path):
 
 def gen_sumatra_settings():
     dst_dir = settings_src_dir()
-    top_level_val = settings
+    top_level_val = Settings()
     file_path = os.path.join(dst_dir, "SettingsSumatra")
     gen_for_top_level_val(top_level_val, file_path)
     gen_txt_for_top_level_val(top_level_val, os.path.join(dst_dir, "data.txt"))
 
+def gen_simple():
+    dst_dir = settings_src_dir()
+    top_level_val = Simple()
+    file_path = os.path.join(dst_dir, "SimpleSettings")
+    gen_for_top_level_val(top_level_val, file_path)
+    gen_txt_for_top_level_val(top_level_val, os.path.join(dst_dir, "data_simple.txt"))
+
 def main():
     gen_sumatra_settings()
+    gen_simple()
 
 if __name__ == "__main__":
     main()

@@ -327,4 +327,17 @@ class Settings(Struct):
         Field("appState", AppState()),
     ]
 
-settings = Settings()
+class Simple(Struct):
+    fields = [
+        Field("bTrue", Bool(True)),
+        Field("bFalse", Bool(False)),
+        Field("u16_1", U16(1)),
+        Field("i32_1", I32(-12)),
+        Field("u32_1", U32(89)),
+        Field("u64_1", U64(123)),
+        Field("col_1", Color(0xacff00ed)),
+        Field("float_1", Float(3.12348)),
+        Field("str_1", String("lola")),
+        Field("wstr_1", WString("wide string")),
+    ]
+
