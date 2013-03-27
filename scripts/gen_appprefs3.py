@@ -62,9 +62,10 @@ class Field(object):
 		return "; %s = ???" % self.name
 
 class Struct(Field):
-	def __init__(self, name, fields, comment, structName=None):
+	def __init__(self, name, fields, comment, structName=None, compact=False):
 		self.structName = structName or name
 		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment)
+		if compact and all(field.type == Int for field in fields): self.type.name = "Compact"
 
 class Array(Field):
 	def __init__(self, name, fields, comment, structName=None):
@@ -151,7 +152,7 @@ UserPrefs = [
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these values allow to override the default settings in the Print dialog"),
 	Struct("PagePadding", PagePadding,
-		"these values allow to change how far apart pages are layed out"),
+		"these values allow to change how far apart pages are layed out"), # TODO: compact?
 	Struct("BackgroundGradient", BackgroundGradient,
 		"these values allow to tweak the experimental feature for using a color " +
 		"gradient to subconsciously determine reading progress"),
@@ -182,7 +183,7 @@ FileSettings = [
 	Field("DisplayMode", String, "automatic", # TODO: Type_Custom, DM_AUTOMATIC
 		"how pages should be layed out for this document"),
 	Struct("ScrollPos", PointI,
-		"how far this document has been scrolled", structName="PointI"),
+		"how far this document has been scrolled", structName="PointI", compact=True),
 	Field("PageNo", Int, 1,
 		"the scrollPos values are relative to the top-left corner of this page"),
 	Field("ReparseIdx", Int, 0,
@@ -194,7 +195,7 @@ FileSettings = [
 	Field("WindowState", Int, 0,
 		"default state of new SumatraPDF windows (same as the last closed)"),
 	Struct("WindowPos", RectI,
-		"default position (can be on any monitor)", structName="RectI"),
+		"default position (can be on any monitor)", structName="RectI", compact=True),
 	Field("DecryptionKey", Utf8String, None,
 		"hex encoded MD5 fingerprint of file content (32 chars) followed by " +
 		"crypt key (64 chars) - only applies for PDF documents"),
@@ -257,7 +258,7 @@ AppPrefs = [
 	Field("WindowState", Int, 1,
 		"default state of new SumatraPDF windows (same as the last closed)"),
 	Struct("WindowPos", RectI,
-		"default position (can be on any monitor)", structName="RectI"),
+		"default position (can be on any monitor)", structName="RectI", compact=True),
 	Field("TocVisible", Bool, True,
 		"whether the table of contents (Bookmarks) sidebar should be shown by " +
 		"default when its available for a document"),
@@ -322,7 +323,7 @@ def BuildStruct(struct, built=[]):
 
 def BuildMetaData(struct, built=[]):
 	fieldInfo, metadata = [], []
-	for field in sorted(struct.default, key=lambda field: field.name):
+	for field in struct.default:
 		if field.internal:
 			continue
 		if type(field) == Struct:
@@ -371,7 +372,7 @@ AppPrefs3_Header = """\
 %(userStructDef)s
 
 enum SettingType {
-	Type_Struct, Type_Array,
+	Type_Struct, Type_Array, Type_Compact,
 	Type_Bool, Type_Color, Type_Float, Type_Int, Type_Int64, Type_String, Type_Utf8String,
 };
 

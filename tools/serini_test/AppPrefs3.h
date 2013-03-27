@@ -263,7 +263,7 @@ struct UserPrefs {
 };
 
 enum SettingType {
-    Type_Struct, Type_Array,
+    Type_Struct, Type_Array, Type_Compact,
     Type_Bool, Type_Color, Type_Float, Type_Int, Type_Int64, Type_String, Type_Utf8String,
 };
 
@@ -280,11 +280,12 @@ static inline size_t GetFieldCount(SettingInfo *meta) { return (size_t)meta[0].t
 static inline size_t GetStructSize(SettingInfo *meta) { return meta[0].offset; }
 
 #ifdef INCLUDE_APPPREFS3_METADATA
-static SettingInfo gFavoriteInfo[] = {
-    { NULL, (SettingType)3, sizeof(Favorite), NULL },
-    { "Name", Type_String, offsetof(Favorite, name), NULL, NULL },
-    { "PageLabel", Type_String, offsetof(Favorite, pageLabel), NULL, NULL },
-    { "PageNo", Type_Int, offsetof(Favorite, pageNo), NULL, 0 },
+static SettingInfo gRectIInfo[] = {
+    { NULL, (SettingType)4, sizeof(RectI), NULL },
+    { "X", Type_Int, offsetof(RectI, x), NULL, 0 },
+    { "Y", Type_Int, offsetof(RectI, y), NULL, 0 },
+    { "Dx", Type_Int, offsetof(RectI, dx), NULL, 0 },
+    { "Dy", Type_Int, offsetof(RectI, dy), NULL, 0 },
 };
 
 static SettingInfo gPointIInfo[] = {
@@ -293,122 +294,121 @@ static SettingInfo gPointIInfo[] = {
     { "Y", Type_Int, offsetof(PointI, y), NULL, 0 },
 };
 
-static SettingInfo gRectIInfo[] = {
-    { NULL, (SettingType)4, sizeof(RectI), NULL },
-    { "Dx", Type_Int, offsetof(RectI, dx), NULL, 0 },
-    { "Dy", Type_Int, offsetof(RectI, dy), NULL, 0 },
-    { "X", Type_Int, offsetof(RectI, x), NULL, 0 },
-    { "Y", Type_Int, offsetof(RectI, y), NULL, 0 },
+static SettingInfo gFavoriteInfo[] = {
+    { NULL, (SettingType)3, sizeof(Favorite), NULL },
+    { "Name", Type_String, offsetof(Favorite, name), NULL, NULL },
+    { "PageNo", Type_Int, offsetof(Favorite, pageNo), NULL, 0 },
+    { "PageLabel", Type_String, offsetof(Favorite, pageLabel), NULL, NULL },
 };
 
 static SettingInfo gFileInfo[] = {
     { NULL, (SettingType)19, sizeof(File), NULL },
-    { "DecryptionKey", Type_Utf8String, offsetof(File, decryptionKey), NULL, NULL },
-    { "DisplayMode", Type_String, offsetof(File, displayMode), NULL, (int64_t)L"automatic" },
-    { "Favorite", Type_Array, offsetof(File, favorite), gFavoriteInfo, NULL },
-    { NULL, Type_Array, offsetof(File, favoriteCount), gFavoriteInfo, NULL },
     { "FilePath", Type_String, offsetof(File, filePath), NULL, NULL },
-    { "IsMissing", Type_Bool, offsetof(File, isMissing), NULL, false },
-    { "IsPinned", Type_Bool, offsetof(File, isPinned), NULL, false },
     { "OpenCount", Type_Int, offsetof(File, openCount), NULL, 0 },
+    { "IsPinned", Type_Bool, offsetof(File, isPinned), NULL, false },
+    { "IsMissing", Type_Bool, offsetof(File, isMissing), NULL, false },
+    { "UseGlobalValues", Type_Bool, offsetof(File, useGlobalValues), NULL, false },
+    { "DisplayMode", Type_String, offsetof(File, displayMode), NULL, (int64_t)L"automatic" },
+    { "ScrollPos", Type_Compact, offsetof(File, scrollPos), gPointIInfo, NULL },
     { "PageNo", Type_Int, offsetof(File, pageNo), NULL, 1 },
     { "ReparseIdx", Type_Int, offsetof(File, reparseIdx), NULL, 0 },
+    { "ZoomVirtual", Type_Float, offsetof(File, zoomVirtual), NULL, 100 },
     { "Rotation", Type_Int, offsetof(File, rotation), NULL, 0 },
-    { "ScrollPos", Type_Struct, offsetof(File, scrollPos), gPointIInfo, NULL },
+    { "WindowState", Type_Int, offsetof(File, windowState), NULL, 0 },
+    { "WindowPos", Type_Compact, offsetof(File, windowPos), gRectIInfo, NULL },
+    { "DecryptionKey", Type_Utf8String, offsetof(File, decryptionKey), NULL, NULL },
+    { "TocVisible", Type_Bool, offsetof(File, tocVisible), NULL, true },
     { "SidebarDx", Type_Int, offsetof(File, sidebarDx), NULL, 0 },
     { "TocState", Type_Utf8String, offsetof(File, tocState), NULL, NULL },
-    { "TocVisible", Type_Bool, offsetof(File, tocVisible), NULL, true },
-    { "UseGlobalValues", Type_Bool, offsetof(File, useGlobalValues), NULL, false },
-    { "WindowPos", Type_Struct, offsetof(File, windowPos), gRectIInfo, NULL },
-    { "WindowState", Type_Int, offsetof(File, windowState), NULL, 0 },
-    { "ZoomVirtual", Type_Float, offsetof(File, zoomVirtual), NULL, 100 },
+    { "Favorite", Type_Array, offsetof(File, favorite), gFavoriteInfo, NULL },
+    { NULL, Type_Array, offsetof(File, favoriteCount), gFavoriteInfo, NULL },
 };
 
 static SettingInfo gGlobalPrefsInfo[] = {
     { NULL, (SettingType)25, sizeof(GlobalPrefs), NULL },
-    { "CbxR2L", Type_Bool, offsetof(GlobalPrefs, cbxR2L), NULL, false },
-    { "CurrLangCode", Type_String, offsetof(GlobalPrefs, currLangCode), NULL, NULL },
-    { "DefaultDisplayMode", Type_String, offsetof(GlobalPrefs, defaultDisplayMode), NULL, (int64_t)L"automatic" },
-    { "DefaultZoom", Type_Float, offsetof(GlobalPrefs, defaultZoom), NULL, -1 },
-    { "EnableAutoUpdate", Type_Bool, offsetof(GlobalPrefs, enableAutoUpdate), NULL, true },
-    { "EnableTeXEnhancements", Type_Bool, offsetof(GlobalPrefs, enableTeXEnhancements), NULL, false },
-    { "FavVisible", Type_Bool, offsetof(GlobalPrefs, favVisible), NULL, false },
-    { "File", Type_Array, offsetof(GlobalPrefs, file), gFileInfo, NULL },
-    { NULL, Type_Array, offsetof(GlobalPrefs, fileCount), gFileInfo, NULL },
     { "GlobalPrefsOnly", Type_Bool, offsetof(GlobalPrefs, globalPrefsOnly), NULL, false },
-    { "InverseSearchCmdLine", Type_String, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL, NULL },
-    { "LastUpdateTime", Type_Int64, offsetof(GlobalPrefs, lastUpdateTime), NULL, 0 },
-    { "OpenCountWeek", Type_Int, offsetof(GlobalPrefs, openCountWeek), NULL, 0 },
+    { "CurrLangCode", Type_String, offsetof(GlobalPrefs, currLangCode), NULL, NULL },
+    { "ToolbarVisible", Type_Bool, offsetof(GlobalPrefs, toolbarVisible), NULL, true },
+    { "FavVisible", Type_Bool, offsetof(GlobalPrefs, favVisible), NULL, false },
     { "PdfAssociateDontAskAgain", Type_Bool, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), NULL, false },
     { "PdfAssociateShouldAssociate", Type_Bool, offsetof(GlobalPrefs, pdfAssociateShouldAssociate), NULL, false },
+    { "EnableAutoUpdate", Type_Bool, offsetof(GlobalPrefs, enableAutoUpdate), NULL, true },
     { "RememberOpenedFiles", Type_Bool, offsetof(GlobalPrefs, rememberOpenedFiles), NULL, true },
-    { "ShowStartPage", Type_Bool, offsetof(GlobalPrefs, showStartPage), NULL, true },
+    { "UseSysColors", Type_Bool, offsetof(GlobalPrefs, useSysColors), NULL, false },
+    { "InverseSearchCmdLine", Type_String, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL, NULL },
+    { "EnableTeXEnhancements", Type_Bool, offsetof(GlobalPrefs, enableTeXEnhancements), NULL, false },
+    { "VersionToSkip", Type_String, offsetof(GlobalPrefs, versionToSkip), NULL, NULL },
+    { "LastUpdateTime", Type_Int64, offsetof(GlobalPrefs, lastUpdateTime), NULL, 0 },
+    { "DefaultDisplayMode", Type_String, offsetof(GlobalPrefs, defaultDisplayMode), NULL, (int64_t)L"automatic" },
+    { "DefaultZoom", Type_Float, offsetof(GlobalPrefs, defaultZoom), NULL, -1 },
+    { "WindowState", Type_Int, offsetof(GlobalPrefs, windowState), NULL, 1 },
+    { "WindowPos", Type_Compact, offsetof(GlobalPrefs, windowPos), gRectIInfo, NULL },
+    { "TocVisible", Type_Bool, offsetof(GlobalPrefs, tocVisible), NULL, true },
     { "SidebarDx", Type_Int, offsetof(GlobalPrefs, sidebarDx), NULL, 0 },
     { "TocDy", Type_Int, offsetof(GlobalPrefs, tocDy), NULL, 0 },
-    { "TocVisible", Type_Bool, offsetof(GlobalPrefs, tocVisible), NULL, true },
-    { "ToolbarVisible", Type_Bool, offsetof(GlobalPrefs, toolbarVisible), NULL, true },
-    { "UseSysColors", Type_Bool, offsetof(GlobalPrefs, useSysColors), NULL, false },
-    { "VersionToSkip", Type_String, offsetof(GlobalPrefs, versionToSkip), NULL, NULL },
-    { "WindowPos", Type_Struct, offsetof(GlobalPrefs, windowPos), gRectIInfo, NULL },
-    { "WindowState", Type_Int, offsetof(GlobalPrefs, windowState), NULL, 1 },
+    { "ShowStartPage", Type_Bool, offsetof(GlobalPrefs, showStartPage), NULL, true },
+    { "OpenCountWeek", Type_Int, offsetof(GlobalPrefs, openCountWeek), NULL, 0 },
+    { "CbxR2L", Type_Bool, offsetof(GlobalPrefs, cbxR2L), NULL, false },
+    { "File", Type_Array, offsetof(GlobalPrefs, file), gFileInfo, NULL },
+    { NULL, Type_Array, offsetof(GlobalPrefs, fileCount), gFileInfo, NULL },
 };
 
 static SettingInfo gAdvancedPrefsInfo[] = {
     { NULL, (SettingType)6, sizeof(AdvancedPrefs), NULL },
-    { "EscToExit", Type_Bool, offsetof(AdvancedPrefs, escToExit), NULL, false },
-    { "MainWindowBackground", Type_Color, offsetof(AdvancedPrefs, mainWindowBackground), NULL, 0xfff200 },
-    { "PageColor", Type_Color, offsetof(AdvancedPrefs, pageColor), NULL, 0xffffff },
-    { "ReuseInstance", Type_Bool, offsetof(AdvancedPrefs, reuseInstance), NULL, false },
-    { "TextColor", Type_Color, offsetof(AdvancedPrefs, textColor), NULL, 0x000000 },
     { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedPrefs, traditionalEbookUI), NULL, false },
+    { "ReuseInstance", Type_Bool, offsetof(AdvancedPrefs, reuseInstance), NULL, false },
+    { "MainWindowBackground", Type_Color, offsetof(AdvancedPrefs, mainWindowBackground), NULL, 0xfff200 },
+    { "EscToExit", Type_Bool, offsetof(AdvancedPrefs, escToExit), NULL, false },
+    { "TextColor", Type_Color, offsetof(AdvancedPrefs, textColor), NULL, 0x000000 },
+    { "PageColor", Type_Color, offsetof(AdvancedPrefs, pageColor), NULL, 0xffffff },
+};
+
+static SettingInfo gPrinterDefaultsInfo[] = {
+    { NULL, (SettingType)2, sizeof(PrinterDefaults), NULL },
+    { "PrintScale", Type_Utf8String, offsetof(PrinterDefaults, printScale), NULL, (int64_t)"shrink" },
+    { "PrintAsImage", Type_Bool, offsetof(PrinterDefaults, printAsImage), NULL, false },
+};
+
+static SettingInfo gPagePaddingInfo[] = {
+    { NULL, (SettingType)4, sizeof(PagePadding), NULL },
+    { "OuterX", Type_Int, offsetof(PagePadding, outerX), NULL, 4 },
+    { "OuterY", Type_Int, offsetof(PagePadding, outerY), NULL, 2 },
+    { "InnerX", Type_Int, offsetof(PagePadding, innerX), NULL, 4 },
+    { "InnerY", Type_Int, offsetof(PagePadding, innerY), NULL, 4 },
 };
 
 static SettingInfo gBackgroundGradientInfo[] = {
     { NULL, (SettingType)4, sizeof(BackgroundGradient), NULL },
-    { "ColorBottom", Type_Color, offsetof(BackgroundGradient, colorBottom), NULL, 0x2828aa },
-    { "ColorMiddle", Type_Color, offsetof(BackgroundGradient, colorMiddle), NULL, 0x28aa28 },
-    { "ColorTop", Type_Color, offsetof(BackgroundGradient, colorTop), NULL, 0xaa2828 },
     { "Enabled", Type_Bool, offsetof(BackgroundGradient, enabled), NULL, false },
+    { "ColorTop", Type_Color, offsetof(BackgroundGradient, colorTop), NULL, 0xaa2828 },
+    { "ColorMiddle", Type_Color, offsetof(BackgroundGradient, colorMiddle), NULL, 0x28aa28 },
+    { "ColorBottom", Type_Color, offsetof(BackgroundGradient, colorBottom), NULL, 0x2828aa },
+};
+
+static SettingInfo gForwardSearch3Info[] = {
+    { NULL, (SettingType)4, sizeof(ForwardSearch3), NULL },
+    { "HighlightOffset", Type_Int, offsetof(ForwardSearch3, highlightOffset), NULL, 0 },
+    { "HighlightWidth", Type_Int, offsetof(ForwardSearch3, highlightWidth), NULL, 15 },
+    { "HighlightColor", Type_Color, offsetof(ForwardSearch3, highlightColor), NULL, 0x6581ff },
+    { "HighlightPermanent", Type_Bool, offsetof(ForwardSearch3, highlightPermanent), NULL, false },
 };
 
 static SettingInfo gExternalViewerInfo[] = {
     { NULL, (SettingType)3, sizeof(ExternalViewer), NULL },
     { "CommandLine", Type_String, offsetof(ExternalViewer, commandLine), NULL, NULL },
-    { "Filter", Type_String, offsetof(ExternalViewer, filter), NULL, NULL },
     { "Name", Type_String, offsetof(ExternalViewer, name), NULL, NULL },
-};
-
-static SettingInfo gForwardSearch3Info[] = {
-    { NULL, (SettingType)4, sizeof(ForwardSearch3), NULL },
-    { "HighlightColor", Type_Color, offsetof(ForwardSearch3, highlightColor), NULL, 0x6581ff },
-    { "HighlightOffset", Type_Int, offsetof(ForwardSearch3, highlightOffset), NULL, 0 },
-    { "HighlightPermanent", Type_Bool, offsetof(ForwardSearch3, highlightPermanent), NULL, false },
-    { "HighlightWidth", Type_Int, offsetof(ForwardSearch3, highlightWidth), NULL, 15 },
-};
-
-static SettingInfo gPagePaddingInfo[] = {
-    { NULL, (SettingType)4, sizeof(PagePadding), NULL },
-    { "InnerX", Type_Int, offsetof(PagePadding, innerX), NULL, 4 },
-    { "InnerY", Type_Int, offsetof(PagePadding, innerY), NULL, 4 },
-    { "OuterX", Type_Int, offsetof(PagePadding, outerX), NULL, 4 },
-    { "OuterY", Type_Int, offsetof(PagePadding, outerY), NULL, 2 },
-};
-
-static SettingInfo gPrinterDefaultsInfo[] = {
-    { NULL, (SettingType)2, sizeof(PrinterDefaults), NULL },
-    { "PrintAsImage", Type_Bool, offsetof(PrinterDefaults, printAsImage), NULL, false },
-    { "PrintScale", Type_Utf8String, offsetof(PrinterDefaults, printScale), NULL, (int64_t)"shrink" },
+    { "Filter", Type_String, offsetof(ExternalViewer, filter), NULL, NULL },
 };
 
 static SettingInfo gUserPrefsInfo[] = {
     { NULL, (SettingType)7, sizeof(UserPrefs), NULL },
     { "AdvancedPrefs", Type_Struct, offsetof(UserPrefs, advancedPrefs), gAdvancedPrefsInfo, NULL },
+    { "PrinterDefaults", Type_Struct, offsetof(UserPrefs, printerDefaults), gPrinterDefaultsInfo, NULL },
+    { "PagePadding", Type_Struct, offsetof(UserPrefs, pagePadding), gPagePaddingInfo, NULL },
     { "BackgroundGradient", Type_Struct, offsetof(UserPrefs, backgroundGradient), gBackgroundGradientInfo, NULL },
+    { "ForwardSearch3", Type_Struct, offsetof(UserPrefs, forwardSearch3), gForwardSearch3Info, NULL },
     { "ExternalViewer", Type_Array, offsetof(UserPrefs, externalViewer), gExternalViewerInfo, NULL },
     { NULL, Type_Array, offsetof(UserPrefs, externalViewerCount), gExternalViewerInfo, NULL },
-    { "ForwardSearch3", Type_Struct, offsetof(UserPrefs, forwardSearch3), gForwardSearch3Info, NULL },
-    { "PagePadding", Type_Struct, offsetof(UserPrefs, pagePadding), gPagePaddingInfo, NULL },
-    { "PrinterDefaults", Type_Struct, offsetof(UserPrefs, printerDefaults), gPrinterDefaultsInfo, NULL },
 };
 #endif
 

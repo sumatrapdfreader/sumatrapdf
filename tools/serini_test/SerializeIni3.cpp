@@ -55,6 +55,17 @@ static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_
     return NULL;
 }
 
+#ifndef NDEBUG
+static bool IsCompactable(SettingInfo *meta)
+{
+    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
+        if (meta[i].type != Type_Int)
+            return false;
+    }
+    return GetFieldCount(meta) > 0;
+}
+#endif
+
 static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
                             const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
 {
@@ -64,6 +75,7 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
     size_t secIdx = startIdx;
     IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
     int r, g, b, a;
+    const char *v;
 
     if (!base)
         base = AllocArray<uint8_t>(GetStructSize(meta));
@@ -132,6 +144,14 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
             else if (meta[i].def)
                 *(char **)(base + meta[i].offset) = str::Dup((const char *)meta[i].def);
             break;
+        case Type_Compact:
+            assert(IsCompactable(meta[i].substruct));
+            v = line ? line->value : NULL;
+            for (size_t j = 1; j <= GetFieldCount(meta[i].substruct); j++) {
+                if (!v || (v = str::Parse(v, "%d%_", (int *)(base + meta[i].offset + meta[i].substruct[j].offset))) == NULL)
+                    *(int *)(base + meta[i].offset + meta[i].substruct[j].offset) = (int)meta[i].substruct[j].def;
+            }
+            break;
         default:
             CrashIf(true);
         }
@@ -188,9 +208,11 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
         ScopedMem<char> value;
         switch (meta[i].type) {
         case Type_Bool:
+            // TODO: only write non-default value?
             value.Set(str::Dup(*(bool *)(base + meta[i].offset) ? "true" : "false"));
             break;
         case Type_Int:
+            // TODO: only write non-default values?
             value.Set(str::Format("%d", *(int *)(base + meta[i].offset)));
             break;
         case Type_Int64:
@@ -228,6 +250,13 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
         case Type_Array:
             // nested structs are serialized after all other values
             i++; // skip implicit array count field
+            break;
+        case Type_Compact:
+            assert(IsCompactable(meta[i].substruct));
+            value.Set(str::Format("%d", *(int *)(base + meta[i].offset + meta[i].substruct[1].offset)));
+            for (size_t j = 2; j <= GetFieldCount(meta[i].substruct); j++) {
+                value.Set(str::Format("%s %d", value, *(int *)(base + meta[i].offset + meta[i].substruct[j].offset)));
+            }
             break;
         default:
             CrashIf(true);
