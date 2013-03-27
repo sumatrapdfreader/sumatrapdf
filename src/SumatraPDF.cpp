@@ -1142,7 +1142,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
 static void UpdateToolbarAndScrollbarState(WindowInfo& win)
 {
     ToolbarUpdateStateForWindow(&win, true);
-    if (win.IsDocLoaded())
+    if (win.IsDocLoaded() && !win.IsChm())
         return;
     ShowScrollBar(win.hwndCanvas, SB_BOTH, FALSE);
     if (win.IsAboutWindow())
