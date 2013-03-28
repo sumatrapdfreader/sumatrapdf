@@ -10,12 +10,7 @@ basic [
   default_display_mode: 0
   default_zoom: -1
   window_state: 1
-  window_pos [
-    x: 0
-    y: 0
-    dx: 0
-    dy: 0
-  ]
+  window_pos: 0 0 0 0
   toc_visible: true
   fav_visible: false
   sidebar_dx: 0

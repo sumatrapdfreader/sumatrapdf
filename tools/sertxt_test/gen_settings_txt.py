@@ -6,20 +6,7 @@ import os, util, codecs, random, gen_settings_types
 from gen_settings_types import Field
 
 """
-Maybe: compact serialization of some structs e.g.
-  window_pos [
-    x: 0
-    y: 0
-    dx: 0
-    dy: 0
-  ]
-=>
-  window_pos: 0 0 0 0
-
-via a Compact flag (like NoStore flag)
-
-
-Maybe: arrays of basic types
+Todo maybe: arrays of basic types
 """
 
 g_script_dir = os.path.realpath(os.path.dirname(__file__))
@@ -130,6 +117,16 @@ def ser_array(field, lines, indent):
     prefix = prefix[:-2]
     lines += ["%s]" % prefix]
 
+def ser_struct_compact(struct, name, lines, indent):
+    assert struct.is_struct()
+    vals = []
+    for field in struct.values:
+        val_str = escape_str(field_val_as_str(field))
+        assert " " not in val_str
+        vals += [val_str]
+    prefix = prefix_str(indent)
+    lines += [prefix + name2name(name) + ": " + " ".join(vals)]
+
 def ser_struct(struct, name, lines, indent):
     assert struct.is_struct()
     prefix = prefix_str(indent)
@@ -147,12 +144,16 @@ def ser_struct(struct, name, lines, indent):
             ser_array(field, lines, indent+1)
             continue
 
+        if field.is_compact():
+            ser_struct_compact(field.val, field.name,  lines, indent + 1)
+            continue
+
         if field.is_struct():
             if field.val.offset == 0:
                 if False: # Note: this omits empty values
                     lines += ["%s%s: " % (prefix, name2name(field.name))]
-            else:
-                ser_struct(field.val, field.name, lines, indent + 1)
+                continue
+            ser_struct(field.val, field.name, lines, indent + 1)
             continue
 
         ser_field(field, lines, indent + 1)

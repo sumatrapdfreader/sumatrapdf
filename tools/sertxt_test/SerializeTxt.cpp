@@ -363,6 +363,64 @@ static void WriteDefaultValue(uint8_t *structDataPtr, Type type)
     }
 }
 
+static void FreeTxtNode(TxtNode *node)
+{
+    if (node->children) {
+        for (size_t i = 0; i < node->children->Count(); i++) {
+            TxtNode *child = node->children->At(i);
+            CrashIf(TextNode != child->type);
+            delete child;
+        }
+    }
+    delete node->children;
+    delete node;
+}
+
+static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, StructMetadata *structDef)
+{
+    CrashIf(TextNode != txtNode->type);
+    str::Slice slice(txtNode->valStart, txtNode->valEnd);
+    TxtNode *node = new TxtNode(StructNode);
+    node->children = new Vec<TxtNode*>();
+    uint16_t fieldNo = 0;
+    TxtNode *child;
+    for (;;) {
+        slice.SkipWsUntilNewline();
+        if (slice.Finished())
+            goto Error;
+        child = new TxtNode(TextNode);
+        child->valStart = slice.curr;
+        slice.SkipNonWs();
+        child->valEnd = slice.curr;
+        FieldMetadata *fieldDef = structDef->fields + fieldNo;
+        char *fieldName = (char*)ds.fieldNamesSeq + fieldDef->nameOffset;
+        child->keyStart = fieldName;
+        child->keyEnd = fieldName + str::Len(fieldName);
+        node->children->Append(child);
+        ++fieldNo;
+        if (fieldNo == structDef->nFields)
+            break;
+    }
+    return node;
+Error:
+    FreeTxtNode(node);
+    return NULL;
+}
+
+static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, TxtNode *defaultNode, StructMetadata *structDef)
+{
+    CrashIf(TextNode != node->type);
+    CrashIf(defaultNode && (TextNode != defaultNode->type));
+    TxtNode *structNode = StructNodeFromTextNode(ds, node, structDef);
+    if (!structNode)
+        structNode = StructNodeFromTextNode(ds, defaultNode, structDef);
+    if (!structNode)
+        return NULL;
+    uint8_t *res = DeserializeRec(ds, structNode, NULL, structDef);
+    FreeTxtNode(structNode);
+    return res;
+}
+
 static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, FieldMetadata *fieldDef, uint8_t *structDataStart)
 {
     Type type = fieldDef->type;
@@ -372,6 +430,9 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
         WriteDefaultValue(structDataPtr, type);
         return true;
     }
+
+    bool isCompact = ((type & TYPE_STORE_COMPACT_MASK) != 0);
+    type = (Type)(type & TYPE_NO_FLAGS_MASK);
 
     const char *fieldName = ds.fieldNamesSeq + fieldDef->nameOffset;
     size_t fieldNameLen = str::Len(fieldName);
@@ -405,11 +466,14 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
         if (ok)
             ok = WriteStructInt(structDataPtr, type, ds.i);
     } else if (TYPE_STRUCT_PTR == type) {
-        // we have a node but it's not the right shape for struct
-        // i.e. we expected "foo [" and it's just "foo" or "foo: bar"
-        if (StructNode != node->type)
-            return false;
-        uint8_t *d = DeserializeRec(ds, node, defaultNode, fieldDef->def);
+        uint8_t *d = NULL;
+        if (isCompact && (TextNode == node->type)) {
+            d = DeserializeCompact(ds, node, defaultNode, fieldDef->def);
+        } else {
+            if (StructNode != node->type)
+                return false;
+            d = DeserializeRec(ds, node, defaultNode, fieldDef->def);
+        }
         if (!d)
             goto Error;
         WriteStructPtrVal(structDataPtr, d);
@@ -518,7 +582,7 @@ static void AppendNest(str::Str<char>& s, int nest)
     }
 }
 
-static void AppendVal(const char *val, char escapeChar, str::Str<char>& res)
+static void AppendVal(const char *val, char escapeChar, bool compact, str::Str<char>& res)
 {
     const char *start = val;
     const char *s = start;
@@ -547,28 +611,41 @@ static void AppendVal(const char *val, char escapeChar, str::Str<char>& res)
     }
     size_t len = s - start;
     res.Append(start, len);
-    res.Append(NL);
+    if (!compact)
+        res.Append(NL);
 }
 
 struct EncodeState {
     str::Str<char>  res;
-    const char *    fieldNamesSeq;
-    int             nest;
+
     char            escapeChar;
+    const char *    fieldNamesSeq;
+
+    // nesting level for the currently serialized value
+    int             nest;
+
+    // is currently serialized structure in compact form
+    bool            compact;
 
     EncodeState() {
+        escapeChar = SERIALIZE_ESCAPE_CHAR;
+
         fieldNamesSeq = NULL;
         nest = 0;
-        escapeChar = SERIALIZE_ESCAPE_CHAR;
+        compact = false;
     }
 };
 
 static void AppendKeyVal(EncodeState& es, const char *key, const char *val)
 {
-    AppendNest(es.res, es.nest);
-    es.res.Append(key);
-    es.res.Append(": ");
-    AppendVal(val, es.escapeChar, es.res);
+    if (es.compact) {
+        es.res.Append(" ");
+    } else {
+        AppendNest(es.res, es.nest);
+        es.res.Append(key);
+        es.res.Append(": ");
+    }
+    AppendVal(val, es.escapeChar, es.compact, es.res);
 }
 
 void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def);
@@ -600,9 +677,12 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
     Type type = fieldDef->type;
     if ((type & TYPE_NO_STORE_MASK) != 0)
         return;
-
+    
     if (!structStart)
         return;
+
+    bool isCompact = ((type & TYPE_STORE_COMPACT_MASK) != 0);
+    type = (Type)(type & TYPE_NO_FLAGS_MASK);
 
     const char *fieldName = es.fieldNamesSeq + fieldDef->nameOffset;
     const uint8_t *data = structStart + fieldDef->offset;
@@ -650,13 +730,23 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
     } else if (TYPE_STRUCT_PTR == type) {
         AppendNest(res, es.nest);
         res.Append(fieldName);
-        res.Append(" [" NL);
+        if (isCompact)
+            res.Append(":");
+        else
+            res.Append(" [" NL);
         const uint8_t *structStart2 = (const uint8_t *)ReadStructPtr(data);
         ++es.nest;
+        // compact status only lives for one structure, so this is enough
+        es.compact = isCompact;
         SerializeRec(es, structStart2, fieldDef->def);
         --es.nest;
-        AppendNest(res, es.nest);
-        res.Append("]" NL);
+        es.compact = false;
+        if (isCompact) {
+            res.Append(NL);
+        } else {
+            AppendNest(res, es.nest);
+            res.Append("]" NL);
+        }
     } else if (TYPE_ARRAY == type) {
         CrashIf(!fieldDef->def);
         AppendNest(res, es.nest);

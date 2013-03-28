@@ -15,6 +15,10 @@ struct Slice {
         Init(txt, len);
     }
 
+    Slice(char *start, char *end) {
+        Init(start, end-start);
+    }
+
     Slice(const Slice& other) {
         this->begin = other.begin;
         this->end = other.end;

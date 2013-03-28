@@ -176,12 +176,19 @@ class Array(Type):
 
 # those are bit flags
 NoStore = 1
+Compact = 2
 
 class Field(object):
     def __init__(self, name, typ_val, flags=0):
         self.name = name
         self.typ = typ_val
         self.flags = flags
+
+        if self.is_no_store(): assert not self.is_compact()
+        if self.is_compact():
+            assert typ_val.is_struct()
+            for field in typ_val.fields:
+                assert not field.is_struct()
 
         if typ_val.is_struct():
             # TODO: support NULL values for the struct, represented by using
@@ -219,6 +226,9 @@ class Field(object):
     def is_no_store(self):
         return self.flags & NoStore == NoStore
 
+    def is_compact(self):
+        return self.flags & Compact == Compact
+
     def is_array(self):
         return type(self.typ) == Array
 
@@ -230,8 +240,13 @@ class Field(object):
 
     def get_typ_enum(self):
         type_enum = self.typ.get_type_typ_enum()
-        if self.is_no_store():
-            return "(Type)(%s | TYPE_NO_STORE_MASK)" % type_enum
+        if self.is_no_store() or self.is_compact():
+            s = "(Type)(" + type_enum
+            if self.is_no_store():
+                s = s + " | TYPE_NO_STORE_MASK"
+            if self.is_compact():
+                s = s + " | TYPE_STORE_COMPACT_MASK"
+            return s + ")"
         return type_enum
 
 class PaddingSettings(Struct):
@@ -287,7 +302,7 @@ class BasicSettings(Struct):
         # -1 == Fit Page
         Field("defaultZoom", Float(-1)),
         Field("windowState", I32(1)), # WIN_STATE_NORMAL
-        Field("windowPos", RectInt()),
+        Field("windowPos", RectInt(), Compact),
         Field("tocVisible", Bool(True)),
         Field("favVisible", Bool(False)),
         Field("sidebarDx", I32(0)),
