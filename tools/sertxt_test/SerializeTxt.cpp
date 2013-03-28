@@ -541,23 +541,25 @@ static void AppendVal(const char *val, char escapeChar, str::Str<char>& res)
 struct EncodeState {
     str::Str<char>  res;
     const char *    fieldNamesSeq;
+    int             nest;
     char            escapeChar;
 
     EncodeState() {
         fieldNamesSeq = NULL;
+        nest = 0;
         escapeChar = SERIALIZE_ESCAPE_CHAR;
     }
 };
 
-static void AppendKeyVal(EncodeState& es, const char *key, const char *val, int nest)
+static void AppendKeyVal(EncodeState& es, const char *key, const char *val)
 {
-    AppendNest(es.res, nest);
+    AppendNest(es.res, es.nest);
     es.res.Append(key);
     es.res.Append(": ");
     AppendVal(val, es.escapeChar, es.res);
 }
 
-void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def, int nest);
+void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def);
 
 // converts "1.00" => "1" i.e. strips unnecessary trailing zeros
 static void FixFloatStr(char *s)
@@ -578,7 +580,7 @@ static void FixFloatStr(char *s)
         *end = 0;
 }
 
-static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8_t *structStart, int nest)
+static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8_t *structStart)
 {
     str::Str<char> val;
     str::Str<char>& res = es.res;
@@ -594,7 +596,7 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
     const uint8_t *data = structStart + fieldDef->offset;
     if (TYPE_BOOL == type) {
         bool b = ReadStructBool(data);
-        AppendKeyVal(es, fieldName, b ? "true" : "false", nest);
+        AppendKeyVal(es, fieldName, b ? "true" : "false");
     } else if (TYPE_COLOR == type) {
         uint64_t u = ReadStructUInt(data, type);
         COLORREF c = (COLORREF)u;
@@ -606,70 +608,74 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
             val.AppendFmt("#%02x%02x%02x%02x", a, r, g, b);
         else
             val.AppendFmt("#%02x%02x%02x", r, g, b);
-        AppendKeyVal(es, fieldName, val.Get(), nest);
+        AppendKeyVal(es, fieldName, val.Get());
     } else if (IsUnsignedIntType(type)) {
         uint64_t u = ReadStructUInt(data, type);
         //val.AppendFmt("%" PRIu64, u);
         val.AppendFmt("%I64u", u);
-        AppendKeyVal(es, fieldName, val.Get(), nest);
+        AppendKeyVal(es, fieldName, val.Get());
     } else if (IsSignedIntType(type)) {
         int64_t i = ReadStructInt(data, type);
         //val.AppendFmt("%" PRIi64, u);
         val.AppendFmt("%I64d", i);
-        AppendKeyVal(es, fieldName, val.Get(), nest);
+        AppendKeyVal(es, fieldName, val.Get());
     } else if (TYPE_FLOAT == type) {
         float f = ReadStructFloat(data);
         val.AppendFmt("%f", f);
         char *floatStr = val.Get();
         FixFloatStr(floatStr);
-        AppendKeyVal(es, fieldName, floatStr, nest);
+        AppendKeyVal(es, fieldName, floatStr);
     } else if (TYPE_STR == type) {
         char *s = (char*)ReadStructPtr(data);
         if (s)
-            AppendKeyVal(es, fieldName, s, nest);
+            AppendKeyVal(es, fieldName, s);
     } else if (TYPE_WSTR == type) {
         WCHAR *s = (WCHAR*)ReadStructPtr(data);
         if (s) {
             ScopedMem<char> val(str::conv::ToUtf8(s));
-            AppendKeyVal(es, fieldName, val, nest);
+            AppendKeyVal(es, fieldName, val);
         }
     } else if (TYPE_STRUCT_PTR == type) {
-        AppendNest(res, nest);
+        AppendNest(res, es.nest);
         res.Append(fieldName);
         res.Append(" [" NL);
         const uint8_t *structStart2 = (const uint8_t *)ReadStructPtr(data);
-        SerializeRec(es, structStart2, fieldDef->def, nest + 1);
-        AppendNest(res, nest);
+        ++es.nest;
+        SerializeRec(es, structStart2, fieldDef->def);
+        --es.nest;
+        AppendNest(res, es.nest);
         res.Append("]" NL);
     } else if (TYPE_ARRAY == type) {
         CrashIf(!fieldDef->def);
-        AppendNest(res, nest);
+        AppendNest(res, es.nest);
         res.Append(fieldName);
         res.Append(" [" NL);
         ListNode<void> *el = (ListNode<void>*)ReadStructPtr(data);
-        ++nest;
+        ++es.nest;
         while (el) {
-            AppendNest(res, nest);
+            AppendNest(res, es.nest);
             res.Append("[" NL);
             const uint8_t *elData = (const uint8_t*)el->val;
-            SerializeRec(es, elData, fieldDef->def, nest + 1);
-            AppendNest(res, nest);
+            ++es.nest;
+            SerializeRec(es, elData, fieldDef->def);
+            --es.nest;
+            AppendNest(res, es.nest);
             res.Append("]" NL);
             el = el->next;
         }
-        --nest;
-        AppendNest(res, nest);
+        --es.nest;
+        AppendNest(res, es.nest);
         res.Append("]" NL);
     } else {
         CrashIf(true);
     }
 }
 
-void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def, int nest)
+void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def)
 {
     for (size_t i = 0; i < def->nFields; i++) {
         FieldMetadata *fieldDef = &def->fields[i];
-        SerializeField(es, fieldDef, data, nest);
+        SerializeField(es, fieldDef, data);
     }
 }
 
@@ -678,7 +684,8 @@ uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNa
     EncodeState es;
     es.res.Append(UTF8_BOM "; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation" NL);
     es.fieldNamesSeq = fieldNamesSeq;
-    SerializeRec(es, data, def, 0);
+    es.nest = 0;
+    SerializeRec(es, data, def);
     if (sizeOut)
         *sizeOut = es.res.Size();
     return (uint8_t *)es.res.StealData();
