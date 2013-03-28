@@ -990,7 +990,7 @@ const char * gTranslations_az =
   "Proqram &haqq\304\261nda\0"\
   "&H\311\231qiqi \303\266l\303\247\303\274\tCtrl+1\0"\
   "&B\303\274t\303\274n se\303\247ilmi\305\237 s\311\231hif\311\231l\311\231r\0"\
-  "&Geriy\311\231\tAlt+Left Arrow\0"\
+  "&Geri\tAlt+Left Arrow\0"\
   "&Kitab format\304\261\tCtrl+8\0"\
   "&Ba\304\237la\tCtrl+W\0"\
   "Se\303\247ilmi\305\237 sah\311\231ni &kopyala\0"\
@@ -1197,7 +1197,7 @@ const char * gTranslations_az =
   "T\311\231rs axtar\304\261\305\237 komandas\304\261n\304\261 t\311\231yin etm\311\231k\0"\
   "\306\217&lf\311\231cinl\311\231ri g\303\266st\311\231r\0"\
   "Al\311\231tl\311\231r &panelini g\303\266st\311\231r\0"\
-  "S\311\231hif\311\231l\311\231ri ard\304\261c\304\261&l g\303\266st\311\231r\0"\
+  "S\311\231hif\311\231l\311\231ri &ard\304\261c\304\261l g\303\266st\311\231r\0"\
   "Se\303\247ilmi\305\237l\311\231ri g\303\266st\311\231r\0"\
   "\306\217n \303\247ox oxunanlar\304\261 g\303\266st\311\231r\0"\
   "M\303\274mk\303\274nd\303\274rs\311\231, \311\231&lf\311\231cinl\311\231r panelini g\303\266st\311\231r\0"\

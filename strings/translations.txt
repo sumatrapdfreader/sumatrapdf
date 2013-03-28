@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c8a0011699139365ac6517df2b79b71ebd624199
+03465090a938fdc36d226317efa2332325ef1688
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -222,7 +222,7 @@ vn:Tất cả các tr&ang được chọn
 :&Back\tAlt+Left Arrow
 am:Հետ\tAlt+<-
 ar:&الخلف\tAlt+السهم الأيسر
-az:&Geriyə\tAlt+Left Arrow
+az:&Geri\tAlt+Left Arrow
 bg:На&зад\tAlt+Лява стрелка
 br:Voltar\tAlt+<-
 bs:Nazad\tAlt+<-
@@ -13134,7 +13134,7 @@ vn:Hiện thanh công cụ
 :Show &pages continuously
 am:Էջերը &ցույց տալ շարունակական
 ar:عرض الصفحات باستمرار
-az:Səhifələri ardıcı&l göstər
+az:Səhifələri &ardıcıl göstər
 bg:&Непрекъснати страници
 br:Exibir páginas de modo contínuo
 bs:Prikaži stranice slijedno
