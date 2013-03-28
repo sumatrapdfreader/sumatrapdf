@@ -39,18 +39,20 @@ void IniFile::ParseData()
         return;
 
     IniSection *section = new IniSection(NULL);
-    char *next = data;
-    while (*next) {
+    bool hasMoreLines = *data != '\0';
+    for (char *next = data; hasMoreLines; next++) {
         char *key = SkipWs(next);
+        hasMoreLines = false;
         for (next = key; *next; next++) {
             if ('\n' == *next) {
-                *next++ = '\0';
+                *next = '\0';
+                hasMoreLines = true;
                 break;
             }
         }
         if ('[' == *key || ']' == *key) {
             // section header
-            char *lineEnd = SkipWsRev(key + 1, next - 1);
+            char *lineEnd = SkipWsRev(key + 1, next);
             if (lineEnd - 1 > key && (']' == *(lineEnd - 1) || '[' == *(lineEnd - 1)))
                 lineEnd--;
             *lineEnd = '\0';
@@ -69,7 +71,7 @@ void IniFile::ParseData()
             char *value = SkipWs(sep + (*sep ? 1 : 0));
             // trim trailing whitespace
             *SkipWsRev(key, sep) = '\0';
-            *SkipWsRev(value, next - 1) = '\0';
+            *SkipWsRev(value, next) = '\0';
             section->lines.Append(IniLine(key, value));
         }
     }

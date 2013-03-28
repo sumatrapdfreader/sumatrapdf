@@ -29,7 +29,7 @@ class Field(object):
 		if self.type == Color:
 			return "0x%06x" % self.default
 		if self.type == Float:
-			return "%g" % self.default
+			return '(int64_t)"%g"' % self.default # converting float to int64_t rounds the value
 		if self.type == Int or self.type == Int64:
 			return "%d" % self.default
 		if self.type == String:

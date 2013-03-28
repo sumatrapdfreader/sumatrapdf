@@ -70,7 +70,7 @@ static void DeserializeField(uint8_t *data, FieldMetadata& field, const char *va
 
     switch (field.type | 0) {
     case TYPE_BOOL:
-        *(bool *)(data + field.offset) = str::EqI(value, "true") || ParseBencInt(value) != 0;
+        *(bool *)(data + field.offset) = str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4])) || ParseBencInt(value) != 0;
         break;
     // TODO: are all these int-types really needed?
     case TYPE_I16:

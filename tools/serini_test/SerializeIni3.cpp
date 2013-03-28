@@ -76,7 +76,7 @@ static void DeserializeField(uint8_t *base, SettingInfo& field, const char *valu
 
     switch (field.type) {
     case Type_Bool:
-        *(bool *)(base + field.offset) = value ? str::EqI(value, "true") || ParseBencInt(value) != 0 : field.def != 0;
+        *(bool *)(base + field.offset) = value ? str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4])) || ParseBencInt(value) != 0 : field.def != 0;
         break;
     case Type_Int:
         *(int *)(base + field.offset) = (int)(value ? ParseBencInt(value) : field.def);
@@ -86,7 +86,7 @@ static void DeserializeField(uint8_t *base, SettingInfo& field, const char *valu
         break;
     case Type_Float:
         if (!value || !str::Parse(value, "%f", (float *)(base + field.offset)))
-            *(float *)(base + field.offset) = (float)field.def;
+            str::Parse((const char *)field.def, "%f", (float *)(base + field.offset));
         break;
     case Type_Color:
         if (value && str::Parse(value, "#%2x%2x%2x%2x", &a, &r, &g, &b))

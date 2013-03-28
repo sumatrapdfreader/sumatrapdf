@@ -145,6 +145,34 @@ static bool TestDefaultValues()
     return true;
 }
 
+struct TestCD2 { bool val1; float val2; };
+struct TestCD1 { TestCD2 compact; };
+
+static SettingInfo gTestCD2Info[] = {
+    { NULL, Type_Meta, sizeof(TestCD2), NULL, 2 },
+    { "Val1", Type_Bool, offsetof(TestCD2, val1), NULL, false },
+    { "Val2", Type_Float, offsetof(TestCD2, val2), NULL, (int64_t)"3.14" },
+};
+
+static SettingInfo gTestCD1Info[] = {
+    { NULL, Type_Meta, sizeof(TestCD1), NULL, 1 },
+    { "Compact", Type_Compact, offsetof(TestCD1, compact), gTestCD2Info, NULL },
+};
+
+static bool TestCompactDefaultValues()
+{
+    static const char *data = "Compact = true -4.25";
+    TestCD1 *cd = (TestCD1 *)serini3::Deserialize(data, str::Len(data), gTestCD1Info);
+    Check(cd && cd->compact.val1 && -4.25f == cd->compact.val2);
+    serini3::FreeStruct(cd, gTestCD1Info);
+
+    cd = (TestCD1 *)serini3::Deserialize(NULL, 0, gTestCD1Info);
+    Check(cd && !cd->compact.val1 && 3.14f == cd->compact.val2);
+    serini3::FreeStruct(cd, gTestCD1Info);
+
+    return true;
+}
+
 int main(int argc, char **argv)
 {
 #ifdef DEBUG
@@ -162,6 +190,8 @@ int main(int argc, char **argv)
     if (!TestSerializeRecursiveArray())
         errors++;
     if (!TestDefaultValues())
+        errors++;
+    if (!TestCompactDefaultValues())
         errors++;
     return errors;
 }
