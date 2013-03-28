@@ -54,7 +54,18 @@ static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_
     return NULL;
 }
 
-static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *fieldNamesSeq, const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
+static void FreeListNode(ListNode<void> *node, StructMetadata *def)
+{
+    while (node) {
+        ListNode<void> *next = node->next;
+        FreeStruct((uint8_t *)node->val, def);
+        free(node);
+        node = next;
+    }
+}
+
+static void *DeserializeRec(IniFile& ini, void *base, StructMetadata *def, const char *fieldNamesSeq,
+                            const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
 {
     if ((size_t)-1 == endIdx)
         endIdx = ini.sections.Count();
@@ -64,7 +75,9 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
     IniLine *line;
     int r, g, b, a;
 
-    uint8_t *data = AllocArray<uint8_t>(def->size);
+    uint8_t *data = (uint8_t *)base;
+    if (!data)
+        data = AllocArray<uint8_t>(def->size);
     if (secIdx >= endIdx) {
         section = NULL;
         secIdx = startIdx - 1;
@@ -75,7 +88,7 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
         const char *fieldName = fieldNamesSeq + field.nameOffset;
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
-            *(void **)(data + field.offset) = DeserializeRec(ini, field.def, fieldNamesSeq, name, secIdx + 1, endIdx);
+            *(void **)(data + field.offset) = DeserializeRec(ini, *(void **)(data + field.offset), field.def, fieldNamesSeq, name, secIdx + 1, endIdx);
             continue;
         }
         if (TYPE_ARRAY == field.type) {
@@ -89,10 +102,11 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
                 size_t nextSubSecIdx = nextSecIdx;
                 IniSection *nextSubSec = FindSection(ini, name, subSecIdx + 1, nextSecIdx, &nextSubSecIdx);
                 *next = AllocStruct<ListNode<void>>();
-                (*next)->val = DeserializeRec(ini, field.def, fieldNamesSeq, name, subSecIdx, nextSubSecIdx);
+                (*next)->val = DeserializeRec(ini, NULL, field.def, fieldNamesSeq, name, subSecIdx, nextSubSecIdx);
                 next = &(*next)->next;
                 subSection = nextSubSec; subSecIdx = nextSubSecIdx;
             }
+            FreeListNode(*(ListNode<void> **)(data + field.offset), field.def);
             *(ListNode<void> **)(data + field.offset) = root;
             continue;
         }
@@ -133,9 +147,11 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
                 *(COLORREF *)(data + field.offset) = (COLORREF)0;
             break;
         case TYPE_STR:
+            free(*(char **)(data + field.offset));
             *(char **)(data + field.offset) = UnescapeStr(line->value);
             break;
         case TYPE_WSTR:
+            free(*(WCHAR **)(data + field.offset));
             *(WCHAR **)(data + field.offset) = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(line->value)));
             break;
         default:
@@ -145,12 +161,22 @@ static void *DeserializeRec(IniFile& ini, StructMetadata *def, const char *field
     return data;
 }
 
-uint8_t *Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq)
+uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, StructMetadata *def, const char *fieldNamesSeq)
 {
-    CrashIf(!data); // TODO: where to get defaults from?
+    void *base = NULL;
+    if (defaultData) {
+        CrashIf(str::Len((const char *)defaultData) != defaultDataSize);
+        IniFile iniDef((const char *)defaultData);
+        base = DeserializeRec(iniDef, base, def, fieldNamesSeq);
+    }
     CrashIf(str::Len((const char *)data) != dataSize);
     IniFile ini((const char *)data);
-    return (uint8_t *)DeserializeRec(ini, def, fieldNamesSeq);
+    return (uint8_t *)DeserializeRec(ini, base, def, fieldNamesSeq);
+}
+
+uint8_t *Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq)
+{
+    return DeserializeWithDefault(data, dataSize, NULL, 0, def, fieldNamesSeq);
 }
 
 // only escape characters which are significant to IniParser:
@@ -288,15 +314,8 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
         FieldMetadata& field = def->fields[i];
         if (TYPE_STRUCT_PTR == field.type)
             FreeStruct(*(uint8_t **)(data + field.offset), field.def);
-        else if (TYPE_ARRAY == field.type) {
-            ListNode<void> *node = *(ListNode<void> **)(data + field.offset);
-            while (node) {
-                ListNode<void> *next = node->next;
-                FreeStruct((uint8_t *)node->val, field.def);
-                free(node);
-                node = next;
-            }
-        }
+        else if (TYPE_ARRAY == field.type)
+            FreeListNode(*(ListNode<void> **)(data + field.offset), field.def);
         else if (TYPE_WSTR == field.type || TYPE_STR == field.type)
             free(*(void **)(data + field.offset));
     }
