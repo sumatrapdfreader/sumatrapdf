@@ -199,37 +199,48 @@ public:
 
     const char *    fieldNamesSeq;
 
-    // last decoded value
-    uint64_t        u;
-    int64_t         i;
-    float           f;
-    char *          s;
-    int             sLen;
-
     DecodeState() {}
 };
 
-// TODO: over-flow detection?
-static bool ParseInt(char *s, char *e, int64_t *iOut)
+static bool ParseUInt(char *s, char *e, uint64_t *nOut)
 {
     str::TrimWsEnd(s, e);
     int d;
-    bool neg = false;
-    if (s >= e)
-        return false;
-
-    if ('-' == *s) {
-        neg = true;
-        s++;
-    }
-    int64_t i = 0;
+    uint64_t n = 0;
+    uint64_t prev = 0;
     while (s < e) {
         d = *s - '0';
         if (d < 0 || d > 9)
             return false;
-        i = i * 10 + d;
+        n = n * 10 + d;
+        if (n < prev) {
+            // on overflow return 0
+            *nOut = 0;
+            return true;
+        }
+        prev = n;
         ++s;
     }
+    *nOut = n;
+    return true;
+}
+
+static bool ParseInt(char *s, char *e, int64_t *iOut)
+{
+    if (s >= e)
+        return false;
+
+    bool neg = false;
+    if ('-' == *s) {
+        neg = true;
+        s++;
+    }
+    uint64_t u;
+    if (!ParseUInt(s, e, &u))
+        return false;
+    if (u > MAXLONG64)
+        return false;
+    int64_t i = (int64_t)u;
     if (neg)
         i = -i;
     *iOut = i;
@@ -281,47 +292,10 @@ static bool ParseBool(char *s, char *e, bool *bOut)
     return false;
 }
 
-// TODO: over-flow detection?
-static bool ParseUInt(char *s, char *e, uint64_t *iOut)
+static bool ParseFloat(char *s, char *e, float *f)
 {
-    str::TrimWsEnd(s, e);
-    int d;
-    uint64_t i = 0;
-    while (s < e) {
-        d = *s - '0';
-        if (d < 0 || d > 9)
-            return false;
-        i = i * 10 + d;
-        ++s;
-    }
-    *iOut = i;
-    return true;
-}
-
-static bool DecodeInt(DecodeState& ds, TxtNode *n)
-{
-    return ParseInt(n->valStart, n->valEnd, &ds.i);
-}
-
-static bool DecodeUInt(DecodeState& ds, TxtNode *n)
-{
-    return ParseUInt(n->valStart, n->valEnd, &ds.u);
-}
-
-static bool DecodeString(DecodeState& ds, TxtNode *n)
-{
-    ds.s = n->valStart;
-    ds.sLen = n->valEnd - n->valStart;
-    return true;
-}
-
-static bool DecodeFloat(DecodeState& ds, TxtNode *n)
-{
-    bool ok = DecodeString(ds, n);
-    if (!ok)
-        return false;
-    char *end;
-    ds.f = (float)strtod(ds.s, &end);
+    char *end = e;
+    *f = (float)strtod(s, &end);
     return true;
 }
 
@@ -458,13 +432,15 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
         if (ok)
             WriteStructUInt(structDataPtr, TYPE_U32, val);
     } else if (IsUnsignedIntType(type)) {
-        ok = DecodeUInt(ds, node);
+        uint64_t n;
+        ok = ParseUInt(node->valStart, node->valEnd, &n);
         if (ok)
-            ok = WriteStructUInt(structDataPtr, type, ds.u);
+            ok = WriteStructUInt(structDataPtr, type, n);
     } else if (IsSignedIntType(type)) {
-        ok = DecodeInt(ds, node);
+        int64_t n;
+        ok = ParseInt(node->valStart, node->valEnd, &n);
         if (ok)
-            ok = WriteStructInt(structDataPtr, type, ds.i);
+            ok = WriteStructInt(structDataPtr, type, n);
     } else if (TYPE_STRUCT_PTR == type) {
         uint8_t *d = NULL;
         if (isCompact && (TextNode == node->type)) {
@@ -478,21 +454,26 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
             goto Error;
         WriteStructPtrVal(structDataPtr, d);
     } else if (TYPE_STR == type) {
-        ok = DecodeString(ds, node);
-        if (ok && (ds.sLen > 0)) {
-            char *s = str::DupN(ds.s, ds.sLen);
+        char *s = node->valStart;
+        size_t sLen = node->valEnd - s;
+        if (s && (sLen > 0)) {
+            // note: we don't free s because it's remembered in structDataPtr
+            s = str::DupN(s, sLen);
             WriteStructStr(structDataPtr, s);
         }
     } else if (TYPE_WSTR == type) {
-        ok = DecodeString(ds, node);
-        if (ok && (ds.sLen > 0)) {
-            WCHAR *ws = str::conv::FromUtf8(ds.s);
+        char *s = node->valStart;
+        size_t sLen = node->valEnd - s;
+        if (s && (sLen > 0)) {
+            // note: we don't free ws because it's remembered in structDataPtr
+            WCHAR *ws = str::conv::FromUtf8(s);
             WriteStructWStr(structDataPtr, ws);
         }
     }  else if (TYPE_FLOAT == type) {
-        ok = DecodeFloat(ds, node);
+        float f;
+        ok = ParseFloat(node->valStart, node->valEnd, &f);
         if (ok)
-            WriteStructFloat(structDataPtr, ds.f);
+            WriteStructFloat(structDataPtr, f);
     } else if (TYPE_ARRAY == type) {
         CrashIf(!fieldDef->def); // array elements must be a struct
         if (StructNode != node->type)

@@ -172,6 +172,7 @@ static void TestDefault()
     free(s);
     free(data);
     free(defaultData);
+    FreeSimple(settings);
 }
 
 int main(int argc, char **argv)
