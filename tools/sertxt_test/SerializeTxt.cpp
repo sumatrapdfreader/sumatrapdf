@@ -631,25 +631,6 @@ static void AppendKeyVal(EncodeState& es, const char *key, const char *val)
 
 void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def);
 
-// converts "1.00" => "1" i.e. strips unnecessary trailing zeros
-static void FixFloatStr(char *s)
-{
-    char *dot = (char*)str::FindCharLast(s, '.');
-    if (!dot)
-        return;
-    char *end = dot;
-    while (*end) {
-        ++end;
-    }
-    --end;
-    while ((end > dot) && ('0' == *end)) {
-        *end = 0;
-        --end;
-    }
-    if (end == dot)
-        *end = 0;
-}
-
 static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8_t *structStart)
 {
     str::Str<char> val;
@@ -694,10 +675,8 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
         AppendKeyVal(es, fieldName, val.Get());
     } else if (TYPE_FLOAT == type) {
         float f = ReadStructFloat(data);
-        val.AppendFmt("%f", f);
-        char *floatStr = val.Get();
-        FixFloatStr(floatStr);
-        AppendKeyVal(es, fieldName, floatStr);
+        val.AppendFmt("%g", f);
+        AppendKeyVal(es, fieldName, val.Get());
     } else if (TYPE_STR == type) {
         char *s = (char*)ReadStructPtr(data);
         if (s)
