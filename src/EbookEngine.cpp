@@ -1130,13 +1130,7 @@ DocTocItem *MobiEngineImpl::GetTocTree()
 
 bool MobiEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    if (sniff) {
-        PdbReader pdbReader(fileName);
-        return str::Eq(pdbReader.GetDbType(), "BOOKMOBI");
-    }
-
-    return str::EndsWithI(fileName, L".mobi") ||
-           str::EndsWithI(fileName, L".prc");
+    return MobiDoc::IsSupportedFile(fileName, sniff);
 }
 
 MobiEngine *MobiEngine::CreateFromFile(const WCHAR *fileName)

@@ -747,8 +747,9 @@ bool Fb2Doc::IsZipped() const
     return isZipped;
 }
 
-bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool)
+bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
+    UNREFERENCED_PARAMETER(sniff); // TODO: implement sniffing
     return str::EndsWithI(fileName, L".fb2")  ||
            str::EndsWithI(fileName, L".fb2z") ||
            str::EndsWithI(fileName, L".zfb2") ||
@@ -1148,8 +1149,9 @@ const WCHAR *HtmlDoc::GetFileName() const
     return fileName;
 }
 
-bool HtmlDoc::IsSupportedFile(const WCHAR *fileName, bool)
+bool HtmlDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
+    UNREFERENCED_PARAMETER(sniff); // intentionally not implemented
     return str::EndsWithI(fileName, L".html") ||
            str::EndsWithI(fileName, L".htm") ||
            str::EndsWithI(fileName, L".xhtml");
@@ -1387,8 +1389,9 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
     return true;
 }
 
-bool TxtDoc::IsSupportedFile(const WCHAR *fileName, bool)
+bool TxtDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
+    UNREFERENCED_PARAMETER(sniff); // intentionally not implemented
     return str::EndsWithI(fileName, L".txt") ||
            str::EndsWithI(fileName, L".log") ||
            // http://en.wikipedia.org/wiki/.nfo

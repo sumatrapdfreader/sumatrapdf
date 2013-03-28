@@ -829,10 +829,18 @@ WCHAR *MobiDoc::GetProperty(DocumentProperty prop)
     return NULL;
 }
 
-bool MobiDoc::IsSupportedFile(const WCHAR *fileName, bool)
+bool MobiDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    // TODO: also accept .prc as MobiEngine::IsSupportedFile ?
-    return str::EndsWithI(fileName, L".mobi");
+    if (sniff) {
+        PdbReader pdbReader(fileName);
+        // in most cases, we're only interested in Mobipocket files
+        // (PalmDoc uses MobiDoc for loading other formats based on MOBI,
+        // but implements sniffing itself in PalmDoc::IsSupportedFile)
+        return Pdb_Mobipocket == GetPdbDocType(pdbReader.GetDbType());
+    }
+
+    return str::EndsWithI(fileName, L".mobi") ||
+           str::EndsWithI(fileName, L".prc");
 }
 
 MobiDoc *MobiDoc::CreateFromFile(const WCHAR *fileName)

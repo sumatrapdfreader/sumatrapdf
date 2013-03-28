@@ -560,8 +560,9 @@ bool ImageDirEngineImpl::SaveFileAs(const WCHAR *copyFileName)
     return ok;
 }
 
-bool ImageDirEngine::IsSupportedFile(const WCHAR *fileName, bool)
+bool ImageDirEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
+    UNREFERENCED_PARAMETER(sniff); // no point in sniffing beyond dir::Exists
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);
 }
