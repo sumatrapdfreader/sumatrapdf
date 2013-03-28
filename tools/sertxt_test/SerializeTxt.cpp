@@ -20,7 +20,7 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
     Type type;
     for (int i = 0; i < def->nFields; i++) {
         fieldDef = def->fields + i;
-        type = fieldDef->type;
+        type = (Type)(fieldDef->type & TYPE_NO_FLAGS_MASK);
         if (TYPE_STRUCT_PTR ==  type) {
             uint8_t **p = (uint8_t**)(data + fieldDef->offset);
             FreeStruct(*p, fieldDef->def);
