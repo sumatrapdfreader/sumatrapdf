@@ -65,7 +65,7 @@ class Struct(Field):
 	def __init__(self, name, fields, comment, structName=None, compact=False):
 		self.structName = structName or name
 		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment)
-		if compact and all(field.type == Int for field in fields): self.type.name = "Compact"
+		if compact: self.type.name = "Compact"
 
 class Array(Field):
 	def __init__(self, name, fields, comment, structName=None):

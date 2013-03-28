@@ -59,12 +59,72 @@ static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_
 static bool IsCompactable(SettingInfo *meta)
 {
     for (size_t i = 1; i <= GetFieldCount(meta); i++) {
-        if (meta[i].type != Type_Int)
+        switch (meta[i].type) {
+        case Type_Bool: case Type_Int: case Type_Int64: case Type_Float: case Type_Color:
+            continue;
+        default:
             return false;
+        }
     }
     return GetFieldCount(meta) > 0;
 }
 #endif
+
+static void DeserializeField(uint8_t *base, SettingInfo& field, const char *value)
+{
+    int r, g, b, a;
+
+    switch (field.type) {
+    case Type_Bool:
+        *(bool *)(base + field.offset) = value ? str::EqI(value, "true") || ParseBencInt(value) != 0 : field.def != 0;
+        break;
+    case Type_Int:
+        *(int *)(base + field.offset) = (int)(value ? ParseBencInt(value) : field.def);
+        break;
+    case Type_Int64:
+        *(int64_t *)(base + field.offset) = value ? ParseBencInt(value) : field.def;
+        break;
+    case Type_Float:
+        if (!value || !str::Parse(value, "%f", (float *)(base + field.offset)))
+            *(float *)(base + field.offset) = (float)field.def;
+        break;
+    case Type_Color:
+        if (value && str::Parse(value, "#%2x%2x%2x%2x", &a, &r, &g, &b))
+            *(COLORREF *)(base + field.offset) = RGB(r, g, b) | (a << 24);
+        else if (value && str::Parse(value, "#%2x%2x%2x", &r, &g, &b))
+            *(COLORREF *)(base + field.offset) = RGB(r, g, b);
+        else
+            *(COLORREF *)(base + field.offset) = (COLORREF)field.def;
+        break;
+    case Type_String:
+        if (value)
+            *(WCHAR **)(base + field.offset) = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(value)));
+        else
+            *(WCHAR **)(base + field.offset) = str::Dup((const WCHAR *)field.def);
+        break;
+    case Type_Utf8String:
+        if (value)
+            *(char **)(base + field.offset) = UnescapeStr(value);
+        else
+            *(char **)(base + field.offset) = str::Dup((const char *)field.def);
+        break;
+    case Type_Compact:
+        assert(IsCompactable(field.substruct));
+        for (size_t i = 1; i <= GetFieldCount(field.substruct); i++) {
+            if (value) {
+                for (; str::IsWs(*value); value++);
+                if (!*value)
+                    value = NULL;
+            }
+            DeserializeField(base + field.offset, field.substruct[i], value);
+            if (value)
+                for (; *value && !str::IsWs(*value); value++);
+        }
+        break;
+    default:
+        CrashIf(true);
+    }
+}
 
 static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
                             const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
@@ -74,8 +134,6 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
 
     size_t secIdx = startIdx;
     IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
-    int r, g, b, a;
-    const char *v;
 
     if (!base)
         base = AllocArray<uint8_t>(GetStructSize(meta));
@@ -88,9 +146,8 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
         if (Type_Struct == meta[i].type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
             DeserializeRec(ini, meta[i].substruct, base + meta[i].offset, name, secIdx + 1, endIdx);
-            continue;
         }
-        if (Type_Array == meta[i].type) {
+        else if (Type_Array == meta[i].type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
             str::Str<uint8_t> array;
             size_t nextSecIdx = endIdx;
@@ -106,54 +163,10 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
             }
             *(size_t *)(base + meta[i+1].offset) = array.Size() / GetStructSize(meta[i].substruct);
             *(uint8_t **)(base + meta[i].offset) = array.StealData();
-            i++; // skip implicit array count field
-            continue;
         }
-        IniLine *line = section ? section->FindLine(meta[i].name) : NULL;
-        switch (meta[i].type) {
-        case Type_Bool:
-            *(bool *)(base + meta[i].offset) = line ? str::EqI(line->value, "true") || ParseBencInt(line->value) != 0 : meta[i].def != 0;
-            break;
-        case Type_Int:
-            *(int *)(base + meta[i].offset) = (int)(line ? ParseBencInt(line->value) : meta[i].def);
-            break;
-        case Type_Int64:
-            *(int64_t *)(base + meta[i].offset) = line ? ParseBencInt(line->value) : meta[i].def;
-            break;
-        case Type_Float:
-            if (!line || !str::Parse(line->value, "%f", (float *)(base + meta[i].offset)))
-                *(float *)(base + meta[i].offset) = (float)meta[i].def;
-            break;
-        case Type_Color:
-            if (line && str::Parse(line->value, "#%2x%2x%2x%2x", &a, &r, &g, &b))
-                *(COLORREF *)(base + meta[i].offset) = RGB(r, g, b) | (a << 24);
-            else if (line && str::Parse(line->value, "#%2x%2x%2x", &r, &g, &b))
-                *(COLORREF *)(base + meta[i].offset) = RGB(r, g, b);
-            else
-                *(COLORREF *)(base + meta[i].offset) = (COLORREF)meta[i].def;
-            break;
-        case Type_String:
-            if (line)
-                *(WCHAR **)(base + meta[i].offset) = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(line->value)));
-            else if (meta[i].def)
-                *(WCHAR **)(base + meta[i].offset) = str::Dup((const WCHAR *)meta[i].def);
-            break;
-        case Type_Utf8String:
-            if (line)
-                *(char **)(base + meta[i].offset) = UnescapeStr(line->value);
-            else if (meta[i].def)
-                *(char **)(base + meta[i].offset) = str::Dup((const char *)meta[i].def);
-            break;
-        case Type_Compact:
-            assert(IsCompactable(meta[i].substruct));
-            v = line ? line->value : NULL;
-            for (size_t j = 1; j <= GetFieldCount(meta[i].substruct); j++) {
-                if (!v || (v = str::Parse(v, "%d%_", (int *)(base + meta[i].offset + meta[i].substruct[j].offset))) == NULL)
-                    *(int *)(base + meta[i].offset + meta[i].substruct[j].offset) = (int)meta[i].substruct[j].def;
-            }
-            break;
-        default:
-            CrashIf(true);
+        else if (Type_Meta != meta[i].type) {
+            IniLine *line = section ? section->FindLine(meta[i].name) : NULL;
+            DeserializeField(base, meta[i], line ? line->value : NULL);
         }
     }
     return base;
@@ -193,6 +206,52 @@ static char *EscapeStr(const char *s)
     return ret.StealData();
 }
 
+static char *SerializeField(const uint8_t *base, SettingInfo& field)
+{
+    ScopedMem<char> value;
+    COLORREF c;
+
+    switch (field.type) {
+    // TODO: only write non-default values?
+    case Type_Bool: return str::Dup(*(bool *)(base + field.offset) ? "true" : "false");
+    case Type_Int: return str::Format("%d", *(int *)(base + field.offset));
+    case Type_Int64: return str::Format("%I64d", *(int64_t *)(base + field.offset));
+    case Type_Float: return str::Format("%g", *(float *)(base + field.offset));
+    case Type_Color:
+        c = *(COLORREF *)(base + field.offset);
+        // TODO: COLORREF doesn't really have an alpha value
+        if (((c >> 24) & 0xff))
+            return str::Format("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c));
+        return str::Format("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c));
+    case Type_String:
+        if (!*(const WCHAR **)(base + field.offset))
+            return NULL; // skip empty strings
+        value.Set(str::conv::ToUtf8(*(const WCHAR **)(base + field.offset)));
+        if (NeedsEscaping(value))
+            return EscapeStr(value);
+        return value.StealData();
+    case Type_Utf8String:
+        if (!*(const char **)(base + field.offset))
+            return NULL; // skip empty strings
+        if (!NeedsEscaping(*(const char **)(base + field.offset)))
+            return str::Dup(*(const char **)(base + field.offset));
+        return EscapeStr(*(const char **)(base + field.offset));
+    case Type_Compact:
+        assert(IsCompactable(field.substruct));
+        for (size_t i = 1; i <= GetFieldCount(field.substruct); i++) {
+            ScopedMem<char> val(SerializeField(base + field.offset, field.substruct[i]));
+            if (!value)
+                value.Set(str::Format("%s", val));
+            else
+                value.Set(str::Format("%s %s", value, val));
+        }
+        return value.StealData();
+    default:
+        CrashIf(true);
+    }
+    return NULL;
+}
+
 static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *meta, const char *sectionName=NULL)
 {
     if (sectionName) {
@@ -201,66 +260,13 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
         out.Append("]\r\n");
     }
 
-    COLORREF c;
-    uint8_t *base = (uint8_t *)data;
+    const uint8_t *base = (const uint8_t *)data;
     for (size_t i = 1; i <= GetFieldCount(meta); i++) {
+        // nested structs are serialized after all other values
+        if (Type_Meta == meta[i].type || Type_Struct == meta[i].type || Type_Array == meta[i].type)
+            continue;
         CrashIf(str::FindChar(meta[i].name, '=') || NeedsEscaping(meta[i].name));
-        ScopedMem<char> value;
-        switch (meta[i].type) {
-        case Type_Bool:
-            // TODO: only write non-default value?
-            value.Set(str::Dup(*(bool *)(base + meta[i].offset) ? "true" : "false"));
-            break;
-        case Type_Int:
-            // TODO: only write non-default values?
-            value.Set(str::Format("%d", *(int *)(base + meta[i].offset)));
-            break;
-        case Type_Int64:
-            value.Set(str::Format("%I64d", *(int64_t *)(base + meta[i].offset)));
-            break;
-        case Type_Float:
-            value.Set(str::Format("%g", *(float *)(base + meta[i].offset)));
-            break;
-        case Type_Color:
-            c = *(COLORREF *)(base + meta[i].offset);
-            // TODO: COLORREF doesn't really have an alpha value
-            if (((c >> 24) & 0xff))
-                value.Set(str::Format("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c)));
-            else
-                value.Set(str::Format("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c)));
-            break;
-        case Type_String:
-            if (*(const WCHAR **)(base + meta[i].offset)) {
-                value.Set(str::conv::ToUtf8(*(const WCHAR **)(base + meta[i].offset)));
-                if (NeedsEscaping(value))
-                    value.Set(EscapeStr(value));
-            }
-            break;
-        case Type_Utf8String:
-            if (!*(const char **)(base + meta[i].offset))
-                /* skip empty string */;
-            else if (!NeedsEscaping(*(const char **)(base + meta[i].offset)))
-                value.Set(str::Dup(*(const char **)(base + meta[i].offset)));
-            else
-                value.Set(EscapeStr(*(const char **)(base + meta[i].offset)));
-            break;
-        case Type_Struct:
-            // nested structs are serialized after all other values
-            break;
-        case Type_Array:
-            // nested structs are serialized after all other values
-            i++; // skip implicit array count field
-            break;
-        case Type_Compact:
-            assert(IsCompactable(meta[i].substruct));
-            value.Set(str::Format("%d", *(int *)(base + meta[i].offset + meta[i].substruct[1].offset)));
-            for (size_t j = 2; j <= GetFieldCount(meta[i].substruct); j++) {
-                value.Set(str::Format("%s %d", value, *(int *)(base + meta[i].offset + meta[i].substruct[j].offset)));
-            }
-            break;
-        default:
-            CrashIf(true);
-        }
+        ScopedMem<char> value(SerializeField(base, meta[i]));
         if (value) {
             out.Append(meta[i].name);
             out.Append(" = ");
@@ -281,7 +287,6 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
             for (size_t j = 0; j < count; j++) {
                 SerializeRec(out, subbase + j * GetStructSize(meta[i].substruct), meta[i].substruct, name);
             }
-            i++; // skip implicit array count field
         }
     }
 }
@@ -315,7 +320,6 @@ static void FreeStructData(uint8_t *base, SettingInfo *meta)
                 FreeStructData(subbase + j * GetStructSize(meta[i].substruct), meta[i].substruct);
             }
             free(subbase);
-            i++;
         }
         else if (Type_String == meta[i].type || Type_Utf8String == meta[i].type)
             free(*(void **)(base + meta[i].offset));

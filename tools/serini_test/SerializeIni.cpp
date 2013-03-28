@@ -64,6 +64,63 @@ static void FreeListNode(ListNode<void> *node, StructMetadata *def)
     }
 }
 
+static void DeserializeField(uint8_t *data, FieldMetadata& field, const char *value)
+{
+    int r, g, b, a;
+
+    switch (field.type | 0) {
+    case TYPE_BOOL:
+        *(bool *)(data + field.offset) = str::EqI(value, "true") || ParseBencInt(value) != 0;
+        break;
+    // TODO: are all these int-types really needed?
+    case TYPE_I16:
+        *(int16_t *)(data + field.offset) = (int16_t)ParseBencInt(value);
+        break;
+    case TYPE_U16:
+        *(uint16_t *)(data + field.offset) = (uint16_t)ParseBencInt(value);
+        break;
+    case TYPE_I32:
+        *(int32_t *)(data + field.offset) = (int32_t)ParseBencInt(value);
+        break;
+    case TYPE_U32:
+        *(uint32_t *)(data + field.offset) = (uint32_t)ParseBencInt(value);
+        break;
+    case TYPE_U64:
+        *(uint64_t *)(data + field.offset) = (uint64_t)ParseBencInt(value);
+        break;
+    case TYPE_FLOAT:
+        if (!str::Parse(value, "%f", (float *)(data + field.offset)))
+            *(float *)(data + field.offset) = 0.f;
+        break;
+    case TYPE_COLOR:
+        if (str::Parse(value, "#%2x%2x%2x%2x", &a, &r, &g, &b))
+            *(COLORREF *)(data + field.offset) = RGB(r, g, b) | (a << 24);
+        else if (str::Parse(value, "#%2x%2x%2x", &r, &g, &b))
+            *(COLORREF *)(data + field.offset) = RGB(r, g, b);
+        break;
+    case TYPE_STR:
+        free(*(char **)(data + field.offset));
+        *(char **)(data + field.offset) = UnescapeStr(value);
+        break;
+    case TYPE_WSTR:
+        free(*(WCHAR **)(data + field.offset));
+        *(WCHAR **)(data + field.offset) = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(value)));
+        break;
+    case (TYPE_STRUCT_PTR | TYPE_STORE_COMPACT_MASK):
+        if (!*(uint8_t **)(data + field.offset))
+            *(uint8_t **)(data + field.offset) = AllocArray<uint8_t>(field.def->size);
+        for (size_t i = 0; i < field.def->nFields; i++) {
+            DeserializeField(*(uint8_t **)(data + field.offset), field.def->fields[i], value);
+            CrashIf(TYPE_STR == field.def->fields[i].type || TYPE_WSTR == field.def->fields[i].type);
+            for (; *value && !str::IsWs(*value); value++);
+            for (; str::IsWs(*value); value++);
+        }
+        break;
+    default:
+        CrashIf(true);
+    }
+}
+
 static void *DeserializeRec(IniFile& ini, void *base, StructMetadata *def, const char *fieldNamesSeq,
                             const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
 {
@@ -73,7 +130,6 @@ static void *DeserializeRec(IniFile& ini, void *base, StructMetadata *def, const
     size_t secIdx = startIdx;
     IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
     IniLine *line;
-    int r, g, b, a;
 
     uint8_t *data = (uint8_t *)base;
     if (!data)
@@ -89,9 +145,8 @@ static void *DeserializeRec(IniFile& ini, void *base, StructMetadata *def, const
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             *(void **)(data + field.offset) = DeserializeRec(ini, *(void **)(data + field.offset), field.def, fieldNamesSeq, name, secIdx + 1, endIdx);
-            continue;
         }
-        if (TYPE_ARRAY == field.type) {
+        else if (TYPE_ARRAY == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             ListNode<void> *root = NULL, **next = &root;
             size_t nextSecIdx = endIdx;
@@ -108,55 +163,10 @@ static void *DeserializeRec(IniFile& ini, void *base, StructMetadata *def, const
             }
             FreeListNode(*(ListNode<void> **)(data + field.offset), field.def);
             *(ListNode<void> **)(data + field.offset) = root;
-            continue;
         }
-        if (!section || (line = section->FindLine(fieldName)) == NULL) {
-            // printf("couldn't find line for %s (%s)\n", field.name, sectionName);
-            continue;
-        }
-        switch (field.type) {
-        case TYPE_BOOL:
-            *(bool *)(data + field.offset) = str::EqI(line->value, "true") || ParseBencInt(line->value) != 0;
-            break;
-        // TODO: are all these int-types really needed?
-        case TYPE_I16:
-            *(int16_t *)(data + field.offset) = (int16_t)ParseBencInt(line->value);
-            break;
-        case TYPE_U16:
-            *(uint16_t *)(data + field.offset) = (uint16_t)ParseBencInt(line->value);
-            break;
-        case TYPE_I32:
-            *(int32_t *)(data + field.offset) = (int32_t)ParseBencInt(line->value);
-            break;
-        case TYPE_U32:
-            *(uint32_t *)(data + field.offset) = (uint32_t)ParseBencInt(line->value);
-            break;
-        case TYPE_U64:
-            *(uint64_t *)(data + field.offset) = (uint64_t)ParseBencInt(line->value);
-            break;
-        case TYPE_FLOAT:
-            if (!str::Parse(line->value, "%f", (float *)(data + field.offset)))
-                *(float *)(data + field.offset) = 0.f;
-            break;
-        case TYPE_COLOR:
-            if (str::Parse(line->value, "#%2x%2x%2x%2x", &a, &r, &g, &b))
-                *(COLORREF *)(data + field.offset) = RGB(r, g, b) | (a << 24);
-            else if (str::Parse(line->value, "#%2x%2x%2x", &r, &g, &b))
-                *(COLORREF *)(data + field.offset) = RGB(r, g, b);
-            else
-                *(COLORREF *)(data + field.offset) = (COLORREF)0;
-            break;
-        case TYPE_STR:
-            free(*(char **)(data + field.offset));
-            *(char **)(data + field.offset) = UnescapeStr(line->value);
-            break;
-        case TYPE_WSTR:
-            free(*(WCHAR **)(data + field.offset));
-            *(WCHAR **)(data + field.offset) = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(line->value)));
-            break;
-        default:
-            CrashIf(true);
-        }
+        else if (section && (line = section->FindLine(fieldName)) != NULL)
+            DeserializeField(data, field, line->value);
+        // else printf("couldn't find line for %s (%s)\n", field.name, sectionName);
     }
     return data;
 }
@@ -206,6 +216,57 @@ static char *EscapeStr(const char *s)
     return ret.StealData();
 }
 
+static char *SerializeField(const uint8_t *data, FieldMetadata& field)
+{
+    ScopedMem<char> value;
+    COLORREF c;
+
+    switch (field.type | 0) {
+    case TYPE_BOOL: return str::Dup(*(bool *)(data + field.offset) ? "true" : "false");
+    case TYPE_I16: return str::Format("%d", (int32_t)*(int16_t *)(data + field.offset));
+    case TYPE_U16: return str::Format("%u", (uint32_t)*(uint16_t *)(data + field.offset));
+    case TYPE_I32: return str::Format("%d", *(int32_t *)(data + field.offset));
+    case TYPE_U32: return str::Format("%u", *(uint32_t *)(data + field.offset));
+    case TYPE_U64: return str::Format("%I64u", *(uint64_t *)(data + field.offset));
+    case TYPE_FLOAT: return str::Format("%g", *(float *)(data + field.offset));
+    case TYPE_COLOR:
+        c = *(COLORREF *)(data + field.offset);
+        // TODO: COLORREF doesn't really have an alpha value
+        if (((c >> 24) & 0xff))
+            return str::Format("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c));
+        return str::Format("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c));
+    case TYPE_STR:
+        if (!*(const char **)(data + field.offset))
+            return NULL; // skip empty strings
+        if (!NeedsEscaping(*(const char **)(data + field.offset)))
+            return str::Dup(*(const char **)(data + field.offset));
+        return EscapeStr(*(const char **)(data + field.offset));
+    case TYPE_WSTR:
+        if (!*(const WCHAR **)(data + field.offset))
+            return NULL; // skip empty strings
+        value.Set(str::conv::ToUtf8(*(const WCHAR **)(data + field.offset)));
+        if (NeedsEscaping(value))
+            return EscapeStr(value);
+        return value.StealData();
+    case (TYPE_STRUCT_PTR | TYPE_STORE_COMPACT_MASK):
+        for (size_t i = 0; i < field.def->nFields; i++) {
+            ScopedMem<char> val(SerializeField(*(const uint8_t **)(data + field.offset), field.def->fields[i]));
+            if (!value)
+                value.Set(str::Format("%s", val));
+            else
+                value.Set(str::Format("%s %s", value, val));
+        }
+        return value.StealData();
+    case TYPE_STRUCT_PTR:
+    case TYPE_ARRAY:
+        // nested structs are serialized after all other values
+        break;
+    default:
+        CrashIf(!(field.type & TYPE_NO_STORE_MASK));
+    }
+    return NULL;
+}
+
 static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, const char *sectionName=NULL)
 {
     if (sectionName) {
@@ -214,64 +275,10 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
         out.Append("]\r\n");
     }
 
-    COLORREF c;
     for (size_t i = 0; i < def->nFields; i++) {
-        FieldMetadata& field = def->fields[i];
-        const char *fieldName = fieldNamesSeq + field.nameOffset;
+        const char *fieldName = fieldNamesSeq + def->fields[i].nameOffset;
         CrashIf(str::FindChar(fieldName, '=') || NeedsEscaping(fieldName));
-        ScopedMem<char> value;
-        switch (field.type) {
-        case TYPE_BOOL:
-            value.Set(str::Dup(*(bool *)(data + field.offset) ? "true" : "false"));
-            break;
-        case TYPE_I16:
-            value.Set(str::Format("%d", (int32_t)*(int16_t *)(data + field.offset)));
-            break;
-        case TYPE_U16:
-            value.Set(str::Format("%u", (uint32_t)*(uint16_t *)(data + field.offset)));
-            break;
-        case TYPE_I32:
-            value.Set(str::Format("%d", *(int32_t *)(data + field.offset)));
-            break;
-        case TYPE_U32:
-            value.Set(str::Format("%u", *(uint32_t *)(data + field.offset)));
-            break;
-        case TYPE_U64:
-            value.Set(str::Format("%I64u", *(uint64_t *)(data + field.offset)));
-            break;
-        case TYPE_FLOAT:
-            value.Set(str::Format("%g", *(float *)(data + field.offset)));
-            break;
-        case TYPE_COLOR:
-            c = *(COLORREF *)(data + field.offset);
-            // TODO: COLORREF doesn't really have an alpha value
-            if (((c >> 24) & 0xff))
-                value.Set(str::Format("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c)));
-            else
-                value.Set(str::Format("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c)));
-            break;
-        case TYPE_STR:
-            if (!*(const char **)(data + field.offset))
-                /* skip empty string */;
-            else if (!NeedsEscaping(*(const char **)(data + field.offset)))
-                value.Set(str::Dup(*(const char **)(data + field.offset)));
-            else
-                value.Set(EscapeStr(*(const char **)(data + field.offset)));
-            break;
-        case TYPE_WSTR:
-            if (*(const WCHAR **)(data + field.offset)) {
-                value.Set(str::conv::ToUtf8(*(const WCHAR **)(data + field.offset)));
-                if (NeedsEscaping(value))
-                    value.Set(EscapeStr(value));
-            }
-            break;
-        case TYPE_STRUCT_PTR:
-        case TYPE_ARRAY:
-            // nested structs are serialized after all other values
-            break;
-        default:
-            CrashIf(!(field.type & TYPE_NO_STORE_MASK));
-        }
+        ScopedMem<char> value(SerializeField(data, def->fields[i]));
         if (value) {
             out.Append(fieldName);
             out.Append(" = ");
@@ -312,7 +319,7 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
         return;
     for (size_t i = 0; i < def->nFields; i++) {
         FieldMetadata& field = def->fields[i];
-        if (TYPE_STRUCT_PTR == field.type)
+        if (TYPE_STRUCT_PTR == (field.type & TYPE_NO_FLAGS_MASK))
             FreeStruct(*(uint8_t **)(data + field.offset), field.def);
         else if (TYPE_ARRAY == field.type)
             FreeListNode(*(ListNode<void> **)(data + field.offset), field.def);
