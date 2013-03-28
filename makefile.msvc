@@ -86,14 +86,14 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 
 # those are warnings that are selected with /W4
 # 4127 : conditional expression is constant
-# 4100 : unreferenced param
 
 # Addittional warnings that we make part of /W3 set:
 # 4244 : conversion from 'type x' to 'type y', possible loss of data
 # 4131 : uses old-style declarator
 # 4701 : potentially uninitialized local variable 'x' used
 # 4706 : assignement in conditional
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34701 /w34706 /w34131 /w34244
+# 4100 : unreferenced param
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34701 /w34706 /w34131 /w34244 /w34100
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(EXTDIR)/lzma/C

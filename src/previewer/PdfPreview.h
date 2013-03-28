@@ -71,7 +71,7 @@ public:
     IFACEMETHODIMP GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha);
 
     // IInitializeWithStream
-    IFACEMETHODIMP Initialize(IStream *pStm, DWORD grfMode) {
+    IFACEMETHODIMP Initialize(IStream *pStm, DWORD) {
         m_pStream = pStm;
         if (!m_pStream)
             return E_INVALIDARG;
@@ -152,7 +152,7 @@ public:
         *phwnd = m_hwndParent;
         return S_OK;
     }
-    IFACEMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) { return E_NOTIMPL; }
+    IFACEMETHODIMP ContextSensitiveHelp(BOOL) { return E_NOTIMPL; }
 
     // IPersist (for Windows XP)
     IFACEMETHODIMP GetClassID(CLSID *pClassID) {
@@ -160,7 +160,7 @@ public:
     }
 
     // IPersistFile (for Windows XP)
-    IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
+    IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD) {
         HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
             return E_INVALIDARG;
@@ -183,9 +183,9 @@ public:
         return res;
     }
     IFACEMETHODIMP IsDirty(void) { return E_NOTIMPL; }
-    IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL bRemember) { return E_NOTIMPL; }
-    IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) { return E_NOTIMPL; }
-    IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) { return E_NOTIMPL; }
+    IFACEMETHODIMP Save(LPCOLESTR, BOOL) { return E_NOTIMPL; }
+    IFACEMETHODIMP SaveCompleted(LPCOLESTR) { return E_NOTIMPL; }
+    IFACEMETHODIMP GetCurFile(LPOLESTR *) { return E_NOTIMPL; }
 
     // IExtractImage2 (for Windows XP)
     IFACEMETHODIMP Extract(HBITMAP *phBmpThumbnail) {
@@ -194,7 +194,7 @@ public:
         WTS_ALPHATYPE dummy;
         return GetThumbnail(m_extractCx, phBmpThumbnail, &dummy);
     }
-    IFACEMETHODIMP GetLocation(LPWSTR pszPathBuffer, DWORD cch, DWORD *pdwPriority, const SIZE *prgSize, DWORD dwRecClrDepth, DWORD *pdwFlags) {
+    IFACEMETHODIMP GetLocation(LPWSTR, DWORD, DWORD *, const SIZE *prgSize, DWORD, DWORD *pdwFlags) {
         if (!prgSize || !pdwFlags)
             return E_INVALIDARG;
         // cheap implementation: ignore anything that isn't useful for IThumbnailProvider::GetThumbnail

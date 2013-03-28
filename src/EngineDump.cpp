@@ -343,15 +343,16 @@ class PasswordHolder : public PasswordUI {
     const WCHAR *password;
 public:
     PasswordHolder(const WCHAR *password) : password(password) { }
-    virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
-                                unsigned char decryptionKeyOut[32], bool *saveKey) {
+    virtual WCHAR * GetPassword(const WCHAR *, unsigned char *,
+                                unsigned char decryptionKeyOut[32], bool *) {
+        (void)decryptionKeyOut;
         return str::Dup(password);
     }
 };
 
 #define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg), __VA_ARGS__)
 
-int main(int argc, char **argv)
+int main(int, char **)
 {
     setlocale(LC_ALL, "C");
     DisableDataExecution();

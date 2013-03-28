@@ -81,6 +81,6 @@ Graphics *AllocGraphicsForMeasureText()
     return &gGH.gfx;
 }
 
-void FreeGraphicsForMeasureText(Graphics *g) { }
+void FreeGraphicsForMeasureText(Graphics *) { }
 
 }

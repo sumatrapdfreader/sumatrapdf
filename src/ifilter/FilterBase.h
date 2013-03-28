@@ -195,7 +195,7 @@ public:
     }
 
     // IFilter
-    IFACEMETHODIMP Init(ULONG grfFlags, ULONG cAttributes, const FULLPROPSPEC *aAttributes, ULONG *pFlags) {
+    IFACEMETHODIMP Init(ULONG, ULONG cAttributes, const FULLPROPSPEC *aAttributes, ULONG *pFlags) {
         if (cAttributes > 0 && !aAttributes)
             return E_INVALIDARG;
 
@@ -268,7 +268,7 @@ public:
     IFACEMETHODIMP BindRegion(FILTERREGION, REFIID, void **) { return E_NOTIMPL; }
 
     // IInitializeWithStream
-    IFACEMETHODIMP Initialize(IStream *pStm, DWORD grfMode) {
+    IFACEMETHODIMP Initialize(IStream *pStm, DWORD) {
         if (m_pStream)
             m_pStream->Release();
         m_pStream = pStm;
@@ -281,11 +281,11 @@ public:
     // IPersistStream
     IFACEMETHODIMP IsDirty(void) { return E_NOTIMPL; }
     IFACEMETHODIMP Load(IStream *pStm) { return Initialize(pStm, 0); }
-    IFACEMETHODIMP Save(IStream *pStm, BOOL fClearDirty) { return E_NOTIMPL; }
-    IFACEMETHODIMP GetSizeMax(ULARGE_INTEGER *pcbSize) { return E_NOTIMPL; }
+    IFACEMETHODIMP Save(IStream *, BOOL) { return E_NOTIMPL; }
+    IFACEMETHODIMP GetSizeMax(ULARGE_INTEGER *) { return E_NOTIMPL; }
 
     // IPersistFile (for compatibility with older Windows Desktop Search versions and ifilttst.exe)
-    IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
+    IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD) {
         HANDLE hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
             return E_INVALIDARG;
@@ -306,9 +306,9 @@ public:
         pStm->Release();
         return res;
     }
-    IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL bRemember) { return E_NOTIMPL; }
-    IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) { return E_NOTIMPL; }
-    IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) { return E_NOTIMPL; }
+    IFACEMETHODIMP Save(LPCOLESTR, BOOL) { return E_NOTIMPL; }
+    IFACEMETHODIMP SaveCompleted(LPCOLESTR) { return E_NOTIMPL; }
+    IFACEMETHODIMP GetCurFile(LPOLESTR *) { return E_NOTIMPL; }
 
 protected:
     IStream*                    m_pStream;
