@@ -1,4 +1,4 @@
-import types
+﻿import types
 
 def is_valid_signed(bits, val):
     if type(val) not in (types.IntType, types.LongType): return False
@@ -325,6 +325,8 @@ class Settings(Struct):
         Field("basic", BasicSettings()),
         Field("advanced", AdvancedSettings()),
         Field("appState", AppState()),
+        Field("str_escape_test", String("[lo\r $foo\\ l\na]]")),
+        Field("wstr_1", WString(u"wide string Πραγματικό &Μέγεθος\tCtrl+1")),
     ]
 
 class Simple(Struct):
@@ -338,6 +340,7 @@ class Simple(Struct):
         Field("col_1", Color(0xacff00ed)),
         Field("float_1", Float(3.12348)),
         Field("str_1", String("lola")),
-        Field("wstr_1", WString("wide string")),
+        Field("str_escape", String("[lo\r $fo\to\\ l\na]]")),
+        Field("wstr_1", WString(u"wide string Πραγματικό &Μέγεθος\nCtrl+1")),
     ]
 

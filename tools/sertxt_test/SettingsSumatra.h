@@ -78,6 +78,8 @@ struct Settings {
     BasicSettings *     basic;
     AdvancedSettings *  advanced;
     AppState *          appState;
+    const char *        str_escape_test;
+    const WCHAR *       wstr_1;
 };
 
 Settings *DeserializeSettings(const char *data, size_t dataLen);

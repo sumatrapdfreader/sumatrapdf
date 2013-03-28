@@ -1,19 +1,38 @@
-#include "BaseUtil.h"
+﻿#include "BaseUtil.h"
 #include "FileUtil.h"
 #include "SerializeTxt.h"
 #include "SerializeTxtParser.h"
 #include "SettingsSumatra.h"
+#include "SettingsSimple.h"
+
+static char *CheckedLoad(const char *path, size_t *fileSizeOut)
+{
+    char *s = file::ReadAllUtf(path, fileSizeOut);
+    if (!s)
+        printf("failed to load '%s'", path);
+    return s;
+}
+
+static void CheckStrEq(const char *s1, const char *s2)
+{
+    if (str::Eq(s1, s2))
+        return;
+    printf("'%s'\n != \n'%s'\n", s1, s2);
+}
+
+static void CheckStrEq(const WCHAR *s1, const WCHAR *s2)
+{
+    if (str::Eq(s1, s2))
+        return;
+    wprintf(L"'%s'\n != \n'%s'\n", s1, s2);
+}
 
 static void TestParseSumatraSettings()
 {
     size_t fileSize;
-    const char *path = "..\\tools\\sertxt_test\\data.txt";
-    char *s = file::ReadAllUtf(path, &fileSize);
-    if (!s) {
-        printf("failed to load '%s'", path);
+    char *s = CheckedLoad( "..\\tools\\sertxt_test\\data.txt", &fileSize);
+    if (!s)
         return;
-    }
-
     TxtParser parser;
     parser.SetToParse(s, fileSize);
     bool ok = ParseTxt(parser);
@@ -24,7 +43,6 @@ static void TestParseSumatraSettings()
 
 static bool TestString(const char *s, char *expected)
 {
-
     size_t n = str::NormalizeNewlinesInPlace(expected);
     expected[n] = '\n';
     expected[n+1] = 0;
@@ -37,12 +55,11 @@ static bool TestString(const char *s, char *expected)
         printf("Failed to parse:'\n%s'\n", s);
         return false;
     }
-    const char *res = PrettyPrintTxt(parser);
+    char *res = PrettyPrintTxt(parser);
     ok = str::Eq(res, expected);
-    if (!ok) {
+    if (!ok)
         printf("'%s'\npretty printed as\n'%s'\nand we expected\n'%s'\n", s, res, expected);
-    }
-    free((void*)res);
+    free(res);
     free(sCopy);
     return ok;
 }
@@ -50,12 +67,11 @@ static bool TestString(const char *s, char *expected)
 static void TestFromFile()
 {
     size_t fileSize;
-    const char *path = "..\\tools\\sertxt_test\\tests.txt";
-    char *s = file::ReadAllUtf(path, &fileSize);
-    if (!s) {
-        printf("failed to load '%s'", path);
+    char *fileContent = CheckedLoad( "..\\tools\\sertxt_test\\tests.txt", &fileSize);
+    char *s = fileContent;
+    if (!s)
         return;
-    }
+
     Vec<char*> tests;
     for (;;) {
         tests.Append(s);
@@ -83,17 +99,16 @@ static void TestFromFile()
         if (!ok)
             return;
     }
+    free(fileContent);
 }
 
 static void TestSettingsDeserialize()
 {
     size_t fileSize;
-    const char *path = "..\\tools\\sertxt_test\\data.txt";
-    char *s = file::ReadAllUtf(path, &fileSize);
-    if (!s) {
-        printf("failed to load '%s'", path);
+    char *s = CheckedLoad("..\\tools\\sertxt_test\\data.txt", &fileSize);
+    if (!s)
         return;
-    }
+
     Settings *settings = DeserializeSettings(s, fileSize);
     if (!settings) {
         printf("failed to deserialize\n'%s'\n", s);
@@ -101,17 +116,39 @@ static void TestSettingsDeserialize()
     }
     size_t serializedLen;
     char *s2 = (char*)SerializeSettings(settings, &serializedLen);
-    s2 += 3; // skip utf8 bom
-    char *toFree = s;
-    if (str::EqN(s, UTF8_BOM, 3))
-        s += 3;
-    str::NormalizeNewlinesInPlace(s2);
+
     str::NormalizeNewlinesInPlace(s);
-    if (!str::Eq(s, s2)) {
-        printf("'%s'\n != \n'%s'\n", s, s2);
-    }
-    free(toFree);
+    str::NormalizeNewlinesInPlace(s2);
+    CheckStrEq(s, s2);
+    CheckStrEq(settings->str_escape_test, "[lo\r $foo\\ l\na]]");
+    CheckStrEq(settings->wstr_1, L"wide string Πραγματικό &Μέγεθος\tCtrl+1");
+    free(s);
+    free(s2);
     FreeSettings(settings);
+}
+
+static void TestSettingsSimple()
+{
+    size_t fileSize;
+    char *s =  CheckedLoad("..\\tools\\sertxt_test\\data_simple_with_ws.txt", &fileSize);
+    if (!s)
+        return;
+    Simple *settings = DeserializeSimple(s, fileSize);
+    if (!settings) {
+        printf("failed to deserialize\n'%s'\n", s);
+        return;
+    }
+    CheckStrEq(settings->str_1, "lola");
+    CheckStrEq(settings->str_escape, "[lo\r $fo\to\\ l\na]]");
+    CheckStrEq(settings->wstr_1, L"wide string Πραγματικό &Μέγεθος\nCtrl+1");
+    size_t serializedLen;
+    char *s2 = (char*)SerializeSimple(settings, &serializedLen);
+    char *s3 = CheckedLoad("..\\tools\\sertxt_test\\data_simple_no_ws.txt", &fileSize);
+    CheckStrEq(s2, s3);
+    free(s);
+    free(s2);
+    free(s3);
+    FreeSimple(settings);
 }
 
 int main(int argc, char **argv)
@@ -121,6 +158,7 @@ int main(int argc, char **argv)
 #endif
 
     TestFromFile();
+    TestSettingsSimple();
     TestSettingsDeserialize();
     TestParseSumatraSettings();
 }

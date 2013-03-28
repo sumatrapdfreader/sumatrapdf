@@ -1,5 +1,10 @@
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #ifndef SerializeTxtParser_h
 #define SerializeTxtParser_h
+
+#define SERIALIZE_ESCAPE_CHAR '$'
 
 #include "StrSlice.h"
 
@@ -57,7 +62,7 @@ struct TxtParser {
 
     TxtParser() {
         allocator = new PoolAllocator();
-        escapeChar = 0;
+        escapeChar = SERIALIZE_ESCAPE_CHAR;
         failed = false;
     }
     ~TxtParser() {

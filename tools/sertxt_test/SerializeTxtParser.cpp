@@ -1,16 +1,14 @@
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #include "BaseUtil.h"
 #include "SerializeTxtParser.h"
-#include <new>
+#include <new>  // for placement new
 
 // unbreak placement new introduced by defining new as DEBUG_NEW
 #ifdef new
 #undef new
 #endif
-
-/*
-TODO:
- - allow "foo = bar" in addition to "foo: bar"
-*/
 
 /*
 This is a parser for a tree-like text format:
@@ -22,7 +20,6 @@ foo [
     mulit-line values are possible
   ]
 ]
-
 
 This is not a very strict format. On purpose it doesn't try to strictly break
 things into key/values, just to decode tree structure and *help* to interpret
@@ -58,6 +55,142 @@ static bool IsCommentStartChar(char c)
     return (';' == c ) || ('#' == c);
 }
 
+// unescapes a string until a newline (\n)
+// returns the end of unescaped string
+static char *UnescapeLineInPlace(char *&sInOut, char *e, char escapeChar)
+{
+    char *s = sInOut;
+    char *dst = s;
+    while ((s < e) && (*s != '\n')) {
+        if (escapeChar != *s) {
+            *dst++ = *s++;
+            continue;
+        }
+
+        // ignore unexpected lone escape char
+        if (s+1 >= e) {
+            *dst++ = *s++;
+            continue;
+        }
+
+        ++s;
+        char c = *s++;
+        if (c == escapeChar) {
+            *dst++ = escapeChar;
+            continue;
+        }
+
+        switch (c) {
+        case '[':
+        case ']':
+            *dst++ = c;
+            break;
+        case 'r':
+            *dst++ = '\r';
+            break;
+        case 'n':
+            *dst++ = '\n';
+            break;
+        default:
+            // invalid escaping sequence. we preserve it
+            *dst++ = escapeChar;
+            *dst++ = c;
+            break;
+        }
+    }
+    sInOut = s;
+    return dst;
+}
+
+// parses "foo[: | (WS*=]WS*[WS*\n" (WS == whitespace
+static bool ParseStructStart(TxtParser& parser)
+{
+    // work on a copy in case we fail
+    str::Slice slice = parser.toParse;
+
+    char *keyStart = slice.curr;
+    slice.SkipNonWs();
+    // "foo:  ["
+    //      ^
+
+    char *keyEnd = slice.curr;
+    if (':' == slice.PrevChar()) {
+        // "foo:  [  "
+        //     ^ <- keyEnd
+        keyEnd--;
+    } else {
+        slice.SkipWsUntilNewline();
+        if ('=' == slice.CurrChar()) {
+            // "foo  =  ["
+            //       ^
+            slice.Skip(1);
+            // "foo  =  ["
+            //        ^
+        }
+    }
+    slice.SkipWsUntilNewline();
+    // "foo  =  [  "
+    //          ^
+    if ('[' != slice.CurrChar())
+        return false;
+    slice.Skip(1);
+    slice.SkipWsUntilNewline();
+    // "foo  =  [  "
+    //             ^
+    if (!(slice.Finished() || ('\n' == slice.CurrChar())))
+        return false;
+
+    TokenVal& tok = parser.tok;
+    tok.type = TokenStructStart;
+    tok.keyStart = keyStart;
+    tok.keyEnd = keyEnd;
+    *keyEnd = 0;
+    if ('\n' == slice.CurrChar()) {
+        slice.ZeroCurr();
+        slice.Skip(1);
+    }
+
+    parser.toParse = slice;
+    return true;
+}
+
+// parses "foo:WS${rest}" or "fooWS=WS${rest}"
+// if finds this pattern, sets parser.tok.keyStart and parser.tok.keyEnd
+// and positions slice at the beginning of ${rest}
+static bool ParseKey(TxtParser& parser)
+{
+    str::Slice slice = parser.toParse;
+    char *keyStart = slice.curr;
+    slice.SkipNonWs();
+    // "foo:  bar"
+    //      ^
+
+    char *keyEnd = slice.curr;
+    if (':' == slice.PrevChar()) {
+        // "foo:  bar"
+        //     ^ <- keyEnd
+        keyEnd--;
+    } else {
+        slice.SkipWsUntilNewline();
+        if ('=' != slice.CurrChar())
+            return false;
+        // "foo  =  bar"
+        //       ^
+        slice.Skip(1);
+        // "foo  =  bar"
+        //        ^
+    }
+    slice.SkipWsUntilNewline();
+    // "foo  =   bar "
+    //           ^
+
+    parser.tok.keyStart = keyStart;
+    parser.tok.keyEnd = keyEnd;
+
+    parser.toParse = slice;
+    return true;
+}
+
 // TODO: maybe also allow things like:
 // foo: [1 3 4]
 // i.e. a child on a single line
@@ -65,25 +198,22 @@ static void ParseNextToken(TxtParser& parser)
 {
     TokenVal& tok = parser.tok;
     ZeroMemory(&tok, sizeof(TokenVal));
-
     str::Slice& slice = parser.toParse;
 
 Again:
-    if (slice.Finished())
-        goto Finished;
-
     // "  foo:  bar  "
     //  ^
-
     tok.lineStart = slice.curr;
-
     slice.SkipWsUntilNewline();
+    if (slice.Finished()) {
+        tok.type = TokenFinished;
+        return;
+    }
+
     // "  foo:  bar  "
     //    ^
 
-    if (slice.Finished())
-        goto Finished;
-
+    // skip comments
     char c = slice.CurrChar();
     if (IsCommentStartChar(c)) {
         slice.SkipUntil('\n');
@@ -103,88 +233,26 @@ Again:
         return;
     }
 
-    tok.type = TokenString;
-    tok.valStart = slice.curr;
-    slice.SkipNonWs();
-    // "  foo:  bar  "
-    //        ^
-
-    bool isKeyVal = (slice.PrevChar() == ':');
-    if (isKeyVal) {
-        tok.keyStart = tok.valStart;
-        tok.keyEnd = slice.curr - 1;
-        CrashIf(*tok.keyEnd != ':');
-        tok.valStart = NULL;
-        tok.valEnd = NULL;
-    }
-
-    slice.SkipWsUntilNewline();
-    // "  foo:  bar  "
-    //          ^
-
-    // this is "foo ["
-    if ('[' == slice.CurrChar()) {
-        tok.type = TokenStructStart;
-        if (isKeyVal)
-            *tok.keyEnd = 0;
-        else {
-            CrashIf(NULL == tok.valStart);
-            tok.keyStart = tok.valStart;
-            tok.keyEnd = slice.curr - 1;
-            str::TrimWsEnd(tok.keyStart, tok.keyEnd);
-            *tok.keyEnd = 0;
-            tok.valStart = NULL;
-            tok.valEnd = NULL;
-        }
-        slice.ZeroCurr();
-        slice.Skip(1);
-        slice.SkipWsUntilNewline();
-        if ('\n' == slice.CurrChar()) {
-            slice.ZeroCurr();
-            slice.Skip(1);
-        }
+    if (ParseStructStart(parser))
         return;
-    }
 
-    // "  foo:  bar  "
+    tok.type = TokenString;
+    ParseKey(parser);
+
+    // "  foo:  bar"
     //          ^
-    if (isKeyVal) {
-        tok.type = TokenKeyVal;
-        tok.valStart = slice.curr;
-    } else {
-        CrashIf(tok.keyStart || tok.keyEnd);
-    }
-    bool wasUnescaped = false;
-NextLine:
-    slice.SkipUntil('\n');
-    // "  foo:  bar  "
-    //               ^
-    if ('\\' == slice.PrevChar()) {
-        wasUnescaped = true;
-        slice.curr[-1] = 0;
-        slice.Skip(1);
-        goto NextLine;
-    }
-    if (wasUnescaped) {
-        // we replaced '\' with 0, we need to remove those zeroes
-        char *s = tok.valStart;
-        char *end = slice.curr;
-        char *dst = s;
-        while (s < end) {
-            if (*s)
-                *dst++ = *s;
-            s++;
-        }
-        *dst = 0;
-        tok.valEnd = dst;
-    } else {
-        tok.valEnd = slice.curr;
-    }
+    tok.valStart = slice.curr;
+    char *origEnd = slice.curr;
+    char *valEnd = UnescapeLineInPlace(origEnd, slice.end, parser.escapeChar);
+    CrashIf((origEnd < slice.end) && (*origEnd != '\n'));
+    if (valEnd < slice.end)
+        *valEnd = 0;
+    tok.valEnd = valEnd;
+
+    slice.curr = origEnd;
     slice.ZeroCurr();
     slice.Skip(1);
     return;
-Finished:
-    tok.type = TokenFinished;
 }
 
 static void ParseNodes(TxtParser& parser)
@@ -263,7 +331,7 @@ static void PrettyPrintKeyVal(TxtNode *curr, int nest, str::Str<char>& res)
     if (curr->keyStart) {
         AppendWsTrimEnd(res, curr->keyStart, curr->keyEnd);
         if (StructNode != curr->type)
-            res.Append(" = ");
+            res.Append(" + ");
     }
     AppendWsTrimEnd(res, curr->valStart, curr->valEnd);
     if (StructNode != curr->type)
@@ -279,7 +347,7 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
 
     if (StructNode == curr->type) {
         PrettyPrintKeyVal(curr, nest, res);
-        res.Append(" [\n");
+        res.Append(" + [\n");
     } else if (nest >= 0) {
         CrashIf(ArrayNode != curr->type);
         AppendNest(res, nest);

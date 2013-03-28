@@ -65,3 +65,5 @@ app_state [
     ]
   ]
 ]
+str_escape_test: $[lo$r $$foo\ l$na$]$]
+wstr_1: wide string Πραγματικό &Μέγεθος	Ctrl+1

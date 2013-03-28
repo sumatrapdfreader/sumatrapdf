@@ -506,45 +506,56 @@ static void AppendNest(str::Str<char>& s, int nest)
     }
 }
 
-static void AppendVal(const char *val, str::Str<char>& res)
+static void AppendVal(const char *val, char escapeChar, str::Str<char>& res)
 {
-    // escape "\n" inside the string with "\" and newline
     const char *start = val;
     const char *s = start;
+    char escaped = 0;
     while (*s) {
-        // TODO: do I need to handle '\r' and "\r\n" as well?
-        if (*s == '\n') {
-            size_t len = s - start;
-            res.Append(start, len);
-            res.Append("\\" NL);
-            start = s + 1;
-        }
-        ++s;
+        char c = *s++;
+        if (escapeChar == c)
+            escaped = escapeChar;
+        else if (']' == c)
+            escaped = ']';
+        else if ('[' == c)
+            escaped = '[';
+        else if ('\n' == c)
+            escaped = 'n';
+        else if ('\r' == c)
+            escaped = 'r';
+        if (0 == escaped)
+            continue;
+
+        size_t len = s - start - 1;
+        res.Append(start, len);
+        res.Append(escapeChar);
+        res.Append(escaped);
+        start = s;
+        escaped = 0;
     }
-    // appends either everything, if wasn't escaped, or
-    // the part since last newline if was escaped
     size_t len = s - start;
     res.Append(start, len);
     res.Append(NL);
-}
-
-static void AppendKeyVal(const char *key, const char *val, int nest, str::Str<char>& res)
-{
-    AppendNest(res, nest);
-    res.Append(key);
-    res.Append(": ");
-    AppendVal(val, res);
 }
 
 struct EncodeState {
     str::Str<char>  res;
     const char *    fieldNamesSeq;
     char            escapeChar;
+
     EncodeState() {
         fieldNamesSeq = NULL;
-        escapeChar = 0;
+        escapeChar = SERIALIZE_ESCAPE_CHAR;
     }
 };
+
+static void AppendKeyVal(EncodeState& es, const char *key, const char *val, int nest)
+{
+    AppendNest(es.res, nest);
+    es.res.Append(key);
+    es.res.Append(": ");
+    AppendVal(val, es.escapeChar, es.res);
+}
 
 void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def, int nest);
 
@@ -554,13 +565,17 @@ static void FixFloatStr(char *s)
     char *dot = (char*)str::FindCharLast(s, '.');
     if (!dot)
         return;
-    char *tmp = dot + 1;
-    while (*tmp) {
-        if (*tmp != '0')
-            return;
-        ++tmp;
+    char *end = dot;
+    while (*end) {
+        ++end;
     }
-    *dot = 0;
+    --end;
+    while ((end > dot) && ('0' == *end)) {
+        *end = 0;
+        --end;
+    }
+    if (end == dot)
+        *end = 0;
 }
 
 static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8_t *structStart, int nest)
@@ -579,7 +594,7 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
     const uint8_t *data = structStart + fieldDef->offset;
     if (TYPE_BOOL == type) {
         bool b = ReadStructBool(data);
-        AppendKeyVal(fieldName, b ? "true" : "false", nest, res);
+        AppendKeyVal(es, fieldName, b ? "true" : "false", nest);
     } else if (TYPE_COLOR == type) {
         uint64_t u = ReadStructUInt(data, type);
         COLORREF c = (COLORREF)u;
@@ -591,32 +606,32 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
             val.AppendFmt("#%02x%02x%02x%02x", a, r, g, b);
         else
             val.AppendFmt("#%02x%02x%02x", r, g, b);
-        AppendKeyVal(fieldName, val.Get(), nest, res);
+        AppendKeyVal(es, fieldName, val.Get(), nest);
     } else if (IsUnsignedIntType(type)) {
         uint64_t u = ReadStructUInt(data, type);
         //val.AppendFmt("%" PRIu64, u);
         val.AppendFmt("%I64u", u);
-        AppendKeyVal(fieldName, val.Get(), nest, res);
+        AppendKeyVal(es, fieldName, val.Get(), nest);
     } else if (IsSignedIntType(type)) {
         int64_t i = ReadStructInt(data, type);
         //val.AppendFmt("%" PRIi64, u);
         val.AppendFmt("%I64d", i);
-        AppendKeyVal(fieldName, val.Get(), nest, res);
+        AppendKeyVal(es, fieldName, val.Get(), nest);
     } else if (TYPE_FLOAT == type) {
         float f = ReadStructFloat(data);
         val.AppendFmt("%f", f);
         char *floatStr = val.Get();
         FixFloatStr(floatStr);
-        AppendKeyVal(fieldName, floatStr, nest, res);
+        AppendKeyVal(es, fieldName, floatStr, nest);
     } else if (TYPE_STR == type) {
         char *s = (char*)ReadStructPtr(data);
         if (s)
-            AppendKeyVal(fieldName, s, nest, res);
+            AppendKeyVal(es, fieldName, s, nest);
     } else if (TYPE_WSTR == type) {
         WCHAR *s = (WCHAR*)ReadStructPtr(data);
         if (s) {
             ScopedMem<char> val(str::conv::ToUtf8(s));
-            AppendKeyVal(fieldName, val, nest, res);
+            AppendKeyVal(es, fieldName, val, nest);
         }
     } else if (TYPE_STRUCT_PTR == type) {
         AppendNest(res, nest);

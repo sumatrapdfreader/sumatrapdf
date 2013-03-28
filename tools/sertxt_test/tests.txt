@@ -1,10 +1,10 @@
-nested [
+nested: [
   [
     depth = 1.1
-    nested [
+    nested =   [
         [
       depth = 2.1
-         nested [
+         nested   =[
         ]
    ]
      [
@@ -17,22 +17,22 @@ nested [
   ]
 ]
 --->
-nested [
+nested + [
   [
-    depth = 1.1
-    nested [
+    depth + 1.1
+    nested + [
       [
-        depth = 2.1
-        nested [
+        depth + 2.1
+        nested + [
         ]
       ]
       [
-        depth = 2.2
+        depth + 2.2
       ]
     ]
   ]
   [
-    depth = 1.2
+    depth + 1.2
   ]
 ]
 ---
@@ -48,14 +48,14 @@ favorites [
       ]
 ]
 --->
-app_state [
-  favorites [
+app_state + [
+  favorites + [
     [
-      name = favorite name
-      page_no = 88
+      name + favorite name
+      page_no + 88
     ]
     [
-      name = second
+      name + second
     ]
   ]
 ]
@@ -72,8 +72,8 @@ les: [
 go
 ]
 --->
-les [
-  foo = bar
+les + [
+  foo + bar
   [
     val
   ]
@@ -84,12 +84,12 @@ foo   [
 x: value of me
 ]
 --->
-foo [
-  x = value of me
+foo + [
+  x + value of me
 ]
 ---
 foo [
 ]
 --->
-foo [
+foo + [
 ]
