@@ -96,25 +96,34 @@ public:
 
     virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return pages.Count(); }
-    virtual RectD PageMediabox(int pageNo) { return RectD(); }
+    virtual RectD PageMediabox(int) { return RectD(); }
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    virtual RenderedBitmap *RenderBitmap(int, float, int,
                          RectD *pageRect=NULL, /* if NULL: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
+                         RenderTarget target=Target_View, AbortCookie **cookieOut=NULL) {
          // TOOD: assert(0);
-         return NULL;
+        (void)pageRect;
+        (void)target;
+        (void)cookieOut;
+        return NULL;
     }
 
-    virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation=0,
-                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
+    virtual bool RenderPage(HDC, RectI, int, float, int rotation=0,
+                         RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookieOut=NULL) {
         // TODO: assert(0);
+        (void)rotation;
+        (void)pageRect;
+        (void)target;
+        (void)cookieOut;
         return false;
     }
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) {
+    virtual PointD Transform(PointD pt, int, float, int, bool inverse=false) {
+        (void)inverse;
         return pt;
     }
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) {
+    virtual RectD Transform(RectD rect, int, float, int, bool inverse=false) {
+        (void)inverse;
         return rect;
     }
     virtual unsigned char *GetFileData(size_t *cbCount) {
@@ -124,24 +133,26 @@ public:
         return CopyFile(fileName, copyFileName, FALSE);
     }
 
-    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
+    virtual WCHAR * ExtractPageText(int, WCHAR *, RectI **coordsOut=NULL,
                                     RenderTarget target=Target_View) {
+        (void)coordsOut;
+        (void)target;
         return NULL;
     }
 
-    virtual bool HasClipOptimizations(int pageNo) { return false; }
+    virtual bool HasClipOptimizations(int) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
     virtual WCHAR *GetProperty(DocumentProperty prop) { return doc->GetProperty(prop); }
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const { return false; }
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
+    virtual bool SupportsAnnotation(bool forSaving=false) const { (void)forSaving; return false; }
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *) { }
 
     virtual const WCHAR *GetDefaultFileExt() const { return L".chm"; }
 
-    virtual Vec<PageElement *> *GetElements(int pageNo) { return NULL; }
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt) { return NULL; }
+    virtual Vec<PageElement *> *GetElements(int) { return NULL; }
+    virtual PageElement *GetElementAtPos(int, PointD) { return NULL; }
 
-    virtual bool BenchLoadPage(int pageNo) { return true; }
+    virtual bool BenchLoadPage(int) { return true; }
 
     virtual PageDestination *GetNamedDest(const WCHAR *name);
     virtual bool HasTocTree() const { return tocTrace.Count() > 0; }
