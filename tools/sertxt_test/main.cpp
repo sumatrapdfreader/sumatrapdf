@@ -102,6 +102,8 @@ static void TestFromFile()
     free(fileContent);
 }
 
+#define STR_ESCAPE_TEST_EXP "[lo\r $fo\to\\ l\na]]"
+
 static void TestSettingsDeserialize()
 {
     size_t fileSize;
@@ -120,7 +122,7 @@ static void TestSettingsDeserialize()
     str::NormalizeNewlinesInPlace(s);
     str::NormalizeNewlinesInPlace(s2);
     CheckStrEq(s, s2);
-    CheckStrEq(settings->str_escape_test, "[lo\r $foo\\ l\na]]");
+    CheckStrEq(settings->str_escape_test, STR_ESCAPE_TEST_EXP);
     CheckStrEq(settings->wstr_1, L"wide string Πραγματικό &Μέγεθος\tCtrl+1");
     free(s);
     free(s2);
@@ -139,7 +141,7 @@ static void TestSettingsSimple()
         return;
     }
     CheckStrEq(settings->str_1, "lola");
-    CheckStrEq(settings->str_escape, "[lo\r $fo\to\\ l\na]]");
+    CheckStrEq(settings->str_escape, STR_ESCAPE_TEST_EXP);
     CheckStrEq(settings->wstr_1, L"wide string Πραγματικό &Μέγεθος\nCtrl+1");
     size_t serializedLen;
     char *s2 = (char*)SerializeSimple(settings, &serializedLen);
@@ -149,6 +151,27 @@ static void TestSettingsSimple()
     free(s2);
     free(s3);
     FreeSimple(settings);
+}
+
+static void TestDefault()
+{
+    size_t dataLen, defaultDataLen;
+    char *data = CheckedLoad("..\\tools\\sertxt_test\\data_for_default.txt", &dataLen);
+    char *defaultData = CheckedLoad("..\\tools\\sertxt_test\\data_simple_no_ws.txt", &defaultDataLen);
+    if (!data || !defaultData)
+        return;
+    Simple *settings = DeserializeSimpleWithDefault(data, dataLen, defaultData, defaultDataLen);
+    if (!settings) {
+        printf("failed to deserialize\n'%s'\n", data);
+        return;
+    }
+
+    size_t serializedLen;
+    char *s = (char*)SerializeSimple(settings, &serializedLen);
+    CheckStrEq(defaultData, s);
+    free(s);
+    free(data);
+    free(defaultData);
 }
 
 int main(int argc, char **argv)
@@ -161,4 +184,5 @@ int main(int argc, char **argv)
     TestSettingsSimple();
     TestSettingsDeserialize();
     TestParseSumatraSettings();
+    TestDefault();
 }

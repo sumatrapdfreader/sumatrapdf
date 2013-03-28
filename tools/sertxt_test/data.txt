@@ -58,12 +58,7 @@ app_state [
       page_no: 13
       page_label: my label for second fav
     ]
-    [
-      name: third fav
-      page_no: 3
-      page_label: my label for third fav
-    ]
   ]
 ]
-str_escape_test: $[lo$r $$foo\ l$na$]$]
+str_escape_test: $[lo$r $$fo	o\ l$na$]$]
 wstr_1: wide string Πραγματικό &Μέγεθος	Ctrl+1

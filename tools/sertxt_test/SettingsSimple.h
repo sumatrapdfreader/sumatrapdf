@@ -19,6 +19,7 @@ struct Simple {
 };
 
 Simple *DeserializeSimple(const char *data, size_t dataLen);
+Simple *DeserializeSimpleWithDefault(const char *data, size_t dataLen, const char *defaultData, size_t defaultDataLen);
 uint8_t *SerializeSimple(Simple *, size_t *dataLenOut);
 void FreeSimple(Simple *);
 

@@ -83,6 +83,7 @@ struct Settings {
 };
 
 Settings *DeserializeSettings(const char *data, size_t dataLen);
+Settings *DeserializeSettingsWithDefault(const char *data, size_t dataLen, const char *defaultData, size_t defaultDataLen);
 uint8_t *SerializeSettings(Settings *, size_t *dataLenOut);
 void FreeSettings(Settings *);
 

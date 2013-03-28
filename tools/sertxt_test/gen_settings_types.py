@@ -312,20 +312,20 @@ class AdvancedSettings(Struct):
 
 fav1 = Fav("my first fav", 22,  "my label for first fav")
 fav2 = Fav("my second fav", 13, "my label for second fav")
-fav3 = Fav("third fav", 3, "my label for third fav")
 
 class AppState(Struct):
     fields = [
-        Field("favorites", Array(Fav, [fav1, fav2, fav3]))
+        Field("favorites", Array(Fav, [fav1, fav2]))
     ]
 
+g_escape_test_str =  "[lo\r $fo\to\\ l\na]]"
 # TODO: merge basic/advanced into one?
 class Settings(Struct):
     fields = [
         Field("basic", BasicSettings()),
         Field("advanced", AdvancedSettings()),
         Field("appState", AppState()),
-        Field("str_escape_test", String("[lo\r $foo\\ l\na]]")),
+        Field("str_escape_test", String(g_escape_test_str)),
         Field("wstr_1", WString(u"wide string Πραγματικό &Μέγεθος\tCtrl+1")),
     ]
 
@@ -340,7 +340,12 @@ class Simple(Struct):
         Field("col_1", Color(0xacff00ed)),
         Field("float_1", Float(3.12348)),
         Field("str_1", String("lola")),
-        Field("str_escape", String("[lo\r $fo\to\\ l\na]]")),
+        Field("str_escape", String(g_escape_test_str)),
         Field("wstr_1", WString(u"wide string Πραγματικό &Μέγεθος\nCtrl+1")),
+    ]
+
+class ForDefaultTesting(Struct):
+    fields = [
+        Field("bFalse", Bool(False)),
     ]
 

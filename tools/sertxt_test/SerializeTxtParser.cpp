@@ -293,8 +293,17 @@ Failed:
     parser.failed = true;
 }
 
+static void SkipUtf8Bom(char *& s, size_t& sLen)
+{
+    if (sLen >= 3 && str::EqN(s, UTF8_BOM, 3)) {
+        s += 3;
+        sLen -= 3;
+    }
+}
+
 void TxtParser::SetToParse(char *s, size_t sLen)
 {
+    SkipUtf8Bom(s, sLen);
     size_t n = str::NormalizeNewlinesInPlace(s, s + sLen);
     toParse.Init(s, n);
 

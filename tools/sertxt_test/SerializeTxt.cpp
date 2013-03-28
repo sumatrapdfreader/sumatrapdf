@@ -325,10 +325,13 @@ static bool DecodeFloat(DecodeState& ds, TxtNode *n)
     return true;
 }
 
-static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def);
+static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, StructMetadata *def);
 
-static TxtNode *FindTxtNode(TxtNode *curr, const char *name, size_t nameLen)
+static TxtNode *FindNode(TxtNode *curr, const char *name, size_t nameLen)
 {
+    if (!curr)
+        return NULL;
+
     char *nodeName;
     size_t nodeNameLen;
 
@@ -344,7 +347,7 @@ static TxtNode *FindTxtNode(TxtNode *curr, const char *name, size_t nameLen)
         }
         if (TextNode == child->type)
             continue;
-        found = FindTxtNode(child, name, nameLen);
+        found = FindNode(child, name, nameLen);
         if (found)
             return found;
     }
@@ -360,7 +363,7 @@ static void WriteDefaultValue(uint8_t *structDataPtr, Type type)
     }
 }
 
-static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fieldDef, uint8_t *structDataStart)
+static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, FieldMetadata *fieldDef, uint8_t *structDataStart)
 {
     Type type = fieldDef->type;
     uint8_t *structDataPtr = structDataStart + fieldDef->offset;
@@ -372,10 +375,12 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
 
     const char *fieldName = ds.fieldNamesSeq + fieldDef->nameOffset;
     size_t fieldNameLen = str::Len(fieldName);
-    TxtNode *node = FindTxtNode(firstNode, fieldName, fieldNameLen);
+    TxtNode *dataNode = FindNode(firstNode, fieldName, fieldNameLen);
+    TxtNode *defaultNode = FindNode(defaultFirstNode, fieldName, fieldNameLen);
 
+    // if the node doesn't exist in data, try to get it from default data
+    TxtNode *node = dataNode ? dataNode : defaultNode;
     if (!node) {
-        // TODO: a real default value must be taken from somewhere else
         WriteDefaultValue(structDataPtr, type);
         return true;
     }
@@ -404,7 +409,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
         // i.e. we expected "foo [" and it's just "foo" or "foo: bar"
         if (StructNode != node->type)
             return false;
-        uint8_t *d = DeserializeRec(ds, node, fieldDef->def);
+        uint8_t *d = DeserializeRec(ds, node, defaultNode, fieldDef->def);
         if (!d)
             goto Error;
         WriteStructPtrVal(structDataPtr, d);
@@ -434,7 +439,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, FieldMetadata *fiel
             child = node->children->At(i);
             if (ArrayNode != child->type)
                 return false;
-            uint8_t *d = DeserializeRec(ds, child, fieldDef->def);
+            uint8_t *d = DeserializeRec(ds, child, NULL, fieldDef->def);
             if (!d)
                 goto Error; // TODO: free root
             ListNode<void> *tmp = AllocArray<ListNode<void>>(1);
@@ -458,11 +463,7 @@ Error:
     return false;
 }
 
-// TODO: do parallel decoding from default data and data from the client
-// if no data from client - return the result from default data
-// if data from client doesn't have enough fields, use fields from default data
-// if data from client is corrupted, decode default data
-static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetadata *def)
+static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, StructMetadata *def)
 {
     bool ok = true;
     if (!firstNode)
@@ -470,7 +471,7 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, StructMetada
 
     uint8_t *res = AllocArray<uint8_t>(def->size);
     for (int i = 0; i < def->nFields; i++) {
-        ok = DecodeField(ds, firstNode, def->fields + i, res);
+        ok = DecodeField(ds, firstNode, defaultFirstNode, def->fields + i, res);
         if (!ok)
             goto Error;
     }
@@ -480,22 +481,33 @@ Error:
     return NULL;
 }
 
-// data is in text format. we might modify it in place
-uint8_t* Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq)
+// data and defaultData is in text format. we might modify it in place
+uint8_t* DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, StructMetadata *def, const char *fieldNamesSeq)
 {
     if (!data)
         return NULL;
+
     DecodeState ds;
     ds.fieldNamesSeq = fieldNamesSeq;
-    if (dataSize >= 3 && str::EqN(data, UTF8_BOM, 3)) {
-        data += 3;
-        dataSize -= 3;
-    }
     ds.parser.SetToParse(data, dataSize);
     bool ok = ParseTxt(ds.parser);
     if (!ok)
         return NULL;
-    return DeserializeRec(ds, ds.parser.nodes.At(0), def);
+
+    TxtNode *defaultFirstNode = NULL;
+    DecodeState ds2;
+    ds2.fieldNamesSeq = fieldNamesSeq;
+    ds2.parser.SetToParse(defaultData, defaultDataSize);
+    ok = ParseTxt(ds2.parser);
+    if (ok)
+        defaultFirstNode =  ds2.parser.nodes.At(0);
+
+    return DeserializeRec(ds, ds.parser.nodes.At(0), defaultFirstNode, def);
+}
+
+uint8_t* Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq)
+{
+    return DeserializeWithDefault(data, dataSize, NULL, 0, def, fieldNamesSeq);
 }
 
 static void AppendNest(str::Str<char>& s, int nest)

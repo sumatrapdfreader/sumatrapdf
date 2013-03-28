@@ -30,9 +30,16 @@ StructMetadata gSimpleMetadata = { sizeof(Simple), 11, &gSimpleFieldMetadata[0] 
 
 Simple *DeserializeSimple(const char *data, size_t dataLen)
 {
+    return DeserializeSimpleWithDefault(data, dataLen, NULL, 0);
+}
+
+Simple *DeserializeSimpleWithDefault(const char *data, size_t dataLen, const char *defaultData, size_t defaultDataLen)
+{
     char *dataCopy = str::DupN(data, dataLen);
-    void *res = Deserialize(dataCopy, dataLen, &gSimpleMetadata, FIELD_NAMES_SEQ);
+    char *defaultDataCopy = str::DupN(defaultData, defaultDataLen);
+    void *res = DeserializeWithDefault(dataCopy, dataLen, defaultDataCopy, defaultDataLen, &gSimpleMetadata, FIELD_NAMES_SEQ);
     free(dataCopy);
+    free(defaultDataCopy);
     return (Simple*)res;
 }
 

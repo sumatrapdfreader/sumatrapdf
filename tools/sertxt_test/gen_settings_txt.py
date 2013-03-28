@@ -2,15 +2,10 @@
 import sys
 sys.path.append("scripts") # assumes is being run as ./tools/sertxt_test/gen_settings_txt.py
 
-import os, util, codecs, random
-from gen_settings_types import  Field, Settings, Simple
+import os, util, codecs, random, gen_settings_types
+from gen_settings_types import Field
 
 """
-TODO:
- - default values
-
-Maybe: support arrays of basic types
-
 Maybe: compact serialization of some structs e.g.
   window_pos [
     x: 0
@@ -22,6 +17,9 @@ Maybe: compact serialization of some structs e.g.
   window_pos: 0 0 0 0
 
 via a Compact flag (like NoStore flag)
+
+
+Maybe: arrays of basic types
 """
 
 g_script_dir = os.path.realpath(os.path.dirname(__file__))
@@ -38,7 +36,7 @@ def settings_src_dir():
     return util.verify_path_exists(g_script_dir)
 
 def to_win_newlines(s):
-    s = s.replace("\r\n", "\n")
+    #s = s.replace("\r\n", "\n")
     s = s.replace("\n", "\r\n")
     return s
 
@@ -217,6 +215,7 @@ def gen_struct_defs(structs):
     return "\n".join([gen_struct_def(stru) for stru in structs])
 
 prototypes_tmpl = """%(name)s *Deserialize%(name)s(const char *data, size_t dataLen);
+%(name)s *Deserialize%(name)sWithDefault(const char *data, size_t dataLen, const char *defaultData, size_t defaultDataLen);
 uint8_t *Serialize%(name)s(%(name)s *, size_t *dataLenOut);
 void Free%(name)s(%(name)s *);
 """
@@ -292,9 +291,16 @@ def gen_structs_metadata_txt(structs, field_names):
 top_level_funcs_txt_tmpl = """
 %(name)s *Deserialize%(name)s(const char *data, size_t dataLen)
 {
+    return Deserialize%(name)sWithDefault(data, dataLen, NULL, 0);
+}
+
+%(name)s *Deserialize%(name)sWithDefault(const char *data, size_t dataLen, const char *defaultData, size_t defaultDataLen)
+{
     char *dataCopy = str::DupN(data, dataLen);
-    void *res = Deserialize(dataCopy, dataLen, &g%(name)sMetadata, FIELD_NAMES_SEQ);
+    char *defaultDataCopy = str::DupN(defaultData, defaultDataLen);
+    void *res = DeserializeWithDefault(dataCopy, dataLen, defaultDataCopy, defaultDataLen, &g%(name)sMetadata, FIELD_NAMES_SEQ);
     free(dataCopy);
+    free(defaultDataCopy);
     return (%(name)s*)res;
 }
 
@@ -366,7 +372,7 @@ def gen_sumatra_settings():
     global g_add_whitespace
     g_add_whitespace = False
     dst_dir = settings_src_dir()
-    top_level_val = Settings()
+    top_level_val = gen_settings_types.Settings()
     file_path = os.path.join(dst_dir, "SettingsSumatra")
     gen_for_top_level_val(top_level_val, file_path)
     gen_txt_for_top_level_val(top_level_val, os.path.join(dst_dir, "data.txt"))
@@ -375,12 +381,15 @@ def gen_simple():
     global g_add_whitespace
     g_add_whitespace = True
     dst_dir = settings_src_dir()
-    top_level_val = Simple()
+    top_level_val = gen_settings_types.Simple()
     file_path = os.path.join(dst_dir, "SettingsSimple")
     gen_for_top_level_val(top_level_val, file_path)
     gen_txt_for_top_level_val(top_level_val, os.path.join(dst_dir, "data_simple_with_ws.txt"))
     g_add_whitespace = False
     gen_txt_for_top_level_val(top_level_val, os.path.join(dst_dir, "data_simple_no_ws.txt"))
+
+    top_level_val = gen_settings_types.ForDefaultTesting()
+    gen_txt_for_top_level_val(top_level_val, os.path.join(dst_dir, "data_for_default.txt"))
 
 def main():
     gen_sumatra_settings()
