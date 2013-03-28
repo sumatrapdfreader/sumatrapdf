@@ -65,7 +65,7 @@ def _serbin(field):
         return gob_uvarint_encode(off)
     if field.is_array():
         return serbin_arr(field)
-    assert False, "don't know how to serialize %s" % str(v.typ)
+    assert False, "don't know how to serialize %s" % str(field.typ)
 
 def serbin(v, serialized_vals):
     assert isinstance(v, Field)
