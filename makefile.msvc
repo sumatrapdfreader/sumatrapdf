@@ -86,6 +86,16 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 
 # those are warnings that are selected with /W4
 # 4127 : conditional expression is constant
+# 4512 : assignment operator could not be generated
+# 4389 : signed/unsigned mismatch
+# 4480 : non-standard extension: specify underlying type for enum
+# 4238 : non-standard extension: class rvalue used as lvalue
+# 4239 : non-standard extension: convert from Foo to Foo&
+# 4245 : arg conversion signed/unsigned mismatch
+# 4189 : variable initialized but not referenced
+# 4213 : non-standard extension: cast on l-value
+# 4505 : unreferenced local function
+# 4428 :  universal-character-name encountered in source
 
 # Addittional warnings that we make part of /W3 set:
 # 4244 : conversion from 'type x' to 'type y', possible loss of data
