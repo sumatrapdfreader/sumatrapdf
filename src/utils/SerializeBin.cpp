@@ -22,6 +22,7 @@ typedef struct {
 // STATIC_ASSERT(sizeof(SerializedHeader) == SERIALIZED_HEADER_LEN, SerializedHeader_is_12_bytes);
 // STATIC_ASSERT(sizeof(FieldMetadata) == 4 + sizeof(StructMetadata*), valid_FieldMetadata_size);
 
+#if 0
 // returns -1 on error
 static int NextIntVal(const char **sInOut)
 {
@@ -54,6 +55,7 @@ Exit:
     ver = ver << (left * 8);
     return ver;
 }
+#endif
 
 // the assumption here is that the data was either built by Deserialize()
 // or was created by application code in a way that observes our rule: each
@@ -63,7 +65,7 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
     if (!data)
         return;
     FieldMetadata *fieldDef = NULL;
-    Typ type;
+    Type type;
     for (int i = 0; i < def->nFields; i++) {
         fieldDef = def->fields + i;
         type = fieldDef->type;
@@ -79,17 +81,18 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
     free(data);
 }
 
-static bool IsSignedIntType(Typ type)
+static bool IsSignedIntType(Type type)
 {
     return ((TYPE_I16 == type) ||
             (TYPE_I32 == type));
 }
 
-static bool IsUnsignedIntType(Typ type)
+static bool IsUnsignedIntType(Type type)
 {
     return ((TYPE_BOOL == type) ||
             (TYPE_U16 == type) ||
             (TYPE_U32 == type) ||
+            (TYPE_COLOR == type) ||
             (TYPE_U64 == type));
 }
 
@@ -116,7 +119,7 @@ static bool WriteStructInt(uint8_t *p, uint16_t type, int64_t val)
     return false;
 }
 
-static bool WriteStructUInt(uint8_t *p, Typ type, uint64_t val)
+static bool WriteStructUInt(uint8_t *p, Type type, uint64_t val)
 {
     if (TYPE_BOOL == type) {
         bool *bp = (bool*)p;
@@ -140,7 +143,7 @@ static bool WriteStructUInt(uint8_t *p, Typ type, uint64_t val)
         return true;
     }
 
-    if (TYPE_U32 == type) {
+    if ((TYPE_U32 == type) || (TYPE_COLOR == type)) {
         if (val > 0xffffffff)
             return false;
         uint32_t v = (uint32_t)val;
@@ -285,7 +288,7 @@ static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def);
 static bool DecodeField(DecodeState *ds, FieldMetadata *fieldDef, uint8_t *structDataStart)
 {
     bool ok;
-    Typ type = fieldDef->type;
+    Type type = fieldDef->type;
     uint8_t *structDataPtr = structDataStart + fieldDef->offset;
     if (TYPE_STR == type) {
         ok = DecodeString(ds);
@@ -322,6 +325,7 @@ static bool DecodeField(DecodeState *ds, FieldMetadata *fieldDef, uint8_t *struc
             ok = WriteStructUInt(structDataPtr, type, ds->u);
     } else {
         CrashIf(true);
+        ok = false;
     }
     return ok;
 Error:

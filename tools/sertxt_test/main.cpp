@@ -5,6 +5,10 @@
 #include "SettingsSumatra.h"
 #include "SettingsSimple.h"
 
+#include "SerializeBin.h"
+#include "SettingsBinSumatra.h"
+#include "SettingsBinSimple.h"
+
 using namespace sertxt;
 
 static char *CheckedLoad(const char *path, size_t *fileSizeOut)

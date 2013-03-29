@@ -37,7 +37,7 @@ solution "everything"
     -- 4244 - possible loss of data due to conversion
     -- /MP  - use multi-cores for compilation
     buildoptions {
-        "/wd4800", "/wd4127", "/wd4100", "/wd4244", "/MP"
+        "/wd4800", "/wd4127", "/wd4100", "/wd4244" --, "/MP"
     }
 
   project "efi"
@@ -89,6 +89,7 @@ solution "everything"
       "tools/sertxt_test/*.cpp",
       "tools/sertxt_test/*.txt",
       "src/utils/BaseUtil*",
+      "src/utils/SerializeBin*",
       "src/utils/FileUtil*",
       "src/utils/StrSlice*",
       "src/utils/StrUtil*",

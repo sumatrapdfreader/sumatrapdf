@@ -28,10 +28,11 @@ def serbin_str(val):
     # non-empty strings are encoded as uvariant(len(s)+1)
     # (+1 for terminating 0), followed by string data (including terminating 0)
     if val == None:
-        data = gob_uvarint_encode(0)
-    else:
-        data = gob_uvarint_encode(len(val)+1)
-        data = data + val + chr(0)
+        return gob_uvarint_encode(0)
+    if type(val) == type(u""):
+        val = val.encode("utf-8")
+    data = gob_uvarint_encode(len(val)+1)
+    data = data + val + chr(0)
     return data
 
 def serbin_arr(field):
@@ -398,13 +399,13 @@ def gen_bin_for_top_level_val(top_level_val, version, file_path_base):
 
 def gen_bin_sumatra():
     dst_dir = settings_src_dir()
-    file_path_base = os.path.join(os.path.dirname(dst_dir), "SettingsBinSumatra")
+    file_path_base = os.path.join(dst_dir, "SettingsBinSumatra")
     top_level_val = gen_settings_types.Settings()
     gen_bin_for_top_level_val(top_level_val, "2.3", file_path_base)
 
 def gen_bin_simple():
     dst_dir = settings_src_dir()
-    file_path_base = os.path.join(os.path.dirname(dst_dir), "SettingsBinSimple")
+    file_path_base = os.path.join(dst_dir, "SettingsBinSimple")
     top_level_val = gen_settings_types.Simple()
     gen_bin_for_top_level_val(top_level_val, "1.0", file_path_base)
 

@@ -8,13 +8,19 @@ namespace serbin {
 
 struct FieldMetadata;
 
+template <typename T>
+struct ListNode {
+    ListNode<T> *   next;
+    T *             val;
+};
+
 typedef struct {
     uint16_t        size;
     uint16_t        nFields;
     FieldMetadata * fields;
 } StructMetadata;
 
-typedef enum : uint16_t {
+typedef enum {
     TYPE_BOOL,
     TYPE_I16,
     TYPE_U16,
@@ -22,17 +28,21 @@ typedef enum : uint16_t {
     TYPE_U32,
     TYPE_U64,
     TYPE_FLOAT,
+    TYPE_COLOR,
     TYPE_STR,
     TYPE_WSTR,
     TYPE_STRUCT_PTR,
-    TYP_ARRAY,
-} Typ;
+    TYPE_ARRAY,
+    TYPE_NO_FLAGS_MASK = 0xFF,
+    // a flag, if set the value is not to be serialized
+    TYPE_NO_STORE_MASK = 0x4000,
+} Type;
 
 // information about a single field
 struct FieldMetadata {
-    Typ              type; // TYPE_*
     // from the beginning of the struct
     uint16_t         offset;
+    Type             type; // TYPE_*
     // type is TYPE_STRUCT_PTR, otherwise NULL
     StructMetadata * def;
 };
