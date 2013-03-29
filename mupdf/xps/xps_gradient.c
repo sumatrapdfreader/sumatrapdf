@@ -14,6 +14,7 @@ struct stop
 {
 	float offset;
 	float r, g, b, a;
+	int index; /* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2245 */
 };
 
 static int cmp_stop(const void *a, const void *b)
@@ -25,7 +26,8 @@ static int cmp_stop(const void *a, const void *b)
 		return -1;
 	if (diff > 0)
 		return 1;
-	return 0;
+	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2245 */
+	return astop->index - bstop->index;
 }
 
 static inline float lerp(float a, float b, float x)
@@ -66,6 +68,9 @@ xps_parse_gradient_stops(xps_document *doc, char *base_uri, fz_xml *node,
 				stops[count].g = rgb[1];
 				stops[count].b = rgb[2];
 				stops[count].a = sample[0];
+
+				/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2245 */
+				stops[count].index = count;
 
 				count ++;
 			}
