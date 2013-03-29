@@ -96,7 +96,10 @@ cpp_bin_tmpl = """// DON'T EDIT MANUALLY !!!!
 #include "%(file_name)s.h"
 
 namespace serbin {
+
+#define of offsetof
 %(structs_metadata)s
+#undef of
 %(values_global_data)s
 %(top_level_funcs)s
 }
@@ -307,35 +310,6 @@ def gen_struct_defs(structs):
 
 """
 FieldMetadata g${name}FieldMetadata[] = {
-    { $type, $offset, &g${name}StructMetadata },
-};
-"""
-def gen_struct_fields(stru):
-    assert isinstance(stru, Struct)
-    struct_name = stru.name()
-    lines = ["FieldMetadata g%(struct_name)sFieldMetadata[] = {" % locals()]
-    max_type_len = 0
-    for field in stru.values:
-        max_type_len = max(max_type_len, len(field.get_typ_enum()))
-    max_type_len += 1
-
-    typ_fmt = "%%-%ds " % max_type_len
-    for field in stru.values:
-        assert isinstance(field, Field)
-        typ_enum = field.get_typ_enum() + ","
-        typ_enum = typ_fmt % typ_enum
-        field_name = field.name
-        offset = "offsetof(%(struct_name)s, %(field_name)s)" % locals()
-        if field.is_struct():
-            field_type = field.typ.name()
-            lines += ["    { %(typ_enum)s %(offset)s, &g%(field_type)sMetadata }," % locals()]
-        else:
-            lines += ["    { %(typ_enum)s %(offset)s, NULL }," % locals()]
-    lines += ["};\n"]
-    return lines
-
-"""
-FieldMetadata g${name}FieldMetadata[] = {
     { $offset, $type, &g${name}StructMetadata },
 };
 """
@@ -345,7 +319,7 @@ def gen_struct_fields_bin(stru_cls):
     rows = []
     for field in stru_cls.fields:
         assert isinstance(field, Field)
-        typ_enum = field.get_typ_enum()
+        typ_enum = field.get_typ_enum(for_bin=True)
         offset = "of(%s, %s)" % (struct_name, field.name)
         val = "NULL"
         if field.is_struct() or field.is_array():
@@ -357,17 +331,16 @@ def gen_struct_fields_bin(stru_cls):
     lines += ["};\n"]
     return lines
 
-
 """
 StructMetadata g${name}StructMetadata = { $size, $nFields, $fields };
 """
-def gen_structs_metadata(structs):
+def gen_structs_metadata_bin(structs):
     lines = []
-    for stru in structs:
-        struct_name = stru.name()
-        nFields = len(stru.values)
+    for stru_cls in structs:
+        struct_name = stru_cls.__name__
+        nFields = len(stru_cls.fields)
         fields = "&g%sFieldMetadata[0]" % struct_name
-        lines += gen_struct_fields(stru)
+        lines += gen_struct_fields_bin(stru_cls)
         lines += ["StructMetadata g%(struct_name)sMetadata = { sizeof(%(struct_name)s), %(nFields)d, %(fields)s };\n" % locals()]
     return "\n".join(lines)
 
@@ -421,7 +394,6 @@ def gen_bin():
 
     top_level_val = gen_settings_types.Settings()
 
-    top_level_funcs = gen_top_level_funcs_bin(top_level_val)
     prototypes = gen_prototypes(top_level_val.__class__, version)
 
     structs = structs_from_top_level_value(top_level_val)
@@ -429,15 +401,14 @@ def gen_bin():
     struct_defs = gen_struct_defs(structs)
     write_to_file(file_path_base + ".h",  h_bin_tmpl % locals())
 
-    """
     serialized_vals = {}
     vals = serialize_top_level_value(top_level_val, serialized_vals)
 
-    structs_metadata = gen_structs_metadata(vals)
-
-    values_global_data = gen_cpp_data_for_struct_values(vals, version, serialized_vals)
+    structs_metadata = gen_structs_metadata_bin(structs)
+    #values_global_data = gen_cpp_data_for_struct_values(vals, version, serialized_vals)
+    values_global_data = ""
+    top_level_funcs = gen_top_level_funcs_bin(top_level_val)
     write_to_file(os.path.join(file_path_base + ".cpp"), cpp_bin_tmpl % locals())
-"""
 
 def main():
     gen_bin()
