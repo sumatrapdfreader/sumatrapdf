@@ -152,15 +152,16 @@ class Diff(object):
 		self.str_sizes_diff = 0
 
 	def __repr__(self):
-		s = "%d added\n%d removed\n%d changed\n%d string sizes diff" % (len(self.added), len(self.removed), len(self.changed, self.str_sizes_diff))
+		s = "%d added\n%d removed\n%d changed\n%d string sizes diff" % (len(self.added), len(self.removed), len(self.changed), self.str_sizes_diff)
 		return s
 
 def same_sym_sizes(syms):
-	size = syms[0].size
-	for sym in syms[1:]:
-		if size != sym.size:
-			return False
-	return True
+	sizes = []
+	for sym in syms:
+		if sym.size in sizes:
+			return True
+		sizes.append(sym.size)
+	return False
 
 # Unfortunately dia2 sometimes doesn't give us unique names for functions,
 # so we need to
@@ -190,10 +191,11 @@ class DiffSyms(object):
 				dup_sym = self.name_to_sym[name]
 				self.dup_syms.append(dup_sym)
 				del self.name_to_sym[name]
+
 		# create unique names for dup symbols
 		for sym in self.dup_syms:
 			name = self.sym_name(sym)
-			assert name not in self.name_to_sym
+			assert name not in self.name_to_sym, "%s should be unique" % name
 			self.name_to_sym[name] = sym
 
 	def sym_name(self, sym):

@@ -113,6 +113,7 @@ def main():
 	efi1 = efiparse.parse_file(efi_result_file(svn_ver1))
 	efi2 = efiparse.parse_file(efi_result_file(svn_ver2))
 	diff = efiparse.diff(efi1, efi2)
+	#print("Diffing done")
 	print(diff)
 	added = diff.added[:20]
 	print("Added symbols:")
