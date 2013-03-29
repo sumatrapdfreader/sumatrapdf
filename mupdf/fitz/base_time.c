@@ -45,6 +45,12 @@ FILE *fopen_utf8(const char *name, const char *mode)
 	int c;
 	FILE *file;
 
+	/* SumatraPDF: prefer ANSI to UTF-8 for consistency with remaining API */
+#undef fopen
+	file = fopen(name, mode);
+	if (file)
+		return file;
+
 	d = wname = malloc((strlen(name)+1) * sizeof(wchar_t));
 	if (d == NULL)
 		return NULL;

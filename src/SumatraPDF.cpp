@@ -1897,8 +1897,7 @@ public:
         // be marked as inexistent in gFileHistory)
         for (size_t i = 0; i < paths.Count() && !WasCancelRequested(); i++) {
             WCHAR *path = paths.At(i);
-            bool check = path::IsOnFixedDrive(path);
-            if (!check || file::Exists(path)) {
+            if (!path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
                 paths.RemoveAt(i--);
                 delete path;
             }
@@ -2898,7 +2897,7 @@ static void OnMenuRenameFile(WindowInfo &win)
     if (gPluginMode) return;
 
     const WCHAR *srcFileName = win.dm->FilePath();
-    // this happens e.g. for embedded documents
+    // this happens e.g. for embedded documents and directories
     if (!file::Exists(srcFileName))
         return;
 

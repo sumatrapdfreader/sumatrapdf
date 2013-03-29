@@ -3279,6 +3279,8 @@ protected:
     virtual bool    Load(IStream *stream);
     bool            Load(fz_stream *stm);
     bool            LoadFromStream(fz_stream *stm);
+    bool            LoadFromDir();
+    bool            LoadFinish();
 
     xps_page      * GetXpsPage(int pageNo, bool failIfBusy=false);
     int             GetPageNo(xps_page *page);
@@ -3464,6 +3466,9 @@ bool XpsEngineImpl::Load(const WCHAR *fileName)
     if (!_fileName || !ctx)
         return false;
 
+    if (dir::Exists(_fileName))
+        return LoadFromDir();
+
     fz_stream *stm = NULL;
     fz_try(ctx) {
         stm = fz_open_file2(ctx, _fileName);
@@ -3520,6 +3525,26 @@ bool XpsEngineImpl::LoadFromStream(fz_stream *stm)
         return false;
     }
 
+    return LoadFinish();
+}
+
+bool XpsEngineImpl::LoadFromDir()
+{
+    ScopedMem<WCHAR> relsPath(path::Join(_fileName, L"_rels\\.rels"));
+    ScopedMem<char> relsPathUtf8(str::conv::ToUtf8(relsPath));
+
+    fz_try(ctx) {
+        _doc = xps_open_document(ctx, relsPathUtf8);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
+
+    return LoadFinish();
+}
+
+bool XpsEngineImpl::LoadFinish()
+{
     if (PageCount() == 0) {
         fz_warn(ctx, "document has no pages");
         return false;
@@ -3980,6 +4005,10 @@ WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, WCHAR *lineSep, RectI **co
 
 unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
 {
+    // TODO: compress uncompressed XPS documents for saving
+    if (!_doc->file)
+        return NULL;
+
     unsigned char *data = NULL;
     ScopedCritSec scope(&ctxAccess);
     fz_try(ctx) {
@@ -4267,6 +4296,11 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo)
 bool XpsEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
+        if (dir::Exists(fileName)) {
+            // allow opening uncompressed XPS files as well
+            ScopedMem<WCHAR> relsPath(path::Join(fileName, L"_rels\\.rels"));
+            return file::Exists(relsPath) || dir::Exists(relsPath);
+        }
         ZipFile zip(fileName, Zip_Deflate);
         return zip.GetFileIndex(L"_rels/.rels") != (size_t)-1 ||
                zip.GetFileIndex(L"_rels/.rels/[0].piece") != (size_t)-1 ||

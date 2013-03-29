@@ -65,8 +65,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz);
 #define isnan _isnan
 #define hypotf _hypotf
 
-/* SumatraPDF: prefer ANSI to UTF-8 for consistency with remaining API */
-// #define fopen fopen_utf8
+#define fopen fopen_utf8
 
 FILE *fopen_utf8(const char *name, const char *mode);
 
