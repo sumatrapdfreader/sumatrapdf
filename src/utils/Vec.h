@@ -325,6 +325,19 @@ public:
         free(s);
     }
 
+    // returns true if was replaced
+    bool Replace(const char *toReplace, const char *replaceWith)
+    {
+        char *s = Get();
+        // fast path: nothing to replace
+        if (!str::Find(s, toReplace))
+            return false;
+        char *newStr = str::Replace(s, toReplace, replaceWith);
+        Reset();
+        AppendAndFree(newStr);
+        return true;
+    }
+
     void Set(const T* s)
     {
         Reset();

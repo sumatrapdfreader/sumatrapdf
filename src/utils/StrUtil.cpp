@@ -495,6 +495,7 @@ void TrimWsEnd(char *s, char *&e)
     }
 }
 
+// the result needs to be free()d
 char *Replace(const char *s, const char *toReplace, const char *replaceWith)
 {
     Vec<char> res;
@@ -527,6 +528,7 @@ Exit:
     return res.StealData();
 }
 
+// the result needs to be free()d
 WCHAR *Replace(const WCHAR *s, const WCHAR *toReplace, const WCHAR *replaceWith)
 {
     if (!str::Find(s, toReplace))

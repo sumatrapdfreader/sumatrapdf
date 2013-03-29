@@ -6,7 +6,16 @@
 #include "Dict.h"
 
 #include "Dia2Subset.h"
+//#include <Dia2.h>
 #include "Util.h"
+
+#include <DbgHelp.h>
+
+// This constant may be missing from DbgHelp.h.  See the documentation for
+// IDiaSymbol::get_undecoratedNameEx.
+#ifndef UNDNAME_NO_ECSU
+#define UNDNAME_NO_ECSU 0x8000  // Suppresses enum/class/struct/union.
+#endif  // UNDNAME_NO_ECSU
 
 // Add SymTag to get the DIA name (i.e. Null => SymTagNull). You can then google
 // that name to figure out what it means
@@ -80,9 +89,6 @@ const char *g_symTypeNamesCompact[SymTagMax] = {
     "Dim"       // Dimension
 };
 
-static str::Str<char> g_strTmp;
-static str::Str<char> g_strTmp2;
-
 static str::Str<char> g_report;
 static StringInterner g_strInterner;
 static StringInterner g_typesSeen;
@@ -90,7 +96,8 @@ static StringInterner g_typesSeen;
 static bool           g_dumpSections = false;
 static bool           g_dumpSymbols = false;
 static bool           g_dumpTypes = false;
-static bool           g_compact = false;
+// TODO: possibly just remove the flag and always do compact
+static bool           g_compact = true;
 
 static void SysFreeStringSafe(BSTR s)
 {
@@ -145,14 +152,31 @@ static const char *GetSectionType(IDiaSectionContrib *item)
     return "U";
 }
 
+// the result doesn't have to be free()d but is only valid until the next call to this function
+static const char *GetObjFileName(IDiaSectionContrib *item)
+{
+    static str::Str<char> strTmp;
+
+    IDiaSymbol *    compiland = 0;
+    BSTR            objFileName = 0;
+
+    item->get_compiland(&compiland);
+    if (!compiland)
+        return "<noobjfile>";
+
+    compiland->get_name(&objFileName);
+    compiland->Release();
+
+    BStrToString(strTmp, objFileName, "<noobjfile>");
+    SysFreeStringSafe(objFileName);
+    return strTmp.Get();
+}
+
 static void DumpSection(IDiaSectionContrib *item)
 {
     DWORD           sectionNo;
     DWORD           offset;
     DWORD           length;
-    BSTR            objFileName = 0;
-    int             objFileId;
-    IDiaSymbol *    compiland = 0;
 
     item->get_addressSection(&sectionNo);
     item->get_addressOffset(&offset);
@@ -162,39 +186,16 @@ static void DumpSection(IDiaSectionContrib *item)
     //item->get_compilandId(&compilandId);
 
     const char *sectionType = GetSectionType(item);
-
-    item->get_compiland(&compiland);
-    if (compiland)
-    {
-        compiland->get_name(&objFileName);
-        compiland->Release();
-    }
-
-    BStrToString(g_strTmp, objFileName, "<noobjfile>");
+    const char *objFileName = GetObjFileName(item);
 
     if (g_compact) {
         // type | sectionNo | length | offset | objFileId
-        objFileId = InternString(g_strTmp.Get());
+        int objFileId = InternString(objFileName);
         g_report.AppendFmt("%s|%d|%d|%d|%d\n", sectionType, sectionNo, length, offset, objFileId);
     } else {
         // type | sectionNo | length | offset | objFile
-        g_report.AppendFmt("%s|%d|%d|%d|%s\n", sectionType, sectionNo, length, offset, g_strTmp.Get());
+        g_report.AppendFmt("%s|%d|%d|%d|%s\n", sectionType, sectionNo, length, offset, objFileName);
     }
-
-    SysFreeStringSafe(objFileName);
-}
-
-#define MY_UNDNAME_COMPLETE 0 // http://msdn.microsoft.com/en-us/library/kszfk0fs(v=vs.80).aspx
-
-static bool ShouldLogUndecorated(const char *s, const char *undecorated)
-{
-    // don't log empty
-    if (!undecorated || !*undecorated)
-        return false;
-    // don't log is it's C symbol (i.e. same as s but with "_" prefix
-    if (*undecorated == '_' && str::Eq(s, undecorated + 1))
-        return false;
-    return true;
 }
 
 static void AddReportSepLine()
@@ -238,12 +239,21 @@ static const char *GetUdtType(IDiaSymbol *symbol)
     return "<unknown udt kind>";
 }
 
+// the result doesn't have to be free()d but is only valid until the next call to this function
+static const char *GetTypeName(IDiaSymbol *symbol)
+{
+    static str::Str<char> strTmp;
+    BSTR name = NULL;
+    symbol->get_name(&name);
+    BStrToString(strTmp, name, "<noname>", true);
+    SysFreeStringSafe(name);
+    return strTmp.Get();
+}
 
 static void DumpType(IDiaSymbol *symbol, int deep)
 {
     IDiaEnumSymbols *   enumChilds = NULL;
     HRESULT             hr;
-    BSTR                name = NULL;
     const char *        nameStr = NULL;
     const char *        type;
     LONG                offset;
@@ -261,9 +271,7 @@ static void DumpType(IDiaSymbol *symbol, int deep)
     if (symbol->get_symTag(&symtag) != S_OK)
         return;
 
-    symbol->get_name(&name);
-    BStrToString(g_strTmp, name, "<noname>", true);
-    nameStr = g_strTmp.Get();
+    nameStr = GetTypeName(symbol);
 
     g_typesSeen.Intern(nameStr, &typeSeen);
     if (typeSeen)
@@ -336,18 +344,56 @@ Exit:
     UnkReleaseSafe(globalScope);
 }
 
+// the result doesn't have to be free()d but is only valid until the next call to this function
+static const char *GetUndecoratedSymbolName(IDiaSymbol *symbol)
+{
+    static str::Str<char> strTmp;
+
+    BSTR name = NULL;
+
+#if 0
+    DWORD undecorateOptions = UNDNAME_COMPLETE;
+#else
+    DWORD undecorateOptions =  UNDNAME_NO_MS_KEYWORDS |
+                                UNDNAME_NO_FUNCTION_RETURNS |
+                                UNDNAME_NO_ALLOCATION_MODEL |
+                                UNDNAME_NO_ALLOCATION_LANGUAGE |
+                                UNDNAME_NO_THISTYPE |
+                                UNDNAME_NO_ACCESS_SPECIFIERS |
+                                UNDNAME_NO_THROW_SIGNATURES |
+                                UNDNAME_NO_MEMBER_TYPE |
+                                UNDNAME_NO_RETURN_UDT_MODEL |
+                                UNDNAME_NO_ECSU;
+#endif
+
+    if (S_OK == symbol->get_undecoratedNameEx(undecorateOptions, &name)) {
+        BStrToString(strTmp, name, "", true);
+        if (str::Eq(strTmp.Get(), "`string'"))
+            return "*str";
+        strTmp.Replace("(void)", "()");
+        // more ideas for undecoration:
+        // http://google-breakpad.googlecode.com/svn/trunk/src/common/windows/pdb_source_line_writer.cc
+    } else {
+        // Unfortunately it does happen that get_undecoratedNameEx() fails
+        // e.g. for RememberDefaultWindowPosition() in Sumatra code
+        symbol->get_name(&name);
+        BStrToString(strTmp, name, "<noname>", true);
+    }
+    SysFreeStringSafe(name);
+
+    return strTmp.Get();
+}
+
 static void DumpSymbol(IDiaSymbol *symbol)
 {
     DWORD               section, offset, rva;
     DWORD               dwTag;
     enum SymTagEnum     tag;
     ULONGLONG           length = 0;
-    BSTR                name = NULL;
     BSTR                undecoratedName = NULL;
     //BSTR                srcFileName = NULL;
     const char *        typeName = NULL;
     const char *        nameStr = NULL;
-    const char *        undecoratedNameStr = NULL;
 
     symbol->get_symTag(&dwTag);
     tag = (enum SymTagEnum)dwTag;
@@ -372,25 +418,10 @@ static void DumpSymbol(IDiaSymbol *symbol)
             length = 0;
     }
 
-    //symbol->get_undecoratedNameEx(MY_UNDNAME_COMPLETE, &undecoratedName);
-    if (S_OK == symbol->get_undecoratedName(&undecoratedName)) {
-        BStrToString(g_strTmp2, undecoratedName, "", true);
-        undecoratedNameStr = g_strTmp2.Get();
-    }
+    nameStr = GetUndecoratedSymbolName(symbol);
+    // type | section | length | offset | rva | name
+    g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr);
 
-    symbol->get_name(&name);
-    BStrToString(g_strTmp, name, "<noname>", true);
-    nameStr = g_strTmp.Get();
-
-    if (ShouldLogUndecorated(nameStr, undecoratedNameStr)) {
-        // type | section | length | offset | rva | name | undecoratedName
-        g_report.AppendFmt("%s|%d|%d|%d|%d|%s|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr, undecoratedNameStr);
-    } else {
-        // type | section | length | offset | rva | name
-        g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr);
-    }
-
-    SysFreeStringSafe(name);
     SysFreeStringSafe(undecoratedName);
 }
 
@@ -535,7 +566,7 @@ Exit:
 
 static char *g_fileName = NULL;
 
-static void ParseCommandLine(int argc, char **argv)
+static bool ParseCommandLine(int argc, char **argv)
 {
     char *s;
     for (int i=0; i<argc; i++) {
@@ -562,20 +593,22 @@ static void ParseCommandLine(int argc, char **argv)
         // dump all information in non-compact way
         g_dumpSections = true;
         g_dumpSymbols = true;
-        g_dumpTypes = true;
+        // TODO: for now don't dump types by default
+        //g_dumpTypes = true;
     }
 
-    return;
+    return true;
 
 InvalidCmdLine:
-    printf("%s", "Usage: efi [-compact] [-sections] [-symbols] [-types] <exefile>\n");
-    exit(0);
+    printf("%s", "Usage: efi [-sections] [-symbols] [-types] <exefile>\n");
+    return false;
 }
 
 int main(int argc, char** argv)
 {
     ScopedCom comInitializer;
-    ParseCommandLine(argc-1, &argv[1]);
+    if (!ParseCommandLine(argc-1, &argv[1]))
+        return 1;
     ProcessPdbFile(g_fileName);
     return 0;
 }

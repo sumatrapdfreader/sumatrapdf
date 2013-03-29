@@ -2,13 +2,26 @@
 
 """
 Parses the output of sizer.exe.
-Shows a summary or a comparison.
-
-TODO:
- - parse compact mode
 """
 
-g_file_name = "sum_sizer.txt"
+g_file_name = "efi_out.txt"
+
+(SECTION_CODE, SECTION_DATA, SECTION_BSS, SECTION_UNKNOWN) = ("C", "D", "B", "U")
+
+# maps a numeric string idx to string. We take advantage of the fact that
+# strings in efi.exe output are stored with consequitive indexes so can use
+#
+class Strings():
+
+	def __init__(self):
+		self.strings = []
+
+	def add(self, idx, str):
+		assert idx == len(self.strings)
+		self.strings.append(str)
+
+	def idx_to_str(self, idx):
+		return self.strings[idx]
 
 # type | sectionNo | length | offset | objFileId
 # C|1|35|0|C:\Users\kkowalczyk\src\sumatrapdf\obj-dbg\sumatrapdf\SumatraPDF.obj
@@ -23,25 +36,27 @@ class Section(object):
 		# it's either name id in compact mode or full name
 		self.name = parts[4]
 
+(SYM_NULL, SYM_EXE, SYM_COMPILAND, SYM_COMPILAND_DETAILS) = ("N", "Exe", "C", "CD")
+(SYM_COMPILAND_ENV, SYM_FUNCTION, SYM_BLOCK, SYM_DATA) = ("CE", "F", "B", "D")
+(SYM_ANNOTATION, SYM_LABEL, SYM_PUBLIC, SYM_UDT, SYM_ENUM) = ("A", "L", "P", "U", "E")
+(SYM_FUNC_TYPE, SYM_POINTER_TYPE, SYM_ARRAY_TYPE) = ("FT", "PT", "AT")
+(SYM_BASE_TYPE, SYM_TYPEDEF, SYM_BASE_CLASS, SYM_FRIEND) = ("BT", "T", "BC", "Friend")
+(SYM_FUNC_ARG_TYPE, SYM_FUNC_DEBUG_START, SYM_FUNC_DEBUG_END) = ("FAT", "FDS", "FDE")
+(SYM_USING_NAMESPACE, SYM_VTABLE_SHAPE, SYM_VTABLE, SYM_CUSTOM) = ("UN", "VTS", "VT", "Custom")
+(SYM_THUNK, SYM_CUSTOM_TYPE, SYM_MANAGED_TYPE, SYM_DIMENSION) = ("Thunk", "CT", "MT", "Dim")
+
 # type | section | length | offset | rva | name
-# or:
-# type | section | length | offset | rva | name | undecoratedName
-# Function|1|35|0|4096|AllocArray<wchar_t>|wchar_t*__cdeclAllocArray<wchar_t>(unsignedint)
+# F|1|35|0|4096|AllocArray<wchar_t>|wchar_t*__cdeclAllocArray<wchar_t>(unsignedint)
 class Symbol(object):
 	def __init__(self, l):
 		parts = l.split("|")
-		assert len(parts) in (6, 7), "len(parts) is %d\n'%s'" % (len(parts), l)
+		assert len(parts) == 6, "len(parts) is %d\n'%s'" % (len(parts), l)
 		self.type = parts[0]
 		self.section = int(parts[1])
 		self.size = int(parts[2])
 		self.offset = int(parts[3])
 		self.rva = int(parts[4])
 		self.name = parts[5]
-		# in case of C++ symbols full_name is undecorated_name. It might be
-		# harder to read but unlike name, is unique
-		self.full_name = self.name
-		if len(parts) == 6:
-			self.full_name = parts[5]
 
 class Type(object):
 	def __init__(self, l):
@@ -51,6 +66,7 @@ class Type(object):
 class ParseState(object):
 	def __init__(self, fo):
 		self.fo = fo
+		self.strings = Strings()
 		self.types = []
 		self.symbols = []
 		self.sections = []
@@ -73,14 +89,25 @@ def parse_next_section(state):
 	#print("'%s'" % l)
 	if l == None: return None
 	if l == "": return parse_next_section
+	if l == "Strings:":
+		return parse_strings
 	if l == "Types:":
 		return parse_types
 	if l == "Sections:":
 		return parse_sections
 	if l == "Symbols:":
 		return parse_symbols
-	print("Unkonw section: '%s'" % l)
+	print("Unknonw section: '%s'" % l)
 	return None
+
+def parse_strings(state):
+	while True:
+		l = state.readline()
+		if l == None: return None
+		if l == "": return parse_next_section
+		parts = l.split("|", 2)
+		idx = int(parts[0])
+		state.strings.add(idx, parts[1])
 
 def parse_sections(state):
 	while True:
@@ -110,7 +137,6 @@ def parse_file_object(fo):
 	state = ParseState(fo)
 	while curr:
 		curr = curr(state)
-	print("%d types, %d sections, %d symbols" % (len(state.types), len(state.sections), len(state.symbols)))
 	return state
 
 def parse_file(file_name):
@@ -123,70 +149,102 @@ class Diff(object):
 		self.added = []
 		self.removed = []
 		self.changed = []
+		self.str_sizes_diff = 0
 
 	def __repr__(self):
-		s = "%d added\n%d removed\n%d changed" % (len(self.added), len(self.removed), len(self.changed))
+		s = "%d added\n%d removed\n%d changed\n%d string sizes diff" % (len(self.added), len(self.removed), len(self.changed, self.str_sizes_diff))
 		return s
 
-# TODO: need add_sym and rem_sym because we have symbols with the same name
-# Need to figure out why we don't always dump undecorated name
-# (e.g. for RememberDefaultWindowPosition() in Sumatra)
-def add_sym(symbols, sym):
-	name = sym.full_name
-	if name not in symbols:
-		symbols[name] = (sym, 1)
-	(sym, count) = symbols[name]
-	symbols[name] = (sym, count+1)
+def same_sym_sizes(syms):
+	size = syms[0].size
+	for sym in syms[1:]:
+		if size != sym.size:
+			return False
+	return True
 
-def rem_sym(symbols, sym):
-	name = sym.full_name
-	if name not in symbols: return
-	(sym, count) = symbols[name]
-	if 1 == count:
-		del symbols[name]
-	else:
-		symbols[name] = (sym, count-1)
+# Unfortunately dia2 sometimes doesn't give us unique names for functions,
+# so we need to
+class DiffSyms(object):
+	def __init__(self):
+		self.name_to_sym = {}
+		self.dup_syms = []
+		self.str_sizes = 0
 
-def sym_changed(symbols, sym):
-	name = sym.full_name
-	(sym2, count) = symbols[name]
-	if count != 1:
-		# TODO: broken, we assume it didn't change while it might have
-		return False
-	return sym2.size != sym.size
+	def process_symbols(self, symbols):
+		for sym in symbols:
+			name = sym.name
+			# for anonymous strings, we just count their total size
+			# since we don't have a way to tell one string from another
+			if name == "*str":
+				self.str_sizes += sym.size
+				continue
+
+			if name not in self.name_to_sym:
+				self.name_to_sym[name] = sym
+				continue
+			self.dup_syms.append(sym)
+		# some dup symbols are still pointed to by self.name_to_sym
+		for sym in self.dup_syms:
+			name = sym.name
+			if name in self.name_to_sym:
+				dup_sym = self.name_to_sym[name]
+				self.dup_syms.append(dup_sym)
+				del self.name_to_sym[name]
+		# create unique names for dup symbols
+		for sym in self.dup_syms:
+			name = self.sym_name(sym)
+			assert name not in self.name_to_sym
+			self.name_to_sym[name] = sym
+
+	def sym_name(self, sym):
+		# uniquify the name by appending its size to the name. If sizes are
+		# the same, append offset
+		syms = [s for s in self.dup_syms if s.name == sym.name]
+		assert len(syms) > 1
+		if same_sym_sizes(syms):
+			return "%s_%d" % (sym.name, sym.offset)
+		else:
+			return "%s_%d" % (sym.name, sym.size)
 
 def diff(parse1, parse2):
 	assert isinstance(parse1, ParseState)
 	assert isinstance(parse2, ParseState)
-	symbols1 = {}
-	for sym in parse1.symbols:
-		add_sym(symbols1, sym)
-	symbols2 = {}
-	for sym in parse2.symbols:
-		add_sym(symbols2, sym)
+	diff_syms1 = DiffSyms()
+	diff_syms1.process_symbols(parse1.symbols)
+
+	diff_syms2 = DiffSyms()
+	diff_syms2.process_symbols(parse2.symbols)
 
 	added = []
 	changed = []
-	for sym in parse2.symbols:
-		name = sym.full_name
-		if name not in symbols1:
-			added += [sym]
+
+	removed_from1_names = {}
+	for name in diff_syms1.name_to_sym.keys():
+		removed_from1_names[name] = True
+
+	for name in diff_syms2.name_to_sym.keys():
+		if name not in diff_syms1.name_to_sym:
+			added.append(diff_syms2.name_to_sym[name])
 		else:
-			if sym_changed(symbols1, sym):
-				changed += [sym]
+			sym1 = diff_syms1.name_to_sym[name]
+			sym2 = diff_syms2.name_to_sym[name]
+			if sym1.size != sym2.size:
+				changed += [sym1]
 			# we remove those we've seen so that at the end the only symbols
 			# left in symbols1 are those that were removed (i.e. not present in symbols2)
-			rem_sym(symbols1, sym)
+			del removed_from1_names[name]
 
-	removed = symbols1.values()
+	removed = [diff_syms1.name_to_sym[k] for k in removed_from1_names.keys()]
 	diff = Diff()
 	diff.added = added
 	diff.removed = removed
 	diff.changed = changed
+	diff.str_sizes_diff = diff_syms1.str_sizes - diff_syms2.str_sizes
 	return diff
 
 def main():
-	parse_file(g_file_name)
+	state = parse_file(g_file_name)
+	print("%d types, %d sections, %d symbols" % (len(state.types), len(state.sections), len(state.symbols)))
 
 if __name__ == "__main__":
 	main()
