@@ -617,6 +617,6 @@ $(OU)\UtilTests.obj: $B\src\utils\WinUtil.h
 $(OU)\WinUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OU)\WinUtil.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OU)\WinUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OU)\ZipUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
-$(OU)\ZipUtil.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OU)\ZipUtil.obj: $B\src\utils\Vec.h $B\src\utils\ZipUtil.h
+$(OU)\ZipUtil.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DirIter.h
+$(OU)\ZipUtil.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
+$(OU)\ZipUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\ZipUtil.h

@@ -4005,7 +4005,6 @@ WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, WCHAR *lineSep, RectI **co
 
 unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
 {
-    // TODO: compress uncompressed XPS documents for saving
     if (!_doc->file)
         return NULL;
 
@@ -4022,6 +4021,9 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
 
 bool XpsEngineImpl::SaveFileAs(const WCHAR *copyFileName)
 {
+    if (!_doc->file)
+        return ZipDirectory(_fileName, copyFileName, true);
+
     size_t dataLen;
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {

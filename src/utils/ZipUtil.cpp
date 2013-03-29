@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "ZipUtil.h"
 
+#include "DirIter.h"
 #include "FileUtil.h"
 
 // mini(un)zip
@@ -265,45 +266,73 @@ bool ZipCreator::AddFileFromDir(const WCHAR *filePath, const WCHAR *dir)
     return AddFile(filePath, nameInZip);
 }
 
+static bool AppendFileToZip(zipFile& zf, const WCHAR *nameInZip, const char *fileData, size_t fileSize)
+{
+    ScopedMem<char> nameInZipUtf(str::conv::ToUtf8(nameInZip));
+    str::TransChars(nameInZipUtf, "\\", "/");
+    zip_fileinfo zi = { 0 };
+    if (!fileData)
+        zi.external_fa = 0x10; // file is directory
+    int err = zipOpenNewFileInZip64(zf, nameInZipUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 1);
+    if (ZIP_OK == err) {
+        err = zipWriteInFileInZip(zf, fileData, fileSize);
+        if (ZIP_OK == err)
+            err = zipCloseFileInZip(zf);
+        else
+            zipCloseFileInZip(zf);
+    }
+    return ZIP_OK == err;
+}
+
 bool ZipCreator::SaveAs(const WCHAR *zipFilePath)
 {
     if (d->pathsAndZipNames.Count() == 0)
         return false;
-    bool result = true;
-    zipFile zf;
     zlib_filefunc64_def ffunc;
     fill_win32_filefunc64(&ffunc);
-    zf = zipOpen2_64((const void*)zipFilePath, 0, NULL, &ffunc);
+    zipFile zf = zipOpen2_64(zipFilePath, 0, NULL, &ffunc);
     if (!zf)
         return false;
-    zip_fileinfo zi = { 0 };
-    int err;
 
-    size_t fileCount = d->pathsAndZipNames.Count() / 2;
-    for (size_t i=0; i<fileCount; i++) {
-        WCHAR *fileName = d->pathsAndZipNames.At(2*i);
-        WCHAR *nameInZip = d->pathsAndZipNames.At(2*i+1);
-        ScopedMem<char> nameInZipUtf(str::conv::ToUtf8(nameInZip));
+    bool result = true;
+    for (size_t i = 0; i < d->pathsAndZipNames.Count(); i += 2) {
+        const WCHAR *fileName = d->pathsAndZipNames.At(i);
+        const WCHAR *nameInZip = d->pathsAndZipNames.At(i + 1);
         size_t fileSize;
-        char *fileData = file::ReadAll(fileName, &fileSize);
-        if (!fileData)
-            goto Error;
-        err = zipOpenNewFileInZip64(zf, nameInZipUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 1);
-        if (err != ZIP_OK)
-            goto Error;
-        err = zipWriteInFileInZip(zf, fileData, fileSize);
-        if (err != ZIP_OK)
-            goto Error;
-        err = zipCloseFileInZip(zf);
-        if (err != ZIP_OK)
-            goto Error;
+        ScopedMem<char> fileData(file::ReadAll(fileName, &fileSize));
+        if (!fileData) {
+            result = false;
+            break;
+        }
+        result = AppendFileToZip(zf, nameInZip, fileData, fileSize);
+        if (!result)
+            break;
     }
-    goto Exit;
-Error:
-    result = false;
-Exit:
-    err = zipClose(zf, NULL);
+    int err = zipClose(zf, NULL);
     if (err != ZIP_OK)
         result = false;
     return result;
+}
+
+// TODO: using this for XPS files results in documents that Microsoft XPS Viewer can't read
+bool ZipDirectory(const WCHAR *dirPath, const WCHAR *zipPath, bool recursive)
+{
+    ZipCreator zip;
+    DirIter iter;
+    const WCHAR *path;
+
+    if (!iter.Start(dirPath, recursive))
+        return false;
+
+    size_t dirLen = str::Len(dirPath);
+    if (!path::IsSep(dirPath[dirLen - 1]))
+        dirLen++;
+
+    while ((path = iter.Next()) != NULL) {
+        CrashIf(!str::StartsWith(path, dirPath));
+        // create a path relative to the main directory
+        zip.AddFile(path, path + dirLen);
+    }
+
+    return zip.SaveAs(zipPath);
 }

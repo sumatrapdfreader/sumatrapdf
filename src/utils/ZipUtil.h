@@ -55,4 +55,6 @@ public:
     bool SaveAs(const WCHAR *zipFilePath);
 };
 
+bool ZipDirectory(const WCHAR *dirPath, const WCHAR *zipPath, bool recursive=false);
+
 #endif
