@@ -4,6 +4,8 @@
 #ifndef SettingsSumatra_h
 #define SettingsSumatra_h
 
+namespace sertxt {
+
 struct RectInt {
     int32_t  x;
     int32_t  y;
@@ -71,7 +73,7 @@ struct Fav {
 };
 
 struct AppState {
-    sertxt::ListNode<Fav> *  favorites;
+    ListNode<Fav> *  favorites;
 };
 
 struct Settings {
@@ -87,4 +89,5 @@ Settings *DeserializeSettingsWithDefault(const char *data, size_t dataLen, const
 uint8_t *SerializeSettings(Settings *, size_t *dataLenOut);
 void FreeSettings(Settings *);
 
+} // namespace sertxt
 #endif

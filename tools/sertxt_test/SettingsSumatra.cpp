@@ -5,7 +5,7 @@
 #include "SerializeTxt.h"
 #include "SettingsSumatra.h"
 
-using namespace sertxt;
+namespace sertxt {
 
 #define FIELD_NAMES_SEQ "x\0y\0dx\0dy\0global_prefs_only\0curr_language\0toolbar_visible\0pdf_associate_dont_ask\0pdf_associate_do_it\0check_for_updates\0remember_mru_files\0use_system_color_scheme\0inverse_search_cmd_line\0version_to_skip\0last_update_time\0default_display_mode\0default_zoom\0window_state\0window_pos\0toc_visible\0fav_visible\0sidebar_dx\0toc_dy\0show_start_page\0open_count_week\0last_pref_update\0top\0bottom\0left\0right\0space_x\0space_y\0highlight_offset\0highlight_width\0highlight_permanent\0highlight_color\0enable_tex_enhancements\0traditional_ebook_ui\0esc_to_exit\0text_color\0page_color\0main_window_background\0page_padding\0forward_search\0name\0page_no\0page_label\0menu_id\0favorites\0basic\0advanced\0app_state\0str_escape_test\0wstr_1\0\0"
 
@@ -130,3 +130,5 @@ void FreeSettings(Settings *val)
 {
     FreeStruct((uint8_t*)val, &gSettingsMetadata);
 }
+
+} // namespace sertxt

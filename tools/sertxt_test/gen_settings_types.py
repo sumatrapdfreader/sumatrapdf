@@ -161,7 +161,7 @@ class Array(Type):
         self.values = values
         for v in values:
             assert self.is_valid_val(v)
-        self.c_type_override = "sertxt::ListNode<%s> *" % typ.__name__
+        self.c_type_override = "ListNode<%s> *" % typ.__name__
         self.offset = None
 
     def is_valid_val(self, val):
@@ -238,9 +238,11 @@ class Field(object):
         assert self.typ.is_valid_val(val)
         self.val = val
 
-    def get_typ_enum(self):
+    def get_typ_enum(self, for_bin=False):
         type_enum = self.typ.get_type_typ_enum()
-        if self.is_no_store() or self.is_compact():
+        # binary doesn't have a notion of compact storage
+        is_compact = self.is_compact() and not for_bin
+        if self.is_no_store() or is_compact:
             s = "(Type)(" + type_enum
             if self.is_no_store():
                 s = s + " | TYPE_NO_STORE_MASK"

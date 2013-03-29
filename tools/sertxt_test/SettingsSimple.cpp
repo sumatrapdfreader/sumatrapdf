@@ -5,7 +5,7 @@
 #include "SerializeTxt.h"
 #include "SettingsSimple.h"
 
-using namespace sertxt;
+namespace sertxt {
 
 #define FIELD_NAMES_SEQ "b_true\0b_false\0u16_1\0i32_1\0u32_1\0u64_1\0col_1\0float_1\0str_1\0str_escape\0wstr_1\0\0"
 
@@ -52,3 +52,5 @@ void FreeSimple(Simple *val)
 {
     FreeStruct((uint8_t*)val, &gSimpleMetadata);
 }
+
+} // namespace sertxt

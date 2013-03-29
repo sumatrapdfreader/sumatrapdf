@@ -5,6 +5,8 @@
 #include "SettingsSumatra.h"
 #include "SettingsSimple.h"
 
+using namespace sertxt;
+
 static char *CheckedLoad(const char *path, size_t *fileSizeOut)
 {
     char *s = file::ReadAllUtf(path, fileSizeOut);

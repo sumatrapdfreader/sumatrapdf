@@ -11,6 +11,8 @@
 
 #define Check(x) CrashIf(!(x)); if (!(x)) return false; else NoOp()
 
+using namespace sertxt;
+
 static bool TestSerializeIni()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data.ini";

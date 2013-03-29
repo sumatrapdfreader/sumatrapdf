@@ -494,6 +494,49 @@ class SeqStrings(object):
       self.strings_seq = self.strings_seq + s + chr(0)
     return self.strings[s]
 
+(FMT_NONE, FMT_LEFT, FMT_RIGHT) = (0, 1, 2)
+
+def get_col_fmt(col_fmt, col):
+    if col >= len(col_fmt):
+        return FMT_NONE
+    return col_fmt[col]
+
+def fmt_str(s, max, fmt):
+    add = max - len(s)
+    if fmt == FMT_LEFT:
+        return " " * add + s
+    elif fmt == FMT_RIGHT:
+        return s + " " * add
+    return s
+
+"""
+[
+  ["a",  "bc",   "def"],
+  ["ab", "fabo", "d"]
+]
+=>
+[
+  ["a ", "bc  ", "def"],
+  ["ab", "fabo", "d  "]
+]
+"""
+def fmt_rows(rows, col_fmt = []):
+    col_max_len = {}
+    for row in rows:
+        for col in range(len(row)):
+            el_len = len(row[col])
+            curr_max = col_max_len.get(col, 0)
+            if el_len > curr_max:
+                col_max_len[col] = el_len
+    res = []
+    for row in rows:
+        res_row = []
+        for col in range(len(row)):
+            s = fmt_str(row[col], col_max_len[col], get_col_fmt(col_fmt, col))
+            res_row.append(s)
+        res.append(res_row)
+    return res
+
 if __name__ == "__main__":
   #parse_svnlog_out_test2()
   #test_load_config()

@@ -4,6 +4,8 @@
 #ifndef SettingsSimple_h
 #define SettingsSimple_h
 
+namespace sertxt {
+
 struct Simple {
     bool           bTrue;
     bool           bFalse;
@@ -23,4 +25,5 @@ Simple *DeserializeSimpleWithDefault(const char *data, size_t dataLen, const cha
 uint8_t *SerializeSimple(Simple *, size_t *dataLenOut);
 void FreeSimple(Simple *);
 
+} // namespace sertxt
 #endif

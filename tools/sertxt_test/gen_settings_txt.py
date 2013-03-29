@@ -161,54 +161,11 @@ def ser_struct(struct, name, lines, indent):
     if name != None:
         lines += ["%s]" % prefix]
 
-(FMT_NONE, FMT_LEFT, FMT_RIGHT) = (0, 1, 2)
-
-def get_col_fmt(col_fmt, col):
-    if col >= len(col_fmt):
-        return FMT_NONE
-    return col_fmt[col]
-
-def fmt_str(s, max, fmt):
-    add = max - len(s)
-    if fmt == FMT_LEFT:
-        return " " * add + s
-    elif fmt == FMT_RIGHT:
-        return s + " " * add
-    return s
-
-"""
-[
-  ["a",  "bc",   "def"],
-  ["ab", "fabo", "d"]
-]
-=>
-[
-  ["a ", "bc  ", "def"],
-  ["ab", "fabo", "d  "]
-]
-"""
-def fmt_rows(rows, col_fmt = []):
-    col_max_len = {}
-    for row in rows:
-        for col in range(len(row)):
-            el_len = len(row[col])
-            curr_max = col_max_len.get(col, 0)
-            if el_len > curr_max:
-                col_max_len[col] = el_len
-    res = []
-    for row in rows:
-        res_row = []
-        for col in range(len(row)):
-            s = fmt_str(row[col], col_max_len[col], get_col_fmt(col_fmt, col))
-            res_row.append(s)
-        res.append(res_row)
-    return res
-
 def gen_struct_def(stru_cls):
     name = stru_cls.__name__
     lines = ["struct %s {" % name]
     rows = [[field.c_type(), field.name] for field in stru_cls.fields]
-    lines += ["    %s  %s;" % (e1, e2) for (e1, e2) in fmt_rows(rows, [FMT_RIGHT])]
+    lines += ["    %s  %s;" % (e1, e2) for (e1, e2) in util.fmt_rows(rows, [util.FMT_RIGHT])]
     lines += ["};\n"]
     return "\n".join(lines)
 
@@ -231,8 +188,11 @@ h_txt_tmpl   ="""// DON'T EDIT MANUALLY !!!!
 #ifndef %(file_name)s_h
 #define %(file_name)s_h
 
+namespace sertxt {
+
 %(struct_defs)s
 %(prototypes)s
+} // namespace sertxt
 #endif
 """
 
@@ -243,13 +203,15 @@ cpp_txt_tmpl = """// DON'T EDIT MANUALLY !!!!
 #include "SerializeTxt.h"
 #include "%(file_name)s.h"
 
-using namespace sertxt;
+namespace sertxt {
 
 %(filed_names_seq_strings)s
 #define of offsetof
 %(structs_metadata)s
 #undef of
 %(top_level_funcs)s
+
+} // namespace sertxt
 """
 
 """
@@ -271,7 +233,7 @@ def gen_struct_fields_txt(stru_cls, field_names):
             val = "&g%sMetadata" % field.typ.name()
         col = [str(name_off) + ",", offset + ",", typ_enum + ",", val]
         rows.append(col)
-    rows = fmt_rows(rows, [FMT_LEFT, FMT_RIGHT, FMT_RIGHT, FMT_RIGHT])
+    rows = util.fmt_rows(rows, [util.FMT_LEFT, util.FMT_RIGHT, util.FMT_RIGHT, util.FMT_RIGHT])
     lines += ["    { %s %s %s %s }," % (e1, e2, e3, e4) for (e1, e2, e3, e4) in rows]
     lines += ["};\n"]
     return lines
