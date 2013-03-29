@@ -11,7 +11,7 @@
 
 #define Check(x) CrashIf(!(x)); if (!(x)) return false; else NoOp()
 
-using namespace sertxt;
+using namespace serini3;
 
 static bool TestSerializeIni()
 {
@@ -19,12 +19,12 @@ static bool TestSerializeIni()
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    Settings *s = DeserializeSettings(data, str::Len(data));
+    sertxt::Settings *s = sertxt::DeserializeSettings(data, str::Len(data));
     Check(s); // failed to parse file
     Check(str::Find(s->basic->inverseSearchCmdLine, L"\r\n"));
 
     size_t len;
-    ScopedMem<char> ser((char *)SerializeSettings(s, &len));
+    ScopedMem<char> ser((char *)sertxt::SerializeSettings(s, &len));
     Check(str::Len(ser) == len);
     Check(str::Eq(data, ser));
     FreeSettings(s);
@@ -43,11 +43,11 @@ default_zoom = 38.5\n\
 
     ScopedMem<char> defaultData(file::ReadAll(defaultPath, NULL));
     Check(defaultData); // failed to read file
-    Settings *s = DeserializeSettingsWithDefault(data, str::Len(data), defaultData, str::Len(defaultData));
+    sertxt::Settings *s = sertxt::DeserializeSettingsWithDefault(data, str::Len(data), defaultData, str::Len(defaultData));
     Check(s); // failed to parse file
     Check(s->basic->globalPrefsOnly && 38.5f == s->basic->defaultZoom);
     Check(s->basic->showStartPage && !s->basic->pdfAssociateDoIt);
-    FreeSettings(s);
+    sertxt::FreeSettings(s);
 
     return true;
 }
@@ -58,15 +58,15 @@ static bool TestSerializeIni3()
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    GlobalPrefs *s = (GlobalPrefs *)serini3::Deserialize(data, str::Len(data), gGlobalPrefsInfo);
+    GlobalPrefs *s = (GlobalPrefs *)Deserialize(data, str::Len(data), gGlobalPrefsInfo);
     Check(s); // failed to parse file
     Check(str::Find(s->inverseSearchCmdLine, L"\r\n"));
 
     size_t len;
-    ScopedMem<char> ser(serini3::Serialize(s, gGlobalPrefsInfo, &len));
+    ScopedMem<char> ser(Serialize(s, gGlobalPrefsInfo, &len));
     Check(str::Len(ser) == len);
     Check(str::Eq(data, ser));
-    serini3::FreeStruct(s, gGlobalPrefsInfo);
+    FreeStruct(s, gGlobalPrefsInfo);
 
     return true;
 }
@@ -77,11 +77,11 @@ static bool TestSerializeUserIni3()
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    UserPrefs *s = (UserPrefs *)serini3::Deserialize(data, str::Len(data), gUserPrefsInfo);
+    UserPrefs *s = (UserPrefs *)Deserialize(data, str::Len(data), gUserPrefsInfo);
     Check(s); // failed to parse file
 
-    ScopedMem<char> ser(serini3::Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini"));
-    serini3::FreeStruct(s, gUserPrefsInfo);
+    ScopedMem<char> ser(Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini"));
+    FreeStruct(s, gUserPrefsInfo);
     Check(str::Eq(data, ser));
 
     return true;
@@ -115,34 +115,34 @@ static bool TestSerializeRecursiveArray()
 [Rec.Up.ExternalViewer]\n\
 CommandLine = serini_test.exe\n\
 ";
-    Rec *r = (Rec *)serini3::Deserialize(data, str::Len(data), gRecInfo);
+    Rec *r = (Rec *)Deserialize(data, str::Len(data), gRecInfo);
     Check(2 == r->recCount && 2 == r->rec[0].recCount && 2 == r->rec[0].rec[0].recCount);
     Check(0 == r->rec[0].rec[0].rec[0].recCount && 0 == r->rec[0].rec[0].rec[1].recCount);
     Check(1 == r->rec[0].rec[1].recCount && 0 == r->rec[0].rec[1].rec[0].recCount);
     Check(1 == r->rec[1].recCount && 0 == r->rec[1].rec[0].recCount);
     Check(1 == r->rec[1].up.externalViewerCount && str::Eq(r->rec[1].up.externalViewer[0].commandLine, L"serini_test.exe"));
     Check(str::Eq(r->rec[0].rec[1].up.printerDefaults.printScale, "shrink"));
-    serini3::FreeStruct(r, gRecInfo);
+    FreeStruct(r, gRecInfo);
 
     // TODO: recurse even if array parents are missing?
     // (bounded by maximum section name length)
     data = "[Rec.Rec]";
-    r = (Rec *)serini3::Deserialize(data, str::Len(data), gRecInfo);
+    r = (Rec *)Deserialize(data, str::Len(data), gRecInfo);
     Check(0 == r->recCount);
-    serini3::FreeStruct(r, gRecInfo);
+    FreeStruct(r, gRecInfo);
 
     return true;
 }
 
 static bool TestDefaultValues()
 {
-    UserPrefs *p = (UserPrefs *)serini3::Deserialize(NULL, 0, gUserPrefsInfo);
+    UserPrefs *p = (UserPrefs *)Deserialize(NULL, 0, gUserPrefsInfo);
     Check(!p->advancedPrefs.escToExit && !p->advancedPrefs.traditionalEbookUI);
     Check(0xffffff == p->advancedPrefs.pageColor && 0x000000 == p->advancedPrefs.textColor);
-    Check(0x6581ff == p->forwardSearch3.highlightColor && 15 == p->forwardSearch3.highlightWidth);
+    Check(0x6581ff == p->forwardSearch.highlightColor && 15 == p->forwardSearch.highlightWidth);
     Check(4 == p->pagePadding.innerX && 2 == p->pagePadding.outerY);
     Check(str::Eq(p->printerDefaults.printScale, "shrink"));
-    serini3::FreeStruct(p, gUserPrefsInfo);
+    FreeStruct(p, gUserPrefsInfo);
 
     return true;
 }
@@ -164,13 +164,13 @@ static SettingInfo gTestCD1Info[] = {
 static bool TestCompactDefaultValues()
 {
     static const char *data = "Compact = true -4.25";
-    TestCD1 *cd = (TestCD1 *)serini3::Deserialize(data, str::Len(data), gTestCD1Info);
+    TestCD1 *cd = (TestCD1 *)Deserialize(data, str::Len(data), gTestCD1Info);
     Check(cd && cd->compact.val1 && -4.25f == cd->compact.val2);
-    serini3::FreeStruct(cd, gTestCD1Info);
+    FreeStruct(cd, gTestCD1Info);
 
-    cd = (TestCD1 *)serini3::Deserialize(NULL, 0, gTestCD1Info);
+    cd = (TestCD1 *)Deserialize(NULL, 0, gTestCD1Info);
     Check(cd && !cd->compact.val1 && 3.14f == cd->compact.val2);
-    serini3::FreeStruct(cd, gTestCD1Info);
+    FreeStruct(cd, gTestCD1Info);
 
     return true;
 }

@@ -156,8 +156,7 @@ UserPrefs = [
 	Struct("BackgroundGradient", BackgroundGradient,
 		"these values allow to tweak the experimental feature for using a color " +
 		"gradient to subconsciously determine reading progress"),
-	# renamed from ForwardSearch for interoperability with gen_settings.py
-	Struct("ForwardSearch3", ForwardSearch,
+	Struct("ForwardSearch", ForwardSearch,
 		"these values allow to customize how the forward search highlight appears"),
 	Array("ExternalViewer", ExternalViewer,
 		"this list contains a list of additional external viewers for various file types"),
