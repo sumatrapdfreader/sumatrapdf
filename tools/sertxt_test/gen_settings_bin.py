@@ -5,7 +5,7 @@ sys.path.append("scripts") # assumes is being run as ./tools/sertxt_test/gen_set
 
 import os, util, struct, types, gen_settings_types
 from gen_settings_types import Struct, Field, String, Array, WString
-from gen_settings_txt import structs_from_top_level_value
+from gen_settings_txt import structs_from_top_level_value, field_val_as_str
 from util import gob_uvarint_encode, gob_varint_encode
 
 g_magic_id = 0x53657454  # 'SetT' as 'Settings''
@@ -46,11 +46,9 @@ def serbin_arr(field):
     return d
 
 def _serbin(field):
-    try:
-        assert isinstance(field, Field)
-    except:
-        print(field)
-        raise
+    assert isinstance(field, Field)
+    if field.is_no_store():
+        return None
     if field.is_signed():
         return gob_varint_encode(long(field.val))
     if field.is_unsigned():
@@ -100,6 +98,7 @@ namespace serbin {
 #define of offsetof
 %(structs_metadata)s
 #undef of
+
 %(values_global_data)s
 %(top_level_funcs)s
 }
@@ -111,7 +110,7 @@ def ver_from_string(ver_str):
     assert len(parts) <= 4
     parts = [int(p) for p in parts]
     for n in parts:
-        assert n > 0 and n < 255
+        assert n >= 0 and n < 255
     n = 4 - len(parts)
     if n > 0:
         parts = parts + [0]*n
@@ -136,6 +135,7 @@ def flatten_values(stru):
                     left += [field.val]
             elif field.is_array():
                 for v in field.val.values:
+                    assert isinstance(v, Struct)
                     left += [v]
     vals.reverse()
     return vals
@@ -157,7 +157,8 @@ def serialize_top_level_value(top_level_val, serialized_vals):
         stru.offset = offset
         for field in stru.values:
             data = serbin(field, serialized_vals)
-            offset += len(data)
+            if None != data:
+                offset += len(data)
         fields_count = len(stru.values)
         offset = offset + 4 + len(gob_uvarint_encode(fields_count))
     return vals
@@ -193,6 +194,19 @@ def short_object_id(obj):
     #    return '"' + obj.val + '"'
     assert False, "%s is object of unkown type" % obj
 
+def str_c_safe(s):
+    if type(s) == type(""):
+        s = s.decode("utf-8")
+    try:
+        assert type(s) == type(u"")
+    except:
+        print(s)
+        raise
+    s = s.encode('ascii','ignore')
+    s = s.replace("\n", "\\n")
+    s = s.replace("\r", "\\r")
+    return s
+
 """
   // $StructName
   0x00, 0x01, // $type $name = $val
@@ -217,6 +231,8 @@ def get_cpp_data_for_struct(stru, serialized_vals):
     size = 4 + len(data)
 
     for field in stru.values:
+        if field.is_no_store():
+            continue
         data = serbin(field, serialized_vals)
         size += len(data)
         data_hex = data_to_hex(data)
@@ -229,30 +245,11 @@ def get_cpp_data_for_struct(stru, serialized_vals):
         elif field.is_array():
                 val_str = short_object_id(field.val)
         else:
-            if field.val == None:
-                try:
-                    assert isinstance(field.typ, String) or isinstance(field.typ, WString)
-                except:
-                    print(field)
-                    print(field.name)
-                    print(field.typ)
-                    print(field.val)
-                    raise
-                val_str = ""
-            elif type(field.val) == type(u""):
-                # TODO: convert unicode to something acceptable in C sources
-                val_str = "<unicode string>"
-            elif type(field.val) == type(""):
-                val_str = field.val
-            else:
-                try:
-                    val_str = hex(field.val)
-                except:
-                    print(field)
-                    print(field.name)
-                    print(field.typ)
-                    print(field.val)
-                    raise
+            val_str = field_val_as_str(field)
+            if val_str == None:
+                assert isinstance(field.typ, String) or isinstance(field.typ, WString)
+                val_str = "NULL"
+            val_str = str_c_safe(val_str)
         s = "    %(data_hex)s, // %(var_type)s %(var_name)s = %(val_str)s" % locals()
         lines += [s]
     return (lines, size)
@@ -386,32 +383,34 @@ def gen_top_level_funcs_bin(top_level_val):
     name = top_level_val.name()
     return top_level_funcs_bin_tmpl % locals()
 
-def gen_bin():
-    version = "2.3"
-    file_name = "SettingsBinSumatra"
-    dst_dir = settings_src_dir()
-    file_path_base = os.path.join(os.path.dirname(dst_dir), file_name)
-
-    top_level_val = gen_settings_types.Settings()
-
+def gen_bin_for_top_level_val(top_level_val, version, file_path_base):
+    file_name = os.path.basename(file_path_base)
     prototypes = gen_prototypes(top_level_val.__class__, version)
-
     structs = structs_from_top_level_value(top_level_val)
-
     struct_defs = gen_struct_defs(structs)
     write_to_file(file_path_base + ".h",  h_bin_tmpl % locals())
-
+    structs_metadata = gen_structs_metadata_bin(structs)
+    top_level_funcs = gen_top_level_funcs_bin(top_level_val)
     serialized_vals = {}
     vals = serialize_top_level_value(top_level_val, serialized_vals)
-
-    structs_metadata = gen_structs_metadata_bin(structs)
-    #values_global_data = gen_cpp_data_for_struct_values(vals, version, serialized_vals)
-    values_global_data = ""
-    top_level_funcs = gen_top_level_funcs_bin(top_level_val)
+    values_global_data = gen_cpp_data_for_struct_values(vals, version, serialized_vals)
     write_to_file(os.path.join(file_path_base + ".cpp"), cpp_bin_tmpl % locals())
 
+def gen_bin_sumatra():
+    dst_dir = settings_src_dir()
+    file_path_base = os.path.join(os.path.dirname(dst_dir), "SettingsBinSumatra")
+    top_level_val = gen_settings_types.Settings()
+    gen_bin_for_top_level_val(top_level_val, "2.3", file_path_base)
+
+def gen_bin_simple():
+    dst_dir = settings_src_dir()
+    file_path_base = os.path.join(os.path.dirname(dst_dir), "SettingsBinSimple")
+    top_level_val = gen_settings_types.Simple()
+    gen_bin_for_top_level_val(top_level_val, "1.0", file_path_base)
+
 def main():
-    gen_bin()
+    gen_bin_sumatra()
+    gen_bin_simple()
 
 if __name__ == "__main__":
     main()
