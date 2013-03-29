@@ -6,6 +6,12 @@ import os, util, codecs, random, gen_settings_types
 from gen_settings_types import Field
 
 """
+TODO:
+  - a different runtime representations: each struct starts with StructDef *.
+    that way the values are self-describing. that would simplify the API
+    (no need to pass StructDef* separately.
+  - add a way to pass Allocator to Serialize/Deserialize
+
 Todo maybe: arrays of basic types
 """
 

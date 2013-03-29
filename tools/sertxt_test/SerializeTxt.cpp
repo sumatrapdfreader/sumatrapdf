@@ -430,7 +430,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
         COLORREF val;
         ok = ParseColor(node->valStart, node->valEnd, &val);
         if (ok)
-            WriteStructUInt(structDataPtr, TYPE_U32, val);
+            WriteStructUInt(structDataPtr, TYPE_COLOR, val);
     } else if (IsUnsignedIntType(type)) {
         uint64_t n;
         ok = ParseUInt(node->valStart, node->valEnd, &n);

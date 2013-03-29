@@ -33,17 +33,31 @@ static void CheckStrEq(const WCHAR *s1, const WCHAR *s2)
     wprintf(L"'%s'\n != \n'%s'\n", s1, s2);
 }
 
+static bool CheckDeserialized(void *val)
+{
+    if (val)
+        return true;
+    printf("failed to deserialize\n");
+    return false;
+}
+
+static bool CheckParsed(bool ok, char *s)
+{
+    if (ok)
+        return true;
+    printf("Failed to parse \n'%s'\n", s);
+    return false;
+}
+
 static void TestParseSumatraSettings()
 {
     size_t fileSize;
     char *s = CheckedLoad( "..\\tools\\sertxt_test\\data.txt", &fileSize);
-    if (!s)
-        return;
+    if (!s) return;
     TxtParser parser;
     parser.SetToParse(s, fileSize);
     bool ok = ParseTxt(parser);
-    if (!ok)
-        printf("failed to parse \n'%s'\n", s);
+    if (!CheckParsed(ok, s)) return;
     free(s);
 }
 
@@ -57,10 +71,7 @@ static bool TestString(const char *s, char *expected)
     TxtParser parser;
     parser.SetToParse(sCopy,  str::Len(sCopy));
     bool ok = ParseTxt(parser);
-    if (!ok) {
-        printf("Failed to parse:'\n%s'\n", s);
-        return false;
-    }
+    if (!CheckParsed(ok, sCopy)) return false;
     char *res = PrettyPrintTxt(parser);
     ok = str::Eq(res, expected);
     if (!ok)
@@ -74,10 +85,9 @@ static void TestFromFile()
 {
     size_t fileSize;
     char *fileContent = CheckedLoad( "..\\tools\\sertxt_test\\tests.txt", &fileSize);
-    char *s = fileContent;
-    if (!s)
-        return;
+    if (!fileContent) return;
 
+    char *s = fileContent;
     Vec<char*> tests;
     for (;;) {
         tests.Append(s);
@@ -114,14 +124,10 @@ static void TestSettingsDeserialize()
 {
     size_t fileSize;
     char *s = CheckedLoad("..\\tools\\sertxt_test\\data.txt", &fileSize);
-    if (!s)
-        return;
+    if (!s) return;
 
     Settings *settings = DeserializeSettings(s, fileSize);
-    if (!settings) {
-        printf("failed to deserialize\n'%s'\n", s);
-        return;
-    }
+    if (!CheckDeserialized(settings)) return;
     size_t serializedLen;
     char *s2 = (char*)SerializeSettings(settings, &serializedLen);
 
@@ -139,13 +145,10 @@ static void TestSettingsSimple()
 {
     size_t fileSize;
     char *s =  CheckedLoad("..\\tools\\sertxt_test\\data_simple_with_ws.txt", &fileSize);
-    if (!s)
-        return;
+    if (!s) return;
     Simple *settings = DeserializeSimple(s, fileSize);
-    if (!settings) {
-        printf("failed to deserialize\n'%s'\n", s);
-        return;
-    }
+    if (!CheckDeserialized(settings)) return;
+
     CheckStrEq(settings->str_1, "lola");
     CheckStrEq(settings->str_escape, STR_ESCAPE_TEST_EXP);
     CheckStrEq(settings->wstr_1, L"wide string Πραγματικό &Μέγεθος\nCtrl+1");
@@ -167,10 +170,7 @@ static void TestDefault()
     if (!data || !defaultData)
         return;
     Simple *settings = DeserializeSimpleWithDefault(data, dataLen, defaultData, defaultDataLen);
-    if (!settings) {
-        printf("failed to deserialize\n'%s'\n", data);
-        return;
-    }
+    if (!CheckDeserialized(settings)) return;
 
     size_t serializedLen;
     char *s = (char*)SerializeSimple(settings, &serializedLen);
@@ -181,12 +181,54 @@ static void TestDefault()
     FreeSimple(settings);
 }
 
+static void TestBinSettings()
+{
+    bool usedDefault = false;
+    serbin::Settings *settings = serbin::DeserializeSettings(NULL, 0, &usedDefault);
+    if (!CheckDeserialized(settings)) return;
+    if (!usedDefault) {
+        printf("usedDefault = %d and should be true", (int)usedDefault);
+        return;
+    }
+    // they have the same layout
+    sertxt::Settings *settings2 = (sertxt::Settings*)settings;
+    size_t sLen, s2Len;
+    char *s = (char*)sertxt::SerializeSettings(settings2, &sLen);
+    char *s2 = CheckedLoad("..\\tools\\sertxt_test\\data.txt", &s2Len);
+    CheckStrEq(s, s2);
+    free(s2);
+    free(s);
+    serbin::FreeSettings(settings);
+}
+
+static void TestBinSimple()
+{
+    bool usedDefault = false;
+    serbin::Simple *settings = serbin::DeserializeSimple(NULL, 0, &usedDefault);
+    if (!CheckDeserialized(settings)) return;
+    if (!usedDefault) {
+        printf("usedDefault = %d and should be true", (int)usedDefault);
+        return;
+    }
+    // they have the same layout
+    sertxt::Simple *settings2 = (sertxt::Simple*)settings;
+    size_t sLen, s2Len;
+    char *s = (char*)sertxt::SerializeSimple(settings2, &sLen);
+    char *s2 = CheckedLoad("..\\tools\\sertxt_test\\data_simple_no_ws.txt", &s2Len);
+    CheckStrEq(s, s2);
+    free(s2);
+    free(s);
+    serbin::FreeSimple(settings);
+}
+
 int main(int argc, char **argv)
 {
 #ifdef DEBUG
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+    TestBinSettings();
+    TestBinSimple();
     TestFromFile();
     TestSettingsSimple();
     TestSettingsDeserialize();
