@@ -116,20 +116,33 @@ def main():
 	#print("Diffing done")
 	print(diff)
 	diff.added.sort(key=lambda sym: sym.size, reverse=True)
-	added = diff.added[:30]
+	diff.removed.sort(key=lambda sym: sym.size, reverse=True)
+	diff.changed.sort(key=lambda sym: sym.size_diff, reverse=True)
 
+	max = 5
+	added = diff.added
 	if len(added) > 0:
 		print("\nAdded symbols:")
-	for sym in added:
-		#sym = diff.syms2.name_to_sym[sym_name]
-		size = sym.size
-		print("%4d : %s" % (size, sym.name))
+		for sym in added[:max]:
+			#sym = diff.syms2.name_to_sym[sym_name]
+			size = sym.size
+			print("%4d : %s" % (size, sym.name))
 
-	changed = diff.changed[:20]
+	removed = diff.removed
+	if len(removed) > 0:
+		print("\nAdded symbols:")
+		for sym in removed[:max]:
+			#sym = diff.syms2.name_to_sym[sym_name]
+			size = sym.size
+			print("%4d : %s" % (size, sym.name))
+
+	changed = diff.changed
 	if len(changed) > 0:
+		changed = diff.changed[:20]
 		print("\nChanged symbols:")
-	for sym_name in changed:
-		print("%s" % sym_name)
+		for sym in changed:
+			size = sym.size_diff
+			print("%4d : %s" % (size, sym.name))
 
 if __name__ == "__main__":
 	main()

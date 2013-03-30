@@ -63,6 +63,12 @@ class Type(object):
 		# TODO: parse the line
 		self.line = l
 
+def print_sym(sym):
+	print(sym)
+	print("name : %s" % sym.name)
+	print("off  : %d" % sym.offset)
+	print("size : %d" % sym.size)
+
 class ParseState(object):
 	def __init__(self, fo):
 		self.fo = fo
@@ -70,6 +76,35 @@ class ParseState(object):
 		self.types = []
 		self.symbols = []
 		self.sections = []
+		# functions, strings etc. are laid out rounded so e.g. a function 11 bytes
+		# in size really takes 16 bytes in the binary, due to rounding of the symbol
+		# after it. Those values allow us to calculate how much is wasted due
+		# to rounding
+		self.symbols_unrounded_size = 0
+		self.symbols_rounding_waste = 0
+
+	def add_symbol(self, sym):
+		n = len(self.symbols)
+		self.symbols.append(sym)
+		self.symbols_unrounded_size += sym.size
+		# TODO: this doesn't quite right because it seems symbols can be
+		# inter-leaved e.g. a data symbol can be inside function symbol, which
+		# breaks the simplistic logic of calculating rounded size as curr.offset - prev.offset
+		"""
+		if 0 == n: return
+		prev_sym = self.symbols[n-1]
+		prev_sym_rounded_size = sym.offset - prev_sym.offset
+		assert prev_sym_rounded_size >= 0
+		prev_sym_wasted = prev_sym_rounded_size - prev_sym.size
+		try:
+			assert prev_sym_wasted >= 0
+		except:
+			print_sym(prev_sym)
+			print_sym(sym)
+			print("prev_sym_wasted (%d) = prev_sym_rounded_size (%d) - prev_sym.size (%d)" % (prev_sym_wasted, prev_sym_rounded_size, prev_sym.size))
+			raise
+		self.symbols_rounding_waste += prev_sym_wasted
+"""
 
 	def readline(self):
 		l = self.fo.readline()
@@ -121,7 +156,7 @@ def parse_symbols(state):
 		l = state.readline()
 		if l == None: return None
 		if l == "": return parse_next_section
-		state.symbols.append(Symbol(l))
+		state.add_symbol(Symbol(l))
 
 def parse_types(state):
 	while True:
@@ -144,18 +179,50 @@ def parse_file(file_name):
 	with open(file_name, "r") as fo:
 		return parse_file_object(fo)
 
+def n_as_str(n):
+	if n > 0: return "+" + str(n)
+	return str(n)
+
 class Diff(object):
 	def __init__(self):
 		self.added = []
 		self.removed = []
 		self.changed = []
-		self.str_sizes_diff = 0
+		self.str_sizes1 = 0
+		self.str_sizes2 = 0
+
+		self.n_symbols1 = 0
+		self.symbols_unrounded_size1 = 0
+		self.symbols_rounding_waste1 = 0
+
+		self.n_symbols2 = 0
+		self.symbols_unrounded_size2 = 0
+		self.symbols_rounding_waste2 = 0
 
 	def __repr__(self):
-		str_sizes = "%s" % self.str_sizes_diff
-		if self.str_sizes_diff > 0:
-			str_sizes = "+" + str_sizes
-		s = "%d added\n%d removed\n%d changed\nstring sizes: %s" % (len(self.added), len(self.removed), len(self.changed), str_sizes)
+		str_sizes1 = self.str_sizes1
+		str_sizes2 = self.str_sizes2
+		str_sizes_diff = n_as_str(str_sizes2 - str_sizes1)
+		n_symbols1 = self.n_symbols1
+		n_symbols2 = self.n_symbols2
+		symbols_diff = n_as_str(n_symbols2 - n_symbols1)
+		sym_size1 = self.symbols_unrounded_size1
+		sym_size2 = self.symbols_unrounded_size2
+		sym_size_diff = n_as_str(sym_size2 - sym_size1)
+		#wasted1 = self.symbols_rounding_waste1
+		#wasted2 = self.symbols_rounding_waste2
+		#wasted_diff = n_as_str(wasted2 - wasted1)
+		n_added = len(self.added)
+		n_removed = len(self.removed)
+		n_changed = len(self.changed)
+
+		#wasted rouding: %(wasted_diff)s %(wasted1)d => %(wasted2)d
+		s = """symbols       : %(symbols_diff)-6s (%(n_symbols1)d => %(n_symbols2)d)
+added         : %(n_added)d
+removed       : %(n_removed)d
+changed       : %(n_changed)d
+symbol sizes  : %(sym_size_diff)-6s (%(sym_size1)d => %(sym_size2)d)
+string sizes  : %(str_sizes_diff)-6s (%(str_sizes1)d => %(str_sizes2)d)""" % locals()
 		return s
 
 def same_sym_sizes(syms):
@@ -171,9 +238,15 @@ def syms_len(syms):
 		return len(syms)
 	return 1
 
+class ChangedSymbol(object):
+	def __init__(self, sym1, sym2):
+		assert sym1.name == sym2.name
+		self.name = sym1.name
+		self.size_diff = sym2.size - sym1.size
+
 # Unfortunately dia2 sometimes doesn't give us unique names for functions,
 # so we need to
-class DiffSyms(object):
+class SymbolStats(object):
 	def __init__(self):
 		self.name_to_sym = {}
 		self.str_sizes = 0
@@ -213,10 +286,10 @@ def find_added(name, diff_syms1, diff_syms2):
 def diff(parse1, parse2):
 	assert isinstance(parse1, ParseState)
 	assert isinstance(parse2, ParseState)
-	diff_syms1 = DiffSyms()
+	diff_syms1 = SymbolStats()
 	diff_syms1.process_symbols(parse1.symbols)
 
-	diff_syms2 = DiffSyms()
+	diff_syms2 = SymbolStats()
 	diff_syms2.process_symbols(parse2.symbols)
 
 	added = []
@@ -232,17 +305,30 @@ def diff(parse1, parse2):
 				sym1 = diff_syms1.name_to_sym[name]
 				sym2 = diff_syms2.name_to_sym[name]
 				if sym1.size != sym2.size:
-					changed += [name]
+					changed += [ChangedSymbol(sym1, sym2)]
 
 	removed = []
+	for name in diff_syms1.name_to_sym.keys():
+		len1 = diff_syms2.syms_len(name)
+		len2 = diff_syms1.syms_len(name)
+		if len2 > len1:
+			removed += find_added(name, diff_syms2, diff_syms1)
 
 	diff = Diff()
 	diff.syms1 = diff_syms1
 	diff.syms2 = diff_syms2
+	diff.str_sizes1 =  diff_syms1.str_sizes
+	diff.str_sizes2 =  diff_syms2.str_sizes
 	diff.added = added
 	diff.removed = removed
 	diff.changed = changed
-	diff.str_sizes_diff = diff_syms2.str_sizes - diff_syms1.str_sizes
+	diff.n_symbols1 = len(parse1.symbols)
+	diff.symbols_unrounded_size1 = parse1.symbols_unrounded_size
+	diff.symbols_rounding_waste1 = parse1.symbols_rounding_waste
+
+	diff.n_symbols2 = len(parse2.symbols)
+	diff.symbols_unrounded_size2 = parse2.symbols_unrounded_size
+	diff.symbols_rounding_waste2 = parse2.symbols_rounding_waste
 	return diff
 
 def main():
