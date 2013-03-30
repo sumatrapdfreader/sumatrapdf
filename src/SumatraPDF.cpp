@@ -3899,13 +3899,11 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
                 SelectionOnPage& sel = win.selectionOnPage->At(i);
                 win.userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(0xE2, 0xC4, 0xE2, 0xCC)));
+                gRenderCache.Invalidate(win.dm, sel.pageNo, sel.rect);
             }
             win.userAnnotsModified = true;
             win.dm->engine->UpdateUserAnnotations(win.userAnnots);
-            // TODO: only invalidate affected tiles (or render annotations separately)
-            gRenderCache.CancelRendering(win.dm);
-            gRenderCache.KeepForDisplayModel(win.dm, win.dm);
-            ClearSearchResult(&win);
+            ClearSearchResult(&win); // causes invalidated tiles to be rerendered
         }
 #endif
     }

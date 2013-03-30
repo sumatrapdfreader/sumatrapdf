@@ -188,9 +188,9 @@ public:
         int hideStep;       // value used to gradually hide the markers
     } fwdSearchMark;
 
-    StressTest *stressTest;
+    StressTest *    stressTest;
 
-    TouchState touchState;
+    TouchState      touchState;
 
     Vec<PageAnnotation> *userAnnots;
     bool            userAnnotsModified;

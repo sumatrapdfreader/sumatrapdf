@@ -119,24 +119,27 @@ void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
         cacheCount++;
 }
 
+static RectD GetTileRect(RectD pagerect, TilePosition tile)
+{
+    CrashIf(tile.res > 30);
+    RectD rect;
+    rect.dx = pagerect.dx / (1ULL << tile.res);
+    rect.dy = pagerect.dy / (1ULL << tile.res);
+    rect.x = pagerect.x + tile.col * rect.dx;
+    rect.y = pagerect.y + ((1ULL << tile.res) - tile.row - 1) * rect.dy;
+    return rect;
+}
+
 // get the coordinates of a specific tile
 static RectI GetTileRectDevice(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile)
 {
     RectD mediabox = engine->PageMediabox(pageNo);
-
-    if (tile.res > 0 && tile.res != INVALID_TILE_RES) {
-        CrashIf(tile.res > 30);
-        double width = mediabox.dx / (1ULL << tile.res);
-        mediabox.x += tile.col * width;
-        mediabox.dx = width;
-        double height = mediabox.dy / (1ULL << tile.res);
-        mediabox.y += ((1 << tile.res) - tile.row - 1) * height;
-        mediabox.dy = height;
-    }
-
+    if (tile.res > 0 && tile.res != INVALID_TILE_RES)
+        mediabox = GetTileRect(mediabox, tile);
     RectD pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
     return pixelbox.Round();
 }
+
 static RectD GetTileRectUser(BaseEngine *engine, int pageNo, int rotation, float zoom, TilePosition tile)
 {
     RectI pixelbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
@@ -215,10 +218,31 @@ void RenderCache::KeepForDisplayModel(DisplayModel *oldDm, DisplayModel *newDm)
 {
     ScopedCritSec scope(&cacheAccess);
     for (int i = 0; i < cacheCount; i++) {
-        if (cache[i]->dm == oldDm && cache[i]->bitmap) {
+        if (cache[i]->dm == oldDm) {
             if (oldDm->PageVisible(cache[i]->pageNo))
                 cache[i]->dm = newDm;
             // make sure that the page is rerendered eventually
+            cache[i]->zoom = INVALID_ZOOM;
+            cache[i]->outOfDate = true;
+        }
+    }
+}
+
+// marks all tiles containing rect of pageNo as out of date
+void RenderCache::Invalidate(DisplayModel *dm, int pageNo, RectD rect)
+{
+    ScopedCritSec scopeReq(&requestAccess);
+
+    ClearQueueForDisplayModel(dm, pageNo);
+    if (curReq && curReq->dm == dm && curReq->pageNo == pageNo)
+        AbortCurrentRequest();
+
+    ScopedCritSec scopeCache(&cacheAccess);
+
+    RectD mediabox = dm->engine->PageMediabox(pageNo);
+    for (int i = 0; i < cacheCount; i++) {
+        if (cache[i]->dm == dm && cache[i]->pageNo == pageNo &&
+            !GetTileRect(mediabox, cache[i]->tile).Intersect(rect).IsEmpty()) {
             cache[i]->zoom = INVALID_ZOOM;
             cache[i]->outOfDate = true;
         }

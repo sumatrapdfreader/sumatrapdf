@@ -17,7 +17,7 @@ any format but PDF). The format uses CSS syntax for brevity:
 
 @meta { version: 2.3; filesize: 98765; timestamp: 2013-03-09T12:34:56Z }
 highlight { page: 1; rect: 10 10 100 100; color: #ff0000; opacity: 0.8 }
-annotType { page: no; rect: x y w h; color: #rrggbb; opacity: 1.0 }
+annotType { page: no; rect: x y w h; color: #rrggbb; opacity: 1 }
 ...
 @update { version: 2.3; filesize: 98765; timestamp: 2013-03-10T05:43:21Z }
 ...
@@ -155,7 +155,7 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
         case Annot_Squiggly:  data.Append("squiggly "); break;
         default: continue;
         }
-        data.AppendFmt(" { page: %d; rect: %.2f %.2f %.2f %.2f; color: #%02x%02x%02x; opacity: %.2f }\r\n",
+        data.AppendFmt(" { page: %d; rect: %g %g %g %g; color: #%02x%02x%02x; opacity: %g }\r\n",
                        annot.pageNo, annot.rect.x, annot.rect.y,
                        annot.rect.dx, annot.rect.dy, annot.color.r,
                        annot.color.g, annot.color.b, annot.color.a / 255.f);
