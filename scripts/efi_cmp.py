@@ -16,15 +16,15 @@ directory. You might occasionally delete it, if disk space is a concern.
 
 """
 TODO:
+ - in efi.exe, record which .obj file is the source of a given symbol
  - diff for symbols in text format
  - summary of biggest functions
- - summary of
  - upload efi results as part of buildbot
  - diff for symbols in html format
  - upload efi html diff as part of buildbot
 """
 
-import sys, os
+import sys, os, bz2, shutil
 # assumes is being run as ./scripts/efi_cmp.py
 efi_scripts_dir = os.path.join("tools", "efi")
 sys.path.append(efi_scripts_dir)
@@ -42,6 +42,9 @@ def sum_efi_cache_dir(ver):
 
 def efi_result_file(ver):
 	return os.path.join(sum_efi_cache_dir(ver), "efi.txt")
+
+def efi_result_bz2_file(ver):
+	return os.path.join(sum_efi_cache_dir(ver), "efi.txt.bz2")
 
 def usage():
 	name = os.path.basename(__file__)
@@ -87,11 +90,17 @@ def build_ver(ver):
 		dst = os.path.join(sum_efi_cache_dir(ver), f)
 		shutil.copyfile(src, dst)
 
+def bz_file_compress(src, dst):
+	with open(src, "rb") as src_fo:
+		with bz2.BZ2File(dst, "w", buffering=16*1024*1024, compresslevel=9) as dst_fo:
+			shutil.copyfileobj(src_fo, dst_fo, length=1*1024*1024)
+
 def build_efi_result(ver):
 	path = efi_result_file(ver)
 	if os.path.exists(path): return # was already done
 	os.chdir(sum_efi_cache_dir(ver))
 	util.run_cmd_throw("efi", "SumatraPDF.exe", ">efi.txt")
+	bz_file_compress("efi.txt", "efi.txt.bz2")
 
 def main():
 	# early checks
@@ -110,8 +119,8 @@ def main():
 	build_ver(svn_ver2)
 	build_efi_result(svn_ver2)
 
-	efi1 = efiparse.parse_file(efi_result_file(svn_ver1))
-	efi2 = efiparse.parse_file(efi_result_file(svn_ver2))
+	efi1 = efiparse.parse_file(efi_result_bz2_file(svn_ver1))
+	efi2 = efiparse.parse_file(efi_result_bz2_file(svn_ver2))
 	diff = efiparse.diff(efi1, efi2)
 	#print("Diffing done")
 	print(diff)

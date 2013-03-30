@@ -4,6 +4,8 @@
 Parses the output of efi.exe.
 """
 
+import bz2
+
 g_file_name = "efi_out.txt"
 
 (SECTION_CODE, SECTION_DATA, SECTION_BSS, SECTION_UNKNOWN) = ("C", "D", "B", "U")
@@ -84,15 +86,15 @@ class ParseState(object):
 		self.symbols_rounding_waste = 0
 
 	def add_symbol(self, sym):
-		n = len(self.symbols)
 		self.symbols.append(sym)
 		self.symbols_unrounded_size += sym.size
 		# TODO: this doesn't quite right because it seems symbols can be
 		# inter-leaved e.g. a data symbol can be inside function symbol, which
 		# breaks the simplistic logic of calculating rounded size as curr.offset - prev.offset
 		"""
-		if 0 == n: return
-		prev_sym = self.symbols[n-1]
+		prev_sym_idx = len(self.symbols) - 2
+		if prev_sym_idx < 0: return
+		prev_sym = self.symbols[prev_sym_idx]
 		prev_sym_rounded_size = sym.offset - prev_sym.offset
 		assert prev_sym_rounded_size >= 0
 		prev_sym_wasted = prev_sym_rounded_size - prev_sym.size
@@ -176,6 +178,9 @@ def parse_file_object(fo):
 
 def parse_file(file_name):
 	print("parse_file: %s" % file_name)
+	if file_name.endswith(".bz2"):
+		with bz2.BZ2File(file_name, "r", buffering=2*1024*1024) as fo:
+			return parse_file_object(fo)
 	with open(file_name, "r") as fo:
 		return parse_file_object(fo)
 
