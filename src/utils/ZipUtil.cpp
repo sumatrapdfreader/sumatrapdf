@@ -271,8 +271,6 @@ static bool AppendFileToZip(zipFile& zf, const WCHAR *nameInZip, const char *fil
     ScopedMem<char> nameInZipUtf(str::conv::ToUtf8(nameInZip));
     str::TransChars(nameInZipUtf, "\\", "/");
     zip_fileinfo zi = { 0 };
-    if (!fileData)
-        zi.external_fa = 0x10; // file is directory
     int err = zipOpenNewFileInZip64(zf, nameInZipUtf, &zi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION, 1);
     if (ZIP_OK == err) {
         err = zipWriteInFileInZip(zf, fileData, fileSize);
@@ -315,24 +313,39 @@ bool ZipCreator::SaveAs(const WCHAR *zipFilePath)
 }
 
 // TODO: using this for XPS files results in documents that Microsoft XPS Viewer can't read
-bool ZipDirectory(const WCHAR *dirPath, const WCHAR *zipPath, bool recursive)
+IStream *OpenDirAsZipStream(const WCHAR *dirPath, bool recursive)
 {
-    ZipCreator zip;
-    DirIter iter;
-    const WCHAR *path;
+    ScopedComPtr<IStream> stream;
+    if (FAILED(CreateStreamOnHGlobal(NULL, TRUE, &stream)))
+        return NULL;
 
+    zlib_filefunc64_def ffunc;
+    fill_win32s_filefunc64(&ffunc);
+    zipFile zf = zipOpen2_64(stream, 0, NULL, &ffunc);
+    if (!zf)
+        return NULL;
+
+    DirIter iter;
     if (!iter.Start(dirPath, recursive))
-        return false;
+        return NULL;
 
     size_t dirLen = str::Len(dirPath);
     if (!path::IsSep(dirPath[dirLen - 1]))
         dirLen++;
 
-    while ((path = iter.Next()) != NULL) {
-        CrashIf(!str::StartsWith(path, dirPath));
-        // create a path relative to the main directory
-        zip.AddFile(path, path + dirLen);
+    bool ok = true;
+    const WCHAR *filePath;
+    while (ok && (filePath = iter.Next()) != NULL) {
+        CrashIf(!str::StartsWith(filePath, dirPath));
+        const WCHAR *nameInZip = filePath + dirLen;
+        size_t fileSize;
+        ScopedMem<char> fileData(file::ReadAll(filePath, &fileSize));
+        ok = fileData && AppendFileToZip(zf, nameInZip, fileData, fileSize);
     }
+    int err = zipClose(zf, NULL);
+    if (!ok || err != ZIP_OK)
+        return NULL;
 
-    return zip.SaveAs(zipPath);
+    stream->AddRef();
+    return stream;
 }

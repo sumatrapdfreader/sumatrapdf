@@ -1165,11 +1165,12 @@ protected:
     CRITICAL_SECTION pagesAccess;
     pdf_page **     _pages;
 
-    virtual bool    Load(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
-    virtual bool    Load(IStream *stream, PasswordUI *pwdUI=NULL);
+    bool            Load(const WCHAR *fileName, PasswordUI *pwdUI=NULL);
+    bool            Load(IStream *stream, PasswordUI *pwdUI=NULL);
     bool            Load(fz_stream *stm, PasswordUI *pwdUI=NULL);
     bool            LoadFromStream(fz_stream *stm, PasswordUI *pwdUI=NULL);
     bool            FinishLoading();
+
     pdf_page      * GetPdfPage(int pageNo, bool failIfBusy=false);
     int             GetPageNo(pdf_page *page);
     fz_matrix       viewctm(int pageNo, float zoom, int rotation) {
@@ -3275,12 +3276,10 @@ protected:
     CRITICAL_SECTION _pagesAccess;
     xps_page **     _pages;
 
-    virtual bool    Load(const WCHAR *fileName);
-    virtual bool    Load(IStream *stream);
+    bool            Load(const WCHAR *fileName);
+    bool            Load(IStream *stream);
     bool            Load(fz_stream *stm);
     bool            LoadFromStream(fz_stream *stm);
-    bool            LoadFromDir();
-    bool            LoadFinish();
 
     xps_page      * GetXpsPage(int pageNo, bool failIfBusy=false);
     int             GetPageNo(xps_page *page);
@@ -3466,8 +3465,13 @@ bool XpsEngineImpl::Load(const WCHAR *fileName)
     if (!_fileName || !ctx)
         return false;
 
-    if (dir::Exists(_fileName))
-        return LoadFromDir();
+    if (dir::Exists(_fileName)) {
+        // load uncompressed documents as a recompressed ZIP stream
+        ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(_fileName, true));
+        if (!zipStream)
+            return false;
+        return Load(zipStream);
+    }
 
     fz_stream *stm = NULL;
     fz_try(ctx) {
@@ -3481,7 +3485,7 @@ bool XpsEngineImpl::Load(const WCHAR *fileName)
 
 bool XpsEngineImpl::Load(IStream *stream)
 {
-    assert(!_fileName && !_doc && ctx);
+    assert(!_doc && ctx);
     if (!ctx)
         return false;
 
@@ -3525,26 +3529,6 @@ bool XpsEngineImpl::LoadFromStream(fz_stream *stm)
         return false;
     }
 
-    return LoadFinish();
-}
-
-bool XpsEngineImpl::LoadFromDir()
-{
-    ScopedMem<WCHAR> relsPath(path::Join(_fileName, L"_rels\\.rels"));
-    ScopedMem<char> relsPathUtf8(str::conv::ToUtf8(relsPath));
-
-    fz_try(ctx) {
-        _doc = xps_open_document(ctx, relsPathUtf8);
-    }
-    fz_catch(ctx) {
-        return false;
-    }
-
-    return LoadFinish();
-}
-
-bool XpsEngineImpl::LoadFinish()
-{
     if (PageCount() == 0) {
         fz_warn(ctx, "document has no pages");
         return false;
@@ -4005,9 +3989,6 @@ WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, WCHAR *lineSep, RectI **co
 
 unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
 {
-    if (!_doc->file)
-        return NULL;
-
     unsigned char *data = NULL;
     ScopedCritSec scope(&ctxAccess);
     fz_try(ctx) {
@@ -4021,9 +4002,6 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
 
 bool XpsEngineImpl::SaveFileAs(const WCHAR *copyFileName)
 {
-    if (!_doc->file)
-        return ZipDirectory(_fileName, copyFileName, true);
-
     size_t dataLen;
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {

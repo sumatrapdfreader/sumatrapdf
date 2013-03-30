@@ -767,6 +767,13 @@ protected:
 bool EpubEngineImpl::Load(const WCHAR *fileName)
 {
     this->fileName = str::Dup(fileName);
+    if (dir::Exists(fileName)) {
+        // load uncompressed documents as a recompressed ZIP stream
+        ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
+        if (!zipStream)
+            return false;
+        return Load(zipStream);
+    }
     doc = EpubDoc::CreateFromFile(fileName);
     return FinishLoading();
 }
@@ -814,6 +821,10 @@ DocTocItem *EpubEngineImpl::GetTocTree()
 
 bool EpubEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
+    if (sniff && dir::Exists(fileName)) {
+        ScopedMem<WCHAR> mimetypePath(path::Join(fileName, L"mimetype"));
+        return file::StartsWith(mimetypePath, "application/epub+zip");
+    }
     return EpubDoc::IsSupportedFile(fileName, sniff);
 }
 
