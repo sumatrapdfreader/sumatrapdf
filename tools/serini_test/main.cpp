@@ -5,9 +5,9 @@
 #define INCLUDE_APPPREFS3_METADATA
 #include "AppPrefs3.h"
 #include "FileUtil.h"
+#include "SerializeIni.h"
 #include "SerializeIni3.h"
 #include "SerializeTxt3.h"
-#include "../sertxt_test/SerializeTxt.h"
 #include "../sertxt_test/SettingsSumatra.h"
 
 #define Check(x) CrashIf(!(x)); if (!(x)) return false; else NoOp()
@@ -16,7 +16,11 @@ using namespace serini3;
 
 static bool TestSerializeIni()
 {
+#ifdef TEST_SERIALIZE_INI
     const WCHAR *path = L"..\\tools\\serini_test\\data.ini";
+#else
+    const WCHAR *path = L"..\\tools\\serini_test\\data.sqt";
+#endif
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
@@ -35,12 +39,21 @@ static bool TestSerializeIni()
 
 static bool TestSerializeIniWithDefaults()
 {
+#ifdef TEST_SERIALIZE_INI
     const WCHAR *defaultPath = L"..\\tools\\serini_test\\data.ini";
     const char *data = "\
 [basic]\n\
 global_prefs_only = true\n\
 default_zoom = 38.5\n\
 ";
+#else
+    const WCHAR *defaultPath = L"..\\tools\\serini_test\\data.sqt";
+    const char *data = "\
+basic [\n\
+global_prefs_only = true\n\
+default_zoom = 38.5\n\
+]";
+#endif
 
     ScopedMem<char> defaultData(file::ReadAll(defaultPath, NULL));
     Check(defaultData); // failed to read file

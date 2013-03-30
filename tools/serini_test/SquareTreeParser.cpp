@@ -37,14 +37,21 @@ list [
 ]
 */
 
-static inline char *SkipWs(char *s)
-{
-    for (; str::IsWs(*s); s++);
-    return s;
-}
 static inline char *SkipWsRev(char *begin, char *s)
 {
     for (; s > begin && str::IsWs(*(s - 1)); s--);
+    return s;
+}
+
+static char *SkipWsAndComments(char *s)
+{
+    do {
+        for (; str::IsWs(*s); s++);
+        if ('#' == *s || ';' == *s) {
+            // skip entire comment line
+            for (; *s && *s != '\n'; s++);
+        }
+    } while (str::IsWs(*s));
     return s;
 }
 
@@ -90,14 +97,8 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
 {
     SquareTreeNode *node = new SquareTreeNode();
 
-    while (*(data = SkipWs(data))) {
-        // comments must be on lines of their own and start with either # or ;
-        if ('#' == *data || ';' == *data) {
-            // skip comment line
-            for (; *data && *data != '\n'; data++);
-            continue;
-        }
-        // all other non-empty lines contain a key-value pair
+    while (*(data = SkipWsAndComments(data))) {
+        // all non-empty non-comment lines contain a key-value pair
         // where the value is either a string or a list of
         // child nodes (if the string value would be a single '[')
         // and where key and value are usually separated by '=' or ':' 
@@ -118,12 +119,12 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
             node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             // array are created by either reusing the same key for a different child
             // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
-            while ('[' == *(data = SkipWs(data))) {
+            while ('[' == *(data = SkipWsAndComments(data))) {
                 data++;
                 node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             }
         }
-        else if (']' == *separator && (IsEmptyLine(data + 1) || '[' == *SkipWs(data + 1))) {
+        else if (']' == *separator && (IsEmptyLine(data + 1) || '[' == *SkipWsAndComments(data + 1))) {
             // finish parsing this node
             data++;
             // interpret "key]" as "key =" and "]"
@@ -141,7 +142,7 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
             for (; *data && *data != '\n'; data++);
             bool hasMoreLines = '\n' == *data;
             *SkipWsRev(value, data) = '\0';
-            node->data.Append(SquareTreeNode::DataItem(key, SkipWs(value)));
+            node->data.Append(SquareTreeNode::DataItem(key, value));
             if (hasMoreLines)
                 data++;
         }
