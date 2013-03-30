@@ -970,6 +970,26 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         win->dm = prevModel;
     }
 
+    if (win->dm != prevModel) {
+        Vec<PageAnnotation> *userAnnots = LoadFileModifications(args.fileName);
+        win->userAnnotsModified = false;
+        if (!userAnnots)
+            userAnnots = win->userAnnots;
+        else if (win->userAnnots) {
+            // don't throw annotations away when reloading
+            for (PageAnnotation *annot = userAnnots->IterStart(); annot; annot = userAnnots->IterNext()) {
+                win->userAnnots->Remove(*annot);
+            }
+            win->userAnnotsModified = win->userAnnots->Count() > 0;
+            for (PageAnnotation *annot = win->userAnnots->IterStart(); annot; annot = win->userAnnots->IterNext()) {
+                userAnnots->Append(*annot);
+            }
+            delete win->userAnnots;
+        }
+        win->userAnnots = userAnnots;
+        win->dm->engine->UpdateUserAnnotations(win->userAnnots);
+    }
+
     if (state) {
         if (win->dm->ValidPageNo(startPage)) {
             ss.page = startPage;
@@ -2658,6 +2678,10 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
             return;
     }
 
+    if (win->userAnnotsModified) {
+        // TODO: warn about unsaved changes
+    }
+
     if (win->IsDocLoaded())
         win->dm->dontRenderFlag = true;
     if (win->presentation)
@@ -2833,7 +2857,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     }
 #endif
     // ... else just copy the file
-    else {
+    else if (!path::IsSame(srcFileName, realDstFileName)) {
         WCHAR *msgBuf;
         ok = CopyFile(srcFileName, realDstFileName, FALSE);
         if (ok) {
@@ -2846,6 +2870,16 @@ static void OnMenuSaveAs(WindowInfo& win)
             errorMsg.Set(str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf));
             LocalFree(msgBuf);
         }
+    }
+    if (ok && win.userAnnots && win.userAnnotsModified) {
+#ifdef DEBUG
+        if (!win.dm->engine->SupportsAnnotation(true))
+#endif
+        {
+            ok = SaveFileModifictions(realDstFileName, win.userAnnots);
+        }
+        if (ok && path::IsSame(srcFileName, realDstFileName))
+            win.userAnnotsModified = false;
     }
     if (!ok)
         MessageBoxWarning(win.hwndFrame, errorMsg ? errorMsg : _TR("Failed to save a file"));
@@ -3179,6 +3213,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     else
         index = (int)(index + files.Count() - 1) % files.Count();
 
+    // TODO: check for unsaved modifications
     UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(&win));
     LoadArgs args(files.At(index), &win, true, true);
     LoadDocument(args);
@@ -3855,36 +3890,22 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     case '$':
         ToggleGdiDebugging();
         break;
-    case 0xA7: case 0xB0:
-        if (win.dm->engine->SupportsAnnotation()) {
-            Vec<PageAnnotation> annots;
-            // load previously saved annotations
-            Vec<PageAnnotation> *savedAnnots = LoadFileModifications(win.loadedFilePath);
-            if (savedAnnots) {
-                annots = *savedAnnots;
-                delete savedAnnots;
+#endif
+#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
+    case 'h': // convert selection to highlight annotation
+        if (win.dm->engine->SupportsAnnotation() && win.showSelection && win.selectionOnPage) {
+            if (!win.userAnnots)
+                win.userAnnots = new Vec<PageAnnotation>();
+            for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
+                SelectionOnPage& sel = win.selectionOnPage->At(i);
+                win.userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(0xE2, 0xC4, 0xE2, 0xCC)));
             }
-            // convert the current selection into a text highlighting annotation
-            if (win.showSelection && win.selectionOnPage) {
-                for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
-                    SelectionOnPage& sel = win.selectionOnPage->At(i);
-                    annots.Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(0xE2, 0xC4, 0xE2, 0xCC)));
-                    // annots.Append(PageAnnotation(Annot_Underline, sel.pageNo, sel.rect, PageAnnotation::Color(0x00, 0x00, 0x00)));
-                    // annots.Append(PageAnnotation(Annot_StrikeOut, sel.pageNo, sel.rect, PageAnnotation::Color(0x80, 0x80, 0x80)));
-                    annots.Append(PageAnnotation(Annot_Squiggly, sel.pageNo, sel.rect, PageAnnotation::Color(0xFF, 0x00, 0x00)));
-                }
-            }
-            if (annots.Count() > 0) {
-                win.dm->engine->UpdateUserAnnotations(&annots);
-                gRenderCache.CancelRendering(win.dm);
-                gRenderCache.KeepForDisplayModel(win.dm, win.dm);
-                ClearSearchResult(&win);
-                // optionally save the annotations to disk
-                if (!win.dm->engine->SupportsAnnotation(true) && IsShiftPressed())
-                    SaveFileModifictions(win.loadedFilePath, &annots);
-            }
-            else
-                win.dm->engine->UpdateUserAnnotations(NULL);
+            win.userAnnotsModified = true;
+            win.dm->engine->UpdateUserAnnotations(win.userAnnots);
+            // TODO: only invalidate affected tiles (or render annotations separately)
+            gRenderCache.CancelRendering(win.dm);
+            gRenderCache.KeepForDisplayModel(win.dm, win.dm);
+            ClearSearchResult(&win);
         }
 #endif
     }
@@ -5082,7 +5103,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_DEBUG_ANNOTATION:
             if (win)
-                FrameOnChar(*win, 0xA7);
+                FrameOnChar(*win, 'h');
             break;
 
         case IDM_DEBUG_CRASH_ME:

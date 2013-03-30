@@ -16,7 +16,7 @@ such modifications portably within the file structure (i.e. currently
 any format but PDF). The format uses CSS syntax for brevity:
 
 @meta { version: 2.3; filesize: 98765; timestamp: 2013-03-09T12:34:56Z }
-highlight { page: 1; rect: 10 10 100 100; color: #FF0000; opacity: 0.8 }
+highlight { page: 1; rect: 10 10 100 100; color: #ff0000; opacity: 0.8 }
 annotType { page: no; rect: x y w h; color: #rrggbb; opacity: 1.0 }
 ...
 @update { version: 2.3; filesize: 98765; timestamp: 2013-03-10T05:43:21Z }
@@ -133,6 +133,9 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
         data.AppendFmt("/* SumatraPDF: modifications to \"%S\" */\r\n", path::GetBaseName(filePath));
     }
 
+    if (list->Count() == offset)
+        return true; // nothing (new) to save
+
     data.AppendFmt("@%s { version: %s", prevList ? "update" : "meta", SMX_CURR_VERSION);
     int64 size = file::GetSize(filePath);
     if (0 <= size && size <= UINT_MAX)
@@ -152,7 +155,7 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
         case Annot_Squiggly:  data.Append("squiggly "); break;
         default: continue;
         }
-        data.AppendFmt(" { page: %d; rect: %.2f %.2f %.2f %.2f; color: #%02X%02X%02X; opacity: %.2f }\r\n",
+        data.AppendFmt(" { page: %d; rect: %.2f %.2f %.2f %.2f; color: #%02x%02x%02x; opacity: %.2f }\r\n",
                        annot.pageNo, annot.rect.x, annot.rect.y,
                        annot.rect.dx, annot.rect.dy, annot.color.r,
                        annot.color.g, annot.color.b, annot.color.a / 255.f);

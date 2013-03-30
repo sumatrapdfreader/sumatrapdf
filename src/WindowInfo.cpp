@@ -34,7 +34,8 @@ WindowInfo::WindowInfo(HWND hwnd) :
     xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
     delayedRepaintTimer(0), watcher(NULL),
     pdfsync(NULL), stressTest(NULL),
-    hwndFavBox(NULL), hwndFavTree(NULL)
+    hwndFavBox(NULL), hwndFavTree(NULL),
+    userAnnots(NULL), userAnnotsModified(false)
 {
     dpi = win::GetHwndDpi(hwndFrame, &uiDPIFactor);
     touchState.panStarted = false;
@@ -56,6 +57,7 @@ WindowInfo::~WindowInfo()
     delete linkOnLastButtonDown;
     delete tocRoot;
     delete notifications;
+    delete userAnnots;
     // delete DisplayModel/BaseEngine last, as e.g.
     // DocTocItem or PageElement might still need the
     // BaseEngine in their destructors

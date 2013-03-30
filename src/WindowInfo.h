@@ -192,6 +192,9 @@ public:
 
     TouchState touchState;
 
+    Vec<PageAnnotation> *userAnnots;
+    bool            userAnnotsModified;
+
     void  UpdateCanvasSize();
     SizeI GetViewPortSize();
     void  RedrawAll(bool update=false);
