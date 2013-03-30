@@ -7,9 +7,12 @@
 #include "../sertxt_test/SerializeTxt.h"
 
 // TODO: the metadata in SettingsSumatra can't be used for
-// two different serialization schemes simultaneously
+// multiple serialization schemes simultaneously
 
-// define to test INI serialization for SettingsSumatra
-// #define TEST_SERIALIZE_INI
+// define to test SquareTreeParser serialization for SettingsSumatra
+// #define TEST_SERIALIZE_SQT
+
+// define to test SerializeTxtParser serialization for SettingsSumatra
+// #define TEST_SERIALIZE_TXT
 
 #endif

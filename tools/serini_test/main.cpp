@@ -16,17 +16,21 @@ using namespace serini3;
 
 static bool TestSerializeIni()
 {
-#ifdef TEST_SERIALIZE_INI
-    const WCHAR *path = L"..\\tools\\serini_test\\data.ini";
-#else
+#ifdef TEST_SERIALIZE_SQT
     const WCHAR *path = L"..\\tools\\serini_test\\data.sqt";
+#elif defined(TEST_SERIALIZE_TXT)
+    const WCHAR *path = L"..\\tools\\sertxt_test\\data.txt";
+#else
+    const WCHAR *path = L"..\\tools\\serini_test\\data.ini";
 #endif
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
     sertxt::Settings *s = sertxt::DeserializeSettings(data, str::Len(data));
     Check(s); // failed to parse file
+#ifndef TEST_SERIALIZE_TXT
     Check(str::Find(s->basic->inverseSearchCmdLine, L"\r\n"));
+#endif
 
     size_t len;
     ScopedMem<char> ser((char *)sertxt::SerializeSettings(s, &len));
@@ -39,20 +43,24 @@ static bool TestSerializeIni()
 
 static bool TestSerializeIniWithDefaults()
 {
-#ifdef TEST_SERIALIZE_INI
+#if defined(TEST_SERIALIZE_SQT) || defined(TEST_SERIALIZE_TXT)
+#ifdef TEST_SERIALIZE_TXT
+    const WCHAR *defaultPath = L"..\\tools\\sertxt_test\\data.txt";
+#else
+    const WCHAR *defaultPath = L"..\\tools\\serini_test\\data.sqt";
+#endif
+    const char *data = "\
+basic [\n\
+global_prefs_only = true\n\
+default_zoom = 38.5\n\
+]";
+#else
     const WCHAR *defaultPath = L"..\\tools\\serini_test\\data.ini";
     const char *data = "\
 [basic]\n\
 global_prefs_only = true\n\
 default_zoom = 38.5\n\
 ";
-#else
-    const WCHAR *defaultPath = L"..\\tools\\serini_test\\data.sqt";
-    const char *data = "\
-basic [\n\
-global_prefs_only = true\n\
-default_zoom = 38.5\n\
-]";
 #endif
 
     ScopedMem<char> defaultData(file::ReadAll(defaultPath, NULL));

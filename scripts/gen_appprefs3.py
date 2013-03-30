@@ -40,7 +40,7 @@ class Field(object):
 			return self.default
 		return None
 
-	def inidefault(self):
+	def inidefault(self, commentChar=";"):
 		if self.type == Bool:
 			return "%s = %s" % (self.name, "true" if self.default else "false")
 		if self.type == Color:
@@ -52,14 +52,14 @@ class Field(object):
 		if self.type == String:
 			if self.default is not None:
 				return "%s = %s" % (self.name, self.default.encode("UTF-8"))
-			return "; %s =" % self.name
+			return "%s %s =" % (commentChar, self.name)
 		if self.type == Utf8String:
 			if self.default is not None:
 				return "%s = %s" % (self.name, self.default)
-			return "; %s =" % self.name
+			return "%s %s =" % (commentChar, self.name)
 		if self.type.name == "Custom":
 			return self.default
-		return "; %s = ???" % self.name
+		return "%s %s = ???" % (commentChar, self.name)
 
 class Struct(Field):
 	def __init__(self, name, fields, comment, structName=None, compact=False):
@@ -159,7 +159,8 @@ UserPrefs = [
 	Struct("ForwardSearch", ForwardSearch,
 		"these values allow to customize how the forward search highlight appears"),
 	Array("ExternalViewer", ExternalViewer,
-		"this list contains a list of additional external viewers for various file types"),
+		"this list contains a list of additional external viewers for various file types " +
+		"(multiple entries of the same format are recognised)"),
 ]
 
 FileSettings = [
@@ -350,12 +351,23 @@ def AssembleDefaults(struct):
 		if field.internal:
 			continue
 		if type(field) in [Struct, Array]:
+			assert field.type.name != "Compact"
 			more.append("\n".join(FormatComment(field.comment, ";") + ["[%s]" % field.name, AssembleDefaults(field)]))
 		else:
-			if field.comment:
-				lines += FormatComment(field.comment, ";")
-			lines.append(field.inidefault())
+			lines += FormatComment(field.comment, ";") + [field.inidefault()]
 	return "\n".join(lines) + "\n".join(more) + "\n"
+
+def AssembleDefaultsSqt(struct, indent=""):
+	lines = []
+	for field in struct.default:
+		if field.internal:
+			continue
+		if type(field) in [Struct, Array]:
+			assert field.type.name != "Compact"
+			lines += FormatComment(field.comment, indent + "#") + ["%s%s [" % (indent, field.name), AssembleDefaultsSqt(field, indent + "\t"), "%s]" % indent, ""]
+		else:
+			lines += FormatComment(field.comment, indent + "#") + [indent + field.inidefault(commentChar="#")]
+	return "\n".join(lines)
 
 AppPrefs3_Header = """\
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
@@ -408,7 +420,10 @@ def main():
 	open("tools/serini_test/AppPrefs3.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
 	
 	content = AssembleDefaults(UserPrefs)
-	open("tools/serini_test/SumatraPDF-user.ini", "wb").write(content.replace("\n", "\r\n"))
+	open("tools/serini_test/SumatraPDF-user.ini", "wb").write(content.replace("\n", "\r\n").encode("utf-8-sig"))
+	
+	content = AssembleDefaultsSqt(UserPrefs)
+	open("tools/serini_test/SumatraPDF-user.sqt", "wb").write(content.replace("\n", "\r\n").encode("utf-8-sig"))
 
 if __name__ == "__main__":
 	main()

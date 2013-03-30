@@ -4,7 +4,9 @@
 #include "BaseUtil.h"
 #include "SerializeIni.h"
 
-#ifdef TEST_SERIALIZE_INI
+#ifndef TEST_SERIALIZE_TXT
+
+#ifndef TEST_SERIALIZE_SQT
 #include "IniParser.h"
 // only escape characters which are significant to IniParser:
 // newlines and heading/trailing whitespace
@@ -23,7 +25,7 @@ static bool NeedsEscaping(const char *s)
            str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
            str::Eq(s, "[") || str::Eq(s, "]");
 }
-#endif
+#endif // TEST_SERIALIZE_SQT
 
 namespace sertxt {
 
@@ -199,7 +201,8 @@ static char *SerializeField(const uint8_t *data, FieldMetadata& field)
     return NULL;
 }
 
-#ifdef TEST_SERIALIZE_INI
+#ifndef TEST_SERIALIZE_SQT
+
 static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_t endIdx, size_t *foundIdx)
 {
     for (size_t i = idx; i < endIdx; i++) {
@@ -408,7 +411,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
     }
 }
 
-#endif
+#endif // TEST_SERIALIZE_SQT
 
 uint8_t *Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq)
 {
@@ -442,3 +445,11 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
 }
 
 };
+
+#else
+
+#include "../../src/utils/StrSlice.cpp"
+#include "../sertxt_test/SerializeTxtParser.cpp"
+#include "../sertxt_test/SerializeTxt.cpp"
+
+#endif // TEST_SERIALIZE_TXT

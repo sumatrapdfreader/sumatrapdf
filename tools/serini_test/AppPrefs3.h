@@ -158,7 +158,7 @@ struct GlobalPrefs {
 };
 
 // this list contains a list of additional external viewers for various
-// file types
+// file types (multiple entries of the same format are recognised)
 struct ExternalViewer {
     // command line with which to call the external viewer, may contain %p
     // for page numer and %1 for the file name
@@ -257,7 +257,7 @@ struct UserPrefs {
     // appears
     ForwardSearch forwardSearch;
     // this list contains a list of additional external viewers for various
-    // file types
+    // file types (multiple entries of the same format are recognised)
     ExternalViewer * externalViewer;
     size_t externalViewerCount;
 };

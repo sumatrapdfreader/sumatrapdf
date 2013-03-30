@@ -5,8 +5,8 @@
 #include "SquareTreeParser.h"
 
 /*
-A square tree is a format for representing string values contained in a
-tree structure. Consumers may parse these strings values further (as integers,
+A 'square tree' is a format for representing string values contained in a
+tree structure. Consumers may parse these string values further (as integers,
 etc.) as required.
 
 Each non-empty line which doesn't start with either '#' or ';' (comment line)
@@ -124,7 +124,7 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
                 node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             }
         }
-        else if (']' == *separator && (IsEmptyLine(data + 1) || '[' == *SkipWsAndComments(data + 1))) {
+        else if (']' == *key || ']' == *separator && (IsEmptyLine(data + 1) || '[' == *SkipWsAndComments(data + 1))) {
             // finish parsing this node
             data++;
             // interpret "key]" as "key =" and "]"
