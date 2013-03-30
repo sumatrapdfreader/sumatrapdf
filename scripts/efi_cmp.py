@@ -115,10 +115,21 @@ def main():
 	diff = efiparse.diff(efi1, efi2)
 	#print("Diffing done")
 	print(diff)
-	added = diff.added[:20]
-	print("Added symbols:")
+	diff.added.sort(key=lambda sym: sym.size, reverse=True)
+	added = diff.added[:30]
+
+	if len(added) > 0:
+		print("\nAdded symbols:")
 	for sym in added:
-		print(sym.name)
+		#sym = diff.syms2.name_to_sym[sym_name]
+		size = sym.size
+		print("%4d : %s" % (size, sym.name))
+
+	changed = diff.changed[:20]
+	if len(changed) > 0:
+		print("\nChanged symbols:")
+	for sym_name in changed:
+		print("%s" % sym_name)
 
 if __name__ == "__main__":
 	main()

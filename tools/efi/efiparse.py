@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Parses the output of sizer.exe.
+Parses the output of efi.exe.
 """
 
 g_file_name = "efi_out.txt"
@@ -152,7 +152,10 @@ class Diff(object):
 		self.str_sizes_diff = 0
 
 	def __repr__(self):
-		s = "%d added\n%d removed\n%d changed\n%d string sizes diff" % (len(self.added), len(self.removed), len(self.changed), self.str_sizes_diff)
+		str_sizes = "%s" % self.str_sizes_diff
+		if self.str_sizes_diff > 0:
+			str_sizes = "+" + str_sizes
+		s = "%d added\n%d removed\n%d changed\nstring sizes: %s" % (len(self.added), len(self.removed), len(self.changed), str_sizes)
 		return s
 
 def same_sym_sizes(syms):
@@ -163,12 +166,16 @@ def same_sym_sizes(syms):
 		sizes.append(sym.size)
 	return False
 
+def syms_len(syms):
+	if isinstance(syms, list):
+		return len(syms)
+	return 1
+
 # Unfortunately dia2 sometimes doesn't give us unique names for functions,
 # so we need to
 class DiffSyms(object):
 	def __init__(self):
 		self.name_to_sym = {}
-		self.dup_syms = []
 		self.str_sizes = 0
 
 	def process_symbols(self, symbols):
@@ -183,30 +190,25 @@ class DiffSyms(object):
 			if name not in self.name_to_sym:
 				self.name_to_sym[name] = sym
 				continue
-			self.dup_syms.append(sym)
-		# some dup symbols are still pointed to by self.name_to_sym
-		for sym in self.dup_syms:
-			name = sym.name
-			if name in self.name_to_sym:
-				dup_sym = self.name_to_sym[name]
-				self.dup_syms.append(dup_sym)
-				del self.name_to_sym[name]
+			v = self.name_to_sym[name]
+			if isinstance(v, list):
+				v.append(sym)
+			else:
+				v = [v, sym]
+			self.name_to_sym[name] = v
 
-		# create unique names for dup symbols
-		for sym in self.dup_syms:
-			name = self.sym_name(sym)
-			assert name not in self.name_to_sym, "%s should be unique" % name
-			self.name_to_sym[name] = sym
+	def syms_len(self, name):
+		if name not in self.name_to_sym:
+			return 0
+		return syms_len(self.name_to_sym[name])
 
-	def sym_name(self, sym):
-		# uniquify the name by appending its size to the name. If sizes are
-		# the same, append offset
-		syms = [s for s in self.dup_syms if s.name == sym.name]
-		assert len(syms) > 1
-		if same_sym_sizes(syms):
-			return "%s_%d" % (sym.name, sym.offset)
-		else:
-			return "%s_%d" % (sym.name, sym.size)
+def find_added(name, diff_syms1, diff_syms2):
+	if name not in diff_syms1.name_to_sym:
+		syms = diff_syms2.name_to_sym[name]
+		if isinstance(syms, list):
+			return syms
+		return [syms]
+	return []
 
 def diff(parse1, parse2):
 	assert isinstance(parse1, ParseState)
@@ -220,28 +222,27 @@ def diff(parse1, parse2):
 	added = []
 	changed = []
 
-	removed_from1_names = {}
-	for name in diff_syms1.name_to_sym.keys():
-		removed_from1_names[name] = True
-
 	for name in diff_syms2.name_to_sym.keys():
-		if name not in diff_syms1.name_to_sym:
-			added.append(diff_syms2.name_to_sym[name])
+		len1 = diff_syms1.syms_len(name)
+		len2 = diff_syms2.syms_len(name)
+		if len2 > len1:
+			added += find_added(name, diff_syms1, diff_syms2)
 		else:
-			sym1 = diff_syms1.name_to_sym[name]
-			sym2 = diff_syms2.name_to_sym[name]
-			if sym1.size != sym2.size:
-				changed += [sym1]
-			# we remove those we've seen so that at the end the only symbols
-			# left in symbols1 are those that were removed (i.e. not present in symbols2)
-			del removed_from1_names[name]
+			if len1 == 1 and len2 == 1:
+				sym1 = diff_syms1.name_to_sym[name]
+				sym2 = diff_syms2.name_to_sym[name]
+				if sym1.size != sym2.size:
+					changed += [name]
 
-	removed = [diff_syms1.name_to_sym[k] for k in removed_from1_names.keys()]
+	removed = []
+
 	diff = Diff()
+	diff.syms1 = diff_syms1
+	diff.syms2 = diff_syms2
 	diff.added = added
 	diff.removed = removed
 	diff.changed = changed
-	diff.str_sizes_diff = diff_syms1.str_sizes - diff_syms2.str_sizes
+	diff.str_sizes_diff = diff_syms2.str_sizes - diff_syms1.str_sizes
 	return diff
 
 def main():
