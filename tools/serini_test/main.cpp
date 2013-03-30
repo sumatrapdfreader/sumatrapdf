@@ -254,7 +254,8 @@ Rec[\n\
 Rec [\n\
   Rec [\n\
   ]\n\
-  Up [\n\
+  Up \n\
+  [\n\
     ExternalViewer = [\n\
       CommandLine = serini_test.exe\n\
     ]\n\

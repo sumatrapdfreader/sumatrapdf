@@ -55,9 +55,11 @@ static char *SkipWsAndComments(char *s)
     return s;
 }
 
-static inline bool IsEmptyLine(char *s)
+static inline bool IsBracketLine(char *s, char bracket)
 {
-    for (; *s && *s != '\n'; s++) {
+    if (*s != bracket)
+        return false;
+    for (s++; *s && *s != '\n'; s++) {
         if (!str::IsWs(*s))
             return false;
     }
@@ -106,16 +108,20 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
         for (data = key; *data && *data != '=' && *data != ':' && *data != '[' && *data != ']' && *data != '\n'; data++);
         if (!*data || '\n' == *data) {
             // use first whitespace as a fallback separator
-            for (data = key; !str::IsWs(*data); data++);
+            for (data = key; *data && !str::IsWs(*data); data++);
         }
         char *separator = data;
-        if ('=' == *data || ':' == *data || str::IsWs(*data) && *data != '\n') {
-            for (data++; *data && str::IsWs(*data) && *data != '\n'; data++);
+        if (*data && *data != '[' && *data != ']' && *data != '\n') {
+            // skip to the first non-whitespace character on the same line (value)
+            for (data++; str::IsWs(*data) && *data != '\n'; data++);
         }
         char *value = data;
-        if ('[' == *value && IsEmptyLine(data + 1)) {
+        if (IsBracketLine(value, '[') ||
+            // also tolerate "key \n [ \n ... \n ]" (else the key
+            // gets an empty value and the child node an empty key)
+            '\n' == *value && IsBracketLine(SkipWsAndComments(data), '[')) {
             // parse child node(s)
-            data++;
+            data = SkipWsAndComments(data) + 1;
             node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             // array are created by either reusing the same key for a different child
             // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
@@ -124,16 +130,19 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
                 node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             }
         }
-        else if (']' == *key || ']' == *separator && (IsEmptyLine(data + 1) || '[' == *SkipWsAndComments(data + 1))) {
+        else if (']' == *key || ']' == *separator && '[' == *SkipWsAndComments(data + 1) ||
+            // also tolerate "key ]" (else the key gets ']' as value),
+            // not however the explicit "key = ]"
+            IsBracketLine(separator, ']')) {
             // finish parsing this node
             data++;
-            // interpret "key]" as "key =" and "]"
             if (key < separator) {
+                // interpret "key ]" as "key =" and "]"
                 *SkipWsRev(key, separator) = '\0';
                 node->data.Append(SquareTreeNode::DataItem(key, ""));
             }
             if (!isRootNode)
-                break;
+                return node;
             // ignore superfluous closing square brackets instead of
             // ignoring all content following them
         }
