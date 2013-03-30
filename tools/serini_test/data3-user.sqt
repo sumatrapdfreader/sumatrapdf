@@ -1,0 +1,38 @@
+﻿# cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.sqt
+AdvancedPrefs [
+	TraditionalEbookUI = true
+	ReuseInstance = false
+	MainWindowBackground = #00ff00
+	EscToExit = false
+	TextColor = #0000ff
+	PageColor = #ff0000
+]
+PrinterDefaults [
+	PrintScale = shrink
+	PrintAsImage = false
+]
+PagePadding [
+	OuterX = 2
+	OuterY = 2
+	InnerX = 4
+	InnerY = 4
+]
+BackgroundGradient [
+	Enabled = false
+	ColorTop = #2828aa
+	ColorMiddle = #28aa28
+	ColorBottom = #aa2828
+]
+ForwardSearch [
+	HighlightOffset = 0
+	HighlightWidth = 0
+	HighlightColor = #000000
+	HighlightPermanent = false
+]
+ExternalViewer [
+	CommandLine = viewer1.exe
+] [
+	CommandLine = viewer2.exe
+] [
+	CommandLine = viewer3.exe
+]

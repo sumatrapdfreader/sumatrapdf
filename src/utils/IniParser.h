@@ -18,7 +18,7 @@ public:
     const char *name;
 
     Vec<IniLine> lines;
-    IniLine *FindLine(const char *key);
+    IniLine *FindLine(const char *key) const;
 };
 
 class IniFile {
@@ -32,7 +32,7 @@ public:
     ~IniFile() { DeleteVecMembers(sections); }
 
     Vec<IniSection *> sections;
-    IniSection *FindSection(const char *name, size_t idx=0);
+    IniSection *FindSection(const char *name, size_t idx=0) const;
 };
 
 #endif

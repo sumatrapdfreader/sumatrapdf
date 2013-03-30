@@ -2,12 +2,12 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "SerializeIni3.h"
+#include "SerializeTxt3.h"
 
 #include "AppPrefs3.h"
-#include "IniParser.h"
+#include "SquareTreeParser.h"
 
-namespace serini3 {
+namespace sertxt3 {
 
 static int64_t ParseBencInt(const char *bytes)
 {
@@ -42,17 +42,6 @@ static char *UnescapeStr(const char *s)
         }
     }
     return ret.StealData();
-}
-
-static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_t endIdx, size_t *foundIdx)
-{
-    for (size_t i = idx; i < endIdx; i++) {
-        if (str::EqI(ini.sections.At(i)->name, name)) {
-            *foundIdx = i;
-            return ini.sections.At(i);
-        }
-    }
-    return NULL;
 }
 
 #ifndef NDEBUG
@@ -126,47 +115,31 @@ static void DeserializeField(uint8_t *base, SettingInfo& field, const char *valu
     }
 }
 
-static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
-                            const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
+static void *DeserializeRec(SquareTreeNode *node, SettingInfo *meta, uint8_t *base=NULL)
 {
-    if ((size_t)-1 == endIdx)
-        endIdx = ini.sections.Count();
-
-    size_t secIdx = startIdx;
-    IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
-
     if (!base)
         base = AllocArray<uint8_t>(GetStructSize(meta));
-    if (secIdx >= endIdx) {
-        section = NULL;
-        secIdx = startIdx - 1;
-    }
 
     for (size_t i = 1; i <= GetFieldCount(meta); i++) {
         if (Type_Struct == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
-            DeserializeRec(ini, meta[i].substruct, base + meta[i].offset, name, secIdx + 1, endIdx);
+            SquareTreeNode *child = node ? node->GetChild(meta[i].name) : NULL;
+            DeserializeRec(child, meta[i].substruct, base + meta[i].offset);
         }
         else if (Type_Array == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
+            if (!node)
+                continue;
             str::Str<uint8_t> array;
-            size_t nextSecIdx = endIdx;
-            FindSection(ini, sectionName, secIdx + 1, endIdx, &nextSecIdx);
-            size_t subSecIdx = nextSecIdx;
-            IniSection *subSection = FindSection(ini, name, secIdx + 1, nextSecIdx, &subSecIdx);
-            while (subSection && subSecIdx < nextSecIdx) {
-                size_t nextSubSecIdx = nextSecIdx;
-                IniSection *nextSubSec = FindSection(ini, name, subSecIdx + 1, nextSecIdx, &nextSubSecIdx);
+            SquareTreeNode *child;
+            for (size_t j = 0; (child = node->GetChild(meta[i].name, j)) != NULL; j++) {
                 uint8_t *subbase = array.AppendBlanks(GetStructSize(meta[i].substruct));
-                DeserializeRec(ini, meta[i].substruct, subbase, name, subSecIdx, nextSubSecIdx);
-                subSection = nextSubSec; subSecIdx = nextSubSecIdx;
+                DeserializeRec(child, meta[i].substruct, subbase);
             }
             *(size_t *)(base + meta[i+1].offset) = array.Size() / GetStructSize(meta[i].substruct);
             *(uint8_t **)(base + meta[i].offset) = array.StealData();
         }
         else if (Type_Meta != meta[i].type) {
-            IniLine *line = section ? section->FindLine(meta[i].name) : NULL;
-            DeserializeField(base, meta[i], line ? line->value : NULL);
+            const char *value = node ? node->GetValue(meta[i].name) : NULL;
+            DeserializeField(base, meta[i], value);
         }
     }
     return base;
@@ -175,16 +148,17 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
 void *Deserialize(const char *data, size_t dataLen, SettingInfo *def)
 {
     CrashIf(str::Len(data) != dataLen);
-    IniFile ini(data);
-    return DeserializeRec(ini, def);
+    SquareTree sqt(data);
+    return DeserializeRec(sqt.root, def);
 }
 
-// only escape characters which are significant to IniParser:
-// newlines and heading/trailing whitespace
+// only escape characters which are significant to SquareTreeParser:
+// newlines, heading/trailing whitespace and single square brackets
 static bool NeedsEscaping(const char *s)
 {
     return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
-           str::FindChar(s, '\n') || str::FindChar(s, '\r');
+           str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
+           str::Eq(s, "[") || str::Eq(s, "]");
 }
 
 // escapes strings containing newlines or heading/trailing whitespace
@@ -252,41 +226,53 @@ static char *SerializeField(const uint8_t *base, SettingInfo& field)
     return NULL;
 }
 
-static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *meta, const char *sectionName=NULL)
+static inline void Indent(str::Str<char>& out, int indent)
 {
-    if (sectionName) {
-        out.Append("[");
-        out.Append(sectionName);
-        out.Append("]\r\n");
-    }
+    while (indent-- > 0)
+        out.Append('\t');
+}
 
+static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *meta, int indent=0)
+{
     const uint8_t *base = (const uint8_t *)data;
     for (size_t i = 1; i <= GetFieldCount(meta); i++) {
-        // nested structs are serialized after all other values
-        if (Type_Meta == meta[i].type || Type_Struct == meta[i].type || Type_Array == meta[i].type)
+        if (Type_Meta == meta[i].type)
             continue;
-        CrashIf(str::FindChar(meta[i].name, '=') || str::FindChar(meta[i].name, ':') || NeedsEscaping(meta[i].name));
+        CrashIf(str::FindChar(meta[i].name, '=') || str::FindChar(meta[i].name, ':') ||
+                str::FindChar(meta[i].name, '[') || str::FindChar(meta[i].name, ']') ||
+                NeedsEscaping(meta[i].name));
+        if (Type_Struct == meta[i].type) {
+            Indent(out, indent);
+            out.Append(meta[i].name);
+            out.Append(" [\r\n");
+            SerializeRec(out, base + meta[i].offset, meta[i].substruct, indent + 1);
+            Indent(out, indent);
+            out.Append("]\r\n");
+            continue;
+        }
+        if (Type_Array == meta[i].type) {
+            size_t count = *(size_t *)(base + meta[i+1].offset);
+            uint8_t *subbase = *(uint8_t **)(base + meta[i].offset);
+            if (0 == count)
+                continue;
+            Indent(out, indent);
+            out.Append(meta[i].name);
+            for (size_t j = 0; j < count; j++) {
+                out.Append(" [\r\n");
+                SerializeRec(out, subbase + j * GetStructSize(meta[i].substruct), meta[i].substruct, indent + 1);
+                Indent(out, indent);
+                out.Append("]");
+            }
+            out.Append("\r\n");
+            continue;
+        }
         ScopedMem<char> value(SerializeField(base, meta[i]));
         if (value) {
+            Indent(out, indent);
             out.Append(meta[i].name);
             out.Append(" = ");
             out.Append(value);
             out.Append("\r\n");
-        }
-    }
-
-    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
-        if (Type_Struct == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
-            SerializeRec(out, base + meta[i].offset, meta[i].substruct, name);
-        }
-        else if (Type_Array == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, meta[i].name) : str::Dup(meta[i].name));
-            size_t count = *(size_t *)(base + meta[i+1].offset);
-            uint8_t *subbase = *(uint8_t **)(base + meta[i].offset);
-            for (size_t j = 0; j < count; j++) {
-                SerializeRec(out, subbase + j * GetStructSize(meta[i].substruct), meta[i].substruct, name);
-            }
         }
     }
 }
@@ -295,12 +281,12 @@ char *Serialize(const void *data, SettingInfo *def, size_t *sizeOut, const char 
 {
     str::Str<char> out;
     if (comment) {
-        out.Append(UTF8_BOM "; ");
+        out.Append(UTF8_BOM "# ");
         out.Append(comment);
         out.Append("\r\n");
     }
     else {
-        out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
+        out.Append(UTF8_BOM "# this file will be overwritten - modify at your own risk\r\n");
     }
     SerializeRec(out, data, def);
     if (sizeOut)

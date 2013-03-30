@@ -17,7 +17,7 @@ static inline char *SkipWsRev(char *begin, char *s)
     return s;
 }
 
-IniLine *IniSection::FindLine(const char *key)
+IniLine *IniSection::FindLine(const char *key) const
 {
     for (size_t i = 0; i < lines.Count(); i++) {
         if (str::EqI(lines.At(i).key, key))
@@ -78,7 +78,7 @@ void IniFile::ParseData()
     sections.Append(section);
 }
 
-IniSection *IniFile::FindSection(const char *name, size_t idx)
+IniSection *IniFile::FindSection(const char *name, size_t idx) const
 {
     for (size_t i = idx; i < sections.Count(); i++) {
         if (str::EqI(sections.At(i)->name, name))

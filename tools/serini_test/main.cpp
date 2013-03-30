@@ -6,6 +6,7 @@
 #include "AppPrefs3.h"
 #include "FileUtil.h"
 #include "SerializeIni3.h"
+#include "SerializeTxt3.h"
 #include "../sertxt_test/SerializeTxt.h"
 #include "../sertxt_test/SettingsSumatra.h"
 
@@ -175,6 +176,81 @@ static bool TestCompactDefaultValues()
     return true;
 }
 
+static bool TestSerializeTxt3()
+{
+    const WCHAR *path = L"..\\tools\\serini_test\\data3.sqt";
+
+    ScopedMem<char> data(file::ReadAll(path, NULL));
+    Check(data); // failed to read file
+    GlobalPrefs *s = (GlobalPrefs *)sertxt3::Deserialize(data, str::Len(data), gGlobalPrefsInfo);
+    Check(s); // failed to parse file
+    Check(str::Find(s->inverseSearchCmdLine, L"\r\n"));
+
+    size_t len;
+    ScopedMem<char> ser(sertxt3::Serialize(s, gGlobalPrefsInfo, &len));
+    Check(str::Len(ser) == len);
+    Check(str::Eq(data, ser));
+    sertxt3::FreeStruct(s, gGlobalPrefsInfo);
+
+    return true;
+}
+
+static bool TestSerializeUserTxt3()
+{
+    const WCHAR *path = L"..\\tools\\serini_test\\data3-user.sqt";
+
+    ScopedMem<char> data(file::ReadAll(path, NULL));
+    Check(data); // failed to read file
+    UserPrefs *s = (UserPrefs *)sertxt3::Deserialize(data, str::Len(data), gUserPrefsInfo);
+    Check(s); // failed to parse file
+
+    ScopedMem<char> ser(sertxt3::Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.sqt"));
+    sertxt3::FreeStruct(s, gUserPrefsInfo);
+    Check(str::Eq(data, ser));
+
+    return true;
+}
+
+static bool TestSerializeRecursiveArrayTxt3()
+{
+    static const char *data ="\
+Rec[\n\
+  Rec = [ \n\
+    Rec :[\n\n\
+      ; nesting three levels deep \n\
+    ][ \n\
+    ] \n\
+  ]\n\
+  Rec: [\n\
+    Rec = [\n\
+      # nesting three levels deep\n\
+    ]\n\
+  ]\n\
+  ] ; this line is ignored due to the comment \n\
+]\n\
+# the following superfluous closing bracket is ignored \n\
+]\n\
+Rec [\n\
+  Rec [\n\
+  ]\n\
+  Up [\n\
+    ExternalViewer = [\n\
+      CommandLine = serini_test.exe\n\
+    ]\n\
+  ]\n\
+]";
+    Rec *r = (Rec *)sertxt3::Deserialize(data, str::Len(data), gRecInfo);
+    Check(2 == r->recCount && 2 == r->rec[0].recCount && 2 == r->rec[0].rec[0].recCount);
+    Check(0 == r->rec[0].rec[0].rec[0].recCount && 0 == r->rec[0].rec[0].rec[1].recCount);
+    Check(1 == r->rec[0].rec[1].recCount && 0 == r->rec[0].rec[1].rec[0].recCount);
+    Check(1 == r->rec[1].recCount && 0 == r->rec[1].rec[0].recCount);
+    Check(1 == r->rec[1].up.externalViewerCount && str::Eq(r->rec[1].up.externalViewer[0].commandLine, L"serini_test.exe"));
+    Check(str::Eq(r->rec[0].rec[1].up.printerDefaults.printScale, "shrink"));
+    sertxt3::FreeStruct(r, gRecInfo);
+
+    return true;
+}
+
 int main(int argc, char **argv)
 {
 #ifdef DEBUG
@@ -194,6 +270,12 @@ int main(int argc, char **argv)
     if (!TestDefaultValues())
         errors++;
     if (!TestCompactDefaultValues())
+        errors++;
+    if (!TestSerializeTxt3())
+        errors++;
+    if (!TestSerializeUserTxt3())
+        errors++;
+    if (!TestSerializeRecursiveArrayTxt3())
         errors++;
     return errors;
 }

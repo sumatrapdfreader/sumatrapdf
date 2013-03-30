@@ -1,0 +1,170 @@
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+#include "BaseUtil.h"
+#include "SquareTreeParser.h"
+
+/*
+A square tree is a format for representing string values contained in a
+tree structure. Consumers may parse these strings values further (as integers,
+etc.) as required.
+
+Each non-empty line which doesn't start with either '#' or ';' (comment line)
+contains a key and a value, separated usually by '=' or ':'. Values which aren't
+a single '[' are parsed as string values to the end of the line; if OTOH a value
+is just '[' then the following lines are parsed as a child node until a ']' is
+found on a line by itself:
+
+key = value
+key2 = [ value containing square brackets (length: 49) ]
+child = [
+  depth = 1
+  subchild: [
+    depth = 2
+  ]
+]
+
+If tree nodes are either concatenated or if their names are reused for a different
+node, these nodes form a list which can be accessed by index (cf. SquareTreeNode::GetChild).
+
+list [
+  value 1
+] [
+  value 2
+]
+list [
+  value 3
+]
+*/
+
+static inline char *SkipWs(char *s)
+{
+    for (; str::IsWs(*s); s++);
+    return s;
+}
+static inline char *SkipWsRev(char *begin, char *s)
+{
+    for (; s > begin && str::IsWs(*(s - 1)); s--);
+    return s;
+}
+
+static inline bool IsEmptyLine(char *s)
+{
+    for (; *s && *s != '\n'; s++) {
+        if (!str::IsWs(*s))
+            return false;
+    }
+    return true;
+}
+
+SquareTreeNode::~SquareTreeNode()
+{
+    for (size_t i = 0; i < data.Count(); i++) {
+        DataItem& item = data.At(i);
+        if (item.isChild)
+            delete item.value.child;
+    }
+}
+
+const char *SquareTreeNode::GetValue(const char *key, size_t idx) const
+{
+    for (size_t i = 0; i < data.Count(); i++) {
+        DataItem& item = data.At(i);
+        if (str::EqI(key, item.key) && !item.isChild && 0 == idx--)
+            return item.value.str;
+    }
+    return NULL;
+}
+
+SquareTreeNode *SquareTreeNode::GetChild(const char *key, size_t idx) const
+{
+    for (size_t i = 0; i < data.Count(); i++) {
+        DataItem& item = data.At(i);
+        if (str::EqI(key, item.key) && item.isChild && 0 == idx--)
+            return item.value.child;
+    }
+    return NULL;
+}
+
+static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
+{
+    SquareTreeNode *node = new SquareTreeNode();
+
+    while (*(data = SkipWs(data))) {
+        // comments must be on lines of their own and start with either # or ;
+        if ('#' == *data || ';' == *data) {
+            // skip comment line
+            for (; *data && *data != '\n'; data++);
+            continue;
+        }
+        // all other non-empty lines contain a key-value pair
+        // where the value is either a string or a list of
+        // child nodes (if the string value would be a single '[')
+        // and where key and value are usually separated by '=' or ':' 
+        char *key = data;
+        for (data = key; *data && *data != '=' && *data != ':' && *data != '[' && *data != ']' && *data != '\n'; data++);
+        if (!*data || '\n' == *data) {
+            // use first whitespace as a fallback separator
+            for (data = key; !str::IsWs(*data); data++);
+        }
+        char *separator = data;
+        if ('=' == *data || ':' == *data || str::IsWs(*data) && *data != '\n') {
+            for (data++; *data && str::IsWs(*data) && *data != '\n'; data++);
+        }
+        char *value = data;
+        if ('[' == *value && IsEmptyLine(data + 1)) {
+            // parse child node(s)
+            data++;
+            node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
+            // array are created by either reusing the same key for a different child
+            // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
+            while ('[' == *(data = SkipWs(data))) {
+                data++;
+                node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
+            }
+        }
+        else if (']' == *separator && (IsEmptyLine(data + 1) || '[' == *SkipWs(data + 1))) {
+            // finish parsing this node
+            data++;
+            // interpret "key]" as "key =" and "]"
+            if (key < separator) {
+                *SkipWsRev(key, separator) = '\0';
+                node->data.Append(SquareTreeNode::DataItem(key, ""));
+            }
+            if (!isRootNode)
+                break;
+            // ignore superfluous closing square brackets instead of
+            // ignoring all content following them
+        }
+        else {
+            // string value (decoding is left to the consumer)
+            for (; *data && *data != '\n'; data++);
+            bool hasMoreLines = '\n' == *data;
+            *SkipWsRev(value, data) = '\0';
+            node->data.Append(SquareTreeNode::DataItem(key, SkipWs(value)));
+            if (hasMoreLines)
+                data++;
+        }
+        *SkipWsRev(key, separator) = '\0';
+    }
+
+    // assume that all square brackets have been properly balanced
+    return node;
+}
+
+SquareTree::SquareTree(const char *data) : root(NULL)
+{
+    // convert the file content to UTF-8
+    if (str::StartsWith(data, UTF8_BOM))
+        dataUtf8.Set(str::Dup(data + 3));
+    else if (str::StartsWith(data, UTF16_BOM))
+        dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(data + 2)));
+    else if (data)
+        dataUtf8.Set(str::conv::ToUtf8(ScopedMem<WCHAR>(str::conv::FromAnsi(data))));
+    if (!dataUtf8)
+        return;
+
+    char *start = dataUtf8.Get();
+    root = ParseSquareTreeRec(start, true);
+    CrashIf(*start);
+}

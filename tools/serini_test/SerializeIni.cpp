@@ -277,7 +277,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
 
     for (size_t i = 0; i < def->nFields; i++) {
         const char *fieldName = fieldNamesSeq + def->fields[i].nameOffset;
-        CrashIf(str::FindChar(fieldName, '=') || NeedsEscaping(fieldName));
+        CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') || NeedsEscaping(fieldName));
         ScopedMem<char> value(SerializeField(data, def->fields[i]));
         if (value) {
             out.Append(fieldName);
