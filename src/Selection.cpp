@@ -93,10 +93,12 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
     // fill path (and draw optional outline margin)
     Graphics gs(hdc);
     Color c(alpha, GetRValue(selectionColor), GetGValue(selectionColor), GetBValue(selectionColor));
-    gs.FillPath(&SolidBrush(c), &path);
+    SolidBrush tmpBrush(c);
+    gs.FillPath(&tmpBrush, &path);
     if (margin) {
         path.Outline(NULL, 0.2f);
-        gs.DrawPath(&Pen(Color(alpha, 0, 0, 0), (REAL)margin), &path);
+        Pen tmpPen(Color(alpha, 0, 0, 0), (REAL)margin);
+        gs.DrawPath(&tmpPen, &path);
     }
 }
 

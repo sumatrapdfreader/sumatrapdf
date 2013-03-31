@@ -152,7 +152,8 @@ StyleRule StyleRule::Parse(CssPullParser *parser)
 
 StyleRule StyleRule::Parse(const char *s, size_t len)
 {
-    return Parse(&CssPullParser(s, len));
+    CssPullParser parser(s, len);
+    return Parse(&parser);
 }
 
 void StyleRule::Merge(StyleRule& source)

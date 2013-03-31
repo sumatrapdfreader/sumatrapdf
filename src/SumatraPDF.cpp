@@ -4404,7 +4404,8 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
         GetCursorPosInHwnd(win.hwndCanvas, pt);
 
         float zoom = win.dm->NextZoomStep(delta < 0 ? ZOOM_MIN : ZOOM_MAX);
-        win.dm->ZoomTo(zoom, &PointI(pt.x, pt.y));
+        PointI tmpPoint(pt.x, pt.y);
+        win.dm->ZoomTo(zoom, &tmpPoint);
         UpdateToolbarState(&win);
 
         // don't show the context menu when zooming with the right mouse-button down

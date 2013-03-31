@@ -269,7 +269,8 @@ Bitmap *WICDecodeImageFromStream(IStream *stream)
     HR(pConverter->GetResolution(&xres, &yres));
     Bitmap bmp(w, h, PixelFormat32bppARGB);
     BitmapData bmpData;
-    Status ok = bmp.LockBits(&Rect(0, 0, w, h), ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
+    Rect tmpRect(0, 0, w, h);
+    Status ok = bmp.LockBits(&tmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
     if (ok != Ok)
         return NULL;
     HR(pConverter->CopyPixels(NULL, bmpData.Stride, w * h * 4, (BYTE *)bmpData.Scan0));

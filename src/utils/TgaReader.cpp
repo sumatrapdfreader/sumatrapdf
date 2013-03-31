@@ -320,7 +320,8 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
 
     Bitmap bmp(w, h, format);
     BitmapData bmpData;
-    Status ok = bmp.LockBits(&Rect(0, 0, w, h), ImageLockModeWrite, format, &bmpData);
+    Rect tmpRect(0, 0, w, h);
+    Status ok = bmp.LockBits(&tmpRect, ImageLockModeWrite, format, &bmpData);
     if (ok != Ok)
         return NULL;
     for (int y = 0; y < h; y++) {

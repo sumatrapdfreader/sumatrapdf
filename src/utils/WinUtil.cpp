@@ -459,7 +459,8 @@ RectI GetWorkAreaRect(RectI rect)
 {
     MONITORINFO mi = { 0 };
     mi.cbSize = sizeof mi;
-    HMONITOR monitor = MonitorFromRect(&rect.ToRECT(), MONITOR_DEFAULTTONEAREST);
+    RECT tmpRect = rect.ToRECT();
+    HMONITOR monitor = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
     BOOL ok = GetMonitorInfo(monitor, &mi);
     if (!ok)
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
@@ -510,7 +511,8 @@ void PaintLine(HDC hdc, const RectI& rect)
 void DrawCenteredText(HDC hdc, const RectI& r, const WCHAR *txt, bool isRTL)
 {
     SetBkMode(hdc, TRANSPARENT);
-    DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (isRTL ? DT_RTLREADING : 0));
+    RECT tmpRect = r.ToRECT();
+    DrawText(hdc, txt, -1, &tmpRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (isRTL ? DT_RTLREADING : 0));
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */

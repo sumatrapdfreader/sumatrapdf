@@ -196,7 +196,8 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
                rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx, txtSize.cy);
     if (IsUIRightToLeft())
         rect.x = ABOUT_INNER_PADDING;
-    DrawText(hdc, txt, -1, &rect.ToRECT(), IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
+    RECT rTmp = rect.ToRECT();
+    DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
 
     SelectObject(hdc, penLinkLine);
     PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
@@ -224,7 +225,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     ClientRect rc(hwnd);
-    FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
+    RECT rTmp = rc.ToRECT();
+    FillRect(hdc, &rTmp, gBrushAboutBg);
 
     /* render title */
     RectI titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
@@ -564,7 +566,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
 
     ClientRect rc(win.hwndCanvas);
-    FillRect(hdc, &rc.ToRECT(), gBrushLogoBg);
+    RECT rTmp = rc.ToRECT();
+    FillRect(hdc, &rTmp, gBrushLogoBg);
 
     SelectObject(hdc, gBrushLogoBg);
     SelectObject(hdc, penBorder);
@@ -584,7 +587,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
-    FillRect(hdc, &rc.ToRECT(), gBrushAboutBg);
+    rTmp = rc.ToRECT();
+    FillRect(hdc, &rTmp, gBrushAboutBg);
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
     Vec<DisplayState *> list;
@@ -605,7 +609,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     RectI headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl)
         headerRect.x = rc.dx - offset.x - headerRect.dx;
-    DrawText(hdc, txt, -1, &headerRect.ToRECT(), (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
+    rTmp = headerRect.ToRECT();
+    DrawText(hdc, txt, -1, &rTmp, (isRtl ? DT_RTLREADING : DT_LEFT) | DT_NOPREFIX);
 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
@@ -649,7 +654,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             RectI rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
             if (isRtl)
                 rect.x -= iconSpace;
-            DrawText(hdc, path::GetBaseName(state->filePath), -1, &rect.ToRECT(), DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
+            RECT rTmp = rect.ToRECT();
+            DrawText(hdc, path::GetBaseName(state->filePath), -1, &rTmp, DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
             SHFILEINFO sfi;
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
@@ -681,7 +687,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     RectI rect(offset.x + rectIcon.dx + 3, rc.y + (rc.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl)
         rect.x = rectIcon.x - rect.dx - 3;
-    DrawText(hdc, txt, -1, &rect.ToRECT(), isRtl ? DT_RTLREADING : DT_LEFT);
+    rTmp = rect.ToRECT();
+    DrawText(hdc, txt, -1, &rTmp, isRtl ? DT_RTLREADING : DT_LEFT);
     PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
     // make the click target larger
     rect = rect.Union(rectIcon);
@@ -821,7 +828,8 @@ void SaveThumbnail(DisplayState& ds)
     if (dir::Create(thumbsPath)) {
         CrashIf(!str::EndsWithI(bmpPath, L".png"));
         Bitmap bmp(ds.thumbnail->GetBitmap(), NULL);
-        bmp.Save(bmpPath, &GetEncoderClsid(L"image/png"));
+        CLSID tmpClsid = GetEncoderClsid(L"image/png");
+        bmp.Save(bmpPath, &tmpClsid);
     }
 }
 

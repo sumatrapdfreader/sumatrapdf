@@ -504,7 +504,8 @@ void UpdateToolbarPageText(WindowInfo *win, int pageCount, bool updateOnly)
     } else {
         RectI rc = ClientRect(win->hwndPageTotal);
         rc = MapRectToWindow(rc, win->hwndPageTotal, win->hwndToolbar);
-        InvalidateRect(win->hwndToolbar, &rc.ToRECT(), TRUE);
+        RECT rTmp = rc.ToRECT();
+        InvalidateRect(win->hwndToolbar, &rTmp, TRUE);
     }
 }
 

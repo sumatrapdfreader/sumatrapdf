@@ -121,7 +121,8 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
         HDC hdc = buffer.GetDC();
         HFONT oldfnt = SelectFont(hdc, wnd->font);
 
-        DrawFrameControl(hdc, &rect.ToRECT(), DFC_BUTTON, DFCS_BUTTONPUSH);
+        RECT rTmp = rect.ToRECT();
+        DrawFrameControl(hdc, &rTmp, DFC_BUTTON, DFCS_BUTTONPUSH);
         if (wnd->highlight) {
             SetBkMode(hdc, OPAQUE);
             SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
@@ -139,10 +140,13 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
         if (wnd->hasCancel)
             rectMsg.dx -= 20;
         ScopedMem<WCHAR> text(win::GetText(hwnd));
-        DrawText(hdc, text, -1, &rectMsg.ToRECT(), DT_SINGLELINE | DT_NOPREFIX);
+        rTmp = rectMsg.ToRECT();
+        DrawText(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
 
-        if (wnd->hasCancel)
-            DrawFrameControl(hdc, &GetCancelRect(hwnd).ToRECT(), DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
+        if (wnd->hasCancel) {
+            rTmp = GetCancelRect(hwnd).ToRECT();
+            DrawFrameControl(hdc, &rTmp, DFC_CAPTION, DFCS_CAPTIONCLOSE | DFCS_FLAT);
+        }
 
         if (wnd->hasProgress) {
             rect.dx = wnd->progressWidth;
@@ -156,7 +160,8 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT message, WPARAM wParam
             rect.dy -= 3;
 
             HBRUSH brush = GetStockBrush(BLACK_BRUSH);
-            FillRect(hdc, &rect.ToRECT(), brush);
+            rTmp = rect.ToRECT();
+            FillRect(hdc, &rTmp, brush);
             DeleteObject(brush);
         }
 

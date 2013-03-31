@@ -1174,7 +1174,8 @@ protected:
     pdf_page      * GetPdfPage(int pageNo, bool failIfBusy=false);
     int             GetPageNo(pdf_page *page);
     fz_matrix       viewctm(int pageNo, float zoom, int rotation) {
-        return fz_create_view_ctm(&fz_RectD_to_rect(PageMediabox(pageNo)), zoom, rotation);
+        const fz_rect tmpRc = fz_RectD_to_rect(PageMediabox(pageNo));
+        return fz_create_view_ctm(&tmpRc, zoom, rotation);
     }
     fz_matrix       viewctm(pdf_page *page, float zoom, int rotation) {
         fz_rect r;
@@ -2045,7 +2046,8 @@ bool PdfEngineImpl::RenderPage(HDC hDC, pdf_page *page, RectI screenRect, const 
     }
 
     HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF, 0xFF, 0xFF));
-    FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
+    RECT tmpRect = screenRect.ToRECT();
+    FillRect(hDC, &tmpRect, bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
     fz_rect cliprect = fz_RectD_to_rect(screenRect.Convert<double>());
@@ -3284,7 +3286,8 @@ protected:
     xps_page      * GetXpsPage(int pageNo, bool failIfBusy=false);
     int             GetPageNo(xps_page *page);
     fz_matrix       viewctm(int pageNo, float zoom, int rotation) {
-        return fz_create_view_ctm(&fz_RectD_to_rect(PageMediabox(pageNo)), zoom, rotation);
+        const fz_rect tmpRect = fz_RectD_to_rect(PageMediabox(pageNo));
+        return fz_create_view_ctm(&tmpRect, zoom, rotation);
     }
     fz_matrix       viewctm(xps_page *page, float zoom, int rotation) {
         fz_rect r;
@@ -3842,7 +3845,8 @@ bool XpsEngineImpl::RenderPage(HDC hDC, xps_page *page, RectI screenRect, const 
         ctm2 = *ctm;
 
     HBRUSH bgBrush = CreateSolidBrush(RGB(0xFF, 0xFF, 0xFF));
-    FillRect(hDC, &screenRect.ToRECT(), bgBrush); // initialize white background
+    RECT tmpRect = screenRect.ToRECT();
+    FillRect(hDC, &tmpRect, bgBrush); // initialize white background
     DeleteObject(bgBrush);
 
     fz_rect cliprect = fz_RectD_to_rect(screenRect.Convert<double>());

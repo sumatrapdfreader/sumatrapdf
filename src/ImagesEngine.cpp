@@ -118,7 +118,8 @@ bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom,
     Color white(0xFF, 0xFF, 0xFF);
     Rect screenR(screenRect.ToGdipRect());
     g.SetClip(screenR);
-    g.FillRectangle(&SolidBrush(white), screenR);
+    SolidBrush tmpBrush(white);
+    g.FillRectangle(&tmpBrush, screenR);
 
     Matrix m;
     GetTransform(m, pageNo, zoom, rotation);

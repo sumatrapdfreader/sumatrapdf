@@ -491,7 +491,8 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
     SolidBrush br(Color(255, 255, 255));
     g.FillRectangle(&br, r);
 
-    DrawHtmlPage(&g, &pd->instructions, (REAL)border, (REAL)border, false, &Color(Color::Black));
+    Color tmpColor(Color::Black);
+    DrawHtmlPage(&g, &pd->instructions, (REAL)border, (REAL)border, false, &tmpColor);
     delete pd;
 
     Bitmap res(bmpSize.dx, bmpSize.dy, PixelFormat24bppRGB);

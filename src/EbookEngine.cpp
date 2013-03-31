@@ -361,17 +361,26 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
         PointF p1, p2;
         switch (annot.type) {
         case Annot_Highlight:
-            g.FillRectangle(&SolidBrush(Unblend(annot.color, 119)), annot.rect.ToGdipRectF());
+            {
+            SolidBrush tmpBrush(Unblend(annot.color, 119));
+            g.FillRectangle(&tmpBrush, annot.rect.ToGdipRectF());
+            }
             break;
         case Annot_Underline:
             p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y);
             p2 = PointF((float)annot.rect.BR().x, p1.Y);
-            g.DrawLine(&Pen(FromColor(annot.color)), p1, p2);
+            {
+            Pen tmpPen(FromColor(annot.color));
+            g.DrawLine(&tmpPen, p1, p2);
+            }
             break;
         case Annot_StrikeOut:
             p1 = PointF((float)annot.rect.x, (float)annot.rect.y + (float)annot.rect.dy / 2);
             p2 = PointF((float)annot.rect.BR().x, p1.Y);
-            g.DrawLine(&Pen(FromColor(annot.color)), p1, p2);
+            {
+            Pen tmpPen(FromColor(annot.color));
+            g.DrawLine(&tmpPen, p1, p2);
+            }
             break;
         case Annot_Squiggly:
             {
@@ -408,7 +417,8 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
     Rect screenR(screenRect.ToGdipRect());
     g.SetClip(screenR);
     screenR.Inflate(1, 1);
-    g.FillRectangle(&SolidBrush(white), screenR);
+    SolidBrush tmpBrush(white);
+    g.FillRectangle(&tmpBrush, screenR);
 
     Matrix m;
     GetTransform(m, zoom, rotation);
@@ -421,7 +431,8 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
     ScopedCritSec scope(&pagesAccess);
     FixFontSizeForResolution(hDC);
-    DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, &Color(Color::Black), cookie ? &cookie->abort : NULL);
+    Color tmpColor(Color::Black);
+    DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, &tmpColor, cookie ? &cookie->abort : NULL);
     DrawAnnotations(g, userAnnots, pageNo);
     return !(cookie && cookie->abort);
 }

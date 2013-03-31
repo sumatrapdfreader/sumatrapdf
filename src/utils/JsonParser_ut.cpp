@@ -32,6 +32,8 @@ public:
     }
 };
 
+#pragma warning(push)
+#pragma warning(disable:4238) // TODO: too lazy to fix them right now
 static void JsonTest()
 {
     JsonVerifier verifyError(NULL, 0);
@@ -106,3 +108,5 @@ static void JsonTest()
 }";
     assert(json::Parse(jsonSample, &JsonVerifier(testData, dimof(testData))));
 }
+#pragma warning(pop)
+
