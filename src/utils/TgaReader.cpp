@@ -50,7 +50,18 @@ struct TgaHeader {
 struct TgaFooter {
     uint32_t    extAreaOffset;
     uint32_t    devAreaOffset;
-    const char  signature[18];
+    char        signature[18];
+
+    TgaFooter() {
+        extAreaOffset = 0;
+        devAreaOffset = 0;
+        memcpy((void*)signature, TGA_FOOTER_SIGNATURE, sizeof(signature));
+    }
+
+private:
+    // disable copy constructor and assignment operator
+    TgaFooter(const TgaFooter&);
+    TgaFooter& operator=(const TgaFooter&);
 };
 
 struct TgaExtArea {
@@ -64,6 +75,12 @@ struct TgaExtArea {
     const char  progVersionC;
     uint32_t    fields_18_to_23[6];
     uint8_t     alphaType;
+
+private:
+    // disable copy constructor and assignment operator
+    TgaExtArea(const TgaExtArea&);
+    TgaExtArea& operator=(const TgaExtArea&);
+
 };
 
 #pragma pack(pop)
@@ -377,7 +394,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     headerLE.width = convLE(w);
     headerLE.height = convLE(h);
     headerLE.bitDepth = 24;
-    TgaFooter footerLE = { 0, 0, TGA_FOOTER_SIGNATURE };
+    TgaFooter footerLE;
 
     str::Str<char> tgaData;
     tgaData.Append((char *)&headerLE, sizeof(headerLE));
