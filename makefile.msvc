@@ -90,7 +90,6 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 
 # those are warnings that are selected with /W4
 # 4389 : signed/unsigned mismatch
-# 4245 : arg conversion signed/unsigned mismatch
 # 4428 : universal-character-name encountered in source
 # 4512 : assignment operator could not be generated
 
@@ -107,6 +106,8 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34701 /w34706 /w34131 /w34244 /w34100
 # 4239 : non-standard extension: convert from Foo to Foo&
 # 4238 : non-standard extension: class rvalue used as lvalue
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34480 /w34505 /w34213 /w34239 /w34238
+# 4245 : arg conversion signed/unsigned mismatch
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34245
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(EXTDIR)/lzma/C

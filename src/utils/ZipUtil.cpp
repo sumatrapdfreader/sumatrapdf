@@ -167,7 +167,7 @@ FILETIME ZipFile::GetFileTime(const WCHAR *fileName)
 
 FILETIME ZipFile::GetFileTime(size_t fileindex)
 {
-    FILETIME ft = { -1, -1 };
+    FILETIME ft = { (DWORD)-1, (DWORD)-1 };
     if (uf && fileindex < fileinfo.Count()) {
         FILETIME ftLocal;
         DWORD dosDate = fileinfo.At(fileindex).dosDate;

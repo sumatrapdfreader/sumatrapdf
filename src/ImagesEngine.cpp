@@ -177,7 +177,7 @@ public:
 
     virtual RenderedBitmap *GetImage() {
         HBITMAP hbmp;
-        if (bmp->GetHBITMAP(Color::White, &hbmp) != Ok)
+        if (bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok)
             return NULL;
         return new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
     }

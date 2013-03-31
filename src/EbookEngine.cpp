@@ -203,7 +203,7 @@ public:
     virtual RenderedBitmap *GetImage() {
         HBITMAP hbmp;
         Bitmap *bmp = BitmapFromData(id->data, id->len);
-        if (!bmp || bmp->GetHBITMAP(Color::White, &hbmp) != Ok) {
+        if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
             delete bmp;
             return NULL;
         }
@@ -431,7 +431,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
     ScopedCritSec scope(&pagesAccess);
     FixFontSizeForResolution(hDC);
-    Color tmpColor(Color::Black);
+    Color tmpColor((ARGB)Color::Black);
     DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, &tmpColor, cookie ? &cookie->abort : NULL);
     DrawAnnotations(g, userAnnots, pageNo);
     return !(cookie && cookie->abort);

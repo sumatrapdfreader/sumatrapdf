@@ -491,7 +491,7 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
     SolidBrush br(Color(255, 255, 255));
     g.FillRectangle(&br, r);
 
-    Color tmpColor(Color::Black);
+    Color tmpColor((ARGB)Color::Black);
     DrawHtmlPage(&g, &pd->instructions, (REAL)border, (REAL)border, false, &tmpColor);
     delete pd;
 
@@ -502,7 +502,7 @@ RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSiz
                  0, 0, pageSize.dx, pageSize.dy, UnitPixel);
 
     HBITMAP hbmp;
-    Status ok = res.GetHBITMAP(Color::White, &hbmp);
+    Status ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
     if (ok != Ok)
         return NULL;
     return new RenderedBitmap(hbmp, bmpSize);
@@ -527,7 +527,7 @@ static RenderedBitmap *ThumbFromCoverPage(Doc doc)
     g.DrawImage(coverBmp, Rect(0, 0, THUMBNAIL_DX, THUMBNAIL_DY),
         0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
     HBITMAP hbmp;
-    Status ok = res.GetHBITMAP(Color::White, &hbmp);
+    Status ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
     delete coverBmp;
     if (ok == Ok)
         return new RenderedBitmap(hbmp, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));

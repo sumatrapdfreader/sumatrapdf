@@ -745,7 +745,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
                 cmdLine = inverseSearch;
             }
             // Find the index of the active command line
-            LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, -1, (LPARAM) cmdLine);
+            LRESULT ind = SendMessage(GetDlgItem(hDlg, IDC_CMDLINE), CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM) cmdLine);
             if (CB_ERR == ind) {
                 // if no existing command was selected then set the user custom command in the combo
                 ComboBox_AddItemData(GetDlgItem(hDlg, IDC_CMDLINE), cmdLine);

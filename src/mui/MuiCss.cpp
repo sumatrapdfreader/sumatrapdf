@@ -171,12 +171,12 @@ static struct {
     const char *name;
     ARGB value;
 } gCssKnownColors[] = {
-    { "black", Color::Black },
-    { "blue",  Color::Blue  },
-    { "gray",  Color::Gray  },
-    { "green", Color::Green },
-    { "red",   Color::Red   },
-    { "white", Color::White },
+    { "black", (ARGB)Color::Black },
+    { "blue",  (ARGB)Color::Blue  },
+    { "gray",  (ARGB)Color::Gray  },
+    { "green", (ARGB)Color::Green },
+    { "red",   (ARGB)Color::Red   },
+    { "white", (ARGB)Color::White },
     { "transparent", MKARGB(0,0,0,0) },
 };
 

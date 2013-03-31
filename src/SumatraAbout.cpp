@@ -780,7 +780,7 @@ static RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
 
     HBITMAP hbmp;
     RenderedBitmap *rendered = NULL;
-    if (bmp->GetHBITMAP(Color::White, &hbmp) == Ok)
+    if (bmp->GetHBITMAP((ARGB)Color::White, &hbmp) == Ok)
         rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
     delete bmp;
 

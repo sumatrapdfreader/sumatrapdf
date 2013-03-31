@@ -1280,7 +1280,7 @@ uint32_t FindHtmlEntityRune(const char *name, size_t len)
         if (4 == len) return 8204;
         break;
     }
-    return -1;
+    return (uint32_t)-1;
 }
 
 CssProp FindCssProp(const char *name, size_t len)

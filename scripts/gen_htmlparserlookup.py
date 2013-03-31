@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This script generates fairly fast C code for the following function:
 Given a string, see if it belongs to a known set of strings. If it does,
@@ -237,7 +238,7 @@ def main():
 	code_selfclosing = createFastSelector(tags, List_Self_Closing_Tags.split(), "IsTagSelfClosing", "HtmlTag")
 	code_inlinetag = createFastSelector(tags, List_Inline_Tags.split(), "IsInlineTag", "HtmlTag")
 	code_alignattr = createFastFinder(aligns, "AlignAttr", "Align_NotFound", True)
-	code_htmlentity = Template_Entities_Comment + "\n" + createFastFinder(List_HTML_Entities, "uint32_t", "-1", False, "HtmlEntityRune")
+	code_htmlentity = Template_Entities_Comment + "\n" + createFastFinder(List_HTML_Entities, "uint32_t", "(uint32_t)-1", False, "HtmlEntityRune")
 	code_cssprop = createFastFinder(cssProps, "CssProp", "Css_Unknown", True)
 	code_csscolor = createFastFinder(cssColors, "ARGB", "MKRGBA(0,0,0,0)", True, "CssColor")
 

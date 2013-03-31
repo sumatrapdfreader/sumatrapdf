@@ -1362,7 +1362,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
                  area.x, area.y, area.dx, area.dy, UnitPixel);
 
     HBITMAP hbmp;
-    Status ok = imageRes.GetHBITMAP(Color::White, &hbmp);
+    Status ok = imageRes.GetHBITMAP((ARGB)Color::White, &hbmp);
     if (ok != Ok)
         return NULL;
     return hbmp;
