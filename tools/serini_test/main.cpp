@@ -12,67 +12,10 @@
 
 #define Check(x) CrashIf(!(x)); if (!(x)) return false; else NoOp()
 
+// allow to easily disable tests for binary size comparison
 #pragma warning(disable: 4505)
 
-static bool TestSerializeIni()
-{
-#ifdef TEST_SERIALIZE_SQT
-    const WCHAR *path = L"..\\tools\\serini_test\\data.sqt";
-#elif defined(TEST_SERIALIZE_TXT)
-    const WCHAR *path = L"..\\tools\\sertxt_test\\data.txt";
-#else
-    const WCHAR *path = L"..\\tools\\serini_test\\data.ini";
-#endif
-
-    ScopedMem<char> data(file::ReadAll(path, NULL));
-    Check(data); // failed to read file
-    sertxt::Settings *s = sertxt::DeserializeSettings(data, str::Len(data));
-    Check(s); // failed to parse file
-#ifndef TEST_SERIALIZE_TXT
-    Check(str::Find(s->basic->inverseSearchCmdLine, L"\r\n"));
-#endif
-
-    size_t len;
-    ScopedMem<char> ser((char *)sertxt::SerializeSettings(s, &len));
-    Check(str::Len(ser) == len);
-    Check(str::Eq(data, ser));
-    FreeSettings(s);
-
-    return true;
-}
-
-static bool TestSerializeIniWithDefaults()
-{
-#if defined(TEST_SERIALIZE_SQT) || defined(TEST_SERIALIZE_TXT)
-#ifdef TEST_SERIALIZE_TXT
-    const WCHAR *defaultPath = L"..\\tools\\sertxt_test\\data.txt";
-#else
-    const WCHAR *defaultPath = L"..\\tools\\serini_test\\data.sqt";
-#endif
-    const char *data = "\
-basic [\n\
-global_prefs_only = true\n\
-default_zoom = 38.5\n\
-]";
-#else
-    const WCHAR *defaultPath = L"..\\tools\\serini_test\\data.ini";
-    const char *data = "\
-[basic]\n\
-global_prefs_only = true\n\
-default_zoom = 38.5\n\
-";
-#endif
-
-    ScopedMem<char> defaultData(file::ReadAll(defaultPath, NULL));
-    Check(defaultData); // failed to read file
-    sertxt::Settings *s = sertxt::DeserializeSettingsWithDefault(data, str::Len(data), defaultData, str::Len(defaultData));
-    Check(s); // failed to parse file
-    Check(s->basic->globalPrefsOnly && 38.5f == s->basic->defaultZoom);
-    Check(s->basic->showStartPage && !s->basic->pdfAssociateDoIt);
-    sertxt::FreeSettings(s);
-
-    return true;
-}
+// structs for recursion and compactness tests
 
 struct Rec {
     Vec<Rec *> * rec;
@@ -98,6 +41,70 @@ static SettingInfo gTestCD1Info[] = {
     { Type_Meta, 1, sizeof(TestCD1), (intptr_t)"Compact" },
     { Type_Compact, 0, offsetof(TestCD1, compact), (intptr_t)gTestCD2Info },
 };
+
+namespace sertxt {
+
+static bool TestSerialize()
+{
+#ifdef TEST_SERIALIZE_SQT
+    const WCHAR *path = L"..\\tools\\serini_test\\data.sqt";
+#elif defined(TEST_SERIALIZE_TXT)
+    const WCHAR *path = L"..\\tools\\sertxt_test\\data.txt";
+#else
+    const WCHAR *path = L"..\\tools\\serini_test\\data.ini";
+#endif
+
+    ScopedMem<char> data(file::ReadAll(path, NULL));
+    Check(data); // failed to read file
+    Settings *s = DeserializeSettings(data, str::Len(data));
+    Check(s); // failed to parse file
+#ifndef TEST_SERIALIZE_TXT
+    Check(str::Find(s->basic->inverseSearchCmdLine, L"\r\n"));
+#endif
+
+    size_t len;
+    ScopedMem<char> ser((char *)SerializeSettings(s, &len));
+    Check(str::Len(ser) == len);
+    Check(str::Eq(data, ser));
+    FreeSettings(s);
+
+    return true;
+}
+
+static bool TestSerializeWithDefaults()
+{
+#if defined(TEST_SERIALIZE_SQT) || defined(TEST_SERIALIZE_TXT)
+#ifdef TEST_SERIALIZE_TXT
+    const WCHAR *defaultPath = L"..\\tools\\sertxt_test\\data.txt";
+#else
+    const WCHAR *defaultPath = L"..\\tools\\serini_test\\data.sqt";
+#endif
+    const char *data = "\
+basic [\n\
+global_prefs_only = true\n\
+default_zoom = 38.5\n\
+]";
+#else
+    const WCHAR *defaultPath = L"..\\tools\\serini_test\\data.ini";
+    const char *data = "\
+[basic]\n\
+global_prefs_only = true\n\
+default_zoom = 38.5\n\
+";
+#endif
+
+    ScopedMem<char> defaultData(file::ReadAll(defaultPath, NULL));
+    Check(defaultData); // failed to read file
+    Settings *s = DeserializeSettingsWithDefault(data, str::Len(data), defaultData, str::Len(defaultData));
+    Check(s); // failed to parse file
+    Check(s->basic->globalPrefsOnly && 38.5f == s->basic->defaultZoom);
+    Check(s->basic->showStartPage && !s->basic->pdfAssociateDoIt);
+    FreeSettings(s);
+
+    return true;
+}
+
+}; // namespace sertxt
 
 namespace ini3 {
 
@@ -306,23 +313,23 @@ static bool TestCompactDefaultValues()
     return true;
 }
 
+}; // namespace sqt
+
 static bool TestSerializeIniAsSqt()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3-user.ini";
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    UserPrefs *s = (UserPrefs *)Deserialize(data, str::Len(data), gUserPrefsInfo);
+    UserPrefs *s = (UserPrefs *)sqt::Deserialize(data, str::Len(data), gUserPrefsInfo);
     Check(s); // failed to parse file
 
     ScopedMem<char> ser(ini3::Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini"));
     Check(str::Eq(data, ser));
-    FreeStruct(s, gUserPrefsInfo);
+    sqt::FreeStruct(s, gUserPrefsInfo);
 
     return true;
 }
-
-}; // namespace sqt
 
 int main(int argc, char **argv)
 {
@@ -330,9 +337,9 @@ int main(int argc, char **argv)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
     int errors = 0;
-    if (!TestSerializeIni())
+    if (!sertxt::TestSerialize())
         errors++;
-    if (!TestSerializeIniWithDefaults())
+    if (!sertxt::TestSerializeWithDefaults())
         errors++;
     if (!ini3::TestSerialize())
         errors++;
@@ -354,7 +361,7 @@ int main(int argc, char **argv)
         errors++;
     if (!sqt::TestCompactDefaultValues())
         errors++;
-    if (!sqt::TestSerializeIniAsSqt())
+    if (!TestSerializeIniAsSqt())
         errors++;
     return errors;
 }
