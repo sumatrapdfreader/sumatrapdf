@@ -89,6 +89,23 @@ const char *g_symTypeNamesCompact[SymTagMax] = {
     "Dim"       // Dimension
 };
 
+const char *g_thunkTypeNames[] = {
+    "NoType",
+    "Adjustor",
+    "VCall",
+    "PCode",
+    "Load",
+    "TrampInc",
+    "TrampBranch"
+};
+
+const char *GetThunkTypeName(DWORD thunkType)
+{
+    if (thunkType >= dimof(g_thunkTypeNames))
+        return "Unknown";
+    return g_thunkTypeNames[thunkType];
+}
+
 static str::Str<char> g_report;
 static StringInterner g_strInterner;
 static StringInterner g_typesSeen;
@@ -238,7 +255,7 @@ static const char *GetTypeName(IDiaSymbol *symbol)
 }
 
 // the result doesn't have to be free()d but is only valid until the next call to this function
-static const char *GetUndecoratedSymbolName(IDiaSymbol *symbol)
+static const char *GetUndecoratedSymbolName(IDiaSymbol *symbol, const char *defName = "<noname>")
 {
     static str::Str<char> strTmp;
 
@@ -270,7 +287,7 @@ static const char *GetUndecoratedSymbolName(IDiaSymbol *symbol)
         // Unfortunately it does happen that get_undecoratedNameEx() fails
         // e.g. for RememberDefaultWindowPosition() in Sumatra code
         symbol->get_name(&name);
-        BStrToString(strTmp, name, "<noname>", true);
+        BStrToString(strTmp, name, defName, true);
     }
     SysFreeStringSafe(name);
 
@@ -403,38 +420,52 @@ static void DumpSymbol(IDiaSymbol *symbol)
     DWORD               dwTag;
     enum SymTagEnum     tag;
     ULONGLONG           length = 0;
-    BSTR                undecoratedName = NULL;
-    //BSTR                srcFileName = NULL;
     const char *        typeName = NULL;
-    const char *        nameStr = NULL;
+          char *        dataTypeName = NULL;
+    const char *        thunkTypeName = NULL;
 
     symbol->get_symTag(&dwTag);
     tag = (enum SymTagEnum)dwTag;
     typeName = GetSymTypeName(tag);
 
     symbol->get_relativeVirtualAddress(&rva);
-    symbol->get_length(&length);
     symbol->get_addressSection(&section);
     symbol->get_addressOffset(&offset);
 
-    // get length from type for data
-    if (tag == SymTagData)
+    // for data, get length from type
+    if (SymTagData == tag)
     {
         IDiaSymbol *type = NULL;
-        length = 0;
         if (symbol->get_type(&type) == S_OK) // no SUCCEEDED test as may return S_FALSE!
         {
             type->get_length(&length);
+            const char *s = GetUndecoratedSymbolName(type, "");
+            if (s && *s)
+                dataTypeName = str::Dup(s);
             type->Release();
         }
+    } if (SymTagThunk == tag) {
+        DWORD dwThunkKind;
+        if (S_OK == symbol->get_thunkOrdinal(&dwThunkKind))
+            thunkTypeName = GetThunkTypeName(dwThunkKind);
+    } else {
+        symbol->get_length(&length);
     }
 
-    nameStr = GetUndecoratedSymbolName(symbol);
-
-    // type | section | length | offset | rva | name
-    g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr);
-
-    SysFreeStringSafe(undecoratedName);
+    const char *nameStr = GetUndecoratedSymbolName(symbol);
+    if (SymTagData == tag) {
+        // type | section | length | offset | rva | name | dataTypeName
+        char *tmp = dataTypeName ? dataTypeName : "";
+        g_report.AppendFmt("%s|%d|%d|%d|%d|%s|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr, tmp);
+        free(dataTypeName);
+    } else if (SymTagThunk == tag) {
+        const char *tmp = thunkTypeName ? thunkTypeName : "";
+        // type | section | length | offset | rva | name | thunkTypeName
+        g_report.AppendFmt("%s|%d|%d|%d|%d|%s|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr, tmp);
+    } else {
+        // type | section | length | offset | rva | name
+        g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr);
+    }
 }
 
 static void DumpSymbols(IDiaSession *session)
@@ -552,17 +583,14 @@ static void ProcessPdbFile(const char *fileNameA)
         goto Exit;
     }
 
-    if (g_dumpTypes) {
+    if (g_dumpTypes)
         DumpTypes(session);
-    }
 
-    if (g_dumpSections) {
+    if (g_dumpSections)
         DumpSections(session);
-    }
 
-    if (g_dumpSymbols) {
+    if (g_dumpSymbols)
         DumpSymbols(session);
-    }
 
     fputs("Format: 1\n", stdout);
     if (g_compact) {

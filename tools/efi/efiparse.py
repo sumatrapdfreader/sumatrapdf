@@ -6,15 +6,13 @@ Parses the output of efi.exe.
 
 import bz2
 
-g_file_name = "efi_out.txt"
+g_file_name = "efi.txt"
 
 (SECTION_CODE, SECTION_DATA, SECTION_BSS, SECTION_UNKNOWN) = ("C", "D", "B", "U")
 
 # maps a numeric string idx to string. We take advantage of the fact that
-# strings in efi.exe output are stored with consequitive indexes so can use
-#
+# strings in efi.exe output are stored with consequitive indexes
 class Strings():
-
 	def __init__(self):
 		self.strings = []
 
@@ -28,15 +26,43 @@ class Strings():
 # type | sectionNo | length | offset | objFileId
 # C|1|35|0|C:\Users\kkowalczyk\src\sumatrapdf\obj-dbg\sumatrapdf\SumatraPDF.obj
 class Section(object):
-	def __init__(self, l):
+	def __init__(self, l, strings):
 		parts = l.split("|")
 		assert len(parts) == 5
 		self.type = parts[0]
 		self.section_no = int(parts[1])
 		self.size = int(parts[2])
 		self.offset = int(parts[3])
-		# it's either name id in compact mode or full name
-		self.name = parts[4]
+		idx = int(parts[4])
+		self.name = strings.idx_to_str(idx)
+
+class SectionsSorted(object):
+	def __init__(self):
+		self.offsets = []
+		self.sections = []
+
+	def add(self, section):
+		prev_sec_idx = len(self.offsets) - 1
+		self.offsets.append(section.offset)
+		self.sections.append(section)
+		if prev_sec_idx > 1:
+			prev_off = self.offsets[prev_sec_idx]
+			assert prev_off <= section.offset
+
+class SectionToObjFile(object):
+	def __init__(self, sections):
+		sec_no_to_sec = {}
+		for s in sections:
+			if s.section_no not in sec_no_to_sec:
+				sec_no_to_sec[s.section_no] = SectionsSorted()
+			sec_sorted = sec_no_to_sec[s.section_no]
+			sec_sorted.add(s)
+		self.sec_no_to_sec = sec_no_to_sec
+
+	def get_obj_by_sec_no_off(self, sec_no, sec_off):
+		#sec_sorted = self.sec_no_to_sec[sec_no]
+		# TODO: find using bisect
+		return ""
 
 (SYM_NULL, SYM_EXE, SYM_COMPILAND, SYM_COMPILAND_DETAILS) = ("N", "Exe", "C", "CD")
 (SYM_COMPILAND_ENV, SYM_FUNCTION, SYM_BLOCK, SYM_DATA) = ("CE", "F", "B", "D")
@@ -52,13 +78,17 @@ class Section(object):
 class Symbol(object):
 	def __init__(self, l):
 		parts = l.split("|")
-		assert len(parts) == 6, "len(parts) is %d\n'%s'" % (len(parts), l)
+		assert len(parts) in (6,7), "len(parts) is %d\n'%s'" % (len(parts), l)
 		self.type = parts[0]
 		self.section = int(parts[1])
 		self.size = int(parts[2])
 		self.offset = int(parts[3])
 		self.rva = int(parts[4])
 		self.name = parts[5]
+		if self.type == SYM_THUNK:
+			self.thunk_type = parts[6]
+		elif self.type == SYM_DATA:
+			self.data_type_name = parts[6]
 
 class Type(object):
 	def __init__(self, l):
@@ -88,7 +118,7 @@ class ParseState(object):
 	def add_symbol(self, sym):
 		self.symbols.append(sym)
 		self.symbols_unrounded_size += sym.size
-		# TODO: this doesn't quite right because it seems symbols can be
+		# TODO: this doesn't quite work because it seems symbols can be
 		# inter-leaved e.g. a data symbol can be inside function symbol, which
 		# breaks the simplistic logic of calculating rounded size as curr.offset - prev.offset
 		"""
@@ -151,7 +181,7 @@ def parse_sections(state):
 		l = state.readline()
 		if l == None: return None
 		if l == "": return parse_next_section
-		state.sections.append(Section(l))
+		state.sections.append(Section(l), state.strings)
 
 def parse_symbols(state):
 	while True:
