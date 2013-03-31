@@ -75,9 +75,9 @@ RectI   GetVirtualScreenRect();
 bool    LaunchFile(const WCHAR *path, const WCHAR *params=NULL, const WCHAR *verb=NULL, bool hidden=false);
 HANDLE  LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir=NULL, DWORD flags=0);
 
-void    PaintRect(HDC hdc, RectI& rect);
-void    PaintLine(HDC hdc, RectI& rect);
-void    DrawCenteredText(HDC hdc, RectI& r, const WCHAR *txt, bool isRTL=false);
+void    PaintRect(HDC hdc, const RectI& rect);
+void    PaintLine(HDC hdc, const RectI& rect);
+void    DrawCenteredText(HDC hdc, const RectI& r, const WCHAR *txt, bool isRTL=false);
 SizeI   TextSizeInHwnd(HWND hwnd, const WCHAR *txt);
 
 bool    IsCursorOverWindow(HWND hwnd);

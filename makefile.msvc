@@ -89,12 +89,11 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 # 4127 : conditional expression is constant
 
 # those are warnings that are selected with /W4
-# 4512 : assignment operator could not be generated
-# 4389 : signed/unsigned mismatch
 # 4238 : non-standard extension: class rvalue used as lvalue
-# 4239 : non-standard extension: convert from Foo to Foo&
+# 4389 : signed/unsigned mismatch
 # 4245 : arg conversion signed/unsigned mismatch
 # 4428 : universal-character-name encountered in source
+# 4512 : assignment operator could not be generated
 
 # Addittional warnings that we make part of /W3 set:
 # 4244 : conversion from 'type x' to 'type y', possible loss of data
@@ -106,7 +105,8 @@ SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34701 /w34706 /w34131 /w34244 /w34100
 # 4480 : non-standard extension: specify underlying type for enum
 # 4505 : unreferenced local function
 # 4213 : non-standard extension: cast on l-value
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34480 /w34505 /w34213
+# 4239 : non-standard extension: convert from Foo to Foo&
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34480 /w34505 /w34213 /w34239
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(EXTDIR)/lzma/C

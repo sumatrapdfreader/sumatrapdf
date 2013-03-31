@@ -56,7 +56,7 @@ public:
     }
 };
 
-void LoadEbookAsync(const WCHAR *fileName, SumatraWindow &win)
+void LoadEbookAsync(const WCHAR *fileName, const SumatraWindow &win)
 {
     ThreadLoadEbook *loadThread = new ThreadLoadEbook(fileName, win);
     // the thread will delete itself at the end of processing

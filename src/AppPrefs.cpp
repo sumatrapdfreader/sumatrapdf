@@ -864,7 +864,8 @@ static bool LoadUserPrefs(AdvancedSettings *advancedPrefs)
     ScopedMem<WCHAR> path(GetUserPrefsPath());
     if (!path)
         return false;
-    DeserializeStructIni(IniFile(path), gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
+    IniFile iniFile(path);
+    DeserializeStructIni(iniFile, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
     return true;
 }
 

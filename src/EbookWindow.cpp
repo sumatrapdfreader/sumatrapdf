@@ -695,7 +695,7 @@ bool IsEbookFile(const WCHAR *fileName)
            MobiDoc::IsSupportedFile(fileName);
 }
 
-Doc GetDocForWindow(SumatraWindow& win)
+Doc GetDocForWindow(const SumatraWindow& win)
 {
     if (win.AsWindowInfo()) {
         WindowInfo *iwin = win.AsWindowInfo();

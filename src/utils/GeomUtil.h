@@ -170,7 +170,7 @@ public:
         RECT result = { rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy };
         return result;
     }
-    static RectT FromRECT(RECT& rect) {
+    static RectT FromRECT(const RECT& rect) {
         return FromXY(rect.left, rect.top, rect.right, rect.bottom);
     }
 

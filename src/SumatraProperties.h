@@ -40,7 +40,7 @@ public:
     HWND    hwndParent;
 };
 
-void OnMenuProperties(SumatraWindow& win);
+void OnMenuProperties(const SumatraWindow& win);
 void DeletePropertiesWindow(HWND hwndParent);
 LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

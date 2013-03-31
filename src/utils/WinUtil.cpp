@@ -492,7 +492,7 @@ RectI GetVirtualScreenRect()
     return result;
 }
 
-void PaintRect(HDC hdc, RectI& rect)
+void PaintRect(HDC hdc, const RectI& rect)
 {
     MoveToEx(hdc, rect.x, rect.y, NULL);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y);
@@ -501,13 +501,13 @@ void PaintRect(HDC hdc, RectI& rect)
     LineTo(hdc, rect.x, rect.y);
 }
 
-void PaintLine(HDC hdc, RectI& rect)
+void PaintLine(HDC hdc, const RectI& rect)
 {
     MoveToEx(hdc, rect.x, rect.y, NULL);
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
-void DrawCenteredText(HDC hdc, RectI& r, const WCHAR *txt, bool isRTL)
+void DrawCenteredText(HDC hdc, const RectI& r, const WCHAR *txt, bool isRTL)
 {
     SetBkMode(hdc, TRANSPARENT);
     DrawText(hdc, txt, -1, &r.ToRECT(), DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (isRTL ? DT_RTLREADING : 0));

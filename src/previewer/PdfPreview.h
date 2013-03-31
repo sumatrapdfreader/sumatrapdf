@@ -125,7 +125,7 @@ public:
     }
     IFACEMETHODIMP SetRect(const RECT *prc) {
         if (!prc) return E_INVALIDARG;
-        m_rcParent = RectI::FromRECT((RECT)*prc);
+        m_rcParent = RectI::FromRECT(*prc);
         if (m_hwnd) {
             SetWindowPos(m_hwnd, NULL, m_rcParent.x, m_rcParent.y, m_rcParent.dx, m_rcParent.dy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
             InvalidateRect(m_hwnd, NULL, TRUE);

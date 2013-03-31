@@ -231,8 +231,10 @@ void LinkHandler::GotoLink(PageDestination *link)
                 newWin->Focus();
         }
         // offer to save other attachments to a file
-        else
-            link->SaveEmbedded(LinkSaver(*owner, path));
+        else {
+            LinkSaver linkSaverTmp(*owner, path);
+            link->SaveEmbedded(linkSaverTmp);
+        }
     }
     else if (Dest_LaunchFile == type) {
         if (path) {

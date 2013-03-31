@@ -534,7 +534,7 @@ static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
     UpdateSidebarDisplayState(win, ds);
 }
 
-void UpdateCurrentFileDisplayStateForWin(SumatraWindow& win)
+void UpdateCurrentFileDisplayStateForWin(const SumatraWindow& win)
 {
     if (win.AsWindowInfo())
         UpdateCurrentFileDisplayStateForWinInfo(win.AsWindowInfo());
@@ -1365,7 +1365,7 @@ static bool DocumentPathExists(const WCHAR *path)
     return false;
 }
 
-void LoadDocument2(const WCHAR *fileName, SumatraWindow& win)
+void LoadDocument2(const WCHAR *fileName, const SumatraWindow& win)
 {
     // TODO: opening non-mobi files from mobi window doesn't work exactly
     // the same as opening them from non-mobi window
@@ -3094,7 +3094,7 @@ HWND GetSumatraWindowHwnd(const SumatraWindow& win)
     return NULL;
 }
 
-void OnMenuOpen(SumatraWindow& win)
+void OnMenuOpen(const SumatraWindow& win)
 {
     if (!HasPermission(Perm_DiskAccess)) return;
     // don't allow opening different files in plugin mode

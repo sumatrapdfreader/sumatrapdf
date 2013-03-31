@@ -113,6 +113,6 @@ public:
     int  CurrPageReparseIdx() const;
 };
 
-void LoadEbookAsync(const WCHAR *fileName, SumatraWindow &win);
+void LoadEbookAsync(const WCHAR *fileName, const SumatraWindow &win);
 
 #endif

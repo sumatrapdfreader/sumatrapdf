@@ -451,7 +451,7 @@ static void ShowProperties(HWND parent, Doc doc, DisplayModel *dm, bool extended
         delete layoutData;
 }
 
-void OnMenuProperties(SumatraWindow& win)
+void OnMenuProperties(const SumatraWindow& win)
 {
     if (win.AsWindowInfo())
         ShowProperties(win.AsWindowInfo()->hwndFrame, GetDocForWindow(win), win.AsWindowInfo()->dm);
