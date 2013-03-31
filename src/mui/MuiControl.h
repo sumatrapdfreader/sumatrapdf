@@ -17,7 +17,7 @@ class Control : public ILayout
 public:
     // allows a control to opt-out from being notified about
     // input events, stored in wantedInputBits
-    enum WantedInputBits : int {
+    enum WantedInputBits {
         WantsMouseOverBit   = 0,
         WantsMouseDownBit   = 1,
         WantsMouseUpBit     = 2,
@@ -27,7 +27,7 @@ public:
     };
 
     // describes current state of a window, stored in stateBits
-    enum ControlStateBits : int {
+    enum ControlStateBits {
         MouseOverBit = 0,
         IsPressedBit = 1,
         // using IsHidden and not IsVisible so that 0 is default, visible state
