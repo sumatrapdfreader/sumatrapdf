@@ -273,6 +273,23 @@ Rec [\n\
     return true;
 }
 
+static bool TestSerializeIniAsTxt3()
+{
+    const WCHAR *path = L"..\\tools\\serini_test\\data3-user.ini";
+
+    ScopedMem<char> data(file::ReadAll(path, NULL));
+    Check(data); // failed to read file
+    UserPrefs *s = (UserPrefs *)sertxt3::Deserialize(data, str::Len(data), gUserPrefsInfo);
+    Check(s); // failed to parse file
+
+    ScopedMem<char> ser(Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini"));
+    Check(str::Eq(data, ser));
+    sertxt3::FreeStruct(s, gUserPrefsInfo);
+
+    return true;
+
+}
+
 int main(int argc, char **argv)
 {
 #ifdef DEBUG
@@ -298,6 +315,8 @@ int main(int argc, char **argv)
     if (!TestSerializeUserTxt3())
         errors++;
     if (!TestSerializeRecursiveArrayTxt3())
+        errors++;
+    if (!TestSerializeIniAsTxt3())
         errors++;
     return errors;
 }

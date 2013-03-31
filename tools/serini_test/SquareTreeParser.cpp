@@ -35,6 +35,19 @@ list [
 list [
   value 3
 ]
+
+The below parser always tries to recover from errors as well as possible.
+One intentional side-effect of this is that INI files can be parsed mostly as
+expected as well. E.g.
+
+[Section]
+key = value
+
+is read as if it were written as
+
+Section [
+  key = value
+]
 */
 
 static inline char *SkipWsRev(char *begin, char *s)
@@ -95,7 +108,7 @@ SquareTreeNode *SquareTreeNode::GetChild(const char *key, size_t idx) const
     return NULL;
 }
 
-static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
+static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
 {
     SquareTreeNode *node = new SquareTreeNode();
 
@@ -120,7 +133,8 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
             // also tolerate "key \n [ \n ... \n ]" (else the key
             // gets an empty value and the child node an empty key)
             '\n' == *value && IsBracketLine(SkipWsAndComments(data), '[')) {
-            // parse child node(s)
+            // parse child node(s) //
+            *SkipWsRev(key, separator) = '\0';
             data = SkipWsAndComments(data) + 1;
             node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             // array are created by either reusing the same key for a different child
@@ -134,28 +148,47 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isRootNode=false)
             // also tolerate "key ]" (else the key gets ']' as value),
             // not however the explicit "key = ]"
             IsBracketLine(separator, ']')) {
-            // finish parsing this node
+            // finish parsing this node //
             data++;
             if (key < separator) {
                 // interpret "key ]" as "key =" and "]"
                 *SkipWsRev(key, separator) = '\0';
                 node->data.Append(SquareTreeNode::DataItem(key, ""));
             }
-            if (!isRootNode)
-                return node;
-            // ignore superfluous closing square brackets instead of
-            // ignoring all content following them
+            if (isTopLevel) {
+                // ignore superfluous closing square brackets instead of
+                // ignoring all content following them
+                continue;
+            }
+            return node;
         }
         else {
-            // string value (decoding is left to the consumer)
+            // string value (decoding is left to the consumer) //
             for (; *data && *data != '\n'; data++);
             bool hasMoreLines = '\n' == *data;
             *SkipWsRev(value, data) = '\0';
+            if (*key == '[' && *value && ']' == value[str::Len(value) - 1] && hasMoreLines) {
+                // treat INI section headers as top-level node names (else
+                // "[Section]" would be parsed as "[Section] = [Section]")
+                if (!isTopLevel) {
+                    value[str::Len(value)] = '\n';
+                    data = key;
+                    return node;
+                }
+                else {
+                    value[str::Len(value) - 1] = '\0';
+                    data++;
+                    node->data.Append(SquareTreeNode::DataItem(key + 1, ParseSquareTreeRec(data)));
+                    continue;
+                }
+            }
+            // parse "key[value" as "key[value = [value" (for now)
+            if (separator < value)
+                *SkipWsRev(key, separator) = '\0';
             node->data.Append(SquareTreeNode::DataItem(key, value));
             if (hasMoreLines)
                 data++;
         }
-        *SkipWsRev(key, separator) = '\0';
     }
 
     // assume that all square brackets have been properly balanced
