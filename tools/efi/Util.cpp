@@ -81,7 +81,7 @@ IDiaDataSource *LoadDia()
             {
                 hr = classFactory->CreateInstance(0,__uuidof(IDiaDataSource),(void**) &g_dia_source);
                 classFactory->Release();
-                logf("using loaded dia %s\n", dllName);
+                //logf("using loaded dia %s\n", dllName);
                 return g_dia_source;
             } else {
                 logf("DllGetClassObject() in %s failed", dllName);

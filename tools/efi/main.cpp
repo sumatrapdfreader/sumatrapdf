@@ -126,6 +126,23 @@ static void GetInternedStringsReport(str::Str<char>& resOut)
     resOut.Append("\n");
 }
 
+static void AddReportSepLine()
+{
+    if (g_report.Count() > 0)
+        g_report.Append("\n");
+}
+
+static char g_spacesBuf[256];
+static const char *spaces(int deep)
+{
+    int n = deep * 2;
+    for (int i = 0; i < n; i++) {
+        g_spacesBuf[i] = ' ';
+    }
+    g_spacesBuf[n] = 0;
+    return (const char*)g_spacesBuf;
+}
+
 static const char *GetSymTypeName(int i)
 {
     if (i >= SymTagMax)
@@ -152,23 +169,111 @@ static const char *GetSectionType(IDiaSectionContrib *item)
     return "U";
 }
 
+static const char *GetUdtType(IDiaSymbol *symbol)
+{
+    DWORD kind = (DWORD)-1;
+    if (FAILED(symbol->get_udtKind(&kind)))
+        return "<unknown udt kind>";
+    if (UdtStruct == kind)
+        return "struct";
+    if (UdtClass == kind)
+        return "class";
+    if (UdtUnion == kind)
+        return "union";
+    return "<unknown udt kind>";
+}
+
 // the result doesn't have to be free()d but is only valid until the next call to this function
 static const char *GetObjFileName(IDiaSectionContrib *item)
 {
     static str::Str<char> strTmp;
+    BSTR            name = 0;
 
     IDiaSymbol *    compiland = 0;
-    BSTR            objFileName = 0;
-
     item->get_compiland(&compiland);
-    if (!compiland)
-        return "<noobjfile>";
+    if (compiland) {
+        compiland->get_name(&name);
+        compiland->Release();
+    }
+    BStrToString(strTmp, name, "<noobjfile>");
+    SysFreeStringSafe(name);
+    return strTmp.Get();
+}
 
-    compiland->get_name(&objFileName);
-    compiland->Release();
+// doesn't seem to exit
+#if 0
+static const char *GetLibraryName(IDiaSymbol *symbol)
+{
+    static str::Str<char> strTmp;
+    BSTR   name = 0;
+    symbol->get_libraryName(&name);
+    BStrToString(strTmp, name, "<nolibfile>");
+    SysFreeStringSafe(name);
+    return strTmp.Get();
+}
+#endif
 
-    BStrToString(strTmp, objFileName, "<noobjfile>");
-    SysFreeStringSafe(objFileName);
+// always returns <nosrcfile>
+#if 0
+static const char *GetSourceFileName(IDiaSymbol *symbol)
+{
+    static str::Str<char> strTmp;
+    BSTR   name = 0;
+    symbol->get_sourceFileName(&name);
+    BStrToString(strTmp, name, "<nosrcfile>");
+    SysFreeStringSafe(name);
+    return strTmp.Get();
+}
+#endif
+
+// the result doesn't have to be free()d but is only valid until the next call to this function
+static const char *GetTypeName(IDiaSymbol *symbol)
+{
+    static str::Str<char> strTmp;
+    BSTR name = NULL;
+    symbol->get_name(&name);
+    BStrToString(strTmp, name, "<noname>", true);
+    SysFreeStringSafe(name);
+    return strTmp.Get();
+}
+
+// the result doesn't have to be free()d but is only valid until the next call to this function
+static const char *GetUndecoratedSymbolName(IDiaSymbol *symbol)
+{
+    static str::Str<char> strTmp;
+
+    BSTR name = NULL;
+
+#if 0
+    DWORD undecorateOptions = UNDNAME_COMPLETE;
+#else
+    DWORD undecorateOptions =  UNDNAME_NO_MS_KEYWORDS |
+                                UNDNAME_NO_FUNCTION_RETURNS |
+                                UNDNAME_NO_ALLOCATION_MODEL |
+                                UNDNAME_NO_ALLOCATION_LANGUAGE |
+                                UNDNAME_NO_THISTYPE |
+                                UNDNAME_NO_ACCESS_SPECIFIERS |
+                                UNDNAME_NO_THROW_SIGNATURES |
+                                UNDNAME_NO_MEMBER_TYPE |
+                                UNDNAME_NO_RETURN_UDT_MODEL |
+                                UNDNAME_NO_ECSU;
+#endif
+
+    if (S_OK == symbol->get_undecoratedNameEx(undecorateOptions, &name)) {
+        BStrToString(strTmp, name, "", true);
+        if (str::Eq(strTmp.Get(), "`string'"))
+            return "*str";
+        strTmp.Replace("(void)", "()");
+        // more ideas for undecoration:
+        // http://google-breakpad.googlecode.com/svn/trunk/src/common/windows/pdb_source_line_writer.cc
+    } else {
+        // Unfortunately it does happen that get_undecoratedNameEx() fails
+        // e.g. for RememberDefaultWindowPosition() in Sumatra code
+        symbol->get_name(&name);
+        BStrToString(strTmp, name, "<noname>", true);
+    }
+    SysFreeStringSafe(name);
+
     return strTmp.Get();
 }
 
@@ -196,58 +301,6 @@ static void DumpSection(IDiaSectionContrib *item)
         // type | sectionNo | length | offset | objFile
         g_report.AppendFmt("%s|%d|%d|%d|%s\n", sectionType, sectionNo, length, offset, objFileName);
     }
-}
-
-static void AddReportSepLine()
-{
-    if (g_report.Count() > 0)
-        g_report.Append("\n");
-}
-
-static char g_spacesBuf[256];
-static const char *spaces(int deep)
-{
-    if (0 == deep)
-        return "";
-    if (1 == deep)
-        return "  ";
-    if (2 == deep)
-        return "    ";
-    if (3 == deep)
-        return "      ";
-    if (4 == deep)
-        return "        ";
-    deep = deep * 2;
-    for (int i = 0; i < deep; i++) {
-        g_spacesBuf[i] = ' ';
-    }
-    g_spacesBuf[deep] = 0;
-    return (const char*)g_spacesBuf;
-}
-
-static const char *GetUdtType(IDiaSymbol *symbol)
-{
-    DWORD kind = (DWORD)-1;
-    if (FAILED(symbol->get_udtKind(&kind)))
-        return "<unknown udt kind>";
-    if (UdtStruct == kind)
-        return "struct";
-    if (UdtClass == kind)
-        return "class";
-    if (UdtUnion == kind)
-        return "union";
-    return "<unknown udt kind>";
-}
-
-// the result doesn't have to be free()d but is only valid until the next call to this function
-static const char *GetTypeName(IDiaSymbol *symbol)
-{
-    static str::Str<char> strTmp;
-    BSTR name = NULL;
-    symbol->get_name(&name);
-    BStrToString(strTmp, name, "<noname>", true);
-    SysFreeStringSafe(name);
-    return strTmp.Get();
 }
 
 static void DumpType(IDiaSymbol *symbol, int deep)
@@ -344,46 +397,6 @@ Exit:
     UnkReleaseSafe(globalScope);
 }
 
-// the result doesn't have to be free()d but is only valid until the next call to this function
-static const char *GetUndecoratedSymbolName(IDiaSymbol *symbol)
-{
-    static str::Str<char> strTmp;
-
-    BSTR name = NULL;
-
-#if 0
-    DWORD undecorateOptions = UNDNAME_COMPLETE;
-#else
-    DWORD undecorateOptions =  UNDNAME_NO_MS_KEYWORDS |
-                                UNDNAME_NO_FUNCTION_RETURNS |
-                                UNDNAME_NO_ALLOCATION_MODEL |
-                                UNDNAME_NO_ALLOCATION_LANGUAGE |
-                                UNDNAME_NO_THISTYPE |
-                                UNDNAME_NO_ACCESS_SPECIFIERS |
-                                UNDNAME_NO_THROW_SIGNATURES |
-                                UNDNAME_NO_MEMBER_TYPE |
-                                UNDNAME_NO_RETURN_UDT_MODEL |
-                                UNDNAME_NO_ECSU;
-#endif
-
-    if (S_OK == symbol->get_undecoratedNameEx(undecorateOptions, &name)) {
-        BStrToString(strTmp, name, "", true);
-        if (str::Eq(strTmp.Get(), "`string'"))
-            return "*str";
-        strTmp.Replace("(void)", "()");
-        // more ideas for undecoration:
-        // http://google-breakpad.googlecode.com/svn/trunk/src/common/windows/pdb_source_line_writer.cc
-    } else {
-        // Unfortunately it does happen that get_undecoratedNameEx() fails
-        // e.g. for RememberDefaultWindowPosition() in Sumatra code
-        symbol->get_name(&name);
-        BStrToString(strTmp, name, "<noname>", true);
-    }
-    SysFreeStringSafe(name);
-
-    return strTmp.Get();
-}
-
 static void DumpSymbol(IDiaSymbol *symbol)
 {
     DWORD               section, offset, rva;
@@ -408,17 +421,16 @@ static void DumpSymbol(IDiaSymbol *symbol)
     if (tag == SymTagData)
     {
         IDiaSymbol *type = NULL;
+        length = 0;
         if (symbol->get_type(&type) == S_OK) // no SUCCEEDED test as may return S_FALSE!
         {
-            if (FAILED(type->get_length(&length)))
-                length = 0;
+            type->get_length(&length);
             type->Release();
         }
-        else
-            length = 0;
     }
 
     nameStr = GetUndecoratedSymbolName(symbol);
+
     // type | section | length | offset | rva | name
     g_report.AppendFmt("%s|%d|%d|%d|%d|%s\n", typeName, (int)section, (int)length, (int)offset, (int)rva, nameStr);
 

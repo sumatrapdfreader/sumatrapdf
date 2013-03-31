@@ -22,6 +22,10 @@ TODO:
  - upload efi results as part of buildbot
  - diff for symbols in html format
  - upload efi html diff as part of buildbot
+ - record thunk type (http://msdn.microsoft.com/en-US/library/2k6x9xth(v=vs.80).aspx,
+   http://msdn.microsoft.com/en-US/library/dh0k8hft(v=vs.80).aspx)
+ - record data type (http://msdn.microsoft.com/en-US/library/w3a9kc5s(v=vs.80).aspx,
+   http://msdn.microsoft.com/en-US/library/b2x2t313(v=vs.80).aspx)
 """
 
 import sys, os, bz2, shutil
