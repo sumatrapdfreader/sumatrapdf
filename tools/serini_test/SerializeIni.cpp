@@ -449,7 +449,7 @@ void FreeStruct(uint8_t *data, StructMetadata *def)
 #else
 
 #include "../../src/utils/StrSlice.cpp"
-#include "../sertxt_test/SerializeTxtParser.cpp"
 #include "../sertxt_test/SerializeTxt.cpp"
+#include "../sertxt_test/SerializeTxtParser.cpp"
 
 #endif // TEST_SERIALIZE_TXT

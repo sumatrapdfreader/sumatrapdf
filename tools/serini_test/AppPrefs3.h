@@ -118,7 +118,7 @@ struct GlobalPrefs {
     WCHAR * versionToSkip;
     // the time SumatraPDF has last checked for updates (cf.
     // EnableAutoUpdate)
-    int64_t lastUpdateTime;
+    FILETIME lastUpdateTime;
     // how pages should be layed out by default
     WCHAR * defaultDisplayMode;
     // the default zoom factor in % (negative values indicate virtual
@@ -151,7 +151,7 @@ struct GlobalPrefs {
     File * file;
     size_t fileCount;
     // modification time of the preferences file when it was last read
-    int64_t lastPrefUpdate;
+    FILETIME lastPrefUpdate;
     // a list of settings which this version of SumatraPDF didn't know how
     // to handle
     char * unknownSettings;
@@ -264,151 +264,157 @@ struct UserPrefs {
 
 enum SettingType {
     Type_Meta, Type_Struct, Type_Array, Type_Compact,
-    Type_Bool, Type_Color, Type_Float, Type_Int, Type_Int64, Type_String, Type_Utf8String,
+    Type_Bool, Type_Color, Type_Float, Type_Int, Type_String, Type_Utf8String,
 };
 
 struct SettingInfo {
-    const char *name;
     SettingType type;
-    size_t offset;
-    SettingInfo *substruct;
-    int64_t def;
+    uint16_t nameOffset;
+    uint16_t offset;
+    intptr_t value;
 };
-STATIC_ASSERT(sizeof(int64_t) >= sizeof(void *), ptr_is_max_64_bit);
 
-static inline size_t GetFieldCount(SettingInfo *meta) { return (size_t)meta[0].def; }
+static inline size_t GetFieldCount(SettingInfo *meta) { return meta[0].nameOffset; }
 static inline size_t GetStructSize(SettingInfo *meta) { return meta[0].offset; }
+static inline SettingInfo *GetSubstruct(SettingInfo& field) { return (SettingInfo *)field.value; }
+static inline const char *GetFieldName(SettingInfo *meta, size_t idx) { return (const char *)meta[0].value + meta[idx].nameOffset; }
 
 #ifdef INCLUDE_APPPREFS3_METADATA
+static SettingInfo gFILETIMEInfo[] = {
+    { Type_Meta, 2, sizeof(FILETIME), (intptr_t)"DwHighDateTime\0DwLowDateTime" },
+    { Type_Int, 0, offsetof(FILETIME, dwHighDateTime), 0 },
+    { Type_Int, 15, offsetof(FILETIME, dwLowDateTime), 0 },
+};
+
 static SettingInfo gRectIInfo[] = {
-    { NULL, Type_Meta, sizeof(RectI), NULL, 4 },
-    { "X", Type_Int, offsetof(RectI, x), NULL, 0 },
-    { "Y", Type_Int, offsetof(RectI, y), NULL, 0 },
-    { "Dx", Type_Int, offsetof(RectI, dx), NULL, 0 },
-    { "Dy", Type_Int, offsetof(RectI, dy), NULL, 0 },
+    { Type_Meta, 4, sizeof(RectI), (intptr_t)"X\0Y\0Dx\0Dy" },
+    { Type_Int, 0, offsetof(RectI, x), 0 },
+    { Type_Int, 2, offsetof(RectI, y), 0 },
+    { Type_Int, 4, offsetof(RectI, dx), 0 },
+    { Type_Int, 7, offsetof(RectI, dy), 0 },
 };
 
 static SettingInfo gPointIInfo[] = {
-    { NULL, Type_Meta, sizeof(PointI), NULL, 2 },
-    { "X", Type_Int, offsetof(PointI, x), NULL, 0 },
-    { "Y", Type_Int, offsetof(PointI, y), NULL, 0 },
+    { Type_Meta, 2, sizeof(PointI), (intptr_t)"X\0Y" },
+    { Type_Int, 0, offsetof(PointI, x), 0 },
+    { Type_Int, 2, offsetof(PointI, y), 0 },
 };
 
 static SettingInfo gFavoriteInfo[] = {
-    { NULL, Type_Meta, sizeof(Favorite), NULL, 3 },
-    { "Name", Type_String, offsetof(Favorite, name), NULL, NULL },
-    { "PageNo", Type_Int, offsetof(Favorite, pageNo), NULL, 0 },
-    { "PageLabel", Type_String, offsetof(Favorite, pageLabel), NULL, NULL },
+    { Type_Meta, 3, sizeof(Favorite), (intptr_t)"Name\0PageNo\0PageLabel" },
+    { Type_String, 0, offsetof(Favorite, name), NULL },
+    { Type_Int, 5, offsetof(Favorite, pageNo), 0 },
+    { Type_String, 12, offsetof(Favorite, pageLabel), NULL },
 };
 
 static SettingInfo gFileInfo[] = {
-    { NULL, Type_Meta, sizeof(File), NULL, 19 },
-    { "FilePath", Type_String, offsetof(File, filePath), NULL, NULL },
-    { "OpenCount", Type_Int, offsetof(File, openCount), NULL, 0 },
-    { "IsPinned", Type_Bool, offsetof(File, isPinned), NULL, false },
-    { "IsMissing", Type_Bool, offsetof(File, isMissing), NULL, false },
-    { "UseGlobalValues", Type_Bool, offsetof(File, useGlobalValues), NULL, false },
-    { "DisplayMode", Type_String, offsetof(File, displayMode), NULL, (int64_t)L"automatic" },
-    { "ScrollPos", Type_Compact, offsetof(File, scrollPos), gPointIInfo, NULL },
-    { "PageNo", Type_Int, offsetof(File, pageNo), NULL, 1 },
-    { "ReparseIdx", Type_Int, offsetof(File, reparseIdx), NULL, 0 },
-    { "ZoomVirtual", Type_Float, offsetof(File, zoomVirtual), NULL, (int64_t)"100" },
-    { "Rotation", Type_Int, offsetof(File, rotation), NULL, 0 },
-    { "WindowState", Type_Int, offsetof(File, windowState), NULL, 0 },
-    { "WindowPos", Type_Compact, offsetof(File, windowPos), gRectIInfo, NULL },
-    { "DecryptionKey", Type_Utf8String, offsetof(File, decryptionKey), NULL, NULL },
-    { "TocVisible", Type_Bool, offsetof(File, tocVisible), NULL, true },
-    { "SidebarDx", Type_Int, offsetof(File, sidebarDx), NULL, 0 },
-    { "TocState", Type_Utf8String, offsetof(File, tocState), NULL, NULL },
-    { "Favorite", Type_Array, offsetof(File, favorite), gFavoriteInfo, NULL },
-    { NULL, Type_Meta, offsetof(File, favoriteCount), gFavoriteInfo, NULL },
+    { Type_Meta, 19, sizeof(File), (intptr_t)"FilePath\0OpenCount\0IsPinned\0IsMissing\0UseGlobalValues\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0ZoomVirtual\0Rotation\0WindowState\0WindowPos\0DecryptionKey\0TocVisible\0SidebarDx\0TocState\0Favorite" },
+    { Type_String, 0, offsetof(File, filePath), NULL },
+    { Type_Int, 9, offsetof(File, openCount), 0 },
+    { Type_Bool, 19, offsetof(File, isPinned), false },
+    { Type_Bool, 28, offsetof(File, isMissing), false },
+    { Type_Bool, 38, offsetof(File, useGlobalValues), false },
+    { Type_String, 54, offsetof(File, displayMode), (intptr_t)L"automatic" },
+    { Type_Compact, 66, offsetof(File, scrollPos), (intptr_t)gPointIInfo },
+    { Type_Int, 76, offsetof(File, pageNo), 1 },
+    { Type_Int, 83, offsetof(File, reparseIdx), 0 },
+    { Type_Float, 94, offsetof(File, zoomVirtual), (intptr_t)"100" },
+    { Type_Int, 106, offsetof(File, rotation), 0 },
+    { Type_Int, 115, offsetof(File, windowState), 0 },
+    { Type_Compact, 127, offsetof(File, windowPos), (intptr_t)gRectIInfo },
+    { Type_Utf8String, 137, offsetof(File, decryptionKey), NULL },
+    { Type_Bool, 151, offsetof(File, tocVisible), true },
+    { Type_Int, 162, offsetof(File, sidebarDx), 0 },
+    { Type_Utf8String, 172, offsetof(File, tocState), NULL },
+    { Type_Array, 181, offsetof(File, favorite), (intptr_t)gFavoriteInfo },
+    { Type_Meta, 0, offsetof(File, favoriteCount), 0 },
 };
 
 static SettingInfo gGlobalPrefsInfo[] = {
-    { NULL, Type_Meta, sizeof(GlobalPrefs), NULL, 25 },
-    { "GlobalPrefsOnly", Type_Bool, offsetof(GlobalPrefs, globalPrefsOnly), NULL, false },
-    { "CurrLangCode", Type_String, offsetof(GlobalPrefs, currLangCode), NULL, NULL },
-    { "ToolbarVisible", Type_Bool, offsetof(GlobalPrefs, toolbarVisible), NULL, true },
-    { "FavVisible", Type_Bool, offsetof(GlobalPrefs, favVisible), NULL, false },
-    { "PdfAssociateDontAskAgain", Type_Bool, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), NULL, false },
-    { "PdfAssociateShouldAssociate", Type_Bool, offsetof(GlobalPrefs, pdfAssociateShouldAssociate), NULL, false },
-    { "EnableAutoUpdate", Type_Bool, offsetof(GlobalPrefs, enableAutoUpdate), NULL, true },
-    { "RememberOpenedFiles", Type_Bool, offsetof(GlobalPrefs, rememberOpenedFiles), NULL, true },
-    { "UseSysColors", Type_Bool, offsetof(GlobalPrefs, useSysColors), NULL, false },
-    { "InverseSearchCmdLine", Type_String, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL, NULL },
-    { "EnableTeXEnhancements", Type_Bool, offsetof(GlobalPrefs, enableTeXEnhancements), NULL, false },
-    { "VersionToSkip", Type_String, offsetof(GlobalPrefs, versionToSkip), NULL, NULL },
-    { "LastUpdateTime", Type_Int64, offsetof(GlobalPrefs, lastUpdateTime), NULL, 0 },
-    { "DefaultDisplayMode", Type_String, offsetof(GlobalPrefs, defaultDisplayMode), NULL, (int64_t)L"automatic" },
-    { "DefaultZoom", Type_Float, offsetof(GlobalPrefs, defaultZoom), NULL, (int64_t)"-1" },
-    { "WindowState", Type_Int, offsetof(GlobalPrefs, windowState), NULL, 1 },
-    { "WindowPos", Type_Compact, offsetof(GlobalPrefs, windowPos), gRectIInfo, NULL },
-    { "TocVisible", Type_Bool, offsetof(GlobalPrefs, tocVisible), NULL, true },
-    { "SidebarDx", Type_Int, offsetof(GlobalPrefs, sidebarDx), NULL, 0 },
-    { "TocDy", Type_Int, offsetof(GlobalPrefs, tocDy), NULL, 0 },
-    { "ShowStartPage", Type_Bool, offsetof(GlobalPrefs, showStartPage), NULL, true },
-    { "OpenCountWeek", Type_Int, offsetof(GlobalPrefs, openCountWeek), NULL, 0 },
-    { "CbxR2L", Type_Bool, offsetof(GlobalPrefs, cbxR2L), NULL, false },
-    { "File", Type_Array, offsetof(GlobalPrefs, file), gFileInfo, NULL },
-    { NULL, Type_Meta, offsetof(GlobalPrefs, fileCount), gFileInfo, NULL },
+    { Type_Meta, 25, sizeof(GlobalPrefs), (intptr_t)"GlobalPrefsOnly\0CurrLangCode\0ToolbarVisible\0FavVisible\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0EnableAutoUpdate\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0VersionToSkip\0LastUpdateTime\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0TocVisible\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxR2L\0File" },
+    { Type_Bool, 0, offsetof(GlobalPrefs, globalPrefsOnly), false },
+    { Type_String, 16, offsetof(GlobalPrefs, currLangCode), NULL },
+    { Type_Bool, 29, offsetof(GlobalPrefs, toolbarVisible), true },
+    { Type_Bool, 44, offsetof(GlobalPrefs, favVisible), false },
+    { Type_Bool, 55, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), false },
+    { Type_Bool, 80, offsetof(GlobalPrefs, pdfAssociateShouldAssociate), false },
+    { Type_Bool, 108, offsetof(GlobalPrefs, enableAutoUpdate), true },
+    { Type_Bool, 125, offsetof(GlobalPrefs, rememberOpenedFiles), true },
+    { Type_Bool, 145, offsetof(GlobalPrefs, useSysColors), false },
+    { Type_String, 158, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL },
+    { Type_Bool, 179, offsetof(GlobalPrefs, enableTeXEnhancements), false },
+    { Type_String, 201, offsetof(GlobalPrefs, versionToSkip), NULL },
+    { Type_Compact, 215, offsetof(GlobalPrefs, lastUpdateTime), (intptr_t)gFILETIMEInfo },
+    { Type_String, 230, offsetof(GlobalPrefs, defaultDisplayMode), (intptr_t)L"automatic" },
+    { Type_Float, 249, offsetof(GlobalPrefs, defaultZoom), (intptr_t)"-1" },
+    { Type_Int, 261, offsetof(GlobalPrefs, windowState), 1 },
+    { Type_Compact, 273, offsetof(GlobalPrefs, windowPos), (intptr_t)gRectIInfo },
+    { Type_Bool, 283, offsetof(GlobalPrefs, tocVisible), true },
+    { Type_Int, 294, offsetof(GlobalPrefs, sidebarDx), 0 },
+    { Type_Int, 304, offsetof(GlobalPrefs, tocDy), 0 },
+    { Type_Bool, 310, offsetof(GlobalPrefs, showStartPage), true },
+    { Type_Int, 324, offsetof(GlobalPrefs, openCountWeek), 0 },
+    { Type_Bool, 338, offsetof(GlobalPrefs, cbxR2L), false },
+    { Type_Array, 345, offsetof(GlobalPrefs, file), (intptr_t)gFileInfo },
+    { Type_Meta, 0, offsetof(GlobalPrefs, fileCount), 0 },
 };
 
 static SettingInfo gAdvancedPrefsInfo[] = {
-    { NULL, Type_Meta, sizeof(AdvancedPrefs), NULL, 6 },
-    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedPrefs, traditionalEbookUI), NULL, false },
-    { "ReuseInstance", Type_Bool, offsetof(AdvancedPrefs, reuseInstance), NULL, false },
-    { "MainWindowBackground", Type_Color, offsetof(AdvancedPrefs, mainWindowBackground), NULL, 0xfff200 },
-    { "EscToExit", Type_Bool, offsetof(AdvancedPrefs, escToExit), NULL, false },
-    { "TextColor", Type_Color, offsetof(AdvancedPrefs, textColor), NULL, 0x000000 },
-    { "PageColor", Type_Color, offsetof(AdvancedPrefs, pageColor), NULL, 0xffffff },
+    { Type_Meta, 6, sizeof(AdvancedPrefs), (intptr_t)"TraditionalEbookUI\0ReuseInstance\0MainWindowBackground\0EscToExit\0TextColor\0PageColor" },
+    { Type_Bool, 0, offsetof(AdvancedPrefs, traditionalEbookUI), false },
+    { Type_Bool, 19, offsetof(AdvancedPrefs, reuseInstance), false },
+    { Type_Color, 33, offsetof(AdvancedPrefs, mainWindowBackground), 0xfff200 },
+    { Type_Bool, 54, offsetof(AdvancedPrefs, escToExit), false },
+    { Type_Color, 64, offsetof(AdvancedPrefs, textColor), 0x000000 },
+    { Type_Color, 74, offsetof(AdvancedPrefs, pageColor), 0xffffff },
 };
 
 static SettingInfo gPrinterDefaultsInfo[] = {
-    { NULL, Type_Meta, sizeof(PrinterDefaults), NULL, 2 },
-    { "PrintScale", Type_Utf8String, offsetof(PrinterDefaults, printScale), NULL, (int64_t)"shrink" },
-    { "PrintAsImage", Type_Bool, offsetof(PrinterDefaults, printAsImage), NULL, false },
+    { Type_Meta, 2, sizeof(PrinterDefaults), (intptr_t)"PrintScale\0PrintAsImage" },
+    { Type_Utf8String, 0, offsetof(PrinterDefaults, printScale), (intptr_t)"shrink" },
+    { Type_Bool, 11, offsetof(PrinterDefaults, printAsImage), false },
 };
 
 static SettingInfo gPagePaddingInfo[] = {
-    { NULL, Type_Meta, sizeof(PagePadding), NULL, 4 },
-    { "OuterX", Type_Int, offsetof(PagePadding, outerX), NULL, 4 },
-    { "OuterY", Type_Int, offsetof(PagePadding, outerY), NULL, 2 },
-    { "InnerX", Type_Int, offsetof(PagePadding, innerX), NULL, 4 },
-    { "InnerY", Type_Int, offsetof(PagePadding, innerY), NULL, 4 },
+    { Type_Meta, 4, sizeof(PagePadding), (intptr_t)"OuterX\0OuterY\0InnerX\0InnerY" },
+    { Type_Int, 0, offsetof(PagePadding, outerX), 4 },
+    { Type_Int, 7, offsetof(PagePadding, outerY), 2 },
+    { Type_Int, 14, offsetof(PagePadding, innerX), 4 },
+    { Type_Int, 21, offsetof(PagePadding, innerY), 4 },
 };
 
 static SettingInfo gBackgroundGradientInfo[] = {
-    { NULL, Type_Meta, sizeof(BackgroundGradient), NULL, 4 },
-    { "Enabled", Type_Bool, offsetof(BackgroundGradient, enabled), NULL, false },
-    { "ColorTop", Type_Color, offsetof(BackgroundGradient, colorTop), NULL, 0xaa2828 },
-    { "ColorMiddle", Type_Color, offsetof(BackgroundGradient, colorMiddle), NULL, 0x28aa28 },
-    { "ColorBottom", Type_Color, offsetof(BackgroundGradient, colorBottom), NULL, 0x2828aa },
+    { Type_Meta, 4, sizeof(BackgroundGradient), (intptr_t)"Enabled\0ColorTop\0ColorMiddle\0ColorBottom" },
+    { Type_Bool, 0, offsetof(BackgroundGradient, enabled), false },
+    { Type_Color, 8, offsetof(BackgroundGradient, colorTop), 0xaa2828 },
+    { Type_Color, 17, offsetof(BackgroundGradient, colorMiddle), 0x28aa28 },
+    { Type_Color, 29, offsetof(BackgroundGradient, colorBottom), 0x2828aa },
 };
 
 static SettingInfo gForwardSearchInfo[] = {
-    { NULL, Type_Meta, sizeof(ForwardSearch), NULL, 4 },
-    { "HighlightOffset", Type_Int, offsetof(ForwardSearch, highlightOffset), NULL, 0 },
-    { "HighlightWidth", Type_Int, offsetof(ForwardSearch, highlightWidth), NULL, 15 },
-    { "HighlightColor", Type_Color, offsetof(ForwardSearch, highlightColor), NULL, 0x6581ff },
-    { "HighlightPermanent", Type_Bool, offsetof(ForwardSearch, highlightPermanent), NULL, false },
+    { Type_Meta, 4, sizeof(ForwardSearch), (intptr_t)"HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent" },
+    { Type_Int, 0, offsetof(ForwardSearch, highlightOffset), 0 },
+    { Type_Int, 16, offsetof(ForwardSearch, highlightWidth), 15 },
+    { Type_Color, 31, offsetof(ForwardSearch, highlightColor), 0x6581ff },
+    { Type_Bool, 46, offsetof(ForwardSearch, highlightPermanent), false },
 };
 
 static SettingInfo gExternalViewerInfo[] = {
-    { NULL, Type_Meta, sizeof(ExternalViewer), NULL, 3 },
-    { "CommandLine", Type_String, offsetof(ExternalViewer, commandLine), NULL, NULL },
-    { "Name", Type_String, offsetof(ExternalViewer, name), NULL, NULL },
-    { "Filter", Type_String, offsetof(ExternalViewer, filter), NULL, NULL },
+    { Type_Meta, 3, sizeof(ExternalViewer), (intptr_t)"CommandLine\0Name\0Filter" },
+    { Type_String, 0, offsetof(ExternalViewer, commandLine), NULL },
+    { Type_String, 12, offsetof(ExternalViewer, name), NULL },
+    { Type_String, 17, offsetof(ExternalViewer, filter), NULL },
 };
 
 static SettingInfo gUserPrefsInfo[] = {
-    { NULL, Type_Meta, sizeof(UserPrefs), NULL, 7 },
-    { "AdvancedPrefs", Type_Struct, offsetof(UserPrefs, advancedPrefs), gAdvancedPrefsInfo, NULL },
-    { "PrinterDefaults", Type_Struct, offsetof(UserPrefs, printerDefaults), gPrinterDefaultsInfo, NULL },
-    { "PagePadding", Type_Struct, offsetof(UserPrefs, pagePadding), gPagePaddingInfo, NULL },
-    { "BackgroundGradient", Type_Struct, offsetof(UserPrefs, backgroundGradient), gBackgroundGradientInfo, NULL },
-    { "ForwardSearch", Type_Struct, offsetof(UserPrefs, forwardSearch), gForwardSearchInfo, NULL },
-    { "ExternalViewer", Type_Array, offsetof(UserPrefs, externalViewer), gExternalViewerInfo, NULL },
-    { NULL, Type_Meta, offsetof(UserPrefs, externalViewerCount), gExternalViewerInfo, NULL },
+    { Type_Meta, 7, sizeof(UserPrefs), (intptr_t)"AdvancedPrefs\0PrinterDefaults\0PagePadding\0BackgroundGradient\0ForwardSearch\0ExternalViewer" },
+    { Type_Struct, 0, offsetof(UserPrefs, advancedPrefs), (intptr_t)gAdvancedPrefsInfo },
+    { Type_Struct, 14, offsetof(UserPrefs, printerDefaults), (intptr_t)gPrinterDefaultsInfo },
+    { Type_Struct, 30, offsetof(UserPrefs, pagePadding), (intptr_t)gPagePaddingInfo },
+    { Type_Struct, 42, offsetof(UserPrefs, backgroundGradient), (intptr_t)gBackgroundGradientInfo },
+    { Type_Struct, 61, offsetof(UserPrefs, forwardSearch), (intptr_t)gForwardSearchInfo },
+    { Type_Array, 75, offsetof(UserPrefs, externalViewer), (intptr_t)gExternalViewerInfo },
+    { Type_Meta, 0, offsetof(UserPrefs, externalViewerCount), 0 },
 };
 #endif
 

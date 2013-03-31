@@ -14,6 +14,8 @@
 
 using namespace serini3;
 
+#pragma warning(disable: 4505)
+
 static bool TestSerializeIni()
 {
 #ifdef TEST_SERIALIZE_SQT
@@ -83,6 +85,7 @@ static bool TestSerializeIni3()
     GlobalPrefs *s = (GlobalPrefs *)Deserialize(data, str::Len(data), gGlobalPrefsInfo);
     Check(s); // failed to parse file
     Check(str::Find(s->inverseSearchCmdLine, L"\r\n"));
+    Check(1 == s->lastUpdateTime.dwHighDateTime && MAXDWORD == s->lastUpdateTime.dwLowDateTime);
 
     size_t len;
     ScopedMem<char> ser(Serialize(s, gGlobalPrefsInfo, &len));
@@ -116,10 +119,10 @@ struct Rec {
 };
 
 static SettingInfo gRecInfo[] = {
-    { NULL, Type_Meta, sizeof(Rec), NULL, 3 },
-    { "Rec", Type_Array, offsetof(Rec, rec), gRecInfo, NULL },
-    { NULL, Type_Meta, offsetof(Rec, recCount), gRecInfo, NULL },
-    { "Up", Type_Struct, offsetof(Rec, up), gUserPrefsInfo, NULL },
+    { Type_Meta, 3, sizeof(Rec), (intptr_t)"Rec\0Up" },
+    { Type_Array, 0, offsetof(Rec, rec), (intptr_t)gRecInfo },
+    { Type_Meta, 0, offsetof(Rec, recCount), (intptr_t)gRecInfo },
+    { Type_Struct, 4, offsetof(Rec, up), (intptr_t)gUserPrefsInfo },
 };
 
 static bool TestSerializeRecursiveArray()
@@ -173,14 +176,14 @@ struct TestCD2 { bool val1; float val2; };
 struct TestCD1 { TestCD2 compact; };
 
 static SettingInfo gTestCD2Info[] = {
-    { NULL, Type_Meta, sizeof(TestCD2), NULL, 2 },
-    { "Val1", Type_Bool, offsetof(TestCD2, val1), NULL, false },
-    { "Val2", Type_Float, offsetof(TestCD2, val2), NULL, (int64_t)"3.14" },
+    { Type_Meta, 2, sizeof(TestCD2), (intptr_t)"Val1\0Val2" },
+    { Type_Bool, 0, offsetof(TestCD2, val1), false },
+    { Type_Float, 5, offsetof(TestCD2, val2), (intptr_t)"3.14" },
 };
 
 static SettingInfo gTestCD1Info[] = {
-    { NULL, Type_Meta, sizeof(TestCD1), NULL, 1 },
-    { "Compact", Type_Compact, offsetof(TestCD1, compact), gTestCD2Info, NULL },
+    { Type_Meta, 1, sizeof(TestCD1), (intptr_t)"Compact" },
+    { Type_Compact, 0, offsetof(TestCD1, compact), (intptr_t)gTestCD2Info },
 };
 
 static bool TestCompactDefaultValues()
@@ -206,6 +209,7 @@ static bool TestSerializeTxt3()
     GlobalPrefs *s = (GlobalPrefs *)sertxt3::Deserialize(data, str::Len(data), gGlobalPrefsInfo);
     Check(s); // failed to parse file
     Check(str::Find(s->inverseSearchCmdLine, L"\r\n"));
+    Check(1 == s->lastUpdateTime.dwHighDateTime && MAXDWORD == s->lastUpdateTime.dwLowDateTime);
 
     size_t len;
     ScopedMem<char> ser(sertxt3::Serialize(s, gGlobalPrefsInfo, &len));

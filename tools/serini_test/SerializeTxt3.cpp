@@ -9,12 +9,12 @@
 
 namespace sertxt3 {
 
-static int64_t ParseBencInt(const char *bytes)
+static int ParseInt(const char *bytes)
 {
     bool negative = *bytes == '-';
     if (negative)
         bytes++;
-    int64_t value = 0;
+    int value = 0;
     for (; str::IsDigit(*bytes); bytes++) {
         value = value * 10 + (*bytes - '0');
         if (value - (negative ? 1 : 0) < 0)
@@ -49,7 +49,7 @@ static bool IsCompactable(SettingInfo *meta)
 {
     for (size_t i = 1; i <= GetFieldCount(meta); i++) {
         switch (meta[i].type) {
-        case Type_Bool: case Type_Int: case Type_Int64: case Type_Float: case Type_Color:
+        case Type_Bool: case Type_Int: case Type_Float: case Type_Color:
             continue;
         default:
             return false;
@@ -65,17 +65,14 @@ static void DeserializeField(uint8_t *base, SettingInfo& field, const char *valu
 
     switch (field.type) {
     case Type_Bool:
-        *(bool *)(base + field.offset) = value ? str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4])) || ParseBencInt(value) != 0 : field.def != 0;
+        *(bool *)(base + field.offset) = value ? str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4])) || ParseInt(value) != 0 : field.value != 0;
         break;
     case Type_Int:
-        *(int *)(base + field.offset) = (int)(value ? ParseBencInt(value) : field.def);
-        break;
-    case Type_Int64:
-        *(int64_t *)(base + field.offset) = value ? ParseBencInt(value) : field.def;
+        *(int *)(base + field.offset) = (int)(value ? ParseInt(value) : field.value);
         break;
     case Type_Float:
         if (!value || !str::Parse(value, "%f", (float *)(base + field.offset)))
-            str::Parse((const char *)field.def, "%f", (float *)(base + field.offset));
+            str::Parse((const char *)field.value, "%f", (float *)(base + field.offset));
         break;
     case Type_Color:
         if (value && str::Parse(value, "#%2x%2x%2x%2x", &a, &r, &g, &b))
@@ -83,29 +80,29 @@ static void DeserializeField(uint8_t *base, SettingInfo& field, const char *valu
         else if (value && str::Parse(value, "#%2x%2x%2x", &r, &g, &b))
             *(COLORREF *)(base + field.offset) = RGB(r, g, b);
         else
-            *(COLORREF *)(base + field.offset) = (COLORREF)field.def;
+            *(COLORREF *)(base + field.offset) = (COLORREF)field.value;
         break;
     case Type_String:
         if (value)
             *(WCHAR **)(base + field.offset) = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(value)));
         else
-            *(WCHAR **)(base + field.offset) = str::Dup((const WCHAR *)field.def);
+            *(WCHAR **)(base + field.offset) = str::Dup((const WCHAR *)field.value);
         break;
     case Type_Utf8String:
         if (value)
             *(char **)(base + field.offset) = UnescapeStr(value);
         else
-            *(char **)(base + field.offset) = str::Dup((const char *)field.def);
+            *(char **)(base + field.offset) = str::Dup((const char *)field.value);
         break;
     case Type_Compact:
-        assert(IsCompactable(field.substruct));
-        for (size_t i = 1; i <= GetFieldCount(field.substruct); i++) {
+        assert(IsCompactable(GetSubstruct(field)));
+        for (size_t i = 1; i <= GetFieldCount(GetSubstruct(field)); i++) {
             if (value) {
                 for (; str::IsWs(*value); value++);
                 if (!*value)
                     value = NULL;
             }
-            DeserializeField(base + field.offset, field.substruct[i], value);
+            DeserializeField(base + field.offset, GetSubstruct(field)[i], value);
             if (value)
                 for (; *value && !str::IsWs(*value); value++);
         }
@@ -122,23 +119,23 @@ static void *DeserializeRec(SquareTreeNode *node, SettingInfo *meta, uint8_t *ba
 
     for (size_t i = 1; i <= GetFieldCount(meta); i++) {
         if (Type_Struct == meta[i].type) {
-            SquareTreeNode *child = node ? node->GetChild(meta[i].name) : NULL;
-            DeserializeRec(child, meta[i].substruct, base + meta[i].offset);
+            SquareTreeNode *child = node ? node->GetChild(GetFieldName(meta, i)) : NULL;
+            DeserializeRec(child, GetSubstruct(meta[i]), base + meta[i].offset);
         }
         else if (Type_Array == meta[i].type) {
             if (!node)
                 continue;
             str::Str<uint8_t> array;
             SquareTreeNode *child;
-            for (size_t j = 0; (child = node->GetChild(meta[i].name, j)) != NULL; j++) {
-                uint8_t *subbase = array.AppendBlanks(GetStructSize(meta[i].substruct));
-                DeserializeRec(child, meta[i].substruct, subbase);
+            for (size_t j = 0; (child = node->GetChild(GetFieldName(meta, i), j)) != NULL; j++) {
+                uint8_t *subbase = array.AppendBlanks(GetStructSize(GetSubstruct(meta[i])));
+                DeserializeRec(child, GetSubstruct(meta[i]), subbase);
             }
-            *(size_t *)(base + meta[i+1].offset) = array.Size() / GetStructSize(meta[i].substruct);
+            *(size_t *)(base + meta[i+1].offset) = array.Size() / GetStructSize(GetSubstruct(meta[i]));
             *(uint8_t **)(base + meta[i].offset) = array.StealData();
         }
         else if (Type_Meta != meta[i].type) {
-            const char *value = node ? node->GetValue(meta[i].name) : NULL;
+            const char *value = node ? node->GetValue(GetFieldName(meta, i)) : NULL;
             DeserializeField(base, meta[i], value);
         }
     }
@@ -189,7 +186,6 @@ static char *SerializeField(const uint8_t *base, SettingInfo& field)
     // TODO: only write non-default values?
     case Type_Bool: return str::Dup(*(bool *)(base + field.offset) ? "true" : "false");
     case Type_Int: return str::Format("%d", *(int *)(base + field.offset));
-    case Type_Int64: return str::Format("%I64d", *(int64_t *)(base + field.offset));
     case Type_Float: return str::Format("%g", *(float *)(base + field.offset));
     case Type_Color:
         c = *(COLORREF *)(base + field.offset);
@@ -211,11 +207,11 @@ static char *SerializeField(const uint8_t *base, SettingInfo& field)
             return str::Dup(*(const char **)(base + field.offset));
         return EscapeStr(*(const char **)(base + field.offset));
     case Type_Compact:
-        assert(IsCompactable(field.substruct));
-        for (size_t i = 1; i <= GetFieldCount(field.substruct); i++) {
-            ScopedMem<char> val(SerializeField(base + field.offset, field.substruct[i]));
+        assert(IsCompactable(GetSubstruct(field)));
+        for (size_t i = 1; i <= GetFieldCount(GetSubstruct(field)); i++) {
+            ScopedMem<char> val(SerializeField(base + field.offset, GetSubstruct(field)[i]));
             if (!value)
-                value.Set(str::Format("%s", val));
+                value.Set(val.StealData());
             else
                 value.Set(str::Format("%s %s", value, val));
         }
@@ -238,14 +234,14 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
     for (size_t i = 1; i <= GetFieldCount(meta); i++) {
         if (Type_Meta == meta[i].type)
             continue;
-        CrashIf(str::FindChar(meta[i].name, '=') || str::FindChar(meta[i].name, ':') ||
-                str::FindChar(meta[i].name, '[') || str::FindChar(meta[i].name, ']') ||
-                NeedsEscaping(meta[i].name));
+        CrashIf(str::FindChar(GetFieldName(meta, i), '=') || str::FindChar(GetFieldName(meta, i), ':') ||
+                str::FindChar(GetFieldName(meta, i), '[') || str::FindChar(GetFieldName(meta, i), ']') ||
+                NeedsEscaping(GetFieldName(meta, i)));
         if (Type_Struct == meta[i].type) {
             Indent(out, indent);
-            out.Append(meta[i].name);
+            out.Append(GetFieldName(meta, i));
             out.Append(" [\r\n");
-            SerializeRec(out, base + meta[i].offset, meta[i].substruct, indent + 1);
+            SerializeRec(out, base + meta[i].offset, GetSubstruct(meta[i]), indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
             continue;
@@ -256,10 +252,10 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
             if (0 == count)
                 continue;
             Indent(out, indent);
-            out.Append(meta[i].name);
+            out.Append(GetFieldName(meta, i));
             for (size_t j = 0; j < count; j++) {
                 out.Append(" [\r\n");
-                SerializeRec(out, subbase + j * GetStructSize(meta[i].substruct), meta[i].substruct, indent + 1);
+                SerializeRec(out, subbase + j * GetStructSize(GetSubstruct(meta[i])), GetSubstruct(meta[i]), indent + 1);
                 Indent(out, indent);
                 out.Append("]");
             }
@@ -269,7 +265,7 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
         ScopedMem<char> value(SerializeField(base, meta[i]));
         if (value) {
             Indent(out, indent);
-            out.Append(meta[i].name);
+            out.Append(GetFieldName(meta, i));
             out.Append(" = ");
             out.Append(value);
             out.Append("\r\n");
@@ -298,12 +294,12 @@ static void FreeStructData(uint8_t *base, SettingInfo *meta)
 {
     for (size_t i = 1; i <= GetFieldCount(meta); i++) {
         if (Type_Struct == meta[i].type)
-            FreeStructData(base + meta[i].offset, meta[i].substruct);
+            FreeStructData(base + meta[i].offset, GetSubstruct(meta[i]));
         else if (Type_Array == meta[i].type) {
             size_t count = *(size_t *)(base + meta[i+1].offset);
             uint8_t *subbase = *(uint8_t **)(base + meta[i].offset);
             for (size_t j = 0; j < count; j++) {
-                FreeStructData(subbase + j * GetStructSize(meta[i].substruct), meta[i].substruct);
+                FreeStructData(subbase + j * GetStructSize(GetSubstruct(meta[i])), GetSubstruct(meta[i]));
             }
             free(subbase);
         }

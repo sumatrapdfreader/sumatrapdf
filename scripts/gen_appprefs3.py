@@ -14,7 +14,6 @@ Bool = Type("Bool", "bool")
 Color = Type("Color", "COLORREF")
 Float = Type("Float", "float")
 Int = Type("Int", "int")
-Int64 = Type("Int64", "int64_t")
 String = Type("String", "WCHAR *")
 Utf8String = Type("Utf8String", "char *")
 
@@ -29,13 +28,13 @@ class Field(object):
 		if self.type == Color:
 			return "0x%06x" % self.default
 		if self.type == Float:
-			return '(int64_t)"%g"' % self.default # converting float to int64_t rounds the value
-		if self.type == Int or self.type == Int64:
+			return '(intptr_t)"%g"' % self.default # converting float to intptr_t rounds the value
+		if self.type == Int:
 			return "%d" % self.default
 		if self.type == String:
-			return '(int64_t)L"%s"' % self.default if self.default is not None else "NULL"
+			return '(intptr_t)L"%s"' % self.default if self.default is not None else "NULL"
 		if self.type == Utf8String:
-			return '(int64_t)"%s"' % self.default if self.default is not None else "NULL"
+			return '(intptr_t)"%s"' % self.default if self.default is not None else "NULL"
 		if self.type.name == "Custom":
 			return self.default
 		return None
@@ -47,7 +46,7 @@ class Field(object):
 			return "%s = #%02x%02x%02x" % (self.name, self.default & 0xFF, (self.default >> 8) & 0xFF, (self.default >> 16) & 0xFF)
 		if self.type == Float:
 			return "%s = %g" % (self.name, self.default)
-		if self.type == Int or self.type == Int64:
+		if self.type == Int:
 			return "%s = %d" % (self.name, self.default)
 		if self.type == String:
 			if self.default is not None:
@@ -59,12 +58,14 @@ class Field(object):
 			return "%s %s =" % (commentChar, self.name)
 		if self.type.name == "Custom":
 			return self.default
+		if self.type.name == "Compact":
+			return "%s = %s" % (self.name, " ".join(field.inidefault().split(" = ", 1)[1] for field in self.default))
 		return "%s %s = ???" % (commentChar, self.name)
 
 class Struct(Field):
-	def __init__(self, name, fields, comment, structName=None, compact=False):
+	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False):
 		self.structName = structName or name
-		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment)
+		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal)
 		if compact: self.type.name = "Compact"
 
 class Array(Field):
@@ -84,6 +85,11 @@ RectI = [
 PointI = [
 	Field("X", Int, 0, "x coordinate"),
 	Field("Y", Int, 0, "y coordinate"),
+]
+
+FileTime = [
+	Field("DwHighDateTime", Int, 0, ""),
+	Field("DwLowDateTime", Int, 0, ""),
 ]
 
 AdvancedPrefs = [
@@ -249,8 +255,9 @@ AppPrefs = [
 	Field("VersionToSkip", String, None,
 		"When we show 'new version available', user has an option to check 'skip this version'. " +
 		"This remembers which version is to be skipped. If NULL - don't skip"),
-	Field("LastUpdateTime", Int64, 0,
-		"the time SumatraPDF has last checked for updates (cf. EnableAutoUpdate)"),
+	Struct("LastUpdateTime", FileTime,
+		"the time SumatraPDF has last checked for updates (cf. EnableAutoUpdate)",
+		structName="FILETIME", compact=True),
 	Field("DefaultDisplayMode", String, "automatic", # TODO: Type_Custom, DM_AUTOMATIC
 		"how pages should be layed out by default"),
 	Field("DefaultZoom", Float, -1,
@@ -279,9 +286,9 @@ AppPrefs = [
 		"Most values in this structure are remembered individually for every file and " +
 		"are by default also persisted so that reading can be resumed"),
 	# non-serialized fields
-	Field("LastPrefUpdate", Int64, 0,
+	Struct("LastPrefUpdate", FileTime,
 		"modification time of the preferences file when it was last read",
-		internal=True),
+		structName="FILETIME", compact=True, internal=True),
 	Field("UnknownSettings", Utf8String, None,
 		"a list of settings which this version of SumatraPDF didn't know how to handle ",
 		internal=True),
@@ -323,23 +330,26 @@ def BuildStruct(struct, built=[]):
 
 def BuildMetaData(struct, built=[]):
 	fieldInfo, metadata = [], []
+	names, namesOffset = [], 0
 	for field in struct.default:
 		if field.internal:
 			continue
 		if type(field) == Struct:
-			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo, NULL }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
+			fieldInfo.append("\t{ Type_%s, %d, offsetof(%s, %s), (intptr_t)g%sInfo }," % (field.type.name, namesOffset, struct.structName, field.cname, field.structName))
 		elif type(field) == Array:
-			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), g%sInfo, NULL }," % (field.name, field.type.name, struct.structName, field.cname, field.structName))
-			fieldInfo.append("\t{ NULL, Type_Meta, offsetof(%s, %sCount), g%sInfo, NULL }," % (struct.structName, field.cname, field.name))
+			fieldInfo.append("\t{ Type_%s, %d, offsetof(%s, %s), (intptr_t)g%sInfo }," % (field.type.name, namesOffset, struct.structName, field.cname, field.structName))
+			fieldInfo.append("\t{ Type_Meta, 0, offsetof(%s, %sCount), 0 }," % (struct.structName, field.cname))
 		else:
-			fieldInfo.append("\t{ \"%s\", Type_%s, offsetof(%s, %s), NULL, %s }," % (field.name, field.type.name, struct.structName, field.cname, field.cdefault()))
+			fieldInfo.append("\t{ Type_%s, %d, offsetof(%s, %s), %s }," % (field.type.name, namesOffset, struct.structName, field.cname, field.cdefault()))
+		names.append(field.name)
+		namesOffset += len(field.name) + 1
 		if type(field) in [Struct, Array] and field.structName not in built:
 			metadata.append(BuildMetaData(field))
 			built.append(field.structName)
 	metadata.append("\n".join([
 		"static SettingInfo g%sInfo[] = {" % struct.structName,
-		# include size information in the first line instead of a second structure
-		"\t{ NULL, Type_Meta, sizeof(%s), NULL, %d }," % (struct.structName, len(fieldInfo)),
+		# include size information and field names in the first line instead of a second structure
+		"\t{ Type_Meta, %d, sizeof(%s), (intptr_t)\"%s\" }," % (len(fieldInfo), struct.structName, "\\0".join(names)),
 	] + fieldInfo + [
 		"};"
 	]))
@@ -350,8 +360,7 @@ def AssembleDefaults(struct):
 	for field in struct.default:
 		if field.internal:
 			continue
-		if type(field) in [Struct, Array]:
-			assert field.type.name != "Compact"
+		if type(field) in [Struct, Array] and not field.type.name == "Compact":
 			more.append("\n".join(FormatComment(field.comment, ";") + ["[%s]" % field.name, AssembleDefaults(field)]))
 		else:
 			lines += FormatComment(field.comment, ";") + [field.inidefault()]
@@ -362,8 +371,7 @@ def AssembleDefaultsSqt(struct, indent=""):
 	for field in struct.default:
 		if field.internal:
 			continue
-		if type(field) in [Struct, Array]:
-			assert field.type.name != "Compact"
+		if type(field) in [Struct, Array] and not field.type.name == "Compact":
 			lines += FormatComment(field.comment, indent + "#") + ["%s%s [" % (indent, field.name), AssembleDefaultsSqt(field, indent + "\t"), "%s]" % indent, ""]
 		else:
 			lines += FormatComment(field.comment, indent + "#") + [indent + field.inidefault(commentChar="#")]
@@ -384,20 +392,20 @@ AppPrefs3_Header = """\
 
 enum SettingType {
 	Type_Meta, Type_Struct, Type_Array, Type_Compact,
-	Type_Bool, Type_Color, Type_Float, Type_Int, Type_Int64, Type_String, Type_Utf8String,
+	Type_Bool, Type_Color, Type_Float, Type_Int, Type_String, Type_Utf8String,
 };
 
 struct SettingInfo {
-	const char *name;
 	SettingType type;
-	size_t offset;
-	SettingInfo *substruct;
-	int64_t def;
+	uint16_t nameOffset;
+	uint16_t offset;
+	intptr_t value;
 };
-STATIC_ASSERT(sizeof(int64_t) >= sizeof(void *), ptr_is_max_64_bit);
 
-static inline size_t GetFieldCount(SettingInfo *meta) { return (size_t)meta[0].def; }
+static inline size_t GetFieldCount(SettingInfo *meta) { return meta[0].nameOffset; }
 static inline size_t GetStructSize(SettingInfo *meta) { return meta[0].offset; }
+static inline SettingInfo *GetSubstruct(SettingInfo& field) { return (SettingInfo *)field.value; }
+static inline const char *GetFieldName(SettingInfo *meta, size_t idx) { return (const char *)meta[0].value + meta[idx].nameOffset; }
 
 #ifdef INCLUDE_APPPREFS3_METADATA
 %(appStructMetadata)s
