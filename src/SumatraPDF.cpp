@@ -1402,7 +1402,6 @@ static WindowInfo* LoadDocumentNew(LoadArgs& args)
 // file (and showing progress/load failures in topmost window) and placing
 // the loaded document in the window (either by replacing document in existing
 // window or creating a new window for the document)
-// TODO: loading a document should never be slow enough to require async loading
 static WindowInfo* LoadDocumentOld(LoadArgs& args)
 {
     if (gCrashOnOpen)
