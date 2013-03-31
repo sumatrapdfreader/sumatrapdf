@@ -302,9 +302,9 @@ bool RenderCache::ReduceTileSize()
     ScopedCritSec scope2(&cacheAccess);
 
     if (maxTileSize.dx > maxTileSize.dy)
-        (int)maxTileSize.dx /= 2;
+        maxTileSize.dx /= 2;
     else
-        (int)maxTileSize.dy /= 2;
+        maxTileSize.dy /= 2;
 
     // invalidate all rendered bitmaps and all requests
     while (cacheCount > 0)

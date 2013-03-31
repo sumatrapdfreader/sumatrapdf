@@ -87,7 +87,7 @@ private:
     CRITICAL_SECTION    requestAccess;
     HANDLE              renderThread;
 
-    const SizeI         maxTileSize;
+    SizeI               maxTileSize;
     bool                isRemoteSession;
 
 public:
