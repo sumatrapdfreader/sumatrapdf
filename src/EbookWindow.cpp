@@ -685,9 +685,7 @@ void RegisterMobiWinClass(HINSTANCE hinst)
     wcex.style          = 0;
     wcex.hIcon          = LoadIcon(hinst, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-
-    ATOM atom = RegisterClassEx(&wcex);
-    CrashIf(!atom);
+    RegisterClassEx(&wcex);
 }
 
 bool IsEbookFile(const WCHAR *fileName)

@@ -89,7 +89,7 @@ int TextSelection::FindClosestGlyph(int pageNo, double x, double y)
 {
     int textLen;
     RectI *coords;
-    const WCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
+    textCache->GetData(pageNo, &textLen, &coords);
     PointD pt = PointD(x, y);
 
     unsigned int maxDist = UINT_MAX;
@@ -181,7 +181,7 @@ bool TextSelection::IsOverGlyph(int pageNo, double x, double y)
 {
     int textLen;
     RectI *coords;
-    const WCHAR *text = textCache->GetData(pageNo, &textLen, &coords);
+    textCache->GetData(pageNo, &textLen, &coords);
 
     int glyphIx = FindClosestGlyph(pageNo, x, y);
     PointI pt = PointD(x, y).Convert<int>();
