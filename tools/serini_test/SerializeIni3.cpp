@@ -7,7 +7,7 @@
 #include "AppPrefs3.h"
 #include "IniParser.h"
 
-namespace serini3 {
+namespace ini3 {
 
 static int ParseInt(const char *bytes)
 {

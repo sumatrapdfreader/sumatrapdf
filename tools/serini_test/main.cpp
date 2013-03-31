@@ -7,12 +7,10 @@
 #include "FileUtil.h"
 #include "SerializeIni.h"
 #include "SerializeIni3.h"
-#include "SerializeTxt3.h"
+#include "SerializeSqt.h"
 #include "../sertxt_test/SettingsSumatra.h"
 
 #define Check(x) CrashIf(!(x)); if (!(x)) return false; else NoOp()
-
-using namespace serini3;
 
 #pragma warning(disable: 4505)
 
@@ -76,7 +74,34 @@ default_zoom = 38.5\n\
     return true;
 }
 
-static bool TestSerializeIni3()
+struct Rec {
+    Vec<Rec *> * rec;
+    UserPrefs up;
+};
+
+static SettingInfo gRecInfo[] = {
+    { Type_Meta, 2, sizeof(Rec), (intptr_t)"Rec\0Up" },
+    { Type_Array, 0, offsetof(Rec, rec), (intptr_t)gRecInfo },
+    { Type_Struct, 4, offsetof(Rec, up), (intptr_t)gUserPrefsInfo },
+};
+
+struct TestCD2 { bool val1; float val2; };
+struct TestCD1 { TestCD2 compact; };
+
+static SettingInfo gTestCD2Info[] = {
+    { Type_Meta, 2, sizeof(TestCD2), (intptr_t)"Val1\0Val2" },
+    { Type_Bool, 0, offsetof(TestCD2, val1), false },
+    { Type_Float, 5, offsetof(TestCD2, val2), (intptr_t)"3.14" },
+};
+
+static SettingInfo gTestCD1Info[] = {
+    { Type_Meta, 1, sizeof(TestCD1), (intptr_t)"Compact" },
+    { Type_Compact, 0, offsetof(TestCD1, compact), (intptr_t)gTestCD2Info },
+};
+
+namespace ini3 {
+
+static bool TestSerialize()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3.ini";
 
@@ -96,7 +121,7 @@ static bool TestSerializeIni3()
     return true;
 }
 
-static bool TestSerializeUserIni3()
+static bool TestSerializeUser()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3-user.ini";
 
@@ -111,17 +136,6 @@ static bool TestSerializeUserIni3()
 
     return true;
 }
-
-struct Rec {
-    Vec<Rec *> * rec;
-    UserPrefs up;
-};
-
-static SettingInfo gRecInfo[] = {
-    { Type_Meta, 2, sizeof(Rec), (intptr_t)"Rec\0Up" },
-    { Type_Array, 0, offsetof(Rec, rec), (intptr_t)gRecInfo },
-    { Type_Struct, 4, offsetof(Rec, up), (intptr_t)gUserPrefsInfo },
-};
 
 static bool TestSerializeRecursiveArray()
 {
@@ -170,20 +184,6 @@ static bool TestDefaultValues()
     return true;
 }
 
-struct TestCD2 { bool val1; float val2; };
-struct TestCD1 { TestCD2 compact; };
-
-static SettingInfo gTestCD2Info[] = {
-    { Type_Meta, 2, sizeof(TestCD2), (intptr_t)"Val1\0Val2" },
-    { Type_Bool, 0, offsetof(TestCD2, val1), false },
-    { Type_Float, 5, offsetof(TestCD2, val2), (intptr_t)"3.14" },
-};
-
-static SettingInfo gTestCD1Info[] = {
-    { Type_Meta, 1, sizeof(TestCD1), (intptr_t)"Compact" },
-    { Type_Compact, 0, offsetof(TestCD1, compact), (intptr_t)gTestCD2Info },
-};
-
 static bool TestCompactDefaultValues()
 {
     static const char *data = "Compact = true -4.25";
@@ -198,43 +198,47 @@ static bool TestCompactDefaultValues()
     return true;
 }
 
-static bool TestSerializeTxt3()
+}; // namespace ini3
+
+namespace sqt {
+
+static bool TestSerialize()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3.sqt";
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    GlobalPrefs *s = (GlobalPrefs *)sertxt3::Deserialize(data, str::Len(data), gGlobalPrefsInfo);
+    GlobalPrefs *s = (GlobalPrefs *)Deserialize(data, str::Len(data), gGlobalPrefsInfo);
     Check(s); // failed to parse file
     Check(str::Find(s->inverseSearchCmdLine, L"\r\n"));
     Check(1 == s->lastUpdateTime.dwHighDateTime && MAXDWORD == s->lastUpdateTime.dwLowDateTime);
 
     size_t len;
-    ScopedMem<char> ser(sertxt3::Serialize(s, gGlobalPrefsInfo, &len));
+    ScopedMem<char> ser(Serialize(s, gGlobalPrefsInfo, &len));
     Check(str::Len(ser) == len);
     Check(str::Eq(data, ser));
-    sertxt3::FreeStruct(s, gGlobalPrefsInfo);
+    FreeStruct(s, gGlobalPrefsInfo);
 
     return true;
 }
 
-static bool TestSerializeUserTxt3()
+static bool TestSerializeUser()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3-user.sqt";
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    UserPrefs *s = (UserPrefs *)sertxt3::Deserialize(data, str::Len(data), gUserPrefsInfo);
+    UserPrefs *s = (UserPrefs *)Deserialize(data, str::Len(data), gUserPrefsInfo);
     Check(s); // failed to parse file
 
-    ScopedMem<char> ser(sertxt3::Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.sqt"));
-    sertxt3::FreeStruct(s, gUserPrefsInfo);
+    ScopedMem<char> ser(Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.sqt"));
+    FreeStruct(s, gUserPrefsInfo);
     Check(str::Eq(data, ser));
 
     return true;
 }
 
-static bool TestSerializeRecursiveArrayTxt3()
+static bool TestSerializeRecursiveArray()
 {
     static const char *data ="\
 Rec[\n\
@@ -263,34 +267,62 @@ Rec [\n\
     ]\n\
   ]\n\
 ]";
-    Rec *r = (Rec *)sertxt3::Deserialize(data, str::Len(data), gRecInfo);
+    Rec *r = (Rec *)Deserialize(data, str::Len(data), gRecInfo);
     Check(2 == r->rec->Count() && 2 == r->rec->At(0)->rec->Count() && 2 == r->rec->At(0)->rec->At(0)->rec->Count());
     Check(0 == r->rec->At(0)->rec->At(0)->rec->At(0)->rec->Count() && 0 == r->rec->At(0)->rec->At(0)->rec->At(1)->rec->Count());
     Check(1 == r->rec->At(0)->rec->At(1)->rec->Count() && 0 == r->rec->At(0)->rec->At(1)->rec->At(0)->rec->Count());
     Check(1 == r->rec->At(1)->rec->Count() && 0 == r->rec->At(1)->rec->At(0)->rec->Count());
     Check(1 == r->rec->At(1)->up.externalViewer->Count() && str::Eq(r->rec->At(1)->up.externalViewer->At(0)->commandLine, L"serini_test.exe"));
     Check(str::Eq(r->rec->At(0)->rec->At(1)->up.printerDefaults.printScale, "shrink"));
-    sertxt3::FreeStruct(r, gRecInfo);
+    FreeStruct(r, gRecInfo);
 
     return true;
 }
 
-static bool TestSerializeIniAsTxt3()
+static bool TestDefaultValues()
+{
+    UserPrefs *p = (UserPrefs *)Deserialize(NULL, 0, gUserPrefsInfo);
+    Check(!p->advancedPrefs.escToExit && !p->advancedPrefs.traditionalEbookUI);
+    Check(0xffffff == p->advancedPrefs.pageColor && 0x000000 == p->advancedPrefs.textColor);
+    Check(0x6581ff == p->forwardSearch.highlightColor && 15 == p->forwardSearch.highlightWidth);
+    Check(4 == p->pagePadding.innerX && 2 == p->pagePadding.outerY);
+    Check(str::Eq(p->printerDefaults.printScale, "shrink"));
+    FreeStruct(p, gUserPrefsInfo);
+
+    return true;
+}
+
+static bool TestCompactDefaultValues()
+{
+    static const char *data = "Compact = true -4.25";
+    TestCD1 *cd = (TestCD1 *)Deserialize(data, str::Len(data), gTestCD1Info);
+    Check(cd && cd->compact.val1 && -4.25f == cd->compact.val2);
+    FreeStruct(cd, gTestCD1Info);
+
+    cd = (TestCD1 *)Deserialize(NULL, 0, gTestCD1Info);
+    Check(cd && !cd->compact.val1 && 3.14f == cd->compact.val2);
+    FreeStruct(cd, gTestCD1Info);
+
+    return true;
+}
+
+static bool TestSerializeIniAsSqt()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3-user.ini";
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    UserPrefs *s = (UserPrefs *)sertxt3::Deserialize(data, str::Len(data), gUserPrefsInfo);
+    UserPrefs *s = (UserPrefs *)Deserialize(data, str::Len(data), gUserPrefsInfo);
     Check(s); // failed to parse file
 
-    ScopedMem<char> ser(Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini"));
+    ScopedMem<char> ser(ini3::Serialize(s, gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini"));
     Check(str::Eq(data, ser));
-    sertxt3::FreeStruct(s, gUserPrefsInfo);
+    FreeStruct(s, gUserPrefsInfo);
 
     return true;
-
 }
+
+}; // namespace sqt
 
 int main(int argc, char **argv)
 {
@@ -302,23 +334,27 @@ int main(int argc, char **argv)
         errors++;
     if (!TestSerializeIniWithDefaults())
         errors++;
-    if (!TestSerializeIni3())
+    if (!ini3::TestSerialize())
         errors++;
-    if (!TestSerializeUserIni3())
+    if (!ini3::TestSerializeUser())
         errors++;
-    if (!TestSerializeRecursiveArray())
+    if (!ini3::TestSerializeRecursiveArray())
         errors++;
-    if (!TestDefaultValues())
+    if (!ini3::TestDefaultValues())
         errors++;
-    if (!TestCompactDefaultValues())
+    if (!ini3::TestCompactDefaultValues())
         errors++;
-    if (!TestSerializeTxt3())
+    if (!sqt::TestSerialize())
         errors++;
-    if (!TestSerializeUserTxt3())
+    if (!sqt::TestSerializeUser())
         errors++;
-    if (!TestSerializeRecursiveArrayTxt3())
+    if (!sqt::TestSerializeRecursiveArray())
         errors++;
-    if (!TestSerializeIniAsTxt3())
+    if (!sqt::TestDefaultValues())
+        errors++;
+    if (!sqt::TestCompactDefaultValues())
+        errors++;
+    if (!sqt::TestSerializeIniAsSqt())
         errors++;
     return errors;
 }

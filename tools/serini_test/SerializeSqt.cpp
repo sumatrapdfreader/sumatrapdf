@@ -2,12 +2,12 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "SerializeTxt3.h"
+#include "SerializeSqt.h"
 
 #include "AppPrefs3.h"
 #include "SquareTreeParser.h"
 
-namespace sertxt3 {
+namespace sqt {
 
 static int ParseInt(const char *bytes)
 {

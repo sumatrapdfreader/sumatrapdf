@@ -209,5 +209,5 @@ SquareTree::SquareTree(const char *data) : root(NULL)
 
     char *start = dataUtf8.Get();
     root = ParseSquareTreeRec(start, true);
-    CrashIf(*start);
+    CrashIf(*start || !root);
 }
