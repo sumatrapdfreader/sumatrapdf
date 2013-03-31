@@ -75,8 +75,7 @@ struct File {
     // compatibility
     char * tocState;
     // Values which are persisted for bookmarks/favorites
-    Favorite * favorite;
-    size_t favoriteCount;
+    Vec<Favorite *> * favorite;
     // temporary value needed for FileHistory::cmpOpenCount
     size_t index;
     // the thumbnail is persisted separately as a PNG in sumatrapdfcache
@@ -148,8 +147,7 @@ struct GlobalPrefs {
     // Most values in this structure are remembered individually for every
     // file and are by default also persisted so that reading can be
     // resumed
-    File * file;
-    size_t fileCount;
+    Vec<File *> * file;
     // modification time of the preferences file when it was last read
     FILETIME lastPrefUpdate;
     // a list of settings which this version of SumatraPDF didn't know how
@@ -258,8 +256,7 @@ struct UserPrefs {
     ForwardSearch forwardSearch;
     // this list contains a list of additional external viewers for various
     // file types (multiple entries of the same format are recognised)
-    ExternalViewer * externalViewer;
-    size_t externalViewerCount;
+    Vec<ExternalViewer *> * externalViewer;
 };
 
 enum SettingType {
@@ -308,7 +305,7 @@ static SettingInfo gFavoriteInfo[] = {
 };
 
 static SettingInfo gFileInfo[] = {
-    { Type_Meta, 19, sizeof(File), (intptr_t)"FilePath\0OpenCount\0IsPinned\0IsMissing\0UseGlobalValues\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0ZoomVirtual\0Rotation\0WindowState\0WindowPos\0DecryptionKey\0TocVisible\0SidebarDx\0TocState\0Favorite" },
+    { Type_Meta, 18, sizeof(File), (intptr_t)"FilePath\0OpenCount\0IsPinned\0IsMissing\0UseGlobalValues\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0ZoomVirtual\0Rotation\0WindowState\0WindowPos\0DecryptionKey\0TocVisible\0SidebarDx\0TocState\0Favorite" },
     { Type_String, 0, offsetof(File, filePath), NULL },
     { Type_Int, 9, offsetof(File, openCount), 0 },
     { Type_Bool, 19, offsetof(File, isPinned), false },
@@ -327,11 +324,10 @@ static SettingInfo gFileInfo[] = {
     { Type_Int, 162, offsetof(File, sidebarDx), 0 },
     { Type_Utf8String, 172, offsetof(File, tocState), NULL },
     { Type_Array, 181, offsetof(File, favorite), (intptr_t)gFavoriteInfo },
-    { Type_Meta, 0, offsetof(File, favoriteCount), 0 },
 };
 
 static SettingInfo gGlobalPrefsInfo[] = {
-    { Type_Meta, 25, sizeof(GlobalPrefs), (intptr_t)"GlobalPrefsOnly\0CurrLangCode\0ToolbarVisible\0FavVisible\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0EnableAutoUpdate\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0VersionToSkip\0LastUpdateTime\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0TocVisible\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxR2L\0File" },
+    { Type_Meta, 24, sizeof(GlobalPrefs), (intptr_t)"GlobalPrefsOnly\0CurrLangCode\0ToolbarVisible\0FavVisible\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0EnableAutoUpdate\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0VersionToSkip\0LastUpdateTime\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0TocVisible\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxR2L\0File" },
     { Type_Bool, 0, offsetof(GlobalPrefs, globalPrefsOnly), false },
     { Type_String, 16, offsetof(GlobalPrefs, currLangCode), NULL },
     { Type_Bool, 29, offsetof(GlobalPrefs, toolbarVisible), true },
@@ -356,7 +352,6 @@ static SettingInfo gGlobalPrefsInfo[] = {
     { Type_Int, 324, offsetof(GlobalPrefs, openCountWeek), 0 },
     { Type_Bool, 338, offsetof(GlobalPrefs, cbxR2L), false },
     { Type_Array, 345, offsetof(GlobalPrefs, file), (intptr_t)gFileInfo },
-    { Type_Meta, 0, offsetof(GlobalPrefs, fileCount), 0 },
 };
 
 static SettingInfo gAdvancedPrefsInfo[] = {
@@ -407,14 +402,13 @@ static SettingInfo gExternalViewerInfo[] = {
 };
 
 static SettingInfo gUserPrefsInfo[] = {
-    { Type_Meta, 7, sizeof(UserPrefs), (intptr_t)"AdvancedPrefs\0PrinterDefaults\0PagePadding\0BackgroundGradient\0ForwardSearch\0ExternalViewer" },
+    { Type_Meta, 6, sizeof(UserPrefs), (intptr_t)"AdvancedPrefs\0PrinterDefaults\0PagePadding\0BackgroundGradient\0ForwardSearch\0ExternalViewer" },
     { Type_Struct, 0, offsetof(UserPrefs, advancedPrefs), (intptr_t)gAdvancedPrefsInfo },
     { Type_Struct, 14, offsetof(UserPrefs, printerDefaults), (intptr_t)gPrinterDefaultsInfo },
     { Type_Struct, 30, offsetof(UserPrefs, pagePadding), (intptr_t)gPagePaddingInfo },
     { Type_Struct, 42, offsetof(UserPrefs, backgroundGradient), (intptr_t)gBackgroundGradientInfo },
     { Type_Struct, 61, offsetof(UserPrefs, forwardSearch), (intptr_t)gForwardSearchInfo },
     { Type_Array, 75, offsetof(UserPrefs, externalViewer), (intptr_t)gExternalViewerInfo },
-    { Type_Meta, 0, offsetof(UserPrefs, externalViewerCount), 0 },
 };
 #endif
 

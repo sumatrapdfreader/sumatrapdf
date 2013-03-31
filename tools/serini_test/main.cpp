@@ -113,15 +113,13 @@ static bool TestSerializeUserIni3()
 }
 
 struct Rec {
-    size_t recCount;
-    Rec * rec;
+    Vec<Rec *> * rec;
     UserPrefs up;
 };
 
 static SettingInfo gRecInfo[] = {
-    { Type_Meta, 3, sizeof(Rec), (intptr_t)"Rec\0Up" },
+    { Type_Meta, 2, sizeof(Rec), (intptr_t)"Rec\0Up" },
     { Type_Array, 0, offsetof(Rec, rec), (intptr_t)gRecInfo },
-    { Type_Meta, 0, offsetof(Rec, recCount), (intptr_t)gRecInfo },
     { Type_Struct, 4, offsetof(Rec, up), (intptr_t)gUserPrefsInfo },
 };
 
@@ -141,19 +139,19 @@ static bool TestSerializeRecursiveArray()
 CommandLine = serini_test.exe\n\
 ";
     Rec *r = (Rec *)Deserialize(data, str::Len(data), gRecInfo);
-    Check(2 == r->recCount && 2 == r->rec[0].recCount && 2 == r->rec[0].rec[0].recCount);
-    Check(0 == r->rec[0].rec[0].rec[0].recCount && 0 == r->rec[0].rec[0].rec[1].recCount);
-    Check(1 == r->rec[0].rec[1].recCount && 0 == r->rec[0].rec[1].rec[0].recCount);
-    Check(1 == r->rec[1].recCount && 0 == r->rec[1].rec[0].recCount);
-    Check(1 == r->rec[1].up.externalViewerCount && str::Eq(r->rec[1].up.externalViewer[0].commandLine, L"serini_test.exe"));
-    Check(str::Eq(r->rec[0].rec[1].up.printerDefaults.printScale, "shrink"));
+    Check(2 == r->rec->Count() && 2 == r->rec->At(0)->rec->Count() && 2 == r->rec->At(0)->rec->At(0)->rec->Count());
+    Check(0 == r->rec->At(0)->rec->At(0)->rec->At(0)->rec->Count() && 0 == r->rec->At(0)->rec->At(0)->rec->At(1)->rec->Count());
+    Check(1 == r->rec->At(0)->rec->At(1)->rec->Count() && 0 == r->rec->At(0)->rec->At(1)->rec->At(0)->rec->Count());
+    Check(1 == r->rec->At(1)->rec->Count() && 0 == r->rec->At(1)->rec->At(0)->rec->Count());
+    Check(1 == r->rec->At(1)->up.externalViewer->Count() && str::Eq(r->rec->At(1)->up.externalViewer->At(0)->commandLine, L"serini_test.exe"));
+    Check(str::Eq(r->rec->At(0)->rec->At(1)->up.printerDefaults.printScale, "shrink"));
     FreeStruct(r, gRecInfo);
 
     // TODO: recurse even if array parents are missing?
     // (bounded by maximum section name length)
     data = "[Rec.Rec]";
     r = (Rec *)Deserialize(data, str::Len(data), gRecInfo);
-    Check(0 == r->recCount);
+    Check(0 == r->rec->Count());
     FreeStruct(r, gRecInfo);
 
     return true;
@@ -266,12 +264,12 @@ Rec [\n\
   ]\n\
 ]";
     Rec *r = (Rec *)sertxt3::Deserialize(data, str::Len(data), gRecInfo);
-    Check(2 == r->recCount && 2 == r->rec[0].recCount && 2 == r->rec[0].rec[0].recCount);
-    Check(0 == r->rec[0].rec[0].rec[0].recCount && 0 == r->rec[0].rec[0].rec[1].recCount);
-    Check(1 == r->rec[0].rec[1].recCount && 0 == r->rec[0].rec[1].rec[0].recCount);
-    Check(1 == r->rec[1].recCount && 0 == r->rec[1].rec[0].recCount);
-    Check(1 == r->rec[1].up.externalViewerCount && str::Eq(r->rec[1].up.externalViewer[0].commandLine, L"serini_test.exe"));
-    Check(str::Eq(r->rec[0].rec[1].up.printerDefaults.printScale, "shrink"));
+    Check(2 == r->rec->Count() && 2 == r->rec->At(0)->rec->Count() && 2 == r->rec->At(0)->rec->At(0)->rec->Count());
+    Check(0 == r->rec->At(0)->rec->At(0)->rec->At(0)->rec->Count() && 0 == r->rec->At(0)->rec->At(0)->rec->At(1)->rec->Count());
+    Check(1 == r->rec->At(0)->rec->At(1)->rec->Count() && 0 == r->rec->At(0)->rec->At(1)->rec->At(0)->rec->Count());
+    Check(1 == r->rec->At(1)->rec->Count() && 0 == r->rec->At(1)->rec->At(0)->rec->Count());
+    Check(1 == r->rec->At(1)->up.externalViewer->Count() && str::Eq(r->rec->At(1)->up.externalViewer->At(0)->commandLine, L"serini_test.exe"));
+    Check(str::Eq(r->rec->At(0)->rec->At(1)->up.printerDefaults.printScale, "shrink"));
     sertxt3::FreeStruct(r, gRecInfo);
 
     return true;

@@ -71,7 +71,7 @@ class Struct(Field):
 class Array(Field):
 	def __init__(self, name, fields, comment, structName=None):
 		self.structName = structName or name
-		super(Array, self).__init__(name, Type("Array", "%s *" % self.structName), fields, comment)
+		super(Array, self).__init__(name, Type("Array", "Vec<%s *> *" % self.structName), fields, comment)
 
 # ##### setting definitions for SumatraPDF #####
 
@@ -320,8 +320,6 @@ def BuildStruct(struct, built=[]):
 	for field in struct.default:
 		lines += FormatComment(field.comment, "\t//")
 		lines.append("\t%s %s;" % (field.type.ctype, field.cname))
-		if type(field) == Array:
-			lines.append("\tsize_t %sCount;" % field.cname)
 		if type(field) in [Struct, Array] and field.name == field.structName and field.name not in built:
 			lines = [BuildStruct(field), ""] + lines
 			built.append(field.name)
@@ -334,11 +332,8 @@ def BuildMetaData(struct, built=[]):
 	for field in struct.default:
 		if field.internal:
 			continue
-		if type(field) == Struct:
+		if type(field) in [Struct, Array]:
 			fieldInfo.append("\t{ Type_%s, %d, offsetof(%s, %s), (intptr_t)g%sInfo }," % (field.type.name, namesOffset, struct.structName, field.cname, field.structName))
-		elif type(field) == Array:
-			fieldInfo.append("\t{ Type_%s, %d, offsetof(%s, %s), (intptr_t)g%sInfo }," % (field.type.name, namesOffset, struct.structName, field.cname, field.structName))
-			fieldInfo.append("\t{ Type_Meta, 0, offsetof(%s, %sCount), 0 }," % (struct.structName, field.cname))
 		else:
 			fieldInfo.append("\t{ Type_%s, %d, offsetof(%s, %s), %s }," % (field.type.name, namesOffset, struct.structName, field.cname, field.cdefault()))
 		names.append(field.name)
