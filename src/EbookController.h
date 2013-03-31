@@ -56,7 +56,7 @@ class EbookController : public sigslot::has_slots
     // know this (when we're showing a page from pagesFromPage and we
     // haven't yet formatted enough pages from beginning to determine which
     // of those pages contains top of the shown page), in which case it's 0
-    size_t          currPageNo;
+    int            currPageNo;
 
     // page that we're currently showing. It can come from pagesFromBeginning,
     // pagesFromPage or from formattingTemp during layout or it can be a page that
@@ -105,7 +105,7 @@ public:
     void HandleMobiLayoutDone(EbookFormattingTask *mobiLayout);
     void OnLayoutTimer();
     void AdvancePage(int dist);
-    int  GetCurrentPageNo() const { return (int)currPageNo; }
+    int  GetCurrentPageNo() const { return currPageNo; }
     size_t GetMaxPageCount();
     void GoToPage(int newPageNo);
     void GoToLastPage();

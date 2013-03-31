@@ -2827,7 +2827,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         !(canConvertToPDF && str::EndsWithI(dstFileName, L".pdf"))) {
         if (hasCopyPerm && 2 == ofn.nFilterIndex)
             defExt = L".txt";
-        else if (canConvertToPDF && (hasCopyPerm ? 3 : 2) == ofn.nFilterIndex)
+        else if (canConvertToPDF && (hasCopyPerm ? 3 : 2) == (int)ofn.nFilterIndex)
             defExt = L".pdf";
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }

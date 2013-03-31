@@ -63,8 +63,8 @@ void ZipFile::ExtractFilenames(ZipMethod method)
         char fileName[MAX_PATH];
         err = unzGetCurrentFileInfo64(uf, &finfo, fileName, dimof(fileName), NULL, 0, NULL, 0);
         // some file format specifications only allow Deflate as compression method (e.g. XPS and EPUB)
-        bool isSupported = Zip_Any == method || Zip_None == finfo.compression_method ||
-                                                method == finfo.compression_method;
+        bool isSupported = (Zip_Any == method) || (Zip_None == finfo.compression_method) ||
+                                                (method == (ZipMethod)finfo.compression_method);
         if (err == UNZ_OK && isSupported) {
             WCHAR fileNameW[MAX_PATH];
             UINT cp = (finfo.flag & (1 << 11)) ? CP_UTF8 : CP_ZIP;

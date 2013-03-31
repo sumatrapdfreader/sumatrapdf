@@ -21,7 +21,7 @@ STATIC_ASSERT(IDM_ZOOM_LAST - IDM_ZOOM_FIRST == 17, zoom_range);
 
 struct MenuDef {
     const char *title;
-    int         id;
+    UINT        id;
     int         flags;
 };
 

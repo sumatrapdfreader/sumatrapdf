@@ -307,11 +307,11 @@ DjVuEngineImpl::~DjVuEngineImpl()
 
 static bool ReadBytes(HANDLE h, int offset, void *buffer, int count)
 {
-    DWORD res = SetFilePointer(h, offset, NULL, FILE_BEGIN);
-    if (res != offset)
+    DWORD res = (int)SetFilePointer(h, offset, NULL, FILE_BEGIN);
+    if (res != (DWORD)offset)
         return false;
     bool ok = ReadFile(h, buffer, count, &res, NULL);
-    return ok && res == count;
+    return ok && res == (DWORD)count;
 }
 
 #define DJVU_MARK_MAGIC 0x41542654L /* AT&T */

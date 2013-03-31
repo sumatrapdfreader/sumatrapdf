@@ -358,9 +358,9 @@ class ChmTocBuilder : public EbookTocVisitor {
         bool inserted = urlsSet.Insert(plainUrl, pageNo, &pageNo);
         if (inserted) {
             pages->Append(plainUrl.StealData());
-            CrashIf(pageNo != pages->Count());
+            CrashIf((size_t)pageNo != pages->Count());
         } else {
-            CrashIf(pageNo == pages->Count() + 1);
+            CrashIf((size_t)pageNo == pages->Count() + 1);
         }
         return pageNo;
     }
