@@ -4,6 +4,7 @@
 // TODO: for the moment it needs to be included from SumatraPDF.cpp
 // and not compiled as stand-alone
 
+#ifdef DEBUG
 static bool TryLoadMemTrace()
 {
     ScopedMem<WCHAR> exePath(GetExePath());
@@ -13,6 +14,7 @@ static bool TryLoadMemTrace()
         return false;
     return true;
 }
+#endif
 
 static void MakePluginWindow(WindowInfo& win, HWND hwndParent)
 {

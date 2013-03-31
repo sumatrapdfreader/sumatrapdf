@@ -1381,6 +1381,7 @@ void LoadDocument2(const WCHAR *fileName, SumatraWindow& win)
     LoadDocument(args);
 }
 
+#if 0
 // Load a file into a new or existing window, show error message
 // if loading failed, set the right window position (based on history
 // settings for this file or default position), update file history,
@@ -1394,6 +1395,7 @@ static WindowInfo* LoadDocumentNew(LoadArgs& args)
     CrashIf(true);
     return NULL;
 }
+#endif
 
 // TODO: eventually I would like to move all loading to be async. To achieve that
 // we need clear separatation of loading process into 2 phases: loading the
@@ -2194,12 +2196,14 @@ void UpdateDocumentColors()
         gBrushNoDocBg = CreateSolidBrush(COL_WINDOW_BG);
 }
 
+#if defined(SHOW_DEBUG_MENU_ITEMS) || defined(DEBUG)
 static void ToggleGdiDebugging()
 {
     gUseGdiRenderer = !gUseGdiRenderer;
     DebugGdiPlusDevice(gUseGdiRenderer);
     RerenderEverything();
 }
+#endif
 
 static void OnDraggingStart(WindowInfo& win, int x, int y, bool right=false)
 {

@@ -93,7 +93,6 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 # 4245 : arg conversion signed/unsigned mismatch
 # 4189 : variable initialized but not referenced
 # 4213 : non-standard extension: cast on l-value
-# 4505 : unreferenced local function
 # 4428 : universal-character-name encountered in source
 
 # Addittional warnings that we make part of /W3 set:
@@ -104,7 +103,8 @@ SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 # 4100 : unreferenced param
 SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34701 /w34706 /w34131 /w34244 /w34100
 # 4480 : non-standard extension: specify underlying type for enum
-SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34480
+# 4505 : unreferenced local function
+SUMATRA_CFLAGS = $(SUMATRA_CFLAGS) /w34480 /w34505
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(EXTDIR)/lzma/C

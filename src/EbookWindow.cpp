@@ -76,6 +76,7 @@ static void OnTimer(EbookWindow *win, WPARAM timerId)
     win->ebookController->OnLayoutTimer();
 }
 
+#if defined(SHOW_DEBUG_MENU_ITEMS) || defined(DEBUG)
 static void OnToggleBbox(EbookWindow *win)
 {
     gShowTextBoundingBoxes = !gShowTextBoundingBoxes;
@@ -84,6 +85,7 @@ static void OnToggleBbox(EbookWindow *win)
     InvalidateRect(win->hwndFrame, NULL, TRUE);
     win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_SHOW_LINKS, gShowTextBoundingBoxes);
 }
+#endif
 
 // closes a physical window, deletes the EbookWindow object and removes it
 // from the global list of windows

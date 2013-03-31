@@ -105,7 +105,7 @@ static bool ParsePositional(const char **sInOut, int *nOut)
     return true;
 }
 
-static bool PositionalArgExists(FmtInfo *fmtParts, int fmtPartsCount, int n)
+bool PositionalArgExists(FmtInfo *fmtParts, int fmtPartsCount, int n)
 {
     for (int i = 0; i < fmtPartsCount; i++) {
         if (fmtParts[i].tp != FmtInfo::Positional)
@@ -116,7 +116,7 @@ static bool PositionalArgExists(FmtInfo *fmtParts, int fmtPartsCount, int n)
     return false;
 }
 
-static int FmtArgsCount(FmtInfo *fmtParts, int n)
+int FmtArgsCount(FmtInfo *fmtParts, int n)
 {
     int nPositional = 0;
     int nPercent = 0;

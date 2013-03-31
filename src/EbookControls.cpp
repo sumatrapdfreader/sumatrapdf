@@ -22,10 +22,12 @@ static HCURSOR   gCursorHand = NULL;
 #define COLOR_LIGHT_BLUE    "64C7EF"
 #define COLOR_LIGHT_GRAY    "F0F0F0"
 
+#if 0
 static Rect RectForCircle(int x, int y, int r)
 {
     return Rect(x - r, y - r, r * 2, r * 2);
 }
+#endif
 
 PageControl::PageControl() : page(NULL), cursorX(-1), cursorY(-1)
 {

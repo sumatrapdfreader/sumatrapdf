@@ -60,10 +60,8 @@ Control objects further to make allocating hundreds of them cheaper or introduce
 other base element(s) with less functionality and less overhead).
 */
 
-static bool ValidReparseIdx(int idx, HtmlPullParser *parser)
+bool ValidReparseIdx(int idx, HtmlPullParser *parser)
 {
-    // note: not the most compact version on purpose, to allow
-    // setting a breakpoint on the path returning false
     if ((idx < 0) || (idx > (int)parser->Len()))
         return false;
     return true;
@@ -238,7 +236,7 @@ void HtmlFormatter::SetFont(Font *, FontStyle fs, float fontSize)
     SetFont(fontName, fs, fontSize);
 }
 
-static bool ValidStyleForChangeFontStyle(FontStyle fs)
+bool ValidStyleForChangeFontStyle(FontStyle fs)
 {
     if ((FontStyleBold == fs) ||
         (FontStyleItalic == fs) ||

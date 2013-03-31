@@ -162,6 +162,7 @@ static bool DeleteSymbolsIfExist()
     return ok;
 }
 
+#ifndef DEBUG
 // static (single .exe) build
 static bool UnpackStaticSymbols(const char *pdbZipPath, const char *symDir)
 {
@@ -188,7 +189,6 @@ static bool UnpackLibSymbols(const char *pdbZipPath, const char *symDir)
     return true;
 }
 
-// an installer
 static bool UnpackInstallerSymbols(const char *pdbZipPath, const char *symDir)
 {
     lf("UnpackInstallerSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
@@ -200,6 +200,7 @@ static bool UnpackInstallerSymbols(const char *pdbZipPath, const char *symDir)
     }
     return true;
 }
+#endif
 
 // .pdb files are stored in a .zip file on a web server. Download that .zip
 // file as pdbZipPath, extract the symbols relevant to our executable
