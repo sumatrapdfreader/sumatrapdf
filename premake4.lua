@@ -1,5 +1,8 @@
+-- to generate Visual Studio files in vs-premake directory, run:
+-- premake4 vs2010 or premake4 vs2008
+
+-- common settings for solutions
 function solution_common()
-  -- those settings are inherited by projects that follow
   configurations { "Debug", "Release" }
   location "vs-premake" -- this is where generated solution/project files go
 
@@ -38,9 +41,7 @@ function solution_common()
     }
 end
 
--- to generate Visual Studio files in vs-premake directory, run:
--- premake4 vs2010 or premake4 vs2008
-solution "everything"
+solution "sertxt"
   solution_common()
 
   project "sertxt_test"
@@ -62,6 +63,9 @@ solution "everything"
     }
     includedirs { "src/utils", "src/utils/msvc" }
     links { "Shlwapi" }
+
+solution "serini"
+  solution_common()
 
   project "serini_test"
     kind "ConsoleApp"
