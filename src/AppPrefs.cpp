@@ -22,8 +22,6 @@
 #define NEW_PREFS_FILE_NAME     L"SumatraPDF.ini"
 #define USER_PREFS_FILE_NAME    L"SumatraPDF-user.ini"
 
-#define MAX_REMEMBERED_FILES 1000
-
 AdvancedSettings gUserPrefs;
 
 /* default UI settings */
@@ -321,12 +319,6 @@ static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
 
 static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
 {
-    if (ds->isMissing && (globalPrefsOnly || ds->useGlobalValues) &&
-        !ds->decryptionKey && !ds->isPinned) {
-        // forget about missing documents without valuable state
-        return NULL;
-    }
-
     // BUG: 2140
     if (!IsValidZoom(ds->zoomVirtual)) {
         dbglog::CrashLogF("Invalid ds->zoomVirtual: %.4f", ds->zoomVirtual);
@@ -351,25 +343,13 @@ static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
 
 static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPrefsOnly)
 {
-    BencArray *arr = new BencArray();
+    // remove entries which should (no longer) be remembered
+    fileHistory.Purge(globalPrefsOnly);
 
-    // Don't save more file entries than will be useful
-    int minOpenCount = 0;
-    if (globalPrefsOnly) {
-        Vec<DisplayState *> frequencyList;
-        fileHistory.GetFrequencyOrder(frequencyList);
-        if (frequencyList.Count() > FILE_HISTORY_MAX_RECENT)
-            minOpenCount = frequencyList.At(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
-    }
+    BencArray *arr = new BencArray();
 
     DisplayState *state;
     for (int index = 0; (state = fileHistory.Get(index)) != NULL; index++) {
-        // never forget pinned documents and documents we've remembered a password for
-        bool forceSave = state->isPinned || state->decryptionKey != NULL;
-        if (index >= MAX_REMEMBERED_FILES && !forceSave)
-            continue;
-        if (state->openCount < minOpenCount && index > FILE_HISTORY_MAX_RECENT && !forceSave)
-            continue;
         BencDict *obj = DisplayState_Serialize(state, globalPrefsOnly);
         if (obj)
             arr->Add(obj);
@@ -445,8 +425,7 @@ Error:
     return data;
 }
 
-// TODO: what happened to globalPrefsOnly?
-static DisplayState * DeserializeDisplayState(BencDict *dict, bool)
+static DisplayState * DeserializeDisplayState(BencDict *dict)
 {
     DisplayState *ds = new DisplayState();
     if (!ds)
@@ -490,7 +469,7 @@ static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& glob
         BencDict *dict = fileHistory->GetDict(i);
         assert(dict);
         if (!dict) continue;
-        DisplayState *state = DeserializeDisplayState(dict, globalPrefs.globalPrefsOnly);
+        DisplayState *state = DeserializeDisplayState(dict);
         if (state) {
             // "age" openCount statistics (cut in in half after every week)
             state->openCount >>= weekDiff;
@@ -685,25 +664,10 @@ static bool SerializePrefs2(const WCHAR *filePath, SerializableGlobalPrefs& glob
     data.Append(globalPrefs.unknownSettings);
 
     // serialize fileHistory
-    int minOpenCount = 0;
-    if (globalPrefs.globalPrefsOnly) {
-        // don't save more file entries than will be useful
-        Vec<DisplayState *> frequencyList;
-        fileHistory.GetFrequencyOrder(frequencyList);
-        if (frequencyList.Count() > FILE_HISTORY_MAX_RECENT)
-            minOpenCount = frequencyList.At(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
-    }
+    // remove entries which should (no longer) be remembered
+    fileHistory.Purge(globalPrefs.globalPrefsOnly);
     DisplayState *state;
     for (size_t i = 0; (state = fileHistory.Get(i)); i++) {
-        bool useGlobalValues = globalPrefs.globalPrefsOnly || state->useGlobalValues;
-        if (!state->isPinned && !state->decryptionKey &&
-            (i >= MAX_REMEMBERED_FILES || state->isMissing && useGlobalValues ||
-             state->openCount < minOpenCount && i > FILE_HISTORY_MAX_RECENT)) {
-            // forget about missing files without valuable state and files that have
-            // not been used in quite a while, unless they're pinned or we've remembered
-            // a password for them
-            continue;
-        }
         // TODO: does issue 2140 still occur?
         CrashIf(!IsValidZoom(state->zoomVirtual));
         // don't include common values in order to keep the preference file size down

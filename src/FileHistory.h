@@ -39,6 +39,10 @@ etc...
 // Frequent Read list (space permitting)
 #define FILE_HISTORY_MAX_FREQUENT   10
 
+// maximum number of files to remember in total
+// (to keep the settings file within reasonable bounds)
+#define FILE_HISTORY_MAX_FILES 1000
+
 class FileHistory {
     Vec<DisplayState *> states;
 
@@ -140,6 +144,37 @@ public:
                 list.Append(*ds);
         }
         list.Sort(cmpOpenCount);
+    }
+
+    // removes file history entries which shouldn't be saved anymore
+    // (see the loop below for the details)
+    void Purge(bool alwaysUseGlobalValues=false) {
+        // minOpenCount is set to the number of times a file must have been
+        // opened to be kept (provided that there is no other valuable
+        // information about the file to be remembered)
+        int minOpenCount = 0;
+        if (alwaysUseGlobalValues) {
+            Vec<DisplayState *> frequencyList;
+            GetFrequencyOrder(frequencyList);
+            if (frequencyList.Count() > FILE_HISTORY_MAX_RECENT)
+                minOpenCount = frequencyList.At(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
+        }
+
+        for (size_t j = states.Count(); j > 0; j--) {
+            DisplayState *state = states.At(j - 1);
+            // never forget pinned documents and documents we've remembered a password for
+            if (state->isPinned || state->decryptionKey != NULL)
+                continue;
+            // forget about missing documents without valuable state
+            if (state->isMissing && (alwaysUseGlobalValues || state->useGlobalValues))
+                states.RemoveAt(j - 1);
+            // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
+            else if (j > FILE_HISTORY_MAX_FILES)
+                states.RemoveAt(j - 1);
+            // forget about files that were hardly used (and without valuable state)
+            else if (alwaysUseGlobalValues && state->openCount < minOpenCount && j > FILE_HISTORY_MAX_RECENT)
+                states.RemoveAt(j - 1);
+        }
     }
 };
 
