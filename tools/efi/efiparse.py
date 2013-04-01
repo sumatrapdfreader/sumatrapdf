@@ -150,8 +150,9 @@ def print_sym(sym):
 	print("size : %d" % sym.size)
 
 class ParseState(object):
-	def __init__(self, fo):
+	def __init__(self, fo, obj_file_splitters):
 		self.fo = fo
+		self.obj_file_splitters = obj_file_splitters
 		self.strings = Strings()
 		self.types = []
 		self.symbols = []
@@ -222,7 +223,13 @@ def parse_strings(state):
 		if l == "": return parse_next_section
 		parts = l.split("|", 2)
 		idx = int(parts[0])
-		state.strings.add(idx, parts[1])
+		s = parts[1]
+		for splitter in state.obj_file_splitters:
+			pos = s.find(splitter)
+			if -1 != pos:
+				s = s[pos + len(splitter):]
+				break
+		state.strings.add(idx, s)
 
 def parse_sections(state):
 	while True:
@@ -252,21 +259,21 @@ def calc_symbols_objname(state):
 	for sym in state.symbols:
 		sym.objname = sec_to_objfile.get_objname_by_symbol(sym)
 
-def parse_file_object(fo):
-	state = ParseState(fo)
+def parse_file_object(fo, obj_file_splitters):
+	state = ParseState(fo, obj_file_splitters)
 	curr = parse_start
 	while curr:
 		curr = curr(state)
 	calc_symbols_objname(state)
 	return state
 
-def parse_file(file_name):
+def parse_file(file_name, obj_file_splitters=[]):
 	print("parse_file: %s" % file_name)
 	if file_name.endswith(".bz2"):
 		with bz2.BZ2File(file_name, "r", buffering=2*1024*1024) as fo:
-			return parse_file_object(fo)
+			return parse_file_object(fo, obj_file_splitters)
 	with open(file_name, "r") as fo:
-		return parse_file_object(fo)
+		return parse_file_object(fo, obj_file_splitters)
 
 def n_as_str(n):
 	if n > 0: return "+" + str(n)

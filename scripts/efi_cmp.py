@@ -123,8 +123,9 @@ def main():
 	build_ver(svn_ver2)
 	build_efi_result(svn_ver2)
 
-	efi1 = efiparse.parse_file(efi_result_bz2_file(svn_ver1))
-	efi2 = efiparse.parse_file(efi_result_bz2_file(svn_ver2))
+	obj_file_splitters = ["obj-rel\\", "INTEL\\"]
+	efi1 = efiparse.parse_file(efi_result_bz2_file(svn_ver1), obj_file_splitters)
+	efi2 = efiparse.parse_file(efi_result_bz2_file(svn_ver2), obj_file_splitters)
 	diff = efiparse.diff(efi1, efi2)
 	#print("Diffing done")
 	print(diff)
