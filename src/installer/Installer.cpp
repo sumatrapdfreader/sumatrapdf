@@ -271,7 +271,8 @@ void InvalidateFrame()
         rc.dy = TITLE_PART_DY;
     else
         rc.dy -= BOTTOM_PART_DY;
-    InvalidateRect(gHwndFrame, &rc.ToRECT(), FALSE);
+    RECT rcTmp = rc.ToRECT();
+    InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }
 
 bool CreateProcessHelper(const WCHAR *exe, const WCHAR *args)
@@ -514,6 +515,7 @@ LetterInfo gLetters[] = {
 
 #define SUMATRA_LETTERS_COUNT (dimof(gLetters))
 
+#if 0
 static char RandUppercaseLetter()
 {
     // note: clearly, not random but seems to work ok anyway
@@ -530,6 +532,7 @@ static void RandomizeLetters()
         gLetters[i].c = RandUppercaseLetter();
     }
 }
+#endif
 
 static void SetLettersSumatraUpTo(int n)
 {
@@ -819,7 +822,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     return atom != NULL;
 }
 
-static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
+static BOOL InstanceInit(HINSTANCE hInstance, int /* nCmdShow */)
 {
     ghinst = hInstance;
     gFontDefault = CreateDefaultGuiFont();
@@ -933,7 +936,7 @@ static void ParseCommandLine(WCHAR *cmdLine)
 
 // no-op but must be defined for CrashHandler.cpp
 void CrashHandlerMessage() { }
-void GetStressTestInfo(str::Str<char>* s) { }
+void GetStressTestInfo(str::Str<char>* /* s */) { }
 
 void GetProgramInfo(str::Str<char>& s)
 {
@@ -952,6 +955,7 @@ bool CrashHandlerCanUseNet()
     return true;
 }
 
+#ifndef BUILD_UNINSTALLER
 static void InstallInstallerCrashHandler()
 {
     // save symbols directly into %TEMP% (so that the installer doesn't
@@ -965,8 +969,9 @@ static void InstallInstallerCrashHandler()
     ScopedMem<WCHAR> crashDumpPath(path::Join(tempDir, CRASH_DUMP_FILE_NAME));
     InstallCrashHandler(crashDumpPath, tempDir);
 }
+#endif
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, LPSTR /* lpCmdLine */, int nCmdShow)
 {
     int ret = 1;
 
@@ -976,7 +981,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     InitAllCommonControls();
     ScopedGdiPlus gdi;
 
-#if !defined(BUILD_UNINSTALLER)
+#ifndef BUILD_UNINSTALLER
     InstallInstallerCrashHandler();
 #endif
 

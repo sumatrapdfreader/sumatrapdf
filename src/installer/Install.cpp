@@ -286,7 +286,7 @@ static bool CreateAppShortcut(bool allUsers)
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
-DWORD WINAPI InstallerThread(LPVOID data)
+DWORD WINAPI InstallerThread(LPVOID /* data */)
 {
     gGlobalData.success = false;
 
@@ -463,7 +463,8 @@ static void OnButtonOptions()
 
     ClientRect rc(gHwndFrame);
     rc.dy -= BOTTOM_PART_DY;
-    InvalidateRect(gHwndFrame, &rc.ToRECT(), FALSE);
+    RECT rcTmp = rc.ToRECT();
+    InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 
     SetFocus(gHwndButtonOptions);
 }
