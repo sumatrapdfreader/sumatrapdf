@@ -16,12 +16,11 @@ directory. You might occasionally delete it, if disk space is a concern.
 
 """
 TODO:
- - in efi.exe, record which .obj file is the source of a given symbol
  - diff for symbols in text format
- - summary of biggest functions
- - upload efi results as part of buildbot
+ - upload efi diff results in text format as part of buildbot
  - diff for symbols in html format
  - upload efi html diff as part of buildbot
+ - summary of biggest functions
 
 Maybe:
  - record data type (http://msdn.microsoft.com/en-US/library/w3a9kc5s(v=vs.80).aspx,
@@ -140,7 +139,7 @@ def main():
 		for sym in added[:max]:
 			#sym = diff.syms2.name_to_sym[sym_name]
 			size = sym.size
-			print("%4d : %s" % (size, sym.name))
+			print("%4d : %s" % (size, sym.full_name()))
 
 	removed = diff.removed
 	if len(removed) > 0:
@@ -148,7 +147,7 @@ def main():
 		for sym in removed[:max]:
 			#sym = diff.syms2.name_to_sym[sym_name]
 			size = sym.size
-			print("%4d : %s" % (size, sym.name))
+			print("%4d : %s" % (size, sym.full_name()))
 
 	changed = diff.changed
 	if len(changed) > 0:
@@ -156,7 +155,7 @@ def main():
 		print("\nChanged symbols:")
 		for sym in changed:
 			size = sym.size_diff
-			print("%4d : %s" % (size, sym.name))
+			print("%4d : %s" % (size, sym.full_name()))
 
 if __name__ == "__main__":
 	main()

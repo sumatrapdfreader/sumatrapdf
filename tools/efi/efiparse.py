@@ -4,7 +4,7 @@
 Parses the output of efi.exe.
 """
 
-import bz2
+import bz2, bisect
 
 g_file_name = "efi.txt"
 
@@ -36,6 +36,12 @@ class Section(object):
 		idx = int(parts[4])
 		self.name = strings.idx_to_str(idx)
 
+def print_i_off_sec(i, off, section):
+	print("""i: %d
+off:            %d
+section.offset: %d
+""" % (i, off, section.offset))
+
 class SectionsSorted(object):
 	def __init__(self):
 		self.offsets = []
@@ -49,20 +55,58 @@ class SectionsSorted(object):
 			prev_off = self.offsets[prev_sec_idx]
 			assert prev_off <= section.offset
 
+	def objname_by_offset(self, off):
+		i = bisect.bisect_left(self.offsets, off)
+		if i >= len(self.sections):
+			i = len(self.sections) - 1
+		section = self.sections[i]
+		if off < section.offset:
+			try:
+				assert i > 0
+			except:
+				print_i_off_sec(i, off, section)
+				raise
+			i -= 1
+			section = self.sections[i]
+		try:
+			assert off >= section.offset
+		except:
+			print_i_off_sec(i, off, section)
+			raise
+		if len(self.sections) < i + 1:
+			next_section = self.sections[i+1]
+			assert off < next_section.offset
+		return section.name
+
 class SectionToObjFile(object):
-	def __init__(self, sections):
+	def __init__(self, sections, strings):
+		self.strings = strings
+
 		sec_no_to_sec = {}
+		curr_sec_no = -1
+		curr_sec_sorted = None
 		for s in sections:
-			if s.section_no not in sec_no_to_sec:
-				sec_no_to_sec[s.section_no] = SectionsSorted()
-			sec_sorted = sec_no_to_sec[s.section_no]
-			sec_sorted.add(s)
+			if s.section_no != curr_sec_no:
+				assert s.section_no not in sec_no_to_sec
+				assert s.section_no > curr_sec_no
+				curr_sec_no = s.section_no
+				curr_sec_sorted = SectionsSorted()
+				sec_no_to_sec[curr_sec_no] = curr_sec_sorted
+			curr_sec_sorted.add(s)
 		self.sec_no_to_sec = sec_no_to_sec
 
-	def get_obj_by_sec_no_off(self, sec_no, sec_off):
-		#sec_sorted = self.sec_no_to_sec[sec_no]
-		# TODO: find using bisect
-		return ""
+	def get_objname_by_sec_no_off(self, sec_no, sec_off):
+		# Note: it does happen that we have symbols in sections
+		# that are not in sections list, like:
+		# P|6|553|0|0|__except_list
+		# D|6|0|553|0|__safe_se_handler_count|
+		if sec_no not in self.sec_no_to_sec:
+			return ""
+		sec_sorted = self.sec_no_to_sec[sec_no]
+		return sec_sorted.objname_by_offset(sec_off)
+
+	def get_objname_by_symbol(self, sym):
+		return self.get_objname_by_sec_no_off(sym.section, sym.offset)
 
 (SYM_NULL, SYM_EXE, SYM_COMPILAND, SYM_COMPILAND_DETAILS) = ("N", "Exe", "C", "CD")
 (SYM_COMPILAND_ENV, SYM_FUNCTION, SYM_BLOCK, SYM_DATA) = ("CE", "F", "B", "D")
@@ -89,6 +133,10 @@ class Symbol(object):
 			self.thunk_type = parts[6]
 		elif self.type == SYM_DATA:
 			self.data_type_name = parts[6]
+		self.objname = None
+
+	def full_name(self):
+		return self.name + "@" + self.objname
 
 class Type(object):
 	def __init__(self, l):
@@ -181,7 +229,7 @@ def parse_sections(state):
 		l = state.readline()
 		if l == None: return None
 		if l == "": return parse_next_section
-		state.sections.append(Section(l), state.strings)
+		state.sections.append(Section(l, state.strings))
 
 def parse_symbols(state):
 	while True:
@@ -199,11 +247,17 @@ def parse_types(state):
 		if l.startswith("struct"):
 			state.types.append(Type(l))
 
+def calc_symbols_objname(state):
+	sec_to_objfile = SectionToObjFile(state.sections, state.strings)
+	for sym in state.symbols:
+		sym.objname = sec_to_objfile.get_objname_by_symbol(sym)
+
 def parse_file_object(fo):
-	curr = parse_start
 	state = ParseState(fo)
+	curr = parse_start
 	while curr:
 		curr = curr(state)
+	calc_symbols_objname(state)
 	return state
 
 def parse_file(file_name):
@@ -278,9 +332,11 @@ class ChangedSymbol(object):
 		assert sym1.name == sym2.name
 		self.name = sym1.name
 		self.size_diff = sym2.size - sym1.size
+		self._full_name = sym1.full_name()
 
-# Unfortunately dia2 sometimes doesn't give us unique names for functions,
-# so we need to
+	def full_name(self):
+		return self._full_name
+
 class SymbolStats(object):
 	def __init__(self):
 		self.name_to_sym = {}
