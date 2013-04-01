@@ -209,7 +209,6 @@ cpp_txt_tmpl = """// DON'T EDIT MANUALLY !!!!
 
 namespace sertxt {
 
-%(filed_names_seq_strings)s
 #define of offsetof
 %(structs_metadata)s
 #undef of
@@ -223,8 +222,9 @@ const FieldMetadata g${name}FieldMetadata[] = {
     { $name_off, $offset, $type, &g${name}StructMetadata },
 };
 """
-def gen_struct_fields_txt(stru_cls, field_names):
+def gen_struct_fields_txt(stru_cls):
     struct_name = stru_cls.__name__
+    field_names = stru_cls.field_names
     lines = ["const FieldMetadata g%sFieldMetadata[] = {" % struct_name]
     rows = []
     for field in stru_cls.fields:
@@ -243,16 +243,23 @@ def gen_struct_fields_txt(stru_cls, field_names):
     return lines
 
 """
-const StructMetadata g${name}StructMetadata = { $size, $nFields, $fields };
+const StructMetadata g${name}StructMetadata = { $size, $nFields, $fields, $fieldNames };
 """
-def gen_structs_metadata_txt(structs, field_names):
+def gen_structs_metadata_txt(structs):
     lines = []
     for stru_cls in structs:
+        stru_cls.field_names = util.SeqStrings()
         struct_name = stru_cls.__name__
         nFields = len(stru_cls.fields)
         fields = "&g%sFieldMetadata[0]" % struct_name
-        lines += gen_struct_fields_txt(stru_cls, field_names)
-        lines += ["const StructMetadata g%(struct_name)sMetadata = { sizeof(%(struct_name)s), %(nFields)d, %(fields)s };\n" % locals()]
+        lines += gen_struct_fields_txt(stru_cls)
+        field_names = stru_cls.field_names.get_all_c_escaped()
+        lines += ["""const StructMetadata g%(struct_name)sMetadata = {
+    sizeof(%(struct_name)s),
+    %(nFields)d,
+    %(field_names)s,
+    %(fields)s
+};\n""" % locals()]
     return "\n".join(lines)
 
 top_level_funcs_txt_tmpl = """
@@ -265,7 +272,7 @@ top_level_funcs_txt_tmpl = """
 {
     char *dataCopy = str::DupN(data, dataLen);
     char *defaultDataCopy = str::DupN(defaultData, defaultDataLen);
-    void *res = DeserializeWithDefault(dataCopy, dataLen, defaultDataCopy, defaultDataLen, &g%(name)sMetadata, FIELD_NAMES_SEQ);
+    void *res = DeserializeWithDefault(dataCopy, dataLen, defaultDataCopy, defaultDataLen, &g%(name)sMetadata);
     free(dataCopy);
     free(defaultDataCopy);
     return (%(name)s*)res;
@@ -273,7 +280,7 @@ top_level_funcs_txt_tmpl = """
 
 uint8_t *Serialize%(name)s(%(name)s *val, size_t *dataLenOut)
 {
-    return Serialize((const uint8_t*)val, FIELD_NAMES_SEQ, dataLenOut);
+    return Serialize((const uint8_t*)val, dataLenOut);
 }
 
 void Free%(name)s(%(name)s *val)
@@ -309,10 +316,8 @@ def gen_for_top_level_val(top_level_val, file_path):
     structs = structs_from_top_level_value(top_level_val)
     prototypes = gen_prototypes(top_level_val.__class__)
     struct_defs = gen_struct_defs(structs)
-    field_names = util.SeqStrings()
-    structs_metadata = gen_structs_metadata_txt(structs, field_names)
+    structs_metadata = gen_structs_metadata_txt(structs)
     top_level_funcs = gen_top_level_funcs_txt(top_level_val)
-    filed_names_seq_strings = "#define FIELD_NAMES_SEQ %s\n" % field_names.get_all_c_escaped()
     file_name = os.path.basename(file_path)
     write_to_file(file_path + ".h",  h_txt_tmpl % locals())
     write_to_file(file_path + ".cpp", cpp_txt_tmpl % locals())

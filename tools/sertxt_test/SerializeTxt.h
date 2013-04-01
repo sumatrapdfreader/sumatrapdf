@@ -32,9 +32,10 @@ struct ListNode {
 };
 
 typedef struct {
-    uint16_t        size;
-    uint16_t        nFields;
-    const FieldMetadata * fields;
+    uint16_t                size;
+    uint16_t                nFields;
+    const char *            fieldNames;
+    const FieldMetadata *   fields;
 } StructMetadata;
 
 typedef enum {
@@ -67,10 +68,10 @@ struct FieldMetadata {
     const StructMetadata * def;
 };
 
+uint8_t *   Serialize(const uint8_t *data, size_t *sizeOut);
+uint8_t*    Deserialize(char *data, size_t dataSize, const StructMetadata *def);
+uint8_t*    DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def);
 void        FreeStruct(uint8_t *data);
-uint8_t *   Serialize(const uint8_t *data, const char *fieldNamesSeq, size_t *sizeOut);
-uint8_t*    Deserialize(char *data, size_t dataSize, const StructMetadata *def, const char *fieldNamesSeq);
-uint8_t*    DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def, const char *fieldNamesSeq);
 
 } // namespace sertxt
 
