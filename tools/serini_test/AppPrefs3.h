@@ -88,7 +88,7 @@ struct GlobalPrefs {
     // whether not to store display settings for individual documents
     bool globalPrefsOnly;
     // pointer to a static string that is part of LangDef, don't free
-    WCHAR * currLangCode;
+    char * currLangCode;
     // whether the toolbar should be visible by default in the main window
     bool toolbarVisible;
     // whether the Favorites sidebar should be visible by default in the
@@ -329,7 +329,7 @@ static SettingInfo gFileInfo[] = {
 static SettingInfo gGlobalPrefsInfo[] = {
     { Type_Meta, 24, sizeof(GlobalPrefs), (intptr_t)"GlobalPrefsOnly\0CurrLangCode\0ToolbarVisible\0FavVisible\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0EnableAutoUpdate\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0VersionToSkip\0LastUpdateTime\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0TocVisible\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxR2L\0File" },
     { Type_Bool, 0, offsetof(GlobalPrefs, globalPrefsOnly), false },
-    { Type_String, 16, offsetof(GlobalPrefs, currLangCode), NULL },
+    { Type_Utf8String, 16, offsetof(GlobalPrefs, currLangCode), NULL },
     { Type_Bool, 29, offsetof(GlobalPrefs, toolbarVisible), true },
     { Type_Bool, 44, offsetof(GlobalPrefs, favVisible), false },
     { Type_Bool, 55, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), false },

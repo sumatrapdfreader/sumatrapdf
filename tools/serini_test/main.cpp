@@ -5,6 +5,7 @@
 #define INCLUDE_APPPREFS3_METADATA
 #include "AppPrefs3.h"
 #include "FileUtil.h"
+#include "DeserializeBenc.h"
 #include "SerializeIni.h"
 #include "SerializeIni3.h"
 #include "SerializeSqt.h"
@@ -315,6 +316,107 @@ static bool TestCompactDefaultValues()
 
 }; // namespace sqt
 
+namespace benc {
+
+static SettingInfo gGlobalPrefsInfoBenc[] = {
+    { Type_Meta, 26, sizeof(GlobalPrefs), (intptr_t)"CBX_Right2Left\0Display Mode\0EnableAutoUpdate\0ExposeInverseSearch\0FavVisible\0GlobalPrefsOnly\0InverseSearchCommandLine\0LastUpdate\0OpenCountWeek\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0RememberOpenedFiles\0ShowStartPage\0ShowToc\0ShowToolbar\0Toc DX\0Toc Dy\0UILanguage\0UseSysColors\0VersionToSkip\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual" },
+    { Type_Bool, 0, offsetof(GlobalPrefs, cbxR2L), false },
+    { Type_String, 15, offsetof(GlobalPrefs, defaultDisplayMode), (intptr_t)L"automatic" },
+    { Type_Bool, 28, offsetof(GlobalPrefs, enableAutoUpdate), true },
+    { Type_Bool, 45, offsetof(GlobalPrefs, enableTeXEnhancements), false },
+    { Type_Bool, 65, offsetof(GlobalPrefs, favVisible), false },
+    { Type_Bool, 76, offsetof(GlobalPrefs, globalPrefsOnly), false },
+    { Type_String, 92, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL },
+    { Type_Meta, 117, offsetof(GlobalPrefs, lastUpdateTime), 0 },
+    { Type_Int, 128, offsetof(GlobalPrefs, openCountWeek), 0 },
+    { Type_Bool, 142, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), false },
+    { Type_Bool, 167, offsetof(GlobalPrefs, pdfAssociateShouldAssociate), false },
+    { Type_Bool, 195, offsetof(GlobalPrefs, rememberOpenedFiles), true },
+    { Type_Bool, 215, offsetof(GlobalPrefs, showStartPage), true },
+    { Type_Bool, 229, offsetof(GlobalPrefs, tocVisible), true },
+    { Type_Bool, 237, offsetof(GlobalPrefs, toolbarVisible), true },
+    { Type_Int, 249, offsetof(GlobalPrefs, sidebarDx), 0 },
+    { Type_Int, 256, offsetof(GlobalPrefs, tocDy), 0 },
+    { Type_Utf8String, 263, offsetof(GlobalPrefs, currLangCode), NULL },
+    { Type_Bool, 274, offsetof(GlobalPrefs, useSysColors), false },
+    { Type_String, 287, offsetof(GlobalPrefs, versionToSkip), NULL },
+    { Type_Int, 301, offsetof(GlobalPrefs, windowPos.dx), 1 },
+    { Type_Int, 311, offsetof(GlobalPrefs, windowPos.dy), 1 },
+    { Type_Int, 321, offsetof(GlobalPrefs, windowState), 1 },
+    { Type_Int, 334, offsetof(GlobalPrefs, windowPos.x), 1 },
+    { Type_Int, 343, offsetof(GlobalPrefs, windowPos.y), 1 },
+    { Type_Float, 352, offsetof(GlobalPrefs, defaultZoom), (intptr_t)"-1" },
+};
+
+static SettingInfo gFileInfoBenc[] = {
+    { Type_Meta, 21, sizeof(File), (intptr_t)"Decryption Key\0Display Mode\0File\0Missing\0OpenCount\0Page\0Pinned\0ReparseIdx\0Rotation\0Scroll X2\0Scroll Y2\0ShowToc\0Toc DX\0TocToggles\0UseGlobalValues\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual" },
+    { Type_Utf8String, 0, offsetof(File, decryptionKey), NULL },
+    { Type_String, 15, offsetof(File, displayMode), (intptr_t)L"automatic" },
+    { Type_String, 28, offsetof(File, filePath), NULL },
+    { Type_Bool, 33, offsetof(File, isMissing), false },
+    { Type_Int, 41, offsetof(File, openCount), 0 },
+    { Type_Int, 51, offsetof(File, pageNo), 1 },
+    { Type_Bool, 56, offsetof(File, isPinned), false },
+    { Type_Int, 63, offsetof(File, reparseIdx), 0 },
+    { Type_Int, 74, offsetof(File, rotation), 0 },
+    { Type_Int, 83, offsetof(File, scrollPos.x), 0 },
+    { Type_Int, 93, offsetof(File, scrollPos.y), 0 },
+    { Type_Bool, 103, offsetof(File, tocVisible), true },
+    { Type_Int, 111, offsetof(File, sidebarDx), 0 },
+    { Type_Meta, 118, offsetof(File, tocState), NULL },
+    { Type_Bool, 129, offsetof(File, useGlobalValues), false },
+    { Type_Int, 145, offsetof(File, windowPos.dx), 1 },
+    { Type_Int, 155, offsetof(File, windowPos.dy), 1 },
+    { Type_Int, 165, offsetof(File, windowState), 1 },
+    { Type_Int, 178, offsetof(File, windowPos.x), 1 },
+    { Type_Int, 187, offsetof(File, windowPos.y), 1 },
+    { Type_Float, 196, offsetof(File, zoomVirtual), (intptr_t)"100" },
+};
+
+static SettingInfo gBencGlobalPrefs[] = {
+    { Type_Meta, 3, sizeof(GlobalPrefs), (intptr_t)"Favorites\0File History\0gp" },
+    { Type_Array, 10, offsetof(GlobalPrefs, file), (intptr_t)gFileInfoBenc },
+    { Type_Struct, 23, 0 /* self */, (intptr_t)gGlobalPrefsInfoBenc },
+    // Favorites must be read after File History
+    { Type_Meta, 0, offsetof(GlobalPrefs, file), NULL },
+};
+
+static SettingInfo gUserPrefsInfoBenc[] = {
+    { Type_Meta, 6, sizeof(UserPrefs), (intptr_t)"BgColor\0EscToExit\0ForwardSearch_HighlightColor\0ForwardSearch_HighlightOffset\0ForwardSearch_HighlightPermanent\0ForwardSearch_HighlightWidth" },
+    { Type_Color, 0, offsetof(UserPrefs, advancedPrefs.mainWindowBackground), 0xfff200 },
+    { Type_Bool, 8, offsetof(UserPrefs, advancedPrefs.escToExit), false },
+    { Type_Color, 18, offsetof(UserPrefs, forwardSearch.highlightColor), 0x6581ff },
+    { Type_Int, 47, offsetof(UserPrefs, forwardSearch.highlightOffset), 0 },
+    { Type_Bool, 77, offsetof(UserPrefs, forwardSearch.highlightPermanent), false },
+    { Type_Int, 110, offsetof(UserPrefs, forwardSearch.highlightWidth), 15 },
+};
+
+static SettingInfo gBencUserPrefs[] = {
+    { Type_Meta, 1, sizeof(UserPrefs), (intptr_t)"gp" },
+    { Type_Struct, 0, 0 /* self */, (intptr_t)gUserPrefsInfoBenc },
+};
+
+static bool TestDeserialize()
+{
+    const WCHAR *path = L"..\\tools\\serini_test\\data3.benc";
+    const WCHAR *pathCmp = L"..\\tools\\serini_test\\data3.ini";
+
+    ScopedMem<char> data(file::ReadAll(path, NULL));
+    Check(data); // failed to read file
+    GlobalPrefs *s = (GlobalPrefs *)Deserialize(data, str::Len(data), gBencGlobalPrefs);
+    Check(s); // failed to parse file
+
+    ScopedMem<char> dataCmp(file::ReadAll(pathCmp, NULL));
+    dataCmp.Set(str::Replace(dataCmp, "PageLabel = ii\r\n", ""));
+    ScopedMem<char> ser(ini3::Serialize(s, gGlobalPrefsInfo, NULL));
+    Check(str::Eq(dataCmp, ser));
+    ini3::FreeStruct(s, gGlobalPrefsInfo);
+
+    return true;
+}
+
+}; // namespace benc
+
 static bool TestSerializeIniAsSqt()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3-user.ini";
@@ -360,6 +462,8 @@ int main(int argc, char **argv)
     if (!sqt::TestDefaultValues())
         errors++;
     if (!sqt::TestCompactDefaultValues())
+        errors++;
+    if (!benc::TestDeserialize())
         errors++;
     if (!TestSerializeIniAsSqt())
         errors++;

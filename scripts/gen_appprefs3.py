@@ -232,7 +232,7 @@ FileSettings = [
 AppPrefs = [
 	Field("GlobalPrefsOnly", Bool, False,
 		"whether not to store display settings for individual documents"),
-	Field("CurrLangCode", String, None, # TODO: Type_Custom
+	Field("CurrLangCode", Utf8String, None, # TODO: Type_Custom
 		"pointer to a static string that is part of LangDef, don't free"),
 	Field("ToolbarVisible", Bool, True,
 		"whether the toolbar should be visible by default in the main window"),

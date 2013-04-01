@@ -73,6 +73,7 @@ solution "everything"
       "tools/sertxt_test/SettingsSumatra.cpp",
       "tools/sertxt_test/data.txt",
       "src/utils/BaseUtil.*",
+      "src/utils/BencUtil.*",
       "src/utils/FileUtil.*",
       "src/utils/IniParser.*",
       "src/utils/Scoped.*",
