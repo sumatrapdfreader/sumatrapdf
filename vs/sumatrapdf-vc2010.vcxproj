@@ -180,7 +180,6 @@
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
-    <ClCompile Include="..\src\utils\SerializeBin_ut.cpp" />
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
     <ClCompile Include="..\src\utils\StrFormat_ut.cpp" />
@@ -194,6 +193,8 @@
     <ClCompile Include="..\src\utils\TrivialHtmlParser_ut.cpp" />
     <ClCompile Include="..\src\utils\UITask.cpp" />
     <ClCompile Include="..\src\utils\UtilTests.cpp" />
+    <ClCompile Include="..\src\utils\VarintGob.cpp" />
+    <ClCompile Include="..\src\utils\VarintGob_ut.cpp" />
     <ClCompile Include="..\src\utils\Vec_ut.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
     <ClCompile Include="..\src\utils\ZipUtil.cpp" />
@@ -446,6 +447,7 @@
     <ClInclude Include="..\src\utils\Touch.h" />
     <ClInclude Include="..\src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="..\src\utils\UITask.h" />
+    <ClInclude Include="..\src\utils\VarintGob.h" />
     <ClInclude Include="..\src\utils\Vec.h" />
     <ClInclude Include="..\src\utils\VecSegmented.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />

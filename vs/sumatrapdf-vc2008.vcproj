@@ -351,18 +351,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\SerializeBin.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\SerializeBin.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\SerializeBin_ut.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\StrFormat.cpp"
 					>
 				</File>
@@ -384,6 +372,18 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\StrSlice.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\VarintGob.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\VarintGob.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\VarintGob_ut.cpp"
 					>
 				</File>
 			</Filter>
@@ -1275,6 +1275,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\fitz\res_func.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\fitz\res_halftone.c"
 					>
 				</File>
@@ -1316,10 +1320,6 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\fitz\stm_read.c"
-					>
-				</File>
-				<File
-					RelativePath="..\mupdf\fitz\res_func.c"
 					>
 				</File>
 			</Filter>

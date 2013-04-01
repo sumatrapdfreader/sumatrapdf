@@ -345,9 +345,6 @@
     <ClCompile Include="..\src\utils\PalmDbReader.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\SerializeBin_ut.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -385,6 +382,12 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\UtilTests.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\VarintGob.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\VarintGob_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\Vec_ut.cpp">
@@ -1137,6 +1140,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\UITask.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\VarintGob.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\Vec.h">

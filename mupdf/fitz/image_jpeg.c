@@ -203,6 +203,11 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 			sp = row[0];
 			for (x = 0; x < cinfo.output_width; x++)
 			{
+				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2250 */
+				if (cinfo.jpeg_color_space == JCS_YCCK && cinfo.saw_Adobe_marker)
+				for (k = 0; k < cinfo.output_components; k++)
+					*dp++ = 255 - *sp++;
+				else
 				for (k = 0; k < cinfo.output_components; k++)
 					*dp++ = *sp++;
 				*dp++ = 255;
