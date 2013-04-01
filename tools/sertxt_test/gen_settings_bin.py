@@ -8,6 +8,13 @@ from gen_settings_types import Struct, Field, String, Array, WString
 from gen_settings_txt import structs_from_top_level_value, field_val_as_str
 from util import gob_uvarint_encode, gob_varint_encode
 
+"""
+TODO:
+  - a different runtime representations: each struct starts with StructDef *.
+    that way the values are self-describing. that would simplify the API
+    (no need to pass StructDef* separately.
+"""
+
 g_magic_id = 0x53657454  # 'SetT' as 'Settings''
 g_magic_id_str = "SetT"
 

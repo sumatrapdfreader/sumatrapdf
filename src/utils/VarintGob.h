@@ -1,3 +1,6 @@
+/* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #ifndef VarintGob_h
 #define VarintGob_h
 

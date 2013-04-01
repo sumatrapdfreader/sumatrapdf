@@ -8,8 +8,8 @@ namespace sertxt {
 
 struct FieldMetadata;
 
-// TODO: to make the operations on elements easier, ListNode should be nt kernel style
-// list i.e. double-linked, with root that points to start and end
+// Note: to make the operations on elements easier, ListNode could be nt kernel
+// style list i.e. double-linked, with root that points to start and end
 #if 0
 template <typename T>
 struct ListNode {
@@ -34,7 +34,7 @@ struct ListNode {
 typedef struct {
     uint16_t        size;
     uint16_t        nFields;
-    FieldMetadata * fields;
+    const FieldMetadata * fields;
 } StructMetadata;
 
 typedef enum {
@@ -64,13 +64,13 @@ struct FieldMetadata {
     uint16_t         offset;
     Type             type;
     // for TYP_ARRAY and TYPE_STRUCT_PTR, otherwise NULL
-    StructMetadata * def;
+    const StructMetadata * def;
 };
 
-void        FreeStruct(uint8_t *data, StructMetadata *def);
-uint8_t*    Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq);
-uint8_t*    DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, StructMetadata *def, const char *fieldNamesSeq);
-uint8_t *   Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, size_t *sizeOut);
+void        FreeStruct(uint8_t *data);
+uint8_t *   Serialize(const uint8_t *data, const char *fieldNamesSeq, size_t *sizeOut);
+uint8_t*    Deserialize(char *data, size_t dataSize, const StructMetadata *def, const char *fieldNamesSeq);
+uint8_t*    DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def, const char *fieldNamesSeq);
 
 } // namespace sertxt
 

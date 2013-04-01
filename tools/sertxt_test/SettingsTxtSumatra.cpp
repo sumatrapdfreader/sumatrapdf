@@ -3,23 +3,23 @@
 
 #include "BaseUtil.h"
 #include "SerializeTxt.h"
-#include "SettingsSumatra.h"
+#include "SettingsTxtSumatra.h"
 
 namespace sertxt {
 
 #define FIELD_NAMES_SEQ "x\0y\0dx\0dy\0global_prefs_only\0curr_language\0toolbar_visible\0pdf_associate_dont_ask\0pdf_associate_do_it\0check_for_updates\0remember_mru_files\0use_system_color_scheme\0inverse_search_cmd_line\0version_to_skip\0last_update_time\0default_display_mode\0default_zoom\0window_state\0window_pos\0toc_visible\0fav_visible\0sidebar_dx\0toc_dy\0show_start_page\0open_count_week\0last_pref_update\0top\0bottom\0left\0right\0space_x\0space_y\0highlight_offset\0highlight_width\0highlight_permanent\0highlight_color\0enable_tex_enhancements\0traditional_ebook_ui\0esc_to_exit\0text_color\0page_color\0main_window_background\0page_padding\0forward_search\0name\0page_no\0page_label\0menu_id\0favorites\0basic\0advanced\0app_state\0str_escape_test\0wstr_1\0\0"
 
 #define of offsetof
-FieldMetadata gRectIntFieldMetadata[] = {
+const FieldMetadata gRectIntFieldMetadata[] = {
     { 0, of(RectInt, x),  TYPE_I32, NULL },
     { 2, of(RectInt, y),  TYPE_I32, NULL },
     { 4, of(RectInt, dx), TYPE_I32, NULL },
     { 7, of(RectInt, dy), TYPE_I32, NULL },
 };
 
-StructMetadata gRectIntMetadata = { sizeof(RectInt), 4, &gRectIntFieldMetadata[0] };
+const StructMetadata gRectIntMetadata = { sizeof(RectInt), 4, &gRectIntFieldMetadata[0] };
 
-FieldMetadata gBasicSettingsFieldMetadata[] = {
+const FieldMetadata gBasicSettingsFieldMetadata[] = {
     {  10, of(BasicSettings, globalPrefsOnly),      TYPE_BOOL,                                         NULL              },
     {  28, of(BasicSettings, currLanguage),         TYPE_STR,                                          NULL              },
     {  42, of(BasicSettings, toolbarVisible),       TYPE_BOOL,                                         NULL              },
@@ -44,9 +44,9 @@ FieldMetadata gBasicSettingsFieldMetadata[] = {
     { 351, of(BasicSettings, lastPrefUpdate),       TYPE_U64,                                          NULL              },
 };
 
-StructMetadata gBasicSettingsMetadata = { sizeof(BasicSettings), 22, &gBasicSettingsFieldMetadata[0] };
+const StructMetadata gBasicSettingsMetadata = { sizeof(BasicSettings), 22, &gBasicSettingsFieldMetadata[0] };
 
-FieldMetadata gPaddingSettingsFieldMetadata[] = {
+const FieldMetadata gPaddingSettingsFieldMetadata[] = {
     { 368, of(PaddingSettings, top),    TYPE_U16, NULL },
     { 372, of(PaddingSettings, bottom), TYPE_U16, NULL },
     { 379, of(PaddingSettings, left),   TYPE_U16, NULL },
@@ -55,9 +55,9 @@ FieldMetadata gPaddingSettingsFieldMetadata[] = {
     { 398, of(PaddingSettings, spaceY), TYPE_U16, NULL },
 };
 
-StructMetadata gPaddingSettingsMetadata = { sizeof(PaddingSettings), 6, &gPaddingSettingsFieldMetadata[0] };
+const StructMetadata gPaddingSettingsMetadata = { sizeof(PaddingSettings), 6, &gPaddingSettingsFieldMetadata[0] };
 
-FieldMetadata gForwardSearchFieldMetadata[] = {
+const FieldMetadata gForwardSearchFieldMetadata[] = {
     { 406, of(ForwardSearch, highlightOffset),       TYPE_I32,   NULL },
     { 423, of(ForwardSearch, highlightWidth),        TYPE_I32,   NULL },
     { 439, of(ForwardSearch, highlightPermanent),    TYPE_I32,   NULL },
@@ -65,9 +65,9 @@ FieldMetadata gForwardSearchFieldMetadata[] = {
     { 475, of(ForwardSearch, enableTexEnhancements), TYPE_BOOL,  NULL },
 };
 
-StructMetadata gForwardSearchMetadata = { sizeof(ForwardSearch), 5, &gForwardSearchFieldMetadata[0] };
+const StructMetadata gForwardSearchMetadata = { sizeof(ForwardSearch), 5, &gForwardSearchFieldMetadata[0] };
 
-FieldMetadata gAdvancedSettingsFieldMetadata[] = {
+const FieldMetadata gAdvancedSettingsFieldMetadata[] = {
     { 499, of(AdvancedSettings, traditionalEbookUI),   TYPE_BOOL,       NULL                      },
     { 520, of(AdvancedSettings, escToExit),            TYPE_BOOL,       NULL                      },
     { 532, of(AdvancedSettings, textColor),            TYPE_COLOR,      NULL                      },
@@ -77,24 +77,24 @@ FieldMetadata gAdvancedSettingsFieldMetadata[] = {
     { 590, of(AdvancedSettings, forwardSearch),        TYPE_STRUCT_PTR, &gForwardSearchMetadata   },
 };
 
-StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 7, &gAdvancedSettingsFieldMetadata[0] };
+const StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 7, &gAdvancedSettingsFieldMetadata[0] };
 
-FieldMetadata gFavFieldMetadata[] = {
+const FieldMetadata gFavFieldMetadata[] = {
     { 605, of(Fav, name),      TYPE_STR,                              NULL },
     { 610, of(Fav, pageNo),    TYPE_I32,                              NULL },
     { 618, of(Fav, pageLabel), TYPE_STR,                              NULL },
     { 629, of(Fav, menuId),    (Type)(TYPE_I32 | TYPE_NO_STORE_MASK), NULL },
 };
 
-StructMetadata gFavMetadata = { sizeof(Fav), 4, &gFavFieldMetadata[0] };
+const StructMetadata gFavMetadata = { sizeof(Fav), 4, &gFavFieldMetadata[0] };
 
-FieldMetadata gAppStateFieldMetadata[] = {
+const FieldMetadata gAppStateFieldMetadata[] = {
     { 637, of(AppState, favorites), TYPE_ARRAY, &gFavMetadata },
 };
 
-StructMetadata gAppStateMetadata = { sizeof(AppState), 1, &gAppStateFieldMetadata[0] };
+const StructMetadata gAppStateMetadata = { sizeof(AppState), 1, &gAppStateFieldMetadata[0] };
 
-FieldMetadata gSettingsFieldMetadata[] = {
+const FieldMetadata gSettingsFieldMetadata[] = {
     { 647, of(Settings, basic),           TYPE_STRUCT_PTR, &gBasicSettingsMetadata    },
     { 653, of(Settings, advanced),        TYPE_STRUCT_PTR, &gAdvancedSettingsMetadata },
     { 662, of(Settings, appState),        TYPE_STRUCT_PTR, &gAppStateMetadata         },
@@ -102,7 +102,7 @@ FieldMetadata gSettingsFieldMetadata[] = {
     { 688, of(Settings, wstr_1),          TYPE_WSTR,       NULL                       },
 };
 
-StructMetadata gSettingsMetadata = { sizeof(Settings), 5, &gSettingsFieldMetadata[0] };
+const StructMetadata gSettingsMetadata = { sizeof(Settings), 5, &gSettingsFieldMetadata[0] };
 
 #undef of
 
@@ -123,12 +123,12 @@ Settings *DeserializeSettingsWithDefault(const char *data, size_t dataLen, const
 
 uint8_t *SerializeSettings(Settings *val, size_t *dataLenOut)
 {
-    return Serialize((const uint8_t*)val, &gSettingsMetadata, FIELD_NAMES_SEQ, dataLenOut);
+    return Serialize((const uint8_t*)val, FIELD_NAMES_SEQ, dataLenOut);
 }
 
 void FreeSettings(Settings *val)
 {
-    FreeStruct((uint8_t*)val, &gSettingsMetadata);
+    FreeStruct((uint8_t*)val);
 }
 
 } // namespace sertxt

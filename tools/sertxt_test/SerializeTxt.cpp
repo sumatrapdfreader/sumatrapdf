@@ -12,35 +12,38 @@ namespace sertxt {
 // the assumption here is that the data was either built by Deserialize()
 // or was created by application code in a way that observes our rule: each
 // struct and string was separately allocated with malloc()
-void FreeStruct(uint8_t *data, StructMetadata *def)
+void FreeStruct(uint8_t *structStart)
 {
-    if (!data)
+    if (!structStart)
         return;
-    FieldMetadata *fieldDef = NULL;
+    const StructMetadata **defPtr = (const StructMetadata**)structStart;
+    const StructMetadata *def = *defPtr;
     Type type;
+    const FieldMetadata *fieldDef = NULL;
     for (int i = 0; i < def->nFields; i++) {
         fieldDef = def->fields + i;
+        uint8_t *data = structStart + fieldDef->offset;
         type = (Type)(fieldDef->type & TYPE_NO_FLAGS_MASK);
         if (TYPE_STRUCT_PTR ==  type) {
-            uint8_t **p = (uint8_t**)(data + fieldDef->offset);
-            FreeStruct(*p, fieldDef->def);
+            uint8_t **p = (uint8_t**)data;
+            FreeStruct(*p);
         } else if (TYPE_ARRAY == type) {
-            ListNode<void> **nodePtr = (ListNode<void>**)(data + fieldDef->offset);
+            ListNode<void> **nodePtr = (ListNode<void>**)data;
             ListNode<void> *node = *nodePtr;
             ListNode<void> *next;
             while (node) {
                 next = node->next;
-                FreeStruct((uint8_t*)node->val, fieldDef->def);
+                FreeStruct((uint8_t*)node->val);
                 free(node);
                 node = next;
             }
         } else if ((TYPE_STR == type) || (TYPE_WSTR == type)) {
-            char **sp = (char**)(data + fieldDef->offset);
+            char **sp = (char**)data;
             char *s = *sp;
             free(s);
         }
     }
-    free(data);
+    free(structStart);
 }
 
 static bool IsSignedIntType(Type type)
@@ -299,7 +302,7 @@ static bool ParseFloat(char *s, char *e, float *f)
     return true;
 }
 
-static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, StructMetadata *def);
+static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, const StructMetadata *def);
 
 static TxtNode *FindNode(TxtNode *curr, const char *name, size_t nameLen)
 {
@@ -350,7 +353,7 @@ static void FreeTxtNode(TxtNode *node)
     delete node;
 }
 
-static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, StructMetadata *structDef)
+static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, const StructMetadata *structDef)
 {
     CrashIf(TextNode != txtNode->type);
     str::Slice slice(txtNode->valStart, txtNode->valEnd);
@@ -366,7 +369,7 @@ static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, Struct
         child->valStart = slice.curr;
         slice.SkipNonWs();
         child->valEnd = slice.curr;
-        FieldMetadata *fieldDef = structDef->fields + fieldNo;
+        const FieldMetadata *fieldDef = structDef->fields + fieldNo;
         char *fieldName = (char*)ds.fieldNamesSeq + fieldDef->nameOffset;
         child->keyStart = fieldName;
         child->keyEnd = fieldName + str::Len(fieldName);
@@ -381,7 +384,7 @@ Error:
     return NULL;
 }
 
-static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, TxtNode *defaultNode, StructMetadata *structDef)
+static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, TxtNode *defaultNode, const StructMetadata *structDef)
 {
     CrashIf(TextNode != node->type);
     CrashIf(defaultNode && (TextNode != defaultNode->type));
@@ -395,7 +398,7 @@ static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, TxtNode *defa
     return res;
 }
 
-static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, FieldMetadata *fieldDef, uint8_t *structDataStart)
+static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, const FieldMetadata *fieldDef, uint8_t *structDataStart)
 {
     Type type = fieldDef->type;
     uint8_t *structDataPtr = structDataStart + fieldDef->offset;
@@ -508,13 +511,15 @@ Error:
     return false;
 }
 
-static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, StructMetadata *def)
+static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, const StructMetadata *def)
 {
     bool ok = true;
     if (!firstNode)
         return NULL;
 
     uint8_t *res = AllocArray<uint8_t>(def->size);
+    const StructMetadata **defPtr = (const StructMetadata**)res;
+    *defPtr = def;
     for (int i = 0; i < def->nFields; i++) {
         ok = DecodeField(ds, firstNode, defaultFirstNode, def->fields + i, res);
         if (!ok)
@@ -522,12 +527,12 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *def
     }
     return res;
 Error:
-    FreeStruct(res, def);
+    FreeStruct(res);
     return NULL;
 }
 
 // data and defaultData is in text format. we might modify it in place
-uint8_t* DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, StructMetadata *def, const char *fieldNamesSeq)
+uint8_t* DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def, const char *fieldNamesSeq)
 {
     if (!data)
         return NULL;
@@ -550,7 +555,7 @@ uint8_t* DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, 
     return DeserializeRec(ds, ds.parser.nodes.At(0), defaultFirstNode, def);
 }
 
-uint8_t* Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq)
+uint8_t* Deserialize(char *data, size_t dataSize, const StructMetadata *def, const char *fieldNamesSeq)
 {
     return DeserializeWithDefault(data, dataSize, NULL, 0, def, fieldNamesSeq);
 }
@@ -629,9 +634,9 @@ static void AppendKeyVal(EncodeState& es, const char *key, const char *val)
     AppendVal(val, es.escapeChar, es.compact, es.res);
 }
 
-void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def);
+void SerializeRec(EncodeState& es, const uint8_t *data);
 
-static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8_t *structStart)
+static void SerializeField(EncodeState& es, const FieldMetadata *fieldDef, const uint8_t *structStart)
 {
     str::Str<char> val;
     str::Str<char>& res = es.res;
@@ -698,7 +703,7 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
         ++es.nest;
         // compact status only lives for one structure, so this is enough
         es.compact = isCompact;
-        SerializeRec(es, structStart2, fieldDef->def);
+        SerializeRec(es, structStart2);
         --es.nest;
         es.compact = false;
         if (isCompact) {
@@ -719,7 +724,7 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
             res.Append("[" NL);
             const uint8_t *elData = (const uint8_t*)el->val;
             ++es.nest;
-            SerializeRec(es, elData, fieldDef->def);
+            SerializeRec(es, elData);
             --es.nest;
             AppendNest(res, es.nest);
             res.Append("]" NL);
@@ -733,21 +738,23 @@ static void SerializeField(EncodeState& es, FieldMetadata *fieldDef, const uint8
     }
 }
 
-void SerializeRec(EncodeState& es, const uint8_t *data, StructMetadata *def)
+void SerializeRec(EncodeState& es, const uint8_t *structStart)
 {
+    StructMetadata **defPtr = (StructMetadata**)structStart;
+    StructMetadata *def = *defPtr;
     for (size_t i = 0; i < def->nFields; i++) {
-        FieldMetadata *fieldDef = &def->fields[i];
-        SerializeField(es, fieldDef, data);
+        const FieldMetadata *fieldDef = &def->fields[i];
+        SerializeField(es, fieldDef, structStart);
     }
 }
 
-uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, size_t *sizeOut)
+uint8_t *Serialize(const uint8_t *rootStruct, const char *fieldNamesSeq, size_t *sizeOut)
 {
     EncodeState es;
     es.res.Append(UTF8_BOM "; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation" NL);
     es.fieldNamesSeq = fieldNamesSeq;
     es.nest = 0;
-    SerializeRec(es, data, def);
+    SerializeRec(es, rootStruct);
     if (sizeOut)
         *sizeOut = es.res.Size();
     return (uint8_t *)es.res.StealData();

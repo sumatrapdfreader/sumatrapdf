@@ -3,14 +3,14 @@
 
 #include "BaseUtil.h"
 #include "SerializeTxt.h"
-#include "SettingsSimple.h"
+#include "SettingsTxtSimple.h"
 
 namespace sertxt {
 
 #define FIELD_NAMES_SEQ "b_true\0b_false\0u16_1\0i32_1\0u32_1\0u64_1\0col_1\0float_1\0str_1\0str_escape\0wstr_1\0\0"
 
 #define of offsetof
-FieldMetadata gSimpleFieldMetadata[] = {
+const FieldMetadata gSimpleFieldMetadata[] = {
     {  0, of(Simple, bTrue),      TYPE_BOOL,  NULL },
     {  7, of(Simple, bFalse),     TYPE_BOOL,  NULL },
     { 15, of(Simple, u16_1),      TYPE_U16,   NULL },
@@ -24,7 +24,7 @@ FieldMetadata gSimpleFieldMetadata[] = {
     { 70, of(Simple, wstr_1),     TYPE_WSTR,  NULL },
 };
 
-StructMetadata gSimpleMetadata = { sizeof(Simple), 11, &gSimpleFieldMetadata[0] };
+const StructMetadata gSimpleMetadata = { sizeof(Simple), 11, &gSimpleFieldMetadata[0] };
 
 #undef of
 
@@ -45,12 +45,12 @@ Simple *DeserializeSimpleWithDefault(const char *data, size_t dataLen, const cha
 
 uint8_t *SerializeSimple(Simple *val, size_t *dataLenOut)
 {
-    return Serialize((const uint8_t*)val, &gSimpleMetadata, FIELD_NAMES_SEQ, dataLenOut);
+    return Serialize((const uint8_t*)val, FIELD_NAMES_SEQ, dataLenOut);
 }
 
 void FreeSimple(Simple *val)
 {
-    FreeStruct((uint8_t*)val, &gSimpleMetadata);
+    FreeStruct((uint8_t*)val);
 }
 
 } // namespace sertxt
