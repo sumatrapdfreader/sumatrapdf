@@ -57,9 +57,9 @@ WCHAR * DupN(const WCHAR *s, size_t lenCch);
 void ToLower(char *s);
 void ToLower(WCHAR *s);
 
-char *  ToMultiByte(const WCHAR *txt, UINT CodePage);
+char *  ToMultiByte(const WCHAR *txt, UINT CodePage, int cchTxtLen=-1);
 char *  ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest);
-WCHAR * ToWideChar(const char *src, UINT CodePage);
+WCHAR * ToWideChar(const char *src, UINT CodePage, int cbSrcLen=-1);
 void    Utf8Encode(char *& dst, int c);
 
 inline const char * FindChar(const char *str, const char c) {
@@ -140,10 +140,13 @@ namespace conv {
 inline WCHAR *  FromCodePage(const char *src, UINT cp) { return ToWideChar(src, cp); }
 inline char *   ToCodePage(const WCHAR *src, UINT cp) { return ToMultiByte(src, cp); }
 
-inline WCHAR *  FromUtf8(const char *src) { return FromCodePage(src, CP_UTF8); }
-inline char *   ToUtf8(const WCHAR *src) { return ToCodePage(src, CP_UTF8); }
-inline WCHAR *  FromAnsi(const char *src) { return FromCodePage(src, CP_ACP); }
-inline char *   ToAnsi(const WCHAR *src) { return ToCodePage(src, CP_ACP); }
+inline WCHAR *  FromUtf8(const char *src, size_t cbSrcLen) { return ToWideChar(src, CP_UTF8, (int)cbSrcLen); }
+inline WCHAR *  FromUtf8(const char *src) { return ToWideChar(src, CP_UTF8); }
+inline char *   ToUtf8(const WCHAR *src, size_t cchSrcLen) { return ToMultiByte(src, CP_UTF8, (int)cchSrcLen); }
+inline char *   ToUtf8(const WCHAR *src) { return ToMultiByte(src, CP_UTF8); }
+inline WCHAR *  FromAnsi(const char *src, size_t cbSrcLen=(size_t)-1) { return ToWideChar(src, CP_ACP, (int)cbSrcLen); }
+inline char *   ToAnsi(const WCHAR *src) { return ToMultiByte(src, CP_ACP); }
+char *          UnknownToUtf8(const char *src, size_t len = 0);
 
 size_t ToCodePageBuf(char *buf, int cbBufSize, const WCHAR *s, UINT cp);
 size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp);

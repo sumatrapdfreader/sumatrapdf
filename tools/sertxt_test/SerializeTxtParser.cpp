@@ -301,8 +301,15 @@ static void SkipUtf8Bom(char *& s, size_t& sLen)
     }
 }
 
+// we will modify s in-place
 void TxtParser::SetToParse(char *s, size_t sLen)
 {
+    char *tmp = str::conv::UnknownToUtf8(s, sLen);
+    if (tmp != s) {
+        toFree = tmp;
+        s = tmp;
+        sLen = str::Len(s);
+    }
     SkipUtf8Bom(s, sLen);
     size_t n = str::NormalizeNewlinesInPlace(s, s + sLen);
     toParse.Init(s, n);

@@ -256,18 +256,18 @@ void ToLower(WCHAR *s)
 }
 
 /* Caller needs to free() the result */
-char *ToMultiByte(const WCHAR *txt, UINT codePage)
+char *ToMultiByte(const WCHAR *txt, UINT codePage, int cchTxtLen)
 {
     AssertCrash(txt);
     if (!txt) return NULL;
 
-    int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, -1, NULL, 0, NULL, NULL);
+    int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, cchTxtLen, NULL, 0, NULL, NULL);
     if (0 == requiredBufSize)
         return NULL;
-    char *res = AllocArray<char>(requiredBufSize);
+    char *res = AllocArray<char>(requiredBufSize+1);
     if (!res)
         return NULL;
-    WideCharToMultiByte(codePage, 0, txt, -1, res, requiredBufSize, NULL, NULL);
+    WideCharToMultiByte(codePage, 0, txt, cchTxtLen, res, requiredBufSize, NULL, NULL);
     return res;
 }
 
@@ -288,18 +288,18 @@ char *ToMultiByte(const char *src, UINT codePageSrc, UINT codePageDest)
 }
 
 /* Caller needs to free() the result */
-WCHAR *ToWideChar(const char *src, UINT codePage)
+WCHAR *ToWideChar(const char *src, UINT codePage, int cbSrcLen)
 {
     AssertCrash(src);
     if (!src) return NULL;
 
-    int requiredBufSize = MultiByteToWideChar(codePage, 0, src, -1, NULL, 0);
+    int requiredBufSize = MultiByteToWideChar(codePage, 0, src, cbSrcLen, NULL, 0);
     if (0 == requiredBufSize)
         return NULL;
-    WCHAR *res = AllocArray<WCHAR>(requiredBufSize);
+    WCHAR *res = AllocArray<WCHAR>(requiredBufSize+1);
     if (!res)
         return NULL;
-    MultiByteToWideChar(codePage, 0, src, -1, res, requiredBufSize);
+    MultiByteToWideChar(codePage, 0, src, cbSrcLen, res, requiredBufSize);
     return res;
 }
 
@@ -1144,6 +1144,41 @@ WCHAR *ToPlainUrl(const WCHAR *url)
 }
 
 namespace conv {
+
+// tries to convert a string in unknown encoding to utf8, as best
+// as it cans
+// As an optimization, can return src if the string already is
+// valid utf8. Otherwise returns a copy of the string and the
+// caller has to free() it
+char * UnknownToUtf8(const char *s, size_t len)
+{
+    if (0 == len)
+        len = str::Len(s);
+
+    if (len < 3)
+        return (char*)s;
+
+    if (str::StartsWith(s, UTF8_BOM))
+        return (char*)s;
+
+    // TODO: UTF16BE_BOM
+
+    if (str::StartsWith(s, UTF16_BOM)) {
+        s += 2;
+        int cchLen = (int)((len - 2) / 2);
+        return str::conv::ToUtf8((const WCHAR *)s, cchLen);
+    }
+
+    WCHAR *uni = NULL;
+    // if is valid utf8, leave it alone
+    // TODO: could be faster by just checking the characters
+    uni = str::conv::FromUtf8(s, len);
+    if (!uni)
+        uni = str::conv::FromAnsi(s, len);
+    char *res = str::conv::ToUtf8(uni);
+    free(uni);
+    return res;
+}
 
 size_t ToCodePageBuf(char *buf, int cbBufSize, const WCHAR *s, UINT cp)
 {

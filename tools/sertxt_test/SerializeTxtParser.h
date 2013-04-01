@@ -9,7 +9,7 @@
 #include "StrSlice.h"
 
 enum Token {
-    TokenFinished = 0,  
+    TokenFinished = 0,
     TokenArrayStart,   // [
     TokenStructStart,  // foo [
     TokenClose,        // ]
@@ -59,14 +59,17 @@ struct TxtParser {
     char            escapeChar;
     bool            failed;
     Vec<TxtNode*>   nodes;
+    char *          toFree;
 
     TxtParser() {
         allocator = new PoolAllocator();
         escapeChar = SERIALIZE_ESCAPE_CHAR;
         failed = false;
+        toFree = NULL;
     }
     ~TxtParser() {
         delete allocator;
+        free(toFree);
     }
     void SetToParse(char *s, size_t sLen);
 };
