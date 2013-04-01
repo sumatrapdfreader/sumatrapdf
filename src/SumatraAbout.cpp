@@ -237,7 +237,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx, rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
 #else
     RectI titleBgBand(0, rect.y, rc.dx, titleRect.dy);
-    FillRect(hdc, &titleBgBand.ToRECT(), gBrushLogoBg);
+    RECT rcLogoBg = titleBgBand.ToRECT();
+    FillRect(hdc, &rcLogoBg, gBrushLogoBg);
     PaintLine(hdc, RectI(0, rect.y, rc.dx, 0));
     PaintLine(hdc, RectI(0, rect.y + titleRect.dy, rc.dx, 0));
 #endif
