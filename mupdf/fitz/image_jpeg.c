@@ -54,7 +54,7 @@ static inline int read_value(unsigned char *data, int bytes, int is_big_endian)
 	return value;
 }
 
-static void extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int *yres)
+static int extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int *yres)
 {
 	int is_big_endian;
 	int offset, ifd_len, res_type = 0;
@@ -75,18 +75,18 @@ static void extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, in
 		read_value(rbuf + 6, 4, 1) != 0x45786966 /* Exif */ ||
 		read_value(rbuf + 10, 2, 1) != 0x0000)
 	{
-		return;
+		return 0;
 	}
 	if (read_value(rbuf + 12, 4, 1) == 0x49492A00)
 		is_big_endian = 0;
 	else if (read_value(rbuf + 12, 4, 1) == 0x4D4D002A)
 		is_big_endian = 1;
 	else
-		return;
+		return 0;
 
 	offset = read_value(rbuf + 16, 4, is_big_endian) + 12;
 	if (offset < 20 || offset + 2 >= rlen)
-		return;
+		return 0;
 	ifd_len = read_value(rbuf + offset, 2, is_big_endian);
 	for (offset += 2; ifd_len > 0 && offset + 12 < rlen; ifd_len--, offset += 12)
 	{
@@ -112,7 +112,7 @@ static void extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, in
 	}
 
 	if (x_res <= 0 || x_res > INT_MAX || y_res <= 0 || y_res > INT_MAX)
-		return;
+		return 0;
 	if (res_type == 2)
 	{
 		*xres = (int)x_res;
@@ -123,6 +123,7 @@ static void extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, in
 		*xres = (int)(x_res * 254 / 100);
 		*yres = (int)(y_res * 254 / 100);
 	}
+	return 1;
 }
 
 fz_pixmap *
@@ -174,6 +175,13 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 
 		image = fz_new_pixmap(ctx, colorspace, cinfo.output_width, cinfo.output_height);
 
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
+		if (cinfo.density_unit == 0)
+			extract_exif_resolution(rbuf, rlen, &image->xres, &image->yres);
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2249 */
+		else if (extract_exif_resolution(rbuf, rlen, &image->xres, &image->yres))
+			/* XPS seems to prefer EXIF resolution to JFIF density */;
+		else
 		if (cinfo.density_unit == 1)
 		{
 			image->xres = cinfo.X_density;
@@ -183,11 +191,6 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 		{
 			image->xres = cinfo.X_density * 254 / 100;
 			image->yres = cinfo.Y_density * 254 / 100;
-		}
-		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
-		else if (cinfo.density_unit == 0)
-		{
-			extract_exif_resolution(rbuf, rlen, &image->xres, &image->yres);
 		}
 
 		if (image->xres <= 0) image->xres = 72;
