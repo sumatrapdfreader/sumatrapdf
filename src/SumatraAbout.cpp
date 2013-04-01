@@ -654,7 +654,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             RectI rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
             if (isRtl)
                 rect.x -= iconSpace;
-            RECT rTmp = rect.ToRECT();
+            rTmp = rect.ToRECT();
             DrawText(hdc, path::GetBaseName(state->filePath), -1, &rTmp, DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
             SHFILEINFO sfi;
