@@ -305,13 +305,13 @@ DjVuEngineImpl::~DjVuEngineImpl()
 // so try to either only use them when actually needed or replace them
 // with a function that extracts all the data at once:
 
-static bool ReadBytes(HANDLE h, int offset, void *buffer, int count)
+static bool ReadBytes(HANDLE h, DWORD offset, void *buffer, DWORD count)
 {
-    DWORD res = (int)SetFilePointer(h, offset, NULL, FILE_BEGIN);
-    if (res != (DWORD)offset)
+    DWORD res = SetFilePointer(h, offset, NULL, FILE_BEGIN);
+    if (res != offset)
         return false;
     bool ok = ReadFile(h, buffer, count, &res, NULL);
-    return ok && res == (DWORD)count;
+    return ok && res == count;
 }
 
 #define DJVU_MARK_MAGIC 0x41542654L /* AT&T */
@@ -343,7 +343,7 @@ bool DjVuEngineImpl::LoadMediaboxes()
     if (!ReadBytes(h, 0, buffer, 16) || r.DWordBE(0) != DJVU_MARK_MAGIC || r.DWordBE(4) != DJVU_MARK_FORM)
         return false;
 
-    int offset = r.DWordBE(12) == DJVU_MARK_DJVM ? 16 : 4;
+    DWORD offset = r.DWordBE(12) == DJVU_MARK_DJVM ? 16 : 4;
     for (int pages = 0; pages < pageCount; ) {
         if (!ReadBytes(h, offset, buffer, 16))
             return false;

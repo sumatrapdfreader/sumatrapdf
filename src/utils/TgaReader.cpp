@@ -51,36 +51,19 @@ struct TgaFooter {
     uint32_t    extAreaOffset;
     uint32_t    devAreaOffset;
     char        signature[18];
-
-    TgaFooter() {
-        extAreaOffset = 0;
-        devAreaOffset = 0;
-        memcpy((void*)signature, TGA_FOOTER_SIGNATURE, sizeof(signature));
-    }
-
-private:
-    // disable copy constructor and assignment operator
-    TgaFooter(const TgaFooter&);
-    TgaFooter& operator=(const TgaFooter&);
 };
 
 struct TgaExtArea {
     uint16_t    size;
-    const char  author[41];
-    const char  comments[4][81];
+    char        author[41];
+    char        comments[4][81];
     uint16_t    dateTime[6];
     uint8_t     fields_14_to_15[47];
-    const char  progName[41];
+    char        progName[41];
     uint16_t    progVersion;
-    const char  progVersionC;
+    char        progVersionC;
     uint32_t    fields_18_to_23[6];
     uint8_t     alphaType;
-
-private:
-    // disable copy constructor and assignment operator
-    TgaExtArea(const TgaExtArea&);
-    TgaExtArea& operator=(const TgaExtArea&);
-
 };
 
 #pragma pack(pop)
@@ -105,20 +88,20 @@ static bool HasVersion2Footer(const char *data, size_t len)
 {
     if (len < sizeof(TgaHeader) + sizeof(TgaFooter))
         return false;
-    TgaFooter *footerLE = (TgaFooter *)(data + len - sizeof(TgaFooter));
+    const TgaFooter *footerLE = (const TgaFooter *)(data + len - sizeof(TgaFooter));
     return str::EqN(footerLE->signature, TGA_FOOTER_SIGNATURE, sizeof(footerLE->signature));
 }
 
-static TgaExtArea *GetExtAreaPtr(const char *data, size_t len)
+static const TgaExtArea *GetExtAreaPtr(const char *data, size_t len)
 {
     if (!HasVersion2Footer(data, len))
         return NULL;
-    TgaFooter *footerLE = (TgaFooter *)(data + len - sizeof(TgaFooter));
+    const TgaFooter *footerLE = (const TgaFooter *)(data + len - sizeof(TgaFooter));
     if (convLE(footerLE->extAreaOffset) < sizeof(TgaHeader) ||
         convLE(footerLE->extAreaOffset) + sizeof(TgaExtArea) + sizeof(TgaFooter) > len) {
         return NULL;
     }
-    TgaExtArea *extAreaLE = (TgaExtArea *)(data + convLE(footerLE->extAreaOffset));
+    const TgaExtArea *extAreaLE = (const TgaExtArea *)(data + convLE(footerLE->extAreaOffset));
     if (convLE(extAreaLE->size) < sizeof(TgaExtArea))
         return NULL;
     return extAreaLE;
@@ -126,7 +109,7 @@ static TgaExtArea *GetExtAreaPtr(const char *data, size_t len)
 
 // note: we only support the more common bit depths:
 // http://www.ryanjuckett.com/programming/graphics/26-parsing-colors-in-a-tga-file
-static PixelFormat GetPixelFormat(TgaHeader *headerLE, ImageAlpha aType=Alpha_Normal)
+static PixelFormat GetPixelFormat(const TgaHeader *headerLE, ImageAlpha aType=Alpha_Normal)
 {
     int bits;
     if (Type_Palette == headerLE->imageType || Type_Palette_RLE == headerLE->imageType) {
@@ -166,7 +149,7 @@ static PixelFormat GetPixelFormat(TgaHeader *headerLE, ImageAlpha aType=Alpha_No
 
 static ImageAlpha GetAlphaType(const char *data, size_t len)
 {
-    TgaExtArea *extAreaLE = GetExtAreaPtr(data, len);
+    const TgaExtArea *extAreaLE = GetExtAreaPtr(data, len);
     if (!extAreaLE)
         return Alpha_Normal;
 
@@ -185,7 +168,7 @@ bool HasSignature(const char *data, size_t len)
     // fall back to checking for values that would be valid for a TGA image
     if (len < sizeof(TgaHeader))
         return false;
-    TgaHeader *headerLE = (TgaHeader *)data;
+    const TgaHeader *headerLE = (const TgaHeader *)data;
     if (headerLE->cmapType != 0 && headerLE->cmapType != 1)
         return false;
     if ((headerLE->flags & Flag_Reserved))
@@ -217,7 +200,7 @@ static bool IsFieldSet(const char *field, size_t len, bool isBinary=false)
 
 static void CopyMetadata(const char *data, size_t len, Bitmap *bmp)
 {
-    TgaExtArea *extAreaLE = GetExtAreaPtr(data, len);
+    const TgaExtArea *extAreaLE = GetExtAreaPtr(data, len);
     if (!extAreaLE)
         return;
 
@@ -311,7 +294,7 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
         return NULL;
 
     ReadState s = { 0 };
-    TgaHeader *headerLE = (TgaHeader *)data;
+    const TgaHeader *headerLE = (const TgaHeader *)data;
     s.data = data + sizeof(TgaHeader) + headerLE->idLength;
     s.end = data + len;
     if (1 == headerLE->cmapType) {
@@ -336,9 +319,9 @@ Gdiplus::Bitmap *ImageFromData(const char *data, size_t len)
     bool invertY = (headerLE->flags & Flag_InvertY);
 
     Bitmap bmp(w, h, format);
+    Rect bmpRect(0, 0, w, h);
     BitmapData bmpData;
-    Rect tmpRect(0, 0, w, h);
-    Status ok = bmp.LockBits(&tmpRect, ImageLockModeWrite, format, &bmpData);
+    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, format, &bmpData);
     if (ok != Ok)
         return NULL;
     for (int y = 0; y < h; y++) {
@@ -394,7 +377,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     headerLE.width = convLE(w);
     headerLE.height = convLE(h);
     headerLE.bitDepth = 24;
-    TgaFooter footerLE;
+    TgaFooter footerLE = { 0, 0, TGA_FOOTER_SIGNATURE };
 
     str::Str<char> tgaData;
     tgaData.Append((char *)&headerLE, sizeof(headerLE));

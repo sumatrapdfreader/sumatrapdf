@@ -386,7 +386,8 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
         HDC hDCBuffer = buffer.GetDC();
         
         // display message centered in the window
-        FillRect(hDCBuffer, &rcClient.ToRECT(), brushBg);
+        RECT rectClient = rcClient.ToRECT();
+        FillRect(hDCBuffer, &rectClient, brushBg);
         hFont = (HFONT)SelectObject(hDCBuffer, hFont);
         SetTextColor(hDCBuffer, RGB(0, 0, 0));
         SetBkMode(hDCBuffer, TRANSPARENT);
@@ -402,10 +403,12 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lPar
             GetTextExtentPoint32(hDCBuffer, data->message, (int)str::Len(data->message), &msgSize);
             rcProgress.Inflate(-(rcProgress.dx - msgSize.cx) / 2, -(rcProgress.dy - msgSize.cy) / 2 + 2);
             rcProgress.Offset(0, msgSize.cy + 4 + 2);
-            FillRect(hDCBuffer, &rcProgress.ToRECT(), GetStockBrush(WHITE_BRUSH));
+            RECT rectProgress = rcProgress.ToRECT();
+            FillRect(hDCBuffer, &rectProgress, GetStockBrush(WHITE_BRUSH));
             RectI rcProgressAll = rcProgress;
             rcProgress.dx = (int)(data->progress * rcProgress.dx);
-            FillRect(hDCBuffer, &rcProgress.ToRECT(), brushProgress);
+            rectProgress = rcProgress.ToRECT();
+            FillRect(hDCBuffer, &rectProgress, brushProgress);
             DeleteObject(brushProgress);
             
             ScopedMem<WCHAR> currSize(FormatSizeSuccint(data->currSize));

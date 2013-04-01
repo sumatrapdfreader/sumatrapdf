@@ -321,8 +321,8 @@ void RenderDocument(BaseEngine *engine, const WCHAR *renderPath, bool silent=fal
         ScopedMem<WCHAR> pageBmpPath(str::Format(renderPath, pageNo));
         if (str::EndsWithI(pageBmpPath, L".png")) {
             Bitmap gbmp(bmp->GetBitmap(), NULL);
-            CLSID tmpClsid = GetEncoderClsid(L"image/png");
-            gbmp.Save(pageBmpPath, &tmpClsid);
+            CLSID pngEncId = GetEncoderClsid(L"image/png");
+            gbmp.Save(pageBmpPath, &pngEncId);
         }
         else if (str::EndsWithI(pageBmpPath, L".bmp")) {
             size_t bmpDataLen;
