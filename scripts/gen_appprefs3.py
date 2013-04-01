@@ -327,28 +327,23 @@ def BuildStruct(struct, built=[]):
 	return "\n".join(lines)
 
 def BuildMetaData(struct, built=[]):
-	fieldInfo, metadata = [], []
-	names, namesOffset = [], 0
+	lines = ["static FieldInfo g%sFields[] = {" % struct.structName]
+	metadata, names, namesOffset = [], [], 0
 	for field in struct.default:
 		if field.internal:
 			continue
 		if type(field) in [Struct, Array]:
-			fieldInfo.append("\t{ Type_%s, %d, offsetof(%s, %s), (intptr_t)g%sInfo }," % (field.type.name, namesOffset, struct.structName, field.cname, field.structName))
+			lines.append("\t{ Type_%s, %d, offsetof(%s, %s), (intptr_t)&g%sInfo }," % (field.type.name, namesOffset, struct.structName, field.cname, field.structName))
 		else:
-			fieldInfo.append("\t{ Type_%s, %d, offsetof(%s, %s), %s }," % (field.type.name, namesOffset, struct.structName, field.cname, field.cdefault()))
+			lines.append("\t{ Type_%s, %d, offsetof(%s, %s), %s }," % (field.type.name, namesOffset, struct.structName, field.cname, field.cdefault()))
 		names.append(field.name)
 		namesOffset += len(field.name) + 1
 		if type(field) in [Struct, Array] and field.structName not in built:
 			metadata.append(BuildMetaData(field))
 			built.append(field.structName)
-	metadata.append("\n".join([
-		"static SettingInfo g%sInfo[] = {" % struct.structName,
-		# include size information and field names in the first line instead of a second structure
-		"\t{ Type_Meta, %d, sizeof(%s), (intptr_t)\"%s\" }," % (len(fieldInfo), struct.structName, "\\0".join(names)),
-	] + fieldInfo + [
-		"};"
-	]))
-	return "\n\n".join(metadata)
+	lines.append("};")
+	lines.append("static SettingInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % (struct.structName, struct.structName, len(names), struct.structName, "\\0".join(names)))
+	return "\n".join(metadata + lines) + "\n"
 
 def AssembleDefaults(struct):
 	lines, more = [], []
@@ -386,21 +381,26 @@ AppPrefs3_Header = """\
 %(userStructDef)s
 
 enum SettingType {
-	Type_Meta, Type_Struct, Type_Array, Type_Compact,
+	Type_Struct, Type_Array, Type_Compact, Type_Custom,
 	Type_Bool, Type_Color, Type_Float, Type_Int, Type_String, Type_Utf8String,
 };
 
-struct SettingInfo {
+struct FieldInfo {
 	SettingType type;
 	uint16_t nameOffset;
 	uint16_t offset;
 	intptr_t value;
 };
 
-static inline size_t GetFieldCount(SettingInfo *meta) { return meta[0].nameOffset; }
-static inline size_t GetStructSize(SettingInfo *meta) { return meta[0].offset; }
-static inline SettingInfo *GetSubstruct(SettingInfo& field) { return (SettingInfo *)field.value; }
-static inline const char *GetFieldName(SettingInfo *meta, size_t idx) { return (const char *)meta[0].value + meta[idx].nameOffset; }
+struct SettingInfo {
+    uint16_t structSize;
+    uint16_t fieldCount;
+    FieldInfo *fields;
+    const char *fieldNames;
+};
+
+static inline const SettingInfo *GetSubstruct(const FieldInfo& field) { return (const SettingInfo *)field.value; }
+static inline const char *GetFieldName(const SettingInfo *meta, size_t idx) { return (const char *)meta->fieldNames + meta->fields[idx].nameOffset; }
 
 #ifdef INCLUDE_APPPREFS3_METADATA
 %(appStructMetadata)s

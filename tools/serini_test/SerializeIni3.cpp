@@ -57,21 +57,21 @@ static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_
 }
 
 #ifndef NDEBUG
-static bool IsCompactable(SettingInfo *meta)
+static bool IsCompactable(const SettingInfo *meta)
 {
-    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
-        switch (meta[i].type) {
+    for (size_t i = 0; i < meta->fieldCount; i++) {
+        switch (meta->fields[i].type) {
         case Type_Bool: case Type_Int: case Type_Float: case Type_Color:
             continue;
         default:
             return false;
         }
     }
-    return GetFieldCount(meta) > 0;
+    return meta->fieldCount > 0;
 }
 #endif
 
-static void DeserializeField(uint8_t *base, SettingInfo& field, const char *value)
+static void DeserializeField(uint8_t *base, const FieldInfo& field, const char *value)
 {
     uint8_t *fieldPtr = base + field.offset;
     int r, g, b, a;
@@ -109,13 +109,13 @@ static void DeserializeField(uint8_t *base, SettingInfo& field, const char *valu
         break;
     case Type_Compact:
         assert(IsCompactable(GetSubstruct(field)));
-        for (size_t i = 1; i <= GetFieldCount(GetSubstruct(field)); i++) {
+        for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
             if (value) {
                 for (; str::IsWs(*value); value++);
                 if (!*value)
                     value = NULL;
             }
-            DeserializeField(fieldPtr, GetSubstruct(field)[i], value);
+            DeserializeField(fieldPtr, GetSubstruct(field)->fields[i], value);
             if (value)
                 for (; *value && !str::IsWs(*value); value++);
         }
@@ -125,7 +125,7 @@ static void DeserializeField(uint8_t *base, SettingInfo& field, const char *valu
     }
 }
 
-static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
+static void *DeserializeRec(IniFile& ini, const SettingInfo *meta, uint8_t *base=NULL,
                             const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
 {
     if ((size_t)-1 == endIdx)
@@ -135,19 +135,21 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
     IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
 
     if (!base)
-        base = AllocArray<uint8_t>(GetStructSize(meta));
+        base = AllocArray<uint8_t>(meta->structSize);
     if (secIdx >= endIdx) {
         section = NULL;
         secIdx = startIdx - 1;
     }
 
-    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
-        if (Type_Struct == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, GetFieldName(meta, i)) : str::Dup(GetFieldName(meta, i)));
-            DeserializeRec(ini, GetSubstruct(meta[i]), base + meta[i].offset, name, secIdx + 1, endIdx);
+    for (size_t i = 0; i < meta->fieldCount; i++) {
+        const FieldInfo& field = meta->fields[i];
+        const char *fieldName = GetFieldName(meta, i);
+        if (Type_Struct == field.type) {
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
+            DeserializeRec(ini, GetSubstruct(field), base + field.offset, name, secIdx + 1, endIdx);
         }
-        else if (Type_Array == meta[i].type) {
-            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, GetFieldName(meta, i)) : str::Dup(GetFieldName(meta, i)));
+        else if (Type_Array == field.type) {
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             Vec<void *> *array = new Vec<void *>();
             size_t nextSecIdx = endIdx;
             FindSection(ini, sectionName, secIdx + 1, endIdx, &nextSecIdx);
@@ -156,20 +158,20 @@ static void *DeserializeRec(IniFile& ini, SettingInfo *meta, uint8_t *base=NULL,
             while (subSection && subSecIdx < nextSecIdx) {
                 size_t nextSubSecIdx = nextSecIdx;
                 IniSection *nextSubSec = FindSection(ini, name, subSecIdx + 1, nextSecIdx, &nextSubSecIdx);
-                array->Append(DeserializeRec(ini, GetSubstruct(meta[i]), NULL, name, subSecIdx, nextSubSecIdx));
+                array->Append(DeserializeRec(ini, GetSubstruct(field), NULL, name, subSecIdx, nextSubSecIdx));
                 subSection = nextSubSec; subSecIdx = nextSubSecIdx;
             }
-            *(Vec<void *> **)(base + meta[i].offset) = array;
+            *(Vec<void *> **)(base + field.offset) = array;
         }
         else {
-            IniLine *line = section ? section->FindLine(GetFieldName(meta, i)) : NULL;
-            DeserializeField(base, meta[i], line ? line->value : NULL);
+            IniLine *line = section ? section->FindLine(fieldName) : NULL;
+            DeserializeField(base, field, line ? line->value : NULL);
         }
     }
     return base;
 }
 
-void *Deserialize(const char *data, size_t dataLen, SettingInfo *def)
+void *Deserialize(const char *data, size_t dataLen, const SettingInfo *def)
 {
     CrashIf(str::Len(data) != dataLen);
     IniFile ini(data);
@@ -203,7 +205,7 @@ static char *EscapeStr(const char *s)
     return ret.StealData();
 }
 
-static char *SerializeField(const uint8_t *base, SettingInfo& field)
+static char *SerializeField(const uint8_t *base, const FieldInfo& field)
 {
     const uint8_t *fieldPtr = base + field.offset;
     ScopedMem<char> value;
@@ -235,8 +237,8 @@ static char *SerializeField(const uint8_t *base, SettingInfo& field)
         return EscapeStr(*(const char **)fieldPtr);
     case Type_Compact:
         assert(IsCompactable(GetSubstruct(field)));
-        for (size_t i = 1; i <= GetFieldCount(GetSubstruct(field)); i++) {
-            ScopedMem<char> val(SerializeField(fieldPtr, GetSubstruct(field)[i]));
+        for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
+            ScopedMem<char> val(SerializeField(fieldPtr, GetSubstruct(field)->fields[i]));
             if (!value)
                 value.Set(val.StealData());
             else
@@ -249,7 +251,7 @@ static char *SerializeField(const uint8_t *base, SettingInfo& field)
     return NULL;
 }
 
-static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *meta, const char *sectionName=NULL)
+static void SerializeRec(str::Str<char>& out, const void *data, const SettingInfo *meta, const char *sectionName=NULL)
 {
     if (sectionName) {
         out.Append("[");
@@ -258,12 +260,13 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
     }
 
     const uint8_t *base = (const uint8_t *)data;
-    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
+    for (size_t i = 0; i < meta->fieldCount; i++) {
+        const FieldInfo& field = meta->fields[i];
         // nested structs are serialized after all other values
-        if (Type_Struct == meta[i].type || Type_Array == meta[i].type)
+        if (Type_Struct == field.type || Type_Array == field.type)
             continue;
         CrashIf(str::FindChar(GetFieldName(meta, i), '=') || str::FindChar(GetFieldName(meta, i), ':') || NeedsEscaping(GetFieldName(meta, i)));
-        ScopedMem<char> value(SerializeField(base, meta[i]));
+        ScopedMem<char> value(SerializeField(base, field));
         if (value) {
             out.Append(GetFieldName(meta, i));
             out.Append(" = ");
@@ -272,22 +275,23 @@ static void SerializeRec(str::Str<char>& out, const void *data, SettingInfo *met
         }
     }
 
-    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
-        if (Type_Struct == meta[i].type) {
+    for (size_t i = 0; i < meta->fieldCount; i++) {
+        const FieldInfo& field = meta->fields[i];
+        if (Type_Struct == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, GetFieldName(meta, i)) : str::Dup(GetFieldName(meta, i)));
-            SerializeRec(out, base + meta[i].offset, GetSubstruct(meta[i]), name);
+            SerializeRec(out, base + field.offset, GetSubstruct(field), name);
         }
-        else if (Type_Array == meta[i].type) {
+        else if (Type_Array == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, GetFieldName(meta, i)) : str::Dup(GetFieldName(meta, i)));
-            Vec<void *> *array = *(Vec<void *> **)(base + meta[i].offset);
+            Vec<void *> *array = *(Vec<void *> **)(base + field.offset);
             for (size_t j = 0; j < array->Count(); j++) {
-                SerializeRec(out, array->At(j), GetSubstruct(meta[i]), name);
+                SerializeRec(out, array->At(j), GetSubstruct(field), name);
             }
         }
     }
 }
 
-char *Serialize(const void *data, SettingInfo *def, size_t *sizeOut, const char *comment)
+char *Serialize(const void *data, const SettingInfo *def, size_t *sizeOut, const char *comment)
 {
     str::Str<char> out;
     if (comment) {
@@ -304,24 +308,25 @@ char *Serialize(const void *data, SettingInfo *def, size_t *sizeOut, const char 
     return out.StealData();
 }
 
-static void FreeStructData(uint8_t *base, SettingInfo *meta)
+static void FreeStructData(uint8_t *base, const SettingInfo *meta)
 {
-    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
-        if (Type_Struct == meta[i].type)
-            FreeStructData(base + meta[i].offset, GetSubstruct(meta[i]));
-        else if (Type_Array == meta[i].type) {
-            Vec<void *> *array = *(Vec<void *> **)(base + meta[i].offset);
+    for (size_t i = 0; i < meta->fieldCount; i++) {
+        const FieldInfo& field = meta->fields[i];
+        if (Type_Struct == field.type)
+            FreeStructData(base + field.offset, GetSubstruct(field));
+        else if (Type_Array == field.type) {
+            Vec<void *> *array = *(Vec<void *> **)(base + field.offset);
             for (size_t j = 0; j < array->Count(); j++) {
-                FreeStruct(array->At(j), GetSubstruct(meta[i]));
+                FreeStruct(array->At(j), GetSubstruct(field));
             }
             delete array;
         }
-        else if (Type_String == meta[i].type || Type_Utf8String == meta[i].type)
-            free(*(void **)(base + meta[i].offset));
+        else if (Type_String == field.type || Type_Utf8String == field.type)
+            free(*(void **)(base + field.offset));
     }
 }
 
-void FreeStruct(void *data, SettingInfo *meta)
+void FreeStruct(void *data, const SettingInfo *meta)
 {
     if (data)
         FreeStructData((uint8_t *)data, meta);

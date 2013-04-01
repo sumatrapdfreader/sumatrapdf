@@ -83,17 +83,17 @@ static char *EscapeStr(const char *s)
     return ret.StealData();
 }
 
-static void FreeListNode(ListNode<void> *node, StructMetadata *def)
+static void FreeListNode(ListNode<void> *node)
 {
     while (node) {
         ListNode<void> *next = node->next;
-        FreeStruct((uint8_t *)node->val, def);
+        FreeStruct((uint8_t *)node->val);
         free(node);
         node = next;
     }
 }
 
-static void DeserializeField(uint8_t *data, FieldMetadata& field, const char *value)
+static void DeserializeField(uint8_t *data, const FieldMetadata& field, const char *value)
 {
     int r, g, b, a;
 
@@ -136,8 +136,11 @@ static void DeserializeField(uint8_t *data, FieldMetadata& field, const char *va
         *(WCHAR **)(data + field.offset) = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(value)));
         break;
     case (TYPE_STRUCT_PTR | TYPE_STORE_COMPACT_MASK):
-        if (!*(uint8_t **)(data + field.offset))
+        if (!*(uint8_t **)(data + field.offset)) {
             *(uint8_t **)(data + field.offset) = AllocArray<uint8_t>(field.def->size);
+            *(const StructMetadata **)*(uint8_t **)(data + field.offset) = field.def;
+        }
+        CrashIf(*(const StructMetadata **)*(uint8_t **)(data + field.offset) != field.def);
         for (size_t i = 0; i < field.def->nFields; i++) {
             DeserializeField(*(uint8_t **)(data + field.offset), field.def->fields[i], value);
             CrashIf(TYPE_STR == field.def->fields[i].type || TYPE_WSTR == field.def->fields[i].type);
@@ -150,7 +153,7 @@ static void DeserializeField(uint8_t *data, FieldMetadata& field, const char *va
     }
 }
 
-static char *SerializeField(const uint8_t *data, FieldMetadata& field)
+static char *SerializeField(const uint8_t *data, const FieldMetadata& field)
 {
     ScopedMem<char> value;
     COLORREF c;
@@ -214,7 +217,7 @@ static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_
     return NULL;
 }
 
-static void *DeserializeRec(IniFile& ini, void *base, StructMetadata *def, const char *fieldNamesSeq,
+static void *DeserializeRec(IniFile& ini, void *base, const StructMetadata *def,
                             const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
 {
     if ((size_t)-1 == endIdx)
@@ -225,19 +228,22 @@ static void *DeserializeRec(IniFile& ini, void *base, StructMetadata *def, const
     IniLine *line;
 
     uint8_t *data = (uint8_t *)base;
-    if (!data)
+    if (!data) {
         data = AllocArray<uint8_t>(def->size);
+        *(const StructMetadata **)data = def;
+    }
+    CrashIf(*(const StructMetadata **)data != def);
     if (secIdx >= endIdx) {
         section = NULL;
         secIdx = startIdx - 1;
     }
 
     for (size_t i = 0; i < def->nFields; i++) {
-        FieldMetadata& field = def->fields[i];
-        const char *fieldName = fieldNamesSeq + field.nameOffset;
+        const FieldMetadata& field = def->fields[i];
+        const char *fieldName = def->fieldNames + field.nameOffset;
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
-            *(void **)(data + field.offset) = DeserializeRec(ini, *(void **)(data + field.offset), field.def, fieldNamesSeq, name, secIdx + 1, endIdx);
+            *(void **)(data + field.offset) = DeserializeRec(ini, *(void **)(data + field.offset), field.def, name, secIdx + 1, endIdx);
         }
         else if (TYPE_ARRAY == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
@@ -250,11 +256,11 @@ static void *DeserializeRec(IniFile& ini, void *base, StructMetadata *def, const
                 size_t nextSubSecIdx = nextSecIdx;
                 IniSection *nextSubSec = FindSection(ini, name, subSecIdx + 1, nextSecIdx, &nextSubSecIdx);
                 *next = AllocStruct<ListNode<void>>();
-                (*next)->val = DeserializeRec(ini, NULL, field.def, fieldNamesSeq, name, subSecIdx, nextSubSecIdx);
+                (*next)->val = DeserializeRec(ini, NULL, field.def, name, subSecIdx, nextSubSecIdx);
                 next = &(*next)->next;
                 subSection = nextSubSec; subSecIdx = nextSubSecIdx;
             }
-            FreeListNode(*(ListNode<void> **)(data + field.offset), field.def);
+            FreeListNode(*(ListNode<void> **)(data + field.offset));
             *(ListNode<void> **)(data + field.offset) = root;
         }
         else if (section && (line = section->FindLine(fieldName)) != NULL)
@@ -264,21 +270,23 @@ static void *DeserializeRec(IniFile& ini, void *base, StructMetadata *def, const
     return data;
 }
 
-uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, StructMetadata *def, const char *fieldNamesSeq)
+uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def)
 {
     void *base = NULL;
     if (defaultData) {
         CrashIf(str::Len(defaultData) != defaultDataSize);
         IniFile iniDef(defaultData);
-        base = DeserializeRec(iniDef, base, def, fieldNamesSeq);
+        base = DeserializeRec(iniDef, base, def);
     }
     CrashIf(str::Len(data) != dataSize);
     IniFile ini(data);
-    return (uint8_t *)DeserializeRec(ini, base, def, fieldNamesSeq);
+    return (uint8_t *)DeserializeRec(ini, base, def);
 }
 
-static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, const char *sectionName=NULL)
+static void SerializeRec(str::Str<char>& out, const uint8_t *data, const char *sectionName=NULL)
 {
+    const StructMetadata *def = *(const StructMetadata **)data;
+
     if (sectionName) {
         out.Append("[");
         out.Append(sectionName);
@@ -286,7 +294,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
     }
 
     for (size_t i = 0; i < def->nFields; i++) {
-        const char *fieldName = fieldNamesSeq + def->fields[i].nameOffset;
+        const char *fieldName = def->fieldNames + def->fields[i].nameOffset;
         CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') || NeedsEscaping(fieldName));
         ScopedMem<char> value(SerializeField(data, def->fields[i]));
         if (value) {
@@ -298,16 +306,16 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
     }
 
     for (size_t i = 0; i < def->nFields; i++) {
-        FieldMetadata& field = def->fields[i];
-        const char *fieldName = fieldNamesSeq + field.nameOffset;
+        const FieldMetadata& field = def->fields[i];
+        const char *fieldName = def->fieldNames + field.nameOffset;
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
-            SerializeRec(out, *(const uint8_t **)(data + field.offset), field.def, fieldNamesSeq, name);
+            SerializeRec(out, *(const uint8_t **)(data + field.offset), name);
         }
         else if (TYPE_ARRAY == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             for (ListNode<void> *node = *(ListNode<void> **)(data + field.offset); node; node = node->next) {
-                SerializeRec(out, (const uint8_t *)node->val, field.def, fieldNamesSeq, name);
+                SerializeRec(out, (const uint8_t *)node->val, name);
             }
         }
     }
@@ -315,19 +323,22 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
 
 #else
 
-static void *DeserializeRec(SquareTreeNode *node, void *base, StructMetadata *def, const char *fieldNamesSeq)
+static void *DeserializeRec(SquareTreeNode *node, void *base, const StructMetadata *def)
 {
     uint8_t *data = (uint8_t *)base;
-    if (!data)
+    if (!data) {
         data = AllocArray<uint8_t>(def->size);
+        *(const StructMetadata **)data = def;
+    }
+    CrashIf(*(const StructMetadata **)data != def);
 
     for (size_t i = 0; i < def->nFields; i++) {
-        FieldMetadata& field = def->fields[i];
-        const char *fieldName = fieldNamesSeq + field.nameOffset;
+        const FieldMetadata& field = def->fields[i];
+        const char *fieldName = def->fieldNames + field.nameOffset;
         const char *value;
         if (TYPE_STRUCT_PTR == field.type) {
             SquareTreeNode *child = node ? node->GetChild(fieldName) : NULL;
-            *(void **)(data + field.offset) = DeserializeRec(child, *(void **)(data + field.offset), field.def, fieldNamesSeq);
+            *(void **)(data + field.offset) = DeserializeRec(child, *(void **)(data + field.offset), field.def);
         }
         else if (TYPE_ARRAY == field.type) {
             if (!node)
@@ -336,10 +347,10 @@ static void *DeserializeRec(SquareTreeNode *node, void *base, StructMetadata *de
             SquareTreeNode *child;
             for (size_t j = 0; (child = node->GetChild(fieldName, j)) != NULL; j++) {
                 *next = AllocStruct<ListNode<void>>();
-                (*next)->val = DeserializeRec(child, NULL, field.def, fieldNamesSeq);
+                (*next)->val = DeserializeRec(child, NULL, field.def);
                 next = &(*next)->next;
             }
-            FreeListNode(*(ListNode<void> **)(data + field.offset), field.def);
+            FreeListNode(*(ListNode<void> **)(data + field.offset));
             *(ListNode<void> **)(data + field.offset) = root;
         }
         else if (node && (value = node->GetValue(fieldName)) != NULL)
@@ -350,17 +361,17 @@ static void *DeserializeRec(SquareTreeNode *node, void *base, StructMetadata *de
     return data;
 }
 
-uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, StructMetadata *def, const char *fieldNamesSeq)
+uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def)
 {
     void *base = NULL;
     if (defaultData) {
         CrashIf(str::Len(defaultData) != defaultDataSize);
         SquareTree sqtDef(defaultData);
-        base = DeserializeRec(sqtDef.root, base, def, fieldNamesSeq);
+        base = DeserializeRec(sqtDef.root, base, def);
     }
     CrashIf(str::Len(data) != dataSize);
     SquareTree sqt(data);
-    return (uint8_t *)DeserializeRec(sqt.root, base, def, fieldNamesSeq);
+    return (uint8_t *)DeserializeRec(sqt.root, base, def);
 }
 
 static inline void Indent(str::Str<char>& out, int indent)
@@ -369,11 +380,13 @@ static inline void Indent(str::Str<char>& out, int indent)
         out.Append('\t');
 }
 
-static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, int indent=0)
+static void SerializeRec(str::Str<char>& out, const uint8_t *data, int indent=0)
 {
+    const StructMetadata *def = *(const StructMetadata **)data;
+
     for (size_t i = 0; i < def->nFields; i++) {
-        FieldMetadata& field = def->fields[i];
-        const char *fieldName = fieldNamesSeq + field.nameOffset;
+        const FieldMetadata& field = def->fields[i];
+        const char *fieldName = def->fieldNames + field.nameOffset;
         CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') ||
                 str::FindChar(fieldName, '[') || str::FindChar(fieldName, ']') ||
                 NeedsEscaping(fieldName));
@@ -381,7 +394,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
             Indent(out, indent);
             out.Append(fieldName);
             out.Append(" [\r\n");
-            SerializeRec(out, *(const uint8_t **)(data + field.offset), field.def, fieldNamesSeq, indent + 1);
+            SerializeRec(out, *(const uint8_t **)(data + field.offset), indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
             continue;
@@ -393,7 +406,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
             out.Append(fieldName);
             for (ListNode<void> *node = *(ListNode<void> **)(data + field.offset); node; node = node->next) {
                 out.Append(" [\r\n");
-                SerializeRec(out, (const uint8_t *)node->val, field.def, fieldNamesSeq, indent + 1);
+                SerializeRec(out, (const uint8_t *)node->val, indent + 1);
                 Indent(out, indent);
                 out.Append("]");
             }
@@ -413,31 +426,32 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, StructMetadat
 
 #endif // TEST_SERIALIZE_SQT
 
-uint8_t *Deserialize(char *data, size_t dataSize, StructMetadata *def, const char *fieldNamesSeq)
+uint8_t *Deserialize(char *data, size_t dataSize, const StructMetadata *def)
 {
-    return DeserializeWithDefault(data, dataSize, NULL, 0, def, fieldNamesSeq);
+    return DeserializeWithDefault(data, dataSize, NULL, 0, def);
 }
 
-uint8_t *Serialize(const uint8_t *data, StructMetadata *def, const char *fieldNamesSeq, size_t *sizeOut)
+uint8_t *Serialize(const uint8_t *data, size_t *sizeOut)
 {
     str::Str<char> out;
     out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
-    SerializeRec(out, data, def, fieldNamesSeq);
+    SerializeRec(out, data);
     if (sizeOut)
         *sizeOut = out.Size();
     return (uint8_t *)out.StealData();
 }
 
-void FreeStruct(uint8_t *data, StructMetadata *def)
+void FreeStruct(uint8_t *data)
 {
     if (!data)
         return;
+    const StructMetadata *def = *(const StructMetadata **)data;
     for (size_t i = 0; i < def->nFields; i++) {
-        FieldMetadata& field = def->fields[i];
+        const FieldMetadata& field = def->fields[i];
         if (TYPE_STRUCT_PTR == (field.type & TYPE_NO_FLAGS_MASK))
-            FreeStruct(*(uint8_t **)(data + field.offset), field.def);
+            FreeStruct(*(uint8_t **)(data + field.offset));
         else if (TYPE_ARRAY == field.type)
-            FreeListNode(*(ListNode<void> **)(data + field.offset), field.def);
+            FreeListNode(*(ListNode<void> **)(data + field.offset));
         else if (TYPE_WSTR == field.type || TYPE_STR == field.type)
             free(*(void **)(data + field.offset));
     }

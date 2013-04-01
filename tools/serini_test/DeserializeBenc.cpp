@@ -9,60 +9,63 @@
 
 namespace benc {
 
-static void *DeserializeRec(BencDict *dict, SettingInfo *meta, uint8_t *base=NULL)
+static void *DeserializeRec(BencDict *dict, const SettingInfo *meta, uint8_t *base=NULL)
 {
     if (!base)
-        base = AllocArray<uint8_t>(GetStructSize(meta));
+        base = AllocArray<uint8_t>(meta->structSize);
 
-    for (size_t i = 1; i <= GetFieldCount(meta); i++) {
-        uint8_t *fieldPtr = base + meta[i].offset;
-        if (Type_Struct == meta[i].type) {
-            BencDict *child = dict ? dict->GetDict(GetFieldName(meta, i)) : NULL;
-            DeserializeRec(child, GetSubstruct(meta[i]), fieldPtr);
+    for (size_t i = 0; i < meta->fieldCount; i++) {
+        const FieldInfo& field = meta->fields[i];
+        const char *fieldName = GetFieldName(meta, i);
+        uint8_t *fieldPtr = base + field.offset;
+        if (Type_Struct == field.type) {
+            BencDict *child = dict ? dict->GetDict(fieldName) : NULL;
+            DeserializeRec(child, GetSubstruct(field), fieldPtr);
         }
-        else if (Type_Array == meta[i].type) {
+        else if (Type_Array == field.type) {
             Vec<void *> *array = new Vec<void *>();
-            BencArray *list = dict ? dict->GetArray(GetFieldName(meta, i)) : NULL;
+            BencArray *list = dict ? dict->GetArray(fieldName) : NULL;
             for (size_t j = 0; list && j < list->Length(); j++) {
-                array->Append(DeserializeRec(list->GetDict(j), GetSubstruct(meta[i])));
+                array->Append(DeserializeRec(list->GetDict(j), GetSubstruct(field)));
             }
             *(Vec<void *> **)fieldPtr = array;
         }
-        else if (Type_Bool == meta[i].type) {
-            BencInt *val = dict ? dict->GetInt(GetFieldName(meta, i)) : NULL;
-            *(bool *)fieldPtr = (val ? val->Value() : meta[i].value) != 0;
+        else if (Type_Bool == field.type) {
+            BencInt *val = dict ? dict->GetInt(fieldName) : NULL;
+            *(bool *)fieldPtr = (val ? val->Value() : field.value) != 0;
         }
-        else if (Type_Int == meta[i].type) {
-            BencInt *val = dict ? dict->GetInt(GetFieldName(meta, i)) : NULL;
-            *(int *)fieldPtr = (int)(val ? val->Value() : meta[i].value);
+        else if (Type_Int == field.type) {
+            BencInt *val = dict ? dict->GetInt(fieldName) : NULL;
+            *(int *)fieldPtr = (int)(val ? val->Value() : field.value);
         }
-        else if (Type_Float == meta[i].type) {
-            BencString *val = dict ? dict->GetString(GetFieldName(meta, i)) : NULL;
+        else if (Type_Float == field.type) {
+            BencString *val = dict ? dict->GetString(fieldName) : NULL;
             if (!val || !str::Parse(val->RawValue(), "%f", (float *)fieldPtr))
-                str::Parse((const char *)meta[i].value, "%f", (float *)fieldPtr);
+                str::Parse((const char *)field.value, "%f", (float *)fieldPtr);
         }
-        else if (Type_Color == meta[i].type) {
-            BencInt *val = dict ? dict->GetInt(GetFieldName(meta, i)) : NULL;
-            *(COLORREF *)fieldPtr = (COLORREF)(val ? val->Value() : meta[i].value);
+        else if (Type_Color == field.type) {
+            BencInt *val = dict ? dict->GetInt(fieldName) : NULL;
+            *(COLORREF *)fieldPtr = (COLORREF)(val ? val->Value() : field.value);
         }
-        else if (Type_String == meta[i].type) {
-            BencString *val = dict ? dict->GetString(GetFieldName(meta, i)) : NULL;
-            *(WCHAR **)fieldPtr = val ? val->Value() : str::Dup((const WCHAR *)meta[i].value);
+        else if (Type_String == field.type) {
+            BencString *val = dict ? dict->GetString(fieldName) : NULL;
+            *(WCHAR **)fieldPtr = val ? val->Value() : str::Dup((const WCHAR *)field.value);
         }
-        else if (Type_Utf8String == meta[i].type) {
-            BencString *val = dict ? dict->GetString(GetFieldName(meta, i)) : NULL;
-            *(char **)fieldPtr = str::Dup(val ? val->RawValue() : (const char *)meta[i].value);
+        else if (Type_Utf8String == field.type) {
+            BencString *val = dict ? dict->GetString(fieldName) : NULL;
+            *(char **)fieldPtr = str::Dup(val ? val->RawValue() : (const char *)field.value);
         }
-        else if (meta[i].type != Type_Meta) {
+        else if (field.type != Type_Custom) {
             CrashIf(true);
         }
-        else if (str::Eq(GetFieldName(meta, i), "LastUpdate")) {
-            BencString *val = dict ? dict->GetString(GetFieldName(meta, i)) : NULL;
+        // the following could be achieved with a callback for custom fields
+        else if (str::Eq(fieldName, "LastUpdate")) {
+            BencString *val = dict ? dict->GetString(fieldName) : NULL;
             if (!val || !_HexToMem(val->RawValue(), (FILETIME *)fieldPtr))
                 ZeroMemory(fieldPtr, sizeof(FILETIME));
         }
-        else if (str::Eq(GetFieldName(meta, i), "TocToggles")) {
-            BencArray *val = dict ? dict->GetArray(GetFieldName(meta, i)) : NULL;
+        else if (str::Eq(fieldName, "TocToggles")) {
+            BencArray *val = dict ? dict->GetArray(fieldName) : NULL;
             ScopedMem<char> values;
             if (val) {
                 for (size_t j = 0; j < val->Length(); j++) {
@@ -75,8 +78,8 @@ static void *DeserializeRec(BencDict *dict, SettingInfo *meta, uint8_t *base=NUL
             }
             *(char **)fieldPtr = values.StealData();
         }
-        else if (str::Eq(GetFieldName(meta, i), "Favorites")) {
-            BencArray *favDict = dict ? dict->GetArray(GetFieldName(meta, i)) : NULL;
+        else if (str::Eq(fieldName, "Favorites")) {
+            BencArray *favDict = dict ? dict->GetArray(fieldName) : NULL;
             Vec<File *> *files = *(Vec<File *> **)fieldPtr;
             for (size_t j = 0; j < files->Count(); j++) {
                 File *file = files->At(j);
@@ -107,7 +110,7 @@ static void *DeserializeRec(BencDict *dict, SettingInfo *meta, uint8_t *base=NUL
     return base;
 }
 
-void *Deserialize(const char *data, size_t dataLen, SettingInfo *def)
+void *Deserialize(const char *data, size_t dataLen, const SettingInfo *def)
 {
     CrashIf(str::Len(data) != dataLen);
     void *result = NULL;

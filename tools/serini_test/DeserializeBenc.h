@@ -8,7 +8,7 @@ struct SettingInfo;
 
 namespace benc {
 
-void *Deserialize(const char *data, size_t dataLen, SettingInfo *meta);
+void *Deserialize(const char *data, size_t dataLen, const SettingInfo *meta);
 
 };
 

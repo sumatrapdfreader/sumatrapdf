@@ -73,8 +73,8 @@ solution "serini"
     files {
       "tools/serini_test/*",
       "tools/sertxt_test/SerializeTxt.h",
-      "tools/sertxt_test/SettingsSumatra.h",
-      "tools/sertxt_test/SettingsSumatra.cpp",
+      "tools/sertxt_test/SettingsTxtSumatra.h",
+      "tools/sertxt_test/SettingsTxtSumatra.cpp",
       "tools/sertxt_test/data.txt",
       "src/utils/BaseUtil.*",
       "src/utils/BencUtil.*",

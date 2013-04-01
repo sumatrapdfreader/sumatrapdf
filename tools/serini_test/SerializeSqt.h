@@ -8,9 +8,9 @@ struct SettingInfo;
 
 namespace sqt {
 
-void *Deserialize(const char *data, size_t dataLen, SettingInfo *meta);
-char *Serialize(const void *data, SettingInfo *meta, size_t *sizeOut=NULL, const char *comment=NULL);
-void FreeStruct(void *data, SettingInfo *meta);
+void *Deserialize(const char *data, size_t dataLen, const SettingInfo *meta);
+char *Serialize(const void *data, const SettingInfo *meta, size_t *sizeOut=NULL, const char *comment=NULL);
+void FreeStruct(void *data, const SettingInfo *meta);
 
 };
 
