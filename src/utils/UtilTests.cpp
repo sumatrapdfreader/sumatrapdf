@@ -242,7 +242,7 @@ static void LogTest()
 #include "ByteOrderDecoder_ut.cpp"
 #include "StrFormat_ut.cpp"
 #include "Dict_ut.cpp"
-//#include "SerializeBin_ut.cpp"
+//#include "VarintBin_ut.cpp"
 #include "IniParser_ut.cpp"
 
 void BaseUtils_UnitTests()
@@ -263,7 +263,7 @@ void BaseUtils_UnitTests()
     JsonTest();
     StrFormatTest();
     DictTest();
-    //SerializeBinTest();
+    //VarintGobTest();
     IniTest();
 }
 

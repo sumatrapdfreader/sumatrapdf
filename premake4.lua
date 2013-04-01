@@ -52,10 +52,10 @@ solution "sertxt"
       "tools/sertxt_test/*.cpp",
       "tools/sertxt_test/*.txt",
       "src/utils/BaseUtil*",
-      "src/utils/SerializeBin*",
       "src/utils/FileUtil*",
       "src/utils/StrSlice*",
       "src/utils/StrUtil*",
+      "src/utils/VarintGob*",
     }
     excludes
     {

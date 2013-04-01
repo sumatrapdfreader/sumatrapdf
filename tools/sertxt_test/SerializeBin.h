@@ -53,9 +53,4 @@ uint8_t *   Serialize(const uint8_t *data, const char *version, StructMetadata *
 
 } // namespace serbin
 
-int         GobVarintEncode(int64_t val, uint8_t *d, int dLen);
-int         GobUVarintEncode(uint64_t val, uint8_t *d, int dLen);
-int         GobVarintDecode(const uint8_t *d, int dLen, int64_t *resOut);
-int         GobUVarintDecode(const uint8_t *d, int dLen, uint64_t *resOut);
-
 #endif

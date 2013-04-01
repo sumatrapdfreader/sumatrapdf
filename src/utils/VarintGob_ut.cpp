@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "SerializeBin.h"
+#include "VarintGob.h"
 
 // if set to 1, dumps on to the debugger code that can be copied
 // to util.py (test_gob()), to verify C and python generate
@@ -73,7 +73,7 @@ static void GobEncodingTest()
         n = GobVarintEncode(val, d, dLen);
         assert(n >= 1);
         GenPythonIntTest(val, d, n);
-        n2 = GobVarintDecode(d, n, &expVal);
+        n2 = VarintGobDecode(d, n, &expVal);
         assert(n == n2);
         assert(val == expVal);
         d += n;
@@ -84,7 +84,7 @@ static void GobEncodingTest()
     d = buf;
     for (int i = 0; i < dimof(intVals); i++) {
         expVal = intVals[i];
-        n = GobVarintDecode(d, dLen, &val);
+        n = VarintGobDecode(d, dLen, &val);
         assert(0 != n);
         assert(val == expVal);
         d += n;
@@ -98,7 +98,7 @@ static void GobEncodingTest()
         n = GobUVarintEncode(uval, d, dLen);
         assert(n >= 1);
         GenPythonUIntTest(uval, d, n);
-        n2 = GobUVarintDecode(d, n, &expUval);
+        n2 = UVarintGobDecode(d, n, &expUval);
         assert(n == n2);
         assert(uval == expUval);
         d += n;
@@ -109,7 +109,7 @@ static void GobEncodingTest()
     d = buf;
     for (int i = 0; i < dimof(uintVals); i++) {
         expUval = uintVals[i];
-        n = GobUVarintDecode(d, dLen, &uval);
+        n = UVarintGobDecode(d, dLen, &uval);
         assert(0 != n);
         assert(uval == expUval);
         d += n;
@@ -118,7 +118,7 @@ static void GobEncodingTest()
     assert(0 == dLen);
 }
 
-static void SerializeBinTest()
+static void VarintGobTest()
 {
     GobEncodingTest();
 }
