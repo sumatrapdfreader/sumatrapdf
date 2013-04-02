@@ -1167,7 +1167,7 @@ WCHAR *ToPlainUrl(const WCHAR *url)
  * remains attached.
  */
 
-typedef unsigned char	UTF8;	/* typically 8 bits */
+typedef unsigned char UTF8; /* typically 8 bits */
 
 /*
  * Index into the table below with the first byte of a UTF-8 sequence to

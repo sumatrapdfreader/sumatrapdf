@@ -61,7 +61,7 @@ static int extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int
 	float x_res = 0, y_res = 0;
 
 	if (rlen >= 10 &&
-		read_value(rbuf + 2, 2, 1) == 0xFFE0 &&
+		read_value(rbuf + 2, 2, 1) == 0xFFE0 /* APP0 */ &&
 		read_value(rbuf + 6, 4, 1) == 0x4A464946 /* JFIF */ &&
 		read_value(rbuf + 4, 2, 1) <= rlen - 2)
 	{
@@ -71,7 +71,7 @@ static int extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int
 	}
 
 	if (rlen < 20 ||
-		read_value(rbuf + 2, 2, 1) != 0xFFE1 ||
+		read_value(rbuf + 2, 2, 1) != 0xFFE1 /* APP1 */ ||
 		read_value(rbuf + 6, 4, 1) != 0x45786966 /* Exif */ ||
 		read_value(rbuf + 10, 2, 1) != 0x0000)
 	{
@@ -85,7 +85,7 @@ static int extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int
 		return 0;
 
 	offset = read_value(rbuf + 16, 4, is_big_endian) + 12;
-	if (offset < 20 || offset + 2 >= rlen)
+	if (offset < 20 || offset + 2 > rlen)
 		return 0;
 	ifd_len = read_value(rbuf + offset, 2, is_big_endian);
 	for (offset += 2; ifd_len > 0 && offset + 12 < rlen; ifd_len--, offset += 12)
@@ -124,6 +124,42 @@ static int extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int
 		*yres = (int)(y_res * 254 / 100);
 	}
 	return 1;
+}
+
+static int extract_app13_resolution(unsigned char *rbuf, int rlen, int *xres, int *yres)
+{
+	unsigned char *seg_end;
+	int data_size = -1;
+
+	if (rlen < 48 ||
+		read_value(rbuf + 2, 2, 1) != 0xFFED /* APP13 */ ||
+		rbuf[19] != 0 || strcmp(rbuf + 6, "Photoshop 3.0") != 0 ||
+		read_value(rbuf + 4, 2, 1) > rlen - 4)
+	{
+		return 0;
+	}
+
+	seg_end = rbuf + 4 + read_value(rbuf + 4, 2, 1);
+	for (rbuf += 20; rbuf + 12 < seg_end; ) {
+		int data_size = -1;
+		int tag = read_value(rbuf + 4, 2, 1);
+		int value_off = 11 + read_value(rbuf + 6, 2, 1);
+		if (value_off % 2 == 1)
+			value_off++;
+		if (read_value(rbuf, 4, 1) == 0x3842494D /* 8BIM */ && rbuf + value_off <= seg_end)
+			data_size = read_value(rbuf + value_off - 4, 4, 1);
+		if (data_size < 0 || rbuf + value_off + data_size > seg_end)
+			return 0;
+		if (tag == 0x3ED && data_size == 16)
+		{
+			*xres = read_value(rbuf + value_off, 2, 1);
+			*yres = read_value(rbuf + value_off + 8, 2, 1);
+			return 1;
+		}
+		rbuf += value_off + data_size;
+	}
+
+	return 0;
 }
 
 fz_pixmap *
@@ -177,7 +213,11 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
 		if (cinfo.density_unit == 0)
-			extract_exif_resolution(rbuf, rlen, &image->xres, &image->yres);
+		{
+			/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2252 */
+			if (!extract_exif_resolution(rbuf, rlen, &image->xres, &image->yres))
+				extract_app13_resolution(rbuf, rlen, &image->xres, &image->yres);
+		}
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2249 */
 		else if (extract_exif_resolution(rbuf, rlen, &image->xres, &image->yres))
 			/* XPS seems to prefer EXIF resolution to JFIF density */;
@@ -206,16 +246,14 @@ fz_load_jpeg(fz_context *ctx, unsigned char *rbuf, int rlen)
 			sp = row[0];
 			for (x = 0; x < cinfo.output_width; x++)
 			{
-				/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2250 */
-				if (cinfo.jpeg_color_space == JCS_YCCK && cinfo.saw_Adobe_marker)
-				for (k = 0; k < cinfo.output_components; k++)
-					*dp++ = 255 - *sp++;
-				else
 				for (k = 0; k < cinfo.output_components; k++)
 					*dp++ = *sp++;
 				*dp++ = 255;
 			}
 		}
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2250 */
+		if (colorspace == fz_device_cmyk && cinfo.saw_Adobe_marker)
+			fz_invert_pixmap(ctx, image);
 	}
 	fz_always(ctx)
 	{
