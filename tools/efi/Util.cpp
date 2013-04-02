@@ -17,15 +17,13 @@ static const struct DLLDesc
     const char *Filename;
     IID UseCLSID;
 } msdiaDlls[] = {
-    "msdia1110.dll", __uuidof(DiaSource110),
-    "msdia100.dll", __uuidof(DiaSource100),
-#if 0
-    // these use a different vtable layout for IDiaSymbol
-    "msdia90.dll", __uuidof(DiaSource90),
-    "msdia80.dll", __uuidof(DiaSource80),
-    "msdia71.dll", __uuidof(DiaSource71),
-#endif
-    // add more here as new versions appear (as long as they're backwards-compatible)
+    // this list is complete as of April 2013. In the future new msdia version
+    // could be added, in which case it should be added to the top of this list
+    "msdia110.dll", __uuidof(DiaSource110),     // Visual Studio 2012
+    "msdia100.dll", __uuidof(DiaSource100),     // Visual Studio 2010
+    // Note: there are also older version (msdia90.dll, msdia80.dll, msdia71.dll)
+    // but they are not compatible because vtable layout for IDiaSymbol
+    // changed in msdia100.dll
     0
 };
 
