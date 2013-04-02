@@ -230,13 +230,11 @@ const FieldMetadata g${name}FieldMetadata[] = {
 """
 def gen_struct_fields_txt(stru_cls):
     struct_name = stru_cls.__name__
-    field_names = stru_cls.field_names
     lines = ["const FieldMetadata g%sFieldMetadata[] = {" % struct_name]
     rows = []
     for field in stru_cls.fields:
         assert isinstance(field, Field)
         typ_enum = field.get_typ_enum()
-        name_off = field_names.get_offset(name2name(field.name))
         offset = "of(%s, %s)" % (struct_name, field.name)
         val = "NULL"
         if field.is_struct() or field.is_array():

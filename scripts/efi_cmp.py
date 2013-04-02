@@ -106,6 +106,58 @@ def build_efi_result(ver):
 	util.run_cmd_throw("efi", "SumatraPDF.exe", ">efi.txt")
 	bz_file_compress("efi.txt", "efi.txt.bz2")
 
+def print_side_by_size(diff):
+	added = diff.added
+	removed = diff.removed
+	n = max(len(added), len(removed))
+	rows = [["", "added", "", "removed"]]
+	for i in range(n):
+		s1 = ""; n1 = ""
+		if i < len(added):
+			sym = added[i]
+			s1 = str(sym.size)
+			n1 = sym.full_name()
+		s2 = ""; n2 = ""
+		if i < len(removed):
+			sym = removed[i]
+			s2 = str(sym.size)
+			n2 = sym.full_name()
+		rows.append([s1, n1, s2, n2])
+	rows = util.fmt_rows(rows, [util.FMT_LEFT, util.FMT_RIGHT, util.FMT_LEFT, util.FMT_RIGHT])
+	lines = ["  %s : %s | %s : %s" % (e1, e2, e3, e4) for (e1, e2, e3, e4) in rows]
+	s = "\n".join(lines)
+	print(s)
+
+def print_seq(diff, max=-1):
+	added = diff.added
+	if len(added) > 0:
+		print("\nAdded symbols:")
+		if max != -1:
+			added = added[:max]
+		for sym in added:
+			#sym = diff.syms2.name_to_sym[sym_name]
+			size = sym.size
+			print("%4d : %s" % (size, sym.full_name()))
+
+	removed = diff.removed
+	if len(removed) > 0:
+		print("\nRemoved symbols:")
+		if max != -1:
+			removed = removed[:max]
+		for sym in removed:
+			#sym = diff.syms2.name_to_sym[sym_name]
+			size = sym.size
+			print("%4d : %s" % (size, sym.full_name()))
+
+	changed = diff.changed
+	if len(changed) > 0:
+		print("\nChanged symbols:")
+		if max != -1:
+			changed = changed[:max]
+		for sym in changed:
+			size = sym.size_diff
+			print("%4d : %s" % (size, sym.full_name()))
+
 def main():
 	# early checks
 	assert os.path.exists(sum_efi_dir()), "Need %s directory" % sum_efi_dir()
@@ -132,31 +184,7 @@ def main():
 	diff.added.sort(key=lambda sym: sym.size, reverse=True)
 	diff.removed.sort(key=lambda sym: sym.size, reverse=True)
 	diff.changed.sort(key=lambda sym: sym.size_diff, reverse=True)
-
-	max = 5
-	added = diff.added
-	if len(added) > 0:
-		print("\nAdded symbols:")
-		for sym in added[:max]:
-			#sym = diff.syms2.name_to_sym[sym_name]
-			size = sym.size
-			print("%4d : %s" % (size, sym.full_name()))
-
-	removed = diff.removed
-	if len(removed) > 0:
-		print("\nAdded symbols:")
-		for sym in removed[:max]:
-			#sym = diff.syms2.name_to_sym[sym_name]
-			size = sym.size
-			print("%4d : %s" % (size, sym.full_name()))
-
-	changed = diff.changed
-	if len(changed) > 0:
-		changed = diff.changed[:20]
-		print("\nChanged symbols:")
-		for sym in changed:
-			size = sym.size_diff
-			print("%4d : %s" % (size, sym.full_name()))
+	print_seq(diff)
 
 if __name__ == "__main__":
 	main()
