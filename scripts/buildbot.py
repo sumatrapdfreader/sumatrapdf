@@ -2,7 +2,7 @@
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
 http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
-import os, shutil, time, datetime, cPickle, traceback
+import os, sys, shutil, time, datetime, cPickle, traceback
 import s3, util
 from util import file_remove_try_hard, run_cmd_throw
 from util import parse_svnlog_out, Serializable, create_dir
@@ -135,6 +135,16 @@ def has_already_been_built(ver):
 			return True
 	return False
 
+def verify_efi_present():
+	try:
+		(out, err, errcode) = util.run_cmd("efi.exe")
+	except:
+		print("Must have efi.exe in the %PATH%!!!")
+		sys.exit(1)
+	if "Usage:" not in out:
+		print("efi.exe created unexpected output:\n%s" % out)
+		sys.exit(1)
+
 def file_size_in_obj(file_name):
 	return file_size(os.path.join("obj-rel", file_name))
 
@@ -191,6 +201,21 @@ def svn_update_to_ver(ver):
 	run_cmd_throw("svn", "update", "-r" + ver)
 	rebuild_trans_src_path_cache()
 
+def efi_out_path(ver):
+	return os.path.join(get_logs_cache_dir(), ver + "_efi.txt.bz2")
+
+# runs efi.exe on obj-rel/SumatraPDF.exe, stores the data in obj-rel/efi.txt.bz2
+# and uploads to s3 as efi.txt.bz2
+def build_and_upload_efi_out(ver):
+	obj_dir = "obj-rel"
+	s3dir = "sumatrapdf/buildbot/%s/" % ver
+	os.chdir(obj_dir)
+	util.run_cmd_throw("efi", "SumatraPDF.exe", ">efi.txt")
+	util.bz_file_compress("efi.txt", "efi.txt.bz2")
+	s3.upload_file_public("efi.txt.bz2", s3dir + "efi.txt.bz2", silent=True)
+	shutil.copyfile("efi.txt.bz2", efi_out_path(ver))
+	os.chdir("..")
+
 # TODO: maybe add debug build and 64bit release?
 # skip_release is just for testing
 def build_version(ver, skip_release=False):
@@ -211,6 +236,9 @@ def build_version(ver, skip_release=False):
 		if stats.rel_failed:
 			run_analyze = False # don't bother running analyze if release failed
 			s3.upload_data_public_with_content_type(stats.rel_build_log, s3dir + "release_build_log.txt", silent=True)
+
+	if not stats.rel_failed:
+		build_and_upload_efi_out(ver)
 
 	if run_analyze:
 		start_time = datetime.datetime.now()
@@ -313,6 +341,7 @@ def buildbot_loop():
 		time.sleep(60*15) # 15 mins
 
 def main():
+	verify_efi_present()
 	verify_started_in_right_directory()
 	# to avoid problems, we build a separate source tree, just for the buildbot
 	src_path = os.path.join("..", "sumatrapdf_buildbot")

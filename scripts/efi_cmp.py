@@ -32,7 +32,7 @@ import sys, os
 efi_scripts_dir = os.path.join("tools", "efi")
 sys.path.append(efi_scripts_dir)
 
-import os, sys, shutil, bz2, util, efiparse
+import os, sys, shutil, util, efiparse
 
 g_top_dir = os.path.realpath("..")
 
@@ -94,17 +94,12 @@ def build_ver(ver):
 		dst = os.path.join(sum_efi_cache_dir(ver), f)
 		shutil.copyfile(src, dst)
 
-def bz_file_compress(src, dst):
-	with open(src, "rb") as src_fo:
-		with bz2.BZ2File(dst, "w", buffering=16*1024*1024, compresslevel=9) as dst_fo:
-			shutil.copyfileobj(src_fo, dst_fo, length=1*1024*1024)
-
 def build_efi_result(ver):
 	path = efi_result_file(ver)
 	if os.path.exists(path): return # was already done
 	os.chdir(sum_efi_cache_dir(ver))
 	util.run_cmd_throw("efi", "SumatraPDF.exe", ">efi.txt")
-	bz_file_compress("efi.txt", "efi.txt.bz2")
+	util.bz_file_compress("efi.txt", "efi.txt.bz2")
 
 def print_side_by_size(diff):
 	added = diff.added

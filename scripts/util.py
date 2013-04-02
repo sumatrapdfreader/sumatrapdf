@@ -1,4 +1,4 @@
-import os, re, subprocess, sys, hashlib, string, time, types, zipfile
+import os, re, subprocess, sys, hashlib, string, time, types, zipfile, bz2, shutil
 
 def log(s):
   print(s)
@@ -250,6 +250,11 @@ def zip_file(dst_zip_file, src, src_name=None, compress=True, append=False):
     src_name = os.path.basename(src)
   zf.write(src, src_name)
   zf.close()
+
+def bz_file_compress(src, dst):
+  with open(src, "rb") as src_fo:
+    with bz2.BZ2File(dst, "w", buffering=16*1024*1024, compresslevel=9) as dst_fo:
+      shutil.copyfileobj(src_fo, dst_fo, length=1*1024*1024)
 
 def formatInt(x):
     if x < 0:
