@@ -341,7 +341,13 @@ def gen_txt_for_top_level_val(top_level_val, file_path):
     # to make it more readable
     ser_struct(top_level_val, None, lines, -1)
     if g_add_whitespace:
-        lines = [add_random_ws(s) for s in lines]
+        new_lines = []
+        for l in lines:
+            # add empty lines to test resilience of the parser
+            if 1 == random.randint(1,3):
+                new_lines.append(add_random_ws(" "))
+            new_lines.append(add_random_ws(l))
+        lines = new_lines
     s = "\n".join(lines) + "\n" # for consistency with how C code does it
     write_to_file_utf8_bom(file_path, s)
 
@@ -357,6 +363,8 @@ def gen_sumatra_settings():
 def gen_simple():
     global g_add_whitespace
     g_add_whitespace = True
+    # seed with a known value so that we generate the same random whitespace
+    random.seed(0)
     dst_dir = settings_src_dir()
     top_level_val = gen_settings_types.Simple()
     file_path = os.path.join(dst_dir, "SettingsTxtSimple")

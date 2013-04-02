@@ -8,32 +8,53 @@
 namespace serbin {
 
 #define of offsetof
-const FieldMetadata gSimpleFieldMetadata[] = {
-    { of(Simple, bTrue),      TYPE_BOOL,  NULL },
-    { of(Simple, bFalse),     TYPE_BOOL,  NULL },
-    { of(Simple, u16_1),      TYPE_U16,   NULL },
-    { of(Simple, i32_1),      TYPE_I32,   NULL },
-    { of(Simple, u32_1),      TYPE_U32,   NULL },
-    { of(Simple, u64_1),      TYPE_U64,   NULL },
-    { of(Simple, col_1),      TYPE_COLOR, NULL },
-    { of(Simple, float_1),    TYPE_FLOAT, NULL },
-    { of(Simple, str_1),      TYPE_STR,   NULL },
-    { of(Simple, str_escape), TYPE_STR,   NULL },
-    { of(Simple, wstr_1),     TYPE_WSTR,  NULL },
+const FieldMetadata gSimpleXYFieldMetadata[] = {
+    { of(SimpleXY, x), TYPE_I32, NULL },
+    { of(SimpleXY, y), TYPE_I32, NULL },
 };
 
-const StructMetadata gSimpleMetadata = { sizeof(Simple), 11, &gSimpleFieldMetadata[0] };
+const StructMetadata gSimpleXYMetadata = { sizeof(SimpleXY), 2, &gSimpleXYFieldMetadata[0] };
+
+const FieldMetadata gSimpleFieldMetadata[] = {
+    { of(Simple, bTrue),      TYPE_BOOL,       NULL               },
+    { of(Simple, bFalse),     TYPE_BOOL,       NULL               },
+    { of(Simple, u16_1),      TYPE_U16,        NULL               },
+    { of(Simple, i32_1),      TYPE_I32,        NULL               },
+    { of(Simple, u32_1),      TYPE_U32,        NULL               },
+    { of(Simple, u64_1),      TYPE_U64,        NULL               },
+    { of(Simple, col_1),      TYPE_COLOR,      NULL               },
+    { of(Simple, float_1),    TYPE_FLOAT,      NULL               },
+    { of(Simple, xy1),        TYPE_STRUCT_PTR, &gSimpleXYMetadata },
+    { of(Simple, str_1),      TYPE_STR,        NULL               },
+    { of(Simple, str_escape), TYPE_STR,        NULL               },
+    { of(Simple, xy2),        TYPE_STRUCT_PTR, &gSimpleXYMetadata },
+    { of(Simple, wstr_1),     TYPE_WSTR,       NULL               },
+};
+
+const StructMetadata gSimpleMetadata = { sizeof(Simple), 13, &gSimpleFieldMetadata[0] };
 
 #undef of
 
-static const uint8_t gSimpleDefault[119] = {
+static const uint8_t gSimpleDefault[135] = {
     0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
     0x00, 0x00, 0x00, 0x01, // version 1.0
-    0x0c, 0x00, 0x00, 0x00, // top-level struct offset 0xc
+    0x1a, 0x00, 0x00, 0x00, // top-level struct offset 0x1a
 
-    // offset: 0xc Simple_9
+    // offset: 0xc SimpleXY_10
     0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
-    0x0b, // 11 fields
+    0x02, // 2 fields
+    0x42, // int32_t x = 33
+    0x18, // int32_t y = 12
+
+    // offset: 0x13 SimpleXY_11
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
+    0x02, // 2 fields
+    0x42, // int32_t x = 33
+    0x18, // int32_t y = 12
+
+    // offset: 0x1a Simple_9
+    0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
+    0x0d, // 13 fields
     0x01, // bool bTrue = true
     0x00, // bool bFalse = false
     0x01, // uint16_t u16_1 = 1
@@ -42,8 +63,10 @@ static const uint8_t gSimpleDefault[119] = {
     0x7b, // uint64_t u64_1 = 123
     0xfc, 0xac, 0xff, 0x00, 0xed, // uint32_t col_1 = #acff00ed
     0x08, 0x33, 0x2e, 0x31, 0x32, 0x33, 0x34, 0x38, 0x00, // float float_1 = 3.12348
+    0x13, // SimpleXY * xy1 = SimpleXY_11
     0x05, 0x6c, 0x6f, 0x6c, 0x61, 0x00, // const char * str_1 = lola
     0x12, 0x5b, 0x6c, 0x6f, 0x0d, 0x20, 0x24, 0x66, 0x6f, 0x09, 0x6f, 0x5c, 0x20, 0x6c, 0x0a, 0x61, 0x5d, 0x5d, 0x00, // const char * str_escape = [lo\r $fo	o\ l\na]]
+    0x0c, // SimpleXY * xy2 = SimpleXY_10
     0x38, 0x77, 0x69, 0x64, 0x65, 0x20, 0x73, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x20, 0xce, 0xa0, 0xcf, 0x81, 0xce, 0xb1, 0xce, 0xb3, 0xce, 0xbc, 0xce, 0xb1, 0xcf, 0x84, 0xce, 0xb9, 0xce, 0xba, 0xcf, 0x8c, 0x20, 0x26, 0xce, 0x9c, 0xce, 0xad, 0xce, 0xb3, 0xce, 0xb5, 0xce, 0xb8, 0xce, 0xbf, 0xcf, 0x82, 0x0a, 0x43, 0x74, 0x72, 0x6c, 0x2b, 0x31, 0x00, // const WCHAR * wstr_1 = wide string  &\nCtrl+1
 };
 

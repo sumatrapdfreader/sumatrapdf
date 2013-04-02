@@ -346,6 +346,12 @@ class Settings(Struct):
         Field("wstr_1", WString(u"wide string Πραγματικό &Μέγεθος\tCtrl+1")),
     ]
 
+class SimpleXY(Struct):
+    fields = [
+        Field("x", I32(33)),
+        Field("y", I32(12))
+    ]
+
 class Simple(Struct):
     fields = [
         Field("bTrue", Bool(True)),
@@ -356,8 +362,10 @@ class Simple(Struct):
         Field("u64_1", U64(123)),
         Field("col_1", Color(0xacff00ed)),
         Field("float_1", Float(3.12348)),
+        Field("xy1", SimpleXY()),
         Field("str_1", String("lola")),
         Field("str_escape", String(g_escape_test_str)),
+        Field("xy2", SimpleXY()),
         Field("wstr_1", WString(u"wide string Πραγματικό &Μέγεθος\nCtrl+1")),
     ]
 

@@ -6,6 +6,11 @@
 
 namespace serbin {
 
+struct SimpleXY {
+    int32_t  x;
+    int32_t  y;
+};
+
 struct Simple {
     bool           bTrue;
     bool           bFalse;
@@ -15,8 +20,10 @@ struct Simple {
     uint64_t       u64_1;
     uint32_t       col_1;
     float          float_1;
+    SimpleXY *     xy1;
     const char *   str_1;
     const char *   str_escape;
+    SimpleXY *     xy2;
     const WCHAR *  wstr_1;
 };
 

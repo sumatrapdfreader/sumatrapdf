@@ -1,12 +1,28 @@
-﻿; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation   
-b_true: true    
-b_false: false 
-u16_1: 1    
-i32_1: -12    
+﻿; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation    
+b_true: true  
+b_false: false  
+u16_1: 1  
+i32_1: -12   
 u32_1: 89   
-u64_1: 123 
-col_1: #acff00ed   
-float_1: 3.12348  
+     
+u64_1: 123   
+     
+col_1: #acff00ed    
+float_1: 3.12348    
+    
+xy1 [    
+  x: 33  
+   
+  y: 12   
+]    
 str_1: lola
 str_escape: $[lo$r $$fo	o\ l$na$]$]
+     
+xy2 [   
+    
+  x: 33  
+  y: 12   
+   
+]    
+   
 wstr_1: wide string Πραγματικό &Μέγεθος$nCtrl+1
