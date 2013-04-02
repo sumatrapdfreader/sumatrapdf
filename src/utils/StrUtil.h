@@ -156,7 +156,8 @@ size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp);
 }  // namespace str
 
 namespace seqstrings {
-
+void         SkipStr(char *& s);
+void         SkipStr(const char *& s);
 int          StrToIdx(const char *strings, const char *toFind);
 int          StrToIdx(const char *strings, const WCHAR *toFind);
 const char * IdxToStr(const char *strings, int idx);

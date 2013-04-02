@@ -9,17 +9,17 @@ namespace sertxt {
 
 #define of offsetof
 const FieldMetadata gSimpleFieldMetadata[] = {
-    {  0, of(Simple, bTrue),      TYPE_BOOL,  NULL },
-    {  7, of(Simple, bFalse),     TYPE_BOOL,  NULL },
-    { 15, of(Simple, u16_1),      TYPE_U16,   NULL },
-    { 21, of(Simple, i32_1),      TYPE_I32,   NULL },
-    { 27, of(Simple, u32_1),      TYPE_U32,   NULL },
-    { 33, of(Simple, u64_1),      TYPE_U64,   NULL },
-    { 39, of(Simple, col_1),      TYPE_COLOR, NULL },
-    { 45, of(Simple, float_1),    TYPE_FLOAT, NULL },
-    { 53, of(Simple, str_1),      TYPE_STR,   NULL },
-    { 59, of(Simple, str_escape), TYPE_STR,   NULL },
-    { 70, of(Simple, wstr_1),     TYPE_WSTR,  NULL },
+    { of(Simple, bTrue),      TYPE_BOOL,  NULL },
+    { of(Simple, bFalse),     TYPE_BOOL,  NULL },
+    { of(Simple, u16_1),      TYPE_U16,   NULL },
+    { of(Simple, i32_1),      TYPE_I32,   NULL },
+    { of(Simple, u32_1),      TYPE_U32,   NULL },
+    { of(Simple, u64_1),      TYPE_U64,   NULL },
+    { of(Simple, col_1),      TYPE_COLOR, NULL },
+    { of(Simple, float_1),    TYPE_FLOAT, NULL },
+    { of(Simple, str_1),      TYPE_STR,   NULL },
+    { of(Simple, str_escape), TYPE_STR,   NULL },
+    { of(Simple, wstr_1),     TYPE_WSTR,  NULL },
 };
 
 const StructMetadata gSimpleMetadata = {

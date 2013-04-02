@@ -352,6 +352,7 @@ static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, const 
     TxtNode *node = new TxtNode(StructNode);
     node->children = new Vec<TxtNode*>();
     uint16_t fieldNo = 0;
+    char *fieldName = (char*)structDef->fieldNames;
     TxtNode *child;
     for (;;) {
         slice.SkipWsUntilNewline();
@@ -361,14 +362,13 @@ static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, const 
         child->valStart = slice.curr;
         slice.SkipNonWs();
         child->valEnd = slice.curr;
-        const FieldMetadata *fieldDef = structDef->fields + fieldNo;
-        char *fieldName = (char*)structDef->fieldNames + fieldDef->nameOffset;
         child->keyStart = fieldName;
         child->keyEnd = fieldName + str::Len(fieldName);
         node->children->Append(child);
         ++fieldNo;
         if (fieldNo == structDef->nFields)
             break;
+        seqstrings::SkipStr(fieldName);
     }
     return node;
 Error:
@@ -390,7 +390,7 @@ static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, TxtNode *defa
     return res;
 }
 
-static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, const char *fieldNames, const FieldMetadata *fieldDef, uint8_t *structDataStart)
+static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, const char *fieldName, const FieldMetadata *fieldDef, uint8_t *structDataStart)
 {
     Type type = fieldDef->type;
     uint8_t *structDataPtr = structDataStart + fieldDef->offset;
@@ -403,7 +403,6 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
     bool isCompact = ((type & TYPE_STORE_COMPACT_MASK) != 0);
     type = (Type)(type & TYPE_NO_FLAGS_MASK);
 
-    const char *fieldName = fieldNames + fieldDef->nameOffset;
     size_t fieldNameLen = str::Len(fieldName);
     TxtNode *dataNode = FindNode(firstNode, fieldName, fieldNameLen);
     TxtNode *defaultNode = FindNode(defaultFirstNode, fieldName, fieldNameLen);
@@ -503,10 +502,12 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *def
     uint8_t *res = AllocArray<uint8_t>(def->size);
     const StructMetadata **defPtr = (const StructMetadata**)res;
     *defPtr = def;
+    const char *fieldName = def->fieldNames;
     for (int i = 0; i < def->nFields; i++) {
-        ok = DecodeField(ds, firstNode, defaultFirstNode, def->fieldNames, def->fields + i, res);
+        ok = DecodeField(ds, firstNode, defaultFirstNode, fieldName, def->fields + i, res);
         if (!ok)
             goto Error;
+        seqstrings::SkipStr(fieldName);
     }
     return res;
 Error:
@@ -614,7 +615,7 @@ static void AppendKeyVal(EncodeState& es, const char *key, const char *val)
 
 void SerializeRec(EncodeState& es, const uint8_t *structStart, const StructMetadata *def);
 
-static void SerializeField(EncodeState& es, const char *fieldNames, const FieldMetadata *fieldDef, const uint8_t *structStart)
+static void SerializeField(EncodeState& es, const char *fieldName, const FieldMetadata *fieldDef, const uint8_t *structStart)
 {
     str::Str<char> val;
     str::Str<char>& res = es.res;
@@ -629,7 +630,6 @@ static void SerializeField(EncodeState& es, const char *fieldNames, const FieldM
     bool isCompact = ((type & TYPE_STORE_COMPACT_MASK) != 0);
     type = (Type)(type & TYPE_NO_FLAGS_MASK);
 
-    const char *fieldName = fieldNames + fieldDef->nameOffset;
     const uint8_t *data = structStart + fieldDef->offset;
     if (TYPE_BOOL == type) {
         bool b = ReadStructBool(data);
@@ -719,9 +719,11 @@ void SerializeRec(EncodeState& es, const uint8_t *structStart, const StructMetad
 {
     if (!structStart)
         return;
+    const char *fieldName = def->fieldNames;
     for (size_t i = 0; i < def->nFields; i++) {
         const FieldMetadata *fieldDef = &def->fields[i];
-        SerializeField(es, def->fieldNames, fieldDef, structStart);
+        SerializeField(es, fieldName, fieldDef, structStart);
+        seqstrings::SkipStr(fieldName);
     }
 }
 

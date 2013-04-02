@@ -223,7 +223,7 @@ namespace sertxt {
 
 """
 const FieldMetadata g${name}FieldMetadata[] = {
-    { $name_off, $offset, $type, &g${name}StructMetadata },
+    { $offset, $type, &g${name}StructMetadata },
 };
 """
 def gen_struct_fields_txt(stru_cls):
@@ -239,10 +239,11 @@ def gen_struct_fields_txt(stru_cls):
         val = "NULL"
         if field.is_struct() or field.is_array():
             val = "&g%sMetadata" % field.typ.name()
-        col = [str(name_off) + ",", offset + ",", typ_enum + ",", val]
+        col = [offset + ",", typ_enum + ",", val]
         rows.append(col)
-    rows = util.fmt_rows(rows, [util.FMT_LEFT, util.FMT_RIGHT, util.FMT_RIGHT, util.FMT_RIGHT])
-    lines += ["    { %s %s %s %s }," % (e1, e2, e3, e4) for (e1, e2, e3, e4) in rows]
+    rows = util.fmt_rows(rows, [util.FMT_RIGHT, util.FMT_RIGHT, util.FMT_RIGHT])
+    lines += ["    { %s %s %s }," % (e1, e2, e3) for (e1, e2, e3) in rows]
+    #lines += ["    { %s %s %s }," % els for els in rows]
     lines += ["};\n"]
     return lines
 

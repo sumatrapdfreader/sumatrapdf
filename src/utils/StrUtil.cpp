@@ -1296,6 +1296,22 @@ size_t FromCodePageBuf(WCHAR *buf, int cchBufSize, const char *s, UINT cp)
 // of L1 cache
 namespace seqstrings {
 
+// advance to next string
+void SkipStr(char *& s)
+{
+    while (*s)
+        s++;
+    s++;
+}
+
+// advance to next string
+void SkipStr(const char *& s)
+{
+    while (*s)
+        s++;
+    s++;
+}
+
 // Returns NULL if s is the same as toFind
 // If they are not equal, returns end of s + 1
 static inline const char *StrEqWeird(const char *s, const char *toFind)

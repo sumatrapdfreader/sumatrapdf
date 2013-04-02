@@ -37,8 +37,7 @@ typedef enum {
 
 // information about a single field
 struct FieldMetadata {
-    uint16_t         nameOffset;
-    // from the beginning of the struct
+    // offset of the value from the beginning of the struct
     uint16_t         offset;
     Type             type;
     // for TYP_ARRAY and TYPE_STRUCT_PTR, otherwise NULL
