@@ -359,6 +359,8 @@ public:
         /* [in] */ LPCOLESTR name,
         /* [in] */ DWORD compareFlags,
         /* [out] */ IDiaEnumSymbols **ppResult) = 0;
+#if _MSC_VER >= 1600
+    // these four methods are missing from IDiaSymbol in VS2008
     virtual HRESULT STDMETHODCALLTYPE findChildrenEx( 
         /* [in] */ enum SymTagEnum symtag,
         /* [in] */ LPCOLESTR name,
@@ -383,6 +385,7 @@ public:
         /* [in] */ DWORD compareFlags,
         /* [in] */ DWORD rva,
         /* [out] */ IDiaEnumSymbols **ppResult) = 0;
+#endif
     virtual /* [id][helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_targetSection( 
         /* [retval][out] */ DWORD *pRetVal) = 0;
     virtual /* [id][helpstring][propget] */ HRESULT STDMETHODCALLTYPE get_targetOffset( 
