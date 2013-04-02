@@ -2,6 +2,9 @@
 
 """
 Parses the output of efi.exe.
+
+TODO:
+ - do a per .obj file string size changes
 """
 
 import bz2, bisect

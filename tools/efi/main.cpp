@@ -11,6 +11,14 @@
 
 #include <DbgHelp.h>
 
+/*
+TODO: in GetUndecoratedSymbolName() we can probably get more descriptive names
+for strings by using different undecorateOptions. Sometimes the name indicates
+what the string is. On the other hand, it'll increase the output because
+those symbol names tend to be long (and ugly). Maybe attributing strings
+per .obj file (which can be done with existing output) will be enoug.
+*/
+
 // This constant may be missing from DbgHelp.h.  See the documentation for
 // IDiaSymbol::get_undecoratedNameEx.
 #ifndef UNDNAME_NO_ECSU
