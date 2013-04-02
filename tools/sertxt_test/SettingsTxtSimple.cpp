@@ -48,12 +48,12 @@ Simple *DeserializeSimpleWithDefault(const char *data, size_t dataLen, const cha
 
 uint8_t *SerializeSimple(Simple *val, size_t *dataLenOut)
 {
-    return Serialize((const uint8_t*)val, dataLenOut);
+    return Serialize((const uint8_t*)val, &gSimpleMetadata, dataLenOut);
 }
 
 void FreeSimple(Simple *val)
 {
-    FreeStruct((uint8_t*)val);
+    FreeStruct((uint8_t*)val, &gSimpleMetadata);
 }
 
 } // namespace sertxt

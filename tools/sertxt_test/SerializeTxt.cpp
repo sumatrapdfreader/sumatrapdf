@@ -12,12 +12,10 @@ namespace sertxt {
 // the assumption here is that the data was either built by Deserialize()
 // or was created by application code in a way that observes our rule: each
 // struct and string was separately allocated with malloc()
-void FreeStruct(uint8_t *structStart)
+void FreeStruct(uint8_t *structStart, const StructMetadata *def)
 {
     if (!structStart)
         return;
-    const StructMetadata **defPtr = (const StructMetadata**)structStart;
-    const StructMetadata *def = *defPtr;
     Type type;
     const FieldMetadata *fieldDef = NULL;
     for (int i = 0; i < def->nFields; i++) {
@@ -26,14 +24,14 @@ void FreeStruct(uint8_t *structStart)
         type = (Type)(fieldDef->type & TYPE_NO_FLAGS_MASK);
         if (TYPE_STRUCT_PTR ==  type) {
             uint8_t **p = (uint8_t**)data;
-            FreeStruct(*p);
+            FreeStruct(*p, fieldDef->def);
         } else if (TYPE_ARRAY == type) {
             ListNode<void> **nodePtr = (ListNode<void>**)data;
             ListNode<void> *node = *nodePtr;
             ListNode<void> *next;
             while (node) {
                 next = node->next;
-                FreeStruct((uint8_t*)node->val);
+                FreeStruct((uint8_t*)node->val, fieldDef->def);
                 free(node);
                 node = next;
             }
@@ -524,7 +522,7 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *def
     }
     return res;
 Error:
-    FreeStruct(res);
+    FreeStruct(res, def);
     return NULL;
 }
 
@@ -626,7 +624,7 @@ static void AppendKeyVal(EncodeState& es, const char *key, const char *val)
     AppendVal(val, es.escapeChar, es.compact, es.res);
 }
 
-void SerializeRec(EncodeState& es, const uint8_t *data);
+void SerializeRec(EncodeState& es, const uint8_t *structStart, const StructMetadata *def);
 
 static void SerializeField(EncodeState& es, const char *fieldNames, const FieldMetadata *fieldDef, const uint8_t *structStart)
 {
@@ -695,7 +693,7 @@ static void SerializeField(EncodeState& es, const char *fieldNames, const FieldM
         ++es.nest;
         // compact status only lives for one structure, so this is enough
         es.compact = isCompact;
-        SerializeRec(es, structStart2);
+        SerializeRec(es, structStart2, fieldDef->def);
         --es.nest;
         es.compact = false;
         if (isCompact) {
@@ -716,7 +714,7 @@ static void SerializeField(EncodeState& es, const char *fieldNames, const FieldM
             res.Append("[" NL);
             const uint8_t *elData = (const uint8_t*)el->val;
             ++es.nest;
-            SerializeRec(es, elData);
+            SerializeRec(es, elData, fieldDef->def);
             --es.nest;
             AppendNest(res, es.nest);
             res.Append("]" NL);
@@ -730,24 +728,22 @@ static void SerializeField(EncodeState& es, const char *fieldNames, const FieldM
     }
 }
 
-void SerializeRec(EncodeState& es, const uint8_t *structStart)
+void SerializeRec(EncodeState& es, const uint8_t *structStart, const StructMetadata *def)
 {
     if (!structStart)
         return;
-    StructMetadata **defPtr = (StructMetadata**)structStart;
-    StructMetadata *def = *defPtr;
     for (size_t i = 0; i < def->nFields; i++) {
         const FieldMetadata *fieldDef = &def->fields[i];
         SerializeField(es, def->fieldNames, fieldDef, structStart);
     }
 }
 
-uint8_t *Serialize(const uint8_t *rootStruct, size_t *sizeOut)
+uint8_t *Serialize(const uint8_t *rootStruct, const StructMetadata *def, size_t *sizeOut)
 {
     EncodeState es;
     es.res.Append(UTF8_BOM "; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation" NL);
     es.nest = 0;
-    SerializeRec(es, rootStruct);
+    SerializeRec(es, rootStruct, def);
     if (sizeOut)
         *sizeOut = es.res.Size();
     return (uint8_t *)es.res.StealData();

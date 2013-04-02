@@ -9,10 +9,7 @@ from gen_settings_txt import structs_from_top_level_value, field_val_as_str
 from util import gob_uvarint_encode, gob_varint_encode
 
 """
-TODO:
-  - a different runtime representations: each struct starts with StructDef *.
-    that way the values are self-describing. that would simplify the API
-    (no need to pass StructDef* separately.
+Generates source files with meta-data description for binary serializer.
 """
 
 g_magic_id = 0x53657454  # 'SetT' as 'Settings''
@@ -271,7 +268,10 @@ def gen_cpp_data_for_struct_values(vals, version_str, serialized_vals):
     top_level = vals[-1]
     assert isinstance(top_level, Struct)
     name = top_level.name()
-    lines = [""] # will be replaced by: "static const uint8_t g%sDefault[%(total_size)d] = {" at the end
+
+    # will be replaced by:
+    #"static const uint8_t g%sDefault[%(total_size)d] = {" at the end
+    lines = [""]
 
     data = struct.pack("<I", g_magic_id)
     comment = "magic id '%s'" % g_magic_id_str

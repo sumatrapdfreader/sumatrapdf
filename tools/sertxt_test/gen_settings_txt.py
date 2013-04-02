@@ -22,6 +22,9 @@ g_escape_char = "$"
 # if true, will add whitespace at the end of the string, just for testing
 g_add_whitespace = False
 
+# if True, adds per-object reflection info. Not really working
+g_with_reflection = False
+
 def settings_src_dir():
     return util.verify_path_exists(g_script_dir)
 
@@ -168,7 +171,8 @@ def gen_struct_def(stru_cls):
     name = stru_cls.__name__
     lines = ["struct %s {" % name]
     rows = [[field.c_type(), field.name] for field in stru_cls.fields]
-    rows = [["const StructMetadata *", "def"]] + rows
+    if g_with_reflection:
+        rows = [["const StructMetadata *", "def"]] + rows
     lines += ["    %s  %s;" % (e1, e2) for (e1, e2) in util.fmt_rows(rows, [util.FMT_RIGHT])]
     lines += ["};\n"]
     return "\n".join(lines)
@@ -280,12 +284,12 @@ top_level_funcs_txt_tmpl = """
 
 uint8_t *Serialize%(name)s(%(name)s *val, size_t *dataLenOut)
 {
-    return Serialize((const uint8_t*)val, dataLenOut);
+    return Serialize((const uint8_t*)val, &g%(name)sMetadata, dataLenOut);
 }
 
 void Free%(name)s(%(name)s *val)
 {
-    FreeStruct((uint8_t*)val);
+    FreeStruct((uint8_t*)val, &g%(name)sMetadata);
 }"""
 
 def add_cls(cls, structs):

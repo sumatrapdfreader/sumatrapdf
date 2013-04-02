@@ -161,12 +161,12 @@ Settings *DeserializeSettingsWithDefault(const char *data, size_t dataLen, const
 
 uint8_t *SerializeSettings(Settings *val, size_t *dataLenOut)
 {
-    return Serialize((const uint8_t*)val, dataLenOut);
+    return Serialize((const uint8_t*)val, &gSettingsMetadata, dataLenOut);
 }
 
 void FreeSettings(Settings *val)
 {
-    FreeStruct((uint8_t*)val);
+    FreeStruct((uint8_t*)val, &gSettingsMetadata);
 }
 
 } // namespace sertxt
