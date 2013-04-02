@@ -36,7 +36,7 @@ g_index_html_css = """
 def a(url, txt): return '<a href="' + url + '">' + txt + '</a>'
 def pre(s): return '<pre style="white-space: pre-wrap;">' + s + '</pre>'
 def td(s, off=0): return " " * off + '<td>%s</td>' % s
-def th(s): return '<th style="font-size:80%">%s</th>' % s
+def th(s): return '<th style="font-size:80%%">%s</th>' % s
 
 def size_diff_html(n):
 	if n > 0:   return ' (<font color=red>+' + str(n) + '</font>)'
@@ -110,7 +110,7 @@ def build_index_html(stats_for_ver, checkin_comment_for_ver):
 	names = [n[len(s3_dir):] for n in names if len(n.split("/")) == 4]
 	names.sort(reverse=True, key=lambda name: int(name.split("/")[0]))
 
-	html += '<table id="table-5"><tr>"' + th("build") + th("/analyze") + th("release")
+	html += '<table id="table-5"><tr>' + th("build") + th("/analyze") + th("release")
 	html += th("SumatraPDF.exe") + th("Installer.exe") + th("efi") + th("checkin comment") + '</tr>\n'
 	files_by_ver = group_by_ver(names)
 	for arr in files_by_ver:

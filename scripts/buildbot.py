@@ -59,12 +59,15 @@ def str2bool(s):
 	if s.lower() in ("false", "0"): return False
 	assert(False)
 
-def get_cache_dir(): return create_dir(os.path.join("..", "sumatrapdfcache", "buildbot"))
-def get_stats_cache_dir(): return create_dir(os.path.join(get_cache_dir(), "stats"))
-def get_logs_cache_dir(): return create_dir(os.path.join(get_cache_dir(), "logs"))
+g_cache_dir = create_dir(os.path.realpath(os.path.join("..", "sumatrapdfcache", "buildbot")))
+g_stats_cache_dir = create_dir(os.path.join(g_cache_dir, "stats"))
+g_logs_cache_dir = create_dir(os.path.join(g_cache_dir, "logs"))
+def get_cache_dir(): return g_cache_dir
+def get_stats_cache_dir(): return g_stats_cache_dir
+def get_logs_cache_dir(): return g_logs_cache_dir
 
 def logs_efi_out_path(ver):
-	return os.path.join(get_logs_cache_dir(), ver + "_efi.txt.bz2")
+	return os.path.join(get_logs_cache_dir(), str(ver) + "_efi.txt.bz2")
 
 # logs are only kept for potential troubleshooting and they're quite big,
 # so we delete old files (we keep logs for the last $to_keep revisions)
@@ -352,6 +355,15 @@ def build_version(ver, skip_release=False):
 	if stats.rel_failed:
 		email_build_failed(ver)
 
+def test_build_html_index():
+	print("test_build_html_index()")
+	html = build_index_html(stats_for_ver, checkin_comment_for_ver)
+	print("after build_index_html()")
+	import codecs
+	codecs.open("index.html", "w", "utf8").write(html)
+	print("after write")
+	sys.exit(1)
+
 g_email_to = ["kkowalczyk@gmail.com"]
 
 def email_build_failed(ver):
@@ -442,7 +454,7 @@ def main():
 	os.chdir(src_path)
 
 	#build_version("6698", skip_release=True)
-	#build_index_html()
+	#test_build_html_index()
 	#build_sizes_json()
 	#build_curr(force=True)
 	buildbot_loop()
