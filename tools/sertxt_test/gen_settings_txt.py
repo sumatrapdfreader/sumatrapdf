@@ -79,6 +79,37 @@ def field_val_as_str(field):
         return field.val
     assert False, "don't know how to serialize %s" % str(field.typ)
 
+def _field_def_val_for_FieldMetada(field):
+    if field.is_struct() or field.is_array():
+        return "&g%sMetadata" % field.typ.name()
+    if field.is_bool():
+        return ["0", "1"][field.val]
+    if field.is_color():
+        if field.val > 0xffffff:
+            return "0x%08x" % field.val
+        else:
+            return "0x%06x" % field.val
+    # Note: doesn't handle default values outside of uintptr_t range,
+    # which is 32bits on 32-bit arch
+    if field.is_signed():
+        assert gen_settings_types.is_valid_signed(32, field.val)
+        return str(field.val)
+    if field.is_unsigned():
+        assert gen_settings_types.is_valid_unsigned(32, field.val)
+        return str(field.val)
+    # TODO: too lazy to do proper utf8 conversion and escaping, so
+    # just returning NULL. We use non-null only for testing
+    if field.is_string():
+        return "NULL"
+    if field.is_float():
+        return '"%s"' % str(field.val)
+    assert False, "don't know how to serialize %s" % str(field.typ)
+
+def field_def_val_for_FieldMetada(field):
+    s = _field_def_val_for_FieldMetada(field)
+    if s != "NULL": s = "(uintptr_t)" + s
+    return s
+
 def escape_char(c):
     if c == g_escape_char:
         return c + c
@@ -236,19 +267,22 @@ def gen_struct_fields_txt(stru_cls):
         assert isinstance(field, Field)
         typ_enum = field.get_typ_enum()
         offset = "of(%s, %s)" % (struct_name, field.name)
-        val = "NULL"
-        if field.is_struct() or field.is_array():
-            val = "&g%sMetadata" % field.typ.name()
+        stru_cls.field_names.add(name2name(field.name))
+        val = field_def_val_for_FieldMetada(field)
         col = [offset + ",", typ_enum + ",", val]
         rows.append(col)
     rows = util.fmt_rows(rows, [util.FMT_RIGHT, util.FMT_RIGHT, util.FMT_RIGHT])
     lines += ["    { %s %s %s }," % (e1, e2, e3) for (e1, e2, e3) in rows]
-    #lines += ["    { %s %s %s }," % els for els in rows]
     lines += ["};\n"]
     return lines
 
 """
-const StructMetadata g${name}StructMetadata = { $size, $nFields, $fields, $fieldNames };
+const StructMetadata g${name}StructMetadata = {
+    $size,
+    $nFields,
+    $fieldNames,
+    $fields
+};
 """
 def gen_structs_metadata_txt(structs):
     lines = []

@@ -9,6 +9,12 @@ namespace sertxt {
 
 #define NL "\r\n"
 
+static const StructMetadata *GetStructDef(const FieldMetadata *fieldDef)
+{
+    CrashIf(0 == fieldDef->defValOrDefinition);
+    return (const StructMetadata *)fieldDef->defValOrDefinition;
+}
+
 // the assumption here is that the data was either built by Deserialize()
 // or was created by application code in a way that observes our rule: each
 // struct and string was separately allocated with malloc()
@@ -24,12 +30,12 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
         type = (Type)(fieldDef->type & TYPE_MASK);
         if (TYPE_STRUCT_PTR ==  type) {
             uint8_t **p = (uint8_t**)data;
-            FreeStruct(*p, fieldDef->def);
+            FreeStruct(*p, GetStructDef(fieldDef));
         } else if (TYPE_ARRAY == type) {
             Vec<uint8_t*> **vecPtr = (Vec<uint8_t*> **)data;
             Vec<uint8_t*> *vec = *vecPtr;
             for (size_t i = 0; i < vec->Count(); i++) {
-                FreeStruct(vec->At(i), fieldDef->def);
+                FreeStruct(vec->At(i), GetStructDef(fieldDef));
             }
             delete vec;
         } else if ((TYPE_STR == type) || (TYPE_WSTR == type)) {
@@ -438,11 +444,11 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
     } else if (TYPE_STRUCT_PTR == type) {
         uint8_t *d = NULL;
         if (isCompact && (TextNode == node->type)) {
-            d = DeserializeCompact(ds, node, defaultNode, fieldDef->def);
+            d = DeserializeCompact(ds, node, defaultNode, GetStructDef(fieldDef));
         } else {
             if (StructNode != node->type)
                 return false;
-            d = DeserializeRec(ds, node, defaultNode, fieldDef->def);
+            d = DeserializeRec(ds, node, defaultNode, GetStructDef(fieldDef));
         }
         if (!d)
             return false;
@@ -469,7 +475,6 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
         if (ok)
             WriteStructFloat(structDataPtr, f);
     } else if (TYPE_ARRAY == type) {
-        CrashIf(!fieldDef->def); // array elements must be a struct
         if (StructNode != node->type)
             return false;
         Vec<uint8_t*> *vec = new Vec<uint8_t*>();
@@ -481,7 +486,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
             // TODO: could be more permissive and ignore the error?
             if (ArrayNode != child->type)
                 return false;
-            uint8_t *d = DeserializeRec(ds, child, NULL, fieldDef->def);
+            uint8_t *d = DeserializeRec(ds, child, NULL, GetStructDef(fieldDef));
             if (!d)
                 return false;
             vec->Append(d);
@@ -681,7 +686,7 @@ static void SerializeField(EncodeState& es, const char *fieldName, const FieldMe
         ++es.nest;
         // compact status only lives for one structure, so this is enough
         es.compact = isCompact;
-        SerializeRec(es, structStart2, fieldDef->def);
+        SerializeRec(es, structStart2, GetStructDef(fieldDef));
         --es.nest;
         es.compact = false;
         if (isCompact) {
@@ -691,7 +696,6 @@ static void SerializeField(EncodeState& es, const char *fieldName, const FieldMe
             res.Append("]" NL);
         }
     } else if (TYPE_ARRAY == type) {
-        CrashIf(!fieldDef->def);
         AppendNest(res, es.nest);
         res.Append(fieldName);
         res.Append(" [" NL);
@@ -702,7 +706,7 @@ static void SerializeField(EncodeState& es, const char *fieldName, const FieldMe
             res.Append("[" NL);
             const uint8_t *elData = vec->At(i);
             ++es.nest;
-            SerializeRec(es, elData, fieldDef->def);
+            SerializeRec(es, elData, GetStructDef(fieldDef));
             --es.nest;
             AppendNest(res, es.nest);
             res.Append("]" NL);

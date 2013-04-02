@@ -21,9 +21,14 @@ static char *CheckedLoad(const char *path, size_t *fileSizeOut)
 
 static void CheckStrEq(const char *s1, const char *s2)
 {
-    if (str::Eq(s1, s2))
+    char *s11 = str::Dup(s1);
+    char *s22 = str::Dup(s2);
+    str::NormalizeNewlinesInPlace(s11);
+    str::NormalizeNewlinesInPlace(s22);
+    if (str::Eq(s11, s22))
         return;
-    printf("'%s'\n != \n'%s'\n", s1, s2);
+    printf("'%s'\n != \n'%s'\n", s11, s22);
+    free(s11); free(s22);
 }
 
 static void CheckStrEq(const WCHAR *s1, const WCHAR *s2)
@@ -131,8 +136,6 @@ static void TestSettingsDeserialize()
     size_t serializedLen;
     char *s2 = (char*)SerializeSettings(settings, &serializedLen);
 
-    str::NormalizeNewlinesInPlace(s);
-    str::NormalizeNewlinesInPlace(s2);
     CheckStrEq(s, s2);
     CheckStrEq(settings->str_escape_test, STR_ESCAPE_TEST_EXP);
     CheckStrEq(settings->wstr_1, L"wide string Πραγματικό &Μέγεθος\tCtrl+1");
@@ -195,6 +198,7 @@ static void TestBinSettings()
     size_t sLen, s2Len;
     char *s = (char*)sertxt::SerializeSettings(settings2, &sLen);
     char *s2 = CheckedLoad("..\\tools\\sertxt_test\\data.txt", &s2Len);
+
     CheckStrEq(s, s2);
     free(s2);
     free(s);

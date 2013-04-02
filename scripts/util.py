@@ -493,6 +493,9 @@ class SeqStrings(object):
     s = s.replace(chr(0), "\\0")
     return '"' + s + '"'
 
+  def add(self, s):
+    self.get_offset(s)
+
   def get_offset(self, s):
     if s not in self.strings:
       self.strings[s] = len(self.strings_seq)

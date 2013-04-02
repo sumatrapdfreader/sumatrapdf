@@ -36,13 +36,15 @@ typedef enum {
     TYPE_STORE_COMPACT_MASK = 0x8000,
 } Type;
 
+// TODO: re-arrange fields for max compactness
 // information about a single field
 struct FieldMetadata {
     // offset of the value from the beginning of the struct
     uint16_t         offset;
     Type             type;
-    // for TYP_ARRAY and TYPE_STRUCT_PTR, otherwise NULL
-    const StructMetadata * def;
+    // StructMetadata * for TYP_ARRAY and TYPE_STRUCT_PT
+    // otherwise default value for this field
+    uintptr_t        defValOrDefinition;
 };
 
 uint8_t *   Serialize(const uint8_t *data,  const StructMetadata *def, size_t *sizeOut);
