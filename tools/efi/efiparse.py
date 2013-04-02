@@ -167,25 +167,27 @@ class ParseState(object):
 	def add_symbol(self, sym):
 		self.symbols.append(sym)
 		self.symbols_unrounded_size += sym.size
-		# TODO: this doesn't quite work because it seems symbols can be
-		# inter-leaved e.g. a data symbol can be inside function symbol, which
-		# breaks the simplistic logic of calculating rounded size as curr.offset - prev.offset
-		"""
 		prev_sym_idx = len(self.symbols) - 2
 		if prev_sym_idx < 0: return
 		prev_sym = self.symbols[prev_sym_idx]
 		prev_sym_rounded_size = sym.offset - prev_sym.offset
-		assert prev_sym_rounded_size >= 0
+		# prev_sym_rounded_size/ prev_sym_wasted can be < 0 in rare cases because
+		# symbols can be inter-leaved e.g. a data symbol can be inside function
+		# symbol, which breaks the simplistic logic of calculating rounded size
+		# as curr.offset - prev.offset it can also happen when we cross section
+		# boundaries. We just ignore those cases because approximate data is
+		# better than no data
+		if prev_sym_rounded_size < 0: return
 		prev_sym_wasted = prev_sym_rounded_size - prev_sym.size
-		try:
-			assert prev_sym_wasted >= 0
-		except:
-			print_sym(prev_sym)
-			print_sym(sym)
-			print("prev_sym_wasted (%d) = prev_sym_rounded_size (%d) - prev_sym.size (%d)" % (prev_sym_wasted, prev_sym_rounded_size, prev_sym.size))
-			raise
-		self.symbols_rounding_waste += prev_sym_wasted
-"""
+		# Note: I don't understand why but efi dump shows some very large gaps
+		# between e.g. 2 functions. I filter everything above 16 bytes, since
+		# wastage shouldn't be bigger than that
+		if prev_sym_wasted > 16:
+			#prev_sym_off = prev_sym.offset
+			#sym_off = sym.offset
+			return
+		if prev_sym_wasted > 0:
+			self.symbols_rounding_waste += prev_sym_wasted
 
 	def readline(self):
 		l = self.fo.readline()
@@ -305,19 +307,18 @@ class Diff(object):
 		sym_size1 = self.symbols_unrounded_size1
 		sym_size2 = self.symbols_unrounded_size2
 		sym_size_diff = n_as_str(sym_size2 - sym_size1)
-		#wasted1 = self.symbols_rounding_waste1
-		#wasted2 = self.symbols_rounding_waste2
-		#wasted_diff = n_as_str(wasted2 - wasted1)
+		wasted1 = self.symbols_rounding_waste1
+		wasted2 = self.symbols_rounding_waste2
+		wasted_diff = n_as_str(wasted2 - wasted1)
 		n_added = len(self.added)
 		n_removed = len(self.removed)
 		n_changed = len(self.changed)
-
-		#wasted rouding: %(wasted_diff)s %(wasted1)d => %(wasted2)d
 		s = """symbols       : %(symbols_diff)-6s (%(n_symbols1)d => %(n_symbols2)d)
 added         : %(n_added)d
 removed       : %(n_removed)d
 changed       : %(n_changed)d
 symbol sizes  : %(sym_size_diff)-6s (%(sym_size1)d => %(sym_size2)d)
+wasted rouding: %(wasted_diff)-6s (%(wasted1)d => %(wasted2)d)
 string sizes  : %(str_sizes_diff)-6s (%(str_sizes1)d => %(str_sizes2)d)""" % locals()
 		return s
 
