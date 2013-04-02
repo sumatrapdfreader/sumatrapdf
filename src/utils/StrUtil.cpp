@@ -1238,6 +1238,20 @@ bool isLegalUTF8Sequence(const UTF8 *source, const UTF8 *sourceEnd) {
     return isLegalUTF8(source, length);
 }
 
+/*
+* Exported function to return whether a UTF-8 string is legal or not.
+* This is not used here; it's just exported.
+*/
+bool isLegalUTF8String(const UTF8 **source, const UTF8 *sourceEnd) {
+    while (*source != sourceEnd) {
+        int length = trailingBytesForUTF8[**source] + 1;
+        if (length > sourceEnd - *source || !isLegalUTF8(*source, length))
+            return false;
+        *source += length;
+    }
+    return true;
+}
+
 // --- end of Unicode, Inc. utf8 code
 
 namespace conv {
@@ -1267,7 +1281,8 @@ char *UnknownToUtf8(const char *s, size_t len)
     }
 
     // if s is valid utf8, leave it alone
-    if (isLegalUTF8Sequence((UTF8*)s, (UTF8*)(s + len)))
+    const UTF8 *tmp = (const UTF8*)s;
+    if (isLegalUTF8String(&tmp, tmp + len))
         return (char*)s;
 
     ScopedMem<WCHAR> uni(str::conv::FromAnsi(s, len));
