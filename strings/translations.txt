@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-03465090a938fdc36d226317efa2332325ef1688
+cce45c592a37c397e26e07fb0b7e86cf93c08a69
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -3131,7 +3131,7 @@ it:Informazioni su SumatraPDF
 ja:SumatraPDF のバージョン情報
 ka:SumatraPDF-ის შესახებ
 kr:SumatraPDF 정보
-ku:دەربارەی SumatraPDF
+ku:SumatraPDF دەربارەی
 kw:A-dro dhe SumatraPDF
 lt:Apie „SumatraPDF“
 mk:За SumatraPDF
@@ -5515,6 +5515,7 @@ hu:Telepítési könyvtár létrehozása sikertelen
 id:Gagal membuat direktori instalasi
 it:Impossibile creare la cartella di installazione
 kr:설치 디렉토리를 만들 수 없습니다.
+ku:ناتوانرێت فۆڵدەری دابەزاندن دروست بکرێت
 pt:Não foi possível criar a pasta de instalação
 ro:Nu s-a putut crea directorul de instalare
 ru:Не удалось создать директорию для установки
@@ -5597,6 +5598,7 @@ hu:PDF előnézet-megjelenítő telepítése sikertelen
 id:Gagal memasang penampil cepat PDF
 it:Impossibile installare modulo anteprima PDF
 kr:PDF 미리보기를 설치할 수 없습니다.
+ku:ناتوانرێت پیشاندەری PDF دابەزێندرێت
 pt:Não foi possível instalar o antevisão de PDF
 ro:Nu s-a putut instala previzualizatorul PDF
 ru:Не удалось установить просмотрщик PDF
@@ -5618,6 +5620,7 @@ hu:PDF keresési szűrő telepítése sikertelen
 id:Gagal memasang PDF search filter
 it:Impossibile installare filtro ricerca PDF
 kr:PDF 검색 필터를 설치할 수 없습니다.
+ku:ناتوانرێت فرمانی گەڕانی PDF دابەزێندرێت
 pt:Não foi possível instalar o filtro de procuras
 ro:Nu s-a putut instala filtrul de cautare PDF
 ru:Не удалось установить фильтр поиска PDF
@@ -5638,6 +5641,7 @@ hu:Böngésző beépülő telepítése sikertelen
 id:Gagal memasang plugin untuk browser
 it:Impossibile installare plugin browser
 kr:브라우저 플러그인을 설치할 수 없습니다.
+ku:ناتوانرێت پێوەکراوی وێبگەڕ دابەزێندرێت
 pt:Não foi possível instalar o plugin do navegador
 ro:Nu s-a putut instala plugin-ul pentru browser
 ru:Не удалось установить плагин браузера
@@ -5658,6 +5662,7 @@ hu:Ideiglenes könyvtár nem érhető el
 id:Gagal mendeteksi direktori penampungan
 it:Impossibile ottenere la cartella temporanea
 kr:임시 디렉토리를 가져올 수 없습니다.
+ku:ناتوانرێت فۆڵدەری کاتی بدۆزرێتەوە
 pt:Não foi possível obter a pasta temporária
 ro:Nu s-a putut obtine directorul temporar
 ru:Не удалось определить временную директорию
@@ -5675,6 +5680,7 @@ fr:Impossible de supprimer le répertoire d'installation
 hu:Telepítési könyvtár eltávolítása sikertelen
 it:Impossibile rimuovere la cartella di installazione
 kr:설치 디렉토리를 제거할 수 없습니다.
+ku:ناتوانرێت فۆڵدەری دابەزاندن لابدرێت
 pt:Não foi possível remover a pasta de instalação
 ro:Nu s-a putut sterge directorul de instalare
 ru:Не удалось удалить директорию установки
@@ -5694,6 +5700,7 @@ fr:Impossible de supprimer le raccourci
 hu:Parancsikon eltávolítása sikertelen
 it:Impossibile rimuovere il collegamento
 kr:바로가기를 제거할 수 없습니다.
+ku:ناتوانرێت کورتە ئایکۆن لابدرێت
 pt:Não foi possível remover o atalho
 ro:Nu s-au putut sterge scurtatura
 ru:Не удалось удалить ярлык
@@ -5773,6 +5780,7 @@ fr:Impossible de désinstaller l'aperçu PDF
 hu:PDF előnézet-megjelenítő eltávolítása sikertelen
 it:Impossibile disinstallare modulo anteprima PDF
 kr:PDF 미리보기를 제거할 수 없습니다.
+ku:ناتوانرێت پیشاندەری PDF بسڕدرێتەوە
 pt:Não foi possível desinstalar a antevisão de PDF
 ro:Nu s-a putut dezinstala previzualizatorul PDF
 ru:Не удалось удалить просмотрщик PDF
@@ -5791,6 +5799,7 @@ fr:Impossible de désinstaller le filtre de recherche PDF
 hu:PDF keresési szűrő eltávolítása sikertelen
 it:Impossibile disinstallare filtro ricerca PDF
 kr:PDF 검색 필터를 제거할 수 없습니다.
+ku:ناتوانرێت فرمانی گەڕانی PDF بسڕدرێتەوە
 pt:Não foi possível desinstalar o filtro de procura
 ro:Nu s-a putut dezinstala filtrul de cautare PDF
 ru:Не удалось удалить фильтр поиска PDF
@@ -5809,6 +5818,7 @@ fr:Impossible de désinstalle le plug-in du navigateur
 hu:Böngésző beépülő eltávolítása sikertelen
 it:Impossibile disinstallare il plugin del brwoser
 kr:브라우저 플러그인을 제거할 수 없습니다.
+ku:ناتوانرێت پێوەکراوی وێبگەڕ بسڕدرێتەوە
 pt:Não foi possível desinstalar o plugin do navegador
 ro:Nu s-a putut dezinstala plugin-ul de browser
 ru:Не удалось удалить плагин браузера
@@ -6823,6 +6833,7 @@ fr:Erreur : SumatraPDF non trouvé !
 hu:Hiba: SumatraPDF nem található!
 it:Errore. SumatraPDF non trovato!
 kr:오류: SumatraPDF를 찾을 수 없습니다!
+ku:هەڵە: SumatraPDF نەدۆزرایەوە!
 pt:Erro: o SumatraPDF não foi encontrado!
 ro:Eroare: SumatraPDF nu a fost gasit!
 ru:Ошибка: SumatraPDF не найдена!
@@ -7124,6 +7135,7 @@ fr:Impossible de créer un raccourci
 hu:Nem sikerült létrehozni a parancsikont
 it:Impossibile creare il collegamento
 kr:바로가기를 만들지 못했습니다.
+ku:دروستکردنی کورتە ئایکۆن سەرکەوتو نەبوو
 pt:Erro ao criar atalho
 ro:Eroare la crearea unei scurtaturi
 ru:Не удалось создать ярлык
@@ -9065,6 +9077,7 @@ hu:SumatraPDF telepítése
 it:Installa SumatraPDF
 ja:SumatraPDFをインストール
 kr:SumatraPDF 설치
+ku:دابەزاندنی SumatraPDF
 pt:Instalar SumatraPDF
 ro:Instalare SumatraPDF
 ru:Начать установку
@@ -9083,6 +9096,7 @@ fr:Installer SumatraPDF dans le répertoire :
 hu:SumatraPDF telepítése a következő &könyvtárba:
 it:Installa SumatraPD&F nella cartella:
 kr:SumatraPDF 설치 폴더(&F):
+ku:لە فۆڵدەری SumatraPDF دابەزاندنی:
 pt:Instalar SumatraPD&F na pasta:
 ro:Instalare SumatraPDF in &folderul:
 ru:Установить SumatraPDF в &папку:
@@ -9700,7 +9714,7 @@ it:È disponibile la versione %s. Scaricare la nuova versione?
 ja:新しいバージョン %s が利用可能です。新しいバージョンをダウンロードしますか？
 ka:ხელმიწვდომია ახალი ვერსია %s. გსურთ მისი ჩამოტვირთვა?
 kr:새 버전 %s (이)가 사용 가능합니다. 다운로드할까요?
-ku:ئامادەیە. داگرتنی وەشانی نوێ؟ %s وەشانی نوێی
+ku:وەشانی نوێی %s ئامادەیە. داگرتنی وەشانی نوێ؟
 kw:Versyon nowyth %s yw parys. Iskarga versyon nowyth?
 lt:Yra nauja %s versija. Atsiųsti naują versiją?
 mk:Нова верзија %s е достапна. Сакате да ја преземам?
@@ -10342,6 +10356,7 @@ fr:Ouvrir dans %s
 hu:Megnyitás %s
 it:Apri in %s
 kr:에서 열기 %s
+ku:کردنەوە لە %s
 pt:Abrir em %s
 ro:deschide în %s
 ru:Открыть в %s
@@ -10594,6 +10609,7 @@ fr:Ouverture du document dans SumatraPDF…
 hu:Dokumentum megnyitása SumatraPDF-ben...
 it:Apri documento in SumatraPDF...
 kr:SumatraPDF로 문서 여는 중...
+ku:...SumatraPDF کردنەوەی بەڵگەنامەکان بەهۆی
 pt:Abrir documento no SumatraPDF
 ro:Deschidere document in SumatraPDF...
 ru:Открытие документа в SumatraPDF...
@@ -11367,6 +11383,7 @@ fr:Fermez %s pour continuer, s.v.p. !
 hu:A(z) %s bezárása szükséges a folytatáshoz!
 it:Chiudi %s per continuare!
 kr:진행하려면 %s(을)를 닫으세요!
+ku:تکایە %s دابخە بۆ بەردەوامبون!
 pt:Para continuar, feche o %s!
 ro:Rugam inchideti %s pentru a putea continua!
 ru:Для продолжения, закройте %s !
@@ -13565,6 +13582,7 @@ hu:SumatraPDF indítása
 it:Avvia SumatraPDF
 ja:SumatraPDFを実行
 kr:SumatraPDF 시작
+ku:SumatraPDF دەستپێکردنی
 pt:Iniciar SumatraPDF
 ro:Pornire SumatraPDF
 ru:Пуск SumatraPDF
@@ -13643,6 +13661,7 @@ fr:Installeur de SumatraPDF %s
 hu:SumatraPDF %s telepítő
 it:Installazione SumatraPDF %s
 kr:SumatraPDF %s 설치 관리자
+ku:SumatraPDF %s دابەزاندنی
 pt:Instalador do SumatraPDF %s
 ro:Programul de instalare %s SumatraPDF
 ru:Инсталлятор SumatraPDF %s
@@ -13661,6 +13680,7 @@ fr:Désinstalleur de SumatraPDF %s
 hu:SumatraPDF %s eltávolító
 it:Disinstallazione SumatraPDF %s
 kr:SumatraPDF %s 제거 관리자
+ku:SumatraPDF %s سڕینەوەی
 pt:Desinstalador do SumatraPDF %s
 ro:Programul de dezinstalare a %s SumatraPDF
 ru:Деинсталлятор SumatraPDF %s
@@ -13869,6 +13889,7 @@ hu:SumatraPDF telepítő nem található.
 it:Installazion3 SumatraPDF non trovata.
 ja:SumatraPDFのインストール情報を見つけられません
 kr:SumatraPDF 설치를 찾을 수 없습니다.
+ku:.نەدۆزرایەوە SumatraPDF دابەزێنەری
 pt:O SumatraPDF não foi encontrado.
 ro:Nu s-a gasit instalarea SumatraPDF.
 ru:Установка SumatraPDF не найдена.
@@ -14191,6 +14212,7 @@ fr:Merci ! SumatraPDF a été installé.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
 it:Grazie! SumatraPDF installato correttamente.
 kr:야호! SumatraPDF가 설치됐습니다.
+ku:سوپاس! SumatraPDF دابەزێنرا.
 pt:O SumatraPDF foi instalado.
 ro:Multumim! SumatraPDF a fost dezinstalat.
 ru:Благодарим Вас! SumatraPDF успешно установлена.
@@ -14409,6 +14431,7 @@ fr:Choisir SumatraPDF comme lecteur PDF par &défaut
 hu:SumatraPDF használata alapértelmezett PDF olvasóként
 it:Usa SumatraPDF come lettore PDF pre&definito
 kr:SumatraPDF를 기본 PDF 리더로 사용(&D)
+ku:وەکو خوێنەرەوەی &سەرەکی PDF SumatraPDF بەکارهێنانی
 pt:Utilizar o SumatraPDF como leitor pa&drão de PDF
 ro:Folositi SumatraPDF ca cititor implicit pentru fisiere P&DF
 ru:Использовать SumatraPDF для просмотра PDF
@@ -14771,7 +14794,7 @@ it:Versione attuale: %s
 ja:バージョン %s です
 ka:თქვენ იყენებთ %s ვერსიას
 kr:현재 버전은 %s 입니다.
-ku:ت هەیە %s تۆ وەشانی
+ku:تۆ وەشانی %s ت هەیە
 kw:Yma versyon %s genes
 lt:Jūsų naudojama laida: %s
 mk:Ја имате верзијата %s
