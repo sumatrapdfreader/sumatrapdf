@@ -73,7 +73,7 @@ struct Fav {
 };
 
 struct AppState {
-    ListNode<Fav> *  favorites;
+    Vec<Fav*> *  favorites;
 };
 
 struct Settings {

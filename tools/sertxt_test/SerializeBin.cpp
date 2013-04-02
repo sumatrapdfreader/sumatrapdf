@@ -60,11 +60,11 @@ Exit:
 // the assumption here is that the data was either built by Deserialize()
 // or was created by application code in a way that observes our rule: each
 // struct and string was separately allocated with malloc()
-void FreeStruct(uint8_t *structDataStart, StructMetadata *def)
+void FreeStruct(uint8_t *structDataStart, const StructMetadata *def)
 {
     if (!structDataStart)
         return;
-    FieldMetadata *fieldDef = NULL;
+    const FieldMetadata *fieldDef = NULL;
     Type type;
     uint8_t *data;
     for (int i = 0; i < def->nFields; i++) {
@@ -75,15 +75,12 @@ void FreeStruct(uint8_t *structDataStart, StructMetadata *def)
             uint8_t **p = (uint8_t**)(data);
             FreeStruct(*p, fieldDef->def);
         } else if (TYPE_ARRAY == type) {
-            ListNode<void> **nodePtr = (ListNode<void>**)(data + fieldDef->offset);
-            ListNode<void> *node = *nodePtr;
-            ListNode<void> *next;
-            while (node) {
-                next = node->next;
-                FreeStruct((uint8_t*)node->val, fieldDef->def);
-                free(node);
-                node = next;
+            Vec<uint8_t*> **vecPtr = (Vec<uint8_t*> **)data;
+            Vec<uint8_t*> *vec = *vecPtr;
+            for (size_t i = 0; i < vec->Count(); i++) {
+                FreeStruct(vec->At(i), fieldDef->def);
             }
+            delete vec;
         } else if ((TYPE_STR == type) || (TYPE_WSTR == type)) {
             char **sp = (char**)(data);
             char *s = *sp;
@@ -329,9 +326,9 @@ static bool DecodeStructHeader(DecodeState *ds)
     return true;
 }
 
-static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def);
+static uint8_t* DeserializeRec(DecodeState *ds, const StructMetadata *def);
 
-static bool DecodeField(DecodeState *ds, FieldMetadata *fieldDef, uint8_t *structDataStart)
+static bool DecodeField(DecodeState *ds, const FieldMetadata *fieldDef, uint8_t *structDataStart)
 {
     bool ok;
     Type type = fieldDef->type;
@@ -358,9 +355,10 @@ static bool DecodeField(DecodeState *ds, FieldMetadata *fieldDef, uint8_t *struc
         if (!ok)
             goto Error;
         size_t nElems = (size_t)ds->u;
-        ListNode<void> *last = NULL;
+        Vec<uint8_t*> *vec = new Vec<uint8_t*>(nElems);
+        // we remember it right away, so that it gets freed in case of error
+        WriteStructPtrVal(structDataPtr, (void*)vec);
         for (size_t i = 0; i < nElems; i++) {
-            // TODO: factor out, same as TYPE_STRUCT_PTR code
             ok = DecodeOffset(ds);
             if (!ok)
                 goto Error;
@@ -368,19 +366,7 @@ static bool DecodeField(DecodeState *ds, FieldMetadata *fieldDef, uint8_t *struc
             uint8_t *d = DeserializeRec(&ds2, fieldDef->def);
             if (!d)
                 goto Error;
-            if (!d)
-                goto Error;
-            ListNode<void> *tmp = AllocArray<ListNode<void>>(1);
-            tmp->val = (void*)d;
-            if (!last) {
-                // this is root
-                last = tmp;
-                // we remember it so that it gets freed in case of error
-                WriteStructPtrVal(structDataPtr, (void*)last);
-            } else {
-                last->next = tmp;
-                last = tmp;
-            }
+            vec->Append(d);
         }
     } else if (TYPE_STRUCT_PTR == type) {
         ok = DecodeOffset(ds);
@@ -416,7 +402,7 @@ Error:
 // if no data from client - return the result from default data
 // if data from client doesn't have enough fields, use fields from default data
 // if data from client is corrupted, decode default data
-static uint8_t* DeserializeRec(DecodeState *ds, StructMetadata *def)
+static uint8_t* DeserializeRec(DecodeState *ds, const StructMetadata *def)
 {
     uint8_t *res = AllocArray<uint8_t>(def->size);
     bool ok = DecodeStructHeader(ds);
@@ -441,7 +427,7 @@ Error:
 // replaced with offsets from the beginning of the memory (base)
 // to deserialize, we malloc() each struct and replace offsets
 // with pointers to those newly allocated structs
-uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, StructMetadata *def)
+uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, const StructMetadata *def)
 {
     if (!data)
         return NULL;
@@ -456,7 +442,7 @@ uint8_t* Deserialize(const uint8_t *data, int dataSize, const char *version, Str
 }
 
 // TODO: write me
-uint8_t *Serialize(const uint8_t *data, const char *version, StructMetadata *def, int *sizeOut)
+uint8_t *Serialize(const uint8_t *data, const char *version, const StructMetadata *def, int *sizeOut)
 {
     *sizeOut = 0;
     return NULL;

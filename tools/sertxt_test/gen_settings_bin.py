@@ -314,13 +314,13 @@ def gen_struct_defs(structs):
     return "\n".join([gen_struct_def(stru) for stru in structs])
 
 """
-FieldMetadata g${name}FieldMetadata[] = {
+const FieldMetadata g${name}FieldMetadata[] = {
     { $offset, $type, &g${name}StructMetadata },
 };
 """
 def gen_struct_fields_bin(stru_cls):
     struct_name = stru_cls.__name__
-    lines = ["FieldMetadata g%sFieldMetadata[] = {" % struct_name]
+    lines = ["const FieldMetadata g%sFieldMetadata[] = {" % struct_name]
     rows = []
     for field in stru_cls.fields:
         assert isinstance(field, Field)
@@ -337,7 +337,7 @@ def gen_struct_fields_bin(stru_cls):
     return lines
 
 """
-StructMetadata g${name}StructMetadata = { $size, $nFields, $fields };
+const StructMetadata g${name}StructMetadata = { $size, $nFields, $fields };
 """
 def gen_structs_metadata_bin(structs):
     lines = []
@@ -346,7 +346,7 @@ def gen_structs_metadata_bin(structs):
         nFields = len(stru_cls.fields)
         fields = "&g%sFieldMetadata[0]" % struct_name
         lines += gen_struct_fields_bin(stru_cls)
-        lines += ["StructMetadata g%(struct_name)sMetadata = { sizeof(%(struct_name)s), %(nFields)d, %(fields)s };\n" % locals()]
+        lines += ["const StructMetadata g%(struct_name)sMetadata = { sizeof(%(struct_name)s), %(nFields)d, %(fields)s };\n" % locals()]
     return "\n".join(lines)
 
 prototypes_tmpl = """#define %(name)sVersion "%(version_str)s"

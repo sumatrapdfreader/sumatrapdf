@@ -26,15 +26,12 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
             uint8_t **p = (uint8_t**)data;
             FreeStruct(*p, fieldDef->def);
         } else if (TYPE_ARRAY == type) {
-            ListNode<void> **nodePtr = (ListNode<void>**)data;
-            ListNode<void> *node = *nodePtr;
-            ListNode<void> *next;
-            while (node) {
-                next = node->next;
-                FreeStruct((uint8_t*)node->val, fieldDef->def);
-                free(node);
-                node = next;
+            Vec<uint8_t*> **vecPtr = (Vec<uint8_t*> **)data;
+            Vec<uint8_t*> *vec = *vecPtr;
+            for (size_t i = 0; i < vec->Count(); i++) {
+                FreeStruct(vec->At(i), fieldDef->def);
             }
+            delete vec;
         } else if ((TYPE_STR == type) || (TYPE_WSTR == type)) {
             char **sp = (char**)data;
             char *s = *sp;
@@ -449,7 +446,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
             d = DeserializeRec(ds, node, defaultNode, fieldDef->def);
         }
         if (!d)
-            goto Error;
+            return false;
         WriteStructPtrVal(structDataPtr, d);
     } else if (TYPE_STR == type) {
         char *s = node->valStart;
@@ -476,34 +473,25 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
         CrashIf(!fieldDef->def); // array elements must be a struct
         if (StructNode != node->type)
             return false;
+        Vec<uint8_t*> *vec = new Vec<uint8_t*>();
+        // we remember it right away, so that it gets freed in case of error
+        WriteStructPtrVal(structDataPtr, (void*)vec);
         TxtNode *child;
-        ListNode<void> *last = NULL;
         for (size_t i = 0; i < node->children->Count(); i++) {
             child = node->children->At(i);
+            // TODO: could be more permissive and ignore the error?
             if (ArrayNode != child->type)
                 return false;
             uint8_t *d = DeserializeRec(ds, child, NULL, fieldDef->def);
             if (!d)
-                goto Error; // TODO: free root
-            ListNode<void> *tmp = AllocArray<ListNode<void>>(1);
-            tmp->val = (void*)d;
-            if (!last) {
-                // this is root
-                last = tmp;
-                // we remember it so that it gets freed in case of error
-                WriteStructPtrVal(structDataPtr, (void*)last);
-            } else {
-                last->next = tmp;
-                last = tmp;
-            }
+                return false;
+            vec->Append(d);
         }
     } else {
         CrashIf(true);
         return false;
     }
     return true;
-Error:
-    return false;
 }
 
 static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFirstNode, const StructMetadata *def)
@@ -707,18 +695,17 @@ static void SerializeField(EncodeState& es, const char *fieldNames, const FieldM
         AppendNest(res, es.nest);
         res.Append(fieldName);
         res.Append(" [" NL);
-        ListNode<void> *el = (ListNode<void>*)ReadStructPtr(data);
+        Vec<const uint8_t*> *vec = (Vec<const uint8_t*> *)ReadStructPtr(data);
         ++es.nest;
-        while (el) {
+        for (size_t i = 0; vec && (i < vec->Count()); i++) {
             AppendNest(res, es.nest);
             res.Append("[" NL);
-            const uint8_t *elData = (const uint8_t*)el->val;
+            const uint8_t *elData = vec->At(i);
             ++es.nest;
             SerializeRec(es, elData, fieldDef->def);
             --es.nest;
             AppendNest(res, es.nest);
             res.Append("]" NL);
-            el = el->next;
         }
         --es.nest;
         AppendNest(res, es.nest);

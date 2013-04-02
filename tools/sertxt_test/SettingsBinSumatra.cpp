@@ -8,16 +8,16 @@
 namespace serbin {
 
 #define of offsetof
-FieldMetadata gRectIntFieldMetadata[] = {
+const FieldMetadata gRectIntFieldMetadata[] = {
     { of(RectInt, x),  TYPE_I32, NULL },
     { of(RectInt, y),  TYPE_I32, NULL },
     { of(RectInt, dx), TYPE_I32, NULL },
     { of(RectInt, dy), TYPE_I32, NULL },
 };
 
-StructMetadata gRectIntMetadata = { sizeof(RectInt), 4, &gRectIntFieldMetadata[0] };
+const StructMetadata gRectIntMetadata = { sizeof(RectInt), 4, &gRectIntFieldMetadata[0] };
 
-FieldMetadata gBasicSettingsFieldMetadata[] = {
+const FieldMetadata gBasicSettingsFieldMetadata[] = {
     { of(BasicSettings, globalPrefsOnly),      TYPE_BOOL,       NULL              },
     { of(BasicSettings, currLanguage),         TYPE_STR,        NULL              },
     { of(BasicSettings, toolbarVisible),       TYPE_BOOL,       NULL              },
@@ -42,9 +42,9 @@ FieldMetadata gBasicSettingsFieldMetadata[] = {
     { of(BasicSettings, lastPrefUpdate),       TYPE_U64,        NULL              },
 };
 
-StructMetadata gBasicSettingsMetadata = { sizeof(BasicSettings), 22, &gBasicSettingsFieldMetadata[0] };
+const StructMetadata gBasicSettingsMetadata = { sizeof(BasicSettings), 22, &gBasicSettingsFieldMetadata[0] };
 
-FieldMetadata gPaddingSettingsFieldMetadata[] = {
+const FieldMetadata gPaddingSettingsFieldMetadata[] = {
     { of(PaddingSettings, top),    TYPE_U16, NULL },
     { of(PaddingSettings, bottom), TYPE_U16, NULL },
     { of(PaddingSettings, left),   TYPE_U16, NULL },
@@ -53,9 +53,9 @@ FieldMetadata gPaddingSettingsFieldMetadata[] = {
     { of(PaddingSettings, spaceY), TYPE_U16, NULL },
 };
 
-StructMetadata gPaddingSettingsMetadata = { sizeof(PaddingSettings), 6, &gPaddingSettingsFieldMetadata[0] };
+const StructMetadata gPaddingSettingsMetadata = { sizeof(PaddingSettings), 6, &gPaddingSettingsFieldMetadata[0] };
 
-FieldMetadata gForwardSearchFieldMetadata[] = {
+const FieldMetadata gForwardSearchFieldMetadata[] = {
     { of(ForwardSearch, highlightOffset),       TYPE_I32,   NULL },
     { of(ForwardSearch, highlightWidth),        TYPE_I32,   NULL },
     { of(ForwardSearch, highlightPermanent),    TYPE_I32,   NULL },
@@ -63,9 +63,9 @@ FieldMetadata gForwardSearchFieldMetadata[] = {
     { of(ForwardSearch, enableTexEnhancements), TYPE_BOOL,  NULL },
 };
 
-StructMetadata gForwardSearchMetadata = { sizeof(ForwardSearch), 5, &gForwardSearchFieldMetadata[0] };
+const StructMetadata gForwardSearchMetadata = { sizeof(ForwardSearch), 5, &gForwardSearchFieldMetadata[0] };
 
-FieldMetadata gAdvancedSettingsFieldMetadata[] = {
+const FieldMetadata gAdvancedSettingsFieldMetadata[] = {
     { of(AdvancedSettings, traditionalEbookUI),   TYPE_BOOL,       NULL                      },
     { of(AdvancedSettings, escToExit),            TYPE_BOOL,       NULL                      },
     { of(AdvancedSettings, textColor),            TYPE_COLOR,      NULL                      },
@@ -75,24 +75,24 @@ FieldMetadata gAdvancedSettingsFieldMetadata[] = {
     { of(AdvancedSettings, forwardSearch),        TYPE_STRUCT_PTR, &gForwardSearchMetadata   },
 };
 
-StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 7, &gAdvancedSettingsFieldMetadata[0] };
+const StructMetadata gAdvancedSettingsMetadata = { sizeof(AdvancedSettings), 7, &gAdvancedSettingsFieldMetadata[0] };
 
-FieldMetadata gFavFieldMetadata[] = {
+const FieldMetadata gFavFieldMetadata[] = {
     { of(Fav, name),      TYPE_STR,                              NULL },
     { of(Fav, pageNo),    TYPE_I32,                              NULL },
     { of(Fav, pageLabel), TYPE_STR,                              NULL },
     { of(Fav, menuId),    (Type)(TYPE_I32 | TYPE_NO_STORE_MASK), NULL },
 };
 
-StructMetadata gFavMetadata = { sizeof(Fav), 4, &gFavFieldMetadata[0] };
+const StructMetadata gFavMetadata = { sizeof(Fav), 4, &gFavFieldMetadata[0] };
 
-FieldMetadata gAppStateFieldMetadata[] = {
+const FieldMetadata gAppStateFieldMetadata[] = {
     { of(AppState, favorites), TYPE_ARRAY, &gFavMetadata },
 };
 
-StructMetadata gAppStateMetadata = { sizeof(AppState), 1, &gAppStateFieldMetadata[0] };
+const StructMetadata gAppStateMetadata = { sizeof(AppState), 1, &gAppStateFieldMetadata[0] };
 
-FieldMetadata gSettingsFieldMetadata[] = {
+const FieldMetadata gSettingsFieldMetadata[] = {
     { of(Settings, basic),           TYPE_STRUCT_PTR, &gBasicSettingsMetadata    },
     { of(Settings, advanced),        TYPE_STRUCT_PTR, &gAdvancedSettingsMetadata },
     { of(Settings, appState),        TYPE_STRUCT_PTR, &gAppStateMetadata         },
@@ -100,7 +100,7 @@ FieldMetadata gSettingsFieldMetadata[] = {
     { of(Settings, wstr_1),          TYPE_WSTR,       NULL                       },
 };
 
-StructMetadata gSettingsMetadata = { sizeof(Settings), 5, &gSettingsFieldMetadata[0] };
+const StructMetadata gSettingsMetadata = { sizeof(Settings), 5, &gSettingsFieldMetadata[0] };
 
 #undef of
 
@@ -153,7 +153,7 @@ static const uint8_t gSettingsDefault[278] = {
     // offset: 0x87 AppState_5
     0x54, 0x74, 0x65, 0x53, // magic id 'SetT'
     0x01, // 1 fields
-    0x02, 0x3a, 0x0c, // ListNode<Fav> * favorites = Array_6
+    0x02, 0x3a, 0x0c, // Vec<Fav*> * favorites = Array_6
 
     // offset: 0x8f AdvancedSettings_7
     0x54, 0x74, 0x65, 0x53, // magic id 'SetT'

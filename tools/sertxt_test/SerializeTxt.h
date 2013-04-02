@@ -8,29 +8,6 @@ namespace sertxt {
 
 struct FieldMetadata;
 
-// Note: to make the operations on elements easier, ListNode could be nt kernel
-// style list i.e. double-linked, with root that points to start and end
-#if 0
-template <typename T>
-struct ListNode {
-    ListNode<T> *   next;
-    ListNode<T> *   prev;
-    void *          val;
-}
-
-template <typename T>
-struct ListRoot {
-    ListNode<T> *   first;
-    ListNode<T> *   last;
-};
-#endif
-
-template <typename T>
-struct ListNode {
-    ListNode<T> *   next;
-    T *             val;
-};
-
 typedef struct {
     uint16_t                size;
     uint16_t                nFields;

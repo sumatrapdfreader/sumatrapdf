@@ -8,7 +8,7 @@
 namespace serbin {
 
 #define of offsetof
-FieldMetadata gSimpleFieldMetadata[] = {
+const FieldMetadata gSimpleFieldMetadata[] = {
     { of(Simple, bTrue),      TYPE_BOOL,  NULL },
     { of(Simple, bFalse),     TYPE_BOOL,  NULL },
     { of(Simple, u16_1),      TYPE_U16,   NULL },
@@ -22,7 +22,7 @@ FieldMetadata gSimpleFieldMetadata[] = {
     { of(Simple, wstr_1),     TYPE_WSTR,  NULL },
 };
 
-StructMetadata gSimpleMetadata = { sizeof(Simple), 11, &gSimpleFieldMetadata[0] };
+const StructMetadata gSimpleMetadata = { sizeof(Simple), 11, &gSimpleFieldMetadata[0] };
 
 #undef of
 

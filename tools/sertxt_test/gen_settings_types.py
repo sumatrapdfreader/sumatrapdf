@@ -161,7 +161,7 @@ class Array(Type):
         self.values = values
         for v in values:
             assert self.is_valid_val(v)
-        self.c_type_override = "ListNode<%s> *" % typ.__name__
+        self.c_type_override = "Vec<%s*> *" % typ.__name__
         self.offset = None
 
     def is_valid_val(self, val):
