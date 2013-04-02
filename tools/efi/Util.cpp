@@ -19,9 +19,12 @@ static const struct DLLDesc
 } msdiaDlls[] = {
     "msdia1110.dll", __uuidof(DiaSource110),
     "msdia100.dll", __uuidof(DiaSource100),
+#if 0
+    // these use a different vtable layout for IDiaSymbol
     "msdia90.dll", __uuidof(DiaSource90),
     "msdia80.dll", __uuidof(DiaSource80),
     "msdia71.dll", __uuidof(DiaSource71),
+#endif
     // add more here as new versions appear (as long as they're backwards-compatible)
     0
 };
