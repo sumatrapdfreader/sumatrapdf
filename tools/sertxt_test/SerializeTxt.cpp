@@ -21,7 +21,7 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
     for (int i = 0; i < def->nFields; i++) {
         fieldDef = def->fields + i;
         uint8_t *data = structStart + fieldDef->offset;
-        type = (Type)(fieldDef->type & TYPE_NO_FLAGS_MASK);
+        type = (Type)(fieldDef->type & TYPE_MASK);
         if (TYPE_STRUCT_PTR ==  type) {
             uint8_t **p = (uint8_t**)data;
             FreeStruct(*p, fieldDef->def);
@@ -401,7 +401,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, TxtNode *defaultFir
     }
 
     bool isCompact = ((type & TYPE_STORE_COMPACT_MASK) != 0);
-    type = (Type)(type & TYPE_NO_FLAGS_MASK);
+    type = (Type)(type & TYPE_MASK);
 
     size_t fieldNameLen = str::Len(fieldName);
     TxtNode *dataNode = FindNode(firstNode, fieldName, fieldNameLen);
@@ -628,7 +628,7 @@ static void SerializeField(EncodeState& es, const char *fieldName, const FieldMe
         return;
 
     bool isCompact = ((type & TYPE_STORE_COMPACT_MASK) != 0);
-    type = (Type)(type & TYPE_NO_FLAGS_MASK);
+    type = (Type)(type & TYPE_MASK);
 
     const uint8_t *data = structStart + fieldDef->offset;
     if (TYPE_BOOL == type) {

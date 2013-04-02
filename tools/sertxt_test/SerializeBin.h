@@ -27,7 +27,8 @@ typedef enum {
     TYPE_WSTR,
     TYPE_STRUCT_PTR,
     TYPE_ARRAY,
-    TYPE_NO_FLAGS_MASK = 0xFF,
+    // do && with TYPE_MASK to get just the type, no flags
+    TYPE_MASK = 0xFF,
     // a flag, if set the value is not to be serialized
     TYPE_NO_STORE_MASK = 0x4000,
 } Type;

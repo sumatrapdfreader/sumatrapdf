@@ -69,7 +69,7 @@ void FreeStruct(uint8_t *structDataStart, const StructMetadata *def)
     uint8_t *data;
     for (int i = 0; i < def->nFields; i++) {
         fieldDef = def->fields + i;
-        type = (Type)(fieldDef->type & TYPE_NO_FLAGS_MASK);
+        type = (Type)(fieldDef->type & TYPE_MASK);
         data = structDataStart + fieldDef->offset;
         if (TYPE_STRUCT_PTR ==  type) {
             uint8_t **p = (uint8_t**)(data);
@@ -334,7 +334,7 @@ static bool DecodeField(DecodeState *ds, const FieldMetadata *fieldDef, uint8_t 
     Type type = fieldDef->type;
     if ((type & TYPE_NO_STORE_MASK) != 0)
         return true;
-    type = (Type)(type & TYPE_NO_FLAGS_MASK);
+    type = (Type)(type & TYPE_MASK);
 
     uint8_t *structDataPtr = structDataStart + fieldDef->offset;
     if (TYPE_STR == type) {
