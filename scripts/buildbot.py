@@ -282,6 +282,7 @@ def efi_diff_as_txt(diff, max=-1):
 		for sym in changed:
 			size = sym.size_diff
 			lines.append("%4d : %s" % (size, sym.full_name()))
+	return "\n".join(lines)
 
 # builds efi diff between this version and previous succesful version
 # and uploads as efi_diff.txt
