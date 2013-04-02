@@ -7,6 +7,8 @@ from gen_settings_types import Field
 
 """
 TODO:
+  - test perf on a large document i.e. ~ 1 MB. Randomly generate a big
+    file and see how fast is SerializeTxtParser.cpp on that file
   - add a way to pass Allocator to Serialize/Deserialize
 
 Todo maybe: arrays of basic types
