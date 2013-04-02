@@ -47,14 +47,14 @@ public:
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName);
-    virtual WCHAR * ExtractPageText(int, WCHAR *, RectI **coords_out=NULL,
-                                    RenderTarget target=Target_View) { (void)target; (void)coords_out; return NULL; }
-    virtual bool HasClipOptimizations(int) { return false; }
+    virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
+                                    RenderTarget target=Target_View) { return NULL; }
+    virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
     virtual bool IsImageCollection() const { return true; }
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const { (void)forSaving; return false; }
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *) { }
+    virtual bool SupportsAnnotation(bool forSaving=false) const { return false; }
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
 
     virtual const WCHAR *GetDefaultFileExt() const { return fileExt; }
 
@@ -101,7 +101,7 @@ RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     return new RenderedBitmap(hbmp, screen.Size());
 }
 
-bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget, AbortCookie **)
+bool ImagesEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     Bitmap *bmp = LoadImage(pageNo);
     if (!bmp)
@@ -425,10 +425,10 @@ public:
     }
     virtual RectD PageMediabox(int pageNo);
 
-    virtual unsigned char *GetFileData(size_t *) { return NULL; }
+    virtual unsigned char *GetFileData(size_t *cbCount) { return NULL; }
     virtual bool SaveFileAs(const WCHAR *copyFileName);
 
-    virtual WCHAR *GetProperty(DocumentProperty) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
     // TODO: is there a better place to expose pageFileNames than through page labels?
     virtual bool HasPageLabels() const { return true; }
@@ -563,7 +563,6 @@ bool ImageDirEngineImpl::SaveFileAs(const WCHAR *copyFileName)
 
 bool ImageDirEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    UNREFERENCED_PARAMETER(sniff); // no point in sniffing beyond dir::Exists
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);
 }

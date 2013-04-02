@@ -167,7 +167,7 @@ public:
     virtual void Paint(Graphics *gfx, int offX, int offY);
 };
 
-Size SumatraLogo::Measure(const Size)
+Size SumatraLogo::Measure(const Size availableSize)
 {
     Graphics *gfx = AllocGraphicsForMeasureText();
     CachedStyle *s = cachedStyle;
@@ -216,7 +216,7 @@ public:
     void Clicked(Control *c, int x, int y);
 };
 
-void ButtonUrlHandler::Clicked(Control *c, int, int)
+void ButtonUrlHandler::Clicked(Control *c, int x, int y)
 {
     WCHAR *url = c->toolTip;
     LaunchBrowser(url);

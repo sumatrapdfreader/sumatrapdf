@@ -156,9 +156,9 @@ protected:
     virtual void HandleHtmlTag(HtmlToken *t);
     void HandleText(HtmlToken *t);
     // blank convenience methods to override
-    virtual void HandleTagImg(HtmlToken *) { }
-    virtual void HandleTagPagebreak(HtmlToken *) { }
-    virtual void HandleTagLink(HtmlToken *) { }
+    virtual void HandleTagImg(HtmlToken *t) { }
+    virtual void HandleTagPagebreak(HtmlToken *t) { }
+    virtual void HandleTagLink(HtmlToken *t) { }
 
     float CurrLineDx();
     float CurrLineDy();

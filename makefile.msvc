@@ -78,7 +78,9 @@ CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 # bump warnings level to max
 # WARNING_CFLAGS = $(WARNING_CFLAGS) /W4
 
-# warnings unlikely to be turned on due to false positives from using CrashIf():
+# warnings unlikely to be turned on due to false positives from using CrashIf()
+# and various logging functions:
+# 4100 : unreferenced param
 # 4189 : variable initialized but not referenced
 # 4127 : conditional expression is constant
 
@@ -90,8 +92,7 @@ CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 # 4131 : uses old-style declarator
 # 4701 : potentially uninitialized local variable 'x' used
 # 4706 : assignement in conditional
-# 4100 : unreferenced param
-WARNING_CFLAGS = $(WARNING_CFLAGS) /w34701 /w34706 /w34131 /w34244 /w34100
+WARNING_CFLAGS = $(WARNING_CFLAGS) /w34701 /w34706 /w34131 /w34244
 # 4480 : non-standard extension: specify underlying type for enum
 # 4505 : unreferenced local function
 # 4213 : non-standard extension: cast on l-value

@@ -651,7 +651,6 @@ void StressTest::TickTimer()
 
 void StressTest::OnTimer(int timerIdGot)
 {
-    (void)timerIdGot;
     CrashIf(timerId != timerIdGot);
     KillTimer(win->hwndFrame, timerId);
     if (!win->dm || !win->dm->engine) {

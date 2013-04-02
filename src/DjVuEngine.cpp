@@ -182,8 +182,6 @@ public:
 #if THREADMODEL!=NOTHREADS
         if (wait)
             ddjvu_message_wait(ctx);
-#else
-        (void)wait;
 #endif
         while (ddjvu_message_peek(ctx))
             ddjvu_message_pop(ctx);
@@ -232,10 +230,10 @@ public:
     virtual bool SaveFileAs(const WCHAR *copyFileName);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
-    virtual bool HasClipOptimizations(int) { return false; }
+    virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
-    virtual WCHAR *GetProperty(DocumentProperty) { return NULL; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { return NULL; }
 
     virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
@@ -245,7 +243,7 @@ public:
     virtual const WCHAR *GetDefaultFileExt() const { return L".djvu"; }
 
     // we currently don't load pages lazily, so there's nothing to do here
-    virtual bool BenchLoadPage(int) { return true; }
+    virtual bool BenchLoadPage(int pageNo) { return true; }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
@@ -510,7 +508,7 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
     DeleteDC(hdc);
 }
 
-RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget, AbortCookie **)
+RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -598,7 +596,7 @@ bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
     return success;
 }
 
-RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget)
+RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -763,7 +761,7 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR *lineSep, str::
     return !item;
 }
 
-WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget)
+WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
 

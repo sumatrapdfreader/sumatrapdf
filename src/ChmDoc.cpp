@@ -268,7 +268,7 @@ const char *ChmDoc::GetHomePath()
     return homePath;
 }
 
-static int ChmEnumerateEntry(struct chmFile *, struct chmUnitInfo *info, void *data)
+static int ChmEnumerateEntry(struct chmFile *chmHandle, struct chmUnitInfo *info, void *data)
 {
     if (info->path) {
         Vec<char *> *paths = (Vec<char *> *)data;

@@ -749,7 +749,7 @@ bool Fb2Doc::IsZipped() const
 
 bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    UNREFERENCED_PARAMETER(sniff); // TODO: implement sniffing
+    // TODO: implement sniffing
     return str::EndsWithI(fileName, L".fb2")  ||
            str::EndsWithI(fileName, L".fb2z") ||
            str::EndsWithI(fileName, L".zfb2") ||
@@ -791,7 +791,7 @@ PalmDoc::~PalmDoc()
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // cf. http://wiki.mobileread.com/wiki/TealDoc
-static const char *HandleTealDocTag(str::Str<char>& builder, WStrVec& tocEntries, const char *text, size_t len, UINT)
+static const char *HandleTealDocTag(str::Str<char>& builder, WStrVec& tocEntries, const char *text, size_t len, UINT codePage)
 {
     if (len < 9) {
 Fallback:
@@ -911,7 +911,7 @@ const char *PalmDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-WCHAR *PalmDoc::GetProperty(DocumentProperty) const
+WCHAR *PalmDoc::GetProperty(DocumentProperty prop) const
 {
     return NULL;
 }
@@ -1009,7 +1009,7 @@ const char *TcrDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-WCHAR *TcrDoc::GetProperty(DocumentProperty) const
+WCHAR *TcrDoc::GetProperty(DocumentProperty prop) const
 {
     return NULL;
 }
@@ -1151,7 +1151,6 @@ const WCHAR *HtmlDoc::GetFileName() const
 
 bool HtmlDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    UNREFERENCED_PARAMETER(sniff); // intentionally not implemented
     return str::EndsWithI(fileName, L".html") ||
            str::EndsWithI(fileName, L".htm") ||
            str::EndsWithI(fileName, L".xhtml");
@@ -1345,7 +1344,7 @@ const char *TxtDoc::GetTextData(size_t *lenOut)
     return htmlData.Get();
 }
 
-WCHAR *TxtDoc::GetProperty(DocumentProperty) const
+WCHAR *TxtDoc::GetProperty(DocumentProperty prop) const
 {
     return NULL;
 }
@@ -1391,7 +1390,6 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
 
 bool TxtDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    UNREFERENCED_PARAMETER(sniff); // intentionally not implemented
     return str::EndsWithI(fileName, L".txt") ||
            str::EndsWithI(fileName, L".log") ||
            // http://en.wikipedia.org/wiki/.nfo

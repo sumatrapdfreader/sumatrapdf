@@ -24,14 +24,14 @@ public:
         s0c = s1c = s2c = s3c = s4c = s5c = s6c = s7c = s8c = 0;
     }
     void Slot0() { s0c++; }
-    void Slot1(int) { s1c++; }
-    void Slot2(int, void *) { s2c++; }
-    void Slot3(char, int, bool) { s3c++; }
-    void Slot4(int *, int, char, char *) { s4c++; }
-    void Slot5(size_t, int*, void*, unsigned, long long) { s5c++; }
-    void Slot6(int, int, int, int, int, int) { s6c++; }
-    void Slot7(int, int, int, int, int, int, int) { s7c++; }
-    void Slot8(int, int, int, int, int, int, int, int) { s8c++; }
+    void Slot1(int a1) { s1c++; }
+    void Slot2(int a1, void *a2) { s2c++; }
+    void Slot3(char a1, int a2, bool a3) { s3c++; }
+    void Slot4(int *a1, int a2, char a3, char *a4) { s4c++; }
+    void Slot5(size_t a1, int* a2, void* a3, unsigned a4, long long a5) { s5c++; }
+    void Slot6(int a1, int a2, int a3, int a4, int a5, int a6) { s6c++; }
+    void Slot7(int a1, int a2, int a3, int a4, int a5, int a6,  int a7) { s7c++; }
+    void Slot8(int a1, int a2, int a3, int a4, int a5, int a6,  int a7, int a8) { s8c++; }
 };
 
 static void SigSlotTestEmit(SigSlotSender& s)

@@ -445,7 +445,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
 }
 
 // Show the result of a PDF forward-search synchronization (initiated by a DDE command)
-void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, UINT, UINT ret, UINT page, Vec<RectI> &rects)
+void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, UINT col, UINT ret, UINT page, Vec<RectI> &rects)
 {
     win->fwdSearchMark.rects.Reset();
     const PageInfo *pi = win->dm->GetPageInfo(page);
@@ -748,7 +748,7 @@ Exit:
     return 0;
 }
 
-LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM)
+LRESULT OnDDETerminate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     // Respond with another WM_DDE_TERMINATE message
     PostMessage((HWND)wparam, WM_DDE_TERMINATE, (WPARAM)hwnd, 0L);

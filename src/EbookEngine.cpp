@@ -66,9 +66,8 @@ public:
     virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return pages ? pages->Count() : 0; }
 
-    virtual RectD PageMediabox(int) { return pageRect; }
+    virtual RectD PageMediabox(int pageNo) { return pageRect; }
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
-        (void)target;
         RectD mbox = PageMediabox(pageNo);
         mbox.Inflate(-pageBorder, -pageBorder);
         return mbox;
@@ -92,7 +91,7 @@ public:
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View);
     // make RenderCache request larger tiles than per default
-    virtual bool HasClipOptimizations(int) { return false; }
+    virtual bool HasClipOptimizations(int pageNo) { return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Book; }
 
     virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
@@ -103,7 +102,7 @@ public:
 
     virtual PageDestination *GetNamedDest(const WCHAR *name);
 
-    virtual bool BenchLoadPage(int) { return true; }
+    virtual bool BenchLoadPage(int pageNo) { return true; }
 
 protected:
     WCHAR *fileName;
@@ -275,7 +274,7 @@ PointD EbookEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, b
     return PointD(rect.x, rect.y);
 }
 
-RectD EbookEngine::Transform(RectD rect, int, float zoom, int rotation, bool inverse)
+RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
 {
     geomutil::RectT<REAL> rcF = rect.Convert<REAL>();
     PointF pts[2] = { PointF(rcF.x, rcF.y), PointF(rcF.x + rcF.dx, rcF.y + rcF.dy) };
@@ -401,7 +400,7 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
     }
 }
 
-bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget, AbortCookie **cookie_out)
+bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -444,7 +443,7 @@ static RectI GetInstrBbox(DrawInstr *instr, float pageBorder)
     return bbox.Round();
 }
 
-WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget)
+WCHAR *EbookEngine::ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out, RenderTarget target)
 {
     ScopedCritSec scope(&pagesAccess);
 
@@ -1459,7 +1458,7 @@ public:
         return html.StealData();
     }
 
-    virtual void Visit(const WCHAR *, const WCHAR *url, int) {
+    virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
         if (!url || IsExternalUrl(url))
             return;
         ScopedMem<WCHAR> plainUrl(str::ToPlainUrl(url));

@@ -43,7 +43,7 @@ public:
 
     virtual ~WndFilter() {}
 
-    virtual bool Matches(Control *, int, int) {
+    virtual bool Matches(Control *w, int offX, int offY) {
         return true;
     }
 };

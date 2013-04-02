@@ -305,7 +305,7 @@ void SubmitCrashInfo()
     gCrashHandlerAllocator->Free(s);
 }
 
-static DWORD WINAPI CrashDumpThread(LPVOID)
+static DWORD WINAPI CrashDumpThread(LPVOID data)
 {
     WaitForSingleObject(gDumpEvent, INFINITE);
     if (!gCrashed)
@@ -592,7 +592,7 @@ static ExeType DetectExeType()
     return exeType;
 }
 
-void __cdecl onSignalAbort(int) {
+void __cdecl onSignalAbort(int code) {
     // put the signal back because can be called many times
     // (from multiple threads) and raise() resets the handler
     signal(SIGABRT, onSignalAbort);

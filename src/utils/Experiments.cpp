@@ -102,7 +102,7 @@ bool ZipExtractor::ExtractTo(size_t fileInfoIdx, const WCHAR *dir, const WCHAR *
     return ok;
 }
 
-void *ZipExtractor::GetFileData(size_t, size_t *)
+void *ZipExtractor::GetFileData(size_t fileInfoIdx, size_t *lenOut)
 {
     return NULL;
 }

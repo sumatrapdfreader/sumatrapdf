@@ -822,7 +822,7 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
     return atom != NULL;
 }
 
-static BOOL InstanceInit(HINSTANCE hInstance, int /* nCmdShow */)
+static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
     gFontDefault = CreateDefaultGuiFont();
@@ -936,7 +936,7 @@ static void ParseCommandLine(WCHAR *cmdLine)
 
 // no-op but must be defined for CrashHandler.cpp
 void CrashHandlerMessage() { }
-void GetStressTestInfo(str::Str<char>* /* s */) { }
+void GetStressTestInfo(str::Str<char>* s) { }
 
 void GetProgramInfo(str::Str<char>& s)
 {
@@ -971,7 +971,7 @@ static void InstallInstallerCrashHandler()
 }
 #endif
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, LPSTR /* lpCmdLine */, int nCmdShow)
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int ret = 1;
 

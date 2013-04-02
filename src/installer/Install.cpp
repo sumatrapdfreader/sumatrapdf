@@ -286,7 +286,7 @@ static bool CreateAppShortcut(bool allUsers)
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
-DWORD WINAPI InstallerThread(LPVOID /* data */)
+DWORD WINAPI InstallerThread(LPVOID data)
 {
     gGlobalData.success = false;
 

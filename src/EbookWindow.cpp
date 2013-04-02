@@ -70,7 +70,6 @@ void RestartLayoutTimer(EbookController *controller)
 
 static void OnTimer(EbookWindow *win, WPARAM timerId)
 {
-    (void)timerId;
     CrashIf(timerId != LAYOUT_TIMER_ID);
     KillTimer(win->hwndFrame, LAYOUT_TIMER_ID);
     win->ebookController->OnLayoutTimer();
@@ -128,7 +127,7 @@ static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
     }
 }
 
-static LRESULT OnMouseWheel(EbookWindow *win, UINT, WPARAM wParam, LPARAM)
+static LRESULT OnMouseWheel(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     short delta = GET_WHEEL_DELTA_WPARAM(wParam);
     if (delta > 0)

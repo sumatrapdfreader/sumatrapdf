@@ -487,7 +487,7 @@ static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
         ds->tocState = new Vec<int>(win->tocState);
 }
 
-static void UpdateSidebarDisplayState(EbookWindow *, DisplayState *ds)
+static void UpdateSidebarDisplayState(EbookWindow *win, DisplayState *ds)
 {
     ds->tocVisible = false;
     ds->tocState = NULL;
@@ -696,15 +696,14 @@ public:
     }
 
     virtual void PageNoChanged(int pageNo) {
-        (void)pageNo;
         CrashIf(pageNo != 1);
         RectI area(0, 0, THUMBNAIL_DX * 2, THUMBNAIL_DY * 2);
         bmp = engine->TakeScreenshot(area, SizeI(THUMBNAIL_DX, THUMBNAIL_DY));
         uitask::Post(this);
     }
 
-    virtual void LaunchBrowser(const WCHAR*) { }
-    virtual void FocusFrame(bool) { }
+    virtual void LaunchBrowser(const WCHAR *url) { }
+    virtual void FocusFrame(bool always) { }
 };
 
 // Create a thumbnail of chm document by loading it again and rendering
@@ -1977,7 +1976,7 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
 }
 #else
-static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI&, bool)
+static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
 {
     ScopedGdiObj<HPEN> pe(CreatePen(PS_NULL, 0, 0));
     ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.colorRange[1]));
@@ -2229,7 +2228,7 @@ static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
     win.MoveDocBy(drag.dx, -2 * drag.dy);
 }
 
-static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM)
+static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 {
     if (!win.IsDocLoaded())
         return;
@@ -2440,7 +2439,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
     delete pageEl;
 }
 
-static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM)
+static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
     // Handle message by recording placement then moving document as mouse moves.
 
@@ -2460,7 +2459,7 @@ static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM)
     }
 }
 
-static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM)
+static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
     //lf("Right button clicked on %d %d", x, y);
     if (!win.IsDocLoaded()) {

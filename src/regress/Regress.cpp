@@ -81,7 +81,7 @@ static bool     gCrashed = false;
 static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = NULL;
 
-static DWORD WINAPI CrashDumpThread(LPVOID)
+static DWORD WINAPI CrashDumpThread(LPVOID data)
 {
     WaitForSingleObject(gDumpEvent, INFINITE);
     if (!gCrashed)

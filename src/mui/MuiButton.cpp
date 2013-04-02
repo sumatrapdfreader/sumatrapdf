@@ -95,7 +95,7 @@ void Button::SetText(const WCHAR *s)
     RecalculateSize(true);
 }
 
-Size Button::Measure(const Size)
+Size Button::Measure(const Size availableSize)
 {
     // desiredSize is calculated when we change the
     // text, font or other attributes that influence
@@ -221,7 +221,7 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
         RequestRepaint(this);
 }
 
-Size ButtonVector::Measure(const Size)
+Size ButtonVector::Measure(const Size availableSize)
 {
     // do nothing: calculated in RecalculateSize()
     return desiredSize;

@@ -346,7 +346,7 @@ extern "C" static void seek_istream(fz_stream *stm, int offset, int whence)
     stm->rp = stm->wp = stm->bp;
 }
 
-extern "C" static void close_istream(fz_context *, void *state)
+extern "C" static void close_istream(fz_context *ctx, void *state)
 {
     ((IStream *)state)->Release();
 }
@@ -644,61 +644,61 @@ static void fz_inspection_handle_image(fz_device *dev, fz_image *image)
 }
 
 extern "C" static void
-fz_inspection_fill_path(fz_device *dev, fz_path *path, int, const fz_matrix *, fz_colorspace *, float *, float)
+fz_inspection_fill_path(fz_device *dev, fz_path *path, int even_odd, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
     fz_inspection_handle_path(dev, path);
 }
 
 extern "C" static void
-fz_inspection_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *, const fz_matrix *, fz_colorspace *, float *, float)
+fz_inspection_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
     fz_inspection_handle_path(dev, path);
 }
 
 extern "C" static void
-fz_inspection_clip_path(fz_device *dev, fz_path *path, const fz_rect *, int, const fz_matrix *)
+fz_inspection_clip_path(fz_device *dev, fz_path *path, const fz_rect *rect, int even_odd, const fz_matrix *ctm)
 {
     fz_inspection_handle_path(dev, path, true);
 }
 
 extern "C" static void
-fz_inspection_clip_stroke_path(fz_device *dev, fz_path *path, const fz_rect *, fz_stroke_state *, const fz_matrix *)
+fz_inspection_clip_stroke_path(fz_device *dev, fz_path *path, const fz_rect *rect, fz_stroke_state *stroke, const fz_matrix *ctm)
 {
     fz_inspection_handle_path(dev, path, true);
 }
 
 extern "C" static void
-fz_inspection_fill_text(fz_device *dev, fz_text *text, const fz_matrix *, fz_colorspace *, float *, float)
+fz_inspection_fill_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
     fz_inspection_handle_text(dev, text);
 }
 
 extern "C" static void
-fz_inspection_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *, const fz_matrix *, fz_colorspace *, float *, float)
+fz_inspection_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
     fz_inspection_handle_text(dev, text);
 }
 
 extern "C" static void
-fz_inspection_clip_text(fz_device *dev, fz_text *text, const fz_matrix *, int)
+fz_inspection_clip_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, int accumulate)
 {
     fz_inspection_handle_text(dev, text);
 }
 
 extern "C" static void
-fz_inspection_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *, const fz_matrix *)
+fz_inspection_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, const fz_matrix *ctm)
 {
     fz_inspection_handle_text(dev, text);
 }
 
 extern "C" static void
-fz_inspection_fill_shade(fz_device *dev, fz_shade *, const fz_matrix *, float )
+fz_inspection_fill_shade(fz_device *dev, fz_shade *shade, const fz_matrix *ctm, float alpha)
 {
     ((ListInspectionData *)dev->user)->mem_estimate += sizeof(fz_shade);
 }
 
 extern "C" static void
-fz_inspection_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float)
+fz_inspection_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float alpha)
 {
     fz_inspection_handle_image(dev, image);
     // extract rectangles for images a user might want to extract
@@ -712,19 +712,19 @@ fz_inspection_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, 
 }
 
 extern "C" static void
-fz_inspection_fill_image_mask(fz_device *dev, fz_image *image, const fz_matrix *, fz_colorspace *, float *, float)
+fz_inspection_fill_image_mask(fz_device *dev, fz_image *image, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
     fz_inspection_handle_image(dev, image);
 }
 
 extern "C" static void
-fz_inspection_clip_image_mask(fz_device *dev, fz_image *image, const fz_rect *, const fz_matrix *)
+fz_inspection_clip_image_mask(fz_device *dev, fz_image *image, const fz_rect *rect, const fz_matrix *ctm)
 {
     fz_inspection_handle_image(dev, image);
 }
 
 extern "C" static void
-fz_inspection_begin_group(fz_device *dev, const fz_rect *, int isolated, int knockout, int blendmode, float alpha)
+fz_inspection_begin_group(fz_device *dev, const fz_rect *rect, int isolated, int knockout, int blendmode, float alpha)
 {
     if (blendmode != FZ_BLEND_NORMAL || alpha != 1.0f || !isolated || knockout)
         ((ListInspectionData *)dev->user)->req_blending = true;
@@ -762,7 +762,7 @@ public:
 };
 
 extern "C" static void
-fz_lock_context_cs(void *user, int)
+fz_lock_context_cs(void *user, int lock)
 {
     // we use a single critical section for all locks,
     // since that critical section (ctxAccess) should
@@ -778,7 +778,7 @@ fz_lock_context_cs(void *user, int)
 }
 
 extern "C" static void
-fz_unlock_context_cs(void *user, int)
+fz_unlock_context_cs(void *user, int lock)
 {
     CRITICAL_SECTION *cs = (CRITICAL_SECTION *)user;
     LeaveCriticalSection(cs);
@@ -1367,7 +1367,7 @@ class PasswordCloner : public PasswordUI {
 public:
     PasswordCloner(unsigned char *cryptKey) : cryptKey(cryptKey) { }
 
-    virtual WCHAR * GetPassword(const WCHAR *, unsigned char *,
+    virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey)
     {
         memcpy(decryptionKeyOut, cryptKey, 32);
@@ -3231,7 +3231,6 @@ public:
                          RenderTarget target=Target_View, AbortCookie **cookie_out=NULL);
     virtual bool RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, int rotation,
                          RectD *pageRect=NULL, RenderTarget target=Target_View, AbortCookie **cookie_out=NULL) {
-        (void)target;
         return RenderPage(hDC, GetXpsPage(pageNo), screenRect, NULL, zoom, rotation, pageRect, cookie_out);
     }
 
@@ -3242,7 +3241,6 @@ public:
     virtual bool SaveFileAs(const WCHAR *copyFileName);
     virtual WCHAR * ExtractPageText(int pageNo, WCHAR *lineSep, RectI **coords_out=NULL,
                                     RenderTarget target=Target_View) {
-        (void)target;
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
     }
     virtual bool HasClipOptimizations(int pageNo);
@@ -3771,7 +3769,7 @@ RectD XpsEngineImpl::PageMediabox(int pageNo)
     return _mediaboxes[pageNo-1];
 }
 
-RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget)
+RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target)
 {
     assert(1 <= pageNo && pageNo <= PageCount());
     xps_page *page = GetXpsPage(pageNo);
@@ -3874,7 +3872,7 @@ bool XpsEngineImpl::RenderPage(HDC hDC, xps_page *page, RectI screenRect, const 
     return RunPage(page, dev, ctm, &cliprect, true, cookie);
 }
 
-RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget, AbortCookie **cookie_out)
+RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
     xps_page* page = GetXpsPage(pageNo);
     if (!page)
@@ -4119,7 +4117,7 @@ Vec<PageElement *> *XpsEngineImpl::GetElements(int pageNo)
     return els;
 }
 
-void XpsEngineImpl::LinkifyPageText(xps_page *page, int)
+void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
 {
     // make MuXPS extract all links and named destinations from the page
     assert(!GetPageRun(page, true));
