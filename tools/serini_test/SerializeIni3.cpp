@@ -255,7 +255,7 @@ static char *SerializeField(const uint8_t *base, const FieldInfo& field)
 static void SerializeRec(str::Str<char>& out, const void *data, const SettingInfo *meta, const char *sectionName=NULL)
 {
     if (sectionName) {
-        out.Append("[");
+        out.Append("\r\n[");
         out.Append(sectionName);
         out.Append("]\r\n");
     }
@@ -305,7 +305,7 @@ char *Serialize(const void *data, const SettingInfo *def, size_t *sizeOut, const
         out.Append("\r\n");
     }
     else {
-        out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
+        out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n\r\n");
     }
     SerializeRec(out, data, def);
     if (sizeOut)

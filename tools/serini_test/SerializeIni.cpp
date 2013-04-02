@@ -278,7 +278,7 @@ uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, 
 static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructMetadata *def, const char *sectionName=NULL)
 {
     if (sectionName) {
-        out.Append("[");
+        out.Append("\r\n[");
         out.Append(sectionName);
         out.Append("]\r\n");
     }
