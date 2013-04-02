@@ -36,6 +36,7 @@ g_index_html_css = """
 def a(url, txt): return '<a href="' + url + '">' + txt + '</a>'
 def pre(s): return '<pre style="white-space: pre-wrap;">' + s + '</pre>'
 def td(s, off=0): return " " * off + '<td>%s</td>' % s
+def th(s): return '<th style="font-size:80%">%s</th>' % s
 
 def size_diff_html(n):
 	if n > 0:   return ' (<font color=red>+' + str(n) + '</font>)'
@@ -90,12 +91,10 @@ def htmlize_error_lines(lines, ver):
 		else: assert(False)
 	return (sumatra_errors, mupdf_errors, ext_errors)
 
-# return stats for the first successful build before $ver
-def stats_for_previous_build(ver, stats_for_ver):
+def stats_for_previous_successful_build(ver, stats_for_ver):
 	ver = int(ver) - 1
 	while True:
 		stats = stats_for_ver(str(ver))
-		# we assume that we have
 		if None == stats: return None
 		if not stats.rel_failed: return stats
 		ver -= 1
@@ -111,8 +110,8 @@ def build_index_html(stats_for_ver, checkin_comment_for_ver):
 	names = [n[len(s3_dir):] for n in names if len(n.split("/")) == 4]
 	names.sort(reverse=True, key=lambda name: int(name.split("/")[0]))
 
-	html += '<table id="table-5"><tr><th>build</th><th>/analyze</th><th>release</th>'
-	html += '<th style="font-size:80%">SumatraPDF.exe size</th><th style="font-size:80%"">Installer.exe size</th><th>checkin comment</th></tr>\n'
+	html += '<table id="table-5"><tr>"' + th("build") + th("/analyze") + th("release")
+	html += th("SumatraPDF.exe") + th("Installer.exe") + th("efi") + th("checkin comment") + '</tr>\n'
 	files_by_ver = group_by_ver(names)
 	for arr in files_by_ver:
 		(ver, files) = arr
@@ -157,7 +156,7 @@ def build_index_html(stats_for_ver, checkin_comment_for_ver):
 		if stats.rel_failed:
 			html += td("", 4) + "\n" + td("", 4) + "\n"
 		else:
-			prev_stats = stats_for_previous_build(ver, stats_for_ver)
+			prev_stats = stats_for_previous_successful_build(ver, stats_for_ver)
 			if None == prev_stats:
 				num_s = formatInt(stats.rel_sumatrapdf_exe_size)
 				html += td(num_s, 4) + "\n"
@@ -172,6 +171,13 @@ def build_index_html(stats_for_ver, checkin_comment_for_ver):
 				num_s = formatInt(stats.rel_installer_exe_size)
 				s = num_s + s
 				html += td(s, 4) + "\n"
+
+		# efi diff
+		if "efi_diff.txt" in files:
+			url = s3_ver_url + "efi_diff.txt"
+			html += td(a(url, "diff"), 4)
+		else:
+			html += td("")
 
 		# checkin comment
 		(comment, trimmed) = util.trim_str(checkin_comment_for_ver(ver))

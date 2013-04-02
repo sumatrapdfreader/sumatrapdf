@@ -16,10 +16,6 @@ directory. You might occasionally delete it, if disk space is a concern.
 
 """
 TODO:
- - diff for symbols in text format
- - upload efi diff results in text format as part of buildbot
- - diff for symbols in html format
- - upload efi html diff as part of buildbot
  - summary of biggest functions
 
 Maybe:
