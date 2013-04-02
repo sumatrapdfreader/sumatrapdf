@@ -14,9 +14,9 @@ static void *DeserializeRec(BencDict *dict, const SettingInfo *meta, uint8_t *ba
     if (!base)
         base = AllocArray<uint8_t>(meta->structSize);
 
+    const char *fieldName = meta->fieldNames;
     for (size_t i = 0; i < meta->fieldCount; i++) {
         const FieldInfo& field = meta->fields[i];
-        const char *fieldName = GetFieldName(meta, i);
         uint8_t *fieldPtr = base + field.offset;
         if (Type_Struct == field.type) {
             BencDict *child = dict ? dict->GetDict(fieldName) : NULL;
@@ -106,6 +106,7 @@ static void *DeserializeRec(BencDict *dict, const SettingInfo *meta, uint8_t *ba
         else {
             CrashIf(true);
         }
+        fieldName += str::Len(fieldName) + 1;
     }
     return base;
 }

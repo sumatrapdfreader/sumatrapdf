@@ -141,9 +141,9 @@ static void *DeserializeRec(IniFile& ini, const SettingInfo *meta, uint8_t *base
         secIdx = startIdx - 1;
     }
 
+    const char *fieldName = meta->fieldNames;
     for (size_t i = 0; i < meta->fieldCount; i++) {
         const FieldInfo& field = meta->fields[i];
-        const char *fieldName = GetFieldName(meta, i);
         if (Type_Struct == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             DeserializeRec(ini, GetSubstruct(field), base + field.offset, name, secIdx + 1, endIdx);
@@ -167,6 +167,7 @@ static void *DeserializeRec(IniFile& ini, const SettingInfo *meta, uint8_t *base
             IniLine *line = section ? section->FindLine(fieldName) : NULL;
             DeserializeField(base, field, line ? line->value : NULL);
         }
+        fieldName += str::Len(fieldName) + 1;
     }
     return base;
 }
@@ -260,34 +261,38 @@ static void SerializeRec(str::Str<char>& out, const void *data, const SettingInf
     }
 
     const uint8_t *base = (const uint8_t *)data;
+    const char *fieldName = meta->fieldNames;
     for (size_t i = 0; i < meta->fieldCount; i++) {
         const FieldInfo& field = meta->fields[i];
+        CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') || NeedsEscaping(fieldName));
         // nested structs are serialized after all other values
-        if (Type_Struct == field.type || Type_Array == field.type)
-            continue;
-        CrashIf(str::FindChar(GetFieldName(meta, i), '=') || str::FindChar(GetFieldName(meta, i), ':') || NeedsEscaping(GetFieldName(meta, i)));
-        ScopedMem<char> value(SerializeField(base, field));
-        if (value) {
-            out.Append(GetFieldName(meta, i));
-            out.Append(" = ");
-            out.Append(value);
-            out.Append("\r\n");
+        if (Type_Struct != field.type && Type_Array != field.type) {
+            ScopedMem<char> value(SerializeField(base, field));
+            if (value) {
+                out.Append(fieldName);
+                out.Append(" = ");
+                out.Append(value);
+                out.Append("\r\n");
+            }
         }
+        fieldName += str::Len(fieldName) + 1;
     }
 
+    fieldName = meta->fieldNames;
     for (size_t i = 0; i < meta->fieldCount; i++) {
         const FieldInfo& field = meta->fields[i];
         if (Type_Struct == field.type) {
-            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, GetFieldName(meta, i)) : str::Dup(GetFieldName(meta, i)));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             SerializeRec(out, base + field.offset, GetSubstruct(field), name);
         }
         else if (Type_Array == field.type) {
-            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, GetFieldName(meta, i)) : str::Dup(GetFieldName(meta, i)));
+            ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             Vec<void *> *array = *(Vec<void *> **)(base + field.offset);
             for (size_t j = 0; j < array->Count(); j++) {
                 SerializeRec(out, array->At(j), GetSubstruct(field), name);
             }
         }
+        fieldName += str::Len(fieldName) + 1;
     }
 }
 

@@ -266,8 +266,7 @@ enum SettingType {
 
 struct FieldInfo {
     SettingType type;
-    uint16_t nameOffset;
-    uint16_t offset;
+    size_t offset;
     intptr_t value;
 };
 
@@ -279,141 +278,140 @@ struct SettingInfo {
 };
 
 static inline const SettingInfo *GetSubstruct(const FieldInfo& field) { return (const SettingInfo *)field.value; }
-static inline const char *GetFieldName(const SettingInfo *meta, size_t idx) { return (const char *)meta->fieldNames + meta->fields[idx].nameOffset; }
 
 #ifdef INCLUDE_APPPREFS3_METADATA
 static FieldInfo gFILETIMEFields[] = {
-    { Type_Int, 0, offsetof(FILETIME, dwHighDateTime), 0 },
-    { Type_Int, 15, offsetof(FILETIME, dwLowDateTime), 0 },
+    { Type_Int, offsetof(FILETIME, dwHighDateTime), 0 },
+    { Type_Int, offsetof(FILETIME, dwLowDateTime), 0 },
 };
 static SettingInfo gFILETIMEInfo = { sizeof(FILETIME), 2, gFILETIMEFields, "DwHighDateTime\0DwLowDateTime" };
 
 static FieldInfo gRectIFields[] = {
-    { Type_Int, 0, offsetof(RectI, x), 0 },
-    { Type_Int, 2, offsetof(RectI, y), 0 },
-    { Type_Int, 4, offsetof(RectI, dx), 0 },
-    { Type_Int, 7, offsetof(RectI, dy), 0 },
+    { Type_Int, offsetof(RectI, x), 0 },
+    { Type_Int, offsetof(RectI, y), 0 },
+    { Type_Int, offsetof(RectI, dx), 0 },
+    { Type_Int, offsetof(RectI, dy), 0 },
 };
 static SettingInfo gRectIInfo = { sizeof(RectI), 4, gRectIFields, "X\0Y\0Dx\0Dy" };
 
 static FieldInfo gPointIFields[] = {
-    { Type_Int, 0, offsetof(PointI, x), 0 },
-    { Type_Int, 2, offsetof(PointI, y), 0 },
+    { Type_Int, offsetof(PointI, x), 0 },
+    { Type_Int, offsetof(PointI, y), 0 },
 };
 static SettingInfo gPointIInfo = { sizeof(PointI), 2, gPointIFields, "X\0Y" };
 
 static FieldInfo gFavoriteFields[] = {
-    { Type_String, 0, offsetof(Favorite, name), NULL },
-    { Type_Int, 5, offsetof(Favorite, pageNo), 0 },
-    { Type_String, 12, offsetof(Favorite, pageLabel), NULL },
+    { Type_String, offsetof(Favorite, name), NULL },
+    { Type_Int, offsetof(Favorite, pageNo), 0 },
+    { Type_String, offsetof(Favorite, pageLabel), NULL },
 };
 static SettingInfo gFavoriteInfo = { sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel" };
 
 static FieldInfo gFileFields[] = {
-    { Type_String, 0, offsetof(File, filePath), NULL },
-    { Type_Int, 9, offsetof(File, openCount), 0 },
-    { Type_Bool, 19, offsetof(File, isPinned), false },
-    { Type_Bool, 28, offsetof(File, isMissing), false },
-    { Type_Bool, 38, offsetof(File, useGlobalValues), false },
-    { Type_String, 54, offsetof(File, displayMode), (intptr_t)L"automatic" },
-    { Type_Compact, 66, offsetof(File, scrollPos), (intptr_t)&gPointIInfo },
-    { Type_Int, 76, offsetof(File, pageNo), 1 },
-    { Type_Int, 83, offsetof(File, reparseIdx), 0 },
-    { Type_Float, 94, offsetof(File, zoomVirtual), (intptr_t)"100" },
-    { Type_Int, 106, offsetof(File, rotation), 0 },
-    { Type_Int, 115, offsetof(File, windowState), 0 },
-    { Type_Compact, 127, offsetof(File, windowPos), (intptr_t)&gRectIInfo },
-    { Type_Utf8String, 137, offsetof(File, decryptionKey), NULL },
-    { Type_Bool, 151, offsetof(File, tocVisible), true },
-    { Type_Int, 162, offsetof(File, sidebarDx), 0 },
-    { Type_Utf8String, 172, offsetof(File, tocState), NULL },
-    { Type_Array, 181, offsetof(File, favorite), (intptr_t)&gFavoriteInfo },
+    { Type_String, offsetof(File, filePath), NULL },
+    { Type_Int, offsetof(File, openCount), 0 },
+    { Type_Bool, offsetof(File, isPinned), false },
+    { Type_Bool, offsetof(File, isMissing), false },
+    { Type_Bool, offsetof(File, useGlobalValues), false },
+    { Type_String, offsetof(File, displayMode), (intptr_t)L"automatic" },
+    { Type_Compact, offsetof(File, scrollPos), (intptr_t)&gPointIInfo },
+    { Type_Int, offsetof(File, pageNo), 1 },
+    { Type_Int, offsetof(File, reparseIdx), 0 },
+    { Type_Float, offsetof(File, zoomVirtual), (intptr_t)"100" },
+    { Type_Int, offsetof(File, rotation), 0 },
+    { Type_Int, offsetof(File, windowState), 0 },
+    { Type_Compact, offsetof(File, windowPos), (intptr_t)&gRectIInfo },
+    { Type_Utf8String, offsetof(File, decryptionKey), NULL },
+    { Type_Bool, offsetof(File, tocVisible), true },
+    { Type_Int, offsetof(File, sidebarDx), 0 },
+    { Type_Utf8String, offsetof(File, tocState), NULL },
+    { Type_Array, offsetof(File, favorite), (intptr_t)&gFavoriteInfo },
 };
 static SettingInfo gFileInfo = { sizeof(File), 18, gFileFields, "FilePath\0OpenCount\0IsPinned\0IsMissing\0UseGlobalValues\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0ZoomVirtual\0Rotation\0WindowState\0WindowPos\0DecryptionKey\0TocVisible\0SidebarDx\0TocState\0Favorite" };
 
 static FieldInfo gGlobalPrefsFields[] = {
-    { Type_Bool, 0, offsetof(GlobalPrefs, globalPrefsOnly), false },
-    { Type_Utf8String, 16, offsetof(GlobalPrefs, currLangCode), NULL },
-    { Type_Bool, 29, offsetof(GlobalPrefs, toolbarVisible), true },
-    { Type_Bool, 44, offsetof(GlobalPrefs, favVisible), false },
-    { Type_Bool, 55, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), false },
-    { Type_Bool, 80, offsetof(GlobalPrefs, pdfAssociateShouldAssociate), false },
-    { Type_Bool, 108, offsetof(GlobalPrefs, enableAutoUpdate), true },
-    { Type_Bool, 125, offsetof(GlobalPrefs, rememberOpenedFiles), true },
-    { Type_Bool, 145, offsetof(GlobalPrefs, useSysColors), false },
-    { Type_String, 158, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL },
-    { Type_Bool, 179, offsetof(GlobalPrefs, enableTeXEnhancements), false },
-    { Type_String, 201, offsetof(GlobalPrefs, versionToSkip), NULL },
-    { Type_Compact, 215, offsetof(GlobalPrefs, lastUpdateTime), (intptr_t)&gFILETIMEInfo },
-    { Type_String, 230, offsetof(GlobalPrefs, defaultDisplayMode), (intptr_t)L"automatic" },
-    { Type_Float, 249, offsetof(GlobalPrefs, defaultZoom), (intptr_t)"-1" },
-    { Type_Int, 261, offsetof(GlobalPrefs, windowState), 1 },
-    { Type_Compact, 273, offsetof(GlobalPrefs, windowPos), (intptr_t)&gRectIInfo },
-    { Type_Bool, 283, offsetof(GlobalPrefs, tocVisible), true },
-    { Type_Int, 294, offsetof(GlobalPrefs, sidebarDx), 0 },
-    { Type_Int, 304, offsetof(GlobalPrefs, tocDy), 0 },
-    { Type_Bool, 310, offsetof(GlobalPrefs, showStartPage), true },
-    { Type_Int, 324, offsetof(GlobalPrefs, openCountWeek), 0 },
-    { Type_Bool, 338, offsetof(GlobalPrefs, cbxR2L), false },
-    { Type_Array, 345, offsetof(GlobalPrefs, file), (intptr_t)&gFileInfo },
+    { Type_Bool, offsetof(GlobalPrefs, globalPrefsOnly), false },
+    { Type_Utf8String, offsetof(GlobalPrefs, currLangCode), NULL },
+    { Type_Bool, offsetof(GlobalPrefs, toolbarVisible), true },
+    { Type_Bool, offsetof(GlobalPrefs, favVisible), false },
+    { Type_Bool, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), false },
+    { Type_Bool, offsetof(GlobalPrefs, pdfAssociateShouldAssociate), false },
+    { Type_Bool, offsetof(GlobalPrefs, enableAutoUpdate), true },
+    { Type_Bool, offsetof(GlobalPrefs, rememberOpenedFiles), true },
+    { Type_Bool, offsetof(GlobalPrefs, useSysColors), false },
+    { Type_String, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL },
+    { Type_Bool, offsetof(GlobalPrefs, enableTeXEnhancements), false },
+    { Type_String, offsetof(GlobalPrefs, versionToSkip), NULL },
+    { Type_Compact, offsetof(GlobalPrefs, lastUpdateTime), (intptr_t)&gFILETIMEInfo },
+    { Type_String, offsetof(GlobalPrefs, defaultDisplayMode), (intptr_t)L"automatic" },
+    { Type_Float, offsetof(GlobalPrefs, defaultZoom), (intptr_t)"-1" },
+    { Type_Int, offsetof(GlobalPrefs, windowState), 1 },
+    { Type_Compact, offsetof(GlobalPrefs, windowPos), (intptr_t)&gRectIInfo },
+    { Type_Bool, offsetof(GlobalPrefs, tocVisible), true },
+    { Type_Int, offsetof(GlobalPrefs, sidebarDx), 0 },
+    { Type_Int, offsetof(GlobalPrefs, tocDy), 0 },
+    { Type_Bool, offsetof(GlobalPrefs, showStartPage), true },
+    { Type_Int, offsetof(GlobalPrefs, openCountWeek), 0 },
+    { Type_Bool, offsetof(GlobalPrefs, cbxR2L), false },
+    { Type_Array, offsetof(GlobalPrefs, file), (intptr_t)&gFileInfo },
 };
 static SettingInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 24, gGlobalPrefsFields, "GlobalPrefsOnly\0CurrLangCode\0ToolbarVisible\0FavVisible\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0EnableAutoUpdate\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0VersionToSkip\0LastUpdateTime\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0TocVisible\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxR2L\0File" };
 
 
 static FieldInfo gAdvancedPrefsFields[] = {
-    { Type_Bool, 0, offsetof(AdvancedPrefs, traditionalEbookUI), false },
-    { Type_Bool, 19, offsetof(AdvancedPrefs, reuseInstance), false },
-    { Type_Color, 33, offsetof(AdvancedPrefs, mainWindowBackground), 0xfff200 },
-    { Type_Bool, 54, offsetof(AdvancedPrefs, escToExit), false },
-    { Type_Color, 64, offsetof(AdvancedPrefs, textColor), 0x000000 },
-    { Type_Color, 74, offsetof(AdvancedPrefs, pageColor), 0xffffff },
+    { Type_Bool, offsetof(AdvancedPrefs, traditionalEbookUI), false },
+    { Type_Bool, offsetof(AdvancedPrefs, reuseInstance), false },
+    { Type_Color, offsetof(AdvancedPrefs, mainWindowBackground), 0xfff200 },
+    { Type_Bool, offsetof(AdvancedPrefs, escToExit), false },
+    { Type_Color, offsetof(AdvancedPrefs, textColor), 0x000000 },
+    { Type_Color, offsetof(AdvancedPrefs, pageColor), 0xffffff },
 };
 static SettingInfo gAdvancedPrefsInfo = { sizeof(AdvancedPrefs), 6, gAdvancedPrefsFields, "TraditionalEbookUI\0ReuseInstance\0MainWindowBackground\0EscToExit\0TextColor\0PageColor" };
 
 static FieldInfo gPrinterDefaultsFields[] = {
-    { Type_Utf8String, 0, offsetof(PrinterDefaults, printScale), (intptr_t)"shrink" },
-    { Type_Bool, 11, offsetof(PrinterDefaults, printAsImage), false },
+    { Type_Utf8String, offsetof(PrinterDefaults, printScale), (intptr_t)"shrink" },
+    { Type_Bool, offsetof(PrinterDefaults, printAsImage), false },
 };
 static SettingInfo gPrinterDefaultsInfo = { sizeof(PrinterDefaults), 2, gPrinterDefaultsFields, "PrintScale\0PrintAsImage" };
 
 static FieldInfo gPagePaddingFields[] = {
-    { Type_Int, 0, offsetof(PagePadding, outerX), 4 },
-    { Type_Int, 7, offsetof(PagePadding, outerY), 2 },
-    { Type_Int, 14, offsetof(PagePadding, innerX), 4 },
-    { Type_Int, 21, offsetof(PagePadding, innerY), 4 },
+    { Type_Int, offsetof(PagePadding, outerX), 4 },
+    { Type_Int, offsetof(PagePadding, outerY), 2 },
+    { Type_Int, offsetof(PagePadding, innerX), 4 },
+    { Type_Int, offsetof(PagePadding, innerY), 4 },
 };
 static SettingInfo gPagePaddingInfo = { sizeof(PagePadding), 4, gPagePaddingFields, "OuterX\0OuterY\0InnerX\0InnerY" };
 
 static FieldInfo gBackgroundGradientFields[] = {
-    { Type_Bool, 0, offsetof(BackgroundGradient, enabled), false },
-    { Type_Color, 8, offsetof(BackgroundGradient, colorTop), 0xaa2828 },
-    { Type_Color, 17, offsetof(BackgroundGradient, colorMiddle), 0x28aa28 },
-    { Type_Color, 29, offsetof(BackgroundGradient, colorBottom), 0x2828aa },
+    { Type_Bool, offsetof(BackgroundGradient, enabled), false },
+    { Type_Color, offsetof(BackgroundGradient, colorTop), 0xaa2828 },
+    { Type_Color, offsetof(BackgroundGradient, colorMiddle), 0x28aa28 },
+    { Type_Color, offsetof(BackgroundGradient, colorBottom), 0x2828aa },
 };
 static SettingInfo gBackgroundGradientInfo = { sizeof(BackgroundGradient), 4, gBackgroundGradientFields, "Enabled\0ColorTop\0ColorMiddle\0ColorBottom" };
 
 static FieldInfo gForwardSearchFields[] = {
-    { Type_Int, 0, offsetof(ForwardSearch, highlightOffset), 0 },
-    { Type_Int, 16, offsetof(ForwardSearch, highlightWidth), 15 },
-    { Type_Color, 31, offsetof(ForwardSearch, highlightColor), 0x6581ff },
-    { Type_Bool, 46, offsetof(ForwardSearch, highlightPermanent), false },
+    { Type_Int, offsetof(ForwardSearch, highlightOffset), 0 },
+    { Type_Int, offsetof(ForwardSearch, highlightWidth), 15 },
+    { Type_Color, offsetof(ForwardSearch, highlightColor), 0x6581ff },
+    { Type_Bool, offsetof(ForwardSearch, highlightPermanent), false },
 };
 static SettingInfo gForwardSearchInfo = { sizeof(ForwardSearch), 4, gForwardSearchFields, "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent" };
 
 static FieldInfo gExternalViewerFields[] = {
-    { Type_String, 0, offsetof(ExternalViewer, commandLine), NULL },
-    { Type_String, 12, offsetof(ExternalViewer, name), NULL },
-    { Type_String, 17, offsetof(ExternalViewer, filter), NULL },
+    { Type_String, offsetof(ExternalViewer, commandLine), NULL },
+    { Type_String, offsetof(ExternalViewer, name), NULL },
+    { Type_String, offsetof(ExternalViewer, filter), NULL },
 };
 static SettingInfo gExternalViewerInfo = { sizeof(ExternalViewer), 3, gExternalViewerFields, "CommandLine\0Name\0Filter" };
 
 static FieldInfo gUserPrefsFields[] = {
-    { Type_Struct, 0, offsetof(UserPrefs, advancedPrefs), (intptr_t)&gAdvancedPrefsInfo },
-    { Type_Struct, 14, offsetof(UserPrefs, printerDefaults), (intptr_t)&gPrinterDefaultsInfo },
-    { Type_Struct, 30, offsetof(UserPrefs, pagePadding), (intptr_t)&gPagePaddingInfo },
-    { Type_Struct, 42, offsetof(UserPrefs, backgroundGradient), (intptr_t)&gBackgroundGradientInfo },
-    { Type_Struct, 61, offsetof(UserPrefs, forwardSearch), (intptr_t)&gForwardSearchInfo },
-    { Type_Array, 75, offsetof(UserPrefs, externalViewer), (intptr_t)&gExternalViewerInfo },
+    { Type_Struct, offsetof(UserPrefs, advancedPrefs), (intptr_t)&gAdvancedPrefsInfo },
+    { Type_Struct, offsetof(UserPrefs, printerDefaults), (intptr_t)&gPrinterDefaultsInfo },
+    { Type_Struct, offsetof(UserPrefs, pagePadding), (intptr_t)&gPagePaddingInfo },
+    { Type_Struct, offsetof(UserPrefs, backgroundGradient), (intptr_t)&gBackgroundGradientInfo },
+    { Type_Struct, offsetof(UserPrefs, forwardSearch), (intptr_t)&gForwardSearchInfo },
+    { Type_Array, offsetof(UserPrefs, externalViewer), (intptr_t)&gExternalViewerInfo },
 };
 static SettingInfo gUserPrefsInfo = { sizeof(UserPrefs), 6, gUserPrefsFields, "AdvancedPrefs\0PrinterDefaults\0PagePadding\0BackgroundGradient\0ForwardSearch\0ExternalViewer" };
 

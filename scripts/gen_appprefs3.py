@@ -328,16 +328,15 @@ def BuildStruct(struct, built=[]):
 
 def BuildMetaData(struct, built=[]):
 	lines = ["static FieldInfo g%sFields[] = {" % struct.structName]
-	metadata, names, namesOffset = [], [], 0
+	metadata, names = [], []
 	for field in struct.default:
 		if field.internal:
 			continue
 		if type(field) in [Struct, Array]:
-			lines.append("\t{ Type_%s, %d, offsetof(%s, %s), (intptr_t)&g%sInfo }," % (field.type.name, namesOffset, struct.structName, field.cname, field.structName))
+			lines.append("\t{ Type_%s, offsetof(%s, %s), (intptr_t)&g%sInfo }," % (field.type.name, struct.structName, field.cname, field.structName))
 		else:
-			lines.append("\t{ Type_%s, %d, offsetof(%s, %s), %s }," % (field.type.name, namesOffset, struct.structName, field.cname, field.cdefault()))
+			lines.append("\t{ Type_%s, offsetof(%s, %s), %s }," % (field.type.name, struct.structName, field.cname, field.cdefault()))
 		names.append(field.name)
-		namesOffset += len(field.name) + 1
 		if type(field) in [Struct, Array] and field.structName not in built:
 			metadata.append(BuildMetaData(field))
 			built.append(field.structName)
@@ -387,8 +386,7 @@ enum SettingType {
 
 struct FieldInfo {
 	SettingType type;
-	uint16_t nameOffset;
-	uint16_t offset;
+	size_t offset;
 	intptr_t value;
 };
 
@@ -400,7 +398,6 @@ struct SettingInfo {
 };
 
 static inline const SettingInfo *GetSubstruct(const FieldInfo& field) { return (const SettingInfo *)field.value; }
-static inline const char *GetFieldName(const SettingInfo *meta, size_t idx) { return (const char *)meta->fieldNames + meta->fields[idx].nameOffset; }
 
 #ifdef INCLUDE_APPPREFS3_METADATA
 %(appStructMetadata)s
