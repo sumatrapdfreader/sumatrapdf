@@ -1,10 +1,11 @@
 AppTranslator: SumatraPDF
-cce45c592a37c397e26e07fb0b7e86cf93c08a69
+0881e40f46442764da142a938c5cdfa19def1b8c
 :%s of %s
 af:%s uit %s
 ar:%s من %s
 az:%s/%s
 br:%s de %s
+by:%s з %s
 cn:%s of %s
 de:%s von %s
 es:%s de %s
@@ -3171,6 +3172,7 @@ bg:Добавяне към любимите
 bn:প্রিয় যোগ করুন
 br:Adicionar Favorito
 bs:Dodaj favorit
+by:Дадаць у Выбранае
 ca-xv:Afig un preferit
 ca:Afegeix un preferit
 cn:添加收藏
@@ -3226,6 +3228,7 @@ az:%s. səhifəni seçilmişlərə əlavə et
 bg:Добавяне на страница %s към любимите
 br:Adicionar página %s aos Favoritos
 bs:Dodaj stranicu %s u favorite
+by:Дадаць старонку %s да выбраных
 ca-xv:Afig la pàgina %s als preferits
 ca:Afegeix la pàgina %s als preferits
 cn:收藏第 %s 页
@@ -3337,6 +3340,7 @@ bg:Добавяне към любимите
 bn:পছন্দের মধ্যে অন্তর্ভুক্ত করুন
 br:Adicionar aos Favoritos
 bs:Dodaj u favorite
+by:Дадаць у Выбраныя
 ca-xv:Afig als preferits
 ca:Afegeix als preferits
 cn:添加到收藏
@@ -4754,6 +4758,7 @@ ar:إغلاق
 az:Bağla
 bn:বন্ধ করুন
 br:Fechar
+by:Зачынiць
 cn:关闭
 de:Schließen
 es:Cerrar
@@ -5837,6 +5842,7 @@ fr:Impossible d'écrire %s sur le disque
 hu:%s lemezre írása sikertelen
 it:Impossibile scrivere %s nel disco.
 kr:%s(을)를 디스크에 쓸 수 없습니다.
+ku:بخوێندرێتەوە بۆ دیسک %s ناتوانرێت
 pt:Não foi possível escrever %s no disco
 ro:Nu s-a putut scrie %s pe disc
 ru:Не удалось записать %s на диск
@@ -6814,6 +6820,7 @@ fr:Erreur : impossible de lancer SumatraPDF !
 hu:Hiba: SumatraPDF futtatása sikertelen!
 it:Errore. Impossibile eseguire SumatraPDF!
 kr:오류: SumatraPDF를 실행할 수 없습니다!
+ku:!بکرێتەوە SumatraPDF هەڵە: ناتوانرێت
 pt:Erro: não foi possível iniciar o SumatraPDF!
 ro:Eroare: Nu s-a putut porni Sumatra PDF!
 ru:Ошибка: не удалось запустить SumatraPDF!
@@ -6853,6 +6860,7 @@ fr:Erreur : le document n'a pu être téléchargé !
 hu:Hiba: a dokumentum letöltése sikertelen!
 it:Errore. Il documento non può essere scaricato!
 kr:오류: 문서를 다운로드할 수 없습니다!
+ku:!هەڵە: بەڵگەنامە ناتوانرێت دابگیرێت
 pt:Erro: não foi possível transferir o documento!
 ro:Eroare: Documentul nu s-a putut descarca!
 ru:Ошибка: не удалось загрузить документ!
@@ -7118,6 +7126,7 @@ fr:La copie du désinstalleur dans un répertoire temporaire a échoué
 hu:Az uninstaller ideiglenes könyvtárba való másolása nem sikerült
 it:Impossibile copiare programma disinstallazione nella cartella temporanea
 kr:제거 관리자를 임시 디렉토리에 복사하지 못했습니다.
+ku:لەبەرگرتنەوەی داتاکانی سڕینەوە سەرکەتو نەبوو بۆ فۆڵدەری کاتی
 pt:Falha ao copiar o desinstalador para a pasta temporária
 ro:Eroare la copierea dezinstalatorului in directorul temporar
 ru:Не удалось скопировать деинсталлятор во временную директорию
@@ -7153,6 +7162,7 @@ fr:La suppression des clés de la base de registre du désinstalleur a échoué
 hu:Az eltávolító registry kulcsainak törlése sikertelen
 it:Impossibile rimuovere chiavi registro
 kr:레지스트리 키를 삭제하지 못했습니다.
+ku:سڕینەوەی پاشکۆ و کلیلەکانی ڕیگستری سەرکەتو نەبوو
 pt:Falha ao eliminar as chaves do registo
 ro:Eroare la stergerea inregistrarilor de dezinstalare din registri
 ru:Не удалось удалить ключи регистра для деинсталлятора
@@ -7288,6 +7298,7 @@ fr:L'écriture dans la base de registre des informations étendues de l'extensio
 hu:Nem sikerült írni a kiterjesztett fájlkiterjesztést információkat a rendszerleíró adatbázisban
 it:Scrittura fallita informazione estensione estesa file nel registro
 kr:확장된 파일의 확장자 정보를 레지스트리에 쓰지 못했습니다.
+ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو لە ڕیگستریدا
 pt:Falha ao escrever as informações do tipo de ficheiro nas chaves de registo
 ro:Eroare la scrierea informatiei extinse despre extensia fisierului in registri
 ru:Не удалось записать полную информацию о расширении файла в регистр
@@ -7305,6 +7316,7 @@ fr:L'écriture des informations de désinstallation dans la base de registre a �
 hu:Eltávolítással kapcsolatos információk registry-be írása sikertelen
 it:Scrittura fallita informazione disinstallazione nel registro
 kr:제거 정보를 레지스트리에 쓰지 못했습니다.
+ku:دانانی زانیاری سڕینەوە سەرکەوتو نەبوو لە ڕیگستریدا
 pt:Falha ao escrever as informações de desinstalação no registo
 ro:Eroare la scrierea informatiilor de dezinstalare in registri
 ru:Не удалось записать информацию для деинсталлятора в регистр
@@ -9056,6 +9068,7 @@ fr:Installer le plug-in PDF pour Firefox, Chrome and Opera
 hu:PDF beépülő telepítése Firefox, Chrome és Opera böngészőkre
 it:Installa plugin PDF per i &browser FireFox, Chrome e Opera
 kr:Firefox, Chrome 및 Opera용 PDF 브라우저 플러그인 설치(&B)
+ku:بۆ فایەرفۆکس، کرۆم و ئۆپێرا& PDF دابەزاندنی پێوەکراوی
 pt:Instalar o pl&ugin de navegador para o Chrome, Firefox e Opera
 ro:Instaleaza plugin-ul PDF pentru browser-ul Firefox, Chrome si Opera
 ru:Установить &плагин PDF для Firefox, Chrome и Opera
@@ -9224,6 +9237,7 @@ fr:Permettre à Windows Desktop Search la recherche de documents PDF
 hu:Hagyja a Windows Desktop Search-re a PDF dokumentumok keresését
 it:Assegna a Windows la ricerca sul desktop & dei documenti PDF
 kr:Windows 데스크탑 검색에서 PDF 문서 내용을 검색할 수 있습니다.
+ku:PDF ڕێگەدان بە گەڕانی سەرشاشەی ویندۆز &بگەڕێت بۆ بەڵگەنامەکانی
 pt:Permitir que o Windows Desktop &Search localize os PDF
 ro:Permite Windows Desktop &Search sa caute in documente PDF
 ru:&Поиск файлов PDF с помощью Windows Desktop Search
@@ -9241,6 +9255,7 @@ fr:Permettre à Windows de montrer des a&perçus des documents PDF
 hu:Hagyja a Windows-ra a PDF dokumentumok előnézetének megjelenítését
 it:Assegna a Windows la visualizzazione & anteprima dei documenti PDF
 kr:PDF 문서의 미리보기를 Windows에서 보기(&P)
+ku:پیشان بدات PDF ڕێگەدان بە پیشاندەری ویندۆز &بەڵگەنامەکانی
 pt:&Permitir que o WIndows mostre uma antevisão dos PDF
 ro:Permite Windows-ului sa arate &previzualizari ale documentelor PDF
 ru:&Просмотр документов PDF средствами Windows
@@ -12903,6 +12918,7 @@ fr:Sélectionner le répertoire d'installation de SumatraPDF :
 hu:Válassza ki a SumatraPDF telepítési könyvtárát:
 it:Seleziona la cartella dove installare SumatraPDF:
 kr:SumatraPDF를 설치할 폴더 선택:
+ku::SumatraPDF فۆڵدەرێک دیاریبکە بۆ دابەزاندنی
 pt:Escolha a pasta de instalação do SumatraPDF:
 ro:Alegeti folderul in care sa se instaleze SumatraPDF:
 ru:Укажите папку установки SumatraPDF:
@@ -13452,6 +13468,7 @@ fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
 hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
 it:Alcuni file che dovevano essere installati erano corrotti o mancanti
 kr:설치해야 할 일부 파일이 손상 또는 누락됐습니다.
+ku:هەندێک فایلی دابەزاندن وونبوون یان تێکچوون
 pt:Alguns ficheiros do instalador estão danificados
 ro:Niste fisiere ce trebuiesc instalate lipsesc sau sunt pleznite
 ru:Некоторые файлы установки повреждены или отсутствуют
@@ -13869,6 +13886,7 @@ fr:SumatraPDF a été désinstallé.
 hu:SumatraPDF eltávolítása befejeződött.
 it:SumatraPDF è stata completamente disinstallato.
 kr:SumatraPDF가 제거됐습니다.
+ku:.سڕایەوە SumatraPDF
 pt:O SumatraPDF foi desinstalado.
 ro:SumatraPDF a fost dezinstalat.
 ru:SumatraPDF удалена.
@@ -14232,6 +14250,7 @@ fr:L'installeur est corrompu. Veuillez le télécharger de nouveau. \nDésolé d
 hu:A telepítő sérült. Kérjük, töltse le újra.\nElnézést kérünk a kellemetlenségért!
 it:Il programma di installazione è danneggiato. Riscaricalo nuovamente.\nSiamo spiacenti per l'incoveniente!
 kr:설치 관리자가 손상됐습니다. 다시 다운로드하세요.\n불편하게 해서 미안합니다!
+ku:دابەزێنەر تێکچووە. تکایە دووبارە دایبگرەوە.\nببورە لە ڕوودانی ئەو هەڵەیە!
 pt:O instalador está danificado. Efetue uma nova transferência.\nDesculpe o inconveniente.
 ro:Programul de instalare este pleznit :(. Rugam descarcati-l din nou. \n Scuze pentru deranj!
 ru:Инсталлятор испорчен. Пожалуйста, загрузите его повторно.\nИзвините за неудобства!

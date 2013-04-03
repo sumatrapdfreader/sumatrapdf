@@ -110,6 +110,16 @@ const WCHAR * const gTranslations[] = {
   NULL,
   L"SumatraPDF로 문서 여는 중...",
 
+  /* Translations for language ku */
+  L"%s لە %s",
+  L"!بکرێتەوە SumatraPDF هەڵە: ناتوانرێت",
+  L"هەڵە: SumatraPDF نەدۆزرایەوە!",
+  L"!هەڵە: بەڵگەنامە ناتوانرێت دابگیرێت",
+  L"گێگابایت",
+  L"کیلۆبایت",
+  L"مێگابایت",
+  L"...SumatraPDF کردنەوەی بەڵگەنامەکان بەهۆی",
+
   /* Translations for language br */
   L"%s de %s",
   L"Não foi possível rodar o SumatraPDF!",
@@ -193,7 +203,7 @@ const WCHAR * const gTranslations[] = {
 
 const char * const gLanguages[] = {
     "en", "ar", "az", "eu", "cn", "fr", "de", "hu", "it", "kr",
-    "br", "pt", "ro", "ru", "es", "ta", "uk", "uz", NULL
+    "ku", "br", "pt", "ro", "ru", "es", "ta", "uk", "uz", NULL
 };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
@@ -222,14 +232,15 @@ int GetLanguageIndex(LANGID id)
     case _LANGID(LANG_HUNGARIAN): return 56;
     case _LANGID(LANG_ITALIAN): return 64;
     case _LANGID(LANG_KOREAN): return 72;
-    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 80;
-    case _LANGID(LANG_PORTUGUESE): return 88;
-    case _LANGID(LANG_ROMANIAN): return 96;
-    case _LANGID(LANG_RUSSIAN): return 104;
-    case _LANGID(LANG_SPANISH): return 112;
-    case _LANGID(LANG_TAMIL): return 120;
-    case _LANGID(LANG_UKRAINIAN): return 128;
-    case _LANGID(LANG_UZBEK): return 136;
+    case MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ): return 80;
+    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 88;
+    case _LANGID(LANG_PORTUGUESE): return 96;
+    case _LANGID(LANG_ROMANIAN): return 104;
+    case _LANGID(LANG_RUSSIAN): return 112;
+    case _LANGID(LANG_SPANISH): return 120;
+    case _LANGID(LANG_TAMIL): return 128;
+    case _LANGID(LANG_UKRAINIAN): return 136;
+    case _LANGID(LANG_UZBEK): return 144;
     default: return -1;
 #undef _LANGID
     }
@@ -237,5 +248,5 @@ int GetLanguageIndex(LANGID id)
 
 bool IsLanguageRtL(int index)
 {
-    return 8 == index;
+    return 8 == index || 80 == index;
 }
