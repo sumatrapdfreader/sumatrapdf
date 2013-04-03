@@ -4,28 +4,16 @@
 #include "BaseUtil.h"
 #include "SerializeIni.h"
 
-#ifndef TEST_SERIALIZE_TXT
-
-#ifndef TEST_SERIALIZE_SQT
 #include "IniParser.h"
-// only escape characters which are significant to IniParser:
-// newlines and heading/trailing whitespace
-static bool NeedsEscaping(const char *s)
-{
-    return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
-           str::FindChar(s, '\n') || str::FindChar(s, '\r');
-}
-#else
 #include "SquareTreeParser.h"
-// only escape characters which are significant to SquareTreeParser:
-// newlines, heading/trailing whitespace and single square brackets
-static bool NeedsEscaping(const char *s)
-{
-    return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
-           str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
-           str::Eq(s, "[") || str::Eq(s, "]");
-}
-#endif // TEST_SERIALIZE_SQT
+
+#include "../../src/utils/StrSlice.cpp"
+#include "../sertxt_test/SerializeTxtParser.cpp"
+
+// undefine to prevent code for that format to be linked
+#define ENABLE_FORMAT_INI
+#define ENABLE_FORMAT_SQT
+#define ENABLE_FORMAT_TXT
 
 namespace sertxt {
 
@@ -64,6 +52,14 @@ static char *UnescapeStr(const char *s)
     return ret.StealData();
 }
 
+// only escape characters which are significant to IniParser/SquareTreeParser:
+// newlines and heading/trailing whitespace
+static bool NeedsEscaping(const char *s)
+{
+    return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
+           str::FindChar(s, '\n') || str::FindChar(s, '\r');
+}
+
 // escapes strings containing newlines or heading/trailing whitespace
 static char *EscapeStr(const char *s)
 {
@@ -83,6 +79,12 @@ static char *EscapeStr(const char *s)
     return ret.StealData();
 }
 
+static const StructMetadata *GetStructDef(const FieldMetadata& fieldDef)
+{
+    CrashIf(!fieldDef.defValOrDefinition);
+    return (const StructMetadata *)fieldDef.defValOrDefinition;
+}
+
 static void FreeListNode(Vec<void *> *list, const StructMetadata *def)
 {
     if (!list)
@@ -90,12 +92,6 @@ static void FreeListNode(Vec<void *> *list, const StructMetadata *def)
     for (size_t i = 0; i < list->Count(); i++)
         FreeStruct((uint8_t *)list->At(i), def);
     delete list;
-}
-
-static const StructMetadata *GetStructDef(const FieldMetadata& fieldDef)
-{
-    CrashIf(!fieldDef.defValOrDefinition);
-    return (const StructMetadata *)fieldDef.defValOrDefinition;
 }
 
 static void DeserializeField(uint8_t *data, const FieldMetadata& field, const char *value)
@@ -221,8 +217,6 @@ static char *SerializeField(const uint8_t *data, const FieldMetadata& field)
     return NULL;
 }
 
-#ifndef TEST_SERIALIZE_SQT
-
 static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_t endIdx, size_t *foundIdx)
 {
     for (size_t i = idx; i < endIdx; i++) {
@@ -283,7 +277,7 @@ static void *DeserializeRec(IniFile& ini, void *base, const StructMetadata *def,
     return data;
 }
 
-uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def)
+uint8_t *DeserializeWithDefaultIni(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def)
 {
     void *base = NULL;
     if (defaultData) {
@@ -296,7 +290,7 @@ uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, 
     return (uint8_t *)DeserializeRec(ini, base, def);
 }
 
-static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructMetadata *def, const char *sectionName=NULL)
+static void SerializeRecIni(str::Str<char>& out, const uint8_t *data, const StructMetadata *def, const char *sectionName=NULL)
 {
     if (sectionName) {
         out.Append("\r\n[");
@@ -322,20 +316,28 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructM
         const FieldMetadata& field = def->fields[i];
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
-            SerializeRec(out, *(const uint8_t **)(data + field.offset), GetStructDef(field), name);
+            SerializeRecIni(out, *(const uint8_t **)(data + field.offset), GetStructDef(field), name);
         }
         else if (TYPE_ARRAY == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             Vec<void *> *array = *(Vec<void *> **)(data + field.offset);
             for (size_t j = 0; j < array->Count(); j++) {
-                SerializeRec(out, (const uint8_t *)array->At(j), GetStructDef(field), name);
+                SerializeRecIni(out, (const uint8_t *)array->At(j), GetStructDef(field), name);
             }
         }
         fieldName += str::Len(fieldName) + 1;
     }
 }
 
-#else
+uint8_t *SerializeIni(const uint8_t *data, const StructMetadata *def, size_t *sizeOut)
+{
+    str::Str<char> out;
+    out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
+    SerializeRecIni(out, data, def);
+    if (sizeOut)
+        *sizeOut = out.Size();
+    return (uint8_t *)out.StealData();
+}
 
 static void *DeserializeRec(SquareTreeNode *node, void *base, const StructMetadata *def)
 {
@@ -370,7 +372,7 @@ static void *DeserializeRec(SquareTreeNode *node, void *base, const StructMetada
     return data;
 }
 
-uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def)
+uint8_t *DeserializeWithDefaultSqt(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def)
 {
     void *base = NULL;
     if (defaultData) {
@@ -389,7 +391,7 @@ static inline void Indent(str::Str<char>& out, int indent)
         out.Append('\t');
 }
 
-static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructMetadata *def, int indent=0)
+static void SerializeRecSqt(str::Str<char>& out, const uint8_t *data, const StructMetadata *def, int indent=0)
 {
     const char *fieldName = def->fieldNames;
     for (size_t i = 0; i < def->nFields; i++) {
@@ -401,7 +403,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructM
             Indent(out, indent);
             out.Append(fieldName);
             out.Append(" [\r\n");
-            SerializeRec(out, *(const uint8_t **)(data + field.offset), GetStructDef(field), indent + 1);
+            SerializeRecSqt(out, *(const uint8_t **)(data + field.offset), GetStructDef(field), indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
         }
@@ -411,7 +413,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructM
             Vec<void *> *array = *(Vec<void *> **)(data + field.offset);
             for (size_t j = 0; j < array->Count(); j++) {
                 out.Append(" [\r\n");
-                SerializeRec(out, (const uint8_t *)array->At(j), GetStructDef(field), indent + 1);
+                SerializeRecSqt(out, (const uint8_t *)array->At(j), GetStructDef(field), indent + 1);
                 Indent(out, indent);
                 out.Append("]");
             }
@@ -431,7 +433,46 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructM
     }
 }
 
-#endif // TEST_SERIALIZE_SQT
+uint8_t *SerializeSqt(const uint8_t *data, const StructMetadata *def, size_t *sizeOut)
+{
+    str::Str<char> out;
+    out.Append(UTF8_BOM "# this file will be overwritten - modify at your own risk\r\n");
+    SerializeRecSqt(out, data, def);
+    if (sizeOut)
+        *sizeOut = out.Size();
+    return (uint8_t *)out.StealData();
+}
+
+#define DeserializeWithDefault DeserializeWithDefaultTxt
+#define FreeStruct FreeStructTxt
+#define AppendNest AppendNestTxt
+#include "../sertxt_test/SerializeTxt.cpp"
+#undef AppendNest
+#undef FreeStruct
+#undef DeserializeWithDefault
+
+static SerializationFormat gFormat = Format_Ini;
+
+void SetSerializeTxtFormat(SerializationFormat format)
+{
+    gFormat = format;
+}
+
+uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def)
+{
+    switch (gFormat) {
+#ifdef ENABLE_FORMAT_INI
+    case Format_Ini: return DeserializeWithDefaultIni(data, dataSize, defaultData, defaultDataSize, def);
+#endif
+#ifdef ENABLE_FORMAT_SQT
+    case Format_Sqt: return DeserializeWithDefaultSqt(data, dataSize, defaultData, defaultDataSize, def);
+#endif
+#ifdef ENABLE_FORMAT_TXT
+    case Format_Txt: return sertxt::DeserializeWithDefaultTxt(data, dataSize, defaultData, defaultDataSize, def);
+#endif
+    default: CrashIf(true); return NULL;
+    }
+}
 
 uint8_t *Deserialize(char *data, size_t dataSize, const StructMetadata *def)
 {
@@ -440,12 +481,18 @@ uint8_t *Deserialize(char *data, size_t dataSize, const StructMetadata *def)
 
 uint8_t *Serialize(const uint8_t *data, const StructMetadata *def, size_t *sizeOut)
 {
-    str::Str<char> out;
-    out.Append(UTF8_BOM "; this file will be overwritten - modify at your own risk\r\n");
-    SerializeRec(out, data, def);
-    if (sizeOut)
-        *sizeOut = out.Size();
-    return (uint8_t *)out.StealData();
+    switch (gFormat) {
+#ifdef ENABLE_FORMAT_INI
+    case Format_Ini: return SerializeIni(data, def, sizeOut);
+#endif
+#ifdef ENABLE_FORMAT_SQT
+    case Format_Sqt: return SerializeSqt(data, def, sizeOut);
+#endif
+#ifdef ENABLE_FORMAT_TXT
+    case Format_Txt: return sertxt::Serialize(data, def, sizeOut);
+#endif
+    default: CrashIf(true); return NULL;
+    }
 }
 
 void FreeStruct(uint8_t *data, const StructMetadata *def)
@@ -465,11 +512,3 @@ void FreeStruct(uint8_t *data, const StructMetadata *def)
 }
 
 };
-
-#else
-
-#include "../../src/utils/StrSlice.cpp"
-#include "../sertxt_test/SerializeTxt.cpp"
-#include "../sertxt_test/SerializeTxtParser.cpp"
-
-#endif // TEST_SERIALIZE_TXT

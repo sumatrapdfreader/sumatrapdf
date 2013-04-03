@@ -1,4 +1,4 @@
-﻿; this file will be overwritten - modify at your own risk
+﻿# this file will be overwritten - modify at your own risk
 basic [
 	global_prefs_only = false
 	toolbar_visible = true

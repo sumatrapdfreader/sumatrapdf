@@ -45,15 +45,31 @@ static char *UnescapeStr(const char *s)
     return ret.StealData();
 }
 
-static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_t endIdx, size_t *foundIdx)
+// only escape characters which are significant to IniParser:
+// newlines and heading/trailing whitespace
+static bool NeedsEscaping(const char *s)
 {
-    for (size_t i = idx; i < endIdx; i++) {
-        if (str::EqI(ini.sections.At(i)->name, name)) {
-            *foundIdx = i;
-            return ini.sections.At(i);
+    return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
+           str::FindChar(s, '\n') || str::FindChar(s, '\r');
+}
+
+// escapes strings containing newlines or heading/trailing whitespace
+static char *EscapeStr(const char *s)
+{
+    str::Str<char> ret;
+    // use an unlikely character combination for indicating an escaped string
+    ret.Append("$[");
+    for (const char *c = s; *c; c++) {
+        switch (*c) {
+        // TODO: escape any other characters?
+        case '$': ret.Append("$$"); break;
+        case '\n': ret.Append("$n"); break;
+        case '\r': ret.Append("$r"); break;
+        default: ret.Append(*c);
         }
     }
-    return NULL;
+    ret.Append("]$");
+    return ret.StealData();
 }
 
 #ifndef NDEBUG
@@ -125,6 +141,17 @@ static void DeserializeField(uint8_t *base, const FieldInfo& field, const char *
     }
 }
 
+static IniSection *FindSection(IniFile& ini, const char *name, size_t idx, size_t endIdx, size_t *foundIdx)
+{
+    for (size_t i = idx; i < endIdx; i++) {
+        if (str::EqI(ini.sections.At(i)->name, name)) {
+            *foundIdx = i;
+            return ini.sections.At(i);
+        }
+    }
+    return NULL;
+}
+
 static void *DeserializeRec(IniFile& ini, const SettingInfo *meta, uint8_t *base=NULL,
                             const char *sectionName=NULL, size_t startIdx=0, size_t endIdx=-1)
 {
@@ -177,33 +204,6 @@ void *Deserialize(const char *data, size_t dataLen, const SettingInfo *def)
     CrashIf(str::Len(data) != dataLen);
     IniFile ini(data);
     return DeserializeRec(ini, def);
-}
-
-// only escape characters which are significant to IniParser:
-// newlines and heading/trailing whitespace
-static bool NeedsEscaping(const char *s)
-{
-    return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
-           str::FindChar(s, '\n') || str::FindChar(s, '\r');
-}
-
-// escapes strings containing newlines or heading/trailing whitespace
-static char *EscapeStr(const char *s)
-{
-    str::Str<char> ret;
-    // use an unlikely character combination for indicating an escaped string
-    ret.Append("$[");
-    for (const char *c = s; *c; c++) {
-        switch (*c) {
-        // TODO: escape any other characters?
-        case '$': ret.Append("$$"); break;
-        case '\n': ret.Append("$n"); break;
-        case '\r': ret.Append("$r"); break;
-        default: ret.Append(*c);
-        }
-    }
-    ret.Append("]$");
-    return ret.StealData();
 }
 
 static char *SerializeField(const uint8_t *base, const FieldInfo& field)

@@ -45,6 +45,33 @@ static char *UnescapeStr(const char *s)
     return ret.StealData();
 }
 
+// only escape characters which are significant to SquareTreeParser:
+// newlines, heading/trailing whitespace and single square brackets
+static bool NeedsEscaping(const char *s)
+{
+    return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
+           str::FindChar(s, '\n') || str::FindChar(s, '\r');
+}
+
+// escapes strings containing newlines or heading/trailing whitespace
+static char *EscapeStr(const char *s)
+{
+    str::Str<char> ret;
+    // use an unlikely character combination for indicating an escaped string
+    ret.Append("$[");
+    for (const char *c = s; *c; c++) {
+        switch (*c) {
+        // TODO: escape any other characters?
+        case '$': ret.Append("$$"); break;
+        case '\n': ret.Append("$n"); break;
+        case '\r': ret.Append("$r"); break;
+        default: ret.Append(*c);
+        }
+    }
+    ret.Append("]$");
+    return ret.StealData();
+}
+
 #ifndef NDEBUG
 static bool IsCompactable(const SettingInfo *meta)
 {
@@ -149,34 +176,6 @@ void *Deserialize(const char *data, size_t dataLen, const SettingInfo *def)
     CrashIf(str::Len(data) != dataLen);
     SquareTree sqt(data);
     return DeserializeRec(sqt.root, def);
-}
-
-// only escape characters which are significant to SquareTreeParser:
-// newlines, heading/trailing whitespace and single square brackets
-static bool NeedsEscaping(const char *s)
-{
-    return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
-           str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
-           str::Eq(s, "[") || str::Eq(s, "]");
-}
-
-// escapes strings containing newlines or heading/trailing whitespace
-static char *EscapeStr(const char *s)
-{
-    str::Str<char> ret;
-    // use an unlikely character combination for indicating an escaped string
-    ret.Append("$[");
-    for (const char *c = s; *c; c++) {
-        switch (*c) {
-        // TODO: escape any other characters?
-        case '$': ret.Append("$$"); break;
-        case '\n': ret.Append("$n"); break;
-        case '\r': ret.Append("$r"); break;
-        default: ret.Append(*c);
-        }
-    }
-    ret.Append("]$");
-    return ret.StealData();
 }
 
 static char *SerializeField(const uint8_t *base, const FieldInfo& field)

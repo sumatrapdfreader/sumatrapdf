@@ -6,13 +6,14 @@
 
 #include "../sertxt_test/SerializeTxt.h"
 
+namespace sertxt {
+
+enum SerializationFormat { Format_Ini, Format_Sqt, Format_Txt };
+
 // TODO: the metadata in SettingsSumatra can't be used for
 // multiple serialization schemes simultaneously
+void SetSerializeTxtFormat(SerializationFormat format);
 
-// define to test SquareTreeParser serialization for SettingsSumatra
-// #define TEST_SERIALIZE_SQT
-
-// define to test SerializeTxtParser serialization for SettingsSumatra
-// #define TEST_SERIALIZE_TXT
+};
 
 #endif

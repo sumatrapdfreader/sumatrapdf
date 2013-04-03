@@ -10,16 +10,15 @@ tree structure. Consumers may parse these string values further (as integers,
 etc.) as required.
 
 Each non-empty line which doesn't start with either '#' or ';' (comment line)
-contains a key and a value, separated usually by '=' or ':'. Values which aren't
-a single '[' are parsed as string values to the end of the line; if OTOH a value
-is just '[' then the following lines are parsed as a child node until a ']' is
-found on a line by itself:
+contains either a key and a single-line string value separated by '=' or ':' or
+it contains a key followed by a single '[' which causes the following lines to be
+parsed as a nested child node until a line starts with ']':
 
 key = value
 key2 = [ value containing square brackets (length: 49) ]
-child = [
+child [
   depth = 1
-  subchild: [
+  subchild [
     depth = 2
   ]
 ]
@@ -36,9 +35,9 @@ list [
   value 3
 ]
 
-The below parser always tries to recover from errors as well as possible.
-One intentional side-effect of this is that INI files can be parsed mostly as
-expected as well. E.g.
+The below parser always tries to recover from errors, usually by ignoring
+faulty lines. One intentional error hanling is the parsing of INI-style headers which
+allows to parse INI files mostly as expected as well. E.g.
 
 [Section]
 key = value
@@ -48,6 +47,9 @@ is read as if it were written as
 Section [
   key = value
 ]
+
+Final note: Whitespace at the start and end of a line as well as around key-value
+separators is always ignored.
 */
 
 static inline char *SkipWsRev(char *begin, char *s)
@@ -68,11 +70,11 @@ static char *SkipWsAndComments(char *s)
     return s;
 }
 
-static inline bool IsBracketLine(char *s, char bracket)
+static inline bool IsBracketLine(char *s)
 {
-    if (*s != bracket)
+    if (*s != '[')
         return false;
-    for (s++; *s && *s != '\n'; s++) {
+    for (s++; *s && *s != '\n' && *s != '#' && *s != ';'; s++) {
         if (!str::IsWs(*s))
             return false;
     }
@@ -130,18 +132,20 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
             for (data = key; *data && !str::IsWs(*data); data++);
         }
         char *separator = data;
-        if (*data && *data != '[' && *data != ']' && *data != '\n') {
+        if (*data && *data != '\n') {
             // skip to the first non-whitespace character on the same line (value)
             for (data++; str::IsWs(*data) && *data != '\n'; data++);
         }
         char *value = data;
-        if (IsBracketLine(value, '[') ||
+        // skip to the end of the line
+        for (; *data && *data != '\n'; data++);
+        if (IsBracketLine(separator) ||
             // also tolerate "key \n [ \n ... \n ]" (else the key
             // gets an empty value and the child node an empty key)
-            '\n' == *value && IsBracketLine(SkipWsAndComments(data), '[')) {
-            // parse child node(s) //
+            str::IsWs(*separator) && '\n' == *value && IsBracketLine(SkipWsAndComments(data))) {
+            // parse child node(s)
+            data = SkipWsAndComments(separator) + 1;
             *SkipWsRev(key, separator) = '\0';
-            data = SkipWsAndComments(data) + 1;
             node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             // array are created by either reusing the same key for a different child
             // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
@@ -150,50 +154,34 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
                 node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             }
         }
-        else if (']' == *key || ']' == *separator && '[' == *SkipWsAndComments(data + 1) ||
-            // also tolerate "key ]" (else the key gets ']' as value),
-            // not however the explicit "key = ]"
-            IsBracketLine(separator, ']')) {
-            // finish parsing this node //
-            data++;
-            if (key < separator) {
-                // interpret "key ]" as "key =" and "]"
-                *SkipWsRev(key, separator) = '\0';
-                node->data.Append(SquareTreeNode::DataItem(key, ""));
+        else if (']' == *key) {
+            // finish parsing child node
+            data = key + 1;
+            if (!isTopLevel)
+                return node;
+            // ignore superfluous closing square brackets instead of
+            // ignoring all content following them
+        }
+        else if ('[' == *key && ']' == SkipWsRev(value, data)[-1] && '\n' == *data) {
+            // treat INI section headers as top-level node names
+            // (else "[Section]" would be ignored)
+            if (!isTopLevel) {
+                data = key;
+                return node;
             }
-            if (isTopLevel) {
-                // ignore superfluous closing square brackets instead of
-                // ignoring all content following them
-                continue;
-            }
-            return node;
+            SkipWsRev(value, data)[-1] = '\0';
+            node->data.Append(SquareTreeNode::DataItem(key + 1, ParseSquareTreeRec(data)));
+        }
+        else if ('[' == *separator || ']' == *separator) {
+            // invalid line (ignored)
         }
         else {
-            // string value (decoding is left to the consumer) //
-            for (; *data && *data != '\n'; data++);
-            bool hasMoreLines = '\n' == *data;
-            *SkipWsRev(value, data) = '\0';
-            if (*key == '[' && *value && ']' == value[str::Len(value) - 1] && hasMoreLines) {
-                // treat INI section headers as top-level node names (else
-                // "[Section]" would be parsed as "[Section] = [Section]")
-                if (!isTopLevel) {
-                    value[str::Len(value)] = '\n';
-                    data = key;
-                    return node;
-                }
-                else {
-                    value[str::Len(value) - 1] = '\0';
-                    data++;
-                    node->data.Append(SquareTreeNode::DataItem(key + 1, ParseSquareTreeRec(data)));
-                    continue;
-                }
-            }
-            // parse "key[value" as "key[value = [value" (for now)
-            if (separator < value)
-                *SkipWsRev(key, separator) = '\0';
-            node->data.Append(SquareTreeNode::DataItem(key, value));
-            if (hasMoreLines)
+            // string value (decoding is left to the consumer)
+            if ('\n' == *data)
                 data++;
+            *SkipWsRev(key, separator) = '\0';
+            *SkipWsRev(value, data) = '\0';
+            node->data.Append(SquareTreeNode::DataItem(key, value));
         }
     }
 
