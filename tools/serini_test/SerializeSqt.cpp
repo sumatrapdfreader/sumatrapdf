@@ -129,7 +129,8 @@ static void *DeserializeRec(SquareTreeNode *node, const SettingInfo *meta, uint8
         else if (Type_Array == field.type) {
             Vec<void *> *array = new Vec<void *>();
             SquareTreeNode *child;
-            for (size_t j = 0; node && (child = node->GetChild(fieldName, j)) != NULL; j++) {
+            size_t idx = 0;
+            while (node && (child = node->GetChild(fieldName, &idx)) != NULL) {
                 array->Append(DeserializeRec(child, GetSubstruct(field)));
             }
             *(Vec<void *> **)(base + field.offset) = array;

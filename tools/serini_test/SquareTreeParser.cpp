@@ -88,22 +88,28 @@ SquareTreeNode::~SquareTreeNode()
     }
 }
 
-const char *SquareTreeNode::GetValue(const char *key, size_t idx) const
+const char *SquareTreeNode::GetValue(const char *key, size_t *startIdx) const
 {
-    for (size_t i = 0; i < data.Count(); i++) {
+    for (size_t i = startIdx ? *startIdx : 0; i < data.Count(); i++) {
         DataItem& item = data.At(i);
-        if (str::EqI(key, item.key) && !item.isChild && 0 == idx--)
+        if (str::EqI(key, item.key) && !item.isChild) {
+            if (startIdx)
+                *startIdx = i + 1;
             return item.value.str;
+        }
     }
     return NULL;
 }
 
-SquareTreeNode *SquareTreeNode::GetChild(const char *key, size_t idx) const
+SquareTreeNode *SquareTreeNode::GetChild(const char *key, size_t *startIdx) const
 {
-    for (size_t i = 0; i < data.Count(); i++) {
+    for (size_t i = startIdx ? *startIdx : 0; i < data.Count(); i++) {
         DataItem& item = data.At(i);
-        if (str::EqI(key, item.key) && item.isChild && 0 == idx--)
+        if (str::EqI(key, item.key) && item.isChild) {
+            if (startIdx)
+                *startIdx = i + 1;
             return item.value.child;
+        }
     }
     return NULL;
 }

@@ -92,98 +92,119 @@ static void FreeListNode(Vec<void *> *list, const StructMetadata *def)
     delete list;
 }
 
+static const StructMetadata *GetStructDef(const FieldMetadata& fieldDef)
+{
+    CrashIf(!fieldDef.defValOrDefinition);
+    return (const StructMetadata *)fieldDef.defValOrDefinition;
+}
+
 static void DeserializeField(uint8_t *data, const FieldMetadata& field, const char *value)
 {
+    uint8_t *fieldPtr = data + field.offset;
     int r, g, b, a;
 
     switch (field.type | 0) {
     case TYPE_BOOL:
-        *(bool *)(data + field.offset) = str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4])) || ParseBencInt(value) != 0;
+        *(bool *)fieldPtr = value ? str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4])) || ParseBencInt(value) != 0 : field.defValOrDefinition != 0;
         break;
     // TODO: are all these int-types really needed?
     case TYPE_I16:
-        *(int16_t *)(data + field.offset) = (int16_t)ParseBencInt(value);
+        *(int16_t *)fieldPtr = (int16_t)(value ? ParseBencInt(value) : field.defValOrDefinition);
         break;
     case TYPE_U16:
-        *(uint16_t *)(data + field.offset) = (uint16_t)ParseBencInt(value);
+        *(uint16_t *)fieldPtr = (uint16_t)(value ? ParseBencInt(value) : field.defValOrDefinition);
         break;
     case TYPE_I32:
-        *(int32_t *)(data + field.offset) = (int32_t)ParseBencInt(value);
+        *(int32_t *)fieldPtr = (int32_t)(value ? ParseBencInt(value) : field.defValOrDefinition);
         break;
     case TYPE_U32:
-        *(uint32_t *)(data + field.offset) = (uint32_t)ParseBencInt(value);
+        *(uint32_t *)fieldPtr = (uint32_t)(value ? ParseBencInt(value) : field.defValOrDefinition);
         break;
     case TYPE_U64:
-        *(uint64_t *)(data + field.offset) = (uint64_t)ParseBencInt(value);
+        *(uint64_t *)fieldPtr = (uint64_t)(value ? ParseBencInt(value) : field.defValOrDefinition);
         break;
     case TYPE_FLOAT:
-        if (!str::Parse(value, "%f", (float *)(data + field.offset)))
-            *(float *)(data + field.offset) = 0.f;
+        if (!value || !str::Parse(value, "%f", (float *)fieldPtr))
+            str::Parse((const char *)field.defValOrDefinition, "%f", (float *)fieldPtr);
         break;
     case TYPE_COLOR:
-        if (str::Parse(value, "#%2x%2x%2x%2x", &a, &r, &g, &b))
-            *(COLORREF *)(data + field.offset) = RGB(r, g, b) | (a << 24);
-        else if (str::Parse(value, "#%2x%2x%2x", &r, &g, &b))
-            *(COLORREF *)(data + field.offset) = RGB(r, g, b);
+        if (value && str::Parse(value, "#%2x%2x%2x%2x", &a, &r, &g, &b))
+            *(COLORREF *)fieldPtr = RGB(r, g, b) | (a << 24);
+        else if (value && str::Parse(value, "#%2x%2x%2x", &r, &g, &b))
+            *(COLORREF *)fieldPtr = RGB(r, g, b);
+        else
+            *(COLORREF *)fieldPtr = (COLORREF)field.defValOrDefinition;
         break;
     case TYPE_STR:
-        free(*(char **)(data + field.offset));
-        *(char **)(data + field.offset) = UnescapeStr(value);
+        free(*(char **)fieldPtr);
+        if (value)
+            *(char **)fieldPtr = UnescapeStr(value);
+        else
+            *(char **)fieldPtr = str::Dup((const char *)field.defValOrDefinition);
         break;
     case TYPE_WSTR:
-        free(*(WCHAR **)(data + field.offset));
-        *(WCHAR **)(data + field.offset) = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(value)));
+        free(*(WCHAR **)fieldPtr);
+        if (value)
+            *(WCHAR **)fieldPtr = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(value)));
+        else
+            *(WCHAR **)fieldPtr = str::Dup((const WCHAR *)field.defValOrDefinition);
         break;
     case (TYPE_STRUCT_PTR | TYPE_STORE_COMPACT_MASK):
-        if (!*(uint8_t **)(data + field.offset))
-            *(uint8_t **)(data + field.offset) = AllocArray<uint8_t>(field.def->size);
-        for (size_t i = 0; i < field.def->nFields; i++) {
-            DeserializeField(*(uint8_t **)(data + field.offset), field.def->fields[i], value);
-            CrashIf(TYPE_STR == field.def->fields[i].type || TYPE_WSTR == field.def->fields[i].type);
-            for (; *value && !str::IsWs(*value); value++);
-            for (; str::IsWs(*value); value++);
+        if (!*(uint8_t **)fieldPtr)
+            *(uint8_t **)fieldPtr = AllocArray<uint8_t>(GetStructDef(field)->size);
+        for (size_t i = 0; i < GetStructDef(field)->nFields; i++) {
+            if (value) {
+                for (; str::IsWs(*value); value++);
+                if (!*value)
+                    value = NULL;
+            }
+            DeserializeField(*(uint8_t **)fieldPtr, GetStructDef(field)->fields[i], value);
+            CrashIf(TYPE_STR == GetStructDef(field)->fields[i].type || TYPE_WSTR == GetStructDef(field)->fields[i].type);
+            if (value)
+                for (; *value && !str::IsWs(*value); value++);
         }
         break;
     default:
-        CrashIf(true);
+        CrashIf(!(field.type & TYPE_NO_STORE_MASK));
     }
 }
 
 static char *SerializeField(const uint8_t *data, const FieldMetadata& field)
 {
+    const uint8_t *fieldPtr = data + field.offset;
     ScopedMem<char> value;
     COLORREF c;
 
     switch (field.type | 0) {
-    case TYPE_BOOL: return str::Dup(*(bool *)(data + field.offset) ? "true" : "false");
-    case TYPE_I16: return str::Format("%d", (int32_t)*(int16_t *)(data + field.offset));
-    case TYPE_U16: return str::Format("%u", (uint32_t)*(uint16_t *)(data + field.offset));
-    case TYPE_I32: return str::Format("%d", *(int32_t *)(data + field.offset));
-    case TYPE_U32: return str::Format("%u", *(uint32_t *)(data + field.offset));
-    case TYPE_U64: return str::Format("%I64u", *(uint64_t *)(data + field.offset));
-    case TYPE_FLOAT: return str::Format("%g", *(float *)(data + field.offset));
+    case TYPE_BOOL: return str::Dup(*(bool *)fieldPtr ? "true" : "false");
+    case TYPE_I16: return str::Format("%d", (int32_t)*(int16_t *)fieldPtr);
+    case TYPE_U16: return str::Format("%u", (uint32_t)*(uint16_t *)fieldPtr);
+    case TYPE_I32: return str::Format("%d", *(int32_t *)fieldPtr);
+    case TYPE_U32: return str::Format("%u", *(uint32_t *)fieldPtr);
+    case TYPE_U64: return str::Format("%I64u", *(uint64_t *)fieldPtr);
+    case TYPE_FLOAT: return str::Format("%g", *(float *)fieldPtr);
     case TYPE_COLOR:
-        c = *(COLORREF *)(data + field.offset);
+        c = *(COLORREF *)fieldPtr;
         // TODO: COLORREF doesn't really have an alpha value
         if (((c >> 24) & 0xff))
             return str::Format("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c));
         return str::Format("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c));
     case TYPE_STR:
-        if (!*(const char **)(data + field.offset))
+        if (!*(const char **)fieldPtr)
             return NULL; // skip empty strings
-        if (!NeedsEscaping(*(const char **)(data + field.offset)))
-            return str::Dup(*(const char **)(data + field.offset));
-        return EscapeStr(*(const char **)(data + field.offset));
+        if (!NeedsEscaping(*(const char **)fieldPtr))
+            return str::Dup(*(const char **)fieldPtr);
+        return EscapeStr(*(const char **)fieldPtr);
     case TYPE_WSTR:
-        if (!*(const WCHAR **)(data + field.offset))
+        if (!*(const WCHAR **)fieldPtr)
             return NULL; // skip empty strings
-        value.Set(str::conv::ToUtf8(*(const WCHAR **)(data + field.offset)));
+        value.Set(str::conv::ToUtf8(*(const WCHAR **)fieldPtr));
         if (NeedsEscaping(value))
             return EscapeStr(value);
         return value.StealData();
     case (TYPE_STRUCT_PTR | TYPE_STORE_COMPACT_MASK):
-        for (size_t i = 0; i < field.def->nFields; i++) {
-            ScopedMem<char> val(SerializeField(*(const uint8_t **)(data + field.offset), field.def->fields[i]));
+        for (size_t i = 0; i < GetStructDef(field)->nFields; i++) {
+            ScopedMem<char> val(SerializeField(*(const uint8_t **)fieldPtr, GetStructDef(field)->fields[i]));
             if (!value)
                 value.Set(str::Format("%s", val));
             else
@@ -221,7 +242,6 @@ static void *DeserializeRec(IniFile& ini, void *base, const StructMetadata *def,
 
     size_t secIdx = startIdx;
     IniSection *section = FindSection(ini, sectionName, startIdx, endIdx, &secIdx);
-    IniLine *line;
 
     uint8_t *data = (uint8_t *)base;
     if (!data)
@@ -236,12 +256,12 @@ static void *DeserializeRec(IniFile& ini, void *base, const StructMetadata *def,
         const FieldMetadata& field = def->fields[i];
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
-            *(void **)(data + field.offset) = DeserializeRec(ini, *(void **)(data + field.offset), field.def, name, secIdx + 1, endIdx);
+            *(void **)(data + field.offset) = DeserializeRec(ini, *(void **)(data + field.offset), GetStructDef(field), name, secIdx + 1, endIdx);
         }
         else if (TYPE_ARRAY == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             Vec<void *> *array = new Vec<void *>();
-            FreeListNode(*(Vec<void *> **)(data + field.offset), field.def);
+            FreeListNode(*(Vec<void *> **)(data + field.offset), GetStructDef(field));
             *(Vec<void *> **)(data + field.offset) = array;
             size_t nextSecIdx = endIdx;
             FindSection(ini, sectionName, secIdx + 1, endIdx, &nextSecIdx);
@@ -250,13 +270,14 @@ static void *DeserializeRec(IniFile& ini, void *base, const StructMetadata *def,
             while (subSection && subSecIdx < nextSecIdx) {
                 size_t nextSubSecIdx = nextSecIdx;
                 IniSection *nextSubSec = FindSection(ini, name, subSecIdx + 1, nextSecIdx, &nextSubSecIdx);
-                array->Append(DeserializeRec(ini, NULL, field.def, name, subSecIdx, nextSubSecIdx));
+                array->Append(DeserializeRec(ini, NULL, GetStructDef(field), name, subSecIdx, nextSubSecIdx));
                 subSection = nextSubSec; subSecIdx = nextSubSecIdx;
             }
         }
-        else if (section && (line = section->FindLine(fieldName)) != NULL)
-            DeserializeField(data, field, line->value);
-        // else printf("couldn't find line for %s (%s)\n", field.name, sectionName);
+        else {
+            IniLine *line = section ? section->FindLine(fieldName) : NULL;
+            DeserializeField(data, field, line ? line->value : NULL);
+        }
         fieldName += str::Len(fieldName) + 1;
     }
     return data;
@@ -301,13 +322,13 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructM
         const FieldMetadata& field = def->fields[i];
         if (TYPE_STRUCT_PTR == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
-            SerializeRec(out, *(const uint8_t **)(data + field.offset), field.def, name);
+            SerializeRec(out, *(const uint8_t **)(data + field.offset), GetStructDef(field), name);
         }
         else if (TYPE_ARRAY == field.type) {
             ScopedMem<char> name(sectionName ? str::Format("%s.%s", sectionName, fieldName) : str::Dup(fieldName));
             Vec<void *> *array = *(Vec<void *> **)(data + field.offset);
             for (size_t j = 0; j < array->Count(); j++) {
-                SerializeRec(out, (const uint8_t *)array->At(j), field.def, name);
+                SerializeRec(out, (const uint8_t *)array->At(j), GetStructDef(field), name);
             }
         }
         fieldName += str::Len(fieldName) + 1;
@@ -325,23 +346,24 @@ static void *DeserializeRec(SquareTreeNode *node, void *base, const StructMetada
     const char *fieldName = def->fieldNames;
     for (size_t i = 0; i < def->nFields; i++) {
         const FieldMetadata& field = def->fields[i];
-        const char *value;
         if (TYPE_STRUCT_PTR == field.type) {
             SquareTreeNode *child = node ? node->GetChild(fieldName) : NULL;
-            *(void **)(data + field.offset) = DeserializeRec(child, *(void **)(data + field.offset), field.def);
+            *(void **)(data + field.offset) = DeserializeRec(child, *(void **)(data + field.offset), GetStructDef(field));
         }
         else if (TYPE_ARRAY == field.type) {
             Vec<void *> *array = new Vec<void *>();
-            FreeListNode(*(Vec<void *> **)(data + field.offset), field.def);
+            FreeListNode(*(Vec<void *> **)(data + field.offset), GetStructDef(field));
             *(Vec<void *> **)(data + field.offset) = array;
             SquareTreeNode *child;
-            for (size_t j = 0; node && (child = node->GetChild(fieldName, j)) != NULL; j++) {
-                array->Append(DeserializeRec(child, NULL, field.def));
+            size_t idx = 0;
+            while (node && (child = node->GetChild(fieldName, &idx)) != NULL) {
+                array->Append(DeserializeRec(child, NULL, GetStructDef(field)));
             }
         }
-        else if (node && (value = node->GetValue(fieldName)) != NULL)
+        else {
+            const char *value = node ? node->GetValue(fieldName) : NULL;
             DeserializeField(data, field, value);
-        // else printf("couldn't find line for %s (%s)\n", field.name, sectionName);
+        }
         fieldName += str::Len(fieldName) + 1;
     }
 
@@ -379,7 +401,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructM
             Indent(out, indent);
             out.Append(fieldName);
             out.Append(" [\r\n");
-            SerializeRec(out, *(const uint8_t **)(data + field.offset), field.def, indent + 1);
+            SerializeRec(out, *(const uint8_t **)(data + field.offset), GetStructDef(field), indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
         }
@@ -389,7 +411,7 @@ static void SerializeRec(str::Str<char>& out, const uint8_t *data, const StructM
             Vec<void *> *array = *(Vec<void *> **)(data + field.offset);
             for (size_t j = 0; j < array->Count(); j++) {
                 out.Append(" [\r\n");
-                SerializeRec(out, (const uint8_t *)array->At(j), field.def, indent + 1);
+                SerializeRec(out, (const uint8_t *)array->At(j), GetStructDef(field), indent + 1);
                 Indent(out, indent);
                 out.Append("]");
             }
@@ -433,9 +455,9 @@ void FreeStruct(uint8_t *data, const StructMetadata *def)
     for (size_t i = 0; i < def->nFields; i++) {
         const FieldMetadata& field = def->fields[i];
         if (TYPE_STRUCT_PTR == (field.type & TYPE_MASK))
-            FreeStruct(*(uint8_t **)(data + field.offset), field.def);
+            FreeStruct(*(uint8_t **)(data + field.offset), GetStructDef(field));
         else if (TYPE_ARRAY == field.type)
-            FreeListNode(*(Vec<void *> **)(data + field.offset), field.def);
+            FreeListNode(*(Vec<void *> **)(data + field.offset), GetStructDef(field));
         else if (TYPE_WSTR == field.type || TYPE_STR == field.type)
             free(*(void **)(data + field.offset));
     }

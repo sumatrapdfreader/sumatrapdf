@@ -23,8 +23,8 @@ public:
     };
     Vec<DataItem> data;
 
-    const char *GetValue(const char *key, size_t idx=0) const;
-    SquareTreeNode *GetChild(const char *key, size_t idx=0) const;
+    const char *GetValue(const char *key, size_t *startIdx=NULL) const;
+    SquareTreeNode *GetChild(const char *key, size_t *startIdx=NULL) const;
 };
 
 class SquareTree {

@@ -105,6 +105,18 @@ default_zoom = 38.5\n\
     return true;
 }
 
+static bool TestDefaultValues()
+{
+    Settings *s = DeserializeSettings(NULL, 0);
+    Check(s->basic->toolbarVisible && !s->basic->globalPrefsOnly);
+    Check(-1 == s->basic->defaultZoom && 2 == s->advanced->pagePadding->top);
+    Check(0x6581ff == s->advanced->forwardSearch->highlightColor);
+    Check(!s->basic->currLanguage);
+    FreeSettings(s);
+
+    return true;
+}
+
 }; // namespace sertxt
 
 namespace ini3 {
@@ -444,6 +456,8 @@ int main(int argc, char **argv)
     if (!sertxt::TestSerialize())
         errors++;
     if (!sertxt::TestSerializeWithDefaults())
+        errors++;
+    if (!sertxt::TestDefaultValues())
         errors++;
     if (!ini3::TestSerialize())
         errors++;
