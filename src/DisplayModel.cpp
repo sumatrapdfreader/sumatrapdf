@@ -812,8 +812,9 @@ PointI DisplayModel::CvtToScreen(int pageNo, PointD pt)
         return PointI();
 
     PointD p = engine->Transform(pt, pageNo, zoomReal, rotation);
-    p.x += 0.5 + pageInfo->pageOnScreen.x;
-    p.y += 0.5 + pageInfo->pageOnScreen.y;
+    // don't add the full 0.5 for rounding to account for precision errors
+    p.x += 0.499 + pageInfo->pageOnScreen.x;
+    p.y += 0.499 + pageInfo->pageOnScreen.y;
 
     return p.Convert<int>();
 }
@@ -835,8 +836,9 @@ PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo)
     if (!pageInfo)
         return PointD();
 
-    PointD p = PointD(pt.x - 0.5 - pageInfo->pageOnScreen.x,
-                      pt.y - 0.5 - pageInfo->pageOnScreen.y);
+    // don't add the full 0.5 for rounding to account for precision errors
+    PointD p = PointD(pt.x - 0.499 - pageInfo->pageOnScreen.x,
+                      pt.y - 0.499 - pageInfo->pageOnScreen.y);
     return engine->Transform(p, pageNo, zoomReal, rotation, true);
 }
 
