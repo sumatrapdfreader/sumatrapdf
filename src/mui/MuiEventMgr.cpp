@@ -167,8 +167,8 @@ LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled)
 LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled)
 {
     if (WM_SIZE == msg) {
-        int dx = LOWORD(lParam);
-        int dy = HIWORD(lParam);
+        //int dx = LOWORD(lParam);
+        //int dy = HIWORD(lParam);
         wndRoot->RequestLayout();
         return 0;
     }

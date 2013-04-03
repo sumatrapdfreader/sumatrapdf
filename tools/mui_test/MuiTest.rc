@@ -1,6 +1,6 @@
 #include <windows.h>
 #include "Resource.h"
-#include "../../Version.h"
+#include "../../src/Version.h"
 
 VS_VERSION_INFO    VERSIONINFO     MOVEABLE IMPURE LOADONCALL DISCARDABLE
   FILEVERSION    VER_RESOURCE
@@ -31,6 +31,6 @@ BEGIN
   END
 END
 
-IDI_SUMATRAPDF          ICON                    "..\..\SumatraPDF-smaller.ico"
+IDI_SUMATRAPDF          ICON                    "..\..\src\SumatraPDF-smaller.ico"
 
-1                       RT_MANIFEST             "MuiTest.exe.manifest"
+// 1                       RT_MANIFEST             "MuiTest.exe.manifest"

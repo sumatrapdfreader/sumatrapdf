@@ -93,6 +93,7 @@ solution "efi"
   project "efi"
     kind "ConsoleApp"
     language "C++"
+
     files {
       "tools/efi/*.h",
       "tools/efi/*.cpp",
@@ -130,3 +131,34 @@ solution "efi"
     includedirs { "src/utils", "src/utils/msvc" }
 --]]
 
+solution "muitest"
+  solution_common()
+
+  project "muitest"
+    kind "WindowedApp"
+    language "C++"
+
+    flags { "NoManifest", "WinMain" }
+
+    files {
+      "tools/mui_test/*",
+      "src/utils/BaseUtil*",
+      "src/utils/BitManip.h",
+      "src/utils/Dict*",
+      "src/utils/DebugLog*",
+      "src/Utils/FileUtil*",
+      "src/utils/GdiPlusUtil*",
+      "src/utils/StrUtil*",
+      "src/utils/TgaReader*",
+      "src/utils/WinUtil*",
+      "src/mui/*.h",
+      "src/mui/*.cpp",
+    }
+    excludes
+    {
+      "src/utils/*_ut.cpp",
+      "src/mui/*_ut.cpp",
+      "src/mui/MiniMui*",
+    }
+    includedirs { "src/utils", "src/utils/msvc", "src/mui" }
+    links { "gdiplus", "comctl32", "shlwapi", "Version" }

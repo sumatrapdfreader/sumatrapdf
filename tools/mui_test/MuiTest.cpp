@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "Resource.h"
+#include "Mui.h"
+#include "WinUtil.h"
 
 using namespace mui;
 
@@ -13,6 +15,7 @@ using namespace mui;
 
 static HINSTANCE            ghinst = NULL;
 static HWND                 gHwndFrame = NULL;
+mui::HwndWrapper *gMainWnd = NULL;
 
 static bool gShowTextBoundingBoxes = false;
 
@@ -33,6 +36,10 @@ static inline void EnableAndShow(HWND hwnd, bool enable)
 {
     ShowWindow(hwnd, enable ? SW_SHOW : SW_HIDE);
     EnableWindow(hwnd, enable);
+}
+
+static void OnOpen(HWND /* hwnd */)
+{
 }
 
 #if 0
@@ -154,10 +161,11 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         case WM_COMMAND:
             OnCommand(hwnd, msg, wParam, lParam);
             break;
-
+#if 0
         case WM_TIMER:
             OnTimer(hwnd, wParam);
             break;
+#endif
 
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -170,15 +178,12 @@ static BOOL RegisterWinClass(HINSTANCE hInstance)
 {
     WNDCLASSEX  wcex;
 
-    FillWndClassEx(wcex, hInstance);
+    FillWndClassEx(wcex, hInstance, FRAME_CLASS_NAME, WndProcFrame);
     // clear out CS_HREDRAW | CS_VREDRAW style so that resizing doesn't
     // cause the whole window redraw
     wcex.style = 0;
-    wcex.lpszClassName  = ET_FRAME_CLASS_NAME;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
     wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-
-    wcex.lpfnWndProc    = WndProcFrame;
 
     ATOM atom = RegisterClassEx(&wcex);
     return atom != NULL;
@@ -199,57 +204,34 @@ static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
 
     if (!gHwndFrame)
         return FALSE;
-
-    SetMenu(gHwndFrame, BuildMenu());
+    gMainWnd = new HwndWrapper(gHwndFrame);
+    //SetMenu(gHwndFrame, BuildMenu());
     ShowWindow(gHwndFrame, SW_SHOW);
     return TRUE;
 }
 
-// inspired by http://engineering.imvu.com/2010/11/24/how-to-write-an-interactive-60-hz-desktop-application/
-static int RunApp()
+static int RunMessageLoop()
 {
-    MSG msg;
-    FrameTimeoutCalculator ftc(60);
-    for (;;) {
-        DWORD timeout = ftc.GetTimeoutInMilliseconds();
-        DWORD res = WAIT_TIMEOUT;
-        HANDLE handles[MAXIMUM_WAIT_OBJECTS];
-        DWORD handleCount = 0;
-        handles[handleCount++] = uimsg::GetQueueEvent();
-        CrashIf(handleCount >= MAXIMUM_WAIT_OBJECTS);
-        if ((timeout > 0) || (handleCount > 0)) {
-            if (0 == timeout)
-                timeout = INFINITE;
-            res = MsgWaitForMultipleObjects(handleCount, handles, FALSE, timeout, QS_ALLINPUT);
-        }
+    //HACCEL accTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
+    MSG msg = { 0 };
 
-        if (res == WAIT_OBJECT_0) {
-            DispatchUiMessages();
-        }
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        // dispatch the accelerator to the correct window
+        //WindowInfo *win = FindWindowInfoByHwnd(msg.hwnd);
+        //HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
+        //if (TranslateAccelerator(accHwnd, accTable, &msg))
+        //    continue;
 
-#if 0
-         if (res == WAIT_TIMEOUT) {
-            ftc.Step();
-        }
-#endif
-
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT) {
-                return (int)msg.wParam;
-            }
-            if (!IsDialogMessage(gHwndFrame, &msg)) {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-        }
-        DispatchUiMessages();
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
+
+    return msg.wParam;
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int ret = 1;
-    LogProcessRunningTime();
 
 #ifdef DEBUG
     // report memory leaks on DbgOut
@@ -261,13 +243,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // (use Win32 functions where localized input or output is desired)
     setlocale(LC_ALL, "C");
 
-#ifdef DEBUG
+#if defined(DEBUG) && 0
     extern void SvgPath_UnitTests();
     SvgPath_UnitTests();
     extern void TrivialHtmlParser_UnitTests();
     TrivialHtmlParser_UnitTests();
-    extern void BaseUtils_UnitTests();
-    BaseUtils_UnitTests();
     extern void HtmlPullParser_UnitTests();
     HtmlPullParser_UnitTests();
 #endif
@@ -283,7 +263,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (!InstanceInit(hInstance, nCmdShow))
         goto Exit;
 
-    ret = RunApp();
+    ret = RunMessageLoop();
 
 Exit:
     mui::Destroy();
