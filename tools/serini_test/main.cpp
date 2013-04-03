@@ -187,6 +187,26 @@ static bool TestDefaultValues()
     return true;
 }
 
+static bool TestSerializeTxtAsSqt()
+{
+    sertxt::SetSerializeTxtFormat(Format_Txt_Sqt);
+
+    const WCHAR *path = L"..\\tools\\sertxt_test\\data.txt";
+
+    ScopedMem<char> data(file::ReadAll(path, NULL));
+    Check(data); // failed to read file
+    Settings *s = DeserializeSettings(data, str::Len(data));
+    Check(s); // failed to parse file
+
+    size_t len;
+    ScopedMem<char> ser((char *)SerializeSettings(s, &len));
+    Check(str::Len(ser) == len);
+    Check(str::Eq(data, ser));
+    FreeSettings(s);
+
+    return true;
+}
+
 }; // namespace sertxt
 
 namespace ini3 {
@@ -541,6 +561,8 @@ int main(int argc, char **argv)
     if (!sertxt::TestSerializeWithDefaultsTxt())
         errors++;
     if (!sertxt::TestDefaultValues())
+        errors++;
+    if (!sertxt::TestSerializeTxtAsSqt())
         errors++;
     // tests for SerializeIni3.cpp
     if (!ini3::TestSerialize())

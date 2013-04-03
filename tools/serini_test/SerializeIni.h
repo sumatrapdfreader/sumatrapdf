@@ -8,7 +8,7 @@
 
 namespace sertxt {
 
-enum SerializationFormat { Format_Ini, Format_Sqt, Format_Txt };
+enum SerializationFormat { Format_Ini, Format_Sqt, Format_Txt, Format_Txt_Sqt };
 
 // TODO: the metadata in SettingsSumatra can't be used for
 // multiple serialization schemes simultaneously

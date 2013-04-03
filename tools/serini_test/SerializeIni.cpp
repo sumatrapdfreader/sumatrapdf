@@ -14,6 +14,7 @@
 #define ENABLE_FORMAT_INI
 #define ENABLE_FORMAT_SQT
 #define ENABLE_FORMAT_TXT
+#define ENABLE_FORMAT_TXT_SQT
 
 namespace sertxt {
 
@@ -358,6 +359,12 @@ static void *DeserializeRec(SquareTreeNode *node, void *base, const StructMetada
             *(Vec<void *> **)(data + field.offset) = array;
             SquareTreeNode *child;
             size_t idx = 0;
+#ifdef ENABLE_FORMAT_TXT_SQT
+            if (node && node->GetChild(fieldName) && node->GetChild(fieldName)->GetChild("")) {
+                node = node->GetChild(fieldName);
+                fieldName += str::Len(fieldName);
+            }
+#endif
             while (node && (child = node->GetChild(fieldName, &idx)) != NULL) {
                 array->Append(DeserializeRec(child, NULL, GetStructDef(field)));
             }
@@ -383,6 +390,49 @@ uint8_t *DeserializeWithDefaultSqt(char *data, size_t dataSize, char *defaultDat
     CrashIf(str::Len(data) != dataSize);
     SquareTree sqt(data);
     return (uint8_t *)DeserializeRec(sqt.root, base, def);
+}
+
+static void FixupStringDecoding(uint8_t *data, const StructMetadata *def)
+{
+    if (!data)
+        return;
+    for (size_t i = 0; i < def->nFields; i++) {
+        const FieldMetadata& field = def->fields[i];
+        if (TYPE_STRUCT_PTR == field.type)
+            FixupStringDecoding(*(uint8_t **)(data + field.offset), GetStructDef(field));
+        else if (TYPE_ARRAY == field.type) {
+            Vec<void *> *array = *(Vec<void *> **)(data + field.offset);
+            for (size_t j = 0; j < array->Count(); j++) {
+                FixupStringDecoding((uint8_t *)array->At(j), GetStructDef(field));
+            }
+        }
+        else if (TYPE_STR == field.type && *(char **)(data + field.offset)) {
+            char *str = *(char **)(data + field.offset);
+            *UnescapeLineInPlace(str, str + str::Len(str), '$') = '\0';
+        }
+        else if (TYPE_WSTR == field.type && *(WCHAR **)(data + field.offset)) {
+            ScopedMem<char> ustr(str::conv::ToUtf8(*(WCHAR **)(data + field.offset)));
+            char *str = ustr.Get();
+            *UnescapeLineInPlace(str, str + str::Len(str), '$') = '\0';
+            free(*(WCHAR **)(data + field.offset));
+            *(WCHAR **)(data + field.offset) = str::conv::FromUtf8(ustr);
+        }
+    }
+}
+
+uint8_t *DeserializeWithDefaultTxtSqt(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def)
+{
+    void *base = NULL;
+    if (defaultData) {
+        CrashIf(str::Len(defaultData) != defaultDataSize);
+        SquareTree sqtDef(defaultData);
+        base = DeserializeRec(sqtDef.root, base, def);
+    }
+    CrashIf(str::Len(data) != dataSize);
+    SquareTree sqt(data);
+    base = DeserializeRec(sqt.root, base, def);
+    FixupStringDecoding((uint8_t *)base, def);
+    return (uint8_t *)base;
 }
 
 static inline void Indent(str::Str<char>& out, int indent)
@@ -470,6 +520,9 @@ uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, 
 #ifdef ENABLE_FORMAT_TXT
     case Format_Txt: return sertxt::DeserializeWithDefaultTxt(data, dataSize, defaultData, defaultDataSize, def);
 #endif
+#ifdef ENABLE_FORMAT_TXT_SQT
+    case Format_Txt_Sqt: return DeserializeWithDefaultTxtSqt(data, dataSize, defaultData, defaultDataSize, def);
+#endif
     default: CrashIf(true); return NULL;
     }
 }
@@ -490,6 +543,9 @@ uint8_t *Serialize(const uint8_t *data, const StructMetadata *def, size_t *sizeO
 #endif
 #ifdef ENABLE_FORMAT_TXT
     case Format_Txt: return sertxt::Serialize(data, def, sizeOut);
+#endif
+#ifdef ENABLE_FORMAT_TXT_SQT
+    case Format_Txt_Sqt: return sertxt::Serialize(data, def, sizeOut);
 #endif
     default: CrashIf(true); return NULL;
     }
