@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "SerializeIni3.h"
 
+#define INCLUDE_APPPREFS3_STRUCTS
 #include "AppPrefs3.h"
 #include "IniParser.h"
 

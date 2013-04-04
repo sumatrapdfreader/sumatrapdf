@@ -37,6 +37,8 @@ class Field(object):
 			return '(intptr_t)"%s"' % self.default if self.default is not None else "NULL"
 		if self.type.name == "Custom":
 			return self.default
+		if self.type.name in ["Struct", "Array", "Compact"]:
+			return "(intptr_t)&g%sInfo" % self.structName
 		return None
 
 	def inidefault(self, commentChar=";"):
@@ -313,6 +315,22 @@ def FormatComment(comment, start):
 		line = start
 	return result
 
+def FormatArrayLine(data, fmt):
+	maxs = [0] * len(data[0])
+	fmts = fmt.split()
+	data2 = []
+	for item in data:
+		assert len(item) == len(maxs) and len(fmts) ==len(maxs)
+		item2 = []
+		for i in range(len(item)):
+			item2.append(fmts[i] % item[i])
+			maxs[i] = max(maxs[i], len(item2[-1]))
+		data2.append(item2)
+	for item in data2:
+		for i in range(len(item)):
+			item[i] += " " * (maxs[i] - len(item[i]))
+		yield " ".join(item)
+
 def BuildStruct(struct, built=[]):
 	lines = ["struct %s {" % struct.name]
 	if struct.comment:
@@ -327,22 +345,20 @@ def BuildStruct(struct, built=[]):
 	return "\n".join(lines)
 
 def BuildMetaData(struct, built=[]):
-	lines = ["static FieldInfo g%sFields[] = {" % struct.structName]
-	metadata, names = [], []
+	lines, data, names = [], [], []
 	for field in struct.default:
 		if field.internal:
 			continue
-		if type(field) in [Struct, Array]:
-			lines.append("\t{ Type_%s, offsetof(%s, %s), (intptr_t)&g%sInfo }," % (field.type.name, struct.structName, field.cname, field.structName))
-		else:
-			lines.append("\t{ Type_%s, offsetof(%s, %s), %s }," % (field.type.name, struct.structName, field.cname, field.cdefault()))
+		data.append(("offsetof(%s, %s)" % (struct.structName, field.cname), "Type_%s" % field.type.name, field.cdefault()))
 		names.append(field.name)
 		if type(field) in [Struct, Array] and field.structName not in built:
-			metadata.append(BuildMetaData(field))
+			lines += [BuildMetaData(field), ""]
 			built.append(field.structName)
+	lines.append("static const FieldInfo g%sFields[] = {" % struct.structName)
+	lines += ["\t{ %s }," % line for line in FormatArrayLine(data, "%s, %s, %s")]
 	lines.append("};")
-	lines.append("static SettingInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % (struct.structName, struct.structName, len(names), struct.structName, "\\0".join(names)))
-	return "\n".join(metadata + lines) + "\n"
+	lines.append("static const SettingInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % (struct.structName, struct.structName, len(names), struct.structName, "\\0".join(names)))
+	return "\n".join(lines)
 
 def AssembleDefaults(struct):
 	lines, more = [], []
@@ -379,30 +395,36 @@ AppPrefs3_Header = """\
 
 %(userStructDef)s
 
+#if defined(INCLUDE_APPPREFS3_STRUCTS) || defined(INCLUDE_APPPREFS3_METADATA)
+
 enum SettingType {
 	Type_Struct, Type_Array, Type_Compact, Type_Custom,
 	Type_Bool, Type_Color, Type_Float, Type_Int, Type_String, Type_Utf8String,
 };
 
 struct FieldInfo {
-	SettingType type;
 	size_t offset;
+	SettingType type;
 	intptr_t value;
 };
 
 struct SettingInfo {
     uint16_t structSize;
     uint16_t fieldCount;
-    FieldInfo *fields;
+    const FieldInfo *fields;
     const char *fieldNames;
 };
 
 static inline const SettingInfo *GetSubstruct(const FieldInfo& field) { return (const SettingInfo *)field.value; }
 
+#endif
+
 #ifdef INCLUDE_APPPREFS3_METADATA
+
 %(appStructMetadata)s
 
 %(userStructMetadata)s
+
 #endif
 
 #endif

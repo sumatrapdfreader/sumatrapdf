@@ -122,9 +122,8 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
 
     while (*(data = SkipWsAndComments(data))) {
         // all non-empty non-comment lines contain a key-value pair
-        // where the value is either a string or a list of
-        // child nodes (if the string value would be a single '[')
-        // and where key and value are usually separated by '=' or ':' 
+        // where the value is either a string (separated by '=' or ':')
+        // or a list of child nodes (if the key is followed by '[' alone)
         char *key = data;
         for (data = key; *data && *data != '=' && *data != ':' && *data != '[' && *data != ']' && *data != '\n'; data++);
         if (!*data || '\n' == *data) {
@@ -147,7 +146,7 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
             data = SkipWsAndComments(separator) + 1;
             *SkipWsRev(key, separator) = '\0';
             node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
-            // array are created by either reusing the same key for a different child
+            // arrays are created by either reusing the same key for a different child
             // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
             while ('[' == *(data = SkipWsAndComments(data))) {
                 data++;

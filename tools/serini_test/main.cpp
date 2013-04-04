@@ -24,8 +24,8 @@ struct Rec {
 };
 
 static FieldInfo gRecFields[] = {
-    { Type_Array, offsetof(Rec, rec), -1 /* set to (intptr_t)gRecInfo before usage */ },
-    { Type_Struct, offsetof(Rec, up), (intptr_t)&gUserPrefsInfo },
+    { offsetof(Rec, rec), Type_Array,  -1 /* set to (intptr_t)gRecInfo before usage */ },
+    { offsetof(Rec, up),  Type_Struct, (intptr_t)&gUserPrefsInfo },
 };
 static SettingInfo gRecInfo = { sizeof(Rec), 2, gRecFields, "Rec\0Up" };
 
@@ -33,13 +33,13 @@ struct TestCD2 { bool val1; float val2; };
 struct TestCD1 { TestCD2 compact; };
 
 static FieldInfo gTestCD2Fields[] = {
-    { Type_Bool, offsetof(TestCD2, val1), false },
-    { Type_Float, offsetof(TestCD2, val2), (intptr_t)"3.14" },
+    { offsetof(TestCD2, val1), Type_Bool,  false },
+    { offsetof(TestCD2, val2), Type_Float, (intptr_t)"3.14" },
 };
 static SettingInfo gTestCD2Info = { sizeof(TestCD2), 2, gTestCD2Fields, "Val1\0Val2" };
 
 static FieldInfo gTestCD1Fields[] = {
-    { Type_Compact, offsetof(TestCD1, compact), (intptr_t)&gTestCD2Info },
+    { offsetof(TestCD1, compact), Type_Compact, (intptr_t)&gTestCD2Info },
 };
 static SettingInfo gTestCD1Info = { sizeof(TestCD1), 1, gTestCD1Fields, "Compact" };
 
@@ -443,80 +443,80 @@ static bool TestSerializeIniAsSqt()
 namespace benc {
 
 static FieldInfo gGlobalPrefsFieldsBenc[] = {
-    { Type_Bool, offsetof(GlobalPrefs, cbxR2L), false },
-    { Type_String, offsetof(GlobalPrefs, defaultDisplayMode), (intptr_t)L"automatic" },
-    { Type_Bool, offsetof(GlobalPrefs, enableAutoUpdate), true },
-    { Type_Bool, offsetof(GlobalPrefs, enableTeXEnhancements), false },
-    { Type_Bool, offsetof(GlobalPrefs, favVisible), false },
-    { Type_Bool, offsetof(GlobalPrefs, globalPrefsOnly), false },
-    { Type_String, offsetof(GlobalPrefs, inverseSearchCmdLine), NULL },
-    { Type_Custom, offsetof(GlobalPrefs, lastUpdateTime), 0 },
-    { Type_Int, offsetof(GlobalPrefs, openCountWeek), 0 },
-    { Type_Bool, offsetof(GlobalPrefs, pdfAssociateDontAskAgain), false },
-    { Type_Bool, offsetof(GlobalPrefs, pdfAssociateShouldAssociate), false },
-    { Type_Bool, offsetof(GlobalPrefs, rememberOpenedFiles), true },
-    { Type_Bool, offsetof(GlobalPrefs, showStartPage), true },
-    { Type_Bool, offsetof(GlobalPrefs, tocVisible), true },
-    { Type_Bool, offsetof(GlobalPrefs, toolbarVisible), true },
-    { Type_Int, offsetof(GlobalPrefs, sidebarDx), 0 },
-    { Type_Int, offsetof(GlobalPrefs, tocDy), 0 },
-    { Type_Utf8String, offsetof(GlobalPrefs, currLangCode), NULL },
-    { Type_Bool, offsetof(GlobalPrefs, useSysColors), false },
-    { Type_String, offsetof(GlobalPrefs, versionToSkip), NULL },
-    { Type_Int, offsetof(GlobalPrefs, windowPos.dx), 1 },
-    { Type_Int, offsetof(GlobalPrefs, windowPos.dy), 1 },
-    { Type_Int, offsetof(GlobalPrefs, windowState), 1 },
-    { Type_Int, offsetof(GlobalPrefs, windowPos.x), 1 },
-    { Type_Int, offsetof(GlobalPrefs, windowPos.y), 1 },
-    { Type_Float, offsetof(GlobalPrefs, defaultZoom), (intptr_t)"-1" },
+    { offsetof(GlobalPrefs, cbxR2L), Type_Bool, false },
+    { offsetof(GlobalPrefs, defaultDisplayMode), Type_String, (intptr_t)L"automatic" },
+    { offsetof(GlobalPrefs, enableAutoUpdate), Type_Bool, true },
+    { offsetof(GlobalPrefs, enableTeXEnhancements), Type_Bool, false },
+    { offsetof(GlobalPrefs, favVisible), Type_Bool, false },
+    { offsetof(GlobalPrefs, globalPrefsOnly), Type_Bool, false },
+    { offsetof(GlobalPrefs, inverseSearchCmdLine), Type_String, NULL },
+    { offsetof(GlobalPrefs, lastUpdateTime), Type_Custom, 0 },
+    { offsetof(GlobalPrefs, openCountWeek), Type_Int, 0 },
+    { offsetof(GlobalPrefs, pdfAssociateDontAskAgain), Type_Bool, false },
+    { offsetof(GlobalPrefs, pdfAssociateShouldAssociate), Type_Bool, false },
+    { offsetof(GlobalPrefs, rememberOpenedFiles), Type_Bool, true },
+    { offsetof(GlobalPrefs, showStartPage), Type_Bool, true },
+    { offsetof(GlobalPrefs, tocVisible), Type_Bool, true },
+    { offsetof(GlobalPrefs, toolbarVisible), Type_Bool, true },
+    { offsetof(GlobalPrefs, sidebarDx), Type_Int, 0 },
+    { offsetof(GlobalPrefs, tocDy), Type_Int, 0 },
+    { offsetof(GlobalPrefs, currLangCode), Type_Utf8String, NULL },
+    { offsetof(GlobalPrefs, useSysColors), Type_Bool, false },
+    { offsetof(GlobalPrefs, versionToSkip), Type_String, NULL },
+    { offsetof(GlobalPrefs, windowPos.dx), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowPos.dy), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowState), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowPos.x), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowPos.y), Type_Int, 1 },
+    { offsetof(GlobalPrefs, defaultZoom), Type_Float, (intptr_t)"-1" },
 };
 static SettingInfo gGlobalPrefsInfoBenc = { sizeof(GlobalPrefs), 26, gGlobalPrefsFieldsBenc, "CBX_Right2Left\0Display Mode\0EnableAutoUpdate\0ExposeInverseSearch\0FavVisible\0GlobalPrefsOnly\0InverseSearchCommandLine\0LastUpdate\0OpenCountWeek\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0RememberOpenedFiles\0ShowStartPage\0ShowToc\0ShowToolbar\0Toc DX\0Toc Dy\0UILanguage\0UseSysColors\0VersionToSkip\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual" };
 
 static FieldInfo gFileFieldsBenc[] = {
-    { Type_Utf8String, offsetof(File, decryptionKey), NULL },
-    { Type_String, offsetof(File, displayMode), (intptr_t)L"automatic" },
-    { Type_String, offsetof(File, filePath), NULL },
-    { Type_Bool, offsetof(File, isMissing), false },
-    { Type_Int, offsetof(File, openCount), 0 },
-    { Type_Int, offsetof(File, pageNo), 1 },
-    { Type_Bool, offsetof(File, isPinned), false },
-    { Type_Int, offsetof(File, reparseIdx), 0 },
-    { Type_Int, offsetof(File, rotation), 0 },
-    { Type_Int, offsetof(File, scrollPos.x), 0 },
-    { Type_Int, offsetof(File, scrollPos.y), 0 },
-    { Type_Bool, offsetof(File, tocVisible), true },
-    { Type_Int, offsetof(File, sidebarDx), 0 },
-    { Type_Custom, offsetof(File, tocState), NULL },
-    { Type_Bool, offsetof(File, useGlobalValues), false },
-    { Type_Int, offsetof(File, windowPos.dx), 1 },
-    { Type_Int, offsetof(File, windowPos.dy), 1 },
-    { Type_Int, offsetof(File, windowState), 1 },
-    { Type_Int, offsetof(File, windowPos.x), 1 },
-    { Type_Int, offsetof(File, windowPos.y), 1 },
-    { Type_Float, offsetof(File, zoomVirtual), (intptr_t)"100" },
+    { offsetof(File, decryptionKey), Type_Utf8String, NULL },
+    { offsetof(File, displayMode), Type_String, (intptr_t)L"automatic" },
+    { offsetof(File, filePath), Type_String, NULL },
+    { offsetof(File, isMissing), Type_Bool, false },
+    { offsetof(File, openCount), Type_Int, 0 },
+    { offsetof(File, pageNo), Type_Int, 1 },
+    { offsetof(File, isPinned), Type_Bool, false },
+    { offsetof(File, reparseIdx), Type_Int, 0 },
+    { offsetof(File, rotation), Type_Int, 0 },
+    { offsetof(File, scrollPos.x), Type_Int, 0 },
+    { offsetof(File, scrollPos.y), Type_Int, 0 },
+    { offsetof(File, tocVisible), Type_Bool, true },
+    { offsetof(File, sidebarDx), Type_Int, 0 },
+    { offsetof(File, tocState), Type_Custom, NULL },
+    { offsetof(File, useGlobalValues), Type_Bool, false },
+    { offsetof(File, windowPos.dx), Type_Int, 1 },
+    { offsetof(File, windowPos.dy), Type_Int, 1 },
+    { offsetof(File, windowState), Type_Int, 1 },
+    { offsetof(File, windowPos.x), Type_Int, 1 },
+    { offsetof(File, windowPos.y), Type_Int, 1 },
+    { offsetof(File, zoomVirtual), Type_Float, (intptr_t)"100" },
 };
 static SettingInfo gFileInfoBenc = { sizeof(File), 21, gFileFieldsBenc, "Decryption Key\0Display Mode\0File\0Missing\0OpenCount\0Page\0Pinned\0ReparseIdx\0Rotation\0Scroll X2\0Scroll Y2\0ShowToc\0Toc DX\0TocToggles\0UseGlobalValues\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual" };
 
 static FieldInfo gBencGlobalPrefsFields[] = {
-    { Type_Array, offsetof(GlobalPrefs, file), (intptr_t)&gFileInfoBenc },
-    { Type_Struct, 0 /* self */, (intptr_t)&gGlobalPrefsInfoBenc },
+    { offsetof(GlobalPrefs, file), Type_Array, (intptr_t)&gFileInfoBenc },
+    { 0 /* self */, Type_Struct, (intptr_t)&gGlobalPrefsInfoBenc },
     // Favorites must be read after File History
-    { Type_Custom, offsetof(GlobalPrefs, file), NULL },
+    { offsetof(GlobalPrefs, file), Type_Custom, NULL },
 };
 static SettingInfo gBencGlobalPrefs = { sizeof(GlobalPrefs), 3, gBencGlobalPrefsFields, "File History\0gp\0Favorites" };
 
 static FieldInfo gUserPrefsFieldsBenc[] = {
-    { Type_Color, offsetof(UserPrefs, advancedPrefs.mainWindowBackground), 0xfff200 },
-    { Type_Bool, offsetof(UserPrefs, advancedPrefs.escToExit), false },
-    { Type_Color, offsetof(UserPrefs, forwardSearch.highlightColor), 0x6581ff },
-    { Type_Int, offsetof(UserPrefs, forwardSearch.highlightOffset), 0 },
-    { Type_Bool, offsetof(UserPrefs, forwardSearch.highlightPermanent), false },
-    { Type_Int, offsetof(UserPrefs, forwardSearch.highlightWidth), 15 },
+    { offsetof(UserPrefs, advancedPrefs.mainWindowBackground), Type_Color, 0xfff200 },
+    { offsetof(UserPrefs, advancedPrefs.escToExit), Type_Bool, false },
+    { offsetof(UserPrefs, forwardSearch.highlightColor), Type_Color, 0x6581ff },
+    { offsetof(UserPrefs, forwardSearch.highlightOffset), Type_Int, 0 },
+    { offsetof(UserPrefs, forwardSearch.highlightPermanent), Type_Bool, false },
+    { offsetof(UserPrefs, forwardSearch.highlightWidth), Type_Int, 15 },
 };
 static SettingInfo gUserPrefsInfoBenc = { sizeof(UserPrefs), 6, gUserPrefsFieldsBenc, "BgColor\0EscToExit\0ForwardSearch_HighlightColor\0ForwardSearch_HighlightOffset\0ForwardSearch_HighlightPermanent\0ForwardSearch_HighlightWidth" };
 
 static FieldInfo gBencUserPrefsFields[] = {
-    { Type_Struct, 0 /* self */, (intptr_t)&gUserPrefsInfoBenc },
+    { 0 /* self */, Type_Struct, (intptr_t)&gUserPrefsInfoBenc },
 };
 static SettingInfo gBencUserPrefs = { sizeof(UserPrefs), 1, gBencUserPrefsFields, "gp" };
 

@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "SerializeSqt.h"
 
+#define INCLUDE_APPPREFS3_STRUCTS
 #include "AppPrefs3.h"
 #include "SquareTreeParser.h"
 
