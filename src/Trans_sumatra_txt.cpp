@@ -260,7 +260,7 @@ const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
 const char * gTranslations_sq = 
   "&P\303\253r\0"\
   "P\303\253rmasa &reale\tCtrl+1\0"\
-  "&Gjith\303\253 faqet e seleksionuara\0"\
+  "&Gjith\303\253 faqet e p\303\253rzgjedhura\0"\
   "&Prapa\tAlt+Left Arrow\0"\
   "&Lib\303\253r\tCtrl+8\0"\
   "&Mbyll\tCtrl+W\0"\
@@ -332,7 +332,7 @@ const char * gTranslations_sq =
   "Nuk mund t\303\253 lidhet n\303\253 internet (gabim %#x).\0"\
   "Anuloj\0"\
   "Nuk mund t\303\253 printoj\303\253 sked\303\253n\0"\
-  "Nuk mund t\303\253 k\303\253rkoj\303\253 mbrapsht. Ju lutemi t\303\253 verifikoni komand\303\253n te parametrat.\0"\
+  "Nuk mund t\303\253 k\303\253rkoj\303\253 mbrapsht. Lutemi t\303\253 verifikoni komand\303\253n te parametrat.\0"\
   "Ndryshoj gjuh\303\253n\0"\
   "&Azhurnoj\0"\
   "\0"\
@@ -404,7 +404,7 @@ const char * gTranslations_sq =
   "Hap sked\303\253n %s...\0"\
   "\0"\
   "SumatraPDF t\303\253 jet\303\253 aplikacioni standard p\303\253r skedat PDF?\0"\
-  "SumatraPDF t\303\253 jet\303\253 lexuesi standard p\303\253r PDF\0"\
+  "SumatraPDF t\303\253 jet\303\253 lexuesi standard i PDF-ve\0"\
   "Krahasoj madh\303\253sin\303\253 e shkrimit\0"\
   "Dokumente Mobi\0"\
   "Modifikuar m\303\253:\0"\
@@ -413,13 +413,13 @@ const char * gTranslations_sq =
   "Nuk ka ngjashm\303\253ri\0"\
   "Asnj\303\253 rezultat n\303\253 radh\303\253n %u te skeda %s\0"\
   "Nuk gjen sked\303\253n e sinkronizimit\0"\
-  "Nuk ka info sinkronizimi n\303\253 k\303\253t\303\253 pozicion\0"\
+  "Nuk ka info p\303\253r sinkronizimin n\303\253 k\303\253t\303\253 pozicion\0"\
   "Numri i faqeve:\0"\
   "\0"\
   "Hap\0"\
   "Hap &n\303\253 PDF-XChange\0"\
   "Hap nj\303\253 dokument...\0"\
-  "\0"\
+  "Hap n\303\253 %s\0"\
   "Hap n\303\253 &Adobe Reader\0"\
   "Hap n\303\253 &Foxit Reader\0"\
   "Hap n\303\253 &Microsoft HTML Help\0"\
@@ -479,8 +479,8 @@ const char * gTranslations_sq =
   "SumatraPDF opsionet\0"\
   "SumatraPDF azhurnimi\0"\
   "SumatraPDF ngeci\0"\
-  "SumatraPDF \303\253sht\303\253 lexuesi standard p\303\253r PDF\0"\
-  "SumatraPDF tani do jet\303\253 lexuesi standard p\303\253r PDF\0"\
+  "SumatraPDF \303\253sht\303\253 lexuesi standard i PDF-ve\0"\
+  "SumatraPDF tani do jet\303\253 lexuesi standard i PDF-ve\0"\
   "Nuk hapet skeda e sinkronizimit\0"\
   "PDF me etiketa\0"\
   "Dokumente tekst\0"\
@@ -11444,7 +11444,7 @@ const char * gTranslations_sv =
   "&St\303\244ng\tCtrl+W\0"\
   "&Kopiera markering\0"\
   "Kopiera markering\tCtrl+C\0"\
-  "Fr\303\245ga mig inte igen\0"\
+  "Fr\303\245ga inte igen\0"\
   "Endast &j\303\244mna sidor\0"\
   "&Sida vid sida\tCtrl+7\0"\
   "&Arkiv\0"\
@@ -11464,7 +11464,7 @@ const char * gTranslations_sv =
   "Endast &udda sidor\0"\
   "&\303\226ppna dokument\0"\
   "&\303\226ppna...\tCtrl+O\0"\
-  "&Inst\303\244llningar...\0"\
+  "Alternativ...\0"\
   "&L\303\266senord:\0"\
   "&F\303\244st dokument\0"\
   "F\303\266reg\303\245ende sida\t<-\0"\
@@ -11559,7 +11559,7 @@ const char * gTranslations_sv =
   "S\303\266k\0"\
   "S\303\266k n\303\244sta\0"\
   "S\303\266k f\303\266reg\303\245ende\0"\
-  "S\303\266k\0"\
+  "S\303\266k:\0"\
   "Passa &inneh\303\245ll\tCtrl+3\0"\
   "Anpassa efter &helsida\tCtrl+0\0"\
   "Anpassa efter &bredd\tCtrl+2\0"\
@@ -11597,7 +11597,7 @@ const char * gTranslations_sv =
   "\303\226ppna\0"\
   "\303\226ppna i PDF-XChange\0"\
   "\303\226ppna ett dokument...\0"\
-  "\0"\
+  "\303\226ppna med %s\0"\
   "\303\226ppna i Adobe &Reader\0"\
   "\303\226ppna i Foxit Reader\0"\
   "\303\226ppna i Microsoft HTML Help\0"\

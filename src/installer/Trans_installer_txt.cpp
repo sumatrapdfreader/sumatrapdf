@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   18
+#define LANGS_COUNT   20
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -58,6 +58,51 @@ const char *gOriginalStrings[STRINGS_COUNT] = {
 
 const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
 
+
+const char * gTranslations_sq = 
+  "&Opsionet\0"\
+  "\0"\
+  "Mbyll\0"\
+  "Nuk mund t\303\253 krijoj\303\253 direktorin\303\253 e p\303\253rkohshme\0"\
+  "Nuk mund t\303\253 krijoj\303\253 direktorin\303\253 p\303\253r instalimin\0"\
+  "Nuk mund t\303\253 instaloj\303\253 parashikuesin e PDF-ve\0"\
+  "\0"\
+  "Nuk mund t\303\253 instaloj\303\253 spin\303\253n p\303\253r shfletuesin\0"\
+  "Nuk mund t\303\253 siguroj\303\253 direktorin\303\253 e p\303\253rkohshme\0"\
+  "Nuk mund t\303\253 heq\303\253 direktorin\303\253 e p\303\253rkohshme\0"\
+  "Nuk mund t\303\253 heq\303\253 shkurtoren\0"\
+  "Nuk mund t\303\253 \303\247instaloj\303\253 parashikuesin e PDF-ve\0"\
+  "\0"\
+  "Nuk mund t\303\253 \303\247instaloj\303\253 spin\303\253n p\303\253r shfletuesin\0"\
+  "Nuk mund t\303\253 shkruaj\303\253 %s n\303\253 disk\0"\
+  "D\303\253shtoi kopjimi i \303\247instaluesit te direktoria e p\303\253rkohshme\0"\
+  "D\303\253shtoi krijimi i shkurtores\0"\
+  "D\303\253shtoi fshirja e \303\247instaluesit nga regjistri\0"\
+  "\0"\
+  "D\303\253shtoi shkrimi n\303\253 regjist\303\253r i informacionit p\303\253r \303\247instalimin\0"\
+  "\0"\
+  "Instaloj spin\303\253n PDF p\303\253r &shfletuesin Firefox, Chrome dhe Opera\0"\
+  "Instaloj SumatraPDF\0"\
+  "Instaloj SumatraPDF n\303\253 &dosje:\0"\
+  "D\303\253shtoi instalimi!\0"\
+  "Instalimi vijon...\0"\
+  "Lejoj Windows Desktop Search t\303\253 &k\303\253rkoj\303\253 dokumentet PDF\0"\
+  "Lejoj Windows Desktop Search t\303\253 &parashikoj\303\253 dokumentet PDF\0"\
+  "Lutemi t\303\253 mbyllni %s p\303\253r t\303\253 vazhduar!\0"\
+  "Seleksiononi dosjen ku do t\303\253 instalohet SumatraPDF:\0"\
+  "\0"\
+  "Nis SumatraPDF\0"\
+  "Instaluesi i SumatraPDF %s\0"\
+  "\303\207instaluesi i SumatraPDF %s\0"\
+  "SumatraPDF u \303\247instalua\0"\
+  "Nuk u gjet SumatraPDF i instaluar.\0"\
+  "Faleminderit q\303\253 zgjodh\303\253t SumatraPDF!\0"\
+  "Faleminderit! SumatraPDF u instalua.\0"\
+  "\0"\
+  "\303\207instaloj SumatraPDF\0"\
+  "D\303\253shtoi \303\247instalimi\0"\
+  "\303\207instalimi vijon...\0"\
+  "P\303\253rdor SumatraPDF si lexuesin &standard t\303\253 PDF-ve\0";
 
 const char * gTranslations_ar = 
   "&\330\247\331\204\330\256\331\212\330\247\330\261\330\247\330\252\0"\
@@ -734,6 +779,51 @@ const char * gTranslations_es =
   "Desinstalaci\303\263n en progreso...\0"\
   "Usar SumatraPDF como el lector PDF por &defecto\0";
 
+const char * gTranslations_sv = 
+  "Alternativ\0"\
+  "\303\204r du s\303\244ker p\303\245 att du vill avinstallera SumatraPDF?\0"\
+  "St\303\244ng\0"\
+  "Kunde inte skapa en tillf\303\244llig katalog\0"\
+  "Kunde inte skapa installationsmappen\0"\
+  "Kunde inte installera f\303\266rhandstitt av PDF:er\0"\
+  "Kunde inte installera s\303\266kfilter f\303\266r PDF\0"\
+  "Kunde inte installera insticksprogrammet i webbl\303\244saren\0"\
+  "Kunde inte h\303\244mta temp-katalog\0"\
+  "Kunde inte ta bort installationsmappen\0"\
+  "Kunde inte ta bort genv\303\244gen\0"\
+  "Kunde inte avinstallera f\303\266rhandstitt p\303\245 PDF:er\0"\
+  "Kunde inte avinstallera s\303\266kfiltret f\303\266r PDF:er\0"\
+  "Kunde inte avinstallera webbl\303\244sarens insticksprogram\0"\
+  "Kunde inte spara %s p\303\245 h\303\245rddisken\0"\
+  "Misslyckades med att kopiera avinstalleraren till temp-katalogen\0"\
+  "Misslyckades med att skapa genv\303\244g\0"\
+  "Misslyckades med att ta bort registernycklar\0"\
+  "Misslyckades med att spara registernycklar f\303\266r den ut\303\266kade filhanteringen\0"\
+  "Missluckades spara data f\303\266r avinstallation i registret\0"\
+  "G\303\266m Alternativ\0"\
+  "Installera insticksprogram f\303\266r PDF i webbl\303\244sarna Firefox, Chrome och Opera\0"\
+  "Installera SumatraPDF\0"\
+  "Installera SumatraPDF i katalog:\0"\
+  "Installationen misslyckades!\0"\
+  "Installerar...\0"\
+  "L\303\245t Windows inbyggda s\303\266kfunktion indexera PDF-dokument\0"\
+  "Visa f\303\266rhandstitt av PDF-dokument i Windows\0"\
+  "V\303\244nligen st\303\244ng %s innan du forts\303\244tter!\0"\
+  "V\303\244lj en katalog d\303\244r SumatraPDF ska installeras:\0"\
+  "N\303\245gra installationsfiler saknas eller \303\244r skadade\0"\
+  "Starta SumatraPDF\0"\
+  "Installationsprogram f\303\266r SumatraPDF %s\0"\
+  "Avinstallationsprogram f\303\266r SumatraPDF %s\0"\
+  "SumatraPDF \303\244r nu borttaget.\0"\
+  "Kunde inte hitta SumatraPDF-installation.\0"\
+  "Tack f\303\266r att du v\303\244ljer SumatraPDF!\0"\
+  "Tack! SumatraPDF \303\244r nu installerat.\0"\
+  "Installationsprogrammet \303\244r skadat. V\303\244nligen ladda ner det igen.\nVi ber om urs\303\244kt f\303\266r problemen.\0"\
+  "Avinstallera SumatraPDF\0"\
+  "Avinstallationen misslyckades\0"\
+  "Avinstallerar...\0"\
+  "Anv\303\244nd SumatraPDF som standardl\303\244sare f\303\266r PDF-filer\0";
+
 const char * gTranslations_ta = 
   "&\340\256\265\340\256\277\340\256\260\340\257\201\340\256\252\340\257\215\340\256\252\340\256\256\340\257\215\0"\
   "\340\256\232\340\257\201\340\256\256\340\256\244\340\257\215\340\256\260\340\256\276 PDF \340\256\250\340\256\277\340\256\261\340\257\201\340\256\265\340\256\262\340\257\210 \340\256\250\340\257\200\340\256\225\340\257\215\340\256\225\340\256\265\340\256\276?\0"\
@@ -827,6 +917,7 @@ const char * gTranslations_uk =
 
 static const char *gTranslations[LANGS_COUNT] = {
   NULL,
+  gTranslations_sq, 
   gTranslations_ar, 
   gTranslations_az, 
   gTranslations_eu, 
@@ -842,6 +933,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ro, 
   gTranslations_ru, 
   gTranslations_es, 
+  gTranslations_sv, 
   gTranslations_ta, 
   gTranslations_uk
 };
@@ -850,6 +942,7 @@ const char *GetTranslationsForLang(int langIdx) { return gTranslations[langIdx];
 
 
 const char *gLangCodes =   "en\0" \
+  "sq\0" \
   "ar\0" \
   "az\0" \
   "eu\0" \
@@ -865,10 +958,12 @@ const char *gLangCodes =   "en\0" \
   "ro\0" \
   "ru\0" \
   "es\0" \
+  "sv\0" \
   "ta\0" \
   "uk\0" "\0";
 
 const char *gLangNames =   "English\0" \
+  "Albanian (Shqip)\0" \
   "Arabic (\330\247\331\204\331\222\330\271\331\216\330\261\331\216\330\250\331\212\331\221\330\251)\0" \
   "Azerbaijani (Az\311\231rbaycanca)\0" \
   "Basque (Euskara)\0" \
@@ -884,6 +979,7 @@ const char *gLangNames =   "English\0" \
   "Romanian (Rom\303\242n\304\203)\0" \
   "Russian (\320\240\321\203\321\201\321\201\320\272\320\270\320\271)\0" \
   "Spanish (Espa\303\261ol)\0" \
+  "Swedish (Svenska)\0" \
   "Tamil (\340\256\244\340\256\256\340\256\277\340\256\264\340\257\215)\0" \
   "Ukrainian (\320\243\320\272\321\200\320\260\321\227\320\275\321\201\321\214\320\272\320\260)\0" "\0";
 
@@ -900,6 +996,7 @@ const char *gLangNames =   "English\0" \
 #define _LANGID(lang) MAKELANGID(lang, SUBLANG_NEUTRAL)
 const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_ENGLISH),
+  _LANGID(LANG_ALBANIAN),
   _LANGID(LANG_ARABIC),
   _LANGID(LANG_AZERI),
   _LANGID(LANG_BASQUE),
@@ -915,6 +1012,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_ROMANIAN),
   _LANGID(LANG_RUSSIAN),
   _LANGID(LANG_SPANISH),
+  _LANGID(LANG_SWEDISH),
   _LANGID(LANG_TAMIL),
   _LANGID(LANG_UKRAINIAN)
 };
@@ -922,7 +1020,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (1 == idx) || (10 == idx);
+  return (2 == idx) || (11 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;
