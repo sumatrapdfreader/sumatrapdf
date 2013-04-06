@@ -6,9 +6,15 @@
 
 struct SettingInfo;
 
+class BencDict;
+struct FieldInfo;
+
 namespace benc {
 
-void *Deserialize(const char *data, size_t dataLen, const SettingInfo *meta);
+// Benc doesn't need compact serialization, so allow to use Type_Compact for custom deserialization
+typedef bool (* CompactCallback)(BencDict *dict, const FieldInfo *field, const char *fieldName, uint8_t *fieldPtr);
+
+void *Deserialize(const char *data, size_t dataLen, const SettingInfo *meta, CompactCallback cb);
 
 };
 

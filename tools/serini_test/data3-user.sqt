@@ -6,6 +6,8 @@ AdvancedPrefs [
 	EscToExit = false
 	TextColor = #0000ff
 	PageColor = #ff0000
+	ZoomIncrement = 0
+	ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400
 ]
 PrinterDefaults [
 	PrintScale = shrink

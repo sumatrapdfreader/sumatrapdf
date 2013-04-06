@@ -93,6 +93,7 @@ static void DeserializeField(uint8_t *base, const FieldInfo& field, const char *
 {
     uint8_t *fieldPtr = base + field.offset;
     int r, g, b, a;
+    float f;
 
     switch (field.type) {
     case Type_Bool:
@@ -136,6 +137,26 @@ static void DeserializeField(uint8_t *base, const FieldInfo& field, const char *
             DeserializeField(fieldPtr, GetSubstruct(field)->fields[i], value);
             if (value)
                 for (; *value && !str::IsWs(*value); value++);
+        }
+        break;
+    case Type_IntArray:
+        if (!value)
+            value = (const char *)field.value;
+        *(Vec<int> **)fieldPtr = new Vec<int>();
+        while (value && *value) {
+            (*(Vec<int> **)fieldPtr)->Append(ParseInt(value));
+            for (; *value && !str::IsWs(*value); value++);
+            for (; str::IsWs(*value); value++);
+        }
+        break;
+    case Type_FloatArray:
+        if (!value)
+            value = (const char *)field.value;
+        *(Vec<float> **)fieldPtr = new Vec<float>();
+        while (value && str::Parse(value, "%f", &f)) {
+            (*(Vec<float> **)fieldPtr)->Append(f);
+            for (; *value && !str::IsWs(*value); value++);
+            for (; str::IsWs(*value); value++);
         }
         break;
     default:
@@ -218,6 +239,22 @@ static char *SerializeField(const uint8_t *base, const FieldInfo& field)
                 value.Set(val.StealData());
             else
                 value.Set(str::Format("%s %s", value, val));
+        }
+        return value.StealData();
+    case Type_IntArray:
+        for (size_t i = 0; i < (*(Vec<int> **)fieldPtr)->Count(); i++) {
+            if (!value)
+                value.Set(str::Format("%d", (*(Vec<int> **)fieldPtr)->At(i)));
+            else
+                value.Set(str::Format("%s %d", value, (*(Vec<int> **)fieldPtr)->At(i)));
+        }
+        return value.StealData();
+    case Type_FloatArray:
+        for (size_t i = 0; i < (*(Vec<float> **)fieldPtr)->Count(); i++) {
+            if (!value)
+                value.Set(str::Format("%g", (*(Vec<float> **)fieldPtr)->At(i)));
+            else
+                value.Set(str::Format("%s %g", value, (*(Vec<float> **)fieldPtr)->At(i)));
         }
         return value.StealData();
     default:
@@ -309,6 +346,10 @@ static void FreeStructData(uint8_t *base, const SettingInfo *meta)
         }
         else if (Type_String == field.type || Type_Utf8String == field.type)
             free(*(void **)(base + field.offset));
+        else if (Type_IntArray == field.type)
+            delete *(Vec<int> **)(base + field.offset);
+        else if (Type_FloatArray == field.type)
+            delete *(Vec<float> **)(base + field.offset);
     }
 }
 

@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #define INCLUDE_APPPREFS3_METADATA
 #include "AppPrefs3.h"
+#include "BencUtil.h"
 #include "FileUtil.h"
 #include "DeserializeBenc.h"
 #include "SerializeIni.h"
@@ -492,7 +493,7 @@ static FieldInfo gGlobalPrefsFieldsBenc[] = {
     { offsetof(GlobalPrefs, favVisible), Type_Bool, false },
     { offsetof(GlobalPrefs, globalPrefsOnly), Type_Bool, false },
     { offsetof(GlobalPrefs, inverseSearchCmdLine), Type_String, NULL },
-    { offsetof(GlobalPrefs, lastUpdateTime), Type_Custom, 0 },
+    { offsetof(GlobalPrefs, lastUpdateTime), Type_Compact, 0 },
     { offsetof(GlobalPrefs, openCountWeek), Type_Int, 0 },
     { offsetof(GlobalPrefs, pdfAssociateDontAskAgain), Type_Bool, false },
     { offsetof(GlobalPrefs, pdfAssociateShouldAssociate), Type_Bool, false },
@@ -528,7 +529,7 @@ static FieldInfo gFileFieldsBenc[] = {
     { offsetof(File, scrollPos.y), Type_Int, 0 },
     { offsetof(File, tocVisible), Type_Bool, true },
     { offsetof(File, sidebarDx), Type_Int, 0 },
-    { offsetof(File, tocState), Type_Custom, NULL },
+    { offsetof(File, tocState), Type_IntArray, NULL },
     { offsetof(File, useGlobalValues), Type_Bool, false },
     { offsetof(File, windowPos.dx), Type_Int, 1 },
     { offsetof(File, windowPos.dy), Type_Int, 1 },
@@ -543,7 +544,7 @@ static FieldInfo gBencGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, file), Type_Array, (intptr_t)&gFileInfoBenc },
     { 0 /* self */, Type_Struct, (intptr_t)&gGlobalPrefsInfoBenc },
     // Favorites must be read after File History
-    { offsetof(GlobalPrefs, file), Type_Custom, NULL },
+    { offsetof(GlobalPrefs, file), Type_Compact, NULL },
 };
 static SettingInfo gBencGlobalPrefs = { sizeof(GlobalPrefs), 3, gBencGlobalPrefsFields, "File History\0gp\0Favorites" };
 
@@ -562,6 +563,43 @@ static FieldInfo gBencUserPrefsFields[] = {
 };
 static SettingInfo gBencUserPrefs = { sizeof(UserPrefs), 1, gBencUserPrefsFields, "gp" };
 
+static bool BencGlobalPrefsCallback(BencDict *dict, const FieldInfo *field, const char *fieldName, uint8_t *fieldPtr)
+{
+    if (str::Eq(fieldName, "LastUpdate")) {
+        BencString *val = dict ? dict->GetString(fieldName) : NULL;
+        if (!val || !_HexToMem(val->RawValue(), (FILETIME *)fieldPtr))
+            ZeroMemory(fieldPtr, sizeof(FILETIME));
+        return true;
+    }
+    if (str::Eq(fieldName, "Favorites")) {
+        BencArray *favDict = dict ? dict->GetArray(fieldName) : NULL;
+        Vec<File *> *files = *(Vec<File *> **)fieldPtr;
+        for (size_t j = 0; j < files->Count(); j++) {
+            File *file = files->At(j);
+            file->favorite = new Vec<Favorite *>();
+            BencArray *favList = NULL;
+            for (size_t k = 0; k < favDict->Length() && !favList; k += 2) {
+                BencString *path = favDict->GetString(k);
+                ScopedMem<WCHAR> filePath(path ? path->Value() : NULL);
+                if (str::Eq(filePath, file->filePath))
+                    favList = favDict->GetArray(k + 1);
+            }
+            if (!favList)
+                continue;
+            for (size_t k = 0; k < favList->Length(); k += 2) {
+                BencInt *page = favList->GetInt(k);
+                BencString *name = favList->GetString(k + 1);
+                Favorite *fav = AllocStruct<Favorite>();
+                fav->pageNo = page ? page->Value() : -1;
+                fav->name = name ? name->Value() : NULL;
+                file->favorite->Append(fav);
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 static bool TestDeserialize()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3.benc";
@@ -569,7 +607,7 @@ static bool TestDeserialize()
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
-    GlobalPrefs *s = (GlobalPrefs *)Deserialize(data, str::Len(data), &gBencGlobalPrefs);
+    GlobalPrefs *s = (GlobalPrefs *)Deserialize(data, str::Len(data), &gBencGlobalPrefs, BencGlobalPrefsCallback);
     Check(s); // failed to parse file
 
     ScopedMem<char> dataCmp(file::ReadAll(pathCmp, NULL));
