@@ -107,6 +107,26 @@ static bool TestSerializeTxt()
     return true;
 }
 
+static bool TestSerializeTxt2()
+{
+    sertxt::SetSerializeTxtFormat(Format_Txt2);
+
+    const WCHAR *path = L"..\\tools\\sertxt_test\\data.txt";
+
+    ScopedMem<char> data(file::ReadAll(path, NULL));
+    Check(data); // failed to read file
+    Settings *s = DeserializeSettings(data, str::Len(data));
+    Check(s); // failed to parse file
+
+    size_t len;
+    ScopedMem<char> ser((char *)SerializeSettings(s, &len));
+    Check(str::Len(ser) == len);
+    Check(str::Eq(data, ser));
+    FreeSettings(s);
+
+    return true;
+}
+
 static bool TestSerializeWithDefaultsIni()
 {
     sertxt::SetSerializeTxtFormat(Format_Ini);
@@ -154,6 +174,28 @@ default_zoom = 38.5\n\
 static bool TestSerializeWithDefaultsTxt()
 {
     sertxt::SetSerializeTxtFormat(Format_Txt);
+
+    const WCHAR *defaultPath = L"..\\tools\\sertxt_test\\data.txt";
+    const char *data = "\
+basic [\n\
+global_prefs_only = true\n\
+default_zoom = 38.5\n\
+]";
+
+    ScopedMem<char> defaultData(file::ReadAll(defaultPath, NULL));
+    Check(defaultData); // failed to read file
+    Settings *s = DeserializeSettingsWithDefault(data, str::Len(data), defaultData, str::Len(defaultData));
+    Check(s); // failed to parse file
+    Check(s->basic->globalPrefsOnly && 38.5f == s->basic->defaultZoom);
+    Check(s->basic->showStartPage && !s->basic->pdfAssociateDoIt);
+    FreeSettings(s);
+
+    return true;
+}
+
+static bool TestSerializeWithDefaultsTxt2()
+{
+    sertxt::SetSerializeTxtFormat(Format_Txt2);
 
     const WCHAR *defaultPath = L"..\\tools\\sertxt_test\\data.txt";
     const char *data = "\
@@ -559,6 +601,10 @@ int main(int argc, char **argv)
     if (!sertxt::TestSerializeTxt())
         errors++;
     if (!sertxt::TestSerializeWithDefaultsTxt())
+        errors++;
+    if (!sertxt::TestSerializeTxt2())
+        errors++;
+    if (!sertxt::TestSerializeWithDefaultsTxt2())
         errors++;
     if (!sertxt::TestDefaultValues())
         errors++;

@@ -47,11 +47,12 @@ static char *UnescapeStr(const char *s)
 }
 
 // only escape characters which are significant to SquareTreeParser:
-// newlines, heading/trailing whitespace and single square brackets
+// newlines and heading/trailing whitespace (and escape sequence delimiters)
 static bool NeedsEscaping(const char *s)
 {
     return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
-           str::FindChar(s, '\n') || str::FindChar(s, '\r');
+           str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
+           str::StartsWith(s, "$[") && str::EndsWith(s, "]$");
 }
 
 // escapes strings containing newlines or heading/trailing whitespace

@@ -15,6 +15,7 @@
 #define ENABLE_FORMAT_SQT
 #define ENABLE_FORMAT_TXT
 #define ENABLE_FORMAT_TXT_SQT
+#define ENABLE_FORMAT_TXT2
 
 namespace sertxt {
 
@@ -54,11 +55,12 @@ static char *UnescapeStr(const char *s)
 }
 
 // only escape characters which are significant to IniParser/SquareTreeParser:
-// newlines and heading/trailing whitespace
+// newlines and heading/trailing whitespace (and escape sequence delimiters)
 static bool NeedsEscaping(const char *s)
 {
     return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
-           str::FindChar(s, '\n') || str::FindChar(s, '\r');
+           str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
+           str::StartsWith(s, "$[") && str::EndsWith(s, "]$");
 }
 
 // escapes strings containing newlines or heading/trailing whitespace
@@ -359,7 +361,7 @@ static void *DeserializeRec(SquareTreeNode *node, void *base, const StructMetada
             *(Vec<void *> **)(data + field.offset) = array;
             SquareTreeNode *child;
             size_t idx = 0;
-#ifdef ENABLE_FORMAT_TXT_SQT
+#if defined(ENABLE_FORMAT_TXT_SQT) || defined(ENABLE_FORMAT_TXT2)
             if (node && node->GetChild(fieldName) && node->GetChild(fieldName)->GetChild("")) {
                 node = node->GetChild(fieldName);
                 fieldName += str::Len(fieldName);
@@ -493,6 +495,67 @@ uint8_t *SerializeSqt(const uint8_t *data, const StructMetadata *def, size_t *si
     return (uint8_t *)out.StealData();
 }
 
+static inline void Indent2(str::Str<char>& out, int indent)
+{
+    while (indent-- > 0)
+        out.Append("  ");
+}
+
+static void SerializeRecTxt2(str::Str<char>& out, const uint8_t *data, const StructMetadata *def, int indent=0)
+{
+    const char *fieldName = def->fieldNames;
+    for (size_t i = 0; i < def->nFields; i++) {
+        const FieldMetadata& field = def->fields[i];
+        CrashIf(str::FindChar(fieldName, '=') || str::FindChar(fieldName, ':') ||
+                str::FindChar(fieldName, '[') || str::FindChar(fieldName, ']') ||
+                NeedsEscaping(fieldName));
+        if (TYPE_STRUCT_PTR == field.type) {
+            Indent2(out, indent);
+            out.Append(fieldName);
+            out.Append(" [\r\n");
+            SerializeRecTxt2(out, *(const uint8_t **)(data + field.offset), GetStructDef(field), indent + 1);
+            Indent2(out, indent);
+            out.Append("]\r\n");
+        }
+        else if (TYPE_ARRAY == field.type) {
+            Indent2(out, indent);
+            out.Append(fieldName);
+            out.Append(" [\r\n");
+            Vec<void *> *array = *(Vec<void *> **)(data + field.offset);
+            for (size_t j = 0; j < array->Count(); j++) {
+                Indent2(out, indent + 1);
+                out.Append("[\r\n");
+                SerializeRecTxt2(out, (const uint8_t *)array->At(j), GetStructDef(field), indent + 2);
+                Indent2(out, indent + 1);
+                out.Append("]\r\n");
+            }
+            Indent2(out, indent);
+            out.Append("]\r\n");
+        }
+        else {
+            ScopedMem<char> value(SerializeField(data, field));
+            if (value) {
+                Indent2(out, indent);
+                out.Append(fieldName);
+                out.Append(": ");
+                out.Append(value);
+                out.Append("\r\n");
+            }
+        }
+        fieldName += str::Len(fieldName) + 1;
+    }
+}
+
+uint8_t *SerializeTxt2(const uint8_t *data, const StructMetadata *def, size_t *sizeOut)
+{
+    str::Str<char> out;
+    out.Append(UTF8_BOM "; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation\r\n");
+    SerializeRecTxt2(out, data, def);
+    if (sizeOut)
+        *sizeOut = out.Size();
+    return (uint8_t *)out.StealData();
+}
+
 #define DeserializeWithDefault DeserializeWithDefaultTxt
 #define FreeStruct FreeStructTxt
 #define AppendNest AppendNestTxt
@@ -523,6 +586,9 @@ uint8_t *DeserializeWithDefault(char *data, size_t dataSize, char *defaultData, 
 #ifdef ENABLE_FORMAT_TXT_SQT
     case Format_Txt_Sqt: return DeserializeWithDefaultTxtSqt(data, dataSize, defaultData, defaultDataSize, def);
 #endif
+#ifdef ENABLE_FORMAT_TXT2
+    case Format_Txt2: return DeserializeWithDefaultSqt(data, dataSize, defaultData, defaultDataSize, def);
+#endif
     default: CrashIf(true); return NULL;
     }
 }
@@ -546,6 +612,9 @@ uint8_t *Serialize(const uint8_t *data, const StructMetadata *def, size_t *sizeO
 #endif
 #ifdef ENABLE_FORMAT_TXT_SQT
     case Format_Txt_Sqt: return sertxt::Serialize(data, def, sizeOut);
+#endif
+#ifdef ENABLE_FORMAT_TXT2
+    case Format_Txt2: return SerializeTxt2(data, def, sizeOut);
 #endif
     default: CrashIf(true); return NULL;
     }
