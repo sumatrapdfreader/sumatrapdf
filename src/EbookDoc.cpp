@@ -592,17 +592,18 @@ bool Fb2Doc::Load()
 {
     size_t len;
     ScopedMem<char> data;
-    if (!fileName && stream)
+    if (stream && !fileName) {
         data.Set((char *)GetDataFromStream(stream, &len));
-    else if (str::EndsWithI(fileName, L".zip") ||
-        str::EndsWithI(fileName, L".fb2z") ||
-        str::EndsWithI(fileName, L".zfb2")) {
-        ZipFile archive(fileName);
-        data.Set(archive.GetFileDataByIdx(0, &len));
-        isZipped = true;
     }
-    else
-        data.Set(file::ReadAll(fileName, &len));
+    else {
+        CrashIf(!fileName);
+        ZipFile archive(fileName);
+        isZipped = archive.GetFileCount() == 1;
+        if (isZipped)
+            data.Set(archive.GetFileDataByIdx(0, &len));
+        else
+            data.Set(file::ReadAll(fileName, &len));
+    }
     if (!data)
         return false;
 
