@@ -1,8 +1,5 @@
 ﻿# these values allow to tweak various bits and pieces of SumatraPDF
 AdvancedPrefs [
-	# whether the UI used for PDF documents will be used for ebooks as well
-	# (enables printing and searching, disables automatic reflow)
-	TraditionalEbookUI = false
 	# whether opening a new document should happen in an already running
 	# SumatraPDF instance so that there's only one process and documents
 	# aren't opend twice
@@ -50,12 +47,9 @@ PagePadding [
 BackgroundGradient [
 	# whether to draw a gradient behind the pages
 	Enabled = false
-	# color at the top of the document (first page)
-	ColorTop = #2828aa
-	# color at the center of the document (middlest page)
-	ColorMiddle = #28aa28
-	# color at the bottom of the document (last page)
-	ColorBottom = #aa2828
+	# colors to use for the gradient from top to bottom (stops will be
+	# inserted at regular intervals throughout the document)
+	Colors = #2828aa #28aa28 #aa2828
 ]
 
 # these values allow to customize how the forward search highlight
@@ -72,6 +66,18 @@ ForwardSearch [
 	# whether the forward search highlight will remain visible until the
 	# next mouse click instead of fading away instantly
 	HighlightPermanent = false
+]
+
+# these values allow to customize the UI used for ebooks (with
+# TraditionalEbookUI disabled)
+EbookUI [
+	# whether the UI used for PDF documents will be used for ebooks as well
+	# (enables printing and searching, disables automatic reflow)
+	TraditionalEbookUI = false
+	# color for text
+	TextColor = #5f4b32
+	# color of the page (background)
+	PageColor = #d9f0fb
 ]
 
 # this list contains a list of additional external viewers for various

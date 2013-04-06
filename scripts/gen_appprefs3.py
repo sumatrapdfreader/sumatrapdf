@@ -37,7 +37,7 @@ class Field(object):
 			return '(intptr_t)"%s"' % self.default if self.default is not None else "NULL"
 		if self.type.name in ["Struct", "Array", "Compact"]:
 			return "(intptr_t)&g%sInfo" % self.structName
-		if self.type.name in ["IntArray", "FloatArray"]:
+		if self.type.name in ["ColorArray", "FloatArray", "IntArray"]:
 			return '(intptr_t)"%s"' % self.default if self.default is not None else "NULL"
 		return None
 
@@ -60,7 +60,7 @@ class Field(object):
 			return "%s %s =" % (commentChar, self.name)
 		if self.type.name == "Compact":
 			return "%s = %s" % (self.name, " ".join(field.inidefault().split(" = ", 1)[1] for field in self.default))
-		if self.type.name in ["IntArray", "FloatArray"]:
+		if self.type.name in ["ColorArray", "FloatArray", "IntArray"]:
 			if self.default is not None:
 				return "%s = %s" % (self.name, self.default)
 			return "%s %s =" % (commentChar, self.name)
@@ -101,9 +101,6 @@ FileTime = [
 ]
 
 AdvancedPrefs = [
-	Field("TraditionalEbookUI", Bool, False,
-		"whether the UI used for PDF documents will be used for ebooks as well " +
-		"(enables printing and searching, disables automatic reflow)"),
 	Field("ReuseInstance", Bool, False,
 		"whether opening a new document should happen in an already running SumatraPDF " +
 		"instance so that there's only one process and documents aren't opend twice"),
@@ -133,9 +130,9 @@ PagePadding = [
 
 BackgroundGradient = [
 	Field("Enabled", Bool, False, "whether to draw a gradient behind the pages"),
-	Field("ColorTop", Color, 0xAA2828, "color at the top of the document (first page)"),
-	Field("ColorMiddle", Color, 0x28AA28, "color at the center of the document (middlest page)"),
-	Field("ColorBottom", Color, 0x2828AA, "color at the bottom of the document (last page)"),
+	CompactArray("Colors", Color, "#2828aa #28aa28 #aa2828",
+		"colors to use for the gradient from top to bottom (stops will be inserted " +
+		"at regular intervals throughout the document)"),
 ]
 
 PrinterDefaults = [
@@ -155,6 +152,14 @@ ForwardSearch = [
 	Field("HighlightPermanent", Bool, False,
 		"whether the forward search highlight will remain visible until the next " +
 		"mouse click instead of fading away instantly"),
+]
+
+EbookUI = [
+	Field("TraditionalEbookUI", Bool, False,
+		"whether the UI used for PDF documents will be used for ebooks as well " +
+		"(enables printing and searching, disables automatic reflow)"),
+	Field("TextColor", Color, 0x324b5f, "color for text"),
+	Field("PageColor", Color, 0xfbf0d9, "color of the page (background)"),
 ]
 
 ExternalViewer = [
@@ -179,6 +184,8 @@ UserPrefs = [
 		"gradient to subconsciously determine reading progress"),
 	Struct("ForwardSearch", ForwardSearch,
 		"these values allow to customize how the forward search highlight appears"),
+	Struct("EbookUI", EbookUI,
+		"these values allow to customize the UI used for ebooks (with TraditionalEbookUI disabled)"),
 	Array("ExternalViewer", ExternalViewer,
 		"this list contains a list of additional external viewers for various file types " +
 		"(multiple entries of the same format are recognised)"),
@@ -413,7 +420,7 @@ AppPrefs3_Header = """\
 enum SettingType {
 	Type_Struct, Type_Array, Type_Compact,
 	Type_Bool, Type_Color, Type_Float, Type_Int, Type_String, Type_Utf8String,
-	Type_IntArray, Type_FloatArray,
+	Type_ColorArray, Type_FloatArray, Type_IntArray,
 };
 
 struct FieldInfo {

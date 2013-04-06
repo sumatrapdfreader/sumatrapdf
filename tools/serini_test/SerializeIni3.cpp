@@ -93,7 +93,6 @@ static void DeserializeField(uint8_t *base, const FieldInfo& field, const char *
 {
     uint8_t *fieldPtr = base + field.offset;
     int r, g, b, a;
-    float f;
 
     switch (field.type) {
     case Type_Bool:
@@ -139,22 +138,17 @@ static void DeserializeField(uint8_t *base, const FieldInfo& field, const char *
                 for (; *value && !str::IsWs(*value); value++);
         }
         break;
+    case Type_ColorArray:
+    case Type_FloatArray:
     case Type_IntArray:
+        CrashIf(sizeof(float) != sizeof(int) || sizeof(COLORREF) != sizeof(int));
         if (!value)
             value = (const char *)field.value;
         *(Vec<int> **)fieldPtr = new Vec<int>();
         while (value && *value) {
-            (*(Vec<int> **)fieldPtr)->Append(ParseInt(value));
-            for (; *value && !str::IsWs(*value); value++);
-            for (; str::IsWs(*value); value++);
-        }
-        break;
-    case Type_FloatArray:
-        if (!value)
-            value = (const char *)field.value;
-        *(Vec<float> **)fieldPtr = new Vec<float>();
-        while (value && str::Parse(value, "%f", &f)) {
-            (*(Vec<float> **)fieldPtr)->Append(f);
+            FieldInfo info = { 0 };
+            info.type = Type_IntArray == field.type ? Type_Int : Type_FloatArray == field.type ? Type_Float : Type_Color;
+            DeserializeField((uint8_t *)(*(Vec<int> **)fieldPtr)->AppendBlanks(1), info, value);
             for (; *value && !str::IsWs(*value); value++);
             for (; str::IsWs(*value); value++);
         }
@@ -269,20 +263,18 @@ static char *SerializeField(const uint8_t *base, const FieldInfo& field)
                 value.Set(str::Format("%s %s", value, val));
         }
         return value.StealData();
-    case Type_IntArray:
-        for (size_t i = 0; i < (*(Vec<int> **)fieldPtr)->Count(); i++) {
-            if (!value)
-                value.Set(str::Format("%d", (*(Vec<int> **)fieldPtr)->At(i)));
-            else
-                value.Set(str::Format("%s %d", value, (*(Vec<int> **)fieldPtr)->At(i)));
-        }
-        return value.StealData();
+    case Type_ColorArray:
     case Type_FloatArray:
-        for (size_t i = 0; i < (*(Vec<float> **)fieldPtr)->Count(); i++) {
+    case Type_IntArray:
+        CrashIf(sizeof(float) != sizeof(int) || sizeof(COLORREF) != sizeof(int));
+        for (size_t i = 0; i < (*(Vec<int> **)fieldPtr)->Count(); i++) {
+            FieldInfo info = { 0 };
+            info.type = Type_IntArray == field.type ? Type_Int : Type_FloatArray == field.type ? Type_Float : Type_Color;
+            ScopedMem<char> val(SerializeField((const uint8_t *)&(*(Vec<int> **)fieldPtr)->At(i), info));
             if (!value)
-                value.Set(str::Format("%g", (*(Vec<float> **)fieldPtr)->At(i)));
+                value.Set(val.StealData());
             else
-                value.Set(str::Format("%s %g", value, (*(Vec<float> **)fieldPtr)->At(i)));
+                value.Set(str::Format("%s %s", value, val));
         }
         return value.StealData();
     default:
@@ -367,10 +359,10 @@ static void FreeStructData(uint8_t *base, const SettingInfo *meta)
         }
         else if (Type_String == field.type || Type_Utf8String == field.type)
             free(*(void **)(base + field.offset));
-        else if (Type_IntArray == field.type)
+        else if (Type_ColorArray == field.type || Type_FloatArray == field.type || Type_IntArray == field.type) {
+            CrashIf(sizeof(float) != sizeof(int) || sizeof(COLORREF) != sizeof(int));
             delete *(Vec<int> **)(base + field.offset);
-        else if (Type_FloatArray == field.type)
-            delete *(Vec<float> **)(base + field.offset);
+        }
     }
 }
 

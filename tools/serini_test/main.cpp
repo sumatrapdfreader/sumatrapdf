@@ -328,11 +328,13 @@ CommandLine = serini_test.exe\n\
 static bool TestDefaultValues()
 {
     UserPrefs *p = (UserPrefs *)Deserialize(NULL, 0, &gUserPrefsInfo);
-    Check(!p->advancedPrefs.escToExit && !p->advancedPrefs.traditionalEbookUI);
+    Check(!p->advancedPrefs.escToExit && !p->ebookUI.traditionalEbookUI);
     Check(0xffffff == p->advancedPrefs.pageColor && 0x000000 == p->advancedPrefs.textColor);
     Check(0x6581ff == p->forwardSearch.highlightColor && 15 == p->forwardSearch.highlightWidth);
     Check(4 == p->pagePadding.innerX && 2 == p->pagePadding.outerY);
     Check(str::Eq(p->printerDefaults.printScale, "shrink"));
+    Check(24 == p->advancedPrefs.zoomLevels->Count() && 6400 == p->advancedPrefs.zoomLevels->At(23));
+    Check(3 == p->backgroundGradient.colors->Count() && RGB(0x28, 0x28, 0xAA) == p->backgroundGradient.colors->At(0));
     FreeStruct(p, &gUserPrefsInfo);
 
     return true;
@@ -441,11 +443,13 @@ Rec [\n\
 static bool TestDefaultValues()
 {
     UserPrefs *p = (UserPrefs *)Deserialize(NULL, 0, &gUserPrefsInfo);
-    Check(!p->advancedPrefs.escToExit && !p->advancedPrefs.traditionalEbookUI);
+    Check(!p->advancedPrefs.escToExit && !p->ebookUI.traditionalEbookUI);
     Check(0xffffff == p->advancedPrefs.pageColor && 0x000000 == p->advancedPrefs.textColor);
     Check(0x6581ff == p->forwardSearch.highlightColor && 15 == p->forwardSearch.highlightWidth);
     Check(4 == p->pagePadding.innerX && 2 == p->pagePadding.outerY);
     Check(str::Eq(p->printerDefaults.printScale, "shrink"));
+    Check(24 == p->advancedPrefs.zoomLevels->Count() && 6400 == p->advancedPrefs.zoomLevels->At(23));
+    Check(3 == p->backgroundGradient.colors->Count() && RGB(0x28, 0x28, 0xAA) == p->backgroundGradient.colors->At(0));
     FreeStruct(p, &gUserPrefsInfo);
 
     return true;
