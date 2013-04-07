@@ -752,10 +752,10 @@ const char * gTranslations_es =
   "No se puede escribir %s al disco\0"\
   "Fallo al copiar el desinstalador al directorio temporal\0"\
   "Error al crear un acceso directo\0"\
-  "Fallo al eliminar las llaves de registro del desinstalador\0"\
+  "Fallo al eliminar las claves del registro del desinstalador\0"\
   "Fallo al escribir informaci\303\263n de la extensi\303\263n de archivo al registro\0"\
   "Fallo al escribir informaci\303\263n de desinstalaci\303\263n al registro\0"\
-  "Ocultar &Opciones\0"\
+  "Ocultar &opciones\0"\
   "Instalar el plugin PDF del &navegador para Firefox, Chrome y Opera\0"\
   "Instalar SumatraPDF\0"\
   "Instalar SumatraPDF en &directorio:\0"\

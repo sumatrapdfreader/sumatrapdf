@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5c4e576d1e273005576047ddf75b432e023a6f22
+c01ac4b48d2daf1b5200d42992b6fe093375c73a
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -113,7 +113,7 @@ cz:Skutečná &velikost\tCtrl+1
 de:&Tatsächliche Größe\tStrg+1
 dk:&Faktisk størrelse\tCtrl+1
 el:Πραγματικό &Μέγεθος\tCtrl+1
-es:Tamaño Real\tCtrl+1
+es:Tamaño real\tCtrl+1
 et:&Tegelik suurus\tCtrl+1
 eu:&Oraingo Neurria\tKtrl+1
 fa:&ابعاد اصلی‌\tCtrl+1
@@ -296,7 +296,7 @@ cz:K&niha\tCtrl+8
 de:&Buchansicht\tStrg+8
 dk:&Bogvisning\tCtrl+8
 el:&Προβολή Βιβλίου\tCtrl+8
-es:&Vista de Libro\tCtrl+8
+es:&Vista de libro\tCtrl+8
 et:&Raamatuvaade\tCtrl+8
 eu:&Liburu Ikuspegia\tKtrl+8
 fa:نمایش &کتابی
@@ -476,7 +476,7 @@ cz:&Kopírovat výběr\tCtrl+C
 de:Auswahl &kopieren\tStrg+C
 dk:&Kopier markering\tCtrl+C
 el:Αντιγραφή Επι&λεγμένων\tCtrl+C
-es:&Copiar Selección\tCtrl+C
+es:&Copiar selección\tCtrl+C
 et:K&opeeri valik\tCtrl+C
 eu:&Kopiatu Hautapena\tKtrl+C
 fa:&رونوشت از انتخاب شده
@@ -1291,7 +1291,7 @@ cz:&Příručka
 de:&Handbuch
 dk:&Manual
 el:&Οδηγίες Χρήσης
-es:&Manual de Instrucciones
+es:&Manual de instrucciones
 et:K&asutusjuhend
 eu:E&skuliburua
 fa:&کتابچه‌ی راهنمای آنلاین
@@ -3531,7 +3531,7 @@ cz:Všechny podporované dokumenty
 de:Alle unterstützten Dokumente
 dk:Alle understøttede dokumenter
 el:Όλα τα υποστηριζόμενα έγγραφα
-es:Todos los documentos legibles
+es:Todos los documentos soportados
 et:Kõik toetatud vormingud
 eu:Sostengatutako agiri guztiak
 fa:همه‌ی اسناد پشتیبانی شده
@@ -3677,7 +3677,7 @@ cz:Přidružit k PDF souborům?
 de:Mit PDF-Dateien verknüpfen?
 dk:Tilknyt til  PDF-filer?
 el:Να γίνει συσχετισμός με τα αρχεία PDF;
-es:¿Asociar a archivos PDF?
+es:¿Asociar con archivos PDF?
 et:Seosta PDF-failidega?
 eu:Elkartu PDF agiriekin?
 fa:پرونده‌های PDF همیشه با این برنامه خوانده شوند؟
@@ -3923,7 +3923,7 @@ cz:&Automaticky kontrolovat aktualizace
 de:&Automatisch nach Updates suchen
 dk:Tjek automatisk for &opdateringer
 el:Αυτόματος έλεγχος για &ενημερώσεις
-es:Revisar &actualizaciones de forma automática
+es:B&uscar actualizaciones automáticamente.
 et:Uuendusi k&ontrollitakse automaatselt
 eu:&Berezgaitasunez egiaztatu eguneraketak
 fa:به صورت خودکار برای نسخه‌ی &جدید جستجو کن
@@ -4628,7 +4628,7 @@ vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần 
 af:Verander Taal (Change Language)
 am:Փոխել լեզուն (Change Language)
 ar:تغيير اللغة (Change language)
-az:Dili dəyişdir
+az:Dili dəyişdir (Change Language)
 bg:Смени езика (Change Language)
 bn:ভাষা পরিবর্তন (Change Language)
 br:Mudar o idioma (Change Language)
@@ -4642,7 +4642,7 @@ cz:Změnit jazyk... (Change Language)
 de:Sprache ändern… (Change Language)
 dk:Skift sprog (Change Language)
 el:Αλλαγή Γλώσσας (Change Language)
-es:Cambiar Idioma (Change Language)
+es:Cambiar idioma (Change Language)
 et:Vali keel (Change Language)
 eu:Aldatu Hizkuntza
 fa:تغییر زبان (Change Language)
@@ -5174,7 +5174,7 @@ cz:Kopírovat &obrázek
 de:&Bild kopieren
 dk:Kopier &Billede
 el:Αντιγραφή &Εικόνας
-es:Copiar &Imagen
+es:Copiar &imagen
 et:Kopeeri &pilt
 eu:Kopiatu &Irudia
 fa:رونوشت از &عکس
@@ -5398,7 +5398,7 @@ cz:Autorská práva:
 de:Copyright:
 dk:Copyright:
 el:Πνευματική ιδιοκτησία:
-es:Derecho de autor:
+es:Derechos de autor:
 et:Autoriõigus:
 eu:Copyrighta:
 fa:حقّ نشر
@@ -6251,7 +6251,7 @@ cz:Odepřená oprávnění:
 de:Einschränkungen:
 dk:Nægtede tilladelser:
 el:Απαγόρευση Δικαιωμάτων:
-es:Permisos Denegados
+es:Permisos denegados:
 et:Keelatud õigused:
 eu:Baimen Ukatuak:
 fa:دسترسی‌های ممنوع:
@@ -6843,7 +6843,7 @@ az:Xəta: SumatraPDF işə salına bilmədi!
 br:Não foi possível rodar o SumatraPDF!
 cn:错误：无法运行SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
-es:Error: No se puede ejecutar SumatraPDF!
+es:Error: No se puede ejecutar SumatraPDF
 eu:Akatsa: Ezinezkoa SumatraPDF abiaraztea!
 fr:Erreur : impossible de lancer SumatraPDF !
 hu:Hiba: SumatraPDF futtatása sikertelen!
@@ -6865,7 +6865,7 @@ az:Xəta: SumatraPDF tapılmadı!
 br:O SumatraPDF não foi encontrado!
 cn:失败: 找不到SumatraPDF
 de:Fehler: SumatraPDF ist unaufindbar!
-es:Error: SumatraPDF no ha sido encontrado!
+es:Error: SumatraPDF no ha sido encontrado
 eu:Akatsa: SumatraPDF ez da aurkitu!
 fr:Erreur : SumatraPDF non trouvé !
 hu:Hiba: SumatraPDF nem található!
@@ -6887,7 +6887,7 @@ az:Xəta: Sənədi endirmək mümkün olmadı!
 br:Erro: o documento não pôde ser baixado!
 cn:错误： 文档无法下载!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
-es:Error: ¡El documento no puede ser descargado!
+es:Error: El documento no puede ser descargado
 eu:Akatsa: Agiria ezin da jeitsi!
 fr:Erreur : le document n'a pu être téléchargé !
 hu:Hiba: a dokumentum letöltése sikertelen!
@@ -7195,7 +7195,7 @@ az:Deinstalyatorun reyestr açarlarını silmək mümkün olmadı
 br:Falha na remoção das entradas de registro do desinstalador
 cn:删除卸载程序的注册表项失败
 de:Konnte nicht alle Registry-Einträge löschen
-es:Fallo al eliminar las llaves de registro del desinstalador
+es:Fallo al eliminar las claves del registro del desinstalador
 eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
 hu:Az eltávolító registry kulcsainak törlése sikertelen
@@ -7380,7 +7380,7 @@ cz:Rychlé zobrazování z webu
 de:Schnelle Webanzeige
 dk:Hurtig Internet Visning
 el:Γρήγορη Διαδικτυακή Προβολή
-es:Visualización Rápida en Web
+es:Visualización rápida en Web
 et:Kiire veebivaade
 eu:Web Ikuspen Azkarra
 fa:تماشای بی درنگ
@@ -7828,7 +7828,7 @@ cz:Najít další
 de:Weitersuchen
 dk:Find næste
 el:Εύρεση Επόμενου
-es:Buscar Siguiente
+es:Buscar siguiente
 et:Otsi järgmine
 eu:Bilatu Hurrengoa
 fa:مورد بعدی را پیدا کن
@@ -7895,7 +7895,7 @@ cz:Najít předchozí
 de:Rückwärts suchen
 dk:Find forrige
 el:Εύρεση Προηγούμενου
-es:Buscar Anterior
+es:Buscar anterior
 et:Otsi eelmine
 eu:Bilatu Aurrekoa
 fa:مورد قبلی را پیدا کن
@@ -8026,7 +8026,7 @@ cz:Přizpůsobit &obsah\tCtrl+3
 de:An &Inhalt anpassen\tStrg+3
 dk:Tilpas &indhold\tCrtl-3
 el:&Προσαρμογή στα περιεχόμενα\tCtrl+3
-es:Ajustar al &Contenido\tCtrl+3
+es:Ajustar a &contenido\tCtrl+3
 et:&Sisu sobitamine\tCtrl+3
 eu:Finkatu &Edukia\tKtrl+3
 fa:متناسب کردن با &محتویات\tCtrl+3
@@ -8085,7 +8085,7 @@ cz:Podle &stránky\tCtrl+0
 de:An &Seite anpassen\tStrg+0
 dk:Tilpas &side\tCtrl+0
 el:&Προσαρμογή στη σελίδα\tCtrl+0
-es:Ajustar a &Página\tCtrl+0
+es:Ajustar a &página\tCtrl+0
 et:Lehekülje &kõrguse sobitamine\tCtrl+0
 eu:&Finkatu Orrialdea\tKtrl+O
 fa:به &بزرگی پنجره\tCtrl+0
@@ -8153,7 +8153,7 @@ cz:&Podle šířky\tCtrl+2
 de:An &Breite anpassen\tStrg+2
 dk:Tilpas &bredde\tCtrl+2
 el:&Προσαρμογή στο πλάτος παραθύρου\tCtrl+2
-es:Ajustar a &Ancho de Página\tCtrl+2
+es:Ajustar a &ancho de página\tCtrl+2
 et:Lehekülje &laiuse sobitamine\tCtrl+2
 eu:Finkatu &Zabalera\tKtrl+2
 fa:به بزرگی &پهنای پنجره\tCtrl+2
@@ -8218,7 +8218,7 @@ cz:Přizpůsobit obsah
 de:An Inhalt anpassen
 dk:Tilpas indhold
 el:Προσαρμογή στα περιεχόμενα
-es:Ajustar al contenido
+es:Ajustar a contenido
 et:Sisu sobitamine
 eu:Finkatu Edukia
 fa:متناسب کردن با محتویات
@@ -8278,7 +8278,7 @@ cz:Podle stránky
 de:An Seite anpassen
 dk:Tilpas side
 el:Ολόκληρη Σελίδα
-es:Ajustar Página
+es:Ajustar a página
 et:Lehekülje kõrguse sobitamine
 eu:Finkatu Orrialdea
 fa:به بزرگی پنجره
@@ -8346,7 +8346,7 @@ cz:Podle šířky
 de:An Breite anpassen
 dk:Tilpas bredde
 el:Πλάτος Παραθύρου
-es:Ajustar a ancho de Página
+es:Ajustar a ancho de página
 et:Lehekülje laiuse sobitamine
 eu:Finkatu Zabalera
 fa:به بزرگی پهنای پنجره
@@ -8918,7 +8918,7 @@ az:&Seçimləri gizlət
 br:Ocultar &Opções
 cn:隐藏选项菜单
 de:&Optionen
-es:Ocultar &Opciones
+es:Ocultar &opciones
 eu:Ezkutatu A&ukerak
 fr:Masque les &options
 hu:Beállítások elrejtése
@@ -13129,7 +13129,7 @@ cz:Zobrazit &záložky
 de:Lese&zeichen anzeigen
 dk:Vis &Bogmærker
 el:Εμφάνιση &Σελιδοδεικτών
-es:Mostrar &Bookmarks
+es:Mostrar &marcadores
 et:Näita &järjehoidjaid
 eu:Erakutsi Laster&markak
 fa:ن&شانه‌ها را نشان بده
@@ -14232,7 +14232,7 @@ cz:Textové dokumenty
 de:Text-Dokumente
 dk:Tekstdokumenter
 el:Αρχεία κειμένου
-es:Documentos de Texto
+es:Documentos de texto
 et:Tekstidokumendid
 eu:Idazki agiriak
 fa:سند متنی
@@ -14567,7 +14567,7 @@ cz:Zobrazení
 de:Ansicht
 dk:Vis
 el:Προβολή
-es:Vista del Documento
+es:Vista del documento
 et:Vaade
 eu:Ikusi
 fa:نمایش
@@ -15011,7 +15011,7 @@ cz:Zvětšit
 de:Vergrößern
 dk:Zoom ind
 el:Μεγέθυνση
-es:Acercar Zoom
+es:Acercar zoom
 et:Suurenda
 eu:Zooma Handitu
 fa:بزرگ نمایی
@@ -15079,7 +15079,7 @@ cz:Zmenšit
 de:Verkleinern
 dk:Zoom ud
 el:Σμίκρυνση
-es:Alejar Zoom
+es:Alejar zoom
 et:Vähenda
 eu:Zooma Gutxitu
 fa:کوچک نمایی
@@ -15144,7 +15144,7 @@ cz:Měřítko přiblížení
 de:Zoomfaktor
 dk:Zoomfaktor
 el:Ποσοστό μεγέθυνσης
-es:Proporción de Zoom
+es:Proporción de zoom
 et:Suurendusaste
 eu:Zomm ezaugarria
 fa:ضریب ابعاد نمایش

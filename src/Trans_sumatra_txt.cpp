@@ -1062,7 +1062,7 @@ const char * gTranslations_az =
   "\304\260mtina\0"\
   "Bu fayl\304\261 \303\247ap etm\311\231k m\303\274mk\303\274n deyil\0"\
   "T\311\231rs axtar\304\261\305\237 komandas\304\261n\304\261 icra etm\311\231k m\303\274mk\303\274n deyil. Komanda s\311\231trinin parametrl\311\231rini yoxlay\304\261n.\0"\
-  "Dili d\311\231yi\305\237dir\0"\
+  "Dili d\311\231yi\305\237dir (Change Language)\0"\
   "&Yenilikl\311\231ri yoxla\0"\
   "CBR, CBZ s\311\231n\311\231dl\311\231ri\0"\
   "Uy\304\237unluq\0"\
@@ -11194,13 +11194,13 @@ const char * gTranslations_sl =
 
 const char * gTranslations_es = 
   "&Acerca de...\0"\
-  "Tama\303\261o Real\tCtrl+1\0"\
+  "Tama\303\261o real\tCtrl+1\0"\
   "&Todas las p\303\241ginas seleccionadas\0"\
   "Atr\303\241s\tAlt+<-\0"\
-  "&Vista de Libro\tCtrl+8\0"\
+  "&Vista de libro\tCtrl+8\0"\
   "&Cerrar\tCtrl+W\0"\
   "&Copiar selecci\303\263n\0"\
-  "&Copiar Selecci\303\263n\tCtrl+C\0"\
+  "&Copiar selecci\303\263n\tCtrl+C\0"\
   "&No volver a preguntar\0"\
   "&S\303\263lo p\303\241ginas pares\0"\
   "&Caras opuestas\tCtrl+7\0"\
@@ -11213,7 +11213,7 @@ const char * gTranslations_es =
   "&Ayuda\0"\
   "\303\232ltima p\303\241gina\tFin\0"\
   "&Aumento:\0"\
-  "&Manual de Instrucciones\0"\
+  "&Manual de instrucciones\0"\
   "&Coincidir may\303\272sculas y min\303\272sculas\0"\
   "P\303\241gina siguiente\t->\0"\
   "\0"\
@@ -11250,13 +11250,13 @@ const char * gTranslations_es =
   "A\303\261adir a favoritos\0"\
   "Avanzado\0"\
   "Todos los archivos\0"\
-  "Todos los documentos legibles\0"\
+  "Todos los documentos soportados\0"\
   "Aplicaci\303\263n:\0"\
-  "\302\277Asociar a archivos PDF?\0"\
+  "\302\277Asociar con archivos PDF?\0"\
   "Adjunto: %s\0"\
   "Autor:\0"\
   "Autom\303\241tico\0"\
-  "Revisar &actualizaciones de forma autom\303\241tica\0"\
+  "B&uscar actualizaciones autom\303\241ticamente.\0"\
   "Vista de libro\0"\
   "Marcadores\tF12\0"\
   "Marcar Atajos\0"\
@@ -11268,7 +11268,7 @@ const char * gTranslations_es =
   "Cancelar\0"\
   "No se puede imprimir este archivo\0"\
   "No se puede iniciar el comando de b\303\272squeda inversa. Verifique la l\303\255nea de comandos en la configuraci\303\263n.\0"\
-  "Cambiar Idioma (Change Language)\0"\
+  "Cambiar idioma (Change Language)\0"\
   "&Buscar actualizaciones\0"\
   "Comics\0"\
   "Compatibilidad\0"\
@@ -11276,11 +11276,11 @@ const char * gTranslations_es =
   "Vista continua de libro\0"\
   "P\303\241gina doble continua\0"\
   "Contribuir en la traducci\303\263n\0"\
-  "Copiar &Imagen\0"\
+  "Copiar &imagen\0"\
   "Copiar direcci\303\263n del enlace\0"\
   "Copiar co&mentario\0"\
   "Copiado de texto no permitido (copiando como imagen)\0"\
-  "Derecho de autor:\0"\
+  "Derechos de autor:\0"\
   "Imposible obtener propiedades de la impresora\0"\
   "No se pudo inicializar la impresora\0"\
   "No se pudo procesar la p\303\241gina\0"\
@@ -11290,7 +11290,7 @@ const char * gTranslations_es =
   "&Vista Predeterminada:\0"\
   "&Acercamiento Predeterminado:\0"\
   "No se puede cambiar el lector PDF predeterminado en modo port\303\241til\0"\
-  "Permisos Denegados\0"\
+  "Permisos denegados:\0"\
   "Documentos DjVu\0"\
   "Propiedades del Documento\0"\
   "Descargar\0"\
@@ -11306,7 +11306,7 @@ const char * gTranslations_es =
   "P\303\241gina doble\0"\
   "\302\241No se puede renombrar el fichero!\0"\
   "Error al Guardar el Archivo\0"\
-  "Visualizaci\303\263n R\303\241pida en Web\0"\
+  "Visualizaci\303\263n r\303\241pida en Web\0"\
   "Favoritos\0"\
   "Documentos FictionBook\0"\
   "El archivo %s no se encuentra\0"\
@@ -11314,15 +11314,15 @@ const char * gTranslations_es =
   "Archivo:\0"\
   "Buscar...\tCtrl+F\0"\
   "Buscar\0"\
-  "Buscar Siguiente\0"\
-  "Buscar Anterior\0"\
+  "Buscar siguiente\0"\
+  "Buscar anterior\0"\
   "Buscar:\0"\
-  "Ajustar al &Contenido\tCtrl+3\0"\
-  "Ajustar a &P\303\241gina\tCtrl+0\0"\
-  "Ajustar a &Ancho de P\303\241gina\tCtrl+2\0"\
-  "Ajustar al contenido\0"\
-  "Ajustar P\303\241gina\0"\
-  "Ajustar a ancho de P\303\241gina\0"\
+  "Ajustar a &contenido\tCtrl+3\0"\
+  "Ajustar a &p\303\241gina\tCtrl+0\0"\
+  "Ajustar a &ancho de p\303\241gina\tCtrl+2\0"\
+  "Ajustar a contenido\0"\
+  "Ajustar a p\303\241gina\0"\
+  "Ajustar a ancho de p\303\241gina\0"\
   "Ajustar al ancho de p\303\241gina y mostrar las p\303\241ginas de forma continua\0"\
   "Ajustar a una sola p\303\241gina\0"\
   "Fuentes:\0"\
@@ -11401,7 +11401,7 @@ const char * gTranslations_es =
   "Seleccionar con Ctrl+Bot\303\263n. Izq. del rat\303\263n\0"\
   "Enviar por correo electr\303\263nico\0"\
   "Establecer l\303\255nea de comando para b\303\272squeda inversa\0"\
-  "Mostrar &Bookmarks\0"\
+  "Mostrar &marcadores\0"\
   "Mostrar barra de herramientas\0"\
   "Mostrar p\303\241ginas de forma continua\0"\
   "Mostrar favoritos\0"\
@@ -11418,19 +11418,19 @@ const char * gTranslations_es =
   "SumatraPDF a partir de ahora ser\303\241 el lector PDF predeterminado\0"\
   "No se pudo abrir el archivo de sincronizaci\303\263n\0"\
   "PDF Etiquetado\0"\
-  "Documentos de Texto\0"\
+  "Documentos de texto\0"\
   "T\303\255tulo:\0"\
   "Archivo fuente desconocido (%s)\0"\
-  "Vista del Documento\0"\
+  "Vista del documento\0"\
   "&Visitar Sitio Web\0"\
   "Advertencia\0"\
   "Documentos XPS\0"\
   "Usted tiene la \303\272ltima versi\303\263n.\0"\
   "Usted tiene la versi\303\263n %s\0"\
   "\0"\
-  "Acercar Zoom\0"\
-  "Alejar Zoom\0"\
-  "Proporci\303\263n de Zoom\0"\
+  "Acercar zoom\0"\
+  "Alejar zoom\0"\
+  "Proporci\303\263n de zoom\0"\
   "[Modificaciones detectadas; actualizando] %s\0"\
   "copiado de texto\0"\
   "imprimiendo documento\0";
