@@ -1,10 +1,13 @@
 import os, sys, tempfile
-from util import log
 
 g_aws_access = None
 g_aws_secret = None
 g_bucket = None
 g_conn = None
+
+def log(s):
+  print(s)
+  sys.stdout.flush()
 
 def set_secrets(access, secret):
   global g_aws_access, g_aws_secret
