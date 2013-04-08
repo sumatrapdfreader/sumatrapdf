@@ -332,7 +332,7 @@ const char * gTranslations_sq =
   "Nuk mund t\303\253 lidhet n\303\253 internet (gabim %#x).\0"\
   "Anuloj\0"\
   "Nuk mund t\303\253 printoj\303\253 sked\303\253n\0"\
-  "Nuk mund t\303\253 k\303\253rkoj\303\253 mbrapsht. Lutemi t\303\253 verifikoni komand\303\253n te parametrat.\0"\
+  "Nuk mund t\303\253 k\303\253rkoj\303\253 mbrapsht. Ju lutemi, verifikoni komand\303\253n te parametrat.\0"\
   "Ndryshoj gjuh\303\253n\0"\
   "&Azhurnoj\0"\
   "\0"\
@@ -411,7 +411,7 @@ const char * gTranslations_sq =
   "Ka dal\303\253 versioni i ri %s. Do e shkarkoni?\0"\
   "Faqja tjet\303\253r\0"\
   "Nuk ka ngjashm\303\253ri\0"\
-  "Asnj\303\253 rezultat n\303\253 radh\303\253n %u te skeda %s\0"\
+  "Pa rezultat n\303\253 radh\303\253n %u te skeda %s\0"\
   "Nuk gjen sked\303\253n e sinkronizimit\0"\
   "Nuk ka info p\303\253r sinkronizimin n\303\253 k\303\253t\303\253 pozicion\0"\
   "Numri i faqeve:\0"\
@@ -437,7 +437,7 @@ const char * gTranslations_sq =
   "Nuk ekziston numri i faqes %u\0"\
   "Shkalla e flet\303\253s\0"\
   "Faqja:\0"\
-  "Lutemi t\303\253 prisni - po radhitet...\0"\
+  "Ju lutemi, prisni - radhitet...\0"\
   "Dokumente Postscript\0"\
   "Pr&ezantim\tCtrl+L\0"\
   "Faqja e m\303\253parshme\0"\
@@ -455,7 +455,7 @@ const char * gTranslations_sq =
   "Heq nga p\303\253lqimet\0"\
   "Heq faqen %s nga p\303\253lqimet\0"\
   "Riem\303\253rtoj si\0"\
-  "Z\303\253vend\303\253soj &ngjyrat e dokumentit me ngjyrat e Windows-it\0"\
+  "Z\303\253vend\303\253soj &ngjyrat e dokumentit me ato t\303\253 Windows-it\0"\
   "Kthej &majtas\tCtrl+Shift+-\0"\
   "Kthej &djathtas\tCtrl+Shift++\0"\
   "Ruaj si\0"\
@@ -473,14 +473,14 @@ const char * gTranslations_sq =
   "Tregoj leximet e shpeshta\0"\
   "Tregoj &faqet e shenjuara kur jan\303\253 t\303\253 gatshme\0"\
   "Nj\303\253flet\303\253sh\0"\
-  "Na falni, kjo nuk duhej t\303\253 ndodhte!\n\nJu lutemi t\303\253 shtypni 'Anuloj' n\303\253se doni t\303\253 na ndihmoni q\303\253 ta ndreqim gabimin.\0"\
+  "Na falni, kjo nuk duhej t\303\253 ndodhte!\n\nJu lutemi, shtypni 'Anuloj' po desh\303\253t t\303\253 na ndihmoni q\303\253 ta ndreqim gabimin.\0"\
   "Skeda burimore %s nuk ka pik\303\253 sinkronizimi\0"\
   "Tema:\0"\
   "SumatraPDF opsionet\0"\
   "SumatraPDF azhurnimi\0"\
   "SumatraPDF ngeci\0"\
   "SumatraPDF \303\253sht\303\253 lexuesi standard i PDF-ve\0"\
-  "SumatraPDF tani do jet\303\253 lexuesi standard i PDF-ve\0"\
+  "SumatraPDF tani do t\303\253 jet\303\253 lexuesi standard i PDF-ve\0"\
   "Nuk hapet skeda e sinkronizimit\0"\
   "PDF me etiketa\0"\
   "Dokumente tekst\0"\
@@ -4064,7 +4064,7 @@ const char * gTranslations_et =
   "Ava\0"\
   "Ava PDF-XChangega\0"\
   "Ava dokument...\0"\
-  "\0"\
+  "Ava rakenduses %s\0"\
   "Ava &Adobe Readeris\0"\
   "Ava &Foxit Readeris\0"\
   "Ava Microsoft HTML Helpga\0"\

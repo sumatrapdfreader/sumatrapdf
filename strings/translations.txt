@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c01ac4b48d2daf1b5200d42992b6fe093375c73a
+9e32e1063bf93515d06b669a980f72a3b99b7ee6
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -9,6 +9,7 @@ by:%s з %s
 cn:%s of %s
 de:%s von %s
 es:%s de %s
+et:%s, kokku %s
 eu:%s -> %s-tik
 fr:%s de %s
 hu:%s/%s
@@ -1770,6 +1771,7 @@ br:&Opções
 cn:&选项
 de:&Optionen
 es:&Opciones
+et:&Sätted
 eu:A&ukerak
 fr:&Options
 hu:&Beállítások
@@ -3642,6 +3644,7 @@ br:Tem certeza de que quer desinstalar o SumatraPDF?
 cn:确定要卸载SumatraPDF吗？
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 es:¿Está seguro de querer desinstalar SumatraPDF?
+et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
 eu:Zihur zaude SumatraPDF kentzea nahi duzula?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
 hu:Biztosan el szeretné távolítani a SumatraPDF-et?
@@ -3654,6 +3657,7 @@ pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza que quer desinstalar o SumatraPDF?
 ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
 ru:Вы уверены, что хотите удалить SumatraPDF?
+sq:Jeni i sigurt se doni të çinstaloni SumatraPDF?
 sv:Är du säker på att du vill avinstallera SumatraPDF?
 ta:சுமத்ரா PDF நிறுவலை நீக்கவா?
 uk:Ви впевнені, що хочете видалити SumatraPDF?
@@ -4613,7 +4617,7 @@ si:ප්‍රතිලෝම සෙවුමේ විධානය ආරම�
 sk:Príkaz inverzné hľadanie zlyhal. Skontrolujte príkazový riadok v nastaveniach.
 sl:Ukaza za obratno iskanje ni mogoče zagnati. Preverite ukazno vrstico v nastavitvah.
 sp-rs:Nije moguće pokrenuti inverznu pretragu. Proverite komandnu liniju u podešavanjima.
-sq:Nuk mund të kërkojë mbrapsht. Lutemi të verifikoni komandën te parametrat.
+sq:Nuk mund të kërkojë mbrapsht. Ju lutemi, verifikoni komandën te parametrat.
 sr-rs:Није могуће покренути инверзну претрагу. Проверите командну линију у подешавањима.
 sv:Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
 ta:தலைகீழ் தேடல் கட்டளை தொடங்க முடியாது. அமைப்புகளில் கட்டளை வரி சரிபார்க்கவும்
@@ -4767,6 +4771,7 @@ by:Зачынiць
 cn:关闭
 de:Schließen
 es:Cerrar
+et:Sulge
 eu:Itxi
 fr:Fermer
 hi:Close
@@ -5499,6 +5504,7 @@ br:Não foi possível criar pasta temporária
 cn:无法创建临时目录
 de:Konnte das Temporärverzeichnis nicht erstellen
 es:No es posiblre crear la carpeta temporal
+et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea sortzea
 fr:Impossible de créer un répertoire temporaire
 hu:Ideiglenes könyvtár létrehozása sikertelen
@@ -5523,6 +5529,7 @@ br:Não foi possível criar a pasta de instalação.
 cn:无法创建指定的安装目录
 de:Konnte das Installationsverzeichnis nicht erstellen
 es:No se puede crear el directorio de instalación
+et:Ei suudetud luua paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea sortzea
 fr:Impossible de créer le répertoire d'installation
 hu:Telepítési könyvtár létrehozása sikertelen
@@ -5608,6 +5615,7 @@ br:Não foi possível instalar o pré-visualizador para PDF
 cn:无法安装PDF文件预临览
 de:Konnte die PDF Vorschau nicht installieren
 es:No se puede instalar previsualizador PDF
+et:Ei suudetud paigaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea ezartzea
 fr:Impossible d'installer l'aperçu PDF
 hu:PDF előnézet-megjelenítő telepítése sikertelen
@@ -5632,6 +5640,7 @@ br:Não foi possível instalar o filtro de pesquisa para PDF
 cn:无法安装PDF搜索过滤器
 de:Konnte den PDF Suchfilter nicht installieren
 es:No se puede instalar el filtro buscador PDF
+et:Ei suudetud paigaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia ezartzea
 fr:Impossible d'installer le filtre de recherche PDF
 hu:PDF keresési szűrő telepítése sikertelen
@@ -5642,6 +5651,7 @@ ku:ناتوانرێت فرمانی گەڕانی PDF دابەزێندرێت
 pt:Não foi possível instalar o filtro de procuras
 ro:Nu s-a putut instala filtrul de cautare PDF
 ru:Не удалось установить фильтр поиска PDF
+sq:Nuk mund të instalojë kërkuesin e PDF-ve
 sv:Kunde inte installera sökfilter för PDF
 ta:PDF தேடலை நிறுவ இயலவில்லை
 uk:Не вдалося встановити фільтр пошуку для PDF
@@ -5654,6 +5664,7 @@ br:Não foi possível instalar o plugin do navegador
 cn:无法安装浏览器插件
 de:Konnte das Browser-Plugin nicht installieren
 es:No es posible instalar el plugin de navegación
+et:Ei suudetud paigaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina ezartzea
 fr:Impossible d'installer le plug-in du navigateur
 hu:Böngésző beépülő telepítése sikertelen
@@ -5677,6 +5688,7 @@ br:Não foi possível obter a pasta temporária
 cn:无法得到暂存目录
 de:Konnte das temporäre Verzeichnis nicht finden
 es:No se puede acceder al directorio temporal
+et:Ei suudetud luua ajutist kataloogi
 eu:Ezinezkoa aldibaterako zuzenbidea lortzea
 fr:Impossible d'obtenir un répertoire temporaire
 hu:Ideiglenes könyvtár nem érhető el
@@ -5698,6 +5710,7 @@ br:Não foi possível remover a pasta de instalação
 cn:无法移除安装目录
 de:Konnte das Installationsverzeichnis nicht löschen
 es:No se puede eliminar el directorio de instalación
+et:Ei suudetud kustutada paigalduskataloogi
 eu:Ezinezkoa ezarpen zuzenbidea kentzea
 fr:Impossible de supprimer le répertoire d'installation
 hu:Telepítési könyvtár eltávolítása sikertelen
@@ -5720,6 +5733,7 @@ br:Não foi possível remover o atalho
 cn:无法移除快捷方式
 de:Konnte die Verknüpfung nicht löschen
 es:No se puede eliminar el acceso directo
+et:Ei suudetud kustutada otseteed
 eu:Ezinezkoa lastertekla kentzea
 fr:Impossible de supprimer le raccourci
 hu:Parancsikon eltávolítása sikertelen
@@ -5802,6 +5816,7 @@ br:Não foi possível desinstalar o pré-visualizador para PDF
 cn:无法卸载PDF预览
 de:Konnte die PDF Vorschau nicht deinstallieren
 es:No se puede desinstalar el previsualizador PDF
+et:Ei suudetud eemaldada PDF-eelvaaturit
 eu:Ezinezkoa PDF aurreikustatzailea kentzea
 fr:Impossible de désinstaller l'aperçu PDF
 hu:PDF előnézet-megjelenítő eltávolítása sikertelen
@@ -5823,6 +5838,7 @@ br:Não foi possível desinstalar o filtro de pesquisa para PDF
 cn:无法卸载PDF搜索过滤器
 de:Konnte den PDF Suchfilter nicht deinstallieren
 es:No se puede desinstalar el filtro buscador PDF
+et:Ei suudetud eemaldada PDF otsingufiltrit
 eu:Ezinezkoa PDF bilaketa iragazkia kentzea
 fr:Impossible de désinstaller le filtre de recherche PDF
 hu:PDF keresési szűrő eltávolítása sikertelen
@@ -5832,6 +5848,7 @@ ku:ناتوانرێت فرمانی گەڕانی PDF بسڕدرێتەوە
 pt:Não foi possível desinstalar o filtro de procura
 ro:Nu s-a putut dezinstala filtrul de cautare PDF
 ru:Не удалось удалить фильтр поиска PDF
+sq:Nuk mund të çinstalojë kërkuesin e PDF-ve
 sv:Kunde inte avinstallera sökfiltret för PDF:er
 ta:PDF தேடலை நீக்க முடியவில்லை
 uk:Не вдалося видалити фільтр пошуку для PDF
@@ -5843,6 +5860,7 @@ br:Não foi possível desinstalar o plugin do navegador
 cn:无法卸载浏览器插件
 de:Konnte das Browser-Plugin nicht deinstallieren
 es:No se puede desinstalar el plugin de navegación
+et:Ei suudetud eemaldada brauseri pluginat
 eu:Ezinezkoa nabigatzaile plugina kentzea
 fr:Impossible de désinstalle le plug-in du navigateur
 hu:Böngésző beépülő eltávolítása sikertelen
@@ -5864,6 +5882,7 @@ br:Não foi possível gravar %s no disco
 cn:无法将%s写进硬盘
 de:Konnte %s nicht kopieren
 es:No se puede escribir %s al disco
+et:Ei suudetud kettale kirjutada %s
 eu:Ezinezkoa %s diskara idaztea
 fr:Impossible d'écrire %s sur le disque
 hu:%s lemezre írása sikertelen
@@ -6844,6 +6863,7 @@ br:Não foi possível rodar o SumatraPDF!
 cn:错误：无法运行SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
 es:Error: No se puede ejecutar SumatraPDF
+et:Viga: Ei suudetud käivitada rakendust SumatraPDF!
 eu:Akatsa: Ezinezkoa SumatraPDF abiaraztea!
 fr:Erreur : impossible de lancer SumatraPDF !
 hu:Hiba: SumatraPDF futtatása sikertelen!
@@ -6866,6 +6886,7 @@ br:O SumatraPDF não foi encontrado!
 cn:失败: 找不到SumatraPDF
 de:Fehler: SumatraPDF ist unaufindbar!
 es:Error: SumatraPDF no ha sido encontrado
+et:Viga: Ei leitud rakendust SumatraPDF
 eu:Akatsa: SumatraPDF ez da aurkitu!
 fr:Erreur : SumatraPDF non trouvé !
 hu:Hiba: SumatraPDF nem található!
@@ -6888,6 +6909,7 @@ br:Erro: o documento não pôde ser baixado!
 cn:错误： 文档无法下载!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
 es:Error: El documento no puede ser descargado
+et:Viga: Dokumenti ei suudetud alla laadida!
 eu:Akatsa: Agiria ezin da jeitsi!
 fr:Erreur : le document n'a pu être téléchargé !
 hu:Hiba: a dokumentum letöltése sikertelen!
@@ -7156,6 +7178,7 @@ br:Falha na cópia do desinstalador para a pasta temporária
 cn:无法将安装程序复制到暂存目录
 de:Konnte das Deinstallationsprogramm nicht kopieren
 es:Fallo al copiar el desinstalador al directorio temporal
+et:Ei õnnestunud kopeerida eemaldusprogrammi temp kataloogi
 eu:Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan
 fr:La copie du désinstalleur dans un répertoire temporaire a échoué
 hu:Az uninstaller ideiglenes könyvtárba való másolása nem sikerült
@@ -7176,6 +7199,7 @@ br:Falha na criação do atalho
 cn:无法创建快捷方式
 de:Konnte keine Verknüpfung erstellen
 es:Error al crear un acceso directo
+et:Ei õnnestu luua otseteed
 eu:Hutsegitea lasterbidea sortzerakoan
 fr:Impossible de créer un raccourci
 hu:Nem sikerült létrehozni a parancsikont
@@ -7196,6 +7220,7 @@ br:Falha na remoção das entradas de registro do desinstalador
 cn:删除卸载程序的注册表项失败
 de:Konnte nicht alle Registry-Einträge löschen
 es:Fallo al eliminar las claves del registro del desinstalador
+et:Ei õnnestu kustutada eemaldusprogrammi registrivõtmeid
 eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
 hu:Az eltávolító registry kulcsainak törlése sikertelen
@@ -7334,6 +7359,7 @@ br:Falha na gravação da extensão de arquivo no registro
 cn:无法将文件扩展名的扩展信息写进注册表
 de:Konnte die Dateiformats-Verknüpfungen nicht vollständig in die Registry schreiben
 es:Fallo al escribir información de la extensión de archivo al registro
+et:Ei õnnestunud registrisse kirjutada infot pikendatud faililaiendi kohta
 eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
 fr:L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
 hu:Nem sikerült írni a kiterjesztett fájlkiterjesztést információkat a rendszerleíró adatbázisban
@@ -7343,6 +7369,7 @@ ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو
 pt:Falha ao escrever as informações do tipo de ficheiro nas chaves de registo
 ro:Eroare la scrierea informatiei extinse despre extensia fisierului in registri
 ru:Не удалось записать полную информацию о расширении файла в регистр
+sq:Dështoi shkrimi në regjistër i informacionit të zgjeruar për skedën.
 sv:Misslyckades med att spara registernycklar för den utökade filhanteringen
 ta:பதிவு செய்ய விரிவாக்கப்பட்ட கோப்பு நீட்டிப்பு தகவலை எழுத முடியவில்லை
 uk:Не вдалося записати інформацію про розширення файлу до реєстру
@@ -7353,6 +7380,7 @@ br:Falha na gravação dos dados de desinstalação no registro
 cn:将卸载所需信息写进注册表时失败了
 de:Konnte keine Deinstallations-Informationen in die Registry schreiben
 es:Fallo al escribir información de desinstalación al registro
+et:Ei õnnestunud registrisse kirjutada eemaldamise informatsiooni
 eu:Hutsegitea kentze argibideak erregistroan idazterakoan
 fr:L'écriture des informations de désinstallation dans la base de registre a échoué
 hu:Eltávolítással kapcsolatos információk registry-be írása sikertelen
@@ -8919,6 +8947,7 @@ br:Ocultar &Opções
 cn:隐藏选项菜单
 de:&Optionen
 es:Ocultar &opciones
+et:Peida &sätted
 eu:Ezkutatu A&ukerak
 fr:Masque les &options
 hu:Beállítások elrejtése
@@ -8929,6 +8958,7 @@ pt:&Ocultar opções
 ro:Ascundere &Optiuni
 ru:Скрыть опции
 sp-rs:Sakrij opcije
+sq:Fsheh &opsionet
 sr-rs:Сакриј опције
 sv:Göm Alternativ
 ta:மறை & விருப்பம்
@@ -9108,6 +9138,7 @@ br:Instalar plugin PDF para Firefox, Chrome e Opera
 cn:安装PDF浏览器插件到火狐, Chrome和Opera
 de:PDF Browser-Plugin für Firefox, Chrome und Opera installieren
 es:Instalar el plugin PDF del &navegador para Firefox, Chrome y Opera
+et:Paigalda lisaks PDF &plugin Firefox, Chrome ja Opera brauseritele.
 eu:Ezarri PDF &nabigatzile plugina Firefox, Chrome eta Opera-rentzat
 fr:Installer le plug-in PDF pour Firefox, Chrome and Opera
 hu:PDF beépülő telepítése Firefox, Chrome és Opera böngészőkre
@@ -9131,6 +9162,7 @@ br:Instalar SumatraPDF
 cn:安装SumatraPDF
 de:Installieren
 es:Instalar SumatraPDF
+et:Paigalda SumatraPDF
 eu:Ezarri SumatraPDF
 fr:Installer SumatraPDF
 hu:SumatraPDF telepítése
@@ -9153,6 +9185,7 @@ br:Instalar SumatraPDF na &pasta:
 cn:安装SumatraPDF到目录: &folder
 de:&Installationsverzeichnis:
 es:Instalar SumatraPDF en &directorio:
+et:Paigalda SumatraPDF &kataloogi:
 eu:Ezarri Su&matraPDF agiritegi honetan:
 fr:Installer SumatraPDF dans le répertoire :
 hu:SumatraPDF telepítése a következő &könyvtárba:
@@ -9174,6 +9207,7 @@ br:Falha na instalação!
 cn:安装失败!
 de:Die Installation ist fehlgeschlagen!
 es:Falló la instalación
+et:Paigaldamine ebaõnnestus!
 eu:Ezarpen hutsegitea!
 fr:Échec de l'installation !
 hu:Telepítés sikertelen!
@@ -9196,6 +9230,7 @@ br:Instalação em progresso...
 cn:安装正在进行中...
 de:Die Installation wird ausgeführt...
 es:Instalación en progreso...
+et:Toimub paigaldamine...
 eu:Ezarpena garatzen...
 fr:Installation en cours…
 hu:Telepítés folyamatban...
@@ -9287,6 +9322,7 @@ br:Permitir que o Windows faça a bu&sca em documentos PDF
 cn:使用Windows桌面搜索来搜索PDF文档
 de:PDF Dokumente in Windows-&Suchen einbeziehen
 es:Permitir al escritorio Windows buscar &buscar documentos PDF
+et:Windows Desktop Search &otsib PDF-dokumente
 eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
 fr:Permettre à Windows Desktop Search la recherche de documents PDF
 hu:Hagyja a Windows Desktop Search-re a PDF dokumentumok keresését
@@ -9307,6 +9343,7 @@ br:Permitir que o Windows &pré-visualize documentos PDF
 cn:使用Windows的PDF预览功能
 de:&Vorschau für PDF Dokumente in Explorer aktivieren
 es:Permitir mostrar a Windows &vistaprevia de documentos PDF
+et:Windows kuvab PDF-dokumentide &eelvaateid
 eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
 fr:Permettre à Windows de montrer des a&perçus des documents PDF
 hu:Hagyja a Windows-ra a PDF dokumentumok előnézetének megjelenítését
@@ -9992,7 +10029,7 @@ ru:Результат, соответствующий строке %u в фай�
 sk:Nenájdené žiadne výsledky na riadku %u v súbore %s
 sl:Okoli vrstice %u v datoteki %s ni zadetkov
 sp-rs:Rezultati oko linije %u u datoteci %s nisu pronađeni
-sq:Asnjë rezultat në radhën %u te skeda %s
+sq:Pa rezultat në radhën %u te skeda %s
 sr-rs:Резултати око линије %u у датотеци %s нису пронађени
 sv:Inget resultat hittades vid rad %u i filen %s
 ta:%u வரியில் %s கோப்பில் முடிவுகள் கிடைக்கவில்லை
@@ -10425,6 +10462,7 @@ br:Abrir em %s
 cn:开放的 %s
 de:Mit %s öffnen
 es:Abrir en %s
+et:Ava rakenduses %s
 eu:Irekitzea %s
 fr:Ouvrir dans %s
 hu:Megnyitás %s
@@ -10680,6 +10718,7 @@ br:Abrindo documento no SumatraPDF...
 cn:正在用SumatraPDF打开文件...
 de:Das Dokument wird in SumatraPDF geöffnet...
 es:Abriendo documento en SumatraPDF
+et:Dokumendi avamine rakenduses SumatraPDF...
 eu:Agiria irekitzen SumatraPDF-an...
 fr:Ouverture du document dans SumatraPDF…
 hu:Dokumentum megnyitása SumatraPDF-ben...
@@ -11456,6 +11495,7 @@ br:Por favor feche %s para continuar!
 cn:请关闭%s后继续!
 de:Bitte schliessen Sie %s vor der Installation!
 es:Por favor cerrar %s para continuar!
+et:Jätkamiseks palun sulge rakendus %s!
 eu:Mesedez itxi %s jarraitzeko!
 fr:Fermez %s pour continuer, s.v.p. !
 hu:A(z) %s bezárása szükséges a folytatáshoz!
@@ -11465,7 +11505,7 @@ ku:تکایە %s دابخە بۆ بەردەوامبون!
 pt:Para continuar, feche o %s!
 ro:Rugam inchideti %s pentru a putea continua!
 ru:Для продолжения, закройте %s !
-sq:Lutemi të mbyllni %s për të vazhduar!
+sq:Ju lutemi, mbyllni %s për të vazhduar!
 sv:Vänligen stäng %s innan du fortsätter!
 ta:தயவு செய்து %s மூடிவிட்டு தொடரவும்!
 uk:Будь ласка закрийте %s, щоб продовжити!
@@ -11519,7 +11559,7 @@ si:මදක් සිටින්න - rendering...
 sk:Prosím počkajte - zobrazovanie...
 sl:Počakajte trenutek, upodobitev poteka …
 sp-rs:Spremanje prikaza...
-sq:Lutemi të prisni - po radhitet...
+sq:Ju lutemi, prisni - radhitet...
 sr-rs:Спремање приказа...
 sv:Ett ögonblick - förbereder...
 ta:தயவுசெய்து காத்திருக்கவும் - அளிக்கபட்டுவருகிறது...
@@ -12480,7 +12520,7 @@ ro:Înlocuiește &colors documentului cu schema de culori Windows.
 ru:Применить к документу цветовую схему Windows
 sk:&Farby dokumentu nahradiť farebnou schémou systému Windows
 sl:Zamenjaj &barve dokumenta z barvno shemo Windows
-sq:Zëvendësoj &ngjyrat e dokumentit me ngjyrat e Windows-it
+sq:Zëvendësoj &ngjyrat e dokumentit me ato të Windows-it
 sr-rs:Замени боје документа Windows колор шемом
 sv:Byt ut dokument&färg till Windows färgschema
 ta:ஆவணம் மற்றும் வண்ணங்களை  விண்டோஸ் வண்ண திட்டம் மூலம் மாற்றவும்
@@ -12978,6 +13018,7 @@ br:Selecione a pasta onde o SumatraPDF deverá ser instalado:
 cn:将SumatraPDF安装到指定目录
 de:In welches Verzeichnis soll SumatraPDF installiert werden?
 es:Seleccione la carpeta donde SumatraPDF debería ser instalado:
+et:Vali kataloog, mille seest SumatraPDF paigaldatakse.
 eu:Hautatu SumatraPDF ezarri behar den agiritegia:
 fr:Sélectionner le répertoire d'installation de SumatraPDF :
 hu:Válassza ki a SumatraPDF telepítési könyvtárát:
@@ -13530,6 +13571,7 @@ br:Alguns arquivos de instalação estão danificados ou ausentes
 cn:某些安装所需的文件损坏或丢失
 de:Einige Dateien konnten nicht korrekt installiert werden
 es:Algunos de los archivos que van a ser instalados estan dañados o no se encuentran
+et:Mõned paigaldatavad failid on viga saanud või puuduvad
 eu:Ezarritako zenbait agiri hondatuta edo galduta daude
 fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
 hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
@@ -13539,6 +13581,7 @@ ku:هەندێک فایلی دابەزاندن وونبوون یان تێکچوو
 pt:Alguns ficheiros do instalador estão danificados
 ro:Niste fisiere ce trebuiesc instalate lipsesc sau sunt pleznite
 ru:Некоторые файлы установки повреждены или отсутствуют
+sq:Janë dëmtuar ose mungojnë disa skeda që do të instalohen.
 sv:Några installationsfiler saknas eller är skadade
 ta:நிறுவப்பட்ட சில கோப்புகள் சேதமடைந்துள்ளன/காணவில்லை
 uk:Деякі файли необхідні для встановлення відсутні або пошкоджені
@@ -13586,7 +13629,7 @@ ru:Извините, произошло что-то непредвиденное
 sk:Ospravedlňujeme sa, nemalo sa to stať.\n\nAk nám chcete pomôcť vyriešiť príčinu tohto zlyhania programu, stlačte tlačidlo 'Storno'.
 sl:Oprostite, to se ne bi smelo zgoditi!\n\nPritisnite 'Prekliči', če želite pomagati pri določitvi vzroka za sesutje.
 sp-rs:Oprostite, ovo nije trebalo da se dogodi!\n\nPritisnite dugme 'Otkaži' ako želite da nam pomognete u rešavanju ovog problema.
-sq:Na falni, kjo nuk duhej të ndodhte!\n\nJu lutemi të shtypni 'Anuloj' nëse doni të na ndihmoni që ta ndreqim gabimin.
+sq:Na falni, kjo nuk duhej të ndodhte!\n\nJu lutemi, shtypni 'Anuloj' po deshët të na ndihmoni që ta ndreqim gabimin.
 sr-rs:Опростите, ово није требало да се догоди!\n\nПритисните дугме 'Откажи' ако желите да нам помогнете у решавању овог проблема.
 sv:Ledsen, det där borde inte ha hänt!\n\nVar god tryck 'Avbryt', om du vill hjälpa oss att korrigera orsaken till denna krash.
 ta:மன்னிக்கவும், இது நடந்திருக்க கூடாது! \n\n தயவு செய்து 'ரத்துதை' அழுத்தவும், எங்களுக்கு இந்த விபத்தினை சரிசெய்ய உதவும்.
@@ -13661,6 +13704,7 @@ br:Iniciar SumatraPDF
 cn:启动SumatraPDF
 de:SumatraPDF starten
 es:Iniciar SumatraPDF
+et:Käivita SumatraPDF
 eu:Abiarazi SumatraPDF
 fr:Lancer SumatraPDF
 hu:SumatraPDF indítása
@@ -13743,6 +13787,7 @@ br:SumatraPDF %s instalador
 cn:SumatraPDF %s 安装程序
 de:SumatraPDF %s installieren
 es:Instalador %s SumatraPDF
+et:SumatraPDF %s paigaldamine
 eu:SumatraPDF %s Ezartzailea
 fr:Installeur de SumatraPDF %s
 hu:SumatraPDF %s telepítő
@@ -13764,6 +13809,7 @@ br:SumatraPDF %s desinstalador
 cn:SumatraPDF %s 卸载程序
 de:SumatraPDF %s deinstallieren
 es:Desinstalador %s SumatraPDF
+et:SumatraPDF %s eemaldamine
 eu:SumatraPDF %s Kentzailea
 fr:Désinstalleur de SumatraPDF %s
 hu:SumatraPDF %s eltávolító
@@ -13955,6 +14001,7 @@ br:SumatraPDF foi desinstalado.
 cn:成功卸载SumatraPDF.
 de:SumatraPDF wurde deinstalliert.
 es:SumatraPDF ha sido desinstalado.
+et:SumatraPDF on eemaldatud.
 eu:SumatraPDF kendu da.
 fr:SumatraPDF a été désinstallé.
 hu:SumatraPDF eltávolítása befejeződött.
@@ -13977,6 +14024,7 @@ br:A instalação do SumatraPDF não foi encontrada.
 cn:找不到SumatraPDF安装程序.
 de:Keine SumatraPDF-Installation zum Deinstallieren gefunden.
 es:Instalación de SumatraPDF no encontrada.
+et:SumatraPDF paigaldust ei leitud.
 eu:SumatraPDF ezarpena ez da aurkitu.
 fr:Installation de SumatraPDF non trouvée
 hu:SumatraPDF telepítő nem található.
@@ -14100,7 +14148,7 @@ si:SumatraPDF මෙතැන් සිට ඔබගේ ප්‍රධාන  P
 sk:SumatraPDF by teraz mala byť vaším predvoleným prehliadačom PDF súborov
 sl:SumatraPDF bi zdaj moral biti vaš privzeti bralnik PDF
 sp-rs:SumatraPDF je postavljen kao podrazumevani PDF čitač
-sq:SumatraPDF tani do jetë lexuesi standard i PDF-ve
+sq:SumatraPDF tani do të jetë lexuesi standard i PDF-ve
 sr-rs:SumatraPDF је постављен као подразумевани PDF читач
 sv:SumatraPDF ska nu vara din valda PDF-läsare
 ta:சுமத்ராPDF இப்பொழுது உங்களின் முதன்மை PDF படிப்பி
@@ -14283,6 +14331,7 @@ br:Obrigado por escolher o SumatraPDF!
 cn:谢谢选用SumatraPDF!
 de:Vielen Dank dafür, dass Sie SumatraPDF verwenden!
 es:Gracias por seleccionar SumatraPDF
+et:Täname, et valisid SumatraPDF'i!
 eu:Mila esker SumatraPDF hautatzeagaitik!
 fr:Merci d'avoir choisi SumatraPDF !
 hu:Köszönjük, hogy a SumatraPDF-et választotta!
@@ -14305,6 +14354,7 @@ br:Obrigado! O SumatraPDF foi instalado.
 cn:谢谢! SumatraPDF已经安装好.
 de:Vielen Dank! SumatraPDF wurde erfolgreich installiert.
 es:¡Gracias! SumatraPDF ha sido instalado
+et:Täname! SumatraPDF on paigaldatud.
 eu:Mila esker! SumatraPDF ezarri da.
 fr:Merci ! SumatraPDF a été installé.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
@@ -14327,6 +14377,7 @@ br:O instalador está corrompido. Por favor baixe-o novamente.\nDesculpe pelo in
 cn:抱歉安装程序损坏，请重新下载。
 de:Das Installationsprogramm wurde beschädigt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!
 es:El instalador está dañado. Por favor descárguelo de nuevo. \nDisculpas por el inconveniente!
+et:Paigaldusprogramm on vigane. Palun laadi see uuesti alla.\nPalun vabandust ebamugavuste pärast!
 eu:Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik!
 fr:L'installeur est corrompu. Veuillez le télécharger de nouveau. \nDésolé de ce désagrément !
 hu:A telepítő sérült. Kérjük, töltse le újra.\nElnézést kérünk a kellemetlenségért!
@@ -14336,6 +14387,7 @@ ku:دابەزێنەر تێکچووە. تکایە دووبارە دایبگرەو
 pt:O instalador está danificado. Efetue uma nova transferência.\nDesculpe o inconveniente.
 ro:Programul de instalare este pleznit :(. Rugam descarcati-l din nou. \n Scuze pentru deranj!
 ru:Инсталлятор испорчен. Пожалуйста, загрузите его повторно.\nИзвините за неудобства!
+sq:Instaluesi ka të meta. Ju lutemi, shkarkojeni edhe një herë.\nNa falni për bezdinë!
 sv:Installationsprogrammet är skadat. Vänligen ladda ner det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
 uk:Інсталятор було пошкоджено. Будь ласка завантажте його знову.\nВибачте за незручності!
@@ -14406,6 +14458,7 @@ br:Desinstalar SumatraPDF
 cn:卸载SumatraPDF
 de:Deinstallieren
 es:Desinstalar SumatraPDF
+et:Eemalda SumatraPDF
 eu:Kendu SumatraPDF
 fr:Désinstaller SumatraPDF
 hu:SumatraPDF eltávolítása
@@ -14429,6 +14482,7 @@ br:A desinstalação falhou
 cn:卸载失败
 de:Die Deinstallation ist fehlgeschlagen
 es:Falló la desinstalación
+et:Eemaldamine ebaõnnestus
 eu:Kentze hutsegitea
 fr:Échec de la désinstallation
 hu:Eltávolítás sikertelen
@@ -14452,6 +14506,7 @@ br:Desinstalação em progresso...
 cn:卸载正在进行中...
 de:Die Deinstallation wird ausgeführt...
 es:Desinstalación en progreso...
+et:Toimub eemaldamine...
 eu:Kentzea garatzen...
 fr:Désinstallation en cours…
 hu:Eltávolítás folyamatban...
@@ -14534,6 +14589,7 @@ br:Usar o SumatraPDF como o leitor PDF pa&drão
 cn:将SumatraPDF设为&缺省PDF阅读器
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
 es:Usar SumatraPDF como el lector PDF por &defecto
+et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.
 eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
 fr:Choisir SumatraPDF comme lecteur PDF par &défaut
 hu:SumatraPDF használata alapértelmezett PDF olvasóként
