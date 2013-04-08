@@ -113,7 +113,7 @@ def build_index_html(stats_for_ver, checkin_comment_for_ver):
 	html += '<table id="table-5"><tr>' + th("build") + th("/analyze") + th("release")
 	html += th("SumatraPDF.exe") + th("Installer.exe") + th("efi") + th("checkin comment") + '</tr>\n'
 	files_by_ver = group_by_ver(names)
-	for arr in files_by_ver:
+	for arr in files_by_ver[:512]:
 		(ver, files) = arr
 		if "stats.txt" not in files:
 			print("stats.txt missing in %s (%s)" % (ver, str(files)))

@@ -27,8 +27,6 @@ TODO:
    hard. One option would be to run efi on an executable compiled with less
    aggressive optimization. Another would be to post-process the result
    and use heuristic to suppress bogus changes
- - at some point the index.html page will get too big, so split it into N-item chunks
-   (100? 300?)
  - should also do pre-release builds if there was a new checkin since the last uploaded
    build but is different that than build and there was no checkin for at least 4hr
    (all those rules are to ensure we don't create pre-release builds too frequently)
