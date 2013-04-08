@@ -32,8 +32,13 @@ import os, sys, shutil, util, efiparse
 
 g_top_dir = os.path.realpath("..")
 
+g_src_dir = os.path.join(os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
+
 def sum_efi_dir():
 	return os.path.join(g_top_dir, "sumatrapdf_efi")
+
+def sumatra_dir():
+	return os.path.joing()
 
 def sum_efi_cache_dir(ver):
 	# make it outside of sumatrapdf_efi directory?
@@ -69,22 +74,26 @@ def already_built(ver):
 		if not os.path.exists(p): return False
 	return True
 
-def build_ver(ver):
-	print("Building release version %d" % ver)
+def build_clean(ver):
 	config = "CFG=rel"
 	obj_dir = "obj-rel"
-	extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % ver
+	extcflags = "EXTCFLAGS=-DSVN_PRE_RELEASE_VER=%s" % str(ver)
 	platform = "PLATFORM=X86"
+	shutil.rmtree(obj_dir, ignore_errors=True)
+	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
+	(out, err, errcode) = util.run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
+
+def build_ver(ver):
+	print("Building release version %d" % ver)
+	obj_dir = "obj-rel"
 
 	if already_built(ver):
 		print("Version %d already built!" % ver)
 		return
 	os.chdir(sum_efi_dir())
 	util.run_cmd_throw("svn", "update", "-r%d" % ver)
+	build_clean(ver)
 
-	shutil.rmtree(obj_dir, ignore_errors=True)
-	shutil.rmtree(os.path.join("mupdf", "generated"), ignore_errors=True)
-	(out, err, errcode) = util.run_cmd("nmake", "-f", "makefile.msvc", config, extcflags, platform, "all_sumatrapdf")
 	for f in g_build_artifacts:
 		src = os.path.join(obj_dir, f)
 		dst = os.path.join(sum_efi_cache_dir(ver), f)
@@ -94,6 +103,11 @@ def build_efi_result(ver):
 	path = efi_result_file(ver)
 	if os.path.exists(path): return # was already done
 	os.chdir(sum_efi_cache_dir(ver))
+	util.run_cmd_throw("efi", "SumatraPDF.exe", ">efi.txt")
+	util.bz_file_compress("efi.txt", "efi.txt.bz2")
+
+def build_efi_result_current():
+	os.chdir("obj-rel")
 	util.run_cmd_throw("efi", "SumatraPDF.exe", ">efi.txt")
 	util.bz_file_compress("efi.txt", "efi.txt.bz2")
 
@@ -149,10 +163,41 @@ def print_seq(diff, max=-1):
 			size = sym.size_diff
 			print("%4d : %s" % (size, sym.full_name()))
 
+def diff_efi(efi1_path, efi2_path):
+	obj_file_splitters = ["obj-rel\\", "INTEL\\"]
+	efi1 = efiparse.parse_file(efi1_path, obj_file_splitters)
+	efi2 = efiparse.parse_file(efi2_path, obj_file_splitters)
+	diff = efiparse.diff(efi1, efi2)
+	#print("Diffing done")
+	print(diff)
+	diff.added.sort(key=lambda sym: sym.size, reverse=True)
+	diff.removed.sort(key=lambda sym: sym.size, reverse=True)
+	diff.changed.sort(key=lambda sym: sym.size_diff, reverse=True)
+	print_seq(diff)
+
+# compare the build of the current state of the tree (including changes not
+# checked in) with the last svn revision.
+# last svn revision is built in ../sumatrapdf_efi
+def cmp_with_last():
+	os.chdir(sum_efi_dir())
+	(local_ver, latest_ver) = util.get_svn_versions()
+	latest_ver = int(latest_ver)
+	build_ver(latest_ver)
+	build_efi_result(latest_ver)
+	os.chdir(g_src_dir)
+	build_clean(latest_ver + 1)
+	build_efi_result_current()
+	diff_efi(efi_result_bz2_file(latest_ver), "efi.txt.bz2")
+
 def main():
 	# early checks
 	assert os.path.exists(sum_efi_dir()), "Need %s directory" % sum_efi_dir()
 	verify_efi_present()
+
+	if "-with-last" in sys.argv:
+		cmp_with_last()
+		sys.exit(1)
+
 	if len(sys.argv) != 3:
 		usage()
 	svn_ver1 = int(sys.argv[1])
@@ -165,17 +210,7 @@ def main():
 	build_efi_result(svn_ver1)
 	build_ver(svn_ver2)
 	build_efi_result(svn_ver2)
-
-	obj_file_splitters = ["obj-rel\\", "INTEL\\"]
-	efi1 = efiparse.parse_file(efi_result_bz2_file(svn_ver1), obj_file_splitters)
-	efi2 = efiparse.parse_file(efi_result_bz2_file(svn_ver2), obj_file_splitters)
-	diff = efiparse.diff(efi1, efi2)
-	#print("Diffing done")
-	print(diff)
-	diff.added.sort(key=lambda sym: sym.size, reverse=True)
-	diff.removed.sort(key=lambda sym: sym.size, reverse=True)
-	diff.changed.sort(key=lambda sym: sym.size_diff, reverse=True)
-	print_seq(diff)
+	diff_efi(efi_result_bz2_file(svn_ver1), efi_result_bz2_file(svn_ver2))
 
 if __name__ == "__main__":
 	main()
