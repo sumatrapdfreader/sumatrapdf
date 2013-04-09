@@ -1071,7 +1071,7 @@ gdiplus_get_path(fz_path *path, const fz_matrix *ctm, bool has_caps, int evenodd
 static Pen *
 gdiplus_get_pen(Brush *brush, const fz_matrix *ctm, fz_stroke_state *stroke)
 {
-	// TODO: pens are too narrow at low zoom levels
+	// TODO: pens are too wide at low zoom levels
 	float me = fz_matrix_expansion(ctm);
 	Pen *pen = new Pen(brush, stroke->linewidth * me);
 	pen->SetTransform(&Matrix(ctm->a / me, ctm->b / me, ctm->c / me, ctm->d / me, 0, 0));
