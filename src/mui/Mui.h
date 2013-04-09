@@ -26,6 +26,7 @@ using namespace css;
 #include "MuiHwndWrapper.h"
 #include "MuiPainter.h"
 #include "MuiEventMgr.h"
+#include "MuiFromText.h"
 
 #define SizeInfinite ((INT)-1)
 
@@ -78,14 +79,6 @@ void        RequestRepaint(Control *c, const Rect *r1 = NULL, const Rect *r2 = N
 void        RequestLayout(Control *c);
 void        DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s);
 HwndWrapper *GetRootHwndWnd(const Control *c);
-
-class ParsedMui {
-public:
-    Vec<ILayout *>      all;
-    Vec<ButtonVector*>  vecButtons;
-    Vec<Button*>        buttons;
-    Vec<Style*>         styles;
-};
 
 } // namespace mui
 

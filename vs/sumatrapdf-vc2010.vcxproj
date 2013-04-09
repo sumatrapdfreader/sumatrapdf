@@ -142,6 +142,7 @@
     <ClCompile Include="..\src\mui\MuiControl.cpp" />
     <ClCompile Include="..\src\mui\MuiCss.cpp" />
     <ClCompile Include="..\src\mui\MuiEventMgr.cpp" />
+    <ClCompile Include="..\src\mui\MuiFromText.cpp" />
     <ClCompile Include="..\src\mui\MuiGrid.cpp" />
     <ClCompile Include="..\src\mui\MuiHwndWrapper.cpp" />
     <ClCompile Include="..\src\mui\MuiLayout.cpp" />
@@ -404,6 +405,7 @@
     <ClInclude Include="..\src\mui\MuiControl.h" />
     <ClInclude Include="..\src\mui\MuiCss.h" />
     <ClInclude Include="..\src\mui\MuiEventMgr.h" />
+    <ClInclude Include="..\src\mui\MuiFromText.h" />
     <ClInclude Include="..\src\mui\MuiGrid.h" />
     <ClInclude Include="..\src\mui\MuiHwndWrapper.h" />
     <ClInclude Include="..\src\mui\MuiLayout.h" />

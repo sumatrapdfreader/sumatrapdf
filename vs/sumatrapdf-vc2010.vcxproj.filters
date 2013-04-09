@@ -231,6 +231,9 @@
     <ClCompile Include="..\src\mui\MuiEventMgr.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\mui\MuiFromText.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\mui\MuiGrid.cpp">
       <Filter>mui</Filter>
     </ClCompile>
@@ -1011,6 +1014,9 @@
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\MuiEventMgr.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mui\MuiFromText.h">
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\MuiGrid.h">

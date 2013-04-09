@@ -622,6 +622,14 @@
 					RelativePath="..\src\mui\MuiButtonVectorDef.h"
 					>
 				</File>
+				<File
+					RelativePath="..\src\mui\MuiFromText.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\mui\MuiFromText.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="base"

@@ -173,7 +173,7 @@ MUI_OBJS = \
 	$(OMUI)\MuiPainter.obj $(OMUI)\MuiControl.obj $(OMUI)\MuiButton.obj \
 	$(OMUI)\MuiScrollBar.obj $(OMUI)\MuiEventMgr.obj $(OMUI)\MuiHwndWrapper.obj \
 	$(OMUI)\MuiGrid.obj $(OMUI)\SvgPath.obj $(OMUI)\MuiButtonVectorDef.obj \
-	$(OMUI)\MuiButtonDef.obj
+	$(OMUI)\MuiButtonDef.obj $(OMUI)\MuiFromText.obj
 
 EBOOK_OBJS = \
 	$(OS)\Doc.obj $(OS)\EbookDoc.obj $(OS)\MobiDoc.obj $(OU)\PalmDbReader.obj \
