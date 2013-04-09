@@ -123,6 +123,7 @@ void Initialize()
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
     gStyleCache = new VecSegmented<StyleCacheEntry>();
+    CacheStyle(gStyleDefault);
     CacheStyle(gStyleButtonDefault);
     CacheStyle(gStyleButtonMouseOver);
 }
@@ -134,12 +135,11 @@ void Destroy()
     }
 
     delete gAllProps;
-
-    delete gStyleButtonDefault;
-    delete gStyleButtonMouseOver;
-
+    StyleCacheEntry *e;
+    for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
+        delete e->style;
+    }
     delete gStyleCache;
-    delete gStyleDefault;
 }
 
 bool IsWidthProp(PropType type)

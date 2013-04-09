@@ -45,19 +45,6 @@ static Style *   styleBtnVer = NULL;
 static Style *   styleBtnLeft = NULL;
 static Style *   styleBtnRight = NULL;
 
-// should only be called once at the end of the program
-extern "C" static void DeleteAboutStyles()
-{
-    delete styleMainWnd;
-    delete styleGrid;
-    delete styleCellLeft;
-    delete styleCellVer;
-    delete styleLogo;
-    delete styleBtnVer;
-    delete styleBtnLeft;
-    delete styleBtnRight;
-}
-
 static void CreateAboutStyles()
 {
     // only create styles once
@@ -110,7 +97,6 @@ static void CreateAboutStyles()
     styleBtnRight->Set(Prop::AllocFontName(L"Arial Black"));
     styleBtnRight->Set(Prop::AllocFontWeight(FontStyleUnderline));
     styleBtnRight->Set(Prop::AllocColorSolid(PropColor, "0020a0"));
-    atexit(DeleteAboutStyles);
 }
 
 struct AboutLayoutInfoEl {

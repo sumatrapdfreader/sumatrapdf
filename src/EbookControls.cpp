@@ -316,18 +316,9 @@ static bool LoadAndParseWinDesc()
     return ok;
 }
 
-// TODO: delete all styles that are in the cache, so we don't
-// have to do it here
 // should only be called once at the end of the program
 extern "C" static void DeleteEbookStyles()
 {
-    delete styleStatus;
-    delete styleBtnNextPrevDefault;
-    delete styleBtnNextPrevMouseOver;
-    delete stylePage;
-    delete styleProgress;
-    delete styleMainWnd;
-
     delete gParser;
     free(gWinDesc);
 }
