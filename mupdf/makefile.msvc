@@ -98,7 +98,7 @@ CFLAGSB = $(CFLAGSB) /wd4428
 # /Ox  : maximum optimizations
 # /O2  : maximize speed
 # docs say /Ox better, my tests say /O2 better
-CFLAGSOPT = $(CFLAGSB) /O2 /D "NDEBUG"
+CFLAGSOPT = $(CFLAGSB) /O2 /arch:sse2 /D "NDEBUG"
 
 LDFLAGS = $(LDFLAGS) /nologo /DEBUG /RELEASE /opt:ref /opt:icf /MACHINE:$(PLATFORM)
 
