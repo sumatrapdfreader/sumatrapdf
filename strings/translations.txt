@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-9e32e1063bf93515d06b669a980f72a3b99b7ee6
+af8bc2c813dd66f895c9ccaf6d67c9ca0b81dd20
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -7,6 +7,7 @@ az:%s/%s
 br:%s de %s
 by:%s з %s
 cn:%s of %s
+cz:%s z %s
 de:%s von %s
 es:%s de %s
 et:%s, kokku %s
@@ -3642,6 +3643,7 @@ az:Əminsiniz ki, SumatraPDF-i silmək istəyirsiniz?
 bn:আপনি কি নিশ্চিত যে আপনি সুমাত্রা-পিডিএফ আন-ইন্সটল করতে চান?
 br:Tem certeza de que quer desinstalar o SumatraPDF?
 cn:确定要卸载SumatraPDF吗？
+cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
 es:¿Está seguro de querer desinstalar SumatraPDF?
 et:Kas oled kindel, et soovid eemaldada rakendust SumatraPDF?
@@ -4769,6 +4771,7 @@ bn:বন্ধ করুন
 br:Fechar
 by:Зачынiць
 cn:关闭
+cz:Zavřít
 de:Schließen
 es:Cerrar
 et:Sulge
@@ -5502,6 +5505,7 @@ az:Müvəqqəti qovluğu yaratmaq mümkün olmadı
 bn:অস্থায়ী ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
 br:Não foi possível criar pasta temporária
 cn:无法创建临时目录
+cz:Nepodařilo se vytvořit dočasný adresář
 de:Konnte das Temporärverzeichnis nicht erstellen
 es:No es posiblre crear la carpeta temporal
 et:Ei suudetud luua ajutist kataloogi
@@ -5527,6 +5531,7 @@ az:Quraşdırma qovluğunu yaratmaq mümkün olmadı
 bn:ইন্সটলএসন ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
 br:Não foi possível criar a pasta de instalação.
 cn:无法创建指定的安装目录
+cz:Nepodařilo se vytvořit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht erstellen
 es:No se puede crear el directorio de instalación
 et:Ei suudetud luua paigalduskataloogi
@@ -5662,6 +5667,7 @@ az:Brauzer plaginini quraşdırmaq mümkün olmadı
 bn:ব্রাউজার প্লাগ-ইন ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o plugin do navegador
 cn:无法安装浏览器插件
+cz:Nepodařilo se nainstalovat rozšíření do prohlížeče
 de:Konnte das Browser-Plugin nicht installieren
 es:No es posible instalar el plugin de navegación
 et:Ei suudetud paigaldada brauseri pluginat
@@ -5708,6 +5714,7 @@ ar:لم أتمكن من إزالة مجلد البرنامج
 az:Quraşdırma qovluğunu silmək mümkün olmadı
 br:Não foi possível remover a pasta de instalação
 cn:无法移除安装目录
+cz:Nepodařilo se odstranit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht löschen
 es:No se puede eliminar el directorio de instalación
 et:Ei suudetud kustutada paigalduskataloogi
@@ -5731,6 +5738,7 @@ az:Yarlığı silmək mümkün olmadı
 bn:শর্টকাট বাতিল করা সম্ভব হয়নি
 br:Não foi possível remover o atalho
 cn:无法移除快捷方式
+cz:Nepodařilo se odstranit zástupce
 de:Konnte die Verknüpfung nicht löschen
 es:No se puede eliminar el acceso directo
 et:Ei suudetud kustutada otseteed
@@ -5858,6 +5866,7 @@ ar:لم أتمكن من إزالة ملحق المستعرض
 az:Brauzer plaginini silmək mümkün olmadı
 br:Não foi possível desinstalar o plugin do navegador
 cn:无法卸载浏览器插件
+cz:Nepodařilo se odinstalovat rozšíření z prohlížeče
 de:Konnte das Browser-Plugin nicht deinstallieren
 es:No se puede desinstalar el plugin de navegación
 et:Ei suudetud eemaldada brauseri pluginat
@@ -6861,6 +6870,7 @@ ar:خطأ: لم أتمكن من تشغيل البرنامج
 az:Xəta: SumatraPDF işə salına bilmədi!
 br:Não foi possível rodar o SumatraPDF!
 cn:错误：无法运行SumatraPDF!
+cz:Chyba: Nepodařilo se spustit SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
 es:Error: No se puede ejecutar SumatraPDF
 et:Viga: Ei suudetud käivitada rakendust SumatraPDF!
@@ -6884,6 +6894,7 @@ ar:خطأ: البرنامج غير موجود
 az:Xəta: SumatraPDF tapılmadı!
 br:O SumatraPDF não foi encontrado!
 cn:失败: 找不到SumatraPDF
+cz:Chyba: Program SumatraPDF nebyl nalezen!
 de:Fehler: SumatraPDF ist unaufindbar!
 es:Error: SumatraPDF no ha sido encontrado
 et:Viga: Ei leitud rakendust SumatraPDF
@@ -6907,6 +6918,7 @@ ar:خطأ: لم أتمكن من تحميل الملف
 az:Xəta: Sənədi endirmək mümkün olmadı!
 br:Erro: o documento não pôde ser baixado!
 cn:错误： 文档无法下载!
+cz:Chyba: Stažení dokumentu se nezdařilo!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
 es:Error: El documento no puede ser descargado
 et:Viga: Dokumenti ei suudetud alla laadida!
@@ -7197,6 +7209,7 @@ ar:فشل في إنشاء رابط اختصار للبرنامج
 az:Yarlık yaratmaq mümkün olmadı
 br:Falha na criação do atalho
 cn:无法创建快捷方式
+cz:Vytvoření zástupce se nezdařilo
 de:Konnte keine Verknüpfung erstellen
 es:Error al crear un acceso directo
 et:Ei õnnestu luua otseteed
@@ -9160,6 +9173,7 @@ ar:تنصيب SumatraPDF
 az:SumatraPDF-i quraşdır
 br:Instalar SumatraPDF
 cn:安装SumatraPDF
+cz:Nainstalovat SumatraPDF
 de:Installieren
 es:Instalar SumatraPDF
 et:Paigalda SumatraPDF
@@ -9183,6 +9197,7 @@ ar:تنصيب SumatraPDF في المجلد:
 az:SumatraPDF-i bu &qovluqda quraşdır:
 br:Instalar SumatraPDF na &pasta:
 cn:安装SumatraPDF到目录: &folder
+cz:Nainstalovat SumatraPDF do &složky:
 de:&Installationsverzeichnis:
 es:Instalar SumatraPDF en &directorio:
 et:Paigalda SumatraPDF &kataloogi:
@@ -9205,6 +9220,7 @@ ar:فشل في تنصيب البرنامج
 az:Quraşdırma baş tutmadı!
 br:Falha na instalação!
 cn:安装失败!
+cz:Instalace selhala!
 de:Die Installation ist fehlgeschlagen!
 es:Falló la instalación
 et:Paigaldamine ebaõnnestus!
@@ -9228,6 +9244,7 @@ ar:قيد تنصيب البرنامج ...
 az:Quraşdırma davam edir...
 br:Instalação em progresso...
 cn:安装正在进行中...
+cz:Probíhá instalace...
 de:Die Installation wird ausgeführt...
 es:Instalación en progreso...
 et:Toimub paigaldamine...
@@ -10460,6 +10477,7 @@ ar:فتح في  %s
 az:%s ilə aç
 br:Abrir em %s
 cn:开放的 %s
+cz:Otevřít v %s
 de:Mit %s öffnen
 es:Abrir en %s
 et:Ava rakenduses %s
@@ -13016,6 +13034,7 @@ ar:اختر مجلد تنصيب البرنامج:
 az:SumatraPDF-in quraşdırılacağı qovluğu seçin:
 br:Selecione a pasta onde o SumatraPDF deverá ser instalado:
 cn:将SumatraPDF安装到指定目录
+cz:Vyberte adresář, do kterého chcete nainstalovat SumatraPDF:
 de:In welches Verzeichnis soll SumatraPDF installiert werden?
 es:Seleccione la carpeta donde SumatraPDF debería ser instalado:
 et:Vali kataloog, mille seest SumatraPDF paigaldatakse.
@@ -13569,6 +13588,7 @@ ar:بعض ملفات التنصيب مفقودة أو معطوبة
 az:Bəzi quraşdırılacaq fayllar zədələnmişdir və ya yoxdur
 br:Alguns arquivos de instalação estão danificados ou ausentes
 cn:某些安装所需的文件损坏或丢失
+cz:Některé soubory potřebné pro instalaci jsou poškozené nebo nebyly nalezeny
 de:Einige Dateien konnten nicht korrekt installiert werden
 es:Algunos de los archivos que van a ser instalados estan dañados o no se encuentran
 et:Mõned paigaldatavad failid on viga saanud või puuduvad
@@ -13702,6 +13722,7 @@ ar:بدء SumatraPDF
 az:SumatraPDF-i işə sal
 br:Iniciar SumatraPDF
 cn:启动SumatraPDF
+cz:Spustit SumatraPDF
 de:SumatraPDF starten
 es:Iniciar SumatraPDF
 et:Käivita SumatraPDF
@@ -13999,6 +14020,7 @@ ar:تمت إزالة SumatraPDF
 az:SumatraPDF silindi.
 br:SumatraPDF foi desinstalado.
 cn:成功卸载SumatraPDF.
+cz:SumatraPDF byl odinstalován.
 de:SumatraPDF wurde deinstalliert.
 es:SumatraPDF ha sido desinstalado.
 et:SumatraPDF on eemaldatud.
@@ -14022,6 +14044,7 @@ ar:ملفات تنصيب SumatraPDF غير موجودة
 az:SumatraPDF quraşdırması tapılmadı.
 br:A instalação do SumatraPDF não foi encontrada.
 cn:找不到SumatraPDF安装程序.
+cz:Instalace programu SumatraPDF nebyla nalezena.
 de:Keine SumatraPDF-Installation zum Deinstallieren gefunden.
 es:Instalación de SumatraPDF no encontrada.
 et:SumatraPDF paigaldust ei leitud.
@@ -14329,6 +14352,7 @@ ar:شكرا لاختيار SumatraPDF
 az:SumatraPDF-i seçdiyiniz üçün təşəkkür edirik!
 br:Obrigado por escolher o SumatraPDF!
 cn:谢谢选用SumatraPDF!
+cz:Děkujeme, že jste si vybrali SumatraPDF!
 de:Vielen Dank dafür, dass Sie SumatraPDF verwenden!
 es:Gracias por seleccionar SumatraPDF
 et:Täname, et valisid SumatraPDF'i!
@@ -14352,6 +14376,7 @@ ar:تم تنصيب SumatraPDF
 az:Təşəkkürlər! SumatraPDF quraşdırıldı.
 br:Obrigado! O SumatraPDF foi instalado.
 cn:谢谢! SumatraPDF已经安装好.
+cz:Děkujeme! Program SumatraPDF byl nainstalován.
 de:Vielen Dank! SumatraPDF wurde erfolgreich installiert.
 es:¡Gracias! SumatraPDF ha sido instalado
 et:Täname! SumatraPDF on paigaldatud.
@@ -14456,6 +14481,7 @@ ar:إزالة SumatraPDF
 az:SumatraPDF-i sil
 br:Desinstalar SumatraPDF
 cn:卸载SumatraPDF
+cz:Odinstalovat SumatraPDF
 de:Deinstallieren
 es:Desinstalar SumatraPDF
 et:Eemalda SumatraPDF
@@ -14480,6 +14506,7 @@ ar:فشل إزالة البرنامج
 az:Deinstalyasiya baş tutmadı
 br:A desinstalação falhou
 cn:卸载失败
+cz:Odinstalace programu selhala
 de:Die Deinstallation ist fehlgeschlagen
 es:Falló la desinstalación
 et:Eemaldamine ebaõnnestus
@@ -14587,6 +14614,7 @@ ar:تعيين SumatraPDF البرنامج الافتراضي لفتح ملفات
 az:SumatraPDF &standart PDF oxuyucusu kimi istifadə olunsun
 br:Usar o SumatraPDF como o leitor PDF pa&drão
 cn:将SumatraPDF设为&缺省PDF阅读器
+cz:Použij SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
 es:Usar SumatraPDF como el lector PDF por &defecto
 et:Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.

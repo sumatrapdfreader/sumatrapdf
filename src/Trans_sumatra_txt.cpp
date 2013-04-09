@@ -3335,7 +3335,7 @@ const char * gTranslations_cz =
   "Otev\305\231\303\255t...\0"\
   "Otev\305\231\303\255t v programu PDF-XChange\0"\
   "Otev\305\231\303\255t dokument...\0"\
-  "\0"\
+  "Otev\305\231\303\255t v %s\0"\
   "Otev\305\231\303\255t v programu &Adobe Reader\0"\
   "Otev\305\231\303\255t v programu &Foxit Reader\0"\
   "Otev\305\231\303\255t v programu Microsoft HTML Help\0"\
