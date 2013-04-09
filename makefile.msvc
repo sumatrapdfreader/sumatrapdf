@@ -130,7 +130,7 @@ LIB_FLAGS = $(LIB_FLAGS) /LTCG
 LIBS = $(LIBS) \
 	comctl32.lib Msimg32.lib Winspool.lib wininet.lib \
 	ole32.lib OleAut32.lib shlwapi.lib version.lib \
-	WindowsCodecs.lib
+	WindowsCodecs.lib DbgHelp.lib
 
 OS   = $(O)\sumatrapdf
 OU   = $(O)\utils
