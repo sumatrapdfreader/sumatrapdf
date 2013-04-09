@@ -8,14 +8,11 @@ namespace mui {
 DirectionalLayout::~DirectionalLayout()
 {
     for (DirectionalLayoutData *e = els.IterStart(); e; e = els.IterNext()) {
-        if (e->ownsElement)
-            delete e->element;
     }
 }
 
-DirectionalLayout& DirectionalLayout::Add(DirectionalLayoutData& ld, bool ownsElement)
+DirectionalLayout& DirectionalLayout::Add(const DirectionalLayoutData& ld)
 {
-    ld.ownsElement = ownsElement;
     els.Append(ld);
     return *this;
 }

@@ -164,18 +164,18 @@ static void CreateEbookStyles()
 
 static void CreateLayout(EbookControls *ctrls)
 {
-    HorizontalLayout *topPart = new HorizontalLayout();
+    ctrls->topPart = new HorizontalLayout();
     DirectionalLayoutData ld;
     ld.Set(ctrls->prev, SizeSelf, 1.f, GetElAlignCenter());
-    topPart->Add(ld);
+    ctrls->topPart->Add(ld);
     ld.Set(ctrls->page, 1.f, 1.f, GetElAlignTop());
-    topPart->Add(ld);
+    ctrls->topPart->Add(ld);
     ld.Set(ctrls->next, SizeSelf, 1.f, GetElAlignBottom());
-    topPart->Add(ld);
+    ctrls->topPart->Add(ld);
 
     VerticalLayout *l = new VerticalLayout();
-    ld.Set(topPart, 1.f, 1.f, GetElAlignTop());
-    l->Add(ld, true);
+    ld.Set(ctrls->topPart, 1.f, 1.f, GetElAlignTop());
+    l->Add(ld);
     ld.Set(ctrls->progress, SizeSelf, 1.f, GetElAlignCenter());
     l->Add(ld);
     ld.Set(ctrls->status, SizeSelf, 1.f, GetElAlignCenter());
@@ -220,5 +220,6 @@ EbookControls *CreateEbookControls(HWND hwnd)
 void DestroyEbookControls(EbookControls* ctrls)
 {
     delete ctrls->mainWnd;
+    delete ctrls->topPart;
     delete ctrls;
 }

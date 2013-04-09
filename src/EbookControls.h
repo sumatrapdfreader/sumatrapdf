@@ -14,12 +14,13 @@ using namespace mui;
 
 // controls managed by EbookController
 struct EbookControls {
-    HwndWrapper *   mainWnd;
-    PageControl *   page;
-    ButtonVector *  next;
-    ButtonVector *  prev;
-    ScrollBar *     progress;
-    Button *        status;
+    HwndWrapper *       mainWnd;
+    PageControl *       page;
+    ButtonVector *      next;
+    ButtonVector *      prev;
+    ScrollBar *         progress;
+    Button *            status;
+    HorizontalLayout *  topPart;
 };
 
 EbookControls * CreateEbookControls(HWND hwnd);
