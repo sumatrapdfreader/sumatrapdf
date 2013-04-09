@@ -7,7 +7,7 @@ basic [
 	check_for_updates = true
 	remember_mru_files = true
 	use_system_color_scheme = false
-	inverse_search_cmd_line = $[A wide string$r$nsplit over multiple lines$r$nwith trailing whitespace ]$
+	inverse_search_cmd_line = $ A wide string$r$nsplit over multiple lines$r$nwith trailing whitespace $
 	default_display_mode = 0
 	default_zoom = -1
 	window_state = 1

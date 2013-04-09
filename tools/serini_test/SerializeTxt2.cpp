@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "SerializeIni.h"
+#include "SerializeTxt2.h"
 
 #include "IniParser.h"
 #include "SquareTreeParser.h"
@@ -35,11 +35,11 @@ static int64_t ParseBencInt(const char *bytes)
 
 static char *UnescapeStr(const char *s)
 {
-    if (!str::StartsWith(s, "$[") || !str::EndsWith(s, "]$"))
+    if (!str::FindChar(s, '$'))
         return str::Dup(s);
     str::Str<char> ret;
-    const char *end = s + str::Len(s) - 2;
-    for (const char *c = s + 2; c < end; c++) {
+    const char *end = s + str::Len(s);
+    for (const char *c = s; c < end; c++) {
         if (*c != '$') {
             ret.Append(*c);
             continue;
@@ -48,37 +48,45 @@ static char *UnescapeStr(const char *s)
         case '$': ret.Append('$'); break;
         case 'n': ret.Append('\n'); break;
         case 'r': ret.Append('\r'); break;
-        default: ret.Append('$'); ret.Append(*c); break;
+        case '\0': break; // trailing whitespace
+        default:
+            if (!str::IsWs(*c) && *c != '[' && *c != ']')
+                ret.Append('$');
+            // else it's leading whitespace
+            ret.Append(*c);
+            break;
         }
     }
     return ret.StealData();
 }
 
-// only escape characters which are significant to IniParser/SquareTreeParser:
-// newlines and heading/trailing whitespace (and escape sequence delimiters)
+// only escape characters which are significant to SquareTreeParser:
+// newlines and leading/trailing whitespace (and escape characters)
 static bool NeedsEscaping(const char *s)
 {
     return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
-           str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
-           str::StartsWith(s, "$[") && str::EndsWith(s, "]$");
+           str::FindChar(s, '\n') || str::FindChar(s, '\r') || str::FindChar(s, '$');
 }
 
 // escapes strings containing newlines or heading/trailing whitespace
 static char *EscapeStr(const char *s)
 {
     str::Str<char> ret;
-    // use an unlikely character combination for indicating an escaped string
-    ret.Append("$[");
+    if (str::IsWs(*s))
+        ret.Append("$");
     for (const char *c = s; *c; c++) {
         switch (*c) {
-        // TODO: escape any other characters?
         case '$': ret.Append("$$"); break;
         case '\n': ret.Append("$n"); break;
         case '\r': ret.Append("$r"); break;
+        // TODO: '[' and ']' don't need to be escaped
+        case '[': ret.Append("$["); break;
+        case ']': ret.Append("$]"); break;
         default: ret.Append(*c);
         }
     }
-    ret.Append("]$");
+    if (*s && str::IsWs(s[str::Len(s) - 1]))
+        ret.Append("$");
     return ret.StealData();
 }
 
@@ -394,34 +402,6 @@ uint8_t *DeserializeWithDefaultSqt(char *data, size_t dataSize, char *defaultDat
     return (uint8_t *)DeserializeRec(sqt.root, base, def);
 }
 
-static void FixupStringDecoding(uint8_t *data, const StructMetadata *def)
-{
-    if (!data)
-        return;
-    for (size_t i = 0; i < def->nFields; i++) {
-        const FieldMetadata& field = def->fields[i];
-        if (TYPE_STRUCT_PTR == field.type)
-            FixupStringDecoding(*(uint8_t **)(data + field.offset), GetStructDef(field));
-        else if (TYPE_ARRAY == field.type) {
-            Vec<void *> *array = *(Vec<void *> **)(data + field.offset);
-            for (size_t j = 0; j < array->Count(); j++) {
-                FixupStringDecoding((uint8_t *)array->At(j), GetStructDef(field));
-            }
-        }
-        else if (TYPE_STR == field.type && *(char **)(data + field.offset)) {
-            char *str = *(char **)(data + field.offset);
-            *UnescapeLineInPlace(str, str + str::Len(str), '$') = '\0';
-        }
-        else if (TYPE_WSTR == field.type && *(WCHAR **)(data + field.offset)) {
-            ScopedMem<char> ustr(str::conv::ToUtf8(*(WCHAR **)(data + field.offset)));
-            char *str = ustr.Get();
-            *UnescapeLineInPlace(str, str + str::Len(str), '$') = '\0';
-            free(*(WCHAR **)(data + field.offset));
-            *(WCHAR **)(data + field.offset) = str::conv::FromUtf8(ustr);
-        }
-    }
-}
-
 uint8_t *DeserializeWithDefaultTxtSqt(char *data, size_t dataSize, char *defaultData, size_t defaultDataSize, const StructMetadata *def)
 {
     void *base = NULL;
@@ -432,9 +412,7 @@ uint8_t *DeserializeWithDefaultTxtSqt(char *data, size_t dataSize, char *default
     }
     CrashIf(str::Len(data) != dataSize);
     SquareTree sqt(data);
-    base = DeserializeRec(sqt.root, base, def);
-    FixupStringDecoding((uint8_t *)base, def);
-    return (uint8_t *)base;
+    return (uint8_t *)DeserializeRec(sqt.root, base, def);
 }
 
 static inline void Indent(str::Str<char>& out, int indent)

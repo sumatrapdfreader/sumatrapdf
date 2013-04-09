@@ -20,6 +20,7 @@ class JsonVerifier : public json::ValueVisitor {
 public:
     JsonVerifier(const JsonValue *data, size_t dataLen) :
         data(data), dataLen(dataLen), idx(0) { }
+    ~JsonVerifier() { assert(dataLen == idx); }
 
     virtual bool Visit(const char *path, const char *value, json::DataType type) {
         assert(idx < dataLen);

@@ -7,9 +7,8 @@
 #include "BencUtil.h"
 #include "FileUtil.h"
 #include "DeserializeBenc.h"
-#include "SerializeIni.h"
-#include "SerializeIni3.h"
 #include "SerializeSqt.h"
+#include "SerializeTxt2.h"
 #include "../sertxt_test/SettingsTxtSumatra.h"
 
 #define Check(x) CrashIf(!(x)); if (!(x)) return false; else NoOp()
@@ -56,7 +55,7 @@ static bool TestSerializeIni()
     Check(data); // failed to read file
     Settings *s = DeserializeSettings(data, str::Len(data));
     Check(s); // failed to parse file
-    Check(str::Find(s->basic->inverseSearchCmdLine, L"\r\n"));
+    Check(str::Eq(s->basic->inverseSearchCmdLine, L" A wide string\r\nsplit over multiple lines\r\nwith trailing whitespace "));
 
     size_t len;
     ScopedMem<char> ser((char *)SerializeSettings(s, &len));
@@ -77,7 +76,7 @@ static bool TestSerializeSqt()
     Check(data); // failed to read file
     Settings *s = DeserializeSettings(data, str::Len(data));
     Check(s); // failed to parse file
-    Check(str::Find(s->basic->inverseSearchCmdLine, L"\r\n"));
+    Check(str::Eq(s->basic->inverseSearchCmdLine, L" A wide string\r\nsplit over multiple lines\r\nwith trailing whitespace "));
 
     size_t len;
     ScopedMem<char> ser((char *)SerializeSettings(s, &len));
@@ -252,110 +251,6 @@ static bool TestSerializeTxtAsSqt()
 
 }; // namespace sertxt
 
-namespace ini3 {
-
-static bool TestSerialize()
-{
-    const WCHAR *path = L"..\\tools\\serini_test\\data3.ini";
-
-    ScopedMem<char> data(file::ReadAll(path, NULL));
-    Check(data); // failed to read file
-    GlobalPrefs *s = (GlobalPrefs *)Deserialize(data, str::Len(data), &gGlobalPrefsInfo);
-    Check(s); // failed to parse file
-    Check(str::Find(s->inverseSearchCmdLine, L"\r\n"));
-    Check(1 == s->lastUpdateTime.dwHighDateTime && MAXDWORD == s->lastUpdateTime.dwLowDateTime);
-
-    size_t len;
-    ScopedMem<char> ser(Serialize(s, &gGlobalPrefsInfo, &len));
-    Check(str::Len(ser) == len);
-    Check(str::Eq(data, ser));
-    FreeStruct(s, &gGlobalPrefsInfo);
-
-    return true;
-}
-
-static bool TestSerializeUser()
-{
-    const WCHAR *path = L"..\\tools\\serini_test\\data3-user.ini";
-
-    ScopedMem<char> data(file::ReadAll(path, NULL));
-    Check(data); // failed to read file
-    UserPrefs *s = (UserPrefs *)Deserialize(data, str::Len(data), &gUserPrefsInfo);
-    Check(s); // failed to parse file
-
-    ScopedMem<char> ser(Serialize(s, &gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini"));
-    FreeStruct(s, &gUserPrefsInfo);
-    Check(str::Eq(data, ser));
-
-    return true;
-}
-
-static bool TestSerializeRecursiveArray()
-{
-    static const char *data ="\
-[Rec]\n\
-[Rec.Rec]\n\
-[Rec.Rec.Rec]\n\
-[Rec.Rec.Rec]\n\
-[Rec.Rec]\n\
-[Rec.Rec.Rec]\n\
-[Rec]\n\
-[Rec.Rec]\n\
-# [Rec.Up] may be omitted\n\
-[Rec.Up.ExternalViewer]\n\
-CommandLine = serini_test.exe\n\
-";
-    gRecFields[0].value = (intptr_t)&gRecInfo; // needed for recursion
-    Rec *r = (Rec *)Deserialize(data, str::Len(data), &gRecInfo);
-    Check(2 == r->rec->Count() && 2 == r->rec->At(0)->rec->Count() && 2 == r->rec->At(0)->rec->At(0)->rec->Count());
-    Check(0 == r->rec->At(0)->rec->At(0)->rec->At(0)->rec->Count() && 0 == r->rec->At(0)->rec->At(0)->rec->At(1)->rec->Count());
-    Check(1 == r->rec->At(0)->rec->At(1)->rec->Count() && 0 == r->rec->At(0)->rec->At(1)->rec->At(0)->rec->Count());
-    Check(1 == r->rec->At(1)->rec->Count() && 0 == r->rec->At(1)->rec->At(0)->rec->Count());
-    Check(1 == r->rec->At(1)->up.externalViewer->Count() && str::Eq(r->rec->At(1)->up.externalViewer->At(0)->commandLine, L"serini_test.exe"));
-    Check(str::Eq(r->rec->At(0)->rec->At(1)->up.printerDefaults.printScale, "shrink"));
-    FreeStruct(r, &gRecInfo);
-
-    // TODO: recurse even if array parents are missing?
-    // (bounded by maximum section name length)
-    data = "[Rec.Rec]";
-    r = (Rec *)Deserialize(data, str::Len(data), &gRecInfo);
-    Check(0 == r->rec->Count());
-    FreeStruct(r, &gRecInfo);
-
-    return true;
-}
-
-static bool TestDefaultValues()
-{
-    UserPrefs *p = (UserPrefs *)Deserialize(NULL, 0, &gUserPrefsInfo);
-    Check(!p->advancedPrefs.escToExit && !p->ebookUI.traditionalEbookUI);
-    Check(0xffffff == p->advancedPrefs.pageColor && 0x000000 == p->advancedPrefs.textColor);
-    Check(0x6581ff == p->forwardSearch.highlightColor && 15 == p->forwardSearch.highlightWidth);
-    Check(4 == p->pagePadding.innerX && 2 == p->pagePadding.outerY);
-    Check(str::Eq(p->printerDefaults.printScale, "shrink"));
-    Check(24 == p->advancedPrefs.zoomLevels->Count() && 6400 == p->advancedPrefs.zoomLevels->At(23));
-    Check(3 == p->backgroundGradient.colors->Count() && RGB(0x28, 0x28, 0xAA) == p->backgroundGradient.colors->At(0));
-    FreeStruct(p, &gUserPrefsInfo);
-
-    return true;
-}
-
-static bool TestCompactDefaultValues()
-{
-    static const char *data = "Compact = true -4.25";
-    TestCD1 *cd = (TestCD1 *)Deserialize(data, str::Len(data), &gTestCD1Info);
-    Check(cd && cd->compact.val1 && -4.25f == cd->compact.val2);
-    FreeStruct(cd, &gTestCD1Info);
-
-    cd = (TestCD1 *)Deserialize(NULL, 0, &gTestCD1Info);
-    Check(cd && !cd->compact.val1 && 3.14f == cd->compact.val2);
-    FreeStruct(cd, &gTestCD1Info);
-
-    return true;
-}
-
-}; // namespace ini3
-
 namespace sqt {
 
 static bool TestSerialize()
@@ -366,7 +261,7 @@ static bool TestSerialize()
     Check(data); // failed to read file
     GlobalPrefs *s = (GlobalPrefs *)Deserialize(data, str::Len(data), &gGlobalPrefsInfo);
     Check(s); // failed to parse file
-    Check(str::Find(s->inverseSearchCmdLine, L"\r\n"));
+    Check(str::Eq(s->inverseSearchCmdLine, L" A wide string\r\nsplit over multiple lines\r\nwith trailing whitespace "));
     Check(1 == s->lastUpdateTime.dwHighDateTime && MAXDWORD == s->lastUpdateTime.dwLowDateTime);
 
     size_t len;
@@ -472,14 +367,16 @@ static bool TestCompactDefaultValues()
 static bool TestSerializeIniAsSqt()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3-user.ini";
+    const WCHAR *pathCmp = L"..\\tools\\serini_test\\data3-user.sqt";
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
     UserPrefs *s = (UserPrefs *)Deserialize(data, str::Len(data), &gUserPrefsInfo);
     Check(s); // failed to parse file
 
-    ScopedMem<char> ser(ini3::Serialize(s, &gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.ini"));
-    Check(str::Eq(data, ser));
+    ScopedMem<char> dataCmp(file::ReadAll(pathCmp, NULL));
+    ScopedMem<char> ser(Serialize(s, &gUserPrefsInfo, NULL, "cf. https://sumatrapdf.googlecode.com/svn/trunk/docs/SumatraPDF-user.sqt"));
+    Check(str::Eq(dataCmp, ser));
     FreeStruct(s, &gUserPrefsInfo);
 
     return true;
@@ -607,7 +504,7 @@ static bool BencGlobalPrefsCallback(BencDict *dict, const FieldInfo *field, cons
 static bool TestDeserialize()
 {
     const WCHAR *path = L"..\\tools\\serini_test\\data3.benc";
-    const WCHAR *pathCmp = L"..\\tools\\serini_test\\data3.ini";
+    const WCHAR *pathCmp = L"..\\tools\\serini_test\\data3.sqt";
 
     ScopedMem<char> data(file::ReadAll(path, NULL));
     Check(data); // failed to read file
@@ -615,10 +512,10 @@ static bool TestDeserialize()
     Check(s); // failed to parse file
 
     ScopedMem<char> dataCmp(file::ReadAll(pathCmp, NULL));
-    dataCmp.Set(str::Replace(dataCmp, "PageLabel = ii\r\n", ""));
-    ScopedMem<char> ser(ini3::Serialize(s, &gGlobalPrefsInfo, NULL));
+    dataCmp.Set(str::Replace(dataCmp, "\t\tPageLabel = ii\r\n", ""));
+    ScopedMem<char> ser(sqt::Serialize(s, &gGlobalPrefsInfo, NULL));
     Check(str::Eq(dataCmp, ser));
-    ini3::FreeStruct(s, &gGlobalPrefsInfo);
+    sqt::FreeStruct(s, &gGlobalPrefsInfo);
 
     return true;
 }
@@ -631,7 +528,7 @@ int main(int argc, char **argv)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
     int errors = 0;
-    // tests for SerializeIni.cpp
+    // tests for SerializeTxt2.cpp
     if (!sertxt::TestSerializeIni())
         errors++;
     if (!sertxt::TestSerializeWithDefaultsIni())
@@ -651,17 +548,6 @@ int main(int argc, char **argv)
     if (!sertxt::TestDefaultValues())
         errors++;
     if (!sertxt::TestSerializeTxtAsSqt())
-        errors++;
-    // tests for SerializeIni3.cpp
-    if (!ini3::TestSerialize())
-        errors++;
-    if (!ini3::TestSerializeUser())
-        errors++;
-    if (!ini3::TestSerializeRecursiveArray())
-        errors++;
-    if (!ini3::TestDefaultValues())
-        errors++;
-    if (!ini3::TestCompactDefaultValues())
         errors++;
     // tests for SerializeSqt.cpp
     if (!sqt::TestSerialize())

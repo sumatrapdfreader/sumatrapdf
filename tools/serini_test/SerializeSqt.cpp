@@ -27,11 +27,11 @@ static int ParseInt(const char *bytes)
 
 static char *UnescapeStr(const char *s)
 {
-    if (!str::StartsWith(s, "$[") || !str::EndsWith(s, "]$"))
+    if (!str::FindChar(s, '$'))
         return str::Dup(s);
     str::Str<char> ret;
-    const char *end = s + str::Len(s) - 2;
-    for (const char *c = s + 2; c < end; c++) {
+    const char *end = s + str::Len(s);
+    for (const char *c = s; c < end; c++) {
         if (*c != '$') {
             ret.Append(*c);
             continue;
@@ -40,37 +40,42 @@ static char *UnescapeStr(const char *s)
         case '$': ret.Append('$'); break;
         case 'n': ret.Append('\n'); break;
         case 'r': ret.Append('\r'); break;
-        default: ret.Append('$'); ret.Append(*c); break;
+        case '\0': break; // trailing whitespace
+        default:
+            if (!str::IsWs(*c))
+                ret.Append('$');
+            // else it's leading whitespace
+            ret.Append(*c);
+            break;
         }
     }
     return ret.StealData();
 }
 
 // only escape characters which are significant to SquareTreeParser:
-// newlines and heading/trailing whitespace (and escape sequence delimiters)
+// newlines and leading/trailing whitespace (and escape characters)
 static bool NeedsEscaping(const char *s)
 {
     return str::IsWs(*s) || *s && str::IsWs(*(s + str::Len(s) - 1)) ||
-           str::FindChar(s, '\n') || str::FindChar(s, '\r') ||
-           str::StartsWith(s, "$[") && str::EndsWith(s, "]$");
+           str::FindChar(s, '\n') || str::FindChar(s, '\r') || str::FindChar(s, '$');
 }
 
 // escapes strings containing newlines or heading/trailing whitespace
 static char *EscapeStr(const char *s)
 {
     str::Str<char> ret;
-    // use an unlikely character combination for indicating an escaped string
-    ret.Append("$[");
+    if (str::IsWs(*s))
+        ret.Append("$");
     for (const char *c = s; *c; c++) {
         switch (*c) {
-        // TODO: escape any other characters?
         case '$': ret.Append("$$"); break;
         case '\n': ret.Append("$n"); break;
         case '\r': ret.Append("$r"); break;
         default: ret.Append(*c);
         }
     }
-    ret.Append("]$");
+    if (*s && str::IsWs(s[str::Len(s) - 1]))
+        ret.Append("$");
     return ret.StealData();
 }
 
