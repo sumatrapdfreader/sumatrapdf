@@ -1087,7 +1087,7 @@ const char * gTranslations_az =
   "Qada\304\237an olunmu\305\237 h\303\274quqlar:\0"\
   "DjVu s\311\231n\311\231dl\311\231ri\0"\
   "S\311\231n\311\231din x\303\274susiyy\311\231tl\311\231ri\0"\
-  "Endir\0"\
+  "B\311\231li\0"\
   "\303\207\304\261x\304\261&\305\237\tCtrl+Q\0"\
   "EPUB e-kitablar\304\261\0"\
   "Parolu daxil edin\0"\
@@ -1220,7 +1220,7 @@ const char * gTranslations_az =
   "X\311\231b\311\231rdarl\304\261q\0"\
   "XPS s\311\231n\311\231dl\311\231ri\0"\
   "\306\217n son versiyan\304\261 istifad\311\231 edirsiniz.\0"\
-  "Siz proqram\304\261n %s versiyas\304\261n\304\261 istifad\311\231 edirsiniz\0"\
+  "Siz proqram\304\261n %s versiyas\304\261n\304\261 istifad\311\231 edirsiniz.\0"\
   "Miqyas\0"\
   "B\303\266y\303\274t\0"\
   "Ki\303\247ilt\0"\
