@@ -675,7 +675,8 @@ static inline void tga_put_pixel(unsigned char *data, int n, int is_bgr, FILE *f
 		putc(data[2], fp);
 		putc(data[1], fp);
 		putc(data[0], fp);
-		putc(n == 4 ? data[3] : 0, fp);
+		if (n == 4)
+			putc(data[3], fp);
 		return;
 	}
 	if (n == 2)
