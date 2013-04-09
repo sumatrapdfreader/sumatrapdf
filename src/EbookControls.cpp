@@ -185,26 +185,24 @@ static Gdiplus::FontStyle ParseFontWeight(const char *s)
 
 static void AddStyleProp(Style *style, TxtNode *prop)
 {
+    ScopedMem<char> tmp(prop->ValDup());
+
     if (prop->IsTextWithKey("name")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->SetName(tmp);
         return;
     }
 
     if (prop->IsTextWithKey("bg_col")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->Set(Prop::AllocColorSolid(PropBgColor, tmp));
         return;
     }
 
     if (prop->IsTextWithKey("col")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->Set(Prop::AllocColorSolid(PropColor, tmp));
         return;
     }
 
     if (prop->IsTextWithKey("parent")) {
-        ScopedMem<char> tmp(prop->ValDup());
         Style *parentStyle = StyleByName(tmp);
         CrashIf(!parentStyle);
         style->SetInheritsFrom(parentStyle);
@@ -212,13 +210,11 @@ static void AddStyleProp(Style *style, TxtNode *prop)
     }
 
     if (prop->IsTextWithKey("border_width")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->SetBorderWidth(ParseFloat(tmp));
         return;
     }
 
     if (prop->IsTextWithKey("padding")) {
-        ScopedMem<char> tmp(prop->ValDup());
         ParsedPadding padding = { 0 };
         ParsePadding(tmp, padding);
         style->SetPadding(padding.top, padding.right, padding.bottom, padding.left);
@@ -226,37 +222,31 @@ static void AddStyleProp(Style *style, TxtNode *prop)
     }
 
     if (prop->IsTextWithKey("stroke_width")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->Set(Prop::AllocWidth(PropStrokeWidth, ParseFloat(tmp)));
         return;
     }
 
     if (prop->IsTextWithKey("fill")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->Set(Prop::AllocColorSolid(PropFill, tmp));
         return;
     }
 
     if (prop->IsTextWithKey("vert_align")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->Set(Prop::AllocAlign(PropVertAlign, ParseElAlign(tmp)));
         return;
     }
 
     if (prop->IsTextWithKey("text_align")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->Set(Prop::AllocTextAlign(ParseAlignAttr(tmp)));
         return;
     }
 
     if (prop->IsTextWithKey("font_size")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->Set(Prop::AllocFontSize(ParseFloat(tmp)));
         return;
     }
 
     if (prop->IsTextWithKey("font_weight")) {
-        ScopedMem<char> tmp(prop->ValDup());
         style->Set(Prop::AllocFontWeight(ParseFontWeight(tmp)));
         return;
     }
@@ -290,21 +280,19 @@ static Vec<Style*> *StylesFromStyleStructs(Vec<TxtNode*> *nodes)
 
 static void AddButtonVectorProp(ButtonVector *b, TxtNode *prop)
 {
+    ScopedMem<char> tmp(prop->ValDup());
     if (prop->IsTextWithKey("name")) {
-        ScopedMem<char> tmp(prop->ValDup());
         b->SetName(tmp);
         return;
     }
 
     if (prop->IsTextWithKey("path")) {
-        ScopedMem<char> tmp(prop->ValDup());
         GraphicsPath *gp = svg::GraphicsPathFromPathData(tmp);
         b->SetGraphicsPath(gp);
         return;
     }
 
     if (prop->IsTextWithKey("style_default")) {
-        ScopedMem<char> tmp(prop->ValDup());
         Style *style = StyleByName(tmp);
         CrashIf(!style);
         b->SetDefaultStyle(style);
@@ -312,7 +300,6 @@ static void AddButtonVectorProp(ButtonVector *b, TxtNode *prop)
     }
 
     if (prop->IsTextWithKey("style_mouse_over")) {
-        ScopedMem<char> tmp(prop->ValDup());
         Style *style = StyleByName(tmp);
         CrashIf(!style);
         b->SetMouseOverStyle(style);
