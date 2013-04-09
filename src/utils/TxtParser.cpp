@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "SerializeTxtParser.h"
+#include "TxtParser.h"
 #include <new>  // for placement new
 
 // unbreak placement new introduced by defining new as DEBUG_NEW

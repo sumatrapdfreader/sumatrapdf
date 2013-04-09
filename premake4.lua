@@ -55,6 +55,7 @@ solution "sertxt"
       "src/utils/FileUtil*",
       "src/utils/StrSlice*",
       "src/utils/StrUtil*",
+      "src/utils/TxtParser*",
       "src/utils/VarintGob*",
     }
     excludes
@@ -148,8 +149,10 @@ solution "muitest"
       "src/utils/DebugLog*",
       "src/Utils/FileUtil*",
       "src/utils/GdiPlusUtil*",
+      "src/utils/StrSlice*",
       "src/utils/StrUtil*",
       "src/utils/TgaReader*",
+      "src/utils/TxtParser*",
       "src/utils/WinUtil*",
       "src/mui/*.h",
       "src/mui/*.cpp",
@@ -160,5 +163,5 @@ solution "muitest"
       "src/mui/*_ut.cpp",
       "src/mui/MiniMui*",
     }
-    includedirs { "src/utils", "src/utils/msvc", "src/mui" }
+    includedirs { "src/utils", "src/utils/msvc", "src/mui", "tools/sertxt_test" }
     links { "gdiplus", "comctl32", "shlwapi", "Version" }

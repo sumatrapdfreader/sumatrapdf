@@ -183,6 +183,9 @@ static struct {
     { "red",   (ARGB)Color::Red   },
     { "white", (ARGB)Color::White },
     { "transparent", MKARGB(0,0,0,0) },
+    { "sepia", MKARGB(0xff, 0xfb, 0xf0, 0xd9) },
+    { "light blue", MKARGB(0xff, 0x64, 0xc7, 0xef) },
+    { "light gray", MKARGB(0xff, 0xf0, 0xf0, 0xf0) },
 };
 
 static bool GetKnownCssColor(const char *name, ARGB& colOut)

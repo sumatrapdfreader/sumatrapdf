@@ -378,6 +378,9 @@
     <ClCompile Include="..\src\utils\TrivialHtmlParser_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\TxtParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\UITask.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1137,6 +1140,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\TrivialHtmlParser.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\TxtParser.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\UITask.h">

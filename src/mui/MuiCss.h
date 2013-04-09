@@ -206,7 +206,6 @@ class Style {
     Style *         inheritsFrom;
     // generation number, changes every time we change the style
     size_t          gen;
-    ScopedMem<char> name;
 
 public:
     Style(Style *inheritsFrom=NULL) : inheritsFrom(inheritsFrom) {
@@ -228,6 +227,7 @@ public:
     void SetPadding(int top, int right, int bottom, int left);
 
     Style * GetInheritsFrom() const;
+    void SetInheritsFrom(Style *parent) { inheritsFrom = parent; }
     size_t GetIdentity() const;
 };
 

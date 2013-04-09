@@ -187,7 +187,7 @@ UTILS_OBJS = \
 	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\IniParser.obj \
-	$(OU)\StrSlice.obj
+	$(OU)\StrSlice.obj $(OU)\TxtParser.obj
 
 !if "$(CFG)"=="dbg"
 UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
@@ -306,7 +306,7 @@ $(OS): $(O) $(OE)
 	@if not exist $(OMUI) mkdir $(OMUI)
 	@if not exist $(OM) mkdir $(OM)
 
-$(SUMATRA_RES): $(SRCDIR)\SumatraPDF.rc $(SRCDIR)\Resource.h $(SRCDIR)\Version.h
+$(SUMATRA_RES): $(SRCDIR)\SumatraPDF.rc $(SRCDIR)\Resource.h $(SRCDIR)\Version.h $(SRCDIR)\EbookWinDesc.txt
 	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\SumatraPDF.rc
 
 $(SUMATRA_APP): $(SUMATRA_OBJS) $(MUPDF_LIB)

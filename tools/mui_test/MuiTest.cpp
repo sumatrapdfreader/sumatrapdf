@@ -2,8 +2,11 @@
    License: BSD */
 
 #include "BaseUtil.h"
-#include "Resource.h"
+
+#include "FileUtil.h"
 #include "Mui.h"
+#include "Resource.h"
+#include "TxtParser.h"
 #include "WinUtil.h"
 
 using namespace mui;
@@ -229,6 +232,29 @@ static int RunMessageLoop()
     return msg.wParam;
 }
 
+#if 0
+static void LoadWinDesc()
+{
+    ScopedMem<WCHAR> exePath(GetExePath());
+    ScopedMem<WCHAR> exeDir(path::GetDir(exePath));
+
+    str::Str<WCHAR> path;
+    path.Append(exeDir);
+    path.Append(L"\\..\\tools\\mui_test\\win_desc.txt");
+    size_t sLen;
+    char *s = file::ReadAll(path.Get(), &sLen);
+    if (!s)
+        return;
+    TxtParser parser;
+    parser.SetToParse(s, sLen);
+    bool ok = ParseTxt(parser);
+    if (!ok) {
+        printf("failed to parse!");
+    }
+    free(s);
+}
+#endif
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int ret = 1;
@@ -256,6 +282,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ScopedGdiPlus gdi;
 
     mui::Initialize();
+
+    //LoadWinDesc();
 
     if (!RegisterWinClass(hInstance))
         goto Exit;

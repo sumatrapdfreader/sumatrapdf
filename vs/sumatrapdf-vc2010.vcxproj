@@ -191,6 +191,7 @@
     <ClCompile Include="..\src\utils\Touch.cpp" />
     <ClCompile Include="..\src\utils\TrivialHtmlParser.cpp" />
     <ClCompile Include="..\src\utils\TrivialHtmlParser_ut.cpp" />
+    <ClCompile Include="..\src\utils\TxtParser.cpp" />
     <ClCompile Include="..\src\utils\UITask.cpp" />
     <ClCompile Include="..\src\utils\UtilTests.cpp" />
     <ClCompile Include="..\src\utils\VarintGob.cpp" />
@@ -446,6 +447,7 @@
     <ClInclude Include="..\src\utils\Timer.h" />
     <ClInclude Include="..\src\utils\Touch.h" />
     <ClInclude Include="..\src\utils\TrivialHtmlParser.h" />
+    <ClInclude Include="..\src\utils\TxtParser.h" />
     <ClInclude Include="..\src\utils\UITask.h" />
     <ClInclude Include="..\src\utils\VarintGob.h" />
     <ClInclude Include="..\src\utils\Vec.h" />

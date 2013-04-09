@@ -6,7 +6,9 @@
 
 #include "BitManip.h"
 #include "HtmlFormatter.h"
+#include "resource.h"
 #include "SvgPath.h"
+#include "TxtParser.h"
 
 #include "DebugLog.h"
 
@@ -17,10 +19,6 @@ static Style *   styleProgress = NULL;
 static Style *   styleBtnNextPrevDefault = NULL;
 static Style *   styleBtnNextPrevMouseOver = NULL;
 static HCURSOR   gCursorHand = NULL;
-
-#define COLOR_SEPIA         "FBF0D9"
-#define COLOR_LIGHT_BLUE    "64C7EF"
-#define COLOR_LIGHT_GRAY    "F0F0F0"
 
 #if 0
 static Rect RectForCircle(int x, int y, int r)
@@ -105,6 +103,221 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
+static char *gWinDesc = NULL;
+static size_t gWinDescSize;
+static TxtParser *gParser = NULL;
+
+static TxtNode *GetRootArray(TxtParser* parser)
+{
+    TxtNode *root = parser->nodes.At(0);
+    CrashIf(!root->IsArray());
+    return root;
+}
+
+static Vec<TxtNode*> *GetStructsWithName(TxtNode *root, const char *name)
+{
+    size_t nameLen = str::Len(name);
+    CrashIf(!root->IsArray());
+    Vec<TxtNode*> *res = NULL;
+    TxtNode **n;
+    for (n = root->children->IterStart(); n; n = root->children->IterNext()) {
+        TxtNode *node = *n;
+        if (node->IsStructWithName(name, nameLen)) {
+            if (!res)
+                res = new Vec<TxtNode*>();
+            res->Append(node);
+        }
+    }
+    return res;
+}
+
+float ParseFloat(const char *s)
+{
+    char *end = (char*)s;
+    return (float)strtod(s, &end);
+}
+struct ParsedPadding {
+    int top;
+    int right;
+    int bottom;
+    int left;
+};
+
+// TODO: be more forgiving with whitespace
+// TODO: allow 1 or 2 elements
+static void ParsePadding(const char *s, ParsedPadding& p)
+{
+    str::Parse(s, "%d %d %d %d", &p.top, &p.right, &p.bottom, &p.left);
+}
+
+// TODO: more enums
+static AlignAttr ParseAlignAttr(const char *s)
+{
+    if (str::EqI(s, "center"))
+        return Align_Center;
+    CrashIf(true);
+    return Align_Left;
+}
+
+// TODO: more enums
+static ElAlign ParseElAlign(const char *s)
+{
+    if (str::EqI(s, "center"))
+        return ElAlignCenter;
+    CrashIf(true);
+    return ElAlignLeft;
+}
+
+#if 0
+    FontStyleRegular    = 0,
+    FontStyleBold       = 1,
+    FontStyleItalic     = 2,
+    FontStyleBoldItalic = 3,
+    FontStyleUnderline  = 4,
+    FontStyleStrikeout  = 8
+#endif
+static Gdiplus::FontStyle ParseFontWeight(const char *s)
+{
+    if (str::EqI(s, "regular"))
+        return FontStyleRegular;
+    CrashIf(true);
+    // TODO: more
+    return FontStyleRegular;
+}
+
+static void AddStyleProp(Style *style, TxtNode *prop)
+{
+    if (prop->IsTextWithKey("name")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->SetName(tmp);
+        return;
+    }
+
+    if (prop->IsTextWithKey("bg_col")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocColorSolid(PropBgColor, tmp));
+        return;
+    }
+
+    if (prop->IsTextWithKey("col")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocColorSolid(PropColor, tmp));
+        return;
+    }
+
+    if (prop->IsTextWithKey("parent")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        Style *parentStyle = StyleByName(tmp);
+        CrashIf(!parentStyle);
+        style->SetInheritsFrom(parentStyle);
+        return;
+    }
+
+    if (prop->IsTextWithKey("border_width")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->SetBorderWidth(ParseFloat(tmp));
+        return;
+    }
+
+    if (prop->IsTextWithKey("padding")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        ParsedPadding padding = { 0 };
+        ParsePadding(tmp, padding);
+        style->SetPadding(padding.top, padding.right, padding.bottom, padding.left);
+        return;
+    }
+
+    if (prop->IsTextWithKey("stroke_width")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocWidth(PropStrokeWidth, ParseFloat(tmp)));
+        return;
+    }
+
+    if (prop->IsTextWithKey("fill")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocColorSolid(PropFill, tmp));
+        return;
+    }
+
+    if (prop->IsTextWithKey("vert_align")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocAlign(PropVertAlign, ParseElAlign(tmp)));
+        return;
+    }
+
+    if (prop->IsTextWithKey("text_align")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocTextAlign(ParseAlignAttr(tmp)));
+        return;
+    }
+
+    if (prop->IsTextWithKey("font_size")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocFontSize(ParseFloat(tmp)));
+        return;
+    }
+
+    
+    if (prop->IsTextWithKey("font_weight")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocFontWeight(ParseFontWeight(tmp)));
+        return;
+    }
+
+    CrashIf(true);
+}
+
+static Style* StyleFromStruct(TxtNode* styleStruct)
+{
+    CrashIf(!styleStruct->IsStructWithName("style"));
+    Style *style = new Style();
+    size_t n = styleStruct->children->Count();
+    for (size_t i = 0; i < n; i++) {
+        TxtNode *n = styleStruct->children->At(i);
+        CrashIf(!n->IsText());
+        AddStyleProp(style, n);
+    }
+    CacheStyle(style);
+    return style;
+}
+
+static Vec<Style*> *StylesFromStyleStructs(Vec<TxtNode*> *styleNodes)
+{
+    size_t n = styleNodes->Count();
+    Vec<Style*> *res = new Vec<Style*>(n);
+    for (size_t i = 0; i < n; i++) {
+        res->Append(StyleFromStruct(styleNodes->At(i)));
+    }
+    return res;
+}
+
+static char *LoadTextResource(int resId, size_t *sizeOut)
+{
+    HRSRC resSrc = FindResource(NULL, MAKEINTRESOURCE(resId), RT_RCDATA);
+    CrashIf(!resSrc);
+    HGLOBAL res = LoadResource(NULL, resSrc);
+    CrashIf(!res);
+    DWORD size = SizeofResource(NULL, resSrc);
+    const char *resData = (const char*)LockResource(res);
+    char *s = str::DupN(resData, size);
+    *sizeOut = size;
+    UnlockResource(res);
+    return s;
+}
+
+static bool LoadAndParseWinDesc()
+{
+    CrashIf(gWinDesc);
+    gWinDesc = LoadTextResource(IDD_EBOOK_WIN_DESC, &gWinDescSize);
+    gParser = new TxtParser();
+    gParser->SetToParse(gWinDesc, gWinDescSize);
+    bool ok = ParseTxt(*gParser);
+    CrashIf(!ok);
+    return ok;
+}
+
+// TODO: delete all styles that are in the cache, so we don't
+// have to do it here
 // should only be called once at the end of the program
 extern "C" static void DeleteEbookStyles()
 {
@@ -114,51 +327,38 @@ extern "C" static void DeleteEbookStyles()
     delete stylePage;
     delete styleProgress;
     delete styleMainWnd;
+
+    delete gParser;
+    free(gWinDesc);
 }
 
 static void CreateEbookStyles()
 {
-    const int pageBorderX = 16;
-    const int pageBorderY = 32;
+    CrashIf(styleMainWnd); // only call me once
 
-    // only create styles once
-    if (styleMainWnd)
-        return;
+    Vec<TxtNode*> *styleNodes = GetStructsWithName(GetRootArray(gParser), "Style");
+    CrashIf(!styleNodes);
 
-    styleMainWnd = new Style();
+    Vec<Style*> *styles = StylesFromStyleStructs(styleNodes);
+
     // TODO: support changing this color to gRenderCache.colorRange[1]
     //       or GetSysColor(COLOR_WINDOW) if gGlobalPrefs.useSysColors
-    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, COLOR_SEPIA));
 
-    stylePage = new Style();
-    stylePage->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
-    stylePage->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
+    styleMainWnd = StyleByName("styleMainWnd");
+    CrashIf(!styleMainWnd);
+    stylePage = StyleByName("stylePage");
+    CrashIf(!stylePage);
+    styleBtnNextPrevDefault = StyleByName("styleNextDefault");
+    CrashIf(!styleBtnNextPrevDefault);
+    styleBtnNextPrevMouseOver = StyleByName("styleNextMouseOver");
+    CrashIf(!styleBtnNextPrevMouseOver);
+    styleStatus = StyleByName("styleStatus");
+    CrashIf(!styleStatus);
+    styleProgress = StyleByName("styleProgress");
+    CrashIf(!styleProgress);
 
-    styleBtnNextPrevDefault = new Style(GetStyleButtonDefault());
-    styleBtnNextPrevDefault->SetBorderWidth(0.f);
-    //styleBtnNextPrevDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
-    styleBtnNextPrevDefault->Set(Prop::AllocPadding(0, 8, 0, 8));
-    styleBtnNextPrevDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.f));
-    styleBtnNextPrevDefault->Set(Prop::AllocColorSolid(PropFill, "gray"));
-    styleBtnNextPrevDefault->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
-    styleBtnNextPrevDefault->Set(Prop::AllocAlign(PropVertAlign, ElAlignCenter));
-
-    styleBtnNextPrevMouseOver = new Style(styleBtnNextPrevDefault);
-    styleBtnNextPrevMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
-
-    styleStatus = new Style(css::GetStyleButtonDefault());
-    styleStatus->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_GRAY));
-    styleStatus->Set(Prop::AllocColorSolid(PropColor, "black"));
-    styleStatus->Set(Prop::AllocFontSize(8));
-    styleStatus->Set(Prop::AllocFontWeight(FontStyleRegular));
-    styleStatus->Set(Prop::AllocPadding(3, 0, 3, 0));
-    styleStatus->SetBorderWidth(0);
-    styleStatus->Set(Prop::AllocTextAlign(Align_Center));
-
-    styleProgress = new Style();
-    styleProgress->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_GRAY));
-    styleProgress->Set(Prop::AllocColorSolid(PropColor, COLOR_LIGHT_BLUE));
-
+    delete styles;
+    delete styleNodes;
     atexit(DeleteEbookStyles);
 }
 
@@ -185,10 +385,13 @@ static void CreateLayout(EbookControls *ctrls)
 
 EbookControls *CreateEbookControls(HWND hwnd)
 {
-    CreateEbookStyles();
-
     if (!gCursorHand)
         gCursorHand  = LoadCursor(NULL, IDC_HAND);
+
+    if (!gWinDesc) {
+        LoadAndParseWinDesc();
+        CreateEbookStyles();
+    }
 
     EbookControls *ctrls = new EbookControls;
 

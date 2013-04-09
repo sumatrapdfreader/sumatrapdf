@@ -1,7 +1,7 @@
 ﻿#include "BaseUtil.h"
 #include "FileUtil.h"
 #include "SerializeTxt.h"
-#include "SerializeTxtParser.h"
+#include "TxtParser.h"
 #include "SettingsTxtSumatra.h"
 #include "SettingsTxtSimple.h"
 

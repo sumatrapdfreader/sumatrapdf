@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 #include "SerializeTxt.h"
-#include "SerializeTxtParser.h"
+#include "TxtParser.h"
 
 namespace sertxt {
 
@@ -628,7 +628,7 @@ static void SerializeField(EncodeState& es, const char *fieldName, const FieldMe
     Type type = fieldDef->type;
     if ((type & TYPE_NO_STORE_MASK) != 0)
         return;
-    
+
     if (!structStart)
         return;
 

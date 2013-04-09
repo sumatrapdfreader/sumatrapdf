@@ -639,6 +639,14 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\utils\TxtParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\utils\TxtParser.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

@@ -1,0 +1,45 @@
+Style [
+    name: styleMainWnd
+    bg_col: sepia
+]
+
+Style [
+    name: stylePage
+    padding: 32 16 32 16
+    bg_col: transparent
+]
+
+Style [
+    name: styleNextDefault
+    parent: buttonDefault
+    border_width: 0
+    padding: 0 8 0 8
+    stroke_width: 0
+    fill: gray
+    bg_col: transparent
+    vert_align: center
+]
+
+Style [
+    name: styleNextMouseOver
+    parent: styleNextDefault
+    fill: black
+]
+
+Style [
+    name: styleStatus
+    parent: buttonDefault
+    bg_col: light gray
+    col: black
+    font_size: 8
+    font_weight: regular
+    padding: 3 0 3 0
+    border_width: 0
+    text_align: center
+]
+
+Style [
+    name: styleProgress
+    bg_col: light gray
+    col: light blue
+]

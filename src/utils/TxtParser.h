@@ -1,8 +1,8 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#ifndef SerializeTxtParser_h
-#define SerializeTxtParser_h
+#ifndef TxtParser_h
+#define TxtParser_h
 
 #define SERIALIZE_ESCAPE_CHAR '$'
 
@@ -37,6 +37,59 @@ struct TxtNode {
         type = tp;
     }
     ~TxtNode() { }
+
+    size_t KeyLen() const {
+        return keyEnd - keyStart;
+    }
+
+    size_t ValLen() const {
+        return valEnd - valStart;
+    }
+
+    bool IsArray() const {
+        return ArrayNode == type;
+    }
+
+    // TODO: move to TxtParser.cpp
+    bool IsStructWithName(const char *name, size_t nameLen) const {
+        if (StructNode != type)
+            return false;
+        if (nameLen != KeyLen())
+            return false;
+        return str::EqNI(keyStart, name, nameLen);
+    }
+
+    bool IsStructWithName(const char *name) const {
+        return IsStructWithName(name, str::Len(name));
+    }
+
+    bool IsText() const {
+        return TextNode == type;
+    }
+
+    // TODO: move to TxtParser.cpp
+    bool IsTextWithKey(const char *name) const {
+        if (!keyStart)
+            return false;
+        size_t nameLen = str::Len(name);
+        if (nameLen != KeyLen())
+            return false;
+        return str::EqNI(keyStart, name, nameLen);
+    }
+
+    // TODO: move to TxtParser.cpp
+    char *KeyDup() const {
+        if (!keyStart)
+            return NULL;
+        return str::DupN(keyStart, KeyLen());
+    }
+
+    // TODO: move to TxtParser.cpp
+    char *ValDup() const {
+        if (!valStart)
+            return NULL;
+        return str::DupN(valStart, ValLen());
+    }
 };
 
 struct TokenVal {
