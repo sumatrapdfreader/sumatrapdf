@@ -60,7 +60,7 @@ static bool IsUnsignedIntType(Type type)
             (TYPE_U64 == type));
 }
 
-static bool WriteStructInt(uint8_t *p, uint16_t type, int64_t val)
+static bool WriteStructInt(uint8_t *p, Type type, int64_t val)
 {
     if (TYPE_I16 == type) {
         if (val > 0xffff)
@@ -239,8 +239,10 @@ static bool ParseInt(char *s, char *e, int64_t *iOut)
     uint64_t u;
     if (!ParseUInt(s, e, &u))
         return false;
+#if 0 // TODO:: why is this missing?
     if (u > MAXLONG64)
         return false;
+#endif
     int64_t i = (int64_t)u;
     if (neg)
         i = -i;
@@ -518,6 +520,12 @@ static uint8_t* DeserializeRec(DecodeState& ds, TxtNode *firstNode, TxtNode *def
 Error:
     FreeStruct(res, def);
     return NULL;
+}
+
+uint8_t* Deserialize(struct TxtNode *root, const StructMetadata *def)
+{
+    DecodeState ds;
+    return DeserializeRec(ds, root, NULL, def);
 }
 
 // data and defaultData is in text format. we might modify it in place

@@ -606,6 +606,22 @@
 					RelativePath="..\src\mui\SvgPath_ut.cpp"
 					>
 				</File>
+				<File
+					RelativePath="..\src\mui\MuiButtonDef.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\mui\MuiButtonDef.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\mui\MuiButtonVectorDef.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\mui\MuiButtonVectorDef.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="base"
@@ -655,6 +671,14 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\utils\SerializeTxt.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\utils\SerializeTxt.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

@@ -656,6 +656,8 @@ CachedStyle* CachedStyleByName(const char *name)
 
 Style *StyleByName(const char *name)
 {
+    if (!name)
+        return NULL;
     StyleCacheEntry *e;
     for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
         if (e->cachedStyle.styleName && str::Eq(e->cachedStyle.styleName, name))

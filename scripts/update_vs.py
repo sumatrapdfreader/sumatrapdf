@@ -169,6 +169,7 @@ def is_sumatra_engine_src_file(path):
     return "Engine" in file_name
 
 def is_sumatra_src_file(path):
+    if is_docs_file(path): return True
     if not is_c_src_file(path): return False
     if is_sumatra_engine_src_file(path): return False
     if is_sumatra_ebook_src_file(path): return False

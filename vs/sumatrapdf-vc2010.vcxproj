@@ -137,6 +137,8 @@
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\MuiBase.cpp" />
     <ClCompile Include="..\src\mui\MuiButton.cpp" />
+    <ClCompile Include="..\src\mui\MuiButtonDef.cpp" />
+    <ClCompile Include="..\src\mui\MuiButtonVectorDef.cpp" />
     <ClCompile Include="..\src\mui\MuiControl.cpp" />
     <ClCompile Include="..\src\mui\MuiCss.cpp" />
     <ClCompile Include="..\src\mui\MuiEventMgr.cpp" />
@@ -180,6 +182,7 @@
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
+    <ClCompile Include="..\src\utils\SerializeTxt.cpp" />
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
@@ -396,6 +399,8 @@
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\MuiBase.h" />
     <ClInclude Include="..\src\mui\MuiButton.h" />
+    <ClInclude Include="..\src\mui\MuiButtonDef.h" />
+    <ClInclude Include="..\src\mui\MuiButtonVectorDef.h" />
     <ClInclude Include="..\src\mui\MuiControl.h" />
     <ClInclude Include="..\src\mui\MuiCss.h" />
     <ClInclude Include="..\src\mui\MuiEventMgr.h" />
@@ -437,6 +442,7 @@
     <ClInclude Include="..\src\utils\PalmDbReader.h" />
     <ClInclude Include="..\src\utils\RefCounted.h" />
     <ClInclude Include="..\src\utils\Scoped.h" />
+    <ClInclude Include="..\src\utils\SerializeTxt.h" />
     <ClInclude Include="..\src\utils\Sigslot.h" />
     <ClInclude Include="..\src\utils\SimpleLog.h" />
     <ClInclude Include="..\src\utils\SquareTreeParser.h" />
@@ -484,6 +490,7 @@
     <Manifest Include="..\src\installer\Installer.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\EbookWinDesc.txt" />
     <None Include="..\docs\codingstyle.txt" />
     <None Include="..\docs\mui-html-fusion.txt" />
     <None Include="..\docs\releasenotes.txt" />

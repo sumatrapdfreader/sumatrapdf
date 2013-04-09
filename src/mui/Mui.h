@@ -79,6 +79,14 @@ void        RequestLayout(Control *c);
 void        DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s);
 HwndWrapper *GetRootHwndWnd(const Control *c);
 
+class ParsedMui {
+public:
+    Vec<ILayout *>      all;
+    Vec<ButtonVector*>  vecButtons;
+    Vec<Button*>        buttons;
+    Vec<Style*>         styles;
+};
+
 } // namespace mui
 
 #endif

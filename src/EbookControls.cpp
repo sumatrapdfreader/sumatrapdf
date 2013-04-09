@@ -3,20 +3,25 @@
 
 #include "BaseUtil.h"
 #include "EbookControls.h"
-
 #include "BitManip.h"
 #include "HtmlFormatter.h"
+#include "MuiButtonVectorDef.h"
+#include "MuiButtonDef.h"
 #include "resource.h"
 #include "SvgPath.h"
 #include "TxtParser.h"
 
 #include "DebugLog.h"
 
-static Style *   styleMainWnd = NULL;
-static Style *   stylePage = NULL;
-static Style *   styleStatus = NULL;
-static Style *   styleProgress = NULL;
-static HCURSOR   gCursorHand = NULL;
+static Style *      styleMainWnd = NULL;
+static Style *      stylePage = NULL;
+static Style *      styleProgress = NULL;
+static HCURSOR      gCursorHand = NULL;
+
+static ParsedMui    ebookMuiInfo;
+static char *       gWinDesc = NULL;
+static size_t       gWinDescSize;
+static TxtParser *  gParser = NULL;
 
 #if 0
 static Rect RectForCircle(int x, int y, int r)
@@ -24,6 +29,29 @@ static Rect RectForCircle(int x, int y, int r)
     return Rect(x - r, y - r, r * 2, r * 2);
 }
 #endif
+
+// TODO: move to mui
+static Button *FindButtonNamed(ParsedMui& muiInfo, const char *name)
+{
+    for (size_t i = 0; i < muiInfo.buttons.Count(); i++) {
+        Button *b = muiInfo.buttons.At(i);
+        if (b->IsNamed(name))
+            return b;
+    }
+    return NULL;
+}
+
+// TODO: move to mui
+static ButtonVector *FindButtonVectorNamed(ParsedMui& muiInfo, const char *name)
+{
+    for (size_t i = 0; i < muiInfo.vecButtons.Count(); i++) {
+        ButtonVector *b = muiInfo.vecButtons.At(i);
+        if (b->IsNamed(name))
+            return b;
+    }
+    return NULL;
+}
+
 
 PageControl::PageControl() : page(NULL), cursorX(-1), cursorY(-1)
 {
@@ -101,32 +129,11 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
-static char *gWinDesc = NULL;
-static size_t gWinDescSize;
-static TxtParser *gParser = NULL;
-
 static TxtNode *GetRootArray(TxtParser* parser)
 {
     TxtNode *root = parser->nodes.At(0);
     CrashIf(!root->IsArray());
     return root;
-}
-
-static Vec<TxtNode*> *GetStructsWithName(TxtNode *root, const char *name)
-{
-    size_t nameLen = str::Len(name);
-    CrashIf(!root->IsArray());
-    Vec<TxtNode*> *res = NULL;
-    TxtNode **n;
-    for (n = root->children->IterStart(); n; n = root->children->IterNext()) {
-        TxtNode *node = *n;
-        if (node->IsStructWithName(name, nameLen)) {
-            if (!res)
-                res = new Vec<TxtNode*>();
-            res->Append(node);
-        }
-    }
-    return res;
 }
 
 float ParseFloat(const char *s)
@@ -268,68 +275,41 @@ static Style* StyleFromStruct(TxtNode* def)
     return style;
 }
 
-static Vec<Style*> *StylesFromStyleStructs(Vec<TxtNode*> *nodes)
+static ButtonVector* ButtonVectorFromDef(TxtNode* structDef)
 {
-    size_t n = nodes->Count();
-    Vec<Style*> *res = new Vec<Style*>(n);
-    for (size_t i = 0; i < n; i++) {
-        res->Append(StyleFromStruct(nodes->At(i)));
-    }
-    return res;
-}
-
-static void AddButtonVectorProp(ButtonVector *b, TxtNode *prop)
-{
-    ScopedMem<char> tmp(prop->ValDup());
-    if (prop->IsTextWithKey("name")) {
-        b->SetName(tmp);
-        return;
-    }
-
-    if (prop->IsTextWithKey("path")) {
-        GraphicsPath *gp = svg::GraphicsPathFromPathData(tmp);
+    CrashIf(!structDef->IsStructWithName("ButtonVector"));
+    ButtonVectorDef *def = DeserializeButtonVectorDef(structDef);
+    ButtonVector *b = new ButtonVector();
+    if (def->name)
+        b->SetName(def->name);
+    if (def->path ){
+        GraphicsPath *gp = svg::GraphicsPathFromPathData(def->path);
         b->SetGraphicsPath(gp);
-        return;
     }
-
-    if (prop->IsTextWithKey("style_default")) {
-        Style *style = StyleByName(tmp);
+    if (def->styleDefault) {
+        Style *style = StyleByName(def->styleDefault);
         CrashIf(!style);
         b->SetDefaultStyle(style);
-        return;
     }
-
-    if (prop->IsTextWithKey("style_mouse_over")) {
-        Style *style = StyleByName(tmp);
+    if (def->styleMouseOver) {
+        Style *style = StyleByName(def->styleMouseOver);
         CrashIf(!style);
         b->SetMouseOverStyle(style);
-        return;
     }
-
-    CrashIf(true);
-}
-
-static ButtonVector* ButtonVectorFromStruct(TxtNode* def)
-{
-    CrashIf(!def->IsStructWithName("ButtonVector"));
-    ButtonVector *b = new ButtonVector();
-    size_t n = def->children->Count();
-    for (size_t i = 0; i < n; i++) {
-        TxtNode *node = def->children->At(i);
-        CrashIf(!node->IsText());
-        AddButtonVectorProp(b, node);
-    }
+    FreeButtonVectorDef(def);
     return b;
 }
 
-static Vec<ButtonVector*> *ButtonVectorsFromStyleStructs(Vec<TxtNode*> *nodes)
+static Button* ButtonFromDef(TxtNode* structDef)
 {
-    size_t n = nodes->Count();
-    Vec<ButtonVector*> *res = new Vec<ButtonVector*>(n);
-    for (size_t i = 0; i < n; i++) {
-        res->Append(ButtonVectorFromStruct(nodes->At(i)));
-    }
-    return res;
+    CrashIf(!structDef->IsStructWithName("Button"));
+    ButtonDef *def = DeserializeButtonDef(structDef);
+    Style *style = StyleByName(def->style);
+    Button *b = new Button(def->text, style, style);
+    if (def->name)
+        b->SetName(def->name);
+    FreeButtonDef(def);
+    return b;
 }
 
 static char *LoadTextResource(int resId, size_t *sizeOut)
@@ -364,14 +344,34 @@ extern "C" static void DeleteEbookStyles()
     free(gWinDesc);
 }
 
+// TODO: move to mui
+// TODO: create the rest of controls
+static void ParseMuiDesc(TxtNode *root, ParsedMui& res)
+{
+    TxtNode **n;
+    for (n = root->children->IterStart(); n; n = root->children->IterNext()) {
+        TxtNode *node = *n;
+        CrashIf(!node->IsStruct());
+        if (node->IsStructWithName("Style")) {
+            res.styles.Append(StyleFromStruct(node));
+        } else if (node->IsStructWithName("ButtonVector")) {
+            ButtonVector *b = ButtonVectorFromDef(node);
+            res.all.Append(b);
+            res.vecButtons.Append(b);
+        } else if (node->IsStructWithName("Button")) {
+            Button *b = ButtonFromDef(node);
+            res.all.Append(b);
+            res.buttons.Append(b);
+        } else {
+            CrashIf(true);
+        }
+    }
+}
+
 static void CreateEbookStyles()
 {
     CrashIf(styleMainWnd); // only call me once
-
-    Vec<TxtNode*> *nodes = GetStructsWithName(GetRootArray(gParser), "Style");
-    CrashIf(!nodes);
-
-    Vec<Style*> *styles = StylesFromStyleStructs(nodes);
+    ParseMuiDesc(GetRootArray(gParser), ebookMuiInfo);
 
     // TODO: support changing this color to gRenderCache.colorRange[1]
     //       or GetSysColor(COLOR_WINDOW) if gGlobalPrefs.useSysColors
@@ -380,13 +380,9 @@ static void CreateEbookStyles()
     CrashIf(!styleMainWnd);
     stylePage = StyleByName("stylePage");
     CrashIf(!stylePage);
-    styleStatus = StyleByName("styleStatus");
-    CrashIf(!styleStatus);
     styleProgress = StyleByName("styleProgress");
     CrashIf(!styleProgress);
 
-    delete styles;
-    delete nodes;
     atexit(DeleteEbookStyles);
 }
 
@@ -411,26 +407,14 @@ static void CreateLayout(EbookControls *ctrls)
     ctrls->mainWnd->layout = l;
 }
 
-// TODO: create the rest of controls
-static void CreateControls(EbookControls *ctrls)
+static void CreateControls(EbookControls *ctrls, ParsedMui& muiInfo)
 {
-    Vec<TxtNode*> *nodes = GetStructsWithName(GetRootArray(gParser), "ButtonVector");
-    CrashIf(!nodes);
-
-    Vec<ButtonVector*> *vecButtons = ButtonVectorsFromStyleStructs(nodes);
-    for (size_t i = 0; i < vecButtons->Count(); i++) {
-        ButtonVector *b = vecButtons->At(i);
-        if (b->IsNamed("nextButton"))
-            ctrls->next = b;
-        else if (b->IsNamed("prevButton"))
-            ctrls->prev = b;
-        else
-            CrashIf(true);
-    }
+    ctrls->next = FindButtonVectorNamed(muiInfo, "nextButton");
     CrashIf(!ctrls->next);
+    ctrls->prev = FindButtonVectorNamed(muiInfo, "prevButton");
     CrashIf(!ctrls->prev);
-    delete vecButtons;
-    delete nodes;
+    ctrls->status = FindButtonNamed(muiInfo, "statusButton");
+    CrashIf(!ctrls->status);
 }
 
 EbookControls *CreateEbookControls(HWND hwnd)
@@ -445,13 +429,11 @@ EbookControls *CreateEbookControls(HWND hwnd)
 
     EbookControls *ctrls = new EbookControls;
 
-    CreateControls(ctrls);
+    CreateControls(ctrls, ebookMuiInfo);
 
     ctrls->progress = new ScrollBar();
     ctrls->progress->hCursor = gCursorHand;
     ctrls->progress->SetStyle(styleProgress);
-
-    ctrls->status = new Button(NULL, styleStatus, styleStatus);
 
     ctrls->page = new PageControl();
     ctrls->page->SetStyle(stylePage);

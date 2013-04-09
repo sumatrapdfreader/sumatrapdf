@@ -157,7 +157,8 @@ UTILS_OBJS = \
 	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\IniParser.obj \
-	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SquareTreeParser.obj
+	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SquareTreeParser.obj \
+	$(OU)\SerializeTxt.obj
 
 !if "$(CFG)"=="dbg"
 UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj
@@ -171,7 +172,8 @@ MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \
 	$(OMUI)\MuiPainter.obj $(OMUI)\MuiControl.obj $(OMUI)\MuiButton.obj \
 	$(OMUI)\MuiScrollBar.obj $(OMUI)\MuiEventMgr.obj $(OMUI)\MuiHwndWrapper.obj \
-	$(OMUI)\MuiGrid.obj $(OMUI)\SvgPath.obj
+	$(OMUI)\MuiGrid.obj $(OMUI)\SvgPath.obj $(OMUI)\MuiButtonVectorDef.obj \
+	$(OMUI)\MuiButtonDef.obj
 
 EBOOK_OBJS = \
 	$(OS)\Doc.obj $(OS)\EbookDoc.obj $(OS)\MobiDoc.obj $(OU)\PalmDbReader.obj \

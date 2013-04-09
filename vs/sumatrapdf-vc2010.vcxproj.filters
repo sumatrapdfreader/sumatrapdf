@@ -216,6 +216,12 @@
     <ClCompile Include="..\src\mui\MuiButton.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\mui\MuiButtonDef.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mui\MuiButtonVectorDef.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\mui\MuiControl.cpp">
       <Filter>mui</Filter>
     </ClCompile>
@@ -343,6 +349,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\PalmDbReader.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\SerializeTxt.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp">
@@ -989,6 +998,12 @@
     <ClInclude Include="..\src\mui\MuiButton.h">
       <Filter>mui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\mui\MuiButtonDef.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mui\MuiButtonVectorDef.h">
+      <Filter>mui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\mui\MuiControl.h">
       <Filter>mui</Filter>
     </ClInclude>
@@ -1110,6 +1125,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\Scoped.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\SerializeTxt.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\Sigslot.h">
@@ -1245,6 +1263,9 @@
     </Manifest>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\EbookWinDesc.txt">
+      <Filter>sumatra</Filter>
+    </None>
     <None Include="..\docs\codingstyle.txt">
       <Filter>docs</Filter>
     </None>

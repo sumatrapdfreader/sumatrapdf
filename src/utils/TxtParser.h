@@ -50,6 +50,10 @@ struct TxtNode {
         return ArrayNode == type;
     }
 
+    bool IsStruct() const {
+        return StructNode == type;
+    }
+
     // TODO: move to TxtParser.cpp
     bool IsStructWithName(const char *name, size_t nameLen) const {
         if (StructNode != type)

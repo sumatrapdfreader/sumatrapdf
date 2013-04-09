@@ -57,3 +57,8 @@ ButtonVector [
     style_default: styleNextDefault
     style_mouse_over: styleNextMouseOver
 ]
+
+Button [
+    name: statusButton
+    style: styleStatus
+]
