@@ -12,7 +12,7 @@
 #include "FileHistory.h"
 #include "FileTransactions.h"
 #include "FileUtil.h"
-#include "IniParser.h"
+#include "SquareTreeParser.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "WindowInfo.h"
@@ -505,7 +505,7 @@ Exit:
 // TODO: replace with AppPrefs3.h or SettingsSumatra.*
 
 enum SettingType {
-    Type_Section, Type_SectionVec, Type_Custom,
+    Type_Section, Type_SectionVec,
     Type_Bool, Type_Color, Type_FileTime, Type_Float, Type_Int, Type_String, Type_Utf8String,
 };
 
@@ -554,14 +554,15 @@ static SettingInfo gAdvancedSettingsInfo[] = {
     { "Name", Type_String, offsetof(AdvancedSettings, vecName), 0 },
 };
 
-static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, void *structBase, IniSection *section=NULL)
+static void DeserializeStructSqt(SquareTreeNode *root, SettingInfo *info, size_t count, void *structBase)
 {
     char *base = (char *)structBase;
-    IniLine *line;
+    SquareTreeNode *node = NULL;
+    const char *value;
 
     for (size_t i = 0; i < count; i++) {
         SettingInfo& meta = info[i];
-        if (!section && meta.type != Type_Section && meta.type != Type_SectionVec) {
+        if (!node && meta.type != Type_Section && meta.type != Type_SectionVec) {
             // skip missing section
             while (++i < count && info[i].type != Type_Section && info[i].type != Type_SectionVec);
             i--;
@@ -569,54 +570,51 @@ static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, 
         }
         switch (meta.type) {
         case Type_Section:
-            section = ini.FindSection(meta.name);
+            node = root->GetChild(meta.name);
             break;
         case Type_Bool:
-            if ((line = section->FindLine(meta.name)) != NULL)
-                *(bool *)(base + meta.offset) = str::EqI(line->value, "true") || atoi(line->value) != 0;
+            if ((value = node->GetValue(meta.name)) != NULL)
+                *(bool *)(base + meta.offset) = str::EqI(value, "true") || atoi(value) != 0;
             break;
         case Type_Color:
-            if ((line = section->FindLine(meta.name)) != NULL) {
+            if ((value = node->GetValue(meta.name)) != NULL) {
                 int r, g, b;
-                if (str::Parse(line->value, "#%2x%2x%2x", &r, &g, &b))
+                if (str::Parse(value, "#%2x%2x%2x", &r, &g, &b))
                     *(COLORREF *)(base + meta.offset) = RGB(r, g, b);
             }
             break;
         case Type_FileTime:
-            if ((line = section->FindLine(meta.name)) != NULL) {
+            if ((value = node->GetValue(meta.name)) != NULL) {
                 FILETIME ft;
-                if (_HexToMem(line->value, &ft))
+                if (_HexToMem(value, &ft))
                     *(FILETIME *)(base + meta.offset) = ft;
             }
             break;
         case Type_Float:
-            if ((line = section->FindLine(meta.name)) != NULL) {
-                float value;
-                if (str::Parse(line->value, "%f", &value))
-                    *(float *)(base + meta.offset) = value;
+            if ((value = node->GetValue(meta.name)) != NULL) {
+                float f;
+                if (str::Parse(value, "%f", &f))
+                    *(float *)(base + meta.offset) = f;
             }
             break;
         case Type_Int:
-            if ((line = section->FindLine(meta.name)) != NULL)
-                *(int *)(base + meta.offset) = atoi(line->value);
+            if ((value = node->GetValue(meta.name)) != NULL)
+                *(int *)(base + meta.offset) = atoi(value);
             break;
         case Type_String:
-            if ((line = section->FindLine(meta.name)) != NULL)
-                ((ScopedMem<WCHAR> *)(base + meta.offset))->Set(str::conv::FromUtf8(line->value));
+            if ((value = node->GetValue(meta.name)) != NULL)
+                ((ScopedMem<WCHAR> *)(base + meta.offset))->Set(str::conv::FromUtf8(value));
             break;
         case Type_Utf8String:
-            if ((line = section->FindLine(meta.name)) != NULL)
-                ((ScopedMem<char> *)(base + meta.offset))->Set(str::Dup(line->value));
-            break;
-        case Type_Custom:
-            CrashIf(true);
+            if ((value = node->GetValue(meta.name)) != NULL)
+                ((ScopedMem<char> *)(base + meta.offset))->Set(str::Dup(value));
             break;
         default:
             CrashIf(true);
         case Type_SectionVec:
             size_t i2 = i;
             while (++i < count && info[i].type != Type_Section && info[i].type != Type_SectionVec);
-            for (size_t ix = 0; (section = ini.FindSection(meta.name, ix)) != NULL; ix = ini.sections.Find(section) + 1) {
+            for (size_t ix = 0; (node = root->GetChild(meta.name, &ix)) != NULL; ) {
                 for (size_t j = i2 + 1; j < i; j++) {
                     SettingInfo& meta2 = info[j];
                     switch (meta2.type) {
@@ -624,15 +622,15 @@ static void DeserializeStructIni(IniFile& ini, SettingInfo *info, size_t count, 
                     // currently only Strings are used in array sections
                     case Type_Int:
                         ((Vec<int,1> *)(base + meta2.offset))->AppendBlanks(1);
-                        if ((line = section->FindLine(meta2.name)))
-                            ((Vec<int,1> *)(base + meta2.offset))->Last() = atoi(line->value);
+                        if ((value = node->GetValue(meta2.name)))
+                            ((Vec<int,1> *)(base + meta2.offset))->Last() = atoi(value);
                         break;
                     // etc.
 #endif
                     case Type_String:
                         ((WStrVec *)(base + meta2.offset))->AppendBlanks(1);
-                        if ((line = section->FindLine(meta2.name)) != NULL)
-                            ((WStrVec *)(base + meta2.offset))->Last() = str::conv::FromUtf8(line->value);
+                        if ((value = node->GetValue(meta2.name)) != NULL)
+                            ((WStrVec *)(base + meta2.offset))->Last() = str::conv::FromUtf8(value);
                         break;
                     default:
                         CrashIf(true);
@@ -828,8 +826,11 @@ static bool LoadUserPrefs(AdvancedSettings *advancedPrefs)
     ScopedMem<WCHAR> path(GetUserPrefsPath());
     if (!path)
         return false;
-    IniFile iniFile(path);
-    DeserializeStructIni(iniFile, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
+    ScopedMem<char> iniData(file::ReadAll(path, NULL));
+    if (!iniData)
+        return false;
+    SquareTree iniFile(iniData);
+    DeserializeStructSqt(iniFile.root, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
     return true;
 }
 

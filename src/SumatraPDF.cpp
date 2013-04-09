@@ -24,7 +24,6 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "HttpUtil.h"
 #include "HtmlWindow.h"
-#include "IniParser.h"
 #include "Menu.h"
 #include "Mui.h"
 #include "Notifications.h"
@@ -37,6 +36,7 @@ using namespace Gdiplus;
 #include "Resource.h"
 #include "Search.h"
 #include "Selection.h"
+#include "SquareTreeParser.h"
 #include "SumatraAbout.h"
 #include "SumatraAbout2.h"
 #include "SumatraDialogs.h"
@@ -624,28 +624,29 @@ static int GetPolicies(bool isRestricted)
     restrictPath.Set(path::GetDir(restrictPath));
     restrictPath.Set(path::Join(restrictPath, RESTRICTIONS_FILE_NAME));
     if (file::Exists(restrictPath)) {
-        IniFile ini(restrictPath);
-        IniSection *polsec = ini.FindSection("Policies");
+        ScopedMem<char> restrictData(file::ReadAll(restrictPath, NULL));
+        SquareTree sqt(restrictData);
+        SquareTreeNode *polsec = sqt.root ? sqt.root->GetChild("Policies") : NULL;
         if (!polsec)
             return Perm_RestrictedUse;
 
         int policy = Perm_RestrictedUse;
         for (size_t i = 0; i < dimof(policies); i++) {
-            IniLine *line = polsec->FindLine(policies[i].name);
-            if (line && atoi(line->value) != 0)
+            const char *value = polsec->GetValue(policies[i].name);
+            if (value && atoi(value) != 0)
                 policy = policy | policies[i].perm;
         }
         // determine the list of allowed link protocols and perceived file types
         if ((policy & Perm_DiskAccess)) {
-            IniLine *line;
-            if ((line = polsec->FindLine("LinkProtocols")) != NULL) {
-                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(line->value));
+            const char *value;
+            if ((value = polsec->GetValue("LinkProtocols")) != NULL) {
+                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
                 str::ToLower(protocols);
                 str::TransChars(protocols, L":; ", L",,,");
                 gAllowedLinkProtocols.Split(protocols, L",", true);
             }
-            if ((line = polsec->FindLine("SafeFileTypes")) != NULL) {
-                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(line->value));
+            if ((value = polsec->GetValue("SafeFileTypes")) != NULL) {
+                ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
                 str::ToLower(protocols);
                 str::TransChars(protocols, L":; ", L",,,");
                 gAllowedFileTypes.Split(protocols, L",", true);
