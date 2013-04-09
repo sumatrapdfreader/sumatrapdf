@@ -24,32 +24,4 @@ const StructMetadata gButtonVectorDefMetadata = {
 
 #undef of
 
-ButtonVectorDef *DeserializeButtonVectorDef(const char *data, size_t dataLen)
-{
-    return DeserializeButtonVectorDefWithDefault(data, dataLen, NULL, 0);
-}
 
-ButtonVectorDef *DeserializeButtonVectorDefWithDefault(const char *data, size_t dataLen, const char *defaultData, size_t defaultDataLen)
-{
-    char *dataCopy = str::DupN(data, dataLen);
-    char *defaultDataCopy = str::DupN(defaultData, defaultDataLen);
-    void *res = DeserializeWithDefault(dataCopy, dataLen, defaultDataCopy, defaultDataLen, &gButtonVectorDefMetadata);
-    free(dataCopy);
-    free(defaultDataCopy);
-    return (ButtonVectorDef*)res;
-}
-
-ButtonVectorDef *DeserializeButtonVectorDef(TxtNode* root)
-{
-    return (ButtonVectorDef*)Deserialize(root, &gButtonVectorDefMetadata);
-}
-
-uint8_t *SerializeButtonVectorDef(ButtonVectorDef *val, size_t *dataLenOut)
-{
-    return Serialize((const uint8_t*)val, &gButtonVectorDefMetadata, dataLenOut);
-}
-
-void FreeButtonVectorDef(ButtonVectorDef *val)
-{
-    FreeStruct((uint8_t*)val, &gButtonVectorDefMetadata);
-}

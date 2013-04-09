@@ -4,7 +4,8 @@
 #ifndef MuiButtonVectorDef_h
 #define MuiButtonVectorDef_h
 
-struct TxtNode;
+#include "SerializeTxt.h"
+using namespace sertxt;
 
 struct ButtonVectorDef {
     const char *  name;
@@ -13,10 +14,26 @@ struct ButtonVectorDef {
     const char *  styleMouseOver;
 };
 
-ButtonVectorDef *DeserializeButtonVectorDef(const char *data, size_t dataLen);
-ButtonVectorDef *DeserializeButtonVectorDefWithDefault(const char *data, size_t dataLen, const char *defaultData, size_t defaultDataLen);
-ButtonVectorDef *DeserializeButtonVectorDef(TxtNode* root);
-uint8_t *SerializeButtonVectorDef(ButtonVectorDef *, size_t *dataLenOut);
-void FreeButtonVectorDef(ButtonVectorDef *);
+extern const StructMetadata gButtonVectorDefMetadata;
+
+inline ButtonVectorDef *DeserializeButtonVectorDef(char *data, size_t dataLen)
+{
+    return (ButtonVectorDef*)Deserialize(data, dataLen, &gButtonVectorDefMetadata);
+}
+
+inline ButtonVectorDef *DeserializeButtonVectorDef(TxtNode* root)
+{
+    return (ButtonVectorDef*)Deserialize(root, &gButtonVectorDefMetadata);
+}
+
+inline uint8_t *SerializeButtonVectorDef(ButtonVectorDef *val, size_t *dataLenOut)
+{
+    return Serialize((const uint8_t*)val, &gButtonVectorDefMetadata, dataLenOut);
+}
+
+inline void FreeButtonVectorDef(ButtonVectorDef *val)
+{
+    FreeStruct((uint8_t*)val, &gButtonVectorDefMetadata);
+}
 
 #endif
