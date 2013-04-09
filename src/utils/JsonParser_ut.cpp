@@ -13,12 +13,12 @@ struct JsonValue {
 };
 
 class JsonVerifier : public json::ValueVisitor {
-    JsonValue *data;
+    const JsonValue *data;
     size_t dataLen;
     size_t idx;
 
 public:
-    JsonVerifier(JsonValue *data, size_t dataLen=1) :
+    JsonVerifier(const JsonValue *data, size_t dataLen) :
         data(data), dataLen(dataLen), idx(0) { }
 
     virtual bool Visit(const char *path, const char *value, json::DataType type) {
@@ -32,57 +32,76 @@ public:
     }
 };
 
-#pragma warning(push)
-#pragma warning(disable:4238) // TODO: too lazy to fix them right now
 static void JsonTest()
 {
+    static const struct {
+        const char *json;
+        JsonValue value;
+    } validJsonData[] = {
+        // strings
+        { "\"test\"", JsonValue("", "test") },
+        { "\"\\\\\\n\\t\\u01234\"", JsonValue("", "\\\n\t\xC4\xA3""4") },
+        // numbers
+        { "123", JsonValue("", "123", json::Type_Number) },
+        { "-99.99", JsonValue("", "-99.99", json::Type_Number) },
+        { "1.2E+15", JsonValue("", "1.2E+15", json::Type_Number) },
+        { "0e-7", JsonValue("", "0e-7", json::Type_Number) },
+        // keywords
+        { "true", JsonValue("", "true", json::Type_Bool) },
+        { "false", JsonValue("", "false", json::Type_Bool) },
+        { "null", JsonValue("", "null", json::Type_Null) },
+        // dictionaries
+        { "{\"key\":\"test\"}", JsonValue("/key", "test") },
+        { "{ \"no\" : 123 }", JsonValue("/no", "123", json::Type_Number) },
+        { "{ \"bool\": true }", JsonValue("/bool", "true", json::Type_Bool) },
+        { "{}", JsonValue("", NULL) },
+        // arrays
+        { "[\"test\"]", JsonValue("[0]", "test") },
+        { "[123]", JsonValue("[0]", "123", json::Type_Number) },
+        { "[ null ]", JsonValue("[0]", "null", json::Type_Null) },
+        { "[]", JsonValue("", NULL) },
+        // combination
+        { "{\"key\":[{\"name\":-987}]}", JsonValue("/key[0]/name", "-987", json::Type_Number) },
+    };
+
+    for (size_t i = 0; i < dimof(validJsonData); i++) {
+        JsonVerifier verifier(&validJsonData[i].value, validJsonData[i].value.value ? 1 : 0);
+        assert(json::Parse(validJsonData[i].json, &verifier));
+    }
+
+    static const struct {
+        const char *json;
+        JsonValue value;
+    } invalidJsonData[] = {
+        // dictionaries
+        { "{\"key\":\"test\"", JsonValue("/key", "test") },
+        { "{ \"no\" : 123, }", JsonValue("/no", "123", json::Type_Number) },
+        { "{\"key\":\"test\"]", JsonValue("/key", "test") },
+        // arrays
+        { "[\"test\"", JsonValue("[0]", "test") },
+        { "[123,]", JsonValue("[0]", "123", json::Type_Number) },
+        { "[\"test\"}", JsonValue("[0]", "test") },
+    };
+
+    for (size_t i = 0; i < dimof(invalidJsonData); i++) {
+        JsonVerifier verifier(&invalidJsonData[i].value, 1);
+        assert(!json::Parse(invalidJsonData[i].json, &verifier));
+    }
+
+    static const char *invalidJson[] = {
+        "", "string", "nada",
+        "\"open", "\"\\xC4\"", "\"\\u123h\"", "'string'",
+        "01", ".1", "12.", "1e", "-", "-01",
+        "{", "{,}", "{\"key\": }", "{\"key: 123 }", "{ 'key': 123 }",
+        "[", "[,]"
+    };
+
     JsonVerifier verifyError(NULL, 0);
+    for (size_t i = 0; i < dimof(invalidJson); i++) {
+        assert(!json::Parse(invalidJson[i], &verifyError));
+    }
 
-    assert(!json::Parse("", &verifyError));
-
-    assert(json::Parse("\"test\"", &JsonVerifier(&JsonValue("", "test"))));
-    assert(json::Parse("\"\\\\\\n\\t\\u01234\"", &JsonVerifier(&JsonValue("", "\\\n\t\xC4\xA3""4"))));
-    assert(!json::Parse("\"open", &verifyError));
-    assert(!json::Parse("\"\\xC4\"", &verifyError));
-    assert(!json::Parse("\"\\u123h\"", &verifyError));
-
-    assert(json::Parse("123", &JsonVerifier(&JsonValue("", "123", json::Type_Number))));
-    assert(json::Parse("-99.99", &JsonVerifier(&JsonValue("", "-99.99", json::Type_Number))));
-    assert(json::Parse("1.2E+15", &JsonVerifier(&JsonValue("", "1.2E+15", json::Type_Number))));
-    assert(json::Parse("0e-7", &JsonVerifier(&JsonValue("", "0e-7", json::Type_Number))));
-    assert(!json::Parse("01", &verifyError));
-    assert(!json::Parse(".1", &verifyError));
-    assert(!json::Parse("12.", &verifyError));
-    assert(!json::Parse("1e", &verifyError));
-
-    assert(json::Parse("{\"key\":\"test\"}", &JsonVerifier(&JsonValue("/key", "test"))));
-    assert(json::Parse("{ \"no\" : 123 }", &JsonVerifier(&JsonValue("/no", "123", json::Type_Number))));
-    assert(json::Parse("{}", &verifyError));
-    assert(!json::Parse("{,}", &verifyError));
-    assert(!json::Parse("{\"key\":\"test\"", &JsonVerifier(&JsonValue("/key", "test"))));
-    assert(!json::Parse("{ \"no\" : 123, }", &JsonVerifier(&JsonValue("/no", "123", json::Type_Number))));
-    assert(!json::Parse("{\"key\":\"test\"]", &JsonVerifier(&JsonValue("/key", "test"))));
-    assert(!json::Parse("{\"key\": }", &verifyError));
-    assert(!json::Parse("{\"key: 123 }", &verifyError));
-
-    assert(json::Parse("[\"test\"]", &JsonVerifier(&JsonValue("[0]", "test"))));
-    assert(json::Parse("[123]", &JsonVerifier(&JsonValue("[0]", "123", json::Type_Number))));
-    assert(json::Parse("[]", &verifyError));
-    assert(!json::Parse("[,]", &verifyError));
-    assert(!json::Parse("[\"test\"", &JsonVerifier(&JsonValue("[0]", "test"))));
-    assert(!json::Parse("[123,]", &JsonVerifier(&JsonValue("[0]", "123", json::Type_Number))));
-    assert(!json::Parse("[\"test\"}", &JsonVerifier(&JsonValue("[0]", "test"))));
-
-    assert(json::Parse("true", &JsonVerifier(&JsonValue("", "true", json::Type_Bool))));
-    assert(json::Parse("false", &JsonVerifier(&JsonValue("", "false", json::Type_Bool))));
-    assert(json::Parse("null", &JsonVerifier(&JsonValue("", "null", json::Type_Null))));
-    assert(!json::Parse("string", &verifyError));
-    assert(!json::Parse("nada", &verifyError));
-
-    assert(json::Parse("{\"key\":[{\"name\":-987}]}",
-        &JsonVerifier(&JsonValue("/key[0]/name", "-987", json::Type_Number))));
-
-    JsonValue testData[] = {
+    const JsonValue testData[] = {
         JsonValue("/ComicBookInfo/1.0/title", "Meta data demo"),
         JsonValue("/ComicBookInfo/1.0/publicationMonth", "4", json::Type_Number),
         JsonValue("/ComicBookInfo/1.0/publicationYear", "2010", json::Type_Number),
@@ -93,20 +112,19 @@ static void JsonTest()
         JsonValue("/ComicBookInfo/1.0/credits[2]", "null", json::Type_Null),
         JsonValue("/appID", "Test/123"),
     };
-    const char *jsonSample = "{\
-    \"ComicBookInfo/1.0\": {\
-        \"title\": \"Meta data demo\",\
-        \"publicationMonth\": 4,\
-        \"publicationYear\": 2010,\
-        \"credits\": [\
-            { \"primary\": true, \"role\": \"Writer\" },\
-            { \"primary\": false, \"role\": \"Publisher\" },\
-            null\
-        ]\
-    },\
-    \"appID\": \"Test/123\"\
+    const char *jsonSample = "{\n\
+    \"ComicBookInfo/1.0\": {\n\
+        \"title\": \"Meta data demo\",\n\
+        \"publicationMonth\": 4,\n\
+        \"publicationYear\": 2010,\n\
+        \"credits\": [\n\
+            { \"primary\": true, \"role\": \"Writer\" },\n\
+            { \"primary\": false, \"role\": \"Publisher\" },\n\
+            null\n\
+        ]\n\
+    },\n\
+    \"appID\": \"Test/123\"\n\
 }";
-    assert(json::Parse(jsonSample, &JsonVerifier(testData, dimof(testData))));
+    JsonVerifier sampleVerifier(testData, dimof(testData));
+    assert(json::Parse(jsonSample, &sampleVerifier));
 }
-#pragma warning(pop)
-
