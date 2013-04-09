@@ -731,7 +731,7 @@ Style* GetStyleButtonDefaultMouseOver()
 #ifdef DEBUG
     return StyleByName("buttonDefaultMouseOver");
 #else
-    return gStyleButtonDefaultMouseOver;
+    return gStyleButtonMouseOver;
 #endif
 }
 
