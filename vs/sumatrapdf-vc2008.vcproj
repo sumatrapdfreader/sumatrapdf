@@ -630,6 +630,14 @@
 					RelativePath="..\src\mui\MuiFromText.h"
 					>
 				</File>
+				<File
+					RelativePath="..\src\mui\MuiScrollBarDef.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\mui\MuiScrollBarDef.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="base"

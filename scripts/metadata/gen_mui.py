@@ -27,12 +27,21 @@ class ButtonDef(Struct):
         Field("style", String(None)),
     ]
 
+class ScrollBarDef(Struct):
+    fields = [
+        Field("name", String(None)),
+        Field("style", String(None)),
+        Field("cursor", String(None)),
+    ]
+
 def gen_mui():
     dst_dir = mui_src_dir()
     file_path_base = os.path.join(dst_dir, "MuiButtonVectorDef")
     gen_for_top_level_val(ButtonVectorDef(), file_path_base)
     file_path_base = os.path.join(dst_dir, "MuiButtonDef")
     gen_for_top_level_val(ButtonDef(), file_path_base)
+    file_path_base = os.path.join(dst_dir, "MuiScrollBarDef")
+    gen_for_top_level_val(ScrollBarDef(), file_path_base)
 
 def main():
     gen_mui()

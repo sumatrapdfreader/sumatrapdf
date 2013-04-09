@@ -1175,3 +1175,18 @@ void VariantInitBstr(VARIANT& urlVar, const WCHAR *s)
     urlVar.vt = VT_BSTR;
     urlVar.bstrVal = SysAllocString(s);
 }
+
+char *LoadTextResource(int resId, size_t *sizeOut)
+{
+    HRSRC resSrc = FindResource(NULL, MAKEINTRESOURCE(resId), RT_RCDATA);
+    CrashIf(!resSrc);
+    HGLOBAL res = LoadResource(NULL, resSrc);
+    CrashIf(!res);
+    DWORD size = SizeofResource(NULL, resSrc);
+    const char *resData = (const char*)LockResource(res);
+    char *s = str::DupN(resData, size);
+    if (sizeOut)
+        *sizeOut = size;
+    UnlockResource(res);
+    return s;
+}

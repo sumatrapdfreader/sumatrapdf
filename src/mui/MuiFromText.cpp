@@ -8,6 +8,7 @@
 #include "MuiButtonDef.h"
 #include "SvgPath.h"
 #include "TxtParser.h"
+#include "MuiScrollBarDef.h"
 
 namespace mui {
 
@@ -27,6 +28,16 @@ ButtonVector *FindButtonVectorNamed(ParsedMui& muiInfo, const char *name)
         ButtonVector *b = muiInfo.vecButtons.At(i);
         if (b->IsNamed(name))
             return b;
+    }
+    return NULL;
+}
+
+ScrollBar *FindScrollBarNamed(ParsedMui& muiInfo, const char *name)
+{
+    for (size_t i = 0; i < muiInfo.scrollBars.Count(); i++) {
+        ScrollBar *sb = muiInfo.scrollBars.At(i);
+        if (sb->IsNamed(name))
+            return sb;
     }
     return NULL;
 }
@@ -215,6 +226,23 @@ static Button* ButtonFromDef(TxtNode* structDef)
     return b;
 }
 
+static ScrollBar *ScrollBarFromDef(TxtNode *structDef)
+{
+    CrashIf(!structDef->IsStructWithName("ScrollBar"));
+    ScrollBarDef *def = DeserializeScrollBarDef(structDef);
+    ScrollBar *sb = new ScrollBar();
+    Style *style = StyleByName(def->style);
+    sb->SetStyle(style);
+
+    if (def->name)
+        sb->SetName(def->name);
+
+    // TODO: support def->cursor
+
+    FreeScrollBarDef(def);
+    return sb;
+}
+
 // TODO: create the rest of controls
 static void ParseMuiDefinition(TxtNode *root, ParsedMui& res)
 {
@@ -232,6 +260,10 @@ static void ParseMuiDefinition(TxtNode *root, ParsedMui& res)
             Button *b = ButtonFromDef(node);
             res.all.Append(b);
             res.buttons.Append(b);
+        } else if (node->IsStructWithName("ScrollBar")) {
+            ScrollBar *sb = ScrollBarFromDef(node);
+            res.all.Append(sb);
+            res.scrollBars.Append(sb);
         } else {
             CrashIf(true);
         }

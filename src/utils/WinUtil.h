@@ -170,5 +170,6 @@ double  GetProcessRunningTime();
 
 void RunNonElevated(const WCHAR *exePath);
 void VariantInitBstr(VARIANT& urlVar, const WCHAR *s);
+char *LoadTextResource(int resId, size_t *sizeOut=NULL);
 
 #endif

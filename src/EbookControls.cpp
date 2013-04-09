@@ -6,12 +6,12 @@
 #include "BitManip.h"
 #include "HtmlFormatter.h"
 #include "resource.h"
+#include "WinUtil.h"
 
 #include "DebugLog.h"
 
 static Style *      styleMainWnd = NULL;
 static Style *      stylePage = NULL;
-static Style *      styleProgress = NULL;
 static HCURSOR      gCursorHand = NULL;
 
 static ParsedMui    ebookMuiDef;
@@ -99,21 +99,6 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
-static char *LoadTextResource(int resId, size_t *sizeOut=NULL)
-{
-    HRSRC resSrc = FindResource(NULL, MAKEINTRESOURCE(resId), RT_RCDATA);
-    CrashIf(!resSrc);
-    HGLOBAL res = LoadResource(NULL, resSrc);
-    CrashIf(!res);
-    DWORD size = SizeofResource(NULL, resSrc);
-    const char *resData = (const char*)LockResource(res);
-    char *s = str::DupN(resData, size);
-    if (sizeOut)
-        *sizeOut = size;
-    UnlockResource(res);
-    return s;
-}
-
 static void CreateEbookStyles()
 {
     CrashIf(styleMainWnd); // only call me once
@@ -125,8 +110,6 @@ static void CreateEbookStyles()
     CrashIf(!styleMainWnd);
     stylePage = StyleByName("stylePage");
     CrashIf(!stylePage);
-    styleProgress = StyleByName("styleProgress");
-    CrashIf(!styleProgress);
 }
 
 static void CreateLayout(EbookControls *ctrls)
@@ -158,6 +141,9 @@ static void CreateControls(EbookControls *ctrls, ParsedMui& muiInfo)
     CrashIf(!ctrls->prev);
     ctrls->status = FindButtonNamed(ebookMuiDef, "statusButton");
     CrashIf(!ctrls->status);
+    ctrls->progress = FindScrollBarNamed(ebookMuiDef, "progressScrollBar");
+    CrashIf(!ctrls->progress);
+    ctrls->progress->hCursor = gCursorHand;
 }
 
 EbookControls *CreateEbookControls(HWND hwnd)
@@ -173,10 +159,6 @@ EbookControls *CreateEbookControls(HWND hwnd)
     EbookControls *ctrls = new EbookControls;
 
     CreateControls(ctrls, ebookMuiDef);
-
-    ctrls->progress = new ScrollBar();
-    ctrls->progress->hCursor = gCursorHand;
-    ctrls->progress->SetStyle(styleProgress);
 
     ctrls->page = new PageControl();
     ctrls->page->SetStyle(stylePage);

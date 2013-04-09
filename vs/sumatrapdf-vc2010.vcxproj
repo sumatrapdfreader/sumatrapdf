@@ -148,6 +148,7 @@
     <ClCompile Include="..\src\mui\MuiLayout.cpp" />
     <ClCompile Include="..\src\mui\MuiPainter.cpp" />
     <ClCompile Include="..\src\mui\MuiScrollBar.cpp" />
+    <ClCompile Include="..\src\mui\MuiScrollBarDef.cpp" />
     <ClCompile Include="..\src\mui\SvgPath.cpp" />
     <ClCompile Include="..\src\mui\SvgPath_ut.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
@@ -411,6 +412,7 @@
     <ClInclude Include="..\src\mui\MuiLayout.h" />
     <ClInclude Include="..\src\mui\MuiPainter.h" />
     <ClInclude Include="..\src\mui\MuiScrollBar.h" />
+    <ClInclude Include="..\src\mui\MuiScrollBarDef.h" />
     <ClInclude Include="..\src\mui\SvgPath.h" />
     <ClInclude Include="..\src\utils\Allocator.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />

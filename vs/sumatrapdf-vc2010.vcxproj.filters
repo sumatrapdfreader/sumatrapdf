@@ -249,6 +249,9 @@
     <ClCompile Include="..\src\mui\MuiScrollBar.cpp">
       <Filter>mui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\mui\MuiScrollBarDef.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\mui\SvgPath.cpp">
       <Filter>mui</Filter>
     </ClCompile>
@@ -1032,6 +1035,9 @@
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\MuiScrollBar.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mui\MuiScrollBarDef.h">
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\SvgPath.h">

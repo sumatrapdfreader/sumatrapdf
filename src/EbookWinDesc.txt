@@ -62,3 +62,9 @@ Button [
     name: statusButton
     style: styleStatus
 ]
+
+ScrollBar [
+    name: progressScrollBar
+    style: styleProgress
+    cursor: hand
+]

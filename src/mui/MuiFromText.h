@@ -14,10 +14,11 @@ public:
     Vec<ILayout *>      all;
     Vec<ButtonVector*>  vecButtons;
     Vec<Button*>        buttons;
+    Vec<ScrollBar*>     scrollBars;
     Vec<Style*>         styles;
 };
 
-bool MuiFromText(char *s, ParsedMui& res);
-Button *FindButtonNamed(ParsedMui& muiInfo, const char *name);
-ButtonVector *FindButtonVectorNamed(ParsedMui& muiInfo, const char *name);
-
+bool            MuiFromText(char *s, ParsedMui& res);
+Button *        FindButtonNamed(ParsedMui& muiInfo, const char *name);
+ButtonVector *  FindButtonVectorNamed(ParsedMui& muiInfo, const char *name);
+ScrollBar *     FindScrollBarNamed(ParsedMui& muiInfo, const char *name);
