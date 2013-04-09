@@ -21,6 +21,16 @@
    a way to force it, but I'm happy I found a way that works.
 */
 
+// not available under Win2000
+typedef BOOL WINAPI MiniDumpWriteDumpProc(
+    HANDLE hProcess,
+    DWORD ProcessId,
+    HANDLE hFile,
+    LONG DumpType,
+    PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
+    PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
+    PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
+
 typedef BOOL _stdcall SymInitializeWProc(
     HANDLE hProcess,
     PCWSTR UserSearchPath,
@@ -39,6 +49,7 @@ typedef BOOL _stdcall StackWalk64Proc(
 
 namespace dbghelp {
 
+static MiniDumpWriteDumpProc *          _MiniDumpWriteDump;
 static SymInitializeWProc *             _SymInitializeW;
 static StackWalk64Proc   *              _StackWalk64;
 static BOOL                             gSymInitializeOk = FALSE;
@@ -87,6 +98,8 @@ static char *ExceptionNameFromCode(DWORD excCode)
 // It can (but doesn't have to) be called before Initialize().
 bool Load()
 {
+    if (_MiniDumpWriteDump)
+        return true;
 #if 0
     WCHAR *dbghelpPath = L"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll";
     HMODULE h = LoadLibrary(dbghelpPath);
@@ -95,6 +108,7 @@ bool Load()
 #endif
 
 #define Load(func) _ ## func = (func ## Proc *)GetProcAddress(h, #func)
+    Load(MiniDumpWriteDump);
     Load(SymInitializeW);
     Load(StackWalk64);
 #undef Load
@@ -215,7 +229,7 @@ bool Initialize(const WCHAR *symPathW, bool force)
     return true;
 }
 
-static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
+static BOOL CALLBACK OpenMiniDumpCallback(void *param, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
 {
     if (!input || !output)
         return FALSE;
@@ -237,7 +251,7 @@ static BOOL CALLBACK OpenMiniDumpCallback(void* /*param*/, PMINIDUMP_CALLBACK_IN
 
 void WriteMiniDump(const WCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, bool fullDump)
 {
-    if (!Initialize(NULL))
+    if (!Initialize(NULL) || !_MiniDumpWriteDump)
         return;
 
     HANDLE hFile = CreateFile(crashDumpFilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
@@ -249,7 +263,7 @@ void WriteMiniDump(const WCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATIO
         type = (MINIDUMP_TYPE)(type | MiniDumpWithDataSegs | MiniDumpWithHandleData | MiniDumpWithPrivateReadWriteMemory);
     MINIDUMP_CALLBACK_INFORMATION mci = { OpenMiniDumpCallback, NULL };
 
-    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, type, mei, NULL, &mci);
+    _MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, type, mei, NULL, &mci);
 
     CloseHandle(hFile);
 }
