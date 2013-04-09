@@ -64,10 +64,8 @@ static Style *gStyleButtonDefault = NULL;
 static Style *gStyleButtonMouseOver = NULL;
 
 struct StyleCacheEntry {
-    Style *     style1;
-    size_t      style1Id;
-    Style *     style2;
-    size_t      style2Id;
+    Style *     style;
+    size_t      styleId;
     CachedStyle cachedStyle;
 };
 
@@ -183,9 +181,9 @@ static struct {
     { "red",   (ARGB)Color::Red   },
     { "white", (ARGB)Color::White },
     { "transparent", MKARGB(0,0,0,0) },
-    { "sepia", MKARGB(0xff, 0xfb, 0xf0, 0xd9) },
-    { "light blue", MKARGB(0xff, 0x64, 0xc7, 0xef) },
-    { "light gray", MKARGB(0xff, 0xf0, 0xf0, 0xf0) },
+    { "sepia", MKRGB(0xfb, 0xf0, 0xd9) },
+    { "light blue", MKRGB(0x64, 0xc7, 0xef) },
+    { "light gray", MKRGB(0xf0, 0xf0, 0xf0) },
 };
 
 static bool GetKnownCssColor(const char *name, ARGB& colOut)
@@ -482,6 +480,7 @@ size_t Style::GetIdentity() const
         identity += curr->gen;
         curr = curr->inheritsFrom;
     }
+    identity += gStyleDefault->gen;
     return identity;
 }
 
@@ -589,22 +588,15 @@ static size_t GetStyleId(Style *style) {
 // If a given style doesn't exist, we add it to the cache.
 // If it exists but it was modified or gStyleDefault was modified, we update the cache.
 // If it exists and didn't change, we return cached entry.
-// TODO: we don't need StyleCacheEntry.style2 - it's always gStyleDefault. Instead we can
-// add gStyleDefault identity at the end of Style::GetIdentity() and get rid of style2 and
-// style2Id from StyleCacheEntry
 CachedStyle *CacheStyle(Style *style)
 {
     ScopedMuiCritSec muiCs;
 
-    Style *style1 = style;
-    Style *style2 = gStyleDefault;
-
     StyleCacheEntry *e;
     bool updateEntry = false;
     for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
-        if ((e->style1 == style1) && (e->style2 == style2)) {
-            if ((e->style1Id == GetStyleId(style1)) &&
-                (e->style2Id == GetStyleId(style2))) {
+        if (e->style == style) {
+            if (e->styleId == GetStyleId(style)) {
                 return &e->cachedStyle;
             }
             updateEntry = true;
@@ -613,8 +605,8 @@ CachedStyle *CacheStyle(Style *style)
     }
 
     Prop* props[PropsCount] = { 0 };
-    if (!GetAllProps(style1, props))
-        GetAllProps(style2, props);
+    if (!GetAllProps(style, props))
+        GetAllProps(gStyleDefault, props);
     for (size_t i = 0; i < dimof(props); i++) {
         CrashIf(!props[i]);
     }
@@ -647,7 +639,7 @@ CachedStyle *CacheStyle(Style *style)
         return &e->cachedStyle;
     }
 
-    StyleCacheEntry newEntry = { style1, GetStyleId(style1), style2, GetStyleId(style2), s };
+    StyleCacheEntry newEntry = { style, GetStyleId(style), s };
     e = gStyleCache->Append(newEntry);
     return &e->cachedStyle;
 }
@@ -667,7 +659,7 @@ Style *StyleByName(const char *name)
     StyleCacheEntry *e;
     for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
         if (e->cachedStyle.styleName && str::Eq(e->cachedStyle.styleName, name))
-            return e->style1;
+            return e->style;
     }
     return NULL;
 }
