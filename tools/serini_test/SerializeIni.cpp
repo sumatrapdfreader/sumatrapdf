@@ -8,7 +8,7 @@
 #include "SquareTreeParser.h"
 
 #include "../../src/utils/StrSlice.cpp"
-#include "../sertxt_test/SerializeTxtParser.cpp"
+#include "../../src/utils/TxtParser.cpp"
 
 // undefine to prevent code for that format to be linked
 #define ENABLE_FORMAT_INI

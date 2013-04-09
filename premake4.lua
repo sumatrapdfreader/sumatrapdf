@@ -82,6 +82,7 @@ solution "serini"
       "src/utils/FileUtil.*",
       "src/utils/IniParser.*",
       "src/utils/Scoped.*",
+      "src/utils/SquareTreeParser.*",
       "src/utils/StrUtil.*",
       "src/utils/Vec.*",
     }

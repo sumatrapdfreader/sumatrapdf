@@ -187,7 +187,7 @@ UTILS_OBJS = \
 	$(OU)\HtmlParserLookup.obj $(OU)\ByteOrderDecoder.obj $(OU)\CmdLineParser.obj \
 	$(OU)\UITask.obj $(OU)\StrFormat.obj $(OU)\Dict.obj $(OU)\BaseUtil.obj \
 	$(OU)\CssParser.obj $(OU)\FileWatcher.obj $(OU)\IniParser.obj \
-	$(OU)\StrSlice.obj $(OU)\TxtParser.obj
+	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SquareTreeParser.obj
 
 !if "$(CFG)"=="dbg"
 UTILS_OBJS = $(UTILS_OBJS) $(OU)\Experiments.obj

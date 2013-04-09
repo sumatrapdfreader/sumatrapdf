@@ -348,6 +348,9 @@
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\SquareTreeParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\StrFormat.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1113,6 +1116,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\SimpleLog.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\SquareTreeParser.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\StrFormat.h">

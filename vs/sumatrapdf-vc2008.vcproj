@@ -203,6 +203,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\SquareTreeParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\SquareTreeParser.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\TgaReader.cpp"
 					>
 				</File>
@@ -372,6 +380,14 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\StrSlice.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\TxtParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\TxtParser.h"
 					>
 				</File>
 				<File
@@ -639,14 +655,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\utils\TxtParser.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\utils\TxtParser.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"

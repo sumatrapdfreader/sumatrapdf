@@ -181,6 +181,7 @@
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp" />
+    <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
     <ClCompile Include="..\src\utils\StrFormat_ut.cpp" />
     <ClCompile Include="..\src\utils\StrSlice.cpp" />
@@ -438,6 +439,7 @@
     <ClInclude Include="..\src\utils\Scoped.h" />
     <ClInclude Include="..\src\utils\Sigslot.h" />
     <ClInclude Include="..\src\utils\SimpleLog.h" />
+    <ClInclude Include="..\src\utils\SquareTreeParser.h" />
     <ClInclude Include="..\src\utils\StrFormat.h" />
     <ClInclude Include="..\src\utils\StrHash.h" />
     <ClInclude Include="..\src\utils\StrSlice.h" />
