@@ -34,8 +34,8 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
         } else if (TYPE_ARRAY == type) {
             Vec<uint8_t*> **vecPtr = (Vec<uint8_t*> **)data;
             Vec<uint8_t*> *vec = *vecPtr;
-            for (size_t i = 0; i < vec->Count(); i++) {
-                FreeStruct(vec->At(i), GetStructDef(fieldDef));
+            for (size_t j = 0; j < vec->Count(); j++) {
+                FreeStruct(vec->At(j), GetStructDef(fieldDef));
             }
             delete vec;
         } else if ((TYPE_STR == type) || (TYPE_WSTR == type)) {
@@ -662,8 +662,8 @@ static void SerializeField(EncodeState& es, const char *fieldName, const FieldMe
     } else if (TYPE_WSTR == type) {
         WCHAR *s = (WCHAR*)ReadStructPtr(data);
         if (s) {
-            ScopedMem<char> val(str::conv::ToUtf8(s));
-            AppendKeyVal(es, fieldName, val);
+            ScopedMem<char> val2(str::conv::ToUtf8(s));
+            AppendKeyVal(es, fieldName, val2);
         }
     } else if (TYPE_STRUCT_PTR == type) {
         AppendNest(res, es.nest);
