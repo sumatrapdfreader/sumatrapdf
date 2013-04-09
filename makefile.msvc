@@ -74,46 +74,28 @@ CFLAGS = $(CFLAGS) /wd6211
 CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
-# TODO: can't do it yet, too many warnings
 # bump warnings level to max
-# WARNING_CFLAGS = $(WARNING_CFLAGS) /W4
-
+CFLAGS_WITH_WARNINGS = $(CFLAGS: /W3 = /W4 )
 # warnings unlikely to be turned on due to false positives from using CrashIf()
 # and various logging functions:
 # 4100 : unreferenced param
-# 4189 : variable initialized but not referenced
 # 4127 : conditional expression is constant
+# 4189 : variable initialized but not referenced
+CFLAGS_WITH_WARNINGS = $(CFLAGS_WITH_WARNINGS) /wd4100 /wd4127 /wd4189
+# warnings that might not make sense to fix:
+# 4428 : universal-character-name encountered in source (prevents using "\u202A" etc.)
+CFLAGS_WITH_WARNINGS = $(CFLAGS_WITH_WARNINGS) /wd4428
 
-# those are warnings that are selected with /W4
-# 4428 : universal-character-name encountered in source
-
-# Addittional warnings that we make part of /W3 set:
-# 4244 : conversion from 'type x' to 'type y', possible loss of data
-# 4131 : uses old-style declarator
-# 4701 : potentially uninitialized local variable 'x' used
-# 4706 : assignement in conditional
-WARNING_CFLAGS = $(WARNING_CFLAGS) /w34701 /w34706 /w34131 /w34244
-# 4480 : non-standard extension: specify underlying type for enum
-# 4505 : unreferenced local function
-# 4213 : non-standard extension: cast on l-value
-# 4239 : non-standard extension: convert from Foo to Foo&
-# 4238 : non-standard extension: class rvalue used as lvalue
-WARNING_CFLAGS = $(WARNING_CFLAGS) /w34480 /w34505 /w34213 /w34239 /w34238
-# 4245 : arg conversion signed/unsigned mismatch
-# 4512 : assignment operator could not be generated
-# 4389 : signed/unsigned mismatch
-WARNING_CFLAGS = $(WARNING_CFLAGS) /w34245 /w34512 /w34389
-
-SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) $(WARNING_CFLAGS) \
+SUMATRA_CFLAGS = $(CFLAGS_WITH_WARNINGS) $(EXTCFLAGS) \
 	/I$(SRCDIR) /I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
 	/I$(MUPDF_DIR)\xps /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
 	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src \
 	/I$(EXTDIR)/lzma/C
 
-INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) $(WARNING_CFLAGS) \
+INSTALLER_CFLAGS = $(CFLAGS_WITH_WARNINGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(EXTDIR)/lzma/C
 
-UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) $(WARNING_CFLAGS) \
+UNINSTALLER_CFLAGS = $(CFLAGS_WITH_WARNINGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /D "BUILD_UNINSTALLER"
 
 RC_FLAGS = $(EXTCFLAGS)
@@ -166,7 +148,7 @@ MEMTRACE_CFLAGS = $(SUMATRA_CFLAGS)
 
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(ODLL)\npPdfViewer.res
-BROWSER_PLUGIN_CFLAGS = $(CFLAGS) $(WARNING_CFLAGS) /I$(SRCDIR)/utils
+BROWSER_PLUGIN_CFLAGS = $(CFLAGS_WITH_WARNINGS) /I$(SRCDIR)/utils
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 

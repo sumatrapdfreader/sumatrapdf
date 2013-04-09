@@ -104,21 +104,20 @@ void ListInsert(T** root, T* el)
 }
 
 template <typename T>
-T* ListRemove(T** root, T* el)
+bool ListRemove(T** root, T* el)
 {
     T **currPtr = root;
     T *curr;
     for (;;) {
         curr = *currPtr;
         if (!curr)
-            return NULL;
+            return false;
         if (curr == el)
             break;
         currPtr = &(curr->next);
     }
-    T *removed = curr;
-    *currPtr = removed->next;
-    return removed;
+    *currPtr = el->next;
+    return true;
 }
 
 static void StartMonitoringDirForChanges(WatchedDir *wd);
@@ -334,7 +333,6 @@ static DWORD WINAPI FileWatcherThread(void *param)
             CrashIf(true);
         }
     }
-    return 0;
 }
 
 static void StartThreadIfNecessary()
@@ -471,7 +469,8 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir *wd)
     if (IsWatchedDirReferenced(wd))
         return;
 
-    WatchedDir *removed = ListRemove(&g_watchedDirs, wd);
+    bool ok = ListRemove(&g_watchedDirs, wd);
+    CrashIf(!ok);
     // memory will be eventually freed in ReadDirectoryChangesNotification()
     QueueUserAPC(StopMonitoringDirAPC, g_threadHandle, (ULONG_PTR)wd);
 }
@@ -479,10 +478,11 @@ static void RemoveWatchedDirIfNotReferenced(WatchedDir *wd)
 static void RemoveWatchedFile(WatchedFile *wf)
 {
     WatchedDir *wd = wf->watchedDir;
-    WatchedFile *removed = ListRemove(&g_watchedFiles, wf);
+    bool ok = ListRemove(&g_watchedFiles, wf);
+    CrashIf(!ok);
 
-    bool needsAwakeThread = removed->isManualCheck;
-    DeleteWatchedFile(removed);
+    bool needsAwakeThread = wf->isManualCheck;
+    DeleteWatchedFile(wf);
     if (needsAwakeThread)
         AwakeWatcherThread();
     else

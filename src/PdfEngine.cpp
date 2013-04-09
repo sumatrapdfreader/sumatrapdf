@@ -12,6 +12,9 @@ extern "C" {
 #include "WinUtil.h"
 #include "ZipUtil.h"
 
+// interaction between '_setjmp' and C++ object destruction is non-portable
+#pragma warning(disable: 4611)
+
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
 // so that their content can be loaded on demand in order to preserve memory
@@ -73,13 +76,7 @@ inline float fz_calc_overlap(fz_rect r1, fz_rect r2)
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
 
-class RenderedFitzBitmap : public RenderedBitmap {
-public:
-    RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap);
-};
-
-RenderedFitzBitmap::RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap) :
-    RenderedBitmap(NULL, SizeI(pixmap->w, pixmap->h))
+static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap)
 {
     int paletteSize = 0;
     bool hasPalette = false;
@@ -94,7 +91,7 @@ RenderedFitzBitmap::RenderedFitzBitmap(fz_context *ctx, fz_pixmap *pixmap) :
     unsigned char *bmpData = (unsigned char *)calloc(rows8, h);
     if (!bmpData) {
         free(bmi);
-        return;
+        return NULL;
     }
     fz_pixmap *bgrPixmap = NULL;
     if (bmpData && pixmap->n == 4 &&
@@ -146,7 +143,7 @@ ProducingPaletteDone:
         }
         fz_catch(ctx) {
             free(bmi);
-            return;
+            return NULL;
         }
     }
     AssertCrash(hasPalette || bgrPixmap);
@@ -161,7 +158,7 @@ ProducingPaletteDone:
     bmi->bmiHeader.biClrUsed = hasPalette ? paletteSize : 0;
 
     HDC hDC = GetDC(NULL);
-    hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT,
+    HBITMAP hbmp = CreateDIBitmap(hDC, &bmi->bmiHeader, CBM_INIT,
         hasPalette ? bmpData : bgrPixmap->samples, bmi, DIB_RGB_COLORS);
     ReleaseDC(NULL, hDC);
 
@@ -170,6 +167,10 @@ ProducingPaletteDone:
     else
         fz_drop_pixmap(ctx, bgrPixmap);
     free(bmi);
+
+    if (!hbmp)
+        return NULL;
+    return new RenderedBitmap(hbmp, SizeI(pixmap->w, pixmap->h));
 }
 
 fz_stream *fz_open_file2(fz_context *ctx, const WCHAR *filePath)
@@ -2182,7 +2183,7 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 
     RenderedBitmap *bitmap = NULL;
     if (ok)
-        bitmap = new RenderedFitzBitmap(ctx, image);
+        bitmap = new_rendered_fz_pixmap(ctx, image);
     fz_drop_pixmap(ctx, image);
     return bitmap;
 }
@@ -2373,7 +2374,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     fz_catch(ctx) {
         return NULL;
     }
-    RenderedFitzBitmap *bmp = new RenderedFitzBitmap(ctx, pixmap);
+    RenderedBitmap *bmp = new_rendered_fz_pixmap(ctx, pixmap);
     fz_drop_pixmap(ctx, pixmap);
 
     return bmp;
@@ -3944,7 +3945,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 
     RenderedBitmap *bitmap = NULL;
     if (ok)
-        bitmap = new RenderedFitzBitmap(ctx, image);
+        bitmap = new_rendered_fz_pixmap(ctx, image);
     fz_drop_pixmap(ctx, image);
     return bitmap;
 }
@@ -4192,7 +4193,7 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     fz_catch(ctx) {
         return NULL;
     }
-    RenderedFitzBitmap *bmp = new RenderedFitzBitmap(ctx, pixmap);
+    RenderedBitmap *bmp = new_rendered_fz_pixmap(ctx, pixmap);
     fz_drop_pixmap(ctx, pixmap);
 
     return bmp;

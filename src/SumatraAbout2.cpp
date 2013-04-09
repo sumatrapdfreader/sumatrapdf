@@ -132,8 +132,6 @@ static AboutLayoutInfoEl gAboutLayoutInfo[] = {
 #endif
 };
 
-static HCURSOR gCursorHand = NULL;
-
 #define COL1 RGB(196, 64, 50)
 #define COL2 RGB(227, 107, 35)
 #define COL3 RGB(93,  160, 40)
@@ -213,8 +211,6 @@ static ButtonUrlHandler *gButtonUrlHandler = NULL;
 
 static void CreateAboutMuiWindow(HWND hwnd)
 {
-    if (!gCursorHand)
-        gCursorHand  = LoadCursor(NULL, IDC_HAND);
     if (!gButtonUrlHandler)
         gButtonUrlHandler = new ButtonUrlHandler();
 

@@ -27,7 +27,6 @@ int HtmlEntityNameToRune(const WCHAR *name, size_t nameLen)
     char asciiName[MAX_ENTITY_NAME_LEN];
     if (nameLen > MAX_ENTITY_NAME_LEN)
         return -1;
-    char *s = asciiName;
     for (size_t i = 0; i < nameLen; i++) {
         if (name[i] > 127)
             return -1;

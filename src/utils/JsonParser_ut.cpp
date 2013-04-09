@@ -8,6 +8,7 @@ struct JsonValue {
     json::DataType type;
     const char *value;
 
+    JsonValue() : path(NULL), value(NULL) { }
     JsonValue(const char *path, const char *value, json::DataType type=json::Type_String) :
         path(path), type(type), value(value) { }
 };
@@ -55,12 +56,12 @@ static void JsonTest()
         { "{\"key\":\"test\"}", JsonValue("/key", "test") },
         { "{ \"no\" : 123 }", JsonValue("/no", "123", json::Type_Number) },
         { "{ \"bool\": true }", JsonValue("/bool", "true", json::Type_Bool) },
-        { "{}", JsonValue("", NULL) },
+        { "{}", JsonValue() },
         // arrays
         { "[\"test\"]", JsonValue("[0]", "test") },
         { "[123]", JsonValue("[0]", "123", json::Type_Number) },
         { "[ null ]", JsonValue("[0]", "null", json::Type_Null) },
-        { "[]", JsonValue("", NULL) },
+        { "[]", JsonValue() },
         // combination
         { "{\"key\":[{\"name\":-987}]}", JsonValue("/key[0]/name", "-987", json::Type_Number) },
     };

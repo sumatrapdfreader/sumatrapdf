@@ -3085,13 +3085,10 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
 
 HWND GetSumatraWindowHwnd(const SumatraWindow& win)
 {
-    if (win.AsWindowInfo()) {
+    if (win.AsWindowInfo())
         return win.AsWindowInfo()->hwndFrame;
-    } else {
-        CrashIf(!win.AsEbookWindow());
-        return win.AsEbookWindow()->hwndFrame;
-    }
-    return NULL;
+    CrashIf(!win.AsEbookWindow());
+    return win.AsEbookWindow()->hwndFrame;
 }
 
 void OnMenuOpen(const SumatraWindow& win)

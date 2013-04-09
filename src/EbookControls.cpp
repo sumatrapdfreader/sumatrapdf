@@ -270,9 +270,9 @@ static Style* StyleFromStruct(TxtNode* def)
     Style *style = new Style();
     size_t n = def->children->Count();
     for (size_t i = 0; i < n; i++) {
-        TxtNode *n = def->children->At(i);
-        CrashIf(!n->IsText());
-        AddStyleProp(style, n);
+        TxtNode *node = def->children->At(i);
+        CrashIf(!node->IsText());
+        AddStyleProp(style, node);
     }
     CacheStyle(style);
     return style;
@@ -328,9 +328,9 @@ static ButtonVector* ButtonVectorFromStruct(TxtNode* def)
     ButtonVector *b = new ButtonVector();
     size_t n = def->children->Count();
     for (size_t i = 0; i < n; i++) {
-        TxtNode *n = def->children->At(i);
-        CrashIf(!n->IsText());
-        AddButtonVectorProp(b, n);
+        TxtNode *node = def->children->At(i);
+        CrashIf(!node->IsText());
+        AddButtonVectorProp(b, node);
     }
     return b;
 }

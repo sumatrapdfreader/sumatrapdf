@@ -596,8 +596,6 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data)
             req.dm->RepaintDisplay();
         }
     }
-
-    return 0;
 }
 
 // TODO: conceptually, RenderCache is not the right place for code that paints
