@@ -1,6 +1,6 @@
 diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
 --- CHMLib.orig\src\chm_lib.c	Thu Jul 02 23:34:54 2009
-+++ CHMLib\src\chm_lib.c	Mon Oct 01 12:24:12 2012
++++ CHMLib\src\chm_lib.c	Tue Apr 09 20:13:03 2013
 @@ -92,11 +92,11 @@
  #ifdef WIN32
  #define CHM_ACQUIRE_LOCK(a) do {                        \
@@ -175,6 +175,19 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
  
      /* now, scan progressively */
      while (cur < end)
+@@ -1406,11 +1435,11 @@
+         for (i = blockAlign; i > 0; i--)
+         {
+             UInt32 curBlockIdx = block - i;
+ 
+             /* check if we most recently decompressed the previous block */
+-            if (h->lzx_last_block != curBlockIdx)
++            if (h->lzx_last_block != (int)curBlockIdx)
+             {
+                 if ((curBlockIdx % h->reset_blkcount) == 0)
+                 {
+ #ifdef CHM_DEBUG
+                     fprintf(stderr, "***RESET (1)***\n");
 @@ -1543,10 +1572,16 @@
          h->lzx_state = LZXinit(window_size);
      }

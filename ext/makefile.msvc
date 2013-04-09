@@ -11,34 +11,35 @@ ODV= $(O)\djvu
 OC = $(O)\chmlib
 OLZ= $(O)\lzma
 
-SYNCTEX_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/synctex /I$(ZLIB_DIR) /wd4244 /wd4996
+SYNCTEX_CFLAGS = $(CFLAGS) /TC /I$(EXTDIR)/synctex /I$(ZLIB_DIR) /wd4244 /wd4702 /wd4706 /wd4996
 !if "$(PLATFORM)"=="X64"
 SYNCTEX_CFLAGS = $(SYNCTEX_CFLAGS) /wd4267
 !endif
 
-BZIP2_CFLAGS = $(CFLAGSOPT) /TC /D "BZ_NO_STDIO" /D "BZ_DEBUG=0"
-!if "$(PLATFORM)"=="X64"
-BZIP2_CFLAGS = $(BZIP2_CFLAGS) /wd4244
-!endif
+BZIP2_CFLAGS = $(CFLAGSOPT) /TC /D "BZ_NO_STDIO" /D "BZ_DEBUG=0" /wd4244 /wd4701
 
 MINIZIP_CFLAGS = $(CFLAGS) /TC /D "HAVE_BZIP2" /I$(ZLIB_DIR) /I$(EXTDIR)/bzip2
 MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /D "UNICODE" /D "_UNICODE" /D "INC_CUSTOM_ALLOC=\"unzalloc.h\"" /D "NOCRYPT"
+MINIZIP_CFLAGS = $(MINIZIP_CFLAGS) /wd4131 /wd4245
 
-UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL" /D "SILENT" /wd4996
+UNRAR_CFLAGS = $(CFLAGSOPT) /D "UNRAR" /D "RARDLL" /D "SILENT"
+UNRAR_CFLAGS = $(UNRAR_CFLAGS) /wd4201 /wd4244 /wd4310 /wd4389 /wd4701 /wd4709 /wd4996
 # a hack to enable C++ exception handling for UnRAR (without triggering a warning)
 UNRAR_CFLAGS = $(UNRAR_CFLAGS:/EHs-c-=/EHsc)
 
-DJVU_CFLAGS = $(CFLAGSOPT) /D "NEED_JPEG_DECODER" /I$(JPEG_TURBO_DIR) /wd4996
+DJVU_CFLAGS = $(CFLAGSOPT) /D "NEED_JPEG_DECODER" /I$(JPEG_TURBO_DIR)
+DJVU_CFLAGS = $(DJVU_CFLAGS) /wd4189 /wd4244 /wd4512 /wd4611 /wd4701 /wd4702 /wd4706 /wd4996
 DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=0" /D "DDJVUAPI=/**/" /D "MINILISPAPI=/**/"
 # prevent libdjvu from changing the C locale from underneath anybody else
 DJVU_CFLAGS = $(DJVU_CFLAGS) /D "DO_CHANGELOCALE=0"
 # a hack to enable C++ exception handling for libdjvu (without triggering a warning)
 DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
 !if "$(PLATFORM)"=="X64"
-DJVU_CFLAGS = $(DJVU_CFLAGS) /wd4244 /wd4267
+DJVU_CFLAGS = $(DJVU_CFLAGS) /wd4267
 !endif
 
-CHMLIB_CFLAGS = $(CFLAGS) /TC /D "CHM_MT" /wd4244 /wd4018 /wd4996
+CHMLIB_CFLAGS = $(CFLAGS) /TC /D "CHM_MT"
+CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /wd4018 /wd4057 /wd4189 /wd4244 /wd4295 /wd4701 /wd4706 /wd4996
 # ChmLib also needs PPC_BSTR defined for UNICODE builds
 CHMLIB_CFLAGS = $(CHMLIB_CFLAGS) /D "UNICODE" /D "_UNICODE" /D "PPC_BSTR"
 
@@ -137,4 +138,3 @@ $(OE): force
 
 {$(EXTDIR)\lzma\C}.c{$(OLZ)}.obj::
 	$(CC) $(LZMA_CFLAGS) /Fo$(OLZ)\ /Fd$(O)\vc80.pdb $<
-

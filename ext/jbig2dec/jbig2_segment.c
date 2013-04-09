@@ -244,8 +244,6 @@ int jbig2_parse_extension_segment(Jbig2Ctx *ctx, Jbig2Segment *segment,
                     "unhandled extension segment");
             }
     }
-
-    return 0;
 }
 
 /* general segment parsing dispatch */

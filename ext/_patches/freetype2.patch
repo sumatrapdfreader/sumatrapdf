@@ -1,6 +1,6 @@
 diff -rPu5 freetype2.orig\include\freetype\config\ftstdlib.h freetype2\include\freetype\config\ftstdlib.h
---- freetype2.orig\include\freetype\config\ftstdlib.h	Sat Sep 29 08:42:15 2012
-+++ freetype2\include\freetype\config\ftstdlib.h	Fri Mar 08 18:17:33 2013
+--- freetype2.orig\include\freetype\config\ftstdlib.h	Sat Sep 29 09:42:15 2012
++++ freetype2\include\freetype\config\ftstdlib.h	Fri Mar 08 19:17:33 2013
 @@ -106,10 +106,15 @@
  #define ft_fread    fread
  #define ft_fseek    fseek
@@ -18,8 +18,8 @@ diff -rPu5 freetype2.orig\include\freetype\config\ftstdlib.h freetype2\include\f
    /*                             sorting                                */
    /*                                                                    */
 diff -rPu5 freetype2.orig\include\freetype\ftsystem.h freetype2\include\freetype\ftsystem.h
---- freetype2.orig\include\freetype\ftsystem.h	Sat Jun 26 08:18:37 2010
-+++ freetype2\include\freetype\ftsystem.h	Fri Mar 08 18:32:51 2013
+--- freetype2.orig\include\freetype\ftsystem.h	Sat Jun 26 09:18:37 2010
++++ freetype2\include\freetype\ftsystem.h	Fri Mar 08 19:32:51 2013
 @@ -343,5 +343,10 @@
  
  #endif /* __FTSYSTEM_H__ */
@@ -32,8 +32,8 @@ diff -rPu5 freetype2.orig\include\freetype\ftsystem.h freetype2\include\freetype
 +FT_FILE* ft_fopen_win32(const char *fname, const char *mode);
 +#endif
 diff -rPu5 freetype2.orig\src\base\ftoutln.c freetype2\src\base\ftoutln.c
---- freetype2.orig\src\base\ftoutln.c	Sat Nov 17 11:35:48 2012
-+++ freetype2\src\base\ftoutln.c	Tue Dec 25 15:30:07 2012
+--- freetype2.orig\src\base\ftoutln.c	Sat Nov 17 12:35:48 2012
++++ freetype2\src\base\ftoutln.c	Tue Dec 25 16:30:07 2012
 @@ -302,10 +302,17 @@
      if ( !anoutline || !memory )
        return FT_Err_Invalid_Argument;
@@ -53,8 +53,8 @@ diff -rPu5 freetype2.orig\src\base\ftoutln.c freetype2\src\base\ftoutln.c
        goto Fail;
  
 diff -rPu5 freetype2.orig\src\base\ftsystem.c freetype2\src\base\ftsystem.c
---- freetype2.orig\src\base\ftsystem.c	Wed Jul 20 05:46:44 2011
-+++ freetype2\src\base\ftsystem.c	Fri Mar 08 18:33:49 2013
+--- freetype2.orig\src\base\ftsystem.c	Wed Jul 20 06:46:44 2011
++++ freetype2\src\base\ftsystem.c	Fri Mar 08 19:33:49 2013
 @@ -316,5 +316,27 @@
      ft_sfree( memory );
    }

@@ -74,28 +74,16 @@ CFLAGS = $(CFLAGS) /wd6211
 CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
-# bump warnings level to max
-CFLAGS_WITH_WARNINGS = $(CFLAGS: /W3 = /W4 )
-# warnings unlikely to be turned on due to false positives from using CrashIf()
-# and various logging functions:
-# 4100 : unreferenced param
-# 4127 : conditional expression is constant
-# 4189 : variable initialized but not referenced
-CFLAGS_WITH_WARNINGS = $(CFLAGS_WITH_WARNINGS) /wd4100 /wd4127 /wd4189
-# warnings that might not make sense to fix:
-# 4428 : universal-character-name encountered in source (prevents using "\u202A" etc.)
-CFLAGS_WITH_WARNINGS = $(CFLAGS_WITH_WARNINGS) /wd4428
-
-SUMATRA_CFLAGS = $(CFLAGS_WITH_WARNINGS) $(EXTCFLAGS) \
+SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR) /I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
 	/I$(MUPDF_DIR)\xps /I$(EXTDIR)/synctex /I$(ZLIB_DIR) \
 	/I$(ZLIB_DIR)/minizip /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src \
 	/I$(EXTDIR)/lzma/C
 
-INSTALLER_CFLAGS = $(CFLAGS_WITH_WARNINGS) $(EXTCFLAGS) \
+INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(EXTDIR)/lzma/C
 
-UNINSTALLER_CFLAGS = $(CFLAGS_WITH_WARNINGS) $(EXTCFLAGS) \
+UNINSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /D "BUILD_UNINSTALLER"
 
 RC_FLAGS = $(EXTCFLAGS)
@@ -148,7 +136,7 @@ MEMTRACE_CFLAGS = $(SUMATRA_CFLAGS)
 
 BROWSER_PLUGIN = $(O)\npPdfViewer.dll
 BROWSER_PLUGIN_RES = $(ODLL)\npPdfViewer.res
-BROWSER_PLUGIN_CFLAGS = $(CFLAGS_WITH_WARNINGS) /I$(SRCDIR)/utils
+BROWSER_PLUGIN_CFLAGS = $(CFLAGS) /I$(SRCDIR)/utils
 
 ENGINEDUMP_APP = $(O)\EngineDump.exe
 

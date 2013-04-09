@@ -1452,7 +1452,7 @@ static int isbinarystream(fz_buffer *buf)
 
 static fz_buffer *hexbuf(fz_context *ctx, unsigned char *p, int n)
 {
-	static const char hex[16] = "0123456789abcdef";
+	static const char hex[17] = "0123456789abcdef";
 	fz_buffer *buf;
 	int x = 0;
 
@@ -2460,14 +2460,14 @@ pdf_file_update_end(pdf_file_update_list *list, pdf_obj *prev_trailer, int prev_
 	{
 		trailer = pdf_new_dict(ctx, 10);
 		pdf_dict_puts_drop(trailer, "Prev", pdf_new_int(ctx, prev_xref_offset));
-		if ((obj = pdf_dict_gets(prev_trailer, "Root")))
+		if ((obj = pdf_dict_gets(prev_trailer, "Root")) != NULL)
 			pdf_dict_puts(trailer, "Root", obj);
-		if ((obj = pdf_dict_gets(prev_trailer, "Info")))
+		if ((obj = pdf_dict_gets(prev_trailer, "Info")) != NULL)
 			pdf_dict_puts(trailer, "Info", obj);
-		if ((obj = pdf_dict_gets(prev_trailer, "Encrypt")))
+		if ((obj = pdf_dict_gets(prev_trailer, "Encrypt")) != NULL)
 			pdf_dict_puts(trailer, "Encrypt", obj);
 		// TODO: update the second entry in the optional /ID array
-		if ((obj = pdf_dict_gets(prev_trailer, "ID")))
+		if ((obj = pdf_dict_gets(prev_trailer, "ID")) != NULL)
 			pdf_dict_puts(trailer, "ID", obj);
 	}
 	fz_catch(ctx)

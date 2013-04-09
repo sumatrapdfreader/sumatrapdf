@@ -1437,7 +1437,7 @@ static Int64 _chm_decompress_block(struct chmFile *h,
             UInt32 curBlockIdx = block - i;
 
             /* check if we most recently decompressed the previous block */
-            if (h->lzx_last_block != curBlockIdx)
+            if (h->lzx_last_block != (int)curBlockIdx)
             {
                 if ((curBlockIdx % h->reset_blkcount) == 0)
                 {

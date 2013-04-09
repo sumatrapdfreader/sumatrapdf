@@ -360,8 +360,6 @@ static int pdfapp_save(pdfapp_t *app)
 			fz_write_document(app->doc, buf, &opts);
 			return 1;
 		}
-
-		return 1;
 	}
 	else
 	{

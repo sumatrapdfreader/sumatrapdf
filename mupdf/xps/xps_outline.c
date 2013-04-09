@@ -251,7 +251,7 @@ xps_open_and_parse(xps_document *doc, char *path)
 	return root;
 }
 
-static inline int iswhite(c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }
+static inline int iswhite(char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }
 
 static char *
 xps_get_core_prop(fz_context *ctx, fz_xml *item)

@@ -1,0 +1,47 @@
+diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
+--- jbig2dec.orig\jbig2.c	Sun Aug 26 13:06:26 2012
++++ jbig2dec\jbig2.c	Tue Apr 09 18:44:43 2013
+@@ -388,11 +388,10 @@
+ 	    return 0;
+ 	  return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1,
+ 		      "Garbage beyond end of file");
+ 	}
+     }
+-  return 0;
+ }
+ 
+ void
+ jbig2_ctx_free (Jbig2Ctx *ctx)
+ {
+diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
+--- jbig2dec.orig\jbig2_huffman.c	Thu Feb 14 14:48:09 2013
++++ jbig2dec\jbig2_huffman.c	Tue Apr 09 18:45:42 2013
+@@ -537,11 +537,11 @@
+         const size_t lines_data_bitlen = (segment->data_length - 9) * 8;    /* length in bit */
+         /* bit offset: controls bit reading */
+         size_t boffset = 0;
+         /* B.2 4) */
+         int32_t CURRANGELOW = HTLOW;
+-        int NTEMP = 0;
++        size_t NTEMP = 0;
+ 
+ #ifdef JBIG2_DEBUG
+         jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number, 
+             "DECODING USER TABLE... Flags: %d, HTOOB: %d, HTPS: %d, HTRS: %d, HTLOW: %d, HTHIGH: %d", 
+             code_table_flags, HTOOB, HTPS, HTRS, HTLOW, HTHIGH);
+diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
+--- jbig2dec.orig\jbig2_segment.c	Sun Aug 26 13:06:26 2012
++++ jbig2dec\jbig2_segment.c	Tue Apr 09 18:45:59 2013
+@@ -242,12 +242,10 @@
+             } else {
+                 return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,
+                     "unhandled extension segment");
+             }
+     }
+-
+-    return 0;
+ }
+ 
+ /* general segment parsing dispatch */
+ int jbig2_parse_segment (Jbig2Ctx *ctx, Jbig2Segment *segment,
+ 			 const uint8_t *segment_data)

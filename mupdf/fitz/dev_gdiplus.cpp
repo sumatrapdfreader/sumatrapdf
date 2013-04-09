@@ -14,6 +14,11 @@ extern "C" {
 #include FT_ADVANCES_H
 }
 
+// nonstandard extension used : class rvalue used as lvalue
+#pragma warning(disable: 4238)
+// interaction between '_setjmp' and C++ object destruction is non-portable
+#pragma warning(disable: 4611)
+
 // define the following to output intermediary rendering stages to files
 #undef DUMP_BITMAP_STEPS
 
@@ -533,7 +538,7 @@ public:
 			graphics = _setup(new Graphics(whiteBg));
 			graphics->TranslateTransform(-stack->bounds.X, -stack->bounds.Y);
 			graphics->SetClip(&Region(stack->bounds));
-			graphics->Clear(Color::White);
+			graphics->Clear((ARGB)Color::White);
 			graphics->DrawImage(stack->layer, stack->bounds, 0, 0, stack->layer->GetWidth(), stack->layer->GetHeight(), UnitPixel, &DrawImageAttributes(1.0f));
 			delete stack->layer;
 			stack->layer = whiteBg;
@@ -764,7 +769,7 @@ protected:
 	void _applyMask(Bitmap *bitmap, Bitmap *mask, bool luminosity=false) const
 	{
 		Rect bounds(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-		assert(bounds.Width == mask->GetWidth() && bounds.Height == mask->GetHeight());
+		assert(bounds.Width == (INT)mask->GetWidth() && bounds.Height == (INT)mask->GetHeight());
 		
 		BitmapData data, dataMask;
 		Status status = bitmap->LockBits(&bounds, ImageLockModeRead | ImageLockModeWrite, PixelFormat32bppARGB, &data);
@@ -873,7 +878,7 @@ protected:
 		assert(bounds.X >= 0 && bounds.Y >= 0);
 		assert(boundsBg.X == 0 && boundsBg.Y == 0);
 		assert(bounds.Width == boundsBg.Width && bounds.Height == boundsBg.Height);
-		assert(boundsBg.Width == backdrop->GetWidth() && boundsBg.Height == backdrop->GetHeight());
+		assert(boundsBg.Width == (INT)backdrop->GetWidth() && boundsBg.Height == (INT)backdrop->GetHeight());
 		
 		BitmapData data, dataBg;
 		Status status = bitmap->LockBits(&bounds, ImageLockModeRead | (modifyBackdrop ? 0 : ImageLockModeWrite), PixelFormat32bppARGB, &data);
@@ -1285,14 +1290,14 @@ static WCHAR
 ft_get_charcode(fz_font *font, fz_text_item *el)
 {
 	FT_Face face = (FT_Face)font->ft_face;
-	if (el->gid == FT_Get_Char_Index(face, el->ucs))
+	if (el->gid == (int)FT_Get_Char_Index(face, el->ucs))
 		return el->ucs;
 	
 	FT_UInt gid;
 	WCHAR ucs = FT_Get_First_Char(face, &gid), prev = ucs - 1;
 	while (gid != 0 && ucs != prev && ucs < 256)
 	{
-		if (gid == el->gid)
+		if ((int)gid == el->gid)
 			return ucs;
 		ucs = FT_Get_Next_Char(face, (prev = ucs), &gid);
 	}

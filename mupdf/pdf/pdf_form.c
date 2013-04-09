@@ -1439,7 +1439,7 @@ static pdf_obj *find_field(pdf_obj *dict, char *name, int len)
 
 		field = pdf_array_get(dict, i);
 		part = pdf_to_str_buf(pdf_dict_gets(field, "T"));
-		if (strlen(part) == len && !memcmp(part, name, len))
+		if (strlen(part) == (size_t)len && !memcmp(part, name, len))
 			return field;
 	}
 

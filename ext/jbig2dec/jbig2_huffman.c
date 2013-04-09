@@ -539,7 +539,7 @@ jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data)
         size_t boffset = 0;
         /* B.2 4) */
         int32_t CURRANGELOW = HTLOW;
-        int NTEMP = 0;
+        size_t NTEMP = 0;
 
 #ifdef JBIG2_DEBUG
         jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number, 

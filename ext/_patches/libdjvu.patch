@@ -1,6 +1,6 @@
 diff -rPu5 libdjvu.orig\ddjvuapi.cpp libdjvu\ddjvuapi.cpp
---- libdjvu.orig\ddjvuapi.cpp	Tue May 08 03:56:53 2012
-+++ libdjvu\ddjvuapi.cpp	Sun Dec 16 15:00:23 2012
+--- libdjvu.orig\ddjvuapi.cpp	Tue May 08 04:56:53 2012
++++ libdjvu\ddjvuapi.cpp	Sun Dec 16 16:00:23 2012
 @@ -3841,10 +3841,12 @@
              {
                if (file->get_flags() & DjVuFile::STOPPED)
@@ -14,9 +14,57 @@ diff -rPu5 libdjvu.orig\ddjvuapi.cpp libdjvu\ddjvuapi.cpp
      }
    // Access annotation data
    return get_bytestream_anno(file->get_merged_anno());
+diff -rPu5 libdjvu.orig\djvu_all.cpp libdjvu\djvu_all.cpp
+--- libdjvu.orig\djvu_all.cpp	Thu Jan 01 01:00:00 1970
++++ libdjvu\djvu_all.cpp	Tue Mar 19 22:09:12 2013
+@@ -0,0 +1,44 @@
++#include "Arrays.cpp"
++#include "atomic.cpp"
++#include "BSByteStream.cpp"
++#include "BSEncodeByteStream.cpp"
++#include "ByteStream.cpp"
++#include "DataPool.cpp"
++#include "DjVmDir0.cpp"
++#include "DjVmDoc.cpp"
++#include "DjVmNav.cpp"
++#include "DjVuAnno.cpp"
++#include "DjVuDumpHelper.cpp"
++#include "DjVuErrorList.cpp"
++#include "DjVuFile.cpp"
++#include "DjVuFileCache.cpp"
++#include "DjVuGlobal.cpp"
++#include "DjVuGlobalMemory.cpp"
++#include "DjVuImage.cpp"
++#include "DjVuInfo.cpp"
++#include "DjVuMessage.cpp"
++#include "DjVuNavDir.cpp"
++#include "DjVuPalette.cpp"
++#include "DjVuPort.cpp"
++#include "DjVuText.cpp"
++#include "GBitmap.cpp"
++#include "GContainer.cpp"
++#include "GException.cpp"
++#include "GIFFManager.cpp"
++#include "GOS.cpp"
++#include "GRect.cpp"
++#include "GSmartPointer.cpp"
++#include "GString.cpp"
++#include "GThreads.cpp"
++#include "GUnicode.cpp"
++#include "IFFByteStream.cpp"
++#include "JB2EncodeCodec.cpp"
++#include "DjVmDir.cpp"
++#include "MMRDecoder.cpp"
++#include "MMX.cpp"
++#include "UnicodeByteStream.cpp"
++#include "XMLTags.cpp"
++#include "ZPCodec.cpp"
++#include "ddjvuapi.cpp"
++#include "debug.cpp"
++
 diff -rPu5 libdjvu.orig\DjVuGlobal.h libdjvu\DjVuGlobal.h
---- libdjvu.orig\DjVuGlobal.h	Tue May 08 03:56:53 2012
-+++ libdjvu\DjVuGlobal.h	Thu Dec 27 13:30:53 2012
+--- libdjvu.orig\DjVuGlobal.h	Tue May 08 04:56:53 2012
++++ libdjvu\DjVuGlobal.h	Thu Dec 27 14:30:53 2012
 @@ -70,11 +70,12 @@
  # include <new>
  #else
@@ -32,8 +80,8 @@ diff -rPu5 libdjvu.orig\DjVuGlobal.h libdjvu\DjVuGlobal.h
  #  define DJVUAPI __declspec(dllimport)
  # endif
 diff -rPu5 libdjvu.orig\GException.cpp libdjvu\GException.cpp
---- libdjvu.orig\GException.cpp	Tue May 08 03:56:53 2012
-+++ libdjvu\GException.cpp	Thu Dec 27 13:37:42 2012
+--- libdjvu.orig\GException.cpp	Tue May 08 04:56:53 2012
++++ libdjvu\GException.cpp	Thu Dec 27 14:37:42 2012
 @@ -251,10 +251,12 @@
  
  
@@ -60,8 +108,8 @@ diff -rPu5 libdjvu.orig\GException.cpp libdjvu\GException.cpp
  }
  # ifndef NOT_USING_DJVU_NAMESPACE
 diff -rPu5 libdjvu.orig\GThreads.h libdjvu\GThreads.h
---- libdjvu.orig\GThreads.h	Tue May 08 03:56:53 2012
-+++ libdjvu\GThreads.h	Sat Aug 18 19:17:23 2012
+--- libdjvu.orig\GThreads.h	Tue May 08 04:56:53 2012
++++ libdjvu\GThreads.h	Sat Aug 18 20:17:23 2012
 @@ -105,10 +105,13 @@
  #include "GException.h"
  
@@ -77,8 +125,8 @@ diff -rPu5 libdjvu.orig\GThreads.h libdjvu\GThreads.h
  #if defined(WIN32)
  #define THREADMODEL WINTHREADS
 diff -rPu5 libdjvu.orig\GURL.cpp libdjvu\GURL.cpp
---- libdjvu.orig\GURL.cpp	Tue May 08 03:56:53 2012
-+++ libdjvu\GURL.cpp	Sun Dec 16 15:00:23 2012
+--- libdjvu.orig\GURL.cpp	Tue May 08 04:56:53 2012
++++ libdjvu\GURL.cpp	Sun Dec 16 16:00:23 2012
 @@ -482,11 +482,11 @@
  GURL::protocol(const GUTF8String& url)
  {
@@ -93,8 +141,8 @@ diff -rPu5 libdjvu.orig\GURL.cpp libdjvu\GURL.cpp
    return GUTF8String();
  }
 diff -rPu5 libdjvu.orig\miniexp.cpp libdjvu\miniexp.cpp
---- libdjvu.orig\miniexp.cpp	Tue May 08 03:56:53 2012
-+++ libdjvu\miniexp.cpp	Sat Aug 18 19:13:23 2012
+--- libdjvu.orig\miniexp.cpp	Tue May 08 04:56:53 2012
++++ libdjvu\miniexp.cpp	Sat Aug 18 20:13:23 2012
 @@ -899,11 +899,12 @@
  }
  
@@ -110,8 +158,8 @@ diff -rPu5 libdjvu.orig\miniexp.cpp libdjvu\miniexp.cpp
  miniexp_to_str(miniexp_t p)
  {
 diff -rPu5 libdjvu.orig\miniexp.h libdjvu\miniexp.h
---- libdjvu.orig\miniexp.h	Tue May 08 03:56:53 2012
-+++ libdjvu\miniexp.h	Sat Aug 18 19:14:08 2012
+--- libdjvu.orig\miniexp.h	Tue May 08 04:56:53 2012
++++ libdjvu\miniexp.h	Sat Aug 18 20:14:08 2012
 @@ -679,15 +679,16 @@
    public: static const miniexp_t classname; \
            virtual miniexp_t classof() const; \

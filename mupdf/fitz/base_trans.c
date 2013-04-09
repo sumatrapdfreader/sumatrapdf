@@ -161,5 +161,4 @@ int fz_generate_transition(fz_pixmap *tpix, fz_pixmap *opix, fz_pixmap *npix, in
 		case 3: return wipe_tb(tpix, opix, npix, time);
 		}
 	}
-	return 0;
 }

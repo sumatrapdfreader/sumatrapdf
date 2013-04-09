@@ -203,7 +203,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 	HBITMAP hbmp;
 	BITMAPINFO bmi = { 0 };
 	int bmp_data_len;
-	char *bmp_data;
+	unsigned char *bmp_data;
 	int as_tga = !strstr(output, ".bmp");
 
 	fz_bound_page(doc, page, &bounds);

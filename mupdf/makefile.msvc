@@ -71,7 +71,6 @@ CFLAGSB = $(CFLAGSB) /D "WIN64" /D "_WIN64"
 # WIN32 means any Windows, not just 32-bit Windows
 CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
 
-# /W3  : bump warnings level from 1 to 3
 # /WX  : treat warnings as errors
 # /GR- : disable RTTI
 # /Zi  : enable debug information
@@ -79,10 +78,22 @@ CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
 # /Gy  : separate functions for linker
 # /GF  : enable read-only string pooling
 # /MP  : use muliple processors to speed up compilation
-CFLAGSB = $(CFLAGSB) /W3 /WX /GR- /Zi /GS /Gy /GF /MP
+CFLAGSB = $(CFLAGSB) /WX /GR- /Zi /GS /Gy /GF /MP
 
 # /EHs-c- : disable C++ exceptions (generates smaller binaries)
 CFLAGSB = $(CFLAGSB) /EHs-c-
+
+# /W4  : bump warnings level from 1 to 4
+CFLAGSB = $(CFLAGSB) /W4
+# warnings unlikely to be turned on due to false positives from using CrashIf()
+# and various logging functions:
+# 4100 : unreferenced param
+# 4127 : conditional expression is constant
+# 4189 : variable initialized but not referenced
+CFLAGSB = $(CFLAGSB) /wd4100 /wd4127 /wd4189
+# warnings that might not make sense to fix:
+# 4428 : universal-character-name encountered in source (prevents using "\u202A" etc.)
+CFLAGSB = $(CFLAGSB) /wd4428
 
 # /Ox  : maximum optimizations
 # /O2  : maximize speed
@@ -108,17 +119,19 @@ CFLAGSB = $(CFLAGSB) /MTd
 CFLAGS = $(CFLAGSB) /Od /RTCs /RTCu
 !endif
 
-ZLIB_CFLAGS = $(CFLAGSOPT) /TC /wd4996 /I$(ZLIB_DIR) /I$(ZLIB_DIR)/infback9
+ZLIB_CFLAGS = $(CFLAGSOPT) /TC /wd4131 /wd4244 /wd4996 /I$(ZLIB_DIR) /I$(ZLIB_DIR)/infback9
 
 FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include \
-	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2" /wd4996
+	/D "FT2_BUILD_LIBRARY" /D "FT_OPTION_AUTOFIT2" /wd4701 /wd4245 /wd4996
 
-JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /D "JBIG_NO_MEMENTO" /I$(JBIG2_DIR) /wd4018 /wd4996
+JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /D "JBIG_NO_MEMENTO" /I$(JBIG2_DIR)
+JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4018 /wd4244 /wd4701 /wd4996
 
-OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR) /wd4996
+OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR)
+OPENJPEG_CFLAGS = $(OPENJPEG_CFLAGS) /wd4244 /wd4701 /wd4996
 
 JPEG_TURBO_CFLAGS = $(CFLAGS) /TC /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
-JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4101 /wd4018 /wd4996
+JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4018 /wd4101 /wd4244 /wd4245 /wd4996
 !if "$(PLATFORM)"=="X64"
 JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f win64 -D__x86_64__ -DWIN64 -DMSVC
 !else
@@ -129,6 +142,7 @@ MUPDF_CFLAGS = $(CFLAGS) /TC \
 	/I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/pdf /I$(MUPDF_DIR)/xps /I$(MUPDF_DIR)/cbz /I$(MUPDF_DIR)/apps \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /I$(OPENJPEG_DIR)
+MUPDF_CFLAGS = $(MUPDF_CFLAGS) /wd4054 /wd4115 /wd4152 /wd4701 /wd4702 /wd4706
 
 !if "$(CFG)"=="dbg"
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "DEBUG"
@@ -146,9 +160,9 @@ MUPDF_CFLAGS = $(MUPDF_CFLAGS) /D "NODROIDFONT"
 # disable warning C4244: conversion from 'type1' to 'type2', possible loss of data
 #     and warning C4267: conversion from 'size_t' to 'type', possible loss of data
 FREETYPE_CFLAGS = $(FREETYPE_CFLAGS) /wd4244 /wd4267
-JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4244 /wd4267
-OPENJPEG_CFLAGS = $(OPENJPEG_CFLAGS) /wd4244 /wd4267
-JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4244 /wd4267
+JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4267
+OPENJPEG_CFLAGS = $(OPENJPEG_CFLAGS) /wd4267
+JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4267
 MUPDF_CFLAGS  = $(MUPDF_CFLAGS) /wd4267
 !endif
 

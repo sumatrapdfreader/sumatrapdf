@@ -422,7 +422,7 @@ safe_read(fz_stream *file, int offset, char *buf, int size)
 {
 	int n;
 	fz_seek(file, offset, 0);
-	n = fz_read(file, buf, size);
+	n = fz_read(file, (unsigned char *)buf, size);
 	if (n != size)
 		fz_throw(file->ctx, "safe_read: read %d, expected %d", n, size);
 }

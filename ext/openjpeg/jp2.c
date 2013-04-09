@@ -1219,7 +1219,7 @@ opj_bool opj_jp2_encode(opj_jp2_t *jp2, opj_cio_t *cio, opj_image_t *image, opj_
 	}
 
 	/* J2K encoding */
-	if(!(len_jp2c = jp2_write_jp2c( jp2, cio, image, cstr_info))){
+	if((len_jp2c = jp2_write_jp2c( jp2, cio, image, cstr_info)) == 0){
 	    opj_event_msg(jp2->cinfo, EVT_ERROR, "Failed to encode image\n");
 	    return OPJ_FALSE;
 	}

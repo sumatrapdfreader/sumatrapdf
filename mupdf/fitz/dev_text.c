@@ -168,9 +168,9 @@ push_span(fz_context *ctx, fz_text_device *tdev, fz_text_span *span, int new_lin
 
 	if (new_line)
 	{
+		/* SumatraPDF: fixup_text_page doesn't handle multiple blocks yet * /
 		float size = fz_matrix_expansion(&span->transform);
 		/* So, a new line. Part of the same block or not? */
-		/* SumatraPDF: fixup_text_page doesn't handle multiple blocks yet */
 		if (/* distance == 0 || distance > size * 1.5 || distance < -size * PARAGRAPH_DIST || */ page->len == 0)
 		{
 			/* New block */
@@ -753,7 +753,7 @@ fixup_text_span(fz_text_span *span)
 			int newC = 0;
 			if (span->text[i + 1].c != 32 || i + 2 == span->len)
 				newC = ornate_character(span, i, i + 1);
-			else if ((newC = ornate_character(span, i, i + 2)))
+			else if ((newC = ornate_character(span, i, i + 2)) != 0)
 				delete_character(span, i + 1);
 			if (newC)
 			{
@@ -931,7 +931,7 @@ fz_text_extract(fz_context *ctx, fz_text_device *dev, fz_text *text, const fz_ma
 	FT_Face face = font->ft_face;
 	fz_matrix tm = text->trm;
 	fz_matrix trm;
-	float adv;
+	float adv = -1;
 	float ascender = 1;
 	float descender = 0;
 	int multi;

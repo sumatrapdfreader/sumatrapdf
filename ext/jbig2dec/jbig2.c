@@ -390,7 +390,6 @@ jbig2_data_in (Jbig2Ctx *ctx, const unsigned char *data, size_t size)
 		      "Garbage beyond end of file");
 	}
     }
-  return 0;
 }
 
 void

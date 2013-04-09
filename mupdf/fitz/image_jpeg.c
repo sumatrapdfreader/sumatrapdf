@@ -129,11 +129,10 @@ static int extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int
 static int extract_app13_resolution(unsigned char *rbuf, int rlen, int *xres, int *yres)
 {
 	unsigned char *seg_end;
-	int data_size = -1;
 
 	if (rlen < 48 ||
 		read_value(rbuf + 2, 2, 1) != 0xFFED /* APP13 */ ||
-		rbuf[19] != 0 || strcmp(rbuf + 6, "Photoshop 3.0") != 0 ||
+		rbuf[19] != 0 || strcmp((const char *)rbuf + 6, "Photoshop 3.0") != 0 ||
 		read_value(rbuf + 4, 2, 1) > rlen - 4)
 	{
 		return 0;

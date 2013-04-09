@@ -52,7 +52,7 @@ static char filename[PATH_MAX];
 	RegCreateKeyExA(parent, name, 0, 0, 0, KEY_WRITE, 0, &ptr, 0)
 
 #define SET_KEY(parent, name, value) \
-	RegSetValueExA(parent, name, 0, REG_SZ, value, strlen(value) + 1)
+	RegSetValueExA(parent, name, 0, REG_SZ, (const BYTE *)(value), strlen(value) + 1)
 
 void install_app(char *argv0)
 {
@@ -342,7 +342,7 @@ dlogchoiceproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		/* FIXME: handle multiple select */
 		if (*cd_nvals > 0)
 		{
-			item = SendMessageA(listbox, LB_FINDSTRINGEXACT, -1, (LPARAM)cd_vals[0]);
+			item = SendMessageA(listbox, LB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cd_vals[0]);
 			if (item != LB_ERR)
 				SendMessageA(listbox, LB_SETCURSEL, item, 0);
 		}
@@ -355,7 +355,7 @@ dlogchoiceproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			*cd_nvals = 0;
 			for (i = 0; i < cd_nopts; i++)
 			{
-				item = SendMessageA(listbox, LB_FINDSTRINGEXACT, -1, (LPARAM)cd_opts[i]);
+				item = SendMessageA(listbox, LB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)cd_opts[i]);
 				sel = SendMessageA(listbox, LB_GETSEL, item, 0);
 				if (sel && sel != LB_ERR)
 					cd_vals[(*cd_nvals)++] = cd_opts[i];

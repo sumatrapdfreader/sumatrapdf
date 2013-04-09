@@ -1268,7 +1268,7 @@ pdf_load_font(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, int nested_depth)
 	pdf_font_desc *fontdesc;
 	int type3 = 0;
 
-	if ((fontdesc = pdf_find_item(ctx, pdf_free_font_imp, dict)))
+	if ((fontdesc = pdf_find_item(ctx, pdf_free_font_imp, dict)) != NULL)
 	{
 		return fontdesc;
 	}

@@ -368,7 +368,7 @@ pdf_load_link(pdf_document *xref, pdf_obj *dict, const fz_matrix *page_ctm)
 		ld = pdf_parse_action(xref, action);
 	}
 	/* support clicking on embedded Flash movies, etc. (PDF 1.7 ExtensionLevel 3) */
-	if (!obj && !action && (obj = pdf_dict_getp(dict, "RichMediaContent/Configurations")))
+	if (!obj && !action && (obj = pdf_dict_getp(dict, "RichMediaContent/Configurations")) != NULL)
 	{
 		obj = pdf_dict_gets(pdf_array_get(obj, 0), "Instances");
 		dest = pdf_dict_gets(pdf_array_get(obj, 0), "Asset");
@@ -1076,7 +1076,7 @@ static float
 pdf_extract_font_size(pdf_document *xref, char *appearance, char **font_name)
 {
 	fz_context *ctx = xref->ctx;
-	fz_stream *stream = fz_open_memory(ctx, appearance, strlen(appearance));
+	fz_stream *stream = fz_open_memory(ctx, (unsigned char *)appearance, strlen(appearance));
 	pdf_lexbuf *lexbuf = &xref->lexbuf.base;
 	float font_size = 0;
 	int tok;
@@ -1473,12 +1473,12 @@ pdf_create_freetext_annot(pdf_document *xref, pdf_obj *obj)
 		fz_buffer_printf(ctx, content, "1 0 0 1 2 %.4f Tm ", rect.y1 - rect.y0 - 2);
 
 		/* Adobe Reader seems to consider "[1 0 0] r" and "1 0 0 rg" to mean the same(?) */
-		if ((r = strchr(base_ap->data, '[')) && sscanf(r, "[%f %f %f] r", &x, &x, &x) == 3)
+		if ((r = strchr((char *)base_ap->data, '[')) != NULL && sscanf(r, "[%f %f %f] r", &x, &x, &x) == 3)
 		{
 			*r = ' ';
 			memcpy(strchr(r, ']'), " rg", 3);
 		}
-		if ((r = strchr(content->data, '[')) && sscanf(r, "[%f %f %f] r", &x, &x, &x) == 3)
+		if ((r = strchr((char *)content->data, '[')) != NULL && sscanf(r, "[%f %f %f] r", &x, &x, &x) == 3)
 		{
 			*r = ' ';
 			memcpy(strchr(r, ']'), " rg", 3);
@@ -1552,8 +1552,8 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 
 			/* SumatraPDF: synthesize appearance streams for a few more annotations */
 			/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=692078 */
-			if ((annot = pdf_update_tx_widget_annot(xref, obj)) ||
-				!pdf_is_dict(pdf_dict_getp(obj, "AP/N")) && (annot = pdf_create_annot_with_appearance(xref, obj)))
+			if ((annot = pdf_update_tx_widget_annot(xref, obj)) != NULL ||
+				!pdf_is_dict(pdf_dict_getp(obj, "AP/N")) && (annot = pdf_create_annot_with_appearance(xref, obj)) != NULL)
 			{
 				annot->page = page;
 				annot->pagerect = annot->rect;
@@ -1650,11 +1650,10 @@ pdf_load_annots(pdf_document *xref, pdf_obj *annots, pdf_page *page)
 void
 pdf_update_annot(pdf_document *xref, pdf_annot *annot)
 {
+	/* SumatraPDF: prevent regressions */
+#if 0
 	pdf_obj *obj, *ap, *as, *n;
 	fz_context *ctx = xref->ctx;
-
-	/* SumatraPDF: prevent regressions */
-	return;
 
 	obj = annot->obj;
 
@@ -1701,6 +1700,7 @@ pdf_update_annot(pdf_document *xref, pdf_annot *annot)
 			}
 		}
 	}
+#endif
 }
 
 pdf_annot *

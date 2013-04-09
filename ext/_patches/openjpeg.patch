@@ -1,6 +1,6 @@
 diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
---- openjpeg.orig\image.c	Thu Sep 13 08:58:39 2012
-+++ openjpeg\image.c	Thu Sep 20 18:28:51 2012
+--- openjpeg.orig\image.c	Thu Sep 13 09:58:39 2012
++++ openjpeg\image.c	Thu Sep 20 19:28:51 2012
 @@ -81,9 +81,11 @@
  					opj_free(image_comp->data);
  				}
@@ -14,8 +14,8 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  }
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
---- openjpeg.orig\j2k.c	Thu Sep 13 08:58:39 2012
-+++ openjpeg\j2k.c	Fri Jan 04 00:06:58 2013
+--- openjpeg.orig\j2k.c	Thu Sep 13 09:58:39 2012
++++ openjpeg\j2k.c	Tue Apr 09 18:47:22 2013
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -192,7 +192,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
    if(e[-2] == 0x00 && e[-1] == 0x00) /* padding bytes */
    {
 +    /* cf. http://code.google.com/p/openjpeg/issues/detail?id=205 */
-+    if ((s = memchr(s, 0xff, e - s - 1)) && *(s + 1) == 0xd9)
++    if ((s = memchr(s, 0xff, e - s - 1)) != NULL && *(s + 1) == 0xd9)
  	while(e > s)
   {
  	if(e[-2] == 0xff && e[-1] == 0xd9)	break;
@@ -232,8 +232,8 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  					tcp_poc->compno0	= parameters->POC[numpocs_tile].compno0;
  					tcp_poc->layno1		= parameters->POC[numpocs_tile].layno1;
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
---- openjpeg.orig\jp2.c	Thu Sep 13 08:58:39 2012
-+++ openjpeg\jp2.c	Tue Jan 08 22:35:14 2013
+--- openjpeg.orig\jp2.c	Thu Sep 13 09:58:39 2012
++++ openjpeg\jp2.c	Tue Apr 09 18:47:56 2013
 @@ -171,10 +171,15 @@
  			box->length = cio_numbytesleft(cio) + 12;
  	}
@@ -341,9 +341,22 @@ diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
  	return OPJ_TRUE;
  }
  
+@@ -1196,11 +1217,11 @@
+ 	  
+ 	  pos_jp2c = cio_tell( cio);
+ 	}
+ 
+ 	/* J2K encoding */
+-	if(!(len_jp2c = jp2_write_jp2c( jp2, cio, image, cstr_info))){
++	if((len_jp2c = jp2_write_jp2c( jp2, cio, image, cstr_info)) == 0){
+ 	    opj_event_msg(jp2->cinfo, EVT_ERROR, "Failed to encode image\n");
+ 	    return OPJ_FALSE;
+ 	}
+ 
+ 	if( jp2->jpip_on){
 diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 --- openjpeg.orig\opj_config.h	Thu Jan 01 01:00:00 1970
-+++ openjpeg\opj_config.h	Thu Sep 20 19:35:01 2012
++++ openjpeg\opj_config.h	Thu Sep 20 20:35:01 2012
 @@ -0,0 +1,41 @@
 +/* If you want to build the library manually without using
 + * 'configure' or 'CMake'

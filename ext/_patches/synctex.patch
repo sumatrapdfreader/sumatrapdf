@@ -1,6 +1,6 @@
 diff -rPu5 synctex.orig\synctex_parser.c synctex\synctex_parser.c
---- synctex.orig\synctex_parser.c	Tue Jun 14 14:40:56 2011
-+++ synctex\synctex_parser.c	Mon Feb 04 16:41:54 2013
+--- synctex.orig\synctex_parser.c	Tue Jun 14 15:40:56 2011
++++ synctex\synctex_parser.c	Mon Feb 04 17:41:54 2013
 @@ -224,37 +224,43 @@
  #   define SYNCTEX_SET_NEXT_HORIZ_BOX(NODE,NEXT_BOX) if (NODE && NEXT_BOX){\
  		SYNCTEX_GETTER(NODE,next_box)[0]=NEXT_BOX;\
@@ -76,8 +76,8 @@ diff -rPu5 synctex.orig\synctex_parser.c synctex\synctex_parser.c
          unsigned int no_gz:1;   /*  Whether zlib is used or not */
          unsigned int reserved:SYNCTEX_BITS_PER_BYTE*sizeof(int)-1; /*  Align */
 diff -rPu5 synctex.orig\synctex_parser_utils.c synctex\synctex_parser_utils.c
---- synctex.orig\synctex_parser_utils.c	Tue Jun 14 09:23:56 2011
-+++ synctex\synctex_parser_utils.c	Mon Mar 12 18:56:52 2012
+--- synctex.orig\synctex_parser_utils.c	Tue Jun 14 10:23:56 2011
++++ synctex\synctex_parser_utils.c	Mon Mar 12 19:56:52 2012
 @@ -166,10 +166,13 @@
  next_character:
  	if(SYNCTEX_IS_PATH_SEPARATOR(*lhs)) {/*  lhs points to a path separator */
