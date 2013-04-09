@@ -56,12 +56,12 @@ struct FontCacheEntry {
 // An app might modify gStyleDefault but it should be done
 // as a first thing to avoid stale props from caching (cache
 // will be correctly refreshed if Control::SetStyle() is called)
-Style *gStyleDefault = NULL;
-// gStyleButtonDefault and gStyleButtonMouseOver are default
-// button styles for convenience. The user must explicitly
+static Style *gStyleDefault = NULL;
+// default button styles for convenience. The user must explicitly
 // use them in inheritance chain of their custom button styles
-Style *gStyleButtonDefault = NULL;
-Style *gStyleButtonMouseOver = NULL;
+// They can be obtained via GetStyleButtonDefault() and GetStyleButtonDefaultMouseOver()
+static Style *gStyleButtonDefault = NULL;
+static Style *gStyleButtonMouseOver = NULL;
 
 struct StyleCacheEntry {
     Style *     style1;
@@ -84,6 +84,7 @@ void Initialize()
 
     // gStyleDefault must have values for all properties
     gStyleDefault = new Style();
+    gStyleDefault->SetName("default");
     gStyleDefault->Set(Prop::AllocFontName(L"Times New Roman"));
     gStyleDefault->Set(Prop::AllocFontSize(14));
     gStyleDefault->Set(Prop::AllocFontWeight(FontStyleBold));
@@ -109,12 +110,14 @@ void Initialize()
     gStyleDefault->Set(Prop::AllocWidth(PropStrokeWidth, 0.5f));
 
     gStyleButtonDefault = new Style(gStyleDefault);
+    gStyleButtonDefault->SetName("buttonDefault");
     gStyleButtonDefault->Set(Prop::AllocPadding(4, 8, 4, 8));
     gStyleButtonDefault->Set(Prop::AllocFontName(L"Lucida Grande"));
     gStyleButtonDefault->Set(Prop::AllocFontSize(8));
     gStyleButtonDefault->Set(Prop::AllocFontWeight(FontStyleBold));
 
     gStyleButtonMouseOver = new Style(gStyleButtonDefault);
+    gStyleButtonMouseOver->SetName("buttonDefaultMouseOver");
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderTopColor, "#777"));
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderRightColor, "#777"));
     gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#666"));
@@ -122,6 +125,8 @@ void Initialize()
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
     gStyleCache = new VecSegmented<StyleCacheEntry>();
+    CacheStyle(gStyleButtonDefault);
+    CacheStyle(gStyleButtonMouseOver);
 }
 
 void Destroy()
@@ -285,10 +290,11 @@ void Prop::Free()
 {
     if (PropFontName == type)
         free(fontName);
-
-    if (IsColorProp(type) && (ColorSolid == color.type))
+    else if (PropStyleName == type)
+        free(styleName);
+    else if (IsColorProp(type) && (ColorSolid == color.type))
         ::delete color.solid.cachedBrush;
-    if (IsColorProp(type) && (ColorGradientLinear == color.type)) {
+    else if (IsColorProp(type) && (ColorGradientLinear == color.type)) {
         ::delete color.gradientLinear.cachedBrush;
         ::delete color.gradientLinear.rect;
     }
@@ -300,6 +306,8 @@ bool Prop::Eq(const Prop *other) const
         return false;
 
     switch (type) {
+    case PropStyleName:
+        return str::Eq(styleName, other->styleName);
     case PropFontName:
         return str::Eq(fontName, other->fontName);
     case PropFontSize:
@@ -342,6 +350,13 @@ static Prop *UniqifyProp(Prop& p)
         return existing;
     }
     return gAllProps->Append(p);
+}
+
+Prop *Prop::AllocStyleName(const char *styleName)
+{
+    Prop p(PropStyleName);
+    p.styleName = str::Dup(styleName);
+    return UniqifyProp(p);
 }
 
 Prop *Prop::AllocFontName(const WCHAR *name)
@@ -484,6 +499,11 @@ void Style::Set(Prop *prop)
     ++gen;
 }
 
+void Style::SetName(const char *styleName)
+{
+    Set(Prop::AllocStyleName(styleName));
+}
+
 void Style::SetPadding(int width)
 {
     Set(Prop::AllocPadding(width, width, width, width));
@@ -532,8 +552,12 @@ static bool FoundAllProps(Prop **props)
 // As an optimization it returns true if we got all props
 static bool GetAllProps(Style *style, Prop **props)
 {
+    bool inherited = false;
     while (style) {
         for (Prop **p = style->props.IterStart(); p; p = style->props.IterNext()) {
+            // PropStyleName is not inheritable
+            if ((PropStyleName == (*p)->type) && inherited)
+                continue;
             int propIdx = (int)(*p)->type;
             CrashIf(propIdx >= (int)PropsCount);
             bool didSet = false;
@@ -545,6 +569,7 @@ static bool GetAllProps(Style *style, Prop **props)
                 return true;
         }
         style = style->GetInheritsFrom();
+        inherited = true;
     }
     return false;
 }
@@ -555,6 +580,15 @@ static size_t GetStyleId(Style *style) {
     return style->GetIdentity();
 }
 
+// Because all styles implicitly inherit the properties they didn't explicitly
+// set from gStyleDefault, we need to track changes (via GetStyleId()) of both the given
+// style an gStyleDefault.
+// If a given style doesn't exist, we add it to the cache.
+// If it exists but it was modified or gStyleDefault was modified, we update the cache.
+// If it exists and didn't change, we return cached entry.
+// TODO: we don't need StyleCacheEntry.style2 - it's always gStyleDefault. Instead we can
+// add gStyleDefault identity at the end of Style::GetIdentity() and get rid of style2 and
+// style2Id from StyleCacheEntry
 CachedStyle *CacheStyle(Style *style)
 {
     ScopedMuiCritSec muiCs;
@@ -583,6 +617,7 @@ CachedStyle *CacheStyle(Style *style)
     }
 
     CachedStyle s;
+    s.styleName            = props[PropStyleName]->styleName;
     s.fontName             = props[PropFontName]->fontName;
     s.fontSize             = props[PropFontSize]->fontSize;
     s.fontWeight           = props[PropFontWeight]->fontWeight;
@@ -612,6 +647,26 @@ CachedStyle *CacheStyle(Style *style)
     StyleCacheEntry newEntry = { style1, GetStyleId(style1), style2, GetStyleId(style2), s };
     e = gStyleCache->Append(newEntry);
     return &e->cachedStyle;
+}
+
+CachedStyle* CachedStyleByName(const char *name)
+{
+    StyleCacheEntry *e;
+    for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
+        if (e->cachedStyle.styleName && str::Eq(e->cachedStyle.styleName, name))
+            return &e->cachedStyle;
+    }
+    return NULL;
+}
+
+Style *StyleByName(const char *name)
+{
+    StyleCacheEntry *e;
+    for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
+        if (e->cachedStyle.styleName && str::Eq(e->cachedStyle.styleName, name))
+            return e->style1;
+    }
+    return NULL;
 }
 
 Brush *BrushFromColorData(ColorData *color, const RectF& r)
@@ -655,6 +710,29 @@ Size GetBorderAndPaddingSize(CachedStyle *s)
     int dy = pad.top  + pad.bottom;
     AddBorders(dx, dy, s);
     return Size(dx, dy);
+}
+
+Style* GetStyleDefault()
+{
+    return gStyleDefault;
+}
+
+Style* GetStyleButtonDefault()
+{
+#ifdef DEBUG
+    return StyleByName("buttonDefault");
+#else
+    return gStyleButtonDefault;
+#endif
+}
+
+Style* GetStyleButtonDefaultMouseOver()
+{
+#ifdef DEBUG
+    return StyleByName("buttonDefaultMouseOver");
+#else
+    return gStyleButtonDefaultMouseOver;
+#endif
 }
 
 } // namespace css

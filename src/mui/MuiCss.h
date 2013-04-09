@@ -12,7 +12,9 @@
 namespace css {
 
 enum PropType {
-    PropFontName = 0,       // font-family
+    // Maybe: use Style::styleName instead of PropStyleName
+    PropStyleName = 0,      // unique name of the style
+    PropFontName,           // font-family
     PropFontSize,           // font-size
     PropFontWeight,         // font-weight
     PropPadding,            // padding
@@ -167,6 +169,7 @@ struct Prop {
     PropType    type;
 
     union {
+        char *      styleName;
         WCHAR *     fontName;
         float       fontSize;
         FontStyle   fontWeight;
@@ -179,6 +182,7 @@ struct Prop {
 
     bool Eq(const Prop* other) const;
 
+    static Prop *AllocStyleName(const char *styleName);
     static Prop *AllocFontName(const WCHAR *name);
     static Prop *AllocFontSize(float size);
     static Prop *AllocFontWeight(FontStyle style);
@@ -199,14 +203,17 @@ struct Prop {
 class Style {
     // if property is not found here, we'll search the
     // inheritance chain
-    Style *     inheritsFrom;
+    Style *         inheritsFrom;
     // generation number, changes every time we change the style
-    size_t      gen;
+    size_t          gen;
+    ScopedMem<char> name;
 
 public:
     Style(Style *inheritsFrom=NULL) : inheritsFrom(inheritsFrom) {
         gen = 1; // so that we can use 0 for NULL
     }
+
+    void SetName(const char *n);
 
     Vec<Prop*>  props;
 
@@ -237,6 +244,7 @@ struct BorderColors {
 
 // CachedStyle combines values of all properties for easier use by clients
 struct CachedStyle {
+    const char *    styleName;
     const WCHAR *   fontName;
     float           fontSize;
     FontStyle       fontWeight;
@@ -253,17 +261,18 @@ struct CachedStyle {
     float           strokeWidth;
 };
 
-// globally known properties for elements we know about
-// we fill them with default values and they can be
-// modified by an app for global visual makeover
-extern Style *gStyleDefault;
-extern Style *gStyleButtonDefault;
-extern Style *gStyleButtonMouseOver;
+// few basic styles provided by mui
+// can be modified by the app (for easyily changing default appearance)
+Style* GetStyleDefault();
+Style* GetStyleButtonDefault();
+Style* GetStyleButtonDefaultMouseOver();
 
 void   Initialize();
 void   Destroy();
 
 CachedStyle* CacheStyle(Style *style);
+CachedStyle* CachedStyleByName(const char *name);
+Style *      StyleByName(const char *name);
 
 Brush *BrushFromColorData(ColorData *color, const Rect& r);
 Brush *BrushFromColorData(ColorData *color, const RectF& r);

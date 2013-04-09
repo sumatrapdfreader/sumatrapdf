@@ -382,7 +382,7 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
     }
 }
 
-char *PrettyPrintTxt(TxtParser& parser)
+char *PrettyPrintTxt(const TxtParser& parser)
 {
     str::Str<char> res;
     PrettyPrintNode(parser.nodes.At(0), -1, res);

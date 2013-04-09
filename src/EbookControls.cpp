@@ -134,7 +134,7 @@ static void CreateEbookStyles()
     stylePage->Set(Prop::AllocPadding(pageBorderY, pageBorderX, pageBorderY, pageBorderX));
     stylePage->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
-    styleBtnNextPrevDefault = new Style(gStyleButtonDefault);
+    styleBtnNextPrevDefault = new Style(GetStyleButtonDefault());
     styleBtnNextPrevDefault->SetBorderWidth(0.f);
     //styleBtnNextPrevDefault->Set(Prop::AllocPadding(1, 1, 1, 4));
     styleBtnNextPrevDefault->Set(Prop::AllocPadding(0, 8, 0, 8));
@@ -146,7 +146,7 @@ static void CreateEbookStyles()
     styleBtnNextPrevMouseOver = new Style(styleBtnNextPrevDefault);
     styleBtnNextPrevMouseOver->Set(Prop::AllocColorSolid(PropFill, "black"));
 
-    styleStatus = new Style(gStyleButtonDefault);
+    styleStatus = new Style(css::GetStyleButtonDefault());
     styleStatus->Set(Prop::AllocColorSolid(PropBgColor, COLOR_LIGHT_GRAY));
     styleStatus->Set(Prop::AllocColorSolid(PropColor, "black"));
     styleStatus->Set(Prop::AllocFontSize(8));
