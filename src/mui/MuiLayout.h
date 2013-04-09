@@ -21,6 +21,11 @@
 class ILayout
 {
 public:
+    ScopedMem<char> name;
+    void SetName(const char *n) { name.Set(str::Dup(n)); }
+    bool IsNamed(const char *s) const {
+        return str::EqI(name.Get(), s);
+    }
     virtual ~ILayout() {};
     virtual Size Measure(const Size availableSize) = 0;
     virtual Size DesiredSize() = 0;

@@ -16,8 +16,6 @@ static Style *   styleMainWnd = NULL;
 static Style *   stylePage = NULL;
 static Style *   styleStatus = NULL;
 static Style *   styleProgress = NULL;
-static Style *   styleBtnNextPrevDefault = NULL;
-static Style *   styleBtnNextPrevMouseOver = NULL;
 static HCURSOR   gCursorHand = NULL;
 
 #if 0
@@ -257,7 +255,6 @@ static void AddStyleProp(Style *style, TxtNode *prop)
         return;
     }
 
-    
     if (prop->IsTextWithKey("font_weight")) {
         ScopedMem<char> tmp(prop->ValDup());
         style->Set(Prop::AllocFontWeight(ParseFontWeight(tmp)));
@@ -267,13 +264,13 @@ static void AddStyleProp(Style *style, TxtNode *prop)
     CrashIf(true);
 }
 
-static Style* StyleFromStruct(TxtNode* styleStruct)
+static Style* StyleFromStruct(TxtNode* def)
 {
-    CrashIf(!styleStruct->IsStructWithName("style"));
+    CrashIf(!def->IsStructWithName("style"));
     Style *style = new Style();
-    size_t n = styleStruct->children->Count();
+    size_t n = def->children->Count();
     for (size_t i = 0; i < n; i++) {
-        TxtNode *n = styleStruct->children->At(i);
+        TxtNode *n = def->children->At(i);
         CrashIf(!n->IsText());
         AddStyleProp(style, n);
     }
@@ -281,12 +278,69 @@ static Style* StyleFromStruct(TxtNode* styleStruct)
     return style;
 }
 
-static Vec<Style*> *StylesFromStyleStructs(Vec<TxtNode*> *styleNodes)
+static Vec<Style*> *StylesFromStyleStructs(Vec<TxtNode*> *nodes)
 {
-    size_t n = styleNodes->Count();
+    size_t n = nodes->Count();
     Vec<Style*> *res = new Vec<Style*>(n);
     for (size_t i = 0; i < n; i++) {
-        res->Append(StyleFromStruct(styleNodes->At(i)));
+        res->Append(StyleFromStruct(nodes->At(i)));
+    }
+    return res;
+}
+
+static void AddButtonVectorProp(ButtonVector *b, TxtNode *prop)
+{
+    if (prop->IsTextWithKey("name")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        b->SetName(tmp);
+        return;
+    }
+
+    if (prop->IsTextWithKey("path")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        GraphicsPath *gp = svg::GraphicsPathFromPathData(tmp);
+        b->SetGraphicsPath(gp);
+        return;
+    }
+
+    if (prop->IsTextWithKey("style_default")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        Style *style = StyleByName(tmp);
+        CrashIf(!style);
+        b->SetDefaultStyle(style);
+        return;
+    }
+
+    if (prop->IsTextWithKey("style_mouse_over")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        Style *style = StyleByName(tmp);
+        CrashIf(!style);
+        b->SetMouseOverStyle(style);
+        return;
+    }
+
+    CrashIf(true);
+}
+
+static ButtonVector* ButtonVectorFromStruct(TxtNode* def)
+{
+    CrashIf(!def->IsStructWithName("ButtonVector"));
+    ButtonVector *b = new ButtonVector();
+    size_t n = def->children->Count();
+    for (size_t i = 0; i < n; i++) {
+        TxtNode *n = def->children->At(i);
+        CrashIf(!n->IsText());
+        AddButtonVectorProp(b, n);
+    }
+    return b;
+}
+
+static Vec<ButtonVector*> *ButtonVectorsFromStyleStructs(Vec<TxtNode*> *nodes)
+{
+    size_t n = nodes->Count();
+    Vec<ButtonVector*> *res = new Vec<ButtonVector*>(n);
+    for (size_t i = 0; i < n; i++) {
+        res->Append(ButtonVectorFromStruct(nodes->At(i)));
     }
     return res;
 }
@@ -327,10 +381,10 @@ static void CreateEbookStyles()
 {
     CrashIf(styleMainWnd); // only call me once
 
-    Vec<TxtNode*> *styleNodes = GetStructsWithName(GetRootArray(gParser), "Style");
-    CrashIf(!styleNodes);
+    Vec<TxtNode*> *nodes = GetStructsWithName(GetRootArray(gParser), "Style");
+    CrashIf(!nodes);
 
-    Vec<Style*> *styles = StylesFromStyleStructs(styleNodes);
+    Vec<Style*> *styles = StylesFromStyleStructs(nodes);
 
     // TODO: support changing this color to gRenderCache.colorRange[1]
     //       or GetSysColor(COLOR_WINDOW) if gGlobalPrefs.useSysColors
@@ -339,17 +393,13 @@ static void CreateEbookStyles()
     CrashIf(!styleMainWnd);
     stylePage = StyleByName("stylePage");
     CrashIf(!stylePage);
-    styleBtnNextPrevDefault = StyleByName("styleNextDefault");
-    CrashIf(!styleBtnNextPrevDefault);
-    styleBtnNextPrevMouseOver = StyleByName("styleNextMouseOver");
-    CrashIf(!styleBtnNextPrevMouseOver);
     styleStatus = StyleByName("styleStatus");
     CrashIf(!styleStatus);
     styleProgress = StyleByName("styleProgress");
     CrashIf(!styleProgress);
 
     delete styles;
-    delete styleNodes;
+    delete nodes;
     atexit(DeleteEbookStyles);
 }
 
@@ -374,6 +424,28 @@ static void CreateLayout(EbookControls *ctrls)
     ctrls->mainWnd->layout = l;
 }
 
+// TODO: create the rest of controls
+static void CreateControls(EbookControls *ctrls)
+{
+    Vec<TxtNode*> *nodes = GetStructsWithName(GetRootArray(gParser), "ButtonVector");
+    CrashIf(!nodes);
+
+    Vec<ButtonVector*> *vecButtons = ButtonVectorsFromStyleStructs(nodes);
+    for (size_t i = 0; i < vecButtons->Count(); i++) {
+        ButtonVector *b = vecButtons->At(i);
+        if (b->IsNamed("nextButton"))
+            ctrls->next = b;
+        else if (b->IsNamed("prevButton"))
+            ctrls->prev = b;
+        else
+            CrashIf(true);
+    }
+    CrashIf(!ctrls->next);
+    CrashIf(!ctrls->prev);
+    delete vecButtons;
+    delete nodes;
+}
+
 EbookControls *CreateEbookControls(HWND hwnd)
 {
     if (!gCursorHand)
@@ -386,11 +458,7 @@ EbookControls *CreateEbookControls(HWND hwnd)
 
     EbookControls *ctrls = new EbookControls;
 
-    ctrls->next = new ButtonVector(svg::GraphicsPathFromPathData("M0 0  L10 13 L0 ,26 Z"));
-    ctrls->next->SetStyles(styleBtnNextPrevDefault, styleBtnNextPrevMouseOver);
-
-    ctrls->prev = new ButtonVector(svg::GraphicsPathFromPathData("M10 0 L0,  13 L10 26 z"));
-    ctrls->prev->SetStyles(styleBtnNextPrevDefault, styleBtnNextPrevMouseOver);
+    CreateControls(ctrls);
 
     ctrls->progress = new ScrollBar();
     ctrls->progress->hCursor = gCursorHand;

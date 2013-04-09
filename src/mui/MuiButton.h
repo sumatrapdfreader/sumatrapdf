@@ -18,6 +18,7 @@ class Button : public Control
     Style *         styleDefault;    // gStyleButtonDefault if styleDefault is NULL
     Style *         styleMouseOver;  // gStyleButtonMouseOver if NULL
 
+    void  UpdateAfterStyleChange();
 public:
     Button(const WCHAR *s, Style *def, Style *mouseOver);
 
@@ -33,6 +34,8 @@ public:
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 
+    void    SetDefaultStyle(Style *style);
+    void    SetMouseOverStyle(Style *style);
     void    SetStyles(Style *def, Style *mouseOver);
 
     WCHAR *         text;
@@ -48,7 +51,9 @@ class ButtonVector : public Control
 
     GraphicsPath *  graphicsPath;
 
+    void  UpdateAfterStyleChange();
 public:
+    ButtonVector();
     ButtonVector(GraphicsPath *gp);
 
     virtual ~ButtonVector();
@@ -63,6 +68,8 @@ public:
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 
+    void    SetDefaultStyle(Style *style);
+    void    SetMouseOverStyle(Style *style);
     void    SetStyles(Style *def, Style *mouseOver);
 };
 

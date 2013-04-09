@@ -104,17 +104,33 @@ Size Button::Measure(const Size availableSize)
     return desiredSize;
 }
 
-void Button::SetStyles(Style *def, Style *mouseOver)
+void Button::UpdateAfterStyleChange()
 {
-    styleDefault = def;
-    styleMouseOver = mouseOver;
-
     if (IsMouseOver())
         SetStyle(styleMouseOver);
     else
         SetStyle(styleDefault);
 
     RecalculateSize(true);
+}
+
+void Button::SetStyles(Style *def, Style *mouseOver)
+{
+    styleDefault = def;
+    styleMouseOver = mouseOver;
+    UpdateAfterStyleChange();
+}
+
+void Button::SetDefaultStyle(Style *style)
+{
+    styleDefault = style;
+    UpdateAfterStyleChange();
+}
+
+void Button::SetMouseOverStyle(Style *style)
+{
+    styleMouseOver = style;
+    UpdateAfterStyleChange();
 }
 
 // given the size of a container, the size of an element inside
@@ -152,6 +168,15 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     Brush *brColor = BrushFromColorData(s->color, bbox); // restrict bbox to just the text?
     Font *font = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
     gfx->DrawString(text, str::Len(text), font, PointF((REAL)x, (REAL)y), NULL, brColor);
+}
+
+ButtonVector::ButtonVector()
+{
+    wantedInputBits = (uint16)-1; // wants everything
+    styleDefault = NULL;
+    styleMouseOver = NULL;
+    graphicsPath = NULL;
+    SetStyle(styleDefault);
 }
 
 ButtonVector::ButtonVector(GraphicsPath *gp)
@@ -275,17 +300,33 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
         gfx->DrawPath(&pen, tmp);
 }
 
-void ButtonVector::SetStyles(Style *def, Style *mouseOver)
+void ButtonVector::UpdateAfterStyleChange()
 {
-    styleDefault = def;
-    styleMouseOver = mouseOver;
-
     if (IsMouseOver())
         SetStyle(styleMouseOver);
     else
         SetStyle(styleDefault);
 
     RecalculateSize(true);
+}
+
+void ButtonVector::SetStyles(Style *def, Style *mouseOver)
+{
+    styleDefault = def;
+    styleMouseOver = mouseOver;
+    UpdateAfterStyleChange();
+}
+
+void ButtonVector::SetDefaultStyle(Style *style)
+{
+    styleDefault = style;
+    UpdateAfterStyleChange();
+}
+
+void ButtonVector::SetMouseOverStyle(Style *style)
+{
+    styleMouseOver = style;
+    UpdateAfterStyleChange();
 }
 
 }
