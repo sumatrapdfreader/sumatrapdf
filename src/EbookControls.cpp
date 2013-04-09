@@ -7,8 +7,8 @@
 #include "BitManip.h"
 #include "HtmlFormatter.h"
 #include "resource.h"
-#include "SquareTreeParser.h"
 #include "SvgPath.h"
+#include "TxtParser.h"
 
 #include "DebugLog.h"
 
@@ -101,13 +101,39 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
-static SquareTree *gParser = NULL;
+static char *gWinDesc = NULL;
+static size_t gWinDescSize;
+static TxtParser *gParser = NULL;
 
-static float ParseFloat(const char *s)
+static TxtNode *GetRootArray(TxtParser* parser)
 {
-    return (float)atof(s);
+    TxtNode *root = parser->nodes.At(0);
+    CrashIf(!root->IsArray());
+    return root;
 }
 
+static Vec<TxtNode*> *GetStructsWithName(TxtNode *root, const char *name)
+{
+    size_t nameLen = str::Len(name);
+    CrashIf(!root->IsArray());
+    Vec<TxtNode*> *res = NULL;
+    TxtNode **n;
+    for (n = root->children->IterStart(); n; n = root->children->IterNext()) {
+        TxtNode *node = *n;
+        if (node->IsStructWithName(name, nameLen)) {
+            if (!res)
+                res = new Vec<TxtNode*>();
+            res->Append(node);
+        }
+    }
+    return res;
+}
+
+float ParseFloat(const char *s)
+{
+    char *end = (char*)s;
+    return (float)strtod(s, &end);
+}
 struct ParsedPadding {
     int top;
     int right;
@@ -157,67 +183,166 @@ static Gdiplus::FontStyle ParseFontWeight(const char *s)
     return FontStyleRegular;
 }
 
-static Style *StyleFromStruct(SquareTreeNode *node)
+static void AddStyleProp(Style *style, TxtNode *prop)
 {
-    Style *style = new Style();
-    const char *value;
+    if (prop->IsTextWithKey("name")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->SetName(tmp);
+        return;
+    }
 
-    if ((value = node->GetValue("name")) != NULL)
-        style->SetName(value);
-    if ((value = node->GetValue("bg_col")) != NULL)
-        style->Set(Prop::AllocColorSolid(PropBgColor, value));
-    if ((value = node->GetValue("col")) != NULL)
-        style->Set(Prop::AllocColorSolid(PropColor, value));
-    if ((value = node->GetValue("parent")) != NULL) {
-        Style *parentStyle = StyleByName(value);
+    if (prop->IsTextWithKey("bg_col")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocColorSolid(PropBgColor, tmp));
+        return;
+    }
+
+    if (prop->IsTextWithKey("col")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocColorSolid(PropColor, tmp));
+        return;
+    }
+
+    if (prop->IsTextWithKey("parent")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        Style *parentStyle = StyleByName(tmp);
         CrashIf(!parentStyle);
         style->SetInheritsFrom(parentStyle);
+        return;
     }
-    if ((value = node->GetValue("border_width")) != NULL)
-        style->SetBorderWidth(ParseFloat(value));
-    if ((value = node->GetValue("padding")) != NULL) {
-        ParsedPadding padding = { 0 };
-        ParsePadding(value, padding);
-        style->SetPadding(padding.top, padding.right, padding.bottom, padding.left);
-    }
-    if ((value = node->GetValue("stroke_width")) != NULL)
-        style->Set(Prop::AllocWidth(PropStrokeWidth, ParseFloat(value)));
-    if ((value = node->GetValue("fill")) != NULL)
-        style->Set(Prop::AllocColorSolid(PropFill, value));
-    if ((value = node->GetValue("vert_align")) != NULL)
-        style->Set(Prop::AllocAlign(PropVertAlign, ParseElAlign(value)));
-    if ((value = node->GetValue("text_align")) != NULL)
-        style->Set(Prop::AllocTextAlign(ParseAlignAttr(value)));
-    if ((value = node->GetValue("font_size")) != NULL)
-        style->Set(Prop::AllocFontSize(ParseFloat(value)));
-    if ((value = node->GetValue("font_weight")) != NULL)
-        style->Set(Prop::AllocFontWeight(ParseFontWeight(value)));
 
+    if (prop->IsTextWithKey("border_width")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->SetBorderWidth(ParseFloat(tmp));
+        return;
+    }
+
+    if (prop->IsTextWithKey("padding")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        ParsedPadding padding = { 0 };
+        ParsePadding(tmp, padding);
+        style->SetPadding(padding.top, padding.right, padding.bottom, padding.left);
+        return;
+    }
+
+    if (prop->IsTextWithKey("stroke_width")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocWidth(PropStrokeWidth, ParseFloat(tmp)));
+        return;
+    }
+
+    if (prop->IsTextWithKey("fill")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocColorSolid(PropFill, tmp));
+        return;
+    }
+
+    if (prop->IsTextWithKey("vert_align")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocAlign(PropVertAlign, ParseElAlign(tmp)));
+        return;
+    }
+
+    if (prop->IsTextWithKey("text_align")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocTextAlign(ParseAlignAttr(tmp)));
+        return;
+    }
+
+    if (prop->IsTextWithKey("font_size")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocFontSize(ParseFloat(tmp)));
+        return;
+    }
+
+    if (prop->IsTextWithKey("font_weight")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        style->Set(Prop::AllocFontWeight(ParseFontWeight(tmp)));
+        return;
+    }
+
+    CrashIf(true);
+}
+
+static Style* StyleFromStruct(TxtNode* def)
+{
+    CrashIf(!def->IsStructWithName("style"));
+    Style *style = new Style();
+    size_t n = def->children->Count();
+    for (size_t i = 0; i < n; i++) {
+        TxtNode *n = def->children->At(i);
+        CrashIf(!n->IsText());
+        AddStyleProp(style, n);
+    }
     CacheStyle(style);
     return style;
 }
 
-static ButtonVector* ButtonVectorFromStruct(SquareTreeNode *node)
+static Vec<Style*> *StylesFromStyleStructs(Vec<TxtNode*> *nodes)
 {
-    ButtonVector *b = new ButtonVector();
-    const char *value;
+    size_t n = nodes->Count();
+    Vec<Style*> *res = new Vec<Style*>(n);
+    for (size_t i = 0; i < n; i++) {
+        res->Append(StyleFromStruct(nodes->At(i)));
+    }
+    return res;
+}
 
-    if ((value = node->GetValue("name")) != NULL)
-        b->SetName(value);
-    if ((value = node->GetValue("path")) != NULL)
-        b->SetGraphicsPath(svg::GraphicsPathFromPathData(value));
-    if ((value = node->GetValue("style_default")) != NULL) {
-        Style *style = StyleByName(value);
+static void AddButtonVectorProp(ButtonVector *b, TxtNode *prop)
+{
+    if (prop->IsTextWithKey("name")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        b->SetName(tmp);
+        return;
+    }
+
+    if (prop->IsTextWithKey("path")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        GraphicsPath *gp = svg::GraphicsPathFromPathData(tmp);
+        b->SetGraphicsPath(gp);
+        return;
+    }
+
+    if (prop->IsTextWithKey("style_default")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        Style *style = StyleByName(tmp);
         CrashIf(!style);
         b->SetDefaultStyle(style);
-    }
-    if ((value = node->GetValue("style_mouse_over")) != NULL) {
-        Style *style = StyleByName(value);
-        CrashIf(!style);
-        b->SetMouseOverStyle(style);
+        return;
     }
 
+    if (prop->IsTextWithKey("style_mouse_over")) {
+        ScopedMem<char> tmp(prop->ValDup());
+        Style *style = StyleByName(tmp);
+        CrashIf(!style);
+        b->SetMouseOverStyle(style);
+        return;
+    }
+
+    CrashIf(true);
+}
+
+static ButtonVector* ButtonVectorFromStruct(TxtNode* def)
+{
+    CrashIf(!def->IsStructWithName("ButtonVector"));
+    ButtonVector *b = new ButtonVector();
+    size_t n = def->children->Count();
+    for (size_t i = 0; i < n; i++) {
+        TxtNode *n = def->children->At(i);
+        CrashIf(!n->IsText());
+        AddButtonVectorProp(b, n);
+    }
     return b;
+}
+
+static Vec<ButtonVector*> *ButtonVectorsFromStyleStructs(Vec<TxtNode*> *nodes)
+{
+    size_t n = nodes->Count();
+    Vec<ButtonVector*> *res = new Vec<ButtonVector*>(n);
+    for (size_t i = 0; i < n; i++) {
+        res->Append(ButtonVectorFromStruct(nodes->At(i)));
+    }
+    return res;
 }
 
 static char *LoadTextResource(int resId, size_t *sizeOut)
@@ -229,39 +354,37 @@ static char *LoadTextResource(int resId, size_t *sizeOut)
     DWORD size = SizeofResource(NULL, resSrc);
     const char *resData = (const char*)LockResource(res);
     char *s = str::DupN(resData, size);
-    if (sizeOut)
-        *sizeOut = size;
+    *sizeOut = size;
     UnlockResource(res);
     return s;
 }
 
 static bool LoadAndParseWinDesc()
 {
-    CrashIf(gParser);
-    ScopedMem<char> winDesc(LoadTextResource(IDD_EBOOK_WIN_DESC, NULL));
-    gParser = new SquareTree(winDesc);
-    CrashIf(!gParser->root || gParser->root->data.Count() == 0);
-    if (!gParser->root || gParser->root->data.Count() == 0)
-        gParser->root = new SquareTreeNode();
-    return gParser->root != NULL && gParser->root->data.Count() != 0;
+    CrashIf(gWinDesc);
+    gWinDesc = LoadTextResource(IDD_EBOOK_WIN_DESC, &gWinDescSize);
+    gParser = new TxtParser();
+    gParser->SetToParse(gWinDesc, gWinDescSize);
+    bool ok = ParseTxt(*gParser);
+    CrashIf(!ok);
+    return ok;
 }
 
 // should only be called once at the end of the program
 extern "C" static void DeleteEbookStyles()
 {
     delete gParser;
+    free(gWinDesc);
 }
 
 static void CreateEbookStyles()
 {
     CrashIf(styleMainWnd); // only call me once
 
-    CrashIf(!gParser || !gParser->root);
-    size_t off = 0;
-    SquareTreeNode *node;
-    while ((node = gParser->root->GetChild("Style", &off)) != NULL) {
-        StyleFromStruct(node);
-    }
+    Vec<TxtNode*> *nodes = GetStructsWithName(GetRootArray(gParser), "Style");
+    CrashIf(!nodes);
+
+    Vec<Style*> *styles = StylesFromStyleStructs(nodes);
 
     // TODO: support changing this color to gRenderCache.colorRange[1]
     //       or GetSysColor(COLOR_WINDOW) if gGlobalPrefs.useSysColors
@@ -275,6 +398,8 @@ static void CreateEbookStyles()
     styleProgress = StyleByName("styleProgress");
     CrashIf(!styleProgress);
 
+    delete styles;
+    delete nodes;
     atexit(DeleteEbookStyles);
 }
 
@@ -302,10 +427,12 @@ static void CreateLayout(EbookControls *ctrls)
 // TODO: create the rest of controls
 static void CreateControls(EbookControls *ctrls)
 {
-    size_t off = 0;
-    SquareTreeNode *node;
-    while ((node = gParser->root->GetChild("ButtonVector", &off)) != NULL) {
-        ButtonVector *b = ButtonVectorFromStruct(node);
+    Vec<TxtNode*> *nodes = GetStructsWithName(GetRootArray(gParser), "ButtonVector");
+    CrashIf(!nodes);
+
+    Vec<ButtonVector*> *vecButtons = ButtonVectorsFromStyleStructs(nodes);
+    for (size_t i = 0; i < vecButtons->Count(); i++) {
+        ButtonVector *b = vecButtons->At(i);
         if (b->IsNamed("nextButton"))
             ctrls->next = b;
         else if (b->IsNamed("prevButton"))
@@ -315,6 +442,8 @@ static void CreateControls(EbookControls *ctrls)
     }
     CrashIf(!ctrls->next);
     CrashIf(!ctrls->prev);
+    delete vecButtons;
+    delete nodes;
 }
 
 EbookControls *CreateEbookControls(HWND hwnd)
@@ -322,8 +451,7 @@ EbookControls *CreateEbookControls(HWND hwnd)
     if (!gCursorHand)
         gCursorHand  = LoadCursor(NULL, IDC_HAND);
 
-    if (!gParser) {
-        // TODO: verify return value
+    if (!gWinDesc) {
         LoadAndParseWinDesc();
         CreateEbookStyles();
     }

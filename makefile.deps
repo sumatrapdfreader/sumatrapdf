@@ -178,7 +178,8 @@ $(OS)\EbookControls.obj: $B\src\mui\MuiScrollBar.h $B\src\mui\SvgPath.h $B\src\r
 $(OS)\EbookControls.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
 $(OS)\EbookControls.obj: $B\src\utils\DebugLog.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
 $(OS)\EbookControls.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
-$(OS)\EbookControls.obj: $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OS)\EbookControls.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h
+$(OS)\EbookControls.obj: $B\src\utils\Vec.h
 $(OS)\EbookDoc.obj: $B\src\BaseEngine.h $B\src\EbookBase.h $B\src\EbookDoc.h
 $(OS)\EbookDoc.obj: $B\src\MobiDoc.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OS)\EbookDoc.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
