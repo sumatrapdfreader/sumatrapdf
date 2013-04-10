@@ -125,27 +125,6 @@ static void CreateEbookStyles()
     CrashIf(!styleMainWnd);
 }
 
-static void CreateLayout(EbookControls *ctrls)
-{
-    ctrls->topPart = new HorizontalLayout();
-    DirectionalLayoutData ld;
-    ld.Set(ctrls->prev, SizeSelf, 1.f, GetElAlignCenter());
-    ctrls->topPart->Add(ld);
-    ld.Set(ctrls->page, 1.f, 1.f, GetElAlignTop());
-    ctrls->topPart->Add(ld);
-    ld.Set(ctrls->next, SizeSelf, 1.f, GetElAlignBottom());
-    ctrls->topPart->Add(ld);
-
-    VerticalLayout *l = new VerticalLayout();
-    ld.Set(ctrls->topPart, 1.f, 1.f, GetElAlignTop());
-    l->Add(ld);
-    ld.Set(ctrls->progress, SizeSelf, 1.f, GetElAlignCenter());
-    l->Add(ld);
-    ld.Set(ctrls->status, SizeSelf, 1.f, GetElAlignCenter());
-    l->Add(ld);
-    ctrls->mainWnd->layout = l;
-}
-
 static void CreateControls(EbookControls *ctrls, ParsedMui& muiInfo)
 {
     ctrls->next = FindButtonVectorNamed(ebookMuiDef, "nextButton");
@@ -159,6 +138,8 @@ static void CreateControls(EbookControls *ctrls, ParsedMui& muiInfo)
     ctrls->progress->hCursor = gCursorHand;
     ctrls->page = (PageControl*)FindControlNamed(ebookMuiDef, "page");
     CrashIf(!ctrls->page);
+    ctrls->topPart = FindLayoutNamed(ebookMuiDef, "top");
+    CrashIf(!ctrls->topPart);
 }
 
 EbookControls *CreateEbookControls(HWND hwnd)
@@ -184,7 +165,8 @@ EbookControls *CreateEbookControls(HWND hwnd)
         Control *c = ebookMuiDef.allControls.At(i);
         ctrls->mainWnd->AddChild(c);
     }
-    CreateLayout(ctrls);
+    ctrls->mainWnd->layout = FindLayoutNamed(ebookMuiDef, "mainLayout");
+    CrashIf(!ctrls->mainWnd->layout);
     return ctrls;
 }
 

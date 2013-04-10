@@ -395,6 +395,18 @@ static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, const StructM
     return res;
 }
 
+static uint8_t *DecodeStruct(DecodeState& ds, const FieldMetadata *fieldDef, TxtNode *node, bool isCompact)
+{
+    uint8_t *d = NULL;
+    if (isCompact && (TextNode == node->type)) {
+        d = DeserializeCompact(ds, node, GetStructDef(fieldDef));
+    } else {
+        if (StructNode == node->type)
+            d = DeserializeRec(ds, node, GetStructDef(fieldDef));
+    }
+    return d;
+}
+
 static bool DecodeField(DecodeState& ds, TxtNode *firstNode, const char *fieldName, const FieldMetadata *fieldDef, uint8_t *structDataStart)
 {
     Type type = fieldDef->type;
@@ -439,17 +451,9 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, const char *fieldNa
         if (ok)
             ok = WriteStructInt(structDataPtr, type, n);
     } else if (TYPE_STRUCT_PTR == type) {
-        uint8_t *d = NULL;
-        if (isCompact && (TextNode == node->type)) {
-            d = DeserializeCompact(ds, node, GetStructDef(fieldDef));
-        } else {
-            if (StructNode != node->type)
-                return false;
-            d = DeserializeRec(ds, node, GetStructDef(fieldDef));
-        }
-        if (!d)
-            return false;
-        WriteStructPtrVal(structDataPtr, d);
+        uint8_t *d = DecodeStruct(ds, fieldDef, node, isCompact);
+        if (d)
+            WriteStructPtrVal(structDataPtr, d);
     } else if (TYPE_STR == type) {
         char *s = node->valStart;
         size_t sLen = node->valEnd - s;
@@ -480,13 +484,9 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, const char *fieldNa
         TxtNode *child;
         for (size_t i = 0; i < node->children->Count(); i++) {
             child = node->children->At(i);
-            // TODO: could be more permissive and ignore the error?
-            if (ArrayNode != child->type)
-                return false;
-            uint8_t *d = DeserializeRec(ds, child, GetStructDef(fieldDef));
-            if (!d)
-                return false;
-            vec->Append(d);
+            uint8_t *d = DecodeStruct(ds, fieldDef, child, isCompact);
+            if (d)
+                vec->Append(d);
         }
     } else {
         CrashIf(true);

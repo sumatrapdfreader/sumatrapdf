@@ -24,6 +24,7 @@ Button *        FindButtonNamed(ParsedMui& muiInfo, const char *name);
 ButtonVector *  FindButtonVectorNamed(ParsedMui& muiInfo, const char *name);
 ScrollBar *     FindScrollBarNamed(ParsedMui& muiInfo, const char *name);
 Control *       FindControlNamed(ParsedMui& muiInfo, const char *name);
+ILayout *       FindLayoutNamed(ParsedMui& muiInfo, const char *name);
 
 typedef Control * (*ControlCreatorFunc)(TxtNode *);
 

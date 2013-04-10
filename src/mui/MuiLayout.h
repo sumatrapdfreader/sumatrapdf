@@ -22,7 +22,10 @@ class ILayout
 {
 public:
     ScopedMem<char> name;
-    void SetName(const char *n) { name.Set(str::Dup(n)); }
+    void SetName(const char *n) {
+        if (n)
+            name.Set(str::Dup(n));
+    }
     bool IsNamed(const char *s) const {
         return str::EqI(name.Get(), s);
     }

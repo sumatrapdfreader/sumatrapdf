@@ -20,7 +20,7 @@ struct EbookControls {
     ButtonVector *      prev;
     ScrollBar *         progress;
     Button *            status;
-    HorizontalLayout *  topPart;
+    ILayout *           topPart;
 };
 
 EbookControls * CreateEbookControls(HWND hwnd);
