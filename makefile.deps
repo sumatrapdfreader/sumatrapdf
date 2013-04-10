@@ -83,7 +83,6 @@ $(OMUI)\MuiEventMgr.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src
 $(OMUI)\MuiEventMgr.obj: $B\src\utils\DebugLog.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OMUI)\MuiEventMgr.obj: $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h
 $(OMUI)\MuiEventMgr.obj: $B\src\utils\TxtParser.h $B\src\utils\Vec.h
-$(OMUI)\MuiFromText.obj: $B\src\BaseEngine.h $B\src\EbookBase.h $B\src\HtmlFormatter.h
 $(OMUI)\MuiFromText.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiFromText.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiDefs.h
 $(OMUI)\MuiFromText.obj: $B\src\mui\MuiEventMgr.h $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h

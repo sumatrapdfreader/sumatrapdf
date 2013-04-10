@@ -3,7 +3,7 @@
 
 #include "Mui.h"
 
-#include "HtmlFormatter.h"
+#include "HtmlParserLookup.h"
 #include "MuiDefs.h"
 #include "SvgPath.h"
 
