@@ -9,7 +9,7 @@
 
 static inline const StructInfo *GetSubstruct(const FieldInfo& field)
 {
-	return (const StructInfo *)field.value;
+    return (const StructInfo *)field.value;
 }
 
 static int ParseInt(const char *bytes)
