@@ -47,7 +47,7 @@ static void EnumeratePrinters()
 #endif
 
 /* Parse 'txt' as hex color and return the result in 'destColor' */
-static void ParseColor(int *destColor, const WCHAR* txt)
+static void ParseColor(COLORREF *destColor, const WCHAR *txt)
 {
     if (!destColor)
         return;
@@ -152,16 +152,16 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             forwardSearchLine = _wtoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-offset")) {
-            fwdSearch.offset = _wtoi(argList.At(++n));
+            forwardSearch.highlightOffset = _wtoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-width")) {
-            fwdSearch.width = _wtoi(argList.At(++n));
+            forwardSearch.highlightWidth = _wtoi(argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-color")) {
-            ParseColor(&fwdSearch.color, argList.At(++n));
+            ParseColor(&forwardSearch.highlightColor, argList.At(++n));
         }
         else if (is_arg_with_param("-fwdsearch-permanent")) {
-            fwdSearch.permanent = _wtoi(argList.At(++n));
+            forwardSearch.highlightPermanent = _wtoi(argList.At(++n));
         }
         else if (is_arg("-esc-to-exit")) {
             escToExit = true;
@@ -200,9 +200,8 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             colorRange[1] = WIN_COL_BLACK;
         }
         else if (is_arg("-set-color-range") && argCount > n + 2) {
-            STATIC_ASSERT(sizeof(colorRange[0]) == sizeof(int), colorref_as_int);
-            ParseColor((int *)&colorRange[0], argList.At(++n));
-            ParseColor((int *)&colorRange[1], argList.At(++n));
+            ParseColor(&colorRange[0], argList.At(++n));
+            ParseColor(&colorRange[1], argList.At(++n));
         }
         else if (is_arg("-presentation")) {
             enterPresentation = true;

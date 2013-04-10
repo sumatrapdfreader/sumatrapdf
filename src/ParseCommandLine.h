@@ -20,16 +20,11 @@ public:
     bool        printDialog;
     WCHAR *     printerName;
     WCHAR *     printSettings;
-    int         bgColor;
+    COLORREF    bgColor;
     WCHAR *     inverseSearchCmdLine;
     WCHAR *     forwardSearchOrigin;
     int         forwardSearchLine;
-    struct {
-        int     offset;
-        int     width;
-        int     color;
-        bool    permanent;
-    } fwdSearch;
+    ForwardSearch forwardSearch;
     bool        escToExit;
     bool        reuseInstance;
     char *      lang;
@@ -60,9 +55,9 @@ public:
     bool        crashOnOpen;
 
     CommandLineInfo() : makeDefault(false), exitWhenDone(false), printDialog(false),
-        printerName(NULL), printSettings(NULL), bgColor(-1), inverseSearchCmdLine(NULL),
+        printerName(NULL), printSettings(NULL), bgColor((COLORREF)-1),
         escToExit(false), reuseInstance(false), lang(NULL),
-        destName(NULL), pageNumber(-1),
+        destName(NULL), pageNumber(-1), inverseSearchCmdLine(NULL),
         restrictedUse(false), pluginURL(NULL),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
@@ -75,10 +70,10 @@ public:
     {
         colorRange[0] = RGB(0, 0, 0); // black
         colorRange[1] = RGB(0xFF, 0xFF, 0xFF); // white
-        fwdSearch.offset = 0;
-        fwdSearch.width = 0;
-        fwdSearch.color = 0;
-        fwdSearch.permanent = false;
+        forwardSearch.highlightOffset = 0;
+        forwardSearch.highlightWidth = 0;
+        forwardSearch.highlightColor = (COLORREF)-1;
+        forwardSearch.highlightPermanent = false;
     }
 
     ~CommandLineInfo() {

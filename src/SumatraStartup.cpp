@@ -99,7 +99,6 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     }
     else
         gBrushNoDocBg = CreateSolidBrush(COL_WINDOW_BG);
-    // TODO: fix logic
     COLORREF bgColor = ABOUT_BG_COLOR_DEFAULT != gUserPrefs->mainWindowBackground ? gUserPrefs->mainWindowBackground : ABOUT_BG_LOGO_COLOR;
     gBrushLogoBg = CreateSolidBrush(bgColor);
 #ifndef ABOUT_USE_LESS_COLORS
@@ -203,6 +202,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
         free(i.fileNames.Pop());
     }
     i.reuseInstance = i.exitWhenDone = false;
+    gUserPrefs->reuseInstance = false;
     // always display the toolbar when embedded (as there's no menubar in that case)
     gGlobalPrefs->toolbarVisible = true;
     // never allow esc as a shortcut to quit
@@ -258,10 +258,7 @@ static void RunUnitTests()
 static void GetCommandLineInfo(CommandLineInfo& i)
 {
     i.bgColor = gUserPrefs->mainWindowBackground;
-    i.fwdSearch.offset = gUserPrefs->forwardSearch.highlightOffset;
-    i.fwdSearch.width = gUserPrefs->forwardSearch.highlightWidth;
-    i.fwdSearch.color = gUserPrefs->forwardSearch.highlightColor;
-    i.fwdSearch.permanent = gUserPrefs->forwardSearch.highlightPermanent;
+    i.forwardSearch = gUserPrefs->forwardSearch;
     i.escToExit = gUserPrefs->escToExit;
     i.cbxR2L = gGlobalPrefs->cbxR2L;
     if (gGlobalPrefs->useSysColors) {
@@ -272,7 +269,6 @@ static void GetCommandLineInfo(CommandLineInfo& i)
         i.colorRange[0] = gUserPrefs->textColor;
         i.colorRange[1] = gUserPrefs->pageColor;
     }
-    // TODO: update with values from SumatraPDF-user.ini
     i.ParseCommandLine(GetCommandLine());
 }
 
@@ -359,11 +355,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gCrashOnOpen = i.crashOnOpen;
 
     gUserPrefs->mainWindowBackground = i.bgColor;
-    // TODO: set enableTeXEnhancements if any of these is non-default
-    gUserPrefs->forwardSearch.highlightOffset = i.fwdSearch.offset;
-    gUserPrefs->forwardSearch.highlightWidth = i.fwdSearch.width;
-    gUserPrefs->forwardSearch.highlightColor = i.fwdSearch.color;
-    gUserPrefs->forwardSearch.highlightPermanent = i.fwdSearch.permanent;
+    if (gUserPrefs->forwardSearch.highlightColor != i.forwardSearch.highlightColor ||
+        gUserPrefs->forwardSearch.highlightOffset != i.forwardSearch.highlightOffset ||
+        gUserPrefs->forwardSearch.highlightPermanent != i.forwardSearch.highlightPermanent ||
+        gUserPrefs->forwardSearch.highlightWidth != i.forwardSearch.highlightWidth) {
+        gGlobalPrefs->enableTeXEnhancements = true;
+    }
+    gUserPrefs->forwardSearch = i.forwardSearch;
     gUserPrefs->escToExit = i.escToExit;
     gGlobalPrefs->cbxR2L = i.cbxR2L;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
@@ -405,7 +403,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
-    if (!i.reuseInstance && gUserPrefs->reuseInstance && !gPluginMode && FindWindow(FRAME_CLASS_NAME, 0))
+    if (!i.reuseInstance && gUserPrefs->reuseInstance && FindWindow(FRAME_CLASS_NAME, 0))
         i.reuseInstance = true;
 
     WindowInfo *win = NULL;

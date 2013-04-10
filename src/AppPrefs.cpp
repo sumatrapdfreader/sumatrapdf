@@ -26,6 +26,20 @@
 GlobalPrefs *gGlobalPrefs = NULL;
 UserPrefs *gUserPrefs = NULL;
 
+Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
+{
+    Favorite *fav = AllocStruct<Favorite>();
+    fav->pageNo = pageNo;
+    fav->name = str::Dup(name);
+    fav->pageLabel = str::Dup(pageLabel);
+    return fav;
+}
+
+void DeleteFavorite(Favorite *fav)
+{
+    FreeStruct(&gFavoriteInfo, fav);
+}
+
 DisplayState *NewDisplayState(const WCHAR *filePath)
 {
     DisplayState *ds = (DisplayState *)DeserializeStruct(&gFileStateInfo, NULL);
@@ -41,21 +55,12 @@ void DeleteDisplayState(DisplayState *ds)
 
 void DeleteGlobalPrefs(GlobalPrefs *globalPrefs)
 {
+    if (!globalPrefs)
+        return;
+    for (size_t i = 0; i < globalPrefs->fileStates->Count(); i++) {
+        delete globalPrefs->fileStates->At(i)->thumbnail;
+    }
     FreeStruct(&gGlobalPrefsInfo, globalPrefs);
-}
-
-Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
-{
-    Favorite *fav = AllocStruct<Favorite>();
-    fav->pageNo = pageNo;
-    fav->name = str::Dup(name);
-    fav->pageLabel = str::Dup(pageLabel);
-    return fav;
-}
-
-void DeleteFavorite(Favorite *fav)
-{
-    FreeStruct(&gFavoriteInfo, fav);
 }
 
 // metadata mapping from legacy Benc names to current structures
@@ -142,8 +147,10 @@ static bool BencGlobalPrefsCallback(BencDict *dict, const FieldInfo *field, cons
         for (size_t j = 0; j < files->Count(); j++) {
             FileState *file = files->At(j);
             file->favorites = new Vec<Favorite *>();
+            if (!favDict)
+                continue;
             BencArray *favList = NULL;
-            for (size_t k = 0; k < favDict->Length() && !favList; k += 2) {
+            for (size_t k = 0; favDict && k < favDict->Length() && !favList; k += 2) {
                 BencString *path = favDict->GetString(k);
                 ScopedMem<WCHAR> filePath(path ? path->Value() : NULL);
                 if (str::Eq(filePath, file->filePath))
@@ -245,8 +252,7 @@ bool EnumFromName(const WCHAR *txt, DisplayMode *mode)
 /* Caller needs to DeleteGlobalPrefs(gGlobalPrefs) */
 bool LoadPrefs()
 {
-    gFileHistory.UpdateStatesSource(NULL);
-    DeleteGlobalPrefs(gGlobalPrefs);
+    CrashIf(gGlobalPrefs);
 
     ScopedMem<WCHAR> path(AppGenDataFilename(NEW_PREFS_FILE_NAME));
     ScopedMem<char> prefsData(file::ReadAll(path, NULL));
@@ -255,15 +261,15 @@ bool LoadPrefs()
 
     if (!file::Exists(path)) {
         ScopedMem<WCHAR> bencPath(AppGenDataFilename(OLD_PREFS_FILE_NAME));
-        ScopedMem<char> prefsData(file::ReadAll(bencPath, NULL));
-        DeserializeStructBenc(&gBencGlobalPrefs, prefsData, gGlobalPrefs, BencGlobalPrefsCallback);
+        ScopedMem<char> bencPrefsData(file::ReadAll(bencPath, NULL));
+        DeserializeStructBenc(&gBencGlobalPrefs, bencPrefsData, gGlobalPrefs, BencGlobalPrefsCallback);
     }
 
     gUserPrefs = &gGlobalPrefs->userPrefs;
     ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
     if (userPath && file::Exists(userPath)) {
-        ScopedMem<char> prefsData(file::ReadAll(userPath, NULL));
-        DeserializeStruct(&gUserPrefsInfo, prefsData, gUserPrefs);
+        ScopedMem<char> userPrefsData(file::ReadAll(userPath, NULL));
+        DeserializeStruct(&gUserPrefsInfo, userPrefsData, gUserPrefs);
     }
 
     if (!gGlobalPrefs->currLangCode || !trans::ValidateLangCode(gGlobalPrefs->currLangCode)) {
@@ -279,6 +285,9 @@ bool LoadPrefs()
     gGlobalPrefs->openCountWeek = GetWeekCount();
     for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
         DisplayState *state = gGlobalPrefs->fileStates->At(i);
+        ok = DisplayModeConv::EnumFromName(state->displayMode, &state->displayModeEnum);
+        if (!ok)
+            state->displayModeEnum = DM_AUTOMATIC;
         // "age" openCount statistics (cut in in half after every week)
         state->openCount >>= weekDiff;
         // work-around https://code.google.com/p/sumatrapdf/issues/detail?id=2140
@@ -324,6 +333,7 @@ bool SavePrefs()
 
     for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
         DisplayState *state = gGlobalPrefs->fileStates->At(i);
+        str::ReplacePtr(&state->displayMode, DisplayModeConv::NameFromEnum(state->displayModeEnum));
         // BUG: 2140
         if (!IsValidZoom(state->zoomVirtual)) {
             dbglog::CrashLogF("Invalid ds->zoomVirtual: %.4f", state->zoomVirtual);
@@ -386,6 +396,10 @@ bool ReloadPrefs()
     ScopedMem<char> currLangCode(str::Dup(gGlobalPrefs->currLangCode));
     bool toolbarVisible = gGlobalPrefs->toolbarVisible;
     bool useSysColors = gGlobalPrefs->useSysColors;
+
+    gFileHistory.UpdateStatesSource(NULL);
+    DeleteGlobalPrefs(gGlobalPrefs);
+    gGlobalPrefs = NULL;
 
     bool ok = LoadPrefs();
     if (!ok)

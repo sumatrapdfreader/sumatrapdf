@@ -5,7 +5,6 @@
 #include "Favorites.h"
 
 #include "AppPrefs.h"
-#include "AppTools.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "FileHistory.h"
@@ -202,12 +201,12 @@ static void AppendFavMenuItems(HMENU m, DisplayState *f, UINT& idx, bool combine
 
 static int SortByBaseFileName(const void *a, const void *b)
 {
-    WCHAR *filePathA = *(WCHAR**)a;
-    WCHAR *filePathB = *(WCHAR**)b;
+    const WCHAR *filePathA = *(const WCHAR **)a;
+    const WCHAR *filePathB = *(const WCHAR **)b;
     return str::CmpNatural(path::GetBaseName(filePathA), path::GetBaseName(filePathB));
 }
 
-static void GetSortedFilePaths(Vec<WCHAR*>& filePathsSortedOut, DisplayState *toIgnore=NULL)
+static void GetSortedFilePaths(Vec<const WCHAR *>& filePathsSortedOut, DisplayState *toIgnore=NULL)
 {
     DisplayState *ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != NULL; i++) {
@@ -233,12 +232,12 @@ static void AppendFavMenus(HMENU m, const WCHAR *currFilePath)
     // To minimize mouse movement when navigating current file via favorites
     // menu, put favorites for current file first
     DisplayState *currFileFav = NULL;
-    if (NULL != currFilePath) {
+    if (currFilePath) {
         currFileFav = gFavorites.GetFavByFilePath(currFilePath);
     }
 
     // sort the files with favorites by base file name of file path
-    Vec<WCHAR*> filePathsSorted;
+    Vec<const WCHAR *> filePathsSorted;
     if (HasPermission(Perm_DiskAccess)) {
         // only show favorites for other files, if we're allowed to open them
         GetSortedFilePaths(filePathsSorted, currFileFav);
@@ -258,8 +257,7 @@ static void AppendFavMenus(HMENU m, const WCHAR *currFilePath)
     if (menusCount > MAX_FAV_MENUS)
         menusCount = MAX_FAV_MENUS;
     for (size_t i = 0; i < menusCount; i++) {
-        WCHAR *filePath = filePathsSorted.At(i);
-        const WCHAR *fileName = path::GetBaseName(filePath);
+        const WCHAR *filePath = filePathsSorted.At(i);
         DisplayState *f = gFavorites.GetFavByFilePath(filePath);
         HMENU sub = m;
         bool combined = (f->favorites->Count() == 1);
@@ -270,6 +268,7 @@ static void AppendFavMenus(HMENU m, const WCHAR *currFilePath)
             if (f == currFileFav) {
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
+                const WCHAR *fileName = path::GetBaseName(filePath);
                 ScopedMem<WCHAR> s(win::menu::ToSafeString(fileName));
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, s);
             }
@@ -456,7 +455,7 @@ void PopulateFavTreeIfNeeded(WindowInfo *win)
     if (TreeView_GetCount(hwndTree) > 0)
         return;
 
-    Vec<WCHAR*> filePathsSorted;
+    Vec<const WCHAR *> filePathsSorted;
     GetSortedFilePaths(filePathsSorted);
 
     SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);

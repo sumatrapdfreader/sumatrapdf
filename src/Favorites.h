@@ -5,6 +5,7 @@
 #define Favorites_h
 
 #include "DisplayState.h"
+#include "SettingsStructs.h"
 
 class WindowInfo;
 

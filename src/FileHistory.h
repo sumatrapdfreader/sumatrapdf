@@ -9,21 +9,20 @@
 
 /* Handling of file history list.
 
-   We keep an infinite list of all (still existing in the file system)
+   We keep a mostly infinite list of all (still existing in the file system)
    files that a user has ever opened. For each file we also keep a bunch of
    attributes describing the display state at the time the file was closed.
 
    We persist this list inside preferences file to something looking like this:
 
-File History:
-{
-   File: C:\path\to\file.pdf
-   Display Mode: single page
-   Page: 1
-   ZoomVirtual: 123.4567
-   Window State: 2
+FileStates [
+   FilePath =  C:\path\to\file.pdf
+   DisplayMode = single page
+   PageNo =  1
+   ZoomVirtual = 123.4567
+   Window State = 2
    ...
-}
+]
 etc...
 
     We deserialize this info at startup and serialize when the application
@@ -44,6 +43,7 @@ etc...
 #define FILE_HISTORY_MAX_FILES 1000
 
 class FileHistory {
+    // owned by gGlobalPrefs->fileStates
     Vec<DisplayState *> *states;
 
     // sorts the most often used files first
@@ -65,7 +65,7 @@ class FileHistory {
 
 public:
     FileHistory() { }
-    ~FileHistory() { Clear(); }
+    ~FileHistory() { }
 
     void Clear() {
         if (!states)
@@ -173,8 +173,9 @@ public:
 
         for (size_t j = states->Count(); j > 0; j--) {
             DisplayState *state = states->At(j - 1);
-            // never forget pinned documents and documents we've remembered a password for
-            if (state->isPinned || state->decryptionKey != NULL)
+            // never forget pinned documents, documents we've remembered a password for and
+            // documents for which there are favorites
+            if (state->isPinned || state->decryptionKey != NULL || state->favorites->Count() > 0)
                 continue;
             // forget about missing documents without valuable state
             if (state->isMissing && (alwaysUseGlobalValues || state->useGlobalValues))
@@ -189,7 +190,6 @@ public:
     }
 
     void UpdateStatesSource(Vec<DisplayState *> *states) {
-        Clear();
         this->states = states;
     }
 };
