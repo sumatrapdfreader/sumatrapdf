@@ -150,6 +150,8 @@ solution "muitest"
       "src/utils/DebugLog*",
       "src/Utils/FileUtil*",
       "src/utils/GdiPlusUtil*",
+      "src/utils/HtmlParserLookup*",
+      "src/utils/SerializeTxt*",
       "src/utils/StrSlice*",
       "src/utils/StrUtil*",
       "src/utils/TgaReader*",
@@ -164,5 +166,5 @@ solution "muitest"
       "src/mui/*_ut.cpp",
       "src/mui/MiniMui*",
     }
-    includedirs { "src/utils", "src/utils/msvc", "src/mui", "tools/sertxt_test" }
+    includedirs { "src", "src/utils", "src/utils/msvc", "src/mui"}
     links { "gdiplus", "comctl32", "shlwapi", "Version" }

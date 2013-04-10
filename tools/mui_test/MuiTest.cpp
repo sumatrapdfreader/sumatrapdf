@@ -148,16 +148,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             PostQuitMessage(0);
             break;
 
-        // if we return 0, during WM_PAINT we can check
-        // PAINTSTRUCT.fErase to see if WM_ERASEBKGND
-        // was sent before WM_PAINT
-        case WM_ERASEBKGND:
-            return 0;
-
-        case WM_PAINT:
-            gMainWnd->OnPaint(hwnd);
-            break;
-
         case WM_KEYDOWN:
             return OnKeyDown(hwnd, msg, wParam, lParam);
 
@@ -292,6 +282,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
 
     ret = RunMessageLoop();
+    delete gMainWnd;
 
 Exit:
     mui::Destroy();
