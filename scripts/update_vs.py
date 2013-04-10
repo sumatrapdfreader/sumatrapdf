@@ -49,6 +49,9 @@ def is_resources_group_file(path):
 def is_docs_file(path):
     return ext(path) in [".txt", ".ini"]
 
+def is_c_or_docs_file(path):
+    return is_c_src_file(path) or is_docs_file(path)
+
 # files that we don't want to be added
 g_global_blacklist = [
     "chm_http.c", "enum_chmLib.c", "enumdir_chmLib.c", "extract_chmLib.c", "test_chmLib.c",
@@ -178,7 +181,7 @@ def is_sumatra_src_file(path):
 g_sumatra_files = list_top_dir_files("src", is_sumatra_src_file)
 g_sumatra_engine_files = list_top_dir_files("src", is_sumatra_engine_src_file)
 g_sumatra_ebook_files = list_top_dir_files("src", is_sumatra_ebook_src_file)
-g_mui_files = list_top_dir_files(pj("src", "mui"), is_c_src_file)
+g_mui_files = list_top_dir_files(pj("src", "mui"), is_c_or_docs_file)
 g_utils_files = list_top_dir_files(pj("src", "utils"), is_c_src_file)
 g_docs_files = list_top_dir_files("docs", is_docs_file)
 g_chm_files = list_top_dir_files(pj("ext", "CHMLib", "src"), is_c_src_file)

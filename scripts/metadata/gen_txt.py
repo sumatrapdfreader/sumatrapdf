@@ -324,30 +324,43 @@ def structs_from_top_level_value_rec(struct, structs):
     assert struct.is_struct()
     for field in struct.values:
         if field.is_array():
-            add_cls(field.val.typ, structs)
+            try:
+                add_cls(field.val.typ, structs)
+            except:
+                print(field)
+                print(field.name)
+                raise
         elif field.is_struct():
             structs_from_top_level_value_rec(field.val, structs)
     add_cls(struct.__class__, structs)
-
-def structs_from_top_level_value(val):
-    structs = []
-    structs_from_top_level_value_rec(val, structs)
-    return structs
 
 def gen_top_level_funcs_txt(top_level):
     assert top_level.is_struct()
     name = top_level.name()
     return top_level_funcs_txt_tmpl % locals()
 
-def gen_for_top_level_val(top_level_val, file_path):
-    structs = structs_from_top_level_value(top_level_val)
-    prototypes = gen_prototypes(top_level_val.__class__)
+def _gen_for_top_level_vals(top_level_vals, file_path):
+    structs = []
+    for v in top_level_vals:
+        structs_from_top_level_value_rec(v, structs)
+
+    prototypes = ""
+    for v in top_level_vals:
+        prototypes += gen_prototypes(v.__class__)
+
     struct_defs = gen_struct_defs(structs)
     structs_metadata = gen_structs_metadata_txt(structs)
-    top_level_funcs = gen_top_level_funcs_txt(top_level_val)
+    top_level_funcs = ""
+    for v in top_level_vals:
+        top_level_funcs += gen_top_level_funcs_txt(v)
+
     file_name = os.path.basename(file_path)
     write_to_file(file_path + ".h",  h_txt_tmpl % locals())
     write_to_file(file_path + ".cpp", cpp_txt_tmpl % locals())
+
+def gen_for_top_level_vals(top_level_vals, file_path):
+    # TODO: if element, wrap in a list
+    _gen_for_top_level_vals(top_level_vals, file_path)
 
 # we add whitespace to all lines that don't have "str" in them
 # which is how we prevent adding whitespace to string fields,
@@ -358,7 +371,7 @@ def add_random_ws(s):
     return s + " " * random.randint(1, 4)
 
 def gen_txt_for_top_level_val(top_level_val, file_path):
-    lines = ["; see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for documentation"]
+    lines = []
     # -1 is a bit hackish, because we elide the name of the top-level struct
     # to make it more readable
     ser_struct(top_level_val, None, lines, -1)

@@ -186,8 +186,12 @@ class Field(object):
 
         if self.is_no_store(): assert not self.is_compact()
         if self.is_compact():
-            assert typ_val.is_struct()
-            for field in typ_val.fields:
+            to_test = typ_val
+            if typ_val.is_array():
+                to_test = typ_val.typ
+            else:
+                assert to_test.is_struct()
+            for field in to_test.fields:
                 assert not field.is_struct()
 
         if typ_val.is_struct():

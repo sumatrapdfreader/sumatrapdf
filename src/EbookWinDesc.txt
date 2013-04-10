@@ -73,3 +73,21 @@ EbookPage [
     name: page
     style: stylePage
 ]
+
+HorizontalLayout [
+    name: top
+    children [
+        nextButton self 1 center
+        page 1 1 top
+        prevButton self 1 bottom
+    ]
+]
+
+VerticalLayout [
+    name: mainLayout
+    children [
+        top 1 1 top
+        progressScrollBar self 1 center
+        statusButton self 1 center
+    ]
+]

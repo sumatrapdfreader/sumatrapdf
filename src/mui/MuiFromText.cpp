@@ -4,10 +4,8 @@
 #include "Mui.h"
 
 #include "HtmlFormatter.h"
-#include "MuiButtonVectorDef.h"
-#include "MuiButtonDef.h"
+#include "MuiDefs.h"
 #include "SvgPath.h"
-#include "MuiScrollBarDef.h"
 
 namespace mui {
 
@@ -314,6 +312,10 @@ static void ParseMuiDefinition(TxtNode *root, ParsedMui& res)
             ScrollBar *sb = ScrollBarFromDef(node);
             res.allControls.Append(sb);
             res.scrollBars.Append(sb);
+        } else if (node->IsStructWithName("HorizontalLayout")) {
+            // TODO: implement me
+        } else if (node->IsStructWithName("VerticalLayout")) {
+            // TODO: implement me
         } else {
             ScopedMem<char> keyName(node->KeyDup());
             ControlCreatorFunc creatorFunc = FindCreatorFuncFor(keyName);

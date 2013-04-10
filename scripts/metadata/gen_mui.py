@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-from metadata import Struct, Field, String, WString
-from gen_txt import gen_for_top_level_val, set_whitespace
+from metadata import Struct, Field, String, WString, Array, Compact
+from gen_txt import gen_for_top_level_vals, set_whitespace
 
 import sys
 sys.path.append("scripts") # assumes is being run as ./scrpts/metadata/gen_mui.py
@@ -44,17 +44,39 @@ class EbookPageDef(Struct):
         Field("style", String(None)),
     ]
 
+class DirectionalLayoutDataDef(Struct):
+    fields = [
+        Field("controlName", String(None)),
+        Field("sla", String(None)), # this is really a float
+        Field("snla", String(None)), # this is really a float
+        Field("align", String(None)),
+    ]
+
+class HorizontalLayoutDef(Struct):
+    fields = [
+        Field("name", String(None)),
+        Field("children", Array(DirectionalLayoutDataDef, []), Compact),
+    ]
+
+class VerticalLayoutDef(Struct):
+    fields = [
+        Field("name", String(None)),
+        Field("children", Array(DirectionalLayoutDataDef, []), Compact),
+    ]
+
 def gen_mui():
     dst_dir = mui_src_dir()
-    file_path_base = os.path.join(dst_dir, "MuiButtonVectorDef")
-    gen_for_top_level_val(ButtonVectorDef(), file_path_base)
-    file_path_base = os.path.join(dst_dir, "MuiButtonDef")
-    gen_for_top_level_val(ButtonDef(), file_path_base)
-    file_path_base = os.path.join(dst_dir, "MuiScrollBarDef")
-    gen_for_top_level_val(ScrollBarDef(), file_path_base)
+    structs = [
+        ButtonVectorDef(), ButtonDef(), ScrollBarDef(),
+        DirectionalLayoutDataDef(), HorizontalLayoutDef(),
+        VerticalLayoutDef()
+    ]
+
+    file_path_base = os.path.join(dst_dir, "MuiDefs")
+    gen_for_top_level_vals(structs, file_path_base)
 
     file_path_base = os.path.join(src_dir(), "MuiEbookPageDef")
-    gen_for_top_level_val(EbookPageDef(), file_path_base)
+    gen_for_top_level_vals([EbookPageDef()], file_path_base)
 
 def main():
     gen_mui()

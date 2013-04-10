@@ -138,10 +138,9 @@
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\MuiBase.cpp" />
     <ClCompile Include="..\src\mui\MuiButton.cpp" />
-    <ClCompile Include="..\src\mui\MuiButtonDef.cpp" />
-    <ClCompile Include="..\src\mui\MuiButtonVectorDef.cpp" />
     <ClCompile Include="..\src\mui\MuiControl.cpp" />
     <ClCompile Include="..\src\mui\MuiCss.cpp" />
+    <ClCompile Include="..\src\mui\MuiDefs.cpp" />
     <ClCompile Include="..\src\mui\MuiEventMgr.cpp" />
     <ClCompile Include="..\src\mui\MuiFromText.cpp" />
     <ClCompile Include="..\src\mui\MuiGrid.cpp" />
@@ -149,7 +148,6 @@
     <ClCompile Include="..\src\mui\MuiLayout.cpp" />
     <ClCompile Include="..\src\mui\MuiPainter.cpp" />
     <ClCompile Include="..\src\mui\MuiScrollBar.cpp" />
-    <ClCompile Include="..\src\mui\MuiScrollBarDef.cpp" />
     <ClCompile Include="..\src\mui\SvgPath.cpp" />
     <ClCompile Include="..\src\mui\SvgPath_ut.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
@@ -403,10 +401,9 @@
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\MuiBase.h" />
     <ClInclude Include="..\src\mui\MuiButton.h" />
-    <ClInclude Include="..\src\mui\MuiButtonDef.h" />
-    <ClInclude Include="..\src\mui\MuiButtonVectorDef.h" />
     <ClInclude Include="..\src\mui\MuiControl.h" />
     <ClInclude Include="..\src\mui\MuiCss.h" />
+    <ClInclude Include="..\src\mui\MuiDefs.h" />
     <ClInclude Include="..\src\mui\MuiEventMgr.h" />
     <ClInclude Include="..\src\mui\MuiFromText.h" />
     <ClInclude Include="..\src\mui\MuiGrid.h" />
@@ -414,7 +411,6 @@
     <ClInclude Include="..\src\mui\MuiLayout.h" />
     <ClInclude Include="..\src\mui\MuiPainter.h" />
     <ClInclude Include="..\src\mui\MuiScrollBar.h" />
-    <ClInclude Include="..\src\mui\MuiScrollBarDef.h" />
     <ClInclude Include="..\src\mui\SvgPath.h" />
     <ClInclude Include="..\src\utils\Allocator.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
@@ -497,6 +493,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\EbookWinDesc.txt" />
+    <None Include="..\src\mui\mui-todo.txt" />
     <None Include="..\docs\codingstyle.txt" />
     <None Include="..\docs\mui-html-fusion.txt" />
     <None Include="..\docs\releasenotes.txt" />

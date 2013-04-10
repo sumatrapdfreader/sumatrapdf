@@ -219,16 +219,13 @@
     <ClCompile Include="..\src\mui\MuiButton.cpp">
       <Filter>mui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mui\MuiButtonDef.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiButtonVectorDef.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\mui\MuiControl.cpp">
       <Filter>mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\MuiCss.cpp">
+      <Filter>mui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mui\MuiDefs.cpp">
       <Filter>mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\MuiEventMgr.cpp">
@@ -250,9 +247,6 @@
       <Filter>mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\MuiScrollBar.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\mui\MuiScrollBarDef.cpp">
       <Filter>mui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\SvgPath.cpp">
@@ -1010,16 +1004,13 @@
     <ClInclude Include="..\src\mui\MuiButton.h">
       <Filter>mui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\mui\MuiButtonDef.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiButtonVectorDef.h">
-      <Filter>mui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\mui\MuiControl.h">
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\MuiCss.h">
+      <Filter>mui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mui\MuiDefs.h">
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\MuiEventMgr.h">
@@ -1041,9 +1032,6 @@
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\MuiScrollBar.h">
-      <Filter>mui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MuiScrollBarDef.h">
       <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\SvgPath.h">
@@ -1283,6 +1271,9 @@
   <ItemGroup>
     <None Include="..\src\EbookWinDesc.txt">
       <Filter>sumatra</Filter>
+    </None>
+    <None Include="..\src\mui\mui-todo.txt">
+      <Filter>mui</Filter>
     </None>
     <None Include="..\docs\codingstyle.txt">
       <Filter>docs</Filter>

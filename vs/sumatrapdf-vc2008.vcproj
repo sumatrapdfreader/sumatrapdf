@@ -607,22 +607,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\mui\MuiButtonDef.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\mui\MuiButtonDef.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\mui\MuiButtonVectorDef.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\mui\MuiButtonVectorDef.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\mui\MuiFromText.cpp"
 					>
 				</File>
@@ -631,11 +615,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\mui\MuiScrollBarDef.cpp"
+					RelativePath="..\src\mui\MuiDefs.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\mui\MuiScrollBarDef.h"
+					RelativePath="..\src\mui\MuiDefs.h"
 					>
 				</File>
 			</Filter>
