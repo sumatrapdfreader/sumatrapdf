@@ -354,6 +354,9 @@
     <ClCompile Include="..\src\utils\SerializeTxt.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\SettingsUtil.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -899,6 +902,9 @@
     <ClInclude Include="..\src\Selection.h">
       <Filter>sumatra</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SettingsStructs.h">
+      <Filter>sumatra</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\StressTesting.h">
       <Filter>sumatra</Filter>
     </ClInclude>
@@ -1128,6 +1134,9 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\SerializeTxt.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\SettingsUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\Sigslot.h">

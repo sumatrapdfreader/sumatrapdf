@@ -534,7 +534,7 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
     ClientRect rc(win.hwndCanvas);
     UpdateAboutLayoutInfo(win.hwndCanvas, hdc, &rc);
     DrawAbout(win.hwndCanvas, hdc, rc, win.staticLinks);
-    if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs.rememberOpenedFiles) {
+    if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
         RectI rect = DrawBottomRightLink(win.hwndCanvas, hdc, _TR("Show frequently read"));
         win.staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }
@@ -790,6 +790,7 @@ static RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
 
 static bool LoadThumbnail(DisplayState& ds)
 {
+    delete ds.thumbnail;
     ds.thumbnail = NULL;
 
     ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
@@ -811,8 +812,10 @@ bool HasThumbnail(DisplayState& ds)
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
     FILETIME fileTime = file::GetModificationTime(ds.filePath);
     // delete the thumbnail if the file is newer than the thumbnail
-    if (FileTimeDiffInSecs(fileTime, bmpTime) > 0)
+    if (FileTimeDiffInSecs(fileTime, bmpTime) > 0) {
+        delete ds.thumbnail;
         ds.thumbnail = NULL;
+    }
 
     return ds.thumbnail != NULL;
 }
@@ -842,5 +845,6 @@ void RemoveThumbnail(DisplayState& ds)
     ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
     if (bmpPath)
         file::Delete(bmpPath);
+    delete ds.thumbnail;
     ds.thumbnail = NULL;
 }

@@ -134,9 +134,9 @@ bool IsValidZoom(float zoomLevel)
 void DisplayModel::DisplayStateFromModel(DisplayState *ds)
 {
     if (!ds->filePath || !str::EqI(ds->filePath, FilePath()))
-        ds->filePath.Set(str::Dup(FilePath()));
+        str::ReplacePtr(&ds->filePath, FilePath());
 
-    ds->displayMode = presentationMode ? presDisplayMode : GetDisplayMode();
+    ds->displayModeEnum = presentationMode ? presDisplayMode : GetDisplayMode();
     ds->rotation = rotation;
     ds->zoomVirtual = presentationMode ? presZoomVirtual : zoomVirtual;
     CrashIf(!IsValidZoom(ds->zoomVirtual));
@@ -148,7 +148,8 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
     else
         ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
 
-    ds->decryptionKey.Set(engine->GetDecryptionKey());
+    free(ds->decryptionKey);
+    ds->decryptionKey = engine->GetDecryptionKey();
 }
 
 SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent)

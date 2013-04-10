@@ -198,9 +198,9 @@ void ToggleTocBox(WindowInfo *win)
     if (!win->IsDocLoaded())
         return;
     if (win->tocVisible) {
-        SetSidebarVisibility(win, false, gGlobalPrefs.favVisible);
+        SetSidebarVisibility(win, false, gGlobalPrefs->favVisible);
     } else {
-        SetSidebarVisibility(win, true,  gGlobalPrefs.favVisible);
+        SetSidebarVisibility(win, true,  gGlobalPrefs->favVisible);
         SetFocus(win->hwndTocTree);
     }
 }
@@ -433,7 +433,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
         case WM_ERASEBKGND:
             return FALSE;
         case WM_CHAR:
-            if (VK_ESCAPE == wParam && gGlobalPrefs.escToExit)
+            if (VK_ESCAPE == wParam && gUserPrefs->escToExit)
                 DestroyWindow(win->hwndFrame);
             break;
         case WM_KEYDOWN:
@@ -515,7 +515,7 @@ void CreateToc(WindowInfo *win)
 {
     // toc windows
     win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD|WS_CLIPCHILDREN,
-                                   0, 0, gGlobalPrefs.sidebarDx, 0,
+                                   0, 0, gGlobalPrefs->sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, ghinst, NULL);
     HWND title = CreateWindow(WC_STATIC, L"", WS_VISIBLE | WS_CHILD,
                               0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TITLE, ghinst, NULL);

@@ -23,7 +23,7 @@
 void MenuUpdateDisplayMode(WindowInfo* win)
 {
     bool enabled = win->IsDocLoaded();
-    DisplayMode displayMode = enabled ? win->dm->GetDisplayMode() : gGlobalPrefs.defaultDisplayMode;
+    DisplayMode displayMode = enabled ? win->dm->GetDisplayMode() : gGlobalPrefs->defaultDisplayModeEnum;
 
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++)
         win::menu::SetEnabled(win->menu, id, enabled);
@@ -257,16 +257,18 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath, b
 
     const int maxEntries = IDM_OPEN_WITH_EXTERNAL_LAST - IDM_OPEN_WITH_EXTERNAL_FIRST + 1;
     int count = 0;
-    for (size_t i = 0; i < gUserPrefs.vecCommandLine.Count() && count < maxEntries; i++) {
-        const WCHAR *filter = gUserPrefs.vecFilter.At(i);
-        if (filter && !str::Eq(filter, L"*") && !(filePath && path::Match(filePath, filter)))
+    for (size_t i = 0; i < gUserPrefs->externalViewers->Count() && count < maxEntries; i++) {
+        ExternalViewer *ev = gUserPrefs->externalViewers->At(i);
+        if (!ev->commandLine)
+            continue;
+        if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter)))
             continue;
 
         ScopedMem<WCHAR> appName;
-        const WCHAR *name = gUserPrefs.vecName.At(i);
+        const WCHAR *name = ev->name;
         if (str::IsEmpty(name)) {
             WStrVec args;
-            ParseCmdLine(gUserPrefs.vecCommandLine.At(i), args, 2);
+            ParseCmdLine(ev->commandLine, args, 2);
             if (args.Count() == 0)
                 continue;
             appName.Set(str::Dup(path::GetBaseName(args.At(0))));
@@ -345,7 +347,7 @@ static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
 
 void MenuUpdateZoom(WindowInfo* win)
 {
-    float zoomVirtual = gGlobalPrefs.defaultZoom;
+    float zoomVirtual = gGlobalPrefs->defaultZoom;
     if (win->IsDocLoaded())
         zoomVirtual = win->dm->ZoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
@@ -410,11 +412,11 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
     win::menu::SetEnabled(win->menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
-    bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs.tocVisible;
+    bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->tocVisible;
     win::menu::SetChecked(win->menu, IDM_VIEW_BOOKMARKS, checked);
 
-    win::menu::SetChecked(win->menu, IDM_FAV_TOGGLE, gGlobalPrefs.favVisible);
-    win::menu::SetChecked(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs.toolbarVisible);
+    win::menu::SetChecked(win->menu, IDM_FAV_TOGGLE, gGlobalPrefs->favVisible);
+    win::menu::SetChecked(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs->toolbarVisible);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
@@ -452,13 +454,13 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
 #ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
     win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
-    win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gUserPrefs.traditionalEbookUI);
+    win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gUserPrefs->ebookUI.traditionalEbookUI);
 #endif
 }
 
 void OnAboutContextMenu(WindowInfo* win, int x, int y)
 {
-    if (!HasPermission(Perm_SavePreferences | Perm_DiskAccess) || !gGlobalPrefs.rememberOpenedFiles || !gGlobalPrefs.showStartPage)
+    if (!HasPermission(Perm_SavePreferences | Perm_DiskAccess) || !gGlobalPrefs->rememberOpenedFiles || !gGlobalPrefs->showStartPage)
         return;
 
     const WCHAR *filePath = GetStaticLink(win->staticLinks, x, y);
@@ -492,6 +494,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
 
     case IDM_FORGET_SELECTED_DOCUMENT:
         gFileHistory.Remove(state);
+        delete state->thumbnail;
         delete state;
         CleanUpThumbnailCache(gFileHistory);
         win->DeleteInfotip();

@@ -279,24 +279,23 @@ bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo)
 {
     if (!HasPermission(Perm_DiskAccess) || !file::Exists(filePath))
         return false;
-    for (size_t i = 0; i < gUserPrefs.vecCommandLine.Count() && i <= idx; i++) {
-        const WCHAR *filter = gUserPrefs.vecFilter.At(i);
-        if (filter && !str::Eq(filter, L"*") && !(filePath && path::Match(filePath, filter)))
+    for (size_t i = 0; i < gUserPrefs->externalViewers->Count() && i <= idx; i++) {
+        ExternalViewer *ev = gUserPrefs->externalViewers->At(i);
+        if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter)))
             idx++;
     }
-    CrashIf(idx >= gUserPrefs.vecCommandLine.Count());
-    if (idx >= gUserPrefs.vecCommandLine.Count())
+    if (idx >= gUserPrefs->externalViewers->Count() || !gUserPrefs->externalViewers->At(idx)->commandLine)
         return false;
 
-    const WCHAR *cmdLine = gUserPrefs.vecCommandLine.At(idx);
+    ExternalViewer *ev = gUserPrefs->externalViewers->At(idx);
     WStrVec args;
-    ParseCmdLine(cmdLine, args, 2);
+    ParseCmdLine(ev->commandLine, args, 2);
     if (args.Count() == 0 || !file::Exists(args.At(0)))
         return false;
 
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path (else the file path is appended)
-    cmdLine = args.Count() > 1 ? args.At(1) : L"\"%1\"";
+    const WCHAR *cmdLine = args.Count() > 1 ? args.At(1) : L"\"%1\"";
     ScopedMem<WCHAR> pageNoStr(str::Format(L"%d", pageNo));
     ScopedMem<WCHAR> params(str::Replace(cmdLine, L"%p", pageNoStr));
     if (str::Find(params, L"%1"))

@@ -169,7 +169,7 @@ static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
         OnMenuGoToPage(win);
         break;
     case VK_ESCAPE:
-        if (gGlobalPrefs.escToExit)
+        if (gUserPrefs->escToExit)
             CloseEbookWindow(win, true, true);
         break;
     default:
@@ -372,9 +372,9 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             break;
 
         case IDM_DEBUG_EBOOK_UI:
-            gUserPrefs.traditionalEbookUI = !gUserPrefs.traditionalEbookUI;
-            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, gUserPrefs.traditionalEbookUI);
-            DebugAlternateChmEngine(gUserPrefs.traditionalEbookUI);
+            gUserPrefs->ebookUI.traditionalEbookUI = !gUserPrefs->ebookUI.traditionalEbookUI;
+            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, gUserPrefs->ebookUI.traditionalEbookUI);
+            DebugAlternateChmEngine(gUserPrefs->ebookUI.traditionalEbookUI);
             break;
 
         case IDM_DEBUG_MUI:
@@ -588,9 +588,9 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
         return;
     }
 
-    if (gGlobalPrefs.rememberOpenedFiles) {
+    if (gGlobalPrefs->rememberOpenedFiles) {
         ds = gFileHistory.MarkFileLoaded(fullPath);
-        if (gGlobalPrefs.showStartPage && ds) {
+        if (gGlobalPrefs->showStartPage && ds) {
             // TODO: do it on a background thread?
             CreateThumbnailForDoc(doc, *ds);
         }
@@ -617,7 +617,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
         return;
     }
 
-    RectI windowPos = gGlobalPrefs.windowPos;
+    RectI windowPos = gGlobalPrefs->windowPos;
     if (!windowPos.IsEmpty())
         EnsureAreaVisibility(windowPos);
     else

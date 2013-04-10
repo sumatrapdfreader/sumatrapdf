@@ -675,12 +675,12 @@ static void RemoveDialogItem(HWND hDlg, int itemId, int prevId=0)
 
 static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    SerializableGlobalPrefs *prefs;
+    GlobalPrefs *prefs;
 
     switch (msg)
     {
     case WM_INITDIALOG:
-        prefs = (SerializableGlobalPrefs *)lParam;
+        prefs = (GlobalPrefs *)lParam;
         assert(prefs);
         SetWindowLongPtr(hDlg, GWLP_USERDATA, (LONG_PTR)prefs);
 
@@ -692,7 +692,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous Facing"));
         SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_ADDSTRING, 0, (LPARAM)_TR("Continuous Book View"));
-        SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_SETCURSEL, prefs->defaultDisplayMode - DM_FIRST, 0);
+        SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_SETCURSEL, prefs->defaultDisplayModeEnum - DM_FIRST, 0);
 
         SetupZoomComboBox(hDlg, IDC_DEFAULT_ZOOM, false, prefs->defaultZoom);
 
@@ -767,9 +767,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         switch (LOWORD(wParam))
         {
         case IDOK:
-            prefs = (SerializableGlobalPrefs *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
+            prefs = (GlobalPrefs *)GetWindowLongPtr(hDlg, GWLP_USERDATA);
             assert(prefs);
-            prefs->defaultDisplayMode = (DisplayMode)(SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + DM_FIRST);
+            prefs->defaultDisplayModeEnum = (DisplayMode)(SendDlgItemMessage(hDlg, IDC_DEFAULT_LAYOUT, CB_GETCURSEL, 0, 0) + DM_FIRST);
             prefs->defaultZoom = GetZoomComboBoxValue(hDlg, IDC_DEFAULT_ZOOM, false, prefs->defaultZoom);
 
             prefs->tocVisible = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_DEFAULT_SHOW_TOC));
@@ -777,8 +777,10 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             prefs->useSysColors = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_USE_SYS_COLORS));
             prefs->enableAutoUpdate = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_AUTO_UPDATE_CHECKS));
             prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
-            if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess))
-                prefs->inverseSearchCmdLine.Set(win::GetText(GetDlgItem(hDlg, IDC_CMDLINE)));
+            if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
+                free(prefs->inverseSearchCmdLine);
+                prefs->inverseSearchCmdLine = win::GetText(GetDlgItem(hDlg, IDC_CMDLINE));
+            }
             EndDialog(hDlg, IDOK);
             return TRUE;
 
@@ -817,7 +819,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
     return FALSE;
 }
 
-INT_PTR Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs)
+INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs *prefs)
 {
     return CreateDialogBox(IDD_DIALOG_SETTINGS, hwnd,
                            Dialog_Settings_Proc, (LPARAM)prefs);

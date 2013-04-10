@@ -162,6 +162,7 @@
     <ClCompile Include="..\src\utils\NoFreeAllocator.cpp" />
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
     <ClCompile Include="..\src\utils\SerializeTxt.cpp" />
+    <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
@@ -345,6 +346,7 @@
     <ClInclude Include="..\src\resource.h" />
     <ClInclude Include="..\src\Search.h" />
     <ClInclude Include="..\src\Selection.h" />
+    <ClInclude Include="..\src\SettingsStructs.h" />
     <ClInclude Include="..\src\StressTesting.h" />
     <ClInclude Include="..\src\SumatraAbout.h" />
     <ClInclude Include="..\src\SumatraAbout2.h" />
@@ -422,6 +424,7 @@
     <ClInclude Include="..\src\utils\RefCounted.h" />
     <ClInclude Include="..\src\utils\Scoped.h" />
     <ClInclude Include="..\src\utils\SerializeTxt.h" />
+    <ClInclude Include="..\src\utils\SettingsUtil.h" />
     <ClInclude Include="..\src\utils\Sigslot.h" />
     <ClInclude Include="..\src\utils\SimpleLog.h" />
     <ClInclude Include="..\src\utils\SquareTreeParser.h" />

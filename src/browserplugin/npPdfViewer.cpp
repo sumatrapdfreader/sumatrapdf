@@ -4,22 +4,16 @@
 #include "BaseUtil.h"
 
 #include "CmdLineParser.h"
+#include "DebugLog.h"
 #include "FileUtil.h"
+#include "SquareTreeParser.h"
 #include "WinUtil.h"
 #ifndef _WINDOWS
 #define _WINDOWS
 #endif
 #include "npapi/npfunctions.h"
 
-#ifndef USE_INI_SETTINGS
-#include "BencUtil.h"
-#define PREFS_FILE_NAME L"sumatrapdfprefs.dat"
-#else
-#include "IniParser.h"
-#define PREFS_FILE_NAME L"SumatraPDF.ini"
-#endif
-
-#include "DebugLog.h"
+#define PREFS_FILE_NAME L"SumatraPDF.dat"
 
 #undef NP_END_MACRO
 #define NP_END_MACRO } __pragma(warning(push)) __pragma(warning(disable:4127)) while (0) __pragma(warning(pop))
@@ -270,39 +264,18 @@ void SelectTranslation(const WCHAR *exePath=NULL)
     if (!file::Exists(path))
         return;
     plogf("sp: Found preferences at %S", path);
-#ifndef USE_INI_SETTINGS
-    ScopedMem<char> data(file::ReadAll(path, NULL));
-    if (data) {
-        BencObj *root = BencObj::Decode(data);
-        if (root && root->Type() == BT_DICT) {
-            BencDict *global = static_cast<BencDict *>(root)->GetDict("gp");
-            BencString *string = global ? global->GetString("UILanguage") : NULL;
-            if (string) {
-                plogf("sp: UILanguage from preferences: %s", string->RawValue());
-                for (int i = 0; gLanguages[i]; i++) {
-                    if (str::Eq(gLanguages[i], string->RawValue())) {
-                        gTranslationIdx = i * gTranslationsCount;
-                        break;
-                    }
-                }
-            }
-        }
-        delete root;
-    }
-#else
-    IniFile ini(path);
-    IniSection *section = ini.FindSection(NULL);
-    IniLine *line = section ? section->FindLine("CurrLangCode") : NULL;
-    if (line) {
-        plogf("sp: UILanguage from preferences: %s", line->value);
+    ScopedMem<char> prefsData(file::ReadAll(path, NULL));
+    SquareTree sqt(prefsData);
+    const char *langCode = sqt.root ? sqt.root->GetValue("CurrLangCode") : NULL;
+    if (langCode) {
+        plogf("sp: UILanguage from preferences: %s", langCode);
         for (int i = 0; gLanguages[i]; i++) {
-            if (str::Eq(gLanguages[i], line->value)) {
+            if (str::Eq(gLanguages[i], langCode)) {
                 gTranslationIdx = i * gTranslationsCount;
                 break;
             }
         }
     }
-#endif
 }
 
 int cmpWcharPtrs(const void *a, const void *b)

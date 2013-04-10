@@ -90,7 +90,7 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorNo       = LoadCursor(NULL, IDC_NO);
     // use the system background color if the user has non-default
     // colors for text (not black-on-white) and also wants to use them
-    bool useSysColor = gGlobalPrefs.useSysColors &&
+    bool useSysColor = gGlobalPrefs->useSysColors &&
                        (GetSysColor(COLOR_WINDOWTEXT) != WIN_COL_BLACK ||
                         GetSysColor(COLOR_WINDOW) != WIN_COL_WHITE);
     if (useSysColor) {
@@ -99,7 +99,8 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     }
     else
         gBrushNoDocBg = CreateSolidBrush(COL_WINDOW_BG);
-    COLORREF bgColor = ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs.bgColor ? gGlobalPrefs.bgColor : ABOUT_BG_LOGO_COLOR;
+    // TODO: fix logic
+    COLORREF bgColor = ABOUT_BG_COLOR_DEFAULT != gUserPrefs->mainWindowBackground ? gUserPrefs->mainWindowBackground : ABOUT_BG_LOGO_COLOR;
     gBrushLogoBg = CreateSolidBrush(bgColor);
 #ifndef ABOUT_USE_LESS_COLORS
     gBrushAboutBg = CreateSolidBrush(bgColor);
@@ -203,17 +204,17 @@ static bool SetupPluginMode(CommandLineInfo& i)
     }
     i.reuseInstance = i.exitWhenDone = false;
     // always display the toolbar when embedded (as there's no menubar in that case)
-    gGlobalPrefs.toolbarVisible = true;
+    gGlobalPrefs->toolbarVisible = true;
     // never allow esc as a shortcut to quit
-    gGlobalPrefs.escToExit = false;
+    gUserPrefs->escToExit = false;
     // never show the sidebar by default
-    gGlobalPrefs.tocVisible = false;
-    if (DM_AUTOMATIC == gGlobalPrefs.defaultDisplayMode) {
+    gGlobalPrefs->tocVisible = false;
+    if (DM_AUTOMATIC == gGlobalPrefs->defaultDisplayModeEnum) {
         // if the user hasn't changed the default display mode,
         // display documents as single page/continuous/fit width
         // (similar to Adobe Reader, Google Chrome and how browsers display HTML)
-        gGlobalPrefs.defaultDisplayMode = DM_CONTINUOUS;
-        gGlobalPrefs.defaultZoom = ZOOM_FIT_WIDTH;
+        gGlobalPrefs->defaultDisplayModeEnum = DM_CONTINUOUS;
+        gGlobalPrefs->defaultZoom = ZOOM_FIT_WIDTH;
     }
 
     // extract some command line arguments from the URL's hash fragment where available
@@ -256,20 +257,20 @@ static void RunUnitTests()
 
 static void GetCommandLineInfo(CommandLineInfo& i)
 {
-    i.bgColor = gGlobalPrefs.bgColor;
-    i.fwdSearch.offset = gGlobalPrefs.fwdSearch.offset;
-    i.fwdSearch.width = gGlobalPrefs.fwdSearch.width;
-    i.fwdSearch.color = gGlobalPrefs.fwdSearch.color;
-    i.fwdSearch.permanent = gGlobalPrefs.fwdSearch.permanent;
-    i.escToExit = gGlobalPrefs.escToExit || gUserPrefs.escToExit;
-    i.cbxR2L = gGlobalPrefs.cbxR2L;
-    if (gGlobalPrefs.useSysColors) {
+    i.bgColor = gUserPrefs->mainWindowBackground;
+    i.fwdSearch.offset = gUserPrefs->forwardSearch.highlightOffset;
+    i.fwdSearch.width = gUserPrefs->forwardSearch.highlightWidth;
+    i.fwdSearch.color = gUserPrefs->forwardSearch.highlightColor;
+    i.fwdSearch.permanent = gUserPrefs->forwardSearch.highlightPermanent;
+    i.escToExit = gUserPrefs->escToExit;
+    i.cbxR2L = gGlobalPrefs->cbxR2L;
+    if (gGlobalPrefs->useSysColors) {
         i.colorRange[0] = GetSysColor(COLOR_WINDOWTEXT);
         i.colorRange[1] = GetSysColor(COLOR_WINDOW);
     }
     else {
-        i.colorRange[0] = gUserPrefs.textColor;
-        i.colorRange[1] = gUserPrefs.pageColor;
+        i.colorRange[0] = gUserPrefs->textColor;
+        i.colorRange[1] = gUserPrefs->pageColor;
     }
     // TODO: update with values from SumatraPDF-user.ini
     i.ParseCommandLine(GetCommandLine());
@@ -342,7 +343,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     CommandLineInfo i;
     GetCommandLineInfo(i);
 
-    SetCurrentLang(i.lang ? i.lang : gGlobalPrefs.currLangCode);
+    SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->currLangCode);
 
     if (i.showConsole)
         RedirectIOToConsole();
@@ -357,23 +358,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     gCrashOnOpen = i.crashOnOpen;
 
-    gGlobalPrefs.bgColor = i.bgColor;
+    gUserPrefs->mainWindowBackground = i.bgColor;
     // TODO: set enableTeXEnhancements if any of these is non-default
-    gGlobalPrefs.fwdSearch.offset = i.fwdSearch.offset;
-    gGlobalPrefs.fwdSearch.width = i.fwdSearch.width;
-    gGlobalPrefs.fwdSearch.color = i.fwdSearch.color;
-    gGlobalPrefs.fwdSearch.permanent = i.fwdSearch.permanent;
-    gGlobalPrefs.escToExit = i.escToExit;
-    gGlobalPrefs.cbxR2L = i.cbxR2L;
+    gUserPrefs->forwardSearch.highlightOffset = i.fwdSearch.offset;
+    gUserPrefs->forwardSearch.highlightWidth = i.fwdSearch.width;
+    gUserPrefs->forwardSearch.highlightColor = i.fwdSearch.color;
+    gUserPrefs->forwardSearch.highlightPermanent = i.fwdSearch.permanent;
+    gUserPrefs->escToExit = i.escToExit;
+    gGlobalPrefs->cbxR2L = i.cbxR2L;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
     gRenderCache.colorRange[0] = i.colorRange[0];
     gRenderCache.colorRange[1] = i.colorRange[1];
     DebugGdiPlusDevice(gUseGdiRenderer);
-    DebugAlternateChmEngine(gUserPrefs.traditionalEbookUI);
+    DebugAlternateChmEngine(gUserPrefs->ebookUI.traditionalEbookUI);
 
     if (i.inverseSearchCmdLine) {
-        gGlobalPrefs.inverseSearchCmdLine.Set(str::Dup(i.inverseSearchCmdLine));
-        gGlobalPrefs.enableTeXEnhancements = true;
+        str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
+        gGlobalPrefs->enableTeXEnhancements = true;
     }
 
     if (!RegisterWinClass(hInstance))
@@ -398,13 +399,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     }
 
-    if (i.fileNames.Count() == 0 && gGlobalPrefs.rememberOpenedFiles && gGlobalPrefs.showStartPage) {
+    if (i.fileNames.Count() == 0 && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage) {
         // make the shell prepare the image list, so that it's ready when the first window's loaded
         SHFILEINFO sfi;
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
-    if (!i.reuseInstance && gUserPrefs.reuseInstance && !gPluginMode && FindWindow(FRAME_CLASS_NAME, 0))
+    if (!i.reuseInstance && gUserPrefs->reuseInstance && !gPluginMode && FindWindow(FRAME_CLASS_NAME, 0))
         i.reuseInstance = true;
 
     WindowInfo *win = NULL;
@@ -445,10 +446,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // Make sure that we're still registered as default,
     // if the user has explicitly told us to be
-    if (gGlobalPrefs.pdfAssociateShouldAssociate && win)
+    if (gGlobalPrefs->pdfAssociateShouldAssociate && win)
         RegisterForPdfExtentions(win->hwndFrame);
 
-    if (gGlobalPrefs.enableAutoUpdate && gWindows.Count() > 0)
+    if (gGlobalPrefs->enableAutoUpdate && gWindows.Count() > 0)
         AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
 
     if (i.stressTestPath)
@@ -487,7 +488,8 @@ Exit:
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
 
-    delete gFavorites;
+    gFileHistory.UpdateStatesSource(NULL);
+    DeleteGlobalPrefs(gGlobalPrefs);
 
     mui::Destroy();
     uitask::Destroy();

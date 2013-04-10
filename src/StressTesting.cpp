@@ -573,8 +573,8 @@ bool StressTest::OpenFile(const WCHAR *fileName)
     win->dm->ChangeDisplayMode(DM_CONTINUOUS);
     win->dm->ZoomTo(ZOOM_FIT_PAGE);
     win->dm->GoToFirstPage();
-    if (win->tocVisible || gGlobalPrefs.favVisible)
-        SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs.favVisible);
+    if (win->tocVisible || gGlobalPrefs->favVisible)
+        SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs->favVisible);
 
     currPage = pageRanges.At(0).start;
     win->dm->GoToPage(currPage, 0);
@@ -800,7 +800,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win, RenderCache *renderCac
     // gPredictiveRender = false;
     gIsStressTesting = true;
     // TODO: for now stress testing only supports the non-ebook ui
-    gUserPrefs.traditionalEbookUI = true;
+    gUserPrefs->ebookUI.traditionalEbookUI = true;
     // forbid entering sleep mode during tests
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
     srand((unsigned int)time(NULL));

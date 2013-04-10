@@ -111,18 +111,6 @@
 				Name="dataformats"
 				>
 				<File
-					RelativePath="..\src\utils\BencUtil.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\BencUtil.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\BencUtil_ut.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\CssParser.cpp"
 					>
 				</File>
@@ -163,18 +151,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\IniParser.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\IniParser.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\IniParser_ut.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\JsonParser.cpp"
 					>
 				</File>
@@ -200,14 +176,6 @@
 				</File>
 				<File
 					RelativePath="..\src\utils\PalmDbReader.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\SquareTreeParser.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\SquareTreeParser.h"
 					>
 				</File>
 				<File
@@ -375,22 +343,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\StrSlice.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\StrSlice.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\TxtParser.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\TxtParser.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\VarintGob.cpp"
 					>
 				</File>
@@ -487,6 +439,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\StrSlice.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\StrSlice.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\Timer.h"
 					>
 				</File>
@@ -547,11 +507,27 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\mui\MuiDefs.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\mui\MuiDefs.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\mui\MuiEventMgr.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\src\mui\MuiEventMgr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\mui\MuiFromText.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\mui\MuiFromText.h"
 					>
 				</File>
 				<File
@@ -606,22 +582,6 @@
 					RelativePath="..\src\mui\SvgPath_ut.cpp"
 					>
 				</File>
-				<File
-					RelativePath="..\src\mui\MuiFromText.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\mui\MuiFromText.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\mui\MuiDefs.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\mui\MuiDefs.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="base"
@@ -671,14 +631,66 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\utils\SerializeTxt.cpp"
+			<Filter
+				Name="settings"
 				>
-			</File>
-			<File
-				RelativePath="..\src\utils\SerializeTxt.h"
-				>
-			</File>
+				<File
+					RelativePath="..\src\utils\BencUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\BencUtil.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\BencUtil_ut.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\IniParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\IniParser.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\IniParser_ut.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\SerializeTxt.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\SerializeTxt.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\SettingsUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\SettingsUtil.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\SquareTreeParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\SquareTreeParser.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\TxtParser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\TxtParser.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Source Files"
@@ -901,6 +913,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\MuiEbookPageDef.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\MuiEbookPageDef.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\Notifications.cpp"
 					>
 				</File>
@@ -1021,6 +1041,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\SettingsStructs.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\StressTesting.cpp"
 					>
 				</File>
@@ -1085,14 +1109,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\MuiEbookPageDef.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\MuiEbookPageDef.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

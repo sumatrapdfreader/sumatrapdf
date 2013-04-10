@@ -4,7 +4,7 @@
 #ifndef SumatraDialogs_h
 #define SumatraDialogs_h
 
-class SerializableGlobalPrefs;
+struct GlobalPrefs;
 
 WCHAR *   Dialog_GoToPage(HWND hwnd, const WCHAR *currentPageLabel, int pageCount, bool onlyNumeric=true);
 WCHAR *   Dialog_Find(HWND hwnd, const WCHAR *previousSearch, bool *matchCase);
@@ -13,7 +13,7 @@ INT_PTR   Dialog_PdfAssociate(HWND hwnd, bool *dontAskAgainOut);
 const char * Dialog_ChangeLanguge(HWND hwnd, const char *currLangCode);
 INT_PTR   Dialog_NewVersionAvailable(HWND hwnd, const WCHAR *currentVersion, const WCHAR *newVersion, bool *skipThisVersion);
 bool      Dialog_CustomZoom(HWND hwnd, bool forChm, float *currZoomInOut);
-INT_PTR   Dialog_Settings(HWND hwnd, SerializableGlobalPrefs *prefs);
+INT_PTR   Dialog_Settings(HWND hwnd, GlobalPrefs *prefs);
 bool      Dialog_AddFavorite(HWND hwnd, const WCHAR *pageNo, ScopedMem<WCHAR>& favName);
 
 enum PrintRangeAdv { PrintRangeAll = 0, PrintRangeEven, PrintRangeOdd };

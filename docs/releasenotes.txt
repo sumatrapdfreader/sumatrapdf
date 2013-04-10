@@ -5,6 +5,10 @@ Next version:
 
 2.3 (2013-??-??):
 
+* settings are now saved to SumatraPDF.dat instead of sumatrapdfprefs.dat
+  see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for
+  further details
+
 * add support for OpenXPS documents
 * "Go To Page" for ebook format
 * fixed paragraph indentation missing for EPUB documents

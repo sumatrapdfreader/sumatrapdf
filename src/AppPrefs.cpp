@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "AppPrefs.h"
 #include "DisplayState.h"
 
@@ -12,287 +13,157 @@
 #include "FileHistory.h"
 #include "FileTransactions.h"
 #include "FileUtil.h"
-#include "SquareTreeParser.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "WindowInfo.h"
-#include "WinUtil.h"
 
-#define PREFS_FILE_NAME         L"sumatrapdfprefs.dat"
-#define NEW_PREFS_FILE_NAME     L"SumatraPDF.ini"
+#define PREFS_INFO_URL          "http://blog.kowalczyk.info/software/sumatrapdf/settings.html"
+// TODO: more appropriate file extension?
+#define NEW_PREFS_FILE_NAME     L"SumatraPDF.dat"
 #define USER_PREFS_FILE_NAME    L"SumatraPDF-user.ini"
+#define OLD_PREFS_FILE_NAME     L"sumatrapdfprefs.dat"
 
-AdvancedSettings gUserPrefs;
+GlobalPrefs *gGlobalPrefs = NULL;
+UserPrefs *gUserPrefs = NULL;
 
-/* default UI settings */
-#define DEFAULT_DISPLAY_MODE    DM_AUTOMATIC
-#define DEFAULT_ZOOM            ZOOM_FIT_PAGE
-#define DEFAULT_LANGUAGE        "en"
-#define COL_FWDSEARCH_BG        RGB(0x65, 0x81, 0xff)
-
-enum PrefType {
-    Pref_Bool, Pref_Int, Pref_Str, Pref_WStr,
-    // custom types which could be implemented through callbacks if need be
-    Pref_DisplayMode, Pref_FileTime, Pref_Float, Pref_IntVec, Pref_UILang,
-};
-
-struct PrefInfo {
-    const char *name;
-    PrefType type;
-    size_t offset;
-    uint32_t bitfield;
-};
-
-static BencDict *SerializeStruct(PrefInfo *info, size_t count, const void *structBase, BencDict *prefs=NULL, uint32_t bitmask=-1)
+DisplayState *NewDisplayState(const WCHAR *filePath)
 {
-    if (!prefs)
-        prefs = new BencDict();
-    const char *base = (const char *)structBase;
-    for (size_t i = 0; i < count; i++) {
-        PrefInfo& meta = info[i];
-        if (meta.bitfield && (meta.bitfield & bitmask) != meta.bitfield)
-            continue;
-        switch (meta.type) {
-        case Pref_Bool:
-            prefs->Add(meta.name, (int64_t)*(bool *)(base + meta.offset));
-            break;
-        case Pref_Int:
-            prefs->Add(meta.name, (int64_t)*(int *)(base + meta.offset));
-            break;
-        case Pref_Str:
-            if (((ScopedMem<char> *)(base + meta.offset))->Get())
-                prefs->AddRaw(meta.name, ((ScopedMem<char> *)(base + meta.offset))->Get());
-            else
-                delete prefs->Remove(meta.name);
-            break;
-        case Pref_WStr:
-            if (((ScopedMem<WCHAR> *)(base + meta.offset))->Get())
-                prefs->Add(meta.name, ((ScopedMem<WCHAR> *)(base + meta.offset))->Get());
-            else
-                delete prefs->Remove(meta.name);
-            break;
-        case Pref_DisplayMode:
-            prefs->Add(meta.name, DisplayModeConv::NameFromEnum(*(DisplayMode *)(base + meta.offset)));
-            break;
-        case Pref_FileTime:
-            prefs->AddRaw(meta.name, ScopedMem<char>(_MemToHex((FILETIME *)(base + meta.offset))));
-            break;
-        case Pref_Float:
-            prefs->AddRaw(meta.name, ScopedMem<char>(str::Format("%.4f", *(float *)(base + meta.offset))));
-            break;
-        case Pref_UILang:
-            if (*(const char **)(base + meta.offset))
-                prefs->AddRaw(meta.name, *(const char **)(base + meta.offset));
-            else
-                delete prefs->Remove(meta.name);
-            break;
-        case Pref_IntVec:
-            BencArray *array = new BencArray();
-            ScopedPtr<Vec<int>>& intVec = *(ScopedPtr<Vec<int>> *)(base + meta.offset);
-            if (intVec) {
-                for (size_t idx = 0; idx < intVec->Count(); idx++) {
-                    array->Add(intVec->At(idx));
-                }
-                prefs->Add(meta.name, array);
-            }
-            else
-                delete prefs->Remove(meta.name);
-            break;
-        }
-    }
-    return prefs;
+    DisplayState *ds = (DisplayState *)DeserializeStruct(&gFileStateInfo, NULL);
+    ds->filePath = str::Dup(filePath);
+    return ds;
 }
 
-static void DeserializeStruct(PrefInfo *info, size_t count, void *structBase, BencDict *prefs)
+void DeleteDisplayState(DisplayState *ds)
 {
-    char *base = (char *)structBase;
-    BencInt *intObj;
-    BencString *strObj;
-    BencArray *arrObj;
-
-    for (size_t i = 0; i < count; i++) {
-        PrefInfo& meta = info[i];
-        switch (meta.type) {
-        case Pref_Bool:
-            if ((intObj = prefs->GetInt(meta.name)) != NULL)
-                *(bool *)(base + meta.offset) = intObj->Value() != 0;
-            break;
-        case Pref_Int:
-            if ((intObj = prefs->GetInt(meta.name)) != NULL)
-                *(int *)(base + meta.offset) = (int)intObj->Value();
-            break;
-        case Pref_Str:
-            if ((strObj = prefs->GetString(meta.name)) != NULL)
-                ((ScopedMem<char> *)(base + meta.offset))->Set(str::Dup(strObj->RawValue()));
-            break;
-        case Pref_WStr:
-            if ((strObj = prefs->GetString(meta.name)) != NULL)
-                ((ScopedMem<WCHAR> *)(base + meta.offset))->Set(strObj->Value());
-            break;
-        case Pref_DisplayMode:
-            if ((strObj = prefs->GetString(meta.name)) != NULL)
-                DisplayModeConv::EnumFromName(ScopedMem<WCHAR>(strObj->Value()), (DisplayMode *)(base + meta.offset));
-            break;
-        case Pref_FileTime:
-            if ((strObj = prefs->GetString(meta.name)) != NULL)
-                _HexToMem(strObj->RawValue(), (FILETIME *)(base + meta.offset));
-            break;
-        case Pref_Float:
-            if ((strObj = prefs->GetString(meta.name)) != NULL) {
-                // note: this might round the value for files produced with versions
-                //       prior to 1.6 and on a system where the decimal mark isn't a '.'
-                //       (the difference should be hardly notable, though)
-                *(float *)(base + meta.offset) = (float)atof(strObj->RawValue());
-            }
-            break;
-        case Pref_IntVec:
-            if ((arrObj = prefs->GetArray(meta.name)) != NULL) {
-                ScopedPtr<Vec<int>>& intVec = *(ScopedPtr<Vec<int>> *)(base + meta.offset);
-                size_t len = arrObj->Length();
-                CrashIf(intVec);
-                if ((intVec = new Vec<int>(len)) != NULL) {
-                    for (size_t idx = 0; idx < len; idx++) {
-                        if ((intObj = arrObj->GetInt(idx)) != NULL)
-                            intVec->Append((int)intObj->Value());
-                    }
-                }
-            }
-            break;
-        case Pref_UILang:
-            if ((strObj = prefs->GetString(meta.name)) != NULL) {
-                // ensure language code is valid
-                const char *langCode = trans::ValidateLangCode(strObj->RawValue());
-                *(const char **)(base + meta.offset) = langCode ? langCode : DEFAULT_LANGUAGE;
-            }
-            break;
-        }
-    }
+    delete ds->thumbnail;
+    FreeStruct(&gFileStateInfo, ds);
 }
 
-// this list is in alphabetical order as Benc expects it
-PrefInfo gGlobalPrefInfo[] = {
-#define sgpOffset(x) offsetof(SerializableGlobalPrefs, x)
-    { "BgColor", Pref_Int, sgpOffset(bgColor) },
-    { "CBX_Right2Left", Pref_Bool, sgpOffset(cbxR2L) },
-    { "Display Mode", Pref_DisplayMode, sgpOffset(defaultDisplayMode) },
-    { "EnableAutoUpdate", Pref_Bool, sgpOffset(enableAutoUpdate) },
-    { "EscToExit", Pref_Bool, sgpOffset(escToExit) },
-    { "ExposeInverseSearch", Pref_Bool, sgpOffset(enableTeXEnhancements) },
-    { "FavVisible", Pref_Bool, sgpOffset(favVisible) },
-    { "ForwardSearch_HighlightColor", Pref_Int, sgpOffset(fwdSearch.color) },
-    { "ForwardSearch_HighlightOffset", Pref_Int, sgpOffset(fwdSearch.offset) },
-    { "ForwardSearch_HighlightPermanent", Pref_Bool, sgpOffset(fwdSearch.permanent) },
-    { "ForwardSearch_HighlightWidth", Pref_Int, sgpOffset(fwdSearch.width) },
-    { "GlobalPrefsOnly", Pref_Bool, sgpOffset(globalPrefsOnly) },
-    { "InverseSearchCommandLine", Pref_WStr, sgpOffset(inverseSearchCmdLine) },
-    { "LastUpdate", Pref_FileTime, sgpOffset(lastUpdateTime) },
-    { "OpenCountWeek", Pref_Int, sgpOffset(openCountWeek) },
-    { "PdfAssociateDontAskAgain", Pref_Bool, sgpOffset(pdfAssociateDontAskAgain) },
-    { "PdfAssociateShouldAssociate", Pref_Bool, sgpOffset(pdfAssociateShouldAssociate) },
-    { "RememberOpenedFiles", Pref_Bool, sgpOffset(rememberOpenedFiles) },
-    { "ShowStartPage", Pref_Bool, sgpOffset(showStartPage) },
-// for backwards compatibility the string is "ShowToc" and not
-// (more appropriate now) "TocVisible"
-    { "ShowToc", Pref_Bool, sgpOffset(tocVisible) },
-// for backwards compatibility the string is "ShowToolbar" and not
-// (more appropriate now) "ToolbarVisible"
-    { "ShowToolbar", Pref_Bool, sgpOffset(toolbarVisible) },
-// for backwards compatibility, the serialized name is "Toc DX" and not
-// (more apropriate now) "Sidebar DX".
-    { "Toc DX", Pref_Int, sgpOffset(sidebarDx) },
-    { "Toc Dy", Pref_Int, sgpOffset(tocDy) },
-    { "UILanguage", Pref_UILang, sgpOffset(currLangCode) },
-    { "UseSysColors", Pref_Bool, sgpOffset(useSysColors) },
-    { "VersionToSkip", Pref_WStr, sgpOffset(versionToSkip) },
-    { "Window DX", Pref_Int, sgpOffset(windowPos.dx) },
-    { "Window DY", Pref_Int, sgpOffset(windowPos.dy) },
-    { "Window State", Pref_Int, sgpOffset(windowState) },
-    { "Window X", Pref_Int, sgpOffset(windowPos.x) },
-    { "Window Y", Pref_Int, sgpOffset(windowPos.y) },
-    { "ZoomVirtual", Pref_Float, sgpOffset(defaultZoom) },
-#undef sgpOffset
-};
+void DeleteGlobalPrefs(GlobalPrefs *globalPrefs)
+{
+    FreeStruct(&gGlobalPrefsInfo, globalPrefs);
+}
 
-enum DsIncludeRestrictions {
-    Ds_Always = 0,
-    Ds_NotGlobal = (1 << 0),
-    Ds_OnlyGlobal = (1 << 1),
-    Ds_IsRecent = (1 << 2),
-    Ds_IsPinned = (1 << 3),
-    Ds_IsMissing = (1 << 4),
-    Ds_HasTocState = (1 << 5),
-};
+Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
+{
+    Favorite *fav = AllocStruct<Favorite>();
+    fav->pageNo = pageNo;
+    fav->name = str::Dup(name);
+    fav->pageLabel = str::Dup(pageLabel);
+    return fav;
+}
 
-// this list is in alphabetical order as Benc expects it
-PrefInfo gFilePrefInfo[] = {
-#define dsOffset(x) offsetof(DisplayState, x)
-    { "Decryption Key", Pref_Str, dsOffset(decryptionKey), Ds_Always },
-    { "Display Mode", Pref_DisplayMode, dsOffset(displayMode), Ds_NotGlobal },
-    { "File", Pref_WStr, dsOffset(filePath), Ds_Always },
-    { "Missing", Pref_Bool, dsOffset(isMissing), Ds_IsMissing },
-    { "OpenCount", Pref_Int, dsOffset(openCount), Ds_IsRecent },
-    { "Page", Pref_Int, dsOffset(pageNo), Ds_NotGlobal },
-    { "Pinned", Pref_Bool, dsOffset(isPinned), Ds_IsPinned },
-    { "ReparseIdx", Pref_Int, dsOffset(reparseIdx), Ds_NotGlobal },
-    { "Rotation", Pref_Int, dsOffset(rotation), Ds_NotGlobal },
-    { "Scroll X2", Pref_Int, dsOffset(scrollPos.x), Ds_NotGlobal },
-    { "Scroll Y2", Pref_Int, dsOffset(scrollPos.y), Ds_NotGlobal },
-// for backwards compatibility the string is "ShowToc" and not
-// (more appropriate now) "TocVisible"
-    { "ShowToc", Pref_Bool, dsOffset(tocVisible), Ds_NotGlobal },
-// for backwards compatibility, the serialized name is "Toc DX" and not
-// (more apropriate now) "Sidebar DX".
-    { "Toc DX", Pref_Int, dsOffset(sidebarDx), Ds_NotGlobal },
-    { "TocToggles", Pref_IntVec, dsOffset(tocState), Ds_NotGlobal | Ds_HasTocState },
-    { "UseGlobalValues", Pref_Bool, dsOffset(useGlobalValues), Ds_OnlyGlobal },
-    { "Window DX", Pref_Int, dsOffset(windowPos.dx), Ds_NotGlobal },
-    { "Window DY", Pref_Int, dsOffset(windowPos.dy), Ds_NotGlobal },
-    { "Window State", Pref_Int, dsOffset(windowState), Ds_NotGlobal },
-    { "Window X", Pref_Int, dsOffset(windowPos.x), Ds_NotGlobal },
-    { "Window Y", Pref_Int, dsOffset(windowPos.y), Ds_NotGlobal },
-    { "ZoomVirtual", Pref_Float, dsOffset(zoomVirtual), Ds_NotGlobal },
-#undef dsOffset
-};
+void DeleteFavorite(Favorite *fav)
+{
+    FreeStruct(&gFavoriteInfo, fav);
+}
 
-#define GLOBAL_PREFS_STR            "gp"
-#define FILE_HISTORY_STR            "File History"
-#define FAVS_STR                    "Favorites"
-
-SerializableGlobalPrefs gGlobalPrefs = {
-    false, // bool globalPrefsOnly
-    DEFAULT_LANGUAGE, // const char *currLangCode
-    true, // bool toolbarVisible
-    false, // bool favVisible
-    false, // bool pdfAssociateDontAskAgain
-    false, // bool pdfAssociateShouldAssociate
-    true, // bool enableAutoUpdate
-    true, // bool rememberOpenedFiles
-    ABOUT_BG_COLOR_DEFAULT, // int bgColor
-    false, // bool escToExit
-    false, // bool useSysColors
-    ScopedMem<WCHAR>(), // ScopedMem<WCHAR> inverseSearchCmdLine
-    false, // bool enableTeXEnhancements
-    ScopedMem<WCHAR>(), // ScopedMem<WCHAR> versionToSkip
-    { 0, 0 }, // FILETIME lastUpdateTime
-    DEFAULT_DISPLAY_MODE, // DisplayMode defaultDisplayMode
-    DEFAULT_ZOOM, // float defaultZoom
-    WIN_STATE_NORMAL, // int  windowState
-    RectI(), // RectI windowPos
-    true, // bool tocVisible
-    0, // int sidebarDx
-    0, // int tocDy
-    {
-        0, // int  fwdSearch.offset
-        COL_FWDSEARCH_BG, // int  fwdSearch.color
-        15, // int  fwdSearch.width
-        false, // bool fwdSearch.permanent
-    },
-    true, // bool showStartPage
-    0, // int openCountWeek
-    { 0, 0 }, // FILETIME lastPrefUpdate
-    false, // bool cbxR2L
-    ScopedMem<char>(), // ScopedMem<char> prevSerialization
+// metadata mapping from legacy Benc names to current structures
+static FieldInfo gGlobalPrefsFieldsBenc[] = {
+    { offsetof(GlobalPrefs, cbxR2L), Type_Bool, false },
+    { offsetof(GlobalPrefs, defaultDisplayMode), Type_String, (intptr_t)L"automatic" },
+    { offsetof(GlobalPrefs, enableAutoUpdate), Type_Bool, true },
+    { offsetof(GlobalPrefs, enableTeXEnhancements), Type_Bool, false },
+    { offsetof(GlobalPrefs, favVisible), Type_Bool, false },
+    { offsetof(GlobalPrefs, globalPrefsOnly), Type_Bool, false },
+    { offsetof(GlobalPrefs, inverseSearchCmdLine), Type_String, NULL },
+    { offsetof(GlobalPrefs, lastUpdateTime), Type_Compact, 0 },
+    { offsetof(GlobalPrefs, openCountWeek), Type_Int, 0 },
+    { offsetof(GlobalPrefs, pdfAssociateDontAskAgain), Type_Bool, false },
+    { offsetof(GlobalPrefs, pdfAssociateShouldAssociate), Type_Bool, false },
+    { offsetof(GlobalPrefs, rememberOpenedFiles), Type_Bool, true },
+    { offsetof(GlobalPrefs, showStartPage), Type_Bool, true },
+    { offsetof(GlobalPrefs, tocVisible), Type_Bool, true },
+    { offsetof(GlobalPrefs, toolbarVisible), Type_Bool, true },
+    { offsetof(GlobalPrefs, sidebarDx), Type_Int, 0 },
+    { offsetof(GlobalPrefs, tocDy), Type_Int, 0 },
+    { offsetof(GlobalPrefs, currLangCode), Type_Utf8String, NULL },
+    { offsetof(GlobalPrefs, useSysColors), Type_Bool, false },
+    { offsetof(GlobalPrefs, versionToSkip), Type_String, NULL },
+    { offsetof(GlobalPrefs, windowPos.dx), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowPos.dy), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowState), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowPos.x), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowPos.y), Type_Int, 1 },
+    { offsetof(GlobalPrefs, defaultZoom), Type_Float, (intptr_t)"-1" },
+    { offsetof(GlobalPrefs, userPrefs.mainWindowBackground), Type_Color, 0xfff200 },
+    { offsetof(GlobalPrefs, userPrefs.escToExit), Type_Bool, false },
+    { offsetof(GlobalPrefs, userPrefs.forwardSearch.highlightColor), Type_Color, 0x6581ff },
+    { offsetof(GlobalPrefs, userPrefs.forwardSearch.highlightOffset), Type_Int, 0 },
+    { offsetof(GlobalPrefs, userPrefs.forwardSearch.highlightPermanent), Type_Bool, false },
+    { offsetof(GlobalPrefs, userPrefs.forwardSearch.highlightWidth), Type_Int, 15 },
 };
+static StructInfo gGlobalPrefsInfoBenc = { sizeof(GlobalPrefs), 26, gGlobalPrefsFieldsBenc, "CBX_Right2Left\0Display Mode\0EnableAutoUpdate\0ExposeInverseSearch\0FavVisible\0GlobalPrefsOnly\0InverseSearchCommandLine\0LastUpdate\0OpenCountWeek\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0RememberOpenedFiles\0ShowStartPage\0ShowToc\0ShowToolbar\0Toc DX\0Toc Dy\0UILanguage\0UseSysColors\0VersionToSkip\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual\0BgColor\0EscToExit\0ForwardSearch_HighlightColor\0ForwardSearch_HighlightOffset\0ForwardSearch_HighlightPermanent\0ForwardSearch_HighlightWidth" };
+
+static FieldInfo gFileFieldsBenc[] = {
+    { offsetof(FileState, decryptionKey), Type_Utf8String, NULL },
+    { offsetof(FileState, displayMode), Type_String, (intptr_t)L"automatic" },
+    { offsetof(FileState, filePath), Type_String, NULL },
+    { offsetof(FileState, isMissing), Type_Bool, false },
+    { offsetof(FileState, openCount), Type_Int, 0 },
+    { offsetof(FileState, pageNo), Type_Int, 1 },
+    { offsetof(FileState, isPinned), Type_Bool, false },
+    { offsetof(FileState, reparseIdx), Type_Int, 0 },
+    { offsetof(FileState, rotation), Type_Int, 0 },
+    { offsetof(FileState, scrollPos.x), Type_Int, 0 },
+    { offsetof(FileState, scrollPos.y), Type_Int, 0 },
+    { offsetof(FileState, tocVisible), Type_Bool, true },
+    { offsetof(FileState, sidebarDx), Type_Int, 0 },
+    { offsetof(FileState, tocState), Type_IntArray, NULL },
+    { offsetof(FileState, useGlobalValues), Type_Bool, false },
+    { offsetof(FileState, windowPos.dx), Type_Int, 1 },
+    { offsetof(FileState, windowPos.dy), Type_Int, 1 },
+    { offsetof(FileState, windowState), Type_Int, 1 },
+    { offsetof(FileState, windowPos.x), Type_Int, 1 },
+    { offsetof(FileState, windowPos.y), Type_Int, 1 },
+    { offsetof(FileState, zoomVirtual), Type_Float, (intptr_t)"100" },
+};
+static StructInfo gFileInfoBenc = { sizeof(FileState), 21, gFileFieldsBenc, "Decryption Key\0Display Mode\0File\0Missing\0OpenCount\0Page\0Pinned\0ReparseIdx\0Rotation\0Scroll X2\0Scroll Y2\0ShowToc\0Toc DX\0TocToggles\0UseGlobalValues\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual" };
+
+static FieldInfo gBencGlobalPrefsFields[] = {
+    { offsetof(GlobalPrefs, fileStates), Type_Array, (intptr_t)&gFileInfoBenc },
+    { 0 /* self */, Type_Struct, (intptr_t)&gGlobalPrefsInfoBenc },
+    // Favorites must be read after File History
+    { offsetof(GlobalPrefs, fileStates), Type_Compact, NULL },
+};
+static StructInfo gBencGlobalPrefs = { sizeof(GlobalPrefs), 3, gBencGlobalPrefsFields, "File History\0gp\0Favorites" };
+
+static bool BencGlobalPrefsCallback(BencDict *dict, const FieldInfo *field, const char *fieldName, uint8_t *fieldPtr)
+{
+    if (str::Eq(fieldName, "LastUpdate")) {
+        BencString *val = dict ? dict->GetString(fieldName) : NULL;
+        if (!val || !_HexToMem(val->RawValue(), (FILETIME *)fieldPtr))
+            ZeroMemory(fieldPtr, sizeof(FILETIME));
+        return true;
+    }
+    if (str::Eq(fieldName, "Favorites")) {
+        BencArray *favDict = dict ? dict->GetArray(fieldName) : NULL;
+        Vec<FileState *> *files = *(Vec<FileState *> **)fieldPtr;
+        for (size_t j = 0; j < files->Count(); j++) {
+            FileState *file = files->At(j);
+            file->favorites = new Vec<Favorite *>();
+            BencArray *favList = NULL;
+            for (size_t k = 0; k < favDict->Length() && !favList; k += 2) {
+                BencString *path = favDict->GetString(k);
+                ScopedMem<WCHAR> filePath(path ? path->Value() : NULL);
+                if (str::Eq(filePath, file->filePath))
+                    favList = favDict->GetArray(k + 1);
+            }
+            if (!favList)
+                continue;
+            for (size_t k = 0; k < favList->Length(); k += 2) {
+                BencInt *page = favList->GetInt(k);
+                BencString *name = favList->GetString(k + 1);
+                int pageNo = page ? (int)page->Value() : -1;
+                ScopedMem<WCHAR> favName(name ? name->Value() : NULL);
+                if (favName && pageNo > 0)
+                    file->favorites->Append(NewFavorite(pageNo, favName, NULL));
+            }
+        }
+        return true;
+    }
+    return false;
+}
 
 // number of weeks past since 2011-01-01
 static int GetWeekCount()
@@ -304,433 +175,6 @@ static int GetWeekCount()
     GetSystemTimeAsFileTime(&currTime);
     return (currTime.dwHighDateTime - origTime.dwHighDateTime) / 1408;
     // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
-}
-
-static BencDict* SerializeGlobalPrefs(SerializableGlobalPrefs& globalPrefs)
-{
-    CrashIf(!IsValidZoom(globalPrefs.defaultZoom));
-    if (!globalPrefs.openCountWeek)
-        globalPrefs.openCountWeek = GetWeekCount();
-    BencDict *prevDict = NULL;
-    if (globalPrefs.prevSerialization)
-        prevDict = BencDict::Decode(globalPrefs.prevSerialization, NULL);
-    return SerializeStruct(gGlobalPrefInfo, dimof(gGlobalPrefInfo), &globalPrefs, prevDict);
-}
-
-static BencDict *DisplayState_Serialize(DisplayState *ds, bool globalPrefsOnly)
-{
-    // BUG: 2140
-    if (!IsValidZoom(ds->zoomVirtual)) {
-        dbglog::CrashLogF("Invalid ds->zoomVirtual: %.4f", ds->zoomVirtual);
-        const WCHAR *ext = path::GetExt(ds->filePath);
-        if (!str::IsEmpty(ext)) {
-            ScopedMem<char> extA(str::conv::ToUtf8(ext));
-            dbglog::CrashLogF("File type: %s", extA.Get());
-        }
-        dbglog::CrashLogF("DisplayMode: %d", ds->displayMode);
-        dbglog::CrashLogF("PageNo: %d", ds->pageNo);
-        CrashIf(true);
-    }
-
-    // don't include common values in order to keep the preference file size down
-    uint32_t bitmask = (globalPrefsOnly || ds->useGlobalValues ? Ds_OnlyGlobal : Ds_NotGlobal) |
-                       (ds->openCount > 0 ? Ds_IsRecent : 0) |
-                       (ds->isPinned ? Ds_IsPinned : 0) |
-                       (ds->isMissing ? Ds_IsMissing : 0) |
-                       (ds->tocState && ds->tocState->Count() > 0 ? Ds_HasTocState : 0);
-    return SerializeStruct(gFilePrefInfo, dimof(gFilePrefInfo), ds, NULL, bitmask);
-}
-
-static BencArray *SerializeFileHistory(FileHistory& fileHistory, bool globalPrefsOnly)
-{
-    // remove entries which should (no longer) be remembered
-    fileHistory.Purge(globalPrefsOnly);
-
-    BencArray *arr = new BencArray();
-
-    DisplayState *state;
-    for (int index = 0; (state = fileHistory.Get(index)) != NULL; index++) {
-        BencDict *obj = DisplayState_Serialize(state, globalPrefsOnly);
-        if (obj)
-            arr->Add(obj);
-    }
-
-    return arr;
-}
-
-static inline const WCHAR *NullToEmpty(const WCHAR *s)
-{
-    return s == NULL ? L"" : s;
-}
-
-static inline const WCHAR *EmptyToNull(const WCHAR *s)
-{
-    return str::IsEmpty(s) ? NULL : s;
-}
-
-static BencArray *SerializeFavData(FileFavs *fav)
-{
-    BencArray *res = new BencArray();
-    for (size_t i = 0; i < fav->favNames.Count(); i++) {
-        FavName *fn = fav->favNames.At(i);
-        res->Add(fn->pageNo);
-        res->Add(NullToEmpty(fn->name));
-    }
-    return res;
-}
-
-// for simplicity, favorites are serialized as an array. Element 2*i is
-// a name of the file, for favorite i, element 2*i+1 is an array of
-// page number integer/name string pairs
-// TODO: rework this serialization so that FavName::pageLabel can also be persisted
-static BencArray *SerializeFavorites(Favorites *favs)
-{
-    BencArray *res = new BencArray();
-    for (size_t i = 0; i < favs->favs.Count(); i++) {
-        FileFavs *fav = favs->favs.At(i);
-        res->Add(fav->filePath);
-        res->Add(SerializeFavData(fav));
-    }
-    return res;
-}
-
-static char *SerializePrefs(SerializableGlobalPrefs& globalPrefs, FileHistory& root, Favorites *favs, size_t* lenOut)
-{
-    char *data = NULL;
-
-    BencDict *prefs = new BencDict();
-    if (!prefs)
-        goto Error;
-
-    BencDict* global = SerializeGlobalPrefs(globalPrefs);
-    if (!global)
-        goto Error;
-    prefs->Add(GLOBAL_PREFS_STR, global);
-
-    BencArray *fileHistory = SerializeFileHistory(root, globalPrefs.globalPrefsOnly);
-    if (!fileHistory)
-        goto Error;
-    prefs->Add(FILE_HISTORY_STR, fileHistory);
-
-    BencArray *favsArr = SerializeFavorites(favs);
-    if (!favsArr)
-        goto Error;
-    prefs->Add(FAVS_STR, favsArr);
-
-    data = prefs->Encode();
-    *lenOut = str::Len(data);
-
-Error:
-    delete prefs;
-    return data;
-}
-
-static DisplayState * DeserializeDisplayState(BencDict *dict)
-{
-    DisplayState *ds = new DisplayState();
-    if (!ds)
-        return NULL;
-
-    DeserializeStruct(gFilePrefInfo, dimof(gFilePrefInfo), ds, dict);
-    if (!ds->filePath) {
-        delete ds;
-        return NULL;
-    }
-
-    // work-around https://code.google.com/p/sumatrapdf/issues/detail?id=2140
-    if (!IsValidZoom(ds->zoomVirtual))
-        ds->zoomVirtual = 100.f;
-
-    return ds;
-}
-
-static void DeserializePrefs(const char *prefsTxt, SerializableGlobalPrefs& globalPrefs,
-    FileHistory& fh, Favorites *favs)
-{
-    BencObj *obj = BencObj::Decode(prefsTxt);
-    if (!obj || obj->Type() != BT_DICT)
-        goto Exit;
-    BencDict *prefs = static_cast<BencDict *>(obj);
-    BencDict *global = prefs->GetDict(GLOBAL_PREFS_STR);
-    if (!global)
-        goto Exit;
-
-    DeserializeStruct(gGlobalPrefInfo, dimof(gGlobalPrefInfo), &globalPrefs, global);
-    globalPrefs.prevSerialization.Set(global->Encode());
-
-    int weekDiff = GetWeekCount() - globalPrefs.openCountWeek;
-    globalPrefs.openCountWeek = GetWeekCount();
-
-    BencArray *fileHistory = prefs->GetArray(FILE_HISTORY_STR);
-    if (!fileHistory)
-        goto Exit;
-    size_t dlen = fileHistory->Length();
-    for (size_t i = 0; i < dlen; i++) {
-        BencDict *dict = fileHistory->GetDict(i);
-        assert(dict);
-        if (!dict) continue;
-        DisplayState *state = DeserializeDisplayState(dict);
-        if (state) {
-            // "age" openCount statistics (cut in in half after every week)
-            state->openCount >>= weekDiff;
-            fh.Append(state);
-        }
-    }
-
-    BencArray *favsArr = prefs->GetArray(FAVS_STR);
-    if (!favsArr)
-        goto Exit;
-    for (size_t i = 0; i < favsArr->Length(); i += 2) {
-        BencString *filePathBenc = favsArr->GetString(i);
-        BencArray *favData = favsArr->GetArray(i+1);
-        if (!filePathBenc || !favData)
-            break;
-        ScopedMem<WCHAR> filePath(filePathBenc->Value());
-        for (size_t j = 0; j < favData->Length(); j += 2) {
-            // we're lenient about errors
-            BencInt *pageNoBenc = favData->GetInt(j);
-            BencString *nameBenc = favData->GetString(j + 1);
-            if (!pageNoBenc || !nameBenc)
-                break;
-            int pageNo = (int)pageNoBenc->Value();
-            ScopedMem<WCHAR> name(nameBenc->Value());
-            favs->AddOrReplace(filePath, pageNo, EmptyToNull(name));
-        }
-    }
-
-Exit:
-    delete obj;
-}
-
-// TODO: replace with AppPrefs3.h or SettingsSumatra.*
-
-enum SettingType {
-    Type_Section, Type_SectionVec,
-    Type_Bool, Type_Color, Type_FileTime, Type_Float, Type_Int, Type_String, Type_Utf8String,
-};
-
-struct SettingInfo {
-    const char *name;
-    SettingType type;
-    size_t offset;
-    int flags;
-};
-
-static SettingInfo gAdvancedSettingsInfo[] = {
-    /* ***** fields for section AdvancedOptions ***** */
-    { "AdvancedOptions", Type_Section },
-    { "EscToExit", Type_Bool, offsetof(AdvancedSettings, escToExit), 0 },
-    { "MainWindowBackground", Type_Color, offsetof(AdvancedSettings, mainWindowBackground), 0 },
-    { "PageColor", Type_Color, offsetof(AdvancedSettings, pageColor), 0 },
-    { "ReuseInstance", Type_Bool, offsetof(AdvancedSettings, reuseInstance), 0 },
-    { "TextColor", Type_Color, offsetof(AdvancedSettings, textColor), 0 },
-    { "TraditionalEbookUI", Type_Bool, offsetof(AdvancedSettings, traditionalEbookUI), 0 },
-    /* ***** fields for section PrinterDefaults ***** */
-    { "PrinterDefaults", Type_Section },
-    { "PrintAsImage", Type_Bool, offsetof(AdvancedSettings, printAsImage), 0 },
-    { "PrintScale", Type_String, offsetof(AdvancedSettings, printScale), 0 },
-    /* ***** fields for section PagePadding ***** */
-    { "PagePadding", Type_Section },
-    { "InnerX", Type_Int, offsetof(AdvancedSettings, innerX), 0 },
-    { "InnerY", Type_Int, offsetof(AdvancedSettings, innerY), 0 },
-    { "OuterX", Type_Int, offsetof(AdvancedSettings, outerX), 0 },
-    { "OuterY", Type_Int, offsetof(AdvancedSettings, outerY), 0 },
-    /* ***** fields for section BackgroundGradient ***** */
-    { "BackgroundGradient", Type_Section },
-    { "Enabled", Type_Bool, offsetof(AdvancedSettings, enabled), 0 },
-    { "ColorTop", Type_Color, offsetof(AdvancedSettings, colorTop), 0 },
-    { "ColorMiddle", Type_Color, offsetof(AdvancedSettings, colorMiddle), 0 },
-    { "ColorBottom", Type_Color, offsetof(AdvancedSettings, colorBottom), 0 },
-    /* ***** fields for section ForwardSearch ***** */
-    { "ForwardSearch", Type_Section },
-    { "HighlightColor", Type_Color, offsetof(AdvancedSettings, highlightColor), 0 },
-    { "HighlightOffset", Type_Int, offsetof(AdvancedSettings, highlightOffset), 0 },
-    { "HighlightPermanent", Type_Bool, offsetof(AdvancedSettings, highlightPermanent), 0 },
-    { "HighlightWidth", Type_Int, offsetof(AdvancedSettings, highlightWidth), 0 },
-    /* ***** fields for array section ExternalViewer ***** */
-    { "ExternalViewer", Type_SectionVec },
-    { "CommandLine", Type_String, offsetof(AdvancedSettings, vecCommandLine), 0 },
-    { "Filter", Type_String, offsetof(AdvancedSettings, vecFilter), 0 },
-    { "Name", Type_String, offsetof(AdvancedSettings, vecName), 0 },
-};
-
-static void DeserializeStructSqt(SquareTreeNode *root, SettingInfo *info, size_t count, void *structBase)
-{
-    char *base = (char *)structBase;
-    SquareTreeNode *node = NULL;
-    const char *value;
-
-    for (size_t i = 0; i < count; i++) {
-        SettingInfo& meta = info[i];
-        if (!node && meta.type != Type_Section && meta.type != Type_SectionVec) {
-            // skip missing section
-            while (++i < count && info[i].type != Type_Section && info[i].type != Type_SectionVec);
-            i--;
-            continue;
-        }
-        switch (meta.type) {
-        case Type_Section:
-            node = root->GetChild(meta.name);
-            break;
-        case Type_Bool:
-            if ((value = node->GetValue(meta.name)) != NULL)
-                *(bool *)(base + meta.offset) = str::EqI(value, "true") || atoi(value) != 0;
-            break;
-        case Type_Color:
-            if ((value = node->GetValue(meta.name)) != NULL) {
-                int r, g, b;
-                if (str::Parse(value, "#%2x%2x%2x", &r, &g, &b))
-                    *(COLORREF *)(base + meta.offset) = RGB(r, g, b);
-            }
-            break;
-        case Type_FileTime:
-            if ((value = node->GetValue(meta.name)) != NULL) {
-                FILETIME ft;
-                if (_HexToMem(value, &ft))
-                    *(FILETIME *)(base + meta.offset) = ft;
-            }
-            break;
-        case Type_Float:
-            if ((value = node->GetValue(meta.name)) != NULL) {
-                float f;
-                if (str::Parse(value, "%f", &f))
-                    *(float *)(base + meta.offset) = f;
-            }
-            break;
-        case Type_Int:
-            if ((value = node->GetValue(meta.name)) != NULL)
-                *(int *)(base + meta.offset) = atoi(value);
-            break;
-        case Type_String:
-            if ((value = node->GetValue(meta.name)) != NULL)
-                ((ScopedMem<WCHAR> *)(base + meta.offset))->Set(str::conv::FromUtf8(value));
-            break;
-        case Type_Utf8String:
-            if ((value = node->GetValue(meta.name)) != NULL)
-                ((ScopedMem<char> *)(base + meta.offset))->Set(str::Dup(value));
-            break;
-        default:
-            CrashIf(true);
-        case Type_SectionVec:
-            size_t i2 = i;
-            while (++i < count && info[i].type != Type_Section && info[i].type != Type_SectionVec);
-            for (size_t ix = 0; (node = root->GetChild(meta.name, &ix)) != NULL; ) {
-                for (size_t j = i2 + 1; j < i; j++) {
-                    SettingInfo& meta2 = info[j];
-                    switch (meta2.type) {
-#if 0
-                    // currently only Strings are used in array sections
-                    case Type_Int:
-                        ((Vec<int,1> *)(base + meta2.offset))->AppendBlanks(1);
-                        if ((value = node->GetValue(meta2.name)))
-                            ((Vec<int,1> *)(base + meta2.offset))->Last() = atoi(value);
-                        break;
-                    // etc.
-#endif
-                    case Type_String:
-                        ((WStrVec *)(base + meta2.offset))->AppendBlanks(1);
-                        if ((value = node->GetValue(meta2.name)) != NULL)
-                            ((WStrVec *)(base + meta2.offset))->Last() = str::conv::FromUtf8(value);
-                        break;
-                    default:
-                        CrashIf(true);
-                    }
-                }
-            }
-            i--;
-            break;
-        }
-    }
-}
-
-#if 0
-static bool SerializePrefs2(const WCHAR *filePath, SerializableGlobalPrefs& globalPrefs,
-    FileHistory& fileHistory, Favorites *favs)
-{
-    CrashIf(!filePath);
-    if (!filePath) return false;
-
-    str::Str<char> data;
-    data.Append(UTF8_BOM "; this file will be overwritten by SumatraPDF - modify at your own risk\r\n");
-
-    // serialize globalPrefs
-    CrashIf(!IsValidZoom(globalPrefs.defaultZoom));
-    if (!globalPrefs.openCountWeek)
-        globalPrefs.openCountWeek = GetWeekCount();
-    // TODO: use different key names than for sumatrapdfprefs.dat?
-    SerializeStructIni(gSerializableGlobalPrefsInfo, dimof(gSerializableGlobalPrefsInfo), &globalPrefs, data, 0);
-    data.Append(globalPrefs.unknownSettings);
-
-    // serialize fileHistory
-    // remove entries which should (no longer) be remembered
-    fileHistory.Purge(globalPrefs.globalPrefsOnly);
-    DisplayState *state;
-    for (size_t i = 0; (state = fileHistory.Get(i)); i++) {
-        // TODO: does issue 2140 still occur?
-        CrashIf(!IsValidZoom(state->zoomVirtual));
-        // don't include common values in order to keep the preference file size down
-        uint32_t bitmask = useGlobalValues ? 0 : Flag_NonGlobal;
-        data.AppendFmt("[File %s]\r\n", ScopedMem<char>(str::conv::ToUtf8(state->filePath)));
-        SerializeStructIni(gDisplayStateInfo, dimof(gDisplayStateInfo), state, data, bitmask);
-    }
-
-    // serialize favs
-    for (size_t i = 0; i < favs->favs.Count(); i++) {
-        FileFavs *fav = favs->favs.At(i);
-        ScopedMem<char> utf8Path(str::conv::ToUtf8(fav->filePath));
-        for (size_t j = 0; j < fav->favNames.Count(); j++) {
-            FavName *fn = fav->favNames.At(j);
-            data.AppendFmt("[Favorite %s]\r\n", utf8Path);
-            SerializeStructIni(gFavNameInfo, dimof(gFavNameInfo), fn, data, 0);
-        }
-    }
-
-    FileTransaction trans;
-    bool ok = trans.WriteAll(filePath, data.Get(), data.Size()) && trans.Commit();
-    if (ok && 0)
-        globalPrefs.lastPrefUpdate = file::GetModificationTime(filePath);
-    return ok;
-}
-#endif
-
-namespace Prefs {
-
-/* Load preferences from the preferences file. */
-bool Load(const WCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
-          FileHistory& fileHistory, Favorites *favs)
-{
-    CrashIf(!filepath);
-    if (!filepath) return false;
-
-    size_t prefsFileLen;
-    ScopedMem<char> prefsTxt(file::ReadAll(filepath, &prefsFileLen));
-    if (str::IsEmpty(prefsTxt.Get()))
-        return false;
-
-    DeserializePrefs(prefsTxt, globalPrefs, fileHistory, favs);
-    globalPrefs.lastPrefUpdate = file::GetModificationTime(filepath);
-    return true;
-}
-
-bool Save(const WCHAR *filepath, SerializableGlobalPrefs& globalPrefs,
-          FileHistory& fileHistory, Favorites* favs)
-{
-    CrashIf(!filepath);
-    if (!filepath) return false;
-
-    size_t dataLen;
-    ScopedMem<char> data(SerializePrefs(globalPrefs, fileHistory, favs, &dataLen));
-    if (!data)
-        return false;
-
-    assert(dataLen > 0);
-    FileTransaction trans;
-    bool ok = trans.WriteAll(filepath, data, dataLen) && trans.Commit();
-    if (ok)
-        globalPrefs.lastPrefUpdate = file::GetModificationTime(filepath);
-    return ok;
-}
-
 }
 
 #define DM_AUTOMATIC_STR            "automatic"
@@ -798,77 +242,58 @@ bool EnumFromName(const WCHAR *txt, DisplayMode *mode)
 
 }
 
-/* Caller needs to free() the result. */
-static WCHAR *GetUserPrefsPath(bool createMissing=false)
-{
-    ScopedMem<WCHAR> path(AppGenDataFilename(USER_PREFS_FILE_NAME));
-    if (file::Exists(path))
-        return path.StealData();
-    if (!IsRunningInPortableMode()) {
-        path.Set(GetExePath());
-        path.Set(path::GetDir(path));
-        path.Set(path::Join(path, USER_PREFS_FILE_NAME));
-        if (file::Exists(path))
-            return path.StealData();
-    }
-    if (createMissing) {
-        // TODO: create from template with link to documentation?
-        return AppGenDataFilename(USER_PREFS_FILE_NAME);
-    }
-    return NULL;
-}
-
-static bool LoadUserPrefs(AdvancedSettings *advancedPrefs)
-{
-#ifdef DISABLE_EBOOK_UI
-    advancedPrefs->traditionalEbookUI = true;
-#endif
-    ScopedMem<WCHAR> path(GetUserPrefsPath());
-    if (!path)
-        return false;
-    ScopedMem<char> iniData(file::ReadAll(path, NULL));
-    if (!iniData)
-        return false;
-    SquareTree iniFile(iniData);
-    DeserializeStructSqt(iniFile.root, gAdvancedSettingsInfo, dimof(gAdvancedSettingsInfo), advancedPrefs);
-    return true;
-}
-
-#if 0
-bool ModifyUserPrefs()
-{
-    ScopedMem<WCHAR> path(GetUserPrefsPath(true));
-    WCHAR buffer[MAX_PATH];
-    UINT res = GetWindowsDirectory(buffer, dimof(buffer));
-    if (!res || res >= dimof(buffer))
-        return NULL;
-    ScopedMem<WCHAR> notepadPath(path::Join(buffer, L"notepad.exe"));
-    if (!file::Exists(notepadPath))
-        return false;
-    return LaunchFile(notepadPath, path);
-}
-#endif
-
-/* Caller needs to free() the result. */
-static inline WCHAR *GetPrefsFileName()
-{
-    return AppGenDataFilename(PREFS_FILE_NAME);
-}
-
+/* Caller needs to DeleteGlobalPrefs(gGlobalPrefs) */
 bool LoadPrefs()
 {
-    delete gFavorites;
-    gFavorites = new Favorites();
+    gFileHistory.UpdateStatesSource(NULL);
+    DeleteGlobalPrefs(gGlobalPrefs);
 
-    LoadUserPrefs(&gUserPrefs);
+    ScopedMem<WCHAR> path(AppGenDataFilename(NEW_PREFS_FILE_NAME));
+    ScopedMem<char> prefsData(file::ReadAll(path, NULL));
+    gGlobalPrefs = (GlobalPrefs *)DeserializeStruct(&gGlobalPrefsInfo, prefsData);
+    CrashAlwaysIf(!gGlobalPrefs);
 
-    ScopedMem<WCHAR> path(GetPrefsFileName());
     if (!file::Exists(path)) {
-        // guess the ui language on first start
-        gGlobalPrefs.currLangCode = trans::DetectUserLang();
-        return true;
+        ScopedMem<WCHAR> bencPath(AppGenDataFilename(OLD_PREFS_FILE_NAME));
+        ScopedMem<char> prefsData(file::ReadAll(bencPath, NULL));
+        DeserializeStructBenc(&gBencGlobalPrefs, prefsData, gGlobalPrefs, BencGlobalPrefsCallback);
     }
-    return Prefs::Load(path, gGlobalPrefs, gFileHistory, gFavorites);
+
+    gUserPrefs = &gGlobalPrefs->userPrefs;
+    ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
+    if (userPath && file::Exists(userPath)) {
+        ScopedMem<char> prefsData(file::ReadAll(userPath, NULL));
+        DeserializeStruct(&gUserPrefsInfo, prefsData, gUserPrefs);
+    }
+
+    if (!gGlobalPrefs->currLangCode || !trans::ValidateLangCode(gGlobalPrefs->currLangCode)) {
+        // guess the ui language on first start
+        gGlobalPrefs->currLangCode = str::Dup(trans::DetectUserLang());
+    }
+    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
+    bool ok = DisplayModeConv::EnumFromName(gGlobalPrefs->defaultDisplayMode, &gGlobalPrefs->defaultDisplayModeEnum);
+    if (!ok)
+        gGlobalPrefs->defaultDisplayModeEnum = DM_AUTOMATIC;
+
+    int weekDiff = GetWeekCount() - gGlobalPrefs->openCountWeek;
+    gGlobalPrefs->openCountWeek = GetWeekCount();
+    for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
+        DisplayState *state = gGlobalPrefs->fileStates->At(i);
+        // "age" openCount statistics (cut in in half after every week)
+        state->openCount >>= weekDiff;
+        // work-around https://code.google.com/p/sumatrapdf/issues/detail?id=2140
+        if (!IsValidZoom(state->zoomVirtual))
+            state->zoomVirtual = 100.f;
+    }
+
+    if (!IsValidZoom(gGlobalPrefs->defaultZoom))
+        gGlobalPrefs->defaultZoom = 100.f;
+
+    gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
+
+    // TODO: update gGlobalPrefs->unknownSettings
+
+    return true;
 }
 
 // called whenever global preferences change or a file is
@@ -888,13 +313,52 @@ bool SavePrefs()
     for (size_t i = 0; i < gWindows.Count(); i++) {
         UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(gWindows.At(i)));
     }
-
     for (size_t i = 0; i < gEbookWindows.Count(); i++) {
         UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(gEbookWindows.At(i)));
     }
 
-    ScopedMem<WCHAR> path(GetPrefsFileName());
-    bool ok = Prefs::Save(path, gGlobalPrefs, gFileHistory, gFavorites);
+    // remove entries which should (no longer) be remembered
+    gFileHistory.Purge();
+
+    str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, DisplayModeConv::NameFromEnum(gGlobalPrefs->defaultDisplayModeEnum));
+
+    for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
+        DisplayState *state = gGlobalPrefs->fileStates->At(i);
+        // BUG: 2140
+        if (!IsValidZoom(state->zoomVirtual)) {
+            dbglog::CrashLogF("Invalid ds->zoomVirtual: %.4f", state->zoomVirtual);
+            const WCHAR *ext = path::GetExt(state->filePath);
+            if (!str::IsEmpty(ext)) {
+                ScopedMem<char> extA(str::conv::ToUtf8(ext));
+                dbglog::CrashLogF("File type: %s", extA.Get());
+            }
+            dbglog::CrashLogF("DisplayMode: %d", state->displayMode);
+            dbglog::CrashLogF("PageNo: %d", state->pageNo);
+            CrashIf(true);
+        }
+    }
+
+    size_t prefsDataSize;
+    ScopedMem<char> prefsData(SerializeStruct(&gGlobalPrefsInfo, gGlobalPrefs, PREFS_INFO_URL, &prefsDataSize));
+    CrashIf(!prefsData || 0 == prefsDataSize);
+    if (!prefsData || 0 == prefsDataSize)
+        return false;
+
+    ScopedMem<WCHAR> path(AppGenDataFilename(NEW_PREFS_FILE_NAME));
+    CrashIf(!path);
+    if (!path)
+        return false;
+
+    // only save if anything's changed at all
+    size_t prevPrefsDataSize;
+    ScopedMem<char> prevPrefsData(file::ReadAll(path, &prevPrefsDataSize));
+    if (prevPrefsDataSize == prefsDataSize && str::Eq(prefsData, prevPrefsData))
+        return true;
+
+    FileTransaction trans;
+    bool ok = trans.WriteAll(path, prefsData, prefsDataSize) && trans.Commit();
+    if (ok)
+        gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
     if (!ok)
         return false;
 
@@ -909,23 +373,21 @@ bool SavePrefs()
 // refresh the preferences when a different SumatraPDF process saves them
 bool ReloadPrefs()
 {
-    ScopedMem<WCHAR> path(GetPrefsFileName());
+    ScopedMem<WCHAR> path(AppGenDataFilename(NEW_PREFS_FILE_NAME));
+    if (!path || !file::Exists(path))
+        return false;
 
     FILETIME time = file::GetModificationTime(path);
-    if (time.dwLowDateTime == gGlobalPrefs.lastPrefUpdate.dwLowDateTime &&
-        time.dwHighDateTime == gGlobalPrefs.lastPrefUpdate.dwHighDateTime) {
+    if (time.dwLowDateTime == gGlobalPrefs->lastPrefUpdate.dwLowDateTime &&
+        time.dwHighDateTime == gGlobalPrefs->lastPrefUpdate.dwHighDateTime) {
         return true;
     }
 
-    const char *currLangCode = gGlobalPrefs.currLangCode;
-    bool toolbarVisible = gGlobalPrefs.toolbarVisible;
-    bool useSysColors = gGlobalPrefs.useSysColors;
+    ScopedMem<char> currLangCode(str::Dup(gGlobalPrefs->currLangCode));
+    bool toolbarVisible = gGlobalPrefs->toolbarVisible;
+    bool useSysColors = gGlobalPrefs->useSysColors;
 
-    gFileHistory.Clear();
-    delete gFavorites;
-    gFavorites = new Favorites();
-
-    bool ok = Prefs::Load(path, gGlobalPrefs, gFileHistory, gFavorites);
+    bool ok = LoadPrefs();
     if (!ok)
         return false;
 
@@ -934,13 +396,13 @@ bool ReloadPrefs()
         gWindows.At(0)->RedrawAll(true);
     }
 
-    if (!str::Eq(currLangCode, gGlobalPrefs.currLangCode)) {
-        SetCurrentLanguageAndRefreshUi(gGlobalPrefs.currLangCode);
+    if (!str::Eq(currLangCode, gGlobalPrefs->currLangCode)) {
+        SetCurrentLanguageAndRefreshUi(gGlobalPrefs->currLangCode);
     }
 
-    if (gGlobalPrefs.toolbarVisible != toolbarVisible)
+    if (gGlobalPrefs->toolbarVisible != toolbarVisible)
         ShowOrHideToolbarGlobally();
-    if (gGlobalPrefs.useSysColors != useSysColors)
+    if (gGlobalPrefs->useSysColors != useSysColors)
         UpdateDocumentColors();
     UpdateFavoritesTreeForAllWindows();
 

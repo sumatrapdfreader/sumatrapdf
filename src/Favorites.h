@@ -4,6 +4,8 @@
 #ifndef Favorites_h
 #define Favorites_h
 
+#include "DisplayState.h"
+
 class WindowInfo;
 
 /*
@@ -24,72 +26,17 @@ they are for navigation only. Presentation settings are remembered on a
 per-file basis in FileHistory.
 */
 
-class FavName {
-public:
-    ScopedMem<WCHAR>    name;
-    int                 pageNo;
-    // TODO: persist pageLabel
-    ScopedMem<WCHAR>    pageLabel;
-    int                 menuId; // assigned in AppendFavMenuItems()
-
-    FavName(int pageNo, const WCHAR *name, const WCHAR *pageLabel) :
-        pageNo(pageNo), name(str::Dup(name)), pageLabel(str::Dup(pageLabel)) { }
-
-    void ChangeName(const WCHAR *newName) {
-        name.Set(str::Dup(newName));
-    }
-};
-
-// list of favorites for one file
-class FileFavs {
-
-    int FindByPage(int pageNo, const WCHAR *pageLabel=NULL) const;
-
-    static int SortByPageNo(const void *a, const void *b);
-
-    public:
-    ScopedMem<WCHAR>filePath;
-    Vec<FavName *>  favNames;
-
-    FileFavs(const WCHAR *fp) : filePath(str::Dup(fp)) { }
-    ~FileFavs() { DeleteVecMembers(favNames); }
-
-    bool IsEmpty() const {
-        return favNames.Count() == 0;
-    }
-
-    bool Exists(int pageNo) const {
-        return FindByPage(pageNo) != -1;
-    }
-
-    void ResetMenuIds();
-    bool GetByMenuId(int menuId, size_t& idx);
-    bool Remove(int pageNo);
-    void AddOrReplace(int pageNo, const WCHAR *name, const WCHAR *pageLabel);
-};
-
+// Favorites is a convenience interface into gFileHistory
 class Favorites {
-
-    // filePathCache points to a string inside FileFavs, so doesn't need to free()d
-    const WCHAR *filePathCache;
-    size_t       idxCache;
-
-    void RemoveFav(FileFavs *fav, size_t idx);
+    size_t idxCache;
 
 public:
-    Vec<FileFavs*> favs;
+    Favorites() : idxCache((size_t)-1) { }
 
-    Favorites() : filePathCache(NULL), idxCache((size_t)-1) { }
-    ~Favorites() { DeleteVecMembers(favs); }
-
-    size_t Count() const {
-       return favs.Count();
-    }
-
-    FileFavs *GetByMenuId(int menuId, size_t& idx);
-    FileFavs *GetByFavName(FavName *fn);
+    Favorite *GetByMenuId(int menuId, DisplayState **dsOut=NULL);
     void ResetMenuIds();
-    FileFavs *GetFavByFilePath(const WCHAR *filePath, bool createIfNotExist=false, size_t *idx=NULL);
+    DisplayState *GetFavByFilePath(const WCHAR *filePath);
+    DisplayState *GetByFavorite(Favorite *fn);
     bool IsPageInFavorites(const WCHAR *filePath, int pageNo);
     void AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name, const WCHAR *pageLabel=NULL);
     void Remove(const WCHAR *filePath, int pageNo);
@@ -105,5 +52,8 @@ void PopulateFavTreeIfNeeded(WindowInfo *win);
 void RememberFavTreeExpansionStateForAllWindows();
 void GoToFavoriteByMenuId(WindowInfo *win, int wmId);
 void UpdateFavoritesTreeForAllWindows();
+
+Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel);
+void DeleteFavorite(Favorite *fav);
 
 #endif

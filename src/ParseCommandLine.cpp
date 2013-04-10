@@ -190,7 +190,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             restrictedUse = true;
         }
         // TODO: remove -invert-colors and -set-color-range in favor
-        //       of the UI settable gGlobalPrefs.useSysColors(?)
+        //       of the UI settable gGlobalPrefs->useSysColors(?)
         else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency

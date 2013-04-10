@@ -173,7 +173,7 @@ void ShowOrHideToolbarGlobally()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
         WindowInfo *win = gWindows.At(i);
-        if (gGlobalPrefs.toolbarVisible) {
+        if (gGlobalPrefs->toolbarVisible) {
             ShowWindow(win->hwndReBar, SW_SHOW);
         } else {
             // Move the focus out of the toolbar
@@ -232,7 +232,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
         HWND hEdit = (HWND)lParam;
         WindowInfo *win = FindWindowInfoByHwnd(hEdit);
         // "find as you type"
-        if (EN_UPDATE == HIWORD(wParam) && hEdit == win->hwndFindBox && gGlobalPrefs.toolbarVisible)
+        if (EN_UPDATE == HIWORD(wParam) && hEdit == win->hwndFindBox && gGlobalPrefs->toolbarVisible)
             FindTextOnThread(win, FIND_FORWARD, true);
     }
     return CallWindowProc(DefWndProcToolbar, hwnd, message, wParam, lParam);

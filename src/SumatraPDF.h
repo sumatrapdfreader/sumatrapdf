@@ -5,6 +5,7 @@
 #define SumatraPDF_h
 
 #include "FileHistory.h"
+#include "Favorites.h"
 #include "SumatraWindow.h"
 #include "Translations.h"
 
@@ -83,7 +84,7 @@ extern HFONT                    gDefaultGuiFont;
 extern WCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
 extern Vec<EbookWindow*>        gEbookWindows;
-extern Favorites *              gFavorites;
+extern Favorites                gFavorites;
 extern FileHistory              gFileHistory;
 extern WNDPROC                  DefWndProcCloseButton;
 

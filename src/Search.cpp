@@ -62,7 +62,7 @@ void OnMenuFind(WindowInfo *win)
     }
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs.toolbarVisible && !win->fullScreen && !win->presentation) {
+    if (gGlobalPrefs->toolbarVisible && !win->fullScreen && !win->presentation) {
         if (GetFocus() == win->hwndFindBox)
             SendMessage(win->hwndFindBox, WM_SETFOCUS, 0, 0);
         else
@@ -362,9 +362,9 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
     for (size_t i = 0; i < win->fwdSearchMark.rects.Count(); i++) {
         RectI rect = win->fwdSearchMark.rects.At(i);
         rect = win->dm->CvtToScreen(win->fwdSearchMark.page, rect.Convert<double>());
-        if (gGlobalPrefs.fwdSearch.offset > 0) {
-            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs.fwdSearch.offset * win->dm->ZoomReal());
-            rect.dx = (int)((gGlobalPrefs.fwdSearch.width > 0 ? gGlobalPrefs.fwdSearch.width : 15.0) * win->dm->ZoomReal());
+        if (gUserPrefs->forwardSearch.highlightOffset > 0) {
+            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gUserPrefs->forwardSearch.highlightOffset * win->dm->ZoomReal());
+            rect.dx = (int)((gUserPrefs->forwardSearch.highlightWidth > 0 ? gUserPrefs->forwardSearch.highlightWidth : 15.0) * win->dm->ZoomReal());
             rect.y -= 4;
             rect.dy += 8;
         }
@@ -372,7 +372,7 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
     }
 
     BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs.fwdSearch.color, alpha, 0);
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, gUserPrefs->forwardSearch.highlightColor, alpha, 0);
 }
 
 // returns true if the double-click was handled and false if it wasn't
@@ -392,7 +392,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
             static_cast<PdfEngine *>(win->dm->engine), &win->pdfsync);
         if (err == PDFSYNCERR_SYNCFILE_NOTFOUND) {
             // We used to warn that "No synchronization file found" at this
-            // point if gGlobalPrefs.enableTeXEnhancements is set; we no longer
+            // point if gGlobalPrefs->enableTeXEnhancements is set; we no longer
             // so do because a double-click has several other meanings
             // (selecting a word or an image, navigating quickly using links)
             // and showing an unrelated warning in all those cases seems wrong
@@ -402,7 +402,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
             ShowNotification(win, _TR("Synchronization file cannot be opened"));
             return true;
         }
-        gGlobalPrefs.enableTeXEnhancements = true;
+        gGlobalPrefs->enableTeXEnhancements = true;
     }
 
     int pageNo = win->dm->GetPageNoByPoint(PointI(x, y));
@@ -418,7 +418,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
         return true;
     }
 
-    WCHAR *inverseSearch = gGlobalPrefs.inverseSearchCmdLine;
+    WCHAR *inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
     if (!inverseSearch)
         // Detect a text editor and use it as the default inverse search handler for now
         inverseSearch = AutoDetectInverseSearchCommands();
@@ -435,10 +435,10 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
         if (!process)
             ShowNotification(win, _TR("Cannot start inverse search command. Please check the command line in the settings."));
     }
-    else if (gGlobalPrefs.enableTeXEnhancements)
+    else if (gGlobalPrefs->enableTeXEnhancements)
         ShowNotification(win, _TR("Cannot start inverse search command. Please check the command line in the settings."));
 
-    if (inverseSearch != gGlobalPrefs.inverseSearchCmdLine)
+    if (inverseSearch != gGlobalPrefs->inverseSearchCmdLine)
         free(inverseSearch);
 
     return true;
@@ -455,7 +455,7 @@ void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, 
         win->fwdSearchMark.page = page;
         win->fwdSearchMark.show = true;
         win->fwdSearchMark.hideStep = 0;
-        if (!gGlobalPrefs.fwdSearch.permanent)
+        if (!gUserPrefs->forwardSearch.highlightPermanent)
             SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
 
         // Scroll to show the overall highlighted zone
