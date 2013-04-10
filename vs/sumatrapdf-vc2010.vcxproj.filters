@@ -207,9 +207,6 @@
     <ClCompile Include="..\src\MuiEbookPageDef.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mui\MiniMui.cpp">
-      <Filter>mui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\mui\Mui.cpp">
       <Filter>mui</Filter>
     </ClCompile>
@@ -991,9 +988,6 @@
     </ClInclude>
     <ClInclude Include="..\src\MuiEbookPageDef.h">
       <Filter>sumatra\ebook</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\mui\MiniMui.h">
-      <Filter>mui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\Mui.h">
       <Filter>mui</Filter>
