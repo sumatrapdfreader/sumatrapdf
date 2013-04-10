@@ -207,13 +207,12 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls),
 EbookController::~EbookController()
 {
     StopFormattingThread();
-    // TODO: figure out why this is necessary to not leak slot connections
-    // thouse should be freed in ~EventMgr anyway
-    //EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
-    //evtMgr->RemoveEventsForName("next");
-    //evtMgr->RemoveEventsForName("prev");
-    //evtMgr->RemoveEventsForControl(ctrls->progress);
-    //evtMgr->RemoveEventsForControl(ctrls->page);
+    EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
+    // we must manually disconnect all events becuase evtMgr is
+    // destroyed after EbookController, and EbookController destructor
+    // will disconnect slots without deleting them, causing leaks
+    // TODO: this seems fragile
+    evtMgr->DisconnectEvents(this);
     CloseCurrentDocument();
 }
 

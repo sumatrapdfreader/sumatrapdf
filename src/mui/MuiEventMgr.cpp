@@ -56,6 +56,19 @@ void EventMgr::RemoveEventsForControl(Control *c)
     }
 }
 
+void EventMgr::DisconnectEvents(sigslot::has_slots *target)
+{
+    EventHandler *h;
+    for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
+        h->events->Clicked.disconnect(target);
+        h->events->SizeChanged.disconnect(target);
+    }
+    NamedEventHandler *nh;
+    for (nh = namedEventHandlers.IterStart(); nh; nh = namedEventHandlers.IterNext()) {
+        nh->namedEvents->Clicked.disconnect(target);
+    }
+}
+
 ControlEvents *EventMgr::EventsForControl(Control *c)
 {
     EventHandler *h;

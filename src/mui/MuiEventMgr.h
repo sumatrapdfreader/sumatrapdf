@@ -65,6 +65,7 @@ public:
     NamedEvents *  EventsForName(const char *name);
 
     void           RemoveEventsForControl(Control *c);
+    void           DisconnectEvents(sigslot::has_slots *target);
 
     void           NotifyClicked(Control *c, int x, int y);
     void           NotifySizeChanged(Control *c, int dx, int dy);
