@@ -282,6 +282,7 @@ static ButtonVector* ButtonVectorFromDef(TxtNode* structDef)
     ButtonVectorDef *def = DeserializeButtonVectorDef(structDef);
     ButtonVector *b = new ButtonVector();
     b->SetName(def->name);
+    b->SetNamedEventClick(def->clicked);
 
     if (def->path ){
         GraphicsPath *gp = svg::GraphicsPathFromPathData(def->path);

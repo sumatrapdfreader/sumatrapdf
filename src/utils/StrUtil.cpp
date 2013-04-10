@@ -167,6 +167,12 @@ void ReplacePtr(char **s, const char *snew)
     *s = str::Dup(snew);
 }
 
+void ReplacePtr(const char **s, const char *snew)
+{
+    free((char*)*s);
+    *s = str::Dup(snew);
+}
+
 void ReplacePtr(WCHAR **s, const WCHAR *snew)
 {
     free(*s);

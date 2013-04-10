@@ -22,6 +22,11 @@ EventMgr::~EventMgr()
     for (h = eventHandlers.IterStart(); h; h = eventHandlers.IterNext()) {
         delete h->events;
     }
+    NamedEventHandler *nh;
+    for (nh = namedEventHandlers.IterStart(); nh; nh = namedEventHandlers.IterNext()) {
+        free((void*)nh->name);
+        delete nh->namedEvents;
+    }
 }
 
 // Set minimum size that will be enforced by handling WM_GETMINMAXINFO
@@ -62,6 +67,32 @@ ControlEvents *EventMgr::EventsForControl(Control *c)
     EventHandler eh = { c, events };
     eventHandlers.Append(eh);
     return events;
+}
+
+NamedEvents * EventMgr::EventsForName(const char *name)
+{
+    NamedEventHandler *h;
+    for (h = namedEventHandlers.IterStart(); h; h = namedEventHandlers.IterNext()) {
+        if (str::EqI(h->name, name))
+            return h->namedEvents;
+    }
+    NamedEvents *namedEvents = new NamedEvents();
+    NamedEventHandler eh = { (const char*)str::Dup(name), namedEvents };
+    namedEventHandlers.Append(eh);
+    return namedEvents;
+}
+
+void EventMgr::NotifyNamedEventClicked(Control *c, int x, int y)
+{
+    const char *name = c->namedEventClick;
+    if (!name)
+        return;
+    NamedEventHandler *h;
+    for (h = namedEventHandlers.IterStart(); h; h = namedEventHandlers.IterNext()) {
+        if (str::EqI(h->name, name)) {
+            return h->namedEvents->Clicked.emit(c, x, y);
+        }
+    }
 }
 
 void EventMgr::NotifyClicked(Control *c, int x, int y)
@@ -135,6 +166,7 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
     Control *c = controls.Last().c;
     c->MapRootToMyPos(x, y);
     NotifyClicked(c, x, y);
+    NotifyNamedEventClicked(c, x, y);
     return 0;
 }
 

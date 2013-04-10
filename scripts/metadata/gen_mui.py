@@ -19,6 +19,7 @@ def src_dir():
 class ButtonVectorDef(Struct):
     fields = [
         Field("name", String(None)),
+        Field("clicked", String(None)),
         Field("path", String(None)),
         Field("styleDefault", String(None)),
         Field("styleMouseOver", String(None)),

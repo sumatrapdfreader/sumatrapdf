@@ -58,6 +58,7 @@ Control::Control(Control *newParent)
     layout = NULL;
     hCursor = NULL;
     cachedStyle = NULL;
+    namedEventClick = NULL;
     SetStyle(NULL);
     pos = Rect();
     if (newParent)
@@ -71,6 +72,11 @@ void Control::SetToolTip(const WCHAR *toolTip)
         wantedInputBits &= WantsMouseOverBit;
     else
         wantedInputBits |= WantsMouseOverBit;
+}
+
+void Control::SetNamedEventClick(const char *s)
+{
+    str::ReplacePtr(&this->namedEventClick, s);
 }
 
 // note: all derived classes must call Control::NotifyMouseEnter()
@@ -103,6 +109,7 @@ Control::~Control()
     delete layout;
     DeleteVecMembers(children);
     free(toolTip);
+    free((void*)namedEventClick);
 }
 
 void Control::SetParent(Control *newParent)
@@ -276,7 +283,6 @@ void Control::MapRootToMyPos(int& x, int& y) const
 void Control::Paint(Graphics *gfx, int offX, int offY)
 {
     CrashIf(!IsVisible());
-
 }
 
 bool Control::SetStyle(Style *style)

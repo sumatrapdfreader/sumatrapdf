@@ -72,6 +72,7 @@ public:
     void Show();
 
     void SetToolTip(const WCHAR *);
+    void SetNamedEventClick(const char *);
 
     void MeasureChildren(Size availableSize) const;
     void MapMyToRootPos(int&x, int& y) const;
@@ -86,6 +87,8 @@ public:
     Control *       parent;
 
     WCHAR *         toolTip;
+
+    const char *    namedEventClick;
 
     // we cache properties for the current style during SetStyle() which
     // makes if fast to access them anywhere without repeating the work

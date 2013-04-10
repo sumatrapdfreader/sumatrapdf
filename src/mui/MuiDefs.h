@@ -9,6 +9,7 @@ using namespace sertxt;
 
 struct ButtonVectorDef {
     const char *  name;
+    const char *  clicked;
     const char *  path;
     const char *  styleDefault;
     const char *  styleMouseOver;

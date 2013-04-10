@@ -10,6 +10,7 @@ using namespace sertxt;
 #define of offsetof
 const FieldMetadata gButtonVectorDefFieldMetadata[] = {
     { of(ButtonVectorDef, name),           TYPE_STR, NULL },
+    { of(ButtonVectorDef, clicked),        TYPE_STR, NULL },
     { of(ButtonVectorDef, path),           TYPE_STR, NULL },
     { of(ButtonVectorDef, styleDefault),   TYPE_STR, NULL },
     { of(ButtonVectorDef, styleMouseOver), TYPE_STR, NULL },
@@ -17,8 +18,8 @@ const FieldMetadata gButtonVectorDefFieldMetadata[] = {
 
 const StructMetadata gButtonVectorDefMetadata = {
     sizeof(ButtonVectorDef),
-    4,
-    "name\0path\0style_default\0style_mouse_over\0\0",
+    5,
+    "name\0clicked\0path\0style_default\0style_mouse_over\0\0",
     &gButtonVectorDefFieldMetadata[0]
 };
 

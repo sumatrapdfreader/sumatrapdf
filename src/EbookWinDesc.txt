@@ -46,6 +46,7 @@ Style [
 
 ButtonVector [
     name: nextButton
+    clicked: next
     path: M0 0  L10 13 L0 ,26 Z
     style_default: styleNextDefault
     style_mouse_over: styleNextMouseOver
@@ -53,6 +54,7 @@ ButtonVector [
 
 ButtonVector [
     name: prevButton
+    clicked: prev
     path: M10 0 L0,  13 L10 26 z
     style_default: styleNextDefault
     style_mouse_over: styleNextMouseOver

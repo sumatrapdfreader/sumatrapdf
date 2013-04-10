@@ -197,8 +197,8 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls),
     startReparseIdx(-1)
 {
     EventMgr *em = ctrls->mainWnd->evtMgr;
-    em->EventsForControl(ctrls->next)->Clicked.connect(this, &EbookController::ClickedNext);
-    em->EventsForControl(ctrls->prev)->Clicked.connect(this, &EbookController::ClickedPrev);
+    em->EventsForName("next")->Clicked.connect(this, &EbookController::ClickedNext);
+    em->EventsForName("prev")->Clicked.connect(this, &EbookController::ClickedPrev);
     em->EventsForControl(ctrls->progress)->Clicked.connect(this, &EbookController::ClickedProgress);
     em->EventsForControl(ctrls->page)->SizeChanged.connect(this, &EbookController::SizeChangedPage);
     UpdateStatus();
@@ -207,11 +207,13 @@ EbookController::EbookController(EbookControls *ctrls) : ctrls(ctrls),
 EbookController::~EbookController()
 {
     StopFormattingThread();
-    EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
-    evtMgr->RemoveEventsForControl(ctrls->next);
-    evtMgr->RemoveEventsForControl(ctrls->prev);
-    evtMgr->RemoveEventsForControl(ctrls->progress);
-    evtMgr->RemoveEventsForControl(ctrls->page);
+    // TODO: figure out why this is necessary to not leak slot connections
+    // thouse should be freed in ~EventMgr anyway
+    //EventMgr *evtMgr = ctrls->mainWnd->evtMgr;
+    //evtMgr->RemoveEventsForName("next");
+    //evtMgr->RemoveEventsForName("prev");
+    //evtMgr->RemoveEventsForControl(ctrls->progress);
+    //evtMgr->RemoveEventsForControl(ctrls->page);
     CloseCurrentDocument();
 }
 
@@ -520,13 +522,13 @@ void EbookController::SizeChangedPage(Control *c, int dx, int dy)
 
 void EbookController::ClickedNext(Control *c, int x, int y)
 {
-    CrashIf(c != ctrls->next);
+    //CrashIf(c != ctrls->next);
     AdvancePage(1);
 }
 
 void EbookController::ClickedPrev(Control *c, int x, int y)
 {
-    CrashIf(c != ctrls->prev);
+    //CrashIf(c != ctrls->prev);
     AdvancePage(-1);
 }
 

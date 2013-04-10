@@ -124,10 +124,10 @@ EbookControls *CreateEbookControls(HWND hwnd)
     }
 
     EbookControls *ctrls = new EbookControls;
-    ctrls->next = FindButtonVectorNamed(gEbookMuiDef, "nextButton");
-    CrashIf(!ctrls->next);
-    ctrls->prev = FindButtonVectorNamed(gEbookMuiDef, "prevButton");
-    CrashIf(!ctrls->prev);
+    //ctrls->next = FindButtonVectorNamed(gEbookMuiDef, "nextButton");
+    //CrashIf(!ctrls->next);
+    //ctrls->prev = FindButtonVectorNamed(gEbookMuiDef, "prevButton");
+    //CrashIf(!ctrls->prev);
     ctrls->status = FindButtonNamed(gEbookMuiDef, "statusButton");
     CrashIf(!ctrls->status);
     ctrls->progress = FindScrollBarNamed(gEbookMuiDef, "progressScrollBar");
