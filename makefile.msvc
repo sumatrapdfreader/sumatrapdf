@@ -198,6 +198,7 @@ MAIN_UI_OBJS = \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(OS)\FileModifications.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
+	$(OS)\MuiEbookPageDef.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj
 

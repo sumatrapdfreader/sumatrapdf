@@ -1101,6 +1101,14 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\MuiEbookPageDef.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\MuiEbookPageDef.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

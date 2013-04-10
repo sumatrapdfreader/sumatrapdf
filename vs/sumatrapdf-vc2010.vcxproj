@@ -133,6 +133,7 @@
     <ClCompile Include="..\src\EbookFormatter.cpp" />
     <ClCompile Include="..\src\EbookWindow.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
+    <ClCompile Include="..\src\MuiEbookPageDef.cpp" />
     <ClCompile Include="..\src\mui\MiniMui.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\MuiBase.cpp" />
@@ -397,6 +398,7 @@
     <ClInclude Include="..\src\EbookFormatter.h" />
     <ClInclude Include="..\src\EbookWindow.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
+    <ClInclude Include="..\src\MuiEbookPageDef.h" />
     <ClInclude Include="..\src\mui\MiniMui.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\MuiBase.h" />

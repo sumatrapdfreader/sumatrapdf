@@ -12,6 +12,10 @@ def mui_src_dir():
     d = os.path.join(g_script_dir, "..", "..", "src", "mui")
     return util.verify_path_exists(os.path.realpath(d))
 
+def src_dir():
+    d = os.path.join(g_script_dir, "..", "..", "src")
+    return util.verify_path_exists(os.path.realpath(d))
+
 class ButtonVectorDef(Struct):
     fields = [
         Field("name", String(None)),
@@ -34,6 +38,12 @@ class ScrollBarDef(Struct):
         Field("cursor", String(None)),
     ]
 
+class EbookPageDef(Struct):
+    fields = [
+        Field("name", String(None)),
+        Field("style", String(None)),
+    ]
+
 def gen_mui():
     dst_dir = mui_src_dir()
     file_path_base = os.path.join(dst_dir, "MuiButtonVectorDef")
@@ -42,6 +52,9 @@ def gen_mui():
     gen_for_top_level_val(ButtonDef(), file_path_base)
     file_path_base = os.path.join(dst_dir, "MuiScrollBarDef")
     gen_for_top_level_val(ScrollBarDef(), file_path_base)
+
+    file_path_base = os.path.join(src_dir(), "MuiEbookPageDef")
+    gen_for_top_level_val(EbookPageDef(), file_path_base)
 
 def main():
     gen_mui()

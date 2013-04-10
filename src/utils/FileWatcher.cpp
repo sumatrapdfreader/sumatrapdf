@@ -96,30 +96,6 @@ static CRITICAL_SECTION g_threadCritSec;
 static WatchedDir *     g_watchedDirs = NULL;
 static WatchedFile *    g_watchedFiles = NULL;
 
-template <typename T>
-void ListInsert(T** root, T* el)
-{
-    el->next = *root;
-    *root = el;
-}
-
-template <typename T>
-bool ListRemove(T** root, T* el)
-{
-    T **currPtr = root;
-    T *curr;
-    for (;;) {
-        curr = *currPtr;
-        if (!curr)
-            return false;
-        if (curr == el)
-            break;
-        currPtr = &(curr->next);
-    }
-    *currPtr = el->next;
-    return true;
-}
-
 static void StartMonitoringDirForChanges(WatchedDir *wd);
 
 static void AwakeWatcherThread()

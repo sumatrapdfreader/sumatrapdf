@@ -5,13 +5,13 @@
 #include "EbookControls.h"
 #include "BitManip.h"
 #include "HtmlFormatter.h"
+#include "MuiEbookPageDef.h"
 #include "resource.h"
 #include "WinUtil.h"
 
 #include "DebugLog.h"
 
 static Style *      styleMainWnd = NULL;
-static Style *      stylePage = NULL;
 static HCURSOR      gCursorHand = NULL;
 
 static ParsedMui    ebookMuiDef;
@@ -99,6 +99,21 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
+Control *CreatePageControl(TxtNode *structDef)
+{
+    CrashIf(!structDef->IsStructWithName("EbookPage"));
+    EbookPageDef *def = DeserializeEbookPageDef(structDef);
+    PageControl *c = new PageControl();
+    Style *style = StyleByName(def->style);
+    c->SetStyle(style);
+
+    if (def->name)
+        c->SetName(def->name);
+
+    FreeEbookPageDef(def);
+    return c;
+}
+
 static void CreateEbookStyles()
 {
     CrashIf(styleMainWnd); // only call me once
@@ -108,8 +123,6 @@ static void CreateEbookStyles()
 
     styleMainWnd = StyleByName("styleMainWnd");
     CrashIf(!styleMainWnd);
-    stylePage = StyleByName("stylePage");
-    CrashIf(!stylePage);
 }
 
 static void CreateLayout(EbookControls *ctrls)
@@ -135,7 +148,7 @@ static void CreateLayout(EbookControls *ctrls)
 
 static void CreateControls(EbookControls *ctrls, ParsedMui& muiInfo)
 {
-    ctrls->next = mui::FindButtonVectorNamed(ebookMuiDef, "nextButton");
+    ctrls->next = FindButtonVectorNamed(ebookMuiDef, "nextButton");
     CrashIf(!ctrls->next);
     ctrls->prev = FindButtonVectorNamed(ebookMuiDef, "prevButton");
     CrashIf(!ctrls->prev);
@@ -144,11 +157,14 @@ static void CreateControls(EbookControls *ctrls, ParsedMui& muiInfo)
     ctrls->progress = FindScrollBarNamed(ebookMuiDef, "progressScrollBar");
     CrashIf(!ctrls->progress);
     ctrls->progress->hCursor = gCursorHand;
+    ctrls->page = (PageControl*)FindControlNamed(ebookMuiDef, "page");
+    CrashIf(!ctrls->page);
 }
 
 EbookControls *CreateEbookControls(HWND hwnd)
 {
     if (!gCursorHand) {
+        RegisterControlCreatorFor("EbookPage", &CreatePageControl);
         gCursorHand  = LoadCursor(NULL, IDC_HAND);
         char *s = LoadTextResource(IDD_EBOOK_WIN_DESC);
         MuiFromText(s, ebookMuiDef);
@@ -160,15 +176,14 @@ EbookControls *CreateEbookControls(HWND hwnd)
 
     CreateControls(ctrls, ebookMuiDef);
 
-    ctrls->page = new PageControl();
-    ctrls->page->SetStyle(stylePage);
-
     ctrls->mainWnd = new HwndWrapper(hwnd);
     ctrls->mainWnd->SetMinSize(Size(320, 200));
     ctrls->mainWnd->SetStyle(styleMainWnd);
 
-    ctrls->mainWnd->AddChild(ctrls->next, ctrls->prev, ctrls->page);
-    ctrls->mainWnd->AddChild(ctrls->progress, ctrls->status);
+    for (size_t i = 0; i < ebookMuiDef.allControls.Count(); i++) {
+        Control *c = ebookMuiDef.allControls.At(i);
+        ctrls->mainWnd->AddChild(c);
+    }
     CreateLayout(ctrls);
     return ctrls;
 }

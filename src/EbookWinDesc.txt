@@ -68,3 +68,8 @@ ScrollBar [
     style: styleProgress
     cursor: hand
 ]
+
+EbookPage [
+    name: page
+    style: stylePage
+]

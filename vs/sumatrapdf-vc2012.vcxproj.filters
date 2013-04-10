@@ -204,6 +204,9 @@
     <ClCompile Include="..\src\MobiDoc.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\MuiEbookPageDef.cpp">
+      <Filter>sumatra\ebook</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\mui\MiniMui.cpp">
       <Filter>mui</Filter>
     </ClCompile>
@@ -990,6 +993,9 @@
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="..\src\MobiDoc.h">
+      <Filter>sumatra\ebook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MuiEbookPageDef.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\MiniMui.h">

@@ -161,6 +161,30 @@ inline bool memeq(const void *s1, const void *s2, size_t len)
 size_t      RoundToPowerOf2(size_t size);
 uint32_t    MurmurHash2(const void *key, size_t len);
 
+template <typename T>
+void ListInsert(T** root, T* el)
+{
+    el->next = *root;
+    *root = el;
+}
+
+template <typename T>
+bool ListRemove(T** root, T* el)
+{
+    T **currPtr = root;
+    T *curr;
+    for (;;) {
+        curr = *currPtr;
+        if (!curr)
+            return false;
+        if (curr == el)
+            break;
+        currPtr = &(curr->next);
+    }
+    *currPtr = el->next;
+    return true;
+}
+
 #include "Allocator.h"
 #include "GeomUtil.h"
 #include "Scoped.h"

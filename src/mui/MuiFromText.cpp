@@ -7,17 +7,57 @@
 #include "MuiButtonVectorDef.h"
 #include "MuiButtonDef.h"
 #include "SvgPath.h"
-#include "TxtParser.h"
 #include "MuiScrollBarDef.h"
 
 namespace mui {
 
+struct ControlCreatorNode {
+    ControlCreatorNode *    next;
+    const char *            typeName;
+    ControlCreatorFunc      creator;
+};
+
+// This is an extensiblity point that allows creating custom controls unknown
+// to mui that appear in text description
+static ControlCreatorNode *gControlCreators = NULL;
+
+void RegisterControlCreatorFor(const char *typeName, ControlCreatorFunc creator)
+{
+    ControlCreatorNode *cc = AllocStruct<ControlCreatorNode>();
+    cc->typeName = str::Dup(typeName);
+    cc->creator = creator;
+    ListInsert(&gControlCreators, cc);
+}
+
+static ControlCreatorFunc FindCreatorFuncFor(const char *typeName)
+{
+    ControlCreatorNode *curr = gControlCreators;
+    while (curr) {
+        if (str::EqI(typeName, curr->typeName))
+            return curr->creator;
+        curr = curr->next;
+    }
+    return NULL;
+}
+
+void FreeControlCreators()
+{
+    ControlCreatorNode *curr = gControlCreators;
+    ControlCreatorNode *next;
+    while (curr) {
+        next = curr->next;
+        free((void*)curr->typeName);
+        free(curr);
+        curr = next;
+    }
+}
+
 Button *FindButtonNamed(ParsedMui& muiInfo, const char *name)
 {
     for (size_t i = 0; i < muiInfo.buttons.Count(); i++) {
-        Button *b = muiInfo.buttons.At(i);
-        if (b->IsNamed(name))
-            return b;
+        Button *c = muiInfo.buttons.At(i);
+        if (c->IsNamed(name))
+            return c;
     }
     return NULL;
 }
@@ -25,9 +65,9 @@ Button *FindButtonNamed(ParsedMui& muiInfo, const char *name)
 ButtonVector *FindButtonVectorNamed(ParsedMui& muiInfo, const char *name)
 {
     for (size_t i = 0; i < muiInfo.vecButtons.Count(); i++) {
-        ButtonVector *b = muiInfo.vecButtons.At(i);
-        if (b->IsNamed(name))
-            return b;
+        ButtonVector *c = muiInfo.vecButtons.At(i);
+        if (c->IsNamed(name))
+            return c;
     }
     return NULL;
 }
@@ -35,9 +75,19 @@ ButtonVector *FindButtonVectorNamed(ParsedMui& muiInfo, const char *name)
 ScrollBar *FindScrollBarNamed(ParsedMui& muiInfo, const char *name)
 {
     for (size_t i = 0; i < muiInfo.scrollBars.Count(); i++) {
-        ScrollBar *sb = muiInfo.scrollBars.At(i);
-        if (sb->IsNamed(name))
-            return sb;
+        ScrollBar *c = muiInfo.scrollBars.At(i);
+        if (c->IsNamed(name))
+            return c;
+    }
+    return NULL;
+}
+
+Control *FindControlNamed(ParsedMui& muiInfo, const char *name)
+{
+    for (size_t i = 0; i < muiInfo.allControls.Count(); i++) {
+        Control *c = muiInfo.allControls.At(i);
+        if (c->IsNamed(name))
+            return c;
     }
     return NULL;
 }
@@ -254,18 +304,23 @@ static void ParseMuiDefinition(TxtNode *root, ParsedMui& res)
             res.styles.Append(StyleFromStruct(node));
         } else if (node->IsStructWithName("ButtonVector")) {
             ButtonVector *b = ButtonVectorFromDef(node);
-            res.all.Append(b);
+            res.allControls.Append(b);
             res.vecButtons.Append(b);
         } else if (node->IsStructWithName("Button")) {
             Button *b = ButtonFromDef(node);
-            res.all.Append(b);
+            res.allControls.Append(b);
             res.buttons.Append(b);
         } else if (node->IsStructWithName("ScrollBar")) {
             ScrollBar *sb = ScrollBarFromDef(node);
-            res.all.Append(sb);
+            res.allControls.Append(sb);
             res.scrollBars.Append(sb);
         } else {
-            CrashIf(true);
+            ScopedMem<char> keyName(node->KeyDup());
+            ControlCreatorFunc creatorFunc = FindCreatorFuncFor(keyName);
+            CrashIf(!creatorFunc);
+            Control *c = creatorFunc(node);
+            if (c)
+                res.allControls.Append(c);
         }
     }
 }
