@@ -240,6 +240,12 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHan
     if (WM_GETMINMAXINFO == msg)
         return OnGetMinMaxInfo((MINMAXINFO*)lParam, wasHandled);
 
+    if (WM_PAINT == msg) {
+        wndRoot->OnPaint(wndRoot->hwndParent);
+        wasHandled = true;
+        return 0;
+    }
+
     return 0;
 }
 

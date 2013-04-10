@@ -440,10 +440,6 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
             CloseEbookWindow(win, true, true);
             break;
 
-        case WM_PAINT:
-            win->hwndWrapper->OnPaint(hwnd);
-            break;
-
         case WM_KEYDOWN:
             return OnKeyDown(win, msg, wParam, lParam);
 

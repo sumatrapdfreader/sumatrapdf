@@ -294,14 +294,6 @@ static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             DestroyAboutMuiWindow();
             break;
 
-        case WM_ERASEBKGND:
-            return 0;
-
-        case WM_PAINT:
-            if (mainWnd)
-                mainWnd->OnPaint(hwnd);
-            break;
-
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }
