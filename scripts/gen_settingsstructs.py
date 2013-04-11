@@ -107,6 +107,11 @@ FileTime = [
 # top, right, bottom, left
 # zeniko: there's outer and inner padding, though, so it'd rather have to be
 # OuterPadding [ TopBottom, LeftRight ] and InnerPadding [ Vert, Horz ]
+# kjk: seems I didn't understand what they meant. It seems to me, we really need
+# 2 different settings:
+#   - WindowPadding (or maybe margin is better in that context?), like in css
+#     top/right/bottom/left. This is the distance from the edges of the window
+#   - PageSpacing (?) - dx/dy or vert/horiz - distance between pages
 PagePadding = [
 	Field("OuterX", Int, 4, "size of the left/right margin between window and document"),
 	Field("OuterY", Int, 2, "size of the top/bottom margin between window and document"),
@@ -137,6 +142,7 @@ EbookUI = [
 	# kjk: don't have an alternative, but I'm not happy with this name
 	# zeniko: DisableEbookUI? Disable? UseFixedPageSize? DisableReflow?
 	# (or all the Disable options as Enable options with default true instead?)
+	# kjk: AltEbookUI ? (Alt - short for alternative, as in "different from the default")
 	Field("TraditionalEbookUI", Bool, False,
 		"whether the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
@@ -154,48 +160,6 @@ ExternalViewer = [
 		"filter for which file types the menu item is to be shown (e.g. \"*.pdf;*.xps\"; \"*\" if missing)"),
 ]
 
-UserPrefs = [
-	# kjk: we should order things in usefulness/likelihood of being changed order
-	Field("MainWindowBackground", Color, 0x8000F2FF,
-		"background color of the non-document windows, traditionally yellow"),
-	Field("EscToExit", Bool, False,
-		"whether the Esc key will exit SumatraPDF same as 'q'"),
-	# zeniko: move these two into it's own struct (FixedPageUI?) to match EbookUI?
-	Field("TextColor", Color, 0x000000,
-		"color value with which black (text) will be substituted"),
-	Field("BackgroundColor", Color, 0xFFFFFF,
-		"color value with which white (background) will be substituted"),
-	Field("ReuseInstance", Bool, False,
-		"whether opening a new document should happen in an already running SumatraPDF " +
-		"instance so that there's only one process and documents aren't opend twice"),
-	Field("ZoomIncrement", Float, 0,
-		"zoom step size in percents relative to the current zoom level " +
-		"(if zero or negative, the values from ZoomLevels are used instead)"),
-	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
-		"zoom levels which zooming steps through, excluding the virtual zoom levels " +
-		"fit page, fit content and fit width (minimal allowed value is 8.33 and maximum "
-		"allowed value is 6400)"),
-	CompactArray("GradientColors", Color, None, # "#2828aa #28aa28 #aa2828",
-		"colors to use for the gradient from top to bottom (stops will be inserted " +
-		"at regular intervals throughout the document); currently only up to three " +
-		"colors are supported; the idea behind this experimental feature is that the " +
-		"background might allow to subconsciously determine reading progress; " +
-		"suggested values: #2828aa #28aa28 #aa2828"),
-	Struct("PrinterDefaults", PrinterDefaults,
-		"these values allow to override the default settings in the Print dialog"),
-	# kjk: should be compact
-	# zeniko: only if it's split into two structs for outer and inner padding
-	Struct("PagePadding", PagePadding,
-		"these values allow to change how far apart pages are layed out"),
-	Struct("ForwardSearch", ForwardSearch,
-		"these values allow to customize how the forward search highlight appears"),
-	Struct("EbookUI", EbookUI,
-		"these values allow to customize the UI used for ebooks (with TraditionalEbookUI disabled)"),
-	Array("ExternalViewers", ExternalViewer,
-		"this list contains a list of additional external viewers for various file types " +
-		"(multiple entries of the same format are recognised)"),
-]
-
 FileSettings = [
 	Field("FilePath", String, None,
 		"file path of the document"),
@@ -210,14 +174,22 @@ FileSettings = [
 	# kjk: should be marked as internal
 	# zeniko: this would cause missing files to be checked at every startup again,
 	# is that intended?
+	# kjk: terminology confusion. Seems like what you call 'internal' I called NoStore
+	# what I mean is that it's ok to not document everything and just say "this
+	# value is for internal use". IsMissing is such value because it doesn't
+	# really make sense to over-ride it. Another criteria is: if it's too complicated
+	# to explain what the setting means
 	Field("IsMissing", Bool, False,
 		"if a document can no longer be found but we still remember valuable state, " +
 		"it's classified as missing so that it can be hidden instead of removed"),
+	# kjk: I think this only applies to certain settings. Should those settings
+	# be grouped in a separate struct and the name reflect that? How does it
+	# interact with GlobalPrefsOnly?
 	Field("UseGlobalValues", Bool, False,
 		"whether global defaults should be used when reloading this file instead of " +
 		"the values listed below"),
 	Field("DisplayMode", String, "automatic",
-		"how pages should be layed out for this document, needs to be synchronized with " +
+		"how pages should be laid out for this document, needs to be synchronized with " +
 		"DefaultDisplayMode after deserialization and before serialization"),
 	Struct("ScrollPos", PointI,
 		"how far this document has been scrolled", structName="PointI", compact=True),
@@ -234,10 +206,12 @@ FileSettings = [
 	Struct("WindowPos", RectI,
 		"default position (can be on any monitor)", structName="RectI", compact=True),
 	Field("DecryptionKey", Utf8String, None,
-		"hex encoded MD5 fingerprint of file content (32 chars) followed by " +
+		"Do not modify! Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
 		"crypt key (64 chars) - only applies for PDF documents"),
 	# kjk: ShowToc
 	# zeniko: that's what it used to be before you changed it to TocVisible in r3696
+	# kjk: that's fine. I'm looking through a different lense at those names now
+	# ("will they make sense to someone who doesn't look at the code")
 	Field("TocVisible", Bool, True,
 		"whether the table of contents (Bookmarks) sidebar is shown for this document"),
 	Field("SidebarDx", Int, 0,
@@ -265,6 +239,57 @@ FileSettings = [
 		internal=True),
 ]
 
+UserPrefs = [
+	Field("MainWindowBackground", Color, 0x8000F2FF,
+		"background color of the non-document windows, traditionally yellow"),
+	Field("EscToExit", Bool, False,
+		"whether the Esc key will exit SumatraPDF same as 'q'"),
+	# zeniko: move these two into it's own struct (FixedPageUI?) to match EbookUI?
+	# kjk: I think we need a scheme where we can set those settings per document
+	# type. For example, the best background color for comic books is black,
+	# which is not the best for other documents, so let's just generalize it
+	# We can either key those by a list of extensions (most flexible but more
+	# generates more settings) or we can create fixed categories (pdf, comic books,
+	# images, ebooks etc.). Or both.
+	# This could include more settings other than color
+	# (paddings?). In order to avoid repetition, we could have a "default"
+	# entry which then could be over-written for a given document type/extension
+	# (or a list of extensions/types)
+	Field("TextColor", Color, 0x000000,
+		"color value with which black (text) will be substituted"),
+	Field("BackgroundColor", Color, 0xFFFFFF,
+		"color value with which white (background) will be substituted"),
+	Field("ReuseInstance", Bool, False,
+		"whether opening a new document should happen in an already running SumatraPDF " +
+		"instance so that there's only one process and documents aren't opend twice"),
+	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
+		"zoom levels which zooming steps through, excluding the virtual zoom levels " +
+		"fit page, fit content and fit width (minimal allowed value is 8.33 and maximum "
+		"allowed value is 6400)"),
+	Field("ZoomIncrement", Float, 0,
+		"zoom step size in percents relative to the current zoom level " +
+		"(if zero or negative, the values from ZoomLevels are used instead)"),
+	CompactArray("GradientColors", Color, None, # "#2828aa #28aa28 #aa2828",
+		"colors to use for the gradient from top to bottom (stops will be inserted " +
+		"at regular intervals throughout the document); currently only up to three " +
+		"colors are supported; the idea behind this experimental feature is that the " +
+		"background might allow to subconsciously determine reading progress; " +
+		"suggested values: #2828aa #28aa28 #aa2828"),
+	Struct("PrinterDefaults", PrinterDefaults,
+		"these values allow to override the default settings in the Print dialog"),
+	# kjk: should be compact
+	# zeniko: only if it's split into two structs for outer and inner padding
+	Struct("PagePadding", PagePadding,
+		"these values allow to change how far apart pages are laid out"),
+	Struct("ForwardSearch", ForwardSearch,
+		"these values allow to customize how the forward search highlight appears"),
+	Struct("EbookUI", EbookUI,
+		"these values allow to customize the UI used for ebooks (with TraditionalEbookUI disabled)"),
+	Array("ExternalViewers", ExternalViewer,
+		"this list contains a list of additional external viewers for various file types " +
+		"(multiple entries of the same format are recognised)"),
+]
+
 UserPrefs = Struct("UserPrefs", UserPrefs,
 	"All values in this structure are can't be modified from within the UI and " +
 	"are for experimental or expert settings. They're overwritten by the content " +
@@ -278,46 +303,73 @@ GlobalPrefs = [
 	# settings are not exposed in the UI (both in the settings file and in the code)
 	# and makes sure that all such options are right at the top of the file where
 	# users can see them without having to go looking for them
+	# kjk: they will still be in the order we choose.
+	# I don't think we should expose internal architecture decisions, especially
+	# those that are fluid. What if we add more UI to set more settings?
+	# Look at this from a perspective of a user who pays attention but is not
+	# a developer. He sees "ZoomLevels" in a different bucket than "DefaultZoom"
+	# but has no context to figure out why this distinction has been made.
+	# If "ShowToolbar" is not "user" pref, then whose pref is it?
+	# If there is grouping to be done, it should be based on: do those
+	# settings logically belong together
 	UserPrefs,
 
 	# kjk: not a good name
 	# zeniko: proposal?
+	# kjk: "global" can mean many things. RememberPerDocumentState?
+	# RememberStatePerDocument? PerDocumentPrefs? PerDocumentSettings? PerDocumentState?
+	# RememberDisplayStatePerDocument? StoreDisplayStatePerDocument? PerDocumentDisplayState?
 	Field("GlobalPrefsOnly", Bool, False,
 		"whether not to store display settings for individual documents"),
 	# kjk: we need an "auto" value, which means "auto-detect". We shouldn't serializee
 	# auto-detected language
+	# kjk: also, it should be just Language or UiLanguage. We can explain that it's
+	# the iso code in the comment and link to a full list
 	Field("CurrLangCode", Utf8String, None, # TODO: "auto"
 		"the code of the current UI language"),
 	Field("ShowToolbar", Bool, True,
 		"whether the toolbar should be visible by default in the main window"),
 	Field("ShowFavorites", Bool, False,
 		"whether the Favorites sidebar should be visible by default in the main window"),
+	# kjk: somehow related. We special-cased .pdf for historical reasons. Let's
+	# generalize to support associations for all supported document formats.
+	# TBD: the exact semantics of what happens when other app takes over
+	# (silently re-enable at startup?) and what happens when we're associated
+	# but the user removed the entry (silently un-associate at startup?)
+	# Those should obsolete this pdf-only logic
 	Field("PdfAssociateDontAskAgain", Bool, False,
 		"if false, we won't ask the user if he wants Sumatra to handle PDF files"),
 	Field("PdfAssociateShouldAssociate", Bool, False,
 		"if pdfAssociateDontAskAgain is true, says whether we should silently associate or not"),
 	Field("CheckForUpdates", Bool, True,
 		"whether SumatraPDF should check once a day whether updates are available"),
+	# kjk: TimeOfLastUpdateCheck?
+	Struct("LastUpdateTime", FileTime,
+		"the time SumatraPDF has last checked for updates (see: CheckForUpdates)",
+		structName="FILETIME", compact=True),
+	Field("VersionToSkip", String, None,
+		"When we show 'new version available', user has an option to check 'skip this version'. " +
+		"This remembers which version is to be skipped."),
 	Field("RememberOpenedFiles", Bool, True,
 		"if true, we remember which files we opened and their settings"),
 	# kjk: probably should be removed as we'll provide a way to set colors explicitly
 	# zeniko: no, this is a UI exposed option for people who prefer changing their
 	# color scheme system wide
+	# kjk: exposed how? My problem with this is that it has complex semantics.
+	# First: what are "system colors"? Second: how does it interact with other ways
+	# to set colors (i.e. who gets precedence)? Is there a better way to provide
+	# such functionality?
 	Field("UseSysColors", Bool, False,
 		"whether to display documents black-on-white or in system colors"),
 	Field("InverseSearchCmdLine", String, None,
 		"pattern used to launch the editor when doing inverse search"),
 	Field("EnableTeXEnhancements", Bool, False,
-		"whether to expose the SyncTeX enhancements to the user"),
-	Field("VersionToSkip", String, None,
-		"When we show 'new version available', user has an option to check 'skip this version'. " +
-		"This remembers which version is to be skipped."),
-	Struct("LastUpdateTime", FileTime,
-		"the time SumatraPDF has last checked for updates (see: EnableAutoUpdate)",
-		structName="FILETIME", compact=True),
+		"whether to expose the SyncTeX enhancements via Settings/Options menu"),
 	Field("DefaultDisplayMode", String, "automatic",
 		"how pages should be laid out by default, needs to be synchronized with " +
 		"DefaultDisplayMode after deserialization and before serialization"),
+	# kjk: this should be a string which can either be a float or the named
+	# zoom ("fit page" etc.)
 	Field("DefaultZoom", Float, -1,
 		"the default zoom factor in % (negative values indicate virtual settings)"),
 	Field("WindowState", Int, 1,
@@ -341,12 +393,10 @@ GlobalPrefs = [
 	# kjk: unless I'm missing something, this should be per-file setting and
 	# we really need ui for easy toggling of this state
 	# zeniko: sure, let's add a "Manga Mode" menu item in View which is only visible for comics
+	# kjk: sounds good
 	Field("CbxR2L", Bool, False,
 		"display CBX double pages from right to left"),
 	# file history and favorites
-	# kjk: FileHistory
-	# zeniko: it's more than just history and naming it so might get people to remove
-	# the entire thing, only realizing later on that their favorites are gone as well
 	Array("FileStates", FileSettings,
 		"Most values in this structure are remembered individually for every file and " +
 		"are by default also persisted so that reading can be resumed"),
