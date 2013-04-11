@@ -116,6 +116,8 @@ inline void SetText(HWND hwnd, const WCHAR *txt)
 }
 
 int GetHwndDpi(HWND hwnd, float *uiDPIFactor);
+int GlobalDpiAdjust(int value);
+int GlobalDpiAdjust(float value);
 
 namespace menu {
 

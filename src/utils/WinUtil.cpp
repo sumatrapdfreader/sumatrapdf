@@ -873,6 +873,28 @@ int GetHwndDpi(HWND hwnd, float *uiDPIFactor)
     return dpi;
 }
 
+int GlobalDpiAdjust(int value)
+{
+    static float dpiFactor = 0.f;
+    if (0.f == dpiFactor) {
+        win::GetHwndDpi(NULL, &dpiFactor);
+        if (0.f == dpiFactor)
+            dpiFactor = 1.f;
+    }
+    return (int)(value * dpiFactor);
+}
+
+int GlobalDpiAdjust(float value)
+{
+    static float dpiFactor = 0.f;
+    if (0.f == dpiFactor) {
+        win::GetHwndDpi(NULL, &dpiFactor);
+        if (0.f == dpiFactor)
+            dpiFactor = 1.f;
+    }
+    return (int)(value * dpiFactor);
+}
+
 }
 
 SizeI GetBitmapSize(HBITMAP hbmp)

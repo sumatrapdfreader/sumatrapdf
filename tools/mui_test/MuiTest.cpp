@@ -4,251 +4,380 @@
 #include "BaseUtil.h"
 
 #include "FileUtil.h"
-#include "Mui.h"
 #include "Resource.h"
-#include "TxtParser.h"
 #include "WinUtil.h"
 
-using namespace mui;
+using namespace Gdiplus;
 
-#define FRAME_CLASS_NAME    L"MUI_TEST_FRAME"
+// point is a pixel * dpi factor, where 1 pixel == 1 point at 72 dpi
+// we use a typedef to make it clear which values are in points
+typedef float SizeInPoint;
 
-#define WIN_DX    720
-#define WIN_DY    640
-
-static HINSTANCE            ghinst = NULL;
-static HWND                 gHwndFrame = NULL;
-mui::HwndWrapper *gMainWnd = NULL;
-
-static bool gShowTextBoundingBoxes = false;
+#define WIN_CLASS_NAME    L"MUI_TEST_FRAME"
 
 #define TEN_SECONDS_IN_MS 10*1000
 
-static float gUiDPIFactor = 1.0f;
-inline int dpiAdjust(int value)
+// it's ARGB, the same format as Gdiplus::Color::ARGB
+typedef uint32_t GfxCol;
+
+GfxCol MakeGfxCol(int r, int g, int b)
 {
-    return (int)(value * gUiDPIFactor);
+    return Color::MakeARGB(255, r, g, b);
 }
 
-static void OnExit()
+GfxCol MakeGfxCol(int a, int r, int g, int b)
 {
-    SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
+    return Color::MakeARGB(a, r, g, b);
 }
 
-static inline void EnableAndShow(HWND hwnd, bool enable)
+GfxCol COL_WHITE = MakeGfxCol(0xff, 0xff, 0xff);
+GfxCol COL_BLACK = MakeGfxCol(0, 0, 0);
+
+inline Gdiplus::ARGB GfxColToARGB(GfxCol c)
 {
-    ShowWindow(hwnd, enable ? SW_SHOW : SW_HIDE);
-    EnableWindow(hwnd, enable);
+    // they are the same format
+    return c;
 }
 
-static void OnOpen(HWND /* hwnd */)
+struct GfxPoint
 {
-}
+    int x, y;
+};
 
-#if 0
-static void OnOpen(HWND hwnd)
+struct GfxSize
 {
-    OPENFILENAME ofn = { 0 };
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = hwnd;
+    int dx, dy;
 
-    str::Str<WCHAR> fileFilter;
-    fileFilter.Append(L"All supported documents");
+    GfxSize() { dx = 0; dy = 0; }
+    GfxSize(int dx, int dy) : dx(dx), dy(dy) { }
 
-    ofn.lpstrFilter = L"All supported documents\0;*.mobi;*.awz;\0\0";
-    ofn.nFilterIndex = 1;
-    ofn.lpstrFileTitle = NULL;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY |
-                OFN_ALLOWMULTISELECT | OFN_EXPLORER;
-    ofn.nMaxFile = MAX_PATH * 100;
-    ScopedMem<WCHAR> file(AllocArray<WCHAR>(ofn.nMaxFile));
-    ofn.lpstrFile = file;
-
-    if (!GetOpenFileName(&ofn))
-        return;
-
-    WCHAR *fileName = ofn.lpstrFile + ofn.nFileOffset;
-    if (*(fileName - 1)) {
-        // special case: single filename without NULL separator
-        gEbookController->LoadMobi(ofn.lpstrFile);
-        return;
-    }
-    // this is just a test app, no need to support multiple files
-    CrashIf(true);
-}
-#endif
-
-static void OnToggleBbox(HWND hwnd)
-{
-    gShowTextBoundingBoxes = !gShowTextBoundingBoxes;
-    SetDebugPaint(gShowTextBoundingBoxes);
-    InvalidateRect(hwnd, NULL, FALSE);
-}
-
-static LRESULT OnCommand(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    int wmId = LOWORD(wParam);
-
-    if ((IDM_EXIT == wmId) || (IDCANCEL == wmId)) {
-        OnExit();
-        return 0;
+    void Set(int dx2, int dy2) {
+        dx = dx2;
+        dy = dy2;
     }
 
-    if (IDM_OPEN == wmId) {
-        OnOpen(hwnd);
-        return 0;
+    void operator=(const GfxSize& other) {
+        dx = (float)other.dx;
+        dy = (float)other.dy;
+    }
+};
+
+struct GfxSizeF
+{
+    float dx, dy;
+
+    GfxSizeF() { dx = 0; dy = 0; }
+
+    void operator=(const GfxSizeF& other) {
+        dx = other.dx;
+        dy = other.dy;
     }
 
-    if (IDM_TOGGLE_BBOX == wmId) {
-        OnToggleBbox(hwnd);
-        return 0;
+    void operator=(const GfxSize& other) {
+        dx = (float)other.dx;
+        dy = (float)other.dy;
+    }
+};
+
+struct GfxRect
+{
+    int x, y, dx, dy;
+
+    GfxRect() { x = 0; y = 0; dx = 0; dy = 0; }
+
+    GfxRect(const GfxSize& s) {
+        x = 0; y = 0;
+        dx = s.dx;
+        dy = s.dy;
     }
 
-    return DefWindowProc(hwnd, msg, wParam, lParam);
+    GfxRect(const GfxRect& other) {
+        x = other.x;
+        y = other.y;
+        dx = other.dx;
+        dy = other.dy;
+    }
+
+    void Inflate(int n)
+    {
+        x -= n;
+        y -= n;
+        dx += (n*2);
+        dy += (n*2);
+    }
+};
+
+class Gfx
+{
+public:
+    GfxSize     size;
+    GfxSizeF    sizeF;
+
+    Gfx() {}
+    virtual ~Gfx() {}
+    virtual void DrawRect(const GfxRect& r, GfxCol col, float width) = 0;
+    virtual void DrawFilledRect(const GfxRect& r, GfxCol col) = 0;
+    void SetSize(int dx, int dy);
+
+};
+
+void Gfx::SetSize(int dx, int dy)
+{
+    size.Set(dx, dy);
+    sizeF = size;
 }
 
-static LRESULT OnKeyDown(HWND hwnd, UINT msg, WPARAM key, LPARAM lParam)
+// set consistent mode for our graphics objects so that we get
+// the same results when measuring text
+void InitGraphicsMode(Graphics *g)
 {
-    switch (key) {
-    case VK_LEFT: case VK_PRIOR: case 'P':
-        break;
-    case VK_RIGHT: case VK_NEXT: case 'N':
-        break;
-    case VK_SPACE:
-        break;
-    case VK_F1:
-        OnToggleBbox(hwnd);
-        break;
-    case VK_HOME:
-        break;
-    case VK_END:
-        break;
-    default:
-        return DefWindowProc(hwnd, msg, key, lParam);
+    g->SetCompositingQuality(CompositingQualityHighQuality);
+    g->SetSmoothingMode(SmoothingModeAntiAlias);
+    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+    g->SetPageUnit(UnitPixel);
+}
+
+class GdiplusGfx : public Gfx
+{
+    Gdiplus::Graphics *g;
+    HDC dc;
+
+public:
+    GdiplusGfx(HDC dc) {
+        g = Gdiplus::Graphics::FromHDC(dc);
+        InitGraphicsMode(g);
     }
+    virtual ~GdiplusGfx() {
+        delete g;
+    }
+    virtual void DrawRect(const GfxRect& r, GfxCol col, float width);
+    virtual void DrawFilledRect(const GfxRect& r, GfxCol col);
+};
+
+void GdiplusGfx::DrawFilledRect(const GfxRect& r, GfxCol col)
+{
+    SolidBrush br(GfxColToARGB(col));
+    float x = (float)r.x - 0.5f;
+    float y = (float)r.y - 0.5f;
+    Gdiplus::RectF r2(x, y, r.dx, r.dy);
+    g->FillRectangle(&br, r2);
+}
+
+void GdiplusGfx::DrawRect(const GfxRect& r, GfxCol col, float width)
+{
+    Pen p(Color(GfxColToARGB(col)), width);
+    //float x = (float)r.x - 0.5f;
+    //float y = (float)r.y - 0.5f;
+    float x = (float)r.x;
+    float y = (float)r.y;
+    float dx = (float)r.dx;
+    float dy = (float)r.dy;
+    Gdiplus::RectF r2(x, y, dx, dy);
+    g->DrawRectangle(&p, r2);
+}
+
+Gfx *CreateGdiplusGfx(HDC dc)
+{
+    return new GdiplusGfx(dc);
+}
+
+class Painter
+{
+    Gfx *gfx;
+public:
+    void OnWmPaint(HWND hwnd);
+};
+
+void Painter::OnWmPaint(HWND hwnd)
+{
+    PAINTSTRUCT ps;
+    HDC dc = BeginPaint(hwnd, &ps);
+
+    gfx = CreateGdiplusGfx(dc);
+    ClientRect cr(hwnd);
+    gfx->SetSize(cr.dx, cr.dy); // TODO: get it from HDC and set during creation
+
+    GfxRect r = gfx->size;
+    gfx->DrawFilledRect(r, COL_WHITE);
+
+    r.Inflate(-1);
+    gfx->DrawRect(r, COL_BLACK, 1.f);
+
+    delete gfx;
+
+    EndPaint(hwnd, &ps);
+}
+
+class EventHandler;
+void RegisterEventHandler(EventHandler* h);
+void UnregisterEventHandler(EventHandler* h);
+
+class EventHandler
+{
+public:
+    HWND hwnd;
+
+    Painter *painter;
+
+    EventHandler(HWND hwnd) : hwnd(hwnd) {
+        painter = new Painter;
+        RegisterEventHandler(this);
+    }
+
+    ~EventHandler() {
+        hwnd = 0;
+        UnregisterEventHandler(this);
+    }
+
+    LRESULT HandleMsg(UINT msg, WPARAM wparam, LPARAM lparam, bool& handled);
+};
+
+Vec<EventHandler*> allEventHandlers;
+
+void RegisterEventHandler(EventHandler* h)
+{
+    allEventHandlers.Append(h);
+}
+
+void UnregisterEventHandler(EventHandler* h)
+{
+    bool removed = allEventHandlers.Remove(h);
+    CrashIf(!removed);
+    if (0 == allEventHandlers.Count())
+        PostQuitMessage(0);
+}
+
+EventHandler *FindEventHandler(HWND hwnd)
+{
+    for (size_t i = 0; i < allEventHandlers.Count(); i++) {
+        EventHandler *h = allEventHandlers.At(i);
+        if (hwnd == h->hwnd)
+            return h;
+    }
+    return NULL;
+}
+
+LRESULT EventHandler::HandleMsg(UINT msg, WPARAM wparam, LPARAM lparam, bool& handled)
+{
+    handled = false;
+
+    if (WM_DESTROY == msg) {
+        // TODO: maybe just schedule ourselves for deletion during out
+        // loop processing
+        handled = true;
+        delete this;
+    } else if (WM_CLOSE == msg) {
+        handled = true;
+        DestroyWindow(hwnd);
+    } else if (painter && (WM_PAINT == msg)) {
+        handled = true;
+        painter->OnWmPaint(hwnd);
+    }
+
     return 0;
 }
 
-static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+// TODO: this is just for curiosity. Remove.
+bool MsgCanHappenBeforeRegister(UINT msg)
 {
-    static bool seenWmPaint = false;
+    static UINT messages[] = { WM_CREATE, WM_NCCREATE, WM_GETMINMAXINFO, WM_NCCALCSIZE, WM_NCDESTROY };
+    for (int i = 0; i < sizeof(messages); i++) {
+        if (msg == messages[i])
+            return true;
+    }
+    return false;
+}
 
-    if (gMainWnd) {
-        bool wasHandled;
-        LRESULT res = gMainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
-        if (wasHandled)
-            return res;
+static LRESULT CALLBACK WndProcEventHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    EventHandler *h = FindEventHandler(hwnd);
+    if (!h) {
+        CrashIf(!MsgCanHappenBeforeRegister(msg));
+        return DefWindowProc(hwnd, msg, wParam, lParam);
     }
 
+    CrashIf(hwnd != h->hwnd);
+    bool handled;
+    LRESULT res = h->HandleMsg(msg, wParam, lParam, handled);
+    if (handled)
+        return res;
+
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+
+#if 0
     switch (msg)
     {
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
-
         case WM_KEYDOWN:
             return OnKeyDown(hwnd, msg, wParam, lParam);
-
         case WM_COMMAND:
             OnCommand(hwnd, msg, wParam, lParam);
             break;
-#if 0
-        case WM_TIMER:
-            OnTimer(hwnd, wParam);
-            break;
-#endif
-
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
-
     return 0;
+#endif
 }
 
-static BOOL RegisterWinClass(HINSTANCE hInstance)
+static void RegisterWinClass()
 {
-    WNDCLASSEX  wcex;
+    static bool registered = false;
+    WNDCLASSEX  wcex = { 0 };
 
-    FillWndClassEx(wcex, hInstance, FRAME_CLASS_NAME, WndProcFrame);
+    if (registered)
+        return;
+
+    registered = true;
+    FillWndClassEx(wcex, NULL, WIN_CLASS_NAME, WndProcEventHandler);
     // clear out CS_HREDRAW | CS_VREDRAW style so that resizing doesn't
     // cause the whole window redraw
     wcex.style = 0;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SUMATRAPDF));
-    wcex.hbrBackground  = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-
     ATOM atom = RegisterClassEx(&wcex);
-    return atom != NULL;
+    CrashIf(!atom);
 }
 
-static BOOL InstanceInit(HINSTANCE hInstance, int nCmdShow)
+EventHandler *EvCreateWindow(SizeInPoint dxp, SizeInPoint dyp, const char *title)
 {
-    ghinst = hInstance;
-    win::GetHwndDpi(NULL, &gUiDPIFactor);
+    ScopedMem<WCHAR> t(str::conv::FromUtf8(title));
+    int dx = win::GlobalDpiAdjust(dxp);
+    int dy = win::GlobalDpiAdjust(dyp);
+    RegisterWinClass();
 
-    gHwndFrame = CreateWindow(
-            FRAME_CLASS_NAME, L"Mui Test",
+    HWND hwnd = CreateWindow(
+            WIN_CLASS_NAME, L"Mui Test",
             WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT, CW_USEDEFAULT,
-            dpiAdjust(WIN_DX), dpiAdjust(WIN_DY),
+            dx, dy,
             NULL, NULL,
-            ghinst, NULL);
-
-    if (!gHwndFrame)
-        return FALSE;
-    gMainWnd = new HwndWrapper(gHwndFrame);
-    //SetMenu(gHwndFrame, BuildMenu());
-    ShowWindow(gHwndFrame, SW_SHOW);
-    return TRUE;
+            NULL, NULL);
+    CrashIf(!hwnd);
+    EventHandler *h = new EventHandler(hwnd);
+    ShowWindow(hwnd, SW_SHOW);
+    return h;
 }
 
 static int RunMessageLoop()
 {
-    //HACCEL accTable = LoadAccelerators(ghinst, MAKEINTRESOURCE(IDC_SUMATRAPDF));
     MSG msg = { 0 };
-
     while (GetMessage(&msg, NULL, 0, 0)) {
-        // dispatch the accelerator to the correct window
-        //WindowInfo *win = FindWindowInfoByHwnd(msg.hwnd);
-        //HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
-        //if (TranslateAccelerator(accHwnd, accTable, &msg))
-        //    continue;
-
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-
     return msg.wParam;
 }
 
-#if 0
-static void LoadWinDesc()
+int RunApp()
 {
-    ScopedMem<WCHAR> exePath(GetExePath());
-    ScopedMem<WCHAR> exeDir(path::GetDir(exePath));
-
-    str::Str<WCHAR> path;
-    path.Append(exeDir);
-    path.Append(L"\\..\\tools\\mui_test\\win_desc.txt");
-    size_t sLen;
-    char *s = file::ReadAll(path.Get(), &sLen);
-    if (!s)
-        return;
-    TxtParser parser;
-    parser.SetToParse(s, sLen);
-    bool ok = ParseTxt(parser);
-    if (!ok) {
-        printf("failed to parse!");
-    }
-    free(s);
+    EvCreateWindow(640, 480, "hello");
+    int res = RunMessageLoop();
+    return res;
 }
-#endif
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    int ret = 1;
-
 #ifdef DEBUG
     // report memory leaks on DbgOut
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -259,32 +388,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // (use Win32 functions where localized input or output is desired)
     setlocale(LC_ALL, "C");
 
-#if defined(DEBUG) && 0
-    extern void SvgPath_UnitTests();
-    SvgPath_UnitTests();
-    extern void TrivialHtmlParser_UnitTests();
-    TrivialHtmlParser_UnitTests();
-    extern void HtmlPullParser_UnitTests();
-    HtmlPullParser_UnitTests();
-#endif
     ScopedCom com;
     InitAllCommonControls();
     ScopedGdiPlus gdi;
 
-    mui::Initialize();
-
-    //LoadWinDesc();
-
-    if (!RegisterWinClass(hInstance))
-        goto Exit;
-
-    if (!InstanceInit(hInstance, nCmdShow))
-        goto Exit;
-
-    ret = RunMessageLoop();
-    delete gMainWnd;
-
-Exit:
-    mui::Destroy();
-    return ret;
+    int res = RunApp();
+    return res;
 }
