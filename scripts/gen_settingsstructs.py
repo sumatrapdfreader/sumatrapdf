@@ -134,6 +134,37 @@ ForwardSearch = [
 		"mouse click instead of fading away instantly"),
 ]
 
+# zeniko: move these two into it's own struct (FixedPageUI?) to match EbookUI?
+# kjk: I think we need a scheme where we can set those settings per document
+# type. For example, the best background color for comic books is black,
+# which is not the best for other documents, so let's just generalize it
+# We can either key those by a list of extensions (most flexible but more
+# generates more settings) or we can create fixed categories (pdf, comic books,
+# images, ebooks etc.). Or both.
+# This could include more settings other than color
+# (paddings?). In order to avoid repetition, we could have a "default"
+# entry which then could be over-written for a given document type/extension
+# (or a list of extensions/types)
+# zeniko: extensions doesn't work as reliable as file type due to sniffing
+# (also, when adding support for more document types, grouping by category should
+# scale better); currently, there are three major groups:
+# FixedPage (PDF, XPS, DjVu, etc.), ImageOnly (images and comic books) and Reflow/Ebook
+FixedPageUI = [
+	Field("TextColor", Color, 0x000000,
+		"color value with which black (text) will be substituted"),
+	Field("BackgroundColor", Color, 0xFFFFFF,
+		"color value with which white (background) will be substituted"),
+	CompactArray("GradientColors", Color, None, # "#2828aa #28aa28 #aa2828",
+		"colors to use for the gradient from top to bottom (stops will be inserted " +
+		"at regular intervals throughout the document); currently only up to three " +
+		"colors are supported; the idea behind this experimental feature is that the " +
+		"background might allow to subconsciously determine reading progress; " +
+		"suggested values: #2828aa #28aa28 #aa2828"),
+	Struct("PageSpacing", SizeI,
+		"horizontal and vertical distance between two pages in facing and book view modes",
+		structName="SizeI", compact=True),
+]
+
 EbookUI = [
 	# kjk: don't have an alternative, but I'm not happy with this name
 	# zeniko: DisableEbookUI? Disable? UseFixedPageSize? DisableReflow?
@@ -141,11 +172,22 @@ EbookUI = [
 	# kjk: AltEbookUI ? (Alt - short for alternative, as in "different from the default")
 	# zeniko: "alternative" isn't that descriptive, if there's a FixedPageUI struct
 	# (and a ImageOnlyUI one), then UseFixedPageUI might be be clearer which alternative is meant
-	Field("TraditionalEbookUI", Bool, False,
+	Field("UseFixedPageUI", Bool, False,
 		"whether the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
 	Field("TextColor", Color, 0x324b5f, "color for text"),
 	Field("BackgroundColor", Color, 0xfbf0d9, "color of the background (page)"),
+]
+
+ImageOnlyUI = [
+	Struct("PageSpacing", SizeI,
+		"horizontal and vertical distance between two pages in facing and book view modes",
+		structName="SizeI", compact=True),
+]
+
+ChmUI = [
+	Field("UseFixedPageUI", Bool, False,
+		"whether the UI used for PDF documents will be used for CHM documents as well"),
 ]
 
 ExternalViewer = [
@@ -247,28 +289,21 @@ UserPrefs = [
 		"background color of the non-document windows, traditionally yellow"),
 	Field("EscToExit", Bool, False,
 		"whether the Esc key will exit SumatraPDF same as 'q'"),
-	# zeniko: move these two into it's own struct (FixedPageUI?) to match EbookUI?
-	# kjk: I think we need a scheme where we can set those settings per document
-	# type. For example, the best background color for comic books is black,
-	# which is not the best for other documents, so let's just generalize it
-	# We can either key those by a list of extensions (most flexible but more
-	# generates more settings) or we can create fixed categories (pdf, comic books,
-	# images, ebooks etc.). Or both.
-	# This could include more settings other than color
-	# (paddings?). In order to avoid repetition, we could have a "default"
-	# entry which then could be over-written for a given document type/extension
-	# (or a list of extensions/types)
-	# zeniko: extensions doesn't work as reliable as file type due to sniffing
-	# (also, when adding support for more document types, grouping by category should
-	# scale better); currently, there are three major groups:
-	# FixedPage (PDF, XPS, DjVu, etc.), ImageOnly (images and comic books) and Reflow/Ebook
-	Field("TextColor", Color, 0x000000,
-		"color value with which black (text) will be substituted"),
-	Field("BackgroundColor", Color, 0xFFFFFF,
-		"color value with which white (background) will be substituted"),
 	Field("ReuseInstance", Bool, False,
 		"whether opening a new document should happen in an already running SumatraPDF " +
 		"instance so that there's only one process and documents aren't opend twice"),
+	Struct("FixedPageUI", FixedPageUI,
+		"these values allow to customize the UI used for fixed page documents (PDF, XPS, DjVu, etc.)"),
+	Struct("EbookUI", EbookUI,
+		"these values allow to customize the UI used for ebooks (with UseFixedPageUI disabled)"),
+	Struct("ImageOnlyUI", ImageOnlyUI,
+		"these values allow to customize the UI used for images and comic books"),
+	Struct("ChmUI", ChmUI,
+		"these values allow to customize the UI used for CHM documents (with UseFixedPageUI disabled)"),
+	Array("ExternalViewers", ExternalViewer,
+		"this list contains a list of additional external viewers for various file types " +
+		"(multiple entries of the same format are recognised)"),
+	# zeniko: the below prefs apply only to FixedPageUI and ImageOnlyUI
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through, excluding the virtual zoom levels " +
 		"fit page, fit content and fit width (minimal allowed value is 8.33 and maximum "
@@ -276,27 +311,13 @@ UserPrefs = [
 	Field("ZoomIncrement", Float, 0,
 		"zoom step size in percents relative to the current zoom level " +
 		"(if zero or negative, the values from ZoomLevels are used instead)"),
-	CompactArray("GradientColors", Color, None, # "#2828aa #28aa28 #aa2828",
-		"colors to use for the gradient from top to bottom (stops will be inserted " +
-		"at regular intervals throughout the document); currently only up to three " +
-		"colors are supported; the idea behind this experimental feature is that the " +
-		"background might allow to subconsciously determine reading progress; " +
-		"suggested values: #2828aa #28aa28 #aa2828"),
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these values allow to override the default settings in the Print dialog"),
 	Struct("WindowMargin", PagePadding,
 		"sizes of the top, right, bottom and left margin (in that order) between window and document",
 		compact=True),
-	Struct("PageSpacing", SizeI,
-		"horizontal and vertical distance between two pages in facing and book view modes",
-		structName="RectI", compact=True),
 	Struct("ForwardSearch", ForwardSearch,
 		"these values allow to customize how the forward search highlight appears"),
-	Struct("EbookUI", EbookUI,
-		"these values allow to customize the UI used for ebooks (with TraditionalEbookUI disabled)"),
-	Array("ExternalViewers", ExternalViewer,
-		"this list contains a list of additional external viewers for various file types " +
-		"(multiple entries of the same format are recognised)"),
 ]
 
 UserPrefs = Struct("UserPrefs", UserPrefs,
