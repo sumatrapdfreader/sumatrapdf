@@ -105,6 +105,8 @@ FileTime = [
 
 # kjk: this is non-standard terminology. Let's adopt css padding terminology:
 # top, right, bottom, left
+# zeniko: there's outer and inner padding, though, so it'd rather have to be
+# OuterPadding [ TopBottom, LeftRight ] and InnerPadding [ Vert, Horz ]
 PagePadding = [
 	Field("OuterX", Int, 4, "size of the left/right margin between window and document"),
 	Field("OuterY", Int, 2, "size of the top/bottom margin between window and document"),
@@ -133,12 +135,13 @@ ForwardSearch = [
 
 EbookUI = [
 	# kjk: don't have an alternative, but I'm not happy with this name
+	# zeniko: DisableEbookUI? Disable? UseFixedPageSize? DisableReflow?
+	# (or all the Disable options as Enable options with default true instead?)
 	Field("TraditionalEbookUI", Bool, False,
 		"whether the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
 	Field("TextColor", Color, 0x324b5f, "color for text"),
-	# kjk: should be BgColor or BackgroundColor. PageColor is non-standard terminology
-	Field("PageColor", Color, 0xfbf0d9, "color of the page (background)"),
+	Field("BackgroundColor", Color, 0xfbf0d9, "color of the background (page)"),
 ]
 
 ExternalViewer = [
@@ -153,19 +156,18 @@ ExternalViewer = [
 
 UserPrefs = [
 	# kjk: we should order things in usefulness/likelihood of being changed order
-	# by that metric, ReuseInstance should probably be at the end
-	Field("ReuseInstance", Bool, False,
-		"whether opening a new document should happen in an already running SumatraPDF " +
-		"instance so that there's only one process and documents aren't opend twice"),
 	Field("MainWindowBackground", Color, 0x8000F2FF,
 		"background color of the non-document windows, traditionally yellow"),
 	Field("EscToExit", Bool, False,
 		"whether the Esc key will exit SumatraPDF same as 'q'"),
+	# zeniko: move these two into it's own struct (FixedPageUI?) to match EbookUI?
 	Field("TextColor", Color, 0x000000,
 		"color value with which black (text) will be substituted"),
-	# kjk: again, background
-	Field("PageColor", Color, 0xFFFFFF,
+	Field("BackgroundColor", Color, 0xFFFFFF,
 		"color value with which white (background) will be substituted"),
+	Field("ReuseInstance", Bool, False,
+		"whether opening a new document should happen in an already running SumatraPDF " +
+		"instance so that there's only one process and documents aren't opend twice"),
 	Field("ZoomIncrement", Float, 0,
 		"zoom step size in percents relative to the current zoom level " +
 		"(if zero or negative, the values from ZoomLevels are used instead)"),
@@ -176,14 +178,15 @@ UserPrefs = [
 	CompactArray("GradientColors", Color, None, # "#2828aa #28aa28 #aa2828",
 		"colors to use for the gradient from top to bottom (stops will be inserted " +
 		"at regular intervals throughout the document); currently only up to three " +
-		"colors are supported; the idea behind this experimental feature is that the" +
+		"colors are supported; the idea behind this experimental feature is that the " +
 		"background might allow to subconsciously determine reading progress; " +
 		"suggested values: #2828aa #28aa28 #aa2828"),
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these values allow to override the default settings in the Print dialog"),
 	# kjk: should be compact
+	# zeniko: only if it's split into two structs for outer and inner padding
 	Struct("PagePadding", PagePadding,
-		"these values allow to change how far apart pages are layed out"), # TODO: compact?
+		"these values allow to change how far apart pages are layed out"),
 	Struct("ForwardSearch", ForwardSearch,
 		"these values allow to customize how the forward search highlight appears"),
 	Struct("EbookUI", EbookUI,
@@ -205,6 +208,8 @@ FileSettings = [
 		"a user can \"pin\" a preferred document to the Frequently Read list " +
 		"so that the document isn't replaced by more frequently used ones"),
 	# kjk: should be marked as internal
+	# zeniko: this would cause missing files to be checked at every startup again,
+	# is that intended?
 	Field("IsMissing", Bool, False,
 		"if a document can no longer be found but we still remember valuable state, " +
 		"it's classified as missing so that it can be hidden instead of removed"),
@@ -232,6 +237,7 @@ FileSettings = [
 		"hex encoded MD5 fingerprint of file content (32 chars) followed by " +
 		"crypt key (64 chars) - only applies for PDF documents"),
 	# kjk: ShowToc
+	# zeniko: that's what it used to be before you changed it to TocVisible in r3696
 	Field("TocVisible", Bool, True,
 		"whether the table of contents (Bookmarks) sidebar is shown for this document"),
 	Field("SidebarDx", Int, 0,
@@ -268,31 +274,35 @@ GlobalPrefs = [
 	# kjk: those settings should be foleded into GlobalPrefs. From the point of
 	# view of people who are not us, it's not understandable why a given setting
 	# is here and not there
+	# zeniko: having them separate has the advantages of indicating which
+	# settings are not exposed in the UI (both in the settings file and in the code)
+	# and makes sure that all such options are right at the top of the file where
+	# users can see them without having to go looking for them
 	UserPrefs,
 
 	# kjk: not a good name
+	# zeniko: proposal?
 	Field("GlobalPrefsOnly", Bool, False,
 		"whether not to store display settings for individual documents"),
 	# kjk: we need an "auto" value, which means "auto-detect". We shouldn't serializee
 	# auto-detected language
-	Field("CurrLangCode", Utf8String, None,
+	Field("CurrLangCode", Utf8String, None, # TODO: "auto"
 		"the code of the current UI language"),
-	# kjk: ShowToolbar?
-	Field("ToolbarVisible", Bool, True,
+	Field("ShowToolbar", Bool, True,
 		"whether the toolbar should be visible by default in the main window"),
-	# kjk: ShowFavorites?
-	Field("FavVisible", Bool, False,
+	Field("ShowFavorites", Bool, False,
 		"whether the Favorites sidebar should be visible by default in the main window"),
 	Field("PdfAssociateDontAskAgain", Bool, False,
 		"if false, we won't ask the user if he wants Sumatra to handle PDF files"),
 	Field("PdfAssociateShouldAssociate", Bool, False,
 		"if pdfAssociateDontAskAgain is true, says whether we should silently associate or not"),
-	# kjk: CheckForUpdates ?
-	Field("EnableAutoUpdate", Bool, True,
+	Field("CheckForUpdates", Bool, True,
 		"whether SumatraPDF should check once a day whether updates are available"),
 	Field("RememberOpenedFiles", Bool, True,
 		"if true, we remember which files we opened and their settings"),
 	# kjk: probably should be removed as we'll provide a way to set colors explicitly
+	# zeniko: no, this is a UI exposed option for people who prefer changing their
+	# color scheme system wide
 	Field("UseSysColors", Bool, False,
 		"whether to display documents black-on-white or in system colors"),
 	Field("InverseSearchCmdLine", String, None,
@@ -330,10 +340,13 @@ GlobalPrefs = [
 		"week count since 2011-01-01 needed to \"age\" openCount values in file history"),
 	# kjk: unless I'm missing something, this should be per-file setting and
 	# we really need ui for easy toggling of this state
+	# zeniko: sure, let's add a "Manga Mode" menu item in View which is only visible for comics
 	Field("CbxR2L", Bool, False,
 		"display CBX double pages from right to left"),
 	# file history and favorites
 	# kjk: FileHistory
+	# zeniko: it's more than just history and naming it so might get people to remove
+	# the entire thing, only realizing later on that their favorites are gone as well
 	Array("FileStates", FileSettings,
 		"Most values in this structure are remembered individually for every file and " +
 		"are by default also persisted so that reading can be resumed"),
