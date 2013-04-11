@@ -74,12 +74,12 @@ CFLAGS = $(CFLAGS) /wd6211
 CFLAGS = $(CFLAGS) /D "DEBUG" /D "_DEBUG"
 !endif
 
-SUMATRA_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
-	/I$(SRCDIR) /I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
-	/I$(MUPDF_DIR)\xps /I$(EXTDIR)/synctex /I$(ZLIB_DIR) /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src
-
 UTILS_CFLAGS = $(CFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/mui /I$(ZLIB_DIR) /I$(ZLIB_DIR)/minizip /I$(EXTDIR)/lzma/C
+
+SUMATRA_CFLAGS = $(UTILS_CFLAGS) $(EXTCFLAGS) \
+	/I$(SRCDIR) /I$(MUPDF_DIR)\fitz /I$(MUPDF_DIR)\pdf \
+	/I$(MUPDF_DIR)\xps /I$(EXTDIR)/synctex /I$(EXTDIR)/libdjvu /I$(EXTDIR)/CHMLib/src
 
 INSTALLER_CFLAGS = $(CFLAGS) $(EXTCFLAGS) \
 	/I$(SRCDIR)/utils /I$(SRCDIR)/installer /I$(SRCDIR) /I$(ZLIB_DIR) /I$(EXTDIR)/lzma/C
