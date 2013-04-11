@@ -103,6 +103,8 @@ FileTime = [
 	Field("DwLowDateTime", Int, 0, ""),
 ]
 
+# kjk: this is non-standard terminology. Let's adopt css padding terminology:
+# top, right, bottom, left
 PagePadding = [
 	Field("OuterX", Int, 4, "size of the left/right margin between window and document"),
 	Field("OuterY", Int, 2, "size of the top/bottom margin between window and document"),
@@ -130,10 +132,12 @@ ForwardSearch = [
 ]
 
 EbookUI = [
+	# kjk: don't have an alternative, but I'm not happy with this name
 	Field("TraditionalEbookUI", Bool, False,
 		"whether the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
 	Field("TextColor", Color, 0x324b5f, "color for text"),
+	# kjk: should be BgColor or BackgroundColor. PageColor is non-standard terminology
 	Field("PageColor", Color, 0xfbf0d9, "color of the page (background)"),
 ]
 
@@ -148,6 +152,8 @@ ExternalViewer = [
 ]
 
 UserPrefs = [
+	# kjk: we should order things in usefulness/likelihood of being changed order
+	# by that metric, ReuseInstance should probably be at the end
 	Field("ReuseInstance", Bool, False,
 		"whether opening a new document should happen in an already running SumatraPDF " +
 		"instance so that there's only one process and documents aren't opend twice"),
@@ -157,6 +163,7 @@ UserPrefs = [
 		"whether the Esc key will exit SumatraPDF same as 'q'"),
 	Field("TextColor", Color, 0x000000,
 		"color value with which black (text) will be substituted"),
+	# kjk: again, background
 	Field("PageColor", Color, 0xFFFFFF,
 		"color value with which white (background) will be substituted"),
 	Field("ZoomIncrement", Float, 0,
@@ -174,6 +181,7 @@ UserPrefs = [
 		"suggested values: #2828aa #28aa28 #aa2828"),
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these values allow to override the default settings in the Print dialog"),
+	# kjk: should be compact
 	Struct("PagePadding", PagePadding,
 		"these values allow to change how far apart pages are layed out"), # TODO: compact?
 	Struct("ForwardSearch", ForwardSearch,
@@ -187,7 +195,7 @@ UserPrefs = [
 
 FileSettings = [
 	Field("FilePath", String, None,
-		"absolute path to a document that's been loaded successfully"),
+		"file path of the document"),
 	Field("OpenCount", Int, 0,
 		"in order to prevent documents that haven't been opened for a while " +
 		"but used to be opened very frequently constantly remain in top positions, " +
@@ -196,6 +204,7 @@ FileSettings = [
 	Field("IsPinned", Bool, False,
 		"a user can \"pin\" a preferred document to the Frequently Read list " +
 		"so that the document isn't replaced by more frequently used ones"),
+	# kjk: should be marked as internal
 	Field("IsMissing", Bool, False,
 		"if a document can no longer be found but we still remember valuable state, " +
 		"it's classified as missing so that it can be hidden instead of removed"),
@@ -222,6 +231,7 @@ FileSettings = [
 	Field("DecryptionKey", Utf8String, None,
 		"hex encoded MD5 fingerprint of file content (32 chars) followed by " +
 		"crypt key (64 chars) - only applies for PDF documents"),
+	# kjk: ShowToc
 	Field("TocVisible", Bool, True,
 		"whether the table of contents (Bookmarks) sidebar is shown for this document"),
 	Field("SidebarDx", Int, 0,
@@ -235,17 +245,17 @@ FileSettings = [
 	Array("Favorites", [
 		Field("Name", String, None, "name of this favorite as shown in the menu"),
 		Field("PageNo", Int, 0, "which page this favorite is about"),
-		Field("PageLabel", String, None, "optional label for this page (if logical and physical numers disagree)"),
-		Field("MenuId", Int, 0, "assigned in AppendFavMenuItems()", internal=True),
+		Field("PageLabel", String, None, "optional label for this page (if logical and physical page numbers are not the same)"),
+		Field("MenuId", Int, 0, "for internal use", internal=True),
 	], "Values which are persisted for bookmarks/favorites"),
 	Field("Index", Type(None, "size_t"), "0",
 		"temporary value needed for FileHistory::cmpOpenCount",
 		internal=True),
 	Field("Thumbnail", Type(None, "RenderedBitmap *"), "NULL",
-		"the thumbnail is persisted separately as a PNG in sumatrapdfcache",
+		"the thumbnail is persisted separately as a PNG in sumatrapdfcache directory",
 		internal=True),
 	Field("DisplayModeEnum", Type(None, "DisplayMode"), "DM_AUTOMATIC",
-		"the value of DisplayMode for internal usage",
+		"for internal use",
 		internal=True),
 ]
 
@@ -255,23 +265,34 @@ UserPrefs = Struct("UserPrefs", UserPrefs,
 	"of SumatraPDF-user.ini if that file exists.")
 
 GlobalPrefs = [
+	# kjk: those settings should be foleded into GlobalPrefs. From the point of
+	# view of people who are not us, it's not understandable why a given setting
+	# is here and not there
 	UserPrefs,
+
+	# kjk: not a good name
 	Field("GlobalPrefsOnly", Bool, False,
 		"whether not to store display settings for individual documents"),
+	# kjk: we need an "auto" value, which means "auto-detect". We shouldn't serializee
+	# auto-detected language
 	Field("CurrLangCode", Utf8String, None,
 		"the code of the current UI language"),
+	# kjk: ShowToolbar?
 	Field("ToolbarVisible", Bool, True,
 		"whether the toolbar should be visible by default in the main window"),
+	# kjk: ShowFavorites?
 	Field("FavVisible", Bool, False,
 		"whether the Favorites sidebar should be visible by default in the main window"),
 	Field("PdfAssociateDontAskAgain", Bool, False,
 		"if false, we won't ask the user if he wants Sumatra to handle PDF files"),
 	Field("PdfAssociateShouldAssociate", Bool, False,
 		"if pdfAssociateDontAskAgain is true, says whether we should silently associate or not"),
+	# kjk: CheckForUpdates ?
 	Field("EnableAutoUpdate", Bool, True,
 		"whether SumatraPDF should check once a day whether updates are available"),
 	Field("RememberOpenedFiles", Bool, True,
 		"if true, we remember which files we opened and their settings"),
+	# kjk: probably should be removed as we'll provide a way to set colors explicitly
 	Field("UseSysColors", Bool, False,
 		"whether to display documents black-on-white or in system colors"),
 	Field("InverseSearchCmdLine", String, None,
@@ -280,19 +301,20 @@ GlobalPrefs = [
 		"whether to expose the SyncTeX enhancements to the user"),
 	Field("VersionToSkip", String, None,
 		"When we show 'new version available', user has an option to check 'skip this version'. " +
-		"This remembers which version is to be skipped. If NULL - don't skip"),
+		"This remembers which version is to be skipped."),
 	Struct("LastUpdateTime", FileTime,
-		"the time SumatraPDF has last checked for updates (cf. EnableAutoUpdate)",
+		"the time SumatraPDF has last checked for updates (see: EnableAutoUpdate)",
 		structName="FILETIME", compact=True),
 	Field("DefaultDisplayMode", String, "automatic",
-		"how pages should be layed out by default, needs to be synchronized with " +
+		"how pages should be laid out by default, needs to be synchronized with " +
 		"DefaultDisplayMode after deserialization and before serialization"),
 	Field("DefaultZoom", Float, -1,
 		"the default zoom factor in % (negative values indicate virtual settings)"),
 	Field("WindowState", Int, 1,
-		"default state of new SumatraPDF windows (same as the last closed)"),
+		"default state of new windows (same as the last closed)"),
 	Struct("WindowPos", RectI,
 		"default position (can be on any monitor)", structName="RectI", compact=True),
+	# kjk: ShowToc?
 	Field("TocVisible", Bool, True,
 		"whether the table of contents (Bookmarks) sidebar should be shown by " +
 		"default when its available for a document"),
@@ -306,9 +328,12 @@ GlobalPrefs = [
 		"whether to display Frequently Read documents or the About page in an empty window"),
 	Field("OpenCountWeek", Int, 0,
 		"week count since 2011-01-01 needed to \"age\" openCount values in file history"),
+	# kjk: unless I'm missing something, this should be per-file setting and
+	# we really need ui for easy toggling of this state
 	Field("CbxR2L", Bool, False,
 		"display CBX double pages from right to left"),
 	# file history and favorites
+	# kjk: FileHistory
 	Array("FileStates", FileSettings,
 		"Most values in this structure are remembered individually for every file and " +
 		"are by default also persisted so that reading can be resumed"),
@@ -442,7 +467,7 @@ def main():
 
 	content = SettingsStructs_Header % locals()
 	open("src/SettingsStructs.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
-	
+
 	# content = AssembleDefaultsSqt(UserPrefs,
 	content = AssembleDefaults(UserPrefs,
 		"You can use this file to modify settings not changeable through the UI " +
