@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   21
+#define LANGS_COUNT   22
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -283,6 +283,51 @@ const char * gTranslations_cn =
   "\345\215\270\350\275\275\345\244\261\350\264\245\0"\
   "\345\215\270\350\275\275\346\255\243\345\234\250\350\277\233\350\241\214\344\270\255...\0"\
   "\345\260\206SumatraPDF\350\256\276\344\270\272&\347\274\272\347\234\201PDF\351\230\205\350\257\273\345\231\250\0";
+
+const char * gTranslations_nl = 
+  "&Opties\0"\
+  "Bent u zeker SumatraPDF te willen desinstalleren?\0"\
+  "Sluiten\0"\
+  "Kon tijdelijke folder niet aanmaken\0"\
+  "Kon de installatie folder niet aanmaken\0"\
+  "Kon PDF voorbeeld niet installeren\0"\
+  "Kon PDF zoek filter niet installeren\0"\
+  "Kon browser invoegmodule niet installeren\0"\
+  "Kon tijdelijke folder niet verkrijgen\0"\
+  "Kon installatie folder niet verwijderen\0"\
+  "Kon snelkoppeling niet verwijderen\0"\
+  "Kon PDF voorbeeld niet deinstalleren\0"\
+  "Kon PDF zoek filter niet de\303\257nstalleren\0"\
+  "Kon browser plugin niet de\303\257nstalleren\0"\
+  "Kon %s niet op schijf wegschrijven\0"\
+  "Kon deinstallatie programma niet kopieren naar tijdelijke folder\0"\
+  "Kon snelkoppeling niet aanmaken\0"\
+  "Kon deinstallatie register sleutels niet verwijderen\0"\
+  "Kon uitgebreide bestandsextensie informatie niet wegschrijven in register\0"\
+  "Kon deinstallatie informatie niet wegschrijven in register\0"\
+  "Verberg &Opties\0"\
+  "Installeer PDF &browser plugin voor Firefox, Chrome en Opera\0"\
+  "Installeer SumatraPDF\0"\
+  "Installeer SumatraPDF in &folder\0"\
+  "Installatie mislukt!\0"\
+  "Installatie is bezig...\0"\
+  "Laat Windows Bureaublad Zoeker PDF documenten &zoeken\0"\
+  "Laat Windows &voorbeelden tonen van PDF documenten\0"\
+  "Sluit %s om verder te gaan!\0"\
+  "Kies de folder waar SumatraPDF geinstalleerd moet worden:\0"\
+  "Sommige bestanden voor de installatie zijn beschadigd of ontbreken\0"\
+  "\0"\
+  "SumatraPDF %s installatieprogramma\0"\
+  "SumatraPDF %s deinstallatieprogramma\0"\
+  "SumatraPDF werd verwijderd.\0"\
+  "SumatraPDF installatie niet gevonden.\0"\
+  "Dank u om voor SumatraPDF te kiezen!\0"\
+  "Dank u! SumatraPDF werd geinstalleerd.\0"\
+  "Het installatie programma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!\0"\
+  "Deinstalleer SumatraPDF\0"\
+  "Deinstallatie mislukt\0"\
+  "Deinstallatie is bezig...\0"\
+  "Gebruik SumatraPDF als &standaard PDF lezer\0";
 
 const char * gTranslations_et = 
   "&S\303\244tted\0"\
@@ -967,6 +1012,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_az, 
   gTranslations_eu, 
   gTranslations_cn, 
+  gTranslations_nl, 
   gTranslations_et, 
   gTranslations_fr, 
   gTranslations_de, 
@@ -993,6 +1039,7 @@ const char *gLangCodes =   "en\0" \
   "az\0" \
   "eu\0" \
   "cn\0" \
+  "nl\0" \
   "et\0" \
   "fr\0" \
   "de\0" \
@@ -1015,6 +1062,7 @@ const char *gLangNames =   "English\0" \
   "Azerbaijani (Az\311\231rbaycanca)\0" \
   "Basque (Euskara)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
+  "Dutch (Nederlands)\0" \
   "Estonian (Eesti)\0" \
   "French (Fran\303\247ais)\0" \
   "German (Deutsch)\0" \
@@ -1049,6 +1097,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_AZERI),
   _LANGID(LANG_BASQUE),
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
+  _LANGID(LANG_DUTCH),
   _LANGID(LANG_ESTONIAN),
   _LANGID(LANG_FRENCH),
   _LANGID(LANG_GERMAN),
@@ -1069,7 +1118,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (12 == idx);
+  return (2 == idx) || (13 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;
