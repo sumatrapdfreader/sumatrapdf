@@ -61,6 +61,12 @@ static void ParseColor(COLORREF *destColor, const WCHAR *txt)
         *destColor = RGB(r, g, b);
 }
 
+// -view [continuous][singlepage|facing|bookview]
+static void ParseViewMode(DisplayMode *mode, const WCHAR *txt)
+{
+    *mode = DisplayModeConv::EnumFromName(txt, DM_AUTOMATIC);
+}
+
 // -zoom [fitwidth|fitpage|fitcontent|100%] (with 100% meaning actual size)
 static void ParseZoomValue(float *zoom, const WCHAR *txt)
 {

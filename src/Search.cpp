@@ -690,8 +690,8 @@ static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
             return next;
     }
 
-    DisplayMode mode;
-    if (DisplayModeConv::EnumFromName(viewMode, &mode) && mode != DM_AUTOMATIC)
+    DisplayMode mode = DisplayModeConv::EnumFromName(viewMode, DM_AUTOMATIC);
+    if (mode != DM_AUTOMATIC)
         SwitchToDisplayMode(win, mode);
 
     if (zoom != INVALID_ZOOM)

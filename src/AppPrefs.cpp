@@ -184,71 +184,6 @@ static int GetWeekCount()
     // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
 }
 
-#define DM_AUTOMATIC_STR            "automatic"
-#define DM_SINGLE_PAGE_STR          "single page"
-#define DM_FACING_STR               "facing"
-#define DM_BOOK_VIEW_STR            "book view"
-#define DM_CONTINUOUS_STR           "continuous"
-#define DM_CONTINUOUS_FACING_STR    "continuous facing"
-#define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
-
-#define IS_STR_ENUM(enumName) \
-    if (str::EqIS(txt, TEXT(enumName##_STR))) { \
-        *mode = enumName; \
-        return true; \
-    }
-
-// -view [continuous][singlepage|facing|bookview]
-bool ParseViewMode(DisplayMode *mode, const WCHAR *txt)
-{
-    IS_STR_ENUM(DM_SINGLE_PAGE);
-    IS_STR_ENUM(DM_CONTINUOUS);
-    IS_STR_ENUM(DM_FACING);
-    IS_STR_ENUM(DM_CONTINUOUS_FACING);
-    IS_STR_ENUM(DM_BOOK_VIEW);
-    IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
-    if (str::EqIS(txt, L"continuous single page")) {
-        *mode = DM_CONTINUOUS;
-    }
-    return true;
-}
-
-namespace DisplayModeConv {
-
-#define STR_FROM_ENUM(val) \
-    if (val == var) \
-        return TEXT(val##_STR);
-
-const WCHAR *NameFromEnum(DisplayMode var)
-{
-    STR_FROM_ENUM(DM_AUTOMATIC)
-    STR_FROM_ENUM(DM_SINGLE_PAGE)
-    STR_FROM_ENUM(DM_FACING)
-    STR_FROM_ENUM(DM_BOOK_VIEW)
-    STR_FROM_ENUM(DM_CONTINUOUS)
-    STR_FROM_ENUM(DM_CONTINUOUS_FACING)
-    STR_FROM_ENUM(DM_CONTINUOUS_BOOK_VIEW)
-    return L"unknown display mode!?";
-}
-
-#undef STR_FROM_ENUM
-
-bool EnumFromName(const WCHAR *txt, DisplayMode *mode)
-{
-    IS_STR_ENUM(DM_AUTOMATIC)
-    IS_STR_ENUM(DM_SINGLE_PAGE)
-    IS_STR_ENUM(DM_FACING)
-    IS_STR_ENUM(DM_BOOK_VIEW)
-    IS_STR_ENUM(DM_CONTINUOUS)
-    IS_STR_ENUM(DM_CONTINUOUS_FACING)
-    IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW)
-    return false;
-}
-
-#undef IS_STR_ENUM
-
-}
-
 /* Caller needs to DeleteGlobalPrefs(gGlobalPrefs) */
 bool LoadPrefs()
 {
@@ -282,17 +217,13 @@ bool LoadPrefs()
         gGlobalPrefs->currLangCode = str::Dup(trans::DetectUserLang());
     }
     gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
-    bool ok = DisplayModeConv::EnumFromName(gGlobalPrefs->defaultDisplayMode, &gGlobalPrefs->defaultDisplayModeEnum);
-    if (!ok)
-        gGlobalPrefs->defaultDisplayModeEnum = DM_AUTOMATIC;
+    gGlobalPrefs->defaultDisplayModeEnum = DisplayModeConv::EnumFromName(gGlobalPrefs->defaultDisplayMode, DM_AUTOMATIC);
 
     int weekDiff = GetWeekCount() - gGlobalPrefs->openCountWeek;
     gGlobalPrefs->openCountWeek = GetWeekCount();
     for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
         DisplayState *state = gGlobalPrefs->fileStates->At(i);
-        ok = DisplayModeConv::EnumFromName(state->displayMode, &state->displayModeEnum);
-        if (!ok)
-            state->displayModeEnum = DM_AUTOMATIC;
+        state->displayModeEnum = DisplayModeConv::EnumFromName(state->displayMode, DM_AUTOMATIC);
         // "age" openCount statistics (cut in in half after every week)
         state->openCount >>= weekDiff;
         // work-around https://code.google.com/p/sumatrapdf/issues/detail?id=2140
@@ -426,4 +357,58 @@ bool ReloadPrefs()
     UpdateFavoritesTreeForAllWindows();
 
     return true;
+}
+
+namespace DisplayModeConv {
+
+#define DM_AUTOMATIC_STR            "automatic"
+#define DM_SINGLE_PAGE_STR          "single page"
+#define DM_FACING_STR               "facing"
+#define DM_BOOK_VIEW_STR            "book view"
+#define DM_CONTINUOUS_STR           "continuous"
+#define DM_CONTINUOUS_FACING_STR    "continuous facing"
+#define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
+
+#define STR_FROM_ENUM(val) \
+    if (val == var) \
+        return TEXT(val##_STR); \
+    else NoOp()
+
+const WCHAR *NameFromEnum(DisplayMode var)
+{
+    STR_FROM_ENUM(DM_AUTOMATIC);
+    STR_FROM_ENUM(DM_SINGLE_PAGE);
+    STR_FROM_ENUM(DM_FACING);
+    STR_FROM_ENUM(DM_BOOK_VIEW);
+    STR_FROM_ENUM(DM_CONTINUOUS);
+    STR_FROM_ENUM(DM_CONTINUOUS_FACING);
+    STR_FROM_ENUM(DM_CONTINUOUS_BOOK_VIEW);
+    CrashIf(true);
+    return L"unknown display mode!?";
+}
+
+#undef STR_FROM_ENUM
+
+#define IS_STR_ENUM(enumName) \
+    if (str::EqIS(txt, TEXT(enumName##_STR))) \
+        return enumName; \
+    else NoOp()
+
+DisplayMode EnumFromName(const WCHAR *txt, DisplayMode default)
+{
+    IS_STR_ENUM(DM_AUTOMATIC);
+    IS_STR_ENUM(DM_SINGLE_PAGE);
+    IS_STR_ENUM(DM_FACING);
+    IS_STR_ENUM(DM_BOOK_VIEW);
+    IS_STR_ENUM(DM_CONTINUOUS);
+    IS_STR_ENUM(DM_CONTINUOUS_FACING);
+    IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
+    // for consistency ("continuous" is used instead in the settings instead for brevity)
+    if (str::EqIS(txt, L"continuous single page"))
+        return DM_CONTINUOUS;
+    return default;
+}
+
+#undef IS_STR_ENUM
+
 }

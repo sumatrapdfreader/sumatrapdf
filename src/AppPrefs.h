@@ -6,8 +6,6 @@
 
 #include "DisplayState.h"
 
-bool ParseViewMode(DisplayMode *mode, const WCHAR *txt);
-
 /* enum from windowState */
 enum {
     WIN_STATE_NORMAL = 1, /* use remembered position and size */
@@ -25,7 +23,7 @@ void DeleteGlobalPrefs(GlobalPrefs *globalPrefs);
 namespace DisplayModeConv {
 
 const WCHAR *   NameFromEnum(DisplayMode var);
-bool            EnumFromName(const WCHAR *txt, DisplayMode *resOut);
+DisplayMode     EnumFromName(const WCHAR *txt, DisplayMode default);
 
 }
 
