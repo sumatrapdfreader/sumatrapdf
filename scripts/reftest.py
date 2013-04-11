@@ -66,7 +66,7 @@ def BitmapDiff(tgaRef, tgaCmp, tgaDiff):
 		refData += "\x00" * (width * height * 3 - len(refData))
 	cmpData = TgaRleUnpack(cmp)
 	if len(cmpData) < width * height * 3:
-		refData += "\xFF" * (width * height * 3 - len(cmpData))
+		cmpData += "\xFF" * (width * height * 3 - len(cmpData))
 	
 	# bail if the files are just differently compressed
 	if refData == cmpData:
