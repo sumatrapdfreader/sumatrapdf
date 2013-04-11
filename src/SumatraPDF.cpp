@@ -1112,8 +1112,6 @@ Error:
 
 void ReloadDocument(WindowInfo *win, bool autorefresh)
 {
-    DisplayState ds;
-    ds.useGlobalValues = gGlobalPrefs->globalPrefsOnly;
     if (!win->IsDocLoaded()) {
         if (!autorefresh && win->loadedFilePath) {
             LoadArgs args(win->loadedFilePath, win);
@@ -1121,11 +1119,13 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         }
         return;
     }
-    win->dm->DisplayStateFromModel(&ds);
-    UpdateDisplayStateWindowRect(*win, ds);
-    UpdateSidebarDisplayState(win, &ds);
+    DisplayState *ds = NewDisplayState(win->loadedFilePath);;
+    ds->useGlobalValues = gGlobalPrefs->globalPrefsOnly;
+    win->dm->DisplayStateFromModel(ds);
+    UpdateDisplayStateWindowRect(*win, *ds);
+    UpdateSidebarDisplayState(win, ds);
     // Set the windows state based on the actual window's placement
-    ds.windowState =  win->fullScreen ? WIN_STATE_FULLSCREEN
+    ds->windowState = win->fullScreen ? WIN_STATE_FULLSCREEN
                     : IsZoomed(win->hwndFrame) ? WIN_STATE_MAXIMIZED
                     : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED
                     : WIN_STATE_NORMAL ;
@@ -1142,12 +1142,14 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     HwndPasswordUI pwdUI(win->hwndFrame);
     LoadArgs args(path, win);
     args.showWin = showWin;
-    if (!LoadDocIntoWindow(args, &pwdUI, &ds, isNewWindow, allowFailure, placeWindow))
+    if (!LoadDocIntoWindow(args, &pwdUI, ds, isNewWindow, allowFailure, placeWindow)) {
+        DeleteDisplayState(ds);
         return;
+    }
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
-        DisplayState *state = gFileHistory.Find(ds.filePath);
+        DisplayState *state = gFileHistory.Find(ds->filePath);
         if (state)
             CreateThumbnailForFile(*win, *state);
     }
@@ -1156,12 +1158,14 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     // we don't ask again at the next refresh
     ScopedMem<char> decryptionKey(win->dm->engine->GetDecryptionKey());
     if (decryptionKey) {
-        DisplayState *state = gFileHistory.Find(ds.filePath);
+        DisplayState *state = gFileHistory.Find(ds->filePath);
         if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
             free(state->decryptionKey);
             state->decryptionKey = decryptionKey.StealData();
         }
     }
+
+    DeleteDisplayState(ds);
 }
 
 static void UpdateToolbarAndScrollbarState(WindowInfo& win)
