@@ -186,6 +186,9 @@ public:
             // forget about files that were hardly used (and without valuable state)
             else if (alwaysUseGlobalValues && state->openCount < minOpenCount && j > FILE_HISTORY_MAX_RECENT)
                 states->RemoveAt(j - 1);
+            else
+                continue;
+            DeleteDisplayState(state);
         }
     }
 

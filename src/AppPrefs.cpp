@@ -263,7 +263,7 @@ bool SavePrefs()
     }
 
     // remove entries which should (no longer) be remembered
-    gFileHistory.Purge();
+    gFileHistory.Purge(gGlobalPrefs->globalPrefsOnly);
 
     str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, DisplayModeConv::NameFromEnum(gGlobalPrefs->defaultDisplayModeEnum));
 
