@@ -3,8 +3,6 @@
 
 #include "BaseUtil.h"
 #include "SettingsUtil.h"
-
-#include "BencUtil.h"
 #include "SquareTreeParser.h"
 
 static inline const StructInfo *GetSubstruct(const FieldInfo& field)
@@ -302,24 +300,27 @@ static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, 
     const char *fieldName = info->fieldNames;
     for (size_t i = 0; i < info->fieldCount; i++) {
         const FieldInfo& field = info->fields[i];
+        uint8_t *fieldPtr = base + field.offset;
         if (Type_Struct == field.type) {
             SquareTreeNode *child = node ? node->GetChild(fieldName) : NULL;
-            DeserializeStructRec(GetSubstruct(field), child, base + field.offset, useDefaults);
+            DeserializeStructRec(GetSubstruct(field), child, fieldPtr, useDefaults);
         }
         else if (Type_Array == field.type) {
-            if (node && node->GetChild(fieldName) &&
-                (0 == node->GetChild(fieldName)->data.Count() || node->GetChild(fieldName)->GetChild(""))) {
-                node = node->GetChild(fieldName);
+            SquareTreeNode *child;
+            if (node && (child = node->GetChild(fieldName)) != NULL &&
+                (0 == child->data.Count() || child->GetChild(""))) {
+                node = child;
                 fieldName += str::Len(fieldName);
             }
-            Vec<void *> *array = new Vec<void *>();
-            SquareTreeNode *child;
-            size_t idx = 0;
-            while (node && (child = node->GetChild(fieldName, &idx)) != NULL) {
-                array->Append(DeserializeStructRec(GetSubstruct(field), child, NULL, true));
+            if (node || useDefaults || !*(Vec<void *> **)fieldPtr) {
+                Vec<void *> *array = new Vec<void *>();
+                size_t idx = 0;
+                while (node && (child = node->GetChild(fieldName, &idx)) != NULL) {
+                    array->Append(DeserializeStructRec(GetSubstruct(field), child, NULL, true));
+                }
+                FreeArray(*(Vec<void *> **)fieldPtr, field);
+                *(Vec<void *> **)fieldPtr = array;
             }
-            FreeArray(*(Vec<void *> **)(base + field.offset), field);
-            *(Vec<void *> **)(base + field.offset) = array;
         }
         else {
             const char *value = node ? node->GetValue(fieldName) : NULL;
@@ -336,8 +337,7 @@ char *SerializeStruct(const StructInfo *info, const void *strct, const char *inf
     str::Str<char> out;
     out.Append(UTF8_BOM "# This file will be overwritten - modify at your own risk!");
     if (infoUrl) {
-        out.Append(" For further\r\n");
-        out.Append("# information, see ");
+        out.Append(" For further\r\n# information, see ");
         out.Append(infoUrl);
     }
     out.Append("\r\n\r\n");
@@ -357,14 +357,15 @@ static void FreeStructData(const StructInfo *info, uint8_t *base)
 {
     for (size_t i = 0; i < info->fieldCount; i++) {
         const FieldInfo& field = info->fields[i];
+        uint8_t *fieldPtr = base + field.offset;
         if (Type_Struct == field.type)
-            FreeStructData(GetSubstruct(field), base + field.offset);
+            FreeStructData(GetSubstruct(field), fieldPtr);
         else if (Type_Array == field.type)
-            FreeArray(*(Vec<void *> **)(base + field.offset), field);
+            FreeArray(*(Vec<void *> **)fieldPtr, field);
         else if (Type_String == field.type || Type_Utf8String == field.type)
-            free(*(void **)(base + field.offset));
+            free(*(void **)fieldPtr);
         else if (Type_ColorArray == field.type || Type_FloatArray == field.type || Type_IntArray == field.type)
-            delete *(Vec<int> **)(base + field.offset);
+            delete *(Vec<int> **)fieldPtr;
     }
 }
 
@@ -376,6 +377,8 @@ void FreeStruct(const StructInfo *info, void *strct)
 }
 
 // TODO: keep Benc deserialization for at least two minor releases (ideally at least a year)
+
+#include "BencUtil.h"
 
 static void *DeserializeStructBencRec(const StructInfo *info, BencDict *dict, uint8_t *base, CompactCallback cb)
 {
