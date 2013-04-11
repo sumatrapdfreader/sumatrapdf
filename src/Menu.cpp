@@ -493,9 +493,14 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y)
         break;
 
     case IDM_FORGET_SELECTED_DOCUMENT:
-        gFileHistory.Remove(state);
-        delete state->thumbnail;
-        delete state;
+        if (state->favorites->Count() > 0) {
+            // just hide documents with favorites
+            gFileHistory.MarkFileInexistent(state->filePath, true);
+        }
+        else {
+            gFileHistory.Remove(state);
+            DeleteDisplayState(state);
+        }
         CleanUpThumbnailCache(gFileHistory);
         win->DeleteInfotip();
         win->RedrawAll(true);

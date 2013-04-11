@@ -101,9 +101,11 @@ static int SortByPageNo(const void *a, const void *b)
 void Favorites::AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name, const WCHAR *pageLabel)
 {
     DisplayState *fav = GetFavByFilePath(filePath);
-    CrashIf(!fav);
-    if (!fav)
-        return;
+    if (!fav) {
+        CrashIf(gGlobalPrefs->rememberOpenedFiles);
+        fav = NewDisplayState(filePath);
+        gFileHistory.Append(fav);
+    }
 
     Favorite *fn = FindByPage(fav, pageNo, pageLabel);
     if (fn) {
@@ -128,6 +130,11 @@ void Favorites::Remove(const WCHAR *filePath, int pageNo)
 
     fav->favorites->Remove(fn);
     DeleteFavorite(fn);
+
+    if (!gGlobalPrefs->rememberOpenedFiles && 0 == fav->favorites->Count()) {
+        gFileHistory.Remove(fav);
+        DeleteDisplayState(fav);
+    }
 }
 
 void Favorites::RemoveAllForFile(const WCHAR *filePath)
@@ -140,6 +147,11 @@ void Favorites::RemoveAllForFile(const WCHAR *filePath)
         DeleteFavorite(fav->favorites->At(i));
     }
     fav->favorites->Reset();
+
+    if (!gGlobalPrefs->rememberOpenedFiles) {
+        gFileHistory.Remove(fav);
+        DeleteDisplayState(fav);
+    }
 }
 
 // Note: those might be too big

@@ -1333,8 +1333,10 @@ static void RenameFileInHistory(const WCHAR *oldPath, const WCHAR *newPath)
     if (ds) {
         oldIsPinned = ds->isPinned;
         oldOpenCount = ds->openCount;
-        // TODO: oldFavorites?
         gFileHistory.Remove(ds);
+        // TODO: merge favorites as well?
+        if (ds->favorites->Count() > 0)
+            UpdateFavoritesTreeForAllWindows();
         DeleteDisplayState(ds);
     }
     ds = gFileHistory.Find(oldPath);
@@ -3390,7 +3392,8 @@ void OnMenuSettings(HWND hwnd)
         return;
 
     if (!gGlobalPrefs->rememberOpenedFiles) {
-        gFileHistory.Clear();
+        // TODO: also remove all favorites?
+        gFileHistory.Clear(true);
         CleanUpThumbnailCache(gFileHistory);
     }
     if (useSysColors != gGlobalPrefs->useSysColors)
