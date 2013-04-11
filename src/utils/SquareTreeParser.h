@@ -1,5 +1,5 @@
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
-   License: GPLv3 */
+   License: Simplified BSD (see COPYING.BSD) */
 
 #ifndef SquareTreeParser_h
 #define SquareTreeParser_h
