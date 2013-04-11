@@ -981,7 +981,7 @@ void fz_free_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buf);
 struct fz_image_s
 {
 	fz_storable storable;
-	int w, h;
+	int w, h, bpc;
 	fz_image *mask;
 	fz_colorspace *colorspace;
 	fz_pixmap *(*get_pixmap)(fz_context *, fz_image *, int w, int h);

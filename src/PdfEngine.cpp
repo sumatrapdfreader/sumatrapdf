@@ -1546,34 +1546,17 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
             break;
         }
 
-        // according to the spec (1.7 ExtensionLevel 3), the password is in
-        // PdfDocEncoding for crypt revisions up to 4 and in UTF-8 with
-        // SASLprep normalization for crypt revisions 5 and above;
-        // to get the best results, we try various additional variations...
-        bool normalized = false;
-RetryWithNormalizedPwd:
-        fz_try(ctx) {
-            char *pwd_doc = pdf_from_ucs2(_doc, (unsigned short *)pwd.Get());
-            ok = pwd_doc && pdf_authenticate_password(_doc, pwd_doc);
-            fz_free(ctx, pwd_doc);
-        }
-        fz_catch(ctx) { }
-        // try the UTF-8 password, if the PDFDocEncoding one doesn't work
+        // MuPDF expects passwords to be UTF-8 encoded
+        ScopedMem<char> pwd_utf8(str::conv::ToUtf8(pwd));
+        ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
+        // according to the spec (1.7 ExtensionLevel 3), the password
+        // for crypt revisions 5 and above are in SASLprep normalization
         if (!ok) {
-            ScopedMem<char> pwd_utf8(str::conv::ToUtf8(pwd));
-            ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
-        }
-        // fall back to an ANSI-encoded password as a last measure
-        if (!ok) {
-            ScopedMem<char> pwd_ansi(str::conv::ToAnsi(pwd));
-            ok = pwd_ansi && pdf_authenticate_password(_doc, pwd_ansi);
-        }
-        if (!normalized) {
             // TODO: this is only part of SASLprep
             pwd.Set(NormalizeString(pwd, 5 /* NormalizationKC */));
             if (pwd) {
-                normalized = true;
-                goto RetryWithNormalizedPwd;
+                pwd_utf8.Set(str::conv::ToUtf8(pwd));
+                ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
             }
         }
     }

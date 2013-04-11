@@ -1430,6 +1430,12 @@ typedef struct fz_colorspace_s fz_colorspace;
 fz_colorspace *fz_find_device_colorspace(fz_context *ctx, char *name);
 
 /*
+	fz_colorspace_is_indexed: Return true, iff a given colorspace is
+	indexed.
+*/
+int fz_colorspace_is_indexed(fz_colorspace *cs);
+
+/*
 	fz_device_gray: Abstract colorspace representing device specific
 	gray.
 */

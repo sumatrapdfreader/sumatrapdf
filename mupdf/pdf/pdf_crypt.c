@@ -699,13 +699,47 @@ pdf_authenticate_owner_password(fz_context *ctx, pdf_crypt *crypt, unsigned char
 	return pdf_authenticate_user_password(ctx, crypt, userpass, 32);
 }
 
-int
-pdf_authenticate_password(pdf_document *xref, char *password)
+static void pdf_docenc_from_utf8(char *password, const char *utf8, int n)
 {
+	int i = 0, k, c;
+	while (*utf8 && i + 1 < n)
+	{
+		utf8 += fz_chartorune(&c, utf8);
+		for (k = 0; k < 256; k++)
+		{
+			if (c == pdf_doc_encoding[k])
+			{
+				password[i++] = k;
+				break;
+			}
+		}
+		/* FIXME: drop characters that can't be encoded or return an error? */
+	}
+	password[i] = 0;
+}
+
+static void pdf_saslprep_from_utf8(char *password, const char *utf8, int n)
+{
+	/* TODO: stringprep with SALSprep profile */
+	fz_strlcpy(password, utf8, n);
+}
+
+int
+pdf_authenticate_password(pdf_document *xref, const char *pwd_utf8)
+{
+	char password[2048];
+
 	if (xref->crypt)
 	{
-		if (!password)
-			password = "";
+		password[0] = 0;
+		if (pwd_utf8)
+		{
+			if (xref->crypt->r <= 4)
+				pdf_docenc_from_utf8(password, pwd_utf8, sizeof password);
+			else
+				pdf_saslprep_from_utf8(password, pwd_utf8, sizeof password);
+		}
+
 		if (pdf_authenticate_user_password(xref->ctx, xref->crypt, (unsigned char *)password, strlen(password)))
 			return 1;
 		if (pdf_authenticate_owner_password(xref->ctx, xref->crypt, (unsigned char *)password, strlen(password)))

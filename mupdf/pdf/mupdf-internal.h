@@ -18,7 +18,7 @@ struct pdf_image_s
 {
 	fz_image base;
 	fz_pixmap *tile;
-	int n, bpc;
+	int n;
 	fz_compressed_buffer *buffer;
 	int colorkey[FZ_MAX_COLORS * 2];
 	float decode[FZ_MAX_COLORS * 2];

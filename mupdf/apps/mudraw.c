@@ -128,7 +128,7 @@ static void usage(void)
 		"\t-d\tdisable use of display list\n"
 		"\t-5\tshow md5 checksums\n"
 		"\t-R -\trotate clockwise by given number of degrees\n"
-		"\t-G gamma\tgamma correct output\n"
+		"\t-G -\tgamma correct output\n"
 		"\t-I\tinvert output\n"
 		"\t-l\tprint outline\n"
 		"\t-j -\tOutput mujstest file\n"
@@ -807,7 +807,7 @@ static void drawoutline(fz_context *ctx, fz_document *doc)
 #ifdef MUPDF_COMBINED_EXE
 int draw_main(int argc, char **argv)
 #else
-#ifdef _WIN32_UTF8
+#ifdef _WIN32
 static int main_utf8(int argc, char **argv)
 #else
 int main(int argc, char **argv)
@@ -1029,7 +1029,7 @@ int main(int argc, char **argv)
 	return (errored != 0);
 }
 
-#ifdef _WIN32_UTF8
+#ifdef _WIN32
 static char *
 wchar_to_utf8(wchar_t *s)
 {

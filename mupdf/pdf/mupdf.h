@@ -193,7 +193,7 @@ pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_stream *file);
 void pdf_close_document(pdf_document *doc);
 
 int pdf_needs_password(pdf_document *doc);
-int pdf_authenticate_password(pdf_document *doc, char *pw);
+int pdf_authenticate_password(pdf_document *doc, const char *pw);
 
 enum
 {

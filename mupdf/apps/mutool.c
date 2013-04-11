@@ -29,7 +29,7 @@ namematch(const char *end, const char *start, const char *match)
 	return ((end-len >= start) && (strncmp(end-len, match, len) == 0));
 }
 
-#ifdef _WIN32_UTF8
+#ifdef _WIN32
 static int main_utf8(int argc, char **argv)
 #else
 int main(int argc, char **argv)
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 	return 1;
 }
 
-#ifdef _WIN32_UTF8
+#ifdef _WIN32
 static char *
 wchar_to_utf8(wchar_t *s)
 {

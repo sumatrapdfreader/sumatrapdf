@@ -194,6 +194,12 @@ fz_find_device_colorspace(fz_context *ctx, char *name)
 	return NULL;
 }
 
+int
+fz_colorspace_is_indexed(fz_colorspace *cs)
+{
+	return (cs && !strcmp(cs->name, "Indexed"));
+}
+
 /* Fast pixmap color conversions */
 
 static void fast_gray_to_rgb(fz_pixmap *dst, fz_pixmap *src)

@@ -254,6 +254,7 @@ void winreplacefile(char *source, char *target)
 
 static char pd_filename[256] = "The file is encrypted.";
 static char pd_password[256] = "";
+static wchar_t pd_passwordw[256] = {0};
 static char td_textinput[1024] = "";
 static int td_retry = 0;
 static int cd_nopts;
@@ -275,8 +276,9 @@ dlogpassproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case 1:
 			pd_okay = 1;
-			GetDlgItemTextA(hwnd, 3, pd_password, sizeof pd_password);
+			GetDlgItemTextW(hwnd, 3, pd_passwordw, nelem(pd_passwordw));
 			EndDialog(hwnd, 1);
+			WideCharToMultiByte(CP_UTF8, 0, pd_passwordw, -1, pd_password, sizeof pd_password, NULL, NULL);
 			return TRUE;
 		case 2:
 			pd_okay = 0;

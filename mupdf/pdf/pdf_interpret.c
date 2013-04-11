@@ -406,6 +406,7 @@ pdf_begin_group(pdf_csi *csi, const fz_rect *bbox)
 		fz_transfer_function *tr = gstate->softmask_tr;
 		gstate->softmask_tr = NULL;
 
+		fz_transform_rect(&mask_bbox, &softmask->matrix);
 		fz_transform_rect(&mask_bbox, &gstate->softmask_ctm);
 		gstate->softmask = NULL;
 		gstate->ctm = gstate->softmask_ctm;
@@ -1747,7 +1748,9 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 				if (!colorspace)
 					colorspace = fz_device_gray;
 
-				fz_concat(&gstate->softmask_ctm, &xobj->matrix, &gstate->ctm);
+				/* The softmask_ctm no longer has the softmask matrix rolled into it, as this
+				 * causes the softmask matrix to be applied twice. */
+				gstate->softmask_ctm = gstate->ctm;
 				gstate->softmask = xobj;
 				for (k = 0; k < colorspace->n; k++)
 					gstate->softmask_bc[k] = 0;
