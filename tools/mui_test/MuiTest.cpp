@@ -7,6 +7,8 @@
 #include "Resource.h"
 #include "WinUtil.h"
 
+#include "DebugLog.h"
+
 using namespace Gdiplus;
 
 // point is a pixel * dpi factor, where 1 pixel == 1 point at 72 dpi
@@ -32,6 +34,7 @@ GfxCol MakeGfxCol(int a, int r, int g, int b)
 
 GfxCol COL_WHITE = MakeGfxCol(0xff, 0xff, 0xff);
 GfxCol COL_BLACK = MakeGfxCol(0, 0, 0);
+GfxCol COL_GRAY = MakeGfxCol(0xcc, 0xcc, 0xcc);
 
 inline Gdiplus::ARGB GfxColToARGB(GfxCol c)
 {
@@ -105,6 +108,16 @@ struct GfxRect
         dx += (n*2);
         dy += (n*2);
     }
+
+    void Inflate(int left, int top, int right, int bottom)
+    {
+        x += left;
+        y += top;
+        dx -= left;
+        dx += right;
+        dy -= top;
+        dy += bottom;
+    }
 };
 
 class Gfx
@@ -118,7 +131,6 @@ public:
     virtual void DrawRect(const GfxRect& r, GfxCol col, float width) = 0;
     virtual void DrawFilledRect(const GfxRect& r, GfxCol col) = 0;
     void SetSize(int dx, int dy);
-
 };
 
 void Gfx::SetSize(int dx, int dy)
@@ -136,6 +148,8 @@ void InitGraphicsMode(Graphics *g)
     //g.SetSmoothingMode(SmoothingModeHighQuality);
     g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     g->SetPageUnit(UnitPixel);
+    //g->SetPixelOffsetMode(PixelOffsetModeNone);
+    g->SetPixelOffsetMode(PixelOffsetModeHalf);
 }
 
 class GdiplusGfx : public Gfx
@@ -147,6 +161,8 @@ public:
     GdiplusGfx(HDC dc) {
         g = Gdiplus::Graphics::FromHDC(dc);
         InitGraphicsMode(g);
+        PixelOffsetMode pm = g->GetPixelOffsetMode();
+        plogf("pm = %d", (int)pm);
     }
     virtual ~GdiplusGfx() {
         delete g;
@@ -158,8 +174,13 @@ public:
 void GdiplusGfx::DrawFilledRect(const GfxRect& r, GfxCol col)
 {
     SolidBrush br(GfxColToARGB(col));
+#if 0
     float x = (float)r.x - 0.5f;
     float y = (float)r.y - 0.5f;
+#else
+    float x = (float)r.x;
+    float y = (float)r.y;
+#endif
     Gdiplus::RectF r2(x, y, r.dx, r.dy);
     g->FillRectangle(&br, r2);
 }
@@ -167,10 +188,16 @@ void GdiplusGfx::DrawFilledRect(const GfxRect& r, GfxCol col)
 void GdiplusGfx::DrawRect(const GfxRect& r, GfxCol col, float width)
 {
     Pen p(Color(GfxColToARGB(col)), width);
-    //float x = (float)r.x - 0.5f;
-    //float y = (float)r.y - 0.5f;
+    PenAlignment a = p.GetAlignment();
+    plogf("a = %d", (int)a);
+    p.SetAlignment(PenAlignmentInset);
+#if 1
+    float x = (float)r.x - 0.5f;
+    float y = (float)r.y - 0.5f;
+#else
     float x = (float)r.x;
     float y = (float)r.y;
+#endif
     float dx = (float)r.dx;
     float dy = (float)r.dy;
     Gdiplus::RectF r2(x, y, dx, dy);
@@ -201,8 +228,10 @@ void Painter::OnWmPaint(HWND hwnd)
     GfxRect r = gfx->size;
     gfx->DrawFilledRect(r, COL_WHITE);
 
-    r.Inflate(-1);
-    gfx->DrawRect(r, COL_BLACK, 1.f);
+    r.Inflate(1, 3, 0, -2);
+    gfx->DrawFilledRect(r, COL_GRAY);
+//    r.Inflate(-1);
+//    gfx->DrawRect(r, COL_BLACK, 1.f);
 
     delete gfx;
 
