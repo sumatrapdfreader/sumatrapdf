@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-46c367cc28a3138bd33d296f4a682f1889f0b461
+c60f329b4360863c7db152ad6b34585161d40e77
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -1025,7 +1025,7 @@ vn:Nhảy đến
 :&Go to page:
 am:&Անցնել էջին.
 ar:&انتقل إلى صفحة
-az:Səhifəyə &keçid:
+az:&Səhifə:
 bg:Отиди на &страница:
 br:&Ir para a página:
 bs:&Idi na stranicu:
@@ -2996,7 +2996,7 @@ vn:Thu-&Phóng
 :(of %d)
 am:(%d-ը)
 ar:(من %d)
-az:(cəmi %d)
+az:/ %d
 bg:(от %d)
 br:(de %d)
 bs:(od %d)
@@ -8914,7 +8914,7 @@ vn:GB
 af:Gaan Na Bladsy
 am:Անցնել էջի
 ar:اذهب لصفحة
-az:Səhifəyə keç
+az:Səhifəyə keçid
 bg:Отиди на страница
 bn:এর পৃষ্ঠায় চলুন
 br:Ir para a página
