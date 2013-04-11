@@ -1,0 +1,111 @@
+<!doctype html>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Description of SumatraPDF settings</title>
+<style type=text/css>
+.cm {
+	color: #aaa;
+}
+</style>
+</head>
+
+<p>You can modify the behavior of
+<a href="http://blog.kowalczyk.info/software/sumatrapdf/">SumatraPDF</a>
+by editing <code>SumatraPDF.dat</code> settings file.</p>
+
+<p>The file is stored in <code>%APPDATA%\SumatraPDF</code> directory for the
+installed version or in the same directory as SumataPDF.exe executable for the
+portable version.</p>
+
+<p>The file is in a simple text format. Here's what different settings mean and
+what is their default value:</p>
+
+<pre>
+UserPrefs [
+  <span class="cm">whether opening a new document should happen in an already
+  running SumatraPDF instance so that there's only one process and documents
+  aren't opend twice</span>
+  ReuseInstance = false
+
+  <span class="cm">background color of the non-document windows, traditionally yellow</span>
+  MainWindowBackground = #80fff200
+  EscToExit = false
+  TextColor = #000000
+  PageColor = #ffffff
+  ZoomIncrement = 0
+  ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400
+  PrinterDefaults [
+    PrintScale = shrink
+    PrintAsImage = false
+  ]
+  PagePadding [
+    OuterX = 4
+    OuterY = 2
+    InnerX = 4
+    InnerY = 4
+   ]
+	ForwardSearch [
+		HighlightOffset = 0
+		HighlightWidth = 15
+		HighlightColor = #ff8165
+		HighlightPermanent = false
+	]
+	EbookUI [
+		TraditionalEbookUI = false
+		TextColor = #5f4b32
+		PageColor = #d9f0fb
+	]
+	ExternalViewers [
+	]
+]
+GlobalPrefsOnly = false
+CurrLangCode = en
+ToolbarVisible = true
+FavVisible = false
+PdfAssociateDontAskAgain = false
+PdfAssociateShouldAssociate = false
+EnableAutoUpdate = true
+RememberOpenedFiles = true
+UseSysColors = false
+EnableTeXEnhancements = false
+LastUpdateTime = 0 0
+DefaultDisplayMode = automatic
+DefaultZoom = -1
+WindowState = 1
+WindowPos = 384 0 672 870
+TocVisible = true
+SidebarDx = 0
+TocDy = 0
+ShowStartPage = true
+OpenCountWeek = 118
+CbxR2L = false
+FileStates [
+	[
+		FilePath = C:\myfile.mobi
+		OpenCount = 16
+		IsPinned = false
+		IsMissing = false
+		UseGlobalValues = false
+		DisplayMode = automatic
+		ScrollPos = 0 0
+		PageNo = 1
+		ReparseIdx = 206823
+		ZoomVirtual = 100
+		Rotation = 0
+		WindowState = 1
+		WindowPos = 384 0 672 870
+		TocVisible = false
+		SidebarDx = 0
+		Favorites [
+		]
+	]
+]
+
+</pre>
+
+<body>
+
+</body>
+</html>
