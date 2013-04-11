@@ -150,7 +150,7 @@ static bool BencGlobalPrefsCallback(BencDict *dict, const FieldInfo *field, cons
             if (!favDict)
                 continue;
             BencArray *favList = NULL;
-            for (size_t k = 0; favDict && k < favDict->Length() && !favList; k += 2) {
+            for (size_t k = 0; k < favDict->Length() && !favList; k += 2) {
                 BencString *path = favDict->GetString(k);
                 ScopedMem<WCHAR> filePath(path ? path->Value() : NULL);
                 if (str::Eq(filePath, file->filePath))
@@ -258,6 +258,11 @@ bool LoadPrefs()
     ScopedMem<char> prefsData(file::ReadAll(path, NULL));
     gGlobalPrefs = (GlobalPrefs *)DeserializeStruct(&gGlobalPrefsInfo, prefsData);
     CrashAlwaysIf(!gGlobalPrefs);
+
+#ifdef DISABLE_EBOOK_UI
+    if (!file::Exists(path))
+        gUserPrefs->ebookUI.traditionalEbookUI = true;
+#endif
 
     if (!file::Exists(path)) {
         ScopedMem<WCHAR> bencPath(AppGenDataFilename(OLD_PREFS_FILE_NAME));
