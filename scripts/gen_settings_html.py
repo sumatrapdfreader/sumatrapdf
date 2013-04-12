@@ -45,7 +45,7 @@ body {
 	font-weight: bold;
 	color: #800; /* this is brown */
 	color: #000;
-	background-color: #e5e5e5;
+	background-color: #ececec;
 }
 
 .cm {
