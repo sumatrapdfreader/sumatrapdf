@@ -61,7 +61,8 @@ what is their default value:</p>
 </html>
 """
 
-indent_str = "&nbsp;&nbsp;"
+#indent_str = "&nbsp;&nbsp;"
+indent_str = "  "
 
 def gen_comment(comment, start, first = False):
 	line_len = 80
