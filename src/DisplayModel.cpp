@@ -54,19 +54,28 @@
 // if true, we pre-render the pages right before and after the visible pages
 bool gPredictiveRender = true;
 
-ScreenPagePadding gPagePadding = {
-    PADDING_PAGE_BORDER_TOP_DEF, PADDING_PAGE_BORDER_LEFT_DEF,
-    PADDING_PAGE_BORDER_BOTTOM_DEF, PADDING_PAGE_BORDER_RIGHT_DEF,
-    PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_Y_DEF
+static ScreenPagePadding gPagePadding = {
+    {
+        PADDING_PAGE_BORDER_TOP_DEF, PADDING_PAGE_BORDER_RIGHT_DEF,
+        PADDING_PAGE_BORDER_BOTTOM_DEF, PADDING_PAGE_BORDER_LEFT_DEF,
+    }, SizeI(PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_Y_DEF)
 }, gPagePaddingPresentation = {
-    0, 0,
-    0, 0,
-    PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF
+    { 0, 0, 0, 0 }, SizeI(PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF)
 }, gImagePadding = {
-    0, 0,
-    0, 0,
-    PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF
+    { 0, 0, 0, 0 }, SizeI(PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF)
+}, gImagePaddingPresentation = {
+    { 0, 0, 0, 0 }, SizeI(PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF)
 };
+
+void SetScreenPadding(WindowMargin& margin, SizeI spacing, bool forImages)
+{
+    ScreenPagePadding *padding = forImages ? &gImagePadding : &gPagePadding;
+    padding->margin = margin;
+    padding->spacing = spacing;
+
+    padding = forImages ? &gImagePaddingPresentation : &gPagePaddingPresentation;
+    padding->spacing = spacing;
+}
 
 bool IsContinuous(DisplayMode displayMode)
 {
@@ -400,8 +409,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
     if (RectD(PointD(), row).IsEmpty())
         return 0;
 
-    int areaForPagesDx = viewPort.dx - padding->left - padding->right - padding->inBetweenX * (columns - 1);
-    int areaForPagesDy = viewPort.dy - padding->top - padding->bottom;
+    int areaForPagesDx = viewPort.dx - padding->margin.left - padding->margin.right - padding->spacing.dx * (columns - 1);
+    int areaForPagesDy = viewPort.dy - padding->margin.top - padding->margin.bottom;
     if (areaForPagesDx <= 0 || areaForPagesDy <= 0)
         return 0;
 
@@ -546,7 +555,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation)
     viewPort = RectI(viewPort.TL(), totalViewPortSize);
 
 RestartLayout:
-    int currPosY = padding->top;
+    int currPosY = padding->margin.top;
     float currZoomReal = zoomReal;
     SetZoomVirtual(newZoomVirtual);
 
@@ -590,7 +599,7 @@ RestartLayout:
         if (columnMaxWidth[pageInARow] < pos.dx)
             columnMaxWidth[pageInARow] = pos.dx;
 
-        if (!needHScroll && viewPort.dx < padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right) {
+        if (!needHScroll && viewPort.dx < padding->margin.left + columnMaxWidth[0] + (columns == 2 ? padding->spacing.dx + columnMaxWidth[1] : 0) + padding->margin.right) {
             needHScroll = true;
             viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
             goto RestartLayout;
@@ -602,7 +611,7 @@ RestartLayout:
         assert(pageInARow <= columns);
         if (pageInARow == columns) {
             /* starting next row */
-            currPosY += rowMaxPageDy + padding->inBetweenY;
+            currPosY += rowMaxPageDy + padding->spacing.dy;
             rowMaxPageDy = 0;
             pageInARow = 0;
         }
@@ -610,11 +619,11 @@ RestartLayout:
 
     if (pageInARow != 0) {
         /* this is a partial row */
-        currPosY += rowMaxPageDy + padding->inBetweenY;
+        currPosY += rowMaxPageDy + padding->spacing.dy;
     }
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
-    const int canvasDy = currPosY + padding->bottom - padding->inBetweenY;
+    const int canvasDy = currPosY + padding->margin.bottom - padding->spacing.dy;
     if (!needVScroll && canvasDy > viewPort.dy) {
         needVScroll = true;
         viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
@@ -631,7 +640,7 @@ RestartLayout:
 
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
-    int canvasDx = padding->left + columnMaxWidth[0] + (columns == 2 ? padding->inBetweenX + columnMaxWidth[1] : 0) + padding->right;
+    int canvasDx = padding->margin.left + columnMaxWidth[0] + (columns == 2 ? padding->spacing.dx + columnMaxWidth[1] : 0) + padding->margin.right;
     if (!needHScroll && canvasDx > viewPort.dx) {
         needHScroll = true;
         viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
@@ -648,7 +657,7 @@ RestartLayout:
 
     assert(offX >= 0);
     pageInARow = 0;
-    int pageOffX = offX + padding->left;
+    int pageOffX = offX + padding->margin.left;
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (!pageInfo->shown) {
@@ -658,26 +667,26 @@ RestartLayout:
         // leave first spot empty in cover page mode
         if (DisplayModeShowCover(GetDisplayMode()) && pageNo == 1) {
             CrashIf(pageInARow >= dimof(columnMaxWidth));
-            pageOffX += columnMaxWidth[pageInARow] + padding->inBetweenX;
+            pageOffX += columnMaxWidth[pageInARow] + padding->spacing.dx;
             ++pageInARow;
         }
         CrashIf(pageInARow >= dimof(columnMaxWidth));
         pageInfo->pos.x = pageOffX + (columnMaxWidth[pageInARow] - pageInfo->pos.dx) / 2;
         // center the cover page over the first two spots in non-continuous mode
         if (DisplayModeShowCover(GetDisplayMode()) && pageNo == 1 && !IsContinuous(GetDisplayMode())) {
-            pageInfo->pos.x = offX + padding->left + (columnMaxWidth[0] + padding->inBetweenX + columnMaxWidth[1] - pageInfo->pos.dx) / 2;
+            pageInfo->pos.x = offX + padding->margin.left + (columnMaxWidth[0] + padding->spacing.dx + columnMaxWidth[1] - pageInfo->pos.dx) / 2;
         }
         // mirror the page layout when displaying a Right-to-Left document
         if (displayR2L && columns > 1)
             pageInfo->pos.x = canvasDx - pageInfo->pos.x - pageInfo->pos.dx;
 
         CrashIf(pageInARow >= dimof(columnMaxWidth));
-        pageOffX += columnMaxWidth[pageInARow] + padding->inBetweenX;
+        pageOffX += columnMaxWidth[pageInARow] + padding->spacing.dx;
         ++pageInARow;
         assert(pageOffX >= 0 && pageInfo->pos.x >= 0);
 
         if (pageInARow == columns) {
-            pageOffX = offX + padding->left;
+            pageOffX = offX + padding->margin.left;
             pageInARow = 0;
         }
     }
@@ -689,7 +698,7 @@ RestartLayout:
 
     /* if a page is smaller than drawing area in y axis, y-center the page */
     if (canvasDy < viewPort.dy) {
-        int offY = padding->top + (viewPort.dy - canvasDy) / 2;
+        int offY = padding->margin.top + (viewPort.dy - canvasDy) / 2;
         assert(offY >= 0.0);
         for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
             PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -1024,13 +1033,13 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
             PointI second = GetContentStart(lastPageNo);
             scrollY = min(scrollY, second.y);
         }
-        viewPort.x = scrollX + pageInfo->pos.x - padding->left;
+        viewPort.x = scrollX + pageInfo->pos.x - padding->margin.left;
     }
     else if (-1 != scrollX)
         viewPort.x = scrollX;
     // make sure to not display the blank space beside the first page in cover mode
     else if (-1 == scrollX && 1 == pageNo && DisplayModeShowCover(GetDisplayMode()))
-        viewPort.x = pageInfo->pos.x - padding->left;
+        viewPort.x = pageInfo->pos.x - padding->margin.left;
 
     /* Hack: if an image is smaller in Y axis than the draw area, then we center
        the image by setting pageInfo->currPos.y in RecalcPagesInfo. So we shouldn't
@@ -1039,7 +1048,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     viewPort.y = scrollY;
     // Move the next page to the top (unless the remaining pages fit onto a single screen)
     if (IsContinuous(GetDisplayMode()))
-        viewPort.y = pageInfo->pos.y - padding->top + scrollY;
+        viewPort.y = pageInfo->pos.y - padding->margin.top + scrollY;
 
     viewPort.x = limitValue(viewPort.x, 0, canvasSize.dx - viewPort.dx);
     viewPort.y = limitValue(viewPort.y, 0, canvasSize.dy - viewPort.dy);
@@ -1083,6 +1092,8 @@ void DisplayModel::SetPresentationMode(bool enable)
         presDisplayMode = displayMode;
         presZoomVirtual = zoomVirtual;
         padding = &gPagePaddingPresentation;
+        if (engine && engine->IsImageCollection())
+            padding = &gImagePaddingPresentation;
         ChangeDisplayMode(DM_SINGLE_PAGE);
         ZoomTo(ZOOM_FIT_PAGE);
     }

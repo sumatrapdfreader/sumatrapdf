@@ -17,10 +17,9 @@ extern bool gPredictiveRender;
 
 struct ScreenPagePadding {
     // padding around the whole canvas
-    int top, left;
-    int bottom, right;
+    WindowMargin margin;
     // padding between two pages in X and Y direction
-    int inBetweenX, inBetweenY;
+    SizeI spacing;
 };
 
 /* the default distance between a page and window border edges, in pixels */
@@ -280,5 +279,7 @@ bool    IsFacing(DisplayMode displayMode);
 bool    DisplayModeShowCover(DisplayMode displayMode);
 int     NormalizeRotation(int rotation);
 bool    IsValidZoom(float zoomLevel);
+
+void    SetScreenPadding(WindowMargin& margin, SizeI spacing, bool forImages);
 
 #endif

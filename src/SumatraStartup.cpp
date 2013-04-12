@@ -367,6 +367,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
     gRenderCache.colorRange[0] = i.colorRange[0];
     gRenderCache.colorRange[1] = i.colorRange[1];
+    SetScreenPadding(gGlobalPrefs->fixedPageUI.windowMargin, gGlobalPrefs->fixedPageUI.pageSpacing, false);
+    SetScreenPadding(gGlobalPrefs->imageOnlyUI.windowMargin, gGlobalPrefs->imageOnlyUI.pageSpacing, true);
     DebugGdiPlusDevice(gUseGdiRenderer);
     DebugAlternateChmEngine(gGlobalPrefs->chmUI.useFixedPageUI);
 

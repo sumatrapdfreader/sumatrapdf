@@ -23,7 +23,7 @@ class Field(object):
 		self.internal = internal; self.cname = name[0].lower() + name[1:] if name else None
 		self.expert = expert # "expert" prefs are the ones not exposed by the UI
 
-	def cdefault(self):
+	def cdefault(self, built):
 		if self.type == Bool:
 			return "true" if self.default else "false"
 		if self.type == Color:
@@ -37,7 +37,8 @@ class Field(object):
 		if self.type == Utf8String:
 			return '(intptr_t)"%s"' % self.default if self.default is not None else "NULL"
 		if self.type.name in ["Struct", "Array", "Compact"]:
-			return "(intptr_t)&g%sInfo" % self.structName
+			id = built.count(self.structName)
+			return "(intptr_t)&g%sInfo" % (self.structName + ("" if not id else "_%d_" % id))
 		if self.type.name in ["ColorArray", "FloatArray", "IntArray"]:
 			return '(intptr_t)"%s"' % self.default if self.default is not None else "NULL"
 		return None
@@ -87,33 +88,21 @@ class CompactArray(Field):
 
 # ##### setting definitions for SumatraPDF #####
 
-RectI = [
+WindowPos = [
 	Field("X", Int, 0, "x coordinate"),
 	Field("Y", Int, 0, "y coordinate"),
 	Field("Dx", Int, 0, "width"),
 	Field("Dy", Int, 0, "height"),
 ]
 
-PointI = [
+ScrollPos = [
 	Field("X", Int, 0, "x coordinate"),
 	Field("Y", Int, 0, "y coordinate"),
-]
-
-SizeI = [
-	Field("Dx", Int, 0, "horizontal difference"),
-	Field("Dy", Int, 0, "vertical difference"),
 ]
 
 FileTime = [
 	Field("DwHighDateTime", Int, 0, ""),
 	Field("DwLowDateTime", Int, 0, ""),
-]
-
-WindowMargin = [
-	Field("Top", Int, 2, "size of the top margin between window and document"),
-	Field("Right", Int, 4, "size of the right margin between window and document"),
-	Field("Bottom", Int, 2, "size of the bottom margin between window and document"),
-	Field("Left", Int, 4, "size of the left margin between window and document"),
 ]
 
 PrinterDefaults = [
@@ -133,6 +122,25 @@ ForwardSearch = [
 	Field("HighlightPermanent", Bool, False,
 		"whether the forward search highlight will remain visible until the next " +
 		"mouse click instead of fading away instantly"),
+]
+
+WindowMargin_FixedPageUI = [
+	Field("Top", Int, 2, "size of the top margin between window and document"),
+	Field("Right", Int, 4, "size of the right margin between window and document"),
+	Field("Bottom", Int, 2, "size of the bottom margin between window and document"),
+	Field("Left", Int, 4, "size of the left margin between window and document"),
+]
+
+WindowMargin_ImageOnlyUI = [
+	Field("Top", Int, 0, "size of the top margin between window and document"),
+	Field("Right", Int, 0, "size of the right margin between window and document"),
+	Field("Bottom", Int, 0, "size of the bottom margin between window and document"),
+	Field("Left", Int, 0, "size of the left margin between window and document"),
+]
+
+PageSpacing = [
+	Field("Dx", Int, 4, "horizontal difference"),
+	Field("Dy", Int, 4, "vertical difference"),
 ]
 
 # zeniko: move these two into it's own struct (FixedPageUI?) to match EbookUI?
@@ -155,15 +163,18 @@ FixedPageUI = [
 		"color value with which black (text) will be substituted"),
 	Field("BackgroundColor", Color, 0xFFFFFF,
 		"color value with which white (background) will be substituted"),
+	Struct("WindowMargin", WindowMargin_FixedPageUI,
+		"sizes of the top, right, bottom and left margin (in that order) between window and document",
+		compact=True, expert=True),
+	Struct("PageSpacing", PageSpacing,
+		"horizontal and vertical distance between two pages in facing and book view modes",
+		structName="SizeI", compact=True),
 	CompactArray("GradientColors", Color, None, # "#2828aa #28aa28 #aa2828",
 		"colors to use for the gradient from top to bottom (stops will be inserted " +
 		"at regular intervals throughout the document); currently only up to three " +
 		"colors are supported; the idea behind this experimental feature is that the " +
 		"background might allow to subconsciously determine reading progress; " +
 		"suggested values: #2828aa #28aa28 #aa2828"),
-	Struct("PageSpacing", SizeI,
-		"horizontal and vertical distance between two pages in facing and book view modes",
-		structName="SizeI", compact=True),
 ]
 
 EbookUI = [
@@ -181,7 +192,10 @@ EbookUI = [
 ]
 
 ImageOnlyUI = [
-	Struct("PageSpacing", SizeI,
+	Struct("WindowMargin", WindowMargin_ImageOnlyUI,
+		"sizes of the top, right, bottom and left margin (in that order) between window and document",
+		compact=True, expert=True),
+	Struct("PageSpacing", PageSpacing,
 		"horizontal and vertical distance between two pages in facing and book view modes",
 		structName="SizeI", compact=True),
 ]
@@ -238,7 +252,7 @@ FileSettings = [
 	Field("DisplayMode", String, "automatic",
 		"how pages should be laid out for this document, needs to be synchronized with " +
 		"DefaultDisplayMode after deserialization and before serialization"),
-	Struct("ScrollPos", PointI,
+	Struct("ScrollPos", ScrollPos,
 		"how far this document has been scrolled", structName="PointI", compact=True),
 	Field("PageNo", Int, 1,
 		"the scrollPos values are relative to the top-left corner of this page"),
@@ -250,7 +264,7 @@ FileSettings = [
 		"how far pages have been rotated as a multiple of 90 degrees"),
 	Field("WindowState", Int, 0,
 		"default state of new SumatraPDF windows (same as the last closed)"),
-	Struct("WindowPos", RectI,
+	Struct("WindowPos", WindowPos,
 		"default position (can be on any monitor)", structName="RectI", compact=True),
 	Field("DecryptionKey", Utf8String, None,
 		"Do not modify! Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
@@ -315,7 +329,7 @@ GlobalPrefs = [
 		"this list contains a list of additional external viewers for various file types " +
 		"(multiple entries of the same format are recognised)",
 		expert=True),
-	# zeniko: the below prefs apply only to FixedPageUI and ImageOnlyUI
+	# zeniko: the below prefs apply only to FixedPageUI and ImageOnlyUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through, excluding the virtual zoom levels " +
 		"fit page, fit content and fit width (minimal allowed value is 8.33 and maximum "
@@ -328,9 +342,6 @@ GlobalPrefs = [
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these values allow to override the default settings in the Print dialog",
 		expert=True),
-	Struct("WindowMargin", WindowMargin,
-		"sizes of the top, right, bottom and left margin (in that order) between window and document",
-		compact=True, expert=True),
 	Struct("ForwardSearch", ForwardSearch,
 		"these values allow to customize how the forward search highlight appears",
 		expert=True),
@@ -397,7 +408,7 @@ GlobalPrefs = [
 		"the default zoom factor in % (negative values indicate virtual settings)"),
 	Field("WindowState", Int, 1,
 		"default state of new windows (same as the last closed)"),
-	Struct("WindowPos", RectI,
+	Struct("WindowPos", WindowPos,
 		"default position (can be on any monitor)", structName="RectI", compact=True),
 	Field("ShowToc", Bool, True,
 		"whether the table of contents (Bookmarks) sidebar should be shown by " +
@@ -469,32 +480,33 @@ def FormatArrayLine(data, fmt):
 		yield " ".join(item)
 
 def BuildStruct(struct, built=[]):
-	lines = ["struct %s {" % struct.structName]
+	lines, required = ["struct %s {" % struct.structName], []
 	if struct.comment:
 		lines = FormatComment(struct.comment, "//") + lines
 	for field in struct.default:
 		lines += FormatComment(field.comment, "\t//")
 		lines.append("\t%s %s;" % (field.type.ctype, field.cname))
 		if type(field) in [Struct, Array] and field.name in [field.structName, field.structName + "s"] and field.name not in built:
-			lines = [BuildStruct(field), ""] + lines
+			required += [BuildStruct(field), ""]
 			built.append(field.name)
 	lines.append("};")
-	return "\n".join(lines)
+	return "\n".join(required + lines)
 
 def BuildMetaData(struct, built=[]):
 	lines, data, names = [], [], []
+	fullName = struct.structName + ("" if struct.structName not in built else "_%d_" % built.count(struct.structName))
 	for field in struct.default:
 		if field.internal:
 			continue
-		data.append(("offsetof(%s, %s)" % (struct.structName, field.cname), "Type_%s" % field.type.name, field.cdefault()))
+		data.append(("offsetof(%s, %s)" % (struct.structName, field.cname), "Type_%s" % field.type.name, field.cdefault(built)))
 		names.append(field.name)
-		if type(field) in [Struct, Array] and field.structName not in built:
+		if type(field) in [Struct, Array]:
 			lines += [BuildMetaData(field), ""]
 			built.append(field.structName)
-	lines.append("static const FieldInfo g%sFields[] = {" % struct.structName)
+	lines.append("static const FieldInfo g%sFields[] = {" % fullName)
 	lines += ["\t{ %s }," % line for line in FormatArrayLine(data, "%s, %s, %s")]
 	lines.append("};")
-	lines.append("static const StructInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % (struct.structName, struct.structName, len(names), struct.structName, "\\0".join(names)))
+	lines.append("static const StructInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % (fullName, struct.structName, len(names), fullName, "\\0".join(names)))
 	return "\n".join(lines)
 
 def AssembleDefaults(struct, topLevelComment=None):
@@ -507,6 +519,7 @@ def AssembleDefaults(struct, topLevelComment=None):
 		if topLevelComment and not field.expert:
 			continue
 		if type(field) in [Struct, Array] and not field.type.name == "Compact":
+			assert topLevelComment
 			more.append("\n".join(FormatComment(field.comment, ";") + ["[%s]" % field.name, AssembleDefaults(field)]))
 		else:
 			lines += FormatComment(field.comment, ";") + [field.inidefault()]
