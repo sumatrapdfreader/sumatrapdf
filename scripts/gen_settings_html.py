@@ -8,7 +8,7 @@ from gen_settingsstructs import Struct, Array
 TODO:
  * ability to link to a more comprehensive documentation e.g. for color formats,
    languages
- * generate
+ * generate html page with all language iso codes from trans_langs.py
 """
 
 html_tmpl = """
