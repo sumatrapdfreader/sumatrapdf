@@ -327,7 +327,7 @@ static const StructInfo gFixedPageUIInfo = { sizeof(FixedPageUI), 4, gFixedPageU
 static const FieldInfo gEbookUIFields[] = {
     { offsetof(EbookUI, useFixedPageUI),  Type_Bool,  false    },
     { offsetof(EbookUI, textColor),       Type_Color, 0x324b5f },
-    { offsetof(EbookUI, backgroundColor), Type_Color, 0xfbf0d9 },
+    { offsetof(EbookUI, backgroundColor), Type_Color, 0xd9f0fb },
 };
 static const StructInfo gEbookUIInfo = { sizeof(EbookUI), 3, gEbookUIFields, "UseFixedPageUI\0TextColor\0BackgroundColor" };
 

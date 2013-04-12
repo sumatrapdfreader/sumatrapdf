@@ -430,8 +430,7 @@ bool EbookEngine::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoom, 
 
     ScopedCritSec scope(&pagesAccess);
     FixFontSizeForResolution(hDC);
-    Color tmpColor((ARGB)Color::Black);
-    DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, &tmpColor, cookie ? &cookie->abort : NULL);
+    DrawHtmlPage(&g, GetHtmlPage(pageNo), pageBorder, pageBorder, false, Color((ARGB)Color::Black), cookie ? &cookie->abort : NULL);
     DrawAnnotations(g, userAnnots, pageNo);
     return !(cookie && cookie->abort);
 }

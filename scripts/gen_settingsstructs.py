@@ -177,7 +177,7 @@ EbookUI = [
 		"whether the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
 	Field("TextColor", Color, 0x324b5f, "color for text"),
-	Field("BackgroundColor", Color, 0xfbf0d9, "color of the background (page)"),
+	Field("BackgroundColor", Color, 0xd9f0fb, "color of the background (page)"),
 ]
 
 ImageOnlyUI = [

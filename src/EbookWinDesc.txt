@@ -79,9 +79,9 @@ EbookPage [
 HorizontalLayout [
     name: top
     children [
-        nextButton self 1 center
-        page 1 1 top
         prevButton self 1 bottom
+        page 1 1 top
+        nextButton self 1 center
     ]
 ]
 

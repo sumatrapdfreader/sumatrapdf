@@ -897,6 +897,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\EbookWinDesc.txt"
+					>
+				</File>
+				<File
 					RelativePath="..\src\Favorites.cpp"
 					>
 				</File>

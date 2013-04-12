@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "EbookControls.h"
+
+#include "AppPrefs.h"
 #include "BitManip.h"
 #include "HtmlFormatter.h"
 #include "MuiEbookPageDef.h"
@@ -92,9 +94,12 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     r.Inflate(1,0);
     gfx->SetClip(r, CombineModeReplace);
 
-    // TODO: support changing the text color to gGlobalPrefs->ebookUI.textColor
-    //       or GetSysColor(COLOR_WINDOWTEXT) if gGlobalPrefs->useSysColors
-    DrawHtmlPage(gfx, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint());
+    Color textColor;
+    if (gGlobalPrefs->useSysColors)
+        textColor.SetFromCOLORREF(GetSysColor(COLOR_WINDOWTEXT));
+    else
+        textColor.SetFromCOLORREF(gGlobalPrefs->ebookUI.textColor);
+    DrawHtmlPage(gfx, &page->instructions, (REAL)r.X, (REAL)r.Y, IsDebugPaint(), textColor);
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
@@ -121,6 +126,13 @@ EbookControls *CreateEbookControls(HWND hwnd)
         char *s = LoadTextResource(IDD_EBOOK_WIN_DESC);
         MuiFromText(s, gEbookMuiDef);
         free(s);
+        // update the background color from the prefs
+        Style *styleMainWnd = StyleByName("styleMainWnd");
+        CrashIf(!styleMainWnd);
+        COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
+        if (gGlobalPrefs->useSysColors)
+            bgColor = GetSysColor(COLOR_WINDOW);
+        styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValue(bgColor), GetGValue(bgColor), GetBValue(bgColor)));
     }
 
     EbookControls *ctrls = new EbookControls;

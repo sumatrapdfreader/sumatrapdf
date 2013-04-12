@@ -43,6 +43,8 @@ DisplayState *NewDisplayState(const WCHAR *filePath)
 {
     DisplayState *ds = (DisplayState *)DeserializeStruct(&gFileStateInfo, NULL);
     ds->filePath = str::Dup(filePath);
+    ds->displayModeEnum = gGlobalPrefs->defaultDisplayModeEnum;
+    ds->zoomFloat = gGlobalPrefs->defaultZoomFloat;
     return ds;
 }
 
@@ -311,7 +313,7 @@ bool SavePrefs()
         UnparseZoomVirtual(&state->zoom, state->zoomFloat);
         // BUG: 2140
         if (!IsValidZoom(state->zoomFloat)) {
-            dbglog::CrashLogF("Invalid ds->zoomVirtual: %g", state->zoomFloat);
+            dbglog::CrashLogF("Invalid ds->zoom: %g", state->zoomFloat);
             const WCHAR *ext = path::GetExt(state->filePath);
             if (!str::IsEmpty(ext)) {
                 ScopedMem<char> extA(str::conv::ToUtf8(ext));
