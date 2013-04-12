@@ -289,6 +289,7 @@ UserPrefs = [
 		"background color of the non-document windows, traditionally yellow"),
 	Field("EscToExit", Bool, False,
 		"whether the Esc key will exit SumatraPDF same as 'q'"),
+	# kjk: SingleInstance is a common term for such functionality
 	Field("ReuseInstance", Bool, False,
 		"whether opening a new document should happen in an already running SumatraPDF " +
 		"instance so that there's only one process and documents aren't opend twice"),
@@ -313,7 +314,7 @@ UserPrefs = [
 		"(if zero or negative, the values from ZoomLevels are used instead)"),
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these values allow to override the default settings in the Print dialog"),
-	Struct("WindowMargin", PagePadding,
+	Struct("WindowMargin", WindowMargin,
 		"sizes of the top, right, bottom and left margin (in that order) between window and document",
 		compact=True),
 	Struct("ForwardSearch", ForwardSearch,
@@ -321,7 +322,7 @@ UserPrefs = [
 ]
 
 UserPrefs = Struct("UserPrefs", UserPrefs,
-	"All values in this structure are can't be modified from within the UI and " +
+	"All values in this structure can't be modified from within the UI and " +
 	"are for experimental or expert settings. They're overwritten by the content " +
 	"of SumatraPDF-user.ini if that file exists.")
 
