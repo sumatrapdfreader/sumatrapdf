@@ -31,8 +31,7 @@ enum ImageAlpha {
     Alpha_Premultiplied = 4,
 };
 
-#pragma pack(push)
-#pragma pack(1)
+#include <pshpack1.h>
 
 struct TgaHeader {
     uint8_t     idLength;
@@ -66,7 +65,7 @@ struct TgaExtArea {
     uint8_t     alphaType;
 };
 
-#pragma pack(pop)
+#include <poppack.h>
 
 STATIC_ASSERT(sizeof(TgaHeader) == 18, tgaHeaderSize);
 STATIC_ASSERT(sizeof(TgaFooter) == 26, tgaFooterSize);

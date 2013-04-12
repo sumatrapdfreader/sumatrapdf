@@ -7,7 +7,8 @@
 // http://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
 const DWORD MS_VC_EXCEPTION=0x406D1388;
 
-#pragma pack(push,8)
+#include <pshpack8.h>
+
 typedef struct tagTHREADNAME_INFO
 {
     DWORD dwType;       // Must be 0x1000.
@@ -15,7 +16,8 @@ typedef struct tagTHREADNAME_INFO
     DWORD dwThreadID;   // Thread ID (-1=caller thread).
     DWORD dwFlags;      // Reserved for future use, must be zero.
 } THREADNAME_INFO;
-#pragma pack(pop)
+
+#include <poppack.h>
 
 #pragma warning(push)
 #pragma warning(disable: 6320) // silence /analyze: Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER. This might mask exceptions that were not intended to be handled

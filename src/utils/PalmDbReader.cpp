@@ -7,8 +7,7 @@
 #include "ByteReader.h"
 #include "FileUtil.h"
 
-#pragma pack(push)
-#pragma pack(1)
+#include <pshpack1.h>
 
 // cf. http://wiki.mobileread.com/wiki/PDB
 struct PdbHeader {
@@ -34,7 +33,7 @@ struct PdbRecordHeader {
     char     uniqueID[3];
 };
 
-#pragma pack(pop)
+#include <poppack.h>
 
 STATIC_ASSERT(sizeof(PdbHeader) == kPdbHeaderLen, pdbHeaderSize);
 STATIC_ASSERT(sizeof(PdbRecordHeader) == 8, pdbRecHeaderSize);

@@ -318,15 +318,16 @@ static bool ReadBytes(HANDLE h, DWORD offset, void *buffer, DWORD count)
 #define DJVU_MARK_DJVU  0x444A5655L /* DJVU */
 #define DJVU_MARK_INFO  0x494E464FL /* INFO */
 
-#pragma pack(push)
-#pragma pack(1)
+#include <pshpack1.h>
+
 struct DjVuInfoChunk {
     WORD width, height;
     BYTE minor, major;
     BYTE dpiLo, dpiHi;
     BYTE gamma, flags;
 };
-#pragma pack(pop)
+
+#include <poppack.h>
 
 STATIC_ASSERT(sizeof(DjVuInfoChunk) == 10, djvuInfoChunkSize);
 
