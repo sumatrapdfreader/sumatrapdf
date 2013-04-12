@@ -18,13 +18,12 @@
 #include "WindowInfo.h"
 
 #define PREFS_INFO_URL          "http://blog.kowalczyk.info/software/sumatrapdf/settings.html"
-// TODO: more appropriate file extension?
-#define NEW_PREFS_FILE_NAME     L"SumatraPDF.dat"
-#define USER_PREFS_FILE_NAME    L"SumatraPDF-user.ini"
 #define OLD_PREFS_FILE_NAME     L"sumatrapdfprefs.dat"
+// TODO: rename once all pref names have been fixed
+#define PREFS_FILE_NAME         L"SumatraPDF.dat"
+#define USER_PREFS_FILE_NAME    L"SumatraPDF-user.ini"
 
 GlobalPrefs *gGlobalPrefs = NULL;
-UserPrefs *gUserPrefs = NULL;
 
 Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
 {
@@ -67,22 +66,22 @@ void DeleteGlobalPrefs(GlobalPrefs *globalPrefs)
 static FieldInfo gGlobalPrefsFieldsBenc[] = {
     { offsetof(GlobalPrefs, cbxR2L), Type_Bool, false },
     { offsetof(GlobalPrefs, defaultDisplayMode), Type_String, (intptr_t)L"automatic" },
-    { offsetof(GlobalPrefs, enableAutoUpdate), Type_Bool, true },
+    { offsetof(GlobalPrefs, checkForUpdates), Type_Bool, true },
     { offsetof(GlobalPrefs, enableTeXEnhancements), Type_Bool, false },
-    { offsetof(GlobalPrefs, favVisible), Type_Bool, false },
-    { offsetof(GlobalPrefs, globalPrefsOnly), Type_Bool, false },
+    { offsetof(GlobalPrefs, showFavorites), Type_Bool, false },
+    { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool, false },
     { offsetof(GlobalPrefs, inverseSearchCmdLine), Type_String, NULL },
-    { offsetof(GlobalPrefs, lastUpdateTime), Type_Compact, 0 },
+    { offsetof(GlobalPrefs, timeOfLastUpdateCheck), Type_Compact, 0 },
     { offsetof(GlobalPrefs, openCountWeek), Type_Int, 0 },
     { offsetof(GlobalPrefs, pdfAssociateDontAskAgain), Type_Bool, false },
     { offsetof(GlobalPrefs, pdfAssociateShouldAssociate), Type_Bool, false },
     { offsetof(GlobalPrefs, rememberOpenedFiles), Type_Bool, true },
     { offsetof(GlobalPrefs, showStartPage), Type_Bool, true },
-    { offsetof(GlobalPrefs, tocVisible), Type_Bool, true },
-    { offsetof(GlobalPrefs, toolbarVisible), Type_Bool, true },
+    { offsetof(GlobalPrefs, showToc), Type_Bool, true },
+    { offsetof(GlobalPrefs, showToolbar), Type_Bool, true },
     { offsetof(GlobalPrefs, sidebarDx), Type_Int, 0 },
     { offsetof(GlobalPrefs, tocDy), Type_Int, 0 },
-    { offsetof(GlobalPrefs, currLangCode), Type_Utf8String, NULL },
+    { offsetof(GlobalPrefs, uiLanguage), Type_Utf8String, NULL },
     { offsetof(GlobalPrefs, useSysColors), Type_Bool, false },
     { offsetof(GlobalPrefs, versionToSkip), Type_String, NULL },
     { offsetof(GlobalPrefs, windowPos.dx), Type_Int, 1 },
@@ -90,13 +89,13 @@ static FieldInfo gGlobalPrefsFieldsBenc[] = {
     { offsetof(GlobalPrefs, windowState), Type_Int, 1 },
     { offsetof(GlobalPrefs, windowPos.x), Type_Int, 1 },
     { offsetof(GlobalPrefs, windowPos.y), Type_Int, 1 },
-    { offsetof(GlobalPrefs, defaultZoom), Type_Float, (intptr_t)"-1" },
-    { offsetof(GlobalPrefs, userPrefs.mainWindowBackground), Type_Color, 0xfff200 },
-    { offsetof(GlobalPrefs, userPrefs.escToExit), Type_Bool, false },
-    { offsetof(GlobalPrefs, userPrefs.forwardSearch.highlightColor), Type_Color, 0x6581ff },
-    { offsetof(GlobalPrefs, userPrefs.forwardSearch.highlightOffset), Type_Int, 0 },
-    { offsetof(GlobalPrefs, userPrefs.forwardSearch.highlightPermanent), Type_Bool, false },
-    { offsetof(GlobalPrefs, userPrefs.forwardSearch.highlightWidth), Type_Int, 15 },
+    { offsetof(GlobalPrefs, defaultZoomFloat), Type_Float, (intptr_t)"-1" },
+    { offsetof(GlobalPrefs, mainWindowBackground), Type_Color, 0xfff200 },
+    { offsetof(GlobalPrefs, escToExit), Type_Bool, false },
+    { offsetof(GlobalPrefs, forwardSearch.highlightColor), Type_Color, 0x6581ff },
+    { offsetof(GlobalPrefs, forwardSearch.highlightOffset), Type_Int, 0 },
+    { offsetof(GlobalPrefs, forwardSearch.highlightPermanent), Type_Bool, false },
+    { offsetof(GlobalPrefs, forwardSearch.highlightWidth), Type_Int, 15 },
 };
 static StructInfo gGlobalPrefsInfoBenc = { sizeof(GlobalPrefs), 26, gGlobalPrefsFieldsBenc, "CBX_Right2Left\0Display Mode\0EnableAutoUpdate\0ExposeInverseSearch\0FavVisible\0GlobalPrefsOnly\0InverseSearchCommandLine\0LastUpdate\0OpenCountWeek\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0RememberOpenedFiles\0ShowStartPage\0ShowToc\0ShowToolbar\0Toc DX\0Toc Dy\0UILanguage\0UseSysColors\0VersionToSkip\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual\0BgColor\0EscToExit\0ForwardSearch_HighlightColor\0ForwardSearch_HighlightOffset\0ForwardSearch_HighlightPermanent\0ForwardSearch_HighlightWidth" };
 
@@ -112,7 +111,7 @@ static FieldInfo gFileFieldsBenc[] = {
     { offsetof(FileState, rotation), Type_Int, 0 },
     { offsetof(FileState, scrollPos.x), Type_Int, 0 },
     { offsetof(FileState, scrollPos.y), Type_Int, 0 },
-    { offsetof(FileState, tocVisible), Type_Bool, true },
+    { offsetof(FileState, showToc), Type_Bool, true },
     { offsetof(FileState, sidebarDx), Type_Int, 0 },
     { offsetof(FileState, tocState), Type_IntArray, NULL },
     { offsetof(FileState, useGlobalValues), Type_Bool, false },
@@ -121,7 +120,7 @@ static FieldInfo gFileFieldsBenc[] = {
     { offsetof(FileState, windowState), Type_Int, 1 },
     { offsetof(FileState, windowPos.x), Type_Int, 1 },
     { offsetof(FileState, windowPos.y), Type_Int, 1 },
-    { offsetof(FileState, zoomVirtual), Type_Float, (intptr_t)"100" },
+    { offsetof(FileState, zoomFloat), Type_Float, (intptr_t)"100" },
 };
 static StructInfo gFileInfoBenc = { sizeof(FileState), 21, gFileFieldsBenc, "Decryption Key\0Display Mode\0File\0Missing\0OpenCount\0Page\0Pinned\0ReparseIdx\0Rotation\0Scroll X2\0Scroll Y2\0ShowToc\0Toc DX\0TocToggles\0UseGlobalValues\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual" };
 
@@ -184,55 +183,93 @@ static int GetWeekCount()
     // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
 }
 
+static float ParseZoomVirtual(const char *txt, float default)
+{
+    if (str::EqIS(txt, "fit page"))
+        return ZOOM_FIT_PAGE;
+    if (str::EqIS(txt, "fit width"))
+        return ZOOM_FIT_WIDTH;
+    if (str::EqIS(txt, "fit content"))
+        return ZOOM_FIT_CONTENT;
+    float zoom;
+    if (str::Parse(txt, "%f", &zoom) && ZOOM_MIN <= zoom && zoom <= ZOOM_MAX)
+        return zoom;
+    return default;
+}
+
+static void UnparseZoomVirtual(char **txt, float zoom)
+{
+    float prevZoom = *txt ? ParseZoomVirtual(*txt, INVALID_ZOOM) : INVALID_ZOOM;
+    if (prevZoom == zoom || !IsValidZoom(zoom))
+        return;
+    free(*txt);
+    if (ZOOM_FIT_PAGE == zoom)
+        *txt = str::Dup("fit page");
+    else if (ZOOM_FIT_WIDTH == zoom)
+        *txt = str::Dup("fit width");
+    else if (ZOOM_FIT_CONTENT == zoom)
+        *txt = str::Dup("fit content");
+    else
+        *txt = str::Format("%g", zoom);
+}
+
 /* Caller needs to DeleteGlobalPrefs(gGlobalPrefs) */
 bool LoadPrefs()
 {
     CrashIf(gGlobalPrefs);
 
-    ScopedMem<WCHAR> path(AppGenDataFilename(NEW_PREFS_FILE_NAME));
+    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
     ScopedMem<char> prefsData(file::ReadAll(path, NULL));
     gGlobalPrefs = (GlobalPrefs *)DeserializeStruct(&gGlobalPrefsInfo, prefsData);
     CrashAlwaysIf(!gGlobalPrefs);
 
 #ifdef DISABLE_EBOOK_UI
-    if (!file::Exists(path))
-        gUserPrefs->ebookUI.traditionalEbookUI = true;
+    if (!file::Exists(path)) {
+        gGlobalPrefs->ebookUI.useFixedPageUI = true;
+        gGlobalPrefs->chmUI.useFixedPageUI = true;
+    }
 #endif
 
     if (!file::Exists(path)) {
         ScopedMem<WCHAR> bencPath(AppGenDataFilename(OLD_PREFS_FILE_NAME));
         ScopedMem<char> bencPrefsData(file::ReadAll(bencPath, NULL));
+        // the old format used the inverted meaning for this pref
+        gGlobalPrefs->rememberStatePerDocument = !gGlobalPrefs->rememberStatePerDocument;
         DeserializeStructBenc(&gBencGlobalPrefs, bencPrefsData, gGlobalPrefs, BencGlobalPrefsCallback);
+        gGlobalPrefs->rememberStatePerDocument = !gGlobalPrefs->rememberStatePerDocument;
+        // the old format always serialized zoom to a float value
+        UnparseZoomVirtual(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
+        for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
+            DisplayState *state = gGlobalPrefs->fileStates->At(i);
+            UnparseZoomVirtual(&state->zoom, state->zoomFloat);
+        }
     }
 
-    gUserPrefs = &gGlobalPrefs->userPrefs;
     ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
     if (userPath && file::Exists(userPath)) {
         ScopedMem<char> userPrefsData(file::ReadAll(userPath, NULL));
-        DeserializeStruct(&gUserPrefsInfo, userPrefsData, gUserPrefs);
+        DeserializeStruct(&gGlobalPrefsInfo, userPrefsData, gGlobalPrefs);
     }
 
-    if (!gGlobalPrefs->currLangCode || !trans::ValidateLangCode(gGlobalPrefs->currLangCode)) {
+    if (!gGlobalPrefs->uiLanguage || !trans::ValidateLangCode(gGlobalPrefs->uiLanguage)) {
         // guess the ui language on first start
-        gGlobalPrefs->currLangCode = str::Dup(trans::DetectUserLang());
+        gGlobalPrefs->uiLanguage = str::Dup(trans::DetectUserLang());
     }
     gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
     gGlobalPrefs->defaultDisplayModeEnum = DisplayModeConv::EnumFromName(gGlobalPrefs->defaultDisplayMode, DM_AUTOMATIC);
+    gGlobalPrefs->defaultZoomFloat = ParseZoomVirtual(gGlobalPrefs->defaultZoom, ZOOM_ACTUAL_SIZE);
+    CrashIf(!IsValidZoom(gGlobalPrefs->defaultZoomFloat));
 
     int weekDiff = GetWeekCount() - gGlobalPrefs->openCountWeek;
     gGlobalPrefs->openCountWeek = GetWeekCount();
     for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
         DisplayState *state = gGlobalPrefs->fileStates->At(i);
         state->displayModeEnum = DisplayModeConv::EnumFromName(state->displayMode, DM_AUTOMATIC);
+        state->zoomFloat = ParseZoomVirtual(state->zoom, ZOOM_ACTUAL_SIZE);
+        CrashIf(!IsValidZoom(state->zoomFloat));
         // "age" openCount statistics (cut in in half after every week)
         state->openCount >>= weekDiff;
-        // work-around https://code.google.com/p/sumatrapdf/issues/detail?id=2140
-        if (!IsValidZoom(state->zoomVirtual))
-            state->zoomVirtual = 100.f;
     }
-
-    if (!IsValidZoom(gGlobalPrefs->defaultZoom))
-        gGlobalPrefs->defaultZoom = 100.f;
 
     gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
 
@@ -263,16 +300,18 @@ bool SavePrefs()
     }
 
     // remove entries which should (no longer) be remembered
-    gFileHistory.Purge(gGlobalPrefs->globalPrefsOnly);
+    gFileHistory.Purge(!gGlobalPrefs->rememberStatePerDocument);
 
     str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, DisplayModeConv::NameFromEnum(gGlobalPrefs->defaultDisplayModeEnum));
+    UnparseZoomVirtual(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
 
     for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
         DisplayState *state = gGlobalPrefs->fileStates->At(i);
         str::ReplacePtr(&state->displayMode, DisplayModeConv::NameFromEnum(state->displayModeEnum));
+        UnparseZoomVirtual(&state->zoom, state->zoomFloat);
         // BUG: 2140
-        if (!IsValidZoom(state->zoomVirtual)) {
-            dbglog::CrashLogF("Invalid ds->zoomVirtual: %.4f", state->zoomVirtual);
+        if (!IsValidZoom(state->zoomFloat)) {
+            dbglog::CrashLogF("Invalid ds->zoomVirtual: %g", state->zoomFloat);
             const WCHAR *ext = path::GetExt(state->filePath);
             if (!str::IsEmpty(ext)) {
                 ScopedMem<char> extA(str::conv::ToUtf8(ext));
@@ -290,7 +329,7 @@ bool SavePrefs()
     if (!prefsData || 0 == prefsDataSize)
         return false;
 
-    ScopedMem<WCHAR> path(AppGenDataFilename(NEW_PREFS_FILE_NAME));
+    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
     CrashIf(!path);
     if (!path)
         return false;
@@ -319,7 +358,7 @@ bool SavePrefs()
 // refresh the preferences when a different SumatraPDF process saves them
 bool ReloadPrefs()
 {
-    ScopedMem<WCHAR> path(AppGenDataFilename(NEW_PREFS_FILE_NAME));
+    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
     if (!path || !file::Exists(path))
         return false;
 
@@ -329,8 +368,8 @@ bool ReloadPrefs()
         return true;
     }
 
-    ScopedMem<char> currLangCode(str::Dup(gGlobalPrefs->currLangCode));
-    bool toolbarVisible = gGlobalPrefs->toolbarVisible;
+    ScopedMem<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));
+    bool showToolbar = gGlobalPrefs->showToolbar;
     bool useSysColors = gGlobalPrefs->useSysColors;
 
     gFileHistory.UpdateStatesSource(NULL);
@@ -346,11 +385,11 @@ bool ReloadPrefs()
         gWindows.At(0)->RedrawAll(true);
     }
 
-    if (!str::Eq(currLangCode, gGlobalPrefs->currLangCode)) {
-        SetCurrentLanguageAndRefreshUi(gGlobalPrefs->currLangCode);
+    if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage)) {
+        SetCurrentLanguageAndRefreshUi(gGlobalPrefs->uiLanguage);
     }
 
-    if (gGlobalPrefs->toolbarVisible != toolbarVisible)
+    if (gGlobalPrefs->showToolbar != showToolbar)
         ShowOrHideToolbarGlobally();
     if (gGlobalPrefs->useSysColors != useSysColors)
         UpdateDocumentColors();

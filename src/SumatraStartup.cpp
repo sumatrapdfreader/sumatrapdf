@@ -99,7 +99,7 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     }
     else
         gBrushNoDocBg = CreateSolidBrush(COL_WINDOW_BG);
-    COLORREF bgColor = ABOUT_BG_COLOR_DEFAULT != gUserPrefs->mainWindowBackground ? gUserPrefs->mainWindowBackground : ABOUT_BG_LOGO_COLOR;
+    COLORREF bgColor = ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs->mainWindowBackground ? gGlobalPrefs->mainWindowBackground : ABOUT_BG_LOGO_COLOR;
     gBrushLogoBg = CreateSolidBrush(bgColor);
 #ifndef ABOUT_USE_LESS_COLORS
     gBrushAboutBg = CreateSolidBrush(bgColor);
@@ -202,19 +202,19 @@ static bool SetupPluginMode(CommandLineInfo& i)
         free(i.fileNames.Pop());
     }
     i.reuseInstance = i.exitWhenDone = false;
-    gUserPrefs->reuseInstance = false;
+    gGlobalPrefs->reuseInstance = false;
     // always display the toolbar when embedded (as there's no menubar in that case)
-    gGlobalPrefs->toolbarVisible = true;
+    gGlobalPrefs->showToolbar = true;
     // never allow esc as a shortcut to quit
-    gUserPrefs->escToExit = false;
+    gGlobalPrefs->escToExit = false;
     // never show the sidebar by default
-    gGlobalPrefs->tocVisible = false;
+    gGlobalPrefs->showToc = false;
     if (DM_AUTOMATIC == gGlobalPrefs->defaultDisplayModeEnum) {
         // if the user hasn't changed the default display mode,
         // display documents as single page/continuous/fit width
         // (similar to Adobe Reader, Google Chrome and how browsers display HTML)
         gGlobalPrefs->defaultDisplayModeEnum = DM_CONTINUOUS;
-        gGlobalPrefs->defaultZoom = ZOOM_FIT_WIDTH;
+        gGlobalPrefs->defaultZoomFloat = ZOOM_FIT_WIDTH;
     }
 
     // extract some command line arguments from the URL's hash fragment where available
@@ -257,17 +257,17 @@ static void RunUnitTests()
 
 static void GetCommandLineInfo(CommandLineInfo& i)
 {
-    i.bgColor = gUserPrefs->mainWindowBackground;
-    i.forwardSearch = gUserPrefs->forwardSearch;
-    i.escToExit = gUserPrefs->escToExit;
+    i.bgColor = gGlobalPrefs->mainWindowBackground;
+    i.forwardSearch = gGlobalPrefs->forwardSearch;
+    i.escToExit = gGlobalPrefs->escToExit;
     i.cbxR2L = gGlobalPrefs->cbxR2L;
     if (gGlobalPrefs->useSysColors) {
         i.colorRange[0] = GetSysColor(COLOR_WINDOWTEXT);
         i.colorRange[1] = GetSysColor(COLOR_WINDOW);
     }
     else {
-        i.colorRange[0] = gUserPrefs->textColor;
-        i.colorRange[1] = gUserPrefs->pageColor;
+        i.colorRange[0] = gGlobalPrefs->fixedPageUI.textColor;
+        i.colorRange[1] = gGlobalPrefs->fixedPageUI.backgroundColor;
     }
     i.ParseCommandLine(GetCommandLine());
 }
@@ -339,7 +339,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     CommandLineInfo i;
     GetCommandLineInfo(i);
 
-    SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->currLangCode);
+    SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
 
     if (i.showConsole)
         RedirectIOToConsole();
@@ -354,21 +354,21 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
     gCrashOnOpen = i.crashOnOpen;
 
-    gUserPrefs->mainWindowBackground = i.bgColor;
-    if (gUserPrefs->forwardSearch.highlightColor != i.forwardSearch.highlightColor ||
-        gUserPrefs->forwardSearch.highlightOffset != i.forwardSearch.highlightOffset ||
-        gUserPrefs->forwardSearch.highlightPermanent != i.forwardSearch.highlightPermanent ||
-        gUserPrefs->forwardSearch.highlightWidth != i.forwardSearch.highlightWidth) {
+    gGlobalPrefs->mainWindowBackground = i.bgColor;
+    if (gGlobalPrefs->forwardSearch.highlightColor != i.forwardSearch.highlightColor ||
+        gGlobalPrefs->forwardSearch.highlightOffset != i.forwardSearch.highlightOffset ||
+        gGlobalPrefs->forwardSearch.highlightPermanent != i.forwardSearch.highlightPermanent ||
+        gGlobalPrefs->forwardSearch.highlightWidth != i.forwardSearch.highlightWidth) {
         gGlobalPrefs->enableTeXEnhancements = true;
     }
-    gUserPrefs->forwardSearch = i.forwardSearch;
-    gUserPrefs->escToExit = i.escToExit;
+    gGlobalPrefs->forwardSearch = i.forwardSearch;
+    gGlobalPrefs->escToExit = i.escToExit;
     gGlobalPrefs->cbxR2L = i.cbxR2L;
     gPolicyRestrictions = GetPolicies(i.restrictedUse);
     gRenderCache.colorRange[0] = i.colorRange[0];
     gRenderCache.colorRange[1] = i.colorRange[1];
     DebugGdiPlusDevice(gUseGdiRenderer);
-    DebugAlternateChmEngine(gUserPrefs->ebookUI.traditionalEbookUI);
+    DebugAlternateChmEngine(gGlobalPrefs->chmUI.useFixedPageUI);
 
     if (i.inverseSearchCmdLine) {
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
@@ -403,7 +403,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
-    if (!i.reuseInstance && gUserPrefs->reuseInstance && FindWindow(FRAME_CLASS_NAME, 0))
+    if (!i.reuseInstance && gGlobalPrefs->reuseInstance && FindWindow(FRAME_CLASS_NAME, 0))
         i.reuseInstance = true;
 
     WindowInfo *win = NULL;
@@ -447,7 +447,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (gGlobalPrefs->pdfAssociateShouldAssociate && win)
         RegisterForPdfExtentions(win->hwndFrame);
 
-    if (gGlobalPrefs->enableAutoUpdate && gWindows.Count() > 0)
+    if (gGlobalPrefs->checkForUpdates && gWindows.Count() > 0)
         AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
 
     if (i.stressTestPath)

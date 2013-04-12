@@ -4,8 +4,6 @@
 #ifndef AppPrefs_h
 #define AppPrefs_h
 
-#include "DisplayState.h"
-
 /* enum from windowState */
 enum {
     WIN_STATE_NORMAL = 1, /* use remembered position and size */
@@ -14,11 +12,15 @@ enum {
     WIN_STATE_MINIMIZED,
 };
 
+#include "DisplayState.h"
+
 extern GlobalPrefs *gGlobalPrefs;
-// convenience pointer for &gGlobalPrefs->userPrefs
-extern UserPrefs *gUserPrefs;
 
 void DeleteGlobalPrefs(GlobalPrefs *globalPrefs);
+
+bool LoadPrefs();
+bool SavePrefs();
+bool ReloadPrefs();
 
 namespace DisplayModeConv {
 
@@ -26,9 +28,5 @@ const WCHAR *   NameFromEnum(DisplayMode var);
 DisplayMode     EnumFromName(const WCHAR *txt, DisplayMode default);
 
 }
-
-bool LoadPrefs();
-bool SavePrefs();
-bool ReloadPrefs();
 
 #endif

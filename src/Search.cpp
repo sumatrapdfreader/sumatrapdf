@@ -62,7 +62,7 @@ void OnMenuFind(WindowInfo *win)
     }
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs->toolbarVisible && !win->fullScreen && !win->presentation) {
+    if (gGlobalPrefs->showToolbar && !win->fullScreen && !win->presentation) {
         if (GetFocus() == win->hwndFindBox)
             SendMessage(win->hwndFindBox, WM_SETFOCUS, 0, 0);
         else
@@ -362,9 +362,9 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
     for (size_t i = 0; i < win->fwdSearchMark.rects.Count(); i++) {
         RectI rect = win->fwdSearchMark.rects.At(i);
         rect = win->dm->CvtToScreen(win->fwdSearchMark.page, rect.Convert<double>());
-        if (gUserPrefs->forwardSearch.highlightOffset > 0) {
-            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gUserPrefs->forwardSearch.highlightOffset * win->dm->ZoomReal());
-            rect.dx = (int)((gUserPrefs->forwardSearch.highlightWidth > 0 ? gUserPrefs->forwardSearch.highlightWidth : 15.0) * win->dm->ZoomReal());
+        if (gGlobalPrefs->forwardSearch.highlightOffset > 0) {
+            rect.x = max(pageInfo->pageOnScreen.x, 0) + (int)(gGlobalPrefs->forwardSearch.highlightOffset * win->dm->ZoomReal());
+            rect.dx = (int)((gGlobalPrefs->forwardSearch.highlightWidth > 0 ? gGlobalPrefs->forwardSearch.highlightWidth : 15.0) * win->dm->ZoomReal());
             rect.y -= 4;
             rect.dy += 8;
         }
@@ -372,7 +372,7 @@ void PaintForwardSearchMark(WindowInfo *win, HDC hdc)
     }
 
     BYTE alpha = (BYTE)(0x5f * 1.0f * (HIDE_FWDSRCHMARK_STEPS - win->fwdSearchMark.hideStep) / HIDE_FWDSRCHMARK_STEPS);
-    PaintTransparentRectangles(hdc, win->canvasRc, rects, gUserPrefs->forwardSearch.highlightColor, alpha, 0);
+    PaintTransparentRectangles(hdc, win->canvasRc, rects, gGlobalPrefs->forwardSearch.highlightColor, alpha, 0);
 }
 
 // returns true if the double-click was handled and false if it wasn't
@@ -455,7 +455,7 @@ void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, 
         win->fwdSearchMark.page = page;
         win->fwdSearchMark.show = true;
         win->fwdSearchMark.hideStep = 0;
-        if (!gUserPrefs->forwardSearch.highlightPermanent)
+        if (!gGlobalPrefs->forwardSearch.highlightPermanent)
             SetTimer(win->hwndCanvas, HIDE_FWDSRCHMARK_TIMER_ID, HIDE_FWDSRCHMARK_DELAY_IN_MS, NULL);
 
         // Scroll to show the overall highlighted zone

@@ -320,7 +320,7 @@ void RebuildFavMenu(WindowInfo *win, HMENU menu)
 
 void ToggleFavorites(WindowInfo *win)
 {
-    if (gGlobalPrefs->favVisible) {
+    if (gGlobalPrefs->showFavorites) {
         SetSidebarVisibility(win, win->tocVisible, false);
     } else {
         SetSidebarVisibility(win, win->tocVisible, true);
@@ -374,7 +374,7 @@ static void GoToFavorite(WindowInfo *win, DisplayState *f, Favorite *fn)
     // LoadDocument() and LoadDocumentInto()
     int pageNo = fn->pageNo;
     DisplayState *ds = gFileHistory.Find(f->filePath);
-    if (ds && !ds->useGlobalValues && !gGlobalPrefs->globalPrefsOnly) {
+    if (ds && !ds->useGlobalValues && gGlobalPrefs->rememberStatePerDocument) {
         ds->pageNo = fn->pageNo;
         ds->scrollPos = PointI(-1, -1); // don't scroll the page
         pageNo = -1;
@@ -503,10 +503,10 @@ void UpdateFavoritesTreeForAllWindows()
 
     // hide the favorites tree if we removed the last favorite
     if (!HasFavorites()) {
-        gGlobalPrefs->favVisible = false;
+        gGlobalPrefs->showFavorites = false;
         for (size_t i = 0; i < gWindows.Count(); i++) {
             WindowInfo *win = gWindows.At(i);
-            SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs->favVisible);
+            SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs->showFavorites);
         }
     }
 }
@@ -720,7 +720,7 @@ static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT msg, WPARAM wParam, LPARA
             return FALSE;
 
         case WM_CHAR:
-            if (VK_ESCAPE == wParam && gUserPrefs->escToExit)
+            if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit)
                 DestroyWindow(win->hwndFrame);
             break;
 

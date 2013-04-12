@@ -481,10 +481,10 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     static bool hasDefaults = false;
     if (!hasDefaults) {
         hasDefaults = true;
-        defaultAsImage = gUserPrefs->printerDefaults.printAsImage;
-        if (str::EqI(gUserPrefs->printerDefaults.printScale, "fit"))
+        defaultAsImage = gGlobalPrefs->printerDefaults.printAsImage;
+        if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "fit"))
             defaultScaleAdv = PrintScaleFit;
-        else if (str::EqI(gUserPrefs->printerDefaults.printScale, "none"))
+        else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "none"))
             defaultScaleAdv = PrintScaleNone;
     }
 

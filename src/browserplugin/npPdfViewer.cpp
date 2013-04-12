@@ -266,9 +266,9 @@ void SelectTranslation(const WCHAR *exePath=NULL)
     plogf("sp: Found preferences at %S", path);
     ScopedMem<char> prefsData(file::ReadAll(path, NULL));
     SquareTree sqt(prefsData);
-    const char *langCode = sqt.root ? sqt.root->GetValue("CurrLangCode") : NULL;
+    const char *langCode = sqt.root ? sqt.root->GetValue("UiLanguage") : NULL;
     if (langCode) {
-        plogf("sp: UILanguage from preferences: %s", langCode);
+        plogf("sp: UiLanguage from preferences: %s", langCode);
         for (int i = 0; gLanguages[i]; i++) {
             if (str::Eq(gLanguages[i], langCode)) {
                 gTranslationIdx = i * gTranslationsCount;

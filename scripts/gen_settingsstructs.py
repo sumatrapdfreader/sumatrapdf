@@ -18,9 +18,10 @@ String = Type("String", "WCHAR *")
 Utf8String = Type("Utf8String", "char *")
 
 class Field(object):
-	def __init__(self, name, type, default, comment, internal=False):
+	def __init__(self, name, type, default, comment, internal=False, expert=False):
 		self.name = name; self.type = type; self.default = default; self.comment = comment
 		self.internal = internal; self.cname = name[0].lower() + name[1:] if name else None
+		self.expert = expert # "expert" prefs are the ones not exposed by the UI
 
 	def cdefault(self):
 		if self.type == Bool:
@@ -67,22 +68,22 @@ class Field(object):
 		assert False
 
 class Struct(Field):
-	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False):
+	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False, expert=False):
 		self.structName = structName or name
-		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal)
+		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal, expert)
 		if compact: self.type.name = "Compact"
 
 class Array(Field):
-	def __init__(self, name, fields, comment, structName=None, internal=False):
+	def __init__(self, name, fields, comment, structName=None, internal=False, expert=False):
 		self.structName = structName or name
 		if not structName and name.endswith("s"):
 			# trim plural 's' from struct name
 			self.structName = name[:-1]
-		super(Array, self).__init__(name, Type("Array", "Vec<%s *> *" % self.structName), fields, comment, internal)
+		super(Array, self).__init__(name, Type("Array", "Vec<%s *> *" % self.structName), fields, comment, internal, expert)
 
 class CompactArray(Field):
-	def __init__(self, name, type, default, comment, internal=False):
-		super(CompactArray, self).__init__(name, Type("%sArray" % type.name, "Vec<%s> *" % type.ctype), default, comment, internal)
+	def __init__(self, name, type, default, comment, internal=False, expert=False):
+		super(CompactArray, self).__init__(name, Type("%sArray" % type.name, "Vec<%s> *" % type.ctype), default, comment, internal, expert)
 
 # ##### setting definitions for SumatraPDF #####
 
@@ -284,68 +285,55 @@ FileSettings = [
 		internal=True),
 ]
 
-UserPrefs = [
+GlobalPrefs = [
 	Field("MainWindowBackground", Color, 0x8000F2FF,
-		"background color of the non-document windows, traditionally yellow"),
+		"background color of the non-document windows, traditionally yellow",
+		expert=True),
 	Field("EscToExit", Bool, False,
-		"whether the Esc key will exit SumatraPDF same as 'q'"),
+		"whether the Esc key will exit SumatraPDF same as 'q'",
+		expert=True),
 	# kjk: SingleInstance is a common term for such functionality
+	# zeniko: this pref is to make the -reuse-instance command line switch permanent
 	Field("ReuseInstance", Bool, False,
 		"whether opening a new document should happen in an already running SumatraPDF " +
-		"instance so that there's only one process and documents aren't opend twice"),
+		"instance so that there's only one process and documents aren't opend twice",
+		expert=True),
 	Struct("FixedPageUI", FixedPageUI,
-		"these values allow to customize the UI used for fixed page documents (PDF, XPS, DjVu, etc.)"),
+		"these values allow to customize the UI used for fixed page documents (PDF, XPS, DjVu, PostScript)",
+		expert=True),
 	Struct("EbookUI", EbookUI,
-		"these values allow to customize the UI used for ebooks (with UseFixedPageUI disabled)"),
+		"these values allow to customize the UI used for ebooks (EPUB, Mobi, FictionBook; " +
+		"applies only with UseFixedPageUI disabled)",
+		expert=True),
 	Struct("ImageOnlyUI", ImageOnlyUI,
-		"these values allow to customize the UI used for images and comic books"),
+		"these values allow to customize the UI used for images and comic books",
+		expert=True),
 	Struct("ChmUI", ChmUI,
-		"these values allow to customize the UI used for CHM documents (with UseFixedPageUI disabled)"),
+		"these values allow to customize the UI used for CHM documents (with UseFixedPageUI disabled)",
+		expert=True),
 	Array("ExternalViewers", ExternalViewer,
 		"this list contains a list of additional external viewers for various file types " +
-		"(multiple entries of the same format are recognised)"),
+		"(multiple entries of the same format are recognised)",
+		expert=True),
 	# zeniko: the below prefs apply only to FixedPageUI and ImageOnlyUI
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through, excluding the virtual zoom levels " +
 		"fit page, fit content and fit width (minimal allowed value is 8.33 and maximum "
-		"allowed value is 6400)"),
+		"allowed value is 6400)",
+		expert=True),
 	Field("ZoomIncrement", Float, 0,
 		"zoom step size in percents relative to the current zoom level " +
-		"(if zero or negative, the values from ZoomLevels are used instead)"),
+		"(if zero or negative, the values from ZoomLevels are used instead)",
+		expert=True),
 	Struct("PrinterDefaults", PrinterDefaults,
-		"these values allow to override the default settings in the Print dialog"),
+		"these values allow to override the default settings in the Print dialog",
+		expert=True),
 	Struct("WindowMargin", WindowMargin,
 		"sizes of the top, right, bottom and left margin (in that order) between window and document",
-		compact=True),
+		compact=True, expert=True),
 	Struct("ForwardSearch", ForwardSearch,
-		"these values allow to customize how the forward search highlight appears"),
-]
-
-UserPrefs = Struct("UserPrefs", UserPrefs,
-	"All values in this structure can't be modified from within the UI and " +
-	"are for experimental or expert settings. They're overwritten by the content " +
-	"of SumatraPDF-user.ini if that file exists.")
-
-GlobalPrefs = [
-	# kjk: those settings should be foleded into GlobalPrefs. From the point of
-	# view of people who are not us, it's not understandable why a given setting
-	# is here and not there
-	# zeniko: having them separate has the advantages of indicating which
-	# settings are not exposed in the UI (both in the settings file and in the code)
-	# and makes sure that all such options are grouped right at the top of the file where
-	# users can see them without having to go looking for them
-	# kjk: they will still be in the order we choose.
-	# I don't think we should expose internal architecture decisions, especially
-	# those that are fluid. What if we add more UI to set more settings?
-	# Look at this from a perspective of a user who pays attention but is not
-	# a developer. He sees "ZoomLevels" in a different bucket than "DefaultZoom"
-	# but has no context to figure out why this distinction has been made.
-	# If "ShowToolbar" is not "user" pref, then whose pref is it?
-	# If there is grouping to be done, it should be based on: do those
-	# settings logically belong together
-	# zeniko: rename this from UserPrefs to ExpertPrefs, AdvancedPrefs,
-	# ExperimenalPrefs or NonExposedPrefs then to make the intent clearer even without comment
-	UserPrefs,
+		"these values allow to customize how the forward search highlight appears",
+		expert=True),
 
 	# zeniko: this will require logic changes throughout the code
 	Field("RememberStatePerDocument", Bool, True,
@@ -510,12 +498,14 @@ def BuildMetaData(struct, built=[]):
 	lines.append("static const StructInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % (struct.structName, struct.structName, len(names), struct.structName, "\\0".join(names)))
 	return "\n".join(lines)
 
-def AssembleDefaults(struct, comment=None):
+def AssembleDefaults(struct, topLevelComment=None):
 	lines, more = [], []
-	if comment:
-		lines += FormatComment(comment, ";") + [""]
+	if topLevelComment:
+		lines += FormatComment(topLevelComment, ";") + [""]
 	for field in struct.default:
 		if field.internal:
+			continue
+		if topLevelComment and not field.expert:
 			continue
 		if type(field) in [Struct, Array] and not field.type.name == "Compact":
 			more.append("\n".join(FormatComment(field.comment, ";") + ["[%s]" % field.name, AssembleDefaults(field)]))
@@ -524,19 +514,6 @@ def AssembleDefaults(struct, comment=None):
 	if more:
 		lines += [""] + more
 	return "\n".join(lines) + "\n"
-
-def AssembleDefaultsSqt(struct, comment=None, indent=""):
-	lines = []
-	if comment:
-		lines += FormatComment(comment, ";") + [""]
-	for field in struct.default:
-		if field.internal:
-			continue
-		if type(field) in [Struct, Array] and not field.type.name == "Compact":
-			lines += FormatComment(field.comment, indent + "#") + ["%s%s [" % (indent, field.name), AssembleDefaultsSqt(field, None, indent + "\t"), "%s]" % indent, ""]
-		else:
-			lines += FormatComment(field.comment, indent + "#") + [indent + field.inidefault(commentChar="#")]
-	return "\n".join(lines)
 
 SettingsStructs_Header = """\
 /* Copyright 2013 the SumatraPDF project authors (see AUTHORS file).
@@ -569,12 +546,11 @@ def main():
 	content = SettingsStructs_Header % locals()
 	open("src/SettingsStructs.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
 
-	# content = AssembleDefaultsSqt(UserPrefs,
-	content = AssembleDefaults(UserPrefs,
-		"You can use this file to modify settings not changeable through the UI " +
-		"instead of modifying SumatraPDF.dat directly. Just copy this file alongside " +
-		"SumatraPDF.dat and change the values below. They will overwrite the corresponding " +
-		"settings in SumatraPDF.dat at every startup.")
+	content = AssembleDefaults(GlobalPrefs,
+		"You can use this file to modify experimental and expert settings not changeable " +
+		"through the UI instead of modifying SumatraPDF.dat directly. Just copy this file " +
+		"alongside SumatraPDF.dat and change the values below. They will overwrite the " +
+		"corresponding settings in SumatraPDF.dat at every startup.")
 	content = "# Caution: All settings below are still subject to change!\n\n" + content
 	open("docs/SumatraPDF-user.ini", "wb").write(content.replace("\n", "\r\n").encode("utf-8-sig"))
 

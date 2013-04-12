@@ -169,7 +169,7 @@ static LRESULT OnKeyDown(EbookWindow *win, UINT msg, WPARAM key, LPARAM lParam)
         OnMenuGoToPage(win);
         break;
     case VK_ESCAPE:
-        if (gUserPrefs->escToExit)
+        if (gGlobalPrefs->escToExit)
             CloseEbookWindow(win, true, true);
         break;
     default:
@@ -372,9 +372,11 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             break;
 
         case IDM_DEBUG_EBOOK_UI:
-            gUserPrefs->ebookUI.traditionalEbookUI = !gUserPrefs->ebookUI.traditionalEbookUI;
-            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, gUserPrefs->ebookUI.traditionalEbookUI);
-            DebugAlternateChmEngine(gUserPrefs->ebookUI.traditionalEbookUI);
+            gGlobalPrefs->ebookUI.useFixedPageUI = !gGlobalPrefs->ebookUI.useFixedPageUI;
+            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
+            // use the same setting to also toggle the CHM UI
+            gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
+            DebugAlternateChmEngine(gGlobalPrefs->chmUI.useFixedPageUI);
             break;
 
         case IDM_DEBUG_MUI:

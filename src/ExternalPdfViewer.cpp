@@ -279,15 +279,15 @@ bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo)
 {
     if (!HasPermission(Perm_DiskAccess) || !file::Exists(filePath))
         return false;
-    for (size_t i = 0; i < gUserPrefs->externalViewers->Count() && i <= idx; i++) {
-        ExternalViewer *ev = gUserPrefs->externalViewers->At(i);
+    for (size_t i = 0; i < gGlobalPrefs->externalViewers->Count() && i <= idx; i++) {
+        ExternalViewer *ev = gGlobalPrefs->externalViewers->At(i);
         if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter)))
             idx++;
     }
-    if (idx >= gUserPrefs->externalViewers->Count() || !gUserPrefs->externalViewers->At(idx)->commandLine)
+    if (idx >= gGlobalPrefs->externalViewers->Count() || !gGlobalPrefs->externalViewers->At(idx)->commandLine)
         return false;
 
-    ExternalViewer *ev = gUserPrefs->externalViewers->At(idx);
+    ExternalViewer *ev = gGlobalPrefs->externalViewers->At(idx);
     WStrVec args;
     ParseCmdLine(ev->commandLine, args, 2);
     if (args.Count() == 0 || !file::Exists(args.At(0)))

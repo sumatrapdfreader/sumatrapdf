@@ -177,8 +177,8 @@ bool HasPermission(int permission)
 static void SetCurrentLang(const char *langCode)
 {
     if (langCode) {
-        if (langCode != gGlobalPrefs->currLangCode)
-            str::ReplacePtr(&gGlobalPrefs->currLangCode, langCode);
+        if (langCode != gGlobalPrefs->uiLanguage)
+            str::ReplacePtr(&gGlobalPrefs->uiLanguage, langCode);
         trans::SetCurrentLangByCode(langCode);
     }
 }
@@ -474,7 +474,7 @@ static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool
 
 static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
 {
-    ds->tocVisible = win->tocVisible;
+    ds->showToc = win->tocVisible;
 
     if (win->tocLoaded) {
         win->tocState.Reset();
@@ -491,7 +491,7 @@ static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
 
 static void UpdateSidebarDisplayState(EbookWindow *win, DisplayState *ds)
 {
-    ds->tocVisible = false;
+    ds->showToc = false;
     delete ds->tocState;
     ds->tocState = NULL;
 }
@@ -517,7 +517,7 @@ static void UpdateCurrentFileDisplayStateForWinMobi(EbookWindow* win)
     if (!ds)
         return;
     DisplayStateFromEbookWindow(win, ds);
-    ds->useGlobalValues = gGlobalPrefs->globalPrefsOnly;
+    ds->useGlobalValues = !gGlobalPrefs->rememberStatePerDocument;
     ds->windowState = gGlobalPrefs->windowState;
     ds->windowPos   = gGlobalPrefs->windowPos;
     UpdateSidebarDisplayState(win, ds);
@@ -532,7 +532,7 @@ static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
     if (!ds)
         return;
     win->dm->DisplayStateFromModel(ds);
-    ds->useGlobalValues = gGlobalPrefs->globalPrefsOnly;
+    ds->useGlobalValues = !gGlobalPrefs->rememberStatePerDocument;
     UpdateDisplayStateWindowRect(*win, *ds, false);
     UpdateSidebarDisplayState(win, ds);
 }
@@ -560,7 +560,7 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
         return;
 
     bool tocVisible = win->tocVisible;
-    if (tocVisible || gGlobalPrefs->favVisible)
+    if (tocVisible || gGlobalPrefs->showFavorites)
         SetSidebarVisibility(win, false, false);
 
     // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
@@ -587,11 +587,11 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
 
     // ensure that the ToC sidebar is on the correct side and that its
     // title and close button are also correctly laid out
-    if (tocVisible || gGlobalPrefs->favVisible) {
-        SetSidebarVisibility(win, tocVisible, gGlobalPrefs->favVisible);
+    if (tocVisible || gGlobalPrefs->showFavorites) {
+        SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
         if (tocVisible)
             SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
-        if (gGlobalPrefs->favVisible)
+        if (gGlobalPrefs->showFavorites)
             SendMessage(win->hwndFavBox, WM_SIZE, 0, 0);
     }
 }
@@ -861,14 +861,14 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     ScopedMem<WCHAR> title;
     WindowInfo *win = args.win;
 
-    float zoomVirtual = gGlobalPrefs->defaultZoom;
+    float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     int rotation = 0;
 
     // TODO: remove time logging before release
     Timer t(true);
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
-    if (placeWindow && (gGlobalPrefs->globalPrefsOnly || state && state->useGlobalValues)) {
+    if (placeWindow && (!gGlobalPrefs->rememberStatePerDocument || state && state->useGlobalValues)) {
         state = NULL;
     } else if (NULL == state) {
         state = gFileHistory.Find(args.fileName);
@@ -886,7 +886,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     if (gGlobalPrefs->windowState == WIN_STATE_MAXIMIZED || showAsFullScreen)
         showType = SW_MAXIMIZE;
 
-    bool tocVisible = gGlobalPrefs->tocVisible;
+    bool showToc = gGlobalPrefs->showToc;
     if (state) {
         startPage = state->pageNo;
         displayMode = state->displayModeEnum;
@@ -897,7 +897,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
             showType = SW_MAXIMIZE;
         else if (state->windowState == WIN_STATE_MINIMIZED)
             showType = SW_MINIMIZE;
-        tocVisible = state->tocVisible;
+        showToc = state->showToc;
     }
 
     DisplayModel *prevModel = win->dm;
@@ -907,7 +907,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
 
     str::ReplacePtr(&win->loadedFilePath, args.fileName);
     DocType engineType;
-    BaseEngine *engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType, !gUserPrefs->ebookUI.traditionalEbookUI);
+    BaseEngine *engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType, !gGlobalPrefs->ebookUI.useFixedPageUI);
 
     if (engine && Engine_Chm == engineType) {
         // make sure that MSHTML can't be used as a potential exploit
@@ -996,7 +996,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     if (state) {
         if (win->dm->ValidPageNo(startPage)) {
             ss.page = startPage;
-            if (ZOOM_FIT_CONTENT != state->zoomVirtual) {
+            if (ZOOM_FIT_CONTENT != state->zoomFloat) {
                 ss.x = state->scrollPos.x;
                 ss.y = state->scrollPos.y;
             }
@@ -1004,7 +1004,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         } else if (startPage > win->dm->PageCount()) {
             ss.page = win->dm->PageCount();
         }
-        zoomVirtual = state->zoomVirtual;
+        zoomVirtual = state->zoomFloat;
         rotation = state->rotation;
 
         win->tocState.Reset();
@@ -1090,7 +1090,7 @@ Error:
             win->dm->Relayout(zoomVirtual, rotation);
     }
 
-    SetSidebarVisibility(win, tocVisible, gGlobalPrefs->favVisible);
+    SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
     win->RedrawAll(true);
 
     UpdateToolbarAndScrollbarState(*win);
@@ -1120,7 +1120,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         return;
     }
     DisplayState *ds = NewDisplayState(win->loadedFilePath);;
-    ds->useGlobalValues = gGlobalPrefs->globalPrefsOnly;
+    ds->useGlobalValues = !gGlobalPrefs->rememberStatePerDocument;
     win->dm->DisplayStateFromModel(ds);
     UpdateDisplayStateWindowRect(*win, *ds);
     UpdateSidebarDisplayState(win, ds);
@@ -1193,7 +1193,7 @@ static void CreateSidebar(WindowInfo* win)
         UpdateWindow(win->hwndTocBox);
     }
 
-    if (gGlobalPrefs->favVisible) {
+    if (gGlobalPrefs->showFavorites) {
         InvalidateRect(win->hwndFavBox, NULL, TRUE);
         UpdateWindow(win->hwndFavBox);
     }
@@ -1442,7 +1442,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         return NULL;
     }
 
-    if (!gUserPrefs->ebookUI.traditionalEbookUI && IsEbookFile(fullPath)) {
+    if (!gGlobalPrefs->ebookUI.useFixedPageUI && IsEbookFile(fullPath)) {
         if (!win) {
             if ((1 == gWindows.Count()) && gWindows.At(0)->IsAboutWindow())
                 win = gWindows.At(0);
@@ -1873,17 +1873,17 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
 
     // don't check for updates at the first start, so that privacy
     // sensitive users can disable the update check in time
-    if (autoCheck && 0 == gGlobalPrefs->lastUpdateTime.dwLowDateTime &&
-                     0 == gGlobalPrefs->lastUpdateTime.dwHighDateTime) {
+    if (autoCheck && 0 == gGlobalPrefs->timeOfLastUpdateCheck.dwLowDateTime &&
+                     0 == gGlobalPrefs->timeOfLastUpdateCheck.dwHighDateTime) {
         return;
     }
 
     /* For auto-check, only check if at least a day passed since last check */
-    if (autoCheck && (gGlobalPrefs->lastUpdateTime.dwLowDateTime != 0 ||
-                      gGlobalPrefs->lastUpdateTime.dwHighDateTime != 0)) {
+    if (autoCheck && (gGlobalPrefs->timeOfLastUpdateCheck.dwLowDateTime != 0 ||
+                      gGlobalPrefs->timeOfLastUpdateCheck.dwHighDateTime != 0)) {
         FILETIME currentTimeFt;
         GetSystemTimeAsFileTime(&currentTimeFt);
-        int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->lastUpdateTime);
+        int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
         assert(secs >= 0);
         // if secs < 0 => somethings wrong, so ignore that case
         if ((secs > 0) && (secs < SECS_IN_DAY))
@@ -1893,7 +1893,7 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
     const WCHAR *url = SUMATRA_UPDATE_INFO_URL L"?v=" UPDATE_CHECK_VER;
     new HttpReq(url, new UpdateDownloadTask(hwnd, autoCheck));
 
-    GetSystemTimeAsFileTime(&gGlobalPrefs->lastUpdateTime);
+    GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
 }
 
 class FileExistenceChecker : public ThreadBase, public UITask
@@ -2063,23 +2063,24 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.colorRange[0]));
         FillRect(hdc, rcArea, brush);
     }
-    else if (!gUserPrefs->gradientColors || gUserPrefs->gradientColors->Count() == 0) {
+    else if (0 == gGlobalPrefs->fixedPageUI.gradientColors->Count()) {
         FillRect(hdc, rcArea, gBrushNoDocBg);
     }
     else {
         COLORREF colors[3];
-        colors[0] = gUserPrefs->gradientColors->At(0);
-        if (gUserPrefs->gradientColors->Count() == 1) {
+        colors[0] = gGlobalPrefs->fixedPageUI.gradientColors->At(0);
+        if (gGlobalPrefs->fixedPageUI.gradientColors->Count() == 1) {
             colors[1] = colors[2] = colors[0];
         }
-        else if (gUserPrefs->gradientColors->Count() == 2) {
-            colors[2] = gUserPrefs->gradientColors->At(1);
-            // TODO: fixme
-            colors[1] = (COLORREF)((colors[0] + colors[2]) / 2);
+        else if (gGlobalPrefs->fixedPageUI.gradientColors->Count() == 2) {
+            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->At(1);
+            colors[1] = RGB((GetRValue(colors[0]) + GetRValue(colors[2])) / 2,
+                            (GetGValue(colors[0]) + GetGValue(colors[2])) / 2,
+                            (GetBValue(colors[0]) + GetBValue(colors[2])) / 2);
         }
         else {
-            colors[1] = gUserPrefs->gradientColors->At(1);
-            colors[2] = gUserPrefs->gradientColors->At(2);
+            colors[1] = gGlobalPrefs->fixedPageUI.gradientColors->At(1);
+            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->At(2);
         }
         SizeI size = win.dm->GetCanvasSize();
         float percTop = 1.0f * win.dm->viewPort.y / size.dy;
@@ -2627,7 +2628,7 @@ void CloseDocumentInWindow(WindowInfo *win)
         UnsubclassCanvas(win->hwndCanvas);
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
-    SetSidebarVisibility(win, false, gGlobalPrefs->favVisible);
+    SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     ClearTocBox(win);
     AbortFinding(win, true);
     delete win->dm;
@@ -3132,8 +3133,8 @@ void OnMenuOpen(const SumatraWindow& win)
         { _TR("EPUB ebooks"),           L"*.epub",      true },
         { _TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true },
         { NULL, /* multi-page images */ L"*.tif;*.tiff",true },
-        { NULL, /* further ebooks */    L"*.pdb;*.tcr", gUserPrefs->ebookUI.traditionalEbookUI },
-        { _TR("Text documents"),        L"*.txt;*.log;*.nfo;file_id.diz;read.me", gUserPrefs->ebookUI.traditionalEbookUI },
+        { NULL, /* further ebooks */    L"*.pdb;*.tcr", gGlobalPrefs->ebookUI.useFixedPageUI },
+        { _TR("Text documents"),        L"*.txt;*.log;*.nfo;file_id.diz;read.me", gGlobalPrefs->ebookUI.useFixedPageUI },
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -3337,14 +3338,14 @@ static void AdjustWindowEdge(WindowInfo& win)
 static void FrameOnSize(WindowInfo* win, int dx, int dy)
 {
     int rebBarDy = 0;
-    if (gGlobalPrefs->toolbarVisible && !(win->presentation || win->fullScreen)) {
+    if (gGlobalPrefs->showToolbar && !(win->presentation || win->fullScreen)) {
         SetWindowPos(win->hwndReBar, NULL, 0, 0, dx, 0, SWP_NOZORDER);
         rebBarDy = WindowRect(win->hwndReBar).dy;
     }
 
     bool tocVisible = win->tocLoaded && win->tocVisible;
-    if (tocVisible || gGlobalPrefs->favVisible)
-        SetSidebarVisibility(win, tocVisible, gGlobalPrefs->favVisible);
+    if (tocVisible || gGlobalPrefs->showFavorites)
+        SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
     else
         SetWindowPos(win->hwndCanvas, NULL, 0, rebBarDy, dx, dy - rebBarDy, SWP_NOZORDER);
 
@@ -3378,7 +3379,7 @@ void OnMenuChangeLanguage(HWND hwnd)
 
 static void OnMenuViewShowHideToolbar()
 {
-    gGlobalPrefs->toolbarVisible = !gGlobalPrefs->toolbarVisible;
+    gGlobalPrefs->showToolbar = !gGlobalPrefs->showToolbar;
     ShowOrHideToolbarGlobally();
 }
 
@@ -3482,7 +3483,7 @@ static void OnMenuGoToPage(WindowInfo& win)
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs->toolbarVisible && !win.fullScreen && !win.presentation) {
+    if (gGlobalPrefs->showToolbar && !win.fullScreen && !win.presentation) {
         FocusPageNoEdit(win.hwndPageBox);
         return;
     }
@@ -3528,10 +3529,10 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
     }
 
     // Remove TOC and favorites from full screen, add back later on exit fullscreen
-    bool favVisibleTmp = gGlobalPrefs->favVisible;
-    if (win.tocVisible || gGlobalPrefs->favVisible) {
+    bool showFavoritesTmp = gGlobalPrefs->showFavorites;
+    if (win.tocVisible || gGlobalPrefs->showFavorites) {
         SetSidebarVisibility(&win, false, false);
-        // restore gGlobalPrefs->favVisible changed by SetSidebarVisibility()
+        // restore gGlobalPrefs->showFavorites changed by SetSidebarVisibility()
     }
 
     long ws = GetWindowLong(win.hwndFrame, GWL_STYLE);
@@ -3555,7 +3556,7 @@ static void EnterFullscreen(WindowInfo& win, bool presentation)
 
     // Make sure that no toolbar/sidebar keeps the focus
     SetFocus(win.hwndFrame);
-    gGlobalPrefs->favVisible = favVisibleTmp;
+    gGlobalPrefs->showFavorites = showFavoritesTmp;
 }
 
 static void ExitFullscreen(WindowInfo& win)
@@ -3577,10 +3578,10 @@ static void ExitFullscreen(WindowInfo& win)
     }
 
     bool tocVisible = win.IsDocLoaded() && win.tocBeforeFullScreen;
-    if (tocVisible || gGlobalPrefs->favVisible)
-        SetSidebarVisibility(&win, tocVisible, gGlobalPrefs->favVisible);
+    if (tocVisible || gGlobalPrefs->showFavorites)
+        SetSidebarVisibility(&win, tocVisible, gGlobalPrefs->showFavorites);
 
-    if (gGlobalPrefs->toolbarVisible)
+    if (gGlobalPrefs->showToolbar)
         ShowWindow(win.hwndReBar, SW_SHOW);
     SetMenu(win.hwndFrame, win.menu);
 
@@ -3614,7 +3615,7 @@ void AdvanceFocus(WindowInfo* win)
     // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
 
     bool hasToolbar = !win->fullScreen && !win->presentation &&
-                      gGlobalPrefs->toolbarVisible && win->IsDocLoaded();
+                      gGlobalPrefs->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
     struct {
@@ -3625,7 +3626,7 @@ void AdvanceFocus(WindowInfo* win)
         { win->hwndPageBox, hasToolbar                          },
         { win->hwndFindBox, hasToolbar && NeedsFindUI(win)      },
         { win->hwndTocTree, win->tocLoaded && win->tocVisible   },
-        { win->hwndFavTree, gGlobalPrefs->favVisible             },
+        { win->hwndFavTree, gGlobalPrefs->showFavorites         },
     };
 
     /* // make sure that at least one element is available
@@ -3792,7 +3793,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
             win.notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
         else if (win.presentation)
             OnMenuViewPresentation(win);
-        else if (gUserPrefs->escToExit)
+        else if (gGlobalPrefs->escToExit)
             CloseWindow(&win, true);
         else if (win.fullScreen)
             OnMenuViewFullscreen(win);
@@ -3895,7 +3896,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
     case 'i':
         // experimental "page info" tip: make figuring out current page and
         // total pages count a one-key action (unless they're already visible)
-        if (!gGlobalPrefs->toolbarVisible || win.fullScreen || PM_ENABLED == win.presentation) {
+        if (!gGlobalPrefs->showToolbar || win.fullScreen || PM_ENABLED == win.presentation) {
             int current = win.dm->CurrentPageNo(), total = win.dm->PageCount();
             ScopedMem<WCHAR> pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), current, total));
             if (win.dm->engine && win.dm->engine->HasPageLabels()) {
@@ -3940,7 +3941,7 @@ static void UpdateSidebarTitles(WindowInfo& win)
 
     HWND favTitle = GetDlgItem(win.hwndFavBox, IDC_FAV_TITLE);
     win::SetText(favTitle, _TR("Favorites"));
-    if (gGlobalPrefs->favVisible) {
+    if (gGlobalPrefs->showFavorites) {
         InvalidateRect(win.hwndFavBox, NULL, TRUE);
         UpdateWindow(win.hwndFavBox);
     }
@@ -3983,14 +3984,14 @@ static void ResizeSidebar(WindowInfo *win)
     SetCursor(gCursorSizeWE);
 
     int favSplitterDy = 0;
-    bool favSplitterVisible = win->tocVisible && gGlobalPrefs->favVisible;
+    bool favSplitterVisible = win->tocVisible && gGlobalPrefs->showFavorites;
     if (favSplitterVisible)
         favSplitterDy = SPLITTER_DY;
 
     int canvasDx = rFrame.dx - sidebarDx - SPLITTER_DX;
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs->toolbarVisible && !win->fullScreen && !win->presentation)
+    if (gGlobalPrefs->showToolbar && !win->fullScreen && !win->presentation)
         y = WindowRect(win->hwndReBar).dy;
     totalDy -= y;
 
@@ -4032,7 +4033,7 @@ static void ResizeFav(WindowInfo *win)
 
     int y = 0;
     int totalDy = rFrame.dy;
-    if (gGlobalPrefs->toolbarVisible && !win->fullScreen && !win->presentation)
+    if (gGlobalPrefs->showToolbar && !win->fullScreen && !win->presentation)
         y = WindowRect(win->hwndReBar).dy;
     totalDy -= y;
 
@@ -4169,32 +4170,32 @@ static void SetWinPos(HWND hwnd, RectI r, bool isVisible)
     SetWindowPos(hwnd, NULL, r.x, r.y, r.dx, r.dy, flags);
 }
 
-void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
+void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
 {
     if (gPluginMode || !HasPermission(Perm_DiskAccess))
-        favVisible = false;
+        showFavorites = false;
 
     if (!win->IsDocLoaded() || !win->dm->HasTocTree())
         tocVisible = false;
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         tocVisible = false;
-        favVisible = false;
+        showFavorites = false;
     }
 
-    bool sidebarVisible = tocVisible || favVisible;
+    bool sidebarVisible = tocVisible || showFavorites;
 
     if (tocVisible)
         LoadTocTree(win);
-    if (favVisible)
+    if (showFavorites)
         PopulateFavTreeIfNeeded(win);
 
     win->tocVisible = tocVisible;
-    gGlobalPrefs->favVisible = favVisible;
+    gGlobalPrefs->showFavorites = showFavorites;
 
     ClientRect rFrame(win->hwndFrame);
     int toolbarDy = 0;
-    if (gGlobalPrefs->toolbarVisible && !win->fullScreen && !win->presentation)
+    if (gGlobalPrefs->showToolbar && !win->fullScreen && !win->presentation)
         toolbarDy = WindowRect(win->hwndReBar).dy;
     int dy = rFrame.dy - toolbarDy;
 
@@ -4231,11 +4232,11 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
     // limitValue() blows up with an assert() if frame.dx / 2 < SIDEBAR_MIN_WIDTH
     tocDx = limitValue(tocDx, SIDEBAR_MIN_WIDTH, rFrame.dx / 2);
 
-    bool favSplitterVisible = tocVisible && favVisible;
+    bool favSplitterVisible = tocVisible && showFavorites;
 
     int tocDy = 0; // if !tocVisible
     if (tocVisible) {
-        if (!favVisible)
+        if (!showFavorites)
             tocDy = dy;
         else if (gGlobalPrefs->tocDy)
             tocDy = gGlobalPrefs->tocDy;
@@ -4259,7 +4260,7 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool favVisible)
 
     SetWinPos(win->hwndTocBox,          rToc,           tocVisible);
     SetWinPos(win->hwndFavSplitter,     rFavSplitter,   favSplitterVisible);
-    SetWinPos(win->hwndFavBox,          rFav,           favVisible);
+    SetWinPos(win->hwndFavBox,          rFav,           showFavorites);
     SetWinPos(win->hwndSidebarSplitter, rSplitter,      true);
     SetWinPos(win->hwndCanvas,          rCanvas,        true);
 
@@ -5111,8 +5112,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_DEBUG_EBOOK_UI:
-            gUserPrefs->ebookUI.traditionalEbookUI = !gUserPrefs->ebookUI.traditionalEbookUI;
-            DebugAlternateChmEngine(gUserPrefs->ebookUI.traditionalEbookUI);
+            gGlobalPrefs->ebookUI.useFixedPageUI = !gGlobalPrefs->ebookUI.useFixedPageUI;
+            // use the same setting to also toggle the CHM UI
+            gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
+            DebugAlternateChmEngine(gGlobalPrefs->chmUI.useFixedPageUI);
             break;
 
         case IDM_DEBUG_MUI:

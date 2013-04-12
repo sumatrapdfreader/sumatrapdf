@@ -138,8 +138,8 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
 
     ds->displayModeEnum = presentationMode ? presDisplayMode : GetDisplayMode();
     ds->rotation = rotation;
-    ds->zoomVirtual = presentationMode ? presZoomVirtual : zoomVirtual;
-    CrashIf(!IsValidZoom(ds->zoomVirtual));
+    ds->zoomFloat = presentationMode ? presZoomVirtual : zoomVirtual;
+    CrashIf(!IsValidZoom(ds->zoomFloat));
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;

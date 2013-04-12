@@ -59,7 +59,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("Open &in PDF-XChange"),         IDM_VIEW_WITH_PDF_XCHANGE,  MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Open in &Microsoft XPS-Viewer"),IDM_VIEW_WITH_XPS_VIEWER,   MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Open in &Microsoft HTML Help"), IDM_VIEW_WITH_HTML_HELP,    MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
-    // further entries are added if specified in gUserPrefs.vecCommandLine
+    // further entries are added if specified in gGlobalPrefs.vecCommandLine
     { _TRN("Send by &E-mail..."),           IDM_SEND_BY_EMAIL,          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS | MF_NOT_FOR_EBOOK_UI },
     { _TRN("P&roperties\tCtrl+D"),          IDM_PROPERTIES,             0 },
@@ -257,8 +257,8 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath, b
 
     const int maxEntries = IDM_OPEN_WITH_EXTERNAL_LAST - IDM_OPEN_WITH_EXTERNAL_FIRST + 1;
     int count = 0;
-    for (size_t i = 0; i < gUserPrefs->externalViewers->Count() && count < maxEntries; i++) {
-        ExternalViewer *ev = gUserPrefs->externalViewers->At(i);
+    for (size_t i = 0; i < gGlobalPrefs->externalViewers->Count() && count < maxEntries; i++) {
+        ExternalViewer *ev = gGlobalPrefs->externalViewers->At(i);
         if (!ev->commandLine)
             continue;
         if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter)))
@@ -347,7 +347,7 @@ static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
 
 void MenuUpdateZoom(WindowInfo* win)
 {
-    float zoomVirtual = gGlobalPrefs->defaultZoom;
+    float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     if (win->IsDocLoaded())
         zoomVirtual = win->dm->ZoomVirtual();
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
@@ -412,11 +412,11 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
     win::menu::SetEnabled(win->menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
-    bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->tocVisible;
+    bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->showToc;
     win::menu::SetChecked(win->menu, IDM_VIEW_BOOKMARKS, checked);
 
-    win::menu::SetChecked(win->menu, IDM_FAV_TOGGLE, gGlobalPrefs->favVisible);
-    win::menu::SetChecked(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs->toolbarVisible);
+    win::menu::SetChecked(win->menu, IDM_FAV_TOGGLE, gGlobalPrefs->showFavorites);
+    win::menu::SetChecked(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs->showToolbar);
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
@@ -454,7 +454,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
 #ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
     win::menu::SetChecked(win->menu, IDM_DEBUG_GDI_RENDERER, gUseGdiRenderer);
-    win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gUserPrefs->ebookUI.traditionalEbookUI);
+    win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
 #endif
 }
 

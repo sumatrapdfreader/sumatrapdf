@@ -198,9 +198,9 @@ void ToggleTocBox(WindowInfo *win)
     if (!win->IsDocLoaded())
         return;
     if (win->tocVisible) {
-        SetSidebarVisibility(win, false, gGlobalPrefs->favVisible);
+        SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     } else {
-        SetSidebarVisibility(win, true,  gGlobalPrefs->favVisible);
+        SetSidebarVisibility(win, true,  gGlobalPrefs->showFavorites);
         SetFocus(win->hwndTocTree);
     }
 }
@@ -433,7 +433,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
         case WM_ERASEBKGND:
             return FALSE;
         case WM_CHAR:
-            if (VK_ESCAPE == wParam && gUserPrefs->escToExit)
+            if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit)
                 DestroyWindow(win->hwndFrame);
             break;
         case WM_KEYDOWN:
