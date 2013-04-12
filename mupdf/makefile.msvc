@@ -174,16 +174,12 @@ MUPDF_CFLAGS  = $(MUPDF_CFLAGS) /wd4267
 LIBS = $(LIBS) advapi32.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib shell32.lib gdiplus.lib ole32.lib WindowsCodecs.lib
 
 FT_OBJS = \
-	$(OFT)\ft_all.obj
-
-#FT_OBJS = \
-#	$(OFT)\ftbase.obj $(OFT)\ftbbox.obj $(OFT)\ftbitmap.obj $(OFT)\ftgasp.obj \
-#	$(OFT)\ftglyph.obj $(OFT)\ftinit.obj $(OFT)\ftstroke.obj $(OFT)\ftsynth.obj \
-#	$(OFT)\ftsystem.obj $(OFT)\fttype1.obj $(OFT)\ftxf86.obj $(OFT)\cff.obj \
-#	$(OFT)\type1cid.obj $(OFT)\psaux.obj $(OFT)\psnames.obj $(OFT)\smooth.obj \
-#	$(OFT)\sfnt.obj $(OFT)\truetype.obj $(OFT)\type1.obj $(OFT)\raster.obj \
-#	$(OFT)\otvalid.obj $(OFT)\ftotval.obj $(OFT)\pshinter.obj
-
+	$(OFT)\ftbase.obj $(OFT)\ftbbox.obj $(OFT)\ftbitmap.obj $(OFT)\ftgasp.obj \
+	$(OFT)\ftglyph.obj $(OFT)\ftinit.obj $(OFT)\ftstroke.obj $(OFT)\ftsynth.obj \
+	$(OFT)\ftsystem.obj $(OFT)\fttype1.obj $(OFT)\ftxf86.obj $(OFT)\cff.obj \
+	$(OFT)\type1cid.obj $(OFT)\psaux.obj $(OFT)\psnames.obj $(OFT)\smooth.obj \
+	$(OFT)\sfnt.obj $(OFT)\truetype.obj $(OFT)\type1.obj $(OFT)\raster.obj \
+	$(OFT)\otvalid.obj $(OFT)\ftotval.obj $(OFT)\pshinter.obj
 !if "$(CFG)"=="dbg"
 FT_OBJS = $(FT_OBJS) $(OFT)\ftdebug.obj
 !endif
@@ -339,9 +335,6 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 	$(LD) $(LDFLAGS) $** $(LIBS) /PDB:$*.pdb /OUT:$@ /SUBSYSTEM:CONSOLE
 
 # freetype directories
-{$(FREETYPE_DIR)\src}.c{$(OFT)}.obj::
-	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
-
 {$(FREETYPE_DIR)\src\base}.c{$(OFT)}.obj::
 	$(CC) $(FREETYPE_CFLAGS) /Fo$(OFT)\ /Fd$(O)\vc80.pdb $<
 
