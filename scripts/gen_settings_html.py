@@ -14,10 +14,22 @@ html_tmpl = """
 <style type=text/css>
 body {
 	font-size: 90%;
+	background-color: #f5f5f5;
+}
+
+.txt {
+	font-family: Monaco, 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Lucida Console', monospace;
+	font-size: 88%;
+	color: #800; /* this is brown */
+	/* tried to emphasize values with bold but it doesn't look good */
+	/* font-weight: bold; */
 }
 
 .cm {
-	color: #8c8c8c;
+	color: #800;   /* this is brown, a bit aggressive */
+	color: #8c8c8c; /* this is gray */
+	color: #555; /* this is darker gray */
+	font-weight: normal;
 }
 </style>
 </head>
@@ -33,7 +45,7 @@ portable version.</p>
 <p>The file is in a simple text format. Here's what different settings mean and
 what is their default value:</p>
 
-<pre>
+<pre class=txt>
 %INSIDE%
 </pre>
 
@@ -45,7 +57,7 @@ what is their default value:</p>
 
 def gen_comment(comment, start, first = False):
 	line_len = 80
-	s = start + '<span class="cm">'
+	s = start + '<span class=cm>'
 	if not first:
 		s = "\n" + s
 	left = line_len - len(start)
@@ -70,10 +82,11 @@ def gen_struct(struct, comment=None, indent=""):
 		first = (field == struct.default[0])
 		if type(field) in [Struct, Array] and not field.type.name == "Compact":
 			lines += gen_comment(field.comment, indent, first)
-			lines += ["%s%s [" % (indent, field.name), gen_struct(field, None, indent + "  "), "%s]" % indent, ""]
+			#lines += ["%s%s [" % (indent, field.name), gen_struct(field, None, indent + "  "), "%s]" % indent, ""]
+			lines += ["%s%s [" % (indent, field.name), gen_struct(field, None, indent + "  "), "%s]" % indent]
 		else:
-			val = field.inidefault(commentChar="").lstrip()
-			lines += gen_comment(field.comment, indent, first) + [indent + val]
+			s = field.inidefault(commentChar="").lstrip()
+			lines += gen_comment(field.comment, indent, first) + [indent + s]
 	return "\n".join(lines)
 
 def gen_html():

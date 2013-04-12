@@ -8,10 +8,21 @@
 <style type=text/css>
 body {
 	font-size: 90%;
+	background-color: #f5f5f5;
+}
+
+.txt {
+	font-family: Monaco, 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Lucida Console', monospace;
+	font-size: 88%;
+	color: #800; /* this is brown */
+	/* font-weight: bold; */
 }
 
 .cm {
-	color: #8c8c8c;
+	color: #800;   /* this is brown, a bit aggressive */
+	color: #8c8c8c; /* this is gray */
+	color: #555; /* this is darker gray */
+	font-weight: normal;
 }
 </style>
 </head>
@@ -27,293 +38,283 @@ portable version.</p>
 <p>The file is in a simple text format. Here's what different settings mean and
 what is their default value:</p>
 
-<pre>
-<span class="cm">All values in this structure can't be modified from within the UI and are for 
+<pre class=txt>
+<span class=cm>All values in this structure can't be modified from within the UI and are for 
 experimental or expert settings. They're overwritten by the content of 
 SumatraPDF-user.ini if that file exists.</span>
 UserPrefs [
-  <span class="cm">background color of the non-document windows, traditionally yellow</span>
+  <span class=cm>background color of the non-document windows, traditionally yellow</span>
   MainWindowBackground = #fff200
 
-  <span class="cm">whether the Esc key will exit SumatraPDF same as 'q'</span>
+  <span class=cm>whether the Esc key will exit SumatraPDF same as 'q'</span>
   EscToExit = false
 
-  <span class="cm">whether opening a new document should happen in an already running SumatraPDF 
+  <span class=cm>whether opening a new document should happen in an already running SumatraPDF 
   instance so that there's only one process and documents aren't opend twice</span>
   ReuseInstance = false
 
-  <span class="cm">these values allow to customize the UI used for fixed page documents (PDF, 
+  <span class=cm>these values allow to customize the UI used for fixed page documents (PDF, 
   XPS, DjVu, etc.)</span>
   FixedPageUI [
-    <span class="cm">color value with which black (text) will be substituted</span>
+    <span class=cm>color value with which black (text) will be substituted</span>
     TextColor = #000000
 
-    <span class="cm">color value with which white (background) will be substituted</span>
+    <span class=cm>color value with which white (background) will be substituted</span>
     BackgroundColor = #ffffff
 
-    <span class="cm">colors to use for the gradient from top to bottom (stops will be inserted at 
+    <span class=cm>colors to use for the gradient from top to bottom (stops will be inserted at 
     regular intervals throughout the document); currently only up to three 
     colors are supported; the idea behind this experimental feature is that the 
     background might allow to subconsciously determine reading progress; 
     suggested values: #2828aa #28aa28 #aa2828</span>
     GradientColors =
 
-    <span class="cm">horizontal and vertical distance between two pages in facing and book view 
+    <span class=cm>horizontal and vertical distance between two pages in facing and book view 
     modes</span>
     PageSpacing = 0 0
   ]
 
-
-  <span class="cm">these values allow to customize the UI used for ebooks (with UseFixedPageUI 
+  <span class=cm>these values allow to customize the UI used for ebooks (with UseFixedPageUI 
   disabled)</span>
   EbookUI [
-    <span class="cm">whether the UI used for PDF documents will be used for ebooks as well 
+    <span class=cm>whether the UI used for PDF documents will be used for ebooks as well 
     (enables printing and searching, disables automatic reflow)</span>
     UseFixedPageUI = false
 
-    <span class="cm">color for text</span>
+    <span class=cm>color for text</span>
     TextColor = #5f4b32
 
-    <span class="cm">color of the background (page)</span>
+    <span class=cm>color of the background (page)</span>
     BackgroundColor = #d9f0fb
   ]
 
-
-  <span class="cm">these values allow to customize the UI used for images and comic books</span>
+  <span class=cm>these values allow to customize the UI used for images and comic books</span>
   ImageOnlyUI [
-    <span class="cm">horizontal and vertical distance between two pages in facing and book view 
+    <span class=cm>horizontal and vertical distance between two pages in facing and book view 
     modes</span>
     PageSpacing = 0 0
   ]
 
-
-  <span class="cm">these values allow to customize the UI used for CHM documents (with 
+  <span class=cm>these values allow to customize the UI used for CHM documents (with 
   UseFixedPageUI disabled)</span>
   ChmUI [
-    <span class="cm">whether the UI used for PDF documents will be used for CHM documents as well</span>
+    <span class=cm>whether the UI used for PDF documents will be used for CHM documents as well</span>
     UseFixedPageUI = false
   ]
 
-
-  <span class="cm">this list contains a list of additional external viewers for various file 
+  <span class=cm>this list contains a list of additional external viewers for various file 
   types (multiple entries of the same format are recognised)</span>
   ExternalViewers [
-    <span class="cm">command line with which to call the external viewer, may contain %p for page 
+    <span class=cm>command line with which to call the external viewer, may contain %p for page 
     numer and %1 for the file name</span>
     CommandLine =
 
-    <span class="cm">name of the external viewer to be shown in the menu (implied by CommandLine 
+    <span class=cm>name of the external viewer to be shown in the menu (implied by CommandLine 
     if missing)</span>
     Name =
 
-    <span class="cm">filter for which file types the menu item is to be shown (e.g. 
+    <span class=cm>filter for which file types the menu item is to be shown (e.g. 
     "*.pdf;*.xps"; "*" if missing)</span>
     Filter =
   ]
 
-
-  <span class="cm">zoom levels which zooming steps through, excluding the virtual zoom levels fit 
+  <span class=cm>zoom levels which zooming steps through, excluding the virtual zoom levels fit 
   page, fit content and fit width (minimal allowed value is 8.33 and maximum 
   allowed value is 6400)</span>
   ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400
 
-  <span class="cm">zoom step size in percents relative to the current zoom level (if zero or 
+  <span class=cm>zoom step size in percents relative to the current zoom level (if zero or 
   negative, the values from ZoomLevels are used instead)</span>
   ZoomIncrement = 0
 
-  <span class="cm">these values allow to override the default settings in the Print dialog</span>
+  <span class=cm>these values allow to override the default settings in the Print dialog</span>
   PrinterDefaults [
-    <span class="cm">default value for scaling (shrink, fit, none)</span>
+    <span class=cm>default value for scaling (shrink, fit, none)</span>
     PrintScale = shrink
 
-    <span class="cm">default value for the compatibility option</span>
+    <span class=cm>default value for the compatibility option</span>
     PrintAsImage = false
   ]
 
-
-  <span class="cm">sizes of the top, right, bottom and left margin (in that order) between window 
+  <span class=cm>sizes of the top, right, bottom and left margin (in that order) between window 
   and document</span>
   WindowMargin = 2 4 2 4
 
-  <span class="cm">these values allow to customize how the forward search highlight appears</span>
+  <span class=cm>these values allow to customize how the forward search highlight appears</span>
   ForwardSearch [
-    <span class="cm">when set to a positive value, the forward search highlight style will be 
+    <span class=cm>when set to a positive value, the forward search highlight style will be 
     changed to a rectangle at the left of the page (with the indicated amount of 
     margin from the page margin)</span>
     HighlightOffset = 0
 
-    <span class="cm">the width of the highlight rectangle for when HighlightOffset is set</span>
+    <span class=cm>the width of the highlight rectangle for when HighlightOffset is set</span>
     HighlightWidth = 15
 
-    <span class="cm">the color used for the forward search highlight</span>
+    <span class=cm>the color used for the forward search highlight</span>
     HighlightColor = #ff8165
 
-    <span class="cm">whether the forward search highlight will remain visible until the next 
+    <span class=cm>whether the forward search highlight will remain visible until the next 
     mouse click instead of fading away instantly</span>
     HighlightPermanent = false
   ]
-
 ]
 
-
-<span class="cm">whether to store display settings for individual documents</span>
+<span class=cm>whether to store display settings for individual documents</span>
 RememberStatePerDocument = true
 
-<span class="cm">the ISO code of the current UI language</span>
+<span class=cm>the ISO code of the current UI language</span>
 UiLanguage =
 
-<span class="cm">whether the toolbar should be visible by default in the main window</span>
+<span class=cm>whether the toolbar should be visible by default in the main window</span>
 ShowToolbar = true
 
-<span class="cm">whether the Favorites sidebar should be visible by default in the main window</span>
+<span class=cm>whether the Favorites sidebar should be visible by default in the main window</span>
 ShowFavorites = false
 
-<span class="cm">if false, we won't ask the user if he wants Sumatra to handle PDF files</span>
+<span class=cm>if false, we won't ask the user if he wants Sumatra to handle PDF files</span>
 PdfAssociateDontAskAgain = false
 
-<span class="cm">if pdfAssociateDontAskAgain is true, says whether we should silently associate 
+<span class=cm>if pdfAssociateDontAskAgain is true, says whether we should silently associate 
 or not</span>
 PdfAssociateShouldAssociate = false
 
-<span class="cm">whether SumatraPDF should check once a day whether updates are available</span>
+<span class=cm>whether SumatraPDF should check once a day whether updates are available</span>
 CheckForUpdates = true
 
-<span class="cm">the time SumatraPDF has last checked for updates (see: CheckForUpdates)</span>
+<span class=cm>the time SumatraPDF has last checked for updates (see: CheckForUpdates)</span>
 TimeOfLastUpdateCheck = 0 0
 
-<span class="cm">When we show 'new version available', user has an option to check 'skip this 
+<span class=cm>When we show 'new version available', user has an option to check 'skip this 
 version'. This remembers which version is to be skipped.</span>
 VersionToSkip =
 
-<span class="cm">if true, we remember which files we opened and their settings</span>
+<span class=cm>if true, we remember which files we opened and their settings</span>
 RememberOpenedFiles = true
 
-<span class="cm">whether to display documents black-on-white or in system colors</span>
+<span class=cm>whether to display documents black-on-white or in system colors</span>
 UseSysColors = false
 
-<span class="cm">pattern used to launch the editor when doing inverse search</span>
+<span class=cm>pattern used to launch the editor when doing inverse search</span>
 InverseSearchCmdLine =
 
-<span class="cm">whether to expose the SyncTeX enhancements via Settings/Options menu</span>
+<span class=cm>whether to expose the SyncTeX enhancements via Settings/Options menu</span>
 EnableTeXEnhancements = false
 
-<span class="cm">how pages should be laid out by default, needs to be synchronized with 
+<span class=cm>how pages should be laid out by default, needs to be synchronized with 
 DefaultDisplayMode after deserialization and before serialization</span>
 DefaultDisplayMode = automatic
 
-<span class="cm">the default zoom factor in % (negative values indicate virtual settings)</span>
+<span class=cm>the default zoom factor in % (negative values indicate virtual settings)</span>
 DefaultZoom = fit page
 
-<span class="cm">default state of new windows (same as the last closed)</span>
+<span class=cm>default state of new windows (same as the last closed)</span>
 WindowState = 1
 
-<span class="cm">default position (can be on any monitor)</span>
+<span class=cm>default position (can be on any monitor)</span>
 WindowPos = 0 0 0 0
 
-<span class="cm">whether the table of contents (Bookmarks) sidebar should be shown by default 
+<span class=cm>whether the table of contents (Bookmarks) sidebar should be shown by default 
 when its available for a document</span>
 ShowToc = true
 
-<span class="cm">if sidebar (favorites and/or bookmarks) is visible, this is the width of the 
+<span class=cm>if sidebar (favorites and/or bookmarks) is visible, this is the width of the 
 left sidebar panel containing them</span>
 SidebarDx = 0
 
-<span class="cm">if both favorites and bookmarks parts of sidebar are visible, this is the height 
+<span class=cm>if both favorites and bookmarks parts of sidebar are visible, this is the height 
 of bookmarks (table of contents) part</span>
 TocDy = 0
 
-<span class="cm">whether to display Frequently Read documents or the About page in an empty 
+<span class=cm>whether to display Frequently Read documents or the About page in an empty 
 window</span>
 ShowStartPage = true
 
-<span class="cm">week count since 2011-01-01 needed to "age" openCount values in file history</span>
+<span class=cm>week count since 2011-01-01 needed to "age" openCount values in file history</span>
 OpenCountWeek = 0
 
-<span class="cm">display CBX double pages from right to left</span>
+<span class=cm>display CBX double pages from right to left</span>
 CbxR2L = false
 
-<span class="cm">Most values in this structure are remembered individually for every file and are 
+<span class=cm>Most values in this structure are remembered individually for every file and are 
 by default also persisted so that reading can be resumed</span>
 FileStates [
-  <span class="cm">file path of the document</span>
+  <span class=cm>file path of the document</span>
   FilePath =
 
-  <span class="cm">in order to prevent documents that haven't been opened for a while but used to 
+  <span class=cm>in order to prevent documents that haven't been opened for a while but used to 
   be opened very frequently constantly remain in top positions, the openCount 
   will be cut in half after every week, so that the Frequently Read list 
   hopefully better reflects the currently relevant documents</span>
   OpenCount = 0
 
-  <span class="cm">a user can "pin" a preferred document to the Frequently Read list so that the 
+  <span class=cm>a user can "pin" a preferred document to the Frequently Read list so that the 
   document isn't replaced by more frequently used ones</span>
   IsPinned = false
 
-  <span class="cm">if a document can no longer be found but we still remember valuable state, 
+  <span class=cm>if a document can no longer be found but we still remember valuable state, 
   it's classified as missing so that it can be hidden instead of removed</span>
   IsMissing = false
 
-  <span class="cm">whether global defaults should be used when reloading this file instead of the 
+  <span class=cm>whether global defaults should be used when reloading this file instead of the 
   values listed below</span>
   UseGlobalValues = false
 
-  <span class="cm">how pages should be laid out for this document, needs to be synchronized with 
+  <span class=cm>how pages should be laid out for this document, needs to be synchronized with 
   DefaultDisplayMode after deserialization and before serialization</span>
   DisplayMode = automatic
 
-  <span class="cm">how far this document has been scrolled</span>
+  <span class=cm>how far this document has been scrolled</span>
   ScrollPos = 0 0
 
-  <span class="cm">the scrollPos values are relative to the top-left corner of this page</span>
+  <span class=cm>the scrollPos values are relative to the top-left corner of this page</span>
   PageNo = 1
 
-  <span class="cm">for bookmarking ebook files: offset of the current page reparse point within 
+  <span class=cm>for bookmarking ebook files: offset of the current page reparse point within 
   html</span>
   ReparseIdx = 0
 
-  <span class="cm">the current zoom factor in % (negative values indicate virtual settings)</span>
+  <span class=cm>the current zoom factor in % (negative values indicate virtual settings)</span>
   Zoom = fit page
 
-  <span class="cm">how far pages have been rotated as a multiple of 90 degrees</span>
+  <span class=cm>how far pages have been rotated as a multiple of 90 degrees</span>
   Rotation = 0
 
-  <span class="cm">default state of new SumatraPDF windows (same as the last closed)</span>
+  <span class=cm>default state of new SumatraPDF windows (same as the last closed)</span>
   WindowState = 0
 
-  <span class="cm">default position (can be on any monitor)</span>
+  <span class=cm>default position (can be on any monitor)</span>
   WindowPos = 0 0 0 0
 
-  <span class="cm">Do not modify! Hex encoded MD5 fingerprint of file content (32 chars) followed 
+  <span class=cm>Do not modify! Hex encoded MD5 fingerprint of file content (32 chars) followed 
   by crypt key (64 chars) - only applies for PDF documents</span>
   DecryptionKey =
 
-  <span class="cm">whether the table of contents (Bookmarks) sidebar is shown for this document</span>
+  <span class=cm>whether the table of contents (Bookmarks) sidebar is shown for this document</span>
   ShowToc = true
 
-  <span class="cm">the width of the left sidebar panel containing the table of contents</span>
+  <span class=cm>the width of the left sidebar panel containing the table of contents</span>
   SidebarDx = 0
 
-  <span class="cm">tocState is an array of ids for ToC items that have been toggled by the user 
+  <span class=cm>tocState is an array of ids for ToC items that have been toggled by the user 
   (i.e. aren't in their default expansion state). - Note: We intentionally track 
   toggle state as opposed to expansion state so that we only have to save a diff 
   instead of all states for the whole tree (which can be quite large) - and also 
   due to backwards compatibility</span>
   TocState =
 
-  <span class="cm">Values which are persisted for bookmarks/favorites</span>
+  <span class=cm>Values which are persisted for bookmarks/favorites</span>
   Favorites [
-    <span class="cm">name of this favorite as shown in the menu</span>
+    <span class=cm>name of this favorite as shown in the menu</span>
     Name =
 
-    <span class="cm">which page this favorite is about</span>
+    <span class=cm>which page this favorite is about</span>
     PageNo = 0
 
-    <span class="cm">optional label for this page (if logical and physical page numbers are not 
+    <span class=cm>optional label for this page (if logical and physical page numbers are not 
     the same)</span>
     PageLabel =
   ]
-
 ]
-
 </pre>
 
 <body>
