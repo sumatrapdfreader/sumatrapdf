@@ -11194,9 +11194,9 @@ const char * gTranslations_sl =
 
 const char * gTranslations_es = 
   "&Acerca de...\0"\
-  "Tama\303\261o real\tCtrl+1\0"\
-  "&Todas las p\303\241ginas seleccionadas\0"\
-  "Atr\303\241s\tAlt+<-\0"\
+  "T&ama\303\261o real\tCtrl+1\0"\
+  "Tod&as las p\303\241ginas seleccionadas\0"\
+  "A&tr\303\241s\tAlt+<-\0"\
   "&Vista de libro\tCtrl+8\0"\
   "&Cerrar\tCtrl+W\0"\
   "&Copiar selecci\303\263n\0"\
@@ -11210,7 +11210,7 @@ const char * gTranslations_es =
   "&Ajustar p\303\241ginas al \303\241rea de impresi\303\263n\0"\
   "&Ir a\0"\
   "&Ir a la p\303\241gina:\0"\
-  "&Ayuda\0"\
+  "A&yuda\0"\
   "\303\232ltima p\303\241gina\tFin\0"\
   "&Aumento:\0"\
   "&Manual de instrucciones\0"\
@@ -11219,18 +11219,18 @@ const char * gTranslations_es =
   "\0"\
   "&No, gracias\0"\
   "&S\303\263lo p\303\241ginas impares\0"\
-  "&Abrir Documento\0"\
+  "&Abrir documento\0"\
   "&Abrir...\tCtrl+O\0"\
   "&Opciones...\0"\
   "&Contrase\303\261a:\0"\
-  "Marcar Documento\0"\
+  "Fi&jar documento\0"\
   "P\303\241gina anterior\t<-\0"\
   "&Imprimir...\0"\
   "&Imprimir...\tCtrl+P\0"\
-  "&Imprimir... (denegado)\0"\
+  "&Imprimir... (protegido)\0"\
   "&Recordar la contrase\303\261a para este documento\0"\
   "&Recordar esta configuraci\303\263n para todos los documentos\0"\
-  "Desechar Documento\0"\
+  "Elimina&r documento\0"\
   "&Guardar como...\0"\
   "&Guardar como...\tCtrl+S\0"\
   "&Configuraci\303\263n\0"\
@@ -11256,9 +11256,9 @@ const char * gTranslations_es =
   "Adjunto: %s\0"\
   "Autor:\0"\
   "Autom\303\241tico\0"\
-  "B&uscar actualizaciones autom\303\241ticamente.\0"\
+  "B&uscar actualizaciones autom\303\241ticamente\0"\
   "Vista de libro\0"\
-  "Marcadores\tF12\0"\
+  "&Marcadores\tF12\0"\
   "Marcar Atajos\0"\
   "Marcar atajo a pagina %s de %s\0"\
   "Marcadores\0"\
@@ -11270,16 +11270,16 @@ const char * gTranslations_es =
   "No se puede iniciar el comando de b\303\272squeda inversa. Verifique la l\303\255nea de comandos en la configuraci\303\263n.\0"\
   "Cambiar idioma (Change Language)\0"\
   "&Buscar actualizaciones\0"\
-  "Comics\0"\
+  "C\303\263mics\0"\
   "Compatibilidad\0"\
   "Continua\0"\
   "Vista continua de libro\0"\
   "P\303\241gina doble continua\0"\
   "Contribuir en la traducci\303\263n\0"\
   "Copiar &imagen\0"\
-  "Copiar direcci\303\263n del enlace\0"\
+  "Copiar direcci\303\263n del en&lace\0"\
   "Copiar co&mentario\0"\
-  "Copiado de texto no permitido (copiando como imagen)\0"\
+  "No se permite copiar como texto (copiando como imagen)\0"\
   "Derechos de autor:\0"\
   "Imposible obtener propiedades de la impresora\0"\
   "No se pudo inicializar la impresora\0"\
@@ -11292,25 +11292,25 @@ const char * gTranslations_es =
   "No se puede cambiar el lector PDF predeterminado en modo port\303\241til\0"\
   "Permisos denegados:\0"\
   "Documentos DjVu\0"\
-  "Propiedades del Documento\0"\
+  "Propiedades del documento\0"\
   "Descargar\0"\
   "&Salir\tCtrl+Q\0"\
   "Documentos EPUB\0"\
   "Introduzca contrase\303\261a\0"\
   "Introduzca contrase\303\261a para %s\0"\
   "Introduzca los modificadores de l\303\255nea de comando que se ejecutar\303\241n al hacer doble-clic en el documento PDF:\0"\
-  "Error de carga %s\0"\
+  "Error al cargar %s\0"\
   "F&avoritos\0"\
   "Adelante\tAlt+->\0"\
   "Pantalla completa\tCtrl+May\303\272s+L\0"\
   "P\303\241gina doble\0"\
-  "\302\241No se puede renombrar el fichero!\0"\
-  "Error al Guardar el Archivo\0"\
+  "\302\241No se pudo renombrar el fichero!\0"\
+  "Error al guardar un archivo\0"\
   "Visualizaci\303\263n r\303\241pida en Web\0"\
   "Favoritos\0"\
   "Documentos FictionBook\0"\
   "El archivo %s no se encuentra\0"\
-  "Tama\303\261o del Archivo:\0"\
+  "Tama\303\261o de archivo:\0"\
   "Archivo:\0"\
   "Buscar...\tCtrl+F\0"\
   "Buscar\0"\
@@ -11328,7 +11328,7 @@ const char * gTranslations_es =
   "Fuentes:\0"\
   "Dando formato al libro... %d p\303\241ginas\0"\
   "Se encontr\303\263 el texto en la p\303\241gina %s\0"\
-  "Se encontr\303\263 el texto en la pagina %s (de nuevo)\0"\
+  "Se encontr\303\263 el texto en la p\303\241gina %s (de nuevo)\0"\
   "Lo m\303\241s le\303\255do\0"\
   "\0"\
   "Ir a la p\303\241gina\0"\
@@ -11357,27 +11357,27 @@ const char * gTranslations_es =
   "Abrir en %s\0"\
   "Abrir en &Adobe Reader\0"\
   "Abrir en &Foxit Reader\0"\
-  "Abrir en Microsoft HTML Help\0"\
-  "Abrir en Microsoft XPS-Viewer\0"\
+  "Abrir en &Microsoft HTML Help\0"\
+  "Abrir en &Microsoft XPS-Viewer\0"\
   "P&ropiedades\0"\
   "P&ropiedades...\tCtrl+D\0"\
   "Documento PDF\0"\
   "Optimizaciones de PDF:\0"\
   "Generador de PDF:\0"\
-  "Versi\303\263n PDF:\0"\
+  "Versi\303\263n de PDF:\0"\
   "Documentos PDF\0"\
   "P\303\241gina...\tCtrl+G\0"\
   "P\303\241gina %s\0"\
-  "Tama\303\261o de P\303\241gina:\0"\
+  "Tama\303\261o de p\303\241gina:\0"\
   "N\303\272mero de p\303\241gina %u inexistente\0"\
   "Escalado de p\303\241gina\0"\
   "P\303\241gina:\0"\
-  "Espere por favor - procesando...\0"\
+  "Espere un momento mientras se carga la visualizaci\303\263n...\0"\
   "Documentos Postscript\0"\
   "Pr&esentaci\303\263n\tCtrl+L\0"\
   "P\303\241gina anterior\0"\
   "Imprimir\0"\
-  "Imprimir como &image (se necesita m\303\241s memoria)\0"\
+  "Imprimir como &imagen (necesita m\303\241s memoria)\0"\
   "Rango de impresi\303\263n\0"\
   "La impresora con el nombre especificado no existe\0"\
   "Impresi\303\263n en progreso.\0"\
@@ -11410,7 +11410,7 @@ const char * gTranslations_es =
   "P\303\241gina \303\272nica\0"\
   "Lo sentimos, esto no deber\303\255a haber sucedido...\n\nPresione 'Cancelar', si quiere ayudarnos a arreglar la causa del fallo.\0"\
   "El archivo fuente %s no posee un punto de sincronizaci\303\263n\0"\
-  "Tema:\0"\
+  "Asunto:\0"\
   "Opciones de SumatraPDF\0"\
   "Actualizar SumatraPDF\0"\
   "SumatraPDF se ha reiniciado debido a un fallo\0"\
@@ -11425,7 +11425,7 @@ const char * gTranslations_es =
   "&Visitar Sitio Web\0"\
   "Advertencia\0"\
   "Documentos XPS\0"\
-  "Usted tiene la \303\272ltima versi\303\263n.\0"\
+  "Esta es la \303\272ltima versi\303\263n disponible.\0"\
   "Usted tiene la versi\303\263n %s\0"\
   "\0"\
   "Acercar zoom\0"\

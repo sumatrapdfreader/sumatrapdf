@@ -840,11 +840,11 @@ const char * gTranslations_es =
   "No se puede desinstalar el filtro buscador PDF\0"\
   "No se puede desinstalar el plugin de navegaci\303\263n\0"\
   "No se puede escribir %s al disco\0"\
-  "Fallo al copiar el desinstalador al directorio temporal\0"\
+  "Error al copiar el desinstalador al directorio temporal\0"\
   "Error al crear un acceso directo\0"\
-  "Fallo al eliminar las claves del registro del desinstalador\0"\
-  "Fallo al escribir informaci\303\263n de la extensi\303\263n de archivo al registro\0"\
-  "Fallo al escribir informaci\303\263n de desinstalaci\303\263n al registro\0"\
+  "Error al eliminar las claves del registro del desinstalador\0"\
+  "Fallo al escribir informaci\303\263n de la extensi\303\263n de archivo en el registro\0"\
+  "Error al escribir informaci\303\263n de desinstalaci\303\263n en el registro\0"\
   "Ocultar &opciones\0"\
   "Instalar el plugin PDF del &navegador para Firefox, Chrome y Opera\0"\
   "Instalar SumatraPDF\0"\
@@ -853,12 +853,12 @@ const char * gTranslations_es =
   "Instalaci\303\263n en progreso...\0"\
   "Permitir al escritorio Windows buscar &buscar documentos PDF\0"\
   "Permitir mostrar a Windows &vistaprevia de documentos PDF\0"\
-  "Por favor cerrar %s para continuar!\0"\
+  "\302\241Para continuar es necesario cerrar %s!\0"\
   "Seleccione la carpeta donde SumatraPDF deber\303\255a ser instalado:\0"\
   "Algunos de los archivos que van a ser instalados estan da\303\261ados o no se encuentran\0"\
   "Iniciar SumatraPDF\0"\
-  "Instalador %s SumatraPDF\0"\
-  "Desinstalador %s SumatraPDF\0"\
+  "Instalador de SumatraPDF %s\0"\
+  "Desinstalador de SumatraPDF %s\0"\
   "SumatraPDF ha sido desinstalado.\0"\
   "Instalaci\303\263n de SumatraPDF no encontrada.\0"\
   "Gracias por seleccionar SumatraPDF\0"\

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c60f329b4360863c7db152ad6b34585161d40e77
+594e2637b2a8c233431a0a62670004e34727e5b3
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -116,7 +116,7 @@ cz:Skutečná &velikost\tCtrl+1
 de:&Tatsächliche Größe\tStrg+1
 dk:&Faktisk størrelse\tCtrl+1
 el:Πραγματικό &Μέγεθος\tCtrl+1
-es:Tamaño real\tCtrl+1
+es:T&amaño real\tCtrl+1
 et:&Tegelik suurus\tCtrl+1
 eu:&Oraingo Neurria\tKtrl+1
 fa:&ابعاد اصلی‌\tCtrl+1
@@ -182,7 +182,7 @@ cz:Vše&chny vybrané stránky
 de:&Alle angegebenen Seiten
 dk:&Alle valgte sider
 el:Ό&λες οι επιλεγμένες
-es:&Todas las páginas seleccionadas
+es:Tod&as las páginas seleccionadas
 et:Kõik v&alitud lehed
 eu:&Hautatutako orrialde guztiak
 fa:&همه‌ی صفحات انتخاب ‌شده
@@ -240,7 +240,7 @@ cz:Z&pět\tAlt+Šipka vlevo
 de:&Zurück\tAlt+<-
 dk:&Tilbage\tAlt+<-
 el:&Πίσω\tAlt+<-
-es:Atrás\tAlt+<-
+es:A&trás\tAlt+<-
 et:&Tagasi\tAlt+Vasaknool
 eu:A&tzera\tAlt+Ezker Gezia
 fa:&عقب\tAlt+←
@@ -1100,7 +1100,7 @@ cz:Náp&ověda
 de:&Hilfe
 dk:&Hjælp
 el:&Βοήθεια
-es:&Ayuda
+es:A&yuda
 et:&Abi
 eu:&Laguntza
 fa:&راهنما
@@ -1659,7 +1659,7 @@ cz:&Otevřít dokument
 de:Ö&ffnen
 dk:&Åbn dokument
 el:Ά&νοιγμα Εγγράφου
-es:&Abrir Documento
+es:&Abrir documento
 et:&Ava dokument
 eu:&Ireki Agiria
 fa:باز کردن سند
@@ -1925,7 +1925,7 @@ cz:&Připnout dokument
 de:Auf dieser Seite &behalten
 dk:&Fastgør dokument
 el:&Καρφίτσωμα Εγγράφου
-es:Marcar Documento
+es:Fi&jar documento
 et:&Kinnita dokument
 eu:&Pin Agiria
 fa:&سنجاق کردن سند
@@ -2102,7 +2102,7 @@ cz:&Tisk... (odepřen)
 de:&Drucken… (verweigert)
 dk:&Udskriv... (nægtet)
 el:&Εκτύπωση... (απαγορεύεται)
-es:&Imprimir... (denegado)
+es:&Imprimir... (protegido)
 et:&Prindi... (keelatud)
 eu:&Irarkitu... (ukatuta)
 fa:&چاپ (ممنوع)...
@@ -2343,7 +2343,7 @@ cz:Odeb&rat dokument
 de:Von dieser Seite &entfernen
 dk:&Fjern dokument
 el:&Απόκρυψη Εγγράφου
-es:Desechar Documento
+es:Elimina&r documento
 et:&Kustuta dokument
 eu:&Kendu Agira
 fa:سند را &حذف کن
@@ -3932,7 +3932,7 @@ cz:&Automaticky kontrolovat aktualizace
 de:&Automatisch nach Updates suchen
 dk:Tjek automatisk for &opdateringer
 el:Αυτόματος έλεγχος για &ενημερώσεις
-es:B&uscar actualizaciones automáticamente.
+es:B&uscar actualizaciones automáticamente
 et:Uuendusi k&ontrollitakse automaatselt
 eu:&Berezgaitasunez egiaztatu eguneraketak
 fa:به صورت خودکار برای نسخه‌ی &جدید جستجو کن
@@ -4056,7 +4056,7 @@ cz:Zál&ožky\tF12
 de:Lese&zeichen\tF12
 dk:Bog&mærker\tF12
 el:&Σελιδοδείκτες\tF12
-es:Marcadores\tF12
+es:&Marcadores\tF12
 et:Jär&jehoidjad\tF12
 eu:&Gogokoenak\tF12
 fa:ن&شانه‌ی صفحه‌ها\tF12
@@ -4815,7 +4815,7 @@ cz:Komiksy
 de:Comicbücher
 dk:Tegneserier
 el:Βιβλία κόμικ
-es:Comics
+es:Cómics
 et:Koomiksiraamatud
 eu:Komiki liburuak
 fa:کتاب‌های فُکاهی
@@ -5238,7 +5238,7 @@ cz:Kopírovat &adresu odkazu
 de:Adresse des &Links kopieren
 dk:Kopier &Linkadresse
 el:Αντιγραφή &Διεύθυνσης
-es:Copiar dirección del enlace
+es:Copiar dirección del en&lace
 et:Kopeeri &lingi aadress
 eu:Kopiatu &Lotura Helbidea
 fa:رونوشت از نشانی &پیوند
@@ -5352,7 +5352,7 @@ cz:Kopírování textu bylo odepřeno (zkopírováno jako obraz)
 de:Text kopieren verweigert (nur als Bild kopiert)
 dk:Kopiering af tekst blev nægtet (kopierer kun som billede)
 el:Η αντιγραφή κειμένου δεν επετράπη (μόνο ως εικόνα)
-es:Copiado de texto no permitido (copiando como imagen)
+es:No se permite copiar como texto (copiando como imagen)
 et:Teksti kopeerimine on keelatud (kopeerida saab vaid pildina)
 eu:Idazkia kopiatzea eragotzita (kopiatzea irudi bezala bakarrik)
 fa:رونوشت‌گیری از متن ممنوع است (رونوشت فقط به صورت عکس)
@@ -6411,7 +6411,7 @@ cz:Vlastnosti dokumentu
 de:Dokumenteigenschaften
 dk:Dokumentegenskaber
 el:Ιδιότητες Εγγράφου
-es:Propiedades del Documento
+es:Propiedades del documento
 et:Dokumendi omadused
 eu:Agiriaren Ezaugarriak
 fa:ویژگی‌های سند
@@ -6841,7 +6841,7 @@ cz:Chyba při načítání %s
 de:Fehler beim Öffnen von %s
 dk:Side %s kan ikke indlæses
 el:Σφάλμα φόρτωσης του %s
-es:Error de carga %s
+es:Error al cargar %s
 et:Viga laadimisel: %s
 eu:Akatsa %s gertatzerakoan
 fa:نمایش خطا %s
@@ -6888,7 +6888,7 @@ br:Não foi possível rodar o SumatraPDF!
 cn:错误：无法运行SumatraPDF!
 cz:Chyba: Nepodařilo se spustit SumatraPDF!
 de:Fehler: Konnte SumatraPDF nicht ausführen!
-es:Error: No se puede ejecutar SumatraPDF
+es:Error: ¡No se pudo ejecutar SumatraPDF!
 et:Viga: Ei suudetud käivitada rakendust SumatraPDF!
 eu:Akatsa: Ezinezkoa SumatraPDF abiaraztea!
 fr:Erreur : impossible de lancer SumatraPDF !
@@ -6913,7 +6913,7 @@ br:O SumatraPDF não foi encontrado!
 cn:失败: 找不到SumatraPDF
 cz:Chyba: Program SumatraPDF nebyl nalezen!
 de:Fehler: SumatraPDF ist unaufindbar!
-es:Error: SumatraPDF no ha sido encontrado
+es:Error: ¡SumatraPDF no ha sido encontrado!
 et:Viga: Ei leitud rakendust SumatraPDF
 eu:Akatsa: SumatraPDF ez da aurkitu!
 fr:Erreur : SumatraPDF non trouvé !
@@ -6938,7 +6938,7 @@ br:Erro: o documento não pôde ser baixado!
 cn:错误： 文档无法下载!
 cz:Chyba: Stažení dokumentu se nezdařilo!
 de:Fehler: Das Dokument konnte nicht heruntergeladen werden!
-es:Error: El documento no puede ser descargado
+es:Error: ¡El documento no pudo ser descargado!
 et:Viga: Dokumenti ei suudetud alla laadida!
 eu:Akatsa: Agiria ezin da jeitsi!
 fr:Erreur : le document n'a pu être téléchargé !
@@ -7208,7 +7208,7 @@ az:Deinstalyatoru müvəqqəti qovluğa kopyalamaq mümkün olmadı
 br:Falha na cópia do desinstalador para a pasta temporária
 cn:无法将安装程序复制到暂存目录
 de:Konnte das Deinstallationsprogramm nicht kopieren
-es:Fallo al copiar el desinstalador al directorio temporal
+es:Error al copiar el desinstalador al directorio temporal
 et:Ei õnnestunud kopeerida eemaldusprogrammi temp kataloogi
 eu:Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan
 fr:La copie du désinstalleur dans un répertoire temporaire a échoué
@@ -7253,7 +7253,7 @@ az:Deinstalyatorun reyestr açarlarını silmək mümkün olmadı
 br:Falha na remoção das entradas de registro do desinstalador
 cn:删除卸载程序的注册表项失败
 de:Konnte nicht alle Registry-Einträge löschen
-es:Fallo al eliminar las claves del registro del desinstalador
+es:Error al eliminar las claves del registro del desinstalador
 et:Ei õnnestu kustutada eemaldusprogrammi registrivõtmeid
 eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
@@ -7283,7 +7283,7 @@ cz:Soubor se nepodařilo přejmenovat!
 de:Die Datei konnte nicht umbenannt werden!
 dk:Fejl ved omdøbning af fil!
 el:Η μετονομασία του αρχείου απέτυχε!
-es:¡No se puede renombrar el fichero!
+es:¡No se pudo renombrar el fichero!
 et:Faili ümbernimetamine ebaõnnestus.
 eu:Hutsegitea agiria berrizendatzerakoan!
 fa:تغییر نام پرونده با شکست مواجه شد!
@@ -7337,7 +7337,7 @@ cz:Při ukládání došlo k chybě
 de:Die Datei konnte nicht neu gespeichert werden!
 dk:Kunne ikke gemme filen
 el:Αποτυχία αποθήκευσης αρχείου
-es:Error al Guardar el Archivo
+es:Error al guardar un archivo
 et:Faili salvestamine ebaõnnestus
 eu:Hutsegitea agiria gordetzerakoan
 fa:ذخیره کردن فایل با مشکل روبرو شد
@@ -7393,7 +7393,7 @@ az:Faylın genişliyi haqqında ətraflı məlumatı reyestrə yazmaq mümkün o
 br:Falha na gravação da extensão de arquivo no registro
 cn:无法将文件扩展名的扩展信息写进注册表
 de:Konnte die Dateiformats-Verknüpfungen nicht vollständig in die Registry schreiben
-es:Fallo al escribir información de la extensión de archivo al registro
+es:Fallo al escribir información de la extensión de archivo en el registro
 et:Ei õnnestunud registrisse kirjutada infot pikendatud faililaiendi kohta
 eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
 fr:L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
@@ -7415,7 +7415,7 @@ az:Deinstalyasiya məlumatını reyestrə yazmaq mümkün olmadı
 br:Falha na gravação dos dados de desinstalação no registro
 cn:将卸载所需信息写进注册表时失败了
 de:Konnte keine Deinstallations-Informationen in die Registry schreiben
-es:Fallo al escribir información de desinstalación al registro
+es:Error al escribir información de desinstalación en el registro
 et:Ei õnnestunud registrisse kirjutada eemaldamise informatsiooni
 eu:Hutsegitea kentze argibideak erregistroan idazterakoan
 fr:L'écriture des informations de désinstallation dans la base de registre a échoué
@@ -7647,7 +7647,7 @@ cz:Velikost souboru:
 de:Dateigröße:
 dk:Filstørrelse:
 el:Μέγεθος Αρχείου:
-es:Tamaño del Archivo:
+es:Tamaño de archivo:
 et:Faili suurus:
 eu:Agiriaren Neurria:
 fa:حجم پرونده:
@@ -8749,7 +8749,7 @@ cz:Položka nalezena na stránce %s (znovu)
 de:Text auf Seite %s gefunden (erneut)
 dk:Tekst er (også) fundet på side %s
 el:Το κείμενο βρέθηκε στη σελίδα %s (πάλι)
-es:Se encontró el texto en la pagina %s (de nuevo)
+es:Se encontró el texto en la página %s (de nuevo)
 et:Leiti tekst leheküljel %s (uuesti)
 eu:Bilatu idazkia %s orrialdean (berriro)
 fa:متن در صفحه‌ی ‌%s پیدا شد (دوباره)
@@ -10662,7 +10662,7 @@ cz:Otevřít v programu Microsoft HTML Help
 de:Mit &Microsoft HTML Hilfe öffnen
 dk:Åbn med Microsoft HTML Help
 el:Άνοιγμα με Microsoft HTML Help
-es:Abrir en Microsoft HTML Help
+es:Abrir en &Microsoft HTML Help
 et:Ava Microsoft HTML Helpga
 eu:Ireki Microsoft HTML Laguntzan
 fa:باز کردن در &Microsoft HTML Help
@@ -10720,7 +10720,7 @@ cz:Otevřít v programu Microsoft XPS-Viewer
 de:Mit &Microsoft XPS-Viewer öffnen
 dk:Åben med Microsoft XPS-Viewer
 el:Άνοιγμα με Microsoft XPS-Viewer
-es:Abrir en Microsoft XPS-Viewer
+es:Abrir en &Microsoft XPS-Viewer
 et:Ava Microsoft XPS-Viewerga
 eu:Ireki Microsoft XPS-Ikusgailuan
 fa:باز کردن در Microsoft X&PS-Viewer
@@ -11077,7 +11077,7 @@ cz:Verze PDF:
 de:PDF Version:
 dk:PDF version:
 el:Έκδοση PDF:
-es:Versión PDF:
+es:Versión de PDF:
 et:PDF-i versioon:
 eu:PDF Bertsioa:
 fa:نسخه‌ی PDF:
@@ -11317,7 +11317,7 @@ cz:Velikost stránky:
 de:Seitengröße:
 dk:Sidestørrelse:
 el:Μέγεθος Σελίδας:
-es:Tamaño de Página:
+es:Tamaño de página:
 et:Lehekülje suurus:
 eu:Orrilde Neurria:
 fa:ابعاد صفحه:
@@ -11546,7 +11546,7 @@ az:Davam etmək üçün %s bağlayın!
 br:Por favor feche %s para continuar!
 cn:请关闭%s后继续!
 de:Bitte schliessen Sie %s vor der Installation!
-es:Por favor cerrar %s para continuar!
+es:¡Para continuar es necesario cerrar %s!
 et:Jätkamiseks palun sulge rakendus %s!
 eu:Mesedez itxi %s jarraitzeko!
 fr:Fermez %s pour continuer, s.v.p. !
@@ -11578,7 +11578,7 @@ cz:Prosím čekejte, probíhá vykreslování...
 de:Bitte einen Moment Geduld…
 dk:Vent venligst - renderer...
 el:Παρακαλώ περιμένετε - φόρτωση...
-es:Espere por favor - procesando...
+es:Espere un momento mientras se carga la visualización...
 et:Palun oota - toimub visualiseerimine...
 eu:Mesedez itxaron - aurkezten...
 fa:لطفاً صبر کنید...
@@ -11866,7 +11866,7 @@ cz:Tisknout jako &obrázek (vyžaduje více paměti)
 de:Als B&ild drucken (benötigt mehr Speicher)
 dk:Print som &Billede (kræver mere hukommelse)
 el:Εκτύπωση ως &εικόνα (απαιτεί περισσότερη μνήμη)
-es:Imprimir como &image (se necesita más memoria)
+es:Imprimir como &imagen (necesita más memoria)
 et:Prindi kui p&ilt (nõuab rohkem mälu)
 eu:Irarkitu I&rudi bezala (oroimen gehiago behar du)
 fa:چاپ به عنوان &عکس (حافظه‌ی بیشتری مصرف می‌شود)
@@ -13796,7 +13796,7 @@ cz:Předmět:
 de:Thema:
 dk:Emne:
 el:Θέμα:
-es:Tema:
+es:Asunto:
 et:Teema:
 eu:Gaia:
 fa:موضوع:
@@ -13845,7 +13845,7 @@ az:SumatraPDF quraşdırıcısı %s
 br:SumatraPDF %s instalador
 cn:SumatraPDF %s 安装程序
 de:SumatraPDF %s installieren
-es:Instalador %s SumatraPDF
+es:Instalador de SumatraPDF %s
 et:SumatraPDF %s paigaldamine
 eu:SumatraPDF %s Ezartzailea
 fr:Installeur de SumatraPDF %s
@@ -13868,7 +13868,7 @@ az:SumatraPDF deinstalyatoru %s
 br:SumatraPDF %s desinstalador
 cn:SumatraPDF %s 卸载程序
 de:SumatraPDF %s deinstallieren
-es:Desinstalador %s SumatraPDF
+es:Desinstalador de SumatraPDF %s
 et:SumatraPDF %s eemaldamine
 eu:SumatraPDF %s Kentzailea
 fr:Désinstalleur de SumatraPDF %s
@@ -14952,7 +14952,7 @@ cz:Používáte nejnovější verzi.
 de:Sie haben die neuste Version installiert.
 dk:Du har den seneste version.
 el:Έχετε την πιο πρόσφατη έκδοση.
-es:Usted tiene la última versión.
+es:Esta es la última versión disponible.
 et:Kasutusel on uusim versioon.
 eu:Azken bertsioa duzu.
 fa:نسخه‌ی شما جدیدترین نسخه است.

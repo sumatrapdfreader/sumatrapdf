@@ -202,9 +202,9 @@ const WCHAR * const gTranslations[] = {
 
   /* Translations for language es */
   L"%s de %s",
-  L"Error: No se puede ejecutar SumatraPDF",
-  L"Error: SumatraPDF no ha sido encontrado",
-  L"Error: El documento no puede ser descargado",
+  L"Error: ¡No se pudo ejecutar SumatraPDF!",
+  L"Error: ¡SumatraPDF no ha sido encontrado!",
+  L"Error: ¡El documento no pudo ser descargado!",
   NULL,
   NULL,
   NULL,
