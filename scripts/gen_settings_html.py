@@ -12,8 +12,12 @@ html_tmpl = """
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Description of SumatraPDF settings</title>
 <style type=text/css>
+body {
+	font-size: 90%;
+}
+
 .cm {
-	color: #aaa;
+	color: #8c8c8c;
 }
 </style>
 </head>
