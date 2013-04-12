@@ -1,0 +1,64 @@
+diff -rPu5 libjpeg-turbo.orig\config.h libjpeg-turbo\config.h
+--- libjpeg-turbo.orig\config.h	Thu Jan 01 01:00:00 1970
++++ libjpeg-turbo\config.h	Fri Apr 12 11:58:03 2013
+@@ -0,0 +1,13 @@
++#define VERSION 1.2.1
++#define BUILD 0
++#define PACKAGE_NAME "libjpeg-turbo"
++
++#ifndef INLINE
++#if defined(__GNUC__)
++#define INLINE __attribute__((always_inline))
++#elif defined(_MSC_VER)
++#define INLINE __forceinline
++#else
++#define INLINE
++#endif
++#endif
+diff -rPu5 libjpeg-turbo.orig\jconfig.h libjpeg-turbo\jconfig.h
+--- libjpeg-turbo.orig\jconfig.h	Thu Jan 01 01:00:00 1970
++++ libjpeg-turbo\jconfig.h	Fri Jul 06 11:21:03 2012
+@@ -0,0 +1,43 @@
++/* jconfig.vc --- jconfig.h for Microsoft Visual C++ on Windows 95 or NT. */
++/* see jconfig.txt for explanations */
++
++#define JPEG_LIB_VERSION 80
++#define LIBJPEG_TURBO_VERSION 1.2.1
++#define C_ARITH_CODING_SUPPORTED
++#define D_ARITH_CODING_SUPPORTED
++
++#define HAVE_PROTOTYPES
++#define HAVE_UNSIGNED_CHAR
++#define HAVE_UNSIGNED_SHORT
++/* #define void char */
++/* #define const */
++#undef CHAR_IS_UNSIGNED
++#define HAVE_STDDEF_H
++#define HAVE_STDLIB_H
++#undef NEED_BSD_STRINGS
++#undef NEED_SYS_TYPES_H
++#undef NEED_FAR_POINTERS	/* we presume a 32-bit flat memory model */
++#undef NEED_SHORT_EXTERNAL_NAMES
++#undef INCOMPLETE_TYPES_BROKEN
++
++/* Define "boolean" as unsigned char, not int, per Windows custom */
++#ifndef __RPCNDR_H__		/* don't conflict if rpcndr.h already read */
++typedef unsigned char boolean;
++#endif
++#define HAVE_BOOLEAN		/* prevent jmorecfg.h from redefining it */
++
++/* Define "INT32" as int, not long, per Windows custom */
++#if !(defined(_BASETSD_H_) || defined(_BASETSD_H))   /* don't conflict if basetsd.h already read */
++typedef short INT16;
++typedef signed int INT32;
++#endif
++#define XMD_H                   /* prevent jmorecfg.h from redefining it */
++
++#ifdef JPEG_INTERNALS
++
++#undef RIGHT_SHIFT_IS_UNSIGNED
++
++#endif /* JPEG_INTERNALS */
++
++/* SumatraPDF: enable SIMD under Win32 */
++#define WITH_SIMD

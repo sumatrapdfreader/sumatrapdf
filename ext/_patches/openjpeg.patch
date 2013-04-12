@@ -15,7 +15,7 @@ diff -rPu5 openjpeg.orig\image.c openjpeg\image.c
  
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Thu Sep 13 09:58:39 2012
-+++ openjpeg\j2k.c	Tue Apr 09 18:47:22 2013
++++ openjpeg\j2k.c	Tue Apr 09 20:53:17 2013
 @@ -420,11 +420,11 @@
  	cp->tx0 = cio_read(cio, 4);		/* XT0siz */
  	cp->ty0 = cio_read(cio, 4);		/* YT0siz */
@@ -233,7 +233,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  					tcp_poc->layno1		= parameters->POC[numpocs_tile].layno1;
 diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
 --- openjpeg.orig\jp2.c	Thu Sep 13 09:58:39 2012
-+++ openjpeg\jp2.c	Tue Apr 09 18:47:56 2013
++++ openjpeg\jp2.c	Tue Apr 09 20:53:17 2013
 @@ -171,10 +171,15 @@
  			box->length = cio_numbytesleft(cio) + 12;
  	}

@@ -14,7 +14,7 @@
 //C- but WITHOUT ANY WARRANTY; without even the implied warranty of
 //C- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //C- GNU General Public License for more details.
-//C-
+//C- 
 //C- DjVuLibre-3.5 is derived from the DjVu(r) Reference Library from
 //C- Lizardtech Software.  Lizardtech Software has authorized us to
 //C- replace the original DjVu(r) Reference Library notice by the following
@@ -35,16 +35,16 @@
 //C- | The computer code originally released by LizardTech under this
 //C- | license and unmodified by other parties is deemed "the LIZARDTECH
 //C- | ORIGINAL CODE."  Subject to any third party intellectual property
-//C- | claims, LizardTech grants recipient a worldwide, royalty-free,
-//C- | non-exclusive license to make, use, sell, or otherwise dispose of
-//C- | the LIZARDTECH ORIGINAL CODE or of programs derived from the
-//C- | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU
-//C- | General Public License.   This grant only confers the right to
-//C- | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to
-//C- | the extent such infringement is reasonably necessary to enable
-//C- | recipient to make, have made, practice, sell, or otherwise dispose
-//C- | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to
-//C- | any greater extent that may be necessary to utilize further
+//C- | claims, LizardTech grants recipient a worldwide, royalty-free, 
+//C- | non-exclusive license to make, use, sell, or otherwise dispose of 
+//C- | the LIZARDTECH ORIGINAL CODE or of programs derived from the 
+//C- | LIZARDTECH ORIGINAL CODE in compliance with the terms of the GNU 
+//C- | General Public License.   This grant only confers the right to 
+//C- | infringe patent claims underlying the LIZARDTECH ORIGINAL CODE to 
+//C- | the extent such infringement is reasonably necessary to enable 
+//C- | recipient to make, have made, practice, sell, or otherwise dispose 
+//C- | of the LIZARDTECH ORIGINAL CODE (or portions thereof) and not to 
+//C- | any greater extent that may be necessary to utilize further 
 //C- | modifications or combinations.
 //C- |
 //C- | The LIZARDTECH ORIGINAL CODE is provided "AS IS" WITHOUT WARRANTY
@@ -77,7 +77,7 @@
     C++ exceptions or an exception emulation based on #longjmp#/#setjmp#. A
     particular model can be forced a compile time by defining option
     #CPP_SUPPORTS_EXCEPTIONS# or #USE_EXCEPTION_EMULATION#.
-
+    
     This emulation code was motivated because many compilers did not properly
     support exceptions as mandated by the C++ standard documents. This
     emulation is now considered obsolete because (a) it is not able to call
@@ -86,12 +86,12 @@
     exception handling intrinsics are not always thread safe.  Therefore we
     urge programmers to {\em only} use exceptions to signal error conditions
     that force the library to discontinue execution.
-
+    
     There are four macros for handling exceptions.  Macros #G_TRY#, #G_CATCH# and
     #G_ENDCATCH# are used to define an exception catching block.  Exceptions can
     be thrown at all times using macro #G_THROW(cause)#. An exception can be
     re-thrown from a catch block using macro #G_RETHROW#.
-
+    
     Example:
     \begin{verbatim}
     G_TRY
@@ -99,19 +99,19 @@
         // program lines which may result in a call to THROW()
         G_THROW("message");
       }
-    G_CATCH(ex)
+    G_CATCH(ex) 
       {
         // Variable ex refers to a GException object.
-        ex.perror();
+        ex.perror();  
         // You can rethrow the exception to an outer exception handler.
         G_RETHROW;
       }
     G_ENDCATCH;
-    \end{verbatim}
+    \end{verbatim} 
 
-    @memo
+    @memo 
     Portable exceptions.
-    @author
+    @author 
     L\'eon Bottou <leonb@research.att.com> -- initial implementation.\\
     Andrei Erofeev <eaf@geocities.com> -- fixed message memory allocation.
 */
@@ -153,7 +153,7 @@ namespace DJVU {
 # endif
 #endif
 
-/** Exception class.
+/** Exception class.  
     The library always uses macros #G_TRY#, #G_THROW#, #G_CATCH# and #G_ENDCATCH# for
     throwing and catching exceptions (see \Ref{GException.h}). These macros
     only deal with exceptions of type #GException#. */
@@ -168,27 +168,27 @@ public:
       interrupts the execution. The remaining arguments are usually provided
       by the predefined macros #__FILE__#, #__LINE__#, and (G++ and EGCS only)
       #__PRETTY_FUNCTION__#.  */
-  GException (const char *cause, const char *file=0, int line=0,
+  GException (const char *cause, const char *file=0, int line=0, 
               const char *func=0, const source_type source=GINTERNAL);
 
   /** Copy Constructor. */
   GException (const GException & exc);
-
+  
   /** Null Constructor. */
   GException ();
-
+  
   /** Destructor. */
   virtual ~GException(void);
-
+  
   /** Copy Operator. */
   GException & operator=(const GException & exc);
-
+  
   /** Prints an error message on stderr.
-      This function no longer takes a message parameter because
+      This function no longer takes a message parameter because 
       some instances used a i18n message id and other instances
       used a literal string. */
   void perror(void) const;
-
+  
   /** Returns the string describing the cause of the exception.  The returned
       pointer is never null.  Exception handlers should not rely on the value
       of the string #cause#.  As a convention however, string
@@ -212,18 +212,18 @@ public:
   /** Returns the function name from which the exception was thrown.
       A null pointer is returned if no function name is available. */
   const char* get_function(void) const { return func; }
-
+  
   /** Returns the file name from which the exception was thrown.
       A null pointer is returned if no file name is available. */
   const char* get_file(void) const { return file; }
-
+ 
   /** Returns the exception source */
   source_type get_source(void) const { return source; }
-
+ 
   /** Returns the line number from which the exception was thrown.
       A zero is returned if no line number is available. */
   int get_line(void) const { return line; };
-
+  
   //  Magic cause string
   static const char * const outofmemory;
 
@@ -265,9 +265,9 @@ public:
 };
 
 #define G_TRY        try
-#define G_CATCH(n)   catch(const GException &n) {
-#define G_CATCH_ALL   catch(...) {
-#define G_ENDCATCH   }
+#define G_CATCH(n)   catch(const GException &n) { 
+#define G_CATCH_ALL   catch(...) { 
+#define G_ENDCATCH   } 
 #define G_RETHROW    GExceptionHandler::rethrow()
 #define G_EMTHROW(ex)  GExceptionHandler::exthrow(ex)
 #ifdef __GNUG__
@@ -300,7 +300,7 @@ public:
                       if (!setjmp(__exh.jump)) \
                       { GExceptionHandler::head = &__exh;
 
-#define G_CATCH_ALL } else { GExceptionHandler::head = __exh.next;
+#define G_CATCH_ALL } else { GExceptionHandler::head = __exh.next; 
 #define G_CATCH(n) G_CATCH_ALL const GException& n = __exh.current;
 
 #define G_ENDCATCH } } while(0)
@@ -309,12 +309,12 @@ public:
 
 #ifdef __GNUG__
 #define G_THROW_TYPE(msg,xtype) GExceptionHandler::emthrow \
-  (GException(msg, __FILE__, __LINE__, __PRETTY_FUNCTION__, xtype))
+  (GException(msg, __FILE__, __LINE__, __PRETTY_FUNCTION__, xtype)) 
 #define G_EMTHROW(ex) GExceptionHandler::emthrow(ex)
 #else
 // SumatraPDF: don't collect messages, file and line for smaller size
 #define G_THROW_TYPE(m,xtype) GExceptionHandler::emthrow \
-  (GException(0, 0, 0,0, xtype))
+  (GException(0, 0, 0, 0, xtype))
 #define G_EMTHROW(ex) GExceptionHandler::emthrow(ex)
 #endif
 

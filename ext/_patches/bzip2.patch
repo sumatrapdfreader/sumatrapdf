@@ -1,0 +1,24 @@
+diff -rPu5 bzip2.orig\bz_internal_error.c bzip2\bz_internal_error.c
+--- bzip2.orig\bz_internal_error.c	Thu Jan 01 01:00:00 1970
++++ bzip2\bz_internal_error.c	Sun Feb 05 23:13:51 2012
+@@ -0,0 +1,8 @@
++/* Use when compiling with BZ_NO_STDIO */
++
++#include <assert.h>
++
++void bz_internal_error(int errcode)
++{
++	assert(0);
++}
+diff -rPu5 bzip2.orig\bzip_all.c bzip2\bzip_all.c
+--- bzip2.orig\bzip_all.c	Thu Jan 01 01:00:00 1970
++++ bzip2\bzip_all.c	Tue Mar 19 10:17:15 2013
+@@ -0,0 +1,8 @@
++#include "blocksort.c"
++#include "bzlib.c"
++#include "compress.c"
++#include "crctable.c"
++#include "decompress.c"
++#include "huffman.c"
++#include "randtable.c"
++#include "bz_internal_error.c"

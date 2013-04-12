@@ -57,7 +57,8 @@ Jbig2Image* jbig2_image_new(Jbig2Ctx *ctx, int width, int height)
             jbig2_free(ctx->allocator, image);
             return NULL;
         }
-        image->data = jbig2_new(ctx, uint8_t, (int)check);
+        /* Add 1 to accept runs that exceed image width and clamped to width+1 */
+        image->data = jbig2_new(ctx, uint8_t, (int)check + 1);
 	if (image->data == NULL) {
         jbig2_error(ctx, JBIG2_SEVERITY_FATAL, -1,
             "could not allocate image data buffer! [stride(%d)*height(%d) bytes]",

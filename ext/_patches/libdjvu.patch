@@ -81,7 +81,7 @@ diff -rPu5 libdjvu.orig\DjVuGlobal.h libdjvu\DjVuGlobal.h
  # endif
 diff -rPu5 libdjvu.orig\GException.cpp libdjvu\GException.cpp
 --- libdjvu.orig\GException.cpp	Tue May 08 04:56:53 2012
-+++ libdjvu\GException.cpp	Thu Dec 27 14:37:42 2012
++++ libdjvu\GException.cpp	Fri Apr 12 12:21:01 2013
 @@ -251,10 +251,12 @@
  
  
@@ -107,6 +107,52 @@ diff -rPu5 libdjvu.orig\GException.cpp libdjvu\GException.cpp
  #ifdef HAVE_NAMESPACES
  }
  # ifndef NOT_USING_DJVU_NAMESPACE
+diff -rPu5 libdjvu.orig\GException.h libdjvu\GException.h
+--- libdjvu.orig\GException.h	Tue May 08 04:56:53 2012
++++ libdjvu\GException.h	Fri Apr 12 12:42:24 2013
+@@ -310,12 +310,13 @@
+ #ifdef __GNUG__
+ #define G_THROW_TYPE(msg,xtype) GExceptionHandler::emthrow \
+   (GException(msg, __FILE__, __LINE__, __PRETTY_FUNCTION__, xtype)) 
+ #define G_EMTHROW(ex) GExceptionHandler::emthrow(ex)
+ #else
++// SumatraPDF: don't collect messages, file and line for smaller size
+ #define G_THROW_TYPE(m,xtype) GExceptionHandler::emthrow \
+-  (GException(m, __FILE__, __LINE__,0, xtype))
++  (GException(0, 0, 0, 0, xtype))
+ #define G_EMTHROW(ex) GExceptionHandler::emthrow(ex)
+ #endif
+ 
+ #endif // !CPP_SUPPORTS_EXCEPTIONS
+ 
+diff -rPu5 libdjvu.orig\GOS.cpp libdjvu\GOS.cpp
+--- libdjvu.orig\GOS.cpp	Tue May 08 04:56:53 2012
++++ libdjvu\GOS.cpp	Fri Apr 12 12:48:52 2013
+@@ -238,10 +238,12 @@
+   return retval;
+ }
+ 
+ 
+ 
++// SumatraPDF: due to changes in GException.h, this function is no longer used
++#if 0
+ // errmsg --
+ // -- A small helper function returning a 
+ //    stdio error message in a static buffer.
+ 
+ static GNativeString 
+@@ -250,10 +252,11 @@
+   GNativeString buffer;
+   const char *errname = strerror(errno);
+   buffer.format("%s (errno = %d)", errname, errno);
+   return buffer;
+ }
++#endif
+ 
+ 
+ 
+ // -----------------------------------------
+ // Functions for measuring time
 diff -rPu5 libdjvu.orig\GThreads.h libdjvu\GThreads.h
 --- libdjvu.orig\GThreads.h	Tue May 08 04:56:53 2012
 +++ libdjvu\GThreads.h	Sat Aug 18 20:17:23 2012
@@ -142,7 +188,7 @@ diff -rPu5 libdjvu.orig\GURL.cpp libdjvu\GURL.cpp
  }
 diff -rPu5 libdjvu.orig\miniexp.cpp libdjvu\miniexp.cpp
 --- libdjvu.orig\miniexp.cpp	Tue May 08 04:56:53 2012
-+++ libdjvu\miniexp.cpp	Sat Aug 18 20:13:23 2012
++++ libdjvu\miniexp.cpp	Fri Apr 12 12:26:15 2013
 @@ -899,11 +899,12 @@
  }
  
@@ -157,6 +203,32 @@ diff -rPu5 libdjvu.orig\miniexp.cpp libdjvu\miniexp.cpp
  const char *
  miniexp_to_str(miniexp_t p)
  {
+@@ -1333,10 +1334,13 @@
+ }
+ 
+ 
+ /* ---- PNAME */
+ 
++// SumatraPDF: don't compile as it's not used and it's the only place
++// using try/catch, which is not compatible with compiling as /EHs-c-
++#if 0
+ static int
+ pname_fputs(miniexp_io_t *io, const char *s)
+ {
+   char *b = (char*)(io->data[0]);
+   size_t l = (size_t)(io->data[2]);
+@@ -1380,10 +1384,11 @@
+     {
+       delete [] (char*)(io.data[0]);
+     }
+   return r;
+ }
++#endif
+ 
+ 
+ /* ---- INPUT */
+ 
+ static void
 diff -rPu5 libdjvu.orig\miniexp.h libdjvu\miniexp.h
 --- libdjvu.orig\miniexp.h	Tue May 08 04:56:53 2012
 +++ libdjvu\miniexp.h	Sat Aug 18 20:14:08 2012

@@ -437,8 +437,9 @@ typedef struct {
   size_t size;
 } Jbig2WordStreamBuf;
 
-static uint32_t
-jbig2_word_stream_buf_get_next_word(Jbig2WordStream *self, int offset)
+static int
+jbig2_word_stream_buf_get_next_word(Jbig2WordStream *self, int offset,
+  uint32_t *word)
 {
   Jbig2WordStreamBuf *z = (Jbig2WordStreamBuf *)self;
   const byte *data = z->data;
@@ -448,7 +449,7 @@ jbig2_word_stream_buf_get_next_word(Jbig2WordStream *self, int offset)
     result = (data[offset] << 24) | (data[offset + 1] << 16) |
       (data[offset + 2] << 8) | data[offset + 3];
   else if (offset >= z->size)
-    return 0;
+    return -1;
   else
     {
       int i;
@@ -457,7 +458,8 @@ jbig2_word_stream_buf_get_next_word(Jbig2WordStream *self, int offset)
       for (i = 0; i < z->size - offset; i++)
 	result |= data[offset + i] << ((3 - i) << 3);
     }
-  return result;
+  *word = result;
+  return 0;
 }
 
 Jbig2WordStream *

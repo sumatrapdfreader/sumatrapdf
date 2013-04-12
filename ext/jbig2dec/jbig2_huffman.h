@@ -76,7 +76,7 @@ jbig2_huffman_get (Jbig2HuffmanState *hs,
 		   const Jbig2HuffmanTable *table, bool *oob);
 
 int32_t
-jbig2_huffman_get_bits (Jbig2HuffmanState *hs, const int bits);
+jbig2_huffman_get_bits (Jbig2HuffmanState *hs, const int bits, int *err);
 
 #ifdef JBIG2_DEBUG
 void jbig2_dump_huffman_state(Jbig2HuffmanState *hs);

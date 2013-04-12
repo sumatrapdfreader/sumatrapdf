@@ -1,6 +1,6 @@
 diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
---- CHMLib.orig\src\chm_lib.c	Thu Jul 02 23:34:54 2009
-+++ CHMLib\src\chm_lib.c	Tue Apr 09 20:13:03 2013
+--- CHMLib.orig\src\chm_lib.c	Fri Jul 03 08:34:54 2009
++++ CHMLib\src\chm_lib.c	Tue Apr 09 20:53:17 2013
 @@ -92,11 +92,11 @@
  #ifdef WIN32
  #define CHM_ACQUIRE_LOCK(a) do {                        \
@@ -232,7 +232,7 @@ diff -rPu5 CHMLib.orig\src\chm_lib.c CHMLib\src\chm_lib.c
          }
          end = page_buf + h->block_len - (header.free_space);
 diff -rPu5 CHMLib.orig\src\lzx.c CHMLib\src\lzx.c
---- CHMLib.orig\src\lzx.c	Thu Jul 02 23:34:54 2009
+--- CHMLib.orig\src\lzx.c	Fri Jul 03 08:34:54 2009
 +++ CHMLib\src\lzx.c	Mon Oct 01 12:36:01 2012
 @@ -175,11 +175,11 @@
      /* if a previously allocated window is big enough, keep it     */

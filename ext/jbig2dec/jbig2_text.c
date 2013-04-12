@@ -112,7 +112,9 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 
 	/* parse and build the runlength code huffman table */
 	for (index = 0; index < 35; index++) {
-	  runcodelengths[index].PREFLEN = jbig2_huffman_get_bits(hs, 4);
+	  runcodelengths[index].PREFLEN = jbig2_huffman_get_bits(hs, 4, &code);
+	  if (code < 0)
+	    goto cleanup1;
 	  runcodelengths[index].RANGELEN = 0;
 	  runcodelengths[index].RANGELOW = index;
 	  jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
@@ -162,9 +164,12 @@ jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
 	    } else {
 	      len = 0; /* code == 33 or 34 */
 	    }
-	    if (code == 32) range = jbig2_huffman_get_bits(hs, 2) + 3;
-	    else if (code == 33) range = jbig2_huffman_get_bits(hs, 3) + 3;
-	    else if (code == 34) range = jbig2_huffman_get_bits(hs, 7) + 11;
+	    err = 0;
+	    if (code == 32) range = jbig2_huffman_get_bits(hs, 2, &err) + 3;
+	    else if (code == 33) range = jbig2_huffman_get_bits(hs, 3, &err) + 3;
+	    else if (code == 34) range = jbig2_huffman_get_bits(hs, 7, &err) + 11;
+	    if (err < 0)
+	      goto cleanup1;
 	  }
 	  jbig2_error(ctx, JBIG2_SEVERITY_DEBUG, segment->number,
 	    "  read runcode%d at index %d (length %d range %d)", code, index, len, range);
@@ -274,11 +279,11 @@ cleanup1:
 	    if (params->SBSTRIPS == 1) {
 		CURT = 0;
 	    } else if (params->SBHUFF) {
-		CURT = jbig2_huffman_get_bits(hs, params->LOGSBSTRIPS);
+		CURT = jbig2_huffman_get_bits(hs, params->LOGSBSTRIPS, &code);
 	    } else {
 		code = jbig2_arith_int_decode(params->IAIT, as, &CURT);
-                if (code < 0) goto cleanup2;
 	    }
+	    if (code < 0) goto cleanup2;
 	    T = STRIPT + CURT;
 
 	    /* (3b.iv) / 6.4.10 - decode the symbol id */
@@ -311,11 +316,11 @@ cleanup1:
 	    }
 	    if (params->SBREFINE) {
 	      if (params->SBHUFF) {
-		RI = jbig2_huffman_get_bits(hs, 1);
+		RI = jbig2_huffman_get_bits(hs, 1, &code);
 	      } else {
 		code = jbig2_arith_int_decode(params->IARI, as, &RI);
-        if (code < 0) goto cleanup2;
 	      }
+	      if (code < 0) goto cleanup2;
 	    } else {
 		RI = 0;
 	    }

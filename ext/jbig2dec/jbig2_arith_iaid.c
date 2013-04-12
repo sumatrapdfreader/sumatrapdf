@@ -86,6 +86,8 @@ jbig2_arith_iaid_decode(Jbig2ArithIaidCtx *ctx, Jbig2ArithState *as,
   for (i = 0; i < SBSYMCODELEN; i++)
     {
       D = jbig2_arith_decode(as, &IAIDx[PREV]);
+      if (D < 0)
+	return -1;
 #ifdef VERBOSE
       fprintf(stderr, "IAID%x: D = %d\n", PREV, D);
 #endif
