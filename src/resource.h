@@ -129,9 +129,9 @@
 #define IDC_DEFAULT_ZOOM_LABEL          1024
 #define IDC_DEFAULT_ZOOM                1025
 #define IDC_DEFAULT_SHOW_TOC            1026
-#define IDC_GLOBAL_PREFS_ONLY           1027
+#define IDC_REMEMBER_STATE_PER_DOCUMENT 1027
 #define IDC_SECTION_ADVANCED            1028
-#define IDC_AUTO_UPDATE_CHECKS          1029
+#define IDC_CHECK_FOR_UPDATES           1029
 #define IDC_SET_DEFAULT_READER          1030
 #define IDC_REMEMBER_OPENED_FILES       1031
 #define IDC_FIND_EDIT                   1032

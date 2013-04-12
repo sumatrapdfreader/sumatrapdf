@@ -226,12 +226,12 @@ BEGIN
     COMBOBOX        IDC_DEFAULT_ZOOM,120,34,108,149,CBS_DROPDOWN | WS_TABSTOP
     CONTROL         "Show the &bookmarks sidebar when available",IDC_DEFAULT_SHOW_TOC,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,53,216,9
-    CONTROL         "&Remember these settings for each document",IDC_GLOBAL_PREFS_ONLY,
+    CONTROL         "&Remember these settings for each document",IDC_REMEMBER_STATE_PER_DOCUMENT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,66,216,9
     CONTROL         "Replace document &colors with Windows color scheme",IDC_USE_SYS_COLORS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,79,216,9
     GROUPBOX        "Advanced",IDC_SECTION_ADVANCED,6,100,228,57
-    CONTROL         "Automatically check for &updates",IDC_AUTO_UPDATE_CHECKS,
+    CONTROL         "Automatically check for &updates",IDC_CHECK_FOR_UPDATES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,110,216,9
     CONTROL         "Remember &opened files",IDC_REMEMBER_OPENED_FILES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,123,216,9
     PUSHBUTTON      "Make SumatraPDF a default PDF reader",IDC_SET_DEFAULT_READER,12,137,216,14
