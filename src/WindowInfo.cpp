@@ -8,7 +8,7 @@
 #include "Notifications.h"
 #include "PdfSync.h"
 #include "Print.h"
-#include "Resource.h"
+#include "resource.h"
 #include "Selection.h"
 #include "StressTesting.h"
 #include "SumatraPDF.h"

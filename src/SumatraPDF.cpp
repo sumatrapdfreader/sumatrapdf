@@ -33,7 +33,7 @@ using namespace Gdiplus;
 #include "Print.h"
 #include "PsEngine.h"
 #include "RenderCache.h"
-#include "Resource.h"
+#include "resource.h"
 #include "Search.h"
 #include "Selection.h"
 #include "SquareTreeParser.h"

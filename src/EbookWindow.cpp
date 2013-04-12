@@ -17,7 +17,7 @@ using namespace Gdiplus;
 #include "GdiPlusUtil.h"
 #include "Menu.h"
 #include "MobiDoc.h"
-#include "Resource.h"
+#include "resource.h"
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
 #include "SumatraPDF.h"
