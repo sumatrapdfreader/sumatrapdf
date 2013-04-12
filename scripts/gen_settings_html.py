@@ -17,12 +17,18 @@ body {
 	background-color: #f5f5f5;
 }
 
-.txt {
+.txt1 {
+	/* bold doesn't look good in the fonts above */
 	font-family: Monaco, 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Lucida Console', monospace;
 	font-size: 88%;
 	color: #800; /* this is brown */
-	/* tried to emphasize values with bold but it doesn't look good */
-	/* font-weight: bold; */
+}
+
+.txt {
+	font-family: Verdana, Arial, sans-serif;
+	font-size: 90%;
+	font-weight: bold;
+	color: #800; /* this is brown */
 }
 
 .cm {
@@ -55,6 +61,8 @@ what is their default value:</p>
 </html>
 """
 
+indent_str = "&nbsp;&nbsp;"
+
 def gen_comment(comment, start, first = False):
 	line_len = 80
 	s = start + '<span class=cm>'
@@ -83,7 +91,7 @@ def gen_struct(struct, comment=None, indent=""):
 		if type(field) in [Struct, Array] and not field.type.name == "Compact":
 			lines += gen_comment(field.comment, indent, first)
 			#lines += ["%s%s [" % (indent, field.name), gen_struct(field, None, indent + "  "), "%s]" % indent, ""]
-			lines += ["%s%s [" % (indent, field.name), gen_struct(field, None, indent + "  "), "%s]" % indent]
+			lines += ["%s%s [" % (indent, field.name), gen_struct(field, None, indent + indent_str), "%s]" % indent]
 		else:
 			s = field.inidefault(commentChar="").lstrip()
 			lines += gen_comment(field.comment, indent, first) + [indent + s]
