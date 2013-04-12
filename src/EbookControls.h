@@ -14,10 +14,9 @@ using namespace mui;
 
 // controls managed by EbookController
 struct EbookControls {
+    ParsedMui *         muiDef;
     HwndWrapper *       mainWnd;
     PageControl *       page;
-    //ButtonVector *      next;
-    //ButtonVector *      prev;
     ScrollBar *         progress;
     Button *            status;
     ILayout *           topPart;

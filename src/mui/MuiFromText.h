@@ -16,7 +16,6 @@ public:
     Vec<Button*>        buttons;
     Vec<ScrollBar*>     scrollBars;
     Vec<ILayout*>       layouts;
-    Vec<Style*>         styles;
 };
 
 bool            MuiFromText(char *s, ParsedMui& res);

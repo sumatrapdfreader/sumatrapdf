@@ -263,9 +263,28 @@ static void AddStyleProp(Style *style, TxtNode *prop)
     CrashIf(true);
 }
 
-static Style* StyleFromStruct(TxtNode* def)
+static TxtNode *TxtChildNodeWithKey(TxtNode *top, const char *keyName)
+{
+    size_t n = top->children->Count();
+    for (size_t i = 0; i < n; i++) {
+        TxtNode *node = top->children->At(i);
+        if (node->IsTextWithKey(keyName))
+            return node;
+    }
+    return NULL;
+}
+
+// styles are cached globally, so we only add a style if it doesn't
+// exist already
+static void CacheStyleFromStruct(TxtNode* def)
 {
     CrashIf(!def->IsStructWithName("style"));
+    TxtNode *nameNode = TxtChildNodeWithKey(def, "name");
+    CrashIf(!nameNode); // must have name or else no way to refer to it
+    ScopedMem<char> tmp(nameNode->ValDup());
+    if (StyleByName(tmp))
+        return;
+
     Style *style = new Style();
     size_t n = def->children->Count();
     for (size_t i = 0; i < n; i++) {
@@ -274,7 +293,6 @@ static Style* StyleFromStruct(TxtNode* def)
         AddStyleProp(style, node);
     }
     CacheStyle(style);
-    return style;
 }
 
 static ButtonVector* ButtonVectorFromDef(TxtNode* structDef)
@@ -389,7 +407,7 @@ static void ParseMuiDefinition(TxtNode *root, ParsedMui& res)
         TxtNode *node = *n;
         CrashIf(!node->IsStruct());
         if (node->IsStructWithName("Style")) {
-            res.styles.Append(StyleFromStruct(node));
+            CacheStyleFromStruct(node);
         } else if (node->IsStructWithName("ButtonVector")) {
             ButtonVector *b = ButtonVectorFromDef(node);
             res.allControls.Append(b);

@@ -16,8 +16,6 @@
 
 static HCURSOR      gCursorHand = NULL;
 
-static ParsedMui    gEbookMuiDef;
-
 #if 0
 static Rect RectForCircle(int x, int y, int r)
 {
@@ -124,43 +122,46 @@ EbookControls *CreateEbookControls(HWND hwnd)
     if (!gCursorHand) {
         RegisterControlCreatorFor("EbookPage", &CreatePageControl);
         gCursorHand  = LoadCursor(NULL, IDC_HAND);
-        char *s = LoadTextResource(IDD_EBOOK_WIN_DESC);
-        MuiFromText(s, gEbookMuiDef);
-        free(s);
-        // update the background color from the prefs
-        Style *styleMainWnd = StyleByName("styleMainWnd");
-        CrashIf(!styleMainWnd);
-        COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
-        if (gGlobalPrefs->useSysColors)
-            bgColor = GetSysColor(COLOR_WINDOW);
-        styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValue(bgColor), GetGValue(bgColor), GetBValue(bgColor)));
     }
 
+    ParsedMui *muiDef = new ParsedMui();
+    char *s = LoadTextResource(IDD_EBOOK_WIN_DESC);
+    MuiFromText(s, *muiDef);
+    free(s);
+
     EbookControls *ctrls = new EbookControls;
-    //ctrls->next = FindButtonVectorNamed(gEbookMuiDef, "nextButton");
-    //CrashIf(!ctrls->next);
-    //ctrls->prev = FindButtonVectorNamed(gEbookMuiDef, "prevButton");
-    //CrashIf(!ctrls->prev);
-    ctrls->status = FindButtonNamed(gEbookMuiDef, "statusButton");
+    ctrls->muiDef = muiDef;
+    CrashIf(!FindButtonVectorNamed(*muiDef, "nextButton"));
+    CrashIf(!FindButtonVectorNamed(*muiDef, "prevButton"));
+    ctrls->status = FindButtonNamed(*muiDef, "statusButton");
     CrashIf(!ctrls->status);
-    ctrls->progress = FindScrollBarNamed(gEbookMuiDef, "progressScrollBar");
+    ctrls->progress = FindScrollBarNamed(*muiDef, "progressScrollBar");
     CrashIf(!ctrls->progress);
     ctrls->progress->hCursor = gCursorHand;
-    ctrls->page = (PageControl*)FindControlNamed(gEbookMuiDef, "page");
+    ctrls->page = (PageControl*)FindControlNamed(*muiDef, "page");
     CrashIf(!ctrls->page);
-    ctrls->topPart = FindLayoutNamed(gEbookMuiDef, "top");
+    ctrls->topPart = FindLayoutNamed(*muiDef, "top");
     CrashIf(!ctrls->topPart);
 
     ctrls->mainWnd = new HwndWrapper(hwnd);
     ctrls->mainWnd->SetMinSize(Size(320, 200));
     Style *styleMainWnd = StyleByName("styleMainWnd");
     CrashIf(!styleMainWnd);
+
+    // update the background color from the prefs
+    CrashIf(!styleMainWnd);
+    COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
+    if (gGlobalPrefs->useSysColors)
+        bgColor = GetSysColor(COLOR_WINDOW);
+    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValue(bgColor), GetGValue(bgColor), GetBValue(bgColor)));
+
+
     ctrls->mainWnd->SetStyle(styleMainWnd);
-    ctrls->mainWnd->layout = FindLayoutNamed(gEbookMuiDef, "mainLayout");
+    ctrls->mainWnd->layout = FindLayoutNamed(*muiDef, "mainLayout");
     CrashIf(!ctrls->mainWnd->layout);
 
-    for (size_t i = 0; i < gEbookMuiDef.allControls.Count(); i++) {
-        Control *c = gEbookMuiDef.allControls.At(i);
+    for (size_t i = 0; i < muiDef->allControls.Count(); i++) {
+        Control *c = muiDef->allControls.At(i);
         ctrls->mainWnd->AddChild(c);
     }
     return ctrls;
@@ -170,5 +171,6 @@ void DestroyEbookControls(EbookControls* ctrls)
 {
     delete ctrls->mainWnd;
     delete ctrls->topPart;
+    delete ctrls->muiDef;
     delete ctrls;
 }
