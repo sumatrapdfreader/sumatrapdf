@@ -133,35 +133,40 @@ def print_side_by_size(diff):
 	s = "\n".join(lines)
 	print(s)
 
-def print_seq(diff, max=-1):
+def diff_as_str(diff, max=-1):
+	lines = []
 	added = diff.added
 	if len(added) > 0:
-		print("\nAdded symbols:")
+		lines.append("\nAdded symbols:")
 		if max != -1:
 			added = added[:max]
 		for sym in added:
 			#sym = diff.syms2.name_to_sym[sym_name]
 			size = sym.size
-			print("%4d : %s" % (size, sym.full_name()))
+			s = "%4d : %s" % (size, sym.full_name())
+			lines.append(s)
 
 	removed = diff.removed
 	if len(removed) > 0:
-		print("\nRemoved symbols:")
+		lines.append("\nRemoved symbols:")
 		if max != -1:
 			removed = removed[:max]
 		for sym in removed:
 			#sym = diff.syms2.name_to_sym[sym_name]
 			size = sym.size
-			print("%4d : %s" % (size, sym.full_name()))
+			s = "%4d : %s" % (size, sym.full_name())
+			lines.append(s)
 
 	changed = diff.changed
 	if len(changed) > 0:
-		print("\nChanged symbols:")
+		lines.append("\nChanged symbols:")
 		if max != -1:
 			changed = changed[:max]
 		for sym in changed:
 			size = sym.size_diff
-			print("%4d : %s" % (size, sym.full_name()))
+			s = "%4d : %s" % (size, sym.full_name())
+			lines.append(s)
+	return "\n".join(lines)
 
 def diff_efi(efi1_path, efi2_path):
 	obj_file_splitters = ["obj-rel\\", "INTEL\\"]
@@ -169,11 +174,12 @@ def diff_efi(efi1_path, efi2_path):
 	efi2 = efiparse.parse_file(efi2_path, obj_file_splitters)
 	diff = efiparse.diff(efi1, efi2)
 	#print("Diffing done")
-	print(diff)
+	s = str(diff)
 	diff.added.sort(key=lambda sym: sym.size, reverse=True)
 	diff.removed.sort(key=lambda sym: sym.size, reverse=True)
 	diff.changed.sort(key=lambda sym: sym.size_diff, reverse=True)
-	print_seq(diff)
+	s = s + diff_as_str(diff)
+	return s
 
 # compare the build of the current state of the tree (including changes not
 # checked in) with the last svn revision.
@@ -187,7 +193,10 @@ def cmp_with_last():
 	os.chdir(g_src_dir)
 	build_clean(latest_ver + 1)
 	build_efi_result_current()
-	diff_efi(efi_result_bz2_file(latest_ver), "efi.txt.bz2")
+	s = diff_efi(efi_result_bz2_file(latest_ver), "efi.txt.bz2")
+	print(s)
+	with open("last_efi_cmp.txt", "w") as fo:
+		fo.write(s)
 
 def main():
 	# early checks
@@ -210,7 +219,8 @@ def main():
 	build_efi_result(svn_ver1)
 	build_ver(svn_ver2)
 	build_efi_result(svn_ver2)
-	diff_efi(efi_result_bz2_file(svn_ver1), efi_result_bz2_file(svn_ver2))
+	s = diff_efi(efi_result_bz2_file(svn_ver1), efi_result_bz2_file(svn_ver2))
+	print(s)
 
 if __name__ == "__main__":
 	main()
