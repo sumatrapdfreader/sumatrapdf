@@ -238,8 +238,8 @@ GOS::basename(const GUTF8String &gfname, const char *suffix)
   return retval;
 }
 
-
-
+// SumatraPDF: due to changes in GException.h, this function is no longer used
+#if 0
 // errmsg --
 // -- A small helper function returning a 
 //    stdio error message in a static buffer.
@@ -252,7 +252,7 @@ errmsg()
   buffer.format("%s (errno = %d)", errname, errno);
   return buffer;
 }
-
+#endif
 
 
 // -----------------------------------------
