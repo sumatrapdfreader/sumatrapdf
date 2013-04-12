@@ -4,6 +4,13 @@ import os
 import gen_settingsstructs
 from gen_settingsstructs import Struct, Array
 
+"""
+TODO:
+ * ability to link to a more comprehensive documentation e.g. for color formats,
+   languages
+ * generate
+"""
+
 html_tmpl = """
 <!doctype html>
 
@@ -24,11 +31,21 @@ body {
 	color: #800; /* this is brown */
 }
 
-.txt {
+.txt2 {
 	font-family: Verdana, Arial, sans-serif;
+	font-family: serif;
 	font-size: 90%;
 	font-weight: bold;
 	color: #800; /* this is brown */
+}
+
+.txt {
+	font-family: serif;
+	font-size: 95%;
+	font-weight: bold;
+	color: #800; /* this is brown */
+	color: #000;
+	background-color: #e5e5e5;
 }
 
 .cm {
