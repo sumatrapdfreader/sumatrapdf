@@ -9,6 +9,7 @@
 #include "HtmlFormatter.h"
 #include "MuiEbookPageDef.h"
 #include "resource.h"
+#include "TxtParser.h"
 #include "WinUtil.h"
 
 #include "DebugLog.h"

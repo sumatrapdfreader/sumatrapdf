@@ -7,9 +7,9 @@
 #define __STDC_LIMIT_MACROS
 #include "BaseUtil.h"
 #include "Sigslot.h"
-#include "TxtParser.h"
 
 enum AlignAttr;
+struct TxtNode;
 
 namespace mui {
 

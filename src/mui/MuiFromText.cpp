@@ -6,6 +6,7 @@
 #include "HtmlParserLookup.h"
 #include "MuiDefs.h"
 #include "SvgPath.h"
+#include "TxtParser.h"
 
 namespace mui {
 

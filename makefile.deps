@@ -39,39 +39,36 @@ $(OMUI)\Mui.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwn
 $(OMUI)\Mui.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\Mui.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OMUI)\Mui.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
-$(OMUI)\Mui.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h
-$(OMUI)\Mui.obj: $B\src\utils\Vec.h
+$(OMUI)\Mui.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OMUI)\MuiBase.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiBase.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\MuiBase.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OMUI)\MuiBase.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiBase.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OMUI)\MuiBase.obj: $B\src\utils\Scoped.h $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h
-$(OMUI)\MuiBase.obj: $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h $B\src\utils\Vec.h
+$(OMUI)\MuiBase.obj: $B\src\utils\Scoped.h $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h
+$(OMUI)\MuiBase.obj: $B\src\utils\Vec.h
 $(OMUI)\MuiButton.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiButton.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\MuiButton.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OMUI)\MuiButton.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiButton.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OMUI)\MuiButton.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
-$(OMUI)\MuiButton.obj: $B\src\utils\Scoped.h $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h
-$(OMUI)\MuiButton.obj: $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h $B\src\utils\Vec.h
+$(OMUI)\MuiButton.obj: $B\src\utils\Scoped.h $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h
+$(OMUI)\MuiButton.obj: $B\src\utils\Vec.h
 $(OMUI)\MuiControl.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiControl.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\MuiControl.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OMUI)\MuiControl.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiControl.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
 $(OMUI)\MuiControl.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
-$(OMUI)\MuiControl.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h
-$(OMUI)\MuiControl.obj: $B\src\utils\Vec.h
+$(OMUI)\MuiControl.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OMUI)\MuiCss.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiCss.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\MuiCss.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OMUI)\MuiCss.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiCss.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OMUI)\MuiCss.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
-$(OMUI)\MuiCss.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h
-$(OMUI)\MuiCss.obj: $B\src\utils\Vec.h $B\src\utils\VecSegmented.h
+$(OMUI)\MuiCss.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\VecSegmented.h
 $(OMUI)\MuiDefs.obj: $B\src\mui\MuiDefs.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OMUI)\MuiDefs.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SerializeTxt.h
 $(OMUI)\MuiDefs.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -81,8 +78,7 @@ $(OMUI)\MuiEventMgr.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mu
 $(OMUI)\MuiEventMgr.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiEventMgr.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
 $(OMUI)\MuiEventMgr.obj: $B\src\utils\DebugLog.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
-$(OMUI)\MuiEventMgr.obj: $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h
-$(OMUI)\MuiEventMgr.obj: $B\src\utils\TxtParser.h $B\src\utils\Vec.h
+$(OMUI)\MuiEventMgr.obj: $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OMUI)\MuiFromText.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiFromText.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiDefs.h
 $(OMUI)\MuiFromText.obj: $B\src\mui\MuiEventMgr.h $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h
@@ -97,39 +93,36 @@ $(OMUI)\MuiGrid.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiE
 $(OMUI)\MuiGrid.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OMUI)\MuiGrid.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiGrid.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OMUI)\MuiGrid.obj: $B\src\utils\Scoped.h $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h
-$(OMUI)\MuiGrid.obj: $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h $B\src\utils\Vec.h
+$(OMUI)\MuiGrid.obj: $B\src\utils\Scoped.h $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h
+$(OMUI)\MuiGrid.obj: $B\src\utils\Vec.h
 $(OMUI)\MuiHwndWrapper.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiHwndWrapper.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\MuiHwndWrapper.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OMUI)\MuiHwndWrapper.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiHwndWrapper.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OMUI)\MuiHwndWrapper.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
-$(OMUI)\MuiHwndWrapper.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h
-$(OMUI)\MuiHwndWrapper.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OMUI)\MuiHwndWrapper.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OMUI)\MuiLayout.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiLayout.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\MuiLayout.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OMUI)\MuiLayout.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiLayout.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
-$(OMUI)\MuiLayout.obj: $B\src\utils\Scoped.h $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h
-$(OMUI)\MuiLayout.obj: $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h $B\src\utils\Vec.h
+$(OMUI)\MuiLayout.obj: $B\src\utils\Scoped.h $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h
+$(OMUI)\MuiLayout.obj: $B\src\utils\Vec.h
 $(OMUI)\MuiPainter.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiPainter.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\MuiPainter.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OMUI)\MuiPainter.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiPainter.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OMUI)\MuiPainter.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
-$(OMUI)\MuiPainter.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h
-$(OMUI)\MuiPainter.obj: $B\src\utils\Vec.h
+$(OMUI)\MuiPainter.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OMUI)\MuiScrollBar.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OMUI)\MuiScrollBar.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h
 $(OMUI)\MuiScrollBar.obj: $B\src\mui\MuiFromText.h $B\src\mui\MuiGrid.h $B\src\mui\MuiHwndWrapper.h
 $(OMUI)\MuiScrollBar.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h
 $(OMUI)\MuiScrollBar.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h
 $(OMUI)\MuiScrollBar.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
-$(OMUI)\MuiScrollBar.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h
-$(OMUI)\MuiScrollBar.obj: $B\src\utils\Vec.h
+$(OMUI)\MuiScrollBar.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OMUI)\SvgPath.obj: $B\src\mui\SvgPath.h $B\src\mui\SvgPath_ut.cpp $B\src\utils\Allocator.h
 $(OMUI)\SvgPath.obj: $B\src\utils\BaseUtil.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
 $(OMUI)\SvgPath.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -191,10 +184,9 @@ $(OS)\EbookController.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src
 $(OS)\EbookController.obj: $B\src\SettingsStructs.h $B\src\SumatraWindow.h $B\src\Translations.h
 $(OS)\EbookController.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DebugLog.h
 $(OS)\EbookController.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\Scoped.h
-$(OS)\EbookController.obj: $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h
-$(OS)\EbookController.obj: $B\src\utils\StrUtil.h $B\src\utils\ThreadUtil.h $B\src\utils\Timer.h
-$(OS)\EbookController.obj: $B\src\utils\TxtParser.h $B\src\utils\UITask.h $B\src\utils\Vec.h
-$(OS)\EbookController.obj: $B\src\WindowInfo.h
+$(OS)\EbookController.obj: $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h
+$(OS)\EbookController.obj: $B\src\utils\ThreadUtil.h $B\src\utils\Timer.h $B\src\utils\UITask.h
+$(OS)\EbookController.obj: $B\src\utils\Vec.h $B\src\WindowInfo.h
 $(OS)\EbookControls.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\DisplayState.h
 $(OS)\EbookControls.obj: $B\src\Doc.h $B\src\EbookBase.h $B\src\EbookControls.h
 $(OS)\EbookControls.obj: $B\src\HtmlFormatter.h $B\src\mui\Mui.h $B\src\mui\MuiBase.h
@@ -244,9 +236,8 @@ $(OS)\EbookWindow.obj: $B\src\SumatraProperties.h $B\src\SumatraWindow.h $B\src\
 $(OS)\EbookWindow.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
 $(OS)\EbookWindow.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
 $(OS)\EbookWindow.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h
-$(OS)\EbookWindow.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\Touch.h
-$(OS)\EbookWindow.obj: $B\src\utils\TxtParser.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OS)\EbookWindow.obj: $B\src\utils\ZipUtil.h $B\src\WindowInfo.h
+$(OS)\EbookWindow.obj: $B\src\utils\StrUtil.h $B\src\utils\Touch.h $B\src\utils\Vec.h
+$(OS)\EbookWindow.obj: $B\src\utils\WinUtil.h $B\src\utils\ZipUtil.h $B\src\WindowInfo.h
 $(OS)\EngineDump.obj: $B\src\BaseEngine.h $B\src\ChmEngine.h $B\src\Doc.h
 $(OS)\EngineDump.obj: $B\src\PdfEngine.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OS)\EngineDump.obj: $B\src\utils\CmdLineParser.h $B\src\utils\FileUtil.h $B\src\utils\GdiPlusUtil.h
@@ -281,8 +272,7 @@ $(OS)\HtmlFormatter.obj: $B\src\mui\MuiLayout.h $B\src\mui\MuiPainter.h $B\src\m
 $(OS)\HtmlFormatter.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\CssParser.h
 $(OS)\HtmlFormatter.obj: $B\src\utils\DebugLog.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
 $(OS)\HtmlFormatter.obj: $B\src\utils\HtmlParserLookup.h $B\src\utils\HtmlPullParser.h $B\src\utils\Scoped.h
-$(OS)\HtmlFormatter.obj: $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h
-$(OS)\HtmlFormatter.obj: $B\src\utils\TxtParser.h $B\src\utils\Vec.h
+$(OS)\HtmlFormatter.obj: $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OS)\ImagesEngine.obj: $B\ext\unrar\dll.hpp $B\src\BaseEngine.h $B\src\ImagesEngine.h
 $(OS)\ImagesEngine.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\FileUtil.h
 $(OS)\ImagesEngine.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
@@ -371,8 +361,8 @@ $(OS)\Regress.obj: $B\src\mui\MuiPainter.h $B\src\mui\MuiScrollBar.h $B\src\regr
 $(OS)\Regress.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\DbgHelpDyn.h
 $(OS)\Regress.obj: $B\src\utils\DirIter.h $B\src\utils\FileUtil.h $B\src\utils\GdiPlusUtil.h
 $(OS)\Regress.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\Scoped.h
-$(OS)\Regress.obj: $B\src\utils\Sigslot.h $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h
-$(OS)\Regress.obj: $B\src\utils\TxtParser.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\Regress.obj: $B\src\utils\Sigslot.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OS)\Regress.obj: $B\src\utils\WinUtil.h
 $(OS)\RenderCache.obj: $B\src\BaseEngine.h $B\src\ChmEngine.h $B\src\DisplayModel.h
 $(OS)\RenderCache.obj: $B\src\DisplayState.h $B\src\Doc.h $B\src\RenderCache.h
 $(OS)\RenderCache.obj: $B\src\SettingsStructs.h $B\src\TextSelection.h $B\src\utils\Allocator.h
@@ -431,8 +421,8 @@ $(OS)\SumatraAbout2.obj: $B\src\SumatraAbout2.h $B\src\SumatraPDF.h $B\src\Sumat
 $(OS)\SumatraAbout2.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
 $(OS)\SumatraAbout2.obj: $B\src\utils\FileUtil.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
 $(OS)\SumatraAbout2.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h
-$(OS)\SumatraAbout2.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\TxtParser.h
-$(OS)\SumatraAbout2.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\Version.h
+$(OS)\SumatraAbout2.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\SumatraAbout2.obj: $B\src\Version.h
 $(OS)\SumatraDialogs.obj: $B\src\AppPrefs.h $B\src\AppTools.h $B\src\BaseEngine.h
 $(OS)\SumatraDialogs.obj: $B\src\DisplayState.h $B\src\Favorites.h $B\src\FileHistory.h
 $(OS)\SumatraDialogs.obj: $B\src\resource.h $B\src\SettingsStructs.h $B\src\SumatraDialogs.h
@@ -463,10 +453,9 @@ $(OS)\SumatraPDF.obj: $B\src\utils\DebugLog.h $B\src\utils\DirIter.h $B\src\util
 $(OS)\SumatraPDF.obj: $B\src\utils\FileWatcher.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
 $(OS)\SumatraPDF.obj: $B\src\utils\HtmlWindow.h $B\src\utils\HttpUtil.h $B\src\utils\Scoped.h
 $(OS)\SumatraPDF.obj: $B\src\utils\SettingsUtil.h $B\src\utils\Sigslot.h $B\src\utils\SquareTreeParser.h
-$(OS)\SumatraPDF.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\ThreadUtil.h
-$(OS)\SumatraPDF.obj: $B\src\utils\Timer.h $B\src\utils\Touch.h $B\src\utils\TxtParser.h
-$(OS)\SumatraPDF.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OS)\SumatraPDF.obj: $B\src\Version.h $B\src\WindowInfo.h
+$(OS)\SumatraPDF.obj: $B\src\utils\StrUtil.h $B\src\utils\ThreadUtil.h $B\src\utils\Timer.h
+$(OS)\SumatraPDF.obj: $B\src\utils\Touch.h $B\src\utils\UITask.h $B\src\utils\Vec.h
+$(OS)\SumatraPDF.obj: $B\src\utils\WinUtil.h $B\src\Version.h $B\src\WindowInfo.h
 $(OS)\SumatraProperties.obj: $B\src\BaseEngine.h $B\src\ChmEngine.h $B\src\DisplayModel.h
 $(OS)\SumatraProperties.obj: $B\src\DisplayState.h $B\src\Doc.h $B\src\EbookWindow.h
 $(OS)\SumatraProperties.obj: $B\src\Favorites.h $B\src\FileHistory.h $B\src\resource.h
@@ -494,9 +483,8 @@ $(OS)\Tester.obj: $B\src\PdfEngine.h $B\src\utils\Allocator.h $B\src\utils\BaseU
 $(OS)\Tester.obj: $B\src\utils\CmdLineParser.h $B\src\utils\DirIter.h $B\src\utils\FileUtil.h
 $(OS)\Tester.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
 $(OS)\Tester.obj: $B\src\utils\HtmlPrettyPrint.h $B\src\utils\Scoped.h $B\src\utils\Sigslot.h
-$(OS)\Tester.obj: $B\src\utils\StrSlice.h $B\src\utils\StrUtil.h $B\src\utils\Timer.h
-$(OS)\Tester.obj: $B\src\utils\TxtParser.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OS)\Tester.obj: $B\src\utils\ZipUtil.h
+$(OS)\Tester.obj: $B\src\utils\StrUtil.h $B\src\utils\Timer.h $B\src\utils\Vec.h
+$(OS)\Tester.obj: $B\src\utils\WinUtil.h $B\src\utils\ZipUtil.h
 $(OS)\TextSearch.obj: $B\src\BaseEngine.h $B\src\TextSearch.h $B\src\TextSelection.h
 $(OS)\TextSearch.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OS)\TextSearch.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
