@@ -69,7 +69,7 @@ static FieldInfo gGlobalPrefsFieldsBenc[] = {
     { offsetof(GlobalPrefs, checkForUpdates), Type_Bool, true },
     { offsetof(GlobalPrefs, enableTeXEnhancements), Type_Bool, false },
     { offsetof(GlobalPrefs, showFavorites), Type_Bool, false },
-    { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool, false },
+    { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool, false }, // note: used to be globalPrefsOnly
     { offsetof(GlobalPrefs, inverseSearchCmdLine), Type_String, NULL },
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck), Type_Compact, 0 },
     { offsetof(GlobalPrefs, openCountWeek), Type_Int, 0 },

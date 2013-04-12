@@ -281,7 +281,8 @@ bool ViewWithExternalViewer(size_t idx, const WCHAR *filePath, int pageNo)
         return false;
     for (size_t i = 0; i < gGlobalPrefs->externalViewers->Count() && i <= idx; i++) {
         ExternalViewer *ev = gGlobalPrefs->externalViewers->At(i);
-        if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter)))
+        // cf. AppendExternalViewersToMenu in Menu.cpp
+        if (!ev->commandLine || ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter)))
             idx++;
     }
     if (idx >= gGlobalPrefs->externalViewers->Count() || !gGlobalPrefs->externalViewers->At(idx)->commandLine)

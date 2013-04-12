@@ -253,7 +253,10 @@ static void AppendRecentFilesToMenu(HMENU m)
 
 static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath, bool forEbookUI)
 {
-    if (!HasPermission(Perm_DiskAccess)) return;
+    if (0 == gGlobalPrefs->externalViewers->Count())
+        return;
+    if (!HasPermission(Perm_DiskAccess) || !file::Exists(filePath))
+        return;
 
     const int maxEntries = IDM_OPEN_WITH_EXTERNAL_LAST - IDM_OPEN_WITH_EXTERNAL_FIRST + 1;
     int count = 0;

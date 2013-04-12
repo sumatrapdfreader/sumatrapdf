@@ -335,7 +335,6 @@ GlobalPrefs = [
 		"these values allow to customize how the forward search highlight appears",
 		expert=True),
 
-	# zeniko: this will require logic changes throughout the code
 	Field("RememberStatePerDocument", Bool, True,
 		"whether to store display settings for individual documents"),
 	# kjk: we need an "auto" value, which means "auto-detect". We shouldn't serializee
