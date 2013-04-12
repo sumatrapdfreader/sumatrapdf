@@ -8,7 +8,8 @@ from gen_settingsstructs import Struct, Array
 TODO:
  * ability to link to a more comprehensive documentation e.g. for color formats,
    languages
- * generate html page with all language iso codes from trans_langs.py
+ * for gen_langs_html, show languages that don't have enough translations
+   in a separate table
 """
 
 html_tmpl = """
@@ -78,6 +79,67 @@ what is their default value:</p>
 </html>
 """
 
+langs_html_tmpl = """
+<!doctype html>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Languages supported by SumatraPDF</title>
+<style type=text/css>
+body {
+	font-size: 90%;
+	background-color: #f5f5f5;
+}
+
+.txt1 {
+	/* bold doesn't look good in the fonts above */
+	font-family: Monaco, 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Lucida Console', monospace;
+	font-size: 88%;
+	color: #800; /* this is brown */
+}
+
+.txt2 {
+	font-family: Verdana, Arial, sans-serif;
+	font-family: serif;
+	font-size: 90%;
+	font-weight: bold;
+	color: #800; /* this is brown */
+}
+
+.txt {
+	font-family: serif;
+	font-size: 95%;
+	font-weight: bold;
+	color: #800; /* this is brown */
+	color: #000;
+	background-color: #ececec;
+}
+
+.cm {
+	color: #800;   /* this is brown, a bit aggressive */
+	color: #8c8c8c; /* this is gray */
+	color: #555; /* this is darker gray */
+	font-weight: normal;
+}
+</style>
+</head>
+
+<p>Languages supported by SumatraPDF. You can use ISO code as a value
+of <code>UILanguage</code> in <a href="settings.html">settings file</a>.
+</p>
+
+<table>
+<tr><th>Language name</th><th>ISO code</th></tr>
+%INSIDE%
+</table>
+
+<body>
+
+</body>
+</html>
+"""
+
 #indent_str = "&nbsp;&nbsp;"
 indent_str = "  "
 
@@ -115,6 +177,25 @@ def gen_struct(struct, comment=None, indent=""):
 			lines += gen_comment(field.comment, indent, first) + [indent + s]
 	return "\n".join(lines)
 
+class Lang(object):
+	def __init__(self, name, code):
+		self.name = name
+		self.code = code
+
+def gen_langs_html():
+	import trans_langs
+	langs = trans_langs.g_langs
+	langs = [Lang(el[1], el[0]) for el in langs]
+	lines = []
+	langs = sorted(langs, key=lambda lang: lang.name)
+	for l in langs:
+		s = '<tr><td>%s</td><td>%s</td></tr>' % (l.name, l.code)
+		lines += [s]
+	inside = "\n".join(lines)
+	s = langs_html_tmpl.replace("%INSIDE%", inside)
+	p = os.path.join("scripts", "langs.html")
+	open(p, "w").write(s)
+
 def gen_html():
 	prefs = gen_settingsstructs.GlobalPrefs
 	inside = gen_struct(prefs)
@@ -123,4 +204,5 @@ def gen_html():
 	open(p, "w").write(s)
 
 if __name__ == "__main__":
+	gen_langs_html()
 	gen_html()
