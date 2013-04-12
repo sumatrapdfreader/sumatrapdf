@@ -764,26 +764,6 @@ fz_pixmap_size(fz_context *ctx, fz_pixmap * pix)
 	return sizeof(*pix) + pix->n * pix->w * pix->h;
 }
 
-fz_pixmap *
-fz_image_to_pixmap(fz_context *ctx, fz_image *image, int w, int h)
-{
-	if (image == NULL)
-		return NULL;
-	return image->get_pixmap(ctx, image, w, h);
-}
-
-fz_image *
-fz_keep_image(fz_context *ctx, fz_image *image)
-{
-	return (fz_image *)fz_keep_storable(ctx, &image->storable);
-}
-
-void
-fz_drop_image(fz_context *ctx, fz_image *image)
-{
-	fz_drop_storable(ctx, &image->storable);
-}
-
 #ifdef ARCH_ARM
 static void
 fz_subsample_pixmap_ARM(unsigned char *ptr, int w, int h, int f, int factor,

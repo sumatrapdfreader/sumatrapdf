@@ -9,25 +9,6 @@ void *pdf_get_indirect_document(pdf_obj *obj);
 void pdf_set_int(pdf_obj *obj, int i);
 
 /*
- * PDF Images
- */
-
-typedef struct pdf_image_s pdf_image;
-
-struct pdf_image_s
-{
-	fz_image base;
-	fz_pixmap *tile;
-	int n;
-	fz_compressed_buffer *buffer;
-	int colorkey[FZ_MAX_COLORS * 2];
-	float decode[FZ_MAX_COLORS * 2];
-	int imagemask;
-	int interpolate;
-	int usecolorkey;
-};
-
-/*
  * tokenizer and low-level object parser
  */
 
@@ -228,7 +209,6 @@ void pdf_print_crypt(pdf_crypt *crypt);
 fz_function *pdf_load_function(pdf_document *doc, pdf_obj *ref, int in, int out);
 
 fz_colorspace *pdf_load_colorspace(pdf_document *doc, pdf_obj *obj);
-fz_pixmap *pdf_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src);
 
 fz_shade *pdf_load_shading(pdf_document *doc, pdf_obj *obj);
 

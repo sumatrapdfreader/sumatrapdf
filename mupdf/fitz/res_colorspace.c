@@ -171,7 +171,7 @@ static void rgb_to_cmyk(fz_context *ctx, fz_colorspace *cs, float *rgb, float *c
 
 static fz_colorspace k_device_gray = { {-1, fz_free_colorspace_imp}, 0, "DeviceGray", 1, gray_to_rgb, rgb_to_gray };
 static fz_colorspace k_device_rgb = { {-1, fz_free_colorspace_imp}, 0, "DeviceRGB", 3, rgb_to_rgb, rgb_to_rgb };
-static fz_colorspace k_device_bgr = { {-1, fz_free_colorspace_imp}, 0, "DeviceRGB", 3, bgr_to_rgb, rgb_to_bgr };
+static fz_colorspace k_device_bgr = { {-1, fz_free_colorspace_imp}, 0, "DeviceBGR", 3, bgr_to_rgb, rgb_to_bgr };
 static fz_colorspace k_device_cmyk = { {-1, fz_free_colorspace_imp}, 0, "DeviceCMYK", 4, cmyk_to_rgb, rgb_to_cmyk };
 
 fz_colorspace *fz_device_gray = &k_device_gray;
@@ -1097,6 +1097,106 @@ fz_convert_color(fz_context *ctx, fz_colorspace *ds, float *dv, fz_colorspace *s
 
 	fz_find_color_converter(&cc, ctx, ds, ss);
 	cc.convert(&cc, dv, sv);
+}
+
+
+/* Indexed */
+
+struct indexed
+{
+	fz_colorspace *base;
+	int high;
+	unsigned char *lookup;
+};
+
+static void
+indexed_to_rgb(fz_context *ctx, fz_colorspace *cs, float *color, float *rgb)
+{
+	struct indexed *idx = cs->data;
+	float alt[FZ_MAX_COLORS];
+	int i, k;
+	i = color[0] * 255;
+	i = fz_clampi(i, 0, idx->high);
+	for (k = 0; k < idx->base->n; k++)
+		alt[k] = idx->lookup[i * idx->base->n + k] / 255.0f;
+	idx->base->to_rgb(ctx, idx->base, alt, rgb);
+}
+
+static void
+free_indexed(fz_context *ctx, fz_colorspace *cs)
+{
+	struct indexed *idx = cs->data;
+	if (idx->base)
+		fz_drop_colorspace(ctx, idx->base);
+	fz_free(ctx, idx->lookup);
+	fz_free(ctx, idx);
+}
+
+fz_colorspace *
+fz_new_indexed_colorspace(fz_context *ctx, fz_colorspace *base, int high, unsigned char *lookup)
+{
+	fz_colorspace *cs;
+	struct indexed *idx;
+
+	idx = fz_malloc_struct(ctx, struct indexed);
+	idx->lookup = lookup;
+	idx->base = base;
+	idx->high = high;
+
+	fz_try(ctx)
+	{
+		cs = fz_new_colorspace(ctx, "Indexed", 1);
+		cs->to_rgb = indexed_to_rgb;
+		cs->free_data = free_indexed;
+		cs->data = idx;
+		cs->size += sizeof(*idx) + (base->n * (idx->high + 1)) + base->size;
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, idx);
+		fz_throw(ctx, "failed to create indexed colorspace");
+	}
+	return cs;
+}
+
+fz_pixmap *
+fz_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src)
+{
+	struct indexed *idx;
+	fz_pixmap *dst;
+	unsigned char *s, *d;
+	int y, x, k, n, high;
+	unsigned char *lookup;
+	fz_irect bbox;
+
+	assert(src->colorspace->to_rgb == indexed_to_rgb);
+	assert(src->n == 2);
+
+	idx = src->colorspace->data;
+	high = idx->high;
+	lookup = idx->lookup;
+	n = idx->base->n;
+
+	dst = fz_new_pixmap_with_bbox(ctx, idx->base, fz_pixmap_bbox(ctx, src, &bbox));
+	s = src->samples;
+	d = dst->samples;
+
+	for (y = 0; y < src->h; y++)
+	{
+		for (x = 0; x < src->w; x++)
+		{
+			int v = *s++;
+			int a = *s++;
+			v = fz_mini(v, high);
+			for (k = 0; k < n; k++)
+				*d++ = fz_mul255(lookup[v * n + k], a);
+			*d++ = a;
+		}
+	}
+
+	dst->interpolate = src->interpolate;
+
+	return dst;
 }
 
 /* SumatraPDF: support transfer functions */

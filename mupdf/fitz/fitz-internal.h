@@ -614,6 +614,16 @@ struct fz_buffer_s
 fz_buffer *fz_new_buffer(fz_context *ctx, int capacity);
 
 /*
+	fz_new_buffer: Create a new buffer.
+
+	capacity: Initial capacity.
+
+	Returns pointer to new buffer. Throws exception on allocation
+	failure.
+*/
+fz_buffer *fz_new_buffer_from_data(fz_context *ctx, unsigned char *data, int size);
+
+/*
 	fz_resize_buffer: Ensure that a buffer has a given capacity,
 	truncating data if required.
 
@@ -826,9 +836,6 @@ fz_stream *fz_open_jbig2d(fz_stream *chain, fz_jbig2_globals *globals);
  * Resources and other graphics related objects.
  */
 
-/* SumatraPDF: make fz_shades use less memory */
-enum { FZ_MAX_COLORS = 8 };
-
 int fz_lookup_blendmode(char *name);
 char *fz_blendmode_name(int blendmode);
 
@@ -928,7 +935,10 @@ enum
 	FZ_IMAGE_RAW = 5,
 	FZ_IMAGE_RLD = 6,
 	FZ_IMAGE_FLATE = 7,
-	FZ_IMAGE_LZW = 8
+	FZ_IMAGE_LZW = 8,
+	FZ_IMAGE_PNG = 9,
+	FZ_IMAGE_TIFF = 10
+	, FZ_IMAGE_JXR = 11 /* SumatraPDF: support JPEG-XR images */
 };
 
 struct fz_compression_params_s
@@ -978,21 +988,44 @@ struct fz_compressed_buffer_s
 
 void fz_free_compressed_buffer(fz_context *ctx, fz_compressed_buffer *buf);
 
+fz_image *fz_new_image(fz_context *ctx, int w, int h, int bpc, fz_colorspace *colorspace, int xres, int yres, int interpolate, int imagemask, float *decode, int *colorkey, fz_compressed_buffer *buffer, fz_image *mask);
+fz_image *fz_new_image_from_pixmap(fz_context *ctx, fz_pixmap *pixmap, fz_image *mask);
+fz_image *fz_new_image_from_buffer(fz_context *ctx, unsigned char *buf, int len);
+fz_pixmap *fz_image_get_pixmap(fz_context *ctx, fz_image *image, int w, int h);
+void fz_free_image(fz_context *ctx, fz_storable *image);
+fz_pixmap *fz_decomp_image_from_stream(fz_context *ctx, fz_stream *stm, fz_image *image, int in_line, int indexed, int l2factor, int native_l2factor);
+fz_pixmap *fz_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src);
+
 struct fz_image_s
 {
 	fz_storable storable;
-	int w, h, bpc;
+	int w, h, n, bpc;
 	fz_image *mask;
 	fz_colorspace *colorspace;
 	fz_pixmap *(*get_pixmap)(fz_context *, fz_image *, int w, int h);
+	fz_compressed_buffer *buffer;
+	int colorkey[FZ_MAX_COLORS * 2];
+	float decode[FZ_MAX_COLORS * 2];
+	int imagemask;
+	int interpolate;
+	int usecolorkey;
+	fz_pixmap *tile; /* Private to the implementation */
+	int xres; /* As given in the image, not necessarily as rendered */
+	int yres; /* As given in the image, not necessarily as rendered */
+	int from_xps; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2250 */
 };
 
 fz_pixmap *fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *cs, int indexed);
-fz_pixmap *fz_load_jpeg(fz_context *doc, unsigned char *data, int size);
-fz_pixmap *fz_load_png(fz_context *doc, unsigned char *data, int size);
-fz_pixmap *fz_load_tiff(fz_context *doc, unsigned char *data, int size);
+fz_pixmap *fz_load_png(fz_context *ctx, unsigned char *data, int size);
+fz_pixmap *fz_load_tiff(fz_context *ctx, unsigned char *data, int size);
+
+void fz_load_jpeg_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
+void fz_load_png_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
+void fz_load_tiff_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
+
 /* SumatraPDF: support JPEG-XR images */
 fz_pixmap *fz_load_jxr(fz_context *ctx, unsigned char *data, int size);
+void fz_load_jxr_info(fz_context *ctx, unsigned char *data, int size, int *w, int *h, int *xres, int *yres, fz_colorspace **cspace);
 
 struct fz_halftone_s
 {
@@ -1019,9 +1052,11 @@ struct fz_colorspace_s
 };
 
 fz_colorspace *fz_new_colorspace(fz_context *ctx, char *name, int n);
+fz_colorspace *fz_new_indexed_colorspace(fz_context *ctx, fz_colorspace *base, int high, unsigned char *lookup);
 fz_colorspace *fz_keep_colorspace(fz_context *ctx, fz_colorspace *colorspace);
 void fz_drop_colorspace(fz_context *ctx, fz_colorspace *colorspace);
 void fz_free_colorspace_imp(fz_context *ctx, fz_storable *colorspace);
+
 
 void fz_convert_color(fz_context *ctx, fz_colorspace *dsts, float *dstv, fz_colorspace *srcs, float *srcv);
 

@@ -1,77 +1,12 @@
 #include "muxps-internal.h"
 
-typedef struct xps_image_s xps_image;
-
-struct xps_image_s
-{
-	fz_image base;
-	fz_pixmap *pix;
-	int xres;
-	int yres;
-};
-
-static void
-xps_free_image(fz_context *ctx, fz_storable *image_)
-{
-	xps_image *image = (xps_image *)image_;
-
-	if (image == NULL)
-		return;
-
-	fz_drop_colorspace(ctx, image->base.colorspace);
-	fz_drop_pixmap(ctx, image->pix);
-	fz_free(ctx, image);
-}
-
-static fz_pixmap *
-xps_image_to_pixmap(fz_context *ctx, fz_image *image_, int x, int w)
-{
-	xps_image *image = (xps_image *)image_;
-
-	return fz_keep_pixmap(ctx, image->pix);
-}
-
 static fz_image *
-xps_load_image(fz_context *ctx, byte *buf, int len)
+xps_load_image(fz_context *ctx, xps_part *part)
 {
-	fz_pixmap *pix;
-	xps_image *image;
-
-	if (len < 8)
-		fz_throw(ctx, "unknown image file format");
-
-	if (buf[0] == 0xff && buf[1] == 0xd8)
-		pix = fz_load_jpeg(ctx, buf, len);
-	else if (memcmp(buf, "\211PNG\r\n\032\n", 8) == 0)
-		pix = fz_load_png(ctx, buf, len);
-	else if (memcmp(buf, "II", 2) == 0 && buf[2] == 0xBC)
-		pix = fz_load_jxr(ctx, buf, len);
-	else if (memcmp(buf, "MM", 2) == 0 || memcmp(buf, "II", 2) == 0)
-		pix = fz_load_tiff(ctx, buf, len);
-	else
-		fz_throw(ctx, "unknown image file format");
-
-	fz_try(ctx)
-	{
-		image = fz_malloc_struct(ctx, xps_image);
-
-		FZ_INIT_STORABLE(&image->base, 1, xps_free_image);
-		image->base.w = pix->w;
-		image->base.h = pix->h;
-		image->base.mask = NULL;
-		image->base.colorspace = pix->colorspace;
-		image->base.get_pixmap = xps_image_to_pixmap;
-		image->xres = pix->xres;
-		image->yres = pix->yres;
-		image->pix = pix;
-	}
-	fz_catch(ctx)
-	{
-		fz_drop_pixmap(ctx, pix);
-		fz_rethrow(ctx);
-	}
-
-	return &image->base;
+	/* Ownership of data always passes in here */
+	byte *data = part->data;
+	part->data = NULL;
+	return fz_new_image_from_buffer(ctx, data, part->size);
 }
 
 /* FIXME: area unused! */
@@ -79,16 +14,16 @@ static void
 xps_paint_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *area, char *base_uri, xps_resource *dict,
 	fz_xml *root, void *vimage)
 {
-	xps_image *image = vimage;
+	fz_image *image = vimage;
 	float xs, ys;
 	fz_matrix local_ctm = *ctm;
 
 	if (image->xres == 0 || image->yres == 0)
 		return;
-	xs = image->base.w * 96 / image->xres;
-	ys = image->base.h * 96 / image->yres;
+	xs = image->w * 96 / image->xres;
+	ys = image->h * 96 / image->yres;
 	fz_pre_scale(&local_ctm, xs, ys);
-	fz_fill_image(doc->dev, &image->base, &local_ctm, doc->opacity[doc->opacity_top]);
+	fz_fill_image(doc->dev, image, &local_ctm, doc->opacity[doc->opacity_top]);
 }
 
 static xps_part *
@@ -212,10 +147,13 @@ xps_parse_image_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *ar
 	{
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2094 */
 		key = xps_new_image_key(doc->ctx, part->name);
-		if (!(image = fz_find_item(doc->ctx, xps_free_image, key, &xps_image_store_type)))
+		if (!(image = fz_find_item(doc->ctx, fz_free_image, key, &xps_image_store_type)))
 		{
-		image = xps_load_image(doc->ctx, part->data, part->size);
-		fz_store_item(doc->ctx, key, image, fz_pixmap_size(doc->ctx, ((xps_image *)image)->pix), &xps_image_store_type);
+
+		image = xps_load_image(doc->ctx, part);
+
+			image->from_xps = 1; /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2250 */
+			fz_store_item(doc->ctx, key, image, sizeof(fz_image) + part->size, &xps_image_store_type);
 		}
 	}
 	fz_always(doc->ctx)

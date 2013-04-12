@@ -1390,6 +1390,10 @@
 					RelativePath="..\mupdf\fitz\stm_read.c"
 					>
 				</File>
+				<File
+					RelativePath="..\mupdf\fitz\res_image.c"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="draw"

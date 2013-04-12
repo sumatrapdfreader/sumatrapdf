@@ -88,6 +88,7 @@ EXPORTS
 	fz_keep_bitmap
 	fz_drop_bitmap
 	fz_find_device_colorspace
+	fz_colorspace_is_indexed
 	fz_pixmap_bbox
 	fz_pixmap_width
 	fz_pixmap_height
@@ -251,6 +252,7 @@ EXPORTS
 	fz_empty_store
 	fz_store_scavenge
 	fz_new_buffer
+	fz_new_buffer_from_data
 	fz_resize_buffer
 	fz_grow_buffer
 	fz_trim_buffer
@@ -305,16 +307,27 @@ EXPORTS
 	fz_open_compressed_buffer
 	fz_open_image_decomp_stream
 	fz_free_compressed_buffer
+	fz_new_image
+	fz_new_image_from_pixmap
+	fz_new_image_from_buffer
+	fz_image_get_pixmap
+	fz_free_image
+	fz_decomp_image_from_stream
+	fz_expand_indexed_pixmap
 	fz_load_jpx
-	fz_load_jpeg
 	fz_load_png
 	fz_load_tiff
 	fz_load_jxr
+	fz_load_jpeg_info
+	fz_load_png_info
+	fz_load_tiff_info
+	fz_load_jxr_info
 	fz_new_halftone
 	fz_default_halftone
 	fz_drop_halftone
 	fz_keep_halftone
 	fz_new_colorspace
+	fz_new_indexed_colorspace
 	fz_keep_colorspace
 	fz_drop_colorspace
 	fz_free_colorspace_imp
@@ -586,7 +599,6 @@ EXPORTS
 	pdf_crypt_key
 	pdf_load_function
 	pdf_load_colorspace
-	pdf_expand_indexed_pixmap
 	pdf_load_shading
 	pdf_load_inline_image
 	pdf_is_jpx_image

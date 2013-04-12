@@ -835,3 +835,33 @@ fz_load_tiff(fz_context *ctx, unsigned char *buf, int len)
 
 	return image;
 }
+
+void
+fz_load_tiff_info(fz_context *ctx, unsigned char *buf, int len, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
+{
+	struct tiff tiff;
+
+	fz_try(ctx)
+	{
+		fz_decode_tiff_header(ctx, &tiff, buf, len);
+
+		*wp = tiff.imagewidth;
+		*hp = tiff.imagelength;
+		*xresp = tiff.xresolution;
+		*yresp = tiff.yresolution;
+		*cspacep = tiff.colorspace;
+	}
+	fz_always(ctx)
+	{
+		/* Clean up scratch memory */
+		if (tiff.colormap) fz_free(ctx, tiff.colormap);
+		if (tiff.stripoffsets) fz_free(ctx, tiff.stripoffsets);
+		if (tiff.stripbytecounts) fz_free(ctx, tiff.stripbytecounts);
+		if (tiff.samples) fz_free(ctx, tiff.samples);
+		if (tiff.profile) fz_free(ctx, tiff.profile);
+	}
+	fz_catch(ctx)
+	{
+		fz_throw(ctx, "out of memory");
+	}
+}

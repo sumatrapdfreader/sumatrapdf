@@ -581,3 +581,22 @@ fz_load_png(fz_context *ctx, unsigned char *p, int total)
 
 	return image;
 }
+
+void
+fz_load_png_info(fz_context *ctx, unsigned char *p, int total, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
+{
+	struct info png;
+
+	png_read_image(ctx, &png, p, total);
+
+	if (png.n == 3 || png.n == 4)
+		*cspacep = fz_device_rgb;
+	else
+		*cspacep = fz_device_gray;
+
+	*wp = png.width;
+	*hp = png.height;
+	*xresp = png.xres;
+	*yresp = png.xres;
+	fz_free(png.ctx, png.samples);
+}

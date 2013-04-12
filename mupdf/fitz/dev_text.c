@@ -1111,6 +1111,7 @@ fz_new_text_device(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
 	dev->clip_text = fz_text_clip_text;
 	dev->clip_stroke_text = fz_text_clip_stroke_text;
 	dev->ignore_text = fz_text_ignore_text;
+
 	return dev;
 }
 

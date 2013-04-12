@@ -553,6 +553,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\res_image.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\res_path.c"
 				>
 			</File>

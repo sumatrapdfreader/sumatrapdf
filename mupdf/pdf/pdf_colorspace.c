@@ -155,119 +155,37 @@ load_separation(pdf_document *xref, pdf_obj *array)
 	return cs;
 }
 
-/* Indexed */
-
-struct indexed
-{
-	fz_colorspace *base;
-	int high;
-	unsigned char *lookup;
-};
-
-static void
-indexed_to_rgb(fz_context *ctx, fz_colorspace *cs, float *color, float *rgb)
-{
-	struct indexed *idx = cs->data;
-	float alt[FZ_MAX_COLORS];
-	int i, k;
-	i = color[0] * 255;
-	i = fz_clampi(i, 0, idx->high);
-	for (k = 0; k < idx->base->n; k++)
-		alt[k] = idx->lookup[i * idx->base->n + k] / 255.0f;
-	idx->base->to_rgb(ctx, idx->base, alt, rgb);
-}
-
-static void
-free_indexed(fz_context *ctx, fz_colorspace *cs)
-{
-	struct indexed *idx = cs->data;
-	if (idx->base)
-		fz_drop_colorspace(ctx, idx->base);
-	fz_free(ctx, idx->lookup);
-	fz_free(ctx, idx);
-}
-
-fz_pixmap *
-pdf_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src)
-{
-	struct indexed *idx;
-	fz_pixmap *dst;
-	unsigned char *s, *d;
-	int y, x, k, n, high;
-	unsigned char *lookup;
-	fz_irect bbox;
-
-	assert(src->colorspace->to_rgb == indexed_to_rgb);
-	assert(src->n == 2);
-
-	idx = src->colorspace->data;
-	high = idx->high;
-	lookup = idx->lookup;
-	n = idx->base->n;
-
-	dst = fz_new_pixmap_with_bbox(ctx, idx->base, fz_pixmap_bbox(ctx, src, &bbox));
-	s = src->samples;
-	d = dst->samples;
-
-	for (y = 0; y < src->h; y++)
-	{
-		for (x = 0; x < src->w; x++)
-		{
-			int v = *s++;
-			int a = *s++;
-			v = fz_mini(v, high);
-			for (k = 0; k < n; k++)
-				*d++ = fz_mul255(lookup[v * n + k], a);
-			*d++ = a;
-		}
-	}
-
-	dst->interpolate = src->interpolate;
-
-	return dst;
-}
 
 static fz_colorspace *
 load_indexed(pdf_document *xref, pdf_obj *array)
 {
-	struct indexed *idx = NULL;
 	fz_context *ctx = xref->ctx;
 	pdf_obj *baseobj = pdf_array_get(array, 1);
 	pdf_obj *highobj = pdf_array_get(array, 2);
-	pdf_obj *lookup = pdf_array_get(array, 3);
+	pdf_obj *lookupobj = pdf_array_get(array, 3);
 	fz_colorspace *base = NULL;
-	fz_colorspace *cs = NULL;
-	int i, n;
+	fz_colorspace *cs;
+	int i, n, high;
+	unsigned char *lookup = NULL;
 
-	fz_var(idx);
 	fz_var(base);
-	fz_var(cs);
 
 	fz_try(ctx)
 	{
 		base = pdf_load_colorspace(xref, baseobj);
 
-		idx = fz_malloc_struct(ctx, struct indexed);
-		idx->lookup = NULL;
-		idx->base = base;
-		idx->high = pdf_to_int(highobj);
-		idx->high = fz_clampi(idx->high, 0, 255);
-		n = base->n * (idx->high + 1);
-		idx->lookup = fz_malloc_array(ctx, 1, n);
+		high = pdf_to_int(highobj);
+		high = fz_clampi(high, 0, 255);
+		n = base->n * (high + 1);
+		lookup = fz_malloc_array(ctx, 1, n);
 
-		cs = fz_new_colorspace(ctx, "Indexed", 1);
-		cs->to_rgb = indexed_to_rgb;
-		cs->free_data = free_indexed;
-		cs->data = idx;
-		cs->size += sizeof(*idx) + n + (base ? base->size : 0);
-
-		if (pdf_is_string(lookup) && pdf_to_str_len(lookup) == n)
+		if (pdf_is_string(lookupobj) && pdf_to_str_len(lookupobj) == n)
 		{
-			unsigned char *buf = (unsigned char *) pdf_to_str_buf(lookup);
+			unsigned char *buf = (unsigned char *) pdf_to_str_buf(lookupobj);
 			for (i = 0; i < n; i++)
-				idx->lookup[i] = buf[i];
+				lookup[i] = buf[i];
 		}
-		else if (pdf_is_indirect(lookup))
+		else if (pdf_is_indirect(lookupobj))
 		{
 			fz_stream *file = NULL;
 
@@ -275,8 +193,8 @@ load_indexed(pdf_document *xref, pdf_obj *array)
 
 			fz_try(ctx)
 			{
-				file = pdf_open_stream(xref, pdf_to_num(lookup), pdf_to_gen(lookup));
-				i = fz_read(file, idx->lookup, n);
+				file = pdf_open_stream(xref, pdf_to_num(lookupobj), pdf_to_gen(lookupobj));
+				i = fz_read(file, lookup, n);
 			}
 			fz_always(ctx)
 			{
@@ -284,24 +202,20 @@ load_indexed(pdf_document *xref, pdf_obj *array)
 			}
 			fz_catch(ctx)
 			{
-				fz_throw(ctx, "cannot open colorspace lookup table (%d 0 R)", pdf_to_num(lookup));
+				fz_throw(ctx, "cannot open colorspace lookup table (%d 0 R)", pdf_to_num(lookupobj));
 			}
 		}
 		else
 		{
 			fz_throw(ctx, "cannot parse colorspace lookup table");
 		}
+
+		cs = fz_new_indexed_colorspace(ctx, base, high, lookup);
 	}
 	fz_catch(ctx)
 	{
-		if (cs == NULL || cs->data != idx)
-		{
-			fz_drop_colorspace(ctx, base);
-			if (idx)
-				fz_free(ctx, idx->lookup);
-			fz_free(ctx, idx);
-		}
-		fz_drop_colorspace(ctx, cs);
+		fz_drop_colorspace(ctx, base);
+		fz_free(ctx, lookup);
 		fz_rethrow(ctx);
 	}
 

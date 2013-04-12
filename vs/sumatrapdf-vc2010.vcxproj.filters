@@ -588,6 +588,9 @@
     <ClCompile Include="..\mupdf\fitz\res_halftone.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\fitz\res_image.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\fitz\res_path.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

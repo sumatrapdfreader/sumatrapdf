@@ -6,10 +6,11 @@
 #include <wincodec.h>
 #endif
 
-fz_pixmap *
-fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
+static fz_pixmap *
+fz_load_jxr_or_info(fz_context *ctx, unsigned char *data, int size, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
 {
 #ifdef _WIN32
+	int info_only = wp && hp && xresp && yresp && cspacep;
 	fz_pixmap *pix = NULL;
 	IStream *stream = NULL;
 	IWICImagingFactory *factory = NULL;
@@ -42,24 +43,35 @@ fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
 #undef Check
 	codec_available = 1;
 
-	fz_try(ctx)
+	if (info_only)
 	{
-		pix = fz_new_pixmap(ctx, fz_device_bgr, width, height);
+		*cspacep = fz_device_bgr;
+		*wp = width;
+		*hp = height;
+		*xresp = (int)(xres + 0.5);
+		*yresp = (int)(yres + 0.5);
 	}
-	fz_catch(ctx)
+	else
 	{
-		pix = NULL;
-		goto CleanUp;
+		fz_try(ctx)
+		{
+			pix = fz_new_pixmap(ctx, fz_device_bgr, width, height);
+		}
+		fz_catch(ctx)
+		{
+			pix = NULL;
+			goto CleanUp;
+		}
+		hr = IWICFormatConverter_CopyPixels(converter, NULL, pix->w * pix->n, pix->w * pix->h * pix->n, pix->samples);
+		if (FAILED(hr))
+		{
+			fz_drop_pixmap(ctx, pix);
+			pix = NULL;
+			goto CleanUp;
+		}
+		pix->xres = (int)(xres + 0.5);
+		pix->yres = (int)(yres + 0.5);
 	}
-	hr = IWICFormatConverter_CopyPixels(converter, NULL, pix->w * pix->n, pix->w * pix->h * pix->n, pix->samples);
-	if (FAILED(hr))
-	{
-		fz_drop_pixmap(ctx, pix);
-		pix = NULL;
-		goto CleanUp;
-	}
-	pix->xres = (int)(xres + 0.5);
-	pix->yres = (int)(yres + 0.5);
 
 CleanUp:
 #define Release(unk) if (unk) IUnknown_Release(unk)
@@ -74,11 +86,23 @@ CleanUp:
 
 	if (codec_available)
 	{
-		if (!pix)
+		if (!pix && !info_only)
 			fz_throw(ctx, "JPEG-XR codec failed to decode the image");
 		return pix;
 	}
 #endif
 	fz_throw(ctx, "JPEG-XR codec is not available");
 	return NULL;
+}
+
+fz_pixmap *
+fz_load_jxr(fz_context *ctx, unsigned char *data, int size)
+{
+	return fz_load_jxr_or_info(ctx, data, size, NULL, NULL, NULL, NULL, NULL);
+}
+
+void
+fz_load_jxr_info(fz_context *ctx, unsigned char *data, int size, int *wp, int *hp, int *xresp, int *yresp, fz_colorspace **cspacep)
+{
+	fz_load_jxr_or_info(ctx, data, size, wp, hp, xresp, yresp, cspacep);
 }

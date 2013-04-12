@@ -1924,6 +1924,9 @@ struct fz_text_block_s
 	fz_text_line *lines;
 };
 
+/* SumatraPDF: make fz_shades use less memory */
+enum { FZ_MAX_COLORS = 8 };
+
 /*
 	fz_text_line: A text line is a list of text spans, with the same
 	baseline. In typical cases this should correspond (as expected) to
