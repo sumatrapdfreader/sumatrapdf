@@ -18,7 +18,7 @@ static void IniTest()
     IniFile pNoNL2("[Section ]");
     assert(pNoNL2.FindSection("Section "));
 
-    static const char *iniData = "\
+    static const char *iniData = UTF8_BOM "\
 ; NULL section \n\
 key1=value1\n\
 [Section 1]\n\

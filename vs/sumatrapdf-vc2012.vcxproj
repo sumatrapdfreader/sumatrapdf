@@ -165,6 +165,7 @@
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
+    <ClCompile Include="..\src\utils\SquareTreeParser_ut.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
     <ClCompile Include="..\src\utils\StrFormat_ut.cpp" />
     <ClCompile Include="..\src\utils\StrSlice.cpp" />

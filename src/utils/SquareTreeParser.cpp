@@ -176,11 +176,12 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
         }
         else {
             // string value (decoding is left to the consumer)
-            if ('\n' == *data)
-                data++;
+            bool hasMoreLines = '\n' == *data;
             *SkipWsRev(key, separator) = '\0';
             *SkipWsRev(value, data) = '\0';
             node->data.Append(SquareTreeNode::DataItem(key, value));
+            if (hasMoreLines)
+                data++;
         }
     }
 

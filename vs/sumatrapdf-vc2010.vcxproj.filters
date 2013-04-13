@@ -363,6 +363,9 @@
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\SquareTreeParser_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\StrFormat.cpp">
       <Filter>utils</Filter>
     </ClCompile>

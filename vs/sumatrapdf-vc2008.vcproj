@@ -683,6 +683,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\utils\SquareTreeParser_ut.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\utils\TxtParser.cpp"
 					>
 				</File>
@@ -1351,6 +1355,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\mupdf\fitz\res_image.c"
+					>
+				</File>
+				<File
 					RelativePath="..\mupdf\fitz\res_path.c"
 					>
 				</File>
@@ -1388,10 +1396,6 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\fitz\stm_read.c"
-					>
-				</File>
-				<File
-					RelativePath="..\mupdf\fitz\res_image.c"
 					>
 				</File>
 			</Filter>
