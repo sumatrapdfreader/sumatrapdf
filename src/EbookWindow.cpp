@@ -599,7 +599,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
     }
 
     int startReparseIdx = -1;
-    if (ds)
+    if (ds && gGlobalPrefs->rememberStatePerDocument && !ds->useGlobalValues)
         startReparseIdx = ds->reparseIdx;
 
     // Add the file also to Windows' recently used documents (this doesn't

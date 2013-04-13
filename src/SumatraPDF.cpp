@@ -1663,8 +1663,8 @@ void AssociateExeWithPdfExtension()
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST | SHCNF_FLUSHNOWAIT, 0, 0);
 
     // Remind the user, when a different application takes over
-    gGlobalPrefs->pdfAssociateShouldAssociate = true;
-    gGlobalPrefs->pdfAssociateDontAskAgain = false;
+    str::ReplacePtr(&gGlobalPrefs->associatedExtensions, L".pdf");
+    gGlobalPrefs->associateSilently = false;
 }
 
 // Registering happens either through the Installer or the Options dialog;
@@ -1679,12 +1679,13 @@ static bool RegisterForPdfExtentions(HWND hwnd)
 
     /* Ask user for permission, unless he previously said he doesn't want to
        see this dialog */
-    if (!gGlobalPrefs->pdfAssociateDontAskAgain) {
-        INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs->pdfAssociateDontAskAgain);
+    if (!gGlobalPrefs->associateSilently) {
+        INT_PTR result = Dialog_PdfAssociate(hwnd, &gGlobalPrefs->associateSilently);
         assert(IDYES == result || IDNO == result);
-        gGlobalPrefs->pdfAssociateShouldAssociate = (IDYES == result);
+        str::ReplacePtr(&gGlobalPrefs->associatedExtensions, IDYES == result ? L".pdf" : NULL);
     }
-    if (!gGlobalPrefs->pdfAssociateShouldAssociate)
+    // for now, .pdf is the only choice
+    if (!str::EqI(gGlobalPrefs->associatedExtensions, L".pdf"))
         return false;
 
     AssociateExeWithPdfExtension();

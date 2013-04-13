@@ -17,17 +17,15 @@
 #include "Translations.h"
 #include "WindowInfo.h"
 
+#define PREFS_FILE_NAME         L"SumatraPDF-settings.txt"
 #define PREFS_INFO_URL          "http://blog.kowalczyk.info/software/sumatrapdf/settings.html"
 #define OLD_PREFS_FILE_NAME     L"sumatrapdfprefs.dat"
-// TODO: rename once all pref names have been fixed
-#define PREFS_FILE_NAME         L"SumatraPDF.dat"
-#define USER_PREFS_FILE_NAME    L"SumatraPDF-user.ini"
 
 GlobalPrefs *gGlobalPrefs = NULL;
 
 Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
 {
-    Favorite *fav = AllocStruct<Favorite>();
+    Favorite *fav = (Favorite *)DeserializeStruct(&gFavoriteInfo, NULL);
     fav->pageNo = pageNo;
     fav->name = str::Dup(name);
     fav->pageLabel = str::Dup(pageLabel);
@@ -75,8 +73,8 @@ static FieldInfo gGlobalPrefsFieldsBenc[] = {
     { offsetof(GlobalPrefs, inverseSearchCmdLine), Type_String, NULL },
     { offsetof(GlobalPrefs, timeOfLastUpdateCheck), Type_Compact, 0 },
     { offsetof(GlobalPrefs, openCountWeek), Type_Int, 0 },
-    { offsetof(GlobalPrefs, pdfAssociateDontAskAgain), Type_Bool, false },
-    { offsetof(GlobalPrefs, pdfAssociateShouldAssociate), Type_Bool, false },
+    { offsetof(GlobalPrefs, associateSilently), Type_Bool, false },
+    { offsetof(GlobalPrefs, associatedExtensions), Type_Compact, false },
     { offsetof(GlobalPrefs, rememberOpenedFiles), Type_Bool, true },
     { offsetof(GlobalPrefs, showStartPage), Type_Bool, true },
     { offsetof(GlobalPrefs, showToc), Type_Bool, true },
@@ -142,11 +140,18 @@ static bool BencGlobalPrefsCallback(BencDict *dict, const FieldInfo *field, cons
             ZeroMemory(fieldPtr, sizeof(FILETIME));
         return true;
     }
+    if (str::Eq(fieldName, "PdfAssociateShouldAssociate")) {
+        BencInt *val = dict ? dict->GetInt(fieldName) : NULL;
+        free(*(WCHAR **)fieldPtr);
+        *(WCHAR **)fieldPtr = str::Dup(val && val->Value() ? L".pdf" : NULL);
+        return true;
+    }
     if (str::Eq(fieldName, "Favorites")) {
         BencArray *favDict = dict ? dict->GetArray(fieldName) : NULL;
         Vec<FileState *> *files = *(Vec<FileState *> **)fieldPtr;
         for (size_t j = 0; j < files->Count(); j++) {
             FileState *file = files->At(j);
+            CrashIf(file->favorites);
             file->favorites = new Vec<Favorite *>();
             if (!favDict)
                 continue;
@@ -247,11 +252,13 @@ bool LoadPrefs()
         }
     }
 
-    ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
+#ifdef ENABLE_SUMATRAPDF_USER_INI
+    ScopedMem<WCHAR> userPath(AppGenDataFilename(L"SumatraPDF-user.ini"));
     if (userPath && file::Exists(userPath)) {
         ScopedMem<char> userPrefsData(file::ReadAll(userPath, NULL));
         DeserializeStruct(&gGlobalPrefsInfo, userPrefsData, gGlobalPrefs);
     }
+#endif
 
     if (!gGlobalPrefs->uiLanguage || !trans::ValidateLangCode(gGlobalPrefs->uiLanguage)) {
         // guess the ui language on first start

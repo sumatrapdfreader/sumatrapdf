@@ -224,8 +224,8 @@ FileSettings = [
 		"the openCount will be cut in half after every week, so that the " +
 		"Frequently Read list hopefully better reflects the currently relevant documents"),
 	Field("IsPinned", Bool, False,
-		"a user can \"pin\" a preferred document to the Frequently Read list " +
-		"so that the document isn't replaced by more frequently used ones"),
+		"a document can be \"pinned\" to the Frequently Read list so that it " +
+		"isn't displaced by more frequently used ones"),
 	# kjk: should be marked as internal
 	# zeniko: this would cause missing files to be checked at every startup again,
 	# is that intended?
@@ -239,12 +239,15 @@ FileSettings = [
 	Field("IsMissing", Bool, False,
 		"if a document can no longer be found but we still remember valuable state, " +
 		"it's classified as missing so that it can be hidden instead of removed"),
+	Field("DecryptionKey", Utf8String, None,
+		"Do not modify! Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
+		"crypt key (64 chars) - only applies for PDF documents"),
 	# kjk: I think this only applies to certain settings. Should those settings
 	# be grouped in a separate struct and the name reflect that? How does it
 	# interact with GlobalPrefsOnly?
 	# zeniko: in the previous implementation, when UseGlobalValues was set, all
 	# document specific settings weren't saved at all; that's no longer easily possible
-	# This pref applies to: DisplayMode, ScrollPos, PageNo, Zoom, Rotation,
+	# This pref applies to: DisplayMode, ScrollPos, PageNo, ReparseIdx, Zoom, Rotation,
 	# WindowState, WindowPos, ShowToc, SidebarDx and TocState
 	Field("UseGlobalValues", Bool, False,
 		"whether global defaults should be used when reloading this file instead of " +
@@ -266,9 +269,6 @@ FileSettings = [
 		"default state of new SumatraPDF windows (same as the last closed)"),
 	Struct("WindowPos", WindowPos,
 		"default position (can be on any monitor)", structName="RectI", compact=True),
-	Field("DecryptionKey", Utf8String, None,
-		"Do not modify! Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
-		"crypt key (64 chars) - only applies for PDF documents"),
 	Field("ShowToc", Bool, True,
 		"whether the table of contents (Bookmarks) sidebar is shown for this document"),
 	Field("SidebarDx", Int, 0,
@@ -370,10 +370,11 @@ GlobalPrefs = [
 	# Those should obsolete this pdf-only logic
 	# zeniko: replace these two with AssociatedExtensions (String, default: empty,
 	# might be e.g. ".pdf .xps") and CheckAssociationsAtStartup (Bool, default: true) ?
-	Field("PdfAssociateDontAskAgain", Bool, False,
-		"if false, we won't ask the user if he wants Sumatra to handle PDF files"),
-	Field("PdfAssociateShouldAssociate", Bool, False,
-		"if pdfAssociateDontAskAgain is true, says whether we should silently associate or not"),
+	Field("AssociatedExtensions", String, None,
+		"a space separated list of extensions that SumatraPDF has associated itself with " +
+		"and will reassociate if a different application takes over"),
+	Field("AssociateSilently", Bool, False,
+		"whether file associations should be fixed silently or only after user feedback"),
 	Field("CheckForUpdates", Bool, True,
 		"whether SumatraPDF should check once a day whether updates are available"),
 	Struct("TimeOfLastUpdateCheck", FileTime,
@@ -560,10 +561,10 @@ def main():
 
 	content = AssembleDefaults(GlobalPrefs,
 		"You can use this file to modify experimental and expert settings not changeable " +
-		"through the UI instead of modifying SumatraPDF.dat directly. Just copy this file " +
-		"alongside SumatraPDF.dat and change the values below. They will overwrite the " +
-		"corresponding settings in SumatraPDF.dat at every startup.")
-	content = "# Caution: All settings below are still subject to change!\n\n" + content
+		"through the UI instead of modifying SumatraPDF-settings.txt directly. Just copy " +
+		"this file alongside SumatraPDF-settings.txt and change the values below. " +
+		"They will overwrite the corresponding settings in SumatraPDF-settings.txt at every startup.")
+	content = "# Warning: This file only works for builds compiled with ENABLE_SUMATRAPDF_USER_INI !\n\n" + content
 	open("docs/SumatraPDF-user.ini", "wb").write(content.replace("\n", "\r\n").encode("utf-8-sig"))
 
 if __name__ == "__main__":

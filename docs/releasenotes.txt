@@ -5,9 +5,9 @@ Next version:
 
 2.3 (2013-??-??):
 
-* settings are now saved to SumatraPDF.dat instead of sumatrapdfprefs.dat
-  see http://blog.kowalczyk.info/software/sumatrapdf/settings.html for
-  further details
+* settings are now saved to SumatraPDF-settings.txt instead of
+  sumatrapdfprefs.dat; for further details on the new file, see
+  http://blog.kowalczyk.info/software/sumatrapdf/settings.html
 
 * add support for OpenXPS documents
 * "Go To Page" for ebook format

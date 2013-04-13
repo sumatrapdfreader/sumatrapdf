@@ -135,13 +135,17 @@ struct FileState {
     // that the Frequently Read list hopefully better reflects the
     // currently relevant documents
     int openCount;
-    // a user can "pin" a preferred document to the Frequently Read list so
-    // that the document isn't replaced by more frequently used ones
+    // a document can be "pinned" to the Frequently Read list so that it
+    // isn't displaced by more frequently used ones
     bool isPinned;
     // if a document can no longer be found but we still remember valuable
     // state, it's classified as missing so that it can be hidden instead
     // of removed
     bool isMissing;
+    // Do not modify! Hex encoded MD5 fingerprint of file content (32
+    // chars) followed by crypt key (64 chars) - only applies for PDF
+    // documents
+    char * decryptionKey;
     // whether global defaults should be used when reloading this file
     // instead of the values listed below
     bool useGlobalValues;
@@ -166,10 +170,6 @@ struct FileState {
     int windowState;
     // default position (can be on any monitor)
     RectI windowPos;
-    // Do not modify! Hex encoded MD5 fingerprint of file content (32
-    // chars) followed by crypt key (64 chars) - only applies for PDF
-    // documents
-    char * decryptionKey;
     // whether the table of contents (Bookmarks) sidebar is shown for this
     // document
     bool showToc;
@@ -243,12 +243,13 @@ struct GlobalPrefs {
     // whether the Favorites sidebar should be visible by default in the
     // main window
     bool showFavorites;
-    // if false, we won't ask the user if he wants Sumatra to handle PDF
-    // files
-    bool pdfAssociateDontAskAgain;
-    // if pdfAssociateDontAskAgain is true, says whether we should silently
-    // associate or not
-    bool pdfAssociateShouldAssociate;
+    // a space separated list of extensions that SumatraPDF has associated
+    // itself with and will reassociate if a different application takes
+    // over
+    WCHAR * associatedExtensions;
+    // whether file associations should be fixed silently or only after
+    // user feedback
+    bool associateSilently;
     // whether SumatraPDF should check once a day whether updates are
     // available
     bool checkForUpdates;
@@ -429,6 +430,7 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, openCount),       Type_Int,        0                        },
     { offsetof(FileState, isPinned),        Type_Bool,       false                    },
     { offsetof(FileState, isMissing),       Type_Bool,       false                    },
+    { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
     { offsetof(FileState, useGlobalValues), Type_Bool,       false                    },
     { offsetof(FileState, displayMode),     Type_String,     (intptr_t)L"automatic"   },
     { offsetof(FileState, scrollPos),       Type_Compact,    (intptr_t)&gPointIInfo   },
@@ -438,53 +440,52 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, rotation),        Type_Int,        0                        },
     { offsetof(FileState, windowState),     Type_Int,        0                        },
     { offsetof(FileState, windowPos),       Type_Compact,    (intptr_t)&gRectI_1_Info },
-    { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
     { offsetof(FileState, showToc),         Type_Bool,       true                     },
     { offsetof(FileState, sidebarDx),       Type_Int,        0                        },
     { offsetof(FileState, tocState),        Type_IntArray,   NULL                     },
     { offsetof(FileState, favorites),       Type_Array,      (intptr_t)&gFavoriteInfo },
 };
-static const StructInfo gFileStateInfo = { sizeof(FileState), 18, gFileStateFields, "FilePath\0OpenCount\0IsPinned\0IsMissing\0UseGlobalValues\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0Zoom\0Rotation\0WindowState\0WindowPos\0DecryptionKey\0ShowToc\0SidebarDx\0TocState\0Favorites" };
+static const StructInfo gFileStateInfo = { sizeof(FileState), 18, gFileStateFields, "FilePath\0OpenCount\0IsPinned\0IsMissing\0DecryptionKey\0UseGlobalValues\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocState\0Favorites" };
 
 static const FieldInfo gGlobalPrefsFields[] = {
-    { offsetof(GlobalPrefs, mainWindowBackground),        Type_Color,      0x8000f2ff                                                                                                            },
-    { offsetof(GlobalPrefs, escToExit),                   Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, reuseInstance),               Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, fixedPageUI),                 Type_Struct,     (intptr_t)&gFixedPageUIInfo                                                                                           },
-    { offsetof(GlobalPrefs, ebookUI),                     Type_Struct,     (intptr_t)&gEbookUIInfo                                                                                               },
-    { offsetof(GlobalPrefs, imageOnlyUI),                 Type_Struct,     (intptr_t)&gImageOnlyUIInfo                                                                                           },
-    { offsetof(GlobalPrefs, chmUI),                       Type_Struct,     (intptr_t)&gChmUIInfo                                                                                                 },
-    { offsetof(GlobalPrefs, externalViewers),             Type_Array,      (intptr_t)&gExternalViewerInfo                                                                                        },
-    { offsetof(GlobalPrefs, zoomLevels),                  Type_FloatArray, (intptr_t)"8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400" },
-    { offsetof(GlobalPrefs, zoomIncrement),               Type_Float,      (intptr_t)"0"                                                                                                         },
-    { offsetof(GlobalPrefs, printerDefaults),             Type_Struct,     (intptr_t)&gPrinterDefaultsInfo                                                                                       },
-    { offsetof(GlobalPrefs, forwardSearch),               Type_Struct,     (intptr_t)&gForwardSearchInfo                                                                                         },
-    { offsetof(GlobalPrefs, rememberStatePerDocument),    Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, uiLanguage),                  Type_Utf8String, NULL                                                                                                                  },
-    { offsetof(GlobalPrefs, showToolbar),                 Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, showFavorites),               Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, pdfAssociateDontAskAgain),    Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, pdfAssociateShouldAssociate), Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, checkForUpdates),             Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, timeOfLastUpdateCheck),       Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
-    { offsetof(GlobalPrefs, versionToSkip),               Type_String,     NULL                                                                                                                  },
-    { offsetof(GlobalPrefs, rememberOpenedFiles),         Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, useSysColors),                Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, inverseSearchCmdLine),        Type_String,     NULL                                                                                                                  },
-    { offsetof(GlobalPrefs, enableTeXEnhancements),       Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, defaultDisplayMode),          Type_String,     (intptr_t)L"automatic"                                                                                                },
-    { offsetof(GlobalPrefs, defaultZoom),                 Type_Utf8String, (intptr_t)"fit page"                                                                                                  },
-    { offsetof(GlobalPrefs, windowState),                 Type_Int,        1                                                                                                                     },
-    { offsetof(GlobalPrefs, windowPos),                   Type_Compact,    (intptr_t)&gRectIInfo                                                                                                 },
-    { offsetof(GlobalPrefs, showToc),                     Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, sidebarDx),                   Type_Int,        0                                                                                                                     },
-    { offsetof(GlobalPrefs, tocDy),                       Type_Int,        0                                                                                                                     },
-    { offsetof(GlobalPrefs, showStartPage),               Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, openCountWeek),               Type_Int,        0                                                                                                                     },
-    { offsetof(GlobalPrefs, cbxR2L),                      Type_Bool,       false                                                                                                                 },
-    { offsetof(GlobalPrefs, fileStates),                  Type_Array,      (intptr_t)&gFileStateInfo                                                                                             },
+    { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,      0x8000f2ff                                                                                                            },
+    { offsetof(GlobalPrefs, escToExit),                Type_Bool,       false                                                                                                                 },
+    { offsetof(GlobalPrefs, reuseInstance),            Type_Bool,       false                                                                                                                 },
+    { offsetof(GlobalPrefs, fixedPageUI),              Type_Struct,     (intptr_t)&gFixedPageUIInfo                                                                                           },
+    { offsetof(GlobalPrefs, ebookUI),                  Type_Struct,     (intptr_t)&gEbookUIInfo                                                                                               },
+    { offsetof(GlobalPrefs, imageOnlyUI),              Type_Struct,     (intptr_t)&gImageOnlyUIInfo                                                                                           },
+    { offsetof(GlobalPrefs, chmUI),                    Type_Struct,     (intptr_t)&gChmUIInfo                                                                                                 },
+    { offsetof(GlobalPrefs, externalViewers),          Type_Array,      (intptr_t)&gExternalViewerInfo                                                                                        },
+    { offsetof(GlobalPrefs, zoomLevels),               Type_FloatArray, (intptr_t)"8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400" },
+    { offsetof(GlobalPrefs, zoomIncrement),            Type_Float,      (intptr_t)"0"                                                                                                         },
+    { offsetof(GlobalPrefs, printerDefaults),          Type_Struct,     (intptr_t)&gPrinterDefaultsInfo                                                                                       },
+    { offsetof(GlobalPrefs, forwardSearch),            Type_Struct,     (intptr_t)&gForwardSearchInfo                                                                                         },
+    { offsetof(GlobalPrefs, rememberStatePerDocument), Type_Bool,       true                                                                                                                  },
+    { offsetof(GlobalPrefs, uiLanguage),               Type_Utf8String, NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, showToolbar),              Type_Bool,       true                                                                                                                  },
+    { offsetof(GlobalPrefs, showFavorites),            Type_Bool,       false                                                                                                                 },
+    { offsetof(GlobalPrefs, associatedExtensions),     Type_String,     NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, associateSilently),        Type_Bool,       false                                                                                                                 },
+    { offsetof(GlobalPrefs, checkForUpdates),          Type_Bool,       true                                                                                                                  },
+    { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
+    { offsetof(GlobalPrefs, versionToSkip),            Type_String,     NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, rememberOpenedFiles),      Type_Bool,       true                                                                                                                  },
+    { offsetof(GlobalPrefs, useSysColors),             Type_Bool,       false                                                                                                                 },
+    { offsetof(GlobalPrefs, inverseSearchCmdLine),     Type_String,     NULL                                                                                                                  },
+    { offsetof(GlobalPrefs, enableTeXEnhancements),    Type_Bool,       false                                                                                                                 },
+    { offsetof(GlobalPrefs, defaultDisplayMode),       Type_String,     (intptr_t)L"automatic"                                                                                                },
+    { offsetof(GlobalPrefs, defaultZoom),              Type_Utf8String, (intptr_t)"fit page"                                                                                                  },
+    { offsetof(GlobalPrefs, windowState),              Type_Int,        1                                                                                                                     },
+    { offsetof(GlobalPrefs, windowPos),                Type_Compact,    (intptr_t)&gRectIInfo                                                                                                 },
+    { offsetof(GlobalPrefs, showToc),                  Type_Bool,       true                                                                                                                  },
+    { offsetof(GlobalPrefs, sidebarDx),                Type_Int,        0                                                                                                                     },
+    { offsetof(GlobalPrefs, tocDy),                    Type_Int,        0                                                                                                                     },
+    { offsetof(GlobalPrefs, showStartPage),            Type_Bool,       true                                                                                                                  },
+    { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
+    { offsetof(GlobalPrefs, cbxR2L),                   Type_Bool,       false                                                                                                                 },
+    { offsetof(GlobalPrefs, fileStates),               Type_Array,      (intptr_t)&gFileStateInfo                                                                                             },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 36, gGlobalPrefsFields, "MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ImageOnlyUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0PdfAssociateDontAskAgain\0PdfAssociateShouldAssociate\0CheckForUpdates\0TimeOfLastUpdateCheck\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxR2L\0FileStates" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 36, gGlobalPrefsFields, "MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ImageOnlyUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0TimeOfLastUpdateCheck\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxR2L\0FileStates" };
 
 #endif
 

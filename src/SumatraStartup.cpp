@@ -446,7 +446,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // Make sure that we're still registered as default,
     // if the user has explicitly told us to be
-    if (gGlobalPrefs->pdfAssociateShouldAssociate && win)
+    if (gGlobalPrefs->associatedExtensions && win)
         RegisterForPdfExtentions(win->hwndFrame);
 
     if (gGlobalPrefs->checkForUpdates && gWindows.Count() > 0)
