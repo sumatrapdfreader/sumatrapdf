@@ -45,6 +45,8 @@
 
 #include "BaseUtil.h"
 #include "DisplayModel.h"
+
+#include "AppPrefs.h" // needed for gGlobalPrefs
 #include "TextSearch.h"
 #include "TextSelection.h"
 
@@ -53,29 +55,6 @@
 
 // if true, we pre-render the pages right before and after the visible pages
 bool gPredictiveRender = true;
-
-static ScreenPagePadding gPagePadding = {
-    {
-        PADDING_PAGE_BORDER_TOP_DEF, PADDING_PAGE_BORDER_RIGHT_DEF,
-        PADDING_PAGE_BORDER_BOTTOM_DEF, PADDING_PAGE_BORDER_LEFT_DEF,
-    }, SizeI(PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_Y_DEF)
-}, gPagePaddingPresentation = {
-    { 0, 0, 0, 0 }, SizeI(PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF)
-}, gImagePadding = {
-    { 0, 0, 0, 0 }, SizeI(PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF)
-}, gImagePaddingPresentation = {
-    { 0, 0, 0, 0 }, SizeI(PADDING_BETWEEN_PAGES_X_DEF, PADDING_BETWEEN_PAGES_X_DEF)
-};
-
-void SetScreenPadding(WindowMargin& margin, SizeI spacing, bool forImages)
-{
-    ScreenPagePadding *padding = forImages ? &gImagePadding : &gPagePadding;
-    padding->margin = margin;
-    padding->spacing = spacing;
-
-    padding = forImages ? &gImagePaddingPresentation : &gPagePaddingPresentation;
-    padding->spacing = spacing;
-}
 
 bool IsContinuous(DisplayMode displayMode)
 {
@@ -205,7 +184,7 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 DisplayModel::DisplayModel(BaseEngine *engine, DocType engineType, DisplayModelCallback *cb) :
     engine(engine), engineType(engineType), dmCb(cb),
     pagesInfo(NULL), displayMode(DM_AUTOMATIC), startPage(1),
-    padding(&gPagePadding), zoomReal(INVALID_ZOOM), zoomVirtual(INVALID_ZOOM),
+    zoomReal(INVALID_ZOOM), zoomVirtual(INVALID_ZOOM),
     rotation(0), dpiFactor(1.0f), displayR2L(false),
     presentationMode(false), presZoomVirtual(INVALID_ZOOM),
     presDisplayMode(DM_AUTOMATIC), navHistoryIx(0),
@@ -213,8 +192,19 @@ DisplayModel::DisplayModel(BaseEngine *engine, DocType engineType, DisplayModelC
 {
     CrashIf(!engine || engine->PageCount() <= 0);
 
-    if (engine->IsImageCollection())
-        padding = &gImagePadding;
+    if (!engine->IsImageCollection()) {
+        windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
+        pageSpacing = gGlobalPrefs->fixedPageUI.pageSpacing;
+    }
+    else {
+        windowMargin = gGlobalPrefs->imageOnlyUI.windowMargin;
+        pageSpacing = gGlobalPrefs->imageOnlyUI.pageSpacing;
+    }
+#ifdef DRAW_PAGE_SHADOWS
+    windowMargin.top += 3; windowMargin.bottom += 5;
+    windowMargin.right += 3; windowMargin.left += 1;
+    pageSpacing.dx += 4; pageSpacing.dy += 4;
+#endif
     if (AsChmEngine())
         AsChmEngine()->SetNavigationCalback(dmCb);
 
@@ -409,8 +399,8 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo)
     if (RectD(PointD(), row).IsEmpty())
         return 0;
 
-    int areaForPagesDx = viewPort.dx - padding->margin.left - padding->margin.right - padding->spacing.dx * (columns - 1);
-    int areaForPagesDy = viewPort.dy - padding->margin.top - padding->margin.bottom;
+    int areaForPagesDx = viewPort.dx - windowMargin.left - windowMargin.right - pageSpacing.dx * (columns - 1);
+    int areaForPagesDy = viewPort.dy - windowMargin.top - windowMargin.bottom;
     if (areaForPagesDx <= 0 || areaForPagesDy <= 0)
         return 0;
 
@@ -555,7 +545,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation)
     viewPort = RectI(viewPort.TL(), totalViewPortSize);
 
 RestartLayout:
-    int currPosY = padding->margin.top;
+    int currPosY = windowMargin.top;
     float currZoomReal = zoomReal;
     SetZoomVirtual(newZoomVirtual);
 
@@ -599,7 +589,7 @@ RestartLayout:
         if (columnMaxWidth[pageInARow] < pos.dx)
             columnMaxWidth[pageInARow] = pos.dx;
 
-        if (!needHScroll && viewPort.dx < padding->margin.left + columnMaxWidth[0] + (columns == 2 ? padding->spacing.dx + columnMaxWidth[1] : 0) + padding->margin.right) {
+        if (!needHScroll && viewPort.dx < windowMargin.left + columnMaxWidth[0] + (columns == 2 ? pageSpacing.dx + columnMaxWidth[1] : 0) + windowMargin.right) {
             needHScroll = true;
             viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
             goto RestartLayout;
@@ -611,7 +601,7 @@ RestartLayout:
         assert(pageInARow <= columns);
         if (pageInARow == columns) {
             /* starting next row */
-            currPosY += rowMaxPageDy + padding->spacing.dy;
+            currPosY += rowMaxPageDy + pageSpacing.dy;
             rowMaxPageDy = 0;
             pageInARow = 0;
         }
@@ -619,11 +609,11 @@ RestartLayout:
 
     if (pageInARow != 0) {
         /* this is a partial row */
-        currPosY += rowMaxPageDy + padding->spacing.dy;
+        currPosY += rowMaxPageDy + pageSpacing.dy;
     }
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
-    const int canvasDy = currPosY + padding->margin.bottom - padding->spacing.dy;
+    const int canvasDy = currPosY + windowMargin.bottom - pageSpacing.dy;
     if (!needVScroll && canvasDy > viewPort.dy) {
         needVScroll = true;
         viewPort.dx -= GetSystemMetrics(SM_CXVSCROLL);
@@ -640,7 +630,7 @@ RestartLayout:
 
     // restart the layout if we detect we need to show scrollbars
     // (there are some edge cases we can't catch in the above loop)
-    int canvasDx = padding->margin.left + columnMaxWidth[0] + (columns == 2 ? padding->spacing.dx + columnMaxWidth[1] : 0) + padding->margin.right;
+    int canvasDx = windowMargin.left + columnMaxWidth[0] + (columns == 2 ? pageSpacing.dx + columnMaxWidth[1] : 0) + windowMargin.right;
     if (!needHScroll && canvasDx > viewPort.dx) {
         needHScroll = true;
         viewPort.dy -= GetSystemMetrics(SM_CYHSCROLL);
@@ -657,7 +647,7 @@ RestartLayout:
 
     assert(offX >= 0);
     pageInARow = 0;
-    int pageOffX = offX + padding->margin.left;
+    int pageOffX = offX + windowMargin.left;
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (!pageInfo->shown) {
@@ -667,26 +657,26 @@ RestartLayout:
         // leave first spot empty in cover page mode
         if (DisplayModeShowCover(GetDisplayMode()) && pageNo == 1) {
             CrashIf(pageInARow >= dimof(columnMaxWidth));
-            pageOffX += columnMaxWidth[pageInARow] + padding->spacing.dx;
+            pageOffX += columnMaxWidth[pageInARow] + pageSpacing.dx;
             ++pageInARow;
         }
         CrashIf(pageInARow >= dimof(columnMaxWidth));
         pageInfo->pos.x = pageOffX + (columnMaxWidth[pageInARow] - pageInfo->pos.dx) / 2;
         // center the cover page over the first two spots in non-continuous mode
         if (DisplayModeShowCover(GetDisplayMode()) && pageNo == 1 && !IsContinuous(GetDisplayMode())) {
-            pageInfo->pos.x = offX + padding->margin.left + (columnMaxWidth[0] + padding->spacing.dx + columnMaxWidth[1] - pageInfo->pos.dx) / 2;
+            pageInfo->pos.x = offX + windowMargin.left + (columnMaxWidth[0] + pageSpacing.dx + columnMaxWidth[1] - pageInfo->pos.dx) / 2;
         }
         // mirror the page layout when displaying a Right-to-Left document
         if (displayR2L && columns > 1)
             pageInfo->pos.x = canvasDx - pageInfo->pos.x - pageInfo->pos.dx;
 
         CrashIf(pageInARow >= dimof(columnMaxWidth));
-        pageOffX += columnMaxWidth[pageInARow] + padding->spacing.dx;
+        pageOffX += columnMaxWidth[pageInARow] + pageSpacing.dx;
         ++pageInARow;
         assert(pageOffX >= 0 && pageInfo->pos.x >= 0);
 
         if (pageInARow == columns) {
-            pageOffX = offX + padding->margin.left;
+            pageOffX = offX + windowMargin.left;
             pageInARow = 0;
         }
     }
@@ -698,7 +688,7 @@ RestartLayout:
 
     /* if a page is smaller than drawing area in y axis, y-center the page */
     if (canvasDy < viewPort.dy) {
-        int offY = padding->margin.top + (viewPort.dy - canvasDy) / 2;
+        int offY = windowMargin.top + (viewPort.dy - canvasDy) / 2;
         assert(offY >= 0.0);
         for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
             PageInfo *pageInfo = GetPageInfo(pageNo);
@@ -1033,13 +1023,13 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
             PointI second = GetContentStart(lastPageNo);
             scrollY = min(scrollY, second.y);
         }
-        viewPort.x = scrollX + pageInfo->pos.x - padding->margin.left;
+        viewPort.x = scrollX + pageInfo->pos.x - windowMargin.left;
     }
     else if (-1 != scrollX)
         viewPort.x = scrollX;
     // make sure to not display the blank space beside the first page in cover mode
     else if (-1 == scrollX && 1 == pageNo && DisplayModeShowCover(GetDisplayMode()))
-        viewPort.x = pageInfo->pos.x - padding->margin.left;
+        viewPort.x = pageInfo->pos.x - windowMargin.left;
 
     /* Hack: if an image is smaller in Y axis than the draw area, then we center
        the image by setting pageInfo->currPos.y in RecalcPagesInfo. So we shouldn't
@@ -1048,7 +1038,7 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     viewPort.y = scrollY;
     // Move the next page to the top (unless the remaining pages fit onto a single screen)
     if (IsContinuous(GetDisplayMode()))
-        viewPort.y = pageInfo->pos.y - padding->margin.top + scrollY;
+        viewPort.y = pageInfo->pos.y - windowMargin.top + scrollY;
 
     viewPort.x = limitValue(viewPort.x, 0, canvasSize.dx - viewPort.dx);
     viewPort.y = limitValue(viewPort.y, 0, canvasSize.dy - viewPort.dy);
@@ -1091,16 +1081,20 @@ void DisplayModel::SetPresentationMode(bool enable)
     if (enable) {
         presDisplayMode = displayMode;
         presZoomVirtual = zoomVirtual;
-        padding = &gPagePaddingPresentation;
-        if (engine && engine->IsImageCollection())
-            padding = &gImagePaddingPresentation;
+        // disable the window margin during presentations
+        windowMargin.top = windowMargin.right = windowMargin.bottom = windowMargin.left = 0;
         ChangeDisplayMode(DM_SINGLE_PAGE);
         ZoomTo(ZOOM_FIT_PAGE);
     }
     else {
-        padding = &gPagePadding;
         if (engine && engine->IsImageCollection())
-            padding = &gImagePadding;
+            windowMargin = gGlobalPrefs->imageOnlyUI.windowMargin;
+        else
+            windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
+#ifdef DRAW_PAGE_SHADOWS
+        windowMargin.top += 3; windowMargin.bottom += 5;
+        windowMargin.right += 3; windowMargin.left += 1;
+#endif
         ChangeDisplayMode(presDisplayMode);
         if (!IsValidZoom(presZoomVirtual))
             presZoomVirtual = zoomVirtual;
@@ -1342,16 +1336,16 @@ void DisplayModel::ZoomBy(float zoomFactor, PointI *fixPt)
 
 float DisplayModel::NextZoomStep(float towardsLevel)
 {
-    // define USE_CONTINUOUS_ZOOM to use a continuous zoom range with
-    // all steps exactly 20% apart instead of the predefined zoom levels
-#ifdef USE_CONTINUOUS_ZOOM
-    const float zoomFactor = 1.2f;
-    float newZoom = ZoomAbsolute();
-    if (newZoom < towardsLevel)
-        newZoom = min(newZoom * zoomFactor, towardsLevel);
-    else if (newZoom > towardsLevel)
-        newZoom = max(newZoom / zoomFactor, towardsLevel);
-#else
+    if (gGlobalPrefs->zoomIncrement > 0) {
+        float zoom = ZoomAbsolute();
+        if (zoom < towardsLevel)
+            return min(zoom * (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+        if (zoom > towardsLevel)
+            return max(zoom / (gGlobalPrefs->zoomIncrement / 100 + 1), towardsLevel);
+        return zoom;
+    }
+
+#if 0
     // differences to Adobe Reader: starts at 8.33 (instead of 1 and 6.25)
     // and has four additional intermediary zoom levels ("added")
     static float zoomLevels[] = {
@@ -1360,6 +1354,9 @@ float DisplayModel::NextZoomStep(float towardsLevel)
         1200, 1600, 2000 /* added */, 2400, 3200, 4800 /* added */, 6400
     };
     CrashIf(zoomLevels[0] != ZOOM_MIN || zoomLevels[dimof(zoomLevels)-1] != ZOOM_MAX);
+#endif
+    Vec<float> *zoomLevels = gGlobalPrefs->zoomLevels;
+    CrashIf(zoomLevels->Count() != 0 && (zoomLevels->At(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
 
     float currZoom = ZoomAbsolute();
     float pageZoom = (float)HUGE_VAL, widthZoom = (float)HUGE_VAL;
@@ -1377,32 +1374,31 @@ float DisplayModel::NextZoomStep(float towardsLevel)
 #define FLOAT_FUZZ 0.01f
     float newZoom = towardsLevel;
     if (currZoom < towardsLevel) {
-        for (int i = 0; i < dimof(zoomLevels); i++) {
-            if (zoomLevels[i] - FLOAT_FUZZ <= currZoom)
+        for (size_t i = 0; i < zoomLevels->Count(); i++) {
+            if (zoomLevels->At(i) - FLOAT_FUZZ <= currZoom)
                 continue;
-            if (currZoom + FLOAT_FUZZ < pageZoom && pageZoom < zoomLevels[i] - FLOAT_FUZZ)
+            if (currZoom + FLOAT_FUZZ < pageZoom && pageZoom < zoomLevels->At(i) - FLOAT_FUZZ)
                 newZoom = ZOOM_FIT_PAGE;
-            else if (currZoom + FLOAT_FUZZ < widthZoom && widthZoom < zoomLevels[i] - FLOAT_FUZZ)
+            else if (currZoom + FLOAT_FUZZ < widthZoom && widthZoom < zoomLevels->At(i) - FLOAT_FUZZ)
                 newZoom = ZOOM_FIT_WIDTH;
             else
-                newZoom = zoomLevels[i];
+                newZoom = zoomLevels->At(i);
             break;
         }
     } else if (currZoom > towardsLevel) {
-        for (int i = dimof(zoomLevels); i > 0; i--) {
-            if (currZoom <= zoomLevels[i-1] + FLOAT_FUZZ)
+        for (size_t i = zoomLevels->Count(); i > 0; i--) {
+            if (currZoom <= zoomLevels->At(i-1) + FLOAT_FUZZ)
                 continue;
-            if (zoomLevels[i-1] + FLOAT_FUZZ < pageZoom && pageZoom < currZoom - FLOAT_FUZZ)
+            if (zoomLevels->At(i-1) + FLOAT_FUZZ < pageZoom && pageZoom < currZoom - FLOAT_FUZZ)
                 newZoom = ZOOM_FIT_PAGE;
-            else if (zoomLevels[i-1] + FLOAT_FUZZ < widthZoom && widthZoom < currZoom - FLOAT_FUZZ)
+            else if (zoomLevels->At(i-1) + FLOAT_FUZZ < widthZoom && widthZoom < currZoom - FLOAT_FUZZ)
                 newZoom = ZOOM_FIT_WIDTH;
             else
-                newZoom = zoomLevels[i-1];
+                newZoom = zoomLevels->At(i-1);
             break;
         }
     }
 #undef FLOAT_FUZZ
-#endif
 
     return newZoom;
 }

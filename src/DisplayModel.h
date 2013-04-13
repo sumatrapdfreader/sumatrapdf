@@ -15,35 +15,6 @@
 
 extern bool gPredictiveRender;
 
-struct ScreenPagePadding {
-    // padding around the whole canvas
-    WindowMargin margin;
-    // padding between two pages in X and Y direction
-    SizeI spacing;
-};
-
-/* the default distance between a page and window border edges, in pixels */
-#ifdef DRAW_PAGE_SHADOWS
-#define PADDING_PAGE_BORDER_TOP_DEF      5
-#define PADDING_PAGE_BORDER_LEFT_DEF     5
-#define PADDING_PAGE_BORDER_BOTTOM_DEF   7
-#define PADDING_PAGE_BORDER_RIGHT_DEF    7
-/* the distance between pages in y axis, in pixels. Only applicable if
-   more than one page in y axis (continuous mode) */
-#define PADDING_BETWEEN_PAGES_Y_DEF      8
-#else
-#define PADDING_PAGE_BORDER_TOP_DEF      2
-#define PADDING_PAGE_BORDER_LEFT_DEF     4
-#define PADDING_PAGE_BORDER_BOTTOM_DEF   2
-#define PADDING_PAGE_BORDER_RIGHT_DEF    4
-/* the distance between pages in y axis, in pixels. Only applicable if
-   more than one page in y axis (continuous mode) */
-#define PADDING_BETWEEN_PAGES_Y_DEF      PADDING_PAGE_BORDER_TOP_DEF + PADDING_PAGE_BORDER_BOTTOM_DEF
-#endif
-/* the distance between pages in x axis, in pixels. Only applicable if
-   columns > 1 */
-#define PADDING_BETWEEN_PAGES_X_DEF      PADDING_BETWEEN_PAGES_Y_DEF
-
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
     /* data that is constant for a given page. page size in document units */
@@ -186,7 +157,7 @@ public:
     bool            IsOverText(PointI pt);
     PageElement *   GetElementAtPos(PointI pt);
 
-    ScreenPagePadding *GetPadding() { return padding; }
+    const WindowMargin *GetWindowMargin() const { return &windowMargin; }
 
     int             GetPageNoByPoint(PointI pt);
     int             GetPageNextToPoint(PointI pt);
@@ -243,7 +214,9 @@ protected:
 
     /* size of virtual canvas containing all rendered pages. */
     SizeI           canvasSize;
-    ScreenPagePadding* padding;
+
+    WindowMargin    windowMargin;
+    SizeI           pageSpacing;
 
     /* real zoom value calculated from zoomVirtual. Same as
        zoomVirtual * 0.01 * dpiFactor
@@ -279,7 +252,5 @@ bool    IsFacing(DisplayMode displayMode);
 bool    DisplayModeShowCover(DisplayMode displayMode);
 int     NormalizeRotation(int rotation);
 bool    IsValidZoom(float zoomLevel);
-
-void    SetScreenPadding(WindowMargin& margin, SizeI spacing, bool forImages);
 
 #endif

@@ -300,7 +300,7 @@ void LinkHandler::ScrollTo(PageDestination *dest)
             scroll.x = -1;
         if (DEST_USE_DEFAULT == rect.y) {
             PageInfo *pageInfo = dm->GetPageInfo(dm->CurrentPageNo());
-            scroll.y = -(pageInfo->pageOnScreen.y - dm->GetPadding()->margin.top);
+            scroll.y = -(pageInfo->pageOnScreen.y - dm->GetWindowMargin()->top);
             scroll.y = max(scroll.y, 0); // Adobe Reader never shows the previous page
         }
     }

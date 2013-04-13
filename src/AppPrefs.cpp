@@ -220,6 +220,11 @@ static void UnparseZoomVirtual(char **txt, float zoom)
         *txt = str::Format("%g", zoom);
 }
 
+static int cmpFloat(const void *a, const void *b)
+{
+    return *(float *)a < *(float *)b ? -1 : *(float *)a > *(float *)b ? 1 : 0;
+}
+
 /* Caller needs to DeleteGlobalPrefs(gGlobalPrefs) */
 bool LoadPrefs()
 {
@@ -278,6 +283,17 @@ bool LoadPrefs()
         CrashIf(!IsValidZoom(state->zoomFloat));
         // "age" openCount statistics (cut in in half after every week)
         state->openCount >>= weekDiff;
+    }
+
+    // make sure that zoom levels are in the order expected by DisplayModel
+    gGlobalPrefs->zoomLevels->Sort(cmpFloat);
+    while (gGlobalPrefs->zoomLevels->Count() > 0 &&
+           gGlobalPrefs->zoomLevels->At(0) < ZOOM_MIN) {
+        gGlobalPrefs->zoomLevels->RemoveAt(0);
+    }
+    while (gGlobalPrefs->zoomLevels->Count() > 0 &&
+           gGlobalPrefs->zoomLevels->Last() > ZOOM_MAX) {
+        gGlobalPrefs->zoomLevels->Pop();
     }
 
     gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
