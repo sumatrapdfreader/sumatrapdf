@@ -9,24 +9,23 @@
 #endif
 #define MuiFromText_h
 
+typedef Control * (* UnknownControlCallback)(const char *name, SquareTreeNode *data);
+
 class ParsedMui {
-public:
-    Vec<Control *>      allControls;
-    Vec<ButtonVector*>  vecButtons;
-    Vec<Button*>        buttons;
-    Vec<ScrollBar*>     scrollBars;
+    Vec<Control *>      controls;
+    Vec<char *>         controlTypes;
     Vec<ILayout*>       layouts;
+
+public:
+    ~ParsedMui() {
+        FreeVecMembers(controlTypes);
+    }
+
+    void AddControl(Control *ctrl, const char *type);
+    void AddLayout(ILayout *layout);
+
+    Control *FindControl(const char *name, const char *type) const;
+    ILayout *FindLayout(const char *name, bool alsoControls=false) const;
+
+    static ParsedMui *Create(char *s, HwndWrapper *owner, UnknownControlCallback cb);
 };
-
-bool            MuiFromText(char *s, ParsedMui& res);
-Button *        FindButtonNamed(ParsedMui& muiInfo, const char *name);
-ButtonVector *  FindButtonVectorNamed(ParsedMui& muiInfo, const char *name);
-ScrollBar *     FindScrollBarNamed(ParsedMui& muiInfo, const char *name);
-Control *       FindControlNamed(ParsedMui& muiInfo, const char *name);
-ILayout *       FindLayoutNamed(ParsedMui& muiInfo, const char *name);
-
-typedef Control * (*ControlCreatorFunc)(TxtNode *);
-
-void RegisterControlCreatorFor(const char *typeName, ControlCreatorFunc creator);
-void FreeControlCreators();
-

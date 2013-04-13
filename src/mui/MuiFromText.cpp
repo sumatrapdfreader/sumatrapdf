@@ -4,118 +4,42 @@
 #include "Mui.h"
 
 #include "HtmlParserLookup.h"
-#include "MuiDefs.h"
+#include "SquareTreeParser.h"
 #include "SvgPath.h"
-#include "TxtParser.h"
 
 namespace mui {
 
-struct ControlCreatorNode {
-    ControlCreatorNode *    next;
-    const char *            typeName;
-    ControlCreatorFunc      creator;
-};
-
-// This is an extensiblity point that allows creating custom controls unknown
-// to mui that appear in text description
-static ControlCreatorNode *gControlCreators = NULL;
-
-void RegisterControlCreatorFor(const char *typeName, ControlCreatorFunc creator)
+void ParsedMui::AddControl(Control *ctrl, const char *type)
 {
-    ControlCreatorNode *cc = AllocStruct<ControlCreatorNode>();
-    cc->typeName = str::Dup(typeName);
-    cc->creator = creator;
-    ListInsert(&gControlCreators, cc);
+    controls.Append(ctrl);
+    controlTypes.Append(str::Dup(type));
 }
 
-static ControlCreatorFunc FindCreatorFuncFor(const char *typeName)
+void ParsedMui::AddLayout(ILayout *layout)
 {
-    ControlCreatorNode *curr = gControlCreators;
-    while (curr) {
-        if (str::EqI(typeName, curr->typeName))
-            return curr->creator;
-        curr = curr->next;
+    layouts.Append(layout);
+}
+
+Control *ParsedMui::FindControl(const char *name, const char *type) const
+{
+    for (size_t i = 0; i < controls.Count(); i++) {
+        if (controls.At(i)->IsNamed(name) && (!type || str::Eq(controlTypes.At(i), type)))
+            return controls.At(i);
     }
     return NULL;
 }
 
-void FreeControlCreators()
+ILayout *ParsedMui::FindLayout(const char *name, bool alsoControls) const
 {
-    ControlCreatorNode *curr = gControlCreators;
-    ControlCreatorNode *next;
-    while (curr) {
-        next = curr->next;
-        free((void*)curr->typeName);
-        free(curr);
-        curr = next;
+    for (size_t i = 0; i < layouts.Count(); i++) {
+        if (layouts.At(i)->IsNamed(name))
+            return layouts.At(i);
     }
-}
-
-Button *FindButtonNamed(ParsedMui& muiInfo, const char *name)
-{
-    for (size_t i = 0; i < muiInfo.buttons.Count(); i++) {
-        Button *c = muiInfo.buttons.At(i);
-        if (c->IsNamed(name))
-            return c;
-    }
+    if (alsoControls)
+        return FindControl(name, NULL);
     return NULL;
 }
 
-ButtonVector *FindButtonVectorNamed(ParsedMui& muiInfo, const char *name)
-{
-    for (size_t i = 0; i < muiInfo.vecButtons.Count(); i++) {
-        ButtonVector *c = muiInfo.vecButtons.At(i);
-        if (c->IsNamed(name))
-            return c;
-    }
-    return NULL;
-}
-
-ScrollBar *FindScrollBarNamed(ParsedMui& muiInfo, const char *name)
-{
-    for (size_t i = 0; i < muiInfo.scrollBars.Count(); i++) {
-        ScrollBar *c = muiInfo.scrollBars.At(i);
-        if (c->IsNamed(name))
-            return c;
-    }
-    return NULL;
-}
-
-Control *FindControlNamed(ParsedMui& muiInfo, const char *name)
-{
-    for (size_t i = 0; i < muiInfo.allControls.Count(); i++) {
-        Control *c = muiInfo.allControls.At(i);
-        if (c->IsNamed(name))
-            return c;
-    }
-    return NULL;
-}
-
-ILayout *FindLayoutNamed(ParsedMui& muiInfo, const char *name)
-{
-    for (size_t i = 0; i < muiInfo.layouts.Count(); i++) {
-        ILayout *l = muiInfo.layouts.At(i);
-        if (l->IsNamed(name))
-            return l;
-    }
-    return NULL;
-}
-
-ILayout *FindElementNamed(ParsedMui& muiInfo, const char *name)
-{
-    Control *c = FindControlNamed(muiInfo, name);
-    if (c)
-        return c;
-    return FindLayoutNamed(muiInfo, name);
-}
-
-
-static TxtNode *GetRootArray(TxtParser* parser)
-{
-    TxtNode *root = parser->nodes.At(0);
-    CrashIf(!root->IsArray());
-    return root;
-}
 
 static float ParseFloat(const char *s)
 {
@@ -149,7 +73,7 @@ static ElAlign ParseElAlign(const char *s)
         return ElAlignCenter;
     if (str::EqI(s, "top"))
         return ElAlignTop;
-    if (str::EqI(s, "bottome"))
+    if (str::EqI(s, "bottom"))
         return ElAlignBottom;
     if (str::EqI(s, "left"))
         return ElAlignLeft;
@@ -157,22 +81,6 @@ static ElAlign ParseElAlign(const char *s)
         return ElAlignRight;
     CrashIf(true);
     return ElAlignLeft;
-}
-
-static ElAlignData ParseElAlignData(const char *s)
-{
-    if (str::EqI(s, "center"))
-        return GetElAlignCenter();
-    if (str::EqI(s, "top"))
-        return GetElAlignTop();
-    if (str::EqI(s, "bottom"))
-        return GetElAlignBottom();
-    if (str::EqI(s, "left"))
-        return GetElAlignLeft();
-    if (str::EqI(s, "right"))
-        return GetElAlignRight();
-    CrashIf(true);
-    return GetElAlignCenter();
 }
 
 #if 0
@@ -192,262 +100,173 @@ static Gdiplus::FontStyle ParseFontWeight(const char *s)
     return FontStyleRegular;
 }
 
-static void AddStyleProp(Style *style, TxtNode *prop)
-{
-    ScopedMem<char> tmp(prop->ValDup());
-
-    if (prop->IsTextWithKey("name")) {
-        style->SetName(tmp);
-        return;
-    }
-
-    if (prop->IsTextWithKey("bg_col")) {
-        style->Set(Prop::AllocColorSolid(PropBgColor, tmp));
-        return;
-    }
-
-    if (prop->IsTextWithKey("col")) {
-        style->Set(Prop::AllocColorSolid(PropColor, tmp));
-        return;
-    }
-
-    if (prop->IsTextWithKey("parent")) {
-        Style *parentStyle = StyleByName(tmp);
-        CrashIf(!parentStyle);
-        style->SetInheritsFrom(parentStyle);
-        return;
-    }
-
-    if (prop->IsTextWithKey("border_width")) {
-        style->SetBorderWidth(ParseFloat(tmp));
-        return;
-    }
-
-    if (prop->IsTextWithKey("padding")) {
-        ParsedPadding padding = { 0 };
-        ParsePadding(tmp, padding);
-        style->SetPadding(padding.top, padding.right, padding.bottom, padding.left);
-        return;
-    }
-
-    if (prop->IsTextWithKey("stroke_width")) {
-        style->Set(Prop::AllocWidth(PropStrokeWidth, ParseFloat(tmp)));
-        return;
-    }
-
-    if (prop->IsTextWithKey("fill")) {
-        style->Set(Prop::AllocColorSolid(PropFill, tmp));
-        return;
-    }
-
-    if (prop->IsTextWithKey("vert_align")) {
-        style->Set(Prop::AllocAlign(PropVertAlign, ParseElAlign(tmp)));
-        return;
-    }
-
-    if (prop->IsTextWithKey("text_align")) {
-        style->Set(Prop::AllocTextAlign(ParseAlignAttr(tmp)));
-        return;
-    }
-
-    if (prop->IsTextWithKey("font_size")) {
-        style->Set(Prop::AllocFontSize(ParseFloat(tmp)));
-        return;
-    }
-
-    if (prop->IsTextWithKey("font_weight")) {
-        style->Set(Prop::AllocFontWeight(ParseFontWeight(tmp)));
-        return;
-    }
-
-    CrashIf(true);
-}
-
-static TxtNode *TxtChildNodeWithKey(TxtNode *top, const char *keyName)
-{
-    size_t n = top->children->Count();
-    for (size_t i = 0; i < n; i++) {
-        TxtNode *node = top->children->At(i);
-        if (node->IsTextWithKey(keyName))
-            return node;
-    }
-    return NULL;
-}
-
 // styles are cached globally, so we only add a style if it doesn't
 // exist already
-static void CacheStyleFromStruct(TxtNode* def)
+static void CacheStyleFromStruct(SquareTreeNode *def)
 {
-    CrashIf(!def->IsStructWithName("style"));
-    TxtNode *nameNode = TxtChildNodeWithKey(def, "name");
-    CrashIf(!nameNode); // must have name or else no way to refer to it
-    ScopedMem<char> tmp(nameNode->ValDup());
-    if (StyleByName(tmp))
+    const char *value = def->GetValue("name");
+    CrashIf(!value); // must have name or else no way to refer to it
+    if (StyleByName(value))
         return;
 
     Style *style = new Style();
-    size_t n = def->children->Count();
-    for (size_t i = 0; i < n; i++) {
-        TxtNode *node = def->children->At(i);
-        CrashIf(!node->IsText());
-        AddStyleProp(style, node);
+    style->SetName(value);
+    if ((value = def->GetValue("bg_col")) != NULL)
+        style->Set(Prop::AllocColorSolid(PropBgColor, value));
+    if ((value = def->GetValue("col")) != NULL)
+        style->Set(Prop::AllocColorSolid(PropColor, value));
+    if ((value = def->GetValue("parent")) != NULL) {
+        Style *parentStyle = StyleByName(value);
+        CrashIf(!parentStyle);
+        style->SetInheritsFrom(parentStyle);
     }
+    if ((value = def->GetValue("border_width")) != NULL)
+        style->SetBorderWidth(ParseFloat(value));
+    if ((value = def->GetValue("padding")) != NULL) {
+        ParsedPadding padding = { 0 };
+        ParsePadding(value, padding);
+        style->SetPadding(padding.top, padding.right, padding.bottom, padding.left);
+    }
+    if ((value = def->GetValue("stroke_width")) != NULL)
+        style->Set(Prop::AllocWidth(PropStrokeWidth, ParseFloat(value)));
+    if ((value = def->GetValue("fill")) != NULL)
+        style->Set(Prop::AllocColorSolid(PropFill, value));
+    if ((value = def->GetValue("vert_align")) != NULL)
+        style->Set(Prop::AllocAlign(PropVertAlign, ParseElAlign(value)));
+    if ((value = def->GetValue("text_align")) != NULL)
+        style->Set(Prop::AllocTextAlign(ParseAlignAttr(value)));
+    if ((value = def->GetValue("font_size")) != NULL)
+        style->Set(Prop::AllocFontSize(ParseFloat(value)));
+    if ((value = def->GetValue("font_weight")) != NULL)
+        style->Set(Prop::AllocFontWeight(ParseFontWeight(value)));
+
     CacheStyle(style);
 }
 
-static ButtonVector* ButtonVectorFromDef(TxtNode* structDef)
+static ButtonVector *ButtonVectorFromDef(SquareTreeNode *def)
 {
-    CrashIf(!structDef->IsStructWithName("ButtonVector"));
-    ButtonVectorDef *def = DeserializeButtonVectorDef(structDef);
     ButtonVector *b = new ButtonVector();
-    b->SetName(def->name);
-    b->SetNamedEventClick(def->clicked);
 
-    if (def->path ){
-        GraphicsPath *gp = svg::GraphicsPathFromPathData(def->path);
-        b->SetGraphicsPath(gp);
-    }
-    if (def->styleDefault) {
-        Style *style = StyleByName(def->styleDefault);
+    b->SetName(def->GetValue("name"));
+    b->SetNamedEventClick(def->GetValue("clicked"));
+
+    const char *value;
+    if ((value = def->GetValue("path")) != NULL)
+        b->SetGraphicsPath(svg::GraphicsPathFromPathData(value));
+    if ((value = def->GetValue("style_default")) != NULL) {
+        Style *style = StyleByName(value);
         CrashIf(!style);
         b->SetDefaultStyle(style);
     }
-    if (def->styleMouseOver) {
-        Style *style = StyleByName(def->styleMouseOver);
+    if ((value = def->GetValue("style_mouse_over")) != NULL) {
+        Style *style = StyleByName(value);
         CrashIf(!style);
         b->SetMouseOverStyle(style);
     }
-    FreeButtonVectorDef(def);
+
     return b;
 }
 
-static Button* ButtonFromDef(TxtNode* structDef)
+static Button *ButtonFromDef(SquareTreeNode *def)
 {
-    CrashIf(!structDef->IsStructWithName("Button"));
-    ButtonDef *def = DeserializeButtonDef(structDef);
-    Style *style = StyleByName(def->style);
-    Button *b = new Button(def->text, style, style);
-    b->SetName(def->name);
-    FreeButtonDef(def);
+    Style *style = StyleByName(def->GetValue("style"));
+    ScopedMem<WCHAR> text;
+    if (def->GetValue("text"))
+        text.Set(str::conv::FromUtf8(def->GetValue("text")));
+    Button *b = new Button(text, style, style);
+    b->SetName(def->GetValue("name"));
     return b;
 }
 
-static ScrollBar *ScrollBarFromDef(TxtNode *structDef)
+static ScrollBar *ScrollBarFromDef(SquareTreeNode *def)
 {
-    CrashIf(!structDef->IsStructWithName("ScrollBar"));
-    ScrollBarDef *def = DeserializeScrollBarDef(structDef);
     ScrollBar *sb = new ScrollBar();
-    Style *style = StyleByName(def->style);
+    Style *style = StyleByName(def->GetValue("style"));
     sb->SetStyle(style);
-    sb->SetName(def->name);
+    sb->SetName(def->GetValue("name"));
 
     // TODO: support def->cursor
 
-    FreeScrollBarDef(def);
     return sb;
 }
 
 static float ParseLayoutFloat(const char *s)
 {
-    if (str::EqI(s, "self"))
+    if (str::StartsWithI(s, "self") && (!s[4] || str::IsWs(s[4])))
         return SizeSelf;
     return ParseFloat(s);
 }
 
-static void SetDirectionalLayouData(DirectionalLayoutData& ld, ParsedMui& parsed, DirectionalLayoutDataDef *def)
+static void NextToken(const char *& s)
 {
-    float sla = ParseLayoutFloat(def->sla);
-    float snla = ParseLayoutFloat(def->snla);
-    ElAlignData elAlign = ParseElAlignData(def->align);
-    ILayout *el = FindElementNamed(parsed, def->controlName);
-    ld.Set(el, sla, snla, elAlign);
+    for (; *s && !str::IsWs(*s); s++);
+    for (; str::IsWs(*s); s++);
 }
 
-static HorizontalLayout *HorizontalLayoutFromDef(ParsedMui& parsed, TxtNode *structDef)
+static void SetDirectionalLayoutData(DirectionalLayoutData& ld, SquareTreeNode::DataItem *item, ParsedMui *parsed)
 {
-    CrashIf(!structDef->IsStructWithName("HorizontalLayout"));
-    HorizontalLayoutDef *def = DeserializeHorizontalLayoutDef(structDef);
-    HorizontalLayout *l = new HorizontalLayout();
-    l->SetName(def->name);
-    Vec<DirectionalLayoutDataDef*> *children = def->children;
+    CrashIf(item->isChild);
+    const char *data = item->value.str;
+    float sla = ParseLayoutFloat(data);
+    NextToken(data);
+    float snla = ParseLayoutFloat(data);
+    NextToken(data);
+    ElAlign align = ParseElAlign(data);
 
-    DirectionalLayoutData ld;
-    for (size_t i = 0; children && i < children->Count(); i++) {
-        SetDirectionalLayouData(ld, parsed, children->At(i));
+    ILayout *el = parsed->FindLayout(item->key, true);
+    ld.Set(el, sla, snla, GetElAlign(align));
+}
+
+static DirectionalLayout *LayoutFromDef(const char *name, SquareTreeNode *def, ParsedMui *parsed)
+{
+    DirectionalLayout *l;
+    if (str::Eq(name, "HorizontalLayout"))
+        l = new HorizontalLayout();
+    else
+        l = new VerticalLayout();
+    l->SetName(def->GetValue("name"));
+
+    SquareTreeNode *children = def->GetChild("children");
+    for (size_t i = 0; children && i < children->data.Count(); i++) {
+        DirectionalLayoutData ld;
+        SetDirectionalLayoutData(ld, &children->data.At(i), parsed);
         l->Add(ld);
     }
 
-    FreeHorizontalLayoutDef(def);
-    return l;
-}
-
-static VerticalLayout *VerticalLayoutFromDef(ParsedMui& parsed, TxtNode *structDef)
-{
-    CrashIf(!structDef->IsStructWithName("VerticalLayout"));
-    VerticalLayoutDef *def = DeserializeVerticalLayoutDef(structDef);
-    VerticalLayout *l = new VerticalLayout();
-    l->SetName(def->name);
-    Vec<DirectionalLayoutDataDef*> *children = def->children;
-
-    DirectionalLayoutData ld;
-    for (size_t i = 0; children && i < children->Count(); i++) {
-        SetDirectionalLayouData(ld, parsed, children->At(i));
-        l->Add(ld);
-    }
-
-    FreeVerticalLayoutDef(def);
     return l;
 }
 
 // TODO: create the rest of controls
-static void ParseMuiDefinition(TxtNode *root, ParsedMui& res)
+ParsedMui *ParsedMui::Create(char *s, HwndWrapper *owner, UnknownControlCallback cb)
 {
-    TxtNode **n;
-    for (n = root->children->IterStart(); n; n = root->children->IterNext()) {
-        TxtNode *node = *n;
-        CrashIf(!node->IsStruct());
-        if (node->IsStructWithName("Style")) {
-            CacheStyleFromStruct(node);
-        } else if (node->IsStructWithName("ButtonVector")) {
-            ButtonVector *b = ButtonVectorFromDef(node);
-            res.allControls.Append(b);
-            res.vecButtons.Append(b);
-        } else if (node->IsStructWithName("Button")) {
-            Button *b = ButtonFromDef(node);
-            res.allControls.Append(b);
-            res.buttons.Append(b);
-        } else if (node->IsStructWithName("ScrollBar")) {
-            ScrollBar *sb = ScrollBarFromDef(node);
-            res.allControls.Append(sb);
-            res.scrollBars.Append(sb);
-        } else if (node->IsStructWithName("HorizontalLayout")) {
-            HorizontalLayout *l = HorizontalLayoutFromDef(res, node);
-            res.layouts.Append(l);
-        } else if (node->IsStructWithName("VerticalLayout")) {
-            VerticalLayout *l = VerticalLayoutFromDef(res, node);
-            res.layouts.Append(l);
-        } else {
-            ScopedMem<char> keyName(node->KeyDup());
-            ControlCreatorFunc creatorFunc = FindCreatorFuncFor(keyName);
-            CrashIf(!creatorFunc);
-            Control *c = creatorFunc(node);
+    SquareTree sqt(s);
+    if (!sqt.root)
+        return NULL;
+
+    ParsedMui *res = new ParsedMui();
+    for (SquareTreeNode::DataItem *item = sqt.root->data.IterStart(); item; item = sqt.root->data.IterNext()) {
+        CrashIf(!item->isChild);
+        if (str::Eq(item->key, "Style"))
+            CacheStyleFromStruct(item->value.child);
+        else if (str::Eq(item->key, "ButtonVector"))
+            res->AddControl(ButtonVectorFromDef(item->value.child), item->key);
+        else if (str::Eq(item->key, "Button"))
+            res->AddControl(ButtonFromDef(item->value.child), item->key);
+        else if (str::Eq(item->key, "ScrollBar"))
+            res->AddControl(ScrollBarFromDef(item->value.child), item->key);
+        else if (str::Eq(item->key, "HorizontalLayout") || str::Eq(item->key, "VerticalLayout"))
+            res->AddLayout(LayoutFromDef(item->key, item->value.child, res));
+        else {
+            CrashIf(!cb);
+            Control *c = cb(item->key, item->value.child);
             if (c)
-                res.allControls.Append(c);
+                res->AddControl(c, item->key);
         }
     }
-}
-
-bool MuiFromText(char *s, ParsedMui& res)
-{
-    TxtParser parser;
-    parser.SetToParse(s, str::Len(s));
-    bool ok = ParseTxt(parser);
-    if (!ok)
-        return false;
-    ParseMuiDefinition(GetRootArray(&parser), res);
-    CrashIf(!ok);
-    return ok;
+    for (size_t i = 0; i < res->controls.Count(); i++) {
+        owner->AddChild(res->controls.At(i));
+    }
+    return res;
 }
 
 } // namespace mui
-

@@ -9,7 +9,7 @@
 #include "Sigslot.h"
 
 enum AlignAttr;
-struct TxtNode;
+class SquareTreeNode;
 
 namespace mui {
 

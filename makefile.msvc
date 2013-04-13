@@ -173,7 +173,7 @@ MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \
 	$(OMUI)\MuiPainter.obj $(OMUI)\MuiControl.obj $(OMUI)\MuiButton.obj \
 	$(OMUI)\MuiScrollBar.obj $(OMUI)\MuiEventMgr.obj $(OMUI)\MuiHwndWrapper.obj \
-	$(OMUI)\MuiGrid.obj $(OMUI)\SvgPath.obj $(OMUI)\MuiDefs.obj $(OMUI)\MuiFromText.obj
+	$(OMUI)\MuiGrid.obj $(OMUI)\SvgPath.obj $(OMUI)\MuiFromText.obj
 
 EBOOK_OBJS = \
 	$(OS)\Doc.obj $(OS)\EbookDoc.obj $(OS)\MobiDoc.obj $(OU)\PalmDbReader.obj \
@@ -197,7 +197,6 @@ MAIN_UI_OBJS = \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
 	$(OS)\Selection.obj $(OS)\FileModifications.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
-	$(OS)\MuiEbookPageDef.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj
 
