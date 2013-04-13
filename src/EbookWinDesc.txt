@@ -5,7 +5,7 @@ Style [
 
 Style [
     name: stylePage
-    padding: 32 16 32 16
+    padding: 32 16
     bg_col: transparent
 ]
 
@@ -13,7 +13,7 @@ Style [
     name: styleNextDefault
     parent: buttonDefault
     border_width: 0
-    padding: 0 8 0 8
+    padding: 0 8
     stroke_width: 0
     fill: gray
     bg_col: transparent
@@ -33,7 +33,7 @@ Style [
     col: black
     font_size: 8
     font_weight: regular
-    padding: 3 0 3 0
+    padding: 3 0
     border_width: 0
     text_align: center
 ]

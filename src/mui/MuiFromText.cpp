@@ -130,11 +130,17 @@ struct ParsedPadding {
     int left;
 };
 
-// TODO: be more forgiving with whitespace
-// TODO: allow 1 or 2 elements
 static void ParsePadding(const char *s, ParsedPadding& p)
 {
-    str::Parse(s, "%d %d %d %d", &p.top, &p.right, &p.bottom, &p.left);
+    if (str::Parse(s, "%d%_%d%_%d%_%d%_%$", &p.top, &p.right, &p.bottom, &p.left))
+        return;
+    if (str::Parse(s, "%d%_%d%_%$", &p.top, &p.right)) {
+        p.bottom = p.top;
+        p.left = p.right;
+    }
+    else if (str::Parse(s, "%d%_%$", &p.top)) {
+        p.left = p.right = p.bottom = p.top;
+    }
 }
 
 static AlignAttr ParseAlignAttr(const char *s)
@@ -149,7 +155,7 @@ static ElAlign ParseElAlign(const char *s)
         return ElAlignCenter;
     if (str::EqI(s, "top"))
         return ElAlignTop;
-    if (str::EqI(s, "bottome"))
+    if (str::EqI(s, "bottom"))
         return ElAlignBottom;
     if (str::EqI(s, "left"))
         return ElAlignLeft;
@@ -161,18 +167,8 @@ static ElAlign ParseElAlign(const char *s)
 
 static ElAlignData ParseElAlignData(const char *s)
 {
-    if (str::EqI(s, "center"))
-        return GetElAlignCenter();
-    if (str::EqI(s, "top"))
-        return GetElAlignTop();
-    if (str::EqI(s, "bottom"))
-        return GetElAlignBottom();
-    if (str::EqI(s, "left"))
-        return GetElAlignLeft();
-    if (str::EqI(s, "right"))
-        return GetElAlignRight();
-    CrashIf(true);
-    return GetElAlignCenter();
+    ElAlign align = ParseElAlign(s);
+    return GetElAlign(align);
 }
 
 #if 0

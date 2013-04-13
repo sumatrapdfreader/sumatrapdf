@@ -138,7 +138,7 @@ EbookControls *CreateEbookControls(HWND hwnd)
     ctrls->progress = FindScrollBarNamed(*muiDef, "progressScrollBar");
     CrashIf(!ctrls->progress);
     ctrls->progress->hCursor = gCursorHand;
-    ctrls->page = (PageControl*)FindControlNamed(*muiDef, "page");
+    ctrls->page = static_cast<PageControl *>(FindControlNamed(*muiDef, "page"));
     CrashIf(!ctrls->page);
     ctrls->topPart = FindLayoutNamed(*muiDef, "top");
     CrashIf(!ctrls->topPart);
@@ -154,7 +154,6 @@ EbookControls *CreateEbookControls(HWND hwnd)
     if (gGlobalPrefs->useSysColors)
         bgColor = GetSysColor(COLOR_WINDOW);
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValue(bgColor), GetGValue(bgColor), GetBValue(bgColor)));
-
 
     ctrls->mainWnd->SetStyle(styleMainWnd);
     ctrls->mainWnd->layout = FindLayoutNamed(*muiDef, "mainLayout");
