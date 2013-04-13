@@ -84,11 +84,11 @@ static FieldInfo gGlobalPrefsFieldsBenc[] = {
     { offsetof(GlobalPrefs, uiLanguage), Type_Utf8String, NULL },
     { offsetof(GlobalPrefs, useSysColors), Type_Bool, false },
     { offsetof(GlobalPrefs, versionToSkip), Type_String, NULL },
-    { offsetof(GlobalPrefs, windowPos.dx), Type_Int, 1 },
-    { offsetof(GlobalPrefs, windowPos.dy), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowPos.dx), Type_Int, 0 },
+    { offsetof(GlobalPrefs, windowPos.dy), Type_Int, 0 },
     { offsetof(GlobalPrefs, windowState), Type_Int, 1 },
-    { offsetof(GlobalPrefs, windowPos.x), Type_Int, 1 },
-    { offsetof(GlobalPrefs, windowPos.y), Type_Int, 1 },
+    { offsetof(GlobalPrefs, windowPos.x), Type_Int, 0 },
+    { offsetof(GlobalPrefs, windowPos.y), Type_Int, 0 },
     { offsetof(GlobalPrefs, defaultZoomFloat), Type_Float, (intptr_t)"-1" },
     { offsetof(GlobalPrefs, mainWindowBackground), Type_Color, 0xfff200 },
     { offsetof(GlobalPrefs, escToExit), Type_Bool, false },
@@ -114,13 +114,13 @@ static FieldInfo gFileFieldsBenc[] = {
     { offsetof(FileState, showToc), Type_Bool, true },
     { offsetof(FileState, sidebarDx), Type_Int, 0 },
     { offsetof(FileState, tocState), Type_IntArray, NULL },
-    { offsetof(FileState, useGlobalValues), Type_Bool, false },
-    { offsetof(FileState, windowPos.dx), Type_Int, 1 },
-    { offsetof(FileState, windowPos.dy), Type_Int, 1 },
+    { offsetof(FileState, useDefaultState), Type_Bool, false },
+    { offsetof(FileState, windowPos.dx), Type_Int, 0 },
+    { offsetof(FileState, windowPos.dy), Type_Int, 0 },
     { offsetof(FileState, windowState), Type_Int, 1 },
-    { offsetof(FileState, windowPos.x), Type_Int, 1 },
-    { offsetof(FileState, windowPos.y), Type_Int, 1 },
-    { offsetof(FileState, zoomFloat), Type_Float, (intptr_t)"100" },
+    { offsetof(FileState, windowPos.x), Type_Int, 0 },
+    { offsetof(FileState, windowPos.y), Type_Int, 0 },
+    { offsetof(FileState, zoomFloat), Type_Float, (intptr_t)"-1" },
 };
 static StructInfo gFileInfoBenc = { sizeof(FileState), 21, gFileFieldsBenc, "Decryption Key\0Display Mode\0File\0Missing\0OpenCount\0Page\0Pinned\0ReparseIdx\0Rotation\0Scroll X2\0Scroll Y2\0ShowToc\0Toc DX\0TocToggles\0UseGlobalValues\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual" };
 
@@ -318,6 +318,8 @@ bool SavePrefs()
         DisplayState *state = gGlobalPrefs->fileStates->At(i);
         str::ReplacePtr(&state->displayMode, DisplayModeConv::NameFromEnum(state->displayModeEnum));
         UnparseZoomVirtual(&state->zoom, state->zoomFloat);
+        if (!gGlobalPrefs->rememberStatePerDocument)
+            state->useDefaultState = true;
         // BUG: 2140
         if (!IsValidZoom(state->zoomFloat)) {
             dbglog::CrashLogF("Invalid ds->zoom: %g", state->zoomFloat);
@@ -332,8 +334,24 @@ bool SavePrefs()
         }
     }
 
+    if (!gGlobalPrefs->rememberStatePerDocument) {
+        // prevent unnecessary settings from being written out
+        uint16_t fieldCount = 0;
+        while (++fieldCount <= dimof(gFileStateFields)) {
+            // count the number of fields up to and including useDefaultState
+            if (gFileStateFields[fieldCount - 1].offset == offsetof(FileState, useDefaultState))
+                break;
+        }
+        // restore the correct fieldCount ASAP after serialization
+        gFileStateInfo.fieldCount = fieldCount;
+    }
+
     size_t prefsDataSize;
     ScopedMem<char> prefsData(SerializeStruct(&gGlobalPrefsInfo, gGlobalPrefs, PREFS_INFO_URL, &prefsDataSize));
+
+    if (!gGlobalPrefs->rememberStatePerDocument)
+        gFileStateInfo.fieldCount = dimof(gFileStateFields);
+
     CrashIf(!prefsData || 0 == prefsDataSize);
     if (!prefsData || 0 == prefsDataSize)
         return false;

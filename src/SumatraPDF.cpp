@@ -517,7 +517,7 @@ static void UpdateCurrentFileDisplayStateForWinMobi(EbookWindow* win)
     if (!ds)
         return;
     DisplayStateFromEbookWindow(win, ds);
-    ds->useGlobalValues = !gGlobalPrefs->rememberStatePerDocument;
+    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
     ds->windowState = gGlobalPrefs->windowState;
     ds->windowPos   = gGlobalPrefs->windowPos;
     UpdateSidebarDisplayState(win, ds);
@@ -532,7 +532,7 @@ static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
     if (!ds)
         return;
     win->dm->DisplayStateFromModel(ds);
-    ds->useGlobalValues = !gGlobalPrefs->rememberStatePerDocument;
+    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
     UpdateDisplayStateWindowRect(*win, *ds, false);
     UpdateSidebarDisplayState(win, ds);
 }
@@ -868,7 +868,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     Timer t(true);
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if placeWindow == true)
-    if (placeWindow && (!gGlobalPrefs->rememberStatePerDocument || state && state->useGlobalValues)) {
+    if (placeWindow && (!gGlobalPrefs->rememberStatePerDocument || state && state->useDefaultState)) {
         state = NULL;
     } else if (NULL == state) {
         state = gFileHistory.Find(args.fileName);
@@ -1120,7 +1120,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         return;
     }
     DisplayState *ds = NewDisplayState(win->loadedFilePath);;
-    ds->useGlobalValues = !gGlobalPrefs->rememberStatePerDocument;
+    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
     win->dm->DisplayStateFromModel(ds);
     UpdateDisplayStateWindowRect(*win, *ds);
     UpdateSidebarDisplayState(win, ds);

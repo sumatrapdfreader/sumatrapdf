@@ -129,6 +129,8 @@ struct Favorite {
 struct FileState {
     // file path of the document
     WCHAR * filePath;
+    // Values which are persisted for bookmarks/favorites
+    Vec<Favorite *> * favorites;
     // in order to prevent documents that haven't been opened for a while
     // but used to be opened very frequently constantly remain in top
     // positions, the openCount will be cut in half after every week, so
@@ -148,7 +150,7 @@ struct FileState {
     char * decryptionKey;
     // whether global defaults should be used when reloading this file
     // instead of the values listed below
-    bool useGlobalValues;
+    bool useDefaultState;
     // how pages should be laid out for this document, needs to be
     // synchronized with DefaultDisplayMode after deserialization and
     // before serialization
@@ -182,8 +184,6 @@ struct FileState {
     // tree (which can be quite large) - and also due to backwards
     // compatibility
     Vec<int> * tocState;
-    // Values which are persisted for bookmarks/favorites
-    Vec<Favorite *> * favorites;
     // temporary value needed for FileHistory::cmpOpenCount
     size_t index;
     // the thumbnail is persisted separately as a PNG in sumatrapdfcache
@@ -404,6 +404,13 @@ static const FieldInfo gRectIFields[] = {
 };
 static const StructInfo gRectIInfo = { sizeof(RectI), 4, gRectIFields, "X\0Y\0Dx\0Dy" };
 
+static const FieldInfo gFavoriteFields[] = {
+    { offsetof(Favorite, name),      Type_String, NULL },
+    { offsetof(Favorite, pageNo),    Type_Int,    0    },
+    { offsetof(Favorite, pageLabel), Type_String, NULL },
+};
+static const StructInfo gFavoriteInfo = { sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel" };
+
 static const FieldInfo gPointIFields[] = {
     { offsetof(PointI, x), Type_Int, 0 },
     { offsetof(PointI, y), Type_Int, 0 },
@@ -418,20 +425,14 @@ static const FieldInfo gRectI_1_Fields[] = {
 };
 static const StructInfo gRectI_1_Info = { sizeof(RectI), 4, gRectI_1_Fields, "X\0Y\0Dx\0Dy" };
 
-static const FieldInfo gFavoriteFields[] = {
-    { offsetof(Favorite, name),      Type_String, NULL },
-    { offsetof(Favorite, pageNo),    Type_Int,    0    },
-    { offsetof(Favorite, pageLabel), Type_String, NULL },
-};
-static const StructInfo gFavoriteInfo = { sizeof(Favorite), 3, gFavoriteFields, "Name\0PageNo\0PageLabel" };
-
 static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, filePath),        Type_String,     NULL                     },
+    { offsetof(FileState, favorites),       Type_Array,      (intptr_t)&gFavoriteInfo },
     { offsetof(FileState, openCount),       Type_Int,        0                        },
     { offsetof(FileState, isPinned),        Type_Bool,       false                    },
     { offsetof(FileState, isMissing),       Type_Bool,       false                    },
     { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
-    { offsetof(FileState, useGlobalValues), Type_Bool,       false                    },
+    { offsetof(FileState, useDefaultState), Type_Bool,       false                    },
     { offsetof(FileState, displayMode),     Type_String,     (intptr_t)L"automatic"   },
     { offsetof(FileState, scrollPos),       Type_Compact,    (intptr_t)&gPointIInfo   },
     { offsetof(FileState, pageNo),          Type_Int,        1                        },
@@ -443,9 +444,8 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, showToc),         Type_Bool,       true                     },
     { offsetof(FileState, sidebarDx),       Type_Int,        0                        },
     { offsetof(FileState, tocState),        Type_IntArray,   NULL                     },
-    { offsetof(FileState, favorites),       Type_Array,      (intptr_t)&gFavoriteInfo },
 };
-static const StructInfo gFileStateInfo = { sizeof(FileState), 18, gFileStateFields, "FilePath\0OpenCount\0IsPinned\0IsMissing\0DecryptionKey\0UseGlobalValues\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocState\0Favorites" };
+static StructInfo gFileStateInfo = { sizeof(FileState), 18, gFileStateFields, "FilePath\0Favorites\0OpenCount\0IsPinned\0IsMissing\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocState" };
 
 static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,      0x8000f2ff                                                                                                            },

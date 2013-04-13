@@ -161,12 +161,12 @@ public:
 
     // removes file history entries which shouldn't be saved anymore
     // (see the loop below for the details)
-    void Purge(bool alwaysUseGlobalValues=false) {
+    void Purge(bool alwaysUseDefaultState=false) {
         // minOpenCount is set to the number of times a file must have been
         // opened to be kept (provided that there is no other valuable
         // information about the file to be remembered)
         int minOpenCount = 0;
-        if (alwaysUseGlobalValues) {
+        if (alwaysUseDefaultState) {
             Vec<DisplayState *> frequencyList;
             GetFrequencyOrder(frequencyList);
             if (frequencyList.Count() > FILE_HISTORY_MAX_RECENT)
@@ -180,13 +180,13 @@ public:
             if (state->isPinned || state->decryptionKey != NULL || state->favorites->Count() > 0)
                 continue;
             // forget about missing documents without valuable state
-            if (state->isMissing && (alwaysUseGlobalValues || state->useGlobalValues))
+            if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState))
                 states->RemoveAt(j - 1);
             // forget about files last opened longer ago than the last FILE_HISTORY_MAX_FILES ones
             else if (j > FILE_HISTORY_MAX_FILES)
                 states->RemoveAt(j - 1);
             // forget about files that were hardly used (and without valuable state)
-            else if (alwaysUseGlobalValues && state->openCount < minOpenCount && j > FILE_HISTORY_MAX_RECENT)
+            else if (alwaysUseDefaultState && state->openCount < minOpenCount && j > FILE_HISTORY_MAX_RECENT)
                 states->RemoveAt(j - 1);
             else
                 continue;

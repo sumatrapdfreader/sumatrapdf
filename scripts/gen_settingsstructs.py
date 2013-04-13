@@ -215,9 +215,18 @@ ExternalViewer = [
 		"filter for which file types the menu item is to be shown (e.g. \"*.pdf;*.xps\"; \"*\" if missing)"),
 ]
 
+Favorite = [
+	Field("Name", String, None, "name of this favorite as shown in the menu"),
+	Field("PageNo", Int, 0, "which page this favorite is about"),
+	Field("PageLabel", String, None, "optional label for this page (if logical and physical page numbers are not the same)"),
+	Field("MenuId", Int, 0, "for internal use", internal=True),
+]
+
 FileSettings = [
 	Field("FilePath", String, None,
 		"file path of the document"),
+	Array("Favorites", Favorite,
+		"Values which are persisted for bookmarks/favorites"),
 	Field("OpenCount", Int, 0,
 		"in order to prevent documents that haven't been opened for a while " +
 		"but used to be opened very frequently constantly remain in top positions, " +
@@ -249,9 +258,11 @@ FileSettings = [
 	# document specific settings weren't saved at all; that's no longer easily possible
 	# This pref applies to: DisplayMode, ScrollPos, PageNo, ReparseIdx, Zoom, Rotation,
 	# WindowState, WindowPos, ShowToc, SidebarDx and TocState
-	Field("UseGlobalValues", Bool, False,
+	Field("UseDefaultState", Bool, False,
 		"whether global defaults should be used when reloading this file instead of " +
 		"the values listed below"),
+	# NOTE: only add fields below UseDefaultState which are either internal or
+	#       should not be serialized when UseDefaultState is true!
 	Field("DisplayMode", String, "automatic",
 		"how pages should be laid out for this document, needs to be synchronized with " +
 		"DefaultDisplayMode after deserialization and before serialization"),
@@ -279,12 +290,6 @@ FileSettings = [
 		"Note: We intentionally track toggle state as opposed to expansion state " +
 		"so that we only have to save a diff instead of all states for the whole " +
 		"tree (which can be quite large) - and also due to backwards compatibility"),
-	Array("Favorites", [
-		Field("Name", String, None, "name of this favorite as shown in the menu"),
-		Field("PageNo", Int, 0, "which page this favorite is about"),
-		Field("PageLabel", String, None, "optional label for this page (if logical and physical page numbers are not the same)"),
-		Field("MenuId", Int, 0, "for internal use", internal=True),
-	], "Values which are persisted for bookmarks/favorites"),
 	Field("Index", Type(None, "size_t"), "0",
 		"temporary value needed for FileHistory::cmpOpenCount",
 		internal=True),
@@ -507,7 +512,8 @@ def BuildMetaData(struct, built=[]):
 	lines.append("static const FieldInfo g%sFields[] = {" % fullName)
 	lines += ["\t{ %s }," % line for line in FormatArrayLine(data, "%s, %s, %s")]
 	lines.append("};")
-	lines.append("static const StructInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % (fullName, struct.structName, len(names), fullName, "\\0".join(names)))
+	# gFileStateInfo isn't const so that the number of fields can be changed at runtime (cf. UseDefaultState)
+	lines.append("static %sStructInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % ("const " if fullName != "FileState" else "", fullName, struct.structName, len(names), fullName, "\\0".join(names)))
 	return "\n".join(lines)
 
 def AssembleDefaults(struct, topLevelComment=None):
