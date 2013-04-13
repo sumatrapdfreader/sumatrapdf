@@ -7,8 +7,9 @@
 #include "AppPrefs.h"
 #include "BitManip.h"
 #include "HtmlFormatter.h"
+#include "MuiEbookPageDef.h"
 #include "resource.h"
-#include "SquareTreeParser.h"
+#include "TxtParser.h"
 #include "WinUtil.h"
 
 #include "DebugLog.h"
@@ -101,49 +102,49 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     gfx->SetClip(&origClipRegion, CombineModeReplace);
 }
 
-Control *CreatePageControl(const char *name, SquareTreeNode *data)
+Control *CreatePageControl(TxtNode *structDef)
 {
-    CrashIf(!str::Eq(name, "EbookPage"));
+    CrashIf(!structDef->IsStructWithName("EbookPage"));
+    EbookPageDef *def = DeserializeEbookPageDef(structDef);
     PageControl *c = new PageControl();
-
-    Style *style = StyleByName(data->GetValue("style"));
-    CrashIf(!style);
+    Style *style = StyleByName(def->style);
     c->SetStyle(style);
 
-    if ((name = data->GetValue("name")) != NULL)
-        c->SetName(name);
+    if (def->name)
+        c->SetName(def->name);
 
+    FreeEbookPageDef(def);
     return c;
 }
 
 EbookControls *CreateEbookControls(HWND hwnd)
 {
     if (!gCursorHand) {
-        // TODO: use gCursorHand from SumatraPDF.h
+        RegisterControlCreatorFor("EbookPage", &CreatePageControl);
         gCursorHand  = LoadCursor(NULL, IDC_HAND);
     }
 
-    EbookControls *ctrls = AllocStruct<EbookControls>();
-    ctrls->mainWnd = new HwndWrapper(hwnd);
-    ctrls->mainWnd->SetMinSize(Size(320, 200));
+    ParsedMui *muiDef = new ParsedMui();
+    char *s = LoadTextResource(IDD_EBOOK_WIN_DESC);
+    MuiFromText(s, *muiDef);
+    free(s);
 
-    ScopedMem<char> s(LoadTextResource(IDD_EBOOK_WIN_DESC));
-    ParsedMui *muiDef = ParsedMui::Create(s, ctrls->mainWnd, CreatePageControl);
-    CrashIf(!muiDef);
-
+    EbookControls *ctrls = new EbookControls;
     ctrls->muiDef = muiDef;
-    CrashIf(!muiDef->FindControl("prevButton", "ButtonVector"));
-    CrashIf(!muiDef->FindControl("nextButton", "ButtonVector"));
-    ctrls->status = static_cast<Button *>(muiDef->FindControl("statusButton", "Button"));
+    CrashIf(!FindButtonVectorNamed(*muiDef, "nextButton"));
+    CrashIf(!FindButtonVectorNamed(*muiDef, "prevButton"));
+    ctrls->status = FindButtonNamed(*muiDef, "statusButton");
     CrashIf(!ctrls->status);
-    ctrls->progress = static_cast<ScrollBar *>(muiDef->FindControl("progressScrollBar", "ScrollBar"));
+    ctrls->progress = FindScrollBarNamed(*muiDef, "progressScrollBar");
     CrashIf(!ctrls->progress);
     ctrls->progress->hCursor = gCursorHand;
-    ctrls->page = static_cast<PageControl *>(muiDef->FindControl("page", "EbookPage"));
+    ctrls->page = (PageControl*)FindControlNamed(*muiDef, "page");
     CrashIf(!ctrls->page);
-    ctrls->topPart = muiDef->FindLayout("top");
+    ctrls->topPart = FindLayoutNamed(*muiDef, "top");
     CrashIf(!ctrls->topPart);
 
+    ctrls->mainWnd = new HwndWrapper(hwnd);
+    ctrls->mainWnd->SetMinSize(Size(320, 200));
     Style *styleMainWnd = StyleByName("styleMainWnd");
     CrashIf(!styleMainWnd);
 
@@ -154,10 +155,15 @@ EbookControls *CreateEbookControls(HWND hwnd)
         bgColor = GetSysColor(COLOR_WINDOW);
     styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValue(bgColor), GetGValue(bgColor), GetBValue(bgColor)));
 
+
     ctrls->mainWnd->SetStyle(styleMainWnd);
-    ctrls->mainWnd->layout = muiDef->FindLayout("mainLayout");
+    ctrls->mainWnd->layout = FindLayoutNamed(*muiDef, "mainLayout");
     CrashIf(!ctrls->mainWnd->layout);
 
+    for (size_t i = 0; i < muiDef->allControls.Count(); i++) {
+        Control *c = muiDef->allControls.At(i);
+        ctrls->mainWnd->AddChild(c);
+    }
     return ctrls;
 }
 
@@ -166,5 +172,5 @@ void DestroyEbookControls(EbookControls* ctrls)
     delete ctrls->mainWnd;
     delete ctrls->topPart;
     delete ctrls->muiDef;
-    free(ctrls);
+    delete ctrls;
 }
