@@ -37,7 +37,7 @@ static char *EscapeStr(const char *s)
 {
     CrashIf(!NeedsEscaping(s));
     str::Str<char> ret;
-    if (str::IsWs(*s))
+    if (str::IsWs(*s) && *s != '\n' && *s != '\r')
         ret.Append("$");
     for (const char *c = s; *c; c++) {
         switch (*c) {
@@ -124,15 +124,19 @@ static char *SerializeField(const uint8_t *base, const FieldInfo& field)
             return str::Format("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c));
         return str::Format("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c));
     case Type_String:
-        if (!*(const WCHAR **)fieldPtr)
+        if (!*(const WCHAR **)fieldPtr) {
+            CrashIf(field.value);
             return NULL; // skip empty strings
+        }
         value.Set(str::conv::ToUtf8(*(const WCHAR **)fieldPtr));
         if (NeedsEscaping(value))
             return EscapeStr(value);
         return value.StealData();
     case Type_Utf8String:
-        if (!*(const char **)fieldPtr)
+        if (!*(const char **)fieldPtr) {
+            CrashIf(field.value);
             return NULL; // skip empty strings
+        }
         if (!NeedsEscaping(*(const char **)fieldPtr))
             return str::Dup(*(const char **)fieldPtr);
         return EscapeStr(*(const char **)fieldPtr);
@@ -149,8 +153,6 @@ static char *SerializeField(const uint8_t *base, const FieldInfo& field)
     case Type_ColorArray:
     case Type_FloatArray:
     case Type_IntArray:
-        if (!(*(Vec<int> **)fieldPtr))
-            return NULL; // skip missing arrays
         for (size_t i = 0; i < (*(Vec<int> **)fieldPtr)->Count(); i++) {
             FieldInfo info = { 0 };
             info.type = Type_IntArray == field.type ? Type_Int : Type_FloatArray == field.type ? Type_Float : Type_Color;
@@ -159,6 +161,10 @@ static char *SerializeField(const uint8_t *base, const FieldInfo& field)
                 value.Set(val.StealData());
             else
                 value.Set(str::Format("%s %s", value, val));
+        }
+        if (!value && field.value) {
+            // prevent empty arrays from being replaced with the defaults
+            value.Set(str::Dup(""));
         }
         return value.StealData();
     default:

@@ -245,6 +245,7 @@ static void LogTest()
 //#include "VarintBin_ut.cpp"
 #include "IniParser_ut.cpp"
 #include "SquareTreeParser_ut.cpp"
+#include "SettingsUtil_ut.cpp"
 
 void BaseUtils_UnitTests()
 {
@@ -267,6 +268,7 @@ void BaseUtils_UnitTests()
     //VarintGobTest();
     IniTest();
     SquareTreeTest();
+    SettingsUtilTest();
 }
 
 #endif

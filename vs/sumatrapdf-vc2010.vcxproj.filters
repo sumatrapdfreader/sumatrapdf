@@ -357,6 +357,9 @@
     <ClCompile Include="..\src\utils\SettingsUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\SettingsUtil_ut.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp">
       <Filter>utils</Filter>
     </ClCompile>

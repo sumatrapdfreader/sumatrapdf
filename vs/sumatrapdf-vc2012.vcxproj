@@ -163,6 +163,7 @@
     <ClCompile Include="..\src\utils\PalmDbReader.cpp" />
     <ClCompile Include="..\src\utils\SerializeTxt.cpp" />
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
+    <ClCompile Include="..\src\utils\SettingsUtil_ut.cpp" />
     <ClCompile Include="..\src\utils\Sigslot_ut.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser_ut.cpp" />
