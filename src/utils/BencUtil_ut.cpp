@@ -3,6 +3,9 @@
 
 #include "BencUtil.h"
 
+// define for testing the encoding of a very large tree
+// #define ENABLE_BENC_STRESS_TEST
+
 static void BencTestSerialization(BencObj *obj, const char *dataOrig)
 {
     ScopedMem<char> data(obj->Encode());
@@ -278,6 +281,8 @@ static void BencTestDictAppend()
     delete dict;
 }
 
+#ifdef ENABLE_BENC_STRESS_TEST
+
 static void GenRandStr(char *buf, int bufLen)
 {
     int l = rand() % (bufLen - 1);
@@ -363,10 +368,10 @@ static void BencTestStress()
         } else if (n < (18 + 24 + 24)) {
             GenRandStr(val, dimof(val));
             if (a) {
-                a->AddRaw((const char*)val);
+                a->AddRaw(val);
             } else {
                 GenRandStr(key, dimof(key));
-                d->AddRaw((const char*)key, val);
+                d->AddRaw(key, val);
             }
         } else {
             GenRandTStr(tval, dimof(tval));
@@ -374,15 +379,16 @@ static void BencTestStress()
                 a->Add(tval);
             } else {
                 GenRandStr(key, dimof(key));
-                d->Add((const char*)key, (const WCHAR *)val);
+                d->Add(key, tval);
             }
         }
     }
 
-    char *s = startDict->Encode();
-    free(s);
+    ScopedMem<char> s(startDict->Encode());
     delete startDict;
 }
+
+#endif
 
 static void BencTest()
 {
@@ -393,5 +399,7 @@ static void BencTest()
     BencTestParseDicts();
     BencTestArrayAppend();
     BencTestDictAppend();
+#ifdef ENABLE_BENC_STRESS_TEST
     BencTestStress();
+#endif
 }
