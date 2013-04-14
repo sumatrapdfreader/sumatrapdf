@@ -478,13 +478,15 @@ Exit:
 
 #else
 
-    CrashIf(gFileExistenceChecker);
-
     DeleteObject(gBrushNoDocBg);
     DeleteObject(gBrushLogoBg);
     DeleteObject(gBrushAboutBg);
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
+
+    // wait for FileExistenceChecker to terminate
+    // (which should be necessary only very rarely)
+    while (gFileExistenceChecker);
 
     gFileHistory.UpdateStatesSource(NULL);
     DeleteGlobalPrefs(gGlobalPrefs);
