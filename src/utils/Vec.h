@@ -326,13 +326,12 @@ public:
     }
 
     // returns true if was replaced
-    bool Replace(const char *toReplace, const char *replaceWith)
+    bool Replace(const T *toReplace, const T *replaceWith)
     {
-        char *s = Get();
         // fast path: nothing to replace
-        if (!str::Find(s, toReplace))
+        if (!str::Find(els, toReplace))
             return false;
-        char *newStr = str::Replace(s, toReplace, replaceWith);
+        char *newStr = str::Replace(els, toReplace, replaceWith);
         Reset();
         AppendAndFree(newStr);
         return true;

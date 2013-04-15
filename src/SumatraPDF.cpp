@@ -483,17 +483,13 @@ static void UpdateSidebarDisplayState(WindowInfo *win, DisplayState *ds)
             UpdateTocExpansionState(win, hRoot);
     }
 
-    delete ds->tocState;
-    ds->tocState = NULL;
-    if (win->tocState.Count() > 0)
-        ds->tocState = new Vec<int>(win->tocState);
+    *ds->tocState = win->tocState;
 }
 
 static void UpdateSidebarDisplayState(EbookWindow *win, DisplayState *ds)
 {
     ds->showToc = false;
-    delete ds->tocState;
-    ds->tocState = NULL;
+    ds->tocState->Reset();
 }
 
 static void DisplayStateFromEbookWindow(EbookWindow* win, DisplayState* ds)
@@ -1006,10 +1002,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         }
         zoomVirtual = state->zoomFloat;
         rotation = state->rotation;
-
-        win->tocState.Reset();
-        if (state->tocState)
-            win->tocState = *state->tocState;
+        win->tocState = *state->tocState;
     }
 
     win->dm->Relayout(zoomVirtual, rotation);
