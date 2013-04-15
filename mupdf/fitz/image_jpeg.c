@@ -44,7 +44,7 @@ static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 }
 
 /* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
-static inline int read_value(unsigned char *data, int bytes, int is_big_endian)
+static inline int read_value(const unsigned char *data, int bytes, int is_big_endian)
 {
 	int value = 0;
 	if (!is_big_endian)
@@ -54,59 +54,48 @@ static inline int read_value(unsigned char *data, int bytes, int is_big_endian)
 	return value;
 }
 
-static int extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int *yres)
+static int extract_exif_resolution(jpeg_saved_marker_ptr marker, int *xres, int *yres)
 {
 	int is_big_endian;
-	int offset, ifd_len, res_type = 0;
+	const unsigned char *data;
+	unsigned int offset, ifd_len, res_type = 0;
 	float x_res = 0, y_res = 0;
 
-	if (rlen >= 10 &&
-		read_value(rbuf + 2, 2, 1) == 0xFFE0 /* APP0 */ &&
-		read_value(rbuf + 6, 4, 1) == 0x4A464946 /* JFIF */ &&
-		read_value(rbuf + 4, 2, 1) <= rlen - 2)
-	{
-		int jfif_len = read_value(rbuf + 4, 2, 1) + 2;
-		rbuf += jfif_len;
-		rlen -= jfif_len;
-	}
-
-	if (rlen < 20 ||
-		read_value(rbuf + 2, 2, 1) != 0xFFE1 /* APP1 */ ||
-		read_value(rbuf + 6, 4, 1) != 0x45786966 /* Exif */ ||
-		read_value(rbuf + 10, 2, 1) != 0x0000)
-	{
+	if (!marker || marker->marker != JPEG_APP0 + 1 || marker->data_length < 14)
 		return 0;
-	}
-	if (read_value(rbuf + 12, 4, 1) == 0x49492A00)
+	data = (const unsigned char *)marker->data;
+	if (read_value(data, 4, 1) != 0x45786966 /* Exif */ || read_value(data + 4, 2, 1) != 0x0000)
+		return 0;
+	if (read_value(data + 6, 4, 1) == 0x49492A00)
 		is_big_endian = 0;
-	else if (read_value(rbuf + 12, 4, 1) == 0x4D4D002A)
+	else if (read_value(data + 6, 4, 1) == 0x4D4D002A)
 		is_big_endian = 1;
 	else
 		return 0;
 
-	offset = read_value(rbuf + 16, 4, is_big_endian) + 12;
-	if (offset < 20 || offset + 2 > rlen)
+	offset = read_value(data + 10, 4, is_big_endian) + 6;
+	if (offset < 14 || offset + 2 > marker->data_length)
 		return 0;
-	ifd_len = read_value(rbuf + offset, 2, is_big_endian);
-	for (offset += 2; ifd_len > 0 && offset + 12 < rlen; ifd_len--, offset += 12)
+	ifd_len = read_value(data + offset, 2, is_big_endian);
+	for (offset += 2; ifd_len > 0 && offset + 12 < marker->data_length; ifd_len--, offset += 12)
 	{
-		int tag = read_value(rbuf + offset, 2, is_big_endian);
-		int type = read_value(rbuf + offset + 2, 2, is_big_endian);
-		int count = read_value(rbuf + offset + 4, 4, is_big_endian);
-		int value_off = read_value(rbuf + offset + 8, 4, is_big_endian) + 12;
+		int tag = read_value(data + offset, 2, is_big_endian);
+		int type = read_value(data + offset + 2, 2, is_big_endian);
+		int count = read_value(data + offset + 4, 4, is_big_endian);
+		unsigned int value_off = read_value(data + offset + 8, 4, is_big_endian) + 6;
 		switch (tag)
 		{
 		case 0x11A:
-			if (type == 5 && value_off > offset && value_off + 8 <= rlen)
-				x_res = 1.0f * read_value(rbuf + value_off, 4, is_big_endian) / read_value(rbuf + value_off + 4, 4, is_big_endian);
+			if (type == 5 && value_off > offset && value_off + 8 <= marker->data_length)
+				x_res = 1.0f * read_value(data + value_off, 4, is_big_endian) / read_value(data + value_off + 4, 4, is_big_endian);
 			break;
 		case 0x11B:
-			if (type == 5 && value_off > offset && value_off + 8 <= rlen)
-				y_res = 1.0f * read_value(rbuf + value_off, 4, is_big_endian) / read_value(rbuf + value_off + 4, 4, is_big_endian);
+			if (type == 5 && value_off > offset && value_off + 8 <= marker->data_length)
+				y_res = 1.0f * read_value(data + value_off, 4, is_big_endian) / read_value(data + value_off + 4, 4, is_big_endian);
 			break;
 		case 0x128:
 			if (type == 3 && count == 1)
-				res_type = read_value(rbuf + offset + 8, 2, is_big_endian);
+				res_type = read_value(data + offset + 8, 2, is_big_endian);
 			break;
 		}
 	}
@@ -126,36 +115,37 @@ static int extract_exif_resolution(unsigned char *rbuf, int rlen, int *xres, int
 	return 1;
 }
 
-static int extract_app13_resolution(unsigned char *rbuf, int rlen, int *xres, int *yres)
+static int extract_app13_resolution(jpeg_saved_marker_ptr marker, int *xres, int *yres)
 {
-	unsigned char *seg_end;
+	const unsigned char *data, *data_end;
 
-	if (rlen < 48 ||
-		read_value(rbuf + 2, 2, 1) != 0xFFED /* APP13 */ ||
-		rbuf[19] != 0 || strcmp((const char *)rbuf + 6, "Photoshop 3.0") != 0 ||
-		read_value(rbuf + 4, 2, 1) > rlen - 4)
+	if (!marker || marker->marker != JPEG_APP0 + 13 || marker->data_length < 42 ||
+		strcmp((const char *)marker->data, "Photoshop 3.0") != 0)
 	{
 		return 0;
 	}
 
-	seg_end = rbuf + 4 + read_value(rbuf + 4, 2, 1);
-	for (rbuf += 20; rbuf + 12 < seg_end; ) {
+	data = (const unsigned char *)marker->data;
+	data_end = data + marker->data_length;
+	for (data += 14; data + 12 < data_end; ) {
 		int data_size = -1;
-		int tag = read_value(rbuf + 4, 2, 1);
-		int value_off = 11 + read_value(rbuf + 6, 2, 1);
+		int tag = read_value(data + 4, 2, 1);
+		int value_off = 11 + read_value(data + 6, 2, 1);
 		if (value_off % 2 == 1)
 			value_off++;
-		if (read_value(rbuf, 4, 1) == 0x3842494D /* 8BIM */ && rbuf + value_off <= seg_end)
-			data_size = read_value(rbuf + value_off - 4, 4, 1);
-		if (data_size < 0 || rbuf + value_off + data_size > seg_end)
+		if (read_value(data, 4, 1) == 0x3842494D /* 8BIM */ && data + value_off <= data_end)
+			data_size = read_value(data + value_off - 4, 4, 1);
+		if (data_size < 0 || data + value_off + data_size > data_end)
 			return 0;
 		if (tag == 0x3ED && data_size == 16)
 		{
-			*xres = read_value(rbuf + value_off, 2, 1);
-			*yres = read_value(rbuf + value_off + 8, 2, 1);
+			*xres = read_value(data + value_off, 2, 1);
+			*yres = read_value(data + value_off + 8, 2, 1);
 			return 1;
 		}
-		rbuf += value_off + data_size;
+		if (data_size % 2 == 1)
+			data_size++;
+		data += value_off + data_size;
 	}
 
 	return 0;
@@ -185,6 +175,11 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 		src.next_input_byte = rbuf;
 		src.bytes_in_buffer = rlen;
 
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
+		jpeg_save_markers(&cinfo, JPEG_APP0+1, 0xffff);
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2252 */
+		jpeg_save_markers(&cinfo, JPEG_APP0+13, 0xffff);
+
 		jpeg_read_header(&cinfo, 1);
 
 		if (cinfo.num_components == 1)
@@ -200,15 +195,13 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 		*yp = cinfo.image_height;
 
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1963 */
-		if (cinfo.density_unit == 0)
-		{
-			/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2252 */
-			if (!extract_exif_resolution(rbuf, rlen, xresp, yresp))
-				extract_app13_resolution(rbuf, rlen, xresp, yresp);
-		}
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2249 */
-		else if (extract_exif_resolution(rbuf, rlen, xresp, yresp))
-			/* XPS seems to prefer EXIF resolution to JFIF density */;
+		if (extract_exif_resolution(cinfo.marker_list, xresp, yresp))
+			/* XPS prefers EXIF resolution to JFIF density */;
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2252 */
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2268 */
+		else if (extract_app13_resolution(cinfo.marker_list, xresp, yresp))
+			/* XPS prefers APP13 resolutoin to JFIF density */;
 		else
 		if (cinfo.density_unit == 1)
 		{
