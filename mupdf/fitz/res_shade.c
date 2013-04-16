@@ -256,7 +256,7 @@ fz_mesh_type4_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 	fz_vertex *vb = &v[1];
 	fz_vertex *vc = &v[2];
 	fz_vertex *vd = &v[3];
-	int flag, i, ncomp;
+	int flag, i, ncomp = painter->ncomp;
 	int bpflag = shade->u.m.bpflag;
 	int bpcoord = shade->u.m.bpcoord;
 	int bpcomp = shade->u.m.bpcomp;
@@ -269,7 +269,6 @@ fz_mesh_type4_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 
 	fz_try(ctx)
 	{
-		ncomp = (shade->use_function > 0 ? 1 : shade->colorspace->n);
 		while (!fz_is_eof_bits(stream))
 		{
 			flag = fz_read_bits(stream, bpflag);
@@ -333,7 +332,7 @@ fz_mesh_type5_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 	fz_vertex *buf = NULL;
 	fz_vertex *ref = NULL;
 	int first;
-	int ncomp;
+	int ncomp = painter->ncomp;
 	int i, k;
 	int vprow = shade->u.m.vprow;
 	int bpcoord = shade->u.m.bpcoord;
@@ -354,7 +353,6 @@ fz_mesh_type5_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 		buf = fz_malloc_array(ctx, vprow, sizeof(fz_vertex));
 		first = 1;
 
-		ncomp = (shade->use_function > 0 ? 1 : shade->colorspace->n);
 		while (!fz_is_eof_bits(stream))
 		{
 			for (i = 0; i < vprow; i++)
@@ -400,26 +398,27 @@ static void
 triangulate_patch(fz_mesh_processor *painter, tensor_patch p)
 {
 	fz_vertex v0, v1, v2, v3;
+	int col_len = painter->ncomp * sizeof(v0.c[0]);
 
 	v0.p = p.pole[0][0];
-	memcpy(v0.c, p.color[0], sizeof(v0.c));
+	memcpy(v0.c, p.color[0], col_len);
 
 	v1.p = p.pole[0][3];
-	memcpy(v1.c, p.color[1], sizeof(v1.c));
+	memcpy(v1.c, p.color[1], col_len);
 
 	v2.p = p.pole[3][3];
-	memcpy(v2.c, p.color[2], sizeof(v2.c));
+	memcpy(v2.c, p.color[2], col_len);
 
 	v3.p = p.pole[3][0];
-	memcpy(v3.c, p.color[3], sizeof(v3.c));
+	memcpy(v3.c, p.color[3], col_len);
 
 	paint_quad(painter, &v0, &v1, &v2, &v3);
 }
 
-static inline void midcolor(float *c, float *c1, float *c2)
+static inline void midcolor(float *c, float *c1, float *c2, int n)
 {
 	int i;
-	for (i = 0; i < FZ_MAX_COLORS; i++)
+	for (i = 0; i < n; i++)
 		c[i] = (c1[i] + c2[i]) * 0.5f;
 }
 
@@ -460,7 +459,7 @@ split_curve(fz_point *pole, fz_point *q0, fz_point *q1, int polestep)
 }
 
 static void
-split_stripe(tensor_patch *p, tensor_patch *s0, tensor_patch *s1)
+split_stripe(tensor_patch *p, tensor_patch *s0, tensor_patch *s1, int n)
 {
 	/*
 	split all horizontal bezier curves in patch,
@@ -472,15 +471,15 @@ split_stripe(tensor_patch *p, tensor_patch *s0, tensor_patch *s1)
 	split_curve(&p->pole[0][3], &s0->pole[0][3], &s1->pole[0][3], 4);
 
 	/* interpolate the colors for the two new patches. */
-	memcpy(s0->color[0], p->color[0], sizeof(s0->color[0]));
-	memcpy(s0->color[1], p->color[1], sizeof(s0->color[1]));
-	midcolor(s0->color[2], p->color[1], p->color[2]);
-	midcolor(s0->color[3], p->color[0], p->color[3]);
+	memcpy(s0->color[0], p->color[0], n * sizeof(s0->color[0][0]));
+	memcpy(s0->color[1], p->color[1], n * sizeof(s0->color[1][0]));
+	midcolor(s0->color[2], p->color[1], p->color[2], n);
+	midcolor(s0->color[3], p->color[0], p->color[3], n);
 
-	memcpy(s1->color[0], s0->color[3], sizeof(s1->color[0]));
-	memcpy(s1->color[1], s0->color[2], sizeof(s1->color[1]));
-	memcpy(s1->color[2], p->color[2], sizeof(s1->color[2]));
-	memcpy(s1->color[3], p->color[3], sizeof(s1->color[3]));
+	memcpy(s1->color[0], s0->color[3], n * sizeof(s1->color[0][0]));
+	memcpy(s1->color[1], s0->color[2], n * sizeof(s1->color[1][0]));
+	memcpy(s1->color[2], p->color[2], n * sizeof(s1->color[2][0]));
+	memcpy(s1->color[3], p->color[3], n * sizeof(s1->color[3][0]));
 }
 
 static void
@@ -489,7 +488,7 @@ draw_stripe(fz_mesh_processor *painter, tensor_patch *p, int depth)
 	tensor_patch s0, s1;
 
 	/* split patch into two half-height patches */
-	split_stripe(p, &s0, &s1);
+	split_stripe(p, &s0, &s1, painter->ncomp);
 
 	depth--;
 	if (depth == 0)
@@ -507,7 +506,7 @@ draw_stripe(fz_mesh_processor *painter, tensor_patch *p, int depth)
 }
 
 static void
-split_patch(tensor_patch *p, tensor_patch *s0, tensor_patch *s1)
+split_patch(tensor_patch *p, tensor_patch *s0, tensor_patch *s1, int n)
 {
 	/*
 	split all vertical bezier curves in patch,
@@ -519,15 +518,15 @@ split_patch(tensor_patch *p, tensor_patch *s0, tensor_patch *s1)
 	split_curve(p->pole[3], s0->pole[3], s1->pole[3], 1);
 
 	/* interpolate the colors for the two new patches. */
-	memcpy(s0->color[0], p->color[0], sizeof(s0->color[0]));
-	midcolor(s0->color[1], p->color[0], p->color[1]);
-	midcolor(s0->color[2], p->color[2], p->color[3]);
-	memcpy(s0->color[3], p->color[3], sizeof(s0->color[3]));
+	memcpy(s0->color[0], p->color[0], n * sizeof(s0->color[0][0]));
+	midcolor(s0->color[1], p->color[0], p->color[1], n);
+	midcolor(s0->color[2], p->color[2], p->color[3], n);
+	memcpy(s0->color[3], p->color[3], n * sizeof(s0->color[3][0]));
 
-	memcpy(s1->color[0], s0->color[1], sizeof(s1->color[0]));
-	memcpy(s1->color[1], p->color[1], sizeof(s1->color[1]));
-	memcpy(s1->color[2], p->color[2], sizeof(s1->color[2]));
-	memcpy(s1->color[3], s0->color[2], sizeof(s1->color[3]));
+	memcpy(s1->color[0], s0->color[1], n * sizeof(s1->color[0][0]));
+	memcpy(s1->color[1], p->color[1], n * sizeof(s1->color[1][0]));
+	memcpy(s1->color[2], p->color[2], n * sizeof(s1->color[2][0]));
+	memcpy(s1->color[3], s0->color[2], n * sizeof(s1->color[3][0]));
 }
 
 static void
@@ -536,7 +535,7 @@ draw_patch(fz_mesh_processor *painter, tensor_patch *p, int depth, int origdepth
 	tensor_patch s0, s1;
 
 	/* split patch into two half-width patches */
-	split_patch(p, &s0, &s1);
+	split_patch(p, &s0, &s1, painter->ncomp);
 
 	depth--;
 	if (depth == 0)
@@ -647,10 +646,10 @@ static void
 fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_mesh_processor *painter)
 {
 	fz_stream *stream = fz_open_compressed_buffer(ctx, shade->buffer);
-	int haspatch, hasprevpatch;
-	float prevc[4][FZ_MAX_COLORS];
-	fz_point prevp[12];
-	int ncomp;
+	float color_storage[2][4][FZ_MAX_COLORS];
+	fz_point point_storage[2][12];
+	int store = 0;
+	int ncomp = painter->ncomp;
 	int i, k;
 	int bpflag = shade->u.m.bpflag;
 	int bpcoord = shade->u.m.bpcoord;
@@ -664,15 +663,16 @@ fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 
 	fz_try(ctx)
 	{
-		hasprevpatch = 0;
-		ncomp = (shade->use_function > 0 ? 1 : shade->colorspace->n);
+		float (*prevc)[FZ_MAX_COLORS] = NULL;
+		fz_point *prevp = NULL;
 		while (!fz_is_eof_bits(stream))
 		{
-			float c[4][FZ_MAX_COLORS];
-			fz_point v[12];
+			float (*c)[FZ_MAX_COLORS] = color_storage[store];
+			fz_point *v = point_storage[store];
 			int startcolor;
 			int startpt;
 			int flag;
+			tensor_patch patch;
 
 			flag = fz_read_bits(stream, bpflag);
 
@@ -700,13 +700,10 @@ fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 					c[i][k] = read_sample(stream, bpcomp, c0[k], c1[k]);
 			}
 
-			haspatch = 0;
-
 			if (flag == 0)
 			{
-				haspatch = 1;
 			}
-			else if (flag == 1 && hasprevpatch)
+			else if (flag == 1 && prevc)
 			{
 				v[0] = prevp[3];
 				v[1] = prevp[4];
@@ -714,10 +711,8 @@ fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 				v[3] = prevp[6];
 				memcpy(c[0], prevc[1], ncomp * sizeof(float));
 				memcpy(c[1], prevc[2], ncomp * sizeof(float));
-
-				haspatch = 1;
 			}
-			else if (flag == 2 && hasprevpatch)
+			else if (flag == 2 && prevc)
 			{
 				v[0] = prevp[6];
 				v[1] = prevp[7];
@@ -725,10 +720,8 @@ fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 				v[3] = prevp[9];
 				memcpy(c[0], prevc[2], ncomp * sizeof(float));
 				memcpy(c[1], prevc[3], ncomp * sizeof(float));
-
-				haspatch = 1;
 			}
-			else if (flag == 3 && hasprevpatch)
+			else if (flag == 3 && prevc)
 			{
 				v[0] = prevp[ 9];
 				v[1] = prevp[10];
@@ -736,29 +729,21 @@ fz_mesh_type6_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 				v[3] = prevp[ 0];
 				memcpy(c[0], prevc[3], ncomp * sizeof(float));
 				memcpy(c[1], prevc[0], ncomp * sizeof(float));
-
-				haspatch = 1;
 			}
+			else
+				continue;
 
-			if (haspatch)
-			{
-				tensor_patch patch;
 
-				make_tensor_patch(&patch, 6, v);
+			make_tensor_patch(&patch, 6, v);
 
-				for (i = 0; i < 4; i++)
-					memcpy(patch.color[i], c[i], ncomp * sizeof(float));
+			for (i = 0; i < 4; i++)
+				memcpy(patch.color[i], c[i], ncomp * sizeof(float));
 
-				draw_patch(painter, &patch, SUBDIV, SUBDIV);
+			draw_patch(painter, &patch, SUBDIV, SUBDIV);
 
-				for (i = 0; i < 12; i++)
-					prevp[i] = v[i];
-
-				for (i = 0; i < 4; i++)
-					memcpy(prevc[i], c[i], ncomp * sizeof(float));
-
-				hasprevpatch = 1;
-			}
+			prevp = v;
+			prevc = c;
+			store ^= 1;
 		}
 	}
 	fz_always(ctx)
@@ -784,23 +769,24 @@ fz_mesh_type7_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 	float y1 = shade->u.m.y1;
 	float *c0 = shade->u.m.c0;
 	float *c1 = shade->u.m.c1;
-	float prevc[4][FZ_MAX_COLORS];
-	fz_point prevp[16];
-	int ncomp;
+	float color_storage[2][4][FZ_MAX_COLORS];
+	fz_point point_storage[2][16];
+	int store = 0;
+	int ncomp = painter->ncomp;
 	int i, k;
-	int haspatch, hasprevpatch;
+	float (*prevc)[FZ_MAX_COLORS] = NULL;
+	fz_point (*prevp) = NULL;
 
 	fz_try(ctx)
 	{
-		hasprevpatch = 0;
-		ncomp = (shade->use_function > 0 ? 1 : shade->colorspace->n);
 		while (!fz_is_eof_bits(stream))
 		{
-			float c[4][FZ_MAX_COLORS];
-			fz_point v[16];
+			float (*c)[FZ_MAX_COLORS] = color_storage[store];
+			fz_point *v = point_storage[store];
 			int startcolor;
 			int startpt;
 			int flag;
+			tensor_patch patch;
 
 			flag = fz_read_bits(stream, bpflag);
 
@@ -828,13 +814,10 @@ fz_mesh_type7_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 					c[i][k] = read_sample(stream, bpcomp, c0[k], c1[k]);
 			}
 
-			haspatch = 0;
-
 			if (flag == 0)
 			{
-				haspatch = 1;
 			}
-			else if (flag == 1 && hasprevpatch)
+			else if (flag == 1 && prevc)
 			{
 				v[0] = prevp[3];
 				v[1] = prevp[4];
@@ -842,10 +825,8 @@ fz_mesh_type7_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 				v[3] = prevp[6];
 				memcpy(c[0], prevc[1], ncomp * sizeof(float));
 				memcpy(c[1], prevc[2], ncomp * sizeof(float));
-
-				haspatch = 1;
 			}
-			else if (flag == 2 && hasprevpatch)
+			else if (flag == 2 && prevc)
 			{
 				v[0] = prevp[6];
 				v[1] = prevp[7];
@@ -853,10 +834,8 @@ fz_mesh_type7_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 				v[3] = prevp[9];
 				memcpy(c[0], prevc[2], ncomp * sizeof(float));
 				memcpy(c[1], prevc[3], ncomp * sizeof(float));
-
-				haspatch = 1;
 			}
-			else if (flag == 3 && hasprevpatch)
+			else if (flag == 3 && prevc)
 			{
 				v[0] = prevp[ 9];
 				v[1] = prevp[10];
@@ -864,29 +843,20 @@ fz_mesh_type7_process(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz
 				v[3] = prevp[ 0];
 				memcpy(c[0], prevc[3], ncomp * sizeof(float));
 				memcpy(c[1], prevc[0], ncomp * sizeof(float));
-
-				haspatch = 1;
 			}
+			else
+				continue; /* We have no patch! */
 
-			if (haspatch)
-			{
-				tensor_patch patch;
+			make_tensor_patch(&patch, 7, v);
 
-				make_tensor_patch(&patch, 7, v);
+			for (i = 0; i < 4; i++)
+				memcpy(patch.color[i], c[i], ncomp * sizeof(float));
 
-				for (i = 0; i < 4; i++)
-					memcpy(patch.color[i], c[i], ncomp * sizeof(float));
+			draw_patch(painter, &patch, SUBDIV, SUBDIV);
 
-				draw_patch(painter, &patch, SUBDIV, SUBDIV);
-
-				for (i = 0; i < 16; i++)
-					prevp[i] = v[i];
-
-				for (i = 0; i < 4; i++)
-					memcpy(prevc[i], c[i], FZ_MAX_COLORS * sizeof(float));
-
-				hasprevpatch = 1;
-			}
+			prevp = v;
+			prevc = c;
+			store ^= 1;
 		}
 	}
 	fz_always(ctx)
@@ -909,6 +879,7 @@ fz_process_mesh(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm,
 	painter.shade = shade;
 	painter.process = process;
 	painter.process_arg = process_arg;
+	painter.ncomp = (shade->use_function > 0 ? 1 : shade->colorspace->n);
 
 	if (shade->type == FZ_FUNCTION_BASED)
 		fz_mesh_type1_process(ctx, shade, ctm, &painter);

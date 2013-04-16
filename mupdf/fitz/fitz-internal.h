@@ -1447,6 +1447,7 @@ struct fz_mesh_processor_s {
 	fz_shade *shade;
 	fz_mesh_process_fn *process;
 	void *process_arg;
+	int ncomp;
 };
 
 void fz_process_mesh(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm,

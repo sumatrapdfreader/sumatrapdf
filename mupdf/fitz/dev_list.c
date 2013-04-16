@@ -256,7 +256,6 @@ fz_list_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke,
 	fz_try(ctx)
 	{
 		fz_bound_path(dev->ctx, path, stroke, ctm, &node->rect);
-		fz_adjust_rect_for_stroke(&node->rect, stroke, ctm);
 		node->item.path = fz_clone_path(dev->ctx, path);
 		node->stroke = fz_keep_stroke_state(dev->ctx, stroke);
 	}
@@ -299,7 +298,6 @@ fz_list_clip_stroke_path(fz_device *dev, fz_path *path, const fz_rect *rect, fz_
 	fz_try(ctx)
 	{
 		fz_bound_path(dev->ctx, path, stroke, ctm, &node->rect);
-		fz_adjust_rect_for_stroke(&node->rect, stroke, ctm);
 		if (rect)
 			fz_intersect_rect(&node->rect, rect);
 		node->item.path = fz_clone_path(dev->ctx, path);

@@ -421,6 +421,8 @@ public:
 	void recordClipMask(const fz_rect *rect, bool luminosity, float *color)
 	{
 		RectF rectf(rect->x0, rect->y0, rect->x1 - rect->x0, rect->y1 - rect->y0);
+		if (fz_is_infinite_rect(rect))
+			graphics->GetClipBounds(&rectf);
 		fz_matrix ctm;
 		pushClipMask(NULL, fz_pre_scale(fz_translate(&ctm, rectf.X, rectf.Y), rectf.Width, rectf.Height));
 		if (luminosity)

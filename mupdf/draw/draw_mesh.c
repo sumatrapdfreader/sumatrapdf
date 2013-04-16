@@ -8,111 +8,121 @@ enum { IN, OUT, ENTER, LEAVE };
 enum { MAXV = 3 + 4 };
 enum { MAXN = 2 + FZ_MAX_COLORS };
 
-static int clipx(float val, int ismax, float *v1, float *v2, int n)
+static inline void copy_vert(float *dst, const float *src, int n)
+{
+	while (n--)
+		*dst++ = *src++;
+}
+
+static int clipx(float val, int ismax, const float *v1, const float *v2, int n, float *dst)
 {
 	float t;
 	int i;
 	int v1o = ismax ? v1[0] > val : v1[0] < val;
 	int v2o = ismax ? v2[0] > val : v2[0] < val;
 	if (v1o + v2o == 0)
-		return IN;
+	{
+		/* Both ends of the line are valid - keep v2, v1 will be kept by another call */
+		copy_vert(dst, v2, n);
+		return 1;
+	}
 	if (v1o + v2o == 2)
-		return OUT;
+		/* Both ends are invalid - drop both */
+		return 0;
+	/* It is tempting to spot that the second intersection finding
+	 * operation below can be reversed so that it's in the same form as
+	 * the first one. Do not do this, as the vagaries of floating point
+	 * maths means we get nasty rounding problems. */
 	if (v2o)
 	{
+		/* v1 valid, v2 invalid - Keep intersection */
 		t = (val - v1[0]) / (v2[0] - v1[0]);
-		v2[0] = val;
-		v2[1] = v1[1] + t * (v2[1] - v1[1]);
+		dst[0] = val;
+		dst[1] = v1[1] + t * (v2[1] - v1[1]);
 		for (i = 2; i < n; i++)
-			v2[i] = v1[i] + t * (v2[i] - v1[i]);
-		return LEAVE;
-	}
-	else
-	{
+			dst[i] = v1[i] + t * (v2[i] - v1[i]);
+		return 1;
+	} else {
+		/* v2 valid, v1 invalid - Keep intersection, plus v2 */
 		t = (val - v2[0]) / (v1[0] - v2[0]);
-		v1[0] = val;
-		v1[1] = v2[1] + t * (v1[1] - v2[1]);
+		dst[0] = val;
+		dst[1] = v2[1] + t * (v1[1] - v2[1]);
+		dst[MAXN] = v2[0];
+		dst[MAXN+1] = v2[1];
 		for (i = 2; i < n; i++)
-			v1[i] = v2[i] + t * (v1[i] - v2[i]);
-		return ENTER;
+		{
+			dst[i] = v2[i] + t * (v1[i] - v2[i]);
+			dst[i+MAXN] = v2[i];
+		}
+		return 2;
 	}
 }
 
-static int clipy(float val, int ismax, float *v1, float *v2, int n)
+static int clipy(float val, int ismax, const float *v1, const float *v2, int n, float *dst)
 {
 	float t;
 	int i;
 	int v1o = ismax ? v1[1] > val : v1[1] < val;
 	int v2o = ismax ? v2[1] > val : v2[1] < val;
 	if (v1o + v2o == 0)
-		return IN;
+	{
+		/* Both ends of the line are valid - keep v2, v1 will be kept by another call */
+		copy_vert(dst, v2, n);
+		return 1;
+	}
 	if (v1o + v2o == 2)
-		return OUT;
+		/* Both ends are invalid - drop both */
+		return 0;
+	/* It is tempting to spot that the second intersection finding
+	 * operation below can be reversed so that it's in the same form as
+	 * the first one. Do not do this, as the vagaries of floating point
+	 * maths means we get nasty rounding problems. */
 	if (v2o)
 	{
+		/* v1 valid, v2 invalid - Keep intersection */
 		t = (val - v1[1]) / (v2[1] - v1[1]);
-		v2[0] = v1[0] + t * (v2[0] - v1[0]);
-		v2[1] = val;
+		dst[0] = v1[0] + t * (v2[0] - v1[0]);
+		dst[1] = val;
 		for (i = 2; i < n; i++)
-			v2[i] = v1[i] + t * (v2[i] - v1[i]);
-		return LEAVE;
-	}
-	else
-	{
+			dst[i] = v1[i] + t * (v2[i] - v1[i]);
+		return 1;
+	} else {
+		/* v2 valid, v1 invalid - Keep intersection, plus v2 */
 		t = (val - v2[1]) / (v1[1] - v2[1]);
-		v1[0] = v2[0] + t * (v1[0] - v2[0]);
-		v1[1] = val;
+		dst[0] = v2[0] + t * (v1[0] - v2[0]);
+		dst[1] = val;
+		dst[MAXN] = v2[0];
+		dst[MAXN+1] = v2[1];
 		for (i = 2; i < n; i++)
-			v1[i] = v2[i] + t * (v1[i] - v2[i]);
-		return ENTER;
+		{
+			dst[i] = v2[i] + t * (v1[i] - v2[i]);
+			dst[i+MAXN] = v2[i];
+		}
+		return 2;
 	}
-}
-
-static inline void copy_vert(float *dst, float *src, int n)
-{
-	while (n--)
-		*dst++ = *src++;
 }
 
 static int clip_poly(float src[MAXV][MAXN],
 	float dst[MAXV][MAXN], int len, int n,
 	float val, int isy, int ismax)
 {
-	float cv1[MAXN];
-	float cv2[MAXN];
 	int v1, v2, cp;
-	int r;
 
 	v1 = len - 1;
 	cp = 0;
 
-	for (v2 = 0; v2 < len; v2++)
-	{
-		copy_vert(cv1, src[v1], n);
-		copy_vert(cv2, src[v2], n);
-
-		if (isy)
-			r = clipy(val, ismax, cv1, cv2, n);
-		else
-			r = clipx(val, ismax, cv1, cv2, n);
-
-		switch (r)
+	if (isy)
+		for (v2 = 0; v2 < len; v2++)
 		{
-		case IN:
-			copy_vert(dst[cp++], cv2, n);
-			break;
-		case OUT:
-			break;
-		case LEAVE:
-			copy_vert(dst[cp++], cv2, n);
-			break;
-		case ENTER:
-			copy_vert(dst[cp++], cv1, n);
-			copy_vert(dst[cp++], cv2, n);
-			break;
+			cp += clipy(val, ismax, src[v1], src[v2], n, dst[cp]);
+			v1 = v2;
 		}
-		v1 = v2;
-	}
+	else
+		for (v2 = 0; v2 < len; v2++)
+		{
+			cp += clipx(val, ismax, src[v1], src[v2], n, dst[cp]);
+			v1 = v2;
+		}
 
 	return cp;
 }
@@ -213,7 +223,7 @@ static inline void step_edge(int *ael, int *del, int n)
 }
 
 static void
-fz_paint_triangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, const fz_irect *bbox)
+fz_paint_triangle(fz_pixmap *pix, float poly_in[3][MAXN], int n, const fz_irect *bbox)
 {
 	float poly[MAXV][MAXN];
 	float temp[MAXV][MAXN];
@@ -230,11 +240,7 @@ fz_paint_triangle(fz_pixmap *pix, float *av, float *bv, float *cv, int n, const 
 
 	int i, k;
 
-	copy_vert(poly[0], av, n);
-	copy_vert(poly[1], bv, n);
-	copy_vert(poly[2], cv, n);
-
-	len = clip_poly(poly, temp, 3, n, cx0, 0, 0);
+	len = clip_poly(poly_in, temp, 3, n, cx0, 0, 0);
 	len = clip_poly(temp, poly, len, n, cx1, 0, 1);
 	len = clip_poly(poly, temp, len, n, cy0, 1, 0);
 	len = clip_poly(temp, poly, len, n, cy1, 1, 1);
@@ -345,7 +351,7 @@ do_paint_tri(void *arg, fz_vertex *av, fz_vertex *bv, fz_vertex *cv)
 				ltri[i + 2] *= 255;
 		}
 	}
-	fz_paint_triangle(dest, local[0], local[1], local[2], 2 + dest->colorspace->n, ptd->bbox);
+	fz_paint_triangle(dest, local, 2 + dest->colorspace->n, ptd->bbox);
 }
 
 void

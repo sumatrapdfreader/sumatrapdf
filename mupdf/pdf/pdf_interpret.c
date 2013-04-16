@@ -391,53 +391,108 @@ pdf_load_transfer_function(pdf_document *doc, pdf_obj *obj, int is_tr2)
  * Emit graphics calls to device.
  */
 
-static void
-pdf_begin_group(pdf_csi *csi, const fz_rect *bbox)
+typedef struct softmask_save_s softmask_save;
+
+struct softmask_save_s
+{
+	pdf_xobject *softmask;
+	fz_matrix ctm;
+};
+
+static pdf_gstate *
+begin_softmask(pdf_csi * csi, softmask_save *save, int for_group)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
-	fz_context *ctx = csi->dev->ctx;
+	pdf_xobject *softmask = gstate->softmask;
+	fz_rect mask_bbox;
+	fz_context *ctx;
+	fz_matrix save_tm, save_tlm, save_ctm;
+	int save_in_text;
+	/* SumatraPDF: support transfer functions */
+	fz_transfer_function *tr = gstate->softmask_tr;
 
-	if (gstate->softmask)
+	save->softmask = softmask;
+	if (softmask == NULL)
+		return gstate;
+	save->ctm = gstate->softmask_ctm;
+	save_ctm = gstate->ctm;
+
+	mask_bbox = softmask->bbox;
+	ctx = csi->dev->ctx;
+	save_tm = csi->tm;
+	save_tlm = csi->tlm;
+	save_in_text = csi->in_text;
+
+	csi->in_text = 0;
+	if (gstate->luminosity)
+		mask_bbox = fz_infinite_rect;
+	else
 	{
-		pdf_xobject *softmask = gstate->softmask;
-		fz_rect mask_bbox = softmask->bbox;
-		fz_matrix save_ctm = gstate->ctm;
-		/* SumatraPDF: support transfer functions */
-		fz_transfer_function *tr = gstate->softmask_tr;
-		gstate->softmask_tr = NULL;
-
 		fz_transform_rect(&mask_bbox, &softmask->matrix);
 		fz_transform_rect(&mask_bbox, &gstate->softmask_ctm);
-		gstate->softmask = NULL;
-		gstate->ctm = gstate->softmask_ctm;
-
-		fz_begin_mask(csi->dev, &mask_bbox, gstate->luminosity,
-			softmask->colorspace, gstate->softmask_bc);
-		fz_try(ctx)
-		{
-			pdf_run_xobject(csi, NULL, softmask, &fz_identity);
-		}
-		fz_catch(ctx)
-		{
-			/* FIXME: Ignore error - nasty, but if we throw from
-			 * here the clip stack would be messed up. */
-			if (csi->cookie)
-				csi->cookie->errors++;
-		}
-
-		/* SumatraPDF: support transfer functions */
-		if (tr)
-		{
-			fz_apply_transfer_function(csi->dev, tr, 1);
-			gstate->softmask_tr = tr;
-		}
-
-		fz_end_mask(csi->dev);
-
-		gstate = csi->gstate + csi->gtop;
-		gstate->softmask = softmask;
-		gstate->ctm = save_ctm;
 	}
+	gstate->softmask = NULL;
+	gstate->ctm = gstate->softmask_ctm;
+	/* SumatraPDF: support transfer functions */
+	gstate->softmask_tr = NULL;
+
+	fz_begin_mask(csi->dev, &mask_bbox, gstate->luminosity,
+			softmask->colorspace, gstate->softmask_bc);
+	fz_try(ctx)
+	{
+		pdf_run_xobject(csi, NULL, softmask, &fz_identity);
+	}
+	fz_catch(ctx)
+	{
+		/* FIXME: Ignore error - nasty, but if we throw from
+		 * here the clip stack would be messed up. */
+		if (csi->cookie)
+			csi->cookie->errors++;
+	}
+
+	/* SumatraPDF: support transfer functions */
+	if (tr)
+	{
+		fz_apply_transfer_function(csi->dev, tr, 1);
+		gstate->softmask_tr = tr;
+	}
+
+	fz_end_mask(csi->dev);
+
+	csi->tm = save_tm;
+	csi->tlm = save_tlm;
+	csi->in_text = save_in_text;
+
+	gstate = csi->gstate + csi->gtop;
+	gstate->ctm = save_ctm;
+	/* SumatraPDF: fix memory leak */
+	gstate->softmask = save->softmask;
+	/* SumatraPDF: fix regression in Bug6901014_CityMap-evince.pdf */
+	if (!for_group)
+	{
+		gstate->softmask = NULL;
+		pdf_drop_xobject(ctx, save->softmask);
+	}
+
+	return gstate;
+}
+
+static void
+end_softmask(pdf_csi *csi, softmask_save *save)
+{
+	pdf_gstate *gstate = csi->gstate + csi->gtop;
+
+	if (save->softmask == NULL)
+		return;
+
+	gstate->softmask_ctm = save->ctm;
+	fz_pop_clip(csi->dev);
+}
+
+static void
+pdf_begin_group(pdf_csi *csi, const fz_rect *bbox, softmask_save *softmask)
+{
+	pdf_gstate *gstate = begin_softmask(csi, softmask, 1);
 
 	/* SumatraPDF: support transfer functions */
 	if (gstate->blendmode || gstate->tr)
@@ -445,7 +500,7 @@ pdf_begin_group(pdf_csi *csi, const fz_rect *bbox)
 }
 
 static void
-pdf_end_group(pdf_csi *csi)
+pdf_end_group(pdf_csi *csi, softmask_save *softmask)
 {
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 
@@ -455,8 +510,7 @@ pdf_end_group(pdf_csi *csi)
 	if (gstate->blendmode || gstate->tr)
 		fz_end_group(csi->dev);
 
-	if (gstate->softmask)
-		fz_pop_clip(csi->dev);
+	end_softmask(csi, softmask);
 }
 
 static void
@@ -465,17 +519,18 @@ pdf_show_shade(pdf_csi *csi, fz_shade *shd)
 	fz_context *ctx = csi->dev->ctx;
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	fz_rect bbox;
+	softmask_save softmask = { NULL };
 
 	if (csi->in_hidden_ocg > 0)
 		return;
 
 	fz_bound_shade(ctx, shd, &gstate->ctm, &bbox);
 
-	pdf_begin_group(csi, &bbox);
+	pdf_begin_group(csi, &bbox, &softmask);
 
 	fz_fill_shade(csi->dev, shd, &gstate->ctm, gstate->fill.alpha);
 
-	pdf_end_group(csi);
+	pdf_end_group(csi, &softmask);
 }
 
 static void
@@ -484,6 +539,7 @@ pdf_show_image(pdf_csi *csi, fz_image *image)
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	fz_matrix image_ctm;
 	fz_rect bbox;
+	softmask_save softmask = { NULL };
 
 	if (csi->in_hidden_ocg > 0)
 		return;
@@ -503,7 +559,7 @@ pdf_show_image(pdf_csi *csi, fz_image *image)
 		fz_clip_image_mask(csi->dev, image->mask, &bbox, &image_ctm);
 	}
 	else
-		pdf_begin_group(csi, &bbox);
+		pdf_begin_group(csi, &bbox, &softmask);
 
 	if (!image->colorspace)
 	{
@@ -546,7 +602,7 @@ pdf_show_image(pdf_csi *csi, fz_image *image)
 			fz_end_group(csi->dev);
 	}
 	else
-		pdf_end_group(csi);
+		pdf_end_group(csi, &softmask);
 }
 
 static void
@@ -556,6 +612,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 	pdf_gstate *gstate = csi->gstate + csi->gtop;
 	fz_path *path;
 	fz_rect bbox;
+	softmask_save softmask = { NULL };
 
 	if (dostroke) {
 		if (csi->dev->flags & (FZ_DEVFLAG_STROKECOLOR_UNDEFINED | FZ_DEVFLAG_LINEJOIN_UNDEFINED | FZ_DEVFLAG_LINEWIDTH_UNDEFINED))
@@ -591,7 +648,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 			dostroke = dofill = 0;
 
 		if (dofill || dostroke)
-			pdf_begin_group(csi, &bbox);
+			pdf_begin_group(csi, &bbox, &softmask);
 
 		if (dofill)
 		{
@@ -663,7 +720,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 		}
 
 		if (dofill || dostroke)
-			pdf_end_group(csi);
+			pdf_end_group(csi, &softmask);
 	}
 	fz_always(ctx)
 	{
@@ -689,6 +746,7 @@ pdf_flush_text(pdf_csi *csi)
 	int doclip;
 	int doinvisible;
 	fz_context *ctx = csi->dev->ctx;
+	softmask_save softmask = { NULL };
 
 	if (!csi->text)
 		return;
@@ -721,7 +779,7 @@ pdf_flush_text(pdf_csi *csi)
 		if (text->len == 0)
 			break;
 
-		pdf_begin_group(csi, &tb);
+		pdf_begin_group(csi, &tb, &softmask);
 
 		if (doinvisible)
 			fz_ignore_text(csi->dev, text, &gstate->ctm);
@@ -792,7 +850,7 @@ pdf_flush_text(pdf_csi *csi)
 			csi->accumulate = 2;
 		}
 
-		pdf_end_group(csi);
+		pdf_end_group(csi, &softmask);
 	}
 	fz_always(ctx)
 	{
@@ -1507,6 +1565,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 	int oldtop = 0;
 	int popmask;
 	fz_matrix local_transform = *transform;
+	softmask_save softmask = { NULL };
 
 	/* Avoid infinite recursion */
 	if (xobj == NULL || pdf_obj_mark(xobj->me))
@@ -1514,7 +1573,6 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 
 	fz_var(gstate);
 	fz_var(oldtop);
-	fz_var(popmask);
 
 	fz_try(ctx)
 	{
@@ -1533,42 +1591,7 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 		{
 			fz_rect bbox = xobj->bbox;
 			fz_transform_rect(&bbox, &gstate->ctm);
-			if (gstate->softmask)
-			{
-				pdf_xobject *softmask = gstate->softmask;
-				/* SumatraPDF: support transfer functions */
-				fz_transfer_function *tr = gstate->softmask_tr;
-				gstate->softmask_tr = NULL;
-
-				gstate->softmask = NULL;
-				popmask = 1;
-
-				fz_begin_mask(csi->dev, &bbox, gstate->luminosity,
-					softmask->colorspace, gstate->softmask_bc);
-				fz_try(ctx)
-				{
-					pdf_run_xobject(csi, resources, softmask, &fz_identity);
-				}
-				fz_catch(ctx)
-				{
-					/* FIXME: Ignore error - nasty, but if
-					 * we throw from here the clip stack
-					 * would be messed up */
-					if (csi->cookie)
-						csi->cookie->errors++;
-				}
-
-				/* SumatraPDF: support transfer functions */
-				if (tr)
-				{
-					fz_apply_transfer_function(csi->dev, tr, 1);
-					fz_drop_transfer_function(ctx, tr);
-				}
-
-				fz_end_mask(csi->dev);
-
-				pdf_drop_xobject(ctx, softmask);
-			}
+			gstate = begin_softmask(csi, &softmask, 0);
 
 			fz_begin_group(csi->dev, &bbox,
 				xobj->isolated, xobj->knockout, gstate->blendmode, gstate->fill.alpha);
@@ -1611,18 +1634,17 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 		}
 
 		pdf_obj_unmark(xobj->me);
+
+		/* wrap up transparency stacks */
+		if (xobj->transparency)
+		{
+			fz_end_group(csi->dev);
+			end_softmask(csi, &softmask);
+		}
 	}
 	fz_catch(ctx)
 	{
 		fz_rethrow(ctx);
-	}
-
-	/* wrap up transparency stacks */
-	if (xobj->transparency)
-	{
-		fz_end_group(csi->dev);
-		if (popmask)
-			fz_pop_clip(csi->dev);
 	}
 }
 

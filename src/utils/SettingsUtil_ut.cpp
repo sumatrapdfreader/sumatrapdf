@@ -114,10 +114,19 @@ UnknownNode [\r\n\
 \t]\r\n\
 ]\r\n";
 
+    static const char *unknownOnly = UTF8_BOM "\
+UnknownString: Forget-me-not\r\n\
+[Point]\r\n\
+Z: -19\r\n\
+[UnknownNode]\r\n\
+AnotherPoint: 7 8\r\n\
+Nested [\r\n\
+Key = Value";
+
     SutStruct *data = NULL;
     for (int i = 0; i < 3; i++) {
         data = (SutStruct *)DeserializeStruct(&gSutStructInfo, serialized, data);
-        ScopedMem<char> reserialized(SerializeStruct(&gSutStructInfo, data, serialized));
+        ScopedMem<char> reserialized(SerializeStruct(&gSutStructInfo, data, i < 2 ? unknownOnly : serialized));
         assert(str::Eq(serialized, reserialized));
     }
     assert(RGB(0xab, 0xcd, 0xef) == data->color);
@@ -131,6 +140,9 @@ UnknownNode [\r\n\
     assert(0 == data->sutStructItems->At(1)->floatArray->Count());
     assert(2 == data->sutStructItems->At(1)->nested.colorArray->Count());
     assert(0x12785634 == data->sutStructItems->At(1)->nested.colorArray->At(0));
+    assert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data))));
+    data->sutStructItems->At(0)->nested.point.x++;
+    assert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data, unknownOnly))));
     FreeStruct(&gSutStructInfo, data);
 
     data = (SutStruct *)DeserializeStruct(&gSutStructInfo, NULL);
