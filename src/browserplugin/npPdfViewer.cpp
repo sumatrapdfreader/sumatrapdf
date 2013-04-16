@@ -13,8 +13,7 @@
 #endif
 #include "npapi/npfunctions.h"
 
-// TODO: needs to use new name ?
-#define PREFS_FILE_NAME L"SumatraPDF.dat"
+#define PREFS_FILE_NAME L"SumatraPDF-settings.txt"
 
 #undef NP_END_MACRO
 #define NP_END_MACRO } __pragma(warning(push)) __pragma(warning(disable:4127)) while (0) __pragma(warning(pop))

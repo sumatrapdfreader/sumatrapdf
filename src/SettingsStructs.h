@@ -305,9 +305,6 @@ struct GlobalPrefs {
     DisplayMode defaultDisplayModeEnum;
     // the value of DefaultZoom for internal usage
     float defaultZoomFloat;
-    // a list of settings which this version of SumatraPDF didn't know how
-    // to handle
-    char * unknownSettings;
 };
 
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA

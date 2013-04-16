@@ -3379,6 +3379,9 @@ static void OnMenuViewShowHideToolbar()
 
 void OnMenuAdvancedOptions()
 {
+    if (!HasPermission(Perm_DiskAccess) || !HasPermission(Perm_SavePreferences))
+        return;
+
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
     if (!file::Exists(path))
         SavePrefs();

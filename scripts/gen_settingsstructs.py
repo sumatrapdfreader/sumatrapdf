@@ -449,9 +449,6 @@ GlobalPrefs = [
 	Field("DefaultZoomFloat", Float, -1,
 		"the value of DefaultZoom for internal usage",
 		internal=True),
-	Field("UnknownSettings", Utf8String, None,
-		"a list of settings which this version of SumatraPDF didn't know how to handle ",
-		internal=True),
 ]
 
 GlobalPrefs = Struct("GlobalPrefs", GlobalPrefs,

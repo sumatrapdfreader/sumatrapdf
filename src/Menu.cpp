@@ -129,8 +129,9 @@ static MenuDef menuDefSettings[] = {
     { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
 #endif
-    { _TRN("&Options..."),                  IDM_OPTIONS,               MF_REQ_PREF_ACCESS },
-    { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,      MF_REQ_PREF_ACCESS },
+    // TODO: these two items shouldn't have ellipses (no further input is required)
+    { _TRN("&Options..."),                  IDM_OPTIONS,                MF_REQ_PREF_ACCESS },
+    { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,       MF_REQ_PREF_ACCESS | MF_REQ_DISK_ACCESS },
 };
 
 // the whole menu is MF_NOT_FOR_EBOOK_UI
