@@ -3377,7 +3377,16 @@ static void OnMenuViewShowHideToolbar()
     ShowOrHideToolbarGlobally();
 }
 
-void OnMenuSettings(HWND hwnd)
+void OnMenuAdvancedOptions()
+{
+    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
+    if (!file::Exists(path))
+        SavePrefs();
+    CrashIf(!file::Exists(path));
+    LaunchFile(path, NULL, L"open");
+}
+
+void OnMenuOptions(HWND hwnd)
 {
     if (!HasPermission(Perm_SavePreferences)) return;
 
@@ -3397,9 +3406,9 @@ void OnMenuSettings(HWND hwnd)
     SavePrefs();
 }
 
-static void OnMenuSettings(WindowInfo& win)
+static void OnMenuOptions(WindowInfo& win)
 {
-    OnMenuSettings(win.hwndFrame);
+    OnMenuOptions(win.hwndFrame);
     if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
         gWindows.At(0)->RedrawAll(true);
 }
@@ -5027,8 +5036,12 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             AutoUpdateCheckAsync(win->hwndFrame, false);
             break;
 
-        case IDM_SETTINGS:
-            OnMenuSettings(*win);
+        case IDM_OPTIONS:
+            OnMenuOptions(*win);
+            break;
+
+        case IDM_ADVANCED_OPTIONS:
+            OnMenuAdvancedOptions();
             break;
 
         case IDM_VIEW_WITH_ACROBAT:

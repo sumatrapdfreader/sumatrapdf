@@ -13,6 +13,7 @@
 #endif
 #include "npapi/npfunctions.h"
 
+// TODO: needs to use new name ?
 #define PREFS_FILE_NAME L"SumatraPDF.dat"
 
 #undef NP_END_MACRO

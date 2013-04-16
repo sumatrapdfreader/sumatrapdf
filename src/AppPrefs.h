@@ -4,6 +4,8 @@
 #ifndef AppPrefs_h
 #define AppPrefs_h
 
+#define PREFS_FILE_NAME         L"SumatraPDF-settings.txt"
+
 /* enum from windowState */
 enum {
     WIN_STATE_NORMAL = 1, /* use remembered position and size */

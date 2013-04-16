@@ -81,7 +81,7 @@
 #define IDM_FILE_HISTORY_LAST           519
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
-#define IDM_SETTINGS                    552
+#define IDM_OPTIONS                     552
 #define IDM_CHANGE_LANGUAGE             553
 #define IDM_CHECK_UPDATE                554
 #define IDM_MANUAL                      555
@@ -101,6 +101,7 @@
 #define IDM_DEBUG_EBOOK_UI              594
 #define IDM_DEBUG_MUI                   595
 #define IDM_DEBUG_ANNOTATION            596
+#define IDM_ADVANCED_OPTIONS            597
 #define IDM_FAV_FIRST                   600
 #define IDM_FAV_LAST                    800
 #define IDC_GOTO_PAGE_EDIT              1000

@@ -17,7 +17,6 @@
 #include "Translations.h"
 #include "WindowInfo.h"
 
-#define PREFS_FILE_NAME         L"SumatraPDF-settings.txt"
 #define PREFS_INFO_URL          "http://blog.kowalczyk.info/software/sumatrapdf/settings.html"
 #define OLD_PREFS_FILE_NAME     L"sumatrapdfprefs.dat"
 

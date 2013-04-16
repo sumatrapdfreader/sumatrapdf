@@ -393,8 +393,12 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             AutoUpdateCheckAsync(win->hwndFrame, false);
             break;
 
-        case IDM_SETTINGS:
-            OnMenuSettings(win->hwndFrame);
+        case IDM_OPTIONS:
+            OnMenuOptions(win->hwndFrame);
+            break;
+
+        case IDM_ADVANCED_OPTIONS:
+            OnMenuAdvancedOptions();
             break;
 
         case IDM_PROPERTIES:

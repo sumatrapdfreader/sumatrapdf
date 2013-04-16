@@ -129,7 +129,8 @@ static MenuDef menuDefSettings[] = {
     { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
 #endif
-    { _TRN("&Options..."),                  IDM_SETTINGS,               MF_REQ_PREF_ACCESS },
+    { _TRN("&Options..."),                  IDM_OPTIONS,               MF_REQ_PREF_ACCESS },
+    { _TRN("&Advanced Options..."),         IDM_ADVANCED_OPTIONS,      MF_REQ_PREF_ACCESS },
 };
 
 // the whole menu is MF_NOT_FOR_EBOOK_UI

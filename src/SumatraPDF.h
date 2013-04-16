@@ -111,7 +111,8 @@ void  SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCon
 void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 bool  CanSendAsEmailAttachment(WindowInfo *win=NULL);
 bool  DoCachePageRendering(WindowInfo *win, int pageNo);
-void  OnMenuSettings(HWND hwnd);
+void  OnMenuOptions(HWND hwnd);
+void  OnMenuAdvancedOptions();
 void  OnMenuExit();
 void  AutoUpdateCheckAsync(HWND hwnd, bool autoCheck);
 void  OnMenuChangeLanguage(HWND hwnd);
