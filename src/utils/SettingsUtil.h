@@ -47,7 +47,8 @@ struct StructInfo {
     const char *fieldNames;
 };
 
-char *SerializeStruct(const StructInfo *info, const void *strct, const char *infoUrl=NULL, size_t *sizeOut=NULL);
+char *SerializeStruct(const StructInfo *info, const void *strct, const char *prevData=NULL,
+                      const char *infoUrl=NULL, size_t *sizeOut=NULL);
 void *DeserializeStruct(const StructInfo *info, const char *data, void *strct=NULL);
 void FreeStruct(const StructInfo *info, void *strct);
 

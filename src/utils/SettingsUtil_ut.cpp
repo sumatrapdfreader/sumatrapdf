@@ -45,6 +45,7 @@ struct SutStruct {
     char *nullUtf8String;
     char *escapedUtf8String;
     Vec<int> *intArray;
+    PointI point;
     Vec<SutStructItem *> *sutStructItems;
 };
 
@@ -60,9 +61,10 @@ static const FieldInfo gSutStructFields[] = {
     { offsetof(SutStruct, nullUtf8String), Type_Utf8String, NULL },
     { offsetof(SutStruct, escapedUtf8String), Type_Utf8String, (intptr_t)"$\nstring " },
     { offsetof(SutStruct, intArray), Type_IntArray, (intptr_t)"1 2 -3" },
+    { offsetof(SutStruct, point), Type_Struct, (intptr_t)&gSutPointIInfo },
     { offsetof(SutStruct, sutStructItems), Type_Array, (intptr_t)&gSutStructItemInfo },
 };
-static const StructInfo gSutStructInfo = { sizeof(SutStruct), 12, gSutStructFields, "Boolean\0Color\0FloatingPoint\0Integer\0String\0NullString\0EscapedString\0Utf8String\0NullUtf8String\0EscapedUtf8String\0IntArray\0SutStructItems" };
+static const StructInfo gSutStructInfo = { sizeof(SutStruct), 13, gSutStructFields, "Boolean\0Color\0FloatingPoint\0Integer\0String\0NullString\0EscapedString\0Utf8String\0NullUtf8String\0EscapedUtf8String\0IntArray\0Point\0SutStructItems" };
 
 static void SettingsUtilTest()
 {
@@ -76,6 +78,11 @@ EscapedString = $\t$r$n$$ $\r\n\
 Utf8String = another string\r\n\
 EscapedUtf8String = $r$n[]\t$\r\n\
 IntArray = 3 1\r\n\
+Point [\r\n\
+\tX = -17\r\n\
+\tY = -18\r\n\
+\tZ = -19\r\n\
+]\r\n\
 SutStructItems [\r\n\
 \t[\r\n\
 \t\tCompactPoint = -1 5\r\n\
@@ -98,21 +105,32 @@ SutStructItems [\r\n\
 \t\t\tColorArray = #12345678 #987654\r\n\
 \t\t]\r\n\
 \t]\r\n\
+]\r\n\
+UnknownString = Forget-me-not\r\n\
+UnknownNode [\r\n\
+\tAnotherPoint = 7 8\r\n\
+\tNested [\r\n\
+\t\tKey = Value\r\n\
+\t]\r\n\
 ]\r\n";
 
     SutStruct *data = NULL;
     for (int i = 0; i < 3; i++) {
         data = (SutStruct *)DeserializeStruct(&gSutStructInfo, serialized, data);
-        ScopedMem<char> reserialized(SerializeStruct(&gSutStructInfo, data));
+        ScopedMem<char> reserialized(SerializeStruct(&gSutStructInfo, data, serialized));
         assert(str::Eq(serialized, reserialized));
     }
+    assert(RGB(0xab, 0xcd, 0xef) == data->color);
     assert(str::Eq(data->escapedString, L"\t\r\n$ "));
     assert(str::Eq(data->escapedUtf8String, "\r\n[]\t"));
+    assert(2 == data->intArray->Count() && 3 == data->intArray->At(0));
     assert(2 == data->sutStructItems->Count());
+    assert(PointI(-1, 5) == data->sutStructItems->At(0)->compactPoint);
     assert(2 == data->sutStructItems->At(0)->floatArray->Count());
     assert(0 == data->sutStructItems->At(0)->nested.colorArray->Count());
     assert(0 == data->sutStructItems->At(1)->floatArray->Count());
     assert(2 == data->sutStructItems->At(1)->nested.colorArray->Count());
+    assert(0x12785634 == data->sutStructItems->At(1)->nested.colorArray->At(0));
     FreeStruct(&gSutStructInfo, data);
 
     data = (SutStruct *)DeserializeStruct(&gSutStructInfo, NULL);
@@ -122,6 +140,7 @@ SutStructItems [\r\n\
     assert(str::Eq(data->utf8String, "Utf-8 String") && !data->nullUtf8String && str::Eq(data->escapedUtf8String, "$\nstring "));
     assert(data->intArray && 3 == data->intArray->Count() && 1 == data->intArray->At(0));
     assert(2 == data->intArray->At(1) && -3 == data->intArray->At(2));
+    assert(PointI(111, 222) == data->point);
     assert(data->sutStructItems && 0 == data->sutStructItems->Count());
     FreeStruct(&gSutStructInfo, data);
 }

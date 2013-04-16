@@ -325,7 +325,7 @@ bool SavePrefs()
 
     // remove entries which should (no longer) be remembered
     gFileHistory.Purge(!gGlobalPrefs->rememberStatePerDocument);
-
+    // update display mode and zoom fields from internal values
     str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, DisplayModeConv::NameFromEnum(gGlobalPrefs->defaultDisplayModeEnum));
     UnparseZoomVirtual(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
 
@@ -349,6 +349,13 @@ bool SavePrefs()
         }
     }
 
+    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
+    CrashIf(!path);
+    if (!path)
+        return false;
+    size_t prevPrefsDataSize;
+    ScopedMem<char> prevPrefsData(file::ReadAll(path, &prevPrefsDataSize));
+
     if (!gGlobalPrefs->rememberStatePerDocument) {
         // prevent unnecessary settings from being written out
         uint16_t fieldCount = 0;
@@ -362,7 +369,8 @@ bool SavePrefs()
     }
 
     size_t prefsDataSize;
-    ScopedMem<char> prefsData(SerializeStruct(&gGlobalPrefsInfo, gGlobalPrefs, PREFS_INFO_URL, &prefsDataSize));
+    ScopedMem<char> prefsData(SerializeStruct(&gGlobalPrefsInfo, gGlobalPrefs, prevPrefsData,
+                                              PREFS_INFO_URL, &prefsDataSize));
 
     if (!gGlobalPrefs->rememberStatePerDocument)
         gFileStateInfo.fieldCount = dimof(gFileStateFields);
@@ -371,23 +379,15 @@ bool SavePrefs()
     if (!prefsData || 0 == prefsDataSize)
         return false;
 
-    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
-    CrashIf(!path);
-    if (!path)
-        return false;
-
     // only save if anything's changed at all
-    size_t prevPrefsDataSize;
-    ScopedMem<char> prevPrefsData(file::ReadAll(path, &prevPrefsDataSize));
     if (prevPrefsDataSize == prefsDataSize && str::Eq(prefsData, prevPrefsData))
         return true;
 
     FileTransaction trans;
     bool ok = trans.WriteAll(path, prefsData, prefsDataSize) && trans.Commit();
-    if (ok)
-        gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
     if (!ok)
         return false;
+    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
 
     // notify all SumatraPDF instances about the updated prefs file
     HWND hwnd = NULL;

@@ -250,7 +250,52 @@ static inline void Indent(str::Str<char>& out, int indent)
         out.Append('\t');
 }
 
-static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, const void *data, int indent=0)
+static void MarkFieldKnown(SquareTreeNode *node, const char *fieldName, SettingType type)
+{
+    if (!node)
+        return;
+    size_t off = 0;
+    if (Type_Struct == type) {
+        if (node->GetChild(fieldName, &off)) {
+            delete node->data.At(off - 1).value.child;
+            node->data.RemoveAt(off - 1);
+        }
+    }
+    else if (Type_Array == type) {
+        while (node->GetChild(fieldName, &off)) {
+            delete node->data.At(off - 1).value.child;
+            node->data.RemoveAt(off - 1);
+            off--;
+        }
+    }
+    else if (node->GetValue(fieldName, &off)) {
+        node->data.RemoveAt(off - 1);
+    }
+}
+
+static void SerializeUnknownFields(str::Str<char>& out, SquareTreeNode *node, int indent)
+{
+    if (!node)
+        return;
+    for (size_t i = 0; i < node->data.Count(); i++) {
+        SquareTreeNode::DataItem& item = node->data.At(i);
+        Indent(out, indent);
+        out.Append(item.key);
+        if (item.isChild) {
+            out.Append(" [\r\n");
+            SerializeUnknownFields(out, item.value.child, indent + 1);
+            Indent(out, indent);
+            out.Append("]\r\n");
+        }
+        else {
+            out.Append(" = ");
+            out.Append(item.value.str);
+            out.Append("\r\n");
+        }
+    }
+}
+
+static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, const void *data, SquareTreeNode *prevNode, int indent=0)
 {
     const uint8_t *base = (const uint8_t *)data;
     const char *fieldName = info->fieldNames;
@@ -264,7 +309,7 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
             Indent(out, indent);
             out.Append(fieldName);
             out.Append(" [\r\n");
-            SerializeStructRec(out, GetSubstruct(field), base + field.offset, indent + 1);
+            SerializeStructRec(out, GetSubstruct(field), base + field.offset, prevNode ? prevNode->GetChild(fieldName) : NULL, indent + 1);
             Indent(out, indent);
             out.Append("]\r\n");
         }
@@ -277,7 +322,7 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
                 for (size_t j = 0; j < array->Count(); j++) {
                     Indent(out, indent + 1);
                     out.Append("[\r\n");
-                    SerializeStructRec(out, GetSubstruct(field), array->At(j), indent + 2);
+                    SerializeStructRec(out, GetSubstruct(field), array->At(j), NULL, indent + 2);
                     Indent(out, indent + 1);
                     out.Append("]\r\n");
                 }
@@ -296,8 +341,10 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
             else
                 out.RemoveAt(offset, out.Size() - offset);
         }
+        MarkFieldKnown(prevNode, fieldName, field.type);
         fieldName += str::Len(fieldName) + 1;
     }
+    SerializeUnknownFields(out, prevNode, indent);
 }
 
 static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, uint8_t *base, bool useDefaults)
@@ -340,7 +387,8 @@ static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, 
     return base;
 }
 
-char *SerializeStruct(const StructInfo *info, const void *strct, const char *infoUrl, size_t *sizeOut)
+char *SerializeStruct(const StructInfo *info, const void *strct, const char *prevData,
+                      const char *infoUrl, size_t *sizeOut)
 {
     str::Str<char> out;
     out.Append(UTF8_BOM "# This file will be overwritten - modify at your own risk!");
@@ -349,7 +397,8 @@ char *SerializeStruct(const StructInfo *info, const void *strct, const char *inf
         out.Append(infoUrl);
     }
     out.Append("\r\n\r\n");
-    SerializeStructRec(out, info, strct);
+    SquareTree prevSqt(prevData);
+    SerializeStructRec(out, info, strct, prevSqt.root);
     if (sizeOut)
         *sizeOut = out.Size();
     return out.StealData();
