@@ -3382,6 +3382,14 @@ void OnMenuAdvancedOptions()
     if (!HasPermission(Perm_DiskAccess) || !HasPermission(Perm_SavePreferences))
         return;
 
+#ifdef ENABLE_SUMATRAPDF_USER_INI
+    ScopedMem<WCHAR> userPath(AppGenDataFilename(L"SumatraPDF-user.ini"));
+    if (file::Exists(userPath)) {
+        LaunchFile(userPath, NULL, L"open");
+        return;
+    }
+#endif
+
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
     if (!file::Exists(path))
         SavePrefs();
