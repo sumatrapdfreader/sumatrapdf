@@ -39,9 +39,7 @@ void DeleteFavorite(Favorite *fav)
 DisplayState *NewDisplayState(const WCHAR *filePath)
 {
     DisplayState *ds = (DisplayState *)DeserializeStruct(&gFileStateInfo, NULL);
-    ds->filePath = str::Dup(filePath);
-    ds->displayModeEnum = gGlobalPrefs->defaultDisplayModeEnum;
-    ds->zoomFloat = gGlobalPrefs->defaultZoomFloat;
+    str::ReplacePtr(&ds->filePath, filePath);
     return ds;
 }
 
@@ -88,7 +86,7 @@ static FieldInfo gGlobalPrefsFieldsBenc[] = {
     { offsetof(GlobalPrefs, windowState), Type_Int, 1 },
     { offsetof(GlobalPrefs, windowPos.x), Type_Int, 0 },
     { offsetof(GlobalPrefs, windowPos.y), Type_Int, 0 },
-    { offsetof(GlobalPrefs, defaultZoomFloat), Type_Float, (intptr_t)"-1" },
+    { offsetof(GlobalPrefs, defaultZoom), Type_Utf8String, (intptr_t)"fit page" },
     { offsetof(GlobalPrefs, mainWindowBackground), Type_Color, 0xfff200 },
     { offsetof(GlobalPrefs, escToExit), Type_Bool, false },
     { offsetof(GlobalPrefs, forwardSearch.highlightColor), Type_Color, 0x6581ff },
@@ -119,7 +117,7 @@ static FieldInfo gFileFieldsBenc[] = {
     { offsetof(FileState, windowState), Type_Int, 1 },
     { offsetof(FileState, windowPos.x), Type_Int, 0 },
     { offsetof(FileState, windowPos.y), Type_Int, 0 },
-    { offsetof(FileState, zoomFloat), Type_Float, (intptr_t)"-1" },
+    { offsetof(FileState, zoom), Type_Utf8String, (intptr_t)"fit page" },
 };
 static StructInfo gFileInfoBenc = { sizeof(FileState), 21, gFileFieldsBenc, "Decryption Key\0Display Mode\0File\0Missing\0OpenCount\0Page\0Pinned\0ReparseIdx\0Rotation\0Scroll X2\0Scroll Y2\0ShowToc\0Toc DX\0TocToggles\0UseGlobalValues\0Window DX\0Window DY\0Window State\0Window X\0Window Y\0ZoomVirtual" };
 
@@ -189,43 +187,15 @@ static int GetWeekCount()
     // 1408 == (10 * 1000 * 1000 * 60 * 60 * 24 * 7) / (1 << 32)
 }
 
-static float ParseZoomVirtual(const char *txt, float default)
-{
-    if (str::EqIS(txt, "fit page"))
-        return ZOOM_FIT_PAGE;
-    if (str::EqIS(txt, "fit width"))
-        return ZOOM_FIT_WIDTH;
-    if (str::EqIS(txt, "fit content"))
-        return ZOOM_FIT_CONTENT;
-    float zoom;
-    if (str::Parse(txt, "%f", &zoom) && ZOOM_MIN <= zoom && zoom <= ZOOM_MAX)
-        return zoom;
-    return default;
-}
-
-static void UnparseZoomVirtual(char **txt, float zoom)
-{
-    float prevZoom = *txt ? ParseZoomVirtual(*txt, INVALID_ZOOM) : INVALID_ZOOM;
-    if (prevZoom == zoom || !IsValidZoom(zoom))
-        return;
-    free(*txt);
-    if (ZOOM_FIT_PAGE == zoom)
-        *txt = str::Dup("fit page");
-    else if (ZOOM_FIT_WIDTH == zoom)
-        *txt = str::Dup("fit width");
-    else if (ZOOM_FIT_CONTENT == zoom)
-        *txt = str::Dup("fit content");
-    else
-        *txt = str::Format("%g", zoom);
-}
-
 static int cmpFloat(const void *a, const void *b)
 {
     return *(float *)a < *(float *)b ? -1 : *(float *)a > *(float *)b ? 1 : 0;
 }
 
+namespace prefs {
+
 /* Caller needs to DeleteGlobalPrefs(gGlobalPrefs) */
-bool LoadPrefs()
+bool Load()
 {
     CrashIf(gGlobalPrefs);
 
@@ -248,11 +218,14 @@ bool LoadPrefs()
         gGlobalPrefs->rememberStatePerDocument = !gGlobalPrefs->rememberStatePerDocument;
         DeserializeStructBenc(&gBencGlobalPrefs, bencPrefsData, gGlobalPrefs, BencGlobalPrefsCallback);
         gGlobalPrefs->rememberStatePerDocument = !gGlobalPrefs->rememberStatePerDocument;
-        // the old format always serialized zoom to a float value
-        UnparseZoomVirtual(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
-        for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
-            DisplayState *state = gGlobalPrefs->fileStates->At(i);
-            UnparseZoomVirtual(&state->zoom, state->zoomFloat);
+        // update the zoom values to the more readable format
+        float zoom = conv::ToZoom(gGlobalPrefs->defaultZoom);
+        str::ReplacePtr(&gGlobalPrefs->defaultZoom, NULL);
+        conv::FromZoom(&gGlobalPrefs->defaultZoom, zoom);
+        for (DisplayState **ds = gGlobalPrefs->fileStates->IterStart(); ds; ds = gGlobalPrefs->fileStates->IterNext()) {
+            zoom = conv::ToZoom((*ds)->zoom);
+            str::ReplacePtr(&(*ds)->zoom, NULL);
+            conv::FromZoom(&(*ds)->zoom, zoom);
         }
     }
 
@@ -269,19 +242,17 @@ bool LoadPrefs()
         gGlobalPrefs->uiLanguage = str::Dup(trans::DetectUserLang());
     }
     gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
-    gGlobalPrefs->defaultDisplayModeEnum = DisplayModeConv::EnumFromName(gGlobalPrefs->defaultDisplayMode, DM_AUTOMATIC);
-    gGlobalPrefs->defaultZoomFloat = ParseZoomVirtual(gGlobalPrefs->defaultZoom, ZOOM_ACTUAL_SIZE);
+    gGlobalPrefs->defaultDisplayModeEnum = conv::ToDisplayMode(gGlobalPrefs->defaultDisplayMode, DM_AUTOMATIC);
+    gGlobalPrefs->defaultZoomFloat = conv::ToZoom(gGlobalPrefs->defaultZoom, ZOOM_ACTUAL_SIZE);
     CrashIf(!IsValidZoom(gGlobalPrefs->defaultZoomFloat));
 
     int weekDiff = GetWeekCount() - gGlobalPrefs->openCountWeek;
     gGlobalPrefs->openCountWeek = GetWeekCount();
-    for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
-        DisplayState *state = gGlobalPrefs->fileStates->At(i);
-        state->displayModeEnum = DisplayModeConv::EnumFromName(state->displayMode, DM_AUTOMATIC);
-        state->zoomFloat = ParseZoomVirtual(state->zoom, ZOOM_ACTUAL_SIZE);
-        CrashIf(!IsValidZoom(state->zoomFloat));
+    if (weekDiff > 0) {
         // "age" openCount statistics (cut in in half after every week)
-        state->openCount >>= weekDiff;
+        for (DisplayState **ds = gGlobalPrefs->fileStates->IterStart(); ds; ds = gGlobalPrefs->fileStates->IterNext()) {
+            (*ds)->openCount >>= weekDiff;
+        }
     }
 
     // make sure that zoom levels are in the order expected by DisplayModel
@@ -305,7 +276,7 @@ bool LoadPrefs()
 // called whenever global preferences change or a file is
 // added or removed from gFileHistory (in order to keep
 // the list of recently opened documents in sync)
-bool SavePrefs()
+bool Save()
 {
     // don't save preferences for plugin windows
     if (gPluginMode)
@@ -326,28 +297,8 @@ bool SavePrefs()
     // remove entries which should (no longer) be remembered
     gFileHistory.Purge(!gGlobalPrefs->rememberStatePerDocument);
     // update display mode and zoom fields from internal values
-    str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, DisplayModeConv::NameFromEnum(gGlobalPrefs->defaultDisplayModeEnum));
-    UnparseZoomVirtual(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
-
-    for (size_t i = 0; i < gGlobalPrefs->fileStates->Count(); i++) {
-        DisplayState *state = gGlobalPrefs->fileStates->At(i);
-        str::ReplacePtr(&state->displayMode, DisplayModeConv::NameFromEnum(state->displayModeEnum));
-        UnparseZoomVirtual(&state->zoom, state->zoomFloat);
-        if (!gGlobalPrefs->rememberStatePerDocument)
-            state->useDefaultState = true;
-        // BUG: 2140
-        if (!IsValidZoom(state->zoomFloat)) {
-            dbglog::CrashLogF("Invalid ds->zoom: %g", state->zoomFloat);
-            const WCHAR *ext = path::GetExt(state->filePath);
-            if (!str::IsEmpty(ext)) {
-                ScopedMem<char> extA(str::conv::ToUtf8(ext));
-                dbglog::CrashLogF("File type: %s", extA.Get());
-            }
-            dbglog::CrashLogF("DisplayMode: %d", state->displayMode);
-            dbglog::CrashLogF("PageNo: %d", state->pageNo);
-            CrashIf(true);
-        }
-    }
+    str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, conv::FromDisplayMode(gGlobalPrefs->defaultDisplayModeEnum));
+    conv::FromZoom(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
 
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
     CrashIf(!path);
@@ -357,6 +308,9 @@ bool SavePrefs()
     ScopedMem<char> prevPrefsData(file::ReadAll(path, &prevPrefsDataSize));
 
     if (!gGlobalPrefs->rememberStatePerDocument) {
+        for (DisplayState **ds = gGlobalPrefs->fileStates->IterStart(); ds; ds = gGlobalPrefs->fileStates->IterNext()) {
+            (*ds)->useDefaultState = true;
+        }
         // prevent unnecessary settings from being written out
         uint16_t fieldCount = 0;
         while (++fieldCount <= dimof(gFileStateFields)) {
@@ -398,7 +352,7 @@ bool SavePrefs()
 }
 
 // refresh the preferences when a different SumatraPDF process saves them
-bool ReloadPrefs()
+bool Reload()
 {
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
     if (!path || !file::Exists(path))
@@ -418,7 +372,7 @@ bool ReloadPrefs()
     DeleteGlobalPrefs(gGlobalPrefs);
     gGlobalPrefs = NULL;
 
-    bool ok = LoadPrefs();
+    bool ok = Load();
     if (!ok)
         return false;
 
@@ -440,7 +394,7 @@ bool ReloadPrefs()
     return true;
 }
 
-namespace DisplayModeConv {
+namespace conv {
 
 #define DM_AUTOMATIC_STR            "automatic"
 #define DM_SINGLE_PAGE_STR          "single page"
@@ -451,11 +405,11 @@ namespace DisplayModeConv {
 #define DM_CONTINUOUS_BOOK_VIEW_STR "continuous book view"
 
 #define STR_FROM_ENUM(val) \
-    if (val == var) \
+    if (val == mode) \
         return TEXT(val##_STR); \
     else NoOp()
 
-const WCHAR *NameFromEnum(DisplayMode var)
+const WCHAR *FromDisplayMode(DisplayMode mode)
 {
     STR_FROM_ENUM(DM_AUTOMATIC);
     STR_FROM_ENUM(DM_SINGLE_PAGE);
@@ -471,11 +425,11 @@ const WCHAR *NameFromEnum(DisplayMode var)
 #undef STR_FROM_ENUM
 
 #define IS_STR_ENUM(enumName) \
-    if (str::EqIS(txt, TEXT(enumName##_STR))) \
+    if (str::EqIS(s, TEXT(enumName##_STR))) \
         return enumName; \
     else NoOp()
 
-DisplayMode EnumFromName(const WCHAR *txt, DisplayMode default)
+DisplayMode ToDisplayMode(const WCHAR *s, DisplayMode default)
 {
     IS_STR_ENUM(DM_AUTOMATIC);
     IS_STR_ENUM(DM_SINGLE_PAGE);
@@ -485,11 +439,55 @@ DisplayMode EnumFromName(const WCHAR *txt, DisplayMode default)
     IS_STR_ENUM(DM_CONTINUOUS_FACING);
     IS_STR_ENUM(DM_CONTINUOUS_BOOK_VIEW);
     // for consistency ("continuous" is used instead in the settings instead for brevity)
-    if (str::EqIS(txt, L"continuous single page"))
+    if (str::EqIS(s, L"continuous single page"))
         return DM_CONTINUOUS;
     return default;
 }
 
 #undef IS_STR_ENUM
 
+void FromZoom(char **dst, float zoom, DisplayState *stateForIssue2140)
+{
+    float prevZoom = *dst ? ToZoom(*dst, INVALID_ZOOM) : INVALID_ZOOM;
+    if (prevZoom == zoom)
+        return;
+    if (!IsValidZoom(zoom) && stateForIssue2140) {
+        // TODO: does issue 2140 still occur?
+        dbglog::CrashLogF("Invalid ds->zoom: %g", zoom);
+        const WCHAR *ext = path::GetExt(stateForIssue2140->filePath);
+        if (!str::IsEmpty(ext)) {
+            ScopedMem<char> extA(str::conv::ToUtf8(ext));
+            dbglog::CrashLogF("File type: %s", extA.Get());
+        }
+        dbglog::CrashLogF("DisplayMode: %S", stateForIssue2140->displayMode);
+        dbglog::CrashLogF("PageNo: %d", stateForIssue2140->pageNo);
+    }
+    CrashIf(!IsValidZoom(zoom));
+    free(*dst);
+    if (ZOOM_FIT_PAGE == zoom)
+        *dst = str::Dup("fit page");
+    else if (ZOOM_FIT_WIDTH == zoom)
+        *dst = str::Dup("fit width");
+    else if (ZOOM_FIT_CONTENT == zoom)
+        *dst = str::Dup("fit content");
+    else
+        *dst = str::Format("%g", zoom);
 }
+
+float ToZoom(const char *s, float default)
+{
+    if (str::EqIS(s, "fit page"))
+        return ZOOM_FIT_PAGE;
+    if (str::EqIS(s, "fit width"))
+        return ZOOM_FIT_WIDTH;
+    if (str::EqIS(s, "fit content"))
+        return ZOOM_FIT_CONTENT;
+    float zoom;
+    if (str::Parse(s, "%f", &zoom) && IsValidZoom(zoom))
+        return zoom;
+    return default;
+}
+
+}; // namespace conv
+
+}; // namespace prefs

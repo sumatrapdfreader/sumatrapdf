@@ -290,17 +290,11 @@ FileSettings = [
 		"Note: We intentionally track toggle state as opposed to expansion state " +
 		"so that we only have to save a diff instead of all states for the whole " +
 		"tree (which can be quite large) - and also due to backwards compatibility"),
-	Field("Index", Type(None, "size_t"), "0",
-		"temporary value needed for FileHistory::cmpOpenCount",
-		internal=True),
 	Field("Thumbnail", Type(None, "RenderedBitmap *"), "NULL",
 		"the thumbnail is persisted separately as a PNG in sumatrapdfcache directory",
 		internal=True),
-	Field("DisplayModeEnum", Type(None, "DisplayMode"), "DM_AUTOMATIC",
-		"the value of DisplayMode for internal use",
-		internal=True),
-	Field("ZoomFloat", Float, -1,
-		"the value of Zoom for internal use",
+	Field("Index", Type(None, "size_t"), "0",
+		"temporary value needed for FileHistory::cmpOpenCount",
 		internal=True),
 ]
 
@@ -376,8 +370,8 @@ GlobalPrefs = [
 	# zeniko: replace these two with AssociatedExtensions (String, default: empty,
 	# might be e.g. ".pdf .xps") and CheckAssociationsAtStartup (Bool, default: true) ?
 	Field("AssociatedExtensions", String, None,
-		"a space separated list of extensions that SumatraPDF has associated itself with " +
-		"and will reassociate if a different application takes over"),
+		"a list of extensions that SumatraPDF has associated itself with and will " +
+		"reassociate if a different application takes over (e.g. \".pdf.xps.epub\")"),
 	Field("AssociateSilently", Bool, False,
 		"whether file associations should be fixed silently or only after user feedback"),
 	Field("CheckForUpdates", Bool, True,

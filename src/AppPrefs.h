@@ -20,15 +20,21 @@ extern GlobalPrefs *gGlobalPrefs;
 
 void DeleteGlobalPrefs(GlobalPrefs *globalPrefs);
 
-bool LoadPrefs();
-bool SavePrefs();
-bool ReloadPrefs();
+namespace prefs {
 
-namespace DisplayModeConv {
+bool Load();
+bool Save();
+bool Reload();
 
-const WCHAR *   NameFromEnum(DisplayMode var);
-DisplayMode     EnumFromName(const WCHAR *txt, DisplayMode default);
+namespace conv {
 
-}
+const WCHAR *   FromDisplayMode(DisplayMode mode);
+DisplayMode     ToDisplayMode(const WCHAR *s, DisplayMode default=DM_AUTOMATIC);
+void            FromZoom(char **dst, float zoom, DisplayState *stateForIssue2140=NULL);
+float           ToZoom(const char *s, float default=ZOOM_FIT_PAGE);
+
+};
+
+};
 
 #endif

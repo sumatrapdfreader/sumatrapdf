@@ -134,7 +134,7 @@ static void OpenUsingDde(const WCHAR *filePath, CommandLineInfo& i, bool isFirst
     }
     if ((i.startView != DM_AUTOMATIC || i.startZoom != INVALID_ZOOM ||
             i.startScroll.x != -1 && i.startScroll.y != -1) && isFirstWin) {
-        const WCHAR *viewMode = DisplayModeConv::NameFromEnum(i.startView);
+        const WCHAR *viewMode = prefs::conv::FromDisplayMode(i.startView);
         cmd.Set(str::Format(L"[" DDECOMMAND_SETVIEW L"(\"%s\", \"%s\", %.2f, %d, %d)]",
                                     fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y));
         DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd);
@@ -334,7 +334,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     mui::Initialize();
     uitask::Initialize();
 
-    LoadPrefs();
+    prefs::Load();
 
     CommandLineInfo i;
     GetCommandLineInfo(i);

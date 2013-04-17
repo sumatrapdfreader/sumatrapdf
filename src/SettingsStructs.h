@@ -184,15 +184,11 @@ struct FileState {
     // tree (which can be quite large) - and also due to backwards
     // compatibility
     Vec<int> * tocState;
-    // temporary value needed for FileHistory::cmpOpenCount
-    size_t index;
     // the thumbnail is persisted separately as a PNG in sumatrapdfcache
     // directory
     RenderedBitmap * thumbnail;
-    // the value of DisplayMode for internal use
-    DisplayMode displayModeEnum;
-    // the value of Zoom for internal use
-    float zoomFloat;
+    // temporary value needed for FileHistory::cmpOpenCount
+    size_t index;
 };
 
 // Most values on this structure can be updated through the UI and are
@@ -243,9 +239,9 @@ struct GlobalPrefs {
     // whether the Favorites sidebar should be visible by default in the
     // main window
     bool showFavorites;
-    // a space separated list of extensions that SumatraPDF has associated
-    // itself with and will reassociate if a different application takes
-    // over
+    // a list of extensions that SumatraPDF has associated itself with and
+    // will reassociate if a different application takes over (e.g.
+    // ".pdf.xps.epub")
     WCHAR * associatedExtensions;
     // whether file associations should be fixed silently or only after
     // user feedback

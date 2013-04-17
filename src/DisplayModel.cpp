@@ -124,10 +124,9 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
     if (!ds->filePath || !str::EqI(ds->filePath, FilePath()))
         str::ReplacePtr(&ds->filePath, FilePath());
 
-    ds->displayModeEnum = presentationMode ? presDisplayMode : GetDisplayMode();
+    str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(presentationMode ? presDisplayMode : GetDisplayMode()));
+    prefs::conv::FromZoom(&ds->zoom, presentationMode ? presZoomVirtual : zoomVirtual, ds);
     ds->rotation = rotation;
-    ds->zoomFloat = presentationMode ? presZoomVirtual : zoomVirtual;
-    CrashIf(!IsValidZoom(ds->zoomFloat));
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;

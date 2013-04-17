@@ -885,7 +885,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     bool showToc = gGlobalPrefs->showToc;
     if (state) {
         startPage = state->pageNo;
-        displayMode = state->displayModeEnum;
+        displayMode = prefs::conv::ToDisplayMode(state->displayMode);
         showAsFullScreen = WIN_STATE_FULLSCREEN == state->windowState;
         if (state->windowState == WIN_STATE_NORMAL)
             showType = SW_NORMAL;
@@ -990,9 +990,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     }
 
     if (state) {
+        zoomVirtual = prefs::conv::ToZoom(state->zoom);
         if (win->dm->ValidPageNo(startPage)) {
             ss.page = startPage;
-            if (ZOOM_FIT_CONTENT != state->zoomFloat) {
+            if (ZOOM_FIT_CONTENT != zoomVirtual) {
                 ss.x = state->scrollPos.x;
                 ss.y = state->scrollPos.y;
             }
@@ -1000,7 +1001,6 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         } else if (startPage > win->dm->PageCount()) {
             ss.page = win->dm->PageCount();
         }
-        zoomVirtual = state->zoomFloat;
         rotation = state->rotation;
         win->tocState = *state->tocState;
     }
@@ -1112,7 +1112,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         }
         return;
     }
-    DisplayState *ds = NewDisplayState(win->loadedFilePath);;
+    DisplayState *ds = NewDisplayState(win->loadedFilePath);
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
     win->dm->DisplayStateFromModel(ds);
     UpdateDisplayStateWindowRect(*win, *ds);
@@ -1423,11 +1423,11 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     if (failEarly) {
         ScopedMem<WCHAR> msg(str::Format(_TR("File %s not found"), fullPath));
         ShowNotification(win, msg, true /* autoDismiss */, true /* highlight */);
-        // display the notification ASAP (SavePrefs() can introduce a notable delay)
+        // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
         if (gFileHistory.MarkFileInexistent(fullPath)) {
-            SavePrefs();
+            prefs::Save();
             // update the Frequently Read list
             if (1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow())
                 gWindows.At(0)->RedrawAll(true);
@@ -1492,7 +1492,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
 
     if (!loaded) {
         if (gFileHistory.MarkFileInexistent(fullPath))
-            SavePrefs();
+            prefs::Save();
         return win;
     }
 
@@ -1509,7 +1509,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         DisplayState *ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage)
             CreateThumbnailForFile(*win, *ds);
-        SavePrefs();
+        prefs::Save();
     }
 
     // Add the file also to Windows' recently used documents (this doesn't
@@ -1770,7 +1770,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpReq *ctx, bool silent)
 #endif
         LaunchBrowser(SVN_UPDATE_LINK);
     }
-    SavePrefs();
+    prefs::Save();
 
     return 0;
 }
@@ -2602,7 +2602,7 @@ void OnMenuExit()
         AbortPrinting(win);
     }
 
-    SavePrefs();
+    prefs::Save();
     PostQuitMessage(0);
 }
 
@@ -2709,7 +2709,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (lastWindow && quitIfLast && !forceClose)
         ShowWindow(win->hwndFrame, SW_HIDE);
     if (lastWindow)
-        SavePrefs();
+        prefs::Save();
     else
         UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(win));
 
@@ -3048,7 +3048,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
         fileName.Set(str::Join(dstFileName, L".lnk"));
 
     ScrollState ss = win.dm->GetScrollState();
-    const WCHAR *viewMode = DisplayModeConv::NameFromEnum(win.dm->GetDisplayMode());
+    const WCHAR *viewMode = prefs::conv::FromDisplayMode(win.dm->GetDisplayMode());
     ScopedMem<WCHAR> ZoomVirtual(str::Format(L"%.2f", win.dm->ZoomVirtual()));
     if (ZOOM_FIT_PAGE == win.dm->ZoomVirtual())
         ZoomVirtual.Set(str::Dup(L"fitpage"));
@@ -3362,7 +3362,7 @@ void SetCurrentLanguageAndRefreshUi(const char *langCode)
     UpdateUITextForLanguage();
     if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
         gWindows.At(0)->RedrawAll(true);
-    SavePrefs();
+    prefs::Save();
 }
 
 void OnMenuChangeLanguage(HWND hwnd)
@@ -3392,7 +3392,7 @@ void OnMenuAdvancedOptions()
 
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
     if (!file::Exists(path))
-        SavePrefs();
+        prefs::Save();
     CrashIf(!file::Exists(path));
     LaunchFile(path, NULL, L"open");
 }
@@ -3414,7 +3414,7 @@ void OnMenuOptions(HWND hwnd)
     if (useSysColors != gGlobalPrefs->useSysColors)
         UpdateDocumentColors();
 
-    SavePrefs();
+    prefs::Save();
 }
 
 static void OnMenuOptions(WindowInfo& win)
@@ -5316,7 +5316,7 @@ InitMouseWheelInfo:
 
         case WM_ENDSESSION:
             // TODO: check for unfinished print jobs in WM_QUERYENDSESSION?
-            SavePrefs();
+            prefs::Save();
             break;
 
         case WM_DDE_INITIATE:
@@ -5329,7 +5329,7 @@ InitMouseWheelInfo:
             return OnDDETerminate(hwnd, wParam, lParam);
 
         case UWM_PREFS_FILE_UPDATED:
-            ReloadPrefs();
+            prefs::Reload();
             break;
 
         case WM_TIMER:

@@ -115,8 +115,8 @@ static void CloseEbookWindow(EbookWindow *win, bool quitIfLast, bool forceClose)
     if (TotalWindowsCount() > 0)
         return;
     if (quitIfLast) {
-        // TODO: the way we call SavePrefs() is all over the place. More principled approach would be better
-        SavePrefs();
+        // TODO: the way we call prefs::Save() is all over the place. More principled approach would be better
+        prefs::Save();
         PostQuitMessage(0);
         return;
     }
@@ -576,7 +576,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
             if (gEbookWindows.Count() > 0 || gWindows.Count() > 1) {
                 CloseWindow(w, false);
                 if (gFileHistory.MarkFileInexistent(fullPath))
-                    SavePrefs();
+                    prefs::Save();
                 // TODO: notify the use that loading failed (e.g. show a notification)
                 return;
             }
@@ -589,7 +589,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
         // is already visible, this is a no-op
         ShowWindow(winToReplace.HwndFrame(), SW_SHOW);
         if (gFileHistory.MarkFileInexistent(fullPath))
-            SavePrefs();
+            prefs::Save();
         return;
     }
 
@@ -599,7 +599,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
             // TODO: do it on a background thread?
             CreateThumbnailForDoc(doc, *ds);
         }
-        SavePrefs();
+        prefs::Save();
     }
 
     int startReparseIdx = -1;
