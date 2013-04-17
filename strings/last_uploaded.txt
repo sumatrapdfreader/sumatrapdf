@@ -2,6 +2,7 @@ AppTranslator strings
 %s of %s
 &About
 &Actual Size\tCtrl+1
+&Advanced Options...
 &All selected pages
 &Back\tAlt+Left Arrow
 &Book View\tCtrl+8

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-594e2637b2a8c233431a0a62670004e34727e5b3
+adfb4786e2669b5b03d7106de8c2b1ba6e59da6b
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -1783,7 +1783,7 @@ ku:هەڵبژاردنەکان&
 nl:&Opties
 pt:&Opções
 ro:&Optiuni
-ru:&Опции
+ru:&Параметры
 sp-rs:Opcije
 sq:&Opsionet
 sr-rs:Опције
@@ -8994,7 +8994,7 @@ ku:هەڵبژاردنەکانی &شاردنەوە
 nl:Verberg &Opties
 pt:&Ocultar opções
 ro:Ascundere &Optiuni
-ru:Скрыть опции
+ru:Скрыть параметры
 sp-rs:Sakrij opcije
 sq:Fsheh &opsionet
 sr-rs:Сакриј опције
