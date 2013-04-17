@@ -1969,7 +1969,7 @@ const char * gTranslations_bg =
 const char * gTranslations_ca = 
   "&Quant a...\0"\
   "Mida &real\tCtrl+1\0"\
-  "\0"\
+  "Opcions &avan\303\247ades...\0"\
   "&Totes les p\303\240gines seleccionades\0"\
   "Enrere\tAlt+Left Arrow\0"\
   "Visualitzaci\303\263 de &llibre\tCtrl+8\0"\
@@ -2084,7 +2084,7 @@ const char * gTranslations_ca =
   "Visualitzaci\303\263 r\303\240pida de web\0"\
   "Preferits\0"\
   "Documents FictionBook\0"\
-  "No s'ha trobat el fitxer %s\0"\
+  "No es troba el fitxer %s\0"\
   "Mida del fitxer:\0"\
   "Fitxer:\0"\
   "&Cerca...\tCtrl+F\0"\
@@ -2129,7 +2129,7 @@ const char * gTranslations_ca =
   "Obre\0"\
   "Obre amb el PDF-XChange\0"\
   "Obre un document...\0"\
-  "\0"\
+  "Obre amb %s\0"\
   "Obre amb l'&Adobe Reader\0"\
   "Obre amb el &Foxit Reader\0"\
   "Obre amb el Microsoft HTML Help\0"\
@@ -2213,7 +2213,7 @@ const char * gTranslations_ca =
 const char * gTranslations_ca_xv = 
   "&Quant a...\0"\
   "Mida &real\tCtrl+1\0"\
-  "\0"\
+  "Opcions &avan\303\247ades...\0"\
   "&Totes les p\303\240gines seleccionades\0"\
   "Arrere\tAlt+Left Arrow\0"\
   "Visualitzaci\303\263 de &llibre\tCtrl+8\0"\
@@ -2263,10 +2263,10 @@ const char * gTranslations_ca_xv =
   "(de %d)\0"\
   "(p\303\240gina %s)\0"\
   "Quant al SumatraPDF\0"\
-  "Afig un preferit\0"\
-  "Afig la p\303\240gina %s als preferits\0"\
-  "Afig la p\303\240gina %s als preferits amb el nom (opcional):\0"\
-  "Afig als preferits\0"\
+  "Afegix un preferit\0"\
+  "Afegix la p\303\240gina %s als preferits\0"\
+  "Afegix la p\303\240gina %s als preferits amb el nom (opcional):\0"\
+  "Afegix als preferits\0"\
   "Avan\303\247ats\0"\
   "Tots els fitxers\0"\
   "Tots els documents suportats\0"\
@@ -2373,7 +2373,7 @@ const char * gTranslations_ca_xv =
   "Obri\0"\
   "Obri amb el PDF-XChange\0"\
   "Obri un document...\0"\
-  "\0"\
+  "Obri amb %s\0"\
   "Obri amb l'&Adobe Reader\0"\
   "Obri amb el &Foxit Reader\0"\
   "Obri amb el Microsoft HTML Help\0"\
@@ -3921,7 +3921,7 @@ const char * gTranslations_nl =
 const char * gTranslations_et = 
   "&Programmi teave\0"\
   "&Tegelik suurus\tCtrl+1\0"\
-  "\0"\
+  "&Rohkem s\303\244tteid...\0"\
   "K\303\265ik v&alitud lehed\0"\
   "&Tagasi\tAlt+Vasaknool\0"\
   "&Raamatuvaade\tCtrl+8\0"\
@@ -4409,7 +4409,7 @@ const char * gTranslations_fi =
 const char * gTranslations_fr = 
   "&\303\200 propos\0"\
   "&Taille r\303\251elle\tCtrl+1\0"\
-  "\0"\
+  "Options &avanc\303\251es\342\200\246\0"\
   "&Toutes les pages s\303\251lectionn\303\251es\0"\
   "&Retour\tAlt+<-\0"\
   "Comme un livre\tCtrl+8\0"\
@@ -5141,7 +5141,7 @@ const char * gTranslations_ka =
 const char * gTranslations_de = 
   "&\303\234ber SumatraPDF\0"\
   "&Tats\303\244chliche Gr\303\266\303\237e\tStrg+1\0"\
-  "\0"\
+  "&Mehr Optionen\342\200\246\0"\
   "&Alle angegebenen Seiten\0"\
   "&Zur\303\274ck\tAlt+<-\0"\
   "&Buchansicht\tStrg+8\0"\
@@ -9289,7 +9289,7 @@ const char * gTranslations_pl =
 const char * gTranslations_br = 
   "S&obre\0"\
   "&Tamanho real\tCtrl+1\0"\
-  "\0"\
+  "Op\303\247\303\265es &Avan\303\247adas...\0"\
   "Tod&as as p\303\241ginas selecionadas\0"\
   "Voltar\tAlt+<-\0"\
   "Visualizar como livro\tCtrl+8\0"\
@@ -10021,7 +10021,7 @@ const char * gTranslations_ro =
 const char * gTranslations_ru = 
   "&\320\236 \320\277\321\200\320\276\320\263\321\200\320\260\320\274\320\274\320\265...\0"\
   "&\320\235\320\260\321\201\321\202\320\276\321\217\321\211\320\270\320\271 \321\200\320\260\320\267\320\274\320\265\321\200\tCtrl+1\0"\
-  "\0"\
+  "&\320\240\320\260\321\201\321\210\320\270\321\200\320\265\320\275\320\275\321\213\320\265 \320\275\320\260\321\201\321\202\321\200\320\276\320\271\320\272\320\270...\0"\
   "&\320\222\321\201\320\265 \320\262\321\213\320\261\321\200\320\260\320\275\320\275\321\213\320\265 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\321\213\0"\
   "&\320\235\320\260\320\267\320\260\320\264\tAlt+\320\241\321\202\321\200\320\265\320\273\320\272\320\260 \320\262\320\273\320\265\320\262\320\276\0"\
   "\320\222 &\321\200\320\260\320\267\320\262\320\276\321\200\320\276\321\202\tCtrl+8\0"\

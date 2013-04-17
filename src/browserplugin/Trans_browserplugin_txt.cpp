@@ -60,6 +60,26 @@ const WCHAR * const gTranslations[] = {
   NULL,
   L"Agiria irekitzen SumatraPDF-an...",
 
+  /* Translations for language ca */
+  L"%s de %s",
+  L"Error: no es pot executar el SumatraPDF!",
+  L"S'ha produït un error: no es troba el SumatraPDF!",
+  L"Error: no es pot baixar el document!",
+  NULL,
+  NULL,
+  NULL,
+  L"S'està obrint el document al SumatraPDF...",
+
+  /* Translations for language ca-xv */
+  L"%s de %s",
+  L"Error: no es pot executar el SumatraPDF!",
+  L"S'ha produït un error: no es troba el SumatraPDF!",
+  L"Error: no es pot baixar el document!",
+  NULL,
+  NULL,
+  NULL,
+  L"S'està obrint el document al SumatraPDF...",
+
   /* Translations for language cn */
   NULL,
   L"错误：无法运行SumatraPDF!",
@@ -118,7 +138,7 @@ const WCHAR * const gTranslations[] = {
   NULL,
   NULL,
   NULL,
-  L"Das Dokument wird in SumatraPDF geöffnet...",
+  L"Das Dokument wird in SumatraPDF geöffnet…",
 
   /* Translations for language hu */
   L"%s/%s",
@@ -252,9 +272,9 @@ const WCHAR * const gTranslations[] = {
 };
 
 const char * const gLanguages[] = {
-    "en", "sq", "ar", "az", "eu", "cn", "cz", "nl", "et", "fr",
-    "de", "hu", "it", "kr", "ku", "br", "pt", "ro", "ru", "es",
-    "sv", "ta", "uk", "uz", NULL
+    "en", "sq", "ar", "az", "eu", "ca", "ca-xv", "cn", "cz", "nl",
+    "et", "fr", "de", "hu", "it", "kr", "ku", "br", "pt", "ro",
+    "ru", "es", "sv", "ta", "uk", "uz", NULL
 };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
@@ -278,25 +298,27 @@ int GetLanguageIndex(LANGID id)
     case _LANGID(LANG_ARABIC): return 16;
     case _LANGID(LANG_AZERI): return 24;
     case _LANGID(LANG_BASQUE): return 32;
-    case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return 40;
-    case _LANGID(LANG_CZECH): return 48;
-    case _LANGID(LANG_DUTCH): return 56;
-    case _LANGID(LANG_ESTONIAN): return 64;
-    case _LANGID(LANG_FRENCH): return 72;
-    case _LANGID(LANG_GERMAN): return 80;
-    case _LANGID(LANG_HUNGARIAN): return 88;
-    case _LANGID(LANG_ITALIAN): return 96;
-    case _LANGID(LANG_KOREAN): return 104;
-    case MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ): return 112;
-    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 120;
-    case _LANGID(LANG_PORTUGUESE): return 128;
-    case _LANGID(LANG_ROMANIAN): return 136;
-    case _LANGID(LANG_RUSSIAN): return 144;
-    case _LANGID(LANG_SPANISH): return 152;
-    case _LANGID(LANG_SWEDISH): return 160;
-    case _LANGID(LANG_TAMIL): return 168;
-    case _LANGID(LANG_UKRAINIAN): return 176;
-    case _LANGID(LANG_UZBEK): return 184;
+    case _LANGID(LANG_CATALAN): return 40;
+    case (LANGID)-1: return 48;
+    case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return 56;
+    case _LANGID(LANG_CZECH): return 64;
+    case _LANGID(LANG_DUTCH): return 72;
+    case _LANGID(LANG_ESTONIAN): return 80;
+    case _LANGID(LANG_FRENCH): return 88;
+    case _LANGID(LANG_GERMAN): return 96;
+    case _LANGID(LANG_HUNGARIAN): return 104;
+    case _LANGID(LANG_ITALIAN): return 112;
+    case _LANGID(LANG_KOREAN): return 120;
+    case MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ): return 128;
+    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 136;
+    case _LANGID(LANG_PORTUGUESE): return 144;
+    case _LANGID(LANG_ROMANIAN): return 152;
+    case _LANGID(LANG_RUSSIAN): return 160;
+    case _LANGID(LANG_SPANISH): return 168;
+    case _LANGID(LANG_SWEDISH): return 176;
+    case _LANGID(LANG_TAMIL): return 184;
+    case _LANGID(LANG_UKRAINIAN): return 192;
+    case _LANGID(LANG_UZBEK): return 200;
     default: return -1;
 #undef _LANGID
     }
@@ -304,5 +326,5 @@ int GetLanguageIndex(LANGID id)
 
 bool IsLanguageRtL(int index)
 {
-    return 16 == index || 112 == index;
+    return 16 == index || 128 == index;
 }

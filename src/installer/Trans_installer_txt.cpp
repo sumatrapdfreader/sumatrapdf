@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   22
+#define LANGS_COUNT   24
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -239,6 +239,96 @@ const char * gTranslations_eu =
   "Kentzea garatzen...\0"\
   "Erabili SumatraP&DF berezko PDF irakurtzaile bezala\0";
 
+const char * gTranslations_ca = 
+  "&Opcions\0"\
+  "Esteu segur de voler desinstal\302\267lar el SumatraPDF?\0"\
+  "Tanca\0"\
+  "No es pot crear el directori temporal\0"\
+  "No es pot crear el directori d'instal\302\267laci\303\263\0"\
+  "No es pot instal\302\267lar el visor r\303\240pid de PDF\0"\
+  "No es pot instal\302\267lar el filtre de cerca PDF\0"\
+  "No es pot instal\302\267lar el connector del navegador\0"\
+  "No es pot obtenir el directori temporal\0"\
+  "No es pot suprimir el directori d'instal\302\267laci\303\263\0"\
+  "No es pot suprimir la drecera\0"\
+  "No es pot desinstal\302\267lar el visor r\303\240pid PDF\0"\
+  "No es pot desinstal\302\267lar el filtre de cerca PDF\0"\
+  "No es pot desinstal\302\267lar el connector de navegador\0"\
+  "No es pot escriure %s al disc\0"\
+  "No es pot copiar el desinstal\302\267lador al directori temporal\0"\
+  "No es pot crear una drecera\0"\
+  "No es poden suprimir les claus de registre del desinstal\302\267lador\0"\
+  "No es pot escriure la informaci\303\263 d'extensi\303\263 de fitxer extesa al registre\0"\
+  "No es pot escriure la informaci\303\263 de desinstal\302\267laci\303\263 al registre\0"\
+  "Amaga les &opcions\0"\
+  "Instal\302\267la el &connector PDF pels navegadors Firefox, Chrome i Opera\0"\
+  "Instal\302\267la el SumatraPDF\0"\
+  "Instal\302\267la el SumatraPDF a la &carpeta:\0"\
+  "La instal\302\267laci\303\263 ha fallat!\0"\
+  "La instal\302\267laci\303\263 \303\251s en progr\303\251s...\0"\
+  "Permet al Windows Desktop Search &cercar als documents PDF\0"\
+  "Permet al Windows mostrar &visualitzacions pr\303\250vies dels documents PDF\0"\
+  "Tanqueu %s per continuar!\0"\
+  "Seleccioneu la carpeta on voleu instal\302\267lar el SumatraPDF:\0"\
+  "Alguns fitxers que s'han d'instal\302\267lar no hi s\303\263n o s\303\263n malmesos\0"\
+  "Inicia el SumatraPDF\0"\
+  "Instal\302\267lador del SumatraPDF %s\0"\
+  "Desintal\302\267lador del SumatraPDF %s\0"\
+  "S'ha desinstal\302\267lat el SumatraPDF.\0"\
+  "No s'ha trobat cap instal\302\267laci\303\263 del SumatraPDF.\0"\
+  "Gr\303\240cies per triar el SumatraPDF!\0"\
+  "Gr\303\240cies! S'ha instal\302\267lat el SumatraPDF.\0"\
+  "L'instal\302\267lador \303\251s malm\303\250s. Baixeu-lo una altra vegada.\nLamentem les mol\303\250sties!\0"\
+  "Desinstal\302\267la el SumatraPDF\0"\
+  "La desinstal\302\267laci\303\263 ha fallat\0"\
+  "Desinstal\302\267laci\303\263 en progr\303\251s...\0"\
+  "Usa el SumatraPDF com a visor PDF &predeterminat\0";
+
+const char * gTranslations_ca_xv = 
+  "&Opcions\0"\
+  "Esteu segur de voler desinstal\302\267lar el SumatraPDF?\0"\
+  "Tanca\0"\
+  "No es pot crear el directori temporal\0"\
+  "No es pot crear el directori d'instal\302\267laci\303\263\0"\
+  "No es pot instal\302\267lar el visor r\303\240pid de PDF\0"\
+  "No es pot instal\302\267lar el filtre de cerca PDF\0"\
+  "No es pot instal\302\267lar el connector del navegador\0"\
+  "No es pot obtindre el directori temporal\0"\
+  "No es pot suprimir el directori d'instal\302\267laci\303\263\0"\
+  "No es pot suprimir la drecera\0"\
+  "No es pot desinstal\302\267lar el visor r\303\240pid PDF\0"\
+  "No es pot desinstal\302\267lar el filtre de cerca PDF\0"\
+  "No es pot desinstal\302\267lar el connector de navegador\0"\
+  "No es pot escriure %s al disc\0"\
+  "No es pot copiar el desinstal\302\267lador al directori temporal\0"\
+  "No es pot crear una drecera\0"\
+  "No es poden suprimir les claus de registre del desinstal\302\267lador\0"\
+  "No es pot escriure la informaci\303\263 d'extensi\303\263 de fitxer extesa al registre\0"\
+  "No es pot escriure la informaci\303\263 de desinstal\302\267laci\303\263 al registre\0"\
+  "Amaga les &opcions\0"\
+  "Instal\302\267la el &connector PDF per als navegadors Firefox, Chrome i Opera\0"\
+  "Instal\302\267la el SumatraPDF\0"\
+  "Instal\302\267la el SumatraPDF a la &carpeta:\0"\
+  "La instal\302\267laci\303\263 ha fallat!\0"\
+  "La instal\302\267laci\303\263 \303\251s en progr\303\251s...\0"\
+  "Permet al Windows Desktop Search &cercar als documents PDF\0"\
+  "Permet al Windows mostrar &visualitzacions pr\303\250vies dels documents\0"\
+  "Tanqueu %s per continuar!\0"\
+  "Seleccioneu la carpeta on voleu instal\302\267lar el SumatraPDF:\0"\
+  "Alguns fitxers que s'han d'instal\302\267lar no hi s\303\263n o s\303\263n malmesos\0"\
+  "Inicia el SumatraPDF\0"\
+  "Instal\302\267lador del SumatraPDF %s\0"\
+  "Desintal\302\267lador del SumatraPDF %s\0"\
+  "S'ha desinstal\302\267lat el SumatraPDF.\0"\
+  "No s'ha trobat cap instal\302\267laci\303\263 del SumatraPDF.\0"\
+  "Gr\303\240cies per triar el SumatraPDF!\0"\
+  "Gr\303\240cies! S'ha instal\302\267lat el SumatraPDF.\0"\
+  "L'instal\302\267lador \303\251s malm\303\251s. Baixeu-lo una altra vegada.\nLamentem les mol\303\250sties!\0"\
+  "Desinstal\302\267la el SumatraPDF\0"\
+  "La desinstal\302\267laci\303\263 ha fallat\0"\
+  "Desinstal\302\267laci\303\263 en progr\303\251s...\0"\
+  "Usa el SumatraPDF com a visor PDF &predeterminat\0";
+
 const char * gTranslations_cn = 
   "&\351\200\211\351\241\271\0"\
   "\347\241\256\345\256\232\350\246\201\345\215\270\350\275\275SumatraPDF\345\220\227\357\274\237\0"\
@@ -445,7 +535,7 @@ const char * gTranslations_de =
   "Installieren\0"\
   "&Installationsverzeichnis:\0"\
   "Die Installation ist fehlgeschlagen!\0"\
-  "Die Installation wird ausgef\303\274hrt...\0"\
+  "Die Installation wird ausgef\303\274hrt\342\200\246\0"\
   "PDF Dokumente in Windows-&Suchen einbeziehen\0"\
   "&Vorschau f\303\274r PDF Dokumente in Explorer aktivieren\0"\
   "Bitte schliessen Sie %s vor der Installation!\0"\
@@ -461,7 +551,7 @@ const char * gTranslations_de =
   "Das Installationsprogramm wurde besch\303\244digt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!\0"\
   "Deinstallieren\0"\
   "Die Deinstallation ist fehlgeschlagen\0"\
-  "Die Deinstallation wird ausgef\303\274hrt...\0"\
+  "Die Deinstallation wird ausgef\303\274hrt\342\200\246\0"\
   "SumatraPDF als Standard&programm f\303\274r PDF Dokumente verwenden\0";
 
 const char * gTranslations_hu = 
@@ -1011,6 +1101,8 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ar, 
   gTranslations_az, 
   gTranslations_eu, 
+  gTranslations_ca, 
+  gTranslations_ca_xv, 
   gTranslations_cn, 
   gTranslations_nl, 
   gTranslations_et, 
@@ -1038,6 +1130,8 @@ const char *gLangCodes =   "en\0" \
   "ar\0" \
   "az\0" \
   "eu\0" \
+  "ca\0" \
+  "ca-xv\0" \
   "cn\0" \
   "nl\0" \
   "et\0" \
@@ -1061,6 +1155,8 @@ const char *gLangNames =   "English\0" \
   "Arabic (\330\247\331\204\331\222\330\271\331\216\330\261\331\216\330\250\331\212\331\221\330\251)\0" \
   "Azerbaijani (Az\311\231rbaycanca)\0" \
   "Basque (Euskara)\0" \
+  "Catalan (Catal\303\240)\0" \
+  "Catalan-Valencian (Catal\303\240-Valenci\303\240)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "Dutch (Nederlands)\0" \
   "Estonian (Eesti)\0" \
@@ -1096,6 +1192,8 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_ARABIC),
   _LANGID(LANG_AZERI),
   _LANGID(LANG_BASQUE),
+  _LANGID(LANG_CATALAN),
+  (LANGID)-1,
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
   _LANGID(LANG_DUTCH),
   _LANGID(LANG_ESTONIAN),
@@ -1118,7 +1216,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (13 == idx);
+  return (2 == idx) || (15 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;
