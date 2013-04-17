@@ -26,6 +26,9 @@ bool Load();
 bool Save();
 bool Reload();
 
+void RegisterForFileChanges();
+void UnregisterForFileChanges();
+
 namespace conv {
 
 const WCHAR *   FromDisplayMode(DisplayMode mode);

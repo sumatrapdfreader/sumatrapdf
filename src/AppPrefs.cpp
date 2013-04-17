@@ -13,6 +13,7 @@
 #include "FileHistory.h"
 #include "FileTransactions.h"
 #include "FileUtil.h"
+#include "FileWatcher.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "WindowInfo.h"
@@ -20,7 +21,9 @@
 #define PREFS_INFO_URL          "http://blog.kowalczyk.info/software/sumatrapdf/settings.html"
 #define OLD_PREFS_FILE_NAME     L"sumatrapdfprefs.dat"
 
-GlobalPrefs *gGlobalPrefs = NULL;
+GlobalPrefs *        gGlobalPrefs = NULL;
+
+static WatchedFile * gWatchedSettingsFile = NULL;
 
 Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
 {
@@ -352,6 +355,9 @@ bool Save()
 }
 
 // refresh the preferences when a different SumatraPDF process saves them
+// TODO: should immediately update as much look&feel as possible. Settings
+// that are not immediately reflected:
+//  - MainWindowBackground when showing the start page
 bool Reload()
 {
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
@@ -392,6 +398,29 @@ bool Reload()
     UpdateFavoritesTreeForAllWindows();
 
     return true;
+}
+
+class SettingsFileObserver : public FileChangeObserver {
+public:
+    virtual ~SettingsFileObserver() { }
+    virtual void OnFileChanged();
+};
+
+void SettingsFileObserver::OnFileChanged()
+{
+    Reload();
+}
+
+void RegisterForFileChanges()
+{
+    CrashIf(gWatchedSettingsFile); // only call me once
+    ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
+    gWatchedSettingsFile = FileWatcherSubscribe(path, new SettingsFileObserver());
+}
+
+void UnregisterForFileChanges()
+{
+    FileWatcherUnsubscribe(gWatchedSettingsFile);
 }
 
 namespace conv {
