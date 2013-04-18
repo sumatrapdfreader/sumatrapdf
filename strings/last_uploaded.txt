@@ -179,6 +179,7 @@ Loading file %s...
 MB
 Make SumatraPDF default application for PDF files?
 Make SumatraPDF my default PDF reader
+Man&ga Mode
 Match Case
 Mobi documents
 Modified:
