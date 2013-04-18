@@ -124,9 +124,10 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
     if (!ds->filePath || !str::EqI(ds->filePath, FilePath()))
         str::ReplacePtr(&ds->filePath, FilePath());
 
+    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
+
     str::ReplacePtr(&ds->displayMode, prefs::conv::FromDisplayMode(presentationMode ? presDisplayMode : GetDisplayMode()));
     prefs::conv::FromZoom(&ds->zoom, presentationMode ? presZoomVirtual : zoomVirtual, ds);
-    ds->rotation = rotation;
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;
@@ -134,6 +135,7 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
         ds->scrollPos = PointI();
     else
         ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
+    ds->rotation = rotation;
 
     free(ds->decryptionKey);
     ds->decryptionKey = engine->GetDecryptionKey();

@@ -270,6 +270,9 @@ bool Exists(const WCHAR *filePath)
 // returns -1 on error (can't use INVALID_FILE_SIZE because it won't cast right)
 int64 GetSize(const WCHAR *filePath)
 {
+    CrashIf(!filePath);
+    if (!filePath) return -1;
+
     ScopedHandle h(CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL));
     if (h == INVALID_HANDLE_VALUE)

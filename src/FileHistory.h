@@ -106,6 +106,7 @@ public:
         DisplayState *state = Find(filePath);
         if (!state) {
             state = NewDisplayState(filePath);
+            state->useDefaultState = true;
         }
         else {
             states->Remove(state);

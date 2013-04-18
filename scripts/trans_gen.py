@@ -377,7 +377,7 @@ def gen_c_code_simple(strings_dict, keys, dir_name):
 
     langs_grp = ['"%s"' % lang.code for lang in langs] + ["NULL"]
     langs_list = ",\n    ".join([", ".join(grp) for grp in util2.group(langs_grp, 10)])
-    lang_id_to_index = "\n    ".join(["case %s: return %d;" % (lang.ms_lang_id, langs.index(lang) * len(keys)) for lang in langs] + ["default: return -1;"])
+    lang_id_to_index = "\n    ".join(["case %s: return %d;" % (lang.ms_lang_id, langs.index(lang) * len(keys)) for lang in langs if lang.ms_lang_id != "(LANGID)-1"] + ["default: return -1;"])
     rtl_lang_cmp = " || ".join(["%d == index" % (langs.index(lang) * len(keys)) for lang in langs if lang.isRtl]) or "false"
 
     translations_count = len(keys)

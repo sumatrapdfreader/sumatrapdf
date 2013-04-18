@@ -299,7 +299,6 @@ int GetLanguageIndex(LANGID id)
     case _LANGID(LANG_AZERI): return 24;
     case _LANGID(LANG_BASQUE): return 32;
     case _LANGID(LANG_CATALAN): return 40;
-    case (LANGID)-1: return 48;
     case MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED): return 56;
     case _LANGID(LANG_CZECH): return 64;
     case _LANGID(LANG_DUTCH): return 72;

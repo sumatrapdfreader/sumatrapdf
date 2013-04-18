@@ -527,7 +527,6 @@ static void UpdateCurrentFileDisplayStateForWinInfo(WindowInfo* win)
     if (!ds)
         return;
     win->dm->DisplayStateFromModel(ds);
-    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
     UpdateDisplayStateWindowRect(*win, *ds, false);
     UpdateSidebarDisplayState(win, ds);
 }
@@ -1112,7 +1111,6 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         return;
     }
     DisplayState *ds = NewDisplayState(win->loadedFilePath);
-    ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
     win->dm->DisplayStateFromModel(ds);
     UpdateDisplayStateWindowRect(*win, *ds);
     UpdateSidebarDisplayState(win, ds);
@@ -3382,7 +3380,7 @@ void OnMenuAdvancedOptions()
         return;
 
 #ifdef ENABLE_SUMATRAPDF_USER_INI
-    ScopedMem<WCHAR> userPath(AppGenDataFilename(L"SumatraPDF-user.ini"));
+    ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
     if (file::Exists(userPath)) {
         LaunchFile(userPath, NULL, L"open");
         return;
@@ -3390,8 +3388,6 @@ void OnMenuAdvancedOptions()
 #endif
 
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
-    if (!file::Exists(path))
-        prefs::Save();
     CrashIf(!file::Exists(path));
     LaunchFile(path, NULL, L"open");
 }
@@ -5337,10 +5333,6 @@ InitMouseWheelInfo:
             return OnDDExecute(hwnd, wParam, lParam);
         case WM_DDE_TERMINATE:
             return OnDDETerminate(hwnd, wParam, lParam);
-
-        case UWM_PREFS_FILE_UPDATED:
-            prefs::Reload();
-            break;
 
         case WM_TIMER:
             OnTimer(*win, hwnd, wParam);

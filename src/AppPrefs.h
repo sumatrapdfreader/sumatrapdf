@@ -5,6 +5,9 @@
 #define AppPrefs_h
 
 #define PREFS_FILE_NAME         L"SumatraPDF-settings.txt"
+#ifdef ENABLE_SUMATRAPDF_USER_INI
+#define USER_PREFS_FILE_NAME    L"SumatraPDF-user.ini"
+#endif
 
 /* enum from windowState */
 enum {
@@ -24,7 +27,7 @@ namespace prefs {
 
 bool Load();
 bool Save();
-bool Reload();
+bool Reload(bool forceReload=false);
 
 void RegisterForFileChanges();
 void UnregisterForFileChanges();

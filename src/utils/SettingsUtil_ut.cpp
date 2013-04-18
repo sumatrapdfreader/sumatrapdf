@@ -21,8 +21,8 @@ static const FieldInfo gSutStructNestedFields[] = {
 static const StructInfo gSutStructNestedInfo = { sizeof(SutStructNested), 2, gSutStructNestedFields, "Point\0ColorArray" };
 
 struct SutStructItem {
-    PointI compactPoint;
     Vec<float> *floatArray;
+    PointI compactPoint;
     SutStructNested nested;
 };
 
@@ -34,6 +34,7 @@ static const FieldInfo gSutStructItemFields[] = {
 static const StructInfo gSutStructItemInfo = { sizeof(SutStructItem), 3, gSutStructItemFields, "CompactPoint\0FloatArray\0Nested" };
 
 struct SutStruct {
+    int internal;
     bool boolean;
     COLORREF color;
     float floatingPoint;
@@ -47,6 +48,7 @@ struct SutStruct {
     Vec<int> *intArray;
     PointI point;
     Vec<SutStructItem *> *sutStructItems;
+    char *internalString;
 };
 
 static const FieldInfo gSutStructFields[] = {
@@ -126,8 +128,10 @@ Key = Value";
     SutStruct *data = NULL;
     for (int i = 0; i < 3; i++) {
         data = (SutStruct *)DeserializeStruct(&gSutStructInfo, serialized, data);
+        assert(data->internal == i);
         ScopedMem<char> reserialized(SerializeStruct(&gSutStructInfo, data, i < 2 ? unknownOnly : serialized));
         assert(str::Eq(serialized, reserialized));
+        data->internal++;
     }
     assert(RGB(0xab, 0xcd, 0xef) == data->color);
     assert(str::Eq(data->escapedString, L"\t\r\n$ "));
@@ -140,6 +144,7 @@ Key = Value";
     assert(0 == data->sutStructItems->At(1)->floatArray->Count());
     assert(2 == data->sutStructItems->At(1)->nested.colorArray->Count());
     assert(0x12785634 == data->sutStructItems->At(1)->nested.colorArray->At(0));
+    assert(!data->internalString);
     assert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data))));
     data->sutStructItems->At(0)->nested.point.x++;
     assert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data, unknownOnly))));

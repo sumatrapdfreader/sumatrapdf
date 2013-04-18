@@ -16,6 +16,7 @@
 #include "FileWatcher.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "UITask.h"
 #include "Version.h"
 #include "WindowInfo.h"
 
@@ -25,6 +26,9 @@
 GlobalPrefs *        gGlobalPrefs = NULL;
 
 static WatchedFile * gWatchedSettingsFile = NULL;
+#ifdef USER_PREFS_FILE_NAME
+static WatchedFile * gWatchedUserSettingsFile = NULL;
+#endif
 
 Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
 {
@@ -234,8 +238,8 @@ bool Load()
     }
 
 #ifdef ENABLE_SUMATRAPDF_USER_INI
-    ScopedMem<WCHAR> userPath(AppGenDataFilename(L"SumatraPDF-user.ini"));
-    if (userPath && file::Exists(userPath)) {
+    ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
+    if (file::Exists(userPath)) {
         ScopedMem<char> userPrefsData(file::ReadAll(userPath, NULL));
         DeserializeStruct(&gGlobalPrefsInfo, userPrefsData, gGlobalPrefs);
     }
@@ -272,8 +276,8 @@ bool Load()
 
     gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
 
-    // TODO: update gGlobalPrefs->unknownSettings
-
+    if (!file::Exists(path))
+        Save();
     return true;
 }
 
@@ -346,12 +350,6 @@ bool Save()
     if (!ok)
         return false;
     gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
-
-    // notify all SumatraPDF instances about the updated prefs file
-    HWND hwnd = NULL;
-    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, FRAME_CLASS_NAME, NULL)) != NULL) {
-        PostMessage(hwnd, UWM_PREFS_FILE_UPDATED, 0, 0);
-    }
     return true;
 }
 
@@ -359,15 +357,16 @@ bool Save()
 // TODO: should immediately update as much look&feel as possible. Settings
 // that are not immediately reflected:
 //  - MainWindowBackground when showing the start page
-bool Reload()
+bool Reload(bool forceReload)
 {
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
-    if (!path || !file::Exists(path))
+    if (!file::Exists(path))
         return false;
 
     FILETIME time = file::GetModificationTime(path);
     if (time.dwLowDateTime == gGlobalPrefs->lastPrefUpdate.dwLowDateTime &&
-        time.dwHighDateTime == gGlobalPrefs->lastPrefUpdate.dwHighDateTime) {
+        time.dwHighDateTime == gGlobalPrefs->lastPrefUpdate.dwHighDateTime &&
+        !forceReload) {
         return true;
     }
 
@@ -401,27 +400,43 @@ bool Reload()
     return true;
 }
 
-class SettingsFileObserver : public FileChangeObserver {
+class SettingsFileObserver : public FileChangeObserver, public UITask {
+    bool forceReload;
 public:
-    virtual ~SettingsFileObserver() { }
-    virtual void OnFileChanged();
-};
+    SettingsFileObserver(bool forceReload=false) : forceReload(forceReload) { }
 
-void SettingsFileObserver::OnFileChanged()
-{
-    Reload();
-}
+    virtual void OnFileChanged() {
+        // don't Reload directly so as to prevent potential race conditions
+        uitask::Post(new SettingsFileObserver(forceReload));
+    }
+    virtual void Execute() {
+        prefs::Reload(forceReload);
+    }
+};
 
 void RegisterForFileChanges()
 {
+    if (gPluginMode || !HasPermission(Perm_SavePreferences))
+        return;
+
     CrashIf(gWatchedSettingsFile); // only call me once
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));
     gWatchedSettingsFile = FileWatcherSubscribe(path, new SettingsFileObserver());
+
+#ifdef ENABLE_SUMATRAPDF_USER_INI
+    CrashIf(gWatchedUserSettingsFile);
+    ScopedMem<WCHAR> userPath(AppGenDataFilename(USER_PREFS_FILE_NAME));
+    if (file::Exists(userPath))
+        gWatchedUserSettingsFile = FileWatcherSubscribe(userPath, new SettingsFileObserver(true));
+#endif
 }
 
 void UnregisterForFileChanges()
 {
     FileWatcherUnsubscribe(gWatchedSettingsFile);
+#ifdef ENABLE_SUMATRAPDF_USER_INI
+    FileWatcherUnsubscribe(gWatchedUserSettingsFile);
+#endif
 }
 
 namespace conv {

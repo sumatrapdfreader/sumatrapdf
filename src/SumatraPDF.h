@@ -9,8 +9,6 @@
 #include "SumatraWindow.h"
 #include "Translations.h"
 
-#define UWM_PREFS_FILE_UPDATED  (WM_USER + 1)
-
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
 

@@ -595,7 +595,7 @@ void OpenMobiInWindow(Doc doc, SumatraWindow& winToReplace)
 
     if (gGlobalPrefs->rememberOpenedFiles) {
         ds = gFileHistory.MarkFileLoaded(fullPath);
-        if (gGlobalPrefs->showStartPage && ds) {
+        if (gGlobalPrefs->showStartPage) {
             // TODO: do it on a background thread?
             CreateThumbnailForDoc(doc, *ds);
         }
