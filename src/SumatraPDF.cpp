@@ -1862,20 +1862,18 @@ void AutoUpdateCheckAsync(HWND hwnd, bool autoCheck)
     if (!HasPermission(Perm_InternetAccess) || gPluginMode)
         return;
 
-    // don't check for updates at the first start, so that privacy
-    // sensitive users can disable the update check in time
-    if (autoCheck && 0 == gGlobalPrefs->timeOfLastUpdateCheck.dwLowDateTime &&
-                     0 == gGlobalPrefs->timeOfLastUpdateCheck.dwHighDateTime) {
-        return;
-    }
+    // For auto-check, only check if at least a day passed since last check
+    if (autoCheck) {
+        // don't check for updates at the first start, so that privacy
+        // sensitive users can disable the update check in time
+        FILETIME never = { 0 };
+        if (FileTimeEq(gGlobalPrefs->timeOfLastUpdateCheck, never))
+            return;
 
-    /* For auto-check, only check if at least a day passed since last check */
-    if (autoCheck && (gGlobalPrefs->timeOfLastUpdateCheck.dwLowDateTime != 0 ||
-                      gGlobalPrefs->timeOfLastUpdateCheck.dwHighDateTime != 0)) {
         FILETIME currentTimeFt;
         GetSystemTimeAsFileTime(&currentTimeFt);
         int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
-        assert(secs >= 0);
+        CrashIf(secs < 0);
         // if secs < 0 => somethings wrong, so ignore that case
         if ((secs > 0) && (secs < SECS_IN_DAY))
             return;

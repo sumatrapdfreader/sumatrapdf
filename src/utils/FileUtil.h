@@ -54,4 +54,9 @@ bool         CreateAll(const WCHAR *dir);
 
 }
 
+inline bool FileTimeEq(const FILETIME& a, const FILETIME& b)
+{
+    return a.dwLowDateTime == b.dwLowDateTime && a.dwHighDateTime == b.dwHighDateTime;
+}
+
 #endif

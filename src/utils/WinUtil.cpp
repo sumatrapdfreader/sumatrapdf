@@ -289,7 +289,7 @@ static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft)
 }
 
 /* Return <ft1> - <ft2> in seconds */
-int FileTimeDiffInSecs(FILETIME& ft1, FILETIME& ft2)
+int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2)
 {
     ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
     ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);

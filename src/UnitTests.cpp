@@ -5,6 +5,7 @@
 
 #include "BaseUtil.h"
 #include "AppTools.h"
+#include "FileUtil.h"
 #include "ParseCommandLine.h"
 #include "StressTesting.h"
 #include "WinUtil.h"
@@ -25,8 +26,7 @@ static void hexstrTest()
     _HexToMem(s, &ft2);
     DWORD diff = FileTimeDiffInSecs(ft1, ft2);
     assert(0 == diff);
-    assert(ft1.dwLowDateTime == ft2.dwLowDateTime);
-    assert(ft1.dwHighDateTime == ft2.dwHighDateTime);
+    assert(FileTimeEq(ft1, ft2));
 
     s.Set(str::MemToHex(NULL, 0));
     assert(str::Eq(s, ""));

@@ -364,11 +364,8 @@ bool Reload(bool forceReload)
         return false;
 
     FILETIME time = file::GetModificationTime(path);
-    if (time.dwLowDateTime == gGlobalPrefs->lastPrefUpdate.dwLowDateTime &&
-        time.dwHighDateTime == gGlobalPrefs->lastPrefUpdate.dwHighDateTime &&
-        !forceReload) {
+    if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate) && !forceReload)
         return true;
-    }
 
     ScopedMem<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));
     bool showToolbar = gGlobalPrefs->showToolbar;
@@ -381,6 +378,7 @@ bool Reload(bool forceReload)
     bool ok = Load();
     if (!ok)
         return false;
+    CrashIf(!gGlobalPrefs);
 
     if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
         gWindows.At(0)->DeleteInfotip();

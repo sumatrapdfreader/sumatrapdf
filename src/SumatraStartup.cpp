@@ -335,7 +335,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     uitask::Initialize();
 
     prefs::Load();
-    // TODO: if prefs file doesn't exist, create it, so that there's always something to watch
     prefs::RegisterForFileChanges();
 
     CommandLineInfo i;
