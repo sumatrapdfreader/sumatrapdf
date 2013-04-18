@@ -82,9 +82,11 @@ what different settings mean and what is their default value:</p>
 %INSIDE%
 </pre>
 
-<p id="#colors">
-The syntax for colors is: <code>#aarrggbb</code> or <code>#rrggbb</code>.
-The components are hex values (ranging from 00 to FF) and stand for:
+<h3 id="color">Syntx for color values</h3>
+
+<p>
+The syntax for colors is: <code>#aarrggbb</code> or <code>#rrggbb</code>.</p>
+<p>The components are hex values (ranging from 00 to FF) and stand for:
 <ul>
   <li><code>aa</code> : alpha (transparency). 0 means fully transparent (invisible)
       color. FF (255) means fully opaque color</li>
@@ -176,6 +178,8 @@ def gen_comment(comment, start, first = False):
 			left = line_len - len(start)
 		word += " "
 		left -= len(word)
+		if word == "color ":
+			word = '<a href="#color">color</a> '
 		s += word
 	s = s.rstrip()
 	s += '</span>'

@@ -350,8 +350,6 @@ GlobalPrefs = [
 		"whether to store display settings for individual documents"),
 	# kjk: we need an "auto" value, which means "auto-detect". We shouldn't serializee
 	# auto-detected language
-	# kjk: also, it should be just Language or UiLanguage. We can explain that it's
-	# the iso code in the comment and link to a full list
 	# zeniko: one issue with "auto": since that setting isn't exposed in the UI, this
 	# can result in two unexpected behaviors for portable versions: either the UI language
 	# unexpectedly changes when using it abroad; or if a user ever closed the Choose Language
