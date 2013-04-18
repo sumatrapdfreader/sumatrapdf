@@ -281,7 +281,7 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // TODO: we should have a ui for this instead of remembering it globally
             // in prefs
             WCHAR *s = argList.At(++n);
-            cbxR2L = str::EqI(L"true", s) || str::Eq(L"1", s);
+            cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
         }
 #if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
         else if (is_arg_with_param("-autoupdate")) {

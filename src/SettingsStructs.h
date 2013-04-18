@@ -289,8 +289,9 @@ struct GlobalPrefs {
     // week count since 2011-01-01 needed to "age" openCount values in file
     // history
     int openCountWeek;
-    // display CBX double pages from right to left
-    bool cbxR2L;
+    // display Comic Book files in manga mode (from right to left if
+    // showing 2 pages at a time)
+    bool cbxMangaMode;
     // Most values in this structure are remembered individually for every
     // file and are by default also persisted so that reading can be
     // resumed
@@ -475,10 +476,10 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, tocDy),                    Type_Int,        0                                                                                                                     },
     { offsetof(GlobalPrefs, showStartPage),            Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
-    { offsetof(GlobalPrefs, cbxR2L),                   Type_Bool,       false                                                                                                                 },
+    { offsetof(GlobalPrefs, cbxMangaMode),             Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, fileStates),               Type_Array,      (intptr_t)&gFileStateInfo                                                                                             },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 36, gGlobalPrefsFields, "MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ImageOnlyUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0TimeOfLastUpdateCheck\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxR2L\0FileStates" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 36, gGlobalPrefsFields, "MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ImageOnlyUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0TimeOfLastUpdateCheck\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxMangaMode\0FileStates" };
 
 #endif
 

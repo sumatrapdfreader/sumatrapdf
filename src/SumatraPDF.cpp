@@ -300,8 +300,7 @@ inline void MoveWindow(HWND hwnd, RectI rect)
 
 void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous)
 {
-    if (!win->IsDocLoaded())
-        return;
+    CrashIf(!win->IsDocLoaded());
 
     if (keepContinuous && IsContinuous(win->dm->GetDisplayMode())) {
         switch (displayMode) {
@@ -952,7 +951,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     if (win->dm) {
         win->dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), win->dpi);
         if (engineType == Engine_ComicBook)
-            win->dm->SetDisplayR2L(gGlobalPrefs->cbxR2L);
+            win->dm->SetDisplayR2L(gGlobalPrefs->cbxMangaMode);
         if (prevModel && str::Eq(win->dm->FilePath(), prevModel->FilePath())) {
             gRenderCache.KeepForDisplayModel(prevModel, win->dm);
             win->dm->CopyNavHistory(*prevModel);
@@ -3448,6 +3447,13 @@ static void OnMenuViewContinuous(WindowInfo& win)
     SwitchToDisplayMode(&win, newMode);
 }
 
+static void OnMenuViewMangaMode(WindowInfo *win)
+{
+    CrashIf(!win->IsDocLoaded() || !win->IsCbx());
+
+
+}
+
 static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuously)
 {
     if (!win->IsDocLoaded())
@@ -4943,6 +4949,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_VIEW_CONTINUOUS:
             OnMenuViewContinuous(*win);
+            break;
+
+        case IDM_VIEW_MANGA_MODE:
+            OnMenuViewMangaMode(win);
             break;
 
         case IDM_VIEW_SHOW_HIDE_TOOLBAR:

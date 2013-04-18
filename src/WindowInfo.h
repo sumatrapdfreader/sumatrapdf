@@ -65,6 +65,7 @@ public:
     bool IsDocLoaded() const { return this->dm != NULL; }
 
     bool IsChm() const { return dm && dm->engineType == Engine_Chm; }
+    bool IsCbx() const { return dm && dm->engineType == Engine_ComicBook; }
     bool IsNotPdf() const { return dm && dm->engineType != Engine_PDF; }
 
     WCHAR *         loadedFilePath;

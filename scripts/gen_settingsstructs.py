@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This script generates structs and enough metadata for reading
 a variety of preference values from user provided settings files.
@@ -427,8 +428,8 @@ GlobalPrefs = [
 	# we really need ui for easy toggling of this state
 	# zeniko: sure, let's add a "Manga Mode" menu item in View which is only visible for comics
 	# kjk: sounds good
-	Field("CbxR2L", Bool, False,
-		"display CBX double pages from right to left"),
+	Field("CbxMangaMode", Bool, False,
+		"display Comic Book files in manga mode (from right to left if showing 2 pages at a time)"),
 	# file history and favorites
 	Array("FileStates", FileSettings,
 		"Most values in this structure are remembered individually for every file and " +

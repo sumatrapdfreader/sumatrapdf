@@ -28,6 +28,7 @@
 #define IDM_VIEW_FACING                 411
 #define IDM_VIEW_BOOK                   412
 #define IDM_VIEW_CONTINUOUS             413
+#define IDM_VIEW_MANGA_MODE             414
 #define IDM_VIEW_ROTATE_LEFT            415
 #define IDM_VIEW_ROTATE_RIGHT           416
 #define IDM_VIEW_BOOKMARKS              417

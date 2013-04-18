@@ -42,7 +42,7 @@ public:
     WCHAR *     pluginURL;
     bool        exitImmediately;
     bool        silent;
-    bool        cbxR2L;
+    bool        cbxMangaMode;
 
     // stress-testing related
     WCHAR *     stressTestPath;
@@ -61,7 +61,7 @@ public:
         restrictedUse(false), pluginURL(NULL),
         enterPresentation(false), enterFullscreen(false), hwndPluginParent(NULL),
         startView(DM_AUTOMATIC), startZoom(INVALID_ZOOM), startScroll(PointI(-1, -1)),
-        showConsole(false), exitImmediately(false), silent(false), cbxR2L(false),
+        showConsole(false), exitImmediately(false), silent(false), cbxMangaMode(false),
         forwardSearchOrigin(NULL), forwardSearchLine(0),
         stressTestPath(NULL), stressTestFilter(NULL),
         stressTestRanges(NULL), stressTestCycles(1), stressParallelCount(1),
