@@ -12,6 +12,8 @@ TODO:
    in a separate table
 """
 
+g_version = "2.3"
+
 html_tmpl = """
 <!doctype html>
 
@@ -58,22 +60,41 @@ body {
 </style>
 </head>
 
+<body>
+
 <p>You can change the look and behavior of
 <a href="http://blog.kowalczyk.info/software/sumatrapdf/">SumatraPDF</a>
-by editing <code>SumatraPDF.dat</code> settings file.</p>
+by editing <code>SumatraPDF-settings.txt</code> file.</p>
+
+<p>Use menu <code>Settings/Advanced Settings...</code> to open settings file
+with your default text editor.</p>
 
 <p>The file is stored in <code>%APPDATA%\SumatraPDF</code> directory for the
-installed version or in the same directory as SumataPDF.exe executable for the
-portable version.</p>
+installed version or in the same directory as <code>SumataPDF.exe</code>
+executable for the portable version.</p>
 
-<p>The file is in a simple text format. Here's what different settings mean and
-what is their default value:</p>
+<p>The file is in a simple text format. Below is an explanation of
+what different settings mean and what is their default value:</p>
+
+<p>Do not modify settings marked as internal.</p>
 
 <pre class=txt>
 %INSIDE%
 </pre>
 
-<body>
+<p id="#colors">
+The syntax for colors is: <code>#aarrggbb</code> or <code>#rrggbb</code>.
+The components are hex values (ranging from 00 to FF) and stand for:
+<ul>
+  <li><code>aa</code> : alpha (transparency). 0 means fully transparent (invisible)
+      color. FF (255) means fully opaque color</li>
+  <li><code>rr</code> : red component</li>
+  <li><code>gg</code> : green component</li>
+  <li><code>bb</code> : blue component</li>
+</ul>
+For example #ff0000 means red color. You can use <a href="http://colorschemedesigner.com/">
+ColorScheme Designer</a> to pick a color.
+</p>
 
 </body>
 </html>
@@ -125,6 +146,8 @@ body {
 </style>
 </head>
 
+<body>
+
 <p>Languages supported by SumatraPDF. You can use ISO code as a value
 of <code>UILanguage</code> in <a href="settings.html">settings file</a>.
 </p>
@@ -133,8 +156,6 @@ of <code>UILanguage</code> in <a href="settings.html">settings file</a>.
 <tr><th>Language name</th><th>ISO code</th></tr>
 %INSIDE%
 </table>
-
-<body>
 
 </body>
 </html>
@@ -200,7 +221,7 @@ def gen_html():
 	prefs = gen_settingsstructs.GlobalPrefs
 	inside = gen_struct(prefs)
 	s = html_tmpl.replace("%INSIDE%", inside)
-	p = os.path.join("scripts", "settings.html")
+	p = os.path.join("scripts", "settings" + g_version + ".html")
 	open(p, "w").write(s)
 
 if __name__ == "__main__":

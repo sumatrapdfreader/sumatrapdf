@@ -16,9 +16,10 @@
 #include "FileWatcher.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "Version.h"
 #include "WindowInfo.h"
 
-#define PREFS_INFO_URL          "http://blog.kowalczyk.info/software/sumatrapdf/settings.html"
+#define PREFS_INFO_URL          "http://blog.kowalczyk.info/software/sumatrapdf/settings" CURR_VERSION_STR_SHORT ".html"
 #define OLD_PREFS_FILE_NAME     L"sumatrapdfprefs.dat"
 
 GlobalPrefs *        gGlobalPrefs = NULL;
