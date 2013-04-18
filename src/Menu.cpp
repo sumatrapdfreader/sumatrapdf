@@ -42,7 +42,10 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
 
-    // TODO: reflect manga mode state
+    if (win->IsCbx()) {
+        bool mangaMode = win->dm ? win->dm->GetDisplayR2L() : gGlobalPrefs->imageOnlyUI.cbxMangaMode;
+        win::menu::SetChecked(win->menu, IDM_VIEW_MANGA_MODE, mangaMode);
+    }
 }
 
 static MenuDef menuDefFile[] = {
@@ -78,7 +81,8 @@ static MenuDef menuDefView[] = {
     // TODO: this should be Show &Pages Continuously. Need to add rename/duplicate functionality
     // to apptranslator to make such renames easy
     { _TRN("Show &pages continuously"),     IDM_VIEW_CONTINUOUS,        MF_NOT_FOR_CHM },
-    { _TRN("Manga Mode"),                   IDM_VIEW_MANGA_MODE,        MF_CBX_ONLY },
+    // TODO: "&Inverse Reading Direction" (since some Mangas might be read left-to-right)?
+    { _TRN("Man&ga Mode"),                  IDM_VIEW_MANGA_MODE,        MF_CBX_ONLY },
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM },
     { _TRN("Rotate &Left\tCtrl+Shift+-"),   IDM_VIEW_ROTATE_LEFT,       MF_NOT_FOR_CHM },
     { _TRN("Rotate &Right\tCtrl+Shift++"),  IDM_VIEW_ROTATE_RIGHT,      MF_NOT_FOR_CHM },

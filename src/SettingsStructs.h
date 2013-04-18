@@ -62,6 +62,9 @@ struct ImageOnlyUI {
     // horizontal and vertical distance between two pages in facing and
     // book view modes
     SizeI pageSpacing;
+    // default to displaying Comic Book files in manga mode (from right to
+    // left if showing 2 pages at a time)
+    bool cbxMangaMode;
 };
 
 // these values allow to customize the UI used for CHM documents (with
@@ -184,6 +187,9 @@ struct FileState {
     // tree (which can be quite large) - and also due to backwards
     // compatibility
     Vec<int> * tocState;
+    // whether the document is displayed right-to-left in facing and book
+    // view modes (only used for comic book documents)
+    bool displayR2L;
     // the thumbnail is persisted separately as a PNG in sumatrapdfcache
     // directory
     RenderedBitmap * thumbnail;
@@ -289,9 +295,6 @@ struct GlobalPrefs {
     // week count since 2011-01-01 needed to "age" openCount values in file
     // history
     int openCountWeek;
-    // display Comic Book files in manga mode (from right to left if
-    // showing 2 pages at a time)
-    bool cbxMangaMode;
     // Most values in this structure are remembered individually for every
     // file and are by default also persisted so that reading can be
     // resumed
@@ -355,8 +358,9 @@ static const StructInfo gSizeI_1_Info = { sizeof(SizeI), 2, gSizeI_1_Fields, "Dx
 static const FieldInfo gImageOnlyUIFields[] = {
     { offsetof(ImageOnlyUI, windowMargin), Type_Compact, (intptr_t)&gWindowMargin_1_Info },
     { offsetof(ImageOnlyUI, pageSpacing),  Type_Compact, (intptr_t)&gSizeI_1_Info        },
+    { offsetof(ImageOnlyUI, cbxMangaMode), Type_Bool,    false                           },
 };
-static const StructInfo gImageOnlyUIInfo = { sizeof(ImageOnlyUI), 2, gImageOnlyUIFields, "WindowMargin\0PageSpacing" };
+static const StructInfo gImageOnlyUIInfo = { sizeof(ImageOnlyUI), 3, gImageOnlyUIFields, "WindowMargin\0PageSpacing\0CbxMangaMode" };
 
 static const FieldInfo gChmUIFields[] = {
     { offsetof(ChmUI, useFixedPageUI), Type_Bool, false },
@@ -438,8 +442,9 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, showToc),         Type_Bool,       true                     },
     { offsetof(FileState, sidebarDx),       Type_Int,        0                        },
     { offsetof(FileState, tocState),        Type_IntArray,   NULL                     },
+    { offsetof(FileState, displayR2L),      Type_Bool,       false                    },
 };
-static StructInfo gFileStateInfo = { sizeof(FileState), 18, gFileStateFields, "FilePath\0Favorites\0OpenCount\0IsPinned\0IsMissing\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocState" };
+static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0OpenCount\0IsPinned\0IsMissing\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0ReparseIdx\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocState\0DisplayR2L" };
 
 static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,      0x8000f2ff                                                                                                            },
@@ -476,10 +481,9 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, tocDy),                    Type_Int,        0                                                                                                                     },
     { offsetof(GlobalPrefs, showStartPage),            Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
-    { offsetof(GlobalPrefs, cbxMangaMode),             Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, fileStates),               Type_Array,      (intptr_t)&gFileStateInfo                                                                                             },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 36, gGlobalPrefsFields, "MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ImageOnlyUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0TimeOfLastUpdateCheck\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0CbxMangaMode\0FileStates" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 35, gGlobalPrefsFields, "MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ImageOnlyUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0TimeOfLastUpdateCheck\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0FileStates" };
 
 #endif
 

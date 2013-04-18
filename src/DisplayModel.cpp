@@ -136,6 +136,7 @@ void DisplayModel::DisplayStateFromModel(DisplayState *ds)
     else
         ds->scrollPos = PointD(ss.x, ss.y).Convert<int>();
     ds->rotation = rotation;
+    ds->displayR2L = displayR2L;
 
     free(ds->decryptionKey);
     ds->decryptionKey = engine->GetDecryptionKey();

@@ -178,6 +178,7 @@ public:
     void            DisplayStateFromModel(DisplayState *ds);
     void            SetInitialViewSettings(DisplayMode displayMode, int newStartPage, SizeI viewPort, int screenDPI);
     void            SetDisplayR2L(bool r2l) { displayR2L = r2l; }
+    bool            GetDisplayR2L() const { return displayR2L; }
 
     // called when we decide that the display needs to be redrawn
     void            RepaintDisplay() { dmCb->Repaint(); }

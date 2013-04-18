@@ -301,6 +301,7 @@ inline void MoveWindow(HWND hwnd, RectI rect)
 void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepContinuous)
 {
     CrashIf(!win->IsDocLoaded());
+    if (!win->IsDocLoaded()) return;
 
     if (keepContinuous && IsContinuous(win->dm->GetDisplayMode())) {
         switch (displayMode) {
@@ -949,8 +950,9 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     */
     if (win->dm) {
         win->dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), win->dpi);
-        if (engineType == Engine_ComicBook)
-            win->dm->SetDisplayR2L(gGlobalPrefs->cbxMangaMode);
+        // TODO: also expose Manga Mode for image folders?
+        if (engineType == Engine_ComicBook || engineType == Engine_ImageDir)
+            win->dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->imageOnlyUI.cbxMangaMode);
         if (prevModel && str::Eq(win->dm->FilePath(), prevModel->FilePath())) {
             gRenderCache.KeepForDisplayModel(prevModel, win->dm);
             win->dm->CopyNavHistory(*prevModel);
@@ -3444,8 +3446,10 @@ static void OnMenuViewContinuous(WindowInfo& win)
 static void OnMenuViewMangaMode(WindowInfo *win)
 {
     CrashIf(!win->IsDocLoaded() || !win->IsCbx());
-
-
+    win->dm->SetDisplayR2L(!win->dm->GetDisplayR2L());
+    ScrollState state = win->dm->GetScrollState();
+    win->dm->Relayout(win->dm->ZoomVirtual(), win->dm->Rotation());
+    win->dm->SetScrollState(state);
 }
 
 static void ChangeZoomLevel(WindowInfo *win, float newZoom, bool pagesContinuously)

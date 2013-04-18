@@ -69,7 +69,7 @@ void DeleteGlobalPrefs(GlobalPrefs *globalPrefs)
 
 // metadata mapping from legacy Benc names to current structures
 static FieldInfo gGlobalPrefsFieldsBenc[] = {
-    { offsetof(GlobalPrefs, cbxMangaMode), Type_Bool, false },
+    { offsetof(GlobalPrefs, imageOnlyUI.cbxMangaMode), Type_Bool, false },
     { offsetof(GlobalPrefs, defaultDisplayMode), Type_String, (intptr_t)L"automatic" },
     { offsetof(GlobalPrefs, checkForUpdates), Type_Bool, true },
     { offsetof(GlobalPrefs, enableTeXEnhancements), Type_Bool, false },

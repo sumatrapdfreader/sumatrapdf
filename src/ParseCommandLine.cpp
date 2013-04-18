@@ -142,11 +142,6 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // always exit on print) and -stress-test (useful for profiling)
             exitWhenDone = true;
         }
-        else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
-            // -bgcolor is for backwards compat (was used pre-1.3)
-            // -bg-color is for consistency
-            ParseColor(&bgColor, argList.At(++n));
-        }
         else if (is_arg_with_param("-inverse-search")) {
             str::ReplacePtr(&inverseSearchCmdLine, argList.At(++n));
         }
@@ -157,21 +152,6 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             str::ReplacePtr(&forwardSearchOrigin, argList.At(++n));
             forwardSearchLine = _wtoi(argList.At(++n));
         }
-        else if (is_arg_with_param("-fwdsearch-offset")) {
-            forwardSearch.highlightOffset = _wtoi(argList.At(++n));
-        }
-        else if (is_arg_with_param("-fwdsearch-width")) {
-            forwardSearch.highlightWidth = _wtoi(argList.At(++n));
-        }
-        else if (is_arg_with_param("-fwdsearch-color")) {
-            ParseColor(&forwardSearch.highlightColor, argList.At(++n));
-        }
-        else if (is_arg_with_param("-fwdsearch-permanent")) {
-            forwardSearch.highlightPermanent = _wtoi(argList.At(++n));
-        }
-        else if (is_arg("-esc-to-exit")) {
-            escToExit = true;
-        }
         else if (is_arg("-reuse-instance")) {
             // find the window handle of a running instance of SumatraPDF
             // TODO: there should be a mutex here to reduce possibility of
@@ -179,10 +159,6 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // FindWindow() in one process is called before a window is created
             // in another process
             reuseInstance = (FindWindow(FRAME_CLASS_NAME, 0) != NULL);
-        }
-        else if (is_arg_with_param("-lang")) {
-            free(lang);
-            lang = str::conv::ToAnsi(argList.At(++n));
         }
         else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
@@ -195,8 +171,6 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
         else if (is_arg("-restrict")) {
             restrictedUse = true;
         }
-        // TODO: remove -invert-colors and -set-color-range in favor
-        //       of the UI settable gGlobalPrefs->useSysColors(?)
         else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency
@@ -204,10 +178,6 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // (i.e. it sets white as foreground color and black as background color)
             colorRange[0] = WIN_COL_WHITE;
             colorRange[1] = WIN_COL_BLACK;
-        }
-        else if (is_arg("-set-color-range") && argCount > n + 2) {
-            ParseColor(&colorRange[0], argList.At(++n));
-            ParseColor(&colorRange[1], argList.At(++n));
         }
         else if (is_arg("-presentation")) {
             enterPresentation = true;
@@ -277,9 +247,37 @@ void CommandLineInfo::ParseCommandLine(WCHAR *cmdLine)
             // to make testing of crash reporting system in pre-release/release
             // builds possible
             crashOnOpen = true;
-        } else if (is_arg_with_param("-manga-mode")) {
-            // TODO: we should have a ui for this instead of remembering it globally
-            // in prefs
+        }
+        // TODO: remove the following deprecated options within a release or two
+        else if (is_arg("-esc-to-exit")) {
+            escToExit = true;
+        }
+        else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color")) {
+            // -bgcolor is for backwards compat (was used pre-1.3)
+            // -bg-color is for consistency
+            ParseColor(&bgColor, argList.At(++n));
+        }
+        else if (is_arg_with_param("-lang")) {
+            free(lang);
+            lang = str::conv::ToAnsi(argList.At(++n));
+        }
+        else if (is_arg("-set-color-range") && argCount > n + 2) {
+            ParseColor(&colorRange[0], argList.At(++n));
+            ParseColor(&colorRange[1], argList.At(++n));
+        }
+        else if (is_arg_with_param("-fwdsearch-offset")) {
+            forwardSearch.highlightOffset = _wtoi(argList.At(++n));
+        }
+        else if (is_arg_with_param("-fwdsearch-width")) {
+            forwardSearch.highlightWidth = _wtoi(argList.At(++n));
+        }
+        else if (is_arg_with_param("-fwdsearch-color")) {
+            ParseColor(&forwardSearch.highlightColor, argList.At(++n));
+        }
+        else if (is_arg_with_param("-fwdsearch-permanent")) {
+            forwardSearch.highlightPermanent = _wtoi(argList.At(++n));
+        }
+        else if (is_arg_with_param("-manga-mode")) {
             WCHAR *s = argList.At(++n);
             cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
         }

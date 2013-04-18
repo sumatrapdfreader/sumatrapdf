@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """
 This script generates structs and enough metadata for reading
 a variety of preference values from user provided settings files.
@@ -199,6 +200,8 @@ ImageOnlyUI = [
 	Struct("PageSpacing", PageSpacing,
 		"horizontal and vertical distance between two pages in facing and book view modes",
 		structName="SizeI", compact=True),
+	Field("CbxMangaMode", Bool, False,
+		"default to displaying Comic Book files in manga mode (from right to left if showing 2 pages at a time)"),
 ]
 
 ChmUI = [
@@ -291,6 +294,9 @@ FileSettings = [
 		"Note: We intentionally track toggle state as opposed to expansion state " +
 		"so that we only have to save a diff instead of all states for the whole " +
 		"tree (which can be quite large) - and also due to backwards compatibility"),
+	Field("DisplayR2L", Bool, False,
+		"whether the document is displayed right-to-left in facing and book view modes " +
+		"(only used for comic book documents)"),
 	Field("Thumbnail", Type(None, "RenderedBitmap *"), "NULL",
 		"the thumbnail is persisted separately as a PNG in sumatrapdfcache directory",
 		internal=True),
@@ -422,12 +428,6 @@ GlobalPrefs = [
 		"whether to display Frequently Read documents or the About page in an empty window"),
 	Field("OpenCountWeek", Int, 0,
 		"week count since 2011-01-01 needed to \"age\" openCount values in file history"),
-	# kjk: unless I'm missing something, this should be per-file setting and
-	# we really need ui for easy toggling of this state
-	# zeniko: sure, let's add a "Manga Mode" menu item in View which is only visible for comics
-	# kjk: sounds good
-	Field("CbxMangaMode", Bool, False,
-		"display Comic Book files in manga mode (from right to left if showing 2 pages at a time)"),
 	# file history and favorites
 	Array("FileStates", FileSettings,
 		"Most values in this structure are remembered individually for every file and " +
