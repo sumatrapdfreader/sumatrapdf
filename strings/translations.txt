@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e694c0adc28e23e23f3d08220844e875c8c5fd40
+a198ae87b514fe98d96a403349fc7d0c628eb672
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -176,6 +176,7 @@ de:&Mehr Optionen…
 et:&Rohkem sätteid...
 fr:Options &avancées…
 it:Opzioni &avanzate...
+kr:고급 옵션(&A)...
 ru:&Расширенные настройки...
 :&All selected pages
 am:&Ընտրված բոլոր էջերը
@@ -9731,6 +9732,11 @@ tw:把 SumatraPDF 作為預設的PDF閱讀工具
 uk:Зробити SumatraPDF типовим переглядачем PDF
 uz:SumatraPDF PDF fayllar bilan bog'lanish
 vn:Đặt SumatraPDF làm trình đọc PDF chính
+:Man&ga Mode
+br:Modo Man&gá
+fr:Mode man&ga
+kr:만화 방식(&G)
+ru:Режим Man&ga
 :Match Case
 af:Vind Bypassende Klein Letters / Hoofletters
 am:Հաշվի առնել մեծատառ/փոքրատառը
