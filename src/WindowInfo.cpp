@@ -54,8 +54,11 @@ WindowInfo::~WindowInfo()
 
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere
-    if (uia_provider)
+    if (uia_provider) {
+        if (dm)
+            uia_provider->OnDocumentUnload();
         uia_provider->Release();
+    }
 
     delete pdfsync;
     delete linkHandler;
@@ -180,21 +183,18 @@ void WindowInfo::DeleteInfotip()
     infotipVisible = false;
 }
 
-SumatraUIAutomationProvider* WindowInfo::GetUIAProvider()
+bool WindowInfo::CreateUIAProvider()
 {
-    if (uia_provider) {
-        uia_provider->AddRef();
-        return uia_provider;
+    if (!uia_provider) {
+        uia_provider = new SumatraUIAutomationProvider(this->hwndCanvas);
+        if (!uia_provider)
+            return false;
+        // load data to provider
+        if (dm)
+            uia_provider->OnDocumentLoad(dm);
     }
 
-    uia_provider = new SumatraUIAutomationProvider(this);
-    uia_provider->AddRef(); // prevent deletion by callers
-
-    // load data to provider
-    if (dm)
-        uia_provider->OnDocumentLoad();
-
-    return uia_provider;
+    return true;
 }
 
 void WindowInfo::LaunchBrowser(const WCHAR *url)

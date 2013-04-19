@@ -695,13 +695,10 @@ $(OUIA)\UIAutomationPageProvider.obj: $B\src\TextSelection.h $B\src\uia\UIAutoma
 $(OUIA)\UIAutomationPageProvider.obj: $B\src\uia\UIAutomationPageProvider.h $B\src\uia\UIAutomationProvider.h $B\src\utils\Allocator.h
 $(OUIA)\UIAutomationPageProvider.obj: $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
 $(OUIA)\UIAutomationPageProvider.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OUIA)\UIAutomationProvider.obj: $B\src\BaseEngine.h $B\src\ChmEngine.h $B\src\DisplayModel.h
-$(OUIA)\UIAutomationProvider.obj: $B\src\DisplayState.h $B\src\Doc.h $B\src\SettingsStructs.h
 $(OUIA)\UIAutomationProvider.obj: $B\src\uia\UIAutomationConstants.h $B\src\uia\UIAutomationDocumentProvider.h $B\src\uia\UIAutomationProvider.h
 $(OUIA)\UIAutomationProvider.obj: $B\src\uia\UIAutomationStartPageProvider.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OUIA)\UIAutomationProvider.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
-$(OUIA)\UIAutomationProvider.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OUIA)\UIAutomationProvider.obj: $B\src\WindowInfo.h
+$(OUIA)\UIAutomationProvider.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OUIA)\UIAutomationProvider.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OUIA)\UIAutomationStartPageProvider.obj: $B\src\uia\UIAutomationConstants.h $B\src\uia\UIAutomationProvider.h $B\src\uia\UIAutomationStartPageProvider.h
 $(OUIA)\UIAutomationStartPageProvider.obj: $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h $B\src\utils\GeomUtil.h
 $(OUIA)\UIAutomationStartPageProvider.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h

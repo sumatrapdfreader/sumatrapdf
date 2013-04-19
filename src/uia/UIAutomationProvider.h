@@ -12,25 +12,24 @@ const int SUMATRA_UIA_DOCUMENT_RUNTIME_ID = 2;
 
 #define SUMATRA_UIA_PAGE_RUNTIME_ID(X) (100 + (X))
 
-class WindowInfo;
+class DisplayModel;
 class SumatraUIAutomationStartPageProvider;
 class SumatraUIAutomationDocumentProvider;
 
 class SumatraUIAutomationProvider : public IRawElementProviderSimple, public IRawElementProviderFragment, public IRawElementProviderFragmentRoot {
     ULONG                                   refCount;
 
-    const WindowInfo*                       win;
     HWND                                    canvasHwnd;
     SumatraUIAutomationStartPageProvider*   startpage;
     SumatraUIAutomationDocumentProvider*    document;
 
 public:
-    SumatraUIAutomationProvider(const WindowInfo*);
+    SumatraUIAutomationProvider(HWND hwnd);
 private: //ensure no accidental destruction of this class and bypassing refcounting
     ~SumatraUIAutomationProvider();
 
 public:
-    void OnDocumentLoad();
+    void OnDocumentLoad(DisplayModel *dm);
     void OnDocumentUnload();
     void OnSelectionChanged();
 

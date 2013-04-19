@@ -7,7 +7,6 @@
 #include "UIAutomationConstants.h"
 #include "UIAutomationDocumentProvider.h"
 #include "UIAutomationStartPageProvider.h"
-#include "WindowInfo.h"
 #include "WinUtil.h"
 
 // not available under Win2000
@@ -86,13 +85,12 @@ HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue)
 
 };
 
-SumatraUIAutomationProvider::SumatraUIAutomationProvider(const WindowInfo* win) :
-    refCount(1),
-    win(win), canvasHwnd(win->hwndCanvas),
-    startpage(NULL), document(NULL)
+SumatraUIAutomationProvider::SumatraUIAutomationProvider(HWND hwnd) :
+    refCount(1), canvasHwnd(hwnd), startpage(NULL), document(NULL)
 {
-    startpage = new SumatraUIAutomationStartPageProvider(canvasHwnd, this);
+    startpage = new SumatraUIAutomationStartPageProvider(hwnd, this);
 }
+
 SumatraUIAutomationProvider::~SumatraUIAutomationProvider()
 {
     if (document) {
@@ -105,12 +103,12 @@ SumatraUIAutomationProvider::~SumatraUIAutomationProvider()
     startpage = NULL;
 }
 
-void SumatraUIAutomationProvider::OnDocumentLoad()
+void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel *dm)
 {
     assert(!document);
 
     document = new SumatraUIAutomationDocumentProvider(canvasHwnd, this);
-    document->LoadDocument(win->dm);
+    document->LoadDocument(dm);
     uia::RaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, NULL, 0);
 }
 void SumatraUIAutomationProvider::OnDocumentUnload()

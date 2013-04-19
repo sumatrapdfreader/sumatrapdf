@@ -962,7 +962,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
 
         // tell UI Automation about content change
         if (win->uia_provider)
-            win->uia_provider->OnDocumentLoad();
+            win->uia_provider->OnDocumentLoad(win->dm);
     } else if (allowFailure) {
         delete prevModel;
         ScopedMem<WCHAR> title2(str::Format(L"%s - %s", path::GetBaseName(args.fileName), SUMATRA_WINDOW_TITLE));
@@ -4743,8 +4743,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         case WM_GETOBJECT:
             // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
             if (!gPluginMode) { 
-                ScopedComPtr<SumatraUIAutomationProvider> provider(win->GetUIAProvider());
-                return uia::ReturnRawElementProvider(hwnd, wParam, lParam, provider);
+                if (win->CreateUIAProvider())
+                    return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
             }
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
