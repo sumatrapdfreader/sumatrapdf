@@ -114,8 +114,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetRuntimeId(SAFEARRA
     
     //RuntimeID magic, use hwnd to differentiate providers of different windows
     int rId[] = { (int)canvasHwnd, SUMATRA_UIA_PAGE_RUNTIME_ID(pageNum) };
-    for (LONG i = 0; i < 2; i++)
-        SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
+    for (LONG i = 0; i < 2; i++) {
+        HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
+        CrashIf(FAILED(hr));
+    }
     
     *pRetVal = psa;
     return S_OK;

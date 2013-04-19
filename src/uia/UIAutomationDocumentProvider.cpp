@@ -172,8 +172,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFE
     
     //RuntimeID magic, use hwnd to differentiate providers of different windows
     int rId[] = { (int)canvasHwnd, SUMATRA_UIA_DOCUMENT_RUNTIME_ID };
-    for (LONG i = 0; i < 2; i++)
-        SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
+    for (LONG i = 0; i < 2; i++) {
+        HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
+        CrashIf(FAILED(hr));
+    }
     
     *pRetVal = psa;
     return S_OK;
@@ -289,7 +291,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFE
     selection->DecreaseRefCount(); // magic, UIA seems to expect 0 refcount when selections are given to it
 
     LONG index = 0;
-    SafeArrayPutElement(psa, &index, selection);
+    HRESULT hr = SafeArrayPutElement(psa, &index, selection);
+    CrashIf(FAILED(hr));
 
     *pRetVal = psa;
     return S_OK;
@@ -318,13 +321,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     // create safe array
     SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, rangeArray.Size());
     if (!psa) {
-        for (size_t i=0;i<rangeArray.Size();++i)
+        for (size_t i = 0; i < rangeArray.Size(); i++) {
             delete rangeArray[i];
+        }
         return E_OUTOFMEMORY;
     }
     
-    for (LONG i=0;i<(LONG)rangeArray.Size();++i)
-        SafeArrayPutElement(psa, &i,rangeArray[i]);
+    for (LONG i = 0; i < (LONG)rangeArray.Size(); i++) {
+        HRESULT hr = SafeArrayPutElement(psa, &i,rangeArray[i]);
+        CrashIf(FAILED(hr));
+    }
     
 
     *pRetVal = psa;
