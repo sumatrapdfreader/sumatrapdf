@@ -6,6 +6,7 @@
 
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
+#include <OleAcc.h>
 
 class DisplayModel;
 class SumatraUIAutomationProvider;

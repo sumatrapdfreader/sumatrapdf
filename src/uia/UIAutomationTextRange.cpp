@@ -11,17 +11,15 @@
 #include "TextSelection.h"
 
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document) :
-    refCount(0), document(document)
+    refCount(1), document(document)
 {
-    this->AddRef(); //We are the only copy
     document->AddRef(); // hold on to the document
 
     SetToNullRange();
 }
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, int pageNum) :
-    refCount(0), document(document)
+    refCount(1), document(document)
 {
-    this->AddRef(); //We are the only copy
     document->AddRef(); // hold on to the document
 
     startPage = pageNum;
@@ -30,9 +28,8 @@ SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDo
     endGlyph = GetPageGlyphCount(pageNum);
 }
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, TextSelection* range) :
-    refCount(0), document(document)
+    refCount(1), document(document)
 {
-    this->AddRef(); //We are the only copy
     document->AddRef(); // hold on to the document
 
     range->GetGlyphRange(&startPage, &startGlyph, &endPage, &endGlyph);
@@ -42,9 +39,8 @@ SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDo
     }
 }
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(const SumatraUIAutomationTextRange&b) :
-    refCount(0), document(b.document)
+    refCount(1), document(b.document)
 {
-    this->AddRef(); //We are the only copy
     document->AddRef(); // hold on to the document
 
     startPage = b.startPage;
@@ -188,7 +184,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::QueryInterface(const IID
     if (ppvObject == NULL)
         return E_POINTER;
     
-    if (iid == IID_ITextRangeProvider) {
+    if (iid == __uuidof(ITextRangeProvider)) {
         *ppvObject = static_cast<ITextRangeProvider*>(this);
         this->AddRef(); //New copy has entered the universe
         return S_OK;

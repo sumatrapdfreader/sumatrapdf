@@ -14,12 +14,11 @@
 
 
 SumatraUIAutomationPageProvider::SumatraUIAutomationPageProvider(int pageNum,HWND canvasHwnd, DisplayModel*dm, SumatraUIAutomationDocumentProvider* root) :
-    refCount(0), pageNum(pageNum),
+    refCount(1), pageNum(pageNum),
     canvasHwnd(canvasHwnd), dm(dm),
     root(root), sibling_prev(NULL), sibling_next(NULL),
     released(false)
 {
-    this->AddRef(); //We are the only copy
     //root->AddRef(); Don't add refs to our parent & owner. 
 }
 SumatraUIAutomationPageProvider::~SumatraUIAutomationPageProvider()
@@ -43,15 +42,15 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::QueryInterface(const 
     if (ppvObject == NULL)
         return E_POINTER;
 
-    if (iid == IID_IRawElementProviderFragment) {
+    if (iid == __uuidof(IRawElementProviderFragment)) {
         *ppvObject = static_cast<IRawElementProviderFragment*>(this);
         this->AddRef(); //New copy has entered the universe
         return S_OK;
-    } else if (iid == IID_IRawElementProviderSimple) {
+    } else if (iid == __uuidof(IRawElementProviderSimple)) {
         *ppvObject = static_cast<IRawElementProviderSimple*>(this);
         this->AddRef(); //New copy has entered the universe
         return S_OK;
-    } else if (iid == IID_IValueProvider) {
+    } else if (iid == __uuidof(IValueProvider)) {
         *ppvObject = static_cast<IValueProvider*>(this);
         this->AddRef(); //New copy has entered the universe
         return S_OK;

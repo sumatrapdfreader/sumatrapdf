@@ -14,12 +14,10 @@
 #include "WindowInfo.h"
 
 SumatraUIAutomationProvider::SumatraUIAutomationProvider(const WindowInfo* win) :
-    refCount(0),
+    refCount(1),
     win(win), canvasHwnd(win->hwndCanvas),
     startpage(NULL), document(NULL)
 {
-    this->AddRef(); //We are the only copy
-
     startpage = new SumatraUIAutomationStartPageProvider(canvasHwnd, this);
 }
 SumatraUIAutomationProvider::~SumatraUIAutomationProvider()
@@ -62,15 +60,15 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(const IID 
     if (ppvObject == NULL)
         return E_POINTER;
 
-    if (iid == IID_IRawElementProviderSimple) {
+    if (iid == __uuidof(IRawElementProviderSimple)) {
         *ppvObject = static_cast<IRawElementProviderSimple*>(this);
         this->AddRef(); //New copy has entered the universe
         return S_OK;
-    } else if (iid == IID_IRawElementProviderFragment) {
+    } else if (iid == __uuidof(IRawElementProviderFragment)) {
         *ppvObject = static_cast<IRawElementProviderFragment*>(this);
         this->AddRef(); //New copy has entered the universe
         return S_OK;
-    } else if (iid == IID_IRawElementProviderFragmentRoot) {
+    } else if (iid == __uuidof(IRawElementProviderFragmentRoot)) {
         *ppvObject = static_cast<IRawElementProviderFragmentRoot*>(this);
         this->AddRef(); //New copy has entered the universe
         return S_OK;

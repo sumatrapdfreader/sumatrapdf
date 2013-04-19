@@ -186,6 +186,11 @@ ENGINE_OBJS = \
 	$(OS)\ChmEngine.obj $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
 	$(OS)\EbookEngine.obj $(EBOOK_OBJS)
 
+UIA_OBJS = \
+	$(OUIA)\UIAutomationProvider.obj $(OUIA)\UIAutomationStartPageProvider.obj \
+	$(OUIA)\UIAutomationDocumentProvider.obj $(OUIA)\UIAutomationPageProvider.obj \
+	$(OUIA)\UIAutomationTextRange.obj
+
 MAIN_UI_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \
 	$(OS)\Favorites.obj $(OS)\TextSearch.obj $(OS)\SumatraAbout.obj $(OS)\SumatraAbout2.obj \
@@ -200,9 +205,7 @@ MAIN_UI_OBJS = \
 	$(OS)\MuiEbookPageDef.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
 	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj \
-	$(OUIA)\UIAutomationProvider.obj $(OUIA)\UIAutomationStartPageProvider.obj \
-	$(OUIA)\UIAutomationDocumentProvider.obj $(OUIA)\UIAutomationPageProvider.obj \
-	$(OUIA)\UIAutomationTextRange.obj
+	$(UIA_OBJS)
 	
 SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \
