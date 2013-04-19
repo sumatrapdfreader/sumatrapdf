@@ -4,7 +4,8 @@
 #include "BaseUtil.h"
 #include "UIAutomationProvider.h"
 
-#include <UIAutomation.h>
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 #include <assert.h>
 
 #include "UIAutomationConstants.h"

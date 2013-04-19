@@ -4,7 +4,8 @@
 #include "BaseUtil.h"
 #include "UIAutomationDocumentProvider.h"
 
-#include <UIAutomation.h>
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 #include "DisplayModel.h"
 #include "FileUtil.h"
 #include "UIAutomationConstants.h"

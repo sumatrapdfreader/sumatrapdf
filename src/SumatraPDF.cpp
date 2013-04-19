@@ -5,7 +5,8 @@
 #include "SumatraPDF.h"
 #include <malloc.h>
 #include <wininet.h>
-#include <UIAutomation.h>
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 
 #include "AppPrefs.h"
 #include "AppTools.h"

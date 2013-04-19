@@ -4,7 +4,8 @@
 #ifndef UIAutomationDocumentProvider_h
 #define UIAutomationDocumentProvider_h
 
-#include <UIAutomation.h>
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 
 class DisplayModel;
 class SumatraUIAutomationProvider;

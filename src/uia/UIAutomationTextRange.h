@@ -4,7 +4,8 @@
 #ifndef UIAutomationTextRange_h
 #define UIAutomationTextRange_h
 
-#include <UIAutomation.h>
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 
 class TextSelection;
 class SumatraUIAutomationDocumentProvider;
