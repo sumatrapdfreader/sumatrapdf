@@ -56,12 +56,12 @@ public:
 
     TextSel result;
 
+    int startPage, endPage;
+    int startGlyph, endGlyph;
+
 protected:
     BaseEngine *    engine;
     PageTextCache * textCache;
-
-    int startPage, endPage;
-    int startGlyph, endGlyph;
 
     int FindClosestGlyph(int pageNo, double x, double y);
     void FillResultRects(int pageNo, int glyph, int length, WStrVec *lines=NULL);

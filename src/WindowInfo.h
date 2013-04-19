@@ -13,6 +13,7 @@ class LinkHandler;
 class Notifications;
 class StressTest;
 struct WatchedFile;
+class SumatraUIAutomationProvider;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction {
@@ -195,6 +196,10 @@ public:
     Vec<PageAnnotation> *userAnnots;
     bool            userAnnotsModified;
 
+    // don't access this directly in UIA API calls
+    // use GetUIAProvider() for correclty RefCounted copies
+    SumatraUIAutomationProvider * uia_provider;
+
     void  UpdateCanvasSize();
     SizeI GetViewPortSize();
     void  RedrawAll(bool update=false);
@@ -216,6 +221,8 @@ public:
 
     void CreateInfotip(const WCHAR *text, RectI& rc, bool multiline=false);
     void DeleteInfotip();
+
+    SumatraUIAutomationProvider* GetUIAProvider();
 
     // DisplayModelCallback implementation (incl. ChmNavigationCallback)
     virtual void PageNoChanged(int pageNo);

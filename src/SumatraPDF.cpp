@@ -5,6 +5,7 @@
 #include "SumatraPDF.h"
 #include <malloc.h>
 #include <wininet.h>
+#include <UIAutomation.h>
 
 #include "AppPrefs.h"
 #include "AppTools.h"
@@ -49,6 +50,7 @@ using namespace Gdiplus;
 #include "Toolbar.h"
 #include "Touch.h"
 #include "Translations.h"
+#include "uia/UIAutomationProvider.h"
 #include "UITask.h"
 #include "Version.h"
 #include "WindowInfo.h"
@@ -958,6 +960,10 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
             win->dm->CopyNavHistory(*prevModel);
         }
         delete prevModel;
+
+        // tell UI Automation about content change
+        if (win->uia_provider)
+            win->uia_provider->OnDocumentLoad();
     } else if (allowFailure) {
         delete prevModel;
         ScopedMem<WCHAR> title2(str::Format(L"%s - %s", path::GetBaseName(args.fileName), SUMATRA_WINDOW_TITLE));
@@ -2622,6 +2628,8 @@ void CloseDocumentInWindow(WindowInfo *win)
     SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     ClearTocBox(win);
     AbortFinding(win, true);
+    if (win->uia_provider)
+        win->uia_provider->OnDocumentUnload();
     delete win->dm;
     win->dm = NULL;
     str::ReplacePtr(&win->loadedFilePath, NULL);
@@ -4732,6 +4740,16 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         case WM_GESTURE:
             return OnGesture(*win, msg, wParam, lParam);
+
+        case WM_GETOBJECT:
+            {
+                SumatraUIAutomationProvider* provider = win->GetUIAProvider();
+                LRESULT res = UiaReturnRawElementProvider(hwnd, wParam, lParam,  provider);
+
+                provider->Release(); //Forget our copy
+
+                return res;
+            }
 
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);

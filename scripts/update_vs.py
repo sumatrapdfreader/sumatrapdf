@@ -181,6 +181,7 @@ def is_sumatra_src_file(path):
 g_sumatra_files = list_top_dir_files("src", is_sumatra_src_file)
 g_sumatra_engine_files = list_top_dir_files("src", is_sumatra_engine_src_file)
 g_sumatra_ebook_files = list_top_dir_files("src", is_sumatra_ebook_src_file)
+g_sumatra_uia_files = list_top_dir_files(pj("src", "uia"), is_any_file)
 g_mui_files = list_top_dir_files(pj("src", "mui"), is_c_or_docs_file)
 g_utils_files = list_top_dir_files(pj("src", "utils"), is_c_src_file)
 g_docs_files = list_top_dir_files("docs", is_docs_file)
@@ -200,6 +201,7 @@ g_filters = [
     Filter("sumatra", "{4FC737F1-C7A5-4376-A066-2A32D752A2FF}", g_sumatra_files),
     Filter("sumatra\\engine", "{2fe13b22-1504-45f2-95a0-8e2d5978dd9f}", g_sumatra_engine_files),
     Filter("sumatra\\ebook", "{232267dd-50d1-4b01-83e1-89ab2c6dde73}", g_sumatra_ebook_files),
+    Filter("sumatra\\uia", "{9c5193d1-868c-46a9-bf38-fd1d816e5b54}", g_sumatra_uia_files),
     Filter("mui", "{0cbc9131-0370-46a1-a361-d8c441d9f9c5}", g_mui_files),
     Filter("utils", "{88c95b88-1f3f-4262-835b-91b32349401b}", g_utils_files),
     Filter("docs", "{367a3cbe-0f88-4739-8890-c93e3b756c3f}", g_docs_files),

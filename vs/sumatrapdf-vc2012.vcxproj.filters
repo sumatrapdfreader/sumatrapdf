@@ -10,6 +10,9 @@
     <Filter Include="sumatra\ebook">
       <UniqueIdentifier>{232267dd-50d1-4b01-83e1-89ab2c6dde73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sumatra\uia">
+      <UniqueIdentifier>{9c5193d1-868c-46a9-bf38-fd1d816e5b54}</UniqueIdentifier>
+    </Filter>
     <Filter Include="mui">
       <UniqueIdentifier>{0cbc9131-0370-46a1-a361-d8c441d9f9c5}</UniqueIdentifier>
     </Filter>
@@ -206,6 +209,21 @@
     </ClCompile>
     <ClCompile Include="..\src\MuiEbookPageDef.cpp">
       <Filter>sumatra\ebook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\uia\UIAutomationDocumentProvider.cpp">
+      <Filter>sumatra\uia</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\uia\UIAutomationPageProvider.cpp">
+      <Filter>sumatra\uia</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\uia\UIAutomationProvider.cpp">
+      <Filter>sumatra\uia</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\uia\UIAutomationStartPageProvider.cpp">
+      <Filter>sumatra\uia</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\uia\UIAutomationTextRange.cpp">
+      <Filter>sumatra\uia</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\Mui.cpp">
       <Filter>mui</Filter>
@@ -1003,6 +1021,21 @@
     </ClInclude>
     <ClInclude Include="..\src\MuiEbookPageDef.h">
       <Filter>sumatra\ebook</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\uia\UIAutomationDocumentProvider.h">
+      <Filter>sumatra\uia</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\uia\UIAutomationPageProvider.h">
+      <Filter>sumatra\uia</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\uia\UIAutomationProvider.h">
+      <Filter>sumatra\uia</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\uia\UIAutomationStartPageProvider.h">
+      <Filter>sumatra\uia</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\uia\UIAutomationTextRange.h">
+      <Filter>sumatra\uia</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\Mui.h">
       <Filter>mui</Filter>

@@ -101,13 +101,13 @@ LIB_FLAGS = $(LIB_FLAGS) /LTCG
 LIBS = $(LIBS) \
 	comctl32.lib Msimg32.lib Winspool.lib wininet.lib \
 	ole32.lib OleAut32.lib shlwapi.lib version.lib \
-	WindowsCodecs.lib DbgHelp.lib
-
+	WindowsCodecs.lib DbgHelp.lib Uiautomationcore.lib
 OS   = $(O)\sumatrapdf
 OU   = $(O)\utils
 ODLL = $(O)\applibs
 OMUI = $(O)\mui
 OM   = $(O)\memtrace
+OUIA = $(O)\uia
 
 SUMATRA_APP = $(O)\SumatraPDF.exe
 SUMATRA_APP_NO_MUPDF = $(O)\SumatraPDF-no-MuPDF.exe
@@ -199,8 +199,11 @@ MAIN_UI_OBJS = \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
 	$(OS)\MuiEbookPageDef.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \
-	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj
-
+	$(OS)\Translations.obj $(OS)\Trans_sumatra_txt.obj \
+	$(OUIA)\UIAutomationProvider.obj $(OUIA)\UIAutomationStartPageProvider.obj \
+	$(OUIA)\UIAutomationDocumentProvider.obj $(OUIA)\UIAutomationPageProvider.obj \
+	$(OUIA)\UIAutomationTextRange.obj
+	
 SUMATRA_OBJS = \
 	$(OS)\SumatraPDF.obj $(SUMATRA_RES) $(MAIN_UI_LIB) \
 	$(ENGINES_LIB) $(UTILS_LIB) $(MUI_LIB) $(SYNCTEX_OBJS) $(LZSA_OBJS)
@@ -278,6 +281,7 @@ $(OS): $(O) $(OE)
 	@if not exist $(ODLL) mkdir $(ODLL)
 	@if not exist $(OMUI) mkdir $(OMUI)
 	@if not exist $(OM) mkdir $(OM)
+	@if not exist $(OUIA) mkdir $(OUIA)
 
 $(SUMATRA_RES): $(SRCDIR)\SumatraPDF.rc $(SRCDIR)\Resource.h $(SRCDIR)\Version.h $(SRCDIR)\EbookWinDesc.txt
 	rc /r /fo$@ $(RC_FLAGS) $(SRCDIR)\SumatraPDF.rc
@@ -342,6 +346,9 @@ $(ENGINEDUMP_APP): $(ENGINEDUMP_OBJS)
 
 {$(SRCDIR)\mui}.cpp{$(OMUI)}.obj::
 	$(CC) $(UTILS_CFLAGS) /Fo$(OMUI)\ /Fd$(O)\vc80.pdb $<
+
+{$(SRCDIR)\uia}.cpp{$(OUIA)}.obj::
+	$(CC) $(SUMATRA_CFLAGS) /Fo$(OUIA)\ /Fd$(O)\vc80.pdb $<
 
 {$(SRCDIR)}.cpp{$(OS)}.obj::
 	$(CC) $(SUMATRA_CFLAGS) /Fo$(OS)\ /Fd$(O)\vc80.pdb $<

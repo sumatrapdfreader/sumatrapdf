@@ -113,6 +113,11 @@
     <ClCompile Include="..\src\EbookWindow.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\MuiEbookPageDef.cpp" />
+    <ClCompile Include="..\src\uia\UIAutomationDocumentProvider.cpp" />
+    <ClCompile Include="..\src\uia\UIAutomationPageProvider.cpp" />
+    <ClCompile Include="..\src\uia\UIAutomationProvider.cpp" />
+    <ClCompile Include="..\src\uia\UIAutomationStartPageProvider.cpp" />
+    <ClCompile Include="..\src\uia\UIAutomationTextRange.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\MuiBase.cpp" />
     <ClCompile Include="..\src\mui\MuiButton.cpp" />
@@ -380,6 +385,11 @@
     <ClInclude Include="..\src\EbookWindow.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\MuiEbookPageDef.h" />
+    <ClInclude Include="..\src\uia\UIAutomationDocumentProvider.h" />
+    <ClInclude Include="..\src\uia\UIAutomationPageProvider.h" />
+    <ClInclude Include="..\src\uia\UIAutomationProvider.h" />
+    <ClInclude Include="..\src\uia\UIAutomationStartPageProvider.h" />
+    <ClInclude Include="..\src\uia\UIAutomationTextRange.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\MuiBase.h" />
     <ClInclude Include="..\src\mui\MuiButton.h" />

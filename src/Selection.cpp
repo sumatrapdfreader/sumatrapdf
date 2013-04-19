@@ -10,6 +10,7 @@
 #include "Translations.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
+#include "uia/UIAutomationProvider.h"
 
 #define COL_SELECTION_RECT      RGB(0xF5, 0xFC, 0x0C)
 
@@ -159,6 +160,9 @@ void UpdateTextSelection(WindowInfo *win, bool select)
     DeleteOldSelectionInfo(win);
     win->selectionOnPage = SelectionOnPage::FromTextSelect(&win->dm->textSelection->result);
     win->showSelection = win->selectionOnPage != NULL;
+
+    if (win->uia_provider)
+        win->uia_provider->OnSelectionChanged();
 }
 
 void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relative)
