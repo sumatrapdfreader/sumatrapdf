@@ -1164,6 +1164,10 @@
 					RelativePath="..\src\uia\UIAutomationTextRange.h"
 					>
 				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationConstants.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
