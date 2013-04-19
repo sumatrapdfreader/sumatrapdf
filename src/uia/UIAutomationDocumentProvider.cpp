@@ -118,16 +118,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(co
 }
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::AddRef(void)
 {
-    return ++refCount;
+    return InterlockedIncrement(&refCount);
 }
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Release(void)
 {
-    if (--refCount)
-        return refCount;
-
-    //Suicide
-    delete this;
-    return 0;
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum NavigateDirection direction, IRawElementProviderFragment **pRetVal)
@@ -286,13 +286,15 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFE
     SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, 1);
     if (!psa)
         return E_OUTOFMEMORY;
-    
+
+    // TODO: this selection is leaked - why?
     SumatraUIAutomationTextRange* selection = new SumatraUIAutomationTextRange(this, dm->textSelection);
-    selection->DecreaseRefCount(); // magic, UIA seems to expect 0 refcount when selections are given to it
 
     LONG index = 0;
     HRESULT hr = SafeArrayPutElement(psa, &index, selection);
     CrashIf(FAILED(hr));
+    // the array now owns the selection
+    selection->Release();
 
     *pRetVal = psa;
     return S_OK;
@@ -322,16 +324,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, rangeArray.Size());
     if (!psa) {
         for (size_t i = 0; i < rangeArray.Size(); i++) {
-            delete rangeArray[i];
+            rangeArray[i]->Release();
         }
         return E_OUTOFMEMORY;
     }
     
     for (LONG i = 0; i < (LONG)rangeArray.Size(); i++) {
-        HRESULT hr = SafeArrayPutElement(psa, &i,rangeArray[i]);
+        HRESULT hr = SafeArrayPutElement(psa, &i, rangeArray[i]);
         CrashIf(FAILED(hr));
+        rangeArray[i]->Release();
     }
-    
 
     *pRetVal = psa;
     return S_OK;
@@ -342,8 +344,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IR
         return E_POINTER;
     if (released)
         return E_FAIL;
-    
+
     // get page range
+    // TODO: is childElement guaranteed to be a SumatraUIAutomationPageProvider?
     *pRetVal = new SumatraUIAutomationTextRange(this, ((SumatraUIAutomationPageProvider*)childElement)->pageNum);
     return S_OK;
 }

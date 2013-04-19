@@ -12,7 +12,7 @@ class SumatraUIAutomationDocumentProvider;
 
 
 class SumatraUIAutomationTextRange : public ITextRangeProvider {
-    ULONG refCount;
+    LONG refCount;
 
     // used for getting dm and document state (== is document closed == dm is invalid)
     // text range will hold reference to document to prevent it from being removed
@@ -33,7 +33,6 @@ public:
     SumatraUIAutomationTextRange(const SumatraUIAutomationTextRange&);
     ~SumatraUIAutomationTextRange();
 
-    void DecreaseRefCount(); // HACK: Sometimes refcounts need some "special" treatment
     bool operator==(const SumatraUIAutomationTextRange&) const;
 
     void SetToDocumentRange();

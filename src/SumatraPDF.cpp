@@ -1295,6 +1295,11 @@ static void DeleteWindowInfo(WindowInfo *win)
     AbortFinding(win);
     AbortPrinting(win);
 
+    if (win->uia_provider) {
+        // tell UIA to release all objects cached in its store
+        uia::ReturnRawElementProvider(win->hwndCanvas, 0, 0, NULL);
+    }
+
     delete win;
 
     t.Stop();

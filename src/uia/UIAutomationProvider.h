@@ -17,7 +17,7 @@ class SumatraUIAutomationStartPageProvider;
 class SumatraUIAutomationDocumentProvider;
 
 class SumatraUIAutomationProvider : public IRawElementProviderSimple, public IRawElementProviderFragment, public IRawElementProviderFragmentRoot {
-    ULONG                                   refCount;
+    LONG                                    refCount;
 
     HWND                                    canvasHwnd;
     SumatraUIAutomationStartPageProvider*   startpage;

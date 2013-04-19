@@ -37,16 +37,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::QueryInterface(c
 }
 ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::AddRef(void)
 {
-    return ++refCount;
+    return InterlockedIncrement(&refCount);
 }
 ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Release(void)
 {
-    if (--refCount)
-        return refCount;
-
-    //Suicide
-    delete this;
-    return 0;
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
 }
 
 

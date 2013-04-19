@@ -9,7 +9,7 @@
 class DisplayModel;
 class SumatraUIAutomationDocumentProvider;
 class SumatraUIAutomationPageProvider : public IRawElementProviderFragment, public IRawElementProviderSimple, public IValueProvider {
-    ULONG                                   refCount;
+    LONG                                    refCount;
     int                                     pageNum;
     HWND                                    canvasHwnd;
     DisplayModel*                           dm;

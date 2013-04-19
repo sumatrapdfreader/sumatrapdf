@@ -53,10 +53,6 @@ SumatraUIAutomationTextRange::~SumatraUIAutomationTextRange()
 {
     document->Release();
 }
-void SumatraUIAutomationTextRange::DecreaseRefCount()
-{
-    --refCount;
-}
 bool SumatraUIAutomationTextRange::operator==(const SumatraUIAutomationTextRange&b) const
 {
     return  document == b.document && 
@@ -196,17 +192,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::QueryInterface(const IID
 }
 ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::AddRef(void)
 {
-    return ++refCount;
+    return InterlockedIncrement(&refCount);
 }
 ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::Release(void)
 {
-    assert(refCount);
-    if (--refCount)
-        return refCount;
-
-    //Suicide
-    delete this;
-    return 0;
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Clone(ITextRangeProvider **clonedRange)
@@ -222,6 +217,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Compare(ITextRangeProvid
         return E_POINTER;
     if (range == NULL)
         return E_POINTER;
+    // TODO: is range guaranteed to be a SumatraUIAutomationTextRange?
     if (*((SumatraUIAutomationTextRange*)range) == *this)
         *areSame = TRUE;
     else
@@ -246,6 +242,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::CompareEndpoints(enum Te
         return E_INVALIDARG;
     }
 
+    // TODO: is range guaranteed to be a SumatraUIAutomationTextRange?
     SumatraUIAutomationTextRange* target = (SumatraUIAutomationTextRange*)range;
 
     int comp_b_page, comp_b_idx;
@@ -662,6 +659,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByRange(Text
     if (range == NULL)
         return E_POINTER;
 
+    // TODO: is range guaranteed to be a SumatraUIAutomationTextRange?
     SumatraUIAutomationTextRange* target = (SumatraUIAutomationTextRange*)range;
 
     // extract target location

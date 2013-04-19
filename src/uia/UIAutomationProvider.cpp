@@ -150,16 +150,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(const IID 
 }
 ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::AddRef(void)
 {
-    return ++refCount;
+    return InterlockedIncrement(&refCount);
 }
 ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::Release(void)
 {
-    if (--refCount)
-        return refCount;
-
-    //Suicide
-    delete this;
-    return 0;
+    LONG res = InterlockedDecrement(&refCount);
+    CrashIf(res < 0);
+    if (0 == res) {
+        delete this;
+    }
+    return res;
 }
 
 

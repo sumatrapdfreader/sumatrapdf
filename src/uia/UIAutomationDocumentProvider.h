@@ -13,7 +13,7 @@ class SumatraUIAutomationProvider;
 class SumatraUIAutomationPageProvider;
 class SumatraUIAutomationTextRange;
 class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment, public IRawElementProviderSimple, public ITextProvider, public IAccIdentity {
-    ULONG                               refCount;
+    LONG                                refCount;
     HWND                                canvasHwnd;
     SumatraUIAutomationProvider*        root;
     bool                                released;
