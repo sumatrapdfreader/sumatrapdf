@@ -119,7 +119,7 @@ struct Favorite {
     // optional label for this page (if logical and physical page numbers
     // are not the same)
     WCHAR * pageLabel;
-    // for internal use
+    // id of this favorite in the menu (assigned by AppendFavMenuItems)
     int menuId;
 };
 
@@ -138,6 +138,13 @@ struct FileState {
     // a document can be "pinned" to the Frequently Read list so that it
     // isn't displaced by more frequently used ones
     bool isPinned;
+    // if a document can no longer be found but we still remember valuable
+    // state, it's classified as missing so that it can be hidden instead
+    // of removed (internal)
+    bool isMissing;
+    // Hex encoded MD5 fingerprint of file content (32 chars) followed by
+    // crypt key (64 chars) - only applies for PDF documents (internal)
+    char * decryptionKey;
     // if true, we use global defaults when opening this file (instead of
     // the values below)
     bool useDefaultState;
@@ -166,12 +173,12 @@ struct FileState {
     // view modes (only used for comic book documents)
     bool displayR2L;
     // internal
-    bool isMissing;
-    // internal
-    char * decryptionKey;
-    // internal
     int reparseIdx;
-    // internal
+    // tocState is an array of ids for ToC items that have been toggled by
+    // the user (i.e. aren't in their default expansion state). - Note: We
+    // intentionally track toggle state as opposed to expansion state so
+    // that we only have to save a diff instead of all states for the whole
+    // tree (which can be quite large) (internal)
     Vec<int> * tocState;
     // thumbnails are saved as PNG files in sumatrapdfcache directory
     RenderedBitmap * thumbnail;
@@ -214,7 +221,7 @@ struct GlobalPrefs {
     ForwardSearch forwardSearch;
     // if true, we store display settings for each document
     bool rememberStatePerDocument;
-    // ISO code of the current UI language
+    // [ISO code](langs.html) of the current UI language
     char * uiLanguage;
     // if true, we show the toolbar at the top of the window
     bool showToolbar;
@@ -397,6 +404,8 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, favorites),       Type_Array,      (intptr_t)&gFavoriteInfo },
     { offsetof(FileState, openCount),       Type_Int,        0                        },
     { offsetof(FileState, isPinned),        Type_Bool,       false                    },
+    { offsetof(FileState, isMissing),       Type_Bool,       false                    },
+    { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
     { offsetof(FileState, useDefaultState), Type_Bool,       false                    },
     { offsetof(FileState, displayMode),     Type_String,     (intptr_t)L"automatic"   },
     { offsetof(FileState, scrollPos),       Type_Compact,    (intptr_t)&gPointIInfo   },
@@ -408,12 +417,10 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, showToc),         Type_Bool,       true                     },
     { offsetof(FileState, sidebarDx),       Type_Int,        0                        },
     { offsetof(FileState, displayR2L),      Type_Bool,       false                    },
-    { offsetof(FileState, isMissing),       Type_Bool,       false                    },
-    { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
     { offsetof(FileState, reparseIdx),      Type_Int,        0                        },
     { offsetof(FileState, tocState),        Type_IntArray,   NULL                     },
 };
-static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0OpenCount\0IsPinned\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0IsMissing\0DecryptionKey\0ReparseIdx\0TocState" };
+static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0OpenCount\0IsPinned\0IsMissing\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState" };
 
 static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,      0x8000f2ff                                                                                                            },

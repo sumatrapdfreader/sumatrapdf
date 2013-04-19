@@ -223,7 +223,7 @@ Favorite = [
 	Field("Name", String, None, "name of this favorite as shown in the menu"),
 	Field("PageNo", Int, 0, "which page this favorite is about"),
 	Field("PageLabel", String, None, "optional label for this page (if logical and physical page numbers are not the same)"),
-	Field("MenuId", Int, 0, "for internal use", internal=True),
+	Field("MenuId", Int, 0, "id of this favorite in the menu (assigned by AppendFavMenuItems)", internal=True),
 ]
 
 FileSettings = [
@@ -239,13 +239,19 @@ FileSettings = [
 	Field("IsPinned", Bool, False,
 		"a document can be \"pinned\" to the Frequently Read list so that it " +
 		"isn't displaced by more frequently used ones"),
+	Field("IsMissing", Bool, False,
+		"if a document can no longer be found but we still remember valuable state, " +
+		"it's classified as missing so that it can be hidden instead of removed (internal)"),
+	Field("DecryptionKey", Utf8String, None,
+		"Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
+		"crypt key (64 chars) - only applies for PDF documents (internal)"),
 	# kjk: I think this only applies to certain settings. Should those settings
 	# be grouped in a separate struct and the name reflect that? How does it
 	# interact with GlobalPrefsOnly?
 	# zeniko: in the previous implementation, when UseGlobalValues was set, all
 	# document specific settings weren't saved at all; that's no longer easily possible
 	# This pref applies to: DisplayMode, ScrollPos, PageNo, ReparseIdx, Zoom, Rotation,
-	# WindowState, WindowPos, ShowToc, SidebarDx and TocState
+	# WindowState, WindowPos, ShowToc, SidebarDx, DisplayR2L and TocState
 	Field("UseDefaultState", Bool, False,
 		"if true, we use global defaults when opening this file (instead of " +
 		"the values below)"),
@@ -273,14 +279,16 @@ FileSettings = [
 	Field("DisplayR2L", Bool, False,
 		"if true, the document is displayed right-to-left in facing and book view modes " +
 		"(only used for comic book documents)"),
-	Field("IsMissing", Bool, False,
-		"internal"),
-	Field("DecryptionKey", Utf8String, None,
-		"internal"),
 	Field("ReparseIdx", Int, 0,
 		"internal"),
 	CompactArray("TocState", Int, None,
-		"internal"),
+		"tocState is an array of ids for ToC items that have been toggled by " +
+		"the user (i.e. aren't in their default expansion state). - " +
+		"Note: We intentionally track toggle state as opposed to expansion state " +
+		"so that we only have to save a diff instead of all states for the whole " +
+		"tree (which can be quite large) (internal)"),
+	# NOTE: only add fields below UseDefaultState which are either internal or
+	#       should not be serialized when UseDefaultState is true!
 	Field("Thumbnail", Type(None, "RenderedBitmap *"), "NULL",
 		"thumbnails are saved as PNG files in sumatrapdfcache directory",
 		internal=True),
