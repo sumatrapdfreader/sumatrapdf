@@ -168,9 +168,13 @@ body {
 
 <body>
 
+<h2>Languages supported by SumatraPDF</h2>
+
 <p>Languages supported by SumatraPDF. You can use ISO code as a value
-of <code>UILanguage</code> in <a href="settings.html">settings file</a>.
+of <code>UiLanguage</code> setting in <a href="settings.html">settings file</a>.
 </p>
+
+<p>Note: not all languages are fully translated. Help us <a href="http://www.apptranslator.org/app/SumatraPDF">translate SumatraPDF</a>.</p>
 
 <table>
 <tr><th>Language name</th><th>ISO code</th></tr>
@@ -184,13 +188,42 @@ of <code>UILanguage</code> in <a href="settings.html">settings file</a>.
 #indent_str = "&nbsp;&nbsp;"
 indent_str = "  "
 
+# if s in the form: "foo](bar.html)", returns ["foo", "bar.html"].
+# otherwise returns ["foo"]
+def extract_url(s):
+	if not s.endswith(")"):
+		return [s]
+	word_end = s.find("]")
+	assert word_end != -1
+	word = s[:word_end]
+	assert s[word_end+1] == "("
+	url = s[word_end+2:-1]
+	return [word, url]
+
 def gen_comment(comment, start, first = False):
 	line_len = 80
 	s = start + '<span class=cm>'
 	if not first:
 		s = "\n" + s
 	left = line_len - len(start)
+	# [foo](bar.html) is turned into <a href="bar.html">foo</a>
+	href_text = None
 	for word in comment.split():
+		if word[0] == "[":
+			word_url = extract_url(word[1:])
+			if len(word_url) == 2:
+				s += '<a href="%s">%s</a>' % (word_url[1], word_url[0])
+				continue
+			href_text = word_url[0]
+			continue
+		elif href_text != None:
+			word_url = extract_url(word)
+			href_text = href_text + " " + word_url[0]
+			if len(word_url) == 2:
+				s += '<a href="%s">%s</a> ' % (word_url[1], href_text)
+				href_text = None
+			continue
+
 		if left < len(word):
 			s += "\n" + start
 			left = line_len - len(start)

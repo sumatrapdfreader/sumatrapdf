@@ -391,12 +391,10 @@ char *SerializeStruct(const StructInfo *info, const void *strct, const char *pre
                       const char *infoUrl, size_t *sizeOut)
 {
     str::Str<char> out;
-    out.Append(UTF8_BOM "# This file will be overwritten - modify at your own risk!");
-    if (infoUrl) {
-        out.Append(" For further\r\n# information, see ");
-        out.Append(infoUrl);
-    }
-    out.Append("\r\n\r\n");
+    if (infoUrl)
+        out.AppendFmt(UTF8_BOM "# see %s\nfor documentation\r\n\r\n", infoUrl);
+    else
+        out.Append(UTF8_BOM "# This file will be overwritten - modify at your own risk!\r\n\r\n");
     SquareTree prevSqt(prevData);
     SerializeStructRec(out, info, strct, prevSqt.root);
     if (sizeOut)

@@ -344,7 +344,7 @@ GlobalPrefs = [
 	# unexpectedly changes when using it abroad; or if a user ever closed the Choose Language
 	# dialog with OK, the language never again adapts to system changes
 	Field("UiLanguage", Utf8String, None, # TODO: "auto"
-		"ISO code of the current UI language"),
+		"[ISO code](langs.html) of the current UI language"),
 	Field("ShowToolbar", Bool, True,
 		"if true, we show the toolbar at the top of the window"),
 	Field("ShowFavorites", Bool, False,
