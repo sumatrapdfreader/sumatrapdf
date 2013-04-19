@@ -4,6 +4,7 @@
 #include "DisplayModel.h"
 #include "UIAutomationDocumentProvider.h"
 #include "UIAutomationPageProvider.h"
+#include "UIAutomationConstants.h"
 #include "TextSelection.h"
 
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document)

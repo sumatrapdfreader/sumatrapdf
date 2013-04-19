@@ -7,6 +7,7 @@
 #include "UIAutomationProvider.h"
 #include "UIAutomationPageProvider.h"
 #include "UIAutomationTextRange.h"
+#include "UIAutomationConstants.h"
 
 
 SumatraUIAutomationDocumentProvider::SumatraUIAutomationDocumentProvider(HWND canvas_hwnd, SumatraUIAutomationProvider* root)

@@ -4,6 +4,7 @@
 #include <UIAutomation.h>
 #include "UIAutomationProvider.h"
 #include "UIAutomationDocumentProvider.h"
+#include "UIAutomationConstants.h"
 #include "DisplayModel.h"
 #include "TextSelection.h"
 

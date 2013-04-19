@@ -3,6 +3,8 @@
 
 #include <UIAutomation.h>
 
+#include "UIAutomationConstants.h"
+
 SumatraUIAutomationStartPageProvider::SumatraUIAutomationStartPageProvider(HWND canvas_hwnd, SumatraUIAutomationProvider* root)
 : m_ref_count(0), m_canvas_hwnd(canvas_hwnd), m_root(root)
 {

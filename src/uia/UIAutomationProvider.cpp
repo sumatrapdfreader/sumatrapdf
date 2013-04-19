@@ -6,6 +6,7 @@
 
 #include "UIAutomationStartPageProvider.h"
 #include "UIAutomationDocumentProvider.h"
+#include "UIAutomationConstants.h"
 #include "WindowInfo.h"
 
 SumatraUIAutomationProvider::SumatraUIAutomationProvider(const WindowInfo* win)

@@ -1022,6 +1022,9 @@
     <ClInclude Include="..\src\MuiEbookPageDef.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\uia\UIAutomationConstants.h">
+      <Filter>sumatra\uia</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\uia\UIAutomationDocumentProvider.h">
       <Filter>sumatra\uia</Filter>
     </ClInclude>
