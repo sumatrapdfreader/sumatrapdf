@@ -8,6 +8,7 @@
 #include "UIAutomationDocumentProvider.h"
 #include "UIAutomationConstants.h"
 #include "UIAutomationPageProvider.h"
+#include "UIAutomationProvider.h"
 #include "TextSelection.h"
 
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document) :
@@ -351,7 +352,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue(TEXTAT
 
     // text doesn't have attributes, we don't support those
     IUnknown* not_supported;
-    UiaGetReservedNotSupportedValue(&not_supported);
+    uia::GetReservedNotSupportedValue(&not_supported);
 
     value->vt = VT_UNKNOWN;
     value->punkVal = not_supported;

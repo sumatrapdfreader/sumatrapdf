@@ -5,8 +5,6 @@
 #include "SumatraPDF.h"
 #include <malloc.h>
 #include <wininet.h>
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
 
 #include "AppPrefs.h"
 #include "AppTools.h"
@@ -4743,17 +4741,12 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             return OnGesture(*win, msg, wParam, lParam);
 
         case WM_GETOBJECT:
-            if (gPluginMode) { 
-                // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
-                return DefWindowProc(hwnd, msg, wParam, lParam);
-            } else {
-                SumatraUIAutomationProvider* provider = win->GetUIAProvider();
-                LRESULT res = UiaReturnRawElementProvider(hwnd, wParam, lParam,  provider);
-
-                provider->Release(); //Forget our copy
-
-                return res;
+            // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
+            if (!gPluginMode) { 
+                ScopedComPtr<SumatraUIAutomationProvider> provider(win->GetUIAProvider());
+                return uia::ReturnRawElementProvider(hwnd, wParam, lParam, provider);
             }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
 
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);

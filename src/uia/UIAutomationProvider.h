@@ -5,14 +5,17 @@
 #define UIAutomationProvider_h
 
 #include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
 
 const int SUMATRA_UIA_STARTPAGE_RUNTIME_ID = 1;
 const int SUMATRA_UIA_DOCUMENT_RUNTIME_ID = 2;
+
 #define SUMATRA_UIA_PAGE_RUNTIME_ID(X) (100 + (X))
 
 class WindowInfo;
 class SumatraUIAutomationStartPageProvider;
 class SumatraUIAutomationDocumentProvider;
+
 class SumatraUIAutomationProvider : public IRawElementProviderSimple, public IRawElementProviderFragment, public IRawElementProviderFragmentRoot {
     ULONG                                   refCount;
 
@@ -56,6 +59,16 @@ public:
 
 private:
     IRawElementProviderFragment* GetElementFromPoint(double,double,IRawElementProviderFragment *);
+};
+
+namespace uia {
+
+LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *);
+HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple ** pProvider);
+HRESULT RaiseAutomationEvent(IRawElementProviderSimple * pProvider, EVENTID id);
+HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple * pProvider, StructureChangeType structureChangeType, int * pRuntimeId, int cRuntimeIdLen);
+HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue);
+
 };
 
 #endif //UIAutomationProvider_h

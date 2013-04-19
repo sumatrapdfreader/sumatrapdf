@@ -4,14 +4,87 @@
 #include "BaseUtil.h"
 #include "UIAutomationProvider.h"
 
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
-#include <assert.h>
-
 #include "UIAutomationConstants.h"
 #include "UIAutomationDocumentProvider.h"
 #include "UIAutomationStartPageProvider.h"
 #include "WindowInfo.h"
+#include "WinUtil.h"
+
+// not available under Win2000
+typedef LRESULT (WINAPI *UiaReturnRawElementProviderProc)(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *el);
+typedef HRESULT (WINAPI *UiaHostProviderFromHwndProc)(HWND hwnd, IRawElementProviderSimple ** pProvider);
+typedef HRESULT (WINAPI *UiaRaiseAutomationEventProc)(IRawElementProviderSimple * pProvider, EVENTID id);
+typedef HRESULT (WINAPI *UiaRaiseStructureChangedEventProc)(IRawElementProviderSimple * pProvider, StructureChangeType structureChangeType, int * pRuntimeId, int cRuntimeIdLen);
+typedef HRESULT (WINAPI *UiaGetReservedNotSupportedValueProc)(IUnknown **punkNotSupportedValue);
+
+namespace uia {
+
+static bool gFuncsLoaded = false;
+static UiaReturnRawElementProviderProc _UiaReturnRawElementProvider = NULL;
+static UiaHostProviderFromHwndProc _UiaHostProviderFromHwnd = NULL;
+static UiaRaiseAutomationEventProc _UiaRaiseAutomationEvent = NULL;
+static UiaRaiseStructureChangedEventProc _UiaRaiseStructureChangedEvent = NULL;
+static UiaGetReservedNotSupportedValueProc _UiaGetReservedNotSupportedValue = NULL;
+
+static void Initialize()
+{
+    static bool funcsLoaded = false;
+    if (funcsLoaded)
+        return;
+
+    HMODULE h = SafeLoadLibrary(L"uiautomationcore.dll");
+#define Load(func) _ ## func = (func ## Proc)GetProcAddress(h, #func)
+    Load(UiaReturnRawElementProvider);
+    Load(UiaHostProviderFromHwnd);
+    Load(UiaRaiseAutomationEvent);
+    Load(UiaRaiseStructureChangedEvent);
+    Load(UiaGetReservedNotSupportedValue);
+#undef Load
+
+    funcsLoaded = true;
+}
+
+LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *provider)
+{
+    Initialize();
+    if (!_UiaReturnRawElementProvider)
+        return 0;
+    return _UiaReturnRawElementProvider(hwnd, wParam, lParam, provider);
+}
+
+HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple ** pProvider)
+{
+    Initialize();
+    if (!_UiaHostProviderFromHwnd)
+        return E_NOTIMPL;
+    return _UiaHostProviderFromHwnd(hwnd, pProvider);
+}
+
+HRESULT RaiseAutomationEvent(IRawElementProviderSimple * pProvider, EVENTID id)
+{
+    Initialize();
+    if (!_UiaRaiseAutomationEvent)
+        return E_NOTIMPL;
+    return _UiaRaiseAutomationEvent(pProvider, id);
+}
+
+HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple * pProvider, StructureChangeType structureChangeType, int * pRuntimeId, int cRuntimeIdLen)
+{
+    Initialize();
+    if (!_UiaRaiseStructureChangedEvent)
+        return E_NOTIMPL;
+    return _UiaRaiseStructureChangedEvent(pProvider, structureChangeType, pRuntimeId, cRuntimeIdLen);
+}
+
+HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue)
+{
+    Initialize();
+    if (!_UiaRaiseStructureChangedEvent)
+        return E_NOTIMPL;
+    return _UiaGetReservedNotSupportedValue(punkNotSupportedValue);
+}
+
+};
 
 SumatraUIAutomationProvider::SumatraUIAutomationProvider(const WindowInfo* win) :
     refCount(1),
@@ -38,7 +111,7 @@ void SumatraUIAutomationProvider::OnDocumentLoad()
 
     document = new SumatraUIAutomationDocumentProvider(canvasHwnd, this);
     document->LoadDocument(win->dm);
-    UiaRaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, NULL, 0);
+    uia::RaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, NULL, 0);
 }
 void SumatraUIAutomationProvider::OnDocumentUnload()
 {
@@ -46,13 +119,13 @@ void SumatraUIAutomationProvider::OnDocumentUnload()
         document->FreeDocument(); // tell that the dm is now invalid
         document->Release(); // release our hooks
         document = NULL;
-        UiaRaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, NULL, 0);
+        uia::RaiseStructureChangedEvent(this, StructureChangeType_ChildrenInvalidated, NULL, 0);
     }
 }
 void SumatraUIAutomationProvider::OnSelectionChanged()
 {
     if (document)
-        UiaRaiseAutomationEvent(document, UIA_Text_TextSelectionChangedEventId);
+        uia::RaiseAutomationEvent(document, UIA_Text_TextSelectionChangedEventId);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(const IID & iid,void ** ppvObject)
@@ -126,7 +199,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPropertyValue(PROPERTY
 }
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_HostRawElementProvider(IRawElementProviderSimple **pRetVal)
 {
-    return UiaHostProviderFromHwnd(canvasHwnd,pRetVal);
+    return uia::HostProviderFromHwnd(canvasHwnd,pRetVal);
 }
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_ProviderOptions(ProviderOptions *pRetVal)
 {
