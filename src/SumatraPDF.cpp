@@ -952,7 +952,7 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
         win->dm->SetInitialViewSettings(displayMode, startPage, win->GetViewPortSize(), win->dpi);
         // TODO: also expose Manga Mode for image folders?
         if (engineType == Engine_ComicBook || engineType == Engine_ImageDir)
-            win->dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->imageOnlyUI.cbxMangaMode);
+            win->dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
         if (prevModel && str::Eq(win->dm->FilePath(), prevModel->FilePath())) {
             gRenderCache.KeepForDisplayModel(prevModel, win->dm);
             win->dm->CopyNavHistory(*prevModel);

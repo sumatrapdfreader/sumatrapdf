@@ -43,7 +43,7 @@ void MenuUpdateDisplayMode(WindowInfo* win)
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
 
     if (win->IsCbx()) {
-        bool mangaMode = win->dm ? win->dm->GetDisplayR2L() : gGlobalPrefs->imageOnlyUI.cbxMangaMode;
+        bool mangaMode = win->dm ? win->dm->GetDisplayR2L() : gGlobalPrefs->comicBookUI.cbxMangaMode;
         win::menu::SetChecked(win->menu, IDM_VIEW_MANGA_MODE, mangaMode);
     }
 }

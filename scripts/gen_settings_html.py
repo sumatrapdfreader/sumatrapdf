@@ -20,11 +20,15 @@ html_tmpl = """
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Description of SumatraPDF settings</title>
+<title>Customizing SumatraPDF</title>
 <style type=text/css>
 body {
 	font-size: 90%;
 	background-color: #f5f5f5;
+}
+
+.desc {
+	padding: 0px 10px 0px 10px;
 }
 
 .txt1 {
@@ -49,6 +53,12 @@ body {
 	color: #800; /* this is brown */
 	color: #000;
 	background-color: #ececec;
+	border: 1px solid #fff;
+	border-radius: 10px;
+	-webkit-border-radius: 10px;
+	box-shadow: rgba(0, 0, 0, .15) 3px 3px 4px;
+	-webkit-box-shadow: rgba(0, 0, 0, .15) 3px 3px 4px;
+	padding: 10px 10px 10px 20px;
 }
 
 .cm {
@@ -61,6 +71,10 @@ body {
 </head>
 
 <body>
+
+<div class=desc>
+
+<h2>Customizing SumatraPDF</h2>
 
 <p>You can change the look and behavior of
 <a href="http://blog.kowalczyk.info/software/sumatrapdf/">SumatraPDF</a>
@@ -78,10 +92,13 @@ what different settings mean and what is their default value:</p>
 
 <p>Do not modify settings marked as internal.</p>
 
+</div>
+
 <pre class=txt>
 %INSIDE%
 </pre>
 
+<div class=desc>
 <h3 id="color">Syntx for color values</h3>
 
 <p>
@@ -97,6 +114,7 @@ The syntax for colors is: <code>#aarrggbb</code> or <code>#rrggbb</code>.</p>
 For example #ff0000 means red color. You can use <a href="http://colorschemedesigner.com/">
 ColorScheme Designer</a> to pick a color.
 </p>
+</div>
 
 </body>
 </html>
@@ -193,10 +211,19 @@ def gen_struct(struct, comment=None, indent=""):
 		if field.internal:
 			continue
 		first = (field == struct.default[0])
-		if type(field) in [Struct, Array] and not field.type.name == "Compact":
+		if type(field) in [Array] and not field.type.name == "Compact":
 			lines += gen_comment(field.comment, indent, first)
-			#lines += ["%s%s [" % (indent, field.name), gen_struct(field, None, indent + "  "), "%s]" % indent, ""]
-			lines += ["%s%s [" % (indent, field.name), gen_struct(field, None, indent + indent_str), "%s]" % indent]
+			indent2 = indent + indent_str
+			start = "%s%s [\n%s[" % (indent, field.name, indent2)
+			end = "%s]\n%s]" % (indent2, indent)
+			inside = gen_struct(field, None, indent2 + indent_str)
+			lines += [start, inside, end]
+		elif type(field) in [Struct] and not field.type.name == "Compact":
+			lines += gen_comment(field.comment, indent, first)
+			start = "%s%s [" % (indent, field.name)
+			end = "%s]" % indent
+			inside = gen_struct(field, None, indent + indent_str)
+			lines += [start, inside, end]
 		else:
 			s = field.inidefault(commentChar="").lstrip()
 			lines += gen_comment(field.comment, indent, first) + [indent + s]
@@ -206,6 +233,12 @@ class Lang(object):
 	def __init__(self, name, code):
 		self.name = name
 		self.code = code
+
+def blog_dir():
+	script_dir = os.path.realpath(os.path.dirname(__file__))
+	blog_dir = os.path.realpath(os.path.join(script_dir, "..", "..", "web", "blog", "www", "software", "sumatrapdf"))
+	if os.path.exists(blog_dir): return blog_dir
+	return None
 
 def gen_langs_html():
 	import trans_langs
@@ -218,15 +251,23 @@ def gen_langs_html():
 		lines += [s]
 	inside = "\n".join(lines)
 	s = langs_html_tmpl.replace("%INSIDE%", inside)
-	p = os.path.join("scripts", "langs.html")
+	file_name = "langs.html"
+	p = os.path.join("scripts", file_name)
 	open(p, "w").write(s)
+	if blog_dir():
+		p = os.path.join(blog_dir(), file_name)
+		open(p, "w").write(s)
 
 def gen_html():
 	prefs = gen_settingsstructs.GlobalPrefs
 	inside = gen_struct(prefs)
 	s = html_tmpl.replace("%INSIDE%", inside)
-	p = os.path.join("scripts", "settings" + g_version + ".html")
+	file_name = "settings" + g_version + ".html"
+	p = os.path.join("scripts", file_name)
 	open(p, "w").write(s)
+	if blog_dir():
+		p = os.path.join(blog_dir(), file_name)
+		open(p, "w").write(s)
 
 if __name__ == "__main__":
 	gen_langs_html()

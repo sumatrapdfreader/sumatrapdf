@@ -199,8 +199,8 @@ DisplayModel::DisplayModel(BaseEngine *engine, DocType engineType, DisplayModelC
         pageSpacing = gGlobalPrefs->fixedPageUI.pageSpacing;
     }
     else {
-        windowMargin = gGlobalPrefs->imageOnlyUI.windowMargin;
-        pageSpacing = gGlobalPrefs->imageOnlyUI.pageSpacing;
+        windowMargin = gGlobalPrefs->comicBookUI.windowMargin;
+        pageSpacing = gGlobalPrefs->comicBookUI.pageSpacing;
     }
 #ifdef DRAW_PAGE_SHADOWS
     windowMargin.top += 3; windowMargin.bottom += 5;
@@ -1090,7 +1090,7 @@ void DisplayModel::SetPresentationMode(bool enable)
     }
     else {
         if (engine && engine->IsImageCollection())
-            windowMargin = gGlobalPrefs->imageOnlyUI.windowMargin;
+            windowMargin = gGlobalPrefs->comicBookUI.windowMargin;
         else
             windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
 #ifdef DRAW_PAGE_SHADOWS
