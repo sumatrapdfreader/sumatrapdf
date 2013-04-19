@@ -4742,7 +4742,10 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             return OnGesture(*win, msg, wParam, lParam);
 
         case WM_GETOBJECT:
-            {
+            if (gPluginMode) { 
+                // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
+                return DefWindowProc(hwnd, msg, wParam, lParam);
+            } else {
                 SumatraUIAutomationProvider* provider = win->GetUIAProvider();
                 LRESULT res = UiaReturnRawElementProvider(hwnd, wParam, lParam,  provider);
 
