@@ -16,6 +16,7 @@ class SumatraUIAutomationTextRange : public ITextRangeProvider
 	SumatraUIAutomationDocumentProvider* m_document;
 	
 	// TODO: this part is very much like TextSelection. Merge them somehow?
+    // TODO: extend TextSelection to make these unnecessary
     int m_startPage, m_endPage;
     int m_startGlyph, m_endGlyph;
 public:

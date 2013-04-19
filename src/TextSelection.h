@@ -56,10 +56,12 @@ public:
 
     TextSel result;
 
+    void GetGlyphRange(int *fromPage, int *fromGlyph, int *toPage, int *toGlyph) const;
+
+protected:
     int startPage, endPage;
     int startGlyph, endGlyph;
 
-protected:
     BaseEngine *    engine;
     PageTextCache * textCache;
 

@@ -14,6 +14,7 @@ DIR_STRUCT = [
 	(pjoin("src", "browserplugin"), ("Integration DLLs", "Browser Plugin")),
 	(pjoin("src", "previewer"), ("Integration DLLs", "Previewer")),
 	(pjoin("src", "mui"), ("baseutils", "mui")),
+	(pjoin("src", "uia"), ("Source Files", "Automation")),
 	(pjoin("mupdf", "draw"), ("mupdf", "draw")),
 	(pjoin("mupdf", "fitz"), ("mupdf", "fitz")),
 	(pjoin("mupdf", "pdf"), ("mupdf", "pdf")),

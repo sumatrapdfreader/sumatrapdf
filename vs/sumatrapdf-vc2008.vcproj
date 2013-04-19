@@ -1121,6 +1121,50 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Automation"
+				>
+				<File
+					RelativePath="..\src\uia\UIAutomationDocumentProvider.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationDocumentProvider.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationPageProvider.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationPageProvider.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationProvider.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationProvider.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationStartPageProvider.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationStartPageProvider.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationTextRange.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\uia\UIAutomationTextRange.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

@@ -31,27 +31,11 @@ SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDo
 	this->AddRef(); //We are the only copy
 	m_document->AddRef(); // hold on to the document
 
+    range->GetGlyphRange(&m_startPage, &m_startGlyph, &m_endPage, &m_endGlyph);
 	// null-range check
-	if ( range->startPage == -1 || range->endPage == -1)
+	if ( m_startPage == -1 || m_endPage == -1)
 	{
 		SetToNullRange();
-	}
-	else
-	{
-		m_startPage = range->startPage;
-		m_startGlyph = range->startGlyph;
-		m_endPage = range->endPage;
-		m_endGlyph = range->endGlyph;
-
-		// ensure order is logical
-		if (m_startPage > m_endPage ||
-			(m_startPage == m_endPage && m_startGlyph > m_endGlyph))
-		{
-			m_startPage = range->endPage;
-			m_startGlyph = range->endGlyph;
-			m_endPage = range->startPage;
-			m_endGlyph = range->startGlyph;
-		}
 	}
 }
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(const SumatraUIAutomationTextRange&b)

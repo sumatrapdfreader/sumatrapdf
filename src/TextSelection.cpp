@@ -264,11 +264,8 @@ WCHAR *TextSelection::ExtractText(WCHAR *lineSep)
 {
     WStrVec lines;
 
-    int fromPage = min(startPage, endPage), toPage = max(startPage, endPage);
-    int fromGlyph = (fromPage == endPage ? endGlyph : startGlyph);
-    int toGlyph = (fromPage == endPage ? startGlyph : endGlyph);
-    if (fromPage == toPage && fromGlyph > toGlyph)
-        Swap(fromGlyph, toGlyph);
+    int fromPage, fromGlyph, toPage, toGlyph;
+    GetGlyphRange(&fromPage, &fromGlyph, &toPage, &toGlyph);
 
     for (int page = fromPage; page <= toPage; page++) {
         int textLen;
@@ -280,4 +277,14 @@ WCHAR *TextSelection::ExtractText(WCHAR *lineSep)
     }
 
     return lines.Join(lineSep);
+}
+
+void TextSelection::GetGlyphRange(int *fromPage, int *fromGlyph, int *toPage, int *toGlyph) const
+{
+    *fromPage = min(startPage, endPage);
+    *toPage = max(startPage, endPage);
+    *fromGlyph = (*fromPage == endPage ? endGlyph : startGlyph);
+    *toGlyph = (*fromPage == endPage ? startGlyph : endGlyph);
+    if (*fromPage == *toPage && *fromGlyph > *toGlyph)
+        Swap(*fromGlyph, *toGlyph);
 }
