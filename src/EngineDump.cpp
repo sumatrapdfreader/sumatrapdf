@@ -424,12 +424,12 @@ Usage:
 
     // optionally use GDI+ rendering for PDF/XPS and the original ChmEngine for CHM
     DebugGdiPlusDevice(useAlternateHandlers);
-    DebugAlternateChmEngine(!useAlternateHandlers);
+    bool useChm2Engine = !useAlternateHandlers;
 
     ScopedGdiPlus gdiPlus;
     DocType engineType;
     PasswordHolder pwdUI(password);
-    BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType);
+    BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType, useChm2Engine);
     if (!engine) {
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
         return 1;

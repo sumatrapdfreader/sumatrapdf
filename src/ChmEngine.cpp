@@ -10,15 +10,6 @@
 #include "HtmlWindow.h"
 #include "Timer.h"
 
-// when set, always returns false from ChmEngine::IsSupportedFile
-// so that an alternative implementation can be used
-static bool gDebugAlternateChmEngine = false;
-
-void DebugAlternateChmEngine(bool enable)
-{
-    gDebugAlternateChmEngine = enable;
-}
-
 static bool IsExternalUrl(const WCHAR *url)
 {
     return str::StartsWithI(url, L"http://") ||
@@ -462,8 +453,6 @@ DocTocItem *ChmEngineImpl::GetTocTree()
 
 bool ChmEngine::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    if (gDebugAlternateChmEngine)
-        return false;
     return ChmDoc::IsSupportedFile(fileName, sniff);
 }
 

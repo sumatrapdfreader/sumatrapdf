@@ -376,7 +376,6 @@ static LRESULT OnCommand(EbookWindow *win, UINT msg, WPARAM wParam, LPARAM lPara
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
             // use the same setting to also toggle the CHM UI
             gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
-            DebugAlternateChmEngine(gGlobalPrefs->chmUI.useFixedPageUI);
             break;
 
         case IDM_DEBUG_MUI:

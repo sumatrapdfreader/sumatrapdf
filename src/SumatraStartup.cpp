@@ -216,6 +216,9 @@ static bool SetupPluginMode(CommandLineInfo& i)
         gGlobalPrefs->defaultDisplayModeEnum = DM_CONTINUOUS;
         gGlobalPrefs->defaultZoomFloat = ZOOM_FIT_WIDTH;
     }
+    // use fixed page UI for all document types (so that the context menu always
+    // contains all plugin specific entries and the main window is never closed)
+    gGlobalPrefs->ebookUI.useFixedPageUI = gGlobalPrefs->chmUI.useFixedPageUI = true;
 
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
@@ -335,7 +338,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     uitask::Initialize();
 
     prefs::Load();
-    prefs::RegisterForFileChanges();
 
     CommandLineInfo i;
     GetCommandLineInfo(i);
@@ -369,7 +371,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     gRenderCache.colorRange[0] = i.colorRange[0];
     gRenderCache.colorRange[1] = i.colorRange[1];
     DebugGdiPlusDevice(gUseGdiRenderer);
-    DebugAlternateChmEngine(gGlobalPrefs->chmUI.useFixedPageUI);
 
     if (i.inverseSearchCmdLine) {
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
@@ -451,13 +452,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     if (gGlobalPrefs->checkForUpdates && gWindows.Count() > 0)
         AutoUpdateCheckAsync(gWindows.At(0)->hwndFrame, true);
 
-    if (i.stressTestPath)
+    if (i.stressTestPath) {
+        // don't save file history and preference changes
+        gPolicyRestrictions = (gPolicyRestrictions | Perm_RestrictedUse) & ~Perm_SavePreferences;
         StartStressTest(&i, win, &gRenderCache);
+    }
 
     if (gFileHistory.Get(0)) {
         gFileExistenceChecker = new FileExistenceChecker();
         gFileExistenceChecker->Start();
     }
+    // call this once it's clear whether Perm_SavePreferences has been granted
+    prefs::RegisterForFileChanges();
 
     retCode = RunMessageLoop();
 

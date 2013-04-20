@@ -388,7 +388,6 @@ bool Reload(bool forceReload)
     if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage)) {
         SetCurrentLanguageAndRefreshUi(gGlobalPrefs->uiLanguage);
     }
-
     if (gGlobalPrefs->showToolbar != showToolbar)
         ShowOrHideToolbarGlobally();
     if (gGlobalPrefs->useSysColors != useSysColors)
