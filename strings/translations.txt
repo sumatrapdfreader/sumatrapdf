@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a198ae87b514fe98d96a403349fc7d0c628eb672
+a2194db5d0da70c61b3a8459bd7e67b016211424
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -175,9 +175,11 @@ ca:Opcions &avançades...
 de:&Mehr Optionen…
 et:&Rohkem sätteid...
 fr:Options &avancées…
+hu:Speciális beállítások...
 it:Opzioni &avanzate...
 kr:고급 옵션(&A)...
 ru:&Расширенные настройки...
+ta:&Advanced Options...
 :&All selected pages
 am:&Ընտրված բոլոր էջերը
 ar:&كل الصفحات المحددة
@@ -9734,7 +9736,10 @@ uz:SumatraPDF PDF fayllar bilan bog'lanish
 vn:Đặt SumatraPDF làm trình đọc PDF chính
 :Man&ga Mode
 br:Modo Man&gá
+et:Man&garežiim
 fr:Mode man&ga
+hu:Manga mód
+it:Modo Man&ga
 kr:만화 방식(&G)
 ru:Режим Man&ga
 :Match Case

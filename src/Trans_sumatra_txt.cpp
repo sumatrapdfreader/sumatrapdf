@@ -4083,7 +4083,7 @@ const char * gTranslations_et =
   "\0"\
   "Tee SumatraPDF PDF-failide vaikerakenduseks?\0"\
   "Tee SumatraPDF PDF-failide vaikerakenduseks\0"\
-  "\0"\
+  "Man&gare\305\276iim\0"\
   "T\303\265stutundlik\0"\
   "Mobi-dokumendid\0"\
   "Muudetud:\0"\
@@ -6142,7 +6142,7 @@ const char * gTranslations_hi =
 const char * gTranslations_hu = 
   "N\303\251v&jegy\0"\
   "&T\303\251nyleges m\303\251ret\tCtrl+1\0"\
-  "\0"\
+  "Speci\303\241lis be\303\241ll\303\255t\303\241sok...\0"\
   "Az \303\266sszes kiv\303\241lasztott oldal\0"\
   "Ugr\303\241s vissza\tAlt+<-\0"\
   "&K\303\266nyv-m\303\263d (oldalp\303\241r c\303\255mlappal)\tCtrl+8\0"\
@@ -6288,7 +6288,7 @@ const char * gTranslations_hu =
   "Mb\0"\
   "Legyen a SumatraPDF az alap\303\251rtelmezett PDF-megnyit\303\263 program?\0"\
   "SumatraPDF mint alap\303\251rtelmezett PDF olvas\303\263\0"\
-  "\0"\
+  "Manga m\303\263d\0"\
   "Kis- \303\251s nagybet\305\261k megk\303\274l\303\266nb\303\266ztet\303\251se\0"\
   "Mobi f\303\241jlok\0"\
   "M\303\263dos\303\255tva:\0"\
@@ -7023,7 +7023,7 @@ const char * gTranslations_it =
   "\0"\
   "Impostare SumatraPDF come programma predefinito per i file PDF?\0"\
   "Imposta SumatraPDF come lettore PDF predefinito\0"\
-  "\0"\
+  "Modo Man&ga\0"\
   "Maiuscole/minuscole\0"\
   "Documenti Mobi\0"\
   "Data ultima modifica:\0"\
