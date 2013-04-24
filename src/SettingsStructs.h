@@ -125,26 +125,13 @@ struct Favorite {
 
 // information about opened files
 struct FileState {
-    // file path of the document
+    // path of the document
     WCHAR * filePath;
     // Values which are persisted for bookmarks/favorites
     Vec<Favorite *> * favorites;
-    // in order to prevent documents that haven't been opened for a while
-    // but used to be opened very frequently constantly remain in top
-    // positions, the openCount will be cut in half after every week, so
-    // that the Frequently Read list hopefully better reflects the
-    // currently relevant documents
-    int openCount;
     // a document can be "pinned" to the Frequently Read list so that it
-    // isn't displaced by more frequently used ones
+    // isn't displaced by recently opened documents
     bool isPinned;
-    // if a document can no longer be found but we still remember valuable
-    // state, it's classified as missing so that it can be hidden instead
-    // of removed (internal)
-    bool isMissing;
-    // Hex encoded MD5 fingerprint of file content (32 chars) followed by
-    // crypt key (64 chars) - only applies for PDF documents (internal)
-    char * decryptionKey;
     // if true, we use global defaults when opening this file (instead of
     // the values below)
     bool useDefaultState;
@@ -164,14 +151,27 @@ struct FileState {
     int windowState;
     // default position (can be on any monitor)
     RectI windowPos;
-    // whether the table of contents (Bookmarks) sidebar is shown for this
-    // document
+    // if true, we show table of contents (Bookmarks) sidebar if it's
+    // present in the document
     bool showToc;
     // width of the left sidebar panel containing the table of contents
     int sidebarDx;
     // if true, the document is displayed right-to-left in facing and book
     // view modes (only used for comic book documents)
     bool displayR2L;
+    // in order to prevent documents that haven't been opened for a while
+    // but used to be opened very frequently constantly remain in top
+    // positions, the openCount will be cut in half after every week, so
+    // that the Frequently Read list hopefully better reflects the
+    // currently relevant documents
+    int openCount;
+    // if a document can no longer be found but we still remember valuable
+    // state, it's classified as missing so that it can be hidden instead
+    // of removed (internal)
+    bool isMissing;
+    // Hex encoded MD5 fingerprint of file content (32 chars) followed by
+    // crypt key (64 chars) - only applies for PDF documents (internal)
+    char * decryptionKey;
     // internal
     int reparseIdx;
     // tocState is an array of ids for ToC items that have been toggled by
@@ -236,8 +236,6 @@ struct GlobalPrefs {
     bool associateSilently;
     // if true, we check once a day if an update is available
     bool checkForUpdates;
-    // internal
-    FILETIME timeOfLastUpdateCheck;
     // we won't show UI to ask to update to this version
     WCHAR * versionToSkip;
     // if true, we remember which files we opened and their display
@@ -261,7 +259,7 @@ struct GlobalPrefs {
     // default position (can be on any monitor)
     RectI windowPos;
     // if true, we show table of contents (Bookmarks) sidebar if it's
-    // presentin the document
+    // present in the document
     bool showToc;
     // width of favorites/bookmarks sidebar (if shown)
     int sidebarDx;
@@ -271,11 +269,13 @@ struct GlobalPrefs {
     // if true, we show a list of frequently read documents in empty
     // window. Otherwise we show info about program
     bool showStartPage;
+    // information about opened files
+    Vec<FileState *> * fileStates;
+    // internal
+    FILETIME timeOfLastUpdateCheck;
     // week count since 2011-01-01 needed to "age" openCount values in file
     // history
     int openCountWeek;
-    // information about opened files
-    Vec<FileState *> * fileStates;
     // modification time of the preferences file when it was last read
     FILETIME lastPrefUpdate;
     // value of DefaultDisplayMode for internal usage
@@ -365,12 +365,6 @@ static const FieldInfo gForwardSearchFields[] = {
 };
 static const StructInfo gForwardSearchInfo = { sizeof(ForwardSearch), 4, gForwardSearchFields, "HighlightOffset\0HighlightWidth\0HighlightColor\0HighlightPermanent" };
 
-static const FieldInfo gFILETIMEFields[] = {
-    { offsetof(FILETIME, dwHighDateTime), Type_Int, 0 },
-    { offsetof(FILETIME, dwLowDateTime),  Type_Int, 0 },
-};
-static const StructInfo gFILETIMEInfo = { sizeof(FILETIME), 2, gFILETIMEFields, "DwHighDateTime\0DwLowDateTime" };
-
 static const FieldInfo gRectIFields[] = {
     { offsetof(RectI, x),  Type_Int, 0 },
     { offsetof(RectI, y),  Type_Int, 0 },
@@ -403,10 +397,7 @@ static const StructInfo gRectI_1_Info = { sizeof(RectI), 4, gRectI_1_Fields, "X\
 static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, filePath),        Type_String,     NULL                     },
     { offsetof(FileState, favorites),       Type_Array,      (intptr_t)&gFavoriteInfo },
-    { offsetof(FileState, openCount),       Type_Int,        0                        },
     { offsetof(FileState, isPinned),        Type_Bool,       false                    },
-    { offsetof(FileState, isMissing),       Type_Bool,       false                    },
-    { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
     { offsetof(FileState, useDefaultState), Type_Bool,       false                    },
     { offsetof(FileState, displayMode),     Type_String,     (intptr_t)L"automatic"   },
     { offsetof(FileState, scrollPos),       Type_Compact,    (intptr_t)&gPointIInfo   },
@@ -418,10 +409,19 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, showToc),         Type_Bool,       true                     },
     { offsetof(FileState, sidebarDx),       Type_Int,        0                        },
     { offsetof(FileState, displayR2L),      Type_Bool,       false                    },
+    { offsetof(FileState, openCount),       Type_Int,        0                        },
+    { offsetof(FileState, isMissing),       Type_Bool,       false                    },
+    { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
     { offsetof(FileState, reparseIdx),      Type_Int,        0                        },
     { offsetof(FileState, tocState),        Type_IntArray,   NULL                     },
 };
-static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0OpenCount\0IsPinned\0IsMissing\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState" };
+static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0IsPinned\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0OpenCount\0IsMissing\0DecryptionKey\0ReparseIdx\0TocState" };
+
+static const FieldInfo gFILETIMEFields[] = {
+    { offsetof(FILETIME, dwHighDateTime), Type_Int, 0 },
+    { offsetof(FILETIME, dwLowDateTime),  Type_Int, 0 },
+};
+static const StructInfo gFILETIMEInfo = { sizeof(FILETIME), 2, gFILETIMEFields, "DwHighDateTime\0DwLowDateTime" };
 
 static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,      0x8000f2ff                                                                                                            },
@@ -443,7 +443,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, associatedExtensions),     Type_String,     NULL                                                                                                                  },
     { offsetof(GlobalPrefs, associateSilently),        Type_Bool,       false                                                                                                                 },
     { offsetof(GlobalPrefs, checkForUpdates),          Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
     { offsetof(GlobalPrefs, versionToSkip),            Type_String,     NULL                                                                                                                  },
     { offsetof(GlobalPrefs, rememberOpenedFiles),      Type_Bool,       true                                                                                                                  },
     { offsetof(GlobalPrefs, useSysColors),             Type_Bool,       false                                                                                                                 },
@@ -457,10 +456,11 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, sidebarDx),                Type_Int,        0                                                                                                                     },
     { offsetof(GlobalPrefs, tocDy),                    Type_Int,        0                                                                                                                     },
     { offsetof(GlobalPrefs, showStartPage),            Type_Bool,       true                                                                                                                  },
-    { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
     { offsetof(GlobalPrefs, fileStates),               Type_Array,      (intptr_t)&gFileStateInfo                                                                                             },
+    { offsetof(GlobalPrefs, timeOfLastUpdateCheck),    Type_Compact,    (intptr_t)&gFILETIMEInfo                                                                                              },
+    { offsetof(GlobalPrefs, openCountWeek),            Type_Int,        0                                                                                                                     },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 35, gGlobalPrefsFields, "MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0TimeOfLastUpdateCheck\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0OpenCountWeek\0FileStates" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 35, gGlobalPrefsFields, "MainWindowBackground\0EscToExit\0ReuseInstance\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0ZoomLevels\0ZoomIncrement\0PrinterDefaults\0ForwardSearch\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0UseSysColors\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0FileStates\0TimeOfLastUpdateCheck\0OpenCountWeek" };
 
 #endif
 

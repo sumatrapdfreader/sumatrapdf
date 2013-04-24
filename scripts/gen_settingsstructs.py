@@ -95,6 +95,10 @@ class CompactArray(Field):
 
 # ##### setting definitions for SumatraPDF #####
 
+defaultDisplayModeDoc = "default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous facing, continuous book view"
+
+displayModeDoc = "layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous facing, continuous book view"
+
 WindowPos = [
 	Field("X", Int, 0, "x coordinate"),
 	Field("Y", Int, 0, "y coordinate"),
@@ -228,30 +232,19 @@ ExternalViewer = [
 
 Favorite = [
 	Field("Name", String, None, "name of this favorite as shown in the menu"),
-	Field("PageNo", Int, 0, "which page this favorite is about"),
+	Field("PageNo", Int, 0, "which page this favorite is about", doc="number of bookmarked page"),
 	Field("PageLabel", String, None, "optional label for this page (if logical and physical page numbers are not the same)"),
 	Field("MenuId", Int, 0, "id of this favorite in the menu (assigned by AppendFavMenuItems)", internal=True),
 ]
 
 FileSettings = [
 	Field("FilePath", String, None,
-		"file path of the document"),
+		"path of the document"),
 	Array("Favorites", Favorite,
 		"Values which are persisted for bookmarks/favorites"),
-	Field("OpenCount", Int, 0,
-		"in order to prevent documents that haven't been opened for a while " +
-		"but used to be opened very frequently constantly remain in top positions, " +
-		"the openCount will be cut in half after every week, so that the " +
-		"Frequently Read list hopefully better reflects the currently relevant documents"),
 	Field("IsPinned", Bool, False,
 		"a document can be \"pinned\" to the Frequently Read list so that it " +
-		"isn't displaced by more frequently used ones"),
-	Field("IsMissing", Bool, False,
-		"if a document can no longer be found but we still remember valuable state, " +
-		"it's classified as missing so that it can be hidden instead of removed (internal)"),
-	Field("DecryptionKey", Utf8String, None,
-		"Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
-		"crypt key (64 chars) - only applies for PDF documents (internal)"),
+		"isn't displaced by recently opened documents"),
 	# kjk: I think this only applies to certain settings. Should those settings
 	# be grouped in a separate struct and the name reflect that? How does it
 	# interact with GlobalPrefsOnly?
@@ -266,26 +259,45 @@ FileSettings = [
 	#       should not be serialized when UseDefaultState is true!
 	Field("DisplayMode", String, "automatic",
 		"how pages should be laid out for this document, needs to be synchronized with " +
-		"DefaultDisplayMode after deserialization and before serialization"),
+		"DefaultDisplayMode after deserialization and before serialization",
+		doc=displayModeDoc),
 	Struct("ScrollPos", ScrollPos,
 		"how far this document has been scrolled", structName="PointI", compact=True),
 	Field("PageNo", Int, 1,
 		"scrollPos values are relative to the top-left corner of this page"),
 	Field("Zoom", Utf8String, "fit page",
-		"current zoom factor in % (negative values indicate virtual settings)"),
+		"current zoom factor in % (negative values indicate virtual settings)",
+		doc="zoom (in %) or one of those values: fit page, fit width, fit content"),
 	Field("Rotation", Int, 0,
 		"how far pages have been rotated as a multiple of 90 degrees"),
 	Field("WindowState", Int, 0,
-		"default state of new SumatraPDF windows (same as the last closed)"),
+		"default state of new SumatraPDF windows (same as the last closed)",
+		doc="state of the window. 1 is normal, 2 is maximized, "+
+		"3 is fullscreen, 4 is minimized"),
 	Struct("WindowPos", WindowPos,
 		"default position (can be on any monitor)", structName="RectI", compact=True),
 	Field("ShowToc", Bool, True,
-		"whether the table of contents (Bookmarks) sidebar is shown for this document"),
+		"if true, we show table of contents (Bookmarks) sidebar if it's present " +
+		"in the document"),
 	Field("SidebarDx", Int, 0,
 		"width of the left sidebar panel containing the table of contents"),
 	Field("DisplayR2L", Bool, False,
 		"if true, the document is displayed right-to-left in facing and book view modes " +
 		"(only used for comic book documents)"),
+	Field("OpenCount", Int, 0,
+		"in order to prevent documents that haven't been opened for a while " +
+		"but used to be opened very frequently constantly remain in top positions, " +
+		"the openCount will be cut in half after every week, so that the " +
+		"Frequently Read list hopefully better reflects the currently relevant documents",
+		doc="internal"),
+	Field("IsMissing", Bool, False,
+		"if a document can no longer be found but we still remember valuable state, " +
+		"it's classified as missing so that it can be hidden instead of removed (internal)",
+		doc="internal"),
+	Field("DecryptionKey", Utf8String, None,
+		"Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
+		"crypt key (64 chars) - only applies for PDF documents (internal)",
+		doc="internal"),
 	Field("ReparseIdx", Int, 0,
 		"internal"),
 	CompactArray("TocState", Int, None,
@@ -293,7 +305,8 @@ FileSettings = [
 		"the user (i.e. aren't in their default expansion state). - " +
 		"Note: We intentionally track toggle state as opposed to expansion state " +
 		"so that we only have to save a diff instead of all states for the whole " +
-		"tree (which can be quite large) (internal)"),
+		"tree (which can be quite large) (internal)",
+		doc="internal"),
 	# NOTE: only add fields below UseDefaultState which are either internal or
 	#       should not be serialized when UseDefaultState is true!
 	Field("Thumbnail", Type(None, "RenderedBitmap *"), "NULL",
@@ -377,9 +390,6 @@ GlobalPrefs = [
 		"whether file associations should be fixed silently or only after user feedback"),
 	Field("CheckForUpdates", Bool, True,
 		"if true, we check once a day if an update is available"),
-	Struct("TimeOfLastUpdateCheck", FileTime,
-		"internal",
-		structName="FILETIME", compact=True),
 	Field("VersionToSkip", String, None,
 		"we won't show UI to ask to update to this version"),
 	Field("RememberOpenedFiles", Bool, True,
@@ -404,16 +414,19 @@ GlobalPrefs = [
 	Field("DefaultDisplayMode", String, "automatic",
 		"how pages should be laid out by default, needs to be synchronized with " +
 		"DefaultDisplayMode after deserialization and before serialization",
-		doc="default layout of pages. Valid values: automatic, single page, facing, " +
-		"book view, continuous, continuous facing, continuous book view"),
+		doc=defaultDisplayModeDoc),
 	Field("DefaultZoom", Utf8String, "fit page",
-		"default zoom factor in % (negative values indicate virtual settings)"),
+		"default zoom factor in % (negative values indicate virtual settings)",
+		doc="default zoom (in %) or one of those values: fit page, fit width, fit content"),
 	Field("WindowState", Int, 1,
-		"default state of new windows (same as the last closed)"),
+		"default state of new windows (same as the last closed)",
+		doc="default state of the window. 1 is normal, 2 is maximized, "+
+		"3 is fullscreen, 4 is minimized"),
 	Struct("WindowPos", WindowPos,
-		"default position (can be on any monitor)", structName="RectI", compact=True),
+		"default position (can be on any monitor)", structName="RectI", compact=True,
+		doc="default position (x, y) and size (width, height) of the window"),
 	Field("ShowToc", Bool, True,
-		"if true, we show table of contents (Bookmarks) sidebar if it's present" +
+		"if true, we show table of contents (Bookmarks) sidebar if it's present " +
 		"in the document"),
 	Field("SidebarDx", Int, 0,
 		"width of favorites/bookmarks sidebar (if shown)"),
@@ -422,11 +435,15 @@ GlobalPrefs = [
 		"the height of bookmarks (table of contents) part"),
 	Field("ShowStartPage", Bool, True,
 		"if true, we show a list of frequently read documents in empty window. Otherwise we show info about program"),
-	Field("OpenCountWeek", Int, 0,
-		"week count since 2011-01-01 needed to \"age\" openCount values in file history"),
 	# file history and favorites
 	Array("FileStates", FileSettings,
 		"information about opened files"),
+	Struct("TimeOfLastUpdateCheck", FileTime,
+		"internal",
+		structName="FILETIME", compact=True),
+	Field("OpenCountWeek", Int, 0,
+		"week count since 2011-01-01 needed to \"age\" openCount values in file history",
+		doc="internal"),
 	# non-serialized fields
 	Struct("LastPrefUpdate", FileTime,
 		"modification time of the preferences file when it was last read",
