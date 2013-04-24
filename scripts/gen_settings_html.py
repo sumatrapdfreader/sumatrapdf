@@ -245,21 +245,21 @@ def gen_struct(struct, comment=None, indent=""):
 			continue
 		first = (field == struct.default[0])
 		if type(field) in [Array] and not field.type.name == "Compact":
-			lines += gen_comment(field.comment, indent, first)
+			lines += gen_comment(field.doc(), indent, first)
 			indent2 = indent + indent_str
 			start = "%s%s [\n%s[" % (indent, field.name, indent2)
 			end = "%s]\n%s]" % (indent2, indent)
 			inside = gen_struct(field, None, indent2 + indent_str)
 			lines += [start, inside, end]
 		elif type(field) in [Struct] and not field.type.name == "Compact":
-			lines += gen_comment(field.comment, indent, first)
+			lines += gen_comment(field.doc(), indent, first)
 			start = "%s%s [" % (indent, field.name)
 			end = "%s]" % indent
 			inside = gen_struct(field, None, indent + indent_str)
 			lines += [start, inside, end]
 		else:
 			s = field.inidefault(commentChar="").lstrip()
-			lines += gen_comment(field.comment, indent, first) + [indent + s]
+			lines += gen_comment(field.doc(), indent, first) + [indent + s]
 	return "\n".join(lines)
 
 class Lang(object):
@@ -305,3 +305,4 @@ def gen_html():
 if __name__ == "__main__":
 	gen_langs_html()
 	gen_html()
+	gen_settingsstructs.main()

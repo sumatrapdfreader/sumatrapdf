@@ -20,10 +20,14 @@ String = Type("String", "WCHAR *")
 Utf8String = Type("Utf8String", "char *")
 
 class Field(object):
-	def __init__(self, name, type, default, comment, internal=False, expert=False):
+	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None):
 		self.name = name; self.type = type; self.default = default; self.comment = comment
 		self.internal = internal; self.cname = name[0].lower() + name[1:] if name else None
 		self.expert = expert # "expert" prefs are the ones not exposed by the UI
+		self.docComment = doc
+
+	def doc(self):
+		return self.docComment or self.comment
 
 	def cdefault(self, built):
 		if self.type == Bool:
@@ -71,9 +75,10 @@ class Field(object):
 		assert False
 
 class Struct(Field):
-	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False, expert=False):
+	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False, expert=False, doc=None):
 		self.structName = structName or name
-		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal, expert)
+		self.docComment = doc
+		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal, expert, doc)
 		if compact: self.type.name = "Compact"
 
 class Array(Field):
@@ -85,8 +90,8 @@ class Array(Field):
 		super(Array, self).__init__(name, Type("Array", "Vec<%s *> *" % self.structName), fields, comment, internal, expert)
 
 class CompactArray(Field):
-	def __init__(self, name, type, default, comment, internal=False, expert=False):
-		super(CompactArray, self).__init__(name, Type("%sArray" % type.name, "Vec<%s> *" % type.ctype), default, comment, internal, expert)
+	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None):
+		super(CompactArray, self).__init__(name, Type("%sArray" % type.name, "Vec<%s> *" % type.ctype), default, comment, internal, expert, doc)
 
 # ##### setting definitions for SumatraPDF #####
 
@@ -118,12 +123,14 @@ ForwardSearch = [
 		"be changed to a rectangle at the left of the page (with the indicated " +
 		"amount of margin from the page margin)"),
 	Field("HighlightWidth", Int, 15,
-		"width of the highlight rectangle for when HighlightOffset is set"),
+		"width of the highlight rectangle (if HighlightOffset is > 0)"),
 	Field("HighlightColor", Color, 0x6581FF,
 		"color used for the forward search highlight"),
 	Field("HighlightPermanent", Bool, False,
 		"whether the forward search highlight will remain visible until the next " +
-		"mouse click instead of fading away instantly"),
+		"mouse click instead of fading away instantly",
+		doc="if true, highlight remains visible until the next " +
+		"mouse click (instead of fading away immediately)"),
 ]
 
 WindowMargin_FixedPageUI = [
@@ -187,7 +194,7 @@ EbookUI = [
 	# zeniko: "alternative" isn't that descriptive, if there's a FixedPageUI struct
 	# (and a ImageOnlyUI one), then UseFixedPageUI might be be clearer which alternative is meant
 	Field("UseFixedPageUI", Bool, False,
-		"if true, the UI used for PDF documents will be used for ebooks as well" +
+		"if true, the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
 	Field("TextColor", Color, 0x324b5f, "color for text"),
 	Field("BackgroundColor", Color, 0xd9f0fb, "color of the background (page)"),
@@ -195,13 +202,13 @@ EbookUI = [
 
 ImageOnlyUI = [
 	Struct("WindowMargin", WindowMargin_ImageOnlyUI,
-		"sizes of the top, right, bottom and left margin (in that order) between window and document",
+		"top, right, bottom and left margin (in that order) between window and document",
 		compact=True, expert=True),
 	Struct("PageSpacing", PageSpacing,
 		"horizontal and vertical distance between two pages in facing and book view modes",
 		structName="SizeI", compact=True),
 	Field("CbxMangaMode", Bool, False,
-		"default to displaying Comic Book files in manga mode (from right to left if showing 2 pages at a time)"),
+		"if true, default to displaying Comic Book files in manga mode (from right to left if showing 2 pages at a time)"),
 ]
 
 ChmUI = [
@@ -331,10 +338,12 @@ GlobalPrefs = [
 		"zoom levels which zooming steps through, excluding the virtual zoom levels " +
 		"fit page, fit content and fit width (minimal allowed value is 8.33 and maximum "
 		"allowed value is 6400)",
+		doc="sequence of zoom levels when zooming in/out. the lowest valid value " +
+		"is 8.33 and highest valid value is 6400",
 		expert=True),
 	Field("ZoomIncrement", Float, 0,
-		"zoom step size in percents relative to the current zoom level " +
-		"(if zero or negative, the values from ZoomLevels are used instead)",
+		"zoom step size in percents relative to the current zoom level. " +
+		"if zero or negative, the values from ZoomLevels are used instead",
 		expert=True),
 	Struct("PrinterDefaults", PrinterDefaults,
 		"these override the default settings in the Print dialog",
@@ -344,7 +353,7 @@ GlobalPrefs = [
 		expert=True),
 
 	Field("RememberStatePerDocument", Bool, True,
-		"if true, we store display settings for each document"),
+		"if true, we store display settings for each document separately"),
 	# kjk: we need an "auto" value, which means "auto-detect". We shouldn't serializee
 	# auto-detected language
 	# zeniko: one issue with "auto": since that setting isn't exposed in the UI, this
@@ -372,9 +381,9 @@ GlobalPrefs = [
 		"internal",
 		structName="FILETIME", compact=True),
 	Field("VersionToSkip", String, None,
-		"we won't show UI to ask to update to this version)"),
+		"we won't show UI to ask to update to this version"),
 	Field("RememberOpenedFiles", Bool, True,
-		"if true, we remember which files we opened and their settings"),
+		"if true, we remember which files we opened and their display settings"),
 	# kjk: probably should be removed as we'll provide a way to set colors explicitly
 	# zeniko: no, this is a UI exposed option for people who prefer changing their
 	# color scheme system wide
@@ -394,7 +403,9 @@ GlobalPrefs = [
 		"if true, we expose SyncTeX enhancements via Settings/Options menu"),
 	Field("DefaultDisplayMode", String, "automatic",
 		"how pages should be laid out by default, needs to be synchronized with " +
-		"DefaultDisplayMode after deserialization and before serialization"),
+		"DefaultDisplayMode after deserialization and before serialization",
+		doc="default layout of pages. Valid values: automatic, single page, facing, " +
+		"book view, continuous, continuous facing, continuous book view"),
 	Field("DefaultZoom", Utf8String, "fit page",
 		"default zoom factor in % (negative values indicate virtual settings)"),
 	Field("WindowState", Int, 1,

@@ -44,7 +44,7 @@ struct FixedPageUI {
 // UseFixedPageUI is true, FixedPageUI settings apply instead
 struct EbookUI {
     // if true, the UI used for PDF documents will be used for ebooks as
-    // well(enables printing and searching, disables automatic reflow)
+    // well (enables printing and searching, disables automatic reflow)
     bool useFixedPageUI;
     // color for text
     COLORREF textColor;
@@ -54,14 +54,14 @@ struct EbookUI {
 
 // customization options for Comic Book and images UI
 struct ComicBookUI {
-    // sizes of the top, right, bottom and left margin (in that order)
-    // between window and document
+    // top, right, bottom and left margin (in that order) between window
+    // and document
     WindowMargin windowMargin;
     // horizontal and vertical distance between two pages in facing and
     // book view modes
     SizeI pageSpacing;
-    // default to displaying Comic Book files in manga mode (from right to
-    // left if showing 2 pages at a time)
+    // if true, default to displaying Comic Book files in manga mode (from
+    // right to left if showing 2 pages at a time)
     bool cbxMangaMode;
 };
 
@@ -101,7 +101,7 @@ struct ForwardSearch {
     // will be changed to a rectangle at the left of the page (with the
     // indicated amount of margin from the page margin)
     int highlightOffset;
-    // width of the highlight rectangle for when HighlightOffset is set
+    // width of the highlight rectangle (if HighlightOffset is > 0)
     int highlightWidth;
     // color used for the forward search highlight
     COLORREF highlightColor;
@@ -212,14 +212,14 @@ struct GlobalPrefs {
     // levels fit page, fit content and fit width (minimal allowed value is
     // 8.33 and maximum allowed value is 6400)
     Vec<float> * zoomLevels;
-    // zoom step size in percents relative to the current zoom level (if
-    // zero or negative, the values from ZoomLevels are used instead)
+    // zoom step size in percents relative to the current zoom level. if
+    // zero or negative, the values from ZoomLevels are used instead
     float zoomIncrement;
     // these override the default settings in the Print dialog
     PrinterDefaults printerDefaults;
     // customization options for how we show forward search results
     ForwardSearch forwardSearch;
-    // if true, we store display settings for each document
+    // if true, we store display settings for each document separately
     bool rememberStatePerDocument;
     // [ISO code](langs.html) of the current UI language
     char * uiLanguage;
@@ -238,9 +238,10 @@ struct GlobalPrefs {
     bool checkForUpdates;
     // internal
     FILETIME timeOfLastUpdateCheck;
-    // we won't show UI to ask to update to this version)
+    // we won't show UI to ask to update to this version
     WCHAR * versionToSkip;
-    // if true, we remember which files we opened and their settings
+    // if true, we remember which files we opened and their display
+    // settings
     bool rememberOpenedFiles;
     // if true, we use Windows system colors for background/text color.
     // Over-rides other settings
