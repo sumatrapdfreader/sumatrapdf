@@ -24,10 +24,7 @@ class Field(object):
 		self.name = name; self.type = type; self.default = default; self.comment = comment
 		self.internal = internal; self.cname = name[0].lower() + name[1:] if name else None
 		self.expert = expert # "expert" prefs are the ones not exposed by the UI
-		self.docComment = doc
-
-	def doc(self):
-		return self.docComment or self.comment
+		self.docComment = doc or comment
 
 	def cdefault(self, built):
 		if self.type == Bool:
@@ -77,7 +74,6 @@ class Field(object):
 class Struct(Field):
 	def __init__(self, name, fields, comment, structName=None, compact=False, internal=False, expert=False, doc=None):
 		self.structName = structName or name
-		self.docComment = doc
 		super(Struct, self).__init__(name, Type("Struct", "%s" % self.structName), fields, comment, internal, expert, doc)
 		if compact: self.type.name = "Compact"
 
@@ -131,9 +127,7 @@ ForwardSearch = [
 	Field("HighlightColor", Color, 0x6581FF,
 		"color used for the forward search highlight"),
 	Field("HighlightPermanent", Bool, False,
-		"whether the forward search highlight will remain visible until the next " +
-		"mouse click instead of fading away instantly",
-		doc="if true, highlight remains visible until the next " +
+		"if true, highlight remains visible until the next " +
 		"mouse click (instead of fading away immediately)"),
 ]
 
@@ -232,7 +226,7 @@ ExternalViewer = [
 
 Favorite = [
 	Field("Name", String, None, "name of this favorite as shown in the menu"),
-	Field("PageNo", Int, 0, "which page this favorite is about", doc="number of bookmarked page"),
+	Field("PageNo", Int, 0, "number of bookmarked page"),
 	Field("PageLabel", String, None, "optional label for this page (if logical and physical page numbers are not the same)"),
 	Field("MenuId", Int, 0, "id of this favorite in the menu (assigned by AppendFavMenuItems)", internal=True),
 ]
@@ -245,6 +239,20 @@ FileSettings = [
 	Field("IsPinned", Bool, False,
 		"a document can be \"pinned\" to the Frequently Read list so that it " +
 		"isn't displaced by recently opened documents"),
+	Field("IsMissing", Bool, False,
+		"if a document can no longer be found but we still remember valuable state, " +
+		"it's classified as missing so that it can be hidden instead of removed",
+		doc="internal"),
+	Field("OpenCount", Int, 0,
+		"in order to prevent documents that haven't been opened for a while " +
+		"but used to be opened very frequently constantly remain in top positions, " +
+		"the openCount will be cut in half after every week, so that the " +
+		"Frequently Read list hopefully better reflects the currently relevant documents",
+		doc="internal"),
+	Field("DecryptionKey", Utf8String, None,
+		"Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
+		"crypt key (64 chars) - only applies for PDF documents",
+		doc="internal"),
 	# kjk: I think this only applies to certain settings. Should those settings
 	# be grouped in a separate struct and the name reflect that? How does it
 	# interact with GlobalPrefsOnly?
@@ -255,8 +263,7 @@ FileSettings = [
 	Field("UseDefaultState", Bool, False,
 		"if true, we use global defaults when opening this file (instead of " +
 		"the values below)"),
-	# NOTE: only add fields below UseDefaultState which are either internal or
-	#       should not be serialized when UseDefaultState is true!
+	# NOTE: fields below UseDefaultState aren't serialized if UseDefaultState is true!
 	Field("DisplayMode", String, "automatic",
 		"how pages should be laid out for this document, needs to be synchronized with " +
 		"DefaultDisplayMode after deserialization and before serialization",
@@ -266,13 +273,11 @@ FileSettings = [
 	Field("PageNo", Int, 1,
 		"scrollPos values are relative to the top-left corner of this page"),
 	Field("Zoom", Utf8String, "fit page",
-		"current zoom factor in % (negative values indicate virtual settings)",
-		doc="zoom (in %) or one of those values: fit page, fit width, fit content"),
+		"zoom (in %) or one of those values: fit page, fit width, fit content"),
 	Field("Rotation", Int, 0,
 		"how far pages have been rotated as a multiple of 90 degrees"),
 	Field("WindowState", Int, 0,
-		"default state of new SumatraPDF windows (same as the last closed)",
-		doc="state of the window. 1 is normal, 2 is maximized, "+
+		"state of the window. 1 is normal, 2 is maximized, "+
 		"3 is fullscreen, 4 is minimized"),
 	Struct("WindowPos", WindowPos,
 		"default position (can be on any monitor)", structName="RectI", compact=True),
@@ -284,20 +289,6 @@ FileSettings = [
 	Field("DisplayR2L", Bool, False,
 		"if true, the document is displayed right-to-left in facing and book view modes " +
 		"(only used for comic book documents)"),
-	Field("OpenCount", Int, 0,
-		"in order to prevent documents that haven't been opened for a while " +
-		"but used to be opened very frequently constantly remain in top positions, " +
-		"the openCount will be cut in half after every week, so that the " +
-		"Frequently Read list hopefully better reflects the currently relevant documents",
-		doc="internal"),
-	Field("IsMissing", Bool, False,
-		"if a document can no longer be found but we still remember valuable state, " +
-		"it's classified as missing so that it can be hidden instead of removed (internal)",
-		doc="internal"),
-	Field("DecryptionKey", Utf8String, None,
-		"Hex encoded MD5 fingerprint of file content (32 chars) followed by " +
-		"crypt key (64 chars) - only applies for PDF documents (internal)",
-		doc="internal"),
 	Field("ReparseIdx", Int, 0,
 		"internal"),
 	CompactArray("TocState", Int, None,
@@ -307,8 +298,7 @@ FileSettings = [
 		"so that we only have to save a diff instead of all states for the whole " +
 		"tree (which can be quite large) (internal)",
 		doc="internal"),
-	# NOTE: only add fields below UseDefaultState which are either internal or
-	#       should not be serialized when UseDefaultState is true!
+	# NOTE: fields below UseDefaultState aren't serialized if UseDefaultState is true!
 	Field("Thumbnail", Type(None, "RenderedBitmap *"), "NULL",
 		"thumbnails are saved as PNG files in sumatrapdfcache directory",
 		internal=True),
@@ -316,6 +306,9 @@ FileSettings = [
 		"temporary value needed for FileHistory::cmpOpenCount",
 		internal=True),
 ]
+
+# list of fields which aren't serialized when UseDefaultState is set
+rememberedFileSettings = ["DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"]
 
 GlobalPrefs = [
 	Field("MainWindowBackground", Color, 0x8000F2FF,
@@ -416,8 +409,7 @@ GlobalPrefs = [
 		"DefaultDisplayMode after deserialization and before serialization",
 		doc=defaultDisplayModeDoc),
 	Field("DefaultZoom", Utf8String, "fit page",
-		"default zoom factor in % (negative values indicate virtual settings)",
-		doc="default zoom (in %) or one of those values: fit page, fit width, fit content"),
+		"default zoom (in %) or one of those values: fit page, fit width, fit content"),
 	Field("WindowState", Int, 1,
 		"default state of new windows (same as the last closed)",
 		doc="default state of the window. 1 is normal, 2 is maximized, "+
@@ -529,7 +521,7 @@ def AssembleDefaults(struct, topLevelComment=None):
 			continue
 		if type(field) in [Struct, Array] and not field.type.name == "Compact":
 			assert topLevelComment
-			more.append("\n".join(FormatComment(field.comment, ";") + ["[%s]" % field.name, AssembleDefaults(field)]))
+			more.append("\n".join(FormatComment(field.docComment, ";") + ["[%s]" % field.name, AssembleDefaults(field)]))
 		else:
 			lines += FormatComment(field.comment, ";") + [field.inidefault()]
 	if more:
@@ -574,6 +566,15 @@ def main():
 		"They will overwrite the corresponding settings in SumatraPDF-settings.txt at every startup.")
 	content = "# Warning: This file only works for builds compiled with ENABLE_SUMATRAPDF_USER_INI !\n\n" + content
 	open("docs/SumatraPDF-user.ini", "wb").write(content.replace("\n", "\r\n").encode("utf-8-sig"))
+	
+	beforeUseDefaultState = True
+	for field in FileSettings:
+		if field.name == "UseDefaultState":
+			beforeUseDefaultState = False
+		elif beforeUseDefaultState:
+			assert field.name not in rememberedFileSettings, "%s shouldn't be serialized when UseDefaultState is true" % field.name
+		else:
+			assert field.name in rememberedFileSettings or field.internal, "%s won't be serialized when UseDefaultState is true" % field.name
 
 if __name__ == "__main__":
 	main()

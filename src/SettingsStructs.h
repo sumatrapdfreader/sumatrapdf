@@ -105,8 +105,8 @@ struct ForwardSearch {
     int highlightWidth;
     // color used for the forward search highlight
     COLORREF highlightColor;
-    // whether the forward search highlight will remain visible until the
-    // next mouse click instead of fading away instantly
+    // if true, highlight remains visible until the next mouse click
+    // (instead of fading away immediately)
     bool highlightPermanent;
 };
 
@@ -114,7 +114,7 @@ struct ForwardSearch {
 struct Favorite {
     // name of this favorite as shown in the menu
     WCHAR * name;
-    // which page this favorite is about
+    // number of bookmarked page
     int pageNo;
     // optional label for this page (if logical and physical page numbers
     // are not the same)
@@ -132,6 +132,19 @@ struct FileState {
     // a document can be "pinned" to the Frequently Read list so that it
     // isn't displaced by recently opened documents
     bool isPinned;
+    // if a document can no longer be found but we still remember valuable
+    // state, it's classified as missing so that it can be hidden instead
+    // of removed
+    bool isMissing;
+    // in order to prevent documents that haven't been opened for a while
+    // but used to be opened very frequently constantly remain in top
+    // positions, the openCount will be cut in half after every week, so
+    // that the Frequently Read list hopefully better reflects the
+    // currently relevant documents
+    int openCount;
+    // Hex encoded MD5 fingerprint of file content (32 chars) followed by
+    // crypt key (64 chars) - only applies for PDF documents
+    char * decryptionKey;
     // if true, we use global defaults when opening this file (instead of
     // the values below)
     bool useDefaultState;
@@ -143,11 +156,12 @@ struct FileState {
     PointI scrollPos;
     // scrollPos values are relative to the top-left corner of this page
     int pageNo;
-    // current zoom factor in % (negative values indicate virtual settings)
+    // zoom (in %) or one of those values: fit page, fit width, fit content
     char * zoom;
     // how far pages have been rotated as a multiple of 90 degrees
     int rotation;
-    // default state of new SumatraPDF windows (same as the last closed)
+    // state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4
+    // is minimized
     int windowState;
     // default position (can be on any monitor)
     RectI windowPos;
@@ -159,19 +173,6 @@ struct FileState {
     // if true, the document is displayed right-to-left in facing and book
     // view modes (only used for comic book documents)
     bool displayR2L;
-    // in order to prevent documents that haven't been opened for a while
-    // but used to be opened very frequently constantly remain in top
-    // positions, the openCount will be cut in half after every week, so
-    // that the Frequently Read list hopefully better reflects the
-    // currently relevant documents
-    int openCount;
-    // if a document can no longer be found but we still remember valuable
-    // state, it's classified as missing so that it can be hidden instead
-    // of removed (internal)
-    bool isMissing;
-    // Hex encoded MD5 fingerprint of file content (32 chars) followed by
-    // crypt key (64 chars) - only applies for PDF documents (internal)
-    char * decryptionKey;
     // internal
     int reparseIdx;
     // tocState is an array of ids for ToC items that have been toggled by
@@ -252,7 +253,8 @@ struct GlobalPrefs {
     // with DefaultDisplayMode after deserialization and before
     // serialization
     WCHAR * defaultDisplayMode;
-    // default zoom factor in % (negative values indicate virtual settings)
+    // default zoom (in %) or one of those values: fit page, fit width, fit
+    // content
     char * defaultZoom;
     // default state of new windows (same as the last closed)
     int windowState;
@@ -398,6 +400,9 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, filePath),        Type_String,     NULL                     },
     { offsetof(FileState, favorites),       Type_Array,      (intptr_t)&gFavoriteInfo },
     { offsetof(FileState, isPinned),        Type_Bool,       false                    },
+    { offsetof(FileState, isMissing),       Type_Bool,       false                    },
+    { offsetof(FileState, openCount),       Type_Int,        0                        },
+    { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
     { offsetof(FileState, useDefaultState), Type_Bool,       false                    },
     { offsetof(FileState, displayMode),     Type_String,     (intptr_t)L"automatic"   },
     { offsetof(FileState, scrollPos),       Type_Compact,    (intptr_t)&gPointIInfo   },
@@ -409,13 +414,10 @@ static const FieldInfo gFileStateFields[] = {
     { offsetof(FileState, showToc),         Type_Bool,       true                     },
     { offsetof(FileState, sidebarDx),       Type_Int,        0                        },
     { offsetof(FileState, displayR2L),      Type_Bool,       false                    },
-    { offsetof(FileState, openCount),       Type_Int,        0                        },
-    { offsetof(FileState, isMissing),       Type_Bool,       false                    },
-    { offsetof(FileState, decryptionKey),   Type_Utf8String, NULL                     },
     { offsetof(FileState, reparseIdx),      Type_Int,        0                        },
     { offsetof(FileState, tocState),        Type_IntArray,   NULL                     },
 };
-static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0IsPinned\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0OpenCount\0IsMissing\0DecryptionKey\0ReparseIdx\0TocState" };
+static StructInfo gFileStateInfo = { sizeof(FileState), 19, gFileStateFields, "FilePath\0Favorites\0IsPinned\0IsMissing\0OpenCount\0DecryptionKey\0UseDefaultState\0DisplayMode\0ScrollPos\0PageNo\0Zoom\0Rotation\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0DisplayR2L\0ReparseIdx\0TocState" };
 
 static const FieldInfo gFILETIMEFields[] = {
     { offsetof(FILETIME, dwHighDateTime), Type_Int, 0 },
