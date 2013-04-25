@@ -124,7 +124,7 @@ struct Favorite {
     int menuId;
 };
 
-// information about opened files
+// information about opened files (in most recently used order)
 struct FileState {
     // path of the document
     WCHAR * filePath;
@@ -213,9 +213,8 @@ struct GlobalPrefs {
     // list of additional external viewers for various file types (can have
     // multiple entries for the same format)
     Vec<ExternalViewer *> * externalViewers;
-    // zoom levels which zooming steps through, excluding the virtual zoom
-    // levels fit page, fit content and fit width (minimal allowed value is
-    // 8.33 and maximum allowed value is 6400)
+    // zoom levels which zooming steps through in addition to Fit Page, Fit
+    // Width and the minimum and maximum allowed values (8.33 and 6400)
     Vec<float> * zoomLevels;
     // zoom step size in percents relative to the current zoom level. if
     // zero or negative, the values from ZoomLevels are used instead
@@ -278,7 +277,7 @@ struct GlobalPrefs {
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
-    // information about opened files
+    // information about opened files (in most recently used order)
     Vec<FileState *> * fileStates;
     // timestamp of the last update check
     FILETIME timeOfLastUpdateCheck;

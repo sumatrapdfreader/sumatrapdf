@@ -347,12 +347,10 @@ GlobalPrefs = [
 		expert=True),
 	# zeniko: the below prefs apply only to FixedPageUI and ImageOnlyUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
-		"zoom levels which zooming steps through, excluding the virtual zoom levels " +
-		"fit page, fit content and fit width (minimal allowed value is 8.33 and maximum "
-		"allowed value is 6400)",
-		doc="sequence of zoom levels when zooming in/out. the lowest valid value " +
-		"is 8.33 and highest valid value is 6400",
-		expert=True),
+		"zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
+		"the minimum and maximum allowed values (8.33 and 6400)",
+		expert=True,
+		doc="sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400"),
 	Field("ZoomIncrement", Float, 0,
 		"zoom step size in percents relative to the current zoom level. " +
 		"if zero or negative, the values from ZoomLevels are used instead",
@@ -439,7 +437,7 @@ GlobalPrefs = [
 		"if true, we show a list of frequently read documents when no document is loaded"),
 	# file history and favorites
 	Array("FileStates", FileSettings,
-		"information about opened files"),
+		"information about opened files (in most recently used order)"),
 	Struct("TimeOfLastUpdateCheck", FileTime,
 		"timestamp of the last update check",
 		structName="FILETIME", compact=True,
@@ -534,7 +532,7 @@ def AssembleDefaults(struct, topLevelComment=None):
 			assert topLevelComment
 			more.append("\n".join(FormatComment(field.docComment, ";") + ["[%s]" % field.name, AssembleDefaults(field)]))
 		else:
-			lines += FormatComment(field.comment, ";") + [field.inidefault()]
+			lines += FormatComment(field.docComment, ";") + [field.inidefault()]
 	if more:
 		lines += [""] + more
 	return "\n".join(lines) + "\n"

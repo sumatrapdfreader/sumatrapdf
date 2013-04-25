@@ -1359,6 +1359,7 @@ float DisplayModel::NextZoomStep(float towardsLevel)
 #endif
     Vec<float> *zoomLevels = gGlobalPrefs->zoomLevels;
     CrashIf(zoomLevels->Count() != 0 && (zoomLevels->At(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
+    CrashIf(zoomLevels->Count() != 0 && zoomLevels->At(0) > zoomLevels->Last());
 
     float currZoom = ZoomAbsolute();
     float pageZoom = (float)HUGE_VAL, widthZoom = (float)HUGE_VAL;
@@ -1371,36 +1372,35 @@ float DisplayModel::NextZoomStep(float towardsLevel)
         }
     }
     CrashIf(!AsChmEngine() && (pageZoom == (float)HUGE_VAL || widthZoom == (float)HUGE_VAL));
+    CrashIf(pageZoom > widthZoom);
     pageZoom *= 100 / dpiFactor; widthZoom *= 100 / dpiFactor;
 
-#define FLOAT_FUZZ 0.01f
+    const float FUZZ = 0.01f;
     float newZoom = towardsLevel;
     if (currZoom < towardsLevel) {
         for (size_t i = 0; i < zoomLevels->Count(); i++) {
-            if (zoomLevels->At(i) - FLOAT_FUZZ <= currZoom)
-                continue;
-            if (currZoom + FLOAT_FUZZ < pageZoom && pageZoom < zoomLevels->At(i) - FLOAT_FUZZ)
-                newZoom = ZOOM_FIT_PAGE;
-            else if (currZoom + FLOAT_FUZZ < widthZoom && widthZoom < zoomLevels->At(i) - FLOAT_FUZZ)
-                newZoom = ZOOM_FIT_WIDTH;
-            else
+            if (zoomLevels->At(i) - FUZZ > currZoom) {
                 newZoom = zoomLevels->At(i);
-            break;
+                break;
+            }
         }
+        if (currZoom + FUZZ < pageZoom && pageZoom < newZoom - FUZZ)
+            newZoom = ZOOM_FIT_PAGE;
+        else if (currZoom + FUZZ < widthZoom && widthZoom < newZoom - FUZZ)
+            newZoom = ZOOM_FIT_WIDTH;
     } else if (currZoom > towardsLevel) {
         for (size_t i = zoomLevels->Count(); i > 0; i--) {
-            if (currZoom <= zoomLevels->At(i-1) + FLOAT_FUZZ)
-                continue;
-            if (zoomLevels->At(i-1) + FLOAT_FUZZ < pageZoom && pageZoom < currZoom - FLOAT_FUZZ)
-                newZoom = ZOOM_FIT_PAGE;
-            else if (zoomLevels->At(i-1) + FLOAT_FUZZ < widthZoom && widthZoom < currZoom - FLOAT_FUZZ)
-                newZoom = ZOOM_FIT_WIDTH;
-            else
-                newZoom = zoomLevels->At(i-1);
-            break;
+            if (zoomLevels->At(i - 1) + FUZZ < currZoom) {
+                newZoom = zoomLevels->At(i - 1);
+                break;
+            }
         }
+        // skip Fit Width if it results in the same value as Fit Page (same as when zooming in)
+        if (newZoom + FUZZ < widthZoom && widthZoom < currZoom - FUZZ && widthZoom != pageZoom)
+            newZoom = ZOOM_FIT_WIDTH;
+        else if (newZoom + FUZZ < pageZoom && pageZoom < currZoom - FUZZ)
+            newZoom = ZOOM_FIT_PAGE;
     }
-#undef FLOAT_FUZZ
 
     return newZoom;
 }
