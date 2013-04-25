@@ -1477,6 +1477,8 @@ void fz_flatten_fill_path(fz_gel *gel, fz_path *path, const fz_matrix *ctm, floa
 void fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
 void fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
 
+fz_irect *fz_bound_path_accurate(fz_context *ctx, fz_irect *bbox, const fz_irect *scissor, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
+
 /* SumatraPDF: support transfer functions */
 typedef struct fz_transfer_function_s fz_transfer_function;
 struct fz_transfer_function_s

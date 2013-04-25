@@ -23,31 +23,19 @@ else
 $(error unknown build setting: '$(build)')
 endif
 
-ifeq "$(OS)" "Linux"
-SYS_FREETYPE_INC := $(shell pkg-config --cflags freetype2)
-SYS_OPENJPEG_INC := $(shell pkg-config --cflags libopenjpeg)
-X11_LIBS := $(shell pkg-config --libs x11 xext)
-endif
-
-ifeq "$(OS)" "FreeBSD"
-SYS_FREETYPE_INC := $(shell pkg-config --cflags freetype2)
-LDFLAGS += -L/usr/local/lib
-X11_LIBS := $(shell pkg-config --libs x11 xext)
-endif
-
-ifeq "$(OS)" "SunOS"
-SYS_FREETYPE_INC := $(shell pkg-config --cflags freetype2)
-LDFLAGS += -L/usr/local/lib
-X11_LIBS := $(shell pkg-config --libs x11 xext)
-endif
-
-# Mac OS X build depends on some thirdparty libs
+# Mac OS X doesn't have pkg-config so we hard code paths.
 ifeq "$(OS)" "Darwin"
-SYS_FREETYPE_INC := -I/usr/X11R6/include/freetype2
-CFLAGS += -I/usr/X11R6/include
-LDFLAGS += -L/usr/X11R6/lib
+SYS_FREETYPE_CFLAGS = -I/usr/X11R6/include/freetype2
+SYS_X11_CFLAGS = -I/usr/X11R6/include
+SYS_X11_LIBS = -L/usr/X11R6/lib -lX11 -lXext
 RANLIB_CMD = ranlib $@
-X11_LIBS := -lX11 -lXext
+
+# Other Unixes use pkg-config for system third party libs
+else
+SYS_FREETYPE_CFLAGS = $(shell pkg-config --cflags freetype2)
+SYS_OPENJPEG_CFLAGS = $(shell pkg-config --cflags libopenjpeg)
+SYS_X11_CFLAGS = $(shell pkg-config --cflags x11 xext)
+SYS_X11_LIBS = $(shell pkg-config --libs x11 xext)
 endif
 
 # The following section is an example of how to simply do cross-compilation

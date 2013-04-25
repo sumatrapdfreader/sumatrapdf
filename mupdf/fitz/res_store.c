@@ -231,6 +231,18 @@ fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_
 
 	type->keep_key(ctx, key);
 	fz_lock(ctx, FZ_LOCK_ALLOC);
+
+	/* Fill out the item. To start with, we always set item->next == item
+	 * and item->prev == item. This is so that we can spot items that have
+	 * been put into the hash table without having made it into the linked
+	 * list yet. */
+	item->key = key;
+	item->val = val;
+	item->size = itemsize;
+	item->next = item;
+	item->prev = item;
+	item->type = type;
+
 	/* If we can index it fast, put it into the hash table. This serves
 	 * to check whether we have one there already. */
 	if (use_hash)
@@ -289,12 +301,6 @@ fz_store_item(fz_context *ctx, void *key, void *val_, unsigned int itemsize, fz_
 	}
 	store->size += itemsize;
 
-	item->key = key;
-	item->val = val;
-	item->size = itemsize;
-	item->next = NULL;
-	item->type = type;
-
 	/* Regardless of whether it's indexed, it goes into the linked list */
 	item->next = store->head;
 	if (item->next)
@@ -345,24 +351,31 @@ fz_find_item(fz_context *ctx, fz_store_free_fn *free, void *key, fz_store_type *
 	}
 	if (item)
 	{
-		/* LRU: Move the block to the front */
-		/* Unlink from present position */
-		if (item->next)
-			item->next->prev = item->prev;
-		else
-			store->tail = item->prev;
-		if (item->prev)
-			item->prev->next = item->next;
-		else
-			store->head = item->next;
-		/* Insert at head */
-		item->next = store->head;
-		if (item->next)
-			item->next->prev = item;
-		else
-			store->tail = item;
-		item->prev = NULL;
-		store->head = item;
+		/* Momentarily things can be in the hash table (and hence can
+		 * be found) without being in the list. Don't attempt to LRU
+		 * these. We indicate such items by setting
+		 * item->next == item. */
+		if (item->next != item)
+		{
+			/* LRU: Move the block to the front */
+			/* Unlink from present position */
+			if (item->next)
+				item->next->prev = item->prev;
+			else
+				store->tail = item->prev;
+			if (item->prev)
+				item->prev->next = item->next;
+			else
+				store->head = item->next;
+			/* Insert at head */
+			item->next = store->head;
+			if (item->next)
+				item->next->prev = item;
+			else
+				store->tail = item;
+			item->prev = NULL;
+			store->head = item;
+		}
 		/* And bump the refcount before returning */
 		if (item->val->refs > 0)
 			item->val->refs++;
@@ -406,14 +419,20 @@ fz_remove_item(fz_context *ctx, fz_store_free_fn *free, void *key, fz_store_type
 	}
 	if (item)
 	{
-		if (item->next)
-			item->next->prev = item->prev;
-		else
-			store->tail = item->prev;
-		if (item->prev)
-			item->prev->next = item->next;
-		else
-			store->head = item->next;
+		/* Momentarily things can be in the hash table without being
+		 * in the list. Don't attempt to unlink these. We indicate
+		 * such items by setting item->next == item. */
+		if (item->next != item)
+		{
+			if (item->next)
+				item->next->prev = item->prev;
+			else
+				store->tail = item->prev;
+			if (item->prev)
+				item->prev->next = item->next;
+			else
+				store->head = item->next;
+		}
 		drop = (item->val->refs > 0 && --item->val->refs == 0);
 		fz_unlock(ctx, FZ_LOCK_ALLOC);
 		if (drop)

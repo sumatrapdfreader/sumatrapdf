@@ -105,7 +105,8 @@ $(OUT)/ft_%.o: $(FREETYPE_DIR)/src/type1/%.c	| $(OUT)
 	$(CC_CMD) $(FT_CFLAGS)
 
 else
-CFLAGS += $(SYS_FREETYPE_INC)
+SYS_FREETYPE_CFLAGS := $(SYS_FREETYPE_CFLAGS)
+CFLAGS += $(SYS_FREETYPE_CFLAGS)
 endif
 
 # --- JBIG2DEC ---
@@ -218,7 +219,8 @@ $(OPENJPEG_LIB): $(addprefix $(OUT)/opj_, $(OPENJPEG_SRC:%.c=%.o))
 $(OUT)/opj_%.o: $(OPENJPEG_DIR)/libopenjpeg/%.c | $(OUT)
 	$(CC_CMD) -DOPJ_STATIC
 else
-CFLAGS += $(SYS_OPENJPEG_INC)
+SYS_OPENJPEG_CFLAGS := $(SYS_OPENJPEG_CFLAGS)
+CFLAGS += $(SYS_OPENJPEG_CFLAGS)
 endif
 
 # --- ZLIB ---
@@ -243,4 +245,13 @@ ZLIB_SRC := \
 $(ZLIB_LIB): $(addprefix $(OUT)/zlib_, $(ZLIB_SRC:%.c=%.o))
 $(OUT)/zlib_%.o: $(ZLIB_DIR)/%.c | $(OUT)
 	$(CC_CMD)
+endif
+
+# --- X11 ---
+
+ifeq "$(NOX11)" ""
+SYS_X11_CFLAGS := $(SYS_X11_CFLAGS)
+SYS_X11_LIBS := $(SYS_X11_LIBS)
+CFLAGS += $(SYS_X11_CFLAGS)
+LIBS += $(SYS_X11_LIBS)
 endif

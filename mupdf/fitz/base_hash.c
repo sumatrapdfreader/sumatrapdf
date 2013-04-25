@@ -141,6 +141,8 @@ do_hash_insert(fz_context *ctx, fz_hash_table *table, void *key, void *val, unsi
 	}
 }
 
+/* Entered with the lock taken, held throughout and at exit, UNLESS the lock
+ * is the alloc lock in which case it may be momentarily dropped. */
 static void
 fz_resize_hash(fz_context *ctx, fz_hash_table *table, int newsize)
 {
@@ -166,8 +168,11 @@ fz_resize_hash(fz_context *ctx, fz_hash_table *table, int newsize)
 		if (table->size >= newsize)
 		{
 			/* Someone else fixed it before we could lock! */
-			fz_unlock(ctx, table->lock);
+			if (table->lock == FZ_LOCK_ALLOC)
+				fz_unlock(ctx, table->lock);
 			fz_free(ctx, newents);
+			if (table->lock == FZ_LOCK_ALLOC)
+				fz_lock(ctx, table->lock);
 			return;
 		}
 	}

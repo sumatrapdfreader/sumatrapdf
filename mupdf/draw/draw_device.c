@@ -2166,3 +2166,24 @@ fz_new_draw_device_type3(fz_context *ctx, fz_pixmap *dest)
 	ddev->flags |= FZ_DRAWDEV_FLAGS_TYPE3;
 	return dev;
 }
+
+fz_irect *
+fz_bound_path_accurate(fz_context *ctx, fz_irect *bbox, const fz_irect *scissor, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth)
+{
+	fz_gel *gel = fz_new_gel(ctx);
+
+	fz_reset_gel(gel, scissor);
+	if (stroke)
+	{
+		if (stroke->dash_len > 0)
+			fz_flatten_dash_path(gel, path, stroke, ctm, flatness, linewidth);
+		else
+			fz_flatten_stroke_path(gel, path, stroke, ctm, flatness, linewidth);
+	}
+	else
+		fz_flatten_fill_path(gel, path, ctm, flatness);
+	fz_bound_gel(gel, bbox);
+	fz_free_gel(gel);
+
+	return bbox;
+}
