@@ -95,7 +95,8 @@ struct PrinterDefaults {
     bool printAsImage;
 };
 
-// customization options for how we show forward search results
+// customization options for how we show forward search results (used
+// from LaTeX editors)
 struct ForwardSearch {
     // when set to a positive value, the forward search highlight style
     // will be changed to a rectangle at the left of the page (with the
@@ -114,10 +115,10 @@ struct ForwardSearch {
 struct Favorite {
     // name of this favorite as shown in the menu
     WCHAR * name;
-    // number of bookmarked page
+    // number of the bookmarked page
     int pageNo;
-    // optional label for this page (if logical and physical page numbers
-    // are not the same)
+    // label for this page (only present if logical and physical page
+    // numbers are not the same)
     WCHAR * pageLabel;
     // id of this favorite in the menu (assigned by AppendFavMenuItems)
     int menuId;
@@ -152,9 +153,9 @@ struct FileState {
     // synchronized with DefaultDisplayMode after deserialization and
     // before serialization
     WCHAR * displayMode;
-    // how far this document has been scrolled
+    // how far this document has been scrolled (in x and y direction)
     PointI scrollPos;
-    // scrollPos values are relative to the top-left corner of this page
+    // number of the last read page
     int pageNo;
     // zoom (in %) or one of those values: fit page, fit width, fit content
     char * zoom;
@@ -173,7 +174,9 @@ struct FileState {
     // if true, the document is displayed right-to-left in facing and book
     // view modes (only used for comic book documents)
     bool displayR2L;
-    // internal
+    // index into an ebook's HTML data from which reparsing has to happen
+    // in order to restore the last viewed page (i.e. the equivalent of
+    // PageNo for the ebook UI)
     int reparseIdx;
     // tocState is an array of ids for ToC items that have been toggled by
     // the user (i.e. aren't in their default expansion state). - Note: We
@@ -188,7 +191,8 @@ struct FileState {
 };
 
 // Most values on this structure can be updated through the UI and are
-// persisted in SumatraPDF.dat (previously in sumatrapdfprefs.dat)
+// persisted in SumatraPDF-settings.txt (previously in
+// sumatrapdfprefs.dat)
 struct GlobalPrefs {
     // background color of the non-document windows, traditionally yellow
     COLORREF mainWindowBackground;
@@ -218,15 +222,17 @@ struct GlobalPrefs {
     float zoomIncrement;
     // these override the default settings in the Print dialog
     PrinterDefaults printerDefaults;
-    // customization options for how we show forward search results
+    // customization options for how we show forward search results (used
+    // from LaTeX editors)
     ForwardSearch forwardSearch;
     // if true, we store display settings for each document separately
+    // (i.e. everything after UseDefaultState in FileStates)
     bool rememberStatePerDocument;
-    // [ISO code](langs.html) of the current UI language
+    // ISO code of the current UI language
     char * uiLanguage;
     // if true, we show the toolbar at the top of the window
     bool showToolbar;
-    // if true, we show favorites sidebar
+    // if true, we show the Favorites sidebar
     bool showFavorites;
     // a list of extensions that SumatraPDF has associated itself with and
     // will reassociate if a different application takes over (e.g. ".pdf
@@ -237,7 +243,7 @@ struct GlobalPrefs {
     bool associateSilently;
     // if true, we check once a day if an update is available
     bool checkForUpdates;
-    // we won't show UI to ask to update to this version
+    // we won't ask again to update to this version
     WCHAR * versionToSkip;
     // if true, we remember which files we opened and their display
     // settings
@@ -245,9 +251,10 @@ struct GlobalPrefs {
     // if true, we use Windows system colors for background/text color.
     // Over-rides other settings
     bool useSysColors;
-    // pattern used to launch the editor when doing inverse search
+    // pattern used to launch the LaTeX editor when doing inverse search
     WCHAR * inverseSearchCmdLine;
-    // if true, we expose SyncTeX enhancements via Settings/Options menu
+    // if true, we expose the SyncTeX inverse search command line in
+    // Settings -> Options
     bool enableTeXEnhancements;
     // how pages should be laid out by default, needs to be synchronized
     // with DefaultDisplayMode after deserialization and before
@@ -268,12 +275,12 @@ struct GlobalPrefs {
     // if both favorites and bookmarks parts of sidebar are visible, this
     // is the height of bookmarks (table of contents) part
     int tocDy;
-    // if true, we show a list of frequently read documents in empty
-    // window. Otherwise we show info about program
+    // if true, we show a list of frequently read documents when no
+    // document is loaded
     bool showStartPage;
     // information about opened files
     Vec<FileState *> * fileStates;
-    // internal
+    // timestamp of the last update check
     FILETIME timeOfLastUpdateCheck;
     // week count since 2011-01-01 needed to "age" openCount values in file
     // history

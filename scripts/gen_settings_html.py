@@ -1,20 +1,16 @@
 #!/usr/bin/env python
 
-import os
-import gen_settingsstructs
-from gen_settingsstructs import Struct, Array
+import os, util2, gen_settingsstructs
 
 """
 TODO:
- * ability to link to a more comprehensive documentation e.g. for color formats,
-   languages
  * for gen_langs_html, show languages that don't have enough translations
    in a separate table
 """
 
 g_version = "2.3"
 
-html_tmpl = """
+html_tmpl = """\
 <!doctype html>
 
 <html>
@@ -67,6 +63,11 @@ body {
 	color: #555; /* this is darker gray */
 	font-weight: normal;
 }
+
+/* TODO: make this prettier */
+.adv {
+	background-color: #ffffec;
+}
 </style>
 </head>
 
@@ -78,19 +79,21 @@ body {
 
 <p>You can change the look and behavior of
 <a href="http://blog.kowalczyk.info/software/sumatrapdf/">SumatraPDF</a>
-by editing <code>SumatraPDF-settings.txt</code> file.</p>
+by editing the file <code>SumatraPDF-settings.txt</code>. The file is stored in
+<code>%APPDATA%\SumatraPDF</code> directory for the installed version or in the
+same directory as <code>SumatraPDF.exe</code> executable for the portable version.</p>
 
-<p>Use menu <code>Settings/Advanced Settings...</code> to open settings file
+<p>Use the menu item <code>Settings -> Advanced Settings...</code> to open the settings file
 with your default text editor.</p>
 
-<p>The file is stored in <code>%APPDATA%\SumatraPDF</code> directory for the
-installed version or in the same directory as <code>SumataPDF.exe</code>
-executable for the portable version.</p>
-
 <p>The file is in a simple text format. Below is an explanation of
-what different settings mean and what is their default value:</p>
+what the different settings mean and what their default values are.</p>
 
-<p>Do not modify settings marked as internal.</p>
+<p>Highlighted settings can't be changed from the UI. Modifying other settings
+directly in this file is not recommended.</p>
+
+<p>If you add or remove lines with square brackets, <b>make sure to always add/remove
+square brackets in pairs</b>! Else you risk losing all the data following them.</p>
 
 </div>
 
@@ -99,20 +102,18 @@ what different settings mean and what is their default value:</p>
 </pre>
 
 <div class=desc>
-<h3 id="color">Syntx for color values</h3>
+<h3 id="color">Syntax for color values</h3>
 
 <p>
-The syntax for colors is: <code>#aarrggbb</code> or <code>#rrggbb</code>.</p>
+The syntax for colors is: <code>#rrggbb</code>.</p>
 <p>The components are hex values (ranging from 00 to FF) and stand for:
 <ul>
-  <li><code>aa</code> : alpha (transparency). 0 means fully transparent (invisible)
-      color. FF (255) means fully opaque color</li>
   <li><code>rr</code> : red component</li>
   <li><code>gg</code> : green component</li>
   <li><code>bb</code> : blue component</li>
 </ul>
-For example #ff0000 means red color. You can use <a href="http://colorschemedesigner.com/">
-ColorScheme Designer</a> to pick a color.
+For example #ff0000 means red color. You can use <a href="http://www.colorpicker.com/">Color Picker</a>
+or <a href="http://colorschemedesigner.com/">ColorScheme Designer</a> to pick a color.
 </p>
 </div>
 
@@ -120,7 +121,7 @@ ColorScheme Designer</a> to pick a color.
 </html>
 """
 
-langs_html_tmpl = """
+langs_html_tmpl = """\
 <!doctype html>
 
 <html>
@@ -186,7 +187,7 @@ of <code>UiLanguage</code> setting in <a href="settings.html">settings file</a>.
 """
 
 #indent_str = "&nbsp;&nbsp;"
-indent_str = "  "
+indent_str = "    "
 
 # if s in the form: "foo](bar.html)", returns ["foo", "bar.html"].
 # otherwise returns ["foo"]
@@ -201,7 +202,7 @@ def extract_url(s):
 	return [word, url]
 
 def gen_comment(comment, start, first = False):
-	line_len = 80
+	line_len = 100
 	s = start + '<span class=cm>'
 	if not first:
 		s = "\n" + s
@@ -231,6 +232,8 @@ def gen_comment(comment, start, first = False):
 		left -= len(word)
 		if word == "color ":
 			word = '<a href="#color">color</a> '
+		elif word == "colors ":
+			word = '<a href="#color">colors</a> '
 		s += word
 	s = s.rstrip()
 	s += '</span>'
@@ -240,18 +243,20 @@ def gen_struct(struct, comment=None, indent=""):
 	lines = []
 	if comment:
 		lines += gen_comment(comment, "") + [""]
+	inside_expert = False
 	for field in struct.default:
 		if field.internal:
 			continue
+		start_idx = len(lines)
 		first = (field == struct.default[0])
-		if type(field) in [Array] and not field.type.name == "Compact":
+		if type(field) == gen_settingsstructs.Array and not field.type.name == "Compact":
 			lines += gen_comment(field.docComment, indent, first)
-			indent2 = indent + indent_str
+			indent2 = indent + indent_str[:len(indent_str)/2]
 			start = "%s%s [\n%s[" % (indent, field.name, indent2)
 			end = "%s]\n%s]" % (indent2, indent)
-			inside = gen_struct(field, None, indent2 + indent_str)
+			inside = gen_struct(field, None, indent + indent_str)
 			lines += [start, inside, end]
-		elif type(field) in [Struct] and not field.type.name == "Compact":
+		elif type(field) == gen_settingsstructs.Struct and not field.type.name == "Compact":
 			lines += gen_comment(field.docComment, indent, first)
 			start = "%s%s [" % (indent, field.name)
 			end = "%s]" % indent
@@ -260,6 +265,11 @@ def gen_struct(struct, comment=None, indent=""):
 		else:
 			s = field.inidefault(commentChar="").lstrip()
 			lines += gen_comment(field.docComment, indent, first) + [indent + s]
+		if field.expert and not inside_expert:
+			lines[start_idx] = '<div class=adv>' + lines[start_idx]
+		elif not field.expert and inside_expert:
+			lines[start_idx] = '</div>' + lines[start_idx]
+		inside_expert = field.expert
 	return "\n".join(lines)
 
 class Lang(object):
@@ -303,6 +313,7 @@ def gen_html():
 		open(p, "w").write(s)
 
 if __name__ == "__main__":
+	util2.chdir_top()
 	gen_langs_html()
 	gen_html()
 	gen_settingsstructs.main()
