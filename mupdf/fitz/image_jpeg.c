@@ -219,8 +219,9 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 			*yresp = 0;
 		}
 
-		if (*xresp <= 0) *xresp = 72;
-		if (*yresp <= 0) *yresp = 72;
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2278 */
+		if (*xresp <= 0) *xresp = 96;
+		if (*yresp <= 0) *yresp = 96;
 	}
 	fz_always(ctx)
 	{
