@@ -475,8 +475,10 @@ __declspec(noinline) bool GetCurrentThreadCallstack(str::Str<char>& s)
 void LogCallstack()
 {
     str::Str<char> s(2048);
-    if (GetCurrentThreadCallstack(s))
+    if (GetCurrentThreadCallstack(s)) {
         plog(s.Get());
+        plog("-------\n\n");
+    }
 }
 
 void GetAllThreadsCallstacks(str::Str<char>& s)

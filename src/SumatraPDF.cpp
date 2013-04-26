@@ -4751,6 +4751,8 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
                     // Maybe instead of having a single provider per win, we should always create a new one
                     // like in this sample: http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
                     // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
+                    // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
+                    // and since WM_GETOBJECT is called many times, it accumulates
                     return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
                 }
             }

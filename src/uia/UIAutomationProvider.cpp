@@ -85,9 +85,12 @@ HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue)
 
 };
 
+#include "DbgHelpDyn.h"
+
 SumatraUIAutomationProvider::SumatraUIAutomationProvider(HWND hwnd) :
     refCount(1), canvasHwnd(hwnd), startpage(NULL), document(NULL)
 {
+    dbghelp::LogCallstack();
     startpage = new SumatraUIAutomationStartPageProvider(hwnd, this);
 }
 
@@ -155,11 +158,13 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(const IID 
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::AddRef(void)
 {
+    dbghelp::LogCallstack();
     return InterlockedIncrement(&refCount);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::Release(void)
 {
+    dbghelp::LogCallstack();
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
     if (0 == res) {
