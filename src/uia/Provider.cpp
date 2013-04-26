@@ -2,11 +2,11 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "UIAutomationProvider.h"
+#include "uia/Provider.h"
 
-#include "UIAutomationConstants.h"
-#include "UIAutomationDocumentProvider.h"
-#include "UIAutomationStartPageProvider.h"
+#include "uia/Constants.h"
+#include "uia/DocumentProvider.h"
+#include "uia/StartPageProvider.h"
 #include "WinUtil.h"
 
 // not available under Win2000

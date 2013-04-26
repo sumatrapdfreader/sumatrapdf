@@ -1125,47 +1125,47 @@
 				Name="Automation"
 				>
 				<File
-					RelativePath="..\src\uia\UIAutomationDocumentProvider.cpp"
+					RelativePath="..\src\uia\Constants.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationDocumentProvider.h"
+					RelativePath="..\src\uia\DocumentProvider.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationPageProvider.cpp"
+					RelativePath="..\src\uia\DocumentProvider.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationPageProvider.h"
+					RelativePath="..\src\uia\PageProvider.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationProvider.cpp"
+					RelativePath="..\src\uia\PageProvider.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationProvider.h"
+					RelativePath="..\src\uia\Provider.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationStartPageProvider.cpp"
+					RelativePath="..\src\uia\Provider.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationStartPageProvider.h"
+					RelativePath="..\src\uia\StartPageProvider.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationTextRange.cpp"
+					RelativePath="..\src\uia\StartPageProvider.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationTextRange.h"
+					RelativePath="..\src\uia\TextRange.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\src\uia\UIAutomationConstants.h"
+					RelativePath="..\src\uia\TextRange.h"
 					>
 				</File>
 			</Filter>

@@ -2,12 +2,12 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "UIAutomationPageProvider.h"
+#include "uia/PageProvider.h"
 
 #include "DisplayModel.h"
-#include "UIAutomationConstants.h"
-#include "UIAutomationDocumentProvider.h"
-#include "UIAutomationProvider.h"
+#include "uia/Constants.h"
+#include "uia/DocumentProvider.h"
+#include "uia/Provider.h"
 #include "TextSelection.h"
 
 SumatraUIAutomationPageProvider::SumatraUIAutomationPageProvider(int pageNum,HWND canvasHwnd, DisplayModel*dm, SumatraUIAutomationDocumentProvider* root) :

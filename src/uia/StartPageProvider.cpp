@@ -2,10 +2,10 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "UIAutomationStartPageProvider.h"
+#include "uia/StartPageProvider.h"
 
-#include "UIAutomationConstants.h"
-#include "UIAutomationProvider.h"
+#include "uia/Constants.h"
+#include "uia/Provider.h"
 
 SumatraUIAutomationStartPageProvider::SumatraUIAutomationStartPageProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root) :
     refCount(1), canvasHwnd(canvasHwnd), root(root)

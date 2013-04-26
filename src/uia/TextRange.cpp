@@ -2,13 +2,13 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "UIAutomationTextRange.h"
+#include "uia/TextRange.h"
 
 #include "DisplayModel.h"
-#include "UIAutomationDocumentProvider.h"
-#include "UIAutomationConstants.h"
-#include "UIAutomationPageProvider.h"
-#include "UIAutomationProvider.h"
+#include "uia/DocumentProvider.h"
+#include "uia/Constants.h"
+#include "uia/PageProvider.h"
+#include "uia/Provider.h"
 #include "TextSelection.h"
 
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document) :

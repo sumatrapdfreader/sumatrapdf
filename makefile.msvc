@@ -188,9 +188,8 @@ ENGINE_OBJS = \
 	$(OS)\EbookEngine.obj $(EBOOK_OBJS)
 
 UIA_OBJS = \
-	$(OUIA)\UIAutomationProvider.obj $(OUIA)\UIAutomationStartPageProvider.obj \
-	$(OUIA)\UIAutomationDocumentProvider.obj $(OUIA)\UIAutomationPageProvider.obj \
-	$(OUIA)\UIAutomationTextRange.obj
+	$(OUIA)\Provider.obj $(OUIA)\StartPageProvider.obj $(OUIA)\DocumentProvider.obj \
+	$(OUIA)\PageProvider.obj $(OUIA)\TextRange.obj
 
 MAIN_UI_OBJS = \
 	$(OS)\AppPrefs.obj $(OS)\DisplayModel.obj $(OS)\CrashHandler.obj \

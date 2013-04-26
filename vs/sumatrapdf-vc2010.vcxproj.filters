@@ -210,19 +210,19 @@
     <ClCompile Include="..\src\MuiEbookPageDef.cpp">
       <Filter>sumatra\ebook</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\uia\UIAutomationDocumentProvider.cpp">
+    <ClCompile Include="..\src\uia\DocumentProvider.cpp">
       <Filter>sumatra\uia</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\uia\UIAutomationPageProvider.cpp">
+    <ClCompile Include="..\src\uia\PageProvider.cpp">
       <Filter>sumatra\uia</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\uia\UIAutomationProvider.cpp">
+    <ClCompile Include="..\src\uia\Provider.cpp">
       <Filter>sumatra\uia</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\uia\UIAutomationStartPageProvider.cpp">
+    <ClCompile Include="..\src\uia\StartPageProvider.cpp">
       <Filter>sumatra\uia</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\uia\UIAutomationTextRange.cpp">
+    <ClCompile Include="..\src\uia\TextRange.cpp">
       <Filter>sumatra\uia</Filter>
     </ClCompile>
     <ClCompile Include="..\src\mui\Mui.cpp">
@@ -1022,22 +1022,22 @@
     <ClInclude Include="..\src\MuiEbookPageDef.h">
       <Filter>sumatra\ebook</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\uia\UIAutomationConstants.h">
+    <ClInclude Include="..\src\uia\Constants.h">
       <Filter>sumatra\uia</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\uia\UIAutomationDocumentProvider.h">
+    <ClInclude Include="..\src\uia\DocumentProvider.h">
       <Filter>sumatra\uia</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\uia\UIAutomationPageProvider.h">
+    <ClInclude Include="..\src\uia\PageProvider.h">
       <Filter>sumatra\uia</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\uia\UIAutomationProvider.h">
+    <ClInclude Include="..\src\uia\Provider.h">
       <Filter>sumatra\uia</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\uia\UIAutomationStartPageProvider.h">
+    <ClInclude Include="..\src\uia\StartPageProvider.h">
       <Filter>sumatra\uia</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\uia\UIAutomationTextRange.h">
+    <ClInclude Include="..\src\uia\TextRange.h">
       <Filter>sumatra\uia</Filter>
     </ClInclude>
     <ClInclude Include="..\src\mui\Mui.h">

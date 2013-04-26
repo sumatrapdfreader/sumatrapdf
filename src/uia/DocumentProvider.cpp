@@ -2,14 +2,14 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include "UIAutomationDocumentProvider.h"
+#include "uia/DocumentProvider.h"
 
 #include "DisplayModel.h"
 #include "FileUtil.h"
-#include "UIAutomationConstants.h"
-#include "UIAutomationPageProvider.h"
-#include "UIAutomationProvider.h"
-#include "UIAutomationTextRange.h"
+#include "uia/Constants.h"
+#include "uia/PageProvider.h"
+#include "uia/Provider.h"
+#include "uia/TextRange.h"
 
 SumatraUIAutomationDocumentProvider::SumatraUIAutomationDocumentProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root) :
     refCount(1), canvasHwnd(canvasHwnd), root(root),

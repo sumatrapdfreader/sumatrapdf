@@ -49,7 +49,7 @@ using namespace Gdiplus;
 #include "Toolbar.h"
 #include "Touch.h"
 #include "Translations.h"
-#include "uia/UIAutomationProvider.h"
+#include "uia/Provider.h"
 #include "UITask.h"
 #include "Version.h"
 #include "WindowInfo.h"
