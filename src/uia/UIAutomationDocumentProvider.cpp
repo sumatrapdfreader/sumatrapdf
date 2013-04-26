@@ -11,7 +11,6 @@
 #include "UIAutomationProvider.h"
 #include "UIAutomationTextRange.h"
 
-
 SumatraUIAutomationDocumentProvider::SumatraUIAutomationDocumentProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root) :
     refCount(1), canvasHwnd(canvasHwnd), root(root),
     released(true), child_first(NULL), child_last(NULL),
@@ -19,6 +18,7 @@ SumatraUIAutomationDocumentProvider::SumatraUIAutomationDocumentProvider(HWND ca
 {
     //root->AddRef(); Don't add refs to our parent & owner. 
 }
+
 SumatraUIAutomationDocumentProvider::~SumatraUIAutomationDocumentProvider()
 {
     this->FreeDocument();
@@ -47,6 +47,7 @@ void SumatraUIAutomationDocumentProvider::LoadDocument(DisplayModel* newDm)
     dm = newDm;
     released = false;
 }
+
 void SumatraUIAutomationDocumentProvider::FreeDocument()
 {
     // release our refs to the page elements
@@ -69,21 +70,25 @@ void SumatraUIAutomationDocumentProvider::FreeDocument()
         child_last = NULL;
     }
 }
+
 bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const
 {
     return !released;
 }
+
 DisplayModel* SumatraUIAutomationDocumentProvider::GetDM()
 {
     assert(IsDocumentLoaded());
     assert(dm);
     return dm;
 }
+
 SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetFirstPage()
 {
     assert(IsDocumentLoaded());
     return child_first;
 }
+
 SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetLastPage()
 {
     assert(IsDocumentLoaded());
@@ -116,10 +121,12 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(co
     *ppvObject = NULL;
     return E_NOINTERFACE;
 }
+
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::AddRef(void)
 {
     return InterlockedIncrement(&refCount);
 }
+
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Release(void)
 {
     LONG res = InterlockedDecrement(&refCount);
@@ -161,6 +168,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum Nav
         return E_INVALIDARG;
     }
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFEARRAY **pRetVal)
 {
     if (pRetVal == NULL)
@@ -180,6 +188,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFE
     *pRetVal = psa;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetEmbeddedFragmentRoots(SAFEARRAY **pRetVal)
 {
     if (pRetVal == NULL)
@@ -189,16 +198,18 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetEmbeddedFragme
     *pRetVal = NULL;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::SetFocus(void)
 {
-    //okay
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_BoundingRectangle(struct UiaRect *pRetVal)
 {
     //Share area with the canvas uia provider
     return root->get_BoundingRectangle(pRetVal);
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_FragmentRoot(IRawElementProviderFragmentRoot **pRetVal)
 {
     if (pRetVal == NULL)
@@ -224,6 +235,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPatternProvide
     *pRetVal = NULL;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(PROPERTYID propertyId,VARIANT *pRetVal)
 {
     if (pRetVal == NULL)
@@ -261,6 +273,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
     pRetVal->vt = VT_EMPTY;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_HostRawElementProvider(IRawElementProviderSimple **pRetVal)
 {
     if (pRetVal == NULL)
@@ -268,6 +281,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_HostRawElemen
     *pRetVal = NULL;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_ProviderOptions(ProviderOptions *pRetVal)
 {
     if (pRetVal == NULL)
@@ -299,6 +313,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFE
     *pRetVal = psa;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(SAFEARRAY * *pRetVal)
 {
     if (pRetVal == NULL)
@@ -338,6 +353,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     *pRetVal = psa;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IRawElementProviderSimple *childElement, ITextRangeProvider **pRetVal)
 {
     if (pRetVal == NULL || childElement == NULL)
@@ -350,12 +366,14 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IR
     *pRetVal = new SumatraUIAutomationTextRange(this, ((SumatraUIAutomationPageProvider*)childElement)->pageNum);
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromPoint(struct UiaPoint point, ITextRangeProvider **pRetVal)
 {
     // TODO: Is this even used? We wont support editing either way
     // so there won't be even a caret visible. Hence empty ranges are useless?
     return E_NOTIMPL;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_DocumentRange(ITextRangeProvider **pRetVal)
 {
     if (pRetVal == NULL)
@@ -369,6 +387,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_DocumentRange
     *pRetVal = documentRange;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_SupportedTextSelection(enum SupportedTextSelection *pRetVal)
 {
     if (pRetVal == NULL)

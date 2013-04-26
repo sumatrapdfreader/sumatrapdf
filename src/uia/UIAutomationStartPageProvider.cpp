@@ -12,10 +12,11 @@ SumatraUIAutomationStartPageProvider::SumatraUIAutomationStartPageProvider(HWND 
 {
     //root->AddRef(); Don't add refs to our parent & owner. 
 }
+
 SumatraUIAutomationStartPageProvider::~SumatraUIAutomationStartPageProvider()
 {
 }
-    
+
 //IUnknown
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::QueryInterface(const IID &iid,void **ppvObject)
 {
@@ -35,10 +36,12 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::QueryInterface(c
     *ppvObject = NULL;
     return E_NOINTERFACE;
 }
+
 ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::AddRef(void)
 {
     return InterlockedIncrement(&refCount);
 }
+
 ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Release(void)
 {
     LONG res = InterlockedDecrement(&refCount);
@@ -48,7 +51,6 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Release(void)
     }
     return res;
 }
-
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Navigate(enum NavigateDirection direction, IRawElementProviderFragment **pRetVal)
 {
@@ -70,6 +72,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::Navigate(enum Na
         return E_INVALIDARG;
     }
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetRuntimeId(SAFEARRAY **pRetVal)
 {
     if (pRetVal == NULL)
@@ -89,6 +92,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetRuntimeId(SAF
     *pRetVal = psa;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetEmbeddedFragmentRoots(SAFEARRAY **pRetVal)
 {
     if (pRetVal == NULL)
@@ -98,16 +102,18 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetEmbeddedFragm
     *pRetVal = NULL;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::SetFocus(void)
 {
-    //okay
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_BoundingRectangle(struct UiaRect *pRetVal)
 {
     //Share area with the canvas uia provider
     return root->get_BoundingRectangle(pRetVal);
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_FragmentRoot(IRawElementProviderFragmentRoot **pRetVal)
 {
     if (pRetVal == NULL)
@@ -119,12 +125,12 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_FragmentRoot
     return S_OK;
 }
 
-
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPatternProvider(PATTERNID patternId,IUnknown **pRetVal)
 {
     *pRetVal = NULL;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPropertyValue(PROPERTYID propertyId,VARIANT *pRetVal)
 {
     if (propertyId == UIA_NamePropertyId) {
@@ -136,6 +142,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPropertyValue
     pRetVal->vt = VT_EMPTY;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_HostRawElementProvider(IRawElementProviderSimple **pRetVal)
 {
     if (pRetVal == NULL)
@@ -143,6 +150,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_HostRawEleme
     *pRetVal = NULL;
     return S_OK;
 }
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_ProviderOptions(ProviderOptions *pRetVal)
 {
     if (pRetVal == NULL)
