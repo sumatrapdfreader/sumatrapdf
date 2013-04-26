@@ -8,9 +8,9 @@
 #include "SumatraPDF.h"
 #include "Toolbar.h"
 #include "Translations.h"
+#include "uia/Provider.h"
 #include "WindowInfo.h"
 #include "WinUtil.h"
-#include "uia/UIAutomationProvider.h"
 
 #define COL_SELECTION_RECT      RGB(0xF5, 0xFC, 0x0C)
 

@@ -13,8 +13,8 @@
 #include "StressTesting.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "uia/Provider.h"
 #include "WinUtil.h"
-#include "uia/UIAutomationProvider.h"
 
 WindowInfo::WindowInfo(HWND hwnd) :
     dm(NULL), menu(NULL), hwndFrame(hwnd),
