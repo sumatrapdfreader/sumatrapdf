@@ -14,7 +14,7 @@
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document) :
     refCount(1), document(document)
 {
-    document->AddRef(); // hold on to the document
+    document->AddRef();
 
     SetToNullRange();
 }
@@ -22,7 +22,7 @@ SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDo
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, int pageNum) :
     refCount(1), document(document)
 {
-    document->AddRef(); // hold on to the document
+    document->AddRef();
 
     startPage = pageNum;
     startGlyph = 0;
@@ -33,7 +33,7 @@ SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDo
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDocumentProvider* document, TextSelection* range) :
     refCount(1), document(document)
 {
-    document->AddRef(); // hold on to the document
+    document->AddRef();
 
     range->GetGlyphRange(&startPage, &startGlyph, &endPage, &endGlyph);
     // null-range check
@@ -45,7 +45,7 @@ SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(SumatraUIAutomationDo
 SumatraUIAutomationTextRange::SumatraUIAutomationTextRange(const SumatraUIAutomationTextRange&b) :
     refCount(1), document(b.document)
 {
-    document->AddRef(); // hold on to the document
+    document->AddRef();
 
     startPage = b.startPage;
     startGlyph = b.startGlyph;
@@ -93,8 +93,8 @@ bool SumatraUIAutomationTextRange::IsEmptyRange() const
 
 int SumatraUIAutomationTextRange::GetPageGlyphCount(int pageNum)
 {
-    assert(document->IsDocumentLoaded());
-    assert(pageNum > 0);
+    AssertCrash(document->IsDocumentLoaded());
+    AssertCrash(pageNum > 0);
 
     int pageLen;
     document->GetDM()->textCache->GetData(pageNum, &pageLen);
@@ -103,7 +103,7 @@ int SumatraUIAutomationTextRange::GetPageGlyphCount(int pageNum)
 
 int SumatraUIAutomationTextRange::GetPageCount()
 {
-    assert(document->IsDocumentLoaded());
+    AssertCrash(document->IsDocumentLoaded());
 
     return document->GetDM()->PageCount();
 }
@@ -132,14 +132,19 @@ int SumatraUIAutomationTextRange::FindPreviousWordEndpoint(int pageno, int idx, 
     int textLen;
     const WCHAR *pageText = document->GetDM()->textCache->GetData(pageno, &textLen);
     
-    if (dontReturnInitial)
+    if (dontReturnInitial) {
         for (; idx > 0; idx--)
+        {
             if (iswordchar(pageText[idx - 1]))
                 break;
+        }
+    }
 
     for (; idx > 0; idx--)
+    {
         if (!iswordchar(pageText[idx - 1]))
             break;
+    }
     return idx;
 }
 
@@ -148,14 +153,19 @@ int SumatraUIAutomationTextRange::FindNextWordEndpoint(int pageno, int idx, bool
     int textLen;
     const WCHAR *pageText = document->GetDM()->textCache->GetData(pageno, &textLen);
 
-    if (dontReturnInitial)
+    if (dontReturnInitial) {
         for (; idx < textLen; idx++)
+        {
             if (iswordchar(pageText[idx]))
                 break;
+        }
+    }
 
     for (; idx < textLen; idx++)
+    {
         if (!iswordchar(pageText[idx]))
             break;
+    }
     return idx;
 }
 
@@ -165,13 +175,19 @@ int SumatraUIAutomationTextRange::FindPreviousLineEndpoint(int pageno, int idx, 
     const WCHAR *pageText = document->GetDM()->textCache->GetData(pageno, &textLen);
     
     if (dontReturnInitial)
+    {
         for (; idx > 0; idx--)
+        {
             if (pageText[idx - 1] != L'\n')
                 break;
+        }
+    }
 
-    for (; idx > 0; idx--)
+    for (; idx > 0; idx--) 
+    {
         if (pageText[idx - 1] == L'\n')
             break;
+    }
     return idx;
 }
 
@@ -180,14 +196,19 @@ int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool
     int textLen;
     const WCHAR *pageText = document->GetDM()->textCache->GetData(pageno, &textLen);
     
-    if (dontReturnInitial)
+    if (dontReturnInitial) {
         for (; idx < textLen; idx++)
+        {
             if (pageText[idx] != L'\n')
                 break;
+        }
+    }
 
     for (; idx < textLen; idx++)
+    {
         if (pageText[idx] == L'\n')
             break;
+    }
     return idx;
 }
 
@@ -196,7 +217,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::QueryInterface(const IID
 {
     if (ppvObject == NULL)
         return E_POINTER;
-    
+
+    // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
+    // respond to IUnknown
     if (iid == __uuidof(ITextRangeProvider)) {
         *ppvObject = static_cast<ITextRangeProvider*>(this);
         this->AddRef(); //New copy has entered the universe
@@ -523,11 +546,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByUnit(TextP
         // return false when cannot be moved
         virtual bool NextEndpoint() const {
             // HACK: Declaring these as pure virtual causes "unreferenced local variable" warnings ==> define a dummy body to get rid of warnings
-            assert(false && "should not happen");
+            CrashIf(true);
             return false;
         }
         virtual bool PrevEndpoint() const {
-            assert(false && "should not happen");
+            CrashIf(true);
             return false;
         }
 

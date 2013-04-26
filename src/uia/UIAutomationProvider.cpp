@@ -105,7 +105,7 @@ SumatraUIAutomationProvider::~SumatraUIAutomationProvider()
 
 void SumatraUIAutomationProvider::OnDocumentLoad(DisplayModel *dm)
 {
-    assert(!document);
+    AssertCrash(!document);
 
     document = new SumatraUIAutomationDocumentProvider(canvasHwnd, this);
     document->LoadDocument(dm);
@@ -133,6 +133,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(const IID 
     if (ppvObject == NULL)
         return E_POINTER;
 
+    // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
+    // respond to IUnknown
     if (iid == __uuidof(IRawElementProviderSimple)) {
         *ppvObject = static_cast<IRawElementProviderSimple*>(this);
         this->AddRef(); //New copy has entered the universe
@@ -216,12 +218,12 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::Navigate(enum NavigateDir
 {
     if (pRetVal == NULL)
         return E_POINTER;
-    
-    //No siblings, no parent
+
+    *pRetVal = NULL;
+    // no siblings, no parent
     if (direction == NavigateDirection_Parent ||
         direction == NavigateDirection_NextSibling ||
         direction == NavigateDirection_PreviousSibling) {
-        *pRetVal = NULL;
         return S_OK;
     } else if (direction == NavigateDirection_FirstChild ||
              direction == NavigateDirection_LastChild) {
@@ -244,7 +246,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetRuntimeId(SAFEARRAY **
     if (pRetVal == NULL)
         return E_POINTER;
 
-    //Top-level elements should return NULL
+    // top-level elements should return NULL
     *pRetVal = NULL;
     return S_OK;
 }
@@ -254,7 +256,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetEmbeddedFragmentRoots(
     if (pRetVal == NULL)
         return E_POINTER;
 
-    //No other roots => return NULL
+    // no other roots => return NULL
     *pRetVal = NULL;
     return S_OK;
 }
@@ -269,7 +271,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_BoundingRectangle(str
     if (pRetVal == NULL)
         return E_POINTER;
 
-    //Return Bounding Rect of the Canvas area
+    // return Bounding Rect of the Canvas area
     RECT canvas_rect;
     GetWindowRect(canvasHwnd, &canvas_rect);
 
@@ -296,7 +298,6 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::ElementProviderFromPoint(
     if (pRetVal == NULL)
         return E_POINTER;
 
-    // traverse the tree
     *pRetVal = this->GetElementFromPoint(x,y,this);
     return S_OK;
 }
@@ -321,7 +322,7 @@ IRawElementProviderFragment* SumatraUIAutomationProvider::GetElementFromPoint(do
     if (!root)
         return NULL;
 
-    //Check the children
+    // check the children
     IRawElementProviderFragment* it;
     root->Navigate(NavigateDirection_FirstChild,&it);
 
@@ -333,17 +334,17 @@ IRawElementProviderFragment* SumatraUIAutomationProvider::GetElementFromPoint(do
         if (rect.left <= x && x <= rect.left+rect.width &&
             rect.top <= y && y <= rect.top+rect.height) {
             IRawElementProviderFragment* leaf = GetElementFromPoint(x,y,it);
-            it->Release(); //release our copy
+            it->Release();
             return leaf;
         }
-        
+
         // go to next element, release old one
         IRawElementProviderFragment* old_it = it;
         old_it->Navigate(NavigateDirection_NextSibling,&it);
         old_it->Release();
     }
 
-    //No such child
+    // no such child
     root->AddRef();
     return root;
 }

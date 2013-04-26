@@ -43,6 +43,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::QueryInterface(const 
     if (ppvObject == NULL)
         return E_POINTER;
 
+    // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
+    // respond to IUnknown
     if (iid == __uuidof(IRawElementProviderFragment)) {
         *ppvObject = static_cast<IRawElementProviderFragment*>(this);
         this->AddRef(); //New copy has entered the universe
@@ -85,27 +87,23 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::Navigate(enum Navigat
     if (released)
         return E_FAIL;
     
+    *pRetVal =  NULL;
     if (direction == NavigateDirection_PreviousSibling) {
         *pRetVal = sibling_prev;
-        if (*pRetVal)
-            (*pRetVal)->AddRef();
-        return S_OK;
     } else if (direction == NavigateDirection_NextSibling) {
         *pRetVal = sibling_next;
-        if (*pRetVal)
-            (*pRetVal)->AddRef();
-        return S_OK;
     } else if (direction == NavigateDirection_FirstChild ||
              direction == NavigateDirection_LastChild) {
-        *pRetVal = NULL;
-        return S_OK;
+        // do nothing
     } else if (direction == NavigateDirection_Parent) {
         *pRetVal = root;
-        (*pRetVal)->AddRef();
-        return S_OK;
     } else {
         return E_INVALIDARG;
     }
+
+    if (*pRetVal)
+        (*pRetVal)->AddRef();
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetRuntimeId(SAFEARRAY **pRetVal)
@@ -117,7 +115,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetRuntimeId(SAFEARRA
     if (!psa)
         return E_OUTOFMEMORY;
     
-    //RuntimeID magic, use hwnd to differentiate providers of different windows
+    // RuntimeID magic, use hwnd to differentiate providers of different windows
     int rId[] = { (int)canvasHwnd, SUMATRA_UIA_PAGE_RUNTIME_ID(pageNum) };
     for (LONG i = 0; i < 2; i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
@@ -133,7 +131,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetEmbeddedFragmentRo
     if (pRetVal == NULL)
         return E_POINTER;
 
-    //No other roots => return NULL
+    // no other roots => return NULL
     *pRetVal = NULL;
     return S_OK;
 }
@@ -172,7 +170,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_FragmentRoot(IRaw
     if (released)
         return E_FAIL;
 
-    //Let our parent to handle this
+    // let our parent to handle this
     return root->get_FragmentRoot(pRetVal);
 }
 
@@ -183,7 +181,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetPatternProvider(PA
 
     if (patternId == UIA_ValuePatternId) {
         *pRetVal = static_cast<IValueProvider*>(this);
-        this->AddRef(); //New copy has entered the universe
+        this->AddRef();
         return S_OK;
     }
 

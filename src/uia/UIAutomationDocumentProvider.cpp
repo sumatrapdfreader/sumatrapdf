@@ -51,24 +51,25 @@ void SumatraUIAutomationDocumentProvider::LoadDocument(DisplayModel* newDm)
 void SumatraUIAutomationDocumentProvider::FreeDocument()
 {
     // release our refs to the page elements
-    if (!released) {
-        released = true;
-        dm = NULL;
+    if (released)
+        return;
 
-        SumatraUIAutomationPageProvider* it = child_first;
-        while (it) {
-            SumatraUIAutomationPageProvider* current = it;
-            it = it->sibling_next;
+    released = true;
+    dm = NULL;
 
-            current->released = true; // disallow DisplayModel access
-            current->Release();
-        }
+    SumatraUIAutomationPageProvider* it = child_first;
+    while (it) {
+        SumatraUIAutomationPageProvider* current = it;
+        it = it->sibling_next;
 
-        // we have released our refs from these objects
-        // we are not allowed to access them anymore
-        child_first = NULL;
-        child_last = NULL;
+        current->released = true; // disallow DisplayModel access
+        current->Release();
     }
+
+    // we have released our refs from these objects
+    // we are not allowed to access them anymore
+    child_first = NULL;
+    child_last = NULL;
 }
 
 bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const
@@ -78,20 +79,20 @@ bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const
 
 DisplayModel* SumatraUIAutomationDocumentProvider::GetDM()
 {
-    assert(IsDocumentLoaded());
-    assert(dm);
+    AssertCrash(IsDocumentLoaded());
+    AssertCrash(dm);
     return dm;
 }
 
 SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetFirstPage()
 {
-    assert(IsDocumentLoaded());
+    AssertCrash(IsDocumentLoaded());
     return child_first;
 }
 
 SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetLastPage()
 {
-    assert(IsDocumentLoaded());
+    AssertCrash(IsDocumentLoaded());
     return child_last;
 }
 
@@ -100,6 +101,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(co
     if (ppvObject == NULL)
         return E_POINTER;
 
+    // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
+    // respond to IUnknown
     if (iid == __uuidof(IRawElementProviderFragment)) {
         *ppvObject = static_cast<IRawElementProviderFragment*>(this);
         this->AddRef(); //New copy has entered the universe
@@ -178,7 +181,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFE
     if (!psa)
         return E_OUTOFMEMORY;
     
-    //RuntimeID magic, use hwnd to differentiate providers of different windows
+    // RuntimeID magic, use hwnd to differentiate providers of different windows
     int rId[] = { (int)canvasHwnd, SUMATRA_UIA_DOCUMENT_RUNTIME_ID };
     for (LONG i = 0; i < 2; i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
@@ -194,7 +197,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetEmbeddedFragme
     if (pRetVal == NULL)
         return E_POINTER;
 
-    //No other roots => return NULL
+    // no other roots => return NULL
     *pRetVal = NULL;
     return S_OK;
 }
@@ -206,7 +209,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::SetFocus(void)
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_BoundingRectangle(struct UiaRect *pRetVal)
 {
-    //Share area with the canvas uia provider
+    // share area with the canvas uia provider
     return root->get_BoundingRectangle(pRetVal);
 }
 
@@ -215,7 +218,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_FragmentRoot(
     if (pRetVal == NULL)
         return E_POINTER;
 
-    //Return the root node
+    // return the root node
     *pRetVal = root;
     root->AddRef();
     return S_OK;
@@ -330,12 +333,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
             it->dm->GetPageInfo(it->pageNum)->visibleRatio > 0.0f) {
             rangeArray.Append(new SumatraUIAutomationTextRange(this, it->pageNum));
         }
-        
-        // go to next element
         it = it->sibling_next;
     }
 
-    // create safe array
     SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, rangeArray.Size());
     if (!psa) {
         for (size_t i = 0; i < rangeArray.Size(); i++) {

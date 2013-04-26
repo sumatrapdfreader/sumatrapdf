@@ -4740,10 +4740,14 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             return OnGesture(*win, msg, wParam, lParam);
 
         case WM_GETOBJECT:
+            // TODO: should we check for UiaRootObjectId, as in http://msdn.microsoft.com/en-us/library/windows/desktop/ff625912.aspx ???
             // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
-            if (!gPluginMode) { 
-                if (win->CreateUIAProvider())
+            if (!gPluginMode) {
+                if (win->CreateUIAProvider()) {
+                    // TODO: should win->uia_provider->Release() as in http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
+                    // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
                     return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
+                }
             }
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
