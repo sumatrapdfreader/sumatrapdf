@@ -338,8 +338,11 @@ static void GetAddressInfo(str::Str<char>& s, DWORD64 addr)
         AppendAddress(s, offset);
         s.AppendFmt(" %s", moduleShort);
 
-        if (symName)
+        if (symName) {
             s.AppendFmt("!%s+0x%x", symName, (int)symDisp);
+        } else if (symDisp != 0) {
+            s.AppendFmt("+0x%x", (int)symDisp);
+        }
         IMAGEHLP_LINE64 line;
         line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
         DWORD disp;

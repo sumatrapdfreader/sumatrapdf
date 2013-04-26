@@ -25,7 +25,7 @@ static UiaRaiseAutomationEventProc _UiaRaiseAutomationEvent = NULL;
 static UiaRaiseStructureChangedEventProc _UiaRaiseStructureChangedEvent = NULL;
 static UiaGetReservedNotSupportedValueProc _UiaGetReservedNotSupportedValue = NULL;
 
-static void Initialize()
+void Initialize()
 {
     static bool funcsLoaded = false;
     if (funcsLoaded)

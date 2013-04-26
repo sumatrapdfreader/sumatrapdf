@@ -62,6 +62,7 @@ private:
 
 namespace uia {
 
+void    Initialize();
 LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *);
 HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple ** pProvider);
 HRESULT RaiseAutomationEvent(IRawElementProviderSimple * pProvider, EVENTID id);

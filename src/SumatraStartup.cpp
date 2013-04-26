@@ -320,6 +320,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     srand((unsigned int)time(NULL));
 
+    // load uiautomationcore.dll before installing crash handler (i.e. initializing
+    // dbghelp.dll), so that we get function names/offsets in GetCallstack()
+    uia::Initialize();
+
     {
         ScopedMem<WCHAR> symDir;
         ScopedMem<WCHAR> tmpDir(path::GetTempPath());
