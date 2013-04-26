@@ -4741,11 +4741,16 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         case WM_GETOBJECT:
             // TODO: should we check for UiaRootObjectId, as in http://msdn.microsoft.com/en-us/library/windows/desktop/ff625912.aspx ???
+            // On the other hand http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
+            // says that UiaReturnRawElementProvider() should be called regardless of lParam
             // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
             if (!gPluginMode) {
                 if (win->CreateUIAProvider()) {
                     // TODO: should win->uia_provider->Release() as in http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
                     // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
+                    // Maybe instead of having a single provider per win, we should always create a new one
+                    // like in this sample: http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
+                    // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
                     return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
                 }
             }
