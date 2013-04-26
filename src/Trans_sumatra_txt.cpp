@@ -262,7 +262,7 @@ const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
 const char * gTranslations_sq = 
   "&P\303\253r\0"\
   "P\303\253rmasa &reale\tCtrl+1\0"\
-  "\0"\
+  "Opsionet e &avancuara...\0"\
   "&Gjith\303\253 faqet e p\303\253rzgjedhura\0"\
   "&Prapa\tAlt+Left Arrow\0"\
   "&Lib\303\253r\tCtrl+8\0"\
@@ -408,7 +408,7 @@ const char * gTranslations_sq =
   "\0"\
   "SumatraPDF t\303\253 jet\303\253 aplikacioni standard p\303\253r skedat PDF?\0"\
   "SumatraPDF t\303\253 jet\303\253 lexuesi standard i PDF-ve\0"\
-  "\0"\
+  "M\303\253nyra Man&ga\0"\
   "Krahasoj madh\303\253sin\303\253 e shkrimit\0"\
   "Dokumente Mobi\0"\
   "Modifikuar m\303\253:\0"\
@@ -997,7 +997,7 @@ const char * gTranslations_am =
 const char * gTranslations_az = 
   "Proqram &haqq\304\261nda\0"\
   "&H\311\231qiqi \303\266l\303\247\303\274\tCtrl+1\0"\
-  "\0"\
+  "&\306\217lav\311\231 se\303\247iml\311\231r...\0"\
   "&B\303\274t\303\274n se\303\247ilmi\305\237 s\311\231hif\311\231l\311\231r\0"\
   "&Geri\tAlt+Left Arrow\0"\
   "&Kitab format\304\261\tCtrl+8\0"\
@@ -1143,7 +1143,7 @@ const char * gTranslations_az =
   "\0"\
   "SumatraPDF PDF fayllar\304\261n g\303\266r\303\274nt\303\274l\311\231nm\311\231si \303\274\303\247\303\274n standart proqram edilsin?\0"\
   "SumatraPDF-i PDF fayllarla \311\231laq\311\231l\311\231ndir\0"\
-  "\0"\
+  "Man&qa rejimi\0"\
   "Registri n\311\231z\311\231r\311\231 al\0"\
   "Mobi s\311\231n\311\231dl\311\231ri\0"\
   "D\311\231yi\305\237iklik tarixi:\0"\
@@ -11287,7 +11287,7 @@ const char * gTranslations_sl =
 const char * gTranslations_es = 
   "&Acerca de...\0"\
   "T&ama\303\261o real\tCtrl+1\0"\
-  "\0"\
+  "Opciones &avanzadas...\0"\
   "Tod&as las p\303\241ginas seleccionadas\0"\
   "A&tr\303\241s\tAlt+<-\0"\
   "&Vista de libro\tCtrl+8\0"\
@@ -11433,7 +11433,7 @@ const char * gTranslations_es =
   "\0"\
   "\302\277Convertir SumatraPDF en la aplicaci\303\263n predeterminada para archivos PDF?\0"\
   "Hacer SumatraPDF el lector PDF predeterminado\0"\
-  "\0"\
+  "Modo man&ga\0"\
   "Coincidir may\303\272sculas y min\303\272sculas\0"\
   "Documentos Mobi\0"\
   "Modificado:\0"\
