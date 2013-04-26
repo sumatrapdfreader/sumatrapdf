@@ -21,27 +21,24 @@
 #define QM(x) _QUOTEME(x)
 #define QM3(x, y, z) _QUOTEME3(x, y, z)
 
-#define CURR_VERSION_STR_SHORT QM(CURR_VERSION)
-
 // version as displayed in UI and included in resources
 #ifndef SVN_PRE_RELEASE_VER
  #ifndef DEBUG
-  #define CURR_VERSION_STR TEXT(QM(CURR_VERSION))
+  #define CURR_VERSION_STRA QM(CURR_VERSION)
  #else
   // hack: adds " (dbg)" after the version
-  #define CURR_VERSION_STR TEXT(QM3(CURR_VERSION, \x20, (dbg)))
   #define CURR_VERSION_STRA QM3(CURR_VERSION, \x20, (dbg))
  #endif
  #define VER_RESOURCE      CURR_VERSION_COMMA,0
  #define VER_RESOURCE_STR  QM3(CURR_VERSION, .0., 0)
  #define UPDATE_CHECK_VER  TEXT(QM(CURR_VERSION))
 #else
- #define CURR_VERSION_STR   TEXT(QM3(CURR_VERSION, ., SVN_PRE_RELEASE_VER))
- #define CURR_VERSION_STRA  QM3(CURR_VERSION, ., SVN_PRE_RELEASE_VER)
+ #define CURR_VERSION_STRA QM3(CURR_VERSION, ., SVN_PRE_RELEASE_VER)
  #define VER_RESOURCE      CURR_VERSION_COMMA,SVN_PRE_RELEASE_VER
  #define VER_RESOURCE_STR  QM3(CURR_VERSION, .0., SVN_PRE_RELEASE_VER)
  #define UPDATE_CHECK_VER  TEXT(QM(SVN_PRE_RELEASE_VER))
 #endif
+#define CURR_VERSION_STR TEXT(CURR_VERSION_STRA)
 
 #define COPYRIGHT_STR      "Copyright 2006-2013 all authors (GPLv3)"
 #define PUBLISHER_STR      "Krzysztof Kowalczyk"

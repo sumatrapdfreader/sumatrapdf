@@ -17,11 +17,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "UITask.h"
-#include "Version.h"
 #include "WindowInfo.h"
-
-#define PREFS_INFO_URL          "http://blog.kowalczyk.info/software/sumatrapdf/settings" CURR_VERSION_STR_SHORT ".html"
-#define OLD_PREFS_FILE_NAME     L"sumatrapdfprefs.dat"
 
 GlobalPrefs *        gGlobalPrefs = NULL;
 
@@ -220,7 +216,7 @@ bool Load()
 #endif
 
     if (!file::Exists(path)) {
-        ScopedMem<WCHAR> bencPath(AppGenDataFilename(OLD_PREFS_FILE_NAME));
+        ScopedMem<WCHAR> bencPath(AppGenDataFilename(L"sumatrapdfprefs.dat"));
         ScopedMem<char> bencPrefsData(file::ReadAll(bencPath, NULL));
         // the old format used the inverted meaning for this pref
         gGlobalPrefs->rememberStatePerDocument = !gGlobalPrefs->rememberStatePerDocument;
@@ -331,8 +327,7 @@ bool Save()
     }
 
     size_t prefsDataSize;
-    ScopedMem<char> prefsData(SerializeStruct(&gGlobalPrefsInfo, gGlobalPrefs, prevPrefsData,
-                                              PREFS_INFO_URL, &prefsDataSize));
+    ScopedMem<char> prefsData(SerializeStruct(&gGlobalPrefsInfo, gGlobalPrefs, prevPrefsData, &prefsDataSize));
 
     if (!gGlobalPrefs->rememberStatePerDocument)
         gFileStateInfo.fieldCount = dimof(gFileStateFields);

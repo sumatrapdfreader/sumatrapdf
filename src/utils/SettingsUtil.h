@@ -31,6 +31,7 @@ enum SettingType {
     Type_Struct, Type_Array, Type_Compact,
     Type_Bool, Type_Color, Type_Float, Type_Int, Type_String, Type_Utf8String,
     Type_ColorArray, Type_FloatArray, Type_IntArray,
+    Type_Comment,
 };
 
 struct FieldInfo {
@@ -47,8 +48,7 @@ struct StructInfo {
     const char *fieldNames;
 };
 
-char *SerializeStruct(const StructInfo *info, const void *strct, const char *prevData=NULL,
-                      const char *infoUrl=NULL, size_t *sizeOut=NULL);
+char *SerializeStruct(const StructInfo *info, const void *strct, const char *prevData=NULL, size_t *sizeOut=NULL);
 void *DeserializeStruct(const StructInfo *info, const char *data, void *strct=NULL);
 void FreeStruct(const StructInfo *info, void *strct);
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, util2, gen_settingsstructs
+import os, util2, gen_settingsstructs, trans_langs
 
 """
 TODO:
@@ -8,7 +8,7 @@ TODO:
    in a separate table
 """
 
-g_version = "2.3"
+g_version = util2.get_sumatrapdf_version()
 
 html_tmpl = """\
 <!doctype html>
@@ -201,7 +201,7 @@ def extract_url(s):
 	url = s[word_end+2:-1]
 	return [word, url]
 
-def gen_comment(comment, start, first = False):
+def gen_comment(comment, start, first=False):
 	line_len = 100
 	s = start + '<span class=cm>'
 	if not first:
@@ -243,20 +243,20 @@ def gen_struct(struct, comment=None, indent=""):
 	lines = []
 	if comment:
 		lines += gen_comment(comment, "") + [""]
+	first = True
 	inside_expert = False
 	for field in struct.default:
-		if field.internal:
+		if field.internal or type(field) is gen_settingsstructs.Comment:
 			continue
 		start_idx = len(lines)
-		first = (field == struct.default[0])
-		if type(field) == gen_settingsstructs.Array and not field.type.name == "Compact":
+		if type(field) is gen_settingsstructs.Array and not field.type.name == "Compact":
 			lines += gen_comment(field.docComment, indent, first)
 			indent2 = indent + indent_str[:len(indent_str)/2]
 			start = "%s%s [\n%s[" % (indent, field.name, indent2)
 			end = "%s]\n%s]" % (indent2, indent)
 			inside = gen_struct(field, None, indent + indent_str)
 			lines += [start, inside, end]
-		elif type(field) == gen_settingsstructs.Struct and not field.type.name == "Compact":
+		elif type(field) is gen_settingsstructs.Struct and not field.type.name == "Compact":
 			lines += gen_comment(field.docComment, indent, first)
 			start = "%s%s [" % (indent, field.name)
 			end = "%s]" % indent
@@ -265,6 +265,7 @@ def gen_struct(struct, comment=None, indent=""):
 		else:
 			s = field.inidefault(commentChar="").lstrip()
 			lines += gen_comment(field.docComment, indent, first) + [indent + s]
+		first = False
 		if field.expert and not inside_expert:
 			lines[start_idx] = '<div class=adv>' + lines[start_idx]
 		elif not field.expert and inside_expert:
@@ -284,7 +285,6 @@ def blog_dir():
 	return None
 
 def gen_langs_html():
-	import trans_langs
 	langs = trans_langs.g_langs
 	langs = [Lang(el[1], el[0]) for el in langs]
 	lines = []

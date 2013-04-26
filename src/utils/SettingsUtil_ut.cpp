@@ -52,6 +52,7 @@ struct SutStruct {
 };
 
 static const FieldInfo gSutStructFields[] = {
+    { (size_t)-1, Type_Comment, (intptr_t)"This file will be overwritten - modify at your own risk!\r\n" },
     { offsetof(SutStruct, boolean), Type_Bool, (intptr_t)true },
     { offsetof(SutStruct, color), Type_Color, 0xffcc9933 },
     { offsetof(SutStruct, floatingPoint), Type_Float, (intptr_t)"-3.14" },
@@ -64,9 +65,10 @@ static const FieldInfo gSutStructFields[] = {
     { offsetof(SutStruct, escapedUtf8String), Type_Utf8String, (intptr_t)"$\nstring " },
     { offsetof(SutStruct, intArray), Type_IntArray, (intptr_t)"1 2 -3" },
     { offsetof(SutStruct, point), Type_Struct, (intptr_t)&gSutPointIInfo },
+    { (size_t)-1, Type_Comment, NULL },
     { offsetof(SutStruct, sutStructItems), Type_Array, (intptr_t)&gSutStructItemInfo },
 };
-static const StructInfo gSutStructInfo = { sizeof(SutStruct), 13, gSutStructFields, "Boolean\0Color\0FloatingPoint\0Integer\0String\0NullString\0EscapedString\0Utf8String\0NullUtf8String\0EscapedUtf8String\0IntArray\0Point\0SutStructItems" };
+static const StructInfo gSutStructInfo = { sizeof(SutStruct), 15, gSutStructFields, "\0Boolean\0Color\0FloatingPoint\0Integer\0String\0NullString\0EscapedString\0Utf8String\0NullUtf8String\0EscapedUtf8String\0IntArray\0Point\0\0SutStructItems" };
 
 static void SettingsUtilTest()
 {
@@ -85,6 +87,7 @@ Point [\r\n\
 \tY = -18\r\n\
 \tZ = -19\r\n\
 ]\r\n\
+\r\n\
 SutStructItems [\r\n\
 \t[\r\n\
 \t\tCompactPoint = -1 5\r\n\

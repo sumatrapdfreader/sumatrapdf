@@ -27,39 +27,41 @@ class Field(object):
 		self.docComment = doc or comment
 
 	def cdefault(self, built):
-		if self.type == Bool:
+		if self.type is Bool:
 			return "true" if self.default else "false"
-		if self.type == Color:
+		if self.type is Color:
 			return "0x%06x" % self.default
-		if self.type == Float:
+		if self.type is Float:
 			return '(intptr_t)"%g"' % self.default # converting float to intptr_t rounds the value
-		if self.type == Int:
+		if self.type is Int:
 			return "%d" % self.default
-		if self.type == String:
+		if self.type is String:
 			return '(intptr_t)L"%s"' % self.default if self.default is not None else "NULL"
-		if self.type == Utf8String:
-			return '(intptr_t)"%s"' % self.default if self.default is not None else "NULL"
+		if self.type is Utf8String:
+			return '(intptr_t)"%s"' % self.default.encode("utf-8") if self.default is not None else "NULL"
 		if self.type.name in ["Struct", "Array", "Compact"]:
 			id = built.count(self.structName)
 			return "(intptr_t)&g%sInfo" % (self.structName + ("" if not id else "_%d_" % id))
 		if self.type.name in ["ColorArray", "FloatArray", "IntArray"]:
 			return '(intptr_t)"%s"' % self.default if self.default is not None else "NULL"
+		if self.type.name == "Comment":
+			return '(intptr_t)"%s"' % self.comment.encode("utf-8") if self.comment is not None else "NULL"
 		return None
 
 	def inidefault(self, commentChar=";"):
-		if self.type == Bool:
+		if self.type is Bool:
 			return "%s = %s" % (self.name, "true" if self.default else "false")
-		if self.type == Color:
+		if self.type is Color:
 			return "%s = #%02x%02x%02x" % (self.name, self.default & 0xFF, (self.default >> 8) & 0xFF, (self.default >> 16) & 0xFF)
-		if self.type == Float:
+		if self.type is Float:
 			return "%s = %g" % (self.name, self.default)
-		if self.type == Int:
+		if self.type is Int:
 			return "%s = %d" % (self.name, self.default)
-		if self.type == String:
+		if self.type is String:
 			if self.default is not None:
 				return "%s = %s" % (self.name, self.default.encode("UTF-8"))
 			return "%s %s =" % (commentChar, self.name)
-		if self.type == Utf8String:
+		if self.type is Utf8String:
 			if self.default is not None:
 				return "%s = %s" % (self.name, self.default)
 			return "%s %s =" % (commentChar, self.name)
@@ -88,6 +90,13 @@ class Array(Field):
 class CompactArray(Field):
 	def __init__(self, name, type, default, comment, internal=False, expert=False, doc=None):
 		super(CompactArray, self).__init__(name, Type("%sArray" % type.name, "Vec<%s> *" % type.ctype), default, comment, internal, expert, doc)
+
+class Comment(Field):
+	def __init__(self, comment, expert=False):
+		super(Comment, self).__init__("", Type("Comment", None), None, comment, False, expert, None)
+
+def EmptyLine(expert=False):
+	return Comment(None, expert)
 
 # ##### setting definitions for SumatraPDF #####
 
@@ -168,7 +177,7 @@ FixedPageUI = [
 		"color value with which white (background) will be substituted"),
 	Struct("WindowMargin", WindowMargin_FixedPageUI,
 		"top, right, bottom and left margin (in that order) between window and document",
-		compact=True, expert=True),
+		compact=True),
 	Struct("PageSpacing", PageSpacing,
 		"horizontal and vertical distance between two pages in facing and book view modes",
 		structName="SizeI", compact=True),
@@ -197,7 +206,7 @@ EbookUI = [
 ImageOnlyUI = [
 	Struct("WindowMargin", WindowMargin_ImageOnlyUI,
 		"top, right, bottom and left margin (in that order) between window and document",
-		compact=True, expert=True),
+		compact=True),
 	Struct("PageSpacing", PageSpacing,
 		"horizontal and vertical distance between two pages in facing and book view modes",
 		structName="SizeI", compact=True),
@@ -314,9 +323,12 @@ FileSettings = [
 ]
 
 # list of fields which aren't serialized when UseDefaultState is set
-rememberedFileSettings = ["DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"]
+rememberedDisplayState = ["DisplayMode", "ScrollPos", "PageNo", "Zoom", "Rotation", "WindowState", "WindowPos", "ShowToc", "SidebarDx", "DisplayR2L", "ReparseIdx", "TocState"]
 
 GlobalPrefs = [
+	Comment("For documentation, see http://blog.kowalczyk.info/software/sumatrapdf/settings%s.html" % util2.get_sumatrapdf_version()),
+	EmptyLine(),
+
 	Field("MainWindowBackground", Color, 0x8000F2FF,
 		"background color of the non-document windows, traditionally yellow",
 		expert=True),
@@ -362,6 +374,7 @@ GlobalPrefs = [
 		"customization options for how we show forward search results (used from " +
 		"LaTeX editors)",
 		expert=True),
+	EmptyLine(),
 
 	Field("RememberStatePerDocument", Bool, True,
 		"if true, we store display settings for each document separately (i.e. everything " +
@@ -435,6 +448,8 @@ GlobalPrefs = [
 		"the height of bookmarks (table of contents) part"),
 	Field("ShowStartPage", Bool, True,
 		"if true, we show a list of frequently read documents when no document is loaded"),
+	EmptyLine(),
+
 	# file history and favorites
 	Array("FileStates", FileSettings,
 		"information about opened files (in most recently used order)"),
@@ -477,7 +492,7 @@ def FormatArrayLine(data, fmt):
 	fmts = fmt.split()
 	data2 = []
 	for item in data:
-		assert len(item) == len(maxs) and len(fmts) ==len(maxs)
+		assert len(item) == len(maxs) and len(fmts) == len(maxs)
 		item2 = []
 		for i in range(len(item)):
 			item2.append(fmts[i] % item[i])
@@ -493,6 +508,8 @@ def BuildStruct(struct, built=[]):
 	if struct.comment:
 		lines = FormatComment(struct.comment, "//") + lines
 	for field in struct.default:
+		if type(field) is Comment:
+			continue
 		lines += FormatComment(field.comment, "\t//")
 		lines.append("\t%s %s;" % (field.type.ctype, field.cname))
 		if type(field) in [Struct, Array] and field.name in [field.structName, field.structName + "s"] and field.name not in built:
@@ -512,6 +529,8 @@ def BuildMetaData(struct, built=[]):
 		if type(field) in [Struct, Array]:
 			lines += [BuildMetaData(field), ""]
 			built.append(field.structName)
+		elif type(field) is Comment:
+			data[-1] = tuple(["(size_t)-1"] + list(data[-1][1:]))
 	lines.append("static const FieldInfo g%sFields[] = {" % fullName)
 	lines += ["\t{ %s }," % line for line in FormatArrayLine(data, "%s, %s, %s")]
 	lines.append("};")
@@ -524,7 +543,7 @@ def AssembleDefaults(struct, topLevelComment=None):
 	if topLevelComment:
 		lines += FormatComment(topLevelComment, ";") + [""]
 	for field in struct.default:
-		if field.internal:
+		if field.internal or type(field) is Comment:
 			continue
 		if topLevelComment and not field.expert:
 			continue
@@ -581,9 +600,9 @@ def main():
 		if field.name == "UseDefaultState":
 			beforeUseDefaultState = False
 		elif beforeUseDefaultState:
-			assert field.name not in rememberedFileSettings, "%s shouldn't be serialized when UseDefaultState is true" % field.name
+			assert field.name not in rememberedDisplayState, "%s shouldn't be serialized when UseDefaultState is true" % field.name
 		else:
-			assert field.name in rememberedFileSettings or field.internal, "%s won't be serialized when UseDefaultState is true" % field.name
+			assert field.name in rememberedDisplayState or field.internal, "%s won't be serialized when UseDefaultState is true" % field.name
 
 if __name__ == "__main__":
 	main()

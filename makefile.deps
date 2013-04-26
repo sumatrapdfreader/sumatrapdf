@@ -135,8 +135,7 @@ $(OS)\AppPrefs.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\
 $(OS)\AppPrefs.obj: $B\src\utils\BencUtil.h $B\src\utils\DebugLog.h $B\src\utils\FileTransactions.h
 $(OS)\AppPrefs.obj: $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h $B\src\utils\GeomUtil.h
 $(OS)\AppPrefs.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
-$(OS)\AppPrefs.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\Version.h
-$(OS)\AppPrefs.obj: $B\src\WindowInfo.h
+$(OS)\AppPrefs.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\WindowInfo.h
 $(OS)\AppTools.obj: $B\src\AppTools.h $B\src\Translations.h $B\src\utils\Allocator.h
 $(OS)\AppTools.obj: $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h $B\src\utils\FileUtil.h
 $(OS)\AppTools.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h

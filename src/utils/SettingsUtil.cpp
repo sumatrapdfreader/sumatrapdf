@@ -305,7 +305,6 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
                 str::FindChar(fieldName, '[') || str::FindChar(fieldName, ']') ||
                 NeedsEscaping(fieldName));
         if (Type_Struct == field.type) {
-            // TODO: insert empty line for readability?
             Indent(out, indent);
             out.Append(fieldName);
             out.Append(" [\r\n");
@@ -329,6 +328,14 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
             }
             Indent(out, indent);
             out.Append("]\r\n");
+        }
+        else if (Type_Comment == field.type) {
+            if (field.value) {
+                Indent(out, indent);
+                out.Append("# ");
+                out.Append((const char *)field.value);
+            }
+            out.Append("\r\n");
         }
         else {
             size_t offset = out.Size();
@@ -377,7 +384,7 @@ static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, 
                 *(Vec<void *> **)fieldPtr = array;
             }
         }
-        else {
+        else if (field.type != Type_Comment) {
             const char *value = node ? node->GetValue(fieldName) : NULL;
             if (useDefaults || value)
                 DeserializeField(field, base, value);
@@ -387,14 +394,10 @@ static void *DeserializeStructRec(const StructInfo *info, SquareTreeNode *node, 
     return base;
 }
 
-char *SerializeStruct(const StructInfo *info, const void *strct, const char *prevData,
-                      const char *infoUrl, size_t *sizeOut)
+char *SerializeStruct(const StructInfo *info, const void *strct, const char *prevData, size_t *sizeOut)
 {
     str::Str<char> out;
-    if (infoUrl)
-        out.AppendFmt(UTF8_BOM "# For documentation, see %s\r\n\r\n", infoUrl);
-    else
-        out.Append(UTF8_BOM "# This file will be overwritten - modify at your own risk!\r\n\r\n");
+    out.Append(UTF8_BOM);
     SquareTree prevSqt(prevData);
     SerializeStructRec(out, info, strct, prevSqt.root);
     if (sizeOut)
