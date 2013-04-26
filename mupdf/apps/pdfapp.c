@@ -759,11 +759,17 @@ void pdfapp_gotopage(pdfapp_t *app, int number)
 
 static int textlen(fz_text_page *page)
 {
-	fz_text_block *block;
-	fz_text_line *line;
 	int len = 0;
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	int block_num;
+
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
+		fz_text_line *line;
+		fz_text_block *block;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
 			int span_num;
@@ -1591,10 +1597,9 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	fz_rect hitbox;
 	fz_matrix ctm;
 	fz_text_page *page = app->page_text;
-	fz_text_block *block;
-	fz_text_line *line;
 	int c, i, p;
 	int seen = 0;
+	int block_num;
 
 	int x0 = app->selr.x0;
 	int x1 = app->selr.x1;
@@ -1605,8 +1610,15 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 
 	p = 0;
 
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
+		fz_text_line *line;
+		fz_text_block *block;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
+
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
 			int span_num;
@@ -1663,7 +1675,6 @@ void pdfapp_postblit(pdfapp_t *app)
 	if (llama >= 256)
 	{
 		/* Completed. */
-		app->in_transit = 0;
 		fz_drop_pixmap(app->ctx, app->image);
 		app->image = app->new_image;
 		app->new_image = NULL;
@@ -1675,4 +1686,9 @@ void pdfapp_postblit(pdfapp_t *app)
 	else
 		fz_generate_transition(app->image, app->old_image, app->new_image, llama, &app->transition);
 	winrepaint(app);
+	if (llama >= 256)
+	{
+		/* Completed. */
+		app->in_transit = 0;
+	}
 }

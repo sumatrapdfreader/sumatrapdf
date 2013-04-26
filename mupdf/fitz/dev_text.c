@@ -165,13 +165,17 @@ push_span(fz_context *ctx, fz_text_device *tdev, fz_text_span *span, int new_lin
 	fz_text_line *line;
 	fz_text_block *block;
 	fz_text_page *page = tdev->page;
+	int prev_not_text = 0;
 
-	if (new_line)
+	if (page->len == 0 || page->blocks[page->len-1].type != FZ_PAGE_BLOCK_TEXT)
+		prev_not_text = 1;
+
+	if (new_line || prev_not_text)
 	{
 		/* SumatraPDF: fixup_text_page doesn't handle multiple blocks yet * /
 		float size = fz_matrix_expansion(&span->transform);
 		/* So, a new line. Part of the same block or not? */
-		if (/* distance == 0 || distance > size * 1.5 || distance < -size * PARAGRAPH_DIST || */ page->len == 0)
+		if (/* distance == 0 || distance > size * 1.5 || distance < -size * PARAGRAPH_DIST || page->len == 0 || */ prev_not_text)
 		{
 			/* New block */
 			if (page->len == page->cap)
@@ -180,16 +184,19 @@ push_span(fz_context *ctx, fz_text_device *tdev, fz_text_span *span, int new_lin
 				page->blocks = fz_resize_array(ctx, page->blocks, newcap, sizeof(*page->blocks));
 				page->cap = newcap;
 			}
-			page->blocks[page->len].cap = 0;
-			page->blocks[page->len].len = 0;
-			page->blocks[page->len].lines = 0;
-			page->blocks[page->len].bbox = fz_empty_rect;
+			block = fz_malloc_struct(ctx, fz_text_block);
+			page->blocks[page->len].type = FZ_PAGE_BLOCK_TEXT;
+			page->blocks[page->len].u.text = block;
+			block->cap = 0;
+			block->len = 0;
+			block->lines = 0;
+			block->bbox = fz_empty_rect;
 			page->len++;
 			distance = 0;
 		}
 
 		/* New line */
-		block = &page->blocks[page->len-1];
+		block = page->blocks[page->len-1].u.text;
 		if (block->len == block->cap)
 		{
 			int newcap = (block->cap ? block->cap*2 : 4);
@@ -205,7 +212,7 @@ push_span(fz_context *ctx, fz_text_device *tdev, fz_text_span *span, int new_lin
 	}
 
 	/* Find last line and append to it */
-	block = &page->blocks[page->len-1];
+	block = page->blocks[page->len-1].u.text;
 	line = &block->lines[block->len-1];
 
 	if (line->len == line->cap)
@@ -456,16 +463,41 @@ fz_free_text_line_contents(fz_context *ctx, fz_text_line *line)
 	fz_free(ctx, line->spans);
 }
 
+static void
+fz_free_text_block(fz_context *ctx, fz_text_block *block)
+{
+	fz_text_line *line;
+	if (block == NULL)
+		return;
+	for (line = block->lines; line < block->lines + block->len; line++)
+		fz_free_text_line_contents(ctx, line);
+	fz_free(ctx, block->lines);
+}
+
+static void
+fz_free_image_block(fz_context *ctx, fz_image_block *block)
+{
+	if (block == NULL)
+		return;
+	fz_drop_image(ctx, block->image);
+	fz_drop_colorspace(ctx, block->cspace);
+}
+
 void
 fz_free_text_page(fz_context *ctx, fz_text_page *page)
 {
-	fz_text_block *block;
-	fz_text_line *line;
+	fz_page_block *block;
 	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
-		for (line = block->lines; line < block->lines + block->len; line++)
-			fz_free_text_line_contents(ctx, line);
-		fz_free(ctx, block->lines);
+		switch(block->type)
+		{
+		case FZ_PAGE_BLOCK_TEXT:
+			fz_free_text_block(ctx, block->u.text);
+			break;
+		case FZ_PAGE_BLOCK_IMAGE:
+			fz_free_image_block(ctx, block->u.image);
+			break;
+		}
 	}
 	fz_free(ctx, page->blocks);
 	fz_free(ctx, page);
@@ -901,18 +933,20 @@ fixup_delete_duplicates:
 static void
 fixup_text_page(fz_context *ctx, fz_text_page *page)
 {
-	fz_text_block *block;
+	fz_page_block *block;
 	fz_text_line *line;
 	int span_num;
 
 	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
-		for (line = block->lines; line < block->lines + block->len; line++)
+		if (block->type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		for (line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++)
 		{
 			for (span_num = 0; span_num < line->len; span_num++)
 				fixup_text_span(line->spans[span_num]);
 		}
-		fixup_text_block(ctx, block);
+		fixup_text_block(ctx, block->u.text);
 	}
 }
 
@@ -1072,6 +1106,46 @@ fz_text_ignore_text(fz_device *dev, fz_text *text, const fz_matrix *ctm)
 }
 
 static void
+fz_text_fill_image_mask(fz_device *dev, fz_image *img, const fz_matrix *ctm,
+		fz_colorspace *cspace, float *color, float alpha)
+{
+	fz_text_device *tdev = dev->user;
+	fz_text_page *page = tdev->page;
+	fz_image_block *block;
+	fz_context *ctx = dev->ctx;
+
+	/* If the alpha is less than 50% then it's probably a watermark or
+	 * effect or something. Skip it */
+	if (alpha < 0.5)
+		return;
+
+	/* SumatraPDF: fixup_text_page doesn't handle multiple blocks yet */
+	return;
+
+	/* New block */
+	if (page->len == page->cap)
+	{
+		int newcap = (page->cap ? page->cap*2 : 4);
+		page->blocks = fz_resize_array(ctx, page->blocks, newcap, sizeof(*page->blocks));
+		page->cap = newcap;
+	}
+	block = fz_malloc_struct(ctx, fz_image_block);
+	page->blocks[page->len].type = FZ_PAGE_BLOCK_IMAGE;
+	page->blocks[page->len].u.image = block;
+	block->image = fz_keep_image(ctx, img);
+	block->cspace = fz_keep_colorspace(ctx, cspace);
+	if (cspace)
+		memcpy(block->colors, color, sizeof(block->colors[0])*cspace->n);
+	page->len++;
+}
+
+static void
+fz_text_fill_image(fz_device *dev, fz_image *img, const fz_matrix *ctm, float alpha)
+{
+	fz_text_fill_image_mask(dev, img, ctm, NULL, NULL, alpha);
+}
+
+static void
 fz_text_free_user(fz_device *dev)
 {
 	fz_context *ctx = dev->ctx;
@@ -1111,8 +1185,22 @@ fz_new_text_device(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
 	dev->clip_text = fz_text_clip_text;
 	dev->clip_stroke_text = fz_text_clip_stroke_text;
 	dev->ignore_text = fz_text_ignore_text;
+	dev->fill_image = fz_text_fill_image;
+	dev->fill_image_mask = fz_text_fill_image_mask;
 
 	return dev;
+}
+
+void
+fz_enable_device_hints(fz_device *dev, int hints)
+{
+	dev->hints |= hints;
+}
+
+void
+fz_disable_device_hints(fz_device *dev, int hints)
+{
+	dev->hints &= ~hints;
 }
 
 /* XML, HTML and plain-text output */
@@ -1181,12 +1269,49 @@ fz_print_text_sheet(fz_context *ctx, fz_output *out, fz_text_sheet *sheet)
 		fz_print_style(out, style);
 }
 
+static void
+send_data_base64(fz_output *out, fz_buffer *buffer)
+{
+	int i, len;
+	static const char set[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+	len = buffer->len/3;
+	for (i = 0; i < len; i++)
+	{
+		int c = buffer->data[3*i];
+		int d = buffer->data[3*i+1];
+		int e = buffer->data[3*i+2];
+		if ((i & 15) == 0)
+			fz_printf(out, "\n");
+		fz_printf(out, "%c%c%c%c", set[c>>2], set[((c&3)<<4)|(d>>4)], set[((d&15)<<2)|(e>>6)], set[e & 63]);
+	}
+	i *= 3;
+	switch (buffer->len-i)
+	{
+		case 2:
+		{
+			int c = buffer->data[i];
+			int d = buffer->data[i+1];
+			fz_printf(out, "%c%c%c=", set[c>>2], set[((c&3)<<4)|(d>>4)], set[((d&15)<<2)]);
+			break;
+		}
+	case 1:
+		{
+			int c = buffer->data[i];
+			fz_printf(out, "%c%c==", set[c>>2], set[(c&3)<<4]);
+			break;
+		}
+	default:
+	case 0:
+		break;
+	}
+}
+
 void
 fz_print_text_page_html(fz_context *ctx, fz_output *out, fz_text_page *page)
 {
 	int block_n, line_n, span_n, ch_n;
 	fz_text_style *style = NULL;
-	fz_text_block *block;
 	fz_text_line *line;
 	void *last_region = NULL;
 
@@ -1194,122 +1319,157 @@ fz_print_text_page_html(fz_context *ctx, fz_output *out, fz_text_page *page)
 
 	for (block_n = 0; block_n < page->len; block_n++)
 	{
-		block = &page->blocks[block_n];
-		fz_printf(out, "<div class=\"block\"><p>\n");
-		for (line_n = 0; line_n < block->len; line_n++)
+		switch(page->blocks[block_n].type)
 		{
-			int lastcol=-1;
-			line = &block->lines[line_n];
-			style = NULL;
-
-			if (line->region != last_region)
+		case FZ_PAGE_BLOCK_TEXT:
+		{
+			fz_text_block * block = page->blocks[block_n].u.text;
+			fz_printf(out, "<div class=\"block\"><p>\n");
+			for (line_n = 0; line_n < block->len; line_n++)
 			{
-				if (last_region)
-					fz_printf(out, "</div>");
-				fz_printf(out, "<div class=\"metaline\">");
-				last_region = line->region;
-			}
-			fz_printf(out, "<div class=\"line\"");
-#ifdef DEBUG_INTERNALS
-			if (line->region)
-				fz_printf(out, " region=\"%x\"", line->region);
-#endif
-			fz_printf(out, ">");
-			for (span_n = 0; span_n < line->len; span_n++)
-			{
-				fz_text_span *span = line->spans[span_n];
-				float size = fz_matrix_expansion(&span->transform);
-				float base_offset = span->base_offset / size;
+				int lastcol=-1;
+				line = &block->lines[line_n];
+				style = NULL;
 
-				if (lastcol != span->column)
+				if (line->region != last_region)
 				{
-					if (lastcol >= 0)
-					{
+					if (last_region)
 						fz_printf(out, "</div>");
-					}
-					/* If we skipped any columns then output some spacer spans */
-					while (lastcol < span->column-1)
-					{
-						fz_printf(out, "<div class=\"cell\"></div>");
-						lastcol++;
-					}
-					lastcol++;
-					/* Now output the span to contain this entire column */
-					fz_printf(out, "<div class=\"cell\" style=\"");
-					{
-						int sn;
-						for (sn = span_n+1; sn < line->len; sn++)
-						{
-							if (line->spans[sn]->column != lastcol)
-								break;
-						}
-						fz_printf(out, "width:%g%%;align:%s", span->column_width, (span->align == 0 ? "left" : (span->align == 1 ? "center" : "right")));
-					}
-					if (span->indent > 1)
-						fz_printf(out, ";padding-left:1em;text-indent:-1em");
-					if (span->indent < -1)
-						fz_printf(out, ";text-indent:1em");
-					fz_printf(out, "\">");
+					fz_printf(out, "<div class=\"metaline\">");
+					last_region = line->region;
 				}
+				fz_printf(out, "<div class=\"line\"");
 #ifdef DEBUG_INTERNALS
-				fz_printf(out, "<span class=\"internal_span\"");
-				if (span->column)
-					fz_printf(out, " col=\"%x\"", span->column);
+				if (line->region)
+					fz_printf(out, " region=\"%x\"", line->region);
+#endif
 				fz_printf(out, ">");
-#endif
-				if (span->spacing >= 1)
-					fz_printf(out, " ");
-				if (base_offset > SUBSCRIPT_OFFSET)
-					fz_printf(out, "<sub>");
-				else if (base_offset < SUPERSCRIPT_OFFSET)
-					fz_printf(out, "<sup>");
-				for (ch_n = 0; ch_n < span->len; ch_n++)
+				for (span_n = 0; span_n < line->len; span_n++)
 				{
-					fz_text_char *ch = &span->text[ch_n];
-					if (style != ch->style)
-					{
-						if (style)
-							fz_print_style_end(out, style);
-						fz_print_style_begin(out, ch->style);
-						style = ch->style;
-					}
+					fz_text_span *span = line->spans[span_n];
+					float size = fz_matrix_expansion(&span->transform);
+					float base_offset = span->base_offset / size;
 
-					if (ch->c == '<')
-						fz_printf(out, "&lt;");
-					else if (ch->c == '>')
-						fz_printf(out, "&gt;");
-					else if (ch->c == '&')
-						fz_printf(out, "&amp;");
-					else if (ch->c >= 32 && ch->c <= 127)
-						fz_printf(out, "%c", ch->c);
-					else
-						fz_printf(out, "&#x%x;", ch->c);
-				}
-				if (style)
-				{
-					fz_print_style_end(out, style);
-					style = NULL;
-				}
-				if (base_offset > SUBSCRIPT_OFFSET)
-					fz_printf(out, "</sub>");
-				else if (base_offset < SUPERSCRIPT_OFFSET)
-					fz_printf(out, "</sup>");
+					if (lastcol != span->column)
+					{
+						if (lastcol >= 0)
+						{
+							fz_printf(out, "</div>");
+						}
+						/* If we skipped any columns then output some spacer spans */
+						while (lastcol < span->column-1)
+						{
+							fz_printf(out, "<div class=\"cell\"></div>");
+							lastcol++;
+						}
+						lastcol++;
+						/* Now output the span to contain this entire column */
+						fz_printf(out, "<div class=\"cell\" style=\"");
+						{
+							int sn;
+							for (sn = span_n+1; sn < line->len; sn++)
+							{
+								if (line->spans[sn]->column != lastcol)
+									break;
+							}
+							fz_printf(out, "width:%g%%;align:%s", span->column_width, (span->align == 0 ? "left" : (span->align == 1 ? "center" : "right")));
+						}
+						if (span->indent > 1)
+							fz_printf(out, ";padding-left:1em;text-indent:-1em");
+						if (span->indent < -1)
+							fz_printf(out, ";text-indent:1em");
+						fz_printf(out, "\">");
+					}
 #ifdef DEBUG_INTERNALS
-				fz_printf(out, "</span>");
+					fz_printf(out, "<span class=\"internal_span\"");
+					if (span->column)
+						fz_printf(out, " col=\"%x\"", span->column);
+					fz_printf(out, ">");
 #endif
+					if (span->spacing >= 1)
+						fz_printf(out, " ");
+					if (base_offset > SUBSCRIPT_OFFSET)
+						fz_printf(out, "<sub>");
+					else if (base_offset < SUPERSCRIPT_OFFSET)
+						fz_printf(out, "<sup>");
+					for (ch_n = 0; ch_n < span->len; ch_n++)
+					{
+						fz_text_char *ch = &span->text[ch_n];
+						if (style != ch->style)
+						{
+							if (style)
+								fz_print_style_end(out, style);
+							fz_print_style_begin(out, ch->style);
+							style = ch->style;
+						}
+
+						if (ch->c == '<')
+							fz_printf(out, "&lt;");
+						else if (ch->c == '>')
+							fz_printf(out, "&gt;");
+						else if (ch->c == '&')
+							fz_printf(out, "&amp;");
+						else if (ch->c >= 32 && ch->c <= 127)
+							fz_printf(out, "%c", ch->c);
+						else
+							fz_printf(out, "&#x%x;", ch->c);
+					}
+					if (style)
+					{
+						fz_print_style_end(out, style);
+						style = NULL;
+					}
+					if (base_offset > SUBSCRIPT_OFFSET)
+						fz_printf(out, "</sub>");
+					else if (base_offset < SUPERSCRIPT_OFFSET)
+						fz_printf(out, "</sup>");
+#ifdef DEBUG_INTERNALS
+					fz_printf(out, "</span>");
+#endif
+				}
+				/* Close our floating span */
+				fz_printf(out, "</div>");
+				/* Close the line */
+				fz_printf(out, "</div>");
+				fz_printf(out, "\n");
 			}
-			/* Close our floating span */
+			/* Close the metaline */
 			fz_printf(out, "</div>");
-#ifdef DEBUG_INTERNALS
-#endif
-			/* Close the line */
-			fz_printf(out, "</div>");
-			fz_printf(out, "\n");
+			last_region = NULL;
+			fz_printf(out, "</p></div>\n");
+			break;
 		}
-		/* Close the metaline */
-		fz_printf(out, "</div>");
-		last_region = NULL;
-		fz_printf(out, "</p></div>\n");
+		case FZ_PAGE_BLOCK_IMAGE:
+		{
+			fz_image_block *image = page->blocks[block_n].u.image;
+			fz_printf(out, "<img width=%d height=%d src=\"data:", image->image->w, image->image->h);
+			switch (image->image->buffer == NULL ? FZ_IMAGE_JPX : image->image->buffer->params.type)
+			{
+			case FZ_IMAGE_JPEG:
+				fz_printf(out, "image/jpeg;base64,");
+				send_data_base64(out, image->image->buffer->buffer);
+				break;
+			case FZ_IMAGE_PNG:
+				fz_printf(out, "image/png;base64,");
+				send_data_base64(out, image->image->buffer->buffer);
+				break;
+			default:
+				{
+					fz_pixmap *pix = fz_image_get_pixmap(ctx, image->image, image->image->w, image->image->h);
+					fz_buffer *buf = fz_new_buffer(ctx, 1024);
+					fz_output *out2 = fz_new_output_with_buffer(ctx, buf);
+					fz_output_pixmap_to_png(ctx, pix, out2, 0);
+					fz_close_output(out2);
+					fz_printf(out, "image/png;base64,");
+					send_data_base64(out, buf);
+					fz_drop_buffer(ctx, buf);
+					break;
+				}
+			}
+			fz_printf(out, "\">\n");
+			break;
+		}
+		}
 	}
 
 	fz_printf(out, "</div>\n");
@@ -1318,69 +1478,82 @@ fz_print_text_page_html(fz_context *ctx, fz_output *out, fz_text_page *page)
 void
 fz_print_text_page_xml(fz_context *ctx, fz_output *out, fz_text_page *page)
 {
-	fz_text_block *block;
-	fz_text_line *line;
-	char *s;
+	int block_n;
 
 	fz_printf(out, "<page>\n");
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	for (block_n = 0; block_n < page->len; block_n++)
 	{
-		fz_printf(out, "<block bbox=\"%g %g %g %g\">\n",
-			block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1);
-		for (line = block->lines; line < block->lines + block->len; line++)
+		switch(page->blocks[block_n].type)
 		{
-			int span_num;
-			fz_printf(out, "<line bbox=\"%g %g %g %g\">\n",
-				line->bbox.x0, line->bbox.y0, line->bbox.x1, line->bbox.y1);
-			for (span_num = 0; span_num < line->len; span_num++)
+		case FZ_PAGE_BLOCK_TEXT:
+		{
+			fz_text_block *block = page->blocks[block_n].u.text;
+			fz_text_line *line;
+			char *s;
+
+			fz_printf(out, "<block bbox=\"%g %g %g %g\">\n",
+				block->bbox.x0, block->bbox.y0, block->bbox.x1, block->bbox.y1);
+			for (line = block->lines; line < block->lines + block->len; line++)
 			{
-				fz_text_span *span = line->spans[span_num];
-				fz_text_style *style = NULL;
-				int char_num;
-				for (char_num = 0; char_num < span->len; char_num++)
+				int span_num;
+				fz_printf(out, "<line bbox=\"%g %g %g %g\">\n",
+					line->bbox.x0, line->bbox.y0, line->bbox.x1, line->bbox.y1);
+				for (span_num = 0; span_num < line->len; span_num++)
 				{
-					fz_text_char *ch = &span->text[char_num];
-					if (ch->style != style)
+					fz_text_span *span = line->spans[span_num];
+					fz_text_style *style = NULL;
+					int char_num;
+					for (char_num = 0; char_num < span->len; char_num++)
 					{
-						if (style)
+						fz_text_char *ch = &span->text[char_num];
+						if (ch->style != style)
 						{
-							fz_printf(out, "</span>\n");
+							if (style)
+							{
+								fz_printf(out, "</span>\n");
+							}
+							style = ch->style;
+							s = strchr(style->font->name, '+');
+							s = s ? s + 1 : style->font->name;
+							fz_printf(out, "<span bbox=\"%g %g %g %g\" font=\"%s\" size=\"%g\">\n",
+								span->bbox.x0, span->bbox.y0, span->bbox.x1, span->bbox.y1,
+								s, style->size);
 						}
-						style = ch->style;
-						s = strchr(style->font->name, '+');
-						s = s ? s + 1 : style->font->name;
-						fz_printf(out, "<span bbox=\"%g %g %g %g\" font=\"%s\" size=\"%g\">\n",
-							span->bbox.x0, span->bbox.y0, span->bbox.x1, span->bbox.y1,
-							s, style->size);
+						{
+							fz_rect rect;
+							fz_text_char_bbox(&rect, span, char_num);
+							fz_printf(out, "<char bbox=\"%g %g %g %g\" x=\"%g\" y=\"%g\" c=\"",
+								rect.x0, rect.y0, rect.x1, rect.y1, ch->p.x, ch->p.y);
+						}
+						switch (ch->c)
+						{
+						case '<': fz_printf(out, "&lt;"); break;
+						case '>': fz_printf(out, "&gt;"); break;
+						case '&': fz_printf(out, "&amp;"); break;
+						case '"': fz_printf(out, "&quot;"); break;
+						case '\'': fz_printf(out, "&apos;"); break;
+						default:
+							if (ch->c >= 32 && ch->c <= 127)
+								fz_printf(out, "%c", ch->c);
+							else
+								fz_printf(out, "&#x%x;", ch->c);
+							break;
+						}
+						fz_printf(out, "\"/>\n");
 					}
-					{
-						fz_rect rect;
-						fz_text_char_bbox(&rect, span, char_num);
-						fz_printf(out, "<char bbox=\"%g %g %g %g\" x=\"%g\" y=\"%g\" c=\"",
-							rect.x0, rect.y0, rect.x1, rect.y1, ch->p.x, ch->p.y);
-					}
-					switch (ch->c)
-					{
-					case '<': fz_printf(out, "&lt;"); break;
-					case '>': fz_printf(out, "&gt;"); break;
-					case '&': fz_printf(out, "&amp;"); break;
-					case '"': fz_printf(out, "&quot;"); break;
-					case '\'': fz_printf(out, "&apos;"); break;
-					default:
-						if (ch->c >= 32 && ch->c <= 127)
-							fz_printf(out, "%c", ch->c);
-						else
-							fz_printf(out, "&#x%x;", ch->c);
-						break;
-					}
-					fz_printf(out, "\"/>\n");
+					if (style)
+						fz_printf(out, "</span>\n");
 				}
-				if (style)
-					fz_printf(out, "</span>\n");
+				fz_printf(out, "</line>\n");
 			}
-			fz_printf(out, "</line>\n");
+			fz_printf(out, "</block>\n");
+			break;
 		}
-		fz_printf(out, "</block>\n");
+		case FZ_PAGE_BLOCK_IMAGE:
+		{
+			break;
+		}
+	}
 	}
 	fz_printf(out, "</page>\n");
 }
@@ -1388,33 +1561,44 @@ fz_print_text_page_xml(fz_context *ctx, fz_output *out, fz_text_page *page)
 void
 fz_print_text_page(fz_context *ctx, fz_output *out, fz_text_page *page)
 {
-	fz_text_block *block;
-	fz_text_line *line;
-	fz_text_char *ch;
-	char utf[10];
-	int i, n;
+	int block_n;
 
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	for (block_n = 0; block_n < page->len; block_n++)
 	{
-		for (line = block->lines; line < block->lines + block->len; line++)
+		switch(page->blocks[block_n].type)
 		{
-			int span_num;
-			for (span_num = 0; span_num < line->len; span_num++)
+		case FZ_PAGE_BLOCK_TEXT:
+		{
+			fz_text_block *block = page->blocks[block_n].u.text;
+			fz_text_line *line;
+			fz_text_char *ch;
+			char utf[10];
+			int i, n;
+
+			for (line = block->lines; line < block->lines + block->len; line++)
 			{
-				fz_text_span *span = line->spans[span_num];
-				for (ch = span->text; ch < span->text + span->len; ch++)
+				int span_num;
+				for (span_num = 0; span_num < line->len; span_num++)
 				{
-					n = fz_runetochar(utf, ch->c);
-					for (i = 0; i < n; i++)
-						fz_printf(out, "%c", utf[i]);
+					fz_text_span *span = line->spans[span_num];
+					for (ch = span->text; ch < span->text + span->len; ch++)
+					{
+						n = fz_runetochar(utf, ch->c);
+						for (i = 0; i < n; i++)
+							fz_printf(out, "%c", utf[i]);
+					}
+					/* SumatraPDF: separate spans with spaces */
+					if (span_num < line->len - 1 && span->len > 0 && span->text[span->len - 1].c != ' ')
+						fz_printf(out, " ");
 				}
-				/* SumatraPDF: separate spans with spaces */
-				if (span_num < line->len - 1 && span->len > 0 && span->text[span->len - 1].c != ' ')
-					fz_printf(out, " ");
+				fz_printf(out, "\n");
 			}
 			fz_printf(out, "\n");
+			break;
 		}
-		fz_printf(out, "\n");
+		case FZ_PAGE_BLOCK_IMAGE:
+			break;
+		}
 	}
 }
 
@@ -1557,6 +1741,7 @@ static void
 split_block(fz_context *ctx, fz_text_page *page, int block_num, int linenum)
 {
 	int split_len;
+	fz_text_block *block, *block2;
 
 	if (page->len == page->cap)
 	{
@@ -1568,17 +1753,22 @@ split_block(fz_context *ctx, fz_text_page *page, int block_num, int linenum)
 	memmove(page->blocks+block_num+1, page->blocks+block_num, (page->len - block_num)*sizeof(*page->blocks));
 	page->len++;
 
-	split_len = page->blocks[block_num].len - linenum;
-	page->blocks[block_num+1].bbox = page->blocks[block_num].bbox; /* FIXME! */
-	page->blocks[block_num+1].cap = 0;
-	page->blocks[block_num+1].len = 0;
-	page->blocks[block_num+1].lines = NULL;
-	page->blocks[block_num+1].lines = fz_malloc_array(ctx, split_len, sizeof(fz_text_line));
-	page->blocks[block_num+1].cap = page->blocks[block_num+1].len;
-	page->blocks[block_num+1].len = split_len;
-	page->blocks[block_num].len = linenum;
-	memcpy(page->blocks[block_num+1].lines, page->blocks[block_num].lines + linenum, split_len * sizeof(fz_text_line));
-	page->blocks[block_num+1].lines[0].distance = 0;
+	block2 = fz_malloc_struct(ctx, fz_text_block);
+	block = page->blocks[block_num].u.text;
+
+	page->blocks[block_num+1].type = FZ_PAGE_BLOCK_TEXT;
+	page->blocks[block_num+1].u.text = block2;
+	split_len = block->len - linenum;
+	block2->bbox = block->bbox; /* FIXME! */
+	block2->cap = 0;
+	block2->len = 0;
+	block2->lines = NULL;
+	block2->lines = fz_malloc_array(ctx, split_len, sizeof(fz_text_line));
+	block2->cap = block2->len;
+	block2->len = split_len;
+	block->len = linenum;
+	memcpy(block2->lines, block->lines + linenum, split_len * sizeof(fz_text_line));
+	block2->lines[0].distance = 0;
 }
 
 static inline int
@@ -2392,7 +2582,6 @@ dehyphenate(fz_text_span *s1, fz_text_span *s2)
 void
 fz_text_analysis(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
 {
-	fz_text_block *block;
 	fz_text_line *line;
 	line_heights *lh;
 	region_masks *rms;
@@ -2405,8 +2594,14 @@ fz_text_analysis(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
 
 	/* Step 1: Gather the line height information */
 	lh = new_line_heights(ctx);
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
+		fz_text_block *block;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
+
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
 			/* For every style in the line, add lineheight to the
@@ -2486,7 +2681,12 @@ list_entry:
 	for (block_num = 0; block_num < page->len; block_num++)
 	{
 		int line_num;
-		block = &page->blocks[block_num];
+		fz_text_block *block;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
+
 		for (line_num = 0; line_num < block->len; line_num++)
 		{
 			/* For every style in the line, check to see if lineheight
@@ -2557,8 +2757,14 @@ force_paragraph:
 	rms = new_region_masks(ctx);
 	/* Step 1: Form the region masks and store them into a list with the
 	 * normalised baseline vectors. */
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
+		fz_text_block *block;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
+
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
 			fz_point blv;
@@ -2639,8 +2845,14 @@ force_paragraph:
 	 * which region mask. */
 	{
 	region_mask *prev_match = NULL;
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
+		fz_text_block *block;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
+
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
 			fz_point blv;
@@ -2726,11 +2938,17 @@ force_paragraph:
 
 	/* Step 7: Collate lines within a block that share the same region
 	 * mask. */
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
 		int line_num;
 		int prev_line_num;
 		int last_from = -1;
+
+		fz_text_block *block;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
 
 		/* First merge lines. This may leave empty lines behind. */
 		for (prev_line_num = 0, line_num = 1; line_num < block->len; line_num++)

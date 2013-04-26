@@ -79,6 +79,7 @@ static int mapped = 0;
 static Cursor xcarrow, xchand, xcwait, xccaret;
 static int justcopied = 0;
 static int dirty = 0;
+static int transition_dirty = 0;
 static int dirtysearch = 0;
 static char *password = "";
 static XColor xbgcolor;
@@ -504,6 +505,8 @@ static void winblit(pdfapp_t *app)
 void winrepaint(pdfapp_t *app)
 {
 	dirty = 1;
+	if (app->in_transit)
+		transition_dirty = 1;
 }
 
 void winrepaintsearch(pdfapp_t *app)
@@ -779,7 +782,7 @@ int main(int argc, char **argv)
 
 	while (!closing)
 	{
-		while (!closing && XPending(xdpy) && !dirty)
+		while (!closing && XPending(xdpy) && !transition_dirty)
 		{
 			XNextEvent(xdpy, &xevt);
 
@@ -886,6 +889,7 @@ int main(int argc, char **argv)
 			else if (dirtysearch)
 				winblitsearch(&gapp);
 			dirty = 0;
+			transition_dirty = 0;
 			dirtysearch = 0;
 			pdfapp_postblit(&gapp);
 		}
@@ -899,7 +903,7 @@ int main(int argc, char **argv)
 			timeradd(&now, &tmo, &tmo_at);
 		}
 
-		if (XPending(xdpy) || dirty)
+		if (XPending(xdpy) || transition_dirty)
 			continue;
 
 		timeout = NULL;

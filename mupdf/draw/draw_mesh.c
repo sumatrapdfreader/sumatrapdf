@@ -18,17 +18,21 @@ static int clipx(float val, int ismax, const float *v1, const float *v2, int n, 
 {
 	float t;
 	int i;
+
 	int v1o = ismax ? v1[0] > val : v1[0] < val;
 	int v2o = ismax ? v2[0] > val : v2[0] < val;
+
 	if (v1o + v2o == 0)
 	{
 		/* Both ends of the line are valid - keep v2, v1 will be kept by another call */
 		copy_vert(dst, v2, n);
 		return 1;
 	}
+
 	if (v1o + v2o == 2)
 		/* Both ends are invalid - drop both */
 		return 0;
+
 	/* It is tempting to spot that the second intersection finding
 	 * operation below can be reversed so that it's in the same form as
 	 * the first one. Do not do this, as the vagaries of floating point
@@ -42,7 +46,9 @@ static int clipx(float val, int ismax, const float *v1, const float *v2, int n, 
 		for (i = 2; i < n; i++)
 			dst[i] = v1[i] + t * (v2[i] - v1[i]);
 		return 1;
-	} else {
+	}
+	else
+	{
 		/* v2 valid, v1 invalid - Keep intersection, plus v2 */
 		t = (val - v2[0]) / (v1[0] - v2[0]);
 		dst[0] = val;
@@ -62,17 +68,21 @@ static int clipy(float val, int ismax, const float *v1, const float *v2, int n, 
 {
 	float t;
 	int i;
+
 	int v1o = ismax ? v1[1] > val : v1[1] < val;
 	int v2o = ismax ? v2[1] > val : v2[1] < val;
+
 	if (v1o + v2o == 0)
 	{
 		/* Both ends of the line are valid - keep v2, v1 will be kept by another call */
 		copy_vert(dst, v2, n);
 		return 1;
 	}
+
 	if (v1o + v2o == 2)
 		/* Both ends are invalid - drop both */
 		return 0;
+
 	/* It is tempting to spot that the second intersection finding
 	 * operation below can be reversed so that it's in the same form as
 	 * the first one. Do not do this, as the vagaries of floating point
@@ -86,7 +96,9 @@ static int clipy(float val, int ismax, const float *v1, const float *v2, int n, 
 		for (i = 2; i < n; i++)
 			dst[i] = v1[i] + t * (v2[i] - v1[i]);
 		return 1;
-	} else {
+	}
+	else
+	{
 		/* v2 valid, v1 invalid - Keep intersection, plus v2 */
 		t = (val - v2[1]) / (v1[1] - v2[1]);
 		dst[0] = v2[0] + t * (v1[0] - v2[0]);
@@ -112,17 +124,21 @@ static int clip_poly(float src[MAXV][MAXN],
 	cp = 0;
 
 	if (isy)
+	{
 		for (v2 = 0; v2 < len; v2++)
 		{
 			cp += clipy(val, ismax, src[v1], src[v2], n, dst[cp]);
 			v1 = v2;
 		}
+	}
 	else
+	{
 		for (v2 = 0; v2 < len; v2++)
 		{
 			cp += clipx(val, ismax, src[v1], src[v2], n, dst[cp]);
 			v1 = v2;
 		}
+	}
 
 	return cp;
 }

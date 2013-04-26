@@ -311,11 +311,11 @@ fz_hash_remove_fast(fz_context *ctx, fz_hash_table *table, void *key, unsigned p
 {
 	fz_hash_entry *ents = table->ents;
 
-	if (memcmp(key, ents[pos].key, table->keylen) != 0)
+	if (ents[pos].val == NULL || memcmp(key, ents[pos].key, table->keylen) != 0)
 	{
-		/* The key didn't match! The table must have been rebuilt
-		 * (or the contents moved) in the meantime. Do the removal
-		 * the slow way. */
+		/* The value isn't there, or the key didn't match! The table
+		 * must have been rebuilt (or the contents moved) in the
+		 * meantime. Do the removal the slow way. */
 		fz_hash_remove(ctx, table, key);
 	}
 	else
@@ -325,6 +325,12 @@ fz_hash_remove_fast(fz_context *ctx, fz_hash_table *table, void *key, unsigned p
 #ifndef NDEBUG
 void
 fz_print_hash(fz_context *ctx, FILE *out, fz_hash_table *table)
+{
+	fz_print_hash_details(ctx, out, table, NULL);
+}
+
+void
+fz_print_hash_details(fz_context *ctx, FILE *out, fz_hash_table *table, void (*details)(FILE *,void*))
 {
 	int i, k;
 
@@ -339,7 +345,10 @@ fz_print_hash(fz_context *ctx, FILE *out, fz_hash_table *table)
 			fprintf(out, "table % 4d: key=", i);
 			for (k = 0; k < MAX_KEY_LEN; k++)
 				fprintf(out, "%02x", ((char*)table->ents[i].key)[k]);
-			fprintf(out, " val=$%p\n", table->ents[i].val);
+			if (details)
+				details(out, table->ents[i].val);
+			else
+				fprintf(out, " val=$%p\n", table->ents[i].val);
 		}
 	}
 }

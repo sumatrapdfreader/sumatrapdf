@@ -547,31 +547,51 @@ static inline void big32(unsigned char *buf, unsigned int v)
 	buf[3] = (v) & 0xff;
 }
 
-static inline void put32(unsigned int v, FILE *fp)
+static inline void put32(unsigned int v, fz_output *out)
 {
-	putc(v >> 24, fp);
-	putc(v >> 16, fp);
-	putc(v >> 8, fp);
-	putc(v, fp);
+	fz_printf(out, "%c%c%c%c", v>>24, v>>16, v>>8, v);
 }
 
-static void putchunk(char *tag, unsigned char *data, int size, FILE *fp)
+static void putchunk(char *tag, unsigned char *data, int size, fz_output *out)
 {
 	unsigned int sum;
-	put32(size, fp);
-	fwrite(tag, 1, 4, fp);
-	fwrite(data, 1, size, fp);
+	put32(size, out);
+	fz_write(out, tag, 4);
+	fz_write(out, data, size);
 	sum = crc32(0, NULL, 0);
 	sum = crc32(sum, (unsigned char*)tag, 4);
 	sum = crc32(sum, data, size);
-	put32(sum, fp);
+	put32(sum, out);
 }
 
 void
 fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 {
+	FILE *fp = fopen(filename, "wb");
+
+	if (!fp)
+	{
+		fz_throw(ctx, "cannot open file '%s': %s", filename, strerror(errno));
+	}
+
+	fz_try(ctx)
+	{
+		fz_output_pixmap_to_png(ctx, pixmap, fz_new_output_with_file(ctx, fp), savealpha);
+	}
+	fz_always(ctx)
+	{
+		fclose(fp);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
+void
+fz_output_pixmap_to_png(fz_context *ctx, fz_pixmap *pixmap, fz_output *out, int savealpha)
+{
 	static const unsigned char pngsig[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
-	FILE *fp;
 	unsigned char head[13];
 	unsigned char *udata = NULL;
 	unsigned char *cdata = NULL;
@@ -641,14 +661,6 @@ fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 		fz_throw(ctx, "cannot compress image data");
 	}
 
-	fp = fopen(filename, "wb");
-	if (!fp)
-	{
-		fz_free(ctx, udata);
-		fz_free(ctx, cdata);
-		fz_throw(ctx, "cannot open file '%s': %s", filename, strerror(errno));
-	}
-
 	big32(head+0, pixmap->w);
 	big32(head+4, pixmap->h);
 	head[8] = 8; /* depth */
@@ -657,11 +669,10 @@ fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 	head[11] = 0; /* filter */
 	head[12] = 0; /* interlace */
 
-	fwrite(pngsig, 1, 8, fp);
-	putchunk("IHDR", head, 13, fp);
-	putchunk("IDAT", cdata, csize, fp);
-	putchunk("IEND", head, 0, fp);
-	fclose(fp);
+	fz_write(out, pngsig, 8);
+	putchunk("IHDR", head, 13, out);
+	putchunk("IDAT", cdata, csize, out);
+	putchunk("IEND", head, 0, out);
 
 	fz_free(ctx, udata);
 	fz_free(ctx, cdata);

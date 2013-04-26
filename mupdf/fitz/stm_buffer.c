@@ -125,7 +125,7 @@ fz_buffer_cat(fz_context *ctx, fz_buffer *buf, fz_buffer *extra)
 	buf->len += extra->len;
 }
 
-void fz_write_buffer(fz_context *ctx, fz_buffer *buf, unsigned char *data, int len)
+void fz_write_buffer(fz_context *ctx, fz_buffer *buf, const void *data, int len)
 {
 	if (buf->len + len > buf->cap)
 		fz_ensure_buffer(ctx, buf, buf->len + len);

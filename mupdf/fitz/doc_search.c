@@ -10,11 +10,17 @@ static inline int fz_tolower(int c)
 
 fz_char_and_box *fz_text_char_at(fz_char_and_box *cab, fz_text_page *page, int idx)
 {
-	fz_text_block *block;
-	fz_text_line *line;
-	int ofs = 0;
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	int block_num;
+
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
+		fz_text_line *line;
+		int ofs = 0;
+		fz_text_block *block;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
 			int span_num;
@@ -60,11 +66,17 @@ static fz_rect *bboxat(fz_text_page *page, int idx, fz_rect *bbox)
 
 static int textlen(fz_text_page *page)
 {
-	fz_text_block *block;
-	fz_text_line *line;
 	int len = 0;
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	int block_num;
+
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
+		fz_text_block *block;
+		fz_text_line *line;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
 			int span_num;
@@ -149,7 +161,7 @@ fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_rect rect, fz_rec
 	fz_rect linebox, charbox;
 	fz_text_block *block;
 	fz_text_line *line;
-	int i, hit_count;
+	int i, block_num, hit_count;
 
 	float x0 = rect.x0;
 	float x1 = rect.x1;
@@ -158,8 +170,11 @@ fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_rect rect, fz_rec
 
 	hit_count = 0;
 
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
 			int span_num;
@@ -198,9 +213,7 @@ fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect)
 {
 	fz_buffer *buffer;
 	fz_rect hitbox;
-	fz_text_block *block;
-	fz_text_line *line;
-	int c, i, seen = 0;
+	int c, i, block_num, seen = 0;
 	char *s;
 
 	float x0 = rect.x0;
@@ -210,8 +223,14 @@ fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect)
 
 	buffer = fz_new_buffer(ctx, 1024);
 
-	for (block = page->blocks; block < page->blocks + page->len; block++)
+	for (block_num = 0; block_num < page->len; block_num++)
 	{
+		fz_text_block *block;
+		fz_text_line *line;
+
+		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
+			continue;
+		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
 			int span_num;

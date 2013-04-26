@@ -765,20 +765,26 @@ visible:
 				fz_ignore_text(dev, node->item.text, &ctm);
 				break;
 			case FZ_CMD_FILL_SHADE:
-				fz_fill_shade(dev, node->item.shade, &ctm, node->alpha);
+				if ((dev->hints & FZ_IGNORE_SHADE) == 0)
+					fz_fill_shade(dev, node->item.shade, &ctm, node->alpha);
 				break;
 			case FZ_CMD_FILL_IMAGE:
-				fz_fill_image(dev, node->item.image, &ctm, node->alpha);
+				if ((dev->hints & FZ_IGNORE_IMAGE) == 0)
+					fz_fill_image(dev, node->item.image, &ctm, node->alpha);
 				break;
 			case FZ_CMD_FILL_IMAGE_MASK:
-				fz_fill_image_mask(dev, node->item.image, &ctm,
-					node->colorspace, node->color, node->alpha);
+				if ((dev->hints & FZ_IGNORE_IMAGE) == 0)
+					fz_fill_image_mask(dev, node->item.image, &ctm,
+						node->colorspace, node->color, node->alpha);
 				break;
 			case FZ_CMD_CLIP_IMAGE_MASK:
 			{
-				fz_rect rect = node->rect;
-				fz_transform_rect(&rect, top_ctm);
-				fz_clip_image_mask(dev, node->item.image, &rect, &ctm);
+				if ((dev->hints & FZ_IGNORE_IMAGE) == 0)
+				{
+					fz_rect rect = node->rect;
+					fz_transform_rect(&rect, top_ctm);
+					fz_clip_image_mask(dev, node->item.image, &rect, &ctm);
+				}
 				break;
 			}
 			case FZ_CMD_POP_CLIP:

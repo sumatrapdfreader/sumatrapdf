@@ -1860,6 +1860,37 @@ fz_device *fz_new_gdiplus_device(fz_context *ctx, void *dc, const fz_rect *base_
 fz_device *fz_new_draw_device_with_bbox(fz_context *ctx, fz_pixmap *dest, const fz_irect *clip);
 
 /*
+	fz_enable_device_hints : Enable hints in a device.
+
+	hints: mask of hints to enable.
+
+	For example: By default the draw device renders shadings. For some
+	purposes (perhaps rendering fast low quality thumbnails) you may want
+	to tell it to ignore shadings. For this you would enable the
+	FZ_IGNORE_SHADE hint.
+*/
+void fz_enable_device_hints(fz_device *dev, int hints);
+
+/*
+	fz_disable_device_hints : Disable hints in a device.
+
+	hints: mask of hints to disable.
+
+	For example: By default the text extraction device ignores images.
+	For some purposes however (such as extracting HTML) you may want to
+	enable the capturing of image data too. For this you would disable
+	the FZ_IGNORE_IMAGE hint.
+*/
+void fz_disable_device_hints(fz_device *dev, int hints);
+
+enum
+{
+	/* Hints */
+	FZ_IGNORE_IMAGE = 1,
+	FZ_IGNORE_SHADE = 2,
+};
+
+/*
 	Text extraction device: Used for searching, format conversion etc.
 
 	(In development - Subject to change in future versions)
@@ -1870,6 +1901,8 @@ typedef struct fz_text_char_s fz_text_char;
 typedef struct fz_text_span_s fz_text_span;
 typedef struct fz_text_line_s fz_text_line;
 typedef struct fz_text_block_s fz_text_block;
+typedef struct fz_image_block_s fz_image_block;
+typedef struct fz_page_block_s fz_page_block;
 
 typedef struct fz_text_sheet_s fz_text_sheet;
 typedef struct fz_text_page_s fz_text_page;
@@ -1902,14 +1935,33 @@ struct fz_text_style_s
 };
 
 /*
-	fz_text_page: A text page is a list of blocks of text, together with
+	fz_text_page: A text page is a list of page blocks, together with
 	an overall bounding box.
 */
 struct fz_text_page_s
 {
 	fz_rect mediabox;
 	int len, cap;
-	fz_text_block *blocks;
+	fz_page_block *blocks;
+};
+
+/*
+	fz_page_block: A page block is a typed block pointer.
+*/
+struct fz_page_block_s
+{
+	int type;
+	union
+	{
+		fz_text_block *text;
+		fz_image_block *image;
+	} u;
+};
+
+enum
+{
+	FZ_PAGE_BLOCK_TEXT = 0,
+	FZ_PAGE_BLOCK_IMAGE = 1
 };
 
 /*
@@ -1926,6 +1978,20 @@ struct fz_text_block_s
 
 /* SumatraPDF: make fz_shades use less memory */
 enum { FZ_MAX_COLORS = 8 };
+
+/*
+	fz_image_block: An image block is an image, together with the  list of lines of text. In typical
+	cases this may correspond to a paragraph or a column of text. A
+	collection of blocks makes up a page.
+*/
+struct fz_image_block_s
+{
+	fz_rect bbox;
+	fz_matrix mat;
+	fz_image *image;
+	fz_colorspace *cspace;
+	float colors[FZ_MAX_COLORS];
+};
 
 /*
 	fz_text_line: A text line is a list of text spans, with the same
@@ -2049,6 +2115,10 @@ void fz_free_text_page(fz_context *ctx, fz_text_page *page);
 
 void fz_text_analysis(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page);
 
+/*
+	Generic output streams - generalise between outputting to a file,
+	a buffer, etc.
+*/
 typedef struct fz_output_s fz_output;
 
 struct fz_output_s
@@ -2056,21 +2126,45 @@ struct fz_output_s
 	fz_context *ctx;
 	void *opaque;
 	int (*printf)(fz_output *, const char *, va_list ap);
+	int (*write)(fz_output *, const void *, int n);
 	void (*close)(fz_output *);
 };
 
-fz_output *fz_new_output_file(fz_context *, FILE *);
+/*
+	fz_new_output_with_file: Open an output stream onto a FILE *.
 
-fz_output *fz_new_output_buffer(fz_context *, fz_buffer *);
+	The stream does NOT take ownership of the FILE *.
+*/
+fz_output *fz_new_output_with_file(fz_context *, FILE *);
 
+/*
+	fz_new_output_with_buffer: Open an output stream onto a buffer.
+
+	The stream doesn NOT take ownership of the buffer.
+*/
+fz_output *fz_new_output_with_buffer(fz_context *, fz_buffer *);
+
+/*
+	fz_printf: fprintf equivalent for output streams.
+*/
 int fz_printf(fz_output *, const char *, ...);
+
+/*
+	fz_write: fwrite equivalent for output streams.
+*/
+int fz_write(fz_output *out, const void *data, int len);
+
+/*
+	Output a pixmap to an output stream as a png.
+*/
+void fz_output_pixmap_to_png(fz_context *ctx, fz_pixmap *pixmap, fz_output *out, int savealpha);
 
 /*
 	fz_close_output: Close a previously opened fz_output stream.
 
 	Note: whether or not this closes the underlying output method is
-	method dependent. FILE * streams created by fz_new_output_file are
-	NOT closed.
+	method dependent. FILE * streams created by fz_new_output_with_file
+	are NOT closed.
 */
 void fz_close_output(fz_output *);
 

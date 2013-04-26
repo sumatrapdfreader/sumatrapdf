@@ -137,7 +137,7 @@ struct sctx
 	int dot;
 	int from_bezier;
 
-	float *dash_list;
+	const float *dash_list;
 	float dash_phase;
 	int dash_len;
 	int toggle, cap;
@@ -545,7 +545,7 @@ fz_stroke_bezier(struct sctx *s,
 }
 
 void
-fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth)
+fz_flatten_stroke_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth)
 {
 	struct sctx s;
 	fz_point p0, p1, p2, p3;
@@ -751,7 +751,7 @@ fz_dash_bezier(struct sctx *s,
 }
 
 void
-fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth)
+fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth)
 {
 	struct sctx s;
 	fz_point p0, p1, p2, p3, beg;

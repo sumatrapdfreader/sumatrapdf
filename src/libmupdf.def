@@ -126,6 +126,8 @@ EXPORTS
 	fz_new_draw_device
 	fz_new_gdiplus_device
 	fz_new_draw_device_with_bbox
+	fz_enable_device_hints
+	fz_disable_device_hints
 	fz_text_char_at
 	fz_text_char_bbox
 	fz_new_text_device
@@ -134,9 +136,11 @@ EXPORTS
 	fz_new_text_page
 	fz_free_text_page
 	fz_text_analysis
-	fz_new_output_file
-	fz_new_output_buffer
+	fz_new_output_with_file
+	fz_new_output_with_buffer
 	fz_printf
+	fz_write
+	fz_output_pixmap_to_png
 	fz_close_output
 	fz_print_text_sheet
 	fz_print_text_page_html
@@ -317,10 +321,10 @@ EXPORTS
 	fz_load_jpx
 	fz_load_png
 	fz_load_tiff
-	fz_load_jxr
 	fz_load_jpeg_info
 	fz_load_png_info
 	fz_load_tiff_info
+	fz_load_jxr
 	fz_load_jxr_info
 	fz_new_halftone
 	fz_default_halftone
@@ -409,6 +413,7 @@ EXPORTS
 	fz_flatten_fill_path
 	fz_flatten_stroke_path
 	fz_flatten_dash_path
+	fz_bound_path_accurate
 	fz_keep_transfer_function
 	fz_drop_transfer_function
 	fz_new_draw_device_type3

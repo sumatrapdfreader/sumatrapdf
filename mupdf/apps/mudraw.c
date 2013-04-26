@@ -513,6 +513,8 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			fz_rect bounds;
 			text = fz_new_text_page(ctx, fz_bound_page(doc, page, &bounds));
 			dev = fz_new_text_device(ctx, sheet, text);
+			if (showtext == TEXT_HTML)
+				fz_disable_device_hints(dev, FZ_IGNORE_IMAGE);
 			if (list)
 				fz_run_display_list(list, dev, &fz_identity, &fz_infinite_rect, &cookie);
 			else
@@ -787,7 +789,7 @@ static void drawoutline(fz_context *ctx, fz_document *doc)
 	fz_var(out);
 	fz_try(ctx)
 	{
-		out = fz_new_output_file(ctx, stdout);
+		out = fz_new_output_with_file(ctx, stdout);
 		if (showoutline > 1)
 			fz_print_outline_xml(ctx, out, outline);
 		else
@@ -896,7 +898,7 @@ int main(int argc, char **argv)
 	timing.maxfilename = "";
 
 	if (showxml || showtext)
-		out = fz_new_output_file(ctx, stdout);
+		out = fz_new_output_with_file(ctx, stdout);
 
 	if (showxml || showtext == TEXT_XML)
 		fz_printf(out, "<?xml version=\"1.0\"?>\n");

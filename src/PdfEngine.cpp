@@ -252,8 +252,10 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
 {
     size_t lineSepLen = str::Len(lineSep);
     size_t textLen = 0;
-    for (fz_text_block *block = text->blocks; block < text->blocks + text->len; block++) {
-        for (fz_text_line *line = block->lines; line < block->lines + block->len; line++) {
+    for (fz_page_block *block = text->blocks; block < text->blocks + text->len; block++) {
+        if (block->type != FZ_PAGE_BLOCK_TEXT)
+            continue;
+        for (fz_text_line *line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++) {
             for (int span_num = 0; span_num < line->len; span_num++) {
                 textLen += line->spans[span_num]->len;
             }
@@ -275,8 +277,10 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
     }
 
     WCHAR *dest = content;
-    for (fz_text_block *block = text->blocks; block < text->blocks + text->len; block++) {
-        for (fz_text_line *line = block->lines; line < block->lines + block->len; line++) {
+    for (fz_page_block *block = text->blocks; block < text->blocks + text->len; block++) {
+        if (block->type != FZ_PAGE_BLOCK_TEXT)
+            continue;
+        for (fz_text_line *line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++) {
             for (int span_num = 0; span_num < line->len; span_num++) {
                 fz_text_span *span = line->spans[span_num];
                 for (fz_text_char *c = span->text; c < span->text + span->len; c++) {

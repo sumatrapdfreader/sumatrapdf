@@ -909,7 +909,7 @@ pdf_show_char(pdf_csi *csi, int cid)
 	if (fontdesc->wmode == 1)
 	{
 		v = pdf_lookup_vmtx(ctx, fontdesc, cid);
-		tsm.e -= v.x * gstate->size * 0.001f;
+		tsm.e -= v.x * fabsf(gstate->size) * 0.001f;
 		tsm.f -= v.y * gstate->size * 0.001f;
 	}
 

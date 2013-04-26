@@ -277,6 +277,7 @@ void *fz_hash_get_val(fz_context *ctx, fz_hash_table *table, int idx);
 
 #ifndef NDEBUG
 void fz_print_hash(fz_context *ctx, FILE *out, fz_hash_table *table);
+void fz_print_hash_details(fz_context *ctx, FILE *out, fz_hash_table *table, void (*details)(FILE *, void *));
 #endif
 
 /*
@@ -593,6 +594,7 @@ int fz_store_scavenge(fz_context *ctx, unsigned int size, int *phase);
 */
 #ifndef NDEBUG
 void fz_print_store(fz_context *ctx, FILE *out);
+void fz_print_store_locked(fz_context *ctx, FILE *out);
 #endif
 
 struct fz_buffer_s
@@ -662,7 +664,7 @@ void fz_trim_buffer(fz_context *ctx, fz_buffer *buf);
 */
 void fz_buffer_cat(fz_context *ctx, fz_buffer *buf, fz_buffer *extra);
 
-void fz_write_buffer(fz_context *ctx, fz_buffer *buf, unsigned char *data, int len);
+void fz_write_buffer(fz_context *ctx, fz_buffer *buf, const void *data, int len);
 
 void fz_write_buffer_byte(fz_context *ctx, fz_buffer *buf, int val);
 
@@ -1474,10 +1476,10 @@ int fz_is_rect_gel(fz_gel *gel);
 void fz_scan_convert(fz_gel *gel, int eofill, const fz_irect *clip, fz_pixmap *pix, unsigned char *colorbv);
 
 void fz_flatten_fill_path(fz_gel *gel, fz_path *path, const fz_matrix *ctm, float flatness);
-void fz_flatten_stroke_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
-void fz_flatten_dash_path(fz_gel *gel, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
+void fz_flatten_stroke_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
+void fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
 
-fz_irect *fz_bound_path_accurate(fz_context *ctx, fz_irect *bbox, const fz_irect *scissor, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
+fz_irect *fz_bound_path_accurate(fz_context *ctx, fz_irect *bbox, const fz_irect *scissor, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth);
 
 /* SumatraPDF: support transfer functions */
 typedef struct fz_transfer_function_s fz_transfer_function;
@@ -1498,10 +1500,6 @@ fz_device *fz_new_draw_device_type3(fz_context *ctx, fz_pixmap *dest);
 
 enum
 {
-	/* Hints */
-	FZ_IGNORE_IMAGE = 1,
-	FZ_IGNORE_SHADE = 2,
-
 	/* Flags */
 	FZ_DEVFLAG_MASK = 1,
 	FZ_DEVFLAG_COLOR = 2,
