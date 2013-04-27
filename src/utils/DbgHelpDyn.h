@@ -24,6 +24,8 @@ void WriteMiniDump(const WCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATIO
 void GetThreadCallstack(str::Str<char>& s, DWORD threadId);
 bool GetCurrentThreadCallstack(str::Str<char>& s);
 void LogCallstack();
+void RememberCallstackLogs();
+char *GetCallstacks();
 void GetAllThreadsCallstacks(str::Str<char>& s);
 void GetExceptionInfo(str::Str<char>& s, EXCEPTION_POINTERS *excPointers);
 

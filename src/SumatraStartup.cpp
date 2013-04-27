@@ -4,6 +4,8 @@
 // TODO: for the moment it needs to be included from SumatraPDF.cpp
 // and not compiled as stand-alone
 
+#include "DbgHelpDyn.h"
+
 #ifdef DEBUG
 static bool TryLoadMemTrace()
 {
@@ -275,6 +277,18 @@ static void GetCommandLineInfo(CommandLineInfo& i)
     i.ParseCommandLine(GetCommandLine());
 }
 
+static void SetupCrashHandler()
+{
+    ScopedMem<WCHAR> symDir;
+    ScopedMem<WCHAR> tmpDir(path::GetTempPath());
+    if (tmpDir)
+        symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
+    else
+        symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
+    ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
+    InstallCrashHandler(crashDumpPath, symDir);
+}
+
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     int retCode = 1;    // by default it's error
@@ -323,17 +337,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // load uiautomationcore.dll before installing crash handler (i.e. initializing
     // dbghelp.dll), so that we get function names/offsets in GetCallstack()
     uia::Initialize();
+#ifdef DEBUG
+    dbghelp::RememberCallstackLogs();
+#endif
 
-    {
-        ScopedMem<WCHAR> symDir;
-        ScopedMem<WCHAR> tmpDir(path::GetTempPath());
-        if (tmpDir)
-            symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
-        else
-            symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
-        ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
-        InstallCrashHandler(crashDumpPath, symDir);
-    }
+    SetupCrashHandler();
 
     ScopedOle ole;
     InitAllCommonControls();
@@ -508,6 +516,7 @@ Exit:
     uitask::Destroy();
     trans::Destroy();
 
+    SaveCallstackLogs();
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
     UninstallCrashHandler();

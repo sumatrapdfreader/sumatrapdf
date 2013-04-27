@@ -475,13 +475,32 @@ __declspec(noinline) bool GetCurrentThreadCallstack(str::Str<char>& s)
 }
 #pragma optimize("", off )
 
+str::Str<char> *gCallstackLogs = NULL;
+
+// start remembering callstack logs done with LogCallstack()
+void RememberCallstackLogs()
+{
+    CrashIf(gCallstackLogs);
+    gCallstackLogs = new str::Str<char>();
+}
+
+char *GetCallstacks()
+{
+    if (!gCallstackLogs)
+        return NULL;
+    return str::Dup(gCallstackLogs->Get());
+}
+
 void LogCallstack()
 {
     str::Str<char> s(2048);
-    if (GetCurrentThreadCallstack(s)) {
-        plog(s.Get());
-        plog("-------\n\n");
-    }
+    if (!GetCurrentThreadCallstack(s))
+        return;
+
+    s.Append("\n");
+    plog(s.Get());
+    if (gCallstackLogs)
+        gCallstackLogs->Append(s.Get());
 }
 
 void GetAllThreadsCallstacks(str::Str<char>& s)

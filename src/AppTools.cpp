@@ -5,6 +5,7 @@
 #include "AppTools.h"
 
 #include "CmdLineParser.h"
+#include "DbgHelpDyn.h"
 #include "FileUtil.h"
 #include "Translations.h"
 #include "Version.h"
@@ -605,4 +606,14 @@ RectI GetDefaultWindowPos()
     r.x = (work.dx - r.dx) / 2;
 
     return r;
+}
+
+void SaveCallstackLogs()
+{
+    char *s = dbghelp::GetCallstacks();
+    if (!s)
+        return;
+    ScopedMem<WCHAR> filePath(AppGenDataFilename(L"callstacks.txt"));
+    file::WriteAll(filePath.Get(), s, str::Len(s));
+    free(s);
 }
