@@ -582,7 +582,7 @@ bool DjVuEngineImpl::RenderPage(HDC hDC, RectI screenRect, int pageNo, float zoo
 
         RenderedBitmap *bmp = RenderBitmap(pageNo, zoom, rotation, &pageBand, target, cookie_out);
         if (bmp && bmp->GetBitmap())
-            bmp->StretchDIBits(hDC, screenBand);
+            success = bmp->StretchDIBits(hDC, screenBand);
         else
             success = false;
         delete bmp;

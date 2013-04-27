@@ -50,14 +50,21 @@ public:
     SizeI Size() const { return size; }
 
     // render the bitmap into the target rectangle (streching and skewing as requird)
-    void StretchDIBits(HDC hdc, RectI target) const {
+    bool StretchDIBits(HDC hdc, RectI target) const {
         HDC bmpDC = CreateCompatibleDC(hdc);
+        if (!bmpDC)
+            return false;
         HGDIOBJ oldBmp = SelectObject(bmpDC, hbmp);
+        if (!oldBmp) {
+            DeleteDC(bmpDC);
+            return false;
+        }
         SetStretchBltMode(hdc, HALFTONE);
-        StretchBlt(hdc, target.x, target.y, target.dx, target.dy,
-            bmpDC, 0, 0, size.dx, size.dy, SRCCOPY);
+        bool ok = StretchBlt(hdc, target.x, target.y, target.dx, target.dy,
+                             bmpDC, 0, 0, size.dx, size.dy, SRCCOPY);
         SelectObject(bmpDC, oldBmp);
         DeleteDC(bmpDC);
+        return ok;
     }
 };
 

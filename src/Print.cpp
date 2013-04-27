@@ -199,32 +199,29 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                     offset.y += (int)(printable.dy - bSize.dy * zoom) / 2;
                 }
 
+                bool ok = false;
                 if (!pd.advData.asImage) {
                     RectI rc(offset.x, offset.y, (int)(clipRegion->dx * zoom), (int)(clipRegion->dy * zoom));
-                    engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                    ok = engine.RenderPage(hdc, rc, pd.sel.At(i).pageNo, zoom, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
                     if (abortCookie)
                         abortCookie->Clear();
                 }
                 else {
-                    RenderedBitmap *bmp = NULL;
                     short shrink = 1;
                     do {
-                        bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                        RenderedBitmap *bmp = engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
                         if (abortCookie)
                             abortCookie->Clear();
-                        if (!bmp || !bmp->GetBitmap()) {
-                            shrink *= 2;
-                            delete bmp;
-                            bmp = NULL;
+                        if (bmp && bmp->GetBitmap()) {
+                            RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                            ok = bmp->StretchDIBits(hdc, rc);
                         }
-                    } while (!bmp && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
-                    if (bmp) {
-                        RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
-                        bmp->StretchDIBits(hdc, rc);
                         delete bmp;
-                    }
+                        shrink *= 2;
+                    } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
                 }
             }
+            // TODO: abort if !ok?
 
             if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
@@ -305,31 +302,28 @@ static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, Abor
                     offset.y -= (int)(onPaper.BR().y - printable.BR().y);
             }
 
+            bool ok = false;
             if (!pd.advData.asImage) {
                 RectI rc = RectI::FromXY(offset.x, offset.y, paperSize.dx, paperSize.dy);
-                engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                ok = engine.RenderPage(hdc, rc, pageNo, zoom, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
                 if (abortCookie)
                     abortCookie->Clear();
             }
             else {
-                RenderedBitmap *bmp = NULL;
                 short shrink = 1;
                 do {
-                    bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
+                    RenderedBitmap *bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, NULL, Target_Print, abortCookie ? &abortCookie->cookie : NULL);
                     if (abortCookie)
                         abortCookie->Clear();
-                    if (!bmp || !bmp->GetBitmap()) {
-                        shrink *= 2;
-                        delete bmp;
-                        bmp = NULL;
+                    if (bmp && bmp->GetBitmap()) {
+                        RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
+                        ok = bmp->StretchDIBits(hdc, rc);
                     }
-                } while (!bmp && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
-                if (bmp) {
-                    RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
-                    bmp->StretchDIBits(hdc, rc);
                     delete bmp;
-                }
+                    shrink *= 2;
+                } while (!ok && shrink < 32 && !(progressUI && progressUI->WasCanceled()));
             }
+            // TODO: abort if !ok?
 
             if (EndPage(hdc) <= 0 || progressUI && progressUI->WasCanceled()) {
                 AbortDoc(hdc);
