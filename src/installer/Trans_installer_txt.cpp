@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   24
+#define LANGS_COUNT   25
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -463,6 +463,51 @@ const char * gTranslations_et =
   "Eemaldamine eba\303\265nnestus\0"\
   "Toimub eemaldamine...\0"\
   "Kasuta SumatraPDF programmi &vaikimisi PDF-lehitsejana.\0";
+
+const char * gTranslations_fi = 
+  "&Asetukset\0"\
+  "Oletko varma ett\303\244 haluat poistaa SumatraPDF:n?\0"\
+  "Sulje\0"\
+  "V\303\244liaikaiskansion luominen ep\303\244onnistui\0"\
+  "Asennuskansion luominen ep\303\244onnistui\0"\
+  "PDF-esikatselijan asentaminen ep\303\244onnistui\0"\
+  "PDF-hakusuodattimen asentaminen ep\303\244onnistui\0"\
+  "Selainliit\303\244nn\303\244isen asentaminen ep\303\244onnistui\0"\
+  "V\303\244liaikaishakemiston k\303\244ytt\303\244minen ep\303\244onnistui\0"\
+  "Asennuskansion poistaminen ep\303\244onnistui\0"\
+  "Pikakuvakkeen poistaminen ep\303\244onnistui\0"\
+  "PDF-esikatselijan poistaminen ep\303\244onnistui\0"\
+  "PDF-hakusuodattimen poistaminen ep\303\244onnistui\0"\
+  "Selainliit\303\244nn\303\244isen poistaminen ep\303\244onnistui\0"\
+  "Levylle kirjoittaminen ep\303\244onnistui: %s\0"\
+  "Poisto-ohjelman kopioiminen v\303\244liaikaiskansioon ep\303\244onnistui\0"\
+  "Pikakuvakkeen luominen ep\303\244onnistui\0"\
+  "Poisto-ohjelman rekisteriavainten poistaminen ep\303\244onnistui\0"\
+  "\0"\
+  "Poistamistietojen kirjoittaminen rekisteriin ep\303\244onnistui\0"\
+  "Piilota &asetukset\0"\
+  "Asenna PDF-liit\303\244nn\303\244inen selaimille Firefox, Chrome ja Opera\0"\
+  "Asenna SumatraPDF\0"\
+  "Asenna SumatraPDF kansioon:\0"\
+  "Asentaminen ep\303\244onnistui!\0"\
+  "Asennus k\303\244ynniss\303\244...\0"\
+  "Anna Windowsin ty\303\266p\303\266yd\303\244n hakutoiminnon &etsi\303\244 PDF-asiakirjoista\0"\
+  "Anna Windowsin n\303\244ytt\303\244\303\244 &esikatselukuvat PDF-asiakirjoille\0"\
+  "Sulje %s jatkaaksesi!\0"\
+  "Valitse kansio, johon SumatraPDF asennetaan:\0"\
+  "Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat\0"\
+  "K\303\244ynnist\303\244 SumatraPDF\0"\
+  "SumatraPDF %s asennusohjelma\0"\
+  "SumatraPDF %s poisto-ohjelma\0"\
+  "SumatraPDF on poistettu.\0"\
+  "SumatraPDF-asennusta ei l\303\266ytynyt.\0"\
+  "Kiitos ett\303\244 valitsit SumatraPDF:n!\0"\
+  "Kiitos! SumatraPDF asennettiin.\0"\
+  "Asennusohjelma on viallinen. Lataa se uudelleen.\nAnteeksi h\303\244iri\303\266!\0"\
+  "Poista SumatraPDF\0"\
+  "Poistaminen ep\303\244onnistui\0"\
+  "Poistaminen k\303\244ynniss\303\244...\0"\
+  "K\303\244yt\303\244 SumatraPDF:\303\244\303\244 PDF-tiedostojen oletuslukijana\0";
 
 const char * gTranslations_fr = 
   "\0"\
@@ -1106,6 +1151,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_cn, 
   gTranslations_nl, 
   gTranslations_et, 
+  gTranslations_fi, 
   gTranslations_fr, 
   gTranslations_de, 
   gTranslations_hu, 
@@ -1135,6 +1181,7 @@ const char *gLangCodes =   "en\0" \
   "cn\0" \
   "nl\0" \
   "et\0" \
+  "fi\0" \
   "fr\0" \
   "de\0" \
   "hu\0" \
@@ -1160,6 +1207,7 @@ const char *gLangNames =   "English\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "Dutch (Nederlands)\0" \
   "Estonian (Eesti)\0" \
+  "Finnish (Suomi)\0" \
   "French (Fran\303\247ais)\0" \
   "German (Deutsch)\0" \
   "Hungarian (Magyar)\0" \
@@ -1197,6 +1245,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
   _LANGID(LANG_DUTCH),
   _LANGID(LANG_ESTONIAN),
+  _LANGID(LANG_FINNISH),
   _LANGID(LANG_FRENCH),
   _LANGID(LANG_GERMAN),
   _LANGID(LANG_HUNGARIAN),
@@ -1216,7 +1265,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (15 == idx);
+  return (2 == idx) || (16 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;
