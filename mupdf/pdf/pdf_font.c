@@ -296,6 +296,9 @@ pdf_load_system_font(fz_context *ctx, pdf_font_desc *fontdesc, char *fontname, c
 		italic = 1;
 	if (strstr(fontname, "Oblique"))
 		italic = 1;
+	/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2280 */
+	if (strstr(fontname, "Courier"))
+		mono = 1;
 
 	if (fontdesc->flags & PDF_FD_FIXED_PITCH)
 		mono = 1;
