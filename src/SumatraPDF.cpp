@@ -4745,6 +4745,9 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             // says that UiaReturnRawElementProvider() should be called regardless of lParam
             // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
             if (!gPluginMode) {
+                // disable UIAutomation in release builds until concurrency issues and
+                // memory leaks have been figured out and fixed
+#ifdef DEBUG
                 if (win->CreateUIAProvider()) {
                     // TODO: should win->uia_provider->Release() as in http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
                     // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
@@ -4755,6 +4758,7 @@ static LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
                     // and since WM_GETOBJECT is called many times, it accumulates
                     return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
                 }
+#endif
             }
             return DefWindowProc(hwnd, msg, wParam, lParam);
 

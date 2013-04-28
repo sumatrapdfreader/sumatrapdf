@@ -5,11 +5,11 @@ Next version:
 
 2.3 (2013-??-??):
 
-* support screen readers etc. via UI automation
 * more configurability. Settings are now saved in human-editable
   SumatraPDF-settings.txt (instead of binary sumatrapdfprefs.dat)
   and there are more settings for customizing Sumatra. For more
   documentation see http://blog.kowalczyk.info/software/sumatrapdf/settings.html
+* support screen readers etc. via UI automation (disabled in release builds)
 * add support for OpenXPS documents
 * "Go To Page" for ebook format
 * fixed paragraph indentation missing for EPUB documents
