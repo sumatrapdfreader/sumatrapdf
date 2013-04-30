@@ -272,10 +272,13 @@ void WriteMiniDump(const WCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATIO
 static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectionOut, DWORD& offsetOut)
 {
     MEMORY_BASIC_INFORMATION mbi;
-    if (!VirtualQuery(addr, &mbi, sizeof(mbi)))
+    if (0 == VirtualQuery(addr, &mbi, sizeof(mbi)))
         return false;
 
     DWORD hMod = (DWORD)mbi.AllocationBase;
+    if (0 == hMod)
+        return false;
+
     if (!GetModuleFileNameA((HMODULE)hMod, module, moduleLen))
         return false;
 
