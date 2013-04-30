@@ -241,10 +241,10 @@ FITZ_DRAW_OBJS = \
 FITZ_OBJS = \
 	$(OFZ)\base_error.obj $(OFZ)\base_geometry.obj $(OFZ)\base_getopt.obj $(OFZ)\base_hash.obj \
 	$(OFZ)\base_memory.obj $(OFZ)\base_string.obj $(OFZ)\base_time.obj $(OFZ)\base_trans.obj \
-	$(OFZ)\base_context.obj $(OFZ)\base_xml.obj $(OFZ)\crypt_sha2.obj $(OFZ)\dev_gdiplus.obj \
-	$(OFZ)\dev_bbox.obj $(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_text.obj \
-	$(OFZ)\dev_trace.obj $(OFZ)\crypt_aes.obj $(OFZ)\crypt_arc4.obj $(OFZ)\crypt_md5.obj \
-	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj $(OFZ)\doc_link.obj $(OFZ)\doc_outline.obj $(OFZ)\doc_search.obj \
+	$(OFZ)\base_context.obj $(OFZ)\base_xml.obj $(OFZ)\crypt_aes.obj $(OFZ)\crypt_sha2.obj \
+	$(OFZ)\crypt_arc4.obj $(OFZ)\crypt_md5.obj $(OFZ)\dev_gdiplus.obj $(OFZ)\dev_bbox.obj \
+	$(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_trace.obj \
+	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj $(OFZ)\doc_link.obj $(OFZ)\doc_outline.obj \
 	$(OFZ)\filt_basic.obj $(OFZ)\filt_faxd.obj $(OFZ)\filt_flate.obj $(OFZ)\filt_jbig2d.obj \
 	$(OFZ)\filt_dctd.obj $(OFZ)\filt_lzwd.obj $(OFZ)\filt_predict.obj $(OFZ)\res_store.obj \
 	$(OFZ)\image_jpeg.obj $(OFZ)\image_jpx.obj $(OFZ)\image_png.obj $(OFZ)\image_tiff.obj \
@@ -252,7 +252,8 @@ FITZ_OBJS = \
 	$(OFZ)\res_colorspace.obj $(OFZ)\res_font.obj $(OFZ)\res_shade.obj $(OFZ)\res_halftone.obj \
 	$(OFZ)\stm_buffer.obj $(OFZ)\stm_comp_buf.obj $(OFZ)\stm_open.obj $(OFZ)\stm_read.obj \
 	$(OFZ)\stm_output.obj $(OFZ)\image_md5.obj $(OFZ)\image_save.obj $(OFZ)\image_jxr.obj \
-	$(OFZ)\res_func.obj $(OFZ)\res_image.obj
+	$(OFZ)\res_func.obj $(OFZ)\res_image.obj $(OFZ)\text_extract.obj $(OFZ)\text_output.obj \
+	$(OFZ)\text_paragraph.obj $(OFZ)\text_search.obj
 
 MUPDF_OBJS = \
 	$(OP)\pdf_object.obj $(OP)\pdf_annot.obj $(OP)\pdf_cmap.obj $(OP)\pdf_store.obj \

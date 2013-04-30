@@ -221,13 +221,11 @@
     <ClCompile Include="..\mupdf\fitz\dev_gdiplus.cpp" />
     <ClCompile Include="..\mupdf\fitz\dev_list.c" />
     <ClCompile Include="..\mupdf\fitz\dev_null.c" />
-    <ClCompile Include="..\mupdf\fitz\dev_text.c" />
     <ClCompile Include="..\mupdf\fitz\dev_trace.c" />
     <ClCompile Include="..\mupdf\fitz\doc_document.c" />
     <ClCompile Include="..\mupdf\fitz\doc_interactive.c" />
     <ClCompile Include="..\mupdf\fitz\doc_link.c" />
     <ClCompile Include="..\mupdf\fitz\doc_outline.c" />
-    <ClCompile Include="..\mupdf\fitz\doc_search.c" />
     <ClCompile Include="..\mupdf\fitz\filt_basic.c" />
     <ClCompile Include="..\mupdf\fitz\filt_dctd.c" />
     <ClCompile Include="..\mupdf\fitz\filt_faxd.c" />
@@ -258,6 +256,10 @@
     <ClCompile Include="..\mupdf\fitz\stm_open.c" />
     <ClCompile Include="..\mupdf\fitz\stm_output.c" />
     <ClCompile Include="..\mupdf\fitz\stm_read.c" />
+    <ClCompile Include="..\mupdf\fitz\text_extract.c" />
+    <ClCompile Include="..\mupdf\fitz\text_output.c" />
+    <ClCompile Include="..\mupdf\fitz\text_paragraph.c" />
+    <ClCompile Include="..\mupdf\fitz\text_search.c" />
     <ClCompile Include="..\mupdf\draw\draw_affine.c" />
     <ClCompile Include="..\mupdf\draw\draw_blend.c" />
     <ClCompile Include="..\mupdf\draw\draw_device.c" />

@@ -23,6 +23,18 @@ fz_free_device(fz_device *dev)
 }
 
 void
+fz_enable_device_hints(fz_device *dev, int hints)
+{
+	dev->hints |= hints;
+}
+
+void
+fz_disable_device_hints(fz_device *dev, int hints)
+{
+	dev->hints &= ~hints;
+}
+
+void
 fz_fill_path(fz_device *dev, fz_path *path, int even_odd, const fz_matrix *ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {

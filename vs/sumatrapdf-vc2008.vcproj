@@ -1295,10 +1295,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\mupdf\fitz\dev_text.c"
-					>
-				</File>
-				<File
 					RelativePath="..\mupdf\fitz\dev_trace.c"
 					>
 				</File>
@@ -1316,10 +1312,6 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\fitz\doc_outline.c"
-					>
-				</File>
-				<File
-					RelativePath="..\mupdf\fitz\doc_search.c"
 					>
 				</File>
 				<File
@@ -1448,6 +1440,22 @@
 				</File>
 				<File
 					RelativePath="..\mupdf\fitz\stm_read.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\fitz\text_extract.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\fitz\text_output.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\fitz\text_paragraph.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mupdf\fitz\text_search.c"
 					>
 				</File>
 			</Filter>

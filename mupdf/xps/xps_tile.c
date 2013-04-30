@@ -195,11 +195,8 @@ xps_parse_tiling_brush(xps_document *doc, const fz_matrix *ctm, const fz_rect *a
 		y1 = ceilf(local_area.y1 / ystep);
 
 #ifdef TILE
-		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=693338 */
-		if (x1 - x0 > 2 || y1 - y0 > 2 ||
-			/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2248 */
-			x1 - x0 == 2 && (local_area.x1 - local_area.x0) / xstep > 0.1f ||
-			y1 - y0 == 2 && (local_area.y1 - local_area.y0) / ystep > 0.1f)
+		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2248 */
+		if ((local_area.x1 - local_area.x0) / xstep > 1 || (local_area.y1 - local_area.y0) / ystep > 1)
 #else
 		if (0)
 #endif

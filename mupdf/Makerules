@@ -33,7 +33,7 @@ RANLIB_CMD = ranlib $@
 # Other Unixes use pkg-config for system third party libs
 else
 SYS_FREETYPE_CFLAGS = $(shell pkg-config --cflags freetype2)
-SYS_OPENJPEG_CFLAGS = $(shell pkg-config --cflags libopenjpeg)
+SYS_OPENJPEG_CFLAGS = $(shell pkg-config --cflags libopenjpeg1)
 SYS_X11_CFLAGS = $(shell pkg-config --cflags x11 xext)
 SYS_X11_LIBS = $(shell pkg-config --libs x11 xext)
 endif

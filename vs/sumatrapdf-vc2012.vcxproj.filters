@@ -534,9 +534,6 @@
     <ClCompile Include="..\mupdf\fitz\dev_null.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
-    <ClCompile Include="..\mupdf\fitz\dev_text.c">
-      <Filter>ext\mupdf\fitz</Filter>
-    </ClCompile>
     <ClCompile Include="..\mupdf\fitz\dev_trace.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
@@ -550,9 +547,6 @@
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\fitz\doc_outline.c">
-      <Filter>ext\mupdf\fitz</Filter>
-    </ClCompile>
-    <ClCompile Include="..\mupdf\fitz\doc_search.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\fitz\filt_basic.c">
@@ -643,6 +637,18 @@
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\fitz\stm_read.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\fitz\text_extract.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\fitz\text_output.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\fitz\text_paragraph.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mupdf\fitz\text_search.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
     <ClCompile Include="..\mupdf\draw\draw_affine.c">

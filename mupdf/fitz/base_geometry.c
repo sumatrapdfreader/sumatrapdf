@@ -260,6 +260,18 @@ fz_transform_vector(fz_point *restrict p, const fz_matrix *restrict m)
 	return p;
 }
 
+void
+fz_normalize_vector(fz_point *p)
+{
+	float len = p->x * p->x + p->y * p->y;
+	if (len != 0)
+	{
+		len = sqrtf(len);
+		p->x /= len;
+		p->y /= len;
+	}
+}
+
 /* Rectangles and bounding boxes */
 
 /* biggest and smallest integers that a float can represent perfectly (i.e. 24 bits) */

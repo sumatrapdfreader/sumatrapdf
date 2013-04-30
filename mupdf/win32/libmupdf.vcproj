@@ -437,7 +437,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\dev_text.c"
+				RelativePath="..\fitz\text_extract.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\text_output.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\text_paragraph.c"
 				>
 			</File>
 			<File
@@ -461,7 +469,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\doc_search.c"
+				RelativePath="..\fitz\text_search.c"
 				>
 			</File>
 			<File

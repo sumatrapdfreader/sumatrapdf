@@ -71,6 +71,7 @@ EXPORTS
 	fz_transform_point
 	fz_transform_vector
 	fz_transform_rect
+	fz_normalize_vector
 	fz_keep_buffer
 	fz_drop_buffer
 	fz_buffer_storage

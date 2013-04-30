@@ -545,7 +545,7 @@ ximage_convert_rgba8888(PARAMS)
 	int x, y;
 	for (y = 0; y < h; y++) {
 		for (x = 0; x < w; x++) {
-			dst[x] = src[x];
+			((unsigned *)dst)[x] = ((unsigned *)src)[x];
 		}
 		dst += dststride;
 		src += srcstride;

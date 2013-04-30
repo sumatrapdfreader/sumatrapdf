@@ -1232,6 +1232,11 @@ fz_point *fz_transform_vector(fz_point *restrict vector, const fz_matrix *restri
 fz_rect *fz_transform_rect(fz_rect *restrict rect, const fz_matrix *restrict transform);
 
 /*
+	fz_normalize_vector: Normalize a vector to length one.
+*/
+void fz_normalize_vector(fz_point *p);
+
+/*
 	fz_buffer is a wrapper around a dynamically allocated array of bytes.
 
 	Buffers have a capacity (the number of bytes storage immediately
