@@ -77,8 +77,6 @@ extern bool                     gUseGdiRenderer;
 extern HCURSOR                  gCursorHand;
 extern HCURSOR                  gCursorArrow;
 extern HCURSOR                  gCursorIBeam;
-extern HBRUSH                   gBrushLogoBg;
-extern HBRUSH                   gBrushAboutBg;
 extern HFONT                    gDefaultGuiFont;
 extern WCHAR *                  gPluginURL;
 extern Vec<WindowInfo*>         gWindows;
@@ -124,6 +122,10 @@ void  OnMenuAbout();
 void  QuitIfNoMoreWindows();
 bool  ShouldSaveThumbnail(DisplayState& ds);
 void  SaveThumbnailForFile(const WCHAR *filePath, RenderedBitmap *bmp);
+
+COLORREF GetLogoBgColor();
+COLORREF GetAboutBgColor();
+COLORREF GetNoDocBgColor();
 
 WindowInfo* FindWindowInfoByFile(const WCHAR *file);
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);

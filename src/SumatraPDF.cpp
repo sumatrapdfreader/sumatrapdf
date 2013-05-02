@@ -125,8 +125,6 @@ HINSTANCE                    ghinst = NULL;
 HCURSOR                      gCursorArrow;
 HCURSOR                      gCursorHand;
 HCURSOR                      gCursorIBeam;
-HBRUSH                       gBrushLogoBg;
-HBRUSH                       gBrushAboutBg;
 HFONT                        gDefaultGuiFont;
 
 // TODO: combine into Vec<SumatraWindow> (after 2.0) ?
@@ -140,7 +138,6 @@ static HCURSOR                      gCursorScroll;
 static HCURSOR                      gCursorSizeWE;
 static HCURSOR                      gCursorSizeNS;
 static HCURSOR                      gCursorNo;
-static HBRUSH                       gBrushNoDocBg;
 static HBITMAP                      gBitmapReloadingCue;
 static RenderCache                  gRenderCache;
 static bool                         gCrashOnOpen = false;
@@ -2059,7 +2056,8 @@ static void DrawDocument(WindowInfo& win, HDC hdc, RECT *rcArea)
         FillRect(hdc, rcArea, brush);
     }
     else if (0 == gGlobalPrefs->fixedPageUI.gradientColors->Count()) {
-        FillRect(hdc, rcArea, gBrushNoDocBg);
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
+        FillRect(hdc, rcArea, brush);
     }
     else {
         COLORREF colors[3];
@@ -2202,12 +2200,6 @@ void UpdateDocumentColors()
         gRenderCache.colorRange[1] = back;
         RerenderEverything();
     }
-    // update document background
-    DeleteObject(gBrushNoDocBg);
-    if (gGlobalPrefs->useSysColors && (fore != WIN_COL_BLACK || back != WIN_COL_WHITE))
-        gBrushNoDocBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-    else
-        gBrushNoDocBg = CreateSolidBrush(COL_WINDOW_BG);
 }
 
 #if defined(SHOW_DEBUG_MENU_ITEMS) || defined(DEBUG)
@@ -2566,7 +2558,8 @@ static void OnPaint(WindowInfo& win)
         // a notification would break this
         ScopedFont fontRightTxt(GetSimpleFont(hdc, L"MS Shell Dlg", 14));
         HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-        FillRect(hdc, &ps.rcPaint, gBrushNoDocBg);
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
+        FillRect(hdc, &ps.rcPaint, brush);
         ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win.loadedFilePath));
         DrawCenteredText(hdc, ClientRect(win.hwndCanvas), msg, IsUIRightToLeft());
         SelectObject(hdc, hPrevFont);

@@ -349,9 +349,7 @@ bool Save()
 }
 
 // refresh the preferences when a different SumatraPDF process saves them
-// TODO: should immediately update as much look&feel as possible. Settings
-// that are not immediately reflected:
-//  - MainWindowBackground when showing the start page
+// or if they are edited by the user using a text editor
 bool Reload(bool forceReload)
 {
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));

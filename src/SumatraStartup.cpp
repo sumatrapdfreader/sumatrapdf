@@ -75,6 +75,36 @@ static bool RegisterWinClass(HINSTANCE hinst)
     return true;
 }
 
+COLORREF GetLogoBgColor()
+{
+    COLORREF bgColor = ABOUT_BG_LOGO_COLOR;
+    if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs->mainWindowBackground)
+        bgColor = gGlobalPrefs->mainWindowBackground;
+    return bgColor;
+}
+
+COLORREF GetAboutBgColor()
+{
+#ifdef ABOUT_USE_LESS_COLORS
+    return ABOUT_BG_GRAY_COLOR;
+#else
+    return GetLogoBgColor();
+#endif
+}
+
+COLORREF GetNoDocBgColor()
+{
+    // use the system background color if the user has non-default
+    // colors for text (not black-on-white) and also wants to use them
+    bool useSysColor = gGlobalPrefs->useSysColors &&
+                       (GetSysColor(COLOR_WINDOWTEXT) != WIN_COL_BLACK ||
+                        GetSysColor(COLOR_WINDOW) != WIN_COL_WHITE);
+    if (useSysColor)
+        return GetSysColor(COLOR_BTNFACE);
+
+    return COL_WINDOW_BG;
+}
+
 static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
 {
     ghinst = hInstance;
@@ -90,24 +120,6 @@ static bool InstanceInit(HINSTANCE hInstance, int nCmdShow)
     gCursorSizeWE   = LoadCursor(NULL, IDC_SIZEWE);
     gCursorSizeNS   = LoadCursor(NULL, IDC_SIZENS);
     gCursorNo       = LoadCursor(NULL, IDC_NO);
-    // use the system background color if the user has non-default
-    // colors for text (not black-on-white) and also wants to use them
-    bool useSysColor = gGlobalPrefs->useSysColors &&
-                       (GetSysColor(COLOR_WINDOWTEXT) != WIN_COL_BLACK ||
-                        GetSysColor(COLOR_WINDOW) != WIN_COL_WHITE);
-    if (useSysColor) {
-        // not using GetSysColorBrush so that gBrushNoDocBg can be deleted
-        gBrushNoDocBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
-    }
-    else
-        gBrushNoDocBg = CreateSolidBrush(COL_WINDOW_BG);
-    COLORREF bgColor = ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs->mainWindowBackground ? gGlobalPrefs->mainWindowBackground : ABOUT_BG_LOGO_COLOR;
-    gBrushLogoBg = CreateSolidBrush(bgColor);
-#ifndef ABOUT_USE_LESS_COLORS
-    gBrushAboutBg = CreateSolidBrush(bgColor);
-#else
-    gBrushAboutBg = CreateSolidBrush(ABOUT_BG_GRAY_COLOR);
-#endif
 
     NONCLIENTMETRICS ncm = { 0 };
     ncm.cbSize = sizeof(ncm);
@@ -499,15 +511,14 @@ Exit:
 
 #else
 
-    DeleteObject(gBrushNoDocBg);
-    DeleteObject(gBrushLogoBg);
-    DeleteObject(gBrushAboutBg);
     DeleteObject(gDefaultGuiFont);
     DeleteBitmap(gBitmapReloadingCue);
 
     // wait for FileExistenceChecker to terminate
     // (which should be necessary only very rarely)
-    while (gFileExistenceChecker);
+    while (gFileExistenceChecker) {
+        // do nothing
+    }
 
     gFileHistory.UpdateStatesSource(NULL);
     DeleteGlobalPrefs(gGlobalPrefs);
@@ -517,7 +528,7 @@ Exit:
     trans::Destroy();
 
     SaveCallstackLogs();
-    dbghelp::ForgetCallstackLogs();
+    dbghelp::FreeCallstackLogs();
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely

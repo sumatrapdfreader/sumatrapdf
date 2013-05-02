@@ -226,19 +226,21 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
 
     ClientRect rc(hwnd);
     RECT rTmp = rc.ToRECT();
-    FillRect(hdc, &rTmp, gBrushAboutBg);
+    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(GetAboutBgColor()));
+    FillRect(hdc, &rTmp, brushAboutBg);
 
     /* render title */
     RectI titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
 
-    SelectObject(hdc, gBrushLogoBg);
+    ScopedGdiObj<HBRUSH> bgBrush(CreateSolidBrush(GetLogoBgColor()));
+    SelectObject(hdc, bgBrush);
     SelectObject(hdc, penBorder);
 #ifndef ABOUT_USE_LESS_COLORS
     Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx, rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
 #else
     RectI titleBgBand(0, rect.y, rc.dx, titleRect.dy);
     RECT rcLogoBg = titleBgBand.ToRECT();
-    FillRect(hdc, &rcLogoBg, gBrushLogoBg);
+    FillRect(hdc, &rcLogoBg, bgBrush);
     PaintLine(hdc, RectI(0, rect.y, rc.dx, 0));
     PaintLine(hdc, RectI(0, rect.y + titleRect.dy, rc.dx, 0));
 #endif
@@ -568,9 +570,10 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     ClientRect rc(win.hwndCanvas);
     RECT rTmp = rc.ToRECT();
-    FillRect(hdc, &rTmp, gBrushLogoBg);
+    ScopedGdiObj<HBRUSH> brushLogoBg(CreateSolidBrush(GetLogoBgColor()));
+    FillRect(hdc, &rTmp, brushLogoBg);
 
-    SelectObject(hdc, gBrushLogoBg);
+    SelectObject(hdc, brushLogoBg);
     SelectObject(hdc, penBorder);
 
     bool isRtl = IsUIRightToLeft();
@@ -589,7 +592,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
     rTmp = rc.ToRECT();
-    FillRect(hdc, &rTmp, gBrushAboutBg);
+    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(GetAboutBgColor()));
+    FillRect(hdc, &rTmp, brushAboutBg);
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
     Vec<DisplayState *> list;

@@ -487,7 +487,7 @@ void RememberCallstackLogs()
     gCallstackLogs = new str::Str<char>();
 }
 
-void ForgetCallstackLogs()
+void FreeCallstackLogs()
 {
     delete gCallstackLogs;
     gCallstackLogs = NULL;
