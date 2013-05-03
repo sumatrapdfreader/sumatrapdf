@@ -9572,7 +9572,7 @@ const char * gTranslations_br =
 const char * gTranslations_pt = 
   "&Sobre\0"\
   "&Tamanho real\tCtrl+1\0"\
-  "\0"\
+  "Op\303\247\303\265es &avan\303\247adas...\0"\
   "&Todas as p\303\241ginas selecionadas\0"\
   "V&oltar\tAlt + <-\0"\
   "Como li&vro\tCtrl+8\0"\
@@ -9718,7 +9718,7 @@ const char * gTranslations_pt =
   "\0"\
   "Tornar SumatraPDF a aplica\303\247\303\243o principal para PDFs?\0"\
   "Tornar SumatraPDF o leitor principal dos PDF\0"\
-  "\0"\
+  "Modo man&ga\0"\
   "Sens\303\255vel a mai\303\272sculas\0"\
   "Documentos Mobi\0"\
   "Modificado:\0"\
