@@ -518,15 +518,25 @@ fz_new_image(fz_context *ctx, int w, int h, int bpc, fz_colorspace *colorspace,
 }
 
 fz_image *
-fz_new_image_from_buffer(fz_context *ctx, unsigned char *buf, int len)
+fz_new_image_from_data(fz_context *ctx, unsigned char *data, int len)
+{
+	fz_buffer *buffer = fz_new_buffer_from_data(ctx, data, len);
+
+	return fz_new_image_from_buffer(ctx, buffer);
+}
+
+fz_image *
+fz_new_image_from_buffer(fz_context *ctx, fz_buffer *buffer)
 {
 	fz_compressed_buffer *bc = NULL;
 	int w, h, xres, yres;
 	fz_colorspace *cspace;
-	unsigned char *free_buf = buf;
+	fz_buffer *drop_buffer = buffer;
+	int len = buffer->len;
+	unsigned char *buf = buffer->data;
 
 	fz_var(bc);
-	fz_var(free_buf);
+	fz_var(drop_buffer);
 
 	fz_try(ctx)
 	{
@@ -534,8 +544,8 @@ fz_new_image_from_buffer(fz_context *ctx, unsigned char *buf, int len)
 			fz_throw(ctx, "unknown image file format");
 
 		bc = fz_malloc_struct(ctx, fz_compressed_buffer);
-		bc->buffer = fz_new_buffer_from_data(ctx, buf, len);
-		free_buf = NULL;
+		bc->buffer = buffer; /* SumatraPDF: TODO: clarify ownership of buffer */
+		drop_buffer = NULL;
 
 		if (buf[0] == 0xff && buf[1] == 0xd8)
 		{
@@ -563,7 +573,7 @@ fz_new_image_from_buffer(fz_context *ctx, unsigned char *buf, int len)
 	}
 	fz_catch(ctx)
 	{
-		fz_free(ctx, free_buf);
+		fz_drop_buffer(ctx, drop_buffer);
 		fz_free_compressed_buffer(ctx, bc);
 		fz_rethrow(ctx);
 	}

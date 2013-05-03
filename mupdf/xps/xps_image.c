@@ -6,7 +6,7 @@ xps_load_image(fz_context *ctx, xps_part *part)
 	/* Ownership of data always passes in here */
 	byte *data = part->data;
 	part->data = NULL;
-	return fz_new_image_from_buffer(ctx, data, part->size);
+	return fz_new_image_from_data(ctx, data, part->size);
 }
 
 /* FIXME: area unused! */

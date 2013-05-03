@@ -437,18 +437,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fitz\text_extract.c"
-				>
-			</File>
-			<File
-				RelativePath="..\fitz\text_output.c"
-				>
-			</File>
-			<File
-				RelativePath="..\fitz\text_paragraph.c"
-				>
-			</File>
-			<File
 				RelativePath="..\fitz\dev_trace.c"
 				>
 			</File>
@@ -466,10 +454,6 @@
 			</File>
 			<File
 				RelativePath="..\fitz\doc_outline.c"
-				>
-			</File>
-			<File
-				RelativePath="..\fitz\text_search.c"
 				>
 			</File>
 			<File
@@ -604,6 +588,22 @@
 				RelativePath="..\fitz\stm_read.c"
 				>
 			</File>
+			<File
+				RelativePath="..\fitz\text_extract.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\text_output.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\text_paragraph.c"
+				>
+			</File>
+			<File
+				RelativePath="..\fitz\text_search.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="draw"
@@ -714,6 +714,18 @@
 			</File>
 			<File
 				RelativePath="..\cbz\mucbz.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="image"
+			>
+			<File
+				RelativePath="..\image\muimage.c"
+				>
+			</File>
+			<File
+				RelativePath="..\image\muimage.h"
 				>
 			</File>
 		</Filter>

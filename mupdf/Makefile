@@ -12,7 +12,7 @@ default: all
 # Do not specify CFLAGS or LIBS on the make invocation line - specify
 # XCFLAGS or XLIBS instead. Make ignores any lines in the makefile that
 # set a variable that was set on the command line.
-CFLAGS += $(XCFLAGS) -Ifitz -Ipdf -Ixps -Icbz -Iscripts
+CFLAGS += $(XCFLAGS) -Ifitz -Ipdf -Ixps -Icbz -Iimage -Iscripts
 LIBS += $(XLIBS) -lfreetype -ljbig2dec -ljpeg -lopenjpeg -lz -lm
 LIBS_V8 = $(LIBS) $(V8LIBS)
 
@@ -47,6 +47,7 @@ FITZ_HDR := fitz/fitz.h fitz/fitz-internal.h
 MUPDF_HDR := $(FITZ_HDR) pdf/mupdf.h pdf/mupdf-internal.h
 MUXPS_HDR := $(FITZ_HDR) xps/muxps.h xps/muxps-internal.h
 MUCBZ_HDR := $(FITZ_HDR) cbz/mucbz.h
+MUIMAGE_HDR := $(FITZ_HDR) image/muimage.h
 
 $(OUT) $(GEN) :
 	$(MKDIR_CMD)
@@ -70,7 +71,9 @@ $(OUT)/%.o : xps/%.c $(MUXPS_HDR) | $(OUT)
 	$(CC_CMD)
 $(OUT)/%.o : cbz/%.c $(MUCBZ_HDR) | $(OUT)
 	$(CC_CMD)
-$(OUT)/%.o : apps/%.c fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h | $(OUT)
+$(OUT)/%.o : image/%.c $(MUCBZ_HDR) | $(OUT)
+	$(CC_CMD)
+$(OUT)/%.o : apps/%.c fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h image/muimage.h | $(OUT)
 	$(CC_CMD)
 $(OUT)/%.o : scripts/%.c | $(OUT)
 	$(CC_CMD)
@@ -90,17 +93,20 @@ MUPDF_V8_SRC := $(filter-out pdf_js_none.c, $(MUPDF_ALL_SRC))
 MUPDF_V8_CPP_SRC := $(notdir $(wildcard pdf/*.cpp))
 MUXPS_SRC := $(notdir $(wildcard xps/*.c))
 MUCBZ_SRC := $(notdir $(wildcard cbz/*.c))
+MUIMAGE_SRC := $(notdir $(wildcard image/*.c))
 
 $(FITZ_LIB) : $(addprefix $(OUT)/, $(FITZ_SRC:%.c=%.o))
 $(FITZ_LIB) : $(addprefix $(OUT)/, $(MUPDF_SRC:%.c=%.o))
 $(FITZ_LIB) : $(addprefix $(OUT)/, $(MUXPS_SRC:%.c=%.o))
 $(FITZ_LIB) : $(addprefix $(OUT)/, $(MUCBZ_SRC:%.c=%.o))
+$(FITZ_LIB) : $(addprefix $(OUT)/, $(MUIMAGE_SRC:%.c=%.o))
 
 $(FITZ_V8_LIB) : $(addprefix $(OUT)/, $(FITZ_SRC:%.c=%.o))
 $(FITZ_V8_LIB) : $(addprefix $(OUT)/, $(MUPDF_V8_SRC:%.c=%.o))
 $(FITZ_V8_LIB) : $(addprefix $(OUT)/, $(MUPDF_V8_CPP_SRC:%.cpp=%.o))
 $(FITZ_V8_LIB) : $(addprefix $(OUT)/, $(MUXPS_SRC:%.c=%.o))
 $(FITZ_V8_LIB) : $(addprefix $(OUT)/, $(MUCBZ_SRC:%.c=%.o))
+$(FITZ_V8_LIB) : $(addprefix $(OUT)/, $(MUIMAGE_SRC:%.c=%.o))
 
 libs: $(FITZ_LIB) $(THIRD_LIBS)
 libs_v8: libs $(FITZ_V8_LIB)
@@ -211,7 +217,7 @@ mandir ?= $(prefix)/share/man
 install: $(FITZ_LIB) $(MUVIEW) $(MUDRAW) $(MUTOOL)
 	install -d $(DESTDIR)$(bindir) $(DESTDIR)$(libdir) $(DESTDIR)$(incdir) $(DESTDIR)$(mandir)/man1
 	install $(FITZ_LIB) $(DESTDIR)$(libdir)
-	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h $(DESTDIR)$(incdir)
+	install fitz/memento.h fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h image/muimage.h $(DESTDIR)$(incdir)
 	install $(MUVIEW) $(MUDRAW) $(MUTOOL) $(DESTDIR)$(bindir)
 	install $(wildcard apps/man/*.1) $(DESTDIR)$(mandir)/man1
 

@@ -364,7 +364,7 @@ cbz_load_page(cbz_document *doc, int number)
 
 		data = cbz_read_zip_entry(doc, doc->entry[number].offset, &size);
 
-		page->image = fz_new_image_from_buffer(ctx, data, size);
+		page->image = fz_new_image_from_data(ctx, data, size);
 	}
 	fz_catch(ctx)
 	{

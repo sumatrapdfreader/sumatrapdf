@@ -162,51 +162,12 @@ EXPORTS
 	fz_print_outline
 	fz_free_outline
 	fz_generate_transition
-	fz_open_document
-	fz_open_document_with_stream
-	fz_close_document
-	fz_needs_password
-	fz_authenticate_password
-	fz_load_outline
-	fz_count_pages
-	fz_load_page
-	fz_load_links
-	fz_bound_page
-	fz_get_annot_type
-	fz_first_annot
-	fz_next_annot
-	fz_bound_annot
-	fz_run_page
-	fz_run_page_contents
-	fz_run_annot
-	fz_free_page
-	fz_meta
-	fz_page_presentation
-	fz_interact
-	fz_has_unsaved_changes
-	fz_pass_event
-	fz_update_page
-	fz_poll_changed_annot
-	fz_focused_widget
-	fz_first_widget
-	fz_next_widget
 	fz_widget_get_type
 	fz_bound_widget
-	fz_text_widget_text
-	fz_text_widget_max_len
-	fz_text_widget_content_type
-	fz_text_widget_set_text
-	fz_choice_widget_options
-	fz_choice_widget_is_multiselect
-	fz_choice_widget_value
-	fz_choice_widget_set_value
-	fz_set_doc_event_callback
 	fz_access_alert_event
 	fz_access_exec_menu_item_event
 	fz_access_launch_url_event
 	fz_access_mail_doc_event
-	fz_javascript_supported
-	fz_write_document
 
 	fz_clone_context_internal
 	fz_new_aa_context
@@ -314,6 +275,7 @@ EXPORTS
 	fz_free_compressed_buffer
 	fz_new_image
 	fz_new_image_from_pixmap
+	fz_new_image_from_data
 	fz_new_image_from_buffer
 	fz_image_get_pixmap
 	fz_free_image
@@ -381,12 +343,6 @@ EXPORTS
 	fz_render_stroked_glyph
 	fz_render_t3_glyph_direct
 	fz_prepare_t3_glyph
-	fz_create_annot
-	fz_delete_annot
-	fz_set_annot_appearance
-	fz_set_markup_annot_quadpoints
-	fz_set_markup_appearance
-	fz_set_ink_annot_list
 	fz_new_text
 	fz_add_text
 	fz_free_text
@@ -805,17 +761,6 @@ EXPORTS
 	xps_extract_anchor_info
 	xps_extract_doc_props
 	xps_free_doc_props
-
-; MuCBZ exports
-
-	cbz_open_document
-	cbz_open_document_with_stream
-	cbz_close_document
-	cbz_count_pages
-	cbz_load_page
-	cbz_bound_page
-	cbz_free_page
-	cbz_run_page
 
 ; jpeg exports (required for libdjvu)
 

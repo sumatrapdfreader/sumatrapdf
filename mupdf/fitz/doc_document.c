@@ -4,10 +4,12 @@
 extern struct pdf_document *pdf_open_document(fz_context *ctx, const char *filename);
 extern struct xps_document *xps_open_document(fz_context *ctx, const char *filename);
 extern struct cbz_document *cbz_open_document(fz_context *ctx, const char *filename);
+extern struct image_document *image_open_document(fz_context *ctx, const char *filename);
 
 extern struct pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_stream *file);
 extern struct xps_document *xps_open_document_with_stream(fz_context *ctx, fz_stream *file);
 extern struct cbz_document *cbz_open_document_with_stream(fz_context *ctx, fz_stream *file);
+extern struct image_document *image_open_document_with_stream(fz_context *ctx, fz_stream *file);
 
 extern int pdf_js_supported(void);
 
@@ -42,6 +44,11 @@ fz_open_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stre
 			return (fz_document*) cbz_open_document_with_stream(ctx, stream);
 		if (!fz_strcasecmp(ext, ".pdf"))
 			return (fz_document*) pdf_open_document_with_stream(ctx, stream);
+		if (!fz_strcasecmp(ext, ".png") || !fz_strcasecmp(ext, ".jpg") ||
+			!fz_strcasecmp(ext, ".jpeg") || !fz_strcasecmp(ext, ".jfif") ||
+			!fz_strcasecmp(ext, ".jfif-tbnl") || !fz_strcasecmp(ext, ".jpe") ||
+			!fz_strcasecmp(ext, ".tif") || !fz_strcasecmp(ext, ".tiff"))
+			return (fz_document*) image_open_document_with_stream(ctx, stream);
 	}
 
 	if (!strcmp(magic, "cbz") || !strcmp(magic, "application/x-cbz"))
@@ -50,6 +57,13 @@ fz_open_document_with_stream(fz_context *ctx, const char *magic, fz_stream *stre
 		return (fz_document*) xps_open_document_with_stream(ctx, stream);
 	if (!strcmp(magic, "pdf") || !strcmp(magic, "application/pdf"))
 		return (fz_document*) pdf_open_document_with_stream(ctx, stream);
+	if (!strcmp(magic, "png") || !strcmp(magic, "image/png") ||
+		!strcmp(magic, "jpg") || !strcmp(magic, "image/jpeg") ||
+		!strcmp(magic, "jpeg") || !strcmp(magic, "image/pjpeg") ||
+		!strcmp(magic, "jpe") || !strcmp(magic, "jfif") ||
+		!strcmp(magic, "tif") || !strcmp(magic, "image/tiff") ||
+		!strcmp(magic, "tiff") || !strcmp(magic, "image/x-tiff"))
+		return (fz_document*) image_open_document_with_stream(ctx, stream);
 
 	/* last guess: pdf */
 	return (fz_document*) pdf_open_document_with_stream(ctx, stream);
@@ -68,6 +82,11 @@ fz_open_document(fz_context *ctx, const char *filename)
 			return (fz_document*) cbz_open_document(ctx, filename);
 		if (!fz_strcasecmp(ext, ".pdf"))
 			return (fz_document*) pdf_open_document(ctx, filename);
+		if (!fz_strcasecmp(ext, ".png") || !fz_strcasecmp(ext, ".jpg") ||
+			!fz_strcasecmp(ext, ".jpeg") || !fz_strcasecmp(ext, ".jpe") ||
+			!fz_strcasecmp(ext, ".jfif") || !fz_strcasecmp(ext, ".jfif-tbnl") ||
+			!fz_strcasecmp(ext, ".tif") || !fz_strcasecmp(ext, ".tiff"))
+			return (fz_document*) image_open_document(ctx, filename);
 	}
 
 	/* last guess: pdf */

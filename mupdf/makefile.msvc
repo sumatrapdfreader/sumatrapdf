@@ -244,7 +244,7 @@ FITZ_OBJS = \
 	$(OFZ)\base_context.obj $(OFZ)\base_xml.obj $(OFZ)\crypt_aes.obj $(OFZ)\crypt_sha2.obj \
 	$(OFZ)\crypt_arc4.obj $(OFZ)\crypt_md5.obj $(OFZ)\dev_gdiplus.obj $(OFZ)\dev_bbox.obj \
 	$(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_trace.obj \
-	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj $(OFZ)\doc_link.obj $(OFZ)\doc_outline.obj \
+	$(OFZ)\doc_link.obj $(OFZ)\doc_outline.obj \
 	$(OFZ)\filt_basic.obj $(OFZ)\filt_faxd.obj $(OFZ)\filt_flate.obj $(OFZ)\filt_jbig2d.obj \
 	$(OFZ)\filt_dctd.obj $(OFZ)\filt_lzwd.obj $(OFZ)\filt_predict.obj $(OFZ)\res_store.obj \
 	$(OFZ)\image_jpeg.obj $(OFZ)\image_jpx.obj $(OFZ)\image_png.obj $(OFZ)\image_tiff.obj \
@@ -273,9 +273,6 @@ MUXPS_OBJS = \
 	$(OX)\xps_image.obj $(OX)\xps_path.obj $(OX)\xps_resource.obj $(OX)\xps_tile.obj \
 	$(OX)\xps_util.obj $(OX)\xps_zip.obj $(OX)\xps_outline.obj
 
-MUCBZ_OBJS = \
-	$(OX)\mucbz.obj
-
 LIBS_OBJS = \
 	$(ZLIB_OBJS) \
 	$(FT_OBJS) \
@@ -285,22 +282,24 @@ LIBS_OBJS = \
 	$(FITZ_DRAW_OBJS) \
 	$(FITZ_OBJS) \
 	$(MUPDF_OBJS) \
-	$(MUXPS_OBJS) \
-	$(MUCBZ_OBJS)
+	$(MUXPS_OBJS)
+
+MUDOC_OBJS = \
+	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj $(OX)\mucbz.obj $(OX)\muimage.obj
 
 MUAPPS_OBJS = \
 	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\mudraw.obj $(OA)\pdfshow.obj \
 	$(OA)\pdfclean.obj $(OA)\pdfinfo.obj $(OA)\pdfextract.obj $(OA)\pdfposter.obj
 
 PDFAPP_RES = $(OA)\pdfview.res
-PDFAPP_OBJS = $(LIBS_OBJS) $(OA)\win_main.obj $(OA)\pdfapp.obj $(PDFAPP_RES)
+PDFAPP_OBJS = $(LIBS_OBJS) $(MUDOC_OBJS) $(OA)\win_main.obj $(OA)\pdfapp.obj $(PDFAPP_RES)
 PDFAPP_APP = $(O)\pdfview.exe
 
-MUTOOL_OBJS = $(LIBS_OBJS) $(OA)\mutool.obj $(OA)\pdfshow.obj \
+MUTOOL_OBJS = $(LIBS_OBJS) $(MUDOC_OBJS) $(OA)\mutool.obj $(OA)\pdfshow.obj \
 	$(OA)\pdfclean.obj $(OA)\pdfinfo.obj $(OA)\pdfextract.obj $(OA)\pdfposter.obj
 MUTOOL_APP = $(O)\mutool.exe
 
-MUDRAW_OBJS = $(LIBS_OBJS) $(OA)\mudraw.obj
+MUDRAW_OBJS = $(LIBS_OBJS) $(MUDOC_OBJS) $(OA)\mudraw.obj
 MUDRAW_APP = $(O)\mudraw.exe
 
 all: $(O) $(MUDRAW_APP) $(MUTOOL_APP) $(PDFAPP_APP)
@@ -393,8 +392,14 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 {$(JBIG2_DIR)}.c{$(OJB)}.obj::
 	$(CC) $(JBIG2_CFLAGS) /Fo$(OJB)\ /Fd$(O)\vc80.pdb $<
 
-{$(MUPDF_DIR)\apps}.c{$(OA)}.obj::
-	$(CC) $(MUPDF_CFLAGS) /Fo$(OA)\ /Fd$(O)\vc80.pdb $<
+{$(MUPDF_DIR)\fitz}.c{$(OFZ)}.obj::
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
+
+{$(MUPDF_DIR)\fitz}.cpp{$(OFZ)}.obj::
+	$(CC) $(MUPDF_CFLAGS: /TC = ) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
+
+{$(MUPDF_DIR)\draw}.c{$(OFZ)}.obj::
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\pdf}.c{$(OP)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(OP)\ /Fd$(O)\vc80.pdb $<
@@ -402,17 +407,14 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 {$(MUPDF_DIR)\xps}.c{$(OX)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
 
+{$(MUPDF_DIR)\apps}.c{$(OA)}.obj::
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OA)\ /Fd$(O)\vc80.pdb $<
+
 {$(MUPDF_DIR)\cbz}.c{$(OX)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
 
-{$(MUPDF_DIR)\draw}.c{$(OFZ)}.obj::
-	$(CC) $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
-
-{$(MUPDF_DIR)\fitz}.c{$(OFZ)}.obj::
-	$(CC) $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
-
-{$(MUPDF_DIR)\fitz}.cpp{$(OFZ)}.obj::
-	$(CC) $(MUPDF_CFLAGS: /TC = ) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
+{$(MUPDF_DIR)\image}.c{$(OX)}.obj::
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
 
 # files that might have to be generated first:
 
@@ -437,11 +439,11 @@ FITZ_H  = $(MUPDF_DIR)\fitz\fitz.h $(MUPDF_DIR)\fitz\fitz-internal.h
 MUPDF_H = $(MUPDF_DIR)\pdf\mupdf.h $(MUPDF_DIR)\pdf\mupdf-internal.h
 MUXPS_H = $(MUPDF_DIR)\xps\muxps.h
 MUCBZ_H = $(MUPDF_DIR)\cbz\mucbz.h
+MUIMG_H = $(MUPDF_DIR)\image\muimage.h
 
 $(FITZ_OBJS) $(FITZ_DRAW_OBJS): $(FITZ_H)
 $(MUPDF_OBJS): $(FITZ_H) $(MUPDF_H)
 $(MUXPS_OBJS): $(FITZ_H) $(MUXPS_H)
-$(MUCBZ_OBJS): $(FITZ_H) $(MUCBZ_H)
-$(MUAPPS_OBJS): $(FITZ_H) $(MUPDF_H) $(MUXPS_H) $(MUCBZ_H)
+$(MUAPPS_OBJS) $(MUDOC_OBJS): $(FITZ_H) $(MUPDF_H) $(MUXPS_H) $(MUCBZ_H) $(MUIMG_H)
 
 force: ;

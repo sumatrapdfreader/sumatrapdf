@@ -1312,7 +1312,7 @@ PdfEngineImpl::PdfEngineImpl() : _fileName(NULL), _doc(NULL),
     fz_locks_ctx.unlock = fz_unlock_context_cs;
     ctx = fz_new_context(NULL, &fz_locks_ctx, MAX_CONTEXT_MEMORY);
 
-    AssertCrash(!fz_javascript_supported() && !pdf_js_supported());
+    AssertCrash(!pdf_js_supported());
 }
 
 PdfEngineImpl::~PdfEngineImpl()

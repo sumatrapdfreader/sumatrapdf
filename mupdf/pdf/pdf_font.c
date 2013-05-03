@@ -5,7 +5,7 @@
 #include FT_FREETYPE_H
 #include FT_XFREE86_H
 
-static void pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *dict, char *collection, char *basefont, int has_encoding);
+static void pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *dict, char *collection, char *basefont, int iscidfont, int has_encoding);
 
 static char *base_font_names[][10] =
 {
@@ -530,7 +530,7 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 		fz_try(ctx)
 		{
 		if (descriptor)
-			pdf_load_font_descriptor(fontdesc, xref, descriptor, NULL, basefont, pdf_dict_gets(dict, "Encoding") != NULL);
+			pdf_load_font_descriptor(fontdesc, xref, descriptor, NULL, basefont, 0, pdf_dict_gets(dict, "Encoding") != NULL);
 		else
 			pdf_load_builtin_font(ctx, fontdesc, basefont);
 		/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=691690 */
@@ -572,7 +572,7 @@ pdf_load_simple_font(pdf_document *xref, pdf_obj *dict)
 				pdf_drop_font(ctx, fontdesc);
 				fontdesc = NULL;
 				fontdesc = pdf_new_font_desc(ctx);
-				pdf_load_font_descriptor(fontdesc, xref, descriptor, "Adobe-GB1", cp936fonts[i+1], 1);
+				pdf_load_font_descriptor(fontdesc, xref, descriptor, "Adobe-GB1", cp936fonts[i+1], 0, 1);
 				fontdesc->encoding = pdf_load_system_cmap(ctx, "GBK-EUC-H");
 				fontdesc->to_unicode = pdf_load_system_cmap(ctx, "Adobe-GB1-UCS2");
 				fontdesc->to_ttf_cmap = pdf_load_system_cmap(ctx, "Adobe-GB1-UCS2");
@@ -938,7 +938,7 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 		descriptor = pdf_dict_gets(dict, "FontDescriptor");
 		if (!descriptor)
 			fz_throw(ctx, "syntaxerror: missing font descriptor");
-		pdf_load_font_descriptor(fontdesc, xref, descriptor, collection, basefont, 1);
+		pdf_load_font_descriptor(fontdesc, xref, descriptor, collection, basefont, 1, 1);
 
 		face = fontdesc->font->ft_face;
 		kind = ft_kind(face);
@@ -1022,6 +1022,17 @@ load_cid_font(pdf_document *xref, pdf_obj *dict, pdf_obj *encoding, pdf_obj *to_
 		fz_catch(ctx)
 		{
 			fz_warn(ctx, "cannot load ToUnicode CMap");
+		}
+
+		/* If we have an identity encoding, we're supposed to use the glyph ids directly.
+		 * If we only have a substitute font, that won't work.
+		 * Make a last ditch attempt by using
+		 * the ToUnicode table if it exists to map via the substitute font's cmap. */
+		if (strstr(fontdesc->encoding->cmap_name, "Identity-") && fontdesc->font->ft_substitute)
+		{
+			fz_warn(ctx, "non-embedded font using identity encoding: %s", basefont);
+			if (fontdesc->to_unicode && !fontdesc->to_ttf_cmap)
+				fontdesc->to_ttf_cmap = pdf_keep_cmap(ctx, fontdesc->to_unicode);
 		}
 
 		/* Horizontal */
@@ -1160,7 +1171,7 @@ pdf_load_type0_font(pdf_document *xref, pdf_obj *dict)
  */
 
 static void
-pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *dict, char *collection, char *basefont, int has_encoding)
+pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *dict, char *collection, char *basefont, int iscidfont, int has_encoding)
 {
 	pdf_obj *obj1, *obj2, *obj3, *obj;
 	char *fontname, *origname;
@@ -1203,7 +1214,7 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *d
 		fz_catch(ctx)
 		{
 			fz_warn(ctx, "ignored error when loading embedded font; attempting to load system font");
-			if (origname != fontname)
+			if (origname != fontname && !iscidfont)
 				pdf_load_builtin_font(ctx, fontdesc, fontname);
 			else
 				pdf_load_system_font(ctx, fontdesc, fontname, collection, has_encoding);
@@ -1211,7 +1222,7 @@ pdf_load_font_descriptor(pdf_font_desc *fontdesc, pdf_document *xref, pdf_obj *d
 	}
 	else
 	{
-		if (origname != fontname)
+		if (origname != fontname && !iscidfont)
 			pdf_load_builtin_font(ctx, fontdesc, fontname);
 		else
 			pdf_load_system_font(ctx, fontdesc, fontname, collection, has_encoding);
