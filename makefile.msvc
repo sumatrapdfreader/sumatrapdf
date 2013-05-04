@@ -185,7 +185,8 @@ ENGINE_OBJS = \
 	$(OS)\ImagesEngine.obj $(ZIP_OBJS) $(UNRAR_OBJS) \
 	$(OS)\DjVuEngine.obj $(DJVU_OBJS) \
 	$(OS)\ChmEngine.obj $(OS)\ChmDoc.obj $(CHMLIB_OBJS) \
-	$(OS)\EbookEngine.obj $(EBOOK_OBJS)
+	$(OS)\EbookEngine.obj $(EBOOK_OBJS) \
+	$(OS)\FileModifications.obj
 
 UIA_OBJS = \
 	$(OUIA)\Provider.obj $(OUIA)\StartPageProvider.obj $(OUIA)\DocumentProvider.obj \
@@ -198,9 +199,8 @@ MAIN_UI_OBJS = \
 	$(OS)\PdfSync.obj $(OS)\RenderCache.obj $(OS)\TextSelection.obj \
 	$(OS)\WindowInfo.obj $(OS)\ParseCommandLine.obj $(OS)\StressTesting.obj \
 	$(OS)\UnitTests.obj $(OS)\AppTools.obj $(OS)\TableOfContents.obj \
-	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj \
+	$(OS)\Toolbar.obj $(OS)\Print.obj $(OS)\Notifications.obj $(OS)\Selection.obj \
 	$(OS)\Search.obj $(OS)\Menu.obj $(OS)\ExternalPdfViewer.obj \
-	$(OS)\Selection.obj $(OS)\FileModifications.obj \
 	$(OS)\EbookControls.obj $(OS)\EbookController.obj $(OS)\EbookWindow.obj \
 	$(OS)\MuiEbookPageDef.obj \
 	$(OS)\Tester.obj $(OS)\Regress.obj \

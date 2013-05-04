@@ -6,6 +6,7 @@
 #include "ChmEngine.h"
 #include "CmdLineParser.h"
 #include "Doc.h"
+#include "FileModifications.h"
 #include "FileUtil.h"
 using namespace Gdiplus;
 #include "GdiPlusUtil.h"
@@ -434,6 +435,9 @@ Usage:
         ErrOut("Error: Couldn't create an engine for %s!\n", path::GetBaseName(filePath));
         return 1;
     }
+    Vec<PageAnnotation> *userAnnots = LoadFileModifications(engine->FileName());
+    engine->UpdateUserAnnotations(userAnnots);
+    delete userAnnots;
     if (!loadOnly)
         DumpData(engine, fullDump);
     if (renderPath)

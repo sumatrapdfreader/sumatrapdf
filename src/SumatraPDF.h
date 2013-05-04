@@ -134,20 +134,20 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file);
 // TODO: this is hopefully temporary
 // LoadDocument carries a lot of state, this holds them in
 // one place
-class LoadArgs
+struct LoadArgs
 {
-public:
-    LoadArgs(const WCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false)
-    {
-        this->fileName = fileName;
-        this->win = win;
-        this->showWin = showWin;
-        this->forceReuse = forceReuse;
-    }
+    LoadArgs(const WCHAR *fileName, WindowInfo *win=NULL, bool showWin=true, bool forceReuse=false) :
+        fileName(fileName), win(win), showWin(showWin), forceReuse(forceReuse),
+        isNewWindow(false), allowFailure(true), placeWindow(true) { }
+
     const WCHAR *fileName;
     WindowInfo *win;
     bool showWin;
     bool forceReuse;
+    // for internal use
+    bool isNewWindow;
+    bool allowFailure;
+    bool placeWindow;
 };
 
 WindowInfo* LoadDocument(LoadArgs& args);

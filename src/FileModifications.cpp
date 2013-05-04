@@ -14,8 +14,8 @@
 The following format (SumatraPDF Modifications eXtensible) is used for
 storing file modifications for file formats which don't allow to save
 such modifications portably within the file structure (i.e. currently
-any format but PDF). The format uses SquareTree syntax (in its INI
-style for better interoperability):
+any format but PDF). The format uses SquareTree syntax (using its INI
+serialization for better interoperability):
 
 [@meta]
 version = 2.3
@@ -168,4 +168,12 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
 
     FileTransaction trans;
     return trans.WriteAll(modificationsPath, data.LendData(), data.Size()) && trans.Commit();
+}
+
+bool IsModificationsFile(const WCHAR *filePath)
+{
+    if (!str::EndsWithI(filePath, SMX_FILE_EXT))
+        return false;
+    ScopedMem<WCHAR> origPath(str::DupN(filePath, str::Len(filePath) - str::Len(SMX_FILE_EXT)));
+    return file::Exists(origPath);
 }

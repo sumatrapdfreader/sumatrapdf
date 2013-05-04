@@ -241,10 +241,11 @@ $(OS)\EbookWindow.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\
 $(OS)\EbookWindow.obj: $B\src\utils\StrUtil.h $B\src\utils\Touch.h $B\src\utils\Vec.h
 $(OS)\EbookWindow.obj: $B\src\utils\WinUtil.h $B\src\utils\ZipUtil.h $B\src\WindowInfo.h
 $(OS)\EngineDump.obj: $B\src\BaseEngine.h $B\src\ChmEngine.h $B\src\Doc.h
-$(OS)\EngineDump.obj: $B\src\PdfEngine.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OS)\EngineDump.obj: $B\src\utils\CmdLineParser.h $B\src\utils\FileUtil.h $B\src\utils\GdiPlusUtil.h
-$(OS)\EngineDump.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\EngineDump.obj: $B\src\utils\TgaReader.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\EngineDump.obj: $B\src\FileModifications.h $B\src\PdfEngine.h $B\src\utils\Allocator.h
+$(OS)\EngineDump.obj: $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h $B\src\utils\FileUtil.h
+$(OS)\EngineDump.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h
+$(OS)\EngineDump.obj: $B\src\utils\StrUtil.h $B\src\utils\TgaReader.h $B\src\utils\Vec.h
+$(OS)\EngineDump.obj: $B\src\utils\WinUtil.h
 $(OS)\ExternalPdfViewer.obj: $B\src\AppPrefs.h $B\src\BaseEngine.h $B\src\ChmEngine.h
 $(OS)\ExternalPdfViewer.obj: $B\src\DisplayModel.h $B\src\DisplayState.h $B\src\Doc.h
 $(OS)\ExternalPdfViewer.obj: $B\src\ExternalPdfViewer.h $B\src\Favorites.h $B\src\FileHistory.h
