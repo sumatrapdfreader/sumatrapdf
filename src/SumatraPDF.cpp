@@ -2626,6 +2626,8 @@ void CloseDocumentInWindow(WindowInfo *win)
     str::ReplacePtr(&win->loadedFilePath, NULL);
     delete win->pdfsync;
     win->pdfsync = NULL;
+    delete win->userAnnots;
+    win->userAnnots = NULL;
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
 
@@ -3936,7 +3938,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key)
                 win.userAnnots = new Vec<PageAnnotation>();
             for (size_t i = 0; i < win.selectionOnPage->Count(); i++) {
                 SelectionOnPage& sel = win.selectionOnPage->At(i);
-                win.userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(0xE2, 0xC4, 0xE2, 0xCC)));
+                win.userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
                 gRenderCache.Invalidate(win.dm, sel.pageNo, sel.rect);
             }
             win.userAnnotsModified = true;

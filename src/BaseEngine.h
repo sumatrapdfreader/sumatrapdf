@@ -104,6 +104,7 @@ struct PageAnnotation {
         uint8_t r, g, b, a;
         Color() : r(0), g(0), b(0), a(0) { }
         Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a=255) : r(r), g(g), b(b), a(a) { }
+        Color(COLORREF c, uint8_t a=255) : r(GetRValue(c)), g(GetGValue(c)), b(GetBValue(c)), a(a) { }
         bool operator==(const Color& other) const {
             return other.r == r && other.g == g && other.b == b && other.a == a;
         }

@@ -517,7 +517,7 @@ Exit:
     // wait for FileExistenceChecker to terminate
     // (which should be necessary only very rarely)
     while (gFileExistenceChecker) {
-        // do nothing
+        Sleep(10);
     }
 
     gFileHistory.UpdateStatesSource(NULL);

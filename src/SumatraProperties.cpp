@@ -468,7 +468,7 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     SetBkMode(hdc, TRANSPARENT);
 
     ClientRect rcClient(hwnd);
-    RECT rTmp = rcClient.ToRECT();	
+    RECT rTmp = rcClient.ToRECT();
     ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(GetAboutBgColor()));
     FillRect(hdc, &rTmp, brushAboutBg);
 

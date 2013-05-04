@@ -229,6 +229,12 @@ ExternalViewer = [
 		"filter for which file types the menu item is to be shown (e.g. \"*.pdf;*.xps\"; \"*\" if missing)"),
 ]
 
+AnnotationDefaults = [
+	Field("HighlightColor", Color, 0x60ffff,
+		"color used for the highlight tool (in prerelease builds, the current selection " +
+		"can be converted into a highlight annotation by pressing the 'h' key)"),
+]
+
 Favorite = [
 	Field("Name", String, None,
 		"name of this favorite as shown in the menu"),
@@ -373,6 +379,10 @@ GlobalPrefs = [
 	Struct("ForwardSearch", ForwardSearch,
 		"customization options for how we show forward search results (used from " +
 		"LaTeX editors)",
+		expert=True),
+	# TODO: remove this for release builds (until annotations are better exposed)?
+	Struct("AnnotationDefaults", AnnotationDefaults,
+		"default values for user added annotations in FixedPageUI documents",
 		expert=True),
 	EmptyLine(),
 
