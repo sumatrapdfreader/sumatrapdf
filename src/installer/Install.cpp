@@ -249,9 +249,6 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey)
     for (int i = 0; NULL != gSupportedExts[i]; i++) {
         ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
         success &= CreateRegKey(hkey, keyname);
-        // TODO: stop removing this after version 1.8 (was wrongly created for version 1.6)
-        keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" APP_NAME_STR));
-        DeleteRegKey(hkey, keyname);
     }
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
