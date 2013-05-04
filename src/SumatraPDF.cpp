@@ -971,22 +971,9 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI,
     }
 
     if (win->dm != prevModel) {
-        Vec<PageAnnotation> *userAnnots = LoadFileModifications(args.fileName);
+        delete win->userAnnots;
+        win->userAnnots = LoadFileModifications(args.fileName);
         win->userAnnotsModified = false;
-        if (!userAnnots)
-            userAnnots = win->userAnnots;
-        else if (win->userAnnots) {
-            // don't throw annotations away when reloading
-            for (PageAnnotation *annot = userAnnots->IterStart(); annot; annot = userAnnots->IterNext()) {
-                win->userAnnots->Remove(*annot);
-            }
-            win->userAnnotsModified = win->userAnnots->Count() > 0;
-            for (PageAnnotation *annot = win->userAnnots->IterStart(); annot; annot = win->userAnnots->IterNext()) {
-                userAnnots->Append(*annot);
-            }
-            delete win->userAnnots;
-        }
-        win->userAnnots = userAnnots;
         win->dm->engine->UpdateUserAnnotations(win->userAnnots);
     }
 

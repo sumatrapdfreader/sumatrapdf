@@ -263,9 +263,9 @@ $(OS)\Favorites.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\u
 $(OS)\Favorites.obj: $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h $B\src\utils\UITask.h
 $(OS)\Favorites.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\FileModifications.obj: $B\src\BaseEngine.h $B\src\FileModifications.h $B\src\utils\Allocator.h
-$(OS)\FileModifications.obj: $B\src\utils\BaseUtil.h $B\src\utils\CssParser.h $B\src\utils\FileTransactions.h
-$(OS)\FileModifications.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h
-$(OS)\FileModifications.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OS)\FileModifications.obj: $B\src\utils\BaseUtil.h $B\src\utils\FileTransactions.h $B\src\utils\FileUtil.h
+$(OS)\FileModifications.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SquareTreeParser.h
+$(OS)\FileModifications.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h $B\src\Version.h
 $(OS)\HtmlFormatter.obj: $B\src\BaseEngine.h $B\src\EbookBase.h $B\src\HtmlFormatter.h
 $(OS)\HtmlFormatter.obj: $B\src\mui\Mui.h $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h
 $(OS)\HtmlFormatter.obj: $B\src\mui\MuiControl.h $B\src\mui\MuiCss.h $B\src\mui\MuiEventMgr.h

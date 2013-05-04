@@ -34,13 +34,12 @@ AlignAttr       FindAlignAttr(const char *name, size_t len);
 uint32_t        FindHtmlEntityRune(const char *name, size_t len);
 
 enum CssProp {
-    Css_Color, Css_Display, Css_Filesize, Css_Font, Css_Font_Family,
-    Css_Font_Size, Css_Font_Style, Css_Font_Weight, Css_List_Style, Css_Margin,
-    Css_Margin_Bottom, Css_Margin_Left, Css_Margin_Right, Css_Margin_Top, Css_Max_Width,
-    Css_Opacity, Css_Padding, Css_Padding_Bottom, Css_Padding_Left, Css_Padding_Right,
-    Css_Padding_Top, Css_Page, Css_Page_Break_After, Css_Page_Break_Before, Css_Rect,
-    Css_Text_Align, Css_Text_Decoration, Css_Text_Indent, Css_Text_Underline, Css_Timestamp,
-    Css_Version, Css_White_Space, Css_Word_Wrap, Css_Unknown
+    Css_Color, Css_Display, Css_Font, Css_Font_Family, Css_Font_Size,
+    Css_Font_Style, Css_Font_Weight, Css_List_Style, Css_Margin, Css_Margin_Bottom,
+    Css_Margin_Left, Css_Margin_Right, Css_Margin_Top, Css_Max_Width, Css_Opacity,
+    Css_Padding, Css_Padding_Bottom, Css_Padding_Left, Css_Padding_Right, Css_Padding_Top,
+    Css_Page_Break_After, Css_Page_Break_Before, Css_Text_Align, Css_Text_Decoration, Css_Text_Indent,
+    Css_Text_Underline, Css_White_Space, Css_Word_Wrap, Css_Unknown
 };
 
 CssProp         FindCssProp(const char *name, size_t len);

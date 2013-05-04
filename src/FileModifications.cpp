@@ -5,94 +5,98 @@
 #include "FileModifications.h"
 
 #include "BaseEngine.h"
-#include "CssParser.h"
 #include "FileTransactions.h"
 #include "FileUtil.h"
+#include "SquareTreeParser.h"
+#include "Version.h"
 
 /*
 The following format (SumatraPDF Modifications eXtensible) is used for
 storing file modifications for file formats which don't allow to save
 such modifications portably within the file structure (i.e. currently
-any format but PDF). The format uses CSS syntax for brevity:
+any format but PDF). The format uses SquareTree syntax (in its INI
+style for better interoperability):
 
-@meta { version: 2.3; filesize: 98765; timestamp: 2013-03-09T12:34:56Z }
-highlight { page: 1; rect: 10 10 100 100; color: #ff0000; opacity: 0.8 }
-annotType { page: no; rect: x y w h; color: #rrggbb; opacity: 1 }
+[@meta]
+version = 2.3
+filesize = 98765
+timestamp = 2013-03-09T12:34:56Z
+
+[highlight]
+page = 1
+rect = 10 10 100 100
+color = #ff0000
+opacity = 0.8
+
+[annotType]
+page = no
+rect = x y w h
+color = #rrggbb
+opacity = 1
+
 ...
-@update { version: 2.3; filesize: 98765; timestamp: 2013-03-10T05:43:21Z }
+
+[@update]
+version = 2.3
+filesize = 98765
+timestamp = 2013-03-10T05:43:21Z
+
 ...
 
 (Currently, the only supported modifications are adding annotations.)
 */
 
 #define SMX_FILE_EXT        L".smx"
-#define SMX_CURR_VERSION    "2.3a2"
+#define SMX_CURR_VERSION    CURR_VERSION_STRA
 
-static inline bool IsSelector(const CssSelector *sel, const char *s) {
-    return str::Len(s) == sel->sLen && str::StartsWithI(sel->s, s);
-}
-
-static Vec<PageAnnotation> *ParseFileModifications(const char *data, size_t len)
+static Vec<PageAnnotation> *ParseFileModifications(const char *data)
 {
     if (!data)
         return NULL;
 
-    CssPullParser parser(data, len);
-    if (!parser.NextRule())
+    SquareTree sqt(data);
+    if (!sqt.root || sqt.root->data.Count() == 0)
         return NULL;
-    const CssSelector *sel = parser.NextSelector();
-    if (!sel || !IsSelector(sel, "@meta") || parser.NextSelector())
+    SquareTreeNode::DataItem& item = sqt.root->data.At(0);
+    if (!item.isChild || !str::EqI(item.key, "@meta"))
         return NULL;
-    const CssProperty *prop = parser.NextProperty();
-    if (!prop || Css_Version != prop->type) {
+    if (!item.value.child->GetValue("version")) {
         // don't check the version value - rather extend the format
         // in a way to ensure backwards compatibility
         return NULL;
     }
 
     Vec<PageAnnotation> *list = new Vec<PageAnnotation>();
-    while (parser.NextRule()) {
-        sel = parser.NextSelector();
-        if (!sel)
-            continue;
-        PageAnnotType type = IsSelector(sel, "highlight") ? Annot_Highlight :
-                             IsSelector(sel, "underline") ? Annot_Underline :
-                             IsSelector(sel, "strikeout") ? Annot_StrikeOut :
-                             IsSelector(sel, "squiggly")  ? Annot_Squiggly  :
+    for (SquareTreeNode::DataItem *i = sqt.root->data.IterStart(); i; i = sqt.root->data.IterNext()) {
+        PageAnnotType type = str::EqI(i->key, "highlight") ? Annot_Highlight :
+                             str::EqI(i->key, "underline") ? Annot_Underline :
+                             str::EqI(i->key, "strikeout") ? Annot_StrikeOut :
+                             str::EqI(i->key, "squiggly")  ? Annot_Squiggly  :
                              Annot_None;
-        if (Annot_None == type || parser.NextSelector())
+        CrashIf(!i->isChild);
+        if (Annot_None == type || !i->isChild)
             continue;
 
-        int pageNo = 0;
+        int pageNo;
         geomutil::RectT<float> rect;
         PageAnnotation::Color color;
-        float opacity = 1.0f;
-        while ((prop = parser.NextProperty()) != NULL) {
-            switch (prop->type) {
-            case Css_Page:
-                if (!str::Parse(prop->s, prop->sLen, "%d%$", &pageNo))
-                    pageNo = 0;
-                break;
-            case Css_Rect:
-                if (!str::Parse(prop->s, prop->sLen, "%f %f %f %f%$",
-                                &rect.x, &rect.y, &rect.dx, &rect.dy))
-                    rect = geomutil::RectT<float>();
-                break;
-            case Css_Color:
-                int r, g, b;
-                if (str::Parse(prop->s, prop->sLen, "#%2x%2x%2x%$", &r, &g, &b))
-                    color = PageAnnotation::Color((uint8_t)r, (uint8_t)g, (uint8_t)b);
-                break;
-            case Css_Opacity:
-                if (!str::Parse(prop->s, prop->sLen, "%f%$", &opacity))
-                    opacity = 1.0f;
-                break;
-            }
-        }
-        if (pageNo <= 0 || rect.IsEmpty() || 0 == color.a)
+        float opacity;
+        int r, g, b;
+
+        SquareTreeNode *node = i->value.child;
+        const char *value = node->GetValue("page");
+        if (!value || !str::Parse(value, "%d%$", &pageNo))
             continue;
-        if (opacity != 1.0f)
-            color.a = (uint8_t)(color.a * opacity);
+        value = node->GetValue("rect");
+        if (!value || !str::Parse(value, "%f %f %f %f%$", &rect.x, &rect.y, &rect.dx, &rect.dy))
+            continue;
+        value = node->GetValue("color");
+        if (!value || !str::Parse(value, "#%2x%2x%2x%$", &r, &g, &b))
+            continue;
+        value = node->GetValue("opacity");
+        if (!value || !str::Parse(value, "%f%$", &opacity))
+            opacity = 1.0f;
+        color = PageAnnotation::Color((uint8_t)r, (uint8_t)g, (uint8_t)b, (uint8_t)(255 * opacity));
         list->Append(PageAnnotation(type, pageNo, rect.Convert<double>(), color));
     }
 
@@ -102,9 +106,8 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data, size_t len)
 Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filePath)
 {
     ScopedMem<WCHAR> modificationsPath(str::Join(filePath, SMX_FILE_EXT));
-    size_t len;
-    ScopedMem<char> data(file::ReadAll(modificationsPath, &len));
-    return ParseFileModifications(data, len);
+    ScopedMem<char> data(file::ReadAll(modificationsPath, NULL));
+    return ParseFileModifications(data);
 }
 
 bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
@@ -116,9 +119,8 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
     str::Str<char> data;
     size_t offset = 0;
 
-    size_t len;
-    ScopedMem<char> prevData(file::ReadAll(modificationsPath, &len));
-    Vec<PageAnnotation> *prevList = ParseFileModifications(prevData, len);
+    ScopedMem<char> prevData(file::ReadAll(modificationsPath, NULL));
+    Vec<PageAnnotation> *prevList = ParseFileModifications(prevData);
     if (prevList) {
         // in the case of an update, append changed annotations to the existing ones
         // (don't rewrite the existing ones in case they're by a newer version which
@@ -126,40 +128,43 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
         for (; offset < prevList->Count() && prevList->At(offset) == list->At(offset); offset++);
         CrashIf(offset != prevList->Count());
         data.AppendAndFree(prevData.StealData());
-        data.Append("\r\n");
         delete prevList;
     }
     else {
-        data.AppendFmt("/* SumatraPDF: modifications to \"%S\" */\r\n", path::GetBaseName(filePath));
+        data.AppendFmt("# SumatraPDF: modifications to \"%S\"\r\n", path::GetBaseName(filePath));
     }
+    data.Append("\r\n");
 
     if (list->Count() == offset)
         return true; // nothing (new) to save
 
-    data.AppendFmt("@%s { version: %s", prevList ? "update" : "meta", SMX_CURR_VERSION);
+    data.AppendFmt("[@%s]\r\n", prevList ? "update" : "meta");
+    data.AppendFmt("version = %s\r\n", SMX_CURR_VERSION);
     int64 size = file::GetSize(filePath);
     if (0 <= size && size <= UINT_MAX)
-        data.AppendFmt("; filesize: %u", (UINT)size);
+        data.AppendFmt("filesize = %u\r\n", (UINT)size);
     SYSTEMTIME time;
     GetSystemTime(&time);
-    data.AppendFmt("; timestamp: %04d-%02d-%02dT%02d:%02d:%02dZ",
+    data.AppendFmt("timestamp = %04d-%02d-%02dT%02d:%02d:%02dZ\r\n",
         time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
-    data.Append(" }\r\n\r\n");
+    data.Append("\r\n");
 
     for (size_t i = offset; i < list->Count(); i++) {
         PageAnnotation& annot = list->At(i);
         switch (annot.type) {
-        case Annot_Highlight: data.Append("highlight"); break;
-        case Annot_Underline: data.Append("underline"); break;
-        case Annot_StrikeOut: data.Append("strikeout"); break;
-        case Annot_Squiggly:  data.Append("squiggly "); break;
+        case Annot_Highlight: data.Append("[highlight]\r\n"); break;
+        case Annot_Underline: data.Append("[underline]\r\n"); break;
+        case Annot_StrikeOut: data.Append("[strikeout]\r\n"); break;
+        case Annot_Squiggly:  data.Append("[squiggly]\r\n");  break;
         default: continue;
         }
-        data.AppendFmt(" { page: %d; rect: %g %g %g %g; color: #%02x%02x%02x; opacity: %g }\r\n",
-                       annot.pageNo, annot.rect.x, annot.rect.y,
-                       annot.rect.dx, annot.rect.dy, annot.color.r,
-                       annot.color.g, annot.color.b, annot.color.a / 255.f);
+        data.AppendFmt("page = %d\r\n", annot.pageNo);
+        data.AppendFmt("rect = %g %g %g %g\r\n", annot.rect.x, annot.rect.y, annot.rect.dx, annot.rect.dy);
+        data.AppendFmt("color = #%02x%02x%02x\r\n", annot.color.r, annot.color.g, annot.color.b);
+        data.AppendFmt("opacity = %g\r\n", annot.color.a / 255.f);
+        data.Append("\r\n");
     }
+    data.RemoveAt(data.Size() - 2, 2);
 
     FileTransaction trans;
     return trans.WriteAll(modificationsPath, data.LendData(), data.Size()) && trans.Commit();

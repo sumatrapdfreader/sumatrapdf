@@ -157,7 +157,6 @@ for (name, value) in List_MathML2_Entities:
 ########## CSS properties ##########
 
 List_CSS_Props = "color display font font-family font-size font-style font-weight list-style margin margin-bottom margin-left margin-right margin-top max-width opacity padding padding-bottom padding-left padding-right padding-top page-break-after page-break-before text-align text-decoration text-indent text-underline white-space word-wrap"
-List_SMX_Props = "filesize page rect timestamp version"
 
 ########## CSS colors ##########
 
@@ -224,7 +223,7 @@ def main():
 	tags = [(name, getEnumName(name, "Tag")) for name in sorted(List_HTML_Tags.split() + List_Other_Tags.split())]
 	attrs = [(name, getEnumName(name, "Attr")) for name in sorted(List_HTML_Attrs.split() + List_Other_Attrs.split())]
 	aligns = [(name, getEnumName(name, "Align")) for name in sorted(List_Align_Values.split())]
-	cssProps = [(name, getEnumName(name, "Css")) for name in sorted(List_CSS_Props.split() + List_SMX_Props.split())]
+	cssProps = [(name, getEnumName(name, "Css")) for name in sorted(List_CSS_Props.split())]
 	cssColors = [(name, "MKRGB(%s)" % value) for (name, value) in sorted(List_CSS_Colors)]
 
 	enum_htmltag = createTypeEnum(tags, "HtmlTag", "Tag_NotFound")
