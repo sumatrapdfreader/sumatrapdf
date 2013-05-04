@@ -369,12 +369,11 @@ bool Reload(bool forceReload)
     gGlobalPrefs = NULL;
 
     bool ok = Load();
-    if (!ok)
-        return false;
-    CrashIf(!gGlobalPrefs);
+    CrashAlwaysIf(!ok || !gGlobalPrefs);
 
     if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
         gWindows.At(0)->DeleteInfotip();
+        gWindows.At(0)->staticLinks.Reset();
         gWindows.At(0)->RedrawAll(true);
     }
 

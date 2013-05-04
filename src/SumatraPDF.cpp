@@ -1470,6 +1470,7 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
     win->fwdSearchMark.show = false;
     win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
     win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
+    win->staticLinks.Reset();
 
     HwndPasswordUI pwdUI(win->hwndFrame);
     args.fileName = fullPath;
