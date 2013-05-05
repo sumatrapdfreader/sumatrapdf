@@ -196,66 +196,77 @@ static WCHAR *GetInstallDate()
 
 static bool WriteUninstallerRegistryInfo(HKEY hkey)
 {
-    bool success = true;
+    bool ok = true;
 
     ScopedMem<WCHAR> uninstallerPath(GetUninstallerPath());
     ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
     ScopedMem<WCHAR> installDate(GetInstallDate());
     ScopedMem<WCHAR> installDir(path::GetDir(installedExePath));
 
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsVistaOrGreater())
-        success &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR L" " CURR_VERSION_STR);
+        ok &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR L" " CURR_VERSION_STR);
     DWORD size = GetDirSize(gGlobalData.installDir) / 1024;
-    success &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, size);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_LOCATION, installDir);
-    success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
-    success &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, TEXT(PUBLISHER_STR));
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, L"http://blog.kowalczyk.info/software/sumatrapdf/");
-    success &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, L"http://blog.kowalczyk.info/software/sumatrapdf/news.html");
+    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, size);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_LOCATION, installDir);
+    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
+    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, TEXT(PUBLISHER_STR));
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallerPath);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, L"http://blog.kowalczyk.info/software/sumatrapdf/");
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, L"http://blog.kowalczyk.info/software/sumatrapdf/news.html");
 
-    return success;
+    return ok;
 }
 
 // cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 static bool WriteExtendedFileExtensionInfo(HKEY hkey)
 {
-    bool success = true;
+    bool ok = true;
 
     ScopedMem<WCHAR> exePath(GetInstalledExePath());
     if (HKEY_LOCAL_MACHINE == hkey)
-        success &= WriteRegStr(hkey, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" EXENAME, NULL, exePath);
+        ok &= WriteRegStr(hkey, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" EXENAME, NULL, exePath);
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     ScopedMem<WCHAR> iconPath(str::Join(exePath, L",1"));
-    success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\DefaultIcon", NULL, iconPath);
+    ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\DefaultIcon", NULL, iconPath);
     ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath));
-    success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Open\\Command", NULL, cmdPath);
+    ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Open\\Command", NULL, cmdPath);
     ScopedMem<WCHAR> printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath));
-    success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", NULL, printPath);
+    ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", NULL, printPath);
     ScopedMem<WCHAR> printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath));
-    success &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\PrintTo\\Command", NULL, printToPath);
+    ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\PrintTo\\Command", NULL, printToPath);
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
 
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
+    // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be
+    // using OpenWithList but OpenWithProgIds. Also, it doesn't seem to work on my win7 32bit
+    // (HKLM\Software\Classes\.mobi\OpenWithList\SumatraPDF.exe key is present but "Open With"
+    // menu item doesn't even exist for .mobi files
+    // It's not so easy, though, because if we just set it to SumatraPDF,
+    // all gSupportedExts will be reported as "PDF Document" by Explorer, so this needs
+    // to be more intelligent. We should probably mimic Windows Media Player scheme i.e.
+    // set OpenWithProgIds to SumatraPDF.AssocFile.Mobi etc. and create apropriate
+    // \SOFTWARE\Classes\CLSID\{GUID}\ProgID etc. entries
+    // Also, if Sumatra is the only program handling those docs, our
+    // PDF icon will be shown (we need icons and properly configure them)
     for (int i = 0; NULL != gSupportedExts[i]; i++) {
         ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
-        success &= CreateRegKey(hkey, keyname);
+        ok &= CreateRegKey(hkey, keyname);
     }
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
-    success &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
-    success &= WriteRegStr(hkey, L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf", L"Extension", L".pdf");
+    ok &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
+    ok &= WriteRegStr(hkey, L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf", L"Extension", L".pdf");
 
-    return success;
+    return ok;
 }
 
 static bool CreateInstallationDirectory()
@@ -504,10 +515,10 @@ static BOOL BrowseForFolder(HWND hwnd, const WCHAR *lpszInitialFolder, const WCH
     bi.lpfn      = BrowseCallbackProc;
     bi.lParam    = (LPARAM)lpszInitialFolder;
 
-    BOOL success = FALSE;
+    BOOL ok = FALSE;
     LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
     if (pidlFolder) {
-        success = SHGetPathFromIDList(pidlFolder, lpszBuf);
+        ok = SHGetPathFromIDList(pidlFolder, lpszBuf);
 
         IMalloc *pMalloc = NULL;
         if (SUCCEEDED(SHGetMalloc(&pMalloc)) && pMalloc) {
@@ -516,7 +527,7 @@ static BOOL BrowseForFolder(HWND hwnd, const WCHAR *lpszInitialFolder, const WCH
         }
     }
 
-    return success;
+    return ok;
 }
 
 static void OnButtonBrowse()
