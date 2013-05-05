@@ -5303,6 +5303,16 @@ InitMouseWheelInfo:
                 gDeltaPerLine = WHEEL_DELTA / ulScrollLines;
             else
                 gDeltaPerLine = 0;
+
+            if (win) {
+                // in tablets it's possible to rotate the screen. if we're
+                // in full screen, resize our window to match new screen size
+                if (win->presentation)
+                    EnterFullscreen(*win, true);
+                else if (win->fullScreen)
+                    EnterFullscreen(*win, false);
+            }
+
             return 0;
 
         case WM_SYSCOLORCHANGE:
