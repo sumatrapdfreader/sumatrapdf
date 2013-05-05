@@ -15,7 +15,7 @@ HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator
     HtmlFormatterArgs *args = new HtmlFormatterArgs();
     args->htmlStr = doc.GetHtmlData(args->htmlStrLen);
     CrashIf(!args->htmlStr);
-    args->fontName = L"Georgia";
+    args->SetFontName(L"Georgia");
     args->fontSize = 12.5f;
     args->pageDx = (REAL)dx;
     args->pageDy = (REAL)dy;

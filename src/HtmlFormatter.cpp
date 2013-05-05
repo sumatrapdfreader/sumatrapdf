@@ -180,7 +180,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
     gfx = mui::AllocGraphicsForMeasureText();
-    defaultFontName.Set(str::Dup(args->fontName));
+    defaultFontName.Set(str::Dup(args->GetFontName()));
     defaultFontSize = args->fontSize;
     DrawStyle style;
     style.font = mui::GetCachedFont(defaultFontName, defaultFontSize, FontStyleRegular);

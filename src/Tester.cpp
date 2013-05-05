@@ -148,7 +148,7 @@ static void MobiLayout(MobiDoc *mobiDoc)
     HtmlFormatterArgs args;
     args.pageDx = 640;
     args.pageDy = 480;
-    args.fontName = L"Tahoma";
+    args.SetFontName(L"Tahoma");
     args.fontSize = 12;
     args.htmlStr = mobiDoc->GetBookHtmlData(args.htmlStrLen);
     args.textAllocator = &textAllocator;

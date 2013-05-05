@@ -36,7 +36,7 @@ static float GetFontSize()
 HtmlFormatterArgs *CreateFormatterArgsDoc2(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
 {
     HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, dx, dy, textAllocator);
-    args->fontName = GetFontName();
+    args->SetFontName(GetFontName());
     args->fontSize = GetFontSize();
     return args;
 }

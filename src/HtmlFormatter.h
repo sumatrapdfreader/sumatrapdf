@@ -109,10 +109,19 @@ struct HtmlFormatterArgs {
       reparseIdx(0), measureAlgo(NULL)
     { }
 
+    ~HtmlFormatterArgs() {
+        free(fontName);
+    }
+
     REAL            pageDx;
     REAL            pageDy;
 
-    const WCHAR *   fontName;
+    void SetFontName(const WCHAR *s) {
+        str::ReplacePtr(&fontName, s);
+    }
+
+    WCHAR *GetFontName() { return fontName; }
+
     float           fontSize;
 
     /* Most of the time string DrawInstr point to original html text
@@ -130,6 +139,9 @@ struct HtmlFormatterArgs {
 
     // we start parsing from htmlStr + reparseIdx
     int             reparseIdx;
+
+private:
+    WCHAR *         fontName;
 };
 
 class HtmlPullParser;

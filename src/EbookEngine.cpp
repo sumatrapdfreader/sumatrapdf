@@ -802,7 +802,7 @@ bool EpubEngineImpl::FinishLoading()
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.fontName = DEFAULT_FONT_NAME;
+    args.SetFontName(DEFAULT_FONT_NAME);
     args.fontSize = DEFAULT_FONT_SIZE;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
@@ -897,7 +897,7 @@ bool Fb2EngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.fontName = DEFAULT_FONT_NAME;
+    args.SetFontName(DEFAULT_FONT_NAME);
     args.fontSize = DEFAULT_FONT_SIZE;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
@@ -1024,7 +1024,7 @@ bool MobiEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetBookHtmlData(args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.fontName = DEFAULT_FONT_NAME;
+    args.SetFontName(DEFAULT_FONT_NAME);
     args.fontSize = DEFAULT_FONT_SIZE;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
@@ -1201,7 +1201,7 @@ bool PdbEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.fontName = DEFAULT_FONT_NAME;
+    args.SetFontName(DEFAULT_FONT_NAME);
     args.fontSize = DEFAULT_FONT_SIZE;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
@@ -1488,7 +1488,7 @@ bool Chm2EngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = dataCache->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.fontName = DEFAULT_FONT_NAME;
+    args.SetFontName(DEFAULT_FONT_NAME);
     args.fontSize = DEFAULT_FONT_SIZE;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
@@ -1569,7 +1569,7 @@ bool TcrEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.fontName = DEFAULT_FONT_NAME;
+    args.SetFontName(DEFAULT_FONT_NAME);
     args.fontSize = DEFAULT_FONT_SIZE;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
@@ -1638,7 +1638,7 @@ bool HtmlEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.fontName = DEFAULT_FONT_NAME;
+    args.SetFontName(DEFAULT_FONT_NAME);
     args.fontSize = DEFAULT_FONT_SIZE;
     args.textAllocator = &allocator;
 
@@ -1742,7 +1742,7 @@ bool TxtEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.fontName = L"Courier New";
+    args.SetFontName(L"Courier New");
     args.fontSize = DEFAULT_FONT_SIZE;
     args.textAllocator = &allocator;
 
