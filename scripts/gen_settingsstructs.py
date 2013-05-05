@@ -143,7 +143,7 @@ WindowMargin_FixedPageUI = [
 	Field("Left", Int, 4, "size of the left margin between window and document"),
 ]
 
-WindowMargin_ImageOnlyUI = [
+WindowMargin_ComicBookUI = [
 	Field("Top", Int, 0, "size of the top margin between window and document"),
 	Field("Right", Int, 0, "size of the right margin between window and document"),
 	Field("Bottom", Int, 0, "size of the bottom margin between window and document"),
@@ -195,7 +195,7 @@ EbookUI = [
 	# (or all the Disable options as Enable options with default true instead?)
 	# kjk: AltEbookUI ? (Alt - short for alternative, as in "different from the default")
 	# zeniko: "alternative" isn't that descriptive, if there's a FixedPageUI struct
-	# (and a ImageOnlyUI one), then UseFixedPageUI might be be clearer which alternative is meant
+	# (and a ComicBookUI one), then UseFixedPageUI might be be clearer which alternative is meant
 	Field("UseFixedPageUI", Bool, False,
 		"if true, the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
@@ -203,8 +203,8 @@ EbookUI = [
 	Field("BackgroundColor", Color, 0xd9f0fb, "color of the background (page)"),
 ]
 
-ImageOnlyUI = [
-	Struct("WindowMargin", WindowMargin_ImageOnlyUI,
+ComicBookUI = [
+	Struct("WindowMargin", WindowMargin_ComicBookUI,
 		"top, right, bottom and left margin (in that order) between window and document",
 		compact=True),
 	Struct("PageSpacing", PageSpacing,
@@ -353,7 +353,7 @@ GlobalPrefs = [
 	Struct("EbookUI", EbookUI,
 		"customization options for eBooks (EPUB, Mobi, FictionBook) UI. If UseFixedPageUI is true, FixedPageUI settings apply instead",
 		expert=True),
-	Struct("ComicBookUI", ImageOnlyUI,
+	Struct("ComicBookUI", ComicBookUI,
 		"customization options for Comic Book and images UI",
 		expert=True),
 	Struct("ChmUI", ChmUI,
@@ -363,7 +363,7 @@ GlobalPrefs = [
 		"list of additional external viewers for various file types " +
 		"(can have multiple entries for the same format)",
 		expert=True),
-	# zeniko: the below prefs apply only to FixedPageUI and ImageOnlyUI (so far)
+	# zeniko: the below prefs apply only to FixedPageUI and ComicBookUI (so far)
 	CompactArray("ZoomLevels", Float, "8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400",
 		"zoom levels which zooming steps through in addition to Fit Page, Fit Width and " +
 		"the minimum and maximum allowed values (8.33 and 6400)",
@@ -604,7 +604,7 @@ def main():
 		"They will overwrite the corresponding settings in SumatraPDF-settings.txt at every startup.")
 	content = "# Warning: This file only works for builds compiled with ENABLE_SUMATRAPDF_USER_INI !\n\n" + content
 	open("docs/SumatraPDF-user.ini", "wb").write(content.replace("\n", "\r\n").encode("utf-8-sig"))
-	
+
 	beforeUseDefaultState = True
 	for field in FileSettings:
 		if field.name == "UseDefaultState":
