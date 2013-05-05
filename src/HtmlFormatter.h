@@ -102,7 +102,8 @@ public:
 };
 
 // just to pack args to HtmlFormatter
-struct HtmlFormatterArgs {
+class HtmlFormatterArgs {
+public:
     HtmlFormatterArgs() :
       pageDx(0), pageDy(0), fontName(NULL), fontSize(0),
       textAllocator(NULL), htmlStr(0), htmlStrLen(0),
@@ -120,7 +121,7 @@ struct HtmlFormatterArgs {
         str::ReplacePtr(&fontName, s);
     }
 
-    WCHAR *GetFontName() { return fontName; }
+    const WCHAR *GetFontName() { return fontName; }
 
     float           fontSize;
 

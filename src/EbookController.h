@@ -12,7 +12,7 @@ struct  EbookControls;
 class   HtmlPage;
 class   EbookFormattingThread;
 class   EbookFormattingTask;
-struct  HtmlFormatterArgs;
+class   HtmlFormatterArgs;
 namespace mui { class Control; }
 using namespace mui;
 

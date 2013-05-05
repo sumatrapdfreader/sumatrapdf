@@ -8,7 +8,7 @@
 #include "Mui.h"
 
 class HtmlFormatter;
-struct HtmlFormatterArgs;
+class HtmlFormatterArgs;
 class PageControl;
 using namespace mui;
 
