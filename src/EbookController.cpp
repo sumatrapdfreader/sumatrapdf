@@ -19,7 +19,6 @@
 static const WCHAR *GetFontName()
 {
     // TODO: validate the name?
-    // TODO: don't use gGlobalPrefs->ebookUI.fontName on a non-UI thread
     return gGlobalPrefs->ebookUI.fontName;
 }
 
