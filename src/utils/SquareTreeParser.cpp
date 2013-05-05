@@ -148,7 +148,7 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
             node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             // arrays are created by either reusing the same key for a different child
             // or by concatenating multiple children ("[ \n ] [ \n ] [ \n ]")
-            while ('[' == *(data = SkipWsAndComments(data))) {
+            while (IsBracketLine((data = SkipWsAndComments(data)))) {
                 data++;
                 node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             }
@@ -161,7 +161,7 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
             // ignore superfluous closing square brackets instead of
             // ignoring all content following them
         }
-        else if ('[' == *key && ']' == SkipWsRev(value, data)[-1] && '\n' == *data) {
+        else if ('[' == *key && ']' == SkipWsRev(value, data)[-1]) {
             // treat INI section headers as top-level node names
             // (else "[Section]" would be ignored)
             if (!isTopLevel) {

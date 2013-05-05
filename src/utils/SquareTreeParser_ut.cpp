@@ -56,6 +56,7 @@ static void SquareTreeTest()
         UTF8_BOM "array [\n item = 0 \n] [\n item = 1 \n]",
         UTF8_BOM "array [\n item = 0 \n]\n array [\n item = 1 \n]",
         UTF8_BOM "[array]\n item = 0 \n[array]\n item = 1 \n",
+        UTF8_BOM "array [\n item = 0 \n]\n [array]\n item = 1 \n",
     };
 
     for (size_t i = 0; i < dimof(arrayData); i++) {
@@ -113,6 +114,21 @@ static void SquareTreeTest()
         assert(!value && 2 == off);
     }
 
+    static const char *emptyNodeData[] = {
+        UTF8_BOM "node [\n]",
+        UTF8_BOM "node \n [ \n ] \n",
+        UTF8_BOM "node [",
+        UTF8_BOM "[node] \n",
+        UTF8_BOM "[node]",
+    };
+
+    for (size_t i = 0; i < dimof(emptyNodeData); i++) {
+        SquareTree emptyNode(emptyNodeData[i]);
+        assert(emptyNode.root && 1 == emptyNode.root->data.Count());
+        assert(emptyNode.root->GetChild("node"));
+        assert(0 == emptyNode.root->GetChild("node")->data.Count());
+    }
+
     static const char *halfBrokenData[] = {
         "node [\n child = \n]\n key = value",
         "node [\nchild\n]\n]\n key = value",
@@ -146,4 +162,9 @@ static void SquareTreeTest()
         node = node->GetChild("node");
     }
     assert(node && 1 == node->data.Count() && str::Eq(node->GetValue("depth"), "5"));
+
+    SquareTree mixed(UTF8_BOM "node1 [\n [node2] \n key:value");
+    assert(mixed.root && mixed.root->GetChild("node1") && mixed.root->GetChild("node2"));
+    assert(0 == mixed.root->GetChild("node1")->data.Count());
+    assert(str::Eq(mixed.root->GetChild("node2")->GetValue("Key"), "value"));
 }
