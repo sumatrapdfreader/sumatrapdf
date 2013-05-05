@@ -84,7 +84,7 @@ def Parse(data, level=0):
 			if level > 0:
 				return node, data
 			data = data[len(line.group(0)):]
-			key = line.group(0).strip()[1:-1]
+			key = line.group(0).strip()[1:-1].strip()
 			subnode, data = Parse(data, level + 1)
 			node.data.append((key, subnode))
 		elif sep in ["=", ":", ""]:
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 	import util2, os
 	util2.chdir_top()
 	
-	data = " Key : Value \nNode\n[\n[Node]\nKey=Value2".encode("utf-8-sig")
+	data = " Key : Value \nNode\n[\n[ Node ]\nKey=Value2".encode("utf-8-sig")
 	root = Parse(data)
 	assert root.GetValue("key") == "Value"
 	assert root.GetChild("node")

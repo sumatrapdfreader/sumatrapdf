@@ -16,7 +16,7 @@ static void IniTest()
     assert(str::Eq(pNoNL1.sections.At(0)->lines.At(0).value, "value"));
 
     IniFile pNoNL2("[Section ]");
-    assert(pNoNL2.FindSection("Section "));
+    assert(pNoNL2.FindSection("Section"));
 
     static const char *iniData = UTF8_BOM "\
 ; NULL section \n\
@@ -32,7 +32,7 @@ key without separator\n\
     IniLine verify[] = {
         IniLine(NULL, NULL), IniLine("key1", "value1"),
         IniLine("Section 1", NULL), IniLine("Key2", "value2"), IniLine("key3", "\"quoted value\""),
-        IniLine(" Empty Section ", NULL),
+        IniLine("Empty Section", NULL),
         IniLine("Section 2", NULL), IniLine("key", "without separator"),
     };
 

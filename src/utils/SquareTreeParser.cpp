@@ -70,7 +70,7 @@ static char *SkipWsAndComments(char *s)
     return s;
 }
 
-static inline bool IsBracketLine(char *s)
+static bool IsBracketLine(char *s)
 {
     if (*s != '[')
         return false;
@@ -168,8 +168,10 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
                 data = key;
                 return node;
             }
-            SkipWsRev(value, data)[-1] = '\0';
-            node->data.Append(SquareTreeNode::DataItem(key + 1, ParseSquareTreeRec(data)));
+            // trim whitespace around section name (for consistency with GetPrivateProfileString)
+            for (key++; str::IsWs(*key); key++);
+            *SkipWsRev(key, SkipWsRev(value, data) - 1) = '\0';
+            node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
         }
         else if ('[' == *separator || ']' == *separator) {
             // invalid line (ignored)

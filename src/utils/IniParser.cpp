@@ -51,13 +51,14 @@ void IniFile::ParseData()
             }
         }
         if ('[' == *key || ']' == *key) {
-            // section header
-            char *lineEnd = SkipWsRev(key + 1, next);
+            // section header (with optional whitespace padding)
+            key = SkipWs(key + 1);
+            char *lineEnd = SkipWsRev(key, next);
             if (lineEnd - 1 > key && (']' == *(lineEnd - 1) || '[' == *(lineEnd - 1)))
                 lineEnd--;
-            *lineEnd = '\0';
+            *SkipWsRev(key, lineEnd) = '\0';
             sections.Append(section);
-            section = new IniSection(key + 1);
+            section = new IniSection(key);
         }
         else if (';' == *key || '#' == *key || !*key) {
             // ignore comments and empty lines

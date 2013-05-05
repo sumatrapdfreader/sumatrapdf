@@ -38,6 +38,7 @@ static void SquareTreeTest()
         UTF8_BOM "node [\n  key : value\n]\n]",
         UTF8_BOM "node[\nkey=value\n]]]",
         UTF8_BOM "[node]\nkey = value\n",
+        UTF8_BOM "[ node ]\nkey = value\n",
     };
 
     for (size_t i = 0; i < dimof(nodeData); i++) {
@@ -120,6 +121,7 @@ static void SquareTreeTest()
         UTF8_BOM "node [",
         UTF8_BOM "[node] \n",
         UTF8_BOM "[node]",
+        UTF8_BOM "  [  node  ]  ",
     };
 
     for (size_t i = 0; i < dimof(emptyNodeData); i++) {
