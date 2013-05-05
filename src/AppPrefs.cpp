@@ -350,6 +350,9 @@ bool Save()
 
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
+// TODO:
+// - refresh font name and size in ebook window
+// - refresh text color/background in ebook window
 bool Reload(bool forceReload)
 {
     ScopedMem<WCHAR> path(AppGenDataFilename(PREFS_FILE_NAME));

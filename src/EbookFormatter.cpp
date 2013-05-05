@@ -10,16 +10,13 @@ using namespace Gdiplus;
 #include "HtmlPullParser.h"
 #include "MobiDoc.h"
 
-#define FONT_NAME              L"Georgia"
-#define FONT_SIZE              12.5f
-
 HtmlFormatterArgs *CreateFormatterArgsDoc(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
 {
     HtmlFormatterArgs *args = new HtmlFormatterArgs();
     args->htmlStr = doc.GetHtmlData(args->htmlStrLen);
     CrashIf(!args->htmlStr);
-    args->fontName = FONT_NAME;
-    args->fontSize = FONT_SIZE;
+    args->fontName = L"Georgia";
+    args->fontSize = 12.5f;
     args->pageDx = (REAL)dx;
     args->pageDy = (REAL)dy;
     args->textAllocator = textAllocator;

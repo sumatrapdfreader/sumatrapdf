@@ -476,7 +476,7 @@ static LRESULT CALLBACK MobiWndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPA
 RenderedBitmap *RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border)
 {
     PoolAllocator textAllocator;
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc2(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
     HtmlFormatter *formatter = CreateFormatter(doc, args);
     HtmlPage *pd = formatter->Next();
     delete formatter;

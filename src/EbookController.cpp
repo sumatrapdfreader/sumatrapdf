@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "EbookController.h"
 
+#include "AppPrefs.h"
 #include "DebugLog.h"
 #include "EbookControls.h"
 #include "MobiDoc.h"
@@ -14,6 +15,30 @@
 #include "ThreadUtil.h"
 #include "Timer.h"
 #include "UITask.h"
+
+static WCHAR *GetFontName()
+{
+    // TODO: validate the name?
+    return gGlobalPrefs->ebookUI.fontName;
+}
+
+static float GetFontSize()
+{
+    float fontSize = gGlobalPrefs->ebookUI.fontSize;
+    if (fontSize < 7.f || fontSize > 32.f)
+        fontSize = 12.5;
+    return fontSize;
+}
+
+// we don't use CreateFormatterArgsDoc() to not introduce dependency
+// on gGlobalPrefs in EngineDump
+HtmlFormatterArgs *CreateFormatterArgsDoc2(Doc doc, int dx, int dy, PoolAllocator *textAllocator)
+{
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, dx, dy, textAllocator);
+    args->fontName = GetFontName();
+    args->fontSize = GetFontSize();
+    return args;
+}
 
 /* TODO: when showing a page from pagesFromPage, its page number can be 1
    so that we can't go back even though we should. This will happen if we resize
@@ -496,7 +521,7 @@ void EbookController::TriggerBookFormatting()
     CrashIf(formattingTemp.reparseIdx > (int)doc.GetHtmlDataSize());
 
     ShowPage(newPage, newPage != NULL);
-    HtmlFormatterArgs *args = CreateFormatterArgsDoc(doc, size.dx, size.dy, &textAllocator);
+    HtmlFormatterArgs *args = CreateFormatterArgsDoc2(doc, size.dx, size.dy, &textAllocator);
     formattingThread = new EbookFormattingThread(doc, args, this, formattingTemp.reparseIdx);
     formattingThreadNo = formattingThread->GetNo();
     formattingThread->Start();

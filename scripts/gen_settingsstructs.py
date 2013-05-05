@@ -190,6 +190,10 @@ FixedPageUI = [
 ]
 
 EbookUI = [
+	Field("FontName", String, "Georgia", "name of the font"),
+	Field("FontSize", Float, 12.5, "size of the font"),
+	Field("TextColor", Color, 0x324b5f, "color for text"),
+	Field("BackgroundColor", Color, 0xd9f0fb, "color of the background (page)"),
 	# kjk: don't have an alternative, but I'm not happy with this name
 	# zeniko: DisableEbookUI? Disable? UseFixedPageSize? DisableReflow?
 	# (or all the Disable options as Enable options with default true instead?)
@@ -199,8 +203,6 @@ EbookUI = [
 	Field("UseFixedPageUI", Bool, False,
 		"if true, the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
-	Field("TextColor", Color, 0x324b5f, "color for text"),
-	Field("BackgroundColor", Color, 0xd9f0fb, "color of the background (page)"),
 ]
 
 ComicBookUI = [

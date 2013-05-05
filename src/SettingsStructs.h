@@ -43,13 +43,17 @@ struct FixedPageUI {
 // customization options for eBooks (EPUB, Mobi, FictionBook) UI. If
 // UseFixedPageUI is true, FixedPageUI settings apply instead
 struct EbookUI {
-    // if true, the UI used for PDF documents will be used for ebooks as
-    // well (enables printing and searching, disables automatic reflow)
-    bool useFixedPageUI;
+    // name of the font
+    WCHAR * fontName;
+    // size of the font
+    float fontSize;
     // color for text
     COLORREF textColor;
     // color of the background (page)
     COLORREF backgroundColor;
+    // if true, the UI used for PDF documents will be used for ebooks as
+    // well (enables printing and searching, disables automatic reflow)
+    bool useFixedPageUI;
 };
 
 // customization options for Comic Book and images UI
@@ -330,11 +334,13 @@ static const FieldInfo gFixedPageUIFields[] = {
 static const StructInfo gFixedPageUIInfo = { sizeof(FixedPageUI), 5, gFixedPageUIFields, "TextColor\0BackgroundColor\0WindowMargin\0PageSpacing\0GradientColors" };
 
 static const FieldInfo gEbookUIFields[] = {
-    { offsetof(EbookUI, useFixedPageUI),  Type_Bool,  false    },
-    { offsetof(EbookUI, textColor),       Type_Color, 0x324b5f },
-    { offsetof(EbookUI, backgroundColor), Type_Color, 0xd9f0fb },
+    { offsetof(EbookUI, fontName),        Type_String, (intptr_t)L"Georgia" },
+    { offsetof(EbookUI, fontSize),        Type_Float,  (intptr_t)"12.5"     },
+    { offsetof(EbookUI, textColor),       Type_Color,  0x324b5f             },
+    { offsetof(EbookUI, backgroundColor), Type_Color,  0xd9f0fb             },
+    { offsetof(EbookUI, useFixedPageUI),  Type_Bool,   false                },
 };
-static const StructInfo gEbookUIInfo = { sizeof(EbookUI), 3, gEbookUIFields, "UseFixedPageUI\0TextColor\0BackgroundColor" };
+static const StructInfo gEbookUIInfo = { sizeof(EbookUI), 5, gEbookUIFields, "FontName\0FontSize\0TextColor\0BackgroundColor\0UseFixedPageUI" };
 
 static const FieldInfo gWindowMargin_1_Fields[] = {
     { offsetof(WindowMargin, top),    Type_Int, 0 },
