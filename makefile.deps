@@ -129,13 +129,14 @@ $(OMUI)\SvgPath.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\V
 $(OMUI)\SvgPath.obj: $B\src\utils\VecSegmented.h
 $(OS)\AppPrefs.obj: $B\src\AppPrefs.h $B\src\AppTools.h $B\src\BaseEngine.h
 $(OS)\AppPrefs.obj: $B\src\ChmEngine.h $B\src\DisplayModel.h $B\src\DisplayState.h
-$(OS)\AppPrefs.obj: $B\src\Doc.h $B\src\Favorites.h $B\src\FileHistory.h
-$(OS)\AppPrefs.obj: $B\src\SettingsStructs.h $B\src\SumatraPDF.h $B\src\SumatraWindow.h
-$(OS)\AppPrefs.obj: $B\src\Translations.h $B\src\utils\Allocator.h $B\src\utils\BaseUtil.h
-$(OS)\AppPrefs.obj: $B\src\utils\BencUtil.h $B\src\utils\DebugLog.h $B\src\utils\FileTransactions.h
-$(OS)\AppPrefs.obj: $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h $B\src\utils\GeomUtil.h
-$(OS)\AppPrefs.obj: $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h $B\src\utils\StrUtil.h
-$(OS)\AppPrefs.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\WindowInfo.h
+$(OS)\AppPrefs.obj: $B\src\Doc.h $B\src\EbookEngine.h $B\src\Favorites.h
+$(OS)\AppPrefs.obj: $B\src\FileHistory.h $B\src\SettingsStructs.h $B\src\SumatraPDF.h
+$(OS)\AppPrefs.obj: $B\src\SumatraWindow.h $B\src\Translations.h $B\src\utils\Allocator.h
+$(OS)\AppPrefs.obj: $B\src\utils\BaseUtil.h $B\src\utils\BencUtil.h $B\src\utils\DebugLog.h
+$(OS)\AppPrefs.obj: $B\src\utils\FileTransactions.h $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h
+$(OS)\AppPrefs.obj: $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h $B\src\utils\SettingsUtil.h
+$(OS)\AppPrefs.obj: $B\src\utils\StrUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
+$(OS)\AppPrefs.obj: $B\src\WindowInfo.h
 $(OS)\AppTools.obj: $B\src\AppTools.h $B\src\Translations.h $B\src\utils\Allocator.h
 $(OS)\AppTools.obj: $B\src\utils\BaseUtil.h $B\src\utils\CmdLineParser.h $B\src\utils\DbgHelpDyn.h
 $(OS)\AppTools.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\Scoped.h

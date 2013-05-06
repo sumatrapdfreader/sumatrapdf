@@ -9,6 +9,7 @@
 #include "AppTools.h"
 #include "BencUtil.h"
 #include "DebugLog.h"
+#include "EbookEngine.h"
 #include "Favorites.h"
 #include "FileHistory.h"
 #include "FileTransactions.h"
@@ -271,6 +272,7 @@ bool Load()
     }
 
     gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
+    SetDefaultEbookFont(gGlobalPrefs->ebookUI.fontName, gGlobalPrefs->ebookUI.fontSize);
 
     if (!file::Exists(path))
         Save();

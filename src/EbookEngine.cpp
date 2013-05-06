@@ -22,8 +22,22 @@ using namespace Gdiplus;
 // http://connect.microsoft.com/VisualStudio/feedback/details/101259/disable-warning-c4250-class1-inherits-class2-member-via-dominance-when-weak-member-is-a-pure-virtual-function
 #pragma warning(disable: 4250) /* 'class1' : inherits 'class2::member' via dominance */
 
-#define DEFAULT_FONT_NAME L"Georgia"
-#define DEFAULT_FONT_SIZE 10
+static ScopedMem<WCHAR> gDefaultFontName;
+static float gDefaultFontSize = 10.f;
+
+static const WCHAR *GetDefaultFontName()
+{
+    return gDefaultFontName ? gDefaultFontName : L"Georgia";
+}
+
+void SetDefaultEbookFont(const WCHAR *name, float size)
+{
+    // intentionally don't validate the input
+    gDefaultFontName.Set(str::Dup(name));
+    // use a somewhat smaller size than in the EbookUI, since fit page/width
+    // is likely to be above 100% for the paperback page dimensions
+    gDefaultFontSize = size * 0.8f;
+}
 
 /* common classes for EPUB, FictionBook2, Mobi, PalmDOC, CHM, TCR, HTML and TXT engines */
 
@@ -802,8 +816,8 @@ bool EpubEngineImpl::FinishLoading()
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.SetFontName(DEFAULT_FONT_NAME);
-    args.fontSize = DEFAULT_FONT_SIZE;
+    args.SetFontName(GetDefaultFontName());
+    args.fontSize = gDefaultFontSize;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -897,8 +911,8 @@ bool Fb2EngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.SetFontName(DEFAULT_FONT_NAME);
-    args.fontSize = DEFAULT_FONT_SIZE;
+    args.SetFontName(GetDefaultFontName());
+    args.fontSize = gDefaultFontSize;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -1024,8 +1038,8 @@ bool MobiEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetBookHtmlData(args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.SetFontName(DEFAULT_FONT_NAME);
-    args.fontSize = DEFAULT_FONT_SIZE;
+    args.SetFontName(GetDefaultFontName());
+    args.fontSize = gDefaultFontSize;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -1201,8 +1215,8 @@ bool PdbEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.SetFontName(DEFAULT_FONT_NAME);
-    args.fontSize = DEFAULT_FONT_SIZE;
+    args.SetFontName(GetDefaultFontName());
+    args.fontSize = gDefaultFontSize;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -1488,8 +1502,8 @@ bool Chm2EngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = dataCache->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.SetFontName(DEFAULT_FONT_NAME);
-    args.fontSize = DEFAULT_FONT_SIZE;
+    args.SetFontName(GetDefaultFontName());
+    args.fontSize = gDefaultFontSize;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -1569,8 +1583,8 @@ bool TcrEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.SetFontName(DEFAULT_FONT_NAME);
-    args.fontSize = DEFAULT_FONT_SIZE;
+    args.SetFontName(GetDefaultFontName());
+    args.fontSize = gDefaultFontSize;
     args.textAllocator = &allocator;
     args.measureAlgo = MeasureTextQuick;
 
@@ -1638,8 +1652,8 @@ bool HtmlEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.SetFontName(DEFAULT_FONT_NAME);
-    args.fontSize = DEFAULT_FONT_SIZE;
+    args.SetFontName(GetDefaultFontName());
+    args.fontSize = gDefaultFontSize;
     args.textAllocator = &allocator;
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
@@ -1742,8 +1756,8 @@ bool TxtEngineImpl::Load(const WCHAR *fileName)
     args.htmlStr = doc->GetTextData(&args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
-    args.SetFontName(L"Courier New");
-    args.fontSize = DEFAULT_FONT_SIZE;
+    args.SetFontName(GetDefaultFontName());
+    args.fontSize = gDefaultFontSize;
     args.textAllocator = &allocator;
 
     pages = TxtFormatter(&args).FormatAllPages(false);
