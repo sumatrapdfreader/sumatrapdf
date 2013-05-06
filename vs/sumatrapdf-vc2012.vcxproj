@@ -159,8 +159,6 @@
     <ClCompile Include="..\src\utils\HtmlPullParser_ut.cpp" />
     <ClCompile Include="..\src\utils\HtmlWindow.cpp" />
     <ClCompile Include="..\src\utils\HttpUtil.cpp" />
-    <ClCompile Include="..\src\utils\IniParser.cpp" />
-    <ClCompile Include="..\src\utils\IniParser_ut.cpp" />
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
     <ClCompile Include="..\src\utils\JsonParser_ut.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
@@ -432,7 +430,6 @@
     <ClInclude Include="..\src\utils\HtmlPullParser.h" />
     <ClInclude Include="..\src\utils\HtmlWindow.h" />
     <ClInclude Include="..\src\utils\HttpUtil.h" />
-    <ClInclude Include="..\src\utils\IniParser.h" />
     <ClInclude Include="..\src\utils\JsonParser.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\utils\NoFreeAllocator.h" />

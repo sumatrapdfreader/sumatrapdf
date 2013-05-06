@@ -348,12 +348,6 @@
     <ClCompile Include="..\src\utils\HttpUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\IniParser.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\IniParser_ut.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\JsonParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -1161,9 +1155,6 @@
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\HttpUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\IniParser.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\JsonParser.h">

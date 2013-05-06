@@ -243,7 +243,6 @@ static void LogTest()
 #include "StrFormat_ut.cpp"
 #include "Dict_ut.cpp"
 //#include "VarintBin_ut.cpp"
-#include "IniParser_ut.cpp"
 #include "SquareTreeParser_ut.cpp"
 #include "SettingsUtil_ut.cpp"
 
@@ -266,7 +265,6 @@ void BaseUtils_UnitTests()
     StrFormatTest();
     DictTest();
     //VarintGobTest();
-    IniTest();
     SquareTreeTest();
     SettingsUtilTest();
 }

@@ -45,10 +45,11 @@ def Parse(data, level=0):
 	node = Node()
 	while data:
 		# skip blank lines, comments and whitespace at the beginning of a line
-		skip = re.match(r"\s*(?:[#;].*\n)?", data)
-		if len(skip.group(0)):
+		skip = re.match(r"(?:\s+|[#;].*)+", data)
+		if skip:
 			data = data[len(skip.group(0)):]
-			continue
+			if not data:
+				break
 		# parse a single line into key, separator and value
 		line = re.match(r"([^=:\[\]\n]*?)[^\S\n]*([=:\[\]])[^\S\n]*([^\n]*?)[^\S\n]*\n", data)
 		if not line:
@@ -109,8 +110,11 @@ def Serialize(root, level=0):
 			result += ["\t" * level + node[0] + " = " + node[1]]
 		else:
 			assert False, "value must be Node/list or string"
+	
+	if level > 0:
+		return result
 	# encode the result as UTF-8
-	return result if level > 0 else "\n".join(result).encode("utf-8-sig")
+	return "\n".join(result).encode("utf-8-sig")
 
 if __name__ == "__main__":
 	import util2, os
