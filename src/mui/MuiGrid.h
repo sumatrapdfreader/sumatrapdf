@@ -44,12 +44,9 @@ public:
         }
 
         bool SetStyle(Style *s) {
-            CachedStyle *newCachedStyle = CacheStyle(s);
-            if (newCachedStyle != cachedStyle) {
-                cachedStyle = newCachedStyle;
-                return true;
-            }
-            return false;
+            bool changed;
+            cachedStyle = CacheStyle(s, &changed);
+            return changed;
         }
     };
 

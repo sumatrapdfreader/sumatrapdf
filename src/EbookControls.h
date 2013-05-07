@@ -24,6 +24,7 @@ struct EbookControls {
 
 EbookControls * CreateEbookControls(HWND hwnd);
 void            DestroyEbookControls(EbookControls* controls);
+void            SetMainWndBgCol(EbookControls *ctrls);
 
 class HtmlPage;
 

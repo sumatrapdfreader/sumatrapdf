@@ -180,7 +180,7 @@ void RequestRepaint(Control *c, const Rect *r1, const Rect *r2)
 {
     // we might be called when the control hasn't yet been
     // placed in the window hierarchy
-    if (!c->parent)
+    if (!c->parent && !c->hwndParent)
         return;
 
     Rect wRect(0, 0, c->pos.Width, c->pos.Height);
@@ -194,7 +194,7 @@ void RequestRepaint(Control *c, const Rect *r1, const Rect *r2)
     CrashIf(!hwnd);
     HwndWrapper *wnd = GetRootHwndWnd(c);
     if (wnd)
-        wnd->RequestRepaint();
+        wnd->MarkForRepaint();
 
     // if we have r1 or r2, invalidate those, else invalidate w
     bool didInvalidate = false;

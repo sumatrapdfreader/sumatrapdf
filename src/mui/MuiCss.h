@@ -270,7 +270,7 @@ Style* GetStyleButtonDefaultMouseOver();
 void   Initialize();
 void   Destroy();
 
-CachedStyle* CacheStyle(Style *style);
+CachedStyle* CacheStyle(Style *style, bool *changedOut);
 CachedStyle* CachedStyleByName(const char *name);
 Style *      StyleByName(const char *name);
 

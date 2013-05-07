@@ -117,6 +117,17 @@ Control *CreatePageControl(TxtNode *structDef)
     return c;
 }
 
+void SetMainWndBgCol(EbookControls *ctrls)
+{
+    Style *styleMainWnd = StyleByName("styleMainWnd");
+    CrashIf(!styleMainWnd);
+    COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
+    if (gGlobalPrefs->useSysColors)
+        bgColor = GetSysColor(COLOR_WINDOW);
+    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValue(bgColor), GetGValue(bgColor), GetBValue(bgColor)));
+    ctrls->mainWnd->SetStyle(styleMainWnd);
+}
+
 EbookControls *CreateEbookControls(HWND hwnd)
 {
     if (!gCursorHand) {
@@ -145,17 +156,8 @@ EbookControls *CreateEbookControls(HWND hwnd)
 
     ctrls->mainWnd = new HwndWrapper(hwnd);
     ctrls->mainWnd->SetMinSize(Size(320, 200));
-    Style *styleMainWnd = StyleByName("styleMainWnd");
-    CrashIf(!styleMainWnd);
 
-    // update the background color from the prefs
-    CrashIf(!styleMainWnd);
-    COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
-    if (gGlobalPrefs->useSysColors)
-        bgColor = GetSysColor(COLOR_WINDOW);
-    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValue(bgColor), GetGValue(bgColor), GetBValue(bgColor)));
-
-    ctrls->mainWnd->SetStyle(styleMainWnd);
+    SetMainWndBgCol(ctrls);
     ctrls->mainWnd->layout = FindLayoutNamed(*muiDef, "mainLayout");
     CrashIf(!ctrls->mainWnd->layout);
 

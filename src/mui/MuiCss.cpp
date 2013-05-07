@@ -123,9 +123,9 @@ void Initialize()
     //gStyleButtonMouseOver->Set(Prop::AllocColorSolid(PropBgColor, "transparent"));
 
     gStyleCache = new VecSegmented<StyleCacheEntry>();
-    CacheStyle(gStyleDefault);
-    CacheStyle(gStyleButtonDefault);
-    CacheStyle(gStyleButtonMouseOver);
+    CacheStyle(gStyleDefault, NULL);
+    CacheStyle(gStyleButtonDefault, NULL);
+    CacheStyle(gStyleButtonMouseOver, NULL);
 }
 
 void Destroy()
@@ -588,10 +588,14 @@ static size_t GetStyleId(Style *style) {
 // If a given style doesn't exist, we add it to the cache.
 // If it exists but it was modified or gStyleDefault was modified, we update the cache.
 // If it exists and didn't change, we return cached entry.
-CachedStyle *CacheStyle(Style *style)
+CachedStyle *CacheStyle(Style *style, bool *changedOut)
 {
-    ScopedMuiCritSec muiCs;
+    bool changedTmp;
+    if (!changedOut)
+        changedOut = &changedTmp;
+    *changedOut = false;
 
+    ScopedMuiCritSec muiCs;
     StyleCacheEntry *e;
     bool updateEntry = false;
     for (e = gStyleCache->IterStart(); e; e = gStyleCache->IterNext()) {
@@ -604,6 +608,7 @@ CachedStyle *CacheStyle(Style *style)
         }
     }
 
+    *changedOut = true;
     Prop* props[PropsCount] = { 0 };
     if (!GetAllProps(style, props))
         GetAllProps(gStyleDefault, props);
@@ -636,6 +641,7 @@ CachedStyle *CacheStyle(Style *style)
 
     if (updateEntry) {
         e->cachedStyle = s;
+        e->styleId = GetStyleId(style);
         return &e->cachedStyle;
     }
 

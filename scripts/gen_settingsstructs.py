@@ -191,8 +191,8 @@ FixedPageUI = [
 
 EbookUI = [
 	# zeniko: that's the default serif font, a different font is used for monospaced text
-	Field("FontName", String, "Georgia", "name of the font"),
-	Field("FontSize", Float, 12.5, "size of the font"),
+	Field("FontName", String, "Georgia", "name of the font. takes effect after re-opening the document"),
+	Field("FontSize", Float, 12.5, "size of the font. takes effect after re-opening the document"),
 	Field("TextColor", Color, 0x324b5f, "color for text"),
 	Field("BackgroundColor", Color, 0xd9f0fb, "color of the background (page)"),
 	# kjk: don't have an alternative, but I'm not happy with this name

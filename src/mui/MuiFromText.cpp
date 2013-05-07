@@ -288,7 +288,7 @@ static void CacheStyleFromStruct(TxtNode* def)
         CrashIf(!node->IsText());
         AddStyleProp(style, node);
     }
-    CacheStyle(style);
+    CacheStyle(style, NULL);
 }
 
 static ButtonVector* ButtonVectorFromDef(TxtNode* structDef)

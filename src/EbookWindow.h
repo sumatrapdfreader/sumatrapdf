@@ -36,6 +36,7 @@ void   RebuildMenuBarForEbookWindows();
 void   DeleteEbookWindow(EbookWindow *win, bool forceDelete = false);
 bool   IsEbookFile(const WCHAR *fileName);
 void   RestartLayoutTimer(EbookController *controller);
+void   EbookWindowRefreshUI(EbookWindow *);
 
 Doc    GetDocForWindow(const SumatraWindow& win);
 

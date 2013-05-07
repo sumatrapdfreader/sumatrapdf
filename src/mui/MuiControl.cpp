@@ -287,12 +287,11 @@ void Control::Paint(Graphics *gfx, int offX, int offY)
 
 bool Control::SetStyle(Style *style)
 {
-    CachedStyle *newCachedStyle = CacheStyle(style);
-    if (newCachedStyle != cachedStyle) {
-        cachedStyle = newCachedStyle;
-        return true;
-    }
-    return false;
+    bool changed;
+    cachedStyle = CacheStyle(style, &changed);
+    if (changed)
+        RequestRepaint(this);
+    return changed;
 }
 
 }

@@ -10,7 +10,7 @@ namespace mui {
 
 HwndWrapper::HwndWrapper(HWND hwnd) :
     painter(NULL), evtMgr(NULL), layoutRequested(false), firstLayout(true), 
-    sizeToFit(false), centerContent(false), repaintRequested(false)
+    sizeToFit(false), centerContent(false), markedForRepaint(false)
 {
     if (hwnd)
         SetHwnd(hwnd);
@@ -115,7 +115,7 @@ void HwndWrapper::TopLevelLayout()
 void HwndWrapper::RequestLayout()
 {
     layoutRequested = true;
-    repaintRequested = true;
+    markedForRepaint = true;
     // trigger message queue so that the layout request is processed
     InvalidateRect(hwndParent, NULL, TRUE);
     UpdateWindow(hwndParent);
@@ -130,8 +130,8 @@ void HwndWrapper::LayoutIfRequested()
 void HwndWrapper::OnPaint(HWND hwnd)
 {
     CrashIf(hwnd != hwndParent);
-    painter->Paint(hwnd, repaintRequested);
-    repaintRequested = false;
+    painter->Paint(hwnd, markedForRepaint);
+    markedForRepaint = false;
 }
 
 }
