@@ -507,9 +507,9 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         currLineTopPadding = 0;
         // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
         for (size_t k = currLineInstr.Count(); k > 0; k--) {
-            DrawInstr *i = &currLineInstr.At(k-1);
+            DrawInstr *i = &currLineInstr.At(k - 1);
             if (InstrFixedSpace == i->type || InstrElasticSpace == i->type)
-                currLineInstr.RemoveAt(k-1);
+                currLineInstr.RemoveAt(k - 1);
         }
         return false;
     }
@@ -568,6 +568,13 @@ void HtmlFormatter::EmitEmptyLine(float lineDy)
     currY += lineDy;
     if (currY <= pageDy) {
         currX = NewLineX();
+        // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
+        for (size_t k = currLineInstr.Count(); k > 0; k--) {
+            DrawInstr *i = &currLineInstr.At(k - 1);
+            if (InstrFixedSpace == i->type || InstrElasticSpace == i->type)
+                currLineInstr.RemoveAt(k - 1);
+
+        }
         return;
     }
     ForceNewPage();
@@ -648,7 +655,7 @@ void HtmlFormatter::EmitParagraph(float indent)
                        Align_Justify == CurrStyle()->align;
     if (indent > 0 && needsIndent && EnsureDx(indent)) {
         AppendInstr(DrawInstr::FixedSpace(indent));
-        currX = NewLineX() + indent;
+        currX += indent;
     }
 }
 
@@ -667,7 +674,7 @@ bool HtmlFormatter::EnsureDx(float dx)
 // at the beginning of the line
 static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec<DrawInstr>& currLineInstr)
 {
-    if (NewLineX == currX)
+    if (NewLineX == currX || 0 == currLineInstr.Count())
         return false;
     // prevent elastic spaces from being flushed to the
     // beginning of the next line
