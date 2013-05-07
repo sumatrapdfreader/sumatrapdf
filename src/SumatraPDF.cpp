@@ -3221,6 +3221,13 @@ static void BrowseFolder(WindowInfo& win, bool forward)
     UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(&win));
     LoadArgs args(files.At(index), &win, true, true);
     LoadDocument(args);
+
+    // disable the toolbar page and find boxes if a document failed to load
+    if (!win.IsDocLoaded()) {
+        UpdateToolbarPageText(&win, 0);
+        UpdateToolbarFindText(&win);
+        UpdateFindbox(&win);
+    }
 }
 
 // scrolls half a page down/up (needed for Shift+Up/Down)

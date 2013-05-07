@@ -380,7 +380,7 @@ void HtmlFormatter::DumpLineDebugInfo()
 // Redistribute extra space in the line equally among the spaces
 void HtmlFormatter::JustifyLineBoth()
 {
-    REAL extraSpaceDxTotal = pageDx - CurrLineDx();
+    REAL extraSpaceDxTotal = pageDx - currX;
 #ifdef DEBUG
     if (extraSpaceDxTotal < 0.f)
         DumpLineDebugInfo();
@@ -435,15 +435,18 @@ bool HtmlFormatter::IsCurrLineEmpty()
 
 void HtmlFormatter::JustifyCurrLine(AlignAttr align)
 {
+    // TODO: is CurrLineDx needed at all?
+    CrashIf(currX != CurrLineDx());
+
     switch (align) {
         case Align_Left:
             LayoutLeftStartingAt(0.f);
             break;
         case Align_Right:
-            LayoutLeftStartingAt(pageDx - CurrLineDx());
+            LayoutLeftStartingAt(pageDx - currX);
             break;
         case Align_Center:
-            LayoutLeftStartingAt((pageDx - CurrLineDx()) / 2.f);
+            LayoutLeftStartingAt((pageDx - currX) / 2.f);
             break;
         case Align_Justify:
             JustifyLineBoth();
