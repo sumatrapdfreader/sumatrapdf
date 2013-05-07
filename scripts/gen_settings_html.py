@@ -311,6 +311,11 @@ def gen_html():
 	if blog_dir():
 		p = os.path.join(blog_dir(), file_name)
 		open(p, "w").write(s)
+		# also save the latest version as settings.html so that there is a
+		# permament version we can link from from docs that is independent of
+		# program version number
+		p = os.path.join(blog_dir(), "settings.html")
+		open(p, "w").write(s)
 
 if __name__ == "__main__":
 	util2.chdir_top()
