@@ -208,6 +208,8 @@ protected:
     bool  IsCurrLineEmpty();
     virtual bool IgnoreText();
 
+    void DumpLineDebugInfo();
+
     // constant during layout process
     float               pageDx;
     float               pageDy;

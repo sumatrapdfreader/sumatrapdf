@@ -371,10 +371,20 @@ static void SetYPos(Vec<DrawInstr>& instr, float y)
     }
 }
 
+void HtmlFormatter::DumpLineDebugInfo()
+{
+    // TODO: write me
+    // like CurrLineDx() but dumps info about draw instructions to dbg out
+}
+
 // Redistribute extra space in the line equally among the spaces
 void HtmlFormatter::JustifyLineBoth()
 {
     REAL extraSpaceDxTotal = pageDx - CurrLineDx();
+#ifdef DEBUG
+    if (extraSpaceDxTotal < 0.f)
+        DumpLineDebugInfo();
+#endif
     CrashIf(extraSpaceDxTotal < 0.f);
 
     LayoutLeftStartingAt(0.f);
