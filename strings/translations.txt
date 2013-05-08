@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5a7faeb930cb04f982df5aae0e6127cb1022a610
+966072319843a0258714b6cf8049eab074d61af8
 :%s of %s
 af:%s uit %s
 ar:%s من %s
@@ -4796,6 +4796,7 @@ uk:Перевірити, чи є нова версія
 uz:&Yangi versiyani tekshirish
 vn:Kiểm tra cập nhật
 :Close
+am:Փակել
 ar:إغلاق
 az:Bağla
 bn:বন্ধ করুন
