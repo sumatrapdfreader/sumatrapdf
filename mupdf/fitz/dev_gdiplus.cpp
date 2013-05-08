@@ -1604,7 +1604,6 @@ fz_image_to_pixmap_def(fz_context *ctx, fz_image *image, const fz_matrix *ctm)
 {
 	float dx = hypotf(ctm->a, ctm->b);
 	float dy = hypotf(ctm->c, ctm->d);
-	// TODO: use dx = image->w and dy = image->h instead?
 	return fz_image_to_pixmap(ctx, image, dx, dy);
 }
 

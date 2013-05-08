@@ -1363,7 +1363,7 @@ void LoadDocument2(const WCHAR *fileName, const SumatraWindow& win)
     CrashIf(!win.AsEbookWindow());
     // TODO: LoadDocument() needs to handle EbookWindow, for now
     // we force opening in a new window
-    LoadArgs args(fileName, NULL);
+    LoadArgs args(fileName);
     LoadDocument(args);
 }
 
@@ -1464,10 +1464,11 @@ static WindowInfo* LoadDocumentOld(LoadArgs& args)
         }
     }
 
-    DeleteOldSelectionInfo(win, true);
-    win->fwdSearchMark.show = false;
-    win->notifications->RemoveAllInGroup(NG_RESPONSE_TO_ACTION);
-    win->notifications->RemoveAllInGroup(NG_PAGE_INFO_HELPER);
+    if (!win->IsAboutWindow()) {
+        CrashIf(!args.forceReuse);
+        CloseDocumentInWindow(win);
+    }
+    // invalidate the links on the Frequently Read page
     win->staticLinks.Reset();
 
     HwndPasswordUI pwdUI(win->hwndFrame);
@@ -3219,15 +3220,9 @@ static void BrowseFolder(WindowInfo& win, bool forward)
 
     // TODO: check for unsaved modifications
     UpdateCurrentFileDisplayStateForWin(SumatraWindow::Make(&win));
-    LoadArgs args(files.At(index), &win, true, true);
+    LoadArgs args(files.At(index), &win);
+    args.forceReuse = true;
     LoadDocument(args);
-
-    // disable the toolbar page and find boxes if a document failed to load
-    if (!win.IsDocLoaded()) {
-        UpdateToolbarPageText(&win, 0);
-        UpdateToolbarFindText(&win);
-        UpdateFindbox(&win);
-    }
 }
 
 // scrolls half a page down/up (needed for Shift+Up/Down)
