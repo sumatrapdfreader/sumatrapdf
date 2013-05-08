@@ -1,14 +1,14 @@
 diff -rPu5 zlib.orig\infback9\inftree2.h zlib\infback9\inftree2.h
 --- zlib.orig\infback9\inftree2.h	Thu Jan 01 01:00:00 1970
-+++ zlib\infback9\inftree2.h	Tue Feb 12 09:27:07 2013
++++ zlib\infback9\inftree2.h	Wed May 08 21:15:55 2013
 @@ -0,0 +1,4 @@
 +/* SumatraPDF: support Deflate64 */
 +extern int inflate_table9 OF((codetype type, unsigned short FAR *lens,
 +                             unsigned codes, code FAR * FAR *table,
 +                             unsigned FAR *bits, unsigned short FAR *work));
 diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
---- zlib.orig\inflate.c	Mon Feb 13 00:20:33 2012
-+++ zlib\inflate.c	Tue Feb 12 18:21:21 2013
+--- zlib.orig\inflate.c	Mon Aug 13 09:02:40 2012
++++ zlib\inflate.c	Wed May 08 21:15:55 2013
 @@ -82,10 +82,15 @@
  
  #include "zutil.h"
@@ -25,7 +25,7 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
  #  ifndef BUILDFIXED
  #    define BUILDFIXED
  #  endif
-@@ -161,20 +166,21 @@
+@@ -162,20 +167,21 @@
              windowBits &= 15;
  #endif
      }
@@ -48,7 +48,7 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
  
  int ZEXPORT inflateInit2_(strm, windowBits, version, stream_size)
  z_streamp strm;
-@@ -291,14 +297,21 @@
+@@ -292,14 +298,21 @@
          /* do this just once */
          virgin = 0;
      }
@@ -72,7 +72,7 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
  
  #ifdef MAKEFIXED
  #include <stdio.h>
-@@ -900,11 +913,11 @@
+@@ -901,11 +914,11 @@
              state->ndist = BITS(5) + 1;
              DROPBITS(5);
              state->ncode = BITS(4) + 4;
@@ -85,11 +85,11 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
                  break;
              }
  #endif
-@@ -920,11 +933,11 @@
+@@ -921,11 +934,11 @@
              while (state->have < 19)
                  state->lens[order[state->have++]] = 0;
              state->next = state->codes;
-             state->lencode = (code const FAR *)(state->next);
+             state->lencode = (const code FAR *)(state->next);
              state->lenbits = 7;
 -            ret = inflate_table(CODES, state->lens, 19, &(state->next),
 +            ret = state->inflate_table(CODES, state->lens, 19, &(state->next),
@@ -98,7 +98,7 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
                  strm->msg = (char *)"invalid code lengths set";
                  state->mode = BAD;
                  break;
-@@ -938,10 +951,11 @@
+@@ -939,10 +952,11 @@
                      here = state->lencode[BITS(state->lenbits)];
                      if ((unsigned)(here.bits) <= bits) break;
                      PULLBYTE();
@@ -110,11 +110,11 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
                  }
                  else {
                      if (here.val == 16) {
-@@ -994,20 +1008,20 @@
+@@ -995,20 +1009,20 @@
                 values here (9 and 6) without reading the comments in inftrees.h
                 concerning the ENOUGH constants, which depend on those values */
              state->next = state->codes;
-             state->lencode = (code const FAR *)(state->next);
+             state->lencode = (const code FAR *)(state->next);
              state->lenbits = 9;
 -            ret = inflate_table(LENS, state->lens, state->nlen, &(state->next),
 +            ret = state->inflate_table(LENS, state->lens, state->nlen, &(state->next),
@@ -124,7 +124,7 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
                  state->mode = BAD;
                  break;
              }
-             state->distcode = (code const FAR *)(state->next);
+             state->distcode = (const code FAR *)(state->next);
              state->distbits = 6;
 -            ret = inflate_table(DISTS, state->lens + state->nlen, state->ndist,
 +            ret = state->inflate_table(DISTS, state->lens + state->nlen, state->ndist,
@@ -133,7 +133,7 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
                  strm->msg = (char *)"invalid distances set";
                  state->mode = BAD;
                  break;
-@@ -1016,11 +1030,11 @@
+@@ -1017,11 +1031,11 @@
              state->mode = LEN_;
              if (flush == Z_TREES) goto inf_leave;
          case LEN_:
@@ -146,7 +146,7 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
                  LOAD();
                  if (state->mode == TYPE)
                      state->back = -1;
-@@ -1062,11 +1076,11 @@
+@@ -1063,11 +1077,11 @@
              if (here.op & 64) {
                  strm->msg = (char *)"invalid literal/length code";
                  state->mode = BAD;
@@ -161,7 +161,7 @@ diff -rPu5 zlib.orig\inflate.c zlib\inflate.c
                  state->length += BITS(state->extra);
 diff -rPu5 zlib.orig\inflate.h zlib\inflate.h
 --- zlib.orig\inflate.h	Sat Dec 26 02:32:08 2009
-+++ zlib\inflate.h	Tue Feb 12 09:35:11 2013
++++ zlib\inflate.h	Wed May 08 21:15:55 2013
 @@ -75,10 +75,14 @@
                  LIT -> LEN
      Process trailer:
@@ -185,6 +185,35 @@ diff -rPu5 zlib.orig\inflate.h zlib\inflate.h
      unsigned was;               /* initial length of match */
 +    inflate_table_func *inflate_table; /* SumatraPDF: support Deflate64 */
  };
+diff -rPu5 zlib.orig\minizip\iowin32.c zlib\minizip\iowin32.c
+--- zlib.orig\minizip\iowin32.c	Mon Apr 29 00:57:11 2013
++++ zlib\minizip\iowin32.c	Wed May 08 22:02:28 2013
+@@ -241,11 +241,11 @@
+ {
+ #ifdef IOWIN32_USING_WINRT_API
+     return SetFilePointerEx(hFile, pos, newPos, dwMoveMethod);
+ #else
+     LONG lHigh = pos.HighPart;
+-    DWORD dwNewPos = SetFilePointer(hFile, pos.LowPart, &lHigh, FILE_CURRENT);
++    DWORD dwNewPos = SetFilePointer(hFile, pos.LowPart, &lHigh, dwMoveMethod);
+     BOOL fOk = TRUE;
+     if (dwNewPos == 0xFFFFFFFF)
+         if (GetLastError() != NO_ERROR)
+             fOk = FALSE;
+     if ((newPos != NULL) && (fOk))
+@@ -368,11 +368,11 @@
+ 
+     if (hFile)
+     {
+         LARGE_INTEGER pos;
+         pos.QuadPart = offset;
+-        if (!MySetFilePointerEx(hFile, pos, NULL, FILE_CURRENT))
++        if (!MySetFilePointerEx(hFile, pos, NULL, dwMoveMethod))
+         {
+             DWORD dwErr = GetLastError();
+             ((WIN32FILE_IOWIN*)stream) -> error=(int)dwErr;
+             ret = -1;
+         }
 diff -rPu5 zlib.orig\minizip\iowin32s.c zlib\minizip\iowin32s.c
 --- zlib.orig\minizip\iowin32s.c	Thu Jan 01 01:00:00 1970
 +++ zlib\minizip\iowin32s.c	Sat Jan 21 16:18:29 2012
@@ -374,8 +403,8 @@ diff -rPu5 zlib.orig\minizip\unzalloc.h zlib\minizip\unzalloc.h
 +}
 +#endif
 diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
---- zlib.orig\minizip\unzip.c	Sat Jan 21 21:49:31 2012
-+++ zlib\minizip\unzip.c	Fri Mar 01 14:45:35 2013
+--- zlib.orig\minizip\unzip.c	Sun Feb 24 09:32:30 2013
++++ zlib\minizip\unzip.c	Wed May 08 21:52:28 2013
 @@ -106,10 +106,15 @@
  
  #ifndef UNZ_MAXFILENAMEINZIP
@@ -392,22 +421,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
  #endif
  #ifndef TRYFREE
  # define TRYFREE(p) {if (p) free(p);}
-@@ -416,10 +421,14 @@
-     ZPOS64_T uSizeFile;
-     ZPOS64_T uBackRead;
-     ZPOS64_T uMaxBack=0xffff; /* maximum size of global comment */
-     ZPOS64_T uPosFound=0;
- 
-+    /* SumatraPDF: allow for some "garbage" after the end of the ZIP file */
-+    /* (required for embedding a ZIP file inside an executable's resources) */
-+    uMaxBack += 0x10000;
-+
-     if (ZSEEK64(*pzlib_filefunc_def,filestream,0,ZLIB_FILEFUNC_SEEK_END) != 0)
-         return 0;
- 
- 
-     uSizeFile = ZTELL64(*pzlib_filefunc_def,filestream);
-@@ -712,10 +721,14 @@
+@@ -712,10 +717,14 @@
          /* total number of entries in the central dir */
          if (unz64local_getShort(&us.z_filefunc, us.filestream,&uL)!=UNZ_OK)
              err=UNZ_ERRNO;
@@ -422,7 +436,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
              (number_disk!=0))
              err=UNZ_BADZIPFILE;
  
-@@ -1373,10 +1386,15 @@
+@@ -1373,10 +1382,15 @@
  /*
  // Unzip Helper Functions - should be here?
  ///////////////////////////////////////////
@@ -438,7 +452,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
    Check the coherency of the local header and info in the end of central
          directory about this file
    store in *piSizeVar the size of extra info in local header
-@@ -1424,10 +1442,11 @@
+@@ -1424,10 +1438,11 @@
  
      if ((err==UNZ_OK) && (s->cur_file_info.compression_method!=0) &&
  /* #ifdef HAVE_BZIP2 */
@@ -450,7 +464,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
  
      if (unz64local_getLong(&s->z_filefunc, s->filestream,&uData) != UNZ_OK) /* date/time */
          err=UNZ_ERRNO;
-@@ -1531,10 +1550,11 @@
+@@ -1531,10 +1546,11 @@
  
      if ((s->cur_file_info.compression_method!=0) &&
  /* #ifdef HAVE_BZIP2 */
@@ -462,7 +476,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
          err=UNZ_BADZIPFILE;
  
      pfile_in_zip_read_info->crc32_wait=s->cur_file_info.crc;
-@@ -1548,17 +1568,19 @@
+@@ -1548,17 +1564,19 @@
      pfile_in_zip_read_info->stream.total_out = 0;
  
      if ((s->cur_file_info.compression_method==Z_BZIP2ED) && (!raw))
@@ -486,7 +500,7 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
        pfile_in_zip_read_info->stream.avail_in = 0;
  
        err=BZ2_bzDecompressInit(&pfile_in_zip_read_info->bstream, 0, 0);
-@@ -1571,19 +1593,25 @@
+@@ -1571,19 +1589,25 @@
        }
  #else
        pfile_in_zip_read_info->raw=1;
@@ -517,8 +531,8 @@ diff -rPu5 zlib.orig\minizip\unzip.c zlib\minizip\unzip.c
        {
          TRYFREE(pfile_in_zip_read_info);
 diff -rPu5 zlib.orig\minizip\unzip.h zlib\minizip\unzip.h
---- zlib.orig\minizip\unzip.h	Mon Feb 15 13:58:22 2010
-+++ zlib\minizip\unzip.h	Tue Feb 12 09:37:23 2013
+--- zlib.orig\minizip\unzip.h	Mon Jul 09 01:34:08 2012
++++ zlib\minizip\unzip.h	Wed May 08 21:15:55 2013
 @@ -57,10 +57,12 @@
  
  #ifdef HAVE_BZIP2

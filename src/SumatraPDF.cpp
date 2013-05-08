@@ -1096,6 +1096,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     if (!win->IsDocLoaded()) {
         if (!autorefresh && win->loadedFilePath) {
             LoadArgs args(win->loadedFilePath, win);
+            args.forceReuse = true;
             LoadDocument(args);
         }
         return;

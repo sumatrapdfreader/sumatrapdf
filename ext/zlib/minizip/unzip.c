@@ -193,7 +193,7 @@ typedef struct
 
 #    ifndef NOUNCRYPT
     unsigned long keys[3];     /* keys defining the pseudo-random sequence */
-    const unsigned long* pcrc_32_tab;
+    const z_crc_t* pcrc_32_tab;
 #    endif
 } unz64_s;
 
@@ -422,10 +422,6 @@ local ZPOS64_T unz64local_SearchCentralDir(const zlib_filefunc64_32_def* pzlib_f
     ZPOS64_T uBackRead;
     ZPOS64_T uMaxBack=0xffff; /* maximum size of global comment */
     ZPOS64_T uPosFound=0;
-
-    /* SumatraPDF: allow for some "garbage" after the end of the ZIP file */
-    /* (required for embedding a ZIP file inside an executable's resources) */
-    uMaxBack += 0x10000;
 
     if (ZSEEK64(*pzlib_filefunc_def,filestream,0,ZLIB_FILEFUNC_SEEK_END) != 0)
         return 0;
@@ -814,9 +810,9 @@ extern unzFile ZEXPORT unzOpen64 (const void *path)
 }
 
 /*
-  Close a ZipFile opened with unzipOpen.
-  If there is files inside the .Zip opened with unzipOpenCurrentFile (see later),
-    these files MUST be closed with unzipCloseCurrentFile before call unzipClose.
+  Close a ZipFile opened with unzOpen.
+  If there is files inside the .Zip opened with unzOpenCurrentFile (see later),
+    these files MUST be closed with unzCloseCurrentFile before call unzClose.
   return UNZ_OK if there is no problem. */
 extern int ZEXPORT unzClose (unzFile file)
 {
@@ -1236,7 +1232,7 @@ extern int ZEXPORT unzGoToNextFile (unzFile  file)
 
 /*
   Try locate the file szFileName in the zipfile.
-  For the iCaseSensitivity signification, see unzipStringFileNameCompare
+  For the iCaseSensitivity signification, see unzStringFileNameCompare
 
   return value :
   UNZ_OK if the file is found. It becomes the current file.
@@ -2026,7 +2022,7 @@ extern int ZEXPORT unzGetLocalExtrafield (unzFile file, voidp buf, unsigned len)
 }
 
 /*
-  Close the file in zip opened with unzipOpenCurrentFile
+  Close the file in zip opened with unzOpenCurrentFile
   Return UNZ_CRCERROR if all the file was read but the CRC is not good
 */
 extern int ZEXPORT unzCloseCurrentFile (unzFile file)
