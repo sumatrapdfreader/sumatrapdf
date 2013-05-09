@@ -1,7 +1,8 @@
 AppTranslator: SumatraPDF
-966072319843a0258714b6cf8049eab074d61af8
+71d78833685c2b4f13e8f43a0c74b5b76a2d64bd
 :%s of %s
 af:%s uit %s
+am:%s՝ %s-ից
 ar:%s من %s
 az:%s/%s
 br:%s de %s
@@ -170,6 +171,7 @@ uk:Справжній розмір\tCtrl+1
 uz:&Haqiqiy o'lchami\tCtrl+1
 vn:Kích thướ&c thật\tCtrl+1
 :&Advanced Options...
+am:&Ընդլայնված կարգավորումներ..
 az:&Əlavə seçimlər...
 br:Opções &Avançadas...
 ca-xv:Opcions &avançades...
@@ -188,6 +190,7 @@ ru:&Расширенные настройки...
 sq:Opsionet e &avancuara...
 ta:&Advanced Options...
 uk:Розширені налаштування...
+uz:&Qo'shimcha parametrlar...
 :&All selected pages
 am:&Ընտրված բոլոր էջերը
 ar:&كل الصفحات المحددة
@@ -430,7 +433,7 @@ uk:&Закрити\tCtrl+W
 uz:&Yopish\tCtrl+W
 vn:Đóng tập tin\tCtrl+W
 :&Copy Selection
-am:&Պատճենել ընտրվածը
+am:&Պատճենել նշվածը
 ar:&نسخ المحدد
 az:Seçilmiş sahəni &kopyala
 bg:&Копирай избраното
@@ -487,7 +490,7 @@ uk:Скопіювати вибране
 uz:&Tanlanganni nusxa olish
 vn:&Chép phần đã chọn
 :&Copy Selection\tCtrl+C
-am:Պատճենել ընտրվածը\tCtrl+C
+am:Պատճենել նշվածը\tCtrl+C
 ar:&نسخ المحدد\tCtrl+C
 az:Seçilmiş &sahəni kopyala\tCtrl+C
 bg:&Копирай избраното\tCtrl+C
@@ -1789,6 +1792,7 @@ uk:Відкрити...\tCtrl+O
 uz:&Ochish...\tCtrl+O
 vn:Mở tập tin...\tCtrl+O
 :&Options
+am:&Ընտրանքներ
 ar:&الخيارات
 az:&Seçimlər
 br:&Opções
@@ -2820,11 +2824,11 @@ tl:Gamitin ang orihinal na laki ng mga pahina
 tr:Orijinal sayfa boyutlarını &kullan
 tw:使用頁面原始大小(&S)
 uk:Використовувати оригінальні розміри сторінки
-uz:&Betlarning asl o'lchamlaridan foydalanish
+uz:&Betlarning asl o'lchamlarini ishlatish
 vn:Sử dụng kích thước trang gốc
 :&View
 af:&Vertoon
-am:&Դիտել
+am:&Տեսքը
 ar:&العرض
 az:&Görüntü
 bg:&Изглед
@@ -3548,7 +3552,7 @@ uk:Всі файли
 uz:Hamma fayllar
 vn:Mọi tập tin
 :All supported documents
-am:Բոլոր աջակցվող փասթաթղթերը
+am:Աջակցվող բոլոր փասթաթղթերը
 ar:كل المستندات المدعومة
 az:Bütün dəstəklənən sənədlər
 bg:Всички поддържани документи
@@ -3665,6 +3669,7 @@ uz:Dastur:
 vn:Ứng dụng:
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
+am:Համոզվա՞ծ եք, որ ցանկանում եք ջնջել SumatraPDF-ը:
 ar:هل أنت متأكد من أنك تريد إزالة SumatraPDF؟
 az:Əminsiniz ki, SumatraPDF-i silmək istəyirsiniz?
 bn:আপনি কি নিশ্চিত যে আপনি সুমাত্রা-পিডিএফ আন-ইন্সটল করতে চান?
@@ -5536,6 +5541,7 @@ uk:Неможливо отримати налаштування друкарки
 uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
 :Couldn't create temporary directory
+am:Հնարավոր չեղավ ստեղծել ժամանակավոր թղթապանակ
 ar:لم أتمكن من إنشاء مجلد مؤقت
 az:Müvəqqəti qovluğu yaratmaq mümkün olmadı
 bn:অস্থায়ী ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
@@ -5566,6 +5572,7 @@ uk:Не вдалося створити тимчасову папку
 uz:Vaqtincha direktoriyani yaratib bo'lmadi
 vn:Không tạo được thư mục tạm
 :Couldn't create the installation directory
+am:Հնարավոր չեղավ ստեղծել տեղադրման թղթապանակը
 ar:لم أتمكن من إنشاء مجلد البرنامج
 az:Quraşdırma qovluğunu yaratmaq mümkün olmadı
 bn:ইন্সটলএসন ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
@@ -5657,6 +5664,7 @@ uk:Неможливо знайти друкарку
 uz:Printerni ishga tushirib bo'lmadi
 vn:Không khởi động được máy in
 :Couldn't install PDF previewer
+am:Հնարավոր չեղավ տեղակայել PDF-ի նախադիտումը
 ar:لم أتمكن من تنصيب معاين PDF
 az:PDF önbaxış alətini quraşdırmaq mümkün olmadı
 bn:পিডিএফ প্রিভিউয়ার ইন্সটল করা সম্ভব হয়নি
@@ -5686,6 +5694,7 @@ uk:Не вдалося встановити програму для попере
 uz:PDF ko'rish vositasini o'rnatib bo'lmadi
 vn:Không thể cài đặt phần hiển thị trước PDF
 :Couldn't install PDF search filter
+am:Հնարավոր չեղավ տեղակայել PDF-ի որոնման պայման
 ar:لم أتمكن من تنصيب فلتر البحث لـPDF
 az:PDF axtarış filtrini quraşdırmaq mümkün olmadı
 bn:পিডিএফ খোঁজ ফিল্টার ইন্সটল করা সম্ভব হয়নি
@@ -5714,6 +5723,7 @@ ta:PDF தேடலை நிறுவ இயலவில்லை
 uk:Не вдалося встановити фільтр пошуку для PDF
 uz:PDF qidirish filtrini o'rnatib bo'lmadi
 :Couldn't install browser plugin
+am:Հնարավոր չեղավ տեղադրել դիտարկիչի բաղադրիչը
 ar:لم أتمكن من تنصيب ملحق المستعرض
 az:Brauzer plaginini quraşdırmaq mümkün olmadı
 bn:ব্রাউজার প্লাগ-ইন ইন্সটল করা সম্ভব হয়নি
@@ -5744,6 +5754,7 @@ uk:Не вдалося встановити розширення для брау
 uz:Brauzer plaginini o'rnatib bo'lmadi
 vn:Không cài được trình cắm vào trình duyệt
 :Couldn't obtain temporary directory
+am:Հնարավոր չեղավ ստանալ ժամանակավոր թղթապանակ
 ar:لم أتمكن من الحصول على المجلد المؤقت
 az:Müvəqqəti qovluğu təyin etmək mümkün olmadı
 br:Não foi possível obter a pasta temporária
@@ -5769,7 +5780,9 @@ sq:Nuk mund të sigurojë direktorinë e përkohshme
 sv:Kunde inte hämta temp-katalog
 ta:தற்காலிக கோப்புறையை அடைய முடியவில்லை
 uk:Не вдалося отримати розташування тимчасової папки
+uz:Vaqtinchalik direktoriyani olib bo'lmadi
 :Couldn't remove installation directory
+am:Հնարավոր չեղավ ջնջել տեղադրման թղթապանակը
 ar:لم أتمكن من إزالة مجلد البرنامج
 az:Quraşdırma qovluğunu silmək mümkün olmadı
 br:Não foi possível remover a pasta de instalação
@@ -5795,8 +5808,10 @@ sq:Nuk mund të heqë direktorinë e përkohshme
 sv:Kunde inte ta bort installationsmappen
 ta:நிறுவிய கோப்புறையை நீக்க முடியவில்லை
 uk:Не вдалося видалити папку, де було встановлено програму
+uz:O'rnatish direktoriyasini o'chirib bo'lmadi
 vn:Không thể gỡ bỏ thư mục cài đặt
 :Couldn't remove the shortcut
+am:Հնարավոր չեղավ ջնջել պիտակը
 ar:لم أتمكن من حذف رابط البرنامج
 az:Yarlığı silmək mümkün olmadı
 bn:শর্টকাট বাতিল করা সম্ভব হয়নি
@@ -5823,6 +5838,7 @@ sq:Nuk mund të heqë shkurtoren
 sv:Kunde inte ta bort genvägen
 ta:சுருக்கு வழியை நீக்க முடியவில்லை
 uk:Не вдалося видалити ярлик
+uz:Xatcho'pni o'chirib bo'lmadi
 vn:Không bỏ lối tắt được
 :Couldn't render the page
 am:Հնարավոր չեղավ ստեղծել էջի պատկերը
@@ -5886,6 +5902,7 @@ uk:Неможливо згенерувати(відобразити) сторі�
 uz:Betni render qilib bo'lmadi
 vn:Không hiện được trang
 :Couldn't uninstall PDF previewer
+am:Հնարավոր չեղավ հեռացնել PDF-ի նախադիտումը
 ar:لم أتمكن من إزالة معاين PDF
 az:PDF önbaxış alətini silmək mümkün olmadı
 br:Não foi possível desinstalar o pré-visualizador para PDF
@@ -5912,6 +5929,7 @@ ta:PDF முன்னோட்டத்தை நீக்க முடிய�
 uk:Не вдалося видалити програму для попереднього перегляду PDF
 uz:PDF ko'rish vositasini o'chirib bo'lmadi
 :Couldn't uninstall PDF search filter
+am:Հնարավոր չեղավ հեռացնել PDF որոնելու պայմանը
 ar:لم أتمكن من إزالة فلتر البحث لـPDF
 az:PDF axtarış filtrini silmək mümkün olmadı
 br:Não foi possível desinstalar o filtro de pesquisa para PDF
@@ -5938,6 +5956,7 @@ ta:PDF தேடலை நீக்க முடியவில்லை
 uk:Не вдалося видалити фільтр пошуку для PDF
 uz:PDF qidirish filtrini o'chirib bo'lmadi
 :Couldn't uninstall browser plugin
+am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
 ar:لم أتمكن من إزالة ملحق المستعرض
 az:Brauzer plaginini silmək mümkün olmadı
 br:Não foi possível desinstalar o plugin do navegador
@@ -5965,6 +5984,7 @@ ta:உலாவி உள்இடுக்கைளை நீக்க மு�
 uk:Не вдалося видалити розширення для браузера
 uz:Brauzer plaginini o'chirib bo'lmadi
 :Couldn't write %s to disk
+am:Հնարավոր չէ գրել %s պնակում
 ar:لم أتمكن من كتابة %s للقرص الصلب
 az:%s diskə yazıla bilmədi
 br:Não foi possível gravar %s no disco
@@ -6107,7 +6127,7 @@ uk:Поточний файл
 uz:Joriy fayl
 vn:Tập tin hiện hành
 :Custom &Zoom...\tCtrl+Y
-am:&Ընտրված չափը\tCtrl+Y
+am:&Ընտրված չափով\tCtrl+Y
 ar:تنسيق &التقريب\tCtrl+Y
 az:Miq&yası qeyd et...\tCtrl+Y
 bg:Увеличение по &избор...\tCtrl+Y
@@ -6950,6 +6970,7 @@ uk:Помилка завантаження %s
 uz:%s yuklab olish xatosi
 vn:Không mở %s được
 :Error: Couldn't run SumatraPDF!
+am:Սխալ. Հնարավոր չէ բացել SumatraPDF-ը:
 ar:خطأ: لم أتمكن من تشغيل البرنامج
 az:Xəta: SumatraPDF işə salına bilmədi!
 br:Não foi possível rodar o SumatraPDF!
@@ -6978,6 +6999,7 @@ uk:Помилка: не вдалося запустити SumatraPDF
 uz:Xato: SumatraPDF ishga tushirib bo'lmadi!
 vn:Lỗi: Không thể chạy SumatraPDF!
 :Error: SumatraPDF hasn't been found!
+am:Սխալ. SumatraPDF-ը չի գտնվել:
 ar:خطأ: البرنامج غير موجود
 az:Xəta: SumatraPDF tapılmadı!
 br:O SumatraPDF não foi encontrado!
@@ -7006,6 +7028,7 @@ uk:Помилка: SumatraPDF не було знайдено
 uz:Xato: SumatraPDF topilmadi!
 vn:Lỗi: Không tìm thấy SumatraPDF!
 :Error: The document couldn't be downloaded!
+am:Սխալ. Փաստաթուղթը չի կարող բեռնվել:
 ar:خطأ: لم أتمكن من تحميل الملف
 az:Xəta: Sənədi endirmək mümkün olmadı!
 br:Erro: o documento não pôde ser baixado!
@@ -7280,6 +7303,7 @@ uk:Дві сторінки
 uz:Ikkita betdan
 vn:Trang kép
 :Failed to copy uninstaller to temp directory
+am:Հնարավոր չեղավ պատճենել ջնջիչը ժամանակավոր թղթապանակ
 ar:فشل في نسخ مزيل البرنامج إلى المجلد المؤت
 az:Deinstalyatoru müvəqqəti qovluğa kopyalamaq mümkün olmadı
 br:Falha na cópia do desinstalador para a pasta temporária
@@ -7304,7 +7328,9 @@ sq:Dështoi kopjimi i çinstaluesit te direktoria e përkohshme
 sv:Misslyckades med att kopiera avinstalleraren till temp-katalogen
 ta:நிறுவி நீக்கலை தற்காலிக கோப்புறையில் இருந்து நகலெடுத்தல் தோல்வி
 uk:Не вдалося скопіювати деінсталятор у тимчасову папку
+uz:O'chirish dasturini vaqtinchalik direktoriyaga nusxa olish muvaffaqiyatsiz tugadi
 :Failed to create a shortcut
+am:Հնարավոր չեղավ ստեղծել պիտակը
 ar:فشل في إنشاء رابط اختصار للبرنامج
 az:Yarlık yaratmaq mümkün olmadı
 br:Falha na criação do atalho
@@ -7330,7 +7356,9 @@ sq:Dështoi krijimi i shkurtores
 sv:Misslyckades med att skapa genväg
 ta:சுருக்கு வழி அமைதல் தோல்வி
 uk:Не вдалося створити ярлик
+uz:Xatcho'pni yaratib bo'lmadi
 :Failed to delete uninstaller registry keys
+am:Հնարավոր չեղավ ջնջել Գրանցատեղիի բանալիները
 ar:فشل في حذف مزيل البرنامج من registry
 az:Deinstalyatorun reyestr açarlarını silmək mümkün olmadı
 br:Falha na remoção das entradas de registro do desinstalador
@@ -7355,6 +7383,7 @@ sq:Dështoi fshirja e çinstaluesit nga regjistri
 sv:Misslyckades med att ta bort registernycklar
 ta:நிறுவி நீக்கியின் பதிவை அழிக்க முடியவில்லை
 uk:Не вдалося видалити інформацію деінсталятора з реєстру
+uz:O'chirish dasturining reyestr kalitlarini o'chirish muvaffaqiyatsiz tugadi
 :Failed to rename the file!
 am:Հնարավոր չեղավ անվանափոխել ֆայլը։
 ar:فشل في إعادة تسمية الملف!
@@ -7475,6 +7504,7 @@ uk:Не можна зберегти файл.
 uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Failed to write the extended file extension information to the registry
+am:Հնարավոր չեղավ ֆայլի ընդլայնման մասին գրառել Գրանցատեղիում
 ar:فشل في كتابة بيانات الملف في registry
 az:Faylın genişliyi haqqında ətraflı məlumatı reyestrə yazmaq mümkün olmadı
 br:Falha na gravação da extensão de arquivo no registro
@@ -7499,6 +7529,7 @@ sv:Misslyckades med att spara registernycklar för den utökade filhanteringen
 ta:பதிவு செய்ய விரிவாக்கப்பட்ட கோப்பு நீட்டிப்பு தகவலை எழுத முடியவில்லை
 uk:Не вдалося записати інформацію про розширення файлу до реєстру
 :Failed to write the uninstallation information to the registry
+am:Ծրագիրը հեռացնելու մասին գրառումը չստացվեց Գրանցատեղիում
 ar:فشل في كتابة بيانات إزالة البرنامج في registry
 az:Deinstalyasiya məlumatını reyestrə yazmaq mümkün olmadı
 br:Falha na gravação dos dados de desinstalação no registro
@@ -7784,7 +7815,7 @@ uk:Розмір файла:
 uz:Fayl hajmi:
 vn:Kích thước:
 :File:
-am:Ֆայլ.
+am:Ֆայլը.
 ar:الملف
 az:Fayl:
 bg:Файл:
@@ -9071,6 +9102,7 @@ uk:Перейти на сторінку
 uz:Betga o'tish
 vn:Nhảy đến trang
 :Hide &Options
+am:Թաքցնել &ընտրանքները
 ar:إخفاء &الخيارات
 az:&Seçimləri gizlət
 br:Ocultar &Opções
@@ -9100,7 +9132,7 @@ uk:Приховати налаштування
 uz:&Parametrlarni yashirish
 vn:Thiết lập ẩn và tùy chọn
 :Hide frequently read
-am:Թաքցնել հաճախակի կարդացածը
+am:Թաքցնել հաճախակի բացվածները
 ar:إخفاء الأكثر قراءة
 az:Ən çox oxunanları gizlət
 bg:Скрий често четените
@@ -9266,6 +9298,7 @@ uk:Файли зображень (*.%s)
 uz:Rasm fayllari (*.%s)
 vn:Tập tin ảnh (*.%s)
 :Install PDF &browser plugin for Firefox, Chrome and Opera
+am:Տեղադրել PDF-ի &բաղադրիչը Firefox-ում, Chrome-ում և Opera-ում
 ar:تنصيب معاين PDF للفايرفوكس وكروم واوبرا
 az:PDF &brauzer plaginini Firefox, Chrome və Opera üçün quraşdır
 br:Instalar plugin PDF para Firefox, Chrome e Opera
@@ -9294,6 +9327,7 @@ uz:PDF &brauzer plaginini Firefox, Chrome va Opera uchun o'rnatish
 vn:Cài đặt trình cắm PDF trình duyệt vào Firefox, Chrome và Opera
 :Install SumatraPDF
 af:Installeer SumatraPDF
+am:Տեղակայել SumatraPDF-ը
 ar:تنصيب SumatraPDF
 az:SumatraPDF-i quraşdır
 br:Instalar SumatraPDF
@@ -9322,6 +9356,7 @@ ta:சுமத்ராPDFஐ நிறுவு
 uk:Встановити SumatraPDF
 uz:SumatraPDF o'rnatish
 :Install SumatraPDF in &folder:
+am:Տեղադրել SumatraPDF-ը &հետևյալ թղթապանակում՝
 ar:تنصيب SumatraPDF في المجلد:
 az:SumatraPDF-i bu &qovluqda quraşdır:
 br:Instalar SumatraPDF na &pasta:
@@ -9349,6 +9384,7 @@ ta:சுமத்ராPDFஐ &கோப்புறையில் நிற�
 uk:Встановити SumatraPDF у папку
 uz:SumatraPDF &jildga o'rnatish
 :Installation failed!
+am:Տեղակայումը ձախողվեց:
 ar:فشل في تنصيب البرنامج
 az:Quraşdırma baş tutmadı!
 br:Falha na instalação!
@@ -9377,6 +9413,7 @@ uk:Встановлення не було успішним!
 uz:O'rnatish muvaffaqiyatsiz tugadi!
 vn:Cài đặt thất bại!
 :Installation in progress...
+am:Ընթացքում է...
 ar:قيد تنصيب البرنامج ...
 az:Quraşdırma davam edir...
 br:Instalação em progresso...
@@ -9474,6 +9511,7 @@ uk:KB
 uz:KB
 vn:KB
 :Let Windows Desktop Search &search PDF documents
+am:Թույլատրել Windows Desktop Search-ին &փնտրել PDF ֆայլեր
 ar:السماح لويندوز بالبحث في ملفات PDF
 az:PDF sənədlərinin Windows Desktop Search vasitəsilə a&xtarılması
 br:Permitir que o Windows faça a bu&sca em documentos PDF
@@ -9499,6 +9537,7 @@ sv:Låt Windows inbyggda sökfunktion indexera PDF-dokument
 ta:விண்டோஸ் டெஸ்க்டாப் தேடல் &PDF கோப்புகளை தேடட்டும்
 uk:Дозволити Windows Desktop Search пошук у PDF документах
 :Let Windows show &previews of PDF documents
+am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նախադիտումը
 ar:السماح لويندوز عرض صور معاينة PDF
 az:PDF sənədlərinin Windows alətləri vasitəsilə &görüntülənməsi
 br:Permitir que o Windows &pré-visualize documentos PDF
@@ -9776,6 +9815,7 @@ uk:Зробити SumatraPDF типовим переглядачем PDF
 uz:SumatraPDF PDF fayllar bilan bog'lanish
 vn:Đặt SumatraPDF làm trình đọc PDF chính
 :Man&ga Mode
+am:Man&ga եղանակ
 az:Man&qa rejimi
 br:Modo Man&gá
 es:Modo man&ga
@@ -9790,6 +9830,7 @@ pt:Modo man&ga
 ru:Режим Man&ga
 sq:Mënyra Man&ga
 uk:Режим манги
+uz:Man&ga usuli
 :Match Case
 af:Vind Bypassende Klein Letters / Hoofletters
 am:Հաշվի առնել մեծատառ/փոքրատառը
@@ -10637,6 +10678,7 @@ uk:Відкрити документ...
 uz:Hujjatni ochish...
 vn:Mở một tập tin...
 :Open in %s
+am:Բացել %s-ում
 ar:فتح في  %s
 az:%s ilə aç
 br:Abrir em %s
@@ -10897,6 +10939,7 @@ uk:Відкрити у Microsoft XPS-Viewer
 uz:Microsoft XPS-Viewerda ochish
 vn:Mở bằng Microsoft XPS-Viewer
 :Opening document in SumatraPDF...
+am:Փաստաթուղթը բացվում է SumatraPDF-ով...
 ar:فتح الملف في SumatraPDF...
 az:Sənəd SumatraPDF-də açılır...
 br:Abrindo documento no SumatraPDF...
@@ -11144,7 +11187,7 @@ uk:Оптимізації PDF:
 uz:PDF optimizatsiyalari:
 vn:Các tối ưu PDF
 :PDF Producer:
-am:PDF արտադրողը.
+am:PDF-ը ստեղծվել է.
 ar:مُنتِج البي دي إف
 az:PDF kompilyatoru:
 bg:PDF създател:
@@ -11679,6 +11722,7 @@ uk:Сторінка:
 uz:Bet:
 vn:Trang:
 :Please close %s to proceed!
+am:Շարունակելուց առաջ փակեք %s-ը:
 ar:أغلق %s للإكمال!
 az:Davam etmək üçün %s bağlayın!
 br:Por favor feche %s para continuar!
@@ -11703,6 +11747,7 @@ sq:Ju lutemi, mbyllni %s për të vazhduar!
 sv:Vänligen stäng %s innan du fortsätter!
 ta:தயவு செய்து %s மூடிவிட்டு தொடரவும்!
 uk:Будь ласка закрийте %s, щоб продовжити!
+uz:Davom etish uchun %s yoping!
 :Please wait - rendering...
 am:Խնդրում ենք սպասել...
 ar:الرجاء الانتظار ، جاري التجزئة
@@ -12234,7 +12279,7 @@ ta:அச்சடித்தல் செயலில் உள்ளது. �
 tr:Yazdırma sürüyor. İptal edip çıkmak istiyor musunuz?
 tw:正在列印，要中止並放棄嗎？
 uk:Друк ще не завершено. Перервати та вийти?
-uz:Bosib chiqarilmoqda. Bekor qilib chiqilsinmi?
+uz:Bosib chiqarilmoqda. To'xtatilib dasturdan chiqilsinmi?
 vn:Vẫn còn đang in. Hủy bỏ và thoát ra?
 :Printing is still in progress. Abort and start over?
 am:Տպվում է։ Կանգնեցնե՞լ։
@@ -12287,7 +12332,7 @@ ta:அச்சிடுதல் செயல்பாட்டில் உள
 tr:Yazıcı hala kullanımda. Durdurup yeniden başlatılsınmı?
 tw:正在列印，是否要放棄並重新設定？
 uk:Друк ще не завершено. Перервати та розпочати знову?
-uz:Bosib chiqarish tugatilmagan. Bekor qilinib qaytadan boshlansinmi?
+uz:Bosib chiqarish tugatilmagan. To'xtatilib qaytadan boshlansinmi?
 vn:Vẫn còn đang in. Thoát và bắt đầu lại?
 :Printing page %d of %d...
 am:Տպվում է %d էջը %d-ից...
@@ -13044,7 +13089,7 @@ uk:Пошук %d з %d...
 uz:%d %d dan qidirilmoqda...
 vn:Đang tìm %d trên %d
 :Select &All
-am:Ընտրել &բոլորը
+am:Նշել &բոլորը
 ar:حدد الكل
 az:&Hamısını seç
 bg:Избери всичко
@@ -13098,7 +13143,7 @@ uk:Вибрати всі
 uz:&Hammasini tanlash
 vn:Chọn hết
 :Select &All\tCtrl+A
-am:Ընտրել &բոլորը\tCtrl+A
+am:Նշել &բոլորը\tCtrl+A
 ar:اختيار &الكل\tCtrl+A
 az:&Hamısını seç\tCtrl+A
 bg:Избери &всичко\tCtrl+A
@@ -13211,6 +13256,7 @@ uk:Виберіть вміст з допомогою Ctrl+ліва кнопка 
 uz:Ctrl va sichqonchaning chap tugmasini bosib tarkibini tanlang
 vn:Đánh dấu nội dung bằng Ctrl+phím chuột trái
 :Select the folder where SumatraPDF should be installed:
+am:Ընտրեք թղթապանակում, որտեղ պետք է տեղակայվի SumatraPDF-ը՝
 ar:اختر مجلد تنصيب البرنامج:
 az:SumatraPDF-in quraşdırılacağı qovluğu seçin:
 br:Selecione a pasta onde o SumatraPDF deverá ser instalado:
@@ -13238,7 +13284,7 @@ ta:சுமத்ராPDF நிறுவல் கோப்புறை �
 uk:Виберіть папку, в яку буде встановлено SumatraPDF
 uz:SumatraPDF o'rnatish uchun jildni tanlang:
 :Send by &E-mail...
-am:Ուղարկել &email-ով
+am:Ուղարկել &էլ. փոստով
 ar:إرسال بالبريد الإلكتروني
 az:&E-poçtla göndər...
 bg:Изпрати по &електронната поща
@@ -13358,7 +13404,7 @@ tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
 tr:Sondan başa arama komut satırı
 tw:設定反搜尋命令列
 uk:Установити зворотній пошук.
-uz:Qayta qidirish buyruq satrini moslash
+uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks
 am:Ցուցադրել &Էջանիշերը
@@ -13589,7 +13635,7 @@ uk:Перелік закладок
 uz:Tanlanganlarni ko'rsatish
 vn:Hiện Ưa thích
 :Show frequently read
-am:Ցուցադրել հաճախակի կարդացվածը
+am:Ցուցադրել հաճախակի բացվածները
 ar:إظهار الأكثر قراءة
 az:Ən çox oxunanları göstər
 bg:Покажи често четените
@@ -13769,6 +13815,7 @@ uk:Одна сторінка
 uz:Bitta bet
 vn:Trang đơn
 :Some files to be installed are damaged or missing
+am:Տեղակայվող որոշ ֆայլեր վնասված են կամ բացակայում են
 ar:بعض ملفات التنصيب مفقودة أو معطوبة
 az:Bəzi quraşdırılacaq fayllar zədələnmişdir və ya yoxdur
 br:Alguns arquivos de instalação estão danificados ou ausentes
@@ -13794,6 +13841,7 @@ sq:Janë dëmtuar ose mungojnë disa skeda që do të instalohen.
 sv:Några installationsfiler saknas eller är skadade
 ta:நிறுவப்பட்ட சில கோப்புகள் சேதமடைந்துள்ளன/காணவில்லை
 uk:Деякі файли необхідні для встановлення відсутні або пошкоджені
+uz:Ba'zi o'rnatilayotgan fayllar buzilgan yoki mavjud emas
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Մերժել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 ar:عذرا, لا يجدر أن يحدث ما حدث!\n\n الرجاء الضغط على 'إلغاء', إذا كنت تريد مساعدتنا في حل هذه المشكلة
@@ -13907,6 +13955,7 @@ uk:Файл-джерело %s немає точки синхронізації
 uz:%s manba faylida sinxronlanish nuqtasi yo'q
 vn:Tập tin nguồn %s không có điểm đồng bộ
 :Start SumatraPDF
+am:Բացել SumatraPDF-ը
 ar:بدء SumatraPDF
 az:SumatraPDF-i işə sal
 br:Iniciar SumatraPDF
@@ -13995,6 +14044,7 @@ uz:Mavzu:
 vn:Chủ đề:
 :SumatraPDF %s Installer
 af:SumatraPDF %s Installeerder
+am:SumatraPDF %s-ի տեղադրիչ
 ar:SumatraPDF %s منصب
 az:SumatraPDF quraşdırıcısı %s
 br:SumatraPDF %s instalador
@@ -14021,6 +14071,7 @@ ta:சுமத்ராPDF %s நிறுவி
 uk:Інсталятор SumatraPDF %s
 uz:SumatraPDF %s o'rnatuvchisi
 :SumatraPDF %s Uninstaller
+am:SumatraPDF %s-ի Ջնջիչ
 ar:SumatraPDF %s مزيل التنصيب
 az:SumatraPDF deinstalyatoru %s
 br:SumatraPDF %s desinstalador
@@ -14045,6 +14096,7 @@ sq:Çinstaluesi i SumatraPDF %s
 sv:Avinstallationsprogram för SumatraPDF %s
 ta:சுமத்ராPDF %s நிறுவல்நீக்கி
 uk:Деінсталятор SumatraPDF %s
+uz:SumatraPDF %s o'chirish dasturi
 :SumatraPDF Options
 am:Ընտրանքներ
 ar:خيارات SumatraPDF
@@ -14217,6 +14269,7 @@ uk:SumatraPDF впав
 uz:SumatraPDFda nosozlik ro'y berdi
 vn:SumatraPDF đã ngưng hoạt đọng
 :SumatraPDF has been uninstalled.
+am:SumatraPDF-ը հեռացվել է:
 ar:تمت إزالة SumatraPDF
 az:SumatraPDF silindi.
 br:SumatraPDF foi desinstalado.
@@ -14245,6 +14298,7 @@ uk:SumatraPDF було успішно видалено.
 uz:SumatraPDF o'chirildi.
 vn:SumatraPDF đã được gỡ bỏ.
 :SumatraPDF installation not found.
+am:SumatraPDF-ը չի գտնվել:
 ar:ملفات تنصيب SumatraPDF غير موجودة
 az:SumatraPDF quraşdırması tapılmadı.
 br:A instalação do SumatraPDF não foi encontrada.
@@ -14557,6 +14611,7 @@ uk:Текстові документи
 uz:Matn hujjatlari
 vn:Tập tin văn bản
 :Thank you for choosing SumatraPDF!
+am:Շնորհակալություն SumatraPDF-ը նախընտրելու համար:
 ar:شكرا لاختيار SumatraPDF
 az:SumatraPDF-i seçdiyiniz üçün təşəkkür edirik!
 br:Obrigado por escolher o SumatraPDF!
@@ -14585,6 +14640,7 @@ uk:Дякуємо, що вибрали SumatraPDF!
 uz:SumatraPDF tanlaganingiz uchun tashakkur!
 vn:Cảm ơn vì đã chọn SumatraPDF!
 :Thank you! SumatraPDF has been installed.
+am:Շնորհակալություն: SumatraPDF-ը տեղադրվել է:
 ar:تم تنصيب SumatraPDF
 az:Təşəkkürlər! SumatraPDF quraşdırıldı.
 br:Obrigado! O SumatraPDF foi instalado.
@@ -14613,6 +14669,7 @@ uk:Дякуємо! SumatraPDF було успішно встановлено.
 uz:Tashakkur! SumatraPDF o'rnatildi.
 vn:Cảm ơn bạn! SumatraPDF đã được cài đặt.
 :The installer has been corrupted. Please download it again.\nSorry for the inconvenience!
+am:Ծրագրի տեղադրիչը վնասված է: Կրկին բեռնեք այն:\nՀայցում ենք Ձեր ներողամտությունը:
 ar:برنامج التثبيت معطوب. قم بتحميل البرنامج مرة أخرى
 az:Quraşdırıcı zədələnmişdir. Lütfən onu təkrar endirin.\nNarahatçılığa görə üzr istəyirik!
 br:O instalador está corrompido. Por favor baixe-o novamente.\nDesculpe pelo incômodo!
@@ -14698,6 +14755,7 @@ uk:Заголовок:
 uz:Sarlavha:
 vn:Tựa đề
 :Uninstall SumatraPDF
+am:Ջնջել SumatraPDF-ը
 ar:إزالة SumatraPDF
 az:SumatraPDF-i sil
 br:Desinstalar SumatraPDF
@@ -14727,6 +14785,7 @@ uk:Видалити SumatraPDF
 uz:SumatraPDFni o'chirish
 vn:Gỡ bỏ SumatraPDF
 :Uninstallation failed
+am:Հնարավոր չեղավ հեռացնել ծրագիրը
 ar:فشل إزالة البرنامج
 az:Deinstalyasiya baş tutmadı
 br:A desinstalação falhou
@@ -14756,6 +14815,7 @@ uk:Видалення не було успішним
 uz:O'chirish muvaffaqiyatsiz tugadi
 vn:Không gỡ bỏ được
 :Uninstallation in progress...
+am:Ծրագիրը հեռացվում է...
 ar:إزالة البرنامج قيد العمل...
 az:Deinstalyasiya davam edir...
 br:Desinstalação em progresso...
@@ -14843,6 +14903,7 @@ uk:Невідомий файл-джерело (%s)
 uz:Noma'lum manba fayli (%s)
 vn:Không rõ tập tin nguồn (%s)
 :Use SumatraPDF as the &default PDF reader
+am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
 ar:تعيين SumatraPDF البرنامج الافتراضي لفتح ملفات PDF
 az:SumatraPDF &standart PDF oxuyucusu kimi istifadə olunsun
 br:Usar o SumatraPDF como o leitor PDF pa&drão
@@ -14872,7 +14933,7 @@ uz:SumatraPDF &andoza PDF o'qish vositasi sifatida ishlatish
 vn:Đặt SumatraPDF là trình đọc PDF mặc định
 :View
 af:Vertoon
-am:Դիտել
+am:Տեսքը
 ar:العرض
 az:Görüntü
 bg:Изглед
