@@ -907,14 +907,11 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
         // make sure that MSHTML can't be used as a potential exploit
         // vector through another browser and our plugin (which doesn't
         // advertise itself for Chm documents but could be tricked into
-        // loading one nonetheless)
-        if (gPluginMode && IsUntrustedFile(args.fileName, gPluginURL)) {
-            delete engine;
-            engine = NULL;
-            engineType = Engine_None;
-        }
+        // loading one nonetheless); note: this crash should never happen,
+        // since gGlobalPrefs->chmUI.useFixedPageUI is set in SetupPluginMode
+        CrashAlwaysIf(gPluginMode);
         // if CLSID_WebBrowser isn't available, fall back on Chm2Engine
-        else if (!static_cast<ChmEngine *>(engine)->SetParentHwnd(win->hwndCanvas)) {
+        if (!static_cast<ChmEngine *>(engine)->SetParentHwnd(win->hwndCanvas)) {
             delete engine;
             engine = EngineManager::CreateEngine(args.fileName, pwdUI, &engineType, true);
             CrashIf(engineType != (engine ? Engine_Chm2 : Engine_None));
