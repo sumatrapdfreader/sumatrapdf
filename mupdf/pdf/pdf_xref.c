@@ -127,7 +127,7 @@ pdf_read_new_trailer(pdf_document *xref, pdf_lexbuf *buf)
 		int num, gen, stm_ofs, ofs;
 		ofs = fz_tell(xref->file);
 		xref->trailer = pdf_parse_ind_obj(xref, xref->file, buf, &num, &gen, &stm_ofs);
-		if (num > xref->len)
+		if (num >= xref->len)
 			pdf_resize_xref(xref, num+1);
 		xref->table[num].ofs = ofs;
 		xref->table[num].gen = gen;
@@ -335,7 +335,7 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 	{
 		int ofs = fz_tell(xref->file);
 		trailer = pdf_parse_ind_obj(xref, xref->file, buf, &num, &gen, &stm_ofs);
-		if (num > xref->len)
+		if (num >= xref->len)
 			pdf_resize_xref(xref, num+1);
 		xref->table[num].ofs = ofs;
 		xref->table[num].gen = gen;
