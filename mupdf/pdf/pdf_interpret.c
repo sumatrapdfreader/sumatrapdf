@@ -1025,6 +1025,10 @@ pdf_show_string(pdf_csi *csi, unsigned char *buf, int len)
 		buf += w;
 
 		cid = pdf_lookup_cmap(fontdesc->encoding, cpt);
+		/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2286 */
+		if (w == 1 && (cpt == 10 || cpt == 13) && !pdf_font_cid_to_gid(ctx, fontdesc, cid))
+			fz_warn(ctx, "ignoring line break in string");
+		else
 		if (cid >= 0)
 			pdf_show_char(csi, cid);
 		else
