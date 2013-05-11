@@ -165,7 +165,7 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
 
 DLLEXPORT STDAPI DllUnregisterServer(VOID)
 {
-    // this value was written up to version 2.2 (has to be removed forever, though)
+    // this value was written up to version 2.3 (has to be removed forever, though)
     ScopedMem<WCHAR> mozPluginPath(ReadRegStr(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH"));
     if (mozPluginPath)
     {
