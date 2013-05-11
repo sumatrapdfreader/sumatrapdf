@@ -39,8 +39,6 @@
 // the installer has to be 32bit as well, so that it goes into proper
 // place in registry (under Software\Wow6432Node\Microsoft\Windows\...
 #define REG_PATH_UNINST     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" APP_NAME_STR
-// Legacy key, only read during an update and removed at uninstallation
-#define REG_PATH_SOFTWARE   L"Software\\" APP_NAME_STR
 
 #define REG_CLASSES_APP     L"Software\\Classes\\" APP_NAME_STR
 #define REG_CLASSES_PDF     L"Software\\Classes\\.pdf"
@@ -80,9 +78,8 @@
 // REG_SZ, same as INSTALL_DIR below
 #define INSTALL_LOCATION L"InstallLocation"
 
-// Installation directory (set in HKLM REG_PATH_SOFTWARE
-// for compatibility with the old NSIS installer)
-#define INSTALL_DIR L"Install_Dir"
+// Legacy key, only removed at uninstallation
+#define REG_PATH_SOFTWARE   L"Software\\" APP_NAME_STR
 
 #define ID_BUTTON_EXIT                11
 

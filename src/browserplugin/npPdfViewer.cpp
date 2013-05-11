@@ -7,6 +7,7 @@
 #include "DebugLog.h"
 #include "FileUtil.h"
 #include "SquareTreeParser.h"
+#include "../Version.h"
 #include "WinUtil.h"
 #ifndef _WINDOWS
 #define _WINDOWS
@@ -140,7 +141,7 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
     GetModuleFileName(g_hInstance, szPath, MAX_PATH);
     if (!SetRegValue(g_lpRegKey, L"Description", L"SumatraPDF Browser Plugin") ||
         !SetRegValue(g_lpRegKey, L"Path", szPath) ||
-        !SetRegValue(g_lpRegKey, L"Version", L"0") ||
+        !SetRegValue(g_lpRegKey, L"Version", CURR_VERSION_STR) ||
         !SetRegValue(g_lpRegKey, L"ProductName", L"SumatraPDF Browser Plugin"))
     {
         return E_UNEXPECTED;
@@ -159,21 +160,12 @@ DLLEXPORT STDAPI DllRegisterServer(VOID)
     mimeType.Set(str::Join(g_lpRegKey, L"\\MimeTypes\\image/x.djvu"));
     EnsureRegKey(mimeType);
     
-    // Work around Mozilla bug https://bugzilla.mozilla.org/show_bug.cgi?id=581848 which
-    // makes Firefox up to version 3.6.* ignore all but the first plugin for a given MIME type
-    // (per http://code.google.com/p/sumatrapdf/issues/detail?id=1254#c12 Foxit does the same)
-    *(WCHAR *)path::GetBaseName(szPath) = '\0';
-    if (SHGetValue(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", NULL, NULL, NULL) == ERROR_FILE_NOT_FOUND)
-    {
-        WriteRegStr(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH", szPath);
-        SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, NULL);
-    }
-    
     return S_OK;
 }
 
 DLLEXPORT STDAPI DllUnregisterServer(VOID)
 {
+    // this value was written up to version 2.2 (has to be removed forever, though)
     ScopedMem<WCHAR> mozPluginPath(ReadRegStr(HKEY_CURRENT_USER, L"Environment", L"MOZ_PLUGIN_PATH"));
     if (mozPluginPath)
     {
