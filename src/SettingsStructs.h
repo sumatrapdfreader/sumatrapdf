@@ -43,9 +43,9 @@ struct FixedPageUI {
 // customization options for eBooks (EPUB, Mobi, FictionBook) UI. If
 // UseFixedPageUI is true, FixedPageUI settings apply instead
 struct EbookUI {
-    // name of the font
+    // name of the font. takes effect after re-opening the document
     WCHAR * fontName;
-    // size of the font
+    // size of the font. takes effect after re-opening the document
     float fontSize;
     // color for text
     COLORREF textColor;

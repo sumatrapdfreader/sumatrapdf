@@ -64,10 +64,6 @@ body {
 	font-weight: normal;
 }
 
-/* TODO: make this prettier */
-.adv {
-	background-color: #ffffec;
-}
 </style>
 </head>
 
@@ -267,7 +263,7 @@ def gen_struct(struct, comment=None, indent=""):
 			lines += gen_comment(field.docComment, indent, first) + [indent + s]
 		first = False
 		if field.expert and not inside_expert:
-			lines[start_idx] = '<div class=adv>' + lines[start_idx]
+			lines[start_idx] = '<div>' + lines[start_idx]
 		elif not field.expert and inside_expert:
 			lines[start_idx] = '</div>' + lines[start_idx]
 		inside_expert = field.expert
