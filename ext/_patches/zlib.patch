@@ -187,7 +187,20 @@ diff -rPu5 zlib.orig\inflate.h zlib\inflate.h
  };
 diff -rPu5 zlib.orig\minizip\iowin32.c zlib\minizip\iowin32.c
 --- zlib.orig\minizip\iowin32.c	Mon Apr 29 00:57:11 2013
-+++ zlib\minizip\iowin32.c	Wed May 08 22:02:28 2013
++++ zlib\minizip\iowin32.c	Sat May 11 21:07:57 2013
+@@ -25,11 +25,11 @@
+ #define INVALID_SET_FILE_POINTER ((DWORD)-1)
+ #endif
+ 
+ 
+ #if defined(WINAPI_FAMILY_PARTITION) && (!(defined(IOWIN32_USING_WINRT_API)))
+-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
++#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+ #define IOWIN32_USING_WINRT_API 1
+ #endif
+ #endif
+ 
+ voidpf  ZCALLBACK win32_open_file_func  OF((voidpf opaque, const char* filename, int mode));
 @@ -241,11 +241,11 @@
  {
  #ifdef IOWIN32_USING_WINRT_API
