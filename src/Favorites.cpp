@@ -254,7 +254,7 @@ static void AppendFavMenus(HMENU m, const WCHAR *currFilePath)
         // only show favorites for other files, if we're allowed to open them
         GetSortedFilePaths(filePathsSorted, currFileFav);
     }
-    if (currFileFav)
+    if (currFileFav && currFileFav->favorites->Count() > 0)
         filePathsSorted.InsertAt(0, currFileFav->filePath);
 
     if (filePathsSorted.Count() == 0)
