@@ -125,34 +125,6 @@ diff -rPu5 libdjvu.orig\GException.h libdjvu\GException.h
  
  #endif // !CPP_SUPPORTS_EXCEPTIONS
  
-diff -rPu5 libdjvu.orig\GOS.cpp libdjvu\GOS.cpp
---- libdjvu.orig\GOS.cpp	Tue May 08 04:56:53 2012
-+++ libdjvu\GOS.cpp	Fri Apr 12 12:48:52 2013
-@@ -238,10 +238,12 @@
-   return retval;
- }
- 
- 
- 
-+// SumatraPDF: due to changes in GException.h, this function is no longer used
-+#if 0
- // errmsg --
- // -- A small helper function returning a 
- //    stdio error message in a static buffer.
- 
- static GNativeString 
-@@ -250,10 +252,11 @@
-   GNativeString buffer;
-   const char *errname = strerror(errno);
-   buffer.format("%s (errno = %d)", errname, errno);
-   return buffer;
- }
-+#endif
- 
- 
- 
- // -----------------------------------------
- // Functions for measuring time
 diff -rPu5 libdjvu.orig\GThreads.h libdjvu\GThreads.h
 --- libdjvu.orig\GThreads.h	Tue May 08 04:56:53 2012
 +++ libdjvu\GThreads.h	Sat Aug 18 20:17:23 2012

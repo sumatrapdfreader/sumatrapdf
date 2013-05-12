@@ -33,7 +33,7 @@ DJVU_CFLAGS = $(DJVU_CFLAGS) /D "THREADMODEL=0" /D "DDJVUAPI=/**/" /D "MINILISPA
 # prevent libdjvu from changing the C locale from underneath anybody else
 DJVU_CFLAGS = $(DJVU_CFLAGS) /D "DO_CHANGELOCALE=0"
 # a hack to enable C++ exception handling for libdjvu (without triggering a warning)
-DJVU_CFLAGS = $(DJVU_CFLAGS) /D "USE_EXCEPTION_EMULATION"
+DJVU_CFLAGS = $(DJVU_CFLAGS:/EHs-c-=/EHsc)
 !if "$(PLATFORM)"=="X64"
 DJVU_CFLAGS = $(DJVU_CFLAGS) /wd4267
 !endif
