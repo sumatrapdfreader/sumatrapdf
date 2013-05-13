@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-71d78833685c2b4f13e8f43a0c74b5b76a2d64bd
+05ffc059d99f07e54c4305a7853795f438ff7ccb
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -188,7 +188,7 @@ kr:고급 옵션(&A)...
 pt:Opções &avançadas...
 ru:&Расширенные настройки...
 sq:Opsionet e &avancuara...
-ta:&Advanced Options...
+ta:&மேம்பட்ட விருப்பங்கள்
 uk:Розширені налаштування...
 uz:&Qo'shimcha parametrlar...
 :&All selected pages
@@ -3941,7 +3941,7 @@ sp-rs:Automatski
 sq:Automatik
 sr-rs:Аутоматски
 sv:Automatiskt
-ta:தானாக
+ta:தானியங்கி
 th:อัตโนมัติ
 tl:Awtomatiko
 tr:Otomatik
@@ -4725,7 +4725,7 @@ sp-rs:Promeni jezik (Change Language)
 sq:Ndryshoj gjuhën
 sr-rs:Промени језик (Change Language)
 sv:Byt språk (Change Language)
-ta:மொழியை மாற்று (Change Language)
+ta:மொழியை மாற்று
 th:เปลี่ยนภาษา (Change Language)
 tl:Ibahin ang Wika (Change Language)
 tr:Dil değiştir (Change Language)
@@ -7159,7 +7159,7 @@ sp-rs:Napred\tAlt+->
 sq:P&ërpara\tAlt+Right Arrow
 sr-rs:Напред\tAlt+->
 sv:Framåt\tAlt+Pil höger
-ta:முன்னோகி\tAlt+Right Arrow
+ta:முன்னோக்கி \tAlt+Right Arrow
 tl:Susunod\tAlt+Right Arrow
 tr:İ&leri\tAlt+Sağ Ok
 tw:下一停頓頁面(&O)\tAlt+->
@@ -9237,7 +9237,7 @@ sp-rs:Savet: Upotrebite taster F3 za nastavak pretrage
 sq:Këshillë: Përdorni tastin F3 për gjetjen e radhës
 sr-rs:Савет: Употребите тастер F3 за наставак претраге
 sv:Tips: Tryck F3 för att söka vidare
-ta:சிறுகுரிப்பு: F3 தட்டை¨Â மருமுறை தேட பயண் படுத்து
+ta:சிறுகுரிப்பு: F3 தட்டை பயன்படுத்தி மீண்டும் தேடு
 tl:Payo: Pindutin ang F3 para maghanap muli
 tr:İpucu: yeniden bulmak için F3 tuşunu kullanın
 tw:提示：按F3重新尋找
@@ -9829,6 +9829,7 @@ kr:만화 방식(&G)
 pt:Modo man&ga
 ru:Режим Man&ga
 sq:Mënyra Man&ga
+ta:மேங்கா முறை
 uk:Режим манги
 uz:Man&ga usuli
 :Match Case
