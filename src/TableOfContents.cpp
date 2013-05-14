@@ -211,7 +211,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
     tvinsert.hParent = parent;
     tvinsert.hInsertAfter = TVI_LAST;
     tvinsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
-    tvinsert.itemex.state = entry->open != toggleItem ? TVIS_EXPANDED : 0;
+    tvinsert.itemex.state = entry->child && entry->open != toggleItem ? TVIS_EXPANDED : 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)entry;
     // Replace unprintable whitespace with regular spaces
