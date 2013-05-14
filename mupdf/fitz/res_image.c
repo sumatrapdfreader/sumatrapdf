@@ -143,7 +143,7 @@ fz_unblend_masked_tile(fz_context *ctx, fz_pixmap *tile, fz_image *image)
 		if (!*s)
 			continue;
 		for (k = 0; k < image->n; k++)
-			d[k] = image->colorkey[k] + (d[k] - image->colorkey[k]) * 255 / *s;
+			d[k] = fz_clampi(image->colorkey[k] + (d[k] - image->colorkey[k]) * 255 / *s, 0, 255);
 	}
 
 	fz_drop_pixmap(ctx, mask);
