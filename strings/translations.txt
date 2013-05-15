@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-05ffc059d99f07e54c4305a7853795f438ff7ccb
+7bf62543bb38789f54b6d0ed39ec3c342ac94170
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -5559,6 +5559,7 @@ fr:Impossible de créer un répertoire temporaire
 hu:Ideiglenes könyvtár létrehozása sikertelen
 id:Gagal membuat direktori tampungan
 it:Impossibile creare la cartella temporanea
+ja:一時ディレクトリを作成できませんでした
 kr:임시 디렉토리를 만들 수 없습니다.
 ku:ناتوانرێت فۆڵدەری کاتی دروستبکرێت
 nl:Kon tijdelijke folder niet aanmaken
@@ -5590,6 +5591,7 @@ fr:Impossible de créer le répertoire d'installation
 hu:Telepítési könyvtár létrehozása sikertelen
 id:Gagal membuat direktori instalasi
 it:Impossibile creare la cartella di installazione
+ja:インストール先ディレクトリを作成できませんでした
 kr:설치 디렉토리를 만들 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن دروست بکرێت
 nl:Kon de installatie folder niet aanmaken
@@ -5741,6 +5743,7 @@ fr:Impossible d'installer le plug-in du navigateur
 hu:Böngésző beépülő telepítése sikertelen
 id:Gagal memasang plugin untuk browser
 it:Impossibile installare plugin browser
+ja:ブラウザプラグインをインストールできませんでした
 kr:브라우저 플러그인을 설치할 수 없습니다.
 ku:ناتوانرێت پێوەکراوی وێبگەڕ دابەزێندرێت
 nl:Kon browser invoegmodule niet installeren
@@ -5798,6 +5801,7 @@ fi:Asennuskansion poistaminen epäonnistui
 fr:Impossible de supprimer le répertoire d'installation
 hu:Telepítési könyvtár eltávolítása sikertelen
 it:Impossibile rimuovere la cartella di installazione
+ja:インストール先ディレクトリを削除できませんでした
 kr:설치 디렉토리를 제거할 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن لابدرێت
 nl:Kon installatie folder niet verwijderen
@@ -5828,6 +5832,7 @@ fi:Pikakuvakkeen poistaminen epäonnistui
 fr:Impossible de supprimer le raccourci
 hu:Parancsikon eltávolítása sikertelen
 it:Impossibile rimuovere il collegamento
+ja:ショートカットを削除できませんでした
 kr:바로가기를 제거할 수 없습니다.
 ku:ناتوانرێت کورتە ئایکۆن لابدرێت
 nl:Kon snelkoppeling niet verwijderen
@@ -5972,6 +5977,7 @@ fi:Selainliitännäisen poistaminen epäonnistui
 fr:Impossible de désinstalle le plug-in du navigateur
 hu:Böngésző beépülő eltávolítása sikertelen
 it:Impossibile disinstallare il plugin del brwoser
+ja:ブラウザプラグインをアンインストールできませんでした
 kr:브라우저 플러그인을 제거할 수 없습니다.
 ku:ناتوانرێت پێوەکراوی وێبگەڕ بسڕدرێتەوە
 nl:Kon browser plugin niet deïnstalleren
@@ -5999,6 +6005,7 @@ fi:Levylle kirjoittaminen epäonnistui: %s
 fr:Impossible d'écrire %s sur le disque
 hu:%s lemezre írása sikertelen
 it:Impossibile scrivere %s nel disco.
+ja:%s をディスクに書き込めませんでした
 kr:%s(을)를 디스크에 쓸 수 없습니다.
 ku:بخوێندرێتەوە بۆ دیسک %s ناتوانرێت
 nl:Kon %s niet op schijf wegschrijven
@@ -6986,6 +6993,7 @@ fi:Virhe: SumatraPDF:n käynnistäminen epäonnistui!
 fr:Erreur : impossible de lancer SumatraPDF !
 hu:Hiba: SumatraPDF futtatása sikertelen!
 it:Errore. Impossibile eseguire SumatraPDF!
+ja:エラー: SumatraPDF を実行できませんでした！
 kr:오류: SumatraPDF를 실행할 수 없습니다!
 ku:!بکرێتەوە SumatraPDF هەڵە: ناتوانرێت
 nl:Fout: kon SumatraPDF niet uitvoeren!
@@ -7015,6 +7023,7 @@ fi:Virhe: SumatraPDF ei löytynyt!
 fr:Erreur : SumatraPDF non trouvé !
 hu:Hiba: SumatraPDF nem található!
 it:Errore. SumatraPDF non trovato!
+ja:エラー: SumatraPDF が見つかりませんでした！
 kr:오류: SumatraPDF를 찾을 수 없습니다!
 ku:هەڵە: SumatraPDF نەدۆزرایەوە!
 nl:Fout: SumatraPDF werd niet gevonden!
@@ -7044,6 +7053,7 @@ fi:Virhe: tiedoston lataaminen epäonnistui!
 fr:Erreur : le document n'a pu être téléchargé !
 hu:Hiba: a dokumentum letöltése sikertelen!
 it:Errore. Il documento non può essere scaricato!
+ja:エラー: ドキュメントをダウンロードできませんでした！
 kr:오류: 문서를 다운로드할 수 없습니다!
 ku:!هەڵە: بەڵگەنامە ناتوانرێت دابگیرێت
 nl:Fout: het document kon niet gedownload worden!
@@ -7346,6 +7356,7 @@ fi:Pikakuvakkeen luominen epäonnistui
 fr:Impossible de créer un raccourci
 hu:Nem sikerült létrehozni a parancsikont
 it:Impossibile creare il collegamento
+ja:ショートカットの作成に失敗しました
 kr:바로가기를 만들지 못했습니다.
 ku:دروستکردنی کورتە ئایکۆن سەرکەوتو نەبوو
 nl:Kon snelkoppeling niet aanmaken
@@ -9038,7 +9049,7 @@ vn:GB
 af:Gaan Na Bladsy
 am:Անցնել էջի
 ar:اذهب لصفحة
-az:Səhifəyə keçid
+az:Səhifəyə keç
 bg:Отиди на страница
 bn:এর পৃষ্ঠায় চলুন
 br:Ir para a página
@@ -9117,6 +9128,7 @@ fi:Piilota &asetukset
 fr:Masque les &options
 hu:Beállítások elrejtése
 it:Nascondi & opzioni
+ja:オプションを隠す(&O)
 kr:옵션 감추기(&O)
 ku:هەڵبژاردنەکانی &شاردنەوە
 nl:Verberg &Opties
@@ -9372,6 +9384,7 @@ fi:Asenna SumatraPDF kansioon:
 fr:Installer SumatraPDF dans le répertoire :
 hu:SumatraPDF telepítése a következő &könyvtárba:
 it:Installa SumatraPD&F nella cartella:
+ja:SumatraPDF インストール先フォルダ(&F)
 kr:SumatraPDF 설치 폴더(&F):
 ku:لە فۆڵدەری SumatraPDF دابەزاندنی:
 nl:Installeer SumatraPDF in &folder
@@ -9400,6 +9413,7 @@ fi:Asentaminen epäonnistui!
 fr:Échec de l'installation !
 hu:Telepítés sikertelen!
 it:Installazione fallita!
+ja:インストールに失敗！
 kr:설치 실패!
 ku:دابەزاندن سەرکەوتو نەبوو!
 nl:Installatie mislukt!
@@ -9825,6 +9839,7 @@ fi:Man&ga-moodi
 fr:Mode man&ga
 hu:Manga mód
 it:Modo Man&ga
+ja:漫画モード(&G)
 kr:만화 방식(&G)
 pt:Modo man&ga
 ru:Режим Man&ga
@@ -10955,6 +10970,7 @@ fi:Avataan asiakirjaa SumatraPDF:ssä...
 fr:Ouverture du document dans SumatraPDF…
 hu:Dokumentum megnyitása SumatraPDF-ben...
 it:Apri documento in SumatraPDF...
+ja:SumatraPDF でドキュメントを開いています…
 kr:SumatraPDF로 문서 여는 중...
 ku:...SumatraPDF کردنەوەی بەڵگەنامەکان بەهۆی
 nl:Document in SumatraPDF aan het openen...
@@ -13273,6 +13289,7 @@ fi:Valitse kansio, johon SumatraPDF asennetaan:
 fr:Sélectionner le répertoire d'installation de SumatraPDF :
 hu:Válassza ki a SumatraPDF telepítési könyvtárát:
 it:Seleziona la cartella dove installare SumatraPDF:
+ja:インストール先ディレクトリの選択:
 kr:SumatraPDF를 설치할 폴더 선택:
 ku::SumatraPDF فۆڵدەرێک دیاریبکە بۆ دابەزاندنی
 nl:Kies de folder waar SumatraPDF geinstalleerd moet worden:
@@ -13832,6 +13849,7 @@ fi:Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat
 fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
 hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
 it:Alcuni file che dovevano essere installati erano corrotti o mancanti
+ja:インストールすべきいくつかのファイルが破損しているか存在しません。
 kr:설치해야 할 일부 파일이 손상 또는 누락됐습니다.
 ku:هەندێک فایلی دابەزاندن وونبوون یان تێکچوون
 nl:Sommige bestanden voor de installatie zijn beschadigd of ontbreken
@@ -14286,6 +14304,7 @@ fi:SumatraPDF on poistettu.
 fr:SumatraPDF a été désinstallé.
 hu:SumatraPDF eltávolítása befejeződött.
 it:SumatraPDF è stata completamente disinstallato.
+ja:SumatraPDF がアンインストールされました。
 kr:SumatraPDF가 제거됐습니다.
 ku:.سڕایەوە SumatraPDF
 nl:SumatraPDF werd verwijderd.
@@ -14657,6 +14676,7 @@ fi:Kiitos! SumatraPDF asennettiin.
 fr:Merci ! SumatraPDF a été installé.
 hu:Köszönjük! A SumatraPDF telepítése befejeződött.
 it:Grazie! SumatraPDF installato correttamente.
+ja:ありがとう！SumatraPDF はインストールされました。
 kr:야호! SumatraPDF가 설치됐습니다.
 ku:سوپاس! SumatraPDF دابەزێنرا.
 nl:Dank u! SumatraPDF werd geinstalleerd.
@@ -14920,6 +14940,7 @@ fi:Käytä SumatraPDF:ää PDF-tiedostojen oletuslukijana
 fr:Choisir SumatraPDF comme lecteur PDF par &défaut
 hu:SumatraPDF használata alapértelmezett PDF olvasóként
 it:Usa SumatraPDF come lettore PDF pre&definito
+ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしますか?(&d)
 kr:SumatraPDF를 기본 PDF 리더로 사용(&D)
 ku:وەکو خوێنەرەوەی &سەرەکی PDF SumatraPDF بەکارهێنانی
 nl:Gebruik SumatraPDF als &standaard PDF lezer
