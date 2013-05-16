@@ -181,7 +181,7 @@ const WCHAR * const gTranslations[] = {
   L"Apri documento in SumatraPDF...",
 
   /* Translations for language ja */
-  NULL,
+  L"%s 中 %s",
   L"エラー: SumatraPDF を実行できませんでした！",
   L"エラー: SumatraPDF が見つかりませんでした！",
   L"エラー: ドキュメントをダウンロードできませんでした！",
@@ -209,6 +209,16 @@ const WCHAR * const gTranslations[] = {
   L"کیلۆبایت",
   L"مێگابایت",
   L"...SumatraPDF کردنەوەی بەڵگەنامەکان بەهۆی",
+
+  /* Translations for language mk */
+  L"%s од %s",
+  L"Грешка: SumatraPDF не може да се изврши!",
+  L"Грешка: SumatraPDF не постои!",
+  L"Грешка: Документот не може да се преземе!",
+  NULL,
+  NULL,
+  NULL,
+  L"Го отворам документот во SumatraPDF...",
 
   /* Translations for language br */
   L"%s de %s",
@@ -304,7 +314,8 @@ const WCHAR * const gTranslations[] = {
 const char * const gLanguages[] = {
     "en", "sq", "ar", "am", "az", "eu", "ca", "ca-xv", "cn", "cz",
     "nl", "et", "fi", "fr", "de", "hu", "it", "ja", "kr", "ku",
-    "br", "pt", "ro", "ru", "es", "sv", "ta", "uk", "uz", NULL
+    "mk", "br", "pt", "ro", "ru", "es", "sv", "ta", "uk", "uz",
+    NULL
 };
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
@@ -342,15 +353,16 @@ int GetLanguageIndex(LANGID id)
     case _LANGID(LANG_JAPANESE): return 136;
     case _LANGID(LANG_KOREAN): return 144;
     case MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ): return 152;
-    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 160;
-    case _LANGID(LANG_PORTUGUESE): return 168;
-    case _LANGID(LANG_ROMANIAN): return 176;
-    case _LANGID(LANG_RUSSIAN): return 184;
-    case _LANGID(LANG_SPANISH): return 192;
-    case _LANGID(LANG_SWEDISH): return 200;
-    case _LANGID(LANG_TAMIL): return 208;
-    case _LANGID(LANG_UKRAINIAN): return 216;
-    case _LANGID(LANG_UZBEK): return 224;
+    case _LANGID(LANG_MACEDONIAN): return 160;
+    case MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN): return 168;
+    case _LANGID(LANG_PORTUGUESE): return 176;
+    case _LANGID(LANG_ROMANIAN): return 184;
+    case _LANGID(LANG_RUSSIAN): return 192;
+    case _LANGID(LANG_SPANISH): return 200;
+    case _LANGID(LANG_SWEDISH): return 208;
+    case _LANGID(LANG_TAMIL): return 216;
+    case _LANGID(LANG_UKRAINIAN): return 224;
+    case _LANGID(LANG_UZBEK): return 232;
     default: return -1;
 #undef _LANGID
     }
