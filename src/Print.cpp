@@ -90,7 +90,7 @@ public:
     operator HDC() const { return hdc; }
 };
 
-static RectD BoundSelectionOnPage(Vec<SelectionOnPage>& sel, int pageNo)
+static RectD BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo)
 {
     RectD bounds;
     for (size_t i = 0; i < sel.Count(); i++) {
@@ -100,7 +100,7 @@ static RectD BoundSelectionOnPage(Vec<SelectionOnPage>& sel, int pageNo)
     return bounds;
 }
 
-static bool PrintToDevice(PrintData& pd, ProgressUpdateUI *progressUI=NULL, AbortCookieManager *abortCookie=NULL)
+static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI *progressUI=NULL, AbortCookieManager *abortCookie=NULL)
 {
     AssertCrash(pd.engine);
     if (!pd.engine)
@@ -464,7 +464,7 @@ So far have tested printing from XP to
  - HP Deskjet D4160
  - Lexmark Z515 inkjet, which should cover most bases.
 */
-#define MAXPAGERANGES 10
+enum { MAXPAGERANGES = 10 };
 void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
 {
     // we remember some printer settings per process
@@ -501,7 +501,10 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     }
 
     if (win->printThread) {
-        int res = MessageBox(win->hwndFrame, _TR("Printing is still in progress. Abort and start over?"), _TR("Printing in progress."), MB_ICONEXCLAMATION | MB_YESNO | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+        int res = MessageBox(win->hwndFrame, 
+                             _TR("Printing is still in progress. Abort and start over?"),
+                             _TR("Printing in progress."),
+                             MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe());
         if (res == IDNO)
             return;
     }
@@ -533,8 +536,10 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
     pd.nPropertyPages = 1;
 
     // restore remembered settings
-    if (defaultDevMode)
-        pd.hDevMode = GlobalMemDup(defaultDevMode.Get(), defaultDevMode.Get()->dmSize + defaultDevMode.Get()->dmDriverExtra);
+    if (defaultDevMode) {
+        DEVMODE *p = defaultDevMode.Get();
+        pd.hDevMode = GlobalMemDup(p, p->dmSize + p->dmDriverExtra);
+    }
 
     if (PrintDlgEx(&pd) != S_OK) {
         if (CommDlgExtendedError() != 0) {
@@ -543,7 +548,8 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion)
                error code, which we could look at here if we wanted.
                for now just warn the user that printing has stopped
                becasue of an error */
-            MessageBox(win->hwndFrame, _TR("Couldn't initialize printer"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(win->hwndFrame, _TR("Couldn't initialize printer"), 
+                              _TR("Printing problem."));
         }
         goto Exit;
     }
@@ -654,6 +660,7 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
 
 bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErrors, const WCHAR *settings)
 {
+    bool ok = false;
     if (!HasPermission(Perm_PrinterAccess))
         return false;
 
@@ -661,15 +668,15 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     BaseEngine *engine = EngineManager::CreateEngine(fileName2, true /* prefer Chm2Engine */);
     if (!engine || !engine->AllowsPrinting()) {
         if (displayErrors)
-            MessageBox(NULL, _TR("Cannot print this file"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(NULL, _TR("Cannot print this file"), _TR("Printing problem."));
         return false;
     }
 
     HANDLE printer;
-    bool ok = OpenPrinter((WCHAR *)printerName, &printer, NULL);
-    if (!ok) {
+    BOOL res = OpenPrinter((WCHAR *)printerName, &printer, NULL);
+    if (0 == res) {
         if (displayErrors)
-            MessageBox(NULL, _TR("Printer with given name doesn't exist"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(NULL, _TR("Printer with given name doesn't exist"), _TR("Printing problem."));
         return false;
     }
 
@@ -679,8 +686,9 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     GetPrinter(printer, 2, NULL, 0, &needed);
     ScopedMem<PRINTER_INFO_2> infoData((PRINTER_INFO_2 *)AllocArray<BYTE>(needed));
     if (infoData)
-        ok = GetPrinter(printer, 2, (LPBYTE)infoData.Get(), needed, &needed);
-    if (!ok || !infoData || needed <= sizeof(PRINTER_INFO_2)) goto Exit;
+        res = GetPrinter(printer, 2, (LPBYTE)infoData.Get(), needed, &needed);
+    if ((0 == res) || !infoData || needed <= sizeof(PRINTER_INFO_2))
+        goto Exit;
 
     LONG structSize = DocumentProperties(NULL,
         printer,                /* Handle to our printer. */
@@ -691,11 +699,12 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     if (structSize < sizeof(DEVMODE)) {
         // If failure, inform the user, cleanup and return failure.
         if (displayErrors)
-            MessageBox(NULL, _TR("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(NULL, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
         goto Exit;
     }
     devMode = (LPDEVMODE)malloc(structSize);
-    if (!devMode) goto Exit;
+    if (!devMode)
+        goto Exit;
 
     // Get the default DevMode for the printer and modify it for your needs.
     LONG returnCode = DocumentProperties(NULL,
@@ -707,7 +716,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
         if (displayErrors)
-            MessageBox(NULL, _TR("Could not obtain Printer properties"), _TR("Printing problem."), MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(NULL, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
         goto Exit;
     }
 
@@ -722,8 +731,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
         PrintData pd(engine, infoData, devMode, ranges, advanced);
         ok = PrintToDevice(pd);
         if (!ok && displayErrors)
-            MessageBox(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."),
-                MB_ICONEXCLAMATION | MB_OK | (IsUIRightToLeft() ? MB_RTLREADING : 0));
+            MessageBoxWarning(NULL, _TR("Couldn't initialize printer"), _TR("Printing problem."));
     }
 
 Exit:

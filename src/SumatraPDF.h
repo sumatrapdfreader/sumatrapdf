@@ -154,4 +154,7 @@ WindowInfo* LoadDocument(LoadArgs& args);
 void        LoadDocument2(const WCHAR *fileName, const SumatraWindow& win);
 WindowInfo *CreateAndShowWindowInfo();
 
+UINT MbRtlReadingMaybe();
+void MessageBoxWarning(HWND hwnd, const WCHAR *msg, const WCHAR *title = NULL);
+
 #endif
