@@ -115,8 +115,14 @@ static PdfEngine *ps2pdf(const WCHAR *fileName)
     if (!process)
         return NULL;
 
+    DWORD timeout = 10000;
+#ifdef DEBUG
+    // allow to disable the timeout for debugging purposes
+    if (GetEnvironmentVariable(L"SUMATRAPDF_NO_GHOSTSCRIPT_TIMEOUT", NULL, 0))
+        timeout = INFINITE;
+#endif
     DWORD exitCode = EXIT_FAILURE;
-    WaitForSingleObject(process, 10000);
+    WaitForSingleObject(process, timeout);
     GetExitCodeProcess(process, &exitCode);
     TerminateProcess(process, 1);
     CloseHandle(process);
