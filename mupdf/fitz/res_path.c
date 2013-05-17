@@ -253,7 +253,7 @@ static inline fz_rect *bound_expand(fz_rect *r, const fz_point *p)
 }
 
 fz_rect *
-fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r)
+fz_bound_path(fz_context *ctx, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r)
 {
 	fz_point p;
 	int i = 0;
@@ -321,7 +321,7 @@ fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, const fz_
 }
 
 fz_rect *
-fz_adjust_rect_for_stroke(fz_rect *r, fz_stroke_state *stroke, const fz_matrix *ctm)
+fz_adjust_rect_for_stroke(fz_rect *r, const fz_stroke_state *stroke, const fz_matrix *ctm)
 {
 	float expand;
 

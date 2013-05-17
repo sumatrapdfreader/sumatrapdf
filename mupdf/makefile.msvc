@@ -146,7 +146,7 @@ JPEG_TURBO_NASM_FLAGS = -I $(JPEG_TURBO_DIR)\simd\ -I $(JPEG_TURBO_DIR)\win\ -f 
 
 # 4703 - potentially uninitialized local variable (frequent with vs 2012)
 MUPDF_CFLAGS = $(CFLAGS) /TC \
-	/I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/pdf /I$(MUPDF_DIR)/xps /I$(MUPDF_DIR)/cbz /I$(MUPDF_DIR)/apps \
+	/I$(MUPDF_DIR)/fitz /I$(MUPDF_DIR)/pdf /I$(MUPDF_DIR)/xps /I$(MUPDF_DIR)/ucdn /I$(MUPDF_DIR)/apps \
 	/I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/include /I$(ZLIB_DIR) \
 	/I$(JBIG2_DIR) /I$(JPEG_TURBO_DIR) /I$(OPENJPEG_DIR)
 MUPDF_CFLAGS = $(MUPDF_CFLAGS) /wd4054 /wd4115 /wd4152 /wd4701 /wd4702 /wd4703 /wd4706
@@ -245,7 +245,7 @@ FITZ_OBJS = \
 	$(OFZ)\base_memory.obj $(OFZ)\base_string.obj $(OFZ)\base_time.obj $(OFZ)\base_trans.obj \
 	$(OFZ)\base_context.obj $(OFZ)\base_xml.obj $(OFZ)\crypt_aes.obj $(OFZ)\crypt_sha2.obj \
 	$(OFZ)\crypt_arc4.obj $(OFZ)\crypt_md5.obj $(OFZ)\dev_gdiplus.obj $(OFZ)\dev_bbox.obj \
-	$(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_trace.obj \
+	$(OFZ)\dev_list.obj $(OFZ)\dev_null.obj $(OFZ)\dev_trace.obj $(OFZ)\ucdn.obj \
 	$(OFZ)\doc_link.obj $(OFZ)\doc_outline.obj \
 	$(OFZ)\filt_basic.obj $(OFZ)\filt_faxd.obj $(OFZ)\filt_flate.obj $(OFZ)\filt_jbig2d.obj \
 	$(OFZ)\filt_dctd.obj $(OFZ)\filt_lzwd.obj $(OFZ)\filt_predict.obj $(OFZ)\res_store.obj \
@@ -287,7 +287,8 @@ LIBS_OBJS = \
 	$(MUXPS_OBJS)
 
 MUDOC_OBJS = \
-	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj $(OX)\mucbz.obj $(OX)\muimage.obj
+	$(OFZ)\doc_document.obj $(OFZ)\doc_interactive.obj $(OFZ)\dev_svg.obj \
+	$(OX)\mucbz.obj $(OX)\muimage.obj
 
 MUAPPS_OBJS = \
 	$(OA)\win_main.obj $(OA)\pdfapp.obj $(OA)\mudraw.obj $(OA)\pdfshow.obj \
@@ -408,6 +409,9 @@ $(MUDRAW_APP): $(MUDRAW_OBJS)
 
 {$(MUPDF_DIR)\xps}.c{$(OX)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(OX)\ /Fd$(O)\vc80.pdb $<
+
+{$(MUPDF_DIR)\ucdn}.c{$(OFZ)}.obj::
+	$(CC) $(MUPDF_CFLAGS) /Fo$(OFZ)\ /Fd$(O)\vc80.pdb $<
 
 {$(MUPDF_DIR)\apps}.c{$(OA)}.obj::
 	$(CC) $(MUPDF_CFLAGS) /Fo$(OA)\ /Fd$(O)\vc80.pdb $<

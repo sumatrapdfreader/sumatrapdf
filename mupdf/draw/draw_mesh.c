@@ -230,7 +230,7 @@ fz_paint_shade(fz_context *ctx, fz_shade *shade, const fz_matrix *ctm, fz_pixmap
 				clut[i][k] = shade->function[i][shade->colorspace->n] * 255;
 			}
 			conv = fz_new_pixmap_with_bbox(ctx, dest->colorspace, bbox);
-			temp = fz_new_pixmap_with_bbox(ctx, fz_device_gray, bbox);
+			temp = fz_new_pixmap_with_bbox(ctx, fz_device_gray(ctx), bbox);
 			fz_clear_pixmap(ctx, temp);
 		}
 		else

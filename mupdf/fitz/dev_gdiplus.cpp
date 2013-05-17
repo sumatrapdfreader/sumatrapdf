@@ -51,7 +51,7 @@ class PixmapBitmap : public Bitmap
 public:
 	PixmapBitmap(fz_context *ctx, fz_pixmap *pixmap) : Bitmap(pixmap->w, pixmap->h,
 		pixmap->has_alpha ? PixelFormat32bppPARGB:
-		pixmap->colorspace != fz_device_gray ? PixelFormat24bppRGB :
+		pixmap->colorspace != fz_device_gray(ctx) ? PixelFormat24bppRGB :
 		pixmap->single_bit ? PixelFormat1bppIndexed : PixelFormat8bppIndexed),
 		palette(NULL), ctx(ctx)
 	{
@@ -59,7 +59,7 @@ public:
 		// 1-bit pixmap (black and white)
 		if (pixmap->single_bit)
 		{
-			assert(pixmap->colorspace == fz_device_gray && !pixmap->has_alpha);
+			assert(pixmap->colorspace == fz_device_gray(ctx) && !pixmap->has_alpha);
 			SetPalette((palette = gdiplus_create_grayscale_palette(ctx, 1)));
 			
 			Status status = LockBits(&Rect(0, 0, pixmap->w, pixmap->h), ImageLockModeWrite, PixelFormat1bppIndexed, &data);
@@ -83,7 +83,7 @@ public:
 			return;
 		}
 		// 8-bit pixmap (grayscale)
-		if (pixmap->colorspace == fz_device_gray && !pixmap->has_alpha)
+		if (pixmap->colorspace == fz_device_gray(ctx) && !pixmap->has_alpha)
 		{
 			SetPalette((palette = gdiplus_create_grayscale_palette(ctx, 8)));
 			
@@ -103,12 +103,12 @@ public:
 		}
 		// color pixmaps (24-bit or 32-bit)
 		fz_pixmap *pix = NULL;
-		if (pixmap->colorspace != fz_device_bgr)
+		if (pixmap->colorspace != fz_device_bgr(ctx))
 		{
 			fz_try(ctx)
 			{
 				fz_irect bbox;
-				pix = fz_new_pixmap_with_bbox(ctx, fz_device_bgr, fz_pixmap_bbox(ctx, pixmap, &bbox));
+				pix = fz_new_pixmap_with_bbox(ctx, fz_device_bgr(ctx), fz_pixmap_bbox(ctx, pixmap, &bbox));
 			}
 			fz_catch(ctx)
 			{
@@ -658,7 +658,7 @@ public:
 			float srcv[FZ_MAX_COLORS], rgb[3];
 			for (int k = 0; k < image->colorspace->n; k++)
 				srcv[k] = image->samples[k] / 255.0f;
-			fz_convert_color(ctx, fz_device_rgb, rgb, image->colorspace, srcv);
+			fz_convert_color(ctx, fz_device_rgb(ctx), rgb, image->colorspace, srcv);
 			SolidBrush brush(Color(alpha * image->samples[image->colorspace->n],
 				rgb[0] * 255, rgb[1] * 255, rgb[2] * 255));
 			
@@ -785,7 +785,7 @@ protected:
 		}
 		
 		fz_color_converter cc;
-		fz_find_color_converter(&cc, ctx, fz_device_gray, fz_device_rgb);
+		fz_find_color_converter(&cc, ctx, fz_device_gray(ctx), fz_device_rgb(ctx));
 		for (int row = 0; row < bounds.Height; row++)
 		{
 			LPBYTE Scan0 = (LPBYTE)data.Scan0 + row * data.Stride;
@@ -995,7 +995,7 @@ gdiplus_get_brush(fz_device *dev, fz_colorspace *colorspace, float *color, float
 	float rgb[3];
 	
 	if (!((userData *)dev->user)->t3color)
-		fz_convert_color(dev->ctx, fz_device_rgb, rgb, colorspace, color);
+		fz_convert_color(dev->ctx, fz_device_rgb(dev->ctx), rgb, colorspace, color);
 	else
 		memcpy(rgb, ((userData *)dev->user)->t3color, sizeof(rgb));
 	
@@ -1456,7 +1456,7 @@ gdiplus_run_t3_text(fz_device *dev, fz_text *text, const fz_matrix *ctm,
 	}
 	
 	float rgb[3];
-	fz_convert_color(dev->ctx, fz_device_rgb, rgb, colorspace, color);
+	fz_convert_color(dev->ctx, fz_device_rgb(dev->ctx), rgb, colorspace, color);
 	((userData *)dev->user)->t3color = rgb;
 	
 	fz_font *font = text->font;
@@ -1518,7 +1518,7 @@ fz_gdiplus_clip_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, int ac
 	if (text->font->ft_face)
 		gdiplus_render_text(dev, text, ctm, NULL, &gpath);
 	else
-		gdiplus_run_t3_text(dev, text, ctm, fz_device_rgb, black, 1.0, &gpath);
+		gdiplus_run_t3_text(dev, text, ctm, fz_device_rgb(dev->ctx), black, 1.0, &gpath);
 	gdiplus_apply_transform(&gpath, ctm);
 	
 	((userData *)dev->user)->pushClip(&gpath, 1.0, accumulate == 2);
@@ -1532,7 +1532,7 @@ fz_gdiplus_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stro
 	if (text->font->ft_face)
 		gdiplus_render_text(dev, text, ctm, NULL, &gpath);
 	else
-		gdiplus_run_t3_text(dev, text, ctm, fz_device_rgb, black, 1.0, &gpath);
+		gdiplus_run_t3_text(dev, text, ctm, fz_device_rgb(dev->ctx), black, 1.0, &gpath);
 	gdiplus_apply_transform(&gpath, ctm);
 	Pen *pen = gdiplus_get_pen(&SolidBrush(Color()), ctm, stroke);
 	
@@ -1571,13 +1571,13 @@ fz_gdiplus_fill_shade(fz_device *dev, fz_shade *shade, const fz_matrix *ctm, flo
 	if (fz_is_empty_irect(&bbox))
 		return;
 	
-	fz_pixmap *dest = fz_new_pixmap_with_bbox(dev->ctx, fz_device_rgb, &bbox);
+	fz_pixmap *dest = fz_new_pixmap_with_bbox(dev->ctx, fz_device_rgb(dev->ctx), &bbox);
 	fz_clear_pixmap(dev->ctx, dest);
 	
 	if (shade->use_background)
 	{
 		float colorfv[4];
-		fz_convert_color(dev->ctx, fz_device_rgb, colorfv, shade->colorspace, shade->background);
+		fz_convert_color(dev->ctx, fz_device_rgb(dev->ctx), colorfv, shade->colorspace, shade->background);
 		colorfv[3] = 1.0;
 		
 		for (int y = bbox.y0; y < bbox.y1; y++)
@@ -1622,13 +1622,13 @@ fz_gdiplus_fill_image_mask(fz_device *dev, fz_image *image, const fz_matrix *ctm
 {
 	float rgb[3];
 	if (!((userData *)dev->user)->t3color)
-		fz_convert_color(dev->ctx, fz_device_rgb, rgb, colorspace, color);
+		fz_convert_color(dev->ctx, fz_device_rgb(dev->ctx), rgb, colorspace, color);
 	else
 		memcpy(rgb, ((userData *)dev->user)->t3color, sizeof(rgb));
 	
 	fz_irect bbox;
 	fz_pixmap *pixmap = fz_image_to_pixmap_def(dev->ctx, image, ctm);
-	fz_pixmap *img2 = fz_new_pixmap_with_bbox(dev->ctx, fz_device_rgb, fz_pixmap_bbox(dev->ctx, pixmap, &bbox));
+	fz_pixmap *img2 = fz_new_pixmap_with_bbox(dev->ctx, fz_device_rgb(dev->ctx), fz_pixmap_bbox(dev->ctx, pixmap, &bbox));
 	for (int i = 0; i < img2->w * img2->h; i++)
 	{
 		img2->samples[i * 4] = rgb[0] * 255;
@@ -1665,7 +1665,7 @@ fz_gdiplus_begin_mask(fz_device *dev, const fz_rect *rect, int luminosity,
 {
 	float rgb[3] = { 0 };
 	if (luminosity && colorspace && colorfv)
-		fz_convert_color(dev->ctx, fz_device_rgb, rgb, colorspace, colorfv);
+		fz_convert_color(dev->ctx, fz_device_rgb(dev->ctx), rgb, colorspace, colorfv);
 	
 	((userData *)dev->user)->recordClipMask(rect, !!luminosity, rgb);
 }

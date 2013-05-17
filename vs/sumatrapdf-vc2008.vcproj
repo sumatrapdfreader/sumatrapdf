@@ -1446,6 +1446,10 @@
 					RelativePath="..\mupdf\fitz\text_search.c"
 					>
 				</File>
+				<File
+					RelativePath="..\mupdf\fitz\dev_svg.c"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="draw"

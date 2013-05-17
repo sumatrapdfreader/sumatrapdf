@@ -1,7 +1,4 @@
 #include "pdfapp.h"
-#include "mupdf.h"
-#include "muxps.h"
-#include "mucbz.h"
 
 #include <ctype.h> /* for tolower() */
 
@@ -92,9 +89,9 @@ void pdfapp_init(fz_context *ctx, pdfapp_t *app)
 	app->resolution = 72;
 	app->ctx = ctx;
 #ifdef _WIN32
-	app->colorspace = fz_device_bgr;
+	app->colorspace = fz_device_bgr(ctx);
 #else
-	app->colorspace = fz_device_rgb;
+	app->colorspace = fz_device_rgb(ctx);
 #endif
 }
 
@@ -654,7 +651,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		if (app->image)
 			fz_drop_pixmap(app->ctx, app->image);
 		if (app->grayscale)
-			colorspace = fz_device_gray;
+			colorspace = fz_device_gray(app->ctx);
 		else
 			colorspace = app->colorspace;
 		app->image = NULL;
@@ -766,16 +763,15 @@ static int textlen(fz_text_page *page)
 	{
 		fz_text_line *line;
 		fz_text_block *block;
+		fz_text_span *span;
 
 		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
 			continue;
 		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			int span_num;
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				len += span->len;
 			}
 			len++; /* pseudo-newline */
@@ -1614,6 +1610,7 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 	{
 		fz_text_line *line;
 		fz_text_block *block;
+		fz_text_span *span;
 
 		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
 			continue;
@@ -1621,10 +1618,8 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			int span_num;
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				if (seen)
 				{
 #ifdef _WIN32
@@ -1652,7 +1647,7 @@ void pdfapp_oncopy(pdfapp_t *app, unsigned short *ucsbuf, int ucslen)
 					}
 				}
 
-				seen = (seen && span_num + 1 == line->len);
+				seen = (seen && span == line->last_span);
 			}
 		}
 	}

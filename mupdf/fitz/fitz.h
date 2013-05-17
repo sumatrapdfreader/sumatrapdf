@@ -210,6 +210,7 @@ typedef struct fz_error_context_s fz_error_context;
 typedef struct fz_id_context_s fz_id_context;
 typedef struct fz_warn_context_s fz_warn_context;
 typedef struct fz_font_context_s fz_font_context;
+typedef struct fz_colorspace_context_s fz_colorspace_context;
 typedef struct fz_aa_context_s fz_aa_context;
 typedef struct fz_locks_context_s fz_locks_context;
 typedef struct fz_store_s fz_store;
@@ -309,6 +310,7 @@ struct fz_context_s
 	fz_error_context *error;
 	fz_warn_context *warn;
 	fz_font_context *font;
+	fz_colorspace_context *colorspace;
 	fz_aa_context *aa;
 	fz_store *store;
 	fz_glyph_cache *glyph_cache;
@@ -1441,28 +1443,44 @@ fz_colorspace *fz_find_device_colorspace(fz_context *ctx, char *name);
 int fz_colorspace_is_indexed(fz_colorspace *cs);
 
 /*
-	fz_device_gray: Abstract colorspace representing device specific
-	gray.
+	fz_device_gray: Get colorspace representing device specific gray.
 */
-extern fz_colorspace *fz_device_gray;
+fz_colorspace *fz_device_gray(fz_context *ctx);
 
 /*
-	fz_device_rgb: Abstract colorspace representing device specific
-	rgb.
+	fz_device_rgb: Get colorspace representing device specific rgb.
 */
-extern fz_colorspace *fz_device_rgb;
+fz_colorspace *fz_device_rgb(fz_context *ctx);
 
 /*
-	fz_device_bgr: Abstract colorspace representing device specific
-	bgr.
+	fz_device_bgr: Get colorspace representing device specific bgr.
 */
-extern fz_colorspace *fz_device_bgr;
+fz_colorspace *fz_device_bgr(fz_context *ctx);
 
 /*
-	fz_device_cmyk: Abstract colorspace representing device specific
-	CMYK.
+	fz_device_cmyk: Get colorspace representing device specific CMYK.
 */
-extern fz_colorspace *fz_device_cmyk;
+fz_colorspace *fz_device_cmyk(fz_context *ctx);
+
+/*
+	fz_set_device_gray: Set colorspace representing device specific gray.
+*/
+void fz_set_device_gray(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	fz_set_device_rgb: Set colorspace representing device specific rgb.
+*/
+void fz_set_device_rgb(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	fz_set_device_bgr: Set colorspace representing device specific bgr.
+*/
+void fz_set_device_bgr(fz_context *ctx, fz_colorspace *cs);
+
+/*
+	fz_set_device_cmyk: Set colorspace representing device specific CMYK.
+*/
+void fz_set_device_cmyk(fz_context *ctx, fz_colorspace *cs);
 
 /*
 	Pixmaps represent a set of pixels for a 2 dimensional region of a
@@ -1716,6 +1734,14 @@ void fz_write_pam(fz_context *ctx, fz_pixmap *pixmap, char *filename, int saveal
 void fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha);
 
 /*
+	fz_write_pwg: Save a pixmap as a pwg
+
+	filename: The filename to save as (including extension).
+	append: If non-zero, then append a new page to existing file.
+*/
+void fz_write_pwg(fz_context *ctx, fz_pixmap *pixmap, char *filename, int append);
+
+/*
 	fz_write_pbm: Save a bitmap as a pbm
 
 	filename: The filename to save as (including extension).
@@ -1802,6 +1828,79 @@ fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht);
 typedef struct fz_font_s fz_font;
 
 /*
+	Generic output streams - generalise between outputting to a file,
+	a buffer, etc.
+*/
+typedef struct fz_output_s fz_output;
+
+struct fz_output_s
+{
+	fz_context *ctx;
+	void *opaque;
+	int (*printf)(fz_output *, const char *, va_list ap);
+	int (*write)(fz_output *, const void *, int n);
+	void (*close)(fz_output *);
+};
+
+/*
+	fz_new_output_with_file: Open an output stream onto a FILE *.
+
+	The stream does NOT take ownership of the FILE *.
+*/
+fz_output *fz_new_output_with_file(fz_context *, FILE *);
+
+/*
+	fz_new_output_with_buffer: Open an output stream onto a buffer.
+
+	The stream does NOT take ownership of the buffer.
+*/
+fz_output *fz_new_output_with_buffer(fz_context *, fz_buffer *);
+
+/*
+	fz_printf: fprintf equivalent for output streams.
+*/
+int fz_printf(fz_output *, const char *, ...);
+
+/*
+	fz_write: fwrite equivalent for output streams.
+*/
+int fz_write(fz_output *out, const void *data, int len);
+
+/*
+	Output a pixmap to an output stream as a png.
+*/
+void fz_output_png(fz_output *out, const fz_pixmap *pixmap, int savealpha);
+
+/*
+	Output a pixmap to an output stream as a pwg raster.
+*/
+void fz_output_pwg(fz_output *out, const fz_pixmap *pixmap);
+
+/*
+	Output the file header to a pwg stream, ready for pages to follow it.
+*/
+void fz_output_pwg_file_header(fz_output *out);
+
+/*
+	Output a page to a pwg stream to follow a header, or other pages.
+*/
+void fz_output_pwg_page(fz_output *out, const fz_pixmap *pixmap);
+
+/*
+	Get an image as a png in a buffer.
+*/
+fz_buffer *fz_image_as_png(fz_context *ctx, fz_image *image, int w, int h);
+
+/*
+	fz_close_output: Close a previously opened fz_output stream.
+
+	Note: whether or not this closes the underlying output method is
+	method dependent. FILE * streams created by fz_new_output_with_file
+	are NOT closed.
+*/
+void fz_close_output(fz_output *);
+
+/*
 	The different format handlers (pdf, xps etc) interpret pages to a
 	device. These devices can then process the stream of calls they
 	recieve in various ways:
@@ -1863,6 +1962,8 @@ fz_device *fz_new_gdiplus_device(fz_context *ctx, void *dc, const fz_rect *base_
 	draw device.
 */
 fz_device *fz_new_draw_device_with_bbox(fz_context *ctx, fz_pixmap *dest, const fz_irect *clip);
+
+fz_device *fz_new_svg_device(fz_context *ctx, fz_output *out, float page_width, float page_height);
 
 /*
 	fz_enable_device_hints : Enable hints in a device.
@@ -2005,8 +2106,7 @@ struct fz_image_block_s
 */
 struct fz_text_line_s
 {
-	int len, cap;
-	fz_text_span **spans;
+	fz_text_span *first_span, *last_span;
 
 	/* Cached information */
 	float distance; /* Perpendicular distance from previous line */
@@ -2040,6 +2140,8 @@ struct fz_text_span_s
 	float column_width; /* Percentage */
 	int align; /* 0 = left, 1 = centre, 2 = right */
 	float indent; /* The indent position for this column. */
+
+	fz_text_span *next;
 };
 
 /*
@@ -2118,60 +2220,7 @@ void fz_free_text_sheet(fz_context *ctx, fz_text_sheet *sheet);
 fz_text_page *fz_new_text_page(fz_context *ctx, const fz_rect *mediabox);
 void fz_free_text_page(fz_context *ctx, fz_text_page *page);
 
-void fz_text_analysis(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page);
-
-/*
-	Generic output streams - generalise between outputting to a file,
-	a buffer, etc.
-*/
-typedef struct fz_output_s fz_output;
-
-struct fz_output_s
-{
-	fz_context *ctx;
-	void *opaque;
-	int (*printf)(fz_output *, const char *, va_list ap);
-	int (*write)(fz_output *, const void *, int n);
-	void (*close)(fz_output *);
-};
-
-/*
-	fz_new_output_with_file: Open an output stream onto a FILE *.
-
-	The stream does NOT take ownership of the FILE *.
-*/
-fz_output *fz_new_output_with_file(fz_context *, FILE *);
-
-/*
-	fz_new_output_with_buffer: Open an output stream onto a buffer.
-
-	The stream doesn NOT take ownership of the buffer.
-*/
-fz_output *fz_new_output_with_buffer(fz_context *, fz_buffer *);
-
-/*
-	fz_printf: fprintf equivalent for output streams.
-*/
-int fz_printf(fz_output *, const char *, ...);
-
-/*
-	fz_write: fwrite equivalent for output streams.
-*/
-int fz_write(fz_output *out, const void *data, int len);
-
-/*
-	Output a pixmap to an output stream as a png.
-*/
-void fz_output_pixmap_to_png(fz_context *ctx, fz_pixmap *pixmap, fz_output *out, int savealpha);
-
-/*
-	fz_close_output: Close a previously opened fz_output stream.
-
-	Note: whether or not this closes the underlying output method is
-	method dependent. FILE * streams created by fz_new_output_with_file
-	are NOT closed.
-*/
-void fz_close_output(fz_output *);
+void fz_analyze_text(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page);
 
 /*
 	fz_print_text_sheet: Output a text sheet to a file as CSS.

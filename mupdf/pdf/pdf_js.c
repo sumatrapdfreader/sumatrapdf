@@ -124,7 +124,7 @@ static pdf_jsimp_obj *app_launchURL(void *jsctx, void *obj, int argc, pdf_jsimp_
 	char *cUrl;
 	int bNewFrame = 0;
 
-	switch(argc)
+	switch (argc)
 	{
 	default:
 		return NULL;

@@ -90,6 +90,14 @@ EXPORTS
 	fz_drop_bitmap
 	fz_find_device_colorspace
 	fz_colorspace_is_indexed
+	fz_device_gray
+	fz_device_rgb
+	fz_device_bgr
+	fz_device_cmyk
+	fz_set_device_gray
+	fz_set_device_rgb
+	fz_set_device_bgr
+	fz_set_device_cmyk
 	fz_pixmap_bbox
 	fz_pixmap_width
 	fz_pixmap_height
@@ -114,6 +122,7 @@ EXPORTS
 	fz_write_pnm
 	fz_write_pam
 	fz_write_png
+	fz_write_pwg
 	fz_write_pbm
 	fz_md5_pixmap
 	fz_write_tga
@@ -121,6 +130,16 @@ EXPORTS
 	fz_drop_image
 	fz_keep_image
 	fz_halftone_pixmap
+	fz_new_output_with_file
+	fz_new_output_with_buffer
+	fz_printf
+	fz_write
+	fz_output_png
+	fz_output_pwg
+	fz_output_pwg_file_header
+	fz_output_pwg_page
+	fz_image_as_png
+	fz_close_output
 	fz_free_device
 	fz_new_trace_device
 	fz_new_bbox_device
@@ -136,13 +155,7 @@ EXPORTS
 	fz_free_text_sheet
 	fz_new_text_page
 	fz_free_text_page
-	fz_text_analysis
-	fz_new_output_with_file
-	fz_new_output_with_buffer
-	fz_printf
-	fz_write
-	fz_output_pixmap_to_png
-	fz_close_output
+	fz_analyze_text
 	fz_print_text_sheet
 	fz_print_text_page_html
 	fz_print_text_page_xml
@@ -299,6 +312,9 @@ EXPORTS
 	fz_drop_colorspace
 	fz_free_colorspace_imp
 	fz_convert_color
+	fz_new_colorspace_context
+	fz_keep_colorspace_context
+	fz_drop_colorspace_context
 	fz_find_color_converter
 	ft_error_string
 	fz_new_font_context

@@ -1,4 +1,5 @@
 #include "fitz-internal.h"
+#include "ucdn.h"
 
 /* Extract text into an unsorted span soup. */
 
@@ -200,9 +201,8 @@ push_span(fz_context *ctx, fz_text_device *tdev, fz_text_span *span, int new_lin
 			block->lines = fz_resize_array(ctx, block->lines, newcap, sizeof(*block->lines));
 			block->cap = newcap;
 		}
-		block->lines[block->len].cap = 0;
-		block->lines[block->len].len = 0;
-		block->lines[block->len].spans = NULL;
+		block->lines[block->len].first_span = NULL;
+		block->lines[block->len].last_span = NULL;
 		block->lines[block->len].distance = distance;
 		block->lines[block->len].bbox = fz_empty_rect;
 		block->len++;
@@ -212,16 +212,21 @@ push_span(fz_context *ctx, fz_text_device *tdev, fz_text_span *span, int new_lin
 	block = page->blocks[page->len-1].u.text;
 	line = &block->lines[block->len-1];
 
-	if (line->len == line->cap)
-	{
-		int newcap = (line->cap ? line->cap*2 : 4);
-		line->spans = fz_resize_array(ctx, line->spans, newcap, sizeof(*line->spans));
-		line->cap = newcap;
-	}
 	fz_union_rect(&block->lines[block->len-1].bbox, &span->bbox);
 	fz_union_rect(&block->bbox, &span->bbox);
 	span->base_offset = (new_line ? 0 : distance);
-	line->spans[line->len++] = span;
+
+	if (!line->first_span)
+	{
+		line->first_span = line->last_span = span;
+		span->next = NULL;
+	}
+	else
+	{
+		line->last_span->next = span;
+		line->last_span = span;
+	}
+
 	return line;
 }
 
@@ -287,8 +292,8 @@ strain_soup(fz_context *ctx, fz_text_device *tdev)
 			}
 #endif
 
-			p.x = last_line->spans[0]->max.x - last_line->spans[0]->min.x;
-			p.y = last_line->spans[0]->max.y - last_line->spans[0]->min.y;
+			p.x = last_line->first_span->max.x - last_line->first_span->min.x;
+			p.y = last_line->first_span->max.y - last_line->first_span->min.y;
 			fz_normalize_vector(&p);
 			q.x = span->max.x - span->min.x;
 			q.y = span->max.y - span->min.y;
@@ -297,8 +302,8 @@ strain_soup(fz_context *ctx, fz_text_device *tdev)
 			printf("last_span=%g %g -> %g %g = %g %g\n", last_span->min.x, last_span->min.y, last_span->max.x, last_span->max.y, p.x, p.y);
 			printf("span     =%g %g -> %g %g = %g %g\n", span->min.x, span->min.y, span->max.x, span->max.y, q.x, q.y);
 #endif
-			perp_r.y = last_line->spans[0]->min.x - span->min.x;
-			perp_r.x = -(last_line->spans[0]->min.y - span->min.y);
+			perp_r.y = last_line->first_span->min.x - span->min.x;
+			perp_r.x = -(last_line->first_span->min.y - span->min.y);
 			/* Check if p and q are parallel. If so, then this
 			 * line is parallel with the last one. */
 			dot = p.x * q.x + p.y * q.y;
@@ -438,14 +443,13 @@ fz_new_text_page(fz_context *ctx, const fz_rect *mediabox)
 static void
 fz_free_text_line_contents(fz_context *ctx, fz_text_line *line)
 {
-	int span_num;
-	for (span_num = 0; span_num < line->len; span_num++)
+	fz_text_span *span, *next;
+	for (span = line->first_span; span; span=next)
 	{
-		fz_text_span *span = line->spans[span_num];
+		next = span->next;
 		fz_free(ctx, span->text);
 		fz_free(ctx, span);
 	}
-	fz_free(ctx, line->spans);
 }
 
 static void
@@ -476,7 +480,7 @@ fz_free_text_page(fz_context *ctx, fz_text_page *page)
 	fz_page_block *block;
 	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
-		switch(block->type)
+		switch (block->type)
 		{
 		case FZ_PAGE_BLOCK_TEXT:
 			fz_free_text_block(ctx, block->u.text);
@@ -508,6 +512,7 @@ fz_new_text_span(fz_context *ctx, const fz_point *p, int wmode, const fz_matrix 
 	span->transform.e = 0;
 	span->transform.f = 0;
 	span->text = NULL;
+	span->next = NULL;
 	return span;
 }
 
@@ -939,21 +944,14 @@ do_glyphs_overlap(fz_text_span *span, int i, fz_text_span *span2, int j, int sta
 static void
 merge_lines(fz_context *ctx, fz_text_block *block, fz_text_line *line)
 {
-	int i;
 	if (line == block->lines + block->len - 1)
 		return;
-	for (i = 0; i < (line + 1)->len; i++)
+	while ((line + 1)->first_span)
 	{
-		if (line->len == line->cap)
-		{
-			int newcap = (line->cap ? line->cap * 2 : 4);
-			line->spans = fz_resize_array(ctx, line->spans, newcap, sizeof(*line->spans));
-			line->cap = newcap;
-		}
-		fz_union_rect(&line->bbox, &(line + 1)->spans[i]->bbox);
-		line->spans[line->len++] = (line + 1)->spans[i];
+		fz_union_rect(&line->bbox, &(line + 1)->first_span->bbox);
+		line->last_span = line->last_span->next = (line + 1)->first_span;
+		(line + 1)->first_span = (line + 1)->first_span->next;
 	}
-	fz_free(ctx, (line + 1)->spans);
 	memmove(line + 1, line + 2, (block->lines + block->len - (line + 2)) * sizeof(fz_text_line));
 	block->len--;
 }
@@ -963,36 +961,36 @@ fixup_text_block(fz_context *ctx, fz_text_block *block)
 {
 	fz_text_line *line;
 	fz_text_span *span;
-	int i, span_num;
+	int i;
 
 	/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=734 */
 	/* remove duplicate character sequences in (almost) the same spot */
 	for (line = block->lines; line < block->lines + block->len; line++)
 	{
-		for (span_num = 0; span_num < line->len; span_num++)
+		for (span = line->first_span; span; span = span->next)
 		{
-			span = line->spans[span_num];
 			for (i = 0; i < span->len; i++)
 			{
-				fz_text_span *span2;
 				fz_text_line *line2 = line;
-				int j = i + 1, span_num2 = span_num;
-				for (span_num2 = span_num; span_num2 <= line2->len; span_num2++, j = 0)
+				fz_text_span *span2 = span;
+				int j = i + 1;
+				for (;;)
 				{
-					if (span_num2 == line2->len)
+					if (!span2)
 					{
-						if (line2 + 1 == block->lines + block->len || line2 != line || (line2 + 1)->len == 0)
+						if (line2 + 1 == block->lines + block->len || line2 != line || !(line2 + 1)->first_span)
 							break;
 						line2++;
-						span_num2 = 0;
+						span2 = line2->first_span;
 					}
-					span2 = line2->spans[span_num2];
 					for (; j < span2->len; j++)
 					{
 						int c = span->text[i].c;
 						if (c != 32 && c == span2->text[j].c && do_glyphs_overlap(span, i, span2, j, 1))
 							goto fixup_delete_duplicates;
 					}
+					span2 = span2->next;
+					j = 0;
 				}
 				continue;
 
@@ -1006,12 +1004,8 @@ fixup_delete_duplicates:
 
 				if (i < span->len && span->text[i].c == 32)
 					delete_character(span, i);
-				else if (i == span->len && span_num == line->len - 1)
-				{
-					int len = line->len;
+				else if (i == span->len && !span->next)
 					merge_lines(ctx, block, line);
-					span = line->spans[len - 1];
-				}
 			}
 		}
 	}
@@ -1022,7 +1016,7 @@ fixup_text_page(fz_context *ctx, fz_text_page *page)
 {
 	fz_page_block *block;
 	fz_text_line *line;
-	int span_num;
+	fz_text_span *span;
 
 	for (block = page->blocks; block < page->blocks + page->len; block++)
 	{
@@ -1030,8 +1024,8 @@ fixup_text_page(fz_context *ctx, fz_text_page *page)
 			continue;
 		for (line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++)
 		{
-			for (span_num = 0; span_num < line->len; span_num++)
-				fixup_text_span(line->spans[span_num]);
+			for (span = line->first_span; span; span = span->next)
+				fixup_text_span(span);
 		}
 		fixup_text_block(ctx, block->u.text);
 	}
@@ -1126,6 +1120,92 @@ fz_text_fill_image(fz_device *dev, fz_image *img, const fz_matrix *ctm, float al
 	fz_text_fill_image_mask(dev, img, ctm, NULL, NULL, alpha);
 }
 
+static int
+fz_bidi_direction(int bidiclass, int curdir)
+{
+	switch (bidiclass)
+	{
+	/* strong */
+	case UCDN_BIDI_CLASS_L: return 1;
+	case UCDN_BIDI_CLASS_R: return -1;
+	case UCDN_BIDI_CLASS_AL: return -1;
+
+	/* weak */
+	case UCDN_BIDI_CLASS_EN:
+	case UCDN_BIDI_CLASS_ES:
+	case UCDN_BIDI_CLASS_ET:
+	case UCDN_BIDI_CLASS_AN:
+	case UCDN_BIDI_CLASS_CS:
+	case UCDN_BIDI_CLASS_NSM:
+	case UCDN_BIDI_CLASS_BN:
+		return curdir;
+
+	/* neutral */
+	case UCDN_BIDI_CLASS_B:
+	case UCDN_BIDI_CLASS_S:
+	case UCDN_BIDI_CLASS_WS:
+	case UCDN_BIDI_CLASS_ON:
+		return curdir;
+
+	/* embedding, override, pop ... we don't support them */
+	default:
+		return 0;
+	}
+}
+
+static void
+fz_bidi_reorder_run(fz_text_span *span, int a, int b, int dir)
+{
+	if (a < b && dir == -1)
+	{
+		fz_text_char c;
+		int m = a + (b - a) / 2;
+		while (a < m)
+		{
+			b--;
+			c = span->text[a];
+			span->text[a] = span->text[b];
+			span->text[b] = c;
+			a++;
+		}
+	}
+}
+
+static void
+fz_bidi_reorder_span(fz_text_span *span)
+{
+	int a, b, dir, curdir;
+
+	a = 0;
+	curdir = 1;
+	for (b = 0; b < span->len; b++)
+	{
+		dir = fz_bidi_direction(ucdn_get_bidi_class(span->text[b].c), curdir);
+		if (dir != curdir)
+		{
+			fz_bidi_reorder_run(span, a, b, curdir);
+			curdir = dir;
+			a = b;
+		}
+	}
+	fz_bidi_reorder_run(span, a, b, curdir);
+}
+
+static void
+fz_bidi_reorder_text_page(fz_context *ctx, fz_text_page *page)
+{
+	fz_page_block *pageblock;
+	fz_text_block *block;
+	fz_text_line *line;
+	fz_text_span *span;
+
+	for (pageblock = page->blocks; pageblock < page->blocks + page->len; pageblock++)
+		if (pageblock->type == FZ_PAGE_BLOCK_TEXT)
+			for (block = pageblock->u.text, line = block->lines; line < block->lines + block->len; line++)
+				for (span = line->first_span; span; span = span->next)
+					fz_bidi_reorder_span(span);
+}
+
 static void
 fz_text_free_user(fz_device *dev)
 {
@@ -1140,7 +1220,10 @@ fz_text_free_user(fz_device *dev)
 
 	/* TODO: smart sorting of blocks in reading order */
 	/* TODO: unicode NFC normalization */
-	/* TODO: bidi logical reordering */
+
+	fz_bidi_reorder_text_page(ctx, tdev->page);
+
+	/* SumatraPDF: various string fixups */
 	fixup_text_page(dev->ctx, tdev->page);
 
 	fz_free(dev->ctx, tdev);

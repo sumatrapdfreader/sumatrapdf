@@ -408,7 +408,7 @@ cbz_run_page(cbz_document *doc, cbz_page *page, fz_device *dev, const fz_matrix 
 static int
 cbz_meta(cbz_document *doc, int key, void *ptr, int size)
 {
-	switch(key)
+	switch (key)
 	{
 	case FZ_META_FORMAT_INFO:
 		sprintf((char *)ptr, "CBZ");

@@ -14,7 +14,7 @@
 
 enum { TEXT_PLAIN = 1, TEXT_HTML = 2, TEXT_XML = 3 };
 
-enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_TGA, OUT_BMP };
+enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_SVG, OUT_PWG, OUT_TGA, OUT_BMP };
 
 typedef struct
 {
@@ -30,6 +30,8 @@ static const suffix_t suffix_table[] =
 	{ ".pnm", OUT_PNM },
 	{ ".pam", OUT_PAM },
 	{ ".pbm", OUT_PBM },
+	{ ".svg", OUT_SVG },
+	{ ".pwg", OUT_PWG },
 	{ ".tga", OUT_TGA }, /* SumatraPDF: support TGA as output format */
 #ifdef GDI_PLUS_BMP_RENDERER
 	{ ".bmp", OUT_BMP },
@@ -107,6 +109,7 @@ static int fit = 0;
 static int errored = 0;
 static int ignore_errors = 0;
 static int output_format;
+static int append = 0;
 
 static fz_text_sheet *sheet = NULL;
 static fz_colorspace *colorspace;
@@ -310,7 +313,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 		if (output_format == OUT_TGA)
 		{
-			fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr, w, h, bmp_data);
+			fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), w, h, bmp_data);
 			fz_write_tga(ctx, pix, buf, 0);
 			fz_drop_pixmap(ctx, pix);
 		}
@@ -335,7 +338,7 @@ static void drawbmp(fz_context *ctx, fz_document *doc, fz_page *page, fz_display
 
 	if (showmd5)
 	{
-		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr, bmp_data_len / 4 / h, h, bmp_data);
+		fz_pixmap *pix = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), bmp_data_len / 4 / h, h, bmp_data);
 		unsigned char digest[16];
 		int i;
 
@@ -549,7 +552,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			}
 			else if (showtext == TEXT_HTML)
 			{
-				fz_text_analysis(ctx, sheet, text);
+				fz_analyze_text(ctx, sheet, text);
 				fz_print_text_page_html(ctx, out, text);
 			}
 			else if (showtext == TEXT_PLAIN)
@@ -575,13 +578,59 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 	if (showmd5 || showtime)
 		printf("page %s %d", filename, pagenum);
 
+	if (output && output_format == OUT_SVG)
+	{
+		float zoom;
+		fz_matrix ctm;
+		fz_rect bounds, tbounds;
+		char buf[512];
+		FILE *file;
+		fz_output *out;
+
+		sprintf(buf, output, pagenum);
+		file = fopen(buf, "wb");
+		if (file == NULL)
+			fz_throw(ctx, "cannot open file '%s': %s", buf, strerror(errno));
+		out = fz_new_output_with_file(ctx, file);
+
+		fz_bound_page(doc, page, &bounds);
+		zoom = resolution / 72;
+		fz_pre_rotate(fz_scale(&ctm, zoom, zoom), rotation);
+		tbounds = bounds;
+		fz_transform_rect(&tbounds, &ctm);
+
+		fz_try(ctx)
+		{
+			dev = fz_new_svg_device(ctx, out, tbounds.x1-tbounds.x0, tbounds.y1-tbounds.y0);
+			if (list)
+				fz_run_display_list(list, dev, &ctm, &tbounds, &cookie);
+			else
+				fz_run_page(doc, page, dev, &ctm, &cookie);
+			fz_free_device(dev);
+			dev = NULL;
+		}
+		fz_always(ctx)
+		{
+			fz_free_device(dev);
+			dev = NULL;
+			fz_close_output(out);
+			fclose(file);
+		}
+		fz_catch(ctx)
+		{
+			fz_free_display_list(ctx, list);
+			fz_free_page(doc, page);
+			fz_rethrow(ctx);
+		}
+	}
+
 #ifdef GDI_PLUS_BMP_RENDERER
 	// hack: use -G0 to "enable GDI+" when saving as TGA
 	if (output_format == OUT_BMP || output_format == OUT_TGA && !gamma_value)
 		drawbmp(ctx, doc, page, list, pagenum, &cookie);
 	else
 #endif
-	if (output || showmd5 || showtime)
+	if ((output && output_format != OUT_SVG) || showmd5 || showtime)
 	{
 		float zoom;
 		fz_matrix ctm;
@@ -688,6 +737,13 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 					fz_write_pam(ctx, pix, buf, savealpha);
 				else if (output_format == OUT_PNG)
 					fz_write_png(ctx, pix, buf, savealpha);
+				else if (output_format == OUT_PWG)
+				{
+					if (strstr(output, "%d") != NULL)
+						append = 0;
+					fz_write_pwg(ctx, pix, buf, append);
+					append = 1;
+				}
 				else if (output_format == OUT_PBM) {
 					fz_bitmap *bit = fz_halftone_pixmap(ctx, pix, NULL);
 					fz_write_pbm(ctx, bit, buf);
@@ -920,9 +976,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	colorspace = fz_device_rgb;
+	colorspace = fz_device_rgb(ctx);
 	if (grayscale || output_format == OUT_PGM || output_format == OUT_PBM)
-		colorspace = fz_device_gray;
+		colorspace = fz_device_gray(ctx);
 
 	timing.count = 0;
 	timing.total = 0;

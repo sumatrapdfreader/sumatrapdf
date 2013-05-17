@@ -1873,16 +1873,16 @@ pdf_delete_annot(pdf_document *doc, pdf_page *page, pdf_annot *annot)
 	doc->dirty = 1;
 }
 
-static fz_colorspace *pdf_to_color(pdf_obj *col, float color[4])
+static fz_colorspace *pdf_to_color(pdf_document *doc, pdf_obj *col, float color[4])
 {
 	fz_colorspace *cs;
 	int i, ncol = pdf_array_len(col);
 
 	switch (ncol)
 	{
-	case 1: cs = fz_device_gray; break;
-	case 3: cs = fz_device_rgb; break;
-	case 4: cs = fz_device_cmyk; break;
+	case 1: cs = fz_device_gray(doc->ctx); break;
+	case 3: cs = fz_device_rgb(doc->ctx); break;
+	case 4: cs = fz_device_cmyk(doc->ctx); break;
 	default: return NULL;
 	}
 
@@ -2136,7 +2136,7 @@ pdf_set_markup_obj_appearance(pdf_document *doc, pdf_obj *annot, float color[3],
 				if (stroke)
 				{
 					// assert(path)
-					fz_stroke_path(dev, path, stroke, &fz_identity, fz_device_rgb, color, alpha);
+					fz_stroke_path(dev, path, stroke, &fz_identity, fz_device_rgb(ctx), color, alpha);
 					fz_drop_stroke_state(ctx, stroke);
 					stroke = NULL;
 					fz_free_path(ctx, path);
@@ -2154,7 +2154,7 @@ pdf_set_markup_obj_appearance(pdf_document *doc, pdf_obj *annot, float color[3],
 
 		if (stroke)
 		{
-			fz_stroke_path(dev, path, stroke, &fz_identity, fz_device_rgb, color, alpha);
+			fz_stroke_path(dev, path, stroke, &fz_identity, fz_device_rgb(ctx), color, alpha);
 		}
 
 		pdf_set_annot_obj_appearance(doc, annot, &fz_identity, &rect, strike_list);
@@ -2195,10 +2195,10 @@ pdf_set_ink_obj_appearance(pdf_document *doc, pdf_obj *annot)
 		pdf_obj *list;
 		int n, m, i, j;
 
-		cs = pdf_to_color(pdf_dict_gets(annot, "C"), color);
+		cs = pdf_to_color(doc, pdf_dict_gets(annot, "C"), color);
 		if (!cs)
 		{
-			cs = fz_device_rgb;
+			cs = fz_device_rgb(ctx);
 			color[0] = 1.0f;
 			color[1] = 0.0f;
 			color[2] = 0.0f;

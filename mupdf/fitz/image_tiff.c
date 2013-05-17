@@ -358,23 +358,23 @@ fz_decode_tiff_strips(struct tiff *tiff)
 	switch (tiff->photometric)
 	{
 	case 0: /* WhiteIsZero -- inverted */
-		tiff->colorspace = fz_device_gray;
+		tiff->colorspace = fz_device_gray(tiff->ctx);
 		break;
 	case 1: /* BlackIsZero */
-		tiff->colorspace = fz_device_gray;
+		tiff->colorspace = fz_device_gray(tiff->ctx);
 		break;
 	case 2: /* RGB */
-		tiff->colorspace = fz_device_rgb;
+		tiff->colorspace = fz_device_rgb(tiff->ctx);
 		break;
 	case 3: /* RGBPal */
-		tiff->colorspace = fz_device_rgb;
+		tiff->colorspace = fz_device_rgb(tiff->ctx);
 		break;
 	case 5: /* CMYK */
-		tiff->colorspace = fz_device_cmyk;
+		tiff->colorspace = fz_device_cmyk(tiff->ctx);
 		break;
 	case 6: /* YCbCr */
 		/* it's probably a jpeg ... we let jpeg convert to rgb */
-		tiff->colorspace = fz_device_rgb;
+		tiff->colorspace = fz_device_rgb(tiff->ctx);
 		break;
 	default:
 		fz_throw(tiff->ctx, "unknown photometric: %d", tiff->photometric);
@@ -809,7 +809,7 @@ fz_load_tiff(fz_context *ctx, unsigned char *buf, int len)
 			/* CMYK is a subtractive colorspace, we want additive for premul alpha */
 			if (image->n == 5)
 			{
-				fz_pixmap *rgb = fz_new_pixmap(tiff.ctx, fz_device_rgb, image->w, image->h);
+				fz_pixmap *rgb = fz_new_pixmap(tiff.ctx, fz_device_rgb(ctx), image->w, image->h);
 				fz_convert_pixmap(tiff.ctx, rgb, image);
 				rgb->xres = image->xres;
 				rgb->yres = image->yres;

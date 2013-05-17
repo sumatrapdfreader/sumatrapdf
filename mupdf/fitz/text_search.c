@@ -14,19 +14,18 @@ fz_char_and_box *fz_text_char_at(fz_char_and_box *cab, fz_text_page *page, int i
 
 	for (block_num = 0; block_num < page->len; block_num++)
 	{
-		fz_text_line *line;
-		int ofs = 0;
 		fz_text_block *block;
+		fz_text_line *line;
+		fz_text_span *span;
+		int ofs = 0;
 
 		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
 			continue;
 		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			int span_num;
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				if (idx < ofs + span->len)
 				{
 					cab->c = span->text[idx - ofs].c;
@@ -73,16 +72,15 @@ static int textlen(fz_text_page *page)
 	{
 		fz_text_block *block;
 		fz_text_line *line;
+		fz_text_span *span;
 
 		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
 			continue;
 		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			int span_num;
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				len += span->len;
 			}
 			len++; /* pseudo-newline */
@@ -161,6 +159,7 @@ fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_rect rect, fz_rec
 	fz_rect linebox, charbox;
 	fz_text_block *block;
 	fz_text_line *line;
+	fz_text_span *span;
 	int i, block_num, hit_count;
 
 	float x0 = rect.x0;
@@ -177,11 +176,9 @@ fz_highlight_selection(fz_context *ctx, fz_text_page *page, fz_rect rect, fz_rec
 		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			int span_num;
 			linebox = fz_empty_rect;
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				for (i = 0; i < span->len; i++)
 				{
 					fz_text_char_bbox(&charbox, span, i);
@@ -227,16 +224,15 @@ fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect)
 	{
 		fz_text_block *block;
 		fz_text_line *line;
+		fz_text_span *span;
 
 		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
 			continue;
 		block = page->blocks[block_num].u.text;
 		for (line = block->lines; line < block->lines + block->len; line++)
 		{
-			int span_num;
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				if (seen)
 				{
 					fz_write_buffer_byte(ctx, buffer, '\n');
@@ -257,7 +253,7 @@ fz_copy_selection(fz_context *ctx, fz_text_page *page, fz_rect rect)
 					}
 				}
 
-				seen = (seen && span_num + 1 == line->len);
+				seen = (seen && span == line->last_span);
 			}
 		}
 	}

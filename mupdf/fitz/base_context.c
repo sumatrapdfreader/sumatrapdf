@@ -52,6 +52,7 @@ fz_free_context(fz_context *ctx)
 	fz_drop_glyph_cache_context(ctx);
 	fz_drop_store_context(ctx);
 	fz_free_aa_context(ctx);
+	fz_drop_colorspace_context(ctx);
 	fz_drop_font_context(ctx);
 	fz_drop_id_context(ctx);
 
@@ -138,6 +139,7 @@ fz_new_context(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int ma
 	{
 		fz_new_store_context(ctx, max_store);
 		fz_new_glyph_cache_context(ctx);
+		fz_new_colorspace_context(ctx);
 		fz_new_font_context(ctx);
 		fz_new_id_context(ctx);
 	}
@@ -180,6 +182,8 @@ fz_clone_context_internal(fz_context *ctx)
 	new_ctx->store = fz_keep_store_context(new_ctx);
 	new_ctx->glyph_cache = ctx->glyph_cache;
 	new_ctx->glyph_cache = fz_keep_glyph_cache(new_ctx);
+	new_ctx->colorspace = ctx->colorspace;
+	new_ctx->colorspace = fz_keep_colorspace_context(new_ctx);
 	new_ctx->font = ctx->font;
 	new_ctx->font = fz_keep_font_context(new_ctx);
 	new_ctx->id = ctx->id;

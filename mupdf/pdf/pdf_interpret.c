@@ -27,6 +27,7 @@ struct pdf_material_s
 	fz_colorspace *colorspace;
 	pdf_pattern *pattern;
 	fz_shade *shade;
+	int gstate_num;
 	float alpha;
 	float v[FZ_MAX_COLORS];
 };
@@ -101,11 +102,11 @@ struct pdf_csi_s
 	int accumulate;
 
 	/* graphics state */
-	fz_matrix top_ctm;
 	pdf_gstate *gstate;
 	int gcap;
 	int gtop;
 	int gbot;
+	int gparent;
 
 	/* cookie support */
 	fz_cookie *cookie;
@@ -113,7 +114,7 @@ struct pdf_csi_s
 
 static void pdf_run_contents_object(pdf_csi *csi, pdf_obj *rdb, pdf_obj *contents);
 static void pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_matrix *transform);
-static void pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, const fz_rect *area, int what);
+static void pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, pdf_gstate *pat_gstate, const fz_rect *area, int what);
 
 static int
 ocg_intents_include(pdf_ocg_descriptor *desc, char *name)
@@ -528,6 +529,8 @@ pdf_show_shade(pdf_csi *csi, fz_shade *shd)
 
 	pdf_begin_group(csi, &bbox, &softmask);
 
+	/* FIXME: The gstate->ctm in the next line may be wrong; maybe
+	 * it should be the parent gstates ctm? */
 	fz_fill_shade(csi->dev, shd, &gstate->ctm, gstate->fill.alpha);
 
 	pdf_end_group(csi, &softmask);
@@ -576,7 +579,7 @@ pdf_show_image(pdf_csi *csi, fz_image *image)
 			if (gstate->fill.pattern)
 			{
 				fz_clip_image_mask(csi->dev, image, &bbox, &image_ctm);
-				pdf_show_pattern(csi, gstate->fill.pattern, &bbox, PDF_FILL);
+				pdf_show_pattern(csi, gstate->fill.pattern, &csi->gstate[gstate->fill.gstate_num], &bbox, PDF_FILL);
 				fz_pop_clip(csi->dev);
 			}
 			break;
@@ -584,7 +587,7 @@ pdf_show_image(pdf_csi *csi, fz_image *image)
 			if (gstate->fill.shade)
 			{
 				fz_clip_image_mask(csi->dev, image, &bbox, &image_ctm);
-				fz_fill_shade(csi->dev, gstate->fill.shade, &gstate->ctm, gstate->fill.alpha);
+				fz_fill_shade(csi->dev, gstate->fill.shade, &csi->gstate[gstate->fill.gstate_num].ctm, gstate->fill.alpha);
 				fz_pop_clip(csi->dev);
 			}
 			break;
@@ -675,7 +678,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 				if (gstate->fill.pattern)
 				{
 					fz_clip_path(csi->dev, path, NULL, even_odd, &gstate->ctm);
-					pdf_show_pattern(csi, gstate->fill.pattern, &bbox, PDF_FILL);
+					pdf_show_pattern(csi, gstate->fill.pattern, &csi->gstate[gstate->fill.gstate_num], &bbox, PDF_FILL);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -683,7 +686,8 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 				if (gstate->fill.shade)
 				{
 					fz_clip_path(csi->dev, path, NULL, even_odd, &gstate->ctm);
-					fz_fill_shade(csi->dev, gstate->fill.shade, &csi->top_ctm, gstate->fill.alpha);
+					/* The cluster and page 2 of patterns.pdf shows that fz_fill_shade should NOT be called with gstate->ctm. */
+					fz_fill_shade(csi->dev, gstate->fill.shade, &csi->gstate[gstate->fill.gstate_num].ctm, gstate->fill.alpha);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -704,7 +708,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 				if (gstate->stroke.pattern)
 				{
 					fz_clip_stroke_path(csi->dev, path, &bbox, gstate->stroke_state, &gstate->ctm);
-					pdf_show_pattern(csi, gstate->stroke.pattern, &bbox, PDF_STROKE);
+					pdf_show_pattern(csi, gstate->stroke.pattern, &csi->gstate[gstate->stroke.gstate_num], &bbox, PDF_STROKE);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -712,7 +716,7 @@ pdf_show_path(pdf_csi *csi, int doclose, int dofill, int dostroke, int even_odd)
 				if (gstate->stroke.shade)
 				{
 					fz_clip_stroke_path(csi->dev, path, &bbox, gstate->stroke_state, &gstate->ctm);
-					fz_fill_shade(csi->dev, gstate->stroke.shade, &csi->top_ctm, gstate->stroke.alpha);
+					fz_fill_shade(csi->dev, gstate->stroke.shade, &csi->gstate[gstate->stroke.gstate_num].ctm, gstate->stroke.alpha);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -798,7 +802,7 @@ pdf_flush_text(pdf_csi *csi)
 				if (gstate->fill.pattern)
 				{
 					fz_clip_text(csi->dev, text, &gstate->ctm, 0);
-					pdf_show_pattern(csi, gstate->fill.pattern, &tb, PDF_FILL);
+					pdf_show_pattern(csi, gstate->fill.pattern, &csi->gstate[gstate->fill.gstate_num], &tb, PDF_FILL);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -806,7 +810,8 @@ pdf_flush_text(pdf_csi *csi)
 				if (gstate->fill.shade)
 				{
 					fz_clip_text(csi->dev, text, &gstate->ctm, 0);
-					fz_fill_shade(csi->dev, gstate->fill.shade, &csi->top_ctm, gstate->fill.alpha);
+					/* Page 2 of patterns.pdf shows that fz_fill_shade should NOT be called with gstate->ctm */
+					fz_fill_shade(csi->dev, gstate->fill.shade, &csi->gstate[gstate->fill.gstate_num].ctm, gstate->fill.alpha);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -827,7 +832,7 @@ pdf_flush_text(pdf_csi *csi)
 				if (gstate->stroke.pattern)
 				{
 					fz_clip_stroke_text(csi->dev, text, gstate->stroke_state, &gstate->ctm);
-					pdf_show_pattern(csi, gstate->stroke.pattern, &tb, PDF_STROKE);
+					pdf_show_pattern(csi, gstate->stroke.pattern, &csi->gstate[gstate->stroke.gstate_num], &tb, PDF_STROKE);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -835,7 +840,7 @@ pdf_flush_text(pdf_csi *csi)
 				if (gstate->stroke.shade)
 				{
 					fz_clip_stroke_text(csi->dev, text, gstate->stroke_state, &gstate->ctm);
-					fz_fill_shade(csi->dev, gstate->stroke.shade, &csi->top_ctm, gstate->stroke.alpha);
+					fz_fill_shade(csi->dev, gstate->stroke.shade, &csi->gstate[gstate->stroke.gstate_num].ctm, gstate->stroke.alpha);
 					fz_pop_clip(csi->dev);
 				}
 				break;
@@ -1075,18 +1080,20 @@ pdf_init_gstate(fz_context *ctx, pdf_gstate *gs, const fz_matrix *ctm)
 	gs->stroke_state = fz_new_stroke_state(ctx);
 
 	gs->stroke.kind = PDF_MAT_COLOR;
-	gs->stroke.colorspace = fz_device_gray; /* No fz_keep_colorspace as static */
+	gs->stroke.colorspace = fz_device_gray(ctx); /* No fz_keep_colorspace as static */
 	gs->stroke.v[0] = 0;
 	gs->stroke.pattern = NULL;
 	gs->stroke.shade = NULL;
 	gs->stroke.alpha = 1;
+	gs->stroke.gstate_num = -1;
 
 	gs->fill.kind = PDF_MAT_COLOR;
-	gs->fill.colorspace = fz_device_gray; /* No fz_keep_colorspace as static */
+	gs->fill.colorspace = fz_device_gray(ctx); /* No fz_keep_colorspace as static */
 	gs->fill.v[0] = 0;
 	gs->fill.pattern = NULL;
 	gs->fill.shade = NULL;
 	gs->fill.alpha = 1;
+	gs->fill.gstate_num = -1;
 
 	gs->char_space = 0;
 	gs->word_space = 0;
@@ -1132,25 +1139,69 @@ pdf_drop_material(fz_context *ctx, pdf_material *mat)
 }
 
 static void
-copy_state(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
+pdf_keep_gstate(fz_context *ctx, pdf_gstate *gs)
 {
-	gs->stroke = old->stroke;
-	gs->fill = old->fill;
-	gs->font = old->font;
-	gs->softmask = old->softmask;
-	/* SumatraPDF: support transfer functions */
-	gs->tr = fz_keep_transfer_function(ctx, old->tr);
-	gs->softmask_tr = fz_keep_transfer_function(ctx, old->softmask_tr);
-
-	fz_drop_stroke_state(ctx, gs->stroke_state);
-	gs->stroke_state = fz_keep_stroke_state(ctx, old->stroke_state);
-
 	pdf_keep_material(ctx, &gs->stroke);
 	pdf_keep_material(ctx, &gs->fill);
 	if (gs->font)
 		pdf_keep_font(ctx, gs->font);
 	if (gs->softmask)
 		pdf_keep_xobject(ctx, gs->softmask);
+	fz_keep_stroke_state(ctx, gs->stroke_state);
+
+	/* SumatraPDF: support transfer functions */
+	fz_keep_transfer_function(ctx, gs->tr);
+	fz_keep_transfer_function(ctx, gs->softmask_tr);
+}
+
+static void
+pdf_drop_gstate(fz_context *ctx, pdf_gstate *gs)
+{
+	pdf_drop_material(ctx, &gs->stroke);
+	pdf_drop_material(ctx, &gs->fill);
+	if (gs->font)
+		pdf_drop_font(ctx, gs->font);
+	if (gs->softmask)
+		pdf_drop_xobject(ctx, gs->softmask);
+	fz_drop_stroke_state(ctx, gs->stroke_state);
+
+	/* SumatraPDF: support transfer functions */
+	fz_drop_transfer_function(ctx, gs->tr);
+	fz_drop_transfer_function(ctx, gs->softmask_tr);
+}
+
+static void
+pdf_copy_gstate(fz_context *ctx, pdf_gstate *gs, pdf_gstate *old)
+{
+	pdf_drop_gstate(ctx, gs);
+	*gs = *old;
+	pdf_keep_gstate(ctx, gs);
+}
+
+static void
+pdf_copy_pattern_gstate(fz_context *ctx, pdf_gstate *gs, const pdf_gstate *old)
+{
+	/* SumatraPDF: fix memory leak */
+	pdf_drop_font(ctx, gs->font);
+	pdf_drop_xobject(ctx, gs->softmask);
+	fz_drop_transfer_function(ctx, gs->tr);
+	fz_drop_transfer_function(ctx, gs->softmask_tr);
+
+	gs->ctm = old->ctm;
+	gs->font = old->font;
+	gs->softmask = old->softmask;
+
+	fz_drop_stroke_state(ctx, gs->stroke_state);
+	gs->stroke_state = fz_keep_stroke_state(ctx, old->stroke_state);
+
+	if (gs->font)
+		pdf_keep_font(ctx, gs->font);
+	if (gs->softmask)
+		pdf_keep_xobject(ctx, gs->softmask);
+
+	/* SumatraPDF: support transfer functions */
+	gs->tr = fz_keep_transfer_function(ctx, old->tr);
+	gs->softmask_tr = fz_keep_transfer_function(ctx, old->softmask_tr);
 }
 
 static pdf_csi *
@@ -1189,13 +1240,16 @@ pdf_new_csi(pdf_document *xref, fz_device *dev, const fz_matrix *ctm, char *even
 		csi->gcap = 64;
 		csi->gstate = fz_malloc_array(ctx, csi->gcap, sizeof(pdf_gstate));
 
-		csi->top_ctm = *ctm;
 		csi->nested_depth = nested;
 		pdf_init_gstate(ctx, &csi->gstate[0], ctm);
 		if (gstate)
-			copy_state(ctx, &csi->gstate[0], gstate);
+		{
+			pdf_copy_gstate(ctx, &csi->gstate[0], gstate);
+			csi->gstate[0].ctm = *ctm;
+		}
 		csi->gtop = 0;
 		csi->gbot = 0;
+		csi->gparent = 0;
 
 		csi->cookie = cookie;
 	}
@@ -1229,7 +1283,6 @@ static void
 pdf_gsave(pdf_csi *csi)
 {
 	fz_context *ctx = csi->dev->ctx;
-	pdf_gstate *gs;
 
 	if (csi->gtop == csi->gcap-1)
 	{
@@ -1240,17 +1293,7 @@ pdf_gsave(pdf_csi *csi)
 	memcpy(&csi->gstate[csi->gtop + 1], &csi->gstate[csi->gtop], sizeof(pdf_gstate));
 
 	csi->gtop++;
-	gs = &csi->gstate[csi->gtop];
-	pdf_keep_material(ctx, &gs->stroke);
-	pdf_keep_material(ctx, &gs->fill);
-	if (gs->font)
-		pdf_keep_font(ctx, gs->font);
-	if (gs->softmask)
-		pdf_keep_xobject(ctx, gs->softmask);
-	/* SumatraPDF: support transfer functions */
-	fz_keep_transfer_function(ctx, gs->tr);
-	fz_keep_transfer_function(ctx, gs->softmask_tr);
-	fz_keep_stroke_state(ctx, gs->stroke_state);
+	pdf_keep_gstate(ctx, &csi->gstate[csi->gtop]);
 }
 
 static void
@@ -1266,17 +1309,7 @@ pdf_grestore(pdf_csi *csi)
 		return;
 	}
 
-	pdf_drop_material(ctx, &gs->stroke);
-	pdf_drop_material(ctx, &gs->fill);
-	if (gs->font)
-		pdf_drop_font(ctx, gs->font);
-	if (gs->softmask)
-		pdf_drop_xobject(ctx, gs->softmask);
-	/* SumatraPDF: support transfer functions */
-	fz_drop_transfer_function(ctx, gs->tr);
-	fz_drop_transfer_function(ctx, gs->softmask_tr);
-	fz_drop_stroke_state(ctx, gs->stroke_state);
-
+	pdf_drop_gstate(ctx, gs);
 	csi->gtop --;
 
 	gs = csi->gstate + csi->gtop;
@@ -1416,6 +1449,7 @@ pdf_set_pattern(pdf_csi *csi, int what, pdf_pattern *pat, float *v)
 		mat->pattern = pdf_keep_pattern(ctx, pat);
 	else
 		mat->pattern = NULL;
+	mat->gstate_num = csi->gparent;
 
 	if (v)
 		pdf_set_color(csi, what, v);
@@ -1442,12 +1476,12 @@ pdf_unset_pattern(pdf_csi *csi, int what)
  */
 
 static void
-pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, const fz_rect *area, int what)
+pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, pdf_gstate *pat_gstate, const fz_rect *area, int what)
 {
 	fz_context *ctx = csi->dev->ctx;
 	pdf_gstate *gstate;
-	fz_matrix ptm, invptm;
-	fz_matrix oldtopctm;
+	int gparent_save;
+	fz_matrix ptm, invptm, gparent_save_ctm;
 	int x0, y0, x1, y1;
 	float fx0, fy0, fx1, fy1;
 	int oldtop;
@@ -1455,6 +1489,8 @@ pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, const fz_rect *area, int what)
 
 	pdf_gsave(csi);
 	gstate = csi->gstate + csi->gtop;
+	/* Patterns are run with the gstate of the parent */
+	pdf_copy_pattern_gstate(ctx, gstate, pat_gstate);
 
 	if (pat->ismask)
 	{
@@ -1486,84 +1522,97 @@ pdf_show_pattern(pdf_csi *csi, pdf_pattern *pat, const fz_rect *area, int what)
 		gstate->softmask = NULL;
 	}
 
-	fz_concat(&ptm, &pat->matrix, &csi->top_ctm);
+	fz_concat(&ptm, &pat->matrix, &pat_gstate->ctm);
 	fz_invert_matrix(&invptm, &ptm);
 
-	/* patterns are painted using the ctm in effect at the beginning
-	 * of the content stream. area = bbox of shape to be filled in
-	 * device space. Map it back to pattern space. */
-	local_area = *area;
-	fz_transform_rect(&local_area, &invptm);
+	/* The parent_ctm is amended with our pattern matrix */
+	gparent_save = csi->gparent;
+	csi->gparent = csi->gtop-1;
+	gparent_save_ctm = csi->gstate[csi->gparent].ctm;
+	csi->gstate[csi->gparent].ctm = ptm;
 
-	fx0 = (local_area.x0 - pat->bbox.x0) / pat->xstep;
-	fy0 = (local_area.y0 - pat->bbox.y0) / pat->ystep;
-	fx1 = (local_area.x1 - pat->bbox.x0) / pat->xstep;
-	fy1 = (local_area.y1 - pat->bbox.y0) / pat->ystep;
+	fz_try(ctx)
+	{
+		/* patterns are painted using the parent_ctm. area = bbox of
+		 * shape to be filled in device space. Map it back to pattern
+		 * space. */
+		local_area = *area;
+		fz_transform_rect(&local_area, &invptm);
 
-	oldtopctm = csi->top_ctm;
-	oldtop = csi->gtop;
+		fx0 = (local_area.x0 - pat->bbox.x0) / pat->xstep;
+		fy0 = (local_area.y0 - pat->bbox.y0) / pat->ystep;
+		fx1 = (local_area.x1 - pat->bbox.x0) / pat->xstep;
+		fy1 = (local_area.y1 - pat->bbox.y0) / pat->ystep;
+
+		oldtop = csi->gtop;
 
 #ifdef TILE
-	/* We have tried various formulations in the past, but this one is
-	 * best we've found; only use it as a tile if a whole repeat is
-	 * required in at least one direction. Note, that this allows for
-	 * 'sections' of 4 tiles to be show, but all non-overlapping. */
-	if (fx1-fx0 > 1 || fy1-fy0 > 1)
+		/* We have tried various formulations in the past, but this one is
+		 * best we've found; only use it as a tile if a whole repeat is
+		 * required in at least one direction. Note, that this allows for
+		 * 'sections' of 4 tiles to be show, but all non-overlapping. */
+		if (fx1-fx0 > 1 || fy1-fy0 > 1)
 #else
-	if (0)
+		if (0)
 #endif
-	{
-		fz_begin_tile(csi->dev, &local_area, &pat->bbox, pat->xstep, pat->ystep, &ptm);
-		gstate->ctm = ptm;
-		csi->top_ctm = gstate->ctm;
-		pdf_gsave(csi);
-		pdf_run_contents_object(csi, pat->resources, pat->contents);
-		pdf_grestore(csi);
-		while (oldtop < csi->gtop)
-			pdf_grestore(csi);
-		fz_end_tile(csi->dev);
-	}
-	else
-	{
-		int x, y;
-
-		/* When calculating the number of tiles required, we adjust by
-		 * a small amount to allow for rounding errors. By choosing
-		 * this amount to be smaller than 1/256, we guarantee we won't
-		 * cause problems that will be visible even under our most
-		 * extreme antialiasing. */
-		x0 = floorf(fx0 + 0.001);
-		y0 = floorf(fy0 + 0.001);
-		x1 = ceilf(fx1 - 0.001);
-		y1 = ceilf(fy1 - 0.001);
-
-		for (y = y0; y < y1; y++)
 		{
-			for (x = x0; x < x1; x++)
+			fz_begin_tile(csi->dev, &local_area, &pat->bbox, pat->xstep, pat->ystep, &ptm);
+			gstate->ctm = ptm;
+			pdf_gsave(csi);
+			pdf_run_contents_object(csi, pat->resources, pat->contents);
+			pdf_grestore(csi);
+			while (oldtop < csi->gtop)
+				pdf_grestore(csi);
+			fz_end_tile(csi->dev);
+		}
+		else
+		{
+			int x, y;
+
+			/* When calculating the number of tiles required, we adjust by
+			 * a small amount to allow for rounding errors. By choosing
+			 * this amount to be smaller than 1/256, we guarantee we won't
+			 * cause problems that will be visible even under our most
+			 * extreme antialiasing. */
+			x0 = floorf(fx0 + 0.001);
+			y0 = floorf(fy0 + 0.001);
+			x1 = ceilf(fx1 - 0.001);
+			y1 = ceilf(fy1 - 0.001);
+
+			for (y = y0; y < y1; y++)
 			{
-				gstate->ctm = ptm;
-				fz_pre_translate(&gstate->ctm, x * pat->xstep, y * pat->ystep);
-				csi->top_ctm = gstate->ctm;
-				pdf_gsave(csi);
-				fz_try(ctx)
+				for (x = x0; x < x1; x++)
 				{
-					pdf_run_contents_object(csi, pat->resources, pat->contents);
-				}
-				fz_always(ctx)
-				{
-					pdf_grestore(csi);
-					while (oldtop < csi->gtop)
+					gstate->ctm = ptm;
+					fz_pre_translate(&gstate->ctm, x * pat->xstep, y * pat->ystep);
+					pdf_gsave(csi);
+					fz_try(ctx)
+					{
+						pdf_run_contents_object(csi, pat->resources, pat->contents);
+					}
+					fz_always(ctx)
+					{
 						pdf_grestore(csi);
-				}
-				fz_catch(ctx)
-				{
-					csi->top_ctm = oldtopctm;
-					fz_throw(ctx, "cannot render pattern tile");
+						while (oldtop < csi->gtop)
+							pdf_grestore(csi);
+					}
+					fz_catch(ctx)
+					{
+						fz_throw(ctx, "cannot render pattern tile");
+					}
 				}
 			}
 		}
 	}
-	csi->top_ctm = oldtopctm;
+	fz_always(ctx)
+	{
+		csi->gstate[csi->gparent].ctm = gparent_save_ctm;
+		csi->gparent = gparent_save;
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
 
 	pdf_grestore(csi);
 }
@@ -1573,11 +1622,12 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 {
 	fz_context *ctx = csi->dev->ctx;
 	pdf_gstate *gstate = NULL;
-	fz_matrix oldtopctm;
 	int oldtop = 0;
 	int popmask;
 	fz_matrix local_transform = *transform;
 	softmask_save softmask = { NULL };
+	int gparent_save;
+	fz_matrix gparent_save_ctm;
 
 	/* Avoid infinite recursion */
 	if (xobj == NULL || pdf_obj_mark(xobj->me))
@@ -1585,6 +1635,9 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 
 	fz_var(gstate);
 	fz_var(oldtop);
+
+	gparent_save = csi->gparent;
+	csi->gparent = csi->gtop;
 
 	fz_try(ctx)
 	{
@@ -1597,6 +1650,10 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 		/* apply xobject's transform matrix */
 		fz_concat(&local_transform, &xobj->matrix, &local_transform);
 		fz_concat(&gstate->ctm, &local_transform, &gstate->ctm);
+
+		/* The gparent is updated with the modified ctm */
+		gparent_save_ctm = csi->gstate[csi->gparent].ctm;
+		csi->gstate[csi->gparent].ctm = gstate->ctm;
 
 		/* apply soft mask, create transparency group and reset state */
 		if (xobj->transparency)
@@ -1625,9 +1682,6 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 
 		/* run contents */
 
-		oldtopctm = csi->top_ctm;
-		csi->top_ctm = gstate->ctm;
-
 		if (xobj->resources)
 			resources = xobj->resources;
 
@@ -1635,10 +1689,11 @@ pdf_run_xobject(pdf_csi *csi, pdf_obj *resources, pdf_xobject *xobj, const fz_ma
 	}
 	fz_always(ctx)
 	{
+		csi->gstate[csi->gparent].ctm = gparent_save_ctm;
+		csi->gparent = gparent_save;
+
 		if (gstate)
 		{
-			csi->top_ctm = oldtopctm;
-
 			while (oldtop < csi->gtop)
 				pdf_grestore(csi);
 
@@ -1780,7 +1835,7 @@ pdf_run_extgstate(pdf_csi *csi, pdf_obj *rdb, pdf_obj *extgstate)
 
 				colorspace = xobj->colorspace;
 				if (!colorspace)
-					colorspace = fz_device_gray;
+					colorspace = fz_device_gray(ctx);
 
 				/* The softmask_ctm no longer has the softmask matrix rolled into it, as this
 				 * causes the softmask matrix to be applied twice. */
@@ -1947,11 +2002,11 @@ static void pdf_run_cs_imp(pdf_csi *csi, pdf_obj *rdb, int what)
 	else
 	{
 		if (!strcmp(csi->name, "DeviceGray"))
-			colorspace = fz_device_gray; /* No fz_keep_colorspace as static */
+			colorspace = fz_device_gray(ctx); /* No fz_keep_colorspace as static */
 		else if (!strcmp(csi->name, "DeviceRGB"))
-			colorspace = fz_device_rgb; /* No fz_keep_colorspace as static */
+			colorspace = fz_device_rgb(ctx); /* No fz_keep_colorspace as static */
 		else if (!strcmp(csi->name, "DeviceCMYK"))
-			colorspace = fz_device_cmyk; /* No fz_keep_colorspace as static */
+			colorspace = fz_device_cmyk(ctx); /* No fz_keep_colorspace as static */
 		else
 		{
 			dict = pdf_dict_gets(rdb, "ColorSpace");
@@ -2094,7 +2149,7 @@ static void pdf_run_F(pdf_csi *csi)
 static void pdf_run_G(pdf_csi *csi)
 {
 	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
-	pdf_set_colorspace(csi, PDF_STROKE, fz_device_gray);
+	pdf_set_colorspace(csi, PDF_STROKE, fz_device_gray(csi->dev->ctx));
 	pdf_set_color(csi, PDF_STROKE, csi->stack);
 }
 
@@ -2111,7 +2166,7 @@ static void pdf_run_J(pdf_csi *csi)
 static void pdf_run_K(pdf_csi *csi)
 {
 	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
-	pdf_set_colorspace(csi, PDF_STROKE, fz_device_cmyk);
+	pdf_set_colorspace(csi, PDF_STROKE, fz_device_cmyk(csi->dev->ctx));
 	pdf_set_color(csi, PDF_STROKE, csi->stack);
 }
 
@@ -2135,7 +2190,7 @@ static void pdf_run_Q(pdf_csi *csi)
 static void pdf_run_RG(pdf_csi *csi)
 {
 	csi->dev->flags &= ~FZ_DEVFLAG_STROKECOLOR_UNDEFINED;
-	pdf_set_colorspace(csi, PDF_STROKE, fz_device_rgb);
+	pdf_set_colorspace(csi, PDF_STROKE, fz_device_rgb(csi->dev->ctx));
 	pdf_set_color(csi, PDF_STROKE, csi->stack);
 }
 
@@ -2199,6 +2254,7 @@ static void pdf_run_SC_imp(pdf_csi *csi, pdf_obj *rdb, int what, pdf_material *m
 	case PDF_MAT_SHADE:
 		fz_throw(ctx, "cannot set color in shade objects");
 	}
+	mat->gstate_num = csi->gparent;
 }
 
 static void pdf_run_SC(pdf_csi *csi, pdf_obj *rdb)
@@ -2425,7 +2481,7 @@ static void pdf_run_fstar(pdf_csi *csi)
 static void pdf_run_g(pdf_csi *csi)
 {
 	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
-	pdf_set_colorspace(csi, PDF_FILL, fz_device_gray);
+	pdf_set_colorspace(csi, PDF_FILL, fz_device_gray(csi->dev->ctx));
 	pdf_set_color(csi, PDF_FILL, csi->stack);
 }
 
@@ -2466,7 +2522,7 @@ static void pdf_run_j(pdf_csi *csi)
 static void pdf_run_k(pdf_csi *csi)
 {
 	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
-	pdf_set_colorspace(csi, PDF_FILL, fz_device_cmyk);
+	pdf_set_colorspace(csi, PDF_FILL, fz_device_cmyk(csi->dev->ctx));
 	pdf_set_color(csi, PDF_FILL, csi->stack);
 }
 
@@ -2516,7 +2572,7 @@ static void pdf_run_re(pdf_csi *csi)
 static void pdf_run_rg(pdf_csi *csi)
 {
 	csi->dev->flags &= ~FZ_DEVFLAG_FILLCOLOR_UNDEFINED;
-	pdf_set_colorspace(csi, PDF_FILL, fz_device_rgb);
+	pdf_set_colorspace(csi, PDF_FILL, fz_device_rgb(csi->dev->ctx));
 	pdf_set_color(csi, PDF_FILL, csi->stack);
 }
 
@@ -3048,10 +3104,15 @@ static void pdf_run_page_contents_with_usage(pdf_document *xref, pdf_page *page,
 	csi = pdf_new_csi(xref, dev, &local_ctm, event, cookie, NULL, 0);
 	fz_try(ctx)
 	{
+		/* We need to save an extra level here to allow for level 0
+		 * to be the 'parent' gstate level. */
+		pdf_gsave(csi);
 		pdf_run_contents_object(csi, page->resources, page->contents);
 	}
 	fz_always(ctx)
 	{
+		while (csi->gtop > 0)
+			pdf_grestore(csi);
 		pdf_free_csi(csi);
 	}
 	fz_catch(ctx)
@@ -3094,10 +3155,15 @@ static void pdf_run_annot_with_usage(pdf_document *xref, pdf_page *page, pdf_ann
 	{
 		fz_try(ctx)
 		{
+			/* We need to save an extra level here to allow for level 0
+			 * to be the 'parent' gstate level. */
+			pdf_gsave(csi);
 			pdf_run_xobject(csi, page->resources, annot->ap, &annot->matrix);
 		}
 		fz_catch(ctx)
 		{
+			while (csi->gtop > 0)
+				pdf_grestore(csi);
 			pdf_free_csi(csi);
 			fz_throw(ctx, "cannot parse annotation appearance stream");
 		}

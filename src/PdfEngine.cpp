@@ -95,7 +95,7 @@ static RenderedBitmap *new_rendered_fz_pixmap(fz_context *ctx, fz_pixmap *pixmap
     }
     fz_pixmap *bgrPixmap = NULL;
     if (bmpData && pixmap->n == 4 &&
-        pixmap->colorspace == fz_find_device_colorspace(ctx, "DeviceRGB"))
+        pixmap->colorspace == fz_device_rgb(ctx))
     {
         unsigned char *dest = bmpData;
         unsigned char *source = pixmap->samples;
@@ -137,7 +137,7 @@ ProducingPaletteDone:
         /* BGRA is a GDI compatible format */
         fz_try(ctx) {
             fz_irect bbox;
-            fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceBGR");
+            fz_colorspace *colorspace = fz_device_bgr(ctx);
             bgrPixmap = fz_new_pixmap_with_bbox(ctx, colorspace, fz_pixmap_bbox(ctx, pixmap, &bbox));
             fz_convert_pixmap(ctx, bgrPixmap, pixmap);
         }
@@ -256,10 +256,10 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
         if (block->type != FZ_PAGE_BLOCK_TEXT)
             continue;
         for (fz_text_line *line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++) {
-            for (int span_num = 0; span_num < line->len; span_num++) {
-                textLen += line->spans[span_num]->len;
+            for (fz_text_span *span = line->first_span; span; span = span->next) {
+                textLen += span->len + 1;
             }
-            textLen += lineSepLen + line->len - 1;
+            textLen += lineSepLen - 1;
         }
     }
 
@@ -281,8 +281,7 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
         if (block->type != FZ_PAGE_BLOCK_TEXT)
             continue;
         for (fz_text_line *line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++) {
-            for (int span_num = 0; span_num < line->len; span_num++) {
-                fz_text_span *span = line->spans[span_num];
+            for (fz_text_span *span = line->first_span; span; span = span->next) {
                 for (fz_text_char *c = span->text; c < span->text + span->len; c++) {
                     *dest = c->c;
                     if (*dest <= 32) {
@@ -301,7 +300,7 @@ WCHAR *fz_text_page_to_str(fz_text_page *text, WCHAR *lineSep, RectI **coords_ou
                         *destRect++ = fz_rect_to_RectD(bbox).Round();
                     }
                 }
-                if (span->len > 0 && span_num < line->len - 1 && *dest != ' ') {
+                if (span->len > 0 && span->next && *dest != ' ') {
                     // TODO: use a Tab instead? (this might be a table)
                     *dest++ = ' ';
                     if (destRect) {
@@ -849,7 +848,7 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device *
         default:
             CrashIf(true);
         }
-        fz_colorspace *cs = fz_find_device_colorspace(dev->ctx, "DeviceRGB");
+        fz_colorspace *cs = fz_device_rgb(dev->ctx);
         float color[3] = { annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f };
         if (Annot_Highlight == annot.type) {
             // render path with transparency effect
@@ -2140,7 +2139,7 @@ RenderedBitmap *PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_pixmap *image = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceRGB");
+        fz_colorspace *colorspace = fz_device_rgb(ctx);
         image = fz_new_pixmap_with_bbox(ctx, colorspace, &bbox);
         fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background
     }
@@ -3902,7 +3901,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_pixmap *image = NULL;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        fz_colorspace *colorspace = fz_find_device_colorspace(ctx, "DeviceRGB");
+        fz_colorspace *colorspace = fz_device_rgb(ctx);
         image = fz_new_pixmap_with_bbox(ctx, colorspace, &bbox);
         fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background
     }

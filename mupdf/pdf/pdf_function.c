@@ -705,7 +705,7 @@ parse_code(pdf_function *func, fz_stream *stream, int *codeptr, pdf_lexbuf *buf)
 	{
 		tok = pdf_lex(stream, buf);
 
-		switch(tok)
+		switch (tok)
 		{
 		case PDF_TOK_EOF:
 			fz_throw(ctx, "truncated calculator function");
@@ -1358,7 +1358,7 @@ pdf_free_function_imp(fz_context *ctx, fz_storable *func_)
 	pdf_function *func = (pdf_function *)func_;
 	int i;
 
-	switch(func->type)
+	switch (func->type)
 	{
 	case SAMPLE:
 		fz_free(ctx, func->u.sa.samples);
@@ -1384,7 +1384,7 @@ pdf_eval_function(fz_context *ctx, fz_function *func_, float *in, float *out)
 {
 	pdf_function *func = (pdf_function *)func_;
 
-	switch(func->type)
+	switch (func->type)
 	{
 	case SAMPLE: eval_sample_func(ctx, func, in, out); break;
 	case EXPONENTIAL: eval_exponential_func(ctx, func, *in, out); break;
@@ -1677,7 +1677,7 @@ pdf_load_function(pdf_document *xref, pdf_obj *dict, int in, int out)
 
 	fz_try(ctx)
 	{
-		switch(func->type)
+		switch (func->type)
 		{
 		case SAMPLE:
 			load_sample_func(func, xref, dict, pdf_to_num(dict), pdf_to_gen(dict));

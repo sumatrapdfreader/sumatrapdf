@@ -521,7 +521,7 @@ pdf_lex(fz_stream *f, pdf_lexbuf *buf)
 
 void pdf_print_token(fz_context *ctx, fz_buffer *fzbuf, int tok, pdf_lexbuf *buf)
 {
-	switch(tok)
+	switch (tok)
 	{
 	case PDF_TOK_NAME:
 		fz_buffer_printf(ctx, fzbuf, "/%s", buf->scratch);

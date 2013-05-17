@@ -573,7 +573,7 @@ xps_parse_glyphs(xps_document *doc, const fz_matrix *ctm,
 			fz_atof(origin_x_att), fz_atof(origin_y_att),
 			is_sideways, bidi_level, indices_att, unicode_att);
 
-	fz_bound_text(doc->ctx, text, &local_ctm, &area);
+	fz_bound_text(doc->ctx, text, NULL, &local_ctm, &area);
 
 	/* SumatraPDF: extended link support */
 	xps_extract_anchor_info(doc, &area, navigate_uri_att, fz_xml_att(root, "Name"), 0);

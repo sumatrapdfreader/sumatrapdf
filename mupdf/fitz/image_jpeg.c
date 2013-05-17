@@ -183,11 +183,11 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 		jpeg_read_header(&cinfo, 1);
 
 		if (cinfo.num_components == 1)
-			*cspacep = fz_device_gray;
+			*cspacep = fz_device_gray(ctx);
 		else if (cinfo.num_components == 3)
-			*cspacep = fz_device_rgb;
+			*cspacep = fz_device_rgb(ctx);
 		else if (cinfo.num_components == 4)
-			*cspacep = fz_device_cmyk;
+			*cspacep = fz_device_cmyk(ctx);
 		else
 			fz_throw(ctx, "bad number of components in jpeg: %d", cinfo.num_components);
 

@@ -202,7 +202,7 @@ send_image(pdf_device *pdev, fz_image *image, int mask, int smask)
 			pdf_dict_puts_drop(imobj, "ColorSpace", pdf_new_name(ctx, "DeviceRGB"));
 		else if (colorspace->n == 4)
 			pdf_dict_puts_drop(imobj, "ColorSpace", pdf_new_name(ctx, "DeviceCMYK"));
-		switch(cp ? cp->type : FZ_IMAGE_UNKNOWN)
+		switch (cp ? cp->type : FZ_IMAGE_UNKNOWN)
 		{
 		case FZ_IMAGE_UNKNOWN:
 		default:
@@ -420,11 +420,11 @@ pdf_dev_color(pdf_device *pdev, fz_colorspace *colorspace, float *color, int str
 	float rgb[FZ_MAX_COLORS];
 	gstate *gs = CURRENT_GSTATE(pdev);
 
-	if (colorspace == fz_device_gray)
+	if (colorspace == fz_device_gray(ctx))
 		cspace = 1;
-	else if (colorspace == fz_device_rgb)
+	else if (colorspace == fz_device_rgb(ctx))
 		cspace = 3;
-	else if (colorspace == fz_device_cmyk)
+	else if (colorspace == fz_device_cmyk(ctx))
 		cspace = 4;
 
 	if (cspace == 0)
@@ -432,7 +432,7 @@ pdf_dev_color(pdf_device *pdev, fz_colorspace *colorspace, float *color, int str
 		/* If it's an unknown colorspace, fallback to rgb */
 		colorspace->to_rgb(ctx, colorspace, color, rgb);
 		color = rgb;
-		colorspace = fz_device_rgb;
+		colorspace = fz_device_rgb(ctx);
 	}
 
 	if (gs->colorspace[stroke] != colorspace)
@@ -1208,8 +1208,8 @@ fz_device *pdf_new_pdf_device(pdf_document *doc, pdf_obj *contents, pdf_obj *res
 		pdev->gstates = fz_malloc_struct(ctx, gstate);
 		pdev->gstates[0].buf = fz_new_buffer(ctx, 256);
 		pdev->gstates[0].ctm = *ctm;
-		pdev->gstates[0].colorspace[0] = fz_device_gray;
-		pdev->gstates[0].colorspace[1] = fz_device_gray;
+		pdev->gstates[0].colorspace[0] = fz_device_gray(ctx);
+		pdev->gstates[0].colorspace[1] = fz_device_gray(ctx);
 		pdev->gstates[0].color[0][0] = 1;
 		pdev->gstates[0].color[1][0] = 1;
 		pdev->gstates[0].alpha[0] = 1.0;

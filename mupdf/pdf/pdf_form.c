@@ -376,7 +376,7 @@ static fz_rect *measure_text(pdf_document *doc, font_info *font_rec, const fz_ma
 
 static void fzbuf_print_color(fz_context *ctx, fz_buffer *fzbuf, pdf_obj *arr, int stroke, float adj)
 {
-	switch(pdf_array_len(arr))
+	switch (pdf_array_len(arr))
 	{
 	case 1:
 		fz_buffer_printf(ctx, fzbuf, stroke?"%f G\n":"%f g\n",
@@ -837,7 +837,7 @@ static fz_buffer *create_text_appearance(pdf_document *doc, const fz_rect *bbox,
 			{
 				fz_translate(&tm, rect.x0, rect.y1 - (height+(ascent-descent)*fontsize)/2.0);
 
-				switch(info->q)
+				switch (info->q)
 				{
 				case Q_Right: tm.e += width; break;
 				case Q_Cent: tm.e += width/2; break;
@@ -1766,7 +1766,7 @@ void pdf_update_appearance(pdf_document *doc, pdf_obj *obj)
 		switch (type)
 		{
 		case FZ_ANNOT_WIDGET:
-			switch(pdf_field_type(doc, obj))
+			switch (pdf_field_type(doc, obj))
 			{
 			case FZ_WIDGET_TYPE_TEXT:
 				{
@@ -2120,7 +2120,7 @@ int pdf_pass_event(pdf_document *doc, pdf_page *page, fz_ui_event *ui_event)
 
 				if (annot)
 				{
-					switch(annot->widget_type)
+					switch (annot->widget_type)
 					{
 					case FZ_WIDGET_TYPE_RADIOBUTTON:
 					case FZ_WIDGET_TYPE_CHECKBOX:
@@ -2750,7 +2750,7 @@ int pdf_choice_widget_is_multiselect(pdf_document *doc, fz_widget *tw)
 
 	if (!annot) return 0;
 
-	switch(pdf_field_type(doc, annot->obj))
+	switch (pdf_field_type(doc, annot->obj))
 	{
 	case FZ_WIDGET_TYPE_LISTBOX:
 	case FZ_WIDGET_TYPE_COMBOBOX:

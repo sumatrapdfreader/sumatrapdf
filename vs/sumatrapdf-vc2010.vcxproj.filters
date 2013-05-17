@@ -528,6 +528,9 @@
     <ClCompile Include="..\mupdf\fitz\dev_null.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>
+    <ClCompile Include="..\mupdf\fitz\dev_svg.c">
+      <Filter>ext\mupdf\fitz</Filter>
+    </ClCompile>
     <ClCompile Include="..\mupdf\fitz\dev_trace.c">
       <Filter>ext\mupdf\fitz</Filter>
     </ClCompile>

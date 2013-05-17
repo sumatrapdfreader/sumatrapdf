@@ -3,7 +3,7 @@
 void
 fz_free_link_dest(fz_context *ctx, fz_link_dest *dest)
 {
-	switch(dest->kind)
+	switch (dest->kind)
 	{
 	case FZ_LINK_NONE:
 		break;

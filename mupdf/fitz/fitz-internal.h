@@ -807,6 +807,26 @@ static inline int fz_is_eof_bits(fz_stream *stm)
 	return fz_is_eof(stm) && (stm->avail == 0 || stm->bits == EOF);
 }
 
+static inline int fz_write_int32be(fz_output *out, int x)
+{
+	char data[4];
+
+	data[0] = x>>24;
+	data[1] = x>>16;
+	data[2] = x>>8;
+	data[3] = x;
+
+	return fz_write(out, data, 4);
+}
+
+static inline void
+fz_write_byte(fz_output *out, int x)
+{
+	char data = x;
+
+	fz_write(out, &data, 1);
+}
+
 /*
  * Data filters.
  */
@@ -1060,8 +1080,11 @@ fz_colorspace *fz_keep_colorspace(fz_context *ctx, fz_colorspace *colorspace);
 void fz_drop_colorspace(fz_context *ctx, fz_colorspace *colorspace);
 void fz_free_colorspace_imp(fz_context *ctx, fz_storable *colorspace);
 
-
 void fz_convert_color(fz_context *ctx, fz_colorspace *dsts, float *dstv, fz_colorspace *srcs, float *srcv);
+
+void fz_new_colorspace_context(fz_context *ctx);
+fz_colorspace_context *fz_keep_colorspace_context(fz_context *ctx);
+void fz_drop_colorspace_context(fz_context *ctx);
 
 typedef struct fz_color_converter_s fz_color_converter;
 
@@ -1222,8 +1245,8 @@ void fz_transform_path(fz_context *ctx, fz_path *path, const fz_matrix *transfor
 
 fz_path *fz_clone_path(fz_context *ctx, fz_path *old);
 
-fz_rect *fz_bound_path(fz_context *ctx, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r);
-fz_rect *fz_adjust_rect_for_stroke(fz_rect *r, fz_stroke_state *stroke, const fz_matrix *ctm);
+fz_rect *fz_bound_path(fz_context *ctx, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r);
+fz_rect *fz_adjust_rect_for_stroke(fz_rect *r, const fz_stroke_state *stroke, const fz_matrix *ctm);
 
 fz_stroke_state *fz_new_stroke_state(fz_context *ctx);
 fz_stroke_state *fz_new_stroke_state_with_len(fz_context *ctx, int len);
@@ -1323,7 +1346,7 @@ struct fz_text_s
 fz_text *fz_new_text(fz_context *ctx, fz_font *face, const fz_matrix *trm, int wmode);
 void fz_add_text(fz_context *ctx, fz_text *text, int gid, int ucs, float x, float y);
 void fz_free_text(fz_context *ctx, fz_text *text);
-fz_rect *fz_bound_text(fz_context *ctx, fz_text *text, const fz_matrix *ctm, fz_rect *r);
+fz_rect *fz_bound_text(fz_context *ctx, fz_text *text, const fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r);
 fz_text *fz_clone_text(fz_context *ctx, fz_text *old);
 void fz_print_text(fz_context *ctx, FILE *out, fz_text*);
 

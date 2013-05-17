@@ -47,7 +47,7 @@ fz_bbox_fill_text(fz_device *dev, fz_text *text, const fz_matrix *ctm,
 	fz_colorspace *colorspace, float *color, float alpha)
 {
 	fz_rect r;
-	fz_bbox_add_rect(dev, fz_bound_text(dev->ctx, text, ctm, &r), 0);
+	fz_bbox_add_rect(dev, fz_bound_text(dev->ctx, text, NULL, ctm, &r), 0);
 }
 
 static void
@@ -55,7 +55,7 @@ fz_bbox_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke,
 	const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
 	fz_rect r;
-	fz_bbox_add_rect(dev, fz_bound_text(dev->ctx, text, ctm, &r), 0);
+	fz_bbox_add_rect(dev, fz_bound_text(dev->ctx, text, stroke, ctm, &r), 0);
 }
 
 static void
@@ -101,14 +101,14 @@ fz_bbox_clip_text(fz_device *dev, fz_text *text, const fz_matrix *ctm, int accum
 	if (accumulate)
 		fz_bbox_add_rect(dev, &r, accumulate != 2);
 	else
-		fz_bbox_add_rect(dev, fz_bound_text(dev->ctx, text, ctm, &r), 1);
+		fz_bbox_add_rect(dev, fz_bound_text(dev->ctx, text, NULL, ctm, &r), 1);
 }
 
 static void
 fz_bbox_clip_stroke_text(fz_device *dev, fz_text *text, fz_stroke_state *stroke, const fz_matrix *ctm)
 {
 	fz_rect r;
-	fz_bbox_add_rect(dev, fz_bound_text(dev->ctx, text, ctm, &r), 1);
+	fz_bbox_add_rect(dev, fz_bound_text(dev->ctx, text, stroke, ctm, &r), 1);
 }
 
 static void

@@ -485,7 +485,7 @@ png_read_image(fz_context *ctx, struct info *info, unsigned char *p, unsigned in
 static fz_pixmap *
 png_expand_palette(fz_context *ctx, struct info *info, fz_pixmap *src)
 {
-	fz_pixmap *dst = fz_new_pixmap(ctx, fz_device_rgb, src->w, src->h);
+	fz_pixmap *dst = fz_new_pixmap(ctx, fz_device_rgb(ctx), src->w, src->h);
 	unsigned char *sp = src->samples;
 	unsigned char *dp = dst->samples;
 	unsigned int x, y;
@@ -548,9 +548,9 @@ fz_load_png(fz_context *ctx, unsigned char *p, int total)
 	png_read_image(ctx, &png, p, total);
 
 	if (png.n == 3 || png.n == 4)
-		colorspace = fz_device_rgb;
+		colorspace = fz_device_rgb(ctx);
 	else
-		colorspace = fz_device_gray;
+		colorspace = fz_device_gray(ctx);
 
 	stride = (png.width * png.n * png.depth + 7) / 8;
 
@@ -590,9 +590,9 @@ fz_load_png_info(fz_context *ctx, unsigned char *p, int total, int *wp, int *hp,
 	png_read_image(ctx, &png, p, total);
 
 	if (png.n == 3 || png.n == 4)
-		*cspacep = fz_device_rgb;
+		*cspacep = fz_device_rgb(ctx);
 	else
-		*cspacep = fz_device_gray;
+		*cspacep = fz_device_gray(ctx);
 
 	*wp = png.width;
 	*hp = png.height;

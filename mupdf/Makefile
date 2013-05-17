@@ -12,7 +12,7 @@ default: all
 # Do not specify CFLAGS or LIBS on the make invocation line - specify
 # XCFLAGS or XLIBS instead. Make ignores any lines in the makefile that
 # set a variable that was set on the command line.
-CFLAGS += $(XCFLAGS) -Ifitz -Ipdf -Ixps -Icbz -Iimage -Iscripts
+CFLAGS += $(XCFLAGS) -Ifitz -Ipdf -Ixps -Icbz -Iimage -Iucdn -Iscripts
 LIBS += $(XLIBS) -lfreetype -ljbig2dec -ljpeg -lopenjpeg -lz -lm
 LIBS_V8 = $(LIBS) $(V8LIBS)
 
@@ -75,6 +75,8 @@ $(OUT)/%.o : image/%.c $(MUCBZ_HDR) | $(OUT)
 	$(CC_CMD)
 $(OUT)/%.o : apps/%.c fitz/fitz.h pdf/mupdf.h xps/muxps.h cbz/mucbz.h image/muimage.h | $(OUT)
 	$(CC_CMD)
+$(OUT)/%.o : ucdn/%.c | $(OUT)
+	$(CC_CMD)
 $(OUT)/%.o : scripts/%.c | $(OUT)
 	$(CC_CMD)
 
@@ -85,7 +87,7 @@ $(OUT)/%.o : scripts/%.c | $(OUT)
 FITZ_LIB := $(OUT)/libfitz.a
 FITZ_V8_LIB := $(OUT)/libfitzv8.a
 
-FITZ_SRC := $(notdir $(wildcard fitz/*.c draw/*.c))
+FITZ_SRC := $(notdir $(wildcard fitz/*.c draw/*.c ucdn/*.c))
 FITZ_SRC := $(filter-out draw_simple_scale.c, $(FITZ_SRC))
 MUPDF_ALL_SRC := $(notdir $(wildcard pdf/*.c))
 MUPDF_SRC := $(filter-out pdf_js.c pdf_jsimp_cpp.c, $(MUPDF_ALL_SRC))
@@ -174,15 +176,16 @@ MUTOOL := $(addprefix $(OUT)/, mutool)
 $(MUTOOL) : $(addprefix $(OUT)/, pdfclean.o pdfextract.o pdfinfo.o pdfposter.o pdfshow.o) $(FITZ_LIB) $(THIRD_LIBS)
 
 ifeq "$(NOX11)" ""
+
 MUVIEW := $(OUT)/mupdf
 $(MUVIEW) : $(FITZ_LIB) $(THIRD_LIBS)
 $(MUVIEW) : $(addprefix $(OUT)/, x11_main.o x11_image.o pdfapp.o)
-	$(LINK_CMD) $(X11_LIBS)
+	$(LINK_CMD) $(SYS_X11_LIBS)
 
 MUVIEW_V8 := $(OUT)/mupdf-v8
 $(MUVIEW_V8) : $(FITZ_V8_LIB) $(THIRD_LIBS)
 $(MUVIEW_V8) : $(addprefix $(OUT)/, x11_main.o x11_image.o pdfapp.o)
-	$(LINK_V8_CMD) $(X11_LIBS)
+	$(LINK_V8_CMD) $(SYS_X11_LIBS)
 endif
 
 MUJSTEST_V8 := $(OUT)/mujstest-v8

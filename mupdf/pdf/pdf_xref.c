@@ -357,7 +357,7 @@ pdf_read_new_xref(pdf_document *xref, pdf_lexbuf *buf)
 			fz_throw(ctx, "xref stream missing Size entry (%d %d R)", num, gen);
 
 		size = pdf_to_int(obj);
-		if (size > xref->len)
+		if (size >= xref->len)
 			pdf_resize_xref(xref, size);
 
 		/* SumatraPDF: xref stream objects don't need an xref entry themselves */
@@ -565,7 +565,7 @@ pdf_load_xref(pdf_document *xref, pdf_lexbuf *buf)
 	if (!size)
 		fz_throw(ctx, "trailer missing Size entry");
 
-	if (size > xref->len)
+	if (size >= xref->len)
 		pdf_resize_xref(xref, size);
 
 	pdf_read_xref_sections(xref, xref->startxref, buf);
@@ -1278,7 +1278,7 @@ pdf_update_stream(pdf_document *xref, int num, fz_buffer *newbuf)
 int
 pdf_meta(pdf_document *doc, int key, void *ptr, int size)
 {
-	switch(key)
+	switch (key)
 	{
 	/*
 		ptr: Pointer to block (uninitialised on entry)

@@ -213,7 +213,7 @@ xps_parse_color(xps_document *doc, char *base_uri, char *string,
 	char buf[1024];
 	char *profile;
 
-	*csp = fz_device_rgb;
+	*csp = fz_device_rgb(doc->ctx);
 
 	samples[0] = 1;
 	samples[1] = 0;
@@ -292,10 +292,10 @@ xps_parse_color(xps_document *doc, char *base_uri, char *string,
 		/* TODO: load ICC profile */
 		switch (n)
 		{
-		case 2: *csp = fz_device_gray; break;
-		case 4: *csp = fz_device_rgb; break;
-		case 5: *csp = fz_device_cmyk; break;
-		default: *csp = fz_device_gray; break;
+		case 2: *csp = fz_device_gray(doc->ctx); break;
+		case 4: *csp = fz_device_rgb(doc->ctx); break;
+		case 5: *csp = fz_device_cmyk(doc->ctx); break;
+		default: *csp = fz_device_gray(doc->ctx); break;
 		}
 	}
 }

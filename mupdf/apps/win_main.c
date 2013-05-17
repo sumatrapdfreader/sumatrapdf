@@ -1,7 +1,3 @@
-#include "fitz.h"
-#include "mupdf.h"
-#include "muxps.h"
-#include "mucbz.h"
 #include "pdfapp.h"
 
 #ifndef UNICODE

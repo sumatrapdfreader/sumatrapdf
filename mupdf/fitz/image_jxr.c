@@ -45,7 +45,7 @@ fz_load_jxr_or_info(fz_context *ctx, unsigned char *data, int size, int *wp, int
 
 	if (info_only)
 	{
-		*cspacep = fz_device_bgr;
+		*cspacep = fz_device_bgr(ctx);
 		*wp = width;
 		*hp = height;
 		*xresp = (int)(xres + 0.5);
@@ -55,7 +55,7 @@ fz_load_jxr_or_info(fz_context *ctx, unsigned char *data, int size, int *wp, int
 	{
 		fz_try(ctx)
 		{
-			pix = fz_new_pixmap(ctx, fz_device_bgr, width, height);
+			pix = fz_new_pixmap(ctx, fz_device_bgr(ctx), width, height);
 		}
 		fz_catch(ctx)
 		{

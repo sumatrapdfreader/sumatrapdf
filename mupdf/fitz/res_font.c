@@ -991,7 +991,7 @@ fz_render_t3_glyph(fz_context *ctx, fz_font *font, int gid, const fz_matrix *trm
 	fz_irect_from_rect(&bbox, &bounds);
 	fz_intersect_irect(&bbox, &scissor);
 
-	glyph = fz_new_pixmap_with_bbox(ctx, model ? model : fz_device_gray, &bbox);
+	glyph = fz_new_pixmap_with_bbox(ctx, model ? model : fz_device_gray(ctx), &bbox);
 	fz_clear_pixmap(ctx, glyph);
 
 	fz_concat(&ctm, &font->t3matrix, trm);

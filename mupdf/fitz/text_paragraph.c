@@ -250,7 +250,7 @@ is_roman(int c)
 }
 
 static int
-is_list_entry(fz_text_span *span, int *char_num_ptr, int span_num)
+is_list_entry(fz_text_line *line, fz_text_span *span, int *char_num_ptr)
 {
 	int char_num;
 	fz_text_char *chr;
@@ -264,7 +264,7 @@ is_list_entry(fz_text_span *span, int *char_num_ptr, int span_num)
 	}
 	*char_num_ptr = char_num;
 
-	if (span_num != 0 || char_num >= span->len)
+	if (span != line->first_span || char_num >= span->len)
 		return 0;
 
 	/* Now we check for various special cases, which we consider to mean
@@ -988,10 +988,11 @@ dehyphenate(fz_text_span *s1, fz_text_span *s2)
 	s2->spacing = 0;
 }
 
-static void
-fz_text_analysis_paragraph(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
+void
+fz_analyze_text(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
 {
 	fz_text_line *line;
+	fz_text_span *span;
 	line_heights *lh;
 	region_masks *rms;
 	int block_num;
@@ -1016,18 +1017,16 @@ fz_text_analysis_paragraph(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *
 			/* For every style in the line, add lineheight to the
 			 * record for that style. FIXME: This is a nasty n^2
 			 * algorithm at the moment. */
-			int span_num;
 			fz_text_style *style = NULL;
 
 			if (line->distance == 0)
 				continue;
 
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				int char_num;
 
-				if (is_list_entry(span, &char_num, span_num))
+				if (is_list_entry(line, span, &char_num))
 					goto list_entry;
 
 				for (; char_num < span->len; char_num++)
@@ -1042,10 +1041,9 @@ fz_text_analysis_paragraph(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *
 					{
 						/* Have we had this style before? */
 						int match = 0;
-						int span_num2;
-						for (span_num2 = 0; span_num2 < span_num; span_num2++)
+						fz_text_span *span2;
+						for (span2 = line->first_span; span2; span2 = span2->next)
 						{
-							fz_text_span *span2 = line->spans[span_num2];
 							int char_num2;
 							for (char_num2 = 0; char_num2 < span2->len; char_num2++)
 							{
@@ -1059,7 +1057,7 @@ fz_text_analysis_paragraph(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *
 						}
 						if (char_num > 0 && match == 0)
 						{
-							fz_text_span *span2 = line->spans[span_num];
+							fz_text_span *span2 = span;
 							int char_num2;
 							for (char_num2 = 0; char_num2 < char_num; char_num2++)
 							{
@@ -1101,7 +1099,6 @@ list_entry:
 			/* For every style in the line, check to see if lineheight
 			 * is correct for that style. FIXME: We check each style
 			 * more than once, currently. */
-			int span_num;
 			int ok = 0; /* -1 = early exit, split now. 0 = split. 1 = don't split. */
 			fz_text_style *style = NULL;
 			line = &block->lines[line_num];
@@ -1112,12 +1109,11 @@ list_entry:
 #ifdef DEBUG_LINE_HEIGHTS
 			printf("line height=%g nspans=%d\n", line->distance, line->len);
 #endif
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				int char_num;
 
-				if (is_list_entry(span, &char_num, span_num))
+				if (is_list_entry(line, span, &char_num))
 					goto force_paragraph;
 
 				/* Now we do the rest of the line */
@@ -1164,6 +1160,7 @@ force_paragraph:
 	 * Otherwise split into tables.
 	 */
 	rms = new_region_masks(ctx);
+
 	/* Step 1: Form the region masks and store them into a list with the
 	 * normalised baseline vectors. */
 	for (block_num = 0; block_num < page->len; block_num++)
@@ -1178,29 +1175,26 @@ force_paragraph:
 		{
 			fz_point blv;
 			region_mask *rm;
-			int span_num;
 
 #ifdef DEBUG_MASKS
 			printf("Line: ");
 			dump_line(line);
 #endif
-			blv = line->spans[0]->max;
-			blv.x -= line->spans[0]->min.x;
-			blv.y -= line->spans[0]->min.y;
+			blv = line->first_span->max;
+			blv.x -= line->first_span->min.x;
+			blv.y -= line->first_span->min.y;
 			fz_normalize_vector(&blv);
 
 			rm = new_region_mask(ctx, &blv);
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				fz_point *region_min = &span->min;
 				fz_point *region_max = &span->max;
 
 				/* Treat adjacent spans as one big region */
-				while (span_num+1 < line->len && line->spans[span_num+1]->spacing < 1.5)
+				while (span->next && span->next->spacing < 1.5)
 				{
-					span_num++;
-					span = line->spans[span_num];
+					span = span->next;
 					region_max = &span->max;
 				}
 
@@ -1266,29 +1260,26 @@ force_paragraph:
 		{
 			fz_point blv;
 			region_mask *rm;
-			int span_num;
 			region_mask *match;
 
-			blv = line->spans[0]->max;
-			blv.x -= line->spans[0]->min.x;
-			blv.y -= line->spans[0]->min.y;
+			blv = line->first_span->max;
+			blv.x -= line->first_span->min.x;
+			blv.y -= line->first_span->min.y;
 			fz_normalize_vector(&blv);
 
 #ifdef DEBUG_MASKS
 			dump_line(line);
 #endif
 			rm = new_region_mask(ctx, &blv);
-			for (span_num = 0; span_num < line->len; span_num++)
+			for (span = line->first_span; span; span = span->next)
 			{
-				fz_text_span *span = line->spans[span_num];
 				fz_point *region_min = &span->min;
 				fz_point *region_max = &span->max;
 
 				/* Treat adjacent spans as one big region */
-				while (span_num+1 < line->len && line->spans[span_num+1]->spacing < 1.5)
+				while (span->next && span->next->spacing < 1.5)
 				{
-					span_num++;
-					span = line->spans[span_num];
+					span = span->next;
 					region_max = &span->max;
 				}
 
@@ -1305,24 +1296,24 @@ force_paragraph:
 			dump_region_mask(match);
 #endif
 			free_region_mask(rm);
-			for (span_num = 0; span_num < line->len; )
+			span = line->first_span;
+			while (span)
 			{
-				fz_text_span *span = line->spans[span_num];
 				fz_point *region_min = &span->min;
 				fz_point *region_max = &span->max;
-				int sn;
+				fz_text_span *sn;
 				int col, align;
 				float colw, left;
 
 				/* Treat adjacent spans as one big region */
 #ifdef DEBUG_ALIGN
-				dump_span(line->spans[span_num]);
+				dump_span(span);
 #endif
-				for (sn = span_num+1; sn < line->len && line->spans[sn]->spacing < 1.5; sn++)
+				for (sn = span->next; sn && sn->spacing < 1.5; sn = sn->next)
 				{
-					region_max = &line->spans[sn]->max;
+					region_max = &sn->max;
 #ifdef DEBUG_ALIGN
-					dump_span(line->spans[sn]);
+					dump_span(sn);
 #endif
 				}
 				col = region_mask_column(match, region_min, region_max, &align, &colw, &left);
@@ -1331,13 +1322,16 @@ force_paragraph:
 #endif
 				do
 				{
-					line->spans[span_num]->column = col;
-					line->spans[span_num]->align = align;
-					line->spans[span_num]->indent = left;
-					line->spans[span_num]->column_width = colw;
-					span_num++;
+					span->column = col;
+					span->align = align;
+					span->indent = left;
+					span->column_width = colw;
+					span = span->next;
 				}
-				while (span_num < sn);
+				while (span != sn);
+
+				if (span)
+					span = span->next;
 			}
 			line->region = match;
 		}
@@ -1351,7 +1345,6 @@ force_paragraph:
 	{
 		int line_num;
 		int prev_line_num;
-		int last_from = -1;
 
 		fz_text_block *block;
 
@@ -1364,125 +1357,126 @@ force_paragraph:
 		{
 			fz_text_line *prev_line;
 			line = &block->lines[line_num];
-			if (line->len == 0)
+			if (!line->first_span)
 				continue;
 			prev_line = &block->lines[prev_line_num];
 			if (prev_line->region == line->region)
 			{
-				int in1, in2, newlen, i, col;
-				float indent;
-
 				/* We only merge lines if the second line
 				 * only uses 1 of the columns. */
-				col = line->spans[0]->column;
+				int col = line->first_span->column;
 				/* Copy the left value for the first span
 				 * in the first column in this line forward
 				 * for all the rest of the spans in the same
 				 * column. */
-				indent = line->spans[0]->indent;
-				for (i = 1; i < line->len; i++)
+				float indent = line->first_span->indent;
+				for (span = line->first_span->next; span; span = span->next)
 				{
-					if (col != line->spans[i]->column)
+					if (col != span->column)
 						break;
-					line->spans[i]->indent = indent;
+					span->indent = indent;
 				}
-				if (i != line->len)
+				if (span)
 				{
 					prev_line_num = line_num;
 					continue;
 				}
 
 				/* Merge line into prev_line */
-				newlen = prev_line->len + line->len;
-				if (newlen > prev_line->cap)
 				{
-					int newcap = prev_line->cap ? prev_line->cap : 2;
-					do
+					fz_text_span **prev_line_span = &prev_line->first_span;
+					int try_dehyphen = -1;
+					fz_text_span *prev_span = NULL;
+					span = line->first_span;
+					while (span)
 					{
-						newcap *= 2;
-					}
-					while (newcap < newlen);
-
-					prev_line->spans = fz_resize_array(ctx, prev_line->spans, newcap, sizeof(*prev_line->spans));
-					prev_line->cap = newcap;
-				}
-
-				in1 = prev_line->len-1;
-				in2 = line->len-1;
-				prev_line->len = newlen;
-				for (; in1 >= 0 || in2 >= 0; )
-				{
-					newlen--;
-					if (in1 < 0 || (in2 >= 0 && line->spans[in2]->column >= prev_line->spans[in1]->column))
-					{
-						prev_line->spans[newlen] = line->spans[in2];
-						in2--;
-						last_from = 1;
-					}
-					else
-					{
-						prev_line->spans[newlen] = prev_line->spans[in1];
-						in1--;
-						if (last_from == 1)
+						/* Skip forwards through the original
+						 * line, until we find a place where
+						 * span should go. */
+						if ((*prev_line_span)->column <= span->column)
 						{
-							prev_line->spans[newlen+1]->spacing = 1;
-							dehyphenate(prev_line->spans[newlen], prev_line->spans[newlen+1]);
-							last_from = 0;
+							/* The current span we are considering
+							 * in prev_line is earlier than span.
+							 * Just skip forwards in prev_line. */
+							prev_span = (*prev_line_span);
+							prev_line_span = &prev_span->next;
+							try_dehyphen = span->column;
+						}
+						else
+						{
+							/* We want to copy span into prev_line. */
+							fz_text_span *next = (*prev_line_span)->next;
+
+							if (prev_line_span == &prev_line->first_span)
+								prev_line->first_span = span;
+							if (next == NULL)
+								prev_line->last_span = span;
+							if (try_dehyphen == span->column)
+								dehyphenate(prev_span, span);
+							try_dehyphen = -1;
+							prev_span = *prev_line_span = span;
+							span = span->next;
+							(*prev_line_span)->next = next;
+							prev_line_span = &span->next;
 						}
 					}
+					while (span || *prev_line_span);
+					line->first_span = NULL;
+					line->last_span = NULL;
 				}
-
-				/* Leave line empty */
-				line->len = 0;
 			}
 			else
 				prev_line_num = line_num;
 		}
+
 		/* Now get rid of the empty lines */
 		for (prev_line_num = 0, line_num = 0; line_num < block->len; line_num++)
 		{
 			line = &block->lines[line_num];
-			if (line->len == 0)
-				fz_free(ctx, line->spans);
-			else
+			if (line->first_span)
 				block->lines[prev_line_num++] = *line;
 		}
 		block->len = prev_line_num;
+
 		/* Now try to spot indents */
 		for (line_num = 0; line_num < block->len; line_num++)
 		{
-			int span_num, sn, col;
+			fz_text_span *span_num, *sn;
+			int col, count;
 			line = &block->lines[line_num];
+
 			/* Run through the spans... */
-			span_num = 0;
+			span_num = line->first_span;
 			{
 				float indent = 0;
 				/* For each set of spans that share the same
 				 * column... */
-				col = line->spans[span_num]->column;
+				col = span_num->column;
 #ifdef DEBUG_INDENTS
-				printf("Indent %g: ", line->spans[span_num]->indent);
-				dump_span(line->spans[span_num]);
+				printf("Indent %g: ", span_num->indent);
+				dump_span(span_num);
 				printf("\n");
 #endif
+
 				/* find the average indent of all but the first.. */
-				for (sn = span_num+1; sn < line->len && line->spans[sn]->column == col; sn++)
+				for (sn = span_num->next, count = 0; sn && sn->column == col; sn = sn->next, count++)
 				{
 #ifdef DEBUG_INDENTS
-					printf("Indent %g: ", line->spans[sn]->indent);
-					dump_span(line->spans[sn]);
+					printf("Indent %g: ", sn->indent);
+					dump_span(sn);
 				printf("\n");
 #endif
-					indent += line->spans[sn]->indent;
-					line->spans[sn]->indent = 0;
+					indent += sn->indent;
+					sn->indent = 0;
 				}
-				if (sn > span_num+1)
-					indent /= sn-(span_num+1);
+				if (sn != span_num->next)
+					indent /= count;
+
 				/* And compare this indent with the first one... */
 #ifdef DEBUG_INDENTS
 				printf("Average indent %g ", indent);
 #endif
-				indent -= line->spans[span_num]->indent;
+				indent -= span_num->indent;
 #ifdef DEBUG_INDENTS
 				printf("delta %g ", indent);
 #endif
@@ -1494,25 +1488,13 @@ force_paragraph:
 #ifdef DEBUG_INDENTS
 				printf("recorded %g\n", indent);
 #endif
-				line->spans[span_num]->indent = indent;
+				span_num->indent = indent;
 				span_num = sn;
 			}
-			for (; span_num < line->len; span_num++)
+			for (; span_num; span_num = span_num->next)
 			{
-				line->spans[span_num]->indent = 0;
+				span_num->indent = 0;
 			}
 		}
 	}
-}
-
-static void
-fz_text_analysis_rtl(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
-{
-}
-
-void
-fz_text_analysis(fz_context *ctx, fz_text_sheet *sheet, fz_text_page *page)
-{
-	fz_text_analysis_paragraph(ctx, sheet, page);
-	fz_text_analysis_rtl(ctx, sheet, page);
 }

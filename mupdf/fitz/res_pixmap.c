@@ -547,39 +547,39 @@ static inline void big32(unsigned char *buf, unsigned int v)
 	buf[3] = (v) & 0xff;
 }
 
-static inline void put32(unsigned int v, fz_output *out)
-{
-	fz_printf(out, "%c%c%c%c", v>>24, v>>16, v>>8, v);
-}
-
 static void putchunk(char *tag, unsigned char *data, int size, fz_output *out)
 {
 	unsigned int sum;
-	put32(size, out);
+	fz_write_int32be(out, size);
 	fz_write(out, tag, 4);
 	fz_write(out, data, size);
 	sum = crc32(0, NULL, 0);
 	sum = crc32(sum, (unsigned char*)tag, 4);
 	sum = crc32(sum, data, size);
-	put32(sum, out);
+	fz_write_int32be(out, sum);
 }
 
 void
 fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 {
 	FILE *fp = fopen(filename, "wb");
+	fz_output *out = NULL;
 
 	if (!fp)
 	{
 		fz_throw(ctx, "cannot open file '%s': %s", filename, strerror(errno));
 	}
 
+	fz_var(out);
+
 	fz_try(ctx)
 	{
-		fz_output_pixmap_to_png(ctx, pixmap, fz_new_output_with_file(ctx, fp), savealpha);
+		out = fz_new_output_with_file(ctx, fp);
+		fz_output_png(out, pixmap, savealpha);
 	}
 	fz_always(ctx)
 	{
+		fz_close_output(out);
 		fclose(fp);
 	}
 	fz_catch(ctx)
@@ -589,7 +589,7 @@ fz_write_png(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 }
 
 void
-fz_output_pixmap_to_png(fz_context *ctx, fz_pixmap *pixmap, fz_output *out, int savealpha)
+fz_output_png(fz_output *out, const fz_pixmap *pixmap, int savealpha)
 {
 	static const unsigned char pngsig[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 	unsigned char head[13];
@@ -600,6 +600,12 @@ fz_output_pixmap_to_png(fz_context *ctx, fz_pixmap *pixmap, fz_output *out, int 
 	int y, x, k, sn, dn;
 	int color;
 	int err;
+	fz_context *ctx;
+
+	if (!out || !pixmap)
+		return;
+
+	ctx = out->ctx;
 
 	fz_var(udata);
 	fz_var(cdata);
@@ -678,6 +684,228 @@ fz_output_pixmap_to_png(fz_context *ctx, fz_pixmap *pixmap, fz_output *out, int 
 	fz_free(ctx, cdata);
 }
 
+fz_buffer *
+fz_image_as_png(fz_context *ctx, fz_image *image, int w, int h)
+{
+	fz_pixmap *pix = fz_image_get_pixmap(ctx, image, image->w, image->h);
+	fz_buffer *buf = NULL;
+	fz_output *out;
+
+	fz_var(buf);
+	fz_var(out);
+
+	fz_try(ctx)
+	{
+		if (pix->colorspace != fz_device_gray(ctx) || pix->colorspace != fz_device_rgb(ctx))
+		{
+			fz_pixmap *pix2 = fz_new_pixmap(ctx, fz_device_rgb(ctx), pix->w, pix->h);
+			fz_convert_pixmap(ctx, pix2, pix);
+			fz_drop_pixmap(ctx, pix);
+			pix = pix2;
+		}
+		buf = fz_new_buffer(ctx, 1024);
+		out = fz_new_output_with_buffer(ctx, buf);
+		fz_output_png(out, pix, 0);
+	}
+	fz_always(ctx)
+	{
+		fz_close_output(out);
+		fz_drop_pixmap(ctx, pix);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_buffer(ctx, buf);
+		fz_rethrow(ctx);
+	}
+	return buf;
+}
+
+unsigned int
+fz_pixmap_size(fz_context *ctx, fz_pixmap * pix)
+{
+	if (pix == NULL)
+		return 0;
+	return sizeof(*pix) + pix->n * pix->w * pix->h;
+}
+
+void
+fz_output_pwg_file_header(fz_output *out)
+{
+	static const unsigned char pwgsig[4] = { 'R', 'a', 'S', '2' };
+
+	/* Sync word */
+	fz_write(out, pwgsig, 4);
+}
+
+void
+fz_output_pwg_page(fz_output *out, const fz_pixmap *pixmap)
+{
+	static const unsigned char zero[4] = { 0 };
+	unsigned char *sp;
+	int y, x, i, sn, dn, ss;
+	fz_context *ctx;
+
+	if (!out || !pixmap)
+		return;
+
+	ctx = out->ctx;
+
+	if (pixmap->n != 1 && pixmap->n != 2 && pixmap->n != 4)
+		fz_throw(ctx, "pixmap must be grayscale or rgb to write as pwg");
+
+	sn = pixmap->n;
+	dn = pixmap->n;
+	if (dn == 2 || dn == 4)
+		dn--;
+
+	/* Page Header: */
+	for (i=0; i < 276; i += 4)
+		fz_write(out, zero, 4);
+	fz_write_int32be(out, pixmap->xres);
+	fz_write_int32be(out, pixmap->yres);
+	/* CUPS format says that 284->300 are supposed to be the bbox of the
+	 * page in points. PWG says 'Reserved'. */
+	for (i=284; i < 300; i += 4)
+		fz_write(out, zero, 4);
+	for (i=300; i < 340; i += 4)
+		fz_write(out, zero, 4);
+	fz_write_int32be(out, 1); /* 1 copy */
+	for (i=344; i < 352; i += 4)
+		fz_write(out, zero, 4);
+	fz_write_int32be(out, pixmap->w * 72/ pixmap->xres);	/* Page size in points */
+	fz_write_int32be(out, pixmap->h * 72/ pixmap->yres);
+	for (i=360; i < 372; i += 4)
+		fz_write(out, zero, 4);
+	fz_write_int32be(out, pixmap->w); /* Page image in pixels */
+	fz_write_int32be(out, pixmap->h);
+	fz_write_int32be(out, 0); /* Reserved */
+	fz_write_int32be(out, 8); /* Bits per color */
+	fz_write_int32be(out, 8*dn); /* Bits per pixel */
+	fz_write_int32be(out, pixmap->w * dn); /* Bytes per line */
+	fz_write_int32be(out, 0); /* Chunky pixels */
+	fz_write_int32be(out, dn == 1 ? 18 /* Sgray */ : 19 /* Srgb */); /* Colorspace */
+	for (i=404; i < 420; i += 4)
+		fz_write(out, zero, 4);
+	fz_write_int32be(out, dn); /* Num Colors */
+	for (i=424; i < 452; i += 4)
+		fz_write(out, zero, 4);
+	fz_write_int32be(out, 1); /* TotalPageCount */
+	fz_write_int32be(out, 1); /* CrossFeedTransform */
+	fz_write_int32be(out, 1); /* FeedTransform */
+	fz_write_int32be(out, 0); /* ImageBoxLeft */
+	fz_write_int32be(out, 0); /* ImageBoxTop */
+	fz_write_int32be(out, pixmap->w); /* ImageBoxRight */
+	fz_write_int32be(out, pixmap->h); /* ImageBoxBottom */
+	for (i=480; i < 1796; i += 4)
+		fz_write(out, zero, 4);
+
+	/* Now output the actual bitmap, using a packbits like compression */
+	sp = pixmap->samples;
+	ss = pixmap->w * sn;
+	y = 0;
+	while (y < pixmap->h)
+	{
+		int yrep;
+
+		assert(sp == pixmap->samples + y * ss);
+
+		/* Count the number of times this line is repeated */
+		for (yrep = 1; yrep < 256 && y+yrep < pixmap->h; yrep++)
+		{
+			if (memcmp(sp, sp + yrep * ss, ss) != 0)
+				break;
+		}
+		fz_write_byte(out, yrep-1);
+
+		/* Encode the line */
+		x = 0;
+		while (x < pixmap->w)
+		{
+			int d;
+
+			assert(sp == pixmap->samples + y * ss + x * sn);
+
+			/* How far do we have to look to find a repeated value? */
+			for (d = 1; d < 128 && x+d < pixmap->w; d++)
+			{
+				if (memcmp(sp + (d-1)*sn, sp + d*sn, sn) == 0)
+					break;
+			}
+			if (d == 1)
+			{
+				int xrep;
+
+				/* We immediately have a repeat (or we've hit
+				 * the end of the line). Count the number of
+				 * times this value is repeated. */
+				for (xrep = 1; xrep < 128 && x+xrep < pixmap->w; xrep++)
+				{
+					if (memcmp(sp, sp + xrep*sn, sn) != 0)
+						break;
+				}
+				fz_write_byte(out, xrep-1);
+				fz_write(out, sp, dn);
+				sp += sn*xrep;
+				x += xrep;
+			}
+			else
+			{
+				fz_write_byte(out, 257-d);
+				x += d;
+				while (d > 0)
+				{
+					fz_write(out, sp, dn);
+					sp += sn;
+					d--;
+				}
+			}
+		}
+
+		/* Move to the next line */
+		sp += ss*(yrep-1);
+		y += yrep;
+	}
+}
+
+void
+fz_output_pwg(fz_output *out, const fz_pixmap *pixmap)
+{
+	fz_output_pwg_file_header(out);
+	fz_output_pwg_page(out, pixmap);
+}
+
+void
+fz_write_pwg(fz_context *ctx, fz_pixmap *pixmap, char *filename, int append)
+{
+	FILE *fp;
+	fz_output *out = NULL;
+
+	fp = fopen(filename, append ? "ab" : "wb");
+	if (!fp)
+	{
+		fz_throw(ctx, "cannot open file '%s': %s", filename, strerror(errno));
+	}
+
+	fz_var(out);
+
+	fz_try(ctx)
+	{
+		out = fz_new_output_with_file(ctx, fp);
+		if (!append)
+			fz_output_pwg_file_header(out);
+		fz_output_pwg_page(out, pixmap);
+	}
+	fz_always(ctx)
+	{
+		fz_close_output(out);
+		fclose(fp);
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow(ctx);
+	}
+}
+
 /* SumatraPDF: Write pixmap to TGA file (with or without alpha channel) */
 static inline void tga_put_pixel(unsigned char *data, int n, int is_bgr, FILE *fp)
 {
@@ -698,17 +926,6 @@ static inline void tga_put_pixel(unsigned char *data, int n, int is_bgr, FILE *f
 	fwrite(data, 1, n, fp);
 }
 
-static inline int memeq(unsigned char *pix1, unsigned char *pix2, int n)
-{
-	int k;
-	for (k = 0; k < n; k++)
-	{
-		if (pix1[k] != pix2[k])
-			return 0;
-	}
-	return 1;
-}
-
 void
 fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 {
@@ -716,11 +933,11 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 	unsigned char head[18];
 	int n = pixmap->n;
 	int d = savealpha || n == 1 ? n : n - 1;
-	int is_bgr = pixmap->colorspace == fz_device_bgr;
+	int is_bgr = pixmap->colorspace == fz_device_bgr(ctx);
 	int k;
 
-	if (pixmap->colorspace && pixmap->colorspace != fz_device_gray &&
-		pixmap->colorspace != fz_device_rgb && pixmap->colorspace != fz_device_bgr)
+	if (pixmap->colorspace && pixmap->colorspace != fz_device_gray(ctx) &&
+		pixmap->colorspace != fz_device_rgb(ctx) && pixmap->colorspace != fz_device_bgr(ctx))
 	{
 		fz_throw(ctx, "pixmap must be grayscale or rgb to write as tga");
 	}
@@ -745,7 +962,7 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 		unsigned char *line = pixmap->samples + pixmap->w * n * (pixmap->h - k);
 		for (i = 0, j = 1; i < pixmap->w; i += j, j = 1)
 		{
-			for (; i + j < pixmap->w && j < 128 && memeq(line + i * n, line + (i + j) * n, d); j++);
+			for (; i + j < pixmap->w && j < 128 && !memcmp(line + i * n, line + (i + j) * n, d); j++);
 			if (j > 1)
 			{
 				putc(j - 1 + 128, fp);
@@ -753,7 +970,7 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 			}
 			else
 			{
-				for (; i + j < pixmap->w && j <= 128 && !memeq(line + (i + j - 1) * n, line + (i + j) * n, d) != 0; j++);
+				for (; i + j < pixmap->w && j <= 128 && memcmp(line + (i + j - 1) * n, line + (i + j) * n, d) != 0; j++);
 				if (i + j < pixmap->w || j > 128)
 					j--;
 				putc(j - 1, fp);
@@ -765,14 +982,6 @@ fz_write_tga(fz_context *ctx, fz_pixmap *pixmap, char *filename, int savealpha)
 	fwrite("\0\0\0\0\0\0\0\0TRUEVISION-XFILE.\0", 1, 26, fp);
 
 	fclose(fp);
-}
-
-unsigned int
-fz_pixmap_size(fz_context *ctx, fz_pixmap * pix)
-{
-	if (pix == NULL)
-		return 0;
-	return sizeof(*pix) + pix->n * pix->w * pix->h;
 }
 
 #ifdef ARCH_ARM

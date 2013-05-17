@@ -675,7 +675,7 @@ xps_close_document(xps_document *doc)
 static int
 xps_meta(xps_document *doc, int key, void *ptr, int size)
 {
-	switch(key)
+	switch (key)
 	{
 	case FZ_META_FORMAT_INFO:
 		sprintf((char *)ptr, "XPS");

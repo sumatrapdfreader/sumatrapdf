@@ -219,6 +219,7 @@
     <ClCompile Include="..\mupdf\fitz\dev_gdiplus.cpp" />
     <ClCompile Include="..\mupdf\fitz\dev_list.c" />
     <ClCompile Include="..\mupdf\fitz\dev_null.c" />
+    <ClCompile Include="..\mupdf\fitz\dev_svg.c" />
     <ClCompile Include="..\mupdf\fitz\dev_trace.c" />
     <ClCompile Include="..\mupdf\fitz\doc_document.c" />
     <ClCompile Include="..\mupdf\fitz\doc_interactive.c" />
