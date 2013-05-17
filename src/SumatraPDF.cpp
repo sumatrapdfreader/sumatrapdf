@@ -2863,12 +2863,10 @@ static void OnMenuSaveAs(WindowInfo& win)
     else if (!file::Exists(srcFileName)) {
         ok = win.dm->engine->SaveFileAs(realDstFileName);
     }
-#ifdef DEBUG
     // ... as well as files containing annotations ...
     else if (win.dm->engine->SupportsAnnotation(true)) {
         ok = win.dm->engine->SaveFileAs(realDstFileName);
     }
-#endif
     // ... else just copy the file
     else if (!path::IsSame(srcFileName, realDstFileName)) {
         WCHAR *msgBuf;
@@ -2885,12 +2883,8 @@ static void OnMenuSaveAs(WindowInfo& win)
         }
     }
     if (ok && win.userAnnots && win.userAnnotsModified) {
-#ifdef DEBUG
         if (!win.dm->engine->SupportsAnnotation(true))
-#endif
-        {
             ok = SaveFileModifictions(realDstFileName, win.userAnnots);
-        }
         if (ok && path::IsSame(srcFileName, realDstFileName))
             win.userAnnotsModified = false;
     }
