@@ -658,7 +658,7 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
     }
 }
 
-bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErrors, const WCHAR *settings)
+bool PrintFile(const WCHAR *fileName, WCHAR *printerName, bool displayErrors, const WCHAR *settings)
 {
     bool ok = false;
     if (!HasPermission(Perm_PrinterAccess))
@@ -673,7 +673,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     }
 
     HANDLE printer;
-    BOOL res = OpenPrinter((WCHAR *)printerName, &printer, NULL);
+    BOOL res = OpenPrinter(printerName, &printer, NULL);
     if (0 == res) {
         if (displayErrors)
             MessageBoxWarning(NULL, _TR("Printer with given name doesn't exist"), _TR("Printing problem."));
@@ -691,10 +691,10 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
         goto Exit;
 
     LONG structSize = DocumentProperties(NULL,
-        printer,                /* Handle to our printer. */
-        (WCHAR *)printerName,   /* Name of the printer. */
+        printer,
+        printerName,
         NULL,                   /* Asking for size, so */
-        NULL,                   /* these are not used. */
+        NULL,                   /* not used. */
         0);                     /* Zero returns buffer size. */
     if (structSize < sizeof(DEVMODE)) {
         // If failure, inform the user, cleanup and return failure.
@@ -709,7 +709,7 @@ bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErro
     // Get the default DevMode for the printer and modify it for your needs.
     LONG returnCode = DocumentProperties(NULL,
         printer,
-        (WCHAR *)printerName,
+        printerName,
         devMode,        /* The address of the buffer to fill. */
         NULL,           /* Not using the input buffer. */
         DM_OUT_BUFFER); /* Have the output buffer filled. */

@@ -6,7 +6,7 @@
 
 class WindowInfo;
 
-bool PrintFile(const WCHAR *fileName, const WCHAR *printerName, bool displayErrors=true, const WCHAR *settings=NULL);
+bool PrintFile(const WCHAR *fileName, WCHAR *printerName, bool displayErrors=true, const WCHAR *settings=NULL);
 void OnMenuPrint(WindowInfo *win, bool waitForCompletion=false);
 void AbortPrinting(WindowInfo *win);
 
