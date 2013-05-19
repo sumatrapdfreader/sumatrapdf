@@ -88,7 +88,7 @@ def htmlize_error_lines(lines, ver):
 		if l.startswith("src\\"):     sumatra_errors.append(s)
 		elif l.startswith("mupdf\\"): mupdf_errors.append(s)
 		elif l.startswith("ext\\"):   ext_errors.append(s)
-		else: assert(False)
+		else: ext_errors.append(s) # everything else we don't recognize, like errors in system includes
 	return (sumatra_errors, mupdf_errors, ext_errors)
 
 def stats_for_previous_successful_build(ver, stats_for_ver):
