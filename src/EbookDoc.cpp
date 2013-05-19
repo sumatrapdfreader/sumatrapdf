@@ -162,6 +162,7 @@ static inline void AppendChar(str::Str<char>& htmlData, char c)
 const char *EPUB_CONTAINER_NS = "urn:oasis:names:tc:opendocument:xmlns:container";
 const char *EPUB_OPF_NS = "http://www.idpf.org/2007/opf";
 const char *EPUB_NCX_NS = "http://www.daisy.org/z3986/2005/ncx/";
+const char *EPUB_ENC_NS = "http://www.w3.org/2001/04/xmlenc#";
 
 EpubDoc::EpubDoc(const WCHAR *fileName) :
     zip(fileName, Zip_Deflate), fileName(str::Dup(fileName)),
@@ -217,6 +218,21 @@ bool EpubDoc::Load()
     else
         *contentPath = '\0';
 
+    // encrypted files will be ignored (TODO: support decryption)
+    WStrList encList;
+    ScopedMem<char> encryption(zip.GetFileDataByName(L"META-INF/encryption.xml"));
+    if (encryption) {
+        HtmlParser parser;
+        HtmlElement *encRoot = parser.ParseInPlace(encryption);
+        HtmlElement *cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
+        while (cr) {
+            WCHAR *uri = cr->GetAttribute("URI");
+            if (uri)
+                encList.Append(uri);
+            cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
+        }
+    }
+
     WStrList idList, pathList;
 
     for (node = node->down; node; node = node->next) {
@@ -228,6 +244,8 @@ bool EpubDoc::Load()
             if (!imgPath)
                 continue;
             imgPath.Set(str::Join(contentPath, imgPath));
+            if (encList.Contains(imgPath))
+                continue;
             // load the image lazily
             ImageData2 data = { 0 };
             data.id = str::conv::ToUtf8(imgPath);
@@ -247,6 +265,8 @@ bool EpubDoc::Load()
                 tocPath.Set(str::Join(contentPath, htmlPath));
                 str::UrlDecodeInPlace(tocPath);
             }
+            if (htmlPath && encList.Count() > 0 && encList.Contains(ScopedMem<WCHAR>(str::Join(contentPath, htmlPath))))
+                continue;
             if (htmlPath && htmlId) {
                 idList.Append(htmlId.StealData());
                 pathList.Append(htmlPath.StealData());
