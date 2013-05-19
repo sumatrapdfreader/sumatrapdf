@@ -1294,12 +1294,11 @@ fz_expand_indexed_pixmap(fz_context *ctx, fz_pixmap *src)
 fz_transfer_function *
 fz_keep_transfer_function(fz_context *ctx, fz_transfer_function *tr)
 {
-	return tr ? (fz_transfer_function *)fz_keep_storable(ctx, &tr->storable) : NULL;
+	return fz_keep_storable(ctx, &tr->storable);
 }
 
 void
 fz_drop_transfer_function(fz_context *ctx, fz_transfer_function *tr)
 {
-	if (tr)
-		fz_drop_storable(ctx, &tr->storable);
+	fz_drop_storable(ctx, &tr->storable);
 }

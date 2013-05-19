@@ -169,6 +169,7 @@ load_indexed(pdf_document *xref, pdf_obj *array)
 	unsigned char *lookup = NULL;
 
 	fz_var(base);
+	fz_var(lookup);
 
 	fz_try(ctx)
 	{

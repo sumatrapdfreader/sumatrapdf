@@ -26,6 +26,7 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 	fz_var(stm);
 	fz_var(mask);
 	fz_var(image);
+	fz_var(colorspace);
 
 	fz_try(ctx)
 	{
@@ -169,6 +170,10 @@ pdf_load_image_imp(pdf_document *xref, pdf_obj *rdb, pdf_obj *dict, fz_stream *c
 	}
 	fz_catch(ctx)
 	{
+		/* SumatraPDF: fix memory leak */
+		if (!image)
+			fz_drop_colorspace(ctx, colorspace);
+		else
 		fz_drop_image(ctx, image);
 		fz_rethrow(ctx);
 	}
