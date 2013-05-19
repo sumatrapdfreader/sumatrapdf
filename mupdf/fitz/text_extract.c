@@ -983,7 +983,7 @@ fixup_text_block(fz_context *ctx, fz_text_block *block)
 						line2++;
 						span2 = line2->first_span;
 					}
-					for (; j < span2->len; j++)
+					for (; j < span2->len && j < i + 512; j++)
 					{
 						int c = span->text[i].c;
 						if (c != 32 && c == span2->text[j].c && do_glyphs_overlap(span, i, span2, j, 1))
