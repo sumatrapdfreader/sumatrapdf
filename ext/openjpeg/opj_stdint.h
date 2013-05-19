@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Herve Drolon, FreeImage Team
+ * Copyright (c) 2012, Mathieu Malaterre <mathieu.malaterre@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,37 +23,25 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef OPJ_STDINT_H
+#define OPJ_STDINT_H
 
-#ifdef _WIN32
-#include <windows.h>
+#include "opj_config.h"
+#ifdef OPJ_HAVE_STDINT_H
+#include <stdint.h>
 #else
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <sys/times.h>
-#endif /* _WIN32 */
-#include "opj_includes.h"
-
-double opj_clock(void) {
-#ifdef _WIN32
-	/* _WIN32: use QueryPerformance (very accurate) */
-    LARGE_INTEGER freq , t ;
-    /* freq is the clock speed of the CPU */
-    QueryPerformanceFrequency(&freq) ;
-	/* cout << "freq = " << ((double) freq.QuadPart) << endl; */
-    /* t is the high resolution performance counter (see MSDN) */
-    QueryPerformanceCounter ( & t ) ;
-    return ( t.QuadPart /(double) freq.QuadPart ) ;
+#if defined(_WIN32)
+typedef   signed __int8   int8_t;
+typedef unsigned __int8   uint8_t;
+typedef   signed __int16  int16_t;
+typedef unsigned __int16  uint16_t;
+typedef   signed __int32  int32_t;
+typedef unsigned __int32  uint32_t;
+typedef   signed __int64  int64_t;
+typedef unsigned __int64  uint64_t;
 #else
-	/* Unix or Linux: use resource usage */
-    struct rusage t;
-    double procTime;
-    /* (1) Get the rusage data structure at this moment (man getrusage) */
-    getrusage(0,&t);
-    /* (2) What is the elapsed time ? - CPU time = User time + System time */
-	/* (2a) Get the seconds */
-    procTime = t.ru_utime.tv_sec + t.ru_stime.tv_sec;
-    /* (2b) More precisely! Get the microseconds part ! */
-    return ( procTime + (t.ru_utime.tv_usec + t.ru_stime.tv_usec) * 1e-6 ) ;
+#error unsupported platform
 #endif
-}
+#endif
 
+#endif /* OPJ_STDINT_H */

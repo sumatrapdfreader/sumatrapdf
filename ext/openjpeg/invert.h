@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, Herve Drolon, FreeImage Team
+ * Copyright (c) 2008, Jerome Fimes, Communications & Systemes <jerome.fimes@c-s.fr>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,32 +23,37 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __J2K_LIB_H
-#define __J2K_LIB_H
-/**
-@file j2k_lib.h
-@brief Internal functions
 
-The functions in J2K_LIB.C are internal utilities mainly used for timing.
+#ifndef __INVERT_H
+#define __INVERT_H
+/**
+@file invert.h
+@brief Implementation of the matrix inversion
+
+The function in INVERT.H compute a matrix inversion with a LUP method
 */
 
-/** @defgroup MISC MISC - Miscellaneous internal functions */
+/** @defgroup INVERT INVERT - Implementation of a matrix inversion */
 /*@{*/
-
 /** @name Exported functions */
 /*@{*/
 /* ----------------------------------------------------------------------- */
 
 /**
-Difference in successive opj_clock() calls tells you the elapsed time
-@return Returns time in seconds
-*/
-double opj_clock(void);
-
+ * Calculates a n x n double matrix inversion with a LUP method. Data is aligned, rows after rows (or columns after columns).
+ * The function does not take ownership of any memory block, data must be fred by the user.
+ *
+ * @param pSrcMatrix	the matrix to invert.
+ * @param pDestMatrix	data to store the inverted matrix. 
+ * @param n size of the matrix
+ * @return OPJ_TRUE if the inversion is successful, OPJ_FALSE if the matrix is singular.
+ */
+OPJ_BOOL opj_matrix_inversion_f(OPJ_FLOAT32 * pSrcMatrix,
+                                OPJ_FLOAT32 * pDestMatrix, 
+                                OPJ_UINT32 nb_compo);
 /* ----------------------------------------------------------------------- */
 /*@}*/
 
 /*@}*/
 
-#endif /* __J2K_LIB_H */
-
+#endif /* __INVERT_H */ 

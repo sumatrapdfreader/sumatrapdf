@@ -20,55 +20,118 @@ static void fz_opj_info_callback(const char *msg, void *client_data)
 	/* fz_warn("openjpeg info: %s", msg); */
 }
 
+typedef struct stream_block_s
+{
+	unsigned char *data;
+	int size;
+	int pos;
+} stream_block;
+
+OPJ_SIZE_T stream_read(void * p_buffer, OPJ_SIZE_T p_nb_bytes, void * p_user_data)
+{
+	stream_block *sb = (stream_block *)p_user_data;
+	int len;
+
+	len = sb->size - sb->pos;
+	if (len < 0)
+		len = 0;
+	if (len == 0)
+		return (OPJ_SIZE_T)-1;  /* End of file! */
+	if ((OPJ_SIZE_T)len > p_nb_bytes)
+		len = p_nb_bytes;
+	memcpy(p_buffer, sb->data + sb->pos, len);
+	sb->pos += len;
+	return len;
+}
+
+OPJ_OFF_T stream_skip(OPJ_OFF_T skip, void * p_user_data)
+{
+	stream_block *sb = (stream_block *)p_user_data;
+
+	if (skip > sb->size - sb->pos)
+		skip = sb->size - sb->pos;
+	sb->pos += skip;
+	return sb->pos;
+}
+
+OPJ_BOOL stream_seek(OPJ_OFF_T seek_pos, void * p_user_data)
+{
+	stream_block *sb = (stream_block *)p_user_data;
+
+	if (seek_pos > sb->size)
+		return OPJ_FALSE;
+	sb->pos = seek_pos;
+	return OPJ_TRUE;
+}
+
 fz_pixmap *
 fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs, int indexed)
 {
 	fz_pixmap *img;
 	fz_colorspace *origcs;
-	opj_event_mgr_t evtmgr;
 	opj_dparameters_t params;
-	opj_dinfo_t *info;
-	opj_cio_t *cio;
+	opj_codec_t *codec;
 	opj_image_t *jpx;
+	opj_stream_t *stream;
 	fz_colorspace *colorspace;
 	unsigned char *p;
 	int format;
 	int a, n, w, h, depth, sgnd;
 	int x, y, k, v;
+	stream_block sb;
 
 	if (size < 2)
 		fz_throw(ctx, "not enough data to determine image format");
 
 	/* Check for SOC marker -- if found we have a bare J2K stream */
 	if (data[0] == 0xFF && data[1] == 0x4F)
-		format = CODEC_J2K;
+		format = OPJ_CODEC_J2K;
 	else
-		format = CODEC_JP2;
-
-	memset(&evtmgr, 0, sizeof(evtmgr));
-	evtmgr.error_handler = fz_opj_error_callback;
-	evtmgr.warning_handler = fz_opj_warning_callback;
-	evtmgr.info_handler = fz_opj_info_callback;
+		format = OPJ_CODEC_JP2;
 
 	opj_set_default_decoder_parameters(&params);
 	if (indexed)
 		params.flags |= OPJ_DPARAMETERS_IGNORE_PCLR_CMAP_CDEF_FLAG;
 
-	info = opj_create_decompress(format);
-	opj_set_event_mgr((opj_common_ptr)info, &evtmgr, ctx);
-	opj_setup_decoder(info, &params);
+	codec = opj_create_decompress(format);
+	opj_set_info_handler(codec, fz_opj_info_callback, ctx);
+	opj_set_warning_handler(codec, fz_opj_warning_callback, ctx);
+	opj_set_error_handler(codec, fz_opj_error_callback, ctx);
+	if (!opj_setup_decoder(codec, &params))
+	{
+		fz_throw(ctx, "j2k decode failed");
+	}
 
-	cio = opj_cio_open((opj_common_ptr)info, data, size);
+	stream = opj_stream_default_create(OPJ_TRUE);
+	sb.data = data;
+	sb.pos = 0;
+	sb.size = size;
 
-	jpx = opj_decode(info, cio);
+	opj_stream_set_read_function(stream, stream_read);
+	opj_stream_set_skip_function(stream, stream_skip);
+	opj_stream_set_seek_function(stream, stream_seek);
+	opj_stream_set_user_data(stream, &sb);
+	opj_stream_set_user_data_length(stream, size); // pointless!?!
 
-	opj_cio_close(cio);
-	opj_destroy_decompress(info);
+	if (!opj_read_header(stream, codec, &jpx))
+	{
+		opj_stream_destroy(stream);
+		opj_destroy_codec(codec);
+		fz_throw(ctx, "Failed to read JPX header");
+	}
 
-	if (!jpx)
-		fz_throw(ctx, "opj_decode failed");
+	if (!opj_decode(codec, stream, jpx))
+	{
+		opj_stream_destroy(stream);
+		opj_destroy_codec(codec);
+		opj_image_destroy(jpx);
+		fz_throw(ctx, "Failed to decode JPX image");
+	}
 
-	for (k = 1; k < jpx->numcomps; k++)
+	opj_stream_destroy(stream);
+	opj_destroy_codec(codec);
+
+	for (k = 1; k < (int)jpx->numcomps; k++)
 	{
 		if (jpx->comps[k].w != jpx->comps[0].w)
 		{
@@ -93,8 +156,8 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 	depth = jpx->comps[0].prec;
 	sgnd = jpx->comps[0].sgnd;
 
-	if (jpx->color_space == CLRSPC_SRGB && n == 4) { n = 3; a = 1; }
-	else if (jpx->color_space == CLRSPC_SYCC && n == 4) { n = 3; a = 1; }
+	if (jpx->color_space == OPJ_CLRSPC_SRGB && n == 4) { n = 3; a = 1; }
+	else if (jpx->color_space == OPJ_CLRSPC_SYCC && n == 4) { n = 3; a = 1; }
 	else if (n == 2) { n = 1; a = 1; }
 	else if (n > 4) { n = 4; a = 1; }
 	else { a = 0; }
@@ -164,14 +227,6 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 			img = tmp;
 		}
 		fz_premultiply_pixmap(ctx, img);
-	}
-
-	if (origcs != defcs && 0 /* SumatraPDF: ignore invalid JPX softmasks */)
-	{
-		fz_pixmap *tmp = fz_new_pixmap(ctx, origcs, w, h);
-		fz_convert_pixmap(ctx, tmp, img);
-		fz_drop_pixmap(ctx, img);
-		img = tmp;
 	}
 
 	return img;

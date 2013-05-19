@@ -1,7 +1,4 @@
 /*
- * Copyright (c) 2002-2007, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
- * Copyright (c) 2002-2007, Professor Benoit Macq
- * Copyright (c) 2002-2003, Yannick Verschueren
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * All rights reserved.
  *
@@ -26,50 +23,32 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
-#ifndef __JPT_H
-#define __JPT_H
+#ifndef __OPJ_CLOCK_H
+#define __OPJ_CLOCK_H
 /**
-@file jpt.h
-@brief JPT-stream reader (JPEG 2000, JPIP)
+@file opj_clock.h
+@brief Internal function for timing
 
-JPT-stream functions are implemented in J2K.C. 
+The functions in OPJ_CLOCK.C are internal utilities mainly used for timing.
 */
 
-/**
-Message Header JPT stream structure
-*/
-typedef struct opj_jpt_msg_header {
-	/** In-class Identifier */
-	unsigned int Id;
-	/** Last byte information */
-	unsigned int last_byte;	
-	/** Class Identifier */
-	unsigned int Class_Id;	
-	/** CSn : index identifier */
-	unsigned int CSn_Id;
-	/** Message offset */
-	unsigned int Msg_offset;
-	/** Message length */
-	unsigned int Msg_length;
-	/** Auxiliary for JPP case */
-	unsigned int Layer_nb;
-} opj_jpt_msg_header_t;
+/** @defgroup MISC MISC - Miscellaneous internal functions */
+/*@{*/
 
+/** @name Exported functions */
+/*@{*/
 /* ----------------------------------------------------------------------- */
 
 /**
-Initialize the value of the message header structure 
-@param header Message header structure
+Difference in successive opj_clock() calls tells you the elapsed time
+@return Returns time in seconds
 */
-void jpt_init_msg_header(opj_jpt_msg_header_t * header);
+OPJ_FLOAT64 opj_clock(void);
 
-/**
-Read the message header for a JPP/JPT - stream
-@param cinfo Codec context info
-@param cio CIO handle
-@param header Message header structure
-*/
-void jpt_read_msg_header(opj_common_ptr cinfo, opj_cio_t *cio, opj_jpt_msg_header_t *header);
+/* ----------------------------------------------------------------------- */
+/*@}*/
 
-#endif
+/*@}*/
+
+#endif /* __OPJ_CLOCK_H */
+

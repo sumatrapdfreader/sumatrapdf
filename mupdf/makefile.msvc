@@ -133,8 +133,7 @@ FREETYPE_CFLAGS = $(CFLAGSOPT) /TC /I$(FREETYPE_DIR)/config /I$(FREETYPE_DIR)/in
 JBIG2_CFLAGS = $(CFLAGS) /TC /D "HAVE_STRING_H=1" /D "JBIG_NO_MEMENTO" /I$(JBIG2_DIR)
 JBIG2_CFLAGS = $(JBIG2_CFLAGS) /wd4018 /wd4244 /wd4701 /wd4996
 
-OPENJPEG_CFLAGS = $(CFLAGS) /TC /D "OPJ_STATIC" /D "OPJ_EXPORTS" /I$(OPENJPEG_DIR)
-OPENJPEG_CFLAGS = $(OPENJPEG_CFLAGS) /wd4244 /wd4701 /wd4996
+OPENJPEG_CFLAGS = $(CFLAGS) /TC /I$(OPENJPEG_DIR) /wd4244 /wd4996
 
 JPEG_TURBO_CFLAGS = $(CFLAGS) /TC /I$(JPEG_TURBO_DIR) /I$(JPEG_TURBO_DIR)\simd
 JPEG_TURBO_CFLAGS = $(JPEG_TURBO_CFLAGS) /wd4018 /wd4101 /wd4244 /wd4245 /wd4996
@@ -229,11 +228,11 @@ JBIG2_OBJS = \
 	$(OJB)\jbig2_image.obj $(OJB)\jbig2_metadata.obj $(OJB)\jbig2_halftone.obj
 
 OPENJPEG_OBJS = \
-	$(OOJ)\bio.obj $(OOJ)\cio.obj $(OOJ)\dwt.obj $(OOJ)\event.obj $(OOJ)\image.obj \
-	$(OOJ)\j2k.obj $(OOJ)\j2k_lib.obj $(OOJ)\jp2.obj $(OOJ)\jpt.obj $(OOJ)\mct.obj \
+	$(OOJ)\bio.obj $(OOJ)\cio.obj $(OOJ)\dwt.obj $(OOJ)\event.obj $(OOJ)\function_list.obj \
+	$(OOJ)\image.obj $(OOJ)\invert.obj $(OOJ)\j2k.obj $(OOJ)\jp2.obj $(OOJ)\mct.obj \
 	$(OOJ)\mqc.obj $(OOJ)\openjpeg.obj $(OOJ)\pi.obj $(OOJ)\raw.obj $(OOJ)\t1.obj \
 	$(OOJ)\t2.obj $(OOJ)\tcd.obj $(OOJ)\tgt.obj $(OOJ)\cidx_manager.obj $(OOJ)\phix_manager.obj \
-	$(OOJ)\ppix_manager.obj $(OOJ)\thix_manager.obj $(OOJ)\tpix_manager.obj
+	$(OOJ)\ppix_manager.obj $(OOJ)\thix_manager.obj $(OOJ)\tpix_manager.obj $(OOJ)\opj_clock.obj
 
 FITZ_DRAW_OBJS = \
 	$(OFZ)\draw_affine.obj $(OFZ)\draw_blend.obj $(OFZ)\draw_edge.obj \

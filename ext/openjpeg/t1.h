@@ -85,27 +85,25 @@ in T1.C are used by some function in TCD.C.
 
 /* ----------------------------------------------------------------------- */
 
-typedef short flag_t;
+typedef OPJ_INT16 opj_flag_t;
 
 /**
 Tier-1 coding (coding of code-block coefficients)
 */
 typedef struct opj_t1 {
-	/** codec context */
-	opj_common_ptr cinfo;
 
 	/** MQC component */
 	opj_mqc_t *mqc;
 	/** RAW component */
 	opj_raw_t *raw;
 
-	int *data;
-	flag_t *flags;
-	int w;
-	int h;
-	int datasize;
-	int flagssize;
-	int flags_stride;
+    OPJ_INT32 *data;
+	opj_flag_t *flags;
+	OPJ_UINT32 w;
+	OPJ_UINT32 h;
+	OPJ_UINT32 datasize;
+	OPJ_UINT32 flagssize;
+	OPJ_UINT32 flags_stride;
 } opj_t1_t;
 
 #define MACRO_t1_flags(x,y) t1->flags[((x)*(t1->flags_stride))+(y)]
@@ -113,32 +111,44 @@ typedef struct opj_t1 {
 /** @name Exported functions */
 /*@{*/
 /* ----------------------------------------------------------------------- */
-/**
-Create a new T1 handle 
-and initialize the look-up tables of the Tier-1 coder/decoder
-@return Returns a new T1 handle if successful, returns NULL otherwise
-@see t1_init_luts
-*/
-opj_t1_t* t1_create(opj_common_ptr cinfo);
-/**
-Destroy a previously created T1 handle
-@param t1 T1 handle to destroy
-*/
-void t1_destroy(opj_t1_t *t1);
+
 /**
 Encode the code-blocks of a tile
 @param t1 T1 handle
 @param tile The tile to encode
 @param tcp Tile coding parameters
+@param mct_norms  FIXME DOC
 */
-void t1_encode_cblks(opj_t1_t *t1, opj_tcd_tile_t *tile, opj_tcp_t *tcp);
+OPJ_BOOL opj_t1_encode_cblks(   opj_t1_t *t1,
+                                opj_tcd_tile_t *tile,
+                                opj_tcp_t *tcp,
+                                const OPJ_FLOAT64 * mct_norms);
+
 /**
 Decode the code-blocks of a tile
 @param t1 T1 handle
 @param tilec The tile to decode
 @param tccp Tile coding parameters
 */
-void t1_decode_cblks(opj_t1_t* t1, opj_tcd_tilecomp_t* tilec, opj_tccp_t* tccp);
+OPJ_BOOL opj_t1_decode_cblks(   opj_t1_t* t1,
+                                opj_tcd_tilecomp_t* tilec,
+                                opj_tccp_t* tccp);
+
+
+
+/**
+ * Creates a new Tier 1 handle
+ * and initializes the look-up tables of the Tier-1 coder/decoder
+ * @return a new T1 handle if successful, returns NULL otherwise
+*/
+opj_t1_t* opj_t1_create(void);
+
+/**
+ * Destroys a previously created T1 handle
+ *
+ * @param p_t1 Tier 1 handle to destroy
+*/
+void opj_t1_destroy(opj_t1_t *p_t1);
 /* ----------------------------------------------------------------------- */
 /*@}*/
 

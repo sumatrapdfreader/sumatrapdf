@@ -7,7 +7,7 @@ jbig2dec        0.11git 2013-04-10   http://git.ghostscript.com/?p=ghostpdl.git;
 libjpeg-turbo   1.2.1   2012-06-30   http://sourceforge.net/projects/libjpeg-turbo/files/
 libdjvu         3.5.25  2012-05-08   http://djvu.sourceforge.net/
 lzma            9.22b   2011-04-19   http://www.7-zip.org/sdk.html
-openjpeg        1.5.1   2012-09-13   http://code.google.com/p/openjpeg/downloads
+openjpeg        2.0svn  2013-03-25   http://code.google.com/p/openjpeg/downloads
 synctex         1.16    2011-06-14   http://itexmac.sourceforge.net/SyncTeX.html
 unrar           4.20.0  2012-06-09   http://www.rarlab.com/rar_add.htm
 zlib            1.2.8   2013-04-28   http://www.zlib.net/
