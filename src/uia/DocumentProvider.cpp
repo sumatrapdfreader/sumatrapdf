@@ -96,29 +96,16 @@ SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetLastPag
     return child_last;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(const IID &iid,void **ppvObject)
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(REFIID riid, void **ppv)
 {
-    if (ppvObject == NULL)
-        return E_POINTER;
-
-    *ppvObject = NULL;
-    if (iid == IID_IUnknown) {
-        // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
-        // respond to IUnknown
-    } else if (iid == __uuidof(IRawElementProviderFragment)) {
-        *ppvObject = static_cast<IRawElementProviderFragment*>(this);
-    } else if (iid == __uuidof(IRawElementProviderSimple)) {
-        *ppvObject = static_cast<IRawElementProviderSimple*>(this);
-    } else if (iid == __uuidof(ITextProvider)) {
-        *ppvObject = static_cast<ITextProvider*>(this);
-    } else if (iid == IID_IAccIdentity) {
-        *ppvObject = static_cast<IAccIdentity*>(this);
-    }
-    if (NULL == *ppvObject)
-        return E_NOINTERFACE;
-
-    AddRef();
-    return S_OK;
+    static const QITAB qit[] = {
+        QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderSimple),
+        QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderFragment),
+        QITABENT(SumatraUIAutomationDocumentProvider, ITextProvider),
+        QITABENT(SumatraUIAutomationDocumentProvider, IAccIdentity),
+        { 0 }
+    };
+    return QISearch(this, qit, riid, ppv);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::AddRef(void)

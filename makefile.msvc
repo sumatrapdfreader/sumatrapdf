@@ -99,7 +99,7 @@ LIB_FLAGS = $(LIB_FLAGS) /LTCG
 !endif
 
 LIBS = $(LIBS) \
-	comctl32.lib Msimg32.lib Winspool.lib wininet.lib \
+	comctl32.lib Msimg32.lib Winspool.lib wininet.lib urlmon.lib \
 	ole32.lib OleAut32.lib shlwapi.lib version.lib \
 	WindowsCodecs.lib DbgHelp.lib
 

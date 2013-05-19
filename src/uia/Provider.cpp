@@ -131,28 +131,15 @@ void SumatraUIAutomationProvider::OnSelectionChanged()
         uia::RaiseAutomationEvent(document, UIA_Text_TextSelectionChangedEventId);
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(const IID & iid,void ** ppvObject)
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::QueryInterface(REFIID riid, void **ppv)
 {
-    if (ppvObject == NULL)
-        return E_POINTER;
-
-    *ppvObject = NULL;
-    if (IID_IUnknown == iid) {
-        // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
-        // respond to IUnknown
-    } else if (iid == __uuidof(IRawElementProviderSimple)) {
-        *ppvObject = static_cast<IRawElementProviderSimple*>(this);
-    } else if (iid == __uuidof(IRawElementProviderFragment)) {
-        *ppvObject = static_cast<IRawElementProviderFragment*>(this);
-    } else if (iid == __uuidof(IRawElementProviderFragmentRoot)) {
-        *ppvObject = static_cast<IRawElementProviderFragmentRoot*>(this);
-    }
-
-    if (NULL == *ppvObject)
-        return E_NOINTERFACE;
-
-    AddRef();
-    return S_OK;
+    static const QITAB qit[] = {
+        QITABENT(SumatraUIAutomationProvider, IRawElementProviderSimple),
+        QITABENT(SumatraUIAutomationProvider, IRawElementProviderFragment),
+        QITABENT(SumatraUIAutomationProvider, IRawElementProviderFragmentRoot),
+        { 0 }
+    };
+    return QISearch(this, qit, riid, ppv);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::AddRef(void)

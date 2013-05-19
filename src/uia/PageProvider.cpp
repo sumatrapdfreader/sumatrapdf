@@ -38,28 +38,15 @@ SumatraUIAutomationPageProvider* SumatraUIAutomationPageProvider::GetPreviousPag
     return sibling_prev;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::QueryInterface(const IID &iid,void **ppvObject)
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::QueryInterface(REFIID riid, void **ppv)
 {
-    if (ppvObject == NULL)
-        return E_POINTER;
-
-    *ppvObject = NULL;
-
-    if (iid == IID_IUnknown) {
-        // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
-        // respond to IUnknown
-    } else if (iid == __uuidof(IRawElementProviderFragment)) {
-        *ppvObject = static_cast<IRawElementProviderFragment*>(this);
-    } else if (iid == __uuidof(IRawElementProviderSimple)) {
-        *ppvObject = static_cast<IRawElementProviderSimple*>(this);
-    } else if (iid == __uuidof(IValueProvider)) {
-        *ppvObject = static_cast<IValueProvider*>(this);
-    }
-    if (NULL == *ppvObject)
-        return E_NOINTERFACE;
-
-    AddRef();
-    return S_OK;
+    static const QITAB qit[] = {
+        QITABENT(SumatraUIAutomationPageProvider, IRawElementProviderSimple),
+        QITABENT(SumatraUIAutomationPageProvider, IRawElementProviderFragment),
+        QITABENT(SumatraUIAutomationPageProvider, IValueProvider),
+        { 0 }
+    };
+    return QISearch(this, qit, riid, ppv);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationPageProvider::AddRef(void)

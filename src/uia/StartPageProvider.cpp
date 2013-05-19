@@ -18,26 +18,14 @@ SumatraUIAutomationStartPageProvider::~SumatraUIAutomationStartPageProvider()
 }
 
 // IUnknown
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::QueryInterface(const IID &iid,void **ppvObject)
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::QueryInterface(REFIID riid, void **ppv)
 {
-    if (ppvObject == NULL)
-        return E_POINTER;
-
-    *ppvObject = NULL;
-    if (IID_IUnknown == iid) {
-        // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
-        // respond to IUnknown
-    } else if (iid == __uuidof(IRawElementProviderFragment)) {
-        *ppvObject = static_cast<IRawElementProviderFragment*>(this);
-    } else if (iid == __uuidof(IRawElementProviderSimple)) {
-        *ppvObject = static_cast<IRawElementProviderSimple*>(this);
-    }
-
-    if (NULL == *ppvObject)
-        return E_NOINTERFACE;
-
-    AddRef();
-    return S_OK;
+    static const QITAB qit[] = {
+        QITABENT(SumatraUIAutomationStartPageProvider, IRawElementProviderSimple),
+        QITABENT(SumatraUIAutomationStartPageProvider, IRawElementProviderFragment),
+        { 0 }
+    };
+    return QISearch(this, qit, riid, ppv);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::AddRef(void)

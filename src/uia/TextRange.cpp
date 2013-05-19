@@ -213,22 +213,13 @@ int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool
 }
 
 // IUnknown
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::QueryInterface(const IID &iid,void **ppvObject)
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::QueryInterface(REFIID riid, void **ppv)
 {
-    if (ppvObject == NULL)
-        return E_POINTER;
-
-    *ppvObject = NULL;
-
-    if ((IID_IUnknown == iid) || (__uuidof(ITextRangeProvider) == iid)) {
-        *ppvObject = static_cast<ITextRangeProvider*>(this);
-    }
-
-    if (*ppvObject == NULL)
-        return E_NOINTERFACE;
-
-    AddRef();
-    return S_OK;
+    static const QITAB qit[] = {
+        QITABENT(SumatraUIAutomationTextRange, ITextRangeProvider),
+        { 0 }
+    };
+    return QISearch(this, qit, riid, ppv);
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::AddRef(void)

@@ -81,7 +81,7 @@ public:
     bool Create(const CLSID clsid) {
         CrashIf(ptr);
         if (ptr) return false;
-        HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, __uuidof(T), (void **)&ptr);
+        HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
     operator T*() const { return ptr; }
@@ -99,14 +99,14 @@ class ScopedComQIPtr : public ScopedComPtr<T> {
 public:
     ScopedComQIPtr() : ScopedComPtr() { }
     explicit ScopedComQIPtr(IUnknown *unk) {
-        HRESULT hr = unk->QueryInterface(__uuidof(T), (void **)&ptr);
+        HRESULT hr = unk->QueryInterface(&ptr);
         if (FAILED(hr))
             ptr = NULL;
     }
     T* operator=(IUnknown *newUnk) {
         if (ptr)
             ptr->Release();
-        HRESULT hr = newUnk->QueryInterface(__uuidof(T), (void **)&ptr);
+        HRESULT hr = newUnk->QueryInterface(&ptr);
         if (FAILED(hr))
             ptr = NULL;
         return ptr;
