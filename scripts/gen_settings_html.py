@@ -108,8 +108,9 @@ The syntax for colors is: <code>#rrggbb</code>.</p>
   <li><code>gg</code> : green component</li>
   <li><code>bb</code> : blue component</li>
 </ul>
-For example #ff0000 means red color. You can use <a href="http://www.colorpicker.com/">Color Picker</a>
-or <a href="http://colorschemedesigner.com/">ColorScheme Designer</a> to pick a color.
+For example #ff0000 means red color. You can use <a href="http://www.colorpicker.com/">
+Color Picker</a> or <a href="http://mudcu.be/sphere/">Sphere</a> or
+<a href="http://colorschemedesigner.com/">ColorScheme Designer</a> to pick a color.
 </p>
 </div>
 
