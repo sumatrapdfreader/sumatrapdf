@@ -43,24 +43,23 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::QueryInterface(const 
     if (ppvObject == NULL)
         return E_POINTER;
 
-    // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
-    // respond to IUnknown
-    if (iid == __uuidof(IRawElementProviderFragment)) {
+    *ppvObject = NULL;
+
+    if (iid == IID_IUnknown) {
+        // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
+        // respond to IUnknown
+    } else if (iid == __uuidof(IRawElementProviderFragment)) {
         *ppvObject = static_cast<IRawElementProviderFragment*>(this);
-        this->AddRef(); //New copy has entered the universe
-        return S_OK;
     } else if (iid == __uuidof(IRawElementProviderSimple)) {
         *ppvObject = static_cast<IRawElementProviderSimple*>(this);
-        this->AddRef(); //New copy has entered the universe
-        return S_OK;
     } else if (iid == __uuidof(IValueProvider)) {
         *ppvObject = static_cast<IValueProvider*>(this);
-        this->AddRef(); //New copy has entered the universe
-        return S_OK;
     }
+    if (NULL == *ppvObject)
+        return E_NOINTERFACE;
 
-    *ppvObject = NULL;
-    return E_NOINTERFACE;
+    AddRef();
+    return S_OK;
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationPageProvider::AddRef(void)
@@ -72,9 +71,8 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationPageProvider::Release(void)
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res) {
+    if (0 == res)
         delete this;
-    }
     return res;
 }
 
@@ -181,7 +179,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetPatternProvider(PA
 
     if (patternId == UIA_ValuePatternId) {
         *pRetVal = static_cast<IValueProvider*>(this);
-        this->AddRef();
+        AddRef();
         return S_OK;
     }
 

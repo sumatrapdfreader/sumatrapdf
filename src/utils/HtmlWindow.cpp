@@ -194,29 +194,6 @@ static void FreeWindowId(int windowId)
 // {F1EC293F-DBBD-4A4B-94F4-FA52BA0BA6EE}
 static const GUID CLSID_HW_IInternetProtocol = { 0xf1ec293f, 0xdbbd, 0x4a4b, { 0x94, 0xf4, 0xfa, 0x52, 0xba, 0xb, 0xa6, 0xee } };
 
-/* TODO: can I implement AddRef()/Release() in all classes below just by
-   inheriting this "mixin" ? */
-/*
-class ComRefCounted {
-    LONG refCount;
-    ComRefCounted() {
-        refCount = 1;
-    }
-    ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
-    ULONG STDMETHODCALLTYPE Release();
-};
-
-ULONG STDMETHODCALLTYPE ComRefCounted::Release()
-{
-    LONG res = InterlockedDecrement(&refCount);
-    CrashIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
-}
-*/
-
 class HW_IInternetProtocolInfo : public IInternetProtocolInfo
 {
 public:
@@ -256,9 +233,8 @@ ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res) {
+    if (0 == res)
         delete this;
-    }
     return res;
 }
 
@@ -319,9 +295,8 @@ ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res) {
+    if (0 == res)
         delete this;
-    }
     return res;
 }
 
@@ -494,9 +469,8 @@ STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res) {
+    if (0 == res)
         delete this;
-    }
     return res;
 }
 
@@ -995,9 +969,8 @@ ULONG STDMETHODCALLTYPE HtmlMoniker::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res) {
+    if (0 == res)
         delete this;
-    }
     return res;
 }
 
@@ -1543,9 +1516,8 @@ ULONG STDMETHODCALLTYPE FrameSite::Release()
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res) {
+    if (0 == res)
         delete this;
-    }
     return res;
 }
 

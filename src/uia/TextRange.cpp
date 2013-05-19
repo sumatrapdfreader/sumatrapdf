@@ -218,16 +218,17 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::QueryInterface(const IID
     if (ppvObject == NULL)
         return E_POINTER;
 
-    // TODO: per http://blogs.msdn.com/b/oldnewthing/archive/2004/03/26/96777.aspx should
-    // respond to IUnknown
-    if (iid == __uuidof(ITextRangeProvider)) {
+    *ppvObject = NULL;
+
+    if ((IID_IUnknown == iid) || (__uuidof(ITextRangeProvider) == iid)) {
         *ppvObject = static_cast<ITextRangeProvider*>(this);
-        this->AddRef(); //New copy has entered the universe
-        return S_OK;
     }
 
-    *ppvObject = NULL;
-    return E_NOINTERFACE;
+    if (*ppvObject == NULL)
+        return E_NOINTERFACE;
+
+    AddRef();
+    return S_OK;
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::AddRef(void)
@@ -239,9 +240,8 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::Release(void)
 {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
-    if (0 == res) {
+    if (0 == res)
         delete this;
-    }
     return res;
 }
 
