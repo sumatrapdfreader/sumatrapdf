@@ -329,9 +329,9 @@ static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=NULL)
         return MimeFromUrl(newUrl, imgExt);
     }
 
-    static struct {
-        WCHAR *ext;
-        WCHAR *mimetype;
+    static const struct {
+        const WCHAR *ext;
+        const WCHAR *mimetype;
     } mimeTypes[] = {
         { L".html",  L"text/html" },
         { L".htm",   L"text/html" },

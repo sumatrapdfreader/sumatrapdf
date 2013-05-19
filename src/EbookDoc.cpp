@@ -213,23 +213,24 @@ bool EpubDoc::Load()
     if (!node)
         return false;
 
-    if (str::FindChar(contentPath, '/'))
-        *(WCHAR *)(str::FindCharLast(contentPath, '/') + 1) = '\0';
+    WCHAR *slashPos = str::FindCharLast(contentPath, '/');
+    if (NULL != slashPos)
+        slashPos[1] = 0;
     else
-        *contentPath = '\0';
+        *contentPath = 0;
 
     // encrypted files will be ignored (TODO: support decryption)
     WStrList encList;
     ScopedMem<char> encryption(zip.GetFileDataByName(L"META-INF/encryption.xml"));
     if (encryption) {
-        HtmlParser parser;
-        HtmlElement *encRoot = parser.ParseInPlace(encryption);
-        HtmlElement *cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
+        HtmlParser parser2;
+        HtmlElement *encRoot = parser2.ParseInPlace(encryption);
+        HtmlElement *cr = parser2.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
         while (cr) {
             WCHAR *uri = cr->GetAttribute("URI");
             if (uri)
                 encList.Append(uri);
-            cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
+            cr = parser2.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
         }
     }
 
