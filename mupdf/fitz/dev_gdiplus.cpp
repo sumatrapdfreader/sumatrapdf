@@ -289,7 +289,8 @@ fz_dump_bitmap(fz_context *ctx, Bitmap *bmp, const char *msg)
 	GetImageEncodersSize(&numEncoders, &size);
 	ImageCodecInfo *codecInfo = (ImageCodecInfo *)fz_malloc(ctx, size);
 	GetImageEncoders(numEncoders, size, codecInfo);
-	for (UINT j = 0; j < numEncoders; j++) {
+	for (UINT j = 0; j < numEncoders; j++)
+	{
 		if (!wcscmp(codecInfo[j].MimeType, L"image/png"))
 			clsid = codecInfo[j].Clsid;
 	}

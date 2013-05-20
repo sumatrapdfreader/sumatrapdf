@@ -200,6 +200,20 @@ bool EpubDoc::Load()
     if (!contentPath)
         return false;
 
+    // encrypted files will be ignored (TODO: support decryption)
+    WStrList encList;
+    ScopedMem<char> encryption(zip.GetFileDataByName(L"META-INF/encryption.xml"));
+    if (encryption) {
+        HtmlElement *encRoot = parser.ParseInPlace(encryption);
+        HtmlElement *cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
+        while (cr) {
+            WCHAR *uri = cr->GetAttribute("URI");
+            if (uri)
+                encList.Append(uri);
+            cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
+        }
+    }
+
     ScopedMem<WCHAR> contentPathDec(str::Dup(contentPath));
     str::UrlDecodeInPlace(contentPathDec);
     ScopedMem<char> content(zip.GetFileDataByName(contentPathDec));
@@ -214,25 +228,10 @@ bool EpubDoc::Load()
         return false;
 
     WCHAR *slashPos = str::FindCharLast(contentPath, '/');
-    if (NULL != slashPos)
-        slashPos[1] = 0;
+    if (slashPos)
+        *(slashPos + 1) = '\0';
     else
-        *contentPath = 0;
-
-    // encrypted files will be ignored (TODO: support decryption)
-    WStrList encList;
-    ScopedMem<char> encryption(zip.GetFileDataByName(L"META-INF/encryption.xml"));
-    if (encryption) {
-        HtmlParser parser2;
-        HtmlElement *encRoot = parser2.ParseInPlace(encryption);
-        HtmlElement *cr = parser2.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
-        while (cr) {
-            WCHAR *uri = cr->GetAttribute("URI");
-            if (uri)
-                encList.Append(uri);
-            cr = parser2.FindElementByNameNS("CipherReference", EPUB_ENC_NS, cr);
-        }
-    }
+        *contentPath = '\0';
 
     WStrList idList, pathList;
 
