@@ -1,13 +1,13 @@
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
-+++ openjpeg\j2k.c	Sun May 19 04:37:13 2013
++++ openjpeg\j2k.c	Mon May 20 03:56:46 2013
 @@ -1930,10 +1930,16 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
                  return OPJ_FALSE;
          }
  
-+        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
++        /* testcase 2539.pdf.SIGFPE.706.1712 (also 3622.pdf.SIGFPE.706.2916 and 4008.pdf.SIGFPE.706.3345 and maybe more) */
 +        if (!(l_cp->tdx * l_cp->tdy)) {
 +                opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: invalid tile size (tdx: %d, tdy: %d)\n", l_cp->tdx, l_cp->tdy);
 +                return OPJ_FALSE;
@@ -18,13 +18,31 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                  /* if JPWL is on, we check whether TX errors have damaged
                    too much the SIZ parameters */
                  if (!(l_image->x1 * l_image->y1)) {
-@@ -4434,10 +4440,18 @@
+@@ -3873,10 +3879,16 @@
+ 
+         l_cp = &(p_j2k->m_cp);
+         opj_read_bytes(p_header_data,&(p_j2k->m_current_tile_number),2);                /* Isot */
+         p_header_data+=2;
+ 
++        /* testcase 2.pdf.SIGFPE.706.1112 */
++        if (p_j2k->m_current_tile_number >= l_cp->tw * l_cp->th) {
++                opj_event_msg(p_manager, EVT_ERROR, "Invalid tile number %d\n", p_j2k->m_current_tile_number);
++                return OPJ_FALSE;
++        }
++
+         l_tcp = &l_cp->tcps[p_j2k->m_current_tile_number];
+         l_tile_x = p_j2k->m_current_tile_number % l_cp->tw;
+         l_tile_y = p_j2k->m_current_tile_number / l_cp->tw;
+ 
+ #ifdef USE_JPWL
+@@ -4434,10 +4446,19 @@
                          }
                  }
          };
  #endif /* USE_JPWL */
  
 +        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=166 */
++        assert(l_comp_room < l_nb_comp); /*MUPDF*/
 +        if (l_comp_room >= l_nb_comp) {
 +                opj_event_msg(p_manager, EVT_ERROR,
 +                        "JPWL: bad component number in RGN (%d when there are only %d)\n",
@@ -37,7 +55,19 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
          return OPJ_TRUE;
  
-@@ -5910,11 +5924,12 @@
+@@ -5806,10 +5827,11 @@
+         */
+ 
+         if (parameters->tile_size_on) {
+                 cp->tw = opj_int_ceildiv(image->x1 - cp->tx0, cp->tdx);
+                 cp->th = opj_int_ceildiv(image->y1 - cp->ty0, cp->tdy);
++                assert(cp->tw * cp->th > 0); /*MUPDF*/
+         } else {
+                 cp->tdx = image->x1 - cp->tx0;
+                 cp->tdy = image->y1 - cp->ty0;
+         }
+ 
+@@ -5910,11 +5932,13 @@
                  tcp->POC = 0;
  
                  if (parameters->numpocs) {
@@ -45,12 +75,104 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                          tcp->POC = 1;
 -                        for (i = 0; i < parameters->numpocs; i++) {
 +                        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=165 */
++                        assert(parameters->numpocs <= 32); /*MUPDF*/
 +                        for (i = 0; i < opj_uint_min(parameters->numpocs, 32); i++) {
                                  if (tileno + 1 == parameters->POC[i].tile )  {
                                          opj_poc_t *tcp_poc = &tcp->pocs[numpocs_tile];
  
                                          tcp_poc->resno0         = parameters->POC[numpocs_tile].resno0;
                                          tcp_poc->compno0        = parameters->POC[numpocs_tile].compno0;
+diff -rPu5 openjpeg.orig\jp2.c openjpeg\jp2.c
+--- openjpeg.orig\jp2.c	Sat May 18 20:52:42 2013
++++ openjpeg\jp2.c	Mon May 20 03:56:53 2013
+@@ -774,10 +774,17 @@
+ 			opj_malloc(nr_channels * sizeof(opj_image_comp_t));
+ 
+ 	for(i = 0; i < nr_channels; ++i) {
+ 		pcol = cmap[i].pcol; cmp = cmap[i].cmp;
+ 
++		/* testcase 451.pdf.SIGSEGV.f4c.3723 */
++		if (cmp >= image->numcomps) {
++			/* TODO: is there a better place to validate the channel index? */
++			fprintf(stderr, "invalid channel index %d\n", cmp);
++			cmp = 0;
++		}
++
+ 		new_comps[pcol] = old_comps[cmp];
+ 
+ 		/* Direct use */
+ 		if(cmap[i].mtyp == 0){
+ 			old_comps[cmp].data = NULL; continue;
+@@ -796,10 +803,16 @@
+ 		/* Direct use: */
+ 		if(cmap[i].mtyp == 0) continue;
+ 
+ 		/* Palette mapping: */
+ 		cmp = cmap[i].cmp; pcol = cmap[i].pcol;
++		/* testcase 451.pdf.SIGSEGV.f4c.3723 */
++		if (cmp >= image->numcomps) {
++			/* TODO: is there a better place to validate the channel index? */
++			fprintf(stderr, "invalid channel index %d\n", cmp);
++			cmp = 0;
++		}
+ 		src = old_comps[cmp].data;
+ 		dst = new_comps[pcol].data;
+ 		max = new_comps[pcol].w * new_comps[pcol].h;
+ 
+ 		for(j = 0; j < max; ++j)
+@@ -958,10 +971,17 @@
+ 		cmap[i].mtyp = (OPJ_BYTE) l_value;
+ 
+ 		opj_read_bytes(p_cmap_header_data, &l_value, 1);			/* PCOL^i */
+ 		++p_cmap_header_data;
+ 		cmap[i].pcol = (OPJ_BYTE) l_value;
++
++		/* testcase 451.pdf.SIGSEGV.5b5.3723 */
++		if (cmap[i].pcol >= nr_channels) {
++			opj_event_msg(p_manager, EVT_ERROR, "Invalid palette index %d.\n", l_value);
++			opj_free(cmap);
++			return OPJ_FALSE;
++		}
+ 	}
+ 
+ 	jp2->color.jp2_pclr->cmap = cmap;
+ 
+ 	return OPJ_TRUE;
+@@ -981,10 +1001,17 @@
+ 		if((asoc = info[i].asoc) == 0) continue;
+ 
+ 		cn = info[i].cn; 
+         acn = asoc - 1;
+ 
++		/* testcase 4149.pdf.SIGSEGV.cf7.3501 */
++		if (cn != acn && (cn >= image->numcomps || acn >= image->numcomps)) {
++			/* TODO: is there a better place to validate these indices? */
++			fprintf(stderr, "invalid component index %d/%d\n", cn, acn);
++			cn = acn = 0;
++		}
++
+ 		if(cn != acn)
+ 		{
+ 			opj_image_comp_t saved;
+ 
+ 			memcpy(&saved, &image->comps[cn], sizeof(opj_image_comp_t));
+@@ -1680,10 +1707,16 @@
+ 				return OPJ_FALSE;
+ 			}
+ 		}
+ 		else if	(box.length == 0) {
+ 			opj_event_msg(p_manager, EVT_ERROR, "Cannot handle box of undefined sizes\n");
++			opj_free(l_current_data);
++			return OPJ_FALSE;
++		}
++		/* testcase 1851.pdf.SIGSEGV.ce9.948 */
++		else if	(box.length < l_nb_bytes_read) {
++			opj_event_msg(p_manager, EVT_ERROR, "invalid box size %d (%x)\n", box.length, box.type);
+ 			opj_free(l_current_data);
+ 			return OPJ_FALSE;
+ 		}
+ 
+ 		l_current_handler = opj_jp2_find_handler(box.type);
 diff -rPu5 openjpeg.orig\opj_config.h openjpeg\opj_config.h
 --- openjpeg.orig\opj_config.h	Thu Jan 01 01:00:00 1970
 +++ openjpeg\opj_config.h	Sun May 19 03:54:43 2013
@@ -69,3 +191,20 @@ diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 +#define OPJ_EXPORTS
 +
 +#define USE_JPIP
+diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
+--- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
++++ openjpeg\tcd.c	Mon May 20 03:56:53 2013
+@@ -1652,10 +1652,13 @@
+                 l_res = l_tile_comp->resolutions + l_img_comp->resno_decoded;
+                 l_width = (l_res->x1 - l_res->x0);
+                 l_height = (l_res->y1 - l_res->y0);
+                 l_stride = (l_tile_comp->x1 - l_tile_comp->x0) - l_width;
+ 
++                /* testcase 2.pdf.SIGFPE.706.1112 */
++                assert(l_height == 0 || l_width + l_stride <= l_tile_comp->data_size / l_height);
++
+                 if (l_img_comp->sgnd) {
+                         l_min = -(1 << (l_img_comp->prec - 1));
+                         l_max = (1 << (l_img_comp->prec - 1)) - 1;
+                 }
+                 else {

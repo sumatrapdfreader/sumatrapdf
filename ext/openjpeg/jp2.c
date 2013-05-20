@@ -776,6 +776,13 @@ void opj_jp2_apply_pclr(opj_image_t *image, opj_jp2_color_t *color)
 	for(i = 0; i < nr_channels; ++i) {
 		pcol = cmap[i].pcol; cmp = cmap[i].cmp;
 
+		/* testcase 451.pdf.SIGSEGV.f4c.3723 */
+		if (cmp >= image->numcomps) {
+			/* TODO: is there a better place to validate the channel index? */
+			fprintf(stderr, "invalid channel index %d\n", cmp);
+			cmp = 0;
+		}
+
 		new_comps[pcol] = old_comps[cmp];
 
 		/* Direct use */
@@ -798,6 +805,12 @@ void opj_jp2_apply_pclr(opj_image_t *image, opj_jp2_color_t *color)
 
 		/* Palette mapping: */
 		cmp = cmap[i].cmp; pcol = cmap[i].pcol;
+		/* testcase 451.pdf.SIGSEGV.f4c.3723 */
+		if (cmp >= image->numcomps) {
+			/* TODO: is there a better place to validate the channel index? */
+			fprintf(stderr, "invalid channel index %d\n", cmp);
+			cmp = 0;
+		}
 		src = old_comps[cmp].data;
 		dst = new_comps[pcol].data;
 		max = new_comps[pcol].w * new_comps[pcol].h;
@@ -960,6 +973,13 @@ OPJ_BOOL opj_jp2_read_cmap(	opj_jp2_t * jp2,
 		opj_read_bytes(p_cmap_header_data, &l_value, 1);			/* PCOL^i */
 		++p_cmap_header_data;
 		cmap[i].pcol = (OPJ_BYTE) l_value;
+
+		/* testcase 451.pdf.SIGSEGV.5b5.3723 */
+		if (cmap[i].pcol >= nr_channels) {
+			opj_event_msg(p_manager, EVT_ERROR, "Invalid palette index %d.\n", l_value);
+			opj_free(cmap);
+			return OPJ_FALSE;
+		}
 	}
 
 	jp2->color.jp2_pclr->cmap = cmap;
@@ -982,6 +1002,13 @@ void opj_jp2_apply_cdef(opj_image_t *image, opj_jp2_color_t *color)
 
 		cn = info[i].cn; 
         acn = asoc - 1;
+
+		/* testcase 4149.pdf.SIGSEGV.cf7.3501 */
+		if (cn != acn && (cn >= image->numcomps || acn >= image->numcomps)) {
+			/* TODO: is there a better place to validate these indices? */
+			fprintf(stderr, "invalid component index %d/%d\n", cn, acn);
+			cn = acn = 0;
+		}
 
 		if(cn != acn)
 		{
@@ -1682,6 +1709,12 @@ OPJ_BOOL opj_jp2_read_header_procedure(  opj_jp2_t *jp2,
 		}
 		else if	(box.length == 0) {
 			opj_event_msg(p_manager, EVT_ERROR, "Cannot handle box of undefined sizes\n");
+			opj_free(l_current_data);
+			return OPJ_FALSE;
+		}
+		/* testcase 1851.pdf.SIGSEGV.ce9.948 */
+		else if	(box.length < l_nb_bytes_read) {
+			opj_event_msg(p_manager, EVT_ERROR, "invalid box size %d (%x)\n", box.length, box.type);
 			opj_free(l_current_data);
 			return OPJ_FALSE;
 		}

@@ -1932,7 +1932,7 @@ static OPJ_BOOL opj_j2k_read_siz(opj_j2k_t *p_j2k,
                 return OPJ_FALSE;
         }
 
-        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=169 */
+        /* testcase 2539.pdf.SIGFPE.706.1712 (also 3622.pdf.SIGFPE.706.2916 and 4008.pdf.SIGFPE.706.3345 and maybe more) */
         if (!(l_cp->tdx * l_cp->tdy)) {
                 opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: invalid tile size (tdx: %d, tdy: %d)\n", l_cp->tdx, l_cp->tdy);
                 return OPJ_FALSE;
@@ -3881,6 +3881,12 @@ OPJ_BOOL opj_j2k_read_sot ( opj_j2k_t *p_j2k,
         opj_read_bytes(p_header_data,&(p_j2k->m_current_tile_number),2);                /* Isot */
         p_header_data+=2;
 
+        /* testcase 2.pdf.SIGFPE.706.1112 */
+        if (p_j2k->m_current_tile_number >= l_cp->tw * l_cp->th) {
+                opj_event_msg(p_manager, EVT_ERROR, "Invalid tile number %d\n", p_j2k->m_current_tile_number);
+                return OPJ_FALSE;
+        }
+
         l_tcp = &l_cp->tcps[p_j2k->m_current_tile_number];
         l_tile_x = p_j2k->m_current_tile_number % l_cp->tw;
         l_tile_y = p_j2k->m_current_tile_number / l_cp->tw;
@@ -4443,6 +4449,7 @@ static OPJ_BOOL opj_j2k_read_rgn (opj_j2k_t *p_j2k,
 #endif /* USE_JPWL */
 
         /* cf. http://code.google.com/p/openjpeg/issues/detail?id=166 */
+        assert(l_comp_room < l_nb_comp); /*MUPDF*/
         if (l_comp_room >= l_nb_comp) {
                 opj_event_msg(p_manager, EVT_ERROR,
                         "JPWL: bad component number in RGN (%d when there are only %d)\n",
@@ -5822,6 +5829,7 @@ void opj_j2k_setup_encoder(     opj_j2k_t *p_j2k,
         if (parameters->tile_size_on) {
                 cp->tw = opj_int_ceildiv(image->x1 - cp->tx0, cp->tdx);
                 cp->th = opj_int_ceildiv(image->y1 - cp->ty0, cp->tdy);
+                assert(cp->tw * cp->th > 0); /*MUPDF*/
         } else {
                 cp->tdx = image->x1 - cp->tx0;
                 cp->tdy = image->y1 - cp->ty0;
@@ -5927,6 +5935,7 @@ void opj_j2k_setup_encoder(     opj_j2k_t *p_j2k,
                         /* initialisation of POC */
                         tcp->POC = 1;
                         /* cf. http://code.google.com/p/openjpeg/issues/detail?id=165 */
+                        assert(parameters->numpocs <= 32); /*MUPDF*/
                         for (i = 0; i < opj_uint_min(parameters->numpocs, 32); i++) {
                                 if (tileno + 1 == parameters->POC[i].tile )  {
                                         opj_poc_t *tcp_poc = &tcp->pocs[numpocs_tile];
