@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-53f3ee960dc8a8e3470c3bc57cc18e9070145bc4
+55805b6ebe9d391b2666184c5997b55aa2c59416
 :%s of %s
 af:%s uit %s
 am:%s՝ %s-ից
@@ -3590,7 +3590,7 @@ id:Semua Dokumen Yang Didukung
 it:Tutti i documenti supportati
 ja:すべての対応ドキュメント
 ka:ყველა მხარდაჭერილი დოკუმენტი
-kr:모든 지원되는 문서
+kr:지원하는 모든 문서
 ku:هەموو بەڵگەنامە گونجاوەکان
 lt:Visų palaikomų tipų dokumentai
 mk:Сите поддражни документи
@@ -3996,7 +3996,7 @@ id:Periksa &pembaruan secara otomatis
 it:Controlla a&utomaticamente aggiornamenti
 ja:自動的に更新をチェックする(&U)
 ka:განახლების &ავტომატურად შემოწმება
-kr:업데이트 자동 확인(&U)
+kr:자동으로 업데이트 확인(&U)
 ku:پشکنین بۆ نوێکردنەوە بە &خۆکاری
 kw:Checkya rag nowythyansow yn awtomatek
 lt:Automatiškai &tikrinti, ar yra naujinimų
@@ -4469,7 +4469,7 @@ id:Tidak bisa menghubungi Internet (kesalahan %#x).
 it:Impossibile connettersi a internet (errore %#x).
 ja:インターネットへ接続できません (エラー %#x)。
 ka:ინტერნეტთან დაკავშირება ვერ მოხერხდა (შეცდომა %#x).
-kr:인터넷에 접속할 수 없습니다. (오류 %#x)
+kr:인터넷에 접속할 수 없습니다. (%#x 오류)
 ku:.(%#x ناتوانرێت پەیوەندی بکرێت بە ئینتەرنێتەوە (هەڵەی
 lt:Ryšys su internetu nutrūko (klaida %#x).
 mk:Не можам да се поврзам на Интернет (грешка %#x).
@@ -4654,7 +4654,7 @@ id:Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah
 it:Impossibile eseguire il comando di ricerca inversa. Controllare la riga di comando usata nelle impostazioni.
 ja:逆順検索コマンドを開始できません。設定でコマンド ラインをチェックしてください。
 ka:შებრუნებული ძებნის ბრძანების გაშვება ვერ მოხერხდა. გთხოვთ შეამოწმეთ ბრძანებების სტრიქონის პარამეტრები.
-kr:역 검색 명령을 시작할 수 없습니다. 설정에서 명령줄을 확인하세요.
+kr:역방향 검색 명령을 시작할 수 없습니다. 설정에서 명령줄을 확인하세요.
 ku:ناتوانرێت فرمانی گەڕانی پێچەوانە ئەنجام بدرێت. تکایە فرمانی هێڵ بپشکنە لە ڕێکخستنەکاندا
 kw:Ny yllir dalleth arhadow gorthhwilas.  Check an linen arhadow y'n settyansow mar pleg.
 lt:Nepavyko pradėti atvirkščios paieškos komandos. Patikrinkite kompandinę eilutę nuostatose.
@@ -6989,7 +6989,7 @@ id:Kesalahan memuat %s
 it:Errore nel caricamento di %s
 ja:%s の読み込みに失敗
 ka:ჩატვირთვის შეცდომა %s
-kr:%s 불러오는 중 오류 발생
+kr:%s(을)를 불러오는 중 오류 발생!
 ku:%s هەڵە ڕوویدا لە کردنەوەی
 lt:Nepavyko įkelti %s
 mk:Грешка при вчитување %s
@@ -9499,7 +9499,7 @@ fr:Installation en cours…
 hu:Telepítés folyamatban...
 it:Installazione in corso...
 ja:インストール中…
-kr:설치 진행 중...
+kr:설치하는 중...
 ku:دابەزاندن لە ئەنجامداندایە...
 mk:Инсталирањето е во тек...
 nl:Installatie is bezig...
@@ -9596,7 +9596,7 @@ fi:Anna Windowsin työpöydän hakutoiminnon &etsiä PDF-asiakirjoista
 fr:Permettre à Windows Desktop Search la recherche de documents PDF
 hu:Hagyja a Windows Desktop Search-re a PDF dokumentumok keresését
 it:Assegna a Windows la ricerca sul desktop & dei documenti PDF
-kr:Windows 데스크탑 검색에서 PDF 문서 내용을 검색할 수 있습니다.
+kr:Windows 데스크톱 검색에서 PDF 문서를 검색할 수 있습니다.
 ku:PDF ڕێگەدان بە گەڕانی سەرشاشەی ویندۆز &بگەڕێت بۆ بەڵگەنامەکانی
 mk:Дозволи Windows Desktop Search да пребарува низ PDF-документи
 nl:Laat Windows Bureaublad Zoeker PDF documenten &zoeken
@@ -9623,7 +9623,7 @@ fi:Anna Windowsin näyttää &esikatselukuvat PDF-asiakirjoille
 fr:Permettre à Windows de montrer des a&perçus des documents PDF
 hu:Hagyja a Windows-ra a PDF dokumentumok előnézetének megjelenítését
 it:Assegna a Windows la visualizzazione & anteprima dei documenti PDF
-kr:PDF 문서의 미리보기를 Windows에서 보기(&P)
+kr:Windows 내에서 PDF 문서 미리보기 기능 추가(&P)
 ku:پیشان بدات PDF ڕێگەدان بە پیشاندەری ویندۆز &بەڵگەنامەکانی
 mk:Дозволи Windows да прикажува слики за PDF-документи
 nl:Laat Windows &voorbeelden tonen van PDF documenten
@@ -9890,6 +9890,8 @@ vn:Đặt SumatraPDF làm trình đọc PDF chính
 am:Man&ga եղանակ
 az:Man&qa rejimi
 br:Modo Man&gá
+ca-xv:Mode man&ga
+ca:Mode man&ga
 cn:漫画模式(&G)
 es:Modo man&ga
 et:Man&garežiim
@@ -10061,7 +10063,7 @@ id:Dimodifikasi:
 it:Data ultima modifica:
 ja:変更日時:
 ka:შეცვლილია:
-kr:수정한 날짜:
+kr:고친 날짜:
 ku:دەستکاریکراو:
 lt:Keistas:
 mk:Изменето на:
@@ -10772,7 +10774,7 @@ eu:Irekitzea %s
 fr:Ouvrir dans %s
 hu:Megnyitás %s
 it:Apri in %s
-kr:에서 열기 %s
+kr:%s(으)로 열기
 ku:کردنەوە لە %s
 mk:Отвори во %s
 nl:Open in %s
@@ -11717,7 +11719,7 @@ id:Mengukur halaman
 it:Adattamento pagina
 ja:ページの拡大縮小
 ka:გვერდის მასშტაბირება
-kr:페이지 배율 조정하는 중
+kr:페이지 배율 조정
 ku:ڕیزکردنی پەڕەکان
 lt:Puslapio mastelis
 mk:Размер на страница
@@ -11869,7 +11871,7 @@ id:Harap tunggu - sedang proses rendering...
 it:Rendering in corso - attendere...
 ja:描画中...
 ka:მიმდინარეობს რენდერი, გთხოვთ მოიცადეთ...
-kr:렌더링하는 중, 잠시만 기다리세요...
+kr:렌더링하는 중, 잠시 기다리세요...
 ku:تکایە چاوەڕوانبە - پوختە ئەکرێت...
 kw:Gortos, mar pleg - ow rendra...
 lt:Prašome palaukti – atvaizduojama...
@@ -13153,7 +13155,7 @@ id:Sedang mencari %d dari %d
 it:Ricerca: %d di %d...
 ja:%d (%d 中) を検索しています...
 ka:მიმდინარეობს ძებნა %d %d-იდან...
-kr:%d / %d (을)를 검색하는 중...
+kr:%d / %d 페이지 검색하는 중...
 ku:...%d لە %d گەڕانی
 kw:Ow hwilas %d a %d...
 lt:Ieškoma %d iš %d...
@@ -13470,7 +13472,7 @@ id:Tetapkan baris perintah pencarian terbalik
 it:Imposta la ricerca inversa via riga di comando
 ja:逆順検索コマンドラインの設定
 ka:შებრუნებული ძებნის ბრძანების სტრიქონის დაყენება
-kr:명령줄 역 탐색 설정
+kr:명령줄 역방향 탐색 설정
 ku:ڕێکخستنی هێڵی پێچەوانەی گەڕان
 kw:Settya linen-arhadow gorthhwilas
 lt:Nustatyti atvirkščios paieškos komandinę eilutę
@@ -13813,7 +13815,7 @@ id:Tampilkan kolom &markah jika tersedia
 it:Visualizza la &barra laterale dei segnalibri quando disponibile
 ja:利用可能ならブックマーク サイド バーを表示(&B)
 ka:&სანიშნეთა ზოლის ჩვენება (თუ შესაძლებელია)
-kr:사용 가능한 경우 책갈피 옆구리 표시줄 보이기(&B)
+kr:책갈피 옆구리 표시줄 보이기(&B) (사용 가능한 경우)
 ku:پیشاندانی &نیشانەکراوەکان لە تەنیشتەوە ئەگەر هەبوو
 kw:Diskwedhes &amalvar an lyververkyow mars eus onan
 lt:Rodyti &žymų parankinę, kai yra žymų
@@ -14942,7 +14944,7 @@ fr:Désinstallation en cours…
 hu:Eltávolítás folyamatban...
 it:Disinstallazione in corso...
 ja:アンインストール中…
-kr:제거 진행 중...
+kr:제거하는 중...
 ku:سڕینەوە لە ئەنجامداندایە...
 mk:Бришењето е во тек...
 nl:Deinstallatie is bezig...
@@ -15775,7 +15777,7 @@ id:menyalin teks
 it:Copia del testo...
 ja:コピーするテキスト
 ka:ტექსტი კოპირდება
-kr:문자열 복사하는 중
+kr:문자열 복사하는 중...
 ku:لەبەرگرتنەوەی دەق
 lt:kopijuojamas tekstas
 mk:копирам текст
@@ -15833,7 +15835,7 @@ id:mencetak dokumen
 it:Stampa documento...
 ja:印刷するドキュメント
 ka:დოკუმენტი იბეჭდება
-kr:문서 인쇄하는 중
+kr:문서 인쇄
 ku:چاپکردنی بەڵگەنامە
 lt:spausdinamas dokumentas
 mk:печатам документ
