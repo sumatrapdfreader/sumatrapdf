@@ -26,6 +26,9 @@ namespace uitask {
 void    Initialize();
 void    Destroy();
 
+// call only from the same thread as Initialize() and Destroy()
+void    DrainQueue();
+
 // Can be called from any thread. Queues the task to be executed
 // as soon as possible on ui thread.
 void    Post(UITask *);

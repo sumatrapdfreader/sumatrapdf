@@ -519,6 +519,7 @@ Exit:
     // (which should be necessary only very rarely)
     while (gFileExistenceChecker) {
         Sleep(10);
+        uitask::DrainQueue();
     }
 
     gFileHistory.UpdateStatesSource(NULL);

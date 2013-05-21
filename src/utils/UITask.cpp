@@ -25,7 +25,7 @@ public:
 
 namespace uitask {
 
-static HWND  gTaskDispatchHwnd;
+static HWND gTaskDispatchHwnd = NULL;
 
 #define UITASK_CLASS_NAME   L"UITask_Wnd_Class"
 #define WM_EXECUTE_TASK       (WM_USER + 1)
@@ -50,6 +50,7 @@ void Initialize()
     FillWndClassEx(wcex, hinst, UITASK_CLASS_NAME, WndProcTaskDispatch);
     RegisterClassEx(&wcex);
 
+    CrashIf(gTaskDispatchHwnd);
     gTaskDispatchHwnd = CreateWindow(
             UITASK_CLASS_NAME, L"UITask Dispatch Window",
             WS_OVERLAPPED,
@@ -58,16 +59,25 @@ void Initialize()
             hinst, NULL);
 }
 
-// note: it's possible (but highly unlikely) that we might leak UITask
-// objects that were sent to the window but not executed/destroyed.
-// There's nothing we can do about it.
+void DrainQueue()
+{
+    CrashIf(!gTaskDispatchHwnd);
+    MSG msg;
+    while (PeekMessage(&msg, gTaskDispatchHwnd, WM_EXECUTE_TASK, WM_EXECUTE_TASK, PM_REMOVE)) {
+        DispatchMessage(&msg);
+    }
+}
+
 void Destroy()
 {
+    DrainQueue();
+    DestroyWindow(gTaskDispatchHwnd);
+    gTaskDispatchHwnd = NULL;
 }
 
 void Post(UITask *task)
 {
-    CrashIf(!task);
+    CrashIf(!task || !gTaskDispatchHwnd);
     lf("posting %s", task->name);
     PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)task);
 }
