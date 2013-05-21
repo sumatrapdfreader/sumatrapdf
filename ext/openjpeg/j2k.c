@@ -3973,6 +3973,13 @@ OPJ_BOOL opj_j2k_read_sot ( opj_j2k_t *p_j2k,
                 opj_read_bytes(p_header_data,&l_num_parts ,1);          /* TNsot */
                 ++p_header_data;
 
+                /* testcase 451.pdf.SIGSEGV.ce9.3723 */
+                if (l_num_parts && l_current_part >= l_num_parts) {
+                        opj_event_msg(p_manager, EVT_ERROR, "In SOT marker, TPSot (%d) is not valid regards to TNsot (%d), giving up\n", l_current_part, l_num_parts);
+                        p_j2k->m_specific_param.m_decoder.m_last_tile_part = 1;
+                        return OPJ_FALSE;
+                }
+
                 if (l_num_parts != 0) { /* Number of tile-part header is provided by this tile-part header */
                         /* Useful to manage the case of textGBR.jp2 file because two values of TNSot are allowed: the correct numbers of
                          * tile-parts for that tile and zero (A.4.2 of 15444-1 : 2002). */
@@ -4448,8 +4455,7 @@ static OPJ_BOOL opj_j2k_read_rgn (opj_j2k_t *p_j2k,
         };
 #endif /* USE_JPWL */
 
-        /* cf. http://code.google.com/p/openjpeg/issues/detail?id=166 */
-        assert(l_comp_room < l_nb_comp); /*MUPDF*/
+        /* testcase 3635.pdf.asan.77.2930 */
         if (l_comp_room >= l_nb_comp) {
                 opj_event_msg(p_manager, EVT_ERROR,
                         "JPWL: bad component number in RGN (%d when there are only %d)\n",
@@ -7464,6 +7470,10 @@ OPJ_BOOL opj_j2k_update_image_data (opj_tcd_t * p_tcd, OPJ_BYTE * p_data, opj_im
                 }
 
                 if( (l_offset_x0_src < 0 ) || (l_offset_y0_src < 0 ) || (l_offset_x1_src < 0 ) || (l_offset_y1_src < 0 ) ){
+                        return OPJ_FALSE;
+                }
+                /* testcase 2977.pdf.asan.67.2198 */
+                if ((OPJ_INT32)l_width_dest < 0 || (OPJ_INT32)l_height_dest < 0) {
                         return OPJ_FALSE;
                 }
                 /*-----*/

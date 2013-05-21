@@ -60,7 +60,8 @@ Allocate a memory block with elements initialized to 0
 #ifdef ALLOC_PERF_OPT
 void * OPJ_CALLCONV opj_calloc(size_t _NumOfElements, size_t _SizeOfElements);
 #else
-#define opj_calloc(num, size) calloc(num, size)
+/* SumatraPDF: don't assert when num * size overflows */
+#define opj_calloc(num, size) ((size_t)(num) >= (size_t)-0x100 / (size_t)(size) ? NULL : calloc(num, size))
 #endif
 
 /**
