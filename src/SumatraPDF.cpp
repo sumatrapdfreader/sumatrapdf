@@ -871,8 +871,6 @@ static bool LoadDocIntoWindow(LoadArgs& args, PasswordUI *pwdUI, DisplayState *s
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
     int rotation = 0;
 
-    // TODO: remove time logging before release
-    Timer t(true);
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if args.placeWindow == true)
     if (args.placeWindow && (!gGlobalPrefs->rememberStatePerDocument || state && state->useDefaultState)) {
@@ -1097,9 +1095,6 @@ Error:
     if (!args.isNewWindow && win->presentation && win->dm)
         win->dm->SetPresentationMode(true);
 
-    t.Stop();
-    lf("LoadDocIntoWindow() time: %.2f", t.GetTimeInMs());
-
     return true;
 }
 
@@ -1275,8 +1270,6 @@ WindowInfo *CreateAndShowWindowInfo()
 
 static void DeleteWindowInfo(WindowInfo *win)
 {
-    Timer t(true);
-
     FileWatcherUnsubscribe(win->watcher);
     win->watcher = NULL;
 
@@ -1295,9 +1288,6 @@ static void DeleteWindowInfo(WindowInfo *win)
     }
 
     delete win;
-
-    t.Stop();
-    lf("DeleteWindowInfo() time: %.2f", t.GetTimeInMs());
 }
 
 class FileChangeCallback : public UITask, public FileChangeObserver
@@ -2607,8 +2597,6 @@ size_t TotalWindowsCount()
 // about window
 void CloseDocumentInWindow(WindowInfo *win)
 {
-    // TODO: remove time logging before release
-    Timer t(true);
     bool wasChm = win->IsChm();
     if (wasChm)
         UnsubclassCanvas(win->hwndCanvas);
@@ -2641,8 +2629,6 @@ void CloseDocumentInWindow(WindowInfo *win)
     win->RedrawAll();
     UpdateFindbox(win);
     SetFocus(win->hwndFrame);
-    t.Stop();
-    lf("CloseDocumentInWindow() time: %.2f", t.GetTimeInMs());
 
 #ifdef DEBUG
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039

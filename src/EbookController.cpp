@@ -61,11 +61,7 @@ public:
         fileName(str::Dup(fileName)), win(sumWin) { }
 
     virtual void Run() {
-        //lf(L"ThreadLoadEbook::Run(%s)", fileName);
-        Timer t(true);
         doc = Doc::CreateFromFile(fileName);
-        double loadingTimeMs = t.GetTimeInMs();
-        lf(L"Loaded %s in %.2f ms", fileName, loadingTimeMs);
         // don't load PalmDoc, etc. files as long as they're not correctly formatted
         if (doc.AsMobi() && Pdb_Mobipocket != doc.AsMobi()->GetDocType())
             doc.Delete();
@@ -170,7 +166,6 @@ bool EbookFormattingThread::Format(int reparseIdx)
     bool fromBeginning = (0 == reparseIdx);
     //lf("Started laying out mobi, fromBeginning=%d", (int)fromBeginning);
     int totalPageCount = 0;
-    Timer t(true);
     formatterArgs->reparseIdx = reparseIdx;
     HtmlFormatter *formatter = CreateFormatter(doc, formatterArgs);
     int lastReparseIdx = reparseIdx;
@@ -199,7 +194,6 @@ bool EbookFormattingThread::Format(int reparseIdx)
     // this is the last message only if we're laying out from the beginning
     bool finished = fromBeginning;
     SendPagesIfNecessary(true, finished, fromBeginning);
-    //lf("Laying out took %.2f ms", t.GetTimeInMs());
     delete formatter;
     return false;
 }
