@@ -1,6 +1,32 @@
+diff -rPu5 openjpeg.orig\cio.c openjpeg\cio.c
+--- openjpeg.orig\cio.c	Sat May 18 20:52:42 2013
++++ openjpeg\cio.c	Thu May 23 00:35:04 2013
+@@ -254,16 +254,22 @@
+ }
+ 
+ void OPJ_CALLCONV opj_stream_set_user_data(opj_stream_t* p_stream, void * p_data)
+ {
+ 	opj_stream_private_t* l_stream = (opj_stream_private_t*) p_stream;
++	/* SumatraPDF: for consistency with opj_stream_set_* */
++	if (!l_stream)
++		return;
+ 	l_stream->m_user_data = p_data;
+ }
+ 
+ void OPJ_CALLCONV opj_stream_set_user_data_length(opj_stream_t* p_stream, OPJ_UINT64 data_length)
+ {
+ 	opj_stream_private_t* l_stream = (opj_stream_private_t*) p_stream;
++	/* SumatraPDF: for consistency with opj_stream_set_* */
++	if (!l_stream)
++		return;
+ 	l_stream->m_user_data_length = data_length;
+ }
+ 
+ OPJ_SIZE_T opj_stream_read_data (opj_stream_private_t * p_stream,OPJ_BYTE * p_buffer, OPJ_SIZE_T p_size, opj_event_mgr_t * p_event_mgr)
+ {
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
-+++ openjpeg\j2k.c	Wed May 22 17:50:07 2013
++++ openjpeg\j2k.c	Wed May 22 18:04:39 2013
 @@ -1930,10 +1930,21 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
@@ -274,7 +300,7 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  @param m Previously allocated memory block to be freed
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
-+++ openjpeg\tcd.c	Wed May 22 17:49:13 2013
++++ openjpeg\tcd.c	Wed May 22 18:04:39 2013
 @@ -661,10 +661,15 @@
          /* 4 borders of the tile rescale on the image if necessary */                                                                                                                                             \
          l_tile->x0 = opj_int_max(l_cp->tx0 + p * l_cp->tdx, l_image->x0);                                                                                                                                             \

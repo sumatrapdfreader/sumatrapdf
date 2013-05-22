@@ -101,6 +101,7 @@ fz_load_jpx(fz_context *ctx, unsigned char *data, int size, fz_colorspace *defcs
 	opj_set_error_handler(codec, fz_opj_error_callback, ctx);
 	if (!opj_setup_decoder(codec, &params))
 	{
+		opj_destroy_codec(codec);
 		fz_throw(ctx, "j2k decode failed");
 	}
 
