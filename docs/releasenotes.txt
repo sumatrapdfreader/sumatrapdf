@@ -7,7 +7,7 @@ Next version:
 
 * support screen readers etc. via UI automation (disabled in release builds)
 
-2.3 (2013-??-??):
+2.3 (2013-05-22):
 
 * more configurability. Settings are now saved in human-editable
   SumatraPDF-settings.txt (instead of binary sumatrapdfprefs.dat)
