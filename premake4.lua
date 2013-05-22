@@ -35,9 +35,10 @@ function solution_common()
     -- 4127 - conditional expression is constant
     -- 4100 - unreferenced formal parameter
     -- 4244 - possible loss of data due to conversion
+    -- 4428 - universal-character-name encountered in source
     -- /MP  - use multi-cores for compilation
     buildoptions {
-        "/wd4800", "/wd4127", "/wd4100", "/wd4244"
+        "/wd4800", "/wd4127", "/wd4100", "/wd4244", "/wd4428"
     }
 end
 
@@ -80,10 +81,7 @@ solution "efi"
       "src/utils/Dict*",
       "src/utils/StrUtil*",
     }
-    excludes
-    {
-      "src/utils/*_ut.cpp",
-    }
+    excludes { "src/utils/*_ut.cpp" }
     includedirs { "src/utils", "src/utils/msvc" }
     links { }
 
@@ -108,6 +106,34 @@ solution "efi"
     }
     includedirs { "src/utils", "src/utils/msvc" }
 --]]
+
+solution "all_tests"
+  solution_common()
+
+  project "tests_util"
+    kind "ConsoleApp"
+    language "C++"
+    files {
+      "tools/tests/unit_main.*",
+      "src/utils/BaseUtil*",
+      "src/utils/BencUtil*",
+      "src/utils/BitManip.h",
+      "src/utils/ByteOrderDecoder.*",
+      "src/utils/Dict*",
+      "src/utils/DebugLog*",
+      "src/utils/FileUtil*",
+      "src/utils/JsonParser*",
+      "src/utils/SettingsUtil*",
+      "src/utils/StrFormat*",
+      "src/utils/StrUtil*",
+      "src/utils/SquareTreeParser*",
+      "src/utils/WinUtil*",
+      "src/utils/UtilTests.cpp"
+    }
+    excludes { "src/utils/*_ut.cpp" }
+    includedirs { "src/utils", "src/utils/msvc" }
+    links { "gdiplus", "comctl32", "shlwapi", "Version" }
+
 
 solution "muitest"
   solution_common()
