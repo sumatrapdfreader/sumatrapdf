@@ -189,6 +189,12 @@ lex_name(fz_stream *f, pdf_lexbuf *buf)
 			case RANGE_A_F:
 				d = (c - 'A' + 10) << 4;
 				break;
+			/* cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2300 */
+			case '#':
+				fz_unread_byte(f);
+				*s++ = '#';
+				n--;
+				continue;
 			default:
 				fz_unread_byte(f);
 				/* fallthrough */
