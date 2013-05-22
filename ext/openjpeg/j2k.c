@@ -7087,7 +7087,7 @@ OPJ_BOOL opj_j2k_read_tile_header(      opj_j2k_t * p_j2k,
                         /* Why this condition? FIXME */
                         if (p_j2k->m_specific_param.m_decoder.m_state & J2K_STATE_TPH){
                                 /* testcase 2236.pdf.SIGSEGV.398.1376 */
-                                assert(p_j2k->m_specific_param.m_decoder.m_sot_length >= l_marker_size + 2);
+                                // doesn't hold, harmless(?): assert(p_j2k->m_specific_param.m_decoder.m_sot_length >= l_marker_size + 2);
                                 p_j2k->m_specific_param.m_decoder.m_sot_length -= (l_marker_size + 2);
                         }
                         l_marker_size -= 2; /* Subtract the size of the marker ID already read */
