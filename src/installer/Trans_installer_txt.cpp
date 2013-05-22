@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   28
+#define LANGS_COUNT   30
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -418,6 +418,51 @@ const char * gTranslations_cn =
   "\345\215\270\350\275\275\345\244\261\350\264\245\0"\
   "\345\215\270\350\275\275\346\255\243\345\234\250\350\277\233\350\241\214\344\270\255...\0"\
   "\345\260\206SumatraPDF\350\256\276\344\270\272&\347\274\272\347\234\201PDF\351\230\205\350\257\273\345\231\250\0";
+
+const char * gTranslations_hr = 
+  "P&ostavke\0"\
+  "Jeste li sigurni da \305\276elite deinstalirati SumatraPDF?\0"\
+  "Zatvori\0"\
+  "Nemogu\304\207e napraviti privremenu mapu\0"\
+  "Nemogu\304\207e napraviti instalacijsku mapu\0"\
+  "Nemogu\304\207e instalirati PDF preglednik\0"\
+  "Nemogu\304\207e instalirati PDF filter pretra\305\276ivanja\0"\
+  "Nemogu\304\207e instalirati dodatak za internet preglednik\0"\
+  "Nemogu\304\207e dobiti privremenu mapu\0"\
+  "Nemogu\304\207e ukloniti instalacijsku mapu\0"\
+  "Nemogu\304\207e ukloniti pre\304\215ac\0"\
+  "Nemogu\304\207e deinstalirati PDF preglednik\0"\
+  "Nemogu\304\207e deinstalirati PDF filter pretra\305\276ivnja\0"\
+  "Nemogu\304\207e deinstalirati dodatak za internet preglednik\0"\
+  "Nemogu\304\207e zapisati %s na disk\0"\
+  "Neuspjeh kod kopiranju deinstalera u privremenu mapu\0"\
+  "Neuspjeh u kreiranju pre\304\215aca\0"\
+  "Neuspjeh kod brisanja klju\304\215eva registra deinstalatera\0"\
+  "Neuspjeh kod zapisivanja produ\305\276enih informacija nastavka datoteke u registru\0"\
+  "Neuspjeh kod zapisivanja deinstalacijskih informacija u registar\0"\
+  "Sakrij postavke\0"\
+  "Instaliraj PDF &dodatak za internet preglednike Firefox, Chrome i Opera\0"\
+  "Instaliraj SumatraPDF\0"\
+  "Instaliraj SumatraPDF u &mapu:\0"\
+  "Instalacija nije uspjela!\0"\
+  "Instaliranje...\0"\
+  "Neka Windows pretraga radne povr\305\241ine &pretra\305\276uje PDF dokumente\0"\
+  "Neka Windows prikazuje &pregled PDF dokumenata\0"\
+  "Molim zatvorite %s za nastavak!\0"\
+  "Odaberite mapu gdje bi trebalo instalirati SumatraPDF:\0"\
+  "Neke datoteke za instalaciju su o\305\241te\304\207ene ili nedostaju\0"\
+  "Pokreni SumatraPDF\0"\
+  "SumatraPDF %s instaler\0"\
+  "SumatraPDF %s deinstaler\0"\
+  "SumatraPDF je deinstaliran.\0"\
+  "SumatraPDF instalacija nije prona\304\221ena.\0"\
+  "Hvala Vam na odabiru SumatraPDF!\0"\
+  "Hvala Vam! SumatraPDF je instaliran.\0"\
+  "Instaler je o\305\241te\304\207en. Molim Vas preuzmite ga ponovno.\nIsprika za tu neugodnost!\0"\
+  "Deinstaliraj SumatraPDF\0"\
+  "Deinstalacija nije uspjela\0"\
+  "Deinstaliranje...\0"\
+  "Koristi SumatraPDF kao zadani PDF preglednik\0";
 
 const char * gTranslations_nl = 
   "&Opties\0"\
@@ -869,6 +914,51 @@ const char * gTranslations_mk =
   "\320\221\321\200\320\270\321\210\320\265\321\232\320\265\321\202\320\276 \320\265 \320\262\320\276 \321\202\320\265\320\272...\0"\
   "\320\232\320\276\321\200\320\270\321\201\321\202\320\270 \320\263\320\276 SumatraPDF \320\272\320\260\320\272\320\276 &\320\276\321\201\320\275\320\276\320\262\320\265\320\275 \321\207\320\270\321\202\320\260\321\207 \320\275\320\260 PDF\0";
 
+const char * gTranslations_pl = 
+  "&Opcje\0"\
+  "Czy na pewno chcesz usun\304\205\304\207 SumatraPDF?\0"\
+  "Zamknij\0"\
+  "Nie mo\305\274na utworzy\304\207 katalogu tymczasowego\0"\
+  "Nie mo\305\274na utworzy\304\207 katalogu instalacyjnego\0"\
+  "Nie mo\305\274na zainstalowa\304\207 podgl\304\205du PDF\0"\
+  "Nie mo\305\274na zainstalowa\304\207 filtru przeszukiwania PDF\0"\
+  "Nie mo\305\274na zainstalowa\304\207 wtyczki do przegl\304\205darek\0"\
+  "Nie mo\305\274na uzyska\304\207 katalogu tymczasowego\0"\
+  "Nie mo\305\274na usun\304\205\304\207 katalogu instalacyjnego\0"\
+  "Nie mo\305\274na usun\304\205\304\207 skr\303\263tu\0"\
+  "Nie mo\305\274na usun\304\205\304\207 podgl\304\205du PDF\0"\
+  "Nie mo\305\274na usun\304\205\304\207 filtru przeszukiwania PDF\0"\
+  "Nie mo\305\274na usun\304\205\304\207 wtyczki do przegl\304\205darek\0"\
+  "Nie mo\305\274na zapisa\304\207 %s na dysk\0"\
+  "Nie mo\305\274na skopiowa\304\207 deinstalatora do katalogu tymczasowego\0"\
+  "B\305\202\304\205d przy tworzeniu skr\303\263tu\0"\
+  "Nie mo\305\274na usun\304\205\304\207 kluczy deinstalatora z rejestru\0"\
+  "Nie mo\305\274na wprowadzi\304\207 poszerzonych informacji o rozszerzeniu pliku do rejestru\0"\
+  "Nie mo\305\274na zapisa\304\207 informacji o usuni\304\231ciu programu do rejestru\0"\
+  "Ukryj &Opcje\0"\
+  "Zainstaluj &wtyczk\304\231 PDF do przegl\304\205darek Firefox, Chrome i Opera\0"\
+  "Zainstaluj SumatraPDF\0"\
+  "Zainstaluj SumatraPDF w &folderze:\0"\
+  "B\305\202\304\205d instalacji!\0"\
+  "Trwa instalacja...\0"\
+  "Wyszukiwanie z pulpitu systemu Windows ma &przeszukiwa\304\207 pliki PDF\0"\
+  "Windows ma pokazywa\304\207 &podgl\304\205d plik\303\263w PDF\0"\
+  "Zamknij  %s, aby kontynuowa\304\207!\0"\
+  "Wybierz folder, w kt\303\263rym nale\305\274y zainstalowa\304\207 program SumatraPDF:\0"\
+  "Niekt\303\263re pliki instalacyjne s\304\205 uszkodzone lub niedost\304\231pne\0"\
+  "Uruchom SumatraPDF\0"\
+  "Instalator SumatraPDF %s\0"\
+  "Usu\305\204 SumatraPDF %s\0"\
+  "Program SumatraPDF zosta\305\202 usuni\304\231ty.\0"\
+  "Program SumatraPDF nie zosta\305\202 znaleziony.\0"\
+  "Dzi\304\231kujemy za wyb\303\263r SumatraPDF!\0"\
+  "Program SumatraPDF zosta\305\202 zainstalowany.\0"\
+  "Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za k\305\202opot.\0"\
+  "Usu\305\204 SumatraPDF\0"\
+  "Usuni\304\231cie programu nie powiod\305\202o si\304\231\0"\
+  "Trwa usuwanie...\0"\
+  "U\305\274ywaj SumatraPDF jako domy\305\233lnej przegl\304\205darki PDF\0";
+
 const char * gTranslations_br = 
   "&Op\303\247\303\265es\0"\
   "Tem certeza de que quer desinstalar o SumatraPDF?\0"\
@@ -1285,6 +1375,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ca, 
   gTranslations_ca_xv, 
   gTranslations_cn, 
+  gTranslations_hr, 
   gTranslations_nl, 
   gTranslations_et, 
   gTranslations_fi, 
@@ -1295,6 +1386,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_kr, 
   gTranslations_ku, 
   gTranslations_mk, 
+  gTranslations_pl, 
   gTranslations_br, 
   gTranslations_pt, 
   gTranslations_ro, 
@@ -1318,6 +1410,7 @@ const char *gLangCodes =   "en\0" \
   "ca\0" \
   "ca-xv\0" \
   "cn\0" \
+  "hr\0" \
   "nl\0" \
   "et\0" \
   "fi\0" \
@@ -1328,6 +1421,7 @@ const char *gLangCodes =   "en\0" \
   "kr\0" \
   "ku\0" \
   "mk\0" \
+  "pl\0" \
   "br\0" \
   "pt\0" \
   "ro\0" \
@@ -1347,6 +1441,7 @@ const char *gLangNames =   "English\0" \
   "Catalan (Catal\303\240)\0" \
   "Catalan-Valencian (Catal\303\240-Valenci\303\240)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
+  "Croatian (Hrvatski)\0" \
   "Dutch (Nederlands)\0" \
   "Estonian (Eesti)\0" \
   "Finnish (Suomi)\0" \
@@ -1357,6 +1452,7 @@ const char *gLangNames =   "English\0" \
   "Korean (\355\225\234\352\265\255\354\226\264)\0" \
   "Kurdish (\331\203\331\210\330\261\330\257\333\214)\0" \
   "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)\0" \
+  "Polish (Polski)\0" \
   "Portuguese - Brazil (Portugu\303\252s)\0" \
   "Portuguese - Portugal (Portugu\303\252s)\0" \
   "Romanian (Rom\303\242n\304\203)\0" \
@@ -1388,6 +1484,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_CATALAN),
   (LANGID)-1,
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
+  _LANGID(LANG_CROATIAN),
   _LANGID(LANG_DUTCH),
   _LANGID(LANG_ESTONIAN),
   _LANGID(LANG_FINNISH),
@@ -1398,6 +1495,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_KOREAN),
   MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ),
   _LANGID(LANG_MACEDONIAN),
+  _LANGID(LANG_POLISH),
   MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN),
   _LANGID(LANG_PORTUGUESE),
   _LANGID(LANG_ROMANIAN),
@@ -1412,7 +1510,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (17 == idx);
+  return (2 == idx) || (18 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

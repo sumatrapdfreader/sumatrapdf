@@ -2957,7 +2957,7 @@ const char * gTranslations_tw =
 const char * gTranslations_hr = 
   "&O programu...\0"\
   "Stvarna veli\304\215ina\tCtrl+1\0"\
-  "\0"\
+  "N&apredne mogu\304\207nosti\0"\
   "Sve obilje\305\276ene str&anice\0"\
   "Natrag\tAlt+<-\0"\
   "&Knji\305\241ki pregled\tCtrl+8\0"\
@@ -3103,7 +3103,7 @@ const char * gTranslations_hr =
   "MiB\0"\
   "Postaviti SumatruPDF pretpostavljenim preglednikom PDF datoteka?\0"\
   "Neka SumatraPDF bude pretpostavljeni preglednik PDF datoteka\0"\
-  "\0"\
+  "Man&ga na\304\215in\0"\
   "Razlikuj velika i mala slova\0"\
   "Mobi dokumenti\0"\
   "Promijenjeno:\0"\
@@ -3118,7 +3118,7 @@ const char * gTranslations_hr =
   "Otvori\0"\
   "Otvori u programu PDF-XChange\0"\
   "Otvori dokument...\0"\
-  "\0"\
+  "Otvori u %s\0"\
   "Otvori u programu &Adobe Reader\0"\
   "Otvori u programu &Foxit Reader\0"\
   "Otvori u programu Microsoft HTML Help\0"\
@@ -9082,7 +9082,7 @@ const char * gTranslations_fa =
 const char * gTranslations_pl = 
   "&O SumatraPDF\0"\
   "Rozmiar &rzeczywisty\tCtrl+1\0"\
-  "\0"\
+  "Opcje zaawansowane...\0"\
   "&Zaznaczone strony\0"\
   "&Wstecz\tAlt+W lewo\0"\
   "Widok o&dczytu\tCtrl+8\0"\
@@ -9220,7 +9220,7 @@ const char * gTranslations_pl =
   "Ostatnio otwierane\0"\
   "\0"\
   "Przejd\305\272 do strony\0"\
-  "Ukryj ostanio otwierane\0"\
+  "Ukryj ostatnio otwierane\0"\
   "Wskaz\303\263wka: u\305\274yj klawisza F3, aby szuka\304\207 dalej\0"\
   "Pliki graficzne (*.%s)\0"\
   "\0"\
@@ -9228,7 +9228,7 @@ const char * gTranslations_pl =
   "\0"\
   "Ustawi\304\207 program SumatraPDF jako domy\305\233ln\304\205 przegl\304\205dark\304\231 plik\303\263w PDF?\0"\
   "Ustaw SumatraPDF jako domy\305\233ln\304\205 przegl\304\205dark\304\231 PDF\0"\
-  "\0"\
+  "Tryb mangi\0"\
   "Uwzgl\304\231dnij wielko\305\233\304\207 liter\0"\
   "Dokumenty Mobi\0"\
   "Zmodyfikowano:\0"\
@@ -9243,7 +9243,7 @@ const char * gTranslations_pl =
   "Otw\303\263rz\0"\
   "Otw\303\263rz w PDF-XChange\0"\
   "Otw\303\263rz dokument...\0"\
-  "\0"\
+  "Otw\303\263rz w %s\0"\
   "Otw\303\263rz w &Adobe Reader\0"\
   "Otw\303\263rz w &Foxit Reader\0"\
   "Otw\303\263rz w Microsoft HTML Help\0"\
@@ -9269,9 +9269,9 @@ const char * gTranslations_pl =
   "Wydrukuj jako &obraz (wymaga wi\304\231cej pami\304\231ci)\0"\
   "Zakres druku\0"\
   "Drukarka o podanej nazwie nie istnieje\0"\
-  "\0"\
-  "\0"\
-  "Jeszcze trwa drukowanie. Przerwa\304\207 i zacz\304\205\304\207 od nowa?\0"\
+  "Trwa drukowanie.\0"\
+  "Nadal trwa drukowanie. Przerwa\304\207 i wyj\305\233\304\207?\0"\
+  "Nadal trwa drukowanie. Przerwa\304\207 i zacz\304\205\304\207 od nowa?\0"\
   "Drukowanie strony %d z %d...\0"\
   "Problem z drukowaniem.\0"\
   "Zmie\305\204 &nazw\304\231...\tF2\0"\
@@ -9306,7 +9306,7 @@ const char * gTranslations_pl =
   "SumatraPDF jest domy\305\233ln\304\205 przegl\304\205dark\304\205 PDF\0"\
   "SumatraPDF powinien by\304\207 teraz domy\305\233ln\304\205 przegl\304\205dark\304\205 PDF\0"\
   "Nie mo\305\274na otworzy\304\207 pliku synchronizacji\0"\
-  "\0"\
+  "Tagowany plik PDF\0"\
   "Pliki tekstowe\0"\
   "Tytu\305\202:\0"\
   "Nieznany plik \305\272r\303\263d\305\202owy (%s)\0"\
@@ -9314,8 +9314,8 @@ const char * gTranslations_pl =
   "Odwied\305\272 &stron\304\231 internetow\304\205\0"\
   "Uwaga\0"\
   "Pliki XPS\0"\
-  "Posiadasz najnowsz\304\205 wersj\304\231.\0"\
-  "Posiadasz wersj\304\231 %s.\0"\
+  "Masz najnowsz\304\205 wersj\304\231.\0"\
+  "Masz wersj\304\231 %s.\0"\
   "Powi\304\231kszenie\0"\
   "Powi\304\231ksz\0"\
   "Zmniejsz\0"\
