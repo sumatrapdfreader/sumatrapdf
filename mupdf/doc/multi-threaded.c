@@ -16,7 +16,7 @@
 // gcc -g -o build/debug/example-mt -I fitz doc/multi-threading.c \
 //	build/debug/libfitz.a build/debug/libfreetype.a \
 //	build/debug/libopenjpeg.a build/debug/libjbig2dec.a \
-//	build/debug/libjpeg.a -lpng -lm -lpthread
+//	build/debug/libjpeg.a -lpthread -lm
 //
 // build/debug/example-mt /path/to/document.pdf
 //

@@ -16,6 +16,8 @@ enum { TEXT_PLAIN = 1, TEXT_HTML = 2, TEXT_XML = 3 };
 
 enum { OUT_PNG, OUT_PPM, OUT_PNM, OUT_PAM, OUT_PGM, OUT_PBM, OUT_SVG, OUT_PWG, OUT_TGA, OUT_BMP };
 
+enum { CS_INVALID, CS_UNSET, CS_MONO, CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA };
+
 typedef struct
 {
 	char *suffix;
@@ -31,11 +33,54 @@ static const suffix_t suffix_table[] =
 	{ ".pam", OUT_PAM },
 	{ ".pbm", OUT_PBM },
 	{ ".svg", OUT_SVG },
-	{ ".pwg", OUT_PWG },
-	{ ".tga", OUT_TGA }, /* SumatraPDF: support TGA as output format */
+	{ ".pwg", OUT_PWG }
+	, { ".tga", OUT_TGA } /* SumatraPDF: support TGA as output format */
 #ifdef GDI_PLUS_BMP_RENDERER
-	{ ".bmp", OUT_BMP },
+	, { ".bmp", OUT_BMP }
 #endif
+};
+
+typedef struct
+{
+	char *name;
+	int colorspace;
+} cs_name_t;
+
+static const cs_name_t cs_name_table[] =
+{
+	{ "m", CS_MONO },
+	{ "mono", CS_MONO },
+	{ "g", CS_GRAY },
+	{ "gray", CS_GRAY },
+	{ "grey", CS_GRAY },
+	{ "ga", CS_GRAYALPHA },
+	{ "grayalpha", CS_GRAYALPHA },
+	{ "greyalpha", CS_GRAYALPHA },
+	{ "rgb", CS_RGB },
+	{ "rgba", CS_RGBA },
+	{ "rgbalpha", CS_RGBA }
+};
+
+typedef struct
+{
+	int format;
+	int default_cs;
+	int permitted_cs[6];
+} format_cs_table_t;
+
+static const format_cs_table_t format_cs_table[] =
+{
+	{ OUT_PNG, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } },
+	{ OUT_PPM, CS_RGB, { CS_GRAY, CS_RGB } },
+	{ OUT_PNM, CS_GRAY, { CS_GRAY, CS_RGB } },
+	{ OUT_PAM, CS_RGBA, { CS_RGBA } },
+	{ OUT_PGM, CS_GRAY, { CS_GRAY, CS_RGB } },
+	{ OUT_PBM, CS_MONO, { CS_MONO } },
+	{ OUT_SVG, CS_UNSET, { CS_UNSET } },
+	{ OUT_PWG, CS_RGB, { CS_MONO, CS_GRAY, CS_RGB } }
+	/* SumatraPDF: support TGA as output format */
+	, { OUT_TGA, CS_RGB, { CS_GRAY, CS_GRAYALPHA, CS_RGB, CS_RGBA } }
+	, { OUT_BMP, CS_RGB, { CS_RGB } }
 };
 
 /*
@@ -98,7 +143,6 @@ static int showtext = 0;
 static int showtime = 0;
 static int showmd5 = 0;
 static int showoutline = 0;
-static int savealpha = 0;
 static int uselist = 1;
 static int alphabits = 8;
 static float gamma_value = 1;
@@ -110,6 +154,7 @@ static int errored = 0;
 static int ignore_errors = 0;
 static int output_format;
 static int append = 0;
+static int out_cs = CS_UNSET;
 
 static fz_text_sheet *sheet = NULL;
 static fz_colorspace *colorspace;
@@ -145,7 +190,7 @@ static void usage(void)
 		"\t-w -\twidth (in pixels) (maximum width if -r is specified)\n"
 		"\t-h -\theight (in pixels) (maximum height if -r is specified)\n"
 		"\t-f -\tfit width and/or height exactly (ignore aspect)\n"
-		"\t-a\tsave alpha channel (only pam, png and tga)\n"
+		"\t-c -\tcolorspace {mono,gray,grayalpha,rgb,rgba}\n"
 		"\t-b -\tnumber of bits of antialiasing (0 to 8)\n"
 		"\t-g\trender in grayscale\n"
 		"\t-m\tshow timing information\n"
@@ -704,6 +749,8 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 
 		fz_try(ctx)
 		{
+			int savealpha = (out_cs == CS_RGBA || out_cs == CS_GRAYALPHA);
+
 			pix = fz_new_pixmap_with_bbox(ctx, colorspace, &ibounds);
 
 			if (savealpha)
@@ -731,7 +778,7 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 			{
 				char buf[512];
 				sprintf(buf, output, pagenum);
-				if (output_format == OUT_PGM || output_format == OUT_PPM)
+				if (output_format == OUT_PGM || output_format == OUT_PPM || output_format == OUT_PNM)
 					fz_write_pnm(ctx, pix, buf);
 				else if (output_format == OUT_PAM)
 					fz_write_pam(ctx, pix, buf, savealpha);
@@ -741,7 +788,14 @@ static void drawpage(fz_context *ctx, fz_document *doc, int pagenum)
 				{
 					if (strstr(output, "%d") != NULL)
 						append = 0;
-					fz_write_pwg(ctx, pix, buf, append);
+					if (out_cs == CS_MONO)
+					{
+						fz_bitmap *bit = fz_halftone_pixmap(ctx, pix, NULL);
+						fz_write_pwg_bitmap(ctx, bit, buf, append, NULL);
+						fz_drop_bitmap(ctx, bit);
+					}
+					else
+						fz_write_pwg(ctx, pix, buf, append, NULL);
 					append = 1;
 				}
 				else if (output_format == OUT_PBM) {
@@ -884,6 +938,21 @@ static void drawoutline(fz_context *ctx, fz_document *doc)
 	}
 }
 
+static int
+parse_colorspace(const char *name)
+{
+	int i;
+
+	for (i = 0; i < nelem(cs_name_table); i++)
+	{
+		if (!strcmp(name, cs_name_table[i].name))
+			return cs_name_table[i].colorspace;
+	}
+	fprintf(stderr, "Unknown colorspace \"%s\"\n", name);
+	exit(1);
+	return -1;
+}
+
 #ifdef MUPDF_COMBINED_EXE
 int draw_main(int argc, char **argv)
 #else
@@ -895,14 +964,13 @@ int main(int argc, char **argv)
 #endif
 {
 	char *password = "";
-	int grayscale = 0;
 	fz_document *doc = NULL;
 	int c;
 	fz_context *ctx;
 
 	fz_var(doc);
 
-	while ((c = fz_getopt(argc, argv, "lo:p:r:R:ab:dgmtx5G:Iw:h:fij:")) != -1)
+	while ((c = fz_getopt(argc, argv, "lo:p:r:R:b:c:dgmtx5G:Iw:h:fij:")) != -1)
 	{
 		switch (c)
 		{
@@ -910,15 +978,15 @@ int main(int argc, char **argv)
 		case 'p': password = fz_optarg; break;
 		case 'r': resolution = atof(fz_optarg); res_specified = 1; break;
 		case 'R': rotation = atof(fz_optarg); break;
-		case 'a': savealpha = 1; break;
 		case 'b': alphabits = atoi(fz_optarg); break;
 		case 'l': showoutline++; break;
 		case 'm': showtime++; break;
 		case 't': showtext++; break;
 		case 'x': showxml++; break;
 		case '5': showmd5++; break;
-		case 'g': grayscale++; break;
+		case 'g': out_cs = CS_GRAY; break;
 		case 'd': uselist = 0; break;
+		case 'c': out_cs = parse_colorspace(fz_optarg); break;
 		case 'G': gamma_value = atof(fz_optarg); break;
 		case 'w': width = atof(fz_optarg); break;
 		case 'h': height = atof(fz_optarg); break;
@@ -976,9 +1044,45 @@ int main(int argc, char **argv)
 		}
 	}
 
-	colorspace = fz_device_rgb(ctx);
-	if (grayscale || output_format == OUT_PGM || output_format == OUT_PBM)
+	{
+		int i, j;
+
+		for (i = 0; i < nelem(format_cs_table); i++)
+		{
+			if (format_cs_table[i].format == output_format)
+			{
+				if (out_cs == CS_UNSET)
+					out_cs = format_cs_table[i].default_cs;
+				for (j = 0; j < nelem(format_cs_table[i].permitted_cs); j++)
+				{
+					if (format_cs_table[i].permitted_cs[j] == out_cs)
+						break;
+				}
+				if (j == nelem(format_cs_table[i].permitted_cs))
+				{
+					fprintf(stderr, "Unsupported colorspace for this format\n");
+					exit(1);
+				}
+			}
+		}
+	}
+
+	switch (out_cs)
+	{
+	case CS_MONO:
+	case CS_GRAY:
+	case CS_GRAYALPHA:
 		colorspace = fz_device_gray(ctx);
+		break;
+	case CS_RGB:
+	case CS_RGBA:
+		colorspace = fz_device_rgb(ctx);
+		break;
+	default:
+		fprintf(stderr, "Unknown colorspace!\n");
+		exit(1);
+		break;
+	}
 
 	timing.count = 0;
 	timing.total = 0;

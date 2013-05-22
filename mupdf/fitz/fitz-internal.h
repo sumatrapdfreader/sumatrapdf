@@ -865,10 +865,11 @@ struct fz_bitmap_s
 {
 	int refs;
 	int w, h, stride, n;
+	int xres, yres;
 	unsigned char *samples;
 };
 
-fz_bitmap *fz_new_bitmap(fz_context *ctx, int w, int h, int n);
+fz_bitmap *fz_new_bitmap(fz_context *ctx, int w, int h, int n, int xres, int yres);
 
 void fz_bitmap_details(fz_bitmap *bitmap, int *w, int *h, int *n, int *stride);
 

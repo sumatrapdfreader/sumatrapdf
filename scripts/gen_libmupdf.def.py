@@ -77,9 +77,12 @@ def main():
 	util2.chdir_top()
 	os.chdir("mupdf")
 	
-	# don't include/export doc_* functions and mucbz.h and muimage.h functions
-	doc_exports = collectFunctions("fitz/doc_document.c") + collectFunctions("fitz/doc_interactive.c") + ["fz_init_ui_pointer_event", "fz_access_submit_event"]
-	fitz_exports = generateExports("fitz/fitz.h", doc_exports + ["fz_new_svg_device"]) + "\n\n" + generateExports("fitz/fitz-internal.h", doc_exports)
+	# don't include/export doc_* functions, mucbz.h and muimage.h functions and svg and pwg functions
+	doc_exports = collectFunctions("fitz/doc_document.c") + collectFunctions("fitz/doc_interactive.c")
+	more_formats = collectFunctions("fitz/dev_svg.c") + collectFunctions("fitz/res_pwg.c")
+	ignore_exports = doc_exports + more_formats + ["fz_init_ui_pointer_event", "fz_access_submit_event"]
+	
+	fitz_exports = generateExports("fitz/fitz.h", ignore_exports) + "\n\n" + generateExports("fitz/fitz-internal.h", ignore_exports)
 	mupdf_exports = generateExports("pdf/mupdf.h") + "\n\n" + generateExports("pdf/mupdf-internal.h", ["pdf_crypt_buffer", "pdf_open_compressed_stream"])
 	muxps_exports = generateExports("xps/muxps.h") + "\n\n" + generateExports("xps/muxps-internal.h", ["xps_parse_solid_color_brush", "xps_print_path"])
 	

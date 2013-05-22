@@ -1932,6 +1932,11 @@ static OPJ_BOOL opj_j2k_read_siz(opj_j2k_t *p_j2k,
                 return OPJ_FALSE;
         }
 
+        /* testcase 4035.pdf.SIGSEGV.d8b.3375 */
+        if (l_image->x0 > l_image->x1 || l_image->y0 > l_image->y1) {
+                opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: negative image size (%d x %d)\n", l_image->x1 - l_image->x0, l_image->y1 - l_image->y0);
+                return OPJ_FALSE;
+        }
         /* testcase 2539.pdf.SIGFPE.706.1712 (also 3622.pdf.SIGFPE.706.2916 and 4008.pdf.SIGFPE.706.3345 and maybe more) */
         if (!(l_cp->tdx * l_cp->tdy)) {
                 opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: invalid tile size (tdx: %d, tdy: %d)\n", l_cp->tdx, l_cp->tdy);
@@ -7081,6 +7086,8 @@ OPJ_BOOL opj_j2k_read_tile_header(      opj_j2k_t * p_j2k,
 
                         /* Why this condition? FIXME */
                         if (p_j2k->m_specific_param.m_decoder.m_state & J2K_STATE_TPH){
+                                /* testcase 2236.pdf.SIGSEGV.398.1376 */
+                                assert(p_j2k->m_specific_param.m_decoder.m_sot_length >= l_marker_size + 2);
                                 p_j2k->m_specific_param.m_decoder.m_sot_length -= (l_marker_size + 2);
                         }
                         l_marker_size -= 2; /* Subtract the size of the marker ID already read */

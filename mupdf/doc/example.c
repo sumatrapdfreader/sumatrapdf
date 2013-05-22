@@ -5,7 +5,7 @@
 // gcc -g -o build/debug/example -I fitz doc/example.c \
 //	build/debug/libfitz.a build/debug/libfreetype.a \
 //	build/debug/libopenjpeg.a build/debug/libjbig2dec.a \
-//	build/debug/libjpeg.a -lpng -lm
+//	build/debug/libjpeg.a -lm
 //
 // build/debug/example /path/to/document.pdf 1 200 25
 

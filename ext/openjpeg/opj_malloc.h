@@ -140,7 +140,8 @@ Reallocate memory blocks.
 #ifdef ALLOC_PERF_OPT
 void * OPJ_CALLCONV opj_realloc(void * m, size_t s);
 #else
-#define opj_realloc(m, s) realloc(m, s)
+/* SumatraPDF: TODO: MSVCRT seems to assert if s is too large(?) e.g. for 2236.pdf.asan.40.1376 */
+#define opj_realloc(m, s) ((ptrdiff_t)(s) < 0 ? NULL : realloc(m, s))
 #endif
 
 /**

@@ -179,7 +179,7 @@ fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)
 		ht = fz_default_halftone(ctx, n);
 	}
 	ht_line = fz_malloc(ctx, pix->w * n);
-	out = fz_new_bitmap(ctx, pix->w, pix->h, n);
+	out = fz_new_bitmap(ctx, pix->w, pix->h, n, pix->xres, pix->yres);
 	o = out->samples;
 	p = pix->samples;
 

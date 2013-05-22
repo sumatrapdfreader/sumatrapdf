@@ -1,12 +1,17 @@
 diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
 --- openjpeg.orig\j2k.c	Sat May 18 20:52:42 2013
-+++ openjpeg\j2k.c	Tue May 21 23:01:21 2013
-@@ -1930,10 +1930,16 @@
++++ openjpeg\j2k.c	Wed May 22 12:11:03 2013
+@@ -1930,10 +1930,21 @@
          if (l_image->numcomps != l_nb_comp) {
                  opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: number of component is not compatible with the remaining number of parameters ( %d vs %d)\n", l_image->numcomps, l_nb_comp);
                  return OPJ_FALSE;
          }
  
++        /* testcase 4035.pdf.SIGSEGV.d8b.3375 */
++        if (l_image->x0 > l_image->x1 || l_image->y0 > l_image->y1) {
++                opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: negative image size (%d x %d)\n", l_image->x1 - l_image->x0, l_image->y1 - l_image->y0);
++                return OPJ_FALSE;
++        }
 +        /* testcase 2539.pdf.SIGFPE.706.1712 (also 3622.pdf.SIGFPE.706.2916 and 4008.pdf.SIGFPE.706.3345 and maybe more) */
 +        if (!(l_cp->tdx * l_cp->tdy)) {
 +                opj_event_msg(p_manager, EVT_ERROR, "Error with SIZ marker: invalid tile size (tdx: %d, tdy: %d)\n", l_cp->tdx, l_cp->tdy);
@@ -18,7 +23,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                  /* if JPWL is on, we check whether TX errors have damaged
                    too much the SIZ parameters */
                  if (!(l_image->x1 * l_image->y1)) {
-@@ -3873,10 +3879,16 @@
+@@ -3873,10 +3884,16 @@
  
          l_cp = &(p_j2k->m_cp);
          opj_read_bytes(p_header_data,&(p_j2k->m_current_tile_number),2);                /* Isot */
@@ -35,7 +40,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
          l_tile_y = p_j2k->m_current_tile_number / l_cp->tw;
  
  #ifdef USE_JPWL
-@@ -3959,10 +3971,17 @@
+@@ -3959,10 +3976,17 @@
                  ++p_header_data;
  
                  opj_read_bytes(p_header_data,&l_num_parts ,1);          /* TNsot */
@@ -53,7 +58,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                           * tile-parts for that tile and zero (A.4.2 of 15444-1 : 2002). */
                          if (l_tcp->m_nb_tile_parts) {
                                  if (l_current_part >= l_tcp->m_nb_tile_parts){
-@@ -4434,10 +4453,18 @@
+@@ -4434,10 +4458,18 @@
                          }
                  }
          };
@@ -72,7 +77,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
          return OPJ_TRUE;
  
-@@ -5806,10 +5833,11 @@
+@@ -5806,10 +5838,11 @@
          */
  
          if (parameters->tile_size_on) {
@@ -84,7 +89,7 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
                  cp->tdy = image->y1 - cp->ty0;
          }
  
-@@ -5910,11 +5938,13 @@
+@@ -5910,11 +5943,13 @@
                  tcp->POC = 0;
  
                  if (parameters->numpocs) {
@@ -99,7 +104,20 @@ diff -rPu5 openjpeg.orig\j2k.c openjpeg\j2k.c
  
                                          tcp_poc->resno0         = parameters->POC[numpocs_tile].resno0;
                                          tcp_poc->compno0        = parameters->POC[numpocs_tile].compno0;
-@@ -7438,10 +7468,14 @@
+@@ -7049,10 +7084,12 @@
+                         /* Read 2 bytes from the buffer as the marker size */
+                         opj_read_bytes(p_j2k->m_specific_param.m_decoder.m_header_data,&l_marker_size,2);
+ 
+                         /* Why this condition? FIXME */
+                         if (p_j2k->m_specific_param.m_decoder.m_state & J2K_STATE_TPH){
++                                /* testcase 2236.pdf.SIGSEGV.398.1376 */
++                                assert(p_j2k->m_specific_param.m_decoder.m_sot_length >= l_marker_size + 2);
+                                 p_j2k->m_specific_param.m_decoder.m_sot_length -= (l_marker_size + 2);
+                         }
+                         l_marker_size -= 2; /* Subtract the size of the marker ID already read */
+ 
+                         /* Get the marker handler from the marker ID */
+@@ -7438,10 +7475,14 @@
                                  l_offset_y1_src = l_res->y1 - l_y1_dest;
                          }
                  }
@@ -225,7 +243,7 @@ diff -rPu5 openjpeg.orig\opj_config_private.h openjpeg\opj_config_private.h
 +#define USE_JPIP
 diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
 --- openjpeg.orig\opj_malloc.h	Sat May 18 20:52:42 2013
-+++ openjpeg\opj_malloc.h	Tue May 21 23:00:37 2013
++++ openjpeg\opj_malloc.h	Wed May 22 11:55:37 2013
 @@ -58,11 +58,12 @@
  @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
  */
@@ -240,9 +258,23 @@ diff -rPu5 openjpeg.orig\opj_malloc.h openjpeg\opj_malloc.h
  /**
  Allocate memory aligned to a 16 byte boundry
  @param size Bytes to allocate
+@@ -137,11 +138,12 @@
+ @return Returns a void pointer to the reallocated (and possibly moved) memory block
+ */
+ #ifdef ALLOC_PERF_OPT
+ void * OPJ_CALLCONV opj_realloc(void * m, size_t s);
+ #else
+-#define opj_realloc(m, s) realloc(m, s)
++/* SumatraPDF: TODO: MSVCRT seems to assert if s is too large(?) e.g. for 2236.pdf.asan.40.1376 */
++#define opj_realloc(m, s) ((ptrdiff_t)(s) < 0 ? NULL : realloc(m, s))
+ #endif
+ 
+ /**
+ Deallocates or frees a memory block.
+ @param m Previously allocated memory block to be freed
 diff -rPu5 openjpeg.orig\tcd.c openjpeg\tcd.c
 --- openjpeg.orig\tcd.c	Sat May 18 20:52:42 2013
-+++ openjpeg\tcd.c	Tue May 21 23:00:37 2013
++++ openjpeg\tcd.c	Wed May 22 01:42:34 2013
 @@ -672,10 +672,16 @@
                  /* border of each l_tile component (global) */      \
                  l_tilec->x0 = opj_int_ceildiv(l_tile->x0, l_image_comp->dx);                                                                                                                                          \

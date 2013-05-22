@@ -1,7 +1,7 @@
 #include "fitz-internal.h"
 
 fz_bitmap *
-fz_new_bitmap(fz_context *ctx, int w, int h, int n)
+fz_new_bitmap(fz_context *ctx, int w, int h, int n, int xres, int yres)
 {
 	fz_bitmap *bit;
 
@@ -10,6 +10,8 @@ fz_new_bitmap(fz_context *ctx, int w, int h, int n)
 	bit->w = w;
 	bit->h = h;
 	bit->n = n;
+	bit->xres = xres;
+	bit->yres = yres;
 	/* Span is 32 bit aligned. We may want to make this 64 bit if we
 	 * use SSE2 etc. */
 	bit->stride = ((n * w + 31) & ~31) >> 3;

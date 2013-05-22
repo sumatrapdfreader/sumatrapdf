@@ -11,13 +11,13 @@ static inline int fz_tolower(int c)
 fz_char_and_box *fz_text_char_at(fz_char_and_box *cab, fz_text_page *page, int idx)
 {
 	int block_num;
+	int ofs = 0;
 
 	for (block_num = 0; block_num < page->len; block_num++)
 	{
 		fz_text_block *block;
 		fz_text_line *line;
 		fz_text_span *span;
-		int ofs = 0;
 
 		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
 			continue;
@@ -35,7 +35,7 @@ fz_char_and_box *fz_text_char_at(fz_char_and_box *cab, fz_text_page *page, int i
 				ofs += span->len;
 			}
 			/* pseudo-newline */
-			if (idx == 0)
+			if (idx == ofs)
 			{
 				cab->bbox = fz_empty_rect;
 				cab->c = 0;

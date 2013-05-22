@@ -561,6 +561,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\fitz\res_pwg.c"
+				>
+			</File>
+			<File
 				RelativePath="..\fitz\res_shade.c"
 				>
 			</File>

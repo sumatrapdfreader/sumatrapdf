@@ -1450,6 +1450,10 @@
 					RelativePath="..\mupdf\fitz\dev_svg.c"
 					>
 				</File>
+				<File
+					RelativePath="..\mupdf\fitz\res_pwg.c"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="draw"

@@ -122,7 +122,6 @@ EXPORTS
 	fz_write_pnm
 	fz_write_pam
 	fz_write_png
-	fz_write_pwg
 	fz_write_pbm
 	fz_md5_pixmap
 	fz_write_tga
@@ -135,9 +134,6 @@ EXPORTS
 	fz_printf
 	fz_write
 	fz_output_png
-	fz_output_pwg
-	fz_output_pwg_file_header
-	fz_output_pwg_page
 	fz_image_as_png
 	fz_close_output
 	fz_free_device
