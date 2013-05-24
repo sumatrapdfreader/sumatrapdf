@@ -598,6 +598,9 @@ void LaunchWithSumatra(InstanceData *data, const char *url_utf8)
         url[str::Len(url) - 1] = '\0';
         url.Set(str::Join(url, L"%5c"));
     }
+    // prevent overlong URLs from making LaunchProcess fail
+    if (str::Len(url) > 4096)
+        url.Set(NULL);
 
     ScopedMem<WCHAR> cmdLine(str::Format(L"\"%s\" -plugin \"%s\" %d \"%s\"",
         data->exepath, url ? url : L"", (HWND)data->npwin->window, data->filepath));
