@@ -186,7 +186,7 @@ endif
 # --- OpenJPEG ---
 
 ifneq "$(wildcard $(OPENJPEG_DIR)/README)" ""
-CFLAGS += -I$(OPENJPEG_DIR)/libopenjpeg
+CFLAGS += -I$(OPENJPEG_DIR)/src/lib/openjp2
 LIBS := $(filter-out -lopenjpeg, $(LIBS))
 OPENJPEG_LIB := $(OUT)/libopenjpeg.a
 
@@ -196,14 +196,15 @@ OPENJPEG_SRC := \
 	cio.c \
 	dwt.c \
 	event.c \
+	function_list.c \
 	image.c \
+	invert.c \
 	j2k.c \
-	j2k_lib.c \
 	jp2.c \
-	jpt.c \
 	mct.c \
 	mqc.c \
 	openjpeg.c \
+	opj_clock.c \
 	phix_manager.c \
 	pi.c \
 	ppix_manager.c \
@@ -216,8 +217,8 @@ OPENJPEG_SRC := \
 	tpix_manager.c \
 
 $(OPENJPEG_LIB): $(addprefix $(OUT)/opj_, $(OPENJPEG_SRC:%.c=%.o))
-$(OUT)/opj_%.o: $(OPENJPEG_DIR)/libopenjpeg/%.c | $(OUT)
-	$(CC_CMD) -DOPJ_STATIC
+$(OUT)/opj_%.o: $(OPENJPEG_DIR)/src/lib/openjp2/%.c | $(OUT)
+	$(CC_CMD) -DOPJ_STATIC -DOPJ_HAVE_STDINT_H
 else
 SYS_OPENJPEG_CFLAGS := $(SYS_OPENJPEG_CFLAGS)
 CFLAGS += $(SYS_OPENJPEG_CFLAGS)
