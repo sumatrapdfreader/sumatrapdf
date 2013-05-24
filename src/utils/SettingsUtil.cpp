@@ -123,9 +123,9 @@ static bool SerializeField(str::Str<char>& out, const uint8_t *base, const Field
     case Type_Color:
         c = *(COLORREF *)fieldPtr;
         if (((c >> 24) & 0xff))
-            out.AppendFmt("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValue(c), GetGValue(c), GetBValue(c));
+            out.AppendFmt("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c));
         else
-            out.AppendFmt("#%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c));
+            out.AppendFmt("#%02x%02x%02x", GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c));
         return true;
     case Type_String:
         if (!*(const WCHAR **)fieldPtr) {

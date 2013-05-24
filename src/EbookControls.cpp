@@ -124,7 +124,7 @@ void SetMainWndBgCol(EbookControls *ctrls)
     COLORREF bgColor = gGlobalPrefs->ebookUI.backgroundColor;
     if (gGlobalPrefs->useSysColors)
         bgColor = GetSysColor(COLOR_WINDOW);
-    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValue(bgColor), GetGValue(bgColor), GetBValue(bgColor)));
+    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
     ctrls->mainWnd->SetStyle(styleMainWnd);
 }
 

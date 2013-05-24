@@ -919,11 +919,11 @@ void UpdateBitmapColorRange(HBITMAP hbmp, COLORREF range[2])
         return;
 
     // color order in DIB is blue-green-red-alpha
-    int base[4] = { GetBValue(range[0]), GetGValue(range[0]), GetRValue(range[0]), 0 };
+    int base[4] = { GetBValueSafe(range[0]), GetGValueSafe(range[0]), GetRValueSafe(range[0]), 0 };
     int diff[4] = {
-        GetBValue(range[1]) - base[0],
-        GetGValue(range[1]) - base[1],
-        GetRValue(range[1]) - base[2],
+        GetBValueSafe(range[1]) - base[0],
+        GetGValueSafe(range[1]) - base[1],
+        GetRValueSafe(range[1]) - base[2],
         255
     };
 
@@ -991,7 +991,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
 
 COLORREF AdjustLightness(COLORREF c, float factor)
 {
-    BYTE R = GetRValue(c), G = GetGValue(c), B = GetBValue(c);
+    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma
     BYTE M = max(max(R, G), B), m = min(min(R, G), B);
     if (M == m) {
