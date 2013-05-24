@@ -110,7 +110,7 @@ solution "efi"
 solution "all_tests"
   solution_common()
 
-  project "tests_util"
+  project "test_util"
     kind "ConsoleApp"
     language "C++"
     files {
