@@ -7,6 +7,10 @@ Next version:
 
 * support screen readers etc. via UI automation (disabled in release builds)
 
+2.3.1 (2013-05-23):
+
+* not compiled with SSE2
+
 2.3 (2013-05-22):
 
 * more configurability. Settings are now saved in human-editable

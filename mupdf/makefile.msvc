@@ -81,9 +81,9 @@ CFLAGSB = $(CFLAGSB) /D "WIN32" /D "_WIN32"
 CFLAGSB = $(CFLAGSB) /WX /GR- /Zi /GS /Gy /GF /MP
 
 # on 64-bit SSE2 is always used, so no need to specify it
-!if "$(PLATFORM)"!="X64" && "$(WITHOUT_ARCH_SSE2)"==""
-CFLAGSB = $(CFLAGSB) /arch:SSE2
-!endif
+#!if "$(PLATFORM)"!="X64" && "$(WITHOUT_ARCH_SSE2)"==""
+#CFLAGSB = $(CFLAGSB) /arch:SSE2
+#!endif
 
 # /EHs-c- : disable C++ exceptions (generates smaller binaries)
 CFLAGSB = $(CFLAGSB) /EHs-c-
