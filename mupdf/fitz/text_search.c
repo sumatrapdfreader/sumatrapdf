@@ -8,6 +8,11 @@ static inline int fz_tolower(int c)
 	return c;
 }
 
+static inline int iswhite(int c)
+{
+	return c == ' ' || c == '\r' || c == '\n' || c == '\t';
+}
+
 fz_char_and_box *fz_text_char_at(fz_char_and_box *cab, fz_text_page *page, int idx)
 {
 	int block_num;
@@ -38,7 +43,7 @@ fz_char_and_box *fz_text_char_at(fz_char_and_box *cab, fz_text_page *page, int i
 			if (idx == ofs)
 			{
 				cab->bbox = fz_empty_rect;
-				cab->c = 0;
+				cab->c = ' ';
 				return cab;
 			}
 			ofs++;
@@ -96,10 +101,11 @@ static int match(fz_text_page *page, const char *s, int n)
 	while (*s)
 	{
 		s += fz_chartorune(&c, (char *)s);
-		if (c == ' ' && charat(page, n) == ' ')
+		if (iswhite(c) && iswhite(charat(page, n)))
 		{
-			while (charat(page, n) == ' ')
+			do
 				n++;
+			while (iswhite(charat(page, n)));
 		}
 		else
 		{

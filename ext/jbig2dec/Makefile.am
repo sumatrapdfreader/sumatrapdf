@@ -8,7 +8,7 @@ include_HEADERS = jbig2.h
 
 CFLAGS = @CFLAGS@ $(XCFLAGS)
 
-libjbig2dec_la_LDFLAGS = -version-info @JBIG2DEC_LT_CURRENT@:@JBIG2DEC_LT_REVISION@:@JBIG2DEC_LT_AGE@
+libjbig2dec_la_LDFLAGS = -version-info @JBIG2DEC_LT_CURRENT@:@JBIG2DEC_LT_REVISION@:@JBIG2DEC_LT_AGE@ -no-undefined
 libjbig2dec_la_SOURCES = jbig2.c \
 	jbig2_arith.c jbig2_arith_int.c jbig2_arith_iaid.c jbig2_huffman.c \
 	jbig2_segment.c jbig2_page.c \
@@ -29,7 +29,7 @@ noinst_PROGRAMS = test_sha1 test_huffman test_arith
 jbig2dec_SOURCES = jbig2dec.c sha1.c sha1.h \
 	jbig2.h jbig2_image.h getopt.h \
 	os_types.h config_types.h config_win32.h
-jbig2dec_LDADD = libjbig2dec.la @LIBOBJS@
+jbig2dec_LDADD = libjbig2dec.la @LIBOBJS@ $(PNG_LIBS)
 
 dist_man_MANS = jbig2dec.1
 

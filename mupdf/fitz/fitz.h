@@ -2503,7 +2503,7 @@ enum {
 
 		gotor.flags: A bitfield consisting of fz_link_flag_*
 		describing the validity and meaning of the different parts
-		of gotor.lr and gotor.rb. Link destinations are constructed
+		of gotor.lt and gotor.rb. Link destinations are constructed
 		(as far as possible) so that lt and rb can be treated as a
 		bounding box, though the validity flags indicate which of the
 		values was actually specified in the file.

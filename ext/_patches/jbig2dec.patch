@@ -1,6 +1,6 @@
 diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
---- jbig2dec.orig\jbig2.c	Fri Apr 12 11:52:53 2013
-+++ jbig2dec\jbig2.c	Fri Apr 12 12:11:07 2013
+--- jbig2dec.orig\jbig2.c	Fri May 24 17:23:20 2013
++++ jbig2dec\jbig2.c	Tue May 14 21:21:20 2013
 @@ -388,11 +388,10 @@
  	    return 0;
  	  return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, -1,
@@ -14,8 +14,8 @@ diff -rPu5 jbig2dec.orig\jbig2.c jbig2dec\jbig2.c
  jbig2_ctx_free (Jbig2Ctx *ctx)
  {
 diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
---- jbig2dec.orig\jbig2_huffman.c	Fri Apr 12 11:52:53 2013
-+++ jbig2dec\jbig2_huffman.c	Fri Apr 12 12:11:50 2013
+--- jbig2dec.orig\jbig2_huffman.c	Fri May 24 17:23:20 2013
++++ jbig2dec\jbig2_huffman.c	Tue May 14 21:21:21 2013
 @@ -563,11 +563,11 @@
          const size_t lines_data_bitlen = (segment->data_length - 9) * 8;    /* length in bit */
          /* bit offset: controls bit reading */
@@ -30,8 +30,8 @@ diff -rPu5 jbig2dec.orig\jbig2_huffman.c jbig2dec\jbig2_huffman.c
              "DECODING USER TABLE... Flags: %d, HTOOB: %d, HTPS: %d, HTRS: %d, HTLOW: %d, HTHIGH: %d", 
              code_table_flags, HTOOB, HTPS, HTRS, HTLOW, HTHIGH);
 diff -rPu5 jbig2dec.orig\jbig2_segment.c jbig2dec\jbig2_segment.c
---- jbig2dec.orig\jbig2_segment.c	Fri Apr 12 11:52:53 2013
-+++ jbig2dec\jbig2_segment.c	Fri Apr 12 12:12:06 2013
+--- jbig2dec.orig\jbig2_segment.c	Fri May 24 17:23:20 2013
++++ jbig2dec\jbig2_segment.c	Tue May 14 21:21:21 2013
 @@ -242,12 +242,10 @@
              } else {
                  return jbig2_error(ctx, JBIG2_SEVERITY_WARNING, segment->number,

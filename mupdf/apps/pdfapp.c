@@ -606,8 +606,7 @@ static void pdfapp_showpage(pdfapp_t *app, int loadpage, int drawpage, int repai
 		pdfapp_loadpage(app);
 
 		/* Zero search hit position */
-		app->hit = -1;
-		app->hitlen = 0;
+		app->hit_count = 0;
 
 		/* Extract text */
 		app->page_sheet = fz_new_text_sheet(app->ctx);
@@ -754,193 +753,65 @@ void pdfapp_gotopage(pdfapp_t *app, int number)
 	pdfapp_showpage(app, 1, 1, 1, 0);
 }
 
-static int textlen(fz_text_page *page)
-{
-	int len = 0;
-	int block_num;
-
-	for (block_num = 0; block_num < page->len; block_num++)
-	{
-		fz_text_line *line;
-		fz_text_block *block;
-		fz_text_span *span;
-
-		if (page->blocks[block_num].type != FZ_PAGE_BLOCK_TEXT)
-			continue;
-		block = page->blocks[block_num].u.text;
-		for (line = block->lines; line < block->lines + block->len; line++)
-		{
-			for (span = line->first_span; span; span = span->next)
-			{
-				len += span->len;
-			}
-			len++; /* pseudo-newline */
-		}
-	}
-	return len;
-}
-
-static inline int charat(fz_text_page *page, int idx)
-{
-	fz_char_and_box cab;
-	return fz_text_char_at(&cab, page, idx)->c;
-}
-
-static inline fz_rect bboxcharat(fz_text_page *page, int idx)
-{
-	fz_char_and_box cab;
-	return fz_text_char_at(&cab, page, idx)->bbox;
-}
-
 void pdfapp_inverthit(pdfapp_t *app)
 {
-	fz_rect hitbox, bbox;
+	fz_rect bbox;
 	fz_matrix ctm;
 	int i;
 
-	if (app->hit < 0)
-		return;
-
-	hitbox = fz_empty_rect;
 	pdfapp_viewctm(&ctm, app);
 
-	for (i = app->hit; i < app->hit + app->hitlen; i++)
+	for (i = 0; i < app->hit_count; i++)
 	{
-		bbox = bboxcharat(app->page_text, i);
-		if (fz_is_empty_rect(&bbox))
-		{
-			if (!fz_is_empty_rect(&hitbox))
-				pdfapp_invert(app, fz_transform_rect(&hitbox, &ctm));
-			hitbox = fz_empty_rect;
-		}
-		else
-		{
-			fz_union_rect(&hitbox, &bbox);
-		}
+		bbox = app->hit_bbox[i];
+		pdfapp_invert(app, fz_transform_rect(&bbox, &ctm));
 	}
-
-	if (!fz_is_empty_rect(&hitbox))
-		pdfapp_invert(app, fz_transform_rect(&hitbox, &ctm));
 }
 
-static int match(char *s, fz_text_page *page, int n)
+static void pdfapp_search_in_direction(pdfapp_t *app, enum panning *panto, int dir)
 {
-	int orig = n;
-	int c;
-	while ((c = *s++))
-	{
-		if (c == ' ' && charat(page, n) == ' ')
-		{
-			while (charat(page, n) == ' ')
-				n++;
-		}
-		else
-		{
-			if (tolower(c) != tolower(charat(page, n)))
-				return 0;
-			n++;
-		}
-	}
-	return n - orig;
-}
-
-static void pdfapp_searchforward(pdfapp_t *app, enum panning *panto)
-{
-	int matchlen;
-	int test;
-	int len;
-	int startpage;
+	int firstpage, page;
 
 	wincursor(app, WAIT);
 
-	startpage = app->pageno;
+	firstpage = app->pageno;
+	if (app->searchpage == app->pageno)
+		page = app->pageno + dir;
+	else
+		page = app->pageno;
+
+	if (page < 1) page = app->pagecount;
+	if (page > app->pagecount) page = 1;
 
 	do
 	{
-		len = textlen(app->page_text);
-
-		if (app->hit >= 0)
-			test = app->hit + strlen(app->search);
-		else
-			test = 0;
-
-		while (test < len)
+		if (page != app->pageno)
 		{
-			matchlen = match(app->search, app->page_text, test);
-			if (matchlen)
-			{
-				app->hit = test;
-				app->hitlen = matchlen;
-				wincursor(app, HAND);
-				winrepaint(app);
-				return;
-			}
-			test++;
+			app->pageno = page;
+			pdfapp_showpage(app, 1, 0, 0, 0);
 		}
 
-		app->pageno++;
-		if (app->pageno > app->pagecount)
-			app->pageno = 1;
-
-		pdfapp_showpage(app, 1, 0, 0, 0);
-		*panto = PAN_TO_TOP;
-
-	} while (app->pageno != startpage);
-
-	if (app->pageno == startpage)
-		pdfapp_warn(app, "String '%s' not found.", app->search);
-	winrepaint(app);
-	wincursor(app, HAND);
-}
-
-static void pdfapp_searchbackward(pdfapp_t *app, enum panning *panto)
-{
-	int matchlen;
-	int test;
-	int len;
-	int startpage;
-
-	wincursor(app, WAIT);
-
-	startpage = app->pageno;
-
-	do
-	{
-		len = textlen(app->page_text);
-
-		if (app->hit >= 0)
-			test = app->hit - 1;
-		else
-			test = len;
-
-		while (test >= 0)
+		app->hit_count = fz_search_text_page(app->ctx, app->page_text, app->search, app->hit_bbox, nelem(app->hit_bbox));
+		if (app->hit_count > 0)
 		{
-			matchlen = match(app->search, app->page_text, test);
-			if (matchlen)
-			{
-				app->hit = test;
-				app->hitlen = matchlen;
-				wincursor(app, HAND);
-				winrepaint(app);
-				return;
-			}
-			test--;
+			*panto = dir == 1 ? PAN_TO_TOP : PAN_TO_BOTTOM;
+			app->searchpage = app->pageno;
+			wincursor(app, HAND);
+			winrepaint(app);
+			return;
 		}
 
-		app->pageno--;
-		if (app->pageno < 1)
-			app->pageno = app->pagecount;
+		page += dir;
+		if (page < 1) page = app->pagecount;
+		if (page > app->pagecount) page = 1;
+	} while (page != firstpage);
 
-		pdfapp_showpage(app, 1, 0, 0, 0);
-		*panto = PAN_TO_BOTTOM;
+	pdfapp_warn(app, "String '%s' not found.", app->search);
 
-	} while (app->pageno != startpage);
-
-	if (app->pageno == startpage)
-		pdfapp_warn(app, "String '%s' not found.", app->search);
-
-	winrepaint(app);
+	app->pageno = firstpage;
+	pdfapp_showpage(app, 1, 0, 0, 0);
 	wincursor(app, HAND);
+	winrepaint(app);
 }
 
 void pdfapp_onresize(pdfapp_t *app, int w, int h)
@@ -1256,8 +1127,8 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		app->isediting = 1;
 		app->searchdir = -1;
 		app->search[0] = 0;
-		app->hit = -1;
-		app->hitlen = 0;
+		app->hit_count = 0;
+		app->searchpage = -1;
 		winrepaintsearch(app);
 		break;
 
@@ -1265,24 +1136,24 @@ void pdfapp_onkey(pdfapp_t *app, int c)
 		app->isediting = 1;
 		app->searchdir = 1;
 		app->search[0] = 0;
-		app->hit = -1;
-		app->hitlen = 0;
+		app->hit_count = 0;
+		app->searchpage = -1;
 		winrepaintsearch(app);
 		break;
 
 	case 'n':
 		if (app->searchdir > 0)
-			pdfapp_searchforward(app, &panto);
+			pdfapp_search_in_direction(app, &panto, 1);
 		else
-			pdfapp_searchbackward(app, &panto);
+			pdfapp_search_in_direction(app, &panto, -1);
 		loadpage = 0;
 		break;
 
 	case 'N':
 		if (app->searchdir > 0)
-			pdfapp_searchbackward(app, &panto);
+			pdfapp_search_in_direction(app, &panto, -1);
 		else
-			pdfapp_searchforward(app, &panto);
+			pdfapp_search_in_direction(app, &panto, 1);
 		loadpage = 0;
 		break;
 
